@@ -1,4 +1,5 @@
 /*
+ * Tundzha - Bulgarian keyboard layout
  * Тунджа - Българска клавиатурна позвукова подредба 'явертъ' за РеактОС
  * Copyright (C) 2007 ReactOS
  * License: LGPL, see: LGPL.txt
@@ -405,7 +406,7 @@ ROSDATA KBDTABLES keyboard_layout_table = {
   /* Key names */
   (VSC_LPWSTR *)key_names,
   (VSC_LPWSTR *)extended_key_names,
-//  dead_key_names, /* Dead key names */
+  // dead_key_names, /* Dead key names */
   NULL, /* Dead key names */
 
   /* scan code to virtual key maps */
@@ -414,9 +415,9 @@ ROSDATA KBDTABLES keyboard_layout_table = {
   extcode0_to_vk,
   extcode1_to_vk,
 
-  MAKELONG(0,1), /* Version 1.0 */
+  MAKELONG(1,1), /* Version 1.0 */
 
-  /* Ligatures --  */
+  /* Ligatures -- Bulgarian doesn't have any */
   0,
   0,
   NULL

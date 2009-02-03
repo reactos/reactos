@@ -1516,21 +1516,22 @@ QsortFiles(LPWIN32_FIND_DATA ptrArray[],	/* [IN/OUT] The array with file info po
 static INT
 DirList(LPTSTR szPath,			/* [IN] The path that dir starts */
 		LPDIRSWITCHFLAGS lpFlags)	/* [IN] The flags of the listing */
-{
+{	
+	BOOL fPoint;							/* If szPath is a file with extension fPoint will be True*/
 	HANDLE hSearch;							/* The handle of the search */
 	HANDLE hRecSearch;						/* The handle for searching recursivly */
 	WIN32_FIND_DATA wfdFileInfo;			/* The info of file that found */
 	LPWIN32_FIND_DATA * ptrFileArray;		/* An array of pointers with all the files */
-	PDIRFINDLISTNODE ptrStartNode;	/* The pointer to the first node */
-	PDIRFINDLISTNODE ptrNextNode;	/* A pointer used for relatives refernces */
-TCHAR szFullPath[MAX_PATH];				/* The full path that we are listing with trailing \ */
-TCHAR szSubPath[MAX_PATH];
-LPTSTR pszFilePart;
-DWORD dwCount;							/* A counter of files found in directory */
-DWORD dwCountFiles;						/* Counter for files */
-DWORD dwCountDirs;						/* Counter for directories */
-ULARGE_INTEGER u64CountBytes;			/* Counter for bytes */
-ULARGE_INTEGER u64Temp;					/* A temporary counter */
+	PDIRFINDLISTNODE ptrStartNode;			/* The pointer to the first node */
+	PDIRFINDLISTNODE ptrNextNode;			/* A pointer used for relatives refernces */
+	TCHAR szFullPath[MAX_PATH];				/* The full path that we are listing with trailing \ */
+	TCHAR szSubPath[MAX_PATH];
+	LPTSTR pszFilePart;
+	DWORD dwCount;							/* A counter of files found in directory */
+	DWORD dwCountFiles;						/* Counter for files */
+	DWORD dwCountDirs;						/* Counter for directories */
+	ULARGE_INTEGER u64CountBytes;			/* Counter for bytes */
+	ULARGE_INTEGER u64Temp;					/* A temporary counter */
 
 	/* Initialize Variables */
 	ptrStartNode = NULL;
@@ -1539,6 +1540,7 @@ ULARGE_INTEGER u64Temp;					/* A temporary counter */
 	dwCountFiles = 0;
 	dwCountDirs = 0;
 	u64CountBytes.QuadPart = 0;
+	fPoint= FALSE;
 
 	/* Create szFullPath */
 	if (GetFullPathName(szPath, sizeof(szFullPath) / sizeof(TCHAR), szFullPath, &pszFilePart) == 0)
@@ -1567,66 +1569,74 @@ ULARGE_INTEGER u64Temp;					/* A temporary counter */
 	}
 	ptrNextNode = ptrStartNode;
 
+	/*Checking ir szPath is a File with/wout extension*/
+	if (szPath[_tcslen(szPath) - 1] == _T('.'))
+		fPoint= TRUE;
+
 	/* Collect the results for the current folder */
 	hSearch = FindFirstFile(szFullPath, &wfdFileInfo);
 	do
 	{
 		if (hSearch != INVALID_HANDLE_VALUE)
 		{
-			/* Here we filter all the specified attributes */
-			if ((wfdFileInfo.dwFileAttributes & lpFlags->stAttribs.dwAttribMask )
-				== (lpFlags->stAttribs.dwAttribMask & lpFlags->stAttribs.dwAttribVal ))
+			/*If retrieved FileName has extension,and szPath doesnt have extension then JUMP the retrieved FileName*/
+			if(_tcschr(wfdFileInfo.cFileName,_T('.'))&&(fPoint==TRUE))
 			{
-				ptrNextNode->ptrNext = cmd_alloc(sizeof(DIRFINDLISTNODE));
-				if (ptrNextNode->ptrNext == NULL)
+				continue;
+			/* Here we filter all the specified attributes */
+			}else if ((wfdFileInfo.dwFileAttributes & lpFlags->stAttribs.dwAttribMask )
+					== (lpFlags->stAttribs.dwAttribMask & lpFlags->stAttribs.dwAttribVal ))
 				{
-					WARN("DEBUG: Cannot allocate memory for ptrNextNode->ptrNext!\n");
-					while (ptrStartNode)
+					ptrNextNode->ptrNext = cmd_alloc(sizeof(DIRFINDLISTNODE));
+					if (ptrNextNode->ptrNext == NULL)
 					{
-						ptrNextNode = ptrStartNode->ptrNext;
-						cmd_free(ptrStartNode);
-						ptrStartNode = ptrNextNode;
-						dwCount --;
+						WARN("DEBUG: Cannot allocate memory for ptrNextNode->ptrNext!\n");
+						while (ptrStartNode)
+						{
+							ptrNextNode = ptrStartNode->ptrNext;
+							cmd_free(ptrStartNode);
+							ptrStartNode = ptrNextNode;
+							dwCount --;
+						}
+						return 1;
 					}
-					return 1;
-				}
 
 				/* If cmd_alloc fails we go to next file in hope it works,
 				   without braking the linked list! */
-				if (ptrNextNode->ptrNext)
-				{
+					if (ptrNextNode->ptrNext)
+					{
 					/* Copy the info of search at linked list */
-					memcpy(&ptrNextNode->ptrNext->stFindInfo,
-					       &wfdFileInfo,
-					       sizeof(WIN32_FIND_DATA));
+						memcpy(&ptrNextNode->ptrNext->stFindInfo,
+								&wfdFileInfo,
+								sizeof(WIN32_FIND_DATA));
 
 					/* If lower case is selected do it here */
-					if (lpFlags->bLowerCase)
-					{
+						if (lpFlags->bLowerCase)
+						{
 						_tcslwr(ptrNextNode->ptrNext->stFindInfo.cAlternateFileName);
 						_tcslwr(ptrNextNode->ptrNext->stFindInfo.cFileName);
-					}
+						}
 
 					/* Continue at next node at linked list */
-					ptrNextNode = ptrNextNode->ptrNext;
-					dwCount ++;
+						ptrNextNode = ptrNextNode->ptrNext;
+						dwCount ++;
 
 					/* Grab statistics */
-					if (wfdFileInfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-					{
+						if (wfdFileInfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+						{
 						/* Directory */
-						dwCountDirs++;
-					}
-					else
-					{
+							dwCountDirs++;
+						}
+						else
+							{
 						/* File */
-						dwCountFiles++;
-						u64Temp.HighPart = wfdFileInfo.nFileSizeHigh;
-						u64Temp.LowPart = wfdFileInfo.nFileSizeLow;
-						u64CountBytes.QuadPart += u64Temp.QuadPart;
+							dwCountFiles++;
+							u64Temp.HighPart = wfdFileInfo.nFileSizeHigh;
+							u64Temp.LowPart = wfdFileInfo.nFileSizeLow;
+							u64CountBytes.QuadPart += u64Temp.QuadPart;
+						}
 					}
 				}
-			}
 		}
 	} while(FindNextFile(hSearch, &wfdFileInfo));
 	FindClose(hSearch);

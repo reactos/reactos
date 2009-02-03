@@ -4,8 +4,6 @@
 /* icons */
 #define IDI_CPLSYSTEM	100
 
-/* dialogs */
-#define IDD_PROPPAGE 200
 /* strings */
 #define IDS_CPLSYSTEMNAME			1001
 #define IDS_CPLSYSTEMDESCRIPTION	2001

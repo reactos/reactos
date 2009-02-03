@@ -114,15 +114,15 @@ IntGdiExtEscape(
    INT    OutSize,
    LPSTR  OutData)
 {
-   BITMAPOBJ *BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
+   SURFACE *psurf = SURFACE_LockSurface(dc->w.hBitmap);
    INT Result;
 
-   /* FIXME - Handle BitmapObj == NULL !!!!!! */
+   /* FIXME - Handle psurf == NULL !!!!!! */
 
    if ( NULL == ((GDIDEVICE *)dc->pPDev)->DriverFunctions.Escape )
    {
       Result = IntEngExtEscape(
-         &BitmapObj->SurfObj,
+         &psurf->SurfObj,
          Escape,
          InSize,
          (PVOID)((ULONG_PTR)InData),
@@ -132,14 +132,14 @@ IntGdiExtEscape(
    else
    {
       Result = ((GDIDEVICE *)dc->pPDev)->DriverFunctions.Escape(
-         &BitmapObj->SurfObj,
+         &psurf->SurfObj,
          Escape,
          InSize,
          (PVOID)InData,
          OutSize,
          (PVOID)OutData );
    }
-   BITMAPOBJ_UnlockBitmap(BitmapObj);
+   SURFACE_UnlockSurface(psurf);
 
    return Result;
 }

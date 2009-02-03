@@ -120,7 +120,7 @@ EXPORTS
   __fpecode @115
   __getmainargs @116
   __initenv @117
-;  __iob_func @118
+  __iob_func @118
   __isascii @119
   __iscsym @120
   __iscsymf @121
@@ -316,7 +316,7 @@ EXPORTS
 ;  _getwche @310
   _getws @311
   _global_unwind2 @312
-;  _gmtime64 @313 ???
+  _gmtime64=gmtime @313
   _heapadd @314
   _heapchk @315
   _heapmin @316
@@ -372,7 +372,7 @@ EXPORTS
   _lfind @366
   _loaddll @367
   _local_unwind2 @368
-;  _localtime64 @369 ???
+  _localtime64 @369
   _lock @370
   _locking @371
   _logb @372
@@ -443,10 +443,10 @@ EXPORTS
   _memccpy @437
   _memicmp @438
   _mkdir @439
-;  _mkgmtime @440
-;  _mkgmtime64 @441
+  _mkgmtime @440
+  _mkgmtime64 @441
   _mktemp @442
-;  _mktime64 @443
+  _mktime64 @443
   _msize @444
   _nextafter @445
   _onexit @446

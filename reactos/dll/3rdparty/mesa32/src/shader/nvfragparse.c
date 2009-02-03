@@ -37,14 +37,14 @@
  * including any use thereof or modifications thereto.
  */
 
-#include "glheader.h"
-#include "context.h"
-#include "imports.h"
-#include "macros.h"
+#include "main/glheader.h"
+#include "main/context.h"
+#include "main/imports.h"
+#include "main/macros.h"
+#include "program.h"
 #include "prog_parameter.h"
 #include "prog_instruction.h"
 #include "nvfragparse.h"
-#include "program.h"
 
 
 #define INPUT_1V     1

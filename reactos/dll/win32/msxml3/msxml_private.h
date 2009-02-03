@@ -54,8 +54,6 @@ extern IUnknown         *create_doc_entity_ref( xmlNodePtr entity );
 
 extern HRESULT queryresult_create( xmlNodePtr, LPWSTR, IXMLDOMNodeList ** );
 
-extern void attach_xmlnode( IXMLDOMNode *node, xmlNodePtr xmlnode );
-
 /* data accessors */
 xmlNodePtr xmlNodePtr_from_domnode( IXMLDOMNode *iface, xmlElementType type );
 
@@ -65,9 +63,10 @@ extern BSTR bstr_from_xmlChar( const xmlChar *buf );
 
 extern LONG xmldoc_add_ref( xmlDocPtr doc );
 extern LONG xmldoc_release( xmlDocPtr doc );
+extern HRESULT xmldoc_add_orphan( xmlDocPtr doc, xmlNodePtr node );
+extern HRESULT xmldoc_remove_orphan( xmlDocPtr doc, xmlNodePtr node );
 
 extern HRESULT XMLElement_create( IUnknown *pUnkOuter, xmlNodePtr node, LPVOID *ppObj );
-extern HRESULT XMLElementCollection_create( IUnknown *pUnkOuter, xmlNodePtr node, LPVOID *ppObj );
 
 extern xmlDocPtr parse_xml(char *ptr, int len);
 
@@ -90,12 +89,32 @@ extern HRESULT DOMDocument_create_from_xmldoc(xmlDocPtr xmldoc, IXMLDOMDocument2
 
 #endif
 
+void* libxslt_handle;
+#ifdef SONAME_LIBXSLT
+# ifdef HAVE_LIBXSLT_PATTERN_H
+#  include <libxslt/pattern.h>
+# endif
+# ifdef HAVE_LIBXSLT_TRANSFORM_H
+#  include <libxslt/transform.h>
+# endif
+# include <libxslt/xsltutils.h>
+# include <libxslt/xsltInternals.h>
+
+# define MAKE_FUNCPTR(f) extern typeof(f) * p##f
+MAKE_FUNCPTR(xsltApplyStylesheet);
+MAKE_FUNCPTR(xsltCleanupGlobals);
+MAKE_FUNCPTR(xsltFreeStylesheet);
+MAKE_FUNCPTR(xsltParseStylesheetDoc);
+# undef MAKE_FUNCPTR
+#endif
+
 extern IXMLDOMParseError *create_parseError( LONG code, BSTR url, BSTR reason, BSTR srcText,
                                              LONG line, LONG linepos, LONG filepos );
 extern HRESULT DOMDocument_create( IUnknown *pUnkOuter, LPVOID *ppObj );
 extern HRESULT SchemaCache_create( IUnknown *pUnkOuter, LPVOID *ppObj );
 extern HRESULT XMLDocument_create( IUnknown *pUnkOuter, LPVOID *ppObj );
 extern HRESULT SAXXMLReader_create(IUnknown *pUnkOuter, LPVOID *ppObj );
+extern HRESULT XMLHTTPRequest_create(IUnknown *pUnkOuter, LPVOID *ppObj);
 
 typedef struct bsc_t bsc_t;
 
@@ -122,6 +141,7 @@ typedef enum tid_t {
     IXMLDOMText_tid,
     IXMLElement_tid,
     IXMLDocument_tid,
+    IXMLHTTPRequest_tid,
     IVBSAXAttributes_tid,
     IVBSAXContentHandler_tid,
     IVBSAXDeclHandler_tid,

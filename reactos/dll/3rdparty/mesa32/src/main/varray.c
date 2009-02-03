@@ -116,6 +116,16 @@ _mesa_VertexPointer(GLint size, GLenum type, GLsizei stride, const GLvoid *ptr)
       case GL_DOUBLE:
          elementSize = size * sizeof(GLdouble);
          break;
+#if FEATURE_fixedpt
+      case GL_FIXED:
+         elementSize = size * sizeof(GLfixed);
+         break;
+#endif
+#if FEATURE_vertex_array_byte
+      case GL_BYTE:
+         elementSize = size * sizeof(GLbyte);
+         break;
+#endif
       default:
          _mesa_error( ctx, GL_INVALID_ENUM, "glVertexPointer(type)" );
          return;
@@ -161,6 +171,11 @@ _mesa_NormalPointer(GLenum type, GLsizei stride, const GLvoid *ptr )
       case GL_DOUBLE:
          elementSize = 3 * sizeof(GLdouble);
          break;
+#if FEATURE_fixedpt
+      case GL_FIXED:
+         elementSize = 3 * sizeof(GLfixed);
+         break;
+#endif
       default:
          _mesa_error( ctx, GL_INVALID_ENUM, "glNormalPointer(type)" );
          return;
@@ -219,6 +234,11 @@ _mesa_ColorPointer(GLint size, GLenum type, GLsizei stride, const GLvoid *ptr)
       case GL_DOUBLE:
          elementSize = size * sizeof(GLdouble);
          break;
+#if FEATURE_fixedpt
+      case GL_FIXED:
+         elementSize = size * sizeof(GLfixed);
+         break;
+#endif
       default:
          _mesa_error( ctx, GL_INVALID_ENUM, "glColorPointer(type)" );
          return;
@@ -400,6 +420,16 @@ _mesa_TexCoordPointer(GLint size, GLenum type, GLsizei stride,
       case GL_DOUBLE:
          elementSize = size * sizeof(GLdouble);
          break;
+#if FEATURE_fixedpt
+      case GL_FIXED:
+         elementSize = size * sizeof(GLfixed);
+         break;
+#endif
+#if FEATURE_vertex_array_byte
+      case GL_BYTE:
+         elementSize = size * sizeof(GLbyte);
+         break;
+#endif
       default:
          _mesa_error( ctx, GL_INVALID_ENUM, "glTexCoordPointer(type)" );
          return;
@@ -430,6 +460,37 @@ _mesa_EdgeFlagPointer(GLsizei stride, const GLvoid *ptr)
 
    if (ctx->Driver.EdgeFlagPointer)
       ctx->Driver.EdgeFlagPointer( ctx, stride, ptr );
+}
+
+
+void GLAPIENTRY
+_mesa_PointSizePointer(GLenum type, GLsizei stride, const GLvoid *ptr)
+{
+   GLsizei elementSize;
+   GET_CURRENT_CONTEXT(ctx);
+   ASSERT_OUTSIDE_BEGIN_END_AND_FLUSH(ctx);
+
+   if (stride < 0) {
+      _mesa_error( ctx, GL_INVALID_VALUE, "glPointSizePointer(stride)" );
+      return;
+   }
+
+   switch (type) {
+      case GL_FLOAT:
+         elementSize = sizeof(GLfloat);
+         break;
+#if FEATURE_fixedpt
+      case GL_FIXED:
+         elementSize = sizeof(GLfixed);
+         break;
+#endif
+      default:
+         _mesa_error( ctx, GL_INVALID_ENUM, "glPointSizePointer(type)" );
+         return;
+   }
+
+   update_array(ctx, &ctx->Array.ArrayObj->PointSize, _NEW_ARRAY_POINT_SIZE,
+                elementSize, 1, type, stride, GL_FALSE, ptr);
 }
 
 
@@ -545,6 +606,11 @@ _mesa_VertexAttribPointerARB(GLuint index, GLint size, GLenum type,
       case GL_DOUBLE:
          elementSize = size * sizeof(GLdouble);
          break;
+#if FEATURE_fixedpt
+      case GL_FIXED:
+         elementSize = size * sizeof(GLfixed);
+         break;
+#endif
       default:
          _mesa_error( ctx, GL_INVALID_ENUM, "glVertexAttribPointerARB(type)" );
          return;

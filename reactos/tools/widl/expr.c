@@ -32,6 +32,7 @@
 #include "utils.h"
 #include "expr.h"
 #include "header.h"
+#include "typetree.h"
 
 expr_t *make_expr(enum expr_type type)
 {
@@ -362,17 +363,14 @@ static type_t *find_identifier(const char *identifier, const type_t *cont_type, 
 
     *found_in_cont_type = 0;
 
-    if (cont_type && (cont_type->type == RPC_FC_FUNCTION || is_struct(cont_type->type)))
-        fields = cont_type->fields_or_args;
-    else if (cont_type && is_union(cont_type->type))
+    if (cont_type)
     {
-        if (cont_type->type == RPC_FC_ENCAPSULATED_UNION)
-        {
-            const var_t *uv = LIST_ENTRY(list_tail(cont_type->fields_or_args), const var_t, entry);
-            fields = uv->type->fields_or_args;
-        }
-        else
-            fields = cont_type->fields_or_args;
+        if (cont_type->type == RPC_FC_FUNCTION)
+            fields = type_function_get_args(cont_type);
+        else if (is_struct(cont_type->type))
+            fields = type_struct_get_fields(cont_type);
+        else if (is_union(cont_type->type))
+            fields = type_union_get_cases(cont_type);
     }
 
     if (fields) LIST_FOR_EACH_ENTRY( field, fields, const var_t, entry )
@@ -471,7 +469,10 @@ static struct expression_type resolve_expression(const struct expr_loc *expr_loc
     case EXPR_PPTR:
         result = resolve_expression(expr_loc, cont_type, e->ref);
         if (result.type && is_ptr(result.type))
-            result.type = result.type->ref;
+            result.type = type_pointer_get_ref(result.type);
+        else if(result.type && is_array(result.type)
+                            && !result.type->declarray)
+            result.type = type_array_get_element(result.type);
         else
             error_loc_info(&expr_loc->v->loc_info, "dereference operator applied to non-pointer type in expression%s%s\n",
                            expr_loc->attr ? " for attribute " : "",
@@ -551,7 +552,7 @@ static struct expression_type resolve_expression(const struct expr_loc *expr_loc
         if (result.type && is_array(result.type))
         {
             struct expression_type index_result;
-            result.type = result.type->ref;
+            result.type = type_array_get_element(result.type);
             index_result = resolve_expression(expr_loc, cont_type /* FIXME */, e->u.ext);
             if (!index_result.type || !is_integer_type(index_result.type))
                 error_loc_info(&expr_loc->v->loc_info, "array subscript not of integral type in expression%s%s\n",
@@ -576,7 +577,7 @@ const type_t *expr_resolve_type(const struct expr_loc *expr_loc, const type_t *c
 
 void write_expr(FILE *h, const expr_t *e, int brackets,
                 int toplevel, const char *toplevel_prefix,
-                const type_t *cont_type)
+                const type_t *cont_type, const char *local_var_prefix)
 {
     switch (e->type)
     {
@@ -602,9 +603,13 @@ void write_expr(FILE *h, const expr_t *e, int brackets,
         {
             int found_in_cont_type;
             find_identifier(e->u.sval, cont_type, &found_in_cont_type);
-            if (found_in_cont_type) fprintf(h, "%s", toplevel_prefix);
+            if (found_in_cont_type)
+            {
+                fprintf(h, "%s%s", toplevel_prefix, e->u.sval);
+                break;
+            }
         }
-        fprintf(h, "%s", e->u.sval);
+        fprintf(h, "%s%s", local_var_prefix, e->u.sval);
         break;
     case EXPR_STRLIT:
         fprintf(h, "\"%s\"", e->u.sval);
@@ -614,33 +619,33 @@ void write_expr(FILE *h, const expr_t *e, int brackets,
         break;
     case EXPR_LOGNOT:
         fprintf(h, "!");
-        write_expr(h, e->ref, 1, toplevel, toplevel_prefix, cont_type);
+        write_expr(h, e->ref, 1, toplevel, toplevel_prefix, cont_type, local_var_prefix);
         break;
     case EXPR_NOT:
         fprintf(h, "~");
-        write_expr(h, e->ref, 1, toplevel, toplevel_prefix, cont_type);
+        write_expr(h, e->ref, 1, toplevel, toplevel_prefix, cont_type, local_var_prefix);
         break;
     case EXPR_POS:
         fprintf(h, "+");
-        write_expr(h, e->ref, 1, toplevel, toplevel_prefix, cont_type);
+        write_expr(h, e->ref, 1, toplevel, toplevel_prefix, cont_type, local_var_prefix);
         break;
     case EXPR_NEG:
         fprintf(h, "-");
-        write_expr(h, e->ref, 1, toplevel, toplevel_prefix, cont_type);
+        write_expr(h, e->ref, 1, toplevel, toplevel_prefix, cont_type, local_var_prefix);
         break;
     case EXPR_ADDRESSOF:
         fprintf(h, "&");
-        write_expr(h, e->ref, 1, toplevel, toplevel_prefix, cont_type);
+        write_expr(h, e->ref, 1, toplevel, toplevel_prefix, cont_type, local_var_prefix);
         break;
     case EXPR_PPTR:
         fprintf(h, "*");
-        write_expr(h, e->ref, 1, toplevel, toplevel_prefix, cont_type);
+        write_expr(h, e->ref, 1, toplevel, toplevel_prefix, cont_type, local_var_prefix);
         break;
     case EXPR_CAST:
         fprintf(h, "(");
         write_type_decl(h, e->u.tref, NULL);
         fprintf(h, ")");
-        write_expr(h, e->ref, 1, toplevel, toplevel_prefix, cont_type);
+        write_expr(h, e->ref, 1, toplevel, toplevel_prefix, cont_type, local_var_prefix);
         break;
     case EXPR_SIZEOF:
         fprintf(h, "sizeof(");
@@ -666,7 +671,7 @@ void write_expr(FILE *h, const expr_t *e, int brackets,
     case EXPR_GTREQL:
     case EXPR_LESSEQL:
         if (brackets) fprintf(h, "(");
-        write_expr(h, e->ref, 1, toplevel, toplevel_prefix, cont_type);
+        write_expr(h, e->ref, 1, toplevel, toplevel_prefix, cont_type, local_var_prefix);
         switch (e->type)
         {
         case EXPR_SHL:          fprintf(h, " << "); break;
@@ -689,38 +694,38 @@ void write_expr(FILE *h, const expr_t *e, int brackets,
         case EXPR_LESSEQL:      fprintf(h, " <= "); break;
         default: break;
         }
-        write_expr(h, e->u.ext, 1, toplevel, toplevel_prefix, cont_type);
+        write_expr(h, e->u.ext, 1, toplevel, toplevel_prefix, cont_type, local_var_prefix);
         if (brackets) fprintf(h, ")");
         break;
     case EXPR_MEMBER:
         if (brackets) fprintf(h, "(");
         if (e->ref->type == EXPR_PPTR)
         {
-            write_expr(h, e->ref->ref, 1, toplevel, toplevel_prefix, cont_type);
+            write_expr(h, e->ref->ref, 1, toplevel, toplevel_prefix, cont_type, local_var_prefix);
             fprintf(h, "->");
         }
         else
         {
-            write_expr(h, e->ref, 1, toplevel, toplevel_prefix, cont_type);
+            write_expr(h, e->ref, 1, toplevel, toplevel_prefix, cont_type, local_var_prefix);
             fprintf(h, ".");
         }
-        write_expr(h, e->u.ext, 1, toplevel, toplevel_prefix, cont_type);
+        write_expr(h, e->u.ext, 1, 0, toplevel_prefix, cont_type, "");
         if (brackets) fprintf(h, ")");
         break;
     case EXPR_COND:
         if (brackets) fprintf(h, "(");
-        write_expr(h, e->ref, 1, toplevel, toplevel_prefix, cont_type);
+        write_expr(h, e->ref, 1, toplevel, toplevel_prefix, cont_type, local_var_prefix);
         fprintf(h, " ? ");
-        write_expr(h, e->u.ext, 1, toplevel, toplevel_prefix, cont_type);
+        write_expr(h, e->u.ext, 1, toplevel, toplevel_prefix, cont_type, local_var_prefix);
         fprintf(h, " : ");
-        write_expr(h, e->ext2, 1, toplevel, toplevel_prefix, cont_type);
+        write_expr(h, e->ext2, 1, toplevel, toplevel_prefix, cont_type, local_var_prefix);
         if (brackets) fprintf(h, ")");
         break;
     case EXPR_ARRAY:
         if (brackets) fprintf(h, "(");
-        write_expr(h, e->ref, 1, toplevel, toplevel_prefix, cont_type);
+        write_expr(h, e->ref, 1, toplevel, toplevel_prefix, cont_type, local_var_prefix);
         fprintf(h, "[");
-        write_expr(h, e->u.ext, 1, toplevel, toplevel_prefix, cont_type);
+        write_expr(h, e->u.ext, 1, 1, toplevel_prefix, cont_type, local_var_prefix);
         fprintf(h, "]");
         if (brackets) fprintf(h, ")");
         break;

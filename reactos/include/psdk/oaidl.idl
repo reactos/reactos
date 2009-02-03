@@ -286,7 +286,7 @@ struct _wireVARIANT {
   [case(VT_DISPATCH|VT_BYREF)] IDispatch **ppdispVal;
   [case(VT_ARRAY|VT_BYREF)]    wireSAFEARRAY *pparray;
   [case(VT_RECORD, VT_RECORD|VT_BYREF)] wireBRECORD brecVal;
-  };
+  } DUMMYUNIONNAME;
 };
 
 /* Dispatch */
@@ -313,7 +313,7 @@ typedef struct tagTYPEDESC {
   [case(VT_CARRAY)]            struct tagARRAYDESC *lpadesc;
   [case(VT_USERDEFINED)]       HREFTYPE hreftype;
   [default]                    ;
-  };
+  } DUMMYUNIONNAME;
   VARTYPE vt;
 } TYPEDESC;
 
@@ -484,7 +484,7 @@ typedef struct tagVARDESC {
   [switch_is(varkind)] union {
   [case(VAR_PERINSTANCE, VAR_DISPATCH, VAR_STATIC)] ULONG oInst;
   [case(VAR_CONST)] VARIANT *lpvarValue;
-  };
+  } DUMMYUNIONNAME;
   ELEMDESC elemdescVar;
   WORD wVarFlags;
   VARKIND varkind;

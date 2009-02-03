@@ -1225,6 +1225,22 @@ XMLPUBFUN int XMLCALL
 					 int deep,
 					 int options);
 
+#ifdef LIBXML_TREE_ENABLED
+/*
+ * 5 interfaces from DOM ElementTraversal, but different in entities
+ * traversal.
+ */
+XMLPUBFUN unsigned long XMLCALL
+            xmlChildElementCount        (xmlNodePtr parent);
+XMLPUBFUN xmlNodePtr XMLCALL
+            xmlNextElementSibling       (xmlNodePtr node);
+XMLPUBFUN xmlNodePtr XMLCALL
+            xmlFirstElementChild        (xmlNodePtr parent);
+XMLPUBFUN xmlNodePtr XMLCALL
+            xmlLastElementChild         (xmlNodePtr parent);
+XMLPUBFUN xmlNodePtr XMLCALL
+            xmlPreviousElementSibling   (xmlNodePtr node);
+#endif
 #ifdef __cplusplus
 }
 #endif

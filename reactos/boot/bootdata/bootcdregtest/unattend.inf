@@ -45,12 +45,10 @@ AutoPartition = 1
 ; yes - disabled
 ; no  - enabled
 DisableVmwInst = yes
-LocaleID = 407
-BootCDRegTestActive = 1
+LocaleID = 409
 
 ; enable this section to automatically launch programs
 ; after 3rd boot
 ;
-; [GuiRunOnce]
-; %SystemRoot%\system32\cmd.exe
-
+[GuiRunOnce]
+%SystemRoot%\system32\rosautotest.exe /s

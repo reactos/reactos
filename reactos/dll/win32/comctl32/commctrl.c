@@ -123,11 +123,11 @@ static const char manifest[] =
 
 static const char manifest_filename[] = ARCH "_" NAME "_" PUBLIC_KEY "_" VERSION "_none_deadbeef.manifest";
 
-LRESULT WINAPI COMCTL32_SubclassProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+static LRESULT WINAPI COMCTL32_SubclassProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-LPWSTR  COMCTL32_wSubclass = NULL;
+static LPWSTR COMCTL32_wSubclass = NULL;
 HMODULE COMCTL32_hModule = 0;
-LANGID  COMCTL32_uiLang = MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL);
+static LANGID COMCTL32_uiLang = MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL);
 HBRUSH  COMCTL32_hPattern55AABrush = NULL;
 COMCTL32_SysColor  comctl32_color;
 
@@ -879,7 +879,7 @@ CreateMappedBitmap (HINSTANCE hInstance, INT_PTR idBitmap, UINT wFlags,
     hglb = LoadResource (hInstance, hRsrc);
     if (hglb == 0)
 	return 0;
-    lpBitmap = (LPBITMAPINFOHEADER)LockResource (hglb);
+    lpBitmap = LockResource (hglb);
     if (lpBitmap == NULL)
 	return 0;
 
@@ -890,7 +890,7 @@ CreateMappedBitmap (HINSTANCE hInstance, INT_PTR idBitmap, UINT wFlags,
     else
         nColorTableSize = 0;
     nSize = lpBitmap->biSize + nColorTableSize * sizeof(RGBQUAD);
-    lpBitmapInfo = (LPBITMAPINFOHEADER)GlobalAlloc (GMEM_FIXED, nSize);
+    lpBitmapInfo = GlobalAlloc (GMEM_FIXED, nSize);
     if (lpBitmapInfo == NULL)
 	return 0;
     RtlMoveMemory (lpBitmapInfo, lpBitmap, nSize);
@@ -933,7 +933,7 @@ CreateMappedBitmap (HINSTANCE hInstance, INT_PTR idBitmap, UINT wFlags,
 	DeleteDC (hdcDst);
     }
     ReleaseDC (NULL, hdcScreen);
-    GlobalFree ((HGLOBAL)lpBitmapInfo);
+    GlobalFree (lpBitmapInfo);
     FreeResource (hglb);
 
     return hbm;
@@ -1118,7 +1118,7 @@ BOOL WINAPI SetWindowSubclass (HWND hWnd, SUBCLASSPROC pfnSubclass,
     * from there. */
 
    /* See if we have been called for this window */
-   stack = (LPSUBCLASS_INFO)GetPropW (hWnd, COMCTL32_wSubclass);
+   stack = GetPropW (hWnd, COMCTL32_wSubclass);
    if (!stack) {
       /* allocate stack */
       stack = Alloc (sizeof(SUBCLASS_INFO));
@@ -1197,7 +1197,7 @@ BOOL WINAPI GetWindowSubclass (HWND hWnd, SUBCLASSPROC pfnSubclass,
    TRACE ("(%p, %p, %lx, %p)\n", hWnd, pfnSubclass, uID, pdwRef);
 
    /* See if we have been called for this window */
-   stack = (LPSUBCLASS_INFO)GetPropW (hWnd, COMCTL32_wSubclass);
+   stack = GetPropW (hWnd, COMCTL32_wSubclass);
    if (!stack)
       return FALSE;
 
@@ -1240,7 +1240,7 @@ BOOL WINAPI RemoveWindowSubclass(HWND hWnd, SUBCLASSPROC pfnSubclass, UINT_PTR u
    TRACE ("(%p, %p, %lx)\n", hWnd, pfnSubclass, uID);
 
    /* Find the Subclass to remove */
-   stack = (LPSUBCLASS_INFO)GetPropW (hWnd, COMCTL32_wSubclass);
+   stack = GetPropW (hWnd, COMCTL32_wSubclass);
    if (!stack)
       return FALSE;
 
@@ -1285,7 +1285,7 @@ BOOL WINAPI RemoveWindowSubclass(HWND hWnd, SUBCLASSPROC pfnSubclass, UINT_PTR u
  * Window procedure for all subclassed windows. 
  * Saves the current subclassing stack position to support nested messages
  */
-LRESULT WINAPI COMCTL32_SubclassProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+static LRESULT WINAPI COMCTL32_SubclassProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
    LPSUBCLASS_INFO stack;
    LPSUBCLASSPROCS proc;
@@ -1293,7 +1293,7 @@ LRESULT WINAPI COMCTL32_SubclassProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
     
    TRACE ("(%p, 0x%08x, 0x%08lx, 0x%08lx)\n", hWnd, uMsg, wParam, lParam);
 
-   stack = (LPSUBCLASS_INFO)GetPropW (hWnd, COMCTL32_wSubclass);
+   stack = GetPropW (hWnd, COMCTL32_wSubclass);
    if (!stack) {
       ERR ("Our sub classing stack got erased for %p!! Nothing we can do\n", hWnd);
       return 0;
@@ -1344,7 +1344,7 @@ LRESULT WINAPI DefSubclassProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
    TRACE ("(%p, 0x%08x, 0x%08lx, 0x%08lx)\n", hWnd, uMsg, wParam, lParam);
 
    /* retrieve our little stack from the Properties */
-   stack = (LPSUBCLASS_INFO)GetPropW (hWnd, COMCTL32_wSubclass);
+   stack = GetPropW (hWnd, COMCTL32_wSubclass);
    if (!stack) {
       ERR ("Our sub classing stack got erased for %p!! Nothing we can do\n", hWnd);
       return 0;
@@ -1560,6 +1560,61 @@ void COMCTL32_EnsureBitmapSize(HBITMAP *pBitmap, int cxMinWidth, int cyMinHeight
     DeleteObject(*pBitmap);    
     *pBitmap = hNewBitmap;
     return;
+}
+
+void COMCTL32_GetFontMetrics(HFONT hFont, TEXTMETRICW *ptm)
+{
+    HDC hdc = GetDC(NULL);
+    HFONT hOldFont;
+
+    hOldFont = SelectObject(hdc, hFont);
+    GetTextMetricsW(hdc, ptm);
+    SelectObject(hdc, hOldFont);
+    ReleaseDC(NULL, hdc);
+}
+
+#ifndef OCM__BASE      /* avoid including olectl.h */
+#define OCM__BASE (WM_USER+0x1c00)
+#endif
+
+/***********************************************************************
+ * COMCTL32_IsReflectedMessage [internal]
+ *
+ * Some parents reflect notify messages - for some messages sent by the child,
+ * they send it back with the message code increased by OCM__BASE (0x2000).
+ * This allows better subclassing of controls. We don't need to handle such
+ * messages but we don't want to print ERRs for them, so this helper function
+ * identifies them.
+ *
+ * Some of the codes are in the CCM_FIRST..CCM_LAST range, but there is no
+ * colision with defined CCM_ codes.
+ */
+BOOL COMCTL32_IsReflectedMessage(UINT uMsg)
+{
+    switch (uMsg)
+    {
+        case OCM__BASE + WM_COMMAND:
+        case OCM__BASE + WM_CTLCOLORBTN:
+        case OCM__BASE + WM_CTLCOLOREDIT:
+        case OCM__BASE + WM_CTLCOLORDLG:
+        case OCM__BASE + WM_CTLCOLORLISTBOX:
+        case OCM__BASE + WM_CTLCOLORMSGBOX:
+        case OCM__BASE + WM_CTLCOLORSCROLLBAR:
+        case OCM__BASE + WM_CTLCOLORSTATIC:
+        case OCM__BASE + WM_DRAWITEM:
+        case OCM__BASE + WM_MEASUREITEM:
+        case OCM__BASE + WM_DELETEITEM:
+        case OCM__BASE + WM_VKEYTOITEM:
+        case OCM__BASE + WM_CHARTOITEM:
+        case OCM__BASE + WM_COMPAREITEM:
+        case OCM__BASE + WM_HSCROLL:
+        case OCM__BASE + WM_VSCROLL:
+        case OCM__BASE + WM_PARENTNOTIFY:
+        case OCM__BASE + WM_NOTIFY:
+            return TRUE;
+        default:
+            return FALSE;
+    }
 }
 
 /***********************************************************************

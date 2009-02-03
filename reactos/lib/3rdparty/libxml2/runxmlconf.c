@@ -12,6 +12,8 @@
 #include <stdio.h>
 #endif
 
+#ifdef LIBXML_XPATH_ENABLED
+
 #if !defined(_WIN32) || defined(__CYGWIN__)
 #include <unistd.h>
 #endif
@@ -605,3 +607,11 @@ main(int argc ATTRIBUTE_UNUSED, char **argv ATTRIBUTE_UNUSED) {
         fclose(logfile);
     return(ret);
 }
+
+#else /* ! LIBXML_XPATH_ENABLED */
+#include <stdio.h>
+int
+main(int argc, char **argv) {
+    fprintf(stderr, "%s need XPath support\n", argv[0]);
+}
+#endif

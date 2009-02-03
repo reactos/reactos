@@ -54,13 +54,11 @@
 #include "editor.h"
 #include "rtf.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(richedit);
-WINE_DECLARE_DEBUG_CHANNEL(richedit_lists);
+WINE_DEFAULT_DEBUG_CHANNEL(richedit_lists);
 
 static ME_DisplayItem* ME_InsertEndParaFromCursor(ME_TextEditor *editor,
                                                   int nCursor,
-                                                  int numCR,
-                                                  int numLF,
+                                                  ME_String *eol_str,
                                                   int paraFlags)
 {
   ME_Style *pStyle = ME_GetInsertStyle(editor, nCursor);
@@ -71,7 +69,7 @@ static ME_DisplayItem* ME_InsertEndParaFromCursor(ME_TextEditor *editor,
     cursor = &editor->pCursors[nCursor];
   }
 
-  tp = ME_SplitParagraph(editor, cursor->pRun, pStyle, numCR, numLF, paraFlags);
+  tp = ME_SplitParagraph(editor, cursor->pRun, pStyle, eol_str, paraFlags);
   cursor->pRun = ME_FindItemFwd(tp, diRun);
   return tp;
 }
@@ -79,7 +77,9 @@ static ME_DisplayItem* ME_InsertEndParaFromCursor(ME_TextEditor *editor,
 ME_DisplayItem* ME_InsertTableRowStartFromCursor(ME_TextEditor *editor)
 {
   ME_DisplayItem *para;
-  para = ME_InsertEndParaFromCursor(editor, 0, 1, 1, MEPF_ROWSTART);
+  WCHAR cr_lf[] = {'\r', '\n', 0};
+  ME_String *eol_str = ME_MakeStringN(cr_lf, 2);
+  para = ME_InsertEndParaFromCursor(editor, 0, eol_str, MEPF_ROWSTART);
   return para->member.para.prev_para;
 }
 
@@ -119,14 +119,18 @@ ME_DisplayItem* ME_InsertTableRowStartAtParagraph(ME_TextEditor *editor,
 ME_DisplayItem* ME_InsertTableCellFromCursor(ME_TextEditor *editor)
 {
   ME_DisplayItem *para;
-  para = ME_InsertEndParaFromCursor(editor, 0, 1, 0, MEPF_CELL);
+  WCHAR cr = '\r';
+  ME_String *eol_str = ME_MakeStringN(&cr, 1);
+  para = ME_InsertEndParaFromCursor(editor, 0, eol_str, MEPF_CELL);
   return para;
 }
 
 ME_DisplayItem* ME_InsertTableRowEndFromCursor(ME_TextEditor *editor)
 {
   ME_DisplayItem *para;
-  para = ME_InsertEndParaFromCursor(editor, 0, 1, 1, MEPF_ROWEND);
+  WCHAR cr_lf[] = {'\r', '\n', 0};
+  ME_String *eol_str = ME_MakeStringN(cr_lf, 2);
+  para = ME_InsertEndParaFromCursor(editor, 0, eol_str, MEPF_ROWEND);
   return para->member.para.prev_para;
 }
 
@@ -176,7 +180,7 @@ void ME_CheckTablesForCorruption(ME_TextEditor *editor)
 {
   if(TRACE_ON(richedit_lists))
   {
-    TRACE_(richedit_lists)("---\n");
+    TRACE("---\n");
     ME_DumpDocument(editor->pBuffer);
   }
 #ifndef NDEBUG
@@ -284,7 +288,7 @@ void ME_ProtectPartialTableDeletion(ME_TextEditor *editor, int nOfs,int *nChars)
                     - end_para->member.para.nCharOfs;
     if (remaining)
     {
-      assert(remaining < c2.pRun->member.run.nCR + c2.pRun->member.run.nLF);
+      assert(remaining < c2.pRun->member.run.strText->nLen);
       end_para = end_para->member.para.next_para;
     }
   }
@@ -332,7 +336,7 @@ void ME_ProtectPartialTableDeletion(ME_TextEditor *editor, int nOfs,int *nChars)
         {
           ME_Run *end_run = &ME_FindItemBack(next_para, diRun)->member.run;
           int nCharsNew = (next_para->member.para.nCharOfs - nOfs
-                           - end_run->nCR - end_run->nLF);
+                           - end_run->strText->nLen);
           nCharsNew = max(nCharsNew, 0);
           assert(nCharsNew <= *nChars);
           *nChars = nCharsNew;
@@ -582,7 +586,7 @@ void ME_TabPressedInTable(ME_TextEditor *editor, BOOL bSelectedRow)
   }
   ME_InvalidateSelection(editor);
   ME_Repaint(editor);
-  HideCaret(editor->hWnd);
+  ITextHost_TxShowCaret(editor->texthost, FALSE);
   ME_ShowCaret(editor);
   ME_SendSelChange(editor);
 }

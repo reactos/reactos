@@ -470,7 +470,7 @@ ROSDATA KBDTABLES keyboard_layout_table = {
 
   MAKELONG(1,1), /* Version 1.0 */
 
-  /* Ligatures -- German doesn't have any */
+  /* Ligatures -- Swedish doesn't have any */
   0,
   0,
   NULL

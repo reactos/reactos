@@ -1,3 +1,128 @@
+Sun Jan 18 22:37:59 CET 2009 Daniel Veillard <daniel@veillard.com>
+
+	* configure.in doc/xml.html doc/*: preparing 0.7.3 release
+	* include/libxml/parserInternals.h SAX2.c: fix a typo in an name
+
+Sun Jan 18 21:48:28 CET 2009 Daniel Veillard <daniel@veillard.com>
+
+	* include/libxml/parser.h include/libxml/xmlwriter.h
+	  include/libxml/relaxng.h include/libxml/xmlversion.h.in
+	  include/libxml/xmlwin32version.h.in include/libxml/valid.h
+	  include/libxml/xmlschemas.h include/libxml/xmlerror.h:
+	  port patch from Marcus Meissner to add gcc checking for
+	  printf like functions parameters, should fix #65068
+	* doc/apibuild.py doc/*: modified the script accordingly
+	  and regenerated
+	* xpath.c xmlmemory.c threads.c: fix a few warnings
+
+Sun Jan 18 20:40:42 CET 2009 Daniel Veillard <daniel@veillard.com>
+
+	* include/libxml/xmlwin32version.h.in: windows header should
+	  get the same define
+
+Sun Jan 18 18:22:33 CET 2009 Daniel Veillard <daniel@veillard.com>
+
+	* include/libxml/xmlversion.h.in include/libxml/xmlmemory.h:
+	  apply patch from Marcus Meissner to add gcc attribute alloc_size
+	  should fix #552505
+	* doc/apibuild.py doc/* testapi.c: regenerate the API
+	* include/libxml/parserInternals.h: fix a comment problem raised
+	  by apibuild.py
+
+Sun Jan 18 16:39:01 CET 2009 Daniel Veillard <daniel@veillard.com>
+
+	* threads.c: also remove pthread key when stopping thread
+	  support, patch based on Alex Ott one should fix #564723
+
+Sun Jan 18 15:55:18 CET 2009 Daniel Veillard <daniel@veillard.com>
+
+	* threads.c: patch from Daniel Zimmermann fixing a memory leak
+	  in an edge case, solves #562230
+
+Sun Jan 18 15:06:05 CET 2009 Daniel Veillard <daniel@veillard.com>
+
+	* include/libxml/parserInternals.h SAX2.c: add a new define
+	  XML_MAX_TEXT_LENGTH limiting the maximum size of a single text
+	  node, the defaultis 10MB and can be removed with the HUGE
+	  parsing option
+
+Mon Jan 05 18:28:41 CET 2009 Rob Richards <rrichards@cdatazone.org>
+
+	* include/libxml/parser.h parser.c: add XML_PARSE_OLDSAX parser 
+	  option to enable pre 2.7 SAX behavior.
+
+Wed Dec 31 23:11:37 CET 2008 Rob Richards <rrichards@cdatazone.org>
+
+	* tree.c: set doc on last child tree in xmlAddChildList for 
+	  bug #546772. Fix problem adding an attribute via with xmlAddChild 
+	  reported by Kris Breuker.
+
+Sun Dec 27 14:16:13 CET 2008 Rob Richards <rrichards@cdatazone.org>
+
+	* xmlwriter.c: fix indenting in xmlTextWriterFullEndElement for 
+	  bug# 554353.
+
+Thu Nov 27 16:24:52 CET 2008 Daniel Veillard <daniel@veillard.com>
+
+	* include/libxml/tree.h tree.c python/generator.py: adds
+	  element traversal support
+	* valid.c: avoid a warning
+	* doc/*: regenerated
+
+Mon Nov 17 16:56:18 CET 2008 Daniel Veillard <daniel@veillard.com>
+
+	* SAX2.c parser.c: fix for CVE-2008-4226, a memory overflow
+	  when building gigantic text nodes, and a bit of cleanup
+	  to better handled out of memory problem in that code.
+	* tree.c: fix for CVE-2008-4225, lack of testing leads to
+	  a busy loop test assuming one have enough core memory.
+
+Thu Nov  6 14:34:35 CET 2008 Daniel Veillard <daniel@veillard.com>
+
+	* xmllint.c: Matthias Kaehlcke reported a build problem when
+	  not compiling HTML support in.
+
+Fri Oct 17 15:24:08 CEST 2008 Daniel Veillard <daniel@veillard.com>
+
+	* configure.in doc/Makefile.am: patch from Adrian Bunk which
+	  adds --disable-rebuild-docs to avoid rebuilding them
+
+Fri Oct  3 09:43:45 CEST 2008 Daniel Veillard <daniel@veillard.com>
+
+	* configure.in doc/* NEWS: preparing the release of 2.7.2
+	* dict.c: fix the Solaris portability issue
+	* parser.c: additional cleanup on #554660 fix
+	* test/ent13 result/ent13* result/noent/ent13*: added the
+	  example in the regression test suite.
+	* HTMLparser.c: handle leading BOM in htmlParseElement()
+
+Thu Oct  2 22:53:39 CEST 2008 Daniel Veillard <daniel@veillard.com>
+
+	* parser.c: fix a nasty bug introduced when cleaning up
+	  entities processing in 2.7.x , fixes #554660
+
+Thu Sep 25 18:04:20 CEST 2008 Daniel Veillard <daniel@veillard.com>
+
+	* HTMLparser.c: fix an HTML parsing error on large data sections
+	  reported by Mike Day
+	* test/HTML/utf8bug.html result/HTML/utf8bug.html.err
+	  result/HTML/utf8bug.html.sax result/HTML/utf8bug.html: add the
+	  reproducer to the test suite
+
+Thu Sep 25 17:35:57 CEST 2008 Daniel Veillard <daniel@veillard.com>
+
+	* runxmlconf.c: fix compilation if XPath is not included
+
+Thu Sep 25 16:54:04 CEST 2008 Daniel Veillard <daniel@veillard.com>
+
+	* xmlreader.c: patch from Riccardo Scussat fixing custom error
+	  handlers problems.
+
+Thu Sep 25 16:30:11 CEST 2008 Daniel Veillard <daniel@veillard.com>
+
+	* include/libxml/xmlsave.h xmlsave.c: new options to serialize
+	  as XML/HTML/XHTML and restore old entry point behaviours
+
 Mon Sep  1 16:49:05 CEST 2008 Daniel Veillard <daniel@veillard.com>
 
 	* doc/xml.html doc/news.html configure.in python/setup.py NEWS:

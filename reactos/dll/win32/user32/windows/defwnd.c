@@ -113,6 +113,22 @@ SetSysColors(
   return NtUserSetSysColors(cElements, lpaElements, lpaRgbValues, 0);
 }
 
+BOOL
+FASTCALL
+DefSetText(HWND hWnd, PCWSTR String, BOOL Ansi)
+{
+  LARGE_STRING lsString;
+
+  if ( String )
+  {
+     if ( Ansi )
+        RtlInitLargeAnsiString((PLARGE_ANSI_STRING)&lsString, (PCSZ)String, 0);
+     else
+        RtlInitLargeUnicodeString((PLARGE_UNICODE_STRING)&lsString, String, 0);
+  }
+  return NtUserDefSetText(hWnd, (String ? &lsString : NULL));
+}
+
 void
 UserGetInsideRectNC(PWINDOW Wnd, RECT *rect)
 {
@@ -1853,21 +1869,11 @@ DefWindowProcA(HWND hWnd,
     {
         case WM_NCCREATE:
         {
-            ANSI_STRING AnsiString;
-            UNICODE_STRING UnicodeString;
             LPCREATESTRUCTA cs = (LPCREATESTRUCTA)lParam;
             /* check for string, as static icons, bitmaps (SS_ICON, SS_BITMAP)
              * may have child window IDs instead of window name */
 
-            if(cs->lpszName)
-            {
-                RtlInitAnsiString(&AnsiString, (LPSTR)cs->lpszName);
-                RtlAnsiStringToUnicodeString(&UnicodeString, &AnsiString, TRUE);
-                NtUserDefSetText(hWnd, &UnicodeString);
-                RtlFreeUnicodeString(&UnicodeString);
-            }
-            else
-                NtUserDefSetText(hWnd, NULL);
+             DefSetText(hWnd, (PCWSTR)cs->lpszName, TRUE);
 
             Result = 1;
             break;
@@ -1933,18 +1939,7 @@ DefWindowProcA(HWND hWnd,
 
         case WM_SETTEXT:
         {
-            ANSI_STRING AnsiString;
-            UNICODE_STRING UnicodeString;
-
-            if(lParam)
-            {
-                RtlInitAnsiString(&AnsiString, (LPSTR)lParam);
-                RtlAnsiStringToUnicodeString(&UnicodeString, &AnsiString, TRUE);
-                NtUserDefSetText(hWnd, &UnicodeString);
-                RtlFreeUnicodeString(&UnicodeString);
-            }
-            else
-                NtUserDefSetText(hWnd, NULL);
+            DefSetText(hWnd, (PCWSTR)lParam, TRUE);
 
             if ((GetWindowLongW(hWnd, GWL_STYLE) & WS_CAPTION) == WS_CAPTION)
             {
@@ -2023,15 +2018,11 @@ DefWindowProcW(HWND hWnd,
     {
         case WM_NCCREATE:
         {
-            UNICODE_STRING UnicodeString;
             LPCREATESTRUCTW cs = (LPCREATESTRUCTW)lParam;
             /* check for string, as static icons, bitmaps (SS_ICON, SS_BITMAP)
              * may have child window IDs instead of window name */
 
-            if(cs->lpszName)
-                RtlInitUnicodeString(&UnicodeString, (LPWSTR)cs->lpszName);
-
-            NtUserDefSetText(hWnd, (cs->lpszName ? &UnicodeString : NULL));
+            DefSetText(hWnd, cs->lpszName, FALSE);
             Result = 1;
             break;
         }
@@ -2090,12 +2081,7 @@ DefWindowProcW(HWND hWnd,
 
         case WM_SETTEXT:
         {
-            UNICODE_STRING UnicodeString;
-
-            if(lParam)
-                RtlInitUnicodeString(&UnicodeString, (LPWSTR)lParam);
-
-            NtUserDefSetText(hWnd, (lParam ? &UnicodeString : NULL));
+            DefSetText(hWnd, (PCWSTR)lParam, FALSE);
 
             if ((GetWindowLongW(hWnd, GWL_STYLE) & WS_CAPTION) == WS_CAPTION)
             {

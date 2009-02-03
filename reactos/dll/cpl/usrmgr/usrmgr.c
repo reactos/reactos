@@ -2,7 +2,7 @@
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS User Manager Control Panel
- * FILE:            dll/cpl/usrmgr/extra.c
+ * FILE:            dll/cpl/usrmgr/usrmgr.c
  * PURPOSE:         Main functions
  *
  * PROGRAMMERS:     Eric Kohl

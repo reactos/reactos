@@ -175,11 +175,18 @@ struct oletls
     struct apartment *apt;
     IErrorInfo       *errorinfo;   /* see errorinfo.c */
     IUnknown         *state;       /* see CoSetState */
+    DWORD             apt_mask;    /* apartment mask (+0Ch on x86) */
+    IInitializeSpy   *spy;         /* The "SPY" from CoInitializeSpy */
     DWORD            inits;        /* number of times CoInitializeEx called */
     DWORD            ole_inits;    /* number of times OleInitialize called */
     GUID             causality_id; /* unique identifier for each COM call */
     LONG             pending_call_count_client; /* number of client calls pending */
     LONG             pending_call_count_server; /* number of server calls pending */
+    DWORD            unknown;
+    ULONG_PTR        context_token; /* (+38h on x86) */
+    IUnknown        *call_state;    /* current call context (+3Ch on x86) */
+    DWORD            unknown2[46];
+    IUnknown        *cancel_object; /* cancel object set by CoSetCancelObject (+F8h on x86) */
 };
 
 
@@ -211,7 +218,6 @@ struct stub_manager *get_stub_manager_from_object(APARTMENT *apt, void *object);
 BOOL stub_manager_notify_unmarshal(struct stub_manager *m, const IPID *ipid);
 BOOL stub_manager_is_table_marshaled(struct stub_manager *m, const IPID *ipid);
 void stub_manager_release_marshal_data(struct stub_manager *m, ULONG refs, const IPID *ipid, BOOL tableweak);
-HRESULT ipid_to_stub_manager(const IPID *ipid, APARTMENT **stub_apt, struct stub_manager **stubmgr_ret);
 HRESULT ipid_get_dispatch_params(const IPID *ipid, APARTMENT **stub_apt, IRpcStubBuffer **stub, IRpcChannelBuffer **chan, IID *iid, IUnknown **iface);
 HRESULT start_apartment_remote_unknown(void);
 
@@ -302,11 +308,15 @@ static inline GUID COM_CurrentCausalityId(void)
 # define DEBUG_SET_CRITSEC_NAME(cs, name) (cs)->DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": " name)
 # define DEBUG_CLEAR_CRITSEC_NAME(cs) (cs)->DebugInfo->Spare[0] = 0
 
-extern HINSTANCE OLE32_hInstance; /* FIXME: make static */
-
 #define CHARS_IN_GUID 39 /* including NULL */
 
 #define WINE_CLSCTX_DONT_HOST   0x80000000
+
+/* from dlldata.c */
+extern HINSTANCE hProxyDll DECLSPEC_HIDDEN;
+extern HRESULT WINAPI OLE32_DllGetClassObject(REFCLSID rclsid, REFIID iid,LPVOID *ppv) DECLSPEC_HIDDEN;
+extern HRESULT WINAPI OLE32_DllRegisterServer(void) DECLSPEC_HIDDEN;
+extern HRESULT WINAPI OLE32_DllUnregisterServer(void) DECLSPEC_HIDDEN;
 
 /* Exported non-interface Data Advise Holder functions */
 HRESULT DataAdviseHolder_OnConnect(IDataAdviseHolder *iface, IDataObject *pDelegate);

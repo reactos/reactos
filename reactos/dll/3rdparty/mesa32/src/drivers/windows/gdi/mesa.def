@@ -867,6 +867,7 @@ EXPORTS
 	_glapi_get_proc_address
 	_mesa_add_soft_renderbuffers
 	_mesa_add_renderbuffer
+	_mesa_begin_query
 	_mesa_buffer_data
 	_mesa_buffer_get_subdata
 	_mesa_buffer_map
@@ -881,6 +882,7 @@ EXPORTS
 	_mesa_delete_array_object
 	_mesa_delete_buffer_object
 	_mesa_delete_program
+	_mesa_delete_query
 	_mesa_delete_texture_object
 	_mesa_destroy_framebuffer
 	_mesa_destroy_visual
@@ -890,6 +892,7 @@ EXPORTS
 	_mesa_enable_2_0_extensions
 	_mesa_enable_2_1_extensions
 	_mesa_enable_sw_extensions
+	_mesa_end_query
 	_mesa_error
 	_mesa_finish_render_texture
 	_mesa_framebuffer_renderbuffer
@@ -941,6 +944,7 @@ EXPORTS
 	_mesa_update_framebuffer_visual
 	_mesa_use_program
 	_mesa_Viewport
+	_mesa_wait_query
 	_swrast_Accum
 	_swrast_Bitmap
 	_swrast_BlitFramebuffer
@@ -973,3 +977,4 @@ EXPORTS
 	_tnl_InvalidateState
 	_tnl_run_pipeline
 	_tnl_program_string
+	_tnl_RasterPos

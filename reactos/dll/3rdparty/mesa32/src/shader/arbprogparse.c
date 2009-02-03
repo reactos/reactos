@@ -32,14 +32,14 @@
 
 #include "main/glheader.h"
 #include "main/imports.h"
+#include "main/context.h"
+#include "main/macros.h"
+#include "main/mtypes.h"
 #include "shader/grammar/grammar_mesa.h"
 #include "arbprogparse.h"
 #include "program.h"
 #include "prog_parameter.h"
 #include "prog_statevars.h"
-#include "context.h"
-#include "macros.h"
-#include "mtypes.h"
 #include "prog_instruction.h"
 
 
@@ -963,6 +963,8 @@ parse_output_color_num (GLcontext * ctx, const GLubyte ** inst,
 
 
 /**
+ * Validate the index of a texture coordinate
+ *
  * \param coord The texture unit index
  * \return 0 on sucess, 1 on error
  */
@@ -972,14 +974,37 @@ parse_texcoord_num (GLcontext * ctx, const GLubyte ** inst,
 {
    GLint i = parse_integer (inst, Program);
 
-   if ((i < 0) || (i >= (int)ctx->Const.MaxTextureUnits)) {
-      program_error(ctx, Program->Position, "Invalid texture unit index");
+   if ((i < 0) || (i >= (int)ctx->Const.MaxTextureCoordUnits)) {
+      program_error(ctx, Program->Position, "Invalid texture coordinate index");
       return 1;
    }
 
    *coord = (GLuint) i;
    return 0;
 }
+
+
+/**
+ * Validate the index of a texture image unit
+ *
+ * \param coord The texture unit index
+ * \return 0 on sucess, 1 on error
+ */
+static GLuint
+parse_teximage_num (GLcontext * ctx, const GLubyte ** inst,
+                    struct arb_program *Program, GLuint * coord)
+{
+   GLint i = parse_integer (inst, Program);
+
+   if ((i < 0) || (i >= (int)ctx->Const.MaxTextureImageUnits)) {
+      program_error(ctx, Program->Position, "Invalid texture image index");
+      return 1;
+   }
+
+   *coord = (GLuint) i;
+   return 0;
+}
+
 
 /**
  * \param coord The weight index
@@ -3003,7 +3028,7 @@ parse_fp_instruction (GLcontext * ctx, const GLubyte ** inst,
             return 1;
 
          /* texImageUnit */
-         if (parse_texcoord_num (ctx, inst, Program, &texcoord))
+         if (parse_teximage_num (ctx, inst, Program, &texcoord))
             return 1;
          fp->TexSrcUnit = texcoord;
 
@@ -3863,6 +3888,9 @@ _mesa_parse_arb_fragment_program(GLcontext* ctx, GLenum target,
    program->FogOption          = ap.FogOption;
    program->UsesKill          = ap.UsesKill;
 
+   if (program->FogOption)
+      program->Base.InputsRead |= FRAG_BIT_FOGC;
+      
    if (program->Base.Instructions)
       _mesa_free(program->Base.Instructions);
    program->Base.Instructions = ap.Base.Instructions;

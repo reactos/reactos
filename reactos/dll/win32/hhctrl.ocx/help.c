@@ -825,7 +825,7 @@ static BOOL HH_CreateHelpWindow(HHInfo *info)
 
     /* Read in window parameters if available */
     if (info->WinType.fsValidMembers & HHWIN_PARAM_STYLES)
-        dwStyles = info->WinType.dwStyles;
+        dwStyles = info->WinType.dwStyles | WS_OVERLAPPEDWINDOW;
     else
         dwStyles = WS_OVERLAPPEDWINDOW | WS_VISIBLE |
                    WS_CLIPSIBLINGS | WS_CLIPCHILDREN;

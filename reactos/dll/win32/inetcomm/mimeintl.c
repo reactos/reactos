@@ -119,7 +119,7 @@ static HRESULT WINAPI MimeInternat_SetDefaultCharset(IMimeInternational *iface, 
     if(hCharset == NULL) return E_INVALIDARG;
     /* FIXME check hCharset is valid */
 
-    InterlockedExchangePointer(&This->default_charset, hCharset);
+    (void)InterlockedExchangePointer(&This->default_charset, hCharset);
 
     return S_OK;
 }
@@ -136,7 +136,7 @@ static HRESULT WINAPI MimeInternat_GetDefaultCharset(IMimeInternational *iface, 
         HCHARSET hcs;
         hr = IMimeInternational_GetCodePageCharset(iface, GetACP(), CHARSET_BODY, &hcs);
         if(SUCCEEDED(hr))
-            InterlockedCompareExchangePointer(&This->default_charset, hcs, NULL);
+            (void)InterlockedCompareExchangePointer(&This->default_charset, hcs, NULL);
     }
     *phCharset = This->default_charset;
 

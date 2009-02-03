@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.1
+ * Version:  7.3
  *
- * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2008  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -180,20 +180,24 @@ do {						\
  */
 /*@{*/
 
-#define PACK_COLOR_8888( R, G, B, A )					\
-   (((R) << 24) | ((G) << 16) | ((B) << 8) | (A))
+#define PACK_COLOR_8888( X, Y, Z, W ) \
+   (((X) << 24) | ((Y) << 16) | ((Z) << 8) | (W))
 
-#define PACK_COLOR_8888_REV( R, G, B, A )				\
-   (((A) << 24) | ((B) << 16) | ((G) << 8) | (R))
+#define PACK_COLOR_8888_REV( X, Y, Z, W ) \
+   (((W) << 24) | ((Z) << 16) | ((Y) << 8) | (X))
 
-#define PACK_COLOR_888( R, G, B )					\
-   (((R) << 16) | ((G) << 8) | (B))
+#define PACK_COLOR_888( X, Y, Z ) \
+   (((X) << 16) | ((Y) << 8) | (Z))
 
-#define PACK_COLOR_565( R, G, B )					\
-   ((((R) & 0xf8) << 8) | (((G) & 0xfc) << 3) | (((B) & 0xf8) >> 3))
+#define PACK_COLOR_565( X, Y, Z )                                  \
+   ((((X) & 0xf8) << 8) | (((Y) & 0xfc) << 3) | (((Z) & 0xf8) >> 3))
 
-#define PACK_COLOR_565_REV( R, G, B )					\
-   (((R) & 0xf8) | ((G) & 0xe0) >> 5 | (((G) & 0x1c) << 11) | (((B) & 0xf8) << 5))
+#define PACK_COLOR_565_REV( X, Y, Z ) \
+   (((X) & 0xf8) | ((Y) & 0xe0) >> 5 | (((Y) & 0x1c) << 11) | (((Z) & 0xf8) << 5))
+
+#define PACK_COLOR_5551( R, G, B, A )					\
+   ((((R) & 0xf8) << 8) | (((G) & 0xf8) << 3) | (((B) & 0xf8) >> 2) |	\
+    ((A) ? 1 : 0))
 
 #define PACK_COLOR_1555( A, B, G, R )					\
    ((((B) & 0xf8) << 7) | (((G) & 0xf8) << 2) | (((R) & 0xf8) >> 3) |	\

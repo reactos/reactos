@@ -268,7 +268,6 @@ GpStatus WINGDIPAPI GdipCombineRegionPath(GpRegion *region, GpPath *path, Combin
 
 out:
     GdipFree(left);
-    delete_element(right);
     GdipDeleteRegion(path_region);
     return stat;
 }
@@ -315,7 +314,6 @@ GpStatus WINGDIPAPI GdipCombineRegionRect(GpRegion *region,
 
 out:
     GdipFree(left);
-    delete_element(right);
     GdipDeleteRegion(rect_region);
     return stat;
 }
@@ -373,7 +371,6 @@ GpStatus WINGDIPAPI GdipCombineRegionRegion(GpRegion *region1,
     if (stat != Ok)
     {
         GdipFree(left);
-        delete_element(right);
         return OutOfMemory;
     }
 

@@ -529,7 +529,7 @@ EXPORTS
   _strrev @523
   _strset @524
   _strtime @525
-;  _strtoi64 @526
+  _strtoi64 @526
   _strtoui64=strtoull @527
   _strupr @528
   _swab @529
@@ -577,8 +577,8 @@ EXPORTS
   _wcsnset @571
   _wcsrev @572
   _wcsset @573
-;  _wcstoi64 @574
-;  _wcstoui64 @575
+  _wcstoi64 @574
+  _wcstoui64 @575
   _wcsupr @576
   _wctime @577
 ;  _wctime64 @578
@@ -847,4 +847,6 @@ EXPORTS
   wprintf @841
   wscanf @842
 
+  _mbsnbcpy_s
+  
   _swprintf=swprintf

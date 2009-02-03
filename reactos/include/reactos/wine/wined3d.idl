@@ -74,6 +74,7 @@ cpp_quote("#define WINED3DERR_INVALIDCALL                      MAKE_WINED3DHRESU
 cpp_quote("#define WINED3DERR_DRIVERINVALIDCALL                MAKE_WINED3DHRESULT(2157)")
 cpp_quote("#define WINED3DERR_WASSTILLDRAWING                  MAKE_WINED3DHRESULT(540)")
 cpp_quote("#define WINEDDERR_NOTAOVERLAYSURFACE                MAKE_WINED3DHRESULT(580)")
+cpp_quote("#define WINEDDERR_NOTLOCKED                         MAKE_WINED3DHRESULT(584)")
 cpp_quote("#define WINEDDERR_NODC                              MAKE_WINED3DHRESULT(586)")
 cpp_quote("#define WINEDDERR_DCALREADYCREATED                  MAKE_WINED3DHRESULT(620)")
 cpp_quote("#define WINEDDERR_NOTFLIPPABLE                      MAKE_WINED3DHRESULT(582)")
@@ -554,35 +555,24 @@ typedef enum _WINED3DMULTISAMPLE_TYPE
 
 typedef enum _WINED3DTEXTURESTAGESTATETYPE
 {
-    WINED3DTSS_COLOROP                      = 1,
-    WINED3DTSS_COLORARG1                    = 2,
-    WINED3DTSS_COLORARG2                    = 3,
-    WINED3DTSS_ALPHAOP                      = 4,
-    WINED3DTSS_ALPHAARG1                    = 5,
-    WINED3DTSS_ALPHAARG2                    = 6,
-    WINED3DTSS_BUMPENVMAT00                 = 7,
-    WINED3DTSS_BUMPENVMAT01                 = 8,
-    WINED3DTSS_BUMPENVMAT10                 = 9,
-    WINED3DTSS_BUMPENVMAT11                 = 10,
-    WINED3DTSS_TEXCOORDINDEX                = 11,
-    WINED3DTSS_ADDRESS                      = 12,
-    WINED3DTSS_ADDRESSU                     = 13,
-    WINED3DTSS_ADDRESSV                     = 14,
-    WINED3DTSS_BORDERCOLOR                  = 15,
-    WINED3DTSS_MAGFILTER                    = 16,
-    WINED3DTSS_MINFILTER                    = 17,
-    WINED3DTSS_MIPFILTER                    = 18,
-    WINED3DTSS_MIPMAPLODBIAS                = 19,
-    WINED3DTSS_MAXMIPLEVEL                  = 20,
-    WINED3DTSS_MAXANISOTROPY                = 21,
-    WINED3DTSS_BUMPENVLSCALE                = 22,
-    WINED3DTSS_BUMPENVLOFFSET               = 23,
-    WINED3DTSS_TEXTURETRANSFORMFLAGS        = 24,
-    WINED3DTSS_ADDRESSW                     = 25,
-    WINED3DTSS_COLORARG0                    = 26,
-    WINED3DTSS_ALPHAARG0                    = 27,
-    WINED3DTSS_RESULTARG                    = 28,
-    WINED3DTSS_CONSTANT                     = 32,
+    WINED3DTSS_COLOROP                      = 0,
+    WINED3DTSS_COLORARG1                    = 1,
+    WINED3DTSS_COLORARG2                    = 2,
+    WINED3DTSS_ALPHAOP                      = 3,
+    WINED3DTSS_ALPHAARG1                    = 4,
+    WINED3DTSS_ALPHAARG2                    = 5,
+    WINED3DTSS_BUMPENVMAT00                 = 6,
+    WINED3DTSS_BUMPENVMAT01                 = 7,
+    WINED3DTSS_BUMPENVMAT10                 = 8,
+    WINED3DTSS_BUMPENVMAT11                 = 9,
+    WINED3DTSS_TEXCOORDINDEX                = 10,
+    WINED3DTSS_BUMPENVLSCALE                = 11,
+    WINED3DTSS_BUMPENVLOFFSET               = 12,
+    WINED3DTSS_TEXTURETRANSFORMFLAGS        = 13,
+    WINED3DTSS_COLORARG0                    = 14,
+    WINED3DTSS_ALPHAARG0                    = 15,
+    WINED3DTSS_RESULTARG                    = 16,
+    WINED3DTSS_CONSTANT                     = 17,
     WINED3DTSS_FORCE_DWORD                  = 0x7fffffff
 } WINED3DTEXTURESTAGESTATETYPE;
 const UINT WINED3D_HIGHEST_TEXTURE_STATE    = WINED3DTSS_CONSTANT;
@@ -889,7 +879,7 @@ const UINT WINED3DCLIPPLANE5                                    = (1 << 5);
 
 /* FVF (Flexible Vertex Format) codes */
 const UINT WINED3DFVF_RESERVED0                                 = 0x0001;
-const UINT WINED3DFVF_POSITION_MASK                             = 0x000e;
+const UINT WINED3DFVF_POSITION_MASK                             = 0x400e;
 const UINT WINED3DFVF_XYZ                                       = 0x0002;
 const UINT WINED3DFVF_XYZRHW                                    = 0x0004;
 const UINT WINED3DFVF_XYZB1                                     = 0x0006;
@@ -1890,10 +1880,13 @@ typedef struct WineDirect3DVertexStridedData
             WineDirect3DStridedData sample;
 
             /* Add fields here */
-            BOOL position_transformed;
         } s;
         WineDirect3DStridedData input[16];  /* Indexed by constants in D3DVSDE_REGISTER */
     } u;
+
+    BOOL position_transformed;
+    WORD swizzle_map;       /* MAX_ATTRIBS, 16 */
+    WORD use_map;           /* MAX_ATTRIBS, 16 */
 } WineDirect3DVertexStridedData;
 
 typedef struct _WINED3DVSHADERCAPS2_0
@@ -2116,22 +2109,65 @@ interface IWineD3DVolume;
 interface IWineD3DSwapChain;
 interface IWineD3DDevice;
 
-typedef HRESULT (*D3DCB_CREATESURFACEFN)(IUnknown *pDevice, IUnknown *pSuperior, UINT Width,
-        UINT Height, WINED3DFORMAT Format, DWORD Usage, WINED3DPOOL Pool, UINT Level, WINED3DCUBEMAP_FACES Face,
-        IWineD3DSurface **ppSurface, HANDLE *pSharedHandle);
-typedef HRESULT (*D3DCB_CREATERENDERTARGETFN)(IUnknown *pDevice, IUnknown *pSuperior, UINT Width,
-        UINT Height, WINED3DFORMAT Format, WINED3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality,
-        BOOL Lockable, IWineD3DSurface **ppSurface, HANDLE *pSharedHandle);
-typedef HRESULT (*D3DCB_CREATEDEPTHSTENCILSURFACEFN)(IUnknown *pDevice, IUnknown *pSuperior, UINT Width,
-        UINT Height, WINED3DFORMAT Format, WINED3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality,
-        BOOL Discard, IWineD3DSurface **ppSurface, HANDLE *pSharedHandle);
+[
+    object,
+    local,
+    uuid(aeb62dfc-bdcb-4f02-9519-1eeea00c15cd)
+]
+interface IWineD3DDeviceParent : IUnknown
+{
+    HRESULT CreateSurface(
+        [in] IUnknown *superior,
+        [in] UINT width,
+        [in] UINT height,
+        [in] WINED3DFORMAT format,
+        [in] DWORD usage,
+        [in] WINED3DPOOL pool,
+        [in] UINT level,
+        [in] WINED3DCUBEMAP_FACES face,
+        [out] IWineD3DSurface **surface
+    );
+
+    HRESULT CreateRenderTarget(
+        [in] IUnknown *superior,
+        [in] UINT width,
+        [in] UINT height,
+        [in] WINED3DFORMAT format,
+        [in] WINED3DMULTISAMPLE_TYPE multisample_type,
+        [in] DWORD multisample_quality,
+        [in] BOOL lockable,
+        [out] IWineD3DSurface **surface
+    );
+
+    HRESULT CreateDepthStencilSurface(
+        [in] IUnknown *superior,
+        [in] UINT width,
+        [in] UINT height,
+        [in] WINED3DFORMAT format,
+        [in] WINED3DMULTISAMPLE_TYPE multisample_type,
+        [in] DWORD multisample_quality,
+        [in] BOOL discard,
+        [out] IWineD3DSurface **surface
+    );
+
+    HRESULT CreateVolume(
+        [in] IUnknown *superior,
+        [in] UINT width,
+        [in] UINT height,
+        [in] UINT depth,
+        [in] WINED3DFORMAT format,
+        [in] WINED3DPOOL pool,
+        [in] DWORD usage,
+        [out] IWineD3DVolume **volume
+    );
+
+    HRESULT CreateSwapChain(
+        [in, out] WINED3DPRESENT_PARAMETERS *present_parameters,
+        [out] IWineD3DSwapChain **swapchain
+    );
+}
 typedef ULONG (*D3DCB_DESTROYSURFACEFN)(IWineD3DSurface *pSurface);
-typedef HRESULT (*D3DCB_CREATEVOLUMEFN)(IUnknown *pDevice, IUnknown *pSuperior, UINT Width,
-        UINT Height, UINT Depth, WINED3DFORMAT Format, WINED3DPOOL Pool, DWORD Usage,
-        IWineD3DVolume **ppVolume, HANDLE *pSharedHandle);
 typedef ULONG (*D3DCB_DESTROYVOLUMEFN)(IWineD3DVolume *pVolume);
-typedef HRESULT (*D3DCB_CREATESWAPCHAIN)(IUnknown *pDevice, WINED3DPRESENT_PARAMETERS *pPresentationParameters,
-        IWineD3DSwapChain **pSwapChain);
 typedef ULONG (*D3DCB_DESTROYSWAPCHAINFN)(IWineD3DSwapChain *pSwapChain);
 typedef HRESULT (*D3DCB_ENUMRESOURCES)(IWineD3DResource *resource, void *pData);
 
@@ -2228,8 +2264,9 @@ interface IWineD3D : IWineD3DBase
         [in] WINED3DDEVTYPE device_type,
         [in] HWND focus_window,
         [in] DWORD behaviour_flags,
-        [out] IWineD3DDevice **device,
-        [in] IUnknown *parent
+        [in] IUnknown *parent,
+        [in] IWineD3DDeviceParent *device_parent,
+        [out] IWineD3DDevice **device
     );
 }
 
@@ -2460,9 +2497,6 @@ interface IWineD3DSurface : IWineD3DResource
     HRESULT GetClipper(
         [out] IWineD3DClipper **clipper
     );
-    HRESULT AddDirtyRect(
-        [in] const RECT *dirty_rect
-    );
     HRESULT LoadTexture(
         [in] BOOL srgb_mode
     );
@@ -2518,11 +2552,6 @@ interface IWineD3DVolume : IWineD3DResource
         [in] DWORD flags
     );
     HRESULT UnlockBox(
-    );
-    HRESULT AddDirtyBox(
-        [in] const WINED3DBOX *dirty_box
-    );
-    HRESULT CleanDirtyBox(
     );
     HRESULT LoadTexture(
         [in] int gl_level,
@@ -2825,8 +2854,6 @@ interface IWineD3DVertexShader : IWineD3DBaseShader
 ]
 interface IWineD3DPixelShader : IWineD3DBaseShader
 {
-    HRESULT UpdateSamplers(
-    );
     HRESULT GetDevice(
         [out] IWineD3DDevice **device
     );
@@ -2892,8 +2919,7 @@ interface IWineD3DDevice : IWineD3DBase
         [in] WINED3DPOOL pool,
         [out] IWineD3DTexture **texture,
         [in] HANDLE *shared_handle,
-        [in] IUnknown *parent,
-        [in] D3DCB_CREATESURFACEFN create_surface_callback
+        [in] IUnknown *parent
     );
     HRESULT CreateVolumeTexture(
         [in] UINT width,
@@ -2905,8 +2931,7 @@ interface IWineD3DDevice : IWineD3DBase
         [in] WINED3DPOOL pool,
         [out] IWineD3DVolumeTexture **texture,
         [in] HANDLE *shared_handle,
-        [in] IUnknown *parent,
-        [in] D3DCB_CREATEVOLUMEFN create_volume_callback
+        [in] IUnknown *parent
     );
     HRESULT CreateVolume(
         [in] UINT width,
@@ -2927,8 +2952,7 @@ interface IWineD3DDevice : IWineD3DBase
         [in] WINED3DPOOL pool,
         [out] IWineD3DCubeTexture **texture,
         [in] HANDLE *shared_handle,
-        [in] IUnknown *parent,
-        [in] D3DCB_CREATESURFACEFN create_surface_callback
+        [in] IUnknown *parent
     );
     HRESULT CreateQuery(
         [in] WINED3DQUERYTYPE type,
@@ -2939,8 +2963,6 @@ interface IWineD3DDevice : IWineD3DBase
         [in] WINED3DPRESENT_PARAMETERS *present_parameters,
         [out] IWineD3DSwapChain **swapchain,
         [in] IUnknown *parent,
-        [in] D3DCB_CREATERENDERTARGETFN create_render_target_callback,
-        [in] D3DCB_CREATEDEPTHSTENCILSURFACEFN create_depth_stencil_callback,
         [in] WINED3DSURFTYPE surface_type
     );
     HRESULT CreateVertexDeclaration(
@@ -2972,12 +2994,10 @@ interface IWineD3DDevice : IWineD3DBase
         [in] IUnknown *parent
     );
     HRESULT Init3D(
-        [in] WINED3DPRESENT_PARAMETERS *present_parameters,
-        [in] D3DCB_CREATESWAPCHAIN create_swapchain_callback
+        [in] WINED3DPRESENT_PARAMETERS *present_parameters
     );
     HRESULT InitGDI(
-        [in] WINED3DPRESENT_PARAMETERS *present_parameters,
-        [in] D3DCB_CREATESWAPCHAIN create_swapchain_callback
+        [in] WINED3DPRESENT_PARAMETERS *present_parameters
     );
     HRESULT Uninit3D(
         [in] D3DCB_DESTROYSURFACEFN destroy_surface_callback,
@@ -3071,12 +3091,6 @@ interface IWineD3DDevice : IWineD3DBase
     );
     HRESULT GetDepthStencilSurface(
         [out] IWineD3DSurface **depth_stencil
-    );
-    HRESULT SetFVF(
-        [in] DWORD fvf
-    );
-    HRESULT GetFVF(
-        [out] DWORD *fvf
     );
     void SetGammaRamp(
         [in] UINT swapchain_idx,

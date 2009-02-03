@@ -295,7 +295,6 @@ LPTSTR *split (LPTSTR s, LPINT args, BOOL expand_wildcards)
 	LPTSTR q;
 	INT  ac;
 	INT  len;
-	BOOL bQuoted = FALSE;
 
 	arg = cmd_alloc (sizeof (LPTSTR));
 	if (!arg)
@@ -305,16 +304,11 @@ LPTSTR *split (LPTSTR s, LPINT args, BOOL expand_wildcards)
 	ac = 0;
 	while (*s)
 	{
+		BOOL bQuoted = FALSE;
+
 		/* skip leading spaces */
 		while (*s && (_istspace (*s) || _istcntrl (*s)))
 			++s;
-
-		/* if quote (") then set bQuoted */
-		if (*s == _T('\"'))
-		{
-			++s;
-			bQuoted = TRUE;
-		}
 
 		start = s;
 
@@ -323,15 +317,11 @@ LPTSTR *split (LPTSTR s, LPINT args, BOOL expand_wildcards)
 			++s;
 
 		/* skip to next word delimiter or start of next option */
-		if (bQuoted)
+		while (_istprint(*s) && (bQuoted || (!_istspace(*s) && *s != _T('/'))))
 		{
-			while (_istprint (*s) && (*s != _T('\"')) && (*s != _T('/')))
-				++s;
-		}
-		else
-		{
-			while (_istprint (*s) && !_istspace (*s) && (*s != _T('/')))
-				++s;
+			/* if quote (") then set bQuoted */
+			bQuoted ^= (*s == _T('\"'));
+			++s;
 		}
 
 		/* a word was found */
@@ -344,6 +334,7 @@ LPTSTR *split (LPTSTR s, LPINT args, BOOL expand_wildcards)
 			}
 			memcpy (q, start, len * sizeof (TCHAR));
 			q[len] = _T('\0');
+			StripQuotes(q);
 			if (expand_wildcards && _T('/') != *start &&
 			    (NULL != _tcschr(q, _T('*')) || NULL != _tcschr(q, _T('?'))))
 			{
@@ -365,19 +356,6 @@ LPTSTR *split (LPTSTR s, LPINT args, BOOL expand_wildcards)
 			}
 			cmd_free (q);
 		}
-
-		/* adjust string pointer if quoted (") */
-		if (bQuoted)
-		{
-      /* Check to make sure if there is no ending "
-       * we dont run over the null char */
-      if(*s == _T('\0'))
-      {
-        break;
-      }
-			++s;
-			bQuoted = FALSE;
-		}
 	}
 
 	*args = ac;
@@ -385,6 +363,67 @@ LPTSTR *split (LPTSTR s, LPINT args, BOOL expand_wildcards)
 	return arg;
 }
 
+/* splitspace() is a function which uses JUST spaces as delimeters. split() uses "/" AND spaces.
+ * The way it works is real similar to split(), search the difference ;)
+ * splitspace is needed for commands such as "move" where paths as C:\this/is\allowed/ are allowed
+ */
+LPTSTR *splitspace (LPTSTR s, LPINT args)
+{
+	LPTSTR *arg;
+	LPTSTR start;
+	LPTSTR q;
+	INT  ac;
+	INT  len;
+
+	arg = cmd_alloc (sizeof (LPTSTR));
+	if (!arg)
+		return NULL;
+	*arg = NULL;
+
+	ac = 0;
+	while (*s)
+	{
+		BOOL bQuoted = FALSE;
+
+		/* skip leading spaces */
+		while (*s && (_istspace (*s) || _istcntrl (*s)))
+			++s;
+
+		start = s;
+
+		/* skip to next word delimiter or start of next option */
+		while (_istprint(*s) && (bQuoted || !_istspace(*s)))
+		{
+			/* if quote (") then set bQuoted */
+			bQuoted ^= (*s == _T('\"'));
+			++s;
+		}
+
+		/* a word was found */
+		if (s != start)
+		{
+			q = cmd_alloc (((len = s - start) + 1) * sizeof (TCHAR));
+			if (!q)
+			{
+				return NULL;
+			}
+			memcpy (q, start, len * sizeof (TCHAR));
+			q[len] = _T('\0');
+			StripQuotes(q);
+			if (! add_entry(&ac, &arg, q))
+			{
+				cmd_free (q);
+				freep (arg);
+				return NULL;
+			}
+			cmd_free (q);
+		}
+	}
+
+	*args = ac;
+
+	return arg;
+}
 
 /*
  * freep -- frees memory used for a call to split

@@ -45,7 +45,7 @@ PCCRL_CONTEXT WINAPI CertCreateCRLContext(DWORD dwCertEncodingType,
     }
     ret = CryptDecodeObjectEx(dwCertEncodingType, X509_CERT_CRL_TO_BE_SIGNED,
      pbCrlEncoded, cbCrlEncoded, CRYPT_DECODE_ALLOC_FLAG, NULL,
-     (BYTE *)&crlInfo, &size);
+     &crlInfo, &size);
     if (ret)
     {
         BYTE *data = NULL;
@@ -69,7 +69,7 @@ PCCRL_CONTEXT WINAPI CertCreateCRLContext(DWORD dwCertEncodingType,
     }
 
 end:
-    return (PCCRL_CONTEXT)crl;
+    return crl;
 }
 
 BOOL WINAPI CertAddEncodedCRLToStore(HCERTSTORE hCertStore,
@@ -110,7 +110,7 @@ static BOOL compare_crl_issued_by(PCCRL_CONTEXT pCrlContext, DWORD dwType,
 
     if (pvPara)
     {
-        PCCERT_CONTEXT issuer = (PCCERT_CONTEXT)pvPara;
+        PCCERT_CONTEXT issuer = pvPara;
 
         ret = CertCompareCertificateName(issuer->dwCertEncodingType,
          &issuer->pCertInfo->Issuer, &pCrlContext->pCrlInfo->Issuer);
@@ -127,7 +127,7 @@ static BOOL compare_crl_existing(PCCRL_CONTEXT pCrlContext, DWORD dwType,
 
     if (pvPara)
     {
-        PCCRL_CONTEXT crl = (PCCRL_CONTEXT)pvPara;
+        PCCRL_CONTEXT crl = pvPara;
 
         ret = CertCompareCertificateName(pCrlContext->dwCertEncodingType,
          &pCrlContext->pCrlInfo->Issuer, &crl->pCrlInfo->Issuer);
@@ -234,7 +234,7 @@ PCCRL_CONTEXT WINAPI CertDuplicateCRLContext(PCCRL_CONTEXT pCrlContext)
 
 static void CrlDataContext_Free(void *context)
 {
-    PCRL_CONTEXT crlContext = (PCRL_CONTEXT)context;
+    PCRL_CONTEXT crlContext = context;
 
     CryptMemFree(crlContext->pbCrlEncoded);
     LocalFree(crlContext->pCrlInfo);
@@ -254,7 +254,7 @@ DWORD WINAPI CertEnumCRLContextProperties(PCCRL_CONTEXT pCRLContext,
  DWORD dwPropId)
 {
     PCONTEXT_PROPERTY_LIST properties = Context_GetProperties(
-     (void *)pCRLContext, sizeof(CRL_CONTEXT));
+     pCRLContext, sizeof(CRL_CONTEXT));
     DWORD ret;
 
     TRACE("(%p, %d)\n", pCRLContext, dwPropId);
@@ -275,7 +275,7 @@ static BOOL CRLContext_GetHashProp(PCCRL_CONTEXT context, DWORD dwPropId,
 {
     BOOL ret = CryptHashCertificate(0, algID, 0, toHash, toHashLen, pvData,
      pcbData);
-    if (ret)
+    if (ret && pvData)
     {
         CRYPT_DATA_BLOB blob = { *pcbData, pvData };
 
@@ -428,7 +428,7 @@ static BOOL CRLContext_SetProperty(PCCRL_CONTEXT context, DWORD dwPropId,
         }
         case CERT_DATE_STAMP_PROP_ID:
             ret = ContextPropertyList_SetProperty(properties, dwPropId,
-             (const BYTE *)pvData, sizeof(FILETIME));
+             pvData, sizeof(FILETIME));
             break;
         default:
             FIXME("%d: stub\n", dwPropId);

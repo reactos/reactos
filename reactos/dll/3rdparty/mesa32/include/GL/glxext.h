@@ -46,9 +46,9 @@ extern "C" {
 /*************************************************************/
 
 /* Header file version number, required by OpenGL ABI for Linux */
-/* glxext.h last updated 2008/08/10 */
+/* glxext.h last updated 2008/10/22 */
 /* Current version at http://www.opengl.org/registry/ */
-#define GLX_GLXEXT_VERSION 20
+#define GLX_GLXEXT_VERSION 21
 
 #ifndef GLX_VERSION_1_3
 #define GLX_WINDOW_BIT                     0x00000001
@@ -125,6 +125,14 @@ extern "C" {
 #ifndef GLX_ARB_fbconfig_float
 #define GLX_RGBA_FLOAT_TYPE_ARB            0x20B9
 #define GLX_RGBA_FLOAT_BIT_ARB             0x00000004
+#endif
+
+#ifndef GLX_ARB_create_context
+#define GLX_CONTEXT_DEBUG_BIT_ARB          0x00000001
+#define GLX_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB 0x00000002
+#define GLX_CONTEXT_MAJOR_VERSION_ARB      0x2091
+#define GLX_CONTEXT_MINOR_VERSION_ARB      0x2092
+#define GLX_CONTEXT_FLAGS_ARB              0x2094
 #endif
 
 #ifndef GLX_SGIS_multisample
@@ -347,20 +355,20 @@ extern "C" {
 #endif
 
 #ifndef GLX_NV_present_video
-#define GLX_GLX_NUM_VIDEO_SLOTS_NV         0x20F0
+#define GLX_NUM_VIDEO_SLOTS_NV             0x20F0
 #endif
 
 #ifndef GLX_NV_video_out
-#define GLX_GLX_VIDEO_OUT_COLOR_NV         0x20C3
-#define GLX_GLX_VIDEO_OUT_ALPHA_NV         0x20C4
-#define GLX_GLX_VIDEO_OUT_DEPTH_NV         0x20C5
-#define GLX_GLX_VIDEO_OUT_COLOR_AND_ALPHA_NV 0x20C6
-#define GLX_GLX_VIDEO_OUT_COLOR_AND_DEPTH_NV 0x20C7
-#define GLX_GLX_VIDEO_OUT_FRAME_NV         0x20C8
-#define GLX_GLX_VIDEO_OUT_FIELD_1_NV       0x20C9
-#define GLX_GLX_VIDEO_OUT_FIELD_2_NV       0x20CA
-#define GLX_GLX_VIDEO_OUT_STACKED_FIELDS_1_2_NV 0x20CB
-#define GLX_GLX_VIDEO_OUT_STACKED_FIELDS_2_1_NV 0x20CC
+#define GLX_VIDEO_OUT_COLOR_NV             0x20C3
+#define GLX_VIDEO_OUT_ALPHA_NV             0x20C4
+#define GLX_VIDEO_OUT_DEPTH_NV             0x20C5
+#define GLX_VIDEO_OUT_COLOR_AND_ALPHA_NV   0x20C6
+#define GLX_VIDEO_OUT_COLOR_AND_DEPTH_NV   0x20C7
+#define GLX_VIDEO_OUT_FRAME_NV             0x20C8
+#define GLX_VIDEO_OUT_FIELD_1_NV           0x20C9
+#define GLX_VIDEO_OUT_FIELD_2_NV           0x20CA
+#define GLX_VIDEO_OUT_STACKED_FIELDS_1_2_NV 0x20CB
+#define GLX_VIDEO_OUT_STACKED_FIELDS_2_1_NV 0x20CC
 #endif
 
 #ifndef GLX_NV_swap_group
@@ -500,6 +508,14 @@ typedef __GLXextFuncPtr ( * PFNGLXGETPROCADDRESSARBPROC) (const GLubyte *procNam
 
 #ifndef GLX_ARB_fbconfig_float
 #define GLX_ARB_fbconfig_float 1
+#endif
+
+#ifndef GLX_ARB_create_context
+#define GLX_ARB_create_context 1
+#ifdef GLX_GLXEXT_PROTOTYPES
+extern GLXContext glXCreateContextAttribsARB (Display *, GLXFBConfig, GLXContext, Bool, const int *);
+#endif /* GLX_GLXEXT_PROTOTYPES */
+typedef GLXContext ( * PFNGLXCREATECONTEXTATTRIBSARBPROC) (Display *dpy, GLXFBConfig config, GLXContext share_context, Bool direct, const int *attrib_list);
 #endif
 
 #ifndef GLX_SGIS_multisample

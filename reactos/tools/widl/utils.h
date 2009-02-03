@@ -33,7 +33,7 @@ char *xstrdup(const char *str);
 #define __attribute__(X)
 #endif
 
-void parser_error(const char *s, ...) __attribute__((format (printf, 1, 2))) __attribute__((noreturn));
+void parser_error(const char *s) __attribute__((noreturn));
 int parser_warning(const char *s, ...) __attribute__((format (printf, 1, 2)));
 void error_loc(const char *s, ...) __attribute__((format (printf, 1, 2))) __attribute__((noreturn));
 void error(const char *s, ...) __attribute__((format (printf, 1, 2))) __attribute__((noreturn));

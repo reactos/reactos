@@ -328,7 +328,7 @@ static void OLEFont_SendNotify(OLEFontImpl* this, DISPID dispID)
  *
  * See Windows documentation for more details on IUnknown methods.
  */
-HRESULT WINAPI OLEFontImpl_QueryInterface(
+static HRESULT WINAPI OLEFontImpl_QueryInterface(
   IFont*  iface,
   REFIID  riid,
   void**  ppvObject)
@@ -384,7 +384,7 @@ HRESULT WINAPI OLEFontImpl_QueryInterface(
  *
  * See Windows documentation for more details on IUnknown methods.
  */
-ULONG WINAPI OLEFontImpl_AddRef(
+static ULONG WINAPI OLEFontImpl_AddRef(
   IFont* iface)
 {
   OLEFontImpl *this = (OLEFontImpl *)iface;
@@ -397,7 +397,7 @@ ULONG WINAPI OLEFontImpl_AddRef(
  *
  * See Windows documentation for more details on IUnknown methods.
  */
-ULONG WINAPI OLEFontImpl_Release(
+static ULONG WINAPI OLEFontImpl_Release(
       IFont* iface)
 {
   OLEFontImpl *this = (OLEFontImpl *)iface;

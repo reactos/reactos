@@ -89,7 +89,7 @@ IntGdiLineTo(DC  *dc,
              int XEnd,
              int YEnd)
 {
-    BITMAPOBJ *BitmapObj;
+    SURFACE *psurf;
     BOOL      Ret = TRUE;
     PGDIBRUSHOBJ PenBrushObj;
     GDIBRUSHINST PenBrushInst;
@@ -121,8 +121,8 @@ IntGdiLineTo(DC  *dc,
        if (Dc_Attr->ulDirty_ & DC_PEN_DIRTY)
           IntGdiSelectPen(dc,Dc_Attr->hpen);
 
-        BitmapObj = BITMAPOBJ_LockBitmap ( dc->w.hBitmap );
-        if (NULL == BitmapObj)
+        psurf = SURFACE_LockSurface( dc->w.hBitmap );
+        if (NULL == psurf)
         {
             SetLastWin32Error(ERROR_INVALID_HANDLE);
             return FALSE;
@@ -158,7 +158,7 @@ IntGdiLineTo(DC  *dc,
         if (!(PenBrushObj->flAttrs & GDIBRUSH_IS_NULL))
         {
             IntGdiInitBrushInstance(&PenBrushInst, PenBrushObj, dc->XlatePen);
-            Ret = IntEngLineTo(&BitmapObj->SurfObj,
+            Ret = IntEngLineTo(&psurf->SurfObj,
                                dc->CombinedClip,
                                &PenBrushInst.BrushObject,
                                Points[0].x, Points[0].y,
@@ -167,7 +167,7 @@ IntGdiLineTo(DC  *dc,
                                ROP2_TO_MIX(Dc_Attr->jROP2));
         }
 
-        BITMAPOBJ_UnlockBitmap ( BitmapObj );
+        SURFACE_UnlockSurface(psurf);
         PENOBJ_UnlockPen( PenBrushObj );
     }
 
@@ -254,7 +254,7 @@ IntGdiPolyline(DC      *dc,
                LPPOINT pt,
                int     Count)
 {
-    BITMAPOBJ *BitmapObj;
+    SURFACE *psurf;
     GDIBRUSHOBJ *PenBrushObj;
     GDIBRUSHINST PenBrushInst;
     LPPOINT Points;
@@ -283,10 +283,10 @@ IntGdiPolyline(DC      *dc,
         Points = EngAllocMem(0, Count * sizeof(POINT), TAG_COORD);
         if (Points != NULL)
         {
-            BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
-            /* FIXME - BitmapObj can be NULL!!!!
+            psurf = SURFACE_LockSurface(dc->w.hBitmap);
+            /* FIXME - psurf can be NULL!!!!
                Don't assert but handle this case gracefully! */
-            ASSERT(BitmapObj);
+            ASSERT(psurf);
 
             RtlCopyMemory(Points, pt, Count * sizeof(POINT));
             IntLPtoDP(dc, Points, Count);
@@ -299,14 +299,14 @@ IntGdiPolyline(DC      *dc,
             }
 
             IntGdiInitBrushInstance(&PenBrushInst, PenBrushObj, dc->XlatePen);
-            Ret = IntEngPolyline(&BitmapObj->SurfObj,
+            Ret = IntEngPolyline(&psurf->SurfObj,
                                  dc->CombinedClip,
                                  &PenBrushInst.BrushObject,
                                  Points,
                                  Count,
                                  ROP2_TO_MIX(Dc_Attr->jROP2));
 
-            BITMAPOBJ_UnlockBitmap(BitmapObj);
+            SURFACE_UnlockSurface(psurf);
             EngFreeMem(Points);
         }
         else

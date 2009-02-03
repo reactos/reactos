@@ -5,7 +5,6 @@
 	<include base="setupapi">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<include base="pnp_client">.</include>
-	<define name="__WINESRC__" />
 	<define name="_SETUPAPI_" />
 	<library>pnp_client</library>
 	<library>uuid</library>

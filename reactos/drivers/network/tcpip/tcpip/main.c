@@ -131,7 +131,7 @@ CP
 #endif
 CP
   /* Allocate resources here. We release them again if something failed */
-  Context = ExAllocatePool(NonPagedPool, sizeof(TRANSPORT_CONTEXT));
+  Context = exAllocatePool(NonPagedPool, sizeof(TRANSPORT_CONTEXT));
   if (!Context) {
     TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
     return STATUS_INSUFFICIENT_RESOURCES;
@@ -169,7 +169,7 @@ CP
 	  TI_DbgPrint(MIN_TRACE, ("AddressType: %\n",
 				  Address->Address[0].AddressType));
       }
-      PoolFreeBuffer(Context);
+      exFreePool(Context);
       return STATUS_INVALID_PARAMETER;
     }
 CP
@@ -186,12 +186,12 @@ CP
       Status = TiGetProtocolNumber(&IrpSp->FileObject->FileName, &Protocol);
       if (!NT_SUCCESS(Status)) {
         TI_DbgPrint(MIN_TRACE, ("Raw IP protocol number is invalid.\n"));
-        PoolFreeBuffer(Context);
+        exFreePool(Context);
         return STATUS_INVALID_PARAMETER;
       }
     } else {
       TI_DbgPrint(MIN_TRACE, ("Invalid device object at (0x%X).\n", DeviceObject));
-      PoolFreeBuffer(Context);
+      exFreePool(Context);
       return STATUS_INVALID_PARAMETER;
     }
 CP
@@ -213,7 +213,7 @@ CP
 
     if (EaInfo->EaValueLength < sizeof(PVOID)) {
       TI_DbgPrint(MIN_TRACE, ("Parameters are invalid.\n"));
-      PoolFreeBuffer(Context);
+      exFreePool(Context);
       return STATUS_INVALID_PARAMETER;
     }
 
@@ -221,7 +221,7 @@ CP
 
     if (DeviceObject != TCPDeviceObject) {
       TI_DbgPrint(MIN_TRACE, ("Bad device object.\n"));
-      PoolFreeBuffer(Context);
+      exFreePool(Context);
       return STATUS_INVALID_PARAMETER;
     }
 
@@ -244,7 +244,7 @@ CP
   }
 
   if (!NT_SUCCESS(Status))
-    PoolFreeBuffer(Context);
+    exFreePool(Context);
 
   TI_DbgPrint(DEBUG_IRP, ("Leaving. Status = (0x%X).\n", Status));
 
@@ -353,7 +353,7 @@ TiDispatchOpenClose(
   case IRP_MJ_CLOSE:
     Context = (PTRANSPORT_CONTEXT)IrpSp->FileObject->FsContext;
     if (Context)
-        PoolFreeBuffer(Context);
+        exFreePool(Context);
     Status = STATUS_SUCCESS;
     break;
 
@@ -608,7 +608,7 @@ VOID NTAPI TiUnload(
     IoDeleteDevice(IPDeviceObject);
 
   if (EntityList)
-    PoolFreeBuffer(EntityList);
+    exFreePool(EntityList);
 
   TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 }
@@ -714,7 +714,7 @@ DriverEntry(
 
   /* Setup network layer and transport layer entities */
   KeInitializeSpinLock(&EntityListLock);
-  EntityList = ExAllocatePool(NonPagedPool, sizeof(TDIEntityID) * MAX_TDI_ENTITIES );
+  EntityList = exAllocatePool(NonPagedPool, sizeof(TDIEntityID) * MAX_TDI_ENTITIES );
   if (!EntityList) {
     TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
     ChewShutdown();
@@ -746,7 +746,7 @@ DriverEntry(
     IoDeleteDevice(RawIPDeviceObject);
     IoDeleteDevice(UDPDeviceObject);
     IoDeleteDevice(TCPDeviceObject);
-    ExFreePool(EntityList);
+    exFreePool(EntityList);
     return STATUS_INSUFFICIENT_RESOURCES;
   }
 
@@ -758,7 +758,7 @@ DriverEntry(
     IoDeleteDevice(RawIPDeviceObject);
     IoDeleteDevice(UDPDeviceObject);
     IoDeleteDevice(TCPDeviceObject);
-    ExFreePool(EntityList);
+    exFreePool(EntityList);
     NdisFreePacketPool(GlobalPacketPool);
     return STATUS_INSUFFICIENT_RESOURCES;
   }
@@ -787,7 +787,7 @@ DriverEntry(
         IoDeleteDevice(RawIPDeviceObject);
         IoDeleteDevice(UDPDeviceObject);
         IoDeleteDevice(TCPDeviceObject);
-        ExFreePool(EntityList);
+        exFreePool(EntityList);
         NdisFreePacketPool(GlobalPacketPool);
         NdisFreeBufferPool(GlobalBufferPool);
 	return Status;
@@ -802,7 +802,7 @@ DriverEntry(
         IoDeleteDevice(RawIPDeviceObject);
         IoDeleteDevice(UDPDeviceObject);
         IoDeleteDevice(TCPDeviceObject);
-        ExFreePool(EntityList);
+        exFreePool(EntityList);
         NdisFreePacketPool(GlobalPacketPool);
         NdisFreeBufferPool(GlobalBufferPool);
 	return Status;
@@ -818,7 +818,7 @@ DriverEntry(
         IoDeleteDevice(RawIPDeviceObject);
         IoDeleteDevice(UDPDeviceObject);
         IoDeleteDevice(TCPDeviceObject);
-        ExFreePool(EntityList);
+        exFreePool(EntityList);
         NdisFreePacketPool(GlobalPacketPool);
         NdisFreeBufferPool(GlobalBufferPool);
 	return Status;
@@ -846,7 +846,7 @@ DriverEntry(
     IoDeleteDevice(RawIPDeviceObject);
     IoDeleteDevice(UDPDeviceObject);
     IoDeleteDevice(TCPDeviceObject);
-    ExFreePool(EntityList);
+    exFreePool(EntityList);
     NdisFreePacketPool(GlobalPacketPool);
     NdisFreeBufferPool(GlobalBufferPool);
     return Status;
@@ -865,7 +865,7 @@ DriverEntry(
     IoDeleteDevice(RawIPDeviceObject);
     IoDeleteDevice(UDPDeviceObject);
     IoDeleteDevice(TCPDeviceObject);
-    ExFreePool(EntityList);
+    exFreePool(EntityList);
     NdisFreePacketPool(GlobalPacketPool);
     NdisFreeBufferPool(GlobalBufferPool);
     LANUnregisterProtocol();

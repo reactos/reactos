@@ -6,9 +6,8 @@
  * PURPOSE:         Implementation of text-mode consoles
  */
 
-#include "w32csr.h"
-
 #define NDEBUG
+#include "w32csr.h"
 #include <debug.h>
 
 CRITICAL_SECTION ActiveConsoleLock;

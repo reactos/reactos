@@ -1,6 +1,12 @@
 #ifndef _WINDEF_H
 #define _WINDEF_H
 
+#if !defined(__ROS_LONG64__)
+#ifdef __WINESRC__
+//#define __ROS_LONG64__
+#endif
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -256,22 +262,13 @@ extern "C" {
 #endif
 #endif
 
-/* FIXME: This will make some code compile. The programs will most
-   likely crash when an exception is raised, but at least they will
-   compile. */
-#if defined (__GNUC__) && defined (__SEH_NOOP)
-#define __try
-#define __except(x) if (0) /* don't execute handler */
-#define __finally
-
-#define _try __try
-#define _except __except
-#define _finally __finally
-#endif
-
 #ifndef DWORD_DEFINED
 #define DWORD_DEFINED
+#ifndef __ROS_LONG64__
     typedef unsigned long DWORD;
+#else
+    typedef unsigned int DWORD;
+#endif
 #endif//DWORD_DEFINED
 
 typedef int WINBOOL,*PWINBOOL,*LPWINBOOL;
@@ -291,7 +288,11 @@ typedef FLOAT *PFLOAT;
 typedef BYTE *PBYTE,*LPBYTE;
 typedef int *PINT,*LPINT;
 typedef WORD *PWORD,*LPWORD;
+#ifndef __ROS_LONG64__
 typedef long *LPLONG;
+#else
+typedef int *LPLONG;
+#endif
 typedef DWORD *PDWORD,*LPDWORD;
 typedef CONST void *PCVOID,*LPCVOID;
 
@@ -299,12 +300,28 @@ typedef unsigned int UINT,*PUINT,*LPUINT;
 
 typedef void *LPVOID;
 
+#ifndef __ms_va_list
+# if defined(__x86_64__) && defined (__GNUC__)
+#  define __ms_va_list __builtin_ms_va_list
+#  define __ms_va_start(list,arg) __builtin_ms_va_start(list,arg)
+#  define __ms_va_end(list) __builtin_ms_va_end(list)
+# else
+#  define __ms_va_list va_list
+#  define __ms_va_start(list,arg) va_start(list,arg)
+#  define __ms_va_end(list) va_end(list)
+# endif
+#endif
+
 //
 // Check if ntdef.h already defined these for us
 //
 #ifndef BASETYPES
 #define BASETYPES
+#ifndef __ROS_LONG64__
 typedef unsigned long ULONG, *PULONG;
+#else
+typedef unsigned int ULONG, *PULONG;
+#endif
 typedef unsigned short USHORT, *PUSHORT;
 typedef unsigned char UCHAR, *PUCHAR;
 typedef char *PSZ;

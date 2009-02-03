@@ -136,6 +136,7 @@ private:
 	void GenerateSourceMacros ( const IfableData& data );
 	void GenerateObjectMacros ( const IfableData& data );
 	const FileLocation* GetPrecompiledHeaderFilename () const;
+	const FileLocation* GetDlldataFilename () const;
 	void GenerateGccCommand ( const FileLocation* sourceFile,
 	                          const Rule *rule,
 	                          const std::string& extraDependencies );

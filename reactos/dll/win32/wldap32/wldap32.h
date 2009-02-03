@@ -18,6 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+ULONG map_error( int );
+
 /* A set of helper functions to convert LDAP data structures
  * to and from ansi (A), wide character (W) and utf8 (U) encodings.
  */

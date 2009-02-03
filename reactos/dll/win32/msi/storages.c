@@ -134,7 +134,7 @@ static UINT STORAGES_get_row( struct tagMSIVIEW *view, UINT row, MSIRECORD **rec
 
 static HRESULT stream_to_storage(IStream *stm, IStorage **stg)
 {
-    ILockBytes *lockbytes;
+    ILockBytes *lockbytes = NULL;
     STATSTG stat;
     LPVOID data;
     HRESULT hr;
@@ -177,7 +177,7 @@ static HRESULT stream_to_storage(IStream *stm, IStorage **stg)
 
 done:
     msi_free(data);
-    ILockBytes_Release(lockbytes);
+    if (lockbytes) ILockBytes_Release(lockbytes);
     return hr;
 }
 

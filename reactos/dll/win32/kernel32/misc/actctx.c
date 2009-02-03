@@ -138,7 +138,8 @@ ActivateActCtx(
 
     DPRINT("ActivateActCtx(%p %p)\n", hActCtx, ulCookie );
 
-    if ((Status = RtlActivateActivationContext(0, hActCtx, ulCookie)))
+    Status = RtlActivateActivationContext(0, hActCtx, ulCookie);
+    if (!NT_SUCCESS(Status))
     {
         SetLastError(RtlNtStatusToDosError(Status));
         return FALSE;
@@ -173,7 +174,8 @@ CreateActCtxW(
 
     DPRINT("CreateActCtxW(%p %08lx)\n", pActCtx, pActCtx ? pActCtx->dwFlags : 0);
 
-    if ((Status = RtlCreateActivationContext(&hActCtx, &pActCtx)))
+    Status = RtlCreateActivationContext(&hActCtx, &pActCtx);
+    if (!NT_SUCCESS(Status))
     {
         SetLastError(RtlNtStatusToDosError(Status));
         return INVALID_HANDLE_VALUE;
@@ -191,8 +193,13 @@ DeactivateActCtx(
     ULONG_PTR ulCookie
     )
 {
+    NTSTATUS Status;
+
     DPRINT("DeactivateActCtx(%08lx %08lx)\n", dwFlags, ulCookie);
-    RtlDeactivateActivationContext(dwFlags, ulCookie);
+    Status = RtlDeactivateActivationContext(dwFlags, ulCookie);
+
+    if (!NT_SUCCESS(Status)) return FALSE;
+
     return TRUE;
 }
 
@@ -230,7 +237,8 @@ FindActCtxSectionStringW(
     NTSTATUS Status;
 
     RtlInitUnicodeString(&us, lpStringToFind);
-    if ((Status = RtlFindActivationContextSectionString(dwFlags, lpExtensionGuid, ulSectionId, &us, ReturnedData)))
+    Status = RtlFindActivationContextSectionString(dwFlags, lpExtensionGuid, ulSectionId, &us, ReturnedData);
+    if (!NT_SUCCESS(Status))
     {
         SetLastError(RtlNtStatusToDosError(Status));
         return FALSE;
@@ -249,7 +257,8 @@ GetCurrentActCtx(
     NTSTATUS Status;
 
     DPRINT("GetCurrentActCtx(%p)\n", phActCtx);
-    if ((Status = RtlGetActiveActivationContext(phActCtx)))
+    Status = RtlGetActiveActivationContext(phActCtx);
+    if (!NT_SUCCESS(Status))
     {
         SetLastError(RtlNtStatusToDosError(Status));
         return FALSE;
@@ -300,8 +309,15 @@ ZombifyActCtx(
     HANDLE hActCtx
     )
 {
+    NTSTATUS Status;
     DPRINT("ZombifyActCtx(%p)\n", hActCtx);
-    if (hActCtx != ACTCTX_FAKE_HANDLE)
+
+    Status = RtlZombifyActivationContext(hActCtx);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
         return FALSE;
+    }
+     
     return TRUE;
 }

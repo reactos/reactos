@@ -11,9 +11,8 @@
 
 /* INCLUDES ******************************************************************/
 
-#include "w32csr.h"
-
 #define NDEBUG
+#include "w32csr.h"
 #include <debug.h>
 
 typedef struct tagALIAS_ENTRY

@@ -370,9 +370,9 @@ ROSDATA KBDTABLES keyboard_layout_table = {
   extcode0_to_vk,
   extcode1_to_vk,
 
-  MAKELONG(0,1), /* Version 1.0 */
+  MAKELONG(1,1), /* Version 1.0 */
 
-  /* Ligatures -- Russian doesn't have any */
+  /* Ligatures -- Georgian doesn't have any */
   0,
   0,
   NULL

@@ -33,17 +33,6 @@
 
 #include "msxml_private.h"
 
-#ifdef HAVE_LIBXSLT
-# ifdef HAVE_LIBXSLT_PATTERN_H
-#  include <libxslt/pattern.h>
-# endif
-# ifdef HAVE_LIBXSLT_TRANSFORM_H
-#  include <libxslt/transform.h>
-# endif
-# include <libxslt/xsltutils.h>
-# include <libxslt/xsltInternals.h>
-#endif
-
 #ifdef HAVE_LIBXML2
 # include <libxml/HTMLtree.h>
 #endif
@@ -94,20 +83,6 @@ xmlNodePtr xmlNodePtr_from_domnode( IXMLDOMNode *iface, xmlElementType type )
     if ( type && This->node->type != type )
         return NULL;
     return This->node;
-}
-
-void attach_xmlnode( IXMLDOMNode *node, xmlNodePtr xml )
-{
-    xmlnode *This = impl_from_IXMLDOMNode( node );
-
-    if(This->node)
-        xmldoc_release(This->node->doc);
-
-    This->node = xml;
-    if(This->node)
-        xmldoc_add_ref(This->node->doc);
-
-    return;
 }
 
 static HRESULT WINAPI xmlnode_QueryInterface(
@@ -282,7 +257,7 @@ BSTR bstr_from_xmlChar( const xmlChar *buf )
         return NULL;
 
     len = MultiByteToWideChar( CP_UTF8, 0, (LPCSTR) buf, -1, NULL, 0 );
-    str = (LPWSTR) HeapAlloc( GetProcessHeap(), 0, len * sizeof (WCHAR) );
+    str = HeapAlloc( GetProcessHeap(), 0, len * sizeof (WCHAR) );
     if ( !str )
         return NULL;
     MultiByteToWideChar( CP_UTF8, 0, (LPCSTR) buf, -1, str, len );
@@ -344,11 +319,22 @@ static HRESULT WINAPI xmlnode_put_nodeValue(
     VARIANT value)
 {
     xmlnode *This = impl_from_IXMLDOMNode( iface );
-    HRESULT hr = S_FALSE;
+    HRESULT hr;
     xmlChar *str = NULL;
+    VARIANT string_value;
 
     TRACE("%p type(%d)\n", This, This->node->type);
 
+    VariantInit(&string_value);
+    hr = VariantChangeType(&string_value, &value, 0, VT_BSTR);
+    if(FAILED(hr))
+    {
+        VariantClear(&string_value);
+        WARN("Couldn't convert to VT_BSTR\n");
+        return hr;
+    }
+
+    hr = S_FALSE;
     /* Document, Document Fragment, Document Type, Element,
         Entity, Entity Reference, Notation aren't supported. */
     switch ( This->node->type )
@@ -359,9 +345,9 @@ static HRESULT WINAPI xmlnode_put_nodeValue(
     case XML_PI_NODE:
     case XML_TEXT_NODE:
       {
-        str = xmlChar_from_wchar((WCHAR*)V_BSTR(&value));
-
+        str = xmlChar_from_wchar(V_BSTR(&string_value));
         xmlNodeSetContent(This->node, str);
+        HeapFree(GetProcessHeap(),0,str);
         hr = S_OK;
         break;
       }
@@ -369,6 +355,8 @@ static HRESULT WINAPI xmlnode_put_nodeValue(
         /* Do nothing for unsupported types. */
         break;
     }
+
+    VariantClear(&string_value);
 
     return hr;
 }
@@ -583,6 +571,10 @@ static HRESULT WINAPI xmlnode_insertBefore(
     new_child_node = impl_from_IXMLDOMNode(new)->node;
     TRACE("new_child_node %p This->node %p\n", new_child_node, This->node);
 
+    if(!new_child_node->parent)
+        if(xmldoc_remove_orphan(new_child_node->doc, new_child_node) != S_OK)
+            WARN("%p is not an orphan of %p\n", new_child_node, new_child_node->doc);
+
     if(before)
     {
         before_node = impl_from_IXMLDOMNode(before)->node;
@@ -609,8 +601,65 @@ static HRESULT WINAPI xmlnode_replaceChild(
     IXMLDOMNode* oldChild,
     IXMLDOMNode** outOldChild)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    xmlnode *This = impl_from_IXMLDOMNode( iface );
+    xmlNode *old_child_ptr, *new_child_ptr;
+    xmlDocPtr leaving_doc;
+    xmlNode *my_ancestor;
+    IXMLDOMNode *realOldChild;
+    HRESULT hr;
+
+    TRACE("%p->(%p,%p,%p)\n",This,newChild,oldChild,outOldChild);
+
+    /* Do not believe any documentation telling that newChild == NULL
+       means removal. It does certainly *not* apply to msxml3! */
+    if(!newChild || !oldChild)
+        return E_INVALIDARG;
+
+    if(outOldChild)
+        *outOldChild = NULL;
+
+    hr = IXMLDOMNode_QueryInterface(oldChild,&IID_IXMLDOMNode,(LPVOID*)&realOldChild);
+    if(FAILED(hr))
+        return hr;
+
+    old_child_ptr = impl_from_IXMLDOMNode(realOldChild)->node;
+    IXMLDOMNode_Release(realOldChild);
+    if(old_child_ptr->parent != This->node)
+    {
+        WARN("childNode %p is not a child of %p\n", oldChild, iface);
+        return E_INVALIDARG;
+    }
+
+    new_child_ptr = impl_from_IXMLDOMNode(newChild)->node;
+    my_ancestor = This->node;
+    while(my_ancestor)
+    {
+        if(my_ancestor == new_child_ptr)
+        {
+            WARN("tried to create loop\n");
+            return E_FAIL;
+        }
+        my_ancestor = my_ancestor->parent;
+    }
+
+    if(!new_child_ptr->parent)
+        if(xmldoc_remove_orphan(new_child_ptr->doc, new_child_ptr) != S_OK)
+            WARN("%p is not an orphan of %p\n", new_child_ptr, new_child_ptr->doc);
+
+    leaving_doc = new_child_ptr->doc;
+    xmldoc_add_ref(old_child_ptr->doc);
+    xmlReplaceNode(old_child_ptr, new_child_ptr);
+    xmldoc_release(leaving_doc);
+
+    xmldoc_add_orphan(old_child_ptr->doc, old_child_ptr);
+
+    if(outOldChild)
+    {
+        IXMLDOMNode_AddRef(oldChild);
+        *outOldChild = oldChild;
+    }
+
+    return S_OK;
 }
 
 static HRESULT WINAPI xmlnode_removeChild(
@@ -619,29 +668,23 @@ static HRESULT WINAPI xmlnode_removeChild(
     IXMLDOMNode** oldChild)
 {
     xmlnode *This = impl_from_IXMLDOMNode( iface );
-    xmlNode *ancestor, *child_node_ptr;
+    xmlNode *child_node_ptr;
     HRESULT hr;
     IXMLDOMNode *child;
 
     TRACE("%p->(%p, %p)\n", This, childNode, oldChild);
 
+    if(!childNode) return E_INVALIDARG;
+
     if(oldChild)
         *oldChild = NULL;
-
-    if(!childNode) return E_INVALIDARG;
 
     hr = IXMLDOMNode_QueryInterface(childNode, &IID_IXMLDOMNode, (LPVOID)&child);
     if(FAILED(hr))
         return hr;
 
-    child_node_ptr = ancestor = impl_from_IXMLDOMNode(child)->node;
-    while(ancestor->parent)
-    {
-        if(ancestor->parent == This->node)
-            break;
-        ancestor = ancestor->parent;
-    }
-    if(!ancestor->parent)
+    child_node_ptr = impl_from_IXMLDOMNode(child)->node;
+    if(child_node_ptr->parent != This->node)
     {
         WARN("childNode %p is not a child of %p\n", childNode, iface);
         IXMLDOMNode_Release(child);
@@ -732,6 +775,7 @@ static HRESULT WINAPI xmlnode_cloneNode(
     if(pClone)
     {
         pClone->doc = This->node->doc;
+        xmldoc_add_orphan(pClone->doc, pClone);
 
         pNode = create_node(pClone);
         if(!pNode)
@@ -820,32 +864,18 @@ static HRESULT WINAPI xmlnode_get_text(
 {
     xmlnode *This = impl_from_IXMLDOMNode( iface );
     BSTR str = NULL;
+    xmlChar *pContent;
 
-    TRACE("%p\n", This);
+    TRACE("%p type %d\n", This, This->node->type);
 
     if ( !text )
         return E_INVALIDARG;
 
-    switch(This->node->type)
+    pContent = xmlNodeGetContent((xmlNodePtr)This->node);
+    if(pContent)
     {
-    case XML_ELEMENT_NODE:
-    case XML_ATTRIBUTE_NODE:
-    {
-        xmlNodePtr child = This->node->children;
-        if ( child && child->type == XML_TEXT_NODE )
-            str = bstr_from_xmlChar( child->content );
-        break;
-    }
-
-    case XML_TEXT_NODE:
-    case XML_CDATA_SECTION_NODE:
-    case XML_PI_NODE:
-    case XML_COMMENT_NODE:
-        str = bstr_from_xmlChar( This->node->content );
-        break;
-
-    default:
-        FIXME("Unhandled node type %d\n", This->node->type);
+        str = bstr_from_xmlChar(pContent);
+        xmlFree(pContent);
     }
 
     /* Always return a string. */
@@ -862,7 +892,7 @@ static HRESULT WINAPI xmlnode_put_text(
     BSTR text)
 {
     xmlnode *This = impl_from_IXMLDOMNode( iface );
-    xmlChar *str = NULL;
+    xmlChar *str, *str2;
 
     TRACE("%p\n", This);
 
@@ -874,14 +904,14 @@ static HRESULT WINAPI xmlnode_put_text(
         break;
     }
 
-    str = xmlChar_from_wchar((WCHAR*)text);
+    str = xmlChar_from_wchar(text);
 
     /* Escape the string. */
-    str = xmlEncodeEntitiesReentrant(This->node->doc, str);
-    str = xmlEncodeSpecialChars(This->node->doc, str);
+    str2 = xmlEncodeEntitiesReentrant(This->node->doc, str);
+    HeapFree(GetProcessHeap(), 0, str);
 
-    xmlNodeSetContent(This->node, str);
-    xmlFree(str);
+    xmlNodeSetContent(This->node, str2);
+    xmlFree(str2);
 
     return S_OK;
 }
@@ -906,8 +936,32 @@ static HRESULT WINAPI xmlnode_get_nodeTypedValue(
     IXMLDOMNode *iface,
     VARIANT* typedValue)
 {
-    FIXME("ignoring data type\n");
-    return xmlnode_get_nodeValue(iface, typedValue);
+    xmlnode *This = impl_from_IXMLDOMNode( iface );
+    HRESULT r = S_FALSE;
+
+    FIXME("ignoring data type %p %p\n", This, typedValue);
+
+    if(!typedValue)
+        return E_INVALIDARG;
+
+    V_VT(typedValue) = VT_NULL;
+
+    switch ( This->node->type )
+    {
+    case XML_ELEMENT_NODE:
+    {
+        xmlChar *content = xmlNodeGetContent(This->node);
+        V_VT(typedValue) = VT_BSTR;
+        V_BSTR(typedValue) = bstr_from_xmlChar( content );
+        xmlFree(content);
+        r = S_OK;
+        break;
+    }
+    default:
+        r = xmlnode_get_nodeValue(iface, typedValue);
+    }
+
+    return r;
 }
 
 static HRESULT WINAPI xmlnode_put_nodeTypedValue(
@@ -1006,7 +1060,7 @@ static HRESULT WINAPI xmlnode_put_dataType(
     {
         xmlNsPtr pNS = NULL;
         xmlAttrPtr pAttr = NULL;
-        xmlChar* str = xmlChar_from_wchar((WCHAR*)dataTypeName);
+        xmlChar* str = xmlChar_from_wchar(dataTypeName);
 
         pAttr = xmlHasNsProp(This->node, (xmlChar*)"dt",
                             (xmlChar*)"urn:schemas-microsoft-com:datatypes");
@@ -1034,6 +1088,7 @@ static HRESULT WINAPI xmlnode_put_dataType(
             else
                 ERR("Failed to Create Namepsace\n");
         }
+        HeapFree( GetProcessHeap(), 0, str );
     }
 
     return hr;
@@ -1085,6 +1140,37 @@ static BSTR EnsureCorrectEOL(BSTR sInput)
     return sNew;
 }
 
+/* Removes encoding information and last character (nullbyte) */
+static BSTR EnsureNoEncoding(BSTR sInput)
+{
+    static const WCHAR wszEncoding[] = {'e','n','c','o','d','i','n','g','='};
+    BSTR sNew;
+    WCHAR *pBeg, *pEnd;
+
+    pBeg = sInput;
+    while(*pBeg != '\n' && memcmp(pBeg, wszEncoding, sizeof(wszEncoding)))
+        pBeg++;
+
+    if(*pBeg == '\n')
+    {
+        SysReAllocStringLen(&sInput, sInput, SysStringLen(sInput)-1);
+        return sInput;
+    }
+    pBeg--;
+
+    pEnd = pBeg + sizeof(wszEncoding)/sizeof(WCHAR) + 2;
+    while(*pEnd != '\"') pEnd++;
+    pEnd++;
+
+    sNew = SysAllocStringLen(NULL,
+            pBeg-sInput + SysStringLen(sInput)-(pEnd-sInput)-1);
+    memcpy(sNew, sInput, (pBeg-sInput)*sizeof(WCHAR));
+    memcpy(&sNew[pBeg-sInput], pEnd, (SysStringLen(sInput)-(pEnd-sInput)-1)*sizeof(WCHAR));
+
+    SysFreeString(sInput);
+    return sNew;
+}
+
 /*
  * We are trying to replicate the same behaviour as msxml by converting
  * line endings to \r\n and using idents as \t. The problem is that msxml
@@ -1123,7 +1209,18 @@ static HRESULT WINAPI xmlnode_get_xml(
             else
                 bstrContent = bstr_from_xmlChar(pContent);
 
-            *xmlString = This->node->type == XML_ELEMENT_NODE ? EnsureCorrectEOL(bstrContent) : bstrContent;
+            switch(This->node->type)
+            {
+                case XML_ELEMENT_NODE:
+                    *xmlString = EnsureCorrectEOL(bstrContent);
+                    break;
+                case XML_DOCUMENT_NODE:
+                    *xmlString = EnsureCorrectEOL(bstrContent);
+                    *xmlString = EnsureNoEncoding(*xmlString);
+                    break;
+                default:
+                    *xmlString = bstrContent;
+            }
         }
 
         xmlBufferFree(pXmlBuf);
@@ -1140,7 +1237,7 @@ static HRESULT WINAPI xmlnode_transformNode(
     IXMLDOMNode* styleSheet,
     BSTR* xmlString)
 {
-#ifdef HAVE_LIBXSLT
+#ifdef SONAME_LIBXSLT
     xmlnode *This = impl_from_IXMLDOMNode( iface );
     xmlnode *pStyleSheet = NULL;
     xsltStylesheetPtr xsltSS = NULL;
@@ -1149,6 +1246,8 @@ static HRESULT WINAPI xmlnode_transformNode(
 
     TRACE("%p %p %p\n", This, styleSheet, xmlString);
 
+    if (!libxslt_handle)
+        return E_NOTIMPL;
     if(!styleSheet || !xmlString)
         return E_INVALIDARG;
 
@@ -1158,10 +1257,10 @@ static HRESULT WINAPI xmlnode_transformNode(
     {
         pStyleSheet = impl_from_IXMLDOMNode( ssNew );
 
-        xsltSS = xsltParseStylesheetDoc( pStyleSheet->node->doc);
+        xsltSS = pxsltParseStylesheetDoc( pStyleSheet->node->doc);
         if(xsltSS)
         {
-            result = xsltApplyStylesheet(xsltSS, This->node->doc, NULL);
+            result = pxsltApplyStylesheet(xsltSS, This->node->doc, NULL);
             if(result)
             {
                 const xmlChar *pContent;
@@ -1172,12 +1271,8 @@ static HRESULT WINAPI xmlnode_transformNode(
                     if(pOutput)
                     {
                         htmlDocContentDumpOutput(pOutput, result->doc, NULL);
-                        if(pOutput)
-                        {
-                            pContent = xmlBufferContent(pOutput->buffer);
-                            *xmlString = bstr_from_xmlChar(pContent);
-                        }
-
+                        pContent = xmlBufferContent(pOutput->buffer);
+                        *xmlString = bstr_from_xmlChar(pContent);
                         xmlOutputBufferClose(pOutput);
                     }
                 }
@@ -1194,12 +1289,16 @@ static HRESULT WINAPI xmlnode_transformNode(
                         {
                             pContent = xmlBufferContent(pXmlBuf);
                             *xmlString = bstr_from_xmlChar(pContent);
-
-                            xmlBufferFree(pXmlBuf);
                         }
+                        xmlBufferFree(pXmlBuf);
                     }
                 }
+                xmlFreeDoc(result);
             }
+            /* libxslt "helpfully" frees the XML document the stylesheet was
+               generated from, too */
+            xsltSS->doc = NULL;
+            pxsltFreeStylesheet(xsltSS);
         }
 
         IXMLDOMNode_Release(ssNew);
@@ -1276,6 +1375,7 @@ static HRESULT WINAPI xmlnode_get_namespaceURI(
     {
         *namespaceURI = bstr_from_xmlChar( pNSList[0]->href );
 
+        xmlFree( pNSList );
         hr = S_OK;
     }
 
@@ -1302,6 +1402,7 @@ static HRESULT WINAPI xmlnode_get_prefix(
     {
         *prefixString = bstr_from_xmlChar( pNSList[0]->prefix );
 
+        xmlFree(pNSList);
         hr = S_OK;
     }
 

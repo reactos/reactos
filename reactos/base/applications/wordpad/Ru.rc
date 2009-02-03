@@ -109,7 +109,7 @@ STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Дата и время"
 FONT 10, "MS Sans Serif"
 BEGIN
-    LTEXT        "Доступные форматы",0,3,2,100,15
+    LTEXT        "Доступные форматы",-1,3,2,100,15
     LISTBOX      IDC_DATETIME,3,12,80,65,LBS_NOINTEGRALHEIGHT | LBS_NOTIFY
     PUSHBUTTON   "&ОК",IDOK,87,12,40,12
     PUSHBUTTON   "О&тмена",IDCANCEL,87,26,40,12
@@ -120,7 +120,7 @@ STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Новый документ"
 FONT 10, "MS Sans Serif"
 BEGIN
-    LTEXT        "Тип создаваемого документа",0,3,2,100,15
+    LTEXT        "Тип создаваемого документа",-1,3,2,100,15
     LISTBOX      IDC_NEWFILE,3,12,90,65,LBS_NOINTEGRALHEIGHT
     PUSHBUTTON   "&ОК",IDOK,97,12,40,12
     PUSHBUTTON   "О&тмена",IDCANCEL,97,26,40,12
@@ -131,14 +131,14 @@ STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 Caption "Абзац"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Отступ", 0, 10, 10, 120, 68
-    LTEXT "Слева", 0, 15, 22, 40, 13
+    GROUPBOX "Отступ", -1, 10, 10, 120, 68
+    LTEXT "Слева", -1, 15, 22, 40, 13
     EDITTEXT IDC_PARA_LEFT, 55, 20, 60, 13
-    LTEXT "Справа", 0, 15, 40, 40, 13
+    LTEXT "Справа", -1, 15, 40, 40, 13
     EDITTEXT IDC_PARA_RIGHT, 55, 38, 60, 13
-    LTEXT "Первая строка", 0, 15, 58, 40, 13
+    LTEXT "Первая строка", -1, 15, 58, 40, 13
     EDITTEXT IDC_PARA_FIRST, 55, 56, 60, 13
-    LTEXT "Выравнивание", 0, 15, 87, 40, 13
+    LTEXT "Выравнивание", -1, 15, 87, 40, 13
     COMBOBOX IDC_PARA_ALIGN, 55, 85, 60, 60, CBS_DROPDOWNLIST
     PUSHBUTTON "&ОК", IDOK, 137, 15, 50, 15
     PUSHBUTTON "О&тмена", IDCANCEL, 137, 33, 50, 15
@@ -149,7 +149,7 @@ STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 Caption "Табуляция"
 FONT 8, "MS SHell DLg"
 BEGIN
-    GROUPBOX "Позиции табуляции", 0, 10, 10, 120, 90
+    GROUPBOX "Позиции табуляции", -1, 10, 10, 120, 90
     COMBOBOX IDC_TABSTOPS, 20, 20, 100, 60, CBS_SIMPLE | CBS_SORT
     DEFPUSHBUTTON "&Установить", ID_TAB_ADD, 20, 80, 45, 15
     PUSHBUTTON "О&чистить", ID_TAB_DEL, 72, 80, 45, 15
@@ -163,11 +163,11 @@ STYLE DS_SYSMODAL
 Caption ""
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Перенос по словам", 0, 10, 10, 130, 85
+    GROUPBOX "Перенос по словам", -1, 10, 10, 130, 85
     RADIOBUTTON "No line wrapping", IDC_PAGEFMT_WN, 18, 25, 117, 15
     RADIOBUTTON "В границах &окна", IDC_PAGEFMT_WW, 18, 45, 117, 15
     RADIOBUTTON "В границах &полей", IDC_PAGEFMT_WM, 18, 65, 117, 15
-    GROUPBOX "Панели", 0, 150, 10, 120, 85
+    GROUPBOX "Панели", -1, 150, 10, 120, 85
     CHECKBOX "&Инструментов", IDC_PAGEFMT_TB, 160, 20, 80, 15
     CHECKBOX "&Форматирования", IDC_PAGEFMT_FB, 160, 38, 80, 15
     CHECKBOX "&Линейка", IDC_PAGEFMT_RU, 160, 56, 80, 15

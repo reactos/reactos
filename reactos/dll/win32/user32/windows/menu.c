@@ -80,8 +80,8 @@ const struct builtin_class_descr POPUPMENU_builtin_class =
 {
     POPUPMENU_CLASS_ATOMW,                     /* name */
     CS_SAVEBITS | CS_DBLCLKS,                  /* style  */
-    (WNDPROC) PopupMenuWndProcW,               /* FIXME - procW */
     (WNDPROC) NULL,                            /* FIXME - procA */
+    (WNDPROC) PopupMenuWndProcW,               /* FIXME - procW */
     sizeof(MENUINFO *),                        /* extra */
     (LPCWSTR) IDC_ARROW,                       /* cursor */
     (HBRUSH)(COLOR_MENU + 1)                   /* brush */
@@ -4031,28 +4031,6 @@ CreatePopupMenu(VOID)
  * @implemented
  */
 BOOL WINAPI
-DeleteMenu(HMENU hMenu,
-	   UINT uPosition,
-	   UINT uFlags)
-{
-  return NtUserDeleteMenu(hMenu, uPosition, uFlags);
-}
-
-
-/*
- * @implemented
- */
-BOOL WINAPI
-DestroyMenu(HMENU hMenu)
-{
-    return NtUserDestroyMenu(hMenu);
-}
-
-
-/*
- * @implemented
- */
-BOOL WINAPI
 DrawMenuBar(HWND hWnd)
 {
   return (BOOL)NtUserCallHwndLock(hWnd, HWNDLOCK_ROUTINE_DRAWMENUBAR);
@@ -4093,19 +4071,6 @@ HMENU WINAPI
 GetMenu(HWND hWnd)
 {
   return NtUserGetMenu(hWnd);
-}
-
-
-/*
- * @implemented
- */
-BOOL WINAPI
-GetMenuBarInfo(HWND hwnd,
-	       LONG idObject,
-	       LONG idItem,
-	       PMENUBARINFO pmbi)
-{
-  return (BOOL)NtUserGetMenuBarInfo(hwnd, idObject, idItem, pmbi);
 }
 
 
@@ -4352,19 +4317,6 @@ GetMenuItemInfoW(
 /*
  * @implemented
  */
-BOOL WINAPI
-GetMenuItemRect(HWND hWnd,
-		HMENU hMenu,
-		UINT uItem,
-		LPRECT lprcItem)
-{
-  return NtUserGetMenuItemRect( hWnd, hMenu, uItem, lprcItem);
-}
-
-
-/*
- * @implemented
- */
 UINT
 WINAPI
 GetMenuState(
@@ -4496,22 +4448,6 @@ GetSystemMenu(
 
   return NULL == TopMenu ? NULL : GetSubMenu(TopMenu, 0);
 }
-
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
-HiliteMenuItem(
-  HWND hwnd,
-  HMENU hmenu,
-  UINT uItemHilite,
-  UINT uHilite)
-{
-  return NtUserHiliteMenuItem(hwnd, hmenu, uItemHilite, uHilite);
-}
-
 
 
 /*
@@ -4874,39 +4810,11 @@ ModifyMenuW(
 /*
  * @implemented
  */
-BOOL
-WINAPI
-RemoveMenu(
-  HMENU hMenu,
-  UINT uPosition,
-  UINT uFlags)
-{
-  return NtUserRemoveMenu(hMenu, uPosition, uFlags);
-}
-
-
-/*
- * @implemented
- */
 BOOL WINAPI
 SetMenu(HWND hWnd,
 	HMENU hMenu)
 {
   return NtUserSetMenu(hWnd, hMenu, TRUE);
-}
-
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
-SetMenuDefaultItem(
-  HMENU hMenu,
-  UINT uItem,
-  UINT fByPos)
-{
-  return NtUserSetMenuDefaultItem(hMenu, uItem, fByPos);
 }
 
 
@@ -5157,18 +5065,6 @@ NEWTrackPopupMenu(
                                     y,
                                   Wnd,
                                  NULL); // LPTPMPARAMS is null
-}
-
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
-SetMenuContextHelpId(HMENU hmenu,
-          DWORD dwContextHelpId)
-{
-  return NtUserSetMenuContextHelpId(hmenu, dwContextHelpId);
 }
 
 

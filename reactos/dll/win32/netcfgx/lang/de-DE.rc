@@ -73,7 +73,7 @@ CAPTION "DNS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LISTBOX IDC_DNSADDRLIST, 5, 17, 180, 60, LBS_NOTIFY
-    LTEXT "D&NS-Serveraddressen in Verwendungsreihenfolge", -1, 5, 5, 180, 12
+    LTEXT "D&NS-Serveradressen in Verwendungsreihenfolge", -1, 5, 5, 180, 12
     PUSHBUTTON "Aufwärts", IDC_DNSADDRUP, 190, 30, 50, 14, WS_TABSTOP
     PUSHBUTTON "Abwärts", IDC_DNSADDRDOWN, 190, 50, 50, 14, WS_TABSTOP
     PUSHBUTTON "Hinzufügen...", IDC_DNSADDRADD, 30, 70, 50, 14, WS_TABSTOP
@@ -91,7 +91,7 @@ BEGIN
     PUSHBUTTON "Entfernen", IDC_DNSSUFFIXDEL, 170, 210, 50, 14, WS_TABSTOP
     LTEXT "DNS-Suffix für diese Verbindung:", -1, 5, 225, 110, 14
     EDITTEXT IDC_SUFFIX, 120, 225, 100, 12, WS_TABSTOP
-    CHECKBOX "Addressen dieser Verbindung in DNS registrieren", IDC_REGSUFFIX, 15, 240, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "Adressen dieser Verbindung in DNS registrieren", IDC_REGSUFFIX, 15, 240, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
     CHECKBOX "DNS-Suffix dieser Verbindung in DNS-Registrierung verwenden", IDC_USESUFFIX, 15, 255, 220, 12, BS_AUTOCHECKBOX | WS_TABSTOP
 
 END

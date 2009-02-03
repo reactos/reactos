@@ -173,10 +173,6 @@ KeFlushProcessTb(VOID)
 }
 
 //
-// TODO: Guarded Mutex Routines
-//
-
-//
 // Enters a Critical Region
 //
 #define KeEnterCriticalRegion()                                             \
@@ -1711,4 +1707,179 @@ KiComputeNewPriority(IN PKTHREAD Thread,
 
     /* Return the new priority */
     return Priority;
+}
+
+//
+// Guarded Mutex Routines
+//
+FORCEINLINE
+VOID
+_KeInitializeGuardedMutex(OUT PKGUARDED_MUTEX GuardedMutex)
+{
+    /* Setup the Initial Data */
+    GuardedMutex->Count = GM_LOCK_BIT;
+    GuardedMutex->Owner = NULL;
+    GuardedMutex->Contention = 0;
+    
+    /* Initialize the Wait Gate */
+    KeInitializeGate(&GuardedMutex->Gate);
+}
+
+FORCEINLINE
+VOID
+_KeAcquireGuardedMutexUnsafe(IN OUT PKGUARDED_MUTEX GuardedMutex)
+{
+    PKTHREAD Thread = KeGetCurrentThread();
+    
+    /* Sanity checks */
+    ASSERT((KeGetCurrentIrql() == APC_LEVEL) ||
+           (Thread->SpecialApcDisable < 0) ||
+           (Thread->Teb == NULL) ||
+           (Thread->Teb >= (PTEB)MM_SYSTEM_RANGE_START));
+    ASSERT(GuardedMutex->Owner != Thread);
+    
+    /* Remove the lock */
+    if (!InterlockedBitTestAndReset(&GuardedMutex->Count, GM_LOCK_BIT_V))
+    {
+        /* The Guarded Mutex was already locked, enter contented case */
+        KiAcquireGuardedMutex(GuardedMutex);
+    }
+    
+    /* Set the Owner */
+    GuardedMutex->Owner = Thread;
+}
+
+FORCEINLINE
+VOID
+_KeReleaseGuardedMutexUnsafe(IN OUT PKGUARDED_MUTEX GuardedMutex)
+{
+    LONG OldValue, NewValue;
+    
+    /* Sanity checks */
+    ASSERT((KeGetCurrentIrql() == APC_LEVEL) ||
+           (KeGetCurrentThread()->SpecialApcDisable < 0) ||
+           (KeGetCurrentThread()->Teb == NULL) ||
+           (KeGetCurrentThread()->Teb >= (PTEB)MM_SYSTEM_RANGE_START));
+    ASSERT(GuardedMutex->Owner == KeGetCurrentThread());
+    
+    /* Destroy the Owner */
+    GuardedMutex->Owner = NULL;
+    
+    /* Add the Lock Bit */
+    OldValue = InterlockedExchangeAdd(&GuardedMutex->Count, GM_LOCK_BIT);
+    ASSERT((OldValue & GM_LOCK_BIT) == 0);
+    
+    /* Check if it was already locked, but not woken */
+    if ((OldValue) && !(OldValue & GM_LOCK_WAITER_WOKEN))
+    {
+        /* Update the Oldvalue to what it should be now */
+        OldValue += GM_LOCK_BIT;
+
+        /* The mutex will be woken, minus one waiter */
+        NewValue = OldValue + GM_LOCK_WAITER_WOKEN -
+            GM_LOCK_WAITER_INC;
+        
+        /* Remove the Woken bit */
+        if (InterlockedCompareExchange(&GuardedMutex->Count,
+                                       NewValue,
+                                       OldValue) == OldValue)
+        {
+            /* Signal the Gate */
+            KeSignalGateBoostPriority(&GuardedMutex->Gate);
+        }
+    }
+}
+
+FORCEINLINE
+VOID
+_KeAcquireGuardedMutex(IN PKGUARDED_MUTEX GuardedMutex)
+{
+    PKTHREAD Thread = KeGetCurrentThread();
+    
+    /* Sanity checks */
+    ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
+    ASSERT(GuardedMutex->Owner != Thread);
+    
+    /* Disable Special APCs */
+    KeEnterGuardedRegion();
+    
+    /* Remove the lock */
+    if (!InterlockedBitTestAndReset(&GuardedMutex->Count, GM_LOCK_BIT_V))
+    {
+        /* The Guarded Mutex was already locked, enter contented case */
+        KiAcquireGuardedMutex(GuardedMutex);
+    }
+    
+    /* Set the Owner and Special APC Disable state */
+    GuardedMutex->Owner = Thread;
+    GuardedMutex->SpecialApcDisable = Thread->SpecialApcDisable;
+}
+
+FORCEINLINE
+VOID
+_KeReleaseGuardedMutex(IN OUT PKGUARDED_MUTEX GuardedMutex)
+{
+    LONG OldValue, NewValue;
+    
+    /* Sanity checks */
+    ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
+    ASSERT(GuardedMutex->Owner == KeGetCurrentThread());
+    ASSERT(KeGetCurrentThread()->SpecialApcDisable ==
+           GuardedMutex->SpecialApcDisable);
+    
+    /* Destroy the Owner */
+    GuardedMutex->Owner = NULL;
+    
+    /* Add the Lock Bit */
+    OldValue = InterlockedExchangeAdd(&GuardedMutex->Count, GM_LOCK_BIT);
+    ASSERT((OldValue & GM_LOCK_BIT) == 0);
+    
+    /* Check if it was already locked, but not woken */
+    if ((OldValue) && !(OldValue & GM_LOCK_WAITER_WOKEN))
+    {
+        /* Update the Oldvalue to what it should be now */
+        OldValue += GM_LOCK_BIT;
+
+        /* The mutex will be woken, minus one waiter */
+        NewValue = OldValue + GM_LOCK_WAITER_WOKEN -
+            GM_LOCK_WAITER_INC;
+        
+        /* Remove the Woken bit */
+        if (InterlockedCompareExchange(&GuardedMutex->Count,
+                                       NewValue,
+                                       OldValue) == OldValue)
+        {
+            /* Signal the Gate */
+            KeSignalGateBoostPriority(&GuardedMutex->Gate);
+        }
+    }
+    
+    /* Re-enable APCs */
+    KeLeaveGuardedRegion();
+}
+
+FORCEINLINE
+BOOLEAN
+_KeTryToAcquireGuardedMutex(IN OUT PKGUARDED_MUTEX GuardedMutex)
+{
+    PKTHREAD Thread = KeGetCurrentThread();
+    
+    /* Block APCs */
+    KeEnterGuardedRegion();
+    
+    /* Remove the lock */
+    if (!InterlockedBitTestAndReset(&GuardedMutex->Count, GM_LOCK_BIT_V))
+    {
+        /* Re-enable APCs */
+        KeLeaveGuardedRegion();
+        YieldProcessor();
+        
+        /* Return failure */
+        return FALSE;
+    }
+    
+    /* Set the Owner and APC State */
+    GuardedMutex->Owner = Thread;
+    GuardedMutex->SpecialApcDisable = Thread->SpecialApcDisable;
+    return TRUE;
 }

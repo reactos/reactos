@@ -1335,6 +1335,7 @@ LRESULT WINAPI
 DispatchMessageA(CONST MSG *lpmsg)
 {
     LRESULT Ret = 0;
+    MSG UnicodeMsg;
     PWINDOW Wnd;
 
     if (lpmsg->hwnd != NULL)
@@ -1349,6 +1350,10 @@ DispatchMessageA(CONST MSG *lpmsg)
     if ((lpmsg->message == WM_TIMER || lpmsg->message == WM_SYSTIMER) && lpmsg->lParam != 0)
     {
         WNDPROC WndProc = (WNDPROC)lpmsg->lParam;
+
+        if ( lpmsg->message == WM_SYSTIMER )
+           return NtUserDispatchMessage( (PMSG)lpmsg );
+
         Ret = WndProc(lpmsg->hwnd,
                       lpmsg->message,
                       lpmsg->wParam,
@@ -1356,16 +1361,33 @@ DispatchMessageA(CONST MSG *lpmsg)
     }
     else if (Wnd != NULL)
     {
-        /* FIXME: WM_PAINT needs special handling */
-        Ret = IntCallMessageProc(Wnd,
-                                 lpmsg->hwnd,
-                                 lpmsg->message,
-                                 lpmsg->wParam,
-                                 lpmsg->lParam,
-                                 TRUE);
-    }
+       // FIXME Need to test for calling proc inside win32k!
+       if ( (lpmsg->message != WM_PAINT) ) // && !(Wnd->flags & WNDF_CALLPROC) )
+       {
+           Ret = IntCallMessageProc(Wnd,
+                                    lpmsg->hwnd,
+                                    lpmsg->message,
+                                    lpmsg->wParam,
+                                    lpmsg->lParam,
+                                    TRUE);
+       }
+       else
+       {
+          if (!MsgiAnsiToUnicodeMessage(&UnicodeMsg, (LPMSG)lpmsg))
+          {
+             return FALSE;
+          }
 
-    return Ret;}
+          Ret = NtUserDispatchMessage(&UnicodeMsg);
+
+          if (!MsgiAnsiToUnicodeReply(&UnicodeMsg, (LPMSG)lpmsg, &Ret))
+          {
+             return FALSE;
+          }
+       }
+    }
+    return Ret;
+}
 
 
 /*
@@ -1389,6 +1411,10 @@ DispatchMessageW(CONST MSG *lpmsg)
     if ((lpmsg->message == WM_TIMER || lpmsg->message == WM_SYSTIMER) && lpmsg->lParam != 0)
     {
         WNDPROC WndProc = (WNDPROC)lpmsg->lParam;
+
+        if ( lpmsg->message == WM_SYSTIMER )
+           return NtUserDispatchMessage( (PMSG) lpmsg );
+
         Ret = WndProc(lpmsg->hwnd,
                       lpmsg->message,
                       lpmsg->wParam,
@@ -1396,13 +1422,18 @@ DispatchMessageW(CONST MSG *lpmsg)
     }
     else if (Wnd != NULL)
     {
-        /* FIXME: WM_PAINT needs special handling */
-        Ret = IntCallMessageProc(Wnd,
-                                 lpmsg->hwnd,
-                                 lpmsg->message,
-                                 lpmsg->wParam,
-                                 lpmsg->lParam,
-                                 FALSE);
+       // FIXME Need to test for calling proc inside win32k!
+       if ( (lpmsg->message != WM_PAINT) ) // && !(Wnd->flags & W32K_CALLPROC) )
+       {
+           Ret = IntCallMessageProc(Wnd,
+                                    lpmsg->hwnd,
+                                    lpmsg->message,
+                                    lpmsg->wParam,
+                                    lpmsg->lParam,
+                                    FALSE);
+       }
+       else
+         Ret = NtUserDispatchMessage( (PMSG) lpmsg );
     }
 
     return Ret;
@@ -2117,17 +2148,6 @@ TranslateMessage(CONST MSG *lpMsg)
 /*
  * @implemented
  */
-BOOL
-WINAPI
-WaitMessage(VOID)
-{
-  return NtUserWaitMessage();
-}
-
-
-/*
- * @implemented
- */
 UINT WINAPI
 RegisterWindowMessageA(LPCSTR lpString)
 {
@@ -2156,15 +2176,6 @@ RegisterWindowMessageW(LPCWSTR lpString)
 
   RtlInitUnicodeString(&String, lpString);
   return(NtUserRegisterWindowMessage(&String));
-}
-
-/*
- * @implemented
- */
-HWND WINAPI
-SetCapture(HWND hWnd)
-{
-  return(NtUserSetCapture(hWnd));
 }
 
 /*

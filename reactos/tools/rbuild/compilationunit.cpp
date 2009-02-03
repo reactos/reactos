@@ -88,7 +88,7 @@ CompilationUnit::HasFileWithExtension ( const std::string& extension ) const
 	{
 		const File& file = *files[i];
 		string fileExtension = GetExtension ( file.file );
-		if ( !_stricmp ( fileExtension.c_str (), extension.c_str () ) )
+		if ( !stricmp ( fileExtension.c_str (), extension.c_str () ) )
 			return true;
 	}
 	return false;

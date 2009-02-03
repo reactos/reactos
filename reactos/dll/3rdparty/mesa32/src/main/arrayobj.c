@@ -142,7 +142,7 @@ _mesa_initialize_array_object( GLcontext *ctx,
    obj->Index.StrideB = 0;
    obj->Index.Ptr = NULL;
    obj->Index.Enabled = GL_FALSE;
-   for (i = 0; i < MAX_TEXTURE_UNITS; i++) {
+   for (i = 0; i < MAX_TEXTURE_COORD_UNITS; i++) {
       obj->TexCoord[i].Size = 4;
       obj->TexCoord[i].Type = GL_FLOAT;
       obj->TexCoord[i].Stride = 0;
@@ -164,6 +164,15 @@ _mesa_initialize_array_object( GLcontext *ctx,
       obj->VertexAttrib[i].Normalized = GL_FALSE;
    }
 
+#if FEATURE_point_size_array
+   obj->PointSize.Type = GL_FLOAT;
+   obj->PointSize.Stride = 0;
+   obj->PointSize.StrideB = 0;
+   obj->PointSize.Ptr = NULL;
+   obj->PointSize.Enabled = GL_FALSE;
+   obj->PointSize.BufferObj = ctx->Array.NullBufferObj;
+#endif
+
 #if FEATURE_ARB_vertex_buffer_object
    /* Vertex array buffers */
    obj->Vertex.BufferObj = ctx->Array.NullBufferObj;
@@ -172,7 +181,7 @@ _mesa_initialize_array_object( GLcontext *ctx,
    obj->SecondaryColor.BufferObj = ctx->Array.NullBufferObj;
    obj->FogCoord.BufferObj = ctx->Array.NullBufferObj;
    obj->Index.BufferObj = ctx->Array.NullBufferObj;
-   for (i = 0; i < MAX_TEXTURE_UNITS; i++) {
+   for (i = 0; i < MAX_TEXTURE_COORD_UNITS; i++) {
       obj->TexCoord[i].BufferObj = ctx->Array.NullBufferObj;
    }
    obj->EdgeFlag.BufferObj = ctx->Array.NullBufferObj;
@@ -326,7 +335,7 @@ _mesa_DeleteVertexArraysAPPLE(GLsizei n, const GLuint *ids)
 	 unbind_buffer_object( ctx, obj->SecondaryColor.BufferObj );
 	 unbind_buffer_object( ctx, obj->FogCoord.BufferObj );
 	 unbind_buffer_object( ctx, obj->Index.BufferObj );
-	 for (i = 0; i < MAX_TEXTURE_UNITS; i++) {
+	 for (i = 0; i < MAX_TEXTURE_COORD_UNITS; i++) {
 	    unbind_buffer_object( ctx, obj->TexCoord[i].BufferObj );
 	 }
 	 unbind_buffer_object( ctx, obj->EdgeFlag.BufferObj );

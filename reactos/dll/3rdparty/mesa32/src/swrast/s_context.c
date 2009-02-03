@@ -26,15 +26,15 @@
  *    Brian Paul
  */
 
-#include "imports.h"
-#include "bufferobj.h"
-#include "context.h"
-#include "colormac.h"
-#include "mtypes.h"
-#include "teximage.h"
-#include "swrast.h"
+#include "main/imports.h"
+#include "main/bufferobj.h"
+#include "main/context.h"
+#include "main/colormac.h"
+#include "main/mtypes.h"
+#include "main/teximage.h"
 #include "shader/prog_parameter.h"
 #include "shader/prog_statevars.h"
+#include "swrast.h"
 #include "s_blend.h"
 #include "s_context.h"
 #include "s_lines.h"

@@ -475,7 +475,7 @@ static UINT get_user_sid(LPWSTR *usersid)
         return ERROR_FUNCTION_FAILED;
 
     size = sizeof(buf);
-    if (!GetTokenInformation(token, TokenUser, (void *)buf, size, &size)) {
+    if (!GetTokenInformation(token, TokenUser, buf, size, &size)) {
         CloseHandle(token);
         return ERROR_FUNCTION_FAILED;
     }
@@ -653,7 +653,7 @@ UINT MSIREG_DeleteUserFeaturesKey(LPCWSTR szProduct)
     return RegDeleteTreeW(HKEY_CURRENT_USER, keypath);
 }
 
-UINT MSIREG_OpenInstallerFeaturesKey(LPCWSTR szProduct, HKEY* key, BOOL create)
+static UINT MSIREG_OpenInstallerFeaturesKey(LPCWSTR szProduct, HKEY* key, BOOL create)
 {
     UINT rc;
     WCHAR squished_pc[GUID_SIZE];
@@ -1894,7 +1894,7 @@ static UINT msi_enum_patches(LPCWSTR szProductCode, LPCWSTR szUserSid,
         MSIINSTALLCONTEXT *pdwTargetProductContext, LPWSTR szTargetUserSid,
         LPDWORD pcchTargetUserSid, LPWSTR *szTransforms)
 {
-    UINT r;
+    UINT r = ERROR_INVALID_PARAMETER;
 
     if (dwContext & MSIINSTALLCONTEXT_USERMANAGED)
     {

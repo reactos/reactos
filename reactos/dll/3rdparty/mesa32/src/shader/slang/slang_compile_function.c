@@ -32,42 +32,6 @@
 #include "slang_compile.h"
 #include "slang_mem.h"
 
-/* slang_fixup_table */
-
-void
-slang_fixup_table_init(slang_fixup_table * fix)
-{
-   fix->table = NULL;
-   fix->count = 0;
-}
-
-void
-slang_fixup_table_free(slang_fixup_table * fix)
-{
-   _slang_free(fix->table);
-   slang_fixup_table_init(fix);
-}
-
-/**
- * Add a new fixup address to the table.
- */
-GLboolean
-slang_fixup_save(slang_fixup_table *fixups, GLuint address)
-{
-   fixups->table = (GLuint *)
-      _slang_realloc(fixups->table,
-                     fixups->count * sizeof(GLuint),
-                     (fixups->count + 1) * sizeof(GLuint));
-   if (fixups->table == NULL)
-      return GL_FALSE;
-   fixups->table[fixups->count] = address;
-   fixups->count++;
-   return GL_TRUE;
-}
-
-
-
-/* slang_function */
 
 int
 slang_function_construct(slang_function * func)
@@ -86,8 +50,6 @@ slang_function_construct(slang_function * func)
    _slang_variable_scope_ctr(func->parameters);
    func->param_count = 0;
    func->body = NULL;
-   func->address = ~0;
-   slang_fixup_table_init(&func->fixups);
    return 1;
 }
 
@@ -101,8 +63,21 @@ slang_function_destruct(slang_function * func)
       slang_operation_destruct(func->body);
       _slang_free(func->body);
    }
-   slang_fixup_table_free(&func->fixups);
 }
+
+
+slang_function *
+slang_function_new(slang_function_kind kind)
+{
+   slang_function *fun = (slang_function *)
+      _slang_alloc(sizeof(slang_function));
+   if (fun) {
+      slang_function_construct(fun);
+      fun->kind = kind;
+   }
+   return fun;
+}
+
 
 /*
  * slang_function_scope
@@ -212,5 +187,76 @@ slang_function_scope_find(slang_function_scope * funcs, slang_function * fun,
    */
    if (all_scopes && funcs->outer_scope != NULL)
       return slang_function_scope_find(funcs->outer_scope, fun, 1);
+   return NULL;
+}
+
+
+/**
+ * Lookup a function according to name and parameter count/types.
+ */
+slang_function *
+_slang_function_locate(const slang_function_scope * funcs, slang_atom a_name,
+                       slang_operation * args, GLuint num_args,
+                       const slang_name_space * space, slang_atom_pool * atoms,
+                       slang_info_log *log, GLboolean *error)
+{
+   slang_typeinfo arg_ti[100];
+   GLuint i;
+
+   *error = GL_FALSE;
+
+   /* determine type of each argument */
+   assert(num_args < 100);
+   for (i = 0; i < num_args; i++) {
+      if (!slang_typeinfo_construct(&arg_ti[i]))
+         return NULL;
+      if (!_slang_typeof_operation(&args[i], space, &arg_ti[i], atoms, log)) {
+         return NULL;
+      }
+   }
+
+   /* loop over function scopes */
+   while (funcs) {
+
+      /* look for function with matching name and argument/param types */
+      for (i = 0; i < funcs->num_functions; i++) {
+         slang_function *f = &funcs->functions[i];
+         const GLuint haveRetValue = _slang_function_has_return_value(f);
+         GLuint j;
+
+         if (a_name != f->header.a_name)
+            continue;
+         if (f->param_count - haveRetValue != num_args)
+            continue;
+
+         /* compare parameter / argument types */
+         for (j = 0; j < num_args; j++) {
+            if (!slang_type_specifier_compatible(&arg_ti[j].spec,
+                              &f->parameters->variables[j]->type.specifier)) {
+               /* param/arg types don't match */
+               break;
+            }
+
+            /* "out" and "inout" formal parameter requires the actual
+             * argument to be an l-value.
+             */
+            if (!arg_ti[j].can_be_referenced &&
+                (f->parameters->variables[j]->type.qualifier == SLANG_QUAL_OUT ||
+                 f->parameters->variables[j]->type.qualifier == SLANG_QUAL_INOUT)) {
+               /* param is not an lvalue! */
+               *error = GL_TRUE;
+               return NULL;
+            }
+         }
+
+         if (j == num_args) {
+            /* name and args match! */
+            return f;
+         }
+      }
+
+      funcs = funcs->outer_scope;
+   }
+
    return NULL;
 }

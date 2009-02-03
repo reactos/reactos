@@ -93,7 +93,7 @@ typedef struct EnumMonikerImpl
 
 
 /* IEnumMoniker Local functions*/
-static HRESULT WINAPI EnumMonikerImpl_CreateEnumROTMoniker(InterfaceList *moniker_list,
+static HRESULT EnumMonikerImpl_CreateEnumROTMoniker(InterfaceList *moniker_list,
     ULONG pos, IEnumMoniker **ppenumMoniker);
 
 static IrotHandle get_irot_handle(void)
@@ -342,7 +342,7 @@ RunningObjectTableImpl_AddRef(IRunningObjectTable* iface)
 /***********************************************************************
  *        RunningObjectTable_Initialize
  */
-static HRESULT WINAPI
+static HRESULT
 RunningObjectTableImpl_Destroy(void)
 {
     struct list *cursor, *cursor2;
@@ -1344,7 +1344,7 @@ static ULONG   WINAPI EnumMonikerImpl_Release(IEnumMoniker* iface)
     return ref;
 }
 /***********************************************************************
- *        EnmumMoniker_Next
+ *        EnumMoniker_Next
  */
 static HRESULT   WINAPI EnumMonikerImpl_Next(IEnumMoniker* iface, ULONG celt, IMoniker** rgelt, ULONG * pceltFetched)
 {
@@ -1379,7 +1379,7 @@ static HRESULT   WINAPI EnumMonikerImpl_Next(IEnumMoniker* iface, ULONG celt, IM
 }
 
 /***********************************************************************
- *        EnmumMoniker_Skip
+ *        EnumMoniker_Skip
  */
 static HRESULT   WINAPI EnumMonikerImpl_Skip(IEnumMoniker* iface, ULONG celt)
 {
@@ -1396,7 +1396,7 @@ static HRESULT   WINAPI EnumMonikerImpl_Skip(IEnumMoniker* iface, ULONG celt)
 }
 
 /***********************************************************************
- *        EnmumMoniker_Reset
+ *        EnumMoniker_Reset
  */
 static HRESULT   WINAPI EnumMonikerImpl_Reset(IEnumMoniker* iface)
 {
@@ -1410,7 +1410,7 @@ static HRESULT   WINAPI EnumMonikerImpl_Reset(IEnumMoniker* iface)
 }
 
 /***********************************************************************
- *        EnmumMoniker_Clone
+ *        EnumMoniker_Clone
  */
 static HRESULT   WINAPI EnumMonikerImpl_Clone(IEnumMoniker* iface, IEnumMoniker ** ppenum)
 {
@@ -1463,7 +1463,7 @@ static const IEnumMonikerVtbl VT_EnumMonikerImpl =
  *        Used by EnumRunning to create the structure and EnumClone
  *	  to copy the structure
  */
-static HRESULT WINAPI EnumMonikerImpl_CreateEnumROTMoniker(InterfaceList *moniker_list,
+static HRESULT EnumMonikerImpl_CreateEnumROTMoniker(InterfaceList *moniker_list,
                                                  ULONG current_pos,
                                                  IEnumMoniker **ppenumMoniker)
 {

@@ -374,8 +374,7 @@ ObpCaptureObjectName(IN OUT PUNICODE_STRING CapturedName,
         if (AccessMode != KernelMode)
         {
             /* First Probe the String */
-            ProbeForReadUnicodeString(ObjectName);
-            LocalName = *ObjectName;
+            LocalName = ProbeForReadUnicodeString(ObjectName);
             ProbeForRead(LocalName.Buffer, LocalName.Length, sizeof(WCHAR));
         }
         else

@@ -102,14 +102,6 @@ GetActiveWindow(VOID)
   return (HWND)NtUserGetThreadState(THREADSTATE_ACTIVEWINDOW);
 }
 
-/*
- * @implemented
- */
-HWND WINAPI
-SetActiveWindow(HWND hWnd)
-{
-  return(NtUserSetActiveWindow(hWnd));
-}
 
 /*
  * @unimplemented

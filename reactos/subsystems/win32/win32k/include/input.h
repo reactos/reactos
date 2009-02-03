@@ -37,4 +37,6 @@ PKBL UserHklToKbl(HKL hKl);
 #define ThreadHasInputAccess(W32Thread) \
   (TRUE)
 
+extern PTHREADINFO ptiRawInput;
+
 #endif /* _WIN32K_INPUT_H */

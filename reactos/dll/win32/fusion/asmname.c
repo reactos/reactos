@@ -150,7 +150,7 @@ static HRESULT WINAPI IAssemblyNameImpl_GetProperty(IAssemblyName *iface,
             *pcbProperty = 0;
             if (name->name)
             {
-                lstrcpyW((LPWSTR)pvProperty, name->name);
+                lstrcpyW(pvProperty, name->name);
                 *pcbProperty = (lstrlenW(name->name) + 1) * 2;
             }
             break;
@@ -187,7 +187,7 @@ static HRESULT WINAPI IAssemblyNameImpl_GetProperty(IAssemblyName *iface,
             *pcbProperty = 0;
             if (name->culture)
             {
-                lstrcpyW((LPWSTR)pvProperty, name->culture);
+                lstrcpyW(pvProperty, name->culture);
                 *pcbProperty = (lstrlenW(name->culture) + 1) * 2;
             }
             break;

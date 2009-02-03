@@ -3,16 +3,16 @@
 @ stub BackupClusterDatabase
 @ stub CanResourceBeDependent
 @ stub ChangeClusterResourceGroup
-@ stub CloseCluster
+@ stdcall CloseCluster(ptr)
 @ stub CloseClusterGroup
 @ stub CloseClusterNetInterface
 @ stub CloseClusterNetwork
 @ stub CloseClusterNode
 @ stub CloseClusterNotifyPort
 @ stub CloseClusterResource
-@ stub ClusterCloseEnum
+@ stdcall ClusterCloseEnum(ptr)
 @ stub ClusterControl
-@ stub ClusterEnum
+@ stdcall ClusterEnum(ptr long ptr wstr ptr)
 @ stub ClusterGetEnumCount
 @ stub ClusterGroupCloseEnum
 @ stub ClusterGroupControl
@@ -30,7 +30,7 @@
 @ stub ClusterNodeEnum
 @ stub ClusterNodeGetEnumCount
 @ stub ClusterNodeOpenEnum
-@ stub ClusterOpenEnum
+@ stdcall ClusterOpenEnum(ptr long)
 @ stub ClusterRegCloseKey
 @ stub ClusterRegCreateKey
 @ stub ClusterRegDeleteKey
@@ -93,7 +93,7 @@
 @ stub OfflineClusterResource
 @ stub OnlineClusterGroup
 @ stub OnlineClusterResource
-@ stub OpenCluster
+@ stdcall OpenCluster(wstr)
 @ stub OpenClusterGroup
 @ stub OpenClusterNetInterface
 @ stub OpenClusterNetwork

@@ -4541,13 +4541,7 @@ MmMapViewOfSection(IN PVOID SectionObject,
 
    ASSERT(Process);
 
-   if (Protect != PAGE_READONLY &&
-       Protect != PAGE_READWRITE &&
-       Protect != PAGE_WRITECOPY &&
-       Protect != PAGE_EXECUTE &&
-       Protect != PAGE_EXECUTE_READ &&
-       Protect != PAGE_EXECUTE_READWRITE &&
-       Protect != PAGE_EXECUTE_WRITECOPY)
+   if (!Protect || Protect & ~PAGE_FLAGS_VALID_FOR_SECTION)
    {
       return STATUS_INVALID_PAGE_PROTECTION;
    }
@@ -4723,8 +4717,44 @@ BOOLEAN NTAPI
 MmCanFileBeTruncated (IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
                       IN PLARGE_INTEGER   NewFileSize)
 {
-   UNIMPLEMENTED;
-   return (FALSE);
+   /* Check whether an ImageSectionObject exists */
+   if (SectionObjectPointer->ImageSectionObject != NULL)
+   {
+      DPRINT1("ERROR: File can't be truncated because it has an image section\n");
+      return FALSE;
+   }
+
+   if (SectionObjectPointer->DataSectionObject != NULL)
+   {
+      PMM_SECTION_SEGMENT Segment;
+
+      Segment = (PMM_SECTION_SEGMENT)SectionObjectPointer->
+                DataSectionObject;
+
+      if (Segment->ReferenceCount != 0)
+      {
+          /* Check size of file */
+          if (SectionObjectPointer->SharedCacheMap)
+          {
+             PBCB Bcb = SectionObjectPointer->SharedCacheMap;
+             if (NewFileSize->QuadPart <= Bcb->FileSize.QuadPart)
+             {
+                return FALSE;
+             }
+          }
+      }
+      else
+      {
+         /* Something must gone wrong
+          * how can we have a Section but no 
+          * reference? */
+         DPRINT1("ERROR: DataSectionObject without reference!\n");
+      }
+   }
+
+   DPRINT1("FIXME: didn't check for outstanding write probes\n");
+
+   return TRUE;
 }
 
 

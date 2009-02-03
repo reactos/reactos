@@ -41,6 +41,28 @@ LaunchDeviceManager(HWND hWndParent)
 #endif /* __REACTOS__ */
 }
 
+static VOID
+LaunchHardwareWizard(HWND hWndParent)
+{
+    SHELLEXECUTEINFO shInputDll;
+
+    memset(&shInputDll, 0x0, sizeof(SHELLEXECUTEINFO));
+
+    shInputDll.cbSize = sizeof(shInputDll);
+    shInputDll.hwnd = hWndParent;
+    shInputDll.lpVerb = _T("open");
+    shInputDll.lpFile = _T("rundll32.exe");
+    shInputDll.lpParameters = _T("shell32.dll,Control_RunDLL hdwwiz.cpl");
+
+    if (ShellExecuteEx(&shInputDll) == 0)
+    {
+        MessageBox(NULL,
+                   _T("Can't start hdwwiz.cpl"),
+                   NULL,
+                   MB_OK | MB_ICONERROR);
+    }
+}
+
 /* Property page dialog callback */
 INT_PTR CALLBACK
 HardwarePageProc(HWND hwndDlg,
@@ -63,6 +85,10 @@ HardwarePageProc(HWND hwndDlg,
                     {
                         /* FIXME */
                     }
+                    return TRUE;
+
+                case IDC_HARDWARE_WIZARD:
+                    LaunchHardwareWizard(hwndDlg);
                     return TRUE;
 
                 case IDC_HARDWARE_PROFILE:

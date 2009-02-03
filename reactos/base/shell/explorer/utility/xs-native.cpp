@@ -2,7 +2,7 @@
  //
  // XML storage C++ classes version 1.3
  //
- // Copyright (c) 2006, 2007, 2008 Martin Fuchs <martin-fuchs@gmx.net>
+ // Copyright (c) 2006, 2007, 2008, 2009 Martin Fuchs <martin-fuchs@gmx.net>
  //
 
  /// \file xs-native.cpp
@@ -37,12 +37,13 @@
 
 */
 
+#include <precomp.h>
+
 #ifndef XS_NO_COMMENT
 #define XS_NO_COMMENT	// no #pragma comment(lib, ...) statements in .lib files to enable static linking
 #endif
 
 //#include "xmlstorage.h"
-#include <precomp.h>
 
 
 #if !defined(XS_USE_EXPAT) && !defined(XS_USE_XERCES)
@@ -131,7 +132,7 @@ struct Buffer
 		//if (_wptr-_buffer < 3)
 		//	return false;
 
-		return !strncmp(_wptr-3, "]]>", 3);
+		return !strncmp(_wptr-3, CDATA_END, 3);
 	}
 
 	XS_String get_tag() const
@@ -318,7 +319,7 @@ bool XMLReaderBase::parse()
 					_format._doctype.parse(str+10);
 
 					c = eat_endl();
-				} else if (!strncmp(str+2, "[CDATA[", 7)) {
+				} else if (!strncmp(str+2, "[CDATA[", 7)) {	// see CDATA_START
 					 // parse <![CDATA[ ... ]]> strings
 					while(!buffer.has_CDEnd()) {
 						c = get();

@@ -21,8 +21,6 @@ WINUSERAPI UINT WINAPI PrivateExtractIconsW(LPCWSTR,int,int,int,HICON*,UINT*,UIN
 
 #define WM_ALTTABACTIVE         0x0029
 
-#define UNICODE_NOCHAR          0xFFFF
-
 #ifndef E_PROP_ID_UNSUPPORTED
 #define E_PROP_ID_UNSUPPORTED            ((HRESULT)0x80070490)
 #endif

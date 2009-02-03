@@ -121,7 +121,6 @@ DECLARE_INTERFACE_(IShellDesktopTray,IUnknown)
 #define IShellDesktopTray_Unknown(T,a,b) (T)->lpVtbl->Unknown(T,a,b)
 #endif
 
-#if USE_API_SHCREATEDESKTOP != 0
 #if 0
 HANDLE WINAPI SHCreateDesktop(IShellDesktopTray*);
 BOOL WINAPI SHDesktopMessageLoop(HANDLE);
@@ -176,8 +175,6 @@ SHDesktopMessageLoop(IN HANDLE hDesktop)
     return FALSE;
 }
 #endif
-
-#endif /* USE_API_SHCREATEDESKTOP */
 
 #define WM_GETISHELLBROWSER (WM_USER+7)
 BOOL WINAPI SetShellWindow(HWND);

@@ -35,10 +35,10 @@
 
 
 
-#include "glheader.h"
-#include "context.h"
-#include "colormac.h"
-#include "macros.h"
+#include "main/glheader.h"
+#include "main/context.h"
+#include "main/colormac.h"
+#include "main/macros.h"
 
 #include "s_blend.h"
 #include "s_context.h"

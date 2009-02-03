@@ -136,7 +136,7 @@ static BOOL WINAPI CRYPT_GetUrlFromCertificateCRLDistPoint(LPCSTR pszUrlOid,
  LPVOID pvPara, DWORD dwFlags, PCRYPT_URL_ARRAY pUrlArray, DWORD *pcbUrlArray,
  PCRYPT_URL_INFO pUrlInfo, DWORD *pcbUrlInfo, LPVOID pvReserved)
 {
-    PCCERT_CONTEXT cert = (PCCERT_CONTEXT)pvPara;
+    PCCERT_CONTEXT cert = pvPara;
     PCERT_EXTENSION ext;
     BOOL ret = FALSE;
 
@@ -686,7 +686,7 @@ static void CALLBACK CRYPT_InetStatusCallback(HINTERNET hInt,
     switch (status)
     {
     case INTERNET_STATUS_REQUEST_COMPLETE:
-        result = (LPINTERNET_ASYNC_RESULT)statusInfo;
+        result = statusInfo;
         context->error = result->dwError;
         SetEvent(context->event);
     }
@@ -1244,17 +1244,17 @@ static BOOL WINAPI CRYPT_CreateAny(LPCSTR pszObjectOid,
                     {
                     case CERT_QUERY_CONTENT_CERT:
                         if (!CertAddCertificateContextToStore(store,
-                         (PCCERT_CONTEXT)context, CERT_STORE_ADD_ALWAYS, NULL))
+                         context, CERT_STORE_ADD_ALWAYS, NULL))
                             ret = FALSE;
                         break;
                     case CERT_QUERY_CONTENT_CRL:
                         if (!CertAddCRLContextToStore(store,
-                         (PCCRL_CONTEXT)context, CERT_STORE_ADD_ALWAYS, NULL))
+                         context, CERT_STORE_ADD_ALWAYS, NULL))
                              ret = FALSE;
                         break;
                     case CERT_QUERY_CONTENT_CTL:
                         if (!CertAddCTLContextToStore(store,
-                         (PCCTL_CONTEXT)context, CERT_STORE_ADD_ALWAYS, NULL))
+                         context, CERT_STORE_ADD_ALWAYS, NULL))
                              ret = FALSE;
                         break;
                     default:
@@ -1327,7 +1327,7 @@ typedef BOOL (*get_object_expiration_func)(void *pvContext,
 
 static BOOL CRYPT_GetExpirationFromCert(void *pvObject, FILETIME *expiration)
 {
-    PCCERT_CONTEXT cert = (PCCERT_CONTEXT)pvObject;
+    PCCERT_CONTEXT cert = pvObject;
 
     *expiration = cert->pCertInfo->NotAfter;
     return TRUE;
@@ -1335,7 +1335,7 @@ static BOOL CRYPT_GetExpirationFromCert(void *pvObject, FILETIME *expiration)
 
 static BOOL CRYPT_GetExpirationFromCRL(void *pvObject, FILETIME *expiration)
 {
-    PCCRL_CONTEXT cert = (PCCRL_CONTEXT)pvObject;
+    PCCRL_CONTEXT cert = pvObject;
 
     *expiration = cert->pCrlInfo->NextUpdate;
     return TRUE;
@@ -1343,7 +1343,7 @@ static BOOL CRYPT_GetExpirationFromCRL(void *pvObject, FILETIME *expiration)
 
 static BOOL CRYPT_GetExpirationFromCTL(void *pvObject, FILETIME *expiration)
 {
-    PCCTL_CONTEXT cert = (PCCTL_CONTEXT)pvObject;
+    PCCTL_CONTEXT cert = pvObject;
 
     *expiration = cert->pCtlInfo->NextUpdate;
     return TRUE;
@@ -1518,7 +1518,7 @@ BOOL WINAPI CertDllVerifyRevocation(DWORD dwEncodingType, DWORD dwRevType,
                             PCRL_ENTRY entry = NULL;
 
                             CertFindCertificateInCRL(
-                             (PCCERT_CONTEXT)rgpvContext[i], crl, 0, NULL,
+                             rgpvContext[i], crl, 0, NULL,
                              &entry);
                             if (entry)
                             {

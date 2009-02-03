@@ -29,8 +29,8 @@
 WINE_DEFAULT_DEBUG_CHANNEL(d3d);
 
 int num_lock = 0;
-void (*wine_tsx11_lock_ptr)(void) = NULL;
-void (*wine_tsx11_unlock_ptr)(void) = NULL;
+void (*CDECL wine_tsx11_lock_ptr)(void) = NULL;
+void (*CDECL wine_tsx11_unlock_ptr)(void) = NULL;
 
 
 /* When updating default value here, make sure to update winecfg as well,
@@ -88,7 +88,7 @@ static inline DWORD get_config_key_dword(HKEY defkey, HKEY appkey, const char* n
     return ERROR_FILE_NOT_FOUND;
 }
 
-static void wined3d_do_nothing(void)
+static void CDECL wined3d_do_nothing(void)
 {
 }
 

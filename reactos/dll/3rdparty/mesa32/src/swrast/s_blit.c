@@ -23,8 +23,8 @@
  */
 
 
-#include "glheader.h"
-#include "macros.h"
+#include "main/glheader.h"
+#include "main/macros.h"
 #include "s_context.h"
 
 

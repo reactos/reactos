@@ -503,8 +503,8 @@ UniataEnumBusMasterController__(
 /*                        if(known) {
                             RtlCopyMemory(newBMListPtr, (PVOID)&(BusMasterAdapters[i]), sizeof(BUSMASTER_CONTROLLER_INFORMATION));
                         } else {*/
-                        sprintf((PCHAR)vendorStrPtr, "%4.4x", (UINT32)VendorID);
-                        sprintf((PCHAR)deviceStrPtr, "%4.4x", (UINT32)DeviceID);
+                        sprintf((PCHAR)vendorStrPtr, "%4.4lx", VendorID);
+                        sprintf((PCHAR)deviceStrPtr, "%4.4lx", DeviceID);
 
                         RtlCopyMemory(&(newBMListPtr->VendorIdStr), (PCHAR)vendorStrPtr, 4);
                         RtlCopyMemory(&(newBMListPtr->DeviceIdStr), (PCHAR)deviceStrPtr, 4);

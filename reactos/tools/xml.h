@@ -236,4 +236,9 @@ XMLLoadFile (
 XMLElement*
 XMLLoadFile ( const std::string& filename );
 
+std::vector<char> vectorize(const std::string &str);
+void vectappend(std::vector<char> &strvec, char ch);
+void vectappend(std::vector<char> &strvec, const char *charstr);
+void vectappend(std::vector<char> &strvec, const std::string &str);
+
 #endif // XML_H

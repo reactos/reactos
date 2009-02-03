@@ -192,6 +192,8 @@ BEGIN
     IDS_CMT_DEVMGMT     "Spustiù Spr·vcu zariadenÌ"
     IDS_CMT_SERVMAN     "Spustiù Spr·vcu sluûieb"
     IDS_CMT_RDESKTOP    "Spustiù Vzdialen˙ pracovn˙ plochu"
+    IDS_CMT_EVENTVIEW   "Spustiù ZobrazovaË udalostÌ"
+    IDS_CMT_MSCONFIG    "Spustiù Program na konfigur·ciu systÈmu"
 END
 
 STRINGTABLE
@@ -246,6 +248,8 @@ BEGIN
     IDS_SHORT_MAGNIFY    "Lupa.lnk"
     IDS_SHORT_RDESKTOP   "Vzdialen· pracovn· plocha.lnk"
     IDS_SHORT_KBSWITCH   "PrepÌnaË rozloûenia kl·vesnice.lnk"
+    IDS_SHORT_EVENTVIEW  "ZobrazovaË udalostÌ.lnk"
+    IDS_SHORT_MSCONFIG   "Program na konfigur·ciu systÈmu.lnk"
 END
 
 STRINGTABLE

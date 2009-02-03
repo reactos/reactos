@@ -28,6 +28,7 @@
 		<file>dib16bpp.c</file>
 		<file>dib24bpp.c</file>
 		<file>dib32bpp.c</file>
+		<file>dibXXbpp.c</file>
 		<file>dib.c</file>
 
 		<if property="ARCH" value="i386">
@@ -84,6 +85,7 @@
 		<file>driver.c</file>
 		<file>err.c</file>
 		<file>math.c</file>
+		<file>rtlstr.c</file>
 		<file>copy.c</file>
 		<file>usrheap.c</file>
 		<if property="ARCH" value="i386">
@@ -189,7 +191,7 @@
 	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38054#c7 -->
 	<compilerflag>-fno-unit-at-a-time</compilerflag>
 </module>
-<module name="win32k" type="kernelmodedriver" installbase="system32" installname="win32k.sys" allowwarnings="true" crt="libcntpr">
+<module name="win32k" type="kernelmodedriver" installbase="system32" installname="win32k.sys" crt="libcntpr">
 	<importlibrary definition="win32k.pspec" />
 	<library>win32k_base</library>
 	<library>pseh</library>

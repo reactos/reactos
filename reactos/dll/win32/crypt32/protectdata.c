@@ -330,8 +330,7 @@ BOOL serialize(const struct protect_data_t *pInfo, DATA_BLOB *pSerial)
 
     if (ptr - pSerial->pbData != dwStruct)
     {
-        ERR("struct size changed!? %u != expected %u\n",
-            ptr - pSerial->pbData, dwStruct);
+        ERR("struct size changed!? expected %u\n", dwStruct);
         LocalFree(pSerial->pbData);
         pSerial->pbData=NULL;
         pSerial->cbData=0;

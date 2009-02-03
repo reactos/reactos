@@ -969,6 +969,7 @@ NtUserSetWindowsHookEx(
    UNICODE_STRING ModuleName;
    NTSTATUS Status;
    HHOOK Handle;
+   BOOLEAN ThreadReferenced = FALSE;
    DECLARE_RETURN(HHOOK);
 
    DPRINT("Enter NtUserSetWindowsHookEx\n");
@@ -1008,6 +1009,8 @@ NtUserSetWindowsHookEx(
          SetLastWin32Error(ERROR_INVALID_PARAMETER);
          RETURN( NULL);
       }
+      /* Thread was referenced */
+      ThreadReferenced = TRUE;
       if (Thread->ThreadsProcess != PsGetCurrentProcess())
       {
          ObDereferenceObject(Thread);
@@ -1032,6 +1035,9 @@ NtUserSetWindowsHookEx(
             SetLastNtError(Status);
             RETURN( (HANDLE) NULL);
          }
+
+         /* Thread was referenced */
+         ThreadReferenced = TRUE;
       }
       else if (NULL ==  Mod)
       {
@@ -1056,10 +1062,8 @@ NtUserSetWindowsHookEx(
       DPRINT1("Not implemented: HookId %d Global %s\n", HookId, Global ? "TRUE" : "FALSE");
 #endif
 
-      if (NULL != Thread)
-      {
-         ObDereferenceObject(Thread);
-      }
+      /* Dereference thread if needed */
+      if (ThreadReferenced) ObDereferenceObject(Thread);
       SetLastWin32Error(ERROR_NOT_SUPPORTED);
       RETURN( NULL);
    }
@@ -1071,10 +1075,8 @@ NtUserSetWindowsHookEx(
 
    if (! NT_SUCCESS(Status))
    {
-      if (NULL != Thread)
-      {
-         ObDereferenceObject(Thread);
-      }
+      /* Dereference thread if needed */
+      if (ThreadReferenced) ObDereferenceObject(Thread);
       SetLastNtError(Status);
       RETURN( (HANDLE) NULL);
    }
@@ -1082,15 +1084,14 @@ NtUserSetWindowsHookEx(
    Hook = IntAddHook(Thread, HookId, Global, WinStaObj);
    if (NULL == Hook)
    {
-      if (NULL != Thread)
-      {
-         ObDereferenceObject(Thread);
-      }
+      /* Dereference thread if needed */
+      if (ThreadReferenced) ObDereferenceObject(Thread);
       ObDereferenceObject(WinStaObj);
       RETURN( NULL);
    }
 
-   if (NULL != Thread)
+   /* Let IntFreeHook now that this thread needs a dereference */
+   if (ThreadReferenced)
    {
       Hook->Flags |= HOOK_THREAD_REFERENCED;
    }
@@ -1102,10 +1103,6 @@ NtUserSetWindowsHookEx(
       {
          UserDereferenceObject(Hook);
          IntRemoveHook(Hook, WinStaObj, FALSE);
-         if (NULL != Thread)
-         {
-            ObDereferenceObject(Thread);
-         }
          ObDereferenceObject(WinStaObj);
          SetLastNtError(Status);
          RETURN( NULL);
@@ -1117,10 +1114,6 @@ NtUserSetWindowsHookEx(
       {
          UserDereferenceObject(Hook);
          IntRemoveHook(Hook, WinStaObj, FALSE);
-         if (NULL != Thread)
-         {
-            ObDereferenceObject(Thread);
-         }
          ObDereferenceObject(WinStaObj);
          SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
          RETURN( NULL);
@@ -1134,10 +1127,6 @@ NtUserSetWindowsHookEx(
          ExFreePoolWithTag(Hook->ModuleName.Buffer, TAG_HOOK);
          UserDereferenceObject(Hook);
          IntRemoveHook(Hook, WinStaObj, FALSE);
-         if (NULL != Thread)
-         {
-            ObDereferenceObject(Thread);
-         }
          ObDereferenceObject(WinStaObj);
          SetLastNtError(Status);
          RETURN( NULL);
@@ -1154,8 +1143,9 @@ NtUserSetWindowsHookEx(
 
 // Clear the client threads next hook.
    ClientInfo->phkCurrent = 0;
-   
+
    UserDereferenceObject(Hook);
+
    ObDereferenceObject(WinStaObj);
 
    RETURN( Handle);

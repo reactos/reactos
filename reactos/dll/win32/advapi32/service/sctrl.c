@@ -541,7 +541,7 @@ I_ScSetServiceBitsA(SERVICE_STATUS_HANDLE hServiceStatus,
 {
     BOOL bResult;
 
-    _SEH2_TRY
+    RpcTryExcept
     {
         /* Call to services.exe using RPC */
         bResult = RI_ScSetServiceBitsA((RPC_SERVICE_STATUS_HANDLE)hServiceStatus,
@@ -550,12 +550,12 @@ I_ScSetServiceBitsA(SERVICE_STATUS_HANDLE hServiceStatus,
                                        bUpdateImmediately,
                                        lpString);
     }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
         SetLastError(ScmRpcStatusToWinError(RpcExceptionCode()));
         bResult = FALSE;
     }
-    _SEH2_END;
+    RpcEndExcept;
 
     return bResult;
 }
@@ -577,7 +577,7 @@ I_ScSetServiceBitsW(SERVICE_STATUS_HANDLE hServiceStatus,
 {
     BOOL bResult;
 
-    _SEH2_TRY
+    RpcTryExcept
     {
         /* Call to services.exe using RPC */
         bResult = RI_ScSetServiceBitsW((RPC_SERVICE_STATUS_HANDLE)hServiceStatus,
@@ -586,12 +586,12 @@ I_ScSetServiceBitsW(SERVICE_STATUS_HANDLE hServiceStatus,
                                        bUpdateImmediately,
                                        lpString);
     }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
         SetLastError(ScmRpcStatusToWinError(RpcExceptionCode()));
         bResult = FALSE;
     }
-    _SEH2_END;
+    RpcEndExcept;
 
     return bResult;
 }
@@ -652,7 +652,7 @@ SetServiceStatus(SERVICE_STATUS_HANDLE hServiceStatus,
  * @implemented
  */
 BOOL WINAPI
-StartServiceCtrlDispatcherA(LPSERVICE_TABLE_ENTRYA lpServiceStartTable)
+StartServiceCtrlDispatcherA(const SERVICE_TABLE_ENTRYA * lpServiceStartTable)
 {
     ULONG i;
     HANDLE hPipe;
@@ -742,7 +742,7 @@ StartServiceCtrlDispatcherA(LPSERVICE_TABLE_ENTRYA lpServiceStartTable)
  * @implemented
  */
 BOOL WINAPI
-StartServiceCtrlDispatcherW(LPSERVICE_TABLE_ENTRYW lpServiceStartTable)
+StartServiceCtrlDispatcherW(const SERVICE_TABLE_ENTRYW * lpServiceStartTable)
 {
     ULONG i;
     HANDLE hPipe;

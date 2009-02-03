@@ -4,10 +4,6 @@
 	<define name="INT16">SHORT</define>
 	<define name="YYDEBUG">1</define>
 	<include base="wpp">.</include>
-	<include base="ReactOS">include/reactos/wine</include>
-	<include base="ReactOS">include/reactos</include>
-	<include base="ReactOS">include</include>
-	<include base="ReactOS" root="intermediate">include</include>
 	<library>wpp</library>
 	<file>client.c</file>
 	<file>expr.c</file>
@@ -17,6 +13,7 @@
 	<file>server.c</file>
 	<file>typegen.c</file>
 	<file>typelib.c</file>
+	<file>typetree.c</file>
 	<file>utils.c</file>
 	<file>widl.c</file>
 	<file>write_msft.c</file>

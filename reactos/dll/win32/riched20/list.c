@@ -42,6 +42,27 @@ void ME_Remove(ME_DisplayItem *diWhere)
   diNext->prev = diPrev;
 }
 
+static BOOL ME_DITypesEqual(ME_DIType type, ME_DIType nTypeOrClass)
+{
+  if (type==nTypeOrClass)
+    return TRUE;
+  if (nTypeOrClass==diRunOrParagraph && (type==diRun || type==diParagraph))
+    return TRUE;
+  if (nTypeOrClass==diRunOrStartRow && (type==diRun || type==diStartRow))
+    return TRUE;
+  if (nTypeOrClass==diParagraphOrEnd && (type==diTextEnd || type==diParagraph))
+    return TRUE;
+  if (nTypeOrClass==diStartRowOrParagraph && (type==diStartRow || type==diParagraph))
+    return TRUE;
+  if (nTypeOrClass==diStartRowOrParagraphOrEnd
+    && (type==diStartRow || type==diParagraph || type==diTextEnd))
+    return TRUE;
+  if (nTypeOrClass==diRunOrParagraphOrEnd
+    && (type==diRun || type==diParagraph || type==diTextEnd))
+    return TRUE;
+  return FALSE;
+}
+
 ME_DisplayItem *ME_FindItemBack(ME_DisplayItem *di, ME_DIType nTypeOrClass)
 {
   if (!di)
@@ -85,27 +106,6 @@ ME_DisplayItem *ME_FindItemFwdOrHere(ME_DisplayItem *di, ME_DIType nTypeOrClass)
     di = di->next;
   }
   return NULL;
-}
-
-BOOL ME_DITypesEqual(ME_DIType type, ME_DIType nTypeOrClass)
-{
-  if (type==nTypeOrClass)
-    return TRUE;
-  if (nTypeOrClass==diRunOrParagraph && (type==diRun || type==diParagraph))
-    return TRUE;
-  if (nTypeOrClass==diRunOrStartRow && (type==diRun || type==diStartRow))
-    return TRUE;
-  if (nTypeOrClass==diParagraphOrEnd && (type==diTextEnd || type==diParagraph))
-    return TRUE;
-  if (nTypeOrClass==diStartRowOrParagraph && (type==diStartRow || type==diParagraph))
-    return TRUE;
-  if (nTypeOrClass==diStartRowOrParagraphOrEnd 
-    && (type==diStartRow || type==diParagraph || type==diTextEnd))
-    return TRUE;
-  if (nTypeOrClass==diRunOrParagraphOrEnd 
-    && (type==diRun || type==diParagraph || type==diTextEnd))
-    return TRUE;
-  return FALSE;
 }
 
 void ME_DestroyDisplayItem(ME_DisplayItem *item) {
@@ -191,10 +191,8 @@ void ME_DumpDocument(ME_TextBuffer *buffer)
         TRACE(" - StartRow\n");
         break;
       case diRun:
-        TRACE(" - Run(\"%s\", %d)\n", debugstr_w(pItem->member.run.strText->szData), 
-          pItem->member.run.nCharOfs);
-        if (pItem->member.run.nFlags & MERF_ENDPARA)
-          TRACE(" - Paragraph end: %d CR, %d LF\n", pItem->member.run.nCR, pItem->member.run.nLF);
+        TRACE(" - Run(\"%s\", %d, flags=%x)\n", debugstr_w(pItem->member.run.strText->szData),
+          pItem->member.run.nCharOfs, pItem->member.run.nFlags);
         break;
       case diTextEnd:
         TRACE("End(ofs=%d)\n", pItem->member.para.nCharOfs);

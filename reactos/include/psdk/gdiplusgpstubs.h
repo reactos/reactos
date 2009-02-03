@@ -23,6 +23,7 @@
 
 class GpGraphics {};
 class GpBrush {};
+class GpHatch : public GpBrush {};
 class GpSolidFill : public GpBrush {};
 class GpPath {};
 class GpMatrix {};
@@ -49,6 +50,7 @@ class CGpEffect {};
 typedef struct GpGraphics GpGraphics;
 typedef struct GpPen GpPen;
 typedef struct GpBrush GpBrush;
+typedef struct GpHatch GpHatch;
 typedef struct GpSolidFill GpSolidFill;
 typedef struct GpPath GpPath;
 typedef struct GpMatrix GpMatrix;

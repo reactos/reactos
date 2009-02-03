@@ -100,7 +100,7 @@ HRESULT WINAPI DrawThemeParentBackground(HWND hwnd, HDC hdc, RECT *prc)
         hParent = hwnd;
     if(prc) {
         CopyRect(&rt, prc);
-        MapWindowPoints(hwnd, NULL, (LPPOINT)&rt, 2);
+        MapWindowPoints(hwnd, hParent, (LPPOINT)&rt, 2);
         
         clip = CreateRectRgn(0,0,1,1);
         hasClip = GetClipRgn(hdc, clip);
@@ -110,8 +110,8 @@ HRESULT WINAPI DrawThemeParentBackground(HWND hwnd, HDC hdc, RECT *prc)
             IntersectClipRect(hdc, prc->left, prc->top, prc->right, prc->bottom);
     }
     else {
-        GetClientRect(hParent, &rt);
-        MapWindowPoints(hParent, NULL, (LPPOINT)&rt, 2);
+        GetClientRect(hwnd, &rt);
+        MapWindowPoints(hwnd, hParent, (LPPOINT)&rt, 2);
     }
 
     OffsetViewportOrgEx(hdc, -rt.left, -rt.top, &org);

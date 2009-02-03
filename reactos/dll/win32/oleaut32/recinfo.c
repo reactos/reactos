@@ -59,7 +59,7 @@ static HRESULT copy_to_variant(void *src, VARIANT *pvar, enum VARENUM vt)
 
 #define CASE_COPY(x) \
     case VT_ ## x: \
-        V_ ## x(pvar) = *(typeof(V_ ## x(pvar))*)src; \
+        memcpy(&V_ ## x(pvar), src, sizeof(V_ ## x(pvar))); \
         break 
 
     switch(vt) {
@@ -106,7 +106,7 @@ static HRESULT copy_from_variant(VARIANT *src, void *dest, enum VARENUM vt)
 
 #define CASE_COPY(x) \
     case VT_ ## x: \
-        *(typeof(V_ ## x(&var))*)dest = V_ ## x(&var); \
+        memcpy(dest, &V_ ## x(&var), sizeof(V_ ## x(&var))); \
         break
 
     switch(vt) {
@@ -235,6 +235,9 @@ static HRESULT WINAPI IRecordInfoImpl_RecordClear(IRecordInfo *iface, PVOID pvEx
             case VT_INT_PTR:
             case VT_UINT_PTR:
                 *(void**)var = NULL;
+                break;
+            case VT_SAFEARRAY:
+                SafeArrayDestroy((SAFEARRAY*)var);
                 break;
             default:
                 FIXME("Not supported vt = %d\n", This->fields[i].vt);
@@ -412,8 +415,7 @@ static HRESULT WINAPI IRecordInfoImpl_GetFieldNames(IRecordInfo *iface, ULONG *p
                                                 BSTR *rgBstrNames)
 {
     IRecordInfoImpl *This = (IRecordInfoImpl*)iface;
-    ULONG n = This->n_vars;
-    int i;
+    ULONG n = This->n_vars, i;
 
     TRACE("(%p)->(%p %p)\n", This, pcNames, rgBstrNames);
 

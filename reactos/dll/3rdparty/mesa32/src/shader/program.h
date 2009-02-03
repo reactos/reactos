@@ -40,7 +40,7 @@
 #ifndef PROGRAM_H
 #define PROGRAM_H
 
-#include "mtypes.h"
+#include "main/mtypes.h"
 
 
 extern struct gl_program _mesa_DummyProgram;

@@ -81,45 +81,6 @@ DeleteFrameBrushes(VOID)
     }
 }
 
-/*
- * @implemented
- */
-HDC
-WINAPI
-BeginPaint(
-  HWND hwnd,
-  LPPAINTSTRUCT lpPaint)
-{
-  return NtUserBeginPaint(hwnd, lpPaint);
-}
-
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
-EndPaint(
-  HWND hWnd,
-  CONST PAINTSTRUCT *lpPaint)
-{
-  return NtUserEndPaint(hWnd, lpPaint);
-}
-
-
-/*
- * @unimplemented
- */
-int
-WINAPI
-ExcludeUpdateRgn(
-  HDC hDC,
-  HWND hWnd)
-{
-  UNIMPLEMENTED;
-  return 0;
-}
-
 
 /*
  * @implemented
@@ -146,37 +107,6 @@ GetUpdateRgn(
   BOOL bErase)
 {
   return NtUserGetUpdateRgn(hWnd, hRgn, bErase);
-}
-
-
-
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
-InvalidateRgn(
-  HWND hWnd,
-  HRGN hRgn,
-  BOOL bErase)
-{
-  return NtUserInvalidateRgn(hWnd, hRgn, bErase);
-}
-
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
-RedrawWindow(
-  HWND hWnd,
-  CONST RECT *lprcUpdate,
-  HRGN hrgnUpdate,
-  UINT flags)
-{
- return NtUserRedrawWindow(hWnd, lprcUpdate, hrgnUpdate, flags);
 }
 
 

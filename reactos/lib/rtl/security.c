@@ -228,8 +228,49 @@ RtlQuerySecurityObject(IN PSECURITY_DESCRIPTOR ObjectDescriptor,
                        IN ULONG DescriptorLength,
                        OUT PULONG ReturnLength)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+    SECURITY_DESCRIPTOR desc;
+    BOOLEAN defaulted, present;
+    PACL pacl;
+    PSID psid;
+
+    Status = RtlCreateSecurityDescriptor(&desc, SECURITY_DESCRIPTOR_REVISION);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    if (SecurityInformation & OWNER_SECURITY_INFORMATION)
+    {
+        Status = RtlGetOwnerSecurityDescriptor(ObjectDescriptor, &psid, &defaulted);
+        if (!NT_SUCCESS(Status)) return Status;
+        Status = RtlSetOwnerSecurityDescriptor(&desc, psid, defaulted);
+        if (!NT_SUCCESS(Status)) return Status;
+    }
+
+    if (SecurityInformation & GROUP_SECURITY_INFORMATION)
+    {
+        Status = RtlGetGroupSecurityDescriptor(ObjectDescriptor, &psid, &defaulted);
+        if (!NT_SUCCESS(Status)) return Status;
+        Status = RtlSetGroupSecurityDescriptor(&desc, psid, defaulted);
+        if (!NT_SUCCESS(Status)) return Status;
+    }
+
+    if (SecurityInformation & DACL_SECURITY_INFORMATION)
+    {
+        Status = RtlGetDaclSecurityDescriptor(ObjectDescriptor, &present, &pacl, &defaulted);
+        if (!NT_SUCCESS(Status)) return Status;
+        Status = RtlSetDaclSecurityDescriptor(&desc, present, pacl, defaulted);
+        if (!NT_SUCCESS(Status)) return Status;
+    }
+
+    if (SecurityInformation & SACL_SECURITY_INFORMATION)
+    {
+        Status = RtlGetSaclSecurityDescriptor(ObjectDescriptor, &present, &pacl, &defaulted);
+        if (!NT_SUCCESS(Status)) return Status;
+        Status = RtlSetSaclSecurityDescriptor(&desc, present, pacl, defaulted);
+        if (!NT_SUCCESS(Status)) return Status;
+    }
+
+    *ReturnLength = DescriptorLength;
+    return RtlAbsoluteToSelfRelativeSD(&desc, ResultantDescriptor, ReturnLength);
 }
 
 

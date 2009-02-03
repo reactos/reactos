@@ -170,7 +170,6 @@ DC_GET_VAL( INT, IntGdiGetStretchBltMode, jStretchBltMode )
 DC_GET_VAL( UINT, IntGdiGetTextAlign, lTextAlign )
 DC_GET_VAL( COLORREF, IntGdiGetTextColor, crForegroundClr )
 
-DC_GET_VAL_EX( GetViewportExtEx, szlViewportExt.cx, szlViewportExt.cy, SIZE, cx, cy )
 DC_GET_VAL_EX( GetViewportOrgEx, ptlViewportOrg.x, ptlViewportOrg.y, POINT, x, y )
 DC_GET_VAL_EX( GetWindowExtEx, szlWindowExt.cx, szlWindowExt.cy, SIZE, cx, cy )
 DC_GET_VAL_EX( GetWindowOrgEx, ptlWindowOrg.x, ptlWindowOrg.y, POINT, x, y )

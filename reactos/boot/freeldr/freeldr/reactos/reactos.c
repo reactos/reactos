@@ -61,7 +61,7 @@ FrLdrLoadDriver(PCHAR szFileName,
 
     FinalSlash = strrchr(szFileName, '\\');
     if(FinalSlash)
-	szFileName = FinalSlash + 1;
+    szFileName = FinalSlash + 1;
 
     /* Open the Driver */
     FilePointer = FsOpenFile(szFileName);
@@ -69,31 +69,31 @@ FrLdrLoadDriver(PCHAR szFileName,
     /* Try under the system root in the main dir and drivers */
     if (FilePointer == NULL)
     {
-	strcpy(value, SystemRoot);
-	if(value[strlen(value)-1] != '\\')
-	    strcat(value, "\\");
-	strcat(value, szFileName);
-	FilePointer = FsOpenFile(value);
+    strcpy(value, SystemRoot);
+    if(value[strlen(value)-1] != '\\')
+        strcat(value, "\\");
+    strcat(value, szFileName);
+    FilePointer = FsOpenFile(value);
     }
 
     if (FilePointer == NULL)
     {
-	strcpy(value, SystemRoot);
-	if(value[strlen(value)-1] != '\\')
-	    strcat(value, "\\");
-	strcat(value, "SYSTEM32\\");
-	strcat(value, szFileName);
-	FilePointer = FsOpenFile(value);
+    strcpy(value, SystemRoot);
+    if(value[strlen(value)-1] != '\\')
+        strcat(value, "\\");
+    strcat(value, "SYSTEM32\\");
+    strcat(value, szFileName);
+    FilePointer = FsOpenFile(value);
     }
 
     if (FilePointer == NULL)
     {
-	strcpy(value, SystemRoot);
-	if(value[strlen(value)-1] != '\\')
-	    strcat(value, "\\");
-	strcat(value, "SYSTEM32\\DRIVERS\\");
-	strcat(value, szFileName);
-	FilePointer = FsOpenFile(value);
+    strcpy(value, SystemRoot);
+    if(value[strlen(value)-1] != '\\')
+        strcat(value, "\\");
+    strcat(value, "SYSTEM32\\DRIVERS\\");
+    strcat(value, szFileName);
+    FilePointer = FsOpenFile(value);
     }
 
     /* Make sure we did */
@@ -438,7 +438,7 @@ FrLdrLoadBootDrivers(PCHAR szSystemRoot,
                 /* open driver Key */
                 rc = RegOpenKey(hServiceKey, ServiceName, &hDriverKey);
                 if (rc == ERROR_SUCCESS)
-				{
+                {
                     /* Read the Start Value */
                     ValueSize = sizeof(ULONG);
                     rc = RegQueryValue(hDriverKey, L"Start", &ValueType, (PUCHAR)&StartValue, &ValueSize);
@@ -570,40 +570,41 @@ FrLdrLoadBootDrivers(PCHAR szSystemRoot,
 VOID
 LoadAndBootReactOS(PCSTR OperatingSystemName)
 {
-	PFILE FilePointer;
-	CHAR name[255];
-	CHAR value[255];
-	CHAR SystemPath[255];
-	CHAR szKernelName[255];
-	CHAR szFileName[255];
-	CHAR  MsgBuffer[256];
-	ULONG_PTR SectionId;
+    PFILE FilePointer;
+    CHAR name[255];
+    CHAR value[255];
+    CHAR SystemPath[255];
+    CHAR LivePath[255];
+    CHAR szKernelName[255];
+    CHAR szFileName[255];
+    CHAR  MsgBuffer[256];
+    ULONG_PTR SectionId;
     PIMAGE_NT_HEADERS NtHeader;
     PVOID LoadBase;
-	ULONG_PTR Base;
-	ULONG Size;
+    ULONG_PTR Base;
+    ULONG Size;
     
     //
     // Backdrop
     //
     UiDrawBackdrop();
 
-	//
-	// Open the operating system section
-	// specified in the .ini file
-	//
-	if (!IniOpenSection(OperatingSystemName, &SectionId))
-	{
-		sprintf(MsgBuffer,"Operating System section '%s' not found in freeldr.ini", OperatingSystemName);
-		UiMessageBox(MsgBuffer);
-		return;
-	}
+    //
+    // Open the operating system section
+    // specified in the .ini file
+    //
+    if (!IniOpenSection(OperatingSystemName, &SectionId))
+    {
+        sprintf(MsgBuffer,"Operating System section '%s' not found in freeldr.ini", OperatingSystemName);
+        UiMessageBox(MsgBuffer);
+        return;
+    }
 
     //
     // Read the command line
     //
-	if (IniReadSettingByName(SectionId, "Options", value, sizeof(value)))
-	{
+    if (IniReadSettingByName(SectionId, "Options", value, sizeof(value)))
+    {
         //
         // Check if a ramdisk file was given
         //
@@ -626,18 +627,18 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
             //
             RamDiskLoadVirtualFile(szFileName);
         }
-	}
+    }
 
-	/*
-	 * Setup multiboot information structure
-	 */
+    /*
+     * Setup multiboot information structure
+     */
     UiDrawProgressBarCenter(1, 100, szLoadingMsg);
-	UiDrawStatusText("Detecting Hardware...");
-	LoaderBlock.CommandLine = reactos_kernel_cmdline;
-	LoaderBlock.PageDirectoryStart = (ULONG_PTR)&PageDirectoryStart;
-	LoaderBlock.PageDirectoryEnd = (ULONG_PTR)&PageDirectoryEnd;
-	LoaderBlock.ModsCount = 0;
-	LoaderBlock.ModsAddr = reactos_modules;
+    UiDrawStatusText("Detecting Hardware...");
+    LoaderBlock.CommandLine = reactos_kernel_cmdline;
+    LoaderBlock.PageDirectoryStart = (ULONG_PTR)&PageDirectoryStart;
+    LoaderBlock.PageDirectoryEnd = (ULONG_PTR)&PageDirectoryEnd;
+    LoaderBlock.ModsCount = 0;
+    LoaderBlock.ModsAddr = reactos_modules;
     LoaderBlock.DrivesAddr = reactos_arc_disk_info;
     LoaderBlock.RdAddr = (ULONG_PTR)gRamDiskBase;
     LoaderBlock.RdLength = gRamDiskSize;
@@ -687,177 +688,179 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
         }
     }
 
-	/*
-	 * Initialize the registry
-	 */
-	RegInitializeRegistry();
+    /*
+     * Initialize the registry
+     */
+    RegInitializeRegistry();
 
-	/*
-	 * Make sure the system path is set in the .ini file
-	 */
-	if (!IniReadSettingByName(SectionId, "SystemPath", SystemPath, sizeof(SystemPath)))
-	{
-		UiMessageBox("System path not specified for selected operating system.");
-		return;
-	}
+    /*
+     * Make sure the system path is set in the .ini file
+     */
+    if (!IniReadSettingByName(SectionId, "SystemPath", SystemPath, sizeof(SystemPath)))
+    {
+        UiMessageBox("System path not specified for selected operating system.");
+        return;
+    }
 
-	/*
-	 * Special case for Live CD.
-	 */
-	if (!_stricmp(SystemPath, "LiveCD"))
-	{
-		/* Normalize */
-		MachDiskGetBootPath(SystemPath, sizeof(SystemPath));
-		strcat(SystemPath, "\\reactos");
-		strcat(strcpy(reactos_kernel_cmdline, SystemPath),
-		       " /MININT");
-	}
-	else
-	{
-		if (! MachDiskNormalizeSystemPath(SystemPath,
-		                                  sizeof(SystemPath)))
-		{
-			UiMessageBox("Invalid system path");
-			return;
-		}
-		/* copy system path into kernel command line */
-		strcpy(reactos_kernel_cmdline, SystemPath);
-	}
+    /*
+     * Special case for Live CD.
+     */
+    if (!_strnicmp(SystemPath, "LiveCD", strlen("LiveCD")))
+    {
+        /* Use everything following the "LiveCD" string as the path */
+        strcpy(LivePath, SystemPath + strlen("LiveCD"));
+        /* Normalize */
+        MachDiskGetBootPath(SystemPath, sizeof(SystemPath));
+        strcat(SystemPath, LivePath);
+        strcat(strcpy(reactos_kernel_cmdline, SystemPath),
+               " /MININT");
+    }
+    else
+    {
+        if (! MachDiskNormalizeSystemPath(SystemPath,
+                                          sizeof(SystemPath)))
+        {
+            UiMessageBox("Invalid system path");
+            return;
+        }
+        /* copy system path into kernel command line */
+        strcpy(reactos_kernel_cmdline, SystemPath);
+    }
 
-	/*
-	 * Read the optional kernel parameters (if any)
-	 */
-	if (IniReadSettingByName(SectionId, "Options", value, sizeof(value)))
-	{
-		strcat(reactos_kernel_cmdline, " ");
-		strcat(reactos_kernel_cmdline, value);
-	}
+    /*
+     * Read the optional kernel parameters (if any)
+     */
+    if (IniReadSettingByName(SectionId, "Options", value, sizeof(value)))
+    {
+        strcat(reactos_kernel_cmdline, " ");
+        strcat(reactos_kernel_cmdline, value);
+    }
 
-	/*
-	 * Detect hardware
-	 */
-	LoaderBlock.ArchExtra = (ULONG_PTR)MachHwDetect();
+    /*
+     * Detect hardware
+     */
+    LoaderBlock.ArchExtra = (ULONG_PTR)MachHwDetect();
     UiDrawProgressBarCenter(5, 100, szLoadingMsg);
 
     LoaderBlock.DrivesCount = reactos_disk_count;
 
-	UiDrawStatusText("Loading...");
+    UiDrawStatusText("Loading...");
 
-	//
-	// If we have a ramdisk, this will switch to the ramdisk disk routines
-	// which read from memory instead of using the firmware. This has to be done
-	// after hardware detection, since hardware detection will require using the
-	// real routines in order to perform disk-detection (just because we're on a
-	// ram-boot doesn't mean the user doesn't have actual disks installed too!)
-	//
-	RamDiskSwitchFromBios();
+    //
+    // If we have a ramdisk, this will switch to the ramdisk disk routines
+    // which read from memory instead of using the firmware. This has to be done
+    // after hardware detection, since hardware detection will require using the
+    // real routines in order to perform disk-detection (just because we're on a
+    // ram-boot doesn't mean the user doesn't have actual disks installed too!)
+    //
+    RamDiskSwitchFromBios();
 
-	/*
-	 * Try to open system drive
-	 */
-	if (!FsOpenSystemVolume(SystemPath, szBootPath, &LoaderBlock.BootDevice))
-	{
-		UiMessageBox("Failed to open system drive.");
-		return;
-	}
+    /*
+     * Try to open system drive
+     */
+    if (!FsOpenSystemVolume(SystemPath, szBootPath, &LoaderBlock.BootDevice))
+    {
+        UiMessageBox("Failed to open system drive.");
+        return;
+    }
 
-	/* append a backslash */
-	if ((strlen(szBootPath)==0) ||
-	    szBootPath[strlen(szBootPath)] != '\\')
-		strcat(szBootPath, "\\");
+    /* append a backslash */
+    if ((strlen(szBootPath)==0) ||
+        szBootPath[strlen(szBootPath)] != '\\')
+        strcat(szBootPath, "\\");
 
 	DPRINTM(DPRINT_REACTOS,"SystemRoot: '%s'\n", szBootPath);
 	strcpy(SystemRoot, szBootPath);
 
-	/*
-	 * Find the kernel image name
-	 * and try to load the kernel off the disk
-	 */
-	if(IniReadSettingByName(SectionId, "Kernel", value, sizeof(value)))
-	{
-		/*
-		 * Set the name and
-		 */
-		if (value[0] == '\\')
-		{
-			strcpy(szKernelName, value);
-		}
-		else
-		{
-			strcpy(szKernelName, szBootPath);
-			strcat(szKernelName, "SYSTEM32\\");
-			strcat(szKernelName, value);
-		}
-	}
-	else
-	{
-		strcpy(value, "NTOSKRNL.EXE");
-		strcpy(szKernelName, szBootPath);
-		strcat(szKernelName, "SYSTEM32\\");
-		strcat(szKernelName, value);
-	}
+    /*
+     * Find the kernel image name
+     * and try to load the kernel off the disk
+     */
+    if(IniReadSettingByName(SectionId, "Kernel", value, sizeof(value)))
+    {
+        /*
+         * Set the name and
+         */
+        if (value[0] == '\\')
+        {
+            strcpy(szKernelName, value);
+        }
+        else
+        {
+            strcpy(szKernelName, szBootPath);
+            strcat(szKernelName, "SYSTEM32\\");
+            strcat(szKernelName, value);
+        }
+    }
+    else
+    {
+        strcpy(value, "NTOSKRNL.EXE");
+        strcpy(szKernelName, szBootPath);
+        strcat(szKernelName, "SYSTEM32\\");
+        strcat(szKernelName, value);
+    }
 
-	/*
-	 * Find the HAL image name
-	 * and try to load the kernel off the disk
-	 */
-	if(IniReadSettingByName(SectionId, "Hal", value, sizeof(value)))
-	{
-		/*
-		 * Set the name and
-		 */
-		if (value[0] == '\\')
-		{
-			strcpy(szHalName, value);
-		}
-		else
-		{
-			strcpy(szHalName, szBootPath);
-			strcat(szHalName, "SYSTEM32\\");
-			strcat(szHalName, value);
-		}
-	}
-	else
-	{
-		strcpy(value, "HAL.DLL");
-		strcpy(szHalName, szBootPath);
-		strcat(szHalName, "SYSTEM32\\");
-		strcat(szHalName, value);
-	}
+    /*
+     * Find the HAL image name
+     * and try to load the kernel off the disk
+     */
+    if(IniReadSettingByName(SectionId, "Hal", value, sizeof(value)))
+    {
+        /*
+         * Set the name and
+         */
+        if (value[0] == '\\')
+        {
+            strcpy(szHalName, value);
+        }
+        else
+        {
+            strcpy(szHalName, szBootPath);
+            strcat(szHalName, "SYSTEM32\\");
+            strcat(szHalName, value);
+        }
+    }
+    else
+    {
+        strcpy(value, "HAL.DLL");
+        strcpy(szHalName, szBootPath);
+        strcat(szHalName, "SYSTEM32\\");
+        strcat(szHalName, value);
+    }
 
-	/* Load the kernel */
-	LoadBase = FrLdrLoadImage(szKernelName, 5, 1);
-	if (!LoadBase) return;
+    /* Load the kernel */
+    LoadBase = FrLdrLoadImage(szKernelName, 5, 1);
+    if (!LoadBase) return;
 
-	/* Get the NT header, kernel base and kernel entry */
-	NtHeader = RtlImageNtHeader(LoadBase);
-	KernelBase = SWAPD(NtHeader->OptionalHeader.ImageBase);
-	KernelEntryPoint = (ROS_KERNEL_ENTRY_POINT)(KernelBase + SWAPD(NtHeader->OptionalHeader.AddressOfEntryPoint));
-	LoaderBlock.KernelBase = KernelBase;
+    /* Get the NT header, kernel base and kernel entry */
+    NtHeader = RtlImageNtHeader(LoadBase);
+    KernelBase = SWAPD(NtHeader->OptionalHeader.ImageBase);
+    KernelEntryPoint = (ROS_KERNEL_ENTRY_POINT)(KernelBase + SWAPD(NtHeader->OptionalHeader.AddressOfEntryPoint));
+    LoaderBlock.KernelBase = KernelBase;
 
-	/*
-	 * Load the System hive from disk
-	 */
-	strcpy(szFileName, szBootPath);
-	strcat(szFileName, "SYSTEM32\\CONFIG\\SYSTEM");
+    /*
+     * Load the System hive from disk
+     */
+    strcpy(szFileName, szBootPath);
+    strcat(szFileName, "SYSTEM32\\CONFIG\\SYSTEM");
 
 	DPRINTM(DPRINT_REACTOS, "SystemHive: '%s'", szFileName);
 
-	FilePointer = FsOpenFile(szFileName);
-	if (FilePointer == NULL)
-	{
-		UiMessageBox("Could not find the System hive!");
-		return;
-	}
+    FilePointer = FsOpenFile(szFileName);
+    if (FilePointer == NULL)
+    {
+        UiMessageBox("Could not find the System hive!");
+        return;
+    }
 
-	/*
-	 * Update the status bar with the current file
-	 */
-	strcpy(name, "Reading ");
-	strcat(name, value);
-	while (strlen(name) < 80)
-		strcat(name, " ");
-	UiDrawStatusText(name);
+    /*
+     * Update the status bar with the current file
+     */
+    strcpy(name, "Reading ");
+    strcat(name, value);
+    while (strlen(name) < 80)
+        strcat(name, " ");
+    UiDrawStatusText(name);
 
 	/*
 	 * Load the System hive
@@ -870,35 +873,35 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 	}
 	DPRINTM(DPRINT_REACTOS, "SystemHive loaded at 0x%x size %u", (unsigned)Base, (unsigned)Size);
 
-	/*
-	 * Import the loaded system hive
-	 */
-	RegImportBinaryHive((PCHAR)Base, Size);
+    /*
+     * Import the loaded system hive
+     */
+    RegImportBinaryHive((PCHAR)Base, Size);
 
-	/*
-	 * Initialize the 'CurrentControlSet' link
-	 */
-	RegInitCurrentControlSet(FALSE);
+    /*
+     * Initialize the 'CurrentControlSet' link
+     */
+    RegInitCurrentControlSet(FALSE);
 
-	UiDrawProgressBarCenter(15, 100, szLoadingMsg);
+    UiDrawProgressBarCenter(15, 100, szLoadingMsg);
 
-	UiDrawProgressBarCenter(20, 100, szLoadingMsg);
+    UiDrawProgressBarCenter(20, 100, szLoadingMsg);
 
-	/*
-	 * Load NLS files
-	 */
-	if (!FrLdrLoadNlsFiles(szBootPath, MsgBuffer))
-	{
-		UiMessageBox(MsgBuffer);
-		return;
-	}
-	UiDrawProgressBarCenter(30, 100, szLoadingMsg);
+    /*
+     * Load NLS files
+     */
+    if (!FrLdrLoadNlsFiles(szBootPath, MsgBuffer))
+    {
+        UiMessageBox(MsgBuffer);
+        return;
+    }
+    UiDrawProgressBarCenter(30, 100, szLoadingMsg);
 
-	/*
-	 * Load boot drivers
-	 */
-	FrLdrLoadBootDrivers(szBootPath, 40);
-	//UiUnInitialize("Booting ReactOS...");
+    /*
+     * Load boot drivers
+     */
+    FrLdrLoadBootDrivers(szBootPath, 40);
+    //UiUnInitialize("Booting ReactOS...");
 
     //
     // Perform architecture-specific pre-boot configuration
@@ -908,7 +911,7 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
     //
     // Setup paging and jump to kernel
     //
-	FrLdrStartup(0x2badb002);
+    FrLdrStartup(0x2badb002);
 }
 
 /* EOF */

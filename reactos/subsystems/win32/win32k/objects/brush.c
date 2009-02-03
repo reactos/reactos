@@ -119,14 +119,14 @@ XLATEOBJ* FASTCALL
 IntGdiCreateBrushXlate(PDC Dc, GDIBRUSHOBJ *BrushObj, BOOLEAN *Failed)
 {
    XLATEOBJ *Result = NULL;
-   BITMAPOBJ * pSurface;
+   SURFACE * psurf;
    HPALETTE hPalette = NULL;
 
-   pSurface = BITMAPOBJ_LockBitmap(Dc->w.hBitmap);
-   if (pSurface)
+   psurf = SURFACE_LockSurface(Dc->w.hBitmap);
+   if (psurf)
    {
-      hPalette = pSurface->hDIBPalette;
-      BITMAPOBJ_UnlockBitmap(pSurface);
+      hPalette = psurf->hDIBPalette;
+      SURFACE_UnlockSurface(psurf);
    }
    if (!hPalette) hPalette = pPrimarySurface->DevInfo.hpalDefault;
 
@@ -142,7 +142,7 @@ IntGdiCreateBrushXlate(PDC Dc, GDIBRUSHOBJ *BrushObj, BOOLEAN *Failed)
    }
    else
    {
-      BITMAPOBJ *Pattern = BITMAPOBJ_LockBitmap(BrushObj->hbmPattern);
+      SURFACE *Pattern = SURFACE_LockSurface(BrushObj->hbmPattern);
       if (Pattern == NULL)
          return NULL;
 
@@ -153,14 +153,14 @@ IntGdiCreateBrushXlate(PDC Dc, GDIBRUSHOBJ *BrushObj, BOOLEAN *Failed)
          if (!Dc_Attr) Dc_Attr = &Dc->Dc_Attr;
 
          if (Dc->w.bitsPerPixel != 1)
-            Result = IntEngCreateSrcMonoXlate(hPalette, BrushObj->BrushAttr.lbColor, Dc_Attr->crBackgroundClr);
+            Result = IntEngCreateSrcMonoXlate(hPalette, Dc_Attr->crBackgroundClr, BrushObj->BrushAttr.lbColor);
       }
       else if (BrushObj->flAttrs & GDIBRUSH_IS_DIB)
       {
          Result = IntEngCreateXlate(0, 0, hPalette, Pattern->hDIBPalette);
       }
 
-      BITMAPOBJ_UnlockBitmap(Pattern);
+      SURFACE_UnlockSurface(Pattern);
       *Failed = FALSE;
    }
 
@@ -330,7 +330,7 @@ IntGdiCreateDIBBrush(
    HBITMAP hPattern;
    ULONG_PTR DataPtr;
    UINT PaletteEntryCount;
-   PBITMAPOBJ BitmapObject;
+   PSURFACE psurfPattern;
    INT PaletteType;
 
    if (BitmapInfo->bmiHeader.biSize < sizeof(BITMAPINFOHEADER))
@@ -363,10 +363,10 @@ IntGdiCreateDIBBrush(
       return NULL;
    }
 
-   BitmapObject = BITMAPOBJ_LockBitmap(hPattern);
-   ASSERT(BitmapObject != NULL);
-   BitmapObject->hDIBPalette = BuildDIBPalette(BitmapInfo, &PaletteType);
-   BITMAPOBJ_UnlockBitmap(BitmapObject);
+   psurfPattern = SURFACE_LockSurface(hPattern);
+   ASSERT(psurfPattern != NULL);
+   psurfPattern->hDIBPalette = BuildDIBPalette(BitmapInfo, &PaletteType);
+   SURFACE_UnlockSurface(psurfPattern);
 
    BrushObject = BRUSHOBJ_AllocBrushWithHandle();
    if (BrushObject == NULL)
@@ -437,7 +437,7 @@ IntGdiCreatePatternBrush(
    PGDIBRUSHOBJ BrushObject;
    HBITMAP hPattern;
 
-   hPattern = BITMAPOBJ_CopyBitmap(hBitmap);
+   hPattern = BITMAP_CopyBitmap(hBitmap);
    if (hPattern == NULL)
    {
       SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);

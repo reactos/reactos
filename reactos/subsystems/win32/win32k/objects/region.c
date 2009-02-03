@@ -2908,7 +2908,7 @@ IntGdiPaintRgn(
     PGDIBRUSHOBJ pBrush;
     GDIBRUSHINST BrushInst;
     POINTL BrushOrigin;
-    BITMAPOBJ *BitmapObj;
+    SURFACE *psurf;
     PDC_ATTR Dc_Attr;
 
     if (!dc) return FALSE;
@@ -2944,16 +2944,16 @@ IntGdiPaintRgn(
 
     BrushOrigin.x = Dc_Attr->ptlBrushOrigin.x;
     BrushOrigin.y = Dc_Attr->ptlBrushOrigin.y;
-    BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
-    /* FIXME - Handle BitmapObj == NULL !!!! */
+    psurf = SURFACE_LockSurface(dc->w.hBitmap);
+    /* FIXME - Handle psurf == NULL !!!! */
 
-    bRet = IntEngPaint(&BitmapObj->SurfObj,
+    bRet = IntEngPaint(&psurf->SurfObj,
                        ClipRegion,
                        &BrushInst.BrushObject,
                        &BrushOrigin,
                        0xFFFF);//FIXME:don't know what to put here
 
-    BITMAPOBJ_UnlockBitmap(BitmapObj);
+    SURFACE_UnlockSurface(psurf);
     BRUSHOBJ_UnlockBrush(pBrush);
     REGION_UnlockRgn(visrgn);
     NtGdiDeleteObject(tmpVisRgn);

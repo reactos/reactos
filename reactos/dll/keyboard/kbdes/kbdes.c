@@ -1,5 +1,5 @@
 /*
- * ReactOS ESASCII Keyboard layout
+ * ReactOS Spanish Keyboard Layout
  * Copyright (C) 2003 ReactOS
  * License: LGPL, see: LGPL.txt
  * Created by HUMA2000 from kbdus, kbdgr, kbdda and kbdfr
@@ -524,7 +524,7 @@ ROSDATA KBDTABLES keyboard_layout_table = {
   extcode0_to_vk,
   extcode1_to_vk,
 
-  MAKELONG(0,1), /* Version 1.0 */
+  MAKELONG(1,1), /* Version 1.0 */
 
   /* Ligatures -- Spanish doesn't have any  */
   0,

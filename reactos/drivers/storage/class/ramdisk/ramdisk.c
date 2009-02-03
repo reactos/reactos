@@ -17,7 +17,6 @@
 #include <ntddvol.h>
 #include <mountdev.h>
 #include <mountmgr.h>
-#include <helper.h>
 #include <ketypes.h>
 #include <iotypes.h>
 #include <rtlfuncs.h>

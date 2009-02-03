@@ -10,7 +10,9 @@
 	<define name="_WIN32_WINNT">0x601</define>
 	<define name="LIBXML_STATIC" />
 	<library>libxml2</library>
+	<library>libxslt</library>
 	<library>wine</library>
+	<library>wineldr</library>
 	<library>urlmon</library>
 	<library>wininet</library>
 	<library>ws2_32</library>
@@ -33,6 +35,7 @@
 	<file>element.c</file>
 	<file>factory.c</file>
 	<file>main.c</file>
+	<file>httprequest.c</file>
 	<file>node.c</file>
 	<file>nodelist.c</file>
 	<file>nodemap.c</file>

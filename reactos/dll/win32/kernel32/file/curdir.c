@@ -212,7 +212,7 @@ GetTempPathW (
          path[0] = 0; /* avoid returning ambiguous "X:" */
    }
 
-   TRACE("GetTempPathW returning %u, %s\n", ret, path);
+   TRACE("GetTempPathW returning %u, %S\n", ret, path);
    return ret;
 
 }

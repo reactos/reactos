@@ -1186,6 +1186,8 @@ DoCreateLink(
 {
     WCHAR szPath[MAX_PATH];
     WCHAR szTarget[MAX_PATH] = {0};
+    WCHAR szDirPath[MAX_PATH];
+    LPWSTR pszFile;
     STRRET strFile;
     LPWSTR pszExt;
     HRESULT hr;
@@ -1230,7 +1232,11 @@ DoCreateLink(
             return E_FAIL;
         }
 
-        if (SUCCEEDED(IShellLinkW_SetPath(nLink, szPath)))
+        GetFullPathName(szPath, MAX_PATH, szDirPath, &pszFile);
+        if (pszFile) pszFile[0] = 0;
+
+        if (SUCCEEDED(IShellLinkW_SetPath(nLink, szPath)) &&
+            SUCCEEDED(IShellLinkW_SetWorkingDirectory(nLink, szDirPath)))
         {
             if (SUCCEEDED(IShellLinkW_QueryInterface(nLink, &IID_IPersistFile, (LPVOID*)&ipf)))
             {

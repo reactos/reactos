@@ -1084,6 +1084,7 @@ KdbpAttachToThread(
    if (KeIsExecutingDpc() && Process != KdbCurrentProcess)
    {
       KdbpPrint("Cannot attach to thread within another process while executing a DPC.\n");
+      ObDereferenceObject(Thread);
       return FALSE;
    }
 
@@ -1132,6 +1133,7 @@ KdbpAttachToThread(
       KdbCurrentProcess = Process;
    }
 
+   ObDereferenceObject(Thread);
    return TRUE;
 }
 
@@ -1160,6 +1162,7 @@ KdbpAttachToProcess(
    }
 
    Entry = Process->ThreadListHead.Flink;
+   ObDereferenceObject(Process);
    if (Entry == &KdbCurrentProcess->ThreadListHead)
    {
       KdbpPrint("No threads in process 0x%p, cannot attach to process!\n", ProcessId);

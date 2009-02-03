@@ -111,7 +111,7 @@ STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Datum und Uhrzeit"
 FONT 10, "MS Sans Serif"
 BEGIN
-    LTEXT        "Verfügbare Formate",0,3,2,100,15
+    LTEXT        "Verfügbare Formate",-1,3,2,100,15
     LISTBOX      IDC_DATETIME,3,12,80,65,LBS_NOINTEGRALHEIGHT | LBS_NOTIFY
     PUSHBUTTON   "&OK",IDOK,87,12,40,12
     PUSHBUTTON   "A&bbrechen",IDCANCEL,87,26,40,12
@@ -122,7 +122,7 @@ STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Neu"
 FONT 10, "MS Sans Serif"
 BEGIN
-    LTEXT        "Neuer Dokumenttyp",0,3,2,100,15
+    LTEXT        "Neuer Dokumenttyp",-1,3,2,100,15
     LISTBOX      IDC_NEWFILE,3,12,90,65,LBS_NOINTEGRALHEIGHT
     PUSHBUTTON   "&OK",IDOK,97,12,40,12
     PUSHBUTTON   "A&bbrechen",IDCANCEL,97,26,40,12
@@ -133,14 +133,14 @@ STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 Caption "Absatz"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Einzug", 0, 10, 10, 120, 68
-    LTEXT "Links", 0, 15, 22, 40, 13
+    GROUPBOX "Einzug", -1, 10, 10, 120, 68
+    LTEXT "Links", -1, 15, 22, 40, 13
     EDITTEXT IDC_PARA_LEFT, 55, 20, 60, 13
-    LTEXT "Rechts", 0, 15, 40, 40, 13
+    LTEXT "Rechts", -1, 15, 40, 40, 13
     EDITTEXT IDC_PARA_RIGHT, 55, 38, 60, 13
-    LTEXT "Erste Zeile", 0, 15, 58, 40, 13
+    LTEXT "Erste Zeile", -1, 15, 58, 40, 13
     EDITTEXT IDC_PARA_FIRST, 55, 56, 60, 13
-    LTEXT "Ausrichtung", 0, 15, 87, 40, 13
+    LTEXT "Ausrichtung", -1, 15, 87, 40, 13
     COMBOBOX IDC_PARA_ALIGN, 55, 85, 60, 60, CBS_DROPDOWNLIST
     PUSHBUTTON "&OK", IDOK, 137, 15, 50, 15
     PUSHBUTTON "A&bbrechen", IDCANCEL, 137, 33, 50, 15
@@ -151,7 +151,7 @@ STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 Caption "Tabstopps"
 FONT 8, "MS SHell DLg"
 BEGIN
-    GROUPBOX "Tabstoppposition", 0, 10, 10, 120, 90
+    GROUPBOX "Tabstoppposition", -1, 10, 10, 120, 90
     COMBOBOX IDC_TABSTOPS, 20, 20, 100, 60, CBS_SIMPLE | CBS_SORT
     DEFPUSHBUTTON "&Festlegen", ID_TAB_ADD, 20, 80, 45, 15
     PUSHBUTTON "&Löschen", ID_TAB_DEL, 72, 80, 45, 15
@@ -165,11 +165,11 @@ STYLE DS_SYSMODAL
 Caption ""
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Zeilenumbruch", 0, 10, 10, 130, 85
+    GROUPBOX "Zeilenumbruch", -1, 10, 10, 130, 85
     RADIOBUTTON "No line wrapping", IDC_PAGEFMT_WN, 18, 25, 117, 15
     RADIOBUTTON "&Am Fenster umbrechen", IDC_PAGEFMT_WW, 18, 45, 117, 15
     RADIOBUTTON "A&m Lineal umbrechen", IDC_PAGEFMT_WM, 18, 65, 117, 15
-    GROUPBOX "Symbolleisten", 0, 150, 10, 120, 85
+    GROUPBOX "Symbolleisten", -1, 150, 10, 120, 85
     CHECKBOX "&Symbolleiste", IDC_PAGEFMT_TB, 160, 20, 80, 15
     CHECKBOX "&Formatierungsleiste", IDC_PAGEFMT_FB, 160, 38, 80, 15
     CHECKBOX "L&ineal", IDC_PAGEFMT_RU, 160, 56, 80, 15

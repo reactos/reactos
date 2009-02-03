@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Run-Time Library
- * FILE:            ntoskrnl/rtl/dbgprint.c
+ * FILE:            lib/rtl/debug.c
  * PURPOSE:         Debug Print and Prompt routines
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  *                  Royce Mitchel III
@@ -203,19 +203,19 @@ __cdecl
 DbgPrint(PCCH Format,
          ...)
 {
-	ULONG n;
+    ULONG n;
     va_list ap;
 
     /* Call the internal routine that also handles ControlC */
     va_start(ap, Format);
     n = vDbgPrintExWithPrefixInternal("",
-                                         -1,
-                                         DPFLTR_ERROR_LEVEL,
-                                         Format,
-                                         ap,
-                                         TRUE);
+                                      -1,
+                                      DPFLTR_ERROR_LEVEL,
+                                      Format,
+                                      ap,
+                                      TRUE);
     va_end(ap);
-	return n;
+    return n;
 }
 
 /*
@@ -228,19 +228,19 @@ DbgPrintEx(IN ULONG ComponentId,
            IN PCCH Format,
            ...)
 {
-	ULONG n;
+    ULONG n;
     va_list ap;
 
     /* Call the internal routine that also handles ControlC */
     va_start(ap, Format);
     n = vDbgPrintExWithPrefixInternal("",
-                                         ComponentId,
-                                         Level,
-                                         Format,
-                                         ap,
-                                         TRUE);
+                                      ComponentId,
+                                      Level,
+                                      Format,
+                                      ap,
+                                      TRUE);
     va_end(ap);
-	return n;
+    return n;
 }
 
 /*
@@ -251,19 +251,19 @@ __cdecl
 DbgPrintReturnControlC(PCH Format,
                        ...)
 {
-	ULONG n;
+    ULONG n;
     va_list ap;
 
     /* Call the internal routine that also handles ControlC */
     va_start(ap, Format);
     n = vDbgPrintExWithPrefixInternal("",
-                                         -1,
-                                         DPFLTR_ERROR_LEVEL,
-                                         Format,
-                                         ap,
-                                         FALSE);
+                                      -1,
+                                      DPFLTR_ERROR_LEVEL,
+                                      Format,
+                                      ap,
+                                      FALSE);
     va_end(ap);
-	return n;
+    return n;
 }
 
 /*
@@ -369,5 +369,3 @@ DbgUnLoadImageSymbols(IN PANSI_STRING Name,
     /* Load the symbols */
     DebugService2(Name, &SymbolInfo, BREAKPOINT_UNLOAD_SYMBOLS);
 }
-
-/* EOF */

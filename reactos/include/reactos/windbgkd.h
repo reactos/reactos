@@ -262,9 +262,9 @@ typedef struct _DBGKD_ANY_CONTROL_SET
 #include <poppack.h>
 
 #if defined(_M_X86)
-typedef X86_DBGKD_CONTROL_SET DBGKD_CONTROL_SET;
+typedef X86_DBGKD_CONTROL_SET DBGKD_CONTROL_SET, *PDBGKD_CONTROL_SET;
 #elif defined(_M_AMD64)
-typedef AMD64_DBGKD_CONTROL_SET DBGKD_CONTROL_SET;
+typedef AMD64_DBGKD_CONTROL_SET DBGKD_CONTROL_SET, *PDBGKD_CONTROL_SET;
 #else
 #error unsupported architecture
 #endif

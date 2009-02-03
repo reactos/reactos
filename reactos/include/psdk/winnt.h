@@ -1,6 +1,12 @@
 #ifndef _WINNT_H
 #define _WINNT_H
 
+#if !defined(__ROS_LONG64__)
+#ifdef __WINESRC__
+//#define __ROS_LONG64__  <- hack of fail!!!
+#endif
+#endif
+
 #ifdef __GNUC__
 #include <msvctarget.h>
 #endif
@@ -98,7 +104,11 @@ extern "C" {
 #endif
 typedef char CHAR;
 typedef short SHORT;
+#ifndef __ROS_LONG64__
 typedef long LONG;
+#else
+typedef int LONG;
+#endif
 typedef char CCHAR, *PCCHAR;
 typedef void *PVOID;
 
@@ -1999,7 +2009,7 @@ typedef struct _ACL {
 } ACL,*PACL;
 typedef enum _ACL_INFORMATION_CLASS
 {
-  AclRevisionInformation = 1, 
+  AclRevisionInformation = 1,
   AclSizeInformation
 } ACL_INFORMATION_CLASS;
 typedef struct _ACL_REVISION_INFORMATION {
@@ -3036,7 +3046,8 @@ typedef struct _SECURITY_DESCRIPTOR {
 	PSID Group;
 	PACL Sacl;
 	PACL Dacl;
-} SECURITY_DESCRIPTOR, *PSECURITY_DESCRIPTOR, *PISECURITY_DESCRIPTOR;
+} SECURITY_DESCRIPTOR, *PISECURITY_DESCRIPTOR;
+typedef PVOID PSECURITY_DESCRIPTOR;
 #endif
 typedef struct _SECURITY_DESCRIPTOR_RELATIVE {
     BYTE Revision;
@@ -3227,7 +3238,7 @@ RtlInterlockedFlushSList (
     );
 
 NTSYSAPI
-WORD  
+WORD
 NTAPI
 RtlQueryDepthSList (
     IN PSLIST_HEADER ListHead
@@ -4576,14 +4587,14 @@ typedef enum _PROCESSOR_CACHE_TYPE {
     CacheUnified,
     CacheInstruction,
     CacheData,
-    CacheTrace 
+    CacheTrace
 } PROCESSOR_CACHE_TYPE;
 
 typedef enum _LOGICAL_PROCESSOR_RELATIONSHIP {
     RelationProcessorCore,
     RelationNumaNode,
     RelationCache,
-    RelationProcessorPackage 
+    RelationProcessorPackage
 } LOGICAL_PROCESSOR_RELATIONSHIP;
 
 #define CACHE_FULLY_ASSOCIATIVE 0xFF
@@ -4830,7 +4841,7 @@ InterlockedBitTestAndReset(IN LONG volatile *Base,
 
 /* TODO: Other architectures than X86 */
 #if defined(_M_IX86)
-#define PF_TEMPORAL_LEVEL_1 
+#define PF_TEMPORAL_LEVEL_1
 #define PF_NON_TEMPORAL_LEVEL_ALL
 #define PreFetchCacheLine(l, a)
 #elif defined (_M_AMD64)

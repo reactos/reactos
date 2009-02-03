@@ -221,3 +221,10 @@ BEGIN
     IDS_ELEMENT_21 "Quickinfo"
     IDS_ELEMENT_22 "Symbol"
 END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_DISPLAY_SETTINGS "Skjerm innstillinger"
+    IDS_APPLY_FAILED "Mislykket å endre innstillingene..."
+    IDS_APPLY_NEEDS_RESTART "Du trenger å starte datamaskinen på nytt for at innstillingene skal endres."
+END

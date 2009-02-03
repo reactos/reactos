@@ -1285,7 +1285,7 @@ VOID DispTdiQueryInformationExComplete(
     QueryContext->Irp->IoStatus.Information = ByteCount;
     QueryContext->Irp->IoStatus.Status      = Status;
 
-    ExFreePool(QueryContext);
+    exFreePool(QueryContext);
 }
 
 
@@ -1348,7 +1348,7 @@ NTSTATUS DispTdiQueryInformationEx(
             IrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
         OutputBuffer = Irp->UserBuffer;
 
-        QueryContext = ExAllocatePool(NonPagedPool, sizeof(TI_QUERY_CONTEXT));
+        QueryContext = exAllocatePool(NonPagedPool, sizeof(TI_QUERY_CONTEXT));
         if (QueryContext) {
 	    _SEH2_TRY {
                 InputMdl = IoAllocateMdl(InputBuffer,
@@ -1411,7 +1411,7 @@ NTSTATUS DispTdiQueryInformationEx(
                 IoFreeMdl(OutputMdl);
             }
 
-            ExFreePool(QueryContext);
+            exFreePool(QueryContext);
         } else
             Status = STATUS_INSUFFICIENT_RESOURCES;
     } else if( InputBufferLength ==
@@ -1424,7 +1424,7 @@ NTSTATUS DispTdiQueryInformationEx(
 
 	Size = 0;
 
-        QueryContext = ExAllocatePool(NonPagedPool, sizeof(TI_QUERY_CONTEXT));
+        QueryContext = exAllocatePool(NonPagedPool, sizeof(TI_QUERY_CONTEXT));
         if (!QueryContext) return STATUS_INSUFFICIENT_RESOURCES;
 
 	_SEH2_TRY {
@@ -1444,7 +1444,7 @@ NTSTATUS DispTdiQueryInformationEx(
 
 	if( !NT_SUCCESS(Status) || !InputMdl ) {
 	    if( InputMdl ) IoFreeMdl( InputMdl );
-	    ExFreePool(QueryContext);
+	    exFreePool(QueryContext);
 	    return Status;
 	}
 
@@ -1557,6 +1557,7 @@ NTSTATUS DispTdiSetIPAddress( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
             IF->Unicast.Address.IPv4Address = IpAddrChange->Address;
             IF->Netmask.Type = IP_ADDRESS_V4;
             IF->Netmask.Address.IPv4Address = IpAddrChange->Netmask;
+            IF->Broadcast.Type = IP_ADDRESS_V4;
 	    IF->Broadcast.Address.IPv4Address =
 		IF->Unicast.Address.IPv4Address |
 		~IF->Netmask.Address.IPv4Address;
@@ -1591,6 +1592,8 @@ NTSTATUS DispTdiDeleteIPAddress( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
             IF->Unicast.Address.IPv4Address = 0;
             IF->Netmask.Type = IP_ADDRESS_V4;
             IF->Netmask.Address.IPv4Address = 0;
+            IF->Broadcast.Type = IP_ADDRESS_V4;
+            IF->Broadcast.Address.IPv4Address = 0;
             Status = STATUS_SUCCESS;
         }
     } EndFor(IF);

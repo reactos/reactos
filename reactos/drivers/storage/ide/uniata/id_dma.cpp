@@ -281,7 +281,7 @@ retry_DB_IO:
     if(!dma_count || ((LONG)(dma_base) == -1)) {
         KdPrint2((PRINT_PREFIX "AtapiDmaSetup: No 1st block\n" ));
         //AtaReq->dma_base = NULL;
-        AtaReq->ahci_base64 = (ULONGLONG)NULL;
+        AtaReq->ahci_base64 = 0;
         return FALSE;
     }
 
@@ -303,7 +303,7 @@ retry_DB_IO:
         if (i >= max_entries) {
             KdPrint2((PRINT_PREFIX "too many segments in DMA table\n" ));
             //AtaReq->dma_base = NULL;
-            AtaReq->ahci_base64 = (ULONGLONG)NULL;
+            AtaReq->ahci_base64 = 0;
             return FALSE;
         }
         KdPrint2((PRINT_PREFIX "  get Phys(data[n]=%x)\n", data ));
@@ -321,7 +321,7 @@ retry_DB_IO:
         } else
         if(!dma_count || !dma_base || ((LONG)(dma_base) == -1)) {
             //AtaReq->dma_base = NULL;
-            AtaReq->ahci_base64 = (ULONGLONG)NULL;
+            AtaReq->ahci_base64 = 0;
             KdPrint2((PRINT_PREFIX "AtapiDmaSetup: No NEXT block\n" ));
             return FALSE;
         }
@@ -596,7 +596,7 @@ AtapiDmaReinit(
     )
 {
     PHW_LU_EXTENSION LunExt = &(deviceExtension->lun[ldev]);
-    CHAR apiomode;
+    SCHAR apiomode;
 
     apiomode = (CHAR)AtaPioMode(&(LunExt->IdentifyData));
 
@@ -754,9 +754,9 @@ AtapiDmaInit(
     IN ULONG DeviceNumber,
     IN ULONG lChannel,          // logical channel,
                                // is always 0 except simplex-only controllers
-    IN CHAR apiomode,
-    IN CHAR wdmamode,
-    IN CHAR udmamode
+    IN SCHAR apiomode,
+    IN SCHAR wdmamode,
+    IN SCHAR udmamode
     )
 {
     PHW_DEVICE_EXTENSION deviceExtension = (PHW_DEVICE_EXTENSION)HwDeviceExtension;
@@ -1046,7 +1046,7 @@ set_new_acard:
         /* set PIO mode timings */
         AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_PIO0 + apiomode);
         if((apiomode >= 0) && (ChipType != VIA133)) {
-            SetPciConfig1(reg-0x08, via_pio[(UCHAR)apiomode]);
+            SetPciConfig1(reg-0x08, via_pio[apiomode]);
         }
         via82c_timing(deviceExtension, dev, ATA_PIO0 + apiomode);
         AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_PIO0 + apiomode);
@@ -1067,18 +1067,18 @@ set_new_acard:
             apiomode = 4;
         for(i=udmamode; i>=0; i--) {
             if(AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_UDMA0 + i)) {
-                AtapiWritePortEx4(chan, (ULONG)(&deviceExtension->BaseIoAddressBM_0), mode_reg, cyr_udmatiming[(UCHAR)udmamode]);
+                AtapiWritePortEx4(chan, (ULONG)(&deviceExtension->BaseIoAddressBM_0), mode_reg, cyr_udmatiming[udmamode]);
                 return;
             }
         }
         for(i=wdmamode; i>=0; i--) {
             if(AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_WDMA0 + i)) {
-                AtapiWritePortEx4(chan, (ULONG)(&deviceExtension->BaseIoAddressBM_0), mode_reg, cyr_wdmatiming[(UCHAR)wdmamode]);
+                AtapiWritePortEx4(chan, (ULONG)(&deviceExtension->BaseIoAddressBM_0), mode_reg, cyr_wdmatiming[wdmamode]);
                 return;
             }
         }
         if(AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_PIO0 + apiomode)) {
-            AtapiWritePortEx4(chan, (ULONG)(&deviceExtension->BaseIoAddressBM_0), mode_reg, cyr_piotiming[(UCHAR)apiomode]);
+            AtapiWritePortEx4(chan, (ULONG)(&deviceExtension->BaseIoAddressBM_0), mode_reg, cyr_piotiming[apiomode]);
             return;
         }
         return;
@@ -1113,7 +1113,7 @@ set_new_acard:
         }
         if(AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_PIO0 + apiomode)) {
             ChangePciConfig4(0x44 + (dev * 8), a | 0x80000000);
-            SetPciConfig4(0x40 + (dev * 8), nat_piotiming[(UCHAR)apiomode]);
+            SetPciConfig4(0x40 + (dev * 8), nat_piotiming[apiomode]);
             return;
         }
         /* Use GENERIC PIO */
@@ -1413,7 +1413,7 @@ set_new_acard:
                 // 44
                 GetPciConfig4(0x44, reg44);
                 reg44 = (reg44 & ~(0xff << bit_offset)) |
-                             (sw_dma_modes[(UCHAR)wdmamode] << bit_offset);
+                             (sw_dma_modes[wdmamode] << bit_offset);
                 SetPciConfig4(0x44, reg44);
                 // 40
                 GetPciConfig4(0x40, reg40);
@@ -1439,7 +1439,7 @@ set_new_acard:
         // 40
         GetPciConfig4(0x40, reg40);
         reg40 = (reg40 & ~(0xff << bit_offset)) |
-                       (sw_pio_modes[(UCHAR)apiomode] << bit_offset);
+                       (sw_pio_modes[apiomode] << bit_offset);
         SetPciConfig4(0x40, reg40);
         return;
         break; }
@@ -1488,7 +1488,7 @@ l_ATA_SILICON_IMAGE_ID:
             AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_PIO0 + apiomode);
 
             SetPciConfig1(mreg, mode | (mask & 0x11));
-            SetPciConfig2(ureg - 0x8, sil_pio_modes[i]);
+            SetPciConfig2(ureg - 0x8, sil_pio_modes[apiomode]);
             return;
 
         } else {
@@ -1527,7 +1527,7 @@ l_ATA_SILICON_IMAGE_ID:
             /* set PIO mode timings */
             AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_PIO0 + apiomode);
 
-            SetPciConfig1(treg, cmd_pio_modes[(UCHAR)apiomode]);
+            SetPciConfig1(treg, cmd_pio_modes[apiomode]);
             ChangePciConfig1(Channel ? 0x7b : 0x73, a & ~(!(DeviceNumber & 1) ? 0x35 : 0xca));
             return;
 
@@ -1731,8 +1731,8 @@ setup_drive_ite:
             AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_PIO0 + apiomode);
             ChangePciConfig1(0x50, a | (1 << (dev + 3)) );
             GetPciConfig1(0x54 + offset, reg54);
-            if(reg54 < chtiming[i]) {
-                SetPciConfig1(0x54 + offset, chtiming[i]);
+            if(reg54 < chtiming[apiomode]) {
+                SetPciConfig1(0x54 + offset, chtiming[apiomode]);
             }
             return;
         }

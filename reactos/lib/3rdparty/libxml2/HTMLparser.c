@@ -2768,6 +2768,7 @@ htmlParseCharData(htmlParserCtxtPtr ctxt) {
     xmlChar buf[HTML_PARSER_BIG_BUFFER_SIZE + 5];
     int nbchar = 0;
     int cur, l;
+    int chunk = 0;
 
     SHRINK;
     cur = CUR_CHAR(l);
@@ -2798,6 +2799,12 @@ htmlParseCharData(htmlParserCtxtPtr ctxt) {
 	    nbchar = 0;
 	}
 	NEXTL(l);
+        chunk++;
+        if (chunk > HTML_PARSER_BUFFER_SIZE) {
+            chunk = 0;
+            SHRINK;
+            GROW;
+        }
 	cur = CUR_CHAR(l);
 	if (cur == 0) {
 	    SHRINK;
@@ -4113,6 +4120,8 @@ htmlParseElement(htmlParserCtxtPtr ctxt) {
 
 int
 htmlParseDocument(htmlParserCtxtPtr ctxt) {
+    xmlChar start[4];
+    xmlCharEncoding enc;
     xmlDtdPtr dtd;
 
     xmlInitParser();
@@ -4131,6 +4140,23 @@ htmlParseDocument(htmlParserCtxtPtr ctxt) {
      */
     if ((ctxt->sax) && (ctxt->sax->setDocumentLocator))
         ctxt->sax->setDocumentLocator(ctxt->userData, &xmlDefaultSAXLocator);
+
+    if ((ctxt->encoding == (const xmlChar *)XML_CHAR_ENCODING_NONE) &&
+        ((ctxt->input->end - ctxt->input->cur) >= 4)) {
+	/*
+	 * Get the 4 first bytes and decode the charset
+	 * if enc != XML_CHAR_ENCODING_NONE
+	 * plug some encoding conversion routines.
+	 */
+	start[0] = RAW;
+	start[1] = NXT(1);
+	start[2] = NXT(2);
+	start[3] = NXT(3);
+	enc = xmlDetectCharEncoding(&start[0], 4);
+	if (enc != XML_CHAR_ENCODING_NONE) {
+	    xmlSwitchEncoding(ctxt, enc);
+	}
+    }
 
     /*
      * Wipe out everything which is before the first '<'
@@ -4151,10 +4177,10 @@ htmlParseDocument(htmlParserCtxtPtr ctxt) {
     while (((CUR == '<') && (NXT(1) == '!') &&
             (NXT(2) == '-') && (NXT(3) == '-')) ||
 	   ((CUR == '<') && (NXT(1) == '?'))) {
-        htmlParseComment(ctxt);	   
-        htmlParsePI(ctxt);	   
+        htmlParseComment(ctxt);
+        htmlParsePI(ctxt);
 	SKIP_BLANKS;
-    }	   
+    }
 
 
     /*

@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="csrsrv" type="nativedll">
-	<importlibrary definition="csrsrv.def" />
+	<importlibrary definition="csrsrv.spec" />
 	<include base="csrsrv">.</include>
 	<include base="csr">.</include>
 	<include base="ReactOS">include/reactos/subsys</include>

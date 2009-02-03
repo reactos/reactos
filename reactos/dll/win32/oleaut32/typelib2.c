@@ -1349,7 +1349,7 @@ static HRESULT WINAPI ICreateTypeInfo2_fnAddRefTypeInfo(
      * implementation of ITypeInfo. So we need to do the following...
      */
     res = ITypeInfo_GetContainingTypeLib(pTInfo, &container, &index);
-    if (!SUCCEEDED(res)) {
+    if (FAILED(res)) {
 	TRACE("failed to find containing typelib.\n");
 	return res;
     }
@@ -1708,7 +1708,7 @@ static HRESULT WINAPI ICreateTypeInfo2_fnSetFuncAndParamNames(
 {
     ICreateTypeInfo2Impl *This = (ICreateTypeInfo2Impl *)iface;
 
-    int i;
+    UINT i;
     int offset;
     char *namedata;
 

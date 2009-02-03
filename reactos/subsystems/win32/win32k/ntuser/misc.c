@@ -508,6 +508,7 @@ GetW32ThreadInfo(VOID)
             ti->kpi = GetW32ProcessInfo();
             ti->pi = UserHeapAddressToUser(ti->kpi);
             ti->Hooks = W32Thread->Hooks;
+            W32Thread->pcti = &ti->ClientThreadInfo;
             if (W32Thread->Desktop != NULL)
             {
                 ti->Desktop = W32Thread->Desktop->DesktopInfo;
@@ -521,6 +522,7 @@ GetW32ThreadInfo(VOID)
             /* update the TEB */
             Teb = NtCurrentTeb();
             ci = GetWin32ClientInfo();
+            W32Thread->pClientInfo = ci;
             _SEH2_TRY
             {
                 ProbeForWrite(Teb,

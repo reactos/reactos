@@ -7,6 +7,12 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
+/* gcc defaults to cdecl */
+#if defined(__GNUC__)
+#undef __cdecl
+#define __cdecl
+#endif
+
 #include "mkhive.h"
 #include <bitmap.c>
 

@@ -45,7 +45,13 @@ ParseAutomaticDependencySwitch (
 	switch ( switchChar2 )
 	{
 		case 'd':
-			configuration.AutomaticDependencies = false;
+			configuration.Dependencies = NoDependencies;
+			break;
+		case 'a':
+			configuration.Dependencies = AutomaticDependencies;
+			break;
+		case 'f':
+			configuration.Dependencies = FullDependencies;
 			break;
 		case 'm':
 			if ( strlen ( switchStart ) <= 3 )
@@ -293,6 +299,8 @@ main ( int argc, char** argv )
 		printf ( "  -c            Clean as you go. Delete generated files as soon as they are not\n" );
 		printf ( "                needed anymore.\n" );
 		printf ( "  -dd           Disable automatic dependencies.\n" );
+		printf ( "  -da           Enable automatic dependencies.\n" );
+		printf ( "  -df           Enable full dependencies.\n" );
 		printf ( "  -dm{module}   Check only automatic dependencies for this module.\n" );
 		printf ( "  -ud           Disable multiple source files per compilation unit.\n" );
 		printf ( "  -mi           Let make handle creation of install directories. Rbuild will\n" );

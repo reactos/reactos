@@ -678,3 +678,16 @@ KsWriteFile(
     UNIMPLEMENTED;
     return STATUS_UNSUCCESSFUL;
 }
+
+/*
+    @unimplemented
+*/
+KSDDKAPI NTSTATUS NTAPI
+KsDefaultForwardIrp(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp)
+{
+    UNIMPLEMENTED;
+    return STATUS_UNSUCCESSFUL;
+}
+

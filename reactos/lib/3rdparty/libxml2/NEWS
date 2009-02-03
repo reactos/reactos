@@ -15,6 +15,17 @@ ChangeLog.html
 to the SVN at 
 http://svn.gnome.org/viewcvs/libxml2/trunk/
  code base.Here is the list of public releases:
+2.7.2: Oct 3 2008:
+   - Portability fix: fix solaris compilation problem, fix compilation
+        if XPath is not configured in
+   - Bug fixes: nasty entity bug introduced in 2.7.0, restore old behaviour
+        when saving an HTML doc with an xml dump function, HTML UTF-8 parsing
+        bug, fix reader custom error handlers (Riccardo Scussat)
+    
+   - Improvement: xmlSave options for more flexibility to save as
+        XML/HTML/XHTML, handle leading BOM in HTML documents
+
+
 2.7.1: Sep 1 2008:
    - Portability fix: Borland C fix (Moritz Both)
    - Bug fixes: python serialization wrappers, XPath QName corner

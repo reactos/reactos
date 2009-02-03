@@ -32,6 +32,7 @@
 	<file>string.c</file>
 	<file>syslink.c</file>
 	<file>tab.c</file>
+	<file>theme_button.c</file>
 	<file>theme_combo.c</file>
 	<file>theme_dialog.c</file>
 	<file>theme_edit.c</file>

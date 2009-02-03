@@ -1678,8 +1678,7 @@ BOOL UserDrawCaption(
    if(uFlags & DC_INBUTTON)
    {
       hOldBrush = NtGdiSelectBrush(hMemDc,
-         IntGetSysColorBrush(uFlags & DC_ACTIVE ?
-            COLOR_BTNFACE : COLOR_BTNSHADOW));
+         IntGetSysColorBrush(COLOR_3DFACE));
 
       if(!hOldBrush)
       {

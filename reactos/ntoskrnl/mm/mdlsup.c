@@ -599,7 +599,7 @@ MmAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
     }
     
     /* If nothing was allocated, fail */
-    if (NumberOfPagesAllocated)
+    if (NumberOfPagesWanted)
     {
         /* Free our MDL */
         ExFreePool(Mdl);

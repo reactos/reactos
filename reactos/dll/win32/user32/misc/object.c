@@ -36,53 +36,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
 /* FUNCTIONS *****************************************************************/
 
 /*
- * @unimplemented
- */
-BOOL
-WINAPI
-SetUserObjectInformationA(
-  HANDLE hObj,
-  int nIndex,
-  PVOID pvInfo,
-  DWORD nLength)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
-SetUserObjectInformationW(
-  HANDLE hObj,
-  int nIndex,
-  PVOID pvInfo,
-  DWORD nLength)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
-UserHandleGrantAccess(
-  HANDLE hUserHandle,
-  HANDLE hJob,
-  BOOL bGrant)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-
-/*
  * @implemented
  */
 BOOL
@@ -130,22 +83,3 @@ GetUserObjectInformationA(
   HeapFree(GetProcessHeap(), 0, buffer);
   return ret;
 }
-
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
-GetUserObjectInformationW(
-  HANDLE hObj,
-  int nIndex,
-  PVOID pvInfo,
-  DWORD nLength,
-  LPDWORD lpnLengthNeeded)
-{
-  TRACE("GetUserObjectInformationW(%x %d %x %d %x)\n", hObj, nIndex,
-         pvInfo, nLength, lpnLengthNeeded);
-  return NtUserGetObjectInformation(hObj, nIndex, pvInfo, nLength, lpnLengthNeeded);
-}
-

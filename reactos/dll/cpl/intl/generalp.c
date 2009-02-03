@@ -28,7 +28,6 @@
 
 #include <windows.h>
 #include <commctrl.h>
-#include <cpl.h>
 #include <tchar.h>
 #include <stdio.h>
 
@@ -441,6 +440,7 @@ GeneralPageProc(HWND hwndDlg,
 
                     /* Set new locale */
                     SetNewLocale(NewLcid);
+                    AddNewKbLayoutsByLcid(NewLcid);
                     SetUserGeoID(NewGeoID);
                     SetNonUnicodeLang(hwndDlg, NewLcid);
                 }

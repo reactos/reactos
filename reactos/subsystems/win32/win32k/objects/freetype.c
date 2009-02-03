@@ -644,8 +644,8 @@ FillTM(TEXTMETRICW *TM, PFONTGDI FontGDI, TT_OS2 *pOS2, TT_HoriHeader *pHori, FT
 
     TM->tmWeight = pOS2->usWeightClass;
     TM->tmOverhang = 0;
-    TM->tmDigitizedAspectX = 300;
-    TM->tmDigitizedAspectY = 300;
+    TM->tmDigitizedAspectX = 96;
+    TM->tmDigitizedAspectY = 96;
     TM->tmFirstChar = pOS2->usFirstCharIndex;
     TM->tmLastChar = pOS2->usLastCharIndex;
     TM->tmDefaultChar = pOS2->usDefaultChar;
@@ -2968,7 +2968,7 @@ ftGdiGetKerningPairs( PFONTGDI Font,
 
         char_previous = char_code = FT_Get_First_Char(face, &glyph_index);
 
-        IntUnLockFreeType;
+        IntLockFreeType;
 
         while (glyph_index)
         {
@@ -3099,7 +3099,7 @@ GreExtTextOutW(
     DC *dc;
     PDC_ATTR Dc_Attr;
     SURFOBJ *SurfObj;
-    BITMAPOBJ *BitmapObj = NULL;
+    SURFACE *psurf = NULL;
     int error, glyph_index, n, i;
     FT_Face face;
     FT_GlyphSlot glyph;
@@ -3179,12 +3179,12 @@ GreExtTextOutW(
         IntLPtoDP(dc, (POINT *)lprc, 2);
     }
 
-    BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
-    if ( !BitmapObj )
+    psurf = SURFACE_LockSurface(dc->w.hBitmap);
+    if (!psurf)
     {
         goto fail;
     }
-    SurfObj = &BitmapObj->SurfObj;
+    SurfObj = &psurf->SurfObj;
     ASSERT(SurfObj);
 
     Start.x = XStart;
@@ -3195,7 +3195,7 @@ GreExtTextOutW(
     YStart = Start.y + dc->ptlDCOrig.y;
 
     /* Create the brushes */
-    hDestPalette = BitmapObj->hDIBPalette;
+    hDestPalette = psurf->hDIBPalette;
     if (!hDestPalette) hDestPalette = pPrimarySurface->DevInfo.hpalDefault;
     PalDestGDI = PALETTE_LockPalette(hDestPalette);
     if ( !PalDestGDI )
@@ -3256,7 +3256,7 @@ GreExtTextOutW(
         DestRect.bottom = lprc->bottom + dc->ptlDCOrig.y;
         IntLPtoDP(dc, (LPPOINT)&DestRect, 2);
         IntEngBitBlt(
-            &BitmapObj->SurfObj,
+            &psurf->SurfObj,
             NULL,
             NULL,
             dc->CombinedClip,
@@ -3502,7 +3502,7 @@ GreExtTextOutW(
             DestRect.top = TextTop + yoff - ((face->size->metrics.ascender + 32) >> 6);
             DestRect.bottom = TextTop + yoff + ((32 - face->size->metrics.descender) >> 6);
             IntEngBitBlt(
-                &BitmapObj->SurfObj,
+                &psurf->SurfObj,
                 NULL,
                 NULL,
                 dc->CombinedClip,
@@ -3618,7 +3618,7 @@ GreExtTextOutW(
 
     EngDeleteXlate(XlateObj);
     EngDeleteXlate(XlateObj2);
-    BITMAPOBJ_UnlockBitmap(BitmapObj);
+    SURFACE_UnlockSurface(psurf);
     if (TextObj != NULL)
         TEXTOBJ_UnlockText(TextObj);
     if (hBrushBg != NULL)
@@ -3640,8 +3640,8 @@ fail:
         EngDeleteXlate(XlateObj);
     if (TextObj != NULL)
         TEXTOBJ_UnlockText(TextObj);
-    if (BitmapObj != NULL)
-        BITMAPOBJ_UnlockBitmap(BitmapObj);
+    if (psurf != NULL)
+        SURFACE_UnlockSurface(psurf);
     if (hBrushBg != NULL)
     {
         BRUSHOBJ_UnlockBrush(BrushBg);

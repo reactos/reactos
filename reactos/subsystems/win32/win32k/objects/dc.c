@@ -65,7 +65,6 @@ NtGdiCreateCompatibleDC(HDC hDC)
   UNICODE_STRING DriverName;
   DWORD Layout = 0;
 
-  DisplayDC = NULL;
   if (hDC == NULL)
     {
       RtlInitUnicodeString(&DriverName, L"DISPLAY");
@@ -1090,6 +1089,8 @@ BOOL
 APIENTRY
 NtGdiDeleteObjectApp(HANDLE  DCHandle)
 {
+  /* Complete all pending operations */
+  NtGdiFlushUserBatch();
 
   if (GDI_HANDLE_IS_STOCKOBJ(DCHandle)) return TRUE;
 
@@ -1262,6 +1263,33 @@ IntGetAspectRatioFilter(PDC pDC,
      AspectRatio->cy = 0;
   }
   return TRUE;
+}
+
+VOID
+FASTCALL
+IntGetViewportExtEx(PDC pdc, LPSIZE pSize)
+{
+    PDC_ATTR pDc_Attr;
+
+    /* Get a pointer to the dc attribute */
+    pDc_Attr = pdc->pDc_Attr;
+    if (!pDc_Attr) pDc_Attr = &pdc->Dc_Attr;
+
+    /* Check if we need to recalculate */
+    if (pDc_Attr->flXform & PAGE_EXTENTS_CHANGED)
+    {
+        /* Check if we need to do isotropic fixup */
+        if (pDc_Attr->iMapMode == MM_ISOTROPIC)
+        {
+            IntFixIsotropicMapping(pdc);
+        }
+
+        /* Update xforms, CHECKME: really done here? */
+        DC_UpdateXforms(pdc);
+    }
+
+    /* Copy the viewport extension */
+    *pSize = pDc_Attr->szlViewportExt;
 }
 
 BOOL APIENTRY

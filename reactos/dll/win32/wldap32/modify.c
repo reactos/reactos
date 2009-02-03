@@ -58,7 +58,7 @@ ULONG CDECL ldap_modifyA( WLDAP32_LDAP *ld, PCHAR dn, LDAPModA *mods[] )
 
     TRACE( "(%p, %s, %p)\n", ld, debugstr_a(dn), mods );
 
-    if (!ld) return ~0UL;
+    if (!ld) return ~0u;
 
     if (dn) {
         dnW = strAtoW( dn );
@@ -128,7 +128,7 @@ ULONG CDECL ldap_modifyW( WLDAP32_LDAP *ld, PWCHAR dn, LDAPModW *mods[] )
     if (ret == LDAP_SUCCESS)
         ret = msg;
     else
-        ret = ~0UL;
+        ret = ~0u;
 
 exit:
     strfreeU( dnU );
@@ -157,7 +157,7 @@ ULONG CDECL ldap_modify_extA( WLDAP32_LDAP *ld, PCHAR dn, LDAPModA *mods[],
     TRACE( "(%p, %s, %p, %p, %p, %p)\n", ld, debugstr_a(dn), mods,
            serverctrls, clientctrls, message );
 
-    if (!ld) return ~0UL;
+    if (!ld) return ~0u;
 
     if (dn) {
         dnW = strAtoW( dn );
@@ -226,7 +226,7 @@ ULONG CDECL ldap_modify_extW( WLDAP32_LDAP *ld, PWCHAR dn, LDAPModW *mods[],
     TRACE( "(%p, %s, %p, %p, %p, %p)\n", ld, debugstr_w(dn), mods,
            serverctrls, clientctrls, message );
 
-    if (!ld) return ~0UL;
+    if (!ld) return ~0u;
 
     if (dn) {
         dnU = strWtoU( dn );
@@ -245,8 +245,8 @@ ULONG CDECL ldap_modify_extW( WLDAP32_LDAP *ld, PWCHAR dn, LDAPModW *mods[],
         if (!clientctrlsU) goto exit;
     }
 
-    ret = ldap_modify_ext( ld, dn ? dnU : "", mods ? modsU : nullmods, serverctrlsU,
-                           clientctrlsU, message ? (int *)message : &dummy );
+    ret = map_error( ldap_modify_ext( ld, dn ? dnU : "", mods ? modsU : nullmods, serverctrlsU,
+                                      clientctrlsU, message ? (int *)message : &dummy ));
 
 exit:
     strfreeU( dnU );
@@ -362,8 +362,8 @@ ULONG CDECL ldap_modify_ext_sW( WLDAP32_LDAP *ld, PWCHAR dn, LDAPModW *mods[],
         if (!clientctrlsU) goto exit;
     }
 
-    ret = ldap_modify_ext_s( ld, dn ? dnU : "", mods ? modsU : nullmods,
-                             serverctrlsU, clientctrlsU );
+    ret = map_error( ldap_modify_ext_s( ld, dn ? dnU : "", mods ? modsU : nullmods,
+                                        serverctrlsU, clientctrlsU ));
 
 exit:
     strfreeU( dnU );
@@ -449,7 +449,7 @@ ULONG CDECL ldap_modify_sW( WLDAP32_LDAP *ld, PWCHAR dn, LDAPModW *mods[] )
         if (!modsU) goto exit;
     }
 
-    ret = ldap_modify_ext_s( ld, dn ? dnU : "", mods ? modsU : nullmods, NULL, NULL );
+    ret = map_error( ldap_modify_ext_s( ld, dn ? dnU : "", mods ? modsU : nullmods, NULL, NULL ));
 
 exit:
     strfreeU( dnU );

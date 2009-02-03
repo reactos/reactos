@@ -42,7 +42,7 @@ typedef struct _WINE_COLLECTIONSTORE
 
 static void WINAPI CRYPT_CollectionCloseStore(HCERTSTORE store, DWORD dwFlags)
 {
-    PWINE_COLLECTIONSTORE cs = (PWINE_COLLECTIONSTORE)store;
+    PWINE_COLLECTIONSTORE cs = store;
     PWINE_STORE_LIST_ENTRY entry, next;
 
     TRACE("(%p, %08x)\n", store, dwFlags);
@@ -51,12 +51,12 @@ static void WINAPI CRYPT_CollectionCloseStore(HCERTSTORE store, DWORD dwFlags)
      entry)
     {
         TRACE("closing %p\n", entry);
-        CertCloseStore((HCERTSTORE)entry->store, dwFlags);
+        CertCloseStore(entry->store, dwFlags);
         CryptMemFree(entry);
     }
     cs->cs.DebugInfo->Spare[0] = 0;
     DeleteCriticalSection(&cs->cs);
-    CRYPT_FreeStore((PWINECRYPT_CERTSTORE)store);
+    CRYPT_FreeStore(store);
 }
 
 static void *CRYPT_CollectionCreateContextFromChild(PWINE_COLLECTIONSTORE store,
@@ -95,7 +95,7 @@ static BOOL CRYPT_CollectionAddContext(PWINE_COLLECTIONSTORE store,
         contextFuncs = (PCONTEXT_FUNCS)((LPBYTE)storeEntry->store +
          contextFuncsOffset);
         ret = contextFuncs->addContext(storeEntry->store, context,
-         existingLinked, childContext);
+         existingLinked, (const void **)&childContext);
     }
     else
     {
@@ -205,7 +205,7 @@ static BOOL CRYPT_CollectionAddCert(PWINECRYPT_CERTSTORE store, void *cert,
             context->hCertStore = store;
         *ppStoreContext = context;
     }
-    CertFreeCertificateContext((PCCERT_CONTEXT)childContext);
+    CertFreeCertificateContext(childContext);
     return ret;
 }
 
@@ -258,7 +258,7 @@ static BOOL CRYPT_CollectionDeleteCert(PWINECRYPT_CERTSTORE store,
 
     TRACE("(%p, %p)\n", store, pCertContext);
 
-    ret = CertDeleteCertificateFromStore((PCCERT_CONTEXT)
+    ret = CertDeleteCertificateFromStore(
      Context_GetLinkedContext(pCertContext, sizeof(CERT_CONTEXT)));
     return ret;
 }
@@ -284,7 +284,7 @@ static BOOL CRYPT_CollectionAddCRL(PWINECRYPT_CERTSTORE store, void *crl,
             context->hCertStore = store;
         *ppStoreContext = context;
     }
-    CertFreeCRLContext((PCCRL_CONTEXT)childContext);
+    CertFreeCRLContext(childContext);
     return ret;
 }
 
@@ -336,7 +336,7 @@ static BOOL CRYPT_CollectionDeleteCRL(PWINECRYPT_CERTSTORE store,
 
     TRACE("(%p, %p)\n", store, pCrlContext);
 
-    ret = CertDeleteCRLFromStore((PCCRL_CONTEXT)
+    ret = CertDeleteCRLFromStore(
      Context_GetLinkedContext(pCrlContext, sizeof(CRL_CONTEXT)));
     return ret;
 }
@@ -362,7 +362,7 @@ static BOOL CRYPT_CollectionAddCTL(PWINECRYPT_CERTSTORE store, void *ctl,
             context->hCertStore = store;
         *ppStoreContext = context;
     }
-    CertFreeCTLContext((PCCTL_CONTEXT)childContext);
+    CertFreeCTLContext(childContext);
     return ret;
 }
 
@@ -414,7 +414,7 @@ static BOOL CRYPT_CollectionDeleteCTL(PWINECRYPT_CERTSTORE store,
 
     TRACE("(%p, %p)\n", store, pCtlContext);
 
-    ret = CertDeleteCTLFromStore((PCCTL_CONTEXT)
+    ret = CertDeleteCTLFromStore(
      Context_GetLinkedContext(pCtlContext, sizeof(CTL_CONTEXT)));
     return ret;
 }
@@ -457,8 +457,8 @@ PWINECRYPT_CERTSTORE CRYPT_CollectionOpenStore(HCRYPTPROV hCryptProv,
 BOOL WINAPI CertAddStoreToCollection(HCERTSTORE hCollectionStore,
  HCERTSTORE hSiblingStore, DWORD dwUpdateFlags, DWORD dwPriority)
 {
-    PWINE_COLLECTIONSTORE collection = (PWINE_COLLECTIONSTORE)hCollectionStore;
-    WINECRYPT_CERTSTORE *sibling = (WINECRYPT_CERTSTORE *)hSiblingStore;
+    PWINE_COLLECTIONSTORE collection = hCollectionStore;
+    WINECRYPT_CERTSTORE *sibling = hSiblingStore;
     PWINE_STORE_LIST_ENTRY entry;
     BOOL ret;
 
@@ -525,8 +525,8 @@ BOOL WINAPI CertAddStoreToCollection(HCERTSTORE hCollectionStore,
 void WINAPI CertRemoveStoreFromCollection(HCERTSTORE hCollectionStore,
  HCERTSTORE hSiblingStore)
 {
-    PWINE_COLLECTIONSTORE collection = (PWINE_COLLECTIONSTORE)hCollectionStore;
-    WINECRYPT_CERTSTORE *sibling = (WINECRYPT_CERTSTORE *)hSiblingStore;
+    PWINE_COLLECTIONSTORE collection = hCollectionStore;
+    WINECRYPT_CERTSTORE *sibling = hSiblingStore;
     PWINE_STORE_LIST_ENTRY store, next;
 
     TRACE("(%p, %p)\n", hCollectionStore, hSiblingStore);

@@ -28,11 +28,11 @@
  * \author Brian Paul
  */
 
-#include "glheader.h"
-#include "bufferobj.h"
-#include "image.h"
-#include "macros.h"
-#include "pixel.h"
+#include "main/glheader.h"
+#include "main/bufferobj.h"
+#include "main/image.h"
+#include "main/macros.h"
+#include "main/pixel.h"
 
 #include "s_context.h"
 #include "s_span.h"

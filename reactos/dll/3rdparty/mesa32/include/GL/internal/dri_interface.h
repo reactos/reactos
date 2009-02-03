@@ -40,8 +40,8 @@
 #ifndef DRI_INTERFACE_H
 #define DRI_INTERFACE_H
 
-/* Make this something other than __APPLE__ for other arcs with no drm.h */
-#ifndef __APPLE__
+/* For archs with no drm.h */
+#if !defined(__APPLE__) && !defined(__CYGWIN__)
 #include <drm.h>
 #else
 typedef unsigned int drm_context_t;
@@ -75,6 +75,10 @@ typedef struct __DRItexOffsetExtensionRec	__DRItexOffsetExtension;
 typedef struct __DRItexBufferExtensionRec	__DRItexBufferExtension;
 typedef struct __DRIlegacyExtensionRec		__DRIlegacyExtension;
 typedef struct __DRIswrastExtensionRec		__DRIswrastExtension;
+typedef struct __DRIbufferRec			__DRIbuffer;
+typedef struct __DRIdri2ExtensionRec		__DRIdri2Extension;
+typedef struct __DRIdri2LoaderExtensionRec	__DRIdri2LoaderExtension;
+
 /*@}*/
 
 
@@ -343,29 +347,6 @@ struct __DRIdamageExtensionRec {
 			 void *loaderPrivate);
 };
 
-/**
- * DRI2 Loader extension.  This extension describes the basic
- * functionality the loader needs to provide for the DRI driver.
- */
-#define __DRI_LOADER "DRI_Loader"
-#define __DRI_LOADER_VERSION 1
-struct __DRIloaderExtensionRec {
-    __DRIextension base;
-
-    /**
-     * Ping the windowing system to get it to reemit info for the
-     * specified drawable in the DRI2 event buffer.
-     *
-     * \param draw the drawable for which to request info
-     * \param tail the new event buffer tail pointer
-     */
-    void (*reemitDrawableInfo)(__DRIdrawable *draw, unsigned int *tail,
-			       void *loaderPrivate);
-
-    void (*postDamage)(__DRIdrawable *draw, struct drm_clip_rect *rects,
-		       int num_rects, void *loaderPrivate);
-};
-
 #define __DRI_SWRAST_IMAGE_OP_DRAW	1
 #define __DRI_SWRAST_IMAGE_OP_CLEAR	2
 #define __DRI_SWRAST_IMAGE_OP_SWAP	3
@@ -631,6 +612,64 @@ struct __DRIswrastExtensionRec {
     __DRIdrawable *(*createNewDrawable)(__DRIscreen *screen,
 					const __DRIconfig *config,
 					void *loaderPrivate);
+};
+
+/**
+ * DRI2 Loader extension.
+ */
+#define __DRI_BUFFER_FRONT_LEFT		0
+#define __DRI_BUFFER_BACK_LEFT		1
+#define __DRI_BUFFER_FRONT_RIGHT	2
+#define __DRI_BUFFER_BACK_RIGHT		3
+#define __DRI_BUFFER_DEPTH		4
+#define __DRI_BUFFER_STENCIL		5
+#define __DRI_BUFFER_ACCUM		6
+#define __DRI_BUFFER_FAKE_FRONT_LEFT	7
+#define __DRI_BUFFER_FAKE_FRONT_RIGHT	8
+
+struct __DRIbufferRec {
+    unsigned int attachment;
+    unsigned int name;
+    unsigned int pitch;
+    unsigned int cpp;
+    unsigned int flags;
+};
+
+#define __DRI_DRI2_LOADER "DRI_DRI2Loader"
+#define __DRI_DRI2_LOADER_VERSION 1
+struct __DRIdri2LoaderExtensionRec {
+    __DRIextension base;
+
+    __DRIbuffer *(*getBuffers)(__DRIdrawable *driDrawable,
+			       int *width, int *height,
+			       unsigned int *attachments, int count,
+			       int *out_count, void *loaderPrivate);
+};
+
+/**
+ * This extension provides alternative screen, drawable and context
+ * constructors for DRI2.
+ */
+#define __DRI_DRI2 "DRI_DRI2"
+#define __DRI_DRI2_VERSION 1
+
+struct __DRIdri2ExtensionRec {
+    __DRIextension base;
+
+    __DRIscreen *(*createNewScreen)(int screen, int fd,
+				    const __DRIextension **extensions,
+				    const __DRIconfig ***driver_configs,
+				    void *loaderPrivate);
+
+    __DRIdrawable *(*createNewDrawable)(__DRIscreen *screen,
+					const __DRIconfig *config,
+					void *loaderPrivate);
+
+    __DRIcontext *(*createNewContext)(__DRIscreen *screen,
+				      const __DRIconfig *config,
+				      __DRIcontext *shared,
+				      void *loaderPrivate);
+
 };
 
 #endif

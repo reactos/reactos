@@ -71,6 +71,12 @@ enum storage_state
     storage_state_loaded
 };
 
+enum object_state
+{
+    object_state_not_running,
+    object_state_running
+};
+
 /****************************************************************************
  * DefaultHandler
  *
@@ -123,6 +129,7 @@ struct DefaultHandler
   IPersistStorage *pPSDelegate;
   /* IDataObject delegate */
   IDataObject *pDataDelegate;
+  enum object_state object_state;
 
   /* connection cookie for the advise on the delegate OLE object */
   DWORD dwAdvConn;
@@ -420,6 +427,25 @@ static HRESULT WINAPI DefaultHandler_SetHostNames(
   return S_OK;
 }
 
+static void release_delegates(DefaultHandler *This)
+{
+    if (This->pDataDelegate)
+    {
+        IDataObject_Release(This->pDataDelegate);
+        This->pDataDelegate = NULL;
+    }
+    if (This->pPSDelegate)
+    {
+        IPersistStorage_Release(This->pPSDelegate);
+        This->pPSDelegate = NULL;
+    }
+    if (This->pOleDelegate)
+    {
+        IOleObject_Release(This->pOleDelegate);
+        This->pOleDelegate = NULL;
+    }
+}
+
 /* undoes the work done by DefaultHandler_Run */
 static void DefaultHandler_Stop(DefaultHandler *This)
 {
@@ -432,18 +458,8 @@ static void DefaultHandler_Stop(DefaultHandler *This)
 
   if (This->dataAdviseHolder)
     DataAdviseHolder_OnDisconnect(This->dataAdviseHolder);
-  if (This->pDataDelegate)
-  {
-     IDataObject_Release(This->pDataDelegate);
-     This->pDataDelegate = NULL;
-  }
-  if (This->pPSDelegate)
-  {
-     IPersistStorage_Release(This->pPSDelegate);
-     This->pPSDelegate = NULL;
-  }
-  IOleObject_Release(This->pOleDelegate);
-  This->pOleDelegate = NULL;
+
+  This->object_state = object_state_not_running;
 }
 
 /************************************************************************
@@ -469,6 +485,7 @@ static HRESULT WINAPI DefaultHandler_Close(
   hr = IOleObject_Close(This->pOleDelegate, dwSaveOption);
 
   DefaultHandler_Stop(This);
+  release_delegates(This);
 
   return hr;
 }
@@ -892,7 +909,7 @@ static HRESULT WINAPI DefaultHandler_GetMiscStatus(
   if (FAILED(hres))
     *pdwStatus = 0;
 
-  return S_OK;
+  return hres;
 }
 
 /************************************************************************
@@ -1296,10 +1313,14 @@ static HRESULT WINAPI DefaultHandler_Run(
   if (object_is_running(This))
     return S_OK;
 
+  release_delegates(This);
+
   hr = CoCreateInstance(&This->clsid, NULL, CLSCTX_LOCAL_SERVER,
                         &IID_IOleObject, (void **)&This->pOleDelegate);
   if (FAILED(hr))
     return hr;
+
+  This->object_state = object_state_running;
 
   hr = IOleObject_Advise(This->pOleDelegate,
                          (IAdviseSink *)&This->lpvtblIAdviseSink,
@@ -1339,7 +1360,10 @@ static HRESULT WINAPI DefaultHandler_Run(
     hr = DataAdviseHolder_OnConnect(This->dataAdviseHolder, This->pDataDelegate);
 
   if (FAILED(hr))
+  {
     DefaultHandler_Stop(This);
+    release_delegates(This);
+  }
 
   return hr;
 }
@@ -1356,7 +1380,7 @@ static BOOL    WINAPI DefaultHandler_IsRunning(
 
   TRACE("()\n");
 
-  if (This->pOleDelegate)
+  if (This->object_state == object_state_running)
     return TRUE;
   else
     return FALSE;
@@ -1934,6 +1958,7 @@ static DefaultHandler* DefaultHandler_Construct(
   This->pOleDelegate = NULL;
   This->pPSDelegate = NULL;
   This->pDataDelegate = NULL;
+  This->object_state = object_state_not_running;
 
   This->dwAdvConn = 0;
   This->storage = NULL;
@@ -1947,6 +1972,7 @@ static void DefaultHandler_Destroy(
 {
   /* release delegates */
   DefaultHandler_Stop(This);
+  release_delegates(This);
 
   HeapFree( GetProcessHeap(), 0, This->containerApp );
   This->containerApp = NULL;

@@ -37,6 +37,13 @@
 extern "C" {
 #endif
 
+typedef struct slang_name_space_
+{
+   struct slang_function_scope_ *funcs;
+   struct slang_struct_scope_ *structs;
+   struct slang_variable_scope_ *vars;
+} slang_name_space;
+
 typedef enum slang_unit_type_
 {
    SLANG_UNIT_FRAGMENT_SHADER,
@@ -44,12 +51,6 @@ typedef enum slang_unit_type_
    SLANG_UNIT_FRAGMENT_BUILTIN,
    SLANG_UNIT_VERTEX_BUILTIN
 } slang_unit_type;
-
-
-typedef struct slang_var_pool_
-{
-   GLuint next_addr;
-} slang_var_pool;
 
 
 typedef struct slang_code_unit_
@@ -79,7 +80,6 @@ typedef struct slang_code_object_
 {
    slang_code_unit builtin[SLANG_BUILTIN_TOTAL];
    slang_code_unit unit;
-   slang_var_pool varpool;
    slang_atom_pool atompool;
 } slang_code_object;
 

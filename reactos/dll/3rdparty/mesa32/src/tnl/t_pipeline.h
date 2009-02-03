@@ -30,7 +30,7 @@
 #ifndef _T_PIPELINE_H_
 #define _T_PIPELINE_H_
 
-#include "mtypes.h"
+#include "main/mtypes.h"
 #include "t_context.h"
 
 extern void _tnl_run_pipeline( GLcontext *ctx );

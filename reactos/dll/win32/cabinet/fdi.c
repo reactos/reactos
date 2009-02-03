@@ -293,7 +293,7 @@ int make_decode_table(cab_ULONG nsyms, cab_ULONG nbits, const cab_UBYTE *length,
 /*************************************************************************
  * checksum (internal)
  */
-cab_ULONG checksum(const cab_UBYTE *data, cab_UWORD bytes, cab_ULONG csum) {
+static cab_ULONG checksum(const cab_UBYTE *data, cab_UWORD bytes, cab_ULONG csum) {
   int len;
   cab_ULONG ul = 0;
 
@@ -1054,7 +1054,7 @@ struct Ziphuft **t, cab_LONG *m, fdi_decomp_state *decomp_state)
         l[h] = j;               /* set table size in stack */
 
         /* allocate and link in new table */
-        if (!(q = (struct Ziphuft *) PFDI_ALLOC(CAB(hfdi), (z + 1)*sizeof(struct Ziphuft))))
+        if (!(q = PFDI_ALLOC(CAB(hfdi), (z + 1)*sizeof(struct Ziphuft))))
         {
           if(h)
             fdi_Ziphuft_free(CAB(hfdi), ZIP(u)[0]);
@@ -2180,8 +2180,8 @@ static int fdi_decomp(const struct fdi_file *fi, int savemode, fdi_decomp_state 
 
             if (cab->mii.folder_resv > 0)
               PFDI_SEEK(CAB(hfdi), cab->cabhf, cab->mii.folder_resv, SEEK_CUR);
-        
-            fol = (struct fdi_folder *) PFDI_ALLOC(CAB(hfdi), sizeof(struct fdi_folder));
+
+            fol = PFDI_ALLOC(CAB(hfdi), sizeof(struct fdi_folder));
             if (!fol) {
               ERR("out of memory!\n");
               return DECR_NOMEMORY;
@@ -2202,8 +2202,8 @@ static int fdi_decomp(const struct fdi_file *fi, int savemode, fdi_decomp_state 
           for (i = 0; i < fdici.cFiles; i++) {
             if (PFDI_READ(CAB(hfdi), cab->cabhf, buf2, cffile_SIZEOF) != cffile_SIZEOF)
               return DECR_INPUT;
-              
-            file = (struct fdi_file *) PFDI_ALLOC(CAB(hfdi), sizeof(struct fdi_file));
+
+            file = PFDI_ALLOC(CAB(hfdi), sizeof(struct fdi_file));
             if (!file) {
               ERR("out of memory!\n"); 
               return DECR_NOMEMORY;
@@ -2592,7 +2592,7 @@ BOOL __cdecl FDICopy(
     if (CAB(mii).folder_resv > 0)
       PFDI_SEEK(hfdi, cabhf, CAB(mii).folder_resv, SEEK_CUR);
 
-    fol = (struct fdi_folder *) PFDI_ALLOC(hfdi, sizeof(struct fdi_folder));
+    fol = PFDI_ALLOC(hfdi, sizeof(struct fdi_folder));
     if (!fol) {
       ERR("out of memory!\n");
       PFDI_INT(hfdi)->perf->erfOper = FDIERROR_ALLOC_FAIL;
@@ -2622,7 +2622,7 @@ BOOL __cdecl FDICopy(
       goto bail_and_fail;
     }
 
-    file = (struct fdi_file *) PFDI_ALLOC(hfdi, sizeof(struct fdi_file));
+    file = PFDI_ALLOC(hfdi, sizeof(struct fdi_file));
     if (!file) { 
       ERR("out of memory!\n"); 
       PFDI_INT(hfdi)->perf->erfOper = FDIERROR_ALLOC_FAIL;

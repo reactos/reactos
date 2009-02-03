@@ -42,7 +42,6 @@ static inline int needs_relay( const ORDDEF *odp )
     if (!odp) return 0;
     /* skip non-functions */
     if ((odp->type != TYPE_STDCALL) && (odp->type != TYPE_CDECL)) return 0;
-    if ((odp->type == TYPE_CDECL) && (target_cpu == CPU_x86_64)) return 0;
     /* skip norelay and forward entry points */
     if (odp->flags & (FLAG_NORELAY|FLAG_FORWARD)) return 0;
     return 1;
@@ -84,95 +83,6 @@ static const char *make_internal_name( const ORDDEF *odp, DLLSPEC *spec, const c
     return buffer;
 }
 
-static void output_relay_debug_x86(DLLSPEC *spec, int i)
-{
-    unsigned int args, flags;
-    ORDDEF *odp = spec->ordinals[i];
-
-    output( "\t.align %d\n", get_alignment(4) );
-    output( ".L__wine_spec_relay_entry_point_%d:\n", i );
-
-    if (odp->flags & FLAG_REGISTER)
-        output( "\tpushl %%eax\n" );
-    else
-        output( "\tpushl %%esp\n" );
-
-    args = strlen(odp->u.func.arg_types);
-    flags = 0;
-    if (odp->flags & FLAG_RET64) flags |= 1;
-    if (odp->type == TYPE_STDCALL) flags |= 2;
-    output( "\tpushl $%u\n", (flags << 24) | (args << 16) | (i - spec->base) );
-
-    if (UsePIC)
-    {
-        output( "\tcall %s\n", asm_name("__wine_spec_get_pc_thunk_eax") );
-        output( "1:\tleal .L__wine_spec_relay_descr-1b(%%eax),%%eax\n" );
-    }
-    else output( "\tmovl $.L__wine_spec_relay_descr,%%eax\n" );
-    output( "\tpushl %%eax\n" );
-
-    if (odp->flags & FLAG_REGISTER)
-    {
-        output( "\tcall *8(%%eax)\n" );
-    }
-    else
-    {
-        output( "\tcall *4(%%eax)\n" );
-        if (odp->type == TYPE_STDCALL)
-            output( "\tret $%u\n", args * get_ptr_size() );
-        else
-            output( "\tret\n" );
-    }
-}
-
-
-static void output_relay_debug_amd64(DLLSPEC *spec, int i)
-{
-    unsigned int args, flags;
-    ORDDEF *odp = spec->ordinals[i];
-
-    output( "\t.align %d\n", get_alignment(8) );
-    output( ".type __wine_spec_relay_entry_point_%d,@function\n", i );
-    output( "__wine_spec_relay_entry_point_%d:\n", i );
-
-    /* Save the original registers on the stack, so +relay can use them */
-    /* This makes the stack layout a bit weird:
-     * [ 4 longs reserved by abi ]
-     * [ rcx, rdx, r8, r9 ]
-     * [ fixed alignment ]
-     * [ ret address ]
-     * [ 4 longs reserved by abi ]
-     * [ possibly additonal args ]
-     */
-    output( "\tpushq %%rbp\n" );
-    output( "\tmovq %%rsp, %%rbp\n" );
-    output( "\tsubq $0x40, %%rsp\n" );
-    output( "\tmovq %%rcx, 0x20(%%rsp)\n" );
-    output( "\tmovq %%rdx, 0x28(%%rsp)\n" );
-    output( "\tmovq %%r8, 0x30(%%rsp)\n" );
-    output( "\tmovq %%r9, 0x38(%%rsp)\n" );
-
-    if (UsePIC)
-    {
-        output( "\tleaq .L__wine_spec_relay_descr(%%rip),%%rcx\n" );
-    }
-    else output( "\tmovq $.L__wine_spec_relay_descr,%%rcx\n" );
-
-    args = strlen(odp->u.func.arg_types);
-    flags = 0; /* For later use */
-    output( "\tmovq $%u, %%rdx\n", (flags << 24) | (args << 16) | (i - spec->base) );
-
-    output( "\tmovq %%rsp, %%r8\n" );
-
-    output( "\tcall *8(%%rcx)\n" );
-    output( "\tmovq 0x20(%%rsp), %%rcx\n" );
-    output( "\tmovq 0x28(%%rsp), %%rdx\n" );
-    output( "\tmovq 0x30(%%rsp), %%r8\n" );
-    output( "\tmovq 0x38(%%rsp), %%r9\n" );
-    output( "\taddq $0x40, %%rsp\n" );
-    output( "\tleaveq\n" );
-    output( "\tret\n" );
-}
 
 /*******************************************************************
  *         output_relay_debug
@@ -182,12 +92,12 @@ static void output_relay_debug_amd64(DLLSPEC *spec, int i)
 static void output_relay_debug( DLLSPEC *spec )
 {
     int i;
-    unsigned int j;
+    unsigned int j, args, flags;
 
     /* first the table of entry point offsets */
 
     output( "\t%s\n", get_asm_rodata_section() );
-    output( "\t.align %d\n", get_alignment(get_ptr_size()) );
+    output( "\t.align %d\n", get_alignment(4) );
     output( ".L__wine_spec_relay_entry_point_offsets:\n" );
 
     for (i = spec->base; i <= spec->limit; i++)
@@ -195,14 +105,14 @@ static void output_relay_debug( DLLSPEC *spec )
         ORDDEF *odp = spec->ordinals[i];
 
         if (needs_relay( odp ))
-            output( "\t.long __wine_spec_relay_entry_point_%d-__wine_spec_relay_entry_points\n", i );
+            output( "\t.long .L__wine_spec_relay_entry_point_%d-__wine_spec_relay_entry_points\n", i );
         else
             output( "\t.long 0\n" );
     }
 
     /* then the table of argument types */
 
-    output( "\t.align %d\n", get_alignment(get_ptr_size()) );
+    output( "\t.align %d\n", get_alignment(4) );
     output( ".L__wine_spec_relay_arg_types:\n" );
 
     for (i = spec->base; i <= spec->limit; i++)
@@ -233,12 +143,62 @@ static void output_relay_debug( DLLSPEC *spec )
 
         if (!needs_relay( odp )) continue;
 
-        if (target_cpu == CPU_x86)
-            output_relay_debug_x86( spec, i );
-        else if (target_cpu == CPU_x86_64)
-            output_relay_debug_amd64( spec, i );
-        else
+        output( "\t.align %d\n", get_alignment(4) );
+        output( ".L__wine_spec_relay_entry_point_%d:\n", i );
+
+        args = strlen(odp->u.func.arg_types);
+        flags = 0;
+
+        switch (target_cpu)
+        {
+        case CPU_x86:
+            if (odp->flags & FLAG_REGISTER)
+                output( "\tpushl %%eax\n" );
+            else
+                output( "\tpushl %%esp\n" );
+
+            if (odp->flags & FLAG_RET64) flags |= 1;
+            output( "\tpushl $%u\n", (flags << 24) | (args << 16) | (i - spec->base) );
+
+            if (UsePIC)
+            {
+                output( "\tcall %s\n", asm_name("__wine_spec_get_pc_thunk_eax") );
+                output( "1:\tleal .L__wine_spec_relay_descr-1b(%%eax),%%eax\n" );
+            }
+            else output( "\tmovl $.L__wine_spec_relay_descr,%%eax\n" );
+            output( "\tpushl %%eax\n" );
+
+            if (odp->flags & FLAG_REGISTER)
+            {
+                output( "\tcall *8(%%eax)\n" );
+            }
+            else
+            {
+                output( "\tcall *4(%%eax)\n" );
+                if (odp->type == TYPE_STDCALL)
+                    output( "\tret $%u\n", args * get_ptr_size() );
+                else
+                    output( "\tret\n" );
+            }
+            break;
+
+        case CPU_x86_64:
+            output( "\tmovq %%rcx,8(%%rsp)\n" );
+            output( "\tmovq %%rdx,16(%%rsp)\n" );
+            output( "\tmovq %%r8,24(%%rsp)\n" );
+            output( "\tmovq %%r9,32(%%rsp)\n" );
+            output( "\tmovq %%rsp,%%r8\n" );
+            output( "\tmovq $%u,%%rdx\n", (flags << 24) | (args << 16) | (i - spec->base) );
+            output( "\tleaq .L__wine_spec_relay_descr(%%rip),%%rcx\n" );
+            output( "\tsubq $40,%%rsp\n" );
+            output( "\tcallq *%u(%%rcx)\n", (odp->flags & FLAG_REGISTER) ? 16 : 8 );
+            output( "\taddq $40,%%rsp\n" );
+            output( "\tret\n" );
+            break;
+
+        default:
             assert(0);
+        }
     }
 }
 
@@ -369,7 +329,7 @@ static void output_exports( DLLSPEC *spec )
 
     /* output relays */
 
-    /* we only support relay debugging on i386 and amd64 */
+    /* we only support relay debugging on i386 and x86_64 */
     if (target_cpu != CPU_x86 && target_cpu != CPU_x86_64)
     {
         output( "\t%s 0\n", get_asm_ptr_keyword() );
@@ -667,11 +627,8 @@ void BuildDef32File( DLLSPEC *spec )
         switch(odp->type)
         {
         case TYPE_EXTERN:
-            output( "  %s", name );
             is_data = 1;
-            if(strcmp(name, odp->link_name) || (odp->flags & FLAG_FORWARD))
-                output( "=%s", odp->link_name );
-            break;
+            /* fall through */
         case TYPE_VARARGS:
         case TYPE_CDECL:
             /* try to reduce output */
@@ -683,7 +640,7 @@ void BuildDef32File( DLLSPEC *spec )
         {
             int at_param = strlen(odp->u.func.arg_types) * get_ptr_size();
             output( "  %s", name );
-            if (!kill_at) output( "@%d", at_param );
+            if (!kill_at && target_cpu == CPU_x86) output( "@%d", at_param );
             if  (odp->flags & FLAG_FORWARD)
             {
                 output( "=%s", odp->link_name );
@@ -691,7 +648,7 @@ void BuildDef32File( DLLSPEC *spec )
             else if (strcmp(name, odp->link_name)) /* try to reduce output */
             {
                 output( "=%s", odp->link_name );
-                if (!kill_at) output( "@%d", at_param );
+                if (!kill_at && target_cpu == CPU_x86) output( "@%d", at_param );
             }
             break;
         }
@@ -780,14 +737,20 @@ void BuildPedllFile( DLLSPEC *spec )
         return;
     }
 
-    output( "#include <windows.h>\n");
-    output( "#include <reactos/debug.h>\n");
+    output( "#include <stdarg.h>\n");
+    output( "#include \"windef.h\"\n");
+    output( "#include \"winbase.h\"\n");
+    output( "#include \"wine/config.h\"\n");
+    output( "#include \"wine/exception.h\"\n\n");
 
-    output( "void __stdcall __wine_spec_unimplemented_stub( const char *module, const char *function )\n");
+    output( "void __wine_spec_unimplemented_stub( const char *module, const char *function )\n");
     output( "{\n");
-    output( "    DPRINT1(\"%%s hit stub for %%s\\n\",module,function);\n");
-    output( "    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);\n");
-    output( "}\n");
+    output( "    ULONG_PTR args[2];\n");
+    output( "\n");
+    output( "    args[0] = (ULONG_PTR)module;\n");
+    output( "    args[1] = (ULONG_PTR)function;\n");
+    output( "    RaiseException( EXCEPTION_WINE_STUB, EH_NONCONTINUABLE, 2, args );\n");
+    output( "}\n\n");
 
     output( "static const char __wine_spec_file_name[] = \"%s\";\n\n", spec->file_name );
 

@@ -37,39 +37,6 @@ OpenClipboard(HWND hWndNewOwner)
 /*
  * @implemented
  */
-BOOL
-WINAPI
-CloseClipboard(VOID)
-{
-    BOOL ret;
-    ret = NtUserCloseClipboard();
-    return ret;
-}
-
-/*
- * @implemented
- */
-INT
-WINAPI
-CountClipboardFormats(VOID)
-{
-    INT ret = NtUserCountClipboardFormats();
-    return ret;
-}
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
-EmptyClipboard(VOID)
-{
-    return NtUserEmptyClipboard();
-}
-
-/*
- * @implemented
- */
 UINT
 WINAPI
 EnumClipboardFormats(UINT format)
@@ -171,68 +138,6 @@ GetClipboardFormatNameW(UINT format,
     Ret = NtUserGetClipboardFormatName(format, &FormatName, cchMaxCount);
     return Ret;
 
-}
-
-/*
- * @implemented
- */
-HWND
-WINAPI
-GetClipboardOwner(VOID)
-{
-    return NtUserGetClipboardOwner();
-}
-
-/*
- * @implemented
- */
-DWORD
-WINAPI
-GetClipboardSequenceNumber(VOID)
-{
-    return NtUserGetClipboardSequenceNumber();
-}
-
-/*
- * @implemented
- */
-HWND
-WINAPI
-GetClipboardViewer(VOID)
-{
-    return NtUserGetClipboardViewer();
-}
-
-/*
- * @implemented
- */
-HWND
-WINAPI
-GetOpenClipboardWindow(VOID)
-{
-    return NtUserGetOpenClipboardWindow();
-}
-
-/*
- * @implemented
- */
-INT
-WINAPI
-GetPriorityClipboardFormat(UINT *paFormatPriorityList, INT cFormats)
-{
-    INT ret = NtUserGetPriorityClipboardFormat(paFormatPriorityList, cFormats);
-    return ret;
-}
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
-IsClipboardFormatAvailable(UINT format)
-{
-    BOOL ret = NtUserIsClipboardFormatAvailable(format);
-    return ret;
 }
 
 /*
@@ -375,27 +280,6 @@ SetClipboardData(UINT uFormat, HANDLE hMem)
 
     return ret;
 
-}
-
-/*
- * @implemented
- */
-HWND
-WINAPI
-SetClipboardViewer(HWND hWndNewViewer)
-{
-    return NtUserSetClipboardViewer(hWndNewViewer);
-}
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
-ChangeClipboardChain(HWND hWndRemove,
-                     HWND hWndNewNext)
-{
-    return NtUserChangeClipboardChain(hWndRemove, hWndNewNext);
 }
 
 /*

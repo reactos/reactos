@@ -707,7 +707,7 @@ BOOL WINAPI MsiGetMode(MSIHANDLE hInstall, MSIRUNMODE iRunMode)
         break;
 
     default:
-        FIXME("%ld %d\n", hInstall, iRunMode);
+        FIXME("%d %d\n", hInstall, iRunMode);
         r = TRUE;
     }
 
@@ -727,7 +727,7 @@ BOOL WINAPI MsiSetMode(MSIHANDLE hInstall, MSIRUNMODE iRunMode, BOOL fState)
     case MSIRUNMODE_RESERVED15:
         return FALSE;
     default:
-        FIXME("%ld %d %d\n", hInstall, iRunMode, fState);
+        FIXME("%d %d %d\n", hInstall, iRunMode, fState);
     }
     return TRUE;
 }
@@ -886,7 +886,7 @@ UINT WINAPI MsiGetFeatureStateW(MSIHANDLE hInstall, LPCWSTR szFeature,
     MSIPACKAGE* package;
     UINT ret;
 
-    TRACE("%ld %s %p %p\n", hInstall, debugstr_w(szFeature), piInstalled, piAction);
+    TRACE("%d %s %p %p\n", hInstall, debugstr_w(szFeature), piInstalled, piAction);
 
     package = msihandle2msiinfo(hInstall, MSIHANDLETYPE_PACKAGE);
     if (!package)
@@ -934,7 +934,7 @@ UINT WINAPI MsiGetFeatureStateW(MSIHANDLE hInstall, LPCWSTR szFeature,
 UINT WINAPI MsiGetFeatureCostA(MSIHANDLE hInstall, LPCSTR szFeature,
                   MSICOSTTREE iCostTree, INSTALLSTATE iState, LPINT piCost)
 {
-    FIXME("(%ld %s %i %i %p): stub\n", hInstall, debugstr_a(szFeature),
+    FIXME("(%d %s %i %i %p): stub\n", hInstall, debugstr_a(szFeature),
           iCostTree, iState, piCost);
     if (piCost) *piCost = 0;
     return ERROR_SUCCESS;
@@ -946,7 +946,7 @@ UINT WINAPI MsiGetFeatureCostA(MSIHANDLE hInstall, LPCSTR szFeature,
 UINT WINAPI MsiGetFeatureCostW(MSIHANDLE hInstall, LPCWSTR szFeature,
                   MSICOSTTREE iCostTree, INSTALLSTATE iState, LPINT piCost)
 {
-    FIXME("(%ld %s %i %i %p): stub\n", hInstall, debugstr_w(szFeature),
+    FIXME("(%d %s %i %i %p): stub\n", hInstall, debugstr_w(szFeature),
           iCostTree, iState, piCost);
     if (piCost) *piCost = 0;
     return ERROR_SUCCESS;
@@ -1082,7 +1082,7 @@ UINT WINAPI MsiGetComponentStateW(MSIHANDLE hInstall, LPCWSTR szComponent,
     MSIPACKAGE* package;
     UINT ret;
 
-    TRACE("%ld %s %p %p\n", hInstall, debugstr_w(szComponent),
+    TRACE("%d %s %p %p\n", hInstall, debugstr_w(szComponent),
            piInstalled, piAction);
 
     package = msihandle2msiinfo(hInstall, MSIHANDLETYPE_PACKAGE);
@@ -1191,7 +1191,7 @@ UINT WINAPI MsiSetInstallLevel(MSIHANDLE hInstall, int iInstallLevel)
     MSIPACKAGE* package;
     UINT r;
 
-    TRACE("%ld %i\n", hInstall, iInstallLevel);
+    TRACE("%d %i\n", hInstall, iInstallLevel);
 
     package = msihandle2msiinfo(hInstall, MSIHANDLETYPE_PACKAGE);
     if (!package)
@@ -1232,7 +1232,7 @@ UINT WINAPI MsiGetFeatureValidStatesW(MSIHANDLE hInstall, LPCWSTR szFeature,
                   LPDWORD pInstallState)
 {
     if(pInstallState) *pInstallState = 1<<INSTALLSTATE_LOCAL;
-    FIXME("%ld %s %p stub returning %d\n",
+    FIXME("%d %s %p stub returning %d\n",
         hInstall, debugstr_w(szFeature), pInstallState, pInstallState ? *pInstallState : 0);
 
     return ERROR_SUCCESS;

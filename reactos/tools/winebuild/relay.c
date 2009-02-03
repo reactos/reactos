@@ -741,9 +741,10 @@ static void BuildCallTo32CBClient( BOOL isEx )
  *
  * Stack layout:
  *   ...
- * (ebp+16)  first arg
- * (ebp+12)  ret addr to user code
- * (ebp+8)   eax saved by relay code
+ * (ebp+20)  first arg
+ * (ebp+16)  ret addr to user code
+ * (ebp+12)  func to call (relative to relay code ret addr)
+ * (ebp+8)   number of args
  * (ebp+4)   ret addr to relay code
  * (ebp+0)   saved ebp
  * (ebp-128) buffer area to allow stack frame manipulation
@@ -770,17 +771,16 @@ static void BuildCallFrom32Regs(void)
 
     output( "\tpushl %%ebp\n" );
     output( "\tmovl %%esp,%%ebp\n ");
-    output( "\tleal -%d(%%esp), %%esp\n", STACK_SPACE + 4 /* for context arg */);
+    output( "\tleal -%d(%%esp),%%esp\n", STACK_SPACE );
 
     /* Build the context structure */
 
+    output( "\tmovl %%eax,%d(%%ebp)\n", CONTEXTOFFSET(Eax) - STACK_SPACE );
     output( "\tpushfl\n" );
     output( "\tpopl %%eax\n" );
     output( "\tmovl %%eax,%d(%%ebp)\n", CONTEXTOFFSET(EFlags) - STACK_SPACE );
     output( "\tmovl 0(%%ebp),%%eax\n" );
     output( "\tmovl %%eax,%d(%%ebp)\n", CONTEXTOFFSET(Ebp) - STACK_SPACE );
-    output( "\tmovl 8(%%ebp),%%eax\n" );
-    output( "\tmovl %%eax,%d(%%ebp)\n", CONTEXTOFFSET(Eax) - STACK_SPACE );
     output( "\tmovl %%ebx,%d(%%ebp)\n", CONTEXTOFFSET(Ebx) - STACK_SPACE );
     output( "\tmovl %%ecx,%d(%%ebp)\n", CONTEXTOFFSET(Ecx) - STACK_SPACE );
     output( "\tmovl %%edx,%d(%%ebp)\n", CONTEXTOFFSET(Edx) - STACK_SPACE );
@@ -805,31 +805,30 @@ static void BuildCallFrom32Regs(void)
     output( "\tmovl $0x%x,%%eax\n", CONTEXT86_FULL );
     output( "\tmovl %%eax,%d(%%ebp)\n", CONTEXTOFFSET(ContextFlags) - STACK_SPACE );
 
-    output( "\tmovl 12(%%ebp),%%eax\n" ); /* Get %eip at time of call */
+    output( "\tmovl 16(%%ebp),%%eax\n" ); /* Get %eip at time of call */
     output( "\tmovl %%eax,%d(%%ebp)\n", CONTEXTOFFSET(Eip) - STACK_SPACE );
 
     /* Transfer the arguments */
 
-    output( "\tmovl 4(%%ebp),%%ebx\n" );   /* get relay code addr */
-    output( "\tmovzbl 4(%%ebx),%%ecx\n" ); /* fetch number of args to copy */
-    output( "\tsubl %%ecx,%%esp\n" );
+    output( "\tmovl 8(%%ebp),%%ecx\n" );    /* fetch number of args to copy */
+    output( "\tleal 4(,%%ecx,4),%%edx\n" ); /* add 4 for context arg */
+    output( "\tsubl %%edx,%%esp\n" );
     output( "\tandl $~15,%%esp\n" );
-    output( "\tleal 16(%%ebp),%%esi\n" );  /* get %esp at time of call */
+    output( "\tleal 20(%%ebp),%%esi\n" );  /* get %esp at time of call */
     output( "\tmovl %%esp,%%edi\n" );
-    output( "\tshrl $2,%%ecx\n" );
+    output( "\ttest %%ecx,%%ecx\n" );
     output( "\tjz 1f\n" );
     output( "\tcld\n" );
     output( "\trep\n\tmovsl\n" );  /* copy args */
     output( "1:\tleal %d(%%ebp),%%eax\n", -STACK_SPACE );  /* get addr of context struct */
     output( "\tmovl %%eax,(%%edi)\n" );    /* and pass it as extra arg */
-    output( "\tmovzbl 5(%%ebx),%%eax\n" ); /* fetch number of args to remove */
-    output( "\tleal 16(%%ebp,%%eax),%%eax\n" );
-    output( "\tmovl %%eax,%d(%%ebp)\n", CONTEXTOFFSET(Esp) - STACK_SPACE );
+    output( "\tmovl %%esi,%d(%%ebp)\n", CONTEXTOFFSET(Esp) - STACK_SPACE );
 
     /* Call the entry point */
 
-    output( "\taddl (%%ebx),%%ebx\n" );
-    output( "\tcall *%%ebx\n" );
+    output( "\tmovl 4(%%ebp),%%eax\n" );   /* get relay code addr */
+    output( "\taddl 12(%%ebp),%%eax\n" );
+    output( "\tcall *%%eax\n" );
     output( "\tleal -%d(%%ebp),%%ecx\n", STACK_SPACE );
 
     /* Restore the context structure */
@@ -975,8 +974,181 @@ void BuildRelays16(void)
     output( "%s\n\t.long 0\n", asm_globl("CallTo16_DataSelector") );
     output( "%s\n\t.long 0\n", asm_globl("CallTo16_TebSelector") );
     if (UsePIC) output( "wine_ldt_copy_ptr:\t.long %s\n", asm_name("wine_ldt_copy") );
+
+    output( "\t.text\n" );
+    output( "%s:\n\n", asm_name("__wine_spec_thunk_text_32") );
+    BuildCallFrom32Regs();
+    output_function_size( "__wine_spec_thunk_text_32" );
+
     output_gnu_stack_note();
 }
+
+
+/*******************************************************************
+ *         build_call_from_regs_x86_64
+ *
+ * Build the register saving code for a 'register' entry point.
+ *
+ * Stack layout:
+ *   ...
+ * (rsp+16)  first arg
+ * (rsp+8)   ret addr to user code
+ * (rsp)     ret addr to relay code
+ * (rsp-128) buffer area to allow stack frame manipulation
+ *
+ * Parameters:
+ *  %rcx     number of args
+ *  %rdx     entry point
+ */
+static void build_call_from_regs_x86_64(void)
+{
+    static const int STACK_SPACE = 128 + 0x4d0; /* size of x86_64 context */
+
+    /* Function header */
+
+    function_header( "__wine_call_from_regs" );
+
+    output( "\tsubq $%u,%%rsp\n", STACK_SPACE );
+
+    /* save registers into the context */
+
+    output( "\tmovq %%rax,0x78(%%rsp)\n" );
+    output( "\tmovq %u(%%rsp),%%rax\n", STACK_SPACE + 16 );  /* saved %rcx on stack */
+    output( "\tmovq %%rax,0x80(%%rsp)\n" );
+    output( "\tmovq %u(%%rsp),%%rax\n", STACK_SPACE + 24 );  /* saved %rdx on stack */
+    output( "\tmovq %%rax,0x88(%%rsp)\n" );
+    output( "\tmovq %%rbx,0x90(%%rsp)\n" );
+    output( "\tleaq %u(%%rsp),%%rax\n", STACK_SPACE + 16 );
+    output( "\tmovq %%rax,0x98(%%rsp)\n" );
+    output( "\tmovq %%rbp,0xa0(%%rsp)\n" );
+    output( "\tmovq %%rsi,0xa8(%%rsp)\n" );
+    output( "\tmovq %%rdi,0xb0(%%rsp)\n" );
+    output( "\tmovq %%r8,0xb8(%%rsp)\n" );
+    output( "\tmovq %%r9,0xc0(%%rsp)\n" );
+    output( "\tmovq %%r10,0xc8(%%rsp)\n" );
+    output( "\tmovq %%r11,0xd0(%%rsp)\n" );
+    output( "\tmovq %%r12,0xd8(%%rsp)\n" );
+    output( "\tmovq %%r13,0xe0(%%rsp)\n" );
+    output( "\tmovq %%r14,0xe8(%%rsp)\n" );
+    output( "\tmovq %%r15,0xf0(%%rsp)\n" );
+    output( "\tmovq %u(%%rsp),%%rax\n", STACK_SPACE + 8 );
+    output( "\tmovq %%rax,0xf8(%%rsp)\n" );
+
+    output( "\tstmxcsr 0x34(%%rsp)\n" );
+    output( "\tfxsave 0x100(%%rsp)\n" );
+    output( "\tmovdqa %%xmm0,0x1a0(%%rsp)\n" );
+    output( "\tmovdqa %%xmm1,0x1b0(%%rsp)\n" );
+    output( "\tmovdqa %%xmm2,0x1c0(%%rsp)\n" );
+    output( "\tmovdqa %%xmm3,0x1d0(%%rsp)\n" );
+    output( "\tmovdqa %%xmm4,0x1e0(%%rsp)\n" );
+    output( "\tmovdqa %%xmm5,0x1f0(%%rsp)\n" );
+    output( "\tmovdqa %%xmm6,0x200(%%rsp)\n" );
+    output( "\tmovdqa %%xmm7,0x210(%%rsp)\n" );
+    output( "\tmovdqa %%xmm8,0x220(%%rsp)\n" );
+    output( "\tmovdqa %%xmm9,0x230(%%rsp)\n" );
+    output( "\tmovdqa %%xmm10,0x240(%%rsp)\n" );
+    output( "\tmovdqa %%xmm11,0x250(%%rsp)\n" );
+    output( "\tmovdqa %%xmm12,0x260(%%rsp)\n" );
+    output( "\tmovdqa %%xmm13,0x270(%%rsp)\n" );
+    output( "\tmovdqa %%xmm14,0x280(%%rsp)\n" );
+    output( "\tmovdqa %%xmm15,0x290(%%rsp)\n" );
+
+    output( "\tmovw %%cs,0x38(%%rsp)\n" );
+    output( "\tmovw %%ds,0x3a(%%rsp)\n" );
+    output( "\tmovw %%es,0x3c(%%rsp)\n" );
+    output( "\tmovw %%fs,0x3e(%%rsp)\n" );
+    output( "\tmovw %%gs,0x40(%%rsp)\n" );
+    output( "\tmovw %%ss,0x42(%%rsp)\n" );
+    output( "\tpushfq\n" );
+    output( "\tpopq %%rax\n" );
+    output( "\tmovl %%eax,0x44(%%rsp)\n" );
+
+    output( "\tmovl $0x%x,0x30(%%rsp)\n", 0x0010000f );
+
+    /* transfer the arguments */
+
+    output( "\tmovq %%r8,%u(%%rsp)\n", STACK_SPACE + 32 );
+    output( "\tmovq %%r9,%u(%%rsp)\n", STACK_SPACE + 40 );
+    output( "\tmovq $4,%%rax\n" );
+    output( "\tleaq %u(%%rsp),%%rsi\n", STACK_SPACE + 16 );
+    output( "\tcmpq %%rax,%%rcx\n" );
+    output( "\tcmovgq %%rcx,%%rax\n" );
+    output( "\tmovq %%rsp,%%rbx\n" );
+    output( "\tleaq 16(,%%rax,8),%%rax\n" );  /* add 8 for context arg and 8 for rounding */
+    output( "\tandq $~15,%%rax\n" );
+    output( "\tsubq %%rax,%%rsp\n" );
+    output( "\tmovq %%rsp,%%rdi\n" );
+    output( "\tjrcxz 1f\n" );
+    output( "\tcld\n" );
+    output( "\trep\n\tmovsq\n" );
+    output( "1:\tmovq %%rbx,0(%%rdi)\n" );  /* context arg */
+
+    /* call the entry point */
+
+    output( "\tmovq %%rdx,%%rax\n" );
+    output( "\tmovq 0(%%rsp),%%rcx\n" );
+    output( "\tmovq 8(%%rsp),%%rdx\n" );
+    output( "\tmovq 16(%%rsp),%%r8\n" );
+    output( "\tmovq 24(%%rsp),%%r9\n" );
+    output( "\tcallq *%%rax\n" );
+
+    /* restore the context structure */
+
+    output( "1:\tmovq 0x80(%%rbx),%%rcx\n" );
+    output( "\tmovq 0x88(%%rbx),%%rdx\n" );
+    output( "\tmovq 0xa0(%%rbx),%%rbp\n" );
+    output( "\tmovq 0xa8(%%rbx),%%rsi\n" );
+    output( "\tmovq 0xb0(%%rbx),%%rdi\n" );
+    output( "\tmovq 0xb8(%%rbx),%%r8\n" );
+    output( "\tmovq 0xc0(%%rbx),%%r9\n" );
+    output( "\tmovq 0xc8(%%rbx),%%r10\n" );
+    output( "\tmovq 0xd0(%%rbx),%%r11\n" );
+    output( "\tmovq 0xd8(%%rbx),%%r12\n" );
+    output( "\tmovq 0xe0(%%rbx),%%r13\n" );
+    output( "\tmovq 0xe8(%%rbx),%%r14\n" );
+    output( "\tmovq 0xf0(%%rbx),%%r15\n" );
+
+    output( "\tmovdqa 0x1a0(%%rbx),%%xmm0\n" );
+    output( "\tmovdqa 0x1b0(%%rbx),%%xmm1\n" );
+    output( "\tmovdqa 0x1c0(%%rbx),%%xmm2\n" );
+    output( "\tmovdqa 0x1d0(%%rbx),%%xmm3\n" );
+    output( "\tmovdqa 0x1e0(%%rbx),%%xmm4\n" );
+    output( "\tmovdqa 0x1f0(%%rbx),%%xmm5\n" );
+    output( "\tmovdqa 0x200(%%rbx),%%xmm6\n" );
+    output( "\tmovdqa 0x210(%%rbx),%%xmm7\n" );
+    output( "\tmovdqa 0x220(%%rbx),%%xmm8\n" );
+    output( "\tmovdqa 0x230(%%rbx),%%xmm9\n" );
+    output( "\tmovdqa 0x240(%%rbx),%%xmm10\n" );
+    output( "\tmovdqa 0x250(%%rbx),%%xmm11\n" );
+    output( "\tmovdqa 0x260(%%rbx),%%xmm12\n" );
+    output( "\tmovdqa 0x270(%%rbx),%%xmm13\n" );
+    output( "\tmovdqa 0x280(%%rbx),%%xmm14\n" );
+    output( "\tmovdqa 0x290(%%rbx),%%xmm15\n" );
+    output( "\tfxrstor 0x100(%%rbx)\n" );
+    output( "\tldmxcsr 0x34(%%rbx)\n" );
+
+    output( "\tmovl 0x44(%%rbx),%%eax\n" );
+    output( "\tpushq %%rax\n" );
+    output( "\tpopfq\n" );
+
+    output( "\tmovq 0x98(%%rbx),%%rax\n" );  /* stack pointer */
+    output( "\tpushq 0xf8(%%rbx)\n" );  /* return address */
+    output( "\tpopq -8(%%rax)\n" );
+    output( "\tpushq 0x78(%%rbx)\n" );  /* rax */
+    output( "\tpopq -16(%%rax)\n" );
+    output( "\tmovq 0x90(%%rbx),%%rbx\n" );
+    output( "\tleaq -16(%%rax),%%rsp\n" );
+    output( "\tpopq %%rax\n" );
+    output( "\tret\n" );
+
+    output_function_size( "__wine_call_from_regs" );
+
+    function_header( "__wine_restore_regs" );
+    output( "\tmovq %%rcx,%%rbx\n" );
+    output( "\tjmp 1b\n" );
+    output_function_size( "__wine_restore_regs" );
+}
+
 
 /*******************************************************************
  *         BuildRelays32
@@ -985,21 +1157,29 @@ void BuildRelays16(void)
  */
 void BuildRelays32(void)
 {
-    if (target_cpu != CPU_x86)
+    switch (target_cpu)
     {
+    case CPU_x86:
+        output( "/* File generated automatically. Do not edit! */\n\n" );
+        output( "\t.text\n" );
+        output( "%s:\n\n", asm_name("__wine_spec_thunk_text_32") );
+
+        /* 32-bit register entry point */
+        BuildCallFrom32Regs();
+
+        output_function_size( "__wine_spec_thunk_text_32" );
+        output_gnu_stack_note();
+        break;
+
+    case CPU_x86_64:
+        output( "/* File generated automatically. Do not edit! */\n\n" );
+        output( "\t.text\n" );
+        build_call_from_regs_x86_64();
+        output_gnu_stack_note();
+        break;
+
+    default:
         output( "/* File not used with this architecture. Do not edit! */\n\n" );
         return;
     }
-
-    /* File header */
-
-    output( "/* File generated automatically. Do not edit! */\n\n" );
-    output( "\t.text\n" );
-    output( "%s:\n\n", asm_name("__wine_spec_thunk_text_32") );
-
-    /* 32-bit register entry point */
-    BuildCallFrom32Regs();
-
-    output_function_size( "__wine_spec_thunk_text_32" );
-    output_gnu_stack_note();
 }

@@ -1068,7 +1068,35 @@ GpStatus WINGDIPAPI GdipLoadImageFromStream(IStream* stream, GpImage **image)
         else
             GetDIBits(hdc, hbm, 0, 0, NULL, pbmi, DIB_RGB_COLORS);
 
-        (*((GpBitmap**) image))->format = (bmch->bcBitCount << 8) | PixelFormatGDI;
+        switch(bmch->bcBitCount)
+        {
+            case 1:
+                (*((GpBitmap**) image))->format = PixelFormat1bppIndexed;
+                break;
+            case 4:
+                (*((GpBitmap**) image))->format = PixelFormat4bppIndexed;
+                break;
+            case 8:
+                (*((GpBitmap**) image))->format = PixelFormat8bppIndexed;
+                break;
+            case 16:
+                (*((GpBitmap**) image))->format = PixelFormat16bppRGB565;
+                break;
+            case 24:
+                (*((GpBitmap**) image))->format = PixelFormat24bppRGB;
+                break;
+            case 32:
+                (*((GpBitmap**) image))->format = PixelFormat32bppRGB;
+                break;
+            case 48:
+                (*((GpBitmap**) image))->format = PixelFormat48bppRGB;
+                break;
+            default:
+                FIXME("Bit depth %d is not fully supported yet\n", bmch->bcBitCount);
+                (*((GpBitmap**) image))->format = (bmch->bcBitCount << 8) | PixelFormatGDI;
+                break;
+        }
+
         GdipFree(pbmi);
     }
     else if(type == PICTYPE_METAFILE || type == PICTYPE_ENHMETAFILE){
@@ -1180,7 +1208,7 @@ static GpStatus encode_image_BMP(LPVOID bitmap_bits, LPBITMAPINFO bitmap_info,
 
     *output = GdipAlloc(*output_size);
 
-    bmp_file_hdr = (BITMAPFILEHEADER*) *output;
+    bmp_file_hdr = *output;
     bmp_file_hdr->bfType = BITMAP_FORMAT_BMP;
     bmp_file_hdr->bfSize = *output_size;
     bmp_file_hdr->bfOffBits =

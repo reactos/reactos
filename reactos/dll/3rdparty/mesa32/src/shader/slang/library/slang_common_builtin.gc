@@ -1,8 +1,9 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5
+ * Version:  7.3
  *
  * Copyright (C) 2006  Brian Paul   All Rights Reserved.
+ * Copyright (C) 2008  VMware, Inc.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -26,8 +27,9 @@
 // From Shader Spec, ver. 1.10, rev. 59
 //
 
-//bp: XXX these will probably go away since the value needs to be
-//determined at runtime and may vary from one GLcontext to another...
+// Note: the values assigned to these constants here aren't actually used.
+// They're set by the compiler according to the GL context limits.
+// See slang_simplify.c
 const int gl_MaxLights = 8;
 const int gl_MaxClipPlanes = 6;
 const int gl_MaxTextureUnits = 8;
@@ -47,7 +49,6 @@ uniform mat4 gl_ModelViewProjectionMatrix;
 uniform mat4 gl_TextureMatrix[gl_MaxTextureCoords];
 
 uniform mat3 gl_NormalMatrix;
-uniform mat3 __NormalMatrixTranspose;  // Mesa only
 
 uniform mat4 gl_ModelViewMatrixInverse;
 uniform mat4 gl_ProjectionMatrixInverse;
@@ -99,6 +100,9 @@ struct gl_MaterialParameters {
 uniform gl_MaterialParameters gl_FrontMaterial;
 uniform gl_MaterialParameters gl_BackMaterial;
 
+/* NOTE: the order of these fields is significant!
+ * See the definition of the lighting state vars such as STATE_SPOT_DIRECTION.
+ */
 struct gl_LightSourceParameters {
     vec4 ambient;
     vec4 diffuse;
@@ -106,12 +110,14 @@ struct gl_LightSourceParameters {
     vec4 position;
     vec4 halfVector;
     vec3 spotDirection;
-    float spotExponent;
-    float spotCutoff;
     float spotCosCutoff;
+
     float constantAttenuation;
     float linearAttenuation;
     float quadraticAttenuation;
+    float spotExponent;
+
+    float spotCutoff;
 };
 
 uniform gl_LightSourceParameters gl_LightSource[gl_MaxLights];

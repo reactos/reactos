@@ -82,15 +82,6 @@
 #  include <inttypes.h>
 #endif
 
-/* For platforms that have the C99 standard uint*_t,
-   but not the commonly used u_int*_t */
-#if defined(__sun)
-# define u_int8_t uint8_t
-# define u_int16_t uint16_t
-# define u_int32_t uint32_t
-# define u_int64_t uint64_t
-# define u_intptr_t uintptr_t
-#endif
 
 /* Sun compilers define __i386 instead of the gcc-style __i386__ */
 #ifdef __SUNPRO_C
@@ -155,7 +146,8 @@
 #include <byteswap.h>
 #define CPU_TO_LE32( x )	bswap_32( x )
 #else /*__linux__*/
-#define CPU_TO_LE32( x )	( x )  /* fix me for non-Linux big-endian! */
+#include <sys/endian.h>
+#define CPU_TO_LE32( x )	bswap32( x )
 #endif /*__linux__*/
 #define MESA_BIG_ENDIAN 1
 #else
@@ -168,6 +160,25 @@
 #define GL_GLEXT_PROTOTYPES
 #include "GL/gl.h"
 #include "GL/glext.h"
+
+
+#ifndef GL_FIXED
+#define GL_FIXED 0x140C
+#endif
+
+
+#ifndef GL_OES_point_size_array
+#define GL_POINT_SIZE_ARRAY_OES                                 0x8B9C
+#define GL_POINT_SIZE_ARRAY_TYPE_OES                            0x898A
+#define GL_POINT_SIZE_ARRAY_STRIDE_OES                          0x898B
+#define GL_POINT_SIZE_ARRAY_POINTER_OES                         0x898C
+#define GL_POINT_SIZE_ARRAY_BUFFER_BINDING_OES                  0x8B9F
+#endif
+
+
+#ifndef GL_OES_draw_texture
+#define GL_TEXTURE_CROP_RECT_OES  0x8B9D
+#endif
 
 
 #if !defined(CAPI) && defined(WIN32) && !defined(BUILD_FOR_SNAP)
@@ -259,12 +270,14 @@
 #endif
 
 
+#if !defined(_WIN32_WCE)
 #if defined(BUILD_FOR_SNAP) && defined(CHECKED)
 #  define ASSERT(X)   _CHECK(X) 
 #elif defined(DEBUG)
 #  define ASSERT(X)   assert(X)
 #else
 #  define ASSERT(X)
+#endif
 #endif
 
 

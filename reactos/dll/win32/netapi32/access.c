@@ -417,6 +417,10 @@ NetUserGetLocalGroups(LPCWSTR servername, LPCWSTR username, DWORD level,
                       LPDWORD entriesread, LPDWORD totalentries)
 {
     NET_API_STATUS status;
+    const WCHAR admins[] = {'A','d','m','i','n','i','s','t','r','a','t','o','r','s',0};
+    LPWSTR currentuser;
+    LOCALGROUP_USERS_INFO_0* info;
+    DWORD size;
 
     FIXME("(%s, %s, %d, %08x, %p %d, %p, %p) stub!\n",
           debugstr_w(servername), debugstr_w(username), level, flags, bufptr,
@@ -426,12 +430,37 @@ NetUserGetLocalGroups(LPCWSTR servername, LPCWSTR username, DWORD level,
     if (status != NERR_Success)
         return status;
 
-    if (!NETAPI_FindUser(username))
-        return NERR_UserNotFound;
+    size = UNLEN + 1;
+    NetApiBufferAllocate(size, (LPVOID*)&currentuser);
+    GetUserNameW(currentuser, &size);
 
-    if (bufptr) *bufptr = NULL;
-    if (entriesread) *entriesread = 0;
-    if (totalentries) *totalentries = 0;
+    if (lstrcmpiW(username, currentuser) && NETAPI_FindUser(username))
+    {
+        NetApiBufferFree(currentuser);
+        return NERR_UserNotFound;
+    }
+
+    NetApiBufferFree(currentuser);
+    *totalentries = 1;
+    size = sizeof(*info) + sizeof(admins);
+
+    if(prefmaxlen < size)
+        status = ERROR_MORE_DATA;
+    else
+        status = NetApiBufferAllocate(size, (LPVOID*)&info);
+
+    if(status != NERR_Success)
+    {
+        *bufptr = NULL;
+        *entriesread = 0;
+        return status;
+    }
+
+    info->lgrui0_name = (LPWSTR)((LPBYTE)info + sizeof(*info));
+    lstrcpyW(info->lgrui0_name, admins);
+
+    *bufptr = (LPBYTE)info;
+    *entriesread = 1;
 
     return NERR_Success;
 }
@@ -485,7 +514,7 @@ static void ACCESS_QueryAdminDisplayInformation(PNET_DISPLAY_USER *buf, PDWORD p
     usr->usri1_comment[0] = 0;
     usr->usri1_flags = UF_SCRIPT | UF_NORMAL_ACCOUNT | UF_DONT_EXPIRE_PASSWD;
     usr->usri1_full_name[0] = 0;
-    usr->usri1_user_id = 500;
+    usr->usri1_user_id = DOMAIN_USER_RID_ADMIN;
     usr->usri1_next_index = 0;
 }
 
@@ -525,7 +554,7 @@ static void ACCESS_QueryGuestDisplayInformation(PNET_DISPLAY_USER *buf, PDWORD p
     usr->usri1_flags = UF_ACCOUNTDISABLE | UF_SCRIPT | UF_NORMAL_ACCOUNT |
         UF_DONT_EXPIRE_PASSWD;
     usr->usri1_full_name[0] = 0;
-    usr->usri1_user_id = 500;
+    usr->usri1_user_id = DOMAIN_USER_RID_GUEST;
     usr->usri1_next_index = 0;
 }
 
@@ -689,6 +718,18 @@ NetGetDCName(LPCWSTR servername, LPCWSTR domainname, LPBYTE *bufptr)
   return NERR_DCNotFound; /* say we can't find a domain controller */  
 }
 
+/************************************************************
+ *                NetGroupEnum  (NETAPI32.@)
+ *
+ */
+NET_API_STATUS WINAPI
+NetGroupEnum(LPCWSTR servername, DWORD level, LPBYTE *bufptr, DWORD prefmaxlen,
+             LPDWORD entriesread, LPDWORD totalentries, LPDWORD resume_handle)
+{
+    FIXME("(%s, %d, %p, %d, %p, %p, %p) stub!\n", debugstr_w(servername),
+          level, bufptr, prefmaxlen, entriesread, totalentries, resume_handle);
+    return ERROR_ACCESS_DENIED;
+}
 
 /******************************************************************************
  * NetUserModalsGet  (NETAPI32.@)

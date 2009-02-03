@@ -28,7 +28,6 @@
 #include "rtlp.h"
 
 /* PSEH Support */
-#include <reactos/helper.h>
 #include <pseh/pseh2.h>
 
 #include <intrin.h>

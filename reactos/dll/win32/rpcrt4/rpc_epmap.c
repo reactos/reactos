@@ -444,7 +444,7 @@ RPC_STATUS WINAPI RpcEpResolveBinding( RPC_BINDING_HANDLE Binding, RPC_IF_HANDLE
     if (!resolved_endpoint)
     {
       status = TowerExplode(towers[i], NULL, NULL, NULL, &resolved_endpoint, NULL);
-      TRACE("status = %ld\n", status);
+      TRACE("status = %d\n", status);
     }
     I_RpcFree(towers[i]);
   }

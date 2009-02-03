@@ -501,7 +501,6 @@ static size_t rpcrt4_ncacn_np_get_top_of_tower(unsigned char *tower_data,
         memcpy(tower_data, networkaddr, networkaddr_size);
     else
         tower_data[0] = 0;
-    tower_data += networkaddr_size;
 
     return size;
 }
@@ -714,7 +713,6 @@ static size_t rpcrt4_ncalrpc_get_top_of_tower(unsigned char *tower_data,
     pipe_floor->count_rhs = endpoint_size;
 
     memcpy(tower_data, endpoint, endpoint_size);
-    tower_data += endpoint_size;
 
     return size;
 }
@@ -755,6 +753,8 @@ static RPC_STATUS rpcrt4_ncalrpc_parse_top_of_tower(const unsigned char *tower_d
 }
 
 /**** ncacn_ip_tcp support ****/
+
+#ifdef HAVE_SOCKETPAIR
 
 typedef struct _RpcConnection_tcp
 {
@@ -1348,7 +1348,8 @@ static void rpcrt4_protseq_sock_free_wait_array(RpcServerProtseq *protseq, void 
 static int rpcrt4_protseq_sock_wait_for_new_connection(RpcServerProtseq *protseq, unsigned int count, void *wait_array)
 {
     struct pollfd *poll_info = wait_array;
-    int ret, i;
+    int ret;
+    unsigned int i;
     RpcConnection *cconn;
     RpcConnection_tcp *conn;
     
@@ -1395,6 +1396,8 @@ static int rpcrt4_protseq_sock_wait_for_new_connection(RpcServerProtseq *protseq
     return 1;
 }
 
+#endif  /* HAVE_SOCKETPAIR */
+
 static const struct connection_ops conn_protseq_list[] = {
   { "ncacn_np",
     { EPM_PROTOCOL_NCACN, EPM_PROTOCOL_SMB },
@@ -1422,6 +1425,7 @@ static const struct connection_ops conn_protseq_list[] = {
     rpcrt4_ncalrpc_get_top_of_tower,
     rpcrt4_ncalrpc_parse_top_of_tower,
   },
+#ifdef HAVE_SOCKETPAIR
   { "ncacn_ip_tcp",
     { EPM_PROTOCOL_NCACN, EPM_PROTOCOL_TCP },
     rpcrt4_conn_tcp_alloc,
@@ -1435,6 +1439,7 @@ static const struct connection_ops conn_protseq_list[] = {
     rpcrt4_ncacn_ip_tcp_get_top_of_tower,
     rpcrt4_ncacn_ip_tcp_parse_top_of_tower,
   }
+#endif
 };
 
 
@@ -1458,6 +1463,7 @@ static const struct protseq_ops protseq_list[] =
         rpcrt4_protseq_np_wait_for_new_connection,
         rpcrt4_protseq_ncalrpc_open_endpoint,
     },
+#ifdef HAVE_SOCKETPAIR
     {
         "ncacn_ip_tcp",
         rpcrt4_protseq_sock_alloc,
@@ -1467,13 +1473,14 @@ static const struct protseq_ops protseq_list[] =
         rpcrt4_protseq_sock_wait_for_new_connection,
         rpcrt4_protseq_ncacn_ip_tcp_open_endpoint,
     },
+#endif
 };
 
 #define ARRAYSIZE(a) (sizeof((a)) / sizeof((a)[0]))
 
 const struct protseq_ops *rpcrt4_get_protseq_ops(const char *protseq)
 {
-  int i;
+  unsigned int i;
   for(i=0; i<ARRAYSIZE(protseq_list); i++)
     if (!strcmp(protseq_list[i].name, protseq))
       return &protseq_list[i];
@@ -1482,7 +1489,7 @@ const struct protseq_ops *rpcrt4_get_protseq_ops(const char *protseq)
 
 static const struct connection_ops *rpcrt4_get_conn_protseq_ops(const char *protseq)
 {
-    int i;
+    unsigned int i;
     for(i=0; i<ARRAYSIZE(conn_protseq_list); i++)
         if (!strcmp(conn_protseq_list[i].name, protseq))
             return &conn_protseq_list[i];
@@ -1636,7 +1643,7 @@ RPC_STATUS RpcTransport_ParseTopOfTower(const unsigned char *tower_data,
     const twr_empty_floor_t *floor4;
     const struct connection_ops *protseq_ops = NULL;
     RPC_STATUS status;
-    int i;
+    unsigned int i;
 
     if (tower_size < sizeof(*protocol_floor))
         return EPT_S_NOT_REGISTERED;

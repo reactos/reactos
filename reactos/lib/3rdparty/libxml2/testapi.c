@@ -19057,6 +19057,40 @@ test_xmlBuildQName(void) {
 
 
 static int
+test_xmlChildElementCount(void) {
+    int test_ret = 0;
+
+#if defined(LIBXML_TREE_ENABLED)
+    int mem_base;
+    unsigned long ret_val;
+    xmlNodePtr parent; /* the parent node */
+    int n_parent;
+
+    for (n_parent = 0;n_parent < gen_nb_xmlNodePtr;n_parent++) {
+        mem_base = xmlMemBlocks();
+        parent = gen_xmlNodePtr(n_parent, 0);
+
+        ret_val = xmlChildElementCount(parent);
+        desret_unsigned_long(ret_val);
+        call_tests++;
+        des_xmlNodePtr(n_parent, parent, 0);
+        xmlResetLastError();
+        if (mem_base != xmlMemBlocks()) {
+            printf("Leak of %d blocks found in xmlChildElementCount",
+	           xmlMemBlocks() - mem_base);
+	    test_ret++;
+            printf(" %d", n_parent);
+            printf("\n");
+        }
+    }
+    function_tests++;
+#endif
+
+    return(test_ret);
+}
+
+
+static int
 test_xmlCopyDoc(void) {
     int test_ret = 0;
 
@@ -20171,6 +20205,40 @@ test_xmlElemDump(void) {
 
 
 static int
+test_xmlFirstElementChild(void) {
+    int test_ret = 0;
+
+#if defined(LIBXML_TREE_ENABLED)
+    int mem_base;
+    xmlNodePtr ret_val;
+    xmlNodePtr parent; /* the parent node */
+    int n_parent;
+
+    for (n_parent = 0;n_parent < gen_nb_xmlNodePtr;n_parent++) {
+        mem_base = xmlMemBlocks();
+        parent = gen_xmlNodePtr(n_parent, 0);
+
+        ret_val = xmlFirstElementChild(parent);
+        desret_xmlNodePtr(ret_val);
+        call_tests++;
+        des_xmlNodePtr(n_parent, parent, 0);
+        xmlResetLastError();
+        if (mem_base != xmlMemBlocks()) {
+            printf("Leak of %d blocks found in xmlFirstElementChild",
+	           xmlMemBlocks() - mem_base);
+	    test_ret++;
+            printf(" %d", n_parent);
+            printf("\n");
+        }
+    }
+    function_tests++;
+#endif
+
+    return(test_ret);
+}
+
+
+static int
 test_xmlGetBufferAllocationScheme(void) {
     int test_ret = 0;
 
@@ -20667,6 +20735,40 @@ test_xmlIsXHTML(void) {
     }
     }
     function_tests++;
+
+    return(test_ret);
+}
+
+
+static int
+test_xmlLastElementChild(void) {
+    int test_ret = 0;
+
+#if defined(LIBXML_TREE_ENABLED)
+    int mem_base;
+    xmlNodePtr ret_val;
+    xmlNodePtr parent; /* the parent node */
+    int n_parent;
+
+    for (n_parent = 0;n_parent < gen_nb_xmlNodePtr;n_parent++) {
+        mem_base = xmlMemBlocks();
+        parent = gen_xmlNodePtr(n_parent, 0);
+
+        ret_val = xmlLastElementChild(parent);
+        desret_xmlNodePtr(ret_val);
+        call_tests++;
+        des_xmlNodePtr(n_parent, parent, 0);
+        xmlResetLastError();
+        if (mem_base != xmlMemBlocks()) {
+            printf("Leak of %d blocks found in xmlLastElementChild",
+	           xmlMemBlocks() - mem_base);
+	    test_ret++;
+            printf(" %d", n_parent);
+            printf("\n");
+        }
+    }
+    function_tests++;
+#endif
 
     return(test_ret);
 }
@@ -21832,6 +21934,40 @@ test_xmlNewTextLen(void) {
 
 
 static int
+test_xmlNextElementSibling(void) {
+    int test_ret = 0;
+
+#if defined(LIBXML_TREE_ENABLED)
+    int mem_base;
+    xmlNodePtr ret_val;
+    xmlNodePtr node; /* the current node */
+    int n_node;
+
+    for (n_node = 0;n_node < gen_nb_xmlNodePtr;n_node++) {
+        mem_base = xmlMemBlocks();
+        node = gen_xmlNodePtr(n_node, 0);
+
+        ret_val = xmlNextElementSibling(node);
+        desret_xmlNodePtr(ret_val);
+        call_tests++;
+        des_xmlNodePtr(n_node, node, 0);
+        xmlResetLastError();
+        if (mem_base != xmlMemBlocks()) {
+            printf("Leak of %d blocks found in xmlNextElementSibling",
+	           xmlMemBlocks() - mem_base);
+	    test_ret++;
+            printf(" %d", n_node);
+            printf("\n");
+        }
+    }
+    function_tests++;
+#endif
+
+    return(test_ret);
+}
+
+
+static int
 test_xmlNodeAddContent(void) {
     int test_ret = 0;
 
@@ -22572,6 +22708,40 @@ test_xmlNodeSetSpacePreserve(void) {
             printf("\n");
         }
     }
+    }
+    function_tests++;
+#endif
+
+    return(test_ret);
+}
+
+
+static int
+test_xmlPreviousElementSibling(void) {
+    int test_ret = 0;
+
+#if defined(LIBXML_TREE_ENABLED)
+    int mem_base;
+    xmlNodePtr ret_val;
+    xmlNodePtr node; /* the current node */
+    int n_node;
+
+    for (n_node = 0;n_node < gen_nb_xmlNodePtr;n_node++) {
+        mem_base = xmlMemBlocks();
+        node = gen_xmlNodePtr(n_node, 0);
+
+        ret_val = xmlPreviousElementSibling(node);
+        desret_xmlNodePtr(ret_val);
+        call_tests++;
+        des_xmlNodePtr(n_node, node, 0);
+        xmlResetLastError();
+        if (mem_base != xmlMemBlocks()) {
+            printf("Leak of %d blocks found in xmlPreviousElementSibling",
+	           xmlMemBlocks() - mem_base);
+	    test_ret++;
+            printf(" %d", n_node);
+            printf("\n");
+        }
     }
     function_tests++;
 #endif
@@ -23845,7 +24015,7 @@ static int
 test_tree(void) {
     int test_ret = 0;
 
-    if (quiet == 0) printf("Testing tree : 133 of 152 functions ...\n");
+    if (quiet == 0) printf("Testing tree : 138 of 157 functions ...\n");
     test_ret += test_xmlAddChild();
     test_ret += test_xmlAddChildList();
     test_ret += test_xmlAddNextSibling();
@@ -23870,6 +24040,7 @@ test_tree(void) {
     test_ret += test_xmlBufferWriteChar();
     test_ret += test_xmlBufferWriteQuotedString();
     test_ret += test_xmlBuildQName();
+    test_ret += test_xmlChildElementCount();
     test_ret += test_xmlCopyDoc();
     test_ret += test_xmlCopyDtd();
     test_ret += test_xmlCopyNamespace();
@@ -23895,6 +24066,7 @@ test_tree(void) {
     test_ret += test_xmlDocGetRootElement();
     test_ret += test_xmlDocSetRootElement();
     test_ret += test_xmlElemDump();
+    test_ret += test_xmlFirstElementChild();
     test_ret += test_xmlGetBufferAllocationScheme();
     test_ret += test_xmlGetCompressMode();
     test_ret += test_xmlGetDocCompressMode();
@@ -23910,6 +24082,7 @@ test_tree(void) {
     test_ret += test_xmlHasProp();
     test_ret += test_xmlIsBlankNode();
     test_ret += test_xmlIsXHTML();
+    test_ret += test_xmlLastElementChild();
     test_ret += test_xmlNewCDataBlock();
     test_ret += test_xmlNewCharRef();
     test_ret += test_xmlNewChild();
@@ -23936,6 +24109,7 @@ test_tree(void) {
     test_ret += test_xmlNewText();
     test_ret += test_xmlNewTextChild();
     test_ret += test_xmlNewTextLen();
+    test_ret += test_xmlNextElementSibling();
     test_ret += test_xmlNodeAddContent();
     test_ret += test_xmlNodeAddContentLen();
     test_ret += test_xmlNodeBufGetContent();
@@ -23954,6 +24128,7 @@ test_tree(void) {
     test_ret += test_xmlNodeSetLang();
     test_ret += test_xmlNodeSetName();
     test_ret += test_xmlNodeSetSpacePreserve();
+    test_ret += test_xmlPreviousElementSibling();
     test_ret += test_xmlReconciliateNs();
     test_ret += test_xmlRemoveProp();
     test_ret += test_xmlReplaceNode();
@@ -25969,9 +26144,9 @@ test_xmlValidateAttributeValue(void) {
 #if defined(LIBXML_VALID_ENABLED)
     int mem_base;
     int ret_val;
-    xmlAttributeType type; /*  */
+    xmlAttributeType type; /* an attribute type */
     int n_type;
-    xmlChar * value; /*  */
+    xmlChar * value; /* an attribute value */
     int n_value;
 
     for (n_type = 0;n_type < gen_nb_xmlAttributeType;n_type++) {

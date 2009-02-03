@@ -78,7 +78,7 @@ static CRITICAL_SECTION_DEBUG threaddata_cs_debug =
 };
 static CRITICAL_SECTION threaddata_cs = { &threaddata_cs_debug, -1, 0, 0, 0, 0 };
 
-struct list threaddata_list = LIST_INIT(threaddata_list);
+static struct list threaddata_list = LIST_INIT(threaddata_list);
 
 struct context_handle_list
 {
@@ -715,7 +715,7 @@ void WINAPI I_RpcFree(void *Object)
  */
 LONG WINAPI I_RpcMapWin32Status(RPC_STATUS status)
 {
-    TRACE("(%ld)\n", status);
+    TRACE("(%d)\n", status);
     switch (status)
     {
     case ERROR_ACCESS_DENIED: return STATUS_ACCESS_DENIED;

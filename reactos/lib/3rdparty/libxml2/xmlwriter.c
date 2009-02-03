@@ -1240,8 +1240,16 @@ xmlTextWriterFullEndElement(xmlTextWriterPtr writer)
             if (count < 0)
                 return -1;
             sum += count;
+            if (writer->indent)
+                writer->doindent = 0;
             /* fallthrough */
         case XML_TEXTWRITER_TEXT:
+            if ((writer->indent) && (writer->doindent)) {
+                count = xmlTextWriterWriteIndent(writer);
+                sum += count;
+                writer->doindent = 1;
+            } else
+                writer->doindent = 1;
             count = xmlOutputBufferWriteString(writer->out, "</");
             if (count < 0)
                 return -1;

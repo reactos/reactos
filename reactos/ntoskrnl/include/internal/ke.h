@@ -312,7 +312,15 @@ KiCompleteTimer(
 
 VOID
 FASTCALL
-KiAcquireGuardedMutexContented(PKGUARDED_MUTEX GuardedMutex);
+KiAcquireGuardedMutex(
+    IN OUT PKGUARDED_MUTEX GuardedMutex
+);
+
+VOID
+FASTCALL
+KiAcquireFastMutex(
+    IN PFAST_MUTEX FastMutex
+);
 
 /* gate.c **********************************************************************/
 

@@ -53,7 +53,7 @@ ULONG CDECL ldap_modrdnA( WLDAP32_LDAP *ld, PCHAR dn, PCHAR newdn )
 
     TRACE( "(%p, %s, %s)\n", ld, debugstr_a(dn), debugstr_a(newdn) );
 
-    if (!ld || !newdn) return ~0UL;
+    if (!ld || !newdn) return ~0u;
 
     if (dn) {
         dnW = strAtoW( dn );
@@ -103,7 +103,7 @@ ULONG CDECL ldap_modrdnW( WLDAP32_LDAP *ld, PWCHAR dn, PWCHAR newdn )
 
     TRACE( "(%p, %s, %s)\n", ld, debugstr_w(dn), debugstr_w(newdn) );
 
-    if (!ld || !newdn) return ~0UL;
+    if (!ld || !newdn) return ~0u;
 
     if (dn) {
         dnU = strWtoU( dn );
@@ -118,7 +118,7 @@ ULONG CDECL ldap_modrdnW( WLDAP32_LDAP *ld, PWCHAR dn, PWCHAR newdn )
     if (ret == LDAP_SUCCESS)
         ret = msg;
     else
-        ret = ~0UL;
+        ret = ~0u;
 
 exit:
     strfreeU( dnU );
@@ -143,7 +143,7 @@ ULONG CDECL ldap_modrdn2A( WLDAP32_LDAP *ld, PCHAR dn, PCHAR newdn, INT delete )
 
     TRACE( "(%p, %s, %p, 0x%02x)\n", ld, debugstr_a(dn), newdn, delete );
 
-    if (!ld || !newdn) return ~0UL;
+    if (!ld || !newdn) return ~0u;
 
     if (dn) {
         dnW = strAtoW( dn );
@@ -194,7 +194,7 @@ ULONG CDECL ldap_modrdn2W( WLDAP32_LDAP *ld, PWCHAR dn, PWCHAR newdn, INT delete
 
     TRACE( "(%p, %s, %p, 0x%02x)\n", ld, debugstr_w(dn), newdn, delete );
 
-    if (!ld || !newdn) return ~0UL;
+    if (!ld || !newdn) return ~0u;
 
     if (dn) {
         dnU = strWtoU( dn );
@@ -209,7 +209,7 @@ ULONG CDECL ldap_modrdn2W( WLDAP32_LDAP *ld, PWCHAR dn, PWCHAR newdn, INT delete
     if (ret == LDAP_SUCCESS)
         ret = msg;
     else
-        ret = ~0UL;
+        ret = ~0u;
 
 exit:
     strfreeU( dnU );
@@ -289,7 +289,7 @@ ULONG CDECL ldap_modrdn2_sW( WLDAP32_LDAP *ld, PWCHAR dn, PWCHAR newdn, INT dele
     newdnU = strWtoU( newdn );
     if (!newdnU) goto exit;
 
-    ret = ldap_rename_s( ld, dn ? dnU : "", newdnU, NULL, delete, NULL, NULL );
+    ret = map_error( ldap_rename_s( ld, dn ? dnU : "", newdnU, NULL, delete, NULL, NULL ));
 
 exit:
     strfreeU( dnU );
@@ -368,7 +368,7 @@ ULONG CDECL ldap_modrdn_sW( WLDAP32_LDAP *ld, PWCHAR dn, PWCHAR newdn )
     newdnU = strWtoU( newdn );
     if (!newdnU) goto exit;
 
-    ret = ldap_rename_s( ld, dn ? dnU : "", newdnU, NULL, 1, NULL, NULL );
+    ret = map_error( ldap_rename_s( ld, dn ? dnU : "", newdnU, NULL, 1, NULL, NULL ));
 
 exit:
     strfreeU( dnU );

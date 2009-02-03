@@ -341,6 +341,68 @@ IntCallWndProcRet
    }
 }
 
+LRESULT
+FASTCALL
+IntDispatchMessage(PMSG pMsg)
+{
+  LARGE_INTEGER TickCount;
+  LONG Time;
+  LRESULT retval;
+  PWINDOW_OBJECT Window = NULL;
+
+  if (pMsg->hwnd)
+  {
+     Window = UserGetWindowObject(pMsg->hwnd);
+     if (!Window || !Window->Wnd) return 0;
+  }
+
+  if (((pMsg->message == WM_SYSTIMER) ||
+       (pMsg->message == WM_TIMER)) &&
+      (pMsg->lParam) )
+  {
+     if (pMsg->message == WM_TIMER)
+     {
+        if (ValidateTimerCallback(PsGetCurrentThreadWin32Thread(),Window,pMsg->wParam,pMsg->lParam))
+        {
+           KeQueryTickCount(&TickCount);
+           Time = MsqCalculateMessageTime(&TickCount);
+           return co_IntCallWindowProc((WNDPROC)pMsg->lParam,
+                                        TRUE,
+                                        pMsg->hwnd,
+                                        WM_TIMER,
+                                        pMsg->wParam,
+                                        (LPARAM)Time,
+                                        sizeof(LPARAM));
+        }
+        return 0;        
+     }
+     else
+     {
+        PTIMER pTimer = FindSystemTimer(pMsg);
+        if (pTimer && pTimer->pfn)
+        {
+           KeQueryTickCount(&TickCount);
+           Time = MsqCalculateMessageTime(&TickCount);
+           pTimer->pfn(pMsg->hwnd, WM_SYSTIMER, (UINT)pMsg->wParam, Time);
+        }
+        return 0;
+     }
+  }
+  // Need a window!
+  if (!Window) return 0;
+
+  retval = co_IntPostOrSendMessage(pMsg->hwnd, pMsg->message, pMsg->wParam, pMsg->lParam);
+
+  if (pMsg->message == WM_PAINT)
+  {
+  /* send a WM_NCPAINT and WM_ERASEBKGND if the non-client area is still invalid */
+     HRGN hrgn = NtGdiCreateRectRgn( 0, 0, 0, 0 );
+     co_UserGetUpdateRgn( Window, hrgn, TRUE );
+     NtGdiDeleteObject( hrgn );
+  }
+  return retval;
+}
+
 
 BOOL
 APIENTRY
@@ -405,92 +467,29 @@ CLEANUP:
 }
 
 LRESULT APIENTRY
-NtUserDispatchMessage(PNTUSERDISPATCHMESSAGEINFO UnsafeMsgInfo)
+NtUserDispatchMessage(PMSG UnsafeMsgInfo)
 {
-   NTSTATUS Status;
-   NTUSERDISPATCHMESSAGEINFO MsgInfo;
-   LRESULT Result = TRUE;
-   DECLARE_RETURN(LRESULT);
+  LRESULT Res = 0;
+  BOOL Hit = FALSE;
+  MSG SafeMsg;
 
-   DPRINT("Enter NtUserDispatchMessage\n");
-   UserEnterExclusive();
+  UserEnterExclusive();  
+  _SEH2_TRY
+  {
+    ProbeForRead(UnsafeMsgInfo, sizeof(MSG), 1);
+    RtlCopyMemory(&SafeMsg, UnsafeMsgInfo, sizeof(MSG));
+  }
+  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+  {
+    SetLastNtError(_SEH2_GetExceptionCode());
+    Hit = TRUE;
+  }
+  _SEH2_END;
+  
+  if (!Hit) Res = IntDispatchMessage(&SafeMsg);
 
-   Status = MmCopyFromCaller(&MsgInfo, UnsafeMsgInfo, sizeof(NTUSERDISPATCHMESSAGEINFO));
-   if (! NT_SUCCESS(Status))
-   {
-      SetLastNtError(Status);
-      RETURN( 0);
-   }
-
-   /* Process timer messages. */
-   if (WM_TIMER == MsgInfo.Msg.message && 0 != MsgInfo.Msg.lParam)
-   {
-      LARGE_INTEGER LargeTickCount;
-      /* FIXME: Call hooks. */
-
-      /* FIXME: Check for continuing validity of timer. */
-
-      MsgInfo.HandledByKernel = FALSE;
-      KeQueryTickCount(&LargeTickCount);
-      MsgInfo.Proc = (WNDPROC) MsgInfo.Msg.lParam;
-      MsgInfo.Msg.lParam = (LPARAM)LargeTickCount.u.LowPart;
-   }
-   else if (NULL == MsgInfo.Msg.hwnd)
-   {
-      MsgInfo.HandledByKernel = TRUE;
-      Result = 0;
-   }
-   else
-   {
-      PWINDOW_OBJECT Window;
-
-      /* Get the window object. */
-      Window = UserGetWindowObject(MsgInfo.Msg.hwnd);
-      if (NULL == Window)
-      {
-         MsgInfo.HandledByKernel = TRUE;
-         Result = 0;
-      }
-      else
-      {
-         if (Window->OwnerThread != PsGetCurrentThread())
-         {
-            DPRINT1("Window doesn't belong to the calling thread!\n");
-            MsgInfo.HandledByKernel = TRUE;
-            Result = 0;
-         }
-         else
-         {
-            /* FIXME: Call hook procedures. */
-
-            MsgInfo.HandledByKernel = FALSE;
-            Result = 0;
-
-            if (Window->Wnd->IsSystem)
-            {
-                MsgInfo.Proc = (!MsgInfo.Ansi ? Window->Wnd->WndProc : Window->Wnd->WndProcExtra);
-            }
-            else
-            {
-                MsgInfo.Ansi = !Window->Wnd->Unicode;
-                MsgInfo.Proc = Window->Wnd->WndProc;
-            }
-         }
-      }
-   }
-   Status = MmCopyToCaller(UnsafeMsgInfo, &MsgInfo, sizeof(NTUSERDISPATCHMESSAGEINFO));
-   if (! NT_SUCCESS(Status))
-   {
-      SetLastNtError(Status);
-      RETURN( 0);
-   }
-
-   RETURN( Result);
-
-CLEANUP:
-   DPRINT("Leave NtUserDispatchMessage. ret=%i\n", _ret_);
-   UserLeave();
-   END_CLEANUP;
+  UserLeave();
+  return Res;
 }
 
 
@@ -836,6 +835,11 @@ CheckMessages:
       goto MsgExit;
    }
 
+   if (ThreadQueue->WakeMask & QS_TIMER)
+      if (PostTimerMessages(hWnd)) // If there are timers ready,
+         goto CheckMessages;       // go back and process them.
+
+   // LOL! Polling Timer Queue? How much time is spent doing this?
    /* Check for WM_(SYS)TIMER messages */
    Present = MsqGetTimerMessage(ThreadQueue, hWnd, MsgFilterMin, MsgFilterMax,
                                 &Msg->Msg, RemoveMessages);
@@ -2239,8 +2243,7 @@ NtUserWaitForInputIdle(
       return STATUS_SUCCESS;  /* no event to wait on */
   }
 
-  StartTime = ((ULONGLONG)SharedUserData->TickCountLowDeprecated *
-                          SharedUserData->TickCountMultiplier / 16777216);
+  StartTime = EngGetTickCount();
 
   Run = dwMilliseconds;
 
@@ -2294,9 +2297,7 @@ NtUserWaitForInputIdle(
 
      if (dwMilliseconds != INFINITE)
      {
-        Elapsed = ((ULONGLONG)SharedUserData->TickCountLowDeprecated *
-                              SharedUserData->TickCountMultiplier / 16777216)
-                              - StartTime;
+        Elapsed = EngGetTickCount() - StartTime;
 
         if (Elapsed > Run)
            Status = STATUS_TIMEOUT;

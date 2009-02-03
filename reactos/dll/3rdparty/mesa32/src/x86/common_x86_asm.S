@@ -40,6 +40,7 @@
  */
 
 #include "matypes.h"
+#include "assyntax.h"
 #include "common_x86_features.h"
 
 	SEG_TEXT

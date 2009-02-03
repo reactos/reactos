@@ -193,7 +193,7 @@ HRESULT CDECL HGLOBALLockBytesImpl16_QueryInterface(
       REFIID       riid,        /* [in] */
       void**       ppvObject)   /* [out][iid_is] (ptr to SEGPTR!) */
 {
-  HGLOBALLockBytesImpl16* const This=(HGLOBALLockBytesImpl16*)MapSL((SEGPTR)iface);
+  HGLOBALLockBytesImpl16* const This = MapSL((SEGPTR)iface);
 
   TRACE("(%p,%s,%p)\n",iface,debugstr_guid(riid),ppvObject);
   /*

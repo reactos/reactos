@@ -8,10 +8,9 @@
 	<library>kernel32</library>
 	<library>user32</library>
 	<define name="USE_EXTERNAL_DXTN_LIB" />
-	<!-- The following is autogenrated by Makefile.ReactOS -->
 	<library>gdi32</library>
 	<define name="BUILD_GL32" />
-	<define name="_OPENGL32_" />
+	<define name="WIN32" />
 	<define name="USE_EXTERNAL_DXTN_LIB=1" />
 	<define name="USE_X86_ASM" />
 	<define name="USE_MMX_ASM" />
@@ -30,6 +29,7 @@
 	<include base="mesa32">src/shader/slang/OGLCompilersDLL</include>
 	<directory name="src">
 	<directory name="glapi">
+		<file>glapi_getproc.c</file>
 		<file>glapi.c</file>
 		<file>glthread.c</file>
 	</directory>
@@ -46,6 +46,7 @@
 	<directory name="main">
 		<file>accum.c</file>
 		<file>api_arrayelt.c</file>
+		<file>api_exec.c</file>
 		<file>api_loopback.c</file>
 		<file>api_noop.c</file>
 		<file>api_validate.c</file>
@@ -54,6 +55,7 @@
 		<file>blend.c</file>
 		<file>bufferobj.c</file>
 		<file>buffers.c</file>
+		<file>clear.c</file>
 		<file>clip.c</file>
 		<file>colortab.c</file>
 		<file>context.c</file>
@@ -63,6 +65,7 @@
 		<file>depthstencil.c</file>
 		<file>dispatch.c</file>
 		<file>dlist.c</file>
+		<file>dlopen.c</file>
 		<file>drawpix.c</file>
 		<file>enable.c</file>
 		<file>enums.c</file>
@@ -71,6 +74,7 @@
 		<file>extensions.c</file>
 		<file>fbobject.c</file>
 		<file>feedback.c</file>
+		<file>ffvertex_prog.c</file>
 		<file>fog.c</file>
 		<file>framebuffer.c</file>
 		<file>get.c</file>
@@ -85,20 +89,27 @@
 		<file>matrix.c</file>
 		<file>mipmap.c</file>
 		<file>mm.c</file>
+		<file>multisample.c</file>
 		<file>pixel.c</file>
+		<file>pixelstore.c</file>
 		<file>points.c</file>
 		<file>polygon.c</file>
 		<file>queryobj.c</file>
 		<file>rastpos.c</file>
 		<file>rbadaptors.c</file>
+		<file>readpix.c</file>
 		<file>renderbuffer.c</file>
+		<file>scissor.c</file>
 		<file>texcompress.c</file>
 		<file>texcompress_fxt1.c</file>
 		<file>texcompress_s3tc.c</file>
+		<file>texenv.c</file>
 		<file>texenvprogram.c</file>
+		<file>texgen.c</file>
 		<file>texformat.c</file>
 		<file>teximage.c</file>
 		<file>texobj.c</file>
+		<file>texparam.c</file>
 		<file>texrender.c</file>
 		<file>texstate.c</file>
 		<file>texstore.c</file>
@@ -111,9 +122,11 @@
 		<file>nvfragparse.c</file>
 		<file>nvprogram.c</file>
 		<file>nvvertparse.c</file>
+		<file>prog_cache.c</file>
 		<file>prog_debug.c</file>
 		<file>prog_execute.c</file>
 		<file>prog_instruction.c</file>
+		<file>prog_noise.c</file>
 		<file>prog_parameter.c</file>
 		<file>prog_print.c</file>
 		<file>prog_statevars.c</file>
@@ -171,7 +184,6 @@
 			<file>slang_emit.c</file>
 			<file>slang_ir.c</file>
 			<file>slang_label.c</file>
-			<file>slang_library_noise.c</file>
 			<file>slang_link.c</file>
 			<file>slang_log.c</file>
 			<file>slang_mem.c</file>
@@ -196,6 +208,7 @@
 		<file>t_context.c</file>
 		<file>t_draw.c</file>
 		<file>t_pipeline.c</file>
+		<file>t_rasterpos.c</file>
 		<file>t_vb_cull.c</file>
 		<file>t_vb_fog.c</file>
 		<file>t_vb_light.c</file>

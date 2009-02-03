@@ -24,15 +24,15 @@ RADDR2LINE_HOST_LFLAGS = $(TOOLS_LFLAGS)
 raddr2line: $(RADDR2LINE_TARGET)
 
 $(RADDR2LINE_TARGET): $(RADDR2LINE_OBJECTS) | $(RADDR2LINE_OUT)
-	$(ECHO_LD)
+	$(ECHO_HOSTLD)
 	${host_gcc} $(RADDR2LINE_OBJECTS) $(RADDR2LINE_HOST_LFLAGS) -o $@
 
 $(RADDR2LINE_INT_)raddr2line.o: $(RADDR2LINE_BASE_)raddr2line.c | $(RADDR2LINE_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gcc} $(RADDR2LINE_HOST_CFLAGS) -c $< -o $@
 
 #$(RADDR2LINE_INT_)rsym_common.o: $(RADDR2LINE_BASE_)rsym_common.c | $(RADDR2LINE_INT)
-#	$(ECHO_CC)
+#	$(ECHO_HOSTCC)
 #	${host_gcc} $(RADDR2LINE_HOST_CFLAGS) -c $< -o $@
 
 .PHONY: raddr2line_clean

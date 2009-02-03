@@ -41,7 +41,4 @@
 /* PSEH for SEH Support */
 #include <pseh/pseh2.h>
 
-/* Helper Header */
-#include <reactos/helper.h>
-
 #endif

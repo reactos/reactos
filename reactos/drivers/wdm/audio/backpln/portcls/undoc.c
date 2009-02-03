@@ -79,19 +79,58 @@ PcCaptureFormat(
     return STATUS_NOT_IMPLEMENTED;
 }
 
+
+/*
+ * @unimplemented
+ */
 NTSTATUS
+NTAPI
 PcCreateSubdeviceDescriptor(
-    /* TODO */ )
+    OUT SUBDEVICE_DESCRIPTOR ** OutSubdeviceDescriptor,
+    IN ULONG InterfaceCount,
+    IN GUID * InterfaceGuids,
+    IN ULONG IdentifierCount,
+    IN KSIDENTIFIER *Identifier,
+    IN ULONG FilterPropertiesCount,
+    IN KSPROPERTY_SET * FilterProperties,
+    IN ULONG Unknown1,
+    IN ULONG Unknown2,
+    IN ULONG PinPropertiesCount,
+    IN KSPROPERTY_SET * PinProperties,
+    IN ULONG EventSetCount,
+    IN KSEVENT_SET * EventSet,
+    IN PPCFILTER_DESCRIPTOR FilterDescription)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    SUBDEVICE_DESCRIPTOR * Descriptor;
+    NTSTATUS Status = STATUS_INSUFFICIENT_RESOURCES;
+
+    Descriptor = AllocateItem(NonPagedPool, sizeof(SUBDEVICE_DESCRIPTOR), TAG_PORTCLASS);
+    if (!Descriptor)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    Descriptor->Interfaces = AllocateItem(NonPagedPool, sizeof(GUID) * InterfaceCount, TAG_PORTCLASS);
+    if (!Descriptor->Interfaces)
+        goto cleanup;
+
+    /* copy interface guids */
+    RtlCopyMemory(Descriptor->Interfaces, InterfaceGuids, sizeof(GUID) * InterfaceCount);
+    Descriptor->InterfaceCount = InterfaceCount;
+
+    *OutSubdeviceDescriptor = Descriptor;
+    return STATUS_SUCCESS;
+
+cleanup:
+    if (Descriptor)
+    {
+        if (Descriptor->Interfaces)
+            FreeItem(Descriptor->Interfaces, TAG_PORTCLASS);
+
+        FreeItem(Descriptor, TAG_PORTCLASS);
+    }
+    return Status;
 }
 
 /* PcDeleteSubdeviceDescriptor */
-
-/* PcDmaMasterDescription */
-
-/* PcDmaSlaveDescription */
 
 /* PcFreeEventTable */
 

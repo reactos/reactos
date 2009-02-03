@@ -105,6 +105,7 @@ static void dump_exception_type( const cxx_exception_type *type )
 
 static void dump_function_descr( const cxx_function_descr *descr )
 {
+#ifndef WINE_NO_TRACE_MSGS
     UINT i;
     int j;
 
@@ -122,6 +123,7 @@ static void dump_function_descr( const cxx_function_descr *descr )
                  descr->tryblock[i].start_level, descr->tryblock[i].end_level,
                  descr->tryblock[i].catch_level, descr->tryblock[i].catchblock,
                  descr->tryblock[i].catchblock_count );
+
         for (j = 0; j < descr->tryblock[i].catchblock_count; j++)
         {
             const catchblock_info *ptr = &descr->tryblock[i].catchblock[j];
@@ -130,6 +132,7 @@ static void dump_function_descr( const cxx_function_descr *descr )
                      ptr->type_info, dbgstr_type_info( ptr->type_info ) );
         }
     }
+#endif
 }
 
 /* check if the exception type is caught by a given catch block, and return the type that matched */

@@ -119,7 +119,7 @@ static void WINAPI IWineD3DVolumeTextureImpl_PreLoad(IWineD3DVolumeTexture *ifac
             FIXME("Volumetexture (%p) has been reloaded at least 20 times due to WINED3DSAMP_SRGBTEXTURE changes on it\'s sampler\n", This);
 
         for (i = 0; i < This->baseTexture.levels; i++) {
-            IWineD3DVolume_AddDirtyBox(This->volumes[i], NULL);
+            volume_add_dirty_box(This->volumes[i], NULL);
             IWineD3DVolume_LoadTexture(This->volumes[i], i, srgb_mode);
         }
     } else {
@@ -244,7 +244,7 @@ static HRESULT WINAPI IWineD3DVolumeTextureImpl_GetLevelDesc(IWineD3DVolumeTextu
         TRACE("(%p) Level (%d)\n", This, Level);
         return IWineD3DVolume_GetDesc(This->volumes[Level], pDesc);
     } else {
-        FIXME("(%p) Level (%d)\n", This, Level);
+        WARN("(%p) Level (%d)\n", This, Level);
     }
     return WINED3D_OK;
 }
@@ -255,7 +255,7 @@ static HRESULT WINAPI IWineD3DVolumeTextureImpl_GetVolumeLevel(IWineD3DVolumeTex
       IWineD3DVolume_AddRef(*ppVolumeLevel);
       TRACE("(%p) -> level(%d) returning volume@%p\n", This, Level, *ppVolumeLevel);
     } else {
-      FIXME("(%p) Level(%d) overflow Levels(%d)\n", This, Level, This->baseTexture.levels);
+      WARN("(%p) Level(%d) overflow Levels(%d)\n", This, Level, This->baseTexture.levels);
       return WINED3DERR_INVALIDCALL;
     }
     return WINED3D_OK;
@@ -295,7 +295,9 @@ static HRESULT WINAPI IWineD3DVolumeTextureImpl_AddDirtyBox(IWineD3DVolumeTextur
     IWineD3DVolumeTextureImpl *This = (IWineD3DVolumeTextureImpl *)iface;
     This->baseTexture.dirty = TRUE;
     TRACE("(%p) : dirtyfication of volume Level (0)\n", This);
-    return IWineD3DVolume_AddDirtyBox(This->volumes[0], pDirtyBox);
+    volume_add_dirty_box(This->volumes[0], pDirtyBox);
+
+    return WINED3D_OK;
 }
 
 const IWineD3DVolumeTextureVtbl IWineD3DVolumeTexture_Vtbl =

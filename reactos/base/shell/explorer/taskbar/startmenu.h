@@ -366,9 +366,11 @@ struct StartMenuRoot : public StartMenuHandler
 	typedef StartMenuHandler super;
 
 	StartMenuRoot(HWND hwnd, const StartMenuRootCreateInfo& info);
-	HWND _hwndParent;
+
 	static HWND Create(HWND hwndDesktopBar, int icon_size);
 	void	TrackStartmenu();
+
+	HWND	_hwndStartButton;
 
 protected:
 	LRESULT	Init(LPCREATESTRUCT pcs);

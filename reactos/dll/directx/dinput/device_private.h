@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #ifndef __WINE_DLLS_DINPUT_DINPUTDEVICE_PRIVATE_H
@@ -25,78 +25,98 @@
 #include "windef.h"
 #include "winbase.h"
 #include "dinput.h"
+#include "wine/list.h"
+#include "dinput_private.h"
+
+typedef struct
+{
+    int size;
+    int offset_in;
+    int offset_out;
+    int value;
+} DataTransform;
+
+typedef struct
+{
+    int                         size;
+    int                         internal_format_size;
+    DataTransform              *dt;
+
+    int                        *offsets;     /* object offsets */
+    LPDIDATAFORMAT              wine_df;     /* wine internal data format */
+    LPDIDATAFORMAT              user_df;     /* user defined data format */
+} DataFormat;
 
 /* Device implementation */
 typedef struct IDirectInputDevice2AImpl IDirectInputDevice2AImpl;
 struct IDirectInputDevice2AImpl
 {
-        const IDirectInputDevice2AVtbl *lpVtbl;
-        LONG                            ref;
-        GUID                            guid;
+    const void                 *lpVtbl;
+    LONG                        ref;
+    GUID                        guid;
+    CRITICAL_SECTION            crit;
+    IDirectInputImpl           *dinput;
+    struct list                 entry;       /* entry into IDirectInput devices list */
+    HANDLE                      hEvent;
+    DWORD                       dwCoopLevel;
+    HWND                        win;
+    int                         acquired;
+    DI_EVENT_PROC               event_proc;  /* function to receive mouse & keyboard events */
+
+    LPDIDEVICEOBJECTDATA        data_queue;  /* buffer for 'GetDeviceData'.                 */
+    int                         queue_len;   /* size of the queue - set in 'SetProperty'    */
+    int                         queue_head;  /* position to write new event into queue      */
+    int                         queue_tail;  /* next event to read from queue               */
+    BOOL                        overflow;    /* return DI_BUFFEROVERFLOW in 'GetDeviceData' */
+
+    DataFormat                  data_format; /* user data format and wine to user format converter */
 };
 
+extern BOOL get_app_key(HKEY*, HKEY*);
+extern DWORD get_config_key(HKEY, HKEY, const char*, char*, DWORD);
+
 /* Routines to do DataFormat / WineFormat conversions */
-typedef struct {
-  int size;
-  int offset_in;
-  int offset_out;
-  int value;
-} DataTransform;
-
-typedef struct {
-  int size;
-  int internal_format_size;
-  DataTransform *dt;
-} DataFormat;
-extern void fill_DataFormat(void *out, const void *in, DataFormat *df) ;
-extern DataFormat *create_DataFormat(const DIDATAFORMAT *wine_format, LPCDIDATAFORMAT asked_format, int *offset) ;
+extern void fill_DataFormat(void *out, DWORD size, const void *in, const DataFormat *df) ;
 extern void release_DataFormat(DataFormat *df) ;
+extern void queue_event(LPDIRECTINPUTDEVICE8A iface, int ofs, DWORD data, DWORD time, DWORD seq);
+/* Helper functions to work with data format */
+extern int id_to_object(LPCDIDATAFORMAT df, int id);
+extern int id_to_offset(const DataFormat *df, int id);
+extern int find_property(const DataFormat *df, LPCDIPROPHEADER ph);
 
-/* Used to fill events in the queue */
-#define GEN_EVENT(offset,data,xtime,seq)					\
-{										\
-  /* If queue_len > 0, queuing is requested -> TRACE the event queued */	\
-  if (This->queue_len > 0) {							\
-    int nq;									\
-    TRACE(" queueing %d at offset %d (queue head %d / size %d)\n", 		\
-	  (int) (data), (int) (offset),                           		\
-	  (int) (This->queue_head), (int) (This->queue_len));			\
-										\
-    nq = This->queue_head+1;							\
-    while (nq >= This->queue_len) nq -= This->queue_len;			\
-    if ((offset >= 0) && (nq != This->queue_tail)) {				\
-      This->data_queue[This->queue_head].dwOfs = offset;			\
-      This->data_queue[This->queue_head].dwData = data;				\
-      This->data_queue[This->queue_head].dwTimeStamp = xtime;			\
-      This->data_queue[This->queue_head].dwSequence = seq;			\
-      This->queue_head = nq;							\
-    } else                                                                      \
-      This->overflow = TRUE;                                                    \
-  }										\
-}
+/* Common joystick stuff */
+typedef struct
+{
+    LONG lDevMin;
+    LONG lDevMax;
+    LONG lMin;
+    LONG lMax;
+    LONG lDeadZone;
+    LONG lSaturation;
+} ObjProps;
 
-/**
- * Callback Data used by specific callback
- *  for EnumObject on 'W' interfaces
- */
-typedef struct {
-  LPDIENUMDEVICEOBJECTSCALLBACKW lpCallBack;
-  LPVOID lpvRef;
-} device_enumobjects_AtoWcb_data;
+extern DWORD joystick_map_pov(POINTL *p);
+extern LONG joystick_map_axis(ObjProps *props, int val);
 
-extern BOOL DIEnumDevicesCallbackAtoW(LPCDIDEVICEOBJECTINSTANCEA, LPVOID);
+typedef struct
+{
+    struct list entry;
+    LPDIRECTINPUTEFFECT ref;
+} effect_list_item;
 
+extern const GUID DInput_Wine_Keyboard_GUID;
+extern const GUID DInput_Wine_Mouse_GUID;
 
 /* Various debug tools */
-extern void _dump_cooperativelevel_DI(DWORD dwFlags) ;
-extern void _dump_EnumObjects_flags(DWORD dwFlags) ;
 extern void _dump_DIPROPHEADER(LPCDIPROPHEADER diph) ;
-extern void _dump_OBJECTINSTANCEA(DIDEVICEOBJECTINSTANCEA *ddoi) ;
-extern void _dump_OBJECTINSTANCEW(DIDEVICEOBJECTINSTANCEW *ddoi) ;
+extern void _dump_OBJECTINSTANCEA(const DIDEVICEOBJECTINSTANCEA *ddoi) ;
+extern void _dump_OBJECTINSTANCEW(const DIDEVICEOBJECTINSTANCEW *ddoi) ;
 extern void _dump_DIDATAFORMAT(const DIDATAFORMAT *df) ;
 extern const char *_dump_dinput_GUID(const GUID *guid) ;
 
 /* And the stubs */
+extern HRESULT WINAPI IDirectInputDevice2AImpl_Acquire(LPDIRECTINPUTDEVICE8A iface);
+extern HRESULT WINAPI IDirectInputDevice2AImpl_Unacquire(LPDIRECTINPUTDEVICE8A iface);
 extern HRESULT WINAPI IDirectInputDevice2AImpl_SetDataFormat(
 	LPDIRECTINPUTDEVICE8A iface,LPCDIDATAFORMAT df ) ;
 extern HRESULT WINAPI IDirectInputDevice2AImpl_SetCooperativeLevel(
@@ -118,25 +138,19 @@ extern HRESULT WINAPI IDirectInputDevice2WImpl_EnumObjects(
 	LPDIENUMDEVICEOBJECTSCALLBACKW lpCallback,
 	LPVOID lpvRef,
 	DWORD dwFlags) ;
-extern HRESULT WINAPI IDirectInputDevice2AImpl_GetProperty(
-	LPDIRECTINPUTDEVICE8A iface,
-	REFGUID rguid,
-	LPDIPROPHEADER pdiph) ;
+extern HRESULT WINAPI IDirectInputDevice2AImpl_GetProperty(LPDIRECTINPUTDEVICE8A iface, REFGUID rguid, LPDIPROPHEADER pdiph);
+extern HRESULT WINAPI IDirectInputDevice2AImpl_SetProperty(LPDIRECTINPUTDEVICE8A iface, REFGUID rguid, LPCDIPROPHEADER pdiph);
 extern HRESULT WINAPI IDirectInputDevice2AImpl_GetObjectInfo(
 	LPDIRECTINPUTDEVICE8A iface,
 	LPDIDEVICEOBJECTINSTANCEA pdidoi,
 	DWORD dwObj,
 	DWORD dwHow) ;
-extern HRESULT WINAPI IDirectInputDevice2WImpl_GetObjectInfo(LPDIRECTINPUTDEVICE8W iface,
+extern HRESULT WINAPI IDirectInputDevice2WImpl_GetObjectInfo(LPDIRECTINPUTDEVICE8W iface, 
 							     LPDIDEVICEOBJECTINSTANCEW pdidoi,
 							     DWORD dwObj,
 							     DWORD dwHow);
-extern HRESULT WINAPI IDirectInputDevice2AImpl_GetDeviceInfo(
-	LPDIRECTINPUTDEVICE8A iface,
-	LPDIDEVICEINSTANCEA pdidi) ;
-extern HRESULT WINAPI IDirectInputDevice2WImpl_GetDeviceInfo(
-	LPDIRECTINPUTDEVICE8W iface,
-	LPDIDEVICEINSTANCEW pdidi) ;
+extern HRESULT WINAPI IDirectInputDevice2AImpl_GetDeviceData(LPDIRECTINPUTDEVICE8A iface,
+        DWORD dodsize, LPDIDEVICEOBJECTDATA dod, LPDWORD entries, DWORD flags);
 extern HRESULT WINAPI IDirectInputDevice2AImpl_RunControlPanel(
 	LPDIRECTINPUTDEVICE8A iface,
 	HWND hwndOwner,

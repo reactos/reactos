@@ -495,16 +495,6 @@ DeferWindowPos(HDWP hWinPosInfo,
 
 
 /*
- * @implemented
- */
-BOOL WINAPI
-DestroyWindow(HWND hWnd)
-{
-    return NtUserDestroyWindow(hWnd);
-}
-
-
-/*
  * @unimplemented
  */
 BOOL WINAPI
@@ -543,15 +533,6 @@ GetDesktopWindow(VOID)
     return Ret;
 }
 
-
-/*
- * @unimplemented
- */
-HWND WINAPI
-GetForegroundWindow(VOID)
-{
-    return NtUserGetForegroundWindow();
-}
 
 static BOOL
 User32EnumWindows(HDESK hDesktop,
@@ -918,17 +899,6 @@ GetClientRect(HWND hWnd, LPRECT lpRect)
 /*
  * @implemented
  */
-BOOL WINAPI
-GetGUIThreadInfo(DWORD idThread,
-                 LPGUITHREADINFO lpgui)
-{
-    return (BOOL)NtUserGetGUIThreadInfo(idThread, lpgui);
-}
-
-
-/*
- * @implemented
- */
 HWND WINAPI
 GetLastActivePopup(HWND hWnd)
 {
@@ -1009,17 +979,6 @@ GetProcessDefaultLayout(DWORD *pdwDefaultLayout)
 
     *pdwDefaultLayout = 0;
     return TRUE;
-}
-
-
-/*
- * @implemented
- */
-BOOL WINAPI
-GetTitleBarInfo(HWND hwnd,
-                PTITLEBARINFO pti)
-{
-    return NtUserGetTitleBarInfo(hwnd, pti);
 }
 
 
@@ -1126,17 +1085,6 @@ GetWindowModuleFileNameW(HWND hwnd,
     }
 
     return GetModuleFileNameW(hWndInst, lpszFileName, cchFileNameMax);
-}
-
-
-/*
- * @implemented
- */
-BOOL WINAPI
-GetWindowPlacement(HWND hWnd,
-                   WINDOWPLACEMENT *lpwndpl)
-{
-    return (BOOL)NtUserGetWindowPlacement(hWnd, lpwndpl);
 }
 
 
@@ -1514,21 +1462,6 @@ LockSetForegroundWindow(UINT uLockCode)
  * @implemented
  */
 BOOL WINAPI
-MoveWindow(HWND hWnd,
-           int X,
-           int Y,
-           int nWidth,
-           int nHeight,
-           BOOL bRepaint)
-{
-    return NtUserMoveWindow(hWnd, X, Y, nWidth, nHeight, bRepaint);
-}
-
-
-/*
- * @implemented
- */
-BOOL WINAPI
 AnimateWindow(HWND hwnd,
               DWORD dwTime,
               DWORD dwFlags)
@@ -1590,17 +1523,6 @@ SetForegroundWindow(HWND hWnd)
 
 
 /*
- * @implemented
- */
-HWND WINAPI
-SetParent(HWND hWndChild,
-          HWND hWndNewParent)
-{
-    return NtUserSetParent(hWndChild, hWndNewParent);
-}
-
-
-/*
  * @unimplemented
  */
 BOOL WINAPI
@@ -1611,33 +1533,6 @@ SetProcessDefaultLayout(DWORD dwDefaultLayout)
 
     UNIMPLEMENTED;
     return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL WINAPI
-SetWindowPlacement(HWND hWnd,
-                   CONST WINDOWPLACEMENT *lpwndpl)
-{
-    return (BOOL)NtUserSetWindowPlacement(hWnd, (WINDOWPLACEMENT *)lpwndpl);
-}
-
-
-/*
- * @implemented
- */
-BOOL WINAPI
-SetWindowPos(HWND hWnd,
-             HWND hWndInsertAfter,
-             int X,
-             int Y,
-             int cx,
-             int cy,
-             UINT uFlags)
-{
-    return NtUserSetWindowPos(hWnd,hWndInsertAfter, X, Y, cx, cy, uFlags);
 }
 
 
@@ -1657,18 +1552,8 @@ SetWindowTextA(HWND hWnd,
     if(ProcessId != GetCurrentProcessId())
     {
         /* do not send WM_GETTEXT messages to other processes */
-        ANSI_STRING AnsiString;
-        UNICODE_STRING UnicodeString;
 
-        if(lpString)
-        {
-            RtlInitAnsiString(&AnsiString, (LPSTR)lpString);
-            RtlAnsiStringToUnicodeString(&UnicodeString, &AnsiString, TRUE);
-            NtUserDefSetText(hWnd, &UnicodeString);
-            RtlFreeUnicodeString(&UnicodeString);
-        }
-        else
-            NtUserDefSetText(hWnd, NULL);
+        DefSetText(hWnd, (PCWSTR)lpString, TRUE);
 
         if ((GetWindowLongW(hWnd, GWL_STYLE) & WS_CAPTION) == WS_CAPTION)
         {
@@ -1697,12 +1582,8 @@ SetWindowTextW(HWND hWnd,
     if(ProcessId != GetCurrentProcessId())
     {
         /* do not send WM_GETTEXT messages to other processes */
-        UNICODE_STRING UnicodeString;
 
-        if(lpString)
-            RtlInitUnicodeString(&UnicodeString, (LPWSTR)lpString);
-
-        NtUserDefSetText(hWnd, (lpString ? &UnicodeString : NULL));
+        DefSetText(hWnd, lpString, FALSE);
 
         if ((GetWindowLongW(hWnd, GWL_STYLE) & WS_CAPTION) == WS_CAPTION)
         {
@@ -1723,28 +1604,6 @@ ShowOwnedPopups(HWND hWnd,
                 BOOL fShow)
 {
     return (BOOL)NtUserCallTwoParam((DWORD)hWnd, fShow, TWOPARAM_ROUTINE_SHOWOWNEDPOPUPS);
-}
-
-
-/*
- * @implemented
- */
-BOOL WINAPI
-ShowWindow(HWND hWnd,
-           int nCmdShow)
-{
-    return NtUserShowWindow(hWnd, nCmdShow);
-}
-
-
-/*
- * @unimplemented
- */
-BOOL WINAPI
-ShowWindowAsync(HWND hWnd,
-                int nCmdShow)
-{
-    return NtUserShowWindowAsync(hWnd, nCmdShow);
 }
 
 

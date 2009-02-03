@@ -1069,7 +1069,7 @@ PeekNamedPipe(HANDLE hNamedPipe,
     NTSTATUS Status;
 
     /* Calculate the buffer space that we'll need and allocate it */
-    BufferSize = nBufferSize + FIELD_OFFSET(FILE_PIPE_PEEK_BUFFER, Data[0]);
+    BufferSize = nBufferSize + sizeof(FILE_PIPE_PEEK_BUFFER);
     Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, BufferSize);
     if (Buffer == NULL)
     {

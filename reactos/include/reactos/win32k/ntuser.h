@@ -5,6 +5,36 @@ struct _W32PROCESSINFO;
 struct _W32THREADINFO;
 struct _WINDOW;
 
+typedef struct _LARGE_UNICODE_STRING
+{
+  ULONG Length;
+  ULONG MaximumLength:31;
+  ULONG bAnsi:1;
+  PWSTR Buffer;
+} LARGE_UNICODE_STRING, *PLARGE_UNICODE_STRING;
+
+typedef struct _LARGE_STRING
+{
+  ULONG Length;
+  ULONG MaximumLength:31;
+  ULONG bAnsi:1;
+  PVOID Buffer;
+} LARGE_STRING, *PLARGE_STRING;
+//
+// Based on ANSI_STRING
+//
+typedef struct _LARGE_ANSI_STRING
+{
+  ULONG Length;
+  ULONG MaximumLength:31;
+  ULONG bAnsi:1;
+  PCHAR Buffer;
+} LARGE_ANSI_STRING, *PLARGE_ANSI_STRING;
+
+VOID NTAPI RtlInitLargeAnsiString(IN OUT PLARGE_ANSI_STRING,IN PCSZ,IN INT);
+VOID NTAPI RtlInitLargeUnicodeString(IN OUT PLARGE_UNICODE_STRING,IN PCWSTR,IN INT);
+BOOL NTAPI RtlLargeStringToUnicodeString( PUNICODE_STRING, PLARGE_STRING);
+
 /* FIXME: UserHMGetHandle needs to be updated once the new handle manager is implemented */
 #define UserHMGetHandle(obj) ((obj)->hdr.Handle)
 
@@ -105,6 +135,10 @@ typedef struct _WINDOWCLASS
     UINT MenuNameIsString : 1;
     UINT NotUsed : 27;
 } WINDOWCLASS, *PWINDOWCLASS;
+
+
+// Flags !Not Implemented!
+#define WNDF_CALLPROC 0x0004 // Call proc inside win32k.
 
 typedef struct _WINDOW
 {
@@ -468,6 +502,11 @@ typedef struct _USERCONNECT
 #define WM_SYSTIMER 280
 #define WM_POPUPSYSTEMMENU 787
 
+//
+// Non SDK DCE types.
+//
+#define DCX_USESTYLE     0x00010000
+#define DCX_KEEPCLIPRGN  0x00040000
 
 DWORD
 NTAPI
@@ -1088,9 +1127,9 @@ HWND
 NTAPI
 NtUserCreateWindowEx(
   DWORD dwExStyle,
-  PLARGE_UNICODE_STRING plustrClassName,
-  PLARGE_UNICODE_STRING plustrClsVesrion,
-  PLARGE_UNICODE_STRING plustrWindowName,
+  PLARGE_STRING plstrClassName,
+  PLARGE_STRING plstrClsVesrion,
+  PLARGE_STRING plstrWindowName,
   DWORD dwStyle,
   int x,
   int y,
@@ -1148,7 +1187,7 @@ NtUserDeferWindowPos(HDWP WinPosInfo,
          int cy,
 		     UINT Flags);
 BOOL NTAPI
-NtUserDefSetText(HWND WindowHandle, PUNICODE_STRING WindowText);
+NtUserDefSetText(HWND WindowHandle, PLARGE_STRING WindowText);
 
 BOOLEAN
 NTAPI
@@ -1174,17 +1213,9 @@ NTAPI
 NtUserDisableThreadIme(
     DWORD dwUnknown1);
 
-typedef struct tagNTUSERDISPATCHMESSAGEINFO
-{
-  BOOL HandledByKernel;
-  BOOL Ansi;
-  WNDPROC Proc;
-  MSG Msg;
-} NTUSERDISPATCHMESSAGEINFO, *PNTUSERDISPATCHMESSAGEINFO;
-
 LRESULT
 NTAPI
-NtUserDispatchMessage(PNTUSERDISPATCHMESSAGEINFO MsgInfo);
+NtUserDispatchMessage(PMSG pMsg);
 
 BOOL
 NTAPI
@@ -2654,12 +2685,12 @@ NtUserValidateRect(
     HWND hWnd,
     CONST RECT *lpRect);
 
-DWORD
-NTAPI
+BOOL
+APIENTRY
 NtUserValidateTimerCallback(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3);
+    HWND hWnd,
+    WPARAM wParam,
+    LPARAM lParam);
 
 DWORD
 NTAPI

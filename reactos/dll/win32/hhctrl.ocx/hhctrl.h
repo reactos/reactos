@@ -141,22 +141,22 @@ BOOL NavigateToChm(HHInfo*,LPCWSTR,LPCWSTR);
 
 /* memory allocation functions */
 
-static inline void __WINE_ALLOC_SIZE(1) *heap_alloc(size_t len)
+static inline void * __WINE_ALLOC_SIZE(1) heap_alloc(size_t len)
 {
     return HeapAlloc(GetProcessHeap(), 0, len);
 }
 
-static inline void __WINE_ALLOC_SIZE(1) *heap_alloc_zero(size_t len)
+static inline void * __WINE_ALLOC_SIZE(1) heap_alloc_zero(size_t len)
 {
     return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len);
 }
 
-static inline void __WINE_ALLOC_SIZE(2) *heap_realloc(void *mem, size_t len)
+static inline void * __WINE_ALLOC_SIZE(2) heap_realloc(void *mem, size_t len)
 {
     return HeapReAlloc(GetProcessHeap(), 0, mem, len);
 }
 
-static inline void __WINE_ALLOC_SIZE(2) *heap_realloc_zero(void *mem, size_t len)
+static inline void * __WINE_ALLOC_SIZE(2) heap_realloc_zero(void *mem, size_t len)
 {
     return HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, mem, len);
 }

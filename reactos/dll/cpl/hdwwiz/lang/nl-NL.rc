@@ -1,7 +1,147 @@
 LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
 
+IDD_STARTPAGE DIALOG DISCARDABLE 0, 0, 317, 186
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Add Hardware Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Welcome to the Add Hardware Wizard", IDC_FINISHTITLE, 114, 8, 203, 24
+	LTEXT "This wizard helps you:", -1, 114, 40, 182, 8
+	LTEXT "1) Install software to support the hardware you add to your computer.", -1, 121, 56, 184, 16
+	LTEXT "2) Troubleshoot problems you may be having with your hardware.", -1, 121, 78, 185, 16
+	ICON IDI_WARNINGICON, IDC_WARNINGICON, 124, 109, 20, 20
+	LTEXT "If your hardware came with an installation CD, it is recommended that you click Cancel to close this wizard and use the manufacturer's CD to install this hardware.", 503, 150, 106, 155, 50
+	LTEXT "To continue, click Next.", -1, 114, 166, 193, 8
+END
+
+IDD_SEARCHPAGE DIALOG DISCARDABLE 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Add Hardware Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "", IDC_STATUSTEXT, 21, 8, 275, 32
+	ICON IDI_SEARCHICON, IDC_SEARCHICON, 148, 50, 20, 20
+END
+
+IDD_ISCONNECTEDPAGE DIALOG DISCARDABLE 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Add Hardware Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Have you already connected this hardware to your computer?", -1, 20, 11, 275, 8
+	AUTORADIOBUTTON "&Yes, I have already connected the hardware", IDC_CONNECTED, 29, 23, 266, 8, WS_GROUP
+	AUTORADIOBUTTON "&No, I have not added the hardware yet", IDC_NOTCONNECTED, 29, 35, 266, 8
+END
+
+IDD_PROBELISTPAGE DIALOG DISCARDABLE 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Add Hardware Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "From the list below, select an installed hardware device, then click Next to check properties or troubleshoot a problem you might be having.", -1, 21, 8, 275, 22
+	LTEXT "To add hardware not shown in the list, click ""Add a new hardware device.""", -1, 21, 32, 275, 24
+	LTEXT "I&nstalled hardware:", -1, 21, 62, 140, 8
+	CONTROL "", IDC_PROBELIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_NOCOLUMNHEADER, 21, 72, 275, 66
+END
+
+IDD_SELECTWAYPAGE DIALOG DISCARDABLE 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Add Hardware Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "The wizard can search for other hardware and automatically install it for you. Or, if you know exactly which hardware model you want to install, you can select it from a list.", -1, 21, 8, 280, 24
+	LTEXT "What do you want the wizard to do?", -1, 23, 40, 275, 8
+	AUTORADIOBUTTON "&Search for and install the hardware automatically (Recommended)", IDC_AUTOINSTALL, 30, 55, 266, 8, WS_GROUP | NOT WS_TABSTOP
+	AUTORADIOBUTTON "Install the hardware that I &manually select from a list (Advanced)", IDC_MANUALLYINST, 30, 70, 266, 8, NOT WS_TABSTOP
+END
+
+IDD_DETECTEDHWPAGE DIALOG DISCARDABLE 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Add Hardware Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "", IDC_STATUSTEXT, 21, 9, 275, 40
+	LTEXT "Detected hardware:", IDC_DETECTEDHWTEXT, 21, 53, 176, 8
+	CONTROL "", IDC_DETECTEDHWLIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_NOCOLUMNHEADER, 21, 65, 275, 70
+END
+
+IDD_HWTYPESPAGE DIALOG DISCARDABLE 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Add Hardware Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "If you do not see the hardware category you want, click Show All Devices.", IDC_STATUSTEXT, 21, 9, 275, 18
+	LTEXT "Common &hardware types:", IDC_HWTYPESTEXT, 21, 31, 180, 8
+	CONTROL "", IDC_HWTYPESLIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_NOCOLUMNHEADER, 21, 42, 275, 92
+END
+
+IDD_PROGRESSPAGE DIALOG DISCARDABLE 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Add Hardware Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "It may take several minutes to search for hardware.", -1, 21, 8, 275, 15
+	LTEXT "Total progress:", IDC_TPROGRESSTEXT, 21, 25, 275, 8
+	CONTROL "", IDC_TPROGRESSBAR, "msctls_progress32", 0, 21, 37, 275, 14
+	LTEXT "", IDC_PROGRESSTEXT, 58, 58, 200, 8, SS_NOPREFIX
+	CONTROL "", IDC_PROGRESSBAR, "msctls_progress32", 0, 58, 70, 200, 8
+END
+
+IDD_FINISHPAGE DIALOG DISCARDABLE 0, 0, 317, 186
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Add Hardware Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Completing the Add Hardware Wizard", IDC_FINISHTITLE, 114, 8, 203, 24
+	LTEXT "You have successfully completed the Add Hardware wizard.", -1, 114, 32, 193, 19
+	LTEXT "", IDC_STATUSTEXT, 114, 70, 193, 92
+	LTEXT "To close this wizard, click Finish.", -1, 114, 166, 132, 8
+END
+
+IDD_ISFOUNDPAGE DIALOG DISCARDABLE 0, 0, 317, 186
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Add Hardware Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Completing the Add Hardware Wizard", IDC_FINISHTITLE, 114, 8, 203, 24
+	LTEXT "The wizard found the following hardware connected to your computer:", -1, 114, 32, 193, 19
+	LTEXT "To close this wizard, click Finish.", -1, 114, 166, 132, 8
+	CONTROL "", IDC_FOUNDHARDWARELIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS, 114, 56, 193, 78
+END
+
+IDD_HWSTATUSPAGE DIALOG DISCARDABLE 0, 0, 317, 186
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Add Hardware Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Completing the Add Hardware Wizard", IDC_FINISHTITLE, 114, 8, 195, 28
+	LTEXT "Here is the current status of the hardware you selected:", -1, 114, 40, 193, 19
+	EDITTEXT IDC_HWSTATUSEDIT, 114, 60, 193, 70, ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | NOT WS_TABSTOP
+	LTEXT "To start a troubleshooter that can help you resolve any problems you might be having, click Finish.", -1, 114, 136, 193, 16
+	LTEXT "To exit this wizard, click Cancel.", IDC_STATUSTEXT, 114, 166, 132, 8
+END
+
+IDD_NOTCONNECTEDPAGE DIALOG DISCARDABLE 0, 0, 317, 186
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Add Hardware Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Cannot Continue the Add Hardware Wizard", IDC_FINISHTITLE, 114, 8, 203, 28
+	LTEXT "To continue, connect this hardware to your computer.", -1, 114, 40, 193, 16
+	AUTOCHECKBOX "&Turn off the computer when I click Finish so that I can open the computer and connect the hardware.", IDC_TURNOFFCHECKBOX, 114, 64, 203, 20, BS_TOP | BS_MULTILINE
+	LTEXT "In most cases ReactOS will automatically install your hardware after you connect it. If ReactOS does not find it, you can reopen this wizard to install the supporting software.", -1, 114, 98, 193, 32
+	LTEXT "To close this wizard, click Finish.", IDC_STATUSTEXT, 114, 166, 193, 8
+END
+
 STRINGTABLE
 BEGIN
-   IDS_CPLNAME "Hardware toevoegen"
-   IDS_CPLDESCRIPTION "Voeg hardware toe aan uw computer."
+	IDS_CPLNAME "Hardware toevoegen"
+	IDS_CPLDESCRIPTION "Voeg hardware toe aan uw computer."
+	IDS_SEARCHTITLE "Please wait while the wizard searches..."
+	IDS_SEARCHTEXT "This wizard is searching for hardware that has been connected to your computer recently but has not yet been installed."
+	IDS_ISCONNECTED "Is the hardware connected?"
+	IDS_PROBELISTTITLE "The following hardware is already installed on your computer"
+	IDS_ADDNEWDEVICE "Add a new hardware device"
+	IDS_SELECTWAYTITLE "The wizard can help you install other hardware"
+	IDS_HDTYPESTITLE "From the list below, select the type of hardware you are installing"
 END

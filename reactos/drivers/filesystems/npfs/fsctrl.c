@@ -5,6 +5,7 @@
 * PURPOSE:    Named pipe filesystem
 * PROGRAMMER: David Welch <welch@cwcom.net>
 *             Eric Kohl
+*             Michael Martin
 */
 
 /* INCLUDES ******************************************************************/
@@ -168,7 +169,7 @@ NpfsConnectPipe(PIRP Irp,
 	{
 		KeWaitForSingleObject(&Ccb->ConnectEvent,
 			UserRequest,
-			KernelMode,
+			Irp->RequestorMode,
 			FALSE,
 			NULL);
 	}
@@ -201,7 +202,7 @@ NpfsDisconnectPipe(PNPFS_CCB Ccb)
 	{
 		Server = (Ccb->PipeEnd == FILE_PIPE_SERVER_END);
 		OtherSide = Ccb->OtherSide;
-		Ccb->OtherSide = NULL;
+		//Ccb->OtherSide = NULL;
 		Ccb->PipeState = FILE_PIPE_DISCONNECTED_STATE;
 		/* Lock the server first */
 		if (Server)
@@ -215,7 +216,7 @@ NpfsDisconnectPipe(PNPFS_CCB Ccb)
 			ExAcquireFastMutex(&Ccb->DataListLock);
 		}
 		OtherSide->PipeState = FILE_PIPE_DISCONNECTED_STATE;
-		OtherSide->OtherSide = NULL;
+		//OtherSide->OtherSide = NULL;
 		/*
 		* Signaling the write event. If is possible that an other
 		* thread waits for an empty buffer.
@@ -364,15 +365,20 @@ NpfsPeekPipe(PIRP Irp,
 			 PIO_STACK_LOCATION IoStack)
 {
 	ULONG OutputBufferLength;
+	ULONG ReturnLength = 0;
 	PFILE_PIPE_PEEK_BUFFER Reply;
 	PNPFS_FCB Fcb;
 	PNPFS_CCB Ccb;
 	NTSTATUS Status;
+	ULONG MessageCount = 0;
+	ULONG MessageLength;
+	ULONG ReadDataAvailable;
+	PVOID BufferPtr;
 
-	DPRINT1("NpfsPeekPipe\n");
+	DPRINT("NpfsPeekPipe\n");
 
 	OutputBufferLength = IoStack->Parameters.DeviceIoControl.OutputBufferLength;
-	DPRINT1("OutputBufferLength: %lu\n", OutputBufferLength);
+	DPRINT("OutputBufferLength: %lu\n", OutputBufferLength);
 
 	/* Validate parameters */
 	if (OutputBufferLength < sizeof(FILE_PIPE_PEEK_BUFFER))
@@ -391,16 +397,74 @@ NpfsPeekPipe(PIRP Irp,
 	Reply->ReadDataAvailable = Ccb->ReadDataAvailable;
 	DPRINT("ReadDataAvailable: %lu\n", Ccb->ReadDataAvailable);
 
-	Reply->NumberOfMessages = 0; /* FIXME */
-	Reply->MessageLength = 0; /* FIXME */
-	Reply->Data[0] = 0; /* FIXME */
+	ExAcquireFastMutex(&Ccb->DataListLock);
+	BufferPtr = Ccb->ReadPtr;
+	DPRINT("BufferPtr = %x\n", BufferPtr);
+	if (Ccb->Fcb->PipeType == FILE_PIPE_BYTE_STREAM_TYPE)
+	{
+		DPRINT("Byte Stream Mode\n");
+		Reply->MessageLength = Ccb->ReadDataAvailable;
+		DPRINT("Reply->MessageLength  %lu\n",Reply->MessageLength );
+		MessageCount = 1;
 
-	//  Irp->IoStatus.Information = sizeof(FILE_PIPE_PEEK_BUFFER);
+		if (Reply->Data[0] && (OutputBufferLength >= Ccb->ReadDataAvailable + FIELD_OFFSET(FILE_PIPE_PEEK_BUFFER, Data[0])))
+		{
+			ReturnLength = Ccb->ReadDataAvailable;
+			memcpy(&Reply->Data[0], (PVOID)BufferPtr, Ccb->ReadDataAvailable);
+		}
+	}
+	else
+	{
+		DPRINT("Message Mode\n");
+		ReadDataAvailable=Ccb->ReadDataAvailable;
 
-	//  Status = STATUS_SUCCESS;
-	Status = STATUS_NOT_IMPLEMENTED;
+		if (ReadDataAvailable > 0)
+		{
+			memcpy(&Reply->MessageLength, BufferPtr, sizeof(ULONG));
 
-	DPRINT1("NpfsPeekPipe done\n");
+			while ((ReadDataAvailable > 0) && (BufferPtr < Ccb->WritePtr))
+			{
+				memcpy(&MessageLength, BufferPtr, sizeof(MessageLength));
+
+				ASSERT(MessageLength > 0);
+
+				DPRINT("MessageLength = %lu\n",MessageLength);
+				ReadDataAvailable -= MessageLength;
+				MessageCount++;
+
+				/* If its the first message, copy the Message if the size of buffer is large enough */
+				if (MessageCount==1)
+				{	
+					if ((Reply->Data[0])
+						&& (OutputBufferLength >= (MessageLength + FIELD_OFFSET(FILE_PIPE_PEEK_BUFFER, Data[0]))))
+					{							
+						memcpy(&Reply->Data[0], (PVOID)((ULONG_PTR)BufferPtr + sizeof(MessageLength)), MessageLength);
+						ReturnLength = MessageLength;
+					}
+				}
+
+				BufferPtr =(PVOID)((ULONG_PTR)BufferPtr + MessageLength + sizeof(MessageLength));
+				DPRINT("BufferPtr = %x\n", BufferPtr);
+				DPRINT("ReadDataAvailable: %lu\n", ReadDataAvailable);
+			}
+
+			if (ReadDataAvailable != 0)
+			{
+				DPRINT1("Possible memory corruption.\n");
+				ASSERT(FALSE);
+			}
+		}
+	}
+	ExReleaseFastMutex(&Ccb->DataListLock);
+
+	Reply->NumberOfMessages = MessageCount;
+
+	Irp->IoStatus.Information = ReturnLength + FIELD_OFFSET(FILE_PIPE_PEEK_BUFFER, Data[0]);
+	Irp->IoStatus.Status = STATUS_SUCCESS;
+
+	Status = STATUS_SUCCESS;
+
+	DPRINT("NpfsPeekPipe done\n");
 
 	return Status;
 }

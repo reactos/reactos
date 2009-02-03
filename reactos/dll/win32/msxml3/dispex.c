@@ -94,6 +94,7 @@ static REFIID tid_ids[] = {
     &IID_IXMLDOMText,
     &IID_IXMLElement,
     &IID_IXMLDOMDocument,
+    &IID_IXMLHTTPRequest,
     &IID_IVBSAXAttributes,
     &IID_IVBSAXContentHandler,
     &IID_IVBSAXDeclHandler,
@@ -435,18 +436,37 @@ static HRESULT WINAPI DispatchEx_GetDispID(IDispatchEx *iface, BSTR bstrName, DW
     }
 
     if(grfdex & fdexNameEnsure) {
+        dispex_dynamic_data_t *dynamic_data;
+
         TRACE("creating dynamic prop %s\n", debugstr_w(bstrName));
 
-        if(!This->dynamic_data) {
-            This->dynamic_data = heap_alloc_zero(sizeof(dispex_dynamic_data_t));
-            This->dynamic_data->props = heap_alloc(This->dynamic_data->buf_size = 4);
-        }else if(This->dynamic_data->buf_size == This->dynamic_data->prop_cnt) {
-            This->dynamic_data->props = heap_realloc(This->dynamic_data->props, This->dynamic_data->buf_size<<=1);
+        if(This->dynamic_data) {
+            dynamic_data = This->dynamic_data;
+        }else {
+            dynamic_data = This->dynamic_data = heap_alloc_zero(sizeof(dispex_dynamic_data_t));
+            if(!dynamic_data)
+                return E_OUTOFMEMORY;
         }
 
-        This->dynamic_data->props[This->dynamic_data->prop_cnt].name = heap_strdupW(bstrName);
-        VariantInit(&This->dynamic_data->props[This->dynamic_data->prop_cnt].var);
-        *pid = DISPID_DYNPROP_0 + This->dynamic_data->prop_cnt++;
+        if(!dynamic_data->buf_size) {
+            dynamic_data->props = heap_alloc(sizeof(dynamic_prop_t)*4);
+            if(!dynamic_data->props)
+                return E_OUTOFMEMORY;
+            dynamic_data->buf_size = 4;
+        }else if(dynamic_data->buf_size == dynamic_data->prop_cnt) {
+            dynamic_prop_t *new_props;
+
+            new_props = heap_realloc(dynamic_data->props, sizeof(dynamic_prop_t)*(dynamic_data->buf_size<<1));
+            if(!new_props)
+                return E_OUTOFMEMORY;
+
+            dynamic_data->props = new_props;
+            dynamic_data->buf_size <<= 1;
+        }
+
+        dynamic_data->props[dynamic_data->prop_cnt].name = heap_strdupW(bstrName);
+        VariantInit(&dynamic_data->props[dynamic_data->prop_cnt].var);
+        *pid = DISPID_DYNPROP_0 + dynamic_data->prop_cnt++;
 
         return S_OK;
     }

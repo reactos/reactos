@@ -30,12 +30,12 @@
  * \author Brian Paul
  */
 
-#include "glheader.h"
-#include "colormac.h"
-#include "context.h"
-#include "macros.h"
-#include "imports.h"
-#include "image.h"
+#include "main/glheader.h"
+#include "main/colormac.h"
+#include "main/context.h"
+#include "main/macros.h"
+#include "main/imports.h"
+#include "main/image.h"
 
 #include "s_atifragshader.h"
 #include "s_alpha.h"
@@ -1032,6 +1032,7 @@ add_specular(GLcontext *ctx, SWspan *span)
    ASSERT(!ctx->FragmentProgram._Current);
    ASSERT(span->arrayMask & SPAN_RGBA);
    ASSERT(swrast->_ActiveAttribMask & FRAG_BIT_COL1);
+   (void) swrast; /* silence warning */
 
    if (span->array->ChanType == GL_FLOAT) {
       if ((span->arrayAttribs & FRAG_BIT_COL0) == 0) {

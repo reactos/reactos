@@ -290,10 +290,10 @@ typedef struct _CERT_KEY_ATTRIBUTES_INFO {
 #define CERT_NON_REPUDIATION_KEY_USAGE   0x40
 #define CERT_KEY_ENCIPHERMENT_KEY_USAGE  0x20
 #define CERT_DATA_ENCIPHERMENT_KEY_USAGE 0x10
-#define CERT_KEY_AGREEMENT_KEY_USAGE     0x80
-#define CERT_KEY_CERT_SIGN_KEY_USAGE     0x40
-#define CERT_OFFLINE_CRL_SIGN_KEY_USAGE  0x20
-#define CERT_CRL_SIGN_KEY_USAGE          0x10
+#define CERT_KEY_AGREEMENT_KEY_USAGE     0x08
+#define CERT_KEY_CERT_SIGN_KEY_USAGE     0x04
+#define CERT_OFFLINE_CRL_SIGN_KEY_USAGE  0x02
+#define CERT_CRL_SIGN_KEY_USAGE          0x02
 #define CERT_ENCIPHER_ONLY_KEY_USAGE     0x01
 /* byte 1 */
 #define CERT_DECIPHER_ONLY_KEY_USAGE     0x80
@@ -860,10 +860,10 @@ typedef struct _CERT_TRUST_LIST_INFO {
 #define CERT_TRUST_IS_OFFLINE_REVOCATION             0x01000000
 #define CERT_TRUST_NO_ISSUANCE_CHAIN_POLICY          0x02000000
 
-#define CERT_TRUST_IS_PARTIAL_CHAIN                  0x00001000
-#define CERT_TRUST_CTL_IS_NOT_TIME_VALID             0x00002000
-#define CERT_TRUST_CTL_IS_NOT_SIGNATURE_VALID        0x00004000
-#define CERT_TRUST_CTL_IS_NOT_VALID_FOR_USAGE        0x00008000
+#define CERT_TRUST_IS_PARTIAL_CHAIN                  0x00010000
+#define CERT_TRUST_CTL_IS_NOT_TIME_VALID             0x00020000
+#define CERT_TRUST_CTL_IS_NOT_SIGNATURE_VALID        0x00040000
+#define CERT_TRUST_CTL_IS_NOT_VALID_FOR_USAGE        0x00080000
 
 #define CERT_TRUST_HAS_EXACT_MATCH_ISSUER            0x00000001
 #define CERT_TRUST_HAS_KEY_MATCH_ISSUER              0x00000002
@@ -1082,7 +1082,7 @@ typedef BOOL (WINAPI *PFN_CERT_ENUM_PHYSICAL_STORE)(const void *pvSystemStore,
  void *pvReserved, void *pvArg);
 
 /* Encode/decode object */
-typedef LPVOID (WINAPI *PFN_CRYPT_ALLOC)(size_t cbsize);
+typedef LPVOID (__WINE_ALLOC_SIZE(1) WINAPI *PFN_CRYPT_ALLOC)(size_t cbsize);
 typedef VOID   (WINAPI *PFN_CRYPT_FREE)(LPVOID pv);
 
 typedef struct _CRYPT_ENCODE_PARA {
@@ -1957,6 +1957,9 @@ static const WCHAR MS_ENH_RSA_AES_PROV_W[] =           { 'M','i','c','r','o','s'
 #define CRYPT_READ              0x0008
 #define CRYPT_WRITE             0x0010
 #define CRYPT_MAC               0x0020
+#define CRYPT_EXPORT_KEY        0x0040
+#define CRYPT_IMPORT_KEY        0x0080
+#define CRYPT_ARCHIVE           0x0100
 
 /* Crypt*Key */
 #define CRYPT_EXPORTABLE        0x00000001
@@ -3087,6 +3090,8 @@ typedef struct _CTL_FIND_SUBJECT_PARA
 #define szOID_NETSCAPE_CA_POLICY_URL         "2.16.840.1.113730.1.8"
 #define szOID_NETSCAPE_SSL_SERVER_NAME       "2.16.840.1.113730.1.12"
 #define szOID_NETSCAPE_COMMENT               "2.16.840.1.113730.1.13"
+#define szOID_NETSCAPE_DATA_TYPE             "2.16.840.1.113730.2"
+#define szOID_NETSCAPE_CERT_SEQUENCE         "2.16.840.1.113730.2.5"
 
 /* Bits for szOID_NETSCAPE_CERT_TYPE */
 #define NETSCAPE_SSL_CLIENT_AUTH_CERT_TYPE 0x80
@@ -3336,6 +3341,11 @@ typedef struct _CTL_FIND_SUBJECT_PARA
 #define CRYPT_ACQUIRE_USE_PROV_INFO_FLAG 0x00000002
 #define CRYPT_ACQUIRE_COMPARE_KEY_FLAG   0x00000004
 #define CRYPT_ACQUIRE_SILENT_FLAG        0x00000040
+
+/* flags for CryptFindCertificateKeyProvInfo */
+#define CRYPT_FIND_USER_KEYSET_FLAG    0x00000001
+#define CRYPT_FIND_MACHINE_KEYSET_FLAG 0x00000002
+#define CRYPT_FIND_SILENT_KEYSET_FLAG  0x00000040
 
 /* Chain engines and chains */
 typedef HANDLE HCERTCHAINENGINE;
@@ -3764,6 +3774,15 @@ typedef struct _CMSG_CMS_RECIPIENT_INFO {
 #define CMSG_ENCODED_SORTED_CTL_FLAG               0x1
 #define CMSG_ENCODE_HASHED_SUBJECT_IDENTIFIER_FLAG 0x2
 
+/* PFXImportCertStore flags */
+#define CRYPT_USER_KEYSET           0x00001000
+#define PKCS12_IMPORT_RESERVED_MASK 0xffff0000
+/* PFXExportCertStore flags */
+#define REPORT_NO_PRIVATE_KEY                 0x00000001
+#define REPORT_NOT_ABLE_TO_EXPORT_PRIVATE_KEY 0x00000002
+#define EXPORT_PRIVATE_KEYS                   0x00000004
+#define PKCS12_EXPORT_RESERVED_MASK           0xffff0000
+
 /* function declarations */
 /* advapi32.dll */
 WINADVAPI BOOL WINAPI CryptAcquireContextA(HCRYPTPROV *, LPCSTR, LPCSTR, DWORD, DWORD);
@@ -3797,7 +3816,11 @@ WINADVAPI BOOL WINAPI CryptGetUserKey (HCRYPTPROV, DWORD, HCRYPTKEY *);
 WINADVAPI BOOL WINAPI CryptHashData (HCRYPTHASH, CONST BYTE *, DWORD, DWORD);
 WINADVAPI BOOL WINAPI CryptHashSessionKey (HCRYPTHASH, HCRYPTKEY, DWORD);
 WINADVAPI BOOL WINAPI CryptImportKey (HCRYPTPROV, CONST BYTE *, DWORD, HCRYPTKEY, DWORD, HCRYPTKEY *);
+#if (NTDDI_VERSION >= NTDDI_WINXP)
 WINADVAPI BOOL WINAPI CryptReleaseContext (HCRYPTPROV, DWORD);
+#else
+WINADVAPI BOOL WINAPI CryptReleaseContext (HCRYPTPROV, ULONG_PTR);
+#endif
 WINADVAPI BOOL WINAPI CryptSetHashParam (HCRYPTHASH, DWORD, CONST BYTE *, DWORD);
 WINADVAPI BOOL WINAPI CryptSetKeyParam (HCRYPTKEY, DWORD, CONST BYTE *, DWORD);
 WINADVAPI BOOL WINAPI CryptSetProviderA (LPCSTR, DWORD);
@@ -3815,8 +3838,8 @@ WINADVAPI BOOL WINAPI CryptVerifySignatureW (HCRYPTHASH, CONST BYTE *, DWORD, HC
 #define               CryptVerifySignature WINELIB_NAME_AW(CryptVerifySignature)
 
 /* crypt32.dll functions */
-LPVOID WINAPI CryptMemAlloc(ULONG cbSize); 
-LPVOID WINAPI CryptMemRealloc(LPVOID pv, ULONG cbSize);
+LPVOID WINAPI CryptMemAlloc(ULONG cbSize) __WINE_ALLOC_SIZE(1);
+LPVOID WINAPI CryptMemRealloc(LPVOID pv, ULONG cbSize) __WINE_ALLOC_SIZE(2);
 VOID   WINAPI CryptMemFree(LPVOID pv);
 
 BOOL WINAPI CryptBinaryToStringA(const BYTE *pbBinary,
@@ -3879,6 +3902,8 @@ PCCRYPT_OID_INFO WINAPI CryptFindOIDInfo(DWORD dwKeyType, void *pvKey,
  DWORD dwGroupId);
 BOOL WINAPI CryptRegisterOIDInfo(PCCRYPT_OID_INFO pInfo, DWORD dwFlags);
 BOOL WINAPI CryptUnregisterOIDInfo(PCCRYPT_OID_INFO pInfo);
+
+LPCWSTR WINAPI CryptFindLocalizedName(LPCWSTR pwszCryptName);
 
 LPCSTR WINAPI CertAlgIdToOID(DWORD dwAlgId);
 DWORD WINAPI CertOIDToAlgId(LPCSTR pszObjId);
@@ -4046,7 +4071,7 @@ BOOL WINAPI CertComparePublicKeyInfo(DWORD dwCertEncodingType,
 DWORD WINAPI CertGetPublicKeyLength(DWORD dwCertEncodingType,
  PCERT_PUBLIC_KEY_INFO pPublicKey);
 
-const void *CertCreateContext(DWORD dwContextType, DWORD dwEncodingType,
+const void * WINAPI CertCreateContext(DWORD dwContextType, DWORD dwEncodingType,
  const BYTE *pbEncoded, DWORD cbEncoded, DWORD dwFlags,
  PCERT_CREATE_CONTEXT_PARA pCreatePara);
 
@@ -4228,6 +4253,9 @@ BOOL WINAPI CryptAcquireCertificatePrivateKey(PCCERT_CONTEXT pCert,
  DWORD dwFlags, void *pvReserved, HCRYPTPROV_OR_NCRYPT_KEY_HANDLE *phCryptProv, DWORD *pdwKeySpec,
  BOOL *pfCallerFreeProv);
 
+BOOL WINAPI CryptFindCertificateKeyProvInfo(PCCERT_CONTEXT pCert,
+ DWORD dwFlags, void *pvReserved);
+
 BOOL WINAPI CryptProtectData( DATA_BLOB* pDataIn, LPCWSTR szDataDescr,
  DATA_BLOB* pOptionalEntropy, PVOID pvReserved,
  CRYPTPROTECT_PROMPTSTRUCT* pPromptStruct, DWORD dwFlags, DATA_BLOB* pDataOut );
@@ -4381,6 +4409,17 @@ BOOL WINAPI CryptVerifyDetachedMessageHash(PCRYPT_HASH_MESSAGE_PARA pHashPara,
  BYTE *pbDetachedHashBlob, DWORD cbDetachedHashBlob, DWORD cToBeHashed,
  const BYTE *rgpbToBeHashed[], DWORD rgcbToBeHashed[], BYTE *pbComputedHash,
  DWORD *pcbComputedHash);
+
+/* PFX functions */
+HCERTSTORE WINAPI PFXImportCertStore(CRYPT_DATA_BLOB *pPFX, LPCWSTR szPassword,
+ DWORD dwFlags);
+BOOL WINAPI PFXIsPFXBlob(CRYPT_DATA_BLOB *pPFX);
+BOOL WINAPI PFXVerifyPassword(CRYPT_DATA_BLOB *pPFX, LPCWSTR szPassword,
+ DWORD dwFlags);
+BOOL WINAPI PFXExportCertStoreEx(HCERTSTORE hStore, CRYPT_DATA_BLOB *pPFX,
+ LPCWSTR szPassword, void *pvReserved, DWORD dwFlags);
+BOOL WINAPI PFXExportCertStore(HCERTSTORE hStore, CRYPT_DATA_BLOB *pPFX,
+ LPCWSTR szPassword, DWORD dwFlags);
 
 /* cryptnet.dll functions */
 BOOL WINAPI CryptCancelAsyncRetrieval(HCRYPTASYNC hAsyncRetrieval);

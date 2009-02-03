@@ -171,8 +171,8 @@ void Context_CopyProperties(const void *to, const void *from,
 {
     PCONTEXT_PROPERTY_LIST toProperties, fromProperties;
 
-    toProperties = Context_GetProperties((void *)to, contextSize);
-    fromProperties = Context_GetProperties((void *)from, contextSize);
+    toProperties = Context_GetProperties(to, contextSize);
+    fromProperties = Context_GetProperties(from, contextSize);
     assert(toProperties && fromProperties);
     ContextPropertyList_Copy(toProperties, fromProperties);
 }

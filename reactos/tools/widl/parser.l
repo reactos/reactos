@@ -47,6 +47,8 @@ double	[0-9]+\.[0-9]+([eE][+-]?[0-9]+)*
 #include <string.h>
 #include <ctype.h>
 #include <assert.h>
+#include <errno.h>
+#include <limits.h>
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
@@ -81,6 +83,19 @@ struct {
   char *temp_name;
 } import_stack[MAX_IMPORT_DEPTH];
 int import_stack_ptr = 0;
+
+/* converts an integer in string form to an unsigned long and prints an error
+ * on overflow */
+static unsigned long xstrtoul(const char *nptr, char **endptr, int base)
+{
+    unsigned long l;
+
+    errno = 0;
+    l = strtoul(nptr, endptr, base);
+    if (l == ULONG_MAX && errno == ERANGE)
+        error_loc("integer constant %s is too large\n", nptr);
+    return l;
+}
 
 UUID *parse_uuid(const char *u)
 {
@@ -154,11 +169,11 @@ UUID *parse_uuid(const char *u)
 				return aUUID;
 			}
 <INITIAL,ATTR>{hex}	{
-				parser_lval.num = strtoul(yytext, NULL, 0);
+				parser_lval.num = xstrtoul(yytext, NULL, 0);
 				return aHEXNUM;
 			}
 <INITIAL,ATTR>{int}	{
-				parser_lval.num = strtoul(yytext, NULL, 0);
+				parser_lval.num = xstrtoul(yytext, NULL, 0);
 				return aNUM;
 			}
 <INITIAL>{double}	{
@@ -244,7 +259,7 @@ static const struct keyword keywords[] = {
 	{"short",			tSHORT},
 	{"signed",			tSIGNED},
 	{"sizeof",			tSIZEOF},
-	{"small",			tSMALL},
+        {"small",			tSMALL},
 	{"static",			tSTATIC},
 	{"stdcall",			tSTDCALL},
 	{"struct",			tSTRUCT},

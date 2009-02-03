@@ -569,7 +569,7 @@ NtAllocateVirtualMemory(IN     HANDLE ProcessHandle,
           Protect);
 
    /* Check for valid protection flags */
-   if ((Protect & PAGE_FLAGS_VALID_FROM_USER_MODE) != Protect)
+   if (!Protect || Protect & ~PAGE_FLAGS_VALID_FROM_USER_MODE)
    {
       DPRINT1("Invalid page protection\n");
       return STATUS_INVALID_PAGE_PROTECTION;
@@ -944,6 +944,12 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
           "*PRegionSize %x, FreeType %x)\n",ProcessHandle,*PBaseAddress,
           *PRegionSize,FreeType);
 
+    if (!(FreeType & (MEM_RELEASE | MEM_DECOMMIT)))
+    {
+        DPRINT1("Invalid FreeType\n");
+        return STATUS_INVALID_PARAMETER_4;
+    }
+
    BaseAddress = (PVOID)PAGE_ROUND_DOWN((*PBaseAddress));
    RegionSize = PAGE_ROUND_UP((ULONG_PTR)(*PBaseAddress) + (*PRegionSize)) -
                 PAGE_ROUND_DOWN((*PBaseAddress));
@@ -1022,11 +1028,20 @@ MmProtectAnonMem(PMM_AVL_TABLE AddressSpace,
    Region = MmFindRegion(MemoryArea->StartingAddress,
                          &MemoryArea->Data.VirtualMemoryData.RegionListHead,
                          BaseAddress, NULL);
-   *OldProtect = Region->Protect;
-   Status = MmAlterRegion(AddressSpace, MemoryArea->StartingAddress,
-                          &MemoryArea->Data.VirtualMemoryData.RegionListHead,
-                          BaseAddress, Length, Region->Type, Protect,
-                          MmModifyAttributes);
+   if (Region->Type == MEM_COMMIT)
+   {
+       /* FIXME: check if the whole range is committed 
+        * before altering the memory */
+       *OldProtect = Region->Protect;
+       Status = MmAlterRegion(AddressSpace, MemoryArea->StartingAddress,
+                              &MemoryArea->Data.VirtualMemoryData.RegionListHead,
+                              BaseAddress, Length, Region->Type, Protect,
+                              MmModifyAttributes);
+   }
+   else
+   {
+       Status = STATUS_NOT_COMMITTED;
+   }
    return(Status);
 }
 

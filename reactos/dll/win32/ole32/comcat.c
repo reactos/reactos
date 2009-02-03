@@ -181,7 +181,7 @@ static HRESULT COMCAT_GetCategoryDesc(HKEY key, LCID lcid, PWCHAR pszDesc,
 	FIXME("Simplified lcid comparison\n");
 	return CAT_E_NODESCRIPTION;
     }
-    pszDesc[size / sizeof(WCHAR)] = (WCHAR)0;
+    pszDesc[size / sizeof(WCHAR)] = 0;
 
     return S_OK;
 }
@@ -531,7 +531,7 @@ static HRESULT WINAPI COMCAT_ICatInformation_GetCategoryDesc(
     if (res != ERROR_SUCCESS) return CAT_E_CATIDNOEXIST;
 
     /* Allocate a sensible amount of memory for the description. */
-    *ppszDesc = (PWCHAR) CoTaskMemAlloc(128 * sizeof(WCHAR));
+    *ppszDesc = CoTaskMemAlloc(128 * sizeof(WCHAR));
     if (*ppszDesc == NULL) {
 	RegCloseKey(key);
 	return E_OUTOFMEMORY;

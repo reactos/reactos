@@ -21,12 +21,18 @@ CsrInit(void)
    NTSTATUS Status;
    UNICODE_STRING PortName;
    ULONG ConnectInfoLength;
+   SECURITY_QUALITY_OF_SERVICE Qos;   
 
    RtlInitUnicodeString(&PortName, L"\\Windows\\ApiPort");
    ConnectInfoLength = 0;
+   Qos.Length = sizeof(Qos);
+   Qos.ImpersonationLevel = SecurityDelegation;
+   Qos.ContextTrackingMode = SECURITY_STATIC_TRACKING;
+   Qos.EffectiveOnly = FALSE;
+
    Status = ZwConnectPort(&WindowsApiPort,
                           &PortName,
-                          NULL,
+                          &Qos,
                           NULL,
                           NULL,
                           NULL,

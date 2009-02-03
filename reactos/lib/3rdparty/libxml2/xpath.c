@@ -13329,8 +13329,8 @@ xmlXPathCompOpEval(xmlXPathParserContextPtr ctxt, xmlXPathStepOpPtr op)
                     URI = xmlXPathNsLookup(ctxt->context, op->value5);
                     if (URI == NULL) {
                         xmlGenericError(xmlGenericErrorContext,
-                                        "xmlXPathCompOpEval: variable %s bound to undefined prefix %s\n",
-                                        op->value4, op->value5);
+            "xmlXPathCompOpEval: variable %s bound to undefined prefix %s\n",
+                                    (char *) op->value4, (char *)op->value5);
                         return (total);
                     }
 		    val = xmlXPathVariableLookupNS(ctxt->context,
@@ -13377,8 +13377,8 @@ xmlXPathCompOpEval(xmlXPathParserContextPtr ctxt, xmlXPathStepOpPtr op)
                         URI = xmlXPathNsLookup(ctxt->context, op->value5);
                         if (URI == NULL) {
                             xmlGenericError(xmlGenericErrorContext,
-                                            "xmlXPathCompOpEval: function %s bound to undefined prefix %s\n",
-                                            op->value4, op->value5);
+            "xmlXPathCompOpEval: function %s bound to undefined prefix %s\n",
+                                    (char *)op->value4, (char *)op->value5);
                             return (total);
                         }
                         func = xmlXPathFunctionLookupNS(ctxt->context,
@@ -13386,8 +13386,8 @@ xmlXPathCompOpEval(xmlXPathParserContextPtr ctxt, xmlXPathStepOpPtr op)
                     }
                     if (func == NULL) {
                         xmlGenericError(xmlGenericErrorContext,
-                                        "xmlXPathCompOpEval: function %s not found\n",
-                                        op->value4);
+                                "xmlXPathCompOpEval: function %s not found\n",
+                                        (char *)op->value4);
                         XP_ERROR0(XPATH_UNKNOWN_FUNC_ERROR);
                     }
                     op->cache = XML_CAST_FPTR(func);

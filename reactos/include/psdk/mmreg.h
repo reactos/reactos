@@ -78,6 +78,10 @@ typedef struct _WAVEFORMATEX {
 } WAVEFORMATEX, *PWAVEFORMATEX, *NPWAVEFORMATEX, *LPWAVEFORMATEX;
 #endif /* _WAVEFORMATEX_ */
 
+#ifndef WAVE_FORMAT_PCM
+#define WAVE_FORMAT_PCM					0x0001
+#endif
+
 /* WAVE form wFormatTag IDs */
 #define  WAVE_FORMAT_UNKNOWN			0x0000	/*  Microsoft Corporation  */
 #define  WAVE_FORMAT_ADPCM			0x0002	/*  Microsoft Corporation  */

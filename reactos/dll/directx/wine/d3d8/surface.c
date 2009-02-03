@@ -206,7 +206,11 @@ static HRESULT WINAPI IDirect3DSurface8Impl_UnlockRect(LPDIRECT3DSURFACE8 iface)
     EnterCriticalSection(&d3d8_cs);
     hr = IWineD3DSurface_UnlockRect(This->wineD3DSurface);
     LeaveCriticalSection(&d3d8_cs);
-    return hr;
+    switch(hr)
+    {
+        case WINEDDERR_NOTLOCKED:       return D3DERR_INVALIDCALL;
+        default:                        return hr;
+    }
 }
 
 const IDirect3DSurface8Vtbl Direct3DSurface8_Vtbl =

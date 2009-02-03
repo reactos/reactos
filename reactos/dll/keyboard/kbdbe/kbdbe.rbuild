@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<module name="kbdbe" type="keyboardlayout" entrypoint="0" installbase="system32" installname="kbdbe.dll" allowwarnings="true">
+<module name="kbdbe" type="keyboardlayout" entrypoint="0" installbase="system32" installname="kbdbe.dll">
 	<importlibrary definition="kbdbe.spec" />
 	<include base="ntoskrnl">include</include>
 	<define name="_DISABLE_TIDENTS" />

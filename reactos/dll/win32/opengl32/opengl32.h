@@ -134,75 +134,75 @@ typedef DWORD (WINAPI *SetContextCallBack)( const ICDTable * );
 /* OpenGL ICD data */
 typedef struct tagGLDRIVERDATA
 {
-	HMODULE handle;                 /*!< DLL handle */
-	UINT    refcount;               /*!< Number of references to this ICD */
-	WCHAR   driver_name[256];       /*!< Name of ICD driver */
+    HMODULE handle;                 /*!< DLL handle */
+    UINT    refcount;               /*!< Number of references to this ICD */
+    WCHAR   driver_name[256];       /*!< Name of ICD driver */
 
-	WCHAR   dll[256];               /*!< Dll filename from registry */
-	DWORD   version;                /*!< Version value from registry */
-	DWORD   driver_version;         /*!< DriverVersion value from registry */
-	DWORD   flags;                  /*!< Flags value from registry */
+    WCHAR   dll[256];               /*!< Dll filename from registry */
+    DWORD   version;                /*!< Version value from registry */
+    DWORD   driver_version;         /*!< DriverVersion value from registry */
+    DWORD   flags;                  /*!< Flags value from registry */
 
-	BOOL      (WINAPI *DrvCopyContext)( HGLRC, HGLRC, UINT );
-	HGLRC     (WINAPI *DrvCreateContext)( HDC );
-	HGLRC     (WINAPI *DrvCreateLayerContext)( HDC, int );
-	BOOL      (WINAPI *DrvDeleteContext)( HGLRC );
-	BOOL      (WINAPI *DrvDescribeLayerPlane)( HDC, int, int, UINT, LPLAYERPLANEDESCRIPTOR );
-	int       (WINAPI *DrvDescribePixelFormat)( IN HDC, IN int, IN UINT, OUT LPPIXELFORMATDESCRIPTOR );
-	int       (WINAPI *DrvGetLayerPaletteEntries)( HDC, int, int, int, COLORREF * );
-	PROC      (WINAPI *DrvGetProcAddress)( LPCSTR lpProcName );
-	void      (WINAPI *DrvReleaseContext)( HGLRC hglrc ); /* maybe returns BOOL? */
-	BOOL      (WINAPI *DrvRealizeLayerPalette)( HDC, int, BOOL );
-	PICDTable (WINAPI *DrvSetContext)( HDC hdc, HGLRC hglrc, SetContextCallBack callback );
-	int       (WINAPI *DrvSetLayerPaletteEntries)( HDC, int, int, int, CONST COLORREF * );
-	BOOL      (WINAPI *DrvSetPixelFormat)( IN HDC, IN int, const PIXELFORMATDESCRIPTOR * );
-	BOOL      (WINAPI *DrvShareLists)( HGLRC, HGLRC );
-	BOOL      (WINAPI *DrvSwapBuffers)( HDC );
-	BOOL      (WINAPI *DrvSwapLayerBuffers)( HDC, UINT );
-	BOOL      (WINAPI *DrvValidateVersion)( DWORD );
+    BOOL      (WINAPI *DrvCopyContext)( HGLRC, HGLRC, UINT );
+    HGLRC     (WINAPI *DrvCreateContext)( HDC );
+    HGLRC     (WINAPI *DrvCreateLayerContext)( HDC, int );
+    BOOL      (WINAPI *DrvDeleteContext)( HGLRC );
+    BOOL      (WINAPI *DrvDescribeLayerPlane)( HDC, int, int, UINT, LPLAYERPLANEDESCRIPTOR );
+    int       (WINAPI *DrvDescribePixelFormat)( IN HDC, IN int, IN UINT, OUT LPPIXELFORMATDESCRIPTOR );
+    int       (WINAPI *DrvGetLayerPaletteEntries)( HDC, int, int, int, COLORREF * );
+    PROC      (WINAPI *DrvGetProcAddress)( LPCSTR lpProcName );
+    void      (WINAPI *DrvReleaseContext)( HGLRC hglrc ); /* maybe returns BOOL? */
+    BOOL      (WINAPI *DrvRealizeLayerPalette)( HDC, int, BOOL );
+    PICDTable (WINAPI *DrvSetContext)( HDC hdc, HGLRC hglrc, SetContextCallBack callback );
+    int       (WINAPI *DrvSetLayerPaletteEntries)( HDC, int, int, int, CONST COLORREF * );
+    BOOL      (WINAPI *DrvSetPixelFormat)( IN HDC, IN int, const PIXELFORMATDESCRIPTOR * );
+    BOOL      (WINAPI *DrvShareLists)( HGLRC, HGLRC );
+    BOOL      (WINAPI *DrvSwapBuffers)( HDC );
+    BOOL      (WINAPI *DrvSwapLayerBuffers)( HDC, UINT );
+    BOOL      (WINAPI *DrvValidateVersion)( DWORD );
 
-	struct tagGLDRIVERDATA *next;   /* next ICD -- linked list */
+    struct tagGLDRIVERDATA *next;   /* next ICD -- linked list */
 } GLDRIVERDATA;
 
 /* Our private OpenGL context (stored in TLS) */
 typedef struct tagGLRC
 {
-	GLDRIVERDATA *icd;  /*!< driver used for this context */
-	HDC     hdc;        /*!< DC handle */
-	BOOL    is_current; /*!< Wether this context is current for some DC */
-	DWORD   thread_id;  /*!< Thread holding this context */
+    GLDRIVERDATA *icd;  /*!< driver used for this context */
+    HDC     hdc;        /*!< DC handle */
+    BOOL    is_current; /*!< Wether this context is current for some DC */
+    DWORD   thread_id;  /*!< Thread holding this context */
 
-	HGLRC   hglrc;      /*!< GLRC from DrvCreateContext (ICD internal) */
+    HGLRC   hglrc;      /*!< GLRC from DrvCreateContext (ICD internal) */
 
-	struct tagGLRC *next; /* linked list */
+    struct tagGLRC *next; /* linked list */
 } GLRC;
 
 /* OpenGL private device context data */
 typedef struct tagGLDCDATA
 {
-	HDC hdc;           /*!< Device context handle for which this data is */
-	GLDRIVERDATA *icd; /*!< Driver used for this DC */
-	int pixel_format;  /*!< Selected pixel format */
+    HDC hdc;           /*!< Device context handle for which this data is */
+    GLDRIVERDATA *icd; /*!< Driver used for this DC */
+    int pixel_format;  /*!< Selected pixel format */
 
-	struct tagGLDCDATA *next; /* linked list */
+    struct tagGLDCDATA *next; /* linked list */
 } GLDCDATA;
 
 
 /* Process data */
 typedef struct tagGLPROCESSDATA
 {
-	GLDRIVERDATA *driver_list;  /*!< List of loaded drivers */
-	HANDLE        driver_mutex; /*!< Mutex to protect driver list */
-	GLRC         *glrc_list;    /*!< List of GL rendering contexts */
-	HANDLE        glrc_mutex;   /*!< Mutex to protect glrc list */
-	GLDCDATA     *dcdata_list;  /*!< List of GL private DC data */
-	HANDLE        dcdata_mutex; /*!< Mutex to protect glrc list */
+    GLDRIVERDATA *driver_list;  /*!< List of loaded drivers */
+    HANDLE        driver_mutex; /*!< Mutex to protect driver list */
+    GLRC         *glrc_list;    /*!< List of GL rendering contexts */
+    HANDLE        glrc_mutex;   /*!< Mutex to protect glrc list */
+    GLDCDATA     *dcdata_list;  /*!< List of GL private DC data */
+    HANDLE        dcdata_mutex; /*!< Mutex to protect glrc list */
 } GLPROCESSDATA;
 
 /* TLS data */
 typedef struct tagGLTHREADDATA
 {
-	GLRC   *glrc;      /*!< current GL rendering context */
+    GLRC   *glrc;      /*!< current GL rendering context */
 } GLTHREADDATA;
 
 extern DWORD OPENGL32_tls;

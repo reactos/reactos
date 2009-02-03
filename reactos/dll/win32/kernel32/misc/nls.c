@@ -208,7 +208,7 @@ IntGetCodePageEntry(UINT CodePage)
                             sizeof(CodePage) / sizeof(WCHAR)))
         {
             /* Last error is set by GetLocaleInfoW. */
-            return 0;
+            return NULL;
         }
     }
     else if (CodePage == CP_MACCP)
@@ -219,7 +219,7 @@ IntGetCodePageEntry(UINT CodePage)
                             sizeof(CodePage) / sizeof(WCHAR)))
         {
             /* Last error is set by GetLocaleInfoW. */
-            return 0;
+            return NULL;
         }
     }
 
@@ -284,6 +284,19 @@ IntGetCodePageEntry(UINT CodePage)
                                      PAGE_READONLY,
                                      SEC_FILE,
                                      FileHandle);
+
+            /* HACK: Check if another process was faster
+             * and already created this section. See bug 3626 for details */
+            if (Status == STATUS_OBJECT_NAME_COLLISION)
+            {
+                /* Close the file then */
+                NtClose(FileHandle);
+
+                /* And open the section */
+                Status = NtOpenSection(&SectionHandle,
+                                       SECTION_MAP_READ,
+                                       &ObjectAttributes);
+            }
         }
     }
     RtlFreeUnicodeString(&UnicodeName);
@@ -480,7 +493,10 @@ IntMultiByteToWideCharCP(UINT CodePage,
         }
 
         if (MultiByteString < MbsEnd)
+        {
             SetLastError(ERROR_INSUFFICIENT_BUFFER);
+            return 0;
+        }
 
         return Count;
     }
@@ -507,21 +523,22 @@ IntMultiByteToWideCharCP(UINT CodePage,
         if (WideCharCount == 0)
             return MultiByteCount;
 
-        /* Adjust buffer size. Wine trick ;-) */
-        if (WideCharCount < MultiByteCount)
-        {
-            MultiByteCount = WideCharCount;
-            SetLastError(ERROR_INSUFFICIENT_BUFFER);
-        }
-
-        for (TempLength = MultiByteCount;
+        /* Fill the WideCharString buffer with what will fit: Verified on WinXP */
+        for (TempLength = (WideCharCount < MultiByteCount) ? WideCharCount : MultiByteCount;
             TempLength > 0;
             MultiByteString++, TempLength--)
         {
             *WideCharString++ = CodePageTable->MultiByteTable[(UCHAR)*MultiByteString];
         }
 
-        return MultiByteCount;
+        /* Adjust buffer size. Wine trick ;-) */
+        if (WideCharCount < MultiByteCount)
+        {
+            MultiByteCount = WideCharCount;
+            SetLastError(ERROR_INSUFFICIENT_BUFFER);
+            return 0;
+        }
+	    return MultiByteCount;
     }
 }
 

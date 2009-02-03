@@ -8,23 +8,23 @@
 @ stdcall CryptCATAdminReleaseCatalogContext(long long long)
 @ stdcall CryptCATAdminReleaseContext(long long)
 @ stdcall CryptCATAdminRemoveCatalog(ptr wstr long)
-@ stub CryptCATAdminResolveCatalogPath
-@ stub CryptCATCDFClose
+@ stdcall CryptCATAdminResolveCatalogPath(ptr wstr ptr long)
+@ stdcall CryptCATCDFClose(ptr)
 @ stub CryptCATCDFEnumAttributes
 @ stub CryptCATCDFEnumAttributesWithCDFTag
-@ stub CryptCATCDFEnumCatAttributes
+@ stdcall CryptCATCDFEnumCatAttributes(ptr ptr ptr)
 @ stub CryptCATCDFEnumMembers
 @ stub CryptCATCDFEnumMembersByCDFTag
-@ stub CryptCATCDFEnumMembersByCDFTagEx
-@ stub CryptCATCDFOpen
-@ stub CryptCATCatalogInfoFromContext
+@ stdcall CryptCATCDFEnumMembersByCDFTagEx(ptr wstr ptr ptr long ptr)
+@ stdcall CryptCATCDFOpen(wstr ptr)
+@ stdcall CryptCATCatalogInfoFromContext(ptr ptr long)
 @ stdcall CryptCATClose(long)
-@ stub CryptCATEnumerateAttr
-@ stub CryptCATEnumerateCatAttr
+@ stdcall CryptCATEnumerateAttr(ptr ptr ptr)
+@ stdcall CryptCATEnumerateCatAttr(ptr ptr)
 @ stdcall CryptCATEnumerateMember(long ptr)
-@ stub CryptCATGetAttrInfo
-@ stub CryptCATGetCatAttrInfo
-@ stub CryptCATGetMemberInfo
+@ stdcall CryptCATGetAttrInfo(ptr ptr wstr)
+@ stdcall CryptCATGetCatAttrInfo(ptr wstr )
+@ stdcall CryptCATGetMemberInfo(ptr wstr)
 @ stub CryptCATHandleFromStore
 @ stdcall CryptCATOpen(wstr long long long long)
 @ stub CryptCATPersistStore

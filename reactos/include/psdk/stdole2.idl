@@ -35,7 +35,7 @@ library stdole
     typedef unsigned long HRESULT;
     typedef void *VARIANT;
     typedef unsigned long SCODE;
-    
+
     typedef struct GUID {
         unsigned long  Data1;
         unsigned short Data2;
@@ -64,7 +64,8 @@ library stdole
 
     [
         odl,
-        uuid(00000000-0000-0000-C000-000000000046)
+        uuid(00000000-0000-0000-C000-000000000046),
+        hidden
     ]
     interface IUnknown
     {
@@ -82,7 +83,8 @@ library stdole
 
     [
         odl,
-        uuid(00020400-0000-0000-C000-000000000046)
+        uuid(00020400-0000-0000-C000-000000000046),
+        restricted
     ]
     interface IDispatch : IUnknown
     {
@@ -119,7 +121,8 @@ library stdole
 
     [
         odl,
-        uuid(00020404-0000-0000-C000-000000000046)
+        uuid(00020404-0000-0000-C000-000000000046),
+        hidden
     ]
     interface IEnumVARIANT : IUnknown
     {
@@ -188,12 +191,9 @@ library stdole
     typedef [uuid(BF030645-9069-101B-AE2D-08002B2EC713), public]
         VARIANT_BOOL OLE_ENABLEDEFAULTBOOL;
 
-    /* FIXME: widl can't cope with enum attributes yet */
-    /*
     [
      uuid(6650430A-BE0F-101A-8BBB-00AA00300CAB)
     ]
-    */
     enum OLE_TRISTATE {
         Unchecked = 0,
         Checked = 1,
@@ -225,12 +225,12 @@ library stdole
      helpstring("Font Object"),
      hidden
     ]
-    interface IFont {
+    interface IFont : IUnknown {
         [propget] HRESULT Name([out, retval] BSTR *pname);
         [propput] HRESULT Name([in] BSTR pname);
 
         [propget] HRESULT Size([out, retval] CURRENCY *psize);
-        [propput] HRESULT Size([in] BSTR psize);
+        [propput] HRESULT Size([in] CURRENCY psize);
 
         [propget] HRESULT Bold([out, retval] VARIANT_BOOL *pbold);
         [propput] HRESULT Bold([in] VARIANT_BOOL pbold);
@@ -300,7 +300,7 @@ library stdole
      helpstring("Picture Object"),
      hidden
     ]
-        interface IPicture /*: IUnknown*/ {
+    interface IPicture : IUnknown {
         [propget] HRESULT Handle([out, retval] OLE_HANDLE *phandle);
 
         [propget] HRESULT hPal([out, retval] OLE_HANDLE *phpal);
@@ -353,7 +353,7 @@ library stdole
         [id(0x2)] OLE_HANDLE hPal;
         [id(0x3), readonly] short Type; 
         [id(0x4), readonly] OLE_XSIZE_HIMETRIC Width;
-        [id(0x5), readonly] OLE_XSIZE_HIMETRIC Height;
+        [id(0x5), readonly] OLE_YSIZE_HIMETRIC Height;
     methods:
         [id(0x6)] void Render(int hdc,
                               long x,
@@ -377,12 +377,9 @@ library stdole
         interface IPicture;
     };
 
-    /* FIXME: widl can't cope with enum attributes yet */
-    /*
     [
      uuid(E6C8FA08-BD9F-11D0-985E-00C04FC29993)
     ]
-    */
     enum LoadPictureConstants {
         Default = 0,
         Monochrome = 1,

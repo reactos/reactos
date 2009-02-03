@@ -2255,14 +2255,15 @@ DestroyPrivateObjectSecurity(PSECURITY_DESCRIPTOR *ObjectDescriptor)
  */
 BOOL
 WINAPI
-GetPrivateObjectSecurity(PSECURITY_DESCRIPTOR ObjectDescriptor,
-                         SECURITY_INFORMATION SecurityInformation,
-                         PSECURITY_DESCRIPTOR ResultantDescriptor,
-                         DWORD DescriptorLength,
-                         PDWORD ReturnLength)
+GetPrivateObjectSecurity(IN PSECURITY_DESCRIPTOR ObjectDescriptor,
+                         IN SECURITY_INFORMATION SecurityInformation,
+                         OUT PSECURITY_DESCRIPTOR ResultantDescriptor OPTIONAL,
+                         IN DWORD DescriptorLength,
+                         OUT PDWORD ReturnLength)
 {
     NTSTATUS Status;
 
+    /* Call RTL */
     Status = RtlQuerySecurityObject(ObjectDescriptor,
                                     SecurityInformation,
                                     ResultantDescriptor,
@@ -2270,10 +2271,12 @@ GetPrivateObjectSecurity(PSECURITY_DESCRIPTOR ObjectDescriptor,
                                     ReturnLength);
     if (!NT_SUCCESS(Status))
     {
+        /* Fail */
         SetLastError(RtlNtStatusToDosError(Status));
         return FALSE;
     }
 
+    /* Success */
     return TRUE;
 }
 

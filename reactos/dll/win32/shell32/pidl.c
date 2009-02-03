@@ -805,7 +805,7 @@ LPITEMIDLIST WINAPI ILGetNext(LPCITEMIDLIST pidl)
 }
 
 /*************************************************************************
- * ILAppend                  [SHELL32.154]
+ * ILAppendID                  [SHELL32.154]
  *
  * Adds the single ItemID item to the ItemIDList indicated by pidl.
  * If bEnd is FALSE, inserts the item in the front of the list,
@@ -2391,4 +2391,11 @@ LPITEMIDLIST* _ILCopyCidaToaPidl(LPITEMIDLIST* pidl, const CIDA * cida)
         dst[i] = ILClone((LPCITEMIDLIST)(&((const BYTE*)cida)[cida->aoffset[i + 1]]));
 
     return dst;
+}
+
+HRESULT WINAPI SHCreateShellItem(LPCITEMIDLIST pidlParent,
+    IShellFolder *psfParent, LPCITEMIDLIST pidl, void **ppsi)
+{
+    FIXME("STUB: %p %p %p %p\n",pidlParent, psfParent, pidl, ppsi);
+    return E_NOINTERFACE;
 }

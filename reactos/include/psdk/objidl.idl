@@ -1378,7 +1378,6 @@ interface IAdviseSink : IUnknown
     [size_is(cbData)] byte data[];
   } RemSTGMEDIUM;
 
-  /* FIXME: C/C++ nameless union version */
   typedef struct tagSTGMEDIUM {
     DWORD tymed;
     [switch_is(tymed)] union {
@@ -1390,7 +1389,7 @@ interface IAdviseSink : IUnknown
     [case(TYMED_ISTREAM)]  IStream *pstm;
     [case(TYMED_ISTORAGE)] IStorage *pstg;
     [default]              ;
-    };
+    } DUMMYUNIONNAME;
     [unique] IUnknown *pUnkForRelease;
   } uSTGMEDIUM;
 
@@ -1425,7 +1424,7 @@ interface IAdviseSink : IUnknown
     case TYMED_FILE:     LPOLESTR lpszFileName;
     case TYMED_ISTREAM:  BYTE_BLOB *pstm;
     case TYMED_ISTORAGE: BYTE_BLOB *pstg;
-    };
+    } DUMMYUNIONNAME;
     IUnknown *pUnkForRelease;
   } userSTGMEDIUM;
 

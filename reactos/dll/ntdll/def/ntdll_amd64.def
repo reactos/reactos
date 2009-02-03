@@ -1812,3 +1812,6 @@ wcsstr
 wcstol
 wcstombs
 wcstoul
+;
+; HACKS for ros
+CsrNewThread

@@ -539,7 +539,7 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_LENGTH_ANGSTROMS            "Angstrom"
-    IDS_LENGTH_ASTRONOMILA_UNITS    "Unità astronomiche"
+    IDS_LENGTH_ASTRONOMICAL_UNITS   "Unità astronomiche"
     IDS_LENGTH_BARLEYCORNS          "Barleycorn"
     IDS_LENGTH_CENTIMETERS          "Centimetri"
     IDS_LENGTH_CHAINS_UK            "Catene (GB)"

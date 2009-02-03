@@ -278,7 +278,7 @@ slang_print_tree(const slang_operation *op, int indent)
       assert(op->num_children == 0 || op->num_children == 1);
       {
          slang_variable *v;
-         v = _slang_locate_variable(op->locals, op->a_id, GL_TRUE);
+         v = _slang_variable_locate(op->locals, op->a_id, GL_TRUE);
          if (v) {
             const slang_variable_scope *scope;
             spaces(indent);
@@ -379,28 +379,43 @@ slang_print_tree(const slang_operation *op, int indent)
    case SLANG_OPER_WHILE:
       assert(op->num_children == 2);
       spaces(indent);
+      printf("WHILE LOOP: locals = %p\n", (void *) op->locals);
+      indent += 3;
+      spaces(indent);
       printf("WHILE cond:\n");
       slang_print_tree(&op->children[0], indent + 3);
       spaces(indent);
       printf("WHILE body:\n");
       slang_print_tree(&op->children[1], indent + 3);
+      indent -= 3;
+      spaces(indent);
+      printf("END WHILE LOOP\n");
       break;
 
    case SLANG_OPER_DO:
+      spaces(indent);
+      printf("DO LOOP: locals = %p\n", (void *) op->locals);
+      indent += 3;
       spaces(indent);
       printf("DO body:\n");
       slang_print_tree(&op->children[0], indent + 3);
       spaces(indent);
       printf("DO cond:\n");
       slang_print_tree(&op->children[1], indent + 3);
+      indent -= 3;
+      spaces(indent);
+      printf("END DO LOOP\n");
       break;
 
    case SLANG_OPER_FOR:
       spaces(indent);
+      printf("FOR LOOP: locals = %p\n", (void *) op->locals);
+      indent += 3;
+      spaces(indent);
       printf("FOR init:\n");
       slang_print_tree(&op->children[0], indent + 3);
       spaces(indent);
-      printf("FOR while:\n");
+      printf("FOR condition:\n");
       slang_print_tree(&op->children[1], indent + 3);
       spaces(indent);
       printf("FOR step:\n");
@@ -408,6 +423,7 @@ slang_print_tree(const slang_operation *op, int indent)
       spaces(indent);
       printf("FOR body:\n");
       slang_print_tree(&op->children[3], indent + 3);
+      indent -= 3;
       spaces(indent);
       printf("ENDFOR\n");
       /*
@@ -620,7 +636,7 @@ slang_print_tree(const slang_operation *op, int indent)
    case SLANG_OPER_CALL:
 #if 0
          slang_function *fun
-            = _slang_locate_function(A->space.funcs, oper->a_id,
+            = _slang_function_locate(A->space.funcs, oper->a_id,
                                      oper->children,
                                      oper->num_children, &A->space, A->atoms);
 #endif
@@ -635,6 +651,11 @@ slang_print_tree(const slang_operation *op, int indent)
       }
       spaces(indent);
       printf(")\n");
+      break;
+
+   case SLANG_OPER_METHOD:
+      spaces(indent);
+      printf("METHOD CALL %s.%s\n", (char *) op->a_obj, (char *) op->a_id);
       break;
 
    case SLANG_OPER_FIELD:

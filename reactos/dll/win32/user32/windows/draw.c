@@ -1797,23 +1797,20 @@ FrameRect(HDC hDC, CONST RECT *lprc, HBRUSH hbr)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL WINAPI
 FlashWindow(HWND hWnd, BOOL bInvert)
 {
-    UNIMPLEMENTED;
-    return FALSE;
-}
+    FLASHWINFO FlashWndInfo;
 
-/*
- * @unimplemented
- */
-BOOL WINAPI
-FlashWindowEx(PFLASHWINFO pfwi)
-{
-    UNIMPLEMENTED;
-    return FALSE;
+    FlashWndInfo.cbSize = sizeof(FLASHWINFO);
+    FlashWndInfo.hwnd = hWnd;
+    FlashWndInfo.dwFlags = !bInvert ? 0 : (FLASHW_TRAY | FLASHW_CAPTION);
+    FlashWndInfo.uCount = 1;
+    FlashWndInfo.dwTimeout = 0;
+
+    return NtUserFlashWindowEx(&FlashWndInfo);
 }
 
 /*
@@ -1836,17 +1833,6 @@ FillRect(HDC hDC, CONST RECT *lprc, HBRUSH hbr)
                 lprc->bottom - lprc->top, PATCOPY);
     SelectObject(hDC, prevhbr);
     return TRUE;
-}
-
-/*
- * @unimplemented
- */
-BOOL WINAPI
-DrawAnimatedRects(HWND hWnd, int idAni, CONST RECT *lprcFrom,
-                  CONST RECT *lprcTo)
-{
-    UNIMPLEMENTED;
-    return FALSE;
 }
 
 /*

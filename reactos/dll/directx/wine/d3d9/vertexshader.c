@@ -166,10 +166,20 @@ HRESULT WINAPI IDirect3DDevice9Impl_GetVertexShader(LPDIRECT3DDEVICE9EX iface, I
     TRACE("(%p) : Relay  device@%p\n", This, This->WineD3DDevice);
     EnterCriticalSection(&d3d9_cs);
     hrc = IWineD3DDevice_GetVertexShader(This->WineD3DDevice, &pShader);
-    if(hrc == D3D_OK && pShader != NULL){
-       hrc = IWineD3DVertexShader_GetParent(pShader, (IUnknown **)ppShader);
-       IWineD3DVertexShader_Release(pShader);
-    } else {
+    if (SUCCEEDED(hrc))
+    {
+        if (pShader)
+        {
+            hrc = IWineD3DVertexShader_GetParent(pShader, (IUnknown **)ppShader);
+            IWineD3DVertexShader_Release(pShader);
+        }
+        else
+        {
+            *ppShader = NULL;
+        }
+    }
+    else
+    {
         WARN("(%p) : Call to IWineD3DDevice_GetVertexShader failed %u (device %p)\n", This, hrc, This->WineD3DDevice);
     }
     LeaveCriticalSection(&d3d9_cs);

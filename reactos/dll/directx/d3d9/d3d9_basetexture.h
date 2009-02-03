@@ -8,6 +8,8 @@
 #ifndef _D3D9_BASETEXTURE_H_
 #define _D3D9_BASETEXTURE_H_
 
+#include "d3d9_resource.h"
+
 // Work-around for:
 // "warning: 'FilterType' is narrower than values of its type"
 #if __GNUC__ >=3
@@ -31,9 +33,10 @@ typedef struct _Direct3DBaseTexture9_INT
 /* 0x005a */        D3DTEXTUREFILTERTYPE FilterType : 8;
                     struct
                     {
-/* 0x005a */            DWORD dwFilterType : 8;
-/* 0x005b */            BOOL  bIsAutoGenMipMap : 8;
-/* 0x005c */            DWORD MipMapLevels2 : 16;
+/* 0x005a */            DWORD dwFilterType      : 8;
+/* 0x005b */            BOOL  bIsAutoGenMipMap  : 8;
+/* 0x005c */            DWORD MipMapLevels2     : 8;
+/* 0x005d */            DWORD MaxLOD            : 8;
                     };
                 };
 /* 0x005e */    WORD wPaletteIndex;

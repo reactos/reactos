@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
-<module name="sndblst" type="kernelmodedriver" allowwarnings="true">
+<module name="sndblst" type="kernelmodedriver">
 	<include base="sndblst">.</include>
 	<library>ntoskrnl</library>
 	<library>hal</library>

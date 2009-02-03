@@ -9,14 +9,10 @@ MENU IDR_MENU_SCIENTIFIC_1
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     GROUPBOX        "",IDC_STATIC,4,16,132,21
-    CONTROL         "Hex",IDC_RADIO_HEX,"Button",BS_AUTORADIOBUTTON,8,24,29,
-                    10
-    CONTROL         "Dez",IDC_RADIO_DEC,"Button",BS_AUTORADIOBUTTON,40,24,29,
-                    10
-    CONTROL         "Okt",IDC_RADIO_OCT,"Button",BS_AUTORADIOBUTTON,72,24,27,
-                    10
-    CONTROL         "Bin",IDC_RADIO_BIN,"Button",BS_AUTORADIOBUTTON,100,24,
-                    26,10
+    CONTROL         "Hex",IDC_RADIO_HEX,"Button",BS_AUTORADIOBUTTON,8,24,29,10
+    CONTROL         "Dez",IDC_RADIO_DEC,"Button",BS_AUTORADIOBUTTON,40,24,29,10
+    CONTROL         "Okt",IDC_RADIO_OCT,"Button",BS_AUTORADIOBUTTON,72,24,27,10
+    CONTROL         "Bin",IDC_RADIO_BIN,"Button",BS_AUTORADIOBUTTON,100,24,26,10
     GROUPBOX        "",IDC_STATIC,4,36,76,21
     CONTROL         "Inv",IDC_CHECK_INV,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,8,44,26,10
@@ -544,7 +540,7 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_LENGTH_ANGSTROMS            "Angströms"
-    IDS_LENGTH_ASTRONOMILA_UNITS    "Astronomische Einheiten"
+    IDS_LENGTH_ASTRONOMICAL_UNITS   "Astronomische Einheiten"
     IDS_LENGTH_CHAINS_UK            "Chains (UK)"
     IDS_LENGTH_CHI                  "Chi"
     IDS_LENGTH_CHOU                 "Chou"

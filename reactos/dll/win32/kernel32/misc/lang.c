@@ -1622,6 +1622,11 @@ const WCHAR *RosGetLocaleValueName( DWORD lctype )
     case LOCALE_ITLZERO:          return L"iTLZero";
     case LOCALE_SCOUNTRY:         return L"sCountry";
     case LOCALE_SLANGUAGE:        return L"sLanguage";
+
+    /* The following are used in XP and later */
+    case LOCALE_IDIGITSUBSTITUTION: return L"NumShape";
+    case LOCALE_SNATIVEDIGITS:      return L"sNativeDigits";
+    case LOCALE_ITIMEMARKPOSN:      return L"iTimePrefix";
     }
     return NULL;
 }
@@ -1670,7 +1675,6 @@ INT RosGetRegistryLocaleInfo( LPCWSTR lpValue, LPWSTR lpBuffer, INT nLen )
     }
 
     ntStatus = NtQueryValueKey( hKey, &usNameW, KeyValuePartialInformation, kvpiInfo, dwSize, &dwSize );
-    if (ntStatus == STATUS_BUFFER_OVERFLOW && !lpBuffer) ntStatus = 0;
 
     if (!ntStatus)
     {
@@ -1691,14 +1695,18 @@ INT RosGetRegistryLocaleInfo( LPCWSTR lpValue, LPWSTR lpBuffer, INT nLen )
             lpBuffer[nRet - 1] = 0;
         }
     }
+    else if (ntStatus == STATUS_BUFFER_OVERFLOW && !lpBuffer)
+    {
+        nRet = (dwSize - nInfoSize) / sizeof(WCHAR) + 1;
+    }
+    else if (ntStatus == STATUS_OBJECT_NAME_NOT_FOUND)
+    {
+        nRet = -1;
+    }
     else
     {
-        if (ntStatus == STATUS_OBJECT_NAME_NOT_FOUND) nRet = -1;
-        else
-        {
-            SetLastError( RtlNtStatusToDosError(ntStatus) );
-            nRet = 0;
-        }
+        SetLastError( RtlNtStatusToDosError(ntStatus) );
+        nRet = 0;
     }
     NtClose( hKey );
     HeapFree( GetProcessHeap(), 0, kvpiInfo );

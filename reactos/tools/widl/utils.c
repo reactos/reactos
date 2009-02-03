@@ -66,33 +66,27 @@ static void generic_msg(const loc_info_t *loc_info, const char *s, const char *t
 }
 
 
-/* yyerror:  yacc assumes this is not newline terminated.  */
-void parser_error(const char *s, ...)
-{
-	loc_info_t cur_location = CURRENT_LOCATION;
-	va_list ap;
-	va_start(ap, s);
-	generic_msg(&cur_location, s, "Error", ap);
-	fprintf(stderr, "\n");
-	va_end(ap);
-	exit(1);
-}
-
 void error_loc(const char *s, ...)
 {
 	loc_info_t cur_loc = CURRENT_LOCATION;
 	va_list ap;
 	va_start(ap, s);
-	generic_msg(&cur_loc, s, "Error", ap);
+	generic_msg(&cur_loc, s, "error", ap);
 	va_end(ap);
 	exit(1);
+}
+
+/* yyerror:  yacc assumes this is not newline terminated.  */
+void parser_error(const char *s)
+{
+	error_loc("%s\n", s);
 }
 
 void error_loc_info(const loc_info_t *loc_info, const char *s, ...)
 {
 	va_list ap;
 	va_start(ap, s);
-	generic_msg(loc_info, s, "Error", ap);
+	generic_msg(loc_info, s, "error", ap);
 	va_end(ap);
 	exit(1);
 }
@@ -102,7 +96,7 @@ int parser_warning(const char *s, ...)
 	loc_info_t cur_loc = CURRENT_LOCATION;
 	va_list ap;
 	va_start(ap, s);
-	generic_msg(&cur_loc, s, "Warning", ap);
+	generic_msg(&cur_loc, s, "warning", ap);
 	va_end(ap);
 	return 0;
 }
@@ -130,7 +124,7 @@ void warning_loc_info(const loc_info_t *loc_info, const char *s, ...)
 {
 	va_list ap;
 	va_start(ap, s);
-	generic_msg(loc_info, s, "Warning", ap);
+	generic_msg(loc_info, s, "warning", ap);
 	va_end(ap);
 }
 

@@ -1182,29 +1182,35 @@ RtlOemStringToCountedUnicodeString(
 
     PAGED_CODE_RTL();
 
+    /* Calculate size of the string */
     Length = RtlOemStringToCountedUnicodeSize(OemSource);
 
+    /* If it's 0 then zero out dest string and return */
     if (!Length)
     {
         RtlZeroMemory(UniDest, sizeof(UNICODE_STRING));
         return STATUS_SUCCESS;
     }
 
+    /* Check if length is a sane value */
     if (Length > MAXUSHORT) return STATUS_INVALID_PARAMETER_2;
 
+    /* Store it in dest string */
     UniDest->Length = (USHORT)Length;
 
+    /* If we're asked to alloc the string - do so */
     if (AllocateDestinationString)
     {
         UniDest->Buffer = RtlpAllocateStringMemory(Length, TAG_USTR);
         UniDest->MaximumLength = Length;
         if (!UniDest->Buffer) return STATUS_NO_MEMORY;
     }
-    else if (UniDest->Length >= UniDest->MaximumLength)
+    else if (UniDest->Length > UniDest->MaximumLength)
     {
         return STATUS_BUFFER_OVERFLOW;
     }
 
+    /* Do the conversion */
     Status = RtlOemToUnicodeN(UniDest->Buffer,
                               UniDest->Length,
                               &Index,
@@ -1213,6 +1219,7 @@ RtlOemStringToCountedUnicodeString(
 
     if (!NT_SUCCESS(Status) && AllocateDestinationString)
     {
+        /* Conversion failed, free dest string and return status code */
         RtlpFreeStringMemory(UniDest->Buffer, TAG_USTR);
         UniDest->Buffer = NULL;
         return Status;
@@ -1492,38 +1499,47 @@ RtlUnicodeStringToCountedOemString(
 
     PAGED_CODE_RTL();
 
+    /* Calculate size of the string */
     Length = RtlUnicodeStringToCountedOemSize(UniSource);
 
+    /* If it's 0 then zero out dest string and return */
     if (!Length)
     {
         RtlZeroMemory(OemDest, sizeof(OEM_STRING));
+        return STATUS_SUCCESS;
     }
 
+    /* Check if length is a sane value */
     if (Length > MAXUSHORT) return STATUS_INVALID_PARAMETER_2;
 
+    /* Store it in dest string */
     OemDest->Length = (USHORT)Length;
 
+    /* If we're asked to alloc the string - do so */
     if (AllocateDestinationString)
     {
         OemDest->Buffer = RtlpAllocateStringMemory(Length, TAG_OSTR);
         OemDest->MaximumLength = Length;
         if (!OemDest->Buffer) return STATUS_NO_MEMORY;
     }
-    else if (OemDest->Length >= OemDest->MaximumLength)
+    else if (OemDest->Length > OemDest->MaximumLength)
     {
         return STATUS_BUFFER_OVERFLOW;
     }
 
+    /* Do the conversion */
     Status = RtlUnicodeToOemN(OemDest->Buffer,
                               OemDest->Length,
                               &Index,
                               UniSource->Buffer,
                               UniSource->Length);
 
-    /* FIXME: Special check needed and return STATUS_UNMAPPABLE_CHARACTER */
+    /* FIXME: Check if everything mapped correctly and
+     * return STATUS_UNMAPPABLE_CHARACTER */
 
     if (!NT_SUCCESS(Status) && AllocateDestinationString)
     {
+        /* Conversion failed, free dest string and return status code */
         RtlpFreeStringMemory(OemDest->Buffer, TAG_OSTR);
         OemDest->Buffer = NULL;
         return Status;

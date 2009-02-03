@@ -48,4 +48,7 @@ extern unsigned long _mesa_ppc_cpu_features;
 #define cpu_has_fpu ((_mesa_ppc_cpu_features & PPC_FEATURE_HAS_FPU) != 0)
 
 #endif /* USE_PPC_ASM */
+
+extern void _mesa_init_all_ppc_transform_asm( void );
+
 #endif /* COMMON_PPC_FEATURES_H */

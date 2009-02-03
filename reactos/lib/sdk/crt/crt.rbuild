@@ -15,7 +15,7 @@
 	</directory>
 </module>
 
-<module name="crt" type="staticlibrary" allowwarnings="true">
+<module name="crt" type="staticlibrary">
 	<library>chkstk</library>
 	<include base="crt">.</include>
 	<include base="crt">include</include>
@@ -425,6 +425,7 @@
 		<file>strspn.c</file>
 		<file>strstr.c</file>
 		<file>strtod.c</file>
+		<file>strtoi64.c</file>
 		<file>strtok.c</file>
 		<file>strtol.c</file>
 		<file>strtoul.c</file>

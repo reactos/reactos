@@ -10,6 +10,7 @@
  *
  */
 
+#include <precomp.h>
 #include <mbstring.h>
 
 extern int g_mbcp_is_multibyte;
@@ -90,4 +91,67 @@ unsigned char * _mbsnbcpy(unsigned char *dst, const unsigned char *src, size_t n
   }
   while (n--) *dst++ = 0;
   return ret;
+}
+
+/*
+ * Unlike _mbsnbcpy this function does not pad the rest of the dest
+ * string with 0
+*/
+int CDECL _mbsnbcpy_s(unsigned char* dst, size_t size, const unsigned char* src, size_t n)
+{
+    size_t pos = 0;
+
+    if(!dst || size == 0)
+        return EINVAL;
+    if(!src)
+    {
+        dst[0] = '\0';
+        return EINVAL;
+    }
+    if(!n)
+        return 0;
+
+    if(g_mbcp_is_multibyte)
+    {
+        int is_lead = 0;
+        while (*src && n)
+        {
+            if(pos == size)
+            {
+                dst[0] = '\0';
+                return ERANGE;
+            }
+            is_lead = (!is_lead && _ismbblead(*src));
+            n--;
+            dst[pos++] = *src++;
+        }
+
+        if (is_lead) /* if string ends with a lead, remove it */
+            dst[pos - 1] = 0;
+    }
+    else
+    {
+        while (n)
+        {
+            n--;
+            if(pos == size)
+            {
+                dst[0] = '\0';
+                return ERANGE;
+            }
+
+            if(!(*src)) break;
+            dst[pos++] = *src++;
+        }
+    }
+
+    if(pos < size)
+        dst[pos] = '\0';
+    else
+    {
+        dst[0] = '\0';
+        return ERANGE;
+    }
+
+    return 0;
 }

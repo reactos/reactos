@@ -885,6 +885,7 @@ co_WinPosSetWindowPos(
    HDC Dc;
    RECT CopyRect;
    RECT TempRect;
+   PWINDOW_OBJECT Ancestor;
 
    ASSERT_REFS_CO(Window);
 
@@ -923,11 +924,10 @@ co_WinPosSetWindowPos(
       return FALSE;
    }
 
+   Ancestor = UserGetAncestor(Window, GA_PARENT);
    if ((WinPos.flags & (SWP_NOZORDER | SWP_HIDEWINDOW | SWP_SHOWWINDOW)) !=
          SWP_NOZORDER &&
-//         UserGetAncestor(WinPos.hwnd, GA_PARENT) == IntGetDesktopWindow())
-//faxme: is WinPos.hwnd constant?? (WinPos.hwnd = Window->hSelf above)
-         UserGetAncestor(Window, GA_PARENT)->hSelf == IntGetDesktopWindow())
+         Ancestor && Ancestor->hSelf == IntGetDesktopWindow())
    {
       WinPos.hwndInsertAfter = WinPosDoOwnedPopups(WinPos.hwnd, WinPos.hwndInsertAfter);
    }

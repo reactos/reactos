@@ -12,11 +12,7 @@
 
 #include "private.h"
 
-const GUID CLSID_MiniportDriverDMusUART;
-const GUID CLSID_MiniportDriverUart;
-const GUID CLSID_MiniportDriverDMusUARTCapture;
-const GUID CLSID_MiniportDriverFmSynth;
-const GUID CLSID_MiniportDriverFmSynthWithVol;
+
 
 /*
  * @implemented
@@ -27,6 +23,8 @@ PcNewMiniport(
     IN  REFCLSID ClassId)
 {
     NTSTATUS Status = STATUS_INVALID_PARAMETER;
+
+    DPRINT1("PcNewMiniport entered\n");
 
     if (!OutMiniport)
     {

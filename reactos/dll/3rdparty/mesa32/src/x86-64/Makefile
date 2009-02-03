@@ -24,6 +24,6 @@ clean:
 
 # need some special rules here, unfortunately
 matypes.h: ../main/mtypes.h ../tnl/t_context.h ../x86/gen_matypes
-	../x86/gen_matypes | grep -v '#include "assyntax.h' > matypes.h
+	../x86/gen_matypes > matypes.h
 
 xform4.o: matypes.h

@@ -689,7 +689,7 @@ typedef struct _RTL_QUERY_REGISTRY_TABLE
 {
     PRTL_QUERY_REGISTRY_ROUTINE QueryRoutine;
     ULONG Flags;
-    PWSTR Name;
+    PCWSTR Name;
     PVOID EntryContext;
     ULONG DefaultType;
     PVOID DefaultData;
@@ -742,7 +742,7 @@ typedef PVOID PACTIVATION_CONTEXT;
 //
 typedef struct _RTL_ACTIVATION_CONTEXT_STACK_FRAME
 {
-    struct __RTL_ACTIVATION_CONTEXT_STACK_FRAME *Previous;
+    struct _RTL_ACTIVATION_CONTEXT_STACK_FRAME *Previous;
     PACTIVATION_CONTEXT ActivationContext;
     ULONG Flags;
 } RTL_ACTIVATION_CONTEXT_STACK_FRAME,

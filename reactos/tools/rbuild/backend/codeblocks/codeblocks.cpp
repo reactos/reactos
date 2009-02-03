@@ -268,7 +268,7 @@ CBBackend::_get_object_files ( const Module& module, vector<string>& out) const
 			string::size_type pos = file.find_last_of (sSep);
 			if ( pos != string::npos )
 				file.erase ( 0, pos+1 );
-			if ( !_stricmp ( Right(file,3).c_str(), ".rc" ) )
+			if ( !stricmp ( Right(file,3).c_str(), ".rc" ) )
 				file = ReplaceExtension ( file, ".res" );
 			else
 				file = ReplaceExtension ( file, ".obj" );
@@ -429,7 +429,7 @@ CBBackend::_generate_cbproj ( const Module& module )
 			string fullpath = files[i]->file.relative_path + sSep + files[i]->file.name;
 			string file = string(".") + &fullpath[cbproj_path.size()];
 
-			if ( !_stricmp ( Right(file,3).c_str(), ".rc" ) )
+			if ( !stricmp ( Right(file,3).c_str(), ".rc" ) )
 				resource_files.push_back ( file );
 			else
 				source_files.push_back ( file );

@@ -1,13 +1,8 @@
-/**
- * \file pixel.h
- * Pixel operations.
- */
-
 /*
  * Mesa 3-D graphics library
- * Version:  6.5.2
+ * Version:  7.1
  *
- * Copyright (C) 1999-2006  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2008  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -25,6 +20,12 @@
  * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+
+/**
+ * \file pixel.h
+ * Pixel operations.
  */
 
 
@@ -57,13 +58,6 @@ extern void GLAPIENTRY
 _mesa_PixelMapusv(GLenum map, GLsizei mapsize, const GLushort *values );
 
 extern void GLAPIENTRY
-_mesa_PixelStoref( GLenum pname, GLfloat param );
-
-
-extern void GLAPIENTRY
-_mesa_PixelStorei( GLenum pname, GLint param );
-
-extern void GLAPIENTRY
 _mesa_PixelTransferf( GLenum pname, GLfloat param );
 
 extern void GLAPIENTRY
@@ -73,48 +67,6 @@ extern void GLAPIENTRY
 _mesa_PixelZoom( GLfloat xfactor, GLfloat yfactor );
 
 /*@}*/
-
-
-/** \name Pixel processing functions */
-/*@{*/
-
-extern void
-_mesa_scale_and_bias_rgba(GLuint n, GLfloat rgba[][4],
-                          GLfloat rScale, GLfloat gScale,
-                          GLfloat bScale, GLfloat aScale,
-                          GLfloat rBias, GLfloat gBias,
-                          GLfloat bBias, GLfloat aBias);
-
-extern void
-_mesa_map_rgba(const GLcontext *ctx, GLuint n, GLfloat rgba[][4]);
-
-
-extern void
-_mesa_transform_rgba(const GLcontext *ctx, GLuint n, GLfloat rgba[][4]);
-
-
-extern void
-_mesa_lookup_rgba_float(const struct gl_color_table *table,
-                        GLuint n, GLfloat rgba[][4]);
-
-extern void
-_mesa_lookup_rgba_ubyte(const struct gl_color_table *table,
-                        GLuint n, GLubyte rgba[][4]);
-
-
-extern void
-_mesa_map_ci_to_rgba(const GLcontext *ctx,
-                     GLuint n, const GLuint index[], GLfloat rgba[][4]);
-
-
-extern void
-_mesa_map_ci8_to_rgba8(const GLcontext *ctx, GLuint n, const GLubyte index[],
-                       GLubyte rgba[][4]);
-
-
-extern void
-_mesa_scale_and_bias_depth(const GLcontext *ctx, GLuint n,
-                           GLfloat depthValues[]);
 
 
 extern void 

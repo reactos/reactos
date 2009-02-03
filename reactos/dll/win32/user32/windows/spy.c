@@ -1455,10 +1455,10 @@ static const USER_MSG toolbar_array[] = {
           USM(TB_GETSTRINGW            ,0),
           USM(TB_GETSTRINGA            ,0),
           USM(TB_UNKWN45D              ,8),
-          USM(TB_UNKWN45E              ,0),
-          USM(TB_UNKWN460              ,0),
-          USM(TB_UNKWN463              ,8),
-          USM(TB_UNKWN464              ,0),
+          USM(TB_SETHOTITEM2           ,0),
+          USM(TB_SETLISTGAP            ,0),
+          USM(TB_GETIMAGELISTCOUNT     ,0),
+          USM(TB_GETIDEALSIZE          ,0),
           {0,0,0} };
 
 static const USER_MSG tooltips_array[] = {

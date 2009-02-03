@@ -482,16 +482,16 @@ static HRESULT WINAPI domattr_get_value(
     IXMLDOMAttribute *iface,
     VARIANT *var1)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    domattr *This = impl_from_IXMLDOMAttribute( iface );
+    return IXMLDOMNode_get_nodeValue( This->node, var1 );
 }
 
 static HRESULT WINAPI domattr_put_value(
     IXMLDOMAttribute *iface,
     VARIANT var1)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    domattr *This = impl_from_IXMLDOMAttribute( iface );
+    return IXMLDOMNode_put_nodeValue( This->node, var1 );
 }
 
 static const struct IXMLDOMAttributeVtbl domattr_vtbl =

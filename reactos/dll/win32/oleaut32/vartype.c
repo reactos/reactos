@@ -32,7 +32,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(variant);
 
-extern HMODULE OLEAUT32_hModule;
+extern HMODULE hProxyDll DECLSPEC_HIDDEN;
 
 #define CY_MULTIPLIER   10000             /* 4 dp of precision */
 #define CY_MULTIPLIER_F 10000.0
@@ -153,7 +153,7 @@ static HRESULT VARIANT_FromDisp(IDispatch* pdispIn, LCID lcid, void* pOut,
 
 /* Compiler cast where input cannot be negative */
 #define NEGTST(dest, src, func) RETTYP _##func(src in, dest* out) { \
-  if (in < (src)0) return DISP_E_OVERFLOW; *out = in; return S_OK; }
+  if (in < 0) return DISP_E_OVERFLOW; *out = in; return S_OK; }
 
 /* Compiler cast where input cannot be > some number */
 #define POSTST(dest, src, func, tst) RETTYP _##func(src in, dest* out) { \
@@ -5949,11 +5949,11 @@ static BOOL VARIANT_GetLocalisedText(LANGID langId, DWORD dwId, WCHAR *lpszDest)
 {
   HRSRC hrsrc;
 
-  hrsrc = FindResourceExW( OLEAUT32_hModule, (LPWSTR)RT_STRING,
+  hrsrc = FindResourceExW( hProxyDll, (LPWSTR)RT_STRING,
                            MAKEINTRESOURCEW((dwId >> 4) + 1), langId );
   if (hrsrc)
   {
-    HGLOBAL hmem = LoadResource( OLEAUT32_hModule, hrsrc );
+    HGLOBAL hmem = LoadResource( hProxyDll, hrsrc );
 
     if (hmem)
     {

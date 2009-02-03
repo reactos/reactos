@@ -1,9 +1,8 @@
-
 /*
  * Mesa 3-D graphics library
- * Version:  3.5
+ * Version:  7.1
  *
- * Copyright (C) 1999-2001  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2008  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -28,17 +27,12 @@
 #define DRAWPIXELS_H
 
 
-#include "mtypes.h"
+#include "main/glheader.h"
 
 
 extern void GLAPIENTRY
 _mesa_DrawPixels( GLsizei width, GLsizei height,
                   GLenum format, GLenum type, const GLvoid *pixels );
-
-
-extern void GLAPIENTRY
-_mesa_ReadPixels( GLint x, GLint y, GLsizei width, GLsizei height,
-                  GLenum format, GLenum type, GLvoid *pixels );
 
 
 extern void GLAPIENTRY

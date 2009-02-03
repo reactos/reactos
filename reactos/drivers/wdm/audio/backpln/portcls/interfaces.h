@@ -1,9 +1,9 @@
 #ifndef INTERFACES_H__
 #define INTERFACES_H__
 
-DEFINE_GUID(IID_IIrpTarget,        0xB4C90A60, 0x5791, 0x11D0, 0x86, 0xF9, 0x00, 0xA0, 0xC9, 0x11, 0xB5, 0x44);
-DEFINE_GUID(IID_ISubdevice,        0xB4C90A61, 0x5791, 0x11D0, 0x86, 0xF9, 0x00, 0xA0, 0xC9, 0x11, 0xB5, 0x44);
-DEFINE_GUID(IID_IIrpTargetFactory, 0xB4C90A62, 0x5791, 0x11D0, 0x86, 0xF9, 0x00, 0xA0, 0xC9, 0x11, 0xB5, 0x44);
+DEFINE_GUID(IID_IIrpTarget,        0xB4C90A60, 0x5791, 0x11D0, 0xF9, 0x86, 0x00, 0xA0, 0xC9, 0x11, 0xB5, 0x44);
+DEFINE_GUID(IID_ISubdevice,        0xB4C90A61, 0x5791, 0x11D0, 0xF9, 0x86, 0x00, 0xA0, 0xC9, 0x11, 0xB5, 0x44);
+DEFINE_GUID(IID_IIrpTargetFactory, 0xB4C90A62, 0x5791, 0x11D0, 0xF9, 0x86, 0x00, 0xA0, 0xC9, 0x11, 0xB5, 0x44);
 
 
 /*****************************************************************************
@@ -96,8 +96,12 @@ DECLARE_INTERFACE_(IIrpTarget, IUnknown)
  */
 
 struct IIrpTargetFactory;
-struct SUBDEVICE_DESCRIPTOR;
 
+typedef struct
+{
+    ULONG InterfaceCount;
+    GUID *Interfaces;
+}SUBDEVICE_DESCRIPTOR, *PSUBDEVICE_DESCRIPTOR;
 
 #undef INTERFACE
 #define INTERFACE ISubdevice
@@ -123,7 +127,7 @@ DECLARE_INTERFACE_(ISubdevice, IUnknown)
     STDMETHOD_(NTSTATUS, ReleaseChildren)(THIS) PURE;
 
     STDMETHOD_(NTSTATUS, GetDescriptor)(THIS_
-        IN struct SUBDEVICE_DESCRIPTOR **) PURE;
+        IN SUBDEVICE_DESCRIPTOR **) PURE;
 
     STDMETHOD_(NTSTATUS, DataRangeIntersection)(THIS_
         IN  ULONG PinId,

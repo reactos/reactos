@@ -47,7 +47,9 @@ HalpAssignDrive(IN PUNICODE_STRING PartitionName,
                 IN UCHAR DriveType,
                 IN ULONG Signature,
                 IN LARGE_INTEGER StartingOffset,
-                IN HANDLE hKey)
+                IN HANDLE hKey,
+                IN PUNICODE_STRING BootDevice,
+                OUT PUCHAR NtSystemPath)
 {
     WCHAR DriveNameBuffer[16];
     UNICODE_STRING DriveName;
@@ -128,6 +130,14 @@ HalpAssignDrive(IN PUNICODE_STRING PartitionName,
             DPRINT1("ZwCreateValueKey failed for %wZ, status=%x\n", &DriveName, Status);
         }
     }
+
+    /* Check if this is a boot partition */
+    if (RtlCompareUnicodeString(PartitionName, BootDevice, FALSE) == 0)
+    {
+        /* Set NtSystemPath to that partition's disk letter */
+        *NtSystemPath = 'A' + DriveNumber;
+    }
+
     return TRUE;
 }
 
@@ -420,6 +430,11 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     PKEY_VALUE_PARTIAL_INFORMATION PartialInformation;
     PREG_DISK_MOUNT_INFO DiskMountInfo;
     ULONG RDiskCount;
+    UNICODE_STRING BootDevice;
+
+    Status = RtlAnsiStringToUnicodeString(&BootDevice,
+                                          NtDeviceName,
+                                          TRUE);
 
     DPRINT("xHalIoAssignDriveLetters()\n");
 
@@ -612,7 +627,9 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                                             DOSDEVICE_DRIVE_FIXED,
                                             DiskMountInfo->Signature,
                                             DiskMountInfo->StartingOffset,
-                                            NULL);
+                                            NULL,
+                                            &BootDevice,
+                                            NtSystemPath);
                                         /* Mark the partition as assigned */
                                         LayoutArray[i]->PartitionEntry[j].RewritePartition = TRUE;
                                     }
@@ -662,7 +679,9 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                             DOSDEVICE_DRIVE_FIXED,
                             LayoutArray[DiskNumber]->Signature,
                             LayoutArray[DiskNumber]->PartitionEntry[j].StartingOffset,
-                            hKey);
+                            hKey,
+                            &BootDevice,
+                            NtSystemPath);
                         /* Mark the partition as assigned */
                         LayoutArray[DiskNumber]->PartitionEntry[j].RewritePartition = TRUE;
                     }
@@ -702,7 +721,9 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                         DOSDEVICE_DRIVE_FIXED,
                         LayoutArray[DiskNumber]->Signature,
                         LayoutArray[DiskNumber]->PartitionEntry[j].StartingOffset,
-                        hKey);
+                        hKey,
+                        &BootDevice,
+                        NtSystemPath);
                     /* Mark the partition as assigned */
                     LayoutArray[DiskNumber]->PartitionEntry[j].RewritePartition = TRUE;
                 }
@@ -741,7 +762,9 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                         DOSDEVICE_DRIVE_FIXED,
                         LayoutArray[DiskNumber]->Signature,
                         LayoutArray[DiskNumber]->PartitionEntry[j].StartingOffset,
-                        hKey);
+                        hKey,
+                        &BootDevice,
+                        NtSystemPath);
                     /* Mark the partition as assigned */
                     LayoutArray[DiskNumber]->PartitionEntry[j].RewritePartition = TRUE;
                 }
@@ -776,7 +799,9 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                         DOSDEVICE_DRIVE_FIXED,
                         LayoutArray[DiskNumber]->Signature,
                         LayoutArray[DiskNumber]->PartitionEntry[j].StartingOffset,
-                        hKey);
+                        hKey,
+                        &BootDevice,
+                        NtSystemPath);
                     /* Mark the partition as assigned */
                     LayoutArray[DiskNumber]->PartitionEntry[j].RewritePartition = TRUE;
                 }
@@ -812,7 +837,9 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                         DOSDEVICE_DRIVE_FIXED,
                         LayoutArray[DiskNumber]->Signature,
                         LayoutArray[DiskNumber]->PartitionEntry[j].StartingOffset,
-                        hKey);
+                        hKey,
+                        &BootDevice,
+                        NtSystemPath);
                     /* Mark the partition as assigned */
                     LayoutArray[DiskNumber]->PartitionEntry[j].RewritePartition = TRUE;
                 }
@@ -844,7 +871,9 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                     DOSDEVICE_DRIVE_REMOVABLE,
                     0,
                     RtlConvertLongToLargeInteger(0),
-                    hKey);
+                    hKey,
+                    &BootDevice,
+                    NtSystemPath);
             }
         }
     }
@@ -875,7 +904,9 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
             DOSDEVICE_DRIVE_REMOVABLE,
             0,
             RtlConvertLongToLargeInteger(0),
-            hKey);
+            hKey,
+            &BootDevice,
+            NtSystemPath);
     }
 
     /* Assign cdrom drives */
@@ -895,7 +926,9 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
             DOSDEVICE_DRIVE_CDROM,
             0,
             RtlConvertLongToLargeInteger(0),
-            hKey);
+            hKey,
+            &BootDevice,
+            NtSystemPath);
     }
 
     /* Anything else to do? */

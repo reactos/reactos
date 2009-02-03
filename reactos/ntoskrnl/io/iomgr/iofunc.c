@@ -1121,6 +1121,12 @@ NtNotifyChangeDirectoryFile(IN HANDLE FileHandle,
 
         /* Check if probing failed */
         if (!NT_SUCCESS(Status)) return Status;
+
+        /* Check if CompletionFilter is valid */
+        if (!CompletionFilter || (CompletionFilter & ~FILE_NOTIFY_VALID_MASK))
+        {
+            return STATUS_INVALID_PARAMETER;
+        }
     }
 
     /* Get File Object */
@@ -1142,7 +1148,11 @@ NtNotifyChangeDirectoryFile(IN HANDLE FileHandle,
                                            PreviousMode,
                                            (PVOID *)&Event,
                                            NULL);
-        if (Status != STATUS_SUCCESS) return Status;
+        if (Status != STATUS_SUCCESS)
+        {
+            ObDereferenceObject(FileObject);
+            return Status;
+        }
         KeClearEvent(Event);
     }
 

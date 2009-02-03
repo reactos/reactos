@@ -1405,7 +1405,7 @@ static LRESULT CALLBACK OLEMenu_CallWndProc(INT code, WPARAM wParam, LPARAM lPar
     goto NEXTHOOK;
 
   /* Get the menu descriptor */
-  pOleMenuDescriptor = (OleMenuDescriptor *) GlobalLock( hOleMenu );
+  pOleMenuDescriptor = GlobalLock( hOleMenu );
   if ( !pOleMenuDescriptor ) /* Bad descriptor! */
     goto NEXTHOOK;
 
@@ -1524,7 +1524,7 @@ static LRESULT CALLBACK OLEMenu_GetMsgProc(INT code, WPARAM wParam, LPARAM lPara
   }
 
   /* Get the menu descriptor */
-  pOleMenuDescriptor = (OleMenuDescriptor *) GlobalLock( hOleMenu );
+  pOleMenuDescriptor = GlobalLock( hOleMenu );
   if ( !pOleMenuDescriptor ) /* Bad descriptor! */
     goto NEXTHOOK;
 
@@ -1579,7 +1579,7 @@ HOLEMENU WINAPI OleCreateMenuDescriptor(
                                 sizeof(OleMenuDescriptor) ) ) )
   return 0;
 
-  pOleMenuDescriptor = (OleMenuDescriptor *) GlobalLock( hOleMenu );
+  pOleMenuDescriptor = GlobalLock( hOleMenu );
   if ( !pOleMenuDescriptor )
     return 0;
 
@@ -1664,7 +1664,7 @@ HRESULT WINAPI OleSetMenuDescriptor(
   return E_FAIL;
 
     /* Get the menu descriptor */
-    pOleMenuDescriptor = (OleMenuDescriptor *) GlobalLock( hOleMenu );
+    pOleMenuDescriptor = GlobalLock( hOleMenu );
     if ( !pOleMenuDescriptor )
       return E_UNEXPECTED;
 
@@ -2119,19 +2119,19 @@ static void OLEDD_TrackMouseMove(TrackerWindowInfo* trackerInfo)
   {
     if (*trackerInfo->pdwEffect & DROPEFFECT_MOVE)
     {
-      SetCursor(LoadCursorA(OLE32_hInstance, MAKEINTRESOURCEA(1)));
+      SetCursor(LoadCursorA(hProxyDll, MAKEINTRESOURCEA(1)));
     }
     else if (*trackerInfo->pdwEffect & DROPEFFECT_COPY)
     {
-      SetCursor(LoadCursorA(OLE32_hInstance, MAKEINTRESOURCEA(2)));
+      SetCursor(LoadCursorA(hProxyDll, MAKEINTRESOURCEA(2)));
     }
     else if (*trackerInfo->pdwEffect & DROPEFFECT_LINK)
     {
-      SetCursor(LoadCursorA(OLE32_hInstance, MAKEINTRESOURCEA(3)));
+      SetCursor(LoadCursorA(hProxyDll, MAKEINTRESOURCEA(3)));
     }
     else
     {
-      SetCursor(LoadCursorA(OLE32_hInstance, MAKEINTRESOURCEA(0)));
+      SetCursor(LoadCursorA(hProxyDll, MAKEINTRESOURCEA(0)));
     }
   }
 }
@@ -2815,6 +2815,22 @@ HRESULT WINAPI PropVariantCopy(PROPVARIANT *pvarDest,      /* [out] */
 
     switch(pvarSrc->vt)
     {
+    case VT_EMPTY:
+    case VT_NULL:
+    case VT_I1:
+    case VT_UI1:
+    case VT_I2:
+    case VT_UI2:
+    case VT_BOOL:
+    case VT_I4:
+    case VT_UI4:
+    case VT_R4:
+    case VT_ERROR:
+    case VT_I8:
+    case VT_UI8:
+    case VT_R8:
+    case VT_CY:
+    case VT_DATE:
     case VT_FILETIME:
         break;
     case VT_STREAM:

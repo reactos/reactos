@@ -107,16 +107,6 @@ DragDetect(
  * @implemented
  */
 BOOL WINAPI
-BlockInput(BOOL fBlockIt)
-{
-  return NtUserBlockInput(fBlockIt);
-}
-
-
-/*
- * @implemented
- */
-BOOL WINAPI
 EnableWindow(HWND hWnd,
 	     BOOL bEnable)
 {
@@ -156,17 +146,6 @@ GetAsyncKeyState(int vKey)
  if (vKey < 0 || vKey > 256)
     return 0;
  return (SHORT) NtUserGetAsyncKeyState((DWORD) vKey);
-}
-
-
-/*
- * @implemented
- */
-UINT
-WINAPI
-GetDoubleClickTime(VOID)
-{
-  return NtUserGetDoubleClickTime();
 }
 
 
@@ -261,17 +240,6 @@ BOOL WINAPI
 GetKeyboardLayoutNameW(LPWSTR pwszKLID)
 {
   return NtUserGetKeyboardLayoutName( pwszKLID );
-}
-
-
-/*
- * @implemented
- */
-BOOL WINAPI
-GetKeyboardState(PBYTE lpKeyState)
-{
-
-  return (BOOL) NtUserGetKeyboardState((LPBYTE) lpKeyState);
 }
 
 
@@ -395,48 +363,12 @@ OemKeyScan(WORD wOemChar)
  * @implemented
  */
 BOOL WINAPI
-RegisterHotKey(HWND hWnd,
-	       int id,
-	       UINT fsModifiers,
-	       UINT vk)
-{
-  return (BOOL)NtUserRegisterHotKey(hWnd,
-                                       id,
-                                       fsModifiers,
-                                       vk);
-}
-
-
-/*
- * @implemented
- */
-BOOL WINAPI
 SetDoubleClickTime(UINT uInterval)
 {
   return (BOOL)NtUserSystemParametersInfo(SPI_SETDOUBLECLICKTIME,
                                              uInterval,
                                              NULL,
                                              0);
-}
-
-
-/*
- * @implemented
- */
-HWND WINAPI
-SetFocus(HWND hWnd)
-{
-  return NtUserSetFocus(hWnd);
-}
-
-
-/*
- * @implemented
- */
-BOOL WINAPI
-SetKeyboardState(LPBYTE lpKeyState)
-{
- return (BOOL) NtUserSetKeyboardState((LPBYTE)lpKeyState);
 }
 
 
@@ -571,20 +503,6 @@ SHORT WINAPI
 VkKeyScanW(WCHAR ch)
 {
   return VkKeyScanExW(ch, GetKeyboardLayout(0));
-}
-
-
-/*
- * @implemented
- */
-UINT
-WINAPI
-SendInput(
-  UINT nInputs,
-  LPINPUT pInputs,
-  int cbSize)
-{
-  return NtUserSendInput(nInputs, pInputs, cbSize);
 }
 
 

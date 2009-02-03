@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<module name="dhcp" type="win32cui" installbase="system32" installname="dhcp.exe">
+<module name="dhcp" type="win32cui" installbase="system32" installname="dhcp.exe" allowwarnings="true">
 	<include base="dhcp">.</include>
 	<include base="dhcp">include</include>
 	<library>ntdll</library>

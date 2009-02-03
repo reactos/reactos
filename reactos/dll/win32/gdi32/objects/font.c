@@ -325,8 +325,8 @@ IntEnumFontFamilies(HDC Dc, LPLOGFONTW LogFont, PVOID EnumProc, LPARAM lParam,
       if (Unicode)
         {
           Ret = ((FONTENUMPROCW) EnumProc)(
-            &Info[i].EnumLogFontEx,
-            &Info[i].NewTextMetricEx,
+            (VOID*)&Info[i].EnumLogFontEx,
+            (VOID*)&Info[i].NewTextMetricEx,
             Info[i].FontType, lParam);
         }
       else
@@ -341,8 +341,8 @@ IntEnumFontFamilies(HDC Dc, LPLOGFONTW LogFont, PVOID EnumProc, LPARAM lParam,
           NewTextMetricExW2A(&NewTextMetricExA,
                              &Info[i].NewTextMetricEx);
           Ret = ((FONTENUMPROCA) EnumProc)(
-            &EnumLogFontExA,
-            &NewTextMetricExA,
+            (VOID*)&EnumLogFontExA,
+            (VOID*)&NewTextMetricExA,
             Info[i].FontType, lParam);
         }
     }
@@ -1903,8 +1903,8 @@ NewEnumFontFamiliesExW(
     {
         PNTMW_INTERNAL pNtmwi = (PNTMW_INTERNAL)((ULONG_PTR)pEfdw + pEfdw->ulNtmwiOffset);
 
-        ret = lpEnumFontFamExProcW(&pEfdw->elfexdv.elfEnumLogfontEx,
-                                   &pNtmwi->ntmw,
+        ret = lpEnumFontFamExProcW((VOID*)&pEfdw->elfexdv.elfEnumLogfontEx,
+                                   (VOID*)&pNtmwi->ntmw,
                                    pEfdw->dwFontType,
                                    lParam);
 

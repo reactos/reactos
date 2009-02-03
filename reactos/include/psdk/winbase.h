@@ -1047,7 +1047,7 @@ typedef struct tagACTCTX_SECTION_KEYED_DATA {
 	PVOID lpSectionBase;
 	ULONG ulSectionTotalLength;
 	HANDLE hActCtx;
-	HANDLE ulAssemblyRosterIndex;
+	ULONG ulAssemblyRosterIndex;
 } ACTCTX_SECTION_KEYED_DATA,*PACTCTX_SECTION_KEYED_DATA;
 typedef const ACTCTX_SECTION_KEYED_DATA *PCACTCTX_SECTION_KEYED_DATA;
 typedef struct _ACTIVATION_CONTEXT_BASIC_INFORMATION {
@@ -1094,7 +1094,13 @@ typedef void(CALLBACK *PTIMERAPCROUTINE)(PVOID,DWORD,DWORD);
 #if (_WIN32_WINNT >= 0x0600)
 typedef DWORD (WINAPI *APPLICATION_RECOVERY_CALLBACK)(PVOID);
 #endif
+
+#ifdef WINE_NO_UNICODE_MACROS /* force using a cast */
+#define MAKEINTATOM(atom)   ((ULONG_PTR)((WORD)(atom)))
+#else
 #define MAKEINTATOM(i) (LPTSTR)((ULONG_PTR)((WORD)(i)))
+#endif
+
 /* Functions */
 #ifndef UNDER_CE
 int APIENTRY WinMain(HINSTANCE,HINSTANCE,LPSTR,int);
@@ -1110,9 +1116,6 @@ LONG WINAPI _llseek(HFILE,LONG,int);
 HFILE WINAPI _lopen(LPCSTR,int);
 UINT WINAPI _lread(HFILE,LPVOID,UINT);
 UINT WINAPI _lwrite(HFILE,LPCSTR,UINT);
-#ifndef AbnormalTermination
-#define AbnormalTermination() FALSE
-#endif
 BOOL WINAPI AccessCheck(PSECURITY_DESCRIPTOR,HANDLE,DWORD,PGENERIC_MAPPING,PPRIVILEGE_SET,PDWORD,PDWORD,PBOOL);
 BOOL WINAPI AccessCheckAndAuditAlarmA(LPCSTR,LPVOID,LPSTR,LPSTR,PSECURITY_DESCRIPTOR,DWORD,PGENERIC_MAPPING,BOOL,PDWORD,PBOOL,PBOOL);
 BOOL WINAPI AccessCheckAndAuditAlarmW(LPCWSTR,LPVOID,LPWSTR,LPWSTR,PSECURITY_DESCRIPTOR,DWORD,PGENERIC_MAPPING,BOOL,PDWORD,PBOOL,PBOOL);
@@ -1290,6 +1293,8 @@ void WINAPI DebugBreak(void);
 BOOL WINAPI DebugBreakProcess(HANDLE);
 BOOL WINAPI DebugSetProcessKillOnExit(BOOL);
 #endif
+PVOID WINAPI DecodePointer(PVOID);
+PVOID WINAPI DecodeSystemPointer(PVOID);
 BOOL WINAPI DefineDosDeviceA(DWORD,LPCSTR,LPCSTR);
 BOOL WINAPI DefineDosDeviceW(DWORD,LPCWSTR,LPCWSTR);
 #define DefineHandleTable(w) ((w),TRUE)
@@ -1319,6 +1324,8 @@ BOOL WINAPI DosDateTimeToFileTime(WORD,WORD,LPFILETIME);
 BOOL WINAPI DuplicateHandle(HANDLE,HANDLE,HANDLE,PHANDLE,DWORD,BOOL,DWORD);
 BOOL WINAPI DuplicateToken(HANDLE,SECURITY_IMPERSONATION_LEVEL,PHANDLE);
 BOOL WINAPI DuplicateTokenEx(HANDLE,DWORD,LPSECURITY_ATTRIBUTES,SECURITY_IMPERSONATION_LEVEL,TOKEN_TYPE,PHANDLE);
+PVOID WINAPI EncodePointer(PVOID);
+PVOID WINAPI EncodeSystemPointer(PVOID);
 BOOL WINAPI EncryptFileA(LPCSTR);
 BOOL WINAPI EncryptFileW(LPCWSTR);
 BOOL WINAPI EndUpdateResourceA(HANDLE,BOOL);
@@ -1782,7 +1789,7 @@ InterlockedAnd_Inline(IN OUT volatile LONG *Target,
     j = *Target;
     do {
         i = j;
-        j = _InterlockedCompareExchange((PLONG)Target,
+        j = _InterlockedCompareExchange((volatile long *)Target,
                                         i & Set,
                                         i);
 
@@ -1805,7 +1812,7 @@ InterlockedOr_Inline(IN OUT volatile LONG *Target,
     j = *Target;
     do {
         i = j;
-        j = _InterlockedCompareExchange((PLONG)Target,
+        j = _InterlockedCompareExchange((volatile long *)Target,
                                         i | Set,
                                         i);
 
@@ -1970,7 +1977,7 @@ BOOL WINAPI ReadEventLogW(HANDLE,DWORD,DWORD,PVOID,DWORD,DWORD *,DWORD *);
 BOOL WINAPI ReadFile(HANDLE,PVOID,DWORD,PDWORD,LPOVERLAPPED);
 BOOL WINAPI ReadFileEx(HANDLE,PVOID,DWORD,LPOVERLAPPED,LPOVERLAPPED_COMPLETION_ROUTINE);
 BOOL WINAPI ReadFileScatter(HANDLE,FILE_SEGMENT_ELEMENT*,DWORD,LPDWORD,LPOVERLAPPED);
-BOOL WINAPI ReadProcessMemory(HANDLE,PCVOID,PVOID,SIZE_T,SIZE_T*);
+BOOL WINAPI ReadProcessMemory(HANDLE,PCVOID,PVOID,SIZE_T,PSIZE_T);
 #if (_WIN32_WINNT >= 0x0600)
 VOID WINAPI RecoveryFinished(BOOL);
 HRESULT WINAPI RecoveryInProgress(OUT PBOOL);

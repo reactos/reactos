@@ -23,14 +23,14 @@
  */
 
 
-#include "glheader.h"
-#include "imports.h"
-#include "macros.h"
+#include "main/glheader.h"
+#include "main/imports.h"
+#include "main/macros.h"
+#include "main/mtypes.h"
 #include "swrast/s_aaline.h"
 #include "swrast/s_context.h"
 #include "swrast/s_span.h"
 #include "swrast/swrast.h"
-#include "mtypes.h"
 
 
 #define SUB_PIXEL 4

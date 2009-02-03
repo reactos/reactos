@@ -12,8 +12,6 @@
 #define NDEBUG
 #include <debug.h>
 
-extern ULONG DbgkpTraceLevel;
-
 /* FUNCTIONS *****************************************************************/
 
 HANDLE
@@ -86,9 +84,9 @@ DbgkpResumeProcess(VOID)
 
 VOID
 NTAPI
-DbgkCreateThread(PVOID StartAddress)
+DbgkCreateThread(IN PETHREAD Thread,
+                 IN PVOID StartAddress)
 {
-    PETHREAD Thread = PsGetCurrentThread();
     PEPROCESS Process = PsGetCurrentProcess();
     ULONG ProcessFlags;
     IMAGE_INFO ImageInfo;
@@ -106,10 +104,13 @@ DbgkCreateThread(PVOID StartAddress)
     PTEB Teb;
     PAGED_CODE();
 
+    /* Sanity check */
+    ASSERT(Thread == PsGetCurrentThread());
+
     /* Try ORing in the create reported and image notify flags */
-    ProcessFlags = InterlockedOr((PLONG)&Process->Flags,
-                                 PSF_CREATE_REPORTED_BIT |
-                                 PSF_IMAGE_NOTIFY_DONE_BIT);
+    ProcessFlags = PspSetProcessFlag(Process,
+                                     PSF_CREATE_REPORTED_BIT |
+                                     PSF_IMAGE_NOTIFY_DONE_BIT);
 
     /* Check if we were the first to set them or if another thread raced us */
     if (!(ProcessFlags & PSF_IMAGE_NOTIFY_DONE_BIT) && (PsImageNotifyEnabled))
@@ -282,7 +283,7 @@ DbgkCreateThread(PVOID StartAddress)
     {
         /* Otherwise, do it just for the thread */
         CreateThread->SubSystemKey = 0;
-        CreateThread->StartAddress = NULL;
+        CreateThread->StartAddress = StartAddress;
 
         /* Setup the API Message */
         ApiMessage.h.u1.Length = sizeof(DBGKM_MSG) << 16 |
@@ -385,11 +386,10 @@ DbgkMapViewOfSection(IN PVOID Section,
     DBGKTRACE(DBGK_PROCESS_DEBUG,
               "Section: %p. Base: %p\n", Section, BaseAddress);
 
-    /* Check if this thread is hidden, doesn't have a debug port, or died */
-    if ((Thread->HideFromDebugger) ||
-        !(Process->DebugPort) ||
-        (Thread->DeadThread) ||
-        (KeGetPreviousMode() == KernelMode))
+    /* Check if this thread is kernel, hidden or doesn't have a debug port */
+    if ((ExGetPreviousMode() == KernelMode) ||
+        (Thread->HideFromDebugger) ||
+        !(Process->DebugPort))
     {
         /* Don't notify the debugger */
         return;
@@ -434,11 +434,10 @@ DbgkUnMapViewOfSection(IN PVOID BaseAddress)
     PETHREAD Thread = PsGetCurrentThread();
     PAGED_CODE();
 
-    /* Check if this thread is hidden, doesn't have a debug port, or died */
-    if ((Thread->HideFromDebugger) ||
-        !(Process->DebugPort) ||
-        (Thread->DeadThread) ||
-        (KeGetPreviousMode() == KernelMode))
+    /* Check if this thread is kernel, hidden or doesn't have a debug port */
+    if ((ExGetPreviousMode() == KernelMode) ||
+        (Thread->HideFromDebugger) ||
+        !(Process->DebugPort))
     {
         /* Don't notify the debugger */
         return;
@@ -456,5 +455,3 @@ DbgkUnMapViewOfSection(IN PVOID BaseAddress)
     /* Send the message */
     DbgkpSendApiMessage(&ApiMessage, TRUE);
 }
-
-/* EOF */

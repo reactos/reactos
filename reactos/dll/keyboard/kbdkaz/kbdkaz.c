@@ -1,5 +1,5 @@
 /*
- * ReactOS Kazak (Cyrillic) Keyboard layout
+ * ReactOS Kazakh (Cyrillic) Keyboard layout
  * Copyright (C) 2008 ReactOS
  * Author: Dmitry Chapyshev
  * License: LGPL, see: LGPL.txt

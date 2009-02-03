@@ -188,7 +188,8 @@ BEGIN
     IDS_CMT_DEVMGMT     "Запустить диспетчер устройств"
     IDS_CMT_SERVMAN     "Запустить диспетчер служб"
     IDS_CMT_RDESKTOP    "Запустить удаленный рабочий стол"
-
+    IDS_CMT_EVENTVIEW   "Запустить программу просмотра событий"
+    IDS_CMT_MSCONFIG    "Запустить программу настройки системы"
 END
 
 STRINGTABLE
@@ -239,10 +240,12 @@ BEGIN
     IDS_SHORT_SNAP       "SnapShot.lnk"
     IDS_SHORT_SOLITAIRE  "Пасьянс.lnk"
     IDS_SHORT_WINEMINE   "Сапер.lnk"
-	IDS_SHORT_CHARMAP    "Таблица символов.lnk"
-	IDS_SHORT_MAGNIFY    "Экранная лупа.lnk"
+    IDS_SHORT_CHARMAP    "Таблица символов.lnk"
+    IDS_SHORT_MAGNIFY    "Экранная лупа.lnk"
     IDS_SHORT_RDESKTOP   "Удаленный рабочий стол.lnk"
-	IDS_SHORT_KBSWITCH   "Переключатель раскладки клавиатуры.lnk"
+    IDS_SHORT_KBSWITCH   "Переключатель раскладки клавиатуры.lnk"
+    IDS_SHORT_EVENTVIEW  "Просмотр событий.lnk"
+    IDS_SHORT_MSCONFIG   "Параметры системы.lnk"
 END
 
 STRINGTABLE

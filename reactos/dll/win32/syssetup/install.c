@@ -764,6 +764,8 @@ CreateShortcuts(VOID)
     /* Create administrative tools startmenu shortcuts */
     CreateShortcut(CSIDL_COMMON_ADMINTOOLS, NULL, IDS_SHORT_SERVICE, _T("%SystemRoot%\\system32\\servman.exe"), IDS_CMT_SERVMAN, TRUE);
     CreateShortcut(CSIDL_COMMON_ADMINTOOLS, NULL, IDS_SHORT_DEVICE, _T("%SystemRoot%\\system32\\devmgmt.exe"), IDS_CMT_DEVMGMT, TRUE);
+    CreateShortcut(CSIDL_COMMON_ADMINTOOLS, NULL, IDS_SHORT_EVENTVIEW, _T("%SystemRoot%\\system32\\eventvwr.exe"), IDS_CMT_EVENTVIEW, TRUE);
+    CreateShortcut(CSIDL_COMMON_ADMINTOOLS, NULL, IDS_SHORT_MSCONFIG, _T("%SystemRoot%\\system32\\msconfig.exe"), IDS_CMT_MSCONFIG, TRUE);
 
     /* Create and fill Accessories subfolder */
     if (CreateShortcutFolder(CSIDL_PROGRAMS, IDS_ACCESSORIES, szFolder, sizeof(szFolder)/sizeof(szFolder[0])))
@@ -776,7 +778,7 @@ CreateShortcuts(VOID)
         CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_RDESKTOP, _T("%SystemRoot%\\system32\\mstsc.exe"), IDS_CMT_RDESKTOP, TRUE);
     }
 
-    /* Creacte System Tools subfolder and fill if the exe is available */
+    /* Create System Tools subfolder and fill if the exe is available */
     if (CreateShortcutFolder(CSIDL_PROGRAMS, IDS_SYS_TOOLS, szFolder, sizeof(szFolder)/sizeof(szFolder[0])))
     {
         CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_CHARMAP, _T("%SystemRoot%\\system32\\charmap.exe"), IDS_CMT_CHARMAP, TRUE);
@@ -784,7 +786,7 @@ CreateShortcuts(VOID)
         CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_REGEDIT, _T("%SystemRoot%\\regedit.exe"), IDS_CMT_REGEDIT, TRUE);
     }
 
-    /* Creacte Accessibility subfolder and fill if the exe is available */
+    /* Create Accessibility subfolder and fill if the exe is available */
     if (CreateShortcutFolder(CSIDL_PROGRAMS, IDS_SYS_ACCESSIBILITY, szFolder, sizeof(szFolder)/sizeof(szFolder[0])))
     {
         CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_MAGNIFY, _T("%SystemRoot%\\system32\\magnify.exe"), IDS_CMT_MAGNIFY, TRUE);

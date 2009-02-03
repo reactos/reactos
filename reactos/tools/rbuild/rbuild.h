@@ -148,6 +148,12 @@ private:
 	                    bool verbose );
 };
 
+enum DependenciesType
+{
+	NoDependencies,
+	AutomaticDependencies,
+	FullDependencies
+};
 
 class Configuration
 {
@@ -156,7 +162,7 @@ public:
 	~Configuration ();
 	bool Verbose;
 	bool CleanAsYouGo;
-	bool AutomaticDependencies;
+	DependenciesType Dependencies;
 	bool CheckDependenciesForModuleOnly;
 	bool CompilationUnitsEnabled;
 	bool PrecompiledHeadersEnabled;
@@ -237,6 +243,8 @@ public:
 	std::map<std::string, Module*> modules;
 	IfableData non_if_data;
 	IfableData host_non_if_data;
+	bool allowWarnings;
+	bool allowWarningsSet;
 
 	Project ( const Configuration& configuration,
 	          const std::string& filename,

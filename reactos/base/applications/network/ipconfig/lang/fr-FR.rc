@@ -6,12 +6,12 @@ BEGIN
   IDS_P2P     "Peer To Peer"
   IDS_MIXED   "Mixte"
   IDS_HYBRID  "Hybride"
-  IDS_UNKNOWN "inconnu"
+  IDS_UNKNOWN "Inconnu"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_OTHER   "Autre Type d'Adapteur"
+  IDS_OTHER   "Autre Type d'adapteur"
   IDS_ETH     "Adapteur Ethernet"
   IDS_TOKEN   "Adapteur Token Ring"
   IDS_FDDI    "Adapteur FDDI"

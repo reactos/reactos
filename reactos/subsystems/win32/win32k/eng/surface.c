@@ -1,22 +1,4 @@
 /*
- *  ReactOS W32 Subsystem
- *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
-/*
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           GDI Driver Surace Functions
@@ -109,28 +91,83 @@ ULONG FASTCALL BitmapFormat(WORD Bits, DWORD Compression)
 }
 
 BOOL INTERNAL_CALL
-BITMAPOBJ_InitBitsLock(BITMAPOBJ *BitmapObj)
+SURFACE_Cleanup(PVOID ObjectBody)
 {
-    BitmapObj->BitsLock = ExAllocatePoolWithTag(NonPagedPool,
+    PSURFACE psurf = (PSURFACE)ObjectBody;
+    PVOID pvBits = psurf->SurfObj.pvBits;
+
+    /* If this is an API bitmap, free the bits */
+    if (pvBits != NULL &&
+        (psurf->flFlags & BITMAPOBJ_IS_APIBITMAP))
+    {
+        /* Check if we have a DIB section */
+        if (psurf->hSecure)
+        {
+            // FIXME: IMPLEMENT ME!
+            // MmUnsecureVirtualMemory(psurf->hSecure);
+            if (psurf->hDIBSection)
+            {
+                /* DIB was created from a section */
+                NTSTATUS Status;
+
+                pvBits = (PVOID)((ULONG_PTR)pvBits - psurf->dwOffset);
+                Status = ZwUnmapViewOfSection(NtCurrentProcess(), pvBits);
+                if (!NT_SUCCESS(Status))
+                {
+                    DPRINT1("Could not unmap section view!\n");
+                    // Should we BugCheck here?
+                }
+            }
+            else
+            {
+                /* DIB was allocated */
+                EngFreeUserMem(pvBits);
+            }
+        }
+        else
+        {
+            // FIXME: use TAG
+            ExFreePool(psurf->SurfObj.pvBits);
+        }
+
+        if (psurf->hDIBPalette != NULL)
+        {
+            NtGdiDeleteObject(psurf->hDIBPalette);
+        }
+    }
+
+    if (NULL != psurf->BitsLock)
+    {
+        ExFreePoolWithTag(psurf->BitsLock, TAG_SURFACE);
+        psurf->BitsLock = NULL;
+    }
+
+    return TRUE;
+}
+
+BOOL INTERNAL_CALL
+SURFACE_InitBitsLock(PSURFACE psurf)
+{
+    psurf->BitsLock = ExAllocatePoolWithTag(NonPagedPool,
                           sizeof(FAST_MUTEX),
-                          TAG_BITMAPOBJ);
-    if (NULL == BitmapObj->BitsLock)
+                          TAG_SURFACE);
+    if (NULL == psurf->BitsLock)
     {
         return FALSE;
     }
 
-    ExInitializeFastMutex(BitmapObj->BitsLock);
+    ExInitializeFastMutex(psurf->BitsLock);
 
     return TRUE;
 }
 
 void INTERNAL_CALL
-BITMAPOBJ_CleanupBitsLock(BITMAPOBJ *BitmapObj)
+SURFACE_CleanupBitsLock(PSURFACE psurf)
 {
-    if (NULL != BitmapObj->BitsLock)
+    if (NULL != psurf->BitsLock)
     {
-        ExFreePoolWithTag(BitmapObj->BitsLock, TAG_BITMAPOBJ);
-        BitmapObj->BitsLock = NULL;
+        ExFreePoolWithTag(psurf->BitsLock, TAG_SURFACE);
+        psurf->BitsLock = NULL;
     }
 }
 
@@ -144,7 +181,7 @@ EngCreateDeviceBitmap(IN DHSURF dhsurf,
                       IN ULONG Format)
 {
     HBITMAP NewBitmap;
-    SURFOBJ *SurfObj;
+    SURFOBJ *pso;
 
     NewBitmap = EngCreateBitmap(Size, DIB_GetDIBWidthBytes(Size.cx, BitsPerFormat(Format)), Format, 0, NULL);
     if (!NewBitmap)
@@ -153,9 +190,9 @@ EngCreateDeviceBitmap(IN DHSURF dhsurf,
         return 0;
     }
 
-    SurfObj = EngLockSurface((HSURF)NewBitmap);
-    SurfObj->dhsurf = dhsurf;
-    EngUnlockSurface(SurfObj);
+    pso = EngLockSurface((HSURF)NewBitmap);
+    pso->dhsurf = dhsurf;
+    EngUnlockSurface(pso);
 
     return NewBitmap;
 }
@@ -288,80 +325,80 @@ IntCreateBitmap(IN SIZEL Size,
                 IN ULONG Flags,
                 IN PVOID Bits)
 {
-    HBITMAP NewBitmap;
-    SURFOBJ *SurfObj;
-    BITMAPOBJ *BitmapObj;
+    HBITMAP hbmp;
+    SURFOBJ *pso;
+    PSURFACE psurf;
     PVOID UncompressedBits;
     ULONG UncompressedFormat;
 
     if (Format == 0)
         return 0;
 
-    BitmapObj = BITMAPOBJ_AllocBitmapWithHandle();
-    if (BitmapObj == NULL)
+    psurf = SURFACE_AllocSurfaceWithHandle();
+    if (psurf == NULL)
     {
         return 0;
     }
-    NewBitmap = BitmapObj->BaseObject.hHmgr;
+    hbmp = psurf->BaseObject.hHmgr;
 
-    if (! BITMAPOBJ_InitBitsLock(BitmapObj))
+    if (! SURFACE_InitBitsLock(psurf))
     {
-        BITMAPOBJ_UnlockBitmap(BitmapObj);
-        BITMAPOBJ_FreeBitmapByHandle(NewBitmap);
+        SURFACE_UnlockSurface(psurf);
+        SURFACE_FreeSurfaceByHandle(hbmp);
         return 0;
     }
-    SurfObj = &BitmapObj->SurfObj;
+    pso = &psurf->SurfObj;
 
     if (Format == BMF_4RLE)
     {
-        SurfObj->lDelta = DIB_GetDIBWidthBytes(Size.cx, BitsPerFormat(BMF_4BPP));
-        SurfObj->cjBits = SurfObj->lDelta * Size.cy;
+        pso->lDelta = DIB_GetDIBWidthBytes(Size.cx, BitsPerFormat(BMF_4BPP));
+        pso->cjBits = pso->lDelta * Size.cy;
         UncompressedFormat = BMF_4BPP;
-        UncompressedBits = EngAllocMem(FL_ZERO_MEMORY, SurfObj->cjBits, TAG_DIB);
-        Decompress4bpp(Size, (BYTE *)Bits, (BYTE *)UncompressedBits, SurfObj->lDelta);
+        UncompressedBits = EngAllocMem(FL_ZERO_MEMORY, pso->cjBits, TAG_DIB);
+        Decompress4bpp(Size, (BYTE *)Bits, (BYTE *)UncompressedBits, pso->lDelta);
     }
     else if (Format == BMF_8RLE)
     {
-        SurfObj->lDelta = DIB_GetDIBWidthBytes(Size.cx, BitsPerFormat(BMF_8BPP));
-        SurfObj->cjBits = SurfObj->lDelta * Size.cy;
+        pso->lDelta = DIB_GetDIBWidthBytes(Size.cx, BitsPerFormat(BMF_8BPP));
+        pso->cjBits = pso->lDelta * Size.cy;
         UncompressedFormat = BMF_8BPP;
-        UncompressedBits = EngAllocMem(FL_ZERO_MEMORY, SurfObj->cjBits, TAG_DIB);
-        Decompress8bpp(Size, (BYTE *)Bits, (BYTE *)UncompressedBits, SurfObj->lDelta);
+        UncompressedBits = EngAllocMem(FL_ZERO_MEMORY, pso->cjBits, TAG_DIB);
+        Decompress8bpp(Size, (BYTE *)Bits, (BYTE *)UncompressedBits, pso->lDelta);
     }
     else
     {
-        SurfObj->lDelta = abs(Width);
-        SurfObj->cjBits = SurfObj->lDelta * Size.cy;
+        pso->lDelta = abs(Width);
+        pso->cjBits = pso->lDelta * Size.cy;
         UncompressedBits = Bits;
         UncompressedFormat = Format;
     }
 
     if (UncompressedBits != NULL)
     {
-        SurfObj->pvBits = UncompressedBits;
+        pso->pvBits = UncompressedBits;
     }
     else
     {
-        if (SurfObj->cjBits == 0)
+        if (pso->cjBits == 0)
         {
-            SurfObj->pvBits = NULL;
+            pso->pvBits = NULL;
         }
         else
         {
             if (0 != (Flags & BMF_USERMEM))
             {
-                SurfObj->pvBits = EngAllocUserMem(SurfObj->cjBits, 0);
+                pso->pvBits = EngAllocUserMem(pso->cjBits, 0);
             }
             else
             {
-                SurfObj->pvBits = EngAllocMem(0 != (Flags & BMF_NOZEROINIT) ?
+                pso->pvBits = EngAllocMem(0 != (Flags & BMF_NOZEROINIT) ?
                                                   0 : FL_ZERO_MEMORY,
-                                              SurfObj->cjBits, TAG_DIB);
+                                              pso->cjBits, TAG_DIB);
             }
-            if (SurfObj->pvBits == NULL)
+            if (pso->pvBits == NULL)
             {
-                BITMAPOBJ_UnlockBitmap(BitmapObj);
-                BITMAPOBJ_FreeBitmapByHandle(NewBitmap);
+                SURFACE_UnlockSurface(psurf);
+                SURFACE_FreeSurfaceByHandle(hbmp);
                 SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
                 return 0;
             }
@@ -370,33 +407,35 @@ IntCreateBitmap(IN SIZEL Size,
 
     if (0 == (Flags & BMF_TOPDOWN))
     {
-        SurfObj->pvScan0 = (PVOID) ((ULONG_PTR) SurfObj->pvBits + SurfObj->cjBits - SurfObj->lDelta);
-        SurfObj->lDelta = - SurfObj->lDelta;
+        pso->pvScan0 = (PVOID)((ULONG_PTR)pso->pvBits + pso->cjBits - pso->lDelta);
+        pso->lDelta = - pso->lDelta;
     }
     else
     {
-        SurfObj->pvScan0 = SurfObj->pvBits;
+        pso->pvScan0 = pso->pvBits;
     }
 
-    SurfObj->dhsurf = 0; /* device managed surface */
-    SurfObj->hsurf = (HSURF)NewBitmap;
-    SurfObj->dhpdev = NULL;
-    SurfObj->hdev = NULL;
-    SurfObj->sizlBitmap = Size;
-    SurfObj->iBitmapFormat = UncompressedFormat;
-    SurfObj->iType = STYPE_BITMAP;
-    SurfObj->fjBitmap = Flags & (BMF_TOPDOWN | BMF_NOZEROINIT);
-    SurfObj->iUniq = 0;
+    pso->dhsurf = 0; /* device managed surface */
+    pso->hsurf = (HSURF)hbmp;
+    pso->dhpdev = NULL;
+    pso->hdev = NULL;
+    pso->sizlBitmap = Size;
+    pso->iBitmapFormat = UncompressedFormat;
+    pso->iType = STYPE_BITMAP;
+    pso->fjBitmap = Flags & (BMF_TOPDOWN | BMF_NOZEROINIT);
+    pso->iUniq = 0;
 
-    BitmapObj->flHooks = 0;
-    BitmapObj->flFlags = 0;
-    BitmapObj->dimension.cx = 0;
-    BitmapObj->dimension.cy = 0;
-    BitmapObj->dib = NULL;
+    psurf->flHooks = 0;
+    psurf->flFlags = 0;
+    psurf->dimension.cx = 0;
+    psurf->dimension.cy = 0;
+    
+    psurf->hSecure = NULL;
+    psurf->hDIBSection = NULL;
 
-    BITMAPOBJ_UnlockBitmap(BitmapObj);
+    SURFACE_UnlockSurface(psurf);
 
-    return NewBitmap;
+    return hbmp;
 }
 
 /*
@@ -409,15 +448,15 @@ EngCreateBitmap(IN SIZEL Size,
                 IN ULONG Flags,
                 IN PVOID Bits)
 {
-    HBITMAP NewBitmap;
+    HBITMAP hNewBitmap;
 
-    NewBitmap = IntCreateBitmap(Size, Width, Format, Flags, Bits);
-    if ( !NewBitmap )
+    hNewBitmap = IntCreateBitmap(Size, Width, Format, Flags, Bits);
+    if ( !hNewBitmap )
         return 0;
 
-    GDIOBJ_SetOwnership(NewBitmap, NULL);
+    GDIOBJ_SetOwnership(hNewBitmap, NULL);
 
-    return NewBitmap;
+    return hNewBitmap;
 }
 
 /*
@@ -428,40 +467,40 @@ EngCreateDeviceSurface(IN DHSURF dhsurf,
                        IN SIZEL Size,
                        IN ULONG Format)
 {
-    HSURF NewSurface;
-    SURFOBJ *SurfObj;
-    BITMAPOBJ *BitmapObj;
+    HSURF hsurf;
+    SURFOBJ *pso;
+    PSURFACE psurf;
 
-    BitmapObj = BITMAPOBJ_AllocBitmapWithHandle();
-    if (!BitmapObj)
+    psurf = SURFACE_AllocSurfaceWithHandle();
+    if (!psurf)
     {
         return 0;
     }
 
-    NewSurface = BitmapObj->BaseObject.hHmgr;
-    GDIOBJ_SetOwnership(NewSurface, NULL);
+    hsurf = psurf->BaseObject.hHmgr;
+    GDIOBJ_SetOwnership(hsurf, NULL);
 
-    if (!BITMAPOBJ_InitBitsLock(BitmapObj))
+    if (!SURFACE_InitBitsLock(psurf))
     {
-        BITMAPOBJ_UnlockBitmap(BitmapObj);
-        BITMAPOBJ_FreeBitmapByHandle(NewSurface);
+        SURFACE_UnlockSurface(psurf);
+        SURFACE_FreeSurfaceByHandle(hsurf);
         return 0;
     }
-    SurfObj = &BitmapObj->SurfObj;
+    pso = &psurf->SurfObj;
 
-    SurfObj->dhsurf = dhsurf;
-    SurfObj->hsurf = NewSurface;
-    SurfObj->sizlBitmap = Size;
-    SurfObj->iBitmapFormat = Format;
-    SurfObj->lDelta = DIB_GetDIBWidthBytes(Size.cx, BitsPerFormat(Format));
-    SurfObj->iType = STYPE_DEVICE;
-    SurfObj->iUniq = 0;
+    pso->dhsurf = dhsurf;
+    pso->hsurf = hsurf;
+    pso->sizlBitmap = Size;
+    pso->iBitmapFormat = Format;
+    pso->lDelta = DIB_GetDIBWidthBytes(Size.cx, BitsPerFormat(Format));
+    pso->iType = STYPE_DEVICE;
+    pso->iUniq = 0;
 
-    BitmapObj->flHooks = 0;
+    psurf->flHooks = 0;
 
-    BITMAPOBJ_UnlockBitmap(BitmapObj);
+    SURFACE_UnlockSurface(psurf);
 
-    return NewSurface;
+    return hsurf;
 }
 
 PFN FASTCALL DriverFunction(DRVENABLEDATA *DED, ULONG DriverFunc)
@@ -482,28 +521,28 @@ PFN FASTCALL DriverFunction(DRVENABLEDATA *DED, ULONG DriverFunc)
  * @implemented
  */
 BOOL APIENTRY
-EngAssociateSurface(IN HSURF Surface,
+EngAssociateSurface(IN HSURF hsurf,
                     IN HDEV Dev,
                     IN ULONG Hooks)
 {
-    SURFOBJ *SurfObj;
-    BITMAPOBJ *BitmapObj;
+    SURFOBJ *pso;
+    PSURFACE psurf;
     GDIDEVICE* Device;
 
     Device = (GDIDEVICE*)Dev;
 
-    BitmapObj = BITMAPOBJ_LockBitmap(Surface);
-    ASSERT(BitmapObj);
-    SurfObj = &BitmapObj->SurfObj;
+    psurf = SURFACE_LockSurface(hsurf);
+    ASSERT(psurf);
+    pso = &psurf->SurfObj;
 
     /* Associate the hdev */
-    SurfObj->hdev = Dev;
-    SurfObj->dhpdev = Device->hPDev;
+    pso->hdev = Dev;
+    pso->dhpdev = Device->hPDev;
 
     /* Hook up specified functions */
-    BitmapObj->flHooks = Hooks;
+    psurf->flHooks = Hooks;
 
-    BITMAPOBJ_UnlockBitmap(BitmapObj);
+    SURFACE_UnlockSurface(psurf);
 
     return TRUE;
 }
@@ -550,10 +589,10 @@ EngModifySurface(
  * @implemented
  */
 BOOL APIENTRY
-EngDeleteSurface(IN HSURF Surface)
+EngDeleteSurface(IN HSURF hsurf)
 {
-    GDIOBJ_SetOwnership(Surface, PsGetCurrentProcess());
-    BITMAPOBJ_FreeBitmapByHandle(Surface);
+    GDIOBJ_SetOwnership(hsurf, PsGetCurrentProcess());
+    SURFACE_FreeSurfaceByHandle(hsurf);
     return TRUE;
 }
 
@@ -561,13 +600,13 @@ EngDeleteSurface(IN HSURF Surface)
  * @implemented
  */
 BOOL APIENTRY
-EngEraseSurface(SURFOBJ *Surface,
+EngEraseSurface(SURFOBJ *pso,
                 RECTL *Rect,
                 ULONG iColor)
 {
-    ASSERT(Surface);
+    ASSERT(pso);
     ASSERT(Rect);
-    return FillSolid(Surface, Rect, iColor);
+    return FillSolid(pso, Rect, iColor);
 }
 
 #define GDIBdyToHdr(body)                                                      \
@@ -578,9 +617,9 @@ EngEraseSurface(SURFOBJ *Surface,
  * @implemented
  */
 SURFOBJ * APIENTRY
-NtGdiEngLockSurface(IN HSURF Surface)
+NtGdiEngLockSurface(IN HSURF hsurf)
 {
-    return EngLockSurface(Surface);
+    return EngLockSurface(hsurf);
 }
 
 
@@ -588,12 +627,12 @@ NtGdiEngLockSurface(IN HSURF Surface)
  * @implemented
  */
 SURFOBJ * APIENTRY
-EngLockSurface(IN HSURF Surface)
+EngLockSurface(IN HSURF hsurf)
 {
-    BITMAPOBJ *bmp = GDIOBJ_ShareLockObj(Surface, GDI_OBJECT_TYPE_BITMAP);
+    SURFACE *psurf = GDIOBJ_ShareLockObj(hsurf, GDI_OBJECT_TYPE_BITMAP);
 
-    if (bmp != NULL)
-        return &bmp->SurfObj;
+    if (psurf != NULL)
+        return &psurf->SurfObj;
 
     return NULL;
 }
@@ -603,21 +642,21 @@ EngLockSurface(IN HSURF Surface)
  * @implemented
  */
 VOID APIENTRY
-NtGdiEngUnlockSurface(IN SURFOBJ *Surface)
+NtGdiEngUnlockSurface(IN SURFOBJ *pso)
 {
-    EngUnlockSurface(Surface);
+    EngUnlockSurface(pso);
 }
 
 /*
  * @implemented
  */
 VOID APIENTRY
-EngUnlockSurface(IN SURFOBJ *Surface)
+EngUnlockSurface(IN SURFOBJ *pso)
 {
-    if (Surface != NULL)
+    if (pso != NULL)
     {
-        BITMAPOBJ *bmp = CONTAINING_RECORD(Surface, BITMAPOBJ, SurfObj);
-        GDIOBJ_ShareUnlockObjByPtr((POBJ)bmp);
+        SURFACE *psurf = CONTAINING_RECORD(pso, SURFACE, SurfObj);
+        GDIOBJ_ShareUnlockObjByPtr((POBJ)psurf);
     }
 }
 

@@ -21,6 +21,13 @@
 #define __FREELDR_H
 
 #define UINT64_C(val) val##ULL
+#define RVA(m, b) ((PVOID)((ULONG_PTR)(b) + (ULONG_PTR)(m)))
+
+#define ROUND_DOWN(n, align) \
+    (((ULONG)n) & ~((align) - 1l))
+
+#define ROUND_UP(n, align) \
+    ROUND_DOWN(((ULONG)n) + (align) - 1, (align))
 
 #define NTOSAPI
 #define printf TuiPrintf
@@ -97,7 +104,6 @@
 /* Externals */
 #include <reactos/rossym.h>
 #include <reactos/buildno.h>
-#include <reactos/helper.h>
 /* Needed if debuging is enabled */
 #include <comm.h>
 /* Swap */
@@ -114,5 +120,8 @@
 
 VOID BootMain(LPSTR CmdLine);
 VOID RunLoader(VOID);
+
+/* Special hack for ReactOS setup OS type */
+VOID LoadReactOSSetup(VOID);
 
 #endif  // defined __FREELDR_H

@@ -367,7 +367,7 @@ static struct stub_manager *get_stub_manager_from_ipid(APARTMENT *apt, const IPI
     return result;
 }
 
-HRESULT ipid_to_stub_manager(const IPID *ipid, APARTMENT **stub_apt, struct stub_manager **stubmgr_ret)
+static HRESULT ipid_to_stub_manager(const IPID *ipid, APARTMENT **stub_apt, struct stub_manager **stubmgr_ret)
 {
     /* FIXME: hack for IRemUnknown */
     if (ipid->Data2 == 0xffff)

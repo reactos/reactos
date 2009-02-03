@@ -31,7 +31,7 @@ PROJECT_NAME           = ReactOS
 # This could be handy for archiving the generated documentation or 
 # if some version control system is used.
 
-PROJECT_NUMBER         = "0.4-SVN r?????"
+PROJECT_NUMBER         = "ReactOS Source Code"
 
 # The OUTPUT_DIRECTORY tag is used to specify the (relative or absolute) 
 # base path where the generated documentation will be put. 
@@ -435,25 +435,25 @@ SORT_BY_SCOPE_NAME     = NO
 # disable (NO) the todo list. This list is created by putting \todo 
 # commands in the documentation.
 
-GENERATE_TODOLIST      = NO
+GENERATE_TODOLIST      = YES
 
 # The GENERATE_TESTLIST tag can be used to enable (YES) or 
 # disable (NO) the test list. This list is created by putting \test 
 # commands in the documentation.
 
-GENERATE_TESTLIST      = NO
+GENERATE_TESTLIST      = YES
 
 # The GENERATE_BUGLIST tag can be used to enable (YES) or 
 # disable (NO) the bug list. This list is created by putting \bug 
 # commands in the documentation.
 
-GENERATE_BUGLIST       = NO
+GENERATE_BUGLIST       = YES
 
 # The GENERATE_DEPRECATEDLIST tag can be used to enable (YES) or 
 # disable (NO) the deprecated list. This list is created by putting 
 # \deprecated commands in the documentation.
 
-GENERATE_DEPRECATEDLIST= NO
+GENERATE_DEPRECATEDLIST= YES
 
 # The ENABLED_SECTIONS tag can be used to enable conditional 
 # documentation sections, marked by \if sectionname ... \endif.
@@ -753,7 +753,7 @@ ALPHABETICAL_INDEX     = YES
 # the COLS_IN_ALPHA_INDEX tag can be used to specify the number of columns 
 # in which this list will be split (can be a number in the range [1..20])
 
-COLS_IN_ALPHA_INDEX    = 5
+COLS_IN_ALPHA_INDEX    = 3
 
 # In case all classes in a project start with a common prefix, all 
 # classes will be put under the same header in the alphabetical index. 
@@ -787,13 +787,13 @@ HTML_FILE_EXTENSION    = .html
 # each generated HTML page. If it is left blank doxygen will generate a 
 # standard header.
 
-HTML_HEADER            = 
+HTML_HEADER            = Doxygen/header.html
 
 # The HTML_FOOTER tag can be used to specify a personal HTML footer for 
 # each generated HTML page. If it is left blank doxygen will generate a 
 # standard footer.
 
-HTML_FOOTER            = 
+HTML_FOOTER            = Doxygen/footer.html
 
 # The HTML_STYLESHEET tag can be used to specify a user-defined cascading 
 # style sheet that is used by each HTML page. It can be used to 
@@ -816,7 +816,7 @@ HTML_ALIGN_MEMBERS     = YES
 # JavaScript and DHTML is required (for instance Mozilla 1.0+, Firefox 
 # Netscape 6.0+, Internet explorer 5.0+, Konqueror, or Safari).
 
-HTML_DYNAMIC_SECTIONS  = YES
+HTML_DYNAMIC_SECTIONS  = NO
 
 # If the GENERATE_DOCSET tag is set to YES, additional index files 
 # will be generated that can be used as input for Apple's Xcode 3 
@@ -941,7 +941,7 @@ QHG_LOCATION           =
 # top of each HTML page. The value NO (the default) enables the index and 
 # the value YES disables it.
 
-DISABLE_INDEX          = NO
+DISABLE_INDEX          = YES
 
 # This tag can be used to set the number of enum values (range [1..20]) 
 # that doxygen will group on one line in the generated HTML documentation.
@@ -1515,4 +1515,4 @@ DOT_CLEANUP            = YES
 # The SEARCHENGINE tag specifies whether or not a search engine should be 
 # used. If set to NO the values of all tags below this one will be ignored.
 
-SEARCHENGINE           = NO
+SEARCHENGINE           = YES

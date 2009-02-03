@@ -154,7 +154,7 @@ static void CALLBACK PlaySound_Callback(HWAVEOUT hwo, UINT uMsg,
     case WOM_CLOSE:
 	break;
     case WOM_DONE:
-	InterlockedIncrement(&s->dwEventCount);
+	InterlockedIncrement((PLONG)&s->dwEventCount);
 	TRACE("Returning waveHdr=%lx\n", dwParam1);
 	SetEvent(s->hEvent);
 	break;
@@ -167,8 +167,8 @@ static void PlaySound_WaitDone(struct playsound_data* s)
 {
     for (;;) {
 	ResetEvent(s->hEvent);
-	if (InterlockedDecrement(&s->dwEventCount) >= 0) break;
-	InterlockedIncrement(&s->dwEventCount);
+	if (InterlockedDecrement((PLONG)&s->dwEventCount) >= 0) break;
+	InterlockedIncrement((PLONG)&s->dwEventCount);
 
 	WaitForSingleObject(s->hEvent, INFINITE);
     }

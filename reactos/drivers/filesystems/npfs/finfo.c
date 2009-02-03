@@ -30,8 +30,22 @@ NpfsSetPipeInformation(PDEVICE_OBJECT DeviceObject,
 	Fcb = Ccb->Fcb;
 	Request = (PFILE_PIPE_INFORMATION)Info;
 
+	if ((Fcb->PipeType == FILE_PIPE_BYTE_STREAM_TYPE) && (Request->ReadMode == FILE_PIPE_MESSAGE_MODE))
+	{
+		DPRINT("Cannot change readmode to message type on a byte type pipe!\n");
+		return STATUS_ACCESS_DENIED;
+	}
+	
 	/* Set Pipe Data */
-	Fcb->ReadMode = Request->ReadMode;
+	if (Ccb->PipeEnd == FILE_PIPE_CLIENT_END)
+	{
+		Fcb->ClientReadMode = Request->ReadMode;
+	}
+	else 
+	{
+		Fcb->ServerReadMode = Request->ReadMode;
+	}
+
 	Fcb->CompletionMode =  Request->CompletionMode;
 
 	/* Return Success */
@@ -69,6 +83,7 @@ NpfsQueryPipeInformation(PDEVICE_OBJECT DeviceObject,
 						 PULONG BufferLength)
 {
 	PNPFS_FCB Fcb;
+	ULONG ConnectionSideReadMode;
 	DPRINT("NpfsQueryPipeInformation()\n");
 
 	/* Get the Pipe */
@@ -76,10 +91,14 @@ NpfsQueryPipeInformation(PDEVICE_OBJECT DeviceObject,
 
 	/* Clear Info */
 	RtlZeroMemory(Info, sizeof(FILE_PIPE_INFORMATION));
+	
+
+	if (Ccb->PipeEnd == FILE_PIPE_CLIENT_END) ConnectionSideReadMode=Ccb->Fcb->ClientReadMode;
+	else ConnectionSideReadMode = Ccb->Fcb->ServerReadMode;
 
 	/* Return Info */
 	Info->CompletionMode = Fcb->CompletionMode;
-	Info->ReadMode = Fcb->ReadMode;
+	Info->ReadMode = ConnectionSideReadMode;
 
 	/* Return success */
 	*BufferLength -= sizeof(FILE_PIPE_INFORMATION);

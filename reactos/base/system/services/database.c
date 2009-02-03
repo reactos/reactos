@@ -30,7 +30,7 @@ static DWORD dwResumeCount = 1;
 
 
 PSERVICE
-ScmGetServiceEntryByName(LPWSTR lpServiceName)
+ScmGetServiceEntryByName(LPCWSTR lpServiceName)
 {
     PLIST_ENTRY ServiceEntry;
     PSERVICE CurrentService;
@@ -59,7 +59,7 @@ ScmGetServiceEntryByName(LPWSTR lpServiceName)
 
 
 PSERVICE
-ScmGetServiceEntryByDisplayName(LPWSTR lpDisplayName)
+ScmGetServiceEntryByDisplayName(LPCWSTR lpDisplayName)
 {
     PLIST_ENTRY ServiceEntry;
     PSERVICE CurrentService;
@@ -148,7 +148,7 @@ ScmGetServiceEntryByClientHandle(HANDLE Handle)
 
 
 DWORD
-ScmCreateNewServiceRecord(LPWSTR lpServiceName,
+ScmCreateNewServiceRecord(LPCWSTR lpServiceName,
                           PSERVICE *lpServiceRecord)
 {
     PSERVICE lpService = NULL;
@@ -225,7 +225,7 @@ ScmDeleteServiceRecord(PSERVICE lpService)
 
 
 static DWORD
-CreateServiceListEntry(LPWSTR lpServiceName,
+CreateServiceListEntry(LPCWSTR lpServiceName,
                        HKEY hServiceKey)
 {
     PSERVICE lpService = NULL;

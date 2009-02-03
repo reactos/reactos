@@ -6,5 +6,5 @@
 	<compilerflag compiler="cpp">-fno-rtti</compilerflag>
 	<define name="WINVER">0x600</define>
 	<file>idndl.cpp</file>
-	<importlibrary definition="idndl.def" />
+	<importlibrary definition="idndl-$(ARCH).def" />
 </module>

@@ -23,9 +23,9 @@
  */
 
 
-#include "glheader.h"
-#include "context.h"
-#include "imports.h"
+#include "main/glheader.h"
+#include "main/context.h"
+#include "main/imports.h"
 
 #include "s_context.h"
 #include "s_depth.h"

@@ -44,35 +44,9 @@
 #include "typelib.h"
 #include "widltypes.h"
 #include "typelib_struct.h"
-
-int in_typelib = 0;
+#include "typetree.h"
 
 static typelib_t *typelib;
-
-type_t *duptype(type_t *t, int dupname)
-{
-  type_t *d = alloc_type();
-
-  *d = *t;
-  if (dupname && t->name)
-    d->name = xstrdup(t->name);
-
-  d->orig = t;
-  return d;
-}
-
-type_t *alias(type_t *t, const char *name)
-{
-  type_t *a = duptype(t, 0);
-
-  a->name = xstrdup(name);
-  a->kind = TKIND_ALIAS;
-  a->attrs = NULL;
-  a->declarray = FALSE;
-  init_loc_info(&a->loc_info);
-
-  return a;
-}
 
 int is_ptr(const type_t *t)
 {
@@ -149,12 +123,19 @@ static unsigned short builtin_vt(const type_t *t)
     return kwp->vt;
   }
   if (is_string_type (t->attrs, t))
-    switch (t->ref->type)
+  {
+    unsigned char fc;
+    if (is_array(t))
+      fc = type_array_get_element(t)->type;
+    else
+      fc = type_pointer_get_ref(t)->type;
+    switch (fc)
       {
       case RPC_FC_CHAR: return VT_LPSTR;
       case RPC_FC_WCHAR: return VT_LPWSTR;
       default: break;
       }
+  }
   return 0;
 }
 
@@ -174,7 +155,7 @@ unsigned short get_type_vt(type_t *t)
     if (vt) return vt;
   }
 
-  if (t->kind == TKIND_ALIAS && is_attr(t->attrs, ATTR_PUBLIC))
+  if (type_is_alias(t) && is_attr(t->attrs, ATTR_PUBLIC))
     return VT_USERDEFINED;
 
   switch (t->type) {
@@ -208,8 +189,13 @@ unsigned short get_type_vt(type_t *t)
   case RPC_FC_UP:
   case RPC_FC_OP:
   case RPC_FC_FP:
+  case RPC_FC_SMFARRAY:
+  case RPC_FC_LGFARRAY:
+  case RPC_FC_SMVARRAY:
+  case RPC_FC_LGVARRAY:
   case RPC_FC_CARRAY:
   case RPC_FC_CVARRAY:
+  case RPC_FC_BOGUS_ARRAY:
     if(t->ref)
     {
       if (match(t->ref->name, "SAFEARRAY"))
@@ -234,9 +220,10 @@ unsigned short get_type_vt(type_t *t)
   case RPC_FC_CVSTRUCT:
   case RPC_FC_BOGUS_STRUCT:
   case RPC_FC_COCLASS:
+  case RPC_FC_MODULE:
     return VT_USERDEFINED;
   case 0:
-    return t->kind == TKIND_PRIMITIVE ? VT_VOID : VT_USERDEFINED;
+    return VT_VOID;
   default:
     error("get_type_vt: unknown type: 0x%02x\n", t->type);
   }
@@ -245,7 +232,6 @@ unsigned short get_type_vt(type_t *t)
 
 void start_typelib(typelib_t *typelib_type)
 {
-    in_typelib++;
     if (!do_typelib) return;
 
     typelib = typelib_type;
@@ -254,21 +240,9 @@ void start_typelib(typelib_t *typelib_type)
 
 void end_typelib(void)
 {
-    in_typelib--;
     if (!typelib) return;
 
     create_msft_typelib(typelib);
-}
-
-void add_typelib_entry(type_t *t)
-{
-    typelib_entry_t *entry;
-    if (!typelib) return;
-
-    chat("add kind %i: %s\n", t->kind, t->name);
-    entry = xmalloc(sizeof(*entry));
-    entry->type = t;
-    list_add_tail( &typelib->entries, &entry->entry );
 }
 
 static void tlb_read(int fd, void *buf, int count)
@@ -353,10 +327,10 @@ static void read_importlib(importlib_t *importlib)
 
     file_name = wpp_find_include(importlib->name, NULL);
     if(file_name) {
-        fd = open(file_name, O_RDONLY | O_BINARY);
+        fd = open(file_name, O_RDONLY | O_BINARY );
         free(file_name);
     }else {
-        fd = open(importlib->name, O_RDONLY | O_BINARY);
+        fd = open(importlib->name, O_RDONLY | O_BINARY );
     }
 
     if(fd < 0)

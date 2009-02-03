@@ -36,19 +36,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
 /* FUNCTIONS *****************************************************************/
 
 /*
- * @implemented
- */
-DWORD
-WINAPI
-GetGuiResources(
-  HANDLE hProcess,
-  DWORD uiFlags)
-{
-  return NtUserGetGuiResources(hProcess, uiFlags);
-}
-
-
-/*
  * Private calls for CSRSS
  */
 VOID
@@ -553,4 +540,77 @@ ValidateHwndOrDesk(HWND hwnd)
         return GetThreadDesktopWnd();
 
     return ValidateHwnd(hwnd);
+}
+
+/*
+ * @implemented
+ */
+DWORD WINAPI WCSToMBEx(WORD CodePage,LPWSTR UnicodeString,LONG UnicodeSize,LPSTR *MBString,LONG MBSize,BOOL Allocate)
+{
+	DWORD Size;
+	if (UnicodeSize == -1)
+	{
+		UnicodeSize = wcslen(UnicodeString)+1;
+	}
+	if (MBSize == -1)
+	{
+		if (!Allocate)
+		{
+			return 0;
+		}
+		MBSize = UnicodeSize * 2;
+	}
+	if (Allocate)
+	{
+		LPSTR SafeString = RtlAllocateHeap(GetProcessHeap(), 0, MBSize);
+        if (SafeString == NULL)
+            return 0;
+        *MBString = SafeString;
+	}
+	if (CodePage == 0)
+	{
+		RtlUnicodeToMultiByteN(*MBString,MBSize,&Size,UnicodeString,UnicodeSize);
+	}
+	else
+	{
+		WideCharToMultiByte(CodePage,0,UnicodeString,UnicodeSize,*MBString,MBSize,0,0);
+	}
+	return UnicodeSize;
+}
+
+/*
+ * @implemented
+ */
+DWORD WINAPI MBToWCSEx(WORD CodePage,LPSTR MBString,LONG MBSize,LPWSTR *UnicodeString,LONG UnicodeSize,BOOL Allocate)
+{
+	DWORD Size;
+	if (MBSize == -1)
+	{
+		MBSize = strlen(MBString)+1;
+	}
+	if (UnicodeSize == -1)
+	{
+		if (!Allocate)
+		{
+			return 0;
+		}
+		UnicodeSize = MBSize;
+	}
+	if (Allocate)
+	{
+		LPWSTR SafeString = RtlAllocateHeap(GetProcessHeap(), 0, UnicodeSize);
+        if (SafeString == NULL)
+            return 0;
+        *UnicodeString = SafeString;
+	}
+	UnicodeSize *= sizeof(WCHAR);
+	if (CodePage == 0)
+	{
+		RtlMultiByteToUnicodeN(*UnicodeString,UnicodeSize,&Size,MBString,MBSize);
+	}
+	else
+	{
+		Size = MultiByteToWideChar(CodePage,0,MBString,MBSize,*UnicodeString,UnicodeSize);
+	}
+	return Size;
 }

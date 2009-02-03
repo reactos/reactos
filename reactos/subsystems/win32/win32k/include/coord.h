@@ -23,5 +23,6 @@ IntGdiModifyWorldTransform(PDC pDc,
                            DWORD Mode);
 
 VOID FASTCALL IntMirrorWindowOrg(PDC);
+void FASTCALL IntFixIsotropicMapping(PDC dc);
 
 #endif

@@ -36,7 +36,7 @@ interface IMLangCodePages : IUnknown
 {
     HRESULT GetCharCodePages(      
         [in] WCHAR chSrc,
-        DWORD *pdwCodePages);
+        [out] DWORD *pdwCodePages);
     HRESULT GetStrCodePages(      
         [in, size_is(cchSrc)] const WCHAR *pszSrc,
         [in] long cchSrc,

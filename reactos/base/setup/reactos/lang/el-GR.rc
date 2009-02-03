@@ -33,7 +33,7 @@ BEGIN
     CONTROL "Type of setup", IDC_STATIC, "Button", BS_GROUPBOX, 10,0,297,172
     CONTROL "Install ReactOS", IDC_INSTALL, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 20, 15, 277, 10
     CONTROL "Repair or update an installed ReactOS", IDC_SETUP, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_DISABLED , 20, 30, 277, 10
-    LTEXT "Click Next to setup the devices.", IDC_STATIC, 10, 180 ,297, 10
+    LTEXT "Πατήστε Επόμενο για να ρυθμίσετε τις συσκευές.", IDC_STATIC, 10, 180 ,297, 10
 END
 
 IDD_DEVICEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193

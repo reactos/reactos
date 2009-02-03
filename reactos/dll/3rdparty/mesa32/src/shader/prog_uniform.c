@@ -52,11 +52,12 @@ _mesa_free_uniform_list(struct gl_uniform_list *list)
 }
 
 
-GLboolean
+struct gl_uniform *
 _mesa_append_uniform(struct gl_uniform_list *list,
                      const char *name, GLenum target, GLuint progPos)
 {
    const GLuint oldNum = list->NumUniforms;
+   struct gl_uniform *uniform;
    GLint index;
 
    assert(target == GL_VERTEX_PROGRAM_ARB ||
@@ -84,30 +85,37 @@ _mesa_append_uniform(struct gl_uniform_list *list,
          return GL_FALSE;
       }
 
-      list->Uniforms[oldNum].Name = _mesa_strdup(name);
-      list->Uniforms[oldNum].VertPos = -1;
-      list->Uniforms[oldNum].FragPos = -1;
-      index = oldNum;
+      uniform = list->Uniforms + oldNum;
+
+      uniform->Name = _mesa_strdup(name);
+      uniform->VertPos = -1;
+      uniform->FragPos = -1;
+      uniform->Initialized = GL_FALSE;
+
       list->NumUniforms++;
+   }
+   else {
+      /* found */
+      uniform = list->Uniforms + index;
    }
 
    /* update position for the vertex or fragment program */
    if (target == GL_VERTEX_PROGRAM_ARB) {
-      if (list->Uniforms[index].VertPos != -1) {
+      if (uniform->VertPos != -1) {
          /* this uniform is already in the list - that shouldn't happen */
          return GL_FALSE;
       }
-      list->Uniforms[index].VertPos = progPos;
+      uniform->VertPos = progPos;
    }
    else {
-      if (list->Uniforms[index].FragPos != -1) {
+      if (uniform->FragPos != -1) {
          /* this uniform is already in the list - that shouldn't happen */
          return GL_FALSE;
       }
-      list->Uniforms[index].FragPos = progPos;
+      uniform->FragPos = progPos;
    }
 
-   return GL_TRUE;
+   return uniform;
 }
 
 
@@ -135,7 +143,7 @@ _mesa_longest_uniform_name(const struct gl_uniform_list *list)
    GLuint i;
    for (i = 0; list && i < list->NumUniforms; i++) {
       GLuint len = _mesa_strlen(list->Uniforms[i].Name);
-      if (len > max)
+      if (len > (GLuint)max)
          max = len;
    }
    return max;

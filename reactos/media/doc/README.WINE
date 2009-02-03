@@ -56,16 +56,20 @@ reactos/dll/win32/imagehlp        # Patches for BindImage need review and submis
 reactos/dll/win32/inetcomm        # Autosync
 reactos/dll/win32/inetmib1        # Autosync
 reactos/dll/win32/iphlpapi        # Out of sync
+reactos/dll/win32/itss            # Autosync
+reactos/dll/win32/jscript         # Autosync
 reactos/dll/win32/localui         # Autosync
 reactos/dll/win32/lz32            # Autosync
 reactos/dll/win32/mapi32          # Autosync
 reactos/dll/win32/mlang           # Autosync
 reactos/dll/win32/mpr             # Autosync
 reactos/dll/win32/msacm32         # Out of sync
+reactos/dll/win32/mscat32         # Autosync
 reactos/dll/win32/mscoree         # Autosync
 reactos/dll/win32/mshtml          # Autosync
 reactos/dll/win32/msimg32         # Autosync
 reactos/dll/win32/msi             # Autosync
+reactos/dll/win32/msimtf          # Autosync
 reactos/dll/win32/mstask          # Autosync
 reactos/dll/win32/msvcrt20        # Autosync
 reactos/dll/win32/msvfw32         # Autosync
@@ -73,6 +77,7 @@ reactos/dll/win32/msxml3          # Synced to Wine-20071230
 reactos/dll/win32/nddeapi         # Autosync
 reactos/dll/win32/netapi32        # Autosync
 reactos/dll/win32/ntdsapi         # Autosync
+reactos/dll/win32/ntprint         # Autosync
 reactos/dll/win32/objsel          # Autosync
 reactos/dll/win32/odbc32          # Out of sync. Depends on port of Linux ODBC.
 reactos/dll/win32/odbccp32        # Autosync
@@ -98,6 +103,7 @@ reactos/dll/win32/shell32         # Forked at Wine-20071011
 reactos/dll/win32/shdocvw         # Synced to Wine-0_9_5
 reactos/dll/win32/shfolder        # Autosync
 reactos/dll/win32/shlwapi         # Autosync
+reactos/dll/win32/spoolss         # Autosync
 reactos/dll/win32/stdole2.tlb     # Autosync
 reactos/dll/win32/sxs             # Autosync
 reactos/dll/win32/tapi32          # Autosync
@@ -113,8 +119,9 @@ reactos/dll/win32/winmm           # Forked at Wine-20050628
 reactos/dll/win32/winmm/midimap   # Forked at Wine-20050628
 reactos/dll/win32/winmm/wavemap   # Forked at Wine-20050628
 reactos/dll/win32/wldap32         # Autosync
+reactos/dll/win32/wmi             # Autosync
 reactos/dll/win32/wtsapi32        # Autosync
-reactos/dll/directx/dinput        # Synced to Wine-0_9_5
+reactos/dll/directx/dinput        # Synced to Wine-1_1_4
 reactos/dll/directx/dinput8       # Synced to Wine-0_9_5
 reactos/dll/directx/dplay         # Synced to Wine-0_9_5
 reactos/dll/directx/dplayx        # Synced to Wine-0_9_5
@@ -161,11 +168,11 @@ msvcrt -
   reactos/lib/sdk/crt/thread/thread.c           # Synced at 20080604
 
 User32 -
-  reactos/dll/win32/user32/controls/button.c    # Synced at 20071022
-  reactos/dll/win32/user32/controls/combo.c     # Synced at 20071022
-  reactos/dll/win32/user32/controls/edit.c      # Synced at 20071022
-  reactos/dll/win32/user32/controls/icontitle.c # Synced at 20060617
-  reactos/dll/win32/user32/controls/listbox.c   # Synced at 20071023
+  reactos/dll/win32/user32/controls/button.c    # Synced to Wine-1_1_13
+  reactos/dll/win32/user32/controls/combo.c     # Synced to Wine-1_1_13
+  reactos/dll/win32/user32/controls/edit.c      # Synced to Wine-1_1_13
+  reactos/dll/win32/user32/controls/icontitle.c # Synced to Wine-1_1_13
+  reactos/dll/win32/user32/controls/listbox.c   # Synced to Wine-1_1_13
   reactos/dll/win32/user32/controls/scrollbar.c # Forked
   reactos/dll/win32/user32/controls/static.c    # Synced at 20071024
 
@@ -175,7 +182,7 @@ User32 -
   reactos/dll/win32/user32/misc/exticon.c       # Last sync date unknown
   reactos/dll/win32/user32/misc/resources.c     # Forked?
   reactos/dll/win32/user32/misc/winhelp.c       # Last sync date unknown
-  reactos/dll/win32/user32/misc/wsprintf.c      # Synced at 20060623
+  reactos/dll/win32/user32/misc/wsprintf.c      # Synced to Wine-1_1_13
 
   reactos/dll/win32/user32/windows/defwnd.c     # Forked
   reactos/dll/win32/user32/windows/draw.c       # Forked at Wine-20020904 (uitools.c)

@@ -33,7 +33,7 @@ VOID FreePacket(
  *     Object = Pointer to an IP packet structure
  */
 {
-    TcpipFreeToNPagedLookasideList(&IPPacketList, Object);
+    exFreeToNPagedLookasideList(&IPPacketList, Object);
 }
 
 
@@ -70,7 +70,7 @@ PIP_PACKET IPCreatePacket(ULONG Type)
 {
   PIP_PACKET IPPacket;
 
-  IPPacket = TcpipAllocateFromNPagedLookasideList(&IPPacketList);
+  IPPacket = exAllocateFromNPagedLookasideList(&IPPacketList);
   if (!IPPacket)
     return NULL;
 
@@ -147,7 +147,8 @@ VOID IPDispatchProtocol(
         TI_DbgPrint(MIN_TRACE, ("IPv6 datagram discarded.\n"));
         return;
     default:
-        Protocol = 0;
+        TI_DbgPrint(MIN_TRACE, ("Unrecognized datagram discarded.\n"));
+        return;
     }
 
     if (Protocol < IP_PROTOCOL_TABLE_SIZE)
@@ -292,8 +293,6 @@ BOOLEAN IPRegisterInterface(
 
     IF->Index = ChosenIndex;
 
-    IPAddInterfaceRoute( IF );
-
     /* Add interface to the global interface list */
     TcpipInterlockedInsertTailList(&InterfaceListHead,
 				   &IF->ListEntry,
@@ -308,22 +307,23 @@ VOID IPRemoveInterfaceRoute( PIP_INTERFACE IF ) {
     PNEIGHBOR_CACHE_ENTRY NCE;
     IP_ADDRESS GeneralRoute;
 
-    TCPDisposeInterfaceData( IF->TCPContext );
-    IF->TCPContext = NULL;
-
-    TI_DbgPrint(DEBUG_IP,("Removing interface Addr %s\n", A2S(&IF->Unicast)));
-    TI_DbgPrint(DEBUG_IP,("                   Mask %s\n", A2S(&IF->Netmask)));
-
-    AddrWidenAddress(&GeneralRoute,&IF->Unicast,&IF->Netmask);
-
-    RouterRemoveRoute(&GeneralRoute, &IF->Unicast);
-
-    /* Remove permanent NCE, but first we have to find it */
     NCE = NBLocateNeighbor(&IF->Unicast);
     if (NCE)
-	NBRemoveNeighbor(NCE);
-    else
-	TI_DbgPrint(DEBUG_IP, ("Could not delete IF route (0x%X)\n", IF));
+    {
+       if ( IF->TCPContext ) {
+           TCPDisposeInterfaceData( IF->TCPContext );
+           IF->TCPContext = NULL;
+       }
+
+       TI_DbgPrint(DEBUG_IP,("Removing interface Addr %s\n", A2S(&IF->Unicast)));
+       TI_DbgPrint(DEBUG_IP,("                   Mask %s\n", A2S(&IF->Netmask)));
+
+       AddrWidenAddress(&GeneralRoute,&IF->Unicast,&IF->Netmask);
+
+       RouterRemoveRoute(&GeneralRoute, &IF->Unicast);
+
+       NBRemoveNeighbor(NCE);
+    }
 }
 
 VOID IPUnregisterInterface(
@@ -346,6 +346,21 @@ VOID IPUnregisterInterface(
 }
 
 
+VOID DefaultProtocolHandler(
+    PIP_INTERFACE Interface,
+    PIP_PACKET IPPacket)
+/*
+ * FUNCTION: Default handler for Internet protocols
+ * ARGUMENTS:
+ *     NTE      = Pointer to net table entry which the packet was received on
+ *     IPPacket = Pointer to an IP packet that was received
+ */
+{
+    TI_DbgPrint(MID_TRACE, ("[IF %x] Packet of unknown Internet protocol "
+			    "discarded.\n", Interface));
+}
+
+
 VOID IPRegisterProtocol(
     UINT ProtocolNumber,
     IP_PROTOCOL_HANDLER Handler)
@@ -363,22 +378,7 @@ VOID IPRegisterProtocol(
         return;
     }
 
-    ProtocolTable[ProtocolNumber] = Handler;
-}
-
-
-VOID DefaultProtocolHandler(
-    PIP_INTERFACE Interface,
-    PIP_PACKET IPPacket)
-/*
- * FUNCTION: Default handler for Internet protocols
- * ARGUMENTS:
- *     NTE      = Pointer to net table entry which the packet was received on
- *     IPPacket = Pointer to an IP packet that was received
- */
-{
-    TI_DbgPrint(MID_TRACE, ("[IF %x] Packet of unknown Internet protocol "
-			    "discarded.\n", Interface));
+    ProtocolTable[ProtocolNumber] = Handler ? Handler : DefaultProtocolHandler;
 }
 
 

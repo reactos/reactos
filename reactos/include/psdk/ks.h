@@ -344,8 +344,11 @@ typedef enum
     Connection Properties/Methods/Events
 */
 
-#define KSPROPSETID_Connection \
-    0x1D58C920L, 0xAC9B, 0x11CF, 0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00
+#define STATIC_KSPROPSETID_Connection \
+	0x1D58C920L, 0xAC9B, 0x11CF, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}
+DEFINE_GUIDSTRUCT("1D58C920-AC9B-11CF-A5D6-28DB04C10000", KSPROPSETID_Connection);
+#define KSPROPSETID_Connection DEFINE_GUIDNAMED(KSPROPSETID_Connection)
+
 
 typedef enum
 {
@@ -1117,6 +1120,20 @@ typedef struct
     PFAST_IO_READ FastRead;
     PFAST_IO_WRITE FastWrite;
 } KSDISPATCH_TABLE, *PKSDISPATCH_TABLE;
+
+
+#define KSCREATE_ITEM_IRP_STORAGE(Irp)      (*(PKSOBJECT_CREATE_ITEM*)&(Irp)->Tail.Overlay.DriverContext[0])
+#define KSEVENT_SET_IRP_STORAGE(Irp)        (*(const KSEVENT_SET**)&(Irp)->Tail.Overlay.DriverContext[0])
+#define KSEVENT_ITEM_IRP_STORAGE(Irp)       (*(const KSEVENT_ITEM**)&(Irp)->Tail.Overlay.DriverContext[3])
+#define KSEVENT_ENTRY_IRP_STORAGE(Irp)      (*(PKSEVENT_ENTRY*)&(Irp)->Tail.Overlay.DriverContext[0])
+#define KSMETHOD_SET_IRP_STORAGE(Irp)       (*(const KSMETHOD_SET**)&(Irp)->Tail.Overlay.DriverContext[0])
+#define KSMETHOD_ITEM_IRP_STORAGE(Irp)      (*(const KSMETHOD_ITEM**)&(Irp)->Tail.Overlay.DriverContext[3])
+#define KSMETHOD_TYPE_IRP_STORAGE(Irp)      (*(ULONG_PTR*)(&(Irp)->Tail.Overlay.DriverContext[2]))
+#define KSQUEUE_SPINLOCK_IRP_STORAGE(Irp)   (*(PKSPIN_LOCK*)&(Irp)->Tail.Overlay.DriverContext[1])
+#define KSPROPERTY_SET_IRP_STORAGE(Irp)     (*(const KSPROPERTY_SET**)&(Irp)->Tail.Overlay.DriverContext[0])
+#define KSPROPERTY_ITEM_IRP_STORAGE(Irp)    (*(const KSPROPERTY_ITEM**)&(Irp)->Tail.Overlay.DriverContext[3])
+#define KSPROPERTY_ATTRIBUTES_IRP_STORAGE(Irp) (*(PKSATTRIBUTE_LIST*)&(Irp)->Tail.Overlay.DriverContext[2])
+
 #endif
 
 typedef struct
@@ -1306,12 +1323,21 @@ typedef struct
 {
 } KSOBJECT_CREATE, *PKSOBJECT_CREATE;
 
+#if defined(__NTDDK_H)
 typedef struct
 {
+    PDRIVER_DISPATCH       Create;
+    PVOID                  Context;
+    UNICODE_STRING         ObjectClass;
+    PSECURITY_DESCRIPTOR   SecurityDescriptor;
+    ULONG                  Flags;
 } KSOBJECT_CREATE_ITEM, *PKSOBJECT_CREATE_ITEM;
+
 
 typedef VOID (*PFNKSITEMFREECALLBACK)(
     IN  PKSOBJECT_CREATE_ITEM CreateItem);
+
+#endif
 
 typedef struct {
     ULONG    Size;
@@ -1420,6 +1446,18 @@ typedef struct
 
 typedef struct
 {
+    ULONG PropertySetsCount;
+    ULONG PropertyItemSize;
+    const KSPROPERTY_SET* PropertySets;
+    ULONG MethodSetsCount;
+    ULONG MethodItemSize;
+    const KSMETHOD_SET* MethodSets;
+    ULONG EventSetsCount;
+    ULONG EventItemSize;
+    const KSEVENT_SET* EventSets;
+#if !defined(_WIN64)
+    PVOID Alignment;
+#endif
 } KSAUTOMATION_TABLE, *PKSAUTOMATION_TABLE;
 
 typedef struct
@@ -1636,11 +1674,17 @@ typedef struct
 /* ===============================================================
     Device Dispatch
 */
+
+
+
 #if defined(_NTDDK_)
-typedef struct
-{
-    /* TODO */
-} KSDEVICE, *PKSDEVICE;
+
+typedef struct _KSFILTER_DISPATCH KSFILTER_DISPATCH, *PKSFILTER_DISPATCH;
+typedef struct _KSDEVICE KSDEVICE, *PKSDEVICE;
+typedef struct _KSFILTER KSFILTER, *PKSFILTER;
+typedef struct _KSNODE_DESCRIPTOR KSNODE_DESCRIPTOR, *PKSNODE_DESCRIPTOR;
+typedef struct _KSFILTER_DESCRIPTOR KSFILTER_DESCRIPTOR, *PKSFILTER_DESCRIPTOR;
+typedef struct _KSDEVICE_DESCRIPTOR KSDEVICE_DESCRIPTOR, *PKSDEVICE_DESCRIPTOR;
 
 typedef NTSTATUS (*PFNKSDEVICECREATE)(
     IN PKSDEVICE Device);
@@ -1682,8 +1726,7 @@ typedef VOID (*PFNKSDEVICESETPOWER)(
     IN DEVICE_POWER_STATE To,
     IN DEVICE_POWER_STATE From);
 
-typedef struct _KSDEVICE_DISPATCH
-{
+typedef struct _KSDEVICE_DISPATCH {
     PFNKSDEVICECREATE Add;
     PFNKSDEVICEPNPSTART Start;
     PFNKSDEVICE PostStart;
@@ -1695,18 +1738,40 @@ typedef struct _KSDEVICE_DISPATCH
     PFNKSDEVICEIRPVOID Remove;
     PFNKSDEVICEQUERYCAPABILITIES QueryCapabilities;
     PFNKSDEVICEIRPVOID SurpriseRemoval;
-    PFNKSDEVICEQUERYPOWER Querypower;
+    PFNKSDEVICEQUERYPOWER QueryPower;
     PFNKSDEVICESETPOWER SetPower;
-} KSDEVICE_DISPATCH, *PKSDEVICE_DISPATCH;
+    PFNKSDEVICEIRP QueryInterface;
+}KSDEVICE_DISPATCH, *PKSDEVICE_DISPATCH;
+
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+#define KSDEVICE_DESCRIPTOR_VERSION_2 (0x110)
+#define MIN_DEV_VER_FOR_FLAGS (0x110)
+#endif
+
+struct _KSDEVICE
+{
+    const KSDEVICE_DESCRIPTOR* Descriptor;
+    KSOBJECT_BAG Bag;
+    PVOID Context;
+    PDEVICE_OBJECT FunctionalDeviceObject;
+    PDEVICE_OBJECT PhysicalDeviceObject;
+    PDEVICE_OBJECT NextDeviceObject;
+    BOOLEAN Started;
+    SYSTEM_POWER_STATE SystemPowerState;
+    DEVICE_POWER_STATE DevicePowerState;
+};
 #endif
 
 /* ===============================================================
     Filter Dispatch
 */
 #if defined(_NTDDK_)
-typedef struct
+struct _KSFILTER
 {
-} KSFILTER, *PKSFILTER;
+    const KSFILTER_DESCRIPTOR* Descriptor;
+    KSOBJECT_BAG Bag;
+    PVOID Context;
+};
 
 typedef NTSTATUS (*PFNKSFILTERIRP)(
     IN PKSFILTER Filter,
@@ -1719,21 +1784,23 @@ typedef NTSTATUS (*PFNKSFILTERPROCESS)(
 typedef NTSTATUS (*PFNKSFILTERVOID)(
     IN PKSFILTER Filter);
 
-typedef struct _KSFILTER_DISPATCH
+struct _KSFILTER_DISPATCH
 {
     PFNKSFILTERIRP Create;
     PFNKSFILTERIRP Close;
     PFNKSFILTERPROCESS Process;
     PFNKSFILTERVOID Reset;
-} KSFILTER_DISPATCH, *PKSFILTER_DISPATCH;
+};
 
-typedef struct {
+struct _KSNODE_DESCRIPTOR
+{
   const KSAUTOMATION_TABLE*  AutomationTable;
   const GUID*  Type;
   const GUID*  Name;
-} KSNODE_DESCRIPTOR, *PKSNODE_DESCRIPTOR;
+};
 
-typedef struct {
+struct _KSFILTER_DESCRIPTOR
+{
   const KSFILTER_DISPATCH*  Dispatch;
   const KSAUTOMATION_TABLE*  AutomationTable;
   ULONG  Version;
@@ -1750,14 +1817,14 @@ typedef struct {
   ULONG  ConnectionsCount;
   const KSTOPOLOGY_CONNECTION*  Connections;
   const KSCOMPONENTID*  ComponentId;
-} KSFILTER_DESCRIPTOR, *PKSFILTER_DESCRIPTOR;
+};
 
-typedef struct
+struct _KSDEVICE_DESCRIPTOR
 {
   const KSDEVICE_DISPATCH*  Dispatch;
   ULONG  FilterDescriptorsCount;
   const  KSFILTER_DESCRIPTOR*const* FilterDescriptors;
-} KSDEVICE_DESCRIPTOR, *PKSDEVICE_DESCRIPTOR;
+};
 #endif
 /* ===============================================================
     Minidriver Callbacks
@@ -2348,6 +2415,11 @@ KSDDKAPI NTSTATUS NTAPI
     IN  ULONG Key OPTIONAL,
     IN  KPROCESSOR_MODE RequestorMode);
 
+
+KSDDKAPI NTSTATUS NTAPI
+  KsDefaultForwardIrp(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp);
 
 /* ===============================================================
     Worker Management Functions

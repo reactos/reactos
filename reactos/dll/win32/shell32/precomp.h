@@ -45,7 +45,7 @@
 #include <ndk/ntndk.h>
 #include <fmifs/fmifs.h>
 #include <largeint.h>
-
+#include <sddl.h>
 
 #include "base/shell/explorer-new/todo.h"
 #include "dlgs.h"

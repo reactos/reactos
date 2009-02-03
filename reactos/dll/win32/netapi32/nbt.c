@@ -103,10 +103,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(netbios);
 #define MIN_CACHE_TIMEOUT   60000
 #define CACHE_TIMEOUT       360000
 
-#define MAX_NBT_NAME_SZ (NCBNAMSZ * 2 + MAX_DOMAIN_NAME_LEN + 2)
-#define SIMPLE_NAME_QUERY_PKT_SIZE 26 + MAX_NBT_NAME_SZ
-
-#define DEFAULT_NBT_SESSIONS 16
+#define MAX_NBT_NAME_SZ            255
+#define SIMPLE_NAME_QUERY_PKT_SIZE 16 + MAX_NBT_NAME_SZ
 
 #define NBNS_TYPE_NB             0x0020
 #define NBNS_TYPE_NBSTAT         0x0021
@@ -156,7 +154,7 @@ static DWORD gWINSQueries;
 static DWORD gWINSQueryTimeout;
 static DWORD gWINSServers[MAX_WINS_SERVERS];
 static int   gNumWINSServers;
-static char  gScopeID[MAX_DOMAIN_NAME_LEN];
+static char  gScopeID[MAX_SCOPE_ID_LEN];
 static DWORD gCacheTimeout;
 static struct NBNameCache *gNameCache;
 
@@ -415,10 +413,7 @@ static BOOL NetBTFindNameAnswerCallback(void *pVoid, WORD answerCount,
             if (queryData->cacheEntry)
                 queryData->cacheEntry->numAddresses = 0;
             else
-            {
-                ret = FALSE;
                 queryData->ret = NRC_OSRESNOTAV;
-            }
         }
         if (rLen == 6 && queryData->cacheEntry &&
          queryData->cacheEntry->numAddresses < answerCount)
@@ -850,8 +845,8 @@ static UCHAR NetBTAstat(void *adapt, PNCB ncb)
             astat->max_sess_pkt_size = 0xffff;
             astat->xmit_success = adapter->xmit_success;
             astat->recv_success = adapter->recv_success;
+            ret = NRC_GOODRET;
         }
-        ret = NRC_GOODRET;
     }
     else
         ret = NetBTAstatRemote(adapter, ncb);
@@ -1183,6 +1178,7 @@ static UCHAR NetBTRecv(void *adapt, void *sess, PNCB ncb)
                  * message header. */
                 NetBIOSHangupSession(ncb);
                 ret = NRC_SABORT;
+                goto error;
             }
             else if (buffer[0] != NBSS_MSG)
             {
@@ -1190,6 +1186,7 @@ static UCHAR NetBTRecv(void *adapt, void *sess, PNCB ncb)
                 FIXME("Received unexpected session msg type %d\n", buffer[0]);
                 NetBIOSHangupSession(ncb);
                 ret = NRC_SABORT;
+                goto error;
             }
             else
             {
@@ -1199,6 +1196,7 @@ static UCHAR NetBTRecv(void *adapt, void *sess, PNCB ncb)
                     FIXME("Received a message that's too long for my taste\n");
                     NetBIOSHangupSession(ncb);
                     ret = NRC_SABORT;
+                    goto error;
                 }
                 else
                 {
@@ -1226,6 +1224,7 @@ static UCHAR NetBTRecv(void *adapt, void *sess, PNCB ncb)
             adapter->recv_success++;
         }
     }
+error:
     TRACE("returning 0x%02x\n", ret);
     return ret;
 }
@@ -1492,7 +1491,7 @@ void NetBTInit(void)
          (LPBYTE)&dword, &size) == ERROR_SUCCESS && dword >= MIN_QUERY_TIMEOUT
          && dword <= MAX_QUERY_TIMEOUT)
             gWINSQueryTimeout = dword;
-        size = MAX_DOMAIN_NAME_LEN - 1;
+        size = sizeof(gScopeID) - 1;
         if (RegQueryValueExW(hKey, ScopeIDW, NULL, NULL, (LPBYTE)gScopeID + 1, &size)
          == ERROR_SUCCESS)
         {
@@ -1500,11 +1499,11 @@ void NetBTInit(void)
                NetBTNameEncode */
             char *ptr, *lenPtr;
 
-            for (ptr = gScopeID + 1; *ptr &&
-             ptr - gScopeID < MAX_DOMAIN_NAME_LEN; )
+            for (ptr = gScopeID + 1; ptr - gScopeID < sizeof(gScopeID) && *ptr; )
             {
-                for (lenPtr = ptr - 1, *lenPtr = 0; *ptr && *ptr != '.' &&
-                 ptr - gScopeID < MAX_DOMAIN_NAME_LEN; ptr++)
+                for (lenPtr = ptr - 1, *lenPtr = 0;
+                     ptr - gScopeID < sizeof(gScopeID) && *ptr && *ptr != '.';
+                     ptr++)
                     *lenPtr += 1;
                 ptr++;
             }

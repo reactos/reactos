@@ -48,7 +48,7 @@ ScmOpenServiceKey(LPWSTR lpServiceName,
 
 
 DWORD
-ScmCreateServiceKey(LPWSTR lpServiceName,
+ScmCreateServiceKey(LPCWSTR lpServiceName,
                     REGSAM samDesired,
                     PHKEY phKey)
 {
@@ -108,9 +108,9 @@ ScmWriteDependencies(HKEY hServiceKey,
 
     if (*lpDependencies == 0)
     {
-        RegDeleteValue(hServiceKey,
+        RegDeleteValueW(hServiceKey,
                        L"DependOnService");
-        RegDeleteValue(hServiceKey,
+        RegDeleteValueW(hServiceKey,
                        L"DependOnGroup");
     }
     else

@@ -446,18 +446,6 @@ SystemParametersInfoW(UINT uiAction,
 /*
  * @implemented
  */
-BOOL
-WINAPI
-CloseDesktop(
-  HDESK hDesktop)
-{
-  return NtUserCloseDesktop(hDesktop);
-}
-
-
-/*
- * @implemented
- */
 HDESK WINAPI
 CreateDesktopA(LPCSTR lpszDesktop,
 	       LPCSTR lpszDevice,
@@ -621,69 +609,6 @@ OpenDesktopW(
     &DesktopName,
     dwFlags,
     dwDesiredAccess);
-}
-
-
-/*
- * @implemented
- */
-HDESK
-WINAPI
-OpenInputDesktop(
-  DWORD dwFlags,
-  BOOL fInherit,
-  ACCESS_MASK dwDesiredAccess)
-{
-  return NtUserOpenInputDesktop(
-    dwFlags,
-    fInherit,
-    dwDesiredAccess);
-}
-
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
-PaintDesktop(
-  HDC hdc)
-{
-  return NtUserPaintDesktop(hdc);
-}
-
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
-SetThreadDesktop(
-  HDESK hDesktop)
-{
-  return NtUserSetThreadDesktop(hDesktop);
-}
-
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
-SwitchDesktop(
-  HDESK hDesktop)
-{
-  return NtUserSwitchDesktop(hDesktop);
-}
-
-
-/*
- * @implemented
- */
-BOOL WINAPI
-SetShellWindowEx(HWND hwndShell, HWND hwndShellListView)
-{
-	return NtUserSetShellWindowEx(hwndShell, hwndShellListView);
 }
 
 

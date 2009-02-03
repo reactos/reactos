@@ -137,7 +137,7 @@ static void WINAPI IWineD3DTextureImpl_PreLoad(IWineD3DTexture *iface) {
             FIXME("Texture (%p) has been reloaded at least 20 times due to WINED3DSAMP_SRGBTEXTURE changes on it\'s sampler\n", This);
 
         for (i = 0; i < This->baseTexture.levels; i++) {
-            IWineD3DSurface_AddDirtyRect(This->surfaces[i], NULL);
+            surface_add_dirty_rect(This->surfaces[i], NULL);
             surface_force_reload(This->surfaces[i]);
             IWineD3DSurface_LoadTexture(This->surfaces[i], srgb_mode);
         }
@@ -303,7 +303,7 @@ static HRESULT WINAPI IWineD3DTextureImpl_GetLevelDesc(IWineD3DTexture *iface, U
         TRACE("(%p) Level (%d)\n", This, Level);
         return IWineD3DSurface_GetDesc(This->surfaces[Level], pDesc);
     }
-    FIXME("(%p) level(%d) overflow Levels(%d)\n", This, Level, This->baseTexture.levels);
+    WARN("(%p) level(%d) overflow Levels(%d)\n", This, Level, This->baseTexture.levels);
     return WINED3DERR_INVALIDCALL;
 }
 
@@ -360,7 +360,9 @@ static HRESULT WINAPI IWineD3DTextureImpl_AddDirtyRect(IWineD3DTexture *iface, C
     IWineD3DTextureImpl *This = (IWineD3DTextureImpl *)iface;
     This->baseTexture.dirty = TRUE;
     TRACE("(%p) : dirtyfication of surface Level (0)\n", This);
-    return IWineD3DSurface_AddDirtyRect(This->surfaces[0], pDirtyRect);
+    surface_add_dirty_rect(This->surfaces[0], pDirtyRect);
+
+    return WINED3D_OK;
 }
 
 const IWineD3DTextureVtbl IWineD3DTexture_Vtbl =

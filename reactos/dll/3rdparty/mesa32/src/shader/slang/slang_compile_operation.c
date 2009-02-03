@@ -44,6 +44,7 @@ slang_operation_construct(slang_operation * oper)
    oper->num_children = 0;
    oper->literal[0] = 0.0;
    oper->literal_size = 1;
+   oper->array_constructor = GL_FALSE;
    oper->a_id = SLANG_ATOM_NULL;
    oper->locals = _slang_variable_scope_new(NULL);
    if (oper->locals == NULL)
@@ -80,10 +81,23 @@ slang_replace_scope(slang_operation *oper,
                     slang_variable_scope *newScope)
 {
    GLuint i;
+
    if (oper->locals != newScope &&
        oper->locals->outer_scope == oldScope) {
+      /* found.  replace old w/ new */
       oper->locals->outer_scope = newScope;
    }
+
+   if (oper->type == SLANG_OPER_VARIABLE_DECL) {
+      /* search/replace in the initializer */
+      slang_variable *var;
+      var = _slang_variable_locate(oper->locals, oper->a_id, GL_TRUE);
+      if (var && var->initializer) {
+         slang_replace_scope(var->initializer, oldScope, newScope);
+      }
+   }
+
+   /* search/replace in children */
    for (i = 0; i < oper->num_children; i++) {
       slang_replace_scope(&oper->children[i], oldScope, newScope);
    }
@@ -148,7 +162,9 @@ slang_operation_copy(slang_operation * x, const slang_operation * y)
    /* If this operation declares a new scope, we need to make sure
     * all children point to it, not the original operation's scope!
     */
-   if (x->type == SLANG_OPER_BLOCK_NEW_SCOPE) {
+   if (x->type == SLANG_OPER_BLOCK_NEW_SCOPE ||
+       x->type == SLANG_OPER_WHILE ||
+       x->type == SLANG_OPER_FOR) {
       slang_replace_scope(x, y->locals, x->locals);
    }
 

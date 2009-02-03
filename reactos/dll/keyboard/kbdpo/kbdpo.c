@@ -1,5 +1,5 @@
 /*
- * ReactOS POASCII Keyboard layout
+ * ReactOS Portuguese keyboard layout
  * Copyright (C) 2006 ReactOS
  * License: LGPL, see: LGPL.txt
  * Based on kbdes, skbdda and skbdfr
@@ -10,7 +10,7 @@
  * http://keytouch.sourceforge.net/howto_keyboard/node4.html (Very Good)
  * http://www.microsoft.com/globaldev/tools/msklc.mspx (Keyboard layout file from MS)
  *
- *TODO
+ * TODO
  *	Correct DEADKEYS
  *	Correct DIVIDE and PrtScr
  */
@@ -223,10 +223,6 @@ ROSDATA VSC_VK extcode1_to_vk[] = {
 };
 
 
-
-
-
-
 #define	TIDLE_CIRC		VK_OEM_2
 #define	ACUTE_GRAVE		VK_OEM_1
 #define	ORDERN_SUPERSCRIPT	VK_OEM_7
@@ -235,7 +231,6 @@ ROSDATA VSC_VK extcode1_to_vk[] = {
 #define	BACKSLASH_BAR		VK_OEM_5
 #define	CLASSIC_QUOTES		VK_OEM_6
 #define	MATH_RELATE		VK_OEM_102
-
 
 
 #define	ACUTE_CHAR	0xB4
@@ -258,12 +253,8 @@ ROSDATA MODIFIERS modifier_bits = {
   modifier_keys,
   6,
   {     0,  1<<0, 1<<1, 1<<2, SHFT_INVALID, SHFT_INVALID,             3  }
- /*  NONE, SHIFT, CTRL,  ALT,         MENU, SHIFT + MENU, SHIFT+CONTROL  */
+  /* NONE, SHIFT, CTRL,  ALT,         MENU, SHIFT + MENU, SHIFT+CONTROL */
 };
-
-
-
-
 
 
 #define NOCAPS 0
@@ -381,12 +372,6 @@ ROSDATA VK_TO_WCHARS4 key_to_chars_4mod[] = {
 };
 
 
-
-
-
-
-
-
 #define vk_master(n,x) { (PVK_TO_WCHARS1)x, n, sizeof(x[0]) }
 
 ROSDATA VK_TO_WCHAR_TABLE vk_to_wchar_master_table[] = {
@@ -396,15 +381,6 @@ ROSDATA VK_TO_WCHAR_TABLE vk_to_wchar_master_table[] = {
   vk_master(4,key_to_chars_4mod),
   { 0,0,0 }
 };
-
-
-
-
-
-
-
-
-
 
 
 #define DEADTRANS(ch, accent, comp, flags) MAKELONG(ch, accent), comp, flags
@@ -476,10 +452,6 @@ ROSDATA DEADKEY  deadkey[] =
 
             { 0, 0, 0}
 };
-
-
-
-
 
 
 ROSDATA VSC_LPWSTR key_names[] = {
@@ -579,10 +551,6 @@ ROSDATA DEADKEY_LPWSTR dead_key_names[] = {
 };
 
 
-
-
-
-
 /* Finally, the master table */
 ROSDATA KBDTABLES keyboard_layout_table = {
 
@@ -608,7 +576,7 @@ ROSDATA KBDTABLES keyboard_layout_table = {
   extcode0_to_vk,
   extcode1_to_vk,
 
-  MAKELONG(0,1), /* Version 1.0 */
+  MAKELONG(1,1), /* Version 1.0 */
 
   /* Ligatures -- Portuguese doesn't have any, that i'm aware  */
   0,

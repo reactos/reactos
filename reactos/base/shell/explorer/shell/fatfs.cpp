@@ -137,8 +137,9 @@ void FATDirectory::read_directory(int scan_flags)
 
 			*d = '\0';
 		} else {
+			s = (const char*)p->Ent->B;	// no change of the pointer, just to avoid overung warnings in code checkers
+
 			 // read long file name
-			s = (const char*)p->Ent->B;
 			TCHAR lname[] = {s[1], s[3], s[5], s[7], s[9], s[14], s[16], s[18], s[20], s[22], s[24], s[28], s[30]};
 
 			long_name = String(lname, 13) + long_name;

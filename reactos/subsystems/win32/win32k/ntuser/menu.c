@@ -609,7 +609,7 @@ IntGetMenuItemByFlag(PMENU_OBJECT Menu, UINT uSearchBy, UINT fFlag,
             if(CurItem->fType & MF_POPUP)
             {
                PMENU_OBJECT NewMenu = UserGetMenuObject(CurItem->hSubMenu);
-               if(Menu)
+               if(NewMenu)
                {
                    ret = IntGetMenuItemByFlag(NewMenu, uSearchBy, fFlag,
                                               SubMenu, MenuItem, PrevMenuItem);
@@ -1566,15 +1566,14 @@ HMENU FASTCALL UserCreateMenu(BOOL PopupMenu)
           return (HMENU)0;
        }
        Menu = IntCreateMenu(&Handle, !PopupMenu);
-       UserDereferenceObject(Menu);
        ObDereferenceObject(WinStaObject);
    }
    else
    {
        Menu = IntCreateMenu(&Handle, !PopupMenu);
-       UserDereferenceObject(Menu);
    }
 
+   if (Menu) UserDereferenceObject(Menu);
    return (HMENU)Handle;
 }
 

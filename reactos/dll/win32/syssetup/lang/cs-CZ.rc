@@ -206,6 +206,8 @@ BEGIN
     IDS_CMT_DEVMGMT     "Spustit Správce zaøízení"
     IDS_CMT_SERVMAN     "Spustit Správce služeb"
     IDS_CMT_RDESKTOP    "Spustit Vzdálenou plochu"
+    IDS_CMT_EVENTVIEW   "Launch Event Viewer"
+    IDS_CMT_MSCONFIG    "Launch System Configuration program"
 END
 
 STRINGTABLE
@@ -256,10 +258,12 @@ BEGIN
     IDS_SHORT_SNAP       "SnapShot.lnk"
     IDS_SHORT_SOLITAIRE  "Solitaire.lnk"
     IDS_SHORT_WINEMINE   "WineMine.lnk"
-	IDS_SHORT_CHARMAP    "Mapa znakù.lnk"
-	IDS_SHORT_MAGNIFY    "Lupa.lnk"
+    IDS_SHORT_CHARMAP    "Mapa znakù.lnk"
+    IDS_SHORT_MAGNIFY    "Lupa.lnk"
     IDS_SHORT_RDESKTOP   "Vzdálená plocha.lnk"
-	IDS_SHORT_KBSWITCH   "Pøepínaè rozložení klávesnice.lnk"
+    IDS_SHORT_KBSWITCH   "Pøepínaè rozložení klávesnice.lnk"
+    IDS_SHORT_EVENTVIEW  "Event Viewer.lnk"
+    IDS_SHORT_MSCONFIG   "System Configuration.lnk"
 END
 
 STRINGTABLE

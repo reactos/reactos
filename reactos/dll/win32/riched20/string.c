@@ -22,7 +22,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(richedit);
 
-int ME_GetOptimalBuffer(int nLen)
+static int ME_GetOptimalBuffer(int nLen)
 {
   return ((2*nLen+1)+128)&~63;
 }
@@ -83,6 +83,7 @@ ME_String *ME_StrDup(const ME_String *s)
 
 void ME_DestroyString(ME_String *s)
 {
+  if (!s) return;
   FREE_OBJ(s->szData);
   FREE_OBJ(s);
 }
@@ -356,12 +357,12 @@ LPWSTR ME_ToUnicode(BOOL unicode, LPVOID psz)
   assert(psz != NULL);
 
   if (unicode)
-    return (LPWSTR)psz;
+    return psz;
   else {
     WCHAR *tmp;
-    int nChars = MultiByteToWideChar(CP_ACP, 0, (char *)psz, -1, NULL, 0);
+    int nChars = MultiByteToWideChar(CP_ACP, 0, psz, -1, NULL, 0);
     if((tmp = ALLOC_N_OBJ(WCHAR, nChars)) != NULL)
-      MultiByteToWideChar(CP_ACP, 0, (char *)psz, -1, tmp, nChars);
+      MultiByteToWideChar(CP_ACP, 0, psz, -1, tmp, nChars);
     return tmp;
   }
 }

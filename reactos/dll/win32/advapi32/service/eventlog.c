@@ -155,16 +155,16 @@ BackupEventLogA(IN HANDLE hEventLog,
     BackupFileName.Length = BackupFileName.MaximumLength =
         lpBackupFileName ? strlen(lpBackupFileName) : 0;
 
-    _SEH2_TRY
+    RpcTryExcept
     {
         Status = ElfrBackupELFA(hEventLog,
                                 &BackupFileName);
     }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
         Status = I_RpcMapWin32Status(RpcExceptionCode());
     }
-    _SEH2_END;
+    RpcEndExcept;
 
     if (!NT_SUCCESS(Status))
     {
@@ -195,16 +195,16 @@ BackupEventLogW(IN HANDLE hEventLog,
     BackupFileName.Length = BackupFileName.MaximumLength =
         lpBackupFileName ? wcslen(lpBackupFileName) * sizeof(WCHAR) : 0;
 
-    _SEH2_TRY
+    RpcTryExcept
     {
         Status = ElfrBackupELFW(hEventLog,
                                 &BackupFileName);
     }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
         Status = I_RpcMapWin32Status(RpcExceptionCode());
     }
-    _SEH2_END;
+    RpcEndExcept;
 
     if (!NT_SUCCESS(Status))
     {
@@ -232,16 +232,16 @@ ClearEventLogA(IN HANDLE hEventLog,
     BackupFileName.Length = BackupFileName.MaximumLength =
         lpBackupFileName ? strlen(lpBackupFileName) : 0;
 
-    _SEH2_TRY
+    RpcTryExcept
     {
         Status = ElfrClearELFA(hEventLog,
                                &BackupFileName);
     }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
         Status = I_RpcMapWin32Status(RpcExceptionCode());
     }
-    _SEH2_END;
+    RpcEndExcept;
 
     if (!NT_SUCCESS(Status))
     {
@@ -269,16 +269,16 @@ ClearEventLogW(IN HANDLE hEventLog,
     BackupFileName.Length = BackupFileName.MaximumLength =
         lpBackupFileName ? wcslen(lpBackupFileName) * sizeof(WCHAR) : 0;
 
-    _SEH2_TRY
+    RpcTryExcept
     {
         Status = ElfrClearELFW(hEventLog,
                                &BackupFileName);
     }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
         Status = I_RpcMapWin32Status(RpcExceptionCode());
     }
-    _SEH2_END;
+    RpcEndExcept;
 
     if (!NT_SUCCESS(Status))
     {
@@ -300,15 +300,15 @@ CloseEventLog(IN HANDLE hEventLog)
 
     TRACE("%p\n", hEventLog);
 
-    _SEH2_TRY
+    RpcTryExcept
     {
         Status = ElfrCloseEL(&hEventLog);
     }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
         Status = I_RpcMapWin32Status(RpcExceptionCode());
     }
-    _SEH2_END;
+    RpcEndExcept;
 
     if (!NT_SUCCESS(Status))
     {
@@ -336,15 +336,15 @@ DeregisterEventSource(IN HANDLE hEventLog)
 
     TRACE("%p\n", hEventLog);
 
-    _SEH2_TRY
+    RpcTryExcept
     {
         Status = ElfrDeregisterEventSource(&hEventLog);
     }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
         Status = I_RpcMapWin32Status(RpcExceptionCode());
     }
-    _SEH2_END;
+    RpcEndExcept;
 
     if (!NT_SUCCESS(Status))
     {
@@ -372,16 +372,16 @@ GetNumberOfEventLogRecords(IN HANDLE hEventLog,
 
     TRACE("%p, %p\n", hEventLog, NumberOfRecords);
 
-    _SEH2_TRY
+    RpcTryExcept
     {
         Status = ElfrNumberOfRecords(hEventLog,
                                      &Records);
     }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
         Status = I_RpcMapWin32Status(RpcExceptionCode());
     }
-    _SEH2_END;
+    RpcEndExcept;
 
     if (!NT_SUCCESS(Status))
     {
@@ -411,16 +411,16 @@ GetOldestEventLogRecord(IN HANDLE hEventLog,
 
     TRACE("%p, %p\n", hEventLog, OldestRecord);
 
-    _SEH2_TRY
+    RpcTryExcept
     {
         Status = ElfrOldestRecord(hEventLog,
                                   &Oldest);
     }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
         Status = I_RpcMapWin32Status(RpcExceptionCode());
     }
-    _SEH2_END;
+    RpcEndExcept;
 
     if (!NT_SUCCESS(Status))
     {
@@ -509,7 +509,7 @@ OpenBackupEventLogW(IN LPCWSTR lpUNCServerName,
     FileName.Length = FileName.MaximumLength =
         lpFileName ? wcslen(lpFileName) * sizeof(WCHAR) : 0;
 
-    _SEH2_TRY
+    RpcTryExcept
     {
         Status = ElfrOpenBELW((LPWSTR)lpUNCServerName,
                               &FileName,
@@ -517,11 +517,11 @@ OpenBackupEventLogW(IN LPCWSTR lpUNCServerName,
                               0,
                               &LogHandle);
     }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
         Status = I_RpcMapWin32Status(RpcExceptionCode());
     }
-    _SEH2_END;
+    RpcEndExcept;
 
     if (!NT_SUCCESS(Status))
     {
@@ -588,7 +588,7 @@ OpenEventLogW(IN LPCWSTR lpUNCServerName,
     SourceName.Length = SourceName.MaximumLength =
         lpSourceName ? wcslen(lpSourceName) * sizeof(WCHAR) : 0;
 
-    _SEH2_TRY
+    RpcTryExcept
     {
         Status = ElfrOpenELW((LPWSTR)lpUNCServerName,
                              &SourceName,
@@ -597,11 +597,11 @@ OpenEventLogW(IN LPCWSTR lpUNCServerName,
                              0,
                              &LogHandle);
     }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
         Status = I_RpcMapWin32Status(RpcExceptionCode());
     }
-    _SEH2_END;
+    RpcEndExcept;
 
     if (!NT_SUCCESS(Status))
     {
@@ -632,7 +632,7 @@ ReadEventLogA(IN HANDLE hEventLog,
         hEventLog, dwReadFlags, dwRecordOffset, lpBuffer,
         nNumberOfBytesToRead, pnBytesRead, pnMinNumberOfBytesNeeded);
 
-    _SEH2_TRY
+    RpcTryExcept
     {
         Status = ElfrReadELA(hEventLog,
                              dwReadFlags,
@@ -642,11 +642,11 @@ ReadEventLogA(IN HANDLE hEventLog,
                              &bytesRead,
                              &minNumberOfBytesNeeded);
     }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
         Status = I_RpcMapWin32Status(RpcExceptionCode());
     }
-    _SEH2_END;
+    RpcEndExcept;
 
     if (!NT_SUCCESS(Status))
     {
@@ -689,7 +689,7 @@ ReadEventLogW(IN HANDLE hEventLog,
         hEventLog, dwReadFlags, dwRecordOffset, lpBuffer,
         nNumberOfBytesToRead, pnBytesRead, pnMinNumberOfBytesNeeded);
 
-    _SEH2_TRY
+    RpcTryExcept
     {
         Status = ElfrReadELW(hEventLog,
                              dwReadFlags,
@@ -699,11 +699,11 @@ ReadEventLogW(IN HANDLE hEventLog,
                              &bytesRead,
                              &minNumberOfBytesNeeded);
     }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
         Status = I_RpcMapWin32Status(RpcExceptionCode());
     }
-    _SEH2_END;
+    RpcEndExcept;
 
     if (!NT_SUCCESS(Status))
     {
@@ -780,7 +780,7 @@ RegisterEventSourceW(IN LPCWSTR lpUNCServerName,
     SourceName.Length = SourceName.MaximumLength =
         lpSourceName ? wcslen(lpSourceName) * sizeof(WCHAR) : 0;
 
-    _SEH2_TRY
+    RpcTryExcept
     {
         Status = ElfrRegisterEventSourceW((LPWSTR)lpUNCServerName,
                                           &SourceName,
@@ -789,11 +789,11 @@ RegisterEventSourceW(IN LPCWSTR lpUNCServerName,
                                           0,
                                           &LogHandle);
     }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
         Status = I_RpcMapWin32Status(RpcExceptionCode());
     }
-    _SEH2_END;
+    RpcEndExcept;
 
     if (!NT_SUCCESS(Status))
     {
@@ -926,7 +926,7 @@ ReportEventW(IN HANDLE hEventLog,
     /*FIXME: ComputerName */
     RtlInitEmptyUnicodeString(&ComputerName, NULL, 0);
 
-    _SEH2_TRY
+    RpcTryExcept
     {
         Status = ElfrReportEventW(hEventLog,
                                   0, /* FIXME: Time */
@@ -943,11 +943,11 @@ ReportEventW(IN HANDLE hEventLog,
                                   NULL,
                                   NULL);
     }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
         Status = I_RpcMapWin32Status(RpcExceptionCode());
     }
-    _SEH2_END;
+    RpcEndExcept;
 
     HeapFree(GetProcessHeap(), 0, Strings);
 

@@ -486,6 +486,7 @@ static HRESULT WINAPI BPInternetProtocolSink_ReportProgress(IInternetProtocolSin
     case BINDSTATUS_SENDINGREQUEST:
     case BINDSTATUS_CACHEFILENAMEAVAILABLE:
     case BINDSTATUS_DIRECTBIND:
+    case BINDSTATUS_ACCEPTRANGES:
     case BINDSTATUS_MIMETYPEAVAILABLE:
         if(!This->protocol_sink)
             return S_OK;

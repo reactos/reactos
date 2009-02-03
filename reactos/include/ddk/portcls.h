@@ -134,6 +134,10 @@ extern "C"
 
 #include <windef.h>
 
+#define NOBITMAP
+#include <mmreg.h>
+#undef NOBITMAP
+
 #include <ks.h>
 #include <ksmedia.h>
 #include <punknown.h>
@@ -741,6 +745,11 @@ typedef IUnregisterPhysicalConnection *PUNREGISTERPHYSICALCONNECTION;
         IN  PVOID Source, \
         IN  ULONG ByteCount);
 
+#undef INTERFACE
+#define INTERFACE IDmaChannel
+
+DEFINE_GUID(IID_IDmaChannel, 0x22C6AC61L, 0x851B, 0x11D0, 0x9A, 0x7F, 0x00, 0xAA, 0x00, 0x38, 0xAC, 0xFE);
+
 DECLARE_INTERFACE_(IDmaChannel, IUnknown)
 {
     DEFINE_ABSTRACT_UNKNOWN()
@@ -779,11 +788,18 @@ typedef IDmaChannel *PDMACHANNEL;
 #undef INTERFACE
 #define INTERFACE IDmaChannelSlave
 
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
+DEFINE_GUID(IID_IDmaChannelSlave, 0x22C6AC62L, 0x851B, 0x11D0, 0x9A, 0x7F, 0x00, 0xAA, 0x00, 0x38, 0xAC, 0xFE);
+#endif
+
+#undef INTERFACE
+#define INTERFACE IDmaChannelSlave
+
 DECLARE_INTERFACE_(IDmaChannelSlave, IDmaChannel)
 {
-    DEFINE_ABSTRACT_UNKNOWN();
-    DEFINE_ABSTRACT_DMACHANNEL();
-    DEFINE_ABSTRACT_DMACHANNELSLAVE();
+    DEFINE_ABSTRACT_UNKNOWN()
+    DEFINE_ABSTRACT_DMACHANNEL()
+    DEFINE_ABSTRACT_DMACHANNELSLAVE()
 };
 
 typedef IDmaChannelSlave *PDMACHANNELSLAVE;
@@ -1057,17 +1073,13 @@ typedef IPort *PPORT;
     IPortMidi Interface
 */
 
-#if 0
-#define STATIC_IID_IPortMidi \
-    0xb4c90a43L, 0x5791, 0x11d0, 0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44
-DEFINE_GUIDSTRUCT("0xB4C90A43-5791-11d0-86f9-00a0c911b544", IID_IPortMidi);
-#define IID_IPortMidi DEFINE_GUIDNAMED(IID_IPortMidi)
-#endif
-
 DEFINE_GUID(IID_IPortMidi,
     0xb4c90a40L, 0x5791, 0x11d0, 0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44);
 DEFINE_GUID(CLSID_PortMidi,
     0xb4c90a43L, 0x5791, 0x11d0, 0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44);
+
+#undef INTERFACE
+#define INTERFACE IPortMidi
 
 DECLARE_INTERFACE_(IPortMidi, IPort)
 {
@@ -1105,50 +1117,12 @@ DEFINE_GUID(CLSID_PortWaveCyclic,
 
 DECLARE_INTERFACE_(IPortWaveCyclic, IPort)
 {
-    STDMETHOD_(NTSTATUS, QueryInterface)(THIS_
-        REFIID InterfaceId,
-        PVOID* Interface
-        ) PURE;
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    DEFINE_ABSTRACT_UNKNOWN()
 
-
-    STDMETHOD_(NTSTATUS,Init)(THIS_
-        IN      PDEVICE_OBJECT  DeviceObject,
-        IN      PIRP            Irp,
-        IN      PUNKNOWN        UnknownMiniport,
-        IN      PUNKNOWN        UnknownAdapter      OPTIONAL,
-        IN      PRESOURCELIST   ResourceList 
-    )   PURE;
-    STDMETHOD_(NTSTATUS,GetDeviceProperty)(THIS_
-        IN      DEVICE_REGISTRY_PROPERTY    DeviceProperty,
-        IN      ULONG                       BufferLength,
-        OUT     PVOID                       PropertyBuffer,
-        OUT     PULONG                      ResultLength
-    )   PURE;
-    STDMETHOD_(NTSTATUS,NewRegistryKey)(THIS_
-        OUT     PREGISTRYKEY *      OutRegistryKey,
-        IN      PUNKNOWN            OuterUnknown,
-        IN      ULONG               RegistryKeyType,
-        IN      ACCESS_MASK         DesiredAccess,
-        IN      POBJECT_ATTRIBUTES  ObjectAttributes    OPTIONAL,
-        IN      ULONG               CreateOptions       OPTIONAL,
-        OUT     PULONG              Disposition         OPTIONAL 
-    )   PURE;
+    DEFINE_ABSTRACT_PORT()
 
     STDMETHOD_(VOID, Notify)(THIS_
         IN  PSERVICEGROUP ServiceGroup) PURE;
-
-
-    STDMETHOD_(NTSTATUS, NewMasterDmaChannel)(THIS_
-        OUT PDMACHANNEL* DmaChannel,
-        IN  PUNKNOWN OuterUnknown,
-        IN  PRESOURCELIST ResourceList OPTIONAL,
-        IN  ULONG MaximumLength,
-        IN  BOOL Dma32BitAddresses,
-        IN  BOOL Dma64BitAddresses,
-        IN  DMA_WIDTH DmaWidth,
-        IN  DMA_SPEED DmaSpeed) PURE;
 
     STDMETHOD_(NTSTATUS, NewSlaveDmaChannel)(THIS_
         OUT PDMACHANNELSLAVE* DmaChannel,
@@ -1159,6 +1133,15 @@ DECLARE_INTERFACE_(IPortWaveCyclic, IPort)
         IN  BOOL DemandMode,
         IN  DMA_SPEED DmaSpeed) PURE;
 
+    STDMETHOD_(NTSTATUS, NewMasterDmaChannel)(THIS_
+        OUT PDMACHANNEL* DmaChannel,
+        IN  PUNKNOWN OuterUnknown,
+        IN  PRESOURCELIST ResourceList OPTIONAL,
+        IN  ULONG MaximumLength,
+        IN  BOOL Dma32BitAddresses,
+        IN  BOOL Dma64BitAddresses,
+        IN  DMA_WIDTH DmaWidth,
+        IN  DMA_SPEED DmaSpeed) PURE;
 
 };
 
@@ -1181,24 +1164,27 @@ DECLARE_INTERFACE_(IPortWavePci, IPort)
     DEFINE_ABSTRACT_UNKNOWN()
     DEFINE_ABSTRACT_PORT()
 
+    STDMETHOD_(VOID, Notify)(THIS_
+        IN  PSERVICEGROUP ServiceGroup) PURE;
+
     STDMETHOD_(NTSTATUS, NewMasterDmaChannel)(THIS_
         OUT PDMACHANNEL* DmaChannel,
         IN  PUNKNOWN OuterUnknown,
         IN  POOL_TYPE PoolType,
         IN  PRESOURCELIST ResourceList OPTIONAL,
-        IN  BOOL ScatterGather,
-        IN  BOOL Dma32BitAddresses,
-        IN  BOOL Dma64BitAddresses,
+        IN  BOOLEAN ScatterGather,
+        IN  BOOLEAN Dma32BitAddresses,
+        IN  BOOLEAN Dma64BitAddresses,
+        IN  BOOLEAN IgnoreCount,
         IN  DMA_WIDTH DmaWidth,
         IN  DMA_SPEED DmaSpeed,
         IN  ULONG MaximumLength,
         IN  ULONG DmaPort) PURE;
-
-    STDMETHOD_(VOID, Notify)(THIS_
-        IN  PSERVICEGROUP ServiceGroup) PURE;
 };
 
 typedef IPortWavePci *PPORTWAVEPCI;
+#undef INTERFACE
+
 
 /* ===============================================================
     IMiniPort Interface
@@ -1243,26 +1229,57 @@ typedef IMiniport *PMINIPORT;
 /* ===============================================================
     IMiniportMidiStream Interface
 */
+#undef INTERFACE
+#define INTERFACE IMiniportMidiStream
+
+DEFINE_GUID(IID_IMiniportMidiStream,
+    0xb4c90a42L, 0x5791, 0x11d0, 0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44);
 
 DECLARE_INTERFACE_(IMiniportMidiStream, IUnknown)
 {
-    /* TODO - Read, SetFormat, SetState, Write */
+    DEFINE_ABSTRACT_UNKNOWN()
+
+    STDMETHOD_(NTSTATUS,SetFormat)(THIS_
+        IN PKSDATAFORMAT DataFormat)PURE;
+
+    STDMETHOD_(NTSTATUS,SetState)(THIS_
+        IN KSSTATE State)PURE;
+
+    STDMETHOD_(NTSTATUS,Read)(THIS_
+        IN PVOID BufferAddress,
+        IN ULONG BufferLength,
+        OUT PULONG BytesRead)PURE;
+
+    STDMETHOD_(NTSTATUS,Write)(THIS_
+        IN PVOID BufferAddress,
+        IN ULONG BytesToWrite,
+        OUT PULONG BytesWritten)PURE;
 };
 
 typedef IMiniportMidiStream* PMINIPORTMIDISTREAM;
-
+#undef INTERFACE
 
 /* ===============================================================
     IMiniportMidi Interface
 */
+#undef INTERFACE
+#define INTERFACE IMiniportMidi
+
+DEFINE_GUID(IID_IMiniportMidi,
+    0xb4c90a41L, 0x5791, 0x11d0, 0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44);
 
 DECLARE_INTERFACE_(IMiniportMidi, IMiniport)
 {
+    DEFINE_ABSTRACT_UNKNOWN()
+    DEFINE_ABSTRACT_MINIPORT()
+
     STDMETHOD_(NTSTATUS, Init)(THIS_
     IN  PUNKNOWN UnknownAdapter,
     IN  PRESOURCELIST ResourceList,
     IN  PPORTMIDI Port,
     OUT PSERVICEGROUP* ServiceGroup) PURE;
+
+    STDMETHOD_(void, Service)(THIS) PURE;
 
     STDMETHOD_(NTSTATUS, NewStream)(THIS_
         OUT PMINIPORTMIDISTREAM Stream,
@@ -1273,11 +1290,10 @@ DECLARE_INTERFACE_(IMiniportMidi, IMiniport)
         IN  PKSDATAFORMAT DataFormat,
         OUT PSERVICEGROUP* ServiceGroup) PURE;
 
-    STDMETHOD_(void, Service)(THIS) PURE;
 };
 
-/* TODO ... */
-
+typedef IMiniportMidi *PMINIPORTMIDI;
+#undef INTERFACE
 
 /* ===============================================================
     IMiniportDriverUart Interface
@@ -1346,7 +1362,7 @@ typedef IMiniportTopology *PMINIPORTTOPOLOGY;
 
 DECLARE_INTERFACE_(IMiniportWaveCyclicStream,IUnknown)
 {
-    DEFINE_ABSTRACT_UNKNOWN()   //  For IUnknown
+    DEFINE_ABSTRACT_UNKNOWN()
 
     STDMETHOD_(NTSTATUS,SetFormat)(THIS_
         IN PKSDATAFORMAT DataFormat)PURE;
@@ -1383,14 +1399,7 @@ DEFINE_GUID(IID_IMiniportWaveCyclic,
 
 DECLARE_INTERFACE_(IMiniportWaveCyclic, IMiniport)
 {
-    STDMETHOD_(NTSTATUS, QueryInterface)(THIS_
-        REFIID InterfaceId,
-        PVOID* Interface
-        ) PURE;
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG,Release)(THIS) PURE;
-
-
+    DEFINE_ABSTRACT_UNKNOWN()
     DEFINE_ABSTRACT_MINIPORT()
 
     STDMETHOD_(NTSTATUS, Init)(THIS_
@@ -1593,10 +1602,24 @@ typedef IPinCount *PPINCOUNT;
     IPortEvents Interface
 */
 
+#undef INTERFACE
+#define INTERFACE IPortEvents
+
+DEFINE_GUID(IID_IPortEvents, 0xA80F29C4L, 0x5498, 0x11D2, 0x95, 0xD9, 0x00, 0xC0, 0x4F, 0xB9, 0x25, 0xD3);
 DECLARE_INTERFACE_(IPortEvents, IUnknown)
 {
     DEFINE_ABSTRACT_UNKNOWN()
-    /* TODO */
+
+    STDMETHOD_(void,AddEventToEventList)(THIS_
+        IN  PKSEVENT_ENTRY EventEntry)PURE;
+
+    STDMETHOD_(void,GenerateEventList)(THIS_
+        IN  GUID* Set OPTIONAL,
+        IN  ULONG EventId,
+        IN  BOOL PinEvent,
+        IN  ULONG PinId,
+        IN  BOOL NodeEvent,
+        IN  ULONG NodeId)PURE;
 };
 
 typedef IPortEvents *PPORTEVENTS;

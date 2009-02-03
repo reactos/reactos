@@ -80,5 +80,5 @@ BEGIN
 	IDS_CPLSYSTEMNAME "Contrôleurs de jeu"
 	IDS_CPLSYSTEMDESCRIPTION "Ajouter, supprimer, et configurer le matériel de contrôle de jeu comme les joysticks et les manettes de jeu."
 	IDS_CONTROLLER "Contrôleur"
-	IDS_STATUS "Status"
+	IDS_STATUS "Statut"
 END

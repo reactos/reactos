@@ -41,7 +41,7 @@ HKCR,"rtffile\shell\open\command","",0x00020000,"%SystemRoot%\system32\wordpad.e
 HKCR,".386","",0x00000000,"vxdfile"
 HKCR,".vxd","",0x00000000,"vxdfile"
 HKCR,"vxdfile","",0x00000000,"Virtual Device Driver"
-HKCR,"vxdfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-157"
+HKCR,"vxdfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-156"
 
 ; Animated Cursors
 HKCR,".ani","",0x00000000,"anifile"
@@ -94,6 +94,7 @@ HKCR,"dllfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-154
 HKCR,".drv","",0x00000000,"drvfile"
 HKCR,"drvfile","",0x00000000,"Device Driver"
 HKCR,"drvfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-164"
+HKCR,"drvfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-154"
 
 ; Applicatons
 HKCR,".exe","",0x00000000,"exefile"
@@ -117,8 +118,15 @@ HKCR,"ttffile\shell\open\command","",0x00020000,"%SystemRoot%\system32\fontview.
 ; Help Files
 HKCR,".hlp","",0x00000000,"hlpfile"
 HKCR,"hlpfile","",0x00000000,"Help File"
-HKCR,"fonfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-168"
+HKCR,"hlpfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-168"
 HKCR,"hlpfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-24"
+HKCR,"hlpfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\winhlp32.exe %1"
+
+HKCR,".chm","",0x00000000,"chm.file"
+HKCR,"chm.file","",0x00000000,"Help File"
+HKCR,"chm.file","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-168"
+HKCR,"chm.file\DefaultIcon","",0x00020000,"%SystemRoot%\hh.exe,0"
+HKCR,"chm.file\shell\open\command","",0x00020000,"%SystemRoot%\hh.exe %1"
 
 ; set MIME type for .html and .htm because Tiny webserver needs it
 HKCR,".htm","",0x00000000,"html"

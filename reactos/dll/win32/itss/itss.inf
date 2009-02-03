@@ -1,0 +1,79 @@
+[version]
+Signature="$CHICAGO$"
+
+
+[RegisterDll]
+AddReg=Classes.Reg, Misc.Reg
+
+
+[UnregisterDll]
+DelReg=Classes.Reg, Misc.Reg
+
+
+[Classes.Reg]
+
+;; ITStorage
+HKCR,"CLSID\%CLSID_ITStorage%",,,"Microsoft InfoTech IStorage System"
+HKCR,"CLSID\%CLSID_ITStorage%\InProcServer32",,,"itss.dll"
+HKCR,"CLSID\%CLSID_ITStorage%\InProcServer32","ThreadingModel",,"Both"
+HKCR,"CLSID\%CLSID_ITStorage%\NotInsertable",,,""
+HKCR,"CLSID\%CLSID_ITStorage%\ProgID",,,"MSITFS1.0"
+HKCR,"CLSID\%CLSID_ITStorage%\VersionIndependentProgID",,,"MSITFS"
+
+HKCR,"MSITFS",,,"Microsoft InfoTech IStorage System"
+HKCR,"MSITFS\CLSID",,,"%CLSID_ITStorage%"
+HKCR,"MSITFS\CurVer",,,"MSITFS1.0"
+
+;; ITSProtocol for IE 3.0
+HKCR,"CLSID\%CLSID_MSITStore%",,,"Microsoft InfoTech Protocol for IE 3.0"
+HKCR,"CLSID\%CLSID_MSITStore%\InProcServer32",,,"itss.dll"
+HKCR,"CLSID\%CLSID_MSITStore%\InProcServer32","ThreadingModel",,"Both"
+HKCR,"CLSID\%CLSID_MSITStore%\NotInsertable",,,""
+HKCR,"CLSID\%CLSID_MSITStore%\ProgID",,,"MSITFS1.0"
+HKCR,"CLSID\%CLSID_MSITStore%\VersionIndependentProgID",,,"MSITFS"
+
+HKCR,"MSITStore",,,"Microsoft InfoTech Protocol for IE 3.0"
+HKCR,"MSITStore\CLSID",,,"%CLSID_MSITStore%"
+HKCR,"MSITStore\CurVer",,,"MSITStore1.0"
+
+
+;; ITSProtocol for IE 4.0
+HKCR,"CLSID\%CLSID_ITSProtocol%",,,"Microsoft InfoTech Protocol for IE 4.0"
+HKCR,"CLSID\%CLSID_ITSProtocol%\InProcServer32",,,"itss.dll"
+HKCR,"CLSID\%CLSID_ITSProtocol%\InProcServer32","ThreadingModel",,"Both"
+HKCR,"CLSID\%CLSID_ITSProtocol%\NotInsertable",,,""
+HKCR,"CLSID\%CLSID_ITSProtocol%\ProgID",,,"MSITFS1.0"
+HKCR,"CLSID\%CLSID_ITSProtocol%%\VersionIndependentProgID",,,"MSITFS"
+
+HKCR,"ITSProtocol","Microsoft InfoTech Protocols for IE 4.0"
+HKCR,"ITSProtocol\CLSID",,,"%CLSID_ITSProtocol%"
+HKCR,"ITSProtocol\CurVer",,,"ITSProtocol1.0"
+
+
+;; MSFSStore
+HKCR,"CLSID\%CLSID_MSFSStore%",,,"Microsoft InfoTech IStorage for Win32 Files"
+HKCR,"CLSID\%CLSID_MSFSStore%\InProcServer32",,,"itss.dll"
+HKCR,"CLSID\%CLSID_MSFSStore%\InProcServer32","ThreadingModel",,"Both"
+HKCR,"CLSID\%CLSID_MSFSStore%\NotInsertable",,,""
+HKCR,"CLSID\%CLSID_MSFSStore%\ProgID",,,"MSITFS1.0"
+HKCR,"CLSID\%CLSID_MSFSStore%\VersionIndependentProgID",,,"MSITFS"
+
+HKCR,"MSFSStore",,,"Microsoft InfoTech IStorage for Win32 Files"
+HKCR,"MSFSStore\CLSID",,,"%CLSID_MSFSStore%"
+HKCR,"MSFSStore\CurVer",,,"MSFSStore1.0"
+
+
+[Misc.Reg]
+
+HKCR,".its",,,"ITS File"
+HKCR,"ITS FILE",,,"Internet Document Set"
+HKCR,"ITS FILE\DefaultIcon",,,"itss.dll,0"
+;; HKCR "ITS FILE\shell\open\command",,,"FIXME"
+
+HKCR,"PROTOCOLS\Handler\its",,,"its: Asychronous Pluggable Protocol Handler"
+HKCR,"PROTOCOLS\Handler\its","CLSID",,"%CLSID_ITSProtocol%"
+HKCR,"PROTOCOLS\Handler\ms-its",,,"ms-its: Asychronous Pluggable Protocol Handler"
+HKCR,"PROTOCOLS\Handler\ms-its","CLSID",,"%CLSID_ITSProtocol%"
+
+HKCR,"PROTOCOLS\Name-Space Handler\mk",,,"NameSpace Filter for MK:@MSITStore:..."
+HKCR,"PROTOCOLS\Name-Space Handler\mk\*","CLSID",,"%CLSID_ITSProtocol%"

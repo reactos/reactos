@@ -33,6 +33,11 @@ IPortDMus_fnQueryInterface(
         _InterlockedIncrement(&This->ref);
         return STATUS_SUCCESS;
     }
+    else if (IsEqualGUIDAligned(refiid, &IID_IPortClsVersion))
+    {
+        return NewPortClsVersion((PPORTCLSVERSION*)Output);
+    }
+
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -61,7 +66,7 @@ IPortDMus_fnRelease(
         {
             This->pMiniport->lpVtbl->Release(This->pMiniport);
         }
-        ExFreePoolWithTag(This, TAG_PORTCLASS);
+        FreeItem(This, TAG_PORTCLASS);
         return 0;
     }
     /* Return new reference count */
@@ -172,6 +177,7 @@ NTSTATUS
 NewPortDMus(
     OUT PPORT* OutPort)
 {
+    UNIMPLEMENTED;
     return STATUS_UNSUCCESSFUL;
 }
 

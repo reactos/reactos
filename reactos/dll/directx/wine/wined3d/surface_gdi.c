@@ -168,7 +168,7 @@ IWineGDISurfaceImpl_UnlockRect(IWineD3DSurface *iface)
     if (!(This->Flags & SFLAG_LOCKED))
     {
         WARN("trying to Unlock an unlocked surf@%p\n", This);
-        return WINED3DERR_INVALIDCALL;
+        return WINEDDERR_NOTLOCKED;
     }
 
     /* Can be useful for debugging */
@@ -341,7 +341,7 @@ const char* filename)
 
         for (y = 0; y < This->pow2Height; y++) {
             const unsigned char *src = This->resource.allocatedMemory + (y * 1 * IWineD3DSurface_GetPitch(iface));
-            for (x = 0; x < This->pow2Width; x++) {	    
+            for (x = 0; x < This->pow2Width; x++) {
                 unsigned int color;
                 unsigned int comp;
                 int i;
@@ -442,11 +442,11 @@ static HRESULT WINAPI IWineGDISurfaceImpl_ReleaseDC(IWineD3DSurface *iface, HDC 
     TRACE("(%p)->(%p)\n",This,hDC);
 
     if (!(This->Flags & SFLAG_DCINUSE))
-        return WINED3DERR_INVALIDCALL;
+        return WINEDDERR_NODC;
 
     if (This->hDC !=hDC) {
         WARN("Application tries to release an invalid DC(%p), surface dc is %p\n", hDC, This->hDC);
-        return WINED3DERR_INVALIDCALL;
+        return WINEDDERR_NODC;
     }
 
     /* we locked first, so unlock now */
@@ -538,14 +538,6 @@ static void WINAPI IWineGDISurfaceImpl_GetGlDesc(IWineD3DSurface *iface, glDescr
     IWineD3DSurfaceImpl *This = (IWineD3DSurfaceImpl *)iface;
     FIXME("(%p) : Should not be called on a GDI surface\n", This);
     *glDescription = NULL;
-}
-
-static HRESULT WINAPI IWineGDISurfaceImpl_AddDirtyRect(IWineD3DSurface *iface, CONST RECT* pDirtyRect) {
-    /* GDI surface data can only be in one location, the system memory dib section. So they are
-     * always clean by definition.
-     */
-    TRACE("No dirtification in GDI surfaces\n");
-    return WINED3D_OK;
 }
 
 static HRESULT WINAPI IWineGDISurfaceImpl_SetMem(IWineD3DSurface *iface, void *Mem) {
@@ -673,7 +665,6 @@ const IWineD3DSurfaceVtbl IWineGDISurface_Vtbl =
     IWineD3DBaseSurfaceImpl_SetClipper,
     IWineD3DBaseSurfaceImpl_GetClipper,
     /* Internal use: */
-    IWineGDISurfaceImpl_AddDirtyRect,
     IWineGDISurfaceImpl_LoadTexture,
     IWineD3DBaseSurfaceImpl_BindTexture,
     IWineGDISurfaceImpl_SaveSnapshot,

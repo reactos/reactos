@@ -2861,12 +2861,12 @@ Return Values:
 --*/
 ULONG
 AtapiParseArgumentString(
-    IN PCHAR String,
-    IN PCHAR KeyWord
+    IN PCCH String,
+    IN PCCH KeyWord
     )
 {
-    PCHAR cptr;
-    PCHAR kptr;
+    PCCH cptr;
+    PCCH kptr;
     ULONG value;
     ULONG stringLength = 0;
     ULONG keyWordLength = 0;
@@ -2879,24 +2879,15 @@ AtapiParseArgumentString(
         return 0;
     }
 
-    // Calculate the string length and lower case all characters.
+    // Calculate the string length.
     cptr = String;
-    while (*cptr) {
-        if (*cptr >= 'A' && *cptr <= 'Z') {
-            *cptr = *cptr + ('a' - 'A');
-        }
-        cptr++;
+    while (*cptr++) {
         stringLength++;
     }
 
-    // Calculate the keyword length and lower case all characters.
-    cptr = KeyWord;
-    while (*cptr) {
-
-        if (*cptr >= 'A' && *cptr <= 'Z') {
-            *cptr = *cptr + ('a' - 'A');
-        }
-        cptr++;
+    // Calculate the keyword length.
+    kptr = KeyWord;
+    while (*kptr++) {
         keyWordLength++;
     }
 
@@ -2922,18 +2913,21 @@ ContinueSearch:
     }
 
     kptr = KeyWord;
-    while (*cptr++ == *kptr++) {
+    while ((*cptr == *kptr) ||
+           (*cptr <= 'Z' && *cptr + ('a' - 'A') == *kptr) ||
+           (*cptr >= 'a' && *cptr - ('a' - 'A') == *kptr)) {
+        cptr++;
+        kptr++;
 
-        if (*(cptr - 1) == '\0') {
+        if (*cptr == '\0') {
             // end of string
             return 0;
         }
     }
 
-    if (*(kptr - 1) == '\0') {
+    if (*kptr == '\0') {
 
         // May have a match backup and check for blank or equals.
-        cptr--;
         while (*cptr == ' ' || *cptr == '\t') {
             cptr++;
         }
@@ -2969,7 +2963,7 @@ ContinueSearch:
         }
 
         value = 0;
-        if ((*cptr == '0') && (*(cptr + 1) == 'x')) {
+        if ((*cptr == '0') && ((*(cptr + 1) == 'x') || (*(cptr + 1) == 'X'))) {
             // Value is in Hex.  Skip the "0x"
             cptr += 2;
             for (index = 0; *(cptr + index); index++) {
@@ -2985,6 +2979,8 @@ ContinueSearch:
                 } else {
                     if ((*(cptr + index) >= 'a') && (*(cptr + index) <= 'f')) {
                         value = (16 * value) + (*(cptr + index) - 'a' + 10);
+                    } else if ((*(cptr + index) >= 'A') && (*(cptr + index) <= 'F')) {
+                        value = (16 * value) + (*(cptr + index) - 'A' + 10);
                     } else {
                         // Syntax error, return not found.
                         return 0;
@@ -8754,10 +8750,10 @@ BuildRequestSenseSrb (
 ULONG
 AtapiRegCheckDevLunValue(
     IN PVOID HwDeviceExtension,
-    IN PWCHAR NamePrefix,
+    IN PCWCH NamePrefix,
     IN ULONG chan,
     IN ULONG dev,
-    IN PWSTR Name,
+    IN PCWSTR Name,
     IN ULONG Default
     )
 {
@@ -8824,7 +8820,7 @@ AtapiRegCheckDevValue(
     IN PVOID HwDeviceExtension,
     IN ULONG chan,
     IN ULONG dev,
-    IN PWSTR Name,
+    IN PCWSTR Name,
     IN ULONG Default
     )
 {
@@ -8942,8 +8938,8 @@ AtapiRegCheckDevValue(
 ULONG
 AtapiRegCheckParameterValue(
     IN PVOID HwDeviceExtension,
-    IN PWSTR PathSuffix,
-    IN PWSTR Name,
+    IN PCWSTR PathSuffix,
+    IN PCWSTR Name,
     IN ULONG Default
     )
 {
@@ -9110,7 +9106,7 @@ extern "C"
 VOID
 _cdecl
 _PrintNtConsole(
-    PCHAR DebugMessage,
+    PCCH DebugMessage,
     ...
     )
 {

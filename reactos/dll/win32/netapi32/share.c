@@ -92,3 +92,24 @@ NET_API_STATUS WINAPI NetShareDel(LMSTR servername, LMSTR netname, DWORD reserve
     FIXME("Stub (%s %s %d)\n", debugstr_w(servername), debugstr_w(netname), reserved);
     return NERR_Success;
 }
+
+/************************************************************
+ * NetShareGetInfo  (NETAPI32.@)
+ */
+NET_API_STATUS WINAPI NetShareGetInfo(LMSTR servername, LMSTR netname,
+    DWORD level, LPBYTE *bufptr)
+{
+    FIXME("Stub (%s %s %d %p)\n", debugstr_w(servername),
+        debugstr_w(netname),level, bufptr);
+    return NERR_NetNameNotFound;
+}
+
+/************************************************************
+ * NetShareAdd  (NETAPI32.@)
+ */
+NET_API_STATUS WINAPI NetShareAdd(LMSTR servername,
+    DWORD level, LPBYTE buf, LPDWORD parm_err)
+{
+    FIXME("Stub (%s %d %p %p)\n", debugstr_w(servername), level, buf, parm_err);
+    return ERROR_NOT_SUPPORTED;
+}

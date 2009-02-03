@@ -59,17 +59,28 @@ typedef struct __SEH2TryLevel
 	volatile struct __SEH2TryLevel * ST_Next;
 	void * ST_Filter;
 	void * ST_Body;
-	void * volatile ST_Ebp;
-	void * volatile ST_Esp;
 }
 _SEH2TryLevel_t;
+
+typedef struct __SEH2HandleTryLevel
+{
+	_SEH2TryLevel_t  SHT_Common;
+	void * volatile SHT_Esp;
+	void * volatile SHT_Ebp;
+	void * volatile SHT_Ebx;
+	void * volatile SHT_Esi;
+	void * volatile SHT_Edi;
+}
+_SEH2HandleTryLevel_t;
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-extern __attribute__((returns_twice)) void __cdecl _SEH2EnterFrame(_SEH2Frame_t *);
+extern int __cdecl _SEH2EnterFrameAndTrylevel(_SEH2Frame_t *, volatile _SEH2TryLevel_t *);
+extern __attribute__((returns_twice)) int __cdecl _SEH2EnterFrameAndHandleTrylevel(_SEH2Frame_t *, volatile _SEH2HandleTryLevel_t *, void *);
+extern __attribute__((returns_twice)) int __cdecl _SEH2EnterHandleTrylevel(_SEH2Frame_t *, volatile _SEH2HandleTryLevel_t *, void *);
 extern void __cdecl _SEH2LeaveFrame(void);
 extern void __cdecl _SEH2Return(void);
 
@@ -177,8 +188,25 @@ void * _SEHClosureFromTrampoline(_SEHTrampoline_t * trampoline_)
 		__SEH_BARRIER; _SEH2FrameP->SF_TopTryLevel = (TRYLEVEL_); __SEH_BARRIER; \
 	}
 
-#define __SEH_ENTER_TRYLEVEL() __SEH_SET_TRYLEVEL(&_SEHTryLevel)
-#define __SEH_LEAVE_TRYLEVEL() __SEH_SET_TRYLEVEL(_SEHPrevTryLevelP)
+#define __SEH_ENTER_FRAME_AND_TRYLEVEL(TRYLEVEL_) (_SEH2EnterFrameAndTrylevel(_SEH2FrameP, (TRYLEVEL_)))
+#define __SEH_ENTER_TRYLEVEL(TRYLEVEL_) ((__SEH_SET_TRYLEVEL((TRYLEVEL_))), 0)
+
+#define __SEH_ENTER_FRAME_AND_HANDLE_TRYLEVEL(TRYLEVEL_, HANDLE_) _SEH2EnterFrameAndHandleTrylevel(_SEH2FrameP, (TRYLEVEL_), (HANDLE_))
+#define __SEH_ENTER_HANDLE_TRYLEVEL(TRYLEVEL_, HANDLE_) _SEH2EnterHandleTrylevel(_SEH2FrameP, (TRYLEVEL_), (HANDLE_))
+
+#define __SEH_ENTER_SCOPE(TRYLEVEL_) (_SEHTopTryLevel ? __SEH_ENTER_FRAME_AND_TRYLEVEL(TRYLEVEL_) : __SEH_ENTER_TRYLEVEL(TRYLEVEL_))
+#define __SEH_ENTER_HANDLE_SCOPE(TRYLEVEL_, HANDLE_) (({ __SEH_BARRIER; __asm__ __volatile__("mov %%esp, %0" : "=m" ((TRYLEVEL_)->SHT_Esp)); __SEH_BARRIER; }), (_SEHTopTryLevel ? __SEH_ENTER_FRAME_AND_HANDLE_TRYLEVEL((TRYLEVEL_), (HANDLE_)) : __SEH_ENTER_HANDLE_TRYLEVEL((TRYLEVEL_), (HANDLE_))))
+
+#define __SEH_LEAVE_SCOPE() \
+	if(_SEHTopTryLevel) \
+	{ \
+		_SEH2LeaveFrame(); \
+		__asm__ __volatile__("mov %0, %%esp" : : "g" (_SEHStackPointer)); \
+	} \
+	else \
+	{ \
+		__SEH_SET_TRYLEVEL(_SEHPrevTryLevelP); \
+	} \
 
 #define __SEH_END_SCOPE_CHAIN \
 	static __attribute__((unused)) const int _SEH2ScopeKind = 1; \
@@ -203,27 +231,23 @@ void * _SEHClosureFromTrampoline(_SEHTrampoline_t * trampoline_)
 			__label__ _SEHAfterTry; \
 			static const int _SEH2ScopeKind = 0; \
 			volatile _SEH2TryLevel_t _SEHTryLevel; \
+			volatile _SEH2HandleTryLevel_t _SEHHandleTryLevel; \
 			void * _SEHStackPointer; \
-			volatile _SEH2TryLevel_t * const _SEH2TryLevelP = &_SEHTryLevel; \
+			volatile _SEH2TryLevel_t * _SEH2TryLevelP; \
 			_SEH2Frame_t * const _SEH2FrameP = _SEHTopTryLevel ? \
 				({ __asm__ __volatile__("mov %%esp, %0" : "=g" (_SEHStackPointer)); __builtin_alloca(sizeof(_SEH2Frame_t)); }) : \
 				_SEHCurFrameP; \
  \
 			(void)_SEH2ScopeKind; \
 			(void)_SEHTryLevel; \
+			(void)_SEHHandleTryLevel; \
 			(void)_SEHStackPointer; \
 			(void)_SEH2FrameP; \
 			(void)_SEH2TryLevelP; \
  \
-			if(_SEHTopTryLevel) \
-				_SEH2EnterFrame(_SEH2FrameP); \
- \
-			_SEHTryLevel.ST_Next = _SEHPrevTryLevelP; \
 			goto _SEHBeforeTry; \
  \
-			_SEHDoTry:; \
- \
-			__SEH_ENTER_TRYLEVEL();
+			_SEHDoTry:;
 
 #define __SEH_END_SCOPE \
 		} \
@@ -257,6 +281,9 @@ void * _SEHClosureFromTrampoline(_SEHTrampoline_t * trampoline_)
  \
 		_SEHTryLevel.ST_Filter = 0; \
 		_SEHTryLevel.ST_Body = &_SEHFinally; \
+		_SEHTryLevel.ST_Next = _SEHPrevTryLevelP; \
+		__SEH_ENTER_SCOPE(&_SEHTryLevel); \
+		_SEH2TryLevelP = &_SEHTryLevel; \
  \
 		_SEHAbnormalTermination = 1; \
  \
@@ -265,12 +292,7 @@ void * _SEHClosureFromTrampoline(_SEHTrampoline_t * trampoline_)
  \
 		_SEHAbnormalTermination = 0; \
  \
-		if(_SEHTopTryLevel) \
-			_SEH2LeaveFrame(); \
-		else \
-		{ \
-			__SEH_LEAVE_TRYLEVEL(); \
-		} \
+		__SEH_LEAVE_SCOPE(); \
  \
 		_SEHFinally(); \
 		goto _SEHEndExcept; \
@@ -299,64 +321,51 @@ void * _SEHClosureFromTrampoline(_SEHTrampoline_t * trampoline_)
 		{ \
 			__attribute__((unused)) struct _EXCEPTION_POINTERS * volatile _SEHExceptionInformation; \
  \
-			if(__builtin_constant_p((__VA_ARGS__))) \
+			if(__builtin_constant_p((__VA_ARGS__)) && (__VA_ARGS__) <= 0) \
 			{ \
-				if((__VA_ARGS__) > 0) \
-				{ \
-					_SEHTryLevel.ST_Filter = (void *)1; \
-					_SEHTryLevel.ST_Body = &&_SEHBeginExcept; \
-					__SEH_USE_LABEL(_SEHBeginExcept); \
-				} \
-				else if((__VA_ARGS__) < 0) \
+				if((__VA_ARGS__) < 0) \
 				{ \
 					_SEHTryLevel.ST_Filter = (void *)-1; \
-					_SEHTryLevel.ST_Body = NULL; \
+					_SEHTryLevel.ST_Body = 0; \
 				} \
 				else \
 				{ \
 					_SEHTryLevel.ST_Filter = (void *)0; \
-					_SEHTryLevel.ST_Body = NULL; \
+					_SEHTryLevel.ST_Body = 0; \
 				} \
+ \
+				_SEHTryLevel.ST_Next = _SEHPrevTryLevelP; \
+				__SEH_ENTER_SCOPE(&_SEHTryLevel); \
+				_SEH2TryLevelP = &_SEHTryLevel; \
 			} \
 			else \
 			{ \
-				__SEH_DEFINE_EXCEPT(_SEHExcept) \
+				if(__builtin_constant_p((__VA_ARGS__)) && (__VA_ARGS__) > 0) \
+					_SEHHandleTryLevel.SHT_Common.ST_Filter = (void *)1; \
+				else \
 				{ \
-					__SEH_RETURN_EXCEPT((__VA_ARGS__)); \
+					__SEH_DEFINE_EXCEPT(_SEHExcept) \
+					{ \
+						__SEH_RETURN_EXCEPT((__VA_ARGS__)); \
+					} \
+ \
+					_SEHHandleTryLevel.SHT_Common.ST_Filter = &_SEHExcept; \
 				} \
  \
-				_SEHTryLevel.ST_Filter = &_SEHExcept; \
-				_SEHTryLevel.ST_Body = &&_SEHBeginExcept; \
-				__SEH_USE_LABEL(_SEHBeginExcept); \
+				_SEHHandleTryLevel.SHT_Common.ST_Next = _SEHPrevTryLevelP; \
+				_SEH2TryLevelP = &_SEHHandleTryLevel.SHT_Common; \
+ \
+				if(__builtin_expect(__SEH_ENTER_HANDLE_SCOPE(&_SEHHandleTryLevel, &&_SEHBeginExcept), 0)) \
+					goto _SEHBeginExcept; \
 			} \
 		} \
- \
-		__SEH_BARRIER; \
- \
-		__asm__ __volatile__ \
-		( \
-			"mov %%ebp, %0\n" \
-			"mov %%esp, %1" : \
-			"=m" (_SEHTryLevel.ST_Ebp), \
-			"=m" (_SEHTryLevel.ST_Esp) \
-		); \
- \
-		__SEH_BARRIER; \
  \
 		goto _SEHDoTry; \
  \
 		__attribute__((unused)) __SEH_DEFINE_FINALLY(_SEHFinally) { __SEH_RETURN_FINALLY(); } \
  \
 		_SEHAfterTry:; \
-		if(_SEHTopTryLevel) \
-		{ \
-			_SEH2LeaveFrame(); \
-			__asm__ __volatile__("mov %0, %%esp" : : "g" (_SEHStackPointer)); \
-		} \
-		else \
-		{ \
-			__SEH_LEAVE_TRYLEVEL(); \
-		} \
+		__SEH_LEAVE_SCOPE(); \
  \
 		goto _SEHEndExcept; \
  \

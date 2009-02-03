@@ -1,6 +1,12 @@
 #ifndef _BASETSD_H
 #define _BASETSD_H
 
+#if !defined(__ROS_LONG64__)
+#ifdef __WINESRC__
+//#define __ROS_LONG64__
+#endif
+#endif
+
 #ifdef __GNUC__
 #ifndef __int64
 #define __int64 long long
@@ -93,8 +99,13 @@ static inline void* ULongToPtr( const unsigned long ul )
     { return( (void*)(ULONG_PTR)ul ); }
 #endif /* !__midl */
 #else /*  !_WIN64 */
+#if !defined(__ROS_LONG64__)
 typedef int INT_PTR, *PINT_PTR;
 typedef unsigned int UINT_PTR, *PUINT_PTR;
+#else
+typedef long INT_PTR, *PINT_PTR;
+typedef unsigned long UINT_PTR, *PUINT_PTR;
+#endif
 
 #ifndef LONG_PTR_DEFINED
 #define LONG_PTR_DEFINED

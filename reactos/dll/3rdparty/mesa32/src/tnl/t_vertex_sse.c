@@ -25,13 +25,13 @@
  *    Keith Whitwell <keithw@tungstengraphics.com>
  */
 
-#include "glheader.h"
-#include "context.h"
-#include "colormac.h"
+#include "main/glheader.h"
+#include "main/context.h"
+#include "main/colormac.h"
+#include "main/simple_list.h"
+#include "main/enums.h"
 #include "t_context.h"
 #include "t_vertex.h"
-#include "simple_list.h"
-#include "enums.h"
 
 #if defined(USE_SSE_ASM)
 
@@ -146,7 +146,8 @@ static void emit_load3f_1( struct x86_program *p,
 			   struct x86_reg dest,
 			   struct x86_reg arg0 )
 {
-   emit_load4f_1(p, dest, arg0);
+   /* Loading from memory erases the upper bits. */
+   sse_movss(&p->func, dest, arg0);
 }
 
 static void emit_load2f_2( struct x86_program *p, 
@@ -160,7 +161,8 @@ static void emit_load2f_1( struct x86_program *p,
 			   struct x86_reg dest,
 			   struct x86_reg arg0 )
 {
-   emit_load4f_1(p, dest, arg0);
+   /* Loading from memory erases the upper bits. */
+   sse_movss(&p->func, dest, arg0);
 }
 
 static void emit_load1f_1( struct x86_program *p, 
@@ -352,6 +354,7 @@ static GLboolean build_vertex_emit( struct x86_program *p )
    struct x86_reg temp = x86_make_reg(file_XMM, 0);
    struct x86_reg vp0 = x86_make_reg(file_XMM, 1);
    struct x86_reg vp1 = x86_make_reg(file_XMM, 2);
+   struct x86_reg temp2 = x86_make_reg(file_XMM, 3);
    GLubyte *fixup, *label;
 
    /* Push a few regs?
@@ -524,7 +527,8 @@ static GLboolean build_vertex_emit( struct x86_program *p )
 	    sse_shufps(&p->func, temp, temp, SHUF(W,X,Y,Z));
 
 	    get_src_ptr(p, srcECX, vtxESI, &a[1]);
-	    emit_load(p, temp, 1, x86_deref(srcECX), a[1].inputsize);
+	    emit_load(p, temp2, 1, x86_deref(srcECX), a[1].inputsize);
+	    sse_movss(&p->func, temp, temp2);
 	    update_src_ptr(p, srcECX, vtxESI, &a[1]);
 
 	    /* Rearrange and possibly do BGR conversion:
@@ -539,8 +543,8 @@ static GLboolean build_vertex_emit( struct x86_program *p )
 	 }
 	 else {
 	    _mesa_printf("Can't emit 3ub\n");
+	    return GL_FALSE;	/* add this later */
 	 }
-	 return GL_FALSE;	/* add this later */
 	 break;
 
       case EMIT_4UB_4F_RGBA:

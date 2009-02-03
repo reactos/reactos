@@ -2132,10 +2132,6 @@ ProcessUnattendInf(HINF hUnattendedInf)
         else
             SetupData.DisableVmwInst = 0;
       }
-    else if (!wcscmp(szName, L"BootCDRegTestActive"))
-      {
-        SetupData.BootCDRegtestActive = _wtoi(szValue);
-      }
 
   }
   while (SetupFindNextLine(&InfContext, &InfContext));
@@ -2187,55 +2183,6 @@ ProcessUnattendInf(HINF hUnattendedInf)
       }while(SetupFindNextLine(&InfContext, &InfContext));
    }
 
-  if (SetupData.BootCDRegtestActive)
-    {
-      char szPath[MAX_PATH];
-      FILE * file;
-      WIN32_FIND_DATAA ffd;
-      HANDLE hFind = INVALID_HANDLE_VALUE;
-#if 0
-      if (!SHGetSpecialFolderPathA(0, szPath, CSIDL_DESKTOP, FALSE))
-        {
-          /* failed to get desktop path */
-            strcpy(szPath, "C:");
-        }
-      strcat(szPath, "\\sysregtest.bat");
-#else
-      strcpy(szPath, "C:\\sysregtest.bat");
-#endif
-      file = fopen(szPath, "w+");
-      if (!file)
-        {
-          DPRINT1("Error: failed create sysregtest.bat");
-          RegCloseKey(hKey);
-          return TRUE;
-        }
-
-      RegSetValueExA(hKey,
-                    "BootCDRegtestActive",
-                    0,
-                    REG_SZ,
-                    (const BYTE*)szPath,
-                     (strlen(szPath)+1) * sizeof(char));
-
-
-      /* winetests */
-      hFind = FindFirstFileA("c:\\reactos\\bin\\*.exe", &ffd); /* %windir% isn't working on ros */
-      if (hFind != INVALID_HANDLE_VALUE)
-      {
-        do
-        {
-          if (ffd.dwFileAttributes & ~FILE_ATTRIBUTE_DIRECTORY)
-            fprintf(file, "%s%s\n", "dbgprint --winetest %windir%\\bin\\", ffd.cFileName);
-        }
-        while (FindNextFileA(hFind, &ffd) != 0);
-        FindClose(hFind);
-      }
-
-      fprintf(file, "%s\n", "dbgprint SYSREG_CHECKPOINT:THIRDBOOT_COMPLETE");
-      fprintf(file, "%s\n", "shutdown -s");
-      fclose(file);
-    }
     RegCloseKey(hKey);
     return TRUE;
 }

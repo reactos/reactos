@@ -1372,7 +1372,7 @@ BOOL RpcQualityOfService_IsEqual(const RpcQualityOfService *qos1, const RpcQuali
     if (!qos1 || !qos2)
         return FALSE;
 
-    TRACE("qos1 = { %ld %ld %ld %ld }, qos2 = { %ld %ld %ld %ld }\n",
+    TRACE("qos1 = { %d %d %d %d }, qos2 = { %d %d %d %d }\n",
         qos1->qos->Capabilities, qos1->qos->IdentityTracking,
         qos1->qos->ImpersonationType, qos1->qos->AdditionalSecurityInfoType,
         qos2->qos->Capabilities, qos2->qos->IdentityTracking,
@@ -1517,14 +1517,14 @@ RpcBindingSetAuthInfoExA( RPC_BINDING_HANDLE Binding, RPC_CSTR ServerPrincName,
   {
       RPC_STATUS status;
 
-      TRACE("SecurityQos { Version=%ld, Capabilties=0x%lx, IdentityTracking=%ld, ImpersonationLevel=%ld",
+      TRACE("SecurityQos { Version=%d, Capabilities=0x%x, IdentityTracking=%d, ImpersonationLevel=%d",
             SecurityQos->Version, SecurityQos->Capabilities, SecurityQos->IdentityTracking, SecurityQos->ImpersonationType);
       if (SecurityQos->Version >= 2)
       {
           const RPC_SECURITY_QOS_V2_A *SecurityQos2 = (const RPC_SECURITY_QOS_V2_A *)SecurityQos;
-          TRACE(", AdditionalSecurityInfoType=%ld", SecurityQos2->AdditionalSecurityInfoType);
+          TRACE(", AdditionalSecurityInfoType=%d", SecurityQos2->AdditionalSecurityInfoType);
           if (SecurityQos2->AdditionalSecurityInfoType == RPC_C_AUTHN_INFO_TYPE_HTTP)
-              TRACE(", { %p, 0x%lx, %ld, %ld, %p, %s }",
+              TRACE(", { %p, 0x%x, %d, %d, %p, %s }",
                     SecurityQos2->u.HttpCredentials->TransportCredentials,
                     SecurityQos2->u.HttpCredentials->Flags,
                     SecurityQos2->u.HttpCredentials->AuthenticationTarget,
@@ -1647,14 +1647,14 @@ RpcBindingSetAuthInfoExW( RPC_BINDING_HANDLE Binding, RPC_WSTR ServerPrincName, 
   {
       RPC_STATUS status;
 
-      TRACE("SecurityQos { Version=%ld, Capabilties=0x%lx, IdentityTracking=%ld, ImpersonationLevel=%ld",
+      TRACE("SecurityQos { Version=%d, Capabilities=0x%x, IdentityTracking=%d, ImpersonationLevel=%d",
             SecurityQos->Version, SecurityQos->Capabilities, SecurityQos->IdentityTracking, SecurityQos->ImpersonationType);
       if (SecurityQos->Version >= 2)
       {
           const RPC_SECURITY_QOS_V2_W *SecurityQos2 = (const RPC_SECURITY_QOS_V2_W *)SecurityQos;
-          TRACE(", AdditionalSecurityInfoType=%ld", SecurityQos2->AdditionalSecurityInfoType);
+          TRACE(", AdditionalSecurityInfoType=%d", SecurityQos2->AdditionalSecurityInfoType);
           if (SecurityQos2->AdditionalSecurityInfoType == RPC_C_AUTHN_INFO_TYPE_HTTP)
-              TRACE(", { %p, 0x%lx, %ld, %ld, %p, %s }",
+              TRACE(", { %p, 0x%x, %d, %d, %p, %s }",
                     SecurityQos2->u.HttpCredentials->TransportCredentials,
                     SecurityQos2->u.HttpCredentials->Flags,
                     SecurityQos2->u.HttpCredentials->AuthenticationTarget,

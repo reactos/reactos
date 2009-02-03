@@ -21,6 +21,10 @@
 import "basetsd.h";
 import "guiddef.h";
 
+cpp_quote("#ifndef __wtypes_h__")
+cpp_quote("#define __wtypes_h__")
+cpp_quote("#endif")
+
 [
   uuid(D3980A60-910C-1068-9341-00DD010F2F1C),
   version(0.1),
@@ -789,7 +793,7 @@ typedef struct tagQUERYCONTEXT
     DWORD dwVersionLo;
 } QUERYCONTEXT;
 
-typedef [v1_enum] enum tagTYSPEC 
+typedef [v1_enum] enum tagTYSPEC
 {
     TYSPEC_CLSID,
     TYSPEC_FILEEXT,

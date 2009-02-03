@@ -36,9 +36,12 @@
 #include <debug.h>
 
 extern BYTE gQueueKeyStateTable[];
+extern NTSTATUS Win32kInitWin32Thread(PETHREAD Thread);
 
 /* GLOBALS *******************************************************************/
 
+PTHREADINFO ptiRawInput;
+PKTIMER MasterTimer;
 
 static HANDLE MouseDeviceHandle;
 static HANDLE MouseThreadHandle;
@@ -46,6 +49,8 @@ static CLIENT_ID MouseThreadId;
 static HANDLE KeyboardThreadHandle;
 static CLIENT_ID KeyboardThreadId;
 static HANDLE KeyboardDeviceHandle;
+static HANDLE RawInputThreadHandle;
+static CLIENT_ID RawInputThreadId;
 static KEVENT InputThreadsStart;
 static BOOLEAN InputThreadsRunning = FALSE;
 
@@ -468,7 +473,6 @@ KeyboardThreadMain(PVOID StartContext)
    MSG msg;
    PUSER_MESSAGE_QUEUE FocusQueue;
    struct _ETHREAD *FocusThread;
-   extern NTSTATUS Win32kInitWin32Thread(PETHREAD Thread);
 
    PKEYBOARD_INDICATOR_TRANSLATION IndicatorTrans = NULL;
    UINT ModifierState = 0;
@@ -832,6 +836,79 @@ KeyboardEscape:
 }
 
 
+static PVOID Objects[2];
+/*
+    Raw Input Thread.
+    Since this relies on InputThreadsStart, just fake it.
+ */
+static VOID APIENTRY
+RawInputThreadMain(PVOID StartContext)
+{
+  NTSTATUS Status;
+  LARGE_INTEGER DueTime;
+
+  DueTime.QuadPart = (LONGLONG)(-10000000);
+
+  do
+  {
+      KEVENT Event;
+      KeInitializeEvent(&Event, NotificationEvent, FALSE);
+      Status = KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, &DueTime);
+  } while (!NT_SUCCESS(Status));
+
+
+  Objects[0] = &InputThreadsStart;
+
+  MasterTimer = ExAllocatePoolWithTag(NonPagedPool, sizeof(KTIMER), TAG_INPUT);
+  if (!MasterTimer)
+  {   
+     DPRINT1("Win32K: Failed making Raw Input thread a win32 thread.\n");
+     return;
+  }
+  KeInitializeTimer(MasterTimer);
+  Objects[1] = MasterTimer;
+
+  // This thread requires win32k!
+  Status = Win32kInitWin32Thread(PsGetCurrentThread());
+  if (!NT_SUCCESS(Status))
+  {
+     DPRINT1("Win32K: Failed making Raw Input thread a win32 thread.\n");
+     return; //(Status);
+  }
+
+  ptiRawInput = PsGetCurrentThreadWin32Thread();
+  DPRINT1("\nRaw Input Thread 0x%x \n", ptiRawInput);
+
+
+  KeSetPriorityThread(&PsGetCurrentThread()->Tcb,
+                       LOW_REALTIME_PRIORITY + 3);
+
+  UserEnterExclusive();
+  StartTheTimers();
+  UserLeave();
+
+  //
+  // ATM, we just have one job to handle, merge the other two later.
+  //
+  for(;;)
+  {
+      DPRINT( "Raw Input Thread Waiting for start event\n" );
+
+      Status = KeWaitForMultipleObjects( 2,
+                                         Objects,
+                                         WaitAll, //WaitAny,
+                                         WrUserRequest,
+                                         KernelMode,
+                                         TRUE,
+                                         NULL,
+                                         NULL);
+      DPRINT( "Raw Input Thread Starting...\n" );
+
+      ProcessTimers();
+  }
+  DPRINT1("Raw Input Thread Exit!\n");
+}
+
 NTSTATUS FASTCALL
 InitInputImpl(VOID)
 {
@@ -843,6 +920,18 @@ InitInputImpl(VOID)
    if(!UserInitDefaultKeyboardLayout())
    {
       DPRINT1("Failed to initialize default keyboard layout!\n");
+   }
+
+   Status = PsCreateSystemThread(&RawInputThreadHandle,
+                                 THREAD_ALL_ACCESS,
+                                 NULL,
+                                 NULL,
+                                 &RawInputThreadId,
+                                 RawInputThreadMain,
+                                 NULL);
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT1("Win32K: Failed to create raw thread.\n");
    }
 
    Status = PsCreateSystemThread(&KeyboardThreadHandle,
@@ -984,8 +1073,8 @@ IntMouseInput(MOUSEINPUT *mi)
    BOOL DoMove, SwapButtons;
    MSG Msg;
    HBITMAP hBitmap;
-   BITMAPOBJ *BitmapObj;
-   SURFOBJ *SurfObj;
+   SURFACE *psurf;
+   SURFOBJ *pso;
    PDC dc;
    PWINDOW_OBJECT DesktopWindow;
 
@@ -1083,21 +1172,21 @@ IntMouseInput(MOUSEINPUT *mi)
          hBitmap = dc->w.hBitmap;
          DC_UnlockDc(dc);
 
-         BitmapObj = BITMAPOBJ_LockBitmap(hBitmap);
-         if (BitmapObj)
+         psurf = SURFACE_LockSurface(hBitmap);
+         if (psurf)
          {
-            SurfObj = &BitmapObj->SurfObj;
+            pso = &psurf->SurfObj;
 
             if (CurInfo->ShowingCursor)
             {
-               IntEngMovePointer(SurfObj, MousePos.x, MousePos.y, &(GDIDEV(SurfObj)->Pointer.Exclude));
+               IntEngMovePointer(pso, MousePos.x, MousePos.y, &(GDIDEV(pso)->Pointer.Exclude));
             }
             /* Only now, update the info in the GDIDEVICE, so EngMovePointer can
             * use the old values to move the pointer image */
             gpsi->ptCursor.x = MousePos.x;
             gpsi->ptCursor.y = MousePos.y;
 
-            BITMAPOBJ_UnlockBitmap(BitmapObj);
+            SURFACE_UnlockSurface(psurf);
          }
       }
    }

@@ -23,8 +23,7 @@
  *
  * Note that TREEVIEW_INFO * and HTREEITEM are the same thing.
  *
- * Note2: All items always! have valid (allocated) pszText field.
- *      If item's text == LPSTR_TEXTCALLBACKA we allocate buffer
+ * Note2: If item's text == LPSTR_TEXTCALLBACKA we allocate buffer
  *      of size TEXT_CALLBACK_SIZE in DoSetItem.
  *      We use callbackMask to keep track of fields to be updated.
  *
@@ -752,7 +751,7 @@ TREEVIEW_UpdateDispInfo(const TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *wineItem,
 					   (LPSTR)callback.item.pszText, -1,
                                            NULL, 0);
 	    buflen = max((len)*sizeof(WCHAR), TEXT_CALLBACK_SIZE);
-	    newText = (LPWSTR)ReAlloc(wineItem->pszText, buflen);
+            newText = ReAlloc(wineItem->pszText, buflen);
 
 	    TRACE("returned str %s, len=%d, buflen=%d\n",
 		  debugstr_a((LPSTR)callback.item.pszText), len, buflen);
@@ -794,7 +793,7 @@ TREEVIEW_UpdateDispInfo(const TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *wineItem,
 					  (LPSTR)callback.item.pszText, -1,
                                            NULL, 0);
 	    buflen = max((len)*sizeof(WCHAR), TEXT_CALLBACK_SIZE);
-	    newText = (LPWSTR)Alloc(buflen);
+            newText = Alloc(buflen);
 
 	    TRACE("same buffer str %s, len=%d, buflen=%d\n",
 		  debugstr_a((LPSTR)callback.item.pszText), len, buflen);
@@ -859,7 +858,7 @@ TREEVIEW_ComputeItemInternalMetrics(const TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM 
 		> TVS_LINESATROOT);
 #endif
 
-    item->linesOffset = infoPtr->uIndent * (item->iLevel + lar - 1)
+    item->linesOffset = infoPtr->uIndent * (lar ? item->iLevel : item->iLevel - 1)
 	- infoPtr->scrollX;
     item->stateOffset = item->linesOffset + infoPtr->uIndent;
     item->imageOffset = item->stateOffset
@@ -1221,7 +1220,7 @@ TREEVIEW_InsertItemT(TREEVIEW_INFO *infoPtr, const TVINSERTSTRUCTW *ptdi, BOOL i
 	if (!TREEVIEW_ValidItem(infoPtr, parentItem))
 	{
 	    WARN("invalid parent %p\n", parentItem);
-	    return (LRESULT)(HTREEITEM)NULL;
+            return 0;
 	}
     }
 
@@ -1252,13 +1251,13 @@ TREEVIEW_InsertItemT(TREEVIEW_INFO *infoPtr, const TVINSERTSTRUCTW *ptdi, BOOL i
 
     newItem = TREEVIEW_AllocateItem(infoPtr);
     if (newItem == NULL)
-	return (LRESULT)(HTREEITEM)NULL;
+        return 0;
 
     newItem->parent = parentItem;
     newItem->iIntegral = 1;
 
     if (!TREEVIEW_DoSetItemT(infoPtr, newItem, tvItem, isW))
-	return (LRESULT)(HTREEITEM)NULL;
+        return 0;
 
     /* After this point, nothing can fail. (Except for TVI_SORT.) */
 
@@ -1585,7 +1584,7 @@ TREEVIEW_DeleteItem(TREEVIEW_INFO *infoPtr, HTREEITEM wineItem)
 
 /* Get/Set Messages *********************************************************/
 static LRESULT
-TREEVIEW_SetRedraw(TREEVIEW_INFO* infoPtr, WPARAM wParam, LPARAM lParam)
+TREEVIEW_SetRedraw(TREEVIEW_INFO* infoPtr, WPARAM wParam)
 {
   if(wParam)
     infoPtr->bRedraw = TRUE;
@@ -2083,7 +2082,12 @@ TREEVIEW_GetItemT(const TREEVIEW_INFO *infoPtr, LPTVITEMEXW tvItem, BOOL isW)
 
     if (tvItem->mask & TVIF_TEXT)
     {
-        if (isW)
+        if (wineItem->pszText == NULL)
+        {
+            if (tvItem->cchTextMax > 0)
+                tvItem->pszText[0] = '\0';
+        }
+        else if (isW)
         {
             if (wineItem->pszText == LPSTR_TEXTCALLBACKW)
             {
@@ -2826,6 +2830,13 @@ TREEVIEW_Refresh(TREEVIEW_INFO *infoPtr, HDC hdc, const RECT *rc)
 	}
     }
 
+    //
+    // This is correct, but it causes an infinite loop of WM_PAINT messages, resulting
+    // in continuous painting of the scroll bar in reactos. Comment out until the real
+    // bug is found
+    // 
+    //TREEVIEW_UpdateScrollBars(infoPtr);
+
     if (infoPtr->cdmode & CDRF_NOTIFYPOSTPAINT)
 	infoPtr->cdmode =
 	    TREEVIEW_SendCustomDrawNotify(infoPtr, CDDS_POSTPAINT, hdc, rect);
@@ -2908,7 +2919,7 @@ TREEVIEW_SortOnName(TREEVIEW_ITEM *first, TREEVIEW_ITEM *second,
 
 /* Returns the number of physical children belonging to item. */
 static INT
-TREEVIEW_CountChildren(const TREEVIEW_INFO *infoPtr, const TREEVIEW_ITEM *item)
+TREEVIEW_CountChildren(const TREEVIEW_ITEM *item)
 {
     INT cChildren = 0;
     HTREEITEM hti;
@@ -2922,7 +2933,7 @@ TREEVIEW_CountChildren(const TREEVIEW_INFO *infoPtr, const TREEVIEW_ITEM *item)
 /* Returns a DPA containing a pointer to each physical child of item in
  * sibling order. If item has no children, an empty DPA is returned. */
 static HDPA
-TREEVIEW_BuildChildDPA(const TREEVIEW_INFO *infoPtr, const TREEVIEW_ITEM *item)
+TREEVIEW_BuildChildDPA(const TREEVIEW_ITEM *item)
 {
     HTREEITEM child = item->firstChild;
 
@@ -2953,7 +2964,7 @@ TREEVIEW_BuildChildDPA(const TREEVIEW_INFO *infoPtr, const TREEVIEW_ITEM *item)
  */
 
 static LRESULT
-TREEVIEW_Sort(TREEVIEW_INFO *infoPtr, BOOL fRecurse, HTREEITEM parent,
+TREEVIEW_Sort(TREEVIEW_INFO *infoPtr, HTREEITEM parent,
 	      LPTVSORTCB pSort)
 {
     INT cChildren;
@@ -2982,7 +2993,7 @@ TREEVIEW_Sort(TREEVIEW_INFO *infoPtr, BOOL fRecurse, HTREEITEM parent,
 	lpCompare = (LPARAM)infoPtr;
     }
 
-    cChildren = TREEVIEW_CountChildren(infoPtr, parent);
+    cChildren = TREEVIEW_CountChildren(parent);
 
     /* Make sure there is something to sort */
     if (cChildren > 1)
@@ -2993,7 +3004,7 @@ TREEVIEW_Sort(TREEVIEW_INFO *infoPtr, BOOL fRecurse, HTREEITEM parent,
 	HTREEITEM nextItem = 0;
 	HTREEITEM prevItem = 0;
 
-	HDPA sortList = TREEVIEW_BuildChildDPA(infoPtr, parent);
+	HDPA sortList = TREEVIEW_BuildChildDPA(parent);
 
 	if (sortList == NULL)
 	    return FALSE;
@@ -3004,8 +3015,8 @@ TREEVIEW_Sort(TREEVIEW_INFO *infoPtr, BOOL fRecurse, HTREEITEM parent,
 	/* The order of DPA entries has been changed, so fixup the
 	 * nextSibling and prevSibling pointers. */
 
-	item = (HTREEITEM)DPA_GetPtr(sortList, count++);
-	while ((nextItem = (HTREEITEM)DPA_GetPtr(sortList, count++)) != NULL)
+        item = DPA_GetPtr(sortList, count++);
+        while ((nextItem = DPA_GetPtr(sortList, count++)) != NULL)
 	{
 	    /* link the two current item together */
 	    item->nextSibling = nextItem;
@@ -3074,9 +3085,9 @@ TREEVIEW_Sort(TREEVIEW_INFO *infoPtr, BOOL fRecurse, HTREEITEM parent,
  * and sort the children of the TV item specified in lParam
  */
 static LRESULT
-TREEVIEW_SortChildrenCB(TREEVIEW_INFO *infoPtr, WPARAM wParam, LPTVSORTCB pSort)
+TREEVIEW_SortChildrenCB(TREEVIEW_INFO *infoPtr, LPTVSORTCB pSort)
 {
-    return TREEVIEW_Sort(infoPtr, wParam, pSort->hParent, pSort);
+    return TREEVIEW_Sort(infoPtr, pSort->hParent, pSort);
 }
 
 
@@ -3084,9 +3095,9 @@ TREEVIEW_SortChildrenCB(TREEVIEW_INFO *infoPtr, WPARAM wParam, LPTVSORTCB pSort)
  * Sort the children of the TV item specified in lParam.
  */
 static LRESULT
-TREEVIEW_SortChildren(TREEVIEW_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
+TREEVIEW_SortChildren(TREEVIEW_INFO *infoPtr, LPARAM lParam)
 {
-    return TREEVIEW_Sort(infoPtr, (BOOL)wParam, (HTREEITEM)lParam, NULL);
+    return TREEVIEW_Sort(infoPtr, (HTREEITEM)lParam, NULL);
 }
 
 
@@ -3292,7 +3303,7 @@ TREEVIEW_Expand(TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *wineItem,
         scrollDist = nextItem->rect.top - orgNextTop;
         scrollRect.top = orgNextTop;
 
-        ScrollWindowEx (infoPtr->hwnd, 0, scrollDist, &scrollRect, &scrollRect,
+        ScrollWindowEx (infoPtr->hwnd, 0, scrollDist, &scrollRect, NULL,
                        NULL, NULL, SW_ERASE | SW_INVALIDATE);
         TREEVIEW_Invalidate (infoPtr, wineItem);
     } else {
@@ -3455,14 +3466,14 @@ TREEVIEW_HitTest(const TREEVIEW_INFO *infoPtr, LPTVHITTESTINFO lpht)
     if (status)
     {
 	lpht->flags = status;
-	return (LRESULT)(HTREEITEM)NULL;
+        return 0;
     }
 
     wineItem = TREEVIEW_HitTestPoint(infoPtr, lpht->pt);
     if (!wineItem)
     {
 	lpht->flags = TVHT_NOWHERE;
-	return (LRESULT)(HTREEITEM)NULL;
+        return 0;
     }
 
     if (x >= wineItem->textOffset + wineItem->textWidth)
@@ -3660,8 +3671,11 @@ TREEVIEW_EditLabel(TREEVIEW_INFO *infoPtr, HTREEITEM hItem)
     }
 
     /* Get string length in pixels */
-    GetTextExtentPoint32W(hdc, editItem->pszText, strlenW(editItem->pszText),
-			  &sz);
+    if (editItem->pszText)
+        GetTextExtentPoint32W(hdc, editItem->pszText, strlenW(editItem->pszText),
+                        &sz);
+    else
+        GetTextExtentPoint32A(hdc, "", 0, &sz);
 
     /* Add Extra spacing for the next character */
     GetTextMetricsW(hdc, &textMetric);
@@ -3710,7 +3724,10 @@ TREEVIEW_EditLabel(TREEVIEW_INFO *infoPtr, HTREEITEM hItem)
     }
 
     infoPtr->selectedItem = hItem;
-    SetWindowTextW(hwndEdit, editItem->pszText);
+
+    if (editItem->pszText)
+        SetWindowTextW(hwndEdit, editItem->pszText);
+
     SetFocus(hwndEdit);
     SendMessageW(hwndEdit, EM_SETSEL, 0, -1);
     ShowWindow(hwndEdit, SW_SHOW);
@@ -4158,7 +4175,7 @@ TREEVIEW_RButtonUp(const TREEVIEW_INFO *infoPtr, const POINT *pPt)
 
 
 static LRESULT
-TREEVIEW_CreateDragImage(TREEVIEW_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
+TREEVIEW_CreateDragImage(TREEVIEW_INFO *infoPtr, LPARAM lParam)
 {
     TREEVIEW_ITEM *dragItem = (HTREEITEM)lParam;
     INT cx, cy;
@@ -4184,10 +4201,14 @@ TREEVIEW_CreateDragImage(TREEVIEW_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
     hdc = CreateCompatibleDC(htopdc);
 
     hOldFont = SelectObject(hdc, infoPtr->hFont);
-    GetTextExtentPoint32W(hdc, dragItem->pszText, strlenW(dragItem->pszText),
+
+    if (dragItem->pszText)
+        GetTextExtentPoint32W(hdc, dragItem->pszText, strlenW(dragItem->pszText),
 			  &size);
-    TRACE("%d %d %s %d\n", size.cx, size.cy, debugstr_w(dragItem->pszText),
-	  strlenW(dragItem->pszText));
+    else
+        GetTextExtentPoint32A(hdc, "", 0, &size);
+
+    TRACE("%d %d %s\n", size.cx, size.cy, debugstr_w(dragItem->pszText));
     hbmp = CreateCompatibleBitmap(htopdc, size.cx, size.cy);
     hOldbmp = SelectObject(hdc, hbmp);
 
@@ -4208,8 +4229,11 @@ TREEVIEW_CreateDragImage(TREEVIEW_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 /* draw item text */
 
     SetRect(&rc, cx, 0, size.cx, size.cy);
-    DrawTextW(hdc, dragItem->pszText, strlenW(dragItem->pszText), &rc,
-	      DT_LEFT);
+
+    if (dragItem->pszText)
+        DrawTextW(hdc, dragItem->pszText, strlenW(dragItem->pszText), &rc,
+                  DT_LEFT);
+
     SelectObject(hdc, hOldFont);
     SelectObject(hdc, hOldbmp);
 
@@ -4877,7 +4901,7 @@ TREEVIEW_Create(HWND hwnd, const CREATESTRUCTW *lpcs)
 
     TRACE("wnd %p, style %x\n", hwnd, GetWindowLongW(hwnd, GWL_STYLE));
 
-    infoPtr = (TREEVIEW_INFO *)Alloc(sizeof(TREEVIEW_INFO));
+    infoPtr = Alloc(sizeof(TREEVIEW_INFO));
 
     if (infoPtr == NULL)
     {
@@ -5000,7 +5024,7 @@ TREEVIEW_Destroy(TREEVIEW_INFO *infoPtr)
     CloseThemeData (GetWindowTheme (infoPtr->hwnd));
 
     /* Deassociate treeview from the window before doing anything drastic. */
-    SetWindowLongPtrW(infoPtr->hwnd, 0, (DWORD_PTR)NULL);
+    SetWindowLongPtrW(infoPtr->hwnd, 0, 0);
 
 
     DeleteObject(infoPtr->hDefaultFont);
@@ -5186,7 +5210,7 @@ TREEVIEW_MouseLeave (TREEVIEW_INFO * infoPtr)
 }
 
 static LRESULT
-TREEVIEW_MouseMove (TREEVIEW_INFO * infoPtr, WPARAM wParam, LPARAM lParam)
+TREEVIEW_MouseMove (TREEVIEW_INFO * infoPtr, LPARAM lParam)
 {
     POINT pt;
     TRACKMOUSEEVENT trackinfo;
@@ -5451,7 +5475,7 @@ TREEVIEW_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     switch (uMsg)
     {
     case TVM_CREATEDRAGIMAGE:
-	return TREEVIEW_CreateDragImage(infoPtr, wParam, lParam);
+	return TREEVIEW_CreateDragImage(infoPtr, lParam);
 
     case TVM_DELETEITEM:
 	return TREEVIEW_DeleteItem(infoPtr, (HTREEITEM)lParam);
@@ -5585,10 +5609,10 @@ TREEVIEW_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         return TREEVIEW_SetUnicodeFormat(infoPtr, (BOOL)wParam);
 
     case TVM_SORTCHILDREN:
-	return TREEVIEW_SortChildren(infoPtr, wParam, lParam);
+	return TREEVIEW_SortChildren(infoPtr, lParam);
 
     case TVM_SORTCHILDRENCB:
-	return TREEVIEW_SortChildrenCB(infoPtr, wParam, (LPTVSORTCB)lParam);
+	return TREEVIEW_SortChildrenCB(infoPtr, (LPTVSORTCB)lParam);
 
     case WM_CHAR:
         return TREEVIEW_ProcessLetterKeys( hwnd, wParam, lParam );
@@ -5632,7 +5656,7 @@ TREEVIEW_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
     case WM_MOUSEMOVE:
         if (infoPtr->dwStyle & TVS_TRACKSELECT)
-            return TREEVIEW_MouseMove(infoPtr, wParam, lParam);
+            return TREEVIEW_MouseMove(infoPtr, lParam);
         else
             return 0;
 
@@ -5669,7 +5693,7 @@ TREEVIEW_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	return TREEVIEW_SetFont(infoPtr, (HFONT)wParam, (BOOL)lParam);
 
     case WM_SETREDRAW:
-        return TREEVIEW_SetRedraw(infoPtr, wParam, lParam);
+        return TREEVIEW_SetRedraw(infoPtr, wParam);
 
     case WM_SIZE:
 	return TREEVIEW_Size(infoPtr, wParam, lParam);
@@ -5703,7 +5727,7 @@ TREEVIEW_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
     default:
 	/* This mostly catches MFC and Delphi messages. :( */
-	if ((uMsg >= WM_USER) && (uMsg < WM_APP))
+	if ((uMsg >= WM_USER) && (uMsg < WM_APP) && !COMCTL32_IsReflectedMessage(uMsg))
 	    TRACE("Unknown msg %04x wp=%08lx lp=%08lx\n", uMsg, wParam, lParam);
 def:
 	return DefWindowProcW(hwnd, uMsg, wParam, lParam);

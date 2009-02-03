@@ -109,7 +109,7 @@ STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Dato og klokkeslett"
 FONT 10, "MS Sans Serif"
 BEGIN
-    LTEXT        "Tilgjengelige formater",0,3,2,100,15
+    LTEXT        "Tilgjengelige formater",-1,3,2,100,15
     LISTBOX      IDC_DATETIME,3,12,80,65,LBS_NOINTEGRALHEIGHT | LBS_NOTIFY
     PUSHBUTTON   "&OK",IDOK,87,12,40,12
     PUSHBUTTON   "&Avbryt",IDCANCEL,87,26,40,12
@@ -120,7 +120,7 @@ STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Ny"
 FONT 10, "MS Sans Serif"
 BEGIN
-    LTEXT        "Ny dokumenttype",0,3,2,100,15
+    LTEXT        "Ny dokumenttype",-1,3,2,100,15
     LISTBOX      IDC_NEWFILE,3,12,90,65,LBS_NOINTEGRALHEIGHT
     PUSHBUTTON   "&OK",IDOK,97,12,40,12
     PUSHBUTTON   "&Avbryt",IDCANCEL,97,26,40,12
@@ -131,14 +131,14 @@ STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 Caption "Formater avsnitt"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Innrykk", 0, 10, 10, 120, 68
-    LTEXT "Venstre", 0, 15, 22, 40, 13
+    GROUPBOX "Innrykk", -1, 10, 10, 120, 68
+    LTEXT "Venstre", -1, 15, 22, 40, 13
     EDITTEXT IDC_PARA_LEFT, 55, 20, 60, 13
-    LTEXT "Høyre", 0, 15, 40, 40, 13
+    LTEXT "Høyre", -1, 15, 40, 40, 13
     EDITTEXT IDC_PARA_RIGHT, 55, 38, 60, 13
-    LTEXT "Første linje", 0, 15, 58, 40, 13
+    LTEXT "Første linje", -1, 15, 58, 40, 13
     EDITTEXT IDC_PARA_FIRST, 55, 56, 60, 13
-    LTEXT "Justering", 0, 15, 87, 40, 13
+    LTEXT "Justering", -1, 15, 87, 40, 13
     COMBOBOX IDC_PARA_ALIGN, 55, 85, 60, 60, CBS_DROPDOWNLIST
     PUSHBUTTON "&OK", IDOK, 137, 15, 50, 15
     PUSHBUTTON "&Avbryt", IDCANCEL, 137, 33, 50, 15
@@ -149,7 +149,7 @@ STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 Caption "Tabulatorer"
 FONT 8, "MS SHell DLg"
 BEGIN
-    GROUPBOX "Tabulatorstopp", 0, 10, 10, 120, 90
+    GROUPBOX "Tabulatorstopp", -1, 10, 10, 120, 90
     COMBOBOX IDC_TABSTOPS, 20, 20, 100, 60, CBS_SIMPLE | CBS_SORT
     DEFPUSHBUTTON "&Legg til", ID_TAB_ADD, 20, 80, 45, 15
     PUSHBUTTON "&Fjern", ID_TAB_DEL, 72, 80, 45, 15
@@ -163,11 +163,11 @@ STYLE DS_SYSMODAL
 Caption ""
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Linjebryting", 0, 10, 10, 130, 85
+    GROUPBOX "Linjebryting", -1, 10, 10, 130, 85
     RADIOBUTTON "No line wrapping", IDC_PAGEFMT_WN, 18, 25, 117, 15
     RADIOBUTTON "Bryt tekst etter v&indusbredden", IDC_PAGEFMT_WW, 18, 45, 117, 15
     RADIOBUTTON "Bryt tekst etter &margen", IDC_PAGEFMT_WM, 18, 65, 117, 15
-    GROUPBOX "Verktøylinjer", 0, 150, 10, 120, 85
+    GROUPBOX "Verktøylinjer", -1, 150, 10, 120, 85
     CHECKBOX "&Verktøylinje", IDC_PAGEFMT_TB, 160, 20, 80, 15
     CHECKBOX "&Formatlinje", IDC_PAGEFMT_FB, 160, 38, 80, 15
     CHECKBOX "&Linjal", IDC_PAGEFMT_RU, 160, 56, 80, 15

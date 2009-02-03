@@ -63,7 +63,7 @@ typedef void (XMLCALL *xmlFreeFunc)(void *mem);
  *
  * Returns a pointer to the newly allocated block or NULL in case of error.
  */
-typedef void *(XMLCALL *xmlMallocFunc)(size_t size);
+typedef void *(ATTRIBUTE_ALLOC_SIZE(1) XMLCALL *xmlMallocFunc)(size_t size);
 
 /**
  * xmlReallocFunc:
@@ -150,7 +150,7 @@ XMLPUBFUN void XMLCALL
 XMLPUBFUN void XMLCALL
 	xmlMemoryDump	(void);
 XMLPUBFUN void * XMLCALL
-	xmlMemMalloc	(size_t size);
+	xmlMemMalloc	(size_t size) ATTRIBUTE_ALLOC_SIZE(1);
 XMLPUBFUN void * XMLCALL
 	xmlMemRealloc	(void *ptr,size_t size);
 XMLPUBFUN void XMLCALL
@@ -158,11 +158,11 @@ XMLPUBFUN void XMLCALL
 XMLPUBFUN char * XMLCALL
 	xmlMemoryStrdup	(const char *str);
 XMLPUBFUN void * XMLCALL
-	xmlMallocLoc	(size_t size, const char *file, int line);
+	xmlMallocLoc	(size_t size, const char *file, int line) ATTRIBUTE_ALLOC_SIZE(1);
 XMLPUBFUN void * XMLCALL
 	xmlReallocLoc	(void *ptr, size_t size, const char *file, int line);
 XMLPUBFUN void * XMLCALL
-	xmlMallocAtomicLoc (size_t size, const char *file, int line);
+	xmlMallocAtomicLoc (size_t size, const char *file, int line) ATTRIBUTE_ALLOC_SIZE(1);
 XMLPUBFUN char * XMLCALL
 	xmlMemStrdupLoc	(const char *str, const char *file, int line);
 

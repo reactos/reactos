@@ -7,6 +7,7 @@
  */
 #include "d3d9_mipmap.h"
 #include "debug.h"
+#include "d3d9_texture.h"
 #include "d3d9_device.h"
 #include "d3d9_helpers.h"
 #include <d3d9.h>
@@ -54,7 +55,7 @@ ULONG WINAPI D3D9MipMap_Release(LPDIRECT3DTEXTURE9 iface)
     return D3D9BaseObject_Release(&This->BaseTexture.BaseResource.BaseObject);
 }
 
-/* IDirect3DBaseTexture9 */
+/* IDirect3DResource9 */
 
 /*++
 * @name IDirect3DTexture9::GetDevice
@@ -74,7 +75,8 @@ ULONG WINAPI D3D9MipMap_Release(LPDIRECT3DTEXTURE9 iface)
 * If ppDevice is a bad pointer the return value will be D3DERR_INVALIDCALL.
 * If the texture didn't contain any device, the return value will be D3DERR_INVALIDDEVICE.
 *
-*/HRESULT WINAPI D3D9MipMap_GetDevice(LPDIRECT3DTEXTURE9 iface, IDirect3DDevice9** ppDevice)
+*/
+HRESULT WINAPI D3D9MipMap_GetDevice(LPDIRECT3DTEXTURE9 iface, IDirect3DDevice9** ppDevice)
 {
     LPD3D9MIPMAP This = IDirect3DTexture9ToImpl(iface);
     LOCK_D3DDEVICE9();
@@ -132,6 +134,7 @@ void WINAPI D3D9MipMap_PreLoad(LPDIRECT3DTEXTURE9 iface)
     UNIMPLEMENTED
 }
 
+/* IDirect3DBaseTexture9 */
 D3DRESOURCETYPE WINAPI D3D9MipMap_GetType(LPDIRECT3DTEXTURE9 iface)
 {
     UNIMPLEMENTED
@@ -144,16 +147,44 @@ DWORD WINAPI D3D9MipMap_SetLOD(LPDIRECT3DTEXTURE9 iface, DWORD LODNew)
     return 0;
 }
 
+/*++
+* @name IDirect3DTexture9::GetLOD
+* @implemented
+*
+* The function D3D9MipMap_GetLOD returns the number 
+* max LODs for the specified texture, if it's managed.
+*
+* @param LPDIRECT3DTEXTURE9 iface
+* Pointer to a IDirect3DTexture9 object returned from IDirect3D9Device::CreateTexture().
+*
+* @return DWORD
+* Returns the number of LODs in the specified texture if it's managed.
+*
+*/
 DWORD WINAPI D3D9MipMap_GetLOD(LPDIRECT3DTEXTURE9 iface)
 {
-    UNIMPLEMENTED
-    return 0;
+    LPD3D9MIPMAP This = IDirect3DTexture9ToImpl(iface);
+    return D3D9Texture_GetLOD( (IDirect3DBaseTexture9*)&This->BaseTexture.lpVtbl );
 }
 
+/*++
+* @name IDirect3DTexture9::GetLevelCount
+* @implemented
+*
+* The function D3D9MipMap_GetLevelCount returns the number of mip map levels
+* in the specified texture.
+*
+* @param LPDIRECT3DTEXTURE9 iface
+* Pointer to a IDirect3DTexture9 object returned from IDirect3D9Device::CreateTexture().
+*
+* @return DWORD
+* Returns the number of levels in the specified texture.
+*
+*/
 DWORD WINAPI D3D9MipMap_GetLevelCount(LPDIRECT3DTEXTURE9 iface)
 {
-    UNIMPLEMENTED
-    return 0;
+    LPD3D9MIPMAP This = IDirect3DTexture9ToImpl(iface);
+    return D3D9Texture_GetLevelCount( (IDirect3DBaseTexture9*)&This->BaseTexture.lpVtbl );
 }
 
 HRESULT WINAPI D3D9MipMap_SetAutoGenFilterType(LPDIRECT3DTEXTURE9 iface, D3DTEXTUREFILTERTYPE FilterType)
@@ -162,10 +193,24 @@ HRESULT WINAPI D3D9MipMap_SetAutoGenFilterType(LPDIRECT3DTEXTURE9 iface, D3DTEXT
     return D3D_OK;
 }
 
+/*++
+* @name IDirect3DTexture9::GetAutoGenFilterType
+* @implemented
+*
+* The function D3D9MipMap_GetAutoGenFilterType returns filter type
+* that is used when automated mipmaping is set.
+*
+* @param LPDIRECT3DTEXTURE9 iface
+* Pointer to a IDirect3DTexture9 object returned from IDirect3D9Device::CreateTexture().
+*
+* @return D3DTEXTUREFILTERTYPE
+* Filter type used when automated mipmaping is set for the specified texture.
+*
+*/
 D3DTEXTUREFILTERTYPE WINAPI D3D9MipMap_GetAutoGenFilterType(LPDIRECT3DTEXTURE9 iface)
 {
-    UNIMPLEMENTED
-    return D3DRTYPE_TEXTURE;
+    LPD3D9MIPMAP This = IDirect3DTexture9ToImpl(iface);
+    return D3D9Texture_GetAutoGenFilterType( (IDirect3DBaseTexture9*)&This->BaseTexture.lpVtbl );
 }
 
 void WINAPI D3D9MipMap_GenerateMipSubLevels(LPDIRECT3DTEXTURE9 iface)
@@ -220,6 +265,8 @@ static IDirect3DTexture9Vtbl D3D9MipMap_Vtbl =
     D3D9MipMap_SetPriority,
     D3D9MipMap_GetPriority,
     D3D9MipMap_PreLoad,
+
+    /* IDirect3DBaseTexture9 methods */
     D3D9MipMap_GetType,
     D3D9MipMap_SetLOD,
     D3D9MipMap_GetLOD,

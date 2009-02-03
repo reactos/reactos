@@ -957,7 +957,8 @@ static HRESULT WINAPI BandSite_IDeskBarClient_SetDeskBarSite(IDeskBarClient *ifa
                                       NULL,
                                       WS_CHILD | WS_CLIPSIBLINGS |
                                           WS_CLIPCHILDREN | RBS_VARHEIGHT |
-                                          CCS_NODIVIDER | RBS_BANDBORDERS,
+                                          RBS_BANDBORDERS | CCS_NODIVIDER |
+                                          CCS_NORESIZE | CCS_NOPARENTALIGN,
                                       0,
                                       0,
                                       0,

@@ -21,8 +21,7 @@ typedef struct
 
 }IServiceGroupImpl;
 
-const GUID IID_IServiceGroup;
-const GUID IID_IServiceSink;
+
 
 //---------------------------------------------------------------
 // IUnknown methods
@@ -75,11 +74,11 @@ IServiceGroup_fnRelease(
             CurEntry = RemoveHeadList(&This->ServiceSinkHead);
             Entry = CONTAINING_RECORD(CurEntry, GROUP_ENTRY, Entry);
             Entry->pServiceSink->lpVtbl->Release(Entry->pServiceSink);
-            ExFreePoolWithTag(Entry, TAG_PORTCLASS);
+            FreeItem(Entry, TAG_PORTCLASS);
         }
         KeWaitForSingleObject(&This->DpcEvent, Executive, KernelMode, FALSE, NULL);
         KeCancelTimer(&This->Timer);
-        ExFreePoolWithTag(This, TAG_PORTCLASS);
+        FreeItem(This, TAG_PORTCLASS);
         return 0;
     }
     /* Return new reference count */
@@ -123,7 +122,7 @@ IServiceGroup_fnAddMember(
     PGROUP_ENTRY Entry;
     IServiceGroupImpl * This = (IServiceGroupImpl*)iface;
 
-    Entry = ExAllocatePoolWithTag(NonPagedPool, sizeof(GROUP_ENTRY), TAG_PORTCLASS);
+    Entry = AllocateItem(NonPagedPool, sizeof(GROUP_ENTRY), TAG_PORTCLASS);
     if (!Entry)
         return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -159,7 +158,7 @@ IServiceGroup_fnRemoveMember(
         {
             RemoveEntryList(&Entry->Entry);
             pServiceSink->lpVtbl->Release(pServiceSink);
-            ExFreePoolWithTag(Entry, TAG_PORTCLASS);
+            FreeItem(Entry, TAG_PORTCLASS);
             return;
         }
         CurEntry = CurEntry->Flink;
@@ -178,7 +177,7 @@ IServiceGroupDpc(
 {
     IServiceGroupImpl * This = (IServiceGroupImpl*)DeferredContext;
     IServiceGroup_fnRequestService((IServiceGroup*)DeferredContext);
-    KeSetEvent(&This->DpcEvent, 0, FALSE);
+    KeSetEvent(&This->DpcEvent, IO_SOUND_INCREMENT, FALSE);
 }
 
 
@@ -244,7 +243,7 @@ static IServiceGroupVtbl vt_IServiceGroup =
 };
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS NTAPI
 PcNewServiceGroup(
@@ -253,14 +252,15 @@ PcNewServiceGroup(
 {
     IServiceGroupImpl * This;
 
-    This = ExAllocatePoolWithTag(NonPagedPool, sizeof(IServiceGroupImpl), TAG_PORTCLASS);
+    DPRINT1("PcNewServiceGroup entered\n");
+
+    This = AllocateItem(NonPagedPool, sizeof(IServiceGroupImpl), TAG_PORTCLASS);
     if (!This)
         return STATUS_INSUFFICIENT_RESOURCES;
 
     This->lpVtbl = &vt_IServiceGroup;
     This->ref = 1;
     InitializeListHead(&This->ServiceSinkHead);
-    This->Initialized = FALSE;
     *OutServiceGroup = (PSERVICEGROUP)&This->lpVtbl;
 
     return STATUS_SUCCESS;

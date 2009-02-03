@@ -107,7 +107,7 @@ void WINAPI NdrRpcSmSetClientToOsf(PMIDL_STUB_MESSAGE pMessage)
 #endif
 }
 
-static void WINAPI dump_RPC_FC_PROC_PF(PARAM_ATTRIBUTES param_attributes)
+static void dump_RPC_FC_PROC_PF(PARAM_ATTRIBUTES param_attributes)
 {
     if (param_attributes.MustSize) TRACE(" MustSize");
     if (param_attributes.MustFree) TRACE(" MustFree");
@@ -123,7 +123,7 @@ static void WINAPI dump_RPC_FC_PROC_PF(PARAM_ATTRIBUTES param_attributes)
     if (param_attributes.ServerAllocSize) TRACE(" ServerAllocSize = %d", param_attributes.ServerAllocSize * 8);
 }
 
-static void WINAPI dump_INTERPRETER_OPT_FLAGS(INTERPRETER_OPT_FLAGS Oi2Flags)
+static void dump_INTERPRETER_OPT_FLAGS(INTERPRETER_OPT_FLAGS Oi2Flags)
 {
     if (Oi2Flags.ServerMustSize) TRACE(" ServerMustSize");
     if (Oi2Flags.ClientMustSize) TRACE(" ClientMustSize");

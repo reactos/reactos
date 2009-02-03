@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8,00"
+	Version="9,00"
 	Name="notifyhook"
 	ProjectGUID="{F28B575D-7DBA-44DE-AAEF-FA0D065E5162}"
+	TargetFrameworkVersion="131072"
 	>
 	<Platforms>
 		<Platform
@@ -77,6 +78,8 @@
 				SuppressStartupBanner="true"
 				ProgramDatabaseFile=".\..\Release/notifyhook.pdb"
 				SubSystem="2"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
 				ImportLibrary=".\..\Release/notifyhook.lib"
 				TargetMachine="1"
 			/>
@@ -99,9 +102,6 @@
 			/>
 			<Tool
 				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -173,6 +173,8 @@
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile=".\..\Debug/notifyhook.pdb"
 				SubSystem="2"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
 				ImportLibrary=".\..\Debug/notifyhook.lib"
 				TargetMachine="1"
 			/>
@@ -195,9 +197,6 @@
 			/>
 			<Tool
 				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"

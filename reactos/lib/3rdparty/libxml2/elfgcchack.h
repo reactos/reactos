@@ -1991,6 +1991,18 @@ extern __typeof (xmlCheckVersion) xmlCheckVersion__internal_alias __attribute((v
 #endif
 #endif
 
+#if defined(LIBXML_TREE_ENABLED)
+#ifdef bottom_tree
+#undef xmlChildElementCount
+extern __typeof (xmlChildElementCount) xmlChildElementCount __attribute((alias("xmlChildElementCount__internal_alias")));
+#else
+#ifndef xmlChildElementCount
+extern __typeof (xmlChildElementCount) xmlChildElementCount__internal_alias __attribute((visibility("hidden")));
+#define xmlChildElementCount xmlChildElementCount__internal_alias
+#endif
+#endif
+#endif
+
 #ifdef bottom_encoding
 #undef xmlCleanupCharEncodingHandlers
 extern __typeof (xmlCleanupCharEncodingHandlers) xmlCleanupCharEncodingHandlers __attribute((alias("xmlCleanupCharEncodingHandlers__internal_alias")));
@@ -3419,6 +3431,18 @@ extern __typeof (xmlFindCharEncodingHandler) xmlFindCharEncodingHandler__interna
 #endif
 #endif
 
+#if defined(LIBXML_TREE_ENABLED)
+#ifdef bottom_tree
+#undef xmlFirstElementChild
+extern __typeof (xmlFirstElementChild) xmlFirstElementChild __attribute((alias("xmlFirstElementChild__internal_alias")));
+#else
+#ifndef xmlFirstElementChild
+extern __typeof (xmlFirstElementChild) xmlFirstElementChild__internal_alias __attribute((visibility("hidden")));
+#define xmlFirstElementChild xmlFirstElementChild__internal_alias
+#endif
+#endif
+#endif
+
 #ifdef bottom_valid
 #undef xmlFreeAttributeTable
 extern __typeof (xmlFreeAttributeTable) xmlFreeAttributeTable __attribute((alias("xmlFreeAttributeTable__internal_alias")));
@@ -4759,6 +4783,18 @@ extern __typeof (xmlKeepBlanksDefault) xmlKeepBlanksDefault__internal_alias __at
 #endif
 #endif
 
+#if defined(LIBXML_TREE_ENABLED)
+#ifdef bottom_tree
+#undef xmlLastElementChild
+extern __typeof (xmlLastElementChild) xmlLastElementChild __attribute((alias("xmlLastElementChild__internal_alias")));
+#else
+#ifndef xmlLastElementChild
+extern __typeof (xmlLastElementChild) xmlLastElementChild__internal_alias __attribute((visibility("hidden")));
+#define xmlLastElementChild xmlLastElementChild__internal_alias
+#endif
+#endif
+#endif
+
 #ifdef bottom_parserInternals
 #undef xmlLineNumbersDefault
 extern __typeof (xmlLineNumbersDefault) xmlLineNumbersDefault __attribute((alias("xmlLineNumbersDefault__internal_alias")));
@@ -5158,6 +5194,16 @@ extern __typeof (xmlMemDisplay) xmlMemDisplay __attribute((alias("xmlMemDisplay_
 #ifndef xmlMemDisplay
 extern __typeof (xmlMemDisplay) xmlMemDisplay__internal_alias __attribute((visibility("hidden")));
 #define xmlMemDisplay xmlMemDisplay__internal_alias
+#endif
+#endif
+
+#ifdef bottom_xmlmemory
+#undef xmlMemDisplayLast
+extern __typeof (xmlMemDisplayLast) xmlMemDisplayLast __attribute((alias("xmlMemDisplayLast__internal_alias")));
+#else
+#ifndef xmlMemDisplayLast
+extern __typeof (xmlMemDisplayLast) xmlMemDisplayLast__internal_alias __attribute((visibility("hidden")));
+#define xmlMemDisplayLast xmlMemDisplayLast__internal_alias
 #endif
 #endif
 
@@ -6043,6 +6089,16 @@ extern __typeof (xmlNewElementContent) xmlNewElementContent__internal_alias __at
 #endif
 #endif
 
+#ifdef bottom_entities
+#undef xmlNewEntity
+extern __typeof (xmlNewEntity) xmlNewEntity __attribute((alias("xmlNewEntity__internal_alias")));
+#else
+#ifndef xmlNewEntity
+extern __typeof (xmlNewEntity) xmlNewEntity__internal_alias __attribute((visibility("hidden")));
+#define xmlNewEntity xmlNewEntity__internal_alias
+#endif
+#endif
+
 #ifdef bottom_parserInternals
 #undef xmlNewEntityInputStream
 extern __typeof (xmlNewEntityInputStream) xmlNewEntityInputStream __attribute((alias("xmlNewEntityInputStream__internal_alias")));
@@ -6364,6 +6420,18 @@ extern __typeof (xmlNextChar) xmlNextChar __attribute((alias("xmlNextChar__inter
 #ifndef xmlNextChar
 extern __typeof (xmlNextChar) xmlNextChar__internal_alias __attribute((visibility("hidden")));
 #define xmlNextChar xmlNextChar__internal_alias
+#endif
+#endif
+
+#if defined(LIBXML_TREE_ENABLED)
+#ifdef bottom_tree
+#undef xmlNextElementSibling
+extern __typeof (xmlNextElementSibling) xmlNextElementSibling __attribute((alias("xmlNextElementSibling__internal_alias")));
+#else
+#ifndef xmlNextElementSibling
+extern __typeof (xmlNextElementSibling) xmlNextElementSibling__internal_alias __attribute((visibility("hidden")));
+#define xmlNextElementSibling xmlNextElementSibling__internal_alias
+#endif
 #endif
 #endif
 
@@ -7766,6 +7834,18 @@ extern __typeof (xmlPopInputCallbacks) xmlPopInputCallbacks __attribute((alias("
 #ifndef xmlPopInputCallbacks
 extern __typeof (xmlPopInputCallbacks) xmlPopInputCallbacks__internal_alias __attribute((visibility("hidden")));
 #define xmlPopInputCallbacks xmlPopInputCallbacks__internal_alias
+#endif
+#endif
+
+#if defined(LIBXML_TREE_ENABLED)
+#ifdef bottom_tree
+#undef xmlPreviousElementSibling
+extern __typeof (xmlPreviousElementSibling) xmlPreviousElementSibling __attribute((alias("xmlPreviousElementSibling__internal_alias")));
+#else
+#ifndef xmlPreviousElementSibling
+extern __typeof (xmlPreviousElementSibling) xmlPreviousElementSibling__internal_alias __attribute((visibility("hidden")));
+#define xmlPreviousElementSibling xmlPreviousElementSibling__internal_alias
+#endif
 #endif
 #endif
 

@@ -313,7 +313,7 @@ MingwBackend::Process ()
 void
 MingwBackend::CheckAutomaticDependenciesForModuleOnly ()
 {
-	if ( configuration.AutomaticDependencies )
+	if ( configuration.Dependencies == AutomaticDependencies )
 	{
 		Module* module = ProjectNode.LocateModule ( configuration.CheckDependenciesForModuleOnlyModule );
 		if ( module == NULL )
@@ -519,6 +519,17 @@ MingwBackend::GenerateProjectLFLAGS () const
 void
 MingwBackend::GenerateGlobalVariables () const
 {
+	fputs ( "include tools$(SEP)rbuild$(SEP)backend$(SEP)mingw$(SEP)rules.mak\n", fMakefile );
+
+	if ( configuration.Dependencies == FullDependencies )
+	{
+		fprintf ( fMakefile,
+				  "ifeq ($(ROS_BUILDDEPS),)\n"
+				  "ROS_BUILDDEPS:=%s\n"
+				  "endif\n",
+				  "full" );
+	}
+
 	fprintf ( fMakefile,
 	          "PREFIX := %s\n",
 	          compilerPrefix.c_str () );
@@ -532,7 +543,7 @@ MingwBackend::GenerateGlobalVariables () const
 	fprintf ( fMakefile, "PROJECT_RCFLAGS := $(PROJECT_CINCLUDES) $(PROJECT_CDEFINES)\n" );
 	fprintf ( fMakefile, "PROJECT_WIDLFLAGS := $(PROJECT_CINCLUDES) $(PROJECT_CDEFINES)\n" );
 	fprintf ( fMakefile, "PROJECT_LFLAGS := '$(shell ${TARGET_CC} -print-libgcc-file-name)' %s\n", GenerateProjectLFLAGS ().c_str () );
-	fprintf ( fMakefile, "PROJECT_LPPFLAGS := '$(shell ${TARGET_CPP} -print-file-name=libstdc++.a)' '$(shell ${TARGET_CPP} -print-file-name=libgcc.a)' '$(shell ${TARGET_CPP} -print-file-name=libmingw32.a)' '$(shell ${TARGET_CPP} -print-file-name=libmingwex.a)' '$(shell ${TARGET_CPP} -print-file-name=libcoldname.a)'\n" );
+	fprintf ( fMakefile, "PROJECT_LPPFLAGS := '$(shell ${TARGET_CPP} -print-file-name=libstdc++.a)' '$(shell ${TARGET_CPP} -print-file-name=libgcc.a)' '$(shell ${TARGET_CPP} -print-file-name=libmingw32.a)' '$(shell ${TARGET_CPP} -print-file-name=libmingwex.a)'\n" );
 	/* hack to get libgcc_eh.a, should check mingw version or something */
 	fprintf ( fMakefile, "ifeq ($(ARCH),amd64)\n" );
 	fprintf ( fMakefile, "PROJECT_LPPFLAGS += '$(shell ${TARGET_CPP} -print-file-name=libgcc_eh.a)'\n" );
@@ -628,7 +639,7 @@ MingwBackend::GenerateXmlBuildFilesMacro() const
 		if ( !f )
 		throw FileNotFoundException ( NormalizeFilename ( xmlbuildfile.topIncludeFilename ) );
 
-		if ( fstat ( _fileno ( f ), &statbuf ) != 0 )
+		if ( fstat ( fileno ( f ), &statbuf ) != 0 )
 		{
 			fclose ( f );
 			throw AccessDeniedException ( NormalizeFilename ( xmlbuildfile.topIncludeFilename ) );
@@ -719,7 +730,7 @@ MingwBackend::GenerateProxyMakefiles ()
 void
 MingwBackend::CheckAutomaticDependencies ()
 {
-	if ( configuration.AutomaticDependencies )
+	if ( configuration.Dependencies == AutomaticDependencies )
 	{
 		printf ( "Checking automatic dependencies..." );
 		AutomaticDependency automaticDependency ( ProjectNode );
@@ -1071,7 +1082,7 @@ MingwBackend::DetectPipeSupport ()
 	{
 		usePipe = (exitcode == 0);
 		fclose ( f );
-		_unlink ( pipe_detectionObjectFilename.c_str () );
+		unlink ( pipe_detectionObjectFilename.c_str () );
 	}
 	else
 		usePipe = false;
@@ -1104,7 +1115,7 @@ MingwBackend::DetectPCHSupport ()
 		{
 			use_pch = true;
 			fclose ( f );
-			_unlink ( path.c_str () );
+			unlink ( path.c_str () );
 		}
 		else
 			use_pch = false;

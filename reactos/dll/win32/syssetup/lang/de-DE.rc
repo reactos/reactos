@@ -206,6 +206,8 @@ BEGIN
     IDS_CMT_DEVMGMT     "Starte Geräte-Manager"
     IDS_CMT_SERVMAN     "Starte Dienst-Manager"
     IDS_CMT_RDESKTOP    "Starte Remote Desktop"
+    IDS_CMT_EVENTVIEW   "Starte Ereignisanzeige"
+    IDS_CMT_MSCONFIG    "Starte Systemkonfigurations Programm"
 END
 
 STRINGTABLE
@@ -260,6 +262,8 @@ BEGIN
     IDS_SHORT_MAGNIFY    "Bildschirmlupe.lnk"
     IDS_SHORT_RDESKTOP   "Remote Desktop.lnk"
     IDS_SHORT_KBSWITCH   "Tastaturlayout-Umschalter.lnk"
+    IDS_SHORT_EVENTVIEW  "Ereignisanzeige.lnk"
+    IDS_SHORT_MSCONFIG   "Systemkonfiguration.lnk"
 END
 
 STRINGTABLE

@@ -74,7 +74,7 @@ FsRtlCopyRead(IN PFILE_OBJECT FileObject,
     PFAST_IO_DISPATCH FastIoDispatch;
     PDEVICE_OBJECT Device;
     BOOLEAN Result = TRUE;
-	ULONG PageCount = COMPUTE_PAGES_SPANNED(FileOffset,Length);
+	ULONG PageCount = ADDRESS_AND_SIZE_TO_SPAN_PAGES(FileOffset,Length);
 
 	PAGED_CODE();
     ASSERT(FileObject);

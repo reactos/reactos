@@ -22,6 +22,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(desktop);
 
+BOOL WINAPI SetShellWindowEx(HWND, HWND);
+
 #define SHDESK_TAG 0x4b534544
 
 static const WCHAR szProgmanClassName[] = {'P','r','o','g','m','a','n'};
@@ -253,6 +255,15 @@ Fail:
     return This;
 }
 
+static HWND
+SHDESK_FindDesktopListView (SHDESK *This)
+{
+    return FindWindowEx (This->hWndShellView,
+                         NULL,
+                         WC_LISTVIEW,
+                         NULL);
+}
+
 static BOOL
 SHDESK_CreateDeskWnd(SHDESK *This)
 {
@@ -274,6 +285,9 @@ SHDESK_CreateDeskWnd(SHDESK *This)
     hRet = IShellView_CreateViewWindow(This->DesktopView, NULL, &fs, ShellBrowser, &rcClient, &This->hWndShellView);
     if (!SUCCEEDED(hRet))
         return FALSE;
+
+    SetShellWindowEx (This->hWnd,
+                      SHDESK_FindDesktopListView (This));
 
     return TRUE;
 }

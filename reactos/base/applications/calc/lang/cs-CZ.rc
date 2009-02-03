@@ -1,6 +1,6 @@
 /* FILE:        base/applications/calc/lang/cs-CZ.rc
  * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:     2008-12-29
+ * UPDATED:     2009-01-25
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
@@ -444,6 +444,7 @@ END
 // types of conversion
 STRINGTABLE DISCARDABLE
 BEGIN
+    IDS_CONV_TIME           "»as"
     IDS_CONV_LENGTH         "DÈlka"
     IDS_CONV_ENERGY         "Energie"
     IDS_CONV_WEIGHT         "Hmotnost"
@@ -451,10 +452,19 @@ BEGIN
     IDS_CONV_VOLUME         "Objem"
     IDS_CONV_AREA           "Plocha"
     IDS_CONV_VELOCITY       "Rychlost"
-    IDS_CONV_CONSUMPTION    "Spot¯eba (motory)"
+    IDS_CONV_CONSUMPTION    "Spot¯eba"
     IDS_CONV_TEMPERATURE    "Teplota"
     IDS_CONV_PRESSURE       "Tlak"
+    IDS_CONV_ANGLE          "⁄hel"
     IDS_CONV_POWER          "V˝kon"
+END
+
+// TYPES OF ANGLES
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ANGLE_GRADIANS "Grady"
+    IDS_ANGLE_RADIANS  "Radi·ny"
+    IDS_ANGLE_DEGREES  "StupnÏ"
 END
 
 // TYPES OF AREAS
@@ -510,6 +520,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
 
     IDS_CURRENCY_BELGIAN_FRANC      "Belgick˝ frank"
+    IDS_CURRENCY_CZECH_KORUNA       "»esk· koruna"
     IDS_CURRENCY_EURO               "Euro"
     IDS_CURRENCY_FINNISH_MARKKA     "Finsk· marka"
     IDS_CURRENCY_FRENCH_FRANC       "Francouzsk˝ frank"
@@ -531,12 +542,16 @@ END
 // TYPES OF ENERGIES
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_ENERGY_15_C_CALORIES        "15 ^C kalorie"
+    IDS_ENERGY_15_C_CALORIES        "15 ∞C kalorie"
+    IDS_ENERGY_BTUS                 "BritskÈ term·lnÌ jednotky"
+    IDS_ENERGY_EVS                  "Elektronvolty"
+    IDS_ENERGY_FOOT_POUNDS          "Foot-Pounds"
     IDS_ENERGY_ERGS                 "Ergy"
     IDS_ENERGY_JOULES               "Jouly"
     IDS_ENERGY_KILOJOULES           "Kilojouly"
     IDS_ENERGY_KILOWATT_HOURS       "Kilowatt hodiny"
     IDS_ENERGY_IT_CALORIES          "Mezin·rodnÌ kalorie"
+    IDS_ENERGY_IT_KILOCALORIES      "Mezin·rodnÌ kilokalorie"
     IDS_ENERGY_NUTRITION_CALORIES   "NutriËnÌ kalorie"
     IDS_ENERGY_TH_CALORIES          "TermochemickÈ kalorie"
 END
@@ -545,7 +560,7 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_LENGTH_ANGSTROMS            "Angstrˆmy"
-    IDS_LENGTH_ASTRONOMILA_UNITS    "AstronomickÈ jednotky"
+    IDS_LENGTH_ASTRONOMICAL_UNITS   "AstronomickÈ jednotky"
     IDS_LENGTH_BARLEYCORNS          "Barleycorny"
     IDS_LENGTH_CENTIMETERS          "Centimetry"
     IDS_LENGTH_CHAINS_UK            "Chains (Gunter's chains) (UK)"
@@ -568,6 +583,7 @@ BEGIN
     IDS_LENGTH_LAR                  "Lar"
     IDS_LENGTH_LINKS_UK             "Links (UK)"
     IDS_LENGTH_METERS               "Metry"
+    IDS_LENGTH_MICRONS              "Mikrony"
     IDS_LENGTH_MILES                "MÌle"
     IDS_LENGTH_MILLIMETERS          "Milimetry"
     IDS_LENGTH_NAUTICAL_MILES       "N·mo¯nÌ mÌle"
@@ -577,6 +593,7 @@ BEGIN
     IDS_LENGTH_PICAS                "Picas"
     IDS_LENGTH_RI_JAPAN             "Ri (Japonsko)"
     IDS_LENGTH_RI_KOREA             "Ri (Korea)"
+    IDS_LENGTH_RODS                 "Rods"
     IDS_LENGTH_SAWK                 "Sawk"
     IDS_LENGTH_SEN                  "Sen"
     IDS_LENGTH_SHAKU                "Shaku"
@@ -594,6 +611,8 @@ END
 // TYPES OF POWERS
 STRINGTABLE DISCARDABLE
 BEGIN
+    IDS_POWER_BTUS_PER_MINUTE       "BritskÈ term·lnÌ jednotky za minutu"
+    IDS_POWER_FPS_PER_MINUTE        "Foot-Pounds za minutu"
     IDS_POWER_HORSEPOWER            "KoÚskÈ sÌly"
     IDS_POWER_KILOWATTS             "Kilowatty"
     IDS_POWER_MEGAWATTS             "Megawatty"
@@ -605,6 +624,8 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_PRESSURE_ATMOSPHERES        "AtmosfÈry"
     IDS_PRESSURE_BARS               "Bary"
+    IDS_PRESSURE_HECTOPASCALS       "Hektopascaly"
+    IDS_PRESSURE_KILOPASCALS        "Kilopascaly"
     IDS_PRESSURE_PSI                "Libry na Ëtvercov˝ palec"
     IDS_PRESSURE_MM_OF_MERCURY      "Milimetry rtuùovÈho sloupce"
     IDS_PRESSURE_PASCALS            "Pascaly"
@@ -619,14 +640,29 @@ BEGIN
     IDS_TEMPERATURE_RANKINE         "Rankina"
 END
 
+// TYPES OF TIME
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_TIME_DAYS         "Dny"
+    IDS_TIME_HOURS        "Hodiny"
+    IDS_TIME_MICROSECONDS "Mikrosekundy"
+    IDS_TIME_MILISECONDS  "Milisekundy"
+    IDS_TIME_MINUTES      "Minuty"
+    IDS_TIME_SECONDS      "Sekundy"
+    IDS_TIME_YEARS        "Roky"
+    IDS_TIME_WEEKS        "T˝dny"
+END
+
 // TYPES OF VELOCITIES
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_VELOCITY_KILOMETERS_HOUR    "Kilometry/hodinu"
+    IDS_VELOCITY_CMS_SECOND         "Centimetry za hodinu"
+    IDS_VELOCITY_KILOMETERS_HOUR    "Kilometry za hodinu"
     IDS_VELOCITY_MACH               "Machy"
-    IDS_VELOCITY_METERS_SECOND      "Metry/sekundu"
-    IDS_VELOCITY_MILES_HOUR         "MÌle/hodinu"
-    IDS_VELOCITY_FEET_HOUR          "Stopy/hodinu"
+    IDS_VELOCITY_METERS_SECOND      "Metry za sekundu"
+    IDS_VELOCITY_MILES_HOUR         "MÌle za hodinu"
+    IDS_VELOCITY_FEET_HOUR          "Stopy za hodinu"
+    IDS_VELOCITY_FEET_SECOND        "Stopy za sekundu"
     IDS_VELOCITY_KNOTS              "Uzly"
 END
 

@@ -5,6 +5,13 @@
 	<include base="hdwwiz">.</include>
 	<library>setupapi</library>
 	<library>kernel32</library>
+	<library>advapi32</library>
+	<library>comctl32</library>
+	<library>rpcrt4</library>
+	<library>user32</library>
+	<library>gdi32</library>
+	<library>devmgr</library>
+	<library>ntdll</library>
 	<file>hdwwiz.c</file>
 	<file>hdwwiz.rc</file>
 </module>

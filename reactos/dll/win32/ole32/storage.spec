@@ -22,12 +22,10 @@
 500 cdecl IStorage16_QueryInterface(ptr ptr ptr) IStorage16_fnQueryInterface
 501 cdecl IStorage16_AddRef(ptr) IStorage16_fnAddRef
 502 cdecl IStorage16_Release(ptr) IStorage16_fnRelease
-#503 cdecl IStorage16_CreateStream(ptr str long long long ptr) IStorage16_fnCreateStream
-503 stub  IStorage16_CreateStream
+503 cdecl IStorage16_CreateStream(ptr str long long long ptr) IStorage16_fnCreateStream
 
 504 cdecl IStorage16_OpenStream(ptr str ptr long long ptr) IStorage16_fnOpenStream
-#505 cdecl IStorage16_CreateStorage(ptr str long long long ptr) IStorage16_fnCreateStorage
-505 stub  IStorage16_CreateStorage
+505 cdecl IStorage16_CreateStorage(ptr str long long long ptr) IStorage16_fnCreateStorage
 506 cdecl IStorage16_OpenStorage(ptr str ptr long ptr long ptr) IStorage16_fnOpenStorage
 507 cdecl IStorage16_CopyTo(ptr long ptr ptr ptr) IStorage16_fnCopyTo
 508 stub  IStorage16_MoveElementTo
@@ -46,8 +44,7 @@
 519 cdecl IStream16_AddRef(ptr) IStream16_fnAddRef
 520 cdecl IStream16_Release(ptr) IStream16_fnRelease
 521 cdecl IStream16_Read(ptr ptr long ptr) IStream16_fnRead
-#522 cdecl IStream16_Write(ptr ptr long ptr) IStream16_fnWrite
-522 stub  IStream16_Write
+522 cdecl IStream16_Write(ptr ptr long ptr) IStream16_fnWrite
 523 cdecl IStream16_Seek(ptr double long ptr) IStream16_fnSeek
 524 stub  IStream16_SetSize
 525 stub  IStream16_CopyTo

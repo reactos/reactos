@@ -193,7 +193,7 @@ HRESULT WINAPI StdProxy_Construct(REFIID riid,
   return S_OK;
 }
 
-static void WINAPI StdProxy_Destruct(LPRPCPROXYBUFFER iface)
+static void StdProxy_Destruct(LPRPCPROXYBUFFER iface)
 {
   ICOM_THIS_MULTI(StdProxyImpl,lpVtbl,iface);
 

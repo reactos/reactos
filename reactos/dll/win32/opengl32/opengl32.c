@@ -28,200 +28,200 @@ GLPROCESSDATA OPENGL32_processdata;
 static BOOL
 OPENGL32_ThreadAttach()
 {
-	GLTHREADDATA* lpData = NULL;
-	PROC *dispatchTable = NULL;
-	TEB *teb = NULL;
+    GLTHREADDATA* lpData = NULL;
+    PROC *dispatchTable = NULL;
+    TEB *teb = NULL;
 
-	dispatchTable = (PROC*)HeapAlloc( GetProcessHeap(),
-	                                  HEAP_GENERATE_EXCEPTIONS | HEAP_ZERO_MEMORY,
-	                                  sizeof (((ICDTable *)(0))->dispatch_table) );
-	if (dispatchTable == NULL)
-	{
-		DBGPRINT( "Error: Couldn't allocate GL dispatch table" );
-		return FALSE;
-	}
+    dispatchTable = (PROC*)HeapAlloc( GetProcessHeap(),
+                                      HEAP_GENERATE_EXCEPTIONS | HEAP_ZERO_MEMORY,
+                                      sizeof (((ICDTable *)(0))->dispatch_table) );
+    if (dispatchTable == NULL)
+    {
+        DBGPRINT( "Error: Couldn't allocate GL dispatch table" );
+        return FALSE;
+    }
 
-	lpData = (GLTHREADDATA*)HeapAlloc( GetProcessHeap(),
-	                                   HEAP_GENERATE_EXCEPTIONS | HEAP_ZERO_MEMORY,
-	                                   sizeof (GLTHREADDATA) );
-	if (lpData == NULL)
-	{
-		DBGPRINT( "Error: Couldn't allocate GLTHREADDATA" );
-		HeapFree( GetProcessHeap(), 0, dispatchTable );
-		return FALSE;
-	}
+    lpData = (GLTHREADDATA*)HeapAlloc( GetProcessHeap(),
+                                       HEAP_GENERATE_EXCEPTIONS | HEAP_ZERO_MEMORY,
+                                       sizeof (GLTHREADDATA) );
+    if (lpData == NULL)
+    {
+        DBGPRINT( "Error: Couldn't allocate GLTHREADDATA" );
+        HeapFree( GetProcessHeap(), 0, dispatchTable );
+        return FALSE;
+    }
 
-	teb = NtCurrentTeb();
+    teb = NtCurrentTeb();
 
-	/* initialize dispatch table with empty functions */
-	#define X(func, ret, typeargs, args, icdidx, tebidx, stack)            \
-		dispatchTable[icdidx] = (PROC)glEmptyFunc##stack;                  \
-		if (tebidx >= 0)                                                   \
-			teb->glDispatchTable[tebidx] = (PVOID)glEmptyFunc##stack;
-	GLFUNCS_MACRO
-	#undef X
+    /* initialize dispatch table with empty functions */
+    #define X(func, ret, typeargs, args, icdidx, tebidx, stack)            \
+        dispatchTable[icdidx] = (PROC)glEmptyFunc##stack;                  \
+        if (tebidx >= 0)                                                   \
+            teb->glDispatchTable[tebidx] = (PVOID)glEmptyFunc##stack;
+    GLFUNCS_MACRO
+    #undef X
 
-	teb->glTable = dispatchTable;
-	TlsSetValue( OPENGL32_tls, lpData );
+    teb->glTable = dispatchTable;
+    TlsSetValue( OPENGL32_tls, lpData );
 
-	return TRUE;
+    return TRUE;
 }
 
 
 static void
 OPENGL32_ThreadDetach()
 {
-	GLTHREADDATA* lpData = NULL;
-	PROC *dispatchTable = NULL;
+    GLTHREADDATA* lpData = NULL;
+    PROC *dispatchTable = NULL;
 
-	rosglMakeCurrent( NULL, NULL );
+    rosglMakeCurrent( NULL, NULL );
 
-	lpData = (GLTHREADDATA*)TlsGetValue( OPENGL32_tls );
-	if (lpData != NULL)
-	{
-		if (!HeapFree( GetProcessHeap(), 0, lpData ))
-			DBGPRINT( "Warning: HeapFree() on GLTHREADDATA failed (%d)",
-			          GetLastError() );
-		lpData = NULL;
-	}
+    lpData = (GLTHREADDATA*)TlsGetValue( OPENGL32_tls );
+    if (lpData != NULL)
+    {
+        if (!HeapFree( GetProcessHeap(), 0, lpData ))
+            DBGPRINT( "Warning: HeapFree() on GLTHREADDATA failed (%d)",
+                      GetLastError() );
+        lpData = NULL;
+    }
 
-	dispatchTable = NtCurrentTeb()->glTable;
-	if (dispatchTable != NULL)
-	{
-		if (!HeapFree( GetProcessHeap(), 0, dispatchTable ))
-			DBGPRINT( "Warning: HeapFree() on dispatch table failed (%d)",
-			          GetLastError() );
-	}
+    dispatchTable = NtCurrentTeb()->glTable;
+    if (dispatchTable != NULL)
+    {
+        if (!HeapFree( GetProcessHeap(), 0, dispatchTable ))
+            DBGPRINT( "Warning: HeapFree() on dispatch table failed (%d)",
+                      GetLastError() );
+    }
 }
 
 
 static BOOL
 OPENGL32_ProcessAttach()
 {
-	SECURITY_ATTRIBUTES attrib = { sizeof (SECURITY_ATTRIBUTES), /* nLength */
-	                               NULL, /* lpSecurityDescriptor */
-	                               TRUE /* bInheritHandle */ };
+    SECURITY_ATTRIBUTES attrib = { sizeof (SECURITY_ATTRIBUTES), /* nLength */
+                                   NULL, /* lpSecurityDescriptor */
+                                   TRUE /* bInheritHandle */ };
 
-	OPENGL32_tls = TlsAlloc();
-	if (-1U == OPENGL32_tls)
-		return FALSE;
+    OPENGL32_tls = TlsAlloc();
+    if (-1U == OPENGL32_tls)
+        return FALSE;
 
-	memset( &OPENGL32_processdata, 0, sizeof (OPENGL32_processdata) );
+    memset( &OPENGL32_processdata, 0, sizeof (OPENGL32_processdata) );
 
-	/* create driver, glrc & dcdata list mutex */
-	OPENGL32_processdata.driver_mutex = CreateMutex( &attrib, FALSE, NULL );
-	if (OPENGL32_processdata.driver_mutex == NULL)
-	{
-		DBGPRINT( "Error: Couldn't create driver_list mutex (%d)",
-		          GetLastError() );
-		return FALSE;
-	}
-	OPENGL32_processdata.glrc_mutex = CreateMutex( &attrib, FALSE, NULL );
-	if (OPENGL32_processdata.glrc_mutex == NULL)
-	{
-		DBGPRINT( "Error: Couldn't create glrc_list mutex (%d)",
-		          GetLastError() );
-		return FALSE;
-	}
-	OPENGL32_processdata.dcdata_mutex = CreateMutex( &attrib, FALSE, NULL );
-	if (OPENGL32_processdata.dcdata_mutex == NULL)
-	{
-		DBGPRINT( "Error: Couldn't create dcdata_list mutex (%d)",
-		          GetLastError() );
-		return FALSE;
-	}
+    /* create driver, glrc & dcdata list mutex */
+    OPENGL32_processdata.driver_mutex = CreateMutex( &attrib, FALSE, NULL );
+    if (OPENGL32_processdata.driver_mutex == NULL)
+    {
+        DBGPRINT( "Error: Couldn't create driver_list mutex (%d)",
+                  GetLastError() );
+        return FALSE;
+    }
+    OPENGL32_processdata.glrc_mutex = CreateMutex( &attrib, FALSE, NULL );
+    if (OPENGL32_processdata.glrc_mutex == NULL)
+    {
+        DBGPRINT( "Error: Couldn't create glrc_list mutex (%d)",
+                  GetLastError() );
+        return FALSE;
+    }
+    OPENGL32_processdata.dcdata_mutex = CreateMutex( &attrib, FALSE, NULL );
+    if (OPENGL32_processdata.dcdata_mutex == NULL)
+    {
+        DBGPRINT( "Error: Couldn't create dcdata_list mutex (%d)",
+                  GetLastError() );
+        return FALSE;
+    }
 
-	return TRUE;
+    return TRUE;
 }
 
 
 static void
 OPENGL32_ProcessDetach()
 {
-	GLDRIVERDATA *icd, *icd2;
-	GLDCDATA *dcdata, *dcdata2;
-	GLRC *glrc, *glrc2;
+    GLDRIVERDATA *icd, *icd2;
+    GLDCDATA *dcdata, *dcdata2;
+    GLRC *glrc, *glrc2;
 
-	/* free lists */
-	for (dcdata = OPENGL32_processdata.dcdata_list; dcdata != NULL;)
-	{
-		dcdata2 = dcdata;
-		dcdata = dcdata->next;
-		if (!HeapFree( GetProcessHeap(), 0, dcdata2 ))
-			DBGPRINT( "Warning: HeapFree() on DCDATA 0x%08x failed (%d)",
-			          dcdata2, GetLastError() );
-	}
+    /* free lists */
+    for (dcdata = OPENGL32_processdata.dcdata_list; dcdata != NULL;)
+    {
+        dcdata2 = dcdata;
+        dcdata = dcdata->next;
+        if (!HeapFree( GetProcessHeap(), 0, dcdata2 ))
+            DBGPRINT( "Warning: HeapFree() on DCDATA 0x%08x failed (%d)",
+                      dcdata2, GetLastError() );
+    }
 
-	for (glrc = OPENGL32_processdata.glrc_list; glrc != NULL;)
-	{
-		glrc2 = glrc;
-		glrc = glrc->next;
-		if (!HeapFree( GetProcessHeap(), 0, glrc2 ))
-			DBGPRINT( "Warning: HeapFree() on GLRC 0x%08x failed (%d)",
-			          glrc2, GetLastError() );
-	}
+    for (glrc = OPENGL32_processdata.glrc_list; glrc != NULL;)
+    {
+        glrc2 = glrc;
+        glrc = glrc->next;
+        if (!HeapFree( GetProcessHeap(), 0, glrc2 ))
+            DBGPRINT( "Warning: HeapFree() on GLRC 0x%08x failed (%d)",
+                      glrc2, GetLastError() );
+    }
 
-	for (icd = OPENGL32_processdata.driver_list; icd != NULL;)
-	{
-		icd2 = icd;
-		icd = icd->next;
-		if (!HeapFree( GetProcessHeap(), 0, icd2 ))
-			DBGPRINT( "Warning: HeapFree() on DRIVERDATA 0x%08x failed (%d)",
-			          icd2, GetLastError() );
-	}
+    for (icd = OPENGL32_processdata.driver_list; icd != NULL;)
+    {
+        icd2 = icd;
+        icd = icd->next;
+        if (!HeapFree( GetProcessHeap(), 0, icd2 ))
+            DBGPRINT( "Warning: HeapFree() on DRIVERDATA 0x%08x failed (%d)",
+                      icd2, GetLastError() );
+    }
 
-	/* free mutexes */
-	if (OPENGL32_processdata.driver_mutex != NULL)
-		CloseHandle( OPENGL32_processdata.driver_mutex );
-	if (OPENGL32_processdata.glrc_mutex != NULL)
-		CloseHandle( OPENGL32_processdata.glrc_mutex );
-	if (OPENGL32_processdata.dcdata_mutex != NULL)
-		CloseHandle( OPENGL32_processdata.dcdata_mutex );
+    /* free mutexes */
+    if (OPENGL32_processdata.driver_mutex != NULL)
+        CloseHandle( OPENGL32_processdata.driver_mutex );
+    if (OPENGL32_processdata.glrc_mutex != NULL)
+        CloseHandle( OPENGL32_processdata.glrc_mutex );
+    if (OPENGL32_processdata.dcdata_mutex != NULL)
+        CloseHandle( OPENGL32_processdata.dcdata_mutex );
 
-	/* free TLS */
-	if (OPENGL32_tls != -1U)
-		TlsFree(OPENGL32_tls);
+    /* free TLS */
+    if (OPENGL32_tls != -1U)
+        TlsFree(OPENGL32_tls);
 }
 
 
 BOOL WINAPI
 DllMain(HINSTANCE hInstance, DWORD Reason, LPVOID Reserved)
 {
-	DBGPRINT( "Info: Called!" );
-	switch ( Reason )
-	{
-	/* The DLL is loading due to process
-	 * initialization or a call to LoadLibrary.
-	 */
-	case DLL_PROCESS_ATTACH:
-		DBGTRACE( "Process attach" );
-		if (!OPENGL32_ProcessAttach())
-			return FALSE;
-		/* No break: Initialize the index for first thread. */
+    DBGPRINT( "Info: Called!" );
+    switch ( Reason )
+    {
+    /* The DLL is loading due to process
+     * initialization or a call to LoadLibrary.
+     */
+    case DLL_PROCESS_ATTACH:
+        DBGTRACE( "Process attach" );
+        if (!OPENGL32_ProcessAttach())
+            return FALSE;
+        /* No break: Initialize the index for first thread. */
 
-	/* The attached process creates a new thread. */
-	case DLL_THREAD_ATTACH:
-		DBGTRACE( "Thread attach" );
-		if (!OPENGL32_ThreadAttach())
-			return FALSE;
-		break;
+    /* The attached process creates a new thread. */
+    case DLL_THREAD_ATTACH:
+        DBGTRACE( "Thread attach" );
+        if (!OPENGL32_ThreadAttach())
+            return FALSE;
+        break;
 
-	/* The thread of the attached process terminates. */
-	case DLL_THREAD_DETACH:
-		DBGTRACE( "Thread detach" );
-		/* Release the allocated memory for this thread.*/
-		OPENGL32_ThreadDetach();
-		break;
+    /* The thread of the attached process terminates. */
+    case DLL_THREAD_DETACH:
+        DBGTRACE( "Thread detach" );
+        /* Release the allocated memory for this thread.*/
+        OPENGL32_ThreadDetach();
+        break;
 
-	/* DLL unload due to process termination or FreeLibrary. */
-	case DLL_PROCESS_DETACH:
-		DBGTRACE( "Process detach" );
-		OPENGL32_ThreadDetach();
-		OPENGL32_ProcessDetach();
-		break;
-	}
+    /* DLL unload due to process termination or FreeLibrary. */
+    case DLL_PROCESS_DETACH:
+        DBGTRACE( "Process detach" );
+        OPENGL32_ThreadDetach();
+        OPENGL32_ProcessDetach();
+        break;
+    }
 
-	return TRUE;
+    return TRUE;
 }
 
 
@@ -234,15 +234,15 @@ DllMain(HINSTANCE hInstance, DWORD Reason, LPVOID Reserved)
 static void
 OPENGL32_AppendICD( GLDRIVERDATA *icd )
 {
-	if (OPENGL32_processdata.driver_list == NULL)
-		OPENGL32_processdata.driver_list = icd;
-	else
-	{
-		GLDRIVERDATA *p = OPENGL32_processdata.driver_list;
-		while (p->next != NULL)
-			p = p->next;
-		p->next = icd;
-	}
+    if (OPENGL32_processdata.driver_list == NULL)
+        OPENGL32_processdata.driver_list = icd;
+    else
+    {
+        GLDRIVERDATA *p = OPENGL32_processdata.driver_list;
+        while (p->next != NULL)
+            p = p->next;
+        p->next = icd;
+    }
 }
 
 
@@ -255,22 +255,22 @@ OPENGL32_AppendICD( GLDRIVERDATA *icd )
 static void
 OPENGL32_RemoveICD( GLDRIVERDATA *icd )
 {
-	if (icd == OPENGL32_processdata.driver_list)
-		OPENGL32_processdata.driver_list = icd->next;
-	else
-	{
-		GLDRIVERDATA *p = OPENGL32_processdata.driver_list;
-		while (p != NULL)
-		{
-			if (p->next == icd)
-			{
-				p->next = icd->next;
-				return;
-			}
-			p = p->next;
-		}
-		DBGPRINT( "Error: ICD 0x%08x not found in list!", icd );
-	}
+    if (icd == OPENGL32_processdata.driver_list)
+        OPENGL32_processdata.driver_list = icd->next;
+    else
+    {
+        GLDRIVERDATA *p = OPENGL32_processdata.driver_list;
+        while (p != NULL)
+        {
+            if (p->next == icd)
+            {
+                p->next = icd->next;
+                return;
+            }
+            p = p->next;
+        }
+        DBGPRINT( "Error: ICD 0x%08x not found in list!", icd );
+    }
 }
 
 
@@ -286,52 +286,52 @@ OPENGL32_RemoveICD( GLDRIVERDATA *icd )
 static GLDRIVERDATA *
 OPENGL32_LoadDriver( LPCWSTR driver )
 {
-	LONG ret;
-	GLDRIVERDATA *icd;
+    LONG ret;
+    GLDRIVERDATA *icd;
 
-	DBGPRINT( "Info: Loading driver %ws...", driver );
+    DBGPRINT( "Info: Loading driver %ws...", driver );
 
-	/* allocate driver data */
-	icd = (GLDRIVERDATA*)HeapAlloc( GetProcessHeap(),
-	                                HEAP_GENERATE_EXCEPTIONS | HEAP_ZERO_MEMORY,
-	                                sizeof (GLDRIVERDATA) );
-	if (icd == NULL)
-	{
-		DBGPRINT( "Error: Couldn't allocate GLDRIVERDATA! (%d)", GetLastError() );
-		return NULL;
-	}
+    /* allocate driver data */
+    icd = (GLDRIVERDATA*)HeapAlloc( GetProcessHeap(),
+                                    HEAP_GENERATE_EXCEPTIONS | HEAP_ZERO_MEMORY,
+                                    sizeof (GLDRIVERDATA) );
+    if (icd == NULL)
+    {
+        DBGPRINT( "Error: Couldn't allocate GLDRIVERDATA! (%d)", GetLastError() );
+        return NULL;
+    }
 
-	ret = OPENGL32_RegGetDriverInfo( driver, icd );
-	if (ret != ERROR_SUCCESS)
-	{
-		DBGPRINT( "Error: Couldn't query driver information (%d)", ret );
-		if (!HeapFree( GetProcessHeap(), 0, icd ))
-			DBGPRINT( "Error: HeapFree() returned false, error code = %d",
-			          GetLastError() );
-		return NULL;
-	}
+    ret = OPENGL32_RegGetDriverInfo( driver, icd );
+    if (ret != ERROR_SUCCESS)
+    {
+        DBGPRINT( "Error: Couldn't query driver information (%d)", ret );
+        if (!HeapFree( GetProcessHeap(), 0, icd ))
+            DBGPRINT( "Error: HeapFree() returned false, error code = %d",
+                      GetLastError() );
+        return NULL;
+    }
 
-	DBGPRINT( "Info: Dll = %ws", icd->dll );
-	DBGPRINT( "Info: Version = 0x%08x", icd->version );
-	DBGPRINT( "Info: DriverVersion = 0x%08x", icd->driver_version );
-	DBGPRINT( "Info: Flags = 0x%08x", icd->flags );
+    DBGPRINT( "Info: Dll = %ws", icd->dll );
+    DBGPRINT( "Info: Version = 0x%08x", icd->version );
+    DBGPRINT( "Info: DriverVersion = 0x%08x", icd->driver_version );
+    DBGPRINT( "Info: Flags = 0x%08x", icd->flags );
 
-	/* load/initialize ICD */
-	ret = OPENGL32_InitializeDriver( icd );
-	if (ret != ERROR_SUCCESS)
-	{
-		DBGPRINT( "Error: Couldnt initialize ICD!" );
-		if (!HeapFree( GetProcessHeap(), 0, icd ))
-			DBGPRINT( "Error: HeapFree() returned false, error code = %d",
-			          GetLastError() );
-		return NULL;
-	}
+    /* load/initialize ICD */
+    ret = OPENGL32_InitializeDriver( icd );
+    if (ret != ERROR_SUCCESS)
+    {
+        DBGPRINT( "Error: Couldnt initialize ICD!" );
+        if (!HeapFree( GetProcessHeap(), 0, icd ))
+            DBGPRINT( "Error: HeapFree() returned false, error code = %d",
+                      GetLastError() );
+        return NULL;
+    }
 
-	/* append ICD to list */
-	OPENGL32_AppendICD( icd );
-	DBGPRINT( "Info: ICD loaded." );
+    /* append ICD to list */
+    OPENGL32_AppendICD( icd );
+    DBGPRINT( "Info: ICD loaded." );
 
-	return icd;
+    return icd;
 }
 
 
@@ -343,74 +343,74 @@ OPENGL32_LoadDriver( LPCWSTR driver )
  * \retval ERROR_SUCCESS  Success
  */
 #define LOAD_DRV_PROC( icd, proc, required ) \
-	*(char**)&icd->proc = (char*)GetProcAddress( icd->handle, #proc ); \
-	if (required && icd->proc == NULL) { \
-		DBGPRINT( "Error: GetProcAddress(\"%s\") failed!", #proc ); \
-		FreeLibrary( icd->handle ); \
-		return GetLastError(); \
-	}
+    *(char**)&icd->proc = (char*)GetProcAddress( icd->handle, #proc ); \
+    if (required && icd->proc == NULL) { \
+        DBGPRINT( "Error: GetProcAddress(\"%s\") failed!", #proc ); \
+        FreeLibrary( icd->handle ); \
+        return GetLastError(); \
+    }
 
 static DWORD
 OPENGL32_InitializeDriver( GLDRIVERDATA *icd )
 {
-	/* check version */
-	if (icd->version > 2)
-		DBGPRINT( "Warning: ICD version > 2 (%d)", icd->version );
+    /* check version */
+    if (icd->version > 2)
+        DBGPRINT( "Warning: ICD version > 2 (%d)", icd->version );
 
-	/* load dll */
-	icd->handle = LoadLibraryW( icd->dll );
-	if (icd->handle == NULL)
-	{
-		DWORD err = GetLastError();
-		DBGPRINT( "Error: Couldn't load DLL! (%d)", err );
-		return err;
-	}
+    /* load dll */
+    icd->handle = LoadLibraryW( icd->dll );
+    if (icd->handle == NULL)
+    {
+        DWORD err = GetLastError();
+        DBGPRINT( "Error: Couldn't load DLL! (%d)", err );
+        return err;
+    }
 
-	/* validate version */
-	if (icd->driver_version > 1)
-	{
-		LOAD_DRV_PROC(icd, DrvValidateVersion, FALSE);
-		if (icd->DrvValidateVersion != NULL)
-		{
-			if (!icd->DrvValidateVersion( icd->driver_version ))
-			{
-				DBGPRINT( "Error: DrvValidateVersion failed!" );
-				DBGBREAK();
-				FreeLibrary( icd->handle );
-				return ERROR_INVALID_FUNCTION; /* FIXME: use better error code */
-			}
-		}
-		else
-			DBGPRINT( "Info: DrvValidateVersion not exported by ICD" );
-	}
+    /* validate version */
+    if (icd->driver_version > 1)
+    {
+        LOAD_DRV_PROC(icd, DrvValidateVersion, FALSE);
+        if (icd->DrvValidateVersion != NULL)
+        {
+            if (!icd->DrvValidateVersion( icd->driver_version ))
+            {
+                DBGPRINT( "Error: DrvValidateVersion failed!" );
+                DBGBREAK();
+                FreeLibrary( icd->handle );
+                return ERROR_INVALID_FUNCTION; /* FIXME: use better error code */
+            }
+        }
+        else
+            DBGPRINT( "Info: DrvValidateVersion not exported by ICD" );
+    }
 
-	/* load DrvXXX procs */
-	LOAD_DRV_PROC(icd, DrvCopyContext, TRUE);
-	LOAD_DRV_PROC(icd, DrvCreateContext, FALSE);
-	LOAD_DRV_PROC(icd, DrvCreateLayerContext, FALSE);
-	LOAD_DRV_PROC(icd, DrvDeleteContext, TRUE);
-	LOAD_DRV_PROC(icd, DrvDescribeLayerPlane, TRUE);
-	LOAD_DRV_PROC(icd, DrvDescribePixelFormat, TRUE);
-	LOAD_DRV_PROC(icd, DrvGetLayerPaletteEntries, TRUE);
-	LOAD_DRV_PROC(icd, DrvGetProcAddress, TRUE);
-	LOAD_DRV_PROC(icd, DrvReleaseContext, TRUE);
-	LOAD_DRV_PROC(icd, DrvRealizeLayerPalette, TRUE);
-	LOAD_DRV_PROC(icd, DrvSetContext, TRUE);
-	LOAD_DRV_PROC(icd, DrvSetLayerPaletteEntries, TRUE);
-	LOAD_DRV_PROC(icd, DrvSetPixelFormat, TRUE);
-	LOAD_DRV_PROC(icd, DrvShareLists, TRUE);
-	LOAD_DRV_PROC(icd, DrvSwapBuffers, TRUE);
-	LOAD_DRV_PROC(icd, DrvSwapLayerBuffers, TRUE);
+    /* load DrvXXX procs */
+    LOAD_DRV_PROC(icd, DrvCopyContext, TRUE);
+    LOAD_DRV_PROC(icd, DrvCreateContext, FALSE);
+    LOAD_DRV_PROC(icd, DrvCreateLayerContext, FALSE);
+    LOAD_DRV_PROC(icd, DrvDeleteContext, TRUE);
+    LOAD_DRV_PROC(icd, DrvDescribeLayerPlane, TRUE);
+    LOAD_DRV_PROC(icd, DrvDescribePixelFormat, TRUE);
+    LOAD_DRV_PROC(icd, DrvGetLayerPaletteEntries, TRUE);
+    LOAD_DRV_PROC(icd, DrvGetProcAddress, TRUE);
+    LOAD_DRV_PROC(icd, DrvReleaseContext, TRUE);
+    LOAD_DRV_PROC(icd, DrvRealizeLayerPalette, TRUE);
+    LOAD_DRV_PROC(icd, DrvSetContext, TRUE);
+    LOAD_DRV_PROC(icd, DrvSetLayerPaletteEntries, TRUE);
+    LOAD_DRV_PROC(icd, DrvSetPixelFormat, TRUE);
+    LOAD_DRV_PROC(icd, DrvShareLists, TRUE);
+    LOAD_DRV_PROC(icd, DrvSwapBuffers, TRUE);
+    LOAD_DRV_PROC(icd, DrvSwapLayerBuffers, TRUE);
 
-	/* we require at least one of DrvCreateContext and DrvCreateLayerContext */
-	if (icd->DrvCreateContext == NULL && icd->DrvCreateLayerContext == NULL)
-	{
-		DBGPRINT( "Error: One of DrvCreateContext/DrvCreateLayerContext is required!" );
-		FreeLibrary( icd->handle );
-		return ERROR_INVALID_FUNCTION; /* FIXME: use better error code... */
-	}
+    /* we require at least one of DrvCreateContext and DrvCreateLayerContext */
+    if (icd->DrvCreateContext == NULL && icd->DrvCreateLayerContext == NULL)
+    {
+        DBGPRINT( "Error: One of DrvCreateContext/DrvCreateLayerContext is required!" );
+        FreeLibrary( icd->handle );
+        return ERROR_INVALID_FUNCTION; /* FIXME: use better error code... */
+    }
 
-	return ERROR_SUCCESS;
+    return ERROR_SUCCESS;
 }
 
 
@@ -422,30 +422,30 @@ OPENGL32_InitializeDriver( GLDRIVERDATA *icd )
 static BOOL
 OPENGL32_UnloadDriver( GLDRIVERDATA *icd )
 {
-	BOOL allOk = TRUE;
+    BOOL allOk = TRUE;
 
-	DBGPRINT( "Info: Unloading driver %ws...", icd->driver_name );
-	if (icd->refcount != 0)
-		DBGPRINT( "Warning: ICD refcount = %d (should be 0)", icd->refcount );
+    DBGPRINT( "Info: Unloading driver %ws...", icd->driver_name );
+    if (icd->refcount != 0)
+        DBGPRINT( "Warning: ICD refcount = %d (should be 0)", icd->refcount );
 
-	/* unload dll */
-	if (!FreeLibrary( icd->handle ))
-	{
-		allOk = FALSE;
-		DBGPRINT( "Warning: FreeLibrary on ICD %ws failed! (%d)", icd->dll,
-		          GetLastError() );
-	}
+    /* unload dll */
+    if (!FreeLibrary( icd->handle ))
+    {
+        allOk = FALSE;
+        DBGPRINT( "Warning: FreeLibrary on ICD %ws failed! (%d)", icd->dll,
+                  GetLastError() );
+    }
 
-	/* free resources */
-	OPENGL32_RemoveICD( icd );
-	if (!HeapFree( GetProcessHeap(), 0, icd ))
-	{
-		allOk = FALSE;
-		DBGPRINT( "Warning: HeapFree() returned FALSE, error code = %d",
-		          GetLastError() );
-	}
+    /* free resources */
+    OPENGL32_RemoveICD( icd );
+    if (!HeapFree( GetProcessHeap(), 0, icd ))
+    {
+        allOk = FALSE;
+        DBGPRINT( "Warning: HeapFree() returned FALSE, error code = %d",
+                  GetLastError() );
+    }
 
-	return allOk;
+    return allOk;
 }
 
 
@@ -457,41 +457,41 @@ OPENGL32_UnloadDriver( GLDRIVERDATA *icd )
 GLDRIVERDATA *
 OPENGL32_LoadICD( LPCWSTR driver )
 {
-	GLDRIVERDATA *icd;
+    GLDRIVERDATA *icd;
 
-	/* synchronize */
-	if (WaitForSingleObject( OPENGL32_processdata.driver_mutex, INFINITE ) ==
-	    WAIT_FAILED)
-	{
-		DBGPRINT( "Error: WaitForSingleObject() failed (%d)", GetLastError() );
-		return NULL; /* FIXME: do we have to expect such an error and handle it? */
-	}
+    /* synchronize */
+    if (WaitForSingleObject( OPENGL32_processdata.driver_mutex, INFINITE ) ==
+        WAIT_FAILED)
+    {
+        DBGPRINT( "Error: WaitForSingleObject() failed (%d)", GetLastError() );
+        return NULL; /* FIXME: do we have to expect such an error and handle it? */
+    }
 
-	/* look if ICD is already loaded */
-	for (icd = OPENGL32_processdata.driver_list; icd; icd = icd->next)
-	{
-		if (!_wcsicmp( driver, icd->driver_name )) /* found */
-		{
-			icd->refcount++;
+    /* look if ICD is already loaded */
+    for (icd = OPENGL32_processdata.driver_list; icd; icd = icd->next)
+    {
+        if (!_wcsicmp( driver, icd->driver_name )) /* found */
+        {
+            icd->refcount++;
 
-			/* release mutex */
-			if (!ReleaseMutex( OPENGL32_processdata.driver_mutex ))
-				DBGPRINT( "Error: ReleaseMutex() failed (%d)", GetLastError() );
+            /* release mutex */
+            if (!ReleaseMutex( OPENGL32_processdata.driver_mutex ))
+                DBGPRINT( "Error: ReleaseMutex() failed (%d)", GetLastError() );
 
-			return icd;
-		}
-	}
+            return icd;
+        }
+    }
 
-	/* not found - try to load */
-	icd = OPENGL32_LoadDriver( driver );
-	if (icd != NULL)
-		icd->refcount = 1;
+    /* not found - try to load */
+    icd = OPENGL32_LoadDriver( driver );
+    if (icd != NULL)
+        icd->refcount = 1;
 
-	/* release mutex */
-	if (!ReleaseMutex( OPENGL32_processdata.driver_mutex ))
-		DBGPRINT( "Error: ReleaseMutex() failed (%d)", GetLastError() );
+    /* release mutex */
+    if (!ReleaseMutex( OPENGL32_processdata.driver_mutex ))
+        DBGPRINT( "Error: ReleaseMutex() failed (%d)", GetLastError() );
 
-	return icd;
+    return icd;
 }
 
 
@@ -503,24 +503,24 @@ OPENGL32_LoadICD( LPCWSTR driver )
 BOOL
 OPENGL32_UnloadICD( GLDRIVERDATA *icd )
 {
-	BOOL ret = TRUE;
+    BOOL ret = TRUE;
 
-	/* synchronize */
-	if (WaitForSingleObject( OPENGL32_processdata.driver_mutex, INFINITE ) ==
-	    WAIT_FAILED)
-	{
-		DBGPRINT( "Error: WaitForSingleObject() failed (%d)", GetLastError() );
-		return FALSE; /* FIXME: do we have to expect such an error and handle it? */
-	}
+    /* synchronize */
+    if (WaitForSingleObject( OPENGL32_processdata.driver_mutex, INFINITE ) ==
+        WAIT_FAILED)
+    {
+        DBGPRINT( "Error: WaitForSingleObject() failed (%d)", GetLastError() );
+        return FALSE; /* FIXME: do we have to expect such an error and handle it? */
+    }
 
-	if (--icd->refcount == 0)
-		ret = OPENGL32_UnloadDriver( icd );
+    if (--icd->refcount == 0)
+        ret = OPENGL32_UnloadDriver( icd );
 
-	/* release mutex */
-	if (!ReleaseMutex( OPENGL32_processdata.driver_mutex ))
-		DBGPRINT( "Error: ReleaseMutex() failed (%d)", GetLastError() );
+    /* release mutex */
+    if (!ReleaseMutex( OPENGL32_processdata.driver_mutex ))
+        DBGPRINT( "Error: ReleaseMutex() failed (%d)", GetLastError() );
 
-	return ret;
+    return ret;
 }
 
 
@@ -540,40 +540,40 @@ OPENGL32_UnloadICD( GLDRIVERDATA *icd )
 DWORD
 OPENGL32_RegEnumDrivers( DWORD idx, LPWSTR name, LPDWORD cName )
 {
-	HKEY hKey;
-	LPCWSTR subKey = OPENGL_DRIVERS_SUBKEY;
-	LONG ret;
-	DWORD size;
-	WCHAR driver[256];
+    HKEY hKey;
+    LPCWSTR subKey = OPENGL_DRIVERS_SUBKEY;
+    LONG ret;
+    DWORD size;
+    WCHAR driver[256];
 
-	if (name == NULL)
-		return ERROR_SUCCESS; /* nothing to do */
+    if (name == NULL)
+        return ERROR_SUCCESS; /* nothing to do */
 
-	if (cName == NULL)
-		return ERROR_INVALID_FUNCTION; /* we need cName when name is given */
+    if (cName == NULL)
+        return ERROR_INVALID_FUNCTION; /* we need cName when name is given */
 
-	/* open OpenGLDrivers registry key */
-	ret = RegOpenKeyExW( HKEY_LOCAL_MACHINE, subKey, 0, KEY_READ, &hKey );
-	if (ret != ERROR_SUCCESS)
-	{
-		DBGPRINT( "Error: Couldn't open registry key '%ws'", subKey );
-		return ret;
-	}
+    /* open OpenGLDrivers registry key */
+    ret = RegOpenKeyExW( HKEY_LOCAL_MACHINE, subKey, 0, KEY_READ, &hKey );
+    if (ret != ERROR_SUCCESS)
+    {
+        DBGPRINT( "Error: Couldn't open registry key '%ws'", subKey );
+        return ret;
+    }
 
-	/* get subkey name */
-	size = sizeof (driver) / sizeof (driver[0]);
-	ret = RegEnumKeyW( hKey, idx, name, *cName );
-	if (ret != ERROR_SUCCESS)
-	{
-		DBGPRINT( "Error: Couldn't get OpenGLDrivers subkey name (%d)", ret );
-		RegCloseKey( hKey );
-		return ret;
-	}
-	*cName = wcslen( name );
+    /* get subkey name */
+    size = sizeof (driver) / sizeof (driver[0]);
+    ret = RegEnumKeyW( hKey, idx, name, *cName );
+    if (ret != ERROR_SUCCESS)
+    {
+        DBGPRINT( "Error: Couldn't get OpenGLDrivers subkey name (%d)", ret );
+        RegCloseKey( hKey );
+        return ret;
+    }
+    *cName = wcslen( name );
 
-	/* close key */
-	RegCloseKey( hKey );
-	return ERROR_SUCCESS;
+    /* close key */
+    RegCloseKey( hKey );
+    return ERROR_SUCCESS;
 }
 #endif /* 0 -- unused */
 
@@ -592,64 +592,64 @@ OPENGL32_RegEnumDrivers( DWORD idx, LPWSTR name, LPDWORD cName )
 static DWORD
 OPENGL32_RegGetDriverInfo( LPCWSTR driver, GLDRIVERDATA *icd )
 {
-	HKEY hKey;
-	WCHAR subKey[1024] = OPENGL_DRIVERS_SUBKEY2;
-	LONG ret;
-	DWORD type, size;
+    HKEY hKey;
+    WCHAR subKey[1024] = OPENGL_DRIVERS_SUBKEY2;
+    LONG ret;
+    DWORD type, size;
 
-	/* drivers registry values */
-	DWORD version = 1, driverVersion = 0, flags = 0;
-	WCHAR dll[256];
+    /* drivers registry values */
+    DWORD version = 1, driverVersion = 0, flags = 0;
+    WCHAR dll[256];
 
-	/* open driver registry key */
-	wcsncat( subKey, driver, 1024 );
-	ret = RegOpenKeyExW( HKEY_LOCAL_MACHINE, subKey, 0, KEY_READ, &hKey );
-	if (ret != ERROR_SUCCESS)
-	{
-		DBGPRINT( "Error: Couldn't open registry key '%ws'", subKey );
-		return ret;
-	}
+    /* open driver registry key */
+    wcsncat( subKey, driver, 1024 );
+    ret = RegOpenKeyExW( HKEY_LOCAL_MACHINE, subKey, 0, KEY_READ, &hKey );
+    if (ret != ERROR_SUCCESS)
+    {
+        DBGPRINT( "Error: Couldn't open registry key '%ws'", subKey );
+        return ret;
+    }
 
-	/* query values */
-	size = sizeof (dll);
-	ret = RegQueryValueExW( hKey, L"Dll", 0, &type, (LPBYTE)dll, &size );
-	if (ret != ERROR_SUCCESS || type != REG_SZ)
-	{
-		DBGPRINT( "Error: Couldn't query Dll value or not a string" );
-		RegCloseKey( hKey );
-		return ret;
-	}
+    /* query values */
+    size = sizeof (dll);
+    ret = RegQueryValueExW( hKey, L"Dll", 0, &type, (LPBYTE)dll, &size );
+    if (ret != ERROR_SUCCESS || type != REG_SZ)
+    {
+        DBGPRINT( "Error: Couldn't query Dll value or not a string" );
+        RegCloseKey( hKey );
+        return ret;
+    }
 
-	size = sizeof (DWORD);
-	ret = RegQueryValueExW( hKey, L"Version", 0, &type, (LPBYTE)&version, &size );
-	if (ret != ERROR_SUCCESS || type != REG_DWORD)
-		DBGPRINT( "Warning: Couldn't query Version value or not a DWORD" );
+    size = sizeof (DWORD);
+    ret = RegQueryValueExW( hKey, L"Version", 0, &type, (LPBYTE)&version, &size );
+    if (ret != ERROR_SUCCESS || type != REG_DWORD)
+        DBGPRINT( "Warning: Couldn't query Version value or not a DWORD" );
 
-	size = sizeof (DWORD);
-	ret = RegQueryValueExW( hKey, L"DriverVersion", 0, &type,
-							(LPBYTE)&driverVersion, &size );
-	if (ret != ERROR_SUCCESS || type != REG_DWORD)
-		DBGPRINT( "Warning: Couldn't query DriverVersion value or not a DWORD" );
+    size = sizeof (DWORD);
+    ret = RegQueryValueExW( hKey, L"DriverVersion", 0, &type,
+                            (LPBYTE)&driverVersion, &size );
+    if (ret != ERROR_SUCCESS || type != REG_DWORD)
+        DBGPRINT( "Warning: Couldn't query DriverVersion value or not a DWORD" );
 
-	size = sizeof (DWORD);
-	ret = RegQueryValueExW( hKey, L"Flags", 0, &type, (LPBYTE)&flags, &size );
-	if (ret != ERROR_SUCCESS || type != REG_DWORD)
-		DBGPRINT( "Warning: Couldn't query Flags value or not a DWORD" );
+    size = sizeof (DWORD);
+    ret = RegQueryValueExW( hKey, L"Flags", 0, &type, (LPBYTE)&flags, &size );
+    if (ret != ERROR_SUCCESS || type != REG_DWORD)
+        DBGPRINT( "Warning: Couldn't query Flags value or not a DWORD" );
 
-	/* close key */
-	RegCloseKey( hKey );
+    /* close key */
+    RegCloseKey( hKey );
 
-	/* output data */
-	/* FIXME: NUL-terminate strings? */
-	wcsncpy( icd->driver_name, driver,
-	         sizeof (icd->driver_name) / sizeof (icd->driver_name[0]) - 1 );
-	wcsncpy( icd->dll, dll,
-	         sizeof (icd->dll) / sizeof (icd->dll[0]) );
-	icd->version = version;
-	icd->driver_version = driverVersion;
-	icd->flags = flags;
+    /* output data */
+    /* FIXME: NUL-terminate strings? */
+    wcsncpy( icd->driver_name, driver,
+             sizeof (icd->driver_name) / sizeof (icd->driver_name[0]) - 1 );
+    wcsncpy( icd->dll, dll,
+             sizeof (icd->dll) / sizeof (icd->dll[0]) );
+    icd->version = version;
+    icd->driver_version = driverVersion;
+    icd->flags = flags;
 
-	return ERROR_SUCCESS;
+    return ERROR_SUCCESS;
 }
 
 /* EOF */

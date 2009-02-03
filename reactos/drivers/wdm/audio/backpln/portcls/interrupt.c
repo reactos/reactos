@@ -28,7 +28,7 @@ typedef struct
 // IUnknown methods
 //
 
-const GUID IID_IInterruptSync;
+
 
 NTSTATUS
 NTAPI
@@ -39,13 +39,16 @@ IInterruptSync_fnQueryInterface(
 {
     IInterruptSyncImpl * This = (IInterruptSyncImpl*)iface;
 
-    if (IsEqualGUIDAligned(refiid, &IID_IInterruptSync))
+    DPRINT1("IInterruptSync_fnQueryInterface: This %p\n", This);
+
+    if (IsEqualGUIDAligned(refiid, &IID_IInterruptSync) ||
+        IsEqualGUIDAligned(refiid, &IID_IUnknown))
     {
         *Output = &This->lpVtbl;
-        _InterlockedIncrement(&This->ref);
+       InterlockedIncrement(&This->ref);
         return STATUS_SUCCESS;
     }
-
+    DPRINT1("IInterruptSync_fnQueryInterface: This %p UNKNOWN interface requested\n", This);
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -56,9 +59,9 @@ IInterruptSync_fnAddRef(
 {
     IInterruptSyncImpl * This = (IInterruptSyncImpl*)iface;
 
-    DPRINT("IInterruptSync_AddRef: This %p\n", This);
+    DPRINT1("IInterruptSync_AddRef: This %p\n", This);
 
-    return _InterlockedIncrement(&This->ref);
+    return InterlockedIncrement(&This->ref);
 }
 
 ULONG
@@ -70,26 +73,22 @@ IInterruptSync_fnRelease(
     PSYNC_ENTRY Entry;
     IInterruptSyncImpl * This = (IInterruptSyncImpl*)iface;
 
-    _InterlockedDecrement(&This->ref);
+    InterlockedDecrement(&This->ref);
 
-    DPRINT("IInterruptSync_Release: This %p new ref %u\n", This, This->ref);
+    DPRINT1("IInterruptSync_Release: This %p new ref %u\n", This, This->ref);
 
     if (This->ref == 0)
     {
-        if (This->Interrupt)
-        {
-            DPRINT1("Interrupt not disconnected! %p\n", This->Interrupt);
-            IoDisconnectInterrupt(This->Interrupt);
-        }
         while(!IsListEmpty(&This->ServiceRoutines))
         {
             CurEntry = RemoveHeadList(&This->ServiceRoutines);
             Entry = CONTAINING_RECORD(CurEntry, SYNC_ENTRY, ListEntry);
-            ExFreePoolWithTag(Entry, TAG_PORTCLASS);
+            FreeItem(Entry, TAG_PORTCLASS);
         }
 
-        This->ResourceList->lpVtbl->Release(This->ResourceList);
-        ExFreePoolWithTag(This, TAG_PORTCLASS);
+        //This->ResourceList->lpVtbl->Release(This->ResourceList);
+        //FreeItem(This, TAG_PORTCLASS);
+DPRINT1("IInterruptSync_Release: complete\n");
         return 0;
     }
     /* Return new reference count */
@@ -107,8 +106,8 @@ IInterruptSynchronizedRoutine(
     IN PVOID  ServiceContext)
 {
     IInterruptSyncImpl * This = (IInterruptSyncImpl*)ServiceContext;
-
-    return This->SyncRoutine((IInterruptSync*)This, This->DynamicContext);
+    DPRINT1("IInterruptSynchronizedRoutine This %p SyncRoutine %p Context %p\n", This, This->SyncRoutine, This->DynamicContext);
+    return This->SyncRoutine((IInterruptSync*)&This->lpVtbl, This->DynamicContext);
 }
 
 NTSTATUS
@@ -118,12 +117,24 @@ IInterruptSync_fnCallSynchronizedRoutine(
     IN PINTERRUPTSYNCROUTINE Routine,
     IN PVOID DynamicContext)
 {
+    KIRQL OldIrql;
     IInterruptSyncImpl * This = (IInterruptSyncImpl*)iface;
+
+    DPRINT1("IInterruptSync_fnCallSynchronizedRoutine This %p Routine %p DynamicContext %p\n", This, Routine, DynamicContext);
 
     if (!This->Interrupt)
     {
         DPRINT("IInterruptSync_CallSynchronizedRoutine %p no interrupt connected\n", This);
-        return STATUS_UNSUCCESSFUL;
+        if (KeGetCurrentIrql() > DISPATCH_LEVEL)
+            return STATUS_UNSUCCESSFUL;
+
+        KeAcquireSpinLock(&This->Lock, &OldIrql);
+        This->SyncRoutine = Routine;
+        This->DynamicContext = DynamicContext;
+        IInterruptSynchronizedRoutine((PVOID)This);
+        KeReleaseSpinLock(&This->Lock, OldIrql);
+
+        return STATUS_SUCCESS;
     }
 
     This->SyncRoutine = Routine;
@@ -138,6 +149,7 @@ IInterruptSync_fnGetKInterrupt(
     IN IInterruptSync * iface)
 {
     IInterruptSyncImpl * This = (IInterruptSyncImpl*)iface;
+    DPRINT1("IInterruptSynchronizedRoutine\n");
 
     return This->Interrupt;
 }
@@ -153,6 +165,8 @@ IInterruptServiceRoutine(
     NTSTATUS Status;
     BOOL Success;
     IInterruptSyncImpl * This = (IInterruptSyncImpl*)ServiceContext;
+
+    DPRINT1("IInterruptServiceRoutine\n");
 
     if (This->Mode == InterruptSyncModeNormal)
     {
@@ -216,6 +230,8 @@ IInterruptSync_fnConnect(
     NTSTATUS Status;
     PCM_PARTIAL_RESOURCE_DESCRIPTOR Descriptor;
 
+    DPRINT1("IInterruptSync_fnConnect\n");
+
     Descriptor = This->ResourceList->lpVtbl->FindTranslatedEntry(This->ResourceList, CmResourceTypeInterrupt, This->ResourceIndex);
     if (!Descriptor)
         return STATUS_UNSUCCESSFUL;
@@ -226,14 +242,16 @@ IInterruptSync_fnConnect(
     Status = IoConnectInterrupt(&This->Interrupt, 
                                 IInterruptServiceRoutine,
                                 (PVOID)This,
-                                &This->Lock, Descriptor->u.Interrupt.Vector, 
+                                &This->Lock,
+                                Descriptor->u.Interrupt.Vector, 
                                 Descriptor->u.Interrupt.Level,
                                 Descriptor->u.Interrupt.Level, //FIXME
                                 LevelSensitive, //FIXME
-                                TRUE, //FIXME
+                                TRUE,
                                 Descriptor->u.Interrupt.Affinity, 
                                 FALSE);
 
+    DPRINT1("IInterruptSync_fnConnect result %x\n", Status);
     return Status;
 }
 
@@ -244,6 +262,7 @@ IInterruptSync_fnDisconnect(
     IN IInterruptSync * iface)
 {
     IInterruptSyncImpl * This = (IInterruptSyncImpl*)iface;
+    DPRINT1("IInterruptSync_fnDisconnect\n");
 
     if (!This->Interrupt)
     {
@@ -266,7 +285,9 @@ IInterruptSync_fnRegisterServiceRoutine(
     PSYNC_ENTRY NewEntry;
     IInterruptSyncImpl * This = (IInterruptSyncImpl*)iface;
 
-    NewEntry = ExAllocatePoolWithTag(NonPagedPool, sizeof(SYNC_ENTRY), TAG_PORTCLASS);
+DPRINT1("IInterruptSync_fnRegisterServiceRoutine\n");
+
+    NewEntry = AllocateItem(NonPagedPool, sizeof(SYNC_ENTRY), TAG_PORTCLASS);
     if (!NewEntry)
         return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -296,7 +317,7 @@ static IInterruptSyncVtbl vt_IInterruptSyncVtbl =
 };
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS NTAPI
 PcNewInterruptSync(
@@ -308,6 +329,8 @@ PcNewInterruptSync(
 {
     IInterruptSyncImpl * This;
 
+    DPRINT1("PcNewInterruptSync entered OutInterruptSync %p OuterUnknown %p ResourceList %p ResourceIndex %u Mode %d\n", 
+            OutInterruptSync, OuterUnknown, ResourceList, ResourceIndex, Mode);
 
     if (!OutInterruptSync || !ResourceList || Mode > InterruptSyncModeRepeat || Mode < 0)
         return STATUS_INVALID_PARAMETER;
@@ -315,22 +338,24 @@ PcNewInterruptSync(
     if (ResourceIndex > ResourceList->lpVtbl->NumberOfEntriesOfType(ResourceList, CmResourceTypeInterrupt))
         return STATUS_INVALID_PARAMETER;
 
+
      ResourceList->lpVtbl->AddRef(ResourceList);
 
-    This = ExAllocatePoolWithTag(NonPagedPool, sizeof(IInterruptSyncImpl), TAG_PORTCLASS);
+    This = AllocateItem(NonPagedPool, sizeof(IInterruptSyncImpl), TAG_PORTCLASS);
     if (!This)
         return STATUS_INSUFFICIENT_RESOURCES;
 
+    /* initialize object */
     This->lpVtbl = &vt_IInterruptSyncVtbl;
     This->ref = 1;
     This->Mode = Mode;
-    This->Interrupt = NULL;
     This->ResourceIndex = ResourceIndex;
     This->ResourceList = ResourceList;
     InitializeListHead(&This->ServiceRoutines);
     KeInitializeSpinLock(&This->Lock);
 
     *OutInterruptSync = (PINTERRUPTSYNC)&This->lpVtbl;
-    return STATUS_UNSUCCESSFUL;
+    DPRINT1("PcNewInterruptSync success %p\n", *OutInterruptSync);
+    return STATUS_SUCCESS;
 }
 

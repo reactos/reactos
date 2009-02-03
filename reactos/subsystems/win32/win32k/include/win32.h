@@ -4,7 +4,7 @@
 typedef struct _WIN32HEAP WIN32HEAP, *PWIN32HEAP;
 
 #include <pshpack1.h>
-
+// FIXME! Move to ntuser.h
 typedef struct _TL
 {
     struct _TL* next;
@@ -28,18 +28,23 @@ typedef struct _W32THREAD
 
 typedef struct _THREADINFO
 {
-    W32THREAD W32Thread;
-    PVOID ppi; // FIXME: use PPROCESSINFO
-    PDESKTOPINFO pDeskInfo;
-    PCLIENTINFO pClientInfo;
-    LIST_ENTRY PtiLink;
+    W32THREAD           W32Thread;
+    PTL                 ptl;
+    PVOID               ppi; // FIXME: use PPROCESSINFO
+    struct _USER_MESSAGE_QUEUE* MessageQueue;
+    struct _KBL*        KeyboardLayout;
+    PCLIENTTHREADINFO   pcti;
+    struct _DESKTOP*    Desktop;
+    PDESKTOPINFO        pDeskInfo;
+    PCLIENTINFO         pClientInfo;
+    FLONG               TIF_flags;
+    HANDLE              hDesktop;
+    UINT                cPaintsReady;
+    UINT                cTimersReady;
+    LIST_ENTRY          PtiLink;
 
-  struct _USER_MESSAGE_QUEUE* MessageQueue;
   LIST_ENTRY WindowListHead;
   LIST_ENTRY W32CallbackListHead;
-  struct _KBL* KeyboardLayout;
-  struct _DESKTOP* Desktop;
-  HANDLE hDesktop;
   BOOLEAN IsExiting;
   SINGLE_LIST_ENTRY  ReferencesList;
   ULONG Hooks;

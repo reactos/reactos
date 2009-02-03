@@ -28,10 +28,10 @@
 @ stub PdhEnumMachinesHA
 @ stub PdhEnumMachinesHW
 @ stub PdhEnumMachinesW
-@ stub PdhEnumObjectItemsA
+@ stdcall PdhEnumObjectItemsA(str str str ptr ptr ptr ptr long long)
 @ stub PdhEnumObjectItemsHA
 @ stub PdhEnumObjectItemsHW
-@ stub PdhEnumObjectItemsW
+@ stdcall PdhEnumObjectItemsW(wstr wstr wstr ptr ptr ptr ptr long long)
 @ stub PdhEnumObjectsA
 @ stub PdhEnumObjectsHA
 @ stub PdhEnumObjectsHW

@@ -30,7 +30,10 @@ typedef enum {
     XML_SAVE_FORMAT     = 1<<0,	/* format save output */
     XML_SAVE_NO_DECL    = 1<<1,	/* drop the xml declaration */
     XML_SAVE_NO_EMPTY	= 1<<2, /* no empty tags */
-    XML_SAVE_NO_XHTML	= 1<<3  /* disable XHTML1 specific rules */
+    XML_SAVE_NO_XHTML	= 1<<3, /* disable XHTML1 specific rules */
+    XML_SAVE_XHTML	= 1<<4, /* force XHTML1 specific rules */
+    XML_SAVE_AS_XML     = 1<<5, /* force XML serialization on HTML doc */
+    XML_SAVE_AS_HTML    = 1<<6  /* force HTML serialization on XML doc */
 } xmlSaveOption;
 
 

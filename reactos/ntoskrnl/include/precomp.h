@@ -63,9 +63,6 @@
 /* PNP GUIDs */
 #include <umpnpmgr/sysguid.h>
 
-/* Helper Header */
-#include <reactos/helper.h>
-
 /* Internal Headers */
 #include "internal/ntoskrnl.h"
 #include "config.h"

@@ -1,4 +1,4 @@
-/*		DirectDraw - IDirectPalette base interface
+/*              DirectDraw - IDirectPalette base interface
  *
  * Copyright 1997-2000 Marcus Meissner
  * Copyright 2000-2001 TransGaming Technologies Inc.

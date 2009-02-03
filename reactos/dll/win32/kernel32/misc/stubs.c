@@ -156,26 +156,6 @@ GetNextVDMCommand (
 /*
  * @unimplemented
  */
-BOOL
-WINAPI
-GetSystemPowerStatus (
-    LPSYSTEM_POWER_STATUS PowerStatus
-    )
-{
-    STUB;
-    PowerStatus->ACLineStatus = 1;
-    PowerStatus->BatteryFlag = 128;
-    PowerStatus->BatteryLifePercent = 255;
-    PowerStatus->Reserved1 = 0;
-    PowerStatus->BatteryLifeTime = -1;
-    PowerStatus->BatteryFullLifeTime = -1;
-    return TRUE;
-}
-
-
-/*
- * @unimplemented
- */
 DWORD
 WINAPI
 GetVDMCurrentDirectories (
@@ -233,20 +213,6 @@ BOOL
 WINAPI
 RegisterWowExec (
     DWORD   Unknown0
-    )
-{
-    STUB;
-    return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL WINAPI
-SetSystemPowerState (
-    BOOL fSuspend,
-    BOOL fForce
     )
 {
     STUB;
@@ -327,21 +293,6 @@ VirtualBufferExceptionHandler (
 }
 
 /*
- * @unimplemented
- */
-BOOL
-WINAPI
-AllocateUserPhysicalPages(
-    HANDLE hProcess,
-    PULONG_PTR NumberOfPages,
-    PULONG_PTR UserPfnArray
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
  * @implemented
  */
 BOOL
@@ -372,19 +323,6 @@ BindIoCompletionCallback(HANDLE FileHandle,
  */
 BOOL
 WINAPI
-CancelDeviceWakeupRequest(
-    HANDLE hDevice
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
 CreateJobSet (
     ULONG NumJob,
     PJOB_SET_ARRAY UserJobSet,
@@ -406,36 +344,6 @@ FindVolumeMountPointClose(
     STUB;
     return 0;
 }
-
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
-FreeUserPhysicalPages(
-    HANDLE hProcess,
-    PULONG_PTR NumberOfPages,
-    PULONG_PTR PageArray
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
-GetDevicePowerState(
-    HANDLE hDevice,
-    BOOL *pfOn
-    )
-{
-    STUB;
-    return 0;
-}
-
 
 /*
  * @unimplemented
@@ -512,49 +420,6 @@ HeapSetInformation (
 }
 
 /*
- * @unimplemented
- */
-BOOL
-WINAPI
-IsSystemResumeAutomatic(
-    VOID
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
-MapUserPhysicalPages(
-    PVOID VirtualAddress,
-    ULONG_PTR NumberOfPages,
-    PULONG_PTR PageArray  OPTIONAL
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
-MapUserPhysicalPagesScatter(
-    PVOID *VirtualAddresses,
-    ULONG_PTR NumberOfPages,
-    PULONG_PTR PageArray  OPTIONAL
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
  * @implemented
  */
 BOOL
@@ -612,46 +477,6 @@ RemoveVectoredExceptionHandler(
 /*
  * @unimplemented
  */
-BOOL
-WINAPI
-RequestDeviceWakeup(
-    HANDLE hDevice
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
-RequestWakeupLatency(
-    LATENCY_TIME latency
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-UINT
-WINAPI
-ResetWriteWatch(
-    LPVOID lpBaseAddress,
-    SIZE_T dwRegionSize
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
 VOID
 WINAPI
 RestoreLastError(
@@ -659,40 +484,6 @@ RestoreLastError(
     )
 {
     STUB;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
-SetMessageWaitingIndicator(
-    HANDLE hMsgIndicator,
-    ULONG ulMsgCount
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-EXECUTION_STATE
-WINAPI
-SetThreadExecutionState(
-    EXECUTION_STATE esFlags
-    )
-{
-    static EXECUTION_STATE current =
-        ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED | ES_USER_PRESENT;
-    EXECUTION_STATE old = current;
-
-    DPRINT1("(0x%x): stub, harmless.\n", esFlags);
-
-    if (!(current & ES_CONTINUOUS) || (esFlags & ES_CONTINUOUS))
-        current = esFlags;
-    return old;
 }
 
 /*
@@ -1069,7 +860,7 @@ DWORD WINAPI GetHandleContext(HANDLE hnd)
 HANDLE WINAPI CreateSocketHandle(VOID)
 {
     STUB;
-    return 0;
+    return INVALID_HANDLE_VALUE;
 }
 
 /*
@@ -1104,14 +895,10 @@ VOID WINAPI UTUnRegister( HMODULE hModule )
 /*
  * @unimplemented
  */
-#if 0
-FARPROC WINAPI DelayLoadFailureHook(unsigned int dliNotify, PDelayLoadInfo pdli)
-#else
-FARPROC WINAPI DelayLoadFailureHook(unsigned int dliNotify, PVOID pdli)
-#endif
+FARPROC WINAPI DelayLoadFailureHook(LPCSTR pszDllName, LPCSTR pszProcName)
 {
     STUB;
-    return 0;
+    return NULL;
 }
 
 /*

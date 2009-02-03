@@ -5,6 +5,7 @@
  *
  * Copyright 2000 Huw D M Davies for CodeWeavers.
  * Copyright 2001 Marcus Meissner
+ * Copyright 2008 Kirill K. Smirnov
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -508,7 +509,6 @@ static void OLEPicture_SendNotify(OLEPictureImpl* this, DISPID dispID)
     IUnknown_Release(CD.pUnk);
   }
   IEnumConnections_Release(pEnum);
-  return;
 }
 
 /************************************************************************
@@ -519,22 +519,26 @@ static HRESULT WINAPI OLEPictureImpl_get_Handle(IPicture *iface,
 {
   OLEPictureImpl *This = (OLEPictureImpl *)iface;
   TRACE("(%p)->(%p)\n", This, phandle);
+
+  if(!phandle)
+    return E_POINTER;
+
   switch(This->desc.picType) {
   case PICTYPE_NONE:
   case PICTYPE_UNINITIALIZED:
     *phandle = 0;
     break;
   case PICTYPE_BITMAP:
-    *phandle = (OLE_HANDLE)This->desc.u.bmp.hbitmap;
+    *phandle = HandleToUlong(This->desc.u.bmp.hbitmap);
     break;
   case PICTYPE_METAFILE:
-    *phandle = (OLE_HANDLE)This->desc.u.wmf.hmeta;
+    *phandle = HandleToUlong(This->desc.u.wmf.hmeta);
     break;
   case PICTYPE_ICON:
-    *phandle = (OLE_HANDLE)This->desc.u.icon.hicon;
+    *phandle = HandleToUlong(This->desc.u.icon.hicon);
     break;
   case PICTYPE_ENHMETAFILE:
-    *phandle = (OLE_HANDLE)This->desc.u.emf.hemf;
+    *phandle = HandleToUlong(This->desc.u.emf.hemf);
     break;
   default:
     FIXME("Unimplemented type %d\n", This->desc.picType);
@@ -564,7 +568,7 @@ static HRESULT WINAPI OLEPictureImpl_get_hPal(IPicture *iface,
       hres = S_FALSE;
       break;
     case PICTYPE_BITMAP:
-      *phandle = (OLE_HANDLE)This->desc.u.bmp.hpal;
+      *phandle = HandleToUlong(This->desc.u.bmp.hpal);
       hres = S_OK;
       break;
     case PICTYPE_METAFILE:
@@ -591,6 +595,10 @@ static HRESULT WINAPI OLEPictureImpl_get_Type(IPicture *iface,
 {
   OLEPictureImpl *This = (OLEPictureImpl *)iface;
   TRACE("(%p)->(%p): type is %d\n", This, ptype, This->desc.picType);
+
+  if(!ptype)
+    return E_POINTER;
+
   *ptype = This->desc.picType;
   return S_OK;
 }
@@ -637,6 +645,10 @@ static HRESULT WINAPI OLEPictureImpl_Render(IPicture *iface, HDC hdc,
     TRACE("prcWBounds (%d,%d) - (%d,%d)\n", prcWBounds->left, prcWBounds->top,
 	  prcWBounds->right, prcWBounds->bottom);
 
+  if(cx == 0 || cy == 0 || cxSrc == 0 || cySrc == 0){
+    return CTL_E_INVALIDPROPERTYVALUE;
+  }
+
   /*
    * While the documentation suggests this to be here (or after rendering?)
    * it does cause an endless recursion in my sample app. -MM 20010804
@@ -644,6 +656,10 @@ static HRESULT WINAPI OLEPictureImpl_Render(IPicture *iface, HDC hdc,
    */
 
   switch(This->desc.picType) {
+  case PICTYPE_UNINITIALIZED:
+  case PICTYPE_NONE:
+    /* nothing to do */
+    return S_OK;
   case PICTYPE_BITMAP:
     {
       HBITMAP hbmpOld;
@@ -766,7 +782,7 @@ static HRESULT WINAPI OLEPictureImpl_SelectPicture(IPicture *iface,
 	  *phdcOut = This->hDCCur;
       This->hDCCur = hdcIn;
       if (phbmpOut)
-	  *phbmpOut = (OLE_HANDLE)This->desc.u.bmp.hbitmap;
+	  *phbmpOut = HandleToUlong(This->desc.u.bmp.hbitmap);
       return S_OK;
   } else {
       FIXME("Don't know how to select picture type %d\n",This->desc.picType);
@@ -834,8 +850,14 @@ static HRESULT WINAPI OLEPictureImpl_get_Attributes(IPicture *iface,
 {
   OLEPictureImpl *This = (OLEPictureImpl *)iface;
   TRACE("(%p)->(%p).\n", This, pdwAttr);
+
+  if(!pdwAttr)
+    return E_POINTER;
+
   *pdwAttr = 0;
   switch (This->desc.picType) {
+  case PICTYPE_UNINITIALIZED:
+  case PICTYPE_NONE: break;
   case PICTYPE_BITMAP: 	if (This->hbmMask) *pdwAttr = PICTURE_TRANSPARENT; break;	/* not 'truly' scalable, see MSDN. */
   case PICTYPE_ICON: *pdwAttr     = PICTURE_TRANSPARENT;break;
   case PICTYPE_ENHMETAFILE: /* fall through */
@@ -1035,7 +1057,7 @@ static int _gif_inputfunc(GifFileType *gif, GifByteType *data, int len) {
     struct gifdata *gd = (struct gifdata*)gif->UserData;
 
     if (len+gd->curoff > gd->len) {
-        FIXME("Trying to read %d bytes, but only %d available.\n",len, gd->len-gd->curoff);
+        ERR("Trying to read %d bytes, but only %d available.\n",len, gd->len-gd->curoff);
         len = gd->len - gd->curoff;
     }
     memcpy(data, gd->data+gd->curoff, len);
@@ -1065,14 +1087,14 @@ static HRESULT OLEPictureImpl_LoadGif(OLEPictureImpl *This, BYTE *xbuf, ULONG xr
     gif = DGifOpen((void*)&gd, _gif_inputfunc);
     ret = DGifSlurp(gif);
     if (ret == GIF_ERROR) {
-      FIXME("Failed reading GIF using libgif.\n");
+      ERR("Failed reading GIF using libgif.\n");
       return E_FAIL;
     }
     TRACE("screen height %d, width %d\n", gif->SWidth, gif->SHeight);
     TRACE("color res %d, backgcolor %d\n", gif->SColorResolution, gif->SBackGroundColor);
     TRACE("imgcnt %d\n", gif->ImageCount);
     if (gif->ImageCount<1) {
-      FIXME("GIF stream does not have images inside?\n");
+      ERR("GIF stream does not have images inside?\n");
       return E_FAIL;
     }
     TRACE("curimage: %d x %d, on %dx%d, interlace %d\n",
@@ -1258,7 +1280,7 @@ static HRESULT OLEPictureImpl_LoadJpeg(OLEPictureImpl *This, BYTE *xbuf, ULONG x
 
     if(!libjpeg_handle) {
         if(!load_libjpeg()) {
-            FIXME("Failed reading JPEG because unable to find %s\n", SONAME_LIBJPEG);
+            ERR("Failed reading JPEG because unable to find %s\n", SONAME_LIBJPEG);
             return E_FAIL;
         }
     }
@@ -1297,7 +1319,7 @@ static HRESULT OLEPictureImpl_LoadJpeg(OLEPictureImpl *This, BYTE *xbuf, ULONG x
     while ( jd.output_scanline<jd.output_height ) {
       x = pjpeg_read_scanlines(&jd,&samprow,1);
       if (x != 1) {
-	FIXME("failed to read current scanline?\n");
+	ERR("failed to read current scanline?\n");
 	break;
       }
       /* We have to convert from RGB to BGR, see MSDN/ BITMAPINFOHEADER */
@@ -1610,9 +1632,7 @@ succ:
 
 end:
     if(png_ptr)
-        ppng_destroy_read_struct(&png_ptr,
-                                (info_ptr ? &info_ptr : (png_infopp) NULL),
-                                (png_infopp)NULL);
+        ppng_destroy_read_struct(&png_ptr, info_ptr ? &info_ptr : NULL, NULL);
     HeapFree(GetProcessHeap(), 0, row_pointers);
     HeapFree(GetProcessHeap(), 0, pngdata);
     return ret;
@@ -1671,7 +1691,7 @@ static HRESULT OLEPictureImpl_LoadIcon(OLEPictureImpl *This, BYTE *xbuf, ULONG x
 		0
     );
     if (!hicon) {
-	FIXME("CreateIcon failed.\n");
+	ERR("CreateIcon failed.\n");
 	return E_FAIL;
     } else {
 	This->desc.picType = PICTYPE_ICON;
@@ -1686,39 +1706,24 @@ static HRESULT OLEPictureImpl_LoadIcon(OLEPictureImpl *This, BYTE *xbuf, ULONG x
     }
 }
 
-static HRESULT OLEPictureImpl_LoadMetafile(OLEPictureImpl *This,
-                                           const BYTE *data, ULONG size)
+static HRESULT OLEPictureImpl_LoadEnhMetafile(OLEPictureImpl *This,
+                                              const BYTE *data, ULONG size)
 {
-    HMETAFILE hmf;
     HENHMETAFILE hemf;
-
-    /* SetMetaFileBitsEx performs data check on its own */
-    hmf = SetMetaFileBitsEx(size, data);
-    if (hmf)
-    {
-        This->desc.picType = PICTYPE_METAFILE;
-        This->desc.u.wmf.hmeta = hmf;
-        This->desc.u.wmf.xExt = 0;
-        This->desc.u.wmf.yExt = 0;
-
-        This->origWidth = 0;
-        This->origHeight = 0;
-        This->himetricWidth = 0;
-        This->himetricHeight = 0;
-
-        return S_OK;
-    }
+    ENHMETAHEADER hdr;
 
     hemf = SetEnhMetaFileBits(size, data);
     if (!hemf) return E_FAIL;
+
+    GetEnhMetaFileHeader(hemf, sizeof(hdr), &hdr);
 
     This->desc.picType = PICTYPE_ENHMETAFILE;
     This->desc.u.emf.hemf = hemf;
 
     This->origWidth = 0;
     This->origHeight = 0;
-    This->himetricWidth = 0;
-    This->himetricHeight = 0;
+    This->himetricWidth = hdr.rclFrame.right - hdr.rclFrame.left;
+    This->himetricHeight = hdr.rclFrame.bottom - hdr.rclFrame.top;
 
     return S_OK;
 }
@@ -1727,16 +1732,24 @@ static HRESULT OLEPictureImpl_LoadAPM(OLEPictureImpl *This,
                                       const BYTE *data, ULONG size)
 {
     APM_HEADER *header = (APM_HEADER *)data;
-    HRESULT hr;
+    HMETAFILE hmf;
 
     if (size < sizeof(APM_HEADER))
         return E_FAIL;
     if (header->key != 0x9ac6cdd7)
         return E_FAIL;
 
-    if ((hr = OLEPictureImpl_LoadMetafile(This, data + sizeof(APM_HEADER), size - sizeof(*header))) != S_OK)
-        return hr;
+    /* SetMetaFileBitsEx performs data check on its own */
+    hmf = SetMetaFileBitsEx(size - sizeof(*header), data + sizeof(*header));
+    if (!hmf) return E_FAIL;
 
+    This->desc.picType = PICTYPE_METAFILE;
+    This->desc.u.wmf.hmeta = hmf;
+    This->desc.u.wmf.xExt = 0;
+    This->desc.u.wmf.yExt = 0;
+
+    This->origWidth = 0;
+    This->origHeight = 0;
     This->himetricWidth = MulDiv((INT)header->right - header->left, 2540, header->inch);
     This->himetricHeight = MulDiv((INT)header->bottom - header->top, 2540, header->inch);
     return S_OK;
@@ -1807,8 +1820,8 @@ static HRESULT WINAPI OLEPictureImpl_Load(IPersistStream* iface,IStream*pStm) {
   do {
       hr=IStream_Read(pStm,header,8,&xread);
       if (hr || xread!=8) {
-          FIXME("Failure while reading picture header (hr is %x, nread is %d).\n",hr,xread);
-          return hr;
+          ERR("Failure while reading picture header (hr is %x, nread is %d).\n",hr,xread);
+          return (hr?hr:E_FAIL);
       }
       headerread += xread;
       xread = 0;
@@ -1885,7 +1898,7 @@ static HRESULT WINAPI OLEPictureImpl_Load(IPersistStream* iface,IStream*pStm) {
               break;
       }
       if (xread != This->datalen)
-          FIXME("Could only read %d of %d bytes out of stream?\n",xread,This->datalen);
+          ERR("Could only read %d of %d bytes out of stream?\n",xread,This->datalen);
   }
   if (This->datalen == 0) { /* Marks the "NONE" picture */
       This->desc.picType = PICTYPE_NONE;
@@ -1924,8 +1937,8 @@ static HRESULT WINAPI OLEPictureImpl_Load(IPersistStream* iface,IStream*pStm) {
   {
     unsigned int i;
 
-    /* let's see if it's a metafile */
-    hr = OLEPictureImpl_LoadMetafile(This, xbuf, xread);
+    /* let's see if it's a EMF */
+    hr = OLEPictureImpl_LoadEnhMetafile(This, xbuf, xread);
     if (hr == S_OK) break;
 
     FIXME("Unknown magic %04x, %d read bytes:\n",magic,xread);
@@ -2643,7 +2656,7 @@ HRESULT WINAPI OleLoadPicture( LPSTREAM lpstream, LONG lSize, BOOL fRunmode,
     return hr;
   hr = IPicture_QueryInterface(newpic,&IID_IPersistStream, (LPVOID*)&ps);
   if (hr) {
-      FIXME("Could not get IPersistStream iface from Ole Picture?\n");
+      ERR("Could not get IPersistStream iface from Ole Picture?\n");
       IPicture_Release(newpic);
       *ppvObj = NULL;
       return hr;
@@ -2659,7 +2672,7 @@ HRESULT WINAPI OleLoadPicture( LPSTREAM lpstream, LONG lSize, BOOL fRunmode,
   }
   hr = IPicture_QueryInterface(newpic,riid,ppvObj);
   if (hr)
-      FIXME("Failed to get interface %s from IPicture.\n",debugstr_guid(riid));
+      ERR("Failed to get interface %s from IPicture.\n",debugstr_guid(riid));
   IPicture_Release(newpic);
   return hr;
 }
@@ -2682,16 +2695,23 @@ HRESULT WINAPI OleLoadPictureEx( LPSTREAM lpstream, LONG lSize, BOOL fRunmode,
     return hr;
   hr = IPicture_QueryInterface(newpic,&IID_IPersistStream, (LPVOID*)&ps);
   if (hr) {
-      FIXME("Could not get IPersistStream iface from Ole Picture?\n");
+      ERR("Could not get IPersistStream iface from Ole Picture?\n");
       IPicture_Release(newpic);
       *ppvObj = NULL;
       return hr;
   }
-  IPersistStream_Load(ps,lpstream);
+  hr = IPersistStream_Load(ps,lpstream);
   IPersistStream_Release(ps);
+  if (FAILED(hr))
+  {
+      ERR("IPersistStream_Load failed\n");
+      IPicture_Release(newpic);
+      *ppvObj = NULL;
+      return hr;
+  }
   hr = IPicture_QueryInterface(newpic,riid,ppvObj);
   if (hr)
-      FIXME("Failed to get interface %s from IPicture.\n",debugstr_guid(riid));
+      ERR("Failed to get interface %s from IPicture.\n",debugstr_guid(riid));
   IPicture_Release(newpic);
   return hr;
 }
@@ -2797,7 +2817,7 @@ HRESULT WINAPI OleLoadPicturePath( LPOLESTR szURLorPath, LPUNKNOWN punkCaller,
 
   hRes = IPicture_QueryInterface(ipicture,riid,ppvRet);
   if (hRes)
-      FIXME("Failed to get interface %s from IPicture.\n",debugstr_guid(riid));
+      ERR("Failed to get interface %s from IPicture.\n",debugstr_guid(riid));
   
   IPicture_Release(ipicture);
   return hRes;

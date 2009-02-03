@@ -119,7 +119,7 @@ int TCPSleep( void *ClientData, void *token, int priority, char *msg,
 		("Called TSLEEP: tok = %x, pri = %d, wmesg = %s, tmio = %x\n",
 		 token, priority, msg, tmio));
 
-    SleepingThread = PoolAllocateBuffer( sizeof( *SleepingThread ) );
+    SleepingThread = exAllocatePool( NonPagedPool, sizeof( *SleepingThread ) );
     if( SleepingThread ) {
 	KeInitializeEvent( &SleepingThread->Event, NotificationEvent, FALSE );
 	SleepingThread->SleepToken = token;
@@ -146,7 +146,7 @@ int TCPSleep( void *ClientData, void *token, int priority, char *msg,
 
 	TcpipRecursiveMutexEnter( &TCPLock, TRUE );
 
-	PoolFreeBuffer( SleepingThread );
+	exFreePool( SleepingThread );
     } else
         return OSK_ENOBUFS;
 
@@ -238,22 +238,22 @@ void *TCPMalloc( void *ClientData,
     if ( ! Found ) {
 	if ( ArrayAllocated <= ArrayUsed ) {
 	    NewSize = ( 0 == ArrayAllocated ? 16 : 2 * ArrayAllocated );
-	    NewArray = PoolAllocateBuffer( 2 * NewSize * sizeof( OSK_UINT ) );
+	    NewArray = exAllocatePool( NonPagedPool, 2 * NewSize * sizeof( OSK_UINT ) );
 	    if ( NULL != NewArray ) {
 		if ( 0 != ArrayAllocated ) {
 		    memcpy( NewArray, Sizes,
 		            ArrayAllocated * sizeof( OSK_UINT ) );
-		    PoolFreeBuffer( Sizes );
+		    exFreePool( Sizes );
 		    memcpy( NewArray + NewSize, Counts,
 		            ArrayAllocated * sizeof( OSK_UINT ) );
-		    PoolFreeBuffer( Counts );
+		    exFreePool( Counts );
 		}
 		Sizes = NewArray;
 		Counts = NewArray + NewSize;
 		ArrayAllocated = NewSize;
 	    } else if ( 0 != ArrayAllocated ) {
-		PoolFreeBuffer( Sizes );
-		PoolFreeBuffer( Counts );
+		exFreePool( Sizes );
+		exFreePool( Counts );
 		ArrayAllocated = 0;
 	    }
 	}
@@ -281,7 +281,7 @@ void *TCPMalloc( void *ClientData,
 	v = ExAllocateFromNPagedLookasideList( &LargeLookasideList );
 	Signature = SIGNATURE_LARGE;
     } else {
-	v = PoolAllocateBuffer( Bytes + sizeof(ULONG) );
+	v = ExAllocatePool( NonPagedPool, Bytes + sizeof(ULONG) );
 	Signature = SIGNATURE_OTHER;
     }
     if( v ) {
@@ -297,7 +297,7 @@ void TCPFree( void *ClientData,
 	      void *data, OSK_PCHAR File, OSK_UINT Line ) {
     ULONG Signature;
 
-    UntrackFL( (PCHAR)File, Line, data );
+    UntrackFL( (PCHAR)File, Line, data, FOURCC('f','b','s','d') );
     data = (void *)((char *) data - sizeof(ULONG));
     Signature = *((ULONG *) data);
     if ( SIGNATURE_SMALL == Signature ) {
@@ -305,7 +305,7 @@ void TCPFree( void *ClientData,
     } else if ( SIGNATURE_LARGE == Signature ) {
 	ExFreeToNPagedLookasideList( &LargeLookasideList, data );
     } else if ( SIGNATURE_OTHER == Signature ) {
-	PoolFreeBuffer( data );
+	ExFreePool( data );
     } else {
 	ASSERT( FALSE );
     }

@@ -78,11 +78,13 @@
 
 
 #if defined(__MINGW32__) || defined(_WIN32_WCE)
+#ifndef _WINSOCKAPI_
 #define _WINSOCKAPI_
+#endif
 #include <wsockcompat.h>
 #include <winsock2.h>
 #undef XML_SOCKLEN_T
-#define XML_SOCKLEN_T unsigned int
+#define XML_SOCKLEN_T int
 #endif
 
 /**

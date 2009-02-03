@@ -293,31 +293,39 @@ NtUserCopyAcceleratorTable(
    int EntriesCount)
 {
    PACCELERATOR_TABLE Accel;
-   NTSTATUS Status;
    int Ret;
+   BOOL Done = FALSE;
    DECLARE_RETURN(int);
 
    DPRINT("Enter NtUserCopyAcceleratorTable\n");
    UserEnterShared();
 
-   if (!(Accel = UserGetAccelObject(hAccel)))
+   Accel = UserGetAccelObject(hAccel);
+
+   if ((Entries && (EntriesCount < 1)) || ((hAccel == NULL) || (!Accel)))
    {
       RETURN(0);
    }
 
-   if(Entries)
+   if (Accel->Count < EntriesCount)
+       EntriesCount = Accel->Count;
+
+   Ret = 0;
+
+   while (!Done)
    {
-      Ret = min(EntriesCount, Accel->Count);
-      Status = MmCopyToCaller(Entries, Accel->Table, Ret * sizeof(ACCEL));
-      if (!NT_SUCCESS(Status))
-      {
-         SetLastNtError(Status);
-         RETURN(0);
-      }
-   }
-   else
-   {
-      Ret = Accel->Count;
+       if (Entries)
+       {
+           Entries[Ret].fVirt = Accel->Table[Ret].fVirt & 0x7f;
+           Entries[Ret].key = Accel->Table[Ret].key;
+           Entries[Ret].cmd = Accel->Table[Ret].cmd;
+
+           if(Ret + 1 == EntriesCount) Done = TRUE;
+       }
+
+       if((Accel->Table[Ret].fVirt & 0x80) != 0) Done = TRUE;
+
+       Ret++;
    }
 
    RETURN(Ret);
@@ -335,17 +343,18 @@ NtUserCreateAcceleratorTable(
    SIZE_T EntriesCount)
 {
    PACCELERATOR_TABLE Accel;
-   NTSTATUS Status;
    HACCEL hAccel;
+   INT Index;
    DECLARE_RETURN(HACCEL);
 
    DPRINT("Enter NtUserCreateAcceleratorTable(Entries %p, EntriesCount %d)\n",
           Entries, EntriesCount);
    UserEnterExclusive();
 
-   if (!Entries || !EntriesCount)
+   if (!Entries || EntriesCount < 1)
    {
-      RETURN( (HACCEL) 0 );
+      SetLastNtError(STATUS_INVALID_PARAMETER);
+      RETURN( (HACCEL) NULL );
    }
 
    Accel = UserCreateObject(gHandleTable, (PHANDLE)&hAccel, otAccel, sizeof(ACCELERATOR_TABLE));
@@ -353,7 +362,7 @@ NtUserCreateAcceleratorTable(
    if (Accel == NULL)
    {
       SetLastNtError(STATUS_NO_MEMORY);
-      RETURN( (HACCEL) 0 );
+      RETURN( (HACCEL) NULL );
    }
 
    Accel->Count = EntriesCount;
@@ -365,18 +374,21 @@ NtUserCreateAcceleratorTable(
          UserDereferenceObject(Accel);
          UserDeleteObject(hAccel, otAccel);
          SetLastNtError(STATUS_NO_MEMORY);
-         RETURN( (HACCEL) 0);
+         RETURN( (HACCEL) NULL);
       }
 
-      Status = MmCopyFromCaller(Accel->Table, Entries, EntriesCount * sizeof(ACCEL));
-      if (!NT_SUCCESS(Status))
+      for (Index = 0; Index < EntriesCount; Index++)
       {
-         ExFreePoolWithTag(Accel->Table, TAG_ACCEL);
-         UserDereferenceObject(Accel);
-         UserDeleteObject(hAccel, otAccel);
-         SetLastNtError(Status);
-         RETURN((HACCEL) 0);
+          Accel->Table[Index].fVirt = Entries[Index].fVirt&0x7f;
+          if(Accel->Table[Index].fVirt & FVIRTKEY)
+          {
+              Accel->Table[Index].key = Entries[Index].key;
+          }
+          Accel->Table[Index].cmd = Entries[Index].cmd;
       }
+
+      /* Set the end-of-table terminator. */
+      Accel->Table[EntriesCount - 1].fVirt |= 0x80;
    }
 
    /* FIXME: Save HandleTable in a list somewhere so we can clean it up again */

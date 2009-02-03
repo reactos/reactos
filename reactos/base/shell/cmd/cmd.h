@@ -311,6 +311,7 @@ TCHAR  cgetchar (VOID);
 BOOL   CheckCtrlBreak (INT);
 BOOL add_entry (LPINT ac, LPTSTR **arg, LPCTSTR entry);
 LPTSTR *split (LPTSTR, LPINT, BOOL);
+LPTSTR *splitspace (LPTSTR, LPINT);
 VOID   freep (LPTSTR *);
 LPTSTR _stpcpy (LPTSTR, LPCTSTR);
 VOID   StripQuotes(LPTSTR);

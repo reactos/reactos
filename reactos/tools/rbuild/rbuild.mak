@@ -353,223 +353,223 @@ rbuild: $(RBUILD_TARGET)
 host_gpp += -g
 
 $(RBUILD_TARGET): $(RBUILD_OBJECTS) $(XML_SSPRINTF_OBJECTS) $(INFLIB_HOST_OBJECTS) | $(RBUILD_OUT)
-	$(ECHO_LD)
+	$(ECHO_HOSTLD)
 	${host_gpp} $^ $(RBUILD_HOST_LFLAGS) -o $@
 
 $(RBUILD_INT_)global.o: $(RBUILD_BASE_)global.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_INT_)automaticdependency.o: $(RBUILD_BASE_)automaticdependency.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_INT_)autoregister.o: $(RBUILD_BASE_)autoregister.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_INT_)bootstrap.o: $(RBUILD_BASE_)bootstrap.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_INT_)cdfile.o: $(RBUILD_BASE_)cdfile.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_INT_)compilationunit.o: $(RBUILD_BASE_)compilationunit.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_INT_)compilationunitsupportcode.o: $(RBUILD_BASE_)compilationunitsupportcode.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_INT_)compilerflag.o: $(RBUILD_BASE_)compilerflag.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_INT_)configuration.o: $(RBUILD_BASE_)configuration.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_INT_)define.o: $(RBUILD_BASE_)define.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_INT_)directory.o: $(RBUILD_BASE_)directory.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_INT_)exception.o: $(RBUILD_BASE_)exception.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_INT_)filesupportcode.o: $(RBUILD_BASE_)filesupportcode.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_INT_)include.o: $(RBUILD_BASE_)include.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_INT_)installfile.o: $(RBUILD_BASE_)installfile.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_INT_)linkerflag.o: $(RBUILD_BASE_)linkerflag.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_INT_)linkerscript.o: $(RBUILD_BASE_)linkerscript.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_INT_)module.o: $(RBUILD_BASE_)module.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_INT_)project.o: $(RBUILD_BASE_)project.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_INT_)rbuild.o: $(RBUILD_BASE_)rbuild.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_INT_)rule.o: $(RBUILD_BASE_)rule.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_INT_)stubbedcomponent.o: $(RBUILD_BASE_)stubbedcomponent.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_INT_)syssetupgenerator.o: $(RBUILD_BASE_)syssetupgenerator.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_INT_)wineresource.o: $(RBUILD_BASE_)wineresource.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_INT_)xmlnode.o: $(RBUILD_BASE_)xmlnode.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_INT_)testsupportcode.o: $(RBUILD_BASE_)testsupportcode.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_BACKEND_INT_)backend.o: $(RBUILD_BACKEND_BASE_)backend.cpp $(RBUILD_HEADERS) | $(RBUILD_BACKEND_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_MINGW_INT_)mingw.o: $(RBUILD_MINGW_BASE_)mingw.cpp $(RBUILD_HEADERS) | $(RBUILD_MINGW_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_MINGW_INT_)modulehandler.o: $(RBUILD_MINGW_BASE_)modulehandler.cpp $(RBUILD_HEADERS) | $(RBUILD_MINGW_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_MINGW_INT_)proxymakefile.o: $(RBUILD_MINGW_BASE_)proxymakefile.cpp $(RBUILD_HEADERS) | $(RBUILD_MINGW_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_MINGW_INT_)rule.o: $(RBUILD_MINGW_BASE_)rule.cpp $(RBUILD_HEADERS) | $(RBUILD_MINGW_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_DEVCPP_INT_)devcpp.o: $(RBUILD_DEVCPP_BASE_)devcpp.cpp $(RBUILD_HEADERS) | $(RBUILD_DEVCPP_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_CODEBLOCKS_INT_)codeblocks.o: $(RBUILD_CODEBLOCKS_BASE_)codeblocks.cpp $(RBUILD_HEADERS) | $(RBUILD_CODEBLOCKS_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_DEPMAP_INT_)dependencymap.o: $(RBUILD_DEPMAP_BASE_)dependencymap.cpp $(RBUILD_HEADERS) | $(RBUILD_DEPMAP_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_VREPORT_INT_)versionreport.o: $(RBUILD_VREPORT_BASE_)versionreport.cpp $(RBUILD_HEADERS) | $(RBUILD_VREPORT_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_MSBUILD_INT_)msbuild.o: $(RBUILD_MSBUILD_BASE_)msbuild.cpp $(RBUILD_HEADERS) | $(RBUILD_MSBUILD_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_MSVC_INT_)genguid.o: $(RBUILD_MSVC_BASE_)genguid.cpp $(RBUILD_HEADERS) | $(RBUILD_MSVC_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_MSVC_INT_)msvc.o: $(RBUILD_MSVC_BASE_)msvc.cpp $(RBUILD_HEADERS) | $(RBUILD_MSVC_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_MSVC_INT_)msvcmaker.o: $(RBUILD_MSVC_BASE_)msvcmaker.cpp $(RBUILD_HEADERS) | $(RBUILD_MSVC_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_MSVC_INT_)vcprojmaker.o: $(RBUILD_MSVC_BASE_)vcprojmaker.cpp $(RBUILD_HEADERS) | $(RBUILD_MSVC_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_TEST_TARGET): $(RBUILD_TEST_OBJECTS) $(INFLIB_HOST_OBJECTS) $(RBUILD_HEADERS) | $(RBUILD_OUT)
-	$(ECHO_LD)
+	$(ECHO_HOSTLD)
 	${host_gpp} $(RBUILD_TEST_OBJECTS) $(INFLIB_HOST_OBJECTS) $(RBUILD_HOST_LFLAGS) -o $@
 
 $(RBUILD_TESTS_INT_)cdfiletest.o: $(RBUILD_TESTS_BASE_)cdfiletest.cpp $(RBUILD_HEADERS) | $(RBUILD_TESTS_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_TESTS_INT_)compilationunittest.o: $(RBUILD_TESTS_BASE_)compilationunittest.cpp $(RBUILD_HEADERS) | $(RBUILD_TESTS_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_TESTS_INT_)definetest.o: $(RBUILD_TESTS_BASE_)definetest.cpp $(RBUILD_HEADERS) | $(RBUILD_TESTS_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_TESTS_INT_)functiontest.o: $(RBUILD_TESTS_BASE_)functiontest.cpp $(RBUILD_HEADERS) | $(RBUILD_TESTS_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_TESTS_INT_)iftest.o: $(RBUILD_TESTS_BASE_)iftest.cpp $(RBUILD_HEADERS) | $(RBUILD_TESTS_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_TESTS_INT_)includetest.o: $(RBUILD_TESTS_BASE_)includetest.cpp $(RBUILD_HEADERS) | $(RBUILD_TESTS_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_TESTS_INT_)invoketest.o: $(RBUILD_TESTS_BASE_)invoketest.cpp $(RBUILD_HEADERS) | $(RBUILD_TESTS_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_TESTS_INT_)linkerflagtest.o: $(RBUILD_TESTS_BASE_)linkerflagtest.cpp $(RBUILD_HEADERS) | $(RBUILD_TESTS_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_TESTS_INT_)moduletest.o: $(RBUILD_TESTS_BASE_)moduletest.cpp $(RBUILD_HEADERS) | $(RBUILD_TESTS_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_TESTS_INT_)projecttest.o: $(RBUILD_TESTS_BASE_)projecttest.cpp $(RBUILD_HEADERS) | $(RBUILD_TESTS_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_TESTS_INT_)sourcefiletest.o: $(RBUILD_TESTS_BASE_)sourcefiletest.cpp $(RBUILD_HEADERS) | $(RBUILD_TESTS_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_TESTS_INT_)symboltest.o: $(RBUILD_TESTS_BASE_)symboltest.cpp $(RBUILD_HEADERS) | $(RBUILD_TESTS_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_TESTS_INT_)alltests.o: $(RBUILD_TESTS_BASE_)alltests.cpp $(RBUILD_HEADERS) | $(RBUILD_TESTS_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 

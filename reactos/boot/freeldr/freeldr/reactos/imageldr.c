@@ -482,6 +482,11 @@ FrLdrReadAndMapImage(IN FILE *Image,
 
     /* Get image headers */
     NtHeader = RtlImageNtHeader(ReadBuffer);
+    if (!NtHeader)
+    {
+	DbgPrint("Failed to read image (bad PE signature) %s\n", Name);
+	return NULL;
+    }
 
     /* Allocate memory for the driver */
     ImageSize = NtHeader->OptionalHeader.SizeOfImage;

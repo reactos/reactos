@@ -135,19 +135,21 @@ SetTokenInformation(HANDLE TokenHandle,
 /*
  * @implemented
  */
-BOOL WINAPI
-AccessCheck(PSECURITY_DESCRIPTOR pSecurityDescriptor,
-            HANDLE ClientToken,
-            DWORD DesiredAccess,
-            PGENERIC_MAPPING GenericMapping,
-            PPRIVILEGE_SET PrivilegeSet,
-            LPDWORD PrivilegeSetLength,
-            LPDWORD GrantedAccess,
-            LPBOOL AccessStatus)
+BOOL
+WINAPI
+AccessCheck(IN PSECURITY_DESCRIPTOR pSecurityDescriptor,
+            IN HANDLE ClientToken,
+            IN DWORD DesiredAccess,
+            IN PGENERIC_MAPPING GenericMapping,
+            OUT PPRIVILEGE_SET PrivilegeSet OPTIONAL,
+            IN OUT LPDWORD PrivilegeSetLength,
+            OUT LPDWORD GrantedAccess,
+            OUT LPBOOL AccessStatus)
 {
     NTSTATUS Status;
-    NTSTATUS AccessStat;
+    NTSTATUS NtAccessStatus;
 
+    /* Do the access check */
     Status = NtAccessCheck(pSecurityDescriptor,
                            ClientToken,
                            DesiredAccess,
@@ -155,22 +157,30 @@ AccessCheck(PSECURITY_DESCRIPTOR pSecurityDescriptor,
                            PrivilegeSet,
                            (PULONG)PrivilegeSetLength,
                            (PACCESS_MASK)GrantedAccess,
-                           &AccessStat);
+                           &NtAccessStatus);
+
+    /* See if the access check operation succeeded */
     if (!NT_SUCCESS(Status))
     {
+        /* Check failed */
         SetLastError(RtlNtStatusToDosError(Status));
         return FALSE;
     }
 
-    if (!NT_SUCCESS(AccessStat))
+    /* Now check the access status  */
+    if (!NT_SUCCESS(NtAccessStatus))
     {
-        SetLastError(RtlNtStatusToDosError(Status));
+        /* Access denied */
+        SetLastError(RtlNtStatusToDosError(NtAccessStatus));
         *AccessStatus = FALSE;
-        return TRUE;
+    }
+    else
+    {
+        /* Access granted */
+        *AccessStatus = TRUE;
     }
 
-    *AccessStatus = TRUE;
-
+    /* Check succeeded */
     return TRUE;
 }
 
@@ -329,7 +339,7 @@ CheckTokenMembership(IN HANDLE ExistingTokenHandle,
                      IN PSID SidToCheck,
                      OUT PBOOL IsMember)
 {
-    PSECURITY_DESCRIPTOR SecurityDescriptor = NULL;
+    PISECURITY_DESCRIPTOR SecurityDescriptor = NULL;
     ACCESS_MASK GrantedAccess;
     struct
     {

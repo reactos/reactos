@@ -98,7 +98,7 @@ static void InitializeTreeView( browse_info *info )
 
     TRACE("%p\n", info );
 
-    Shell_GetImageList(NULL, &hImageList);
+    Shell_GetImageLists(NULL, &hImageList);
 
     if (hImageList)
         SendMessageW( info->hwndTreeView, TVM_SETIMAGELIST, 0, (LPARAM)hImageList );

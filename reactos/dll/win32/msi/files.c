@@ -323,7 +323,7 @@ UINT ACTION_InstallFiles(MSIPACKAGE *package)
 
 static UINT ITERATE_DuplicateFiles(MSIRECORD *row, LPVOID param)
 {
-    MSIPACKAGE *package = (MSIPACKAGE*)param;
+    MSIPACKAGE *package = param;
     WCHAR dest_name[0x100];
     LPWSTR dest_path, dest;
     LPCWSTR file_key, component;
@@ -468,7 +468,7 @@ static BOOL verify_comp_for_removal(MSICOMPONENT *comp, UINT install_mode)
 
 static UINT ITERATE_RemoveFiles(MSIRECORD *row, LPVOID param)
 {
-    MSIPACKAGE *package = (MSIPACKAGE*)param;
+    MSIPACKAGE *package = param;
     MSICOMPONENT *comp;
     LPCWSTR component, filename, dirprop;
     UINT install_mode;

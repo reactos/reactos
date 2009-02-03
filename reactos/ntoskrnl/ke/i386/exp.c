@@ -831,10 +831,7 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
                     IN BOOLEAN FirstChance)
 {
     CONTEXT Context;
-    ULONG_PTR Stack, NewStack;
-    ULONG Size;
     EXCEPTION_RECORD LocalExceptRecord;
-    EXCEPTION_RECORD SehExceptRecord;
 
     /* Increase number of Exception Dispatches */
     KeGetCurrentPrcb()->KeExceptionDispatchCount++;
@@ -955,6 +952,9 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
 DispatchToUser:
             _SEH2_TRY
             {
+                ULONG Size;
+                ULONG_PTR Stack, NewStack;
+
                 /* Make sure we have a valid SS and that this isn't V86 mode */
                 if ((TrapFrame->HardwareSegSs != (KGDT_R3_DATA | RPL_MASK)) ||
                     (TrapFrame->EFlags & EFLAGS_V86_MASK))
@@ -1008,17 +1008,17 @@ DispatchToUser:
                 /* Dispatch exception to user-mode */
                 _SEH2_YIELD(return);
             }
-            _SEH2_EXCEPT((RtlCopyMemory(&SehExceptRecord, _SEH2_GetExceptionInformation()->ExceptionRecord, sizeof(EXCEPTION_RECORD)), EXCEPTION_EXECUTE_HANDLER))
+            _SEH2_EXCEPT((RtlCopyMemory(&LocalExceptRecord, _SEH2_GetExceptionInformation()->ExceptionRecord, sizeof(EXCEPTION_RECORD)), EXCEPTION_EXECUTE_HANDLER))
             {
                 /* Check if we got a stack overflow and raise that instead */
-                if ((NTSTATUS)SehExceptRecord.ExceptionCode ==
+                if ((NTSTATUS)LocalExceptRecord.ExceptionCode ==
                     STATUS_STACK_OVERFLOW)
                 {
                     /* Copy the exception address and record */
-                    SehExceptRecord.ExceptionAddress =
+                    LocalExceptRecord.ExceptionAddress =
                         ExceptionRecord->ExceptionAddress;
                     RtlCopyMemory(ExceptionRecord,
-                                  (PVOID)&SehExceptRecord,
+                                  (PVOID)&LocalExceptRecord,
                                   sizeof(EXCEPTION_RECORD));
 
                     /* Do the exception again */

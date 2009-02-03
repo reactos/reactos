@@ -159,9 +159,9 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 				module.output->relative_path );
 			string file = path + std::string("\\") + files[i]->file.name;
 
-			if ( !_stricmp ( Right(file,3).c_str(), ".rc" ) )
+			if ( !stricmp ( Right(file,3).c_str(), ".rc" ) )
 				resource_files.push_back ( file );
-			else if ( !_stricmp ( Right(file,2).c_str(), ".h" ) )
+			else if ( !stricmp ( Right(file,2).c_str(), ".h" ) )
 				header_files.push_back ( file );
 			else
 				source_files.push_back ( file );
@@ -471,7 +471,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 		{
 			fprintf ( OUT, "\t\t\t<Tool\r\n" );
 			fprintf ( OUT, "\t\t\t\tName=\"VCLinkerTool\"\r\n" );
-			if (module.GetEntryPoint(false) == "0")
+			if (module.GetEntryPoint(false) == "0" && sys == false)
 				fprintf ( OUT, "AdditionalOptions=\"/noentry\"" );
 
 			if (configuration.VSProjectVersion == "9.00")
@@ -544,7 +544,10 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 
 			if ( sys )
 			{
-				fprintf ( OUT, "\t\t\t\tAdditionalOptions=\" /ALIGN:0x20 /SECTION:INIT,D /IGNORE:4001,4037,4039,4065,4070,4078,4087,4089,4096\"\r\n" );
+				if (module.GetEntryPoint(false) == "0")
+					fprintf ( OUT, "\t\t\t\tAdditionalOptions=\" /noentry /ALIGN:0x20 /SECTION:INIT,D /IGNORE:4001,4037,4039,4065,4070,4078,4087,4089,4096\"\r\n" );
+				else
+					fprintf ( OUT, "\t\t\t\tAdditionalOptions=\" /ALIGN:0x20 /SECTION:INIT,D /IGNORE:4001,4037,4039,4065,4070,4078,4087,4089,4096\"\r\n" );
 				fprintf ( OUT, "\t\t\t\tIgnoreAllDefaultLibraries=\"TRUE\"\r\n" );
 				fprintf ( OUT, "\t\t\t\tGenerateManifest=\"FALSE\"\r\n" );
 				fprintf ( OUT, "\t\t\t\tSubSystem=\"%d\"\r\n", 3 );

@@ -29,19 +29,22 @@ IopApplyRosCdromArcHack(IN ULONG i)
     OBJECT_ATTRIBUTES ObjectAttributes;
     ANSI_STRING InstallName;
     UNICODE_STRING DeviceName;
-    CHAR Buffer[128];
+    CHAR Buffer[128], RosSysPath[16];
     FILE_BASIC_INFORMATION FileInfo;
     NTSTATUS Status;
     PCHAR p, q;
     PCONFIGURATION_INFORMATION ConfigInfo = IoGetConfigurationInformation();
     extern BOOLEAN InitIsWinPEMode, ExpInTextModeSetup;
 
+    /* Change this if you want ROS to boot properly from another directory */
+    sprintf(RosSysPath, "%s", "reactos");
+
     /* Only ARC Name left - Build full ARC Name */
     p = strstr(KeLoaderBlock->ArcBootDeviceName, "cdrom");
     if (p)
     {
         /* Build installer name */
-        sprintf(Buffer, "\\Device\\CdRom%lu\\reactos\\ntoskrnl.exe", i);
+        sprintf(Buffer, "\\Device\\CdRom%lu\\%s\\ntoskrnl.exe", i, RosSysPath);
         RtlInitAnsiString(&InstallName, Buffer);
         Status = RtlAnsiStringToUnicodeString(&DeviceName, &InstallName, TRUE);
         if (!NT_SUCCESS(Status)) return FALSE;
@@ -67,8 +70,8 @@ IopApplyRosCdromArcHack(IN ULONG i)
         {
             /* Build live CD kernel name */
             sprintf(Buffer,
-                    "\\Device\\CdRom%lu\\reactos\\system32\\ntoskrnl.exe",
-                    i);
+                    "\\Device\\CdRom%lu\\%s\\system32\\ntoskrnl.exe",
+                    i, RosSysPath);
             RtlInitAnsiString(&InstallName, Buffer);
             Status = RtlAnsiStringToUnicodeString(&DeviceName,
                                                   &InstallName,
@@ -111,8 +114,6 @@ IopApplyRosCdromArcHack(IN ULONG i)
     /* Return whether this is the CD or not */
     if ((InitIsWinPEMode) || (ExpInTextModeSetup))
     {
-        /* Hack until IoAssignDriveLetters is fixed */
-        swprintf(SharedUserData->NtSystemRoot, L"%c:\\reactos", 'C' + DeviceNumber);
         return TRUE;
     }
 

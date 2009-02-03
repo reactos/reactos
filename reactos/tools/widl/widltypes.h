@@ -29,6 +29,7 @@
 #define max(a, b) ((a) > (b) ? a : b)
 
 #include <stdarg.h>
+#include <assert.h>
 #include "guiddef.h"
 #include "wine/rpcfc.h"
 #include "wine/list.h"
@@ -43,6 +44,7 @@ typedef GUID UUID;
 #endif
 #define FALSE 0
 
+#define RPC_FC_MODULE   0xfc
 #define RPC_FC_COCLASS  0xfd
 #define RPC_FC_FUNCTION 0xfe
 
@@ -268,17 +270,61 @@ struct _expr_t {
   struct list entry;
 };
 
+struct struct_details
+{
+  var_list_t *fields;
+};
+
+struct enumeration_details
+{
+  var_list_t *enums;
+};
+
+struct func_details
+{
+  var_list_t *args;
+  int idx;
+};
+
+struct iface_details
+{
+  statement_list_t *stmts;
+  func_list_t *disp_methods;
+  var_list_t *disp_props;
+};
+
+struct module_details
+{
+  statement_list_t *stmts;
+  func_list_t *funcs;
+};
+
+struct array_details
+{
+  unsigned long dim;
+  expr_t *size_is, *length_is;
+};
+
+struct coclass_details
+{
+  ifref_list_t *ifaces;
+};
+
 struct _type_t {
   const char *name;
-  enum type_kind kind;
   unsigned char type;
   struct _type_t *ref;
   attr_list_t *attrs;
-  func_list_t *funcs;             /* interfaces and modules */
-  var_list_t *fields_or_args;     /* interfaces, structures, enumerations and functions (for args) */
-  ifref_list_t *ifaces;           /* coclasses */
-  unsigned long dim;              /* array dimension */
-  expr_t *size_is, *length_is;
+  union
+  {
+    struct struct_details *structure;
+    struct enumeration_details *enumeration;
+    struct func_details *function;
+    struct iface_details *iface;
+    struct module_details *module;
+    struct array_details array;
+    struct coclass_details coclass;
+  } details;
   type_t *orig;                   /* dup'd types */
   unsigned int typestring_offset;
   unsigned int ptrdesc;           /* used for complex structs */
@@ -291,6 +337,7 @@ struct _type_t {
   unsigned int user_types_registered : 1;
   unsigned int tfswrite : 1;   /* if the type needs to be written to the TFS */
   unsigned int checked : 1;
+  unsigned int is_alias : 1; /* is the type an alias? */
   int sign : 2;
 };
 
@@ -319,8 +366,6 @@ struct _declarator_t {
 
 struct _func_t {
   var_t *def;
-  var_list_t *args;
-  int ignore, idx;
 
   /* parser-internal */
   struct list entry;
@@ -368,7 +413,6 @@ struct _typelib_t {
     char *name;
     char *filename;
     const attr_list_t *attrs;
-    struct list entries;
     struct list importlibs;
     statement_list_t *stmts;
 };
@@ -405,9 +449,7 @@ void check_for_additional_prototype_types(const var_list_t *list);
 void init_types(void);
 type_t *alloc_type(void);
 void set_all_tfswrite(int val);
-
-type_t *duptype(type_t *t, int dupname);
-type_t *alias(type_t *t, const char *name);
+void clear_all_offsets(void);
 
 int is_ptr(const type_t *t);
 int is_array(const type_t *t);
@@ -422,9 +464,26 @@ type_t *make_type(unsigned char type, type_t *ref);
 
 void init_loc_info(loc_info_t *);
 
-static inline type_t *get_func_return_type(const func_t *func)
+static inline var_list_t *type_get_function_args(const type_t *func_type)
 {
-  return func->def->type->ref;
+  return func_type->details.function->args;
+}
+
+#define STATEMENTS_FOR_EACH_FUNC(stmt, stmts) \
+  if (stmts) LIST_FOR_EACH_ENTRY( stmt, stmts, statement_t, entry ) \
+    if (stmt->type == STMT_DECLARATION && stmt->u.var->stgclass == STG_NONE && \
+        stmt->u.var->type->type == RPC_FC_FUNCTION)
+
+static inline int statements_has_func(const statement_list_t *stmts)
+{
+  const statement_t *stmt;
+  int has_func = 0;
+  STATEMENTS_FOR_EACH_FUNC(stmt, stmts)
+  {
+    has_func = 1;
+    break;
+  }
+  return has_func;
 }
 
 #endif

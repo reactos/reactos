@@ -136,9 +136,8 @@ static void WINAPI IWineD3DCubeTextureImpl_PreLoad(IWineD3DCubeTexture *iface) {
             }
         }
     } else if (srgb_was_toggled) {
-        /* Loop is repeated in the else block with the extra AddDirtyRect line to avoid the alternative of
-         * checking srgb_was_toggled in every iteration, even when the texture is just dirty
-         */
+        /* Loop is repeated in the else block with the extra surface_add_dirty_rect() line to avoid the
+         * alternative of checking srgb_was_toggled in every iteration, even when the texture is just dirty */
         if (This->baseTexture.srgb_mode_change_count < 20)
             ++This->baseTexture.srgb_mode_change_count;
         else
@@ -146,7 +145,7 @@ static void WINAPI IWineD3DCubeTextureImpl_PreLoad(IWineD3DCubeTexture *iface) {
 
         for (i = 0; i < This->baseTexture.levels; i++) {
             for (j = WINED3DCUBEMAP_FACE_POSITIVE_X; j <= WINED3DCUBEMAP_FACE_NEGATIVE_Z ; j++) {
-                IWineD3DSurface_AddDirtyRect(This->surfaces[j][i], NULL);
+                surface_add_dirty_rect(This->surfaces[j][i], NULL);
                 surface_force_reload(This->surfaces[j][i]);
                 IWineD3DSurface_LoadTexture(This->surfaces[j][i], srgb_mode);
             }
@@ -298,7 +297,7 @@ static HRESULT WINAPI IWineD3DCubeTextureImpl_GetLevelDesc(IWineD3DCubeTexture *
         TRACE("(%p) level (%d)\n", This, Level);
         return IWineD3DSurface_GetDesc(This->surfaces[0][Level], pDesc);
     }
-    FIXME("(%p) level(%d) overflow Levels(%d)\n", This, Level, This->baseTexture.levels);
+    WARN("(%p) level(%d) overflow Levels(%d)\n", This, Level, This->baseTexture.levels);
     return WINED3DERR_INVALIDCALL;
 }
 
@@ -360,7 +359,8 @@ static HRESULT  WINAPI IWineD3DCubeTextureImpl_AddDirtyRect(IWineD3DCubeTexture 
     This->baseTexture.dirty = TRUE;
     TRACE("(%p) : dirtyfication of faceType(%d) Level (0)\n", This, FaceType);
     if (FaceType <= WINED3DCUBEMAP_FACE_NEGATIVE_Z) {
-        hr = IWineD3DSurface_AddDirtyRect(This->surfaces[FaceType][0], pDirtyRect);
+        surface_add_dirty_rect(This->surfaces[FaceType][0], pDirtyRect);
+        hr = WINED3D_OK;
     } else {
         WARN("(%p) overflow FaceType(%d)\n", This, FaceType);
     }

@@ -13,7 +13,7 @@ IntGdiCreateBrushXlate(PDC Dc, GDIBRUSHOBJ *BrushObj, BOOLEAN *Failed);
 
 XLATEOBJ*
 FASTCALL
-IntCreateXlateForBlt(PDC pDCDest, PDC pDCSrc, BITMAPOBJ* pDestSurf, BITMAPOBJ* pSrcSurf);
+IntCreateXlateForBlt(PDC pDCDest, PDC pDCSrc, SURFACE* pDestSurf, SURFACE* pSrcSurf);
 
 VOID FASTCALL
 IntGdiInitBrushInstance(GDIBRUSHINST *BrushInst, PGDIBRUSHOBJ BrushObj, XLATEOBJ *XlateObj);
@@ -244,9 +244,9 @@ WORD APIENTRY IntGdiSetHookFlags(HDC hDC, WORD Flags);
 
 VOID APIENTRY IntGdiSetDCState ( HDC hDC, HDC hDCSave );
 
-LONG APIENTRY IntSetBitmapBits(PBITMAPOBJ bmp, DWORD  Bytes, IN PBYTE Bits);
+LONG APIENTRY IntSetBitmapBits(PSURFACE bmp, DWORD  Bytes, IN PBYTE Bits);
 
-LONG APIENTRY IntGetBitmapBits(PBITMAPOBJ bmp, DWORD Bytes, OUT PBYTE Bits);
+LONG APIENTRY IntGetBitmapBits(PSURFACE bmp, DWORD Bytes, OUT PBYTE Bits);
 
 UINT APIENTRY IntSetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, CONST RGBQUAD *Colors);
 

@@ -36,17 +36,17 @@
 
 
 
-#include "glheader.h"
-#include "imports.h"
-#include "colormac.h"
-#include "context.h"
-#include "convolve.h"
-#include "image.h"
-#include "macros.h"
-#include "mipmap.h"
-#include "texformat.h"
-#include "teximage.h"
-#include "texstore.h"
+#include "main/glheader.h"
+#include "main/imports.h"
+#include "main/colormac.h"
+#include "main/context.h"
+#include "main/convolve.h"
+#include "main/image.h"
+#include "main/macros.h"
+#include "main/mipmap.h"
+#include "main/texformat.h"
+#include "main/teximage.h"
+#include "main/texstore.h"
 
 #include "s_context.h"
 #include "s_depth.h"
@@ -216,9 +216,9 @@ is_depth_format(GLenum format)
 {
    switch (format) {
       case GL_DEPTH_COMPONENT:
-      case GL_DEPTH_COMPONENT16_SGIX:
-      case GL_DEPTH_COMPONENT24_SGIX:
-      case GL_DEPTH_COMPONENT32_SGIX:
+      case GL_DEPTH_COMPONENT16:
+      case GL_DEPTH_COMPONENT24:
+      case GL_DEPTH_COMPONENT32:
          return GL_TRUE;
       default:
          return GL_FALSE;

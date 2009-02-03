@@ -133,6 +133,7 @@ static void ME_InsertRowStart(ME_WrapContext *wc, const ME_DisplayItem *pEnd)
       }
   }
 
+  para->member.para.nWidth = max(para->member.para.nWidth, width);
   row = ME_MakeRow(ascent+descent, ascent, width);
   if (wc->context->editor->bEmulateVersion10 && /* v1.0 - 3.0 */
       pFmt->dwMask & PFM_TABLE && pFmt->wEffects & PFE_TABLE)
@@ -536,6 +537,7 @@ static void ME_WrapTextParagraph(ME_Context *c, ME_DisplayItem *tp) {
 static void ME_PrepareParagraphForWrapping(ME_Context *c, ME_DisplayItem *tp) {
   ME_DisplayItem *p, *pRow;
 
+  tp->member.para.nWidth = 0;
   /* remove all items that will be reinserted by paragraph wrapper anyway */
   tp->member.para.nRows = 0;
   for (p = tp->next; p!=tp->member.para.next_para; p = p->next) {
@@ -578,8 +580,9 @@ BOOL ME_WrapMarkedParagraphs(ME_TextEditor *editor)
   ME_Context c;
   BOOL bModified = FALSE;
   int yStart = -1;
+  int totalWidth = 0;
 
-  ME_InitContext(&c, editor, GetDC(editor->hWnd));
+  ME_InitContext(&c, editor, ITextHost_TxGetDC(editor->texthost));
   c.pt.x = 0;
   item = editor->pBuffer->pFirst->next;
   while(item != editor->pBuffer->pLast) {
@@ -638,6 +641,7 @@ BOOL ME_WrapMarkedParagraphs(ME_TextEditor *editor)
       ME_DisplayItem *startRowPara;
       int prevHeight, nHeight, bottomBorder = 0;
       ME_DisplayItem *cell = ME_FindItemBack(item, diCell);
+      item->member.para.nWidth = cell->member.cell.pt.x + cell->member.cell.nWidth;
       if (!(item->member.para.next_para->member.para.nFlags & MEPF_ROWSTART))
       {
         /* Last row, the bottom border is added to the height. */
@@ -707,16 +711,19 @@ BOOL ME_WrapMarkedParagraphs(ME_TextEditor *editor)
       }
       c.pt.y += item->member.para.nHeight;
     }
+
+    totalWidth = max(totalWidth, item->member.para.nWidth);
     item = item->member.para.next_para;
   }
   editor->sizeWindow.cx = c.rcView.right-c.rcView.left;
   editor->sizeWindow.cy = c.rcView.bottom-c.rcView.top;
-  
+
   editor->nTotalLength = c.pt.y;
+  editor->nTotalWidth = totalWidth;
   editor->pBuffer->pLast->member.para.pt.x = 0;
   editor->pBuffer->pLast->member.para.pt.y = c.pt.y;
 
-  ME_DestroyContext(&c, editor->hWnd);
+  ME_DestroyContext(&c);
 
   if (bModified || editor->nTotalLength < editor->nLastTotalLength)
     ME_InvalidateMarkedParagraphs(editor);
@@ -730,9 +737,9 @@ void ME_InvalidateMarkedParagraphs(ME_TextEditor *editor)
   int ofs;
   ME_DisplayItem *item;
 
-  ME_InitContext(&c, editor, GetDC(editor->hWnd));
+  ME_InitContext(&c, editor, ITextHost_TxGetDC(editor->texthost));
   rc = c.rcView;
-  ofs = ME_GetYScrollPos(editor);
+  ofs = editor->vert_si.nPos;
 
   item = editor->pBuffer->pFirst;
   while(item != editor->pBuffer->pLast) {
@@ -741,7 +748,7 @@ void ME_InvalidateMarkedParagraphs(ME_TextEditor *editor)
       rc.bottom = max(c.rcView.top + item->member.para.pt.y
                       + item->member.para.nHeight - ofs,
                       c.rcView.bottom);
-      InvalidateRect(editor->hWnd, &rc, TRUE);
+      ITextHost_TxInvalidateRect(editor->texthost, &rc, TRUE);
     }
     item = item->member.para.next_para;
   }
@@ -749,9 +756,9 @@ void ME_InvalidateMarkedParagraphs(ME_TextEditor *editor)
   {
     rc.top = c.rcView.top + editor->nTotalLength - ofs;
     rc.bottom = c.rcView.top + editor->nLastTotalLength - ofs;
-    InvalidateRect(editor->hWnd, &rc, TRUE);
+    ITextHost_TxInvalidateRect(editor->texthost, &rc, TRUE);
   }
-  ME_DestroyContext(&c, editor->hWnd);
+  ME_DestroyContext(&c);
 }
 
 
@@ -762,21 +769,19 @@ ME_SendRequestResize(ME_TextEditor *editor, BOOL force)
   {
     RECT rc;
 
-    GetClientRect(editor->hWnd, &rc);
+    ITextHost_TxGetClientRect(editor->texthost, &rc);
 
     if (force || rc.bottom != editor->nTotalLength)
     {
       REQRESIZE info;
 
-      info.nmhdr.hwndFrom = editor->hWnd;
-      info.nmhdr.idFrom = GetWindowLongW(editor->hWnd, GWLP_ID);
       info.nmhdr.code = EN_REQUESTRESIZE;
       info.rc = rc;
+      info.rc.right = editor->nTotalWidth;
       info.rc.bottom = editor->nTotalLength;
 
       editor->nEventMask &= ~ENM_REQUESTRESIZE;
-      SendMessageW(GetParent(editor->hWnd), WM_NOTIFY,
-                   info.nmhdr.idFrom, (LPARAM)&info);
+      ITextHost_TxNotify(editor->texthost, info.nmhdr.code, &info);
       editor->nEventMask |= ENM_REQUESTRESIZE;
     }
   }

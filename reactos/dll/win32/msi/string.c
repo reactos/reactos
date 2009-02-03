@@ -179,6 +179,34 @@ static void set_st_entry( string_table *st, UINT n, LPWSTR str, UINT refcount, e
         st->freeslot = n + 1;
 }
 
+static UINT msi_string2idA( const string_table *st, LPCSTR buffer, UINT *id )
+{
+    DWORD sz;
+    UINT r = ERROR_INVALID_PARAMETER;
+    LPWSTR str;
+
+    TRACE("Finding string %s in string table\n", debugstr_a(buffer) );
+
+    if( buffer[0] == 0 )
+    {
+        *id = 0;
+        return ERROR_SUCCESS;
+    }
+
+    sz = MultiByteToWideChar( st->codepage, 0, buffer, -1, NULL, 0 );
+    if( sz <= 0 )
+        return r;
+    str = msi_alloc( sz*sizeof(WCHAR) );
+    if( !str )
+        return ERROR_NOT_ENOUGH_MEMORY;
+    MultiByteToWideChar( st->codepage, 0, buffer, -1, str, sz );
+
+    r = msi_string2idW( st, str, id );
+    msi_free( str );
+
+    return r;
+}
+
 static int msi_addstring( string_table *st, UINT n, const CHAR *data, int len, UINT refcount, enum StringPersistence persistence )
 {
     LPWSTR str;
@@ -350,7 +378,7 @@ UINT msi_id2stringW( const string_table *st, UINT id, LPWSTR buffer, UINT *sz )
  *   The size includes the terminating nul character.  Short buffers
  *  will be filled, but not nul terminated.
  */
-UINT msi_id2stringA( const string_table *st, UINT id, LPSTR buffer, UINT *sz )
+static UINT msi_id2stringA( const string_table *st, UINT id, LPSTR buffer, UINT *sz )
 {
     UINT len;
     const WCHAR *str;
@@ -407,34 +435,6 @@ UINT msi_string2idW( const string_table *st, LPCWSTR str, UINT *id )
     }
 
     return ERROR_INVALID_PARAMETER;
-}
-
-UINT msi_string2idA( const string_table *st, LPCSTR buffer, UINT *id )
-{
-    DWORD sz;
-    UINT r = ERROR_INVALID_PARAMETER;
-    LPWSTR str;
-
-    TRACE("Finding string %s in string table\n", debugstr_a(buffer) );
-
-    if( buffer[0] == 0 )
-    {
-        *id = 0;
-        return ERROR_SUCCESS;
-    }
-
-    sz = MultiByteToWideChar( st->codepage, 0, buffer, -1, NULL, 0 );
-    if( sz <= 0 )
-        return r;
-    str = msi_alloc( sz*sizeof(WCHAR) );
-    if( !str )
-        return ERROR_NOT_ENOUGH_MEMORY;
-    MultiByteToWideChar( st->codepage, 0, buffer, -1, str, sz );
-
-    r = msi_string2idW( st, str, id );
-    msi_free( str );
-
-    return r;
 }
 
 UINT msi_strcmp( const string_table *st, UINT lval, UINT rval, UINT *res )

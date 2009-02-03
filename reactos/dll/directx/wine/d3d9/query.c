@@ -163,7 +163,7 @@ HRESULT WINAPI IDirect3DDevice9Impl_CreateQuery(LPDIRECT3DDEVICE9EX iface, D3DQU
     /* Allocate the storage for the device */
     object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IDirect3DQuery9Impl));
     if (NULL == object) {
-        FIXME("Allocation of memory failed, returning D3DERR_OUTOFVIDEOMEMORY\n");
+        ERR("Allocation of memory failed, returning D3DERR_OUTOFVIDEOMEMORY\n");
         return D3DERR_OUTOFVIDEOMEMORY;
     }
 
@@ -176,7 +176,7 @@ HRESULT WINAPI IDirect3DDevice9Impl_CreateQuery(LPDIRECT3DDEVICE9EX iface, D3DQU
     if (FAILED(hr)) {
 
         /* free up object */
-        FIXME("(%p) call to IWineD3DDevice_CreateQuery failed\n", This);
+        WARN("(%p) call to IWineD3DDevice_CreateQuery failed\n", This);
         HeapFree(GetProcessHeap(), 0, object);
     } else {
         IDirect3DDevice9Ex_AddRef(iface);

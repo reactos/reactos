@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5.1
+ * Version:  7.2.1
  *
- * Copyright (C) 1999-2006  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2008  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -23,11 +23,11 @@
  */
 
 
-#include "glheader.h"
-#include "context.h"
-#include "macros.h"
-#include "imports.h"
-#include "fbobject.h"
+#include "main/glheader.h"
+#include "main/context.h"
+#include "main/macros.h"
+#include "main/imports.h"
+#include "main/fbobject.h"
 
 #include "s_depth.h"
 #include "s_context.h"
@@ -534,15 +534,15 @@ depth_test_span( GLcontext *ctx, SWspan *span)
       if (rb->DataType == GL_UNSIGNED_SHORT) {
          GLushort zbuffer[MAX_WIDTH];
          rb->GetRow(ctx, rb, count, x, y, zbuffer);
-         passed = depth_test_span16(ctx, count, zbuffer, zValues, mask );
-         rb->PutRow(ctx, rb, count, x, y, zbuffer, NULL);
+         passed = depth_test_span16(ctx, count, zbuffer, zValues, mask);
+         rb->PutRow(ctx, rb, count, x, y, zbuffer, mask);
       }
       else {
          GLuint zbuffer[MAX_WIDTH];
          ASSERT(rb->DataType == GL_UNSIGNED_INT);
          rb->GetRow(ctx, rb, count, x, y, zbuffer);
-         passed = depth_test_span32(ctx, count, zbuffer, zValues, mask );
-         rb->PutRow(ctx, rb, count, x, y, zbuffer, NULL);
+         passed = depth_test_span32(ctx, count, zbuffer, zValues, mask);
+         rb->PutRow(ctx, rb, count, x, y, zbuffer, mask);
       }
    }
 
@@ -1080,15 +1080,15 @@ depth_test_pixels( GLcontext *ctx, SWspan *span )
       if (rb->DataType == GL_UNSIGNED_SHORT) {
          GLushort zbuffer[MAX_WIDTH];
          _swrast_get_values(ctx, rb, count, x, y, zbuffer, sizeof(GLushort));
-         depth_test_span16(ctx, count, zbuffer, z, mask );
-         rb->PutValues(ctx, rb, count, x, y, zbuffer, NULL);
+         depth_test_span16(ctx, count, zbuffer, z, mask);
+         rb->PutValues(ctx, rb, count, x, y, zbuffer, mask);
       }
       else {
          GLuint zbuffer[MAX_WIDTH];
          ASSERT(rb->DataType == GL_UNSIGNED_INT);
          _swrast_get_values(ctx, rb, count, x, y, zbuffer, sizeof(GLuint));
-         depth_test_span32(ctx, count, zbuffer, z, mask );
-         rb->PutValues(ctx, rb, count, x, y, zbuffer, NULL);
+         depth_test_span32(ctx, count, zbuffer, z, mask);
+         rb->PutValues(ctx, rb, count, x, y, zbuffer, mask);
       }
    }
 

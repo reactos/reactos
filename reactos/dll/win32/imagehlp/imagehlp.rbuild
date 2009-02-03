@@ -1,4 +1,4 @@
-<module name="imagehlp" type="win32dll" baseaddress="${BASEADDRESS_IMAGEHLP}" installbase="system32" installname="imagehlp.dll">
+<module name="imagehlp" type="win32dll" baseaddress="${BASEADDRESS_IMAGEHLP}" installbase="system32" installname="imagehlp.dll" allowwarnings="true">
 	<importlibrary definition="imagehlp.spec" />
 	<include base="imagehlp">.</include>
 	<define name="_IMAGEHLP_SOURCE_"></define>

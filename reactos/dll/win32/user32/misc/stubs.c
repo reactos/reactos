@@ -47,30 +47,6 @@ GetMouseMovePointsEx(
 
 
 /*
- * @implemented
- */
-BOOL
-WINAPI
-LockWindowUpdate(
-  HWND hWndLock)
-{
-    return NtUserLockWindowUpdate(hWndLock);
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
-LockWorkStation(VOID)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-
-/*
  * @unimplemented
  */
 DWORD
@@ -171,54 +147,10 @@ LoadRemoteFonts ( VOID )
  */
 VOID
 WINAPI
-SetInternalWindowPos(
-		     HWND    hwnd,
-		     UINT    showCmd,
-		     LPRECT  rect,
-		     LPPOINT pt
-		     )
-{
-  UNIMPLEMENTED;
-}
-
-/*
- * @unimplemented
- */
-VOID
-WINAPI
 RegisterSystemThread ( DWORD flags, DWORD reserved )
 {
   UNIMPLEMENTED;
 }
-
-/*
- * @unimplemented
- */
-DWORD
-WINAPI
-RegisterTasklist ( DWORD x )
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
-DWORD
-WINAPI
-DragObject(
-	   HWND    hwnd1,
-	   HWND    hwnd2,
-	   UINT    u1,
-	   ULONG_PTR   dw1,
-	   HCURSOR hc1
-	   )
-{
-  return NtUserDragObject(hwnd1, hwnd2, u1, dw1, hc1);
-}
-
-
 
 
 /*
@@ -516,127 +448,6 @@ RegisterRawInputDevices(
 /*
  * @unimplemented
  */
-UINT
-WINAPI
-WINNLSGetIMEHotkey( HWND hwnd)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
-WINNLSEnableIME( HWND hwnd, BOOL enable)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
-WINNLSGetEnableStatus( HWND hwnd)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
-IMPSetIMEW( HWND hwnd, LPIMEPROW ime)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
-IMPQueryIMEW( LPIMEPROW ime)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
-IMPGetIMEW( HWND hwnd, LPIMEPROW ime)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
-IMPSetIMEA( HWND hwnd, LPIMEPROA ime)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
-IMPQueryIMEA( LPIMEPROA ime)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
-IMPGetIMEA( HWND hwnd, LPIMEPROA ime)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
-LRESULT
-WINAPI
-SendIMEMessageExW(HWND hwnd,LPARAM lparam)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
-LRESULT
-WINAPI
-SendIMEMessageExA(HWND hwnd, LPARAM lparam)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
 BOOL WINAPI DisplayExitWindowsWarnings(ULONG flags)
 {
   UNIMPLEMENTED;
@@ -757,14 +568,3 @@ BOOL WINAPI DdeGetQualityOfService(HWND hWnd, DWORD Reserved, PSECURITY_QUALITY_
   UNIMPLEMENTED;
   return FALSE;
 }
-
-
-/*
- * @unimplemented
- */
-DWORD WINAPI User32InitializeImmEntryTable(PVOID p)
-{
-  UNIMPLEMENTED;
-  return 0;
-}
-

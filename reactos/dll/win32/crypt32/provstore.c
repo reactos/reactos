@@ -43,7 +43,7 @@ typedef struct _WINE_PROVIDERSTORE
 
 static void WINAPI CRYPT_ProvCloseStore(HCERTSTORE hCertStore, DWORD dwFlags)
 {
-    PWINE_PROVIDERSTORE store = (PWINE_PROVIDERSTORE)hCertStore;
+    PWINE_PROVIDERSTORE store = hCertStore;
 
     TRACE("(%p, %08x)\n", store, dwFlags);
 
@@ -69,7 +69,7 @@ static BOOL CRYPT_ProvAddCert(PWINECRYPT_CERTSTORE store, void *cert,
     {
         ret = TRUE;
         if (ps->provWriteCert)
-            ret = ps->provWriteCert(ps->hStoreProv, (PCCERT_CONTEXT)cert,
+            ret = ps->provWriteCert(ps->hStoreProv, cert,
              CERT_STORE_PROV_WRITE_ADD_FLAG);
         if (ret)
             ret = ps->memStore->certs.addContext(ps->memStore, cert, NULL,
@@ -135,7 +135,7 @@ static BOOL CRYPT_ProvAddCRL(PWINECRYPT_CERTSTORE store, void *crl,
         {
             ret = TRUE;
             if (ps->provWriteCrl)
-                ret = ps->provWriteCrl(ps->hStoreProv, (PCCRL_CONTEXT)crl,
+                ret = ps->provWriteCrl(ps->hStoreProv, crl,
                  CERT_STORE_PROV_WRITE_ADD_FLAG);
             if (ret)
                 ret = ps->memStore->crls.addContext(ps->memStore, crl, NULL,
@@ -202,7 +202,7 @@ static BOOL CRYPT_ProvAddCTL(PWINECRYPT_CERTSTORE store, void *ctl,
         {
             ret = TRUE;
             if (ps->provWriteCtl)
-                ret = ps->provWriteCtl(ps->hStoreProv, (PCCTL_CONTEXT)ctl,
+                ret = ps->provWriteCtl(ps->hStoreProv, ctl,
                  CERT_STORE_PROV_WRITE_ADD_FLAG);
             if (ret)
                 ret = ps->memStore->ctls.addContext(ps->memStore, ctl, NULL,
@@ -250,7 +250,7 @@ static BOOL CRYPT_ProvDeleteCTL(PWINECRYPT_CERTSTORE store, void *ctl)
 static BOOL WINAPI CRYPT_ProvControl(HCERTSTORE hCertStore, DWORD dwFlags,
  DWORD dwCtrlType, void const *pvCtrlPara)
 {
-    PWINE_PROVIDERSTORE store = (PWINE_PROVIDERSTORE)hCertStore;
+    PWINE_PROVIDERSTORE store = hCertStore;
     BOOL ret = TRUE;
 
     TRACE("(%p, %08x, %d, %p)\n", hCertStore, dwFlags, dwCtrlType,

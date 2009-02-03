@@ -7,10 +7,8 @@
  */
 
 /* INCLUDES ******************************************************************/
-
-#include "w32csr.h"
-
 #define NDEBUG
+#include "w32csr.h"
 #include <debug.h>
 
 /* Not defined in any header file */

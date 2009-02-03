@@ -59,8 +59,8 @@ ULONG CDECL WLDAP32_ldap_abandon( WLDAP32_LDAP *ld, ULONG msgid )
 
     TRACE( "(%p, 0x%08x)\n", ld, msgid );
 
-    if (!ld) return ~0UL;
-    ret = ldap_abandon_ext( ld, msgid, NULL, NULL );
+    if (!ld) return ~0u;
+    ret = map_error( ldap_abandon_ext( ld, msgid, NULL, NULL ));
 
 #endif
     return ret;
@@ -153,7 +153,7 @@ WLDAP32_LDAP * CDECL ldap_conn_from_msg( WLDAP32_LDAP *ld, WLDAP32_LDAPMessage *
  *
  * RETURNS
  *  Success: The number of entries.
- *  Failure: ~0UL
+ *  Failure: ~0u
  */
 ULONG CDECL WLDAP32_ldap_count_entries( WLDAP32_LDAP *ld, WLDAP32_LDAPMessage *res )
 {
@@ -162,7 +162,7 @@ ULONG CDECL WLDAP32_ldap_count_entries( WLDAP32_LDAP *ld, WLDAP32_LDAPMessage *r
 
     TRACE( "(%p, %p)\n", ld, res );
 
-    if (!ld) return ~0UL;
+    if (!ld) return ~0u;
     ret = ldap_count_entries( ld, res );
 
 #endif
@@ -180,7 +180,7 @@ ULONG CDECL WLDAP32_ldap_count_entries( WLDAP32_LDAP *ld, WLDAP32_LDAPMessage *r
  *
  * RETURNS
  *  Success: The number of references.
- *  Failure: ~0UL
+ *  Failure: ~0u
  */
 ULONG CDECL WLDAP32_ldap_count_references( WLDAP32_LDAP *ld, WLDAP32_LDAPMessage *res )
 {
@@ -596,7 +596,7 @@ WLDAP32_LDAPMessage * CDECL WLDAP32_ldap_next_reference( WLDAP32_LDAP *ld, WLDAP
  *   LDAP_RES_SEARCH_ENTRY
  *   LDAP_RES_SEARCH_RESULT
  *
- *  Failure: ~0UL
+ *  Failure: ~0u
  *
  *  This function returns 0 when the timeout has expired.
  *
@@ -614,7 +614,7 @@ ULONG CDECL WLDAP32_ldap_result( WLDAP32_LDAP *ld, ULONG msgid, ULONG all,
 
     TRACE( "(%p, 0x%08x, 0x%08x, %p, %p)\n", ld, msgid, all, timeout, res );
 
-    if (!ld || !res || msgid == ~0UL) return ~0UL;
+    if (!ld || !res || msgid == ~0u) return ~0u;
     ret = ldap_result( ld, msgid, all, (struct timeval *)timeout, res );
 
 #endif

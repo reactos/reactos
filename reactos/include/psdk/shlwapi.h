@@ -83,9 +83,9 @@ DWORD WINAPI SHCopyKeyA(HKEY,LPCSTR,HKEY,DWORD);
 DWORD WINAPI SHCopyKeyW(HKEY,LPCWSTR,HKEY,DWORD);
 #define SHCopyKey WINELIB_NAME_AW(SHCopyKey)
 
-/* Undocumented registry functions */
-
 HKEY WINAPI  SHRegDuplicateHKey(HKEY);
+
+/* Undocumented registry functions */
 
 DWORD WINAPI SHDeleteOrphanKeyA(HKEY,LPCSTR);
 DWORD WINAPI SHDeleteOrphanKeyW(HKEY,LPCWSTR);
@@ -193,6 +193,7 @@ enum
     ASSOCF_REMAPRUNDLL          = 0x080, /* Get rundll args */
     ASSOCF_NOFIXUPS             = 0x100, /* Don't fixup errors */
     ASSOCF_IGNOREBASECLASS      = 0x200, /* Don't read baseclass */
+    ASSOCF_INIT_IGNOREUNKNOWN   = 0x400, /* Fail for unknown progid */
 };
 
 typedef DWORD ASSOCF;
@@ -245,9 +246,7 @@ typedef enum
 
 typedef struct IQueryAssociations *LPQUERYASSOCIATIONS;
 
-#ifndef INTERFACE
 #define INTERFACE IQueryAssociations
-#endif
 DECLARE_INTERFACE_(IQueryAssociations,IUnknown)
 {
     /*** IUnknown methods ***/
@@ -341,7 +340,7 @@ int WINAPI PathCommonPrefixW(LPCWSTR,LPCWSTR,LPWSTR);
 
 HRESULT WINAPI PathCreateFromUrlA(LPCSTR pszUrl, LPSTR pszPath, LPDWORD pcchPath, DWORD dwReserved);
 HRESULT WINAPI PathCreateFromUrlW(LPCWSTR pszUrl, LPWSTR pszPath, LPDWORD pcchPath, DWORD dwReserved);
-#define PathCreateFromUrl WINELIB_NANE_AW(PathCreateFromUrl)
+#define PathCreateFromUrl WINELIB_NAME_AW(PathCreateFromUrl)
 
 BOOL WINAPI PathFileExistsA(LPCSTR);
 BOOL WINAPI PathFileExistsW(LPCWSTR);
@@ -668,17 +667,17 @@ BOOL    WINAPI UrlIsOpaqueW(LPCWSTR);
 
 HRESULT WINAPI UrlUnescapeA(LPSTR,LPSTR,LPDWORD,DWORD);
 HRESULT WINAPI UrlUnescapeW(LPWSTR,LPWSTR,LPDWORD,DWORD);
-#define UrlUnescape WINELIB_AW_NAME(UrlUnescape)
+#define UrlUnescape WINELIB_NAME_AW(UrlUnescape)
 
 #define UrlUnescapeInPlaceA(x,y) UrlUnescapeA(x, NULL, NULL, \
                                               y | URL_UNESCAPE_INPLACE)
 #define UrlUnescapeInPlaceW(x,y) UrlUnescapeW(x, NULL, NULL, \
                                               y | URL_UNESCAPE_INPLACE)
-#define UrlUnescapeInPlace WINELIB_AW_NAME(UrlUnescapeInPlace)
+#define UrlUnescapeInPlace WINELIB_NAME_AW(UrlUnescapeInPlace)
 
 HRESULT WINAPI UrlCreateFromPathA(LPCSTR,LPSTR,LPDWORD,DWORD);
 HRESULT WINAPI UrlCreateFromPathW(LPCWSTR,LPWSTR,LPDWORD,DWORD);
-#define UrlCreateFromPath WINELIB_AW_NAME(UrlCreateFromPath)
+#define UrlCreateFromPath WINELIB_NAME_AW(UrlCreateFromPath)
 
 typedef struct tagPARSEDURLA {
     DWORD cbSize;
@@ -700,7 +699,7 @@ typedef struct tagPARSEDURLW {
 
 HRESULT WINAPI ParseURLA(LPCSTR pszUrl, PARSEDURLA *ppu);
 HRESULT WINAPI ParseURLW(LPCWSTR pszUrl, PARSEDURLW *ppu);
-#define ParseURL WINELIB_AW_NAME(ParseUrl)
+#define ParseURL WINELIB_NAME_AW(ParseUrl)
 
 #endif /* NO_SHLWAPI_PATH */
 
@@ -784,7 +783,7 @@ LPSTR WINAPI StrFormatByteSizeA (DWORD,LPSTR,UINT);
 /* A/W Pairing is broken for this function */
 LPSTR WINAPI StrFormatByteSize64A (LONGLONG,LPSTR,UINT);
 LPWSTR WINAPI StrFormatByteSizeW (LONGLONG,LPWSTR,UINT);
-#ifndef __WINESRC__
+#ifndef WINE_NO_UNICODE_MACROS
 #ifdef UNICODE
 #define StrFormatByteSize StrFormatByteSizeW
 #else
@@ -860,8 +859,8 @@ BOOL WINAPI StrTrimA(LPSTR,LPCSTR);
 BOOL WINAPI StrTrimW(LPWSTR,LPCWSTR);
 #define StrTrim WINELIB_NAME_AW(StrTrim)
 
-INT WINAPI wvnsprintfA(LPSTR,INT,LPCSTR,va_list);
-INT WINAPI wvnsprintfW(LPWSTR,INT,LPCWSTR,va_list);
+INT WINAPI wvnsprintfA(LPSTR,INT,LPCSTR,__ms_va_list);
+INT WINAPI wvnsprintfW(LPWSTR,INT,LPCWSTR,__ms_va_list);
 #define wvnsprintf WINELIB_NAME_AW(wvnsprintf)
 
 INT WINAPIV wnsprintfA(LPSTR,INT,LPCSTR, ...);
@@ -1065,7 +1064,7 @@ BOOL WINAPI IsOS(DWORD);
 #define TPS_EXECUTEIO    0x00000001
 #define TPS_LONGEXECTIME 0x00000008
 
-#include <poppack.h>
+#include <poppack.h> 
 
 #ifdef __cplusplus
 } /* extern "C" */

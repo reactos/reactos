@@ -14,6 +14,10 @@
 extern "C" {
 #endif
 
+#ifndef _INC_SETJMPEX
+#define setjmp  _setjmp
+#endif
+
 #if (defined(_X86_) && !defined(__x86_64))
 
 #define _JBLEN 16
@@ -32,7 +36,9 @@ extern "C" {
     unsigned long UnwindFunc;
     unsigned long UnwindData[6];
   } _JUMP_BUFFER;
+
 #elif defined(__ia64__)
+
   typedef _CRT_ALIGN(16) struct _SETJMP_FLOAT128 {
     __int64 LowPart;
     __int64 HighPart;
@@ -92,7 +98,9 @@ extern "C" {
     __int64 Preds;
 
   } _JUMP_BUFFER;
+
 #elif defined(__x86_64)
+
   typedef _CRT_ALIGN(16) struct _SETJMP_FLOAT128 {
     unsigned __int64 Part[2];
   } SETJMP_FLOAT128;
@@ -124,12 +132,15 @@ extern "C" {
     SETJMP_FLOAT128 Xmm14;
     SETJMP_FLOAT128 Xmm15;
   } _JUMP_BUFFER;
+
 #endif
+
 #ifndef _JMP_BUF_DEFINED
   typedef _JBTYPE jmp_buf[_JBLEN];
 #define _JMP_BUF_DEFINED
 #endif
 
+#if 0
   void * __cdecl __attribute__ ((__nothrow__)) mingw_getsp(void);
 
 #ifdef USE_MINGW_SETJMP_TWO_ARGS
@@ -148,6 +159,10 @@ extern "C" {
 #endif
   int __cdecl __attribute__ ((__nothrow__)) setjmp(jmp_buf _Buf);
 #endif
+
+#endif // 0
+
+  int __cdecl setjmp(jmp_buf _Buf);
 
   __declspec(noreturn) __attribute__ ((__nothrow__)) void __cdecl ms_longjmp(jmp_buf _Buf,int _Value)/* throw(...)*/;
   __declspec(noreturn) __attribute__ ((__nothrow__)) void __cdecl longjmp(jmp_buf _Buf,int _Value);

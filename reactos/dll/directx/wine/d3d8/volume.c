@@ -192,7 +192,7 @@ static HRESULT WINAPI IDirect3DVolume8Impl_UnlockBox(LPDIRECT3DVOLUME8 iface) {
     return hr;
 }
 
-static const IDirect3DVolume8Vtbl Direct3DVolume8_Vtbl =
+const IDirect3DVolume8Vtbl Direct3DVolume8_Vtbl =
 {
     /* IUnknown */
     IDirect3DVolume8Impl_QueryInterface,
@@ -208,42 +208,6 @@ static const IDirect3DVolume8Vtbl Direct3DVolume8_Vtbl =
     IDirect3DVolume8Impl_LockBox,
     IDirect3DVolume8Impl_UnlockBox
 };
-
-
-/* Internal function called back during the CreateVolumeTexture */
-HRESULT WINAPI D3D8CB_CreateVolume(IUnknown  *pDevice, IUnknown *pSuperior, UINT Width, UINT Height, UINT Depth,
-                                   WINED3DFORMAT  Format, WINED3DPOOL Pool, DWORD Usage,
-                                   IWineD3DVolume **ppVolume,
-                                   HANDLE   * pSharedHandle) {
-    IDirect3DVolume8Impl *object;
-    IDirect3DDevice8Impl *This = (IDirect3DDevice8Impl *)pDevice;
-    HRESULT hrc = D3D_OK;
-
-    /* Allocate the storage for the device */
-    object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IDirect3DVolume8Impl));
-    if (NULL == object) {
-        FIXME("Allocation of memory failed\n");
-        *ppVolume = NULL;
-        return D3DERR_OUTOFVIDEOMEMORY;
-    }
-
-    object->lpVtbl = &Direct3DVolume8_Vtbl;
-    object->ref = 1;
-    hrc = IWineD3DDevice_CreateVolume(This->WineD3DDevice, Width, Height, Depth, Usage, Format, 
-                                       Pool, &object->wineD3DVolume, pSharedHandle, (IUnknown *)object);
-    if (hrc != D3D_OK) {
-        /* free up object */ 
-        FIXME("(%p) call to IWineD3DDevice_CreateVolume failed\n", This);
-        HeapFree(GetProcessHeap(), 0, object);
-        *ppVolume = NULL;
-    } else {
-        *ppVolume = object->wineD3DVolume;
-        object->container = pSuperior;
-        object->forwardReference = pSuperior;
-    }
-    TRACE("(%p) Created volume %p\n", This, *ppVolume);
-    return hrc;
-}
 
 ULONG WINAPI D3D8CB_DestroyVolume(IWineD3DVolume *pVolume) {
     IDirect3DVolume8Impl* volumeParent;

@@ -50,7 +50,4 @@
 #include "mps.h"
 #include "ioapic.h"
 
-/* Helper Header */
-#include <reactos/helper.h>
-
 /* EOF */

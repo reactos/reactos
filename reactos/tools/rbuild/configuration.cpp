@@ -24,7 +24,7 @@ Configuration::Configuration ()
 {
 	Verbose = false;
 	CleanAsYouGo = false;
-	AutomaticDependencies = true;
+	Dependencies = AutomaticDependencies;
 	CheckDependenciesForModuleOnly = false;
 	CompilationUnitsEnabled = true;
 	PrecompiledHeadersEnabled = true;

@@ -10,7 +10,10 @@ typedef [context_handle] PVOID LSAPR_HANDLE;
 typedef LSAPR_HANDLE *PLSAPR_HANDLE;
 
 cpp_quote("#ifndef _WINNT_H")
-typedef LARGE_INTEGER LUID, *PLUID;
+typedef struct _LUID {
+    ULONG LowPart;
+    LONG HighPart;
+} LUID, *PLUID;
 cpp_quote("#endif")
 
 cpp_quote("#ifndef _NTDEF_")

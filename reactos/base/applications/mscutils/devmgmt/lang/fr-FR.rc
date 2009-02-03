@@ -51,7 +51,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_LICENSE "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
+  IDS_LICENSE "Ce programme est un logiciel libre ; vous pouvez le redistribuer et/ou le modifier tout en respectant les termes de la ""GNU General Public License"" publiée par la Free Software Foundation; dans sa version 2  (ou selon votre préférence) toute version ultérieure.\r\n\r\nCe programme est distribué dans l'espoir qu'il sera utile, cependant SANS GARANTIE D'AUCUNE SORTE ; sans même une garantie implicite de COMMERCIABILITÉ ou DE CONFORMITÉ À UNE UTILISATION PARTICULIÈRE. \r\n\r\nVoir la Licence Publique Générale GNU pour plus de détails. Vous devriez avoir reçu un exemplaire de la Licence Publique Générale GNU avec ce programme ; si ce n'est pas le cas, écrivez à la Free Software Foundation Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
 END
 
 STRINGTABLE DISCARDABLE

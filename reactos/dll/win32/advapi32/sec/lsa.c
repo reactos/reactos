@@ -10,12 +10,63 @@
  *      20030202 KJK compressed stubs
  *
  */
-
 #include <advapi32.h>
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 
+/* imported from wine 1.1.14 */
+static void* ADVAPI_GetDomainName(unsigned sz, unsigned ofs)
+{
+    HKEY key;
+    LONG ret;
+    BYTE* ptr = NULL;
+    UNICODE_STRING* ustr;
+
+    static const WCHAR wVNETSUP[] = {
+        'S','y','s','t','e','m','\\',
+        'C','u','r','r','e','n','t','C','o','n','t','r','o','l','S','e','t','\\',
+        'S','e','r','v','i','c','e','s','\\',
+        'V','x','D','\\','V','N','E','T','S','U','P','\0'};
+
+    ret = RegOpenKeyExW(HKEY_LOCAL_MACHINE, wVNETSUP, 0, KEY_READ, &key);
+    if (ret == ERROR_SUCCESS)
+    {
+        DWORD size = 0;
+        static const WCHAR wg[] = { 'W','o','r','k','g','r','o','u','p',0 };
+
+        ret = RegQueryValueExW(key, wg, NULL, NULL, NULL, &size);
+        if (ret == ERROR_MORE_DATA || ret == ERROR_SUCCESS)
+        {
+            ptr = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sz + size);
+            if (!ptr) return NULL;
+            ustr = (UNICODE_STRING*)(ptr + ofs);
+            ustr->MaximumLength = size;
+            ustr->Buffer = (WCHAR*)(ptr + sz);
+            ret = RegQueryValueExW(key, wg, NULL, NULL, (LPBYTE)ustr->Buffer, &size);
+            if (ret != ERROR_SUCCESS)
+            {
+                HeapFree(GetProcessHeap(), 0, ptr);
+                ptr = NULL;
+            }   
+            else ustr->Length = size - sizeof(WCHAR);
+        }
+        RegCloseKey(key);
+    }
+    if (!ptr)
+    {
+        static const WCHAR wDomain[] = {'D','O','M','A','I','N','\0'};
+        ptr = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
+                        sz + sizeof(wDomain));
+        if (!ptr) return NULL;
+        ustr = (UNICODE_STRING*)(ptr + ofs);
+        ustr->MaximumLength = sizeof(wDomain);
+        ustr->Buffer = (WCHAR*)(ptr + sz);
+        ustr->Length = sizeof(wDomain) - sizeof(WCHAR);
+        memcpy(ustr->Buffer, wDomain, sizeof(wDomain));
+    }
+    return ptr;
+}
 
 handle_t __RPC_USER
 PLSAPR_SERVER_NAME_bind(PLSAPR_SERVER_NAME pszSystemName)
@@ -82,15 +133,15 @@ LsaClose(LSA_HANDLE ObjectHandle)
 
     TRACE("LsaClose(0x%p) called\n", ObjectHandle);
 
-    _SEH2_TRY
+    RpcTryExcept
     {
         Status = LsarClose((PLSAPR_HANDLE)&ObjectHandle);
     }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
         Status = I_RpcMapWin32Status(RpcExceptionCode());
     }
-    _SEH2_END;
+    RpcEndExcept;
 
     return Status;
 }
@@ -106,15 +157,15 @@ LsaDelete(LSA_HANDLE ObjectHandle)
 
     TRACE("LsaDelete(0x%p) called\n", ObjectHandle);
 
-    _SEH2_TRY
+    RpcTryExcept
     {
         Status = LsarDelete((LSAPR_HANDLE)ObjectHandle);
     }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
         Status = I_RpcMapWin32Status(RpcExceptionCode());
     }
-    _SEH2_END;
+    RpcEndExcept;
 
     return Status;
 }
@@ -388,23 +439,23 @@ LsaOpenPolicy(
     NTSTATUS Status;
 
     TRACE("LsaOpenPolicy (%s,%p,0x%08x,%p)\n",
-          SystemName?debugstr_w(SystemName->Buffer):"(null)",
+          SystemName ? debugstr_w(SystemName->Buffer) : "(null)",
           ObjectAttributes, DesiredAccess, PolicyHandle);
 
-    _SEH2_TRY
+    RpcTryExcept
     {
         *PolicyHandle = NULL;
 
-        Status = LsarOpenPolicy(SystemName->Buffer,
+        Status = LsarOpenPolicy(SystemName ? SystemName->Buffer : NULL,
                                 (PLSAPR_OBJECT_ATTRIBUTES)ObjectAttributes,
                                 DesiredAccess,
                                 PolicyHandle);
     }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
         Status = I_RpcMapWin32Status(RpcExceptionCode());
     }
-    _SEH2_END;
+    RpcEndExcept;
 
     TRACE("LsaOpenPolicy() done (Status: 0x%08lx)\n", Status);
 
@@ -477,56 +528,60 @@ LsaQueryInformationPolicy(LSA_HANDLE PolicyHandle,
         }
         break;
         case PolicyPrimaryDomainInformation: /* 3 */
+        {
+            /* Only the domain name is valid for the local computer.
+             * All other fields are zero.
+             */
+            PPOLICY_PRIMARY_DOMAIN_INFO pinfo;
+
+            pinfo = ADVAPI_GetDomainName(sizeof(*pinfo), offsetof(POLICY_PRIMARY_DOMAIN_INFO, Name));
+
+            TRACE("setting domain to %s\n", debugstr_w(pinfo->Name.Buffer));
+
+            *Buffer = pinfo;
+        }
         case PolicyAccountDomainInformation: /* 5 */
         {
             struct di
             {
-                POLICY_PRIMARY_DOMAIN_INFO ppdi;
+                POLICY_ACCOUNT_DOMAIN_INFO info;
                 SID sid;
+                DWORD padding[3];
+                WCHAR domain[MAX_COMPUTERNAME_LENGTH + 1];
             };
             SID_IDENTIFIER_AUTHORITY localSidAuthority = {SECURITY_NT_AUTHORITY};
 
+            DWORD dwSize = MAX_COMPUTERNAME_LENGTH + 1;
             struct di * xdi = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*xdi));
-            HKEY key;
-            BOOL useDefault = TRUE;
-            LONG ret;
 
-            if ((ret = RegOpenKeyExA(HKEY_LOCAL_MACHINE,
-                    "System\\CurrentControlSet\\Services\\VxD\\VNETSUP", 0,
-                    KEY_READ, &key)) == ERROR_SUCCESS)
-            {
-                DWORD size = 0;
-                WCHAR wg[] = { 'W','o','r','k','g','r','o','u','p',0 };
+            xdi->info.DomainName.MaximumLength = dwSize * sizeof(WCHAR);
+            xdi->info.DomainName.Buffer = xdi->domain;
+            if (GetComputerNameW(xdi->info.DomainName.Buffer, &dwSize))
+                xdi->info.DomainName.Length = dwSize * sizeof(WCHAR);
 
-                ret = RegQueryValueExW(key, wg, NULL, NULL, NULL, &size);
-                if (ret == ERROR_MORE_DATA || ret == ERROR_SUCCESS)
-                {
-                    xdi->ppdi.Name.Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
-                    HEAP_ZERO_MEMORY, size);
-                    if ((ret = RegQueryValueExW(key, wg, NULL, NULL,
-                        (LPBYTE)xdi->ppdi.Name.Buffer, &size)) == ERROR_SUCCESS)
-                    {
-                        xdi->ppdi.Name.Length = (USHORT)size;
-                        useDefault = FALSE;
-                    }
-                    else
-                    {
-                        RtlFreeHeap(RtlGetProcessHeap(), 0, xdi->ppdi.Name.Buffer);
-                        xdi->ppdi.Name.Buffer = NULL;
-                    }
-                }
-                RegCloseKey(key);
-            }
-            if (useDefault)
-                RtlCreateUnicodeStringFromAsciiz(&(xdi->ppdi.Name), "DOMAIN");
-            TRACE("setting domain to \n");
+            TRACE("setting name to %s\n", debugstr_w(xdi->info.DomainName.Buffer));
 
-            xdi->ppdi.Sid = &(xdi->sid);
+            xdi->info.DomainSid = &xdi->sid;
             xdi->sid.Revision = SID_REVISION;
             xdi->sid.SubAuthorityCount = 1;
             xdi->sid.IdentifierAuthority = localSidAuthority;
             xdi->sid.SubAuthority[0] = SECURITY_LOCAL_SYSTEM_RID;
+
             *Buffer = xdi;
+        }
+        break;
+        case  PolicyDnsDomainInformation:	/* 12 (0xc) */
+        {
+            /* Only the domain name is valid for the local computer.
+             * All other fields are zero.
+             */
+            PPOLICY_DNS_DOMAIN_INFO pinfo;
+
+            pinfo = ADVAPI_GetDomainName(sizeof(*pinfo), offsetof(POLICY_DNS_DOMAIN_INFO, Name));
+
+            TRACE("setting domain to %s\n", debugstr_w(pinfo->Name.Buffer));
+
+            *Buffer = pinfo;
         }
         break;
         case PolicyAuditLogInformation:
@@ -537,7 +592,6 @@ LsaQueryInformationPolicy(LSA_HANDLE PolicyHandle,
         case PolicyModificationInformation:
         case PolicyAuditFullSetInformation:
         case PolicyAuditFullQueryInformation:
-        case PolicyDnsDomainInformation:
         case PolicyEfsInformation:
         {
             FIXME("category not implemented\n");

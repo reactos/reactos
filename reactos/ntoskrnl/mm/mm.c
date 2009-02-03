@@ -34,6 +34,7 @@ MiSyncForProcessAttach(IN PKTHREAD Thread,
     PETHREAD Ethread = CONTAINING_RECORD(Thread, ETHREAD, Tcb);
 
     /* Hack Sync because Mm is broken */
+    MmUpdatePageDir(Process, Ethread, sizeof(ETHREAD));
     MmUpdatePageDir(Process, Ethread->ThreadsProcess, sizeof(EPROCESS));
     MmUpdatePageDir(Process,
                     (PVOID)Thread->StackLimit,

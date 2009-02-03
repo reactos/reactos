@@ -108,11 +108,11 @@ static BOOL CRYPT_QueryContextObject(DWORD dwObjectType, const void *pvObject,
         /* Cert, CRL, and CTL contexts can't be "embedded" in a file, so
          * just read the file directly
          */
-        ret = CRYPT_ReadBlobFromFile((LPCWSTR)pvObject, &fileBlob);
+        ret = CRYPT_ReadBlobFromFile(pvObject, &fileBlob);
         blob = &fileBlob;
         break;
     case CERT_QUERY_OBJECT_BLOB:
-        blob = (const CERT_BLOB *)pvObject;
+        blob = pvObject;
         ret = TRUE;
         break;
     default:
@@ -198,11 +198,11 @@ static BOOL CRYPT_QuerySerializedContextObject(DWORD dwObjectType,
         /* Cert, CRL, and CTL contexts can't be "embedded" in a file, so
          * just read the file directly
          */
-        ret = CRYPT_ReadBlobFromFile((LPCWSTR)pvObject, &fileBlob);
+        ret = CRYPT_ReadBlobFromFile(pvObject, &fileBlob);
         blob = &fileBlob;
         break;
     case CERT_QUERY_OBJECT_BLOB:
-        blob = (const CERT_BLOB *)pvObject;
+        blob = pvObject;
         ret = TRUE;
         break;
     default:
@@ -287,7 +287,7 @@ static BOOL CRYPT_QuerySerializedStoreObject(DWORD dwObjectType,
  const void *pvObject, DWORD *pdwMsgAndCertEncodingType, DWORD *pdwContentType,
  HCERTSTORE *phCertStore, HCRYPTMSG *phMsg)
 {
-    LPCWSTR fileName = (LPCWSTR)pvObject;
+    LPCWSTR fileName = pvObject;
     HANDLE file;
     BOOL ret = FALSE;
 
@@ -450,11 +450,11 @@ static BOOL CRYPT_QueryMessageObject(DWORD dwObjectType, const void *pvObject,
         /* This isn't an embedded PKCS7 message, so just read the file
          * directly
          */
-        ret = CRYPT_ReadBlobFromFile((LPCWSTR)pvObject, &fileBlob);
+        ret = CRYPT_ReadBlobFromFile(pvObject, &fileBlob);
         blob = &fileBlob;
         break;
     case CERT_QUERY_OBJECT_BLOB:
-        blob = (const CERT_BLOB *)pvObject;
+        blob = pvObject;
         ret = TRUE;
         break;
     default:
@@ -583,7 +583,7 @@ static BOOL CRYPT_QueryEmbeddedMessageObject(DWORD dwObjectType,
     GUID subject;
     BOOL ret = FALSE;
 
-    TRACE("%s\n", debugstr_w((LPCWSTR)pvObject));
+    TRACE("%s\n", debugstr_w(pvObject));
 
     if (dwObjectType != CERT_QUERY_OBJECT_FILE)
     {
@@ -592,11 +592,11 @@ static BOOL CRYPT_QueryEmbeddedMessageObject(DWORD dwObjectType,
         SetLastError(E_INVALIDARG);
         return FALSE;
     }
-    file = CreateFileW((LPCWSTR)pvObject, GENERIC_READ, FILE_SHARE_READ,
+    file = CreateFileW(pvObject, GENERIC_READ, FILE_SHARE_READ,
      NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (file != INVALID_HANDLE_VALUE)
     {
-        ret = CryptSIPRetrieveSubjectGuid((LPCWSTR)pvObject, file, &subject);
+        ret = CryptSIPRetrieveSubjectGuid(pvObject, file, &subject);
         if (ret)
         {
             SIP_DISPATCH_INFO sip;
@@ -614,7 +614,7 @@ static BOOL CRYPT_QueryEmbeddedMessageObject(DWORD dwObjectType,
                 subjectInfo.cbSize = sizeof(subjectInfo);
                 subjectInfo.pgSubjectType = &subject;
                 subjectInfo.hFile = file;
-                subjectInfo.pwsFileName = (LPCWSTR)pvObject;
+                subjectInfo.pwsFileName = pvObject;
                 ret = sip.pfGet(&subjectInfo, &encodingType, 0, &blob.cbData,
                  NULL);
                 if (ret)
@@ -1623,7 +1623,7 @@ static BOOL WINAPI CRYPT_FormatAuthorityInfoAccess(DWORD dwCertEncodingType,
             else
             {
                 *pcbFormat = bytesNeeded;
-                strcpyW((LPWSTR)pbFormat, infoNotAvailable);
+                strcpyW(pbFormat, infoNotAvailable);
             }
         }
         else
@@ -2021,7 +2021,7 @@ static BOOL WINAPI CRYPT_FormatCRLDistPoints(DWORD dwCertEncodingType,
             else
             {
                 *pcbFormat = bytesNeeded;
-                strcpyW((LPWSTR)pbFormat, infoNotAvailable);
+                strcpyW(pbFormat, infoNotAvailable);
             }
         }
         else

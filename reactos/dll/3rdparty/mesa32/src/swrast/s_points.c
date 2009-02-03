@@ -23,11 +23,11 @@
  */
 
 
-#include "glheader.h"
-#include "colormac.h"
-#include "context.h"
-#include "macros.h"
-#include "texstate.h"
+#include "main/glheader.h"
+#include "main/colormac.h"
+#include "main/context.h"
+#include "main/macros.h"
+#include "main/texstate.h"
 #include "s_context.h"
 #include "s_feedback.h"
 #include "s_points.h"
@@ -129,13 +129,13 @@ sprite_point(GLcontext *ctx, const SWvertex *vert)
       s = 0.0;
       dsdx = 1.0 / size;
       if (ctx->Point.SpriteOrigin == GL_LOWER_LEFT) {
-         t0 = 0.0;
          dtdy = 1.0 / size;
+         t0 = 0.5 * dtdy;
       }
       else {
          /* GL_UPPER_LEFT */
-         t0 = 1.0;
          dtdy = -1.0 / size;
+         t0 = 1.0 + 0.5 * dtdy;
       }
 
       ATTRIB_LOOP_BEGIN

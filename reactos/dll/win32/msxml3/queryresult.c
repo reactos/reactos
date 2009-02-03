@@ -308,7 +308,7 @@ static HRESULT queryresult_get_dispid(IUnknown *iface, BSTR name, DWORD flags, D
 {
     queryresult *This = impl_from_IXMLDOMNodeList( (IXMLDOMNodeList*)iface );
     WCHAR *ptr;
-    DWORD idx=0;
+    int idx = 0;
 
     for(ptr = name; *ptr && isdigitW(*ptr); ptr++)
         idx = idx*10 + (*ptr-'0');
@@ -340,7 +340,7 @@ static HRESULT queryresult_invoke(IUnknown *iface, DISPID id, LCID lcid, WORD fl
             IXMLDOMNode *disp = NULL;
 
             queryresult_get_item(XMLQUERYRES(This), id - MSXML_DISPID_CUSTOM_MIN, &disp);
-            V_DISPATCH(res) = (IDispatch*)&disp;
+            V_DISPATCH(res) = (IDispatch*)disp;
             break;
         }
         default:
@@ -349,6 +349,8 @@ static HRESULT queryresult_invoke(IUnknown *iface, DISPID id, LCID lcid, WORD fl
             break;
         }
     }
+
+    TRACE("ret %p\n", V_DISPATCH(res));
 
     return S_OK;
 }

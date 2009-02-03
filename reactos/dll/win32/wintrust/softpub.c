@@ -795,7 +795,7 @@ HRESULT WINAPI GenericChainCertificateTrust(CRYPT_PROVIDER_DATA *data)
 {
     BOOL ret;
     WTD_GENERIC_CHAIN_POLICY_DATA *policyData =
-     (WTD_GENERIC_CHAIN_POLICY_DATA *)data->pWintrustData->pPolicyCallbackData;
+     data->pWintrustData->pPolicyCallbackData;
 
     TRACE("(%p)\n", data);
 
@@ -961,7 +961,7 @@ HRESULT WINAPI GenericChainFinalProv(CRYPT_PROVIDER_DATA *data)
 {
     HRESULT err = NO_ERROR; /* not a typo, MS confused the types */
     WTD_GENERIC_CHAIN_POLICY_DATA *policyData =
-     (WTD_GENERIC_CHAIN_POLICY_DATA *)data->pWintrustData->pPolicyCallbackData;
+     data->pWintrustData->pPolicyCallbackData;
 
     TRACE("(%p)\n", data);
 

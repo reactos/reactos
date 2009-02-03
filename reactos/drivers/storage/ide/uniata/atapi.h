@@ -1067,8 +1067,8 @@ AtapiFindController(
 
 ULONG
 AtapiParseArgumentString(
-    IN PCHAR String,
-    IN PCHAR KeyWord
+    IN PCCH String,
+    IN PCCH KeyWord
     );
 
 BOOLEAN
@@ -1206,15 +1206,15 @@ AtapiRegCheckDevValue(
     IN PVOID HwDeviceExtension,
     IN ULONG chan,
     IN ULONG dev,
-    IN PWSTR Name,
+    IN PCWSTR Name,
     IN ULONG Default
     );
 
 extern ULONG
 AtapiRegCheckParameterValue(
     IN PVOID HwDeviceExtension,
-    IN PWSTR PathSuffix,
-    IN PWSTR Name,
+    IN PCWSTR PathSuffix,
+    IN PCWSTR Name,
     IN ULONG Default
     );
 
@@ -1224,7 +1224,7 @@ extern "C"
 VOID
 _cdecl
 _PrintNtConsole(
-    PCHAR DebugMessage,
+    PCCH DebugMessage,
     ...
     );
 

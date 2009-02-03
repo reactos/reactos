@@ -404,7 +404,7 @@ POLYGONFILL_FillScanLineAlternate(
   PDC dc,
   int ScanLine,
   FILL_EDGE* ActiveHead,
-  BITMAPOBJ *BitmapObj,
+  SURFACE *psurf,
   BRUSHOBJ *BrushObj,
   MIX RopMode )
 {
@@ -430,7 +430,7 @@ POLYGONFILL_FillScanLineAlternate(
       BoundRect.right = x2;
 
       //DPRINT("Fill Line (%d, %d) to (%d, %d)\n",x1, ScanLine, x2, ScanLine);
-      IntEngLineTo(&BitmapObj->SurfObj,
+      IntEngLineTo(&psurf->SurfObj,
                    dc->CombinedClip,
                    BrushObj,
                    x1,
@@ -452,7 +452,7 @@ POLYGONFILL_FillScanLineWinding(
   PDC dc,
   int ScanLine,
   FILL_EDGE* ActiveHead,
-  BITMAPOBJ *BitmapObj,
+  SURFACE *psurf,
   BRUSHOBJ *BrushObj,
   MIX RopMode )
 {
@@ -503,7 +503,7 @@ POLYGONFILL_FillScanLineWinding(
 	BoundRect.right = x2;
 
 	//DPRINT("Fill Line (%d, %d) to (%d, %d)\n",x1, ScanLine, x2, ScanLine);
-	IntEngLineTo(&BitmapObj->SurfObj,
+	IntEngLineTo(&psurf->SurfObj,
                      dc->CombinedClip,
                      BrushObj,
                      x1,
@@ -526,7 +526,7 @@ POLYGONFILL_FillScanLineWinding(
   BoundRect.right = x2;
 
   //DPRINT("Fill Line (%d, %d) to (%d, %d)\n",x1, ScanLine, x2, ScanLine);
-  IntEngLineTo(&BitmapObj->SurfObj,
+  IntEngLineTo(&psurf->SurfObj,
                dc->CombinedClip,
                BrushObj,
                x1,
@@ -550,7 +550,7 @@ BOOL
 APIENTRY
 FillPolygon(
   PDC dc,
-  BITMAPOBJ *BitmapObj,
+  SURFACE *psurf,
   BRUSHOBJ *BrushObj,
   MIX RopMode,
   CONST PPOINT Points,
@@ -566,7 +566,7 @@ FillPolygon(
     PDC dc,
     int ScanLine,
     FILL_EDGE* ActiveHead,
-    BITMAPOBJ *BitmapObj,
+    SURFACE *psurf,
     BRUSHOBJ *BrushObj,
     MIX RopMode );
 
@@ -592,7 +592,7 @@ FillPolygon(
   {
     POLYGONFILL_BuildActiveList(ScanLine, list, &ActiveHead);
     //DEBUG_PRINT_ACTIVE_EDGELIST(ActiveHead);
-    FillScanLine ( dc, ScanLine, ActiveHead, BitmapObj, BrushObj, RopMode );
+    FillScanLine ( dc, ScanLine, ActiveHead, psurf, BrushObj, RopMode );
   }
 
   /* Free Edge List. If any are left. */

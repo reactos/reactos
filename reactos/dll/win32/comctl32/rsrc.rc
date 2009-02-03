@@ -30,9 +30,9 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #define WINE_FILEDESCRIPTION_STR "Wine Common Controls"
 #define WINE_FILENAME_STR "comctl32.dll"
 #define WINE_FILEVERSION COMCTL32_VERSION, COMCTL32_VERSION_MINOR, 4704, 1100
-#define WINE_FILEVERSIONSTR "5.81"
+#define WINE_FILEVERSION_STR "5.81"
 #define WINE_PRODUCTVERSION WINE_FILEVERSION
-#define WINE_PRODUCTVERSION_STR WINE_FILEVERSIONSTR
+#define WINE_PRODUCTVERSION_STR WINE_FILEVERSION_STR
 
 #include "wine/wine_common_ver.rc"
 
@@ -91,7 +91,6 @@ IDI_TT_ERROR_SM ICON LOADONCALL DISCARDABLE idi_tt_error_sm.ico
  */
 
 #include "comctl_Bg.rc"
-#include "comctl_Cn.rc"
 #include "comctl_Cs.rc"
 #include "comctl_De.rc"
 #include "comctl_El.rc"
@@ -114,3 +113,4 @@ IDI_TT_ERROR_SM ICON LOADONCALL DISCARDABLE idi_tt_error_sm.ico
 #include "comctl_Th.rc"
 #include "comctl_Tr.rc"
 #include "comctl_Uk.rc"
+#include "comctl_Zh.rc"

@@ -916,7 +916,7 @@ HRESULT WINAPI CloseThemeFile(HTHEMEFILE hThemeFile)
  * char b[] = "\0"; where \0 can be one or more of any character, makes no difference
  *   the theme is applied smoothly (screen does not flicker)
  * char *b = "\0" or NULL; where \0 can be zero or more of any character, makes no difference
- *   the function fails returning invalid parameter...very strange
+ *   the function fails returning invalid parameter... very strange
  */
 HRESULT WINAPI ApplyTheme(HTHEMEFILE hThemeFile, char *unknown, HWND hWnd)
 {

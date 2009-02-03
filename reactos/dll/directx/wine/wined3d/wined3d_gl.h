@@ -866,6 +866,7 @@ void (WINE_GLAPI *glDepthFunc) (GLenum func);
 void (WINE_GLAPI *glDepthMask) (GLboolean flag);
 void (WINE_GLAPI *glDepthRange) (GLclampd nearParam, GLclampd farParam);
 void (WINE_GLAPI *glDisable) (GLenum cap);
+void (WINE_GLAPI *glDisableWINE) (GLenum cap);
 void (WINE_GLAPI *glDisableClientState) (GLenum array);
 void (WINE_GLAPI *glDrawArrays) (GLenum mode, GLint first, GLsizei count);
 void (WINE_GLAPI *glDrawBuffer) (GLenum mode);
@@ -875,6 +876,7 @@ void (WINE_GLAPI *glEdgeFlag) (GLboolean flag);
 void (WINE_GLAPI *glEdgeFlagPointer) (GLsizei stride, const GLvoid* pointer);
 void (WINE_GLAPI *glEdgeFlagv) (const GLboolean* flag);
 void (WINE_GLAPI *glEnable) (GLenum cap);
+void (WINE_GLAPI *glEnableWINE) (GLenum cap);
 void (WINE_GLAPI *glEnableClientState) (GLenum array);
 void (WINE_GLAPI *glEnd) ();
 void (WINE_GLAPI *glEndList) ();
@@ -2037,6 +2039,39 @@ typedef void (WINE_GLAPI * PGLFNGLTEXSUBIMAGE3DEXTPROC) (GLenum target, GLint le
 #define GL_RGBA16F_ARB                    0x881A
 #define GL_RGB16F_ARB                     0x881B
 #endif
+/* GL_ARB_texture_rg */
+#ifndef GL_ARB_texture_rg
+#define GL_RG                             0x8227
+#define GL_RG_INTEGER                     0x8228
+#define GL_R8                             0x8229
+#define GL_R16                            0x822A
+#define GL_RG8                            0x822B
+#define GL_RG16                           0x822C
+#define GL_R16F                           0x822D
+#define GL_R32F                           0x822E
+#define GL_RG16F                          0x822F
+#define GL_RG32F                          0x8230
+#define GL_R8I                            0x8231
+#define GL_R8UI                           0x8232
+#define GL_R16I                           0x8233
+#define GL_R16UI                          0x8234
+#define GL_R32I                           0x8235
+#define GL_R32UI                          0x8236
+#define GL_RG8I                           0x8237
+#define GL_RG8UI                          0x8238
+#define GL_RG16I                          0x8239
+#define GL_RG16UI                         0x823A
+#define GL_RG32I                          0x823B
+#define GL_RG32UI                         0x823C
+#endif
+/* GL_EXT_texture_swizzle */
+#ifndef GL_EXT_texture_swizzle
+#define GL_TEXTURE_SWIZZLE_R_EXT          0x8E42
+#define GL_TEXTURE_SWIZZLE_G_EXT          0x8E43
+#define GL_TEXTURE_SWIZZLE_B_EXT          0x8E44
+#define GL_TEXTURE_SWIZZLE_A_EXT          0x8E45
+#define GL_TEXTURE_SWIZZLE_RGBA_EXT       0x8E46
+#endif
 /* GL_ARB_half_float_pixel */
 #ifndef GL_ARB_half_float_pixel
 #define GL_ARB_half_float_pixel
@@ -2288,10 +2323,10 @@ typedef void (WINE_GLAPI * PGLFNBLENDEQUATIONSEPARATEEXTPROC) (GLenum modeRGB, G
 #define GL_FOG_COORDINATE_ARRAY_POINTER_EXT     0x8456
 #define GL_FOG_COORDINATE_ARRAY_EXT             0x8457
 #endif /* GL_EXT_fog_coord */
-typedef void (WINE_GLAPI * PGLFNGLFOGCOORDFEXTPROC) (GLfloat intesity);
-typedef void (WINE_GLAPI * PGLFNGLFOGCOORDFVEXTPROC) (GLfloat intesity);
-typedef void (WINE_GLAPI * PGLFNGLFOGCOORDDEXTPROC) (GLfloat intesity);
-typedef void (WINE_GLAPI * PGLFNGLFOGCOORDDVEXTPROC) (GLfloat intesity);
+typedef void (WINE_GLAPI * PGLFNGLFOGCOORDFEXTPROC) (GLfloat coord);
+typedef void (WINE_GLAPI * PGLFNGLFOGCOORDFVEXTPROC) (const GLfloat *coord);
+typedef void (WINE_GLAPI * PGLFNGLFOGCOORDDEXTPROC) (GLdouble coord);
+typedef void (WINE_GLAPI * PGLFNGLFOGCOORDDVEXTPROC) (const GLdouble *coord);
 typedef void (WINE_GLAPI * PGLFNGLFOGCOORDPOINTEREXTPROC) (GLenum type, GLsizei stride, GLvoid *data);
 /* GL_ARB_shader_objects (GLSL) */
 #ifndef GL_ARB_shader_objects
@@ -3317,6 +3352,7 @@ typedef enum _GL_SupportedExt {
   ARB_TEXTURE_MIRRORED_REPEAT,
   ARB_TEXTURE_NON_POWER_OF_TWO,
   ARB_TEXTURE_RECTANGLE,
+  ARB_TEXTURE_RG,
   ARB_VERTEX_PROGRAM,
   ARB_VERTEX_BLEND,
   ARB_VERTEX_BUFFER_OBJECT,
@@ -3347,7 +3383,9 @@ typedef enum _GL_SupportedExt {
   EXT_TEXTURE_ENV_COMBINE,
   EXT_TEXTURE_ENV_DOT3,
   EXT_TEXTURE_SRGB,
+  EXT_TEXTURE_SWIZZLE,
   EXT_GPU_PROGRAM_PARAMETERS,
+  EXT_VERTEX_ARRAY_BGRA,
   /* NVIDIA */
   NV_HALF_FLOAT,
   NV_FOG_DISTANCE,
@@ -3471,7 +3509,7 @@ typedef enum _GL_SupportedExt {
     USE_GL_FUNC(PGLFNGLFOGCOORDFEXTPROC,                            glFogCoordfEXT,                             EXT_FOG_COORD,          NULL )\
     USE_GL_FUNC(PGLFNGLFOGCOORDFVEXTPROC,                           glFogCoordfvEXT,                            EXT_FOG_COORD,          NULL )\
     USE_GL_FUNC(PGLFNGLFOGCOORDDEXTPROC,                            glFogCoorddEXT,                             EXT_FOG_COORD,          NULL )\
-    USE_GL_FUNC(PGLFNGLFOGCOORDDVEXTPROC,                           glFogCoordvEXT,                             EXT_FOG_COORD,          NULL )\
+    USE_GL_FUNC(PGLFNGLFOGCOORDDVEXTPROC,                           glFogCoorddvEXT,                            EXT_FOG_COORD,          NULL )\
     USE_GL_FUNC(PGLFNGLFOGCOORDPOINTEREXTPROC,                      glFogCoordPointerEXT,                       EXT_FOG_COORD,          NULL )\
     /* GL_EXT_framebuffer_object */ \
     USE_GL_FUNC(PGLFNGLISRENDERBUFFEREXTPROC,                       glIsRenderbufferEXT,                        EXT_FRAMEBUFFER_OBJECT, NULL )\
@@ -3579,8 +3617,8 @@ typedef enum _GL_SupportedExt {
     USE_GL_FUNC(WINED3D_PFNGLUNIFORMMATRIX2FVARBPROC,               glUniformMatrix2fvARB,                      ARB_SHADER_OBJECTS,     NULL )\
     USE_GL_FUNC(WINED3D_PFNGLUNIFORMMATRIX3FVARBPROC,               glUniformMatrix3fvARB,                      ARB_SHADER_OBJECTS,     NULL )\
     USE_GL_FUNC(WINED3D_PFNGLUNIFORMMATRIX4FVARBPROC,               glUniformMatrix4fvARB,                      ARB_SHADER_OBJECTS,     NULL )\
-    USE_GL_FUNC(WINED3D_PFNGLGETUNIFORMFVARBPROC,                   glGetUniform4fvARB,                         ARB_SHADER_OBJECTS,     NULL )\
-    USE_GL_FUNC(WINED3D_PFNGLGETUNIFORMIVARBPROC,                   glGetUniform4ivARB,                         ARB_SHADER_OBJECTS,     NULL )\
+    USE_GL_FUNC(WINED3D_PFNGLGETUNIFORMFVARBPROC,                   glGetUniformfvARB,                          ARB_SHADER_OBJECTS,     NULL )\
+    USE_GL_FUNC(WINED3D_PFNGLGETUNIFORMIVARBPROC,                   glGetUniformivARB,                          ARB_SHADER_OBJECTS,     NULL )\
     USE_GL_FUNC(WINED3D_PFNGLGETINFOLOGARBPROC,                     glGetInfoLogARB,                            ARB_SHADER_OBJECTS,     NULL )\
     USE_GL_FUNC(WINED3D_PFNGLUSEPROGRAMOBJECTARBPROC,               glUseProgramObjectARB,                      ARB_SHADER_OBJECTS,     NULL )\
     USE_GL_FUNC(WINED3D_PFNGLCREATESHADEROBJECTARBPROC,             glCreateShaderObjectARB,                    ARB_SHADER_OBJECTS,     NULL )\
@@ -3678,8 +3716,8 @@ typedef enum _GL_SupportedExt {
     USE_GL_FUNC(PGLXFNGETVIDEOSYNCSGIPROC,                          glXGetVideoSyncSGI,                         SGI_VIDEO_SYNC,         NULL )\
     USE_GL_FUNC(PGLXFNWAITVIDEOSYNCSGIPROC,                         glXWaitVideoSyncSGI,                        SGI_VIDEO_SYNC,         NULL )\
     /* GL_APPLE_flush_render */ \
-    USE_GL_FUNC(PGLFNFLUSHRENDERAPPLEPROC,                          glFlushRenderApple,                         APPLE_FLUSH_RENDER,     NULL )\
-    USE_GL_FUNC(PGLFNFINISHRENDERAPPLEPROC,                         glFinishRenderApple,                        APPLE_FLUSH_RENDER,     NULL )\
+    USE_GL_FUNC(PGLFNFLUSHRENDERAPPLEPROC,                          glFlushRenderAPPLE,                         APPLE_FLUSH_RENDER,     NULL )\
+    USE_GL_FUNC(PGLFNFINISHRENDERAPPLEPROC,                         glFinishRenderAPPLE,                        APPLE_FLUSH_RENDER,     NULL )\
     /* GL_EXT_gpu_program_parameters */ \
     USE_GL_FUNC(PGLFNPROGRAMENVPARAMETERS4FVEXTPROC,                glProgramEnvParameters4fvEXT,            EXT_GPU_PROGRAM_PARAMETERS,NULL )\
     USE_GL_FUNC(PGLFNPROGRAMLOCALPARAMETERS4FVEXTPROC,              glProgramLocalParameters4fvEXT,          EXT_GPU_PROGRAM_PARAMETERS,NULL )\
@@ -3817,6 +3855,7 @@ typedef struct _WINED3DGLTYPE {
     int         d3dType;
     GLint       size;
     GLenum      glType;
+    GLint       format;
     GLboolean   normalized;
     int         typesize;
 } WINED3DGLTYPE;

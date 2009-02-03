@@ -167,17 +167,6 @@ DestroyCursor(HCURSOR hCursor)
 /*
  * @implemented
  */
-BOOL
-WINAPI
-GetClipCursor(LPRECT lpRect)
-{
-    return NtUserGetClipCursor(lpRect);
-}
-
-
-/*
- * @implemented
- */
 HCURSOR
 WINAPI
 GetCursor(VOID)
@@ -188,17 +177,6 @@ GetCursor(VOID)
         return ci.hCursor;
     else
         return (HCURSOR)0;
-}
-
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
-GetCursorInfo(PCURSORINFO pci)
-{
-    return (BOOL)NtUserGetCursorInfo(pci);
 }
 
 
@@ -291,28 +269,6 @@ LoadCursorW(HINSTANCE hInstance,
                       0,
                       0,
                       LR_SHARED | LR_DEFAULTSIZE));
-}
-
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
-ClipCursor(CONST RECT *lpRect)
-{
-    return NtUserClipCursor((RECT *)lpRect);
-}
-
-
-/*
- * @implemented
- */
-HCURSOR
-WINAPI
-SetCursor(HCURSOR hCursor)
-{
-    return NtUserSetCursor(hCursor);
 }
 
 

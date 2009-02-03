@@ -15,6 +15,8 @@
 #define NDEBUG
 #include <debug.h>
 
+#define UNICODIZE1(x) L##x
+#define UNICODIZE(x) UNICODIZE1(x)
 
 /* FUNCTIONS ******************************************************************/
 

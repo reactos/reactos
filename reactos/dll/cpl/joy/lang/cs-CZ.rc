@@ -1,6 +1,6 @@
 /* FILE:        dll/cpl/joy/lang/cs-CZ.rc
  * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:     2008-07-27
+ * UPDATED:     2009-01-10
  */
  
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
@@ -13,7 +13,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_CPLSYSTEM, -1, 7, 7, 20, 20
     LTEXT "Tato nastavení pomáhají konfigurovat herní ovladaèe nainstalované na tomto poèítaèi.", -1, 33, 7, 214, 20, NOT WS_GROUP
-    GROUPBOX "Nai&nstalované ovladaèe her", -1, 7, 34, 238, 117
+    GROUPBOX "Nai&nstalované herní ovladaèe", -1, 7, 34, 238, 117
     CONTROL "List1", IDC_CONTROLLER_LIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x0000808D, 14, 44, 224, 80
     PUSHBUTTON "&Pøidat...", IDC_ADD_BUTTON, 35, 129, 65, 14
     PUSHBUTTON "&Odebrat", IDC_REMOVE_BUTTON, 104, 129, 65, 14, WS_DISABLED

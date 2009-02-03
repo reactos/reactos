@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.0.3
+ * Version:  7.3
  *
- * Copyright (C) 1999-2007  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2008  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -35,15 +35,15 @@
  */
 
 
-#include "glheader.h"
-#include "colormac.h"
-#include "context.h"
+#include "main/glheader.h"
+#include "main/colormac.h"
+#include "main/context.h"
 #include "program.h"
 #include "prog_execute.h"
 #include "prog_instruction.h"
 #include "prog_parameter.h"
 #include "prog_print.h"
-#include "shader/slang/slang_library_noise.h"
+#include "prog_noise.h"
 
 
 /* debug predicate */
@@ -76,56 +76,52 @@ static const GLfloat ZeroVec[4] = { 0.0F, 0.0F, 0.0F, 0.0F };
  * source register.
  */
 static INLINE const GLfloat *
-get_register_pointer(const struct prog_src_register *source,
-                     const struct gl_program_machine *machine)
+get_src_register_pointer(const struct prog_src_register *source,
+                         const struct gl_program_machine *machine)
 {
+   const struct gl_program *prog = machine->CurProgram;
+   GLint reg = source->Index;
+
    if (source->RelAddr) {
-      const GLint reg = source->Index + machine->AddressReg[0][0];
-      if (source->File == PROGRAM_ENV_PARAM)
-         if (reg < 0 || reg >= MAX_PROGRAM_ENV_PARAMS)
-            return ZeroVec;
-         else
-            return machine->EnvParams[reg];
-      else {
-         const struct gl_program_parameter_list *params;
-         ASSERT(source->File == PROGRAM_LOCAL_PARAM ||
-                source->File == PROGRAM_CONSTANT ||
-                source->File == PROGRAM_STATE_VAR ||
-                source->File == PROGRAM_UNIFORM);
-         params = machine->CurProgram->Parameters;
-         if (reg < 0 || reg >= params->NumParameters)
-            return ZeroVec;
-         else
-            return params->ParameterValues[reg];
+      /* add address register value to src index/offset */
+      reg += machine->AddressReg[0][0];
+      if (reg < 0) {
+         return ZeroVec;
       }
    }
 
    switch (source->File) {
    case PROGRAM_TEMPORARY:
-      ASSERT(source->Index < MAX_PROGRAM_TEMPS);
-      return machine->Temporaries[source->Index];
+      if (reg >= MAX_PROGRAM_TEMPS)
+         return ZeroVec;
+      return machine->Temporaries[reg];
 
    case PROGRAM_INPUT:
-      if (machine->CurProgram->Target == GL_VERTEX_PROGRAM_ARB) {
-         ASSERT(source->Index < VERT_ATTRIB_MAX);
-         return machine->VertAttribs[source->Index];
+      if (prog->Target == GL_VERTEX_PROGRAM_ARB) {
+         if (reg >= VERT_ATTRIB_MAX)
+            return ZeroVec;
+         return machine->VertAttribs[reg];
       }
       else {
-         ASSERT(source->Index < FRAG_ATTRIB_MAX);
-         return machine->Attribs[source->Index][machine->CurElement];
+         if (reg >= FRAG_ATTRIB_MAX)
+            return ZeroVec;
+         return machine->Attribs[reg][machine->CurElement];
       }
 
    case PROGRAM_OUTPUT:
-      ASSERT(source->Index < MAX_PROGRAM_OUTPUTS);
-      return machine->Outputs[source->Index];
+      if (reg >= MAX_PROGRAM_OUTPUTS)
+         return ZeroVec;
+      return machine->Outputs[reg];
 
    case PROGRAM_LOCAL_PARAM:
-      ASSERT(source->Index < MAX_PROGRAM_LOCAL_PARAMS);
-      return machine->CurProgram->LocalParams[source->Index];
+      if (reg >= MAX_PROGRAM_LOCAL_PARAMS)
+         return ZeroVec;
+      return machine->CurProgram->LocalParams[reg];
 
    case PROGRAM_ENV_PARAM:
-      ASSERT(source->Index < MAX_PROGRAM_ENV_PARAMS);
-      return machine->EnvParams[source->Index];
+      if (reg >= MAX_PROGRAM_ENV_PARAMS)
+         return ZeroVec;
+      return machine->EnvParams[reg];
 
    case PROGRAM_STATE_VAR:
       /* Fallthrough */
@@ -134,17 +130,60 @@ get_register_pointer(const struct prog_src_register *source,
    case PROGRAM_UNIFORM:
       /* Fallthrough */
    case PROGRAM_NAMED_PARAM:
-      ASSERT(source->Index <
-             (GLint) machine->CurProgram->Parameters->NumParameters);
-      return machine->CurProgram->Parameters->ParameterValues[source->Index];
+      if (reg >= (GLint) prog->Parameters->NumParameters)
+         return ZeroVec;
+      return prog->Parameters->ParameterValues[reg];
 
    default:
       _mesa_problem(NULL,
-                    "Invalid input register file %d in get_register_pointer()",
-                    source->File);
+         "Invalid src register file %d in get_src_register_pointer()",
+         source->File);
       return NULL;
    }
 }
+
+
+/**
+ * Return a pointer to the 4-element float vector specified by the given
+ * destination register.
+ */
+static INLINE GLfloat *
+get_dst_register_pointer(const struct prog_dst_register *dest,
+                         struct gl_program_machine *machine)
+{
+   static GLfloat dummyReg[4];
+   GLint reg = dest->Index;
+
+   if (dest->RelAddr) {
+      /* add address register value to src index/offset */
+      reg += machine->AddressReg[0][0];
+      if (reg < 0) {
+         return dummyReg;
+      }
+   }
+
+   switch (dest->File) {
+   case PROGRAM_TEMPORARY:
+      if (reg >= MAX_PROGRAM_TEMPS)
+         return dummyReg;
+      return machine->Temporaries[reg];
+
+   case PROGRAM_OUTPUT:
+      if (reg >= MAX_PROGRAM_OUTPUTS)
+         return dummyReg;
+      return machine->Outputs[reg];
+
+   case PROGRAM_WRITE_ONLY:
+      return dummyReg;
+
+   default:
+      _mesa_problem(NULL,
+         "Invalid dest register file %d in get_dst_register_pointer()",
+         dest->File);
+      return NULL;
+   }
+}
+
 
 
 #if FEATURE_MESA_program_debug
@@ -160,12 +199,12 @@ _mesa_get_program_register(GLcontext *ctx, enum register_file file,
                            GLuint index, GLfloat val[4])
 {
    if (CurrentMachine) {
-      struct prog_src_register src;
-      const GLfloat *reg;
-      src.File = file;
-      src.Index = index;
-      reg = get_register_pointer(&src, CurrentMachine);
-      COPY_4V(val, reg);
+      struct prog_src_register srcReg;
+      const GLfloat *src;
+      srcReg.File = file;
+      srcReg.Index = index;
+      src = get_src_register_pointer(&srcReg, CurrentMachine);
+      COPY_4V(val, src);
    }
 }
 #endif /* FEATURE_MESA_program_debug */
@@ -179,7 +218,7 @@ static void
 fetch_vector4(const struct prog_src_register *source,
               const struct gl_program_machine *machine, GLfloat result[4])
 {
-   const GLfloat *src = get_register_pointer(source, machine);
+   const GLfloat *src = get_src_register_pointer(source, machine);
    ASSERT(src);
 
    if (source->Swizzle == SWIZZLE_NOOP) {
@@ -219,6 +258,37 @@ fetch_vector4(const struct prog_src_register *source,
 
 
 /**
+ * Fetch a 4-element uint vector from the given source register.
+ * Apply swizzling but not negation/abs.
+ */
+static void
+fetch_vector4ui(const struct prog_src_register *source,
+                const struct gl_program_machine *machine, GLuint result[4])
+{
+   const GLuint *src = (GLuint *) get_src_register_pointer(source, machine);
+   ASSERT(src);
+
+   if (source->Swizzle == SWIZZLE_NOOP) {
+      /* no swizzling */
+      COPY_4V(result, src);
+   }
+   else {
+      ASSERT(GET_SWZ(source->Swizzle, 0) <= 3);
+      ASSERT(GET_SWZ(source->Swizzle, 1) <= 3);
+      ASSERT(GET_SWZ(source->Swizzle, 2) <= 3);
+      ASSERT(GET_SWZ(source->Swizzle, 3) <= 3);
+      result[0] = src[GET_SWZ(source->Swizzle, 0)];
+      result[1] = src[GET_SWZ(source->Swizzle, 1)];
+      result[2] = src[GET_SWZ(source->Swizzle, 2)];
+      result[3] = src[GET_SWZ(source->Swizzle, 3)];
+   }
+
+   /* Note: no NegateBase, Abs, NegateAbs here */
+}
+
+
+
+/**
  * Fetch the derivative with respect to X or Y for the given register.
  * XXX this currently only works for fragment program input attribs.
  */
@@ -228,7 +298,8 @@ fetch_vector4_deriv(GLcontext * ctx,
                     const struct gl_program_machine *machine,
                     char xOrY, GLfloat result[4])
 {
-   if (source->File == PROGRAM_INPUT && source->Index < machine->NumDeriv) {
+   if (source->File == PROGRAM_INPUT &&
+       source->Index < (GLint) machine->NumDeriv) {
       const GLint col = machine->CurElement;
       const GLfloat w = machine->Attribs[FRAG_ATTRIB_WPOS][col][3];
       const GLfloat invQ = 1.0f / w;
@@ -284,7 +355,7 @@ static void
 fetch_vector1(const struct prog_src_register *source,
               const struct gl_program_machine *machine, GLfloat result[4])
 {
-   const GLfloat *src = get_register_pointer(source, machine);
+   const GLfloat *src = get_src_register_pointer(source, machine);
    ASSERT(src);
 
    result[0] = src[GET_SWZ(source->Swizzle, 0)];
@@ -399,29 +470,11 @@ static void
 store_vector4(const struct prog_instruction *inst,
               struct gl_program_machine *machine, const GLfloat value[4])
 {
-   const struct prog_dst_register *dest = &(inst->DstReg);
+   const struct prog_dst_register *dstReg = &(inst->DstReg);
    const GLboolean clamp = inst->SaturateMode == SATURATE_ZERO_ONE;
-   GLfloat *dstReg;
-   GLfloat dummyReg[4];
+   GLuint writeMask = dstReg->WriteMask;
    GLfloat clampedValue[4];
-   GLuint writeMask = dest->WriteMask;
-
-   switch (dest->File) {
-   case PROGRAM_OUTPUT:
-      ASSERT(dest->Index < MAX_PROGRAM_OUTPUTS);
-      dstReg = machine->Outputs[dest->Index];
-      break;
-   case PROGRAM_TEMPORARY:
-      ASSERT(dest->Index < MAX_PROGRAM_TEMPS);
-      dstReg = machine->Temporaries[dest->Index];
-      break;
-   case PROGRAM_WRITE_ONLY:
-      dstReg = dummyReg;
-      return;
-   default:
-      _mesa_problem(NULL, "bad register file in store_vector4(fp)");
-      return;
-   }
+   GLfloat *dst = get_dst_register_pointer(dstReg, machine);
 
 #if 0
    if (value[0] > 1.0e10 ||
@@ -439,38 +492,38 @@ store_vector4(const struct prog_instruction *inst,
       value = clampedValue;
    }
 
-   if (dest->CondMask != COND_TR) {
+   if (dstReg->CondMask != COND_TR) {
       /* condition codes may turn off some writes */
       if (writeMask & WRITEMASK_X) {
-         if (!test_cc(machine->CondCodes[GET_SWZ(dest->CondSwizzle, 0)],
-                      dest->CondMask))
+         if (!test_cc(machine->CondCodes[GET_SWZ(dstReg->CondSwizzle, 0)],
+                      dstReg->CondMask))
             writeMask &= ~WRITEMASK_X;
       }
       if (writeMask & WRITEMASK_Y) {
-         if (!test_cc(machine->CondCodes[GET_SWZ(dest->CondSwizzle, 1)],
-                      dest->CondMask))
+         if (!test_cc(machine->CondCodes[GET_SWZ(dstReg->CondSwizzle, 1)],
+                      dstReg->CondMask))
             writeMask &= ~WRITEMASK_Y;
       }
       if (writeMask & WRITEMASK_Z) {
-         if (!test_cc(machine->CondCodes[GET_SWZ(dest->CondSwizzle, 2)],
-                      dest->CondMask))
+         if (!test_cc(machine->CondCodes[GET_SWZ(dstReg->CondSwizzle, 2)],
+                      dstReg->CondMask))
             writeMask &= ~WRITEMASK_Z;
       }
       if (writeMask & WRITEMASK_W) {
-         if (!test_cc(machine->CondCodes[GET_SWZ(dest->CondSwizzle, 3)],
-                      dest->CondMask))
+         if (!test_cc(machine->CondCodes[GET_SWZ(dstReg->CondSwizzle, 3)],
+                      dstReg->CondMask))
             writeMask &= ~WRITEMASK_W;
       }
    }
 
    if (writeMask & WRITEMASK_X)
-      dstReg[0] = value[0];
+      dst[0] = value[0];
    if (writeMask & WRITEMASK_Y)
-      dstReg[1] = value[1];
+      dst[1] = value[1];
    if (writeMask & WRITEMASK_Z)
-      dstReg[2] = value[2];
+      dst[2] = value[2];
    if (writeMask & WRITEMASK_W)
-      dstReg[3] = value[3];
+      dst[3] = value[3];
 
    if (inst->CondUpdate) {
       if (writeMask & WRITEMASK_X)
@@ -493,6 +546,71 @@ store_vector4(const struct prog_instruction *inst,
 
 
 /**
+ * Store 4 uints into a register.  Observe the set-condition-code flags.
+ */
+static void
+store_vector4ui(const struct prog_instruction *inst,
+                struct gl_program_machine *machine, const GLuint value[4])
+{
+   const struct prog_dst_register *dstReg = &(inst->DstReg);
+   GLuint writeMask = dstReg->WriteMask;
+   GLuint *dst = (GLuint *) get_dst_register_pointer(dstReg, machine);
+
+   if (dstReg->CondMask != COND_TR) {
+      /* condition codes may turn off some writes */
+      if (writeMask & WRITEMASK_X) {
+         if (!test_cc(machine->CondCodes[GET_SWZ(dstReg->CondSwizzle, 0)],
+                      dstReg->CondMask))
+            writeMask &= ~WRITEMASK_X;
+      }
+      if (writeMask & WRITEMASK_Y) {
+         if (!test_cc(machine->CondCodes[GET_SWZ(dstReg->CondSwizzle, 1)],
+                      dstReg->CondMask))
+            writeMask &= ~WRITEMASK_Y;
+      }
+      if (writeMask & WRITEMASK_Z) {
+         if (!test_cc(machine->CondCodes[GET_SWZ(dstReg->CondSwizzle, 2)],
+                      dstReg->CondMask))
+            writeMask &= ~WRITEMASK_Z;
+      }
+      if (writeMask & WRITEMASK_W) {
+         if (!test_cc(machine->CondCodes[GET_SWZ(dstReg->CondSwizzle, 3)],
+                      dstReg->CondMask))
+            writeMask &= ~WRITEMASK_W;
+      }
+   }
+
+   if (writeMask & WRITEMASK_X)
+      dst[0] = value[0];
+   if (writeMask & WRITEMASK_Y)
+      dst[1] = value[1];
+   if (writeMask & WRITEMASK_Z)
+      dst[2] = value[2];
+   if (writeMask & WRITEMASK_W)
+      dst[3] = value[3];
+
+   if (inst->CondUpdate) {
+      if (writeMask & WRITEMASK_X)
+         machine->CondCodes[0] = generate_cc(value[0]);
+      if (writeMask & WRITEMASK_Y)
+         machine->CondCodes[1] = generate_cc(value[1]);
+      if (writeMask & WRITEMASK_Z)
+         machine->CondCodes[2] = generate_cc(value[2]);
+      if (writeMask & WRITEMASK_W)
+         machine->CondCodes[3] = generate_cc(value[3]);
+#if DEBUG_PROG
+      printf("CondCodes=(%s,%s,%s,%s) for:\n",
+             _mesa_condcode_string(machine->CondCodes[0]),
+             _mesa_condcode_string(machine->CondCodes[1]),
+             _mesa_condcode_string(machine->CondCodes[2]),
+             _mesa_condcode_string(machine->CondCodes[3]));
+#endif
+   }
+}
+
+
+
+/**
  * Execute the given vertex/fragment program.
  *
  * \param ctx  rendering context
@@ -507,7 +625,7 @@ _mesa_execute_program(GLcontext * ctx,
 {
    const GLuint numInst = program->NumInstructions;
    const GLuint maxExec = 10000;
-   GLint pc, numExec = 0;
+   GLuint pc, numExec = 0;
 
    machine->CurProgram = program;
 
@@ -571,11 +689,23 @@ _mesa_execute_program(GLcontext * ctx,
             }
          }
          break;
+      case OPCODE_AND:     /* bitwise AND */
+         {
+            GLuint a[4], b[4], result[4];
+            fetch_vector4ui(&inst->SrcReg[0], machine, a);
+            fetch_vector4ui(&inst->SrcReg[1], machine, b);
+            result[0] = a[0] & b[0];
+            result[1] = a[1] & b[1];
+            result[2] = a[2] & b[2];
+            result[3] = a[3] & b[3];
+            store_vector4ui(inst, machine, result);
+         }
+         break;
       case OPCODE_ARL:
          {
             GLfloat t[4];
             fetch_vector4(&inst->SrcReg[0], machine, t);
-            machine->AddressReg[0][0] = (GLint) FLOORF(t[0]);
+            machine->AddressReg[0][0] = IFLOOR(t[0]);
          }
          break;
       case OPCODE_BGNLOOP:
@@ -649,6 +779,33 @@ _mesa_execute_program(GLcontext * ctx,
             store_vector4(inst, machine, result);
          }
          break;
+      case OPCODE_DP2:
+         {
+            GLfloat a[4], b[4], result[4];
+            fetch_vector4(&inst->SrcReg[0], machine, a);
+            fetch_vector4(&inst->SrcReg[1], machine, b);
+            result[0] = result[1] = result[2] = result[3] = DOT2(a, b);
+            store_vector4(inst, machine, result);
+            if (DEBUG_PROG) {
+               printf("DP2 %g = (%g %g) . (%g %g)\n",
+                      result[0], a[0], a[1], b[0], b[1]);
+            }
+         }
+         break;
+      case OPCODE_DP2A:
+         {
+            GLfloat a[4], b[4], c, result[4];
+            fetch_vector4(&inst->SrcReg[0], machine, a);
+            fetch_vector4(&inst->SrcReg[1], machine, b);
+            fetch_vector1(&inst->SrcReg[1], machine, &c);
+            result[0] = result[1] = result[2] = result[3] = DOT2(a, b) + c;
+            store_vector4(inst, machine, result);
+            if (DEBUG_PROG) {
+               printf("DP2A %g = (%g %g) . (%g %g) + %g\n",
+                      result[0], a[0], a[1], b[0], b[1], c);
+            }
+         }
+         break;
       case OPCODE_DP3:
          {
             GLfloat a[4], b[4], result[4];
@@ -681,8 +838,7 @@ _mesa_execute_program(GLcontext * ctx,
             GLfloat a[4], b[4], result[4];
             fetch_vector4(&inst->SrcReg[0], machine, a);
             fetch_vector4(&inst->SrcReg[1], machine, b);
-            result[0] = result[1] = result[2] = result[3] =
-               a[0] * b[0] + a[1] * b[1] + a[2] * b[2] + b[3];
+            result[0] = result[1] = result[2] = result[3] = DOT3(a, b) + b[3];
             store_vector4(inst, machine, result);
          }
          break;
@@ -789,17 +945,6 @@ _mesa_execute_program(GLcontext * ctx,
       case OPCODE_ENDIF:
          /* nothing */
          break;
-      case OPCODE_INT:         /* float to int */
-         {
-            GLfloat a[4], result[4];
-            fetch_vector4(&inst->SrcReg[0], machine, a);
-            result[0] = (GLfloat) (GLint) a[0];
-            result[1] = (GLfloat) (GLint) a[1];
-            result[2] = (GLfloat) (GLint) a[2];
-            result[3] = (GLfloat) (GLint) a[3];
-            store_vector4(inst, machine, result);
-         }
-         break;
       case OPCODE_KIL_NV:      /* NV_f_p only (conditional) */
          if (eval_condition(machine, inst)) {
             return GL_FALSE;
@@ -818,7 +963,10 @@ _mesa_execute_program(GLcontext * ctx,
          {
             GLfloat a[4], result[4];
             fetch_vector1(&inst->SrcReg[0], machine, a);
-            result[0] = result[1] = result[2] = result[3] = LOG2(a[0]);
+	    /* The fast LOG2 macro doesn't meet the precision requirements.
+	     */
+            result[0] = result[1] = result[2] = result[3] =
+		(log(a[0]) * 1.442695F);
             store_vector4(inst, machine, result);
          }
          break;
@@ -877,7 +1025,11 @@ _mesa_execute_program(GLcontext * ctx,
                   GLfloat mantissa = FREXPF(t[0], &exponent);
                   q[0] = (GLfloat) (exponent - 1);
                   q[1] = (GLfloat) (2.0 * mantissa); /* map [.5, 1) -> [1, 2) */
-                  q[2] = (GLfloat) (q[0] + LOG2(q[1]));
+
+		  /* The fast LOG2 macro doesn't meet the precision
+		   * requirements.
+		   */
+                  q[2] = (log(t[0]) * 1.442695F);
                }
             }
             else {
@@ -992,7 +1144,8 @@ _mesa_execute_program(GLcontext * ctx,
             fetch_vector1(&inst->SrcReg[0], machine, a);
             result[0] =
                result[1] =
-               result[2] = result[3] = _slang_library_noise1(a[0]);
+               result[2] =
+               result[3] = _mesa_noise1(a[0]);
             store_vector4(inst, machine, result);
          }
          break;
@@ -1002,7 +1155,7 @@ _mesa_execute_program(GLcontext * ctx,
             fetch_vector4(&inst->SrcReg[0], machine, a);
             result[0] =
                result[1] =
-               result[2] = result[3] = _slang_library_noise2(a[0], a[1]);
+               result[2] = result[3] = _mesa_noise2(a[0], a[1]);
             store_vector4(inst, machine, result);
          }
          break;
@@ -1013,7 +1166,7 @@ _mesa_execute_program(GLcontext * ctx,
             result[0] =
                result[1] =
                result[2] =
-               result[3] = _slang_library_noise3(a[0], a[1], a[2]);
+               result[3] = _mesa_noise3(a[0], a[1], a[2]);
             store_vector4(inst, machine, result);
          }
          break;
@@ -1024,45 +1177,100 @@ _mesa_execute_program(GLcontext * ctx,
             result[0] =
                result[1] =
                result[2] =
-               result[3] = _slang_library_noise4(a[0], a[1], a[2], a[3]);
+               result[3] = _mesa_noise4(a[0], a[1], a[2], a[3]);
             store_vector4(inst, machine, result);
          }
          break;
       case OPCODE_NOP:
          break;
-      case OPCODE_PK2H:        /* pack two 16-bit floats in one 32-bit float */
+      case OPCODE_NOT:         /* bitwise NOT */
+         {
+            GLuint a[4], result[4];
+            fetch_vector4ui(&inst->SrcReg[0], machine, a);
+            result[0] = ~a[0];
+            result[1] = ~a[1];
+            result[2] = ~a[2];
+            result[3] = ~a[3];
+            store_vector4ui(inst, machine, result);
+         }
+         break;
+      case OPCODE_NRM3:        /* 3-component normalization */
          {
             GLfloat a[4], result[4];
+            GLfloat tmp;
+            fetch_vector4(&inst->SrcReg[0], machine, a);
+            tmp = a[0] * a[0] + a[1] * a[1] + a[2] * a[2];
+            if (tmp != 0.0F)
+               tmp = INV_SQRTF(tmp);
+            result[0] = tmp * a[0];
+            result[1] = tmp * a[1];
+            result[2] = tmp * a[2];
+            result[3] = 0.0;  /* undefined, but prevent valgrind warnings */
+            store_vector4(inst, machine, result);
+         }
+         break;
+      case OPCODE_NRM4:        /* 4-component normalization */
+         {
+            GLfloat a[4], result[4];
+            GLfloat tmp;
+            fetch_vector4(&inst->SrcReg[0], machine, a);
+            tmp = a[0] * a[0] + a[1] * a[1] + a[2] * a[2] + a[3] * a[3];
+            if (tmp != 0.0F)
+               tmp = INV_SQRTF(tmp);
+            result[0] = tmp * a[0];
+            result[1] = tmp * a[1];
+            result[2] = tmp * a[2];
+            result[3] = tmp * a[3];
+            store_vector4(inst, machine, result);
+         }
+         break;
+      case OPCODE_OR:          /* bitwise OR */
+         {
+            GLuint a[4], b[4], result[4];
+            fetch_vector4ui(&inst->SrcReg[0], machine, a);
+            fetch_vector4ui(&inst->SrcReg[1], machine, b);
+            result[0] = a[0] | b[0];
+            result[1] = a[1] | b[1];
+            result[2] = a[2] | b[2];
+            result[3] = a[3] | b[3];
+            store_vector4ui(inst, machine, result);
+         }
+         break;
+      case OPCODE_PK2H:        /* pack two 16-bit floats in one 32-bit float */
+         {
+            GLfloat a[4];
+            GLuint result[4];
             GLhalfNV hx, hy;
-            GLuint *rawResult = (GLuint *) result;
-            GLuint twoHalves;
             fetch_vector4(&inst->SrcReg[0], machine, a);
             hx = _mesa_float_to_half(a[0]);
             hy = _mesa_float_to_half(a[1]);
-            twoHalves = hx | (hy << 16);
-            rawResult[0] = rawResult[1] = rawResult[2] = rawResult[3]
-               = twoHalves;
-            store_vector4(inst, machine, result);
+            result[0] =
+            result[1] =
+            result[2] =
+            result[3] = hx | (hy << 16);
+            store_vector4ui(inst, machine, result);
          }
          break;
       case OPCODE_PK2US:       /* pack two GLushorts into one 32-bit float */
          {
-            GLfloat a[4], result[4];
-            GLuint usx, usy, *rawResult = (GLuint *) result;
+            GLfloat a[4];
+            GLuint result[4], usx, usy;
             fetch_vector4(&inst->SrcReg[0], machine, a);
             a[0] = CLAMP(a[0], 0.0F, 1.0F);
             a[1] = CLAMP(a[1], 0.0F, 1.0F);
             usx = IROUND(a[0] * 65535.0F);
             usy = IROUND(a[1] * 65535.0F);
-            rawResult[0] = rawResult[1] = rawResult[2] = rawResult[3]
-               = usx | (usy << 16);
-            store_vector4(inst, machine, result);
+            result[0] =
+            result[1] =
+            result[2] =
+            result[3] = usx | (usy << 16);
+            store_vector4ui(inst, machine, result);
          }
          break;
       case OPCODE_PK4B:        /* pack four GLbytes into one 32-bit float */
          {
-            GLfloat a[4], result[4];
-            GLuint ubx, uby, ubz, ubw, *rawResult = (GLuint *) result;
+            GLfloat a[4];
+            GLuint result[4], ubx, uby, ubz, ubw;
             fetch_vector4(&inst->SrcReg[0], machine, a);
             a[0] = CLAMP(a[0], -128.0F / 127.0F, 1.0F);
             a[1] = CLAMP(a[1], -128.0F / 127.0F, 1.0F);
@@ -1072,15 +1280,17 @@ _mesa_execute_program(GLcontext * ctx,
             uby = IROUND(127.0F * a[1] + 128.0F);
             ubz = IROUND(127.0F * a[2] + 128.0F);
             ubw = IROUND(127.0F * a[3] + 128.0F);
-            rawResult[0] = rawResult[1] = rawResult[2] = rawResult[3]
-               = ubx | (uby << 8) | (ubz << 16) | (ubw << 24);
-            store_vector4(inst, machine, result);
+            result[0] =
+            result[1] =
+            result[2] =
+            result[3] = ubx | (uby << 8) | (ubz << 16) | (ubw << 24);
+            store_vector4ui(inst, machine, result);
          }
          break;
       case OPCODE_PK4UB:       /* pack four GLubytes into one 32-bit float */
          {
-            GLfloat a[4], result[4];
-            GLuint ubx, uby, ubz, ubw, *rawResult = (GLuint *) result;
+            GLfloat a[4];
+            GLuint result[4], ubx, uby, ubz, ubw;
             fetch_vector4(&inst->SrcReg[0], machine, a);
             a[0] = CLAMP(a[0], 0.0F, 1.0F);
             a[1] = CLAMP(a[1], 0.0F, 1.0F);
@@ -1090,9 +1300,11 @@ _mesa_execute_program(GLcontext * ctx,
             uby = IROUND(255.0F * a[1]);
             ubz = IROUND(255.0F * a[2]);
             ubw = IROUND(255.0F * a[3]);
-            rawResult[0] = rawResult[1] = rawResult[2] = rawResult[3]
-               = ubx | (uby << 8) | (ubz << 16) | (ubw << 24);
-            store_vector4(inst, machine, result);
+            result[0] =
+            result[1] =
+            result[2] =
+            result[3] = ubx | (uby << 8) | (ubz << 16) | (ubw << 24);
+            store_vector4ui(inst, machine, result);
          }
          break;
       case OPCODE_POW:
@@ -1288,6 +1500,17 @@ _mesa_execute_program(GLcontext * ctx,
             }
          }
          break;
+      case OPCODE_SSG:         /* set sign (-1, 0 or +1) */
+         {
+            GLfloat a[4], result[4];
+            fetch_vector4(&inst->SrcReg[0], machine, a);
+            result[0] = (GLfloat) ((a[0] > 0.0F) - (a[0] < 0.0F));
+            result[1] = (GLfloat) ((a[1] > 0.0F) - (a[1] < 0.0F));
+            result[2] = (GLfloat) ((a[2] > 0.0F) - (a[2] < 0.0F));
+            result[3] = (GLfloat) ((a[3] > 0.0F) - (a[3] < 0.0F));
+            store_vector4(inst, machine, result);
+         }
+         break;
       case OPCODE_STR:         /* set true, operands ignored */
          {
             static const GLfloat result[4] = { 1.0F, 1.0F, 1.0F, 1.0F };
@@ -1314,7 +1537,7 @@ _mesa_execute_program(GLcontext * ctx,
       case OPCODE_SWZ:         /* extended swizzle */
          {
             const struct prog_src_register *source = &inst->SrcReg[0];
-            const GLfloat *src = get_register_pointer(source, machine);
+            const GLfloat *src = get_src_register_pointer(source, machine);
             GLfloat result[4];
             GLuint i;
             for (i = 0; i < 4; i++) {
@@ -1425,6 +1648,17 @@ _mesa_execute_program(GLcontext * ctx,
             store_vector4(inst, machine, color);
          }
          break;
+      case OPCODE_TRUNC:       /* truncate toward zero */
+         {
+            GLfloat a[4], result[4];
+            fetch_vector4(&inst->SrcReg[0], machine, a);
+            result[0] = (GLfloat) (GLint) a[0];
+            result[1] = (GLfloat) (GLint) a[1];
+            result[2] = (GLfloat) (GLint) a[2];
+            result[3] = (GLfloat) (GLint) a[3];
+            store_vector4(inst, machine, result);
+         }
+         break;
       case OPCODE_UP2H:        /* unpack two 16-bit floats */
          {
             GLfloat a[4], result[4];
@@ -1473,6 +1707,18 @@ _mesa_execute_program(GLcontext * ctx,
             result[2] = ((rawBits[0] >> 16) & 0xff) / 255.0F;
             result[3] = ((rawBits[0] >> 24) & 0xff) / 255.0F;
             store_vector4(inst, machine, result);
+         }
+         break;
+      case OPCODE_XOR:         /* bitwise XOR */
+         {
+            GLuint a[4], b[4], result[4];
+            fetch_vector4ui(&inst->SrcReg[0], machine, a);
+            fetch_vector4ui(&inst->SrcReg[1], machine, b);
+            result[0] = a[0] ^ b[0];
+            result[1] = a[1] ^ b[1];
+            result[2] = a[2] ^ b[2];
+            result[3] = a[3] ^ b[3];
+            store_vector4ui(inst, machine, result);
          }
          break;
       case OPCODE_XPD:         /* cross product */

@@ -548,10 +548,7 @@ static VOID UpdateFileSize(PFILE_OBJECT FileObject, PVFATFCB Fcb, ULONG Size, UL
    Fcb->RFCB.FileSize.QuadPart = Size;
    Fcb->RFCB.ValidDataLength.QuadPart = Size;
 
-   if (FileObject->SectionObjectPointer->SharedCacheMap != NULL)
-   {
-      CcSetFileSizes(FileObject, (PCC_FILE_SIZES)&Fcb->RFCB.AllocationSize);
-   }
+   CcSetFileSizes(FileObject, (PCC_FILE_SIZES)&Fcb->RFCB.AllocationSize);
 }
 
 NTSTATUS
@@ -692,6 +689,17 @@ VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
   }
   else if (NewSize + ClusterSize <= Fcb->RFCB.AllocationSize.u.LowPart)
   {
+
+    DPRINT("Check for the ability to set file size\n");
+    if (!MmCanFileBeTruncated
+      (FileObject->SectionObjectPointer,
+      (PLARGE_INTEGER)AllocationSize))
+    {
+      DPRINT("Couldn't set file size!\n");
+      return STATUS_USER_MAPPED_FILE;
+    }
+    DPRINT("Can set file size\n");
+
     AllocSizeChanged = TRUE;
     /* FIXME: Use the cached cluster/offset better way. */
     Fcb->LastCluster = Fcb->LastOffset = 0;
@@ -890,6 +898,26 @@ NTSTATUS VfatSetInformation(PVFAT_IRP_CONTEXT IrpContext)
 
   DPRINT("FileInformationClass %d\n", FileInformationClass);
   DPRINT("SystemBuffer %p\n", SystemBuffer);
+
+  /* Special: We should call MmCanFileBeTruncated here to determine if changing
+     the file size would be allowed.  If not, we bail with the right error.
+     We must do this before acquiring the lock. */
+  if (FileInformationClass == FileEndOfFileInformation)
+  {
+      DPRINT("Check for the ability to set file size\n");
+      if (!MmCanFileBeTruncated
+         (IrpContext->FileObject->SectionObjectPointer,
+          (PLARGE_INTEGER)SystemBuffer))
+      {
+         DPRINT("Couldn't set file size!\n");
+         IrpContext->Irp->IoStatus.Status = STATUS_USER_MAPPED_FILE;
+         IrpContext->Irp->IoStatus.Information = 0;
+         IoCompleteRequest(IrpContext->Irp, IO_NO_INCREMENT);
+         VfatFreeIrpContext(IrpContext);
+         return STATUS_USER_MAPPED_FILE;
+      }
+      DPRINT("Can set file size\n");
+  }
 
   if (!(FCB->Flags & FCB_IS_PAGE_FILE))
     {

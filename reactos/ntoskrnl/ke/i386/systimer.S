@@ -294,9 +294,6 @@ _KeUpdateSystemTime@0:
     mov ds:[USER_SHARED_DATA+USER_SHARED_DATA_TICK_COUNT], ecx
     mov ds:[USER_SHARED_DATA+USER_SHARED_DATA_TICK_COUNT+4], edx
 
-    /* FIXME: HACK */
-    mov ds:[USER_SHARED_DATA], ecx
-
     /* Get hand index and entry into the table */
     and eax, TIMER_TABLE_SIZE - 1
     shl eax, 4

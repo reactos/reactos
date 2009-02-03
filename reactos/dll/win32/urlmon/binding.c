@@ -1183,6 +1183,8 @@ static HRESULT WINAPI InternetProtocolSink_ReportProgress(IInternetProtocolSink 
     case BINDSTATUS_DIRECTBIND:
         This->report_mime = FALSE;
         break;
+    case BINDSTATUS_ACCEPTRANGES:
+        break;
     default:
         FIXME("Unhandled status code %d\n", ulStatusCode);
         return E_NOTIMPL;
@@ -1532,7 +1534,8 @@ static BOOL is_urlmon_protocol(LPCWSTR url)
         {wszMk,     sizeof(wszMk)    /sizeof(WCHAR)}
     };
 
-    int i, len = strlenW(url);
+    unsigned int i;
+    int len = lstrlenW(url);
 
     for(i=0; i < sizeof(protocol_list)/sizeof(protocol_list[0]); i++) {
         if(len >= protocol_list[i].len

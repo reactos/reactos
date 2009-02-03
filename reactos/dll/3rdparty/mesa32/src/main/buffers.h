@@ -37,16 +37,6 @@
 
 
 extern void GLAPIENTRY
-_mesa_ClearIndex( GLfloat c );
-
-extern void GLAPIENTRY
-_mesa_ClearColor( GLclampf red, GLclampf green,
-                  GLclampf blue, GLclampf alpha );
-
-extern void GLAPIENTRY
-_mesa_Clear( GLbitfield mask );
-
-extern void GLAPIENTRY
 _mesa_DrawBuffer( GLenum mode );
 
 extern void GLAPIENTRY
@@ -62,25 +52,5 @@ _mesa_readbuffer(GLcontext *ctx, GLenum buffer, GLint bufferIndex);
 extern void GLAPIENTRY
 _mesa_ReadBuffer( GLenum mode );
 
-extern void GLAPIENTRY
-_mesa_ResizeBuffersMESA( void );
-
-extern void GLAPIENTRY
-_mesa_Scissor( GLint x, GLint y, GLsizei width, GLsizei height );
-
-extern void GLAPIENTRY
-_mesa_SampleCoverageARB(GLclampf value, GLboolean invert);
-
-extern void 
-_mesa_init_scissor(GLcontext *ctx);
-
-extern void 
-_mesa_init_multisample(GLcontext *ctx);
-
-extern void
-_mesa_set_scissor(GLcontext *ctx, 
-                  GLint x, GLint y, GLsizei width, GLsizei height);
-
-extern void _mesa_resizebuffers( GLcontext *ctx );
 
 #endif

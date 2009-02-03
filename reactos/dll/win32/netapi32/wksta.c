@@ -98,7 +98,7 @@ static void wprint_mac(WCHAR* buffer, int len, const MIB_IFROW *ifRow)
         else
             buffer[2*i+1] = (WCHAR)((val & 0xf) + '0');
     }
-    buffer[2*i]=(WCHAR)0;
+    buffer[2*i]=0;
 }
 
 /* Theoretically this could be too short, except that MS defines
@@ -441,6 +441,19 @@ NET_API_STATUS WINAPI NetWkstaUserGetInfo(LMSTR reserved, DWORD level,
         return ERROR_INVALID_LEVEL;
     }
     return NERR_Success;
+}
+
+/************************************************************
+ *                NetWkstaUserEnum  (NETAPI32.@)
+ */
+NET_API_STATUS WINAPI
+NetWkstaUserEnum(LMSTR servername, DWORD level, LPBYTE* bufptr,
+                 DWORD prefmaxlen, LPDWORD entriesread,
+                 LPDWORD totalentries, LPDWORD resumehandle)
+{
+    FIXME("(%s, %d, %p, %d, %p, %p, %p): stub!\n", debugstr_w(servername),
+          level, bufptr, prefmaxlen, entriesread, totalentries, resumehandle);
+    return ERROR_INVALID_PARAMETER;
 }
 
 /************************************************************

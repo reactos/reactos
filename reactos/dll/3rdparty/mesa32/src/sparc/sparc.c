@@ -31,7 +31,7 @@
 
 #ifdef USE_SPARC_ASM
 
-#include "context.h"
+#include "main/context.h"
 #include "math/m_xform.h"
 #include "tnl/t_context.h"
 

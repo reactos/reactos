@@ -114,7 +114,7 @@
 	if	%Text; #IMPLIED
 	ifnot	%Text; #IMPLIED
 	name	%CIdentifier; #IMPLIED
-	type	(buildtool|staticlibrary|objectlibrary|embeddedtypelib|kernel|kernelmodedll|kernelmodedriver|nativedll|nativecui|win32dll|win32ocx|win32cui|win32gui|win32scr|bootloader|bootsector|elfexecutable|idlheader|iso|isoregtest|liveiso|liveisoregtest|test|rpcserver|rpcclient|alias) #REQUIRED
+	type	(buildtool|staticlibrary|objectlibrary|embeddedtypelib|kernel|kernelmodedll|kernelmodedriver|nativedll|nativecui|win32dll|win32ocx|win32cui|win32gui|win32scr|bootloader|bootsector|elfexecutable|idlheader|iso|isoregtest|liveiso|liveisoregtest|test|rpcserver|rpcclient|rpcproxy|alias) #REQUIRED
 	extension	%CIdentifier; #IMPLIED
 	entrypoint	%CIdentifier; #IMPLIED
 	baseaddress	%CIdentifier; #IMPLIED
@@ -137,6 +137,7 @@
 <!ATTLIST project
 	name      (ReactOS|Project) #REQUIRED
 	makefile  %Text;  #REQUIRED
+	allowwarnings	(true|false) "false"
 	xmlns:xi  %Text;  #FIXED "http://www.w3.org/2001/XInclude"
 >
 

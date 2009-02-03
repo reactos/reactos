@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
-<module name="d3d9" type="win32dll" installbase="system32" installname="d3d9.dll" allowwarnings ="true" unicode="yes">
+<module name="d3d9" type="win32dll" installbase="system32" installname="d3d9.dll" unicode="yes">
 	<importlibrary definition="d3d9.spec" />
 	<include base="d3d9">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
