@@ -805,7 +805,6 @@ NtGdiStretchBlt(
 	   IntGdiSelectBrush(DCDest,Dc_Attr->hbrush);
 
 	/* Offset the destination and source by the origin of their DCs. */
-	// FIXME: ptlDCOrig is in device coordinates!
 	XOriginDest += DCDest->ptlDCOrig.x;
 	YOriginDest += DCDest->ptlDCOrig.y;
 	if (UsesSource)
@@ -818,11 +817,16 @@ NtGdiStretchBlt(
 	DestRect.top    = YOriginDest;
 	DestRect.right  = XOriginDest+WidthDest;
 	DestRect.bottom = YOriginDest+HeightDest;
+	IntLPtoDP(DCDest, (LPPOINT)&DestRect, 2);
 
 	SourceRect.left   = XOriginSrc;
 	SourceRect.top    = YOriginSrc;
 	SourceRect.right  = XOriginSrc+WidthSrc;
 	SourceRect.bottom = YOriginSrc+HeightSrc;
+	if (UsesSource)
+	{
+		IntLPtoDP(DCSrc, (LPPOINT)&SourceRect, 2);
+	}
 
 	/* Determine surfaces to be used in the bitblt */
 	BitmapDest = SURFACE_LockSurface(DCDest->w.hBitmap);
