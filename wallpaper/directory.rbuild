@@ -1,3 +1,3 @@
 <group>
-	<installfile>lake.bmp</installfile>
+	<installfile>Angelus.02_ROSWP.bmp</installfile>
 </group>
