@@ -39,7 +39,40 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             /* fill destination with brush */
             brush = CreateHatchBrush(HS_DIAGCROSS, RGB(255,0,0));
             SelectObject(hdc, brush);
-            PatBlt(hdc, 0, 0, 4*bitmap.bmWidth, 4*bitmap.bmHeight, PATCOPY);
+            PatBlt(hdc, 30, 0, 4*bitmap.bmWidth*2, 4*bitmap.bmHeight, PATCOPY);
+
+            /* hatched brushes */
+            INT l = 66;
+            brush = CreateHatchBrush(HS_DIAGCROSS, RGB(255,0,0));
+            SelectObject(hdc, brush);
+            PatBlt(hdc, 0, 0, 30, l, PATCOPY);
+            DeleteObject(brush);
+
+            brush = CreateHatchBrush(HS_CROSS, RGB(255,0,0));
+            SelectObject(hdc, brush);
+            PatBlt(hdc, 0, 1*l, 30, l, PATCOPY);
+            DeleteObject(brush);
+
+            brush = CreateHatchBrush(HS_FDIAGONAL, RGB(255,0,0));
+            SelectObject(hdc, brush);
+            PatBlt(hdc, 0, 2*l, 30, l, PATCOPY);
+            DeleteObject(brush);
+
+            brush = CreateHatchBrush(HS_BDIAGONAL, RGB(255,0,0));
+            SelectObject(hdc, brush);
+            PatBlt(hdc, 0, 3*l, 30, l, PATCOPY);
+            DeleteObject(brush);
+
+            brush = CreateHatchBrush(HS_VERTICAL, RGB(255,0,0));
+            SelectObject(hdc, brush);  
+            PatBlt(hdc, 0, 4*l, 30, l, PATCOPY);
+            DeleteObject(brush);
+
+            brush = CreateHatchBrush(HS_HORIZONTAL, RGB(255,0,0));
+            SelectObject(hdc, brush);
+            PatBlt(hdc, 0, 5*l, 30, l, PATCOPY);
+            DeleteObject(brush);
+  
             /* set up a second brush */
             brush2 = CreateHatchBrush(HS_VERTICAL, RGB(127,127,127));
 
@@ -47,27 +80,51 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             SelectObject(hdc, brush2);
             SetBkColor(hdc, RGB(0, 255, 0));
 
-            /* 15 blt op's */
+            /* 15 blt op's with bitblt */
             SelectObject(hdcMem, hBmpTest);
-            BitBlt(hdc, 0,   0, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, SRCCOPY);
-            BitBlt(hdc, 100, 0, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, DSTINVERT);
-            BitBlt(hdc, 200, 0, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, MERGECOPY);
-            BitBlt(hdc, 300, 0, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, MERGEPAINT);
+            /* offset coordinates */
+            SetWindowOrgEx(hdc, -10, -10, NULL);
+            BitBlt(hdc, 30,  0, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, SRCCOPY);
+            BitBlt(hdc, 130, 0, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, DSTINVERT);
+            BitBlt(hdc, 230, 0, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, MERGECOPY);
+            BitBlt(hdc, 330, 0, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, MERGEPAINT);
 
-            BitBlt(hdc, 0,   100, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, NOTSRCCOPY);
-            BitBlt(hdc, 100, 100, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, NOTSRCERASE);
-            BitBlt(hdc, 200, 100, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, PATCOPY);
-            BitBlt(hdc, 300, 100, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, PATINVERT);
+            BitBlt(hdc, 30,  100, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, NOTSRCCOPY);
+            BitBlt(hdc, 130, 100, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, NOTSRCERASE);
+            BitBlt(hdc, 230, 100, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, PATCOPY);
+            BitBlt(hdc, 330, 100, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, PATINVERT);
 
-            BitBlt(hdc, 0,   200, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, PATPAINT);
-            BitBlt(hdc, 100, 200, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, SRCAND);
-            BitBlt(hdc, 200, 200, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, SRCERASE);
-            BitBlt(hdc, 300, 200, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, SRCINVERT);
+            BitBlt(hdc, 30,  200, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, PATPAINT);
+            BitBlt(hdc, 130, 200, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, SRCAND);
+            BitBlt(hdc, 230, 200, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, SRCERASE);
+            BitBlt(hdc, 330, 200, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, SRCINVERT);
 
-            BitBlt(hdc, 0,   300, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, BLACKNESS);
-            BitBlt(hdc, 100, 300, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, SRCPAINT);
-            BitBlt(hdc, 200, 300, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, WHITENESS);
+            BitBlt(hdc, 30,  300, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, BLACKNESS);
+            BitBlt(hdc, 130, 300, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, SRCPAINT);
+            BitBlt(hdc, 230, 300, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, WHITENESS);
 
+            /* 15 blt op's with stretchblt */
+            StretchBlt(hdc, 30+400,  0, bitmap.bmWidth/2, bitmap.bmHeight/2, hdcMem, 0, 0, bitmap.bmWidth, bitmap.bmHeight, SRCCOPY);
+            StretchBlt(hdc, 130+400, 0, bitmap.bmWidth/2, bitmap.bmHeight/2, hdcMem, 0, 0, bitmap.bmWidth, bitmap.bmHeight, DSTINVERT);
+            StretchBlt(hdc, 230+400, 0, bitmap.bmWidth/2, bitmap.bmHeight/2, hdcMem, 0, 0, bitmap.bmWidth, bitmap.bmHeight, MERGECOPY);
+            StretchBlt(hdc, 330+400, 0, bitmap.bmWidth/2, bitmap.bmHeight/2, hdcMem, 0, 0, bitmap.bmWidth, bitmap.bmHeight, MERGEPAINT);
+
+            StretchBlt(hdc, 30+400,  100, bitmap.bmWidth/2, bitmap.bmHeight/2, hdcMem, 0, 0, bitmap.bmWidth, bitmap.bmHeight, NOTSRCCOPY);
+            StretchBlt(hdc, 130+400, 100, bitmap.bmWidth/2, bitmap.bmHeight/2, hdcMem, 0, 0, bitmap.bmWidth, bitmap.bmHeight, NOTSRCERASE);
+            StretchBlt(hdc, 230+400, 100, bitmap.bmWidth/2, bitmap.bmHeight/2, hdcMem, 0, 0, bitmap.bmWidth, bitmap.bmHeight, PATCOPY);
+            StretchBlt(hdc, 330+400, 100, bitmap.bmWidth/2, bitmap.bmHeight/2, hdcMem, 0, 0, bitmap.bmWidth, bitmap.bmHeight, PATINVERT);
+
+            StretchBlt(hdc, 30+400,  200, bitmap.bmWidth/2, bitmap.bmHeight/2, hdcMem, 0, 0, bitmap.bmWidth, bitmap.bmHeight, PATPAINT);
+            StretchBlt(hdc, 130+400, 200, bitmap.bmWidth/2, bitmap.bmHeight/2, hdcMem, 0, 0, bitmap.bmWidth, bitmap.bmHeight, SRCAND);
+            StretchBlt(hdc, 230+400, 200, bitmap.bmWidth/2, bitmap.bmHeight/2, hdcMem, 0, 0, bitmap.bmWidth, bitmap.bmHeight, SRCERASE);
+            StretchBlt(hdc, 330+400, 200, bitmap.bmWidth/2, bitmap.bmHeight/2, hdcMem, 0, 0, bitmap.bmWidth, bitmap.bmHeight, SRCINVERT);
+
+            StretchBlt(hdc, 30+400,  300, bitmap.bmWidth/2, bitmap.bmHeight/2, hdcMem, 0, 0, bitmap.bmWidth, bitmap.bmHeight, BLACKNESS);
+            StretchBlt(hdc, 130+400, 300, bitmap.bmWidth/2, bitmap.bmHeight/2, hdcMem, 0, 0, bitmap.bmWidth, bitmap.bmHeight, SRCPAINT);
+            StretchBlt(hdc, 230+400, 300, bitmap.bmWidth/2, bitmap.bmHeight/2, hdcMem, 0, 0, bitmap.bmWidth, bitmap.bmHeight, WHITENESS);
+
+            DeleteObject(brush);
+            DeleteObject(brush2);
             DeleteDC(hdcMem);
             EndPaint(hWnd, &ps);
             break;
@@ -119,7 +176,7 @@ InitInstance(HINSTANCE hInstance, int nCmdShow)
                          WS_OVERLAPPEDWINDOW,
                          CW_USEDEFAULT,
                          CW_USEDEFAULT,
-                         440,
+                         840,
                          440,
                          NULL,
                          NULL,
