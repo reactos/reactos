@@ -396,7 +396,7 @@ DecodeResponse(PAPPINFO pInfo)
                     DebugPrint(_T("Rouge packet: header id,  process id  %d"), TTLExceedHdr->OrigIcmpHeader.id, GetCurrentProcessId());
                     return -1;
                 }
-                _tprintf(_T("%3Ld ms"), (pInfo->lTimeEnd - pInfo->lTimeStart) / pInfo->TicksPerMs.QuadPart);
+                _tprintf(_T("%3ld ms"), (ULONG)((pInfo->lTimeEnd - pInfo->lTimeStart) / pInfo->TicksPerMs.QuadPart));
                 return 0;
 
            case ECHO_REPLY :
@@ -407,7 +407,7 @@ DecodeResponse(PAPPINFO pInfo)
                     DebugPrint(_T("Rouge packet: header id %d, process id  %d"), IcmpHdr->icmpheader.id, GetCurrentProcessId());
                     return -1;
                 }
-                _tprintf(_T("%3Ld ms"), (pInfo->lTimeEnd - pInfo->lTimeStart) / pInfo->TicksPerMs.QuadPart);
+                _tprintf(_T("%3ld ms"), (ULONG)((pInfo->lTimeEnd - pInfo->lTimeStart) / pInfo->TicksPerMs.QuadPart));
                 return 1;
 
            case DEST_UNREACHABLE :
