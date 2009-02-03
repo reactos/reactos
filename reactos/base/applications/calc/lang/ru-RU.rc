@@ -640,7 +640,7 @@ BEGIN
     IDS_TIME_DAYS         "день"
     IDS_TIME_HOURS        "час"
     IDS_TIME_MICROSECONDS "микросекунда"
-    IDS_TIME_MILISECONDS  "миллисекунда"
+    IDS_TIME_MILLISECONDS "миллисекунда"
     IDS_TIME_MINUTES      "минута"
     IDS_TIME_SECONDS      "секунда"
     IDS_TIME_WEEKS        "неделя"

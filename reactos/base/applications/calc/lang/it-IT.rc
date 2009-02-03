@@ -439,6 +439,7 @@ END
 // Categorie per le conversioni
 STRINGTABLE DISCARDABLE
 BEGIN
+    IDS_CONV_ANGLE          "Angoli"
     IDS_CONV_AREA           "Area"
     IDS_CONV_CONSUMPTION    "Consumi (motori)"
     IDS_CONV_CURRENCY       "Valute monetarie"
@@ -447,9 +448,18 @@ BEGIN
     IDS_CONV_POWER          "Potenza"
     IDS_CONV_PRESSURE       "Pressione"
     IDS_CONV_TEMPERATURE    "Temperatura"
+    IDS_CONV_TIME           "Tempo"
     IDS_CONV_VELOCITY       "Velocità"
     IDS_CONV_VOLUME         "Volume"
     IDS_CONV_WEIGHT         "Peso"
+END
+
+// Tipi di angoli
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ANGLE_DEGREES       "Sessagesimali"
+    IDS_ANGLE_GRADIANS      "Centesimali (Gradienti)"
+    IDS_ANGLE_RADIANS       "Radianti"
 END
 
 // Tipi di aree
@@ -506,6 +516,7 @@ BEGIN
     IDS_CURRENCY_AUSTRIAN_SCHILLING "Scellino austriaco"
     IDS_CURRENCY_BELGIAN_FRANC      "Franco belga"
     IDS_CURRENCY_CYPRIOT_POUND      "Sterlina cipriota"
+    IDS_CURRENCY_CZECH_KORUNA       "Corona ceca"
     IDS_CURRENCY_DEUTSCHE_MARK      "Marco tedesco"
     IDS_CURRENCY_DUTCH_GUILDER      "Fiorino olandese"
     IDS_CURRENCY_EURO               "Euro"
@@ -526,8 +537,12 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_ENERGY_15_C_CALORIES        "15 ^C calorie"
+    IDS_ENERGY_BTUS                 "British Thermal Units"
     IDS_ENERGY_ERGS                 "Erg"
+    IDS_ENERGY_EVS                  "Elettron-Volt"
+    IDS_ENERGY_FOOT_POUNDS          "Libbra per piede"
     IDS_ENERGY_IT_CALORIES          "Calorie I.T."
+    IDS_ENERGY_IT_KILOCALORIES      "Kilocalorie I.T."
     IDS_ENERGY_JOULES               "Joule"
     IDS_ENERGY_KILOJOULES           "Kilojoule"
     IDS_ENERGY_KILOWATT_HOURS       "Kilowatt per ora"
@@ -565,6 +580,7 @@ BEGIN
     IDS_LENGTH_LIGHT_YEARS          "Anni luce"
     IDS_LENGTH_LINKS_UK             "Links (GB)"
     IDS_LENGTH_METERS               "Metri"
+    IDS_LENGTH_MICRONS              "Micrometro"
     IDS_LENGTH_MILES                "Miglia"
     IDS_LENGTH_MILLIMETERS          "Millimetri"
     IDS_LENGTH_NAUTICAL_MILES       "Miglia nautiche"
@@ -573,6 +589,7 @@ BEGIN
     IDS_LENGTH_PICAS                "Pica"
     IDS_LENGTH_RI_JAPAN             "Ri (Giappone)"
     IDS_LENGTH_RI_KOREA             "Ri (Corea)"
+    IDS_LENGTH_RODS                 "Rod"
     IDS_LENGTH_SAWK                 "Sawk"
     IDS_LENGTH_SEN                  "Sen"
     IDS_LENGTH_SHAKU                "Shaku"
@@ -588,6 +605,8 @@ END
 // Tipi di potenze
 STRINGTABLE DISCARDABLE
 BEGIN
+    IDS_POWER_BTUS_PER_MINUTE       "BTU al minuto"
+    IDS_POWER_FPS_PER_MINUTE        "Libbra per piede al minuto"
     IDS_POWER_HORSEPOWER            "Cavalli vapore"
     IDS_POWER_KILOWATTS             "Kilowatt"
     IDS_POWER_MEGAWATTS             "Megawatt"
@@ -599,6 +618,8 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_PRESSURE_ATMOSPHERES        "Atmosfere"
     IDS_PRESSURE_BARS               "Bar"
+    IDS_PRESSURE_HECTOPASCALS       "Hectopascal"
+    IDS_PRESSURE_KILOPASCALS        "Kilopascal"
     IDS_PRESSURE_MM_OF_MERCURY      "Millimetri di mercurio"
     IDS_PRESSURE_PASCALS            "Pascal"
     IDS_PRESSURE_PSI                "Libbre-forza per pollice quadrato"
@@ -613,10 +634,25 @@ BEGIN
     IDS_TEMPERATURE_RANKINE         "Rankine"
 END
 
+// Tipi di tempi
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_TIME_DAYS         "Giorni"
+    IDS_TIME_HOURS        "Ore"
+    IDS_TIME_MICROSECONDS "Microsecondi"
+    IDS_TIME_MILLISECONDS "Millisecondi"
+    IDS_TIME_MINUTES      "Minuti"
+    IDS_TIME_SECONDS      "Secondi"
+    IDS_TIME_WEEKS        "Settimane"
+    IDS_TIME_YEARS        "Anni"
+END
+
 // Tipi di velocità
 STRINGTABLE DISCARDABLE
 BEGIN
+    IDS_VELOCITY_CMS_SECOND         "Centimetri/ora"
     IDS_VELOCITY_FEET_HOUR          "Piedi/ora"
+    IDS_VELOCITY_FEET_SECOND        "Piedi/secondo"
     IDS_VELOCITY_KILOMETERS_HOUR    "Chilometri/ora"
     IDS_VELOCITY_KNOTS              "Nodi"
     IDS_VELOCITY_MACH               "Mach"
@@ -677,8 +713,8 @@ BEGIN
     IDS_WEIGHT_JIN_CHINA            "Jin (Cina)"
     IDS_WEIGHT_JIN_TAIWAN           "Jin (Taiwan)"
     IDS_WEIGHT_KAN                  "Kan"
-    IDS_WEIGHT_KIN                  "Kin"
     IDS_WEIGHT_KILOGRAMS            "Chilogrammi"
+    IDS_WEIGHT_KIN                  "Kin"
     IDS_WEIGHT_LIANG_CHINA          "Liang (Cina)"
     IDS_WEIGHT_LIANG_TAIWAN         "Liang (Taiwan)"
     IDS_WEIGHT_MONME                "Monme"
