@@ -221,7 +221,7 @@ static BOOL ParseCmdline(int argc, char* argv[])
                     if (DataSize > ICMP_MAXSIZE - sizeof(ICMP_ECHO_PACKET))
                     {
                         printf("Bad value for option -l, valid range is from 0 to %d.\n",
-                            ICMP_MAXSIZE - sizeof(ICMP_ECHO_PACKET));
+                            ICMP_MAXSIZE - (int)sizeof(ICMP_ECHO_PACKET));
                         return FALSE;
                    }
                     break;
@@ -454,7 +454,7 @@ static BOOL DecodeResponse(PCHAR buffer, UINT size, PSOCKADDR_IN from)
 
 
     printf("Reply from %s: bytes=%d time%s%s TTL=%d\n", inet_ntoa(from->sin_addr),
-      size - IphLength - sizeof(ICMP_ECHO_PACKET), Sign, Time, IpHeader->TTL);
+      size - IphLength - (int)sizeof(ICMP_ECHO_PACKET), Sign, Time, IpHeader->TTL);
     if (RelativeTime.QuadPart < MinRTT.QuadPart || !MinRTTSet)
     {
         MinRTT.QuadPart = RelativeTime.QuadPart;
