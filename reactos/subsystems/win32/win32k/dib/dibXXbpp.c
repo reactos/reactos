@@ -139,27 +139,34 @@ BOOLEAN DIB_XXBPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
                 for (DesX=DestRect->left; DesX<DestRect->right; DesX++)
                 {
-                    if (UsesSource) 
+                    /* Check if inside clip region */
+                    if (DesX >= OutputRect.left &&
+                        DesX < OutputRect.right &&
+                        DesY >= OutputRect.top &&
+                        DesY < OutputRect.bottom)
                     {
-                        Source = XLATEOBJ_iXlate(ColorTranslation, fnSource_GetPixel(SourceSurf, sx, sy));
-                    }
+                        if (UsesSource) 
+                        {
+                            Source = XLATEOBJ_iXlate(ColorTranslation, fnSource_GetPixel(SourceSurf, sx, sy));
+                        }
 
-                    if (UsesPattern)
-                    {
-                        /* TBD as soon as BRUSHOBJ is available */
-                    }
+                        if (UsesPattern)
+                        {
+                            /* TBD as soon as BRUSHOBJ is available */
+                        }
 
-                    Dest = fnDest_GetPixel(DestSurf, DesX, DesY);
-                    color = DIB_DoRop(ROP, Dest, Source, Pattern) & xxBPPMask;
+                        Dest = fnDest_GetPixel(DestSurf, DesX, DesY);
+                        color = DIB_DoRop(ROP, Dest, Source, Pattern) & xxBPPMask;
 
-                    fnDest_PutPixel(DestSurf, DesX, DesY, color);
+                        fnDest_PutPixel(DestSurf, DesX, DesY, color);
 
-                    sx += SrcZoomXHight;
-                    sx_dec += SrcZoomXLow;
-                    if (sx_dec >= sx_max)
-                    {
-                        sx++;
-                        sx_dec -= sx_max;
+                        sx += SrcZoomXHight;
+                        sx_dec += SrcZoomXLow;
+                        if (sx_dec >= sx_max)
+                        {
+                            sx++;
+                            sx_dec -= sx_max;
+                        }
                     }
                 }
 
