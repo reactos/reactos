@@ -12,6 +12,7 @@
 #include <windef.h>
 #include <winbase.h>
 #include <winnt.h>
+#include <time.h>
 
 #include <stddef.h>
 
