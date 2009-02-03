@@ -539,7 +539,10 @@ UINT FASTCALL IntGdiRealizePalette(HDC hDC)
   // Create the XLATEOBJ for device managed DCs
   if(dc->DC_Type != DC_TYPE_MEMORY)
   {
-    // Device managed DC
+    if (palGDI->logicalToSystem != NULL)
+    {
+        EngDeleteXlate(palGDI->logicalToSystem);
+    }
     palGDI->logicalToSystem = IntEngCreateXlate(sysMode, palMode, systemPalette, dc->DcLevel.hpal);
   }
 
