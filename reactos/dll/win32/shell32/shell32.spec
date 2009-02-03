@@ -4,12 +4,12 @@
 4   stdcall SHChangeNotifyDeregister(long)
 5   stdcall -noname SHChangeNotifyUpdateEntryList(long long long long)
 6   stdcall SHDefExtractIconW(wstr long long ptr ptr long)
-7   stub -noname Shell_7
-8   stub -noname Shell_8
+7   stub -noname SHLookupIconIndexA
+8   stub -noname SHLookupIconIndexW
 9   stub PifMgr_OpenProperties
 10  stub PifMgr_GetProperties
 11  stub PifMgr_SetProperties
-12  stub -noname Shell_12
+12  stub -noname SHStartNetConnectionDialogA
 13  stub PifMgr_CloseProperties
 14  stub SHStartNetConnectionDialogW
 15  stdcall -noname ILGetDisplayName(ptr ptr)
@@ -50,7 +50,7 @@
 50  stdcall -noname PathStripToRoot(wstr) PathStripToRootW
 51  stdcall PathResolve(str long long) PathResolveAW
 52  stdcall -noname PathGetArgs(wstr) PathGetArgsW
-53  stub -noname Shell_53
+53  stub -noname IsSuspendAllowed
 54  stub -noname LogoffWindowsDialog
 55  stdcall -noname PathQuoteSpaces(wstr) PathQuoteSpacesW
 56  stdcall -noname PathUnquoteSpaces(wstr) PathUnquoteSpacesW
@@ -79,7 +79,7 @@
 79  stdcall -noname StrToOleStrN(wstr long str long) StrToOleStrNAW # Fixme
 80  stub SHOpenPropSheetW
 81  stdcall OpenAs_RunDLLA(long long str long)
-82  stub -noname Shell_82
+82  stub -noname DDECreatePostNotify
 83  stdcall -noname CIDLData_CreateFromIDArray(ptr long ptr ptr)
 84  stub SHIsBadInterfacePtr # Fixme
 85  stdcall OpenRegStream(long str str long) shlwapi.SHOpenRegStreamA
@@ -227,34 +227,34 @@
 227 stdcall FreeIconList(long)
 228 stub InternalExtractIconListA
 229 stub InternalExtractIconListW
-230 stub -noname Shell_230
-231 stub -noname Shell_231
-232 stub -noname Shell_232
-233 stub -noname Shell_233
-234 stub -noname Shell_234
-235 stub -noname Shell_235
-236 stub -noname Shell_236
-237 stub -noname Shell_237
+230 stub -noname FirstUserLogon
+231 stub -noname SHSetFolderPathA
+232 stub -noname SHSetFolderPathW
+233 stub -noname SHGetUserPicturePathW
+234 stub -noname SHSetUserPicturePathW
+235 stub -noname SHOpenEffectiveToken
+236 stub -noname SHTestTokenPrivilegeW
+237 stub -noname SHShouldShowWizards
 238 stdcall Options_RunDLL(ptr ptr str long)
 239 stub PathIsSlowW
 240 stub PathIsSlowA
-241 stub -noname Shell_241
-242 stub -noname Shell_242
-243 stdcall @(long long) shell32_243 # Fixme !!! Call SetShellWindowEx()
+241 stub -noname SHGetUserDisplayName
+242 stub -noname SHGetProcessDword
+243 stdcall -noname SHSetShellWindowEx(ptr ptr) user32.SetShellWindowEx
 244 stdcall -noname SHInitRestricted(ptr ptr)
 245 stub SHTestTokenMembership
-246 stub -noname Shell_246
-247 stub -noname Shell_247
-248 stub -noname Shell_248 # Fixme
+246 stub -noname SHInvokePrivilegedFunctionW
+247 stub -noname SHGetActiveConsoleSessionId
+248 stub -noname SHGetUserSessionId # Fixme
 249 stdcall -noname PathParseIconLocation(wstr) PathParseIconLocationW
 250 stdcall -noname PathRemoveExtension(wstr) PathRemoveExtensionW
 251 stdcall -noname PathRemoveArgs(wstr) PathRemoveArgsW
-252 stub -noname Shell_252 # Fixme
-253 stub -noname Shell_253
-254 stub -noname Shell_254
+252 stub -noname PathIsURL # Fixme
+253 stub -noname SHIsCurrentProcessConsoleSession
+254 stub -noname DisconnectWindowsDialog
 255 stdcall Options_RunDLLA(ptr ptr str long)
-256 stdcall SHCreateShellFolderView(ptr ptr) SHELL32_256 # Fixme
-257 stub -noname Shell_257 # Fixme
+256 stdcall SHCreateShellFolderView(ptr ptr)
+257 stub -noname SHGetShellFolderViewCB # Fixme
 258 stdcall -noname LinkWindow_RegisterClass()
 259 stdcall -noname LinkWindow_UnregisterClass()
 260 stdcall Options_RunDLLW(ptr ptr wstr long)
@@ -409,61 +409,61 @@
 646 stub -noname SHChangeRegistrationReceive # Fixme
 648 stub -noname SHWaitOp_Operate
 650 stdcall -noname PathIsSameRoot(ptr ptr) PathIsSameRootAW # Fixme
-651 stdcall -noname SHReadCabinetState(long long) ReadCabinetState # Fixme
+651 stdcall -noname OldReadCabinetState(long long) ReadCabinetState
 652 stdcall WriteCabinetState(long)
 653 stdcall PathProcessCommand(long long long long) PathProcessCommandAW
 654 stdcall ReadCabinetState(long long)
 660 stdcall -noname FileIconInit(long)
 680 stdcall IsUserAnAdmin()
-681 stub -noname Shell_681
-683 stub -noname Shell_683
-684 stub -noname Shell_684
+681 stub -noname SHGetAppCompatFlags
+683 stub -noname SHStgOpenStorageW
+684 stub -noname SHStgOpenStorageA
 685 stub SHPropStgCreate
 688 stub SHPropStgReadMultiple
 689 stub SHPropStgWriteMultiple
-690 stub -noname Shell_690
-691 stub -noname Shell_691
+690 stub -noname SHIsLegacyAnsiProperty
+691 stub -noname SHFileSysBindToStorage
 700 stub CDefFolderMenu_Create
 701 stdcall CDefFolderMenu_Create2(ptr ptr long ptr ptr ptr long ptr ptr)
-702 stub -noname Shell_702
-703 stub -noname Shell_703 # Fixme
+702 stub -noname CDefFolderMenu_MergeMenu
+703 stub -noname GUIDFromStringA # Fixme
 704 stdcall -noname GUIDFromStringW(wstr ptr) # Fixme
-707 stub -noname Shell_707 # Fixme
-708 stub -noname Shell_708
+707 stub -noname SHOpenPropSheetA # Fixme
+708 stub -noname SHGetSetFolderCustomSettingsA
 709 stub SHGetSetFolderCustomSettingsW
-711 stub -noname Shell_711
-712 stub -noname Shell_712 # Fixme
-713 stub -noname Shell_713
-714 stdcall @(ptr) SHELL32_714 # PathIsTemporaryW # Fixme
-715 stub -noname Shell_715 # Fixme
+711 stub -noname CheckWinIniForAssocs
+712 stub -noname SHCopyMonikerToTemp # Fixme
+713 stub -noname PathIsTemporaryA
+714 stdcall -noname PathIsTemporaryW(wstr)
+715 stub -noname SHCreatePropertyBag # Fixme
 716 stub SHMultiFileProperties
-719 stub -noname Shell_719
-720 stub -noname Shell_720
-721 stub -noname Shell_721
-722 stub -noname Shell_722
-723 stub -noname Shell_723
-724 stub -noname Shell_724
-725 stub -noname Shell_725
-726 stub -noname Shell_726
+719 stub -noname SHParseDarwinIDFromCacheW
+720 stub -noname MakeShellURLFromPathA
+721 stub -noname MakeShellURLFromPathW
+722 stub -noname SHCreateInstance
+723 stub -noname SHCreateSessionKey
+724 stub -noname SHIsTempDisplayMode
+725 stub -noname GetFileDescriptor
+726 stub -noname CopyStreamUI
 727 stdcall SHGetImageList(long ptr ptr)
 730 stdcall RestartDialogEx(long wstr long long)
-731 stub -noname Shell_731
-732 stub -noname Shell_732
-733 stub -noname Shell_733
-740 stub -noname Shell_740
+731 stub -noname SHRegisterDarwinLink
+732 stub -noname SHReValidateDarwinCache
+733 stub -noname CheckDiskSpace
+740 stub -noname SHCreateFileDataObject
 743 stub SHCreateFileExtractIconW
-744 stub -noname Shell_744
-745 stub -noname Shell_745
+744 stub -noname Create_IEnumUICommand
+745 stub -noname Create_IUIElement
 747 stdcall SHLimitInputEdit(ptr ptr)
 748 stdcall -noname SHLimitInputCombo(ptr ptr)
 749 stub SHGetShellStyleHInstance
 750 stub SHGetAttributesFromDataObject
-751 stub -noname Shell_751
-752 stub -noname Shell_752
-753 stub -noname Shell_753
-754 stub -noname Shell_754
-755 stub -noname Shell_755
-756 stub -noname Shell_756
+751 stub -noname SHSimulateDropOnClsid
+752 stub -noname SHGetComputerDisplayNameW
+753 stub -noname CheckStagingArea
+754 stub -noname SHLimitInputEditWithFlags
+755 stub -noname PathIsEqualOrSubFolder
+756 stub -noname DeleteFileThumbnail
 
 # Functions exported by the WinVista shell32.dll
 @ stdcall SHCreateDefaultContextMenu(ptr ptr ptr)

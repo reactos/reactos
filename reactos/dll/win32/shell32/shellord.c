@@ -1471,21 +1471,6 @@ BOOL WINAPI SHWaitForFileToOpen(
 }
 
 /************************************************************************
- *	@				[SHELL32.654]
- *
- * NOTES
- *  first parameter seems to be a pointer (same as passed to WriteCabinetState)
- *  second one could be a size (0x0c). The size is the same as the structure saved to
- *  HCU\Software\Microsoft\Windows\CurrentVersion\Explorer\CabinetState
- *  I'm (js) guessing: this one is just ReadCabinetState ;-)
- */
-HRESULT WINAPI shell32_654 (CABINETSTATE *cs, int length)
-{
-	TRACE("%p %d\n",cs,length);
-	return ReadCabinetState(cs,length);
-}
-
-/************************************************************************
  *	RLBuildListOfPaths			[SHELL32.146]
  *
  * NOTES
@@ -1578,19 +1563,6 @@ DWORD WINAPI DoEnvironmentSubstAW(LPVOID x, UINT y)
 }
 
 /*************************************************************************
- *      @                             [SHELL32.243]
- *
- * Win98+ by-ordinal routine.  In Win98 this routine returns zero and
- * does nothing else.  Possibly this does something in NT or SHELL32 5.0?
- *
- */
-
-BOOL WINAPI shell32_243(DWORD a, DWORD b)
-{
-  return FALSE;
-}
-
-/*************************************************************************
  *      GUIDFromStringW   [SHELL32.704]
  */
 BOOL WINAPI GUIDFromStringW(LPCWSTR str, LPGUID guid)
@@ -1602,11 +1574,11 @@ BOOL WINAPI GUIDFromStringW(LPCWSTR str, LPGUID guid)
 }
 
 /*************************************************************************
- *      @	[SHELL32.714]
+ *      PathIsTemporaryW	[SHELL32.714]
  */
-DWORD WINAPI SHELL32_714(LPVOID x)
+DWORD WINAPI PathIsTemporaryW(LPWSTR Str)
 {
- 	FIXME("(%s)stub\n", debugstr_w(x));
+ 	FIXME("(%s)stub\n", debugstr_w(Str));
 	return 0;
 }
 
@@ -1896,15 +1868,15 @@ HRESULT WINAPI SHCreateStdEnumFmtEtc(
 
 
 /*************************************************************************
- *		SHELL32_256 (SHELL32.256)
+ *		SHCreateShellFolderView (SHELL32.256)
  */
-HRESULT WINAPI SHELL32_256(LPDWORD lpdw0, LPDWORD lpdw1)
+HRESULT WINAPI SHCreateShellFolderView(const SFV_CREATE *pcsfv, IShellView **ppsv)
 {
     HRESULT ret = S_OK;
 
-    FIXME("stub %p 0x%08x %p\n", lpdw0, lpdw0 ? *lpdw0 : 0, lpdw1);
+    FIXME("SHCreateShellFolderView() stub\n");
 
-    if (!lpdw0 || *lpdw0 != 0x10)
+    if (!pcsfv || sizeof(*pcsfv) != pcsfv->cbSize)
         ret = E_INVALIDARG;
     else
     {
