@@ -438,12 +438,12 @@ NpfsPeekPipe(PIRP Irp,
 					if ((Reply->Data[0])
 						&& (OutputBufferLength >= (MessageLength + FIELD_OFFSET(FILE_PIPE_PEEK_BUFFER, Data[0]))))
 					{							
-						memcpy(&Reply->Data[0], (PVOID)((ULONG)BufferPtr + sizeof(MessageLength)), MessageLength);
+						memcpy(&Reply->Data[0], (PVOID)((ULONG_PTR)BufferPtr + sizeof(MessageLength)), MessageLength);
 						ReturnLength = MessageLength;
 					}
 				}
 
-				BufferPtr =(PVOID)((ULONG)BufferPtr + MessageLength + sizeof(MessageLength));
+				BufferPtr =(PVOID)((ULONG_PTR)BufferPtr + MessageLength + sizeof(MessageLength));
 				DPRINT("BufferPtr = %x\n", BufferPtr);
 				DPRINT("ReadDataAvailable: %lu\n", ReadDataAvailable);
 			}
