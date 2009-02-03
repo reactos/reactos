@@ -77,7 +77,7 @@
 77  stdcall SHMapPIDLToSystemImageListIndex(ptr ptr ptr)
 78  stdcall -noname OleStrToStrN(str long wstr long) OleStrToStrNAW # Fixme
 79  stdcall -noname StrToOleStrN(wstr long str long) StrToOleStrNAW # Fixme
-80  stub SHOpenPropSheetW
+80  stdcall SHOpenPropSheetW(wstr ptr long ptr ptr ptr wstr)
 81  stdcall OpenAs_RunDLLA(long long str long)
 82  stub -noname DDECreatePostNotify
 83  stdcall -noname CIDLData_CreateFromIDArray(ptr long ptr ptr)
@@ -361,7 +361,7 @@
 361 stdcall ShellExecuteExA (long)
 362 stdcall ShellExecuteExW (long)
 363 stdcall ShellExecuteW(long wstr wstr wstr wstr long)
-364 stub ShellHookProc
+364 stdcall ShellHookProc(long ptr ptr)
 365 stdcall Shell_NotifyIcon(long ptr) Shell_NotifyIconA
 366 stdcall Shell_NotifyIconA(long ptr)
 367 stdcall Shell_NotifyIconW(long ptr)
@@ -385,29 +385,29 @@
 385 stdcall StrRChrIA(str str long) shlwapi.StrRChrIA
 386 stdcall StrRChrIW(str str long) shlwapi.StrRChrIW
 387 stdcall StrRChrW(wstr wstr long) shlwapi.StrRChrW
-388 stub StrRStrA
+388 stdcall StrRStrA(str str str)
 389 stdcall StrRStrIA(str str str) shlwapi.StrRStrIA
 390 stdcall StrRStrIW(wstr wstr wstr) shlwapi.StrRStrIW
-391 stub StrRStrW
+391 stdcall StrRStrW(wstr wstr wstr)
 392 stdcall StrStrA(str str) shlwapi.StrStrA
 393 stdcall StrStrIA(str str) shlwapi.StrStrIA
 394 stdcall StrStrIW(wstr wstr) shlwapi.StrStrIW
 395 stdcall StrStrW(wstr wstr) shlwapi.StrStrW
-396 stub WOWShellExecute
+396 stdcall WOWShellExecute(ptr wstr wstr wstr wstr long ptr)
 520 stdcall SHAllocShared(ptr long long)
 521 stdcall SHLockShared(long long)
 522 stdcall SHUnlockShared(ptr)
 523 stdcall SHFreeShared(long long)
 524 stdcall RealDriveType(long long)
-525 stub -noname RealDriveTypeFlags
+525 stdcall -noname RealDriveTypeFlags(long long)
 526 stdcall SHFlushSFCache()
 640 stdcall -noname NTSHChangeNotifyRegister(long long long long long long)
 641 stdcall -noname NTSHChangeNotifyDeregister(long)
-643 stub -noname SHChangeNotifyReceive # Fixme
+643 stdcall -noname SHChangeNotifyReceive(long long ptr ptr)
 644 stdcall SHChangeNotification_Lock(long long ptr ptr)
 645 stdcall SHChangeNotification_Unlock(long)
-646 stub -noname SHChangeRegistrationReceive # Fixme
-648 stub -noname SHWaitOp_Operate
+646 stdcall -noname SHChangeRegistrationReceive(ptr long)
+648 stdcall -noname SHWaitOp_Operate(ptr long)
 650 stdcall -noname PathIsSameRoot(ptr ptr) PathIsSameRootAW # Fixme
 651 stdcall -noname OldReadCabinetState(long long) ReadCabinetState
 652 stdcall WriteCabinetState(long)
@@ -415,7 +415,7 @@
 654 stdcall ReadCabinetState(long long)
 660 stdcall -noname FileIconInit(long)
 680 stdcall IsUserAnAdmin()
-681 stub -noname SHGetAppCompatFlags
+681 stdcall -noname SHGetAppCompatFlags(long) shlwapi.SHGetAppCompatFlags
 683 stub -noname SHStgOpenStorageW
 684 stub -noname SHStgOpenStorageA
 685 stub SHPropStgCreate
@@ -423,35 +423,35 @@
 689 stub SHPropStgWriteMultiple
 690 stub -noname SHIsLegacyAnsiProperty
 691 stub -noname SHFileSysBindToStorage
-700 stub CDefFolderMenu_Create
+700 stdcall CDefFolderMenu_Create(ptr ptr long ptr ptr ptr ptr ptr ptr)
 701 stdcall CDefFolderMenu_Create2(ptr ptr long ptr ptr ptr long ptr ptr)
-702 stub -noname CDefFolderMenu_MergeMenu
-703 stub -noname GUIDFromStringA # Fixme
-704 stdcall -noname GUIDFromStringW(wstr ptr) # Fixme
-707 stub -noname SHOpenPropSheetA # Fixme
-708 stub -noname SHGetSetFolderCustomSettingsA
-709 stub SHGetSetFolderCustomSettingsW
-711 stub -noname CheckWinIniForAssocs
-712 stub -noname SHCopyMonikerToTemp # Fixme
-713 stub -noname PathIsTemporaryA
+702 stdcall -noname CDefFolderMenu_MergeMenu(ptr long long ptr)
+703 stdcall -noname GUIDFromStringA(str ptr)
+704 stdcall -noname GUIDFromStringW(wstr ptr)
+707 stdcall -noname SHOpenPropSheetA(str ptr long ptr ptr ptr str)
+708 stdcall -noname SHGetSetFolderCustomSettingsA(ptr str long)
+709 stdcall SHGetSetFolderCustomSettingsW(ptr wstr long)
+711 stdcall -noname CheckWinIniForAssocs()
+712 stdcall -noname SHCopyMonikerToTemp(ptr wstr wstr long)
+713 stdcall -noname PathIsTemporaryA(str)
 714 stdcall -noname PathIsTemporaryW(wstr)
-715 stub -noname SHCreatePropertyBag # Fixme
-716 stub SHMultiFileProperties
-719 stub -noname SHParseDarwinIDFromCacheW
-720 stub -noname MakeShellURLFromPathA
-721 stub -noname MakeShellURLFromPathW
+715 stdcall -noname SHCreatePropertyBag(ptr ptr)
+716 stdcall SHMultiFileProperties(ptr long)
+719 stdcall -noname SHParseDarwinIDFromCacheW(wstr wstr)
+720 stdcall -noname MakeShellURLFromPathA(str str long)
+721 stdcall -noname MakeShellURLFromPathW(wstr wstr long)
 722 stub -noname SHCreateInstance
-723 stub -noname SHCreateSessionKey
-724 stub -noname SHIsTempDisplayMode
-725 stub -noname GetFileDescriptor
-726 stub -noname CopyStreamUI
+723 stdcall -noname SHCreateSessionKey(long ptr)
+724 stdcall -noname SHIsTempDisplayMode()
+725 stdcall -noname GetFileDescriptor(ptr long long wstr)
+726 stdcall -noname CopyStreamUI(ptr ptr ptr)
 727 stdcall SHGetImageList(long ptr ptr)
 730 stdcall RestartDialogEx(long wstr long long)
 731 stub -noname SHRegisterDarwinLink
-732 stub -noname SHReValidateDarwinCache
-733 stub -noname CheckDiskSpace
+732 stdcall -noname SHReValidateDarwinCache()
+733 stdcall -noname CheckDiskSpace()
 740 stub -noname SHCreateFileDataObject
-743 stub SHCreateFileExtractIconW
+743 stdcall SHCreateFileExtractIconW(wstr long ptr ptr)
 744 stub -noname Create_IEnumUICommand
 745 stub -noname Create_IUIElement
 747 stdcall SHLimitInputEdit(ptr ptr)
@@ -462,7 +462,7 @@
 752 stub -noname SHGetComputerDisplayNameW
 753 stub -noname CheckStagingArea
 754 stub -noname SHLimitInputEditWithFlags
-755 stub -noname PathIsEqualOrSubFolder
+755 stdcall -noname PathIsEqualOrSubFolder(wstr wstr)
 756 stub -noname DeleteFileThumbnail
 
 # Functions exported by the WinVista shell32.dll

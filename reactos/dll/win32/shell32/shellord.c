@@ -1563,6 +1563,15 @@ DWORD WINAPI DoEnvironmentSubstAW(LPVOID x, UINT y)
 }
 
 /*************************************************************************
+ *      GUIDFromStringA   [SHELL32.703]
+ */
+BOOL WINAPI GUIDFromStringA(LPCSTR str, LPGUID guid)
+{
+    TRACE("GUIDFromStringA() stub\n");
+    return FALSE;
+}
+
+/*************************************************************************
  *      GUIDFromStringW   [SHELL32.704]
  */
 BOOL WINAPI GUIDFromStringW(LPCWSTR str, LPGUID guid)
@@ -1576,10 +1585,19 @@ BOOL WINAPI GUIDFromStringW(LPCWSTR str, LPGUID guid)
 /*************************************************************************
  *      PathIsTemporaryW	[SHELL32.714]
  */
-DWORD WINAPI PathIsTemporaryW(LPWSTR Str)
+BOOL WINAPI PathIsTemporaryW(LPWSTR Str)
 {
  	FIXME("(%s)stub\n", debugstr_w(Str));
-	return 0;
+	return FALSE;
+}
+
+/*************************************************************************
+ *      PathIsTemporaryA	[SHELL32.713]
+ */
+BOOL WINAPI PathIsTemporaryA(LPSTR Str)
+{
+ 	FIXME("(%s)stub\n", debugstr_a(Str));
+	return FALSE;
 }
 
 typedef struct _PSXA
