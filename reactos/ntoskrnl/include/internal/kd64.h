@@ -258,6 +258,11 @@ KdpReport(IN PKTRAP_FRAME TrapFrame,
           IN KPROCESSOR_MODE PreviousMode,
           IN BOOLEAN SecondChanceException);
 
+VOID
+NTAPI
+KdpSysGetVersion(IN PDBGKD_GET_VERSION64 Version);
+
+
 //
 // Global KD Data
 //
