@@ -8,10 +8,14 @@
 #define MINGW_HAS_SECURE_API 1
 
 #include <tchar.h>
+#define __STDC_WANT_SECURE_LIB__
 #include <time.h>
 #include "bitsfixup.h"
 
 #define EINVAL -1
+
+/* Doesn't really exist, but we need it here */
+_CRTIMP errno_t __cdecl localtime_s(struct tm *_Tm,const time_t *_Time);
 
 /******************************************************************************
  * \name _tctime_s
