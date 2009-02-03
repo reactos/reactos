@@ -97,27 +97,27 @@ static void __inline__ __attribute__((always_inline)) _MemoryBarrier(void)
 
 #if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) > 40100
 
-static __inline__ __attribute__((always_inline)) char _InterlockedCompareExchange8(volatile char * const Destination, const char Exchange, const char Comperand)
+static __inline__ __attribute__((always_inline)) char _InterlockedCompareExchange8(volatile char * Destination, const char Exchange, const char Comperand)
 {
 	return __sync_val_compare_and_swap(Destination, Comperand, Exchange);
 }
 
-static __inline__ __attribute__((always_inline)) short _InterlockedCompareExchange16(volatile short * const Destination, const short Exchange, const short Comperand)
+static __inline__ __attribute__((always_inline)) short _InterlockedCompareExchange16(volatile short * Destination, const short Exchange, const short Comperand)
 {
 	return __sync_val_compare_and_swap(Destination, Comperand, Exchange);
 }
 
-static __inline__ __attribute__((always_inline)) long _InterlockedCompareExchange(volatile long * const Destination, const long Exchange, const long Comperand)
+static __inline__ __attribute__((always_inline)) long _InterlockedCompareExchange(volatile long * Destination, const long Exchange, const long Comperand)
 {
 	return __sync_val_compare_and_swap(Destination, Comperand, Exchange);
 }
 
-static __inline__ __attribute__((always_inline)) void * _InterlockedCompareExchangePointer(void * volatile * const Destination, void * const Exchange, void * const Comperand)
+static __inline__ __attribute__((always_inline)) void * _InterlockedCompareExchangePointer(void * volatile * Destination, void * const Exchange, void * const Comperand)
 {
 	return __sync_val_compare_and_swap(Destination, Comperand, Exchange);
 }
 
-static __inline__ __attribute__((always_inline)) long _InterlockedExchange(volatile long * const Target, const long Value)
+static __inline__ __attribute__((always_inline)) long _InterlockedExchange(volatile long * Target, const long Value)
 {
 	/* NOTE: __sync_lock_test_and_set would be an acquire barrier, so we force a full barrier */
 	__sync_synchronize();
@@ -125,7 +125,7 @@ static __inline__ __attribute__((always_inline)) long _InterlockedExchange(volat
 }
 
 #if defined(_M_AMD64)
-static __inline__ __attribute__((always_inline)) long long _InterlockedExchange64(volatile long long * const Target, const long long Value)
+static __inline__ __attribute__((always_inline)) long long _InterlockedExchange64(volatile long long * Target, const long long Value)
 {
 	/* NOTE: __sync_lock_test_and_set would be an acquire barrier, so we force a full barrier */
 	__sync_synchronize();
@@ -133,80 +133,80 @@ static __inline__ __attribute__((always_inline)) long long _InterlockedExchange6
 }
 #endif
 
-static __inline__ __attribute__((always_inline)) void * _InterlockedExchangePointer(void * volatile * const Target, void * const Value)
+static __inline__ __attribute__((always_inline)) void * _InterlockedExchangePointer(void * volatile * Target, void * const Value)
 {
 	/* NOTE: ditto */
 	__sync_synchronize();
 	return __sync_lock_test_and_set(Target, Value);
 }
 
-static __inline__ __attribute__((always_inline)) long _InterlockedExchangeAdd16(volatile short * const Addend, const short Value)
+static __inline__ __attribute__((always_inline)) long _InterlockedExchangeAdd16(volatile short * Addend, const short Value)
 {
 	return __sync_fetch_and_add(Addend, Value);
 }
 
-static __inline__ __attribute__((always_inline)) long _InterlockedExchangeAdd(volatile long * const Addend, const long Value)
+static __inline__ __attribute__((always_inline)) long _InterlockedExchangeAdd(volatile long * Addend, const long Value)
 {
 	return __sync_fetch_and_add(Addend, Value);
 }
 
 #if defined(_M_AMD64)
-static __inline__ __attribute__((always_inline)) long long _InterlockedExchangeAdd64(volatile long long * const Addend, const long long Value)
+static __inline__ __attribute__((always_inline)) long long _InterlockedExchangeAdd64(volatile long long * Addend, const long long Value)
 {
 	return __sync_fetch_and_add(Addend, Value);
 }
 #endif
 
-static __inline__ __attribute__((always_inline)) char _InterlockedAnd8(volatile char * const value, const char mask)
+static __inline__ __attribute__((always_inline)) char _InterlockedAnd8(volatile char * value, const char mask)
 {
 	return __sync_fetch_and_and(value, mask);
 }
 
-static __inline__ __attribute__((always_inline)) short _InterlockedAnd16(volatile short * const value, const short mask)
+static __inline__ __attribute__((always_inline)) short _InterlockedAnd16(volatile short * value, const short mask)
 {
 	return __sync_fetch_and_and(value, mask);
 }
 
-static __inline__ __attribute__((always_inline)) long _InterlockedAnd(volatile long * const value, const long mask)
+static __inline__ __attribute__((always_inline)) long _InterlockedAnd(volatile long * value, const long mask)
 {
 	return __sync_fetch_and_and(value, mask);
 }
 
 #if defined(_M_AMD64)
-static __inline__ __attribute__((always_inline)) long _InterlockedAnd64(volatile long long * const value, const long long mask)
+static __inline__ __attribute__((always_inline)) long _InterlockedAnd64(volatile long long * value, const long long mask)
 {
 	return __sync_fetch_and_and(value, mask);
 }
 #endif
 
-static __inline__ __attribute__((always_inline)) char _InterlockedOr8(volatile char * const value, const char mask)
+static __inline__ __attribute__((always_inline)) char _InterlockedOr8(volatile char * value, const char mask)
 {
 	return __sync_fetch_and_or(value, mask);
 }
 
-static __inline__ __attribute__((always_inline)) short _InterlockedOr16(volatile short * const value, const short mask)
+static __inline__ __attribute__((always_inline)) short _InterlockedOr16(volatile short * value, const short mask)
 {
 	return __sync_fetch_and_or(value, mask);
 }
 
-static __inline__ __attribute__((always_inline)) long _InterlockedOr(volatile long * const value, const long mask)
+static __inline__ __attribute__((always_inline)) long _InterlockedOr(volatile long * value, const long mask)
 {
 	return __sync_fetch_and_or(value, mask);
 }
 
 #if defined(_M_AMD64)
-static __inline__ __attribute__((always_inline)) long _InterlockedOr64(volatile long long * const value, const long long mask)
+static __inline__ __attribute__((always_inline)) long _InterlockedOr64(volatile long long * value, const long long mask)
 {
 	return __sync_fetch_and_or(value, mask);
 }
 #endif
 
-static __inline__ __attribute__((always_inline)) char _InterlockedXor8(volatile char * const value, const char mask)
+static __inline__ __attribute__((always_inline)) char _InterlockedXor8(volatile char * value, const char mask)
 {
 	return __sync_fetch_and_xor(value, mask);
 }
 
-static __inline__ __attribute__((always_inline)) short _InterlockedXor16(volatile short * const value, const short mask)
+static __inline__ __attribute__((always_inline)) short _InterlockedXor16(volatile short * value, const short mask)
 {
 	return __sync_fetch_and_xor(value, mask);
 }
@@ -218,63 +218,63 @@ static __inline__ __attribute__((always_inline)) long _InterlockedXor(volatile l
 
 #else
 
-static __inline__ __attribute__((always_inline)) char _InterlockedCompareExchange8(volatile char * const Destination, const char Exchange, const char Comperand)
+static __inline__ __attribute__((always_inline)) char _InterlockedCompareExchange8(volatile char * Destination, const char Exchange, const char Comperand)
 {
 	char retval = Comperand;
 	__asm__("lock; cmpxchgb %b[Exchange], %[Destination]" : [retval] "+a" (retval) : [Destination] "m" (*Destination), [Exchange] "q" (Exchange) : "memory");
 	return retval;
 }
 
-static __inline__ __attribute__((always_inline)) short _InterlockedCompareExchange16(volatile short * const Destination, const short Exchange, const short Comperand)
+static __inline__ __attribute__((always_inline)) short _InterlockedCompareExchange16(volatile short * Destination, const short Exchange, const short Comperand)
 {
 	short retval = Comperand;
 	__asm__("lock; cmpxchgw %w[Exchange], %[Destination]" : [retval] "+a" (retval) : [Destination] "m" (*Destination), [Exchange] "q" (Exchange): "memory");
 	return retval;
 }
 
-static __inline__ __attribute__((always_inline)) long _InterlockedCompareExchange(volatile long * const Destination, const long Exchange, const long Comperand)
+static __inline__ __attribute__((always_inline)) long _InterlockedCompareExchange(volatile long * Destination, const long Exchange, const long Comperand)
 {
 	long retval = Comperand;
 	__asm__("lock; cmpxchgl %k[Exchange], %[Destination]" : [retval] "+a" (retval) : [Destination] "m" (*Destination), [Exchange] "q" (Exchange): "memory");
 	return retval;
 }
 
-static __inline__ __attribute__((always_inline)) void * _InterlockedCompareExchangePointer(void * volatile * const Destination, void * const Exchange, void * const Comperand)
+static __inline__ __attribute__((always_inline)) void * _InterlockedCompareExchangePointer(void * volatile * Destination, void * const Exchange, void * const Comperand)
 {
 	void * retval = (void *)Comperand;
 	__asm__("lock; cmpxchgl %k[Exchange], %[Destination]" : [retval] "=a" (retval) : "[retval]" (retval), [Destination] "m" (*Destination), [Exchange] "q" (Exchange) : "memory");
 	return retval;
 }
 
-static __inline__ __attribute__((always_inline)) long _InterlockedExchange(volatile long * const Target, const long Value)
+static __inline__ __attribute__((always_inline)) long _InterlockedExchange(volatile long * Target, const long Value)
 {
 	long retval = Value;
 	__asm__("xchgl %[retval], %[Target]" : [retval] "+r" (retval) : [Target] "m" (*Target) : "memory");
 	return retval;
 }
 
-static __inline__ __attribute__((always_inline)) void * _InterlockedExchangePointer(void * volatile * const Target, void * const Value)
+static __inline__ __attribute__((always_inline)) void * _InterlockedExchangePointer(void * volatile * Target, void * const Value)
 {
 	void * retval = Value;
 	__asm__("xchgl %[retval], %[Target]" : [retval] "+r" (retval) : [Target] "m" (*Target) : "memory");
 	return retval;
 }
 
-static __inline__ __attribute__((always_inline)) long _InterlockedExchangeAdd16(volatile short * const Addend, const short Value)
+static __inline__ __attribute__((always_inline)) long _InterlockedExchangeAdd16(volatile short * Addend, const short Value)
 {
 	long retval = Value;
 	__asm__("lock; xaddw %[retval], %[Addend]" : [retval] "+r" (retval) : [Addend] "m" (*Addend) : "memory");
 	return retval;
 }
 
-static __inline__ __attribute__((always_inline)) long _InterlockedExchangeAdd(volatile long * const Addend, const long Value)
+static __inline__ __attribute__((always_inline)) long _InterlockedExchangeAdd(volatile long * Addend, const long Value)
 {
 	long retval = Value;
 	__asm__("lock; xaddl %[retval], %[Addend]" : [retval] "+r" (retval) : [Addend] "m" (*Addend) : "memory");
 	return retval;
 }
 
-static __inline__ __attribute__((always_inline)) char _InterlockedAnd8(volatile char * const value, const char mask)
+static __inline__ __attribute__((always_inline)) char _InterlockedAnd8(volatile char * value, const char mask)
 {
 	char x;
 	char y;
@@ -291,7 +291,7 @@ static __inline__ __attribute__((always_inline)) char _InterlockedAnd8(volatile 
 	return y;
 }
 
-static __inline__ __attribute__((always_inline)) short _InterlockedAnd16(volatile short * const value, const short mask)
+static __inline__ __attribute__((always_inline)) short _InterlockedAnd16(volatile short * value, const short mask)
 {
 	short x;
 	short y;
@@ -308,7 +308,7 @@ static __inline__ __attribute__((always_inline)) short _InterlockedAnd16(volatil
 	return y;
 }
 
-static __inline__ __attribute__((always_inline)) long _InterlockedAnd(volatile long * const value, const long mask)
+static __inline__ __attribute__((always_inline)) long _InterlockedAnd(volatile long * value, const long mask)
 {
 	long x;
 	long y;
@@ -325,7 +325,7 @@ static __inline__ __attribute__((always_inline)) long _InterlockedAnd(volatile l
 	return y;
 }
 
-static __inline__ __attribute__((always_inline)) char _InterlockedOr8(volatile char * const value, const char mask)
+static __inline__ __attribute__((always_inline)) char _InterlockedOr8(volatile char * value, const char mask)
 {
 	char x;
 	char y;
@@ -342,7 +342,7 @@ static __inline__ __attribute__((always_inline)) char _InterlockedOr8(volatile c
 	return y;
 }
 
-static __inline__ __attribute__((always_inline)) short _InterlockedOr16(volatile short * const value, const short mask)
+static __inline__ __attribute__((always_inline)) short _InterlockedOr16(volatile short * value, const short mask)
 {
 	short x;
 	short y;
@@ -359,7 +359,7 @@ static __inline__ __attribute__((always_inline)) short _InterlockedOr16(volatile
 	return y;
 }
 
-static __inline__ __attribute__((always_inline)) long _InterlockedOr(volatile long * const value, const long mask)
+static __inline__ __attribute__((always_inline)) long _InterlockedOr(volatile long * value, const long mask)
 {
 	long x;
 	long y;
@@ -376,7 +376,7 @@ static __inline__ __attribute__((always_inline)) long _InterlockedOr(volatile lo
 	return y;
 }
 
-static __inline__ __attribute__((always_inline)) char _InterlockedXor8(volatile char * const value, const char mask)
+static __inline__ __attribute__((always_inline)) char _InterlockedXor8(volatile char * value, const char mask)
 {
 	char x;
 	char y;
@@ -393,7 +393,7 @@ static __inline__ __attribute__((always_inline)) char _InterlockedXor8(volatile 
 	return y;
 }
 
-static __inline__ __attribute__((always_inline)) short _InterlockedXor16(volatile short * const value, const short mask)
+static __inline__ __attribute__((always_inline)) short _InterlockedXor16(volatile short * value, const short mask)
 {
 	short x;
 	short y;
@@ -410,7 +410,7 @@ static __inline__ __attribute__((always_inline)) short _InterlockedXor16(volatil
 	return y;
 }
 
-static __inline__ __attribute__((always_inline)) long _InterlockedXor(volatile long * const value, const long mask)
+static __inline__ __attribute__((always_inline)) long _InterlockedXor(volatile long * value, const long mask)
 {
 	long x;
 	long y;
@@ -431,14 +431,14 @@ static __inline__ __attribute__((always_inline)) long _InterlockedXor(volatile l
 
 #if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) > 40100 && defined(__x86_64__)
 
-static __inline__ __attribute__((always_inline)) long long _InterlockedCompareExchange64(volatile long long * const Destination, const long long Exchange, const long long Comperand)
+static __inline__ __attribute__((always_inline)) long long _InterlockedCompareExchange64(volatile long long * Destination, const long long Exchange, const long long Comperand)
 {
 	return __sync_val_compare_and_swap(Destination, Comperand, Exchange);
 }
 
 #else
 
-static __inline__ __attribute__((always_inline)) long long _InterlockedCompareExchange64(volatile long long * const Destination, const long long Exchange, const long long Comperand)
+static __inline__ __attribute__((always_inline)) long long _InterlockedCompareExchange64(volatile long long * Destination, const long long Exchange, const long long Comperand)
 {
 	long long retval = Comperand;
 
@@ -457,7 +457,7 @@ static __inline__ __attribute__((always_inline)) long long _InterlockedCompareEx
 
 #endif
 
-static __inline__ __attribute__((always_inline)) long _InterlockedAddLargeStatistic(volatile long long * const Addend, const long Value)
+static __inline__ __attribute__((always_inline)) long _InterlockedAddLargeStatistic(volatile long long * Addend, const long Value)
 {
 	__asm__
 	(
@@ -473,33 +473,33 @@ static __inline__ __attribute__((always_inline)) long _InterlockedAddLargeStatis
 	return Value;
 }
 
-static __inline__ __attribute__((always_inline)) long _InterlockedDecrement(volatile long * const lpAddend)
+static __inline__ __attribute__((always_inline)) long _InterlockedDecrement(volatile long * lpAddend)
 {
 	return _InterlockedExchangeAdd(lpAddend, -1) - 1;
 }
 
-static __inline__ __attribute__((always_inline)) long _InterlockedIncrement(volatile long * const lpAddend)
+static __inline__ __attribute__((always_inline)) long _InterlockedIncrement(volatile long * lpAddend)
 {
 	return _InterlockedExchangeAdd(lpAddend, 1) + 1;
 }
 
-static __inline__ __attribute__((always_inline)) long _InterlockedDecrement16(volatile short * const lpAddend)
+static __inline__ __attribute__((always_inline)) long _InterlockedDecrement16(volatile short * lpAddend)
 {
 	return _InterlockedExchangeAdd16(lpAddend, -1) - 1;
 }
 
-static __inline__ __attribute__((always_inline)) long _InterlockedIncrement16(volatile short * const lpAddend)
+static __inline__ __attribute__((always_inline)) long _InterlockedIncrement16(volatile short * lpAddend)
 {
 	return _InterlockedExchangeAdd16(lpAddend, 1) + 1;
 }
 
 #if defined(_M_AMD64)
-static __inline__ __attribute__((always_inline)) long long _InterlockedDecrement64(volatile long long * const lpAddend)
+static __inline__ __attribute__((always_inline)) long long _InterlockedDecrement64(volatile long long * lpAddend)
 {
 	return _InterlockedExchangeAdd64(lpAddend, -1) - 1;
 }
 
-static __inline__ __attribute__((always_inline)) long long _InterlockedIncrement64(volatile long long * const lpAddend)
+static __inline__ __attribute__((always_inline)) long long _InterlockedIncrement64(volatile long long * lpAddend)
 {
 	return _InterlockedExchangeAdd64(lpAddend, 1) + 1;
 }
