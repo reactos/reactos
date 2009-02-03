@@ -805,7 +805,7 @@ LPITEMIDLIST WINAPI ILGetNext(LPCITEMIDLIST pidl)
 }
 
 /*************************************************************************
- * ILAppend                  [SHELL32.154]
+ * ILAppendID                  [SHELL32.154]
  *
  * Adds the single ItemID item to the ItemIDList indicated by pidl.
  * If bEnd is FALSE, inserts the item in the front of the list,

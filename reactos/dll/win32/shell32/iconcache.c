@@ -498,13 +498,13 @@ static int SIC_LoadOverlayIcon(int icon_idx)
 }
 
 /*************************************************************************
- * Shell_GetImageList			[SHELL32.71]
+ * Shell_GetImageLists			[SHELL32.71]
  *
  * PARAMETERS
  *  imglist[1|2] [OUT] pointer which receives imagelist handles
  *
  */
-BOOL WINAPI Shell_GetImageList(HIMAGELIST * lpBigList, HIMAGELIST * lpSmallList)
+BOOL WINAPI Shell_GetImageLists(HIMAGELIST * lpBigList, HIMAGELIST * lpSmallList)
 {	TRACE("(%p,%p)\n",lpBigList,lpSmallList);
 	if (lpBigList)
 	{ *lpBigList = ShellBigIconList;
