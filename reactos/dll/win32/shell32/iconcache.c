@@ -843,3 +843,27 @@ HRESULT WINAPI SHDefExtractIconA(LPCSTR pszIconFile, int iIndex, UINT uFlags,
   HeapFree(GetProcessHeap(), 0, lpwstrFile);
   return ret;
 }
+
+/****************************************************************************
+ * SHGetIconOverlayIndexA    [SHELL32.@]
+ *
+ * Returns the index of the overlay icon in the system image list.
+ */
+INT WINAPI SHGetIconOverlayIndexA(LPCSTR pszIconPath, INT iIconIndex)
+{
+  FIXME("%s, %d\n", debugstr_a(pszIconPath), iIconIndex);
+
+  return -1;
+}
+
+/****************************************************************************
+ * SHGetIconOverlayIndexW    [SHELL32.@]
+ *
+ * Returns the index of the overlay icon in the system image list.
+ */
+INT WINAPI SHGetIconOverlayIndexW(LPCWSTR pszIconPath, INT iIconIndex)
+{
+  FIXME("%s, %d\n", debugstr_w(pszIconPath), iIconIndex);
+
+  return -1;
+}

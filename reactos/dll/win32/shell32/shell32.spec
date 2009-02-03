@@ -151,7 +151,7 @@
 151 stdcall SHLoadOLE(long)
 152 stdcall ILGetSize(ptr)
 153 stdcall ILGetNext(ptr)
-154 stdcall -noname ILAppendID(long long long) ILAppend
+154 stdcall ILAppendID(long long long) ILAppend
 155 stdcall ILFree(ptr)
 156 stdcall -noname ILGlobalFree(ptr)
 157 stdcall ILCreateFromPath(ptr) ILCreateFromPathAW
@@ -304,8 +304,8 @@
 304 stdcall SHGetFolderPathAndSubDirA(long long long long str ptr)
 305 stdcall SHGetFolderPathAndSubDirW(long long long long wstr ptr)
 306 stdcall SHGetFolderPathW(long long long long ptr)
-307 stub SHGetIconOverlayIndexA # Needed for sync with Wine
-308 stub SHGetIconOverlayIndexW # Needed for sync with Wine
+307 stdcall SHGetIconOverlayIndexA(str long)
+308 stdcall SHGetIconOverlayIndexW(wstr long)
 309 stdcall SHGetInstanceExplorer(long)
 310 stdcall SHGetMalloc(ptr)
 311 stdcall SHGetNewLinkInfo(str str ptr long long) SHGetNewLinkInfoA
