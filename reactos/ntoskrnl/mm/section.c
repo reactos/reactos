@@ -4746,7 +4746,6 @@ MmCanFileBeTruncated (IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
           * how can we have a Section but no 
           * reference? */
          DPRINT1("ERROR: DataSectionObject without reference!\n");
-         return FALSE;
       }
    }
 
