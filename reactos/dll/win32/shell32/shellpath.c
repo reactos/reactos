@@ -1355,47 +1355,75 @@ static HRESULT _SHGetUserProfilePath(HANDLE hToken, DWORD dwFlags, BYTE folder,
 
     if (folder >= sizeof(CSIDL_Data) / sizeof(CSIDL_Data[0]))
         return E_INVALIDARG;
+
     if (CSIDL_Data[folder].type != CSIDL_Type_User)
         return E_INVALIDARG;
+
     if (!pszPath)
         return E_INVALIDARG;
 
-    /* Only the current user and the default user are supported right now
-     * I'm afraid.
-     * FIXME: should be able to call GetTokenInformation on the token,
-     * then call ConvertSidToStringSidW on it to get the user prefix.
-     * But Wine's registry doesn't store user info by sid, it stores it
-     * by user name (and I don't know how to convert from a token to a
-     * user name).
-     */
-    if (hToken != NULL && hToken != (HANDLE)-1)
-    {
-        FIXME("unsupported for user other than current or default\n");
-        return E_FAIL;
-    }
-
     if (dwFlags & SHGFP_TYPE_DEFAULT)
+    {
         hr = _SHGetDefaultValue(folder, pszPath);
+    }
     else
     {
-        LPCWSTR userPrefix = NULL;
+        LPWSTR userPrefix;
         HKEY hRootKey;
 
         if (hToken == (HANDLE)-1)
         {
+            /* Get the folder of the default user */
             hRootKey = HKEY_USERS;
-            userPrefix = DefaultW;
+            userPrefix = (LPWSTR)DefaultW;
         }
-        else /* hToken == NULL, other values disallowed above */
+        else if(!hToken)
+        {
+            /* Get the folder of the current user */
             hRootKey = HKEY_CURRENT_USER;
-        hr = _SHGetUserShellFolderPath(hRootKey, userPrefix,
-         CSIDL_Data[folder].szValueName, pszPath);
+            userPrefix = NULL;
+        }
+        else
+        {
+            /* Get the folder of the specified user */
+            DWORD InfoLength;
+            PTOKEN_USER UserInfo;
+
+            hRootKey = HKEY_USERS;
+
+            GetTokenInformation(hToken, TokenUser, NULL, 0, &InfoLength);
+            UserInfo = (PTOKEN_USER)HeapAlloc(GetProcessHeap(), 0, InfoLength);
+
+            if(!GetTokenInformation(hToken, TokenUser, UserInfo, InfoLength, &InfoLength))
+            {
+                WARN("GetTokenInformation failed for %x!\n", hToken);
+                HeapFree(GetProcessHeap(), 0, UserInfo);
+                return E_FAIL;
+            }
+
+            if(!ConvertSidToStringSidW(UserInfo->User.Sid, &userPrefix))
+            {
+                WARN("ConvertSidToStringSidW failed for %x!\n", hToken);
+                HeapFree(GetProcessHeap(), 0, UserInfo);
+                return E_FAIL;
+            }
+
+            HeapFree(GetProcessHeap(), 0, UserInfo);
+        }
+
+        hr = _SHGetUserShellFolderPath(hRootKey, userPrefix, CSIDL_Data[folder].szValueName, pszPath);
+
+        /* Free the memory allocated by ConvertSidToStringSidW */
+        if(hToken && hToken != (HANDLE)-1)
+            LocalFree(userPrefix);
+
         if (FAILED(hr) && hRootKey != HKEY_LOCAL_MACHINE)
-            hr = _SHGetUserShellFolderPath(HKEY_LOCAL_MACHINE, NULL,
-             CSIDL_Data[folder].szValueName, pszPath);
+            hr = _SHGetUserShellFolderPath(HKEY_LOCAL_MACHINE, NULL, CSIDL_Data[folder].szValueName, pszPath);
+
         if (FAILED(hr))
             hr = _SHGetDefaultValue(folder, pszPath);
     }
+
     TRACE("returning 0x%08x (output path is %s)\n", hr, debugstr_w(pszPath));
     return hr;
 }
