@@ -22,4 +22,9 @@ void InitDirect3DBaseTexture9(Direct3DBaseTexture9_INT* pBaseTexture,
                               struct _Direct3DDevice9_INT* pDevice,
                               enum REF_TYPE RefType);
 
+
+D3DTEXTUREFILTERTYPE WINAPI D3D9Texture_GetAutoGenFilterType(struct IDirect3DBaseTexture9* iface);
+DWORD WINAPI D3D9Texture_GetLOD(struct IDirect3DBaseTexture9* iface);
+DWORD WINAPI D3D9Texture_GetLevelCount(struct IDirect3DBaseTexture9* iface);
+
 #endif // _D3D9_TEXTURE_H_

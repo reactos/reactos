@@ -6,7 +6,6 @@
  * PROGRAMERS:      Gregor Brunmar <gregor (dot) brunmar (at) home (dot) se>
  */
 
-#define _WIN32_WINNT    0x0502
 #include "d3d9_common.h"
 #include <d3d9.h>
 #include <ddraw.h>
