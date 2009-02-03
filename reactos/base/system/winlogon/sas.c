@@ -175,9 +175,6 @@ HandleLogon(
 	SIZE_T EnvBlockSize = 0, ProfileSize = 0;
 	BOOLEAN Old;
 	BOOL ret = FALSE;
-	UNICODE_STRING VariableName;
-	UNICODE_STRING VariableValue;
-	WCHAR AppDataPath[MAX_PATH];
 
 	/* Loading personal settings */
 	DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_LOADINGYOURPERSONALSETTINGS);
@@ -221,18 +218,6 @@ HandleLogon(
 		WARN("WL: CreateEnvironmentBlock() failed\n");
 		goto cleanup;
 	}
-
-	/* Use SHGetFolderPathW for getting the AppData path */
-	if(SHGetFolderPathW(NULL, CSIDL_APPDATA, Session->UserToken, SHGFP_TYPE_CURRENT, AppDataPath) == E_FAIL)
-	{
-		WARN("WL: SHGetFolderPathW() failed\n");
-		goto cleanup;
-	}
-
-	/* Some environment variables need to be set by winlogon (verified against Windows XP winlogon) */
-	RtlInitUnicodeString(&VariableName, L"APPDATA");
-	RtlInitUnicodeString(&VariableValue, AppDataPath);
-	RtlSetEnvironmentVariable((PWSTR*)&lpEnvironment, &VariableName, &VariableValue);
 
 	if (Session->Profile->dwType == WLX_PROFILE_TYPE_V2_0 && Session->Profile->pszEnvironment)
 	{
@@ -278,8 +263,6 @@ HandleLogon(
 
 	DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_APPLYINGYOURPERSONALSETTINGS);
 	UpdatePerUserSystemParameters(0, TRUE);
-
-	/* FIXME: Set the "Volatile Environment" key for the new user */
 
 	/* Set default language */
 	if (!SetDefaultLanguage(TRUE))
