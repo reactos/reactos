@@ -1197,7 +1197,7 @@ static HRESULT _SHGetUserProfilePath(HANDLE hToken, DWORD dwFlags, BYTE folder,
         hr = _SHGetUserShellFolderPath(hRootKey, userPrefix, CSIDL_Data[folder].szValueName, pszPath);
 
         /* Free the memory allocated by ConvertSidToStringSidW */
-        if(!hToken && hToken != (HANDLE)-1)
+        if(hToken && hToken != (HANDLE)-1)
             LocalFree(userPrefix);
 
         if (FAILED(hr) && hRootKey != HKEY_LOCAL_MACHINE)
