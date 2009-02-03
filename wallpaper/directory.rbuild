@@ -1,3 +1,3 @@
 <group>
-	<installfile>Angelus.02_ROSWP.bmp</installfile>
+	<installfile>Angelus_02_ROSWP.bmp</installfile>
 </group>
