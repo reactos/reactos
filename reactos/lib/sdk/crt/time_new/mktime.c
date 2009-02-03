@@ -6,36 +6,17 @@
  * PROGRAMERS:  Timo Kreuzer
  */
 #include <precomp.h>
+#include "bitsfixup.h"
 
-time_t
-mktime_worker(struct tm * ptm, int utc)
-{
-    return 0;
-}
-
-/*    int tm_sec;
-    int tm_min;
-    int tm_hour;
-    int tm_mday;
-    int tm_mon;
-    int tm_year;
-    int tm_wday;
-    int tm_yday;
-    int tm_isdst;
-*/
+#define MAX_32BIT_TIME 0xFFFFFFFFULL
 
 static int g_monthdays[13] = {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365};
 
-
-/** 
- * \name _mkgmtime
- * 
- */
-time_t
-_mkgmtime(struct tm *ptm)
+__time64_t
+mktime_worker(struct tm * ptm, int utc)
 {
     struct tm *ptm2;
-    time_t time;
+    __time64_t time;
     int mons, years, leapyears;
 
     /* Normalize year and month */
@@ -105,20 +86,57 @@ _mkgmtime(struct tm *ptm)
     return time;
 }
 
+/*    int tm_sec;
+    int tm_min;
+    int tm_hour;
+    int tm_mday;
+    int tm_mon;
+    int tm_year;
+    int tm_wday;
+    int tm_yday;
+    int tm_isdst;
+*/
+
+/** 
+ * \name _mkgmtime
+ * 
+ */
+time_t
+_mkgmtime(struct tm *ptm)
+{
+    time_t time = mktime_worker(ptm, 1);
+    return (time > MAX_32BIT_TIME) ? -1 : time;
+}
+
 time_t
 mktime(struct tm *ptm)
 {
-    time_t time;
-
-    /* Convert the time as if it was UTC */
-    time = _mkgmtime(ptm);
-
-    /* Apply offset */
-    if (time != -1)
-    {
-        time += _timezone;
-    }
-
-    return time;
+    time_t time = mktime_worker(ptm, 0);
+    return (time > MAX_32BIT_TIME) ? -1 : time;
 }
 
+__time32_t
+_mkgmtime32(struct tm *ptm)
+{
+    time_t time = mktime_worker(ptm, 1);
+    return (time > MAX_32BIT_TIME) ? -1 : time;
+}
+
+__time32_t
+_mktime32(struct tm *ptm)
+{
+    time_t time = mktime_worker(ptm, 0);
+    return (time > MAX_32BIT_TIME) ? -1 : time;
+}
+
+__time64_t
+_mkgmtime64(struct tm *ptm)
+{
+    return mktime_worker(ptm, 1);
+}
+
+__time64_t
+_mktime64(struct tm *ptm)
+{
+    return mktime_worker(ptm, 0);
+}
