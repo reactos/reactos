@@ -630,5 +630,48 @@ typedef struct _QUOTA_LIMITS {
 #define QUOTA_LIMITS_USE_DEFAULT_LIMITS 0x00000010
 
 
+//
+// Byte Swap Functions
+//
+#if (defined(_M_IX86) && (_MSC_FULL_VER > 13009037)) || \
+    ((defined(_M_AMD64) || \
+     defined(_M_IA64)) && (_MSC_FULL_VER > 13009175))
+
+unsigned short __cdecl _byteswap_ushort(unsigned short);
+unsigned long  __cdecl _byteswap_ulong (unsigned long);
+unsigned __int64 __cdecl _byteswap_uint64(unsigned __int64);
+#pragma intrinsic(_byteswap_ushort)
+#pragma intrinsic(_byteswap_ulong)
+#pragma intrinsic(_byteswap_uint64)
+#define RtlUshortByteSwap(_x) _byteswap_ushort((USHORT)(_x))
+#define RtlUlongByteSwap(_x) _byteswap_ulong((_x))
+#define RtlUlonglongByteSwap(_x) _byteswap_uint64((_x))
+
+#elif defined(__GNUC__)
+
+#define RtlUshortByteSwap(_x) _byteswap_ushort((USHORT)(_x))
+#define RtlUlongByteSwap(_x) _byteswap_ulong((_x))
+#define RtlUlonglongByteSwap(_x) _byteswap_uint64((_x))
+
+#else
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+NTSYSAPI
+USHORT
+FASTCALL
+RtlUshortByteSwap(IN USHORT Source);
+
+NTSYSAPI
+ULONG
+FASTCALL
+RtlUlongByteSwap(IN ULONG Source);
+
+NTSYSAPI
+ULONGLONG
+FASTCALL
+RtlUlonglongByteSwap(IN ULONGLONG Source);
+#endif
+
+#endif
 
 #endif // _WDMDDK_

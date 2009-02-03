@@ -7183,16 +7183,6 @@ RtlTimeToTimeFields(
   IN PLARGE_INTEGER  Time,
   IN PTIME_FIELDS  TimeFields);
 
-ULONG
-FASTCALL
-RtlUlongByteSwap(
-  IN ULONG  Source);
-
-ULONGLONG
-FASTCALL
-RtlUlonglongByteSwap(
-  IN ULONGLONG  Source);
-
 #define RtlUnicodeStringToAnsiSize(STRING) (                  \
     NLS_MB_CODE_PAGE_TAG ?                                    \
     RtlxUnicodeStringToAnsiSize(STRING) :                     \
@@ -7263,11 +7253,6 @@ NTAPI
 RtlUpperString(
   IN OUT PSTRING  DestinationString,
   IN PSTRING  SourceString);
-
-USHORT
-FASTCALL
-RtlUshortByteSwap(
-  IN USHORT  Source);
 
 NTSYSAPI
 BOOLEAN
