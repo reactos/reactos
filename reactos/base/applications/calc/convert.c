@@ -337,7 +337,7 @@ static const conv_t conv_TIME[] = {
     DECLARE_CONV_UNIT(TIME, MINUTES,      "$*60",       "$/60")
     DECLARE_CONV_UNIT(TIME, DAYS,         "$*86400",    "$/86400")
     DECLARE_CONV_UNIT(TIME, HOURS,        "$*3600",     "$/3600")
-    DECLARE_CONV_UNIT(TIME, MILISECONDS,  "$*0.001",    "$/0.001")
+    DECLARE_CONV_UNIT(TIME, MILLISECONDS, "$*0.001",    "$/0.001")
     DECLARE_CONV_UNIT(TIME, MICROSECONDS, "$*0.000001", "$/0.000001")
     DECLARE_CONV_UNIT(TIME, SECONDS,      "$",          "$")
     DECLARE_CONV_UNIT(TIME, WEEKS,        "$*604800",   "$/604800")

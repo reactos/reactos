@@ -275,7 +275,7 @@
 #define IDS_TIME_DAYS                   3001
 #define IDS_TIME_HOURS                  3002
 #define IDS_TIME_MICROSECONDS           3003
-#define IDS_TIME_MILISECONDS            3004
+#define IDS_TIME_MILLISECONDS           3004
 #define IDS_TIME_MINUTES                3005
 #define IDS_TIME_SECONDS                3006
 #define IDS_TIME_WEEKS                  3007
