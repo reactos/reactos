@@ -28,33 +28,33 @@
 28  stdcall SHILCreateFromPath(ptr ptr ptr) SHILCreateFromPathAW
 29  stdcall -noname PathIsRoot(ptr) PathIsRootAW
 30  stdcall -noname PathBuildRoot(ptr long) PathBuildRootAW
-31  stdcall -noname PathFindExtension(ptr) PathFindExtensionAW # Fixme
-32  stdcall -noname PathAddBackslash(ptr) PathAddBackslashAW # Fixme
-33  stdcall -noname PathRemoveBlanks(ptr) PathRemoveBlanksAW # Fixme
-34  stdcall -noname PathFindFileName(ptr) PathFindFileNameAW # Fixme
+31  stdcall -noname PathFindExtension(wstr) PathFindExtensionW
+32  stdcall -noname PathAddBackslash(wstr) PathAddBackslashW
+33  stdcall -noname PathRemoveBlanks(wstr) PathRemoveBlanksW
+34  stdcall -noname PathFindFileName(wstr) PathFindFileNameW
 35  stdcall -noname PathRemoveFileSpec(ptr) PathRemoveFileSpecAW # Fixme
 36  stdcall -noname PathAppend(ptr ptr) PathAppendAW # Fixme
-37  stdcall -noname PathCombine(ptr ptr ptr) PathCombineAW # Fixme
-38  stdcall -noname PathStripPath(ptr) PathStripPathAW # Fixme
-39  stdcall -noname PathIsUNC(ptr) PathIsUNCAW # Fixme
-40  stdcall -noname PathIsRelative(ptr) PathIsRelativeAW # Fixme
+37  stdcall -noname PathCombine(wstr wstr wstr) PathCombineW
+38  stdcall -noname PathStripPath(wstr) PathStripPathW
+39  stdcall -noname PathIsUNC(wstr) PathIsUNCW
+40  stdcall -noname PathIsRelative(wstr) PathIsRelativeW
 41  stdcall IsLFNDriveA(str)
 42  stdcall IsLFNDriveW(wstr)
 43  stdcall PathIsExe(ptr) PathIsExeAW
 44  stdcall OpenAs_RunDLL(long long str long) OpenAs_RunDLLA
 45  stdcall -noname PathFileExists(ptr) PathFileExistsAW # Fixme
-46  stdcall -noname PathMatchSpec(ptr ptr) PathMatchSpecAW # Fixme
+46  stdcall -noname PathMatchSpec(wstr wstr) PathMatchSpecW
 47  stdcall PathMakeUniqueName(ptr long ptr ptr ptr) PathMakeUniqueNameAW
-48  stdcall -noname PathSetDlgItemPath(long long ptr) PathSetDlgItemPathAW # Fixme
+48  stdcall -noname PathSetDlgItemPath(long long wstr) PathSetDlgItemPathW
 49  stdcall PathQualify(ptr) PathQualifyAW
-50  stdcall -noname PathStripToRoot(ptr) PathStripToRootAW # Fixme
+50  stdcall -noname PathStripToRoot(wstr) PathStripToRootW
 51  stdcall PathResolve(str long long) PathResolveAW
-52  stdcall -noname PathGetArgs(str) PathGetArgsAW # Fixme
+52  stdcall -noname PathGetArgs(wstr) PathGetArgsW
 53  stub -noname Shell_53
 54  stub -noname LogoffWindowsDialog
-55  stdcall -noname PathQuoteSpaces(ptr) PathQuoteSpacesAW # Fixme
-56  stdcall -noname PathUnquoteSpaces(str) PathUnquoteSpacesAW # Fixme
-57  stdcall -noname PathGetDriveNumber(str) PathGetDriveNumberAW # Fixme
+55  stdcall -noname PathQuoteSpaces(wstr) PathQuoteSpacesW
+56  stdcall -noname PathUnquoteSpaces(wstr) PathUnquoteSpacesW
+57  stdcall -noname PathGetDriveNumber(wstr) PathGetDriveNumberW
 58  stdcall -noname ParseField(str long ptr long) ParseFieldAW # Fixme
 59  stdcall RestartDialog(long wstr long)
 60  stdcall -noname ExitWindowsDialog(long) # Fixme
@@ -90,8 +90,8 @@
 90  stdcall SHFindFiles(ptr ptr)
 91  stub SHFindComputer # Fixme
 92  stdcall PathGetShortPath(ptr) PathGetShortPathAW
-93  stdcall -noname Win32CreateDirectory(wstr ptr) Win32CreateDirectoryAW # Fixme
-94  stdcall -noname Win32RemoveDirectory(wstr) Win32RemoveDirectoryAW # Fixme
+93  stdcall -noname Win32CreateDirectory(wstr ptr) Win32CreateDirectoryW
+94  stdcall -noname Win32RemoveDirectory(wstr) Win32RemoveDirectoryW
 95  stdcall -noname SHLogILFromFSIL(ptr)
 96  stdcall -noname StrRetToStrN(ptr long ptr ptr) StrRetToStrNAW # Fixme
 97  stdcall -noname SHWaitForFileToOpen(long long long)
@@ -142,7 +142,7 @@
 142 stub DragQueryFileAorW
 143 stdcall DragQueryFileW(long long ptr long)
 144 stdcall DragQueryPoint(long ptr)
-145 stdcall -noname PathFindOnPath(ptr ptr) PathFindOnPathAW # Fixme
+145 stdcall -noname PathFindOnPath(wstr wstr) PathFindOnPathW
 146 stdcall -noname RLBuildListOfPaths()
 147 stdcall SHCLSIDFromString(long long) SHCLSIDFromStringAW
 148 stdcall SHMapIDListToImageListIndexAsync(ptr ptr ptr long ptr ptr ptr ptr ptr)
@@ -155,13 +155,13 @@
 155 stdcall ILFree(ptr)
 156 stdcall -noname ILGlobalFree(ptr)
 157 stdcall ILCreateFromPath(ptr) ILCreateFromPathAW
-158 stdcall -noname PathGetExtension(str long long) PathGetExtensionAW # Fixme
-159 stdcall -noname PathIsDirectory(ptr) PathIsDirectoryAW # Fixme
+158 stdcall -noname PathGetExtension(wstr long long) SHPathGetExtensionW
+159 stdcall -noname PathIsDirectory(wstr) PathIsDirectoryW
 160 stub SHNetConnectionDialog # Fixme
 161 stdcall SHRunControlPanel(long long)
 162 stdcall SHSimpleIDListFromPath(ptr) SHSimpleIDListFromPathAW # Fixme
 163 stdcall -noname StrToOleStr(wstr str) StrToOleStrAW # Fixme
-164 stdcall Win32DeleteFile(str) Win32DeleteFileAW
+164 stdcall Win32DeleteFile(wstr) Win32DeleteFileW
 165 stdcall SHCreateDirectory(long ptr)
 166 stdcall CallCPLEntry16(long long long long long long)
 167 stdcall SHAddFromPropSheetExtArray(long long long)
@@ -172,7 +172,7 @@
 172 stdcall -noname SHCreateLinks(long str ptr long ptr)
 173 stdcall SHValidateUNC(long long long)
 174 stdcall SHCreateShellFolderViewEx(ptr ptr)
-175 stdcall -noname SHGetSpecialFolderPath(long long long long) SHGetSpecialFolderPathAW # Fixme
+175 stdcall -noname SHGetSpecialFolderPath(long long long long) SHGetSpecialFolderPathW
 176 stdcall SHSetInstanceExplorer(long)
 177 stub DAD_SetDragImageFromListView
 178 stdcall SHObjectProperties(long long wstr wstr)
@@ -246,9 +246,9 @@
 246 stub -noname Shell_246
 247 stub -noname Shell_247
 248 stub -noname Shell_248 # Fixme
-249 stdcall -noname PathParseIconLocation(ptr) PathParseIconLocationAW # Fixme
-250 stdcall -noname PathRemoveExtension(ptr) PathRemoveExtensionAW # Fixme
-251 stdcall -noname PathRemoveArgs(ptr) PathRemoveArgsAW # Fixme
+249 stdcall -noname PathParseIconLocation(wstr) PathParseIconLocationW
+250 stdcall -noname PathRemoveExtension(wstr) PathRemoveExtensionW
+251 stdcall -noname PathRemoveArgs(wstr) PathRemoveArgsW
 252 stub -noname Shell_252 # Fixme
 253 stub -noname Shell_253
 254 stub -noname Shell_254

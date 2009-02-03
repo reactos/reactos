@@ -37,11 +37,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 static const WCHAR wWildcardFile[] = {'*',0};
 static const WCHAR wWildcardChars[] = {'*','?',0};
 
-static DWORD SHNotifyCreateDirectoryA(LPCSTR path, LPSECURITY_ATTRIBUTES sec);
 static DWORD SHNotifyCreateDirectoryW(LPCWSTR path, LPSECURITY_ATTRIBUTES sec);
-static DWORD SHNotifyRemoveDirectoryA(LPCSTR path);
 static DWORD SHNotifyRemoveDirectoryW(LPCWSTR path);
-static DWORD SHNotifyDeleteFileA(LPCSTR path);
 static DWORD SHNotifyDeleteFileW(LPCWSTR path);
 static DWORD SHNotifyMoveFileW(LPCWSTR src, LPCWSTR dest);
 static DWORD SHNotifyCopyFileW(LPCWSTR src, LPCWSTR dest, BOOL bFailIfExists);
@@ -367,28 +364,7 @@ BOOL SHELL_DeleteDirectoryW(HWND hwnd, LPCWSTR pszDir, BOOL bShowUI)
  *
  * RETURNS
  *  TRUE if successful, FALSE otherwise
- *
- * NOTES
- *  Verified on Win98 / IE 5 (SHELL32 4.72, March 1999 build) to be ANSI.
- *  This is Unicode on NT/2000
  */
-static DWORD SHNotifyCreateDirectoryA(LPCSTR path, LPSECURITY_ATTRIBUTES sec)
-{
-	LPWSTR wPath;
-	DWORD retCode;
-
-	TRACE("(%s, %p)\n", debugstr_a(path), sec);
-
-	retCode = SHELL32_AnsiToUnicodeBuf(path, &wPath, 0);
-	if (!retCode)
-	{
-	  retCode = SHNotifyCreateDirectoryW(wPath, sec);
-	  SHELL32_FreeUnicodeBuf(wPath);
-	}
-	return retCode;
-}
-
-/**********************************************************************/
 
 static DWORD SHNotifyCreateDirectoryW(LPCWSTR path, LPSECURITY_ATTRIBUTES sec)
 {
@@ -404,11 +380,9 @@ static DWORD SHNotifyCreateDirectoryW(LPCWSTR path, LPSECURITY_ATTRIBUTES sec)
 
 /**********************************************************************/
 
-BOOL WINAPI Win32CreateDirectoryAW(LPCVOID path, LPSECURITY_ATTRIBUTES sec)
+BOOL WINAPI Win32CreateDirectoryW(LPCWSTR path, LPSECURITY_ATTRIBUTES sec)
 {
-	if (SHELL_OsIsUnicode())
-	  return (SHNotifyCreateDirectoryW(path, sec) == ERROR_SUCCESS);
-	return (SHNotifyCreateDirectoryA(path, sec) == ERROR_SUCCESS);
+	return (SHNotifyCreateDirectoryW(path, sec) == ERROR_SUCCESS);
 }
 
 /************************************************************************
@@ -421,29 +395,7 @@ BOOL WINAPI Win32CreateDirectoryAW(LPCVOID path, LPSECURITY_ATTRIBUTES sec)
  *
  * RETURNS
  *  TRUE if successful, FALSE otherwise
- *
- * NOTES
- *  Verified on Win98 / IE 5 (SHELL32 4.72, March 1999 build) to be ANSI.
- *  This is Unicode on NT/2000
  */
-static DWORD SHNotifyRemoveDirectoryA(LPCSTR path)
-{
-	LPWSTR wPath;
-	DWORD retCode;
-
-	TRACE("(%s)\n", debugstr_a(path));
-
-	retCode = SHELL32_AnsiToUnicodeBuf(path, &wPath, 0);
-	if (!retCode)
-	{
-	  retCode = SHNotifyRemoveDirectoryW(wPath);
-	  SHELL32_FreeUnicodeBuf(wPath);
-	}
-	return retCode;
-}
-
-/***********************************************************************/
-
 static DWORD SHNotifyRemoveDirectoryW(LPCWSTR path)
 {
 	BOOL ret;
@@ -468,11 +420,9 @@ static DWORD SHNotifyRemoveDirectoryW(LPCWSTR path)
 
 /***********************************************************************/
 
-BOOL WINAPI Win32RemoveDirectoryAW(LPCVOID path)
+BOOL WINAPI Win32RemoveDirectoryW(LPCWSTR path)
 {
-	if (SHELL_OsIsUnicode())
-	  return (SHNotifyRemoveDirectoryW(path) == ERROR_SUCCESS);
-	return (SHNotifyRemoveDirectoryA(path) == ERROR_SUCCESS);
+	return (SHNotifyRemoveDirectoryW(path) == ERROR_SUCCESS);
 }
 
 /************************************************************************
@@ -485,29 +435,7 @@ BOOL WINAPI Win32RemoveDirectoryAW(LPCVOID path)
  *
  * RETURNS
  *  TRUE if successful, FALSE otherwise
- *
- * NOTES
- *  Verified on Win98 / IE 5 (SHELL32 4.72, March 1999 build) to be ANSI.
- *  This is Unicode on NT/2000
  */
-static DWORD SHNotifyDeleteFileA(LPCSTR path)
-{
-	LPWSTR wPath;
-	DWORD retCode;
-
-	TRACE("(%s)\n", debugstr_a(path));
-
-	retCode = SHELL32_AnsiToUnicodeBuf(path, &wPath, 0);
-	if (!retCode)
-	{
-	  retCode = SHNotifyDeleteFileW(wPath);
-	  SHELL32_FreeUnicodeBuf(wPath);
-	}
-	return retCode;
-}
-
-/***********************************************************************/
-
 static DWORD SHNotifyDeleteFileW(LPCWSTR path)
 {
 	BOOL ret;
@@ -533,11 +461,9 @@ static DWORD SHNotifyDeleteFileW(LPCWSTR path)
 
 /***********************************************************************/
 
-DWORD WINAPI Win32DeleteFileAW(LPCVOID path)
+DWORD WINAPI Win32DeleteFileW(LPCWSTR path)
 {
-	if (SHELL_OsIsUnicode())
-	  return (SHNotifyDeleteFileW(path) == ERROR_SUCCESS);
-	return (SHNotifyDeleteFileA(path) == ERROR_SUCCESS);
+	return (SHNotifyDeleteFileW(path) == ERROR_SUCCESS);
 }
 
 /************************************************************************
