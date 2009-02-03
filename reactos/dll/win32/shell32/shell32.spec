@@ -197,11 +197,11 @@
 197 stub -noname SHGlobalDefect
 198 stdcall -noname SHAbortInvokeCommand()
 199 stdcall ExtractAssociatedIconA(long str ptr)
-200 stub -noname SHLocalAlloc # Fixme
-201 stub -noname SHLocalFree # Fixme
-202 stub -noname SHLocalReAlloc # Fixme
-203 stub -noname AddCommasW # Fixme
-204 stub -noname ShortSizeFormatW # Fixme
+200 stdcall -noname SHLocalAlloc(long long)
+201 stdcall -noname SHLocalFree(ptr)
+202 stdcall -noname SHLocalReAlloc(ptr long long)
+203 stdcall -noname AddCommasW(long wstr)
+204 stdcall -noname ShortSizeFormatW(double)
 205 stdcall Printer_LoadIconsW(wstr ptr ptr)
 206 stdcall ExtractAssociatedIconExA(long str long long)
 207 stdcall ExtractAssociatedIconExW(long wstr long long)
@@ -501,13 +501,3 @@
 #@ stdcall SHRegQueryValueW (long long long long)
 #@ stdcall SHRegQueryValueExW (long wstr ptr ptr ptr ptr)
 #@ stdcall SHRegDeleteKeyW (long wstr)
-#@ stub Desktop_UpdateBriefcaseOnEvent
-#@ stub SHGetFileIcon
-#@ stub Link_AddExtraDataSection
-#@ stub Link_ReadExtraDataSection
-#@ stub Link_RemoveExtraDataSection
-#@ stub ReceiveAddToRecentDocs
-#@ stub FOOBAR1217   # no joke! This is the real name!!
-#@ stub FixupOptionalComponents
-#@ stub OCInstall
-#@ stub SHGetFreeDiskSpace
