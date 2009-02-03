@@ -529,12 +529,12 @@ CreateBitCase(FILE *Out, unsigned Bpp, PROPINFO RopInfo, int Flags,
     {
       if (0 == (Flags & FLAG_BOTTOMUP))
         {
-          Output(Out, "PatternY = (BltInfo->DestRect.top + BltInfo->BrushOrigin.y) %%\n");
+          Output(Out, "PatternY = (BltInfo->DestRect.top - BltInfo->BrushOrigin.y) %%\n");
           Output(Out, "           BltInfo->PatternSurface->sizlBitmap.cy;\n");
         }
       else
         {
-          Output(Out, "PatternY = (BltInfo->DestRect.bottom - 1 +\n");
+          Output(Out, "PatternY = (BltInfo->DestRect.bottom - 1 -\n");
           Output(Out, "            BltInfo->BrushOrigin.y) %%\n");
           Output(Out, "           BltInfo->PatternSurface->sizlBitmap.cy;\n");
         }
@@ -547,7 +547,7 @@ CreateBitCase(FILE *Out, unsigned Bpp, PROPINFO RopInfo, int Flags,
     }
   if (RopInfo->UsesPattern && 0 != (Flags & FLAG_PATTERNSURFACE))
     {
-      Output(Out, "BasePatternX = (BltInfo->DestRect.left + BltInfo->BrushOrigin.x) %%\n");
+      Output(Out, "BasePatternX = (BltInfo->DestRect.left - BltInfo->BrushOrigin.x) %%\n");
       Output(Out, "           BltInfo->PatternSurface->sizlBitmap.cx;\n");
     }
 
