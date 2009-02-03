@@ -3,8 +3,8 @@
  * This file is part of the w64 mingw-runtime package.
  * No warranty is given; refer to the file DISCLAIMER within this package.
  */
-#ifndef _TIME_H_
-#define _TIME_H_
+#ifndef _INC_TIME
+#define _INC_TIME
 
 #include <crtdefs.h>
 
@@ -114,10 +114,11 @@ extern "C" {
   _CRT_OBSOLETE(GetLocalTime) unsigned __cdecl _getsystime(struct tm *_Tm);
   _CRT_OBSOLETE(GetLocalTime) unsigned __cdecl _setsystime(struct tm *_Tm,unsigned _MilliSec);
 
+#ifdef __STDC_WANT_SECURE_LIB__
   _CRTIMP errno_t __cdecl asctime_s(char *_Buf,size_t _SizeInWords,const struct tm *_Tm);
+#endif
   _CRTIMP errno_t __cdecl _ctime32_s(char *_Buf,size_t _SizeInBytes,const __time32_t *_Time);
   _CRTIMP errno_t __cdecl _gmtime32_s(struct tm *_Tm,const __time32_t *_Time);
-  _CRTIMP errno_t __cdecl localtime_s(struct tm *_Tm,const time_t *_Time);
   _CRTIMP errno_t __cdecl _localtime32_s(struct tm *_Tm,const __time32_t *_Time);
   _CRTIMP errno_t __cdecl _strdate_s(char *_Buf,size_t _SizeInBytes);
   _CRTIMP errno_t __cdecl _strtime_s(char *_Buf ,size_t _SizeInBytes);
@@ -173,8 +174,6 @@ __CRT_INLINE errno_t _wctime_s(wchar_t *_Buffer, size_t _SizeInWords,const time_
  _CRTIMP char *__cdecl ctime(const time_t *_Time);
  _CRTIMP struct tm *__cdecl gmtime(const time_t *_Time);
  _CRTIMP struct tm *__cdecl localtime(const time_t *_Time);
- _CRTIMP struct tm *__cdecl localtime_r(const time_t *_Time,struct tm *);
-
  _CRTIMP time_t __cdecl mktime(struct tm *_Tm);
  _CRTIMP time_t __cdecl _mkgmtime(struct tm *_Tm);
  _CRTIMP time_t __cdecl time(time_t *_Time);
@@ -216,5 +215,5 @@ __CRT_INLINE time_t __cdecl time(time_t *_Time) { return _time64(_Time); }
 
 #pragma pack(pop)
 
-#endif /* End _TIME_H_ */
+#endif /* End _INC_TIME */
 
