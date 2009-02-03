@@ -51,6 +51,12 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
     HANDLE hProcess;
     HANDLE hToken;
     TOKEN_PRIVILEGES tkp;
+    HANDLE hMutex;
+
+    /* check wether we're already running or not */
+    hMutex = CreateMutexW(NULL, TRUE, L"taskmgrros");
+    if ((!hMutex) || (GetLastError() == ERROR_ALREADY_EXISTS))
+        return 1;
 
     /* Initialize global variables */
     hInst = hInstance;
