@@ -4714,10 +4714,10 @@ BOOLEAN NTAPI
 MmCanFileBeTruncated (IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
                       IN PLARGE_INTEGER   NewFileSize)
 {
- 
    /* Check whether an ImageSectionObject exists */
    if (SectionObjectPointer->ImageSectionObject != NULL)
    {
+      DPRINT1("ERROR: File can't be truncated because it has an image section\n");
       return FALSE;
    }
 
@@ -4730,15 +4730,29 @@ MmCanFileBeTruncated (IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
 
       if (Segment->ReferenceCount != 0)
       {
-         /* FIXME: check if NewFileSize <= current file size */
+          /* Check size of file */
+          if (SectionObjectPointer->SharedCacheMap)
+          {
+             PBCB Bcb = SectionObjectPointer->SharedCacheMap;
+             if (NewFileSize->QuadPart <= Bcb->FileSize.QuadPart)
+             {
+                return FALSE;
+             }
+          }
+      }
+      else
+      {
+         /* Something must gone wrong
+          * how can we have a Section but no 
+          * reference? */
+         DPRINT1("ERROR: DataSectionObject without reference!\n");
          return FALSE;
       }
    }
 
-   /* FIXME: check for outstanding write probes */
-   UNIMPLEMENTED;
+   DPRINT1("FIXME: didn't check for outstanding write probes\n");
 
-   return FALSE;
+   return TRUE;
 }
 
 
