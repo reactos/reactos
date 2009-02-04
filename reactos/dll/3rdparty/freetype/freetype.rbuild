@@ -7,7 +7,6 @@
 	<define name="__NTDRIVER__" />
 	<define name="__NO_CTYPE_INLINES" />
 	<define name="FT2_BUILD_LIBRARY"  />
-	<library>libcntpr</library>
 	<if property="NSWPAT" value="0">
 		<define name="TT_CONFIG_OPTION_UNPATENTED_HINTING" />
 	</if>
