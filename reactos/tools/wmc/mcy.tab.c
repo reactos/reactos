@@ -118,7 +118,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
-
+#include <string.h>
 #include "utils.h"
 #include "wmc.h"
 #include "lang.h"
