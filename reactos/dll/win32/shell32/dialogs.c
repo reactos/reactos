@@ -607,10 +607,10 @@ int WINAPI RestartDialogEx(HWND hWndOwner, LPCWSTR lpwstrReason, DWORD uFlags, D
 }
 
 /*************************************************************************
- * LogoffWindowsDialog                          [SHELL32.54]
+ * LogoffWindowsDialog  [SHELL32.54]
  */
 
-int WINAPI LogoffWindowsDialog(DWORD uFlags)
+int WINAPI LogoffWindowsDialog(HWND hWndOwner)
 {
    UNIMPLEMENTED;
    ExitWindowsEx(EWX_LOGOFF, 0);

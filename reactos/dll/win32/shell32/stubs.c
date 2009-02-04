@@ -854,3 +854,566 @@ SHGetShellFolderViewCB(HWND hwnd)
     FIXME("SHGetShellFolderViewCB() stub\n");
     return NULL;
 }
+
+/*
+ * Unimplemented
+ */
+INT
+WINAPI
+SHLookupIconIndexA(LPCSTR lpName, INT iIndex, UINT uFlags)
+{
+    FIXME("SHLookupIconIndexA() stub\n");
+    return 0;
+}
+
+/*
+ * Unimplemented
+ */
+INT
+WINAPI
+SHLookupIconIndexW(LPCWSTR lpName, INT iIndex, UINT uFlags)
+{
+    FIXME("SHLookupIconIndexW() stub\n");
+    return 0;
+}
+
+/*
+ * Unimplemented
+ */
+HANDLE
+WINAPI
+PifMgr_OpenProperties(LPWSTR lpAppPath, LPWSTR lpPifPath, UINT hInfIndex, UINT uUnknown)
+{
+    FIXME("PifMgr_OpenProperties() stub\n");
+    return 0;
+}
+
+/*
+ * Unimplemented
+ */
+INT
+WINAPI
+PifMgr_GetProperties(HANDLE hHandle, LPWSTR lpName, LPVOID lpUnknown, INT iUnknown, UINT uUnknown)
+{
+    FIXME("PifMgr_GetProperties() stub\n");
+    return 0;
+}
+
+/*
+ * Unimplemented
+ */
+INT
+WINAPI
+PifMgr_SetProperties(HANDLE hHandle, LPWSTR lpName, LPVOID lpUnknown, INT iUnknown, UINT uUnknown)
+{
+    FIXME("PifMgr_SetProperties() stub\n");
+    return 0;
+}
+
+/*
+ * Unimplemented
+ */
+HRESULT
+WINAPI
+SHStartNetConnectionDialogA(HWND hwnd,
+                            LPCSTR pszRemoteName,
+                            DWORD dwType)
+{
+    FIXME("SHStartNetConnectionDialogA() stub\n");
+    return E_FAIL;
+}
+
+/*
+ * Unimplemented
+ */
+HRESULT
+WINAPI
+SHStartNetConnectionDialogW(HWND hwnd,
+                            LPCWSTR pszRemoteName,
+                            DWORD dwType)
+{
+    FIXME("SHStartNetConnectionDialogW() stub\n");
+    return E_FAIL;
+}
+
+/*
+ * Unimplemented
+ */
+HANDLE
+WINAPI
+PifMgr_CloseProperties(HANDLE hHandle, UINT uUnknown)
+{
+    FIXME("PifMgr_CloseProperties() stub\n");
+    return NULL;
+}
+
+/*
+ * Unimplemented
+ */
+BOOL
+WINAPI
+DAD_DragEnterEx2(HWND hwndTarget,
+                 const POINT ptStart,
+                 IDataObject *pdtObject)
+{
+    FIXME("DAD_DragEnterEx2() stub\n");
+    return FALSE;
+}
+
+/*
+ * Unimplemented
+ */
+BOOL
+WINAPI
+IsSuspendAllowed(VOID)
+{
+    FIXME("IsSuspendAllowed() stub\n");
+    return FALSE;
+}
+
+/*
+ * Unimplemented
+ */
+UINT
+WINAPI
+SHGetNetResource(LPVOID lpUnknown1, UINT iIndex, LPVOID lpUnknown2, UINT cchMax)
+{
+    FIXME("SHGetNetResource() stub\n");
+    return 0;
+}
+
+/*
+ * Unimplemented
+ */
+BOOL
+WINAPI
+DragQueryInfo(HDROP hDrop, DRAGINFO *pDragInfo)
+{
+    FIXME("DragQueryInfo() stub\n");
+    return FALSE;
+}
+
+/*
+ * Unimplemented
+ */
+LPVOID
+WINAPI
+DDECreatePostNotify(LPVOID lpUnknown)
+{
+    FIXME("DDECreatePostNotify() stub\n");
+    return NULL;
+}
+
+/*
+ * Unimplemented
+ */
+BOOL
+WINAPI
+SHIsBadInterfacePtr(LPVOID pv, UINT ucb)
+{
+    FIXME("SHIsBadInterfacePtr() stub\n");
+    return FALSE;
+}
+
+/*
+ * Unimplemented
+ */
+BOOL
+WINAPI
+Activate_RunDLL(DWORD dwProcessId, LPVOID lpUnused1, LPVOID lpUnused2, LPVOID lpUnused3)
+{
+    FIXME("Activate_RunDLL() stub\n");
+    return FALSE;
+}
+
+/*
+ * Unimplemented
+ */
+VOID
+WINAPI
+AppCompat_RunDLLW(HWND hwnd, HINSTANCE hInstance, LPWSTR pszCmdLine, int nCmdShow)
+{
+    FIXME("AppCompat_RunDLLW() stub\n");
+}
+
+/*
+ * Unimplemented
+ */
+VOID
+WINAPI
+Control_RunDLLAsUserW(HWND hwnd, HINSTANCE hInstance, LPWSTR pszCmdLine, int nCmdShow)
+{
+    FIXME("Control_RunDLLAsUserW() stub\n");
+}
+
+/*
+ * Unimplemented
+ */
+UINT
+WINAPI
+DragQueryFileAorW(HDROP hDrop, UINT iIndex, LPWSTR lpFile, UINT ucb, BOOL bUnicode, BOOL bShorten)
+{
+    FIXME("DragQueryFileAorW() stub\n");
+    return 0;
+}
+
+/*
+ * Unimplemented
+ */
+DWORD
+WINAPI
+SHNetConnectionDialog(HWND hwndOwner,
+                      LPCWSTR lpstrRemoteName,
+                      DWORD dwType)
+{
+    FIXME("SHNetConnectionDialog() stub\n");
+    return ERROR_INVALID_PARAMETER;
+}
+
+/*
+ * Unimplemented
+ */
+BOOL
+WINAPI
+DAD_SetDragImageFromListView(HWND hwnd, POINT pt)
+{
+    FIXME("DAD_SetDragImageFromListView() stub\n");
+    return FALSE;
+}
+
+/*
+ * Unimplemented
+ */
+void
+WINAPI
+SHHandleDiskFull(HWND hwndOwner, UINT uDrive)
+{
+    FIXME("SHHandleDiskFull() stub\n");
+}
+
+/*
+ * Unimplemented
+ */
+BOOL
+WINAPI
+ILGetPseudoNameW(LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2, LPWSTR szStr, INT iUnknown)
+{
+    FIXME("ILGetPseudoNameW() stub\n");
+    return FALSE;
+}
+
+/*
+ * Unimplemented
+ */
+VOID
+WINAPI
+SHGlobalDefect(DWORD dwUnknown)
+{
+    /* Unimplemented in WinXP SP3 */
+    TRACE("SHGlobalDefect() stub\n");
+}
+
+/*
+ * Unimplemented
+ */
+LPITEMIDLIST
+WINAPI
+Printers_GetPidl(LPCITEMIDLIST pidl, LPCWSTR lpName)
+{
+    FIXME("Printers_GetPidl() stub\n");
+    return NULL;
+}
+
+/*
+ * Unimplemented
+ */
+INT
+WINAPI
+Int64ToString(LONGLONG llInt64,
+              LPWSTR lpOut,
+              UINT uSize,
+              BOOL bUseFormat,
+              NUMBERFMT *pNumberFormat,
+              DWORD dwNumberFlags)
+{
+    FIXME("Int64ToString() stub\n");
+    return 0;
+}
+
+/*
+ * Unimplemented
+ */
+INT
+WINAPI
+LargeIntegerToString(LARGE_INTEGER *pLargeInt,
+                     LPWSTR lpOut,
+                     UINT uSize,
+                     BOOL bUseFormat,
+                     NUMBERFMT *pNumberFormat,
+                     DWORD dwNumberFlags)
+{
+    FIXME("LargeIntegerToString() stub\n");
+    return 0;
+}
+
+/*
+ * Unimplemented
+ */
+LONG
+WINAPI
+Printers_AddPrinterPropPages(LPVOID lpUnknown1, LPVOID lpUnknown2)
+{
+    FIXME("Printers_AddPrinterPropPages() stub\n");
+    return 0;
+}
+
+/*
+ * Unimplemented
+ */
+WORD
+WINAPI
+ExtractIconResInfoA(HANDLE hHandle,
+                    LPSTR lpFile,
+                    WORD wIndex,
+                    LPWORD lpSize,
+                    LPHANDLE lpIcon)
+{
+    FIXME("ExtractIconResInfoA() stub\n");
+    return 0;
+}
+
+/*
+ * Unimplemented
+ */
+WORD
+WINAPI
+ExtractIconResInfoW(HANDLE hHandle,
+                    LPWSTR lpFile,
+                    WORD wIndex,
+                    LPWORD lpSize,
+                    LPHANDLE lpIcon)
+{
+    FIXME("ExtractIconResInfoW() stub\n");
+    return 0;
+}
+
+/*
+ * Unimplemented
+ */
+DWORD
+WINAPI
+ExtractVersionResource16W(LPWSTR lpName, LPHANDLE lpHandle)
+{
+    FIXME("ExtractVersionResource16W() stub\n");
+    return 0;
+}
+
+/*
+ * Unimplemented
+ */
+BOOL*
+WINAPI
+FindExeDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    FIXME("FindExeDlgProc() stub\n");
+    return 0;
+}
+
+/*
+ * Unimplemented
+ */
+HANDLE
+WINAPI
+InternalExtractIconListW(HANDLE hHandle,
+                         LPWSTR lpFileName,
+                         LPINT lpCount)
+{
+    FIXME("InternalExtractIconListW() stub\n");
+    return NULL;
+}
+
+/*
+ * Unimplemented
+ */
+HANDLE
+WINAPI
+InternalExtractIconListA(HANDLE hHandle,
+                         LPSTR lpFileName,
+                         LPINT lpCount)
+{
+    FIXME("InternalExtractIconListA() stub\n");
+    return NULL;
+}
+
+/*
+ * Unimplemented
+ */
+HRESULT
+WINAPI
+FirstUserLogon(LPWSTR lpUnknown1, LPWSTR lpUnknown2)
+{
+    FIXME("FirstUserLogon() stub\n");
+    return E_FAIL;
+}
+
+/*
+ * Unimplemented
+ */
+HRESULT
+WINAPI
+SHSetFolderPathA(int csidl,
+                 HANDLE hToken,
+                 DWORD dwFlags,
+                 LPCSTR pszPath)
+{
+    FIXME("SHSetFolderPathA() stub\n");
+    return E_FAIL;
+}
+
+/*
+ * Unimplemented
+ */
+HRESULT
+WINAPI
+SHSetFolderPathW(int csidl,
+                 HANDLE hToken,
+                 DWORD dwFlags,
+                 LPCWSTR pszPath)
+{
+    FIXME("SHSetFolderPathW() stub\n");
+    return E_FAIL;
+}
+
+/*
+ * Unimplemented
+ */
+HRESULT
+WINAPI
+SHGetUserPicturePathW(LPCWSTR lpPath, int csidl, LPVOID lpUnknown)
+{
+    FIXME("SHGetUserPicturePathW() stub\n");
+    return E_FAIL;
+}
+
+/*
+ * Unimplemented
+ */
+HRESULT
+WINAPI
+SHSetUserPicturePathW(LPCWSTR lpPath, int csidl, LPVOID lpUnknown)
+{
+    FIXME("SHGetUserPicturePathA() stub\n");
+    return E_FAIL;
+}
+
+/*
+ * Unimplemented
+ */
+BOOL
+WINAPI
+SHOpenEffectiveToken(LPVOID Token)
+{
+    FIXME("SHOpenEffectiveToken() stub\n");
+    return FALSE;
+}
+
+/*
+ * Unimplemented
+ */
+BOOL
+WINAPI
+SHTestTokenPrivilegeW(HANDLE hToken, LPDWORD ReturnLength)
+{
+    FIXME("SHTestTokenPrivilegeW() stub\n");
+    return FALSE;
+}
+
+/*
+ * Unimplemented
+ */
+BOOL
+WINAPI
+SHShouldShowWizards(LPVOID lpUnknown)
+{
+    FIXME("SHShouldShowWizards() stub\n");
+    return FALSE;
+}
+
+/*
+ * Unimplemented
+ */
+BOOL
+WINAPI
+PathIsSlowW(LPCWSTR pszFile, DWORD dwFileAttr)
+{
+    FIXME("PathIsSlowW() stub\n");
+    return FALSE;
+}
+
+/*
+ * Unimplemented
+ */
+BOOL
+WINAPI
+PathIsSlowA(LPCSTR pszFile, DWORD dwFileAttr)
+{
+    FIXME("PathIsSlowA() stub\n");
+    return FALSE;
+}
+
+/*
+ * Unimplemented
+ */
+DWORD
+WINAPI
+SHGetUserDisplayName(LPWSTR lpName, PULONG puSize)
+{
+    FIXME("SHGetUserDisplayName() stub\n");
+    wcscpy(lpName, L"UserName");
+    return ERROR_SUCCESS;
+}
+
+/*
+ * Unimplemented
+ */
+DWORD
+WINAPI
+SHGetProcessDword(DWORD dwUnknown1, DWORD dwUnknown2)
+{
+    /* Unimplemented in WinXP SP3 */
+    TRACE("SHGetProcessDword() stub\n");
+    return 0;
+}
+
+/*
+ * Unimplemented
+ */
+BOOL
+WINAPI
+SHTestTokenMembership(HANDLE TokenHandle, PSID SidToCheck)
+{
+    FIXME("SHTestTokenMembership() stub\n");
+    return FALSE;
+}
+
+/*
+ * Unimplemented
+ */
+LPVOID
+WINAPI
+SHGetUserSessionId(HANDLE hHandle)
+{
+    FIXME("SHGetUserSessionId() stub\n");
+    return NULL;
+}
+
+/*
+ * Unimplemented
+ */
+BOOL
+WINAPI
+PathIsURL(LPCWSTR pszPath)
+{
+    FIXME("PathIsURL() stub\n");
+    return FALSE;
+}
