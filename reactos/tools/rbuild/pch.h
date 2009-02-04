@@ -28,8 +28,6 @@
 #include <map>
 #include <set>
 #include <utility>
-#include <cstdlib>
-#include <cstdio>
 
 #ifdef WIN32
 #include <windows.h>
