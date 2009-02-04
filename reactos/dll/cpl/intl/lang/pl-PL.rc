@@ -38,10 +38,10 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Jêzyki"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Jêzyki i us³ugi tekstowe", IDC_GROUPBOX, 5, 5, 234, 52
+    GROUPBOX "Jêzyki i us³ugi tekstowe", -1, 5, 5, 234, 52
     LTEXT "Aby przejrzeæ b¹dŸ zmieniæ zainstalowane jêzyki lub us³ugi tekstowe, naciœnij ""Szczegó³y...""", -1, 12, 15, 220, 18
     PUSHBUTTON "Szcze&gó³y...", IDC_DETAIL_BUTTON, 177, 34, 54, 14
-    GROUPBOX "Dodatkowe wsparcie jêzyków", IDC_GROUPBOX, 5, 62, 234, 82
+    GROUPBOX "Dodatkowe wsparcie jêzyków", -1, 5, 62, 234, 82
     LTEXT "Wiêkszoœæ jêzyków jest instalowana domyœlnie. Aby zainstalowaæ dodatkowe jêzyki, zaznacz odpowiedni¹ opcjê poni¿ej.", -1, 12, 72, 220, 18
     CHECKBOX "I&nstalacja jêzyków o z³o¿onej sk³adni i jêzyków pisanych od prawej do lewej", IDC_INST_FILES_FOR_RTOL_LANG, 12, 92, 215, 22, BS_MULTILINE
     CHECKBOX "In&stalacja jêzyków wschodnioazjatyckich", IDC_INST_FILES_FOR_ASIAN, 12, 114, 180, 22, BS_MULTILINE
@@ -52,7 +52,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Zaawansowane"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Jêzyki dla programów bez Unicode", IDC_GROUPBOX, 5, 5, 234, 90
+    GROUPBOX "Jêzyki dla programów bez Unicode", -1, 5, 5, 234, 90
     COMBOBOX IDC_LANGUAGE_COMBO, 14, 75, 217, 160, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
     LTEXT "Te ustawienia umo¿liwiaj¹ programom bez standardu Unicode wyœwietlaæ menu i dialogi w odpowiednich jêzykach. Nie ma to wp³ywu na programy Unicode ale dotyczy profili domyœlnych.", -1, 14, 18, 223, 33
     LTEXT "Wybierz taki jêzyk, który ma byæ u¿ywany przez programy bez Unicode:", -1, 14, 55, 223, 18
@@ -150,7 +150,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Data"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Kalendarz", IDC_GROUPBOX, 7, 7, 230, 74
+    GROUPBOX "Kalendarz", -1, 7, 7, 230, 74
     LTEXT "Je¿eli rok zostanie zapisany w postaci dwóch cyfr, intepretuj go jako rok z przedzia³u:", -1, 13, 18, 215, 8
     EDITTEXT IDC_FIRSTYEAR_EDIT, 13, 30, 36, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_DISABLED
     LTEXT "do", -1, 55, 32, 17, 8
@@ -160,7 +160,7 @@ BEGIN
     COMBOBOX IDC_CALTYPE_COMBO, 77, 46, 153, 100, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
     LTEXT "Kalendarz muzu³mañski:", -1, 13, 62, 60, 16
     COMBOBOX IDC_HIJCHRON_COMBO, 77, 64, 153, 100, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
-    GROUPBOX "Format daty krótkiej", IDC_GROUPBOX, 7, 83, 230, 81
+    GROUPBOX "Format daty krótkiej", -1, 7, 83, 230, 81
     LTEXT "Przyk³ad:", -1, 13, 95, 63, 10
     EDITTEXT IDC_SHRTDATESAMPLE_EDIT, 77, 93, 153, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
     LTEXT "Przyk³ad - z prawej do lewej:", -1, 13, 109, 60, 16
@@ -169,7 +169,7 @@ BEGIN
     COMBOBOX IDC_SHRTDATEFMT_COMBO, 77, 129, 153, 100, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_VISIBLE
     LTEXT "Separator daty:", -1, 13, 148, 113, 10
     COMBOBOX IDC_SHRTDATESEP_COMBO, 180, 146, 51, 100, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_VISIBLE
-    GROUPBOX "Format daty d³ugiej", IDC_GROUPBOX, 7, 167, 230, 64
+    GROUPBOX "Format daty d³ugiej", -1, 7, 167, 230, 64
     LTEXT "Przyk³ad:", -1, 13, 179, 61, 10
     EDITTEXT IDC_LONGDATESAMPLE_EDIT, 77, 177, 153, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
     LTEXT "Przyk³ad - z prawej do lewej:", -1, 13, 193, 61, 16

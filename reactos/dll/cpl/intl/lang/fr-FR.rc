@@ -34,10 +34,10 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Langues"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Langue de saisie du texte et services", IDC_GROUPBOX, 5, 5, 234, 52
+    GROUPBOX "Langue de saisie du texte et services", -1, 5, 5, 234, 52
     LTEXT "Pour voir ou changer la langue ou les méthodes de saise de texte, pressez ""Détails...""", -1, 12, 15, 220, 18
     PUSHBUTTON "Dé&tails...", IDC_DETAIL_BUTTON, 177, 34, 54, 14
-    GROUPBOX "Support de langues additionnelles", IDC_GROUPBOX, 5, 62, 234, 82
+    GROUPBOX "Support de langues additionnelles", -1, 5, 62, 234, 82
     LTEXT "La plupart des langues sont installées par défaut. Pour installer des langues supplémentaires, sélectionnez la case à cocher appropriée ci-dessous.", -1, 12, 72, 220, 18
     CHECKBOX "I&nstaller les fichiers pour les scripts complexes et les langues de droite à gauche", IDC_INST_FILES_FOR_RTOL_LANG, 12, 92, 215, 22, BS_MULTILINE
     CHECKBOX "In&staller les fichiers pour les langues de l'Asie de l'Est", IDC_INST_FILES_FOR_ASIAN, 12, 114, 180, 22, BS_MULTILINE
@@ -48,7 +48,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Avancé"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Langue pour les programmes non-Unicode", IDC_GROUPBOX, 5, 5, 234, 90
+    GROUPBOX "Langue pour les programmes non-Unicode", -1, 5, 5, 234, 90
     COMBOBOX IDC_LANGUAGE_COMBO, 14, 75, 217, 160, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
     LTEXT "Ce paramètre système permet aux programmes non-Unicode d'afficher les menus et les dialogues dans leur langue native. Cela n'affecte pas es programmes Unicode, mais s'applique à tous les utilisateurs de cet ordinateur.", -1, 14, 18, 223, 33
     LTEXT "Sélectionnez une langue qui corresponde à la version de la langue des programmes que vous voulez utiliser :", -1, 14, 55, 223, 18
@@ -146,7 +146,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Date"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Calendrier", IDC_GROUPBOX, 7, 7, 230, 74
+    GROUPBOX "Calendrier", -1, 7, 7, 230, 74
     LTEXT "Si l'année est tapée sur deux chiffres, alors l'afficher comme une année entre:", -1, 13, 18, 215, 8
     EDITTEXT IDC_FIRSTYEAR_EDIT, 13, 30, 36, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_DISABLED
     LTEXT "et", -1, 55, 32, 17, 8
@@ -156,7 +156,7 @@ BEGIN
     COMBOBOX IDC_CALTYPE_COMBO, 77, 46, 153, 100, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
     LTEXT "Calendrier musulman:", -1, 13, 61, 62, 17
     COMBOBOX IDC_HIJCHRON_COMBO, 77, 64, 153, 100, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
-    GROUPBOX "Format de date courte", IDC_GROUPBOX, 7, 83, 230, 81
+    GROUPBOX "Format de date courte", -1, 7, 83, 230, 81
     LTEXT "Exemple:", -1, 13, 95, 63, 10
     EDITTEXT IDC_SHRTDATESAMPLE_EDIT, 77, 93, 153, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
     LTEXT "Exemple - lecture de droite à gauche:", -1, 13, 109, 60, 16
@@ -165,7 +165,7 @@ BEGIN
     COMBOBOX IDC_SHRTDATEFMT_COMBO, 77, 129, 153, 100, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_VISIBLE
     LTEXT "Séparateur des composants de la date:", -1, 13, 148, 113, 10
     COMBOBOX IDC_SHRTDATESEP_COMBO, 180, 146, 51, 100, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_VISIBLE
-    GROUPBOX "Format de date longue", IDC_GROUPBOX, 7, 167, 230, 64
+    GROUPBOX "Format de date longue", -1, 7, 167, 230, 64
     LTEXT "Exemple :", -1, 13, 179, 61, 10
     EDITTEXT IDC_LONGDATESAMPLE_EDIT, 77, 177, 153, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
     LTEXT "Exemple - lecture de droite à gauche:", -1, 13, 193, 61, 16

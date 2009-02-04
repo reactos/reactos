@@ -5,6 +5,7 @@
 #define IDI_CPLICON                3004
 #define IDI_PLAY_ICON              3005
 #define IDI_STOP_ICON              3006
+#define IDI_MIDICON                3007
 #define IDI_JOY_ICON               4361
 #define IDI_CAMERA_ICON            4364
 #define IDI_SHUTDOWN_ICON          3009
