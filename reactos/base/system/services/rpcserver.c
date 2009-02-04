@@ -4251,7 +4251,14 @@ DWORD RQueryServiceConfig2A(
                                 L"Description",
                                 &lpDescriptionW);
         if (dwError != ERROR_SUCCESS)
+        {
+            if (cbBufSize < sizeof(SERVICE_DESCRIPTIONA))
+            {
+                *pcbBytesNeeded = sizeof(SERVICE_DESCRIPTIONA);
+                dwError = ERROR_INSUFFICIENT_BUFFER;
+            }
             goto done;
+        }
 
         dwRequiredSize = sizeof(SERVICE_DESCRIPTIONA) + ((wcslen(lpDescriptionW) + 1));
 
