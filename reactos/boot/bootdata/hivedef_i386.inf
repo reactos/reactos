@@ -278,5 +278,7 @@ HKCU, "Control Panel\Desktop\WindowMetrics","StatusFont",0x00000001,f5,ff,ff,ff,
 HKCU,"Software\Microsoft\Internet Explorer\Main","Start Page",,"http://www.reactos.org"
 HKCU,"Software\Microsoft\Internet Explorer\Main","Search Page",,"http://www.google.com"
 
+HKCU,Software\Wine\MSHTML,"GeckoUrl",,"http://links.reactos.org/links/winegecko.php"
+
 
 ; EOF

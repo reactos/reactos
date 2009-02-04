@@ -146,8 +146,21 @@ static HRESULT WINAPI OmNavigator_get_appName(IOmNavigator *iface, BSTR *p)
 static HRESULT WINAPI OmNavigator_get_appVersion(IOmNavigator *iface, BSTR *p)
 {
     OmNavigator *This = OMNAVIGATOR_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+
+    /* FIXME: Should we return something smarter? */
+    static const WCHAR app_verW[] =
+        {'4','.','0',' ','(','c','o','m','p','a','t','i','b','l','e',';',
+         ' ','M','S','I','E',' ','7','.','0',';',
+         ' ','W','i','n','d','o','w','s',' ','N','T',' ','5','.','1',';',
+         ' ','M','o','z','i','l','l','a','/','4','.','0',')',0};
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    *p = SysAllocString(app_verW);
+    if(!*p)
+        return E_OUTOFMEMORY;
+
+    return S_OK;
 }
 
 static HRESULT WINAPI OmNavigator_get_userAgent(IOmNavigator *iface, BSTR *p)
@@ -238,11 +251,15 @@ static HRESULT WINAPI OmNavigator_get_platform(IOmNavigator *iface, BSTR *p)
 {
     OmNavigator *This = OMNAVIGATOR_THIS(iface);
 
-    static const WCHAR win32W[] = {'W','i','n','3','2',0};
+#ifdef _WIN64
+    static const WCHAR platformW[] = {'W','i','n','6','4',0};
+#else
+    static const WCHAR platformW[] = {'W','i','n','3','2',0};
+#endif
 
     TRACE("(%p)->(%p)\n", This, p);
 
-    *p = SysAllocString(win32W);
+    *p = SysAllocString(platformW);
     return S_OK;
 }
 

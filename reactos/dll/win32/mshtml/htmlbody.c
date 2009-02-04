@@ -140,8 +140,23 @@ static HRESULT WINAPI HTMLBodyElement_Invoke(IHTMLBodyElement *iface, DISPID dis
 static HRESULT WINAPI HTMLBodyElement_put_background(IHTMLBodyElement *iface, BSTR v)
 {
     HTMLBodyElement *This = HTMLBODY_THIS(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_w(v));
-    return E_NOTIMPL;
+    HRESULT hr = S_OK;
+    nsAString nsstr;
+    nsresult nsres;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_w(v));
+
+    nsAString_Init(&nsstr, v);
+
+    nsres = nsIDOMHTMLBodyElement_SetBackground(This->nsbody, &nsstr);
+    if(!NS_SUCCEEDED(nsres))
+    {
+        hr = E_FAIL;
+    }
+
+    nsAString_Finish(&nsstr);
+
+    return hr;
 }
 
 static HRESULT WINAPI HTMLBodyElement_get_background(IHTMLBodyElement *iface, BSTR *p)
@@ -257,29 +272,89 @@ static HRESULT WINAPI HTMLBodyElement_get_noWrap(IHTMLBodyElement *iface, VARIAN
 static HRESULT WINAPI HTMLBodyElement_put_bgColor(IHTMLBodyElement *iface, VARIANT v)
 {
     HTMLBodyElement *This = HTMLBODY_THIS(iface);
-    FIXME("(%p)->()\n", This);
-    return E_NOTIMPL;
+    nsAString strColor;
+    nsresult nsres;
+
+    TRACE("(%p)->()\n", This);
+
+    if(!variant_to_nscolor(&v, &strColor))
+        return S_OK;
+
+    nsres = nsIDOMHTMLBodyElement_SetBgColor(This->nsbody, &strColor);
+    nsAString_Finish(&strColor);
+    if(NS_FAILED(nsres))
+        ERR("SetBgColor failed: %08x\n", nsres);
+
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLBodyElement_get_bgColor(IHTMLBodyElement *iface, VARIANT *p)
 {
     HTMLBodyElement *This = HTMLBODY_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+    nsAString strColor;
+    nsresult nsres;
+    const PRUnichar *color;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    nsAString_Init(&strColor, NULL);
+    nsres = nsIDOMHTMLBodyElement_GetBgColor(This->nsbody, &strColor);
+    if(NS_FAILED(nsres))
+        ERR("SetBgColor failed: %08x\n", nsres);
+
+    nsAString_GetData(&strColor, &color);
+
+    V_VT(p) = VT_BSTR;
+    V_BSTR(p) = SysAllocString(color);
+
+    nsAString_Finish(&strColor);
+
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLBodyElement_put_text(IHTMLBodyElement *iface, VARIANT v)
 {
     HTMLBodyElement *This = HTMLBODY_THIS(iface);
-    FIXME("(%p)->()\n", This);
-    return E_NOTIMPL;
+    nsAString text;
+    nsresult nsres;
+
+    TRACE("(%p)->(v%d)\n", This, V_VT(&v));
+
+    if(!variant_to_nscolor(&v, &text))
+        return S_OK;
+
+    nsres = nsIDOMHTMLBodyElement_SetText(This->nsbody, &text);
+    nsAString_Finish(&text);
+
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLBodyElement_get_text(IHTMLBodyElement *iface, VARIANT *p)
 {
     HTMLBodyElement *This = HTMLBODY_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+    nsAString text;
+    nsresult nsres;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    nsAString_Init(&text, NULL);
+
+    V_VT(p) = VT_BSTR;
+    V_BSTR(p) = NULL;
+
+    nsres = nsIDOMHTMLBodyElement_GetText(This->nsbody, &text);
+    if(NS_SUCCEEDED(nsres))
+    {
+        const PRUnichar *sText;
+        nsAString_GetData(&text, &sText);
+
+        V_VT(p) = VT_BSTR;
+        V_BSTR(p) = SysAllocString(sText);
+    }
+
+    nsAString_Finish(&text);
+
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLBodyElement_put_link(IHTMLBodyElement *iface, VARIANT v)
@@ -469,30 +544,34 @@ static HRESULT WINAPI HTMLBodyElement_get_onbeforeunload(IHTMLBodyElement *iface
 static HRESULT WINAPI HTMLBodyElement_createTextRange(IHTMLBodyElement *iface, IHTMLTxtRange **range)
 {
     HTMLBodyElement *This = HTMLBODY_THIS(iface);
+    nsIDOMDocumentRange *nsdocrange;
     nsIDOMRange *nsrange = NULL;
+    nsresult nsres;
 
     TRACE("(%p)->(%p)\n", This, range);
 
-    if(This->textcont.element.node.doc->nscontainer) {
-        nsIDOMDocument *nsdoc;
-        nsIDOMDocumentRange *nsdocrange;
-        nsresult nsres;
-
-        nsIWebNavigation_GetDocument(This->textcont.element.node.doc->nscontainer->navigation, &nsdoc);
-        nsIDOMDocument_QueryInterface(nsdoc, &IID_nsIDOMDocumentRange, (void**)&nsdocrange);
-        nsIDOMDocument_Release(nsdoc);
-
-        nsres = nsIDOMDocumentRange_CreateRange(nsdocrange, &nsrange);
-        if(NS_SUCCEEDED(nsres)) {
-            nsres = nsIDOMRange_SelectNodeContents(nsrange, This->textcont.element.node.nsnode);
-            if(NS_FAILED(nsres))
-                ERR("SelectNodeContents failed: %08x\n", nsres);
-        }else {
-            ERR("CreateRange failed: %08x\n", nsres);
-        }
-
-        nsIDOMDocumentRange_Release(nsdocrange);
+    if(!This->textcont.element.node.doc->nsdoc) {
+        WARN("No nsdoc\n");
+        return E_UNEXPECTED;
     }
+
+    nsres = nsIDOMDocument_QueryInterface(This->textcont.element.node.doc->nsdoc, &IID_nsIDOMDocumentRange,
+            (void**)&nsdocrange);
+    if(NS_FAILED(nsres)) {
+        ERR("Could not get nsIDOMDocumentRabge iface: %08x\n", nsres);
+        return E_FAIL;
+    }
+
+    nsres = nsIDOMDocumentRange_CreateRange(nsdocrange, &nsrange);
+    if(NS_SUCCEEDED(nsres)) {
+        nsres = nsIDOMRange_SelectNodeContents(nsrange, This->textcont.element.node.nsnode);
+        if(NS_FAILED(nsres))
+            ERR("SelectNodeContents failed: %08x\n", nsres);
+    }else {
+        ERR("CreateRange failed: %08x\n", nsres);
+    }
+
+    nsIDOMDocumentRange_Release(nsdocrange);
 
     *range = HTMLTxtRange_Create(This->textcont.element.node.doc, nsrange);
     return S_OK;
@@ -594,7 +673,6 @@ static const NodeImplVtbl HTMLBodyElementImplVtbl = {
 static const tid_t HTMLBodyElement_iface_tids[] = {
     IHTMLBodyElement_tid,
     IHTMLBodyElement2_tid,
-    IHTMLControlElement_tid,
     IHTMLDOMNode_tid,
     IHTMLDOMNode2_tid,
     IHTMLElement_tid,

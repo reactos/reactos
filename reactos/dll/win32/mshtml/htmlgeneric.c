@@ -66,25 +66,21 @@ static ULONG WINAPI HTMLGenericElement_Release(IHTMLGenericElement *iface)
 static HRESULT WINAPI HTMLGenericElement_GetTypeInfoCount(IHTMLGenericElement *iface, UINT *pctinfo)
 {
     HTMLGenericElement *This = HTMLGENERIC_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, pctinfo);
-    return E_NOTIMPL;
+    return IDispatchEx_GetTypeInfoCount(DISPATCHEX(&This->element.node.dispex), pctinfo);
 }
 
 static HRESULT WINAPI HTMLGenericElement_GetTypeInfo(IHTMLGenericElement *iface, UINT iTInfo,
                                               LCID lcid, ITypeInfo **ppTInfo)
 {
     HTMLGenericElement *This = HTMLGENERIC_THIS(iface);
-    FIXME("(%p)->(%u %u %p)\n", This, iTInfo, lcid, ppTInfo);
-    return E_NOTIMPL;
+    return IDispatchEx_GetTypeInfo(DISPATCHEX(&This->element.node.dispex), iTInfo, lcid, ppTInfo);
 }
 
 static HRESULT WINAPI HTMLGenericElement_GetIDsOfNames(IHTMLGenericElement *iface, REFIID riid,
         LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId)
 {
     HTMLGenericElement *This = HTMLGENERIC_THIS(iface);
-    FIXME("(%p)->(%s %p %u %u %p)\n", This, debugstr_guid(riid), rgszNames, cNames,
-          lcid, rgDispId);
-    return E_NOTIMPL;
+    return IDispatchEx_GetIDsOfNames(DISPATCHEX(&This->element.node.dispex), riid, rgszNames, cNames, lcid, rgDispId);
 }
 
 static HRESULT WINAPI HTMLGenericElement_Invoke(IHTMLGenericElement *iface, DISPID dispIdMember,
@@ -92,9 +88,8 @@ static HRESULT WINAPI HTMLGenericElement_Invoke(IHTMLGenericElement *iface, DISP
         VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
 {
     HTMLGenericElement *This = HTMLGENERIC_THIS(iface);
-    FIXME("(%p)->(%d %s %d %d %p %p %p %p)\n", This, dispIdMember, debugstr_guid(riid),
-          lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
-    return E_NOTIMPL;
+    return IDispatchEx_Invoke(DISPATCHEX(&This->element.node.dispex), dispIdMember, riid, lcid, wFlags, pDispParams,
+            pVarResult, pExcepInfo, puArgErr);
 }
 
 static HRESULT WINAPI HTMLGenericElement_get_recordset(IHTMLGenericElement *iface, IDispatch **p)
@@ -162,7 +157,7 @@ static const tid_t HTMLGenericElement_iface_tids[] = {
     IHTMLDOMNode2_tid,
     IHTMLElement_tid,
     IHTMLElement2_tid,
-    IHTMLElement2_tid,
+    IHTMLElement3_tid,
     IHTMLGenericElement_tid,
     0
 };

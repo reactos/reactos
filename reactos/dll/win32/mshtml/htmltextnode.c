@@ -32,10 +32,10 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
-typedef struct {
+struct HTMLDOMTextNode {
     HTMLDOMNode node;
     const IHTMLDOMTextNodeVtbl   *lpIHTMLDOMTextNodeVtbl;
-} HTMLDOMTextNode;
+};
 
 #define HTMLTEXT(x)  ((IHTMLDOMTextNode*)  &(x)->lpIHTMLDOMTextNodeVtbl)
 
@@ -68,16 +68,14 @@ static ULONG WINAPI HTMLDOMTextNode_Release(IHTMLDOMTextNode *iface)
 static HRESULT WINAPI HTMLDOMTextNode_GetTypeInfoCount(IHTMLDOMTextNode *iface, UINT *pctinfo)
 {
     HTMLDOMTextNode *This = HTMLTEXT_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, pctinfo);
-    return E_NOTIMPL;
+    return IDispatchEx_GetTypeInfoCount(DISPATCHEX(&This->node.dispex), pctinfo);
 }
 
 static HRESULT WINAPI HTMLDOMTextNode_GetTypeInfo(IHTMLDOMTextNode *iface, UINT iTInfo,
                                               LCID lcid, ITypeInfo **ppTInfo)
 {
     HTMLDOMTextNode *This = HTMLTEXT_THIS(iface);
-    FIXME("(%p)->(%u %u %p)\n", This, iTInfo, lcid, ppTInfo);
-    return E_NOTIMPL;
+    return IDispatchEx_GetTypeInfo(DISPATCHEX(&This->node.dispex), iTInfo, lcid, ppTInfo);
 }
 
 static HRESULT WINAPI HTMLDOMTextNode_GetIDsOfNames(IHTMLDOMTextNode *iface, REFIID riid,
@@ -85,9 +83,7 @@ static HRESULT WINAPI HTMLDOMTextNode_GetIDsOfNames(IHTMLDOMTextNode *iface, REF
                                                 LCID lcid, DISPID *rgDispId)
 {
     HTMLDOMTextNode *This = HTMLTEXT_THIS(iface);
-    FIXME("(%p)->(%s %p %u %u %p)\n", This, debugstr_guid(riid), rgszNames, cNames,
-                                        lcid, rgDispId);
-    return E_NOTIMPL;
+    return IDispatchEx_GetIDsOfNames(DISPATCHEX(&This->node.dispex), riid, rgszNames, cNames, lcid, rgDispId);
 }
 
 static HRESULT WINAPI HTMLDOMTextNode_Invoke(IHTMLDOMTextNode *iface, DISPID dispIdMember,
@@ -95,9 +91,8 @@ static HRESULT WINAPI HTMLDOMTextNode_Invoke(IHTMLDOMTextNode *iface, DISPID dis
                             VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
 {
     HTMLDOMTextNode *This = HTMLTEXT_THIS(iface);
-    FIXME("(%p)->(%d %s %d %d %p %p %p %p)\n", This, dispIdMember, debugstr_guid(riid),
-          lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
-    return E_NOTIMPL;
+    return IDispatchEx_Invoke(DISPATCHEX(&This->node.dispex), dispIdMember, riid, lcid, wFlags, pDispParams,
+            pVarResult, pExcepInfo, puArgErr);
 }
 
 static HRESULT WINAPI HTMLDOMTextNode_put_data(IHTMLDOMTextNode *iface, BSTR v)
@@ -154,7 +149,7 @@ static const IHTMLDOMTextNodeVtbl HTMLDOMTextNodeVtbl = {
 
 #define HTMLTEXT_NODE_THIS(iface) DEFINE_THIS2(HTMLDOMTextNode, node, iface)
 
-HRESULT HTMLDOMTextNode_QI(HTMLDOMNode *iface, REFIID riid, void **ppv)
+static HRESULT HTMLDOMTextNode_QI(HTMLDOMNode *iface, REFIID riid, void **ppv)
 {
     HTMLDOMTextNode *This = HTMLTEXT_NODE_THIS(iface);
 
@@ -171,7 +166,7 @@ HRESULT HTMLDOMTextNode_QI(HTMLDOMNode *iface, REFIID riid, void **ppv)
     return S_OK;
 }
 
-void HTMLDOMTextNode_destructor(HTMLDOMNode *iface)
+static void HTMLDOMTextNode_destructor(HTMLDOMNode *iface)
 {
     HTMLDOMTextNode *This = HTMLTEXT_NODE_THIS(iface);
 

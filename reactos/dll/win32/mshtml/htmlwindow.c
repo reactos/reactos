@@ -248,8 +248,15 @@ static HRESULT WINAPI HTMLWindow2_get_Image(IHTMLWindow2 *iface, IHTMLImageEleme
 static HRESULT WINAPI HTMLWindow2_get_location(IHTMLWindow2 *iface, IHTMLLocation **p)
 {
     HTMLWindow *This = HTMLWINDOW2_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    if(!This->doc) {
+        FIXME("This->doc is NULL\n");
+        return E_FAIL;
+    }
+
+    return IHTMLDocument2_get_location(HTMLDOC(This->doc), p);
 }
 
 static HRESULT WINAPI HTMLWindow2_get_history(IHTMLWindow2 *iface, IOmHistory **p)
@@ -504,8 +511,13 @@ static HRESULT WINAPI HTMLWindow2_get_document(IHTMLWindow2 *iface, IHTMLDocumen
 static HRESULT WINAPI HTMLWindow2_get_event(IHTMLWindow2 *iface, IHTMLEventObj **p)
 {
     HTMLWindow *This = HTMLWINDOW2_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    if(This->event)
+        IHTMLEventObj_AddRef(This->event);
+    *p = This->event;
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLWindow2_get__newEnum(IHTMLWindow2 *iface, IUnknown **p)
@@ -1177,131 +1189,31 @@ static dispex_static_data_t HTMLWindow_dispex = {
     HTMLWindow_iface_tids
 };
 
-static const char wineConfig_func[] =
-"window.__defineGetter__(\"external\",function() {\n"
-"    return window.__wineWindow__.external;\n"
-"});\n"
-"window.__wineWindow__ = wineWindow;\n";
-
-static void astr_to_nswstr(const char *str, nsAString *nsstr)
+HRESULT HTMLWindow_Create(HTMLDocument *doc, nsIDOMWindow *nswindow, HTMLWindow **ret)
 {
-    LPWSTR wstr;
-    int len;
+    HTMLWindow *window;
 
-    len = MultiByteToWideChar(CP_ACP, 0, str, -1, NULL, 0);
-    wstr = heap_alloc(len*sizeof(WCHAR));
-    MultiByteToWideChar(CP_ACP, 0, str, -1, wstr, len);
+    window = heap_alloc_zero(sizeof(HTMLWindow));
+    if(!window)
+        return E_OUTOFMEMORY;
 
-    nsAString_Init(nsstr, wstr);
+    window->lpHTMLWindow2Vtbl = &HTMLWindow2Vtbl;
+    window->lpHTMLWindow3Vtbl = &HTMLWindow3Vtbl;
+    window->lpIDispatchExVtbl = &WindowDispExVtbl;
+    window->ref = 1;
+    window->doc = doc;
 
-    heap_free(wstr);
-}
+    init_dispex(&window->dispex, (IUnknown*)HTMLWINDOW2(window), &HTMLWindow_dispex);
 
-static nsresult call_js_func(nsIScriptContainer *script_container, nsISupports *target,
-                             const char *name, const char *body,
-                             PRUint32 argc, const char **arg_names, nsIArray *argv)
-{
-    nsACString name_str;
-    nsAString body_str;
-    JSObject func_obj, jsglobal;
-    nsIVariant *jsret;
-    nsresult nsres;
-
-    nsres = nsIScriptContainer_GetGlobalObject(script_container, &jsglobal);
-    if(NS_FAILED(nsres))
-        ERR("GetGlobalObject: %08x\n", nsres);
-
-    nsACString_Init(&name_str, name);
-    astr_to_nswstr(body, &body_str);
-
-    nsres =  nsIScriptContainer_CompileFunction(script_container, jsglobal, &name_str, argc, arg_names,
-                                                &body_str, NULL, 1, FALSE, &func_obj);
-
-    nsACString_Finish(&name_str);
-    nsAString_Finish(&body_str);
-
-    if(NS_FAILED(nsres)) {
-        ERR("CompileFunction failed: %08x\n", nsres);
-        return nsres;
+    if(nswindow) {
+        nsIDOMWindow_AddRef(nswindow);
+        window->nswindow = nswindow;
     }
 
-    nsres = nsIScriptContainer_CallFunction(script_container, target, jsglobal, func_obj, argv, &jsret);
+    list_add_head(&window_list, &window->entry);
 
-    nsIScriptContainer_DropScriptObject(script_container, func_obj);
-    nsIScriptContainer_DropScriptObject(script_container, jsglobal);
-    if(NS_FAILED(nsres)) {
-        ERR("CallFunction failed: %08x\n", nsres);
-        return nsres;
-    }
-
-    nsIVariant_Release(jsret);
-    return NS_OK;
-}
-
-void setup_nswindow(HTMLWindow *This)
-{
-    nsIScriptContainer *script_container;
-    nsIDOMWindow *nswindow;
-    nsIDOMDocument *domdoc;
-    nsIWritableVariant *nsvar;
-    nsIMutableArray *argv;
-    nsresult nsres;
-
-    static const char *args[] = {"wineWindow"};
-
-    TRACE("(%p)\n", This);
-
-    nsIWebNavigation_GetDocument(This->doc->nscontainer->navigation, &domdoc);
-    nsres = nsIDOMDocument_QueryInterface(domdoc, &IID_nsIScriptContainer, (void**)&script_container);
-    nsIDOMDocument_Release(domdoc);
-    if(NS_FAILED(nsres)) {
-        TRACE("Could not get nsIDOMScriptContainer: %08x\n", nsres);
-        return;
-    }
-
-    nsIWebBrowser_GetContentDOMWindow(This->doc->nscontainer->webbrowser, &nswindow);
-
-    nsvar = create_nsvariant();
-    nsres = nsIWritableVariant_SetAsInterface(nsvar, &IID_IDispatch, HTMLWINDOW2(This));
-    if(NS_FAILED(nsres))
-        ERR("SetAsInterface failed: %08x\n", nsres);
-
-    argv = create_nsarray();
-    nsres = nsIMutableArray_AppendElement(argv, (nsISupports*)nsvar, FALSE);
-    nsIWritableVariant_Release(nsvar);
-    if(NS_FAILED(nsres))
-        ERR("AppendElement failed: %08x\n", nsres);
-
-    call_js_func(script_container, (nsISupports*)nswindow/*HTMLWINDOW2(This)*/, "wineConfig",
-                 wineConfig_func, 1, args, (nsIArray*)argv);
-
-    nsIMutableArray_Release(argv);
-    nsIScriptContainer_Release(script_container);
-}
-
-HTMLWindow *HTMLWindow_Create(HTMLDocument *doc)
-{
-    HTMLWindow *ret = heap_alloc_zero(sizeof(HTMLWindow));
-
-    ret->lpHTMLWindow2Vtbl = &HTMLWindow2Vtbl;
-    ret->lpHTMLWindow3Vtbl = &HTMLWindow3Vtbl;
-    ret->lpIDispatchExVtbl = &WindowDispExVtbl;
-    ret->ref = 1;
-    ret->doc = doc;
-
-    init_dispex(&ret->dispex, (IUnknown*)HTMLWINDOW2(ret), &HTMLWindow_dispex);
-
-    if(doc->nscontainer) {
-        nsresult nsres;
-
-        nsres = nsIWebBrowser_GetContentDOMWindow(doc->nscontainer->webbrowser, &ret->nswindow);
-        if(NS_FAILED(nsres))
-            ERR("GetContentDOMWindow failed: %08x\n", nsres);
-    }
-
-    list_add_head(&window_list, &ret->entry);
-
-    return ret;
+    *ret = window;
+    return S_OK;
 }
 
 HTMLWindow *nswindow_to_window(const nsIDOMWindow *nswindow)

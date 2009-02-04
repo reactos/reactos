@@ -223,6 +223,9 @@ static HRESULT WINAPI ActiveScriptSite_QueryInterface(IActiveScriptSite *iface, 
     }else if(IsEqualGUID(&IID_IActiveScriptSiteDebug32, riid)) {
         TRACE("(%p)->(IID_IActiveScriptSiteDebug32 %p)\n", This, ppv);
         *ppv = ACTSCPDBG32(This);
+    }else if(IsEqualGUID(&IID_ICanHandleException, riid)) {
+        TRACE("(%p)->(IID_ICanHandleException not supported %p)\n", This, ppv);
+        return E_NOINTERFACE;
     }else {
         FIXME("(%p)->(%s %p)\n", This, debugstr_guid(riid), ppv);
         return E_NOINTERFACE;
@@ -712,8 +715,8 @@ static ScriptHost *get_script_host(HTMLDocument *doc, const GUID *guid)
 {
     ScriptHost *iter;
 
-    if(IsEqualGUID(&CLSID_JScript, guid)) {
-        FIXME("Ignoring JScript\n");
+    if(IsEqualGUID(&CLSID_JScript, guid) && doc->scriptmode != SCRIPTMODE_ACTIVESCRIPT) {
+        TRACE("Ignoring JScript\n");
         return NULL;
     }
 
@@ -790,6 +793,54 @@ IDispatch *script_parse_event(HTMLDocument *doc, LPCWSTR text)
 
     TRACE("ret %p\n", disp);
     return disp;
+}
+
+static BOOL is_jscript_available(void)
+{
+    static BOOL available, checked;
+
+    if(!checked) {
+        IUnknown *unk;
+        HRESULT hres = CoGetClassObject(&CLSID_JScript, CLSCTX_INPROC_SERVER, NULL, &IID_IUnknown, (void**)&unk);
+
+        if(SUCCEEDED(hres)) {
+            available = TRUE;
+            IUnknown_Release(unk);
+        }else {
+            available = FALSE;
+        }
+        checked = TRUE;
+    }
+
+    return available;
+}
+
+void set_script_mode(HTMLDocument *doc, SCRIPTMODE mode)
+{
+    nsIWebBrowserSetup *setup;
+    nsresult nsres;
+
+    if(mode == SCRIPTMODE_ACTIVESCRIPT && !is_jscript_available()) {
+        TRACE("jscript.dll not available\n");
+        doc->scriptmode = SCRIPTMODE_GECKO;
+        return;
+    }
+
+    doc->scriptmode = mode;
+
+    if(!doc->nscontainer || !doc->nscontainer->webbrowser)
+        return;
+
+    nsres = nsIWebBrowser_QueryInterface(doc->nscontainer->webbrowser,
+            &IID_nsIWebBrowserSetup, (void**)&setup);
+    if(NS_SUCCEEDED(nsres)) {
+        nsres = nsIWebBrowserSetup_SetProperty(setup, SETUP_ALLOW_JAVASCRIPT,
+                doc->scriptmode == SCRIPTMODE_GECKO);
+        nsIWebBrowserSetup_Release(setup);
+    }
+
+    if(NS_FAILED(nsres))
+        ERR("JavaScript setup failed: %08x\n", nsres);
 }
 
 void release_script_hosts(HTMLDocument *doc)

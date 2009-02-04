@@ -28,6 +28,7 @@
 #include "wine/debug.h"
 
 #include "mshtml_private.h"
+#include "htmlevent.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
@@ -102,25 +103,21 @@ static ULONG WINAPI HTMLDOMChildrenCollection_Release(IHTMLDOMChildrenCollection
 static HRESULT WINAPI HTMLDOMChildrenCollection_GetTypeInfoCount(IHTMLDOMChildrenCollection *iface, UINT *pctinfo)
 {
     HTMLDOMChildrenCollection *This = HTMLCHILDCOL_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, pctinfo);
-    return E_NOTIMPL;
+    return IDispatchEx_GetTypeInfoCount(DISPATCHEX(&This->dispex), pctinfo);
 }
 
 static HRESULT WINAPI HTMLDOMChildrenCollection_GetTypeInfo(IHTMLDOMChildrenCollection *iface, UINT iTInfo,
         LCID lcid, ITypeInfo **ppTInfo)
 {
     HTMLDOMChildrenCollection *This = HTMLCHILDCOL_THIS(iface);
-    FIXME("(%p)->(%u %u %p)\n", This, iTInfo, lcid, ppTInfo);
-    return E_NOTIMPL;
+    return IDispatchEx_GetTypeInfo(DISPATCHEX(&This->dispex), iTInfo, lcid, ppTInfo);
 }
 
 static HRESULT WINAPI HTMLDOMChildrenCollection_GetIDsOfNames(IHTMLDOMChildrenCollection *iface, REFIID riid,
         LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId)
 {
     HTMLDOMChildrenCollection *This = HTMLCHILDCOL_THIS(iface);
-    FIXME("(%p)->(%s %p %u %u %p)\n", This, debugstr_guid(riid), rgszNames, cNames,
-          lcid, rgDispId);
-    return E_NOTIMPL;
+    return IDispatchEx_GetIDsOfNames(DISPATCHEX(&This->dispex), riid, rgszNames, cNames, lcid, rgDispId);
 }
 
 static HRESULT WINAPI HTMLDOMChildrenCollection_Invoke(IHTMLDOMChildrenCollection *iface, DISPID dispIdMember,
@@ -128,9 +125,8 @@ static HRESULT WINAPI HTMLDOMChildrenCollection_Invoke(IHTMLDOMChildrenCollectio
         VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
 {
     HTMLDOMChildrenCollection *This = HTMLCHILDCOL_THIS(iface);
-    FIXME("(%p)->(%d %s %d %d %p %p %p %p)\n", This, dispIdMember, debugstr_guid(riid),
-          lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
-    return E_NOTIMPL;
+    return IDispatchEx_Invoke(DISPATCHEX(&This->dispex), dispIdMember, riid, lcid,
+            wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
 }
 
 static HRESULT WINAPI HTMLDOMChildrenCollection_get_length(IHTMLDOMChildrenCollection *iface, long *p)
@@ -315,16 +311,14 @@ static ULONG WINAPI HTMLDOMNode_Release(IHTMLDOMNode *iface)
 static HRESULT WINAPI HTMLDOMNode_GetTypeInfoCount(IHTMLDOMNode *iface, UINT *pctinfo)
 {
     HTMLDOMNode *This = HTMLDOMNODE_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, pctinfo);
-    return E_NOTIMPL;
+    return IDispatchEx_GetTypeInfoCount(DISPATCHEX(&This->dispex), pctinfo);
 }
 
 static HRESULT WINAPI HTMLDOMNode_GetTypeInfo(IHTMLDOMNode *iface, UINT iTInfo,
                                               LCID lcid, ITypeInfo **ppTInfo)
 {
     HTMLDOMNode *This = HTMLDOMNODE_THIS(iface);
-    FIXME("(%p)->(%u %u %p)\n", This, iTInfo, lcid, ppTInfo);
-    return E_NOTIMPL;
+    return IDispatchEx_GetTypeInfo(DISPATCHEX(&This->dispex), iTInfo, lcid, ppTInfo);
 }
 
 static HRESULT WINAPI HTMLDOMNode_GetIDsOfNames(IHTMLDOMNode *iface, REFIID riid,
@@ -332,9 +326,7 @@ static HRESULT WINAPI HTMLDOMNode_GetIDsOfNames(IHTMLDOMNode *iface, REFIID riid
                                                 LCID lcid, DISPID *rgDispId)
 {
     HTMLDOMNode *This = HTMLDOMNODE_THIS(iface);
-    FIXME("(%p)->(%s %p %u %u %p)\n", This, debugstr_guid(riid), rgszNames, cNames,
-                                        lcid, rgDispId);
-    return E_NOTIMPL;
+    return IDispatchEx_GetIDsOfNames(DISPATCHEX(&This->dispex), riid, rgszNames, cNames, lcid, rgDispId);
 }
 
 static HRESULT WINAPI HTMLDOMNode_Invoke(IHTMLDOMNode *iface, DISPID dispIdMember,
@@ -342,9 +334,8 @@ static HRESULT WINAPI HTMLDOMNode_Invoke(IHTMLDOMNode *iface, DISPID dispIdMembe
                             VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
 {
     HTMLDOMNode *This = HTMLDOMNODE_THIS(iface);
-    FIXME("(%p)->(%d %s %d %d %p %p %p %p)\n", This, dispIdMember, debugstr_guid(riid),
-            lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
-    return E_NOTIMPL;
+    return IDispatchEx_Invoke(DISPATCHEX(&This->dispex), dispIdMember, riid, lcid,
+            wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
 }
 
 static HRESULT WINAPI HTMLDOMNode_get_nodeType(IHTMLDOMNode *iface, long *p)
@@ -455,8 +446,48 @@ static HRESULT WINAPI HTMLDOMNode_insertBefore(IHTMLDOMNode *iface, IHTMLDOMNode
                                                VARIANT refChild, IHTMLDOMNode **node)
 {
     HTMLDOMNode *This = HTMLDOMNODE_THIS(iface);
-    FIXME("(%p)->(%p v %p)\n", This, newChild, node);
-    return E_NOTIMPL;
+    nsIDOMNode *nsnode, *nsref = NULL;
+    HTMLDOMNode *new_child;
+    nsresult nsres;
+
+    TRACE("(%p)->(%p %s %p)\n", This, newChild, debugstr_variant(&refChild), node);
+
+    new_child = get_node_obj(This->doc, (IUnknown*)newChild);
+    if(!new_child) {
+        ERR("invalid newChild\n");
+        return E_INVALIDARG;
+    }
+
+    switch(V_VT(&refChild)) {
+    case VT_NULL:
+        break;
+    case VT_DISPATCH: {
+        HTMLDOMNode *ref_node;
+
+        ref_node = get_node_obj(This->doc, (IUnknown*)V_DISPATCH(&refChild));
+        if(!ref_node) {
+            ERR("unvalid node\n");
+            return E_FAIL;
+        }
+
+        nsref = ref_node->nsnode;
+        break;
+    }
+    default:
+        FIXME("unimplemented vt %d\n", V_VT(&refChild));
+        return E_NOTIMPL;
+    }
+
+    nsres = nsIDOMNode_InsertBefore(This->nsnode, new_child->nsnode, nsref, &nsnode);
+    if(NS_FAILED(nsres)) {
+        ERR("InsertBefore failed: %08x\n", nsres);
+        return E_FAIL;
+    }
+
+    *node = HTMLDOMNODE(get_node(This->doc, nsnode, TRUE));
+    nsIDOMNode_Release(nsnode);
+    IHTMLDOMNode_AddRef(*node);
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLDOMNode_removeChild(IHTMLDOMNode *iface, IHTMLDOMNode *oldChild,
@@ -481,6 +512,7 @@ static HRESULT WINAPI HTMLDOMNode_removeChild(IHTMLDOMNode *iface, IHTMLDOMNode 
 
     /* FIXME: Make sure that node != newChild */
     *node = HTMLDOMNODE(get_node(This->doc, nsnode, TRUE));
+    nsIDOMNode_Release(nsnode);
     IHTMLDOMNode_AddRef(*node);
     return S_OK;
 }
@@ -541,8 +573,8 @@ static HRESULT WINAPI HTMLDOMNode_appendChild(IHTMLDOMNode *iface, IHTMLDOMNode 
 
     nsres = nsIDOMNode_AppendChild(This->nsnode, node_obj->nsnode, &nsnode);
     if(NS_FAILED(nsres)) {
-        ERR("AppendChild failed: %08x\n", nsres);
-        return E_FAIL;
+        WARN("AppendChild failed: %08x\n", nsres);
+        nsnode = node_obj->nsnode;
     }
 
     /* FIXME: Make sure that node != newChild */
@@ -739,16 +771,14 @@ static ULONG WINAPI HTMLDOMNode2_Release(IHTMLDOMNode2 *iface)
 static HRESULT WINAPI HTMLDOMNode2_GetTypeInfoCount(IHTMLDOMNode2 *iface, UINT *pctinfo)
 {
     HTMLDOMNode *This = HTMLDOMNODE2_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, pctinfo);
-    return E_NOTIMPL;
+    return IDispatchEx_GetTypeInfoCount(DISPATCHEX(&This->dispex), pctinfo);
 }
 
 static HRESULT WINAPI HTMLDOMNode2_GetTypeInfo(IHTMLDOMNode2 *iface, UINT iTInfo,
         LCID lcid, ITypeInfo **ppTInfo)
 {
     HTMLDOMNode *This = HTMLDOMNODE2_THIS(iface);
-    FIXME("(%p)->(%u %u %p)\n", This, iTInfo, lcid, ppTInfo);
-    return E_NOTIMPL;
+    return IDispatchEx_GetTypeInfo(DISPATCHEX(&This->dispex), iTInfo, lcid, ppTInfo);
 }
 
 static HRESULT WINAPI HTMLDOMNode2_GetIDsOfNames(IHTMLDOMNode2 *iface, REFIID riid,
@@ -756,9 +786,7 @@ static HRESULT WINAPI HTMLDOMNode2_GetIDsOfNames(IHTMLDOMNode2 *iface, REFIID ri
                                                 LCID lcid, DISPID *rgDispId)
 {
     HTMLDOMNode *This = HTMLDOMNODE2_THIS(iface);
-    FIXME("(%p)->(%s %p %u %u %p)\n", This, debugstr_guid(riid), rgszNames, cNames,
-          lcid, rgDispId);
-    return E_NOTIMPL;
+    return IDispatchEx_GetIDsOfNames(DISPATCHEX(&This->dispex), riid, rgszNames, cNames, lcid, rgDispId);
 }
 
 static HRESULT WINAPI HTMLDOMNode2_Invoke(IHTMLDOMNode2 *iface, DISPID dispIdMember,
@@ -766,9 +794,8 @@ static HRESULT WINAPI HTMLDOMNode2_Invoke(IHTMLDOMNode2 *iface, DISPID dispIdMem
         VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
 {
     HTMLDOMNode *This = HTMLDOMNODE2_THIS(iface);
-    FIXME("(%p)->(%d %s %d %d %p %p %p %p)\n", This, dispIdMember, debugstr_guid(riid),
-            lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
-    return E_NOTIMPL;
+    return IDispatchEx_Invoke(DISPATCHEX(&This->dispex), dispIdMember, riid, lcid,
+            wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
 }
 
 static HRESULT WINAPI HTMLDOMNode2_get_ownerDocument(IHTMLDOMNode2 *iface, IDispatch **p)

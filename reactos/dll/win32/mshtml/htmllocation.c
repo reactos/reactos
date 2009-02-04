@@ -43,12 +43,11 @@ static HRESULT WINAPI HTMLLocation_QueryInterface(IHTMLLocation *iface, REFIID r
     if(IsEqualGUID(&IID_IUnknown, riid)) {
         TRACE("(%p)->(IID_IUnknown %p)\n", This, ppv);
         *ppv = HTMLLOCATION(This);
-    }else if(IsEqualGUID(&IID_IDispatch, riid)) {
-        TRACE("(%p)->(IID_IDispatch %p)\n", This, ppv);
-        *ppv = HTMLLOCATION(This);
     }else if(IsEqualGUID(&IID_IHTMLLocation, riid)) {
         TRACE("(%p)->(IID_IHTMLLocation %p)\n", This, ppv);
         *ppv = HTMLLOCATION(This);
+    }else if(dispex_query_interface(&This->dispex, riid, ppv)) {
+        return *ppv ? S_OK : E_NOINTERFACE;
     }
 
     if(*ppv) {
@@ -293,6 +292,18 @@ static const IHTMLLocationVtbl HTMLLocationVtbl = {
     HTMLLocation_toString
 };
 
+static const tid_t HTMLLocation_iface_tids[] = {
+    IHTMLLocation_tid,
+    0
+};
+static dispex_static_data_t HTMLLocation_dispex = {
+    NULL,
+    IHTMLLocation_tid,
+    NULL,
+    HTMLLocation_iface_tids
+};
+
+
 HTMLLocation *HTMLLocation_Create(HTMLDocument *doc)
 {
     HTMLLocation *ret = heap_alloc(sizeof(*ret));
@@ -300,6 +311,8 @@ HTMLLocation *HTMLLocation_Create(HTMLDocument *doc)
     ret->lpHTMLLocationVtbl = &HTMLLocationVtbl;
     ret->ref = 1;
     ret->doc = doc;
+
+    init_dispex(&ret->dispex, (IUnknown*)HTMLLOCATION(ret),  &HTMLLocation_dispex);
 
     return ret;
 }

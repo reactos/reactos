@@ -56,8 +56,8 @@ typedef struct {
     nsIDOMCSSRuleList *nslist;
 } HTMLStyleSheetRulesCollection;
 
-#define HTMLSTYLESHEET(x)     ((IHTMLStyleSheet*)                &(x)->lpHTMLStyleSheetVtbl);
-#define HTMLSTYLESHEETSCOL(x) ((IHTMLStyleSheetsCollection*)     &(x)->lpHTMLStyleSheetsCollectionVtbl);
+#define HTMLSTYLESHEET(x)     ((IHTMLStyleSheet*)                &(x)->lpHTMLStyleSheetVtbl)
+#define HTMLSTYLESHEETSCOL(x) ((IHTMLStyleSheetsCollection*)     &(x)->lpHTMLStyleSheetsCollectionVtbl)
 #define HTMLSTYLERULESCOL(x)  ((IHTMLStyleSheetRulesCollection*) &(x)->lpHTMLStyleSheetRulesCollectionVtbl)
 
 #define HTMLSTYLERULESCOL_THIS(iface) \
