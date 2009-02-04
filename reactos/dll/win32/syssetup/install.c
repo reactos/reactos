@@ -881,6 +881,21 @@ InstallReactOS(HINSTANCE hInstance)
     /* Append the Admin-RID */
     AppendRidToSid(&AdminSid, DomainSid, DOMAIN_USER_RID_ADMIN);
 
+    CreateTempDir(L"TEMP");
+    CreateTempDir(L"TMP");
+
+    if (GetWindowsDirectory(szBuffer, sizeof(szBuffer) / sizeof(TCHAR)))
+    {
+        PathAddBackslash(szBuffer);
+        _tcscat(szBuffer, _T("system"));
+        CreateDirectory(szBuffer, NULL);
+    }
+
+    if (!CommonInstall())
+        return 0;
+
+    InstallWizard();
+
     /* Create the Administrator account */
     if (!SamCreateUser(L"Administrator", L"", AdminSid))
     {
@@ -931,21 +946,6 @@ InstallReactOS(HINSTANCE hInstance)
         }
     }
     /* END OF ROS HACK */
-
-    CreateTempDir(L"TEMP");
-    CreateTempDir(L"TMP");
-
-    if (GetWindowsDirectory(szBuffer, sizeof(szBuffer) / sizeof(TCHAR)))
-    {
-        PathAddBackslash(szBuffer);
-        _tcscat(szBuffer, _T("system"));
-        CreateDirectory(szBuffer, NULL);
-    }
-
-    if (!CommonInstall())
-        return 0;
-
-    InstallWizard();
 
     SetupCloseInfFile(hSysSetupInf);
     SetSetupType(0);
