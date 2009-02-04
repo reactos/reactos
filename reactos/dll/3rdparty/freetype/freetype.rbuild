@@ -15,9 +15,9 @@
 	</if>
 	<library>ntoskrnl</library>
 	<if property="ARCH" value="i386">
-	<directory name="i386">
-		<file>setjmplongjmp.s</file>
-	</directory>
+		<directory name="i386">
+			<file>setjmplongjmp.s</file>
+		</directory>
 	</if>
 	<directory name="src">
 		<directory name="base">
