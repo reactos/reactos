@@ -845,7 +845,7 @@ dev_mgr_get_desc_completion(PURB purb, PVOID context)
     PUSB_CTRL_SETUP_PACKET psetup;
     PHCD hcd;
 
-    USE_BASIC_NON_PENDING_IRQL;;
+    USE_BASIC_NON_PENDING_IRQL;
 
     if (purb == NULL)
         return;
@@ -1033,7 +1033,7 @@ dev_mgr_start_select_driver(PUSB_DEV pdev)
     PUSB_EVENT pevent;
     BOOLEAN bret;
 
-    USE_BASIC_NON_PENDING_IRQL;;
+    USE_BASIC_NON_PENDING_IRQL;
 
     if (pdev == NULL)
         return FALSE;

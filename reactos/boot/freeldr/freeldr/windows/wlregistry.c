@@ -715,7 +715,7 @@ WinLdrAddDriverToList(LIST_ENTRY *BootDriverListHead,
 	else
 	{
 		// we have to construct ImagePath ourselves
-		PathLength = wcslen(ServiceName)*sizeof(WCHAR) + sizeof(L"system32\\drivers\\.sys");;
+		PathLength = wcslen(ServiceName)*sizeof(WCHAR) + sizeof(L"system32\\drivers\\.sys");
 		BootDriverEntry->FilePath.Length = 0;
 		BootDriverEntry->FilePath.MaximumLength = PathLength+sizeof(WCHAR);
 		BootDriverEntry->FilePath.Buffer = MmHeapAlloc(PathLength);

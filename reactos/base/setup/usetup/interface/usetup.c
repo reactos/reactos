@@ -3428,7 +3428,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
             }
             else if (Line == 14)
             {
-                return SUCCESS_PAGE;;
+                return SUCCESS_PAGE;
             }
 
             return BOOT_LOADER_PAGE;

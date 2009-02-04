@@ -171,7 +171,7 @@ static void ref_norm_transform_normalize( const GLmatrix *mat,
             out[i][0] = out[i][1] = out[i][2] = 0;
          }
       } else {
-         scale = lengths[i];;
+         scale = lengths[i];
 	 SCALE_SCALAR_3V( out[i], scale, t );
       }
 

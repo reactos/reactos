@@ -61,7 +61,7 @@ struct rc4_state
 void* APP_CC
 ssl_rc4_info_create(void)
 {
-  return g_malloc(sizeof(struct rc4_state), 1);;
+  return g_malloc(sizeof(struct rc4_state), 1);
 }
 
 /*****************************************************************************/

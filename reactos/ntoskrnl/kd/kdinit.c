@@ -24,7 +24,7 @@
 KD_PORT_INFORMATION PortInfo = {DEFAULT_DEBUG_PORT, DEFAULT_DEBUG_BAUD_RATE, 0};
 ULONG KdpPortIrq;
 #ifdef AUTO_ENABLE_BOCHS
-KDP_DEBUG_MODE KdpDebugMode = {{{.Bochs=TRUE}}};;
+KDP_DEBUG_MODE KdpDebugMode = {{{.Bochs=TRUE}}};
 #else
 KDP_DEBUG_MODE KdpDebugMode;
 #endif

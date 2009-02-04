@@ -3905,7 +3905,7 @@ xmlTextReaderPreserve(xmlTextReaderPtr reader) {
     }
     reader->preserves++;
         
-    parent = cur->parent;;
+    parent = cur->parent;
     while (parent != NULL) {
         if (parent->type == XML_ELEMENT_NODE)
 	    parent->extra |= NODE_IS_PRESERVED;
