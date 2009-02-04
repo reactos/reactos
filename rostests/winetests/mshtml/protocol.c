@@ -266,9 +266,13 @@ static void res_sec_url_cmp(LPCWSTR url, DWORD size, LPCWSTR file)
         return;
     }
 
+    SetLastError(0xdeadbeef);
     len = SearchPathW(NULL, file, NULL, sizeof(buf)/sizeof(WCHAR), buf, NULL);
     if(!len) {
-        ok(0, "SearchPath failed: %u\n", GetLastError());
+        if (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
+            win_skip("SearchPathW is not implemented\n");
+        else
+            ok(0, "SearchPath failed: %u\n", GetLastError());
         return;
     }
 
@@ -301,7 +305,7 @@ static void test_res_protocol(void)
 
     hres = CoGetClassObject(&CLSID_ResProtocol, CLSCTX_INPROC_SERVER, NULL, &IID_IUnknown, (void**)&unk);
     ok(hres == S_OK, "CoGetClassObject failed: %08x\n", hres);
-    if(!SUCCEEDED(hres))
+    if(FAILED(hres))
         return;
 
     hres = IUnknown_QueryInterface(unk, &IID_IInternetProtocolInfo, (void**)&protocol_info);
@@ -364,7 +368,7 @@ static void test_res_protocol(void)
                 sizeof(buf)/sizeof(buf[0]), &size, 0);
         ok(hres == E_FAIL, "ParseUrl failed: %08x\n", hres);
         ok(buf[0] == '?', "buf changed\n");
-        ok(size == 1, "size=%u, ezpected 1\n", size);
+        ok(size == 1, "size=%u, expected 1\n", size);
 
         buf[0] = '?';
         hres = IInternetProtocolInfo_ParseUrl(protocol_info, blank_url, PARSE_DOMAIN, 0, buf,
@@ -610,7 +614,7 @@ static void test_about_protocol(void)
 
     hres = CoGetClassObject(&CLSID_AboutProtocol, CLSCTX_INPROC_SERVER, NULL, &IID_IUnknown, (void**)&unk);
     ok(hres == S_OK, "CoGetClassObject failed: %08x\n", hres);
-    if(!SUCCEEDED(hres))
+    if(FAILED(hres))
         return;
 
     hres = IUnknown_QueryInterface(unk, &IID_IInternetProtocolInfo, (void**)&protocol_info);
@@ -660,7 +664,7 @@ static void test_about_protocol(void)
                 sizeof(buf)/sizeof(buf[0]), &size, 0);
         ok(hres == E_FAIL, "ParseUrl failed: %08x\n", hres);
         ok(buf[0] == '?', "buf changed\n");
-        ok(size == 1, "size=%u, ezpected 1\n", size);
+        ok(size == 1, "size=%u, expected 1\n", size);
 
         buf[0] = '?';
         hres = IInternetProtocolInfo_ParseUrl(protocol_info, about_blank_url, PARSE_DOMAIN, 0, buf,

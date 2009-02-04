@@ -118,6 +118,9 @@
 	<directory name="setupapi">
 		<xi:include href="setupapi/setupapi.rbuild" />
 	</directory>
+	<directory name="shdocvw">
+		<xi:include href="shdocvw/shdocvw.rbuild" />
+	</directory>
 	<directory name="shell32">
 		<xi:include href="shell32/shell32.rbuild" />
 	</directory>

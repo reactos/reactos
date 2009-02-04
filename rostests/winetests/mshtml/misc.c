@@ -24,9 +24,8 @@
 #include "windef.h"
 #include "winbase.h"
 #include "ole2.h"
-#include "optary.h"
-
 #include "initguid.h"
+#include "optary.h"
 
 static void test_HTMLLoadOptions(void)
 {
