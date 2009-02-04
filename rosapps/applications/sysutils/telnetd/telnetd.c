@@ -262,6 +262,8 @@ static DWORD WINAPI UserLoginThread(LPVOID data)
     return 0;
   }
   received = ReceiveLine(client->socket, password, sizeof(password), Password );
+
+#if 0
   if (received < 0) {
     closesocket(client->socket);
     free(client);
@@ -271,18 +273,20 @@ static DWORD WINAPI UserLoginThread(LPVOID data)
       *terminator = '\0';
     }
   }
-
+#endif
 
   /* TODO: do authentication here */
 
   
   printf("User '%s' logged on\n", userID);
+#if 0
   strcpy(client->userID, userID);
   if (send(client->socket, logonPrompt, strlen(logonPrompt), 0) < 0) {   
     closesocket(client->socket);
     free(client);
     return 0;
   }
+#endif
   RunShell(client);
   return 0;
 }

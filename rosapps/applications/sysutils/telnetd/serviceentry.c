@@ -57,8 +57,9 @@ ServiceMain(DWORD argc, LPTSTR *argv)
 
 
 int
-wmain(int argc, WCHAR *argv[])
+main(int argc, CHAR *argv[])
 {
+#if 0
     SERVICE_TABLE_ENTRY ServiceTable[2] =
     {
         {SERVICE_NAME, ServiceMain},
@@ -71,6 +72,7 @@ wmain(int argc, WCHAR *argv[])
     DPRINT("TelnetD: main() started\n");
 
     StartServiceCtrlDispatcher(ServiceTable);
+#endif
 
 	telnetd_main();
 
