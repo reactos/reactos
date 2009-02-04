@@ -3985,13 +3985,115 @@ DWORD REnumServiceGroupW(
 }
 
 
+//
+// WARNING: This function is untested
+//
 /* Function 36 */
 DWORD RChangeServiceConfig2A(
     SC_RPC_HANDLE hService,
     SC_RPC_CONFIG_INFOA Info)
 {
-    UNIMPLEMENTED;
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    SC_RPC_CONFIG_INFOW InfoW;
+    DWORD dwRet, dwLength;
+    PVOID ptr = NULL;
+
+    DPRINT("RChangeServiceConfig2A() called\n");
+    DPRINT("dwInfoLevel = %lu\n", Info.dwInfoLevel);
+
+    InfoW.dwInfoLevel = Info.dwInfoLevel;
+
+    if (InfoW.dwInfoLevel == SERVICE_CONFIG_DESCRIPTION)
+    {
+        LPSERVICE_DESCRIPTIONW lpServiceDesriptonW;
+        LPSERVICE_DESCRIPTIONA lpServiceDesriptonA;
+
+        lpServiceDesriptonA = Info.psd;
+
+        if (lpServiceDesriptonA &&
+            lpServiceDesriptonA->lpDescription)
+        {
+            dwLength = (strlen(lpServiceDesriptonA->lpDescription) + 1) * sizeof(WCHAR);
+
+            lpServiceDesriptonW = HeapAlloc(GetProcessHeap(),
+                                            0,
+                                            dwLength + sizeof(SERVICE_DESCRIPTIONW));
+            if (!lpServiceDesriptonW)
+            {
+                return ERROR_NOT_ENOUGH_MEMORY;
+            }
+
+            MultiByteToWideChar(CP_ACP,
+                                0,
+                                lpServiceDesriptonA->lpDescription,
+                                -1,
+                                lpServiceDesriptonW->lpDescription,
+                                dwLength);
+
+            ptr = lpServiceDesriptonW;
+        }
+    }
+    else if (Info.dwInfoLevel == SERVICE_CONFIG_FAILURE_ACTIONS)
+    {
+        LPSERVICE_FAILURE_ACTIONSW lpServiceFailureActionsW;
+        LPSERVICE_FAILURE_ACTIONSA lpServiceFailureActionsA;
+        DWORD dwRebootLen = 0;
+        DWORD dwCommandLen = 0;
+
+        lpServiceFailureActionsA = Info.psfa;
+
+        if (lpServiceFailureActionsA)
+        {
+            if (lpServiceFailureActionsA->lpRebootMsg)
+            {
+                dwRebootLen = (strlen(lpServiceFailureActionsA->lpRebootMsg) + 1) * sizeof(WCHAR);
+            }
+            if (lpServiceFailureActionsA->lpCommand)
+            {
+                dwCommandLen = (strlen(lpServiceFailureActionsA->lpCommand) + 1) * sizeof(WCHAR);
+            }
+            dwLength = dwRebootLen + dwCommandLen + sizeof(SERVICE_FAILURE_ACTIONSW);
+
+            lpServiceFailureActionsW = HeapAlloc(GetProcessHeap(),
+                                                 0,
+                                                 dwLength);
+            if (!lpServiceFailureActionsW)
+            {
+                return ERROR_NOT_ENOUGH_MEMORY;
+            }
+
+            lpServiceFailureActionsW->cActions = lpServiceFailureActionsA->cActions;
+            lpServiceFailureActionsW->dwResetPeriod = lpServiceFailureActionsA->dwResetPeriod;
+            CopyMemory(lpServiceFailureActionsW->lpsaActions, lpServiceFailureActionsA->lpsaActions, sizeof(SC_ACTION));
+
+            if (lpServiceFailureActionsA->lpRebootMsg)
+            {
+                MultiByteToWideChar(CP_ACP,
+                                    0,
+                                    lpServiceFailureActionsA->lpRebootMsg,
+                                    -1,
+                                    lpServiceFailureActionsW->lpRebootMsg,
+                                    dwRebootLen);
+            }
+
+            if (lpServiceFailureActionsA->lpCommand)
+            {
+                MultiByteToWideChar(CP_ACP,
+                                    0,
+                                    lpServiceFailureActionsA->lpCommand,
+                                    -1,
+                                    lpServiceFailureActionsW->lpCommand,
+                                    dwCommandLen);
+            }
+
+            ptr = lpServiceFailureActionsW;
+        }
+    }
+
+    dwRet = RChangeServiceConfig2W(hService, InfoW);
+
+    HeapFree(GetProcessHeap(), 0, ptr);
+
+    return dwRet;
 }
 
 
@@ -4048,7 +4150,7 @@ DWORD RChangeServiceConfig2W(
     if (dwError != ERROR_SUCCESS)
         goto done;
 
-    if (Info.dwInfoLevel & SERVICE_CONFIG_DESCRIPTION)
+    if (Info.dwInfoLevel == SERVICE_CONFIG_DESCRIPTION)
     {
         LPSERVICE_DESCRIPTIONW lpServiceDescription;
 
@@ -4069,7 +4171,7 @@ DWORD RChangeServiceConfig2W(
                 goto done;
         }
     }
-    else if (Info.dwInfoLevel & SERVICE_CONFIG_FAILURE_ACTIONS)
+    else if (Info.dwInfoLevel == SERVICE_CONFIG_FAILURE_ACTIONS)
     {
         UNIMPLEMENTED;
         dwError = ERROR_CALL_NOT_IMPLEMENTED;
