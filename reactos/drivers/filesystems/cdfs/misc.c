@@ -103,9 +103,9 @@ CdfsWriteNumberInShortName
 {
     while (Number)
     {
-	*EndOfNumberTarget = '0' + (Number % 10);
-	EndOfNumberTarget--;
-	Number /= 10;
+        *EndOfNumberTarget = '0' + (Number % 10);
+        EndOfNumberTarget--;
+        Number /= 10;
     }
     return EndOfNumberTarget;
 }
@@ -131,86 +131,86 @@ CdfsShortNameCacheGet
 
     /* Try to find the name in our cache */
     for (Entry = DirectoryFcb->ShortNameList.Flink; 
-	 Entry != &DirectoryFcb->ShortNameList;
-	 Entry = Entry->Flink)
+        Entry != &DirectoryFcb->ShortNameList;
+        Entry = Entry->Flink)
     {
-	ShortNameEntry = CONTAINING_RECORD(Entry, CDFS_SHORT_NAME, Entry);
-	if (ShortNameEntry->StreamOffset.QuadPart == StreamOffset->QuadPart)
-	{
-	    /* Cache hit */
-	    RtlCopyMemory
-		(ShortName->Buffer, ShortNameEntry->Name.Buffer, 
-		 ShortNameEntry->Name.Length);
-	    ShortName->Length = ShortNameEntry->Name.Length;
-	    ExReleaseResourceLite(&DirectoryFcb->NameListResource);
-	    DPRINT("Yield short name %wZ from cache\n", ShortName);
-	    return;
-	}
+        ShortNameEntry = CONTAINING_RECORD(Entry, CDFS_SHORT_NAME, Entry);
+        if (ShortNameEntry->StreamOffset.QuadPart == StreamOffset->QuadPart)
+        {
+            /* Cache hit */
+            RtlCopyMemory
+                (ShortName->Buffer, ShortNameEntry->Name.Buffer, 
+                ShortNameEntry->Name.Length);
+            ShortName->Length = ShortNameEntry->Name.Length;
+            ExReleaseResourceLite(&DirectoryFcb->NameListResource);
+            DPRINT("Yield short name %wZ from cache\n", ShortName);
+            return;
+        }
     }
-    
+
     /* Cache miss */
     if ((RtlIsNameLegalDOS8Dot3(LongName, NULL, &HasSpaces) == FALSE) ||
-	(HasSpaces == TRUE))
+        (HasSpaces == TRUE))
     {
-	RtlGenerate8dot3Name(LongName, FALSE, &Context, ShortName);
+        RtlGenerate8dot3Name(LongName, FALSE, &Context, ShortName);
     }
     else
     {
-	/* copy short name */
-	RtlUpcaseUnicodeString
-	    (ShortName,
-	     LongName,
-	     FALSE);
+        /* copy short name */
+        RtlUpcaseUnicodeString
+            (ShortName,
+            LongName,
+            FALSE);
     }
 
     DPRINT("Initial Guess %wZ\n", ShortName);
-    
+
     /* Find the part that'll be numberified */
     LastDot = &ShortName->Buffer[(ShortName->Length / sizeof(WCHAR)) - 1];
     for (Scan = ShortName->Buffer; 
-	 Scan - ShortName->Buffer < ShortName->Length;
-	 Scan++)
-	if (*Scan == '.') LastDot = Scan - 1;
-    
+        Scan - ShortName->Buffer < ShortName->Length;
+        Scan++)
+        if (*Scan == '.') LastDot = Scan - 1;
+
     /* Make it unique by scanning the cache and bumping */
     /* Note that incrementing the ambiguous name is enough, since we add new
-     * entries at the tail.  We'll scan over all collisions. */
+    * entries at the tail.  We'll scan over all collisions. */
     /* XXX could perform better. */
     for (Entry = DirectoryFcb->ShortNameList.Flink; 
-	 Entry != &DirectoryFcb->ShortNameList;
-	 Entry = Entry->Flink)
+        Entry != &DirectoryFcb->ShortNameList;
+        Entry = Entry->Flink)
     {
-	ShortNameEntry = CONTAINING_RECORD(Entry, CDFS_SHORT_NAME, Entry);
-	if (RtlCompareUnicodeString
-	    (ShortName,
-	     &ShortNameEntry->Name,
-	     TRUE) == 0) /* Match */
-	{
-	    Scan = CdfsWriteNumberInShortName(LastDot, ++Number);
-	    *Scan = '~';
-	    DPRINT("Collide; try %wZ\n", ShortName);
-	}
+        ShortNameEntry = CONTAINING_RECORD(Entry, CDFS_SHORT_NAME, Entry);
+        if (RtlCompareUnicodeString
+            (ShortName,
+            &ShortNameEntry->Name,
+            TRUE) == 0) /* Match */
+        {
+            Scan = CdfsWriteNumberInShortName(LastDot, ++Number);
+            *Scan = '~';
+            DPRINT("Collide; try %wZ\n", ShortName);
+        }
     }
-    
+
     /* We've scanned over all entries and now have a unique one.  Cache it. */
     ShortNameEntry = ExAllocatePool(PagedPool, sizeof(CDFS_SHORT_NAME));
     if (!ShortNameEntry) 
     {
-	/* We couldn't cache it, but we can return it.  We run the risk of
-	 * generating a non-unique name later. */
-	ExReleaseResourceLite(&DirectoryFcb->NameListResource);
-	DPRINT1("Couldn't cache potentially clashing 8.3 name %wZ\n", ShortName);
-	return;
+        /* We couldn't cache it, but we can return it.  We run the risk of
+        * generating a non-unique name later. */
+        ExReleaseResourceLite(&DirectoryFcb->NameListResource);
+        DPRINT1("Couldn't cache potentially clashing 8.3 name %wZ\n", ShortName);
+        return;
     }
-    
+
     ShortNameEntry->StreamOffset = *StreamOffset;
     ShortNameEntry->Name.Buffer = ShortNameEntry->NameBuffer;
     ShortNameEntry->Name.Length = ShortName->Length;
     ShortNameEntry->Name.MaximumLength = sizeof(ShortNameEntry->NameBuffer);
     RtlCopyMemory
-	(ShortNameEntry->NameBuffer, 
-	 ShortName->Buffer, 
-	 ShortName->Length);
+        (ShortNameEntry->NameBuffer, 
+        ShortName->Buffer, 
+        ShortName->Length);
     InsertTailList(&DirectoryFcb->ShortNameList, &ShortNameEntry->Entry);
     ExReleaseResourceLite(&DirectoryFcb->NameListResource);
 

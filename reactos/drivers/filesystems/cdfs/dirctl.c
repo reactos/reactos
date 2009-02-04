@@ -275,8 +275,8 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
             Record->RecordLength, Record->ExtAttrRecordLength, Record->FileIdLength);
 
         Status = CdfsGetEntryName
-	    (DeviceExt, &Context, &Block, &StreamOffset,
-	     DirSize, (PVOID*)&Record, name, &DirIndex, &Offset);
+            (DeviceExt, &Context, &Block, &StreamOffset,
+            DirSize, (PVOID*)&Record, name, &DirIndex, &Offset);
 
         if (Status == STATUS_NO_MORE_ENTRIES)
         {
@@ -295,8 +295,8 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
         ShortName.MaximumLength = 26;
         ShortName.Buffer = ShortNameBuffer;
 
-	OffsetOfEntry.QuadPart = StreamOffset.QuadPart + Offset;
-	CdfsShortNameCacheGet(Parent, &OffsetOfEntry, &LongName, &ShortName);
+        OffsetOfEntry.QuadPart = StreamOffset.QuadPart + Offset;
+        CdfsShortNameCacheGet(Parent, &OffsetOfEntry, &LongName, &ShortName);
 
         DPRINT("ShortName '%wZ'\n", &ShortName);
 

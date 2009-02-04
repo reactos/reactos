@@ -106,15 +106,15 @@ VOID
 CdfsDestroyFCB(PFCB Fcb)
 {
     PLIST_ENTRY Entry;
-    
+
     ExDeleteResourceLite(&Fcb->PagingIoResource);
     ExDeleteResourceLite(&Fcb->MainResource);
 
     while (!IsListEmpty(&Fcb->ShortNameList))
     {
-	Entry = Fcb->ShortNameList.Flink;
-	RemoveEntryList(Entry);
-	ExFreePool(Entry);
+        Entry = Fcb->ShortNameList.Flink;
+        RemoveEntryList(Entry);
+        ExFreePool(Entry);
     }
 
     ExFreePool(Fcb);
@@ -541,8 +541,8 @@ CdfsDirFindFile(PDEVICE_EXTENSION DeviceExt,
         ShortName.Buffer = ShortNameBuffer;
         memset(ShortNameBuffer, 0, 26);
 
-	OffsetOfEntry.QuadPart = StreamOffset.QuadPart + Offset;
-	CdfsShortNameCacheGet(DirectoryFcb, &OffsetOfEntry, &LongName, &ShortName);
+        OffsetOfEntry.QuadPart = StreamOffset.QuadPart + Offset;
+        CdfsShortNameCacheGet(DirectoryFcb, &OffsetOfEntry, &LongName, &ShortName);
 
         DPRINT("ShortName '%wZ'\n", &ShortName);
 
