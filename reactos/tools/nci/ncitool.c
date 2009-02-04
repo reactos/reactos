@@ -56,6 +56,11 @@
                             "    call *(%%ecx)\n" \
                             "    ret $0x%x\n\n"
 
+#define UserModeStub_amd64  "    movl $0x%x, %%eax\n" \
+                            "    movq %%rcx, %%r10\n" \
+                            "    syscall\n" \
+                            "    ret $0x%x\n\n"
+
 #define UserModeStub_ppc    "    stwu 1,-16(1)\n" \
                             "    mflr 0\n\t" \
                             "    stw  0,0(1)\n" \
@@ -97,6 +102,10 @@
                             "    call _KiSystemService\n" \
                             "    ret $0x%x\n\n"
 
+#define KernelModeStub_amd64 "    movl $0x%x, %%eax\n" \
+                            "    call _KiSystemService\n" \
+                            "    ret $0x%x\n\n"
+
 /* For now, use the usermode stub.  We'll optimize later */
 #define KernelModeStub_ppc  UserModeStub_ppc
 
@@ -133,6 +142,8 @@ struct ncitool_data_t {
 struct ncitool_data_t ncitool_data[] = {
     { "i386", 4, KernelModeStub_x86, UserModeStub_x86,
       ".global _%s@%d\n", "_%s@%d:\n" },
+    { "amd64", 4, KernelModeStub_amd64, UserModeStub_amd64,
+      ".global _%s\n", "_%s:\n" },
     { "powerpc", 4, KernelModeStub_ppc, UserModeStub_ppc,
       "\t.globl %s\n", "%s:\n" },
     { "mips", 4, KernelModeStub_mips, UserModeStub_mips,
