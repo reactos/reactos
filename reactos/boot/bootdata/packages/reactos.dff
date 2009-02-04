@@ -705,3 +705,6 @@ modules\windows\vmx_svga.inf                                               6   o
 modules\windows\kvmnet.sys                                                 2   optional
 modules\windows\kvmnet.inf                                                 6   optional
 
+; Gecko
+modules\windows\wine_gecko-0.9.0.cab                                       4   optional
+
