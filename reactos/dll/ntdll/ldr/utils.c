@@ -269,7 +269,7 @@ LdrpInitializeTlsForProccess(VOID)
                                                               &Size);
                ASSERT(Module->TlsIndex < LdrpTlsCount);
                TlsData = &LdrpTlsArray[Module->TlsIndex];
-               TlsData->StartAddressOfRawData = (PVOID)(ULONG_PTR)TlsDirectory->StartAddressOfRawData;
+               TlsData->StartAddressOfRawData = (PVOID)TlsDirectory->StartAddressOfRawData;
                TlsData->TlsDataSize = TlsDirectory->EndAddressOfRawData - TlsDirectory->StartAddressOfRawData;
                TlsData->TlsZeroSize = TlsDirectory->SizeOfZeroFill;
                if (TlsDirectory->AddressOfCallBacks)
