@@ -425,7 +425,7 @@ LdrpInit2(PCONTEXT Context,
     InsertTailList(&Peb->Ldr->InLoadOrderModuleList,
                    &NtModule->InLoadOrderLinks);
     InsertTailList(&Peb->Ldr->InInitializationOrderModuleList,
-                   &NtModule->InInitializationOrderModuleList);
+                   &NtModule->InInitializationOrderLinks);
 
 #if defined(DBG) || defined(KDBG)
 
