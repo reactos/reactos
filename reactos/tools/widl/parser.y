@@ -1443,7 +1443,7 @@ static void set_type(var_t *v, decl_spec_t *decl_spec, const declarator_t *decl,
     {
       ptr_attr = get_attrv(ptr->attrs, ATTR_POINTERTYPE);
       if (!ptr_attr && type_is_alias(ptr))
-        ptr = ptr->orig;
+        ptr = type_alias_get_aliasee(ptr);
       else
         break;
     }
@@ -1777,7 +1777,7 @@ static void add_incomplete(type_t *t)
 static void fix_type(type_t *t)
 {
   if (type_is_alias(t) && is_incomplete(t)) {
-    type_t *ot = t->orig;
+    type_t *ot = type_alias_get_aliasee(t);
     fix_type(ot);
     if (is_struct(ot->type) || is_union(ot->type))
       t->details.structure = ot->details.structure;
@@ -2380,9 +2380,9 @@ static void check_field_common(const type_t *container_type,
             break;
         }
         if (type_is_alias(type))
-            type = type->orig;
+            type = type_alias_get_aliasee(type);
         else if (is_ptr(type))
-            type = type->ref;
+            type = type_pointer_get_ref(type);
         else if (is_array(type))
             type = type_array_get_element(type);
         else
@@ -2442,7 +2442,7 @@ static void check_remoting_args(const var_t *func)
             if (is_attr(type->attrs, ATTR_CONTEXTHANDLE))
                 break;
             if (type_is_alias(type))
-                type = type->orig;
+                type = type_alias_get_aliasee(type);
             else if (is_ptr(type))
             {
                 ptr_level++;

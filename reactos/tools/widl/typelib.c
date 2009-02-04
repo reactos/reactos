@@ -50,28 +50,12 @@ static typelib_t *typelib;
 
 int is_ptr(const type_t *t)
 {
-  unsigned char c = t->type;
-  return c == RPC_FC_RP
-      || c == RPC_FC_UP
-      || c == RPC_FC_FP
-      || c == RPC_FC_OP;
+    return type_get_type(t) == TYPE_POINTER;
 }
 
 int is_array(const type_t *t)
 {
-    switch (t->type)
-    {
-    case RPC_FC_SMFARRAY:
-    case RPC_FC_LGFARRAY:
-    case RPC_FC_SMVARRAY:
-    case RPC_FC_LGVARRAY:
-    case RPC_FC_CARRAY:
-    case RPC_FC_CVARRAY:
-    case RPC_FC_BOGUS_ARRAY:
-        return TRUE;
-    default:
-        return FALSE;
-    }
+    return type_get_type(t) == TYPE_ARRAY;
 }
 
 /* List of oleauto types that should be recognized by name.

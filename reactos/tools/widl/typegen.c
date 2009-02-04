@@ -515,7 +515,7 @@ static type_t *get_user_type(const type_t *t, const char **pname)
         }
 
         if (type_is_alias(t))
-            t = t->orig;
+            t = type_alias_get_aliasee(t);
         else
             return 0;
     }
@@ -1053,7 +1053,7 @@ size_t type_memsize(const type_t *t, unsigned int *align)
     size_t size = 0;
 
     if (type_is_alias(t))
-        size = type_memsize(t->orig, align);
+        size = type_memsize(type_alias_get_aliasee(t), align);
     else if (t->declarray && is_conformant_array(t))
     {
         type_memsize(type_array_get_element(t), align);
@@ -2325,6 +2325,8 @@ static size_t write_union_tfs(FILE *file, type_t *type, unsigned int *tfsoff)
         }
 
         *tfsoff += write_conf_or_var_desc(file, NULL, *tfsoff, st, &dummy_expr );
+        print_file(file, 2, "NdrFcShort(0x2),\t/* Offset= 2 (%u) */\n", *tfsoff + 2);
+        *tfsoff += 2;
     }
 
     print_file(file, 2, "NdrFcShort(0x%x),\t/* %d */\n", size, size);
