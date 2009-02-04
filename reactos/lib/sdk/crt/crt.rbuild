@@ -399,6 +399,7 @@
 		<file>strdup.c</file>
 		<file>strerror.c</file>
 		<file>stricmp.c</file>
+		<file>string.c</file>
 		<file>strlwr.c</file>
 		<file>strncoll.c</file>
 		<file>strnicmp.c</file>
