@@ -89,7 +89,7 @@ static DWORD WINAPI UserLoginThread(LPVOID);
 static int DoTelnetHandshake(int sock);
 static int ReceiveLine(int sock, char *buffer, int len, EchoMode echo);
 static void RunShell(client_t *client); 
-static BOOL CreateChildProcess(const char *); 
+//static BOOL CreateChildProcess(const char *); 
 static DWORD WINAPI MonitorChildThread(LPVOID);
 static DWORD WINAPI WriteToPipeThread(LPVOID); 
 static DWORD WINAPI ReadFromPipeThread(LPVOID); 
@@ -224,8 +224,8 @@ static DWORD WINAPI UserLoginThread(LPVOID data)
   char       welcome[256];
   char       hostname[64] = "Unknown";
   char      *pwdPrompt = "\r\npass:";
-  char      *logonPrompt = "\r\nLogin OK, please wait...";
-  char      *byebye = "\r\nWrong! bye bye...\r\n";
+  //char      *logonPrompt = "\r\nLogin OK, please wait...";
+  //char      *byebye = "\r\nWrong! bye bye...\r\n";
   char       userID[USERID_SIZE];
   char       password[USERID_SIZE];
   int        received;
@@ -321,7 +321,7 @@ static int DoTelnetHandshake(int sock)
       return 0;
     }
     /* no error and no timeout, we have data in our sock */
-    received = recv(sock, client_reply, sizeof(client_reply), 0);
+    received = recv(sock, (char *) client_reply, sizeof(client_reply), 0);
     if (received <= 0) {
      return -1;
     }
@@ -466,7 +466,7 @@ static void RunShell(client_t *client)
                       NULL,                      // process security attributes 
                       NULL,                      // primary thread security attributes 
                       TRUE,                      // handles are inherited 
-                      //DETACHED_PROCESS +         // creation flags 
+                      DETACHED_PROCESS +         // creation flags 
                       CREATE_NEW_PROCESS_GROUP,
                       NULL,                      // use parent's environment 
                       NULL,                      // use parent's current directory 
@@ -507,7 +507,7 @@ static DWORD WINAPI MonitorChildThread(LPVOID data)
   WaitForSingleObject(client->hProcess, INFINITE);
 
   GetExitCodeProcess(client->hProcess, &exitCode);
-  printf("Child process terminated with code %d\n", exitCode);
+  printf("Child process terminated with code %lx\n", exitCode);
 
   /* signal the other threads to give up */
   client->bTerminate = TRUE;
@@ -589,7 +589,7 @@ static DWORD WINAPI ReadFromPipeThread(LPVOID data)
   CHAR chBuf[BUFSIZE];
   CHAR txBuf[BUFSIZE*2];
   DWORD from,to;
-  char warning[] = "warning: rl_prep_terminal: cannot get terminal settings";
+  //char warning[] = "warning: rl_prep_terminal: cannot get terminal settings";
 
   client_t *client = (client_t *) data;
 

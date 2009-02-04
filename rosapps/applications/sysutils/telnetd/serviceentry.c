@@ -20,7 +20,7 @@ SERVICE_STATUS_HANDLE ServiceStatusHandle;
 
 /* FUNCTIONS *****************************************************************/
 
-
+#if 0
 static DWORD WINAPI
 ServiceControlHandler(DWORD dwControl,
                       DWORD dwEventType,
@@ -54,7 +54,7 @@ ServiceMain(DWORD argc, LPTSTR *argv)
 
     DPRINT("ServiceMain() done\n");
 }
-
+#endif
 
 int
 main(int argc, CHAR *argv[])
@@ -73,8 +73,7 @@ main(int argc, CHAR *argv[])
 
     StartServiceCtrlDispatcher(ServiceTable);
 #endif
-
-	telnetd_main();
+    telnetd_main();
 
     DPRINT("TelnetD: main() done\n");
 
@@ -84,3 +83,4 @@ main(int argc, CHAR *argv[])
 }
 
 /* EOF */
+
