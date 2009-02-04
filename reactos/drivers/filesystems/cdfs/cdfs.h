@@ -162,8 +162,6 @@ typedef struct
   PFILE_OBJECT StreamFileObject;
 
   CDINFO CdInfo;
-
-
 } DEVICE_EXTENSION, *PDEVICE_EXTENSION, VCB, *PVCB;
 
 
@@ -172,6 +170,14 @@ typedef struct
 #define FCB_IS_VOLUME           0x0004
 
 #define MAX_PATH                260
+
+typedef struct _CDFS_SHORT_NAME 
+{
+    LIST_ENTRY Entry;
+    LARGE_INTEGER StreamOffset;
+    UNICODE_STRING Name;
+    WCHAR NameBuffer[13];
+} CDFS_SHORT_NAME, *PCDFS_SHORT_NAME;
 
 typedef struct _FCB
 {
@@ -201,6 +207,9 @@ typedef struct _FCB
   ULONG Flags;
 
   DIR_RECORD Entry;
+
+  ERESOURCE  NameListResource;
+  LIST_ENTRY ShortNameList;
 } FCB, *PFCB;
 
 
@@ -223,8 +232,6 @@ typedef struct _CCB
 #endif
 
 #define TAG_CCB TAG('I', 'C', 'C', 'B')
-
-
 
 typedef struct
 {
@@ -389,6 +396,12 @@ VOID
 CdfsFileFlagsToAttributes(PFCB Fcb,
 			  PULONG FileAttributes);
 
+VOID
+CdfsShortNameCacheGet
+(PFCB DirectoryFcb, 
+ PLARGE_INTEGER StreamOffset, 
+ PUNICODE_STRING LongName, 
+ PUNICODE_STRING ShortName);
 
 /* rw.c */
 

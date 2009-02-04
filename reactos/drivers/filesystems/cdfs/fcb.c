@@ -30,7 +30,7 @@
 
 #include "cdfs.h"
 
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS ****************************************************************/
@@ -92,9 +92,11 @@ CdfsCreateFCB(PCWSTR FileName)
 
     ExInitializeResourceLite(&Fcb->PagingIoResource);
     ExInitializeResourceLite(&Fcb->MainResource);
+    ExInitializeResourceLite(&Fcb->NameListResource);
     Fcb->RFCB.PagingIoResource = &Fcb->PagingIoResource;
     Fcb->RFCB.Resource = &Fcb->MainResource;
     Fcb->RFCB.IsFastIoPossible = FastIoIsNotPossible;
+    InitializeListHead(&Fcb->ShortNameList);
 
     return(Fcb);
 }
@@ -103,8 +105,17 @@ CdfsCreateFCB(PCWSTR FileName)
 VOID
 CdfsDestroyFCB(PFCB Fcb)
 {
+    PLIST_ENTRY Entry;
+    
     ExDeleteResourceLite(&Fcb->PagingIoResource);
     ExDeleteResourceLite(&Fcb->MainResource);
+
+    while (!IsListEmpty(&Fcb->ShortNameList))
+    {
+	Entry = Fcb->ShortNameList.Flink;
+	RemoveEntryList(Entry);
+	ExFreePool(Entry);
+    }
 
     ExFreePool(Fcb);
 }
@@ -458,16 +469,13 @@ CdfsDirFindFile(PDEVICE_EXTENSION DeviceExt,
     ULONG BlockOffset;
     NTSTATUS Status;
 
-    LARGE_INTEGER StreamOffset;
+    LARGE_INTEGER StreamOffset, OffsetOfEntry;
     PVOID Context;
 
     WCHAR ShortNameBuffer[13];
     UNICODE_STRING ShortName;
     UNICODE_STRING LongName;
     UNICODE_STRING FileToFindUpcase;
-    BOOLEAN HasSpaces;
-    GENERATE_NAME_CONTEXT NameContext;
-
 
     ASSERT(DeviceExt);
     ASSERT(DirectoryFcb);
@@ -533,22 +541,8 @@ CdfsDirFindFile(PDEVICE_EXTENSION DeviceExt,
         ShortName.Buffer = ShortNameBuffer;
         memset(ShortNameBuffer, 0, 26);
 
-        if ((RtlIsNameLegalDOS8Dot3(&LongName, NULL, &HasSpaces) == FALSE) ||
-            (HasSpaces == TRUE))
-        {
-            /* Build short name */
-            RtlGenerate8dot3Name(&LongName,
-                FALSE,
-                &NameContext,
-                &ShortName);
-        }
-        else
-        {
-            /* copy short name */
-            RtlUpcaseUnicodeString(&ShortName,
-                &LongName,
-                FALSE);
-        }
+	OffsetOfEntry.QuadPart = StreamOffset.QuadPart + Offset;
+	CdfsShortNameCacheGet(DirectoryFcb, &OffsetOfEntry, &LongName, &ShortName);
 
         DPRINT("ShortName '%wZ'\n", &ShortName);
 
