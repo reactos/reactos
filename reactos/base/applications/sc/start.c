@@ -45,6 +45,11 @@ BOOL Start(LPCTSTR ServiceName, LPCTSTR *ServiceArgs, INT ArgCount)
     if (hSc == NULL)
         goto fail;
 
+    if (!ArgCount)
+    {
+        ServiceArgs = NULL;
+    }
+
     if (! StartService(hSc,
                        ArgCount,
                        ServiceArgs))
