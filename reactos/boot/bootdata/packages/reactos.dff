@@ -353,6 +353,7 @@ dll\win32\serialui\serialui.dll                     1
 dll\win32\setupapi\setupapi.dll                     1
 dll\win32\sfc\sfc.dll                               1
 dll\win32\sfc_os\sfc_os.dll                         1
+dll\win32\shdoclc\shdoclc.dll                       1
 dll\win32\shdocvw\shdocvw.dll                       1
 dll\win32\shell32\shell32.dll                       1
 dll\win32\shfolder\shfolder.dll                     1
