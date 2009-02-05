@@ -1845,16 +1845,20 @@ DWORD WINAPI GetUdpTable(PMIB_UDPTABLE pUdpTable, PDWORD pdwSize, BOOL bOrder)
 /******************************************************************
  *    GetUniDirectionalAdapterInfo (IPHLPAPI.@)
  *
+ * This is a Win98-only function to get information on "unidirectional"
+ * adapters.  Since this is pretty nonsensical in other contexts, it
+ * never returns anything.
  *
  * PARAMS
- *
- *  pIPIfInfo [In/Out]
- *  dwOutBufLen [In/Out]
+ *  pIPIfInfo   [Out] buffer for adapter infos
+ *  dwOutBufLen [Out] length of the output buffer
  *
  * RETURNS
+ *  Success: NO_ERROR
+ *  Failure: error code from winerror.h
  *
- *  DWORD
- *
+ * FIXME
+ *  Stub, returns ERROR_NOT_SUPPORTED.
  */
 DWORD WINAPI GetUniDirectionalAdapterInfo(PIP_UNIDIRECTIONAL_ADAPTER_ADDRESS pIPIfInfo, PULONG dwOutBufLen)
 {
@@ -1867,15 +1871,21 @@ DWORD WINAPI GetUniDirectionalAdapterInfo(PIP_UNIDIRECTIONAL_ADAPTER_ADDRESS pIP
 /******************************************************************
  *    IpReleaseAddress (IPHLPAPI.@)
  *
+ * Release an IP obtained through DHCP,
  *
  * PARAMS
- *
- *  AdapterInfo [In/Out]
+ *  AdapterInfo [In] adapter to release IP address
  *
  * RETURNS
+ *  Success: NO_ERROR
+ *  Failure: error code from winerror.h
  *
- *  DWORD
+ * NOTES
+ *  Since GetAdaptersInfo never returns adapters that have DHCP enabled,
+ *  this function does nothing.
  *
+ * FIXME
+ *  Stub, returns ERROR_NOT_SUPPORTED.
  */
 DWORD WINAPI IpReleaseAddress(PIP_ADAPTER_INDEX_MAP AdapterInfo)
 {
@@ -1889,15 +1899,21 @@ DWORD WINAPI IpReleaseAddress(PIP_ADAPTER_INDEX_MAP AdapterInfo)
 /******************************************************************
  *    IpRenewAddress (IPHLPAPI.@)
  *
+ * Renew an IP obtained through DHCP.
  *
  * PARAMS
- *
- *  AdapterInfo [In/Out]
+ *  AdapterInfo [In] adapter to renew IP address
  *
  * RETURNS
+ *  Success: NO_ERROR
+ *  Failure: error code from winerror.h
  *
- *  DWORD
+ * NOTES
+ *  Since GetAdaptersInfo never returns adapters that have DHCP enabled,
+ *  this function does nothing.
  *
+ * FIXME
+ *  Stub, returns ERROR_NOT_SUPPORTED.
  */
 DWORD WINAPI IpRenewAddress(PIP_ADAPTER_INDEX_MAP AdapterInfo)
 {
@@ -1911,22 +1927,22 @@ DWORD WINAPI IpRenewAddress(PIP_ADAPTER_INDEX_MAP AdapterInfo)
 /******************************************************************
  *    NotifyAddrChange (IPHLPAPI.@)
  *
+ * Notify caller whenever the ip-interface map is changed.
  *
  * PARAMS
- *
- *  Handle [In/Out]
- *  overlapped [In/Out]
+ *  Handle     [Out] handle usable in asynchronous notification
+ *  overlapped [In]  overlapped structure that notifies the caller
  *
  * RETURNS
+ *  Success: NO_ERROR
+ *  Failure: error code from winerror.h
  *
- *  DWORD
- *
+ * FIXME
+ *  Stub, returns ERROR_NOT_SUPPORTED.
  */
 DWORD WINAPI NotifyAddrChange(PHANDLE Handle, LPOVERLAPPED overlapped)
 {
-  TRACE("Handle %p, overlapped %p\n", Handle, overlapped);
-  FIXME(":stub\n");
-  /* marking Win2K+ functions not supported */
+  FIXME("(Handle %p, overlapped %p): stub\n", Handle, overlapped);
   return ERROR_NOT_SUPPORTED;
 }
 
@@ -1934,22 +1950,22 @@ DWORD WINAPI NotifyAddrChange(PHANDLE Handle, LPOVERLAPPED overlapped)
 /******************************************************************
  *    NotifyRouteChange (IPHLPAPI.@)
  *
+ * Notify caller whenever the ip routing table is changed.
  *
  * PARAMS
- *
- *  Handle [In/Out]
- *  overlapped [In/Out]
+ *  Handle     [Out] handle usable in asynchronous notification
+ *  overlapped [In]  overlapped structure that notifies the caller
  *
  * RETURNS
+ *  Success: NO_ERROR
+ *  Failure: error code from winerror.h
  *
- *  DWORD
- *
+ * FIXME
+ *  Stub, returns ERROR_NOT_SUPPORTED.
  */
 DWORD WINAPI NotifyRouteChange(PHANDLE Handle, LPOVERLAPPED overlapped)
 {
-  TRACE("Handle %p, overlapped %p\n", Handle, overlapped);
-  FIXME(":stub\n");
-  /* marking Win2K+ functions not supported */
+  FIXME("(Handle %p, overlapped %p): stub\n", Handle, overlapped);
   return ERROR_NOT_SUPPORTED;
 }
 
@@ -1957,25 +1973,25 @@ DWORD WINAPI NotifyRouteChange(PHANDLE Handle, LPOVERLAPPED overlapped)
 /******************************************************************
  *    SendARP (IPHLPAPI.@)
  *
+ * Send an ARP request.
  *
  * PARAMS
- *
- *  DestIP [In]
- *  SrcIP [In]
- *  pMacAddr [In/Out]
- *  PhyAddrLen [In/Out]
+ *  DestIP     [In]     attempt to obtain this IP
+ *  SrcIP      [In]     optional sender IP address
+ *  pMacAddr   [Out]    buffer for the mac address
+ *  PhyAddrLen [In/Out] length of the output buffer
  *
  * RETURNS
+ *  Success: NO_ERROR
+ *  Failure: error code from winerror.h
  *
- *  DWORD
- *
+ * FIXME
+ *  Stub, returns ERROR_NOT_SUPPORTED.
  */
 DWORD WINAPI SendARP(IPAddr DestIP, IPAddr SrcIP, PULONG pMacAddr, PULONG PhyAddrLen)
 {
-  TRACE("DestIP 0x%08lx, SrcIP 0x%08lx, pMacAddr %p, PhyAddrLen %p\n", DestIP,
-   SrcIP, pMacAddr, PhyAddrLen);
-  FIXME(":stub\n");
-  /* marking Win2K+ functions not supported */
+  FIXME("(DestIP 0x%08x, SrcIP 0x%08x, pMacAddr %p, PhyAddrLen %p): stub\n",
+   DestIP, SrcIP, pMacAddr, PhyAddrLen);
   return ERROR_NOT_SUPPORTED;
 }
 
@@ -1983,24 +1999,25 @@ DWORD WINAPI SendARP(IPAddr DestIP, IPAddr SrcIP, PULONG pMacAddr, PULONG PhyAdd
 /******************************************************************
  *    SetIfEntry (IPHLPAPI.@)
  *
+ * Set the administrative status of an interface.
  *
  * PARAMS
- *
- *  pIfRow [In/Out]
+ *  pIfRow [In] dwAdminStatus member specifies the new status.
  *
  * RETURNS
+ *  Success: NO_ERROR
+ *  Failure: error code from winerror.h
  *
- *  DWORD
- *
+ * FIXME
+ *  Stub, returns ERROR_NOT_SUPPORTED.
  */
 DWORD WINAPI SetIfEntry(PMIB_IFROW pIfRow)
 {
-  TRACE("pIfRow %p\n", pIfRow);
-  /* this is supposed to set an administratively interface up or down.
+  FIXME("(pIfRow %p): stub\n", pIfRow);
+  /* this is supposed to set an interface administratively up or down.
      Could do SIOCSIFFLAGS and set/clear IFF_UP, but, not sure I want to, and
      this sort of down is indistinguishable from other sorts of down (e.g. no
      link). */
-  FIXME(":stub\n");
   return ERROR_NOT_SUPPORTED;
 }
 
@@ -2008,14 +2025,14 @@ DWORD WINAPI SetIfEntry(PMIB_IFROW pIfRow)
 /******************************************************************
  *    SetIpForwardEntry (IPHLPAPI.@)
  *
+ * Modify an existing route.
  *
  * PARAMS
- *
- *  pRoute [In/Out]
+ *  pRoute [In] route with the new information
  *
  * RETURNS
- *
- *  DWORD
+ *  Success: NO_ERROR
+ *  Failure: error code from winerror.h
  *
  */
 DWORD WINAPI SetIpForwardEntry(PMIB_IPFORWARDROW pRoute)
@@ -2027,111 +2044,113 @@ DWORD WINAPI SetIpForwardEntry(PMIB_IPFORWARDROW pRoute)
 /******************************************************************
  *    SetIpNetEntry (IPHLPAPI.@)
  *
+ * Modify an existing ARP entry.
  *
  * PARAMS
- *
- *  pArpEntry [In/Out]
+ *  pArpEntry [In] ARP entry with the new information
  *
  * RETURNS
+ *  Success: NO_ERROR
+ *  Failure: error code from winerror.h
  *
- *  DWORD
- *
+ * FIXME
+ *  Stub, returns NO_ERROR.
  */
 DWORD WINAPI SetIpNetEntry(PMIB_IPNETROW pArpEntry)
 {
-  TRACE("pArpEntry %p\n", pArpEntry);
+  FIXME("(pArpEntry %p): stub\n", pArpEntry);
   /* same as CreateIpNetEntry here, could use SIOCSARP, not sure I want to */
-  FIXME(":stub\n");
-  return (DWORD) 0;
+  return 0;
 }
 
 
 /******************************************************************
  *    SetIpStatistics (IPHLPAPI.@)
  *
+ * Toggle IP forwarding and det the default TTL value.
  *
  * PARAMS
- *
- *  pIpStats [In/Out]
+ *  pIpStats [In] IP statistics with the new information
  *
  * RETURNS
+ *  Success: NO_ERROR
+ *  Failure: error code from winerror.h
  *
- *  DWORD
- *
+ * FIXME
+ *  Stub, returns NO_ERROR.
  */
 DWORD WINAPI SetIpStatistics(PMIB_IPSTATS pIpStats)
 {
-  TRACE("pIpStats %p\n", pIpStats);
-  FIXME(":stub\n");
-  return (DWORD) 0;
+  FIXME("(pIpStats %p): stub\n", pIpStats);
+  return 0;
 }
 
 
 /******************************************************************
  *    SetIpTTL (IPHLPAPI.@)
  *
+ * Set the default TTL value.
  *
  * PARAMS
- *
- *  nTTL [In]
+ *  nTTL [In] new TTL value
  *
  * RETURNS
+ *  Success: NO_ERROR
+ *  Failure: error code from winerror.h
  *
- *  DWORD
- *
+ * FIXME
+ *  Stub, returns NO_ERROR.
  */
 DWORD WINAPI SetIpTTL(UINT nTTL)
 {
-  TRACE("nTTL %d\n", nTTL);
-  /* could echo nTTL > /proc/net/sys/net/ipv4/ip_default_ttl, not sure I
-     want to.  Could map EACCESS to ERROR_ACCESS_DENIED, I suppose */
-  FIXME(":stub\n");
-  return (DWORD) 0;
+  FIXME("(nTTL %d): stub\n", nTTL);
+  return 0;
 }
 
 
 /******************************************************************
  *    SetTcpEntry (IPHLPAPI.@)
  *
+ * Set the state of a TCP connection.
  *
  * PARAMS
- *
- *  pTcpRow [In/Out]
+ *  pTcpRow [In] specifies connection with new state
  *
  * RETURNS
+ *  Success: NO_ERROR
+ *  Failure: error code from winerror.h
  *
- *  DWORD
- *
+ * FIXME
+ *  Stub, returns NO_ERROR.
  */
 DWORD WINAPI SetTcpEntry(PMIB_TCPROW pTcpRow)
 {
-  TRACE("pTcpRow %p\n", pTcpRow);
-  FIXME(":stub\n");
-  return (DWORD) 0;
+  FIXME("(pTcpRow %p): stub\n", pTcpRow);
+  return 0;
 }
 
 
 /******************************************************************
  *    UnenableRouter (IPHLPAPI.@)
  *
+ * Decrement the IP-forwarding reference count. Turn off IP-forwarding
+ * if it reaches zero.
  *
  * PARAMS
- *
- *  pOverlapped [In/Out]
- *  lpdwEnableCount [In/Out]
+ *  pOverlapped     [In/Out] should be the same as in EnableRouter()
+ *  lpdwEnableCount [Out]    optional, receives reference count
  *
  * RETURNS
+ *  Success: NO_ERROR
+ *  Failure: error code from winerror.h
  *
- *  DWORD
- *
+ * FIXME
+ *  Stub, returns ERROR_NOT_SUPPORTED.
  */
 DWORD WINAPI UnenableRouter(OVERLAPPED * pOverlapped, LPDWORD lpdwEnableCount)
 {
-  TRACE("pOverlapped %p, lpdwEnableCount %p\n", pOverlapped, lpdwEnableCount);
-  FIXME(":stub\n");
-  /* could echo "0" > /proc/net/sys/net/ipv4/ip_forward, not sure I want to
-     could map EACCESS to ERROR_ACCESS_DENIED, I suppose
-     marking Win2K+ functions not supported */
+  FIXME("(pOverlapped %p, lpdwEnableCount %p): stub\n", pOverlapped,
+   lpdwEnableCount);
   return ERROR_NOT_SUPPORTED;
 }
 
