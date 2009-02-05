@@ -602,6 +602,12 @@ CreateServiceA(SC_HANDLE hSCManager,
     int len;
     LPSTR lpStr;
 
+    if (!hSCManager)
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return NULL;
+    }
+
     if (lpServiceName)
     {
         len = MultiByteToWideChar(CP_ACP, 0, lpServiceName, -1, NULL, 0);
@@ -1299,6 +1305,12 @@ GetServiceDisplayNameA(SC_HANDLE hSCManager,
     TRACE("%p %s %p %p\n", hSCManager,
           debugstr_a(lpServiceName), lpDisplayName, lpcchBuffer);
 
+    if (!hSCManager)
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+
     if (!lpDisplayName)
         *lpcchBuffer = 0;
 
@@ -1385,6 +1397,19 @@ GetServiceKeyNameA(SC_HANDLE hSCManager,
     DWORD dwError;
 
     TRACE("GetServiceKeyNameA() called\n");
+
+    if (!hSCManager)
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+
+    if (!lpDisplayName)
+    {
+        SetLastError(ERROR_INVALID_ADDRESS);
+        *lpcchBuffer = 1;
+        return FALSE;
+    }
 
     if (!lpServiceName)
         *lpcchBuffer = 0;
@@ -1638,6 +1663,12 @@ OpenServiceA(SC_HANDLE hSCManager,
 
     TRACE("OpenServiceA(%p, %s, %lx)\n",
            hSCManager, lpServiceName, dwDesiredAccess);
+
+    if (!hSCManager)
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return NULL;
+    }
 
     RpcTryExcept
     {
