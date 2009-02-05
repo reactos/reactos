@@ -1055,7 +1055,7 @@ EnumServicesStatusA(SC_HANDLE hSCManager,
         return FALSE;
     }
 
-    if (!pcbBytesNeeded || !lpServicesReturned || !lpResumeHandle)
+    if (!pcbBytesNeeded || !lpServicesReturned)
     {
         SetLastError(ERROR_INVALID_ADDRESS);
         return FALSE;
