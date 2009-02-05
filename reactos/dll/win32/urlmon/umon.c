@@ -1185,7 +1185,7 @@ HRESULT WINAPI URLDownloadToCacheFileA(LPUNKNOWN lpUnkCaller, LPCSTR szURL, LPST
     if(szURL) {
         len = MultiByteToWideChar(CP_ACP, 0, szURL, -1, NULL, 0);
         url = heap_alloc(len*sizeof(WCHAR));
-        MultiByteToWideChar(CP_ACP, 0, szURL, -1, url, -1);
+        MultiByteToWideChar(CP_ACP, 0, szURL, -1, url, len);
     }
 
     if(szFileName)
