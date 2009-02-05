@@ -3280,6 +3280,14 @@ RegistryPage(PINPUT_RECORD Ir)
         return QUIT_PAGE;
     }
 
+    /* Set GeoID */
+
+    if (!SetGeoID(MUIGetGeoID()))
+    {
+        MUIDisplayError(ERROR_UPDATE_GEOID, Ir, POPUP_WAIT_ENTER);
+        return QUIT_PAGE;
+    }
+
     if (!IsUnattendedSetup){
         
        /* Update keyboard layout settings */

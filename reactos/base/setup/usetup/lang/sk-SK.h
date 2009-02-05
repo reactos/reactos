@@ -1483,6 +1483,11 @@ MUI_ERROR skSKErrorEntries[] =
         "ENTER = ReÁtart poü°taüa"
     },
     {
+        //ERROR_UPDATE_GEOID,
+        "Setup could not set the geo id.\n"
+        "ENTER = Reboot computer"
+    },
+    {
         NULL,
         NULL
     }

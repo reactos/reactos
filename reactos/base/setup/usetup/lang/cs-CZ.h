@@ -1481,6 +1481,11 @@ MUI_ERROR csCZErrorEntries[] =
         "ENTER = Restartovat poü°taü"
     },
     {
+        //ERROR_UPDATE_GEOID,
+        "Setup could not set the geo id.\n"
+        "ENTER = Reboot computer"
+    },
+    {
         NULL,
         NULL
     }

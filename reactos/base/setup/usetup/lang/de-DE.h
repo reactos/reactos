@@ -1473,7 +1473,12 @@ MUI_ERROR deDEErrorEntries[] =
         "Setup konnte die Tastaturlayouts nicht in Registry eintragen.\n"
         "ENTER = Computer neustarten"
     },
-    {
+        {
+        //ERROR_UPDATE_GEOID,
+        "Setup konnte den geographischen Standort nicht einstellen.\n"
+        "ENTER = Computer neustarten"
+    },
+{
         NULL,
         NULL
     }
