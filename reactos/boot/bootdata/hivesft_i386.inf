@@ -974,6 +974,8 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\43","Coun
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\43","Name",0x00000000,"Austria"
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\44","CountryCode",0x00010001,0x0000002c
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\44","Name",0x00000000,"United Kingdom"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\45","CountryCode",0x00010001,0x0000002D
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\45","Name",0x00000000,"Denmark"
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\46","CountryCode",0x00010001,0x0000002e
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\46","Name",0x00000000,"Sweden"
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\47","CountryCode",0x00010001,0x0000002f
