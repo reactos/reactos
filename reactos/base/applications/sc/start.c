@@ -11,8 +11,8 @@
 
 BOOL Start(LPCTSTR ServiceName, LPCTSTR *ServiceArgs, INT ArgCount)
 {
-    SC_HANDLE hSCManager;
-    SC_HANDLE hSc;
+    SC_HANDLE hSCManager = NULL;
+    SC_HANDLE hSc = NULL;
     LPSERVICE_STATUS_PROCESS pServiceInfo = NULL;
 
 #ifdef SCDBG
