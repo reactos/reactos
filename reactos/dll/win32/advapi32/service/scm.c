@@ -1025,6 +1025,48 @@ EnumServicesStatusA(SC_HANDLE hSCManager,
 
     TRACE("EnumServicesStatusA() called\n");
 
+    if (!hSCManager)
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+
+    if (dwServiceType != SERVICE_DRIVER && dwServiceType != SERVICE_WIN32)
+    {
+        if (pcbBytesNeeded && lpServicesReturned)
+        {
+            *pcbBytesNeeded = 0;
+            *lpServicesReturned = 0;
+        }
+
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    if (dwServiceState != SERVICE_ACTIVE && dwServiceState != SERVICE_INACTIVE && dwServiceState != SERVICE_STATE_ALL)
+    {
+            if (pcbBytesNeeded)
+                *pcbBytesNeeded = 0;
+
+            if (lpServicesReturned)
+                *lpServicesReturned = 0;
+
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    if (!pcbBytesNeeded || !lpServicesReturned || !lpResumeHandle)
+    {
+        SetLastError(ERROR_INVALID_ADDRESS);
+        return FALSE;
+    }
+
+    if (!lpServices && cbBufSize != 0)
+    {
+        SetLastError(ERROR_INVALID_ADDRESS);
+        return FALSE;
+    }
+
     RpcTryExcept
     {
         dwError = REnumServicesStatusA((SC_RPC_HANDLE)hSCManager,
@@ -1407,7 +1449,9 @@ GetServiceKeyNameA(SC_HANDLE hSCManager,
     if (!lpDisplayName)
     {
         SetLastError(ERROR_INVALID_ADDRESS);
-        *lpcchBuffer = 1;
+
+        if (!lpServiceName)
+            *lpcchBuffer = 1;
         return FALSE;
     }
 
@@ -2295,6 +2339,12 @@ QueryServiceStatus(SC_HANDLE hService,
     TRACE("QueryServiceStatus(%p, %p)\n",
            hService, lpServiceStatus);
 
+    if (!hService)
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+
     RpcTryExcept
     {
         /* Call to services.exe using RPC */
@@ -2333,6 +2383,12 @@ QueryServiceStatusEx(SC_HANDLE hService,
     DWORD dwError;
 
     TRACE("QueryServiceStatusEx() called\n");
+
+    if (InfoLevel != SC_STATUS_PROCESS_INFO)
+    {
+        SetLastError(ERROR_INVALID_LEVEL);
+        return FALSE;
+    }
 
     RpcTryExcept
     {
