@@ -1325,6 +1325,14 @@ Module::GetEntryPoint(bool leadingUnderscore) const
 		result = "_";
 
 	result += entrypoint;
+
+	if (Environment::GetArch() == "amd64")
+	{
+		size_t at_index = result.find_last_of( '@' );
+		if ( at_index != result.npos )
+			return result.substr (0, at_index );
+	}
+
 	return result;
 }
 
