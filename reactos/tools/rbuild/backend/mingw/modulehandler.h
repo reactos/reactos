@@ -102,6 +102,7 @@ protected:
 	std::string GetLinkingDependenciesMacro () const;
 	std::string GetLibsMacro () const;
 	std::string GetLinkerMacro () const;
+	std::string GetDebugFormat () const;
 	void GenerateCleanObjectsAsYouGoCode () const;
 	void GenerateRunRsymCode () const;
 	void GenerateRunStripCode () const;
