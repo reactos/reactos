@@ -32,12 +32,6 @@ using std::vector;
 #define CLEAN_FILE(f) clean_files.push_back ( (f).name.length () > 0 ? backend->GetFullName ( f ) : backend->GetFullPath ( f ) );
 #define IsStaticLibrary( module ) ( ( module.type == StaticLibrary ) || ( module.type == HostStaticLibrary ) )
 
-#if (ARCH == amd64)
-#define DEBUG_FORMAT " -gdwarf-2"
-#else
-#define DEBUG_FORMAT " -gstabs+"
-#endif
-
 MingwBackend*
 MingwModuleHandler::backend = NULL;
 FILE*
@@ -1881,6 +1875,16 @@ MingwModuleHandler::GetLinkerMacro () const
 }
 
 string
+MingwModuleHandler::GetDebugFormat () const
+{
+    if (Environment::GetArch() == "amd64")
+    {
+        return "dwarf-2";
+    }
+    return "stabs+";
+}
+
+string
 MingwModuleHandler::GetModuleTargets ( const Module& module )
 {
 	if ( ReferenceObjects ( module ) )
@@ -2037,7 +2041,7 @@ MingwModuleHandler::GenerateOtherMacros ()
 	}
 	else
 		globalCflags += " -Wall -Wpointer-arith";
-	globalCflags += DEBUG_FORMAT;
+	globalCflags += " -g" + MingwModuleHandler::GetDebugFormat ();
 	if ( backend->usePipe )
 		globalCflags += " -pipe";
 	if ( !module.allowWarnings )
@@ -3687,6 +3691,7 @@ MingwElfExecutableModuleHandler::Process ()
 	string objectsMacro = GetObjectsMacro ( module );
 	string linkDepsMacro = GetLinkingDependenciesMacro ();
 	string libsMacro = GetLibsMacro ();
+	string debugFormat = GetDebugFormat ();
 
 	GenerateRules ();
 
@@ -3700,11 +3705,11 @@ MingwElfExecutableModuleHandler::Process ()
 
 	fprintf ( fMakefile, "\t$(ECHO_BOOTPROG)\n" );
 
-	fprintf ( fMakefile, "\t${gcc} $(%s_LINKFORMAT) %s %s %s -o %s\n",
+	fprintf ( fMakefile, "\t${gcc} $(%s_LINKFORMAT) %s %s -g%s -o %s\n",
 	          module.buildtype.c_str(),
 	          objectsMacro.c_str(),
 	          libsMacro.c_str(),
-	          DEBUG_FORMAT,
+	          debugFormat.c_str(),
 	          targetMacro.c_str () );
 
 	delete target_file;
