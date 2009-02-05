@@ -4732,8 +4732,21 @@ RegSaveKeyExW(HKEY hKey,
               LPSECURITY_ATTRIBUTES lpSecurityAttributes,
               DWORD Flags)
 {
-    FIXME("RegSaveKeyExW() not implemented!\n");
-    return ERROR_INVALID_PARAMETER;
+    switch (Flags)
+    {
+        case REG_STANDARD_FORMAT:
+        case REG_LATEST_FORMAT:
+        case REG_NO_COMPRESSION:
+            break;
+        default:
+            return ERROR_INVALID_PARAMETER;
+    }
+
+    FIXME("RegSaveKeyExW(): Flags ignored!\n");
+
+    return RegSaveKeyW(hKey,
+                       lpFile,
+                       lpSecurityAttributes);
 }
 
 
