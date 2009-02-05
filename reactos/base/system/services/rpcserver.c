@@ -745,6 +745,9 @@ DWORD RQueryServiceObjectSecurity(
     DWORD dwBytesNeeded;
     DWORD dwError;
 
+
+    SECURITY_DESCRIPTOR ObjectDescriptor;
+
     DPRINT("RQueryServiceObjectSecurity() called\n");
 
     hSvc = (PSERVICE_HANDLE)hService;
@@ -778,7 +781,10 @@ DWORD RQueryServiceObjectSecurity(
 
     /* FIXME: Lock the service list */
 
-    Status = RtlQuerySecurityObject(lpService->lpSecurityDescriptor,
+    /* hack */
+    Status = RtlCreateSecurityDescriptor(&ObjectDescriptor, SECURITY_DESCRIPTOR_REVISION);
+
+    Status = RtlQuerySecurityObject(&ObjectDescriptor  /* lpService->lpSecurityDescriptor */,
                                     dwSecurityInformation,
                                     (PSECURITY_DESCRIPTOR)lpSecurityDescriptor,
                                     cbBufSize,
@@ -819,9 +825,9 @@ DWORD RSetServiceObjectSecurity(
     PSERVICE_HANDLE hSvc;
     PSERVICE lpService;
     ULONG DesiredAccess = 0;
-    HANDLE hToken = NULL;
+    /* HANDLE hToken = NULL; */
     HKEY hServiceKey;
-    NTSTATUS Status;
+    /* NTSTATUS Status; */
     DWORD dwError;
 
     DPRINT1("RSetServiceObjectSecurity() called\n");
@@ -875,6 +881,7 @@ DWORD RSetServiceObjectSecurity(
     if (lpService->bDeleted)
         return ERROR_SERVICE_MARKED_FOR_DELETE;
 
+#if 0
     RpcImpersonateClient(NULL);
 
     Status = NtOpenThreadToken(NtCurrentThread(),
@@ -882,13 +889,12 @@ DWORD RSetServiceObjectSecurity(
                                TRUE,
                                &hToken);
     if (!NT_SUCCESS(Status))
-        return RtlNtStatusToDosError(Status);
+        return RtlNtStatusToDosError(Status); 
 
     RpcRevertToSelf();
 
     /* FIXME: Lock service database */
 
-#if 0
     Status = RtlSetSecurityObject(dwSecurityInformation,
                                   (PSECURITY_DESCRIPTOR)lpSecurityDescriptor,
                                   &lpService->lpSecurityDescriptor,
@@ -917,8 +923,10 @@ DWORD RSetServiceObjectSecurity(
 
 Done:
 
+#if 0
     if (hToken != NULL)
         NtClose(hToken);
+#endif
 
     /* FIXME: Unlock service database */
 
