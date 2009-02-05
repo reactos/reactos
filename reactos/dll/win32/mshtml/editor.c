@@ -588,7 +588,7 @@ static HRESULT exec_fontname(HTMLDocument *This, DWORD cmdexecopt, VARIANT *in, 
 
         len = MultiByteToWideChar(CP_ACP, 0, stra, -1, NULL, 0);
         strw = heap_alloc(len*sizeof(WCHAR));
-        MultiByteToWideChar(CP_ACP, 0, stra, -1, strw, -1);
+        MultiByteToWideChar(CP_ACP, 0, stra, -1, strw, len);
         nsfree(stra);
 
         V_BSTR(out) = SysAllocString(strw);

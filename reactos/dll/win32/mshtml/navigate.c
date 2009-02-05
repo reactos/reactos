@@ -657,7 +657,7 @@ static void parse_post_data(nsIInputStream *post_data_stream, LPWSTR *headers_re
         else
             headers = heap_alloc((len+1)*sizeof(WCHAR));
 
-        len = MultiByteToWideChar(CP_ACP, 0, ptr2, ptr-ptr2, headers+headers_len, -1);
+        len = MultiByteToWideChar(CP_ACP, 0, ptr2, ptr-ptr2, headers+headers_len, len);
         headers_len += len;
 
         ptr2 = ptr;
