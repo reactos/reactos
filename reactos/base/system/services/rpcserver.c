@@ -2984,7 +2984,7 @@ DWORD RChangeServiceConfigA(
                             lpDisplayName,
                             -1,
                             lpDisplayNameW,
-                            wcslen(lpDisplayNameW) + 1);
+                            strlen(lpDisplayName) + 1);
 
         RegSetValueExW(hServiceKey,
                        L"DisplayName",
@@ -3620,7 +3620,7 @@ DWORD RQueryServiceConfigA(
                                 lpImagePath,
                                 -1,
                                 lpStr,
-                                wcslen(lpImagePath),
+                                wcslen(lpImagePath)+1,
                                 0,
                                 0);
         }
@@ -3639,7 +3639,7 @@ DWORD RQueryServiceConfigA(
                                 lpService->lpGroup->lpGroupName,
                                 -1,
                                 lpStr,
-                                wcslen(lpService->lpGroup->lpGroupName),
+                                wcslen(lpService->lpGroup->lpGroupName)+1,
                                 0,
                                 0);
         }
@@ -3664,7 +3664,7 @@ DWORD RQueryServiceConfigA(
                                 lpServiceStartName,
                                 -1,
                                 lpStr,
-                                wcslen(lpServiceStartName),
+                                wcslen(lpServiceStartName)+1,
                                 0,
                                 0);
         }
@@ -3683,7 +3683,7 @@ DWORD RQueryServiceConfigA(
                                 lpService->lpDisplayName,
                                 -1,
                                 lpStr,
-                                wcslen(lpService->lpDisplayName),
+                                wcslen(lpService->lpDisplayName)+1,
                                 0,
                                 0);
         }
