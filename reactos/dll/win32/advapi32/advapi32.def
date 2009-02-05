@@ -528,8 +528,8 @@ RegReplaceKeyW@16
 RegRestoreKeyA@12
 RegRestoreKeyW@12
 RegSaveKeyA@12
-;RegSaveKeyExA
-;RegSaveKeyExW
+RegSaveKeyExA@16
+RegSaveKeyExW@16
 RegSaveKeyW@12
 RegSetKeySecurity@12
 RegSetKeyValueA@24

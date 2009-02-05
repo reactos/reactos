@@ -93,6 +93,8 @@ LONG WINAPI RegDeleteValueA(HKEY,LPCSTR);
 LONG WINAPI RegDeleteValueW(HKEY,LPCWSTR);
 #if (_WIN32_WINNT >= 0x0500)
 LONG WINAPI RegDisablePredefinedCache(VOID);
+LONG WINAPI RegSaveKeyExA(HKEY,LPCSTR,LPSECURITY_ATTRIBUTES,DWORD);
+LONG WINAPI RegSaveKeyExW(HKEY,LPCWSTR,LPSECURITY_ATTRIBUTES,DWORD);
 #endif
 #if (_WIN32_WINNT >= 0x0600)
 LONG WINAPI RegDisablePredefinedCacheEx(VOID);
@@ -188,6 +190,7 @@ typedef VALENTW VALENT,*PVALENT;
 #define RegReplaceKey RegReplaceKeyW
 #define RegRestoreKey RegRestoreKeyW
 #define RegSaveKey RegSaveKeyW
+#define RegSaveKeyEx RegSaveKeyExW
 #if (_WIN32_WINNT >= 0x0600)
 #define RegSetKeyValue RegSetKeyValueW
 #endif
@@ -230,6 +233,7 @@ typedef VALENTA VALENT,*PVALENT;
 #define RegReplaceKey RegReplaceKeyA
 #define RegRestoreKey RegRestoreKeyA
 #define RegSaveKey RegSaveKeyA
+#define RegSaveKeyEx RegSaveKeyExA
 #if (_WIN32_WINNT >= 0x0600)
 #define RegSetKeyValue RegSetKeyValueA
 #endif
