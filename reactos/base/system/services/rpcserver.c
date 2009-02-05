@@ -2445,18 +2445,18 @@ DWORD ROpenServiceW(
     if (ScmShutdown)
         return ERROR_SHUTDOWN_IN_PROGRESS;
 
-    if (!lpServiceHandle)
-        return ERROR_INVALID_PARAMETER;
-
-    if (!lpServiceName)
-        return ERROR_INVALID_ADDRESS;
-
     hManager = (PMANAGER_HANDLE)hSCManager;
     if (!hManager || hManager->Handle.Tag != MANAGER_TAG)
     {
         DPRINT1("Invalid manager handle!\n");
         return ERROR_INVALID_HANDLE;
     }
+
+    if (!lpServiceHandle)
+        return ERROR_INVALID_PARAMETER;
+
+    if (!lpServiceName)
+        return ERROR_INVALID_ADDRESS;
 
     /* FIXME: Lock the service list */
 
@@ -2872,7 +2872,7 @@ DWORD RGetServiceKeyNameW(
 
     dwError = (*lpcchBuffer > dwLength) ? ERROR_SUCCESS : ERROR_INSUFFICIENT_BUFFER;
 
-    *lpcchBuffer = dwLength * 2;
+    *lpcchBuffer = dwLength;
 
     return dwError;
 }
