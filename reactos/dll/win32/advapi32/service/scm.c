@@ -191,6 +191,7 @@ ScmRpcStatusToWinError(RPC_STATUS Status)
 {
     switch (Status)
     {
+        case RPC_S_INVALID_BINDING:
         case RPC_X_SS_IN_NULL_CONTEXT:
             return ERROR_INVALID_HANDLE;
 
