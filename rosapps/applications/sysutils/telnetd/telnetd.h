@@ -12,7 +12,7 @@
 /*
 ** macro definitions
 */
-#define TELNET_PORT      (23003)
+#define TELNET_PORT      (23)
 
 #define BUFSIZE        (4096)  
 #define USERID_SIZE      (64)
