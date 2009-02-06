@@ -35,12 +35,21 @@
 #define LF               (10)
 #define DEL             (127)
 
-#define IAC             (255)
-#define DONT            (254)
-#define WONT            (253)
-#define DO              (252)
-#define WILL            (251)
-#define ECHO            (1)
+#define IAC "\xff"
+#define DONT "\xfe"
+#define WONT "\xfc"
+#define WILL "\xfb"
+#define DO "\xfd"
+#define SB "\xfa"
+#define SE "\xf0"
+#define ECHO "\x01"
+#define SUPPRESS_GO_AHEAD "\x03"
+#define TERMINAL_TYPE "\x18"
+#define NAWS "\x1f"
+#define LINEMODE "\x22"
+#define NEWENVIRON "\x27"
+#define MODE "\x01"
+
 
 #define HANDSHAKE_TIMEOUT (3)
 
@@ -300,10 +309,23 @@ static int DoTelnetHandshake(int sock)
   int received;
   fd_set set;
   struct timeval timeout = { HANDSHAKE_TIMEOUT, 0 };
-  unsigned char will_echo[3] = { IAC, WILL, ECHO };
+
+  char will_echo[]=
+      IAC DONT ECHO
+      IAC WILL ECHO
+      IAC WILL NAWS
+      IAC WILL SUPPRESS_GO_AHEAD
+      IAC DO SUPPRESS_GO_AHEAD
+      IAC DONT NEWENVIRON
+      IAC WONT NEWENVIRON
+      IAC WONT LINEMODE
+      IAC DO NAWS
+      IAC SB TERMINAL_TYPE "\x01" IAC SE
+      ;
+
   unsigned char client_reply[256];
 
-  if (send(sock, (const char *) will_echo, sizeof(will_echo), 0) < 0) {   
+  if (send(sock, will_echo, sizeof(will_echo), 0) < 0) {   
     return -1;
   }
 
@@ -682,3 +704,4 @@ static VOID ErrorExit (LPTSTR lpszMessage)
    }
    ExitProcess(0); 
 } 
+
