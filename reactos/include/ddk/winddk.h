@@ -5614,6 +5614,117 @@ KeGetCurrentThread(
 
 #elif defined(__x86_64__)
 
+typedef struct DECLSPEC_ALIGN(16) _M128A {
+    ULONGLONG Low;
+    LONGLONG High;
+} M128A, *PM128A;
+
+typedef struct _XMM_SAVE_AREA32 {
+    USHORT ControlWord;
+    USHORT StatusWord;
+    UCHAR TagWord;
+    UCHAR Reserved1;
+    USHORT ErrorOpcode;
+    ULONG ErrorOffset;
+    USHORT ErrorSelector;
+    USHORT Reserved2;
+    ULONG DataOffset;
+    USHORT DataSelector;
+    USHORT Reserved3;
+    ULONG MxCsr;
+    ULONG MxCsr_Mask;
+    M128A FloatRegisters[8];
+    M128A XmmRegisters[16];
+    UCHAR Reserved4[96];
+} XMM_SAVE_AREA32, *PXMM_SAVE_AREA32;
+
+typedef struct DECLSPEC_ALIGN(16) _CONTEXT {
+    ULONG64 P1Home;
+    ULONG64 P2Home;
+    ULONG64 P3Home;
+    ULONG64 P4Home;
+    ULONG64 P5Home;
+    ULONG64 P6Home;
+
+    /* Control flags */
+    ULONG ContextFlags;
+    ULONG MxCsr;
+
+    /* Segment */
+    USHORT SegCs;
+    USHORT SegDs;
+    USHORT SegEs;
+    USHORT SegFs;
+    USHORT SegGs;
+    USHORT SegSs;
+    USHORT EFlags;
+
+    /* Debug */
+    ULONG64 Dr0;
+    ULONG64 Dr1;
+    ULONG64 Dr2;
+    ULONG64 Dr3;
+    ULONG64 Dr6;
+    ULONG64 Dr7;
+
+    /* Integer */
+    ULONG64 Rax;
+    ULONG64 Rcx;
+    ULONG64 Rdx;
+    ULONG64 Rbx;
+    ULONG64 Rsp;
+    ULONG64 Rbp;
+    ULONG64 Rsi;
+    ULONG64 Rdi;
+    ULONG64 R8;
+    ULONG64 R9;
+    ULONG64 R10;
+    ULONG64 R11;
+    ULONG64 R12;
+    ULONG64 R13;
+    ULONG64 R14;
+    ULONG64 R15;
+
+    /* Counter */
+    ULONG64 Rip;
+
+   /* Floating point */
+   union {
+       XMM_SAVE_AREA32 FltSave;
+       struct {
+           M128A Header[2];
+           M128A Legacy[8];
+           M128A Xmm0;
+           M128A Xmm1;
+           M128A Xmm2;
+           M128A Xmm3;
+           M128A Xmm4;
+           M128A Xmm5;
+           M128A Xmm6;
+           M128A Xmm7;
+           M128A Xmm8;
+           M128A Xmm9;
+           M128A Xmm10;
+           M128A Xmm11;
+           M128A Xmm12;
+           M128A Xmm13;
+           M128A Xmm14;
+           M128A Xmm15;
+      } DUMMYSTRUCTNAME;
+    } DUMMYUNIONNAME;
+
+     /* Vector */
+    M128A VectorRegister[26];
+    ULONG64 VectorControl;
+
+    /* Debug control */
+    ULONG64 DebugControl;
+    ULONG64 LastBranchToRip;
+    ULONG64 LastBranchFromRip;
+    ULONG64 LastExceptionToRip;
+    ULONG64 LastExceptionFromRip;
+} CONTEXT;
+
 //
 // Used to contain PFNs and PFN counts
 //
