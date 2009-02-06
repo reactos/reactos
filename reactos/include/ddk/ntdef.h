@@ -140,6 +140,7 @@ typedef unsigned long POINTER_64; // FIXME! HACK!!!
 
 
 // FIXME
+#undef UNALIGNED
 #define UNALIGNED
 #define RESTRICTED_POINTER
 

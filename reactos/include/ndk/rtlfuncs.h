@@ -481,7 +481,7 @@ NTAPI
 RtlAllocateHeap(
     IN HANDLE HeapHandle,
     IN ULONG Flags,
-    IN ULONG Size
+    IN SIZE_T Size
 );
 
 NTSYSAPI
@@ -539,7 +539,7 @@ RtlExtendHeap(
     IN HANDLE Heap,
     IN ULONG Flags,
     IN PVOID P,
-    IN ULONG Size
+    IN SIZE_T Size
 );
 
 NTSYSAPI
@@ -646,7 +646,7 @@ RtlSetUserFlagsHeap(
 );
 
 NTSYSAPI
-ULONG
+SIZE_T
 NTAPI
 RtlSizeHeap(
     IN PVOID HeapHandle,
