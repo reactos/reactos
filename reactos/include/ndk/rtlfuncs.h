@@ -1370,6 +1370,8 @@ RtlCharToInteger(
 //
 // Byte Swap Functions
 //
+#ifdef NTOS_MODE_USER
+
 #if (defined(_M_IX86) && (_MSC_FULL_VER > 13009037)) || \
     ((defined(_M_AMD64) || \
      defined(_M_IA64)) && (_MSC_FULL_VER > 13009175))
@@ -1384,8 +1386,15 @@ unsigned __int64 __cdecl _byteswap_uint64(unsigned __int64);
 #define RtlUlongByteSwap(_x) _byteswap_ulong((_x))
 #define RtlUlonglongByteSwap(_x) _byteswap_uint64((_x))
 
+#elif defined (__GNUC__)
+
+#define RtlUshortByteSwap(_x) _byteswap_ushort((USHORT)(_x))
+#define RtlUlongByteSwap(_x) _byteswap_ulong((_x))
+#define RtlUlonglongByteSwap(_x) _byteswap_uint64((_x))
+
 #else
 
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
 NTSYSAPI
 USHORT
 FASTCALL
@@ -1400,8 +1409,10 @@ NTSYSAPI
 ULONGLONG
 FASTCALL
 RtlUlonglongByteSwap(IN ULONGLONG Source);
+#endif
 
 #endif
+#endif // NTOS_MODE_USER
 
 //
 // Unicode->Ansi String Functions
