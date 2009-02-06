@@ -629,22 +629,6 @@ GetFirmwareEnvironmentVariableW(
  */
 BOOL
 WINAPI
-GetVolumePathNameW(
-    LPCWSTR lpszFileName,
-    LPWSTR lpszVolumePathName,
-    DWORD cchBufferLength
-    )
-{
-    STUB;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
 GetVolumePathNamesForVolumeNameW(
     LPCWSTR lpszVolumeName,
     LPWSTR lpszVolumePathNames,
@@ -760,21 +744,6 @@ GetFirmwareEnvironmentVariableA(
     LPCSTR lpGuid,
     PVOID   pBuffer,
     DWORD    nSize
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
-GetVolumePathNameA(
-    LPCSTR lpszFileName,
-    LPSTR lpszVolumePathName,
-    DWORD cchBufferLength
     )
 {
     STUB;

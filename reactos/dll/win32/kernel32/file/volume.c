@@ -1179,4 +1179,142 @@ FindVolumeClose(
     return RtlFreeHeap(GetProcessHeap(), 0, hFindVolume);
 }
 
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+GetVolumePathNameA(LPCSTR lpszFileName,
+                   LPSTR lpszVolumePathName,
+                   DWORD cchBufferLength)
+{
+    PWCHAR FileNameW = NULL;
+    WCHAR VolumePathName[MAX_PATH];
+    BOOL Result;
+
+    if (lpszFileName)
+    {
+        if (!(FileNameW = FilenameA2W(lpszFileName, FALSE)))
+            return FALSE;
+    }
+
+    Result = GetVolumePathNameW(FileNameW, VolumePathName, cchBufferLength);
+
+    if (Result)
+        FilenameW2A_N(lpszVolumePathName, MAX_PATH, VolumePathName, -1);
+
+    return Result;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+GetVolumePathNameW(LPCWSTR lpszFileName,
+                   LPWSTR lpszVolumePathName,
+                   DWORD cchBufferLength)
+{
+    DWORD PathLength;
+    UNICODE_STRING UnicodeFilePath;
+    LPWSTR FilePart;
+    PWSTR FullFilePath, FilePathName;
+    ULONG PathSize;
+    WCHAR VolumeName[MAX_PATH];
+    DWORD ErrorCode;
+    BOOL Result = FALSE;
+
+    if (!(PathLength = GetFullPathNameW(lpszFileName, 0, NULL, NULL)))
+    {
+        return Result;
+    }
+    else
+    {
+        PathLength = PathLength + 10;
+        PathSize = PathLength * sizeof(WCHAR);
+
+        if (!(FullFilePath = RtlAllocateHeap(RtlGetProcessHeap(), 0, PathSize)))
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return Result;
+        }
+
+        if (!GetFullPathNameW(lpszFileName, PathLength, FullFilePath, &FilePart))
+        {
+            RtlFreeHeap(RtlGetProcessHeap(), 0, FullFilePath);
+            return Result;
+        }
+
+        RtlInitUnicodeString(&UnicodeFilePath, FullFilePath);
+
+        if (UnicodeFilePath.Buffer[UnicodeFilePath.Length / sizeof(WCHAR) - 1] != '\\')
+        {
+            UnicodeFilePath.Length += sizeof(WCHAR);
+            UnicodeFilePath.Buffer[UnicodeFilePath.Length / sizeof(WCHAR) - 1] = '\\';
+            UnicodeFilePath.Buffer[UnicodeFilePath.Length / sizeof(WCHAR)] = '\0';
+        }
+
+        if (!(FilePathName = RtlAllocateHeap(RtlGetProcessHeap(), 0, PathSize)))
+        {
+            RtlFreeHeap(RtlGetProcessHeap(), 0, FullFilePath);
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return Result;
+        }
+
+        while (!GetVolumeNameForVolumeMountPointW(UnicodeFilePath.Buffer,
+                                                  VolumeName,
+                                                  MAX_PATH))
+        {
+            if (((UnicodeFilePath.Length == 4) && (UnicodeFilePath.Buffer[0] == '\\') &&
+                (UnicodeFilePath.Buffer[1] == '\\')) || ((UnicodeFilePath.Length == 6) &&
+                (UnicodeFilePath.Buffer[1] == ':')))
+            {
+                break;
+            }
+
+            UnicodeFilePath.Length -= sizeof(WCHAR);
+            UnicodeFilePath.Buffer[UnicodeFilePath.Length / sizeof(WCHAR)] = '\0';
+
+            memcpy(FilePathName, UnicodeFilePath.Buffer, UnicodeFilePath.Length);
+            FilePathName[UnicodeFilePath.Length / sizeof(WCHAR)] = '\0';
+
+            if (!GetFullPathNameW(FilePathName, PathLength, FullFilePath, &FilePart))
+            {
+                goto Cleanup2;
+            }
+
+            if (!FilePart)
+            {
+                RtlInitUnicodeString(&UnicodeFilePath, FullFilePath);
+                UnicodeFilePath.Length += sizeof(WCHAR);
+                UnicodeFilePath.Buffer[UnicodeFilePath.Length / sizeof(WCHAR) - 1] = '\\';
+                UnicodeFilePath.Buffer[UnicodeFilePath.Length / sizeof(WCHAR)] = '\0';
+                break;
+            }
+
+            FilePart[0] = '\0';
+            RtlInitUnicodeString(&UnicodeFilePath, FullFilePath);
+        }
+    }
+
+    if (UnicodeFilePath.Length > (cchBufferLength * sizeof(WCHAR)) - sizeof(WCHAR))
+    {
+        ErrorCode = ERROR_FILENAME_EXCED_RANGE;
+        goto Cleanup1;
+    }
+
+    memcpy(lpszVolumePathName, UnicodeFilePath.Buffer, UnicodeFilePath.Length);
+    lpszVolumePathName[UnicodeFilePath.Length / sizeof(WCHAR)] = '\0';
+
+    Result = TRUE;
+    goto Cleanup2;
+
+Cleanup1:
+    SetLastError(ErrorCode);
+Cleanup2:
+    RtlFreeHeap(RtlGetProcessHeap(), 0, FullFilePath);
+    RtlFreeHeap(RtlGetProcessHeap(), 0, FilePathName);
+    return Result;
+}
+
 /* EOF */
