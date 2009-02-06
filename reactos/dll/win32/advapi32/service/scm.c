@@ -770,6 +770,12 @@ CreateServiceW(SC_HANDLE hSCManager,
     TRACE("%p %S %S\n", hSCManager, 
           lpServiceName, lpDisplayName);
 
+    if (!hSCManager)
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return NULL;
+    }
+
     /* Calculate the Dependencies length*/
     if (lpDependencies != NULL)
     {
@@ -1132,6 +1138,12 @@ EnumServicesStatusW(SC_HANDLE hSCManager,
 
     TRACE("EnumServicesStatusW() called\n");
 
+    if (!hSCManager)
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+
     RpcTryExcept
     {
         dwError = REnumServicesStatusW((SC_RPC_HANDLE)hSCManager,
@@ -1398,6 +1410,12 @@ GetServiceDisplayNameW(SC_HANDLE hSCManager,
 
     TRACE("GetServiceDisplayNameW() called\n");
 
+    if (!hSCManager)
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+
     if (!lpDisplayName)
         *lpcchBuffer = 0;
 
@@ -1497,7 +1515,22 @@ GetServiceKeyNameW(SC_HANDLE hSCManager,
 
     TRACE("GetServiceKeyNameW() called\n");
 
+    if (!hSCManager)
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+
     if (!lpDisplayName)
+    {
+        SetLastError(ERROR_INVALID_ADDRESS);
+
+        if (!lpServiceName)
+            *lpcchBuffer = 1;
+        return FALSE;
+    }
+
+    if (!lpServiceName)
         *lpcchBuffer = 0;
 
     RpcTryExcept
@@ -1756,6 +1789,12 @@ OpenServiceW(SC_HANDLE hSCManager,
 
     TRACE("OpenServiceW(%p, %S, %lx)\n",
            hSCManager, lpServiceName, dwDesiredAccess);
+
+    if (!hSCManager)
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return NULL;
+    }
 
     RpcTryExcept
     {
