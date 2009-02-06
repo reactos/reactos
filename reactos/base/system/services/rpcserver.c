@@ -3578,7 +3578,7 @@ DWORD RQueryServiceConfigA(
     else
         dwRequiredSize += 2;
 
-    if (lpService->lpGroup != NULL)
+    if ((lpService->lpGroup != NULL) && (lpService->lpGroup->lpGroupName != NULL))
         dwRequiredSize += wcslen(lpService->lpGroup->lpGroupName) + 1;
     else
         dwRequiredSize += 2;
@@ -3632,7 +3632,7 @@ DWORD RQueryServiceConfigA(
         lpConfig->lpBinaryPathName = (LPSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpConfig);
         lpStr += (strlen((LPSTR)lpStr) + 1);
 
-        if (lpService->lpGroup)
+        if (lpService->lpGroup && lpService->lpGroup->lpGroupName)
         {
             WideCharToMultiByte(CP_ACP,
                                 0,
