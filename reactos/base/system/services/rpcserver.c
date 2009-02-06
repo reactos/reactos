@@ -4209,7 +4209,6 @@ DWORD RQueryServiceConfig2A(
     PSERVICE_HANDLE hSvc;
     PSERVICE lpService = NULL;
     HKEY hServiceKey = NULL;
-    DWORD dwRequiredSize;
     LPWSTR lpDescriptionW = NULL;
     LPSTR lpDescription = NULL;
 
@@ -4255,39 +4254,42 @@ DWORD RQueryServiceConfig2A(
         LPSERVICE_DESCRIPTIONA lpServiceDescription = (LPSERVICE_DESCRIPTIONA)lpBuffer;
         LPSTR lpStr;
 
+        *pcbBytesNeeded = sizeof(SERVICE_DESCRIPTIONA);
+
         dwError = ScmReadString(hServiceKey,
                                 L"Description",
                                 &lpDescriptionW);
-        if (dwError != ERROR_SUCCESS)
+        if (dwError == ERROR_SUCCESS)
         {
-            if (cbBufSize < sizeof(SERVICE_DESCRIPTIONA))
+            *pcbBytesNeeded += ((wcslen(lpDescriptionW) + 1));
+        }
+
+        if (cbBufSize >= *pcbBytesNeeded)
+        {
+
+            if (dwError == ERROR_SUCCESS)
             {
-                *pcbBytesNeeded = sizeof(SERVICE_DESCRIPTIONA);
-                dwError = ERROR_INSUFFICIENT_BUFFER;
+                lpStr = (LPSTR)(lpServiceDescription + 1);
+
+                WideCharToMultiByte(CP_ACP,
+                                    0,
+                                    lpDescriptionW,
+                                    -1,
+                                    lpStr,
+                                    wcslen(lpDescriptionW),
+                                    NULL,
+                                    NULL);
+                lpServiceDescription->lpDescription = (LPSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpServiceDescription);
             }
-            goto done;
+            else
+            {
+                lpServiceDescription->lpDescription = NULL;
+            }
         }
-
-        dwRequiredSize = sizeof(SERVICE_DESCRIPTIONA) + ((wcslen(lpDescriptionW) + 1));
-
-        if (cbBufSize < dwRequiredSize)
+        else
         {
-            *pcbBytesNeeded = dwRequiredSize;
             dwError = ERROR_INSUFFICIENT_BUFFER;
-            goto done;
         }
-
-        lpStr = (LPSTR)(lpServiceDescription + 1);
-
-        WideCharToMultiByte(CP_ACP,
-                            0,
-                            lpDescriptionW,
-                            -1,
-                            lpStr,
-                            wcslen(lpDescriptionW),
-                            NULL,
-                            NULL);
-        lpServiceDescription->lpDescription = (LPSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpServiceDescription);
     }
     else if (dwInfoLevel & SERVICE_CONFIG_FAILURE_ACTIONS)
     {
