@@ -5612,6 +5612,24 @@ KeGetCurrentThread(
 
 #define KI_USER_SHARED_DATA               0xffdf0000
 
+#define PAGE_SIZE                         0x1000
+#define PAGE_SHIFT                        12L
+
+#define SharedUserData                    ((KUSER_SHARED_DATA * CONST) KI_USER_SHARED_DATA)
+
+extern NTKERNELAPI PVOID MmHighestUserAddress;
+extern NTKERNELAPI PVOID MmSystemRangeStart;
+extern NTKERNELAPI ULONG_PTR MmUserProbeAddress;
+
+#define MM_HIGHEST_USER_ADDRESS           MmHighestUserAddress
+#define MM_SYSTEM_RANGE_START             MmSystemRangeStart
+#define MM_USER_PROBE_ADDRESS             MmUserProbeAddress
+#define MM_LOWEST_USER_ADDRESS            (PVOID)0x10000
+#define MM_LOWEST_SYSTEM_ADDRESS          (PVOID)0xC0C00000
+
+#define MM_KSEG0_BASE       MM_SYSTEM_RANGE_START
+#define MM_SYSTEM_SPACE_END 0xFFFFFFFF
+
 #elif defined(__x86_64__)
 
 typedef struct DECLSPEC_ALIGN(16) _M128A {
@@ -5767,6 +5785,13 @@ typedef LONG64 SPFN_NUMBER, *PSPFN_NUMBER;
 #define PDE_TOP     0xFFFFF6FB7FFFFFFFULL
 #define PTE_TOP     0xFFFFF6FFFFFFFFFFULL
 
+extern NTKERNELAPI PVOID MmHighestUserAddress;
+extern NTKERNELAPI PVOID MmSystemRangeStart;
+extern NTKERNELAPI ULONG_PTR MmUserProbeAddress;
+
+#define MM_HIGHEST_USER_ADDRESS           MmHighestUserAddress
+#define MM_SYSTEM_RANGE_START             MmSystemRangeStart
+#define MM_USER_PROBE_ADDRESS             MmUserProbeAddress
 #define MM_LOWEST_USER_ADDRESS   (PVOID)0x10000
 #define MM_LOWEST_SYSTEM_ADDRESS (PVOID)0xFFFF080000000000ULL
 #define KI_USER_SHARED_DATA       0xFFFFF78000000000ULL
@@ -5967,25 +5992,6 @@ KeGetCurrentProcessorNumber(VOID)
 #else
 #error Unknown architecture
 #endif
-
-#define PAGE_SIZE                         0x1000
-#define PAGE_SHIFT                        12L
-
-#define SharedUserData                    ((KUSER_SHARED_DATA * CONST) KI_USER_SHARED_DATA)
-
-extern NTKERNELAPI PVOID MmHighestUserAddress;
-extern NTKERNELAPI PVOID MmSystemRangeStart;
-extern NTKERNELAPI ULONG_PTR MmUserProbeAddress;
-
-#define MM_HIGHEST_USER_ADDRESS           MmHighestUserAddress
-#define MM_SYSTEM_RANGE_START             MmSystemRangeStart
-#define MM_USER_PROBE_ADDRESS             MmUserProbeAddress
-#define MM_LOWEST_USER_ADDRESS            (PVOID)0x10000
-#define MM_LOWEST_SYSTEM_ADDRESS          (PVOID)0xC0C00000
-
-#define MM_KSEG0_BASE       MM_SYSTEM_RANGE_START
-#define MM_SYSTEM_SPACE_END 0xFFFFFFFF
-
 
 #define EFLAG_SIGN                        0x8000
 #define EFLAG_ZERO                        0x4000
