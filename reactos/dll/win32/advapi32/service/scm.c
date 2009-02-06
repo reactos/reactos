@@ -487,6 +487,12 @@ CloseServiceHandle(SC_HANDLE hSCObject)
 
     TRACE("CloseServiceHandle() called\n");
 
+    if (!hSCObject)
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+
     RpcTryExcept
     {
         /* Call to services.exe using RPC */
@@ -1211,6 +1217,19 @@ EnumServicesStatusExA(SC_HANDLE hSCManager,
     DWORD dwCount;
 
     TRACE("EnumServicesStatusExA() called\n");
+
+    if (InfoLevel != SC_ENUM_PROCESS_INFO)
+    {
+        SetLastError(ERROR_INVALID_LEVEL);
+        return FALSE;
+    }
+
+    if (!hSCManager)
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+
 
     RpcTryExcept
     {
