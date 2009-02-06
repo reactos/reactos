@@ -77,7 +77,13 @@
 			<description>Word processor.</description>
 			<location>http://www.abiword.org/downloads/abiword/2.6.4/Windows/abiword-setup-2.6.4.exe</location>
 		</application>
-		<application name="OpenOffice">
+		<application name="OpenOffice 2.4">
+			<regname>OpenOffice.org 2.4.2</regname>
+			<version>2.4.2</version>
+			<description>THE Open Source Office Suite.</description>
+			<location>http://ftp.plusline.de/OpenOffice/stable/2.4.2/OOo_2.4.2_Win32Intel_install_wJRE_en-US.exe</location>
+		</application>
+		<application name="OpenOffice 3.0">
 			<regname>OpenOffice.org 3.0.1</regname>
 			<version>3.0.1</version>
 			<description>THE Open Source Office Suite.</description>
