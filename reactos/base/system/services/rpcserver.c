@@ -3950,8 +3950,8 @@ DWORD RGetServiceKeyNameA(
                             0,
                             lpService->lpServiceName,
                             wcslen(lpService->lpServiceName),
-                            lpServiceName + 1,
-                            dwLength,
+                            lpServiceName,
+                            dwLength + 1,
                             NULL,
                             NULL);
         return ERROR_SUCCESS;
@@ -4284,11 +4284,13 @@ DWORD RQueryServiceConfig2A(
             else
             {
                 lpServiceDescription->lpDescription = NULL;
+                goto done;
             }
         }
         else
         {
             dwError = ERROR_INSUFFICIENT_BUFFER;
+            goto done;
         }
     }
     else if (dwInfoLevel & SERVICE_CONFIG_FAILURE_ACTIONS)
