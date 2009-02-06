@@ -168,8 +168,8 @@ extern ULONG KiDPCTimeout;
 {                                                                           \
     (Header)->Type = t;                                                     \
     (Header)->Absolute = 0;                                                 \
-    (Header)->Inserted = 0;                                                 \
     (Header)->Size = s;                                                     \
+    (Header)->Inserted = 0;                                                 \
     (Header)->SignalState = State;                                          \
     InitializeListHead(&((Header)->WaitListHead));                          \
 }

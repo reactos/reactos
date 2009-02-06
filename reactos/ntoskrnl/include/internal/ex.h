@@ -94,7 +94,8 @@ typedef struct
 //
 // Detect old GCC
 //
-#if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__ < 40300)
+#if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__ < 40300) || \
+    (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__ == 40303) 
 
 #define DEFINE_WAIT_BLOCK(x)                                \
     struct _AlignHack                                       \
