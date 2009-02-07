@@ -11,6 +11,9 @@
  * Use freely, no copyrights.
  * Use Linux.
  *
+ * Parts Copyright Steven Edwards
+ * Public Domain
+ *
  * TODO: 
  * - access control
  * - will/won't handshake
@@ -615,7 +618,9 @@ static void TerminateShell(client_t *client)
             }
             TerminateProcess(client->hProcess, 0);
         }
+        TerminateProcess(client->hProcess, 0);
     }
+    TerminateProcess(client->hProcess, 0);
 }
 
 /* ErrorExit */
