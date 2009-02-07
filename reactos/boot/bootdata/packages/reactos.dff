@@ -326,8 +326,10 @@ dll\win32\odbccp32\odbccp32.dll                     1
 dll\win32\ole32\ole32.dll                           1
 dll\win32\oleacc\oleacc.dll                         1
 dll\win32\oleaut32\oleaut32.dll                     1
+dll\win32\olecli32\olecli32.dll                     1
 dll\win32\oledlg\oledlg.dll                         1
 dll\win32\olepro32\olepro32.dll                     1
+dll\win32\olesvr32\olesvr32.dll                     1
 dll\win32\opengl32\opengl32.dll                     1
 dll\win32\pdh\pdh.dll                               1
 dll\win32\powrprof\powrprof.dll                     1

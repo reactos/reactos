@@ -277,11 +277,17 @@
 <directory name="oleaut32">
 	<xi:include href="oleaut32/oleaut32.rbuild" />
 </directory>
+<directory name="olecli32">
+	<xi:include href="olecli32/olecli32.rbuild" />
+</directory>
 <directory name="oledlg">
 	<xi:include href="oledlg/oledlg.rbuild" />
 </directory>
 <directory name="olepro32">
 	<xi:include href="olepro32/olepro32.rbuild" />
+</directory>
+<directory name="olesvr32">
+	<xi:include href="olesvr32/olesvr32.rbuild" />
 </directory>
 <directory name="opengl32">
 	<xi:include href="opengl32/opengl32.rbuild" />

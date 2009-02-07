@@ -99,6 +99,8 @@
   <property name="BASEADDRESS_WSOCK32" value="0x71ab0000" />
   <property name="BASEADDRESS_ACLEDIT" value="0x71b70000" />
   <property name="BASEADDRESS_NETAPI32" value="0x71c00000" />
+  <property name="BASEADDRESS_OLESVR32" value="0x71dd0000" />
+  <property name="BASEADDRESS_OLECLI32" value="0x71df0000" />
   <property name="BASEADDRESS_DPLAY" value="0x71e80000" />
   <property name="BASEADDRESS_SECURITY" value="0x71f10000" />
   <property name="BASEADDRESS_CRYPTUI" value="0x720D0000" />
