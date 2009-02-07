@@ -997,3 +997,27 @@ SetupChangeFontSize(
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
+
+/*
+ * @unimplemented
+ */
+DWORD WINAPI
+SetupChangeLocaleEx(HWND hWnd,
+                    LCID Lcid,
+                    LPCWSTR lpSrcRootPath,
+                    char Unknown,
+                    DWORD dwUnused1,
+                    DWORD dwUnused2)
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+/*
+ * @implemented
+ */
+DWORD WINAPI
+SetupChangeLocale(HWND hWnd, LCID Lcid)
+{
+    return SetupChangeLocaleEx(hWnd, Lcid, NULL, 0, 0, 0);
+}
