@@ -36,7 +36,7 @@ typedef struct _RPC_SYNTAX_IDENTIFIER {
 typedef struct _RPC_MESSAGE
 {
     RPC_BINDING_HANDLE Handle;
-    unsigned long DataRepresentation;
+    ULONG DataRepresentation;
     void* Buffer;
     unsigned int BufferLength;
     unsigned int ProcNum;
@@ -45,7 +45,7 @@ typedef struct _RPC_MESSAGE
     void* ReservedForRuntime;
     RPC_MGR_EPV* ManagerEpv;
     void* ImportContext;
-    unsigned long RpcFlags;
+    ULONG RpcFlags;
 } RPC_MESSAGE, *PRPC_MESSAGE;
 
 /* or'ed with ProcNum */
@@ -202,13 +202,13 @@ RPCRTAPI RPC_STATUS RPC_ENTRY
 typedef RPC_STATUS (*RPC_BLOCKING_FN)(void* hWnd, void* Context, void* hSyncEvent);
 
 RPCRTAPI RPC_STATUS RPC_ENTRY
-  I_RpcBindingSetAsync( RPC_BINDING_HANDLE Binding, RPC_BLOCKING_FN BlockingFn, unsigned long ServerTid );
+  I_RpcBindingSetAsync( RPC_BINDING_HANDLE Binding, RPC_BLOCKING_FN BlockingFn, ULONG ServerTid );
 
 RPCRTAPI RPC_STATUS RPC_ENTRY
   I_RpcSetThreadParams( int fClientFree, void* Context, void* hWndClient );
 
 RPCRTAPI UINT RPC_ENTRY
-  I_RpcWindowProc( void* hWnd, unsigned int Message, unsigned int wParam, unsigned long lParam );
+  I_RpcWindowProc( void* hWnd, unsigned int Message, unsigned int wParam, ULONG lParam );
 
 #endif
 

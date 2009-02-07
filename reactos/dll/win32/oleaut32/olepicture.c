@@ -710,17 +710,27 @@ static HRESULT WINAPI OLEPictureImpl_Render(IPicture *iface, HDC hdc,
 
   case PICTYPE_METAFILE:
   {
-    POINT prevOrg;
-    SIZE prevExt;
+    POINT prevOrg, prevWndOrg;
+    SIZE prevExt, prevWndExt;
     int oldmode;
 
+    /* Render the WMF to the appropriate location by setting the
+       appropriate ratio between "device units" and "logical units" */
     oldmode = SetMapMode(hdc, MM_ANISOTROPIC);
+    /* For the "source rectangle" the y-axis must be inverted */
+    SetWindowOrgEx(hdc, xSrc, This->himetricHeight-ySrc, &prevWndOrg);
+    SetWindowExtEx(hdc, cxSrc, -cySrc, &prevWndExt);
+    /* For the "destination rectangle" no inversion is necessary */
     SetViewportOrgEx(hdc, x, y, &prevOrg);
     SetViewportExtEx(hdc, cx, cy, &prevExt);
 
     if (!PlayMetaFile(hdc, This->desc.u.wmf.hmeta))
         ERR("PlayMetaFile failed!\n");
 
+    /* We're done, restore the DC to the previous settings for converting
+       logical units to device units */
+    SetWindowExtEx(hdc, prevWndExt.cx, prevWndExt.cy, NULL);
+    SetWindowOrgEx(hdc, prevWndOrg.x, prevWndOrg.y, NULL);
     SetViewportExtEx(hdc, prevExt.cx, prevExt.cy, NULL);
     SetViewportOrgEx(hdc, prevOrg.x, prevOrg.y, NULL);
     SetMapMode(hdc, oldmode);

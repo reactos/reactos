@@ -510,7 +510,7 @@ ULONG WINAPI LHashValOfNameSysA( SYSKIND skind, LCID lcid, LPCSTR lpStr)
   ULONG nHiWord, nLoWord = 0x0deadbee;
   const unsigned char *str = (const unsigned char *)lpStr, *pnLookup = NULL;
 
-  TRACE("(%d, %d, %s) %s\n", skind, lcid, debugstr_a(lpStr),
+  TRACE("(%d, 0x%x, %s) %s\n", skind, lcid, debugstr_a(lpStr),
     (skind == SYS_WIN16) ? "SYS_WIN16" : (skind == SYS_WIN32) ? "SYS_WIN32" : "");
 
   if (!str)

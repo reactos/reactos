@@ -144,7 +144,7 @@ struct NDR_ALLOC_ALL_NODES_CONTEXT;
 struct NDR_POINTER_QUEUE_STATE;
 
 typedef unsigned char *RPC_BUFPTR;
-typedef unsigned long RPC_LENGTH;
+typedef ULONG RPC_LENGTH;
 typedef void (__RPC_USER *EXPR_EVAL)(struct _MIDL_STUB_MESSAGE *);
 typedef const unsigned char *PFORMAT_STRING;
 
@@ -562,6 +562,18 @@ RPCRTAPI void RPC_ENTRY
 RPCRTAPI void RPC_ENTRY
   NdrSimpleTypeUnmarshall( PMIDL_STUB_MESSAGE pStubMsg, unsigned char* pMemory, unsigned char FormatChar );
 
+RPCRTAPI unsigned char* RPC_ENTRY
+  NdrByteCountPointerMarshall( PMIDL_STUB_MESSAGE pStubMsg, unsigned char* pMemory, PFORMAT_STRING pFormat );
+RPCRTAPI unsigned char* RPC_ENTRY
+  NdrByteCountPointerUnmarshall( PMIDL_STUB_MESSAGE pStubMsg, unsigned char** ppMemory, PFORMAT_STRING pFormat, unsigned char fMustAlloc );
+RPCRTAPI void RPC_ENTRY
+  NdrByteCountPointerBufferSize( PMIDL_STUB_MESSAGE pStubMsg, unsigned char* pMemory, PFORMAT_STRING pFormat );
+RPCRTAPI void RPC_ENTRY
+  NdrByteCountPointerFree( PMIDL_STUB_MESSAGE pStubMsg, unsigned char* pMemory, PFORMAT_STRING pFormat );
+
+RPCRTAPI unsigned char* RPC_ENTRY
+  NdrRangeUnmarshall( PMIDL_STUB_MESSAGE pStubMsg, unsigned char** ppMemory, PFORMAT_STRING pFormat, unsigned char fMustAlloc );
+
 /* while MS declares each prototype separately, I prefer to use macros for this kind of thing instead */
 #define SIMPLE_TYPE_MARSHAL(type) \
 RPCRTAPI unsigned char* RPC_ENTRY \
@@ -590,11 +602,9 @@ TYPE_MARSHAL(VaryingArray)
 TYPE_MARSHAL(ComplexArray)
 TYPE_MARSHAL(EncapsulatedUnion)
 TYPE_MARSHAL(NonEncapsulatedUnion)
-TYPE_MARSHAL(ByteCountPointer)
 TYPE_MARSHAL(XmitOrRepAs)
 TYPE_MARSHAL(UserMarshal)
 TYPE_MARSHAL(InterfacePointer)
-TYPE_MARSHAL(Range)
 
 SIMPLE_TYPE_MARSHAL(ConformantString)
 SIMPLE_TYPE_MARSHAL(NonConformantString)

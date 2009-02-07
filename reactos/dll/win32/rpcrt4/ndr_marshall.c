@@ -122,6 +122,13 @@ static unsigned char *WINAPI NdrContextHandleMarshall(PMIDL_STUB_MESSAGE, unsign
 static void WINAPI NdrContextHandleBufferSize(PMIDL_STUB_MESSAGE, unsigned char *, PFORMAT_STRING);
 static unsigned char *WINAPI NdrContextHandleUnmarshall(PMIDL_STUB_MESSAGE, unsigned char **, PFORMAT_STRING, unsigned char);
 
+static unsigned char *WINAPI NdrRangeMarshall(PMIDL_STUB_MESSAGE,unsigned char *, PFORMAT_STRING);
+static void WINAPI NdrRangeBufferSize(PMIDL_STUB_MESSAGE, unsigned char *, PFORMAT_STRING);
+static ULONG WINAPI NdrRangeMemorySize(PMIDL_STUB_MESSAGE, PFORMAT_STRING);
+static void WINAPI NdrRangeFree(PMIDL_STUB_MESSAGE, unsigned char *, PFORMAT_STRING);
+
+static ULONG WINAPI NdrByteCountPointerMemorySize(PMIDL_STUB_MESSAGE, PFORMAT_STRING);
+
 const NDR_MARSHALL NdrMarshaller[NDR_TABLE_SIZE] = {
   0,
   NdrBaseTypeMarshall, NdrBaseTypeMarshall, NdrBaseTypeMarshall,
@@ -3141,11 +3148,9 @@ static unsigned long ComplexStructMemorySize(PMIDL_STUB_MESSAGE pStubMsg,
     }
     case RPC_FC_ALIGNM4:
       ALIGN_LENGTH(size, 4);
-      ALIGN_POINTER(pStubMsg->Buffer, 4);
       break;
     case RPC_FC_ALIGNM8:
       ALIGN_LENGTH(size, 8);
-      ALIGN_POINTER(pStubMsg->Buffer, 8);
       break;
     case RPC_FC_STRUCTPAD1:
     case RPC_FC_STRUCTPAD2:
@@ -4328,6 +4333,56 @@ void WINAPI NdrUserMarshalFree(PMIDL_STUB_MESSAGE pStubMsg,
 
   pStubMsg->StubDesc->aUserMarshalQuadruple[index].pfnFree(
     &umcb.Flags, pMemory);
+}
+
+/***********************************************************************
+ *           NdrGetUserMarshalInfo [RPCRT4.@]
+ */
+RPC_STATUS RPC_ENTRY NdrGetUserMarshalInfo(ULONG *flags, ULONG level, NDR_USER_MARSHAL_INFO *umi)
+{
+    USER_MARSHAL_CB *umcb = CONTAINING_RECORD(flags, USER_MARSHAL_CB, Flags);
+
+    TRACE("(%p,%u,%p)\n", flags, level, umi);
+
+    if (level != 1)
+        return RPC_S_INVALID_ARG;
+
+    memset(&umi->Level1, 0, sizeof(umi->Level1));
+    umi->InformationLevel = level;
+
+    if (umcb->Signature != USER_MARSHAL_CB_SIGNATURE)
+        return RPC_S_INVALID_ARG;
+
+    umi->Level1.pfnAllocate = umcb->pStubMsg->pfnAllocate;
+    umi->Level1.pfnFree = umcb->pStubMsg->pfnFree;
+    umi->Level1.pRpcChannelBuffer = umcb->pStubMsg->pRpcChannelBuffer;
+
+    switch (umcb->CBType)
+    {
+    case USER_MARSHAL_CB_MARSHALL:
+    case USER_MARSHAL_CB_UNMARSHALL:
+    {
+        RPC_MESSAGE *msg = umcb->pStubMsg->RpcMsg;
+        unsigned char *buffer_start = msg->Buffer;
+        unsigned char *buffer_end =
+            (unsigned char *)msg->Buffer + msg->BufferLength;
+
+        if (umcb->pStubMsg->Buffer < buffer_start ||
+            umcb->pStubMsg->Buffer > buffer_end)
+            return ERROR_INVALID_USER_BUFFER;
+
+        umi->Level1.Buffer = umcb->pStubMsg->Buffer;
+        umi->Level1.BufferSize = buffer_end - umcb->pStubMsg->Buffer;
+        break;
+    }
+    case USER_MARSHAL_CB_BUFFER_SIZE:
+    case USER_MARSHAL_CB_FREE:
+        break;
+    default:
+        WARN("unrecognised CBType %d\n", umcb->CBType);
+    }
+
+    return RPC_S_OK;
 }
 
 /***********************************************************************
@@ -6002,10 +6057,10 @@ void WINAPI NdrByteCountPointerBufferSize(PMIDL_STUB_MESSAGE pStubMsg,
 }
 
 /***********************************************************************
- *           NdrByteCountPointerMemorySize [RPCRT4.@]
+ *           NdrByteCountPointerMemorySize [internal]
  */
-ULONG WINAPI NdrByteCountPointerMemorySize(PMIDL_STUB_MESSAGE pStubMsg,
-                                PFORMAT_STRING pFormat)
+static ULONG WINAPI NdrByteCountPointerMemorySize(PMIDL_STUB_MESSAGE pStubMsg,
+                                                  PFORMAT_STRING pFormat)
 {
     FIXME("stub\n");
     return 0;
@@ -6077,7 +6132,7 @@ void WINAPI NdrXmitOrRepAsFree(PMIDL_STUB_MESSAGE pStubMsg,
 /***********************************************************************
  *           NdrRangeMarshall [internal]
  */
-unsigned char *WINAPI NdrRangeMarshall(
+static unsigned char *WINAPI NdrRangeMarshall(
     PMIDL_STUB_MESSAGE pStubMsg,
     unsigned char *pMemory,
     PFORMAT_STRING pFormat)
@@ -6100,7 +6155,7 @@ unsigned char *WINAPI NdrRangeMarshall(
 }
 
 /***********************************************************************
- *           NdrRangeUnmarshall
+ *           NdrRangeUnmarshall [RPCRT4.@]
  */
 unsigned char *WINAPI NdrRangeUnmarshall(
     PMIDL_STUB_MESSAGE pStubMsg,
@@ -6200,7 +6255,7 @@ unsigned char *WINAPI NdrRangeUnmarshall(
 /***********************************************************************
  *           NdrRangeBufferSize [internal]
  */
-void WINAPI NdrRangeBufferSize(
+static void WINAPI NdrRangeBufferSize(
     PMIDL_STUB_MESSAGE pStubMsg,
     unsigned char *pMemory,
     PFORMAT_STRING pFormat)
@@ -6223,7 +6278,7 @@ void WINAPI NdrRangeBufferSize(
 /***********************************************************************
  *           NdrRangeMemorySize [internal]
  */
-ULONG WINAPI NdrRangeMemorySize(
+static ULONG WINAPI NdrRangeMemorySize(
     PMIDL_STUB_MESSAGE pStubMsg,
     PFORMAT_STRING pFormat)
 {
@@ -6244,7 +6299,7 @@ ULONG WINAPI NdrRangeMemorySize(
 /***********************************************************************
  *           NdrRangeFree [internal]
  */
-void WINAPI NdrRangeFree(PMIDL_STUB_MESSAGE pStubMsg,
+static void WINAPI NdrRangeFree(PMIDL_STUB_MESSAGE pStubMsg,
                                 unsigned char *pMemory,
                                 PFORMAT_STRING pFormat)
 {

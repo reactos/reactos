@@ -606,10 +606,15 @@ serialize_param(
     marshal_state	*buf)
 {
     HRESULT hres = S_OK;
+    VARTYPE vartype;
 
     TRACE("(tdesc.vt %s)\n",debugstr_vt(tdesc->vt));
 
-    switch (tdesc->vt) {
+    vartype = tdesc->vt;
+    if ((vartype & 0xf000) == VT_ARRAY)
+        vartype = VT_SAFEARRAY;
+
+    switch (vartype) {
     case VT_EMPTY: /* nothing. empty variant for instance */
 	return S_OK;
     case VT_I8:
@@ -919,11 +924,16 @@ deserialize_param(
     marshal_state	*buf)
 {
     HRESULT hres = S_OK;
+    VARTYPE vartype;
 
     TRACE("vt %s at %p\n",debugstr_vt(tdesc->vt),arg);
 
+    vartype = tdesc->vt;
+    if ((vartype & 0xf000) == VT_ARRAY)
+        vartype = VT_SAFEARRAY;
+
     while (1) {
-	switch (tdesc->vt) {
+	switch (vartype) {
 	case VT_EMPTY:
 	    if (debugout) TRACE_(olerelay)("<empty>\n");
 	    return S_OK;
