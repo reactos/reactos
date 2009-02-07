@@ -620,7 +620,7 @@ WSPListen(SOCKET Handle,
     Socket = GetSocketStructure(Handle);
 
     if (Socket->SharedData.Listening)
-    	return 0;
+        return 0;
 
     Status = NtCreateEvent(&SockEvent,
                            GENERIC_READ | GENERIC_WRITE,
