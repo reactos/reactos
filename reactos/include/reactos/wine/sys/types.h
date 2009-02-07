@@ -11,7 +11,10 @@ typedef int	_pid_t;
 typedef __int64	_pid_t;
 #endif
 #ifndef	NO_OLDNAMES
+#ifndef __pid_t_defined
+#define __pid_t_defined
 typedef _pid_t	pid_t;
+#endif /* __pid_t_defined */
 #endif
 #endif	/* Not _PID_T_ */
 
