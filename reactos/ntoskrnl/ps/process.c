@@ -554,7 +554,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     Process->SectionObject = SectionObject;
 
     /* Set default exit code */
-    Process->ExitStatus = STATUS_TIMEOUT;
+    Process->ExitStatus = STATUS_PENDING;
 
     /* Check if this is the initial process being built */
     if (Parent)
