@@ -1049,3 +1049,11 @@ GetNumaAvailableMemoryNode(IN UCHAR Node,
     STUB;
     return FALSE;
 }
+
+BOOL
+WINAPI
+NlsResetProcessLocale(VOID)
+{
+    STUB;
+    return TRUE;
+}

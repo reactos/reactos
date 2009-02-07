@@ -685,7 +685,7 @@ NeedCurrentDirectoryForExePathA@4
 NeedCurrentDirectoryForExePathW@4
 NlsConvertIntegerToString@20
 NlsGetCacheUpdateCount@0
-;NlsResetProcessLocale
+NlsResetProcessLocale@0
 ;NumaVirtualQueryNode
 OpenConsoleW@16
 ;OpenDataFile
