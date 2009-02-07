@@ -1483,8 +1483,8 @@ MUI_ERROR plPLErrorEntries[] =
     },
     {
         //ERROR_UPDATE_GEOID,
-        "Setup could not set the geo id.\n"
-        "ENTER = Reboot computer"
+        "Instalator nie m¢gˆ ustawi† lokalizacji geograficznej.\n"
+        "ENTER = Restart komputera"
     },
     {
         NULL,
