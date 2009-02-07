@@ -17,6 +17,8 @@ AddDesktopItemA@32 @113 NONAME
 AddDesktopItemW@32 @114 NONAME
 DeleteDesktopItemA@8 @115 NONAME
 DeleteDesktopItemW@8 @116 NONAME
+DeleteProfileW@12
+DeleteProfileA@12
 CreateEnvironmentBlock@12
 DestroyEnvironmentBlock@4
 EnterCriticalPolicySection@4

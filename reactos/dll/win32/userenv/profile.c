@@ -1134,4 +1134,22 @@ UnloadUserProfile (HANDLE hToken,
   return TRUE;
 }
 
+BOOL WINAPI
+DeleteProfileW(LPCWSTR lpSidString,
+               LPCWSTR lpProfilePath,
+               LPCWSTR lpComputerName)
+{
+   DPRINT1("DeleteProfileW() not implemented!\n");
+   return FALSE;
+}
+
+BOOL WINAPI
+DeleteProfileA(LPCSTR lpSidString,
+               LPCSTR lpProfilePath,
+               LPCSTR lpComputerName)
+{
+   DPRINT1("DeleteProfileA() not implemented!\n");
+   return FALSE;
+}
+
 /* EOF */
