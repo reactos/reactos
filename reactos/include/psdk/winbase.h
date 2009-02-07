@@ -1772,6 +1772,9 @@ PSLIST_ENTRY WINAPI InterlockedPushEntrySList(PSLIST_HEADER,PSLIST_ENTRY);
 
 #endif // !(defined (_M_AMD64) || defined (_M_IA64))
 
+VOID WINAPI InitializeSListHead(PSLIST_HEADER);
+USHORT WINAPI QueryDepthSList(PSLIST_HEADER);
+
 #if !defined(InterlockedAnd)
 #define InterlockedAnd InterlockedAnd_Inline
 FORCEINLINE

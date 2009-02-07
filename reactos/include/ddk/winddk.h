@@ -6510,14 +6510,6 @@ InterlockedPushEntrySList(
 
 #endif
 
-/*
- * USHORT
- * QueryDepthSList(
- *   IN PSLIST_HEADER  SListHead)
- */
-#define QueryDepthSList(_SListHead) \
-  ((USHORT) ((_SListHead)->Alignment & 0xffff))
-
 #define InterlockedFlushSList(ListHead) ExInterlockedFlushSList(ListHead)
 
 NTSYSAPI
@@ -7621,7 +7613,22 @@ ExFreePoolWithTag(
   IN PVOID  P,
   IN ULONG  Tag);
 
-#define ExQueryDepthSList(ListHead) QueryDepthSList(ListHead)
+#if defined (_WIN64)
+#if defined(_NTDRIVER_) || defined(_NTDDK) || defined(_NTIFS_) || defined(_NTHAL_) || defined(_NTOSP_)
+NTKRNLAPI
+USHORT
+ExQueryDepthSList(IN PSLIST_HEADER Listhead);
+#else
+FORCEINLINE
+USHORT
+ExQueryDepthSList(IN PSLIST_HEADER Listhead)
+{
+    return (USHORT)(ListHead->Alignment & 0xffff);
+}
+#endif
+#else
+#define ExQueryDepthSList(listhead) (listhead)->Depth
+#endif
 
 static __inline VOID
 ExFreeToNPagedLookasideList(
