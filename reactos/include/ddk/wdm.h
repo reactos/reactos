@@ -181,30 +181,14 @@ InterlockedBitTestAndReset(IN LONG volatile *Base,
 #endif
 }
 
-static __inline__ BOOLEAN
-BitScanReverse(OUT ULONG *Index,
-               IN ULONG Mask)
-{
-	BOOLEAN BitPosition = 0;
-#if defined(_M_IX86)
-	__asm__ __volatile__("bsrl %2,%0\n\t"
-	                     "setnz %1\n\t"
-	                     :"=&r" (*Index), "=q" (BitPosition)
-	                     :"rm" (Mask)
-	                     :"memory");
-	return BitPosition;
-#else
-	/* Slow implementation for now */
-	for( *Index = 31; *Index; (*Index)-- ) {
-		if( (1<<*Index) & Mask ) {
-			return TRUE;
-		}
-	}
-
-	return FALSE;
 #endif
-}
 
+#define BitScanForward _BitScanForward
+#define BitScanReverse _BitScanReverse
+
+#ifdef _M_AMD64
+#define InterlockedBitTestAndSet64 _interlockedbittestandset64
+#define InterlockedBitTestAndReset64 _interlockedbittestandreset64
 #endif
 
 
