@@ -17,19 +17,14 @@
  * - Unify Debugging output and return StatusCodes
  */
 
-#include <stdio.h> 
-#include <windows.h>
-
 #include "telnetd.h"
 
 #define telnetd_printf printf
-
 #if 0
-extern void syslog (int priority, const char *fmt, ...);
-
-int telnetd_printf(const char *format, ...)
+static inline int telnetd_printf(const char *format, ...);
 {
- syslog (6, format);
+    printf(format,...);
+    syslog (6, format);
 }
 #endif
 
@@ -37,7 +32,6 @@ int telnetd_printf(const char *format, ...)
 
 static BOOLEAN bShutdown = 0;
 static BOOLEAN bSocketInterfaceInitialised = 0;
-
 static int sock;
 
 /* In the future, some options might be passed here to handle
@@ -50,6 +44,9 @@ static int sock;
  */
 int main(int argc, char **argv)
 {
+  printf("Attempting to start Simple TelnetD\n");
+
+//  DetectPlatform();
   SetConsoleCtrlHandler(Cleanup, 1);
 
   if (!StartSocketInterface())
@@ -142,7 +139,6 @@ static void UserLogin(int client_socket)
 
   if (client == NULL)
     ErrorExit("failed to allocate memory for client");
-
 
   client->socket = client_socket;
   CreateThread(NULL, 0, UserLoginThread, client, 0, &threadID);
@@ -574,35 +570,52 @@ static DWORD WINAPI ReadFromPipeThread(LPVOID data)
 /* TerminateShell */ 
 static void TerminateShell(client_t *client)
 {
-  DWORD exitCode;
-  DWORD dwWritten;
-  char stop[] = "\003\r\nexit\r\n"; /* Ctrl-C + exit */
-
-  GetExitCodeProcess(client->hProcess, &exitCode);
-  if (exitCode == STILL_ACTIVE) {
-    telnetd_printf("user shell still active, send Ctrl-Break to group-id %lu\n", client->dwProcessId );
-
-    if (!GenerateConsoleCtrlEvent( CTRL_BREAK_EVENT, client->dwProcessId ))
-      telnetd_printf("Failed to send Ctrl_break\n");
-
-    Sleep(500);
-
-    if (!GenerateConsoleCtrlEvent( CTRL_C_EVENT, client->dwProcessId ))
-      telnetd_printf("Failed to send Ctrl_C\n");
-
-    Sleep(500);
-
-    if (!WriteFile(client->hChildStdinWr, stop, sizeof(stop), &dwWritten, NULL))
-      telnetd_printf("Error writing to pipe\n");
-
-    Sleep(500);
+    DWORD exitCode;
+    DWORD dwWritten;
+    char stop[] = "\003\r\nexit\r\n"; /* Ctrl-C + exit */
 
     GetExitCodeProcess(client->hProcess, &exitCode);
-    if (exitCode == STILL_ACTIVE) {
-      telnetd_printf("user shell still active, attempt to terminate it now...\n");
-      TerminateProcess(client->hProcess, 0);
+
+    if (exitCode == STILL_ACTIVE)
+    {
+        HANDLE hEvent = NULL;
+        DWORD dwWaitResult;
+
+        telnetd_printf("user shell still active, send Ctrl-Break to group-id %lu\n", client->dwProcessId );
+
+        hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+
+        if (hEvent == NULL)
+            printf("CreateEvent error\n");
+
+        if (!GenerateConsoleCtrlEvent( CTRL_BREAK_EVENT, client->dwProcessId ))
+            telnetd_printf("Failed to send Ctrl_break\n");
+
+        if (!GenerateConsoleCtrlEvent( CTRL_C_EVENT, client->dwProcessId ))
+            telnetd_printf("Failed to send Ctrl_C\n");
+
+        if (!WriteFile(client->hChildStdinWr, stop, sizeof(stop), &dwWritten, NULL))
+            telnetd_printf("Error writing to pipe\n");
+
+        /* wait for our handler to be called */
+        dwWaitResult=WaitForSingleObject(hEvent, 500);
+
+        if (WAIT_FAILED==dwWaitResult)
+            telnetd_printf("WaitForSingleObject failed\n");
+
+        GetExitCodeProcess(client->hProcess, &exitCode);
+        if (exitCode == STILL_ACTIVE) 
+        {
+            telnetd_printf("user shell still active, attempt to terminate it now...\n");
+        
+            if (hEvent != NULL) 
+            {
+                if (!CloseHandle(hEvent)) 
+                   telnetd_printf("CloseHandle");
+            }
+            TerminateProcess(client->hProcess, 0);
+        }
     }
-  }
 }
 
 /* ErrorExit */
