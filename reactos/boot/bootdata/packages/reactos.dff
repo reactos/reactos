@@ -75,7 +75,6 @@ base\applications\shutdown\shutdown.exe                 1
 base\applications\sndvol32\sndvol32.exe                 1
 base\applications\taskmgr\taskmgr.exe                   1
 base\applications\winhlp32\winhlp32.exe                 4
-base\applications\winhstb\winhlp32.exe                  1
 base\applications\wordpad\wordpad.exe                   1
 
 base\services\audiosrv\audiosrv.exe                 1

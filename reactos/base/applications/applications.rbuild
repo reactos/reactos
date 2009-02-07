@@ -73,9 +73,6 @@
 	<directory name="winhlp32">
 		<xi:include href="winhlp32/winhlp32.rbuild" />
 	</directory>
-	<directory name="winhstb">
-		<xi:include href="winhstb/winhstb.rbuild" />
-	</directory>
 	<directory name="wordpad">
 		<xi:include href="wordpad/wordpad.rbuild" />
 	</directory>
