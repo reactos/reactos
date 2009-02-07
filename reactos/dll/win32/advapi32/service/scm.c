@@ -195,12 +195,11 @@ ScmRpcStatusToWinError(RPC_STATUS Status)
         case RPC_X_SS_IN_NULL_CONTEXT:
             return ERROR_INVALID_HANDLE;
 
-        case RPC_X_NULL_REF_POINTER:
         case RPC_X_ENUM_VALUE_OUT_OF_RANGE:
         case RPC_X_BYTE_COUNT_TOO_SMALL:
             return ERROR_INVALID_PARAMETER;
 
-        case STATUS_ACCESS_VIOLATION:
+        case RPC_X_NULL_REF_POINTER:
             return ERROR_INVALID_ADDRESS;
 
         default:
