@@ -229,10 +229,11 @@ ChangeServiceConfig2A(SC_HANDLE hService,
     {
         case SERVICE_CONFIG_DESCRIPTION:
             Info.psd = (LPSERVICE_DESCRIPTIONA)&lpInfo;
+            Info.lpDescription = ((LPSERVICE_DESCRIPTIONA)lpInfo)->lpDescription; //HACK
             break;
 
         case SERVICE_CONFIG_FAILURE_ACTIONS:
-            Info.psfa = (LPSERVICE_FAILURE_ACTIONSA)&lpInfo;
+            Info.psfa = (LPSERVICE_FAILURE_ACTIONSA)lpInfo;
             break;
 
         default:
@@ -2000,7 +2001,7 @@ QueryServiceConfig2A(SC_HANDLE hService,
 {
     DWORD dwError;
 
-    TRACE("QueryServiceConfig2A(%p, %lu, %p, %lu, %p)\n",
+    DbgPrint("QueryServiceConfig2A(hService %p, dwInfoLevel %lu, lpBuffer %p, cbBufSize %lu, pcbBytesNeeded %p)\n",
            hService, dwInfoLevel, lpBuffer, cbBufSize, pcbBytesNeeded);
 
     if (dwInfoLevel != SERVICE_CONFIG_DESCRIPTION &&
