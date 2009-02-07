@@ -289,7 +289,7 @@ ScmReadString(HKEY hServiceKey,
         *lpValue = ptr;
     }
 
-done:;
+done:
     if (dwError != ERROR_SUCCESS)
     {
         HeapFree(GetProcessHeap(), 0, ptr);

@@ -4012,33 +4012,36 @@ DWORD RChangeServiceConfig2A(
 
     if (InfoW.dwInfoLevel == SERVICE_CONFIG_DESCRIPTION)
     {
-        LPSERVICE_DESCRIPTIONW lpServiceDesriptonW;
-        LPSERVICE_DESCRIPTIONA lpServiceDesriptonA;
+        LPSERVICE_DESCRIPTIONW lpServiceDescriptonW;
+        LPSERVICE_DESCRIPTIONA lpServiceDescriptonA;
 
-        lpServiceDesriptonA = Info.psd;
+        lpServiceDescriptonA = Info.psd;
 
-        if (lpServiceDesriptonA &&
-            lpServiceDesriptonA->lpDescription)
-        {
-            dwLength = (strlen(lpServiceDesriptonA->lpDescription) + 1) * sizeof(WCHAR);
+        ///if (lpServiceDescriptonA &&
+        ///lpServiceDescriptonA->lpDescription)
+        ///{
+            dwLength = (strlen(Info.lpDescription) + 1) * sizeof(WCHAR);
 
-            lpServiceDesriptonW = HeapAlloc(GetProcessHeap(),
+            lpServiceDescriptonW = HeapAlloc(GetProcessHeap(),
                                             0,
                                             dwLength + sizeof(SERVICE_DESCRIPTIONW));
-            if (!lpServiceDesriptonW)
+            if (!lpServiceDescriptonW)
             {
                 return ERROR_NOT_ENOUGH_MEMORY;
             }
 
+            lpServiceDescriptonW->lpDescription = (LPWSTR)(lpServiceDescriptonW + 1);
+
             MultiByteToWideChar(CP_ACP,
                                 0,
-                                lpServiceDesriptonA->lpDescription,
+                                Info.lpDescription,
                                 -1,
-                                lpServiceDesriptonW->lpDescription,
+                                lpServiceDescriptonW->lpDescription,
                                 dwLength);
 
-            ptr = lpServiceDesriptonW;
-        }
+            ptr = lpServiceDescriptonW;
+            InfoW.psd = lpServiceDescriptonW;
+        ///}
     }
     else if (Info.dwInfoLevel == SERVICE_CONFIG_FAILURE_ACTIONS)
     {
@@ -4162,12 +4165,13 @@ DWORD RChangeServiceConfig2W(
     {
         LPSERVICE_DESCRIPTIONW lpServiceDescription;
 
-        lpServiceDescription = (LPSERVICE_DESCRIPTIONW)&Info;
-        lpServiceDescription->lpDescription = (LPWSTR)(&Info + sizeof(LPSERVICE_DESCRIPTIONW));
+        lpServiceDescription = (LPSERVICE_DESCRIPTIONW)Info.psd;
+        lpServiceDescription->lpDescription = (LPWSTR)((ULONG_PTR)lpServiceDescription + sizeof(LPSERVICE_DESCRIPTIONW));
 
         if (lpServiceDescription != NULL &&
             lpServiceDescription->lpDescription != NULL)
         {
+            DPRINT1("Setting value %S\n", lpServiceDescription->lpDescription);
             RegSetValueExW(hServiceKey,
                            L"Description",
                            0,
@@ -4212,7 +4216,7 @@ DWORD RQueryServiceConfig2A(
     LPWSTR lpDescriptionW = NULL;
     LPSTR lpDescription = NULL;
 
-    DPRINT("RQueryServiceConfig2W() called\n");
+    DPRINT1("RQueryServiceConfig2A() called hService %p dwInfoLevel %u, lpBuffer %p cbBufSize %u pcbBytesNeeded %p\n",hService, dwInfoLevel, lpBuffer, cbBufSize, pcbBytesNeeded);
 
     if (!lpBuffer)
         return ERROR_INVALID_ADDRESS;
@@ -4261,7 +4265,7 @@ DWORD RQueryServiceConfig2A(
                                 &lpDescriptionW);
         if (dwError == ERROR_SUCCESS)
         {
-            *pcbBytesNeeded += ((wcslen(lpDescriptionW) + 1));
+            *pcbBytesNeeded += ((wcslen(lpDescriptionW) + 1) * sizeof(WCHAR));
         }
 
         if (cbBufSize >= *pcbBytesNeeded)
