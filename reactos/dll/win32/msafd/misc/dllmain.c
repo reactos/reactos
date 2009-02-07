@@ -101,6 +101,7 @@ WSPSocket(int AddressFamily,
     RtlZeroMemory(Socket, sizeof(*Socket));
     Socket->RefCount = 2;
     Socket->Handle = -1;
+    Socket->SharedData.Listening = FALSE;
     Socket->SharedData.State = SocketOpen;
     Socket->SharedData.AddressFamily = AddressFamily;
     Socket->SharedData.SocketType = SocketType;
@@ -615,6 +616,12 @@ WSPListen(SOCKET Handle,
     HANDLE                  SockEvent;
     NTSTATUS                Status;
 
+    /* Get the Socket Structure associate to this Socket*/
+    Socket = GetSocketStructure(Handle);
+
+    if (Socket->SharedData.Listening)
+    	return 0;
+
     Status = NtCreateEvent(&SockEvent,
                            GENERIC_READ | GENERIC_WRITE,
                            NULL,
@@ -623,9 +630,6 @@ WSPListen(SOCKET Handle,
 
     if( !NT_SUCCESS(Status) )
         return -1;
-
-    /* Get the Socket Structure associate to this Socket*/
-    Socket = GetSocketStructure(Handle);
 
     /* Set Up Listen Structure */
     ListenData.UseSAN = FALSE;
