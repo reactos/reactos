@@ -155,10 +155,10 @@ class Revision
    */
   public static function delete( $rev_id )
   {
-    Log::writeMedium("delete entry: rev-id [rev-id: ".$rev_id."]");
+    Log::writeMedium('delete entry: rev-id [rev-id: '.$rev_id.']');
 
     // delete Depencies
-    $success = $success && Depencies::removeRevision($rev_id);
+    $success = Depencies::removeRevision($rev_id);
 
     // delete revision and texts
     $stmt=&DBConnection::getInstance()->prepare("DELETE FROM ".ROSCMST_REVISIONS." WHERE id = :rev_id LIMIT 1");
@@ -369,17 +369,13 @@ class Revision
     if ($rev_id === false) {
 
       // create new revision
-      $stmt=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_REVISIONS." ( id , data_id , version , lang_id , user_id , datetime, status ) VALUES ( NULL, :data_id, 0, :lang, :user_id, NOW(), 'draft')");
-      $stmt->bindParam('data_id',$data_id,PDO::PARAM_INT);
-      $stmt->bindParam('lang',$lang_id,PDO::PARAM_INT);
-      $stmt->bindParam('user_id',$thisuser_id,PDO::PARAM_INT);
-      $stmt->execute();
+      $stmt_ins=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_REVISIONS." ( id , data_id , version , lang_id , user_id , datetime, status ) VALUES ( NULL, :data_id, 0, :lang, :user_id, NOW(), 'draft')");
+      $stmt_ins->bindParam('data_id',$data_id,PDO::PARAM_INT);
+      $stmt_ins->bindParam('lang',$lang_id,PDO::PARAM_INT);
+      $stmt_ins->bindParam('user_id',$thisuser_id,PDO::PARAM_INT);
+      $stmt_ins->execute();
 
-      // get new revision id
-      $stmt=&DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_REVISIONS." WHERE data_id = :data_id AND version = 0 AND lang_id = :lang AND user_id = :user_id AND status='draft' ORDER BY datetime DESC LIMIT 1");
-      $stmt->bindParam('data_id',$data_id,PDO::PARAM_INT);
-      $stmt->bindParam('lang',$lang_id,PDO::PARAM_INT);
-      $stmt->bindParam('user_id',$thisuser_id,PDO::PARAM_INT);
+      // get new revision id (use old used statement again)
       $stmt->execute();
 
       // return new revision id
@@ -421,6 +417,11 @@ class Revision
    */
   public static function translate( $rev_id, $lang_id = 0 )
   {
+    // can translate to this language ?
+    if (!ThisUser::getInstance()->hasAccess('more_lang') && $lang_id != ThisUser::getInstance()->language()) {
+      die ('You\'ve no rights to translate into this language'.$lang_id.'--'.ThisUser::getInstance()->language());
+    }
+
     // original_revision
     $stmt=&DBConnection::getInstance()->prepare("SELECT id, data_id, lang_id FROM ".ROSCMST_REVISIONS." WHERE id = :rev_id LIMIT 1");
     $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
@@ -433,11 +434,11 @@ class Revision
     }
 
     // insert translated revision
-    $new_rev_id = Revision::add($revision['data_id'],$lang_id);
+    $new_rev_id = self::add($revision['data_id'],$lang_id);
 
     // check if copy process was successfull
     if ($new_rev_id === false) {
-      die('copy-process of data_revision not successful');
+      die('Copy-process of data_revision not successful, maybe you\'ve that entry already as a draft.');
     }
 
     // copy short text

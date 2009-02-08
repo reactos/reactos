@@ -161,16 +161,13 @@ CREATE TABLE roscms_entries_areas (
 INSERT INTO roscms_entries_areas VALUES
 (1, 'Translate', 'translate', 'user can translate this entry to the lang he has set in his profile'),
 (2, 'Edit', 'edit', 'modify content of this entry'),
-(3, 'View Metadata', 'metadata', 'view Metadata tab '),
-(4, 'View History', 'history', 'view History tab'),
-(5, 'View Fields', 'fields', 'view fields tab'),
-(6, 'View Entry Tab', 'entry', 'view entry tab'),
-(7, 'View Security', 'security', 'view security tab'),
-(8, 'View Depencies', 'depencies', 'view depencies tab'),
-(9, 'System metadata', 'system_meta', 'modify System metadata'),
-(10, 'Change ACL', 'acl', 'modify ACL for this entry'),
-(11, 'Add Fields', 'add_fields', 'add new text fields'),
-(12, 'Read', 'read', 'can view this entry');
+(3, 'View History', 'history', 'view History tab'),
+(4, 'View Fields', 'fields', 'view fields tab'),
+(5, 'View Revision Tab', 'revision', 'view revision tab'),
+(6, 'View Depencies', 'depencies', 'view depencies tab'),
+(7, 'System metadata', 'system_meta', 'modify System metadata'),
+(8, 'Add Fields', 'add_fields', 'add new text fields'),
+(9, 'Read', 'read', 'can view this entry');
 
 
 
@@ -206,7 +203,7 @@ OR (g.security_level = 2 AND s.sec_lev2_trans = 1 AND r.name_short='translate')
 
 OR (g.security_level = 3 AND s.sec_lev3_read = 1 AND r.name_short='read')
 OR (g.security_level = 3 AND s.sec_lev3_write = 1 AND r.name_short='edit')
-OR (g.security_level = 3 AND s.sec_lev3_add = 1 AND (r.name_short='add_fields' OR r.name_short='fields' OR r.name_short='security' OR r.name_short='acl' OR r.name_short='entry'))
+OR (g.security_level = 3 AND s.sec_lev3_add = 1 AND (r.name_short='add_fields' OR r.name_short='fields' OR r.name_short='revision'))
 OR (g.security_level = 3 AND s.sec_lev3_trans = 1 AND r.name_short='translate')
 
 OR (s.sec_allow LIKE CONCAT('%',s.sec_allow,'%') AND r.name_short='read')
@@ -269,7 +266,8 @@ INSERT INTO roscms_area VALUES
 (29, 'add level 2 groups', 'addlvl2group', 'Add memberships with group security level 2'),
 (30, 'add level 3 groups', 'addlvl3group', 'Add memberships with group security level 3'),
 (31, 'Mix private & public entries', 'mix_priv_pub', 'show private and public type entries together'),
-(32, 'show system entries', 'show_sys_entry', 'show entries of type ''system''');
+(32, 'Entry Details Security', 'entry_security', 'change security settings & name + type of entry'),
+(33, 'show system entries', 'show_sys_entry', 'show entries of type ''system''');
 
 
 
@@ -283,7 +281,7 @@ CREATE TABLE roscms_rel_groups_area (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO roscms_rel_groups_area
-SELECT g.id, a.id
+SELECT DISTINCT g.id, a.id
 FROM roscms_area a JOIN roscms_groups g
 WHERE ((a.name_short = 'system_tags' OR a.name_short = 'entry_details' OR a.name_short = 'new_entry' OR a.name_short = 'deltag' OR a.name_short = 'del_entry' OR a.name_short = 'mix_priv_pub' OR a.name_short = 'show_sys_entry' OR a.name_short = 'addlvl1group')
 AND g.security_level > 1)
@@ -304,7 +302,10 @@ OR ((a.name_short = 'maintain' OR a.name_short = 'user' OR a.name_short = 'addme
 AND g.name_short = 'transmaint')
 
 OR ((a.name_short = 'more_lang')
-AND g.name_short != 'translator' AND g.name_short != 'transmaint' AND g.security_level > 0);
+AND g.name_short != 'translator' AND g.name_short != 'transmaint' AND g.security_level > 0)
+
+OR ((a.name_short = 'entry_security')
+AND (g.name_short = 'ros_sadmin' OR g.name_short = 'ros_admin'));
 
 
 -- --------------------------------------------------------
@@ -331,7 +332,7 @@ SELECT
   d.data_name,
   s.id,
   d.data_id,
-  1
+  TRUE
 FROM data_a d JOIN roscms_entries_access s ON d.data_acl=s.name_short
 UNION
 SELECT
@@ -340,7 +341,7 @@ SELECT
   d.data_name,
   s.id,
   d.data_id,
-  0
+  FALSE
 FROM data_ d JOIN roscms_entries_access s ON d.data_acl=s.name_short;
 
 
@@ -374,8 +375,8 @@ SELECT
   r.rev_usrid,
   r.rev_version,
   r.rev_datetime,
-  1,
   'unknown',
+  TRUE,
   r.rev_id
 FROM data_revision_a r JOIN roscms_languages l ON r.rev_language=l.name_short JOIN roscms_entries d ON (d.old_id=r.data_id AND d.old_archive IS TRUE)
 UNION
@@ -386,8 +387,8 @@ SELECT
   r.rev_usrid,
   r.rev_version,
   r.rev_datetime,
-  0,
   'unknown',
+  FALSE,
   r.rev_id
 FROM data_revision r JOIN roscms_languages l ON r.rev_language=l.name_short JOIN roscms_entries d ON (d.old_id=r.data_id AND d.old_archive IS FALSE);
 
@@ -513,10 +514,12 @@ FROM data_tag t JOIN data_tag_name n ON t.tag_name_id=n.tn_id JOIN data_tag_valu
 -- --------------------------------------------------------
 -- port status tags to revisions
 -- --------------------------------------------------------
+
 UPDATE roscms_entries_revisions r
-SET status = (SELECT value FROM roscms_entries_tags WHERE rev_id=r.id AND name='status' LIMIT 1);
+SET status = (SELECT value FROM roscms_entries_tags WHERE rev_id=r.id AND name='status' ORDER BY value ASC LIMIT 1);
 
 DELETE FROM roscms_entries_tags WHERE name='status';
+
 
 
 
@@ -525,7 +528,7 @@ DELETE FROM roscms_entries_tags WHERE name='status';
 -- --------------------------------------------------------
 DELETE FROM roscms_entries_tags WHERE name='visible';
 DELETE FROM roscms_entries_tags WHERE name='kind' AND value='default';
-
+DELETE FROM roscms_entries_tags WHERE name='number_sort';
 
 
 -- --------------------------------------------------------
@@ -707,6 +710,17 @@ CREATE TABLE roscms_jobs (
 
 
 -- --------------------------------------------------------
+-- remove converter specific fields
+-- --------------------------------------------------------
+ALTER TABLE roscms_entries
+  DROP old_id,
+  DROP old_archive,
+  ADD UNIQUE KEY type_name ( type , name );
+ALTER TABLE roscms_entries_revisions DROP old_id;
+
+
+
+-- --------------------------------------------------------
 -- convert to dynamic entries
 -- --------------------------------------------------------
 UPDATE roscms_entries SET type = 'dynamic' WHERE type='page' AND (name='news_page' OR name='newsletter' OR name='interview');
@@ -716,23 +730,28 @@ SELECT DISTINCT
   'content',
   CONCAT(d.name,'_',t.value),
   d.access_id
-FROM roscms_entries d JOIN roscms_entries_revisions r ON r.data_id=d.id JOIN roscms_entries_tags t ON t.rev_id=r.id
-WHERE t.name='number' AND d.type='content';
+FROM roscms_entries d JOIN roscms_entries e ON e.name=d.name JOIN roscms_entries_revisions r ON r.data_id=d.id JOIN roscms_entries_tags t ON t.rev_id=r.id
+WHERE t.name='number' AND d.type='content' AND e.type = 'dynamic';
 
 UPDATE roscms_entries_revisions r JOIN roscms_entries o ON r.data_id=o.id JOIN roscms_entries_tags t ON t.rev_id=r.id JOIN roscms_entries d ON d.name=CONCAT(o.name,'_',t.value) SET r.data_id=d.id WHERE t.name='number' AND o.type='content';
 
+INSERT INTO roscms_entries_tags (rev_id, name, value, user_id)
+SELECT
+  r2.id,
+  'next_index',
+  MAX(t.value*1)+1 AS val,
+  -1
+FROM roscms_entries d
+JOIN roscms_entries_revisions r2 ON d.id=r2.data_id
+JOIN roscms_entries e ON e.name LIKE CONCAT(d.name,'_%')
+JOIN roscms_entries_revisions r ON r.data_id=e.id
+JOIN roscms_entries_tags t ON t.rev_id=r.id
+WHERE d.type = 'dynamic'
+AND e.type = 'content'
+AND t.name='number'
+GROUP BY d.name;
+
 DELETE FROM roscms_entries WHERE type='content' AND (name='news_page' OR name='newsletter' OR name='interview');
-
-
-
--- --------------------------------------------------------
--- remove converter specific fields
--- --------------------------------------------------------
-ALTER TABLE roscms_entries
-  DROP old_id,
-  DROP old_archive,
-  ADD UNIQUE KEY type_name ( type , name );
-ALTER TABLE roscms_entries_revisions DROP old_id;
 
 
 

@@ -1056,7 +1056,7 @@ function htmlSelectPresets( preset )
   var selhtml_new = '<span class="button" onclick="selectType(\'new\')">New</span>';
   var selhtml_draft = '<span class="button" onclick="selectType(\'draft\')">Draft</span>';
   var selhtml_uptodate = '<span class="button" onclick="selectType(\'transg\')">Current</span>';
-  var selhtml_outdated = '<span class="button" onclick="selectType(\'transr\')">Dated</span>';
+  var selhtml_outdated = '<span class="button" onclick="selectType(\'transr\')">Outdated</span>';
   var selhtml_notrans = '<span class="button" onclick="selectType(\'transb\')">Missing</span>';
 
   // use for all types
@@ -1359,21 +1359,18 @@ function delLabelOrTag( tag_id )
 
 
 /**
- * updates or changes a specific tag, mostly status or star
+ * updates or changes a specific tag, mostly star
  *
- * @param int rev revision id
- * @param string dtn tag name
- * @param string dtv tag value
- * @param int dusr user
- * @param int dtid tag id
+ * @param int rev_id revision id
+ * @param string value tag value
  * @param string objid
  */
-function updateTag( rev_id, dtn, dtv, dusr, dtid, objid )
+function updateBookmark( rev_id, value, objid )
 {
-  if (dtn !== '' && dtv !== '') {
-    makeRequest('?page=backend&type=text&subtype=eta&d_fl=updatetag&rev='+rev_id+'&d_val='+encodeURIComponent(dtn)+'&d_val2='+encodeURIComponent(dtv)+'&d_val3='+dusr+'&d_val4='+dtid, 'eta', objid, 'html', 'GET', '');
+  if (value != '') {
+    makeRequest('?page=backend&type=text&subtype=eta&d_fl=setbookmark&rev='+rev_id+'&tag_value='+encodeURIComponent(value), 'eta', objid, 'html', 'GET', '');
   }
-} // end of function updateTag
+} // end of function updateBookmark
 
 
 
@@ -1438,7 +1435,6 @@ function saveAsDraft( did, drid )
 
     loadEntryTableWithOffset(roscms_current_tbl_position);
     window.clearTimeout(autosave_timer);
-    alertbox('Draft saved');
   }
 } // end of function saveAsDraft
 
@@ -1994,6 +1990,13 @@ function showAutosaveInfo( http_request, objid )
         autosave_cache = tempcache;
       }
       document.getElementById('mefasi').innerHTML = 'Draft saved at '+ curr_hour +':'+ curr_min;
+      
+      if (http_request.responseText != '') {
+        alertbox('Error: '+http_request.responseText);
+      }
+      else {
+        alertbox('Draft saved');
+      }
       break;
 
     case 'alert':
@@ -2044,7 +2047,7 @@ function setBookmark( entryid, dtv, dusr, objid )
         dtv = 'off';
         document.getElementById(objid).className = 'cStarOff';
       }
-      updateTag(devideids2, devideids3, 'star', dtv, dusr, devide2[1], objid, '3');
+      updateBookmark(devideids3, dtv, objid);
     }
   }
 } // end of function setBookmark
@@ -2176,12 +2179,12 @@ function loadMenu( objid )
       break;
 
     case '3':
-      filtstring2 = 'y_is_page_0|k_is_stable_0|l_is_'+userlang+'_0|i_is_read_0|o_asc_name_0';
+      filtstring2 = 'y_is_page_0|k_is_stable_0|c_is_language_0|i_is_read_0|o_asc_name_0';
       loadEntryTable('page');
       break;
 
     case '13':
-      filtstring2 = 'y_is_dynamic_0|k_is_stable_0|l_is_'+userlang+'_0|i_is_read_0|o_asc_name_0';
+      filtstring2 = 'y_is_dynamic_0|k_is_stable_0|c_is_language_0|i_is_read_0|o_asc_name_0';
       loadEntryTable('dynamic');
       break;
 
@@ -2191,12 +2194,12 @@ function loadMenu( objid )
       break;
 
     case '5':
-        filtstring2 = 'y_is_template_0|k_is_stable_0|l_is_'+userlang+'_0|i_is_read_0|o_asc_name_0';
+        filtstring2 = 'y_is_template_0|k_is_stable_0|c_is_language_0|i_is_read_0|o_asc_name_0';
       loadEntryTable('template');
       break;
 
     case '6':
-      filtstring2 = 'y_is_script_0|k_is_stable_0|l_is_'+userlang+'_0|i_is_read_0|o_asc_name_0';
+      filtstring2 = 'y_is_script_0|k_is_stable_0|c_is_language_0|i_is_read_0|o_asc_name_0';
       loadEntryTable('script');
       break;
 
@@ -2287,11 +2290,11 @@ function toggleBookmark( did, drid, dusr, objid )
   if (did > 0 && drid > 0) {
     if (document.getElementById(objid).src == roscms_intern_webserver_roscms+'images/star_on_small.gif') {
       document.getElementById(objid).src = roscms_intern_webserver_roscms+'images/star_off_small.gif';
-      updateTag(drid, 'star', 'off', dusr, document.getElementById(objid).className, objid, '3');
+      updateBookmark(drid, 'off', objid);
     }
     else {
       document.getElementById(objid).src = roscms_intern_webserver_roscms+'images/star_on_small.gif';
-      updateTag(drid, 'star', 'on', dusr, document.getElementById(objid).className, objid, '3');
+      updateBookmark(drid, 'on', objid);
     }
   }
 } // end of function ToggleBookmark

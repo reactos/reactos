@@ -182,15 +182,12 @@ class Entry
     if ($data_id === false) {
 
       // insert new data
-      $stmt=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_ENTRIES." ( id , name , type ) VALUES ( NULL , :name, :type )");
-      $stmt->bindParam('name',$data_name,PDO::PARAM_STR);
-      $stmt->bindParam('type',$data_type,PDO::PARAM_STR);
-      $stmt->execute();
+      $stmt_ins=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_ENTRIES." ( id , name , type ) VALUES ( NULL , :name, :type )");
+      $stmt_ins->bindParam('name',$data_name,PDO::PARAM_STR);
+      $stmt_ins->bindParam('type',$data_type,PDO::PARAM_STR);
+      $stmt_ins->execute();
 
-      // and get new data_id
-      $stmt=&DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_ENTRIES." WHERE name = :name AND type = :type LIMIT 1");
-      $stmt->bindParam('name',$data_name,PDO::PARAM_STR);
-      $stmt->bindParam('type',$data_type,PDO::PARAM_STR);
+      // and get new data_id (use old used statement again)
       $stmt->execute();
       $data_id = $stmt->fetchColumn();
     }

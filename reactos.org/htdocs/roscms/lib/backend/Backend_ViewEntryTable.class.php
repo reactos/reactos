@@ -61,7 +61,7 @@ class Backend_ViewEntryTable extends Backend
     $this->generateFilterSQL($_GET['d_filter2']);
 
     // begin to construct xml
-    $this->generateXML($_GET['d_cp']);
+    $this->generateXML(@$_GET['d_cp']);
   } // end of constructor
 
 
@@ -79,7 +79,7 @@ class Backend_ViewEntryTable extends Backend
 
     // convert requested columns to array
     $this->column_list = substr($this->column_list,1,-1);// prevent from additional entries caused by '|' at start and end
-    if ($this->column_list === '') {
+    if ($this->column_list === false) {
       $column_array = array();
     }
     else {
@@ -105,7 +105,7 @@ class Backend_ViewEntryTable extends Backend
       echo $ptm_entries.'<table>';
 
       // start table header
-      echo '<view curpos="'.$page_offset.'" pagelimit="'.$this->page_limit.'" pagemax="'.$ptm_entries.'" tblcols="|'.$this->column_list.'|" />';
+      echo '<view curpos="'.$page_offset.'" pagelimit="'.$this->page_limit.'" pagemax="'.$ptm_entries.'" tblcols="'.($this->column_list !== false ? '|'.$this->column_list.'|' : '').'" />';
 
       // prepare for usage in loop
       $stmt_trans=&DBConnection::getInstance()->prepare("SELECT r.data_id, d.name, d.type, r.id, r.version, r.lang_id, r.datetime, r.user_id FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id=d.id WHERE d.id = :data_id AND r.version > 0 AND r.lang_id = :lang AND r.archive = :archive LIMIT 1");
@@ -134,7 +134,7 @@ class Backend_ViewEntryTable extends Backend
         $star_state = '0';
         $star_id = 0;
         $line_status = 'unknown';
-        $column_list_row = '';
+        $column_list_row = null;
         $security = '';
 
         // for non translation
@@ -217,7 +217,7 @@ class Backend_ViewEntryTable extends Backend
               $stmt_lang->bindParam('lang',$row['lang_id'],PDO::PARAM_STR);
               $stmt_lang->execute();
               $language = $stmt_lang->fetchColumn();
-              if ($language != '') {
+              if ($language !== false) {
                 $column_list_row .= $language;
               }
               else {
@@ -228,7 +228,7 @@ class Backend_ViewEntryTable extends Backend
               $stmt_user->bindParam('user_id',$row['user_id'],PDO::PARAM_INT);
               $stmt_user->execute();
               $user_name = $stmt_user->fetchColumn();
-              if ($user_name != '') {
+              if ($user_name !== false) {
                 $column_list_row .= $user_name;
               }
               else {
@@ -242,7 +242,7 @@ class Backend_ViewEntryTable extends Backend
               $stmt_acl->bindParam('access_id',$row['access_id'],PDO::PARAM_INT);
               $stmt_acl->execute();
               $acl = $stmt_acl->fetchColumn();
-              if ($acl != '') {
+              if ($acl !== false) {
                 $column_list_row .= $acl;
               }
               else {
@@ -260,7 +260,9 @@ class Backend_ViewEntryTable extends Backend
               break;
           }
         } // foreach
-        $column_list_row .= '|';
+        if ($column_list_row !== null) {
+          $column_list_row .= '|';
+        }
 
         // has person right to write / edit entries ?
         if (Entry::hasAccess($row['data_id'], 'edit')) {

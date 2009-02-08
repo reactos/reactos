@@ -281,7 +281,14 @@ class HTML_CMS_Website extends HTML_CMS
                   <select name="favlangopt" id="favlangopt" style="vertical-align: top; width: 22ex;" onchange="setLang(this.value)">');
 
     // preselect current user language
-    $stmt=&DBConnection::getInstance()->prepare("SELECT id, name FROM ".ROSCMST_LANGUAGES." WHERE level > 0 ORDER BY name ASC");
+    if ($thisuser->hasAccess('more_lang')) {
+      $stmt=&DBConnection::getInstance()->prepare("SELECT id, name FROM ".ROSCMST_LANGUAGES." WHERE level > 0 ORDER BY name ASC");
+    }
+    else {
+      $stmt=&DBConnection::getInstance()->prepare("SELECT id, name FROM ".ROSCMST_LANGUAGES." WHERE id IN(:lang_id,:standard_lang)");
+      $stmt->bindParam('lang_id',$thisuser->language(),PDO::PARAM_INT);
+      $stmt->bindParam('standard_lang',Language::getStandardId(),PDO::PARAM_INT);
+    }
     $stmt->execute();
     while($language=$stmt->fetch()) {
       echo '<option value="'.$language['id'].'"';

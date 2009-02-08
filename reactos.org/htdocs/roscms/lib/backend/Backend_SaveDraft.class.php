@@ -57,6 +57,10 @@ class Backend_SaveDraft extends Backend
   {
     $thisuser = &ThisUser::getInstance();
     $rev_id = 0; // helper var, contains current rev_id in force
+    
+    if (!$thisuser->hasAccess('more_lang') && $_GET['lang_id'] != $thisuser->language()) {
+      die ('Can\'t save drafts of other than your language, due to access restrictions');
+    }
 
     // detect if theres already a autosave-draft saved, and get rev_id
     $stmt=&DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_REVISIONS." WHERE data_id = :data_id AND user_id = :user_id AND lang_id = :lang AND archive IS FALSE AND status = 'draft' ORDER BY id DESC LIMIT 1");
@@ -67,7 +71,7 @@ class Backend_SaveDraft extends Backend
     $draft_candidate = $stmt->fetchColumn();
 
     // if there is a valid value returned, use it as rev_id
-    if ($draft_candidate !== false)
+    if ($draft_candidate !== false) {
       $rev_id = $draft_candidate;
     }
 

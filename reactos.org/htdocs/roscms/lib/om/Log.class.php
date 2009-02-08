@@ -180,7 +180,7 @@ class Log
       // insert long text
       $stmt=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_TEXT." ( id , rev_id , name , content ) VALUES (NULL, :rev_id, :name, :content)");
       $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
-      $stmt->bindValue('content',$entry,PDO::PARAM_STR);
+      $stmt->bindValue('content','',PDO::PARAM_STR);
 
       // insert all three
       $stmt->bindValue('name','low',PDO::PARAM_INT);
@@ -229,7 +229,12 @@ class Log
    * @access public
    */
   public static function read($level = 'medium', $log = '' ) {
-    return Entry::getContent('log_website_'.($log!=''?$log.'_':'').date('Y-W'), 'system', Language::getStandardId(), $level.'_security_log', 'text');
+    $stmt=&DBConnection::getInstance()->prepare("SELECT t.content FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id = d.id JOIN ".ROSCMST_TEXT." t ON t.rev_id=r.id WHERE d.name = :name AND d.type = 'system' AND r.lang_id = :lang AND t.name = :type ORDER BY r.datetime DESC LIMIT 1");
+    $stmt->bindValue('name','log_website_'.($log!=''?$log.'_':'').date('Y-W'),PDO::PARAM_STR);
+    $stmt->bindParam('type',$level,PDO::PARAM_STR);
+    $stmt->bindParam('lang',Language::getStandardId(),PDO::PARAM_INT);
+    $stmt->execute();
+    return $stmt->fetchColumn();
   } // end of member function read
 
 

@@ -57,10 +57,6 @@ class HTML_CMS_Maintain extends HTML_CMS
   protected function body( )
   {
     echo_strip('
-      <br />
-      <h2>Maintain</h2>
-      <p><b>RosCMS Maintainer Interface</b></p>
-      <br />
       <p><a href="javascript:optimizeDB()">Optimize Database Tables</a></p>
       <br />
       <p><a href="javascript:rebuildDepencies()">Rebuild Depency Tree</a></p>

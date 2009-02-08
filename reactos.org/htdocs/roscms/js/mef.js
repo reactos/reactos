@@ -1,5 +1,4 @@
 
-var roscmseditorsavecache = '';
 var roscms_richtexteditors = new Array();
 
 
@@ -20,7 +19,7 @@ function toggleEditor( id, objid ) {
   var butid = document.getElementById(objid);
   var wrapid = document.getElementById('swraped'+objid.substr(6));
 
-  if (tinyMCE.getInstanceById(id) === null) {
+  if (tinyMCE.getInstanceById(id) == null) {
     tinyMCE.execCommand('mceAddControl', false, id);
     butid.value = 'HTML Source';
     wrapid.style.visibility = 'hidden';
@@ -58,7 +57,8 @@ function rtestop( )
 
 function ajaxsaveContent( id )
 {
-  if (tinyMCE.getInstanceById(id) !== null) {
+
+  if (tinyMCE.getInstanceById(id) != null) {
     return tinyMCE.getInstanceById(id).getHTML();
   }
 
@@ -93,24 +93,4 @@ function toggleWordWrap( elm, objid )
   else {
     setWrap('off', objid);
   }
-}
-
-
-
-function ajaxLoad( )
-{
-  var inst = tinyMCE.getInstanceById('elm1');
-
-  // Do you ajax call here
-  inst.setHTML('HTML content that got passed from server.');
-}
-
-
-
-function ajaxSave( )
-{
-  var inst = tinyMCE.getInstanceById('elm1');
-
-  // Do you ajax call here
-  alert(inst.getHTML());
 }

@@ -23,12 +23,8 @@ require('../lib/RosCMS_Autoloader.class.php');
 Login::required();
 
 // get user language
-$user_lang = ThisUser::getInstance()->language();
-
-// prepare build languages
-$stmt=&DBConnection::getInstance()->prepare("SELECT id, level, name FROM ".ROSCMST_LANGUAGES." WHERE level > 0 ORDER BY name ASC");
-$stmt->execute();
-$languages = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$thisuser = ThisUser::getInstance();
+$user_lang = $thisuser->language();
 ?>
 
 
@@ -104,7 +100,16 @@ function htmlFilterValues( action, objidval2, filterid ) {
         filtentryselstrs2 = '<select id="sfc'+filterid+'"><?php
 
 // build languages
-foreach($languages as $language) {
+if ($thisuser->hasAccess('more_lang')) {
+  $stmt=&DBConnection::getInstance()->prepare("SELECT id, name FROM ".ROSCMST_LANGUAGES." WHERE level > 0 ORDER BY name ASC");
+}
+else {
+  $stmt=&DBConnection::getInstance()->prepare("SELECT id, name FROM ".ROSCMST_LANGUAGES." WHERE id IN(:lang_id,:standard_lang)");
+  $stmt->bindParam('lang_id',$thisuser->language(),PDO::PARAM_INT);
+  $stmt->bindParam('standard_lang',Language::getStandardId(),PDO::PARAM_INT);
+}
+$stmt->execute();
+while ($language = $stmt->fetch(PDO::FETCH_ASSOC)) {
   echo '<option value="'.$language['id'].'"'.(($language['id'] == $user_lang) ? ' selected="selected"' : '').'>'.$language['name'].'</option>';
 }
 
@@ -116,11 +121,18 @@ foreach($languages as $language) {
         filtentryselstrs1 = '<select id="sfb'+filterid+'"><option value="is">to</option></select>';
         filtentryselstrs2 = '<select id="sfc'+filterid+'"><?php
 
-// build translation languages
-foreach($languages as $language) {
-  if ($language['level'] != '10') {
-    echo '<option value="'.$language['id'].'"'.(($language['id'] == $user_lang) ? ' selected="selected"' : '').'>'.$language['name'].'</option>';
-  }
+// translation languages
+if ($thisuser->hasAccess('more_lang')) {
+  $stmt=&DBConnection::getInstance()->prepare("SELECT id, name FROM ".ROSCMST_LANGUAGES." WHERE level > 0 AND id!=:standard_lang ORDER BY name ASC");
+}
+else {
+  $stmt=&DBConnection::getInstance()->prepare("SELECT id, name FROM ".ROSCMST_LANGUAGES." WHERE id=:lang_id AND id != :standard_lang");
+  $stmt->bindParam('lang_id',$user_lang,PDO::PARAM_INT);
+}
+$stmt->bindParam('standard_lang',Language::getStandardId(),PDO::PARAM_INT);
+$stmt->execute();
+while ($language = $stmt->fetch(PDO::FETCH_ASSOC)) {
+  echo '<option value="'.$language['id'].'"'.(($language['id'] == $user_lang) ? ' selected="selected"' : '').'>'.$language['name'].'</option>';
 }
  ?></select>';
         break;

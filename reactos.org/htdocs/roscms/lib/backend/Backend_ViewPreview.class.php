@@ -53,7 +53,7 @@ class Backend_ViewPreview extends Backend
   private function show( $rev_id )
   {  
     echo_strip('
-      <iframe style="width:100%;height:600px;background-color: white;border: 1px solid black;" src="?page=backend&amp;type=page&amp;rev='.$rev_id.'"></iframe>');
+      <iframe style="width:100%;height:600px;background-color: white;border: 1px solid black;" src="?page=backend&amp;type=text&amp;subtype=prv&amp;rev='.$rev_id.'"></iframe>');
   } // end of member function show
 
 

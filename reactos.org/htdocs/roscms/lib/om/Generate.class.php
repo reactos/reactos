@@ -1,8 +1,8 @@
 <?php
     /*
     RosCMS - ReactOS Content Management System
-    Copyright (C) 2007  Klemens Friedl <frik85@reactos.org>
-                  2008  Danny Götte <dangerground@web.de>
+    Copyright (C) 2007      Klemens Friedl <frik85@reactos.org>
+                  2008-2009 Danny Götte <dangerground@web.de>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -127,9 +127,6 @@ class Generate
     if ($id_type != 'revision') {
       $this->cacheFiles();
     }
-
-    // we need to reset this, as cacheFiles() overwrites this setting
-    $this->base_dir = $this->destination_folder;
 
     // build all entries
     if ($id === null) {
@@ -256,7 +253,7 @@ class Generate
    * @return bool
    * @access private
    */
-  private function makeDynamic( $data_name )
+  private function makeDynamic( $data_name, $number = null )
   {
     // get page data
     $revision = $this->getFrom('dynamic', $data_name);
@@ -273,13 +270,26 @@ class Generate
       return false;
     }
 
-    // get last index
-    $next_index = (int)Tag::getValue($revision['id'],'next_index',-1);
+    // generate all numbers
+    if ($number === null) {
+      // get last index
+      $next_index = (int)Tag::getValue($revision['id'],'next_index',-1);
+      $start = 1;
+    }
 
-    for ($i=1; $i < $next_index; ++$i) {
+    // generate only one number
+    else {
+      $start = $number;
+      $next_index = $start + 1;
+    }
+
+    for ($i=$start; $i < $next_index; ++$i) {
 
       // get file name
       $file_name = $data_name.'_'.$i.'.'.$file_extension;
+
+      // information, what was generated
+      echo $this->lang_id.'--'.$file_name.'<br />';
 
       // can I copy from standard lang ?
       if (!$this->cloneFile(RosCMS::getInstance()->siteLanguage(), $this->lang, $file_name)) {
@@ -332,7 +342,6 @@ class Generate
     // cache revision (set language, cache, restore base_dir)
     $this->lang_id = $revision['lang_id'];
     $this->cacheFiles($revision['data_id']);
-    $this->base_dir = $this->destination_folder;
     
     // for usage in loop
       // in standard language we may have depencies to other languages, so better generate them all
@@ -345,10 +354,19 @@ class Generate
       }
 
     // get list of entries which depend on this one and handle their types
-    $stmt=&DBConnection::getInstance()->prepare("SELECT r.lang_id, d.name, d.type, r.id FROM ".ROSCMST_DEPENCIES." w JOIN ".ROSCMST_REVISIONS." r ON r.id=w.rev_id JOIN ".ROSCMST_ENTRIES." d ON d.id=r.data_id WHERE w.child_id=:depency_id AND w.rev_id NOT IN(:rev_id,:rev_id2) AND r.archive IS FALSE AND w.include IS TRUE");
+    $stmt=&DBConnection::getInstance()->prepare("
+        SELECT
+          org.name, org.type, COALESCE( trans.id, org.id ) AS id, org.data_id
+        FROM (
+          SELECT d.name, d.type, r.id, r.data_id FROM ".ROSCMST_DEPENCIES." w JOIN ".ROSCMST_REVISIONS." r ON r.id=w.rev_id JOIN ".ROSCMST_ENTRIES." d ON d.id=r.data_id WHERE w.child_id=:depency_id AND r.lang_id = :standard_lang AND w.rev_id NOT IN(:rev_id,:rev_id2) AND r.archive IS FALSE AND w.include IS TRUE
+        ) AS org LEFT OUTER JOIN (
+          SELECT d.name, d.type, r.id, r.data_id FROM ".ROSCMST_DEPENCIES." w JOIN ".ROSCMST_REVISIONS." r ON r.id=w.rev_id JOIN ".ROSCMST_ENTRIES." d ON d.id=r.data_id WHERE w.child_id=:depency_id AND r.lang_id = :lang_id AND w.rev_id NOT IN(:rev_id,:rev_id2) AND r.archive IS FALSE AND w.include IS TRUE
+        ) AS trans ON org.data_id = trans.data_id");
     $stmt->bindParam('depency_id',$revision['data_id'],PDO::PARAM_INT);
     $stmt->bindParam('rev_id',$base_rev,PDO::PARAM_INT);
     $stmt->bindParam('rev_id2',$rev_id,PDO::PARAM_INT);
+    $stmt->bindParam('standard_lang',Language::getStandardId(),PDO::PARAM_INT);
+    $stmt->bindParam('lang_id',$revision['lang_id'],PDO::PARAM_INT);
     $stmt->execute();
     while ($depency = $stmt->fetch(PDO::FETCH_ASSOC)) {
 
@@ -356,7 +374,7 @@ class Generate
       switch ($depency['type']) {
         case 'page':
         case 'dynamic':
-        
+
           // generate pages for all languages, if standard lang, otherwise only once
           $stmt_lang->execute();
           while ($language = $stmt_lang->fetch(PDO::FETCH_ASSOC)) {
@@ -379,6 +397,7 @@ class Generate
           // scripts are only executed in pages
           break;
         default:
+
           // only run update once per $rev_id
           $this->update($depency['id']);
           break;
@@ -398,7 +417,14 @@ class Generate
    */
   private function cacheFiles( $data_id = null, $depencies = true )
   {
-    $this->base_dir = $this->cache_dir;
+    // set dir to generate contents
+    static $backup;
+    static $first;
+    if (empty($backup)){
+      $backup = $this->base_dir;
+      $first = $data_id;
+      $this->base_dir = $this->cache_dir;
+    }
 
     if ($data_id === null) {
       $stmt=&DBConnection::getInstance()->prepare("SELECT d.id AS data_id, d.type, d.name, l.id AS lang_id FROM ".ROSCMST_ENTRIES." d CROSS JOIN ".ROSCMST_LANGUAGES." l WHERE d.type = 'content' OR d.type = 'script' OR d.type='template' ORDER BY l.level DESC");
@@ -463,6 +489,11 @@ class Generate
         $this->writeFile($data['lang_id'],$filename, $content);
       }
     } // end while
+
+    // reset old build path
+    if ($first == $data_id) {
+      $this->base_dir = $backup;
+    }
   } // end of member function cacheFiles
 
 
@@ -557,23 +588,22 @@ class Generate
   private function getFrom( $type, $name )
   {
     // get entry
-    $stmt=&DBConnection::getInstance()->prepare("SELECT t.content, r.id, r.lang_id, r.version FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id = d.id JOIN ".ROSCMST_TEXT." t ON t.rev_id = r.id WHERE d.name = :name AND d.type = :type AND r.version > 0 AND r.lang_id IN(:lang_one, :lang_two) AND r.archive IS FALSE AND t.name = 'content' AND r.status='stable' ORDER BY r.version DESC LIMIT 2");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT t.content, r.id, r.lang_id, r.version, r.status FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id = d.id JOIN ".ROSCMST_TEXT." t ON t.rev_id = r.id WHERE d.name = :name AND d.type = :type AND r.version > 0 AND r.lang_id = :lang_id AND r.archive IS FALSE AND t.name = 'content' AND status='stable' LIMIT 1");
     $stmt->bindParam('name',$name,PDO::PARAM_STR);
     $stmt->bindParam('type',$type,PDO::PARAM_STR);
-    $stmt->bindParam('lang_one',$this->lang_id,PDO::PARAM_INT);
-    $stmt->bindParam('lang_two',Language::getStandardId(),PDO::PARAM_INT);
+    $stmt->bindParam('lang_id',$this->lang_id,PDO::PARAM_INT);
     $stmt->execute();
-    $results=$stmt->fetchAll(PDO::FETCH_ASSOC);
+    $revision=$stmt->fetch(PDO::FETCH_ASSOC);
 
     // check if depency not available
-    if (count($results) === 0){
-      return false;
-    }
-
-    // try to get the dataset with lang_id == $lang, to boost the translated content
-    $revision = $results[0];
-    if (count($results) === 2 && $revision['lang_id'] == Language::getStandardId() ) {
-      $revision = $results[1];
+    if ($revision === false) {
+      $stmt->bindParam('lang_id',Language::getStandardId(),PDO::PARAM_INT);
+      $stmt->execute();
+      $revision=$stmt->fetch(PDO::FETCH_ASSOC);
+      
+      if ($revision === false) {
+        return false;
+      }
     }
     return $revision;
   }
@@ -626,14 +656,11 @@ class Generate
    */
   private function cloneFile( $source_folder, $dest_folder, $filename )
   {
-    $standard_id = Language::getStandardId();
-
     // check, if language is different than standard and if requested file exists
-    if ($this->lang_id != $standard_id && file_exists($this->base_dir.$source_folder.'/'.$filename)) {
+    if ($this->lang_id != Language::getStandardId() && file_exists($this->base_dir.$source_folder.'/'.$filename)) {
       return copy($this->base_dir.$source_folder.'/'.$filename, $this->base_dir.$dest_folder.'/'.$filename);
     }
     return false;
-
   } // end of member function cloneFile
 
 
@@ -648,7 +675,7 @@ class Generate
   private function getCached( $matches )
   {
     // get cached content
-    $fh = fopen($this->cache_dir.$this->lang_id.'/'.$matches[1].'.rcf', 'r');
+    $fh = @fopen($this->cache_dir.$this->lang_id.'/'.$matches[1].'.rcf', 'r');
     if ($fh !== false){
       $content = fread($fh, filesize($this->cache_dir.$this->lang_id.'/'.$matches[1].'.rcf')+1); 
       fclose($fh);
@@ -656,7 +683,7 @@ class Generate
 
     // fail
     else {
-      $content = '[#'.$matches[1].']';
+      $content = '[#'.$matches[1].'--'.$this->cache_dir.$this->lang_id.'/'.$matches[1].'.rcf'.']';
     }
 
     return $content;
@@ -672,9 +699,10 @@ class Generate
    * @access private
    */
   private function evalTemplate( $matches )
-  {
-    $revision = $this->getFrom('script',$matches[1]);
-  
+  {  
+    // get entry
+    $revision=$this->getFrom('script',$matches[1]);
+
     // execute php code
     if( Tag::getValue($revision['id'], 'kind',-1) == 'php') {
 
@@ -688,12 +716,12 @@ class Generate
       // execute code and return the output
       eval('?>'.$revision['content']);
       $content = ob_get_contents(); 
-      ob_end_clean(); 
+      ob_end_clean();
     }
 
     // no other script types supported -> return nothing
     else {
-      $content = '';
+      $content = $revision['content'];
     }
 
     // replace roscms links

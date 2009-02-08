@@ -27,6 +27,7 @@ class Tag
 {
 
 
+
   /**
    * returns tag id
    *
@@ -50,6 +51,7 @@ class Tag
   } // end of member function getId
 
 
+
   /**
    * wrapper for deleteById
    *
@@ -64,6 +66,7 @@ class Tag
     $tag_id = self::getId($rev_id, $tag_name, $user_id);
     return self::deleteById($tag_id);
   } // end of member function deleteByName
+
 
 
   /**
@@ -93,6 +96,7 @@ class Tag
   } // end of member function deleteById
 
 
+
   /**
    * add a new tag
    *
@@ -105,7 +109,8 @@ class Tag
    */
   public static function add( $rev_id, $tag_name, $tag_value, $user_id )
   {
-    if ($user_id != ThisUser::getInstance()->id() && !($user_id == -1 && ThisUser::getInstance()->hasAccess('system_tags'))) {
+    // check if user has rights to add this type of tag
+    if ($user_id != ThisUser::getInstance()->id() && ($user_id != -1 || !ThisUser::getInstance()->hasAccess('system_tags'))) {
       die('ERROR: no rights to access this function');
     }
 
@@ -130,6 +135,7 @@ class Tag
 
     return false;
   } // end of member function add
+
 
 
   /**
@@ -160,6 +166,7 @@ class Tag
   } // end of member function update
 
 
+
   /**
    * copies tags from old-data to new-data
    *
@@ -170,14 +177,36 @@ class Tag
    */
   public static function copyFromRevision( $old_rev_id, $new_rev_id )
   {
+    // prepare insert for usage in loop
+      $stmt_ins=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_TAGS." ( id , rev_id , name , value , user_id ) VALUES (NULL, :rev_id, :tag_name, :tag_value, :user_id)");
+      $stmt_ins->bindParam('rev_id',$new_rev_id,PDO::PARAM_INT);
 
-    // prepare statements for while loop
-    $stmt=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_TAGS." ( rev_id , name, value, user_id ) SELECT :new_rev_id, name, value, user_id FROM ".ROSCMST_TAGS." WHERE rev_id = :old_rev_id");
+    // check each old tag
+    $stmt=&DBConnection::getInstance()->prepare("SELECT name, value, user_id FROM ".ROSCMST_TAGS." WHERE rev_id = :old_rev_id");
     $stmt->bindParam('old_rev_id',$old_rev_id, PDO::PARAM_INT);
-    $stmt->bindParam('new_rev_id',$new_rev_id, PDO::PARAM_INT);
-    return $stmt->execute();
+    $success = $stmt->execute();
+    while ($old = $stmt->fetch(PDO::FETCH_ASSOC)) {
+      $tag_id = Tag::getId($new_rev_id, $old['name'], $old['user_id']);
 
+      // check if tag already exists
+      if ($tag_id == false) { // could be 0
+
+        // tag doesn't exist -> insert new
+        $stmt_ins->bindParam('tag_name',$old['name'],PDO::PARAM_STR);
+        $stmt_ins->bindParam('tag_value',$old['value'],PDO::PARAM_STR);
+        $stmt_ins->bindParam('user_id',$old['user_id'],PDO::PARAM_INT);
+        $success = $success && $stmt_ins->execute();
+      }
+      else {
+
+        // update old tag with new value
+        $success = $success && Tag::update($tag_id, $old['value']);
+      }
+    }
+
+    return ;
   } // end of member function copyFromRevision
+
 
 
   /**
@@ -203,6 +232,7 @@ class Tag
   } // end of member function getValue
 
 
+
   /**
    * returns revision id
    *
@@ -220,6 +250,7 @@ class Tag
     }
     return false;
   } // end of member function getRevision
+
 
 
 } // end of Tag

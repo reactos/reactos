@@ -421,27 +421,33 @@ class Backend_ViewEditor extends Backend
     else {
       echo '<span class="detailmenu" onclick="'."showEditorTabMetadata(".$this->rev_id.")".'">Metadata</span>';
     }
-    echo '&nbsp;|&nbsp;';
 
     // History
-    if ($mode == self::HISTORY) {
-      echo '<strong>History</strong>';
+    if (Entry::hasAccess($this->data_id,'history')) {
+      echo '&nbsp;|&nbsp;';
+
+      if ($mode == self::HISTORY) {
+        echo '<strong>History</strong>';
+      }
+      else {
+        echo '<span class="detailmenu" onclick="'."showEditorTabHistory(".$this->rev_id.")".'">History</span>';
+      }
     }
-    else {
-      echo '<span class="detailmenu" onclick="'."showEditorTabHistory(".$this->rev_id.")".'">History</span>';
-    }
-    echo '&nbsp;|&nbsp;';
 
     // Depencies
-    if ($mode == self::DEPENCIES) {
-      echo '<strong>Depencies</strong>';
-    }
-    else {
-      echo '<span class="detailmenu" onclick="'."showEditorTabDepencies(".$this->rev_id.")".'">Depencies</span>';
+    if (Entry::hasAccess($this->data_id,'depencies')) {
+      echo '&nbsp;|&nbsp;';
+
+      if ($mode == self::DEPENCIES) {
+        echo '<strong>Depencies</strong>';
+      }
+      else {
+        echo '<span class="detailmenu" onclick="'."showEditorTabDepencies(".$this->rev_id.")".'">Depencies</span>';
+      }
     }
 
     // allowed only for someone with "add" rights
-    if ($thisuser->hasAccess('entry_fields')) {
+    if (Entry::hasAccess($this->data_id,'fields')) {
       echo '&nbsp;|&nbsp;';
 
       // Fields
@@ -454,7 +460,7 @@ class Backend_ViewEditor extends Backend
     }
 
     // Revision Data
-    if ($thisuser->hasAccess('entry_revs')) {
+    if (Entry::hasAccess($this->data_id,'revision')) {
       echo '&nbsp;|&nbsp;';
 
       // Revision
@@ -495,7 +501,7 @@ class Backend_ViewEditor extends Backend
         $this->showEntryDepencies($this->data_id);
         break;
       case self::SECURITY:
-        $this->showEntryDetailsSecurity();
+        $this->showEntryDetailsEntry();
         break;
       case self::FIELDS:
         $this->showEntryDetailsFields();
@@ -708,11 +714,11 @@ class Backend_ViewEditor extends Backend
 
 
   /**
-   * Interface to modify security settings
+   * Interface to modify entry settings
    *
    * @access private
    */
-  private function showEntryDetailsSecurity( )
+  private function showEntryDetailsEntry( )
   {
     // entry details
     $stmt=&DBConnection::getInstance()->prepare("SELECT id, name, type, access_id FROM ".ROSCMST_ENTRIES." WHERE id = :data_id LIMIT 1");

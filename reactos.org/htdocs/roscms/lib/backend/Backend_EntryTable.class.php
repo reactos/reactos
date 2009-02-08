@@ -41,8 +41,8 @@ class Backend_EntryTable extends Backend
     parent::__construct();
 
     // update one tag
-    if ($_GET['d_fl'] == 'updatetag') {
-      echo $this->updateTag();
+    if ($_GET['d_fl'] == 'setbookmark') {
+      echo $this->setBookmark();
     }
 
     // update a list (if there a entries selected)
@@ -76,7 +76,7 @@ class Backend_EntryTable extends Backend
     }
 
     // go through all selected revisions
-    $stmt=&DBConnection::getInstance()->prepare("SELECT lang_id, version, data_id, id, user_id, status FROM ".ROSCMST_REVISIONS." WHERE id IN(".$id_list.") LIMIT 1");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT lang_id, version, data_id, id, user_id, status FROM ".ROSCMST_REVISIONS." WHERE id IN(".$id_list.")");
     $stmt->execute();
     while ($revision = $stmt->fetch(PDO::FETCH_ASSOC)) {
 
@@ -132,11 +132,10 @@ class Backend_EntryTable extends Backend
    * @return int
    * @access private
    */
-  private function updateTag( )
+  private function setBookmark( )
   {
-    Tag::deleteByName($_GET['rev'], $_GET['tag_name'] , $_GET['user']);
-    Tag::add($_GET['rev'], $_GET['tag_name'] , $_GET['tag_value'], $_GET['user']);
-    return Tag::getId($_GET['rev'], $_GET['tag_value'], $_GET['user']);
+    Tag::deleteByName($_GET['rev'], 'star', ThisUser::getInstance()->id() );
+    Tag::add($_GET['rev'], 'star' , $_GET['tag_value'], ThisUser::getInstance()->id());
   }
 
 
@@ -152,15 +151,20 @@ class Backend_EntryTable extends Backend
   {
     $thisuser = &ThisUser::getInstance();
 
-    // access to this entry ?
-    if (!$thisuser->hasAccess('more_lang') && $revision['lang_id'] != $thisuser->language()) {
-      echo 'You have no rights to delete entries from other languages';
-      return false;
-    }
-
     // able to delete this entry ?
     if (!$thisuser->hasAccess('del_entry') && ($revision['user_id'] != $thisuser->id() || $revision['version']>0)) {
       echo 'Not enough rights for delete process.';
+      return false;
+    }
+
+    // delete own entries ?
+    if ($revision['user_id'] == $thisuser->id() && $revision['version'] == 0 ) {
+      return Revision::delete($revision['id']);
+    }
+    
+    // access to this entry ?
+    if (!$thisuser->hasAccess('more_lang') && $revision['lang_id'] != $thisuser->language()) {
+      echo 'You have no rights to delete entries from other languages';
       return false;
     }
 
@@ -169,16 +173,12 @@ class Backend_EntryTable extends Backend
       return Revision::toArchive($revision['id']);
     }
 
-    // 
-    elseif ($revision['version']) {
+    // delete everything
+    else {
+      //Data::deleteFile($revision['id']);
       return Revision::delete($revision['id']);
     }
 
-    // delete everything
-    else {
-      Revision::deleteFile($revision['id']);
-      return Revision::delete($revision['id']);
-    }
   } // end of member function deleteEntry
 
 
@@ -285,21 +285,24 @@ class Backend_EntryTable extends Backend
     // update depencies for new rev
     $depency = new Depencies();
     if (!$depency->addRevision($revision['id'])) {
-      echo 'Can\'t generate updated entry.';
+      echo 'Error while updating depencies';
       return false;
     }
+
+    // make entry stable
+    Revision::setStatus($revision['id'],'stable');
 
     // generate content
     $generate = new Generate();
     if (!$generate->update($revision['id'])) {
+      Revision::setStatus($revision['id'],$revision['status']);
       echo 'Can\'t generate updated entry.';
       return false;
     }
 
     Log::writeLow('mark entry as stable: data-id '.$revision['data_id'].', rev-id '.$revision['id']);
 
-    // make entry stable
-    return Revision::setStatus($revision['id'],'stable');
+    return true;
   } // end of member function markStable
 
 
