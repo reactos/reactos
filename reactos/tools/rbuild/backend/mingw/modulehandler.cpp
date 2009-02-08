@@ -173,6 +173,7 @@ MingwModuleHandler::InstanciateHandler (
 		case RpcProxy:
 		case MessageHeader:
 		case IdlHeader:
+		case IdlInterface:
 		case EmbeddedTypeLib:
 		case BootSector:
 			handler = new MingwModuleHandler( module );
@@ -301,6 +302,8 @@ MingwModuleHandler::ReferenceObjects (
 		return true;
 	if ( module.type == IdlHeader )
 		return true;
+	if ( module.type == IdlInterface )
+		return true;
 	if ( module.type == MessageHeader)
 		return true;
 	return false;
@@ -428,6 +431,8 @@ MingwModuleHandler::GetObjectFilename (
 			newExtension = "_c.o";
 		else if ( module.type == RpcProxy )
 			newExtension = "_p.o";
+		else if ( module.type == IdlInterface )
+			newExtension = "_i.o";
 		else
 			newExtension = ".h";
 	}
@@ -1053,7 +1058,7 @@ Rule arRule1 ( "$(intermediate_path_noext).a: $($(module_name)_OBJS)  $(dependen
                "$(intermediate_path_noext).a",
                "$(intermediate_dir)$(SEP)", NULL );
 Rule arRule2 ( "\t$(ECHO_AR)\n"
-              "\t${ar} -rc $@ $($(module_name)_OBJS)\n",
+              "\t${ar} -rc $@ $($(module_name)_OBJS) \n",
               NULL );
 Rule arHostRule2 ( "\t$(ECHO_HOSTAR)\n"
                    "\t${host_ar} -rc $@ $($(module_name)_OBJS)\n",
@@ -1161,11 +1166,21 @@ Rule winebuildRule ( "$(intermediate_path_unique).stubs.c: $(source) $(WINEBUILD
                      "$(intermediate_path_unique).stubs.o.d",
                      "$(intermediate_dir)$(SEP)", NULL );
 Rule widlHeaderRule ( "$(source): ${$(module_name)_precondition}\n"
-					  "$(intermediate_path_noext).h: $(source) $(dependencies) $(WIDL_TARGET) | $(intermediate_dir)\n"
+                      "$(intermediate_path_noext).h: $(source) $(dependencies) $(WIDL_TARGET) | $(intermediate_dir)\n"
                       "\t$(ECHO_WIDL)\n"
                       "\t$(Q)$(WIDL_TARGET) $($(module_name)_WIDLFLAGS) -h -H $(intermediate_path_noext).h $(source)\n",
                       "$(intermediate_path_noext).h",
                       "$(intermediate_dir)$(SEP)", NULL );
+Rule widlInterfaceRule ( "$(source): ${$(module_name)_precondition}\n"
+                       "$(intermediate_path_noext)_i.c: $(source) $(dependencies) $(WIDL_TARGET) | $(intermediate_dir)\n"
+                       "\t$(ECHO_WIDL)\n"
+                       "\t$(Q)$(WIDL_TARGET) $($(module_name)_WIDLFLAGS) -u -U $(intermediate_path_noext)_i.c $(source)\n"
+                       "$(intermediate_path_noext)_i.o: $(intermediate_path_noext)_i.c $(dependencies) | $(intermediate_dir)\n"
+                       "\t$(ECHO_CC)\n"
+                       "\t${gcc} -o $@ $($(module_name)_CFLAGS)$(compiler_flags) -fno-unit-at-a-time -c $<\n",
+                       "$(intermediate_path_noext)_i.c",
+                       "$(intermediate_path_noext)_i.o",
+                       "$(intermediate_dir)$(SEP)", NULL );
 Rule widlServerRule ( "$(source): ${$(module_name)_precondition}\n"
 					  "$(intermediate_path_noext)_s.c $(intermediate_path_noext)_s.h: $(source) $(dependencies) $(WIDL_TARGET) | $(intermediate_dir)\n"
                       "\t$(ECHO_WIDL)\n"
@@ -1185,7 +1200,7 @@ Rule widlServerRule ( "$(source): ${$(module_name)_precondition}\n"
                       "$(intermediate_path_noext)_s.o.d",
                       "$(intermediate_dir)$(SEP)", NULL );
 Rule widlClientRule ( "$(source): ${$(module_name)_precondition}\n"
-					  "$(intermediate_path_noext)_c.c $(intermediate_path_noext)_c.h: $(source) $(dependencies) $(WIDL_TARGET) | $(intermediate_dir)\n"
+                      "$(intermediate_path_noext)_c.c $(intermediate_path_noext)_c.h: $(source) $(dependencies) $(WIDL_TARGET) | $(intermediate_dir)\n"
                       "\t$(ECHO_WIDL)\n"
                       "\t$(Q)$(WIDL_TARGET) $($(module_name)_WIDLFLAGS) -h -H $(intermediate_path_noext)_c.h -c -C $(intermediate_path_noext)_c.c $(source)\n"
                       "ifeq ($(ROS_BUILDDEPS),full)\n"
@@ -1203,7 +1218,7 @@ Rule widlClientRule ( "$(source): ${$(module_name)_precondition}\n"
                       "$(intermediate_path_noext)_c.o.d",
                       "$(intermediate_dir)$(SEP)", NULL );
 Rule widlProxyRule ( "$(source): ${$(module_name)_precondition}\n"
-					 "$(intermediate_path_noext)_p.c $(intermediate_path_noext)_p.h: $(source) $(dependencies) $(WIDL_TARGET) | $(intermediate_dir)\n"
+                     "$(intermediate_path_noext)_p.c $(intermediate_path_noext)_p.h: $(source) $(dependencies) $(WIDL_TARGET) | $(intermediate_dir)\n"
                      "\t$(ECHO_WIDL)\n"
                      "\t$(Q)$(WIDL_TARGET) $($(module_name)_WIDLFLAGS) -h -H $(intermediate_path_noext)_p.h -p -P $(intermediate_path_noext)_p.c $(source)\n"
                      "ifeq ($(ROS_BUILDDEPS),full)\n"
@@ -1235,7 +1250,7 @@ Rule widlDlldataRule ( "$(source):  $(dependencies) ${$(module_name)_preconditio
                        "$(intermediate_path_noext).o",
                        "$(intermediate_path_noext).o.d", NULL );
 Rule widlTlbRule ( "$(source): ${$(module_name)_precondition}\n"
-				   "$(intermediate_dir)$(SEP)$(module_name).tlb: $(source) $(dependencies) $(WIDL_TARGET) | $(intermediate_dir)\n"
+                   "$(intermediate_dir)$(SEP)$(module_name).tlb: $(source) $(dependencies) $(WIDL_TARGET) | $(intermediate_dir)\n"
                    "\t$(ECHO_WIDL)\n"
                    "\t$(Q)$(WIDL_TARGET) $($(module_name)_WIDLFLAGS) -t -T $(intermediate_path_noext).tlb $(source)\n",
                    "$(intermediate_dir)$(SEP)", NULL );
@@ -1251,7 +1266,7 @@ Rule gppRule ( "$(eval $(call RBUILD_GPP_RULE,$(module_name),$(source),$(depende
                "$(intermediate_path_unique).o",
                "$(intermediate_path_unique).o.d", NULL );
 Rule gppHostRule ( "$(source): ${$(module_name)_precondition}\n"
-				   "$(intermediate_path_unique).o: $(source) $(dependencies) | $(intermediate_dir)\n"
+                   "$(intermediate_path_unique).o: $(source) $(dependencies) | $(intermediate_dir)\n"
                    "\t$(ECHO_HOSTCC)\n"
                    "\t${host_gpp} -o $@ $($(module_name)_CXXFLAGS)$(compiler_flags) -c $<\n",
                    "$(intermediate_path_unique).o", NULL );
@@ -1375,6 +1390,7 @@ MingwModuleHandler::GenerateCommands (
 		{ HostDontCare, RpcServer, ".idl", &widlServerRule },
 		{ HostDontCare, RpcClient, ".idl", &widlClientRule },
 		{ HostDontCare, RpcProxy, ".idl", &widlProxyRule },
+		{ HostDontCare, IdlInterface, ".idl", &widlInterfaceRule },
 		{ HostDontCare, EmbeddedTypeLib, ".idl", &widlTlbRule },
 		{ HostDontCare, TypeDontCare, ".idl", &widlHeaderRule },
 		{ HostTrue, TypeDontCare, ".c", &gccHostRule },

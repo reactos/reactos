@@ -941,6 +941,8 @@ Module::GetModuleType ( const string& location, const XMLAttribute& attribute )
 		return Alias;
 	if ( attribute.value == "idlheader" )
 		return IdlHeader;
+	if ( attribute.value == "idlinterface" )
+		return IdlInterface;
 	if ( attribute.value == "embeddedtypelib" )
 		return EmbeddedTypeLib;
 	if ( attribute.value == "elfexecutable" )
@@ -991,6 +993,7 @@ Module::GetTargetDirectoryTree () const
 		case RpcProxy:
 		case Alias:
 		case IdlHeader:
+		case IdlInterface:
 		case MessageHeader:
 			return IntermediateDirectory;
 		case TypeDontCare:
@@ -1047,6 +1050,7 @@ Module::GetDefaultModuleExtension () const
 		case RpcServer:
 		case RpcClient:
 		case RpcProxy:
+		case IdlInterface:
 			return ".o";
 		case Alias:
 		case ElfExecutable:
@@ -1112,6 +1116,7 @@ Module::GetDefaultModuleEntrypoint () const
 		case Alias:
 		case BootProgram:
 		case IdlHeader:
+		case IdlInterface:
 		case MessageHeader:
 		case ElfExecutable:
 		case EmbeddedTypeLib:
@@ -1164,6 +1169,7 @@ Module::GetDefaultModuleBaseaddress () const
 		case Alias:
 		case BootProgram:
 		case IdlHeader:
+		case IdlInterface:
 		case MessageHeader:
 		case EmbeddedTypeLib:
 		case Cabinet:
@@ -1220,6 +1226,7 @@ Module::GetDefaultModuleCRT () const
 		case Alias:
 		case BootProgram:
 		case IdlHeader:
+		case IdlInterface:
 		case MessageHeader:
 		case EmbeddedTypeLib:
 		case Cabinet:
@@ -1276,6 +1283,7 @@ Module::IsDLL () const
 		case RpcProxy:
 		case Alias:
 		case IdlHeader:
+		case IdlInterface:
 		case MessageHeader:
 		case EmbeddedTypeLib:
 		case ElfExecutable:

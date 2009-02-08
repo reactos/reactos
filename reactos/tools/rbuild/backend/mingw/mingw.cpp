@@ -58,6 +58,7 @@ const struct ModuleHandlerInformations ModuleHandlerInformations[] = {
 	{ HostFalse, "", "", "-nostartfiles -nostdlib" }, // BootProgram
 	{ HostFalse, "", "", "" }, // Win32SCR
 	{ HostFalse, "", "", "" }, // IdlHeader
+	{ HostFalse, "", "", "" }, // IdlInterface
 	{ HostFalse, "", "", "" }, // IsoRegTest
 	{ HostFalse, "", "", "" }, // LiveIsoRegTest
 	{ HostFalse, "", "", "" }, // EmbeddedTypeLib
