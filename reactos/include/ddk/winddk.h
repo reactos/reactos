@@ -9429,11 +9429,12 @@ IoReuseIrp(
  *   IN PIRP  Irp,
  *   IN PDRIVER_CANCEL  CancelRoutine)
  */
-#define IoSetCancelRoutine( Irp, NewCancelRoutine ) (  \
- (PDRIVER_CANCEL)InterlockedExchange( (PLONG)&(Irp)->CancelRoutine, (LONG)(NewCancelRoutine) ) )
-    
-    
-    /*
+#define IoSetCancelRoutine(_Irp, \
+                           _CancelRoutine) \
+  ((PDRIVER_CANCEL) InterlockedExchangePointer( \
+    (PVOID *) &(_Irp)->CancelRoutine, (PVOID) (_CancelRoutine)))
+
+/*
  * VOID
  * IoSetCompletionRoutine(
  *   IN PIRP  Irp,
