@@ -95,6 +95,7 @@
   <property name="BASEADDRESS_ACLUI" value="0x71550000" />
   <property name="BASEADDRESS_DHCPCSVC" value="0x71650000" />
   <property name="BASEADDRESS_SHDOCVW" value="0x71700000" />
+  <property name="BASEADDRESS_ACTXPRXY" value="0x71800000" />
   <property name="BASEADDRESS_MSWSOCK" value="0x71a30000" />
   <property name="BASEADDRESS_WSOCK32" value="0x71ab0000" />
   <property name="BASEADDRESS_ACLEDIT" value="0x71b70000" />

@@ -240,6 +240,7 @@ dll\win32\aclui\aclui.dll                           1
 dll\win32\activeds\activeds.dll                     1
 dll\win32\advapi32\advapi32.dll                     1
 dll\win32\advpack\advpack.dll                       1
+dll\win32\actxprxy\actxprxy.dll                     1
 dll\win32\atl\atl.dll                               1
 dll\win32\authz\authz.dll                           1
 dll\win32\avifil32\avifil32.dll                     1
