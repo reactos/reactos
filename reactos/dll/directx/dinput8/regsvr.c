@@ -1,7 +1,8 @@
 /*
- *	self-registerable dll functions for dinput.dll
+ *	self-registerable dll functions for dinput8.dll
  *
  * Copyright (C) 2003 John K. Hohm
+ * Copyright (C) 2007 Francois Gouget for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,15 +24,14 @@
 
 #include "windef.h"
 #include "winbase.h"
+#include "winreg.h"
 #include "wingdi.h"
 #include "winuser.h"
-#include "winreg.h"
 #include "winerror.h"
 
 #include "dinput.h"
 
 #include "wine/debug.h"
-#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(dinput);
 
@@ -43,18 +43,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(dinput);
 /***********************************************************************
  *		interface for self-registering
  */
-struct regsvr_interface
-{
-    IID const *iid;		/* NULL for end of list */
-    LPCSTR name;		/* can be NULL to omit */
-    IID const *base_iid;	/* can be NULL to omit */
-    int num_methods;		/* can be <0 to omit */
-    CLSID const *ps_clsid;	/* can be NULL to omit */
-    CLSID const *ps_clsid32;	/* can be NULL to omit */
-};
-
-static HRESULT register_interfaces(struct regsvr_interface const *list);
-static HRESULT unregister_interfaces(struct regsvr_interface const *list);
 
 struct regsvr_coclass
 {
@@ -63,9 +51,8 @@ struct regsvr_coclass
     LPCSTR ips;			/* can be NULL to omit */
     LPCSTR ips32;		/* can be NULL to omit */
     LPCSTR ips32_tmodel;	/* can be NULL to omit */
+    LPCSTR clsid_str;		/* can be NULL to omit */
     LPCSTR progid;		/* can be NULL to omit */
-    LPCSTR viprogid;		/* can be NULL to omit */
-    LPCSTR progid_extra;	/* can be NULL to omit */
 };
 
 static HRESULT register_coclasses(struct regsvr_coclass const *list);
@@ -89,8 +76,6 @@ static WCHAR const ps_clsid32_keyname[17] = {
     'i', 'd', '3', '2', 0 };
 static WCHAR const clsid_keyname[6] = {
     'C', 'L', 'S', 'I', 'D', 0 };
-static WCHAR const curver_keyname[7] = {
-    'C', 'u', 'r', 'V', 'e', 'r', 0 };
 static WCHAR const ips_keyname[13] = {
     'I', 'n', 'P', 'r', 'o', 'c', 'S', 'e', 'r', 'v', 'e', 'r',
     0 };
@@ -99,119 +84,15 @@ static WCHAR const ips32_keyname[15] = {
     '3', '2', 0 };
 static WCHAR const progid_keyname[7] = {
     'P', 'r', 'o', 'g', 'I', 'D', 0 };
-static WCHAR const viprogid_keyname[25] = {
-    'V', 'e', 'r', 's', 'i', 'o', 'n', 'I', 'n', 'd', 'e', 'p',
-    'e', 'n', 'd', 'e', 'n', 't', 'P', 'r', 'o', 'g', 'I', 'D',
-    0 };
 static char const tmodel_valuename[] = "ThreadingModel";
 
 /***********************************************************************
  *		static helper functions
  */
-static LONG register_key_guid(HKEY base, WCHAR const *name, GUID const *guid);
 static LONG register_key_defvalueW(HKEY base, WCHAR const *name,
 				   WCHAR const *value);
 static LONG register_key_defvalueA(HKEY base, WCHAR const *name,
 				   char const *value);
-static LONG register_progid(WCHAR const *clsid,
-			    char const *progid, char const *curver_progid,
-			    char const *name, char const *extra);
-
-/***********************************************************************
- *		register_interfaces
- */
-static HRESULT register_interfaces(struct regsvr_interface const *list)
-{
-    LONG res = ERROR_SUCCESS;
-    HKEY interface_key;
-
-    res = RegCreateKeyExW(HKEY_CLASSES_ROOT, interface_keyname, 0, NULL, 0,
-			  KEY_READ | KEY_WRITE, NULL, &interface_key, NULL);
-    if (res != ERROR_SUCCESS) goto error_return;
-
-    for (; res == ERROR_SUCCESS && list->iid; ++list) {
-	WCHAR buf[39];
-	HKEY iid_key;
-
-	StringFromGUID2(list->iid, buf, 39);
-	res = RegCreateKeyExW(interface_key, buf, 0, NULL, 0,
-			      KEY_READ | KEY_WRITE, NULL, &iid_key, NULL);
-	if (res != ERROR_SUCCESS) goto error_close_interface_key;
-
-	if (list->name) {
-	    res = RegSetValueExA(iid_key, NULL, 0, REG_SZ,
-				 (CONST BYTE*)(list->name),
-				 strlen(list->name) + 1);
-	    if (res != ERROR_SUCCESS) goto error_close_iid_key;
-	}
-
-	if (list->base_iid) {
-	    res = register_key_guid(iid_key, base_ifa_keyname, list->base_iid);
-	    if (res != ERROR_SUCCESS) goto error_close_iid_key;
-	}
-
-	if (0 <= list->num_methods) {
-	    static WCHAR const fmt[3] = { '%', 'd', 0 };
-	    HKEY key;
-
-	    res = RegCreateKeyExW(iid_key, num_methods_keyname, 0, NULL, 0,
-				  KEY_READ | KEY_WRITE, NULL, &key, NULL);
-	    if (res != ERROR_SUCCESS) goto error_close_iid_key;
-
-	    sprintfW(buf, fmt, list->num_methods);
-	    res = RegSetValueExW(key, NULL, 0, REG_SZ,
-				 (CONST BYTE*)buf,
-				 (lstrlenW(buf) + 1) * sizeof(WCHAR));
-	    RegCloseKey(key);
-
-	    if (res != ERROR_SUCCESS) goto error_close_iid_key;
-	}
-
-	if (list->ps_clsid) {
-	    res = register_key_guid(iid_key, ps_clsid_keyname, list->ps_clsid);
-	    if (res != ERROR_SUCCESS) goto error_close_iid_key;
-	}
-
-	if (list->ps_clsid32) {
-	    res = register_key_guid(iid_key, ps_clsid32_keyname, list->ps_clsid32);
-	    if (res != ERROR_SUCCESS) goto error_close_iid_key;
-	}
-
-    error_close_iid_key:
-	RegCloseKey(iid_key);
-    }
-
-error_close_interface_key:
-    RegCloseKey(interface_key);
-error_return:
-    return res != ERROR_SUCCESS ? HRESULT_FROM_WIN32(res) : S_OK;
-}
-
-/***********************************************************************
- *		unregister_interfaces
- */
-static HRESULT unregister_interfaces(struct regsvr_interface const *list)
-{
-    LONG res = ERROR_SUCCESS;
-    HKEY interface_key;
-
-    res = RegOpenKeyExW(HKEY_CLASSES_ROOT, interface_keyname, 0,
-			KEY_READ | KEY_WRITE, &interface_key);
-    if (res == ERROR_FILE_NOT_FOUND) return S_OK;
-    if (res != ERROR_SUCCESS) goto error_return;
-
-    for (; res == ERROR_SUCCESS && list->iid; ++list) {
-	WCHAR buf[39];
-
-	StringFromGUID2(list->iid, buf, 39);
-	res = RegDeleteTreeW(interface_key, buf);
-	if (res == ERROR_FILE_NOT_FOUND) res = ERROR_SUCCESS;
-    }
-
-    RegCloseKey(interface_key);
-error_return:
-    return res != ERROR_SUCCESS ? HRESULT_FROM_WIN32(res) : S_OK;
-}
 
 /***********************************************************************
  *		register_coclasses
@@ -265,23 +146,26 @@ static HRESULT register_coclasses(struct regsvr_coclass const *list)
 	    if (res != ERROR_SUCCESS) goto error_close_clsid_key;
 	}
 
+	if (list->clsid_str) {
+	    res = register_key_defvalueA(clsid_key, clsid_keyname,
+					 list->clsid_str);
+	    if (res != ERROR_SUCCESS) goto error_close_clsid_key;
+	}
+
 	if (list->progid) {
+	    HKEY progid_key;
+
 	    res = register_key_defvalueA(clsid_key, progid_keyname,
 					 list->progid);
 	    if (res != ERROR_SUCCESS) goto error_close_clsid_key;
 
-	    res = register_progid(buf, list->progid, NULL,
-				  list->name, list->progid_extra);
-	    if (res != ERROR_SUCCESS) goto error_close_clsid_key;
-	}
-
-	if (list->viprogid) {
-	    res = register_key_defvalueA(clsid_key, viprogid_keyname,
-					 list->viprogid);
+	    res = RegCreateKeyExA(HKEY_CLASSES_ROOT, list->progid, 0,
+				  NULL, 0, KEY_READ | KEY_WRITE, NULL,
+				  &progid_key, NULL);
 	    if (res != ERROR_SUCCESS) goto error_close_clsid_key;
 
-	    res = register_progid(buf, list->viprogid, list->progid,
-				  list->name, list->progid_extra);
+	    res = register_key_defvalueW(progid_key, clsid_keyname, buf);
+	    RegCloseKey(progid_key);
 	    if (res != ERROR_SUCCESS) goto error_close_clsid_key;
 	}
 
@@ -321,29 +205,12 @@ static HRESULT unregister_coclasses(struct regsvr_coclass const *list)
 	    if (res == ERROR_FILE_NOT_FOUND) res = ERROR_SUCCESS;
 	    if (res != ERROR_SUCCESS) goto error_close_coclass_key;
 	}
-
-	if (list->viprogid) {
-	    res = RegDeleteTreeA(HKEY_CLASSES_ROOT, list->viprogid);
-	    if (res == ERROR_FILE_NOT_FOUND) res = ERROR_SUCCESS;
-	    if (res != ERROR_SUCCESS) goto error_close_coclass_key;
-	}
     }
 
 error_close_coclass_key:
     RegCloseKey(coclass_key);
 error_return:
     return res != ERROR_SUCCESS ? HRESULT_FROM_WIN32(res) : S_OK;
-}
-
-/***********************************************************************
- *		regsvr_key_guid
- */
-static LONG register_key_guid(HKEY base, WCHAR const *name, GUID const *guid)
-{
-    WCHAR buf[39];
-
-    StringFromGUID2(guid, buf, 39);
-    return register_key_defvalueW(base, name, buf);
 }
 
 /***********************************************************************
@@ -387,86 +254,21 @@ static LONG register_key_defvalueA(
 }
 
 /***********************************************************************
- *		regsvr_progid
- */
-static LONG register_progid(
-    WCHAR const *clsid,
-    char const *progid,
-    char const *curver_progid,
-    char const *name,
-    char const *extra)
-{
-    LONG res;
-    HKEY progid_key;
-
-    res = RegCreateKeyExA(HKEY_CLASSES_ROOT, progid, 0,
-			  NULL, 0, KEY_READ | KEY_WRITE, NULL,
-			  &progid_key, NULL);
-    if (res != ERROR_SUCCESS) return res;
-
-    if (name) {
-	res = RegSetValueExA(progid_key, NULL, 0, REG_SZ,
-			     (CONST BYTE*)name, strlen(name) + 1);
-	if (res != ERROR_SUCCESS) goto error_close_progid_key;
-    }
-
-    if (clsid) {
-	res = register_key_defvalueW(progid_key, clsid_keyname, clsid);
-	if (res != ERROR_SUCCESS) goto error_close_progid_key;
-    }
-
-    if (curver_progid) {
-	res = register_key_defvalueA(progid_key, curver_keyname,
-				     curver_progid);
-	if (res != ERROR_SUCCESS) goto error_close_progid_key;
-    }
-
-    if (extra) {
-	HKEY extra_key;
-
-	res = RegCreateKeyExA(progid_key, extra, 0,
-			      NULL, 0, KEY_READ | KEY_WRITE, NULL,
-			      &extra_key, NULL);
-	if (res == ERROR_SUCCESS)
-	    RegCloseKey(extra_key);
-    }
-
-error_close_progid_key:
-    RegCloseKey(progid_key);
-    return res;
-}
-
-/***********************************************************************
  *		coclass list
  */
+
 static struct regsvr_coclass const coclass_list[] = {
-    {
-	&CLSID_DirectInput,
-	"DirectInput Object",
+    {   &CLSID_DirectInput8,
+	"DirectInput8 Object",
 	NULL,
-	"dinput.dll",
-	"Both"
-    },
-    {
-	&CLSID_DirectInputDevice,
-	"DirectInputDevice Object",
-	NULL,
-	"dinput.dll",
+	"dinput8.dll",
 	"Both"
     },
     { NULL }			/* list terminator */
 };
 
 /***********************************************************************
- *		interface list
- */
-
-static struct regsvr_interface const interface_list[] = {
-    { NULL }			/* list terminator */
-};
-
-/***********************************************************************
- *		DllRegisterServer (DINPUT.@)
+ *		DllRegisterServer (DINPUT8.@)
  */
 HRESULT WINAPI DllRegisterServer(void)
 {
@@ -475,13 +277,11 @@ HRESULT WINAPI DllRegisterServer(void)
     TRACE("\n");
 
     hr = register_coclasses(coclass_list);
-    if (SUCCEEDED(hr))
-	hr = register_interfaces(interface_list);
     return hr;
 }
 
 /***********************************************************************
- *		DllUnregisterServer (DINPUT.@)
+ *		DllUnregisterServer (DINPUT8.@)
  */
 HRESULT WINAPI DllUnregisterServer(void)
 {
@@ -490,7 +290,5 @@ HRESULT WINAPI DllUnregisterServer(void)
     TRACE("\n");
 
     hr = unregister_coclasses(coclass_list);
-    if (SUCCEEDED(hr))
-	hr = unregister_interfaces(interface_list);
     return hr;
 }

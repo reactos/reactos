@@ -124,7 +124,7 @@ reactos/dll/win32/wldap32         # Autosync
 reactos/dll/win32/wmi             # Autosync
 reactos/dll/win32/wtsapi32        # Autosync
 reactos/dll/directx/dinput        # Synced to Wine-1_1_4
-reactos/dll/directx/dinput8       # Synced to Wine-0_9_5
+reactos/dll/directx/dinput8       # Synced to Wine-1_1_4
 reactos/dll/directx/dplay         # Synced to Wine-0_9_5
 reactos/dll/directx/dplayx        # Synced to Wine-0_9_5
 reactos/dll/directx/dxdiagn       # Synced to Wine-0_9_5
