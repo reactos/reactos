@@ -160,13 +160,13 @@ BOOLEAN DIB_XXBPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
                         fnDest_PutPixel(DestSurf, DesX, DesY, color);
 
-                        sx += SrcZoomXHight;
-                        sx_dec += SrcZoomXLow;
-                        if (sx_dec >= sx_max)
-                        {
-                            sx++;
-                            sx_dec -= sx_max;
-                        }
+                    }
+                    sx += SrcZoomXHight;
+                    sx_dec += SrcZoomXLow;
+                    if (sx_dec >= sx_max)
+                    {
+                        sx++;
+                        sx_dec -= sx_max;
                     }
                 }
 

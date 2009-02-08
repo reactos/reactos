@@ -825,7 +825,6 @@ EngStretchBlt(
 {
     // www.osr.com/ddk/graphics/gdifncs_0bs7.htm
 
-    POINTL             InputPoint;
     RECTL              InputRect;
     RECTL              OutputRect;
     POINTL             Translate;
@@ -838,23 +837,79 @@ EngStretchBlt(
     POINTL             AdjustedBrushOrigin;
     BOOL               UsesSource = ROP4_USES_SOURCE(Mode);
 
-    InputRect.left = prclSrc->left;
-    InputRect.right = prclSrc->right;
-    InputRect.top = prclSrc->top;
-    InputRect.bottom = prclSrc->bottom;
-
+    if (Mode == R4_NOOP)
+    {
+        /* Copy destination onto itself: nop */
+        return TRUE;
+    }
+   
+    OutputRect = *prclDest;
+    if (OutputRect.right < OutputRect.left)
+    {
+        OutputRect.left = prclDest->right;
+        OutputRect.right = prclDest->left;
+    }
+    if (OutputRect.bottom < OutputRect.top)
+    {
+        OutputRect.left = prclDest->right;
+        OutputRect.right = prclDest->left;
+    }
+    
+    InputRect = *prclSrc;
     if (UsesSource)
     {
-        if (! IntEngEnter(&EnterLeaveSource, psoSource, &InputRect, TRUE, &Translate, &psoInput))
+        if (NULL == prclSrc)
         {
             return FALSE;
         }
+
+        /* Make sure we don't try to copy anything outside the valid source region */
+        if (InputRect.left < 0)
+        {
+            OutputRect.left -= InputRect.left;
+            InputRect.left = 0;
+        }
+        if (InputRect.top < 0)
+        {
+            OutputRect.top -= InputRect.top;
+            InputRect.top = 0;
+        }
+
+        if (! IntEngEnter(&EnterLeaveSource, psoSource, &InputRect, TRUE,
+                          &Translate, &psoInput))
+        {
+            return FALSE;
+        }
+
+        InputRect.left += Translate.x;
+        InputRect.right += Translate.x;
+        InputRect.top += Translate.y;
+        InputRect.bottom += Translate.y;
     }
 
-    InputPoint.x = InputRect.left + Translate.x;
-    InputPoint.y = InputRect.top + Translate.y;
-
-    OutputRect = *prclDest;
+    if (NULL != ClipRegion)
+    {
+        if (OutputRect.left < ClipRegion->rclBounds.left)
+        {
+            InputRect.left += ClipRegion->rclBounds.left - OutputRect.left;
+            OutputRect.left = ClipRegion->rclBounds.left;
+        }
+        if (ClipRegion->rclBounds.right < OutputRect.right)
+        {
+            InputRect.right -= OutputRect.right - ClipRegion->rclBounds.right;
+            OutputRect.right = ClipRegion->rclBounds.right;
+        }
+        if (OutputRect.top < ClipRegion->rclBounds.top)
+        {
+            InputRect.top += ClipRegion->rclBounds.top - OutputRect.top;
+            OutputRect.top = ClipRegion->rclBounds.top;
+        }
+        if (ClipRegion->rclBounds.bottom < OutputRect.bottom)
+        {
+            InputRect.bottom -=  OutputRect.bottom - ClipRegion->rclBounds.bottom;
+            OutputRect.bottom = ClipRegion->rclBounds.bottom;
+        }
+    }
 
     /* Check for degenerate case: if height or width of OutputRect is 0 pixels there's
        nothing to do */
@@ -876,12 +931,12 @@ EngStretchBlt(
         return FALSE;
     }
 
-    OutputRect.left = prclDest->left + Translate.x;
-    OutputRect.right = prclDest->right + Translate.x;
-    OutputRect.top = prclDest->top + Translate.y;
-    OutputRect.bottom = prclDest->bottom + Translate.y;
+    OutputRect.left += Translate.x;
+    OutputRect.right += Translate.x;
+    OutputRect.top += Translate.y;
+    OutputRect.bottom += Translate.y;
 
-    if (NULL != BrushOrigin)
+    if (BrushOrigin)
     {
         AdjustedBrushOrigin.x = BrushOrigin->x + Translate.x;
         AdjustedBrushOrigin.y = BrushOrigin->y + Translate.y;
@@ -906,7 +961,6 @@ EngStretchBlt(
     {
         BltRectFunc = CallDibStretchBlt;
     }
-
 
     Ret = (*BltRectFunc)(psoOutput, psoInput, Mask, ClipRegion,
                          ColorTranslation, &OutputRect, &InputRect, MaskOrigin,
@@ -939,12 +993,80 @@ IntEngStretchBlt(SURFOBJ *psoDest,
     POINT MaskOrigin;
     SURFACE *psurfDest;
     SURFACE *psurfSource = NULL;
+    RECTL InputClippedRect;
+    RECTL InputRect;
+    RECTL OutputRect;
     BOOL UsesSource = ROP4_USES_SOURCE(ROP);
+    LONG InputClWidth, InputClHeight, InputWidth, InputHeight;
 
     ASSERT(psoDest);
     psurfDest = CONTAINING_RECORD(psoDest, SURFACE, SurfObj);
     ASSERT(psurfDest);
+    ASSERT(DestRect);
 
+    InputClippedRect = *DestRect;
+    if (InputClippedRect.right < InputClippedRect.left)
+    {
+        InputClippedRect.left = DestRect->right;
+        InputClippedRect.right = DestRect->left;
+    }
+    if (InputClippedRect.bottom < InputClippedRect.top)
+    {
+        InputClippedRect.top = DestRect->bottom;
+        InputClippedRect.bottom = DestRect->top;
+    }
+    
+    if (UsesSource)
+    {
+        if (NULL == SourceRect || NULL == psoSource)
+        {
+            return FALSE;
+        }
+        InputRect = *SourceRect;
+ 
+        /* Make sure we don't try to copy anything outside the valid source region */
+        if (InputRect.left < 0)
+        {
+            InputClippedRect.left -= InputRect.left;
+            InputRect.left = 0;
+        }
+        if (InputRect.top < 0)
+        {
+            InputClippedRect.top -= InputRect.top;
+            InputRect.top = 0;
+        }
+
+        if (InputClippedRect.right < InputClippedRect.left ||
+                InputClippedRect.bottom < InputClippedRect.top)
+        {
+            /* Everything clipped away, nothing to do */
+            return TRUE;
+        }
+    }    
+
+    if (ClipRegion)
+    {
+        if (! EngIntersectRect(&OutputRect, &InputClippedRect,
+                               &ClipRegion->rclBounds))
+        {
+            return TRUE;
+        }
+        /* Update source rect */
+        InputClWidth = InputClippedRect.right - InputClippedRect.left;
+        InputClHeight = InputClippedRect.bottom - InputClippedRect.top;
+        InputWidth = InputRect.right - InputRect.left;
+        InputHeight = InputRect.bottom - InputRect.top;
+
+        InputRect.left += (InputWidth * (OutputRect.left - InputClippedRect.left)) / InputClWidth;
+        InputRect.right -= (InputWidth * (InputClippedRect.right - OutputRect.right)) / InputClWidth;
+        InputRect.top += (InputHeight * (OutputRect.top - InputClippedRect.top)) / InputClHeight;
+        InputRect.bottom -= (InputHeight * (InputClippedRect.bottom - OutputRect.bottom)) / InputClHeight;
+    }
+    else
+    {
+        OutputRect = InputClippedRect;
+    }
+    
     if (pMaskOrigin != NULL)
     {
         MaskOrigin.x = pMaskOrigin->x; MaskOrigin.y = pMaskOrigin->y;
@@ -952,21 +1074,19 @@ IntEngStretchBlt(SURFOBJ *psoDest,
 
     /* No success yet */
     ret = FALSE;
-    ASSERT(DestRect);
     SURFACE_LockBitmapBits(psurfDest);
-    MouseSafetyOnDrawStart(psoDest, DestRect->left, DestRect->top,
-                           DestRect->right, DestRect->bottom);
+    MouseSafetyOnDrawStart(psoDest, OutputRect.left, OutputRect.top,
+                           OutputRect.right, OutputRect.bottom);
 
     if (UsesSource)
     {
         psurfSource = CONTAINING_RECORD(psoSource, SURFACE, SurfObj);
-        ASSERT(SourceRect);
         if (psoSource != psoDest)
         {
             SURFACE_LockBitmapBits(psurfSource);
         }
-        MouseSafetyOnDrawStart(psoSource, SourceRect->left, SourceRect->top,
-                               SourceRect->right, SourceRect->bottom);
+        MouseSafetyOnDrawStart(psoSource, InputRect.left, InputRect.top,
+                               InputRect.right, InputRect.bottom);
     }
 
     /* Prepare color adjustment */
@@ -978,14 +1098,14 @@ IntEngStretchBlt(SURFOBJ *psoDest,
         // FIXME: MaskOrigin is always NULL !
         ret = GDIDEVFUNCS(psoDest).StretchBlt(
                   psoDest, (UsesSource) ? psoSource : NULL, MaskSurf, ClipRegion, ColorTranslation,
-                  &ca, BrushOrigin, DestRect, SourceRect, NULL, ROP);
+                  &ca, BrushOrigin, &OutputRect, &InputRect, NULL, ROP);
     }
 
     if (! ret)
     {
         // FIXME: see previous fixme
         ret = EngStretchBlt(psoDest, psoSource, MaskSurf, ClipRegion, ColorTranslation,
-                            &ca, BrushOrigin, DestRect, SourceRect, NULL, ROP);
+                            &ca, BrushOrigin, &OutputRect, &InputRect, NULL, ROP);
     }
 
     if (UsesSource)
