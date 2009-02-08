@@ -785,7 +785,11 @@ typedef struct _CRITICAL_SECTION_DEBUG {
 	LIST_ENTRY ProcessLocksList;
 	DWORD EntryCount;
 	DWORD ContentionCount;
-	DWORD Spare [2];
+//#ifdef __WINESRC__ //not all wine code is marked so
+	DWORD_PTR Spare[8/sizeof(DWORD_PTR)];/* in Wine they store a string here */
+//#else
+	//WORD SpareWORD;
+//#endif
 } CRITICAL_SECTION_DEBUG,*PCRITICAL_SECTION_DEBUG;
 typedef struct _CRITICAL_SECTION {
 	PCRITICAL_SECTION_DEBUG DebugInfo;
@@ -907,7 +911,7 @@ typedef struct _SYSTEM_INFO {
 	DWORD dwPageSize;
 	PVOID lpMinimumApplicationAddress;
 	PVOID lpMaximumApplicationAddress;
-	DWORD dwActiveProcessorMask;
+	DWORD_PTR dwActiveProcessorMask;
 	DWORD dwNumberOfProcessors;
 	DWORD dwProcessorType;
 	DWORD dwAllocationGranularity;
@@ -1667,7 +1671,7 @@ BOOL WINAPI GlobalUnlock(HGLOBAL);
 BOOL WINAPI GlobalUnWire(HGLOBAL); /* Obsolete: Has no effect. */
 PVOID WINAPI GlobalWire(HGLOBAL); /* Obsolete: Has no effect. */
 #define HasOverlappedIoCompleted(lpOverlapped)  ((lpOverlapped)->Internal != STATUS_PENDING)
-PVOID WINAPI HeapAlloc(HANDLE,DWORD,DWORD);
+PVOID WINAPI HeapAlloc(HANDLE,DWORD,SIZE_T);
 SIZE_T WINAPI HeapCompact(HANDLE,DWORD);
 HANDLE WINAPI HeapCreate(DWORD,DWORD,DWORD);
 BOOL WINAPI HeapDestroy(HANDLE);
@@ -2080,7 +2084,7 @@ BOOL WINAPI SetMailslotInfo(HANDLE,DWORD);
 BOOL WINAPI SetNamedPipeHandleState(HANDLE,PDWORD,PDWORD,PDWORD);
 BOOL WINAPI SetPriorityClass(HANDLE,DWORD);
 BOOL WINAPI SetPrivateObjectSecurity(SECURITY_INFORMATION,PSECURITY_DESCRIPTOR,PSECURITY_DESCRIPTOR *,PGENERIC_MAPPING,HANDLE);
-BOOL WINAPI SetProcessAffinityMask(HANDLE,DWORD);
+BOOL WINAPI SetProcessAffinityMask(HANDLE,DWORD_PTR);
 BOOL WINAPI SetProcessPriorityBoost(HANDLE,BOOL);
 BOOL WINAPI SetProcessShutdownParameters(DWORD,DWORD);
 BOOL WINAPI SetProcessWorkingSetSize(HANDLE,SIZE_T,SIZE_T);

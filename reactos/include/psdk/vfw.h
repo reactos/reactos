@@ -1073,14 +1073,14 @@ static __inline DWORD
 ICGetDefaultQuality(HIC hic)
 {
    DWORD dwICValue;
-   ICSendMessage(hic, ICM_GETDEFAULTQUALITY, (DWORD)(LPVOID)&dwICValue, sizeof(DWORD));
+   ICSendMessage(hic, ICM_GETDEFAULTQUALITY, (DWORD_PTR)(LPVOID)&dwICValue, sizeof(DWORD));
    return dwICValue;
 }
 static __inline DWORD
 ICGetDefaultKeyFrameRate(HIC hic)
 {
    DWORD dwICValue;
-   ICSendMessage(hic, ICM_GETDEFAULTKEYFRAMERATE, (DWORD)(LPVOID)&dwICValue, sizeof(DWORD));
+   ICSendMessage(hic, ICM_GETDEFAULTKEYFRAMERATE, (DWORD_PTR)(LPVOID)&dwICValue, sizeof(DWORD));
    return dwICValue;
 }
 static __inline LRESULT
@@ -1094,7 +1094,7 @@ ICDrawSuggestFormat(HIC hic,LPBITMAPINFOHEADER lpbiIn,LPBITMAPINFOHEADER lpbiOut
 	ic.dxDst = dxDst;
 	ic.dyDst = dyDst;
 	ic.hicDecompressor = hicDecomp;
-	return ICSendMessage(hic,ICM_DRAW_SUGGESTFORMAT,(DWORD)&ic,sizeof(ic));
+	return ICSendMessage(hic,ICM_DRAW_SUGGESTFORMAT,(DWORD_PTR)&ic,sizeof(ic));
 }
 static __inline LRESULT
 ICSetStatusProc(HIC hic,DWORD dwFlags,LRESULT lParam,LONG (CALLBACK *fpfnStatus)(LPARAM,UINT,LONG))
@@ -1103,7 +1103,7 @@ ICSetStatusProc(HIC hic,DWORD dwFlags,LRESULT lParam,LONG (CALLBACK *fpfnStatus)
 	ic.dwFlags = dwFlags;
 	ic.lParam = lParam;
 	ic.Status = fpfnStatus;
-	return ICSendMessage(hic,ICM_SET_STATUS_PROC,(DWORD)&ic,sizeof(ic));
+	return ICSendMessage(hic,ICM_SET_STATUS_PROC,(DWORD_PTR)&ic,sizeof(ic));
 }
 static __inline LRESULT
 ICDecompressEx(HIC hic,DWORD dwFlags,LPBITMAPINFOHEADER lpbiSrc,LPVOID lpSrc,INT xSrc,INT ySrc,INT dxSrc,INT dySrc,LPBITMAPINFOHEADER lpbiDst,LPVOID lpDst,INT xDst,INT yDst,INT dxDst,INT dyDst)
@@ -1122,7 +1122,7 @@ ICDecompressEx(HIC hic,DWORD dwFlags,LPBITMAPINFOHEADER lpbiSrc,LPVOID lpSrc,INT
 	ic.yDst = yDst;
 	ic.dxDst = dxDst;
 	ic.dyDst = dyDst;
-	return ICSendMessage(hic,ICM_DECOMPRESSEX,(DWORD)&ic,sizeof(ic));
+	return ICSendMessage(hic,ICM_DECOMPRESSEX,(DWORD_PTR)&ic,sizeof(ic));
 }
 static __inline LRESULT
 ICDecompressExBegin(HIC hic,DWORD dwFlags,LPBITMAPINFOHEADER lpbiSrc,LPVOID lpSrc,INT xSrc,INT ySrc,INT dxSrc,INT dySrc,LPBITMAPINFOHEADER lpbiDst,LPVOID lpDst,INT xDst,INT yDst,INT dxDst,INT dyDst)
@@ -1141,7 +1141,7 @@ ICDecompressExBegin(HIC hic,DWORD dwFlags,LPBITMAPINFOHEADER lpbiSrc,LPVOID lpSr
 	ic.yDst = yDst;
 	ic.dxDst = dxDst;
 	ic.dyDst = dyDst;
-	return ICSendMessage(hic,ICM_DECOMPRESSEX_BEGIN,(DWORD)&ic,sizeof(ic));
+	return ICSendMessage(hic,ICM_DECOMPRESSEX_BEGIN,(DWORD_PTR)&ic,sizeof(ic));
 }
 static __inline LRESULT
 ICDecompressExQuery(HIC hic,DWORD dwFlags,LPBITMAPINFOHEADER lpbiSrc,LPVOID lpSrc,INT xSrc,INT ySrc,INT dxSrc,INT dySrc,LPBITMAPINFOHEADER lpbiDst,LPVOID lpDst,INT xDst,INT yDst,INT dxDst,INT dyDst)
@@ -1160,7 +1160,7 @@ ICDecompressExQuery(HIC hic,DWORD dwFlags,LPBITMAPINFOHEADER lpbiSrc,LPVOID lpSr
 	ic.yDst = yDst;
 	ic.dxDst = dxDst;
 	ic.dyDst = dyDst;
-	return ICSendMessage(hic,ICM_DECOMPRESSEX_QUERY,(DWORD)&ic,sizeof(ic));
+	return ICSendMessage(hic,ICM_DECOMPRESSEX_QUERY,(DWORD_PTR)&ic,sizeof(ic));
 }
 
 #ifdef UNICODE

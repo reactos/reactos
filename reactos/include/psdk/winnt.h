@@ -2323,16 +2323,33 @@ typedef struct _KNONVOLATILE_CONTEXT_POINTERS {
 
 #define RUNTIME_FUNCTION_INDIRECT 0x1
 
-  typedef struct _RUNTIME_FUNCTION {
+typedef struct _RUNTIME_FUNCTION {
     DWORD BeginAddress;
     DWORD EndAddress;
     DWORD UnwindData;
-  } RUNTIME_FUNCTION,*PRUNTIME_FUNCTION;
+} RUNTIME_FUNCTION,*PRUNTIME_FUNCTION;
 
-  typedef PRUNTIME_FUNCTION (*PGET_RUNTIME_FUNCTION_CALLBACK)(DWORD64 ControlPc,PVOID Context);
-  typedef DWORD (*POUT_OF_PROCESS_FUNCTION_TABLE_CALLBACK)(HANDLE Process,PVOID TableAddress,PDWORD Entries,PRUNTIME_FUNCTION *Functions);
+#define UNWIND_HISTORY_TABLE_SIZE 12
 
-  #define OUT_OF_PROCESS_FUNCTION_TABLE_CALLBACK_EXPORT_NAME "OutOfProcessFunctionTableCallback"
+typedef struct _UNWIND_HISTORY_TABLE_ENTRY
+{
+    ULONG64 ImageBase;
+    PRUNTIME_FUNCTION FunctionEntry;
+} UNWIND_HISTORY_TABLE_ENTRY, *PUNWIND_HISTORY_TABLE_ENTRY;
+
+typedef struct _UNWIND_HISTORY_TABLE
+{
+    ULONG Count;
+    UCHAR Search;
+    ULONG64 LowAddress;
+    ULONG64 HighAddress;
+    UNWIND_HISTORY_TABLE_ENTRY Entry[UNWIND_HISTORY_TABLE_SIZE];
+} UNWIND_HISTORY_TABLE, *PUNWIND_HISTORY_TABLE;
+
+typedef PRUNTIME_FUNCTION (*PGET_RUNTIME_FUNCTION_CALLBACK)(DWORD64 ControlPc,PVOID Context);
+typedef DWORD (*POUT_OF_PROCESS_FUNCTION_TABLE_CALLBACK)(HANDLE Process,PVOID TableAddress,PDWORD Entries,PRUNTIME_FUNCTION *Functions);
+
+#define OUT_OF_PROCESS_FUNCTION_TABLE_CALLBACK_EXPORT_NAME "OutOfProcessFunctionTableCallback"
 
 NTSYSAPI
 VOID
@@ -4679,7 +4696,11 @@ static __inline__ PVOID GetCurrentFiber(void)
 #elif defined (_M_AMD64)
 FORCEINLINE PVOID GetCurrentFiber(VOID)
 {
+  #ifdef NONAMELESSUNION
+    return (PVOID)__readgsqword(FIELD_OFFSET(NT_TIB, DUMMYUNIONNAME.FiberData));
+  #else
     return (PVOID)__readgsqword(FIELD_OFFSET(NT_TIB, FiberData));
+  #endif
 }
 #elif defined (_M_ARM)
     PVOID WINAPI GetCurrentFiber(VOID);
@@ -4875,7 +4896,7 @@ MemoryBarrier(VOID)
 }
 #endif
 #elif defined (_M_AMD64)
-#define MemoryBarrier()
+#define MemoryBarrier __faststorefence
 #elif defined(_M_PPC)
 #define MemoryBarrier()
 #elif defined(_M_ARM)

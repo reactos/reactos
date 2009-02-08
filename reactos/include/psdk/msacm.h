@@ -543,7 +543,7 @@ typedef struct _ACMSTREAMHEADER
 {
   DWORD  cbStruct;
   DWORD  fdwStatus;
-  DWORD  dwUser;
+  DWORD_PTR  dwUser;
   LPBYTE pbSrc;
   DWORD  cbSrcLength;
   DWORD  cbSrcLengthUsed;
