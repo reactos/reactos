@@ -253,7 +253,10 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
                 /* Not found, bail out with error for FILE_OPEN requests. */
                 DPRINT("No listening server CCB found!\n");
                 if (ClientCcb->Data)
+                {
                     ExFreePool(ClientCcb->Data);
+                    ClientCcb->Data = NULL;
+                }
                 KeUnlockMutex(&Fcb->CcbListLock);
                 Irp->IoStatus.Status = STATUS_OBJECT_PATH_NOT_FOUND;
                 IoCompleteRequest(Irp, IO_NO_INCREMENT);
