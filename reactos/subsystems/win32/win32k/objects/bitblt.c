@@ -259,6 +259,10 @@ NtGdiBitBlt(
 
 	SourcePoint.x = XSrc;
 	SourcePoint.y = YSrc;
+	if (UsesSource)
+	{
+		IntLPtoDP(DCSrc, (LPPOINT)&SourcePoint, 1);
+	}
 
 	BrushOrigin.x = 0;
 	BrushOrigin.y = 0;
