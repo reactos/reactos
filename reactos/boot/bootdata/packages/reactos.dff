@@ -338,6 +338,7 @@ dll\win32\printui\printui.dll                       1
 dll\win32\psapi\psapi.dll                           1
 dll\win32\pstorec\pstorec.dll                       1
 dll\win32\qmgr\qmgr.dll                             1
+dll\win32\qmgrprxy\qmgrprxy.dll                     1
 dll\win32\rasapi32\rasapi32.dll                     1
 dll\win32\rasdlg\rasdlg.dll                         1
 dll\win32\rasman\rasman.dll                         1
