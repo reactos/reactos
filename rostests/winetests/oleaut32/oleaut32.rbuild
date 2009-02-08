@@ -5,7 +5,7 @@
 	<include base="oleaut32_winetest">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<include base="oleaut32_winetest" root="intermediate">.</include>
-    <define name="__ROS_LONG64__" />
+	<define name="__ROS_LONG64__" />
 	<library>wine</library>
 	<library>oleaut32</library>
 	<library>ole32</library>
@@ -16,6 +16,7 @@
 	<library>kernel32</library>
 	<library>uuid</library>
 	<library>ntdll</library>
+	<library>tmarshal_interface</library>
 	<file>olefont.c</file>
 	<file>olepicture.c</file>
 	<file>safearray.c</file>
@@ -32,6 +33,10 @@
 	<dependency>test_tlb</dependency>
 </module>
 <module name="tmarshal_header" type="idlheader">
+	<dependency>stdole2</dependency>
+	<file>tmarshal.idl</file>
+</module>
+<module name="tmarshal_interface" type="idlinterface">
 	<dependency>stdole2</dependency>
 	<file>tmarshal.idl</file>
 </module>

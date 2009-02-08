@@ -154,7 +154,7 @@ static void check_safearray(void *buffer, LPSAFEARRAY lpsa)
     {
         GUID guid;
         SafeArrayGetIID(lpsa, &guid);
-        ok(IsEqualGUID(&guid, (GUID*)wiresa), "guid mismatch\n");
+        ok(IsEqualGUID(&guid, wiresa), "guid mismatch\n");
         wiresa += sizeof(GUID);
     }
     ok(!memcmp(wiresa, lpsa->rgsabound, sizeof(lpsa->rgsabound[0]) * lpsa->cDims), "bounds mismatch\n");
@@ -444,7 +444,7 @@ static HRESULT WINAPI HeapUnknown_QueryInterface(IUnknown *iface, REFIID riid, v
     if (IsEqualIID(riid, &IID_IUnknown))
     {
         IUnknown_AddRef(iface);
-        *ppv = (LPVOID)iface;
+        *ppv = iface;
         return S_OK;
     }
     *ppv = NULL;

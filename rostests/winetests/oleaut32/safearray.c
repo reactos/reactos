@@ -275,7 +275,7 @@ static struct {
 static void test_safearray(void)
 {
 	SAFEARRAY 	*a, b, *c;
-	unsigned int 	i;
+	unsigned int 	i, diff;
 	LONG		indices[2];
 	HRESULT 	hres;
 	SAFEARRAYBOUND	bound, bounds[2];
@@ -434,19 +434,22 @@ static void test_safearray(void)
 	indices[1] = 23;
 	hres = SafeArrayPtrOfIndex(a, indices, (void**)&ptr2);
 	ok(S_OK == hres,"SAPOI failed [1,23], hres 0x%x\n",hres);
-	ok(ptr2 - ptr1 == 8,"ptr difference is not 8, but %d (%p vs %p)\n", ptr2-ptr1, ptr2, ptr1);
+        diff = ptr2 - ptr1;
+	ok(diff == 8,"ptr difference is not 8, but %d (%p vs %p)\n", diff, ptr2, ptr1);
 
 	indices[0] = 3;
 	indices[1] = 24;
 	hres = SafeArrayPtrOfIndex(a, indices, (void**)&ptr2);
 	ok(S_OK == hres,"SAPOI failed [5,24], hres 0x%x\n",hres);
-	ok(ptr2 - ptr1 == 176,"ptr difference is not 176, but %d (%p vs %p)\n", ptr2-ptr1, ptr2, ptr1);
+        diff = ptr2 - ptr1;
+	ok(diff == 176,"ptr difference is not 176, but %d (%p vs %p)\n", diff, ptr2, ptr1);
 
 	indices[0] = 20;
 	indices[1] = 23;
 	hres = SafeArrayPtrOfIndex(a, indices, (void**)&ptr2);
 	ok(S_OK == hres,"SAPOI failed [20,23], hres 0x%x\n",hres);
-	ok(ptr2 - ptr1 == 76,"ptr difference is not 76, but %d (%p vs %p)\n", ptr2-ptr1, ptr2, ptr1);
+        diff = ptr2 - ptr1;
+	ok(diff == 76,"ptr difference is not 76, but %d (%p vs %p)\n", diff, ptr2, ptr1);
 
 	hres = SafeArrayUnaccessData(a);
 	ok(S_OK == hres, "SAUAD failed with 0x%x\n", hres);
@@ -1271,7 +1274,7 @@ static void test_SafeArrayCopyData(void)
   /* Fill the source array with some data; it doesn't matter what */
   for (dimension = 0; dimension < size; dimension++)
   {
-    int* data = (int*)sa->pvData;
+    int* data = sa->pvData;
     data[dimension] = dimension;
   }
 
@@ -1417,7 +1420,7 @@ static void test_SafeArrayCreateEx(void)
 
   /* Win32 doesn't care if GetSize fails */
   fail_GetSize = TRUE;
-  sa = pSafeArrayCreateEx(VT_RECORD, 1, sab, (LPVOID)iRec);
+  sa = pSafeArrayCreateEx(VT_RECORD, 1, sab, iRec);
   ok(sa != NULL, "CreateEx (Fail Size) failed\n");
   ok(iRec->ref == START_REF_COUNT + 1, "Wrong iRec refcount %d\n", iRec->ref);
   ok(iRec->sizeCalled == 1, "GetSize called %d times\n", iRec->sizeCalled);
@@ -1434,7 +1437,7 @@ static void test_SafeArrayCreateEx(void)
   iRec->ref = START_REF_COUNT;
   iRec->sizeCalled = 0;
   iRec->clearCalled = 0;
-  sa = pSafeArrayCreateEx(VT_RECORD, 1, sab, (LPVOID)iRec);
+  sa = pSafeArrayCreateEx(VT_RECORD, 1, sab, iRec);
   ok(sa != NULL, "CreateEx (Rec) failed\n");
   ok(iRec->ref == START_REF_COUNT + 1, "Wrong iRec refcount %d\n", iRec->ref);
   ok(iRec->sizeCalled == 1, "GetSize called %d times\n", iRec->sizeCalled);

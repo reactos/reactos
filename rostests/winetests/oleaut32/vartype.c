@@ -554,7 +554,7 @@ static HRESULT WINAPI DummyDispatch_QueryInterface(LPDISPATCH iface,
     }
     if (*ppvObject)
     {
-      DummyDispatch_AddRef((IDispatch*)*ppvObject);
+      DummyDispatch_AddRef(*ppvObject);
       return S_OK;
     }
   }
@@ -5060,7 +5060,7 @@ static void test_SysStringByteLen(void)
   BSTR str = GetBSTR(&bstr);
 
   bstr.dwLen = 0;
-  ok (SysStringByteLen(str) == 0, "Expected dwLen 0, got %d\n", SysStringLen(str));
+  ok (SysStringByteLen(str) == 0, "Expected dwLen 0, got %d\n", SysStringByteLen(str));
   bstr.dwLen = 2;
   ok (SysStringByteLen(str) == 2, "Expected dwLen 2, got %d\n", SysStringByteLen(str));
 }
@@ -5452,12 +5452,12 @@ static void test_IUnknownChangeTypeEx(void)
   /* =>IDispatch */
   u.ref = 1;
   V_VT(&vSrc) = VT_UNKNOWN;
-  V_UNKNOWN(&vSrc) = (IUnknown*)pu;
+  V_UNKNOWN(&vSrc) = pu;
   VariantInit(&vDst);
   hres = VariantChangeTypeEx(&vDst, &vSrc, lcid, 0, VT_UNKNOWN);
   /* Note vSrc is not cleared, as final refcount is 2 */
   ok(hres == S_OK && u.ref == 2 &&
-     V_VT(&vDst) == VT_UNKNOWN && V_UNKNOWN(&vDst) == (IUnknown*)pu,
+     V_VT(&vDst) == VT_UNKNOWN && V_UNKNOWN(&vDst) == pu,
      "change unk(src,dst): expected 0x%08x,%d,%d,%p, got 0x%08x,%d,%d,%p\n",
      S_OK, 2, VT_UNKNOWN, pu, hres, u.ref, V_VT(&vDst), V_UNKNOWN(&vDst));
 
@@ -5467,7 +5467,7 @@ static void test_IUnknownChangeTypeEx(void)
     HRESULT hExpected = DISP_E_BADVARTYPE;
 
     V_VT(&vSrc) = VT_UNKNOWN;
-    V_UNKNOWN(&vSrc) = (IUnknown*)pu;
+    V_UNKNOWN(&vSrc) = pu;
     VariantInit(&vDst);
 
     if (vt == VT_UNKNOWN || vt == VT_DISPATCH || vt == VT_EMPTY || vt == VT_NULL)

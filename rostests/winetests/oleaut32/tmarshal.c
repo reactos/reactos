@@ -135,7 +135,7 @@ struct host_object_data
 
 static DWORD CALLBACK host_object_proc(LPVOID p)
 {
-    struct host_object_data *data = (struct host_object_data *)p;
+    struct host_object_data *data = p;
     HRESULT hr;
     MSG msg;
 
@@ -546,7 +546,7 @@ static HRESULT WINAPI Widget_VariantArrayPtr(
     return S_OK;
 }
 
-static void WINAPI Widget_Variant(
+static HRESULT WINAPI Widget_Variant(
     IWidget __RPC_FAR * iface,
     VARIANT var)
 {
@@ -554,9 +554,10 @@ static void WINAPI Widget_Variant(
     ok(V_VT(&var) == VT_CY, "V_VT(&var) was %d\n", V_VT(&var));
     ok(S(V_CY(&var)).Hi == 0xdababe, "V_CY(&var).Hi was 0x%x\n", S(V_CY(&var)).Hi);
     ok(S(V_CY(&var)).Lo == 0xdeadbeef, "V_CY(&var).Lo was 0x%x\n", S(V_CY(&var)).Lo);
+    return S_OK;
 }
 
-static void WINAPI Widget_VarArg(
+static HRESULT WINAPI Widget_VarArg(
     IWidget * iface,
     int numexpect,
     SAFEARRAY * values)
@@ -586,9 +587,11 @@ static void WINAPI Widget_VarArg(
 
     hr = SafeArrayUnaccessData(values);
     ok(hr == S_OK, "SafeArrayUnaccessData failed with %x\n", hr);
+
+    return S_OK;
 }
 
-static void WINAPI Widget_StructArgs(
+static HRESULT WINAPI Widget_StructArgs(
     IWidget * iface,
     MYSTRUCT byval,
     MYSTRUCT *byptr,
@@ -597,6 +600,7 @@ static void WINAPI Widget_StructArgs(
     ok(memcmp(&byval, &MYSTRUCT_BYVAL, sizeof(MYSTRUCT))==0, "Struct parameter passed by value corrupted\n");
     ok(memcmp(byptr,  &MYSTRUCT_BYPTR, sizeof(MYSTRUCT))==0, "Struct parameter passed by pointer corrupted\n");
     ok(memcmp(arr,    MYSTRUCT_ARRAY,  sizeof(MYSTRUCT_ARRAY))==0, "Array of structs corrupted\n");
+    return S_OK;
 }
 
 
@@ -1102,7 +1106,10 @@ static void test_typelibmarshal(void)
     /* call StructArgs (direct) */
     mystruct = MYSTRUCT_BYPTR;
     memcpy(mystructArray, MYSTRUCT_ARRAY, sizeof(mystructArray));
-    IWidget_StructArgs(pWidget, MYSTRUCT_BYVAL, &mystruct, mystructArray);
+    hr = IWidget_StructArgs(pWidget, MYSTRUCT_BYVAL, &mystruct, mystructArray);
+    todo_wine {
+    ok_ole_success(hr, IWidget_StructArgs);
+    }
 
     /* call Clone */
     dispparams.cNamedArgs = 0;

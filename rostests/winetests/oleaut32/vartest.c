@@ -2838,7 +2838,7 @@ static void test_VarFix(void)
     S1(U1(*pdec)).Mid32 = 0;
     S1(U1(*pdec)).Lo32 = 1;
     hres = pVarFix(&v,&vDst);
-    ok(hres == S_OK && V_VT(&vDst) == VT_DECIMAL && !memcmp(&v, &vDst, sizeof(v)),
+    ok(hres == S_OK && V_VT(&vDst) == VT_DECIMAL && !memcmp(&V_DECIMAL(&v), &V_DECIMAL(&vDst), sizeof(DECIMAL)),
        "VarFix: expected 0x0,%d,identical, got 0x%X,%d\n", VT_DECIMAL,
        hres, V_VT(&vDst));
 
@@ -2953,7 +2953,7 @@ static void test_VarInt(void)
     S1(U1(*pdec)).Mid32 = 0;
     S1(U1(*pdec)).Lo32 = 1;
     hres = pVarInt(&v,&vDst);
-    ok(hres == S_OK && V_VT(&vDst) == VT_DECIMAL && !memcmp(&v, &vDst, sizeof(v)),
+    ok(hres == S_OK && V_VT(&vDst) == VT_DECIMAL && !memcmp(&V_DECIMAL(&v), &V_DECIMAL(&vDst), sizeof(DECIMAL)),
        "VarInt: expected 0x0,%d,identical, got 0x%X,%d\n", VT_DECIMAL,
        hres, V_VT(&vDst));
 

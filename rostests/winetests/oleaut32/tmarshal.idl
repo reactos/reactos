@@ -112,13 +112,13 @@ library TestTypelib
         HRESULT VariantArrayPtr([in] SAFEARRAY(VARIANT) *values);
 
         [id(DISPID_TM_VARIANT)]
-        void Variant([in] VARIANT var);
+        HRESULT Variant([in] VARIANT var);
 
         [vararg, id(DISPID_TM_VARARG)]
-        void VarArg([in] int numexpect, [in] SAFEARRAY(VARIANT) values);
+        HRESULT VarArg([in] int numexpect, [in] SAFEARRAY(VARIANT) values);
 
         [id(DISPID_TM_STRUCTARGS)]
-        void StructArgs([in] MYSTRUCT byval, [in] MYSTRUCT *byptr, [in] MYSTRUCT arr[5]);
+        HRESULT StructArgs([in] MYSTRUCT byval, [in] MYSTRUCT *byptr, [in] MYSTRUCT arr[5]);
 
         [id(DISPID_TM_ERROR)]
         HRESULT Error();
