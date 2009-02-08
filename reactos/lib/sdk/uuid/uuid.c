@@ -75,7 +75,6 @@ DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
 #include "dimm.h"
 #include "isguids.h"
 #include "objsafe.h"
-#include "mstask.h"
 
 /* FIXME: cguids declares GUIDs but does not define their values */
 
