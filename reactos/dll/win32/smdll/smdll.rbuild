@@ -1,5 +1,5 @@
 <module name="smdll" type="nativedll" baseaddress="${BASEADDRESS_SMDLL}" installbase="system32" installname="smdll.dll">
-	<importlibrary definition="smdll.def" />
+	<importlibrary definition="smdll.spec" />
 	<include base="smdll">.</include>
 	<include base="ReactOS">include/reactos/subsys</include>
 	<define name="_DISABLE_TIDENTS" />

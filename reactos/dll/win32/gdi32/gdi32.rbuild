@@ -1,5 +1,5 @@
-<module name="gdi32" type="win32dll" baseaddress="${BASEADDRESS_GDI32}" installbase="system32" installname="gdi32.dll" unicode="yes" crt="dll">
-	<importlibrary definition="gdi32.def" />
+<module name="gdi32" type="win32dll" baseaddress="${BASEADDRESS_GDI32}" installbase="system32" installname="gdi32.dll" unicode="yes" crt="dll" allowwarnings="true">
+	<importlibrary definition="gdi32.spec" />
 	<include base="gdi32">include</include>
 	<define name="_DISABLE_TIDENTS" />
 	<define name="LANGPACK" />
@@ -10,7 +10,6 @@
 	<library>pseh</library>
 	<library>dxguid</library>
 	<library>ntdll</library>
-
 	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38269
 	<directory name="include">
 		<pch>precomp.h</pch>

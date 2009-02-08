@@ -1,5 +1,5 @@
 <module name="dnsapi" type="win32dll" entrypoint="0" baseaddress="${BASEADDRESS_DNSAPI}" installbase="system32" installname="dnsapi.dll" crt="msvcrt">
-	<importlibrary definition="dnsapi.def" />
+	<importlibrary definition="dnsapi.spec" />
 	<include base="dnsapi">include</include>
 	<include base="adns">src</include>
 	<include base="adns">adns_win32</include>
