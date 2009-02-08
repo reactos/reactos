@@ -259,7 +259,7 @@ static void test_SystemFunction004(void)
     key.Length = 0x100;
     key.MaximumLength = 0x100;
 
-    r = pSystemFunction004(&in, &key, (struct ustring *)&out);
+    r = pSystemFunction004(&in, &key, &out);
     ok(r == STATUS_BUFFER_TOO_SMALL, "function failed\n");
 
     in.Buffer = inbuf;

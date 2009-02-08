@@ -34,6 +34,8 @@ static BOOL (WINAPI *pCredGetSessionTypes)(DWORD,LPDWORD);
 static BOOL (WINAPI *pCredReadA)(LPCSTR,DWORD,DWORD,PCREDENTIALA *);
 static BOOL (WINAPI *pCredRenameA)(LPCSTR,LPCSTR,DWORD,DWORD);
 static BOOL (WINAPI *pCredWriteA)(PCREDENTIALA,DWORD);
+static BOOL (WINAPI *pCredReadDomainCredentialsA)(PCREDENTIAL_TARGET_INFORMATIONA,DWORD,DWORD*,PCREDENTIALA**);
+
 
 #define TEST_TARGET_NAME  "credtest.winehq.org"
 #define TEST_TARGET_NAME2 "credtest2.winehq.org"
@@ -133,6 +135,65 @@ static void test_CredDeleteA(void)
     ret = pCredDeleteA(TEST_TARGET_NAME, CRED_TYPE_GENERIC, 0xdeadbeef);
     ok(!ret && ( GetLastError() == ERROR_INVALID_FLAGS || GetLastError() == ERROR_INVALID_PARAMETER /* Vista */ ),
         "CredDeleteA should have failed with ERROR_INVALID_FLAGS or ERROR_INVALID_PARAMETER instead of %d\n",
+        GetLastError());
+}
+
+static void test_CredReadDomainCredentialsA(void)
+{
+    BOOL ret;
+    char target_name[] = "no_such_target";
+    CREDENTIAL_TARGET_INFORMATIONA info = {target_name, NULL, target_name, NULL, NULL, NULL, NULL, 0, 0, NULL};
+    DWORD count;
+    PCREDENTIAL* creds;
+
+    if (!pCredReadDomainCredentialsA)
+    {
+        win_skip("CredReadDomainCredentialsA() is not implemented\n");
+        return;
+    }
+
+    /* these two tests would crash on both native and Wine. Implementations
+     * does not check for NULL output pointers and try to zero them out early */
+#if 0
+    ok(!pCredReadDomainCredentialsA(&info, 0, NULL, &creds) &&
+            GetLastError() == ERROR_INVALID_PARAMETER, "!\n");
+    ok(!pCredReadDomainCredentialsA(&info, 0, &count, NULL) &&
+            GetLastError() == ERROR_INVALID_PARAMETER, "!\n");
+#endif
+
+    SetLastError(0xdeadbeef);
+    ret = pCredReadDomainCredentialsA(NULL, 0, &count, &creds);
+    ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER,
+        "CredReadDomainCredentialsA should have failed with ERROR_INVALID_PARAMETER instead of %d\n",
+        GetLastError());
+
+    SetLastError(0xdeadbeef);
+    creds = (void*)0x12345;
+    count = 2;
+    ret = pCredReadDomainCredentialsA(&info, 0, &count, &creds);
+    ok(!ret && GetLastError() == ERROR_NOT_FOUND,
+        "CredReadDomainCredentialsA should have failed with ERROR_NOT_FOUND instead of %d\n",
+        GetLastError());
+    ok(count ==0 && creds == NULL, "CredReadDomainCredentialsA must not return any result\n");
+
+    info.TargetName = NULL;
+
+    SetLastError(0xdeadbeef);
+    ret = pCredReadDomainCredentialsA(&info, 0, &count, &creds);
+    ok(!ret, "CredReadDomainCredentialsA should have failed\n");
+    ok(GetLastError() == ERROR_NOT_FOUND ||
+        GetLastError() == ERROR_INVALID_PARAMETER, /* Vista, W2K8 */
+        "Expected ERROR_NOT_FOUND or ERROR_INVALID_PARAMETER instead of %d\n",
+        GetLastError());
+
+    info.DnsServerName = NULL;
+
+    SetLastError(0xdeadbeef);
+    ret = pCredReadDomainCredentialsA(&info, 0, &count, &creds);
+    ok(!ret, "CredReadDomainCredentialsA should have failed\n");
+    ok(GetLastError() == ERROR_NOT_FOUND ||
+        GetLastError() == ERROR_INVALID_PARAMETER, /* Vista, W2K8 */
+        "Expected ERROR_NOT_FOUND or ERROR_INVALID_PARAMETER instead of %d\n",
         GetLastError());
 }
 
@@ -279,6 +340,7 @@ START_TEST(cred)
     pCredDeleteA = (void *)GetProcAddress(GetModuleHandle("advapi32.dll"), "CredDeleteA");
     pCredReadA = (void *)GetProcAddress(GetModuleHandle("advapi32.dll"), "CredReadA");
     pCredRenameA = (void *)GetProcAddress(GetModuleHandle("advapi32.dll"), "CredRenameA");
+    pCredReadDomainCredentialsA = (void *)GetProcAddress(GetModuleHandle("advapi32.dll"), "CredReadDomainCredentialsA");
 
     if (!pCredEnumerateA || !pCredFree || !pCredWriteA || !pCredDeleteA ||
         !pCredReadA)
@@ -303,6 +365,8 @@ START_TEST(cred)
     test_CredReadA();
     test_CredWriteA();
     test_CredDeleteA();
+
+    test_CredReadDomainCredentialsA();
 
     trace("generic:\n");
     if (persists[CRED_TYPE_GENERIC] == CRED_PERSIST_NONE)

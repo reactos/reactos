@@ -41,7 +41,7 @@ fnMD5Init pMD5Init;
 fnMD5Update pMD5Update;
 fnMD5Final pMD5Final;
 
-#define ctxcmp( a, b ) memcmp( (char*)a, (char*)b, FIELD_OFFSET( MD5_CTX, in ) )
+#define ctxcmp( a, b ) memcmp( a, b, FIELD_OFFSET( MD5_CTX, in ) )
 
 static void test_md5_ctx(void)
 {

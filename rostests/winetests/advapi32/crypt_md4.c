@@ -49,7 +49,7 @@ fnSystemFunction007 pSystemFunction007;
 md4hashfunc pSystemFunction010;
 md4hashfunc pSystemFunction011;
 
-#define ctxcmp( a, b ) memcmp( (char*)a, (char*)b, FIELD_OFFSET( MD4_CTX, in ) )
+#define ctxcmp( a, b ) memcmp( a, b, FIELD_OFFSET( MD4_CTX, in ) )
 
 static void test_md4_ctx(void)
 {
