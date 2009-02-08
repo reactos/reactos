@@ -771,8 +771,7 @@ NtGdiEngStretchBlt(
     IN RECTL  *prclDest,
     IN RECTL  *prclSrc,
     IN POINTL  *MaskOrigin,
-    IN ULONG  Mode
-)
+    IN ULONG  Mode)
 {
     COLORADJUSTMENT  ca;
     POINTL  lBrushOrigin;
@@ -807,9 +806,12 @@ NtGdiEngStretchBlt(
     return EngStretchBlt(psoDest, psoSource, Mask, ClipRegion, ColorTranslation, &ca, &lBrushOrigin, &rclDest, &rclSrc, &lMaskOrigin, Mode);
 }
 
+/*
+ * @implemented
+ */
 BOOL
 APIENTRY
-EngStretchBlt(
+EngStretchBltROP(
     IN SURFOBJ  *psoDest,
     IN SURFOBJ  *psoSource,
     IN SURFOBJ  *Mask,
@@ -820,11 +822,10 @@ EngStretchBlt(
     IN RECTL  *prclDest,
     IN RECTL  *prclSrc,
     IN POINTL  *MaskOrigin,
-    IN ULONG  Mode
-)
+    IN ULONG  Mode,
+    IN BRUSHOBJ *Brush,
+    IN DWORD ROP4)
 {
-    // www.osr.com/ddk/graphics/gdifncs_0bs7.htm
-
     RECTL              InputRect;
     RECTL              OutputRect;
     POINTL             Translate;
@@ -835,9 +836,9 @@ EngStretchBlt(
     PSTRETCHRECTFUNC   BltRectFunc;
     BOOLEAN            Ret;
     POINTL             AdjustedBrushOrigin;
-    BOOL               UsesSource = ROP4_USES_SOURCE(Mode);
+    BOOL               UsesSource = ROP4_USES_SOURCE(ROP4);
 
-    if (Mode == R4_NOOP)
+    if (ROP4 == R4_NOOP)
     {
         /* Copy destination onto itself: nop */
         return TRUE;
@@ -964,7 +965,7 @@ EngStretchBlt(
 
     Ret = (*BltRectFunc)(psoOutput, psoInput, Mask, ClipRegion,
                          ColorTranslation, &OutputRect, &InputRect, MaskOrigin,
-                         &AdjustedBrushOrigin, Mode);
+                         &AdjustedBrushOrigin, ROP4);
 
     IntEngLeave(&EnterLeaveDest);
     if (UsesSource)
@@ -973,6 +974,40 @@ EngStretchBlt(
     }
 
     return Ret;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+APIENTRY
+EngStretchBlt(
+    IN SURFOBJ  *psoDest,
+    IN SURFOBJ  *psoSource,
+    IN SURFOBJ  *Mask,
+    IN CLIPOBJ  *ClipRegion,
+    IN XLATEOBJ  *ColorTranslation,
+    IN COLORADJUSTMENT  *pca,
+    IN POINTL  *BrushOrigin,
+    IN RECTL  *prclDest,
+    IN RECTL  *prclSrc,
+    IN POINTL  *MaskOrigin,
+    IN ULONG  Mode)
+{
+    return EngStretchBltROP(
+        psoDest,
+        psoSource,
+        Mask,
+        ClipRegion,
+        ColorTranslation,
+        pca,
+        BrushOrigin,
+        prclDest,
+        prclSrc,
+        MaskOrigin,
+        Mode,
+        NULL,
+        SRCCOPY);
 }
 
 BOOL APIENTRY
@@ -1104,8 +1139,8 @@ IntEngStretchBlt(SURFOBJ *psoDest,
     if (! ret)
     {
         // FIXME: see previous fixme
-        ret = EngStretchBlt(psoDest, psoSource, MaskSurf, ClipRegion, ColorTranslation,
-                            &ca, BrushOrigin, &OutputRect, &InputRect, NULL, ROP);
+        ret = EngStretchBltROP(psoDest, psoSource, MaskSurf, ClipRegion, ColorTranslation,
+                            &ca, BrushOrigin, &OutputRect, &InputRect, NULL, COLORONCOLOR, Brush, ROP);
     }
 
     if (UsesSource)

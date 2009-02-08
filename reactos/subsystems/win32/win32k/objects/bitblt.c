@@ -756,7 +756,9 @@ NtGdiStretchBlt(
     RECTL SourceRect;
     BOOL Status = FALSE;
     XLATEOBJ *XlateObj = NULL;
+    POINTL BrushOrigin;
     PGDIBRUSHOBJ BrushObj = NULL;
+    GDIBRUSHINST BrushInst;
     BOOL UsesSource = ROP3_USES_SOURCE(ROP);
     BOOL UsesPattern = ROP3_USES_PATTERN(ROP);
 
@@ -834,6 +836,9 @@ NtGdiStretchBlt(
     {
         IntLPtoDP(DCSrc, (LPPOINT)&SourceRect, 2);
     }
+
+    BrushOrigin.x = 0;
+    BrushOrigin.y = 0;
 
     /* Determine surfaces to be used in the bitblt */
     BitmapDest = SURFACE_LockSurface(DCDest->w.hBitmap);
@@ -920,13 +925,16 @@ NtGdiStretchBlt(
             SetLastWin32Error(ERROR_INVALID_HANDLE);
             goto failed;
         }
+        BrushOrigin = *((PPOINTL)&BrushObj->ptOrigin);
+        IntGdiInitBrushInstance(&BrushInst, BrushObj, DCDest->XlateBrush);
     }
 
     /* Perform the bitblt operation */
     Status = IntEngStretchBlt(&BitmapDest->SurfObj, &BitmapSrc->SurfObj,
         NULL, DCDest->CombinedClip, XlateObj,
-        &DestRect, &SourceRect, NULL, NULL, NULL,
-        ROP3_TO_ROP4(ROP));
+        &DestRect, &SourceRect, NULL, 
+        BrushObj ? &BrushInst.BrushObject : NULL,
+        &BrushOrigin, ROP3_TO_ROP4(ROP));
 
 failed:
     if (XlateObj)
