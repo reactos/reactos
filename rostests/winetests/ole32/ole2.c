@@ -68,7 +68,7 @@ static HRESULT WINAPI OleObject_QueryInterface(IOleObject *iface, REFIID riid, v
     *ppv = NULL;
 
     if (IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, &IID_IOleObject))
-        *ppv = (void *)iface;
+        *ppv = iface;
     else if (IsEqualIID(riid, &IID_IPersistStorage))
         *ppv = &OleObjectPersistStg;
     else if (IsEqualIID(riid, &IID_IOleCache))
@@ -1497,7 +1497,7 @@ static void test_runnable(void)
         NULL
     };
 
-    IOleObject *object = (IOleObject *)&OleObject;
+    IOleObject *object = &OleObject;
 
     expected_method_list = methods_query_runnable;
     ok(OleIsRunning(object), "Object should be running\n");

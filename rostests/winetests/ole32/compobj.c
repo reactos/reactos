@@ -37,6 +37,7 @@
 /* functions that are not present on all versions of Windows */
 HRESULT (WINAPI * pCoInitializeEx)(LPVOID lpReserved, DWORD dwCoInit);
 HRESULT (WINAPI * pCoGetObjectContext)(REFIID riid, LPVOID *ppv);
+HRESULT (WINAPI * pCoSwitchCallContext)(IUnknown *pObject, IUnknown **ppOldObject);
 
 #define ok_ole_success(hr, func) ok(hr == S_OK, func " failed with error 0x%08x\n", hr)
 #define ok_more_than_one_lock() ok(cLocks > 0, "Number of locks should be > 0, but actually is %d\n", cLocks)
@@ -88,7 +89,7 @@ static HRESULT WINAPI Test_IClassFactory_QueryInterface(
     if (IsEqualGUID(riid, &IID_IUnknown) ||
         IsEqualGUID(riid, &IID_IClassFactory))
     {
-        *ppvObj = (LPVOID)iface;
+        *ppvObj = iface;
         IClassFactory_AddRef(iface);
         return S_OK;
     }
@@ -286,7 +287,7 @@ static HRESULT WINAPI MessageFilter_QueryInterface(IMessageFilter *iface, REFIID
     if (IsEqualGUID(riid, &IID_IUnknown) ||
         IsEqualGUID(riid, &IID_IClassFactory))
     {
-        *ppvObj = (LPVOID)iface;
+        *ppvObj = iface;
         IMessageFilter_AddRef(iface);
         return S_OK;
     }
@@ -397,7 +398,7 @@ static HRESULT WINAPI Test_IUnknown_QueryInterface(
     if (IsEqualIID(riid, &IID_IUnknown) ||
         IsEqualIID(riid, &IID_IWineTest))
     {
-        *ppvObj = (LPVOID)iface;
+        *ppvObj = iface;
         IUnknown_AddRef(iface);
         return S_OK;
     }
@@ -512,7 +513,7 @@ static void test_CoRegisterPSClsid(void)
     hr = CreateStreamOnHGlobal(NULL, TRUE, &stream);
     ok_ole_success(hr, "CreateStreamOnHGlobal");
 
-    hr = CoMarshalInterface(stream, &IID_IWineTest, (IUnknown *)&Test_Unknown, MSHCTX_INPROC, NULL, MSHLFLAGS_NORMAL);
+    hr = CoMarshalInterface(stream, &IID_IWineTest, &Test_Unknown, MSHCTX_INPROC, NULL, MSHLFLAGS_NORMAL);
     ok(hr == E_NOTIMPL, "CoMarshalInterface should have returned E_NOTIMPL instead of 0x%08x\n", hr);
     IStream_Release(stream);
 
@@ -938,6 +939,7 @@ static void test_CoFreeUnusedLibraries(void)
     if (hr == REGDB_E_CLASSNOTREG)
     {
         trace("IE not installed so can't run CoFreeUnusedLibraries test\n");
+        CoUninitialize();
         return;
     }
     ok_ole_success(hr, "CoCreateInstance");
@@ -1039,6 +1041,106 @@ static void test_CoGetObjectContext(void)
     CoUninitialize();
 }
 
+typedef struct {
+    const IUnknownVtbl *lpVtbl;
+    LONG refs;
+} Test_CallContext;
+
+static HRESULT WINAPI Test_CallContext_QueryInterface(
+    IUnknown *iface,
+    REFIID riid,
+    LPVOID *ppvObj)
+{
+    if (ppvObj == NULL) return E_POINTER;
+
+    if (IsEqualGUID(riid, &IID_IUnknown))
+    {
+        *ppvObj = iface;
+        IUnknown_AddRef(iface);
+        return S_OK;
+    }
+
+    *ppvObj = NULL;
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI Test_CallContext_AddRef(IUnknown *iface)
+{
+    Test_CallContext *This = (Test_CallContext*)iface;
+    return InterlockedIncrement(&This->refs);
+}
+
+static ULONG WINAPI Test_CallContext_Release(IUnknown *iface)
+{
+    Test_CallContext *This = (Test_CallContext*)iface;
+    ULONG refs = InterlockedDecrement(&This->refs);
+    if (!refs)
+        HeapFree(GetProcessHeap(), 0, This);
+    return refs;
+}
+
+static const IUnknownVtbl TestCallContext_Vtbl =
+{
+    Test_CallContext_QueryInterface,
+    Test_CallContext_AddRef,
+    Test_CallContext_Release
+};
+
+static void test_CoGetCallContext(void)
+{
+    HRESULT hr;
+    ULONG refs;
+    IUnknown *pUnk;
+    IUnknown *test_object;
+
+    if (!pCoSwitchCallContext)
+    {
+        skip("CoSwitchCallContext not present\n");
+        return;
+    }
+
+    CoInitialize(NULL);
+
+    test_object = HeapAlloc(GetProcessHeap(), 0, sizeof(Test_CallContext));
+    ((Test_CallContext*)test_object)->lpVtbl = &TestCallContext_Vtbl;
+    ((Test_CallContext*)test_object)->refs = 1;
+
+    hr = CoGetCallContext(&IID_IUnknown, (void**)&pUnk);
+    ok(hr == RPC_E_CALL_COMPLETE, "Expected RPC_E_CALL_COMPLETE, got 0x%08x\n", hr);
+
+    pUnk = (IUnknown*)0xdeadbeef;
+    hr = pCoSwitchCallContext(test_object, &pUnk);
+    ok_ole_success(hr, "CoSwitchCallContext");
+    ok(pUnk == NULL, "expected NULL, got %p\n", pUnk);
+    refs = IUnknown_AddRef(test_object);
+    ok(refs == 2, "Expected refcount 2, got %d\n", refs);
+    IUnknown_Release(test_object);
+
+    pUnk = (IUnknown*)0xdeadbeef;
+    hr = CoGetCallContext(&IID_IUnknown, (void**)&pUnk);
+    ok_ole_success(hr, "CoGetCallContext");
+    ok(pUnk == test_object, "expected %p, got %p\n", test_object, pUnk);
+    refs = IUnknown_AddRef(test_object);
+    ok(refs == 3, "Expected refcount 3, got %d\n", refs);
+    IUnknown_Release(test_object);
+    IUnknown_Release(pUnk);
+
+    pUnk = (IUnknown*)0xdeadbeef;
+    hr = pCoSwitchCallContext(NULL, &pUnk);
+    ok_ole_success(hr, "CoSwitchCallContext");
+    ok(pUnk == test_object, "expected %p, got %p\n", test_object, pUnk);
+    refs = IUnknown_AddRef(test_object);
+    ok(refs == 2, "Expected refcount 2, got %d\n", refs);
+    IUnknown_Release(test_object);
+
+    hr = CoGetCallContext(&IID_IUnknown, (void**)&pUnk);
+    ok(hr == RPC_E_CALL_COMPLETE, "Expected RPC_E_CALL_COMPLETE, got 0x%08x\n", hr);
+
+    IUnknown_Release(test_object);
+
+    CoUninitialize();
+}
+
 static void test_CoInitializeEx(void)
 {
     HRESULT hr;
@@ -1064,6 +1166,7 @@ START_TEST(compobj)
 {
     HMODULE hOle32 = GetModuleHandle("ole32");
     pCoGetObjectContext = (void*)GetProcAddress(hOle32, "CoGetObjectContext");
+    pCoSwitchCallContext = (void*)GetProcAddress(hOle32, "CoSwitchCallContext");
     if (!(pCoInitializeEx = (void*)GetProcAddress(hOle32, "CoInitializeEx")))
     {
         trace("You need DCOM95 installed to run this test\n");
@@ -1088,5 +1191,6 @@ START_TEST(compobj)
     test_registered_object_thread_affinity();
     test_CoFreeUnusedLibraries();
     test_CoGetObjectContext();
+    test_CoGetCallContext();
     test_CoInitializeEx();
 }

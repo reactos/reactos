@@ -386,7 +386,7 @@ static HRESULT WINAPI Test_IUnknown_QueryInterface(
 
     if (IsEqualGUID(riid, &IID_IUnknown))
     {
-        *ppvObj = (LPVOID)iface;
+        *ppvObj = iface;
         IUnknown_AddRef(iface);
         return S_OK;
     }

@@ -82,6 +82,19 @@ static void UnlockModule(void)
     InterlockedDecrement(&cLocks);
 }
 
+static SIZE_T round_heap_size(SIZE_T size)
+{
+    static SIZE_T heap_size_alignment = -1;
+    if (heap_size_alignment == -1)
+    {
+        void *p = HeapAlloc(GetProcessHeap(), 0, 1);
+        heap_size_alignment = HeapSize(GetProcessHeap(), 0, p);
+        HeapFree(GetProcessHeap(), 0, p);
+    }
+
+    return ((size + heap_size_alignment - 1) & ~(heap_size_alignment - 1));
+}
+
 static HRESULT WINAPI Test_IClassFactory_QueryInterface(
     LPCLASSFACTORY iface,
     REFIID riid,
@@ -92,7 +105,7 @@ static HRESULT WINAPI Test_IClassFactory_QueryInterface(
     if (IsEqualGUID(riid, &IID_IUnknown) ||
         IsEqualGUID(riid, &IID_IClassFactory))
     {
-        *ppvObj = (LPVOID)iface;
+        *ppvObj = iface;
         IClassFactory_AddRef(iface);
         return S_OK;
     }
@@ -151,7 +164,7 @@ static HRESULT WINAPI HeapUnknown_QueryInterface(IUnknown *iface, REFIID riid, v
     if (IsEqualIID(riid, &IID_IUnknown))
     {
         IUnknown_AddRef(iface);
-        *ppv = (LPVOID)iface;
+        *ppv = iface;
         return S_OK;
     }
     *ppv = NULL;
@@ -1204,12 +1217,12 @@ static void test_moniker(
     moniker_data = GlobalLock(hglobal);
 
     /* first check we have the right amount of data */
-    ok(moniker_size == sizeof_expected_moniker_saved_data,
+    ok(moniker_size == round_heap_size(sizeof_expected_moniker_saved_data),
         "%s: Size of saved data differs (expected %d, actual %d)\n",
-        testname, sizeof_expected_moniker_saved_data, moniker_size);
+        testname, (DWORD)round_heap_size(sizeof_expected_moniker_saved_data), moniker_size);
 
     /* then do a byte-by-byte comparison */
-    for (i = 0; i < min(moniker_size, sizeof_expected_moniker_saved_data); i++)
+    for (i = 0; i < min(moniker_size, round_heap_size(sizeof_expected_moniker_saved_data)); i++)
     {
         if (expected_moniker_saved_data[i] != moniker_data[i])
         {
@@ -1250,14 +1263,14 @@ static void test_moniker(
     moniker_data = GlobalLock(hglobal);
 
     /* first check we have the right amount of data */
-    ok(moniker_size == sizeof_expected_moniker_marshal_data,
+    ok(moniker_size == round_heap_size(sizeof_expected_moniker_marshal_data),
         "%s: Size of marshaled data differs (expected %d, actual %d)\n",
-        testname, sizeof_expected_moniker_marshal_data, moniker_size);
+        testname, (DWORD)round_heap_size(sizeof_expected_moniker_marshal_data), moniker_size);
 
     /* then do a byte-by-byte comparison */
     if (expected_moniker_marshal_data)
     {
-        for (i = 0; i < min(moniker_size, sizeof_expected_moniker_marshal_data); i++)
+        for (i = 0; i < min(moniker_size, round_heap_size(sizeof_expected_moniker_marshal_data)); i++)
         {
             if (expected_moniker_marshal_data[i] != moniker_data[i])
             {
