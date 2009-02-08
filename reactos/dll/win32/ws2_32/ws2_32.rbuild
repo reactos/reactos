@@ -1,5 +1,5 @@
 <module name="ws2_32" type="win32dll" baseaddress="${BASEADDRESS_WS2_32}" installbase="system32" installname="ws2_32.dll" unicode="yes">
-	<importlibrary definition="ws2_32.def" />
+	<importlibrary definition="ws2_32.spec" />
 	<include base="ws2_32">include</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="_DISABLE_TIDENTS" />
@@ -27,3 +27,4 @@
 	</directory>
 	<file>ws2_32.rc</file>
 </module>
+

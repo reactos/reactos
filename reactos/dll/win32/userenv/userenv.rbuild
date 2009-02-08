@@ -1,5 +1,5 @@
 <module name="userenv" type="win32dll" baseaddress="${BASEADDRESS_USERENV}" installbase="system32" installname="userenv.dll">
-	<importlibrary definition="userenv.def" />
+	<importlibrary definition="userenv.spec" />
 	<include base="userenv">.</include>
 	<library>uuid</library>
 	<library>ntdll</library>
