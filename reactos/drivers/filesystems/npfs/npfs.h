@@ -6,82 +6,82 @@
 
 typedef struct _NPFS_DEVICE_EXTENSION
 {
-	LIST_ENTRY PipeListHead;
-	LIST_ENTRY ThreadListHead;
-	KMUTEX PipeListLock;
-	ULONG EmptyWaiterCount;
-	ULONG MinQuota;
-	ULONG DefaultQuota;
-	ULONG MaxQuota;
+    LIST_ENTRY PipeListHead;
+    LIST_ENTRY ThreadListHead;
+    KMUTEX PipeListLock;
+    ULONG EmptyWaiterCount;
+    ULONG MinQuota;
+    ULONG DefaultQuota;
+    ULONG MaxQuota;
 } NPFS_DEVICE_EXTENSION, *PNPFS_DEVICE_EXTENSION;
 
 typedef struct _NPFS_FCB
 {
-	FSRTL_COMMON_FCB_HEADER RFCB;
-	UNICODE_STRING PipeName;
-	LIST_ENTRY PipeListEntry;
-	KMUTEX CcbListLock;
-	LIST_ENTRY ServerCcbListHead;
-	LIST_ENTRY ClientCcbListHead;
-	LIST_ENTRY WaiterListHead;
-	LIST_ENTRY EmptyBufferListHead;
-	ULONG PipeType;
-	ULONG ClientReadMode;
-	ULONG ServerReadMode;
-	ULONG CompletionMode;
-	ULONG PipeConfiguration;
-	ULONG MaximumInstances;
-	ULONG CurrentInstances;
-	ULONG InboundQuota;
-	ULONG OutboundQuota;
-	LARGE_INTEGER TimeOut;
+    FSRTL_COMMON_FCB_HEADER RFCB;
+    UNICODE_STRING PipeName;
+    LIST_ENTRY PipeListEntry;
+    KMUTEX CcbListLock;
+    LIST_ENTRY ServerCcbListHead;
+    LIST_ENTRY ClientCcbListHead;
+    LIST_ENTRY WaiterListHead;
+    LIST_ENTRY EmptyBufferListHead;
+    ULONG PipeType;
+    ULONG ClientReadMode;
+    ULONG ServerReadMode;
+    ULONG CompletionMode;
+    ULONG PipeConfiguration;
+    ULONG MaximumInstances;
+    ULONG CurrentInstances;
+    ULONG InboundQuota;
+    ULONG OutboundQuota;
+    LARGE_INTEGER TimeOut;
 } NPFS_FCB, *PNPFS_FCB;
 
 typedef struct _NPFS_CCB
 {
-	LIST_ENTRY CcbListEntry;
-	struct _NPFS_CCB* OtherSide;
-	struct ETHREAD *Thread;
-	PNPFS_FCB Fcb;
-	KEVENT ConnectEvent;
-	KEVENT ReadEvent;
-	KEVENT WriteEvent;
-	ULONG PipeEnd;
-	ULONG PipeState;
-	ULONG ReadDataAvailable;
-	ULONG WriteQuotaAvailable;
+    LIST_ENTRY CcbListEntry;
+    struct _NPFS_CCB* OtherSide;
+    struct ETHREAD *Thread;
+    PNPFS_FCB Fcb;
+    KEVENT ConnectEvent;
+    KEVENT ReadEvent;
+    KEVENT WriteEvent;
+    ULONG PipeEnd;
+    ULONG PipeState;
+    ULONG ReadDataAvailable;
+    ULONG WriteQuotaAvailable;
 
-	LIST_ENTRY ReadRequestListHead;
+    LIST_ENTRY ReadRequestListHead;
 
-	PVOID Data;
-	PVOID ReadPtr;
-	PVOID WritePtr;
-	ULONG MaxDataLength;
+    PVOID Data;
+    PVOID ReadPtr;
+    PVOID WritePtr;
+    ULONG MaxDataLength;
 
-	FAST_MUTEX DataListLock;	/* Data queue lock */
+    FAST_MUTEX DataListLock;    /* Data queue lock */
 } NPFS_CCB, *PNPFS_CCB;
 
 typedef struct _NPFS_CONTEXT
 {
-	LIST_ENTRY ListEntry;
-	PKEVENT WaitEvent;
+    LIST_ENTRY ListEntry;
+    PKEVENT WaitEvent;
 } NPFS_CONTEXT, *PNPFS_CONTEXT;
 
 typedef struct _NPFS_THREAD_CONTEXT
 {
-	ULONG Count;
-	KEVENT Event;
-	PNPFS_DEVICE_EXTENSION DeviceExt;
-	LIST_ENTRY ListEntry;
-	PVOID WaitObjectArray[MAXIMUM_WAIT_OBJECTS];
-	KWAIT_BLOCK WaitBlockArray[MAXIMUM_WAIT_OBJECTS];
-	PIRP WaitIrpArray[MAXIMUM_WAIT_OBJECTS];
+    ULONG Count;
+    KEVENT Event;
+    PNPFS_DEVICE_EXTENSION DeviceExt;
+    LIST_ENTRY ListEntry;
+    PVOID WaitObjectArray[MAXIMUM_WAIT_OBJECTS];
+    KWAIT_BLOCK WaitBlockArray[MAXIMUM_WAIT_OBJECTS];
+    PIRP WaitIrpArray[MAXIMUM_WAIT_OBJECTS];
 } NPFS_THREAD_CONTEXT, *PNPFS_THREAD_CONTEXT;
 
 typedef struct _NPFS_WAITER_ENTRY
 {
-	LIST_ENTRY Entry;
-	PNPFS_CCB Ccb;
+    LIST_ENTRY Entry;
+    PNPFS_CCB Ccb;
 } NPFS_WAITER_ENTRY, *PNPFS_WAITER_ENTRY;
 
 
@@ -89,10 +89,10 @@ extern NPAGED_LOOKASIDE_LIST NpfsPipeDataLookasideList;
 
 
 #define KeLockMutex(x) KeWaitForSingleObject(x, \
-	UserRequest, \
-	KernelMode, \
-	FALSE, \
-	NULL);
+    UserRequest, \
+    KernelMode, \
+    FALSE, \
+    NULL);
 
 #define KeUnlockMutex(x) KeReleaseMutex(x, FALSE);
 
@@ -133,6 +133,6 @@ NTSTATUS NTAPI NpfsQueryVolumeInformation (PDEVICE_OBJECT DeviceObject, PIRP Irp
 
 NTSTATUS NTAPI
 DriverEntry(PDRIVER_OBJECT DriverObject,
-			PUNICODE_STRING RegistryPath);
+            PUNICODE_STRING RegistryPath);
 
 #endif /* __DRIVERS_FS_NP_NPFS_H */

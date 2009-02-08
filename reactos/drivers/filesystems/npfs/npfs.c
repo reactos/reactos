@@ -17,73 +17,73 @@
 
 NTSTATUS NTAPI
 DriverEntry(PDRIVER_OBJECT DriverObject,
-			PUNICODE_STRING RegistryPath)
+            PUNICODE_STRING RegistryPath)
 {
-	PNPFS_DEVICE_EXTENSION DeviceExtension;
-	PDEVICE_OBJECT DeviceObject;
-	UNICODE_STRING DeviceName;
-	NTSTATUS Status;
+    PNPFS_DEVICE_EXTENSION DeviceExtension;
+    PDEVICE_OBJECT DeviceObject;
+    UNICODE_STRING DeviceName;
+    NTSTATUS Status;
 
-	DPRINT("Named Pipe FSD 0.0.2\n");
+    DPRINT("Named Pipe FSD 0.0.2\n");
 
-	ASSERT (sizeof(NPFS_CONTEXT) <= FIELD_OFFSET(IRP, Tail.Overlay.DriverContext));
-	ASSERT (sizeof(NPFS_WAITER_ENTRY) <= FIELD_OFFSET(IRP, Tail.Overlay.DriverContext));
+    ASSERT (sizeof(NPFS_CONTEXT) <= FIELD_OFFSET(IRP, Tail.Overlay.DriverContext));
+    ASSERT (sizeof(NPFS_WAITER_ENTRY) <= FIELD_OFFSET(IRP, Tail.Overlay.DriverContext));
 
-	DriverObject->MajorFunction[IRP_MJ_CREATE] = NpfsCreate;
-	DriverObject->MajorFunction[IRP_MJ_CREATE_NAMED_PIPE] =
-		NpfsCreateNamedPipe;
-	DriverObject->MajorFunction[IRP_MJ_CLOSE] = NpfsClose;
-	DriverObject->MajorFunction[IRP_MJ_READ] = NpfsRead;
-	DriverObject->MajorFunction[IRP_MJ_WRITE] = NpfsWrite;
-	DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] =
-		NpfsQueryInformation;
-	DriverObject->MajorFunction[IRP_MJ_SET_INFORMATION] =
-		NpfsSetInformation;
-	DriverObject->MajorFunction[IRP_MJ_QUERY_VOLUME_INFORMATION] =
-		NpfsQueryVolumeInformation;
-	DriverObject->MajorFunction[IRP_MJ_CLEANUP] = NpfsCleanup;
-	DriverObject->MajorFunction[IRP_MJ_FLUSH_BUFFERS] = NpfsFlushBuffers;
-	//   DriverObject->MajorFunction[IRP_MJ_DIRECTORY_CONTROL] =
-	//     NpfsDirectoryControl;
-	DriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL] =
-		NpfsFileSystemControl;
-	//   DriverObject->MajorFunction[IRP_MJ_QUERY_SECURITY] =
-	//     NpfsQuerySecurity;
-	//   DriverObject->MajorFunction[IRP_MJ_SET_SECURITY] =
-	//     NpfsSetSecurity;
+    DriverObject->MajorFunction[IRP_MJ_CREATE] = NpfsCreate;
+    DriverObject->MajorFunction[IRP_MJ_CREATE_NAMED_PIPE] =
+        NpfsCreateNamedPipe;
+    DriverObject->MajorFunction[IRP_MJ_CLOSE] = NpfsClose;
+    DriverObject->MajorFunction[IRP_MJ_READ] = NpfsRead;
+    DriverObject->MajorFunction[IRP_MJ_WRITE] = NpfsWrite;
+    DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] =
+        NpfsQueryInformation;
+    DriverObject->MajorFunction[IRP_MJ_SET_INFORMATION] =
+        NpfsSetInformation;
+    DriverObject->MajorFunction[IRP_MJ_QUERY_VOLUME_INFORMATION] =
+        NpfsQueryVolumeInformation;
+    DriverObject->MajorFunction[IRP_MJ_CLEANUP] = NpfsCleanup;
+    DriverObject->MajorFunction[IRP_MJ_FLUSH_BUFFERS] = NpfsFlushBuffers;
+    //   DriverObject->MajorFunction[IRP_MJ_DIRECTORY_CONTROL] =
+    //     NpfsDirectoryControl;
+    DriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL] =
+        NpfsFileSystemControl;
+    //   DriverObject->MajorFunction[IRP_MJ_QUERY_SECURITY] =
+    //     NpfsQuerySecurity;
+    //   DriverObject->MajorFunction[IRP_MJ_SET_SECURITY] =
+    //     NpfsSetSecurity;
 
-	DriverObject->DriverUnload = NULL;
+    DriverObject->DriverUnload = NULL;
 
-	RtlInitUnicodeString(&DeviceName, L"\\Device\\NamedPipe");
-	Status = IoCreateDevice(DriverObject,
-		sizeof(NPFS_DEVICE_EXTENSION),
-		&DeviceName,
-		FILE_DEVICE_NAMED_PIPE,
-		0,
-		FALSE,
-		&DeviceObject);
-	if (!NT_SUCCESS(Status))
-	{
-		DPRINT("Failed to create named pipe device! (Status %x)\n", Status);
-		return Status;
-	}
+    RtlInitUnicodeString(&DeviceName, L"\\Device\\NamedPipe");
+    Status = IoCreateDevice(DriverObject,
+        sizeof(NPFS_DEVICE_EXTENSION),
+        &DeviceName,
+        FILE_DEVICE_NAMED_PIPE,
+        0,
+        FALSE,
+        &DeviceObject);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("Failed to create named pipe device! (Status %x)\n", Status);
+        return Status;
+    }
 
-	/* initialize the device object */
-	DeviceObject->Flags |= DO_DIRECT_IO;
+    /* initialize the device object */
+    DeviceObject->Flags |= DO_DIRECT_IO;
 
-	/* initialize the device extension */
-	DeviceExtension = DeviceObject->DeviceExtension;
-	InitializeListHead(&DeviceExtension->PipeListHead);
-	InitializeListHead(&DeviceExtension->ThreadListHead);
-	KeInitializeMutex(&DeviceExtension->PipeListLock, 0);
-	DeviceExtension->EmptyWaiterCount = 0;
+    /* initialize the device extension */
+    DeviceExtension = DeviceObject->DeviceExtension;
+    InitializeListHead(&DeviceExtension->PipeListHead);
+    InitializeListHead(&DeviceExtension->ThreadListHead);
+    KeInitializeMutex(&DeviceExtension->PipeListLock, 0);
+    DeviceExtension->EmptyWaiterCount = 0;
 
-	/* set the size quotas */
-	DeviceExtension->MinQuota = PAGE_SIZE;
-	DeviceExtension->DefaultQuota = 8 * PAGE_SIZE;
-	DeviceExtension->MaxQuota = 64 * PAGE_SIZE;
+    /* set the size quotas */
+    DeviceExtension->MinQuota = PAGE_SIZE;
+    DeviceExtension->DefaultQuota = 8 * PAGE_SIZE;
+    DeviceExtension->MaxQuota = 64 * PAGE_SIZE;
 
-	return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
 /* EOF */
