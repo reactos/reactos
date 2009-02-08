@@ -50,8 +50,9 @@ typedef BOOLEAN (APIENTRY *PSTRETCHRECTFUNC)(SURFOBJ* OutputObj,
                                             RECTL* OutputRect,
                                             RECTL* InputRect,
                                             POINTL* MaskOrigin,
+                                            BRUSHOBJ* BrushObj,
                                             POINTL* BrushOrigin,
-                                            ULONG Mode);
+                                            ROP4 Rop4);
 
 BOOL APIENTRY EngIntersectRect(RECTL* prcDst, RECTL* prcSrc1, RECTL* prcSrc2)
 {
@@ -741,8 +742,9 @@ CallDibStretchBlt(SURFOBJ* psoDest,
                   RECTL* OutputRect,
                   RECTL* InputRect,
                   POINTL* MaskOrigin,
+                  BRUSHOBJ* Brush,
                   POINTL* BrushOrigin,
-                  ULONG Mode)
+                  ROP4 Rop4)
 {
     POINTL RealBrushOrigin;
     if (BrushOrigin == NULL)
@@ -754,7 +756,7 @@ CallDibStretchBlt(SURFOBJ* psoDest,
         RealBrushOrigin = *BrushOrigin;
     }
     return DibFunctionsForBitmapFormat[psoDest->iBitmapFormat].DIB_StretchBlt(
-               psoDest, psoSource, OutputRect, InputRect, MaskOrigin, RealBrushOrigin, ClipRegion, ColorTranslation, Mode);
+               psoDest, psoSource, OutputRect, InputRect, MaskOrigin, Brush, &RealBrushOrigin, ClipRegion, ColorTranslation, Rop4);
 }
 
 
@@ -965,7 +967,7 @@ EngStretchBltROP(
 
     Ret = (*BltRectFunc)(psoOutput, psoInput, Mask, ClipRegion,
                          ColorTranslation, &OutputRect, &InputRect, MaskOrigin,
-                         &AdjustedBrushOrigin, ROP4);
+                         Brush, &AdjustedBrushOrigin, ROP4);
 
     IntEngLeave(&EnterLeaveDest);
     if (UsesSource)

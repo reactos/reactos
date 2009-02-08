@@ -23,10 +23,10 @@
 #include <debug.h>
 
 BOOLEAN DIB_XXBPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
-                            RECTL* DestRect, RECTL *SourceRect,
-                            POINTL* MaskOrigin, POINTL BrushOrigin,
-                            CLIPOBJ *ClipRegion, XLATEOBJ *ColorTranslation,
-                            ULONG ROP)
+                            RECTL *DestRect, RECTL *SourceRect,
+                            POINTL *MaskOrigin, BRUSHOBJ *Brush,
+                            POINTL *BrushOrigin, CLIPOBJ *ClipRegion, 
+                            XLATEOBJ *ColorTranslation, ROP4 ROP)
 {
     LONG SrcSizeY;
     LONG SrcSizeX;
