@@ -40,6 +40,7 @@
 	<compilerflag>-fno-strict-aliasing</compilerflag>
 	<compilerflag>-Wno-strict-aliasing</compilerflag>
 	<compilerflag>-Wpointer-arith</compilerflag>
+	<!-- compilerflag>-H</compilerflag>    enable this for header traces -->
 	<linkerflag>-disable-stdcall-fixup</linkerflag>
 
 </project>
