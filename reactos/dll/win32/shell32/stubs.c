@@ -1406,14 +1406,3 @@ SHGetUserSessionId(HANDLE hHandle)
     FIXME("SHGetUserSessionId() stub\n");
     return NULL;
 }
-
-/*
- * Unimplemented
- */
-BOOL
-WINAPI
-PathIsURL(LPCWSTR pszPath)
-{
-    FIXME("PathIsURL() stub\n");
-    return FALSE;
-}

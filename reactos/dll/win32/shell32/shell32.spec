@@ -249,7 +249,7 @@
 249 stdcall -noname PathParseIconLocation(wstr) PathParseIconLocationW
 250 stdcall -noname PathRemoveExtension(wstr) PathRemoveExtensionW
 251 stdcall -noname PathRemoveArgs(wstr) PathRemoveArgsW
-252 stdcall -noname PathIsURL(wstr) shell32.PathIsURL # Fixme
+252 stdcall -noname PathIsURL(wstr) shlwapi.PathIsURLW
 253 stub -noname SHIsCurrentProcessConsoleSession
 254 stub -noname DisconnectWindowsDialog
 255 stdcall Options_RunDLLA(ptr ptr str long)
