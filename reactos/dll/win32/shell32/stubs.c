@@ -1098,7 +1098,9 @@ BOOL
 WINAPI
 ILGetPseudoNameW(LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2, LPWSTR szStr, INT iUnknown)
 {
-    FIXME("ILGetPseudoNameW() stub\n");
+    /* Unimplemented in WinXP SP3 */
+    TRACE("ILGetPseudoNameW() stub\n");
+    *szStr = 0;
     return FALSE;
 }
 

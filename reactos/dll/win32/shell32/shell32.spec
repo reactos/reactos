@@ -181,10 +181,10 @@
 181 stdcall -noname RegisterShellHook(long long)
 182 varargs ShellMessageBoxA(long long str str long)
 183 varargs ShellMessageBoxW(long long wstr wstr long)
-184 stdcall -noname ArrangeWindows(long long long long long) # Fixme
+184 stdcall -noname ArrangeWindows(long long long long long)
 185 stdcall -noname SHHandleDiskFull(ptr long) # Fixme
 186 stdcall -noname ILGetDisplayNameEx(ptr ptr ptr long)
-187 stdcall -noname ILGetPseudoNameW(ptr ptr wstr long) # Fixme
+187 stdcall -noname ILGetPseudoNameW(ptr ptr wstr long)
 188 stdcall -noname ShellDDEInit(long)
 189 stdcall ILCreateFromPathA(str)
 190 stdcall ILCreateFromPathW(wstr)
