@@ -694,16 +694,16 @@ NtGdiMaskBlt (
     NtGdiBitBlt(hDC2, 0, 0, nWidth, nHeight, hdcSrc, nXSrc, nYSrc, FRGND_ROP3(dwRop), 0,0);
     NtGdiBitBlt(hDC2, 0, 0, nWidth, nHeight, hDCMask, xMask, yMask, SRCAND, 0, 0);
 
-    /* 4. combine two bitmap and copy it to hdcDest */
+    /* 4. combine both and copy the result to hdcDest */
     NtGdiBitBlt(hDC1, 0, 0, nWidth, nHeight, hDC2, 0, 0, SRCPAINT, 0, 0);
     NtGdiBitBlt(hdcDest, nXDest, nYDest, nWidth, nHeight, hDC1, 0, 0, SRCCOPY, 0, 0);
 
-    /* 5. restore all object */
+    /* 5. restore all objects */
     NtGdiSelectBitmap(hDCMask, hOldMaskBitmap);
     NtGdiSelectBitmap(hDC1, hOldBitmap2);
     NtGdiSelectBitmap(hDC2, hOldBitmap3);
 
-    /* 6. delete all temp object */
+    /* 6. delete all temp objects */
     NtGdiDeleteObject(hBitmap2);
     NtGdiDeleteObject(hBitmap3);
 
