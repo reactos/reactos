@@ -40,13 +40,9 @@
 #include <stdarg.h>
 #include <windef.h>
 #include <winbase.h>
-#if !(defined NOGDI || defined  _WINGDI_H)
 #include <wingdi.h>
-#endif
-#include <wincon.h>
-#ifndef _WINUSER_H
 #include <winuser.h>
-#endif
+#include <wincon.h>
 #ifndef _WINNLS_H
 #include <winnls.h>
 #endif

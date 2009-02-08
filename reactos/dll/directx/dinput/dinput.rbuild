@@ -4,6 +4,7 @@
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="dinput.spec" />
 	<define name="_WIN32_WINNT">0x600</define>
+	<define name="NOGDI" />
 	<include base="dinput">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<library>wine</library>

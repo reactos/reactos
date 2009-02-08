@@ -6,7 +6,7 @@
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
 	<define name="USE_WIN32_OPENGL" />
-
+	<define name="NOGDI" />
 	<library>uuid</library>
 	<library>wine</library>
 	<library>user32</library>

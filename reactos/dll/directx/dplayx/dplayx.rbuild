@@ -3,6 +3,7 @@
 <module name="dplayx" type="win32dll" baseaddress="${BASEADDRESS_DPLAYX}" installbase="system32" installname="dplayx.dll" unicode="yes">
 	<!-- Won't load correctly in ReactOS yet autoregister infsection="OleControlDlls" type="DllRegisterServer" -->
 	<importlibrary definition="dplayx.spec" />
+	<define name="NOGDI" />
 	<include base="dplayx">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<library>wine</library>

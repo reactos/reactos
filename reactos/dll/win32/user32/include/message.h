@@ -12,4 +12,7 @@
 BOOL FASTCALL MessageInit(VOID);
 VOID FASTCALL MessageCleanup(VOID);
 
+#define WM_ALTTABACTIVE         0x0029
+#define WM_SETVISIBLE           0x0009
+
 #endif /* LIB_USER32_INCLUDE_MESSAGE_H */
