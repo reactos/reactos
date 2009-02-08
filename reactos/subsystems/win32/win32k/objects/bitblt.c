@@ -144,7 +144,7 @@ NtGdiAlphaBlend(
 
 	if (XlateObj == (XLATEOBJ*)-1)
 	{
-		DPRINT1("error!!!\n");
+		DPRINT1("couldn't create XlateObj\n");
 		SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
 		XlateObj = NULL;
 		Status = FALSE;
@@ -299,7 +299,7 @@ NtGdiBitBlt(
 
 		if (XlateObj == (XLATEOBJ*)-1)
 		{
-			DPRINT1("error!\n");
+			DPRINT1("couldn't create XlateObj\n");
 			SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
 			XlateObj = NULL;
 			goto cleanup;
@@ -458,10 +458,13 @@ NtGdiTransparentBlt(
   rcDest.top = yDst;
   rcDest.right = rcDest.left + cxDst;
   rcDest.bottom = rcDest.top + cyDst;
+  IntLPtoDP(DCDest, (LPPOINT)&rcDest, 2);
+
   rcSrc.left = xSrc;
   rcSrc.top = ySrc;
   rcSrc.right = rcSrc.left + cxSrc;
   rcSrc.bottom = rcSrc.top + cySrc;
+  IntLPtoDP(DCSrc, (LPPOINT)&rcSrc, 2);
 
   if((cxDst != cxSrc) || (cyDst != cySrc))
   {
