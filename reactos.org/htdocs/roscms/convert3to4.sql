@@ -187,8 +187,8 @@ CREATE TABLE roscms_rel_acl (
 INSERT INTO roscms_rel_acl
 SELECT DISTINCT
   NULL,
-  a.id,
   r.id,
+  a.id,
   g.id
 FROM roscms_entries_access a JOIN data_security s ON a.name_short=s.sec_name JOIN roscms_groups g JOIN roscms_entries_areas r WHERE (((
    (g.security_level = 1 AND s.sec_lev1_read = 1 AND r.name_short='read')
