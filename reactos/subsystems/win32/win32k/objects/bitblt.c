@@ -857,56 +857,6 @@ NtGdiStretchBlt(
                 goto failed;
         }
 
-        int sw = BitmapSrc->SurfObj.sizlBitmap.cx;
-        int sh = BitmapSrc->SurfObj.sizlBitmap.cy;
-        if ( SourceRect.left < 0 )
-        {
-            DestRect.left = DestRect.right - (DestRect.right-DestRect.left) * (SourceRect.right)/abs(SourceRect.right-SourceRect.left);
-            SourceRect.left = 0;
-        }
-        if ( SourceRect.top < 0 )
-        {
-            DestRect.top = DestRect.bottom - (DestRect.bottom-DestRect.top) * (SourceRect.bottom)/abs(SourceRect.bottom-SourceRect.top);
-            SourceRect.top = 0;
-        }
-        if ( SourceRect.right < -1 )
-        {
-            DestRect.right = DestRect.left + (DestRect.right-DestRect.left) * (-1-SourceRect.left)/abs(SourceRect.right-SourceRect.left);
-            SourceRect.right = -1;
-        }
-        if ( SourceRect.bottom < -1 )
-        {
-            DestRect.bottom = DestRect.top + (DestRect.bottom-DestRect.top) * (-1-SourceRect.top)/abs(SourceRect.bottom-SourceRect.top);
-            SourceRect.bottom = -1;
-        }
-        if ( SourceRect.right > sw )
-        {
-            DestRect.right = DestRect.left + (DestRect.right-DestRect.left) * abs(sw-SourceRect.left) / abs(SourceRect.right-SourceRect.left);
-            SourceRect.right = sw;
-        }
-        if ( SourceRect.bottom > sh )
-        {
-            DestRect.bottom = DestRect.top + (DestRect.bottom-DestRect.top) * abs(sh-SourceRect.top) / abs(SourceRect.bottom-SourceRect.top);
-            SourceRect.bottom = sh;
-        }
-        sw--;
-        sh--;
-        if ( SourceRect.left > sw )
-        {
-            DestRect.left = DestRect.right - (DestRect.right-DestRect.left) * (SourceRect.right-sw) / abs(SourceRect.right-SourceRect.left);
-            SourceRect.left = 0;
-        }
-        if ( SourceRect.top > sh )
-        {
-            DestRect.top = DestRect.bottom - (DestRect.bottom-DestRect.top) * (SourceRect.bottom-sh) / abs(SourceRect.bottom-SourceRect.top);
-            SourceRect.top = 0;
-        }
-        if (0 == (DestRect.right-DestRect.left) || 0 == (DestRect.bottom-DestRect.top) || 0 == (SourceRect.right-SourceRect.left) || 0 == (SourceRect.bottom-SourceRect.top))
-        {
-            SetLastWin32Error(ERROR_INVALID_PARAMETER);
-            goto failed;
-        }
-
         /* Create the XLATEOBJ. */
         XlateObj = IntCreateXlateForBlt(DCDest, DCSrc, BitmapDest, BitmapSrc);
         if (XlateObj == (XLATEOBJ*)-1)
