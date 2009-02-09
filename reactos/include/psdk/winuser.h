@@ -3115,6 +3115,11 @@ typedef struct tagICONMETRICSW {
 	int iTitleWrap;
 	LOGFONTW lfFont;
 } ICONMETRICSW,*LPICONMETRICSW;
+#ifdef UNICODE
+typedef ICONMETRICSW ICONMETRICS,*LPICONMETRICS;
+#else /* UNICODE */
+typedef ICONMETRICSA ICONMETRICS,*LPICONMETRICS;
+#endif /* UNICODE */
 #endif /*  NOGDI */
 typedef struct tagMINIMIZEDMETRICS {
 	UINT cbSize;
@@ -3167,6 +3172,11 @@ typedef struct tagNONCLIENTMETRICSW {
 	LOGFONTW lfStatusFont;
 	LOGFONTW lfMessageFont;
 } NONCLIENTMETRICSW,*LPNONCLIENTMETRICSW;
+#ifdef UNICODE
+typedef NONCLIENTMETRICSW NONCLIENTMETRICS,*LPNONCLIENTMETRICS;
+#else /* UNICODE */
+typedef NONCLIENTMETRICSA NONCLIENTMETRICS,*LPNONCLIENTMETRICS;
+#endif /* UNICODE */
 #endif
 typedef struct tagSERIALKEYSA {
 	UINT cbSize;
@@ -4485,8 +4495,6 @@ typedef MONITORINFOEXW MONITORINFOEX, *LPMONITORINFOEX;
 #define wvsprintf wvsprintfW
 
 #ifndef NOGDI
-typedef ICONMETRICSW ICONMETRICS,*LPICONMETRICS;
-typedef NONCLIENTMETRICSW NONCLIENTMETRICS,*LPNONCLIENTMETRICS;
 #define ChangeDisplaySettings ChangeDisplaySettingsW
 #define ChangeDisplaySettingsEx ChangeDisplaySettingsExW
 #define CreateDesktop CreateDesktopW
@@ -4653,8 +4661,6 @@ typedef MONITORINFOEXA MONITORINFOEX, *LPMONITORINFOEX;
 #define wsprintf wsprintfA
 #define wvsprintf wvsprintfA
 #if defined(_WINGDI_) && !defined(NOGDI)
-typedef ICONMETRICSA ICONMETRICS,*LPICONMETRICS;
-typedef NONCLIENTMETRICSA NONCLIENTMETRICS,*LPNONCLIENTMETRICS;
 #define ChangeDisplaySettings ChangeDisplaySettingsA
 #define ChangeDisplaySettingsEx ChangeDisplaySettingsExA
 #define CreateDesktop CreateDesktopA
