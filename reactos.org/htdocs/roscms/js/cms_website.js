@@ -2174,32 +2174,32 @@ function loadMenu( objid )
       break;
 
     case '2':
-      filtstring2 = 'k_is_new_0|c_is_type_0|l_is_'+userlang+'_0|i_is_read_0|o_desc_datetime_0';
+      filtstring2 = 'k_is_new_0|c_is_type_0|l_is_'+userlang+'_1|i_is_read_0|o_desc_datetime_1';
       loadEntryTable('new');
       break;
 
     case '3':
-      filtstring2 = 'y_is_page_0|k_is_stable_0|c_is_language_0|i_is_read_0|o_asc_name_0';
+      filtstring2 = 'y_is_page_0|k_is_stable_0|c_is_language_1|i_is_read_0|o_asc_name_1';
       loadEntryTable('page');
       break;
 
     case '13':
-      filtstring2 = 'y_is_dynamic_0|k_is_stable_0|c_is_language_0|i_is_read_0|o_asc_name_0';
+      filtstring2 = 'y_is_dynamic_0|k_is_stable_0|c_is_language_1|i_is_read_0|o_asc_name_1';
       loadEntryTable('dynamic');
       break;
 
     case '4':
-      filtstring2 = 'y_is_content_0|k_is_stable_0|l_is_'+userlang+'_0|i_is_read_0|o_asc_name_0';
+      filtstring2 = 'y_is_content_0|k_is_stable_0|l_is_'+userlang+'_1|i_is_read_0|o_asc_name_1';
       loadEntryTable('content');
       break;
 
     case '5':
-        filtstring2 = 'y_is_template_0|k_is_stable_0|c_is_language_0|i_is_read_0|o_asc_name_0';
+      filtstring2 = 'y_is_template_0|k_is_stable_0|c_is_language_1|i_is_read_0|o_asc_name_1';
       loadEntryTable('template');
       break;
 
     case '6':
-      filtstring2 = 'y_is_script_0|k_is_stable_0|c_is_language_0|i_is_read_0|o_asc_name_0';
+      filtstring2 = 'y_is_script_0|k_is_stable_0|c_is_language_1|i_is_read_0|o_asc_name_1';
       loadEntryTable('script');
       break;
 
@@ -2211,33 +2211,33 @@ function loadMenu( objid )
       else {
         translang = userlang;
       }
-      filtstring2 = 'y_is_content_0|k_is_stable_0|i_is_translate_0|c_is_user_0|l_is_'+roscms_standard_language+'_0|r_is_'+translang+'_0|o_desc_datetime_0';
+      filtstring2 = 'y_is_content_1|k_is_stable_0|i_is_translate_0|c_is_user_1|l_is_'+roscms_standard_language+'_0|r_is_'+translang+'_1|o_desc_datetime_1';
       loadEntryTable('translate');
       break;
 
     case '8':
     default:
-      filtstring2 = 'c_is_type_0|l_is_'+userlang+'_0|i_is_read_0|o_desc_datetime_0';
+      filtstring2 = 'c_is_type_1|l_is_'+userlang+'_1|i_is_read_0|o_desc_datetime_1';
       loadEntryTable('all');
       break;
 
     case '9':
-      filtstring2 = 's_is_true_0|c_is_type_0|l_is_'+userlang+'_0|i_is_read_0|o_desc_datetime_0';
+      filtstring2 = 's_is_true_0|c_is_type_1|l_is_'+userlang+'_1|i_is_read_0|o_desc_datetime_1';
       loadEntryTable('starred');
       break;
 
     case '10':
-      filtstring2 = 'k_is_draft_0|u_is_'+roscms_intern_login_check_username+'_0|c_is_type_0|i_is_read_0|o_desc_datetime_0';
+      filtstring2 = 'k_is_draft_0|u_is_'+roscms_intern_login_check_username+'_0|c_is_type_1|i_is_read_0|o_desc_datetime_1';
       loadEntryTable('draft');
       break;
 
     case '11':
-      filtstring2 = 'u_is_'+roscms_intern_login_check_username+'_0|c_is_type_0|i_is_read_0|o_desc_datetime_0';
+      filtstring2 = 'u_is_'+roscms_intern_login_check_username+'_0|c_is_type_1|i_is_read_0|o_desc_datetime_1';
       loadEntryTable('my');
       break;
 
     case '12':
-      filtstring2 = 'k_is_archive_0|c_is_version_0|c_is_type_0|l_is_'+userlang+'_0|o_asc_name_0|i_is_read_0|o_desc_ver_0';
+      filtstring2 = 'k_is_archive_0|c_is_version_1|c_is_type_1|l_is_'+userlang+'_1|o_asc_name_1|i_is_read_0|o_desc_ver_1';
       roscms_archive = true; /* activate archive mode*/
       loadEntryTable('archive');
       break;
@@ -2548,16 +2548,18 @@ function htmlCommandBar( preset )
   var cmdhtml_select_va = '';
   var cmdhtml_select_xe = '';
 
-  // special commands for access levels
-  if (roscms_access_level >= 2) {
+  // mark stable / generate
+  if (roscms_access['make_stable']) {
     cmdhtml_stable = '<button type="button" id="cmdstable" onclick="changeSelectedTags(\'ms\')">Stable</button>'+cmdhtml_space;
     cmdhtml_select_ms = '<option value="ms">&nbsp;&nbsp;&nbsp;Mark as stable</option>';
     cmdhtml_select_ge = '<option value="va">&nbsp;&nbsp;&nbsp;Generate page</option>';
     
-    if (roscms_access_level === 3) {
-      cmdhtml_select_va = '<option value="va">&nbsp;&nbsp;&nbsp;Move to archive</option>';
-      cmdhtml_select_xe = '<option value="xe">&nbsp;&nbsp;&nbsp;Delete</option>';
-    }
+  }
+
+  // delete entries
+  if (roscms_access['del_entry']) {
+    cmdhtml_select_va = '<option value="va">&nbsp;&nbsp;&nbsp;Move to archive</option>';
+    cmdhtml_select_xe = '<option value="xe">&nbsp;&nbsp;&nbsp;Delete</option>';
   }
   
   var cmdhtml_select_full = cmdhtml_select_start
@@ -2649,20 +2651,16 @@ function htmlCommandBar( preset )
  */
 function addFilter( )
 {
+  var new_filter = 'a_is_';
+
+  // fill filtstring2 with content, if available
   getActiveFilters();
 
-  if (roscms_access_level > 1) { 
-    tmp_security_new_filter = "k_is_stable";
-  }
-  else {
-    tmp_security_new_filter = "a_is_";
-  }
-
   if (filtstring2 === '') {
-    htmlFilterChoices(tmp_security_new_filter);
+    htmlFilterChoices(new_filter);
   }
   else {
-    htmlFilterChoices(filtstring2+'|'+tmp_security_new_filter);
+    htmlFilterChoices(filtstring2+'|'+new_filter);
   }
 } // end of function addFilter
 
@@ -2691,15 +2689,9 @@ function htmlFilterChoices( filtpopstr )
     for (i=0; i < filtpopstr2.length; i++) {
       lstfilterstr2 = filtpopstr2[i].split('_');
 
-      if (lstfilterstr2[3] == 0) {
+      if (lstfilterstr2[3] == 0 && !roscms_access['dont_hide_filter']) {
         filtvisibility = false;
-
-        if (roscms_access_level > 1) {
-          lstfilterstr +=  '<span style="font-style: italic;">';
-        }
-        else {
-          lstfilterstr +=  '<span style="display: none">';
-        }
+        lstfilterstr +=  '<span style="display: none;">';
       }
       else {
         filtvisibility = true;
@@ -2710,15 +2702,15 @@ function htmlFilterChoices( filtpopstr )
       lstfilterstr +=  '<div id="filt'+indexid+'" class="filterbar2">and&nbsp;';
 
       // hidden filter entries don't need a combobox (only for SecLev = 1 user)
-      if (lstfilterstr2[3] == 0 && roscms_access_level === 1) {  
+      if (lstfilterstr2[3] == 0 && !roscms_access['dont_hide_filter']) {  
         lstfilterstr +=  '<input type="hidden" name="sfa'+indexid+'" id="sfa'+indexid+'" value="" />';
       }
       else {
         lstfilterstr +=  '<select id="sfa'+indexid+'" onchange="isFilterChanged(this.id)">';
 
-        if (roscms_access_level > 1) { 
-          lstfilterstr += '<option value="k"+roscms_cbm_hide+>Status</option>'
-            + '<option value="y"+roscms_cbm_hide+>Type</option>';
+        if (roscms_access['more_filter']) { 
+          lstfilterstr += '<option value="k">Status</option>'
+            + '<option value="y">Type</option>';
         } 
 
         lstfilterstr += '<option value="n">Name</option>'
@@ -2727,14 +2719,14 @@ function htmlFilterChoices( filtpopstr )
           + '<option value="a">Tag</option>'
           + '<option value="l">Language</option>';
 
-        if (roscms_access_level > 1) {
-          lstfilterstr += '<option value="r"+roscms_cbm_hide+>Translate</option>'
-            + '<option value="i"+roscms_cbm_hide+>Security</option>'
-            + '<option value="m"+roscms_cbm_hide+>Metadata</option>'
-            + '<option value="u"+roscms_cbm_hide+>User</option>';
+        if (roscms_access['more_filter']) {
+          lstfilterstr += '<option value="r">Translate</option>'
+            + '<option value="i">Security</option>'
+            + '<option value="m">Metadata</option>'
+            + '<option value="u">User</option>';
 
-          if (roscms_access_level === 3) {
-            lstfilterstr += '<option value="e"+roscms_cbm_hide+>System</option>';
+          if (roscms_access['admin_filter']) {
+            lstfilterstr += '<option value="e">System</option>';
           }
         }
 

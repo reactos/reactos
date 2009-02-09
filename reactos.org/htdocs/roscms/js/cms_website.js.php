@@ -42,7 +42,7 @@ function htmlFilterValues( action, objidval2, filterid ) {
   var filtentryselstrs2 = '';
 
   // hidden filter entries don't need a combobox (only for SecLev = 1 user) 
-  if (objidval2 == 0 && roscms_access_level == 1) { 
+  if (objidval2 == 0 && !roscms_access['dont_hide_filter']) { 
     filtentryselstrs1 = '<input type="hidden" name="sfb'+filterid+'" id="sfb'+filterid+'" value="" />';
     filtentryselstrs2 = '<input type="hidden" name="sfc'+filterid+'" id="sfc'+filterid+'" value="" />';
   }
@@ -53,14 +53,14 @@ function htmlFilterValues( action, objidval2, filterid ) {
       // kind
       case 'k': 
         filtentryselstrs1 = '<select id="sfb'+filterid+'"><option value="is">is</option>';
-        if (roscms_access_level > 1) {
-          filtentryselstrs1 += '<option value="no"'+roscms_cbm_hide+'>is not</option>';
+        if (roscms_access['more_filter']) {
+          filtentryselstrs1 += '<option value="no">is not</option>';
         }
         filtentryselstrs1 += '</select>';
         filtentryselstrs2 = '<select id="sfc'+filterid+'"><option value="stable">Stable</option><option value="new">New</option><option value="draft">Draft</option><option value="unknown">Unknown or no status</option>';
 
-        if (roscms_access_level > 1) {
-          filtentryselstrs2 += '<option value="archive"+roscms_cbm_hide+>Archive</option>';
+        if (roscms_access['more_filter']) {
+          filtentryselstrs2 += '<option value="archive">Archive</option>';
         }
 
         filtentryselstrs2 += '</select>';
@@ -69,8 +69,8 @@ function htmlFilterValues( action, objidval2, filterid ) {
       // type
       case 'y': 
         filtentryselstrs1 = '<select id="sfb'+filterid+'"><option value="is">is</option>';
-        if (roscms_access_level > 1) {
-          filtentryselstrs1 += '<option value="no"+roscms_cbm_hide+>is not</option>';
+        if (roscms_access['more_filter']) {
+          filtentryselstrs1 += '<option value="no">is not</option>';
         }
         filtentryselstrs1 += '</select>';
         filtentryselstrs2 = '<select id="sfc'+filterid+'"><option value="page">Page</option><option value="dynamic">Dynamic Page</option><option value="content">Content</option><option value="template">Template</option><option value="script">Script</option><option value="system">System</option></select>';
@@ -140,8 +140,8 @@ while ($language = $stmt->fetch(PDO::FETCH_ASSOC)) {
       // user
       case 'u': 
         filtentryselstrs1 = '<select id="sfb'+filterid+'"><option value="is">is</option>';
-        if (roscms_access_level > 1) {
-          filtentryselstrs1 += '<option value="no"+roscms_cbm_hide+>is not</option>';
+        if (roscms_access['more_filter']) {
+          filtentryselstrs1 += '<option value="no">is not</option>';
         }
         filtentryselstrs1 += '</select>';
         filtentryselstrs2 = '<input id="sfc'+filterid+'" type="text" value="" size="20" maxlength="50" />&nbsp;&nbsp;(e.g. John Doe)';
@@ -157,8 +157,8 @@ while ($language = $stmt->fetch(PDO::FETCH_ASSOC)) {
       case 'c':
         filtentryselstrs1 = '<select id="sfb'+filterid+'"><option value="is">is</option></select>';
         filtentryselstrs2 = '<select id="sfc'+filterid+'"><option value="language">Language</option><option value="user">User</option><option value="type">Type</option><option value="version">Version</option>';
-        if (roscms_access_level > 1) {
-          filtentryselstrs2 += '<option value="security"+roscms_cbm_hide+>Security</option><option value="rights"+roscms_cbm_hide+>Rights</option>';
+        if (roscms_access['more_filter']) {
+          filtentryselstrs2 += '<option value="security">Security</option><option value="rights">Rights</option>';
         }
         filtentryselstrs2 += '</select>';
         break;
@@ -167,8 +167,8 @@ while ($language = $stmt->fetch(PDO::FETCH_ASSOC)) {
       case 'o': 
         filtentryselstrs1 = '<select id="sfb'+filterid+'"><option value="asc">Ascending</option><option value="desc">Descending</option></select>';
         filtentryselstrs2 = '<select id="sfc'+filterid+'"><option value="datetime">Date &amp; Time</option><option value="name">Name</option><option value="lang">Language</option><option value="usr">User</option><option value="type">Type</option><option value="ver">Version</option><option value="nbr">Number ("dynamic" entry)</option>';
-        if (roscms_access_level > 1) {
-          filtentryselstrs2 += '<option value="security"+roscms_cbm_hide+>Security</option><option value="revid"+roscms_cbm_hide+>RevID</option><option value="ext"+roscms_cbm_hide+>Extension</option><option value="status"+roscms_cbm_hide+>Status</option><option value="kind"+roscms_cbm_hide+>Kind</option>';
+        if (roscms_access['more_filter']) {
+          filtentryselstrs2 += '<option value="security">Security</option><option value="revid">RevID</option><option value="ext">Extension</option><option value="status">Status</option><option value="kind">Kind</option>';
         }
         filtentryselstrs2 += '</select>';
         break;
@@ -197,8 +197,8 @@ while($ACL=$stmt->fetch(PDO::FETCH_ASSOC)) {
       // name
       case 'n': 
         filtentryselstrs1 = '<select id="sfb'+filterid+'"><option value="is">is</option>';
-        if (roscms_access_level > 1) {
-          filtentryselstrs1 += '<option value="no"+roscms_cbm_hide+>is not</option><option value="likea"+roscms_cbm_hide+>is like *...*</option>';
+        if (roscms_access['more_filter']) {
+          filtentryselstrs1 += '<option value="no">is not</option><option value="likea">is like *...*</option>';
         }
         filtentryselstrs1 += '<option value="likeb">is like ...*</option></select>';
         filtentryselstrs2 = '<input id="sfc'+filterid+'" type="text" value="" size="20" maxlength="50" />&nbsp;&nbsp;(e.g. about)';
@@ -207,8 +207,8 @@ while($ACL=$stmt->fetch(PDO::FETCH_ASSOC)) {
       // tag
       case 'a': 
         filtentryselstrs1 = '<select id="sfb'+filterid+'"><option value="is">is</option>';
-        if (roscms_access_level > 1) {
-          filtentryselstrs1 += '<option value="no"+roscms_cbm_hide+>is not</option>';
+        if (roscms_access['more_filter']) {
+          filtentryselstrs1 += '<option value="no">is not</option>';
         }
         filtentryselstrs1 +='</select>';
         filtentryselstrs2 = '<input id="sfc'+filterid+'" type="text" value="" size="15" maxlength="30" />&nbsp;&nbsp;(e.g. todo)';
@@ -216,7 +216,7 @@ while($ACL=$stmt->fetch(PDO::FETCH_ASSOC)) {
 
       // system
       case 'e': 
-        if (roscms_access_level == 3) {
+        if (roscms_access['admin_filter']) {
           filtentryselstrs1 = '<select id="sfb'+filterid+'"><option value="dataid">Data-ID</option><option value="revid">Rev-ID</option><option value="usrid">User-ID</option><option value="langid">Lang-ID</option></select>';
           filtentryselstrs2 = '<input id="sfc'+filterid+'" type="text" value="" size="15" maxlength="30" />';
         }

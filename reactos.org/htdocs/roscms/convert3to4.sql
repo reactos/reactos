@@ -227,7 +227,7 @@ OR s.sec_allow LIKE CONCAT('%',g.name_short,'%'));
 CREATE TABLE roscms_area (
   id bigint(20) NOT NULL auto_increment,
   `name` varchar(30) NOT NULL,
-  name_short varchar(15) NOT NULL,
+  name_short varchar(18) NOT NULL,
   description varchar(255) NOT NULL,
   PRIMARY KEY  (id),
   UNIQUE KEY `name` (`name`),
@@ -267,7 +267,11 @@ INSERT INTO roscms_area VALUES
 (30, 'add level 3 groups', 'addlvl3group', 'Add memberships with group security level 3'),
 (31, 'Mix private & public entries', 'mix_priv_pub', 'show private and public type entries together'),
 (32, 'Entry Details Security', 'entry_security', 'change security settings & name + type of entry'),
-(33, 'show system entries', 'show_sys_entry', 'show entries of type ''system''');
+(33, 'show more filter', 'more_filter', 'show more than standard filter'),
+(34, 'show admin filter', 'admin_filter', 'special admin filters'),
+(35, 'Show all filter', 'dont_hide_filter', 'don''t hide filter from users'),
+(36, 'Make Entries Stable', 'make_stable', 'Make Entries Stable'),
+(37, 'show system entries', 'show_sys_entry', 'show entries of type ''system''');
 
 
 
@@ -283,10 +287,10 @@ CREATE TABLE roscms_rel_groups_area (
 INSERT INTO roscms_rel_groups_area
 SELECT DISTINCT g.id, a.id
 FROM roscms_area a JOIN roscms_groups g
-WHERE ((a.name_short = 'system_tags' OR a.name_short = 'entry_details' OR a.name_short = 'new_entry' OR a.name_short = 'deltag' OR a.name_short = 'del_entry' OR a.name_short = 'mix_priv_pub' OR a.name_short = 'show_sys_entry' OR a.name_short = 'addlvl1group')
+WHERE ((a.name_short = 'system_tags' OR a.name_short = 'entry_details' OR a.name_short = 'new_entry' OR a.name_short = 'deltag' OR a.name_short = 'del_entry' OR a.name_short = 'mix_priv_pub' OR a.name_short = 'show_sys_entry' OR a.name_short = 'addlvl1group' OR a.name_short = 'more_filter' OR a.name_short = 'make_stable' OR a.name_short = 'dont_hide_filter')
 AND g.security_level > 1)
 
-OR ((a.name_short = 'delete_file' OR a.name_short = 'delmembership' OR a.name_short = 'disableaccount' OR a.name_short = 'user_details' OR a.name_short = 'other_drafts' OR a.name_short = 'stats' OR a.name_short = 'dynamic_pages' OR a.name_short = 'updatetag' OR a.name_short = 'del_wo_archiv' OR a.name_short = 'addlvl2group' OR a.name_short = 'user' OR a.name_short = 'addmembership' OR a.name_short = 'maintain')
+OR ((a.name_short = 'delete_file' OR a.name_short = 'delmembership' OR a.name_short = 'disableaccount' OR a.name_short = 'user_details' OR a.name_short = 'other_drafts' OR a.name_short = 'stats' OR a.name_short = 'dynamic_pages' OR a.name_short = 'updatetag' OR a.name_short = 'del_wo_archiv' OR a.name_short = 'addlvl2group' OR a.name_short = 'user' OR a.name_short = 'addmembership' OR a.name_short = 'maintain' OR a.name_short = 'admin_filter')
 AND g.security_level = 3)
 
 OR ((a.name_short = 'admin' OR a.name_short = 'logs' OR a.name_short = 'addlvl3group')

@@ -227,6 +227,14 @@ class Backend_EntryTable extends Backend
    */
   private function markStable( $revision )
   {
+    $thisuser=&ThisUser::getInstance();
+  
+    // check if entry is not already stable
+    if (!$thisuser->hasAccess('make_stable')) {
+      echo 'You\'ve no rights to publish stable entries.';
+      return false;
+    }
+
     // check if entry is not already stable
     if ($revision['status'] === 'stable') {
       echo 'Entry is already stable';
@@ -234,15 +242,15 @@ class Backend_EntryTable extends Backend
     }
 
     // has user access to modify other languages?
-    if (!ThisUser::getInstance()->hasAccess('more_lang')) {
+    if (!$thisuser->hasAccess('more_lang')) {
 
       // check if user has set a language
-      if (ThisUser::getInstance()->language() == 0) {
+      if ($thisuser->language() == 0) {
         die('Set a valid language in your account settings!');
       }
 
       // block actions for user with access to one language
-      elseif (ThisUser::getInstance()->language() != $revision['lang_id']) {
+      elseif ($thisuser->language() != $revision['lang_id']) {
         echo 'You can\'t mark entries of other languages as stable!';
         return false;
       }

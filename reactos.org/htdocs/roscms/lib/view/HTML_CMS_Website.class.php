@@ -103,8 +103,14 @@ class HTML_CMS_Website extends HTML_CMS
         var roscms_intern_webserver_roscms = '".RosCMS::getInstance()->pathRosCMS()."';
         var roscms_intern_page_link = '".RosCMS::getInstance()->pathRosCMS()."?page=';
         var roscms_get_edit = '".(isset($_GET['edit']) ? $_GET['edit'] : '')."';
-        var roscms_access_level = 3"./*$thisuser->securityLevel().*/";
-        var roscms_cbm_hide = '"./*(($thisuser->securityLevel() > 1) ? '' : ' disabled="disabled" style="color:#CCCCCC;"').*/"'; // disable combobox entries for novice user
+        
+        // access restrictions
+        var roscms_access = new Object();
+            roscms_access['more_filter'] = ".($thisuser->hasAccess('more_filter') ? 'true' : 'false').";
+            roscms_access['admin_filter'] = ".($thisuser->hasAccess('admin_filter') ? 'true' : 'false').";
+            roscms_access['dont_hide_filter'] = ".($thisuser->hasAccess('dont_hide_filter') ? 'true' : 'false').";
+            roscms_access['make_stable'] = ".($thisuser->hasAccess('make_stable') ? 'true' : 'false').";
+            roscms_access['del_entry'] = ".($thisuser->hasAccess('del_entry') ? 'true' : 'false').";
 
         // favorite user language
         ";
