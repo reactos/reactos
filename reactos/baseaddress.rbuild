@@ -12,6 +12,7 @@
   <property name="BASEADDRESS_DWMAPI" value="0x4A3F0000" />
   <property name="BASEADDRESS_LOADPERF" value="0x4B920000" />
   <property name="BASEADDRESS_MPRAPI" value="0x4C400000" />
+  <property name="BASEADDRESS_SRCLIENT" value="0x512C0000" />
   <property name="BASEADDRESS_PSTOREC" value="0x513D0000" />
   <property name="BASEADDRESS_LPK" value="0x516C0000" />
   <property name="BASEADDRESS_TELEPHON" value="0x58750000" />

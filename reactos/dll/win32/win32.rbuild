@@ -397,6 +397,9 @@
 <directory name="spoolss">
 	<xi:include href="spoolss/spoolss.rbuild" />
 </directory>
+<directory name="srclient">
+	<xi:include href="srclient/srclient.rbuild" />
+</directory>
 <directory name="stdole2.tlb">
 	<xi:include href="stdole2.tlb/stdole2.rbuild" />
 </directory>
