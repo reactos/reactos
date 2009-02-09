@@ -24,8 +24,8 @@
  *    _X86_        - X86 environment
  */
 
-#ifndef __NTDDK_H
-#define __NTDDK_H
+#ifndef _NTDDK_
+#define _NTDDK_
 
 //
 // Dependencies
@@ -63,4 +63,4 @@ typedef GUID UUID;
 /* Definitions only in Windows NT 4 */
 #include "winnt4.h"
 
-#endif /* __NTDDK_H */
+#endif /* _NTDDK_ */

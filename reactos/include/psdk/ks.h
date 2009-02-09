@@ -1056,7 +1056,7 @@ typedef enum
 } KSCOMPLETION_INVOCATION;
 
 
-#if defined(__NTDDK_H)
+#if defined(_NTDDK_)
 /* MOVE ME */
 typedef NTSTATUS (*PFNKSCONTEXT_DISPATCH)(
     IN PVOID Context,
@@ -1106,7 +1106,7 @@ typedef struct
     Dispatch Table
     http://www.osronline.com/DDKx/stream/ks-struct_494j.htm
 */
-#if defined(__NTDDK_H)
+#if defined(_NTDDK_)
 typedef struct
 {
     PDRIVER_DISPATCH DeviceIoControl;
@@ -1323,7 +1323,7 @@ typedef struct
 {
 } KSOBJECT_CREATE, *PKSOBJECT_CREATE;
 
-#if defined(__NTDDK_H)
+#if defined(_NTDDK_)
 typedef struct
 {
     PDRIVER_DISPATCH       Create;
@@ -1581,7 +1581,7 @@ typedef PVOID (*PFNKSINITIALIZEALLOCATOR)(
 typedef PVOID (*PFNKSDELETEALLOCATOR)(
     IN  PVOID Context);
 
-#if defined(__NTDDK_H)
+#if defined(_NTDDK_)
 typedef NTSTATUS (*PFNKSALLOCATOR)(
     IN  PIRP Irp,
     IN  ULONG BufferSize,

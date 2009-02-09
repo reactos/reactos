@@ -465,7 +465,7 @@ typedef DWORD FLONG;
 #define FILE_NAMED_STREAMS              0x00040000
 
 /* FIXME: Oh how I wish, I wish the w32api DDK wouldn't include winnt.h... */
-#ifndef __NTDDK_H
+#ifndef _NTDDK_
 #define IO_COMPLETION_QUERY_STATE       0x0001
 #define IO_COMPLETION_MODIFY_STATE      0x0002
 #define IO_COMPLETION_ALL_ACCESS        (STANDARD_RIGHTS_REQUIRED|SYNCHRONIZE|0x3)
@@ -480,7 +480,7 @@ typedef DWORD FLONG;
 #define MAILSLOT_NO_MESSAGE	((DWORD)-1)
 #define MAILSLOT_WAIT_FOREVER	((DWORD)-1)
 /* FIXME: Oh how I wish, I wish the w32api DDK wouldn't include winnt.h... */
-#ifndef __NTDDK_H
+#ifndef _NTDDK_
 #define PROCESS_TERMINATE	1
 #define PROCESS_CREATE_THREAD	2
 #define PROCESS_SET_SESSIONID	4
@@ -502,7 +502,7 @@ typedef DWORD FLONG;
 #define THREAD_SET_CONTEXT	16
 #define THREAD_SET_INFORMATION	32
 /* FIXME: Oh how I wish, I wish the w32api DDK wouldn't include winnt.h... */
-#ifndef __NTDDK_H
+#ifndef _NTDDK_
 #define THREAD_QUERY_INFORMATION	64
 #define THREAD_SET_THREAD_TOKEN	128
 #define THREAD_IMPERSONATE	256
@@ -510,7 +510,7 @@ typedef DWORD FLONG;
 #endif
 #define THREAD_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED|SYNCHRONIZE|0x3FF)
 /* FIXME: Oh how I wish, I wish the w32api DDK wouldn't include winnt.h... */
-#ifndef __NTDDK_H
+#ifndef _NTDDK_
 #define MUTANT_QUERY_STATE	0x0001
 #define MUTANT_ALL_ACCESS	(STANDARD_RIGHTS_REQUIRED|SYNCHRONIZE|MUTANT_QUERY_STATE)
 #define TIMER_QUERY_STATE	0x0001
@@ -739,7 +739,7 @@ typedef enum {
 #define SE_REMOTE_SHUTDOWN_NAME	TEXT("SeRemoteShutdownPrivilege")
 #define SE_CREATE_GLOBAL_NAME TEXT("SeCreateGlobalPrivilege")
 /* FIXME: Oh how I wish, I wish the w32api DDK wouldn't include winnt.h... */
-#ifndef __NTDDK_H
+#ifndef _NTDDK_
 #define SE_GROUP_MANDATORY 1
 #define SE_GROUP_ENABLED_BY_DEFAULT 2
 #define SE_GROUP_ENABLED 4
@@ -1257,7 +1257,7 @@ typedef enum {
 #define MEM_PHYSICAL	   0x400000
 #define MEM_4MB_PAGES    0x80000000
 /* FIXME: Oh how I wish, I wish the w32api DDK wouldn't include winnt.h... */
-#ifndef __NTDDK_H
+#ifndef _NTDDK_
 #define MEM_IMAGE        SEC_IMAGE
 #define SEC_NO_CHANGE	0x00400000
 #define SEC_FILE	0x00800000
@@ -1274,7 +1274,7 @@ typedef enum {
 #define SECTION_MAP_EXECUTE 8
 #define SECTION_ALL_ACCESS 0xf001f
 #define WRITE_WATCH_FLAG_RESET 0x01
-#ifndef __NTDDK_H
+#ifndef _NTDDK_
 #define MESSAGE_RESOURCE_UNICODE 1
 #endif
 #define RTL_CRITSECT_TYPE 0
@@ -1900,7 +1900,7 @@ typedef struct _GENERIC_MAPPING {
 	ACCESS_MASK GenericAll;
 } GENERIC_MAPPING, *PGENERIC_MAPPING;
 /* Sigh..when will they learn... */
-#ifndef __NTDDK_H
+#ifndef _NTDDK_
 typedef struct _ACE_HEADER {
 	BYTE AceType;
 	BYTE AceFlags;
@@ -2975,7 +2975,7 @@ typedef struct _SE_IMPERSONATION_STATE {
 	SECURITY_IMPERSONATION_LEVEL Level;
 } SE_IMPERSONATION_STATE,*PSE_IMPERSONATION_STATE;
 /* Steven you are my hero when you fix the w32api ddk! */
-#if !defined(__NTDDK_H)
+#if !defined(_NTDDK_)
 typedef struct _SID_IDENTIFIER_AUTHORITY {
 	BYTE Value[6];
 } SID_IDENTIFIER_AUTHORITY,*PSID_IDENTIFIER_AUTHORITY,*LPSID_IDENTIFIER_AUTHORITY;
@@ -3175,7 +3175,7 @@ typedef struct _TAPE_CREATE_PARTITION {
 	DWORD Size;
 } TAPE_CREATE_PARTITION,*PTAPE_CREATE_PARTITION;
 /* Sigh..when will they learn... */
-#ifndef __NTDDK_H
+#ifndef _NTDDK_
 typedef struct _MEMORY_BASIC_INFORMATION {
 	PVOID BaseAddress;
 	PVOID AllocationBase;
@@ -3267,7 +3267,7 @@ RtlQueryDepthSList (
     );
 
 /* FIXME: Please oh please stop including winnt.h from the DDK... */
-#ifndef __NTDDK_H
+#ifndef _NTDDK_
 typedef struct _RTL_CRITICAL_SECTION_DEBUG {
 	WORD Type;
 	WORD CreatorBackTraceIndex;
@@ -4124,7 +4124,7 @@ typedef union _FILE_SEGMENT_ELEMENT {
 #define JOB_OBJECT_MSG_JOB_MEMORY_LIMIT       10
 
 /* FIXME: Oh how I wish, I wish the w32api DDK wouldn't include winnt.h... */
-#ifndef __NTDDK_H
+#ifndef _NTDDK_
 #define JOB_OBJECT_ASSIGN_PROCESS           1
 #define JOB_OBJECT_SET_ATTRIBUTES           2
 #define JOB_OBJECT_QUERY                    4
@@ -4184,7 +4184,7 @@ typedef struct _JOBOBJECT_BASIC_UI_RESTRICTIONS {
 	DWORD UIRestrictionsClass;
 } JOBOBJECT_BASIC_UI_RESTRICTIONS,*PJOBOBJECT_BASIC_UI_RESTRICTIONS;
 /* Steven you are my hero when you fix the w32api ddk! */
-#ifndef __NTDDK_H
+#ifndef _NTDDK_
 typedef struct _JOBOBJECT_SECURITY_LIMIT_INFORMATION {
 	DWORD SecurityLimitFlags;
 	HANDLE JobToken;
@@ -4383,7 +4383,7 @@ typedef struct _SYSTEM_BATTERY_STATE {
 	ULONG  DefaultAlert2;
 } SYSTEM_BATTERY_STATE, *PSYSTEM_BATTERY_STATE;
 
-#ifndef __NTDDK_H /* HACK!!! ntddk.h shouldn't include winnt.h! */
+#ifndef _NTDDK_ /* HACK!!! ntddk.h shouldn't include winnt.h! */
 typedef struct _PROCESSOR_POWER_INFORMATION {
 	ULONG Number;
 	ULONG MaxMhz;
@@ -4727,7 +4727,7 @@ static __inline__ PVOID GetCurrentFiber(void)
 #endif
 
 /* FIXME: Oh how I wish, I wish the w32api DDK wouldn't include winnt.h... */
-#ifndef __NTDDK_H
+#ifndef _NTDDK_
 #ifdef _M_IX86
 static __inline__ struct _TEB * NtCurrentTeb(void)
 {

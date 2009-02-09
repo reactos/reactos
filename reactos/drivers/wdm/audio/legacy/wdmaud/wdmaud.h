@@ -1,7 +1,6 @@
 #ifndef WDMAUD_H__
 #define WDMAUD_H__
 
-#define _NTDDK_
 #include <ntddk.h>
 #include <portcls.h>
 #define YDEBUG
