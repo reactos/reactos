@@ -23,10 +23,6 @@
 #define MAX_AVISTREAMS 8
 #endif
 
-#ifndef comptypeDIB
-#define comptypeDIB  mmioFOURCC('D','I','B',' ')
-#endif
-
 #ifndef DIBWIDTHBYTES
 #define WIDTHBYTES(i)     (((i+31)&(~31))/8)
 #define DIBWIDTHBYTES(bi) WIDTHBYTES((bi).biWidth * (bi).biBitCount)
