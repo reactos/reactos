@@ -104,7 +104,9 @@
 @ stdcall ExInitializeRundownProtectionCacheAware(ptr long)
 @ stdcall ExInitializeZone(ptr long ptr long)
 @ stdcall ExInterlockedAddLargeInteger(ptr long long ptr)
+#ifndef __x86_64__
 @ fastcall ExInterlockedAddLargeStatistic(ptr long)
+#endif
 @ stdcall ExInterlockedAddUlong(ptr long ptr)
 #ifndef __x86_64__
 @ fastcall ExInterlockedCompareExchange64(ptr ptr ptr ptr)
