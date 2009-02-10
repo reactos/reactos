@@ -276,7 +276,7 @@ typedef union _SLIST_HEADER {
         ULONGLONG HeaderType:1;
         ULONGLONG Init:1;
         ULONGLONG Reserved:2;
-        ULONGLONG Region:60;
+        ULONGLONG NextEntry:60;
     struct {
     } Header16;
 } SLIST_HEADER, *PSLIST_HEADER;
