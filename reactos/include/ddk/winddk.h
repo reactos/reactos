@@ -35,13 +35,6 @@ extern "C" {
 #include "intrin.h"
 #endif
 
-#ifdef _NTOSKRNL_
-/* HACKHACKHACK!!! We shouldn't include this header from ntoskrnl! */
-#define NTKERNELAPI
-#else
-#define NTKERNELAPI DECLSPEC_IMPORT
-#endif
-
 #if !defined(_NTHAL_)
 #define NTHALAPI DECLSPEC_IMPORT
 #else
@@ -130,11 +123,6 @@ struct _DRIVE_LAYOUT_INFORMATION;
 struct _DRIVE_LAYOUT_INFORMATION_EX;
 struct _LOADER_PARAMETER_BLOCK;
 
-#ifndef _SECURITY_ATTRIBUTES_
-#define _SECURITY_ATTRIBUTES_
-typedef PVOID PSECURITY_DESCRIPTOR;
-#endif
-typedef ULONG SECURITY_INFORMATION, *PSECURITY_INFORMATION;
 typedef PVOID PSID;
 
 #if 1
@@ -168,33 +156,13 @@ typedef enum
 ** Simple structures
 */
 
-typedef LONG KPRIORITY;
 typedef UCHAR KIRQL, *PKIRQL;
-typedef ULONG_PTR KSPIN_LOCK, *PKSPIN_LOCK;
-typedef UCHAR KPROCESSOR_MODE;
 
 typedef enum _MODE {
   KernelMode,
   UserMode,
   MaximumMode
 } MODE;
-
-
-/* Structures not exposed to drivers */
-typedef struct _OBJECT_TYPE *POBJECT_TYPE;
-typedef struct _HAL_DISPATCH_TABLE *PHAL_DISPATCH_TABLE;
-typedef struct _HAL_PRIVATE_DISPATCH_TABLE *PHAL_PRIVATE_DISPATCH_TABLE;
-typedef struct _DEVICE_HANDLER_OBJECT *PDEVICE_HANDLER_OBJECT;
-typedef struct _BUS_HANDLER *PBUS_HANDLER;
-
-typedef struct _ADAPTER_OBJECT *PADAPTER_OBJECT; 
-typedef struct _CALLBACK_OBJECT *PCALLBACK_OBJECT;
-typedef struct _ETHREAD *PETHREAD;
-typedef struct _EPROCESS *PEPROCESS;
-typedef struct _IO_TIMER *PIO_TIMER;
-typedef struct _KINTERRUPT *PKINTERRUPT;
-typedef struct _KPROCESS *PKPROCESS;
-typedef struct _KTHREAD *PKTHREAD, *PRKTHREAD;
 
 //
 // Forwarder
@@ -1290,62 +1258,6 @@ typedef struct _WAIT_CONTEXT_BLOCK {
   PVOID  CurrentIrp;
   PKDPC  BufferChainingDpc;
 } WAIT_CONTEXT_BLOCK, *PWAIT_CONTEXT_BLOCK;
-
-typedef struct _DISPATCHER_HEADER
-{
-    union
-    {
-        struct
-        {
-            UCHAR Type;
-            union
-            {
-                UCHAR Absolute;
-                UCHAR NpxIrql;
-            };
-            union
-            {
-                UCHAR Size;
-                UCHAR Hand;
-            };
-            union
-            {
-                UCHAR Inserted;
-                BOOLEAN DebugActive;
-            };
-        };
-        volatile LONG Lock;
-    };
-    LONG SignalState;
-    LIST_ENTRY WaitListHead;
-} DISPATCHER_HEADER, *PDISPATCHER_HEADER;
-
-typedef struct _KEVENT {
-  DISPATCHER_HEADER  Header;
-} KEVENT, *PKEVENT, *RESTRICTED_POINTER PRKEVENT;
-
-typedef struct _KSEMAPHORE {
-    DISPATCHER_HEADER Header;
-    LONG Limit;
-} KSEMAPHORE, *PKSEMAPHORE, *RESTRICTED_POINTER PRKSEMAPHORE;
-
-typedef struct _FAST_MUTEX
-{
-    LONG Count;
-    PKTHREAD Owner;
-    ULONG Contention;
-    KEVENT Gate;
-    ULONG OldIrql;
-} FAST_MUTEX, *PFAST_MUTEX;
-
-typedef struct _EX_RUNDOWN_REF
-{
-    union
-    {
-        volatile ULONG_PTR Count;
-        volatile PVOID Ptr;
-    };
-} EX_RUNDOWN_REF, *PEX_RUNDOWN_REF;
 
 #define ASSERT_GATE(object) \
     ASSERT((((object)->Header.Type & KOBJECT_TYPE_MASK) == GateObject) || \
@@ -3288,17 +3200,6 @@ typedef struct _FILE_FULL_EA_INFORMATION {
   CHAR  EaName[1];
 } FILE_FULL_EA_INFORMATION, *PFILE_FULL_EA_INFORMATION;
 
-typedef ULONG_PTR ERESOURCE_THREAD;
-typedef ERESOURCE_THREAD *PERESOURCE_THREAD;
-
-typedef struct _OWNER_ENTRY {
-  ERESOURCE_THREAD  OwnerThread;
-  _ANONYMOUS_UNION union {
-      LONG  OwnerCount;
-      ULONG  TableSize;
-  } DUMMYUNIONNAME;
-} OWNER_ENTRY, *POWNER_ENTRY;
-
 /* ERESOURCE.Flag */
 
 #define ResourceNeverExclusive            0x0010
@@ -3306,27 +3207,6 @@ typedef struct _OWNER_ENTRY {
 #define ResourceOwnedExclusive            0x0080
 
 #define RESOURCE_HASH_TABLE_SIZE          64
-
-typedef struct _ERESOURCE
-{
-    LIST_ENTRY SystemResourcesList;
-    POWNER_ENTRY OwnerTable;
-    SHORT ActiveCount;
-    USHORT Flag;
-    volatile PKSEMAPHORE SharedWaiters;
-    volatile PKEVENT ExclusiveWaiters;
-    OWNER_ENTRY OwnerEntry;
-    ULONG ActiveEntries;
-    ULONG ContentionCount;
-    ULONG NumberOfSharedWaiters;
-    ULONG NumberOfExclusiveWaiters;
-    union
-    {
-        PVOID Address;
-        ULONG_PTR CreatorBackTraceIndex;
-    };
-    KSPIN_LOCK SpinLock;
-} ERESOURCE, *PERESOURCE;
 
 typedef struct _DEVOBJ_EXTENSION
 {
@@ -4354,40 +4234,9 @@ typedef struct _PCI_SLOT_NUMBER {
   } u;
 } PCI_SLOT_NUMBER, *PPCI_SLOT_NUMBER;
 
-typedef enum _POOL_TYPE {
-  NonPagedPool,
-  PagedPool,
-  NonPagedPoolMustSucceed,
-  DontUseThisType,
-  NonPagedPoolCacheAligned,
-  PagedPoolCacheAligned,
-  NonPagedPoolCacheAlignedMustS,
-  MaxPoolType,
-  NonPagedPoolSession = 32,
-  PagedPoolSession,
-  NonPagedPoolMustSucceedSession,
-  DontUseThisTypeSession,
-  NonPagedPoolCacheAlignedSession,
-  PagedPoolCacheAlignedSession,
-  NonPagedPoolCacheAlignedMustSSession
-} POOL_TYPE;
-
 #define POOL_COLD_ALLOCATION                256
 #define POOL_QUOTA_FAIL_INSTEAD_OF_RAISE    8
 #define POOL_RAISE_IF_ALLOCATION_FAILURE    16
-
-
-typedef enum _EX_POOL_PRIORITY {
-  LowPoolPriority,
-  LowPoolPrioritySpecialPoolOverrun = 8,
-  LowPoolPrioritySpecialPoolUnderrun = 9,
-  NormalPoolPriority = 16,
-  NormalPoolPrioritySpecialPoolOverrun = 24,
-  NormalPoolPrioritySpecialPoolUnderrun = 25,
-  HighPoolPriority = 32,
-  HighPoolPrioritySpecialPoolOverrun = 40,
-  HighPoolPrioritySpecialPoolUnderrun = 41
-} EX_POOL_PRIORITY;
 
 typedef struct _OSVERSIONINFOA {
     ULONG dwOSVersionInfoSize;
@@ -4491,18 +4340,6 @@ VerSetConditionMask(
 #define VER_CONDITION_MASK              7
 #define VER_NUM_BITS_PER_CONDITION_MASK 3
 
-typedef struct _RTL_BITMAP {
-  ULONG  SizeOfBitMap;
-  PULONG  Buffer;
-} RTL_BITMAP, *PRTL_BITMAP;
-
-#define RtlCheckBit(BMH,BP) (((((PLONG)(BMH)->Buffer)[(BP) / 32]) >> ((BP) % 32)) & 0x1)
-
-typedef struct _RTL_BITMAP_RUN {
-    ULONG  StartingIndex;
-    ULONG  NumberOfBits;
-} RTL_BITMAP_RUN, *PRTL_BITMAP_RUN;
-
 struct _RTL_RANGE;
 
 typedef BOOLEAN
@@ -4510,108 +4347,6 @@ typedef BOOLEAN
     PVOID Context,
     struct _RTL_RANGE *Range
 );
-
-typedef NTSTATUS
-(DDKAPI *PRTL_QUERY_REGISTRY_ROUTINE)(
-  IN PWSTR  ValueName,
-  IN ULONG  ValueType,
-  IN PVOID  ValueData,
-  IN ULONG  ValueLength,
-  IN PVOID  Context,
-  IN PVOID  EntryContext);
-
-#define RTL_REGISTRY_ABSOLUTE             0
-#define RTL_REGISTRY_SERVICES             1
-#define RTL_REGISTRY_CONTROL              2
-#define RTL_REGISTRY_WINDOWS_NT           3
-#define RTL_REGISTRY_DEVICEMAP            4
-#define RTL_REGISTRY_USER                 5
-#define RTL_REGISTRY_HANDLE               0x40000000
-#define RTL_REGISTRY_OPTIONAL             0x80000000
-
-/* RTL_QUERY_REGISTRY_TABLE.Flags */
-#define RTL_QUERY_REGISTRY_SUBKEY         0x00000001
-#define RTL_QUERY_REGISTRY_TOPKEY         0x00000002
-#define RTL_QUERY_REGISTRY_REQUIRED       0x00000004
-#define RTL_QUERY_REGISTRY_NOVALUE        0x00000008
-#define RTL_QUERY_REGISTRY_NOEXPAND       0x00000010
-#define RTL_QUERY_REGISTRY_DIRECT         0x00000020
-#define RTL_QUERY_REGISTRY_DELETE         0x00000040
-
-typedef struct _RTL_QUERY_REGISTRY_TABLE {
-  PRTL_QUERY_REGISTRY_ROUTINE  QueryRoutine;
-  ULONG  Flags;
-  PCWSTR Name;
-  PVOID  EntryContext;
-  ULONG  DefaultType;
-  PVOID  DefaultData;
-  ULONG  DefaultLength;
-} RTL_QUERY_REGISTRY_TABLE, *PRTL_QUERY_REGISTRY_TABLE;
-
-typedef struct _TIME_FIELDS {
-  CSHORT  Year;
-  CSHORT  Month;
-  CSHORT  Day;
-  CSHORT  Hour;
-  CSHORT  Minute;
-  CSHORT  Second;
-  CSHORT  Milliseconds;
-  CSHORT  Weekday;
-} TIME_FIELDS, *PTIME_FIELDS;
-
-typedef PVOID
-(DDKAPI *PALLOCATE_FUNCTION)(
-  IN POOL_TYPE  PoolType,
-  IN SIZE_T  NumberOfBytes,
-  IN ULONG  Tag);
-
-typedef VOID
-(DDKAPI *PFREE_FUNCTION)(
-  IN PVOID  Buffer);
-
-typedef struct _GENERAL_LOOKASIDE {
-  SLIST_HEADER  ListHead;
-  USHORT  Depth;
-  USHORT  MaximumDepth;
-  ULONG  TotalAllocates;
-  union {
-    ULONG  AllocateMisses;
-    ULONG  AllocateHits;
-  };
-  ULONG  TotalFrees;
-  union {
-    ULONG  FreeMisses;
-    ULONG  FreeHits;
-  };
-  POOL_TYPE  Type;
-  ULONG  Tag;
-  ULONG  Size;
-  PALLOCATE_FUNCTION  Allocate;
-  PFREE_FUNCTION  Free;
-  LIST_ENTRY  ListEntry;
-  ULONG  LastTotalAllocates;
-  union {
-    ULONG  LastAllocateMisses;
-    ULONG  LastAllocateHits;
-  };
-  ULONG Future[2];
-} GENERAL_LOOKASIDE, *PGENERAL_LOOKASIDE;
-
-typedef struct _NPAGED_LOOKASIDE_LIST {
-  GENERAL_LOOKASIDE  L;
-  KSPIN_LOCK  Obsoleted;
-} NPAGED_LOOKASIDE_LIST, *PNPAGED_LOOKASIDE_LIST;
-
-typedef struct _PAGED_LOOKASIDE_LIST {
-  GENERAL_LOOKASIDE  L;
-  FAST_MUTEX  Obsoleted;
-} PAGED_LOOKASIDE_LIST, *PPAGED_LOOKASIDE_LIST;
-
-typedef VOID
-(DDKAPI *PCALLBACK_FUNCTION)(
-  IN PVOID  CallbackContext,
-  IN PVOID  Argument1,
-  IN PVOID  Argument2);
 
 typedef enum _EVENT_TYPE {
   NotificationEvent,
@@ -5411,21 +5146,6 @@ typedef struct _DRIVER_VERIFIER_THUNK_PAIRS {
 #define HASH_STRING_ALGORITHM_X65599      1
 #define HASH_STRING_ALGORITHM_INVALID     0xffffffff
 
-typedef enum _SUITE_TYPE {
-  SmallBusiness,
-  Enterprise,
-  BackOffice,
-  CommunicationServer,
-  TerminalServer,
-  SmallBusinessRestricted,
-  EmbeddedNT,
-  DataCenter,
-  SingleUserTS,
-  Personal,
-  Blade,
-  MaxSuiteType
-} SUITE_TYPE;
-
 typedef VOID
 (DDKAPI *PTIMER_APC_ROUTINE)(
   IN PVOID  TimerContext,
@@ -6174,17 +5894,6 @@ InterlockedExchangeAdd(
 #define InterlockedCompareExchangePointer _InterlockedCompareExchangePointer
 #define InterlockedExchangePointer _InterlockedExchangePointer
 
-#define ExInterlockedPopEntrySList(Head, Lock) ExpInterlockedPopEntrySList(Head)
-#define ExInterlockedPushEntrySList(Head, Entry, Lock) ExpInterlockedPushEntrySList(Head, Entry)
-#define ExInterlockedFlushSList(Head) ExpInterlockedFlushSList(Head)
-
-#if !defined(_WINBASE_)
-#define InterlockedPopEntrySList(Head) ExpInterlockedPopEntrySList(Head)
-#define InterlockedPushEntrySList(Head, Entry) ExpInterlockedPushEntrySList(Head, Entry)
-#define InterlockedFlushSList(Head) ExpInterlockedFlushSList(Head)
-#define QueryDepthSList(Head) ExQueryDepthSList(Head)
-#endif // !defined(_WINBASE_)
-
 #endif // _M_AMD64
 
 #endif /* !__INTERLOCKED_DECLARED */
@@ -6274,8 +5983,6 @@ KeAcquireSpinLockRaiseToDpc(
 
 #endif // !defined (_X86_)
 
-#define RtlCopyMemoryNonTemporal RtlCopyMemory
-
 #define KeGetDcacheFillSize() 1L
 
 
@@ -6318,15 +6025,6 @@ KeAcquireSpinLockRaiseToDpc(
  */
 #define ROUND_TO_PAGES(Size) \
   ((ULONG_PTR) (((ULONG_PTR) Size + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1)))
-
-NTSYSAPI
-VOID
-NTAPI
-RtlAssert(
-  IN PVOID  FailedAssertion,
-  IN PVOID  FileName,
-  IN ULONG  LineNumber,
-  IN PCHAR  Message);
 
 #ifdef DBG
 
@@ -6493,75 +6191,6 @@ RemoveTailList(
   return Entry;
 }
 
-#if !defined(_WINBASE_) || _WIN32_WINNT < 0x0501
-
-NTKERNELAPI
-PSLIST_ENTRY
-FASTCALL
-InterlockedPopEntrySList(
-  IN PSLIST_HEADER  ListHead);
-
-NTKERNELAPI
-PSLIST_ENTRY
-FASTCALL
-InterlockedPushEntrySList(
-  IN PSLIST_HEADER  ListHead,
-  IN PSLIST_ENTRY  ListEntry);
-
-#endif
-
-#define InterlockedFlushSList(ListHead) ExInterlockedFlushSList(ListHead)
-
-NTSYSAPI
-ULONG
-NTAPI
-RtlxAnsiStringToUnicodeSize(
-  IN PCANSI_STRING  AnsiString);
-
-#define RtlAnsiStringToUnicodeSize(STRING) (               \
-  NLS_MB_CODE_PAGE_TAG ?                                   \
-  RtlxAnsiStringToUnicodeSize(STRING) :                    \
-  ((STRING)->Length + sizeof(ANSI_NULL)) * sizeof(WCHAR)   \
-)
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlAnsiStringToUnicodeString(
-  IN OUT PUNICODE_STRING  DestinationString,
-  IN PANSI_STRING  SourceString,
-  IN BOOLEAN  AllocateDestinationString);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlAppendUnicodeStringToString(
-  IN OUT PUNICODE_STRING  Destination,
-  IN PCUNICODE_STRING  Source);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlAppendUnicodeToString(
-  IN OUT PUNICODE_STRING  Destination,
-  IN PCWSTR  Source);
-
-NTSYSAPI
-BOOLEAN
-NTAPI
-RtlAreBitsClear(
-  IN PRTL_BITMAP  BitMapHeader,
-  IN ULONG  StartingIndex,
-  IN ULONG  Length);
-
-NTSYSAPI
-BOOLEAN
-NTAPI
-RtlAreBitsSet(
-  IN PRTL_BITMAP  BitMapHeader,
-  IN ULONG  StartingIndex,
-  IN ULONG  Length);
-
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -6569,51 +6198,6 @@ RtlCharToInteger(
   IN PCSZ  String,
   IN ULONG  Base  OPTIONAL,
   IN OUT PULONG  Value);
-
-#if 0
-NTSYSAPI
-ULONG
-NTAPI
-RtlCheckBit(
-  IN PRTL_BITMAP  BitMapHeader,
-  IN ULONG  BitPosition);
-#endif
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlCheckRegistryKey(
-  IN ULONG  RelativeTo,
-  IN PWSTR  Path);
-
-NTSYSAPI
-VOID
-NTAPI
-RtlClearAllBits(
-  IN PRTL_BITMAP  BitMapHeader);
-
-NTSYSAPI
-VOID
-NTAPI
-RtlClearBit(
-  PRTL_BITMAP  BitMapHeader,
-  ULONG  BitNumber);
-
-NTSYSAPI
-VOID
-NTAPI
-RtlClearBits(
-  IN PRTL_BITMAP  BitMapHeader,
-  IN ULONG  StartingIndex,
-  IN ULONG  NumberToClear);
-
-NTSYSAPI
-SIZE_T
-NTAPI
-RtlCompareMemory(
-  IN CONST VOID  *Source1,
-  IN CONST VOID  *Source2,
-  IN SIZE_T  Length);
 
 NTSYSAPI
 LONG
@@ -6624,94 +6208,16 @@ RtlCompareString(
   BOOLEAN  CaseInSensitive);
 
 NTSYSAPI
-LONG
-NTAPI
-RtlCompareUnicodeString(
-  IN PCUNICODE_STRING  String1,
-  IN PCUNICODE_STRING  String2,
-  IN BOOLEAN  CaseInSensitive);
-
-static __inline
-LARGE_INTEGER
-NTAPI_INLINE
-RtlConvertLongToLargeInteger(LONG SignedInteger)
-{
-    LARGE_INTEGER Result;
-
-    Result.QuadPart = SignedInteger;
-    return Result;
-}
-
-static __inline
-LARGE_INTEGER
-NTAPI_INLINE
-RtlConvertUlongToLargeInteger(
-  ULONG UnsignedInteger)
-{
-    LARGE_INTEGER ret;
-    ret.QuadPart = UnsignedInteger;
-    return ret;
-}
-
-NTSYSAPI
 LUID
 NTAPI
 RtlConvertLongToLuid(
   IN LONG  Long);
-
 
 NTSYSAPI
 LUID
 NTAPI
 RtlConvertUlongToLuid(
   ULONG  Ulong);
-
-#ifdef _M_AMD64
-
-static __inline
-LARGE_INTEGER
-NTAPI_INLINE
-RtlExtendedIntegerMultiply(
-  LARGE_INTEGER Multiplicand,
-  LONG Multiplier)
-{
-    LARGE_INTEGER ret;
-    ret.QuadPart = Multiplicand.QuadPart * Multiplier;
-    return ret;
-}
-
-static __inline
-LARGE_INTEGER
-NTAPI_INLINE
-RtlExtendedLargeIntegerDivide(
-  LARGE_INTEGER Dividend,
-  ULONG Divisor,
-  PULONG Remainder)
-{
-    LARGE_INTEGER ret;
-    ret.QuadPart = (ULONG64)Dividend.QuadPart / Divisor;
-    if (Remainder)
-        *Remainder = (ULONG)(Dividend.QuadPart % Divisor);
-    return ret;
-}
-
-#endif
-
-/*
- * VOID
- * RtlCopyMemory(
- *   IN VOID UNALIGNED  *Destination,
- *   IN CONST VOID UNALIGNED  *Source,
- *   IN SIZE_T  Length)
- */
-#ifndef RtlCopyMemory
-#define RtlCopyMemory(Destination, Source, Length) \
-  memcpy(Destination, Source, Length)
-#endif
-
-#ifndef RtlCopyBytes
-#define RtlCopyBytes RtlCopyMemory
-#endif
 
 NTSYSAPI
 VOID
@@ -6729,179 +6235,12 @@ RtlCopyString(
   IN PSTRING  SourceString  OPTIONAL);
 
 NTSYSAPI
-VOID
-NTAPI
-RtlCopyUnicodeString(
-  IN OUT PUNICODE_STRING  DestinationString,
-  IN PCUNICODE_STRING  SourceString);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlCreateRegistryKey(
-  IN ULONG  RelativeTo,
-  IN PWSTR  Path);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlCreateSecurityDescriptor(
-  IN OUT PSECURITY_DESCRIPTOR  SecurityDescriptor,
-  IN ULONG  Revision);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlDeleteRegistryValue(
-  IN ULONG  RelativeTo,
-  IN PCWSTR  Path,
-  IN PCWSTR  ValueName);
-
-/*
- * BOOLEAN
- * RtlEqualLuid(
- *   IN PLUID  Luid1,
- *   IN PLUID  Luid2)
- */
-#define RtlEqualLuid(Luid1, \
-                     Luid2) \
-  (((Luid1)->LowPart == (Luid2)->LowPart) && ((Luid1)->HighPart == (Luid2)->HighPart))
-
-/*
- * ULONG
- * RtlEqualMemory(
- *   IN VOID UNALIGNED  *Destination,
- *   IN CONST VOID UNALIGNED  *Source,
- *   IN SIZE_T  Length)
- */
-#define RtlEqualMemory(Destination, Source, Length) (!memcmp(Destination, Source, Length))
-
-NTSYSAPI
 BOOLEAN
 NTAPI
 RtlEqualString(
   IN PSTRING  String1,
   IN PSTRING  String2,
   IN BOOLEAN  CaseInSensitive);
-
-NTSYSAPI
-BOOLEAN
-NTAPI
-RtlEqualUnicodeString(
-  IN CONST UNICODE_STRING  *String1,
-  IN CONST UNICODE_STRING  *String2,
-  IN BOOLEAN  CaseInSensitive);
-
-/*
- * VOID
- * RtlFillMemory(
- *   IN VOID UNALIGNED  *Destination,
- *   IN SIZE_T  Length,
- *   IN UCHAR  Fill)
- */
-#ifndef RtlFillMemory
-#define RtlFillMemory(Destination, Length, Fill) \
-  memset(Destination, Fill, Length)
-#endif
-
-#ifndef RtlFillBytes
-#define RtlFillBytes RtlFillMemory
-#endif
-
-NTSYSAPI
-ULONG
-NTAPI
-RtlFindClearBits(
-  IN PRTL_BITMAP  BitMapHeader,
-  IN ULONG  NumberToFind,
-  IN ULONG  HintIndex);
-
-NTSYSAPI
-ULONG
-NTAPI
-RtlFindClearBitsAndSet(
-  IN PRTL_BITMAP  BitMapHeader,
-  IN ULONG  NumberToFind,
-  IN ULONG  HintIndex);
-
-NTSYSAPI
-ULONG
-NTAPI
-RtlFindClearRuns(
-  IN PRTL_BITMAP  BitMapHeader,
-  OUT PRTL_BITMAP_RUN  RunArray,
-  IN ULONG  SizeOfRunArray,
-  IN BOOLEAN  LocateLongestRuns);
-
-NTSYSAPI
-ULONG
-NTAPI
-RtlFindFirstRunClear(
-  IN PRTL_BITMAP  BitMapHeader,
-  OUT PULONG  StartingIndex);
-
-NTSYSAPI
-ULONG
-NTAPI
-RtlFindLastBackwardRunClear(
-  IN PRTL_BITMAP  BitMapHeader,
-  IN ULONG  FromIndex,
-  OUT PULONG  StartingRunIndex);
-
-NTSYSAPI
-CCHAR
-NTAPI
-RtlFindLeastSignificantBit(
-  IN ULONGLONG  Set);
-
-NTSYSAPI
-ULONG
-NTAPI
-RtlFindLongestRunClear(
-  IN PRTL_BITMAP  BitMapHeader,
-  OUT PULONG  StartingIndex);
-
-NTSYSAPI
-CCHAR
-NTAPI
-RtlFindMostSignificantBit(
-  IN ULONGLONG  Set);
-
-NTSYSAPI
-ULONG
-NTAPI
-RtlFindNextForwardRunClear(
-  IN PRTL_BITMAP  BitMapHeader,
-  IN ULONG  FromIndex,
-  OUT PULONG  StartingRunIndex);
-
-NTSYSAPI
-ULONG
-NTAPI
-RtlFindSetBits(
-  IN PRTL_BITMAP  BitMapHeader,
-  IN ULONG  NumberToFind,
-  IN ULONG  HintIndex);
-
-NTSYSAPI
-ULONG
-NTAPI
-RtlFindSetBitsAndClear(
-  IN PRTL_BITMAP  BitMapHeader,
-  IN ULONG  NumberToFind,
-  IN ULONG  HintIndex);
-
-NTSYSAPI
-VOID
-NTAPI
-RtlFreeAnsiString(
-  IN PANSI_STRING  AnsiString);
-
-NTSYSAPI
-VOID
-NTAPI
-RtlFreeUnicodeString(
-  IN PUNICODE_STRING  UnicodeString);
 
 #if (defined(_M_AMD64) || defined(_M_IA64)) && !defined(_REALLY_GET_CALLERS_CALLER_)
 #define RtlGetCallersAddress(CallersAddress, CallersCaller) \
@@ -6923,122 +6262,11 @@ RtlGetVersion(
   IN OUT PRTL_OSVERSIONINFOW  lpVersionInformation);
 
 NTSYSAPI
-NTSTATUS
-NTAPI
-RtlGUIDFromString(
-  IN PUNICODE_STRING  GuidString,
-  OUT GUID  *Guid);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlHashUnicodeString(
-  IN CONST UNICODE_STRING  *String,
-  IN BOOLEAN  CaseInSensitive,
-  IN ULONG  HashAlgorithm,
-  OUT PULONG  HashValue);
-
-NTSYSAPI
-VOID
-NTAPI
-RtlInitAnsiString(
-  IN OUT PANSI_STRING  DestinationString,
-  IN PCSZ  SourceString);
-
-NTSYSAPI
-VOID
-NTAPI
-RtlInitializeBitMap(
-  IN PRTL_BITMAP  BitMapHeader,
-  IN PULONG  BitMapBuffer,
-  IN ULONG  SizeOfBitMap);
-
-NTSYSAPI
-VOID
-NTAPI
-RtlInitString(
-  IN OUT PSTRING  DestinationString,
-  IN PCSZ  SourceString);
-
-NTSYSAPI
-VOID
-NTAPI
-RtlInitUnicodeString(
-  IN OUT PUNICODE_STRING  DestinationString,
-  IN PCWSTR  SourceString);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlInt64ToUnicodeString(
-  IN ULONGLONG  Value,
-  IN ULONG  Base OPTIONAL,
-  IN OUT PUNICODE_STRING  String);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlIntegerToUnicodeString(
-  IN ULONG  Value,
-  IN ULONG  Base  OPTIONAL,
-  IN OUT PUNICODE_STRING  String);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlIntPtrToUnicodeString(
-  PLONG  Value,
-  ULONG  Base  OPTIONAL,
-  PUNICODE_STRING  String);
-
-/*
- * BOOLEAN
- * RtlIsZeroLuid(
- *   IN PLUID  L1)
- */
-#define RtlIsZeroLuid(_L1) \
-  ((BOOLEAN) ((!(_L1)->LowPart) && (!(_L1)->HighPart)))
-
-NTSYSAPI
-ULONG
-NTAPI
-RtlLengthSecurityDescriptor(
-  IN PSECURITY_DESCRIPTOR  SecurityDescriptor);
-
-NTSYSAPI
 VOID
 NTAPI
 RtlMapGenericMask(
   IN OUT PACCESS_MASK  AccessMask,
   IN PGENERIC_MAPPING  GenericMapping);
-
-/*
- * VOID
- * RtlMoveMemory(
- *  IN VOID UNALIGNED  *Destination,
- *  IN CONST VOID UNALIGNED  *Source,
- *  IN SIZE_T  Length)
- */
-#define RtlMoveMemory memmove
-
-NTSYSAPI
-ULONG
-NTAPI
-RtlNumberOfClearBits(
-  IN PRTL_BITMAP  BitMapHeader);
-
-NTSYSAPI
-ULONG
-NTAPI
-RtlNumberOfSetBits(
-  IN PRTL_BITMAP  BitMapHeader);
-
-NTSYSAPI
-VOID
-FASTCALL
-RtlPrefetchMemoryNonTemporal(
-  IN PVOID  Source,
-  IN SIZE_T  Length);
 
 NTSYSAPI
 BOOLEAN
@@ -7047,183 +6275,6 @@ RtlPrefixUnicodeString(
   IN PCUNICODE_STRING  String1,
   IN PCUNICODE_STRING  String2,
   IN BOOLEAN  CaseInSensitive);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlQueryRegistryValues(
-  IN ULONG  RelativeTo,
-  IN PCWSTR  Path,
-  IN PRTL_QUERY_REGISTRY_TABLE  QueryTable,
-  IN PVOID  Context,
-  IN PVOID  Environment  OPTIONAL);
-
-
-#define LONG_SIZE (sizeof(LONG))
-#define LONG_MASK (LONG_SIZE - 1)
-
-/*
- * VOID
- * RtlRetrieveUlong (
- *	PULONG	DestinationAddress,
- *	PULONG	SourceAddress
- *	);
- */
-#define RtlRetrieveUlong(DestAddress,SrcAddress) \
-    if ((ULONG_PTR)(SrcAddress) & LONG_MASK) \
-    { \
-        ((PUCHAR)(DestAddress))[0]=((PUCHAR)(SrcAddress))[0]; \
-        ((PUCHAR)(DestAddress))[1]=((PUCHAR)(SrcAddress))[1]; \
-        ((PUCHAR)(DestAddress))[2]=((PUCHAR)(SrcAddress))[2]; \
-        ((PUCHAR)(DestAddress))[3]=((PUCHAR)(SrcAddress))[3]; \
-    } \
-    else \
-    { \
-        *((PULONG)(DestAddress))=*((PULONG)(SrcAddress)); \
-    }
-
-NTSYSAPI
-VOID
-NTAPI
-RtlRetrieveUshort(
-  IN OUT PUSHORT  DestinationAddress,
-  IN PUSHORT  SourceAddress);
-
-NTSYSAPI
-VOID
-NTAPI
-RtlSetAllBits(
-  IN PRTL_BITMAP  BitMapHeader);
-
-NTSYSAPI
-VOID
-NTAPI
-RtlSetBit(
-  PRTL_BITMAP  BitMapHeader,
-  ULONG  BitNumber);
-
-NTSYSAPI
-VOID
-NTAPI
-RtlSetBits(
-  IN PRTL_BITMAP  BitMapHeader,
-  IN ULONG  StartingIndex,
-  IN ULONG  NumberToSet);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlSetDaclSecurityDescriptor(
-  IN OUT PSECURITY_DESCRIPTOR  SecurityDescriptor,
-  IN BOOLEAN  DaclPresent,
-  IN PACL  Dacl  OPTIONAL,
-  IN BOOLEAN  DaclDefaulted  OPTIONAL);
-
-NTSYSAPI
-VOID
-NTAPI
-RtlStoreUlong(
-  IN PULONG  Address,
-  IN ULONG  Value);
-
-NTSYSAPI
-VOID
-NTAPI
-RtlStoreUlonglong(
-  IN OUT PULONGLONG  Address,
-  ULONGLONG  Value);
-
-NTSYSAPI
-VOID
-NTAPI
-RtlStoreUlongPtr(
-  IN OUT PULONG_PTR  Address,
-  IN ULONG_PTR  Value);
-
-NTSYSAPI
-VOID
-NTAPI
-RtlStoreUshort(
-  IN PUSHORT  Address,
-  IN USHORT  Value);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlStringFromGUID(
-  IN REFGUID  Guid,
-  OUT PUNICODE_STRING  GuidString);
-
-NTSYSAPI
-BOOLEAN
-NTAPI
-RtlTestBit(
-  IN PRTL_BITMAP  BitMapHeader,
-  IN ULONG  BitNumber);
-
-NTSYSAPI
-BOOLEAN
-NTAPI
-RtlTimeFieldsToTime(
-  IN PTIME_FIELDS  TimeFields,
-  IN PLARGE_INTEGER  Time);
-
-NTSYSAPI
-VOID
-NTAPI
-RtlTimeToTimeFields(
-  IN PLARGE_INTEGER  Time,
-  IN PTIME_FIELDS  TimeFields);
-
-#define RtlUnicodeStringToAnsiSize(STRING) (                  \
-    NLS_MB_CODE_PAGE_TAG ?                                    \
-    RtlxUnicodeStringToAnsiSize(STRING) :                     \
-    ((STRING)->Length + sizeof(UNICODE_NULL)) / sizeof(WCHAR) \
-)
-
-FORCEINLINE
-VOID
-RtlInitEmptyUnicodeString(OUT PUNICODE_STRING UnicodeString,
-                          IN PWSTR Buffer,
-                          IN USHORT BufferSize)
-{
-    UnicodeString->Length = 0;
-    UnicodeString->MaximumLength = BufferSize;
-    UnicodeString->Buffer = Buffer;
-}
-
-FORCEINLINE
-VOID
-RtlInitEmptyAnsiString(OUT PANSI_STRING AnsiString,
-                       IN PCHAR Buffer,
-                       IN USHORT BufferSize)
-{
-    AnsiString->Length = 0;
-    AnsiString->MaximumLength = BufferSize;
-    AnsiString->Buffer = Buffer;
-}
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlUnicodeStringToAnsiString(
-  IN OUT PANSI_STRING  DestinationString,
-  IN PCUNICODE_STRING  SourceString,
-  IN BOOLEAN  AllocateDestinationString);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlUnicodeStringToInteger(
-  IN PCUNICODE_STRING  String,
-  IN ULONG  Base  OPTIONAL,
-  OUT PULONG  Value);
-
-NTSYSAPI
-WCHAR
-NTAPI
-RtlUpcaseUnicodeChar(
-  IN WCHAR  SourceCharacter);
 
 NTSYSAPI
 NTSTATUS
@@ -7247,20 +6298,6 @@ RtlUpperString(
   IN PSTRING  SourceString);
 
 NTSYSAPI
-BOOLEAN
-NTAPI
-RtlValidRelativeSecurityDescriptor(
-  IN PSECURITY_DESCRIPTOR SecurityDescriptorInput,
-  IN ULONG  SecurityDescriptorLength,
-  IN SECURITY_INFORMATION  RequiredInformation);
-
-NTSYSAPI
-BOOLEAN
-NTAPI
-RtlValidSecurityDescriptor(
-  IN PSECURITY_DESCRIPTOR  SecurityDescriptor);
-
-NTSYSAPI
 NTSTATUS
 NTAPI
 RtlVerifyVersionInfo(
@@ -7282,38 +6319,6 @@ RtlWalkFrameChain(
   OUT PVOID  *Callers,
   IN ULONG  Count,
   IN ULONG  Flags);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlWriteRegistryValue(
-  IN ULONG  RelativeTo,
-  IN PCWSTR  Path,
-  IN PCWSTR  ValueName,
-  IN ULONG  ValueType,
-  IN PVOID  ValueData,
-  IN ULONG  ValueLength);
-
-NTSYSAPI
-ULONG
-NTAPI
-RtlxUnicodeStringToAnsiSize(
-  IN PCUNICODE_STRING  UnicodeString);
-
-/*
- * VOID
- * RtlZeroMemory(
- *   IN VOID UNALIGNED  *Destination,
- *   IN SIZE_T  Length)
- */
-#ifndef RtlZeroMemory
-#define RtlZeroMemory(Destination, Length) \
-  memset(Destination, 0, Length)
-#endif
-
-#ifndef RtlZeroBytes
-#define RtlZeroBytes RtlZeroMemory
-#endif
 
 NTKERNELAPI
 BOOLEAN
@@ -7380,22 +6385,6 @@ KeTryToAcquireGuardedMutex(
     IN OUT PKGUARDED_MUTEX GuardedMutex
 );
 
-NTKERNELAPI
-BOOLEAN
-FASTCALL
-ExAcquireRundownProtectionEx(
-     IN OUT PEX_RUNDOWN_REF RunRef,
-     IN ULONG Count
-);
-
-NTKERNELAPI
-VOID
-FASTCALL
-ExReleaseRundownProtectionEx(
-     IN OUT PEX_RUNDOWN_REF RunRef,
-     IN ULONG Count
-);
-
 /* Fast Mutex */
 #define ExInitializeFastMutex(_FastMutex) \
 { \
@@ -7405,83 +6394,7 @@ ExReleaseRundownProtectionEx(
     KeInitializeEvent(&(_FastMutex)->Gate, SynchronizationEvent, FALSE); \
 }
 
-NTKERNELAPI
-VOID
-FASTCALL
-ExAcquireFastMutexUnsafe(IN OUT PFAST_MUTEX FastMutex);
-
-NTKERNELAPI
-VOID
-FASTCALL
-ExReleaseFastMutexUnsafe(IN OUT PFAST_MUTEX FastMutex);
-
-#if defined(_NTHAL_) && defined(_X86_)
-NTKERNELAPI
-VOID
-FASTCALL
-ExiAcquireFastMutex(IN OUT PFAST_MUTEX FastMutex);
-
-NTKERNELAPI
-VOID
-FASTCALL
-ExiReleaseFastMutex(IN OUT PFAST_MUTEX FastMutex);
-
-NTKERNELAPI
-BOOLEAN
-FASTCALL
-ExiTryToAcquireFastMutex(IN OUT PFAST_MUTEX FastMutex);
-
-#define ExAcquireFastMutex(FastMutex)       ExiAcquireFastMutex(FastMutex)
-#define ExReleaseFastMutex(FastMutex)       ExiReleaseFastMutex(FastMutex)
-#define ExTryToAcquireFastMutex(FastMutex)  ExiTryToAcquireFastMutex(FastMutex)
-
-#else
-
-NTKERNELAPI
-VOID
-FASTCALL
-ExAcquireFastMutex(IN OUT PFAST_MUTEX FastMutex);
-
-NTKERNELAPI
-VOID
-FASTCALL
-ExReleaseFastMutex(IN OUT PFAST_MUTEX FastMutex);
-
-NTKERNELAPI
-BOOLEAN
-FASTCALL
-ExTryToAcquireFastMutex(IN OUT PFAST_MUTEX FastMutex);
-#endif
-
 /** Executive support routines **/
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-ExAcquireResourceExclusiveLite(
-  IN PERESOURCE  Resource,
-  IN BOOLEAN  Wait);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-ExAcquireResourceSharedLite(
-  IN PERESOURCE  Resource,
-  IN BOOLEAN  Wait);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-ExAcquireSharedStarveExclusive(
-  IN PERESOURCE  Resource,
-  IN BOOLEAN  Wait);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-ExAcquireSharedWaitForExclusive(
-  IN PERESOURCE  Resource,
-  IN BOOLEAN  Wait);
 
 static __inline PVOID
 ExAllocateFromNPagedLookasideList(
@@ -7513,122 +6426,7 @@ ExAllocateFromPagedLookasideList(
   return Entry;
 }
 
-NTKERNELAPI
-PVOID
-NTAPI
-ExAllocatePoolWithQuotaTag(
-  IN POOL_TYPE  PoolType,
-  IN SIZE_T  NumberOfBytes,
-  IN ULONG  Tag);
-
-NTKERNELAPI
-PVOID
-NTAPI
-ExAllocatePoolWithTag(
-  IN POOL_TYPE  PoolType,
-  IN SIZE_T  NumberOfBytes,
-  IN ULONG  Tag);
-
-#ifdef POOL_TAGGING
-
-#define ExAllocatePoolWithQuota(p,n) ExAllocatePoolWithQuotaTag(p,n,' kdD')
-#define ExAllocatePool(p,n) ExAllocatePoolWithTag(p,n,' kdD')
-
-#else /* !POOL_TAGGING */
-
-NTKERNELAPI
-PVOID
-NTAPI
-ExAllocatePool(
-  IN POOL_TYPE  PoolType,
-  IN SIZE_T  NumberOfBytes);
-
-NTKERNELAPI
-PVOID
-NTAPI
-ExAllocatePoolWithQuota(
-  IN POOL_TYPE  PoolType,
-  IN SIZE_T  NumberOfBytes);
-
-#endif /* POOL_TAGGING */
-
-NTKERNELAPI
-PVOID
-NTAPI
-ExAllocatePoolWithTagPriority(
-  IN POOL_TYPE  PoolType,
-  IN SIZE_T  NumberOfBytes,
-  IN ULONG  Tag,
-  IN EX_POOL_PRIORITY  Priority);
-
-NTKERNELAPI
-VOID
-NTAPI
-ExConvertExclusiveToSharedLite(
-  IN PERESOURCE  Resource);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-ExCreateCallback(
-  OUT PCALLBACK_OBJECT  *CallbackObject,
-  IN POBJECT_ATTRIBUTES  ObjectAttributes,
-  IN BOOLEAN  Create,
-  IN BOOLEAN  AllowMultipleCallbacks);
-
-NTKERNELAPI
-VOID
-NTAPI
-ExDeleteNPagedLookasideList(
-  IN PNPAGED_LOOKASIDE_LIST  Lookaside);
-
-NTKERNELAPI
-VOID
-NTAPI
-ExDeletePagedLookasideList(
-  IN PPAGED_LOOKASIDE_LIST  Lookaside);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-ExDeleteResourceLite(
-  IN PERESOURCE  Resource);
-
-NTKERNELAPI
-VOID
-NTAPI
-ExFreePool(
-  IN PVOID  P);
-
 #define PROTECTED_POOL                    0x80000000
-
-#ifdef POOL_TAGGING
-#define ExFreePool(P) ExFreePoolWithTag(P, 0)
-#endif
-
-NTKERNELAPI
-VOID
-NTAPI
-ExFreePoolWithTag(
-  IN PVOID  P,
-  IN ULONG  Tag);
-
-#if defined (_WIN64)
-#if defined(_NTDRIVER_) || defined(_NTDDK) || defined(_NTIFS_) || defined(_NTHAL_) || defined(_NTOSP_)
-NTKRNLAPI
-USHORT
-ExQueryDepthSList(IN PSLIST_HEADER Listhead);
-#else
-FORCEINLINE
-USHORT
-ExQueryDepthSList(IN PSLIST_HEADER Listhead)
-{
-    return (USHORT)(ListHead->Alignment & 0xffff);
-}
-#endif
-#else
-#define ExQueryDepthSList(listhead) (listhead)->Depth
-#endif
 
 static __inline VOID
 ExFreeToNPagedLookasideList(
@@ -7658,31 +6456,6 @@ ExFreeToPagedLookasideList(
   }
 }
 
-/*
- * ERESOURCE_THREAD
- * ExGetCurrentResourceThread(
- *   VOID);
- */
-#define ExGetCurrentResourceThread() ((ERESOURCE_THREAD) PsGetCurrentThread())
-
-NTKERNELAPI
-ULONG
-NTAPI
-ExGetExclusiveWaiterCount(
-  IN PERESOURCE  Resource);
-
-NTKERNELAPI
-KPROCESSOR_MODE
-NTAPI
-ExGetPreviousMode(
-  VOID);
-
-NTKERNELAPI
-ULONG
-NTAPI
-ExGetSharedWaiterCount(
-  IN PERESOURCE  Resource);
-
 NTKERNELAPI
 VOID
 NTAPI
@@ -7690,36 +6463,6 @@ KeInitializeEvent(
   IN PRKEVENT  Event,
   IN EVENT_TYPE  Type,
   IN BOOLEAN  State);
-
-NTKERNELAPI
-VOID
-NTAPI
-ExInitializeNPagedLookasideList(
-  IN PNPAGED_LOOKASIDE_LIST  Lookaside,
-  IN PALLOCATE_FUNCTION  Allocate  OPTIONAL,
-  IN PFREE_FUNCTION  Free  OPTIONAL,
-  IN ULONG  Flags,
-  IN SIZE_T  Size,
-  IN ULONG  Tag,
-  IN USHORT  Depth);
-
-NTKERNELAPI
-VOID
-NTAPI
-ExInitializePagedLookasideList(
-  IN PPAGED_LOOKASIDE_LIST  Lookaside,
-  IN PALLOCATE_FUNCTION  Allocate  OPTIONAL,
-  IN PFREE_FUNCTION  Free  OPTIONAL,
-  IN ULONG  Flags,
-  IN SIZE_T  Size,
-  IN ULONG  Tag,
-  IN USHORT  Depth);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-ExInitializeResourceLite(
-  IN PERESOURCE  Resource);
 
 /*
  * VOID
@@ -7732,237 +6475,24 @@ ExInitializeResourceLite(
 #define ExInitializeSListHead InitializeSListHead
 
 NTKERNELAPI
-LARGE_INTEGER
-NTAPI
-ExInterlockedAddLargeInteger(
-  IN PLARGE_INTEGER  Addend,
-  IN LARGE_INTEGER  Increment,
-  IN PKSPIN_LOCK  Lock);
-
-NTKERNELAPI
-VOID
-FASTCALL
-ExInterlockedAddLargeStatistic(
-  IN PLARGE_INTEGER  Addend,
-  IN ULONG  Increment);
-
-NTKERNELAPI
-ULONG
-NTAPI
-ExInterlockedAddUlong(
-  IN PULONG  Addend,
-  IN ULONG  Increment,
-  PKSPIN_LOCK  Lock);
-
-NTKERNELAPI
-LONGLONG
-FASTCALL
-ExInterlockedCompareExchange64(
-  IN OUT PLONGLONG  Destination,
-  IN PLONGLONG  Exchange,
-  IN PLONGLONG  Comparand,
-  IN PKSPIN_LOCK  Lock);
-
-NTKERNELAPI
-LONGLONG
-FASTCALL
-ExfInterlockedCompareExchange64(
-  IN OUT LONGLONG volatile  *Destination,
-  IN PLONGLONG  Exchange,
-  IN PLONGLONG  Comperand);
-
-NTKERNELAPI
-PSINGLE_LIST_ENTRY
-FASTCALL
-ExInterlockedFlushSList(
-  IN PSLIST_HEADER  ListHead);
-
-NTKERNELAPI
-PLIST_ENTRY
-NTAPI
-ExInterlockedInsertHeadList(
-  IN PLIST_ENTRY  ListHead,
-  IN PLIST_ENTRY  ListEntry,
-  IN PKSPIN_LOCK  Lock);
-
-NTKERNELAPI
-PLIST_ENTRY
-NTAPI
-ExInterlockedInsertTailList(
-  IN PLIST_ENTRY  ListHead,
-  IN PLIST_ENTRY  ListEntry,
-  IN PKSPIN_LOCK  Lock);
-
-NTKERNELAPI
-PSINGLE_LIST_ENTRY
-NTAPI
-ExInterlockedPopEntryList(
-  IN PSINGLE_LIST_ENTRY  ListHead,
-  IN PKSPIN_LOCK  Lock);
-
-/*
- * PSINGLE_LIST_ENTRY
- * ExInterlockedPopEntrySList(
- *   IN PSLIST_HEADER  ListHead,
- *   IN PKSPIN_LOCK  Lock)
- */
-#define ExInterlockedPopEntrySList(_ListHead, \
-                                   _Lock) \
-  InterlockedPopEntrySList(_ListHead)
-
-NTKERNELAPI
-PSINGLE_LIST_ENTRY
-NTAPI
-ExInterlockedPushEntryList(
-  IN PSINGLE_LIST_ENTRY  ListHead,
-  IN PSINGLE_LIST_ENTRY  ListEntry,
-  IN PKSPIN_LOCK  Lock);
-
-/*
- * PSINGLE_LIST_ENTRY FASTCALL
- * ExInterlockedPushEntrySList(
- *   IN PSLIST_HEADER  ListHead,
- *   IN PSINGLE_LIST_ENTRY  ListEntry,
- *   IN PKSPIN_LOCK  Lock)
- */
-#define ExInterlockedPushEntrySList(_ListHead, \
-                                    _ListEntry, \
-                                    _Lock) \
-  InterlockedPushEntrySList(_ListHead, _ListEntry)
-
-NTKERNELAPI
-PLIST_ENTRY
-NTAPI
-ExInterlockedRemoveHeadList(
-  IN PLIST_ENTRY  ListHead,
-  IN PKSPIN_LOCK  Lock);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-ExIsProcessorFeaturePresent(
-  IN ULONG  ProcessorFeature);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-ExIsResourceAcquiredExclusiveLite(
-  IN PERESOURCE  Resource);
-
-NTKERNELAPI
-USHORT
-NTAPI
-ExIsResourceAcquiredLite(
-  IN PERESOURCE  Resource);
-
-NTKERNELAPI
-ULONG
-NTAPI
-ExIsResourceAcquiredSharedLite(
-  IN PERESOURCE  Resource);
-
-NTKERNELAPI
+DECLSPEC_NORETURN
 VOID
 NTAPI
-ExLocalTimeToSystemTime(
-  IN PLARGE_INTEGER  LocalTime,
-  OUT PLARGE_INTEGER  SystemTime);
-
-NTKERNELAPI
-VOID
-NTAPI
-ExNotifyCallback(
-  IN PCALLBACK_OBJECT  CallbackObject,
-  IN PVOID  Argument1,
-  IN PVOID  Argument2);
-
-NTKERNELAPI
-VOID
-NTAPI
-__declspec(noreturn)
 ExRaiseAccessViolation(
   VOID);
 
 NTKERNELAPI
+DECLSPEC_NORETURN
 VOID
 NTAPI
-__declspec(noreturn)
 ExRaiseDatatypeMisalignment(
   VOID);
-
-DECLSPEC_NORETURN
-NTKERNELAPI
-VOID
-NTAPI
-__declspec(noreturn)
-ExRaiseStatus(
-  IN NTSTATUS  Status);
-
-NTKERNELAPI
-PVOID
-NTAPI
-ExRegisterCallback(
-  IN PCALLBACK_OBJECT  CallbackObject,
-  IN PCALLBACK_FUNCTION  CallbackFunction,
-  IN PVOID  CallbackContext);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-ExReinitializeResourceLite(
-  IN PERESOURCE  Resource);
-
-NTKERNELAPI
-VOID
-NTAPI
-ExReleaseResourceForThreadLite(
-  IN PERESOURCE  Resource,
-  IN ERESOURCE_THREAD  ResourceThreadId);
-
-NTKERNELAPI
-VOID
-FASTCALL
-ExReleaseResourceLite(
-  IN PERESOURCE  Resource);
-
-NTKERNELAPI
-VOID
-NTAPI
-ExSetResourceOwnerPointer(
-  IN PERESOURCE  Resource,
-  IN PVOID  OwnerPointer);
-
-NTKERNELAPI
-ULONG
-NTAPI
-ExSetTimerResolution(
-  IN ULONG  DesiredTime,
-  IN BOOLEAN  SetResolution);
-
-NTKERNELAPI
-VOID
-NTAPI
-ExSystemTimeToLocalTime(
-  IN PLARGE_INTEGER  SystemTime,
-  OUT PLARGE_INTEGER  LocalTime);
-
-NTKERNELAPI
-VOID
-NTAPI
-ExUnregisterCallback(
-  IN PVOID  CbRegistration);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 ExUuidCreate(
   OUT UUID  *Uuid);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-ExVerifySuite(
-  IN SUITE_TYPE  SuiteType);
 
 #ifdef DBG
 
