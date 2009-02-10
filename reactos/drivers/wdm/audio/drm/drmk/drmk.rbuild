@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../../../tools/rbuild/project.dtd">
-<module name="drmk" type="kernelmodedriver" installbase="system32/drivers" installname="drmk.sys">
+<module name="drmk" type="kernelmodedriver" installbase="system32/drivers" installname="drmk.sys" entrypoint="0">
 	<include base="drmk">.</include>
 	<include base="drmk">..</include>
 	<include base="drmk">../include</include>
