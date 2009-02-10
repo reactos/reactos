@@ -147,6 +147,7 @@ ExAllocatePoolWithTag (POOL_TYPE PoolType, ULONG NumberOfBytes, ULONG Tag)
 /*
  * @implemented
  */
+#undef ExAllocatePoolWithQuota
 PVOID NTAPI
 ExAllocatePoolWithQuota (POOL_TYPE PoolType, ULONG NumberOfBytes)
 {
@@ -184,6 +185,7 @@ ExAllocatePoolWithTagPriority(
 /*
  * @implemented
  */
+#undef ExAllocatePoolWithQuotaTag
 PVOID
 NTAPI
 ExAllocatePoolWithQuotaTag (IN POOL_TYPE PoolType,
