@@ -50,17 +50,8 @@
 typedef GUID UUID;
 
 
-
 /* Windows Device Driver Kit */
 #include "winddk.h"
 
-/* Definitions only in Windows XP */
-#include "winxp.h"
-
-/* Definitions only in Windows 2000 */
-#include "win2k.h"
-
-/* Definitions only in Windows NT 4 */
-#include "winnt4.h"
 
 #endif /* _NTDDK_ */

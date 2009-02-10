@@ -822,6 +822,52 @@ typedef struct _QUOTA_LIMITS {
 #define QUOTA_LIMITS_HARDWS_MAX_DISABLE 0x00000008
 #define QUOTA_LIMITS_USE_DEFAULT_LIMITS 0x00000010
 
+
+/******************************************************************************
+ *                             WINBASE Functions                              *
+ ******************************************************************************/
+#if !defined(_WINBASE_)
+
+#if defined(_WIN64)
+
+#define InterlockedPopEntrySList(Head) \
+    ExpInterlockedPopEntrySList(Head)
+
+#define InterlockedPushEntrySList(Head, Entry) \
+    ExpInterlockedPushEntrySList(Head, Entry)
+
+#define InterlockedFlushSList(Head) \
+    ExpInterlockedFlushSList(Head)
+
+#define QueryDepthSList(Head) \
+    ExQueryDepthSList(Head)
+
+#else // !defined(_WIN64)
+
+NTKERNELAPI
+PSLIST_ENTRY
+FASTCALL
+InterlockedPopEntrySList(
+    IN PSLIST_HEADER ListHead);
+
+NTKERNELAPI
+PSLIST_ENTRY
+FASTCALL
+InterlockedPushEntrySList(
+    IN PSLIST_HEADER ListHead,
+    IN PSLIST_ENTRY ListEntry);
+
+#define InterlockedFlushSList(ListHead) \
+    ExInterlockedFlushSList(ListHead)
+
+#define QueryDepthSList(Head) \
+    ExQueryDepthSList(Head)
+
+#endif // !defined(_WIN64)
+
+#endif // !defined(_WINBASE_)
+
+
 /******************************************************************************
  *                              Kernel Types                                  *
  ******************************************************************************/
@@ -1175,6 +1221,33 @@ RtlEqualUnicodeString(
     IN CONST UNICODE_STRING *String1,
     IN CONST UNICODE_STRING *String2,
     IN BOOLEAN CaseInSensitive);
+
+#if !defined(_AMD64_) && !defined(_IA64_)
+NTSYSAPI
+LARGE_INTEGER
+NTAPI
+RtlExtendedIntegerMultiply(
+    IN LARGE_INTEGER Multiplicand,
+    IN LONG Multiplier);
+
+NTSYSAPI
+LARGE_INTEGER
+NTAPI
+RtlExtendedLargeIntegerDivide(
+  IN LARGE_INTEGER Dividend,
+  IN ULONG Divisor,
+  IN OUT PULONG Remainder);
+#endif
+
+#if defined(_X86_) || defined(_IA64_)
+NTSYSAPI
+LARGE_INTEGER
+NTAPI
+RtlExtendedMagicDivide(
+    IN LARGE_INTEGER Dividend,
+    IN LARGE_INTEGER MagicDivisor,
+    IN CCHAR  ShiftCount);
+#endif
 
 NTSYSAPI
 VOID
@@ -1681,9 +1754,9 @@ LARGE_INTEGER
 NTAPI_INLINE
 RtlConvertLongToLargeInteger(LONG SignedInteger)
 {
-    LARGE_INTEGER Result;
-    Result.QuadPart = SignedInteger;
-    return Result;
+    LARGE_INTEGER ret;
+    ret.QuadPart = SignedInteger;
+    return ret;
 }
 
 //DECLSPEC_DEPRECATED_DDK_WINXP
@@ -1695,6 +1768,46 @@ RtlConvertUlongToLargeInteger(
 {
     LARGE_INTEGER ret;
     ret.QuadPart = UnsignedInteger;
+    return ret;
+}
+
+//DECLSPEC_DEPRECATED_DDK
+static __inline
+ULONG
+NTAPI_INLINE
+RtlEnlargedUnsignedDivide(
+    IN ULARGE_INTEGER Dividend,
+    IN ULONG Divisor,
+    IN OUT PULONG Remainder)
+{
+    if (Remainder)
+        *Remainder = Dividend.QuadPart % Divisor;
+    return Dividend.QuadPart / Divisor;
+}
+
+//DECLSPEC_DEPRECATED_DDK
+static __inline
+LARGE_INTEGER
+NTAPI_INLINE
+RtlEnlargedUnsignedMultiply(
+    IN ULONG Multiplicand,
+    IN ULONG Multiplier)
+{
+    LARGE_INTEGER ret;
+    ret.QuadPart = (ULONGLONG)Multiplicand * (ULONGLONG)Multiplier;
+    return ret;
+}
+
+//DECLSPEC_DEPRECATED_DDK
+static __inline
+LARGE_INTEGER
+NTAPI_INLINE
+RtlEnlargedIntegerMultiply(
+    IN LONG Multiplicand,
+    IN LONG Multiplier)
+{
+    LARGE_INTEGER ret;
+    ret.QuadPart = (LONGLONG)Multiplicand * (ULONGLONG)Multiplier;
     return ret;
 }
 
@@ -1721,7 +1834,7 @@ RtlInitEmptyUnicodeString(
     UnicodeString->Buffer = Buffer;
 }
 
-#ifdef _M_AMD64
+#if defined(_AMD64_) || defined(_IA64_)
 static __inline
 LARGE_INTEGER
 NTAPI_INLINE
@@ -1749,6 +1862,71 @@ RtlExtendedLargeIntegerDivide(
     return ret;
 }
 #endif
+
+#if defined(_AMD64_)
+//DECLSPEC_DEPRECATED_DDK
+static __inline
+LARGE_INTEGER
+NTAPI_INLINE
+RtlExtendedMagicDivide(
+    IN LARGE_INTEGER Dividend,
+    IN LARGE_INTEGER MagicDivisor,
+    IN CCHAR ShiftCount);
+{
+    LARGE_INTEGER ret;
+    ULONG64 ret64;
+    BOOLEAN Pos;
+    Pos = (Dividend.QuadPart >= 0);
+    ret64 = UnsignedMultiplyHigh(Pos ? Dividend.QuadPart : -Dividend.QuadPart
+                                 MagicDivisor.QuadPart);
+    ret64 >>= ShiftCount;
+    ret.QuadPart = Pos ? ret64 : -ret64;
+    return ret;
+}
+#endif
+
+//DECLSPEC_DEPRECATED_DDK
+static __inline
+LARGE_INTEGER
+NTAPI_INLINE
+RtlLargeIntegerAdd(
+    IN LARGE_INTEGER Addend1,
+    IN LARGE_INTEGER Addend2)
+{
+    LARGE_INTEGER ret;
+    ret.QuadPart = Addend1.QuadPart + Addend2.QuadPart;
+    return ret;
+}
+
+/* VOID
+ * RtlLargeIntegerAnd(
+ *     IN OUT LARGE_INTEGER Result,
+ *     IN LARGE_INTEGER Source,
+ *     IN LARGE_INTEGER Mask);
+ */
+#define RtlLargeIntegerAnd(Result, Source, Mask) \
+    Result.QuadPart = Source.QuadPart & Mask.QuadPart
+
+//DECLSPEC_DEPRECATED_DDK
+static __inline
+LARGE_INTEGER
+NTAPI_INLINE
+RtlLargeIntegerArithmeticShift(
+    IN LARGE_INTEGER LargeInteger,
+    IN CCHAR ShiftCount)
+{
+    LARGE_INTEGER ret;
+    ret.QuadPart = LargeInteger.QuadPart >> ShiftCount;
+    return ret;
+}
+
+/* BOOLEAN
+ * RtlLargeIntegerEqualTo(
+ *     IN LARGE_INTEGER  Operand1,
+ *     IN LARGE_INTEGER  Operand2);
+ */
+#define RtlLargeIntegerEqualTo(X,Y) \
+    (!(((X).LowPart ^ (Y).LowPart) | ((X).HighPart ^ (Y).HighPart)))
 
 FORCEINLINE
 PVOID
@@ -1787,26 +1965,164 @@ RtlCheckBit(
 //
 // Byte Swap Functions
 //
-#if (defined(_M_IX86) && (_MSC_FULL_VER > 13009037)) || \
-    ((defined(_M_AMD64) || \
-     defined(_M_IA64)) && (_MSC_FULL_VER > 13009175))
-
-unsigned short __cdecl _byteswap_ushort(unsigned short);
-unsigned long  __cdecl _byteswap_ulong (unsigned long);
-unsigned __int64 __cdecl _byteswap_uint64(unsigned __int64);
-#pragma intrinsic(_byteswap_ushort)
-#pragma intrinsic(_byteswap_ulong)
-#pragma intrinsic(_byteswap_uint64)
-#define RtlUshortByteSwap(_x) _byteswap_ushort((USHORT)(_x))
-#define RtlUlongByteSwap(_x) _byteswap_ulong((_x))
-#define RtlUlonglongByteSwap(_x) _byteswap_uint64((_x))
-
-#elif defined(__GNUC__) && (defined(_M_IX86) || defined(_M_AMD64))
+#if (defined(_M_IX86) && (_MSC_FULL_VER > 13009037 || defined(__GNUC__))) || \
+    ((defined(_M_AMD64) || defined(_M_IA64)) \
+        && (_MSC_FULL_VER > 13009175 || defined(__GNUC__)))
 
 #define RtlUshortByteSwap(_x) _byteswap_ushort((USHORT)(_x))
 #define RtlUlongByteSwap(_x) _byteswap_ulong((_x))
 #define RtlUlonglongByteSwap(_x) _byteswap_uint64((_x))
 
+#endif
+
+/******************************************************************************
+ *                         Memory manager Types                               *
+ ******************************************************************************/
+
+typedef struct _MDL {
+    struct _MDL *Next;
+    CSHORT Size;
+    CSHORT MdlFlags;
+    struct _EPROCESS *Process;
+    PVOID MappedSystemVa;
+    PVOID StartVa;
+    ULONG ByteCount;
+    ULONG ByteOffset;
+} MDL, *PMDL;
+
+
+/******************************************************************************
+ *                       Memory manager Functions                             *
+ ******************************************************************************/
+
+/* PVOID MmGetSystemAddressForMdl(
+ *     IN PMDL Mdl);
+ */
+#define MmGetSystemAddressForMdl(Mdl) \
+  (((Mdl)->MdlFlags & (MDL_MAPPED_TO_SYSTEM_VA | \
+    MDL_SOURCE_IS_NONPAGED_POOL)) ? \
+      ((Mdl)->MappedSystemVa) : \
+      (MmMapLockedPages((Mdl), KernelMode)))
+
+/* PVOID
+ * MmGetSystemAddressForMdlSafe(
+ *     IN PMDL Mdl,
+ *     IN MM_PAGE_PRIORITY Priority)
+ */
+#define MmGetSystemAddressForMdlSafe(_Mdl, _Priority) \
+  (((_Mdl)->MdlFlags & (MDL_MAPPED_TO_SYSTEM_VA \
+    | MDL_SOURCE_IS_NONPAGED_POOL)) ? \
+    (_Mdl)->MappedSystemVa : \
+    (PVOID) MmMapLockedPagesSpecifyCache((_Mdl), \
+      KernelMode, MmCached, NULL, FALSE, (_Priority)))
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+NTKERNELAPI
+PMDL
+NTAPI
+MmCreateMdl(
+  IN PMDL  MemoryDescriptorList  OPTIONAL,
+  IN PVOID  Base,
+  IN SIZE_T  Length);
+
+#endif
+
+
+/******************************************************************************
+ *                         I/O Manager Functions                              *
+ ******************************************************************************/
+
+#if defined(USE_DMA_MACROS) && !defined(_NTHAL_) && \
+   (defined(_NTDDK_) || defined(_NTDRIVER_)) || defined(_WDM_INCLUDED_)
+
+#define DMA_MACROS_DEFINED
+
+FORCEINLINE
+NTSTATUS
+IoAllocateAdapterChannel(
+    IN PADAPTER_OBJECT AdapterObject,
+    IN PDEVICE_OBJECT DeviceObject,
+    IN ULONG NumberOfMapRegisters,
+    IN PDRIVER_CONTROL ExecutionRoutine,
+    IN PVOID Context)
+{
+    PALLOCATE_ADAPTER_CHANNEL AllocateAdapterChannel;
+    AllocateAdapterChannel =
+        *(DmaAdapter)->DmaOperations->AllocateAdapterChannel;
+    ASSERT(AllocateAdapterChannel);
+    return AllocateAdapterChannel(DmaAdapter,
+                                  DeviceObject,
+                                  NumberOfMapRegisters,
+                                  ExecutionRoutine,
+                                  Context );
+}
+
+FORCEINLINE
+BOOLEAN
+IoFlushAdapterBuffers(
+    IN PADAPTER_OBJECT AdapterObject,
+    IN PMDL Mdl,
+    IN PVOID MapRegisterBase,
+    IN PVOID CurrentVa,
+    IN ULONG Length,
+    IN BOOLEAN WriteToDevice)
+{
+    PFLUSH_ADAPTER_BUFFERS FlushAdapterBuffers;
+    FlushAdapterBuffers = *(DmaAdapter)->DmaOperations->FlushAdapterBuffers;
+    ASSERT(FlushAdapterBuffers);
+    return FlushAdapterBuffers(DmaAdapter,
+                               Mdl,
+                               MapRegisterBase,
+                               CurrentVa,
+                               Length,
+                               WriteToDevice );
+}
+
+FORCEINLINE
+VOID
+IoFreeAdapterChannel(
+    IN PADAPTER_OBJECT AdapterObject)
+{
+    PFREE_ADAPTER_CHANNEL FreeAdapterChannel;
+    FreeAdapterChannel = *(DmaAdapter)->DmaOperations->FreeAdapterChannel;
+    ASSERT(FreeAdapterChannel);
+    FreeAdapterChannel(DmaAdapter);
+}
+
+FORCEINLINE
+VOID
+IoFreeMapRegisters(
+    IN PADAPTER_OBJECT AdapterObject,
+    IN PVOID MapRegisterBase,
+    IN ULONG NumberOfMapRegisters)
+{
+    PFREE_MAP_REGISTERS FreeMapRegisters;
+    FreeMapRegisters = *(DmaAdapter)->DmaOperations->FreeMapRegisters;
+    ASSERT(FreeMapRegisters);
+    FreeMapRegisters(DmaAdapter, MapRegisterBase, NumberOfMapRegisters);
+}
+
+FORCEINLINE
+PHYSICAL_ADDRESS
+IoMapTransfer(
+    IN PDMA_ADAPTER DmaAdapter,
+    IN PMDL Mdl,
+    IN PVOID MapRegisterBase,
+    IN PVOID CurrentVa,
+    IN OUT PULONG Length,
+    IN BOOLEAN WriteToDevice)
+{
+    PMAP_TRANSFER MapTransfer;
+
+    MapTransfer = *(DmaAdapter)->DmaOperations->MapTransfer;
+    ASSERT(MapTransfer);
+    return MapTransfer(DmaAdapter,
+                       Mdl,
+                       MapRegisterBase,
+                       CurrentVa,
+                       Length,
+                       WriteToDevice);
+}
 #endif
 
 
@@ -1997,6 +2313,23 @@ typedef struct _EX_RUNDOWN_REF {
     };
 } EX_RUNDOWN_REF, *PEX_RUNDOWN_REF;
 
+typedef enum _WORK_QUEUE_TYPE {
+  CriticalWorkQueue,
+  DelayedWorkQueue,
+  HyperCriticalWorkQueue,
+  MaximumWorkQueue
+} WORK_QUEUE_TYPE;
+
+typedef VOID
+(DDKAPI *PWORKER_THREAD_ROUTINE)(
+  IN PVOID Parameter);
+
+typedef struct _WORK_QUEUE_ITEM {
+  LIST_ENTRY  List;
+  PWORKER_THREAD_ROUTINE  WorkerRoutine;
+  volatile PVOID  Parameter;
+} WORK_QUEUE_ITEM, *PWORK_QUEUE_ITEM;
+
 
 /******************************************************************************
  *                          Executive Functions                               *
@@ -2096,6 +2429,19 @@ ExInterlockedPushEntrySList(
 #define ExGetCurrentResourceThread() ((ERESOURCE_THREAD)PsGetCurrentThread())
 
 #define ExReleaseResource(R) (ExReleaseResourceLite(R))
+
+/* VOID
+ * ExInitializeWorkItem(
+ *     IN PWORK_QUEUE_ITEM Item,
+ *     IN PWORKER_THREAD_ROUTINE Routine,
+ *     IN PVOID Context)
+ */
+#define ExInitializeWorkItem(Item, Routine, Context) \
+{ \
+  (Item)->WorkerRoutine = Routine; \
+  (Item)->Parameter = Context; \
+  (Item)->List.Flink = NULL; \
+}
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 
@@ -2416,6 +2762,13 @@ ExNotifyCallback(
     IN PVOID Argument2);
 
 NTKERNELAPI
+VOID
+NTAPI
+ExQueueWorkItem(
+    IN PWORK_QUEUE_ITEM WorkItem,
+    IN WORK_QUEUE_TYPE QueueType);
+
+NTKERNELAPI
 DECLSPEC_NORETURN
 VOID
 NTAPI
@@ -2572,49 +2925,73 @@ ExInitializeLookasideListEx(
 #endif
 
 
-/******************************************************************************
- *                             WINBASE Functions                              *
- ******************************************************************************/
-#if !defined(_WINBASE_)
+#if !defined(MIDL_PASS)
 
-#if defined(_WIN64)
+static __inline PVOID
+ExAllocateFromNPagedLookasideList(
+    IN PNPAGED_LOOKASIDE_LIST Lookaside)
+{
+    PVOID Entry;
 
-#define InterlockedPopEntrySList(Head) \
-    ExpInterlockedPopEntrySList(Head)
+    Lookaside->L.TotalAllocates++;
+    Entry = InterlockedPopEntrySList(&Lookaside->L.ListHead);
+    if (Entry == NULL) {
+        Lookaside->L.AllocateMisses++;
+        Entry = (Lookaside->L.Allocate)(Lookaside->L.Type,
+                                        Lookaside->L.Size,
+                                        Lookaside->L.Tag);
+    }
+    return Entry;
+}
 
-#define InterlockedPushEntrySList(Head, Entry) \
-    ExpInterlockedPushEntrySList(Head, Entry)
+static __inline PVOID
+ExAllocateFromPagedLookasideList(
+    IN PPAGED_LOOKASIDE_LIST Lookaside)
+{
+    PVOID Entry;
 
-#define InterlockedFlushSList(Head) \
-    ExpInterlockedFlushSList(Head)
+    Lookaside->L.TotalAllocates++;
+    Entry = InterlockedPopEntrySList(&Lookaside->L.ListHead);
+    if (Entry == NULL) {
+        Lookaside->L.AllocateMisses++;
+        Entry = (Lookaside->L.Allocate)(Lookaside->L.Type,
+                                        Lookaside->L.Size,
+                                        Lookaside->L.Tag);
+    }
+    return Entry;
+}
 
-#define QueryDepthSList(Head) \
-    ExQueryDepthSList(Head)
+static __inline VOID
+ExFreeToNPagedLookasideList(
+    IN PNPAGED_LOOKASIDE_LIST Lookaside,
+    IN PVOID  Entry)
+{
+    Lookaside->L.TotalFrees++;
+    if (ExQueryDepthSList(&Lookaside->L.ListHead) >= Lookaside->L.Depth) {
+        Lookaside->L.FreeMisses++;
+        (Lookaside->L.Free)(Entry);
+    } else {
+        InterlockedPushEntrySList(&Lookaside->L.ListHead, (PSLIST_ENTRY)Entry);
+    }
+}
 
-#else // !defined(_WIN64)
+static __inline VOID
+ExFreeToPagedLookasideList(
+    IN PPAGED_LOOKASIDE_LIST Lookaside,
+    IN PVOID  Entry)
+{
+    Lookaside->L.TotalFrees++;
+    if (ExQueryDepthSList(&Lookaside->L.ListHead) >= Lookaside->L.Depth) {
+        Lookaside->L.FreeMisses++;
+        (Lookaside->L.Free)(Entry);
+    } else {
+        InterlockedPushEntrySList(&Lookaside->L.ListHead, (PSLIST_ENTRY)Entry);
+    }
+}
 
-NTKERNELAPI
-PSLIST_ENTRY
-FASTCALL
-InterlockedPopEntrySList(
-    IN PSLIST_HEADER ListHead);
 
-NTKERNELAPI
-PSLIST_ENTRY
-FASTCALL
-InterlockedPushEntrySList(
-    IN PSLIST_HEADER ListHead,
-    IN PSLIST_ENTRY ListEntry);
+#endif // !defined(MIDL_PASS)
 
-#define InterlockedFlushSList(ListHead) \
-    ExInterlockedFlushSList(ListHead)
-
-#define QueryDepthSList(Head) \
-    ExQueryDepthSList(Head)
-
-#endif // !defined(_WIN64)
-
-#endif // !defined(_WINBASE_)
 
 #ifdef __cplusplus
 }

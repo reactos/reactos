@@ -2299,17 +2299,6 @@ typedef struct _SCATTER_GATHER_LIST {
   SCATTER_GATHER_ELEMENT  Elements[1];
 } SCATTER_GATHER_LIST, *PSCATTER_GATHER_LIST;
 
-typedef struct _MDL {
-  struct _MDL  *Next;
-  CSHORT  Size;
-  CSHORT  MdlFlags;
-  struct _EPROCESS  *Process;
-  PVOID  MappedSystemVa;
-  PVOID  StartVa;
-  ULONG  ByteCount;
-  ULONG  ByteOffset;
-} MDL, *PMDL;
-
 #define MDL_MAPPED_TO_SYSTEM_VA     0x0001
 #define MDL_PAGES_LOCKED            0x0002
 #define MDL_SOURCE_IS_NONPAGED_POOL 0x0004
@@ -4579,23 +4568,6 @@ typedef enum _IO_QUERY_DEVICE_DATA_FORMAT {
   IoQueryDeviceMaxData
 } IO_QUERY_DEVICE_DATA_FORMAT, *PIO_QUERY_DEVICE_DATA_FORMAT;
 
-typedef enum _WORK_QUEUE_TYPE {
-  CriticalWorkQueue,
-  DelayedWorkQueue,
-  HyperCriticalWorkQueue,
-  MaximumWorkQueue
-} WORK_QUEUE_TYPE;
-
-typedef VOID
-(DDKAPI *PWORKER_THREAD_ROUTINE)(
-  IN PVOID Parameter);
-
-typedef struct _WORK_QUEUE_ITEM {
-  LIST_ENTRY  List;
-  PWORKER_THREAD_ROUTINE  WorkerRoutine;
-  volatile PVOID  Parameter;
-} WORK_QUEUE_ITEM, *PWORK_QUEUE_ITEM;
-
 typedef enum _KBUGCHECK_CALLBACK_REASON {
   KbCallbackInvalid,
   KbCallbackReserved1,
@@ -4746,6 +4718,25 @@ typedef VOID
   IN PUNICODE_STRING  FullImageName,
   IN HANDLE  ProcessId,
   IN PIMAGE_INFO  ImageInfo);
+
+#pragma pack(push,4)
+typedef enum _BUS_DATA_TYPE {
+    ConfigurationSpaceUndefined = -1,
+    Cmos,
+    EisaConfiguration,
+    Pos,
+    CbusConfiguration,
+    PCIConfiguration,
+    VMEConfiguration,
+    NuBusConfiguration,
+    PCMCIAConfiguration,
+    MPIConfiguration,
+    MPSAConfiguration,
+    PNPISAConfiguration,
+    SgiInternalConfiguration,
+    MaximumBusDataType
+} BUS_DATA_TYPE, *PBUS_DATA_TYPE;
+#pragma pack(pop)
 
 typedef struct _NT_TIB {
     struct _EXCEPTION_REGISTRATION_RECORD *ExceptionList;
@@ -6281,68 +6272,6 @@ KeTryToAcquireGuardedMutex(
     KeInitializeEvent(&(_FastMutex)->Gate, SynchronizationEvent, FALSE); \
 }
 
-/** Executive support routines **/
-
-static __inline PVOID
-ExAllocateFromNPagedLookasideList(
-  IN PNPAGED_LOOKASIDE_LIST  Lookaside)
-{
-  PVOID Entry;
-
-  Lookaside->L.TotalAllocates++;
-  Entry = InterlockedPopEntrySList(&Lookaside->L.ListHead);
-  if (Entry == NULL) {
-    Lookaside->L.AllocateMisses++;
-    Entry = (Lookaside->L.Allocate)(Lookaside->L.Type, Lookaside->L.Size, Lookaside->L.Tag);
-  }
-  return Entry;
-}
-
-static __inline PVOID
-ExAllocateFromPagedLookasideList(
-  IN PPAGED_LOOKASIDE_LIST  Lookaside)
-{
-  PVOID Entry;
-
-  Lookaside->L.TotalAllocates++;
-  Entry = InterlockedPopEntrySList(&Lookaside->L.ListHead);
-  if (Entry == NULL) {
-    Lookaside->L.AllocateMisses++;
-    Entry = (Lookaside->L.Allocate)(Lookaside->L.Type, Lookaside->L.Size, Lookaside->L.Tag);
-  }
-  return Entry;
-}
-
-#define PROTECTED_POOL                    0x80000000
-
-static __inline VOID
-ExFreeToNPagedLookasideList(
-  IN PNPAGED_LOOKASIDE_LIST  Lookaside,
-  IN PVOID  Entry)
-{
-  Lookaside->L.TotalFrees++;
-  if (ExQueryDepthSList(&Lookaside->L.ListHead) >= Lookaside->L.Depth) {
-    Lookaside->L.FreeMisses++;
-    (Lookaside->L.Free)(Entry);
-  } else {
-    InterlockedPushEntrySList(&Lookaside->L.ListHead, (PSLIST_ENTRY)Entry);
-  }
-}
-
-static __inline VOID
-ExFreeToPagedLookasideList(
-  IN PPAGED_LOOKASIDE_LIST  Lookaside,
-  IN PVOID  Entry)
-{
-  Lookaside->L.TotalFrees++;
-  if (ExQueryDepthSList(&Lookaside->L.ListHead) >= Lookaside->L.Depth) {
-    Lookaside->L.FreeMisses++;
-    (Lookaside->L.Free)(Entry);
-  } else {
-    InterlockedPushEntrySList(&Lookaside->L.ListHead, (PSLIST_ENTRY)Entry);
-  }
-}
-
 NTKERNELAPI
 VOID
 NTAPI
@@ -6350,6 +6279,91 @@ KeInitializeEvent(
   IN PRKEVENT  Event,
   IN EVENT_TYPE  Type,
   IN BOOLEAN  State);
+
+/******************************************************************************
+ *                            Executive Types                                 *
+ ******************************************************************************/
+
+typedef struct _ZONE_SEGMENT_HEADER {
+  SINGLE_LIST_ENTRY  SegmentList;
+  PVOID  Reserved;
+} ZONE_SEGMENT_HEADER, *PZONE_SEGMENT_HEADER;
+
+typedef struct _ZONE_HEADER {
+  SINGLE_LIST_ENTRY  FreeList;
+  SINGLE_LIST_ENTRY  SegmentList;
+  ULONG  BlockSize;
+  ULONG  TotalSegmentSize;
+} ZONE_HEADER, *PZONE_HEADER;
+
+#define PROTECTED_POOL                    0x80000000
+
+/******************************************************************************
+ *                          Executive Functions                               *
+ ******************************************************************************/
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+ExExtendZone(
+  IN PZONE_HEADER  Zone,
+  IN PVOID  Segment,
+  IN ULONG  SegmentSize);
+
+static __inline PVOID
+ExAllocateFromZone(
+  IN PZONE_HEADER  Zone)
+{
+  if (Zone->FreeList.Next)
+    Zone->FreeList.Next = Zone->FreeList.Next->Next;
+  return (PVOID) Zone->FreeList.Next;
+}
+
+static __inline PVOID
+ExFreeToZone(
+  IN PZONE_HEADER  Zone,
+  IN PVOID  Block)
+{
+  ((PSINGLE_LIST_ENTRY) Block)->Next = Zone->FreeList.Next;
+  Zone->FreeList.Next = ((PSINGLE_LIST_ENTRY) Block);
+  return ((PSINGLE_LIST_ENTRY) Block)->Next;
+}
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+ExInitializeZone(
+  IN PZONE_HEADER  Zone,
+  IN ULONG  BlockSize,
+  IN PVOID  InitialSegment,
+  IN ULONG  InitialSegmentSize);
+
+/*
+ * PVOID
+ * ExInterlockedAllocateFromZone(
+ *   IN PZONE_HEADER  Zone,
+ *   IN PKSPIN_LOCK  Lock)
+ */
+#define ExInterlockedAllocateFromZone(Zone, Lock) \
+    ((PVOID) ExInterlockedPopEntryList(&Zone->FreeList, Lock))
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+ExInterlockedExtendZone(
+  IN PZONE_HEADER  Zone,
+  IN PVOID  Segment,
+  IN ULONG  SegmentSize,
+  IN PKSPIN_LOCK  Lock);
+
+/* PVOID
+ * ExInterlockedFreeToZone(
+ *  IN PZONE_HEADER  Zone,
+ *  IN PVOID  Block,
+ *  IN PKSPIN_LOCK  Lock);
+ */
+#define ExInterlockedFreeToZone(Zone, Block, Lock) \
+    ExInterlockedPushEntryList(&(Zone)->FreeList, (PSINGLE_LIST_ENTRY)(Block), Lock)
 
 /*
  * VOID
@@ -6360,6 +6374,24 @@ KeInitializeEvent(
 	(_SListHead)->Alignment = 0
 
 #define ExInitializeSListHead InitializeSListHead
+
+/*
+ * BOOLEAN
+ * ExIsFullZone(
+ *  IN PZONE_HEADER  Zone)
+ */
+#define ExIsFullZone(Zone) \
+  ((Zone)->FreeList.Next == (PSINGLE_LIST_ENTRY) NULL)
+
+/* BOOLEAN
+ * ExIsObjectInFirstZoneSegment(
+ *     IN PZONE_HEADER Zone,
+ *     IN PVOID Object);
+ */
+#define ExIsObjectInFirstZoneSegment(Zone,Object) \
+    ((BOOLEAN)( ((PUCHAR)(Object) >= (PUCHAR)(Zone)->SegmentList.Next) && \
+                ((PUCHAR)(Object) <  (PUCHAR)(Zone)->SegmentList.Next + \
+                         (Zone)->TotalSegmentSize)) )
 
 NTKERNELAPI
 DECLSPEC_NORETURN
@@ -6380,6 +6412,17 @@ NTSTATUS
 NTAPI
 ExUuidCreate(
   OUT UUID  *Uuid);
+
+#define ExAcquireResourceExclusive ExAcquireResourceExclusiveLite
+#define ExAcquireResourceShared ExAcquireResourceSharedLite
+#define ExConvertExclusiveToShared ExConvertExclusiveToSharedLite
+#define ExDeleteResource ExDeleteResourceLite
+#define ExInitializeResource ExInitializeResourceLite
+#define ExIsResourceAcquiredExclusive ExIsResourceAcquiredExclusiveLite
+#define ExIsResourceAcquiredShared ExIsResourceAcquiredSharedLite
+#define ExIsResourceAcquired ExIsResourceAcquiredSharedLite
+#define ExReleaseResourceForThread ExReleaseResourceForThreadLite
+
 
 #ifdef DBG
 
@@ -6465,16 +6508,6 @@ HalPutDmaAdapter(
     PADAPTER_OBJECT AdapterObject
 );
 
-NTKERNELAPI
-NTSTATUS
-NTAPI
-IoAllocateAdapterChannel(
-    IN PADAPTER_OBJECT AdapterObject,
-    IN PDEVICE_OBJECT DeviceObject,
-    IN ULONG NumberOfMapRegisters,
-    IN PDRIVER_CONTROL ExecutionRoutine,
-    IN PVOID Context
-);
 
 /** Io access routines **/
 
@@ -6937,6 +6970,18 @@ IoAcquireRemoveLockEx(
       InterlockedDecrement(_Count); \
     } \
 }
+
+#ifndef DMA_MACROS_DEFINED
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoAllocateAdapterChannel(
+    IN PADAPTER_OBJECT AdapterObject,
+    IN PDEVICE_OBJECT DeviceObject,
+    IN ULONG NumberOfMapRegisters,
+    IN PDRIVER_CONTROL ExecutionRoutine,
+    IN PVOID Context);
+#endif
 
 NTKERNELAPI
 VOID
@@ -7657,6 +7702,15 @@ IoReadDiskSignature(
 
 NTKERNELAPI
 NTSTATUS
+FASTCALL
+IoReadPartitionTable(
+  IN PDEVICE_OBJECT  DeviceObject,
+  IN ULONG  SectorSize,
+  IN BOOLEAN  ReturnRecognizedPartitions,
+  OUT struct _DRIVE_LAYOUT_INFORMATION  **PartitionBuffer);
+
+NTKERNELAPI
+NTSTATUS
 NTAPI
 IoReadPartitionTableEx(
   IN PDEVICE_OBJECT  DeviceObject,
@@ -7916,6 +7970,15 @@ IoSetHardErrorOrVerifyDevice(
   (_Irp)->CurrentLocation--; \
   (_Irp)->Tail.Overlay.CurrentStackLocation--; \
 }
+
+NTKERNELAPI
+NTSTATUS
+FASTCALL
+IoSetPartitionInformation(
+  IN PDEVICE_OBJECT  DeviceObject,
+  IN ULONG  SectorSize,
+  IN ULONG  PartitionNumber,
+  IN ULONG  PartitionType);
 
 NTKERNELAPI
 NTSTATUS
@@ -8183,6 +8246,16 @@ VOID
 NTAPI
 IoWriteErrorLogEntry(
   IN PVOID  ElEntry);
+
+NTKERNELAPI
+NTSTATUS
+FASTCALL
+IoWritePartitionTable(
+  IN PDEVICE_OBJECT  DeviceObject,
+  IN ULONG  SectorSize,
+  IN ULONG  SectorsPerTrack,
+  IN ULONG  NumberOfHeads,
+  IN struct _DRIVE_LAYOUT_INFORMATION  *PartitionBuffer);
 
 NTKERNELAPI
 NTSTATUS
@@ -9075,19 +9148,6 @@ NTAPI
 MmMarkPhysicalMemoryAsGood(
   IN PPHYSICAL_ADDRESS  StartAddress,
   IN OUT PLARGE_INTEGER  NumberOfBytes);
-
-/*
- * PVOID
- * MmGetSystemAddressForMdlSafe(
- *   IN PMDL  Mdl,
- *   IN MM_PAGE_PRIORITY  Priority)
- */
-#define MmGetSystemAddressForMdlSafe(_Mdl, _Priority) \
-  (((_Mdl)->MdlFlags & (MDL_MAPPED_TO_SYSTEM_VA \
-    | MDL_SOURCE_IS_NONPAGED_POOL)) ? \
-    (_Mdl)->MappedSystemVa : \
-    (PVOID) MmMapLockedPagesSpecifyCache((_Mdl), \
-      KernelMode, MmCached, NULL, FALSE, (_Priority)))
 
 NTKERNELAPI
 PVOID
@@ -10389,6 +10449,398 @@ extern BOOLEAN KdDebuggerEnabled;
 #define KD_DEBUGGER_NOT_PRESENT KdDebuggerNotPresent
 
 #endif
+
+/** Stuff from winnt4.h */
+
+#ifndef DMA_MACROS_DEFINED
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+
+//DECLSPEC_DEPRECATED_DDK
+NTKERNELAPI
+BOOLEAN
+NTAPI
+IoFlushAdapterBuffers(
+    IN PADAPTER_OBJECT AdapterObject,
+    IN PMDL Mdl,
+    IN PVOID MapRegisterBase,
+    IN PVOID CurrentVa,
+    IN ULONG Length,
+    IN BOOLEAN WriteToDevice);
+
+//DECLSPEC_DEPRECATED_DDK
+NTKERNELAPI
+VOID
+NTAPI
+IoFreeAdapterChannel(
+    IN PADAPTER_OBJECT AdapterObject);
+
+//DECLSPEC_DEPRECATED_DDK
+NTKERNELAPI
+VOID
+NTAPI
+IoFreeMapRegisters(
+    IN PADAPTER_OBJECT AdapterObject,
+    IN PVOID MapRegisterBase,
+    IN ULONG NumberOfMapRegisters);
+
+//DECLSPEC_DEPRECATED_DDK
+NTKERNELAPI
+PHYSICAL_ADDRESS
+NTAPI
+IoMapTransfer(
+    IN PDMA_ADAPTER DmaAdapter,
+    IN PMDL Mdl,
+    IN PVOID MapRegisterBase,
+    IN PVOID CurrentVa,
+    IN OUT PULONG Length,
+    IN BOOLEAN WriteToDevice);
+
+
+#endif // (NTDDI_VERSION >= NTDDI_WIN2K)
+#endif // !defined(DMA_MACROS_DEFINED)
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoAssignResources(
+  IN PUNICODE_STRING  RegistryPath,
+  IN PUNICODE_STRING  DriverClassName  OPTIONAL,
+  IN PDRIVER_OBJECT  DriverObject,
+  IN PDEVICE_OBJECT  DeviceObject  OPTIONAL,
+  IN PIO_RESOURCE_REQUIREMENTS_LIST  RequestedResources,
+  IN OUT PCM_RESOURCE_LIST  *AllocatedResources);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoAttachDeviceByPointer(
+  IN PDEVICE_OBJECT  SourceDevice,
+  IN PDEVICE_OBJECT  TargetDevice);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+MmIsNonPagedSystemAddressValid(
+  IN PVOID  VirtualAddress);
+
+#if defined(_AMD64_) || defined(_IA64_)
+//DECLSPEC_DEPRECATED_DDK_WINXP
+static __inline
+LARGE_INTEGER
+NTAPI_INLINE
+RtlLargeIntegerDivide(
+    IN LARGE_INTEGER Dividend,
+    IN LARGE_INTEGER Divisor,
+    IN OUT PLARGE_INTEGER Remainder)
+{
+    LARGE_INTEGER ret;
+    ret.QuadPart = Dividend.QuadPart / Divisor.QuadPart;
+    if (Remainder)
+        Remainder->QuadPart = Dividend.QuadPart % Divisor.QuadPart;
+    return ret;
+}
+#else
+NTSYSAPI
+LARGE_INTEGER
+NTAPI
+RtlLargeIntegerDivide(
+  IN LARGE_INTEGER  Dividend,
+  IN LARGE_INTEGER  Divisor,
+  IN OUT PLARGE_INTEGER  Remainder);
+#endif
+
+NTKERNELAPI
+INTERLOCKED_RESULT
+NTAPI
+ExInterlockedDecrementLong(
+  IN PLONG  Addend,
+  IN PKSPIN_LOCK  Lock);
+
+NTKERNELAPI
+ULONG
+NTAPI
+ExInterlockedExchangeUlong(
+  IN PULONG  Target,
+  IN ULONG  Value,
+  IN PKSPIN_LOCK  Lock);
+
+NTKERNELAPI
+INTERLOCKED_RESULT
+NTAPI
+ExInterlockedIncrementLong(
+  IN PLONG  Addend,
+  IN PKSPIN_LOCK  Lock);
+
+NTHALAPI
+VOID
+NTAPI
+HalAcquireDisplayOwnership(
+  IN PHAL_RESET_DISPLAY_PARAMETERS  ResetDisplayParameters);
+
+NTHALAPI
+NTSTATUS
+NTAPI
+HalAllocateAdapterChannel(
+  IN PADAPTER_OBJECT  AdapterObject,
+  IN PWAIT_CONTEXT_BLOCK  Wcb,
+  IN ULONG  NumberOfMapRegisters,
+  IN PDRIVER_CONTROL  ExecutionRoutine);
+
+NTHALAPI
+PVOID
+NTAPI
+HalAllocateCommonBuffer(
+  IN PADAPTER_OBJECT  AdapterObject,
+  IN ULONG  Length,
+  OUT PPHYSICAL_ADDRESS  LogicalAddress,
+  IN BOOLEAN  CacheEnabled);
+
+NTHALAPI
+NTSTATUS
+NTAPI
+HalAssignSlotResources(
+  IN PUNICODE_STRING  RegistryPath,
+  IN PUNICODE_STRING  DriverClassName,
+  IN PDRIVER_OBJECT  DriverObject,
+  IN PDEVICE_OBJECT  DeviceObject,
+  IN INTERFACE_TYPE  BusType,
+  IN ULONG  BusNumber,
+  IN ULONG  SlotNumber,
+  IN OUT PCM_RESOURCE_LIST  *AllocatedResources);
+
+NTHALAPI
+VOID
+NTAPI
+HalFreeCommonBuffer(
+  IN PADAPTER_OBJECT  AdapterObject,
+  IN ULONG  Length,
+  IN PHYSICAL_ADDRESS  LogicalAddress,
+  IN PVOID  VirtualAddress,
+  IN BOOLEAN  CacheEnabled);
+
+NTHALAPI
+PADAPTER_OBJECT
+NTAPI
+HalGetAdapter(
+  IN PDEVICE_DESCRIPTION  DeviceDescription,
+  IN OUT PULONG  NumberOfMapRegisters);
+
+NTHALAPI
+ULONG
+NTAPI
+HalGetBusData(
+  IN BUS_DATA_TYPE  BusDataType,
+  IN ULONG  BusNumber,
+  IN ULONG  SlotNumber,
+  IN PVOID  Buffer,
+  IN ULONG  Length);
+
+NTHALAPI
+ULONG
+NTAPI
+HalGetBusDataByOffset(
+  IN BUS_DATA_TYPE  BusDataType,
+  IN ULONG  BusNumber,
+  IN ULONG  SlotNumber,
+  IN PVOID  Buffer,
+  IN ULONG  Offset,
+  IN ULONG  Length);
+
+NTHALAPI
+ULONG
+NTAPI
+HalGetDmaAlignmentRequirement(
+  VOID);
+
+NTHALAPI
+ULONG
+NTAPI
+HalGetInterruptVector(
+  IN INTERFACE_TYPE  InterfaceType,
+  IN ULONG  BusNumber,
+  IN ULONG  BusInterruptLevel,
+  IN ULONG  BusInterruptVector,
+  OUT PKIRQL  Irql,
+  OUT PKAFFINITY  Affinity);
+
+NTHALAPI
+ULONG
+NTAPI
+HalReadDmaCounter(
+  IN PADAPTER_OBJECT  AdapterObject);
+
+NTHALAPI
+ULONG
+NTAPI
+HalSetBusData(
+  IN BUS_DATA_TYPE  BusDataType,
+  IN ULONG  BusNumber,
+  IN ULONG  SlotNumber,
+  IN PVOID  Buffer,
+  IN ULONG  Length);
+
+NTHALAPI
+ULONG
+NTAPI
+HalSetBusDataByOffset(
+  IN BUS_DATA_TYPE  BusDataType,
+  IN ULONG  BusNumber,
+  IN ULONG  SlotNumber,
+  IN PVOID  Buffer,
+  IN ULONG  Offset,
+  IN ULONG  Length);
+
+NTHALAPI
+BOOLEAN
+NTAPI
+HalTranslateBusAddress(
+  IN INTERFACE_TYPE  InterfaceType,
+  IN ULONG  BusNumber,
+  IN PHYSICAL_ADDRESS  BusAddress,
+  IN OUT PULONG  AddressSpace,
+  OUT PPHYSICAL_ADDRESS  TranslatedAddress);
+
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlLargeIntegerEqualToZero(
+  IN LARGE_INTEGER  Operand);
+
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlLargeIntegerGreaterOrEqualToZero(
+  IN LARGE_INTEGER  Operand);
+
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlLargeIntegerGreaterThan(
+  IN LARGE_INTEGER  Operand1,
+  IN LARGE_INTEGER  Operand2);
+
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlLargeIntegerGreaterThanOrEqualTo(
+  IN LARGE_INTEGER  Operand1,
+  IN LARGE_INTEGER  Operand2);
+
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlLargeIntegerGreaterThanZero(
+  IN LARGE_INTEGER  Operand);
+
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlLargeIntegerLessOrEqualToZero(
+  IN LARGE_INTEGER  Operand);
+
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlLargeIntegerLessThan(
+  IN LARGE_INTEGER  Operand1,
+  IN LARGE_INTEGER  Operand2);
+
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlLargeIntegerLessThanOrEqualTo(
+  IN LARGE_INTEGER  Operand1,
+  IN LARGE_INTEGER  Operand2);
+
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlLargeIntegerLessThanZero(
+  IN LARGE_INTEGER  Operand);
+
+NTSYSAPI
+LARGE_INTEGER
+NTAPI
+RtlLargeIntegerNegate(
+  IN LARGE_INTEGER  Subtrahend);
+
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlLargeIntegerNotEqualTo(
+  IN LARGE_INTEGER  Operand1,
+  IN LARGE_INTEGER  Operand2);
+
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlLargeIntegerNotEqualToZero(
+  IN LARGE_INTEGER  Operand);
+
+NTSYSAPI
+LARGE_INTEGER
+NTAPI
+RtlLargeIntegerShiftLeft(
+  IN LARGE_INTEGER  LargeInteger,
+  IN CCHAR  ShiftCount);
+
+NTSYSAPI
+LARGE_INTEGER
+NTAPI
+RtlLargeIntegerShiftRight(
+  IN LARGE_INTEGER  LargeInteger,
+  IN CCHAR  ShiftCount);
+
+NTSYSAPI
+LARGE_INTEGER
+NTAPI
+RtlLargeIntegerSubtract(
+  IN LARGE_INTEGER  Minuend,
+  IN LARGE_INTEGER  Subtrahend);
+
+
+/*
+ * ULONG
+ * COMPUTE_PAGES_SPANNED(
+ *   IN PVOID  Va,
+ *   IN ULONG  Size)
+ */
+#define COMPUTE_PAGES_SPANNED(Va, \
+                              Size) \
+  (ADDRESS_AND_SIZE_TO_SPAN_PAGES(Va, Size))
+
+
+/*
+** Architecture specific structures
+*/
+
+#ifdef _X86_
+
+NTKERNELAPI
+INTERLOCKED_RESULT
+FASTCALL
+Exfi386InterlockedIncrementLong(
+  IN PLONG  Addend);
+
+NTKERNELAPI
+INTERLOCKED_RESULT
+FASTCALL
+Exfi386InterlockedDecrementLong(
+  IN PLONG  Addend);
+
+NTKERNELAPI
+ULONG
+FASTCALL
+Exfi386InterlockedExchangeUlong(
+  IN PULONG  Target,
+  IN ULONG  Value);
+
+#define ExInterlockedIncrementLong(Addend,Lock) Exfi386InterlockedIncrementLong(Addend)
+#define ExInterlockedDecrementLong(Addend,Lock) Exfi386InterlockedDecrementLong(Addend)
+#define ExInterlockedExchangeUlong(Target, Value, Lock) Exfi386InterlockedExchangeUlong(Target, Value)
+
+#endif /* _X86_ */
 
 #ifdef __cplusplus
 }
