@@ -9,6 +9,7 @@
  *                  8 Jul 07    Started basic implementation
  */
 
+#include <ntifs.h>
 #include <ntddk.h>
 #include <ks.h>
 #define YDEBUG

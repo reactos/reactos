@@ -23,13 +23,4 @@ typedef struct
     KMUTEX Mutex;
 }SYSAUDIODEVEXT;
 
-
-BOOLEAN
-NTAPI
-  RtlCreateUnicodeString(
-    OUT PUNICODE_STRING  DestinationString,
-    IN PCWSTR  SourceString
-    );
-
-
 #endif
