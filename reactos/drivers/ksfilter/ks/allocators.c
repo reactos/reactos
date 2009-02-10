@@ -1,10 +1,5 @@
-/* ===============================================================
-    Allocator Functions
-*/
+#include "priv.h"
 
-#include <ntddk.h>
-#include <debug.h>
-#include <ks.h>
 
 /*
     @unimplemented

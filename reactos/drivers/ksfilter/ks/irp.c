@@ -3,11 +3,7 @@
     IRP Helpers
 */
 
-#include <ntddk.h>
-#include <debug.h>
-#include <ks.h>
-
-#define TAG(A, B, C, D) (IN ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
+#include "priv.h"
 
 /*
     @unimplemented
@@ -145,32 +141,31 @@ KsAllocateObjectCreateItem(
 */
 KSDDKAPI NTSTATUS NTAPI
 KsAllocateObjectHeader(
-    OUT PVOID Header,
+    OUT KSOBJECT_HEADER *Header,
     IN  ULONG ItemsCount,
     IN  PKSOBJECT_CREATE_ITEM ItemsList OPTIONAL,
     IN  PIRP Irp,
     IN  KSDISPATCH_TABLE* Table)
 {
-    /* NOTE: PKSOBJECT_HEADER is not defined yet */
-#if 0
-    PKSOBJECT_HEADER object_header;
+    PKSIOBJECT_HEADER ObjectHeader;
 
-    /* TODO: Validate parameters */
-
-    object_header = ExAllocatePoolWithTag(PagedPool, sizeof(KSOBJECT_HEADER), TAG('H','O','S','K'));
-
-    if ( ! object_header )
+    ObjectHeader = ExAllocatePoolWithTag(PagedPool, sizeof(KSIOBJECT_HEADER), TAG_KSOBJECT_TAG);
+    if (!ObjectHeader)
     {
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    (PVOID)(*Header) = object_header;
+    RtlZeroMemory(ObjectHeader, sizeof(KSIOBJECT_HEADER));
 
-    /* TODO ... */
-#endif
+    RtlCopyMemory(&ObjectHeader->DispatchTable, Table, sizeof(KSDISPATCH_TABLE));
+    ObjectHeader->CreateItem = ItemsList;
 
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
+    //FIXME
+    // copy itemlist
+
+    *Header = ObjectHeader;
+    return STATUS_SUCCESS;
+
 }
 
 /*
@@ -584,11 +579,13 @@ KsInternalIrpDispatcher(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
 {
+    PIO_STACK_LOCATION IoStack;
+
     /* TODO - Nothing implemented really yet! */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    DPRINT1("KS IRP dispatch function called\n");
 
-    //PKSDISPATCH_TABLE ks_dispatch_table = NULL;
+    DPRINT1("KS IRP dispatch function called with func %x\n", IoStack->MajorFunction);
 
     /* ks_dispatch_table is the first element in a structure pointed to by FsContext */
 

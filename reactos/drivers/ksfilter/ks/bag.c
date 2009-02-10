@@ -1,6 +1,6 @@
-#include <ntddk.h>
-#include <debug.h>
-#include <ks.h>
+#include "priv.h"
+
+
 #if 0
 typedef struct
 {

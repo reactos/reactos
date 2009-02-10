@@ -1,14 +1,4 @@
-/*
-    KsCreatePin
-    KsValidateConnectRequest
-    KsPinPropertyHandler
-    KsPinDataIntersection
-    KsHandleSizedListQuery
-*/
-
-#include <ntddk.h>
-#include <debug.h>
-#include <ks.h>
+#include "priv.h"
 
 KSDDKAPI NTSTATUS NTAPI
 KsCreatePin(
