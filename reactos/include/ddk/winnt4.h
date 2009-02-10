@@ -140,12 +140,6 @@ ExIsObjectInFirstZoneSegment(
   IN PZONE_HEADER  Zone,
   IN PVOID  Object);
 
-NTKERNELAPI
-VOID
-NTAPI
-ExReleaseResource(
-  IN PERESOURCE  Resource);
-
 #define ExAcquireResourceExclusive ExAcquireResourceExclusiveLite
 #define ExAcquireResourceShared ExAcquireResourceSharedLite
 #define ExConvertExclusiveToShared ExConvertExclusiveToSharedLite
