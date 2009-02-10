@@ -27,9 +27,7 @@
         &Overlapped);
 */
 
-#ifndef KS_H
-#define KS_H
-
+#ifndef _KS_
 #define _KS_
 
 #ifdef __cplusplus
@@ -1533,6 +1531,11 @@ typedef struct
     KSPRIORITY Priority;
 } KSPIN_CONNECT, *PKSPIN_CONNECT;
 
+typedef
+void
+(*PFNKSFREE)(
+    IN PVOID Data
+    );
 
 /* ===============================================================
     Topology
@@ -1825,6 +1828,13 @@ struct _KSDEVICE_DESCRIPTOR
   ULONG  FilterDescriptorsCount;
   const  KSFILTER_DESCRIPTOR*const* FilterDescriptors;
 };
+
+struct _KSFILTERFACTORY {
+    const KSFILTER_DESCRIPTOR* FilterDescriptor;
+    KSOBJECT_BAG Bag;
+    PVOID Context;
+};
+
 #endif
 /* ===============================================================
     Minidriver Callbacks
@@ -2221,7 +2231,7 @@ KsAllocateObjectCreateItem(
 
 KSDDKAPI NTSTATUS NTAPI
 KsAllocateObjectHeader(
-    OUT PVOID Header,
+    OUT KSOBJECT_HEADER *Header,
     IN  ULONG ItemsCount,
     IN  PKSOBJECT_CREATE_ITEM ItemsList OPTIONAL,
     IN  PIRP Irp,
@@ -2578,19 +2588,23 @@ KsSynchronousIoControlDevice(
 */
 
 #if defined(_NTDDK_)
-KSDDKAPI NTSTATUS NTAPI
+KSDDKAPI
+NTSTATUS
+NTAPI
 KsInitializeDriver(
     IN PDRIVER_OBJECT  DriverObject,
     IN PUNICODE_STRING  RegistryPath,
     IN const KSDEVICE_DESCRIPTOR  *Descriptor OPTIONAL);
-#endif
 
-#if 0
+typedef struct _KSFILTERFACTORY KSFILTERFACTORY, *PKSFILTERFACTORY; //FIXME
+
 typedef void (*PFNKSFILTERFACTORYPOWER)(
     IN  PKSFILTERFACTORY FilterFactory,
     IN  DEVICE_POWER_STATE State);
 
-KSDDKAPI NTSTATUS NTAPI
+KSDDKAPI
+NTSTATUS
+NTAPI
 _KsEdit(
     IN  KSOBJECT_BAG ObjectBag,
     IN  OUT PVOID* PointerToPointerToItem,
@@ -2598,71 +2612,73 @@ _KsEdit(
     IN  ULONG OldSize,
     IN  ULONG Tag);
 
+KSDDKAPI
 VOID
+NTAPI
 KsAcquireControl(
-    IN  PVOID Object)
-{
-}
+    IN  PVOID Object);
 
+KSDDKAPI
 VOID
+NTAPI
 KsAcquireDevice(
-    IN  PKSDEVICE Device)
-{
-}
+    IN  PKSDEVICE Device);
 
+KSDDKAPI
 NTSTATUS
+NTAPI
 KsAddDevice(
     IN  PDRIVER_OBJECT DriverObject,
-    IN  PDEVICE_OBJECT PhysicalDeviceObject)
-{
-}
+    IN  PDEVICE_OBJECT PhysicalDeviceObject);
 
+KSDDKAPI
 VOID
+NTAPI
 KsAddEvent(
     IN  PVOID Object,
-    IN  PKSEVENT_ENTRY EventEntry)
-{
-}
+    IN  PKSEVENT_ENTRY EventEntry);
 
+KSDDKAPI
 NTSTATUS
+NTAPI
 KsAddItemToObjectBag(
     IN  KSOBJECT_BAG ObjectBag,
     IN  PVOID Item,
-    IN  PFNKSFREE Free OPTIONAL)
-{
-}
+    IN  PFNKSFREE Free OPTIONAL);
 
+KSDDKAPI
 NTSTATUS
+NTAPI
 KsAllocateObjectBag(
     IN  PKSDEVICE Device,
-    OUT KSOBJECT_BAG* ObjectBag)
-{
-}
+    OUT KSOBJECT_BAG* ObjectBag);
 
+KSDDKAPI
 VOID
+NTAPI
 KsCompletePendingRequest(
-    IN  PIRP Irp)
-{
-}
+    IN  PIRP Irp);
 
+KSDDKAPI
 NTSTATUS
+NTAPI
 KsCopyObjectBagItems(
     IN  KSOBJECT_BAG ObjectBagDestination,
-    IN  KSOBJECT_BAG ObjectBagSource)
-{
-}
+    IN  KSOBJECT_BAG ObjectBagSource);
 
+KSDDKAPI
 NTSTATUS
+NTAPI
 KsCreateDevice(
     IN  PDRIVER_OBJECT DriverObject,
     IN  PDEVICE_OBJECT PhysicalDeviceObject,
     IN  const KSDEVICE_DESCRIPTOR* Descriptor OPTIONAL,
     IN  ULONG ExtensionSize OPTIONAL,
-    OUT PKSDEVICE* Device OPTIONAL)
-{
-}
+    OUT PKSDEVICE* Device OPTIONAL);
 
+KSDDKAPI
 NTSTATUS
+NTAPI
 KsCreateFilterFactory(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  const KSFILTER_DESCRIPTOR* Descriptor,
@@ -2671,114 +2687,136 @@ KsCreateFilterFactory(
     IN  ULONG CreateItemFlags,
     IN  PFNKSFILTERFACTORYPOWER SleepCallback OPTIONAL,
     IN  PFNKSFILTERFACTORYPOWER WakeCallback OPTIONAL,
-    OUT PKFSFILTERFACTORY FilterFactory OPTIONAL)
-{
-}
+    OUT PKSFILTERFACTORY FilterFactory OPTIONAL);
 
+KSDDKAPI
 NTSTATUS
+NTAPI
 KsDefaultAddEventHandler(
     IN  PIRP Irp,
     IN  PKSEVENTDATA EventData,
-    IN  OUT PKSEVENT_ENTRY EventEntry)
-{
-}
+    IN  OUT PKSEVENT_ENTRY EventEntry);
 
-NTSTATUS
-KsDeleteFilterFactory(
-    IN  PKSFILTERFACTORY FilterFactory)
-{
-}
 
+#define KsDeleteFilterFactory(FilterFactory)                                           \
+            KsFreeObjectCreateItemsByContext(                                          \
+            *(KSDEVICE_HEADER *)(                                                      \
+            KsFilterFactoryGetParentDevice(FilterFactory)->FunctionalDeviceObject->    \
+            DeviceExtension),                                                          \
+            FilterFactory)
+
+KSDDKAPI
 ULONG
+NTAPI
 KsDeviceGetBusData(
     IN  PKSDEVICE Device,
     IN  ULONG DataType,
     IN  PVOID Buffer,
     IN  ULONG Offset,
-    IN  ULONG Length)
-{
-}
+    IN  ULONG Length);
 
+
+KSDDKAPI
+PVOID
+NTAPI
+KsGetFirstChild(
+    IN PVOID Object
+    );
+
+KSDDKAPI
 PKSFILTERFACTORY
+NTAPI
 KsDeviceGetFirstChildFilterFactory(
-    IN  PKSDEVICE Device)
-{
-}
+    IN  PKSDEVICE Device);
+
+#if defined(_UNKNOWN_H_) || defined(__IUnknown_INTERFACE_DEFINED__)
 
 PUNKNOWN
+NTAPI
 KsDeviceGetOuterUnknown(
     IN  PKSDEVICE Device)
 {
+    return KsGetOuterUnknown((PVOID) Device);
 }
 
-VOID
-KsDeviceRegisterAdapterObject(
-    IN  PKSDEVICE Device,
-    IN  PADAPTER_OBJECT AdapterObject,
-    IN  ULONG MaxMappingByteCount,
-    IN  ULONG MappingTableStride)
-{
-}
-
-KSDDKAPI PUNKNOWN NTAPI
+KSDDKAPI
+PUNKNOWN
+NTAPI
 KsDeviceRegisterAggregatedClientUnknown(
     IN  PKSDEVICE Device,
     IN  PUNKNOWN ClientUnknown);
 
+#endif
+
+KSDDKAPI
+VOID
+NTAPI
+KsDeviceRegisterAdapterObject(
+    IN  PKSDEVICE Device,
+    IN  PADAPTER_OBJECT AdapterObject,
+    IN  ULONG MaxMappingByteCount,
+    IN  ULONG MappingTableStride);
+
+KSDDKAPI
 ULONG
+NTAPI
 KsDeviceSetBusData(
     IN  PKSDEVICE Device,
     IN  ULONG DataType,
     IN  PVOID Buffer,
     IN  ULONG Offset,
-    IN  ULONG Length)
-{
-}
+    IN  ULONG Length);
+
 
 #define KsDiscard(object, pointer) \
     KsRemoveItemFromObjectBag(object->Bag, pointer, TRUE)
 
-VOID
-KsFilterAcquireControl(
-    IN  PKSFILTER Filter)
-{
-}
+#define KsFilterAcquireControl(Filter) \
+    KsAcquireControl((PVOID) Filter);
 
+#define KsFilterAddEvent(Filter, EventEntry) \
+    KsAddEvent(Filter,EventEntry);
+
+KSDDKAPI
 VOID
+NTAPI
 KsFilterAcquireProcessingMutex(
     IN  PKSFILTER Filter);
 
-VOID
-KsFilterAddEvent(
-    IN  PKSFILTER Filter,
-    IN  PKSEVENT_ENTRY EventEntry)
-{
-}
-
-KSDDKAPI NTSTATUS NTAPI
+KSDDKAPI
+NTSTATUS
+NTAPI
 KsFilterAddTopologyConnections(
     IN  PKSFILTER Filter,
     IN  ULONG NewConnectionsCount,
     IN  const KSTOPOLOGY_CONNECTION* NewTopologyConnections);
 
+KSDDKAPI
 VOID
+NTAPI
 KsFilterAttemptProcessing(
     IN  PKSFILTER Filter,
     IN  BOOLEAN Asynchronous);
 
-KSDDKAPI NTSTATUS NTAPI
+KSDDKAPI
+NTSTATUS
+NTAPI
 KsFilterCreateNode(
     IN  PKSFILTER Filter,
     IN  const KSNODE_DESCRIPTOR* NodeDescriptor,
     OUT PULONG NodeID);
 
-KSDDKAPI NTSTATUS NTAPI
+KSDDKAPI
+NTSTATUS
+NTAPI
 KsFilterCreatePinFactory(
     IN  PKSFILTER Filter,
     IN  const KSPIN_DESCRIPTOR_EX* PinDescriptor,
     OUT PULONG PinID);
 
-PKSDEVICE __inline
+KSDDKAPI
+PKSDEVICE
+__inline
 KsFilterFactoryGetDevice(
     IN  PKSFILTERFACTORY FilterFactory);
 
