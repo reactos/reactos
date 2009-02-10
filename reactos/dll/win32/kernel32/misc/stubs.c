@@ -387,39 +387,6 @@ GetNumaProcessorNode(
 }
 
 /*
- * @unimplemented
- */
-BOOL
-WINAPI
-HeapQueryInformation (
-    HANDLE HeapHandle,
-    HEAP_INFORMATION_CLASS HeapInformationClass,
-    PVOID HeapInformation OPTIONAL,
-    SIZE_T HeapInformationLength OPTIONAL,
-    PSIZE_T ReturnLength OPTIONAL
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
-HeapSetInformation (
-    HANDLE HeapHandle,
-    HEAP_INFORMATION_CLASS HeapInformationClass,
-    PVOID HeapInformation OPTIONAL,
-    SIZE_T HeapInformationLength OPTIONAL
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
  * @implemented
  */
 BOOL
