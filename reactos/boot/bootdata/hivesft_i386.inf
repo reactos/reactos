@@ -1080,9 +1080,6 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Controls Folder\Device\shellex\P
 ; deskmon.dll shell extension
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Controls Folder\Device\shellex\PropertySheetHandlers\Display Monitor CPL Extension","",0x00000000,"{42071713-76d4-11d1-8b24-00a0c9068ff3}"
 
-; Where to download the Mozilla ActiveX control
-HKLM,"SOFTWARE\ReactOS\shdocvw","MozillaUrl",0x00000000,"http://links.reactos.org/mozactivex"
-
 ; Keyboard layout switcher
 ;HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Run","kbswitch",0x00000000,"kbswitch.exe"
 
