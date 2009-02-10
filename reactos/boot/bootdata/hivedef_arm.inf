@@ -458,9 +458,6 @@ HKCU, "Control Panel\Desktop\WindowMetrics","StatusFont",0x00000001,f5,ff,ff,ff,
 
 ; Internet Explorer
 
-HKCU,"Software\Microsoft\Internet Explorer\Main","Start Page",,"http://www.reactos.org"
-HKCU,"Software\Microsoft\Internet Explorer\Main","Search Page",,"http://www.google.com"
-
 HKCU,Software\Wine\MSHTML,"GeckoUrl",,"http://source.winehq.org/winegecko.php"
 HKCU,Software\Wine\MSHTML,"GeckoCabDir",0x00020000,"%SystemRoot%\"
 
