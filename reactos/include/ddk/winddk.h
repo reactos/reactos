@@ -10489,7 +10489,7 @@ NTKERNELAPI
 PHYSICAL_ADDRESS
 NTAPI
 IoMapTransfer(
-    IN PDMA_ADAPTER DmaAdapter,
+    IN PADAPTER_OBJECT AdapterObject,
     IN PMDL Mdl,
     IN PVOID MapRegisterBase,
     IN PVOID CurrentVa,
