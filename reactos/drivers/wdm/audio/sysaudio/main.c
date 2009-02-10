@@ -16,9 +16,15 @@
 //#include <dxsdk/mediaobj.h>
 #include "sysaudio.h"
 
+const GUID KSCATEGORY_AUDIO_DEVICE             = {0xFBF6F530L, 0x07B9, 0x11D2, {0xA7, 0x1E, 0x00, 0x00, 0xF8, 0x00, 0x47, 0x88}};
+const GUID KSCATEGORY_PREFERRED_WAVEOUT_DEVICE = {0xD6C5066EL, 0x72C1, 0x11D2, {0x97, 0x55, 0x00, 0x00, 0xF8, 0x00, 0x47, 0x88}};
+const GUID KSCATEGORY_PREFERRED_WAVEIN_DEVICE  = {0xD6C50671L, 0x72C1, 0x11D2, {0x97, 0x55, 0x00, 0x00, 0xF8, 0x00, 0x47, 0x88}};
+const GUID KSCATEGORY_PREFERRED_MIDIOUT_DEVICE = {0xD6C50674L, 0x72C1, 0x11D2, {0x97, 0x55, 0x00, 0x00, 0xF8, 0x00, 0x47, 0x88}};
+const GUID KS_CATEGORY_AUDIO                   = {0x6994AD04L, 0x93EF, 0x11D0, {0xA3, 0xCC, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}};
+const GUID GUID_DEVICE_INTERFACE_ARRIVAL       = {0xCB3A4004L, 0x46F0, 0x11D0, {0xB0, 0x8F, 0x00, 0x60, 0x97, 0x13, 0x05, 0x3F}};
+const GUID GUID_DEVICE_INTERFACE_REMOVAL       = {0xCB3A4005L, 0x46F0, 0x11D0, {0xB0, 0x8F, 0x00, 0x60, 0x97, 0x13, 0x05, 0x3F}};
 
 
-const GUID KS_CATEGORY_AUDIO    = {0x6994AD04, 0x93EF, 0x11D0, {0xA3, 0xCC, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}};
 VOID
 NTAPI
 SysAudio_Unload(IN PDRIVER_OBJECT DriverObject)
@@ -53,6 +59,10 @@ SysAudio_Pnp(
 
         IoDeleteSymbolicLink(&SymlinkName);
     }
+    else if (IrpStack->MinorFunction == IRP_MN_QUERY_PNP_DEVICE_STATE)
+    {
+        Irp->IoStatus.Information |= PNP_DEVICE_NOT_DISABLEABLE;
+    }
 
     return KsDefaultDispatchPnp(DeviceObject, Irp);
 }
@@ -63,10 +73,77 @@ DeviceInterfaceChangeCallback(
     IN PVOID NotificationStructure,
     IN PVOID Context)
 {
-    DEVICE_INTERFACE_CHANGE_NOTIFICATION * Event = (DEVICE_INTERFACE_CHANGE_NOTIFICATION*)NotificationStructure;
+    DEVICE_INTERFACE_CHANGE_NOTIFICATION * Event;
+    SYSAUDIODEVEXT *DeviceExtension = (SYSAUDIODEVEXT*)Context;
+    NTSTATUS Status = STATUS_SUCCESS;
 
-    DPRINT1("DeviceInterfaceChangeCallback called %p\n", Event);
-    return STATUS_SUCCESS;
+    Event = (DEVICE_INTERFACE_CHANGE_NOTIFICATION*)NotificationStructure;
+
+    if (IsEqualGUIDAligned(&Event->Event,
+                           &GUID_DEVICE_INTERFACE_ARRIVAL))
+    {
+        /* a new device has arrived */
+
+        PFILE_OBJECT FileObject = NULL;
+        PDEVICE_OBJECT DeviceObject = NULL;
+        UNICODE_STRING DeviceName;
+        PKSAUDIO_DEVICE_ENTRY DeviceEntry;
+
+        DeviceEntry = ExAllocatePool(NonPagedPool, sizeof(KSAUDIO_DEVICE_ENTRY));
+        if (!DeviceEntry)
+            return STATUS_INSUFFICIENT_RESOURCES;
+
+        if (!RtlCreateUnicodeString(&DeviceEntry->DeviceName, Event->SymbolicLinkName->Buffer))
+        {
+            ExFreePool(DeviceEntry);
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+#if 1   //HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK
+        RtlInitUnicodeString(&DeviceName, L"\\Device\\00000017");
+#else
+        RtlInitUnicodeString(&DeviceName, Event->SymbolicLinkName->Buffer);
+#endif
+
+        Status = IoGetDeviceObjectPointer(&DeviceName,
+                                          FILE_READ_DATA | FILE_WRITE_DATA, 
+                                          &FileObject,
+                                          &DeviceObject);
+
+        if (!NT_SUCCESS(Status))
+        {
+            ExFreePool(DeviceEntry);
+            return Status;
+        }
+
+        DeviceEntry->DeviceObject = DeviceObject;
+        DeviceEntry->FileObject = FileObject;
+
+        InsertTailList(&DeviceExtension->KsAudioDeviceList, &DeviceEntry->Entry);
+        DeviceExtension->NumberOfKsAudioDevices++;
+
+        DPRINT1("Successfully opened audio device\n");
+        return Status;
+    }
+    else if (IsEqualGUIDAligned(&Event->Event,
+                                &GUID_DEVICE_INTERFACE_REMOVAL))
+    {
+        DPRINT1("Remove interface to audio device!\n");
+        ///FIXME
+        ///
+        return STATUS_SUCCESS;
+    }
+    else
+    {
+        UNICODE_STRING EventName, InterfaceGuid;
+
+        RtlStringFromGUID(&Event->Event, &EventName);
+        RtlStringFromGUID(&Event->InterfaceClassGuid, &InterfaceGuid);
+        DPRINT1("Unknown event: Event %wZ GUID %wZ\n", &EventName, &InterfaceGuid);
+        return STATUS_SUCCESS;
+    }
+
+
 }
 
 NTSTATUS
@@ -79,13 +156,6 @@ DispatchCreate(
 
     return STATUS_SUCCESS;
 }
-
-const GUID KSCATEGORY_AUDIO_DEVICE             = {0xFBF6F530L, 0x07B9, 0x11D2, {0xA7, 0x1E, 0x00, 0x00, 0xF8, 0x00, 0x47, 0x88}};
-const GUID KSCATEGORY_PREFERRED_WAVEOUT_DEVICE = {0xD6C5066EL, 0x72C1, 0x11D2, {0x97, 0x55, 0x00, 0x00, 0xF8, 0x00, 0x47, 0x88}};
-const GUID KSCATEGORY_PREFERRED_WAVEIN_DEVICE  = {0xD6C50671L, 0x72C1, 0x11D2, {0x97, 0x55, 0x00, 0x00, 0xF8, 0x00, 0x47, 0x88}};
-const GUID KSCATEGORY_PREFERRED_MIDIOUT_DEVICE = {0xD6C50674L, 0x72C1, 0x11D2, {0x97, 0x55, 0x00, 0x00, 0xF8, 0x00, 0x47, 0x88}};
-
-
 
 NTSTATUS
 NTAPI
@@ -135,8 +205,8 @@ SysAudio_AddDevice(
     RtlZeroMemory(DeviceExtension, sizeof(SYSAUDIODEVEXT));
 
     KeInitializeMutex(&DeviceExtension->Mutex, 0);
-
     DeviceExtension->PhysicalDeviceObject = PhysicalDeviceObject;
+    InitializeListHead(&DeviceExtension->KsAudioDeviceList);
 
     /* initialize create item struct */
     RtlZeroMemory(&CreateItem, sizeof(KSOBJECT_CREATE_ITEM));
@@ -222,6 +292,24 @@ SysAudio_AddDevice(
     return Status;
 }
 
+NTSTATUS
+NTAPI
+SysAudio_Stub(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp)
+{
+    DPRINT1("SysAudio_Stub called\n");
+
+    /* TODO */
+
+	Irp->IoStatus.Status = STATUS_SUCCESS;
+    Irp->IoStatus.Information = 0;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+    return STATUS_SUCCESS;
+}
+
+
 NTSTATUS NTAPI
 DriverEntry(
     IN  PDRIVER_OBJECT DriverObject,
@@ -230,10 +318,19 @@ DriverEntry(
     DPRINT1("System audio graph builder (sysaudio) started\n");
 
     DPRINT1("Setting KS function handlers\n");
+
+#if KS_IMPLEMENTED
     KsSetMajorFunctionHandler(DriverObject, IRP_MJ_CREATE);
     KsSetMajorFunctionHandler(DriverObject, IRP_MJ_CLOSE);
     KsSetMajorFunctionHandler(DriverObject, IRP_MJ_WRITE);
     KsSetMajorFunctionHandler(DriverObject, IRP_MJ_DEVICE_CONTROL);
+#else
+    DriverObject->MajorFunction[IRP_MJ_CREATE] = SysAudio_Stub;
+    DriverObject->MajorFunction[IRP_MJ_CLOSE] = SysAudio_Stub;
+    DriverObject->MajorFunction[IRP_MJ_WRITE] = SysAudio_Stub;
+    DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = SysAudio_Stub;
+#endif
+
 
     DriverObject->MajorFunction[IRP_MJ_POWER] = KsDefaultDispatchPower;
     DriverObject->MajorFunction[IRP_MJ_SYSTEM_CONTROL] = KsDefaultForwardIrp;
