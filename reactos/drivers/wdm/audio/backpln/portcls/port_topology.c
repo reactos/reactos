@@ -434,6 +434,228 @@ static ISubdeviceVtbl vt_ISubdeviceVtbl =
 
 
 NTSTATUS
+NTAPI
+ITopology_fnDeviceIoControl(
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp)
+{
+    DPRINT1("ITopology_fnDeviceIoControl called\n");
+
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+ITopology_fnRead(
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp)
+{
+    DPRINT1("ITopology_fnRead called\n");
+
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+ITopology_fnWrite(
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp)
+{
+    DPRINT1("ITopology_fnWrite called\n");
+
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+ITopology_fnFlush(
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp)
+{
+    DPRINT1("ITopology_fnFlush called\n");
+
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+ITopology_fnClose(
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp)
+{
+    DPRINT1("ITopology_fnClose called\n");
+
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+ITopology_fnQuerySecurity(
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp)
+{
+    DPRINT1("ITopology_fnQuerySecurity called\n");
+
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+ITopology_fnSetSecurity(
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp)
+{
+    DPRINT1("ITopology_fnSetSecurity called\n");
+
+    return STATUS_SUCCESS;
+}
+
+BOOLEAN
+NTAPI
+ITopology_fnFastDeviceIoControl(
+    PFILE_OBJECT FileObject,
+    BOOLEAN Wait,
+    PVOID InputBuffer,
+    ULONG InputBufferLength,
+    PVOID OutputBuffer,
+    ULONG OutputBufferLength,
+    ULONG IoControlCode,
+    PIO_STATUS_BLOCK IoStatus,
+    PDEVICE_OBJECT DeviceObject)
+{
+    DPRINT1("ITopology_fnFastDeviceIoControl called\n");
+
+    return TRUE;
+}
+
+
+BOOLEAN
+NTAPI
+ITopology_fnFastRead(
+    PFILE_OBJECT FileObject,
+    PLARGE_INTEGER FileOffset,
+    ULONG Length,
+    BOOLEAN Wait,
+    ULONG LockKey,
+    PVOID Buffer,
+    PIO_STATUS_BLOCK IoStatus,
+    PDEVICE_OBJECT DeviceObject)
+{
+    DPRINT1("ITopology_fnFastRead called\n");
+
+    return TRUE;
+
+}
+
+BOOLEAN
+NTAPI
+ITopology_fnFastWrite(
+    PFILE_OBJECT FileObject,
+    PLARGE_INTEGER FileOffset,
+    ULONG Length,
+    BOOLEAN Wait,
+    ULONG LockKey,
+    PVOID Buffer,
+    PIO_STATUS_BLOCK IoStatus,
+    PDEVICE_OBJECT DeviceObject)
+{
+    DPRINT1("ITopology_fnFastWrite called\n");
+
+    return TRUE;
+}
+
+static KSDISPATCH_TABLE DispatchTable =
+{
+    ITopology_fnDeviceIoControl,
+    ITopology_fnRead,
+    ITopology_fnWrite,
+    ITopology_fnFlush,
+    ITopology_fnClose,
+    ITopology_fnQuerySecurity,
+    ITopology_fnSetSecurity,
+    ITopology_fnFastDeviceIoControl,
+    ITopology_fnFastRead,
+    ITopology_fnFastWrite,
+};
+
+NTSTATUS
+NTAPI
+PcCreateItemDispatch(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    ISubdevice * SubDevice;
+    PPCLASS_DEVICE_EXTENSION DeviceExt;
+    SUBDEVICE_ENTRY * Entry;
+    PKSOBJECT_CREATE_ITEM CreateItem;
+
+    DPRINT1("PcCreateItemDispatch called\n");
+
+    /* access the create item */
+    CreateItem = KSCREATE_ITEM_IRP_STORAGE(Irp);
+    if (!CreateItem)
+    {
+        DPRINT1("PcCreateItemDispatch no CreateItem\n");
+        Status = STATUS_UNSUCCESSFUL;
+        goto cleanup;
+    }
+
+    SubDevice = (ISubdevice*)CreateItem->Context;
+    DeviceExt = (PPCLASS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    if (!SubDevice || !DeviceExt)
+    {
+        DPRINT1("PcCreateItemDispatch SubDevice %p DeviceExt %p\n", SubDevice, DeviceExt);
+
+        Status = STATUS_UNSUCCESSFUL;
+        goto cleanup;
+    }
+
+    Entry = AllocateItem(NonPagedPool, sizeof(SUBDEVICE_ENTRY), TAG_PORTCLASS);
+    if (!Entry)
+    {
+        DPRINT1("PcCreateItemDispatch no memory\n");
+
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto cleanup;
+    }
+#if 0
+    Status = KsReferenceSoftwareBusObject(DeviceExt->KsDeviceHeader);
+    if (!NT_SUCCESS(Status) && Status != STATUS_NOT_IMPLEMENTED)
+    {
+        DPRINT1("PciCreateItemDispatch failed to reference device header\n");
+
+        FreeItem(Entry, TAG_PORTCLASS);
+        goto cleanup;
+    }
+#endif
+
+    Status = KsAllocateObjectHeader(&Entry->ObjectHeader, 0, NULL, Irp, &DispatchTable);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("KsAllocateObjectHeader failed with %x\n", Status);
+        //KsDereferenceSoftwareBusObject(DeviceExt->KsDeviceHeader);
+        FreeItem(Entry, TAG_PORTCLASS);
+        return Status;
+    }
+
+    InsertTailList(&DeviceExt->SubDeviceList, &Entry->Entry);
+
+
+cleanup:
+   // Irp->IoStatus.Status = Status;
+   // Irp->IoStatus.Information = 0;
+   // IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+    DPRINT1("PcCreateItemDispatch Status %x\n", Status);
+    return Status;
+}
+
+
+
+NTSTATUS
 NewPortTopology(
     OUT PPORT* OutPort)
 {

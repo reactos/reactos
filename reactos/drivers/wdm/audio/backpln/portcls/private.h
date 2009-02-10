@@ -12,7 +12,6 @@
 #define YDEBUG
 #include <debug.h>
 
-#include <portcls.h>
 #include <dmusicks.h>
 
 #include "interfaces.h"
@@ -118,10 +117,10 @@ typedef struct
 
 typedef struct
 {
+    KSDEVICE_HEADER KsDeviceHeader;
     PDEVICE_OBJECT PhysicalDeviceObject;
     PDEVICE_OBJECT PrevDeviceObject;
     PCPFNSTARTDEVICE StartDevice;
-    KSDEVICE_HEADER KsDeviceHeader;
     IAdapterPowerManagement * AdapterPowerManagement;
     ULONG MaxSubDevices;
     KSOBJECT_CREATE_ITEM * CreateItems;
@@ -177,5 +176,12 @@ PcCreateSubdeviceDescriptor(
     IN ULONG EventSetCount,
     IN KSEVENT_SET * EventSet,
     IN PPCFILTER_DESCRIPTOR FilterDescription);
+
+NTSTATUS
+NTAPI
+PcCreateItemDispatch(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp);
+
 
 #endif

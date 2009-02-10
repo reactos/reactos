@@ -49,13 +49,7 @@ PortClsCreate(
 {
     DPRINT1("PortClsCreate called\n");
 
-    /* TODO */
-
-	Irp->IoStatus.Status = STATUS_SUCCESS;
-    Irp->IoStatus.Information = 0;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
-    return STATUS_SUCCESS;
+    return KsDispatchIrp(DeviceObject, Irp);
 }
 
 
@@ -234,19 +228,8 @@ PcDispatchIrp(
         case IRP_MJ_SYSTEM_CONTROL :
             return PortClsSysControl(DeviceObject, Irp);
 
-        /* KS - TODO */
-
-#if 0
-    KsSetMajorFunctionHandler(DriverObject, IRP_MJ_CLOSE);
-    KsSetMajorFunctionHandler(DriverObject, IRP_MJ_DEVICE_CONTROL);
-    KsSetMajorFunctionHandler(DriverObject, IRP_MJ_FLUSH_BUFFERS);
-    KsSetMajorFunctionHandler(DriverObject, IRP_MJ_QUERY_SECURITY);
-    KsSetMajorFunctionHandler(DriverObject, IRP_MJ_READ);
-    KsSetMajorFunctionHandler(DriverObject, IRP_MJ_SET_SECURITY);
-    KsSetMajorFunctionHandler(DriverObject, IRP_MJ_WRITE);
-#endif
-
-        default :
+        default:
+            DPRINT1("Unhandled function %x\n", IoStack->MajorFunction);
             break;
     };
 

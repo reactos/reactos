@@ -12,6 +12,7 @@
 #include "private.h"
 #include <devguid.h>
 #include <initguid.h>
+#include <ksmedia.h>
 
 /*
     This is called from DriverEntry so that PortCls can take care of some
@@ -199,58 +200,6 @@ PcAddAdapterDevice(
     return status;
 }
 
-NTSTATUS
-NTAPI
-PciDriverDispatch(
-    IN  PDEVICE_OBJECT DeviceObject,
-    IN  PIRP Irp)
-{
-    NTSTATUS Status;
-
-    ISubdevice * SubDevice;
-    PPCLASS_DEVICE_EXTENSION DeviceExt;
-    SUBDEVICE_ENTRY * Entry;
-    KSDISPATCH_TABLE DispatchTable;
-
-    DPRINT1("PortClsSysControl called\n");
-
-    SubDevice = (ISubdevice*)Irp->Tail.Overlay.DriverContext[3];
-    DeviceExt = (PPCLASS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-
-    if (!SubDevice || !DeviceExt)
-    {
-        return STATUS_UNSUCCESSFUL;
-    }
-
-    Entry = AllocateItem(NonPagedPool, sizeof(SUBDEVICE_ENTRY), TAG_PORTCLASS);
-    if (!Entry)
-        return STATUS_INSUFFICIENT_RESOURCES;
-
-    /* initialize DispatchTable */
-    RtlZeroMemory(&DispatchTable, sizeof(KSDISPATCH_TABLE));
-    /* FIXME
-     * initialize DispatchTable pointer
-     * which call in turn ISubDevice
-     */
-
-
-    Status = KsAllocateObjectHeader(&Entry->ObjectHeader, 1, NULL, Irp, &DispatchTable);
-    if (!NT_SUCCESS(Status))
-    {
-        FreeItem(Entry, TAG_PORTCLASS);
-        return Status;
-    }
-
-
-    InsertTailList(&DeviceExt->SubDeviceList, &Entry->Entry);
-
-    Irp->IoStatus.Status = STATUS_SUCCESS;
-    Irp->IoStatus.Information = 0;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
-    return STATUS_SUCCESS;
-}
-
 NTSTATUS NTAPI
 PcRegisterSubdevice(
     IN  PDEVICE_OBJECT DeviceObject,
@@ -283,8 +232,7 @@ PcRegisterSubdevice(
         /* the provided port driver doesnt support ISubdevice */
         return STATUS_INVALID_PARAMETER;
     }
-#if KS_IMPLEMENTED
-    Status = KsAddObjectCreateItemToDeviceHeader(DeviceExt->KsDeviceHeader, PciDriverDispatch, (PVOID)SubDevice, Name, NULL);
+    Status = KsAddObjectCreateItemToDeviceHeader(DeviceExt->KsDeviceHeader, PcCreateItemDispatch, (PVOID)SubDevice, Name, NULL);
     if (!NT_SUCCESS(Status))
     {
         /* failed to attach */
@@ -292,8 +240,7 @@ PcRegisterSubdevice(
         DPRINT1("KsAddObjectCreateItemToDeviceHeader failed with %x\n", Status);
         return Status;
     }
-#endif
-
+    SubDevice->lpVtbl->AddRef(SubDevice);
 
     Status = SubDevice->lpVtbl->GetDescriptor(SubDevice, &SubDeviceDescriptor);
     if (!NT_SUCCESS(Status))
