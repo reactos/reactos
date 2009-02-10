@@ -35,21 +35,6 @@ KsAddIrpToCancelableQueue(
     @unimplemented
 */
 KSDDKAPI NTSTATUS NTAPI
-KsAddObjectCreateItemToDeviceHeader(
-    IN  KSDEVICE_HEADER Header,
-    IN  PDRIVER_DISPATCH Create,
-    IN  PVOID Context,
-    IN  PWCHAR ObjectClass,
-    IN  PSECURITY_DESCRIPTOR SecurityDescriptor)
-{
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
-}
-
-/*
-    @unimplemented
-*/
-KSDDKAPI NTSTATUS NTAPI
 KsAddObjectCreateItemToObjectHeader(
     IN  KSOBJECT_HEADER Header,
     IN  PDRIVER_DISPATCH Create,
@@ -61,29 +46,150 @@ KsAddObjectCreateItemToObjectHeader(
     return STATUS_UNSUCCESSFUL;
 }
 
+
 /*
-    @unimplemented
+    @implemented
+*/
+KSDDKAPI
+NTSTATUS
+NTAPI
+KsAddObjectCreateItemToDeviceHeader(
+    IN  KSDEVICE_HEADER DevHeader,
+    IN  PDRIVER_DISPATCH Create,
+    IN  PVOID Context,
+    IN  PWCHAR ObjectClass,
+    IN  PSECURITY_DESCRIPTOR SecurityDescriptor)
+{
+    PKSIDEVICE_HEADER Header;
+    PKSOBJECT_CREATE_ITEM ItemList;
+    PKSIOBJECT_HEADER ObjectList;
+
+    Header = (PKSIDEVICE_HEADER)DevHeader;
+
+    if (!DevHeader)
+        return STATUS_INVALID_PARAMETER_1;
+
+    if (!Create)
+        return STATUS_INVALID_PARAMETER_2;
+
+    if (!ObjectClass)
+        return STATUS_INVALID_PARAMETER_4;
+
+    if (Header->FreeIndex >= Header->MaxItems && Header->ItemsListProvided)
+        return STATUS_ALLOTTED_SPACE_EXCEEDED;
+
+    if (Header->FreeIndex >= Header->MaxItems)
+    {
+        ItemList = ExAllocatePoolWithTag(NonPagedPool, sizeof(KSOBJECT_CREATE_ITEM) * (Header->MaxItems + 1), TAG('H','D','S','K'));
+        if (!ItemList)
+            return STATUS_INSUFFICIENT_RESOURCES;
+
+        ObjectList = ExAllocatePoolWithTag(PagedPool, sizeof(KSIOBJECT_HEADER) * (Header->MaxItems + 1), TAG('H','D','S','K'));
+        if (!ObjectList)
+        {
+            ExFreePoolWithTag(ItemList, TAG('H','D','S','K'));
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        RtlMoveMemory(ItemList, Header->ItemsList, Header->MaxItems * sizeof(KSOBJECT_CREATE_ITEM));
+        ExFreePoolWithTag(Header->ItemsList, TAG('H','D','S','K'));
+
+        RtlMoveMemory(ObjectList, Header->ObjectList, Header->MaxItems * sizeof(KSIOBJECT_HEADER));
+        ExFreePoolWithTag(Header->ObjectList, TAG('H','D','S','K'));
+
+        Header->MaxItems++;
+        Header->ItemsList = ItemList;
+    }
+
+    if (Header->FreeIndex < Header->MaxItems)
+    {
+        Header->ItemsList[Header->FreeIndex].Context = Context;
+        Header->ItemsList[Header->FreeIndex].Create = Create;
+        Header->ItemsList[Header->FreeIndex].Flags = 0;
+        RtlInitUnicodeString(&Header->ItemsList[Header->FreeIndex].ObjectClass, ObjectClass);
+        Header->ItemsList[Header->FreeIndex].SecurityDescriptor = SecurityDescriptor;
+
+        Header->FreeIndex++;
+        return STATUS_SUCCESS;
+    }
+
+    return STATUS_ALLOTTED_SPACE_EXCEEDED;
+}
+
+/*
+    @implemented
 */
 KSDDKAPI NTSTATUS NTAPI
 KsAllocateDeviceHeader(
-    OUT KSDEVICE_HEADER* Header,
+    OUT KSDEVICE_HEADER* OutHeader,
     IN  ULONG ItemsCount,
     IN  PKSOBJECT_CREATE_ITEM ItemsList OPTIONAL)
 {
-    /* Allocates memory for the KSDEVICE_HEADER structure */
+    PKSIDEVICE_HEADER Header;
 
-    if ( ! Header )
+    if (!OutHeader)
         return STATUS_INVALID_PARAMETER;
 
-    Header = ExAllocatePoolWithTag(PagedPool, sizeof(KSDEVICE_HEADER), TAG('H','D','S','K'));
+    Header = ExAllocatePoolWithTag(PagedPool, sizeof(KSIDEVICE_HEADER), TAG('H','D','S','K'));
 
-    if ( ! Header )
+    if (!Header)
         return STATUS_INSUFFICIENT_RESOURCES;
 
-    /* TODO: Actually do something with the header, perhaps? */
+    RtlZeroMemory(Header, sizeof(KSIDEVICE_HEADER));
+
+    if (ItemsCount)
+    {
+        Header->ObjectList = ExAllocatePoolWithTag(PagedPool, sizeof(KSIOBJECT_HEADER) * ItemsCount, TAG('H','D','S','K'));
+        if (!Header->ObjectList)
+        {
+            ExFreePoolWithTag(Header, TAG('H','D','S','K'));
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+        RtlZeroMemory(Header->ObjectList, sizeof(KSIOBJECT_HEADER) * ItemsCount);
+    }
+
+    Header->MaxItems = ItemsCount;
+    Header->FreeIndex = 0;
+    Header->ItemsList = ItemsList;
+    Header->ItemsListProvided = (ItemsList != NULL) ? TRUE : FALSE;
+
+    *OutHeader = Header;
 
     return STATUS_SUCCESS;
 }
+
+/*
+    @unimplemented
+
+    http://www.osronline.com/DDKx/stream/ksfunc_3sc3.htm
+*/
+KSDDKAPI
+NTSTATUS
+NTAPI
+KsAllocateObjectCreateItem(
+    IN  KSDEVICE_HEADER DevHeader,
+    IN  PKSOBJECT_CREATE_ITEM CreateItem,
+    IN  BOOLEAN AllocateEntry,
+    IN  PFNKSITEMFREECALLBACK ItemFreeCallback OPTIONAL)
+{
+    PKSIDEVICE_HEADER Header;
+
+    Header = (PKSIDEVICE_HEADER)DevHeader;
+
+    if (!DevHeader)
+        return STATUS_INVALID_PARAMETER_1;
+
+    if (!CreateItem)
+        return STATUS_INVALID_PARAMETER_2;
+
+    //FIXME
+    //handle ItemFreeCallback
+    //
+
+    UNIMPLEMENTED
+    return STATUS_UNSUCCESSFUL;
+}
+
 
 /*
     @unimplemented
@@ -92,7 +198,7 @@ KSDDKAPI VOID NTAPI
 KsFreeDeviceHeader(
     IN  KSDEVICE_HEADER Header)
 {
-    if ( ! Header )
+    if (!Header)
         return;
 
     /* TODO: Free content first */
@@ -116,22 +222,6 @@ KsAllocateExtraData(
 /*
     @unimplemented
 
-    http://www.osronline.com/DDKx/stream/ksfunc_3sc3.htm
-*/
-KSDDKAPI NTSTATUS NTAPI
-KsAllocateObjectCreateItem(
-    IN  KSDEVICE_HEADER Header,
-    IN  PKSOBJECT_CREATE_ITEM CreateItem,
-    IN  BOOLEAN AllocateEntry,
-    IN  PFNKSITEMFREECALLBACK ItemFreeCallback OPTIONAL)
-{
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
-}
-
-/*
-    @unimplemented
-
     Initialize the required file context header.
     Allocates KSOBJECT_HEADER structure.
     Irp is an IRP_MJ_CREATE structure.
@@ -139,7 +229,9 @@ KsAllocateObjectCreateItem(
 
     http://www.osronline.com/DDKx/stream/ksfunc_0u2b.htm
 */
-KSDDKAPI NTSTATUS NTAPI
+KSDDKAPI
+NTSTATUS
+NTAPI
 KsAllocateObjectHeader(
     OUT KSOBJECT_HEADER *Header,
     IN  ULONG ItemsCount,
@@ -147,23 +239,23 @@ KsAllocateObjectHeader(
     IN  PIRP Irp,
     IN  KSDISPATCH_TABLE* Table)
 {
-    PKSIOBJECT_HEADER ObjectHeader;
+    PKSIDEVICE_HEADER DeviceHeader;
+    ULONG Index;
 
-    ObjectHeader = ExAllocatePoolWithTag(PagedPool, sizeof(KSIOBJECT_HEADER), TAG_KSOBJECT_TAG);
-    if (!ObjectHeader)
-    {
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
+    if (!Header)
+        return STATUS_INVALID_PARAMETER_1;
 
-    RtlZeroMemory(ObjectHeader, sizeof(KSIOBJECT_HEADER));
+    if (!Irp)
+        return STATUS_INVALID_PARAMETER_4;
 
-    RtlCopyMemory(&ObjectHeader->DispatchTable, Table, sizeof(KSDISPATCH_TABLE));
-    ObjectHeader->CreateItem = ItemsList;
+    DeviceHeader = (PKSIDEVICE_HEADER)Irp->Tail.Overlay.DriverContext[3];
+    Index = (ULONG)Irp->Tail.Overlay.DriverContext[2];
 
-    //FIXME
-    // copy itemlist
+    RtlCopyMemory(&DeviceHeader->ObjectList[Index].DispatchTable, Table, sizeof(KSDISPATCH_TABLE));
+    DeviceHeader->ObjectList[Index].CreateItem = ItemsList;
+    DeviceHeader->ObjectList[Index].Initialized = TRUE;
 
-    *Header = ObjectHeader;
+    *Header = &DeviceHeader->ObjectList[Index];
     return STATUS_SUCCESS;
 
 }
@@ -264,26 +356,6 @@ KsDispatchInvalidDeviceRequest(
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
     return STATUS_INVALID_DEVICE_REQUEST;
-}
-
-/*
-    @unimplemented
-*/
-KSDDKAPI NTSTATUS NTAPI
-KsDispatchIrp(
-    IN  PDEVICE_OBJECT DeviceObject,
-    IN  PIRP Irp)
-{
-    /* Calls a dispatch routine corresponding to the function code of the IRP */
-
-    /*
-        First we need to get the dispatch table. An opaque header is pointed to by
-        FsContext. The first element points to this table. This table is the key
-        to dispatching the IRP correctly.
-    */
-
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
 }
 
 /*
@@ -486,19 +558,43 @@ KsSetInformationFile(
 
 
 
-/*
-    IRP handlers
-    NOT USED
-*/
-#if 0
-static NTAPI
+NTAPI
 NTSTATUS
 KsCreate(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
 {
+    PIO_STACK_LOCATION IoStack;
+    PDEVICE_EXTENSION DeviceExtension;
+    PKSIDEVICE_HEADER DeviceHeader;
+    ULONG Index;
+    NTSTATUS Status;
+
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    DeviceHeader = DeviceExtension->DeviceHeader;
+
     DPRINT1("KS / Create\n");
-    return STATUS_UNSUCCESSFUL;
+
+    /* first call all create handlers */
+    for(Index = 0; Index < DeviceHeader->FreeIndex; Index++)
+    {
+        KSCREATE_ITEM_IRP_STORAGE(Irp) = &DeviceHeader->ItemsList[Index];
+        
+        Irp->Tail.Overlay.DriverContext[3] = (PVOID)DeviceHeader;
+        Irp->Tail.Overlay.DriverContext[2] = (PVOID)Index;
+
+        DeviceHeader->ObjectList[Index].Initialized = FALSE;
+        Status = DeviceHeader->ItemsList[Index].Create(DeviceObject, Irp);
+        if (!NT_SUCCESS(Status))
+        {
+            DeviceHeader->ObjectList[Index].Initialized = FALSE;
+        }
+    }
+
+
+    return STATUS_SUCCESS;
 }
 
 static NTAPI
@@ -507,8 +603,29 @@ KsClose(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
 {
-    DPRINT1("KS / Close\n");
-    return STATUS_UNSUCCESSFUL;
+    PIO_STACK_LOCATION IoStack;
+    PDEVICE_EXTENSION DeviceExtension;
+    PKSIDEVICE_HEADER DeviceHeader;
+    ULONG Index;
+    NTSTATUS Status;
+
+    DPRINT1("KS / CLOSE\n");
+
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    DeviceHeader = DeviceExtension->DeviceHeader;
+
+    for(Index = 0; Index < DeviceHeader->FreeIndex; Index++)
+    {
+        if (DeviceHeader->ObjectList[Index].Initialized)
+        {
+            Status = DeviceHeader->ObjectList->DispatchTable.Close(DeviceObject, Irp);
+            DeviceHeader->ObjectList[Index].Initialized = FALSE;
+        }
+    }
+
+    return STATUS_SUCCESS;
 }
 
 static NTAPI
@@ -517,8 +634,29 @@ KsDeviceControl(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
 {
-    DPRINT1("KS / DeviceControl\n");
-    return STATUS_UNSUCCESSFUL;
+    PIO_STACK_LOCATION IoStack;
+    PDEVICE_EXTENSION DeviceExtension;
+    PKSIDEVICE_HEADER DeviceHeader;
+    ULONG Index;
+    NTSTATUS Status;
+
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    DeviceHeader = DeviceExtension->DeviceHeader;
+
+    DPRINT1("KS / DeviceControl NumDevices %x\n", DeviceHeader->FreeIndex);
+
+    for(Index = 0; Index < DeviceHeader->FreeIndex; Index++)
+    {
+        if (DeviceHeader->ObjectList[Index].Initialized)
+        {
+            DPRINT1("Calling DeviceIoControl\n");
+            Status = DeviceHeader->ObjectList->DispatchTable.DeviceIoControl(DeviceObject, Irp);
+        }
+    }
+
+    return STATUS_SUCCESS;
 }
 
 static NTAPI
@@ -527,8 +665,28 @@ KsRead(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
 {
+    PIO_STACK_LOCATION IoStack;
+    PDEVICE_EXTENSION DeviceExtension;
+    PKSIDEVICE_HEADER DeviceHeader;
+    ULONG Index;
+    NTSTATUS Status;
+
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    DeviceHeader = DeviceExtension->DeviceHeader;
+
     DPRINT1("KS / Read\n");
-    return STATUS_UNSUCCESSFUL;
+
+    for(Index = 0; Index < DeviceHeader->FreeIndex; Index++)
+    {
+        if (DeviceHeader->ObjectList[Index].Initialized)
+        {
+            Status = DeviceHeader->ObjectList->DispatchTable.Read(DeviceObject, Irp);
+        }
+    }
+
+    return STATUS_SUCCESS;
 }
 
 static NTAPI
@@ -537,8 +695,27 @@ KsWrite(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
 {
+    PIO_STACK_LOCATION IoStack;
+    PDEVICE_EXTENSION DeviceExtension;
+    PKSIDEVICE_HEADER DeviceHeader;
+    ULONG Index;
+    NTSTATUS Status;
+
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    DeviceHeader = DeviceExtension->DeviceHeader;
+
     DPRINT1("KS / Write\n");
-    return STATUS_UNSUCCESSFUL;
+
+    for(Index = 0; Index < DeviceHeader->FreeIndex; Index++)
+    {
+        if (DeviceHeader->ObjectList[Index].Initialized)
+        {
+            Status = DeviceHeader->ObjectList->DispatchTable.Write(DeviceObject, Irp);
+        }
+    }
+    return STATUS_SUCCESS;
 }
 
 static NTAPI
@@ -570,40 +747,9 @@ KsSetSecurity(
     DPRINT1("KS / SetSecurity\n");
     return STATUS_UNSUCCESSFUL;
 }
-#endif
-
-
-static NTAPI
-NTSTATUS
-KsInternalIrpDispatcher(
-    IN  PDEVICE_OBJECT DeviceObject,
-    IN  PIRP Irp)
-{
-    PIO_STACK_LOCATION IoStack;
-
-    /* TODO - Nothing implemented really yet! */
-    IoStack = IoGetCurrentIrpStackLocation(Irp);
-
-
-    DPRINT1("KS IRP dispatch function called with func %x\n", IoStack->MajorFunction);
-
-    /* ks_dispatch_table is the first element in a structure pointed to by FsContext */
-
-    switch ( IoGetCurrentIrpStackLocation(Irp)->MajorFunction )
-    {
-        case IRP_MJ_CREATE :
-/*            return ks_dispatch_table->Create(DeviceObject, Irp);*/
-
-        /* TODO ... */
-
-        default :
-            return STATUS_INVALID_PARAMETER;
-    };
-}
-
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI NTSTATUS NTAPI
 KsSetMajorFunctionHandler(
@@ -619,23 +765,90 @@ KsSetMajorFunctionHandler(
 
     switch ( MajorFunction )
     {
-        case IRP_MJ_CREATE :
-        case IRP_MJ_CLOSE :
-        case IRP_MJ_DEVICE_CONTROL :
-        case IRP_MJ_READ :
-        case IRP_MJ_WRITE :
+        case IRP_MJ_CREATE:
+            DriverObject->MajorFunction[MajorFunction] = KsCreate;
+            break;
+        case IRP_MJ_CLOSE:
+            DriverObject->MajorFunction[MajorFunction] = KsClose;
+            break;
+        case IRP_MJ_DEVICE_CONTROL:
+            DriverObject->MajorFunction[MajorFunction] = KsDeviceControl;
+            break;
+        case IRP_MJ_READ:
+            DriverObject->MajorFunction[MajorFunction] = KsRead;
+            break;
+        case IRP_MJ_WRITE:
+            DriverObject->MajorFunction[MajorFunction] = KsWrite;
+            break;
         case IRP_MJ_FLUSH_BUFFERS :
-        case IRP_MJ_QUERY_SECURITY :
-        case IRP_MJ_SET_SECURITY :
-            DriverObject->MajorFunction[MajorFunction] = KsInternalIrpDispatcher;
+            DriverObject->MajorFunction[MajorFunction] = KsFlushBuffers;
+            break;
+        case IRP_MJ_QUERY_SECURITY:
+            DriverObject->MajorFunction[MajorFunction] = KsQuerySecurity;
+            break;
+        case IRP_MJ_SET_SECURITY:
+            DriverObject->MajorFunction[MajorFunction] = KsSetSecurity;
             break;
 
-        default :
+        default:
             return STATUS_INVALID_PARAMETER;    /* is this right? */
     };
 
     return STATUS_SUCCESS;
 }
+
+/*
+    @implemented
+*/
+KSDDKAPI
+NTSTATUS
+NTAPI
+KsDispatchIrp(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp)
+{
+    PIO_STACK_LOCATION IoStack;
+
+    /* Calls a dispatch routine corresponding to the function code of the IRP */
+    /*
+        First we need to get the dispatch table. An opaque header is pointed to by
+        FsContext. The first element points to this table. This table is the key
+        to dispatching the IRP correctly.
+    */
+
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+    DPRINT1("KsDispatchIrp %x\n", IoStack->MajorFunction);
+
+    switch (IoStack->MajorFunction)
+    {
+        case IRP_MJ_CREATE:
+            return KsCreate(DeviceObject, Irp);
+        case IRP_MJ_CLOSE:
+            return KsClose(DeviceObject, Irp);
+            break;
+        case IRP_MJ_DEVICE_CONTROL:
+            return KsDeviceControl(DeviceObject, Irp);
+            break;
+        case IRP_MJ_READ:
+            return KsRead(DeviceObject, Irp);
+            break;
+        case IRP_MJ_WRITE:
+            return KsWrite(DeviceObject, Irp);
+            break;
+        case IRP_MJ_FLUSH_BUFFERS:
+            return KsFlushBuffers(DeviceObject, Irp);
+            break;
+        case IRP_MJ_QUERY_SECURITY:
+            return KsQuerySecurity(DeviceObject, Irp);
+            break;
+        case IRP_MJ_SET_SECURITY:
+            return KsSetSecurity(DeviceObject, Irp);
+            break;
+        default:
+            return STATUS_INVALID_PARAMETER;    /* is this right? */
+    };
+}
+
 
 /*
     @unimplemented

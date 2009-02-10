@@ -1,6 +1,4 @@
-#include <ntddk.h>
-#include <debug.h>
-#include <ks.h>
+#include "priv.h"
 
 /* ===============================================================
     Misc. Helper Functions
@@ -22,13 +20,42 @@ KsCacheMedium(
 /*
     @unimplemented
 */
+
 KSDDKAPI NTSTATUS NTAPI
 KsDefaultDispatchPnp(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
 {
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
+    PIO_STACK_LOCATION IoStack;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    DPRINT1("KsDefaultDispatchPnp entered with func %x\n", IoStack->MinorFunction);
+
+    switch(IoStack->MinorFunction)
+    {
+        case IRP_MN_QUERY_DEVICE_RELATIONS:
+            Irp->IoStatus.Information = 0;
+            Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
+            return STATUS_INSUFFICIENT_RESOURCES;
+        case IRP_MN_REMOVE_DEVICE:
+            // FIXME
+            // destroy device header, detach device and delete device
+        case IRP_MN_START_DEVICE:
+        case IRP_MN_QUERY_REMOVE_DEVICE:
+        case IRP_MN_CANCEL_STOP_DEVICE:
+        case IRP_MN_SURPRISE_REMOVAL:
+            Irp->IoStatus.Information = 0;
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+            return STATUS_SUCCESS;
+        default:
+            Irp->IoStatus.Information = 0;
+            Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+            //Status = IoCallDriver(NULL /* PnpBaseObject */, Irp);
+    }
+
+    return Status;
 }
 
 /*
@@ -219,4 +246,43 @@ KsSynchronousIoControlDevice(
 }
 
 
+/*
+    @implemented
+*/
+KSDDKAPI
+VOID
+NTAPI
+KsAcquireDeviceSecurityLock(
+    IN KSDEVICE_HEADER DevHeader,
+    IN BOOLEAN Exclusive)
+{
+    NTSTATUS Status;
+    PKSIDEVICE_HEADER Header = (PKSIDEVICE_HEADER)DevHeader;
+
+    KeEnterCriticalRegion();
+
+    if (Exclusive)
+    {
+        Status = ExAcquireResourceExclusiveLite(&Header->SecurityLock, TRUE);
+    }
+    else
+    {
+        Status = ExAcquireResourceSharedLite(&Header->SecurityLock, TRUE);
+    }
+}
+
+/*
+    @implemented
+*/
+KSDDKAPI
+VOID
+NTAPI
+KsReleaseDeviceSecurityLock(
+    IN KSDEVICE_HEADER DevHeader)
+{
+    PKSIDEVICE_HEADER Header = (PKSIDEVICE_HEADER)DevHeader;
+
+    ExReleaseResourceLite(&Header->SecurityLock);
+    KeLeaveCriticalRegion();
+}
 
