@@ -55,9 +55,7 @@
 @ stdcall DbgPrompt(str ptr long)
 @ stdcall DbgQueryDebugFilterState(long long)
 @ stdcall DbgSetDebugFilterState(long long long)
-#ifdef __x86_64__
-@ fastcall ExAcquireFastMutex(ptr)
-#endif
+@ fastcall -arch=x86_64 ExAcquireFastMutex(ptr)
 @ fastcall ExAcquireFastMutexUnsafe(ptr)
 @ stdcall ExAcquireResourceExclusiveLite(ptr long)
 @ stdcall ExAcquireResourceSharedLite(ptr long)
@@ -134,6 +132,7 @@
 @ stdcall ExIsResourceAcquiredSharedLite(ptr)
 @ stdcall ExLocalTimeToSystemTime(ptr ptr)
 @ stdcall ExNotifyCallback(ptr ptr ptr)
+@ stdcall -arch=x86_64 ExQueryDepthSList(ptr)
 @ stdcall ExQueryPoolBlockSize(ptr ptr)
 @ stdcall ExQueueWorkItem(ptr long)
 @ stdcall ExRaiseAccessViolation()
@@ -145,9 +144,7 @@
 @ fastcall ExReInitializeRundownProtectionCacheAware(ptr) ExfReInitializeRundownProtectionCacheAware
 @ stdcall ExRegisterCallback(ptr ptr ptr)
 @ stdcall ExReinitializeResourceLite(ptr)
-#ifdef __x86_64__
-@ fastcall ExReleaseFastMutex(ptr)
-#endif
+@ fastcall -arch=x86_64 ExReleaseFastMutex(ptr)
 @ fastcall ExReleaseFastMutexUnsafe(ptr)
 @ fastcall ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(ptr)
 @ fastcall ExReleaseResourceAndLeaveCriticalRegion(ptr)
@@ -165,9 +162,7 @@
 @ stdcall ExSizeOfRundownProtectionCacheAware()
 @ stdcall ExSystemExceptionFilter()
 @ stdcall ExSystemTimeToLocalTime(ptr ptr)
-#ifdef __x86_64__
-@ fastcall ExTryToAcquireFastMutex(ptr)
-#endif
+@ fastcall -arch=x86_64 ExTryToAcquireFastMutex(ptr)
 @ stdcall ExUnregisterCallback(ptr)
 @ stdcall ExUuidCreate(ptr)
 @ stdcall ExVerifySuite(long)
@@ -190,24 +185,18 @@
 @ fastcall ExfReleasePushLockShared(ptr)
 @ fastcall ExfTryToWakePushLock(ptr)
 @ fastcall ExfUnblockPushLock(ptr ptr)
-#ifdef __x86_64__
-@ stdcall ExpInterlockedFlushSList(ptr)
-@ stdcall ExpInterlockedPopEntrySList(ptr ptr)
-@ stdcall ExpInterlockedPushEntrySList(ptr ptr)
-#endif
-#ifdef _M_IX86
-@ fastcall Exfi386InterlockedDecrementLong(ptr)
-@ fastcall Exfi386InterlockedExchangeUlong(ptr long)
-@ fastcall Exfi386InterlockedIncrementLong(ptr)
-@ stdcall Exi386InterlockedDecrementLong(ptr)
-@ stdcall Exi386InterlockedExchangeUlong(ptr long long)
-@ stdcall Exi386InterlockedIncrementLong(ptr)
-#endif
-#ifdef _M_IX86
-@ fastcall ExiAcquireFastMutex(ptr) ExAcquireFastMutex
-@ fastcall ExiReleaseFastMutex(ptr) ExReleaseFastMutex
-@ fastcall ExiTryToAcquireFastMutex(ptr) ExTryToAcquireFastMutex
-#endif
+@ stdcall -arch=x86_64 ExpInterlockedFlushSList(ptr)
+@ stdcall -arch=x86_64 ExpInterlockedPopEntrySList(ptr ptr)
+@ stdcall -arch=x86_64 ExpInterlockedPushEntrySList(ptr ptr)
+@ fastcall -arch=i386 Exfi386InterlockedDecrementLong(ptr)
+@ fastcall -arch=i386 Exfi386InterlockedExchangeUlong(ptr long)
+@ fastcall -arch=i386 Exfi386InterlockedIncrementLong(ptr)
+@ stdcall -arch=i386 Exi386InterlockedDecrementLong(ptr)
+@ stdcall -arch=i386 Exi386InterlockedExchangeUlong(ptr long long)
+@ stdcall -arch=i386 Exi386InterlockedIncrementLong(ptr)
+@ fastcall -arch=i386 ExiAcquireFastMutex(ptr) ExAcquireFastMutex
+@ fastcall -arch=i386 ExiReleaseFastMutex(ptr) ExReleaseFastMutex
+@ fastcall -arch=i386 ExiTryToAcquireFastMutex(ptr) ExTryToAcquireFastMutex
 @ stdcall FsRtlAcquireFileExclusive(ptr)
 ;FsRtlAddBaseMcbEntry
 @ stdcall FsRtlAddLargeMcbEntry(ptr long long long long long long)
@@ -566,12 +555,10 @@
 @ stdcall KdPowerTransition(long)
 @ stdcall KdRefreshDebuggerNotPresent()
 @ stdcall KdSystemDebugControl(long ptr long ptr long ptr long)
-#ifdef _M_IX86
-@ stdcall Ke386CallBios(long ptr)
-@ stdcall Ke386IoSetAccessProcess(ptr long)
-@ stdcall Ke386QueryIoAccessMap(long ptr)
-@ stdcall Ke386SetIoAccessMap(long ptr)
-#endif
+@ stdcall -arch=i386 Ke386CallBios(long ptr)
+@ stdcall -arch=i386 Ke386IoSetAccessProcess(ptr long)
+@ stdcall -arch=i386 Ke386QueryIoAccessMap(long ptr)
+@ stdcall -arch=i386 Ke386SetIoAccessMap(long ptr)
 @ fastcall KeAcquireGuardedMutex(ptr)
 @ fastcall KeAcquireGuardedMutexUnsafe(ptr)
 @ fastcall KeAcquireInStackQueuedSpinLockAtDpcLevel(ptr ptr)
@@ -579,9 +566,7 @@
 @ stdcall KeAcquireInterruptSpinLock(ptr)
 @ stdcall KeAcquireSpinLockAtDpcLevel(ptr)
 @ fastcall KeAcquireSpinLockForDpc(ptr)
-#ifdef __x86_64__
-@ stdcall KeAcquireSpinLockRaiseToDpc(ptr)
-#endif
+@ stdcall -arch=x86_64 KeAcquireSpinLockRaiseToDpc(ptr)
 @ stdcall KeAddSystemServiceTable(ptr ptr long ptr long)
 @ stdcall KeAreAllApcsDisabled()
 @ stdcall KeAreApcsDisabled()
@@ -609,18 +594,16 @@
 @ stdcall KeGetCurrentThread()
 @ stdcall KeGetPreviousMode()
 @ stdcall KeGetRecommendedSharedDataAlignment()
-#ifdef _M_IX86
 ;KeI386AbiosCall
-@ stdcall KeI386AllocateGdtSelectors(ptr long)
+@ stdcall -arch=i386 KeI386AllocateGdtSelectors(ptr long)
 ;KeI386Call16BitCStyleFunction
 ;KeI386Call16BitFunction
-@ stdcall KeI386FlatToGdtSelector(long long long)
+@ stdcall -arch=i386 KeI386FlatToGdtSelector(long long long)
 ;KeI386GetLid
-@ extern KeI386MachineType
-@ stdcall KeI386ReleaseGdtSelectors(ptr long)
+@ extern -arch=i386 KeI386MachineType
+@ stdcall -arch=i386 KeI386ReleaseGdtSelectors(ptr long)
 ;KeI386ReleaseLid
 ;KeI386SetGdtSelector
-#endif
 @ stdcall KeInitializeApc(ptr ptr long ptr ptr ptr long ptr)
 @ stdcall KeInitializeCrashDumpHeader(long long ptr long ptr)
 @ stdcall KeInitializeDeviceQueue(ptr)
@@ -741,27 +724,19 @@
 @ stdcall KeWaitForSingleObject(ptr long long long ptr)
 @ fastcall KefAcquireSpinLockAtDpcLevel(ptr)
 @ fastcall KefReleaseSpinLockFromDpcLevel(ptr)
-#ifdef _M_IX86
-@ stdcall Kei386EoiHelper()
-#endif
+@ stdcall -arch=i386 Kei386EoiHelper()
 @ fastcall KiAcquireSpinLock(ptr)
 @ extern KiBugCheckData
 @ stdcall KiCheckForKernelApcDelivery()
 ;KiCheckForSListAddress
-#ifdef _M_IX86
-@ stdcall KiCoprocessorError()
-#endif
+@ stdcall -arch=i386 KiCoprocessorError()
 @ stdcall KiDeliverApc(long ptr ptr)
-#ifdef _M_IX86
-@ stdcall KiDispatchInterrupt()
-#endif
+@ stdcall -arch=i386 KiDispatchInterrupt()
 @ extern KiEnableTimerWatchdog
 @ stdcall KiIpiServiceRoutine(ptr ptr)
 @ fastcall KiReleaseSpinLock(ptr)
 @ cdecl KiUnexpectedInterrupt()
-#ifdef _M_IX86
-;Kii386SpinOnSpinLock
-#endif
+;-arch=i386 Kii386SpinOnSpinLock
 @ stdcall LdrAccessResource(ptr ptr ptr ptr)
 @ stdcall LdrEnumResources(ptr ptr long ptr ptr)
 @ stdcall LdrFindResourceDirectory_U(ptr ptr long ptr)
@@ -1568,19 +1543,17 @@
 #ifndef __x86_64
 @ cdecl _abnormal_termination()
 #endif
-#ifdef _M_IX86
-@ cdecl _alldiv()
-@ cdecl _alldvrm()
-@ cdecl _allmul()
-@ cdecl _alloca_probe()
-@ cdecl _allrem()
-@ cdecl _allshl()
-@ cdecl _allshr()
-@ cdecl _aulldiv()
-@ cdecl _aulldvrm()
-@ cdecl _aullrem()
-@ cdecl _aullshr()
-#endif
+@ cdecl -arch=i386 _alldiv()
+@ cdecl -arch=i386 _alldvrm()
+@ cdecl -arch=i386 _allmul()
+@ cdecl -arch=i386 _alloca_probe()
+@ cdecl -arch=i386 _allrem()
+@ cdecl -arch=i386 _allshl()
+@ cdecl -arch=i386 _allshr()
+@ cdecl -arch=i386 _aulldiv()
+@ cdecl -arch=i386 _aulldvrm()
+@ cdecl -arch=i386 _aullrem()
+@ cdecl -arch=i386 _aullshr()
 #ifndef __x86_64
 @ cdecl _except_handler2()
 @ cdecl _except_handler3()

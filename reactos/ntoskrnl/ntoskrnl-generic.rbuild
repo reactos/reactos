@@ -199,6 +199,11 @@
 				<file>ioport.S</file>
 			</directory>
 		</if>
+		<if property="ARCH" value="amd64">
+			<directory name="amd64">
+				<file>fastinterlck.c</file>
+			</directory>
+		</if>
 		<file>atom.c</file>
 		<file>callback.c</file>
 		<file>dbgctrl.c</file>

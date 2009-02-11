@@ -160,15 +160,6 @@ NtVdmControl(IN ULONG ControlCode,
     return STATUS_UNSUCCESSFUL;
 }
 
-NTKERNELAPI
-PSLIST_ENTRY
-ExpInterlockedFlushSList(
-    PSLIST_HEADER ListHead)
-{
-    UNIMPLEMENTED;
-    return NULL;
-}
-
 NTSTATUS
 NTAPI
 KiCallUserMode(
@@ -179,3 +170,10 @@ KiCallUserMode(
     return STATUS_UNSUCCESSFUL;
 }
 
+#undef ExQueryDepthSList
+NTKERNELAPI
+USHORT
+ExQueryDepthSList(IN PSLIST_HEADER ListHead)
+{
+    return (USHORT)(ListHead->Alignment & 0xffff);
+}
