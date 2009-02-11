@@ -4,7 +4,7 @@
 typedef struct
 {
     LIST_ENTRY Entry;
-    PDEVICE_OBJECT DeviceObject;
+    HANDLE Handle;
     PFILE_OBJECT FileObject;
     UNICODE_STRING DeviceName;
 

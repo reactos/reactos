@@ -43,10 +43,9 @@ SysAudio_Pnp(
     UNICODE_STRING SymlinkName = RTL_CONSTANT_STRING(L"\\DosDevices\\sysaudio");
     SYSAUDIODEVEXT *DeviceExtension;
 
-    DPRINT1("SysAudio_Pnp called\n");
-
-
     IrpStack = IoGetCurrentIrpStackLocation(Irp);
+
+    DPRINT1("SysAudio_Pnp called for func %x\n", IrpStack->MinorFunction);
 
     DeviceExtension = (SYSAUDIODEVEXT*)DeviceObject->DeviceExtension;
 
@@ -86,9 +85,11 @@ DeviceInterfaceChangeCallback(
         /* a new device has arrived */
 
         PFILE_OBJECT FileObject = NULL;
-        PDEVICE_OBJECT DeviceObject = NULL;
         UNICODE_STRING DeviceName;
         PKSAUDIO_DEVICE_ENTRY DeviceEntry;
+        HANDLE NodeHandle;
+        IO_STATUS_BLOCK IoStatusBlock;
+        OBJECT_ATTRIBUTES ObjectAttributes;
 
         DeviceEntry = ExAllocatePool(NonPagedPool, sizeof(KSAUDIO_DEVICE_ENTRY));
         if (!DeviceEntry)
@@ -106,24 +107,44 @@ DeviceInterfaceChangeCallback(
         RtlInitUnicodeString(&DeviceName, Event->SymbolicLinkName->Buffer);
 #endif
 
-        Status = IoGetDeviceObjectPointer(&DeviceName,
-                                          FILE_READ_DATA | FILE_WRITE_DATA, 
-                                          &FileObject,
-                                          &DeviceObject);
+        InitializeObjectAttributes(&ObjectAttributes, &DeviceName, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, NULL, NULL);
+
+        Status = ZwCreateFile(&NodeHandle,
+                              GENERIC_READ | GENERIC_WRITE,
+                              &ObjectAttributes,
+                              &IoStatusBlock,
+                              NULL,
+                              0,
+                              0,
+                              FILE_OPEN,
+                              FILE_SYNCHRONOUS_IO_NONALERT,
+                              NULL,
+                              0);
+
 
         if (!NT_SUCCESS(Status))
         {
+            DPRINT1("ZwCreateFile failed with %x\n", Status);
             ExFreePool(DeviceEntry);
             return Status;
         }
 
-        DeviceEntry->DeviceObject = DeviceObject;
+        Status = ObReferenceObjectByHandle(NodeHandle, GENERIC_READ | GENERIC_WRITE, IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            ZwClose(NodeHandle);
+            ExFreePool(DeviceEntry);
+            DPRINT1("ObReferenceObjectByHandle failed with %x\n", Status);
+            return Status;
+        }
+
+        DeviceEntry->Handle = NodeHandle;
         DeviceEntry->FileObject = FileObject;
 
         InsertTailList(&DeviceExtension->KsAudioDeviceList, &DeviceEntry->Entry);
         DeviceExtension->NumberOfKsAudioDevices++;
 
-        DPRINT1("Successfully opened audio device\n");
+        DPRINT1("Successfully opened audio device handle %p file object %p device object %p\n", NodeHandle, FileObject, FileObject->DeviceObject);
         return Status;
     }
     else if (IsEqualGUIDAligned(&Event->Event,
@@ -256,28 +277,34 @@ SysAudio_AddDevice(
 #endif
 
             Status = IoRegisterDeviceInterface(PhysicalDeviceObject, &KSCATEGORY_PREFERRED_MIDIOUT_DEVICE, NULL, &SymbolicLink);
-            if (!NT_SUCCESS(Status))
+            if (NT_SUCCESS(Status))
             {
-                DPRINT1("Failed to register KSCATEGORY_PREFERRED_MIDIOUT_DEVICE interface\n");
-                return Status;
+                RtlFreeUnicodeString(&SymbolicLink);
             }
-            RtlFreeUnicodeString(&SymbolicLink);
+            else
+            {
+                DPRINT1("Failed to register KSCATEGORY_PREFERRED_MIDIOUT_DEVICE interface Status %x\n", Status);
+            }
 
             Status = IoRegisterDeviceInterface(PhysicalDeviceObject, &KSCATEGORY_PREFERRED_WAVEIN_DEVICE, NULL, &SymbolicLink);
-            if (!NT_SUCCESS(Status))
+            if (NT_SUCCESS(Status))
             {
-                DPRINT1("Failed to register KSCATEGORY_PREFERRED_WAVEIN_DEVICE interface\n");
-                return Status;
+                RtlFreeUnicodeString(&SymbolicLink);
             }
-            RtlFreeUnicodeString(&SymbolicLink);
+            else
+            {
+                DPRINT1("Failed to register KSCATEGORY_PREFERRED_WAVEIN_DEVICE interface Status %x\n", Status);
+            }
 
             Status = IoRegisterDeviceInterface(PhysicalDeviceObject, &KSCATEGORY_PREFERRED_WAVEOUT_DEVICE, NULL, &SymbolicLink);
-            if (!NT_SUCCESS(Status))
+            if (NT_SUCCESS(Status))
             {
-                DPRINT1("Failed to register KSCATEGORY_PREFERRED_WAVEOUT_DEVICE interface\n");
-                return Status;
+                RtlFreeUnicodeString(&SymbolicLink);
             }
-            RtlFreeUnicodeString(&SymbolicLink);
+            else
+            {
+                DPRINT1("Failed to register KSCATEGORY_PREFERRED_WAVEOUT_DEVICE interface Status %x\n", Status);
+            }
 
             /* set io flags */
             DeviceObject->Flags |= DO_DIRECT_IO | DO_POWER_PAGABLE;
@@ -286,11 +313,9 @@ SysAudio_AddDevice(
         }
     }
 
-
-
     DPRINT("Device SysAudio_AddDevice result %x\n", Status);
 
-    return Status;
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
