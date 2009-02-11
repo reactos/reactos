@@ -914,19 +914,23 @@ SearchPathA (
                 BufferU.Length = wcslen(BufferU.Buffer) * sizeof(WCHAR);
                 /* convert ansi (or oem) string to unicode */
                 if (bIsFileApiAnsi)
-                        RtlUnicodeStringToAnsiString (&Buffer,
-                                                      &BufferU,
-                                                      FALSE);
+                    Status = RtlUnicodeStringToAnsiString(&Buffer,
+                                                          &BufferU,
+                                                          FALSE);
                 else
-                        RtlUnicodeStringToOemString (&Buffer,
-                                                     &BufferU,
-                                                     FALSE);
-                /* nul-terminate ascii string */
-                Buffer.Buffer[BufferU.Length / sizeof(WCHAR)] = '\0';
+                    Status = RtlUnicodeStringToOemString(&Buffer,
+                                                         &BufferU,
+                                                         FALSE);
 
-                if (NULL != lpFilePart && BufferU.Length != 0)
+                if (NT_SUCCESS(Status) && Buffer.Buffer)
                 {
+                    /* nul-terminate ascii string */
+                    Buffer.Buffer[BufferU.Length / sizeof(WCHAR)] = '\0';
+
+                    if (NULL != lpFilePart && BufferU.Length != 0)
+                    {
                         *lpFilePart = strrchr (lpBuffer, '\\') + 1;
+                    }
                 }
         }
 
