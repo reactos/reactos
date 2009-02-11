@@ -7,7 +7,21 @@ KsCreatePin(
     IN  ACCESS_MASK DesiredAccess,
     OUT PHANDLE ConnectionHandle)
 {
-    return STATUS_SUCCESS;
+    UINT ConnectSize = sizeof(KSPIN_CONNECT);
+
+    PKSDATAFORMAT_WAVEFORMATEX Format = (PKSDATAFORMAT_WAVEFORMATEX)(Connect + 1);
+    if (Format->DataFormat.FormatSize == sizeof(KSDATAFORMAT) ||
+        Format->DataFormat.FormatSize == sizeof(KSDATAFORMAT) + sizeof(WAVEFORMATEX))
+    {
+        ConnectSize += Format->DataFormat.FormatSize;
+    }
+
+    return KspCreateObjectType(FilterHandle,
+                               L"{146F1A80-4791-11D0-A5D6-28DB04C10000}",
+                               (PVOID)Connect,
+                               ConnectSize,
+                               DesiredAccess,
+                               ConnectionHandle);
 }
 
 KSDDKAPI NTSTATUS NTAPI
