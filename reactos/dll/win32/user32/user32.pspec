@@ -644,7 +644,7 @@
 @ stdcall SetMessageQueue(long)
 @ stdcall SetParent(long long) NtUserSetParent
 @ stdcall SetProcessDefaultLayout(long)
-@ stub SetProcessDPIAware
+@ stdcall SetProcessDPIAware()
 @ stdcall SetProcessWindowStation(long) NtUserSetProcessWindowStation
 @ stdcall SetProgmanWindow (long)
 @ stdcall SetPropA(long str long)

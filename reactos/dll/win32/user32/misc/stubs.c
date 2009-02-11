@@ -568,3 +568,14 @@ BOOL WINAPI DdeGetQualityOfService(HWND hWnd, DWORD Reserved, PSECURITY_QUALITY_
   UNIMPLEMENTED;
   return FALSE;
 }
+
+/***********************************************************************
+ *              SetProcessDPIAware   (USER32.@)
+ */
+BOOL WINAPI SetProcessDPIAware( VOID )
+{
+    FIXME( "stub!\n");
+
+    return TRUE;
+}
+
