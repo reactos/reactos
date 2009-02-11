@@ -2477,7 +2477,7 @@ static BOOL pdb_process_internal(const struct process* pcs,
             else
             {
                 WARN("wrong header %x expecting 0xeffeeffe\n", *(const DWORD*)files_image);
-                free(files_image);
+                pdb_free(files_image);
                 files_image = NULL;
             }
         }
