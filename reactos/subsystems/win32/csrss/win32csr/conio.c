@@ -184,7 +184,7 @@ CsrInitConsole(PCSRSS_CONSOLE Console)
     }
   /* init screen buffer with defaults */
   NewBuffer->CursorInfo.bVisible = TRUE;
-  NewBuffer->CursorInfo.dwSize = 5;
+  NewBuffer->CursorInfo.dwSize = CSR_DEFAULT_CURSOR_SIZE;
   /* make console active, and insert into console list */
   Console->ActiveBuffer = (PCSRSS_SCREEN_BUFFER) NewBuffer;
 
@@ -1995,7 +1995,7 @@ CSR_API(CsrCreateScreenBuffer)
       else
         {
           Buff->CursorInfo.bVisible = TRUE;
-          Buff->CursorInfo.dwSize = 5;
+          Buff->CursorInfo.dwSize = CSR_DEFAULT_CURSOR_SIZE;
         }
 
       if (Buff->MaxX == 0)

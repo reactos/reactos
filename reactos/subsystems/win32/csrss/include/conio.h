@@ -12,6 +12,8 @@
 #include "api.h"
 #include "win32csr.h"
 
+#define CSR_DEFAULT_CURSOR_SIZE 25
+
 /* Object type magic numbers */
 
 #define CONIO_CONSOLE_MAGIC         0x00000001
