@@ -22,6 +22,7 @@ AddReg = AUDIOClass.NT.AddReg
 HKR, , ,               0, %AUDIOClassName%
 HKR, , EnumPropPages32,0, "MmSys.Cpl,MediaPropPageProvider"
 HKR, , Icon,           0, "-51"
+HKR, , Installer32,     0, "MmSys.Cpl,MediaClassInstaller"
 
 ;-------------------------------- Audio installation ----------------------------------------
 
