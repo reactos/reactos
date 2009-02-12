@@ -267,22 +267,22 @@
 @ stdcall GdiDrawStream(ptr long ptr)
 @ stdcall GdiEndDocEMF(ptr)
 @ stdcall GdiEndPageEMF(ptr long)
-@ stdcall GdiEntry10(ptr long) gdi32.DdReenableDirectDrawObject
-@ stdcall GdiEntry11(ptr ptr) gdi32.DdAttachSurface
-@ stdcall GdiEntry12(ptr ptr) gdi32.DdUnattachSurface
-@ stdcall GdiEntry13() gdi32.DdQueryDisplaySettingsUniqueness
-@ stdcall GdiEntry14(ptr ptr long) gdi32.DdGetDxHandle
-@ stdcall GdiEntry15(ptr ptr ptr) gdi32.DdSetGammaRamp
-@ stdcall GdiEntry16(ptr ptr ptr) gdi32.DdSwapTextureHandles
-@ stdcall GdiEntry1(ptr ptr) gdi32.DdCreateDirectDrawObject
-@ stdcall GdiEntry2(ptr ptr ptr ptr ptr ptr ptr ptr ptr ptr ptr) gdi32.DdQueryDirectDrawObject
-@ stdcall GdiEntry3(ptr) gdi32.DdDeleteDirectDrawObject
-@ stdcall GdiEntry4(ptr long) gdi32.DdCreateSurfaceObject
-@ stdcall GdiEntry5(ptr) gdi32.DdDeleteSurfaceObject
-@ stdcall GdiEntry6(ptr ptr) gdi32.DdResetVisrgn
-@ stdcall GdiEntry7(ptr ptr) gdi32.DdGetDC
-@ stdcall GdiEntry8(ptr) gdi32.DdReleaseDC
-@ stdcall GdiEntry9(ptr ptr ptr ptr ptr ptr) gdi32.DdCreateDIBSection
+@ stdcall GdiEntry10(ptr long)
+@ stdcall GdiEntry11(ptr ptr)
+@ stdcall GdiEntry12(ptr ptr)
+@ stdcall GdiEntry13()
+@ stdcall GdiEntry14(ptr ptr long)
+@ stdcall GdiEntry15(ptr ptr ptr)
+@ stdcall GdiEntry16(ptr ptr ptr)
+@ stdcall GdiEntry1(ptr ptr)
+@ stdcall GdiEntry2(ptr ptr ptr ptr ptr ptr ptr ptr ptr ptr ptr)
+@ stdcall GdiEntry3(ptr)
+@ stdcall GdiEntry4(ptr long)
+@ stdcall GdiEntry5(ptr)
+@ stdcall GdiEntry6(ptr ptr)
+@ stdcall GdiEntry7(ptr ptr)
+@ stdcall GdiEntry8(ptr)
+@ stdcall GdiEntry9(ptr ptr ptr ptr ptr ptr)
 @ stdcall GdiFixUpHandle(ptr)
 @ stdcall GdiFlush()
 @ stdcall GdiFullscreenControl(ptr ptr long ptr ptr) NtGdiFullscreenControl 
