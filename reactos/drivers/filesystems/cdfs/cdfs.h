@@ -232,6 +232,7 @@ typedef struct _CCB
 #endif
 
 #define TAG_CCB TAG('I', 'C', 'C', 'B')
+#define TAG_FCB TAG('I', 'F', 'C', 'B')
 
 typedef struct
 {

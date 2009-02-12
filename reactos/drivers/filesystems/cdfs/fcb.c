@@ -35,8 +35,6 @@
 
 /* FUNCTIONS ****************************************************************/
 
-#define TAG_FCB TAG('I', 'F', 'C', 'B')
-
 #define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
 
 
@@ -114,10 +112,11 @@ CdfsDestroyFCB(PFCB Fcb)
     {
         Entry = Fcb->ShortNameList.Flink;
         RemoveEntryList(Entry);
-        ExFreePool(Entry);
+        ExFreePoolWithTag(Entry, TAG_FCB);
     }
 
-    ExFreePool(Fcb);
+    ExDeleteResourceLite(&Fcb->NameListResource);
+    ExFreePoolWithTag(Fcb, TAG_FCB);
 }
 
 

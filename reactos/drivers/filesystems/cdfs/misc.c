@@ -95,21 +95,6 @@ CdfsFileFlagsToAttributes(PFCB Fcb,
         ((Fcb->Entry.FileFlags & FILE_FLAG_READONLY) ? FILE_ATTRIBUTE_READONLY : 0);
 }
 
-/* Writes a number into a string, ending at the target position. */
-static PWCHAR
-CdfsWriteNumberInShortName
-(PWCHAR EndOfNumberTarget,
- ULONG Number)
-{
-    while (Number)
-    {
-        *EndOfNumberTarget = '0' + (Number % 10);
-        EndOfNumberTarget--;
-        Number /= 10;
-    }
-    return EndOfNumberTarget;
-}
-
 VOID
 CdfsShortNameCacheGet
 (PFCB DirectoryFcb, 
@@ -118,11 +103,9 @@ CdfsShortNameCacheGet
  PUNICODE_STRING ShortName)
 {
     BOOLEAN HasSpaces;
-    PWCHAR LastDot, Scan;
-    ULONG Number = 1;
     PLIST_ENTRY Entry;
     PCDFS_SHORT_NAME ShortNameEntry;
-    GENERATE_NAME_CONTEXT Context = { };
+    GENERATE_NAME_CONTEXT Context = { 0 };
 
     DPRINT("CdfsShortNameCacheGet(%I64u,%wZ)\n", StreamOffset->QuadPart, LongName);
 
@@ -165,13 +148,6 @@ CdfsShortNameCacheGet
 
     DPRINT("Initial Guess %wZ\n", ShortName);
 
-    /* Find the part that'll be numberified */
-    LastDot = &ShortName->Buffer[(ShortName->Length / sizeof(WCHAR)) - 1];
-    for (Scan = ShortName->Buffer; 
-        Scan - ShortName->Buffer < ShortName->Length;
-        Scan++)
-        if (*Scan == '.') LastDot = Scan - 1;
-
     /* Make it unique by scanning the cache and bumping */
     /* Note that incrementing the ambiguous name is enough, since we add new
     * entries at the tail.  We'll scan over all collisions. */
@@ -186,14 +162,13 @@ CdfsShortNameCacheGet
             &ShortNameEntry->Name,
             TRUE) == 0) /* Match */
         {
-            Scan = CdfsWriteNumberInShortName(LastDot, ++Number);
-            *Scan = '~';
+            RtlGenerate8dot3Name(LongName, FALSE, &Context, ShortName);
             DPRINT("Collide; try %wZ\n", ShortName);
         }
     }
 
     /* We've scanned over all entries and now have a unique one.  Cache it. */
-    ShortNameEntry = ExAllocatePool(PagedPool, sizeof(CDFS_SHORT_NAME));
+    ShortNameEntry = ExAllocatePoolWithTag(PagedPool, sizeof(CDFS_SHORT_NAME), TAG_FCB);
     if (!ShortNameEntry) 
     {
         /* We couldn't cache it, but we can return it.  We run the risk of
