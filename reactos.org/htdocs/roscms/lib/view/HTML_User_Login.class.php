@@ -28,6 +28,13 @@
 class HTML_User_Login extends HTML_User
 {
 
+
+
+  private $err_message=null;
+  private $random_string_security=null;
+
+
+
   /**
    *
    *
@@ -36,6 +43,17 @@ class HTML_User_Login extends HTML_User
   public function __construct( )
   {
     session_start();
+    $this->checkLogin();
+
+    $config = &RosCMS::getInstance();
+
+    if (isset($_GET['sec']) && $_GET['sec'] == 'security') { 
+      $this->random_string_security = $this->makeKey();
+      Cookie::write($config->cookieSecure(), $this->random_string_security, 0);
+    } 
+    else {
+      Cookie::write($config->cookieSecure(), '', time() - 3600);
+    }
 
     // register js files
     $this->register_js('md5.js');
@@ -44,21 +62,21 @@ class HTML_User_Login extends HTML_User
 
 
 
-  protected function body( )
+  protected function checkLogin( )
   {
     $config = &RosCMS::getInstance();
   
     // show login dialog
     if (empty($_POST[$config->cookieUserName()]) && empty($_POST[$config->cookiePassword()])) {
-      self::loginPage();
+      $this->loginPage();
     }
 
     // pw or user are not set
     elseif(empty($_POST[$config->cookieUserName()])) {
-      self::loginPage('Please enter your username!');
+      $this->loginPage('Please enter your username!');
     }
     elseif(empty($_POST[$config->cookiePassword()])) {
-      self::loginPage('Please enter your password');
+      $this->loginPage('Please enter your password');
     }
 
     // try to login the user
@@ -71,7 +89,7 @@ class HTML_User_Login extends HTML_User
         $session_found = true;
       }
       else {
-        $session_id = self::makeKey();
+        $session_id = $this->makeKey();
         $session_found = false;
       }
 
@@ -80,7 +98,7 @@ class HTML_User_Login extends HTML_User
         $user_name = $matches[1];
       }
       else {
-        self::loginPage('You have specified an incorrect username.');
+        $this->loginPage('You have specified an incorrect username.');
         exit;
       }
 
@@ -89,7 +107,7 @@ class HTML_User_Login extends HTML_User
         $password = $matches[1];
       }
       else {
-        self::loginPage('You have specified an invalid password.');
+        $this->loginPage('You have specified an invalid password.');
         exit;
       }
 
@@ -110,13 +128,13 @@ class HTML_User_Login extends HTML_User
       }
 
       if ($a_password != $user['password']) {
-        self::loginPage("You have specified an incorrect or inactive username, or an invalid password.");
+        $this->loginPage("You have specified an incorrect or inactive username, or an invalid password.");
         exit;
       }
 
       // if the account is NOT enabled; e.g. a reason could be that a member of the admin group has disabled this account because of spamming, etc.
       if ($user['disabled'] == true) { 
-        self::loginPage('Account is not activated or disabled!<br /><br />Check your email inbox (and spam folder), maybe you have overseen the activation information.');
+        $this->loginPage('Account is not activated or disabled!<br /><br />Check your email inbox (and spam folder), maybe you have overseen the activation information.');
         exit;
       }
 
@@ -191,6 +209,7 @@ class HTML_User_Login extends HTML_User
   } // end of member function body
 
 
+
   /**
    * shows page with login formular
    *
@@ -198,18 +217,19 @@ class HTML_User_Login extends HTML_User
    */
   private function loginPage( $err_message = '' )
   {
+    $this->err_message = $err_message;
+  }
+
+
+
+  /**
+   * shows page with login formular
+   *
+   * @access private
+   */
+  protected function body( )
+  {
     $config = &RosCMS::getInstance();
-
-    //@ADD comment -> why do we need this
-    $random_string_security = '';
-
-    if (isset($_GET['sec']) && $_GET['sec'] == 'security') { 
-      $random_string_security = self::makeKey();
-      Cookie::write($config->cookieSecure(), $random_string_security, 0);
-    } 
-    else {
-      Cookie::write($config->cookieSecure(), '', time() - 3600);
-    }
 
     $target_clean = '';
     if (isset($_REQUEST['target']) && preg_match('/^(\/[a-zA-Z0-9!$%&,\'()*+\-.\/:;=?@_~]+)$/', $_REQUEST['target'], $matches)) {
@@ -262,20 +282,20 @@ class HTML_User_Login extends HTML_User
     }
     echo_strip('
           <input name="logintype" type="hidden" id="logintype" value="'.((isset($_GET['sec']) && $_GET['sec'] == 'security') ? 'security' : 'standard').'" />
-          <button type="submit" name="submit"'.((isset($_GET['sec']) && $_GET['sec'] == 'security') ? ' onclick="'.$config->cookiePassword().'.value = calcMD5(\''.$random_string_security.'\' + calcMD5('.$config->cookiePassword().'.value))"': '').'>Login</button>
+          <button type="submit" name="submit"'.((isset($_GET['sec']) && $_GET['sec'] == 'security') ? ' onclick="'.$config->cookiePassword().'.value = calcMD5(\''.$this->random_string_security.'\' + calcMD5('.$config->cookiePassword().'.value))"': '').'>Login</button>
         </div>
         <div class="corner_BL">
           <div class="corner_BR"></div>
         </div>
       </div>');
 
-    if ($err_message != "") {
+    if ($this->err_message != "") {
       echo_strip('
         <div class="bubble message">
           <div class="corner_TL">
             <div class="corner_TR"></div>
           </div>
-          <strong>');echo $err_message;echo_strip('</strong>
+          <strong>');echo $this->err_message;echo_strip('</strong>
           <div class="corner_BL">
             <div class="corner_BR"></div>
           </div>

@@ -167,7 +167,7 @@ class Entry
    * @return bool
    * @access public
    */
-  public static function add($data_name, $data_type = null, $template = '', $dynamic = false)
+  public static function add($data_name, $data_type = null, $template = '')
   {
     $data_name = trim($data_name);
 
@@ -180,11 +180,16 @@ class Entry
 
     // if entry does not exist -> create a new one
     if ($data_id === false) {
+    
+      $stmt_ask=&DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_ACCESS." WHERE standard IS TRUE");
+      $stmt_ask->execute();
+      $access_id = $stmt_ask->fetchColumn();
 
       // insert new data
-      $stmt_ins=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_ENTRIES." ( id , name , type ) VALUES ( NULL , :name, :type )");
+      $stmt_ins=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_ENTRIES." ( id , name , type , access_id ) VALUES ( NULL , :name, :type, :access_id )");
       $stmt_ins->bindParam('name',$data_name,PDO::PARAM_STR);
       $stmt_ins->bindParam('type',$data_type,PDO::PARAM_STR);
+      $stmt_ins->bindParam('access_id',$access_id,PDO::PARAM_INT);
       $stmt_ins->execute();
 
       // and get new data_id (use old used statement again)
@@ -199,6 +204,7 @@ class Entry
 
     // only go on, if we got a new revision
     if ($rev_id === false) {
+      echo 'Could not create new revision, maybe the entry already exists.';
       return false;
     }
 
@@ -225,16 +231,6 @@ class Entry
         Tag::add($rev_id, 'next_number', 1, -1);
       }
     }
-    elseif ($data_type == 'content' && $dynamic === true) {
-
-      // get highest saved dynamic number for this data
-      $next_number = intval(Tag::getValue($rev_id,'number_next',-1));
-
-      // add a title
-      $stmt->bindValue('description','title',PDO::PARAM_STR);
-      $stmt->bindValue('content',$data_name.'_'.$next_number,PDO::PARAM_STR);
-      $stmt->execute();
-    }
 
     // set page content to template, if selected
     if ($template != '' && $template != 'none') {
@@ -256,7 +252,7 @@ class Entry
       // add Tags
       Tag::add($rev_id, 'number', $next_number, -1);
       Tag::add($rev_id, 'pub_date', date('Y-m-d'), -1);
-      Tag::add($rev_id, 'pub_user', $thisuser->id(), -1);
+      Tag::add($rev_id, 'pub_user', ThisUser::getInstance()->id(), -1);
 
       // update next number
       Tag::update(Tag::getId($rev_id,'number_next',-1),$next_number+1);

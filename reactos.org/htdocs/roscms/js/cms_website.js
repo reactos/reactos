@@ -1951,6 +1951,11 @@ function applyToEditor( http_request, objid )
       alertbox('Entry updated');
       break;
 
+    case 'updatedepencies':
+      alertbox(http_request.responseText);
+      makeRequest('?page=backend&type=text&subtype=mef&d_fl=showdepencies&d_r_id='+document.getElementById('mefrrevid').innerHTML, 'mef', 'frmedittagsc2', 'html', 'GET', '');
+      break;
+
     case 'updatetag':
       selectUserTags();
       objid = tsplits[1];
@@ -2322,7 +2327,7 @@ function createNewEntry( menumode )
 
     // new dynamic entry
     case 1:
-      makeRequest('?page=backend&type=text&subtype=ned&action=newdynamic&name='+encodeURIComponent(document.getElementById('txtadddynsource').value), 'ned', 'newentryarea', 'html', 'GET', '');
+      makeRequest('?page=backend&type=text&subtype=ned&action=newdynamic&data_id='+encodeURIComponent(document.getElementById('txtadddynsource').value), 'ned', 'newentryarea', 'html', 'GET', '');
       break;
 
     // new page & content (with template)
@@ -2374,6 +2379,35 @@ function showPreview( http_request, objid )
   document.getElementById('previewzone').innerHTML = http_request.responseText;
   document.getElementById('previewhead').innerHTML = '<span class="button" onclick="loadEntryTableWithOffset(roscms_current_tbl_position)"><strong>&laquo; Back</strong></span> &nbsp; <strong>Preview</strong>';
 } // end of function showPreview
+
+
+
+/**
+ * add a new manual depency
+ *
+ * @param int rev_id
+ */
+function addDepency( rev_id )
+{
+  var name = document.getElementById('dep_name').value;
+
+  // check if name is given
+  if (name != '') {
+    makeRequest('?page=backend&type=text&subtype=mef&d_fl=adddepency&rev_id='+rev_id+'&dep_name='+encodeURIComponent(name)+'&dep_type='+encodeURIComponent(document.getElementById('dep_type').value), 'mef', 'updatedepencies', 'html', 'GET', '');
+  }
+} // addDepency
+
+
+
+/**
+ * delete a new manual depency
+ *
+ * @param int dep_id depency id
+ */
+function deleteDepency( dep_id )
+{
+  makeRequest('?page=backend&type=text&subtype=mef&d_fl=deletedepency&dep_id='+dep_id, 'mef', 'updatedepencies', 'html', 'GET', '');
+} // deleteDepency
 
 
 

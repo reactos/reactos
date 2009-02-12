@@ -46,7 +46,7 @@ class Depencies
     @set_time_limit(0);
   
     // remove old depencies
-    DBConnection::getInstance()->exec("DELETE FROM ".ROSCMST_DEPENCIES);
+    DBConnection::getInstance()->exec("DELETE FROM ".ROSCMST_DEPENCIES." WHERE user_defined IS FALSE");
 
     // walk trough all stable
     $stmt=&DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_REVISIONS." WHERE archive IS FALSE AND status='stable'");
@@ -146,6 +146,48 @@ class Depencies
 
 
   /**
+   * add a new user defined depency
+   *
+   * @param int rev_id
+   * @param string name entry name
+   * @param string type entry type
+   * @return bool
+   * @access public
+   */
+  public static function addManual( $rev_id, $name, $type )
+  {
+    // check access rights
+    if (ThisUser::getInstance()->hasAccess('add_depencies')) {
+      return self::insert($rev_id, $name, $type, true);
+    }
+    return false;
+  } // end of member function addManual
+
+
+
+  /**
+   * deletes a user defined Depency
+   *
+   * @param int dep_id depency id
+   * @return bool
+   * @access public
+   */
+  public static function deleteManual( $dep_id )
+  {
+    // check access rights
+    if (ThisUser::getInstance()->hasAccess('add_depencies')) {
+
+      // delete depencies
+      $stmt=&DBConnection::getInstance()->prepare("DELETE FROM ".ROSCMST_DEPENCIES." WHERE id = :dep_id AND user_defined IS TRUE");
+      $stmt->bindParam('dep_id',$dep_id,PDO::PARAM_INT);
+      return $stmt->execute();
+    }
+    return false;
+  } // end of member function deleteManual
+
+
+
+  /**
    * inserts/updates new depency into database
    *
    * @param string[] matches
@@ -158,36 +200,73 @@ class Depencies
     switch ($matches[2]) {
       case 'templ':
         $type = 'template';
-        $include = true;
         break;
       case 'cont':
         $type = 'content';
-        $include = true;
         break;
       case 'inc':
         $type = 'script';
-        $include = true;
         break;
       case 'link':
         $type = 'page';
+        break;
+    }
+
+    return self::insert($this->rev_id, $matches[3], $type, false);
+  } // end of member function newDepency
+
+
+
+  /**
+   * shared function to insert/update entries
+   *
+   * @param int rev_id parent
+   * @param string name child
+   * @param string type child
+   * @param bool user_defined
+   * @return bool
+   * @access public
+   */
+  private static function insert( $rev_id, $name, $type, $user_defined )
+  {
+    // is include depency ?
+    switch ($type) {
+      case 'template':
+        $depency_name = 'templ_'.$name;
+        $include = true;
+        break;
+      case 'content':
+        $depency_name = 'cont_'.$name;
+        $include = true;
+        break;
+      case 'script':
+        $depency_name = 'inc_'.$name;
+        $include = true;
+        break;
+      case 'dynamic':
+        $depency_name = 'link_'.$name;
+        $include = true && $user_defined;
+        break;
+      case 'page':
+        $depency_name = 'link_'.$name;
         $include = false;
         break;
     }
 
-    // try to get depency id
+    // check for existing entry
     $stmt=&DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_ENTRIES." WHERE name = :name AND type = :type LIMIT 1");
-    $stmt->bindParam('name',$matches[3],PDO::PARAM_STR);
+    $stmt->bindParam('name',$name,PDO::PARAM_STR);
     $stmt->bindParam('type',$type,PDO::PARAM_STR);
     if ($stmt->execute()) {
       $data_id = $stmt->fetchColumn();
 
       // check if we already have an depency to this entry
       $stmt=&DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_DEPENCIES." WHERE child_name=:depency_name");
-      $stmt->bindParam('depency_name',$matches[1],PDO::PARAM_STR);
+      $stmt->bindParam('depency_name',$depency_name,PDO::PARAM_STR);
       $stmt->execute();
       $depency_id = $stmt->fetchColumn();
 
-      // update depency with name -> depency with id
+      // update entry with data id instead of name&type
       if ($depency_id !== false) {
         $stmt=&DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_DEPENCIES." SET child_name=NULL, child_id=:depency_id WHERE id=:depency_id");
         $stmt->bindParam('child_id',$data_id,PDO::PARAM_INT);
@@ -195,27 +274,28 @@ class Depencies
         return $stmt->execute();
       }
 
-      // inseert new depency
+      // insert new depency
       else {
 
         // insert depency with name
         if ($data_id === false) {
-          $stmt=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_DEPENCIES." (rev_id, child_name, include) VALUES (:rev_id, :depency_name, :is_include)");
-          $stmt->bindParam('depency_name',$matches[1],PDO::PARAM_STR);
+          $stmt=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_DEPENCIES." (rev_id, child_name, include, user_defined) VALUES (:rev_id, :depency_name, :is_include, :user_defined)");
+          $stmt->bindParam('depency_name',$depency_name,PDO::PARAM_STR);
         }
 
         // insert depency with id
         else {
-          $stmt=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_DEPENCIES." (rev_id, child_id, include) VALUES (:rev_id, :depency_id, :is_include)");
+          $stmt=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_DEPENCIES." (rev_id, child_id, include, user_defined) VALUES (:rev_id, :depency_id, :is_include, :user_defined)");
           $stmt->bindParam('depency_id',$data_id,PDO::PARAM_INT);
         }
-        $stmt->bindParam('rev_id',$this->rev_id,PDO::PARAM_INT);
+        $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
         $stmt->bindParam('is_include',$include,PDO::PARAM_BOOL);
+        $stmt->bindParam('user_defined',$user_defined,PDO::PARAM_BOOL);
         return $stmt->execute();
       }
     }
     return false;
-  } // end of member function newDepency
+  } // end of member function deleteManual
 
 
 

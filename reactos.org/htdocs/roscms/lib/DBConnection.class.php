@@ -37,7 +37,7 @@ class DBConnection extends PDO
    */
   public function __construct()
   {
-    global $db_host, $db_host, $db_user, $db_pass;
+    global $db_host, $db_host, $db_user, $db_pass, $db_port;
     include_once(ROSCMS_PATH.'connect.db.php');
 
     try {

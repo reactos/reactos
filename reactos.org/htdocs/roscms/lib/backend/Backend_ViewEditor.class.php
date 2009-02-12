@@ -114,6 +114,26 @@ class Backend_ViewEditor extends Backend
         $this->showEntryDetails(self::DEPENCIES);
         break;
 
+      // add Depencies
+      case 'adddepency':
+        if (Depencies::addManual($_GET['rev_id'],$_GET['dep_name'],$_GET['dep_type'])) {
+          echo 'Adding user defined depency was successful.';
+        }
+        else {
+          echo 'Error while adding user defined depency.';
+        }
+        break;
+
+      // delete Depencies
+      case 'deletedepency':
+        if (Depencies::deleteManual($_GET['dep_id'])) {
+          echo 'Deleting user defined depency was successful.';
+        }
+        else {
+          echo 'Error while deleting user defined depency.';
+        }
+        break;
+
       // show Field details
       case 'alterfields':
         $this->showEntryDetails(self::FIELDS);
@@ -376,6 +396,7 @@ class Backend_ViewEditor extends Backend
           </span>
           &nbsp;'.$revision['name'].'</span>
           &nbsp;
+          <span style="display: none;" id="mefrrevid">'.$revision['id'].'</span>
           <span style="white-space: nowrap;">type: <span class="revDetail">'.$revision['type'].'</span></span> &nbsp; 
           <span style="white-space: nowrap;">version: <span id="mefrverid" class="revDetail">'.$revision['version'].'</span></span> &nbsp; 
           <span style="white-space: nowrap;">language: <span class="revDetail">'.$revision['language'].'</span><span id="mefrlang" style="display:none;">'.$revision['lang_id'].'</span></span> &nbsp; 
@@ -635,18 +656,38 @@ class Backend_ViewEditor extends Backend
    */
   private function showEntryDepencies()
   {
+  
+    // add manual depency
+    if (ThisUser::getInstance()->hasAccess('add_depencies')) {
+      echo_strip('
+        <h3>Add Depency</h3>
+        <fieldset>
+          <label for="dep_name">Name:</label> 
+          <input type="text" name="dep_name" id="dep_name" /><br />
+          
+          <label for="dep_type">Type:</label> 
+          <select name="dep_type" id ="dep_type">
+            <option value="content">Content</option>
+            <option value="script">Script</option>
+            <option value="template">Template</option>
+            '.(ThisUser::getInstance()->hasAccess('dynamic_pages') ? '<option value="dynamic">Dynamic Page</option>' : '').'
+          </select><br />
+          <button type="submit" onclick="'."addDepency(".$this->rev_id.")".'">add manual depency</button>
+        </fieldset>');
+    }
+
     // print depency tree
     echo '<h3>Dependent Entries</h3>';
     $this->buildDepencyTree($this->data_id);
 
     // required articles that don't exist
-    $stmt=&DBConnection::getInstance()->prepare("SELECT DISTINCT child_name, include FROM ".ROSCMST_DEPENCIES." WHERE rev_id=:rev_id AND child_id IS NULL ORDER BY include DESC, child_name ASC");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT DISTINCT child_name, include, id, user_defined FROM ".ROSCMST_DEPENCIES." WHERE rev_id=:rev_id AND child_id IS NULL ORDER BY include DESC, child_name ASC");
     $stmt->bindParam('rev_id',$this->rev_id, PDO::PARAM_INT);
     $stmt->execute();
     $required_fail = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // articles that exist
-    $stmt=&DBConnection::getInstance()->prepare("SELECT DISTINCT d.name, d.type, w.include FROM ".ROSCMST_DEPENCIES." w JOIN ".ROSCMST_ENTRIES." d ON d.id=w.child_id WHERE rev_id=:rev_id AND w.child_name IS NULL ORDER BY w.include DESC, d.name ASC, d.type ASC");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT DISTINCT d.name, d.type, w.include, w.id, w.user_defined FROM ".ROSCMST_DEPENCIES." w JOIN ".ROSCMST_ENTRIES." d ON d.id=w.child_id WHERE rev_id=:rev_id AND w.child_name IS NULL ORDER BY w.include DESC, d.name ASC, d.type ASC");
     $stmt->bindParam('rev_id',$this->rev_id, PDO::PARAM_INT);
     $stmt->execute();
     $required_exist = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -658,17 +699,31 @@ class Backend_ViewEditor extends Backend
       if (count($required_exist) > 0) {
         echo '<ul>';
         foreach($required_exist as $required) {
-          echo '<li>'.$required['name'].' ['.$required['type'].'] ('.($required['include']==true ? 'include' : 'link').')</li>';
+          echo '<li>['.$required['type'].'] '.$required['name'].' ('.($required['include']==true ? 'include' : 'link').')';
+
+          // delete manual depency
+          if (ThisUser::getInstance()->hasAccess('add_depencies') && $required['user_defined']) {
+            echo ' <span class="deletebutton" onclick="'."deleteDepency(".$required['id'].")".'"><img src="images/remove.gif" alt="" /> Delete</span>';
+          }
+
+          echo '</li>';
         }
         echo '</ul>';
       }
 
       if (count($required_fail) > 0) {
         echo_strip('
-          <h4>Entries that don\'t exist</h4>
+          <h4>Required Entries that don\'t exist</h4>
           <ul>');
         foreach($required_fail as $required) {
-          echo '<li>'.$required['child_name'].' ('.($required['include']==true ? 'include' : 'link').')</li>';
+          echo '<li>'.$required['child_name'].' ('.($required['include']==true ? 'include' : 'link').')';
+
+          // delete manual depency
+          if (ThisUser::getInstance()->hasAccess('add_depencies') && $required['user_defined']) {
+            echo ' <span class="deletebutton" onclick="'."deleteDepency(".$required['id'].")".'"><img src="images/remove.gif" alt="" /> Delete</span>';
+          }
+
+          echo '</li>';
         }
         echo '</ul>';
       }
@@ -685,7 +740,7 @@ class Backend_ViewEditor extends Backend
   private function buildDepencyTree( $data_id )
   {
     // get current childs
-    $stmt=&DBConnection::getInstance()->prepare("SELECT d.name, l.name AS language, d.type, r.data_id FROM ".ROSCMST_DEPENCIES." w JOIN ".ROSCMST_REVISIONS." r ON w.rev_id = r.id JOIN ".ROSCMST_ENTRIES." d ON d.id=r.data_id JOIN ".ROSCMST_LANGUAGES." l ON l.id=r.lang_id WHERE w.child_id=:data_id AND w.include IS TRUE ORDER BY l.name ASC, d.name ASC");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT d.name, l.name AS language, d.type, r.data_id, w.user_defined, w.id FROM ".ROSCMST_DEPENCIES." w JOIN ".ROSCMST_REVISIONS." r ON w.rev_id = r.id JOIN ".ROSCMST_ENTRIES." d ON d.id=r.data_id JOIN ".ROSCMST_LANGUAGES." l ON l.id=r.lang_id WHERE w.child_id=:data_id AND w.include IS TRUE ORDER BY l.name ASC, d.name ASC");
     $stmt->bindParam('data_id',$data_id, PDO::PARAM_INT);
     $stmt->execute();
     $depencies = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -695,15 +750,19 @@ class Backend_ViewEditor extends Backend
     if (count($depencies) > 0) {
       echo '<ul>';
 
-      $last_language = null;
       // show Depencies
+      $x=0;
       foreach ($depencies as $depency) {
-        echo '<li>'.$depency['name'].' ('.$depency['type'].') ['.$depency['language'].']';
+        $x++;
+        echo '<li style="color: #'.($x%2 ? '000' : '777').';">['.$depency['type'].'] '.$depency['name'].' <span style="color: #'.($x%2 ? 'AAA' : 'CCC').';">('.$depency['language'].')</span>';
+
+        // get childs
         if ($data_id != $depency['data_id']) {
           $this->buildDepencyTree( $depency['data_id']);
         }
         echo '</li>';
-      }
+      } // end foreach
+
       echo '</ul>';
     }
     elseif ($this->data_id === $data_id) {
@@ -1008,7 +1067,14 @@ class Backend_ViewEditor extends Backend
   {
     // select all related entries
     if ($lang_id === null) {
-      $stmt=&DBConnection::getInstance()->prepare("SELECT r.data_id, d.name, r.id, r.lang_id, l.name AS language, r.version, DATE(r.datetime) as date, r.datetime, u.name AS user_name, r.archive FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id = d.id JOIN ".ROSCMST_LANGUAGES." l ON r.lang_id = l.id JOIN ".ROSCMST_USERS." u ON u.id = r.user_id WHERE d.id = :data_id AND r.version > 0 ORDER BY l.name  ASC, r.datetime DESC");
+      if (ThisUser::getInstance()->hasAccess('more_lang')) {
+        $stmt=&DBConnection::getInstance()->prepare("SELECT r.data_id, d.name, r.id, r.lang_id, l.name AS language, r.version, DATE(r.datetime) as date, r.datetime, u.name AS user_name, r.archive FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id = d.id JOIN ".ROSCMST_LANGUAGES." l ON r.lang_id = l.id JOIN ".ROSCMST_USERS." u ON u.id = r.user_id WHERE d.id = :data_id AND r.version > 0 ORDER BY l.name  ASC, r.datetime DESC");
+      }
+      else {
+        $stmt=&DBConnection::getInstance()->prepare("SELECT r.data_id, d.name, r.id, r.lang_id, l.name AS language, r.version, DATE(r.datetime) as date, r.datetime, u.name AS user_name, r.archive FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id = d.id JOIN ".ROSCMST_LANGUAGES." l ON r.lang_id = l.id JOIN ".ROSCMST_USERS." u ON u.id = r.user_id WHERE d.id = :data_id AND r.version > 0 AND l.id IN(:standard_lang,:lang_id) ORDER BY l.name  ASC, r.datetime DESC");
+        $stmt->bindParam('standard_lang',Language::getStandardId(),PDO::PARAM_INT);
+        $stmt->bindParam('lang_id',ThisUser::getInstance()->language(),PDO::PARAM_INT);
+      }
     }
 
     // select only one language

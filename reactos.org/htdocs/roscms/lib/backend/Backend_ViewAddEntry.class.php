@@ -65,7 +65,7 @@ class Backend_ViewAddEntry extends Backend
    *
    * @access private
    */
-  private function evalAction(  )
+  private function evalAction( )
   {
     switch ($_GET['action']) {
 
@@ -77,7 +77,22 @@ class Backend_ViewAddEntry extends Backend
 
       // dynamic entry - save entry
       case 'newdynamic':
-        $rev_id = Entry::add($_GET['name'], 'content', null, true);
+      
+        // get some data about the dynamic page
+        $stmt=&DBConnection::getInstance()->prepare("SELECT r.id AS rev_id, d.name FROM ".ROSCMST_REVISIONS." r JOIN ".ROSCMST_ENTRIES." d ON d.id=r.data_id WHERE d.id=:data_id AND lang_id=:standard_lang LIMIT 1");
+        $stmt->bindParam('data_id',$_GET['data_id'],PDO::PARAM_INT);
+        $stmt->bindParam('standard_lang',Language::getStandardId(),PDO::PARAM_INT);
+        $stmt->execute();
+        $page = $stmt->fetchOnce(PDO::FETCH_ASSOC);
+        $next_index = Tag::getValue($page['rev_id'],'next_index',-1);
+
+        // create new dynamic entry
+        $rev_id = Entry::add($page['name'].'_'.$next_index, 'content');
+
+        // update next index for dynamic page
+        Tag::update(Tag::getId($page['rev_id'],'next_index',-1),$next_index+1);
+
+        // show editor
         new Backend_ViewEditor($rev_id);
         break;
 
@@ -106,7 +121,7 @@ class Backend_ViewAddEntry extends Backend
             break;
         } // end switch type
         break;
-      
+
     } // end switch action
   } // end of member function evalAction
 

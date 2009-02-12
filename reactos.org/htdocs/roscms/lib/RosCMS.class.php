@@ -44,7 +44,8 @@ class RosCMS
   private $site_language = 'en'; // standard language
   private $site_timezone = -2; // time difference to utc time from server time
 
-  private $path_generated = '/reactos/'; // path to generated files
+  private $path_generated = '../reactos/'; // path to generated files
+  private $path_generation_cache = '../reactos/roscms_cache'; // path to cache files while generation process
   private $path_roscms = '/reactos/roscms/'; // path to roscms files
 
   // system vars
@@ -97,6 +98,7 @@ class RosCMS
   public function siteTimezone(){ return $this->site_timezone; }
 
   public function pathGenerated() { return $this->path_generated; }
+  public function pathGenerationCache() { return $this->path_generation_cache; }
   public function pathRosCMS() { return $this->path_roscms; }
 
 
@@ -152,6 +154,11 @@ class RosCMS
   public function setPathGenerated( $new_value ) {
     $this->path_generated = $new_value;
   }
+
+  public function setPathGenerationCache( $new_value ) {
+    $this->path_generation_cache = $new_value;
+  }
+
   public function setPathRosCMS( $new_value ) {
     $this->path_roscms = $new_value;
   }

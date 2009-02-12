@@ -43,8 +43,9 @@ $config->setSiteName('ReactOS.org'); // sites name
 $config->setSiteLanguage('en'); // standard language
 $config->setSiteTimezone(-2); // time difference to utc time from server time
 
-$config->setPathGenerated('/reactos/'); // path to generated files
 $config->setPathRoscms('/reactos/roscms/'); // path to roscms files
+$config->setPathGenerationCache('../roscms_cache/'); // path to generated files (relative to roscms folder)
+$config->setPathGenerated('../'); // path to generated files (relative to roscms folder)
 
 
 

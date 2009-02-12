@@ -21,10 +21,10 @@
 
 // Database:
 $db_host = 'localhost';
-$db_user = 'lev-db';
-$db_pass = 'DangerGround';
-$db_name = 'realroscms';
-$db_port = 3306;
+$db_user = 'username';
+$db_pass = 'password';
+$db_name = 'roscms';
+$db_port = 3301;
 
 // vars are unset in DBConnection class
 // !!! so be sure to use DBConnection or unset(..) yourself
