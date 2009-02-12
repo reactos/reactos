@@ -553,6 +553,7 @@ media\nls\c_28604.nls                               1
 media\nls\c_28605.nls                               1
 media\nls\c_28606.nls                               1
 media\drivers\etc\services                          5
+media\inf\audio.inf                                 6
 media\inf\acpi.inf                                  6
 media\inf\cdrom.inf                                 6
 media\inf\display.inf                               6

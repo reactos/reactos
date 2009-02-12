@@ -1,0 +1,34 @@
+; AUDIO.INF
+
+; Installation of Audio / Video Adapters
+
+[Version]
+Signature  = "$Windows NT$"
+;Signature  = "$ReactOS$"
+LayoutFile = layout.inf
+Class      = AUDIO
+ClassGUID  = {4d36e96c-e325-11ce-bfc1-08002be10318}
+Provider   = %ReactOS%
+DriverVer  = 10/19/1999,5.00.2157.1
+
+[DestinationDirs]
+DefaultDestDir = 12
+
+[ClassInstall32.NT]
+AddReg = AUDIOClass.NT.AddReg
+
+[AUDIOClass.NT.AddReg]
+HKR, , ,               0, %AUDIOClassName%
+HKR, , EnumPropPages32,0, "MmSys.Cpl,MediaPropPageProvider"
+HKR, , Icon,           0, "-51"
+
+
+;-------------------------------- STRINGS -------------------------------
+
+[Strings]
+ReactOS = "ReactOS Team"
+AUDIOClassName = "Audio & Videocontroller"
+
+
+[Strings.0407]
+AUDIOClassName = "Audio-, Video- und Gamecontroller"
