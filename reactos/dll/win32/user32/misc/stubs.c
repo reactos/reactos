@@ -569,13 +569,39 @@ BOOL WINAPI DdeGetQualityOfService(HWND hWnd, DWORD Reserved, PSECURITY_QUALITY_
   return FALSE;
 }
 
-/***********************************************************************
- *              SetProcessDPIAware   (USER32.@)
+/*
+ * @unimplemented
  */
-BOOL WINAPI SetProcessDPIAware( VOID )
+BOOL WINAPI SetProcessDPIAware(VOID)
 {
-    FIXME( "stub!\n");
-
+    UNIMPLEMENTED;
     return TRUE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL WINAPI CliImmSetHotKey(DWORD dwID, UINT uModifiers, UINT uVirtualKey, HKL hKl)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD WINAPI GetMenuIndex(HMENU hMenu, HMENU hSubMenu)
+{
+  UNIMPLEMENTED;
+  return 0;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD WINAPI UserRegisterWowHandlers(PVOID Unknown1, PVOID Unknown2)
+{
+  UNIMPLEMENTED;
+  return 0;
 }
 
