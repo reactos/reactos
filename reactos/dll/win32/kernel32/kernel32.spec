@@ -5,13 +5,13 @@
 @ stdcall AddAtomW(wstr)
 @ stdcall AddConsoleAliasA(str str str) #check
 @ stdcall AddConsoleAliasW(wstr wstr wstr) #check
-@ stub AddLocalAlternateComputerNameA
-@ stub AddLocalAlternateComputerNameW
+@ stdcall AddLocalAlternateComputerNameA(str ptr)
+@ stdcall AddLocalAlternateComputerNameW(wstr ptr)
 @ stdcall AddRefActCtx(ptr)
 @ stdcall AddVectoredExceptionHandler(long ptr) ntdll.RtlAddVectoredExceptionHandler
 @ stdcall AllocConsole()
-@ stub AllocLSCallback
-@ stub AllocateUserPhysicalPages
+@ stub AllocLSCallback # missed in XP SP3
+@ stdcall AllocateUserPhysicalPages(long ptr ptr)
 @ stdcall AreFileApisANSI()
 @ stdcall AssignProcessToJobObject(ptr ptr)
 @ stdcall AttachConsole(long)
@@ -19,17 +19,17 @@
 @ stdcall BackupSeek(ptr long long ptr ptr ptr)
 @ stdcall BackupWrite(ptr ptr long ptr long long ptr)
 @ stdcall BaseCheckAppcompatCache(long long long ptr) #check
-@ stub BaseCleanupAppcompatCache
-@ stub BaseCleanupAppcompatCacheSupport
+@ stdcall BaseCleanupAppcompatCache()
+@ stdcall BaseCleanupAppcompatCacheSupport(ptr)
 @ stdcall BaseDumpAppcompatCache()
 @ stdcall BaseFlushAppcompatCache()
-@ stub BaseInitAppcompatCache
-@ stub BaseInitAppcompatCacheSupport
+@ stdcall BaseInitAppcompatCache()
+@ stdcall BaseInitAppcompatCacheSupport()
 @ stdcall BaseProcessInitPostImport()
 @ stdcall BaseQueryModuleData(str str ptr ptr ptr) #check
 @ stdcall BaseUpdateAppcompatCache(long long long)
 @ stub BasepCheckWinSaferRestrictions
-@ stub BasepDebugDump
+@ stub BasepDebugDump # missed in XP SP3
 @ stdcall Beep(long long)
 @ stdcall BeginUpdateResourceA(str long)
 @ stdcall BeginUpdateResourceW(wstr long)
@@ -55,7 +55,7 @@
 @ stdcall CloseConsoleHandle(long)
 @ stdcall CloseHandle(long)
 @ stdcall CloseProfileUserMapping()
-@ stub CloseSystemHandle
+@ stub CloseSystemHandle # missed in XP SP3
 @ stdcall CmdBatNotification(long)
 @ stdcall CommConfigDialogA(str long ptr)
 @ stdcall CommConfigDialogW(wstr long ptr)
@@ -64,7 +64,7 @@
 @ stdcall CompareStringW(long long wstr long wstr long)
 @ stdcall ConnectNamedPipe(long ptr)
 @ stdcall ConsoleMenuControl(long long long)
-@ stub ConsoleSubst
+@ stub ConsoleSubst # missed in XP SP3
 @ stdcall ContinueDebugEvent(long long long)
 @ stdcall ConvertDefaultLocale (long)
 @ stdcall ConvertFiberToThread()
@@ -96,7 +96,7 @@
 @ stdcall CreateJobObjectA(ptr str)
 @ stdcall CreateJobObjectW(ptr wstr)
 @ stdcall CreateJobSet(long ptr long)
-@ stub CreateKernelThread
+@ stub CreateKernelThread # missed in XP SP3
 @ stdcall CreateMailslotA(ptr long long ptr)
 @ stdcall CreateMailslotW(ptr long long ptr)
 @ stdcall CreateMemoryResourceNotification(ptr)
@@ -109,7 +109,7 @@
 @ stdcall CreateProcessA(str str ptr ptr long long ptr str ptr ptr)
 @ stdcall CreateProcessInternalA(ptr str str ptr ptr long long ptr str ptr ptr long)
 @ stdcall CreateProcessInternalW(ptr wstr wstr ptr ptr long long ptr wstr ptr ptr long)
-@ stub CreateProcessInternalWSecure
+@ stdcall CreateProcessInternalWSecure()
 @ stdcall CreateProcessW(wstr wstr ptr ptr long long ptr wstr ptr ptr)
 @ stdcall CreateRemoteThread(long ptr long ptr long long ptr)
 @ stdcall CreateSemaphoreA(ptr long long str)
@@ -136,7 +136,7 @@
 @ stdcall DebugBreakProcess(long)
 @ stdcall DebugSetProcessKillOnExit(long)
 @ stdcall DecodePointer(ptr) ntdll.RtlDecodePointer
-@ stub DecodeSystemPointer
+@ stdcall DecodeSystemPointer(ptr) ntdll.RtlDecodeSystemPointer
 @ stdcall DefineDosDeviceA(long str str)
 @ stdcall DefineDosDeviceW(long wstr wstr)
 @ stdcall DelayLoadFailureHook(str str)
@@ -161,7 +161,7 @@
 @ stdcall DuplicateConsoleHandle(long long long long)
 @ stdcall DuplicateHandle(long long long ptr long long long)
 @ stdcall EncodePointer(ptr) ntdll.RtlEncodePointer
-@ stub EncodeSystemPointer
+@ stdcall EncodeSystemPointer(ptr) ntdll.RtlEncodeSystemPointer
 @ stdcall EndUpdateResourceA(long long)
 @ stdcall EndUpdateResourceW(long long)
 @ stdcall EnterCriticalSection(ptr) ntdll.RtlEnterCriticalSection
@@ -192,13 +192,13 @@
 @ stdcall EnumTimeFormatsW(ptr long long)
 @ stdcall EnumUILanguagesA(ptr long long)
 @ stdcall EnumUILanguagesW(ptr long long)
-@ stub EnumerateLocalComputerNamesA
-@ stub EnumerateLocalComputerNamesW
+@ stdcall EnumerateLocalComputerNamesA(ptr long str ptr)
+@ stdcall EnumerateLocalComputerNamesW(ptr long wstr ptr)
 @ stdcall EraseTape(ptr long long)
 @ stdcall EscapeCommFunction(long long)
 @ stdcall ExitProcess(long)
 @ stdcall ExitThread(long)
-@ stub ExitVDM
+@ stdcall ExitVDM(long long)
 @ stdcall ExpandEnvironmentStringsA(str ptr long)
 @ stdcall ExpandEnvironmentStringsW(wstr ptr long)
 @ stdcall ExpungeConsoleCommandHistoryA(long)
@@ -244,10 +244,10 @@
 @ stdcall FindResourceW(long wstr wstr)
 @ stdcall FindVolumeClose(ptr)
 @ stdcall FindVolumeMountPointClose(ptr)
-#@ stdcall FlsAlloc(ptr)
-#@ stdcall FlsFree(long)
-#@ stdcall FlsGetValue(long)
-#@ stdcall FlsSetValue(long ptr)
+#@ stdcall FlsAlloc(ptr) # missed in XP SP3
+#@ stdcall FlsFree(long) # missed in XP SP3
+#@ stdcall FlsGetValue(long) # missed in XP SP3
+#@ stdcall FlsSetValue(long ptr) # missed in XP SP3
 @ stdcall FlushConsoleInputBuffer(long)
 @ stdcall FlushFileBuffers(long)
 @ stdcall FlushInstructionCache(long long long)
@@ -277,7 +277,7 @@
 @ stdcall GetCPInfoExW(long long ptr)
 @ stdcall GetCalendarInfoA(long long long ptr long ptr)
 @ stdcall GetCalendarInfoW(long long long ptr long ptr)
-@ stub GetComPlusPackageInstallStatus
+@ stdcall GetComPlusPackageInstallStatus()
 @ stdcall GetCommConfig(long ptr long)
 @ stdcall GetCommMask(long ptr)
 @ stdcall GetCommModemStatus(long ptr)
@@ -303,35 +303,35 @@
 @ stdcall GetConsoleAliasesLengthW(wstr)
 @ stdcall GetConsoleAliasesW(wstr long wstr)
 @ stdcall GetConsoleCP()
-@ stub GetConsoleCharType
+@ stdcall GetConsoleCharType(long long ptr)
 @ stdcall GetConsoleCommandHistoryA(long long long)
 @ stdcall GetConsoleCommandHistoryLengthA(long)
 @ stdcall GetConsoleCommandHistoryLengthW(long)
 @ stdcall GetConsoleCommandHistoryW(long long long)
 @ stdcall GetConsoleCursorInfo(long ptr)
-@ stub GetConsoleCursorMode
+@ stdcall GetConsoleCursorMode(long ptr ptr)
 @ stdcall GetConsoleDisplayMode(ptr)
-@ stub GetConsoleFontInfo
-@ stub GetConsoleFontSize
-@ stub GetConsoleHardwareState
+@ stdcall GetConsoleFontInfo(long long long ptr)
+@ stdcall GetConsoleFontSize(long long)
+@ stdcall GetConsoleHardwareState(long long ptr)
 @ stdcall GetConsoleInputExeNameA(long ptr)
 @ stdcall GetConsoleInputExeNameW(long ptr)
 @ stdcall GetConsoleInputWaitHandle()
 @ stdcall GetConsoleKeyboardLayoutNameA(ptr)
 @ stdcall GetConsoleKeyboardLayoutNameW(ptr)
 @ stdcall GetConsoleMode(long ptr)
-@ stub GetConsoleNlsMode
+@ stdcall GetConsoleNlsMode(long ptr)
 @ stdcall GetConsoleOutputCP()
-@ stub GetConsoleProcessist
+@ stub GetConsoleProcessist # missed in XP SP3
 @ stdcall GetConsoleScreenBufferInfo(long ptr)
-@ stub GetConsoleSelectionInfo
+@ stdcall GetConsoleSelectionInfo(ptr)
 @ stdcall GetConsoleTitleA(ptr long)
 @ stdcall GetConsoleTitleW(ptr long)
 @ stdcall GetConsoleWindow()
 @ stdcall GetCurrencyFormatA(long long str ptr str long)
 @ stdcall GetCurrencyFormatW(long long str ptr str long)
 @ stdcall GetCurrentActCtx(ptr)
-@ stub GetCurrentConsoleFont
+@ stdcall GetCurrentConsoleFont(long long ptr)
 @ stdcall GetCurrentDirectoryA(long ptr)
 @ stdcall GetCurrentDirectoryW(long ptr)
 @ stdcall GetCurrentProcess()
@@ -340,10 +340,10 @@
 @ stdcall GetCurrentThreadId()
 @ stdcall GetDateFormatA(long long ptr str ptr long)
 @ stdcall GetDateFormatW(long long ptr wstr ptr long)
-@ stub GetDaylightFlag
+@ stub GetDaylightFlag # missed in XP SP3
 @ stdcall GetDefaultCommConfigA(str ptr long)
 @ stdcall GetDefaultCommConfigW(wstr ptr long)
-@ stub GetDefaultSortkeySize
+@ stdcall GetDefaultSortkeySize(ptr)
 @ stdcall GetDevicePowerState(long ptr)
 @ stdcall GetDiskFreeSpaceA(str ptr ptr ptr ptr)
 @ stdcall GetDiskFreeSpaceExA (str ptr ptr ptr)
@@ -358,7 +358,7 @@
 @ stdcall GetEnvironmentStringsW()
 @ stdcall GetEnvironmentVariableA(str ptr long)
 @ stdcall GetEnvironmentVariableW(wstr ptr long)
-@ stub GetErrorMode
+@ stdcall GetErrorMode()
 @ stdcall GetExitCodeProcess(long ptr)
 @ stdcall GetExitCodeThread(long ptr)
 @ stdcall GetExpandedNameA(str ptr)
@@ -376,20 +376,20 @@
 @ stdcall GetFileType(long)
 @ stdcall GetFinalPathNameByHandleA(long str long long)
 @ stdcall GetFinalPathNameByHandleW(long wstr long long)
-@ stub GetFirmwareEnvironmentVariableA
-@ stub GetFirmwareEnvironmentVariableW
+@ stdcall GetFirmwareEnvironmentVariableA(str str ptr long)
+@ stdcall GetFirmwareEnvironmentVariableW(wstr wstr ptr long)
 @ stdcall GetFullPathNameA(str long ptr ptr)
 @ stdcall GetFullPathNameW(wstr long ptr ptr)
 @ stdcall GetGeoInfoA(long long ptr long long)
 @ stdcall GetGeoInfoW(long long ptr long long)
 @ stdcall GetHandleContext(long)
 @ stdcall GetHandleInformation(long ptr)
-@ stub GetSCallbackTarget
-@ stub GetSCallbackTemplate
+@ stub GetSCallbackTarget # missed in XP SP3
+@ stub GetSCallbackTemplate # missed in XP SP3
 @ stdcall GetLargePageMinimum()
 @ stdcall GetLargestConsoleWindowSize(long)
 @ stdcall GetLastError()
-@ stub GetLinguistLangSize
+@ stdcall GetLinguistLangSize(ptr)
 @ stdcall GetLocalTime(ptr)
 @ stdcall GetLocaleInfoA(long long ptr long)
 @ stdcall GetLocaleInfoW(long long ptr long)
@@ -410,14 +410,14 @@
 @ stdcall GetNamedPipeHandleStateW(long ptr ptr ptr ptr wstr long)
 @ stdcall GetNamedPipeInfo(long ptr ptr ptr ptr)
 @ stdcall GetNativeSystemInfo(ptr)
-@ stub GetNextVDMCommand
-@ stub GetNlsSectionName
-@ stub GetNumaAvailableMemory
-@ stub GetNumaAvailableMemoryNode
-@ stub GetNumaHighestNodeNumber
-@ stub GetNumaNodeProcessorMask
-@ stub GetNumaProcessorMap
-@ stub GetNumaProcessorNode
+@ stdcall GetNextVDMCommand(long)
+@ stdcall GetNlsSectionName(long long double str str double)
+@ stdcall GetNumaAvailableMemory(ptr double ptr)
+@ stdcall GetNumaAvailableMemoryNode(double ptr)
+@ stdcall GetNumaHighestNodeNumber(ptr)
+@ stdcall GetNumaNodeProcessorMask(double ptr)
+@ stdcall GetNumaProcessorMap(ptr double ptr)
+@ stdcall GetNumaProcessorNode(double ptr)
 @ stdcall GetNumberFormatA(long long str ptr ptr long)
 @ stdcall GetNumberFormatW(long long wstr ptr ptr long)
 @ stdcall GetNumberOfConsoleFonts()
@@ -448,7 +448,7 @@
 @ stdcall GetProcessTimes(long ptr ptr ptr ptr)
 @ stdcall GetProcessVersion(long)
 @ stdcall GetProcessWorkingSetSize(long ptr ptr)
-@ stub GetProductName
+@ stub GetProductName # missed in XP SP3
 @ stdcall GetProfileIntA(str str long)
 @ stdcall GetProfileIntW(wstr wstr long)
 @ stdcall GetProfileSectionA(str ptr long)
@@ -456,8 +456,8 @@
 @ stdcall GetProfileStringA(str str str ptr long)
 @ stdcall GetProfileStringW(wstr wstr wstr ptr long)
 @ stdcall GetQueuedCompletionStatus(long ptr ptr ptr long)
-@ stub GetLSCallbackTarget
-@ stub GetLSCallbackTemplate
+@ stub GetLSCallbackTarget # missed in XP SP3
+@ stub GetLSCallbackTemplate # missed in XP SP3
 @ stdcall GetShortPathNameA(str ptr long)
 @ stdcall GetShortPathNameW(wstr ptr long)
 @ stdcall GetStartupInfoA(ptr)
@@ -474,11 +474,11 @@
 @ stdcall GetSystemDirectoryW(ptr long)
 @ stdcall GetSystemInfo(ptr)
 @ stdcall GetSystemPowerStatus(ptr)
-@ stub GetSystemRegistryQuota
+@ stdcall GetSystemRegistryQuota(ptr ptr)
 @ stdcall GetSystemTime(ptr)
 @ stdcall GetSystemTimeAdjustment(ptr ptr ptr)
 @ stdcall GetSystemTimeAsFileTime(ptr)
-@ stub GetSystemTimes
+@ stdcall GetSystemTimes(ptr ptr ptr)
 @ stdcall GetSystemWindowsDirectoryA(ptr long)
 @ stdcall GetSystemWindowsDirectoryW(ptr long)
 @ stdcall GetSystemWow64DirectoryA(ptr long)
@@ -492,7 +492,7 @@
 @ stdcall GetTempPathW(long ptr)
 @ stdcall GetThreadContext(long ptr)
 @ stdcall GetThreadId(ptr)
-@ stub GetThreadIOPendingFlag
+@ stdcall GetThreadIOPendingFlag(long ptr)
 @ stdcall GetThreadLocale()
 @ stdcall GetThreadPriority(long)
 @ stdcall GetThreadPriorityBoost(long ptr)
@@ -507,7 +507,7 @@
 @ stdcall GetUserDefaultLangID()
 @ stdcall GetUserDefaultUILanguage()
 @ stdcall GetUserGeoID(long)
-@ stub GetVDMCurrentDirectories
+@ stdcall GetVDMCurrentDirectories(long long)
 @ stdcall GetVersion()
 @ stdcall GetVersionExA(ptr)
 @ stdcall GetVersionExW(ptr)
@@ -517,11 +517,11 @@
 @ stdcall GetVolumeNameForVolumeMountPointW(wstr ptr long)
 @ stdcall GetVolumePathNameA(str ptr long)
 @ stdcall GetVolumePathNameW(wstr ptr long)
-@ stub GetVolumePathNamesForVolumeNameA
-@ stub GetVolumePathNamesForVolumeNameW
+@ stdcall GetVolumePathNamesForVolumeNameA(str str long ptr)
+@ stdcall GetVolumePathNamesForVolumeNameW(wstr wstr long ptr)
 @ stdcall GetWindowsDirectoryA(ptr long)
 @ stdcall GetWindowsDirectoryW(ptr long)
-@ stub GetWriteWatch
+@ stdcall GetWriteWatch(long ptr long ptr ptr ptr)
 @ stdcall GlobalAddAtomA(str)
 @ stdcall GlobalAddAtomW(wstr)
 @ stdcall GlobalAlloc(long long)
@@ -544,33 +544,33 @@
 @ stdcall GlobalUnfix(long)
 @ stdcall GlobalUnlock(long)
 @ stdcall GlobalWire(long)
-@ stub Heap32First
+@ stdcall Heap32First(ptr long long)
 @ stdcall Heap32ListFirst(long ptr)
-@ stub Heap32ListNext
-@ stub Heap32Next
+@ stdcall Heap32ListNext(long ptr)
+@ stdcall Heap32Next(ptr)
 @ stdcall HeapAlloc(long long long) ntdll.RtlAllocateHeap
 @ stdcall HeapCompact(long long)
 @ stdcall HeapCreate(long long long)
-@ stub HeapCreateTagsW
+@ stdcall HeapCreateTagsW(long long wstr wstr)
 @ stdcall HeapDestroy(long)
-@ stub HeapExtend
+@ stdcall HeapExtend(long long ptr long)
 @ stdcall HeapFree(long long long) ntdll.RtlFreeHeap
 @ stdcall HeapLock(long)
-@ stub HeapQueryInformation
-@ stub HeapQueryTagW
+@ stdcall HeapQueryInformation(long long ptr long ptr)
+@ stdcall HeapQueryTagW(long long long long ptr)
 @ stdcall HeapReAlloc(long long ptr long) ntdll.RtlReAllocateHeap
-@ stub HeapSetFlags
+@ stub HeapSetFlags # missed in XP SP3
 @ stdcall HeapSetInformation(ptr long ptr long)
 @ stdcall HeapSize(long long ptr) ntdll.RtlSizeHeap
-@ stub HeapSummary
+@ stdcall HeapSummary(long long ptr)
 @ stdcall HeapUnlock(long)
-@ stub HeapUsage
+@ stdcall HeapUsage(long long long long ptr)
 @ stdcall HeapValidate(long long ptr)
 @ stdcall HeapWalk(long ptr)
 @ stdcall InitAtomTable(long)
 @ stdcall InitializeCriticalSection(ptr)
 @ stdcall InitializeCriticalSectionAndSpinCount(ptr long)
-#@ stdcall InitializeCriticalSectionEx(ptr long long)
+#@ stdcall InitializeCriticalSectionEx(ptr long long) # missed in XP SP3
 @ stdcall InitializeSListHead(ptr) ntdll.RtlInitializeSListHead
 @ stdcall InitializeSRWLock(ptr) ntdll.RtlInitializeSRWLock
 @ stdcall InterlockedCompareExchange (ptr long long)
@@ -581,8 +581,8 @@
 @ stdcall InterlockedIncrement(ptr)
 @ stdcall InterlockedPopEntrySList(ptr) ntdll.RtlInterlockedPopEntrySList
 @ stdcall InterlockedPushEntrySList(ptr ptr) ntdll.RtlInterlockedPushEntrySList
-@ stub InvalidateConsoleDIBits
-@ stub InvalidateNSCache
+@ stdcall InvalidateConsoleDIBits(long long)
+@ stub InvalidateNSCache # missed in XP SP3
 @ stdcall IsBadCodePtr(ptr)
 @ stdcall IsBadHugeReadPtr(ptr long)
 @ stdcall IsBadHugeWritePtr(ptr long)
@@ -593,15 +593,15 @@
 @ stdcall IsDBCSLeadByte(long)
 @ stdcall IsDBCSLeadByteEx(long long)
 @ stdcall IsDebuggerPresent()
-@ stub IsProcessInJob
+@ stdcall IsProcessInJob(long long ptr)
 @ stdcall IsProcessorFeaturePresent(long)
 @ stdcall IsSystemResumeAutomatic()
 @ stdcall IsValidCodePage(long)
 @ stdcall IsValidLanguageGroup(long long)
 @ stdcall IsValidLocale(long long)
-@ stub IsValidUILanguage
+@ stdcall IsValidUILanguage(long)
 @ stdcall IsWow64Process(ptr ptr)
-@ stub LCIDToLocaleName
+@ stub LCIDToLocaleName # missed in XP SP3
 @ stdcall LCMapStringA(long long str long ptr long)
 @ stdcall LCMapStringW(long long wstr long ptr long)
 @ stdcall LeaveCriticalSection(ptr) ntdll.RtlLeaveCriticalSection
@@ -622,7 +622,7 @@
 @ stdcall LocalShrink(long long)
 @ stdcall LocalSize(long)
 @ stdcall LocalUnlock(long)
-@ stub LocaleNameToLCID
+@ stub LocaleNameToLCID # missed in XP SP3
 @ stdcall LockFile(long long long long long)
 @ stdcall LockFileEx(long long long long long ptr)
 @ stdcall LockResource(long)
@@ -653,24 +653,24 @@
 @ stdcall MultiByteToWideChar(long long str long ptr long)
 @ stdcall NeedCurrentDirectoryForExePathA(str)
 @ stdcall NeedCurrentDirectoryForExePathW(wstr)
-@ stub NlsConvertIntegerToString
-@ stub NlsGetCacheUpdateCount
-@ stub NlsResetProcessocale
-@ stub NotifyNLSUserCache
-@ stub NumaVirtualQueryNode
+@ stdcall NlsConvertIntegerToString(double double double wstr double)
+@ stdcall NlsGetCacheUpdateCount()
+@ stub NlsResetProcessocale # missed in XP SP3
+@ stub NotifyNLSUserCache # missed in XP SP3
+@ stdcall NumaVirtualQueryNode(long long long long)
 @ stdcall OpenConsoleW(wstr long long long)
-@ stub OpenDataFile
+@ stdcall OpenDataFile(long long)
 @ stdcall OpenEventA(long long str)
 @ stdcall OpenEventW(long long wstr)
 @ stdcall OpenFile(str ptr long)
 @ stdcall OpenFileMappingA(long long str)
 @ stdcall OpenFileMappingW(long long wstr)
-@ stub OpenJobObjectA
-@ stub OpenJobObjectW
+@ stdcall OpenJobObjectA(long long str)
+@ stdcall OpenJobObjectW(long long wstr)
 @ stdcall OpenMutexA(long long str)
 @ stdcall OpenMutexW(long long wstr)
 @ stdcall OpenProcess(long long long)
-@ stub OpenProfileUserMapping
+@ stdcall OpenProfileUserMapping()
 @ stdcall OpenSemaphoreA(long long str)
 @ stdcall OpenSemaphoreW(long long wstr)
 @ stdcall OpenThread(long long long)
@@ -683,8 +683,8 @@
 @ stdcall PeekNamedPipe(long ptr long ptr ptr ptr)
 @ stdcall PostQueuedCompletionStatus(long long ptr ptr)
 @ stdcall PrepareTape(ptr long long)
-@ stub PrivCopyFileExW
-@ stub PrivMoveFileIdentityW
+@ stdcall PrivCopyFileExW(wstr wstr ptr ptr long long)
+@ stdcall PrivMoveFileIdentityW(long long long)
 @ stdcall Process32First (ptr ptr)
 @ stdcall Process32FirstW (ptr ptr)
 @ stdcall Process32Next (ptr ptr)
@@ -696,20 +696,20 @@
 @ stdcall QueryDepthSList(ptr) ntdll.RtlQueryDepthSList
 @ stdcall QueryDosDeviceA(str ptr long)
 @ stdcall QueryDosDeviceW(wstr ptr long)
-@ stub QueryInformationJobObject
-@ stub QueryMemoryResourceNotification
-@ stub QueryNumberOfEventogRecords
-@ stub QueryOldestEventogRecord
+@ stdcall QueryInformationJobObject(long long ptr long ptr)
+@ stdcall QueryMemoryResourceNotification(long ptr)
+@ stub QueryNumberOfEventogRecords # missed in XP SP3
+@ stub QueryOldestEventogRecord # missed in XP SP3
 @ stdcall QueryPerformanceCounter(ptr)
 @ stdcall QueryPerformanceFrequency(ptr)
-@ stub QueryWin31IniFilesMappedToRegistry
+@ stdcall QueryWin31IniFilesMappedToRegistry(long long long long)
 @ stdcall QueueUserAPC(ptr long long)
 @ stdcall QueueUserWorkItem(ptr ptr long)
 @ stdcall RaiseException(long long long ptr)
 @ stdcall ReadConsoleA(long ptr long ptr ptr)
 @ stdcall ReadConsoleInputA(long ptr long ptr)
-@ stub ReadConsoleInputExA
-@ stub ReadConsoleInputExW
+@ stdcall ReadConsoleInputExA(long ptr long ptr long)
+@ stdcall ReadConsoleInputExW(long ptr long ptr long)
 @ stdcall ReadConsoleInputW(long ptr long ptr)
 @ stdcall ReadConsoleOutputA(long ptr long long ptr)
 @ stdcall ReadConsoleOutputAttribute(long ptr long long ptr)
@@ -723,16 +723,16 @@
 @ stdcall ReadFileScatter(long ptr long ptr ptr)
 @ stdcall ReadProcessMemory(long ptr ptr long ptr)
 @ stdcall RegisterApplicationRestart(wstr long)
-@ stub RegisterConsoleIME
-@ stub RegisterConsoleOS2
-@ stub RegisterConsoleVDM
-@ stub RegisterServiceProcess
-@ stub RegisterSysMsgHandler
-@ stub RegisterWaitForInputIdle
+@ stdcall RegisterConsoleIME(ptr ptr)
+@ stdcall RegisterConsoleOS2(long)
+@ stdcall RegisterConsoleVDM(long long long long long long long long long long long)
+@ stub RegisterServiceProcess # missed in XP SP3
+@ stub RegisterSysMsgHandler # missed in XP SP3
+@ stdcall RegisterWaitForInputIdle(ptr)
 @ stdcall RegisterWaitForSingleObject(ptr long ptr ptr long long)
 @ stdcall RegisterWaitForSingleObjectEx(long ptr ptr long long)
-@ stub RegisterWowBaseHandlers
-@ stub RegisterWowExec
+@ stdcall RegisterWowBaseHandlers(long)
+@ stdcall RegisterWowExec(long)
 @ stdcall ReleaseActCtx(ptr)
 @ stdcall ReleaseMutex(long)
 @ stdcall ReleaseSemaphore(long long ptr)
@@ -740,16 +740,16 @@
 @ stdcall ReleaseSRWLockShared(ptr) ntdll.RtlReleaseSRWLockShared
 @ stdcall RemoveDirectoryA(str)
 @ stdcall RemoveDirectoryW(wstr)
-@ stub RemoveLocalAlternateComputerNameA
-@ stub RemoveLocalAlternateComputerNameW
+@ stdcall RemoveLocalAlternateComputerNameA(str long)
+@ stdcall RemoveLocalAlternateComputerNameW(wstr long)
 @ stdcall RemoveVectoredExceptionHandler(ptr) ntdll.RtlRemoveVectoredExceptionHandler
 @ stdcall ReplaceFile(wstr wstr wstr long ptr ptr) ReplaceFileW
 @ stdcall ReplaceFileA(str str str long ptr ptr)
 @ stdcall ReplaceFileW(wstr wstr wstr long ptr ptr)
-@ stub RequestDeviceWakeup
+@ stdcall RequestDeviceWakeup(long)
 @ stdcall RequestWakeupLatency(long)
 @ stdcall ResetEvent(long)
-@ stub ResetWriteWatch
+@ stdcall ResetWriteWatch(ptr long)
 @ stdcall RestoreLastError(long) ntdll.RtlRestoreLastWin32Error
 @ stdcall ResumeThread(long)
 @ stdcall RtlCaptureContext(ptr) ntdll.RtlCaptureContext
@@ -767,8 +767,8 @@
 @ stdcall SetCPGlobal(long)
 @ stdcall SetCalendarInfoA(long long long str)
 @ stdcall SetCalendarInfoW(long long long wstr)
-@ stub SetClientTimeZoneInformation
-@ stub SetComPlusPackageInstallStatus
+@ stdcall SetClientTimeZoneInformation(ptr)
+@ stdcall SetComPlusPackageInstallStatus(ptr)
 @ stdcall SetCommBreak(long)
 @ stdcall SetCommConfig(long ptr long)
 @ stdcall SetCommMask(long ptr)
@@ -780,29 +780,29 @@
 @ stdcall SetComputerNameW(wstr)
 @ stdcall SetConsoleActiveScreenBuffer(long)
 @ stdcall SetConsoleCP(long)
-@ stub SetConsoleCommandHistoryMode
+@ stdcall SetConsoleCommandHistoryMode(long)
 @ stdcall SetConsoleCtrlHandler(ptr long)
-@ stub SetConsoleCursor
+@ stdcall SetConsoleCursor(long long)
 @ stdcall SetConsoleCursorInfo(long ptr)
-@ stub SetConsoleCursorMode
+@ stdcall SetConsoleCursorMode(long long long)
 @ stdcall SetConsoleCursorPosition(long long)
 @ stdcall SetConsoleDisplayMode(long long ptr)
-@ stub SetConsoleFont
-@ stub SetConsoleHardwareState
-@ stub SetConsoleIcon
+@ stdcall SetConsoleFont(long long)
+@ stdcall SetConsoleHardwareState(long long long)
+@ stdcall SetConsoleIcon(ptr)
 @ stdcall SetConsoleInputExeNameA(ptr)
 @ stdcall SetConsoleInputExeNameW(ptr)
-@ stub SetConsoleKeyShortcuts
-@ stub SetConsoleLocalEUDC
-@ stub SetConsoleMaximumWindowSize
-@ stub SetConsoleMenuClose
+@ stdcall SetConsoleKeyShortcuts(long long long long)
+@ stdcall SetConsoleLocalEUDC(long long long long)
+@ stdcall SetConsoleMaximumWindowSize(long long)
+@ stdcall SetConsoleMenuClose(long)
 @ stdcall SetConsoleMode(long long)
-@ stub SetConsoleNlsMode
-@ stub SetConsoleNumberOfCommandsA
-@ stub SetConsoleNumberOfCommandsW
-@ stub SetConsoleOS2OemFormat
+@ stdcall SetConsoleNlsMode(long long)
+@ stdcall SetConsoleNumberOfCommandsA(long long)
+@ stdcall SetConsoleNumberOfCommandsW(long long)
+@ stdcall SetConsoleOS2OemFormat(long)
 @ stdcall SetConsoleOutputCP(long)
-@ stub SetConsolePalette
+@ stdcall SetConsolePalette(long long long)
 @ stdcall SetConsoleScreenBufferSize(long long)
 @ stdcall SetConsoleTextAttribute(long long)
 @ stdcall SetConsoleTitleA(str)
@@ -811,7 +811,7 @@
 @ stdcall SetCriticalSectionSpinCount(ptr long) ntdll.RtlSetCriticalSectionSpinCount
 @ stdcall SetCurrentDirectoryA(str)
 @ stdcall SetCurrentDirectoryW(wstr)
-@ stub SetDaylightFlag
+@ stub SetDaylightFlag # missed in XP SP3
 @ stdcall SetDefaultCommConfigA(str ptr long)
 @ stdcall SetDefaultCommConfigW(wstr ptr long)
 @ stdcall SetDllDirectoryA(str)
@@ -827,25 +827,25 @@
 @ stdcall SetFileAttributesW(wstr long)
 @ stdcall SetFilePointer(long long ptr long)
 @ stdcall SetFilePointerEx(long double ptr long)
-@ stub SetFileShortNameA
-@ stub SetFileShortNameW
+@ stdcall SetFileShortNameA(long str)
+@ stdcall SetFileShortNameW(long wstr)
 @ stdcall SetFileTime(long ptr ptr ptr)
-@ stub SetFileValidData
-@ stub SetFirmwareEnvironmentVariableA
-@ stub SetFirmwareEnvironmentVariableW
+@ stdcall SetFileValidData(long double)
+@ stdcall SetFirmwareEnvironmentVariableA(str str ptr long)
+@ stdcall SetFirmwareEnvironmentVariableW(wstr wstr ptr long)
 @ stdcall SetHandleContext(long long)
 @ stdcall SetHandleCount(long)
 @ stdcall SetHandleInformation(long long long)
-@ stub SetInformationJobObject
-@ stub SetastConsoleEventActive
+@ stdcall SetInformationJobObject(long long ptr long)
+@ stub SetastConsoleEventActive # missed in XP SP3
 @ stdcall SetLastError(long)
-@ stub SetocalPrimaryComputerNameA
-@ stub SetocalPrimaryComputerNameW
+@ stub SetocalPrimaryComputerNameA # missed in XP SP3
+@ stub SetocalPrimaryComputerNameW # missed in XP SP3
 @ stdcall SetLocalTime(ptr)
 @ stdcall SetLocaleInfoA(long long str)
 @ stdcall SetLocaleInfoW(long long wstr)
 @ stdcall SetMailslotInfo(long long)
-@ stub SetMessageWaitingIndicator
+@ stdcall SetMessageWaitingIndicator(long double)
 @ stdcall SetNamedPipeHandleState(long ptr ptr ptr)
 @ stdcall SetPriorityClass(long long)
 @ stdcall SetProcessAffinityMask(long long)
@@ -868,17 +868,17 @@
 @ stdcall SetThreadPriorityBoost(long long)
 @ stdcall SetThreadUILanguage(long)
 @ stdcall SetTimeZoneInformation(ptr)
-@ stub SetTimerQueueTimer
+@ stdcall SetTimerQueueTimer(long ptr ptr long long long)
 @ stdcall SetUnhandledExceptionFilter(ptr)
 @ stdcall SetUserGeoID(long)
-@ stub SetVDMCurrentDirectories
+@ stdcall SetVDMCurrentDirectories(long long)
 @ stdcall SetVolumeLabelA(str str)
 @ stdcall SetVolumeLabelW(wstr wstr)
-@ stub SetVolumeMountPointA
-@ stub SetVolumeMountPointW
+@ stdcall SetVolumeMountPointA(str str)
+@ stdcall SetVolumeMountPointW(wstr wstr)
 @ stdcall SetWaitableTimer(long ptr long ptr ptr long)
 @ stdcall SetupComm(long long long)
-@ stub ShowConsoleCursor
+@ stdcall ShowConsoleCursor(long long)
 @ stdcall SignalObjectAndWait(long long long long)
 @ stdcall SizeofResource(long long)
 @ stdcall Sleep(long)
@@ -888,16 +888,16 @@
 @ stdcall SwitchToThread()
 @ stdcall SystemTimeToFileTime(ptr ptr)
 @ stdcall SystemTimeToTzSpecificLocalTime (ptr ptr ptr)
-@ stub TerminateJobObject
+@ stdcall TerminateJobObject(long long)
 @ stdcall TerminateProcess(long long)
 @ stdcall TerminateThread(long long)
 @ stdcall TermsrvAppInstallMode()
 @ stdcall Thread32First(long ptr)
 @ stdcall Thread32Next(long ptr)
 @ stdcall TlsAlloc()
-@ stub TlsAllocInternal
+@ stub TlsAllocInternal # missed in XP SP3
 @ stdcall TlsFree(long)
-@ stub TlsFreeInternal
+@ stub TlsFreeInternal # missed in XP SP3
 @ stdcall TlsGetValue(long)
 @ stdcall TlsSetValue(long ptr)
 @ stdcall Toolhelp32ReadProcessMemory(long ptr ptr long ptr)
@@ -912,15 +912,15 @@
 @ stdcall UnlockFile(long long long long long)
 @ stdcall UnlockFileEx(long long long long ptr)
 @ stdcall UnmapViewOfFile(ptr)
-@ stub UnregisterConsoleIME
+@ stdcall UnregisterConsoleIME()
 @ stdcall UnregisterWait(long)
 @ stdcall UnregisterWaitEx(long long)
 @ stdcall UpdateResourceA(long str str long ptr long)
 @ stdcall UpdateResourceW(long wstr wstr long ptr long)
-@ stub VDMConsoleOperation
-@ stub VDMOperationStarted
-@ stub ValidateCType
-@ stub ValidatLeocale
+@ stdcall VDMConsoleOperation(long long)
+@ stdcall VDMOperationStarted(long)
+@ stub ValidateCType # missed in XP SP3
+@ stub ValidatLeocale # missed in XP SP3
 @ stdcall VerLanguageNameA(long str long)
 @ stdcall VerLanguageNameW(long wstr long)
 @ stdcall -ret64 VerSetConditionMask(long long long long) ntdll.VerSetConditionMask
@@ -929,7 +929,7 @@
 @ stdcall VerifyVersionInfoW(long long double)
 @ stdcall VirtualAlloc(ptr long long long)
 @ stdcall VirtualAllocEx(long ptr long long long)
-@ stub VirtualBufferExceptionHandler
+@ stdcall VirtualBufferExceptionHandler(long long long)
 @ stdcall VirtualFree(ptr long long)
 @ stdcall VirtualFreeEx(long ptr long long)
 @ stdcall VirtualLock(ptr long)
@@ -955,8 +955,8 @@
 @ stdcall Wow64RevertWow64FsRedirection(long)
 @ stdcall WriteConsoleA(long ptr long ptr ptr)
 @ stdcall WriteConsoleInputA(long ptr long ptr)
-@ stub WriteConsoleInputVDMA
-@ stub WriteConsoleInputVDMW
+@ stdcall WriteConsoleInputVDMA(long long long long)
+@ stdcall WriteConsoleInputVDMW(long long long long)
 @ stdcall WriteConsoleInputW(long ptr long ptr)
 @ stdcall WriteConsoleOutputA(long ptr long long ptr)
 @ stdcall WriteConsoleOutputAttribute(long ptr long long ptr)
@@ -981,8 +981,8 @@
 @ stdcall WriteTapemark(ptr long long long)
 @ stdcall WTSGetActiveConsoleSessionId()
 @ stdcall ZombifyActCtx(ptr)
-@ stub _DebugOut
-@ stub _DebugPrintf
+@ stub _DebugOut # missed in XP SP3
+@ stub _DebugPrintf # missed in XP SP3
 @ stdcall _hread(long ptr long)
 @ stdcall _hwrite(long ptr long)
 @ stdcall _lclose(long)
@@ -991,7 +991,7 @@
 @ stdcall _lopen(str long)
 @ stdcall _lread(long ptr long) _hread
 @ stdcall _lwrite(long ptr long) _hwrite
-@ stub dprintf
+@ stub dprintf # missed in XP SP3
 @ stdcall lstrcat(str str) lstrcatA
 @ stdcall lstrcatA(str str)
 @ stdcall lstrcatW(wstr wstr)
@@ -1010,5 +1010,3 @@
 @ stdcall lstrlen(str) lstrlenA
 @ stdcall lstrlenA(str)
 @ stdcall lstrlenW(wstr)
-
-#EOF

@@ -1019,8 +1019,267 @@ GetNumaAvailableMemoryNode(IN UCHAR Node,
 
 BOOL
 WINAPI
+GetNumaAvailableMemory(PVOID lpInfo,
+                       ULONG Length,
+                       PULONG ReturnLength)
+{
+    STUB;
+    return FALSE;
+}
+
+BOOL
+WINAPI
+GetNumaProcessorMap(PVOID lpInfo,
+                    ULONG Length,
+                    PULONG ReturnLength)
+{
+    STUB;
+    return FALSE;
+}
+
+BOOL
+WINAPI
 NlsResetProcessLocale(VOID)
 {
     STUB;
     return TRUE;
+}
+
+DWORD
+WINAPI
+AddLocalAlternateComputerNameA(LPSTR lpName, PNTSTATUS Status)
+{
+    STUB;
+    return 0;
+}
+
+DWORD
+WINAPI
+AddLocalAlternateComputerNameW(LPWSTR lpName, PNTSTATUS Status)
+{
+    STUB;
+    return 0;
+}
+
+NTSTATUS
+WINAPI
+BaseCleanupAppcompatCache()
+{
+    STUB;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+WINAPI
+BaseCleanupAppcompatCacheSupport(PVOID pUnknown)
+{
+    STUB;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+BOOL
+WINAPI
+BaseInitAppcompatCache(VOID)
+{
+    STUB;
+    return FALSE;
+}
+
+BOOL
+WINAPI
+BaseInitAppcompatCacheSupport(VOID)
+{
+    STUB;
+    return FALSE;
+}
+
+VOID
+WINAPI
+CreateProcessInternalWSecure(VOID)
+{
+    STUB;
+}
+
+DWORD
+WINAPI
+EnumerateLocalComputerNamesA(PVOID pUnknown, DWORD Size, LPSTR lpBuffer, LPDWORD lpnSize)
+{
+    STUB;
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+DWORD
+WINAPI
+EnumerateLocalComputerNamesW(PVOID pUnknown, DWORD Size, LPWSTR lpBuffer, LPDWORD lpnSize)
+{
+    STUB;
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+PVOID
+WINAPI
+GetComPlusPackageInstallStatus(VOID)
+{
+    STUB;
+    return NULL;
+}
+
+BOOL
+WINAPI
+GetConsoleCharType(HANDLE hConsole, COORD Coord, PDWORD Type)
+{
+    STUB;
+    return FALSE;
+}
+
+BOOL
+WINAPI
+GetConsoleCursorMode(HANDLE hConsole, PBOOL pUnknown1, PBOOL pUnknown2)
+{
+    STUB;
+    return FALSE;
+}
+
+BOOL
+WINAPI
+GetConsoleNlsMode(HANDLE hConsole, LPDWORD lpMode)
+{
+    STUB;
+    return FALSE;
+}
+
+VOID
+WINAPI
+GetDefaultSortkeySize(LPVOID lpUnknown)
+{
+    STUB;
+    lpUnknown = NULL;
+}
+
+VOID
+WINAPI
+GetLinguistLangSize(LPVOID lpUnknown)
+{
+    STUB;
+    lpUnknown = NULL;
+}
+
+BOOL
+WINAPI
+OpenDataFile(HANDLE hFile, DWORD dwUnused)
+{
+    STUB;
+    return FALSE;
+}
+
+BOOL
+WINAPI
+OpenProfileUserMapping(VOID)
+{
+    STUB;
+    return FALSE;
+}
+
+BOOL
+WINAPI
+PrivMoveFileIdentityW(DWORD Unknown1, DWORD Unknown2, DWORD Unknown3)
+{
+    STUB;
+    return FALSE;
+}
+
+BOOL
+WINAPI
+ReadConsoleInputExA(HANDLE hConsole, LPVOID lpBuffer, DWORD dwLen, LPDWORD Unknown1, DWORD Unknown2)
+{
+    STUB;
+    return FALSE;
+}
+
+BOOL
+WINAPI
+ReadConsoleInputExW(HANDLE hConsole, LPVOID lpBuffer, DWORD dwLen, LPDWORD Unknown1, DWORD Unknown2)
+{
+    STUB;
+    return FALSE;
+}
+
+BOOL
+WINAPI
+RegisterConsoleIME(HWND hWnd, LPDWORD ThreadId)
+{
+    STUB;
+    return FALSE;
+}
+
+BOOL
+WINAPI
+RegisterConsoleOS2(BOOL bUnknown)
+{
+    STUB;
+    return FALSE;
+}
+
+DWORD
+WINAPI
+RemoveLocalAlternateComputerNameA(LPSTR lpName, DWORD Unknown)
+{
+    STUB;
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+DWORD
+WINAPI
+RemoveLocalAlternateComputerNameW(LPWSTR lpName, DWORD Unknown)
+{
+    STUB;
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+BOOL
+WINAPI
+SetComPlusPackageInstallStatus(LPVOID lpInfo)
+{
+    STUB;
+    return FALSE;
+}
+
+BOOL
+WINAPI
+SetConsoleCursorMode(HANDLE hConsole, BOOL Unknown1, BOOL Unknown2)
+{
+    STUB;
+    return FALSE;
+}
+
+BOOL
+WINAPI
+SetConsoleLocalEUDC(DWORD Unknown1, DWORD Unknown2, DWORD Unknown3, DWORD Unknown4)
+{
+    STUB;
+    return FALSE;
+}
+
+BOOL
+WINAPI
+SetConsoleNlsMode(HANDLE hConsole, DWORD dwMode)
+{
+    STUB;
+    return FALSE;
+}
+
+BOOL
+WINAPI
+SetConsoleOS2OemFormat(BOOL bUnknown)
+{
+    STUB;
+    return FALSE;
+}
+
+BOOL
+WINAPI
+UnregisterConsoleIME(VOID)
+{
+    STUB;
+    return FALSE;
 }
