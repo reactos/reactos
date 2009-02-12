@@ -304,7 +304,7 @@ class Backend_ViewEditor extends Backend
     else {
       echo_strip('
         <button type="button" id="bsavedraft" disabled="disabled">Save as Draft</button> &nbsp;
-        <img src="images/locked.gif" width="11" height="12" /> (not enough rights) &nbsp;
+        <img src="'.RosCMS::getInstance()->pathRosCMS().'images/locked.gif" width="11" height="12" /> (not enough rights) &nbsp;
         <input name="editautosavemode" type="hidden" value="false" />');
     }
 
@@ -325,7 +325,7 @@ class Backend_ViewEditor extends Backend
 
       echo_strip('
         <span id="bshowdiff" class="frmeditbutton" onclick="'."openOrCloseDiffArea(".$this->rev_id.",".$this->rev_id.")".'">
-        <img id="bshowdiffi" src="images/tab_closed.gif" alt="" style="width:11px; height:11px; border:0px;" />&nbsp;Compare</span> (no related '.$lang.' entry, choose yourself)&nbsp;');
+        <img id="bshowdiffi" src="'.RosCMS::getInstance()->pathRosCMS().'images/tab_closed.gif" alt="" style="width:11px; height:11px; border:0px;" />&nbsp;Compare</span> (no related '.$lang.' entry, choose yourself)&nbsp;');
     }
 
     // Compare button
@@ -357,7 +357,7 @@ class Backend_ViewEditor extends Backend
 
       echo_strip('
         <span id="bshowdiff" class="frmeditbutton" onclick="'."openOrCloseDiffArea('".$diff1."','".$diff2."')".'">
-          <img id="bshowdiffi" src="images/tab_closed.gif" alt="" style="width:11px; height:11px; border:0px;" />
+          <img id="bshowdiffi" src="'.RosCMS::getInstance()->pathRosCMS().'images/tab_closed.gif" alt="" style="width:11px; height:11px; border:0px;" />
           &nbsp;Compare
         </span>');
     }
@@ -392,7 +392,7 @@ class Backend_ViewEditor extends Backend
       <div style="padding-bottom: 3px;">
         <span class="revDetail">
           <span onclick="'."toggleBookmark(".$revision['id'].", ".$thisuser->id().", 'editstar')".'" style="cursor: pointer;">
-           <img id="editstar" class="'.Tag::getId($revision['id'], 'star', $thisuser->id()).'" src="images/star_'.Tag::getValue($revision['id'], 'star', $thisuser->id()).'_small.gif" alt="" style="width:13px; height:13px; border:0px;" alt="*" />
+           <img id="editstar" class="'.Tag::getId($revision['id'], 'star', $thisuser->id()).'" src="'.RosCMS::getInstance()->pathRosCMS().'images/star_'.Tag::getValue($revision['id'], 'star', $thisuser->id()).'_small.gif" alt="" style="width:13px; height:13px; border:0px;" alt="*" />
           </span>
           &nbsp;'.$revision['name'].'</span>
           &nbsp;
@@ -411,7 +411,7 @@ class Backend_ViewEditor extends Backend
 
     echo_strip('
         <span id="frmedittags" class="frmeditbutton" onclick="TabOpenClose(this.id)" style="white-space: nowrap;">
-          <img id="frmedittagsi" src="images/tab_closed.gif" alt="" style="width:11px; height:11px; border:0px;" />
+          <img id="frmedittagsi" src="'.RosCMS::getInstance()->pathRosCMS().'images/tab_closed.gif" alt="" style="width:11px; height:11px; border:0px;" />
           &nbsp;Details
         </span>
       </div>
@@ -578,7 +578,7 @@ class Backend_ViewEditor extends Backend
       if (($thisuser->hasAccess('system_tags') && $tag['user_id'] == -1) || $tag['user_id'] == $thisuser->id()) {
         echo_strip('&nbsp;&nbsp;
           <span class="frmeditbutton" onclick="'."delLabelOrTag('".$tag['id']."')".'">
-            <img src="images/remove.gif" alt="" style="width:11px; height:11px; border:0px;" />
+            <img src="'.RosCMS::getInstance()->pathRosCMS().'images/remove.gif" alt="" style="width:11px; height:11px; border:0px;" />
             &nbsp;Delete
           </span>');
       }
@@ -703,7 +703,7 @@ class Backend_ViewEditor extends Backend
 
           // delete manual depency
           if (ThisUser::getInstance()->hasAccess('add_depencies') && $required['user_defined']) {
-            echo ' <span class="deletebutton" onclick="'."deleteDepency(".$required['id'].")".'"><img src="images/remove.gif" alt="" /> Delete</span>';
+            echo ' <span class="deletebutton" onclick="'."deleteDepency(".$required['id'].")".'"><img src="'.RosCMS::getInstance()->pathRosCMS().'images/remove.gif" alt="" /> Delete</span>';
           }
 
           echo '</li>';
@@ -720,7 +720,7 @@ class Backend_ViewEditor extends Backend
 
           // delete manual depency
           if (ThisUser::getInstance()->hasAccess('add_depencies') && $required['user_defined']) {
-            echo ' <span class="deletebutton" onclick="'."deleteDepency(".$required['id'].")".'"><img src="images/remove.gif" alt="" /> Delete</span>';
+            echo ' <span class="deletebutton" onclick="'."deleteDepency(".$required['id'].")".'"><img src="'.RosCMS::getInstance()->pathRosCMS().'images/remove.gif" alt="" /> Delete</span>';
           }
 
           echo '</li>';
@@ -790,7 +790,7 @@ class Backend_ViewEditor extends Backend
       <div>'.$data['id'].'</div><br />
       <label for="secdataname">Name</label><br />
       <input type="text" name="secdataname" id="secdataname" size="25" maxlength="100" value="'.$data['name'].'" /> (ASCII lowercase, no space) 
-      <img src="images/attention.gif" width="22" height="22" /><br />
+      <img src="'.RosCMS::getInstance()->pathRosCMS().'images/attention.gif" width="22" height="22" /><br />
       <small>all links to this entry will be updated</small><br />
       <br />
       <label for="cbmdatatype">Type</label><br />
@@ -813,7 +813,7 @@ class Backend_ViewEditor extends Backend
     }
     echo_strip('
       </select>
-      <img src="images/attention.gif" width="22" height="22" /><br />
+      <img src="'.RosCMS::getInstance()->pathRosCMS().'images/attention.gif" width="22" height="22" /><br />
       <br />
       <br />
       <button type="button" id="beditsavefields" onclick="'."saveSecurityData('".$this->data_id."','".$this->rev_id."')".'">Save Changes</button> &nbsp; 
@@ -852,7 +852,7 @@ class Backend_ViewEditor extends Backend
       <div id="editaddstext"></div>
       <span id="editaddstextcount" style="display: none;">'.$stext_num.'</span>
       <span class="filterbutton" onclick="addShortTextField()">
-        <img src="images/add.gif" alt="" style="width:11px; height:11px; border:0px;" />&nbsp;Add
+        <img src="'.RosCMS::getInstance()->pathRosCMS().'images/add.gif" alt="" style="width:11px; height:11px; border:0px;" />&nbsp;Add
       </span>
       <br /><br />
       <h3>Text</h3>');
@@ -878,7 +878,7 @@ class Backend_ViewEditor extends Backend
       <div id="editaddtext"></div>
       <span id="editaddtextcount" style="display: none;">'.$text_num.'</span>
       <span class="filterbutton" onclick="addTextField()">
-        <img src="images/add.gif" alt="" style="width:11px; height:11px; border:0px;" />&nbsp;Add
+        <img src="'.RosCMS::getInstance()->pathRosCMS().'images/add.gif" alt="" style="width:11px; height:11px; border:0px;" />&nbsp;Add
       </span>
       <br /><br /><br />
       <button type="button" id="beditsavefields" onclick="'."saveFieldData('".$this->data_id."','".$this->rev_id."')".'">Save Changes</button> &nbsp; 
@@ -919,15 +919,15 @@ class Backend_ViewEditor extends Backend
       <br />
       <label for="verusr">User</label>
       <input type="text" name="verusr" id="verusr" size="20" maxlength="20" value="'.$revision['user_name'].'" /> (account name)
-      <img src="images/attention.gif" width="22" height="22" /><br />
+      <img src="'.RosCMS::getInstance()->pathRosCMS().'images/attention.gif" width="22" height="22" /><br />
       <br />
       <label for="verdate">Date</label>
       <input type="text" name="verdate" id="verdate" size="10" maxlength="10" value="'.$revision['date'].'" /> (year-month-day)
-      <img src="images/attention.gif" width="22" height="22" /><br />
+      <img src="'.RosCMS::getInstance()->pathRosCMS().'images/attention.gif" width="22" height="22" /><br />
       <br />
       <label for="vertime">Time</label>
       <input type="text" name="vertime" id="vertime" size="8" maxlength="8" value="'.$revision['time'].'" /> (hour:minute:second)
-      <img src="images/attention.gif" width="22" height="22" /><br />
+      <img src="'.RosCMS::getInstance()->pathRosCMS().'images/attention.gif" width="22" height="22" /><br />
       <br />
       <br />
       <button type="button" id="beditsaveentry" onclick="saveRevisionData('.$this->data_id.','.$this->rev_id.')">Save Changes</button> &nbsp;

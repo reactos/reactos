@@ -80,16 +80,18 @@ abstract class HTML
    */
   protected function header( )
   {
+    $config = &RosCMS::getInstance();
+
     // this page was generated in ...
     $roscms_gentime = explode(' ',microtime()); 
-    $this->page_start = $roscms_gentime[1] + $roscms_gentime[0]; 
+    $this->page_start = $roscms_gentime[1] + $roscms_gentime[0];
 
     // output header
     echo_strip( '
       <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
       <html lang="en">
       <head>
-        <title>ReactOS '.(($this->title!=='') ? '- '.$this->title : '').'</title>
+        <title>'.$config->systemBrand().' '.(($this->title!=='') ? '- '.$this->title : '').'</title>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
         <meta http-equiv="Pragma" content="no-cache" />
         <meta name="Copyright" content="ReactOS Foundation" />
@@ -103,16 +105,16 @@ abstract class HTML
     // link css files (use register_css method)
     foreach($this->css_files as $file) {
       if ($file['condition'] === false) {
-        echo '<link href="'.RosCMS::getInstance()->pathRosCMS().'css/'.$file['name'].'" type="text/css" rel="stylesheet" />';
+        echo '<link href="'.$config->pathRosCMS().'css/'.$file['name'].'" type="text/css" rel="stylesheet" />';
       }
       else {
-        echo '<!--[if '.$file['condition'].']<link href="'.RosCMS::getInstance()->pathRosCMS().'css/'.$file['name'].'" type="text/css" rel="stylesheet" /><![endif]-->';
+        echo '<!--[if '.$file['condition'].']<link href="'.$config->pathRosCMS().'css/'.$file['name'].'" type="text/css" rel="stylesheet" /><![endif]-->';
       }
     }
 
     // link js files (use register_js method)
     foreach($this->js_files as $file) {
-      echo '<script src="'.RosCMS::getInstance()->pathRosCMS().'js/'.$file.'" type="text/javascript"></script>';
+      echo '<script src="'.$config->pathRosCMS().'js/'.$file.'" type="text/javascript"></script>';
     }
 
     //@TODO remove those static links from here
@@ -121,11 +123,11 @@ abstract class HTML
       <body>
       <div id="top">
         <div id="topMenu"> 
-          <a href="'.RosCMS::getInstance()->pathGenerated().'?page=index">Home</a> <span>|</span>
-          <a href="'.RosCMS::getInstance()->pathGenerated().'?page=about">Info</a> <span>|</span>
-          <a href="'.RosCMS::getInstance()->pathGenerated().'?page=community">Community</a> <span>|</span>
-          <a href="'.RosCMS::getInstance()->pathGenerated().'?page=dev">Developement</a> <span>|</span>
-          <a href="'.RosCMS::getInstance()->pathRosCMS().'?page=user">myRosCMS</a>
+          <a href="'.$config->pathGenerated().'?page=index">Home</a> <span>|</span>
+          <a href="'.$config->pathGenerated().'?page=about">Info</a> <span>|</span>
+          <a href="'.$config->pathGenerated().'?page=community">Community</a> <span>|</span>
+          <a href="'.$config->pathGenerated().'?page=dev">Developement</a> <span>|</span>
+          <a href="'.$config->pathInstance().'?page=user">myRosCMS</a>
         </div>
       </div>');
   } // end of member function header

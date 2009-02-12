@@ -81,7 +81,7 @@ abstract class HTML_User extends HTML
               <li><a href="'.$config->pathGenerated().'en/about.html">Info</a></li>
               <li><a href="'.$config->pathGenerated().'en/community.html">Community</a></li>
               <li><a href="'.$config->pathGenerated().'en/dev.html">Development</a></li>
-              <li><a href="'.$config->pathRosCMS().'?page=user">myReactOS</a></li>
+              <li><a href="'.$config->pathInstance().'?page=user">myReactOS</a></li>
             </ul>');
 
     // Menu for logged in user
@@ -90,11 +90,11 @@ abstract class HTML_User extends HTML
         <h2>Account</h2>
         <ul>
           <li title="'.$thisuser->name().'">&nbsp;Nick:&nbsp;'.substr($thisuser->name(), 0, 9).'</li>
-          <li><a href="'.$config->pathRosCMS().'?page=my">My Profile</a></li>
-          <li><a href="'.$config->pathRosCMS().'?page=search">User Search</a></li>
+          <li><a href="'.$config->pathInstance().'?page=my">My Profile</a></li>
+          <li><a href="'.$config->pathInstance().'?page=search">User Search</a></li>
           <li><a href="'.$config->pathGenerated().'peoplemap/">User Map</a></li>');
       if ($thisuser->hasAccess('CMS')) {
-        echo '<li><a href="'.$config->pathRosCMS().'?page=data&amp;branch=welcome">RosCMS Interface</a></li>';
+        echo '<li><a href="'.$config->pathInstance().'?page=data&amp;branch=welcome">RosCMS Interface</a></li>';
       }
       echo_strip('
           <li><a href="?page=logout">Logout</a></li>
@@ -106,8 +106,8 @@ abstract class HTML_User extends HTML
       echo_strip('
         <h2>Account</h2>
         <ul> 
-          <li><a href="'.$config->pathRosCMS().'?page=login">Login</a></li>
-          <li><a href="'.$config->pathRosCMS().'?page=register">Register</a></li>
+          <li><a href="'.$config->pathInstance().'?page=login">Login</a></li>
+          <li><a href="'.$config->pathInstance().'?page=register">Register</a></li>
         </ul>');
     }
 
@@ -128,7 +128,7 @@ abstract class HTML_User extends HTML
       <ul>
         <li> 
           <div style="text-align:center;"> 
-            <select id="select" size="1" name="select" class="selectbox" style="width:140px" onchange="'."window.location.href = '".$config->pathRosCMS().'?'.htmlentities($_SERVER['QUERY_STRING'])."&lang=' + this.options[this.selectedIndex].value".'">
+            <select id="select" size="1" name="select" class="selectbox" style="width:140px" onchange="'."window.location.href = '".$config->pathInstance().'?'.htmlentities($_SERVER['QUERY_STRING'])."&lang=' + this.options[this.selectedIndex].value".'">
               <optgroup label="current language">'); 
 
     // print current language

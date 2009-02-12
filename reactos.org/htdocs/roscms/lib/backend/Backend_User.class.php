@@ -280,7 +280,7 @@ class Backend_User extends Backend
         echo_strip('
           &nbsp;
           <span class="frmeditbutton" onclick="'."delMembership(".$_GET['user'].", '".$membership['group_id']."')".'">
-            <img src="images/remove.gif" alt="" style="width:11px; height:11px; border:0px;" />
+            <img src="'.RosCMS::getInstance()->pathRosCMS().'images/remove.gif" alt="" style="width:11px; height:11px; border:0px;" />
             &nbsp;Delete
           </span>');
       }

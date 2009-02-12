@@ -87,7 +87,7 @@ class HTML_CMS_Maintain extends HTML_CMS
 
       <p><a href="javascript:generateAllPages()">Generate All Pages</a></p>
       <div id="maintainarea" style="border: 1px dashed red;display:none;"></div>
-      <img id="ajaxloading" style="display:none;" src="images/ajax_loading.gif" width="13" height="13" alt="" />
+      <img id="ajaxloading" style="display:none;" src="'.RosCMS::getInstance()->pathRosCMS().'images/ajax_loading.gif" width="13" height="13" alt="" />
       <br />');
 
     if (ThisUser::getInstance()->hasAccess('logs')) {

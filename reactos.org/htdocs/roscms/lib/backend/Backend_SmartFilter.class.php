@@ -121,7 +121,7 @@ class Backend_SmartFilter Extends Backend
       echo_strip('
         <span style="cursor:pointer; text-decoration:underline;" onclick="'."selectUserFilter('".$filter['setting']."', '".$filter['name']."')".'">'.$filter['name'].'</span>
         <span style="cursor:pointer;" onclick="'."deleteUserFilter('".$filter['id']."', '".$filter['name']."')".'">
-          <img src="images/remove.gif" alt="-" style="width:11px; height:11px; border:0px;" />
+          <img src="'.RosCMS::getInstance()->pathRosCMS().'images/remove.gif" alt="-" style="width:11px; height:11px; border:0px;" />
         </span>
         <br />');
     }

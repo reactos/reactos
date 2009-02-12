@@ -101,7 +101,7 @@ class HTML_CMS_Website extends HTML_CMS
         var roscms_standard_language = '".Language::getStandardId()."';
         var roscms_intern_login_check_username = '".$thisuser->name()."';
         var roscms_intern_webserver_roscms = '".RosCMS::getInstance()->pathRosCMS()."';
-        var roscms_intern_page_link = '".RosCMS::getInstance()->pathRosCMS()."?page=';
+        var roscms_intern_page_link = '".RosCMS::getInstance()->pathInstance()."?page=';
         var roscms_get_edit = '".(isset($_GET['edit']) ? $_GET['edit'] : '')."';
         
         // access restrictions
@@ -197,7 +197,7 @@ class HTML_CMS_Website extends HTML_CMS
 
           <div id="smenutab9" class="submb" onclick="loadMenu(this.id)">
             <div class="subm1">
-              <div id="smenutabc9" class="subm2">Bookmark&nbsp;<img src="images/star_on_small.gif" alt="" style="width:13px; height:13px; border:0px;" /></div>
+              <div id="smenutabc9" class="subm2">Bookmark&nbsp;<img src="'.RosCMS::getInstance()->pathRosCMS().'images/star_on_small.gif" alt="" style="width:13px; height:13px; border:0px;" /></div>
             </div>
           </div>
           <div id="smenutab10" class="submb" onclick="loadMenu(this.id)">
@@ -221,11 +221,11 @@ class HTML_CMS_Website extends HTML_CMS
               <div class="corner_TR"></div>
             </div>
             <div class="title" id="labtitel1" onclick="TabOpenCloseEx(this.id)">
-              <img id="labtitel1i" src="images/tab_open.gif" alt="" style="width:11px; height:11px; border:0px;" />&nbsp;Quick Info
+              <img id="labtitel1i" src="'.RosCMS::getInstance()->pathRosCMS().'images/tab_open.gif" alt="" style="width:11px; height:11px; border:0px;" />&nbsp;Quick Info
             </div>
             <div class="content" id="labtitel1c" style="display:block;">
               <div id="qiload" style="display:none;">
-                <img src="images/ajax_loading.gif" alt="loading ..." width="13" height="13" />
+                <img src="'.RosCMS::getInstance()->pathRosCMS().'images/ajax_loading.gif" alt="loading ..." width="13" height="13" />
               </div>
               <div id="lablinks1" class="text">
                 <span>Move the mouse over an item to get some details</span>
@@ -241,7 +241,7 @@ class HTML_CMS_Website extends HTML_CMS
               <div class="corner_TR"></div>
             </div>
             <div class="title" id="labtitel2" onclick="TabOpenCloseEx(this.id)">
-              <img id="labtitel2i" src="images/tab_open.gif" alt="" style="width:11px; height:11px; border:0px;" />&nbsp;Smart Filters
+              <img id="labtitel2i" src="'.RosCMS::getInstance()->pathRosCMS().'images/tab_open.gif" alt="" style="width:11px; height:11px; border:0px;" />&nbsp;Smart Filters
             </div>
             <div class="content" id="labtitel2c">&nbsp;</div>
             <div class="corner_BL">
@@ -254,7 +254,7 @@ class HTML_CMS_Website extends HTML_CMS
               <div class="corner_TR"></div>
             </div>
             <div class="title" id="labtitel3" onclick="TabOpenCloseEx(this.id)">
-              <img id="labtitel3i" src="images/tab_open.gif" alt="" style="width:11px; height:11px; border:0px;" />&nbsp;Labels
+              <img id="labtitel3i" src="'.RosCMS::getInstance()->pathRosCMS().'images/tab_open.gif" alt="" style="width:11px; height:11px; border:0px;" />&nbsp;Labels
             </div>
             <div class="content" id="labtitel3c">&nbsp;</div>
             <div class="corner_BL">
@@ -272,14 +272,14 @@ class HTML_CMS_Website extends HTML_CMS
               <div id="frametable" style="border: 0px dashed white;">
                 <div class="filterbar">
                   <input id="txtfind" type="text" accesskey="f" tabindex="1" title="Search &amp; Filters" onfocus="'."searchFilter(this.id, this.value, 'Search &amp; Filters', true)".'" onblur="'."searchFilter(this.id, this.value, 'Search &amp; Filters', false)".'" onkeyup="getAllActiveFilters()" value="Search &amp; Filters" size="39" maxlength="250" />&nbsp;
-                  <span id="filters" class="filterbutton" onclick="TabOpenClose(this.id)"><img id="filtersi" src="images/tab_closed.gif" alt="" style="width:11px; height:11px; border:0px;" />&nbsp;Filters</span>&nbsp;
+                  <span id="filters" class="filterbutton" onclick="TabOpenClose(this.id)"><img id="filtersi" src="'.RosCMS::getInstance()->pathRosCMS().'images/tab_closed.gif" alt="" style="width:11px; height:11px; border:0px;" />&nbsp;Filters</span>&nbsp;
                   <div id="filtersc" style="display:none;">
                     <div id="filtersct">&nbsp;</div>
                     <div id="filterOptionsfilt2" class="filterbar2">
-                      <span class="filterbutton" onclick="addFilter()"><img src="images/add.gif" alt="" style="width:11px; height:11px; border:0px;" />&nbsp;Add</span>
-                      &nbsp;&nbsp;&nbsp;<span class="filterbutton" onclick="clearAllFilter()"><img src="images/clear.gif" alt="" style="width:14px; height:14px; border:0px;" />&nbsp;Clear</span>
-                      &nbsp;&nbsp;&nbsp;<span class="filterbutton" onclick="'."addUserFilter('filter', filtstring2)".'"><img src="images/save.gif" alt="" style="width:14px; height:14px; border:0px;" />&nbsp;Save</span>
-                      &nbsp;&nbsp;&nbsp;<span class="filterbutton" onclick="searchByFilters()"><img src="images/search.gif" alt="" style="width:14px; height:14px; border:0px;" />&nbsp;Search</span>
+                      <span class="filterbutton" onclick="addFilter()"><img src="'.RosCMS::getInstance()->pathRosCMS().'images/add.gif" alt="" style="width:11px; height:11px; border:0px;" />&nbsp;Add</span>
+                      &nbsp;&nbsp;&nbsp;<span class="filterbutton" onclick="clearAllFilter()"><img src="'.RosCMS::getInstance()->pathRosCMS().'images/clear.gif" alt="" style="width:14px; height:14px; border:0px;" />&nbsp;Clear</span>
+                      &nbsp;&nbsp;&nbsp;<span class="filterbutton" onclick="'."addUserFilter('filter', filtstring2)".'"><img src="'.RosCMS::getInstance()->pathRosCMS().'images/save.gif" alt="" style="width:14px; height:14px; border:0px;" />&nbsp;Save</span>
+                      &nbsp;&nbsp;&nbsp;<span class="filterbutton" onclick="searchByFilters()"><img src="'.RosCMS::getInstance()->pathRosCMS().'images/search.gif" alt="" style="width:14px; height:14px; border:0px;" />&nbsp;Search</span>
                     </div>
                   </div>
                 </div>

@@ -76,9 +76,9 @@ class HTML_User_Profile extends HTML_User
       // more than one user was found (or none)
       if ($users_found != 1 && (empty($_GET['user_name']) || !empty($_GET['search']))) {
         echo_strip('
-          <h1><a href="'.$config->pathRosCMS().'?page=my">'.$config->siteName().'</a> &gt; Profile Search</h1>
+          <h1><a href="'.$config->pathInstance().'?page=my">'.$config->siteName().'</a> &gt; Profile Search</h1>
           <p>Profile Search</p>
-          <form id="form1" method="get" action="'.$config->pathRosCMS().'?page=search">
+          <form id="form1" method="get" action="'.$config->pathInstance().'?page=search">
             <div class="bubble">
               <div class="corner_TL">
                 <div class="corner_TR"></div>
@@ -108,7 +108,7 @@ class HTML_User_Profile extends HTML_User
           $stmt->execute();
 
           while ($search = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            echo '<li><a style="font-weight:bold;" href="'.$config->pathRosCMS().'?page=search&amp;user_id='.$search['id'].'">'.$search['name'].'</a>';
+            echo '<li><a style="font-weight:bold;" href="'.$config->pathInstance().'?page=search&amp;user_id='.$search['id'].'">'.$search['name'].'</a>';
             if ($search['fullname']) {
               echo '<br />'.$search['fullname'];
             }
@@ -258,12 +258,12 @@ class HTML_User_Profile extends HTML_User
 
     // show edit or search link (depending if the current user is searched user)
     if ($profile['id'] == $thisuser->id()) {
-      echo '<div class="u-link"><a href="'.$config->pathRosCMS().'?page=my&amp;subpage=edit">Edit My Profile</a></div>';
+      echo '<div class="u-link"><a href="'.$config->pathInstance().'?page=my&amp;subpage=edit">Edit My Profile</a></div>';
     }
     else {
       echo_strip('
           <div class="u-link">
-            <a href="'.$config->pathRosCMS().'?page=search">raquo; Profile Search</a>
+            <a href="'.$config->pathInstance().'?page=search">raquo; Profile Search</a>
           </div>');
     }
       echo_strip('

@@ -203,7 +203,7 @@ class HTML_User_Login extends HTML_User
         exit;
       }
 
-      header('Location: '.$config->pathRosCMS().'?page=my');
+      header('Location: '.$config->pathInstance().'?page=my');
       exit;
     }
   } // end of member function body
@@ -237,9 +237,9 @@ class HTML_User_Login extends HTML_User
     }
 
     echo_strip('
-      <form action="'.$config->pathRosCMS().'?page=login" method="post">
+      <form action="'.$config->pathInstance().'?page=login" method="post">
         <h1>Login</h1>
-        <p>You don\'t have a '.$config->siteName().' account yet? <a href="'.$config->pathRosCMS().'?page=register">Join now</a>, it\'s free and just takes a minute.</p>
+        <p>You don\'t have a '.$config->siteName().' account yet? <a href="'.$config->pathInstance().'?page=register">Join now</a>, it\'s free and just takes a minute.</p>
 
         <div class="bubble">
           <div class="corner_TL">
@@ -305,15 +305,15 @@ class HTML_User_Login extends HTML_User
     echo '<div style="margin:10px;text-align:center;">';
 
     if (empty($_GET['sec']) || $_GET['sec'] == 'standard') {
-      echo '<a href="'.$config->pathRosCMS().'?page=login&amp;sec=security'.(($target_clean != '') ? '&amp;target='.urlencode($target_clean) : '').'">Use enhanced security</a>';
+      echo '<a href="'.$config->pathInstance().'?page=login&amp;sec=security'.(($target_clean != '') ? '&amp;target='.urlencode($target_clean) : '').'">Use enhanced security</a>';
     }
     else {
-      echo '<a href="'.$config->pathRosCMS().'?page=login&amp;sec=standard'.(($target_clean != '') ? '&amp;target='.urlencode($target_clean) : '').'">Use standard security</a>';
+      echo '<a href="'.$config->pathInstance().'?page=login&amp;sec=standard'.(($target_clean != '') ? '&amp;target='.urlencode($target_clean) : '').'">Use standard security</a>';
     }
     
     echo_strip('
           <br />
-          <a href="'.$config->pathRosCMS().'?page=login&amp;subpage=lost">Lost username or password?</a>
+          <a href="'.$config->pathInstance().'?page=login&amp;subpage=lost">Lost username or password?</a>
         </div>
       </form>');
   } // end of member function loginForm

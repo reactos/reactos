@@ -57,17 +57,17 @@ class HTML_User_ProfileEdit extends HTML_User
 
     if ($activation_code != '' && strlen($activation_code) > 6) {
       echo_strip('
-        <h1><a href="'.$config->pathRosCMS().'?page=my">'.$config->siteName().'</a> &gt; <a href="'.$config->pathRosCMS().'?page=my&amp;subpage=edit">Edit My Profile</a> &gt; Activate E-Mail Address</h1>
+        <h1><a href="'.$config->pathInstance().'?page=my">'.$config->siteName().'</a> &gt; <a href="'.$config->pathInstance().'?page=my&amp;subpage=edit">Edit My Profile</a> &gt; Activate E-Mail Address</h1>
         <p>So you have a new email address and would like to keep your '.$config->siteName().' account up-to-date? That is a very good idea. To confirm your email address change, please enter your new email address again.</p>');
     }
     else {
       echo_strip('
-        <h1><a href="'.$config->pathRosCMS().'?page=my">'.$config->siteName().'</a> &gt; Edit My Profile</h1>
+        <h1><a href="'.$config->pathInstance().'?page=my">'.$config->siteName().'</a> &gt; Edit My Profile</h1>
         <p>Update your user account profile data to reflect the current state.</p>');
     }
     
     echo_strip('
-      <form action="'.$config->pathRosCMS().'?page=my&amp;subpage=edit" method="post">
+      <form action="'.$config->pathInstance().'?page=my&amp;subpage=edit" method="post">
         <div class="bubble">
           <div class="corner_TL">
             <div class="corner_TR"></div>
@@ -90,7 +90,7 @@ class HTML_User_ProfileEdit extends HTML_User
       echo_strip('
         <h2>E-Mail Address Changed</h2>
         <div>
-          <a href="'.$config->pathRosCMS().'?page=my" style="color: red !important; text-decoration:underline;">My Profile</a>
+          <a href="'.$config->pathInstance().'?page=my" style="color: red !important; text-decoration:underline;">My Profile</a>
         </div>');
       return;
     }
@@ -167,7 +167,7 @@ class HTML_User_ProfileEdit extends HTML_User
         $subject = $config->siteName()." - Email Address Activation";
 
         // message
-        $message = $config->siteName()." - Email Address Activation\n\n\nYou have requested an email address change for your account on ".$config->siteName().". The next step in order to enable the new email address for the account is to activate it by using the hyperlink below.\n\n\nCurrent E-Mail Address: ".$profile['email']."\nNew E-Mail Address: ".$_POST['useremail']."\n\nActivation-Hyperlink: ".$config->pathRosCMS()."?page=my&amp;subpage=activate&code=".$account_act_code."/\n\n\nBest regards,\nThe ".$config->siteName()." Team\n\n\n(please do not reply as this is an auto generated email!)";
+        $message = $config->siteName()." - Email Address Activation\n\n\nYou have requested an email address change for your account on ".$config->siteName().". The next step in order to enable the new email address for the account is to activate it by using the hyperlink below.\n\n\nCurrent E-Mail Address: ".$profile['email']."\nNew E-Mail Address: ".$_POST['useremail']."\n\nActivation-Hyperlink: ".$config->pathInstance()."?page=my&amp;subpage=activate&code=".$account_act_code."/\n\n\nBest regards,\nThe ".$config->siteName()." Team\n\n\n(please do not reply as this is an auto generated email!)";
 
         // send the mail
         if (EMail::send($_POST['useremail'], $subject, $message)) {
@@ -182,7 +182,7 @@ class HTML_User_ProfileEdit extends HTML_User
         echo '<div>Password changed.</div>';
       }
 
-      echo '<div><a href="'.$config->pathRosCMS().'?page=my" style="color:red !important; text-decoration:underline;">My Profile</a></div>';
+      echo '<div><a href="'.$config->pathInstance().'?page=my" style="color:red !important; text-decoration:underline;">My Profile</a></div>';
 
       ROSUser::syncSubsystems($profile['id']);
     }
@@ -245,7 +245,7 @@ class HTML_User_ProfileEdit extends HTML_User
       if (isset($_POST['registerpost']) && $existemail && $_POST['useremail'] != $profile['user_email']) {
         echo_strip('
           <br />
-          <em>That email address is already with an account. Do you have several accounts? Please <a href="'.$config->pathRosCMS().'?page=login" style="color:red !important; text-decoration:underline;"><strong>login</strong></a>!</em>');
+          <em>That email address is already with an account. Do you have several accounts? Please <a href="'.$config->pathInstance().'?page=login" style="color:red !important; text-decoration:underline;"><strong>login</strong></a>!</em>');
       }
 
       echo_strip('
@@ -346,7 +346,7 @@ class HTML_User_ProfileEdit extends HTML_User
         <div class="field">
           <input type="hidden" name="registerpost" id="registerpost" value="reg" />
           <button type="submit" name="submit">Save</button>
-          <button type="button" onclick="'.("window.location='".$config->pathRosCMS()."'").'" style="color:#777777;">Cancel</button>
+          <button type="button" onclick="'.("window.location='".$config->pathInstance()."'").'" style="color:#777777;">Cancel</button>
         </div>');
     }
     echo_strip('

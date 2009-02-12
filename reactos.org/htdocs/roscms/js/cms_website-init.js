@@ -37,11 +37,11 @@ if (roscms_get_edit != "") {
 }
 
 // load user filter
-document.getElementById('labtitel2c').innerHTML = '<div align="right"><img src="images/ajax_loading.gif" alt="loading ..." style="width:13px; height:13px;" /></div>';
+document.getElementById('labtitel2c').innerHTML = '<div align="right"><img src="'+roscms_intern_webserver_roscms+'images/ajax_loading.gif" alt="loading ..." style="width:13px; height:13px;" /></div>';
 makeRequest('?page=backend&type=text&subtype=ufs&d_val=load', 'ufs', 'labtitel2c', 'html', 'GET', '');
 
 // load user labels
-document.getElementById('labtitel3c').innerHTML = '<div align="right"><img src="images/ajax_loading.gif" alt="loading ..." style="width:13px; height:13px;" /></div>';
+document.getElementById('labtitel3c').innerHTML = '<div align="right"><img src="'+roscms_intern_webserver_roscms+'images/ajax_loading.gif" alt="loading ..." style="width:13px; height:13px;" /></div>';
 makeRequest('?page=backend&type=text&subtype=ut', 'ut', 'labtitel3c', 'html', 'GET', '');
 
 if (readCookie('labtitel1') == 0) TabOpenCloseEx('labtitel1');

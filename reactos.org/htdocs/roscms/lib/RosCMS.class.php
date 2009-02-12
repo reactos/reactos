@@ -18,10 +18,6 @@
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
     */
 
-
-global $roscms_subsystem_wiki_path;
-$roscms_subsystem_wiki_path = '/reactos/wiki/index.php/'; // base adress for wiki pages
-
 /**
  * class RosCMS
  * 
@@ -31,22 +27,23 @@ class RosCMS
 {
 
   // DO NOT MODIFY ANYTHING HERE (except you know what you're doing)
-  private $email_support = 'support at reactos.org'; // email to which users can send mails, if they got a problem
-  private $email_system = 'ReactOS<noreply@reactos.org>'; // mails which are send from the system and don't require a reply
+  private $email_support = null; // email to which users can send mails, if they got a problem
+  private $email_system = null; // mails which are send from the system and don't require a reply
   
-  private $cookie_user_key = 'roscmsusrkey'; // session key
-  private $cookie_user_name = 'roscmsusrname'; // user_name
-  private $cookie_password = 'rospassword';  // user_password (used for keep login function)
-  private $cookie_login_name = 'roscmslogon'; // where username is stored for 'save username' in login options
-  private $cookie_security = 'roscmsseckey'; // stores security settings
+  private $cookie_user_key = null; // session key
+  private $cookie_user_name = null; // user_name
+  private $cookie_password = null;  // user_password (used for keep login function)
+  private $cookie_login_name = null; // where username is stored for 'save username' in login options
+  private $cookie_security = null; // stores security settings
 
-  private $site_name = 'ReactOS.org'; // sites name
-  private $site_language = 'en'; // standard language
-  private $site_timezone = -2; // time difference to utc time from server time
+  private $site_name = null; // sites name
+  private $site_language = null; // standard language
+  private $site_timezone = null; // time difference to utc time from server time
 
-  private $path_generated = '../reactos/'; // path to generated files
-  private $path_generation_cache = '../reactos/roscms_cache'; // path to cache files while generation process
-  private $path_roscms = '/reactos/roscms/'; // path to roscms files
+  private $path_generated = null; // path to generated files
+  private $path_generation_cache = null; // path to cache files while generation process
+  private $path_roscms = null; // path to roscms files
+  private $path_instance = null; // path to current roscms instance
 
   // system vars
   private $limit_username_min = 4;
@@ -58,12 +55,17 @@ class RosCMS
   private $system_version = '4.0.0 alpha';
 
 
+  private $applied = false;
+  private $config = array();
+
+
   /**
    * returns an static instance
    *
    * @access public
    */
-  public static function getInstance() {
+  public static function getInstance()
+  {
     static $instance;
 
     if (empty($instance)) {
@@ -73,17 +75,48 @@ class RosCMS
   } // end of member function getInstance
 
 
+
+  /**
+   * apply temporary config data, if not already set
+   *
+   * @access public
+   */
+  public function apply()
+  {
+    
+    foreach ($this->config as $key => $val) {
+      if ($this->$key === null) $this->$key = $val;
+    }
+    $this->applied=true;
+  } // end of member function apply
+
+
+
+  /**
+   * registers a new table name, if not already registered
+   *
+   * @access public
+   */
+  public function setTable($table, $name)
+  {
+    if (!defined($table)) {
+      define($table, $name);
+    }
+  } // end of member function setTable
+
+
+
   /**
    * getter functions
    */
-  public function emailSupport() { return $this->email_support; }
-  public function emailSystem() { return $this-email_system; }
-  public function cookieUserKey() { return $this->cookie_user_key; }
+  public function emailSupport() { if ($this->applied) return $this->email_support; }
+  public function emailSystem() { if ($this->applied) return $this-email_system; }
+  public function cookieUserKey() { if ($this->applied) return $this->cookie_user_key; }
 
-  public function cookieUserName() { return $this->cookie_user_name; }
-  public function cookiePassword() { return $this->cookie_password; }
-  public function cookieLoginName() { return $this->cookie_login_name; }
-  public function cookieSecure() { return $this->cookie_security; }
+  public function cookieUserName() { if ($this->applied) return $this->cookie_user_name; }
+  public function cookiePassword() { if ($this->applied) return $this->cookie_password; }
+  public function cookieLoginName() { if ($this->applied) return $this->cookie_login_name; }
+  public function cookieSecure() { if ($this->applied) return $this->cookie_security; }
 
   public function limitUserNameMin() { return $this->limit_username_min; }
   public function limitUserNameMax() { return $this->limit_username_max; }
@@ -93,13 +126,14 @@ class RosCMS
   public function systemBrand( ) { return $this->system_brand; }
   public function systemVersion() { return $this->system_version; }
 
-  public function siteName() { return $this->site_name; }
-  public function siteLanguage() { return $this->site_language; }
-  public function siteTimezone(){ return $this->site_timezone; }
+  public function siteName() { if ($this->applied) return $this->site_name; }
+  public function siteLanguage() { if ($this->applied) return $this->site_language; }
+  public function siteTimezone(){ if ($this->applied) return $this->site_timezone; }
 
-  public function pathGenerated() { return $this->path_generated; }
-  public function pathGenerationCache() { return $this->path_generation_cache; }
-  public function pathRosCMS() { return $this->path_roscms; }
+  public function pathGenerated() { if ($this->applied) return $this->path_generated; }
+  public function pathGenerationCache() { if ($this->applied) return $this->path_generation_cache; }
+  public function pathRosCMS() { if ($this->applied) return $this->path_roscms; }
+  public function pathInstance() { if ($this->applied) return $this->path_instance; }
 
 
 
@@ -107,61 +141,66 @@ class RosCMS
    * setter functions
    */
   public function setEmailSupport( $new_value ){
-    $this->email_support = $new_value;
+    $this->config['email_support'] = $new_value;
   }
 
   public function setEmailSystem( $new_value ) {
-    $this->email_system = $new_value;
+    $this->config['email_system'] = $new_value;
   }
 
   public function setCookieUserKey( $new_value ) {
-    if (preg_match('/[A-Za-z0-9_]+/', $new_value)) $this->cookie_user_key = $new_value;
+    if (preg_match('/[A-Za-z0-9_]+/', $new_value)) $this->config['cookie_user_key'] = $new_value;
     else die('bad user key cookie name');
   }
 
   public function setCookieUserName( $new_value ) {
-    if (preg_match('/[A-Za-z0-9_]+/', $new_value)) $this->cookie_user_name = $new_value;
+    if (preg_match('/[A-Za-z0-9_]+/', $new_value)) $this->config['cookie_user_name'] = $new_value;
     else die('bad user name cookie name');
   }
 
   public function setCookiePassword( $new_value ) {
-    if (preg_match('/[A-Za-z0-9_]+/', $new_value)) $this->cookie_password = $new_value;
+    if (preg_match('/[A-Za-z0-9_]+/', $new_value)) $this->config['cookie_password'] = $new_value;
     else die('bad password cookie name');
   }
 
   public function setCookieLoginName( $new_value ) {
-    if (preg_match('/[A-Za-z0-9_]+/', $new_value)) $this->cookie_login_name = $new_value;
+    if (preg_match('/[A-Za-z0-9_]+/', $new_value)) $this->config['cookie_login_name'] = $new_value;
     else die('bad login name cookie name');
   }
 
   public function setCookieSecure( $new_value ) {
-    if (preg_match('/[A-Za-z0-9_]+/', $new_value)) $this->cookie_security = $new_value;
+    if (preg_match('/[A-Za-z0-9_]+/', $new_value)) $this->config['cookie_security'] = $new_value;
     else die('bad security login cookie name');
   }
 
   public function setSiteName( $new_value ) {
-    $this->site_name = $new_value;
+    $this->config['site_name'] = $new_value;
   }
 
   public function setSiteLanguage( $new_value ) {
-    $this->site_language = $new_value;
+    $this->config['site_language'] = $new_value;
   }
 
   public function setSiteTimezone( $new_value ) {
-    $this->site_timezone = intval($new_value);
+    $this->config['site_timezone'] = intval($new_value);
   }
 
   public function setPathGenerated( $new_value ) {
-    $this->path_generated = $new_value;
+    $this->config['path_generated'] = $new_value;
   }
 
   public function setPathGenerationCache( $new_value ) {
-    $this->path_generation_cache = $new_value;
+    $this->config['path_generation_cache'] = $new_value;
   }
 
   public function setPathRosCMS( $new_value ) {
-    $this->path_roscms = $new_value;
+    $this->config['path_roscms'] = $new_value;
   }
+
+  public function setPathInstance( $new_value ) {
+    $this->config['path_instance'] = $new_value;
+  }
+
 
 
 } // end of RosCMS

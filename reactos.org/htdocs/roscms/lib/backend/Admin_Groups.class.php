@@ -74,7 +74,7 @@ class Admin_Groups extends Admin
 
     // list rights in header
     foreach ($rights as $right) {
-      echo '<th style="vertical-align:bottom;" title="'.$right['name'].': '.$right['description'].'"><img src="?page=presentation&amp;type=vtext&amp;text='.$right['name'].'" alt="'.$right['name'].'" /></th>';
+      echo '<th style="vertical-align:bottom;" title="'.$right['name'].': '.$right['description'].'"><img src="'.RosCMS::getInstance()->pathInstance().'?page=presentation&amp;type=vtext&amp;text='.$right['name'].'" alt="'.$right['name'].'" /></th>';
     }
     echo '</tr>';
 
@@ -300,7 +300,7 @@ class Admin_Groups extends Admin
             <tr>
               <th>ACL Name</th>');
     foreach ($rights as $right) {
-      echo '<th style="vertical-align:bottom;" title="'.$right['name'].': '.$right['description'].'"><img src="?page=presentation&amp;type=vtext&amp;text='.$right['name'].'" alt="'.$right['name'].'" /></th>';
+      echo '<th style="vertical-align:bottom;" title="'.$right['name'].': '.$right['description'].'"><img src="'.RosCMS::getInstance()->pathInstance().'?page=presentation&amp;type=vtext&amp;text='.$right['name'].'" alt="'.$right['name'].'" /></th>';
     }
     echo '</tr>';
 

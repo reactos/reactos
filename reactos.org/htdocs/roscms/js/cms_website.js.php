@@ -20,7 +20,10 @@
 
 define('ROSCMS_PATH', '../');
 require('../lib/RosCMS_Autoloader.class.php');
-Login::required();
+
+// config data
+require_once(ROSCMS_PATH.'config.php');
+RosCMS::getInstance()->apply();
 
 // get user language
 $thisuser = ThisUser::getInstance();

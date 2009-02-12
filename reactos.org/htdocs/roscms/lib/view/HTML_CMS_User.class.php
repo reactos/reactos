@@ -68,7 +68,7 @@ class HTML_CMS_User extends HTML_CMS
         <input name="searchopt" type="radio" id="searchopt3" value="email" onclick="getUser()" /><label for="searchopt3">email address</label>
         <input name="searchopt" type="radio" id="searchopt4" value="website" onclick="getUser()" /><label for="searchopt4">website</label>'.($thisuser->hasAccess('more_lang') ? '
         <input name="searchopt" type="radio" id="searchopt5" value="language" onclick="getUser()" /><label for="searchopt5">language</label>' : '').'
-        <img id="ajaxloading" style="display:none;" src="images/ajax_loading.gif" width="13" height="13" alt="" /><br />
+        <img id="ajaxloading" style="display:none;" src="'.RosCMS::getInstance()->pathRosCMS().'images/ajax_loading.gif" width="13" height="13" alt="" /><br />
       </fieldset>
       <br />
       <div id="userarea"></div>

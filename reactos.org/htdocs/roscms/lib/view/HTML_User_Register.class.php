@@ -59,11 +59,11 @@ class HTML_User_Register extends HTML_User
       <h1>Register to'. $config->siteName().'</h1>
       <p>Become a member of the '.$config->siteName().' Community, and have a single sign-on for all '.$config->siteName().' web services.</p>
       <ul>
-        <li>Already a member? <a href="'.$config->pathRosCMS().'?page=login">Login now</a>! </li>
-        <li><a href="'.$config->pathRosCMS().'?page=login&amp;subpage=lost">Lost username or password?</a></li>
+        <li>Already a member? <a href="'.$config->pathInstance().'?page=login">Login now</a>! </li>
+        <li><a href="'.$config->pathInstance().'?page=login&amp;subpage=lost">Lost username or password?</a></li>
       </ul>
 
-      <form action="'.$config->pathRosCMS().'?page=register" method="post">
+      <form action="'.$config->pathInstance().'?page=register" method="post">
         <div class="bubble">
           <div class="corner_TL">
             <div class="corner_TR"></div>
@@ -141,7 +141,7 @@ class HTML_User_Register extends HTML_User
           $subject = $config->siteName()." - Account Activation";
 
           // message
-          $message = $config->siteName()." - Account Activation\n\n\nYou have registered an account on ".$config->siteName().". The next step in order to enable the account is to activate it by using the hyperlink below.\n\nYou haven't registered an account? Oops, then someone has tried to register an account with your email address. Just ignore this email, no one can use it anyway as it is not activated and the account will get deleted soon.\n\n\nUsername: ".$_POST['username']."\nPassword: ".$_POST['userpwd1']."\n\nActivation-Hyperlink: ".$config->pathRosCMS()."?page=login&subpage=activate&code=".$account_act_code."/\n\n\nBest regards,\nThe ".$config->siteName()." Team\n\n\n(please do not reply as this is an auto generated email!)";
+          $message = $config->siteName()." - Account Activation\n\n\nYou have registered an account on ".$config->siteName().". The next step in order to enable the account is to activate it by using the hyperlink below.\n\nYou haven't registered an account? Oops, then someone has tried to register an account with your email address. Just ignore this email, no one can use it anyway as it is not activated and the account will get deleted soon.\n\n\nUsername: ".$_POST['username']."\nPassword: ".$_POST['userpwd1']."\n\nActivation-Hyperlink: ".$config->pathInstance()."?page=login&subpage=activate&code=".$account_act_code."/\n\n\nBest regards,\nThe ".$config->siteName()." Team\n\n\n(please do not reply as this is an auto generated email!)";
 
           // send the mail
           if (Email::send($_POST['useremail'], $subject, $message)) {
@@ -200,7 +200,7 @@ class HTML_User_Register extends HTML_User
       if (isset($_POST['registerpost']) && $mail_exists) {
         echo_strip('
           <br />
-          <em>That email address is already with an account. Please <a href="'.$config->pathRosCMS().'?page=login" style="color:red !important; font-weight: bold; text-decoration:underline;">login</a>!</em>');
+          <em>That email address is already with an account. Please <a href="'.$config->pathInstance().'?page=login" style="color:red !important; font-weight: bold; text-decoration:underline;">login</a>!</em>');
       }
 
       echo_strip('
@@ -216,14 +216,14 @@ class HTML_User_Register extends HTML_User
             function CaptchaReload()
             {
               ++BypassCacheNumber;
-              document.getElementById('captcha').src = '".$config->pathRosCMS()."?page=captcha&nr=' + BypassCacheNumber;
+              document.getElementById('captcha').src = '".$config->pathInstance()."?page=captcha&nr=' + BypassCacheNumber;
             }
 
             document.write('<br /><span style=\"color:#817A71; \">If you can't read this, try <a href=\"javascript:CaptchaReload()\">another one</a>.</span>');
           
           -->";echo_strip('
           </script>
-          <img id="captcha" src="'.$config->pathRosCMS().'?page=captcha" style="padding-top:10px;" alt="If you can\'t read this, try another one or email '.$config->emailSupport().' for help." title="Are you human?" />
+          <img id="captcha" src="'.$config->pathInstance().'?page=captcha" style="padding-top:10px;" alt="If you can\'t read this, try another one or email '.$config->emailSupport().' for help." title="Are you human?" />
           <br />');
       if (isset($_POST['registerpost'])) { 
         echo_strip('
@@ -236,7 +236,7 @@ class HTML_User_Register extends HTML_User
         <div class="field">
           <input name="registerpost" type="hidden" id="registerpost" value="reg" />
           <button type="submit" name="submit">Register</button>
-          <button type="button" onclick="'."window.location='".$config->pathRosCMS()."'".'" style="color:#777777;">Cancel</button>
+          <button type="button" onclick="'."window.location='".$config->pathInstance()."'".'" style="color:#777777;">Cancel</button>
         </div>');
     } // end registration form
 

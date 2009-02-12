@@ -110,7 +110,7 @@ class Login
     if (0 == $user_id && $login_type == self::REQUIRED) {
     
       // build login url
-      $url = $config->pathRosCMS().'?page=login';
+      $url = $config->pathInstance().'?page=login';
       if ($target != '') {
         $url .= '&target='.urlencode($target);
       }
@@ -159,7 +159,7 @@ class Login
     }
 
     // otherwise redirect to myRosCMS page
-    header('Location: '.$config->pathRosCMS().'?page=my');
+    header('Location: '.$config->pathInstance().'?page=my');
     exit;
   } // end of member function out
 

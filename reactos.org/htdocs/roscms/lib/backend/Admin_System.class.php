@@ -93,7 +93,7 @@ class Admin_System extends Backend
 
     // show areas in head
     foreach ($areas as $area) {
-      echo '<th style="vertical-align:bottom;" title="'.$area['name'].': '.$area['description'].'"><img src="?page=presentation&amp;type=vtext&amp;text='.$area['name'].'" alt="'.$area['name'].'" /></th>';
+      echo '<th style="vertical-align:bottom;" title="'.$area['name'].': '.$area['description'].'"><img src="'.RosCMS::getInstance()->pathInstance().'?page=presentation&amp;type=vtext&amp;text='.$area['name'].'" alt="'.$area['name'].'" /></th>';
     }
     echo '</tr>';
 

@@ -59,17 +59,17 @@ class HTML_User_LostPassword extends HTML_User
 
     if (strlen($activation_code > 6)) {
       echo_strip('
-        <h1><a href="'.$config->pathRosCMS().'?page=login">Login</a> &gt; Reset your Password</h1>
+        <h1><a href="'.$config->pathInstance().'?page=login">Login</a> &gt; Reset your Password</h1>
         <p>Have you forgotten your password of your '.$config->siteName().' account? Don\'t panic. You have already requested us that we reset your password. Now it\'s your turn to enter a new password for your '.$config->siteName().' account.</p>');
     }
     else {
       echo_strip('
-        <h1><a href="'.$config->pathRosCMS().'?page=login">Login</a> &gt; Lost Username or Password?</h1>
+        <h1><a href="'.$config->pathInstance().'?page=login">Login</a> &gt; Lost Username or Password?</h1>
         <p>Have you forgotten your username and/or password of your '.$config->siteName().' account? Don\'t panic. We can send you your username and let you reset your password. All you need is your email address.</p>');
     }
 
     echo_strip('
-      <form action="'.$config->pathRosCMS().'?page=login&amp;subpage=lost" method="post">
+      <form action="'.$config->pathInstance().'?page=login&amp;subpage=lost" method="post">
         <div class="bubble">
           <div class="corner_TL">
             <div class="corner_TR"></div>
@@ -98,7 +98,7 @@ class HTML_User_LostPassword extends HTML_User
 
       echo_strip('
         <h2>Password changed</h2>
-        <div><a href="'.$config->pathRosCMS().'?page=login" style="color:red !important; text-decoration:underline;">Login now</a>!</div>');
+        <div><a href="'.$config->pathInstance().'?page=login" style="color:red !important; text-decoration:underline;">Login now</a>!</div>');
 
     }
     elseif (strlen($activation_code) < 6 && isset($_POST['registerpost']) && !empty($_POST['useremail']) && EMail::isValid($_POST['useremail']) && !empty($_POST['usercaptcha']) && !empty($_SESSION['rdf_security_code']) && strtolower($_SESSION['rdf_security_code']) == strtolower($_POST['usercaptcha']) && $mail_exists) {
@@ -121,7 +121,7 @@ class HTML_User_LostPassword extends HTML_User
       $subject = $config->siteName().' - Lost username or password?';
 
       // Email message
-      $message = $config->siteName()." - Lost username or password?\n\n\nYou have requested your ".$config->siteName()." account login data.\n\nYou haven't requested your account login data? Oops, then someone has tried the 'Lost username or password?' function with your email address, just ignore this email.\n\n\nUsername: ".$user['name']."\n\n\nLost your password? Reset your password: ".$config->pathRosCMS()."?page=login&subpage=lost&code=".$activation_code."/\n\n\nBest regards,\nThe ".$config->siteName()." Team\n\n\n(please do not reply as this is an auto generated email!)";
+      $message = $config->siteName()." - Lost username or password?\n\n\nYou have requested your ".$config->siteName()." account login data.\n\nYou haven't requested your account login data? Oops, then someone has tried the 'Lost username or password?' function with your email address, just ignore this email.\n\n\nUsername: ".$user['name']."\n\n\nLost your password? Reset your password: ".$config->pathInstance()."?page=login&subpage=lost&code=".$activation_code."/\n\n\nBest regards,\nThe ".$config->siteName()." Team\n\n\n(please do not reply as this is an auto generated email!)";
 
       // send the Email
       if (EMail::send($_POST['useremail'], $subject, $message)) {
@@ -189,14 +189,14 @@ class HTML_User_LostPassword extends HTML_User
             function CaptchaReload()
             {
               ++BypassCacheNumber;
-              document.getElementById('captcha').src = '".$config->pathRosCMS()."?page=captcha&nr=' + BypassCacheNumber;
+              document.getElementById('captcha').src = '".$config->pathInstance()."?page=captcha&nr=' + BypassCacheNumber;
             }
 
             document.write('".'<br /><span style="color:#817A71;">If you can\'t read this, try <a href="javascript:CaptchaReload()">another one</a>.</span>'."');
           -->".'
           </script>';
       echo_strip('
-          <img id="captcha" src="'.$config->pathRosCMS().'?page=captcha" style="padding-top:10px;" alt="If you can\'t read this, try another one or email '.$config->emailSupport().' for help." title="Are you human?" />
+          <img id="captcha" src="'.$config->pathInstance().'?page=captcha" style="padding-top:10px;" alt="If you can\'t read this, try another one or email '.$config->emailSupport().' for help." title="Are you human?" />
           <br />');
 
       if (isset($_POST['registerpost'])) { 
@@ -210,7 +210,7 @@ class HTML_User_LostPassword extends HTML_User
         <div class="field">
           <input name="registerpost" type="hidden" id="registerpost" value="reg" />
           <button type="submit" name="submit">Send</button>
-          <button type="button" onclick="'."window.location=".$config->pathRosCMS()."'".'" style="color:#777777;">Cancel</button>
+          <button type="button" onclick="'."window.location=".$config->pathInstance()."'".'" style="color:#777777;">Cancel</button>
         </div>');
     }
 

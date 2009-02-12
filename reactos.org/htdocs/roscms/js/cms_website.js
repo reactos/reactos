@@ -837,7 +837,7 @@ function loadEditor( objevent, entryid )
         autosave_timer = window.setTimeout("tryAutosave()", autosave_coundown);
 
         // loading screen:
-        document.getElementById('editzone').innerHTML = '<div style="background:white; border-bottom: 1px solid #bbb; border-right: 1px solid #bbb;margin:10px;padding: 2em 0px;width:95%;text-align: center;"><img src="images/ajax_loading.gif" alt="loading ..." style="width:13px;height:13px;" />&nbsp;&nbsp;loading ...</div>';
+        document.getElementById('editzone').innerHTML = '<div style="background:white; border-bottom: 1px solid #bbb; border-right: 1px solid #bbb;margin:10px;padding: 2em 0px;width:95%;text-align: center;"><img src="'+roscms_intern_webserver_roscms+'images/ajax_loading.gif" alt="loading ..." style="width:13px;height:13px;" />&nbsp;&nbsp;loading ...</div>';
 
         makeRequest('?page=backend&type=text&subtype=mef&d_fl='+objevent+'&d_id='+devideids2+'&d_r_id='+devideids3+'&d_r_lang='+userlang, 'mef', 'editzone', 'html', 'GET', '');
       }
@@ -1742,7 +1742,7 @@ function makeRequest( url, action, objid, format, kind, parameters )
   }; // internal function end
 
   if (kind === 'POST') {
-    http_request.open('POST', url, true);
+    http_request.open('POST', roscms_intern_webserver_roscms+url, true);
     http_request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
     http_request.setRequestHeader("Content-length", parameters.length);
     http_request.setRequestHeader("If-Modified-Since", "Sat, 1 Jan 2000 00:00:00 GMT");	// Bypass the IE Cache
@@ -1750,7 +1750,7 @@ function makeRequest( url, action, objid, format, kind, parameters )
     http_request.send(parameters);
   }
   else {
-    http_request.open('GET', url, true);
+    http_request.open('GET', roscms_intern_webserver_roscms+url, true);
     http_request.setRequestHeader("If-Modified-Since", "Sat, 1 Jan 2000 00:00:00 GMT");	// Bypass the IE Cache
     http_request.send(null);
   }
@@ -1840,7 +1840,7 @@ function htmlEntryTableRow( bnr, bclass, bid, bdname, btype, brid, brver, brlang
 
   // not found -> readonly
   if (security.indexOf("write") < 0 ) { 
-    lstBody += '<img src="images/locked.gif" alt="read-only" style="width:11px; height:12px; border:0px;" /> ';
+    lstBody += '<img src="'+roscms_intern_webserver_roscms+'images/locked.gif" alt="read-only" style="width:11px; height:12px; border:0px;" /> ';
   }
 
   try {
@@ -2772,7 +2772,7 @@ function htmlFilterChoices( filtpopstr )
       }
 
       lstfilterstr +=  htmlFilterValues(lstfilterstr2[0], lstfilterstr2[3], indexid)
-        +  '&nbsp;&nbsp;&nbsp;<span id="fdel'+indexid+'" class="filterbutton" onclick="removeFilter(this.id)"><img src="images/remove.gif" alt="" style="width:11px; height:11px; border:0px;" />&nbsp;Delete</span>'
+        +  '&nbsp;&nbsp;&nbsp;<span id="fdel'+indexid+'" class="filterbutton" onclick="removeFilter(this.id)"><img src="'+roscms_intern_webserver_roscms+'images/remove.gif" alt="" style="width:11px; height:11px; border:0px;" />&nbsp;Delete</span>'
         +  '</div>';
 
       if (lstfilterstr2[3] == 0) {

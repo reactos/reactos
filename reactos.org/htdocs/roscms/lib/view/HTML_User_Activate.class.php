@@ -53,9 +53,9 @@ class HTML_User_Activate extends HTML_User
 
     echo_strip('
       <h1>Activate '.RosCMS::getInstance()->siteName().' Account</h1>
-      <p>Already a member? <a href="'.RosCMS::getInstance()->pathRosCMS().'?page=login">Login now</a>!</p>
-      <p>Don\'t have a '.RosCMS::getInstance()->siteName().' account yet? <a href="'.RosCMS::getInstance()->pathRosCMS().'?page=register">Join now</a>, it\'s free and just takes a minute.</p>
-      <form action="'.RosCMS::getInstance()->pathRosCMS().'?page=login&amp;subpage=activate" method="post">
+      <p>Already a member? <a href="'.RosCMS::getInstance()->pathInstance().'?page=login">Login now</a>!</p>
+      <p>Don\'t have a '.RosCMS::getInstance()->siteName().' account yet? <a href="'.RosCMS::getInstance()->pathInstance().'?page=register">Join now</a>, it\'s free and just takes a minute.</p>
+      <form action="'.RosCMS::getInstance()->pathInstance().'?page=login&amp;subpage=activate" method="post">
         <div class="bubble">
           <div class="corner_TL">
             <div class="corner_TR"></div>
@@ -103,7 +103,7 @@ class HTML_User_Activate extends HTML_User
 
       echo_strip('
         <h2>Account activated</h2>
-        <div><a href="'.RosCMS::getInstance()->pathRosCMS().'?page=login" style="color:red !important; text-decoration:underline;">Login now</a>!</div>');
+        <div><a href="'.RosCMS::getInstance()->pathInstance().'?page=login" style="color:red !important; text-decoration:underline;">Login now</a>!</div>');
     }
     elseif ($activation_code_exists) {
       echo_strip('

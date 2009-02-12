@@ -95,11 +95,11 @@ abstract class HTML_CMS extends HTML
         <strong>'.$thisuser->name().'</strong> ('. $group_list .')
         |
         <span onclick="refreshPage()" style="color:#006090; cursor:pointer;">
-          <img src="images/reload.gif" alt="reload page" width="16" height="16" />
+          <img src="'.RosCMS::getInstance()->pathRosCMS().'images/reload.gif" alt="reload page" width="16" height="16" />
           <span style="text-decoration:underline;">reload</span>
         </span>  
         |
-        <a href="'.RosCMS::getInstance()->pathRosCMS().'?page=logout">Sign out</a>
+        <a href="'.RosCMS::getInstance()->pathInstance().'?page=logout">Sign out</a>
       </div>
       <div id="roscms_page">
         <table id="mt" cellpadding="0" cellspacing="0">
@@ -182,7 +182,7 @@ abstract class HTML_CMS extends HTML
     echo_strip('
             <td style="width:100%">
               <div id="ajaxloadinginfo" style="visibility:hidden; text-align: center;">
-                <img src="images/ajax_loading.gif" alt="loading ..." width="13" height="13" />
+                <img src="'.RosCMS::getInstance()->pathRosCMS().'images/ajax_loading.gif" alt="loading ..." width="13" height="13" />
               </div>
             </td>
           </tr>
@@ -199,7 +199,7 @@ abstract class HTML_CMS extends HTML
         break;
 
       case 'website':
-        echo_strip('Quick Links: <a href="'.RosCMS::getInstance()->pathRosCMS().'?page=data&amp;branch=welcome#web_news_langgroup">Translation Group News</a>
+        echo_strip('Quick Links: <a href="'.RosCMS::getInstance()->pathInstance().'?page=data&amp;branch=welcome#web_news_langgroup">Translation Group News</a>
           | <a href="'.RosCMS::getInstance()->pathGenerated().'?page=tutorial_roscms">Text- &amp; Video-Tutorials</a>
           | <a href="'.RosCMS::getInstance()->pathGenerated().'/forum/viewforum.php?f=18">Website Forum</a>');
         break;
