@@ -74,6 +74,7 @@
 @ stdcall CloseWindowStation(long) NtUserCloseWindowStation
 @ stdcall CopyAcceleratorTableA(long ptr long)
 @ stdcall CopyAcceleratorTableW(long ptr long) NtUserCopyAcceleratorTable
+@ stdcall CopyCursor(long)
 @ stdcall CopyIcon(long)
 @ stdcall CopyImage(long long long long long)
 @ stdcall CopyRect(ptr ptr)
