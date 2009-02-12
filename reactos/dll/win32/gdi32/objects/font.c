@@ -376,6 +376,7 @@ EnumFontFamiliesW(HDC hdc, LPCWSTR lpszFamily, FONTENUMPROCW lpEnumFontFamProc,
   LogFont.lfCharSet = DEFAULT_CHARSET;
   if (NULL != lpszFamily)
     {
+      if (!*lpszFamily) return 1;
       lstrcpynW(LogFont.lfFaceName, lpszFamily, LF_FACESIZE);
     }
 
@@ -417,6 +418,7 @@ EnumFontFamiliesA(HDC hdc, LPCSTR lpszFamily, FONTENUMPROCA lpEnumFontFamProc,
   LogFont.lfCharSet = DEFAULT_CHARSET;
   if (NULL != lpszFamily)
     {
+      if (!*lpszFamily) return 1;
       MultiByteToWideChar(CP_THREAD_ACP, 0, lpszFamily, -1, LogFont.lfFaceName, LF_FACESIZE);
     }
 

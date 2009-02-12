@@ -603,7 +603,7 @@ FillTM(TEXTMETRICW *TM, PFONTGDI FontGDI, TT_OS2 *pOS2, TT_HoriHeader *pHori, FT
         return;
     }
 
-    if (0  == pOS2->usWinAscent + pOS2->usWinDescent)
+    if (pOS2->usWinAscent + pOS2->usWinDescent == 0)
     {
         Ascent = pHori->Ascender;
         Descent = -pHori->Descender;
@@ -621,9 +621,9 @@ FillTM(TEXTMETRICW *TM, PFONTGDI FontGDI, TT_OS2 *pOS2, TT_HoriHeader *pHori, FT
     TM->tmAscent = (Face->size->metrics.ascender + 32) >> 6; /* units above baseline */
     TM->tmDescent = (32 - Face->size->metrics.descender) >> 6; /* units below baseline */
 #endif
-
     TM->tmInternalLeading = (FT_MulFix(Ascent + Descent - Face->units_per_EM, YScale) + 32) >> 6;
-    TM->tmHeight = TM->tmAscent + TM->tmDescent; // we need add 1 height more after scale it right
+
+    TM->tmHeight = TM->tmAscent + TM->tmDescent;
 
     /* MSDN says:
      *  el = MAX(0, LineGap - ((WinAscent + WinDescent) - (Ascender - Descender)))
@@ -634,7 +634,7 @@ FillTM(TEXTMETRICW *TM, PFONTGDI FontGDI, TT_OS2 *pOS2, TT_HoriHeader *pHori, FT
                                     YScale) + 32) >> 6);
 
     TM->tmAveCharWidth = (FT_MulFix(pOS2->xAvgCharWidth, XScale) + 32) >> 6;
-    if (0 == TM->tmAveCharWidth)
+    if (TM->tmAveCharWidth == 0)
     {
         TM->tmAveCharWidth = 1;
     }
@@ -647,8 +647,8 @@ FillTM(TEXTMETRICW *TM, PFONTGDI FontGDI, TT_OS2 *pOS2, TT_HoriHeader *pHori, FT
     TM->tmDigitizedAspectX = 96;
     TM->tmDigitizedAspectY = 96;
     TM->tmFirstChar = pOS2->usFirstCharIndex;
+    TM->tmDefaultChar = pOS2->usDefaultChar ? pOS2->usDefaultChar : 0xffff;
     TM->tmLastChar = pOS2->usLastCharIndex;
-    TM->tmDefaultChar = pOS2->usDefaultChar;
     TM->tmBreakChar = L'\0' != pOS2->usBreakChar ? pOS2->usBreakChar : ' ';
     TM->tmItalic = (Face->style_flags & FT_STYLE_FLAG_ITALIC) ? 255 : 0;
     TM->tmUnderlined = FontGDI->Underline;
@@ -670,11 +670,15 @@ FillTM(TEXTMETRICW *TM, PFONTGDI FontGDI, TT_OS2 *pOS2, TT_HoriHeader *pHori, FT
         TM->tmPitchAndFamily |= FF_SCRIPT;
         break;
     case PAN_FAMILY_DECORATIVE:
-    case PAN_FAMILY_PICTORIAL:
         TM->tmPitchAndFamily |= FF_DECORATIVE;
         break;
+
+    case PAN_ANY:
+    case PAN_NO_FIT:
     case PAN_FAMILY_TEXT_DISPLAY:
-        if (0 == TM->tmPitchAndFamily) /* fixed */
+    case PAN_FAMILY_PICTORIAL: /* symbol fonts get treated as if they were text */
+                               /* which is clearly not what the panose spec says. */
+        if (TM->tmPitchAndFamily == 0) /* fixed */
         {
             TM->tmPitchAndFamily = FF_MODERN;
         }
@@ -682,13 +686,30 @@ FillTM(TEXTMETRICW *TM, PFONTGDI FontGDI, TT_OS2 *pOS2, TT_HoriHeader *pHori, FT
         {
             switch (pOS2->panose[PAN_SERIFSTYLE_INDEX])
             {
+            case PAN_ANY:
+            case PAN_NO_FIT:
+            default:
+                TM->tmPitchAndFamily |= FF_DONTCARE;
+                break;
+
+            case PAN_SERIF_COVE:
+            case PAN_SERIF_OBTUSE_COVE:
+            case PAN_SERIF_SQUARE_COVE:
+            case PAN_SERIF_OBTUSE_SQUARE_COVE:
+            case PAN_SERIF_SQUARE:
+            case PAN_SERIF_THIN:
+            case PAN_SERIF_BONE:
+            case PAN_SERIF_EXAGGERATED:
+            case PAN_SERIF_TRIANGLE:
+                TM->tmPitchAndFamily |= FF_ROMAN;
+                break;
+
             case PAN_SERIF_NORMAL_SANS:
             case PAN_SERIF_OBTUSE_SANS:
             case PAN_SERIF_PERP_SANS:
+            case PAN_SERIF_FLARED:
+            case PAN_SERIF_ROUNDED:
                 TM->tmPitchAndFamily |= FF_SWISS;
-                break;
-            default:
-                TM->tmPitchAndFamily |= FF_ROMAN;
                 break;
             }
         }
@@ -822,9 +843,9 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI,
     Otm->otmrcFontBox.right = (FT_MulFix(FontGDI->face->bbox.xMax, XScale) + 32) >> 6;
     Otm->otmrcFontBox.top = (FT_MulFix(FontGDI->face->bbox.yMax, YScale) + 32) >> 6;
     Otm->otmrcFontBox.bottom = (FT_MulFix(FontGDI->face->bbox.yMin, YScale) + 32) >> 6;
-    Otm->otmMacAscent = 0; /* where do these come from ? */
-    Otm->otmMacDescent = 0;
-    Otm->otmMacLineGap = 0;
+    Otm->otmMacAscent = FontGDI->TextMetric.tmAscent;
+    Otm->otmMacDescent = -FontGDI->TextMetric.tmDescent;
+    Otm->otmMacLineGap = Otm->otmLineGap;
     Otm->otmusMinimumPPEM = 0; /* TT Header */
     Otm->otmptSubscriptSize.x = (FT_MulFix(pOS2->ySubscriptXSize, XScale) + 32) >> 6;
     Otm->otmptSubscriptSize.y = (FT_MulFix(pOS2->ySubscriptYSize, YScale) + 32) >> 6;
@@ -836,7 +857,7 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI,
     Otm->otmptSuperscriptOffset.y = (FT_MulFix(pOS2->ySuperscriptYOffset, YScale) + 32) >> 6;
     Otm->otmsStrikeoutSize = (FT_MulFix(pOS2->yStrikeoutSize, YScale) + 32) >> 6;
     Otm->otmsStrikeoutPosition = (FT_MulFix(pOS2->yStrikeoutPosition, YScale) + 32) >> 6;
-    if (NULL == pPost)
+    if (!pPost)
     {
         Otm->otmsUnderscoreSize = 0;
         Otm->otmsUnderscorePosition = 0;
