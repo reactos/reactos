@@ -292,6 +292,9 @@
 <directory name="olesvr32">
 	<xi:include href="olesvr32/olesvr32.rbuild" />
 </directory>
+<directory name="olethk32">
+	<xi:include href="olethk32/olethk32.rbuild" />
+</directory>
 <directory name="opengl32">
 	<xi:include href="opengl32/opengl32.rbuild" />
 </directory>
