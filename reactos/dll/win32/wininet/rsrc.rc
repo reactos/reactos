@@ -63,3 +63,4 @@
 #include "wininet_Sv.rc"
 #include "wininet_Uk.rc"
 #include "wininet_Tr.rc"
+#include "wininet_Zh.rc"
