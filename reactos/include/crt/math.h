@@ -282,7 +282,7 @@ extern "C" {
 /* #define isinf(x) (fpclassify(x) == FP_INFINITE) */
 
   /* we don't have fpclassify */
-static int isinf (double d) {
+__CRT_INLINE int isinf (double d) {
   int expon = 0;
   double val = frexp (d, &expon);
   if (expon == 1025) {
