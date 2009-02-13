@@ -307,6 +307,8 @@ static const IID * const style_iids[] = {
     &IID_IDispatchEx,
     &IID_IHTMLStyle,
     &IID_IHTMLStyle2,
+    &IID_IHTMLStyle3,
+    &IID_IHTMLStyle4,
     NULL
 };
 
@@ -2411,6 +2413,7 @@ static void test_default_style(IHTMLStyle *style)
     float f;
     BSTR sOverflowDefault;
     BSTR sDefault;
+    VARIANT vDefault;
 
     test_disp((IUnknown*)style, &DIID_DispHTMLStyle);
     test_ifaces((IUnknown*)style, style_iids);
@@ -2428,6 +2431,82 @@ static void test_default_style(IHTMLStyle *style)
     hres = IHTMLStyle_get_fontWeight(style, &str);
     ok(hres == S_OK, "get_fontWeight failed: %08x\n", hres);
     ok(!str, "fontWeight = %s\n", dbgstr_w(str));
+
+    hres = IHTMLStyle_get_fontWeight(style, &sDefault);
+    ok(hres == S_OK, "get_fontWeight failed: %08x\n", hres);
+
+    str = a2bstr("test");
+    hres = IHTMLStyle_put_fontWeight(style, str);
+    ok(hres == E_INVALIDARG, "put_fontWeight failed: %08x\n", hres);
+    SysFreeString(str);
+
+    str = a2bstr("bold");
+    hres = IHTMLStyle_put_fontWeight(style, str);
+    ok(hres == S_OK, "put_fontWeight failed: %08x\n", hres);
+    SysFreeString(str);
+
+    str = a2bstr("bolder");
+    hres = IHTMLStyle_put_fontWeight(style, str);
+    ok(hres == S_OK, "put_fontWeight failed: %08x\n", hres);
+    SysFreeString(str);
+
+    str = a2bstr("lighter");
+    hres = IHTMLStyle_put_fontWeight(style, str);
+    ok(hres == S_OK, "put_fontWeight failed: %08x\n", hres);
+    SysFreeString(str);
+
+    str = a2bstr("100");
+    hres = IHTMLStyle_put_fontWeight(style, str);
+    ok(hres == S_OK, "put_fontWeight failed: %08x\n", hres);
+    SysFreeString(str);
+
+    str = a2bstr("200");
+    hres = IHTMLStyle_put_fontWeight(style, str);
+    ok(hres == S_OK, "put_fontWeight failed: %08x\n", hres);
+    SysFreeString(str);
+
+    str = a2bstr("300");
+    hres = IHTMLStyle_put_fontWeight(style, str);
+    ok(hres == S_OK, "put_fontWeight failed: %08x\n", hres);
+    SysFreeString(str);
+
+    str = a2bstr("400");
+    hres = IHTMLStyle_put_fontWeight(style, str);
+    ok(hres == S_OK, "put_fontWeight failed: %08x\n", hres);
+    SysFreeString(str);
+
+    str = a2bstr("500");
+    hres = IHTMLStyle_put_fontWeight(style, str);
+    ok(hres == S_OK, "put_fontWeight failed: %08x\n", hres);
+    SysFreeString(str);
+
+    str = a2bstr("600");
+    hres = IHTMLStyle_put_fontWeight(style, str);
+    ok(hres == S_OK, "put_fontWeight failed: %08x\n", hres);
+    SysFreeString(str);
+
+    str = a2bstr("700");
+    hres = IHTMLStyle_put_fontWeight(style, str);
+    ok(hres == S_OK, "put_fontWeight failed: %08x\n", hres);
+    SysFreeString(str);
+
+    str = a2bstr("800");
+    hres = IHTMLStyle_put_fontWeight(style, str);
+    ok(hres == S_OK, "put_fontWeight failed: %08x\n", hres);
+    SysFreeString(str);
+
+    str = a2bstr("900");
+    hres = IHTMLStyle_put_fontWeight(style, str);
+    ok(hres == S_OK, "put_fontWeight failed: %08x\n", hres);
+    SysFreeString(str);
+
+    hres = IHTMLStyle_get_fontWeight(style, &str);
+    ok(hres == S_OK, "get_fontWeight failed: %08x\n", hres);
+    ok(!strcmp_wa(str, "900"), "str != style900\n");
+    SysFreeString(str);
+
+    hres = IHTMLStyle_put_fontWeight(style, sDefault);
+    ok(hres == S_OK, "put_fontWeight failed: %08x\n", hres);
 
     /* font Variant */
     hres = IHTMLStyle_get_fontVariant(style, NULL);
@@ -2482,10 +2561,32 @@ static void test_default_style(IHTMLStyle *style)
     ok(hres == S_OK, "get_textDecorationUnderline failed: %08x\n", hres);
     ok(b == VARIANT_FALSE, "textDecorationUnderline = %x\n", b);
 
+    hres = IHTMLStyle_put_textDecorationUnderline(style, VARIANT_TRUE);
+    ok(hres == S_OK, "get_textDecorationUnderline failed: %08x\n", hres);
+    ok(b == VARIANT_FALSE, "textDecorationUnderline = %x\n", b);
+
+    hres = IHTMLStyle_get_textDecorationUnderline(style, &b);
+    ok(hres == S_OK, "get_textDecorationUnderline failed: %08x\n", hres);
+    ok(b == VARIANT_TRUE, "textDecorationUnderline = %x\n", b);
+
+    hres = IHTMLStyle_put_textDecorationUnderline(style, VARIANT_FALSE);
+    ok(hres == S_OK, "get_textDecorationUnderline failed: %08x\n", hres);
+
     b = 0xfefe;
     hres = IHTMLStyle_get_textDecorationLineThrough(style, &b);
     ok(hres == S_OK, "get_textDecorationLineThrough failed: %08x\n", hres);
     ok(b == VARIANT_FALSE, "textDecorationLineThrough = %x\n", b);
+
+    hres = IHTMLStyle_put_textDecorationLineThrough(style, VARIANT_TRUE);
+    ok(hres == S_OK, "get_textDecorationLineThrough failed: %08x\n", hres);
+    ok(b == VARIANT_FALSE, "textDecorationLineThrough = %x\n", b);
+
+    hres = IHTMLStyle_get_textDecorationLineThrough(style, &b);
+    ok(hres == S_OK, "get_textDecorationLineThrough failed: %08x\n", hres);
+    ok(b == VARIANT_TRUE, "textDecorationLineThrough = %x\n", b);
+
+    hres = IHTMLStyle_put_textDecorationLineThrough(style, VARIANT_FALSE);
+    ok(hres == S_OK, "get_textDecorationLineThrough failed: %08x\n", hres);
 
     hres = IHTMLStyle_get_posWidth(style, NULL);
     ok(hres == E_POINTER, "get_posWidth failed: %08x\n", hres);
@@ -2903,6 +3004,29 @@ static void test_default_style(IHTMLStyle *style)
     str = a2bstr("bordertopstyle");
     test_border_styles(style, str);
     SysFreeString(str);
+
+    hres = IHTMLStyle_get_backgroundColor(style, &v);
+    ok(hres == S_OK, "get_backgroundColor: %08x\n", hres);
+    ok(V_VT(&v) == VT_BSTR, "type failed: %d\n", V_VT(&v));
+    ok(!V_BSTR(&v), "str=%s\n", dbgstr_w(V_BSTR(&v)));
+    VariantClear(&v);
+
+    /* PaddingLeft */
+    hres = IHTMLStyle_get_paddingLeft(style, &vDefault);
+    ok(hres == S_OK, "get_paddingLeft: %08x\n", hres);
+
+    V_VT(&v) = VT_BSTR;
+    V_BSTR(&v) = a2bstr("10");
+    hres = IHTMLStyle_put_paddingLeft(style, v);
+    ok(hres == S_OK, "get_paddingLeft: %08x\n", hres);
+    VariantClear(&v);
+
+    hres = IHTMLStyle_get_paddingLeft(style, &v);
+    ok(hres == S_OK, "get_paddingLeft: %08x\n", hres);
+    ok(!strcmp_wa(V_BSTR(&v), "10px"), "expecte 10 = %s\n", dbgstr_w(V_BSTR(&v)));
+
+    hres = IHTMLStyle_put_paddingLeft(style, vDefault);
+    ok(hres == S_OK, "get_paddingLeft: %08x\n", hres);
 
     hres = IHTMLStyle_QueryInterface(style, &IID_IHTMLStyle2, (void**)&style2);
     ok(hres == S_OK, "Could not get IHTMLStyle2 iface: %08x\n", hres);
