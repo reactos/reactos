@@ -285,6 +285,7 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
         else if (Status == STATUS_UNSUCCESSFUL)
         {
             /* Note: the directory cache has already been unpinned */
+            RtlFreeUnicodeString(&FileToFindUpcase);
             return Status;
         }
 
