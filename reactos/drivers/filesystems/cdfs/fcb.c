@@ -246,6 +246,9 @@ CdfsFCBInitializeCache(PVCB Vcb,
     RtlZeroMemory(newCCB,
         sizeof(CCB));
 
+    FileObject->ReadAccess = TRUE;
+    FileObject->WriteAccess = FALSE;
+    FileObject->DeleteAccess = FALSE;
     FileObject->SectionObjectPointer = &Fcb->SectionObjectPointers;
     FileObject->FsContext = Fcb;
     FileObject->FsContext2 = newCCB;
