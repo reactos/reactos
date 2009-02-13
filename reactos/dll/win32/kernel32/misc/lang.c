@@ -3042,3 +3042,13 @@ VerLanguageNameW (
 {
     return GetLocaleInfoW( MAKELCID(wLang, SORT_DEFAULT), LOCALE_SENGLANGUAGE, szLang, nSize );
 }
+
+/***********************************************************************
+ *           LCIDToLocaleName  (KERNEL32.@) Wine 13.02.2009
+ */
+INT WINAPI LCIDToLocaleName( LCID lcid, LPWSTR name, INT count, DWORD flags )
+{
+    if (flags) DPRINT1( "unsupported flags %x\n", flags );
+
+    return GetLocaleInfoW( lcid, LOCALE_SNAME | LOCALE_NOUSEROVERRIDE, name, count );
+}

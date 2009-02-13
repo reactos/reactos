@@ -601,7 +601,7 @@
 @ stdcall IsValidLocale(long long)
 @ stdcall IsValidUILanguage(long)
 @ stdcall IsWow64Process(ptr ptr)
-@ stub LCIDToLocaleName # missed in XP SP3
+@ stdcall LCIDToLocaleName(long wstr long long) # needed for wine gecko; missed in XP SP3
 @ stdcall LCMapStringA(long long str long ptr long)
 @ stdcall LCMapStringW(long long wstr long ptr long)
 @ stdcall LeaveCriticalSection(ptr) ntdll.RtlLeaveCriticalSection
