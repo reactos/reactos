@@ -857,8 +857,10 @@ void update_nsdocument(HTMLDocument *doc)
         return;
     }
 
-    if(doc->nsdoc)
+    if(doc->nsdoc) {
+        remove_mutation_observer(doc->nscontainer, doc->nsdoc);
         nsIDOMHTMLDocument_Release(doc->nsdoc);
+    }
 
     doc->nsdoc = nsdoc;
 

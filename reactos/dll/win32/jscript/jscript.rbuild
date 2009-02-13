@@ -11,6 +11,8 @@
 	<library>wine</library>
 	<library>kernel32</library>
 	<library>oleaut32</library>
+	<library>advapi32</library>
+	<file>date.c</file>
 	<file>dispex.c</file>
 	<file>engine.c</file>
 	<file>jscript.c</file>

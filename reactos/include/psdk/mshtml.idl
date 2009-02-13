@@ -33,6 +33,10 @@ cpp_quote("DEFINE_GUID(SID_SHTMLEditServices,   0x3050f7f9,0x98b5,0x11cf,0xbb,0x
 cpp_quote("#define SID_SHTMLWindow IID_IHTMLWindow2")
 cpp_quote("#define SID_SElementBehaviorFactory IID_IElementBehaviorFactory")
 
+cpp_quote("#ifdef WINE_NO_UNICODE_MACROS")
+cpp_quote("#undef FindText")
+cpp_quote("#endif")
+
 typedef enum {
     POINTER_GRAVITY_Left,
     POINTER_GRAVITY_Right,
@@ -5393,6 +5397,38 @@ interface IHTMLStyleSheetRulesCollection : IDispatch
         [retval, out] IHTMLStyleSheetRule **ppHTMLStyleSheetRule);
 }
 
+[
+    odl,
+    oleautomation,
+    dual,
+    uuid(3050f7ee-98b5-11cf-bb82-00aa00bdce0b)
+]
+interface IHTMLStyleSheetPage : IDispatch
+{
+    [propget, id(DISPID_IHTMLSTYLESHEETPAGE_SELECTOR)]
+    HRESULT selector([retval, out] BSTR *p);
+
+    [propget, id(DISPID_IHTMLSTYLESHEETPAGE_PSEUDOCLASS)]
+    HRESULT pseudoClass([retval, out] BSTR *p);
+}
+
+[
+    odl,
+    oleautomation,
+    dual,
+    uuid(3050f7f0-98b5-11cf-bb82-00aa00bdce0b)
+]
+interface IHTMLStyleSheetPagesCollection : IDispatch
+{
+    [propget, id(DISPID_IHTMLSTYLESHEETPAGESCOLLECTION_LENGTH)]
+    HRESULT length([retval, out] long *p);
+
+    [id(DISPID_IHTMLSTYLESHEETPAGESCOLLECTION_ITEM)]
+    HRESULT item(
+        [in] long index,
+        [retval, out] IHTMLStyleSheetPage **ppHTMLStyleSheetPage);
+}
+
 /*****************************************************************************
  *    IHTMLStyleSheet interface
  */
@@ -5473,6 +5509,125 @@ interface IHTMLStyleSheet : IDispatch
 
     [propget, id(DISPID_IHTMLSTYLESHEET_RULES)]
     HRESULT rules([retval, out] IHTMLStyleSheetRulesCollection **p);
+}
+
+/*****************************************************************************
+ *    IHTMLStyleSheet2 interface
+ */
+[
+    odl,
+    oleautomation,
+    dual,
+    uuid(3050f3d1-98b5-11cf-bb82-00aa00bdce0b)
+]
+interface IHTMLStyleSheet2 : IDispatch
+{
+    [propget, id(DISPID_IHTMLSTYLESHEET2_PAGES)]
+    HRESULT pages([retval, out] IHTMLStyleSheetPagesCollection **p);
+
+    [id(DISPID_IHTMLSTYLESHEET2_ADDPAGERULE)]
+    HRESULT addPageRule(
+        [in] BSTR bstrSelector,
+        [in] BSTR bstrStyle,
+        [defaultvalue(-1), in] long lIndex,
+        [retval, out] long *plNewIndex);
+}
+
+[
+    hidden,
+    uuid(3050f58d-98b5-11cf-bb82-00aa00bdce0b)
+]
+dispinterface DispHTMLStyleSheet
+{
+properties:
+methods:
+    [propput, id(DISPID_IHTMLSTYLESHEET_TITLE)]
+    void title(BSTR v);
+
+    [propget, id(DISPID_IHTMLSTYLESHEET_TITLE)]
+    BSTR title();
+
+    [propget, id(DISPID_IHTMLSTYLESHEET_PARENTSTYLESHEET)]
+    IHTMLStyleSheet* parentStyleSheet();
+
+    [propget, id(DISPID_IHTMLSTYLESHEET_OWNINGELEMENT)]
+    IHTMLElement* owningElement();
+
+    [propput, id(DISPID_IHTMLSTYLESHEET_DISABLED)]
+    void disabled(VARIANT_BOOL v);
+
+    [propget, id(DISPID_IHTMLSTYLESHEET_DISABLED)]
+    VARIANT_BOOL disabled();
+
+    [propget, id(DISPID_IHTMLSTYLESHEET_READONLY)]
+    VARIANT_BOOL readOnly();
+
+    [propget, id(DISPID_IHTMLSTYLESHEET_IMPORTS)]
+    IHTMLStyleSheetsCollection* imports();
+
+    [propput, id(DISPID_IHTMLSTYLESHEET_HREF)]
+    void href(BSTR v);
+
+    [propget, id(DISPID_IHTMLSTYLESHEET_HREF)]
+    BSTR href();
+
+    [propget, id(DISPID_IHTMLSTYLESHEET_TYPE)]
+    BSTR type();
+
+    [propget, id(DISPID_IHTMLSTYLESHEET_ID)]
+    BSTR id();
+
+    [id(DISPID_IHTMLSTYLESHEET_ADDIMPORT)]
+    long addImport(
+        [in] BSTR bstrURL,
+        [defaultvalue(-1), in] long lIndex);
+
+    [id(DISPID_IHTMLSTYLESHEET_ADDRULE)]
+    long addRule(
+        [in] BSTR bstrSelector,
+        [in] BSTR bstrStyle,
+        [defaultvalue(-1), in] long lIndex);
+
+    [id(DISPID_IHTMLSTYLESHEET_REMOVEIMPORT)]
+    void removeImport([in] long lIndex);
+
+    [id(DISPID_IHTMLSTYLESHEET_REMOVERULE)]
+    void removeRule([in] long lIndex);
+
+    [propput, id(DISPID_IHTMLSTYLESHEET_MEDIA)]
+    void media(BSTR v);
+
+    [propget, id(DISPID_IHTMLSTYLESHEET_MEDIA)]
+    BSTR media();
+
+    [propput, id(DISPID_IHTMLSTYLESHEET_CSSTEXT)]
+    void cssText(BSTR v);
+
+    [propget, id(DISPID_IHTMLSTYLESHEET_CSSTEXT)]
+    BSTR cssText();
+
+    [propget, id(DISPID_IHTMLSTYLESHEET_RULES)]
+    IHTMLStyleSheetRulesCollection* rules();
+
+    [propget, id(DISPID_IHTMLSTYLESHEET2_PAGES)]
+    IHTMLStyleSheetPagesCollection* pages();
+
+    [id(DISPID_IHTMLSTYLESHEET2_ADDPAGERULE)]
+    long addPageRule(
+        [in] BSTR bstrSelector,
+        [in] BSTR bstrStyle,
+        [defaultvalue(-1), in] long lIndex);
+}
+
+[
+    noncreatable,
+    uuid(3050f2e4-98b5-11cf-bb82-00aa00bdce0b)
+]
+coclass HTMLStyleSheet
+{
+    [default]           dispinterface DispHTMLStyleSheet;
+                        interface IHTMLStyleSheet;
+                        interface IHTMLStyleSheet2;
 }
 
 /*****************************************************************************
@@ -5644,6 +5799,15 @@ interface IHTMLTxtRange : IDispatch
     HRESULT execCommandShowHelp(
         [in] BSTR cmdID,
         [retval, out] VARIANT_BOOL *pfRet);
+}
+
+[
+    noncreatable,
+    uuid(3050f37f-98b5-11cf-bb82-00aa00bdce0b)
+]
+coclass HTMLStyleSheetsCollection
+{
+    [default]           interface IHTMLStyleSheetsCollection;
 }
 
 /*****************************************************************************
@@ -12622,6 +12786,15 @@ interface IOmHistory : IDispatch
     HRESULT go([optional, in] VARIANT *pvargdistance);
 }
 
+[
+    noncreatable,
+    uuid(FECEAAA3-8405-11cf-8BA1-00AA00476DA6)
+]
+coclass HTMLHistory
+{
+    [default]           interface IOmHistory;
+}
+
 /*****************************************************************************
  *    IHTMLMimeTypesCollection interface
  */
@@ -12635,6 +12808,15 @@ interface IHTMLMimeTypesCollection : IDispatch
 {
     [propget, id(DISPID_IHTMLMIMETYPESCOLLECTION_LENGTH)]
     HRESULT length([retval, out] long *p);
+}
+
+[
+    noncreatable,
+    uuid(3050f3fe-98b5-11cf-bb82-00aa00bdce0b)
+]
+coclass CMimeTypes
+{
+    [default]           interface IHTMLMimeTypesCollection;
 }
 
 /*****************************************************************************
@@ -12653,6 +12835,15 @@ interface IHTMLPluginsCollection : IDispatch
 
     [id(DISPID_IHTMLPLUGINSCOLLECTION_REFRESH)]
     HRESULT refresh([defaultvalue(0), in] VARIANT_BOOL reload);
+}
+
+[
+    noncreatable,
+    uuid(3050f3ff-98b5-11cf-bb82-00aa00bdce0b)
+]
+coclass CPlugins
+{
+    [default]           interface IHTMLPluginsCollection;
 }
 
 /*****************************************************************************
@@ -12716,6 +12907,15 @@ interface IHTMLOpsProfile : IDispatch
 
     [id(DISPID_IHTMLOPSPROFILE_DOWRITEREQUEST)]
     HRESULT doWriteRequest([retval, out] VARIANT_BOOL *success);
+}
+
+[
+    noncreatable,
+    uuid(3050f402-98b5-11cf-bb82-00aa00bdce0b)
+]
+coclass COpsProfile
+{
+    [default]           interface IHTMLOpsProfile;
 }
 
 /*****************************************************************************
@@ -12790,6 +12990,15 @@ interface IOmNavigator : IDispatch
     HRESULT userProfile([retval, out] IHTMLOpsProfile **p);
 }
 
+[
+    noncreatable,
+    uuid(FECEAAA6-8405-11cf-8BA1-00AA00476DA6)
+]
+coclass HTMLNavigator
+{
+    [default]           interface IOmNavigator;
+}
+
 /*****************************************************************************
  *    IHTMLLocation interface
  */
@@ -12860,6 +13069,15 @@ interface IHTMLLocation : IDispatch
 
     [id(DISPID_IHTMLLOCATION_TOSTRING)]
     HRESULT toString([retval, out] BSTR *String);
+}
+
+[
+    noncreatable,
+    uuid(163BB1E1-6E00-11cf-837A-48DC04C10000)
+]
+coclass HTMLLocation
+{
+    [default]           interface IHTMLLocation;
 }
 
 [

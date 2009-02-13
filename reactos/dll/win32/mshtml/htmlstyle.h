@@ -20,6 +20,8 @@ struct HTMLStyle {
     DispatchEx dispex;
     const IHTMLStyleVtbl    *lpHTMLStyleVtbl;
     const IHTMLStyle2Vtbl   *lpHTMLStyle2Vtbl;
+    const IHTMLStyle3Vtbl   *lpHTMLStyle3Vtbl;
+    const IHTMLStyle4Vtbl   *lpHTMLStyle4Vtbl;
 
     LONG ref;
 
@@ -28,6 +30,8 @@ struct HTMLStyle {
 
 #define HTMLSTYLE(x)     ((IHTMLStyle*)                   &(x)->lpHTMLStyleVtbl)
 #define HTMLSTYLE2(x)    ((IHTMLStyle2*)                  &(x)->lpHTMLStyle2Vtbl)
+#define HTMLSTYLE3(x)    ((IHTMLStyle3*)                  &(x)->lpHTMLStyle3Vtbl)
+#define HTMLSTYLE4(x)    ((IHTMLStyle4*)                  &(x)->lpHTMLStyle4Vtbl)
 
 /* NOTE: Make sure to keep in sync with style_tbl in htmlstyle.c */
 typedef enum {
@@ -68,6 +72,7 @@ typedef enum {
 } styleid_t;
 
 void HTMLStyle2_Init(HTMLStyle*);
+void HTMLStyle3_Init(HTMLStyle*);
 
 HRESULT get_nsstyle_attr(nsIDOMCSSStyleDeclaration*,styleid_t,BSTR*);
 HRESULT set_nsstyle_attr(nsIDOMCSSStyleDeclaration*,styleid_t,LPCWSTR,DWORD);

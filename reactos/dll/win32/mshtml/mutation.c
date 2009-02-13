@@ -55,6 +55,21 @@ void set_mutation_observer(NSContainer *nscontainer, nsIDOMHTMLDocument *nshtmld
     nsIDOMNSDocument_Release(nsdoc);
 }
 
+void remove_mutation_observer(NSContainer *nscontainer, nsIDOMHTMLDocument *nshtmldoc)
+{
+    nsIDOMNSDocument *nsdoc;
+    nsresult nsres;
+
+    nsres = nsIDOMHTMLDocument_QueryInterface(nshtmldoc, &IID_nsIDOMNSDocument, (void**)&nsdoc);
+    if(NS_FAILED(nsres)) {
+        ERR("Could not get nsIDOMNSDocument: %08x\n", nsres);
+        return;
+    }
+
+    nsIDOMNSDocument_WineRemoveObserver(nsdoc, NSDOCOBS(nscontainer));
+    nsIDOMNSDocument_Release(nsdoc);
+}
+
 #define IE_MAJOR_VERSION 7
 #define IE_MINOR_VERSION 0
 
@@ -358,7 +373,7 @@ static nsresult NSAPI nsDocumentObserver_QueryInterface(nsIDocumentObserver *ifa
 
     if(IsEqualGUID(&IID_nsISupports, riid)) {
         TRACE("(%p)->(IID_nsISupports, %p)\n", This, result);
-        *result = NSWBCHROME(This);
+        *result = NSDOCOBS(This);
     }else if(IsEqualGUID(&IID_nsIMutationObserver, riid)) {
         TRACE("(%p)->(IID_nsIMutationObserver %p)\n", This, result);
         *result = NSDOCOBS(This);

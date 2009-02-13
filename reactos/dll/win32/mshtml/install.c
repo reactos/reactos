@@ -54,11 +54,6 @@ static const WCHAR mshtml_keyW[] =
      '\\','W','i','n','e',
      '\\','M','S','H','T','M','L',0};
 
-static const CHAR mshtml_keyA[] =
-    {'S','o','f','t','w','a','r','e',
-     '\\','W','i','n','e',
-     '\\','M','S','H','T','M','L',0};
-
 static HWND install_dialog = NULL;
 static LPWSTR tmp_file_name = NULL;
 static HANDLE tmp_file = INVALID_HANDLE_VALUE;
@@ -202,17 +197,17 @@ static BOOL install_from_unix_file(const char *file_name)
         wine_get_dos_file_name = (void*)GetProcAddress(GetModuleHandleW(kernel32W), "wine_get_dos_file_name");
 
     if(wine_get_dos_file_name) { /* Wine UNIX mode */
-        dos_file_name = wine_get_dos_file_name(file_name);
-        if(!dos_file_name) {
-            ERR("Could not get dos file name of %s\n", debugstr_a(file_name));
-            return FALSE;
-        }
-    } else { /* ReactOS mode. */
-        UINT res;
-        WARN("Could not get wine_get_dos_file_name function, calling install_cab directly.\n");
-        res = MultiByteToWideChar( CP_ACP, 0, file_name, -1, 0, 0);
-        dos_file_name = heap_alloc (res*sizeof(WCHAR));
-        MultiByteToWideChar( CP_ACP, 0, file_name, -1, dos_file_name, res);
+	dos_file_name = wine_get_dos_file_name(file_name);
+	if(!dos_file_name) {
+	    ERR("Could not get dos file name of %s\n", debugstr_a(file_name));
+	    return FALSE;
+	}
+    } else { /* Windows mode */
+	UINT res;
+	WARN("Could not get wine_get_dos_file_name function, calling install_cab directly.\n");
+	res = MultiByteToWideChar( CP_ACP, 0, file_name, -1, 0, 0);
+	dos_file_name = heap_alloc (res*sizeof(WCHAR));
+	MultiByteToWideChar( CP_ACP, 0, file_name, -1, dos_file_name, res);
     }
 
     ret = install_cab(dos_file_name);
@@ -224,18 +219,23 @@ static BOOL install_from_unix_file(const char *file_name)
 static BOOL install_from_registered_dir(void)
 {
     char *file_name;
+    HKEY hkey;
     DWORD res, type, size = MAX_PATH;
     BOOL ret;
 
-    file_name = heap_alloc(size+sizeof(GECKO_FILE_NAME));
     /* @@ Wine registry key: HKCU\Software\Wine\MSHTML */
-    res = RegGetValueA(HKEY_CURRENT_USER, mshtml_keyA, "GeckoCabDir", RRF_RT_ANY, &type, (PBYTE)file_name, &size);
+    res = RegOpenKeyW(HKEY_CURRENT_USER, mshtml_keyW, &hkey);
+    if(res != ERROR_SUCCESS)
+        return FALSE;
+
+    file_name = heap_alloc(size+sizeof(GECKO_FILE_NAME));
+    res = RegQueryValueExA(hkey, "GeckoCabDir", NULL, &type, (PBYTE)file_name, &size);
     if(res == ERROR_MORE_DATA) {
         file_name = heap_realloc(file_name, size+sizeof(GECKO_FILE_NAME));
-        res = RegGetValueA(HKEY_CURRENT_USER, mshtml_keyA, "GeckoCabDir", RRF_RT_ANY, &type, (PBYTE)file_name, &size);
+        res = RegQueryValueExA(hkey, "GeckoCabDir", NULL, &type, (PBYTE)file_name, &size);
     }
-    
-    if(res != ERROR_SUCCESS || (type != REG_SZ && type != REG_EXPAND_SZ)) {
+    RegCloseKey(hkey);
+    if(res != ERROR_SUCCESS || type != REG_SZ) {
         heap_free(file_name);
         return FALSE;
     }
@@ -384,13 +384,14 @@ static HRESULT WINAPI InstallCallback_OnDataAvailable(IBindStatusCallback *iface
     BYTE buf[1024];
     DWORD size;
     HRESULT hres;
-	DWORD dwBytesWritten;
 
     do {
+        DWORD written;
+
         size = 0;
         hres = IStream_Read(str, buf, sizeof(buf), &size);
         if(size)
-            WriteFile(tmp_file, buf, size, &dwBytesWritten, NULL);
+            WriteFile(tmp_file, buf, size, &written, NULL);
     }while(hres == S_OK);
 
     return S_OK;
@@ -446,7 +447,7 @@ static LPWSTR get_url(void)
 
     if(size > sizeof(httpW) && !memcmp(url, httpW, sizeof(httpW))) {
         strcatW(url, v_formatW);
-        MultiByteToWideChar(CP_ACP, 0, GECKO_VERSION, -1, url+strlenW(url), (size-strlenW(url)) / sizeof(WCHAR));
+        MultiByteToWideChar(CP_ACP, 0, GECKO_VERSION, -1, url+strlenW(url), size/sizeof(WCHAR)-strlenW(url));
     }
 
     TRACE("Got URL %s\n", debugstr_w(url));

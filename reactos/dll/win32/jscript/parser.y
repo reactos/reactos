@@ -21,16 +21,13 @@
 #include "jscript.h"
 #include "engine.h"
 
-#include "wine/debug.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(jscript);
-
 #define YYLEX_PARAM ctx
 #define YYPARSE_PARAM ctx
 
 static int parser_error(const char*);
 static BOOL allow_auto_semicolon(parser_ctx_t*);
 static void program_parsed(parser_ctx_t*,source_elements_t*);
+static source_elements_t *function_body_parsed(parser_ctx_t*,source_elements_t*);
 
 typedef struct _statement_list_t {
     statement_t *head;
@@ -109,8 +106,8 @@ struct statement_list_t {
    statement_t *tail;
 };
 
-statement_list_t *new_statement_list(parser_ctx_t*,statement_t*);
-statement_list_t *statement_list_add(statement_list_t*,statement_t*);
+static statement_list_t *new_statement_list(parser_ctx_t*,statement_t*);
+static statement_list_t *statement_list_add(statement_list_t*,statement_t*);
 
 typedef struct _parameter_list_t {
     parameter_t *head;
@@ -120,7 +117,14 @@ typedef struct _parameter_list_t {
 static parameter_list_t *new_parameter_list(parser_ctx_t*,const WCHAR*);
 static parameter_list_t *parameter_list_add(parser_ctx_t*,parameter_list_t*,const WCHAR*);
 
-static expression_t *new_function_expression(parser_ctx_t*,const WCHAR*,parameter_list_t*,source_elements_t*);
+static void push_func(parser_ctx_t*);
+static inline void pop_func(parser_ctx_t *ctx)
+{
+    ctx->func_stack = ctx->func_stack->next;
+}
+
+static expression_t *new_function_expression(parser_ctx_t*,const WCHAR*,parameter_list_t*,
+        source_elements_t*,const WCHAR*,DWORD);
 static expression_t *new_binary_expression(parser_ctx_t*,expression_type_t,expression_t*,expression_t*);
 static expression_t *new_unary_expression(parser_ctx_t*,expression_type_t,expression_t*);
 static expression_t *new_conditional_expression(parser_ctx_t*,expression_t*,expression_t*,expression_t*);
@@ -134,10 +138,8 @@ static expression_t *new_literal_expression(parser_ctx_t*,literal_t*);
 static expression_t *new_array_literal_expression(parser_ctx_t*,element_list_t*,int);
 static expression_t *new_prop_and_value_expression(parser_ctx_t*,property_list_t*);
 
-static function_declaration_t *new_function_declaration(parser_ctx_t*,const WCHAR*,parameter_list_t*,source_elements_t*);
 static source_elements_t *new_source_elements(parser_ctx_t*);
 static source_elements_t *source_elements_add_statement(source_elements_t*,statement_t*);
-static source_elements_t *source_elements_add_function(source_elements_t*,function_declaration_t*);
 
 %}
 
@@ -146,6 +148,7 @@ static source_elements_t *source_elements_add_function(source_elements_t*,functi
 
 %union {
     int                     ival;
+    const WCHAR             *srcptr;
     LPCWSTR                 wstr;
     literal_t               *literal;
     struct _argument_list_t *argument_list;
@@ -155,7 +158,6 @@ static source_elements_t *source_elements_add_function(source_elements_t*,functi
     struct _element_list_t  *element_list;
     expression_t            *expr;
     const WCHAR            *identifier;
-    function_declaration_t  *function_declaration;
     struct _parameter_list_t *parameter_list;
     struct _property_list_t *property_list;
     source_elements_t       *source_elements;
@@ -166,9 +168,11 @@ static source_elements_t *source_elements_add_function(source_elements_t*,functi
 }
 
 /* keywords */
-%token kBREAK kCASE kCATCH kCONTINUE kDEFAULT kDELETE kDO kELSE kIF kFINALLY kFOR kFUNCTION kIN
+%token kBREAK kCASE kCATCH kCONTINUE kDEFAULT kDELETE kDO kELSE kIF kFINALLY kFOR kIN
 %token kINSTANCEOF kNEW kNULL kUNDEFINED kRETURN kSWITCH kTHIS kTHROW kTRUE kFALSE kTRY kTYPEOF kVAR kVOID kWHILE kWITH
 %token tANDAND tOROR tINC tDEC
+
+%token <srcptr> kFUNCTION '}'
 
 /* tokens */
 %token <identifier> tIdentifier
@@ -195,7 +199,6 @@ static source_elements_t *source_elements_add_function(source_elements_t*,functi
 %type <statement> TryStatement
 %type <statement> Finally
 %type <statement_list> StatementList StatementList_opt
-%type <function_declaration> FunctionDeclaration
 %type <parameter_list> FormalParameterList FormalParameterList_opt
 %type <expr> Expression Expression_opt
 %type <expr> ExpressionNoIn ExpressionNoIn_opt
@@ -239,6 +242,10 @@ static source_elements_t *source_elements_add_function(source_elements_t*,functi
 %type <property_list> PropertyNameAndValueList
 %type <literal> PropertyName
 %type <literal> BooleanLiteral
+%type <srcptr> KFunction
+
+%nonassoc LOWER_THAN_ELSE
+%nonassoc kELSE
 
 %%
 
@@ -251,22 +258,18 @@ SourceElements
         : /* empty */           { $$ = new_source_elements(ctx); }
         | SourceElements Statement
                                 { $$ = source_elements_add_statement($1, $2); }
-        | SourceElements FunctionDeclaration
-                                { $$ = source_elements_add_function($1, $2); }
-
-/* ECMA-262 3rd Edition    13 */
-FunctionDeclaration
-        : kFUNCTION tIdentifier '(' FormalParameterList_opt ')' '{' FunctionBody '}'
-                                { $$ = new_function_declaration(ctx, $2, $4, $7); }
 
 /* ECMA-262 3rd Edition    13 */
 FunctionExpression
-        : kFUNCTION Identifier_opt '(' FormalParameterList_opt ')' '{' FunctionBody '}'
-                                { $$ = new_function_expression(ctx, $2, $4, $7); }
+        : KFunction Identifier_opt '(' FormalParameterList_opt ')' '{' FunctionBody '}'
+                                { $$ = new_function_expression(ctx, $2, $4, $7, $1, $8-$1+1); }
+
+KFunction
+        : kFUNCTION             { push_func(ctx); $$ = $1; }
 
 /* ECMA-262 3rd Edition    13 */
 FunctionBody
-        : SourceElements        { $$ = $1; }
+        : SourceElements        { $$ = function_body_parsed(ctx, $1); }
 
 /* ECMA-262 3rd Edition    13 */
 FormalParameterList
@@ -309,8 +312,8 @@ StatementList_opt
 
 /* ECMA-262 3rd Edition    12.1 */
 Block
-        : '{' StatementList_opt '}'
-                                { $$ = new_block_statement(ctx, $2); }
+        : '{' StatementList '}' { $$ = new_block_statement(ctx, $2); }
+        | '{' '}'               { $$ = new_block_statement(ctx, NULL); }
 
 /* ECMA-262 3rd Edition    12.2 */
 VariableStatement
@@ -373,7 +376,7 @@ ExpressionStatement
 IfStatement
         : kIF '(' Expression ')' Statement kELSE Statement
                                 { $$ = new_if_statement(ctx, $3, $5, $7); }
-        | kIF '(' Expression ')' Statement
+        | kIF '(' Expression ')' Statement %prec LOWER_THAN_ELSE
                                 { $$ = new_if_statement(ctx, $3, $5, NULL); }
 
 /* ECMA-262 3rd Edition    12.6 */
@@ -722,10 +725,11 @@ PrimaryExpression
 
 /* ECMA-262 3rd Edition    11.1.4 */
 ArrayLiteral
-        : '[' Elision_opt ']'   { $$ = new_array_literal_expression(ctx, NULL, $2); }
+        : '[' ']'               { $$ = new_array_literal_expression(ctx, NULL, 0); }
+        | '[' Elision ']'       { $$ = new_array_literal_expression(ctx, NULL, $2+1); }
         | '[' ElementList ']'   { $$ = new_array_literal_expression(ctx, $2, 0); }
         | '[' ElementList ',' Elision_opt ']'
-                                { $$ = new_array_literal_expression(ctx, $2, $4); }
+                                { $$ = new_array_literal_expression(ctx, $2, $4+1); }
 
 /* ECMA-262 3rd Edition    11.1.4 */
 ElementList
@@ -1013,10 +1017,19 @@ static statement_t *new_block_statement(parser_ctx_t *ctx, statement_list_t *lis
 static variable_declaration_t *new_variable_declaration(parser_ctx_t *ctx, const WCHAR *identifier, expression_t *expr)
 {
     variable_declaration_t *ret = parser_alloc(ctx, sizeof(variable_declaration_t));
+    var_list_t *var_list = parser_alloc(ctx, sizeof(var_list_t));
 
     ret->identifier = identifier;
     ret->expr = expr;
     ret->next = NULL;
+
+    var_list->identifier = identifier;
+    var_list->next = NULL;
+
+    if(ctx->func_stack->var_tail)
+        ctx->func_stack->var_tail = ctx->func_stack->var_tail->next = var_list;
+    else
+        ctx->func_stack->var_head = ctx->func_stack->var_tail = var_list;
 
     return ret;
 }
@@ -1247,7 +1260,7 @@ static parameter_list_t *parameter_list_add(parser_ctx_t *ctx, parameter_list_t 
 }
 
 static expression_t *new_function_expression(parser_ctx_t *ctx, const WCHAR *identifier,
-       parameter_list_t *parameter_list, source_elements_t *source_elements)
+       parameter_list_t *parameter_list, source_elements_t *source_elements, const WCHAR *src_str, DWORD src_len)
 {
     function_expression_t *ret = parser_alloc(ctx, sizeof(function_expression_t));
 
@@ -1255,6 +1268,20 @@ static expression_t *new_function_expression(parser_ctx_t *ctx, const WCHAR *ide
     ret->identifier = identifier;
     ret->parameter_list = parameter_list ? parameter_list->head : NULL;
     ret->source_elements = source_elements;
+    ret->src_str = src_str;
+    ret->src_len = src_len;
+
+    if(ret->identifier) {
+        function_declaration_t *decl = parser_alloc(ctx, sizeof(function_declaration_t));
+
+        decl->expr = ret;
+        decl->next = NULL;
+
+        if(ctx->func_stack->func_tail)
+            ctx->func_stack->func_tail = ctx->func_stack->func_tail->next = decl;
+        else
+            ctx->func_stack->func_head = ctx->func_stack->func_tail = decl;
+    }
 
     return &ret->expr;
 }
@@ -1443,19 +1470,6 @@ static expression_t *new_literal_expression(parser_ctx_t *ctx, literal_t *litera
     return &ret->expr;
 }
 
-static function_declaration_t *new_function_declaration(parser_ctx_t *ctx, const WCHAR *identifier,
-       parameter_list_t *parameter_list, source_elements_t *source_elements)
-{
-    function_declaration_t *ret = parser_alloc(ctx, sizeof(function_declaration_t));
-
-    ret->identifier = identifier;
-    ret->parameter_list = parameter_list ? parameter_list->head : NULL;
-    ret->source_elements = source_elements;
-    ret->next = NULL;
-
-    return ret;
-}
-
 static source_elements_t *new_source_elements(parser_ctx_t *ctx)
 {
     source_elements_t *ret = parser_alloc(ctx, sizeof(source_elements_t));
@@ -1475,18 +1489,7 @@ static source_elements_t *source_elements_add_statement(source_elements_t *sourc
     return source_elements;
 }
 
-static source_elements_t *source_elements_add_function(source_elements_t *source_elements,
-       function_declaration_t *function_declaration)
-{
-    if(source_elements->functions_tail)
-        source_elements->functions_tail = source_elements->functions_tail->next = function_declaration;
-    else
-        source_elements->functions = source_elements->functions_tail = function_declaration;
-
-    return source_elements;
-}
-
-statement_list_t *new_statement_list(parser_ctx_t *ctx, statement_t *statement)
+static statement_list_t *new_statement_list(parser_ctx_t *ctx, statement_t *statement)
 {
     statement_list_t *ret =  parser_alloc_tmp(ctx, sizeof(statement_list_t));
 
@@ -1495,15 +1498,39 @@ statement_list_t *new_statement_list(parser_ctx_t *ctx, statement_t *statement)
     return ret;
 }
 
-statement_list_t *statement_list_add(statement_list_t *list, statement_t *statement)
+static statement_list_t *statement_list_add(statement_list_t *list, statement_t *statement)
 {
     list->tail = list->tail->next = statement;
 
     return list;
 }
 
+static void push_func(parser_ctx_t *ctx)
+{
+    func_stack_t *new_func = parser_alloc_tmp(ctx, sizeof(func_stack_t));
+
+    new_func->func_head = new_func->func_tail = NULL;
+    new_func->var_head = new_func->var_tail = NULL;
+
+    new_func->next = ctx->func_stack;
+    ctx->func_stack = new_func;
+}
+
+static source_elements_t *function_body_parsed(parser_ctx_t *ctx, source_elements_t *source)
+{
+    source->functions = ctx->func_stack->func_head;
+    source->variables = ctx->func_stack->var_head;
+    pop_func(ctx);
+
+    return source;
+}
+
 static void program_parsed(parser_ctx_t *ctx, source_elements_t *source)
 {
+    source->functions = ctx->func_stack->func_head;
+    source->variables = ctx->func_stack->var_head;
+    pop_func(ctx);
+
     ctx->source = source;
     ctx->hres = S_OK;
 }
@@ -1543,6 +1570,8 @@ HRESULT script_parse(script_ctx_t *ctx, const WCHAR *code, parser_ctx_t **ret)
 
     mark = jsheap_mark(&ctx->tmp_heap);
     jsheap_init(&parser_ctx->heap);
+
+    push_func(parser_ctx);
 
     parser_parse(parser_ctx);
     jsheap_clear(mark);

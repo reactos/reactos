@@ -23,10 +23,15 @@
  * compatible with XPCOM, usable in C code.
  */
 
-cpp_quote("#define GECKO_VERSION \"0.9.0\"")
+cpp_quote("#define GECKO_VERSION \"0.9.1\"")
 cpp_quote("#define GECKO_VERSION_STRING \"Wine Gecko \" GECKO_VERSION")
 
 import "wtypes.idl";
+
+cpp_quote("#ifdef WINE_NO_UNICODE_MACROS")
+cpp_quote("#undef GetForm")
+cpp_quote("#undef SetPort")
+cpp_quote("#endif")
 
 typedef HRESULT nsresult;
 typedef ULONG nsrefcnt;
@@ -873,6 +878,7 @@ interface nsIDOMNSDocument : nsISupports
 
     /* Wine extensions */
     nsresult WineAddObserver(nsIDocumentObserver *aObserver);
+    nsresult WineRemoveObserver(nsIDocumentObserver *aObserver);
     nsresult WineAddScriptRunner(nsIRunnable *aRunnable);
 }
 

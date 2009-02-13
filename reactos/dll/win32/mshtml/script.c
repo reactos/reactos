@@ -119,7 +119,7 @@ static BOOL init_script_engine(ScriptHost *script_host)
         WARN("Could not get IActiveScriptProperty: %08x\n", hres);
     }
 
-    hres = IActiveScriptParse_InitNew(script_host->parse);
+    hres = IActiveScriptParse64_InitNew(script_host->parse);
     if(FAILED(hres)) {
         WARN("InitNew failed: %08x\n", hres);
         return FALSE;
@@ -175,12 +175,12 @@ static void release_script_engine(ScriptHost *This)
 
     default:
         if(This->parse_proc) {
-            IActiveScriptParseProcedure_Release(This->parse_proc);
+            IUnknown_Release(This->parse_proc);
             This->parse_proc = NULL;
         }
 
         if(This->parse) {
-            IActiveScriptParse_Release(This->parse);
+            IUnknown_Release(This->parse);
             This->parse = NULL;
         }
     }
@@ -552,7 +552,7 @@ static void parse_text(ScriptHost *script_host, LPCWSTR text)
 
     VariantInit(&var);
     memset(&excepinfo, 0, sizeof(excepinfo));
-    hres = IActiveScriptParse_ParseScriptText(script_host->parse, text, windowW, NULL, script_endW,
+    hres = IActiveScriptParse64_ParseScriptText(script_host->parse, text, windowW, NULL, script_endW,
                                               0, 0, SCRIPTTEXT_ISVISIBLE|SCRIPTTEXT_HOSTMANAGESSOURCE,
                                               &var, &excepinfo);
     if(FAILED(hres))
@@ -640,7 +640,7 @@ static BOOL get_guid_from_type(LPCWSTR type, GUID *guid)
         {'t','e','x','t','/','j','a','v','a','s','c','r','i','p','t',0};
 
     /* FIXME: Handle more types */
-    if(!strcmpW(type, text_javascriptW)) {
+    if(!strcmpiW(type, text_javascriptW)) {
         *guid = CLSID_JScript;
     }else {
         FIXME("Unknown type %s\n", debugstr_w(type));
@@ -783,7 +783,7 @@ IDispatch *script_parse_event(HTMLDocument *doc, LPCWSTR text)
     if(!script_host || !script_host->parse_proc)
         return NULL;
 
-    hres = IActiveScriptParseProcedure_ParseProcedureText(script_host->parse_proc, ptr, NULL, emptyW,
+    hres = IActiveScriptParseProcedure64_ParseProcedureText(script_host->parse_proc, ptr, NULL, emptyW,
             NULL, NULL, delimiterW, 0 /* FIXME */, 0,
             SCRIPTPROC_HOSTMANAGESSOURCE|SCRIPTPROC_IMPLICIT_THIS|SCRIPTPROC_IMPLICIT_PARENTS, &disp);
     if(FAILED(hres)) {

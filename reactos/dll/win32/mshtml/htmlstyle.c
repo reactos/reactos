@@ -468,6 +468,12 @@ static HRESULT WINAPI HTMLStyle_QueryInterface(IHTMLStyle *iface, REFIID riid, v
     }else if(IsEqualGUID(&IID_IHTMLStyle2, riid)) {
         TRACE("(%p)->(IID_IHTMLStyle2 %p)\n", This, ppv);
         *ppv = HTMLSTYLE2(This);
+    }else if(IsEqualGUID(&IID_IHTMLStyle3, riid)) {
+        TRACE("(%p)->(IID_IHTMLStyle3 %p)\n", This, ppv);
+        *ppv = HTMLSTYLE3(This);
+    }else if(IsEqualGUID(&IID_IHTMLStyle4, riid)) {
+        TRACE("(%p)->(IID_IHTMLStyle4 %p)\n", This, ppv);
+        *ppv = HTMLSTYLE4(This);
     }else if(dispex_query_interface(&This->dispex, riid, ppv)) {
         return *ppv ? S_OK : E_NOINTERFACE;
     }
@@ -612,8 +618,35 @@ static HRESULT WINAPI HTMLStyle_get_fontVariant(IHTMLStyle *iface, BSTR *p)
 static HRESULT WINAPI HTMLStyle_put_fontWeight(IHTMLStyle *iface, BSTR v)
 {
     HTMLStyle *This = HTMLSTYLE_THIS(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_w(v));
-    return E_NOTIMPL;
+    static const WCHAR styleBold[] = {'b','o','l','d',0};
+    static const WCHAR styleBolder[] = {'b','o','l','d','e','r',0};
+    static const WCHAR styleLighter[]  = {'l','i','g','h','t','e','r',0};
+    static const WCHAR style100[] = {'1','0','0',0};
+    static const WCHAR style200[] = {'2','0','0',0};
+    static const WCHAR style300[] = {'3','0','0',0};
+    static const WCHAR style400[] = {'4','0','0',0};
+    static const WCHAR style500[] = {'5','0','0',0};
+    static const WCHAR style600[] = {'6','0','0',0};
+    static const WCHAR style700[] = {'7','0','0',0};
+    static const WCHAR style800[] = {'8','0','0',0};
+    static const WCHAR style900[] = {'9','0','0',0};
+
+    TRACE("(%p)->(%s)\n", This, debugstr_w(v));
+
+    /* fontWeight can only be one of the following */
+    if(!v || strcmpiW(szNormal, v) == 0    || strcmpiW(styleBold, v) == 0    ||
+             strcmpiW(styleBolder, v) == 0 || strcmpiW(styleLighter, v) == 0 ||
+             strcmpiW(style100, v) == 0    || strcmpiW(style200, v) == 0     ||
+             strcmpiW(style300, v) == 0    || strcmpiW(style400, v) == 0     ||
+             strcmpiW(style500, v) == 0    || strcmpiW(style600, v) == 0     ||
+             strcmpiW(style700, v) == 0    || strcmpiW(style800, v) == 0     ||
+             strcmpiW(style900, v) == 0
+             )
+    {
+        return set_nsstyle_attr(This->nsstyle, STYLEID_FONT_WEIGHT, v, 0);
+    }
+
+    return E_INVALIDARG;
 }
 
 static HRESULT WINAPI HTMLStyle_get_fontWeight(IHTMLStyle *iface, BSTR *p)
@@ -737,8 +770,10 @@ static HRESULT WINAPI HTMLStyle_put_backgroundColor(IHTMLStyle *iface, VARIANT v
 static HRESULT WINAPI HTMLStyle_get_backgroundColor(IHTMLStyle *iface, VARIANT *p)
 {
     HTMLStyle *This = HTMLSTYLE_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+    TRACE("(%p)->(%p)\n", This, p);
+
+    V_VT(p) = VT_BSTR;
+    return get_style_attr(This, STYLEID_BACKGROUND_COLOR, &V_BSTR(p));
 }
 
 static HRESULT WINAPI HTMLStyle_put_backgroundImage(IHTMLStyle *iface, BSTR v)
@@ -890,8 +925,10 @@ static HRESULT WINAPI HTMLStyle_get_textDecorationNone(IHTMLStyle *iface, VARIAN
 static HRESULT WINAPI HTMLStyle_put_textDecorationUnderline(IHTMLStyle *iface, VARIANT_BOOL v)
 {
     HTMLStyle *This = HTMLSTYLE_THIS(iface);
-    FIXME("(%p)->(%x)\n", This, v);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%x)\n", This, v);
+
+    return set_style_attr(This, STYLEID_TEXT_DECORATION, v ? valUnderline : emptyW, 0);
 }
 
 static HRESULT WINAPI HTMLStyle_get_textDecorationUnderline(IHTMLStyle *iface, VARIANT_BOOL *p)
@@ -920,8 +957,10 @@ static HRESULT WINAPI HTMLStyle_get_textDecorationOverline(IHTMLStyle *iface, VA
 static HRESULT WINAPI HTMLStyle_put_textDecorationLineThrough(IHTMLStyle *iface, VARIANT_BOOL v)
 {
     HTMLStyle *This = HTMLSTYLE_THIS(iface);
-    FIXME("(%p)->(%x)\n", This, v);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%x)\n", This, v);
+
+    return set_style_attr(This, STYLEID_TEXT_DECORATION, v ? valLineThrough : emptyW, 0);
 }
 
 static HRESULT WINAPI HTMLStyle_get_textDecorationLineThrough(IHTMLStyle *iface, VARIANT_BOOL *p)
@@ -1218,8 +1257,18 @@ static HRESULT WINAPI HTMLStyle_put_paddingLeft(IHTMLStyle *iface, VARIANT v)
 static HRESULT WINAPI HTMLStyle_get_paddingLeft(IHTMLStyle *iface, VARIANT *p)
 {
     HTMLStyle *This = HTMLSTYLE_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+    BSTR ret;
+    HRESULT hres;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    hres = get_style_attr(This, STYLEID_PADDING_LEFT, &ret);
+    if(FAILED(hres))
+        return hres;
+
+    V_VT(p) = VT_BSTR;
+    V_BSTR(p) = ret;
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLStyle_put_padding(IHTMLStyle *iface, BSTR v)
@@ -2425,6 +2474,7 @@ IHTMLStyle *HTMLStyle_Create(nsIDOMCSSStyleDeclaration *nsstyle)
     ret->ref = 1;
     ret->nsstyle = nsstyle;
     HTMLStyle2_Init(ret);
+    HTMLStyle3_Init(ret);
 
     nsIDOMCSSStyleDeclaration_AddRef(nsstyle);
 

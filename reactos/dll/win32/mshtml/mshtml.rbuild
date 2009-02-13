@@ -35,6 +35,7 @@
 	<file>htmlselect.c</file>
 	<file>htmlstyle.c</file>
 	<file>htmlstyle2.c</file>
+	<file>htmlstyle3.c</file>
 	<file>htmlstylesheet.c</file>
 	<file>htmltable.c</file>
 	<file>htmltablerow.c</file>

@@ -32,21 +32,21 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
-typedef struct {
+struct HTMLStyleSheet {
     const IHTMLStyleSheetVtbl *lpHTMLStyleSheetVtbl;
 
     LONG ref;
 
     nsIDOMCSSStyleSheet *nsstylesheet;
-} HTMLStyleSheet;
+};
 
-typedef struct {
+struct HTMLStyleSheetsCollection {
     const IHTMLStyleSheetsCollectionVtbl *lpHTMLStyleSheetsCollectionVtbl;
 
     LONG ref;
 
     nsIDOMStyleSheetList *nslist;
-} HTMLStyleSheetsCollection;
+};
 
 typedef struct {
     const IHTMLStyleSheetRulesCollectionVtbl *lpHTMLStyleSheetRulesCollectionVtbl;

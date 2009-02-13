@@ -214,8 +214,10 @@ static ULONG WINAPI HTMLDocument_Release(IHTMLDocument2 *iface)
 
         ConnectionPointContainer_Destroy(&This->cp_container);
 
-        if(This->nsdoc)
+        if(This->nsdoc) {
+            remove_mutation_observer(This->nscontainer, This->nsdoc);
             nsIDOMHTMLDocument_Release(This->nsdoc);
+        }
         if(This->nscontainer)
             NSContainer_Release(This->nscontainer);
 
