@@ -16,35 +16,40 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+/* UTF-8 */
+#pragma code_page(65001)
+
 LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 
 IDD_SAVEOPTIONS DIALOG FIXED IMPURE  43, 37, 226, 82
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ˆ³kƒIƒvƒVƒ‡ƒ“"
-FONT 9, "MS UI Gothic"
+CAPTION "åœ§ç¸®ã‚ªãƒ—ã‚·ãƒ§ãƒ³"
+FONT 9, "MS Shell Dlg"
 BEGIN
-    LTEXT           "ƒXƒgƒŠ[ƒ€‚ð‘I‘ð(&C):",-1,2,5,154,10
+    LTEXT           "ã‚¹ãƒˆãƒªãƒ¼ãƒ ã‚’é¸æŠž(&C):",-1,2,5,154,10
     COMBOBOX        IDC_STREAM,2,18,154,61,CBS_DROPDOWNLIST | WS_VSCROLL |
                     WS_TABSTOP
-    PUSHBUTTON      "ƒIƒvƒVƒ‡ƒ“(&O)...",IDC_OPTIONS,170,17,50,14
-    AUTOCHECKBOX    "ƒCƒ“ƒ^[ƒŠ[ƒu(&I)",IDC_INTERLEAVE,3,42,85,11,WS_TABSTOP
+    PUSHBUTTON      "ã‚ªãƒ—ã‚·ãƒ§ãƒ³(&O)...",IDC_OPTIONS,170,17,50,14
+    AUTOCHECKBOX    "ã‚¤ãƒ³ã‚¿ãƒ¼ãƒªãƒ¼ãƒ–(&I)",IDC_INTERLEAVE,3,42,85,11,WS_TABSTOP
     EDITTEXT        IDC_INTERLEAVEEVERY,91,41,32,12,ES_AUTOHSCROLL
-    LTEXT           "ƒtƒŒ[ƒ€",-1,129,43,36,9
-    LTEXT           "Œ»Ý‚ÌƒtƒH[ƒ}ƒbƒg:",-1,3,56,73,9
+    LTEXT           "ãƒ•ãƒ¬ãƒ¼ãƒ ",-1,129,43,36,9
+    LTEXT           "ç¾åœ¨ã®ãƒ•ã‚©ãƒ¼ãƒžãƒƒãƒˆ:",-1,3,56,73,9
     LTEXT           "This space for rent",IDC_FORMATTEXT,75,56,90,26
     DEFPUSHBUTTON   "OK",IDOK,170,42,50,14
-    PUSHBUTTON      "ƒLƒƒƒ“ƒZƒ‹",IDCANCEL,170,61,50,14
+    PUSHBUTTON      "ã‚­ãƒ£ãƒ³ã‚»ãƒ«",IDCANCEL,170,61,50,14
 END
 
 STRINGTABLE DISCARDABLE
 {
-  IDS_WAVESTREAMFORMAT	"Waveƒtƒ@ƒCƒ‹: %s"
-  IDS_WAVEFILETYPE	"Waveƒtƒ@ƒCƒ‹"
-  IDS_ALLMULTIMEDIA	"‘S‚Ä‚Ìƒ}ƒ‹ƒ`ƒƒfƒBƒAƒtƒ@ƒCƒ‹"
-  IDS_ALLFILES		"‘S‚Ä‚Ìƒtƒ@ƒCƒ‹ (*.*)@*.*"
-  IDS_VIDEO		"ƒrƒfƒI"
-  IDS_AUDIO		"‰¹º"
+  IDS_WAVESTREAMFORMAT	"Waveãƒ•ã‚¡ã‚¤ãƒ«: %s"
+  IDS_WAVEFILETYPE	"Waveãƒ•ã‚¡ã‚¤ãƒ«"
+  IDS_ALLMULTIMEDIA	"å…¨ã¦ã®ãƒžãƒ«ãƒãƒ¡ãƒ‡ã‚£ã‚¢ãƒ•ã‚¡ã‚¤ãƒ«"
+  IDS_ALLFILES		"å…¨ã¦ã®ãƒ•ã‚¡ã‚¤ãƒ« (*.*)@*.*"
+  IDS_VIDEO		"ãƒ“ãƒ‡ã‚ª"
+  IDS_AUDIO		"éŸ³å£°"
   IDS_AVISTREAMFORMAT	"%s %s #%d"
   IDS_AVIFILETYPE	"Wine AVI-default-filehandler"
-  IDS_UNCOMPRESSED      "–¢ˆ³k"
+  IDS_UNCOMPRESSED      "æœªåœ§ç¸®"
 }
+
+#pragma code_page(default)

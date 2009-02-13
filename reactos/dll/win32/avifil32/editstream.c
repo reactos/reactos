@@ -1,5 +1,5 @@
 /*
- * Copyright 2003 Michael Günnewig
+ * Copyright 2003 Michael GÃ¼nnewig
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -261,7 +261,7 @@ static LPVOID AVIFILE_ReadFrame(IAVIEditStreamImpl* const This,
     if (pg == NULL)
       return NULL;
     if (This->pg != NULL) {
-      if (IGetFrame_SetFormat(pg, This->lpFrame, NULL, 0, 0, -1, -1)) {
+      if (IGetFrame_SetFormat(pg, This->lpFrame, NULL, 0, 0, -1, -1) != S_OK) {
         AVIStreamGetFrameClose(pg);
         ERR(": IGetFrame_SetFormat failed\n");
         return NULL;
@@ -793,7 +793,7 @@ static HRESULT WINAPI IAVIEditStream_fnSetInfo(IAVIEditStream*iface,
   if (asi->dwQuality <= ICQUALITY_HIGH)
     This->sInfo.dwQuality = ICQUALITY_HIGH;
   CopyRect(&This->sInfo.rcFrame, &asi->rcFrame);
-  memcpy(&This->sInfo.szName, &asi->szName, sizeof(asi->szName));
+  memcpy(This->sInfo.szName, asi->szName, sizeof(asi->szName));
   This->sInfo.dwEditCount++;
 
   return AVIERR_OK;
@@ -896,7 +896,7 @@ static LONG    WINAPI IEditAVIStream_fnFindSample(IAVIStream*iface,LONG pos,
 
   /* map our position to a stream and position in it */
   if (AVIFILE_FindStreamInTable(This, pos, &stream, &streamPos,
-                                &streamNr, TRUE))
+                                &streamNr, TRUE) != S_OK)
     return -1; /* doesn't exist */
 
   if (This->bDecompress) {
@@ -935,7 +935,7 @@ static HRESULT WINAPI IEditAVIStream_fnReadFormat(IAVIStream*iface,LONG pos,
   if (! This->bDecompress)
     return IAVIStream_ReadFormat(stream, n, format, fmtsize);
 
-  lp = (LPBITMAPINFOHEADER)AVIFILE_ReadFrame(This, stream, n);
+  lp = AVIFILE_ReadFrame(This, stream, n);
   if (lp == NULL)
     return AVIERR_ERROR;
   if (lp->biBitCount <= 8) {
