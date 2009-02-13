@@ -299,7 +299,7 @@ __CRT_INLINE int isinf (double d) {
 }
 
   /* 7.12.3.4 */
-  /* We don't need to worry about trucation here:
+  /* We don't need to worry about truncation here:
   A NaN stays a NaN. */
 
   __CRT_INLINE int __cdecl __isnan (double _x)
