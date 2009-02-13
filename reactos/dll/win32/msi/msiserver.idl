@@ -29,7 +29,6 @@ typedef int INSTALLMESSAGE;
 typedef int MSICONDITION;
 typedef int MSIRUNMODE;
 typedef int INSTALLSTATE;
-typedef WORD LANGID;
 cpp_quote("#endif")
 
 [

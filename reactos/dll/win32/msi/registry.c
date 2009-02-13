@@ -392,17 +392,6 @@ DWORD msi_version_str_to_dword(LPCWSTR p)
     return MAKELONG(build, MAKEWORD(minor, major));
 }
 
-LPWSTR msi_version_dword_to_str(DWORD version)
-{
-    static const WCHAR fmt[] = { '%','u','.','%','u','.','%','u',0 };
-    LPWSTR str = msi_alloc(20);
-    sprintfW(str, fmt,
-             (version&0xff000000)>>24,
-             (version&0x00ff0000)>>16,
-              version&0x0000ffff);
-    return str;
-}
-
 LONG msi_reg_set_val_str( HKEY hkey, LPCWSTR name, LPCWSTR value )
 {
     static const WCHAR emptyW[] = {0};

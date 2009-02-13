@@ -655,11 +655,9 @@ enum StringPersistence
 };
 
 extern BOOL msi_addstringW( string_table *st, UINT string_no, const WCHAR *data, int len, UINT refcount, enum StringPersistence persistence );
-extern UINT msi_id2stringW( const string_table *st, UINT string_no, LPWSTR buffer, UINT *sz );
 
 extern UINT msi_string2idW( const string_table *st, LPCWSTR buffer, UINT *id );
 extern VOID msi_destroy_stringtable( string_table *st );
-extern UINT msi_strcmp( const string_table *st, UINT lval, UINT rval, UINT *res );
 extern const WCHAR *msi_string_lookup_id( const string_table *st, UINT id );
 extern HRESULT msi_init_string_table( IStorage *stg );
 extern string_table *msi_load_string_table( IStorage *stg, UINT *bytes_per_strref );
@@ -795,7 +793,6 @@ extern LPWSTR msi_reg_get_val_str( HKEY hkey, LPCWSTR name );
 extern BOOL msi_reg_get_val_dword( HKEY hkey, LPCWSTR name, DWORD *val);
 
 extern DWORD msi_version_str_to_dword(LPCWSTR p);
-extern LPWSTR msi_version_dword_to_str(DWORD version);
 
 extern LONG msi_reg_set_val_str( HKEY hkey, LPCWSTR name, LPCWSTR value );
 extern LONG msi_reg_set_val_multi_str( HKEY hkey, LPCWSTR name, LPCWSTR value );
@@ -973,14 +970,12 @@ extern BOOL create_full_pathW(const WCHAR *path);
 extern BOOL ACTION_VerifyComponentForAction(const MSICOMPONENT*, INSTALLSTATE);
 extern BOOL ACTION_VerifyFeatureForAction(const MSIFEATURE*, INSTALLSTATE);
 extern void reduce_to_longfilename(WCHAR*);
-extern void reduce_to_shortfilename(WCHAR*);
 extern LPWSTR create_component_advertise_string(MSIPACKAGE*, MSICOMPONENT*, LPCWSTR);
 extern void ACTION_UpdateComponentStates(MSIPACKAGE *package, LPCWSTR szFeature);
 extern UINT register_unique_action(MSIPACKAGE *, LPCWSTR);
 extern BOOL check_unique_action(const MSIPACKAGE *, LPCWSTR);
 extern WCHAR* generate_error_string(MSIPACKAGE *, UINT, DWORD, ... );
 extern UINT msi_create_component_directories( MSIPACKAGE *package );
-extern void msi_ui_error( DWORD msg_id, DWORD type );
 extern UINT msi_set_last_used_source(LPCWSTR product, LPCWSTR usersid,
                         MSIINSTALLCONTEXT context, DWORD options, LPCWSTR value);
 
@@ -1011,8 +1006,6 @@ extern VOID ControlEvent_CleanupDialogSubscriptions(MSIPACKAGE *package, LPWSTR 
 extern VOID ControlEvent_CleanupSubscriptions(MSIPACKAGE *package);
 extern VOID ControlEvent_SubscribeToEvent(MSIPACKAGE *package, msi_dialog *dialog,
                                       LPCWSTR event, LPCWSTR control, LPCWSTR attribute);
-extern VOID ControlEvent_UnSubscribeToEvent( MSIPACKAGE *package, LPCWSTR event,
-                                      LPCWSTR control, LPCWSTR attribute );
 
 /* OLE automation */
 extern HRESULT create_msiserver(IUnknown *pOuter, LPVOID *ppObj);
