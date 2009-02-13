@@ -33,13 +33,14 @@ static BOOL
 IntRunTest(PWSTR CommandLine, HANDLE hReadPipe, LPSTARTUPINFOW StartupInfo, PWINE_GETSUITEID_DATA GetSuiteIDData, PWINE_SUBMIT_DATA SubmitData)
 {
     BOOL BreakLoop = FALSE;
+    BOOL ReturnValue = FALSE;
     DWORD BytesAvailable;
     DWORD LogAvailable = 0;
     DWORD LogLength = 0;
     DWORD LogPosition = 0;
     DWORD Temp;
-    PCHAR Buffer;
-    PROCESS_INFORMATION ProcessInfo;
+    PCHAR Buffer = NULL;
+    PROCESS_INFORMATION ProcessInfo = {0};
 
     if(AppOptions.Submit)
     {
@@ -55,12 +56,13 @@ IntRunTest(PWSTR CommandLine, HANDLE hReadPipe, LPSTARTUPINFOW StartupInfo, PWIN
     sprintf(Buffer, "Running Wine Test, Module: %s, Test: %s\n", GetSuiteIDData->Module, GetSuiteIDData->Test);
     StringOut(Buffer);
     HeapFree(hProcessHeap, 0, Buffer);
+    Buffer = NULL;
 
     /* Execute the test */
     if(!CreateProcessW(NULL, CommandLine, NULL, NULL, TRUE, NORMAL_PRIORITY_CLASS, NULL, NULL, StartupInfo, &ProcessInfo))
     {
         StringOut("CreateProcessW for running the test failed\n");
-        return FALSE;
+        goto Cleanup;
     }
 
     /* Receive all the data from the pipe */
@@ -78,7 +80,7 @@ IntRunTest(PWSTR CommandLine, HANDLE hReadPipe, LPSTARTUPINFOW StartupInfo, PWIN
         if(!PeekNamedPipe(hReadPipe, NULL, 0, NULL, &BytesAvailable, NULL))
         {
             StringOut("PeekNamedPipe failed for the test run\n");
-            return FALSE;
+            goto Cleanup;
         }
 
         if(BytesAvailable)
@@ -89,7 +91,7 @@ IntRunTest(PWSTR CommandLine, HANDLE hReadPipe, LPSTARTUPINFOW StartupInfo, PWIN
             if(!ReadFile(hReadPipe, Buffer, BytesAvailable, &Temp, NULL))
             {
                 StringOut("ReadFile failed for the test run\n");
-                return FALSE;
+                goto Cleanup;
             }
 
             /* Output all test output through StringOut, even while the test is still running */
@@ -114,13 +116,10 @@ IntRunTest(PWSTR CommandLine, HANDLE hReadPipe, LPSTARTUPINFOW StartupInfo, PWIN
             }
 
             HeapFree(hProcessHeap, 0, Buffer);
+            Buffer = NULL;
         }
     }
     while(!BreakLoop);
-
-    /* Close the process handles */
-    CloseHandle(ProcessInfo.hProcess);
-    CloseHandle(ProcessInfo.hThread);
 
     if(AppOptions.Submit)
     {
@@ -137,29 +136,47 @@ IntRunTest(PWSTR CommandLine, HANDLE hReadPipe, LPSTARTUPINFOW StartupInfo, PWIN
                 SubmitData->General.TestID = GetTestID(WineTest);
 
                 if(!SubmitData->General.TestID)
-                    return FALSE;
+                    goto Cleanup;
             }
 
             /* Get a Suite ID for this combination */
             SubmitData->General.SuiteID = GetSuiteID(WineTest, GetSuiteIDData);
 
             if(!SubmitData->General.SuiteID)
-                return FALSE;
+                goto Cleanup;
 
             /* Submit the stuff */
             Submit(WineTest, SubmitData);
-
-            /* Cleanup */
-            HeapFree(hProcessHeap, 0, SubmitData->General.SuiteID);
         }
-
-        /* Cleanup */
-        HeapFree(hProcessHeap, 0, SubmitData->Log);
     }
 
     StringOut("\n\n");
 
-    return TRUE;
+    ReturnValue = TRUE;
+
+Cleanup:
+    if(Buffer)
+        HeapFree(hProcessHeap, 0, Buffer);
+
+    if(ProcessInfo.hProcess)
+        HeapFree(hProcessHeap, 0, ProcessInfo.hProcess);
+
+    if(ProcessInfo.hThread)
+        HeapFree(hProcessHeap, 0, ProcessInfo.hThread);
+
+    if(SubmitData->General.SuiteID)
+    {
+        HeapFree(hProcessHeap, 0, SubmitData->General.SuiteID);
+        SubmitData->General.SuiteID = NULL;
+    }
+
+    if(SubmitData->Log)
+    {
+        HeapFree(hProcessHeap, 0, SubmitData->Log);
+        SubmitData->Log = NULL;
+    }
+
+    return ReturnValue;
 }
 
 /**
@@ -186,15 +203,17 @@ IntRunTest(PWSTR CommandLine, HANDLE hReadPipe, LPSTARTUPINFOW StartupInfo, PWIN
 static BOOL
 IntRunModuleTests(PWSTR File, PWSTR FilePath, HANDLE hReadPipe, LPSTARTUPINFOW StartupInfo, PWINE_SUBMIT_DATA SubmitData)
 {
+    BOOL ReturnValue = FALSE;
     DWORD BytesAvailable;
     DWORD Length;
     DWORD Temp;
-    PCHAR Buffer;
+    PCHAR Buffer = NULL;
     PCHAR pStart;
     PCHAR pEnd;
-    PROCESS_INFORMATION ProcessInfo;
+    PROCESS_INFORMATION ProcessInfo = {0};
+    PWSTR pUnderscore;
     size_t FilePosition;
-    WINE_GETSUITEID_DATA GetSuiteIDData;
+    WINE_GETSUITEID_DATA GetSuiteIDData = {0};
 
     /* Build the full command line */
     FilePosition = wcslen(FilePath);
@@ -202,8 +221,25 @@ IntRunModuleTests(PWSTR File, PWSTR FilePath, HANDLE hReadPipe, LPSTARTUPINFOW S
     FilePath[FilePosition] = 0;
     wcscat(FilePath, L"--list");
 
+    /* Find the underscore in the file name */
+    pUnderscore = wcschr(File, L'_');
+
+    if(!pUnderscore)
+    {
+        StringOut("Invalid test file name: ");
+
+        Length = wcslen(File);
+        Buffer = HeapAlloc(hProcessHeap, 0, Length + 1);
+        WideCharToMultiByte(CP_ACP, 0, File, Length + 1, Buffer, Length + 1, NULL, NULL);
+
+        StringOut(Buffer);
+        StringOut("\n");
+
+        goto Cleanup;
+    }
+
     /* Store the tested module name */
-    Length = wcschr(File, L'_') - File;
+    Length = pUnderscore - File;
     GetSuiteIDData.Module = HeapAlloc(hProcessHeap, 0, Length + 1);
     WideCharToMultiByte(CP_ACP, 0, File, Length, GetSuiteIDData.Module, Length, NULL, NULL);
     GetSuiteIDData.Module[Length] = 0;
@@ -212,33 +248,45 @@ IntRunModuleTests(PWSTR File, PWSTR FilePath, HANDLE hReadPipe, LPSTARTUPINFOW S
     if(!CreateProcessW(NULL, FilePath, NULL, NULL, TRUE, NORMAL_PRIORITY_CLASS, NULL, NULL, StartupInfo, &ProcessInfo))
     {
         StringOut("CreateProcessW for getting the available tests failed\n");
-        return FALSE;
+        goto Cleanup;
     }
 
     /* Wait till this process ended */
     if(WaitForSingleObject(ProcessInfo.hProcess, INFINITE) == WAIT_FAILED)
     {
         StringOut("WaitForSingleObject failed for the test list\n");
-        return FALSE;
+        goto Cleanup;
     }
-
-    /* Close the process handles */
-    CloseHandle(ProcessInfo.hProcess);
-    CloseHandle(ProcessInfo.hThread);
 
     /* Read the output data into a buffer */
     if(!PeekNamedPipe(hReadPipe, NULL, 0, NULL, &BytesAvailable, NULL))
     {
         StringOut("PeekNamedPipe failed for the test list\n");
-        return FALSE;
+        goto Cleanup;
     }
 
+    /* Check if we got any */
+    if(!BytesAvailable)
+    {
+        StringOut("The --list command did not return any data for ");
+
+        Length = wcslen(File);
+        Buffer = HeapAlloc(hProcessHeap, 0, Length + 1);
+        WideCharToMultiByte(CP_ACP, 0, File, Length + 1, Buffer, Length + 1, NULL, NULL);
+
+        StringOut(Buffer);
+        StringOut("\n");
+
+        goto Cleanup;
+    }
+
+    /* Read the data */
     Buffer = HeapAlloc(hProcessHeap, 0, BytesAvailable);
 
     if(!ReadFile(hReadPipe, Buffer, BytesAvailable, &Temp, NULL))
     {
         StringOut("ReadFile failed\n");
-        return FALSE;
+        goto Cleanup;
     }
 
     /* Jump to the first available test */
@@ -267,21 +315,36 @@ IntRunModuleTests(PWSTR File, PWSTR FilePath, HANDLE hReadPipe, LPSTARTUPINFOW S
             FilePath[FilePosition + Length] = 0;
 
             if(!IntRunTest(FilePath, hReadPipe, StartupInfo, &GetSuiteIDData, SubmitData))
-                return FALSE;
+                goto Cleanup;
         }
 
         /* Cleanup */
         HeapFree(hProcessHeap, 0, GetSuiteIDData.Test);
+        GetSuiteIDData.Test = NULL;
 
         /* Move to the next test */
         pStart = pEnd + 6;
     }
 
-    /* Cleanup */
-    HeapFree(hProcessHeap, 0, GetSuiteIDData.Module);
-    HeapFree(hProcessHeap, 0, Buffer);
+    ReturnValue = TRUE;
 
-    return TRUE;
+Cleanup:
+    if(GetSuiteIDData.Module)
+        HeapFree(hProcessHeap, 0, GetSuiteIDData.Module);
+
+    if(GetSuiteIDData.Test)
+        HeapFree(hProcessHeap, 0, GetSuiteIDData.Test);
+
+    if(Buffer)
+        HeapFree(hProcessHeap, 0, Buffer);
+
+    if(ProcessInfo.hProcess)
+        CloseHandle(ProcessInfo.hProcess);
+
+    if(ProcessInfo.hThread)
+        CloseHandle(ProcessInfo.hThread);
+
+    return ReturnValue;
 }
 
 /**
@@ -293,10 +356,11 @@ IntRunModuleTests(PWSTR File, PWSTR FilePath, HANDLE hReadPipe, LPSTARTUPINFOW S
 BOOL
 RunWineTests()
 {
+    BOOL ReturnValue = FALSE;
     GENERAL_FINISH_DATA FinishData;
-    HANDLE hFind;
-    HANDLE hReadPipe;
-    HANDLE hWritePipe;
+    HANDLE hFind = NULL;
+    HANDLE hReadPipe = NULL;
+    HANDLE hWritePipe = NULL;
     SECURITY_ATTRIBUTES SecurityAttributes;
     STARTUPINFOW StartupInfo = {0};
     size_t PathPosition;
@@ -312,7 +376,7 @@ RunWineTests()
     if(!CreatePipe(&hReadPipe, &hWritePipe, &SecurityAttributes, 0))
     {
         StringOut("CreatePipe failed\n");
-        return FALSE;
+        goto Cleanup;
     }
 
     StartupInfo.cb = sizeof(StartupInfo);
@@ -323,7 +387,7 @@ RunWineTests()
     if(GetWindowsDirectoryW(FilePath, MAX_PATH) > MAX_PATH - 60)
     {
         StringOut("Windows directory path is too long\n");
-        return FALSE;
+        goto Cleanup;
     }
 
     wcscat(FilePath, L"\\bin\\");
@@ -346,7 +410,7 @@ RunWineTests()
     if(hFind == INVALID_HANDLE_VALUE)
     {
         StringOut("FindFirstFileW failed\n");
-        return FALSE;
+        goto Cleanup;
     }
 
     /* Run the tests */
@@ -357,27 +421,33 @@ RunWineTests()
 
         /* Run it */
         if(!IntRunModuleTests(fd.cFileName, FilePath, hReadPipe, &StartupInfo, &SubmitData))
-            return FALSE;
+            goto Cleanup;
     }
     while(FindNextFileW(hFind, &fd));
 
-    /* Cleanup */
-    FindClose(hFind);
-
-    if(AppOptions.Submit && SubmitData.General.TestID)
+    /* Close this test run if necessary */
+    if(SubmitData.General.TestID)
     {
-        /* We're done with the tests, so close this test run */
         FinishData.TestID = SubmitData.General.TestID;
 
         if(!Finish(WineTest, &FinishData))
-            return FALSE;
-
-        /* Cleanup */
-        HeapFree(hProcessHeap, 0, FinishData.TestID);
+            goto Cleanup;
     }
 
-    CloseHandle(hReadPipe);
-    CloseHandle(hWritePipe);
+    ReturnValue = TRUE;
 
-    return TRUE;
+Cleanup:
+    if(SubmitData.General.TestID)
+        HeapFree(hProcessHeap, 0, SubmitData.General.TestID);
+
+    if(hFind && hFind != INVALID_HANDLE_VALUE)
+        FindClose(hFind);
+
+    if(hReadPipe)
+        CloseHandle(hReadPipe);
+
+    if(hWritePipe)
+        CloseHandle(hWritePipe);
+
+    return ReturnValue;
 }

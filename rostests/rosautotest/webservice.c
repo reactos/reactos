@@ -33,9 +33,10 @@ IntDoRequest(char** Data, PDWORD DataLength)
 {
     const WCHAR Headers[] = L"Content-Type: application/x-www-form-urlencoded";
 
-    HINTERNET hHTTP;
-    HINTERNET hHTTPRequest;
-    HINTERNET hInet;
+    BOOL ReturnValue = FALSE;
+    HINTERNET hHTTP = NULL;
+    HINTERNET hHTTPRequest = NULL;
+    HINTERNET hInet = NULL;
 
     /* Establish an internet connection to the "testman" server */
     hInet = InternetOpenW(L"rosautotest", INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
@@ -43,7 +44,7 @@ IntDoRequest(char** Data, PDWORD DataLength)
     if(!hInet)
     {
         StringOut("InternetOpenW failed\n");
-        return FALSE;
+        goto Cleanup;
     }
 
     hHTTP = InternetConnectW(hInet, SERVER_HOSTNAME, INTERNET_DEFAULT_HTTP_PORT, NULL, NULL, INTERNET_SERVICE_HTTP, 0, 0);
@@ -51,7 +52,7 @@ IntDoRequest(char** Data, PDWORD DataLength)
     if(!hHTTP)
     {
         StringOut("InternetConnectW failed\n");
-        return FALSE;
+        goto Cleanup;
     }
 
     /* Post our test results to the web service */
@@ -60,22 +61,23 @@ IntDoRequest(char** Data, PDWORD DataLength)
     if(!hHTTPRequest)
     {
         StringOut("HttpOpenRequestW failed\n");
-        return FALSE;
+        goto Cleanup;
     }
 
     if(!HttpSendRequestW(hHTTPRequest, Headers, wcslen(Headers), *Data, *DataLength))
     {
         StringOut("HttpSendRequestW failed\n");
-        return FALSE;
+        goto Cleanup;
     }
 
     HeapFree(hProcessHeap, 0, *Data);
+    *Data = NULL;
 
     /* Get the response */
     if(!InternetQueryDataAvailable(hHTTPRequest, DataLength, 0, 0))
     {
         StringOut("InternetQueryDataAvailable failed\n");
-        return FALSE;
+        goto Cleanup;
     }
 
     *Data = HeapAlloc(hProcessHeap, 0, *DataLength + 1);
@@ -83,16 +85,23 @@ IntDoRequest(char** Data, PDWORD DataLength)
     if(!InternetReadFile(hHTTPRequest, *Data, *DataLength, DataLength))
     {
         StringOut("InternetReadFile failed\n");
-        return FALSE;
+        goto Cleanup;
     }
 
     (*Data)[*DataLength] = 0;
+    ReturnValue = TRUE;
 
-    InternetCloseHandle(hHTTPRequest);
-    InternetCloseHandle(hHTTP);
-    InternetCloseHandle(hInet);
+Cleanup:
+    if(hHTTPRequest)
+        InternetCloseHandle(hHTTPRequest);
 
-    return TRUE;
+    if(hHTTP)
+        InternetCloseHandle(hHTTP);
+
+    if(hInet)
+        InternetCloseHandle(hInet);
+
+    return ReturnValue;
 }
 
 /**
@@ -127,6 +136,7 @@ IsNumber(PCHAR Input)
  *
  * @return
  * Returns the Test ID as a CHAR array if successful or NULL otherwise.
+ * The caller needs to HeapFree the returned pointer in case of success.
  */
 PCHAR
 GetTestID(TESTTYPES TestType)
@@ -135,6 +145,7 @@ GetTestID(TESTTYPES TestType)
 
     DWORD DataLength;
     PCHAR Data;
+    PCHAR ReturnValue = NULL;
 
     /* Build the full request string */
     DataLength  = sizeof(ActionProp) - 1 + sizeof(GetTestIDAction) - 1;
@@ -163,7 +174,7 @@ GetTestID(TESTTYPES TestType)
     }
 
     if(!IntDoRequest(&Data, &DataLength))
-        return NULL;
+        goto Cleanup;
 
     /* Verify that this is really a number */
     if(!IsNumber(Data))
@@ -171,11 +182,16 @@ GetTestID(TESTTYPES TestType)
         StringOut("Expected Test ID, but received:\n");
         StringOut(Data);
         StringOut("\n");
-        HeapFree(hProcessHeap, 0, Data);
-        return NULL;
+        goto Cleanup;
     }
 
-    return Data;
+    ReturnValue = Data;
+
+Cleanup:
+    if(Data && ReturnValue != Data)
+        HeapFree(hProcessHeap, 0, Data);
+
+    return ReturnValue;
 }
 
 /**
@@ -190,6 +206,7 @@ GetTestID(TESTTYPES TestType)
  *
  * @return
  * Returns the Suite ID as a CHAR array if successful or NULL otherwise.
+ * The caller needs to HeapFree the returned pointer in case of success.
  */
 PCHAR
 GetSuiteID(TESTTYPES TestType, const PVOID TestData)
@@ -200,6 +217,7 @@ GetSuiteID(TESTTYPES TestType, const PVOID TestData)
 
     DWORD DataLength;
     PCHAR Data;
+    PCHAR ReturnValue = NULL;
     PWINE_GETSUITEID_DATA WineData;
 
     DataLength  = sizeof(ActionProp) - 1 + sizeof(GetSuiteIDAction) - 1;
@@ -242,7 +260,7 @@ GetSuiteID(TESTTYPES TestType, const PVOID TestData)
     }
 
     if(!IntDoRequest(&Data, &DataLength))
-        return NULL;
+        goto Cleanup;
 
     /* Verify that this is really a number */
     if(!IsNumber(Data))
@@ -250,11 +268,16 @@ GetSuiteID(TESTTYPES TestType, const PVOID TestData)
         StringOut("Expected Suite ID, but received:\n");
         StringOut(Data);
         StringOut("\n");
-        HeapFree(hProcessHeap, 0, Data);
-        return NULL;
+        goto Cleanup;
     }
 
-    return Data;
+    ReturnValue = Data;
+
+Cleanup:
+    if(Data && ReturnValue != Data)
+        HeapFree(hProcessHeap, 0, Data);
+
+    return ReturnValue;
 }
 
 /**
@@ -277,6 +300,7 @@ Submit(TESTTYPES TestType, const PVOID TestData)
     const CHAR SuiteIDProp[] = "&suiteid=";
     const CHAR LogProp[] = "&log=";
 
+    BOOL ReturnValue = FALSE;
     DWORD DataLength;
     PCHAR Data;
     PCHAR pData;
@@ -342,7 +366,7 @@ Submit(TESTTYPES TestType, const PVOID TestData)
 
     /* Send all the stuff */
     if(!IntDoRequest(&Data, &DataLength))
-        return FALSE;
+        goto Cleanup;
 
     /* Output the response */
     StringOut("The server responded:\n");
@@ -350,9 +374,13 @@ Submit(TESTTYPES TestType, const PVOID TestData)
     StringOut("\n");
 
     if(!strcmp(Data, "OK"))
-        return TRUE;
+        ReturnValue = TRUE;
 
-    return FALSE;
+Cleanup:
+    if(Data)
+        HeapFree(hProcessHeap, 0, Data);
+
+    return ReturnValue;
 }
 
 /**
@@ -373,6 +401,7 @@ Finish(TESTTYPES TestType, const PVOID TestData)
 {
     const CHAR FinishAction[] = "finish";
 
+    BOOL ReturnValue = FALSE;
     DWORD DataLength;
     PCHAR Data;
     PGENERAL_FINISH_DATA GeneralData;
@@ -410,10 +439,14 @@ Finish(TESTTYPES TestType, const PVOID TestData)
     }
 
     if(!IntDoRequest(&Data, &DataLength))
-        return FALSE;
+        goto Cleanup;
 
     if(!strcmp(Data, "OK"))
-        return TRUE;
+        ReturnValue = TRUE;
 
-    return FALSE;
+Cleanup:
+    if(Data)
+        HeapFree(hProcessHeap, 0, Data);
+
+    return ReturnValue;
 }

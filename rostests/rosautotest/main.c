@@ -66,15 +66,19 @@ IntGetConfigurationValues()
     const CHAR PasswordProp[] = "&password=";
     const CHAR UserNameProp[] = "&username=";
 
+    BOOL ReturnValue = FALSE;
     DWORD DataLength;
     DWORD Length;
-    PCHAR Password;
-    PCHAR UserName;
+    PCHAR Password = NULL;
+    PCHAR UserName = NULL;
     WCHAR ConfigFile[MAX_PATH];
 
     /* We only need this if the results are going to be submitted */
     if(!AppOptions.Submit)
-        return TRUE;
+    {
+        ReturnValue = TRUE;
+        goto Cleanup;
+    }
 
     /* Build the path to the configuration file from the application's path */
     GetModuleFileNameW(NULL, ConfigFile, MAX_PATH);
@@ -85,7 +89,7 @@ IntGetConfigurationValues()
     if(GetFileAttributesW(ConfigFile) == INVALID_FILE_ATTRIBUTES)
     {
         StringOut("Missing \"rosautotest.ini\" configuration file!\n");
-        return FALSE;
+        goto Cleanup;
     }
 
     /* Get the required length of the authentication request string */
@@ -95,7 +99,7 @@ IntGetConfigurationValues()
     if(!Length)
     {
         StringOut("UserName is missing in the configuration file\n");
-        return FALSE;
+        goto Cleanup;
     }
 
     /* Some characters might need to be escaped and an escaped character takes 3 bytes */
@@ -107,7 +111,7 @@ IntGetConfigurationValues()
     if(!Length)
     {
         StringOut("Password is missing in the configuration file\n");
-        return FALSE;
+        goto Cleanup;
     }
 
     DataLength += 3 * Length;
@@ -121,7 +125,16 @@ IntGetConfigurationValues()
     strcat(AuthenticationRequestString, PasswordProp);
     EscapeString(&AuthenticationRequestString[strlen(AuthenticationRequestString)], Password);
 
-    return TRUE;
+    ReturnValue = TRUE;
+
+Cleanup:
+    if(UserName)
+        HeapFree(hProcessHeap, 0, UserName);
+
+    if(Password)
+        HeapFree(hProcessHeap, 0, Password);
+
+    return ReturnValue;
 }
 
 /**
@@ -242,7 +255,7 @@ IntPrintUsage()
 int
 wmain(int argc, wchar_t* argv[])
 {
-    int Result = 0;
+    int ReturnValue = 0;
     UINT i;
 
     hProcessHeap = GetProcessHeap();
@@ -263,12 +276,12 @@ wmain(int argc, wchar_t* argv[])
                     break;
 
                 default:
-                    Result = 1;
+                    ReturnValue = 1;
                     /* Fall through */
 
                 case '?':
                     IntPrintUsage();
-                    goto End;
+                    goto Cleanup;
             }
         }
         else
@@ -292,24 +305,23 @@ wmain(int argc, wchar_t* argv[])
             }
             else
             {
-                Result = 1;
+                ReturnValue = 1;
                 IntPrintUsage();
-                goto End;
+                goto Cleanup;
             }
         }
     }
 
     if(!IntGetConfigurationValues() || !IntGetBuildAndPlatform() || !RunWineTests())
     {
-        Result = 1;
-        goto End;
+        ReturnValue = 1;
+        goto Cleanup;
     }
 
     /* For sysreg */
     OutputDebugStringA("SYSREG_CHECKPOINT:THIRDBOOT_COMPLETE\n");
 
-End:
-    /* Cleanup */
+Cleanup:
     if(AppOptions.Module)
         HeapFree(hProcessHeap, 0, AppOptions.Module);
 
@@ -324,7 +336,7 @@ End:
 
     /* Shut down the system if requested */
     if(AppOptions.Shutdown && !ShutdownSystem())
-        Result = 1;
+        ReturnValue = 1;
 
-    return Result;
+    return ReturnValue;
 }
