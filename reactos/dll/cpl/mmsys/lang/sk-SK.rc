@@ -1,5 +1,6 @@
-/* TRANSLATOR:  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
- * DATE OF TR:  28-04-2008
+/* TRANSLATOR :  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
+ * DATE OF TR.:  28-04-2008
+ * LAST CHANGE:  11-02-2009
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
@@ -31,7 +32,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Zvuky"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "A sound scheme is a set of sounds applied to events to in ReactOS and programs. You can select an existing scheme or save one you have modified.",-1,8,7,230,40
+    LTEXT "Zvukov· schÈma je skupina zvukov, ktorÈ sa pouûÌvaj˙ pri udalostiach v systÈme ReactOS a v programoch. MÙûete si zvoliù existuj˙cu schÈmu alebo uloûiù Vami modifikovan˙.",-1,8,7,230,40
     LTEXT "Zvukov· s&chÈma:",-1,8,42,150,17
     COMBOBOX IDC_SOUND_SCHEME, 8, 53, 230, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "Uloûiù &ako...", IDC_SAVEAS_BTN, 134,70,50,15
@@ -76,14 +77,14 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Hlas"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "These settings control volume and advanced options for the voice playback or recording device you selected.",-1,8,7,230,40
-    GROUPBOX "Voice playback", -1, 7,37,230,60
+    LTEXT "Tieto nastavenia ovl·daj˙ hlasitosù a rozöÌrenÈ moûnosti pre Vami zvolenÈ prehr·vacie alebo nahr·vacie zariadenie.",-1,8,7,230,40
+    GROUPBOX "Prehr·vanie", -1, 7,37,230,60
     ICON IDI_CPLICON, IDI_CPLICON, 15,50,32,32
     LTEXT "&Default device:",-1,50,50,80,17
     COMBOBOX IDC_DEVICE_VOICE_LIST, 50, 60, 180, 46, CBS_DROPDOWNLIST
     PUSHBUTTON "&Volume...", IDC_VOLUME4_BTN, 85,77,70,15
     PUSHBUTTON "Adva&nced...", IDC_ADV4_BTN, 160,77,70,15
-    GROUPBOX "Voice recording", -1, 7,105,230,60
+    GROUPBOX "Nahr·vanie", -1, 7,105,230,60
     ICON IDI_MICROPHONE_ICON, IDI_MICROPHONE_ICON, 15,118,32,32
     LTEXT "D&efault device:",-1,50,118,80,17
     COMBOBOX IDC_DEVICE_VOICE_REC_LIST, 50, 128, 180, 46, CBS_DROPDOWNLIST
@@ -105,7 +106,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBL
 CAPTION "Uloûiù schÈmu ako"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Save this sound scheme as:", -1, 7, 7, 212, 9
+    LTEXT "&Uloûiù t˙to schÈmu ako:", -1, 7, 7, 212, 9
     EDITTEXT 8960, 7, 17, 211, 14, ES_AUTOHSCROLL
     DEFPUSHBUTTON "OK", IDOK, 93, 36, 60, 14
     PUSHBUTTON "Zruöiù", IDCANCEL, 157, 36, 60, 14
@@ -131,15 +132,15 @@ BEGIN
     LTEXT "These settings control how ReactOS plays audio. They can help you troubleshoot audio-related problems.", 8492, 34, 7, 218, 23
     GROUPBOX "Prehr·vanie zvuku", 8494, 7, 32, 243, 152
     ICON 4379, 8512, 8, 8, 20, 20
-    LTEXT "&Hardware acceleration:", 8495, 13, 56, 111, 14
+    LTEXT "&HardvÈrovÈ ur˝chæovanie:", 8495, 13, 56, 111, 14
     CONTROL "Slider1", 5395, "MSCTLS_TRACKBAR32", WS_GROUP | WS_TABSTOP | 0x00000401, 150, 54, 62, 18
     LTEXT "&Sample rate conversion quality:", 8496, 13, 123, 103, 14
     CONTROL "Slider1", 5396, "MSCTLS_TRACKBAR32", WS_TABSTOP | 0x00000401, 150, 121, 62, 18
     PUSHBUTTON "&Restore Defaults", 5400, 7, 191, 110, 14
-    LTEXT "None", 8497, 128, 56, 21, 10
-    LTEXT "Full", 8498, 214, 56, 21, 9
-    LTEXT "Good", 8499, 128, 123, 21, 10
-    LTEXT "Best", 8500, 214, 123, 23, 9
+    LTEXT "ûiadne", 8497, 128, 56, 21, 10
+    LTEXT "˙plnÈ", 8498, 214, 56, 21, 9
+    LTEXT "dobrÈ", 8499, 128, 123, 21, 10
+    LTEXT "lepöie", 8500, 214, 123, 23, 9
     LTEXT "This string describes the hardware setting for the capture device", 5399, 13, 145, 227, 21
     LTEXT "This string describes the hardware setting for the render device", 5398, 13, 78, 227, 22
 END
@@ -150,17 +151,17 @@ CAPTION "V˝kon"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "These settings control how ReactOS records audio. They can help you troubleshoot audio-related problems.", 8492, 34, 7, 217, 20
-    GROUPBOX "Audio recording", 8494, 7, 29, 242, 122
+    GROUPBOX "Nahr·vanie zvuku", 8494, 7, 29, 242, 122
     ICON 4380, 8512, 8, 7, 20, 20
-    LTEXT "&Hardware acceleration:", 8495, 13, 46, 103, 17
+    LTEXT "&HardvÈrovÈ ur˝chæovanie:", 8495, 13, 46, 103, 17
     CONTROL "Slider1", 5395, "MSCTLS_TRACKBAR32", WS_GROUP | WS_TABSTOP | 0x00000401, 150, 43, 62, 18
     LTEXT "&Sample rate conversion quality:", 8496, 13, 103, 103, 17
     CONTROL "Slider1", 5396, "MSCTLS_TRACKBAR32", WS_TABSTOP | 0x00000401, 150, 101, 62, 18
     PUSHBUTTON "&Restore Defaults", 5400, 9, 158, 110, 14
-    LTEXT "None", 8497, 125, 46, 24, 10
-    LTEXT "Full", 8498, 217, 46, 19, 9
-    LTEXT "Good", 8499, 125, 103, 24, 10
-    LTEXT "Best", 8500, 217, 103, 19, 9
+    LTEXT "ûiadne", 8497, 125, 46, 24, 10
+    LTEXT "˙plnÈ", 8498, 217, 46, 19, 9
+    LTEXT "dobrÈ", 8499, 125, 103, 24, 10
+    LTEXT "lepöie", 8500, 217, 103, 19, 9
     LTEXT "This string describes the hardware setting for the capture device", 5399, 13, 125, 222, 21
     LTEXT "This string describes the hardware setting for the render device", 5398, 13, 68, 218, 24
 END
@@ -237,14 +238,14 @@ STRINGTABLE
 BEGIN
     IDS_CPLNAME "Zvuk a zvukovÈ zariadenia"
     IDS_CPLDESCRIPTION "Changes the sound scheme for your computer, or configure the settings for your speakers and recording devices."
-    IDS_NO_SOUND "(None)"
+    IDS_NO_SOUND "(éiadne)"
 
     5825 "Chyba programu"
-    5826 "Close program"
+    5826 "Zavrieù program"
     5827 "Critical Battery Alarm"
-    5828 "Device Connect"
-    5829 "Device Disconnect"
-    5830 "Device Failed to Connect"
+    5828 "Pripojenie zariadenia"
+    5829 "Odpojenie zariadenia"
+    5830 "Pripojenie zariadenia zlyhalo"
     5831 "Vypr·zdniù KÙö"
     5832 "Low Battery Alarm"
     5833 "Maximaliz·cia"
@@ -254,18 +255,18 @@ BEGIN
     5837 "Ozn·menie novej poöty"
     5838 "Start Navigation"
     5839 "Open program"
-    5840 "Print Complete"
+    5840 "DokonËen· tlaË"
     5841 "Restore Down"
     5842 "Restore Up"
-    5843 "Asterisk"
+    5843 "HviezdiËka"
     5844 "Default sound"
-    5845 "Exclamation"
+    5845 "V˝krik"
     5846 "UkonËenie systÈmu ReactOS"
     5847 "KritickÈ zastavenie"
-    5848 "System Notification"
+    5848 "Hl·senie systÈmu" //System notif.
     5849 "Ot·zka"
     5850 "Spustenie systÈmu ReactOS"
-    5851 "Start Menu"
+    5851 "Ponuka ätart"
     5852 "Odhl·senie zo systÈmu ReactOS"
     5853 "Prihl·senie do systÈmu ReactOS"
 END

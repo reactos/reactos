@@ -1,7 +1,7 @@
 /* TRANSLATOR :  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * NOTE       :  partially translated
  * TRANSLATED :  26-12-2007
- * LAST CHANGE:  26-10-2008
+ * LAST CHANGE:  09-02-2009
  */   
 
 /*
@@ -301,8 +301,8 @@ BEGIN
 
 	LTEXT "Jednotka %s", 14010, 100, 170, 45, 10
 	PUSHBUTTON "&»istenie disku", 14011, 180, 175, 50, 15, WS_TABSTOP
-	CHECKBOX "Uöetriù miesto na disku &kompresiou jednotky", 14012, 15, 205, 180, 10, WS_DISABLED
-	CHECKBOX "&Povoliù indexovanie pre tento disk, a zr˝chliù tak hæadanie s˙borov", 14012, 15, 220, 220, 10, WS_DISABLED
+	CHECKBOX "Uöetriù miesto na disku &kompresiou jednotky", 14012, 10, 205, 180, 10, WS_DISABLED
+	CHECKBOX "&Povoliù indexovanie pre tento disk, a zr˝chliù tak hæadanie s˙borov", 14012, 10, 220, 225, 10, WS_DISABLED
 END
 
 DRIVE_EXTRA_DLG DIALOGEX 0, 0, 240, 230
