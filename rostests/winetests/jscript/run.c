@@ -574,8 +574,13 @@ static void parse_script(BSTR script_str)
 
     hres = IActiveScript_QueryInterface(engine, &IID_IActiveScriptParse, (void**)&parser);
     ok(hres == S_OK, "Could not get IActiveScriptParse: %08x\n", hres);
+    if (FAILED(hres))
+    {
+        IActiveScript_Release(engine);
+        return;
+    }
 
-    hres = IActiveScriptParse_InitNew(parser);
+    hres = IActiveScriptParse64_InitNew(parser);
     ok(hres == S_OK, "InitNew failed: %08x\n", hres);
 
     hres = IActiveScript_SetScriptSite(engine, &ActiveScriptSite);
@@ -588,11 +593,11 @@ static void parse_script(BSTR script_str)
     hres = IActiveScript_SetScriptState(engine, SCRIPTSTATE_STARTED);
     ok(hres == S_OK, "SetScriptState(SCRIPTSTATE_STARTED) failed: %08x\n", hres);
 
-    hres = IActiveScriptParse_ParseScriptText(parser, script_str, NULL, NULL, NULL, 0, 0, 0, NULL, NULL);
+    hres = IActiveScriptParse64_ParseScriptText(parser, script_str, NULL, NULL, NULL, 0, 0, 0, NULL, NULL);
     ok(hres == S_OK, "ParseScriptText failed: %08x\n", hres);
 
     IActiveScript_Release(engine);
-    IActiveScriptParse_Release(parser);
+    IUnknown_Release(parser);
 }
 
 static void parse_script_a(const char *src)
@@ -696,8 +701,13 @@ static void test_isvisible(BOOL global_members)
 
     hres = IActiveScript_QueryInterface(engine, &IID_IActiveScriptParse, (void**)&parser);
     ok(hres == S_OK, "Could not get IActiveScriptParse: %08x\n", hres);
+    if (FAILED(hres))
+    {
+        IActiveScript_Release(engine);
+        return;
+    }
 
-    hres = IActiveScriptParse_InitNew(parser);
+    hres = IActiveScriptParse64_InitNew(parser);
     ok(hres == S_OK, "InitNew failed: %08x\n", hres);
 
     hres = IActiveScript_SetScriptSite(engine, &ActiveScriptSite);
@@ -717,16 +727,16 @@ static void test_isvisible(BOOL global_members)
 
     if(!global_members)
         SET_EXPECT(GetItemInfo_testVal);
-    hres = IActiveScriptParse_ParseScriptText(parser, script_textW, NULL, NULL, NULL, 0, 0, 0, NULL, NULL);
+    hres = IActiveScriptParse64_ParseScriptText(parser, script_textW, NULL, NULL, NULL, 0, 0, 0, NULL, NULL);
     ok(hres == S_OK, "ParseScriptText failed: %08x\n", hres);
     if(!global_members)
         CHECK_CALLED(GetItemInfo_testVal);
 
-    hres = IActiveScriptParse_ParseScriptText(parser, script_textW, NULL, NULL, NULL, 0, 0, 0, NULL, NULL);
+    hres = IActiveScriptParse64_ParseScriptText(parser, script_textW, NULL, NULL, NULL, 0, 0, 0, NULL, NULL);
     ok(hres == S_OK, "ParseScriptText failed: %08x\n", hres);
 
     IActiveScript_Release(engine);
-    IActiveScriptParse_Release(parser);
+    IUnknown_Release(parser);
 }
 
 static void run_tests(void)

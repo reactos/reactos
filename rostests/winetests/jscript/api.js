@@ -519,6 +519,9 @@ ok(tmp === 1, "Math.round(true) = " + tmp);
 tmp = Math.round(1.1, 3, 4);
 ok(tmp === 1, "Math.round(1.1, 3, 4) = " + tmp);
 
+tmp = Math.round();
+ok(isNaN(tmp), "Math.round() is not NaN");
+
 tmp = Math.ceil(0.5);
 ok(tmp === 1, "Math.ceil(0.5) = " + tmp);
 
@@ -584,6 +587,14 @@ ok(tmp === 2, "Math.pow(2, 2) = " + tmp);
 
 tmp = Math.pow(2, 2, 3);
 ok(tmp === 4, "Math.pow(2, 2, 3) = " + tmp);
+
+tmp = Math.random();
+ok(typeof(tmp) == "number", "typeof(tmp) = " + typeof(tmp));
+ok(0 <= tmp && tmp <= 1, "Math.random() = " + tmp);
+
+tmp = Math.random(100);
+ok(typeof(tmp) == "number", "typeof(tmp) = " + typeof(tmp));
+ok(0 <= tmp && tmp <= 1, "Math.random(100) = " + tmp);
 
 var func = function  (a) {
         var a = 1;
