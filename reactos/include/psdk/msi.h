@@ -27,7 +27,7 @@ extern "C" {
 #include <wincrypt.h>
 #endif
 
-typedef unsigned long MSIHANDLE;
+typedef ULONG MSIHANDLE;
 
 typedef enum tagINSTALLSTATE
 {
