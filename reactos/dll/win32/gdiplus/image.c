@@ -18,6 +18,8 @@
 
 #include <stdarg.h>
 
+#define NONAMELESSUNION
+
 #include "windef.h"
 #include "winbase.h"
 #include "winuser.h"
@@ -427,6 +429,50 @@ GpStatus WINGDIPAPI GdipCreateBitmapFromGraphics(INT width, INT height,
                                     NULL, bitmap);
 
     return ret;
+}
+
+GpStatus WINGDIPAPI GdipCreateBitmapFromHICON(HICON hicon, GpBitmap** bitmap)
+{
+    HICON icon_copy;
+    ICONINFO iinfo;
+    PICTDESC desc;
+
+    TRACE("%p, %p\n", hicon, bitmap);
+
+    if(!bitmap || !GetIconInfo(hicon, &iinfo))
+        return InvalidParameter;
+
+    *bitmap = GdipAlloc(sizeof(GpBitmap));
+    if(!*bitmap)    return OutOfMemory;
+
+    icon_copy = CreateIconIndirect(&iinfo);
+
+    if(!icon_copy){
+        GdipFree(*bitmap);
+        return InvalidParameter;
+    }
+
+    desc.cbSizeofstruct = sizeof(PICTDESC);
+    desc.picType = PICTYPE_ICON;
+    desc.u.icon.hicon = icon_copy;
+
+    if(OleCreatePictureIndirect(&desc, &IID_IPicture, TRUE,
+                                (LPVOID*) &((*bitmap)->image.picture)) != S_OK){
+        DestroyIcon(icon_copy);
+        GdipFree(*bitmap);
+        return GenericError;
+    }
+
+    (*bitmap)->format = PixelFormat32bppARGB;
+    (*bitmap)->image.type  = ImageTypeBitmap;
+    (*bitmap)->image.flags = ImageFlagsNone;
+    (*bitmap)->width  = ipicture_pixel_width((*bitmap)->image.picture);
+    (*bitmap)->height = ipicture_pixel_height((*bitmap)->image.picture);
+
+    DeleteObject(iinfo.hbmColor);
+    DeleteObject(iinfo.hbmMask);
+
+    return Ok;
 }
 
 GpStatus WINGDIPAPI GdipCreateBitmapFromScan0(INT width, INT height, INT stride,

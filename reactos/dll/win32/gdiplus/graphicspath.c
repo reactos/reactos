@@ -723,6 +723,17 @@ GpStatus WINGDIPAPI GdipAddPathPie(GpPath *path, REAL x, REAL y, REAL width, REA
     if(!path)
         return InvalidParameter;
 
+    /* on zero width/height only start point added */
+    if(width <= 1e-7 || height <= 1e-7){
+        if(!lengthen_path(path, 1))
+            return OutOfMemory;
+        path->pathdata.Points[0].X = x + width  / 2.0;
+        path->pathdata.Points[0].Y = y + height / 2.0;
+        path->pathdata.Types[0] = PathPointTypeStart | PathPointTypeCloseSubpath;
+        path->pathdata.Count = 1;
+        return InvalidParameter;
+    }
+
     count = arc2polybezier(NULL, x, y, width, height, startAngle, sweepAngle);
 
     if(count == 0)
