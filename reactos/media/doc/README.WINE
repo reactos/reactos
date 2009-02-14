@@ -111,6 +111,7 @@ reactos/dll/win32/stdole2.tlb     # Autosync
 reactos/dll/win32/sxs             # Autosync
 reactos/dll/win32/tapi32          # Autosync
 reactos/dll/win32/twain_32        # Out of sync
+reactos/dll/win32/url             # Autosync
 reactos/dll/win32/urlmon          # Autosync
 reactos/dll/win32/usp10           # Autosync
 reactos/dll/win32/uxtheme         # Autosync

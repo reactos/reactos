@@ -436,6 +436,9 @@
 <directory name="untfs">
 	<xi:include href="untfs/untfs.rbuild" />
 </directory>
+<directory name="url">
+	<xi:include href="url/url.rbuild" />
+</directory>
 <directory name="urlmon">
 	<xi:include href="urlmon/urlmon.rbuild" />
 </directory>

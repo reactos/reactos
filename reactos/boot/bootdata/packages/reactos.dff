@@ -379,6 +379,7 @@ dll\win32\uext2\uext2.dll                           1
 dll\win32\ufat\ufat.dll                             1
 dll\win32\ufatx\ufatx.dll                           1   optional
 dll\win32\untfs\untfs.dll                           1
+dll\win32\url\url.dll                               1
 dll\win32\urlmon\urlmon.dll                         1
 dll\win32\user32\user32.dll                         1
 dll\win32\userenv\userenv.dll                       1
