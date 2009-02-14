@@ -42,9 +42,16 @@ typedef enum _SYSTEM_DOCK_STATE
 //
 // Processor Power State Data
 //
+struct _PROCESSOR_POWER_STATE;
+
+typedef
+VOID
+(FASTCALL *PPROCESSOR_IDLE_FUNCTION)(
+    struct _PROCESSOR_POWER_STATE *PState);
+
 typedef struct _PROCESSOR_POWER_STATE
 {
-    PVOID IdleFunction;
+    PPROCESSOR_IDLE_FUNCTION IdleFunction;
     ULONG Idle0KernelTimeLimit;
     ULONG Idle0LastTime;
     PVOID IdleHandlers;
@@ -61,10 +68,10 @@ typedef struct _PROCESSOR_POWER_STATE
     UCHAR ThermalThrottleIndex;
     ULONG LastKernelUserTime;
     ULONG PerfIdleTime;
-    ULONG DebugDelta;
+    ULONGLONG DebugDelta;
     ULONG DebugCount;
     ULONG LastSysTime;
-    ULONG TotalIdleStateTime[3];
+    ULONGLONG TotalIdleStateTime[3];
     ULONG TotalIdleTransitions[3];
     ULONGLONG PreviousC3StateTime;
     UCHAR KneeThrottleIndex;
