@@ -868,6 +868,7 @@ ExecuteCommand(PARSED_COMMAND *Cmd)
 {
 	BOOL bNewBatch = TRUE;
 	PARSED_COMMAND *Sub;
+	LPTSTR ExpandedLine;
 	BOOL Success = TRUE;
 
 	if (!PerformRedirection(Cmd->Redirections))
@@ -879,7 +880,14 @@ ExecuteCommand(PARSED_COMMAND *Cmd)
 		if(bc)
 			bNewBatch = FALSE;
 
-		Success = DoCommand(Cmd->Command.CommandLine);
+		ExpandedLine = DoDelayedExpansion(Cmd->Command.CommandLine);
+		if (!ExpandedLine)
+		{
+			Success = FALSE;
+			break;
+		}
+		Success = DoCommand(ExpandedLine);
+		cmd_free(ExpandedLine);
 
 		if(bNewBatch && bc)
 			AddBatchRedirection(&Cmd->Redirections);
@@ -1097,8 +1105,11 @@ GetBatchVar ( LPCTSTR varName, UINT* varNameLen )
 	return NULL;
 }
 
+BOOL bNoInteractive;
+BOOL bIsBatch;
+
 BOOL
-SubstituteVars(TCHAR *Src, TCHAR *Dest, TCHAR Delim, BOOL bIsBatch)
+SubstituteVars(TCHAR *Src, TCHAR *Dest, TCHAR Delim)
 {
 #define APPEND(From, Length) { \
 	if (Dest + (Length) > DestEnd) \
@@ -1250,14 +1261,26 @@ too_long:
 #undef APPEND1
 }
 
+LPTSTR
+DoDelayedExpansion(LPTSTR Line)
+{
+	TCHAR Buf[CMDLINE_LENGTH];
+	if (!_tcschr(Line, _T('!')))
+		return cmd_dup(Line);
+
+	/* FIXME: Delayed substitutions actually aren't quite the same as
+	 * immediate substitutions. In particular, it's possible to escape
+	 * the exclamation point using ^. */
+	if (!SubstituteVars(Line, Buf, _T('!')))
+		return NULL;
+	return cmd_dup(Buf);
+}
+
 
 /*
  * do the prompt/input/process loop
  *
  */
-
-BOOL bNoInteractive;
-BOOL bIsBatch;
 
 BOOL
 ReadLine (TCHAR *commandline, BOOL bMore)
@@ -1299,15 +1322,7 @@ ReadLine (TCHAR *commandline, BOOL bMore)
 		bIsBatch = TRUE;
 	}
 
-	if (!SubstituteVars(ip, commandline, _T('%'), bIsBatch))
-		return FALSE;
-
-	/* FIXME: !vars! should be substituted later, after parsing. */
-	if (!SubstituteVars(commandline, readline, _T('!'), bIsBatch))
-		return FALSE;
-	_tcscpy(commandline, readline);
-
-	return TRUE;
+	return SubstituteVars(ip, commandline, _T('%'));
 }
 
 static INT
