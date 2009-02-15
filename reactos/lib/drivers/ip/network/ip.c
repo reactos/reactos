@@ -195,6 +195,8 @@ PIP_INTERFACE IPCreateInterface(
 
     INIT_TAG(IF, TAG('F','A','C','E'));
 
+	RtlZeroMemory(IF, sizeof(IP_INTERFACE));
+
     IF->Free       = FreeIF;
     IF->Context    = BindInfo->Context;
     IF->HeaderSize = BindInfo->HeaderSize;
@@ -209,6 +211,11 @@ PIP_INTERFACE IPCreateInterface(
     IF->Address       = BindInfo->Address;
     IF->AddressLength = BindInfo->AddressLength;
     IF->Transmit      = BindInfo->Transmit;
+
+	IF->Unicast.Type = IP_ADDRESS_V4;
+	IF->PointToPoint.Type = IP_ADDRESS_V4;
+	IF->Netmask.Type = IP_ADDRESS_V4;
+	IF->Broadcast.Type = IP_ADDRESS_V4;
 
     TcpipInitializeSpinLock(&IF->Lock);
 

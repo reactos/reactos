@@ -242,7 +242,6 @@ NTSTATUS FileOpenAddress(
   PVOID Options)
 {
   IPv4_RAW_ADDRESS IPv4Address;
-  BOOLEAN Matched;
   PADDRESS_FILE AddrFile;
 
   TI_DbgPrint(MID_TRACE, ("Called (Proto %d).\n", Protocol));
@@ -260,21 +259,19 @@ NTSTATUS FileOpenAddress(
   AddrFile->Free = AddrFileFree;
 
   /* Make sure address is a local unicast address or 0 */
-
-  /* Locate address entry. If specified address is 0, a random address is chosen */
-
   /* FIXME: IPv4 only */
   AddrFile->Family = Address->Address[0].AddressType;
   IPv4Address = Address->Address[0].Address[0].in_addr;
-  if (IPv4Address == 0)
-      Matched = IPGetDefaultAddress(&AddrFile->Address);
+  if (IPv4Address != 0 &&
+      !AddrLocateADEv4(IPv4Address, &AddrFile->Address)) {
+	  exFreePool(AddrFile);
+	  TI_DbgPrint(MIN_TRACE, ("Non-local address given (0x%X).\n", DN2H(IPv4Address)));
+	  return STATUS_INVALID_PARAMETER;
+  }
   else
-      Matched = AddrLocateADEv4(IPv4Address, &AddrFile->Address);
-
-  if (!Matched) {
-    exFreePool(AddrFile);
-    TI_DbgPrint(MIN_TRACE, ("Non-local address given (0x%X).\n", DN2H(IPv4Address)));
-    return STATUS_INVALID_PARAMETER;
+  {
+	  /* Bound to the default address ... Copy the address type */
+	  AddrFile->Address.Type = IP_ADDRESS_V4;
   }
 
   TI_DbgPrint(MID_TRACE, ("Opening address %s for communication (P=%d U=%d).\n",
