@@ -1639,6 +1639,28 @@ CreateWineD3DDevice(LPDDRAWI_DIRECTDRAW_GBL hDirectDraw)
     return TRUE;
 }
 
+VOID
+GetPixelFormatData(DDPIXELFORMAT *ddpf, WINED3DFORMAT WineD3DFormat)
+{
+    ddpf->dwFourCC = 0;
+    ddpf->dwRGBAlphaBitMask = 0x00000000;
+    ddpf->dwFlags = DDPF_RGB;
+
+    switch(WineD3DFormat)
+    {
+        case WINED3DFMT_X8R8G8B8:
+            ddpf->dwRGBBitCount = 32;
+            ddpf->dwRBitMask = 0x00ff0000;
+            ddpf->dwGBitMask = 0x0000ff00;
+            ddpf->dwBBitMask = 0x000000ff;
+            break;
+
+        default:
+            ddpf->dwFlags = 0;
+            DPRINT1("Unknown pixel format: %d\n", WineD3DFormat);
+    }
+}
+
 BOOL
 WINAPI
 bDDCreateSurface(LPDDRAWI_DDRAWSURFACE_LCL pSurface,
@@ -1782,21 +1804,13 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
                         LPDWORD pdwFourCC,
                         LPVIDMEM pvmList)
     {
-
-    HDC hdc;
-    DEVMODEW DevMode;
     PVIDEOMEMORY VidMemList = NULL;
-    //DWORD dwNumHeaps=0, FourCCs=0;
     BOOL retVal = TRUE;
-
-    HBITMAP hbmp;
-    const UINT bmiSize = sizeof(BITMAPINFOHEADER) + 0x10;
-    UCHAR *pbmiData;
-    BITMAPINFO *pbmi;
-    DWORD *pMasks;
-
+    WINED3DDISPLAYMODE Mode;
     IWineD3D* pWineD3d;
     WINED3DCAPS WineCaps;
+    IWineD3DDevice *pD3DDevice = (IWineD3DDevice*) pDirectDrawGlobal->dwUnused3;
+
     DWORD wined3dFourCCList[] =
     {
         MAKEFOURCC('Y','U','Y','2'),
@@ -1812,9 +1826,6 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
     };
 
 
-
-
-
     /* Note : XP always alloc 24*sizeof(VIDEOMEMORY) of pvmlist so we change it to it */
     if ( (pvmList != NULL) &&
          (pHalInfo->vmiData.dwNumHeaps != 0) )
@@ -1822,10 +1833,8 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
         VidMemList = (PVIDEOMEMORY) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (sizeof(VIDEOMEMORY) * 24 ) * pHalInfo->vmiData.dwNumHeaps);
     }
 
-    /* Do the query */
     if ( GetDdHandle(pDirectDrawGlobal->hDD) == NULL)
     {
-        /* We failed, free the memory and return */
         retVal = FALSE;
         goto cleanup;
     }
@@ -1836,47 +1845,6 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
     /* Get adapter res, we can use windows own api here for we need getting the d3d support caps*/
     IWineD3D_GetDeviceCaps(pWineD3d, 0, WINED3DDEVTYPE_HAL,(WINED3DCAPS *)&WineCaps);
 
-    EnumDisplaySettingsW(NULL,ENUM_CURRENT_SETTINGS,&DevMode);
-
-    /* Dectect RGB bit mask */
-    hdc = CreateDCW(L"DISPLAY", NULL, NULL, NULL);
-    if (hdc == NULL)
-    {
-        retVal = FALSE;
-        goto cleanup;
-    }
-
-    hbmp = CreateCompatibleBitmap(hdc, 1, 1);
-    if (hbmp==NULL)
-    {
-        DeleteDC(hdc);
-        retVal = FALSE;
-        goto cleanup;
-    }
-
-    pbmiData = (UCHAR *)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, bmiSize);
-    pbmi = (BITMAPINFO*)pbmiData;
-
-    if (pbmiData==NULL)
-    {
-       DeleteDC(hdc);
-       DeleteObject(hbmp);
-       retVal = FALSE;
-       goto cleanup;
-    }
-
-    pbmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    pbmi->bmiHeader.biBitCount = (WORD)DevMode.dmBitsPerPel;
-    pbmi->bmiHeader.biCompression = BI_BITFIELDS;
-    pbmi->bmiHeader.biWidth = 1;
-    pbmi->bmiHeader.biHeight = 1;
-
-    GetDIBits(hdc, hbmp, 0, 0, NULL, pbmi, 0);
-    DeleteObject(hbmp);
-    pMasks = (DWORD*)(pbmiData + sizeof(BITMAPINFOHEADER));
-    DeleteDC(hdc);
-    /* End dectect RGB bit mask */
-
     if (pHalInfo)
     {
         /* Clear the incoming pointer */
@@ -1885,53 +1853,17 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
         /* Convert all the data */
         pHalInfo->dwSize = sizeof(DDHALINFO);
 
+        IWineD3DDevice_GetDisplayMode(pD3DDevice, 0, &Mode);
+        GetPixelFormatData(&pHalInfo->vmiData.ddpfDisplay, Mode.Format);
+
         pHalInfo->vmiData.fpPrimary = 0;
         pHalInfo->vmiData.dwFlags = 0; // MSDN Currently unused and should be set to zero.
-
-        pHalInfo->vmiData.dwDisplayWidth = DevMode.dmPelsHeight;
-        pHalInfo->vmiData.dwDisplayHeight = DevMode.dmPelsWidth;
-
-        /* ToDo align it right, we skip align it, it must be algin like the graphice card delta for the screen
-         * the graphice card delta is same as pHalInfo->vmiData.lDisplayPitch
-         */
-        pHalInfo->vmiData.lDisplayPitch = (DevMode.dmPelsWidth * DevMode.dmBitsPerPel) / 8;
+        pHalInfo->vmiData.dwDisplayWidth = Mode.Width;
+        pHalInfo->vmiData.dwDisplayHeight = Mode.Height;
+        pHalInfo->vmiData.lDisplayPitch = (Mode.Width * pHalInfo->vmiData.ddpfDisplay.dwRGBBitCount) / 8;
 
         /* Setup DDPIXELFORMAT for pHalInfo->vmiData.ddpfDisplay */
         pHalInfo->vmiData.ddpfDisplay.dwSize = sizeof(DDPIXELFORMAT);
-        switch(DevMode.dmBitsPerPel)
-        {
-            case 1:
-                pHalInfo->vmiData.ddpfDisplay.dwFlags = DDPF_PALETTEINDEXED1;
-                break;
-
-            case 2:
-                pHalInfo->vmiData.ddpfDisplay.dwFlags = DDPF_PALETTEINDEXED2;
-                break;
-
-            case 4:
-                pHalInfo->vmiData.ddpfDisplay.dwFlags = DDPF_PALETTEINDEXED4;
-                break;
-
-            case 8:
-                pHalInfo->vmiData.ddpfDisplay.dwFlags = DDPF_PALETTEINDEXED8;
-                break;
-
-            case 16:
-            case 24:
-            case 32:
-                pHalInfo->vmiData.ddpfDisplay.dwFlags = DDPF_RGB;
-                break;
-
-            default:
-                break;
-        }
-
-        pHalInfo->vmiData.ddpfDisplay.dwFourCC = 0;
-        pHalInfo->vmiData.ddpfDisplay.dwRGBBitCount = DevMode.dmBitsPerPel;
-        pHalInfo->vmiData.ddpfDisplay.dwRBitMask = pMasks[0];
-        pHalInfo->vmiData.ddpfDisplay.dwGBitMask = pMasks[1];
-        pHalInfo->vmiData.ddpfDisplay.dwBBitMask = pMasks[2];
-        pHalInfo->vmiData.ddpfDisplay.dwRGBAlphaBitMask = pMasks[3];
 
         /* ToDo ? align setting for wined3d */
         pHalInfo->vmiData.dwOffscreenAlign = 0;
@@ -1939,7 +1871,6 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
         pHalInfo->vmiData.dwTextureAlign = 0;
         pHalInfo->vmiData.dwZBufferAlign = 0;
         pHalInfo->vmiData.dwAlphaAlign = 0;
-
         pHalInfo->vmiData.dwNumHeaps = 0;
         pHalInfo->vmiData.pvmList = NULL;
 
