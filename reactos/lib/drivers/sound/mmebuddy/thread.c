@@ -194,7 +194,10 @@ MMRESULT
 DestroySoundThread(
     IN  PSOUND_THREAD Thread)
 {
-    /* TODO: Implement me! */
+    VALIDATE_MMSYS_PARAMETER( Thread );
+    SND_TRACE(L"Terminating sound thread\n");
+    Thread->Running = FALSE;
+    /* TODO: Implement me! Wait for thread to have finished? */
     return MMSYSERR_NOTSUPPORTED;
 }
 

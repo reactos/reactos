@@ -13,7 +13,8 @@
  *
  * NOTES:       MME Buddy was the best name I could come up with...
  *              The structures etc. here should be treated as internal to the
- *              library so should not be directly accessed elsewhere.
+ *              library so should not be directly accessed elsewhere. Perhaps they
+ *              can be moved to an internal header?
 */
 
 #ifndef ROS_AUDIO_MMEBUDDY_H

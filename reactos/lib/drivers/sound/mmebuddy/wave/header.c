@@ -155,8 +155,29 @@ EnqueueWaveHeader(
     if ( ! FunctionTable->SubmitWaveHeader )
         return MMSYSERR_NOTSUPPORTED;
 
-    return WaveHeaderOperation(FunctionTable->SubmitWaveHeader,
-                               SoundDeviceInstance,
-                               Header);
-}
+    /*
+        A few minor sanity checks - any custom checks should've been carried
+        out during wave header preparation etc.
+    */
+    VALIDATE_MMSYS_PARAMETER( Header->lpData != NULL );
+    VALIDATE_MMSYS_PARAMETER( Header->dwBufferLength > 0 );
+    VALIDATE_MMSYS_PARAMETER( Header->dwFlags & WHDR_PREPARED );
+    VALIDATE_MMSYS_PARAMETER( ! Header->dwFlags & WHDR_INQUEUE );
 
+    /* Clear the "done" flag for the buffer */
+    Header->dwFlags &= ~WHDR_DONE;
+
+    Result =  WaveHeaderOperation(FunctionTable->SubmitWaveHeader,
+                                  SoundDeviceInstance,
+                                  Header);
+
+    if ( ! MMSUCCESS(Result) )
+    {
+        return Result;
+    }
+
+    /* Set the "in queue" flag if everything was OK */
+    Header->dwFlags |= WHDR_INQUEUE;
+
+    return MMSYSERR_NOERROR;
+}
