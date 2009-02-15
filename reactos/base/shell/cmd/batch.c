@@ -405,19 +405,14 @@ LPTSTR ReadBatchLine ()
 			}
 
 			/* At this point, fv points to parameter string */
+			bc->forvalue = fv;
+
+			/* Double up % signs so they will get through the parser intact */
 			while (*sp)
 			{
-				if ((*sp == _T('%')) && (*(sp + 1) == bc->forvar))
-				{
-					/* replace % var */
-					dp = _stpcpy (dp, fv);
-					sp += 2;
-				}
-				else
-				{
-					/* Else just copy */
-					*dp++ = *sp++;
-				}
+				if (*sp == _T('%'))
+					*dp++ = _T('%');
+				*dp++ = *sp++;
 			}
 
 			*dp++ = _T('\n');

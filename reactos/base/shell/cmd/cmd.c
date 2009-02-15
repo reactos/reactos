@@ -1261,19 +1261,56 @@ too_long:
 #undef APPEND1
 }
 
+BOOL
+SubstituteForVars(TCHAR *Src, TCHAR *Dest)
+{
+	TCHAR *DestEnd = &Dest[CMDLINE_LENGTH - 1];
+	while (*Src)
+	{
+		if (Src[0] == _T('%') && Src[1] != _T('\0'))
+		{
+			/* This might be a variable. Search the list of contexts for it */
+			BATCH_CONTEXT *Ctx = bc;
+			while (Ctx && Ctx->forvar != Src[1])
+				Ctx = Ctx->prev;
+			if (Ctx)
+			{
+				/* Found it */
+				if (Dest + _tcslen(Ctx->forvalue) > DestEnd)
+					return FALSE;
+				Dest = _stpcpy(Dest, Ctx->forvalue);
+				Src += 2;
+				continue;
+			}
+		}
+		/* Not a variable; just copy the character */
+		if (Dest >= DestEnd)
+			return FALSE;
+		*Dest++ = *Src++;
+	}
+	*Dest = _T('\0');
+	return TRUE;
+}
+
 LPTSTR
 DoDelayedExpansion(LPTSTR Line)
 {
-	TCHAR Buf[CMDLINE_LENGTH];
-	if (!_tcschr(Line, _T('!')))
-		return cmd_dup(Line);
+	TCHAR Buf1[CMDLINE_LENGTH];
+	TCHAR Buf2[CMDLINE_LENGTH];
+
+	/* First, substitute FOR variables */
+	if (!SubstituteForVars(Line, Buf1))
+		return NULL;
+
+	if (!_tcschr(Buf1, _T('!')))
+		return cmd_dup(Buf1);
 
 	/* FIXME: Delayed substitutions actually aren't quite the same as
 	 * immediate substitutions. In particular, it's possible to escape
 	 * the exclamation point using ^. */
-	if (!SubstituteVars(Line, Buf, _T('!')))
+	if (!SubstituteVars(Buf1, Buf2, _T('!')))
 		return NULL;
-	return cmd_dup(Buf);
+	return cmd_dup(Buf2);
 }
 
 

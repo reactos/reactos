@@ -610,18 +610,21 @@ ParseCommand(LPTSTR Line)
 	return Cmd;
 }
 
-/* Reconstruct a parse tree into text form;
- * used for echoing batch file commands */
+
+/* Reconstruct a parse tree into text form; used for echoing
+ * batch file commands and FOR instances. */
 VOID
 EchoCommand(PARSED_COMMAND *Cmd)
 {
+	TCHAR Buf[CMDLINE_LENGTH];
 	PARSED_COMMAND *Sub;
 	REDIRECTION *Redir;
 
 	switch (Cmd->Type)
 	{
 	case C_COMMAND:
-		ConOutPrintf(_T("%s"), Cmd->Command.CommandLine);
+		if (SubstituteForVars(Cmd->Command.CommandLine, Buf))
+			ConOutPrintf(_T("%s"), Buf);
 		break;
 	case C_QUIET:
 		return;
@@ -649,9 +652,11 @@ EchoCommand(PARSED_COMMAND *Cmd)
 			ConOutPrintf(_T(" /I"));
 		if (Cmd->If.Flags & IFFLAG_NEGATE)
 			ConOutPrintf(_T(" not"));
-		if (Cmd->If.LeftArg)
-			ConOutPrintf(_T(" %s"), Cmd->If.LeftArg);
-		ConOutPrintf(_T(" %s %s "), IfOperatorString[Cmd->If.Operator], Cmd->If.RightArg);
+		if (Cmd->If.LeftArg && SubstituteForVars(Cmd->If.LeftArg, Buf))
+			ConOutPrintf(_T(" %s"), Buf);
+		ConOutPrintf(_T(" %s"), IfOperatorString[Cmd->If.Operator]);
+		if (SubstituteForVars(Cmd->If.RightArg, Buf))
+			ConOutPrintf(_T(" %s "), Buf);
 		Sub = Cmd->Subcommands;
 		EchoCommand(Sub);
 		if (Sub->Next)
@@ -664,8 +669,9 @@ EchoCommand(PARSED_COMMAND *Cmd)
 
 	for (Redir = Cmd->Redirections; Redir; Redir = Redir->Next)
 	{
-		ConOutPrintf(_T(" %c%s%s"), _T('0') + Redir->Number,
-			RedirString[Redir->Type], Redir->Filename);
+		if (SubstituteForVars(Redir->Filename, Buf))
+			ConOutPrintf(_T(" %c%s%s"), _T('0') + Redir->Number,
+				RedirString[Redir->Type], Buf);
 	}
 }
 
