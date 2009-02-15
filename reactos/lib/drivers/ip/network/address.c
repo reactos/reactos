@@ -223,7 +223,6 @@ BOOLEAN AddrIsEqual(
 {
     if (Address1->Type != Address2->Type) {
         DbgPrint("AddrIsEqual: Unequal Address Types\n");
-		ASSERT(FALSE);
         return FALSE;
     }
 
