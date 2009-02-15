@@ -197,9 +197,13 @@ DWORD
 WINAPI
 DdUnlock(LPDDHAL_UNLOCKDATA Unlock)
 {
+    /* Fixme for opengl hel emulations */
+    HEL_OGL_STUB;
+#if 0
     /* Call win32k */
     return NtGdiDdUnlock((HANDLE)Unlock->lpDDSurface->hDDSurface,
                           (PDD_UNLOCKDATA)Unlock);
+#endif
 }
 
 /*
@@ -1648,6 +1652,28 @@ GetPixelFormatData(DDPIXELFORMAT *ddpf, WINED3DFORMAT WineD3DFormat)
 
     switch(WineD3DFormat)
     {
+       case WINED3DFMT_P8:
+            ddpf->dwFlags |= DDPF_PALETTEINDEXED8;
+            ddpf->dwRGBBitCount = 8;
+            ddpf->dwRBitMask = 0x00000000;
+            ddpf->dwGBitMask = 0x00000000;
+            ddpf->dwBBitMask = 0x00000000;
+            break;
+
+       case WINED3DFMT_R5G6B5:
+            ddpf->dwRGBBitCount = 16;
+            ddpf->dwRBitMask = 0x0000f800;
+            ddpf->dwGBitMask = 0x000007e0;
+            ddpf->dwBBitMask = 0x0000001f;
+            break;
+
+        case WINED3DFMT_R8G8B8:
+            ddpf->dwRGBBitCount = 24;
+            ddpf->dwRBitMask = 0x00ff0000;
+            ddpf->dwGBitMask = 0x0000ff00;
+            ddpf->dwBBitMask = 0x000000ff;
+            break;
+
         case WINED3DFMT_X8R8G8B8:
             ddpf->dwRGBBitCount = 32;
             ddpf->dwRBitMask = 0x00ff0000;
@@ -1852,6 +1878,12 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
 
         /* Convert all the data */
         pHalInfo->dwSize = sizeof(DDHALINFO);
+
+        if(!pD3DDevice)
+        {
+            CreateWineD3DDevice(pDirectDrawGlobal);
+            pD3DDevice = (IWineD3DDevice*) pDirectDrawGlobal->dwUnused3;
+        }
 
         IWineD3DDevice_GetDisplayMode(pD3DDevice, 0, &Mode);
         GetPixelFormatData(&pHalInfo->vmiData.ddpfDisplay, Mode.Format);
