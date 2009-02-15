@@ -1019,75 +1019,72 @@ void state_fog_fragpart(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3D
      * and 2) disables the fog computation (in either the fixed function or programmable
      * rasterizer) if using a vertex program.
      *
+     * D3D shaders can provide an explicit fog coordinate. This fog coordinate is used with
+     * D3DRS_FOGTABLEMODE==D3DFOG_NONE. The FOGVERTEXMODE is ignored, d3d always uses linear
+     * fog with start=1.0 and end=0.0 in this case. This is similar to fog coordinates in
+     * the specular color, a vertex shader counts as pretransformed geometry in this case.
+     * There are some GL differences between specular fog coords and vertex shaders though.
+     *
+     * With table fog the vertex shader fog coordinate is ignored.
      *
      * If a fogtablemode and a fogvertexmode are specified, table fog is applied (with or
      * without shaders).
      */
 
-    if (use_vs(stateblock) && ((IWineD3DVertexShaderImpl *)stateblock->vertexShader)->baseShader.reg_maps.fog) {
-        if( stateblock->renderState[WINED3DRS_FOGTABLEMODE] != WINED3DFOG_NONE ) {
-            FIXME("vertex shader with table fog used\n");
-        } else {
-            /* Set fog computation in the rasterizer to pass through the value (just blend it) */
-            glFogi(GL_FOG_MODE, GL_LINEAR);
-            checkGLcall("glFogi(GL_FOG_MODE, GL_LINEAR)");
-        }
-        context->last_was_foggy_shader = TRUE;
-        new_source = FOGSOURCE_VS;
-    }
     /* DX 7 sdk: "If both render states(vertex and table fog) are set to valid modes,
      * the system will apply only pixel(=table) fog effects."
      */
-    else if(stateblock->renderState[WINED3DRS_FOGTABLEMODE] == WINED3DFOG_NONE) {
-        context->last_was_foggy_shader = FALSE;
+    if(stateblock->renderState[WINED3DRS_FOGTABLEMODE] == WINED3DFOG_NONE) {
+        if(use_vs(stateblock)) {
+            glFogi(GL_FOG_MODE, GL_LINEAR);
+            checkGLcall("glFogi(GL_FOG_MODE, GL_LINEAR)");
+            new_source = FOGSOURCE_VS;
+        } else {
+            switch (stateblock->renderState[WINED3DRS_FOGVERTEXMODE]) {
+                /* If processed vertices are used, fall through to the NONE case */
+                case WINED3DFOG_EXP:
+                    if(!context->last_was_rhw) {
+                        glFogi(GL_FOG_MODE, GL_EXP);
+                        checkGLcall("glFogi(GL_FOG_MODE, GL_EXP)");
+                        new_source = FOGSOURCE_FFP;
+                        break;
+                    }
+                    /* drop through */
 
-        switch (stateblock->renderState[WINED3DRS_FOGVERTEXMODE]) {
-            /* If processed vertices are used, fall through to the NONE case */
-            case WINED3DFOG_EXP:
-                if(!context->last_was_rhw) {
-                    glFogi(GL_FOG_MODE, GL_EXP);
-                    checkGLcall("glFogi(GL_FOG_MODE, GL_EXP)");
-                    new_source = FOGSOURCE_FFP;
-                    break;
-                }
-                /* drop through */
+                case WINED3DFOG_EXP2:
+                    if(!context->last_was_rhw) {
+                        glFogi(GL_FOG_MODE, GL_EXP2);
+                        checkGLcall("glFogi(GL_FOG_MODE, GL_EXP2)");
+                        new_source = FOGSOURCE_FFP;
+                        break;
+                    }
+                    /* drop through */
 
-            case WINED3DFOG_EXP2:
-                if(!context->last_was_rhw) {
-                    glFogi(GL_FOG_MODE, GL_EXP2);
-                    checkGLcall("glFogi(GL_FOG_MODE, GL_EXP2)");
-                    new_source = FOGSOURCE_FFP;
-                    break;
-                }
-                /* drop through */
+                case WINED3DFOG_LINEAR:
+                    if(!context->last_was_rhw) {
+                        glFogi(GL_FOG_MODE, GL_LINEAR);
+                        checkGLcall("glFogi(GL_FOG_MODE, GL_LINEAR)");
+                        new_source = FOGSOURCE_FFP;
+                        break;
+                    }
+                    /* drop through */
 
-            case WINED3DFOG_LINEAR:
-                if(!context->last_was_rhw) {
+                case WINED3DFOG_NONE:
+                    /* Both are none? According to msdn the alpha channel of the specular
+                     * color contains a fog factor. Set it in drawStridedSlow.
+                     * Same happens with Vertexfog on transformed vertices
+                     */
+                    new_source = FOGSOURCE_COORD;
                     glFogi(GL_FOG_MODE, GL_LINEAR);
                     checkGLcall("glFogi(GL_FOG_MODE, GL_LINEAR)");
-                    new_source = FOGSOURCE_FFP;
                     break;
-                }
-                /* drop through */
 
-            case WINED3DFOG_NONE:
-                /* Both are none? According to msdn the alpha channel of the specular
-                 * color contains a fog factor. Set it in drawStridedSlow.
-                 * Same happens with Vertexfog on transformed vertices
-                 */
-                new_source = FOGSOURCE_COORD;
-                glFogi(GL_FOG_MODE, GL_LINEAR);
-                checkGLcall("glFogi(GL_FOG_MODE, GL_LINEAR)");
-                break;
-
-            default:
-                FIXME("Unexpected WINED3DRS_FOGVERTEXMODE %d\n", stateblock->renderState[WINED3DRS_FOGVERTEXMODE]);
-                new_source = FOGSOURCE_FFP; /* Make the compiler happy */
+                default:
+                    FIXME("Unexpected WINED3DRS_FOGVERTEXMODE %d\n", stateblock->renderState[WINED3DRS_FOGVERTEXMODE]);
+                    new_source = FOGSOURCE_FFP; /* Make the compiler happy */
+            }
         }
     } else {
-        glHint(GL_FOG_HINT, GL_NICEST);
-        checkGLcall("glHint(GL_FOG_HINT, GL_NICEST)");
-        context->last_was_foggy_shader = FALSE;
         new_source = FOGSOURCE_FFP;
 
         switch (stateblock->renderState[WINED3DRS_FOGTABLEMODE]) {
@@ -3928,8 +3925,18 @@ static inline void loadNumberedArrays(IWineD3DStateBlockImpl *stateblock,
                 case WINED3DDECLTYPE_UBYTE4:
                     GL_EXTCALL(glVertexAttrib4NubvARB(i, ptr));
                     break;
-                case WINED3DDECLTYPE_UBYTE4N:
                 case WINED3DDECLTYPE_D3DCOLOR:
+                    if (GL_SUPPORT(EXT_VERTEX_ARRAY_BGRA))
+                    {
+                        const DWORD *src = (const DWORD *)ptr;
+                        DWORD c = *src & 0xff00ff00;
+                        c |= (*src & 0xff0000) >> 16;
+                        c |= (*src & 0xff) << 16;
+                        GL_EXTCALL(glVertexAttrib4NubvARB(i, (GLubyte *)&c));
+                        break;
+                    }
+                    /* else fallthrough */
+                case WINED3DDECLTYPE_UBYTE4N:
                     GL_EXTCALL(glVertexAttrib4NubvARB(i, ptr));
                     break;
 
@@ -4270,10 +4277,12 @@ static void streamsrc(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3DCo
             load_numbered = TRUE;
             device->useDrawStridedSlow = FALSE;
         }
-    } else if (fixup || GL_SUPPORT(EXT_VERTEX_ARRAY_BGRA) ||
-               (dataLocations->u.s.pSize.lpData == NULL &&
-                dataLocations->u.s.diffuse.lpData == NULL &&
-                dataLocations->u.s.specular.lpData == NULL)) {
+    } else if (fixup || (!dataLocations->u.s.pSize.lpData
+            && !dataLocations->position_transformed
+            && (GL_SUPPORT(EXT_VERTEX_ARRAY_BGRA)
+            || (!dataLocations->u.s.diffuse.lpData
+            && !dataLocations->u.s.specular.lpData))))
+    {
         /* Load the vertex data using named arrays */
         load_named = TRUE;
         device->useDrawStridedSlow = FALSE;
@@ -4330,15 +4339,6 @@ static void vertexdeclaration(DWORD state, IWineD3DStateBlockImpl *stateblock, W
     /* Some stuff is in the device until we have per context tracking */
     IWineD3DDeviceImpl *device = stateblock->wineD3DDevice;
     BOOL wasrhw = context->last_was_rhw;
-
-    if (useVertexShaderFunction)
-    {
-        if(((IWineD3DVertexShaderImpl *)stateblock->vertexShader)->baseShader.reg_maps.fog != context->last_was_foggy_shader) {
-            updateFog = TRUE;
-        }
-    } else if(context->last_was_foggy_shader) {
-        updateFog = TRUE;
-    }
 
     transformed = device->strided_streams.position_transformed;
     if(transformed != context->last_was_rhw && !useVertexShaderFunction) {
@@ -4405,8 +4405,11 @@ static void vertexdeclaration(DWORD state, IWineD3DStateBlockImpl *stateblock, W
             state_colormat(STATE_RENDER(WINED3DRS_COLORVERTEX), stateblock, context);
         }
 
-        if(context->last_was_vshader && !isStateDirty(context, STATE_RENDER(WINED3DRS_CLIPPLANEENABLE))) {
-            state_clipping(STATE_RENDER(WINED3DRS_CLIPPLANEENABLE), stateblock, context);
+        if(context->last_was_vshader) {
+            updateFog = TRUE;
+            if(!isStateDirty(context, STATE_RENDER(WINED3DRS_CLIPPLANEENABLE))) {
+                state_clipping(STATE_RENDER(WINED3DRS_CLIPPLANEENABLE), stateblock, context);
+            }
         }
         if(!isStateDirty(context, STATE_RENDER(WINED3DRS_NORMALIZENORMALS))) {
             state_normalize(STATE_RENDER(WINED3DRS_NORMALIZENORMALS), stateblock, context);
@@ -4440,6 +4443,7 @@ static void vertexdeclaration(DWORD state, IWineD3DStateBlockImpl *stateblock, W
                     transform_world(STATE_TRANSFORM(WINED3DTS_WORLDMATRIX(0)), stateblock, context);
                 }
             }
+            updateFog = TRUE;
         }
     }
 

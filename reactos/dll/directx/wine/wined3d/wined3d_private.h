@@ -461,6 +461,18 @@ struct ps_compile_args {
     /* Texture types(2D, Cube, 3D) in ps 1.x */
 };
 
+#define MAX_ATTRIBS 16
+
+enum fog_src_type {
+    VS_FOG_Z        = 0,
+    VS_FOG_COORD    = 1
+};
+
+struct vs_compile_args {
+    WORD                        fog_src;
+    WORD                        swizzle_map;   /* MAX_ATTRIBS, 16 */
+};
+
 typedef struct {
     const SHADER_HANDLER *shader_instruction_handler_table;
     void (*shader_select)(IWineD3DDevice *iface, BOOL usePS, BOOL useVS);
@@ -475,7 +487,7 @@ typedef struct {
     void (*shader_free_private)(IWineD3DDevice *iface);
     BOOL (*shader_dirtifyable_constants)(IWineD3DDevice *iface);
     GLuint (*shader_generate_pshader)(IWineD3DPixelShader *iface, SHADER_BUFFER *buffer, const struct ps_compile_args *args);
-    void (*shader_generate_vshader)(IWineD3DVertexShader *iface, SHADER_BUFFER *buffer);
+    GLuint (*shader_generate_vshader)(IWineD3DVertexShader *iface, SHADER_BUFFER *buffer, const struct vs_compile_args *args);
     void (*shader_get_caps)(WINED3DDEVTYPE devtype, const WineD3D_GL_Info *gl_info, struct shader_caps *caps);
     BOOL (*shader_color_fixup_supported)(struct color_fixup_desc fixup);
 } shader_backend_t;
@@ -804,7 +816,6 @@ struct WineD3DContext {
     WORD last_was_rhw : 1;              /* true iff last draw_primitive was in xyzrhw mode */
     WORD last_was_pshader : 1;
     WORD last_was_vshader : 1;
-    WORD last_was_foggy_shader : 1;
     WORD namedArraysLoaded : 1;
     WORD numberedArraysLoaded : 1;
     WORD last_was_blit : 1;
@@ -813,7 +824,7 @@ struct WineD3DContext {
     WORD isPBuffer : 1;
     WORD fog_enabled : 1;
     WORD num_untracked_materials : 2;   /* Max value 2 */
-    WORD padding : 2;
+    WORD padding : 3;
     BYTE texShaderBumpMap;              /* MAX_TEXTURES, 8 */
     BYTE lastWasPow2Texture;            /* MAX_TEXTURES, 8 */
     DWORD                   numbered_array_mask;
@@ -2210,7 +2221,6 @@ typedef struct IWineD3DBaseShaderClass
     CONST SHADER_OPCODE             *shader_ins;
     DWORD                          *function;
     UINT                            functionLength;
-    BOOL                            is_compiled;
     UINT                            cur_loop_depth, cur_loop_regno;
     BOOL                            load_local_constsF;
     BOOL                            uses_bool_consts, uses_int_consts;
@@ -2326,8 +2336,14 @@ static inline BOOL shader_constant_is_local(IWineD3DBaseShaderImpl* This, DWORD 
 }
 
 /*****************************************************************************
- * IDirect3DVertexShader implementation structure
+ * IDirect3DVertexShader implementation structures
  */
+
+struct vs_compiled_shader {
+    struct vs_compile_args      args;
+    GLuint                      prgId;
+};
+
 typedef struct IWineD3DVertexShaderImpl {
     /* IUnknown parts*/   
     const IWineD3DVertexShaderVtbl *lpVtbl;
@@ -2341,22 +2357,25 @@ typedef struct IWineD3DVertexShaderImpl {
     DWORD                       usage;
 
     /* The GL shader */
-    GLuint                          prgId;
+    struct vs_compiled_shader   *gl_shaders;
+    UINT                        num_gl_shaders, shader_array_size;
 
     /* Vertex shader input and output semantics */
     semantic semantics_in [MAX_ATTRIBS];
     semantic semantics_out [MAX_REG_OUTPUT];
 
-    WORD swizzle_map;   /* MAX_ATTRIBS, 16 */
-
     UINT                       min_rel_offset, max_rel_offset;
     UINT                       rel_offset;
 
     UINT                       recompile_count;
+
+    const struct vs_compile_args    *cur_args;
 } IWineD3DVertexShaderImpl;
 extern const SHADER_OPCODE IWineD3DVertexShaderImpl_shader_ins[];
 extern const IWineD3DVertexShaderVtbl IWineD3DVertexShader_Vtbl;
-HRESULT IWineD3DVertexShaderImpl_CompileShader(IWineD3DVertexShader *iface);
+
+void find_vs_compile_args(IWineD3DVertexShaderImpl *shader, IWineD3DStateBlockImpl *stateblock, struct vs_compile_args *args);
+GLuint find_gl_vshader(IWineD3DVertexShaderImpl *shader, const struct vs_compile_args *args);
 
 /*****************************************************************************
  * IDirect3DPixelShader implementation structure
@@ -2384,7 +2403,7 @@ typedef struct IWineD3DPixelShaderImpl {
 
     /* The GL shader */
     struct ps_compiled_shader   *gl_shaders;
-    UINT                        num_gl_shaders;
+    UINT                        num_gl_shaders, shader_array_size;
 
     /* Some information about the shader behavior */
     struct stb_const_desc       bumpenvmatconst[MAX_TEXTURES];

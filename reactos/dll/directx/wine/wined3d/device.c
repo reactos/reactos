@@ -2104,7 +2104,7 @@ static void IWineD3DDeviceImpl_LoadLogo(IWineD3DDeviceImpl *This, const char *fi
     HDC dcb = NULL, dcs = NULL;
     WINEDDCOLORKEY colorkey;
 
-    hbm = (HBITMAP) LoadImageA(NULL, filename, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | LR_CREATEDIBSECTION);
+    hbm = LoadImageA(NULL, filename, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | LR_CREATEDIBSECTION);
     if(hbm)
     {
         GetObjectA(hbm, sizeof(BITMAP), &bm);
@@ -6765,7 +6765,7 @@ static HRESULT  WINAPI  IWineD3DDeviceImpl_SetCursorProperties(IWineD3DDevice* i
             {
                 const struct GlPixelFormatDesc *glDesc;
                 const StaticPixelFormatDesc *tableEntry = getFormatDescEntry(WINED3DFMT_A8R8G8B8, &GLINFO_LOCATION, &glDesc);
-                char *mem, *bits = (char *)rect.pBits;
+                char *mem, *bits = rect.pBits;
                 GLint intfmt = glDesc->glInternal;
                 GLint format = glDesc->glFormat;
                 GLint type = glDesc->glType;

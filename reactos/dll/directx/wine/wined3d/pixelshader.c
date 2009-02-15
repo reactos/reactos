@@ -34,8 +34,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(d3d_shader);
 
 #define GLINFO_LOCATION ((IWineD3DDeviceImpl *) This->baseShader.device)->adapter->gl_info
 
-#define GLNAME_REQUIRE_GLSL  ((const char *)1)
-
 static HRESULT  WINAPI IWineD3DPixelShaderImpl_QueryInterface(IWineD3DPixelShader *iface, REFIID riid, LPVOID *ppobj) {
     TRACE("iface %p, riid %s, ppobj %p\n", iface, debugstr_guid(riid), ppobj);
 
@@ -439,8 +437,6 @@ static GLuint pixelshader_compile(IWineD3DPixelShaderImpl *This, const struct ps
     retval = device->shader_backend->shader_generate_pshader((IWineD3DPixelShader *)This, &buffer, args);
     shader_buffer_free(&buffer);
 
-    This->baseShader.is_compiled = TRUE;
-
     return retval;
 }
 
@@ -520,10 +516,12 @@ void find_ps_compile_args(IWineD3DPixelShaderImpl *shader, IWineD3DStateBlockImp
 GLuint find_gl_pshader(IWineD3DPixelShaderImpl *shader, const struct ps_compile_args *args)
 {
     UINT i;
-    struct ps_compiled_shader *old_array;
+    DWORD new_size;
+    struct ps_compiled_shader *new_array;
 
     /* Usually we have very few GL shaders for each d3d shader(just 1 or maybe 2),
-     * so a linear search is more performant than a hashmap
+     * so a linear search is more performant than a hashmap or a binary search
+     * (cache coherency etc)
      */
     for(i = 0; i < shader->num_gl_shaders; i++) {
         if(memcmp(&shader->gl_shaders[i].args, args, sizeof(*args)) == 0) {
@@ -532,17 +530,22 @@ GLuint find_gl_pshader(IWineD3DPixelShaderImpl *shader, const struct ps_compile_
     }
 
     TRACE("No matching GL shader found, compiling a new shader\n");
-    old_array = shader->gl_shaders;
-    if(old_array) {
-        shader->gl_shaders = HeapReAlloc(GetProcessHeap(), 0, old_array,
-                                         (shader->num_gl_shaders + 1) * sizeof(*shader->gl_shaders));
-    } else {
-        shader->gl_shaders = HeapAlloc(GetProcessHeap(), 0, sizeof(*shader->gl_shaders));
-    }
+    if(shader->shader_array_size == shader->num_gl_shaders) {
+        if(shader->gl_shaders) {
+            new_size = shader->shader_array_size + max(1, shader->shader_array_size / 2);
+            new_array = HeapReAlloc(GetProcessHeap(), 0, shader->gl_shaders,
+                                    new_size * sizeof(*shader->gl_shaders));
+        } else {
+            new_array = HeapAlloc(GetProcessHeap(), 0, sizeof(*shader->gl_shaders));
+            new_size = 1;
+        }
 
-    if(!shader->gl_shaders) {
-        ERR("Out of memory\n");
-        return 0;
+        if(!new_array) {
+            ERR("Out of memory\n");
+            return 0;
+        }
+        shader->gl_shaders = new_array;
+        shader->shader_array_size = new_size;
     }
 
     shader->gl_shaders[shader->num_gl_shaders].args = *args;

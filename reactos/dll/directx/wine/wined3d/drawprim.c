@@ -324,8 +324,8 @@ static void drawStridedSlow(IWineD3DDevice *iface, const WineDirect3DVertexStrid
             idxData = ((IWineD3DIndexBufferImpl *) This->stateBlock->pIndexData)->resource.allocatedMemory;
         }
 
-        if (idxSize == 2) pIdxBufS = (const WORD *) idxData;
-        else pIdxBufL = (const DWORD *) idxData;
+        if (idxSize == 2) pIdxBufS = idxData;
+        else pIdxBufL = idxData;
     } else if (idxData) {
         ERR("non-NULL idxData with 0 idxSize, this should never happen\n");
         return;
@@ -519,31 +519,41 @@ static void drawStridedSlow(IWineD3DDevice *iface, const WineDirect3DVertexStrid
 static inline void send_attribute(IWineD3DDeviceImpl *This, const DWORD type, const UINT index, const void *ptr) {
     switch(type) {
         case WINED3DDECLTYPE_FLOAT1:
-            GL_EXTCALL(glVertexAttrib1fvARB(index, (const float *)ptr));
+            GL_EXTCALL(glVertexAttrib1fvARB(index, ptr));
             break;
         case WINED3DDECLTYPE_FLOAT2:
-            GL_EXTCALL(glVertexAttrib2fvARB(index, (const float *)ptr));
+            GL_EXTCALL(glVertexAttrib2fvARB(index, ptr));
             break;
         case WINED3DDECLTYPE_FLOAT3:
-            GL_EXTCALL(glVertexAttrib3fvARB(index, (const float *)ptr));
+            GL_EXTCALL(glVertexAttrib3fvARB(index, ptr));
             break;
         case WINED3DDECLTYPE_FLOAT4:
-            GL_EXTCALL(glVertexAttrib4fvARB(index, (const float *)ptr));
+            GL_EXTCALL(glVertexAttrib4fvARB(index, ptr));
             break;
 
         case WINED3DDECLTYPE_UBYTE4:
             GL_EXTCALL(glVertexAttrib4ubvARB(index, ptr));
             break;
-        case WINED3DDECLTYPE_UBYTE4N:
         case WINED3DDECLTYPE_D3DCOLOR:
+            if (GL_SUPPORT(EXT_VERTEX_ARRAY_BGRA))
+            {
+                const DWORD *src = ptr;
+                DWORD c = *src & 0xff00ff00;
+                c |= (*src & 0xff0000) >> 16;
+                c |= (*src & 0xff) << 16;
+                GL_EXTCALL(glVertexAttrib4NubvARB(index, (GLubyte *)&c));
+                break;
+            }
+            /* else fallthrough */
+        case WINED3DDECLTYPE_UBYTE4N:
             GL_EXTCALL(glVertexAttrib4NubvARB(index, ptr));
             break;
 
         case WINED3DDECLTYPE_SHORT2:
-            GL_EXTCALL(glVertexAttrib4svARB(index, (const GLshort *)ptr));
+            GL_EXTCALL(glVertexAttrib4svARB(index, ptr));
             break;
         case WINED3DDECLTYPE_SHORT4:
-            GL_EXTCALL(glVertexAttrib4svARB(index, (const GLshort *)ptr));
+            GL_EXTCALL(glVertexAttrib4svARB(index, ptr));
             break;
 
         case WINED3DDECLTYPE_SHORT2N:
@@ -559,10 +569,10 @@ static inline void send_attribute(IWineD3DDeviceImpl *This, const DWORD type, co
             break;
         }
         case WINED3DDECLTYPE_SHORT4N:
-            GL_EXTCALL(glVertexAttrib4NsvARB(index, (const GLshort *)ptr));
+            GL_EXTCALL(glVertexAttrib4NsvARB(index, ptr));
             break;
         case WINED3DDECLTYPE_USHORT4N:
-            GL_EXTCALL(glVertexAttrib4NusvARB(index, (const GLushort *)ptr));
+            GL_EXTCALL(glVertexAttrib4NusvARB(index, ptr));
             break;
 
         case WINED3DDECLTYPE_UDEC3:
@@ -579,7 +589,7 @@ static inline void send_attribute(IWineD3DDeviceImpl *This, const DWORD type, co
              * byte float according to the IEEE standard
              */
             if (GL_SUPPORT(NV_HALF_FLOAT)) {
-                GL_EXTCALL(glVertexAttrib2hvNV(index, (const GLhalfNV *)ptr));
+                GL_EXTCALL(glVertexAttrib2hvNV(index, ptr));
             } else {
                 float x = float_16_to_32(((const unsigned short *)ptr) + 0);
                 float y = float_16_to_32(((const unsigned short *)ptr) + 1);
@@ -588,7 +598,7 @@ static inline void send_attribute(IWineD3DDeviceImpl *This, const DWORD type, co
             break;
         case WINED3DDECLTYPE_FLOAT16_4:
             if (GL_SUPPORT(NV_HALF_FLOAT)) {
-                GL_EXTCALL(glVertexAttrib4hvNV(index, (const GLhalfNV *)ptr));
+                GL_EXTCALL(glVertexAttrib4hvNV(index, ptr));
             } else {
                 float x = float_16_to_32(((const unsigned short *)ptr) + 0);
                 float y = float_16_to_32(((const unsigned short *)ptr) + 1);
@@ -626,8 +636,8 @@ static void drawStridedSlowVs(IWineD3DDevice *iface, const WineDirect3DVertexStr
             idxData = ((IWineD3DIndexBufferImpl *) stateblock->pIndexData)->resource.allocatedMemory;
         }
 
-        if (idxSize == 2) pIdxBufS = (const WORD *) idxData;
-        else pIdxBufL = (const DWORD *) idxData;
+        if (idxSize == 2) pIdxBufS = idxData;
+        else pIdxBufL = idxData;
     } else if (idxData) {
         ERR("non-NULL idxData with 0 idxSize, this should never happen\n");
         return;
@@ -954,7 +964,7 @@ void drawPrimitive(IWineD3DDevice *iface, int PrimitiveType, long NumPrimitives,
                     sprintf(buffer, "/tmp/texture_%p_%ld_%d.tga", This->stateBlock->textures[textureNo], primCounter, textureNo);
                     TRACE("Saving texture %s\n", buffer);
                     if (IWineD3DBaseTexture_GetType(This->stateBlock->textures[textureNo]) == WINED3DRTYPE_TEXTURE) {
-                            IWineD3DTexture_GetSurfaceLevel((IWineD3DTexture *)This->stateBlock->textures[textureNo], 0, &pSur);
+                            IWineD3DTexture_GetSurfaceLevel(This->stateBlock->textures[textureNo], 0, &pSur);
                             IWineD3DSurface_SaveSnapshot(pSur, buffer);
                             IWineD3DSurface_Release(pSur);
                     } else  {

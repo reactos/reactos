@@ -803,7 +803,7 @@ static void set_tex_op_atifs(DWORD state, IWineD3DStateBlockImpl *stateblock, Wi
     IWineD3DDeviceImpl          *This = stateblock->wineD3DDevice;
     const struct atifs_ffp_desc *desc;
     struct ffp_frag_settings     settings;
-    struct atifs_private_data   *priv = (struct atifs_private_data *) This->fragment_priv;
+    struct atifs_private_data   *priv = This->fragment_priv;
     DWORD mapped_stage;
     unsigned int i;
 
@@ -1107,7 +1107,7 @@ static HRESULT atifs_alloc(IWineD3DDevice *iface) {
         ERR("Out of memory\n");
         return E_OUTOFMEMORY;
     }
-    priv = (struct atifs_private_data *) This->fragment_priv;
+    priv = This->fragment_priv;
     priv->fragment_shaders = hash_table_create(ffp_frag_program_key_hash, ffp_frag_program_key_compare);
     return WINED3D_OK;
 }
@@ -1126,7 +1126,7 @@ static void atifs_free_ffpshader(void *value, void *device) {
 
 static void atifs_free(IWineD3DDevice *iface) {
     IWineD3DDeviceImpl *This = (IWineD3DDeviceImpl *) iface;
-    struct atifs_private_data *priv = (struct atifs_private_data *) This->fragment_priv;
+    struct atifs_private_data *priv = This->fragment_priv;
 
     hash_table_destroy(priv->fragment_shaders, atifs_free_ffpshader, This);
 

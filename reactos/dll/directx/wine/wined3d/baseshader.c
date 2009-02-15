@@ -31,8 +31,6 @@
 WINE_DEFAULT_DEBUG_CHANNEL(d3d_shader);
 WINE_DECLARE_DEBUG_CHANNEL(d3d);
 
-#define GLNAME_REQUIRE_GLSL  ((const char *)1)
-
 static void shader_dump_param(const DWORD param, const DWORD addr_token, int input, DWORD shader_version);
 
 static inline BOOL shader_is_version_token(DWORD token) {
@@ -1135,8 +1133,9 @@ static GLuint shader_none_generate_pshader(IWineD3DPixelShader *iface, SHADER_BU
     FIXME("NONE shader backend asked to generate a pixel shader\n");
     return 0;
 }
-static void shader_none_generate_vshader(IWineD3DVertexShader *iface, SHADER_BUFFER *buffer) {
+static GLuint shader_none_generate_vshader(IWineD3DVertexShader *iface, SHADER_BUFFER *buffer, const struct vs_compile_args *args) {
     FIXME("NONE shader backend asked to generate a vertex shader\n");
+    return 0;
 }
 
 #define GLINFO_LOCATION      (*gl_info)

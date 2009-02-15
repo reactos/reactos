@@ -29,7 +29,6 @@
 #include "config.h"
 #include "wine/port.h"
 #include "wined3d_private.h"
-#include "float.h"
 
 #include <assert.h>
 
@@ -46,7 +45,7 @@ static inline unsigned short float_32_to_16(const float *in)
     /* Deal with special numbers */
     if(*in == 0.0) return 0x0000;
     if(isnan(*in)) return 0x7C01;
-    if(!_finite(*in)) return (*in < 0.0 ? 0xFC00 : 0x7c00);
+    if(isinf(*in)) return (*in < 0.0 ? 0xFC00 : 0x7c00);
 
     if(tmp < pow(2, 10)) {
         do
@@ -1145,7 +1144,7 @@ HRESULT WINAPI IWineD3DBaseSurfaceImpl_Blt(IWineD3DSurface *iface, const RECT *D
     assert(width <= dlock.Pitch);
 
     if (DestRect && Src != This)
-        dbuf = (BYTE*)dlock.pBits;
+        dbuf = dlock.pBits;
     else
         dbuf = (BYTE*)dlock.pBits+(xdst.top*dlock.Pitch)+(xdst.left*bpp);
 

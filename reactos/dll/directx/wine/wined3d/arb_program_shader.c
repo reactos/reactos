@@ -510,7 +510,7 @@ static void vshader_program_add_param(const SHADER_OPCODE_ARG *arg, const DWORD 
     break;
   case WINED3DSPR_INPUT:
 
-    if (This->swizzle_map & (1 << reg)) is_color = TRUE;
+    if (This->cur_args->swizzle_map & (1 << reg)) is_color = TRUE;
 
     sprintf(tmpReg, "vertex.attrib[%u]", reg);
     strcat(hwLine, tmpReg);
@@ -1741,18 +1741,19 @@ static GLuint create_arb_blt_fragment_program(const WineD3D_GL_Info *gl_info, en
 
 static void shader_arb_select(IWineD3DDevice *iface, BOOL usePS, BOOL useVS) {
     IWineD3DDeviceImpl *This = (IWineD3DDeviceImpl *)iface;
-    struct shader_arb_priv *priv = (struct shader_arb_priv *) This->shader_priv;
+    struct shader_arb_priv *priv = This->shader_priv;
     const WineD3D_GL_Info *gl_info = &This->adapter->gl_info;
 
     if (useVS) {
-        TRACE("Using vertex shader\n");
-        IWineD3DVertexShaderImpl_CompileShader(This->stateBlock->vertexShader);
+        struct vs_compile_args compile_args;
 
-        priv->current_vprogram_id = ((IWineD3DVertexShaderImpl *)This->stateBlock->vertexShader)->prgId;
+        TRACE("Using vertex shader\n");
+        find_vs_compile_args((IWineD3DVertexShaderImpl *) This->stateBlock->vertexShader, This->stateBlock, &compile_args);
+        priv->current_vprogram_id = find_gl_vshader((IWineD3DVertexShaderImpl *) This->stateBlock->vertexShader, &compile_args);
 
         /* Bind the vertex program */
         GL_EXTCALL(glBindProgramARB(GL_VERTEX_PROGRAM_ARB, priv->current_vprogram_id));
-        checkGLcall("glBindProgramARB(GL_VERTEX_PROGRAM_ARB, vertexShader->prgId);");
+        checkGLcall("glBindProgramARB(GL_VERTEX_PROGRAM_ARB, priv->current_vprogram_id);");
 
         /* Enable OpenGL vertex programs */
         glEnable(GL_VERTEX_PROGRAM_ARB);
@@ -1773,7 +1774,7 @@ static void shader_arb_select(IWineD3DDevice *iface, BOOL usePS, BOOL useVS) {
 
         /* Bind the fragment program */
         GL_EXTCALL(glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, priv->current_fprogram_id));
-        checkGLcall("glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, pixelShader->prgId);");
+        checkGLcall("glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, priv->current_fprogram_id);");
 
         if(!priv->use_arbfp_fixed_func) {
             /* Enable OpenGL fragment programs */
@@ -1794,7 +1795,7 @@ static void shader_arb_select(IWineD3DDevice *iface, BOOL usePS, BOOL useVS) {
 
 static void shader_arb_select_depth_blt(IWineD3DDevice *iface, enum tex_types tex_type) {
     IWineD3DDeviceImpl *This = (IWineD3DDeviceImpl *)iface;
-    struct shader_arb_priv *priv = (struct shader_arb_priv *) This->shader_priv;
+    struct shader_arb_priv *priv = This->shader_priv;
     GLuint *blt_fprogram = &priv->depth_blt_fprogram_id[tex_type];
     const WineD3D_GL_Info *gl_info = &This->adapter->gl_info;
 
@@ -1809,7 +1810,7 @@ static void shader_arb_select_depth_blt(IWineD3DDevice *iface, enum tex_types te
 
 static void shader_arb_deselect_depth_blt(IWineD3DDevice *iface) {
     IWineD3DDeviceImpl *This = (IWineD3DDeviceImpl *)iface;
-    struct shader_arb_priv *priv = (struct shader_arb_priv *) This->shader_priv;
+    struct shader_arb_priv *priv = This->shader_priv;
     const WineD3D_GL_Info *gl_info = &This->adapter->gl_info;
 
     if (priv->current_vprogram_id) {
@@ -1857,16 +1858,22 @@ static void shader_arb_destroy(IWineD3DBaseShader *iface) {
         HeapFree(GetProcessHeap(), 0, This->gl_shaders);
         This->gl_shaders = NULL;
         This->num_gl_shaders = 0;
+        This->shader_array_size = 0;
     } else {
         IWineD3DVertexShaderImpl *This = (IWineD3DVertexShaderImpl *) iface;
+        UINT i;
 
         ENTER_GL();
-        GL_EXTCALL(glDeleteProgramsARB(1, &This->prgId));
-        checkGLcall("GL_EXTCALL(glDeleteProgramsARB(1, &This->prgId))");
-        ((IWineD3DVertexShaderImpl *) This)->prgId = 0;
+        for(i = 0; i < This->num_gl_shaders; i++) {
+            GL_EXTCALL(glDeleteProgramsARB(1, &This->gl_shaders[i].prgId));
+            checkGLcall("GL_EXTCALL(glDeleteProgramsARB(1, &This->gl_shaders[i].prgId))");
+        }
         LEAVE_GL();
+        HeapFree(GetProcessHeap(), 0, This->gl_shaders);
+        This->gl_shaders = NULL;
+        This->num_gl_shaders = 0;
+        This->shader_array_size = 0;
     }
-    baseShader->baseShader.is_compiled = FALSE;
 }
 
 static HRESULT shader_arb_alloc(IWineD3DDevice *iface) {
@@ -1878,7 +1885,7 @@ static HRESULT shader_arb_alloc(IWineD3DDevice *iface) {
 static void shader_arb_free(IWineD3DDevice *iface) {
     IWineD3DDeviceImpl *This = (IWineD3DDeviceImpl *)iface;
     const WineD3D_GL_Info *gl_info = &This->adapter->gl_info;
-    struct shader_arb_priv *priv = (struct shader_arb_priv *) This->shader_priv;
+    struct shader_arb_priv *priv = This->shader_priv;
     int i;
 
     if(priv->depth_blt_vprogram_id) {
@@ -2007,13 +2014,14 @@ static GLuint shader_arb_generate_pshader(IWineD3DPixelShader *iface, SHADER_BUF
     return retval;
 }
 
-static void shader_arb_generate_vshader(IWineD3DVertexShader *iface, SHADER_BUFFER *buffer) {
+static GLuint shader_arb_generate_vshader(IWineD3DVertexShader *iface, SHADER_BUFFER *buffer, const struct vs_compile_args *args) {
     IWineD3DVertexShaderImpl *This = (IWineD3DVertexShaderImpl *)iface;
     const shader_reg_maps *reg_maps = &This->baseShader.reg_maps;
     CONST DWORD *function = This->baseShader.function;
     IWineD3DDeviceImpl *device = (IWineD3DDeviceImpl *)This->baseShader.device;
     const WineD3D_GL_Info *gl_info = &device->adapter->gl_info;
     const local_constant *lconst;
+    GLuint ret;
 
     /*  Create the hw ARB shader */
     shader_addline(buffer, "!!ARBvp1.0\n");
@@ -2060,9 +2068,16 @@ static void shader_arb_generate_vshader(IWineD3DVertexShader *iface, SHADER_BUFF
     /* Base Shader Body */
     shader_generate_main( (IWineD3DBaseShader*) This, buffer, reg_maps, function);
 
-    /* If this shader doesn't use fog copy the z coord to the fog coord so that we can use table fog */
-    if (!reg_maps->fog)
+    /* The D3DRS_FOGTABLEMODE render state defines if the shader-generated fog coord is used
+     * or if the fragment depth is used. If the fragment depth is used(FOGTABLEMODE != NONE),
+     * the fog frag coord is thrown away. If the fog frag coord is used, but not written by
+     * the shader, it is set to 0.0(fully fogged, since start = 1.0, end = 0.0)
+     */
+    if(args->fog_src == VS_FOG_Z) {
         shader_addline(buffer, "MOV result.fogcoord, TMP_OUT.z;\n");
+    } else if (!reg_maps->fog) {
+        shader_addline(buffer, "MOV result.fogcoord, 0.0;\n");
+    }
 
     /* Write the final position.
      *
@@ -2085,12 +2100,12 @@ static void shader_arb_generate_vshader(IWineD3DVertexShader *iface, SHADER_BUFF
     shader_addline(buffer, "END\n");
 
     /* TODO: change to resource.glObjectHandle or something like that */
-    GL_EXTCALL(glGenProgramsARB(1, &This->prgId));
+    GL_EXTCALL(glGenProgramsARB(1, &ret));
 
-    TRACE("Creating a hw vertex shader, prg=%d\n", This->prgId);
-    GL_EXTCALL(glBindProgramARB(GL_VERTEX_PROGRAM_ARB, This->prgId));
+    TRACE("Creating a hw vertex shader, prg=%d\n", ret);
+    GL_EXTCALL(glBindProgramARB(GL_VERTEX_PROGRAM_ARB, ret));
 
-    TRACE("Created hw vertex shader, prg=%d\n", This->prgId);
+    TRACE("Created hw vertex shader, prg=%d\n", ret);
     /* Create the program and check for errors */
     GL_EXTCALL(glProgramStringARB(GL_VERTEX_PROGRAM_ARB, GL_PROGRAM_FORMAT_ASCII_ARB,
                buffer->bsize, buffer->buffer));
@@ -2100,16 +2115,17 @@ static void shader_arb_generate_vshader(IWineD3DVertexShader *iface, SHADER_BUFF
         glGetIntegerv(GL_PROGRAM_ERROR_POSITION_ARB, &errPos);
         FIXME("HW VertexShader Error at position %d: %s\n",
               errPos, debugstr_a((const char *)glGetString(GL_PROGRAM_ERROR_STRING_ARB)));
-        This->prgId = -1;
-    }
-
-    /* Load immediate constants */
-    if(!This->baseShader.load_local_constsF) {
-        LIST_FOR_EACH_ENTRY(lconst, &This->baseShader.constantsF, local_constant, entry) {
-            const float *value = (const float *)lconst->value;
-            GL_EXTCALL(glProgramLocalParameter4fvARB(GL_VERTEX_PROGRAM_ARB, lconst->idx, value));
+        ret = -1;
+    } else {
+        /* Load immediate constants */
+        if(!This->baseShader.load_local_constsF) {
+            LIST_FOR_EACH_ENTRY(lconst, &This->baseShader.constantsF, local_constant, entry) {
+                const float *value = (const float *)lconst->value;
+                GL_EXTCALL(glProgramLocalParameter4fvARB(GL_VERTEX_PROGRAM_ARB, lconst->idx, value));
+            }
         }
     }
+    return ret;
 }
 
 static void shader_arb_get_caps(WINED3DDEVTYPE devtype, const WineD3D_GL_Info *gl_info, struct shader_caps *pCaps)
@@ -2294,7 +2310,7 @@ static HRESULT arbfp_alloc(IWineD3DDevice *iface) {
         This->fragment_priv = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(struct shader_arb_priv));
         if(!This->fragment_priv) return E_OUTOFMEMORY;
     }
-    priv = (struct shader_arb_priv *) This->fragment_priv;
+    priv = This->fragment_priv;
     priv->fragment_shaders = hash_table_create(ffp_frag_program_key_hash, ffp_frag_program_key_compare);
     priv->use_arbfp_fixed_func = TRUE;
     return WINED3D_OK;
@@ -2313,7 +2329,7 @@ static void arbfp_free_ffpshader(void *value, void *gli) {
 
 static void arbfp_free(IWineD3DDevice *iface) {
     IWineD3DDeviceImpl *This = (IWineD3DDeviceImpl *) iface;
-    struct shader_arb_priv *priv = (struct shader_arb_priv *) This->fragment_priv;
+    struct shader_arb_priv *priv = This->fragment_priv;
 
     hash_table_destroy(priv->fragment_shaders, arbfp_free_ffpshader, &This->adapter->gl_info);
     priv->use_arbfp_fixed_func = FALSE;
@@ -2952,7 +2968,7 @@ static GLuint gen_arbfp_ffp_shader(const struct ffp_frag_settings *settings, IWi
 
 static void fragment_prog_arbfp(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3DContext *context) {
     IWineD3DDeviceImpl *device = stateblock->wineD3DDevice;
-    struct shader_arb_priv *priv = (struct shader_arb_priv *) device->fragment_priv;
+    struct shader_arb_priv *priv = device->fragment_priv;
     BOOL use_pshader = use_ps(stateblock);
     BOOL use_vshader = use_vs(stateblock);
     struct ffp_frag_settings settings;
@@ -3051,22 +3067,17 @@ static void state_arbfp_fog(DWORD state, IWineD3DStateBlockImpl *stateblock, Win
 
     if(!stateblock->renderState[WINED3DRS_FOGENABLE]) return;
 
-    if(use_vs(stateblock)
-       && ((IWineD3DVertexShaderImpl *)stateblock->vertexShader)->baseShader.reg_maps.fog) {
-        if( stateblock->renderState[WINED3DRS_FOGTABLEMODE] != WINED3DFOG_NONE ) {
-            FIXME("vertex shader with table fog used\n");
-        }
-        context->last_was_foggy_shader = TRUE;
-        new_source = FOGSOURCE_VS;
-    } else if(stateblock->renderState[WINED3DRS_FOGTABLEMODE] == WINED3DFOG_NONE) {
-        context->last_was_foggy_shader = FALSE;
-        if(stateblock->renderState[WINED3DRS_FOGVERTEXMODE] == WINED3DFOG_NONE || context->last_was_rhw) {
-            new_source = FOGSOURCE_COORD;
+    if(stateblock->renderState[WINED3DRS_FOGTABLEMODE] == WINED3DFOG_NONE) {
+        if(use_vs(stateblock)) {
+            new_source = FOGSOURCE_VS;
         } else {
-            new_source = FOGSOURCE_FFP;
+            if(stateblock->renderState[WINED3DRS_FOGVERTEXMODE] == WINED3DFOG_NONE || context->last_was_rhw) {
+                new_source = FOGSOURCE_COORD;
+            } else {
+                new_source = FOGSOURCE_FFP;
+            }
         }
     } else {
-        context->last_was_foggy_shader = FALSE;
         new_source = FOGSOURCE_FFP;
     }
     if(new_source != context->fog_source) {
@@ -3263,7 +3274,7 @@ static HRESULT arbfp_blit_alloc(IWineD3DDevice *iface) {
 }
 static void arbfp_blit_free(IWineD3DDevice *iface) {
     IWineD3DDeviceImpl *device = (IWineD3DDeviceImpl *) iface;
-    struct arbfp_blit_priv *priv = (struct arbfp_blit_priv *) device->blit_priv;
+    struct arbfp_blit_priv *priv = device->blit_priv;
 
     ENTER_GL();
     GL_EXTCALL(glDeleteProgramsARB(1, &priv->yuy2_rect_shader));
@@ -3514,7 +3525,7 @@ static GLuint gen_yuv_shader(IWineD3DDeviceImpl *device, enum yuv_fixup yuv_fixu
     GLenum shader;
     SHADER_BUFFER buffer;
     char luminance_component;
-    struct arbfp_blit_priv *priv = (struct arbfp_blit_priv *) device->blit_priv;
+    struct arbfp_blit_priv *priv = device->blit_priv;
 
     /* Shader header */
     shader_buffer_init(&buffer);
@@ -3649,7 +3660,7 @@ static HRESULT arbfp_blit_set(IWineD3DDevice *iface, WINED3DFORMAT fmt, GLenum t
     GLenum shader;
     IWineD3DDeviceImpl *device = (IWineD3DDeviceImpl *) iface;
     float size[4] = {width, height, 1, 1};
-    struct arbfp_blit_priv *priv = (struct arbfp_blit_priv *) device->blit_priv;
+    struct arbfp_blit_priv *priv = device->blit_priv;
     const struct GlPixelFormatDesc *glDesc;
     enum yuv_fixup yuv_fixup;
 

@@ -265,7 +265,7 @@ static BOOL     WINAPI  IDirect3DDevice9Impl_ShowCursor(LPDIRECT3DDEVICE9EX ifac
 }
 
 static HRESULT WINAPI reset_enum_callback(IWineD3DResource *resource, void *data) {
-    BOOL *resources_ok = (BOOL *) data;
+    BOOL *resources_ok = data;
     WINED3DRESOURCETYPE type;
     HRESULT ret = S_OK;
     WINED3DSURFACE_DESC surface_desc;
@@ -617,7 +617,7 @@ static HRESULT  WINAPI  IDirect3DDevice9Impl_StretchRect(LPDIRECT3DDEVICE9EX ifa
 
     TRACE("(%p)->(%p,%p,%p,%p,%d)\n" , This, src, pSourceRect, dst, pDestRect, Filter);
     EnterCriticalSection(&d3d9_cs);
-    hr = IWineD3DSurface_Blt(dst->wineD3DSurface, (RECT *) pDestRect, src->wineD3DSurface, (RECT *) pSourceRect, 0, NULL, Filter);
+    hr = IWineD3DSurface_Blt(dst->wineD3DSurface, pDestRect, src->wineD3DSurface, pSourceRect, 0, NULL, Filter);
     LeaveCriticalSection(&d3d9_cs);
     return hr;
 }
@@ -1338,7 +1338,7 @@ static IDirect3DVertexDeclaration9 *getConvertedDecl(IDirect3DDevice9Impl *This,
 
 static HRESULT WINAPI IDirect3DDevice9Impl_SetFVF(LPDIRECT3DDEVICE9EX iface, DWORD FVF) {
     IDirect3DDevice9Impl *This = (IDirect3DDevice9Impl *)iface;
-    HRESULT hr;
+    HRESULT hr = S_OK;
     TRACE("(%p) Relay\n" , This);
 
     EnterCriticalSection(&d3d9_cs);
