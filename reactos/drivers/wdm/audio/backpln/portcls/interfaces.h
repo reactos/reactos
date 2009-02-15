@@ -99,8 +99,16 @@ struct IIrpTargetFactory;
 
 typedef struct
 {
+    ULONG PinDescriptorCount;
+    ULONG PinDescriptorSize;
+    KSPIN_DESCRIPTOR * KsPinDescriptor;
+}KSPIN_FACTORY;
+
+typedef struct
+{
     ULONG InterfaceCount;
     GUID *Interfaces;
+    KSPIN_FACTORY Factory;
 }SUBDEVICE_DESCRIPTOR, *PSUBDEVICE_DESCRIPTOR;
 
 #undef INTERFACE

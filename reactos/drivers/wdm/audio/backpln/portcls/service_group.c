@@ -37,7 +37,8 @@ IServiceGroup_fnQueryInterface(
 {
     IServiceGroupImpl * This = (IServiceGroupImpl*)iface;
     if (IsEqualGUIDAligned(refiid, &IID_IServiceGroup) ||
-        IsEqualGUIDAligned(refiid, &IID_IServiceSink))
+        IsEqualGUIDAligned(refiid, &IID_IServiceSink) ||
+        IsEqualGUIDAligned(refiid, &IID_IUnknown))
     {
         *Output = &This->lpVtbl;
         InterlockedIncrement(&This->ref);

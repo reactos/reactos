@@ -97,7 +97,7 @@ IPortEvents_fnRelease(
     IPortEvents* iface)
 {
     IPortWaveCyclicImpl * This = (IPortWaveCyclicImpl*)CONTAINING_RECORD(iface, IPortWaveCyclicImpl, lpVtblPortEvents);
-    DPRINT1("IPortEvents_fnQueryInterface entered\n");
+    DPRINT1("IPortEvents_fnRelease entered\n");
     InterlockedDecrement(&This->ref);
 
     if (This->ref == 0)
@@ -272,7 +272,7 @@ IPortWaveCyclic_fnInit(
     PPOWERNOTIFY PowerNotify;
     IPortWaveCyclicImpl * This = (IPortWaveCyclicImpl*)iface;
 
-    DPRINT1("IPortWaveCyclic_Init entered\n");
+    DPRINT1("IPortWaveCyclic_Init entered %p\n", This);
 
     if (This->bInitialized)
     {
@@ -537,12 +537,21 @@ ISubDevice_fnNewIrpTarget(
     IN PUNKNOWN Unknown,
     IN POOL_TYPE PoolType,
     IN PDEVICE_OBJECT * DeviceObject,
-    IN PIRP Irp, 
+    IN PIRP Irp,
     IN KSOBJECT_CREATE *CreateObject)
 {
+    NTSTATUS Status;
+    IPortFilterWaveCyclic * Filter;
     IPortWaveCyclicImpl * This = (IPortWaveCyclicImpl*)CONTAINING_RECORD(iface, IPortWaveCyclicImpl, lpVtblSubDevice);
 
     DPRINT1("ISubDevice_NewIrpTarget this %p\n", This);
+
+    Status = NewPortFilterWaveCyclic(&Filter, (IPortWaveCyclic*)This);
+    if (NT_SUCCESS(Status))
+    {
+        *OutTarget = (IIrpTarget*)Filter;
+    }
+
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -567,9 +576,11 @@ ISubDevice_fnGetDescriptor(
 {
     IPortWaveCyclicImpl * This = (IPortWaveCyclicImpl*)CONTAINING_RECORD(iface, IPortWaveCyclicImpl, lpVtblSubDevice);
 
+    ASSERT(This->SubDeviceDescriptor != NULL);
+
     *Descriptor = This->SubDeviceDescriptor;
 
-    DPRINT1("ISubDevice_GetDescriptor this %p\n", This);
+    DPRINT1("ISubDevice_GetDescriptor this %p desc %p\n", This, This->SubDeviceDescriptor);
     return STATUS_SUCCESS;
 }
 

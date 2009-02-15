@@ -22,5 +22,5 @@ FreeItem(
     IN ULONG Tag)
 {
 
-    //ExFreePoolWithTag(Item, Tag);
+    ExFreePoolWithTag(Item, Tag);
 }

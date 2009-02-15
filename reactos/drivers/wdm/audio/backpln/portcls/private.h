@@ -83,7 +83,11 @@ NTSTATUS NewPortClsVersion(
     OUT PPORTCLSVERSION * OutVersion);
 
 NTSTATUS NewPortFilterWaveCyclic(
-    OUT IPortFilterWaveCyclic ** OutFilter);
+    OUT IPortFilterWaveCyclic ** OutFilter,
+    IN IPortWaveCyclic* iface);
+
+NTSTATUS NewPortPinWaveCyclic(
+    OUT IPortPinWaveCyclic ** OutPin);
 
 PVOID AllocateItem(IN POOL_TYPE PoolType, IN SIZE_T NumberOfBytes, IN ULONG Tag);
 
@@ -176,6 +180,13 @@ PcCreateSubdeviceDescriptor(
     IN ULONG EventSetCount,
     IN KSEVENT_SET * EventSet,
     IN PPCFILTER_DESCRIPTOR FilterDescription);
+
+NTSTATUS
+NTAPI
+PcValidateConnectRequest(
+    IN PIRP Irp,
+    IN KSPIN_FACTORY * Descriptor,
+    OUT PKSPIN_CONNECT* Connect);
 
 NTSTATUS
 NTAPI

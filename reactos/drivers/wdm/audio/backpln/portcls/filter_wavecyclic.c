@@ -6,6 +6,9 @@ typedef struct
 
     LONG ref;
 
+    IPortWaveCyclic* Port;
+    IPortPinWaveCyclic * Pin;
+
 }IPortFilterWaveCyclicImpl;
 
 /*
@@ -80,8 +83,53 @@ IPortFilterWaveCyclic_fnNewIrpTarget(
     IN PIRP Irp,
     IN KSOBJECT_CREATE *CreateObject)
 {
+    ISubdevice * ISubDevice;
+    NTSTATUS Status;
+    IPortPinWaveCyclic * Pin;
 
-    return STATUS_UNSUCCESSFUL;
+    SUBDEVICE_DESCRIPTOR * Descriptor;
+    PKSPIN_CONNECT ConnectDetails;
+
+    IPortFilterWaveCyclicImpl * This = (IPortFilterWaveCyclicImpl *)iface;
+
+    ASSERT(This->Port);
+
+    Status = This->Port->lpVtbl->QueryInterface(This->Port, &IID_ISubdevice, (PVOID*)&ISubDevice);
+    if (!NT_SUCCESS(Status))
+        return STATUS_UNSUCCESSFUL;
+
+    Status = ISubDevice->lpVtbl->GetDescriptor(ISubDevice, &Descriptor);
+    if (!NT_SUCCESS(Status))
+        return STATUS_UNSUCCESSFUL;
+
+    Status = PcValidateConnectRequest(Irp, &Descriptor->Factory, &ConnectDetails);
+    if (!NT_SUCCESS(Status))
+    {
+        ISubDevice->lpVtbl->Release(ISubDevice);
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    ISubDevice->lpVtbl->Release(ISubDevice);
+
+    Status = NewPortPinWaveCyclic(&Pin);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    Status = Pin->lpVtbl->Init(Pin, This->Port, iface, ConnectDetails, &Descriptor->Factory.KsPinDescriptor[ConnectDetails->PinId]);
+    if (!NT_SUCCESS(Status))
+    {
+        Pin->lpVtbl->Release(Pin);
+        return Status;
+    }
+
+    /* store pin handle */
+    This->Pin = Pin;
+
+    /* store result */
+    *OutTarget = (IIrpTarget*)Pin;
+    return Status;
 }
 
 /*
@@ -256,7 +304,8 @@ static IPortFilterWaveCyclicVtbl vt_IPortFilterWaveCyclic =
 
 
 NTSTATUS NewPortFilterWaveCyclic(
-    OUT IPortFilterWaveCyclic ** OutFilter)
+    OUT IPortFilterWaveCyclic ** OutFilter,
+    IN IPortWaveCyclic* iface)
 {
     IPortFilterWaveCyclicImpl * This;
 
@@ -267,6 +316,10 @@ NTSTATUS NewPortFilterWaveCyclic(
     /* initialize IPortFilterWaveCyclic */
     This->ref = 1;
     This->lpVtbl = &vt_IPortFilterWaveCyclic;
+    This->Port = iface;
+
+    /* increment reference count */
+    iface->lpVtbl->AddRef(iface);
 
     /* return result */
     *OutFilter = (IPortFilterWaveCyclic*)&This->lpVtbl;

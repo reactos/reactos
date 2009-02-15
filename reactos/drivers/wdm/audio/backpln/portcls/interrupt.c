@@ -120,7 +120,7 @@ IInterruptSync_fnCallSynchronizedRoutine(
     KIRQL OldIrql;
     IInterruptSyncImpl * This = (IInterruptSyncImpl*)iface;
 
-    DPRINT1("IInterruptSync_fnCallSynchronizedRoutine This %p Routine %p DynamicContext %p\n", This, Routine, DynamicContext);
+    DPRINT1("IInterruptSync_fnCallSynchronizedRoutine This %p Routine %p DynamicContext %p Irql %x Interrupt %p\n", This, Routine, DynamicContext, KeGetCurrentIrql(), This->Interrupt);
 
     if (!This->Interrupt)
     {
@@ -140,7 +140,10 @@ IInterruptSync_fnCallSynchronizedRoutine(
     This->SyncRoutine = Routine;
     This->DynamicContext = DynamicContext;
 
-    return KeSynchronizeExecution(This->Interrupt, IInterruptSynchronizedRoutine, (PVOID)This);
+    if (KeSynchronizeExecution(This->Interrupt, IInterruptSynchronizedRoutine, (PVOID)This))
+        return STATUS_SUCCESS;
+    else
+        return STATUS_UNSUCCESSFUL;
 }
 
 NTAPI

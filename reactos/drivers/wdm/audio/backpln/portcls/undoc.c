@@ -102,6 +102,7 @@ PcCreateSubdeviceDescriptor(
     IN PPCFILTER_DESCRIPTOR FilterDescription)
 {
     SUBDEVICE_DESCRIPTOR * Descriptor;
+    ULONG Index;
     NTSTATUS Status = STATUS_INSUFFICIENT_RESOURCES;
 
     Descriptor = AllocateItem(NonPagedPool, sizeof(SUBDEVICE_DESCRIPTOR), TAG_PORTCLASS);
@@ -116,6 +117,24 @@ PcCreateSubdeviceDescriptor(
     RtlCopyMemory(Descriptor->Interfaces, InterfaceGuids, sizeof(GUID) * InterfaceCount);
     Descriptor->InterfaceCount = InterfaceCount;
 
+
+    if (FilterDescription->PinCount)
+    {
+        /// FIXME
+        /// handle extra size
+        ASSERT(FilterDescription->PinSize == sizeof(KSPIN_DESCRIPTOR));
+        Descriptor->Factory.KsPinDescriptor = AllocateItem(NonPagedPool, sizeof(KSPIN_DESCRIPTOR) * FilterDescription->PinCount, TAG_PORTCLASS);
+        if (!Descriptor->Factory.KsPinDescriptor)
+            goto cleanup;
+
+        Descriptor->Factory.PinDescriptorCount = FilterDescription->PinCount;
+        Descriptor->Factory.PinDescriptorSize = FilterDescription->PinSize;
+
+        /* copy pin factories */
+        for(Index = 0; Index < FilterDescription->PinCount; Index++)
+            RtlMoveMemory(&Descriptor->Factory.KsPinDescriptor[Index], &FilterDescription->Pins[Index].KsPinDescriptor, sizeof(KSPIN_DESCRIPTOR));
+    }
+
     *OutSubdeviceDescriptor = Descriptor;
     return STATUS_SUCCESS;
 
@@ -125,10 +144,28 @@ cleanup:
         if (Descriptor->Interfaces)
             FreeItem(Descriptor->Interfaces, TAG_PORTCLASS);
 
+        if (Descriptor->Factory.KsPinDescriptor)
+            FreeItem(Descriptor->Factory.KsPinDescriptor, TAG_PORTCLASS);
+
         FreeItem(Descriptor, TAG_PORTCLASS);
     }
     return Status;
 }
+
+/*
+ * @implemented
+ */
+
+NTSTATUS
+NTAPI
+PcValidateConnectRequest(
+    IN PIRP Irp,
+    IN KSPIN_FACTORY * Factory,
+    OUT PKSPIN_CONNECT * Connect)
+{
+    return KsValidateConnectRequest(Irp, Factory->PinDescriptorCount, Factory->KsPinDescriptor, Connect);
+}
+
 
 /* PcDeleteSubdeviceDescriptor */
 

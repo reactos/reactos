@@ -26,6 +26,7 @@
 	<file>resource.c</file>
 	<file>registry.c</file>
 	<file>service_group.c</file>
+	<file>pin_wavecyclic.c</file>
 	<file>pool.c</file>
 	<file>port.c</file>
 	<file>power.c</file>
