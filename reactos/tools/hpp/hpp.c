@@ -1,3 +1,11 @@
+/*
+ * COPYRIGHT:             See COPYING in the top level directory
+ * PROJECT:               Header preprocessor
+ * PURPOSE:               Generates header files from other header files
+ * PROGRAMMER;            Timo Kreuzer
+ *
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
