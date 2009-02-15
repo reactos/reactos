@@ -394,6 +394,9 @@
 <directory name="smdll">
 	<xi:include href="smdll/smdll.rbuild" />
 </directory>
+<directory name="sndblst">
+	<xi:include href="sndblst/sndblst.rbuild" />
+</directory>
 <directory name="snmpapi">
 	<xi:include href="snmpapi/snmpapi.rbuild" />
 </directory>

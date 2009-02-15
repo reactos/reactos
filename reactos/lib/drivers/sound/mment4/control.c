@@ -12,6 +12,7 @@
 #include <mmsystem.h>
 #include <mmddk.h>
 #include <ntddsnd.h>
+#include <reactos/sndtypes.h>
 #include <mmebuddy.h>
 #include <mment4.h>
 

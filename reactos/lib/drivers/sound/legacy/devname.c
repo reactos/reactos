@@ -11,6 +11,7 @@
 
 #include <ntddk.h>
 #include <ntddsnd.h>
+#include <sndnames.h>
 #include <debug.h>
 
 
