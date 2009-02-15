@@ -243,7 +243,7 @@ DestroySoundDeviceInstance(
     SND_ASSERT( FunctionTable->Close );
     if ( FunctionTable->Close == NULL )
     {
-        /* Bad practice, really! If you can open, why not close?! */
+        /* This indicates bad practice, really! If you can open, why not close?! */
         return MMSYSERR_NOTSUPPORTED;
     }
 

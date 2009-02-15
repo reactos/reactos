@@ -18,26 +18,26 @@
 /*
     Attaches a function table to a sound device. Any NULL entries in this
     table are automatically set to point to a default routine to handle
-    the appropriate function. If NULL is passed as the function table itself,
-    the entire function table will use only the default routines.
+    the appropriate function.
 */
 MMRESULT
 SetSoundDeviceFunctionTable(
     IN  PSOUND_DEVICE SoundDevice,
-    IN  PMMFUNCTION_TABLE FunctionTable OPTIONAL)
+    IN  PMMFUNCTION_TABLE FunctionTable)
 {
     VALIDATE_MMSYS_PARAMETER( IsValidSoundDevice(SoundDevice) );
+    VALIDATE_MMSYS_PARAMETER( FunctionTable );
 
     /* Zero out the existing function table (if present) */
     ZeroMemory(&SoundDevice->FunctionTable, sizeof(MMFUNCTION_TABLE));
 
-    if ( FunctionTable )
-    {
-        /* Fill in the client-supplied functions */
-        CopyMemory(&SoundDevice->FunctionTable,
-                   FunctionTable,
-                   sizeof(MMFUNCTION_TABLE));
-    }
+    if ( ! FunctionTable )
+        return MMSYSERR_INVALPARAM;
+
+    /* Fill in the client-supplied functions */
+    CopyMemory(&SoundDevice->FunctionTable,
+                FunctionTable,
+                sizeof(MMFUNCTION_TABLE));
 
     return MMSYSERR_NOERROR;
 }

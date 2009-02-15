@@ -14,6 +14,62 @@
 #include <ntddsnd.h>
 #include <mmebuddy.h>
 
+
+/*
+    This structure gets used locally within functions as a way to shuttle data
+    to the sound thread. It's safe to use locally since CallSoundThread will
+    not return until the operation has been carried out.
+*/
+
+typedef struct
+{
+    MMWAVEHEADER_FUNC Function;
+    PWAVEHDR Header;
+} THREADED_WAVEHEADER_PARAMETERS;
+
+
+/*
+    Helper routines to simplify the call to the sound thread for the header
+    functions.
+*/
+
+MMRESULT
+WaveHeaderOperationInSoundThread(
+    PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    IN  PVOID Parameter)
+{
+    THREADED_WAVEHEADER_PARAMETERS* Parameters = (THREADED_WAVEHEADER_PARAMETERS*) Parameter;
+    return Parameters->Function(SoundDeviceInstance, Parameters->Header);
+}
+
+MMRESULT
+WaveHeaderOperation(
+    MMWAVEHEADER_FUNC Function,
+    PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    PWAVEHDR Header)
+{
+    THREADED_WAVEHEADER_PARAMETERS Parameters;
+
+    Parameters.Function = Function;
+    Parameters.Header = Header;
+
+    return CallSoundThread(SoundDeviceInstance,
+                           WaveHeaderOperationInSoundThread,
+                           &Parameters);
+}
+
+
+/*
+    The following routines are basically handlers for:
+    - WODM_PREPARE
+    - WODM_UNPREPARE
+    - WODM_WRITE
+
+    All of these calls are ultimately dealt with in the context of the
+    appropriate sound thread, so the implementation should expect itself to
+    be running in this other thread when any of these operations take place.
+*/
+
 MMRESULT
 PrepareWaveHeader(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
@@ -39,7 +95,9 @@ PrepareWaveHeader(
     if ( ! FunctionTable->PrepareWaveHeader )
         return MMSYSERR_NOTSUPPORTED;
 
-    return FunctionTable->PrepareWaveHeader(SoundDeviceInstance, Header);
+    return WaveHeaderOperation(FunctionTable->PrepareWaveHeader,
+                               SoundDeviceInstance,
+                               Header);
 }
 
 MMRESULT
@@ -67,7 +125,9 @@ UnprepareWaveHeader(
     if ( ! FunctionTable->UnprepareWaveHeader )
         return MMSYSERR_NOTSUPPORTED;
 
-    return FunctionTable->UnprepareWaveHeader(SoundDeviceInstance, Header);
+    return WaveHeaderOperation(FunctionTable->UnprepareWaveHeader,
+                               SoundDeviceInstance,
+                               Header);
 }
 
 MMRESULT
@@ -95,6 +155,8 @@ SubmitWaveHeader(
     if ( ! FunctionTable->SubmitWaveHeader )
         return MMSYSERR_NOTSUPPORTED;
 
-    return FunctionTable->SubmitWaveHeader(SoundDeviceInstance, Header);
+    return WaveHeaderOperation(FunctionTable->SubmitWaveHeader,
+                               SoundDeviceInstance,
+                               Header);
 }
 

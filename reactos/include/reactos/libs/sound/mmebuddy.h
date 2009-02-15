@@ -376,7 +376,7 @@ GetSoundDeviceType(
 MMRESULT
 SetSoundDeviceFunctionTable(
     IN  PSOUND_DEVICE SoundDevice,
-    IN  PMMFUNCTION_TABLE FunctionTable OPTIONAL);
+    IN  PMMFUNCTION_TABLE FunctionTable);
 
 MMRESULT
 GetSoundDeviceFunctionTable(
@@ -438,9 +438,8 @@ DestroySoundThread(
 
 MMRESULT
 CallSoundThread(
-    IN  PSOUND_THREAD Thread,
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
     IN  SOUND_THREAD_REQUEST_HANDLER RequestHandler,
-    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance OPTIONAL,
     IN  PVOID Parameter OPTIONAL);
 
 

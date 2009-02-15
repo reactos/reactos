@@ -175,6 +175,7 @@ CreateSoundThread(
     /* Wake the thread up */
     if ( ResumeThread(NewThread->Handle) == -1 )
     {
+        SND_ERR(L"Failed to resume thread!\n");
         CloseHandle(NewThread->Handle);
         DestroySoundThreadEvents(NewThread->Events.Ready,
                                  NewThread->Events.Request,
@@ -199,13 +200,15 @@ DestroySoundThread(
 
 MMRESULT
 CallSoundThread(
-    IN  PSOUND_THREAD Thread,
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
     IN  SOUND_THREAD_REQUEST_HANDLER RequestHandler,
-    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance OPTIONAL,
     IN  PVOID Parameter OPTIONAL)
 {
-    VALIDATE_MMSYS_PARAMETER( Thread );
+    VALIDATE_MMSYS_PARAMETER( SoundDeviceInstance );
     VALIDATE_MMSYS_PARAMETER( RequestHandler );
+
+    /* TODO: Don't call this directly? */
+    PSOUND_THREAD Thread = SoundDeviceInstance->Thread;
 
     SND_TRACE(L"Waiting for READY event\n");
     WaitForSingleObject(Thread->Events.Ready, INFINITE);
