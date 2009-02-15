@@ -131,7 +131,7 @@ UnprepareWaveHeader(
 }
 
 MMRESULT
-SubmitWaveHeader(
+EnqueueWaveHeader(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
     IN  PWAVEHDR Header)
 {

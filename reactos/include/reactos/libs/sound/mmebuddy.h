@@ -307,8 +307,8 @@ MmeCloseDevice(
 #define MmeUnprepareWaveHeader(private_handle, header) \
     UnprepareWaveHeader((PSOUND_DEVICE_INSTANCE)private_handle, (PWAVEHDR)header)
 
-#define MmeSubmitWaveHeader(private_handle, header) \
-    SubmitWaveHeader((PSOUND_DEVICE_INSTANCE)private_handle, (PWAVEHDR)header)
+#define MmeEnqueueWaveHeader(private_handle, header) \
+    EnqueueWaveHeader((PSOUND_DEVICE_INSTANCE)private_handle, (PWAVEHDR)header)
 
 
 /*
@@ -503,7 +503,7 @@ UnprepareWaveHeader(
     IN  PWAVEHDR Header);
 
 MMRESULT
-SubmitWaveHeader(
+EnqueueWaveHeader(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
     IN  PWAVEHDR Header);
 
