@@ -9,7 +9,7 @@ LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
 /* menovka zv„zku = volume label, drive = jednotka */
-STRING_HELP,  "Pou§itie: %S jednotka: [-FS:syst‚m s£borov] [-V:menovka] [-Q] [-A:ve–kosœ] [-C]\n\n\
+STRING_HELP,  "Pou§itie: %s jednotka: [-FS:syst‚m s£borov] [-V:menovka] [-Q] [-A:ve–kosœ] [-C]\n\n\
   [jednotka:]         UrŸuje jednotku k naform tovaniu.\n\
   -FS:syst‚m s£borov  UrŸuje typ s£borov‚ho syst‚mu (%s).\n\
   -V:menovka          UrŸuje menovku zv„zku.\n\
@@ -31,7 +31,7 @@ STRING_NO_SUPPORT  "Oper cia nie je podporovan "
 
 STRING_FMIFS_FAIL  "Could not located FMIFS entry points.\n\n"
 
-STRING_UNKNOW_ARG  "Nezn my argument: %S\n"
+STRING_UNKNOW_ARG  "Nezn my argument: %s\n"
 
 STRING_DRIVE_PARM  "Chìba nevyhnutnì parameter jednotky.\n\n"
 
@@ -43,7 +43,7 @@ STRING_NO_VOLUME         "Could not query volume"
 
 STRING_NO_VOLUME_SIZE    "Could not query volume size"
 
-STRING_FILESYSTEM        "Typ syst‚mu s£borov je %S.\n"
+STRING_FILESYSTEM        "Typ syst‚mu s£borov je %s.\n"
 
 STRING_LABEL_NAME_EDIT  "Vlo§te s£Ÿasn£ menovku zv„zku pre jednotku %C: "
 

@@ -7,7 +7,7 @@
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 STRINGTABLE DISCARDABLE
 BEGIN
-STRING_HELP,  "Uso: %S unidad: [-FS:sistema de archivos] [-V:etiqueta] [-Q] [-A:tamaño] [-C]\n\n\
+STRING_HELP,  "Uso: %s unidad: [-FS:sistema de archivos] [-V:etiqueta] [-Q] [-A:tamaño] [-C]\n\n\
   [unidad:]       		Especifica la unidad a formatear.\n\
   -FS:sistema de archivos 	Especifica el sistema de archivos (%s).\n\
   -V:etiqueta         		Especifica la etiqueta del volumen.\n\
@@ -29,7 +29,7 @@ STRING_NO_SUPPORT  "Operación No Soportada"
 
 STRING_FMIFS_FAIL  "Imposible localizar puntos de entrada FMIFS.\n\n"
 
-STRING_UNKNOW_ARG  "Argumento desconocido: %S\n"
+STRING_UNKNOW_ARG  "Argumento desconocido: %s\n"
 
 STRING_DRIVE_PARM  "Parámetro de unidad requerido no encontrado.\n\n"
 
@@ -41,7 +41,7 @@ STRING_NO_VOLUME         "Imposible consultar el volumen"
 
 STRING_NO_VOLUME_SIZE    "Imposible consultar el tamaño de volumen"
 
-STRING_FILESYSTEM        "El tipo del Sistema de archivos es %S.\n"
+STRING_FILESYSTEM        "El tipo del Sistema de archivos es %s.\n"
 
 STRING_LABEL_NAME_EDIT  "Introduzca la etiqueta del volumen para la unidad %C: "
 

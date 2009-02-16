@@ -12,7 +12,7 @@
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
-STRING_HELP,  "Použití: %S jednotka: [-FS:filesystem] [-V:jmenovka] [-Q] [-A:velikost] [-C]\n\n\
+STRING_HELP,  "Použití: %s jednotka: [-FS:filesystem] [-V:jmenovka] [-Q] [-A:velikost] [-C]\n\n\
   [jednotka:]   Urèí jednotku, která bude zformátována.\n\
   -FS:typfs     Urèí typ souborového systému (%s).\n\
   -V:jmenovka   Urèí jmenovku svazku.\n\
@@ -33,7 +33,7 @@ STRING_NO_SUPPORT  "Operace není podporována"
 
 STRING_FMIFS_FAIL  "Nelze najít vstupní body FMIFS.\n\n"
 
-STRING_UNKNOW_ARG  "Neznámý agrument: %S\n"
+STRING_UNKNOW_ARG  "Neznámý agrument: %s\n"
 
 STRING_DRIVE_PARM  "Schází nutný parametr disku.\n\n"
 
@@ -45,7 +45,7 @@ STRING_NO_VOLUME         "Nelze zjistit svazek"
 
 STRING_NO_VOLUME_SIZE    "Nelze zjistit velikost svazku"
 
-STRING_FILESYSTEM        "Souborový systém je typu %S.\n"
+STRING_FILESYSTEM        "Souborový systém je typu %s.\n"
 
 STRING_LABEL_NAME_EDIT  "Vložte nynìjší jmenovku svazku pro jednotku %C: "
 
