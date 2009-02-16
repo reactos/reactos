@@ -2464,6 +2464,18 @@ ExTryToAcquireFastMutex(
     IN OUT PFAST_MUTEX FastMutex);
 
 NTKERNELAPI
+VOID
+FASTCALL
+ExAcquireFastMutexUnsafe(
+    IN OUT PFAST_MUTEX FastMutex);
+
+NTKERNELAPI
+VOID
+FASTCALL
+ExReleaseFastMutexUnsafe(
+    IN OUT PFAST_MUTEX FastMutex);
+
+NTKERNELAPI
 BOOLEAN
 NTAPI
 ExAcquireResourceExclusiveLite(
