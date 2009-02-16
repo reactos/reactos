@@ -89,19 +89,8 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
     if (!NT_SUCCESS(Status)) return Status;
 #endif
 
-    /* Check if this isn't the cookie class */
-    if(ProcessInformationClass != ProcessCookie)
-    {
-        /* Reference the process */
-        Status = ObReferenceObjectByHandle(ProcessHandle,
-                                           PROCESS_QUERY_INFORMATION,
-                                           PsProcessType,
-                                           PreviousMode,
-                                           (PVOID*)&Process,
-                                           NULL);
-        if (!NT_SUCCESS(Status)) return Status;
-    }
-    else if(ProcessHandle != NtCurrentProcess())
+    if((ProcessInformationClass == ProcessCookie) &&
+        (ProcessHandle != NtCurrentProcess()))
     {
         /*
          * Retreiving the process cookie is only allowed for the calling process
@@ -125,6 +114,16 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
                 Status = STATUS_INFO_LENGTH_MISMATCH;
                 break;
             }
+
+            /* Reference the process */
+            Status = ObReferenceObjectByHandle(ProcessHandle,
+                                               PROCESS_QUERY_INFORMATION,
+                                               PsProcessType,
+                                               PreviousMode,
+                                               (PVOID*)&Process,
+                                               NULL);
+            if (!NT_SUCCESS(Status)) break;
+
             /* Protect writes with SEH */
             _SEH2_TRY
             {
@@ -145,6 +144,9 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
                 Status = _SEH2_GetExceptionCode();
             }
             _SEH2_END;
+
+            /* Dereference the process */
+            ObDereferenceObject(Process);
             break;
 
         /* Quote limits and I/O Counters: not implemented */
@@ -158,7 +160,18 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
                 break;
             }
 
+            /* Reference the process */
+            Status = ObReferenceObjectByHandle(ProcessHandle,
+                                               PROCESS_QUERY_INFORMATION,
+                                               PsProcessType,
+                                               PreviousMode,
+                                               (PVOID*)&Process,
+                                               NULL);
+            if (!NT_SUCCESS(Status)) break;
+
             Status = STATUS_NOT_IMPLEMENTED;
+            /* Dereference the process */
+            ObDereferenceObject(Process);
             break;
 
         /* Timing */
@@ -172,6 +185,15 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
                 Status = STATUS_INFO_LENGTH_MISMATCH;
                 break;
             }
+
+            /* Reference the process */
+            Status = ObReferenceObjectByHandle(ProcessHandle,
+                                               PROCESS_QUERY_INFORMATION,
+                                               PsProcessType,
+                                               PreviousMode,
+                                               (PVOID*)&Process,
+                                               NULL);
+            if (!NT_SUCCESS(Status)) break;
 
             /* Protect writes with SEH */
             _SEH2_TRY
@@ -190,6 +212,9 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
                 Status = _SEH2_GetExceptionCode();
             }
             _SEH2_END;
+
+            /* Dereference the process */
+            ObDereferenceObject(Process);
             break;
 
         /* Process Debug Port */
@@ -203,6 +228,16 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
                 Status = STATUS_INFO_LENGTH_MISMATCH;
                 break;
             }
+
+            /* Reference the process */
+            Status = ObReferenceObjectByHandle(ProcessHandle,
+                                               PROCESS_QUERY_INFORMATION,
+                                               PsProcessType,
+                                               PreviousMode,
+                                               (PVOID*)&Process,
+                                               NULL);
+            if (!NT_SUCCESS(Status)) break;
+
             /* Protect write with SEH */
             _SEH2_TRY
             {
@@ -216,6 +251,9 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
                 Status = _SEH2_GetExceptionCode();
             }
             _SEH2_END;
+
+            /* Dereference the process */
+            ObDereferenceObject(Process);
             break;
 
         /* LDT, WS and VDM Information: not implemented */
@@ -236,6 +274,15 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
                 break;
             }
 
+            /* Reference the process */
+            Status = ObReferenceObjectByHandle(ProcessHandle,
+                                               PROCESS_QUERY_INFORMATION,
+                                               PsProcessType,
+                                               PreviousMode,
+                                               (PVOID*)&Process,
+                                               NULL);
+            if (!NT_SUCCESS(Status)) break;
+
             /* Count the number of handles this process has */
             HandleCount = ObGetProcessHandleCount(Process);
 
@@ -251,6 +298,9 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
                 Status = _SEH2_GetExceptionCode();
             }
             _SEH2_END;
+
+            /* Dereference the process */
+            ObDereferenceObject(Process);
             break;
 
         /* Session ID for the process */
@@ -264,6 +314,16 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
                 Status = STATUS_INFO_LENGTH_MISMATCH;
                 break;
             }
+
+            /* Reference the process */
+            Status = ObReferenceObjectByHandle(ProcessHandle,
+                                               PROCESS_QUERY_INFORMATION,
+                                               PsProcessType,
+                                               PreviousMode,
+                                               (PVOID*)&Process,
+                                               NULL);
+            if (!NT_SUCCESS(Status)) break;
+
             /* Enter SEH for write safety */
             _SEH2_TRY
             {
@@ -276,6 +336,9 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
                 Status = _SEH2_GetExceptionCode();
             }
             _SEH2_END;
+
+            /* Dereference the process */
+            ObDereferenceObject(Process);
             break;
 
         /* WOW64: Not implemented */
@@ -294,6 +357,15 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
                 Status = STATUS_INFO_LENGTH_MISMATCH;
                 break;
             }
+
+            /* Reference the process */
+            Status = ObReferenceObjectByHandle(ProcessHandle,
+                                               PROCESS_QUERY_INFORMATION,
+                                               PsProcessType,
+                                               PreviousMode,
+                                               (PVOID*)&Process,
+                                               NULL);
+            if (!NT_SUCCESS(Status)) break;
 
             /* Enter SEH for write safety */
             _SEH2_TRY
@@ -318,6 +390,9 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
                 Status = _SEH2_GetExceptionCode();
             }
             _SEH2_END;
+
+            /* Dereference the process */
+            ObDereferenceObject(Process);
             break;
 
         /* Hard Error Processing Mode */
@@ -331,6 +406,16 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
                 Status = STATUS_INFO_LENGTH_MISMATCH;
                 break;
             }
+
+            /* Reference the process */
+            Status = ObReferenceObjectByHandle(ProcessHandle,
+                                               PROCESS_QUERY_INFORMATION,
+                                               PsProcessType,
+                                               PreviousMode,
+                                               (PVOID*)&Process,
+                                               NULL);
+            if (!NT_SUCCESS(Status)) break;
+
             /* Enter SEH for writing back data */
             _SEH2_TRY
             {
@@ -344,6 +429,9 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
                 Status = _SEH2_GetExceptionCode();
             }
             _SEH2_END;
+
+            /* Dereference the process */
+            ObDereferenceObject(Process);
             break;
 
         /* Priority Boosting status */
@@ -357,6 +445,16 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
                 Status = STATUS_INFO_LENGTH_MISMATCH;
                 break;
             }
+
+            /* Reference the process */
+            Status = ObReferenceObjectByHandle(ProcessHandle,
+                                               PROCESS_QUERY_INFORMATION,
+                                               PsProcessType,
+                                               PreviousMode,
+                                               (PVOID*)&Process,
+                                               NULL);
+            if (!NT_SUCCESS(Status)) break;
+
             /* Enter SEH for writing back data */
             _SEH2_TRY
             {
@@ -370,6 +468,9 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
                 Status = _SEH2_GetExceptionCode();
             }
             _SEH2_END;
+
+            /* Dereference the process */
+            ObDereferenceObject(Process);
             break;
 
         /* DOS Device Map */
@@ -383,6 +484,16 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
                 Status = STATUS_INFO_LENGTH_MISMATCH;
                 break;
             }
+
+            /* Reference the process */
+            Status = ObReferenceObjectByHandle(ProcessHandle,
+                                               PROCESS_QUERY_INFORMATION,
+                                               PsProcessType,
+                                               PreviousMode,
+                                               (PVOID*)&Process,
+                                               NULL);
+            if (!NT_SUCCESS(Status)) break;
+
             /* Query the device map information */
             ObQueryDeviceMapInformation(Process, &DeviceMap);
 
@@ -397,6 +508,9 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
                 Status = _SEH2_GetExceptionCode();
             }
             _SEH2_END;
+
+            /* Dereference the process */
+            ObDereferenceObject(Process);
             break;
 
         /* Priority class */
@@ -410,6 +524,16 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
                 Status = STATUS_INFO_LENGTH_MISMATCH;
                 break;
             }
+
+            /* Reference the process */
+            Status = ObReferenceObjectByHandle(ProcessHandle,
+                                               PROCESS_QUERY_INFORMATION,
+                                               PsProcessType,
+                                               PreviousMode,
+                                               (PVOID*)&Process,
+                                               NULL);
+            if (!NT_SUCCESS(Status)) break;
+
             /* Enter SEH for writing back data */
             _SEH2_TRY
             {
@@ -422,9 +546,21 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
                 Status = _SEH2_GetExceptionCode();
             }
             _SEH2_END;
+
+            /* Dereference the process */
+            ObDereferenceObject(Process);
             break;
 
         case ProcessImageFileName:
+
+            /* Reference the process */
+            Status = ObReferenceObjectByHandle(ProcessHandle,
+                                               PROCESS_QUERY_INFORMATION,
+                                               PsProcessType,
+                                               PreviousMode,
+                                               (PVOID*)&Process,
+                                               NULL);
+            if (!NT_SUCCESS(Status)) break;
 
             /* Get the image path */
             Status = SeLocateProcessImageName(Process, &ImageName);
@@ -465,6 +601,8 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
                 /* Free the image path */
                 ExFreePool(ImageName);
             }
+            /* Dereference the process */
+            ObDereferenceObject(Process);
             break;
 
         /* Per-process security cookie */
@@ -537,8 +675,6 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
     }
     _SEH2_END;
 
-    /* If we referenced the process, dereference it */
-    if(ProcessInformationClass != ProcessCookie) ObDereferenceObject(Process);
     return Status;
 }
 
