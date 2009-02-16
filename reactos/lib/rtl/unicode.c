@@ -1594,12 +1594,22 @@ RtlLargeIntegerToChar(
     if (Len > Length)
         return STATUS_BUFFER_OVERFLOW;
 
+#if 1 /* It needs to be removed, when will probably use SEH in rtl */
+    if (String == NULL)
+    {
+        return STATUS_ACCESS_VIOLATION;
+    }
+#endif
+
+#if 0
     _SEH2_TRY
     {
+#endif
         if (Len == Length)
             RtlCopyMemory(String, Pos, Len);
         else
             RtlCopyMemory(String, Pos, Len + 1);
+#if 0
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -1607,6 +1617,7 @@ RtlLargeIntegerToChar(
         Status = _SEH2_GetExceptionCode();
     }
     _SEH2_END;
+#endif
 
     return Status;
 }
