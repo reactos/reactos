@@ -63,7 +63,7 @@ typedef struct
     CTL_CODE(FILE_DEVICE_SOUND, \
              0, \
              METHOD_BUFFERED, \
-             FILE_CREATE_TREE_CONNECTION | FILE_ANY_ACCESS);
+             FILE_CREATE_TREE_CONNECTION | FILE_ANY_ACCESS)
 
 
 /// IOCTL_CLOSE_WDMAUD
@@ -80,7 +80,7 @@ typedef struct
     CTL_CODE(FILE_DEVICE_SOUND, \
              1, \
              METHOD_BUFFERED, \
-             FILE_CREATE_TREE_CONNECTION | FILE_ANY_ACCESS); \
+             FILE_CREATE_TREE_CONNECTION | FILE_ANY_ACCESS) \
 
 
 /// IOCTL_GETNUMDEVS_TYPE
@@ -98,7 +98,7 @@ typedef struct
     CTL_CODE(FILE_DEVICE_SOUND, \
              2, \
              METHOD_BUFFERED, \
-             FILE_CREATE_TREE_CONNECTION | FILE_ANY_ACCESS);
+             FILE_CREATE_TREE_CONNECTION | FILE_ANY_ACCESS)
 
 
 /// IOCTL_SETDEVICE_STATE
@@ -115,7 +115,7 @@ typedef struct
     CTL_CODE(FILE_DEVICE_SOUND, \
              3, \
              METHOD_BUFFERED, \
-             FILE_CREATE_TREE_CONNECTION | FILE_ANY_ACCESS);
+             FILE_CREATE_TREE_CONNECTION | FILE_ANY_ACCESS)
 
 
 /// IOCTL_GETDEVID
@@ -133,7 +133,7 @@ typedef struct
     CTL_CODE(FILE_DEVICE_SOUND, \
              4, \
              METHOD_BUFFERED, \
-             FILE_CREATE_TREE_CONNECTION | FILE_ANY_ACCESS);
+             FILE_CREATE_TREE_CONNECTION | FILE_ANY_ACCESS)
 
 
 /// IOCTL_GETVOLUME
@@ -150,8 +150,8 @@ typedef struct
 #define IOCTL_GETVOLUME \
     CTL_CODE(FILE_DEVICE_SOUND, \
              5, \
-             METHOD_BUFFEERED, \
-             FILE_CREATE_TREE_CONNECTION | FILE_ANY_ACCESS);
+             METHOD_BUFFERED, \
+             FILE_CREATE_TREE_CONNECTION | FILE_ANY_ACCESS)
 
 
 /// IOCTL_SETVOLUME
@@ -168,7 +168,7 @@ typedef struct
     CTL_CODE(FILE_DEVICE_SOUND, \
              6, \
              METHOD_BUFFERED, \
-             FILE_CREATE_TREE_CONNECTION | FILE_ANY_ACCESS);
+             FILE_CREATE_TREE_CONNECTION | FILE_ANY_ACCESS)
 
 
 /// IOCTL_GETCAPABILTIES
@@ -185,7 +185,7 @@ typedef struct
     CTL_CODE(FILE_DEVICE_SOUND, \
              7, \
              METHOD_BUFFERED, \
-             FILE_CREATE_TREE_CONNECTION | FILE_ANY_ACCESS);
+             FILE_CREATE_TREE_CONNECTION | FILE_ANY_ACCESS)
 
 
 /// IOCTL_WRITEDATA
@@ -202,7 +202,7 @@ typedef struct
     CTL_CODE(FILE_DEVICE_SOUND, \
              8, \
              METHOD_BUFFERED, \
-             FILE_CREATE_TREE_CONNECTION | FILE_ANY_ACCESS);
+             FILE_CREATE_TREE_CONNECTION | FILE_ANY_ACCESS)
 
 
 #endif
