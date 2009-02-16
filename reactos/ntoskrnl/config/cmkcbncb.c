@@ -196,7 +196,7 @@ CmpGetNameControlBlock(IN PUNICODE_STRING NodeName)
         Ncb = CONTAINING_RECORD(HashEntry, CM_NAME_CONTROL_BLOCK, NameHash);
 
         /* Check if the hash matches */
-        if (ConvKey == HashEntry->ConvKey && Length == Ncb->NameLength)
+        if ((ConvKey == HashEntry->ConvKey) && (Length == Ncb->NameLength))
         {
             /* Assume success */
             Found = TRUE;
