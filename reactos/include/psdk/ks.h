@@ -570,8 +570,10 @@ typedef enum
     Properties/Methods/Events
 */
 
-#define KSPROPSETID_Topology \
+#define STATIC_KSPROPSETID_Topology\
     0x720D4AC0L, 0x7533, 0x11D0, 0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00
+DEFINE_GUIDSTRUCT("720D4AC0-7533-11D0-A5D6-28DB04C10000", KSPROPSETID_Topology);
+#define KSPROPSETID_Topology DEFINE_GUIDNAMED(KSPROPSETID_Topology)
 
 typedef enum
 {
@@ -963,6 +965,39 @@ typedef PVOID   KSDEVICE_HEADER,
     (values have been checked)
 */
 
+#ifndef _MSC_VER
+
+#define DEFINE_KSPROPERTY_ITEM(PropertyId, GetHandler,\
+                               MinProperty,\
+                               MinData,\
+                               SetHandler,\
+                               Values, RelationsCount, Relations, SupportHandler,\
+                               SerializedSize)\
+{\
+     PropertyId, {(PFNKSHANDLER)GetHandler}, MinProperty, MinData,\
+     {(PFNKSHANDLER)SetHandler},\
+    (PKSPROPERTY_VALUES)Values, RelationsCount, (PKSPROPERTY)Relations,\
+    (PFNKSHANDLER)SupportHandler, (ULONG)SerializedSize\
+}
+
+#else
+
+#define DEFINE_KSPROPERTY_ITEM(PropertyId, GetHandler,\
+                               MinProperty,\
+                               MinData,\
+                               SetHandler,\
+                               Values, RelationsCount, Relations, SupportHandler,\
+                               SerializedSize)\
+{\
+    PropertyId, (PFNKSHANDLER)GetHandler, MinProperty, MinData,\
+    (PFNKSHANDLER)SetHandler,\
+    (PKSPROPERTY_VALUES)Values, RelationsCount, (PKSPROPERTY)Relations,\
+    (PFNKSHANDLER)SupportHandler, (ULONG)SerializedSize\
+}
+
+#endif
+
+
 typedef enum
 {
     KsObjectTypeDevice,
@@ -1173,21 +1208,57 @@ typedef struct
 {
 } KSPROPERTY_DESCRIPTION, *PKSPROPERTY_DESCRIPTION;
 
+
 typedef struct
 {
+    ULONG   MembersFlags;
+    ULONG   MembersSize;
+    ULONG   MembersCount;
+    ULONG   Flags;
+} KSPROPERTY_MEMBERSHEADER, *PKSPROPERTY_MEMBERSHEADER;
+
+typedef struct {
+    KSPROPERTY_MEMBERSHEADER    MembersHeader;
+    const VOID*                 Members;
+} KSPROPERTY_MEMBERSLIST, *PKSPROPERTY_MEMBERSLIST;
+
+typedef struct {
+    KSIDENTIFIER                    PropTypeSet;
+    ULONG                           MembersListCount;
+    const KSPROPERTY_MEMBERSLIST*   MembersList;
+} KSPROPERTY_VALUES, *PKSPROPERTY_VALUES;
+
+typedef NTSTATUS (*PFNKSHANDLER)(
+    IN  PIRP Irp,
+    IN  PKSIDENTIFIER Request,
+    IN  OUT PVOID Data);
+
+typedef struct 
+{
+    ULONG PropertyId;
+    union 
+    {
+        PFNKSHANDLER GetPropertyHandler;
+        BOOLEAN GetSupported;
+    };
+    ULONG MinProperty;
+    ULONG MinData;
+    union {
+        PFNKSHANDLER SetPropertyHandler;
+        BOOLEAN SetSupported;
+    };
+    const KSPROPERTY_VALUES * Values;
+    ULONG RelationsCount;
+    const KSPROPERTY * Relations;
+    PFNKSHANDLER SupportHandler;
+    ULONG SerializedSize;
 } KSPROPERTY_ITEM, *PKSPROPERTY_ITEM;
 
 typedef struct
 {
 } KSPROPERTY_MEDIAAVAILABLE, *PKSPROPERTY_MEDIAAVAILABLE;
 
-typedef struct
-{
-} KSPROPERTY_MEMBERSHEADER, *PKSPROPERTY_MEMBERSHEADER;
 
-typedef struct
-{
-} KSPROPERTY_MEMBERSLIST, *PKSPROPERTY_MEMBERSLIST;
 
 typedef struct
 {
@@ -1201,8 +1272,37 @@ typedef struct
 {
 } KSPROPERTY_SERIALHDR, *PKSPROPERTY_SERIALHDR;
 
+typedef
+BOOLEAN
+(*PFNKSFASTHANDLER)(
+    IN PFILE_OBJECT FileObject,
+    IN PKSIDENTIFIER Request,
+    IN ULONG RequestLength,
+    IN OUT PVOID Data,
+    IN ULONG DataLength,
+    OUT PIO_STATUS_BLOCK IoStatus
+    );
+
+typedef struct {
+    ULONG                       PropertyId;
+    union {
+        PFNKSFASTHANDLER            GetPropertyHandler;
+        BOOLEAN                     GetSupported;
+    };
+    union {
+        PFNKSFASTHANDLER            SetPropertyHandler;
+        BOOLEAN                     SetSupported;
+    };
+    ULONG                       Reserved;
+} KSFASTPROPERTY_ITEM, *PKSFASTPROPERTY_ITEM;
+
 typedef struct
 {
+    const GUID* Set;
+    ULONG PropertiesCount;
+    const KSPROPERTY_ITEM * PropertyItem;
+    ULONG FastIoCount;
+    const KSFASTPROPERTY_ITEM* FastIoTable;
 } KSPROPERTY_SET, *PKSPROPERTY_SET;
 
 typedef struct
@@ -1213,9 +1313,7 @@ typedef struct
 {
 } KSPROPERTY_STEPPING_LONGLONG, *PKSPROPERTY_STEPPING_LONGLONG;
 
-typedef struct
-{
-} KSPROPERTY_VALUES, *PKSPROPERTY_VALUES;
+
 
 
 /* ===============================================================
@@ -1397,15 +1495,6 @@ typedef struct
 
 
 /* ===============================================================
-    Properties?
-*/
-
-typedef struct
-{
-} KSFASTPROPERTY_ITEM, *PKSFASTPROPERTY_ITEM;
-
-
-/* ===============================================================
     Events
 */
 
@@ -1531,11 +1620,170 @@ typedef struct
     KSPRIORITY Priority;
 } KSPIN_CONNECT, *PKSPIN_CONNECT;
 
+
+#define DEFINE_KSPROPERTY_ITEM_PIN_CINSTANCES(Handler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_PIN_CINSTANCES,\
+        (Handler),\
+        sizeof(KSP_PIN),\
+        sizeof(KSPIN_CINSTANCES),\
+        NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_PIN_CTYPES(Handler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_PIN_CTYPES,\
+        (Handler),\
+        sizeof(KSPROPERTY),\
+        sizeof(ULONG),\
+        NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_PIN_DATAFLOW(Handler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_PIN_DATAFLOW,\
+        (Handler),\
+        sizeof(KSP_PIN),\
+        sizeof(KSPIN_DATAFLOW),\
+        NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_PIN_DATARANGES(Handler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_PIN_DATARANGES,\
+        (Handler),\
+        sizeof(KSP_PIN),\
+        0,\
+        NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_PIN_DATAINTERSECTION(Handler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_PIN_DATAINTERSECTION,\
+        (Handler),\
+        sizeof(KSP_PIN) + sizeof(KSMULTIPLE_ITEM),\
+        0,\
+        NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_PIN_INTERFACES(Handler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_PIN_INTERFACES,\
+        (Handler),\
+        sizeof(KSP_PIN),\
+        0,\
+        NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_PIN_MEDIUMS(Handler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_PIN_MEDIUMS,\
+        (Handler),\
+        sizeof(KSP_PIN),\
+        0,\
+        NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_PIN_COMMUNICATION(Handler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_PIN_COMMUNICATION,\
+        (Handler),\
+        sizeof(KSP_PIN),\
+        sizeof(KSPIN_COMMUNICATION),\
+        NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_PIN_GLOBALCINSTANCES(Handler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_PIN_GLOBALCINSTANCES,\
+        (Handler),\
+        sizeof(KSP_PIN),\
+        sizeof(KSPIN_CINSTANCES),\
+        NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_PIN_NECESSARYINSTANCES(Handler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_PIN_NECESSARYINSTANCES,\
+        (Handler),\
+        sizeof(KSP_PIN),\
+        sizeof(ULONG),\
+        NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_PIN_PHYSICALCONNECTION(Handler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_PIN_PHYSICALCONNECTION,\
+        (Handler),\
+        sizeof(KSP_PIN),\
+        0,\
+        NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_PIN_CATEGORY(Handler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_PIN_CATEGORY,\
+        (Handler),\
+        sizeof(KSP_PIN),\
+        sizeof(GUID),\
+        NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_PIN_NAME(Handler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_PIN_NAME,\
+        (Handler),\
+        sizeof(KSP_PIN),\
+        0,\
+        NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_PIN_CONSTRAINEDDATARANGES(Handler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_PIN_CONSTRAINEDDATARANGES,\
+        (Handler),\
+        sizeof(KSP_PIN),\
+        0,\
+        NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_PIN_PROPOSEDATAFORMAT(Handler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_PIN_PROPOSEDATAFORMAT,\
+        NULL,\
+        sizeof(KSP_PIN),\
+        sizeof(KSDATAFORMAT),\
+        (Handler), NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_PINSET(PinSet,\
+    PropGeneral, PropInstances, PropIntersection)\
+DEFINE_KSPROPERTY_TABLE(PinSet) {\
+    DEFINE_KSPROPERTY_ITEM_PIN_CINSTANCES(PropInstances),\
+    DEFINE_KSPROPERTY_ITEM_PIN_CTYPES(PropGeneral),\
+    DEFINE_KSPROPERTY_ITEM_PIN_DATAFLOW(PropGeneral),\
+    DEFINE_KSPROPERTY_ITEM_PIN_DATARANGES(PropGeneral),\
+    DEFINE_KSPROPERTY_ITEM_PIN_DATAINTERSECTION(PropIntersection),\
+    DEFINE_KSPROPERTY_ITEM_PIN_INTERFACES(PropGeneral),\
+    DEFINE_KSPROPERTY_ITEM_PIN_MEDIUMS(PropGeneral),\
+    DEFINE_KSPROPERTY_ITEM_PIN_COMMUNICATION(PropGeneral),\
+    DEFINE_KSPROPERTY_ITEM_PIN_CATEGORY(PropGeneral),\
+    DEFINE_KSPROPERTY_ITEM_PIN_NAME(PropGeneral)\
+}
+
+#define DEFINE_KSPROPERTY_PINSETCONSTRAINED(PinSet,\
+    PropGeneral, PropInstances, PropIntersection)\
+DEFINE_KSPROPERTY_TABLE(PinSet) {\
+    DEFINE_KSPROPERTY_ITEM_PIN_CINSTANCES(PropInstances),\
+    DEFINE_KSPROPERTY_ITEM_PIN_CTYPES(PropGeneral),\
+    DEFINE_KSPROPERTY_ITEM_PIN_DATAFLOW(PropGeneral),\
+    DEFINE_KSPROPERTY_ITEM_PIN_DATARANGES(PropGeneral),\
+    DEFINE_KSPROPERTY_ITEM_PIN_DATAINTERSECTION(PropIntersection),\
+    DEFINE_KSPROPERTY_ITEM_PIN_INTERFACES(PropGeneral),\
+    DEFINE_KSPROPERTY_ITEM_PIN_MEDIUMS(PropGeneral),\
+    DEFINE_KSPROPERTY_ITEM_PIN_COMMUNICATION(PropGeneral),\
+    DEFINE_KSPROPERTY_ITEM_PIN_CATEGORY(PropGeneral),\
+    DEFINE_KSPROPERTY_ITEM_PIN_NAME(PropGeneral),\
+    DEFINE_KSPROPERTY_ITEM_PIN_CONSTRAINEDDATARANGES(PropGeneral)\
+}
+
+
+
 typedef
 void
 (*PFNKSFREE)(
     IN PVOID Data
     );
+
+
+
+#define DEFINE_KSPROPERTY_TABLE(tablename)\
+    const KSPROPERTY_ITEM tablename[] =
 
 /* ===============================================================
     Topology
@@ -1561,6 +1809,46 @@ typedef struct
     ULONG Reserved;
 } KSTOPOLOGY, *PKSTOPOLOGY;
 
+
+#define DEFINE_KSPROPERTY_ITEM_TOPOLOGY_CATEGORIES(Handler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_TOPOLOGY_CATEGORIES,\
+        (Handler),\
+        sizeof(KSPROPERTY),\
+        0,\
+        NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_TOPOLOGY_NODES(Handler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_TOPOLOGY_NODES,\
+        (Handler),\
+        sizeof(KSPROPERTY),\
+        0,\
+        NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_TOPOLOGY_CONNECTIONS(Handler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_TOPOLOGY_CONNECTIONS,\
+        (Handler),\
+        sizeof(KSPROPERTY),\
+        0,\
+        NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_TOPOLOGY_NAME(Handler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_TOPOLOGY_NAME,\
+        (Handler),\
+        sizeof(KSP_NODE),\
+        0,\
+        NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_TOPOLOGYSET(TopologySet, Handler)\
+DEFINE_KSPROPERTY_TABLE(TopologySet) {\
+    DEFINE_KSPROPERTY_ITEM_TOPOLOGY_CATEGORIES(Handler),\
+    DEFINE_KSPROPERTY_ITEM_TOPOLOGY_NODES(Handler),\
+    DEFINE_KSPROPERTY_ITEM_TOPOLOGY_CONNECTIONS(Handler),\
+    DEFINE_KSPROPERTY_ITEM_TOPOLOGY_NAME(Handler)\
+}
 
 /* ===============================================================
     ??? SORT ME
@@ -1589,19 +1877,6 @@ typedef NTSTATUS (*PFNKSALLOCATOR)(
     IN  PIRP Irp,
     IN  ULONG BufferSize,
     IN  BOOLEAN InputOperation);
-
-typedef NTSTATUS (*PFNKSHANDLER)(
-    IN  PIRP Irp,
-    IN  PKSIDENTIFIER Request,
-    IN  OUT PVOID Data);
-
-typedef BOOLEAN (*PFNKSFASTHANDLER)(
-    IN  PFILE_OBJECT FileObject,
-    IN  PKSIDENTIFIER UNALIGNED Request,
-    IN  ULONG RequestLength,
-    IN  OUT PVOID UNALIGNED Data,
-    IN  ULONG DataLength,
-    OUT PIO_STATUS_BLOCK IoStatus);
 
 typedef NTSTATUS (*PFNKSADDEVENT)(
     IN  PIRP Irp,
