@@ -454,7 +454,7 @@ WinLdrpCompareDllName(IN PCH DllName,
 	UnicodeNamePA.MaximumLength = UnicodeName->MaximumLength;
 	UnicodeNamePA.Buffer = VaToPa(UnicodeName->Buffer);
 	DPRINTM(DPRINT_WINDOWS, "WinLdrpCompareDllName: %s and %wZ, Length = %d "
-		"UN->Length %d\n", DllName, &UnicodeNamePA, Length, UnicodeName->Length));
+		"UN->Length %d\n", DllName, &UnicodeNamePA, Length, UnicodeName->Length);
 
 	if ((Length * sizeof(WCHAR)) > UnicodeName->Length)
 		return FALSE;
