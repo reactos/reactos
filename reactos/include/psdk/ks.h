@@ -1437,7 +1437,8 @@ typedef VOID (*PFNKSITEMFREECALLBACK)(
 
 #endif
 
-typedef struct {
+typedef struct
+{
     ULONG    Size;
     ULONG    Count;
 } KSMULTIPLE_ITEM, *PKSMULTIPLE_ITEM;
@@ -1574,10 +1575,27 @@ typedef struct
     };
 } KSPIN_DESCRIPTOR, *PKSPIN_DESCRIPTOR;
 
-/* TODO */
-/* This is just to shut the compiler up so DON'T USE IT! */
-typedef void (*PFNKSINTERSECTHANDLER)(void);
-typedef void (*PFNKSINTERSECTHANDLEREX)(void);
+typedef
+NTSTATUS
+(*PFNKSINTERSECTHANDLER)(
+    IN PIRP Irp,
+    IN PKSP_PIN Pin,
+    IN PKSDATARANGE DataRange,
+    OUT PVOID Data OPTIONAL
+    );
+
+typedef
+NTSTATUS
+(*PFNKSINTERSECTHANDLEREX)(
+    IN PVOID Context,
+    IN PIRP Irp,
+    IN PKSP_PIN Pin,
+    IN PKSDATARANGE DataRange,
+    IN PKSDATARANGE MatchingDataRange,
+    IN ULONG DataBufferSize,
+    OUT PVOID Data OPTIONAL,
+    OUT PULONG DataSize
+    );
 
 typedef struct
 {
@@ -2445,7 +2463,7 @@ KsPinPropertyHandler(
 KSDDKAPI NTSTATUS NTAPI
 KsPinDataIntersection(
     IN  PIRP Irp,
-    IN  PKSPIN Pin,
+    IN  PKSP_PIN Pin,
     OUT PVOID Data,
     IN  ULONG DescriptorsCount,
     IN  const KSPIN_DESCRIPTOR* Descriptor,
