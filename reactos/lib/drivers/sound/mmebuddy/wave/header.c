@@ -162,7 +162,7 @@ EnqueueWaveHeader(
     VALIDATE_MMSYS_PARAMETER( Header->lpData != NULL );
     VALIDATE_MMSYS_PARAMETER( Header->dwBufferLength > 0 );
     VALIDATE_MMSYS_PARAMETER( Header->dwFlags & WHDR_PREPARED );
-    VALIDATE_MMSYS_PARAMETER( ! Header->dwFlags & WHDR_INQUEUE );
+    VALIDATE_MMSYS_PARAMETER( ! (Header->dwFlags & WHDR_INQUEUE) );
 
     /* Clear the "done" flag for the buffer */
     Header->dwFlags &= ~WHDR_DONE;
