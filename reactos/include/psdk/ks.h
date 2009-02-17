@@ -1198,6 +1198,18 @@ typedef struct
 
 typedef struct
 {
+} KSPROPERTY_POSITIONS, *PKSPROPERTY_POSITIONS;
+
+typedef struct
+{
+} KSPROPERTY_SERIAL, *PKSPROPERTY_SERIAL;
+
+typedef struct
+{
+} KSPROPERTY_SERIALHDR, *PKSPROPERTY_SERIALHDR;
+
+typedef struct
+{
 } KSPROPERTY_BOUNDS_LONG, *PKSPROPERTY_BOUNDS_LONG;
 
 typedef struct
@@ -1207,6 +1219,10 @@ typedef struct
 typedef struct
 {
 } KSPROPERTY_DESCRIPTION, *PKSPROPERTY_DESCRIPTION;
+
+typedef struct
+{
+} KSPROPERTY_MEDIAAVAILABLE, *PKSPROPERTY_MEDIAAVAILABLE;
 
 
 typedef struct
@@ -1228,6 +1244,7 @@ typedef struct {
     const KSPROPERTY_MEMBERSLIST*   MembersList;
 } KSPROPERTY_VALUES, *PKSPROPERTY_VALUES;
 
+#if defined(_NTDDK_)
 typedef NTSTATUS (*PFNKSHANDLER)(
     IN  PIRP Irp,
     IN  PKSIDENTIFIER Request,
@@ -1254,23 +1271,6 @@ typedef struct
     ULONG SerializedSize;
 } KSPROPERTY_ITEM, *PKSPROPERTY_ITEM;
 
-typedef struct
-{
-} KSPROPERTY_MEDIAAVAILABLE, *PKSPROPERTY_MEDIAAVAILABLE;
-
-
-
-typedef struct
-{
-} KSPROPERTY_POSITIONS, *PKSPROPERTY_POSITIONS;
-
-typedef struct
-{
-} KSPROPERTY_SERIAL, *PKSPROPERTY_SERIAL;
-
-typedef struct
-{
-} KSPROPERTY_SERIALHDR, *PKSPROPERTY_SERIALHDR;
 
 typedef
 BOOLEAN
@@ -1304,6 +1304,8 @@ typedef struct
     ULONG FastIoCount;
     const KSFASTPROPERTY_ITEM* FastIoTable;
 } KSPROPERTY_SET, *PKSPROPERTY_SET;
+
+#endif
 
 typedef struct
 {
@@ -1531,6 +1533,8 @@ typedef struct
 {
 } KSPIN_DISPATCH, *PKSPIN_DISPATCH;
 
+#if defined(_NTDDK_)
+
 typedef struct
 {
     ULONG PropertySetsCount;
@@ -1547,8 +1551,27 @@ typedef struct
 #endif
 } KSAUTOMATION_TABLE, *PKSAUTOMATION_TABLE;
 
+
+
 typedef struct
 {
+    ULONG                   InterfacesCount;
+    const KSPIN_INTERFACE*  Interfaces;
+    ULONG                   MediumsCount;
+    const KSPIN_MEDIUM*     Mediums;
+    ULONG                   DataRangesCount;
+    const PKSDATARANGE*     DataRanges;
+    KSPIN_DATAFLOW          DataFlow;
+    KSPIN_COMMUNICATION     Communication;
+    const GUID*             Category;
+    const GUID*             Name;
+    union {
+        LONGLONG            Reserved;
+        struct {
+            ULONG           ConstrainedDataRangesCount;
+            PKSDATARANGE*   ConstrainedDataRanges;
+        };
+    };
 } KSPIN_DESCRIPTOR, *PKSPIN_DESCRIPTOR;
 
 /* TODO */
@@ -1610,16 +1633,6 @@ typedef struct
     KSRESET ResetState;
     KSSTATE ClientState;
 } KSPIN, *PKSPIN;
-
-typedef struct
-{
-    KSPIN_INTERFACE Interface;
-    KSPIN_MEDIUM Medium;
-    ULONG PinId;
-    HANDLE PinToHandle;
-    KSPRIORITY Priority;
-} KSPIN_CONNECT, *PKSPIN_CONNECT;
-
 
 #define DEFINE_KSPROPERTY_ITEM_PIN_CINSTANCES(Handler)\
     DEFINE_KSPROPERTY_ITEM(\
@@ -1784,6 +1797,17 @@ void
 
 #define DEFINE_KSPROPERTY_TABLE(tablename)\
     const KSPROPERTY_ITEM tablename[] =
+
+#endif
+
+typedef struct
+{
+    KSPIN_INTERFACE Interface;
+    KSPIN_MEDIUM Medium;
+    ULONG PinId;
+    HANDLE PinToHandle;
+    KSPRIORITY Priority;
+} KSPIN_CONNECT, *PKSPIN_CONNECT;
 
 /* ===============================================================
     Topology
