@@ -34,8 +34,7 @@ KspCreateObjectType(
     RtlMoveMemory(Name.Buffer + wcslen(ObjectType) +1, CreateParameters, CreateParametersSize);
 
     Name.Buffer[Name.Length / 2] = L'\0';
-
-    InitializeObjectAttributes(&ObjectAttributes, &Name, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, ParentHandle, NULL);
+    InitializeObjectAttributes(&ObjectAttributes, &Name, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE | OBJ_OPENIF, ParentHandle, NULL);
 
 
     Status = IoCreateFile(NodeHandle,

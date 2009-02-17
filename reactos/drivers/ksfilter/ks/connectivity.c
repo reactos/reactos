@@ -1,6 +1,11 @@
 #include "priv.h"
 
-KSDDKAPI NTSTATUS NTAPI
+/*
+    @implemented
+*/
+KSDDKAPI
+NTSTATUS
+NTAPI
 KsCreatePin(
     IN  HANDLE FilterHandle,
     IN  PKSPIN_CONNECT Connect,
@@ -17,23 +22,83 @@ KsCreatePin(
     }
 
     return KspCreateObjectType(FilterHandle,
-                               L"{146F1A80-4791-11D0-A5D6-28DB04C10000}",
+                               L"{146F1A80-4791-11D0-A5D6-28DB04C10000}", //KSNAME_Pin
                                (PVOID)Connect,
                                ConnectSize,
                                DesiredAccess,
                                ConnectionHandle);
 }
 
-KSDDKAPI NTSTATUS NTAPI
+/*
+    @unimplemented
+*/
+KSDDKAPI
+NTSTATUS
+NTAPI
 KsValidateConnectRequest(
     IN  PIRP Irp,
     IN  ULONG DescriptorsCount,
     IN  KSPIN_DESCRIPTOR* Descriptor,
     OUT PKSPIN_CONNECT* Connect)
 {
+    PIO_STACK_LOCATION IoStack;
+    PKSPIN_CONNECT ConnectDetails;
+    LPWSTR PinName = L"{146F1A80-4791-11D0-A5D6-28DB04C10000}\\";
+    PKSDATAFORMAT DataFormat;
+
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+    if (!IoStack->FileObject->FileName.Buffer)
+        return STATUS_INVALID_PARAMETER;
+
+    if (wcsncmp(IoStack->FileObject->FileName.Buffer, PinName, wcslen(PinName)))
+        return STATUS_INVALID_PARAMETER;
+
+    ConnectDetails = (PKSPIN_CONNECT)(IoStack->FileObject->FileName.Buffer + wcslen(PinName));
+
+    if (ConnectDetails->PinToHandle != NULL)
+    {
+        UNIMPLEMENTED
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+    if (IoStack->FileObject->FileName.Length < wcslen(PinName) + sizeof(KSPIN_CONNECT) + sizeof(KSDATAFORMAT))
+        return STATUS_INVALID_PARAMETER;
+
+    ConnectDetails = (PKSPIN_CONNECT)(IoStack->FileObject->FileName.Buffer + wcslen(PinName));
+
+    if (ConnectDetails->PinId >= DescriptorsCount)
+        return STATUS_INVALID_PARAMETER;
+
+#if 0
+    if (!IsEqualGUIDAligned(&ConnectDetails->Interface.Set, &KSINTERFACESETID_Standard) &&
+         ConnectDetails->Interface.Id != KSINTERFACE_STANDARD_STREAMING)
+    {
+         //FIXME
+         // validate provided interface set
+         DPRINT1("FIXME\n");
+    }
+
+    if (!IsEqualGUIDAligned(&ConnectDetails->Medium.Set, &KSMEDIUMSETID_Standard) &&
+         ConnectDetails->Medium.Id != KSMEDIUM_TYPE_ANYINSTANCE)
+    {
+         //FIXME
+         // validate provided medium set
+         DPRINT1("FIXME\n");
+    }
+#endif
+
+    /// FIXME
+    /// implement format checking
+
+    DataFormat = (PKSDATAFORMAT) (ConnectDetails + 1);
+    *Connect = ConnectDetails;
+
     return STATUS_SUCCESS;
 }
 
+/*
+    @implemented
+*/
 KSDDKAPI
 NTSTATUS
 NTAPI
@@ -241,6 +306,9 @@ KsPinPropertyHandler(
     return Irp->IoStatus.Status;
 }
 
+/*
+    @implemented
+*/
 KSDDKAPI
 NTSTATUS
 NTAPI
