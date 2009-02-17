@@ -628,6 +628,7 @@ modules\rosapps\applications\sysutils\man\man.exe                               
 modules\rosapps\applications\sysutils\pedump\pedump.exe                                 1   optional
 modules\rosapps\applications\sysutils\regexpl\regexpl.exe                               1   optional
 modules\rosapps\applications\sysutils\tcat\tcat.exe                                     1   optional
+modules\rosapps\applications\sysutils\telnetd\telnetd.exe                               1   optional
 modules\rosapps\applications\sysutils\tlist\tlist.exe                                   1   optional
 modules\rosapps\applications\sysutils\screenshot\screenshot.exe                         1   optional
 modules\rosapps\applications\sysutils\utils\binpatch\binpatch.exe                       1   optional
