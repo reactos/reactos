@@ -10,7 +10,7 @@
 /* INCLUDES *******************************************************************/
 
 #include <ntoskrnl.h>
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS ********************************************************************/
@@ -25,12 +25,11 @@ PRTL_BITMAP CcCacheBitmap = (PRTL_BITMAP)&CcpBitmapBuffer;
 FAST_MUTEX CcMutex;
 KEVENT CcDeleteEvent;
 ULONG CcCacheClockHand;
-LONG CcOutstandingDeletes;
 
 typedef struct _NOCC_UNMAP_CHAIN
 {
     PVOID Buffer;
-    PSECTION_OBJECT SectionObject;
+	PMEMORY_AREA MemoryArea;
     PFILE_OBJECT FileObject;
     LARGE_INTEGER FileOffset;
     ULONG Length;
@@ -39,159 +38,108 @@ NOCC_UNMAP_CHAIN CcUnmapChain[CACHE_NUM_SECTIONS];
 
 /* FUNCTIONS ******************************************************************/
 
-VOID CcpUnlinkedFromFile
-(PFILE_OBJECT FileObject, 
- PNOCC_BCB Bcb)
-{
-    PLIST_ENTRY Entry;
-
-    for (Entry = ((PNOCC_CACHE_MAP)FileObject->SectionObjectPointer->SharedCacheMap)->AssociatedBcb.Flink;
-	 Entry != &((PNOCC_CACHE_MAP)FileObject->SectionObjectPointer->SharedCacheMap)->AssociatedBcb;
-	 Entry = Entry->Flink)
-    {
-	ASSERT(CONTAINING_RECORD(Entry, NOCC_BCB, ThisFileList) != Bcb);
-    }
-}
+VOID MmPrintMemoryStatistic(VOID);
 
 VOID CcpLock()
 {
+    //DPRINT("<<<---<<< CC In Mutex! (from %x)\n", __builtin_return_address(0));
     ExAcquireFastMutex(&CcMutex);
-    //DPRINT("<<<---<<< CC In Mutex!\n");
-}
-
-NTSTATUS
-NTAPI
-CcpSimpleWrite
-(PFILE_OBJECT FileObject,
- PLARGE_INTEGER FileOffset,
- PVOID Buffer,
- PIO_STATUS_BLOCK ReadStatus);
-
-VOID CcpPerformUnmapWork()
-{
-    NOCC_UNMAP_CHAIN WorkingOn;
-    IO_STATUS_BLOCK IoStatus;
-    ULONG NumElements;
-    PCHAR BufStart, BufPage;
-    LARGE_INTEGER ToWrite;
-
-    ExAcquireFastMutex(&CcMutex);
-    while (CcOutstandingDeletes > 0)
-    {
-	NumElements = InterlockedDecrement(&CcOutstandingDeletes);
-	DPRINT1("Unmapping %d ...\n", NumElements);
-	WorkingOn = CcUnmapChain[0];
-	RtlMoveMemory(&CcUnmapChain[0], &CcUnmapChain[1], NumElements * sizeof(NOCC_UNMAP_CHAIN));
-	ExReleaseFastMutex(&CcMutex);
-
-	BufStart = (PCHAR)WorkingOn.Buffer;
-	ToWrite = WorkingOn.FileOffset;
-		
-	for (BufPage = BufStart;
-	     BufPage < BufStart + WorkingOn.Length;
-	     BufPage += PAGE_SIZE)
-	{
-	    CcpSimpleWrite(WorkingOn.FileObject, &ToWrite, BufPage, &IoStatus);
-	    ToWrite.QuadPart += PAGE_SIZE;
-	}
-		
-	MmUnmapViewInSystemSpace(WorkingOn.Buffer);
-	ObDereferenceObject(WorkingOn.SectionObject);
-	DPRINT1("Done unmapping\n");
-	ExAcquireFastMutex(&CcMutex);
-    }
-    ExReleaseFastMutex(&CcMutex);
 }
 
 VOID CcpUnlock()
 {
-    //DPRINT(">>>--->>> CC Exit Mutex!\n");
     ExReleaseFastMutex(&CcMutex);
-}
-
-VOID STDCALL
-CcpUnmapThread(PVOID Unused)
-{
-    while (TRUE)
-    {
-	KeWaitForSingleObject(&CcDeleteEvent, UserRequest, KernelMode, FALSE, NULL);
-	CcpPerformUnmapWork();
-    }
+    //DPRINT(">>>--->>> CC Exit Mutex!\n");
 }
 
 PDEVICE_OBJECT
 NTAPI
 MmGetDeviceObjectForFile(IN PFILE_OBJECT FileObject);
 
+VOID CcpFreeAreaPage
+(PVOID Context, 
+ PMEMORY_AREA MemoryArea,
+ PVOID Address,
+ PFN_TYPE Page,
+ SWAPENTRY SwapEntry,
+ BOOLEAN Dirty)
+{
+	NTSTATUS Status;
+	PNOCC_BCB Bcb = (PNOCC_BCB)Context;
+	LARGE_INTEGER ReadOffset;
+    PNOCC_CACHE_MAP Map = (PNOCC_CACHE_MAP)Bcb->FileObject->SectionObjectPointer->SharedCacheMap;
+
+	if (!Page) return;
+
+	ReadOffset.QuadPart = 
+		Bcb->FileOffset.QuadPart + 
+		((PCHAR)Address - (PCHAR)Bcb->BaseAddress);
+		
+	if (Dirty && ReadOffset.QuadPart < Map->FileSizes.FileSize.QuadPart)
+	{
+		Status = MiScheduleForWrite
+			(Bcb->FileObject,
+			 &ReadOffset,
+			 Page,
+			 (ULONG)
+			 (Map->FileSizes.FileSize.QuadPart - 
+			  ReadOffset.QuadPart));
+		if (NT_SUCCESS(Status))
+		{
+			DPRINT1("We failed to write a page!\n");
+		}
+	}
+	MmReleasePageMemoryConsumer(MC_CACHE, Page);
+}
+
 VOID CcpUnmapSegment(ULONG Segment)
 {
     PNOCC_BCB Bcb = &CcCacheSections[Segment];
-    PNOCC_UNMAP_CHAIN UnmapWork = &CcUnmapChain[CcOutstandingDeletes];
 
-    ASSERT(Bcb->RefCount > 0);
-    DPRINT("CcpUnmapSegment(#%x)\n", Segment);
-
-    InterlockedIncrement(&CcOutstandingDeletes);
-    UnmapWork->Buffer = Bcb->BaseAddress;
-    UnmapWork->SectionObject = Bcb->SectionObject;
-    UnmapWork->FileObject = Bcb->FileObject;
-    UnmapWork->FileOffset = Bcb->FileOffset;
-    UnmapWork->Length = Bcb->Length;
-    Bcb->BaseAddress = NULL;
-    Bcb->Length = 0;
-    Bcb->FileOffset.QuadPart = 0;
-
-    KeSetEvent(&CcDeleteEvent, IO_DISK_INCREMENT, FALSE);
+	MmLockAddressSpace(MmGetKernelAddressSpace());
+	MmFreeMemoryArea
+		(MmGetKernelAddressSpace(),
+		 Bcb->MemoryArea,
+		 CcpFreeAreaPage,
+		 Bcb);
+	MmUnlockAddressSpace(MmGetKernelAddressSpace());
 }
 
 NTSTATUS CcpMapSegment(ULONG Start)
 {
     PNOCC_BCB Bcb = &CcCacheSections[Start];
-    ULONG ViewSize = CACHE_STRIPE;
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_SUCCESS;
 
     ASSERT(RtlTestBit(CcCacheBitmap, Start));
     DPRINT("CcpMapSegment(#%x)\n", Start);
 
-    Status = MmMapViewInSystemSpaceAtOffset
-	(Bcb->SectionObject,
-	 &Bcb->BaseAddress,
-	 &Bcb->FileOffset,
-	 &ViewSize);
-
-    if (!NT_SUCCESS(Status))
-    {
-	DPRINT("Failed to map view in system space: %x\n", Status);
-	return Status;
-    }
-
     DPRINT("System view is at %x\n", Bcb->BaseAddress);
-    Bcb->Length = ViewSize;
 
-    return Status;
+	return Status;
 }
 
 NTSTATUS CcpAllocateSection
-(PFILE_OBJECT FileObject, 
- ULONG Length,
- ULONG Protect, 
- PSECTION_OBJECT *Result)
+(ULONG Protect, 
+ PVOID *BaseAddress,
+ PMEMORY_AREA *Result)
 {
     NTSTATUS Status;
-    LARGE_INTEGER MaxSize;
-
-    MaxSize.QuadPart = Length;
-
-    Status = MmCreateSection
-	((PVOID*)Result,
-	 STANDARD_RIGHTS_REQUIRED,
-	 NULL,
-	 &MaxSize,
-	 Protect,
-	 SEC_RESERVE,
-	 NULL,
-	 FileObject);
-		
+	LARGE_INTEGER BoundaryAddressMultiple;
+	BoundaryAddressMultiple.QuadPart = 0;
+	MmLockAddressSpace(MmGetKernelAddressSpace());
+	*BaseAddress = 0;
+	Status = MmCreateMemoryArea
+		(MmGetKernelAddressSpace(),
+		 MEMORY_AREA_CACHE_SEGMENT,
+		 BaseAddress,
+		 CACHE_STRIPE + 2 * PAGE_SIZE,
+		 Protect,
+		 Result,
+		 FALSE,
+		 0,
+		 BoundaryAddressMultiple);
+	MmUnlockAddressSpace(MmGetKernelAddressSpace());
+	*BaseAddress = ((PCHAR)*BaseAddress) + PAGE_SIZE;
     return Status;
 }
 
@@ -206,7 +154,6 @@ VOID CcpDereferenceCache(ULONG Start)
     Bcb = &CcCacheSections[Start];
     DPRINT("Dereference #%x (count %d)\n", Start, Bcb->RefCount);
     ASSERT(Bcb->FileObject);
-    ASSERT(Bcb->SectionObject);
     ASSERT(Bcb->RefCount == 1);
 	
     Map = (PNOCC_CACHE_MAP)Bcb->FileObject->SectionObjectPointer->SharedCacheMap;
@@ -217,79 +164,92 @@ VOID CcpDereferenceCache(ULONG Start)
 	
     RemoveEntryList(&Bcb->ThisFileList);
 	
+	ObDereferenceObject(Bcb->FileObject);
     Bcb->FileObject = NULL;
-    Bcb->SectionObject = NULL;
     Bcb->BaseAddress = NULL;
     Bcb->FileOffset.QuadPart = 0;
     Bcb->Length = 0;
     Bcb->RefCount = 0;
+
+	MmPrintMemoryStatistic();
 }
 
 /* Needs mutex */
 ULONG CcpAllocateCacheSections
 (PFILE_OBJECT FileObject, 
- PSECTION_OBJECT SectionObject, 
  PLARGE_INTEGER FileOffset)
 {
     ULONG i = INVALID_CACHE;
+	NTSTATUS Status;
     PNOCC_CACHE_MAP Map;
     PNOCC_BCB Bcb;
+	PVOID BaseAddress;
+	PMEMORY_AREA Area;
 	
     DPRINT("AllocateCacheSections: FileObject %x\n", FileObject);
 	
     if (!FileObject->SectionObjectPointer)
-	return INVALID_CACHE;
+		return INVALID_CACHE;
 
     Map = (PNOCC_CACHE_MAP)FileObject->SectionObjectPointer->SharedCacheMap;
 
     if (!Map)
-	return INVALID_CACHE;
+		return INVALID_CACHE;
 
     DPRINT("Allocating Cache Section (File already has %d sections)\n", Map->NumberOfMaps);
 
+	Status = CcpAllocateSection(PAGE_READWRITE, &BaseAddress, &Area);
+
+	if (!NT_SUCCESS(Status)) return INVALID_CACHE;
+
     i = RtlFindClearBitsAndSet
-	(CcCacheBitmap, 1, CcCacheClockHand);
+		(CcCacheBitmap, 1, CcCacheClockHand);
     CcCacheClockHand = i + 1;
 
     if (i != INVALID_CACHE)
     {
-	DPRINT("Setting up Bcb #%x\n", i);
+		DPRINT("Setting up Bcb #%x\n", i);
 
-	Bcb = &CcCacheSections[i];
+		Bcb = &CcCacheSections[i];
 		
-	ASSERT(Bcb->RefCount < 2);
+		ASSERT(Bcb->RefCount < 2);
 
-	if (Bcb->RefCount > 0)
-	{
-	    CcpDereferenceCache(i);
-	}
+		if (Bcb->RefCount > 0)
+		{
+			CcpDereferenceCache(i);
+		}
 
-	ASSERT(!Bcb->RefCount);
+		ASSERT(!Bcb->RefCount);
 
-	Bcb->RefCount = 1;
-	DPRINT("Bcb #%x RefCount %d\n", Bcb - CcCacheSections, Bcb->RefCount);
-	ObReferenceObject(SectionObject);
+		Bcb->RefCount = 1;
+		DPRINT("Bcb #%x RefCount %d\n", Bcb - CcCacheSections, Bcb->RefCount);
+
+		ObReferenceObject(FileObject);
+		Bcb->FileObject = FileObject;
+		Bcb->FileOffset = *FileOffset;
+		Bcb->BaseAddress = BaseAddress;
+		Bcb->MemoryArea = Area;
+		Bcb->Length = CACHE_STRIPE;
+		Map->NumberOfMaps++;
+		Area->Data.CacheData.CacheRegion = Bcb - CcCacheSections;
+
+		InsertTailList(&Map->AssociatedBcb, &Bcb->ThisFileList);
+
+		if (!RtlTestBit(CcCacheBitmap, i))
+		{
+			DPRINT("Somebody stoeled BCB #%x\n", i);
+		}
+		ASSERT(RtlTestBit(CcCacheBitmap, i));
 		
-	Bcb->FileObject = FileObject;
-	Bcb->SectionObject = SectionObject;
-	Bcb->FileOffset = *FileOffset;
-	Bcb->Length = CACHE_STRIPE;
-	Map->NumberOfMaps++;
-
-	InsertTailList(&Map->AssociatedBcb, &Bcb->ThisFileList);
-
-	if (!RtlTestBit(CcCacheBitmap, i))
-	{
-	    DPRINT("Somebody stoeled BCB #%x\n", i);
-	}
-	ASSERT(RtlTestBit(CcCacheBitmap, i));
-		
-	DPRINT("Allocated #%x\n", i);
-	ASSERT(CcCacheSections[i].RefCount);
+		DPRINT("Allocated #%x\n", i);
+		ASSERT(CcCacheSections[i].RefCount);
     }
     else
     {
-	DPRINT("Failed to allocate cache segment\n");
+		DPRINT("Failed to allocate cache segment\n");
+		MmLockAddressSpace(MmGetKernelAddressSpace());
+		MmFreeMemoryArea(MmGetKernelAddressSpace(), Area, NULL, NULL);
+		MmUnlockAddressSpace(MmGetKernelAddressSpace());
     }
     return i;
 }
@@ -300,16 +260,16 @@ ULONG CcpAllocateCacheSections
 ULONG CcpFindCacheFor(PNOCC_CACHE_MAP Map)
 {
     if (!Map)
-	return INVALID_CACHE;
+		return INVALID_CACHE;
     else 
     {
-	if (IsListEmpty(&Map->AssociatedBcb)) 
-	    return INVALID_CACHE;
-	PNOCC_BCB Bcb = CONTAINING_RECORD
-	    (Map->AssociatedBcb.Flink,
-	     NOCC_BCB,
-	     ThisFileList);
-	return Bcb - CcCacheSections;
+		if (IsListEmpty(&Map->AssociatedBcb)) 
+			return INVALID_CACHE;
+		PNOCC_BCB Bcb = CONTAINING_RECORD
+			(Map->AssociatedBcb.Flink,
+			 NOCC_BCB,
+			 ThisFileList);
+		return Bcb - CcCacheSections;
     }
 }
 
@@ -319,7 +279,6 @@ VOID CcpReferenceCache(ULONG Start)
     PNOCC_BCB Bcb;
     Bcb = &CcCacheSections[Start];
     ASSERT(Bcb->FileObject);
-    ASSERT(Bcb->SectionObject);
     Bcb->RefCount++;
     RtlSetBit(CcCacheBitmap, Start);
 
@@ -341,7 +300,6 @@ VOID CcpReferenceCacheExclusive(ULONG Start)
     CcpLock();
     ASSERT(Bcb->ExclusiveWaiter);
     ASSERT(Bcb->FileObject);
-    ASSERT(Bcb->SectionObject);
     Bcb->RefCount++;
     Bcb->Exclusive = TRUE;
     Bcb->ExclusiveWaiter--;
@@ -355,28 +313,28 @@ ULONG CcpFindMatchingMap(PNOCC_BCB Head, PLARGE_INTEGER FileOffset, ULONG Length
 {
     PLIST_ENTRY Entry;
 
-    //DPRINT("Find Matching Map: %x:%x\n", FileOffset->LowPart, Length);
+    DPRINT("Find Matching Map: %x:%x\n", FileOffset->LowPart, Length);
 
     if (FileOffset->QuadPart >= Head->FileOffset.QuadPart &&
-	FileOffset->QuadPart + Length <= Head->FileOffset.QuadPart + Head->Length)
+		FileOffset->QuadPart + Length <= Head->FileOffset.QuadPart + Head->Length)
     {
-	//DPRINT("Head matched\n");
-	return Head - CcCacheSections;
+		DPRINT("Head matched\n");
+		return Head - CcCacheSections;
     }
 
     for (Entry = Head->ThisFileList.Flink; Entry != &Head->ThisFileList; Entry = Entry->Flink)
     {
-	PNOCC_BCB Bcb = CONTAINING_RECORD(Entry, NOCC_BCB, ThisFileList);
-	//DPRINT("This File: %x:%x\n", Bcb->FileOffset.LowPart, Bcb->Length);
-	if (FileOffset->QuadPart >= Bcb->FileOffset.QuadPart &&
-	    FileOffset->QuadPart + Length <= Bcb->FileOffset.QuadPart + Bcb->Length)
-	{
-	    //DPRINT("Found match at #%x\n", Bcb - CcCacheSections);
-	    return Bcb - CcCacheSections;
-	}
+		PNOCC_BCB Bcb = CONTAINING_RECORD(Entry, NOCC_BCB, ThisFileList);
+		DPRINT("This File: %x:%x\n", Bcb->FileOffset.LowPart, Bcb->Length);
+		if (FileOffset->QuadPart >= Bcb->FileOffset.QuadPart &&
+			FileOffset->QuadPart + Length <= Bcb->FileOffset.QuadPart + Bcb->Length)
+		{
+			//DPRINT("Found match at #%x\n", Bcb - CcCacheSections);
+			return Bcb - CcCacheSections;
+		}
     }
 
-    //DPRINT("This region isn't mapped\n");
+    DPRINT("This region isn't mapped\n");
 
     return INVALID_CACHE;
 }
@@ -392,48 +350,37 @@ CcpStartCaching(PFILE_OBJECT FileObject)
 
     if (!FileObject->SectionObjectPointer->SharedCacheMap)
     {
-	DPRINT("CcpStartCaching %p\n", FileObject);
-	Status = IoQueryFileInformation
-	    (FileObject,
-	     FileStandardInformation,
-	     sizeof(FILE_STANDARD_INFORMATION),
-	     &FileInfo,
-	     &Information);
+		DPRINT("CcpStartCaching %p\n", FileObject);
+		Status = IoQueryFileInformation
+			(FileObject,
+			 FileStandardInformation,
+			 sizeof(FILE_STANDARD_INFORMATION),
+			 &FileInfo,
+			 &Information);
 	
-	if (!NT_SUCCESS(Status))
-	{
-	    return FALSE;
-	}
-
-	Status = IoQueryFileInformation
-	    (FileObject,
-	     FileAllocationInformation,
-	     sizeof(LARGE_INTEGER),
-	     &FileSizes.AllocationSize,
-	     &Information);
+		if (!NT_SUCCESS(Status))
+		{
+			return FALSE;
+		}
 	
-	if (!NT_SUCCESS(Status))
-	{
-	    return FALSE;
-	}
-	
-	FileSizes.ValidDataLength = FileInfo.EndOfFile;
-	FileSizes.FileSize = FileInfo.EndOfFile;
+		FileSizes.ValidDataLength = FileInfo.EndOfFile;
+		FileSizes.FileSize = FileInfo.EndOfFile;
+		FileSizes.AllocationSize = FileInfo.AllocationSize;
 
-	DPRINT("Initializing -> File Sizes: VALID %08x%08x FILESIZE %08x%08x ALLOC %08x%08x\n",
-	       FileSizes.ValidDataLength.HighPart,
-	       FileSizes.ValidDataLength.LowPart,
-	       FileSizes.FileSize.HighPart,
-	       FileSizes.FileSize.LowPart,
-	       FileSizes.AllocationSize.HighPart,
-	       FileSizes.AllocationSize.LowPart);
+		DPRINT1("Initializing -> File Sizes: VALID %08x%08x FILESIZE %08x%08x ALLOC %08x%08x\n",
+			   FileSizes.ValidDataLength.HighPart,
+			   FileSizes.ValidDataLength.LowPart,
+			   FileSizes.FileSize.HighPart,
+			   FileSizes.FileSize.LowPart,
+			   FileSizes.AllocationSize.HighPart,
+			   FileSizes.AllocationSize.LowPart);
 
-	CcInitializeCacheMap
-	    (FileObject,
-	     &FileSizes,
-	     FALSE,
-	     NULL,
-	     NULL);
+		CcInitializeCacheMap
+			(FileObject,
+			 &FileSizes,
+			 FALSE,
+			 NULL,
+			 NULL);
     }
 
     return TRUE;
@@ -446,6 +393,7 @@ CcpMapData
  IN PLARGE_INTEGER FileOffset,
  IN ULONG Length,
  IN ULONG Flags,
+ IN BOOLEAN Zero,
  OUT PVOID *BcbResult,
  OUT PVOID *Buffer)
 {
@@ -456,7 +404,6 @@ CcpMapData
     LARGE_INTEGER Target;
     ULONG BcbHead;
     PNOCC_BCB Bcb = NULL;
-    PSECTION_OBJECT SectionObject = NULL;
     NTSTATUS Status;
 
     DPRINT("CcMapData(F->%x,%x:%d)\n", Map, FileOffset->LowPart, Length);
@@ -473,97 +420,61 @@ CcpMapData
     /* No bcbs for this file */
     if (BcbHead != INVALID_CACHE)
     {
-	/* Find an accomodating section */
-	//DPRINT("Selected BCB #%x\n", BcbHead);
-	Bcb = &CcCacheSections[BcbHead];
-	BcbHead = CcpFindMatchingMap(Bcb, FileOffset, Length);
+		/* Find an accomodating section */
+		//DPRINT("Selected BCB #%x\n", BcbHead);
+		Bcb = &CcCacheSections[BcbHead];
+		BcbHead = CcpFindMatchingMap(Bcb, FileOffset, Length);
 	
-	if (BcbHead == INVALID_CACHE)
-	{
-	    if (!Wait)
-	    {
-		CcpUnlock();
-		//DPRINT("End\n");
-		goto cleanup;
-	    }
-	}
-	else
-	{
-	    Bcb = &CcCacheSections[BcbHead];
-	    SectionObject = Bcb->SectionObject;
-	    Success = TRUE;
-	    *BcbResult = Bcb;
-	    *Buffer = ((PCHAR)Bcb->BaseAddress) + (int)(FileOffset->QuadPart - Bcb->FileOffset.QuadPart);
-	    DPRINT
-		("Bcb #%x Buffer maps (%x) At %x Length %x (Getting %x:%x)\n", 
-		 Bcb - CcCacheSections,
-		 Bcb->FileOffset.LowPart, 
-		 Bcb->BaseAddress,
-		 Bcb->Length,
-		 *Buffer, 
-		 Length);
-	    CcpUnlock();
-	    //DPRINT("w1n\n");
-	    goto cleanup;
-	}
+		if (BcbHead == INVALID_CACHE)
+		{
+			if (!Wait)
+			{
+				CcpUnlock();
+				//DPRINT("End\n");
+				goto cleanup;
+			}
+		}
+		else
+		{
+			Bcb = &CcCacheSections[BcbHead];
+			Bcb->Zero = Zero;
+			Success = TRUE;
+			*BcbResult = Bcb;
+			*Buffer = ((PCHAR)Bcb->BaseAddress) + (int)(FileOffset->QuadPart - Bcb->FileOffset.QuadPart);
+			DPRINT
+				("Bcb #%x Buffer maps (%x) At %x Length %x (Getting %x:%x)\n", 
+				 Bcb - CcCacheSections,
+				 Bcb->FileOffset.LowPart, 
+				 Bcb->BaseAddress,
+				 Bcb->Length,
+				 *Buffer, 
+				 Length);
+			CcpUnlock();
+			//DPRINT("w1n\n");
+			goto cleanup;
+		}
     }
 
     CcpUnlock();
 
-    if (!SectionObject)
-    {
-	PNOCC_CACHE_MAP Map = (PNOCC_CACHE_MAP)FileObject->SectionObjectPointer->SharedCacheMap;
-	ULONG SectionSize;
-
-	DPRINT("%08x: File size %08x%08x\n", FileObject->SectionObjectPointer, Map->FileSizes.ValidDataLength.HighPart, Map->FileSizes.ValidDataLength.LowPart);
-
-	if (Map->FileSizes.ValidDataLength.QuadPart)
-	{
-	    SectionSize = min(CACHE_STRIPE, Map->FileSizes.ValidDataLength.QuadPart - Target.QuadPart);
-	}
-	else
-	{
-	    SectionSize = CACHE_STRIPE;
-	}
-
-	DPRINT("Allocating a cache stripe at %x:%d\n",
-	       Target.LowPart, SectionSize);
-	ASSERT(SectionSize <= CACHE_STRIPE);
-
-	Status = CcpAllocateSection
-	    (FileObject,
-	     SectionSize,
-	     PAGE_READWRITE,
-	     &SectionObject);
-		
-	if (!NT_SUCCESS(Status))
-	{
-	    //DPRINT("End %08x\n", Status);
-	    goto cleanup;
-	}
-    }
-
     /* Returns a reference */
     do 
     {
-	CcpLock();
+		CcpLock();
 		
-	BcbHead = CcpAllocateCacheSections
-	    (FileObject,
-	     SectionObject, 
-	     &Target);
+		BcbHead = CcpAllocateCacheSections(FileObject, &Target);
 		
-	CcpUnlock();
+		CcpUnlock();
     }
     while (BcbHead == INVALID_CACHE && 
-	   NT_SUCCESS
-	   (KeWaitForSingleObject
-	    (&CcDeleteEvent, UserRequest, KernelMode, FALSE, NULL)));
+		   NT_SUCCESS
+		   (KeWaitForSingleObject
+			(&CcDeleteEvent, UserRequest, KernelMode, FALSE, NULL)));
 
     if (BcbHead == INVALID_CACHE)
     {
-	//DPRINT("End\n");
-	goto cleanup;
+		//DPRINT("End\n");
+		goto cleanup;
     }
 
     DPRINT("Selected BCB #%x\n", BcbHead);
@@ -572,19 +483,19 @@ CcpMapData
 
     if (NT_SUCCESS(Status))
     {
-	Success = TRUE;
-	//DPRINT("w1n\n");
-	*BcbResult = &CcCacheSections[BcbHead];
-	*Buffer = ((PCHAR)Bcb->BaseAddress) + (int)(FileOffset->QuadPart - Bcb->FileOffset.QuadPart);
-	DPRINT
-	    ("Bcb #%x Buffer maps (%x) At %x Length %x (Getting %x:%x)\n", 
-	     Bcb - CcCacheSections,
-	     Bcb->FileOffset.LowPart, 
-	     Bcb->BaseAddress,
-	     Bcb->Length,
-	     *Buffer, 
-	     Length);
-	goto cleanup;
+		Success = TRUE;
+		//DPRINT("w1n\n");
+		*BcbResult = &CcCacheSections[BcbHead];
+		*Buffer = ((PCHAR)Bcb->BaseAddress) + (int)(FileOffset->QuadPart - Bcb->FileOffset.QuadPart);
+		DPRINT
+			("Bcb #%x Buffer maps (%x) At %x Length %x (Getting %x:%x)\n", 
+			 Bcb - CcCacheSections,
+			 Bcb->FileOffset.LowPart, 
+			 Bcb->BaseAddress,
+			 Bcb->Length,
+			 *Buffer, 
+			 Length);
+		goto cleanup;
     }
 
     //DPRINT("TERM!\n");
@@ -605,12 +516,13 @@ CcMapData
 {
     if (!CcpStartCaching(FileObject)) return FALSE;
     return CcpMapData
-	((PNOCC_CACHE_MAP)FileObject->SectionObjectPointer->SharedCacheMap,
-	 FileOffset,
-	 Length,
-	 Flags,
-	 BcbResult,
-	 Buffer);
+		((PNOCC_CACHE_MAP)FileObject->SectionObjectPointer->SharedCacheMap,
+		 FileOffset,
+		 Length,
+		 Flags,
+		 FALSE,
+		 BcbResult,
+		 Buffer);
 }
 
 BOOLEAN
@@ -639,42 +551,41 @@ CcPinMappedData(IN PFILE_OBJECT FileObject,
     CcpLock();
     if (Exclusive)
     {
-	DPRINT("Requesting #%x Exclusive\n", BcbHead);
-	CcpMarkForExclusive(BcbHead);
+		DPRINT("Requesting #%x Exclusive\n", BcbHead);
+		CcpMarkForExclusive(BcbHead);
     }
     else
     {
-	DPRINT("Reference #%x\n", BcbHead);
-	CcpReferenceCache(BcbHead);
+		DPRINT("Reference #%x\n", BcbHead);
+		CcpReferenceCache(BcbHead);
     }
     CcpUnlock();
 
     if (Exclusive)
-	CcpReferenceCacheExclusive(BcbHead);
+		CcpReferenceCacheExclusive(BcbHead);
 
     if (!TheBcb->Pinned)
     {
-	TheBcb->Pinned = IoAllocateMdl
-	    (TheBcb->BaseAddress,
-	     TheBcb->Length,
-	     FALSE,
-	     FALSE,
-	     NULL);
+		PCHAR Buffer;
+		ULONG Length;
+		PNOCC_CACHE_MAP Map = (PNOCC_CACHE_MAP)
+			FileObject->SectionObjectPointer->SharedCacheMap;
 
-	if(!TheBcb->Pinned) return FALSE;
+		TheBcb->Pinned = TRUE;
 
-	_SEH_TRY
-	{
-	    MmProbeAndLockPages(TheBcb->Pinned, KernelMode, IoReadAccess);
+		Length = 
+			min(Map->FileSizes.FileSize.QuadPart - TheBcb->FileOffset.QuadPart,
+				CACHE_STRIPE);
+
+		for (Buffer = TheBcb->BaseAddress;
+			 Buffer < (PCHAR)TheBcb->BaseAddress + Length;
+			 Buffer += PAGE_SIZE)
+		{
+			MmLockAddressSpace(MmGetKernelAddressSpace());
+			CcReplaceCachePage(TheBcb->MemoryArea, Buffer);
+			MmUnlockAddressSpace(MmGetKernelAddressSpace());
+		}
 	}
-	_SEH_HANDLE
-	{
-	    IoFreeMdl(TheBcb->Pinned);
-	    TheBcb->Pinned = NULL;
-	    _SEH_YIELD(return FALSE);
-	}
-	_SEH_END;
-    }
 
     return TRUE;
 }
@@ -694,19 +605,19 @@ CcPinRead(IN PFILE_OBJECT FileObject,
     if (!CcpStartCaching(FileObject)) return FALSE;
 
     Result = CcPinMappedData
-	(FileObject, 
-	 FileOffset,
-	 Length,
-	 Flags,
-	 Bcb);
+		(FileObject, 
+		 FileOffset,
+		 Length,
+		 Flags,
+		 Bcb);
 
     if (Result)
     {
-	CcpLock();
-	/* Find out if any range is a superset of what we want */
-	RealBcb = *Bcb;
-	*Buffer = ((PCHAR)RealBcb->BaseAddress) + (int)(FileOffset->QuadPart - RealBcb->FileOffset.QuadPart);
-	CcpUnlock();
+		CcpLock();
+		/* Find out if any range is a superset of what we want */
+		RealBcb = *Bcb;
+		*Buffer = ((PCHAR)RealBcb->BaseAddress) + (int)(FileOffset->QuadPart - RealBcb->FileOffset.QuadPart);
+		CcpUnlock();
     }
 
     return Result;
@@ -725,22 +636,47 @@ CcPreparePinWrite(IN PFILE_OBJECT FileObject,
     BOOLEAN Result;
     PNOCC_BCB RealBcb;
 
-    ASSERT(!Zero);
-
-    Result = CcPinRead
-	(FileObject,
-	 FileOffset,
-	 Length,
-	 Flags,
-	 Bcb,
-	 Buffer);
+	if (!Zero)
+	{
+		Result = CcPinRead
+			(FileObject,
+			 FileOffset,
+			 Length,
+			 Flags,
+			 Bcb,
+			 Buffer);
+	}
+	else
+	{
+		PNOCC_CACHE_MAP Map;
+		ASSERT(FileObject->SectionObjectPointer->SharedCacheMap);
+		Map = (PNOCC_CACHE_MAP)
+			FileObject->SectionObjectPointer->SharedCacheMap;
+		Result = CcpMapData
+			(Map,
+			 FileOffset,
+			 Length,
+			 Flags,
+			 TRUE,
+			 Bcb,
+			 Buffer);
+		if (Result)
+		{
+			Result = CcPinMappedData
+				(FileObject,
+				 FileOffset,
+				 Length,
+				 Flags,
+				 Bcb);
+		}
+	}
 
     if (Result)
     {
-	CcpLock();
-	RealBcb = *Bcb;
-	RealBcb->Dirty = TRUE;
-	CcpUnlock();
+		CcpLock();
+		RealBcb = *Bcb;
+		RealBcb->Dirty = TRUE;
+		CcpUnlock();
     }
 
     return Result;
@@ -753,32 +689,30 @@ CcUnpinData(IN PVOID Bcb)
     PNOCC_BCB RealBcb = (PNOCC_BCB)Bcb;
     ULONG Selected = RealBcb - CcCacheSections;
 
-    DPRINT("CcUnpinData Bcb #%x (RefCount %d)\n", Selected, RealBcb->RefCount);
+    DPRINT("CcUnpinData Bcb #%x (RefCount %d) (ExclusiveWaiter %d)\n", Selected, RealBcb->RefCount, RealBcb->ExclusiveWaiter);
 
     CcpLock();
     if (RealBcb->RefCount <= 2)
     {
-	if (RealBcb->Pinned)
-	{
-	    DPRINT("Unpin (actually) the memory\n");
-	    MmUnlockPages(RealBcb->Pinned);
-	    IoFreeMdl(RealBcb->Pinned);
-	    RealBcb->Pinned = NULL;
-	}
-	DPRINT("Unset allocation bit #%x\n", Selected);
-	RtlClearBit(CcCacheBitmap, Selected);
-	RealBcb->Exclusive = FALSE;
-	if (RealBcb->ExclusiveWaiter)
-	{
-	    DPRINT("Triggering exclusive waiter\n");
-	    KeSetEvent(&RealBcb->ExclusiveWait, IO_NO_INCREMENT, FALSE);
-	}
+		if (RealBcb->Pinned)
+		{
+			DPRINT("Unpin (actually) the memory\n");
+			RealBcb->Pinned = FALSE;
+		}
+		DPRINT("Unset allocation bit #%x\n", Selected);
+		RtlClearBit(CcCacheBitmap, Selected);
+		RealBcb->Exclusive = FALSE;
+		if (RealBcb->ExclusiveWaiter)
+		{
+			DPRINT("Triggering exclusive waiter\n");
+			KeSetEvent(&RealBcb->ExclusiveWait, IO_NO_INCREMENT, FALSE);
+		}
     }
     if (RealBcb->RefCount > 1)
     {
-	DPRINT("Removing one reference #%x\n", Selected);
-	RealBcb->RefCount--;
-	ASSERT(RealBcb->RefCount);
+		DPRINT("Removing one reference #%x\n", Selected);
+		RealBcb->RefCount--;
+		ASSERT(RealBcb->RefCount);
     }
     CcpUnlock();
     KeSetEvent(&CcDeleteEvent, IO_DISK_INCREMENT, FALSE);
@@ -802,6 +736,109 @@ CcUnpinDataForThread(IN PVOID Bcb,
                      IN ERESOURCE_THREAD ResourceThreadId)
 {
     CcUnpinData(Bcb);
+}
+
+VOID
+NTAPI
+CcFlushCache(IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
+             IN OPTIONAL PLARGE_INTEGER FileOffset,
+             IN ULONG Length,
+             OUT OPTIONAL PIO_STATUS_BLOCK IoStatus)
+{
+	NTSTATUS Status;
+	ULONG Target;
+	ULONG PageLength;
+    PCHAR BufPage;
+    PNOCC_BCB Bcb;
+    LARGE_INTEGER ToWrite = *FileOffset;
+    IO_STATUS_BLOCK IOSB;
+    PNOCC_CACHE_MAP Map;
+
+	DPRINT("CcFlushCache\n");
+    
+    if (IoStatus)
+    {
+		IoStatus->Status = STATUS_SUCCESS;
+		IoStatus->Information = 0;
+    }
+	
+    if (!SectionObjectPointer->SharedCacheMap)
+    {
+		DPRINT("Attempt to flush a non-cached file section\n");
+		return;
+    }
+    
+	Map = (PNOCC_CACHE_MAP)SectionObjectPointer->SharedCacheMap;
+
+	CcpLock();
+	Target = CcpFindCacheFor(Map);
+	if (Target == INVALID_CACHE)
+	{
+		CcpUnlock();
+		return;
+	}
+	Target = CcpFindMatchingMap(&CcCacheSections[Target], FileOffset, Length);
+	if (Target == INVALID_CACHE)
+	{
+		CcpUnlock();
+		return;
+	}
+
+	Bcb = &CcCacheSections[Target];
+
+    /* Don't flush a pinned bcb, because we'll disturb the locked-ness
+     * of the pages.  Figured out how to do this right. */
+    if (Bcb->Pinned || !Bcb->Dirty) 
+    {
+		CcpUnlock();
+		return;
+    }
+    
+	CcpReferenceCache(Bcb - CcCacheSections);
+
+    DPRINT
+		("CcpSimpleWrite: [%wZ] %x:%d\n", 
+		 &Bcb->FileObject->FileName,
+		 Bcb->BaseAddress,
+		 Bcb->Length);
+    
+	ToWrite = *FileOffset;
+
+    for (BufPage = (PCHAR)Bcb->BaseAddress + 
+			 PAGE_ROUND_DOWN((ULONG)(FileOffset->QuadPart - Bcb->FileOffset.QuadPart));
+		 BufPage < (PCHAR)Bcb->BaseAddress + PAGE_ROUND_UP(Length);
+		 BufPage += PAGE_SIZE)
+    {
+		PageLength = Length - ((PCHAR)BufPage - (PCHAR)Bcb->BaseAddress);
+		if (PageLength > PAGE_SIZE)
+			PageLength = PAGE_SIZE;
+		if (MmIsPagePresent(NULL, BufPage) && MmIsDirtyPage(NULL, BufPage))
+		{
+			Status = MiScheduleForWrite
+				(Bcb->FileObject,
+				 &ToWrite,
+				 MmGetPfnForProcess(NULL, BufPage),
+				 PageLength);
+
+			if (NT_SUCCESS(Status))
+				MmSetCleanPage(NULL, BufPage);
+		}
+		ToWrite.QuadPart += PAGE_SIZE;
+    }
+    
+    Bcb->Dirty = FALSE;
+	CcpUnlock();
+
+	CcUnpinData(Bcb);
+
+    DPRINT("Page Write: %08x\n", IOSB.Status);
+	
+    if (IoStatus)
+    {
+		*IoStatus = IOSB;
+    }
+
+	DPRINT("CcFlushCache Done\n");
 }
 
 /* EOF */

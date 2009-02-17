@@ -506,6 +506,9 @@ MmInitSystem(IN ULONG Phase,
         /* Initialize the balance set manager */
         MmInitBsmThread();
 
+		/* Initialize lazy write thread for various purposes */
+		MmWriteThreadInit();
+
         /* FIXME: Read parameters from memory */
     }
 

@@ -45,7 +45,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 #include <reactos/exeformat.h>
 
@@ -54,6 +54,13 @@
 #pragma alloc_text(INIT, MmInitSectionImplementation)
 #endif
 
+/* Backport hack */
+#ifndef _SEH2_TRY
+#define _SEH2_TRY _SEH_TRY
+#define _SEH2_EXCEPT(x) _SEH_HANDLE
+#define _SEH2_GetExceptionCode _SEH_GetExceptionCode
+#define _SEH2_END _SEH_END
+#endif
 
 /* TYPES *********************************************************************/
 
@@ -93,271 +100,6 @@ static const INFORMATION_CLASS_INFO ExSectionInfoClass[] =
 };
 
 /* FUNCTIONS *****************************************************************/
-
-PDEVICE_OBJECT
-NTAPI
-MmGetDeviceObjectForFile(IN PFILE_OBJECT FileObject)
-{
-    return IoGetRelatedDeviceObject(FileObject);
-}
-
-PFILE_OBJECT
-NTAPI
-MmGetFileObjectForSection(IN PROS_SECTION_OBJECT Section)
-{
-    PAGED_CODE();
-    ASSERT(Section);
-
-    /* Return the file object */
-    return Section->FileObject; // Section->ControlArea->FileObject on NT
-}
-
-NTSTATUS
-NTAPI
-MiSimpleReadComplete
-(PDEVICE_OBJECT DeviceObject,
- PIRP Irp,
- PVOID Context)
-{
-    /* Unlock MDL Pages, page 167. */
-    PMDL Mdl = Irp->MdlAddress;
-    while (Mdl)
-    {
-	MmUnlockPages(Mdl);
-        Mdl = Mdl->Next;
-    }
-	
-    /* Check if there's an MDL */
-    while ((Mdl = Irp->MdlAddress))
-    {
-        /* Clear all of them */
-        Irp->MdlAddress = Mdl->Next;
-        IoFreeMdl(Mdl);
-    }
-
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-NTAPI
-MiSimpleRead
-(PFILE_OBJECT FileObject, 
- PLARGE_INTEGER FileOffset,
- PVOID Buffer, 
- ULONG Length,
- PIO_STATUS_BLOCK ReadStatus)
-{
-    NTSTATUS Status;
-    PIRP Irp = NULL;
-    KEVENT ReadWait;
-    PDEVICE_OBJECT DeviceObject;
-    PIO_STACK_LOCATION IrpSp;
-    
-    ASSERT(FileObject);
-    ASSERT(FileOffset);
-    ASSERT(Buffer);
-    ASSERT(ReadStatus);
-    
-    DeviceObject = MmGetDeviceObjectForFile(FileObject);
-    
-    ASSERT(DeviceObject);
-    
-#if 0
-    DPRINT1
-	("PAGING READ: FileObject %x Offset %x Length %d\n", 
-	 &FileObject, 
-	 FileOffset->LowPart,
-	 Length);
-#endif
-    
-    KeInitializeEvent(&ReadWait, NotificationEvent, FALSE);
-    
-    Irp = IoBuildAsynchronousFsdRequest
-	(IRP_MJ_READ,
-	 DeviceObject,
-	 Buffer,
-	 Length,
-	 FileOffset,
-	 ReadStatus);
-    
-    if (!Irp)
-    {
-	return STATUS_NO_MEMORY;
-    }
-    
-    Irp->Flags |= IRP_PAGING_IO | IRP_SYNCHRONOUS_PAGING_IO | IRP_NOCACHE;
-    
-    ObReferenceObject(FileObject);
-    
-    Irp->UserEvent = &ReadWait;
-    Irp->Tail.Overlay.OriginalFileObject = FileObject;
-    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
-    IrpSp = IoGetNextIrpStackLocation(Irp);
-    IrpSp->FileObject = FileObject;
-    IrpSp->CompletionRoutine = MiSimpleReadComplete;
-    
-    Status = IoCallDriver(DeviceObject, Irp);
-    if (Status == STATUS_PENDING)
-    {
-	if (!NT_SUCCESS
-	    (KeWaitForSingleObject
-	     (&ReadWait, 
-	      Suspended, 
-	      KernelMode, 
-	      FALSE, 
-	      NULL)))
-	{
-	    DPRINT1("Warning: Failed to wait for synchronous IRP\n");
-	    ASSERT(FALSE);
-	    ObDereferenceObject(FileObject);
-	    return Status;
-	}
-    }
-    
-    ObDereferenceObject(FileObject);
-    
-    DPRINT("Paging IO Done: %08x\n", ReadStatus->Status);
-    return ReadStatus->Status;
-}
-
-NTSTATUS
-NTAPI
-MiSimpleWrite
-(PFILE_OBJECT FileObject, 
- PLARGE_INTEGER FileOffset,
- PVOID Buffer, 
- ULONG Length,
- PIO_STATUS_BLOCK ReadStatus)
-{
-    NTSTATUS Status;
-    PIRP Irp = NULL;
-    KEVENT ReadWait;
-    PDEVICE_OBJECT DeviceObject;
-    PIO_STACK_LOCATION IrpSp;
-    
-    ASSERT(FileObject);
-    ASSERT(FileOffset);
-    ASSERT(Buffer);
-    ASSERT(ReadStatus);
-    
-    DeviceObject = MmGetDeviceObjectForFile(FileObject);
-    
-    ASSERT(DeviceObject);
-    
-    DPRINT1
-	("PAGING WRITE: FileObject %x Offset %x Length %d\n", 
-	 &FileObject, 
-	 FileOffset->LowPart,
-	 Length);
-    
-    KeInitializeEvent(&ReadWait, NotificationEvent, FALSE);
-    
-    Irp = IoBuildAsynchronousFsdRequest
-	(IRP_MJ_WRITE,
-	 DeviceObject,
-	 Buffer,
-	 Length,
-	 FileOffset,
-	 ReadStatus);
-    
-    if (!Irp)
-    {
-	return STATUS_NO_MEMORY;
-    }
-    
-    Irp->Flags |= IRP_PAGING_IO | IRP_SYNCHRONOUS_PAGING_IO | IRP_NOCACHE;
-    
-    ObReferenceObject(FileObject);
-    
-    Irp->UserEvent = &ReadWait;
-    Irp->Tail.Overlay.OriginalFileObject = FileObject;
-    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
-    IrpSp = IoGetNextIrpStackLocation(Irp);
-    IrpSp->FileObject = FileObject;
-    IrpSp->CompletionRoutine = MiSimpleReadComplete;
-    
-    Status = IoCallDriver(DeviceObject, Irp);
-    if (Status == STATUS_PENDING)
-    {
-	if (!NT_SUCCESS
-	    (KeWaitForSingleObject
-	     (&ReadWait, 
-	      Suspended, 
-	      KernelMode, 
-	      FALSE, 
-	      NULL)))
-	{
-	    DPRINT1("Warning: Failed to wait for synchronous IRP\n");
-	    ASSERT(FALSE);
-	    ObDereferenceObject(FileObject);
-	    return Status;
-	}
-    }
-    
-    ObDereferenceObject(FileObject);
-    
-    DPRINT("Paging IO Done: %08x\n", ReadStatus->Status);
-    return ReadStatus->Status;
-}
-
-NTSTATUS
-NTAPI
-MmGetFileNameForSection(IN PROS_SECTION_OBJECT Section,
-                        OUT POBJECT_NAME_INFORMATION *ModuleName)
-{
-    POBJECT_NAME_INFORMATION ObjectNameInfo;
-    NTSTATUS Status;
-    ULONG ReturnLength;
-
-    /* Make sure it's an image section */
-    *ModuleName = NULL;
-    if (!(Section->AllocationAttributes & SEC_IMAGE))
-    {
-        /* It's not, fail */
-        return STATUS_SECTION_NOT_IMAGE;
-    }
-
-    /* Allocate memory for our structure */
-    ObjectNameInfo = ExAllocatePoolWithTag(PagedPool,
-                                           1024,
-                                           TAG('M', 'm', ' ', ' '));
-    if (!ObjectNameInfo) return STATUS_NO_MEMORY;
-
-    /* Query the name */
-    Status = ObQueryNameString(Section->FileObject,
-                               ObjectNameInfo,
-                               1024,
-                               &ReturnLength);
-    if (!NT_SUCCESS(Status))
-    {
-        /* Failed, free memory */
-        ExFreePool(ObjectNameInfo);
-        return Status;
-    }
-
-    /* Success */
-    *ModuleName = ObjectNameInfo;
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-NTAPI
-MmGetFileNameForAddress(IN PVOID Address,
-                        OUT PUNICODE_STRING ModuleName)
-{
-    /*
-     * FIXME: TODO.
-     * Filip says to get the MM_AVL_TABLE from EPROCESS,
-     * then use the MmMarea routines to locate the Marea that
-     * corresponds to the address. Then make sure it's a section
-     * view type (MEMORY_AREA_SECTION_VIEW) and use the marea's
-     * per-type union to get the .u.SectionView.Section pointer to
-     * the SECTION_OBJECT. Then we can use MmGetFileNameForSection
-     * to get the full filename.
-     */
-    RtlCreateUnicodeString(ModuleName, L"C:\\ReactOS\\system32\\ntdll.dll");
-    return STATUS_SUCCESS;
-}
 
 /* Note: Mmsp prefix denotes "Memory Manager Section Private". */
 
@@ -1104,10 +846,10 @@ MmNotPresentFaultSectionView(PMM_AVL_TABLE AddressSpace,
 	      RemainingLength,
 	      &IOSB);
 
-         if (!NT_SUCCESS(Status))
-         {
-            DPRINT1("MiReadPage failed (Status %x)\n", Status);
-         }
+	 if (!NT_SUCCESS(Status))
+	 {
+		 DPRINT1("MiReadPage failed (Status %x)\n", Status);
+	 }
 
 	 MmDeleteHyperspaceMapping(Buffer);
       }
@@ -2100,7 +1842,7 @@ MmProtectSectionView(PMM_AVL_TABLE AddressSpace,
    return(Status);
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 MmQuerySectionView(PMEMORY_AREA MemoryArea,
                    PVOID Address,
                    PMEMORY_BASIC_INFORMATION Info,
@@ -2180,7 +1922,7 @@ MmpFreePageFileSegment(PMM_SECTION_SEGMENT Segment)
    }
 }
 
-VOID STDCALL
+VOID NTAPI
 MmpDeleteSection(PVOID ObjectBody)
 {
    PROS_SECTION_OBJECT Section = (PROS_SECTION_OBJECT)ObjectBody;
@@ -2250,7 +1992,7 @@ MmpDeleteSection(PVOID ObjectBody)
    }
 }
 
-VOID STDCALL
+VOID NTAPI
 MmpCloseSection(IN PEPROCESS Process OPTIONAL,
                 IN PVOID Object,
                 IN ACCESS_MASK GrantedAccess,
@@ -2481,29 +2223,26 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
     */
    if (!CcGetFileSizes(FileObject, &FileSizes))
    {
-       /* This means the file isn't cached (yet) ... consequently, this
-	* call is not recursive from the cache. */
        /*
-	* FIXME: This is propably not entirely correct. We can't look into
-	* the standard FCB header because it might not be initialized yet
-	* (as in case of the EXT2FS driver by Manoj Paul Joseph where the
-	* standard file information is filled on first request).
-	*/
-       DPRINT("IoQueryFileInformation\n");
+		* FIXME: This is propably not entirely correct. We can't look into
+		* the standard FCB header because it might not be initialized yet
+		* (as in case of the EXT2FS driver by Manoj Paul Joseph where the
+		* standard file information is filled on first request).
+		*/
        Status = IoQueryFileInformation
 	   (FileObject,
 	    FileStandardInformation,
 	    sizeof(FILE_STANDARD_INFORMATION),
 	    &FileInfo,
 	    &Iosb.Information);
-       DPRINT("IoQueryFileInformation -> %08x\n", Status);
 
        if (!NT_SUCCESS(Status))
        {
-	   ObDereferenceObject(Section);
-	   ObDereferenceObject(FileObject);
-	   return Status;
+		   ObDereferenceObject(Section);
+		   ObDereferenceObject(FileObject);
+		   return Status;
        }
+	   ASSERT(Status != STATUS_PENDING);
 
        FileSizes.ValidDataLength = FileInfo.EndOfFile;
        FileSizes.FileSize = FileInfo.EndOfFile;
@@ -2519,32 +2258,15 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
    }
    else
    {
-      MaximumSize = FileSizes.ValidDataLength;
-      /* Mapping zero-sized files isn't allowed. */
-      if (MaximumSize.QuadPart == 0)
-      {
-         ObDereferenceObject(Section);
-         ObDereferenceObject(FileObject);
-         return STATUS_FILE_INVALID;
-      }
+	  MaximumSize = FileSizes.FileSize;
    }
 
-   if (MaximumSize.QuadPart > FileSizes.ValidDataLength.QuadPart)
+   /* Mapping zero-sized files isn't allowed. */
+   if (MaximumSize.QuadPart == 0)
    {
-       DPRINT("IoSetInformation expanding from %x to %x\n", 
-	      MaximumSize.LowPart, FileSizes.ValidDataLength.LowPart);
-      Status = IoSetInformation(FileObject,
-                                FileAllocationInformation,
-                                sizeof(LARGE_INTEGER),
-                                &MaximumSize);
-      DPRINT("IoSetInformation -> %08x\n", Status);
-
-      if (!NT_SUCCESS(Status))
-      {
-         ObDereferenceObject(Section);
-         ObDereferenceObject(FileObject);
-         return(STATUS_SECTION_NOT_EXTENDED);
-      }
+	   ObDereferenceObject(Section);
+	   ObDereferenceObject(FileObject);
+	   return STATUS_FILE_INVALID;
    }
 
    Segment = ExAllocatePoolWithTag(NonPagedPool, sizeof(MM_SECTION_SEGMENT),
@@ -2577,6 +2299,7 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
 
       DPRINT("Filling out Segment info (No previous data section)\n");
       Segment->FileOffset.QuadPart = 0;
+	  Segment->FileObject = FileObject;
       Segment->Protection = SectionPageProtection;
       Segment->Flags = MM_DATAFILE_SEGMENT;
       Segment->Characteristics = 0;
@@ -3280,6 +3003,7 @@ MmCreateImageSection(PROS_SECTION_OBJECT *SectionObject,
     */
    if (UMaximumSize != NULL)
    {
+	  DPRINT1("STATUS_INVALID_PARAMETER_4\n");
       return(STATUS_INVALID_PARAMETER_4);
    }
 
@@ -3316,6 +3040,7 @@ MmCreateImageSection(PROS_SECTION_OBJECT *SectionObject,
    if (!NT_SUCCESS(Status))
    {
       ObDereferenceObject(FileObject);
+	  DPRINT1("Failed - Status %x\n", Status);
       return(Status);
    }
 
@@ -3334,6 +3059,7 @@ MmCreateImageSection(PROS_SECTION_OBJECT *SectionObject,
       {
          ObDereferenceObject(FileObject);
          ObDereferenceObject(Section);
+		 DPRINT1("STATUS_NO_MEMORY");
          return(STATUS_NO_MEMORY);
       }
 
@@ -3350,6 +3076,7 @@ MmCreateImageSection(PROS_SECTION_OBJECT *SectionObject,
          ExFreePool(ImageSectionObject);
          ObDereferenceObject(Section);
          ObDereferenceObject(FileObject);
+		 DPRINT1("StatusExeFmt %x\n", StatusExeFmt);
          return(StatusExeFmt);
       }
 
@@ -3366,6 +3093,7 @@ MmCreateImageSection(PROS_SECTION_OBJECT *SectionObject,
          ExFreePool(ImageSectionObject);
          ObDereferenceObject(Section);
          ObDereferenceObject(FileObject);
+		 DPRINT1("Status %x\n", Status);
          return(Status);
       }
 
@@ -3399,6 +3127,7 @@ MmCreateImageSection(PROS_SECTION_OBJECT *SectionObject,
       {
          ObDereferenceObject(Section);
          ObDereferenceObject(FileObject);
+		 DPRINT1("Status %x\n", Status);
          return(Status);
       }
 
@@ -3425,7 +3154,7 @@ MmCreateImageSection(PROS_SECTION_OBJECT *SectionObject,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtCreateSection (OUT PHANDLE SectionHandle,
                  IN ACCESS_MASK DesiredAccess,
                  IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
@@ -3443,17 +3172,17 @@ NtCreateSection (OUT PHANDLE SectionHandle,
 
    if(MaximumSize != NULL && PreviousMode != KernelMode)
    {
-     _SEH_TRY
+     _SEH2_TRY
      {
        /* make a copy on the stack */
        SafeMaximumSize = ProbeForReadLargeInteger(MaximumSize);
        MaximumSize = &SafeMaximumSize;
      }
-     _SEH_HANDLE
+     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
      {
-       Status = _SEH_GetExceptionCode();
+       Status = _SEH2_GetExceptionCode();
      }
-     _SEH_END;
+     _SEH2_END;
 
      if(!NT_SUCCESS(Status))
      {
@@ -3500,7 +3229,7 @@ NtCreateSection (OUT PHANDLE SectionHandle,
  *
  * REVISIONS
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtOpenSection(PHANDLE   SectionHandle,
               ACCESS_MASK  DesiredAccess,
               POBJECT_ATTRIBUTES ObjectAttributes)
@@ -3513,15 +3242,15 @@ NtOpenSection(PHANDLE   SectionHandle,
 
    if(PreviousMode != KernelMode)
    {
-     _SEH_TRY
+     _SEH2_TRY
      {
        ProbeForWriteHandle(SectionHandle);
      }
-     _SEH_HANDLE
+     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
      {
-       Status = _SEH_GetExceptionCode();
+       Status = _SEH2_GetExceptionCode();
      }
-     _SEH_END;
+     _SEH2_END;
 
      if(!NT_SUCCESS(Status))
      {
@@ -3539,15 +3268,15 @@ NtOpenSection(PHANDLE   SectionHandle,
 
    if(NT_SUCCESS(Status))
    {
-     _SEH_TRY
+     _SEH2_TRY
      {
        *SectionHandle = hSection;
      }
-     _SEH_HANDLE
+     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
      {
-       Status = _SEH_GetExceptionCode();
+       Status = _SEH2_GetExceptionCode();
      }
-     _SEH_END;
+     _SEH2_END;
    }
 
    return(Status);
@@ -3647,7 +3376,7 @@ MmMapViewOfSegment(PMM_AVL_TABLE AddressSpace,
  *
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtMapViewOfSection(IN HANDLE SectionHandle,
                    IN HANDLE ProcessHandle,
                    IN OUT PVOID* BaseAddress  OPTIONAL,
@@ -3698,7 +3427,7 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
      SafeSectionOffset.QuadPart = 0;
      SafeViewSize = 0;
 
-     _SEH_TRY
+     _SEH2_TRY
      {
        if(BaseAddress != NULL)
        {
@@ -3713,11 +3442,11 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
        ProbeForWriteSize_t(ViewSize);
        SafeViewSize = *ViewSize;
      }
-     _SEH_HANDLE
+     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
      {
-       Status = _SEH_GetExceptionCode();
+       Status = _SEH2_GetExceptionCode();
      }
-     _SEH_END;
+     _SEH2_END;
 
      if(!NT_SUCCESS(Status))
      {
@@ -3788,7 +3517,7 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
    if(NT_SUCCESS(Status))
    {
      /* copy parameters back to the caller */
-     _SEH_TRY
+     _SEH2_TRY
      {
        if(BaseAddress != NULL)
        {
@@ -3803,11 +3532,11 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
          *ViewSize = SafeViewSize;
        }
      }
-     _SEH_HANDLE
+     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
      {
-       Status = _SEH_GetExceptionCode();
+       Status = _SEH2_GetExceptionCode();
      }
-     _SEH_END;
+     _SEH2_END;
    }
 
    return(Status);
@@ -3981,7 +3710,7 @@ MmUnmapViewOfSegment(PMM_AVL_TABLE AddressSpace,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 MmUnmapViewOfSection(PEPROCESS Process,
                      PVOID BaseAddress)
 {
@@ -4120,7 +3849,7 @@ MmUnmapViewOfSection(PEPROCESS Process,
  *
  * REVISIONS
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtUnmapViewOfSection (HANDLE ProcessHandle,
                       PVOID BaseAddress)
 {
@@ -4176,7 +3905,7 @@ NtUnmapViewOfSection (HANDLE ProcessHandle,
  *
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtQuerySection(IN HANDLE SectionHandle,
                IN SECTION_INFORMATION_CLASS SectionInformationClass,
                OUT PVOID SectionInformation,
@@ -4217,7 +3946,7 @@ NtQuerySection(IN HANDLE SectionHandle,
          {
             PSECTION_BASIC_INFORMATION Sbi = (PSECTION_BASIC_INFORMATION)SectionInformation;
 
-            _SEH_TRY
+            _SEH2_TRY
             {
                Sbi->Attributes = Section->AllocationAttributes;
                if (Section->AllocationAttributes & SEC_IMAGE)
@@ -4237,11 +3966,11 @@ NtQuerySection(IN HANDLE SectionHandle,
                }
                Status = STATUS_SUCCESS;
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-               Status = _SEH_GetExceptionCode();
+               Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
 
             break;
          }
@@ -4250,7 +3979,7 @@ NtQuerySection(IN HANDLE SectionHandle,
          {
             PSECTION_IMAGE_INFORMATION Sii = (PSECTION_IMAGE_INFORMATION)SectionInformation;
 
-            _SEH_TRY
+            _SEH2_TRY
             {
                memset(Sii, 0, sizeof(SECTION_IMAGE_INFORMATION));
                if (Section->AllocationAttributes & SEC_IMAGE)
@@ -4275,11 +4004,11 @@ NtQuerySection(IN HANDLE SectionHandle,
                }
                Status = STATUS_SUCCESS;
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-               Status = _SEH_GetExceptionCode();
+               Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
 
             break;
          }
@@ -4306,7 +4035,7 @@ NtQuerySection(IN HANDLE SectionHandle,
  * @todo Move the actual code to internal function MmExtendSection.
  * @unimplemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtExtendSection(IN HANDLE SectionHandle,
                 IN PLARGE_INTEGER NewMaximumSize)
 {
@@ -4319,17 +4048,17 @@ NtExtendSection(IN HANDLE SectionHandle,
 
    if(PreviousMode != KernelMode)
    {
-     _SEH_TRY
+     _SEH2_TRY
      {
        /* make a copy on the stack */
        SafeNewMaximumSize = ProbeForReadLargeInteger(NewMaximumSize);
        NewMaximumSize = &SafeNewMaximumSize;
      }
-     _SEH_HANDLE
+     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
      {
-       Status = _SEH_GetExceptionCode();
+       Status = _SEH2_GetExceptionCode();
      }
-     _SEH_END;
+     _SEH2_END;
 
      if(!NT_SUCCESS(Status))
      {
@@ -4384,7 +4113,7 @@ NtExtendSection(IN HANDLE SectionHandle,
  *
  * REVISIONS
  */
-PVOID STDCALL
+PVOID NTAPI
 MmAllocateSection (IN ULONG Length, PVOID BaseAddress)
 {
    PVOID Result;
@@ -4473,7 +4202,7 @@ MmAllocateSection (IN ULONG Length, PVOID BaseAddress)
  *
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 MmMapViewOfSection(IN PVOID SectionObject,
                    IN PEPROCESS Process,
                    IN OUT PVOID *BaseAddress,
@@ -4667,19 +4396,61 @@ MmMapViewOfSection(IN PVOID SectionObject,
 /*
  * @unimplemented
  */
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 MmCanFileBeTruncated (IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
                       IN PLARGE_INTEGER   NewFileSize)
 {
-   UNIMPLEMENTED;
-   return (FALSE);
+   CC_FILE_SIZES FileSizes;
+
+   /* Check whether an ImageSectionObject exists */
+   if (SectionObjectPointer->ImageSectionObject != NULL)
+   {
+      DPRINT1("ERROR: File can't be truncated because it has an image section\n");
+      return FALSE;
+   }
+
+   if (SectionObjectPointer->DataSectionObject != NULL)
+   {
+      PMM_SECTION_SEGMENT Segment;
+
+      Segment = (PMM_SECTION_SEGMENT)SectionObjectPointer->
+                DataSectionObject;
+
+      if (Segment->ReferenceCount != 0)
+      {
+          /* Check size of file */
+          if (SectionObjectPointer->SharedCacheMap)
+          {
+			 if (!CcGetFileSizes(Segment->FileObject, &FileSizes))
+			 {
+				return FALSE;
+			 }
+
+             if (NewFileSize->QuadPart <= FileSizes.FileSize.QuadPart)
+             {
+                return FALSE;
+             }
+          }
+      }
+      else
+      {
+         /* Something must gone wrong
+          * how can we have a Section but no 
+          * reference? */
+         DPRINT1("ERROR: DataSectionObject without reference!\n");
+      }
+   }
+
+   DPRINT1("FIXME: didn't check for outstanding write probes\n");
+
+   return TRUE;
 }
 
 
 /*
  * @unimplemented
  */
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 MmDisableModifiedWriteOfSection (ULONG Unknown0)
 {
    UNIMPLEMENTED;
@@ -4689,7 +4460,7 @@ MmDisableModifiedWriteOfSection (ULONG Unknown0)
 /*
  * @implemented
  */
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 MmFlushImageSection (IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
                      IN MMFLUSH_TYPE   FlushType)
 {
@@ -4699,7 +4470,7 @@ MmFlushImageSection (IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
 /*
  * @unimplemented
  */
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 MmForceSectionClosed (
     IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
     IN BOOLEAN                  DelayClose)
@@ -4712,7 +4483,7 @@ MmForceSectionClosed (
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 MmMapViewInSystemSpace (IN PVOID SectionObject,
                         OUT PVOID * MappedBase,
                         IN OUT PULONG ViewSize)
@@ -4740,7 +4511,6 @@ MmMapViewInSystemSpace (IN PVOID SectionObject,
 
    MmLockSectionSegment(Section->Segment);
 
-
    Status = MmMapViewOfSegment(AddressSpace,
                                Section,
                                Section->Segment,
@@ -4756,7 +4526,7 @@ MmMapViewInSystemSpace (IN PVOID SectionObject,
    return Status;
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 MmMapViewInSystemSpaceAtOffset
 (IN PVOID SectionObject,
  OUT PVOID *MappedBase,
@@ -4804,7 +4574,7 @@ MmMapViewInSystemSpaceAtOffset
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 MmMapViewInSessionSpace (
     IN PVOID Section,
     OUT PVOID *MappedBase,
@@ -4819,7 +4589,7 @@ MmMapViewInSessionSpace (
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 MmUnmapViewInSystemSpace (IN PVOID MappedBase)
 {
    PMM_AVL_TABLE AddressSpace;
@@ -4838,7 +4608,7 @@ MmUnmapViewInSystemSpace (IN PVOID MappedBase)
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 MmUnmapViewInSessionSpace (
     IN PVOID MappedBase
     )
@@ -4850,7 +4620,7 @@ MmUnmapViewInSessionSpace (
 /*
  * @unimplemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 MmSetBankedSection (ULONG Unknown0,
                     ULONG Unknown1,
                     ULONG Unknown2,
@@ -4918,7 +4688,7 @@ MmSetBankedSection (ULONG Unknown0,
  *
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 MmCreateSection (OUT PVOID  * Section,
                  IN ACCESS_MASK  DesiredAccess,
                  IN POBJECT_ATTRIBUTES ObjectAttributes     OPTIONAL,
@@ -4940,30 +4710,30 @@ MmCreateSection (OUT PVOID  * Section,
      */
     Protection = SectionPageProtection & ~(PAGE_GUARD|PAGE_NOCACHE);
     if (Protection != PAGE_NOACCESS &&
-	Protection != PAGE_READONLY &&
-	Protection != PAGE_READWRITE &&
-	Protection != PAGE_WRITECOPY &&
-	Protection != PAGE_EXECUTE &&
-	Protection != PAGE_EXECUTE_READ &&
-	Protection != PAGE_EXECUTE_READWRITE &&
-	Protection != PAGE_EXECUTE_WRITECOPY)
+		Protection != PAGE_READONLY &&
+		Protection != PAGE_READWRITE &&
+		Protection != PAGE_WRITECOPY &&
+		Protection != PAGE_EXECUTE &&
+		Protection != PAGE_EXECUTE_READ &&
+		Protection != PAGE_EXECUTE_READWRITE &&
+		Protection != PAGE_EXECUTE_WRITECOPY)
     {
-	return STATUS_INVALID_PAGE_PROTECTION;
+		return STATUS_INVALID_PAGE_PROTECTION;
     }
     
     if (((DesiredAccess == SECTION_ALL_ACCESS ||
-	  (DesiredAccess & SECTION_MAP_WRITE)) &&
-	 (Protection == PAGE_READWRITE ||
-	  Protection == PAGE_EXECUTE_READWRITE)) &&
-	!(AllocationAttributes & SEC_IMAGE))
+		  (DesiredAccess & SECTION_MAP_WRITE)) &&
+		 (Protection == PAGE_READWRITE ||
+		  Protection == PAGE_EXECUTE_READWRITE)) &&
+		!(AllocationAttributes & SEC_IMAGE))
     {
-	DPRINT("Creating a section with WRITE access\n");
-	FileAccess = FILE_READ_DATA | FILE_WRITE_DATA;
+		DPRINT("Creating a section with WRITE access\n");
+		FileAccess = FILE_READ_DATA | FILE_WRITE_DATA;
     }
     else 
     {
-	DPRINT("Creating a section with READ access\n");
-	FileAccess = FILE_READ_DATA;
+		DPRINT("Creating a section with READ access\n");
+		FileAccess = FILE_READ_DATA;
     }
     
     /*
@@ -4971,62 +4741,62 @@ MmCreateSection (OUT PVOID  * Section,
      */
     if (!FileObject && FileHandle)
     {
-	Status = ObReferenceObjectByHandle
-	    (FileHandle,
-	     FileAccess,
-	     IoFileObjectType,
-	     ExGetPreviousMode(),
-	     (PVOID*)(PVOID)&FileObject,
-	     NULL);
-	if (!NT_SUCCESS(Status)) 
-	{
-	    DPRINT("Failed: %x\n", Status);
-	    return Status;
-	}
-	else
-	    ReferencedFile = TRUE;
+		Status = ObReferenceObjectByHandle
+			(FileHandle,
+			 FileAccess,
+			 IoFileObjectType,
+			 ExGetPreviousMode(),
+			 (PVOID*)(PVOID)&FileObject,
+			 NULL);
+		if (!NT_SUCCESS(Status)) 
+		{
+			DPRINT("Failed: %x\n", Status);
+			return Status;
+		}
+		else
+			ReferencedFile = TRUE;
     }
     
     if (AllocationAttributes & SEC_IMAGE)
     {
-	DPRINT("Creating an image section\n");
-	Status = MmCreateImageSection
-	    (SectionObject,
-	     DesiredAccess,
-	     ObjectAttributes,
-	     MaximumSize,
-	     SectionPageProtection,
-	     AllocationAttributes,
-	     FileObject);
-	if (!NT_SUCCESS(Status))
-	    DPRINT("Failed: %x\n", Status);
+		DPRINT("Creating an image section\n");
+		Status = MmCreateImageSection
+			(SectionObject,
+			 DesiredAccess,
+			 ObjectAttributes,
+			 MaximumSize,
+			 SectionPageProtection,
+			 AllocationAttributes,
+			 FileObject);
+		if (!NT_SUCCESS(Status))
+			DPRINT("Failed: %x\n", Status);
     }
     else if (FileHandle != NULL || OriginalFileObject != NULL)
     {
-	DPRINT("Creating a data section\n");
-	Status = MmCreateDataFileSection
-	    (SectionObject,
-	     DesiredAccess,
-	     ObjectAttributes,
-	     MaximumSize,
-	     SectionPageProtection,
-	     AllocationAttributes,
-	     FileObject);
-	if (!NT_SUCCESS(Status))
-	    DPRINT("Failed: %x\n", Status);
+		DPRINT("Creating a data section\n");
+		Status = MmCreateDataFileSection
+			(SectionObject,
+			 DesiredAccess,
+			 ObjectAttributes,
+			 MaximumSize,
+			 SectionPageProtection,
+			 AllocationAttributes,
+			 FileObject);
+		if (!NT_SUCCESS(Status))
+			DPRINT("Failed: %x\n", Status);
     }
     else
     {
-	DPRINT("Creating a page file section\n");
-	Status = MmCreatePageFileSection
-	    (SectionObject,
-	     DesiredAccess,
-	     ObjectAttributes,
-	     MaximumSize,
-	     SectionPageProtection,
-	     AllocationAttributes);
-	if (!NT_SUCCESS(Status))
-	    DPRINT("Failed: %x\n", Status);
+		DPRINT("Creating a page file section\n");
+		Status = MmCreatePageFileSection
+			(SectionObject,
+			 DesiredAccess,
+			 ObjectAttributes,
+			 MaximumSize,
+			 SectionPageProtection,
+			 AllocationAttributes);
+		if (!NT_SUCCESS(Status))
+			DPRINT("Failed: %x\n", Status);
     }
 
     return(Status);   

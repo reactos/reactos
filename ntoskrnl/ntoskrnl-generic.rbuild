@@ -33,9 +33,11 @@
 	<library>bootvid</library>
 	<library>wdmguid</library>
 	<dependency>bugcodes</dependency>
+	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38269
 	<directory name="include">
-		<pch>ntoskrnl.h</pch>
+		<pch>precomp.h</pch>
 	</directory>
+	-->
 	<directory name="ke">
 		<if property="ARCH" value="i386">
 			<directory name="i386">
@@ -115,11 +117,12 @@
 	<directory name="cache">
 		<file>cachesub.c</file>
 		<file>copysup.c</file>
-		<file>fssup.c</file>
+		<file>io.c</file>
 		<file>lazyrite.c</file>
-		<file>logsup.c</file>
 		<file>mdlsup.c</file>
 		<file>pinsup.c</file>
+		<file>fssup.c</file>
+		<file>logsup.c</file>
 		<file>vacbsup.c</file>
 	</directory>
 	<directory name="config">
@@ -470,4 +473,7 @@
 	<file>ntoskrnl.rc</file>
 	<file>ntoskrnl.spec</file>
 	<linkerscript>ntoskrnl_$(ARCH).lnk</linkerscript>
+
+	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38054#c7 -->
+	<compilerflag>-fno-unit-at-a-time</compilerflag>
 </group>

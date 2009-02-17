@@ -10,27 +10,80 @@
 /* INCLUDES *******************************************************************/
 
 #include <ntoskrnl.h>
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS ********************************************************************/
 
 PFSN_PREFETCHER_GLOBALS CcPfGlobals;
 extern LONG CcOutstandingDeletes;
-extern KEVENT CcpLazyWriteEvent;
-extern VOID STDCALL CcpUnmapThread(PVOID Unused);
-extern VOID STDCALL CcpLazyWriteThread(PVOID Unused);
-HANDLE CcUnmapThreadHandle, CcLazyWriteThreadHandle;
-CLIENT_ID CcUnmapThreadId, CcLazyWriteThreadId;
+extern ULONG CcCacheClockHand;
 
 /* FUNCTIONS ******************************************************************/
+
+VOID MmPrintMemoryStatistic(VOID);
+
+NTSTATUS
+CcTrimPages
+(ULONG Target,
+ ULONG Priority,
+ PULONG NrFreed)
+{
+	PCHAR PageAddress;
+	PNOCC_BCB Bcb;
+	PNOCC_CACHE_MAP Map;
+	PFN_TYPE Page;
+	ULONG ClockHand;
+	BOOLEAN WasDirty;
+
+	*NrFreed = 0;
+	DPRINT1("Balance: Free cache pages\n");
+	CcpLock();
+	ClockHand = CcCacheClockHand;
+	do
+	{
+		Bcb = &CcCacheSections[ClockHand];
+		ClockHand = (ClockHand+1) % CACHE_NUM_SECTIONS;
+		DPRINT1("Bcb #%x -> Base %x RefCount %d Pinned %x\n", 
+				Bcb - CcCacheSections,
+				Bcb->BaseAddress,
+				Bcb->RefCount,
+				Bcb->Pinned);
+		if (Bcb->RefCount && Bcb->BaseAddress && !Bcb->Pinned)
+		{
+			Map = (PNOCC_CACHE_MAP)
+				Bcb->FileObject->SectionObjectPointer->SharedCacheMap;
+			for (PageAddress = Bcb->BaseAddress;
+				 *NrFreed < Target && 
+				 PageAddress < ((PCHAR)Bcb->BaseAddress) + CACHE_STRIPE;
+				 PageAddress += PAGE_SIZE)
+			{
+				MmLockAddressSpace(MmGetKernelAddressSpace());
+				if (MmIsPagePresent(NULL, PageAddress) && 
+					!MmIsDirtyPage(NULL, PageAddress))
+				{
+					MmDeleteVirtualMapping
+						(NULL, PageAddress, FALSE, &WasDirty, &Page);
+				}
+				MmUnlockAddressSpace(MmGetKernelAddressSpace());
+				MmReleasePageMemoryConsumer(MC_CACHE, Page);
+				(*NrFreed)++;
+			}
+		}
+	}
+	while (*NrFreed < Target && ClockHand != CcCacheClockHand);
+	CcpUnlock();
+	DPRINT1("Balance: Freed %d cache pages\n", *NrFreed);
+	MmPrintMemoryStatistic();
+
+	return STATUS_SUCCESS;
+}
 
 BOOLEAN
 NTAPI
 CcInitializeCacheManager(VOID)
 {
 	int i;
-	NTSTATUS Status;
 
 	DPRINT("Initialize\n");
 	for (i = 0; i < CACHE_NUM_SECTIONS; i++)
@@ -45,33 +98,7 @@ CcInitializeCacheManager(VOID)
 	CcCacheBitmap->SizeOfBitMap = ROUND_UP(CACHE_NUM_SECTIONS, 32);
 	DPRINT("Cache has %d entries\n", CcCacheBitmap->SizeOfBitMap);
 	ExInitializeFastMutex(&CcMutex);
-	Status = PsCreateSystemThread
-		(&CcUnmapThreadHandle,
-		 THREAD_ALL_ACCESS,
-		 NULL,
-		 NULL,
-		 &CcUnmapThreadId,
-		 (PKSTART_ROUTINE) CcpUnmapThread,
-		 NULL);
-
-	if (!NT_SUCCESS(Status))
-	{
-	    KeBugCheck(0);
-	}
-
-	Status = PsCreateSystemThread
-	    (&CcLazyWriteThreadHandle,
-	     THREAD_ALL_ACCESS,
-	     NULL,
-	     NULL,
-	     &CcLazyWriteThreadId,
-	     (PKSTART_ROUTINE) CcpLazyWriteThread,
-	     NULL);
-
-	if (!NT_SUCCESS(Status))
-	{
-	    KeBugCheck(0);
-	}
+	MmInitializeMemoryConsumer(MC_CACHE, CcTrimPages);
 
     return TRUE;
 }
@@ -104,22 +131,21 @@ CcInitializeCacheMap(IN PFILE_OBJECT FileObject,
     CcpLock();
     if (FileObject->SectionObjectPointer->SharedCacheMap)
     {
-	PNOCC_CACHE_MAP Map = (PNOCC_CACHE_MAP)FileObject->SectionObjectPointer->SharedCacheMap;
-	InterlockedIncrement((PLONG)&Map->RefCount);
+		PNOCC_CACHE_MAP Map = (PNOCC_CACHE_MAP)FileObject->SectionObjectPointer->SharedCacheMap;
+		InterlockedIncrement((PLONG)&Map->RefCount);
     }
     else
     {
-	PNOCC_CACHE_MAP Map = ExAllocatePool(NonPagedPool, sizeof(NOCC_CACHE_MAP));
-	DPRINT("Initializing file object for (%p) %wZ\n", FileObject, &FileObject->FileName);
-	ASSERT(FileObject);
-	FileObject->SectionObjectPointer->SharedCacheMap = Map;
-	Map->RefCount = 1;
-	ObReferenceObject(FileObject);
-	Map->FileObject = FileObject;
-	Map->NumberOfMaps = 0;
-	Map->FileSizes = *FileSizes;
-	DPRINT("FileSizes->ValidDataLength %x\n", FileSizes->ValidDataLength.LowPart);
-	InitializeListHead(&Map->AssociatedBcb);
+		PNOCC_CACHE_MAP Map = ExAllocatePool(NonPagedPool, sizeof(NOCC_CACHE_MAP));
+		DPRINT1("Initializing file object for (%p) %wZ\n", FileObject, &FileObject->FileName);
+		ASSERT(FileObject);
+		FileObject->SectionObjectPointer->SharedCacheMap = Map;
+		Map->RefCount = 1;
+		ObReferenceObject(FileObject);
+		Map->FileObject = FileObject;
+		Map->NumberOfMaps = 0;
+		Map->FileSizes = *FileSizes;
+		InitializeListHead(&Map->AssociatedBcb);
     }
     CcpUnlock();
 }
@@ -133,56 +159,34 @@ CcUninitializeCacheMap(IN PFILE_OBJECT FileObject,
     PNOCC_CACHE_MAP Map = (PNOCC_CACHE_MAP)FileObject->SectionObjectPointer->SharedCacheMap;
     PNOCC_BCB Bcb;
     PLIST_ENTRY Entry;
-    IO_STATUS_BLOCK IOSB;
     
     DPRINT("Uninitializing file object for %wZ SectionObjectPointer %x\n", &FileObject->FileName, FileObject->SectionObjectPointer);
-    
+	
     ASSERT(UninitializeEvent == NULL);
-
-    for (Entry = Map->AssociatedBcb.Flink;
-	 Entry != &Map->AssociatedBcb;
-	 Entry = Entry->Flink)
-    {
-	Bcb = CONTAINING_RECORD(Entry, NOCC_BCB, ThisFileList);
-
-	if (!Bcb->Dirty) continue;
-
-	if (Bcb->RefCount == 1)
-	{
-	    DPRINT("Flushing #%x\n", Bcb - CcCacheSections);
-	    CcFlushCache
-		(Bcb->FileObject->SectionObjectPointer,
-		 &Bcb->FileOffset,
-		 Bcb->Length,
-		 &IOSB);
-	}
-    }
-    
-    CcpLock();
-
+	
+    if (!Map) return TRUE;
+	    
+	CcpLock();
     if (InterlockedDecrement((PLONG)&Map->RefCount) == 1)
     {
-	for (Entry = Map->AssociatedBcb.Flink;
-	     Entry != &Map->AssociatedBcb;
-	     Entry = Entry->Flink)
-	{
-	    Bcb = CONTAINING_RECORD(Entry, NOCC_BCB, ThisFileList);
-	    if (Bcb->RefCount == 1)
-	    {
-		DPRINT("Unmapping #%x\n", Bcb - CcCacheSections);
-		CcpDereferenceCache(Bcb - CcCacheSections);
-	    }
-	}
+		for (Entry = Map->AssociatedBcb.Flink;
+			 Entry != &Map->AssociatedBcb;
+			 Entry = Entry->Flink)
+		{
+			Bcb = CONTAINING_RECORD(Entry, NOCC_BCB, ThisFileList);
+			DPRINT("Unmapping #%x\n", Bcb - CcCacheSections);
+			CcpDereferenceCache(Bcb - CcCacheSections);
+		}
+		
+		ObDereferenceObject(Map->FileObject);
+		ExFreePool(Map);	
 	
-	ObDereferenceObject(Map->FileObject);
-
-	ExFreePool(Map);
-	
-	/* Clear the cache map */
-	FileObject->SectionObjectPointer->SharedCacheMap = NULL;
+		/* Clear the cache map */
+		FileObject->SectionObjectPointer->SharedCacheMap = NULL;
     }
-    
-    CcpUnlock();
+	CcpUnlock();
+
+	MmPrintMemoryStatistic();
     return TRUE;
 }
 

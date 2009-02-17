@@ -140,6 +140,16 @@ typedef ULONG PFN_TYPE, *PPFN_TYPE;
     PAGE_NOACCESS | \
     PAGE_NOCACHE)
 
+#define PAGE_FLAGS_VALID_FOR_SECTION \
+    (PAGE_READONLY | \
+     PAGE_READWRITE | \
+     PAGE_WRITECOPY | \
+     PAGE_EXECUTE | \
+     PAGE_EXECUTE_READ | \
+     PAGE_EXECUTE_READWRITE | \
+     PAGE_EXECUTE_WRITECOPY | \
+     PAGE_NOACCESS)
+
 #define PAGE_IS_READABLE                    \
     (PAGE_READONLY | \
     PAGE_READWRITE | \
@@ -183,10 +193,11 @@ typedef struct
 
 typedef struct _MM_SECTION_SEGMENT
 {
-    LARGE_INTEGER FileOffset;		/* start offset into the file for image sections */
+    LARGE_INTEGER FileOffset;	/* start offset into the file for image sections */
     ULONG_PTR VirtualAddress;	/* dtart offset into the address range for image sections */
+	PFILE_OBJECT FileObject;    /* associated file object */
     ULONG RawLength;		/* length of the segment which is part of the mapped file */
-    ULONG Length;			/* absolute length of the segment */
+    ULONG Length;		/* absolute length of the segment */
     ULONG Protection;
     FAST_MUTEX Lock;		/* lock which protects the page directory */
     ULONG ReferenceCount;
@@ -254,6 +265,10 @@ typedef struct _MEMORY_AREA
         {
             LIST_ENTRY RegionListHead;
         } VirtualMemoryData;
+		struct
+		{
+			ULONG CacheRegion;			
+		} CacheData;
     } Data;
 } MEMORY_AREA, *PMEMORY_AREA;
 
@@ -285,7 +300,7 @@ typedef struct _PHYSICAL_PAGE
         Flags;
         ULONG AllFlags;
     };
-    
+
     LIST_ENTRY ListEntry;
     ULONG ReferenceCount;
     SWAPENTRY SavedSwapEntry;
@@ -354,7 +369,7 @@ typedef struct _MMFREE_POOL_ENTRY
 
 /* Paged pool information */
 typedef struct _MM_PAGED_POOL_INFO
-{  
+{
     PRTL_BITMAP PagedPoolAllocationMap;
     PRTL_BITMAP EndOfPagedPoolBitmap;
     PMMPTE FirstPteForPagedPool;
@@ -388,13 +403,11 @@ typedef VOID
     BOOLEAN Dirty
 );
 
-PMM_AVL_TABLE MmKernelAddressSpace;
-
 /* marea.c *******************************************************************/
 
 NTSTATUS
 NTAPI
-MmInitMemoryAreas(VOID);
+MmInitMemoryAreas();
 
 NTSTATUS
 NTAPI
@@ -1018,7 +1031,8 @@ ULONG
 NTAPI
 MmGetLockCountPage(PFN_TYPE Page);
 
-FORCEINLINE
+static
+__inline
 KIRQL
 NTAPI
 MmAcquirePageListLock()
@@ -1474,7 +1488,7 @@ VOID
 NTAPI
 MmFreeSectionSegments(PFILE_OBJECT FileObject);
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 MmMapViewInSystemSpaceAtOffset
 (IN PVOID SectionObject,
  OUT PVOID *MappedBase,

@@ -109,13 +109,14 @@ typedef struct _NOCC_BCB
 
     /* So we know the initial request that was made */
     PFILE_OBJECT FileObject;
-    PSECTION_OBJECT SectionObject;
+	PMEMORY_AREA MemoryArea;
     LARGE_INTEGER FileOffset;
     ULONG Length;
     PVOID BaseAddress;
     BOOLEAN Dirty;
+	BOOLEAN Zero;
+    BOOLEAN Pinned;
     PVOID OwnerPointer;
-    PMDL Pinned;
     
     /* Reference counts */
     ULONG RefCount;
@@ -135,6 +136,68 @@ typedef struct _NOCC_CACHE_MAP
     ULONG RefCount;
     CC_FILE_SIZES FileSizes;
 } NOCC_CACHE_MAP, *PNOCC_CACHE_MAP;
+
+/* io.c *****************************************************************/
+
+PDEVICE_OBJECT
+NTAPI
+MmGetDeviceObjectForFile
+(IN PFILE_OBJECT FileObject);
+
+PFILE_OBJECT
+NTAPI
+MmGetFileObjectForSection
+(IN PROS_SECTION_OBJECT Section);
+
+NTSTATUS
+NTAPI
+MmGetFileNameForSection
+(IN PROS_SECTION_OBJECT Section,
+ OUT POBJECT_NAME_INFORMATION *ModuleName);
+
+NTSTATUS
+NTAPI
+MmGetFileNameForAddress
+(IN PVOID Address,
+ OUT PUNICODE_STRING ModuleName);
+
+NTSTATUS
+NTAPI
+MiSimpleRead
+(PFILE_OBJECT FileObject,
+ PLARGE_INTEGER FileOffset,
+ PVOID Buffer,
+ ULONG Length,
+ PIO_STATUS_BLOCK ReadStatus);
+
+NTSTATUS
+NTAPI
+MiSimpleWrite
+(PFILE_OBJECT FileObject,
+ PLARGE_INTEGER FileOffset,
+ PVOID Buffer,
+ ULONG Length,
+ PIO_STATUS_BLOCK WriteStatus);
+
+NTSTATUS
+NTAPI
+MiScheduleForWrite
+(PFILE_OBJECT FileObject,
+ PLARGE_INTEGER FileOffset,
+ PFN_TYPE Page,
+ ULONG Length);
+
+NTSTATUS
+NTAPI
+MmWriteThreadInit();
+
+/* other */
+
+NTSTATUS
+NTAPI
+CcReplaceCachePage(
+	PMEMORY_AREA MemoryArea, PVOID Address
+);
 
 VOID
 NTAPI
@@ -219,6 +282,7 @@ CcpMapData
  IN PLARGE_INTEGER FileOffset,
  IN ULONG Length,
  IN ULONG Flags,
+ IN BOOLEAN Zero,
  OUT PVOID *BcbResult,
  OUT PVOID *Buffer);
 
