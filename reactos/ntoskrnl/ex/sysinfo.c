@@ -706,12 +706,16 @@ QSI_DEF(SystemProcessInformation)
     PEPROCESS Process = NULL, SystemProcess;
     PETHREAD CurrentThread;
     ANSI_STRING ImageName;
-    int CurrentSize, ImageNameLength = 32; // image name len in bytes
-    PLIST_ENTRY CurrentEntry;   
+    ULONG CurrentSize;
+    USHORT ImageNameMaximumLength; // image name len in bytes
+    USHORT ImageNameLength;
+    PLIST_ENTRY CurrentEntry;
     ULONG TotalSize = 0, ThreadsCount;
     ULONG TotalUser, TotalKernel;
     PUCHAR Current;
     NTSTATUS Status = STATUS_SUCCESS;
+    PUNICODE_STRING ProcessImageName;
+    PWCHAR szSrc;
 
     _SEH2_TRY
     {
@@ -746,29 +750,71 @@ QSI_DEF(SystemProcessInformation)
 
             // size of the structure for every process
             CurrentSize = sizeof(SYSTEM_PROCESS_INFORMATION) + sizeof(SYSTEM_THREAD_INFORMATION) * ThreadsCount;
-            TotalSize += CurrentSize + ImageNameLength;
+            ImageNameLength = 0;
+            Status = SeLocateProcessImageName(Process, &ProcessImageName);
+            szSrc = NULL;
+            if (NT_SUCCESS(Status))
+            {
+              szSrc = (PWCHAR)((PCHAR)ProcessImageName->Buffer + ProcessImageName->Length);
+              /* Loop the file name*/
+              while (szSrc > ProcessImageName->Buffer)
+              {
+                /* Make sure this isn't a backslash */
+                if (*--szSrc == OBJ_NAME_PATH_SEPARATOR)
+                {
+                    szSrc++;
+                    break;
+                }
+                else
+                {
+                    ImageNameLength += sizeof(WCHAR);
+                }
+              }
+            }
+            if (!ImageNameLength && Process != PsIdleProcess && Process->ImageFileName)
+            {
+              ImageNameLength = strlen(Process->ImageFileName) * sizeof(WCHAR);
+            }
+
+            /* Round up the image name length as NT does */
+            ImageNameMaximumLength = ROUND_UP(ImageNameLength, 8);
+
+            TotalSize += CurrentSize + ImageNameMaximumLength;
 
             if (TotalSize > Size)
             {
                 *ReqSize = TotalSize;
                 ObDereferenceObject(Process);
 
+                /* Release the memory allocated by SeLocateProcessImageName */
+                if (NT_SUCCESS(Status)) ExFreePool(ProcessImageName);
+
                 _SEH2_YIELD(return STATUS_INFO_LENGTH_MISMATCH); // in case buffer size is too small
             }
 
-            // fill system information
-            SpiCurrent->NextEntryOffset = CurrentSize + ImageNameLength; // relative offset to the beginnnig of the next structure
+            /* Fill system information */
+            SpiCurrent->NextEntryOffset = CurrentSize + ImageNameMaximumLength; // relative offset to the beginnnig of the next structure
             SpiCurrent->NumberOfThreads = ThreadsCount;
             SpiCurrent->CreateTime = Process->CreateTime;
-            SpiCurrent->ImageName.Length = strlen(Process->ImageFileName) * sizeof(WCHAR);
-            SpiCurrent->ImageName.MaximumLength = (USHORT)ImageNameLength;
+            SpiCurrent->ImageName.Length = ImageNameLength;
+            SpiCurrent->ImageName.MaximumLength = ImageNameMaximumLength;
             SpiCurrent->ImageName.Buffer = (void*)(Current + CurrentSize);
 
-            // copy name to the end of the struct
+            /* Copy name to the end of the struct */
             if(Process != PsIdleProcess)
             {
+              if (szSrc)
+              {
+                RtlCopyMemory(SpiCurrent->ImageName.Buffer, szSrc, SpiCurrent->ImageName.Length);
+
+                /* Release the memory allocated by SeLocateProcessImageName */
+                ExFreePool(ProcessImageName);
+              }
+              else if (Process->ImageFileName)
+              {
                 RtlInitAnsiString(&ImageName, Process->ImageFileName);
                 RtlAnsiStringToUnicodeString(&SpiCurrent->ImageName, &ImageName, FALSE);
+              }
             }
             else
             {
@@ -831,12 +877,12 @@ QSI_DEF(SystemProcessInformation)
                 break;
             }
             else
-                Current += CurrentSize + ImageNameLength;
-        }  while ((Process != SystemProcess) && (Process != NULL));
+                Current += CurrentSize + ImageNameMaximumLength;
+          }  while ((Process != SystemProcess) && (Process != NULL));
 
-        if(Process != NULL)
+          if(Process != NULL)
             ObDereferenceObject(Process);
-        Status = STATUS_SUCCESS;
+          Status = STATUS_SUCCESS;
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
