@@ -241,16 +241,66 @@ KsPinPropertyHandler(
     return Irp->IoStatus.Status;
 }
 
-KSDDKAPI NTSTATUS NTAPI
+KSDDKAPI
+NTSTATUS
+NTAPI
 KsPinDataIntersection(
     IN  PIRP Irp,
-    IN  PKSPIN Pin,
+    IN  PKSP_PIN Pin,
     OUT PVOID Data,
     IN  ULONG DescriptorsCount,
     IN  const KSPIN_DESCRIPTOR* Descriptor,
     IN  PFNKSINTERSECTHANDLER IntersectHandler)
 {
-    return STATUS_SUCCESS;
+    KSMULTIPLE_ITEM * Item;
+    KSDATARANGE * DataRange;
+    PIO_STACK_LOCATION IoStack;
+    ULONG Size;
+    ULONG Index;
+    NTSTATUS Status;
+
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    Size = sizeof(KSP_PIN) + sizeof(KSMULTIPLE_ITEM) + sizeof(KSDATARANGE);
+    if (IoStack->Parameters.DeviceIoControl.InputBufferLength < Size)
+    {
+        Irp->IoStatus.Information = 0;
+        Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+        return STATUS_BUFFER_TOO_SMALL;
+    }
+
+    if (Pin->PinId >= DescriptorsCount)
+    {
+        Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+        Irp->IoStatus.Information = 0;
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    Item = (KSMULTIPLE_ITEM*)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
+    DataRange = (KSDATARANGE*)(Item + 1);
+
+    for(Index = 0; Index < Item->Count; Index++, DataRange++)
+    {
+        Status = IntersectHandler(Irp, Pin, DataRange, Data);
+        if (NT_SUCCESS(Status))
+        {
+            if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(KSDATARANGE))
+            {
+                Irp->IoStatus.Information = sizeof(KSDATARANGE);
+                Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
+                return STATUS_BUFFER_TOO_SMALL;
+            }
+            RtlMoveMemory(Irp->UserBuffer, DataRange, sizeof(KSDATARANGE));
+            Irp->IoStatus.Information = sizeof(KSDATARANGE);
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+            return STATUS_SUCCESS;
+        }
+
+    }
+
+    Irp->IoStatus.Information = 0;
+    Irp->IoStatus.Status = STATUS_NO_MATCH;
+    return STATUS_NO_MATCH;
 }
 
 /* Does this belong here? */
