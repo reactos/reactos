@@ -364,7 +364,7 @@ static void RunShell(client_t *client)
    PROCESS_INFORMATION   piProcInfo;
    SECURITY_ATTRIBUTES   saAttr;
 
-   const char *name = "c:\\windows\\system32\\cmd.exe";
+   const char *name = "c:\\reactos\\system32\\cmd.exe";
    const char *cmd = NULL;
    //const char *name = "d:\\cygwin\\bin\\bash.exe";
    //const char *cmd = "d:\\cygwin\\bin\\bash.exe --login -i";
