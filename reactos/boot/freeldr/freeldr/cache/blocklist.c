@@ -27,18 +27,18 @@ PCACHE_BLOCK CacheInternalGetBlockPointer(PCACHE_DRIVE CacheDrive, ULONG BlockNu
 {
 	PCACHE_BLOCK	CacheBlock = NULL;
 
-	DbgPrint((DPRINT_CACHE, "CacheInternalGetBlockPointer() BlockNumber = %d\n", BlockNumber));
+	DPRINTM(DPRINT_CACHE, "CacheInternalGetBlockPointer() BlockNumber = %d\n", BlockNumber);
 
 	CacheBlock = CacheInternalFindBlock(CacheDrive, BlockNumber);
 
 	if (CacheBlock != NULL)
 	{
-		DbgPrint((DPRINT_CACHE, "Cache hit! BlockNumber: %d CacheBlock->BlockNumber: %d\n", BlockNumber, CacheBlock->BlockNumber));
+		DPRINTM(DPRINT_CACHE, "Cache hit! BlockNumber: %d CacheBlock->BlockNumber: %d\n", BlockNumber, CacheBlock->BlockNumber);
 
 		return CacheBlock;
 	}
 
-	DbgPrint((DPRINT_CACHE, "Cache miss! BlockNumber: %d\n", BlockNumber));
+	DPRINTM(DPRINT_CACHE, "Cache miss! BlockNumber: %d\n", BlockNumber);
 
 	CacheBlock = CacheInternalAddBlockToCache(CacheDrive, BlockNumber);
 
@@ -52,7 +52,7 @@ PCACHE_BLOCK CacheInternalFindBlock(PCACHE_DRIVE CacheDrive, ULONG BlockNumber)
 {
 	PCACHE_BLOCK	CacheBlock = NULL;
 
-	DbgPrint((DPRINT_CACHE, "CacheInternalFindBlock() BlockNumber = %d\n", BlockNumber));
+	DPRINTM(DPRINT_CACHE, "CacheInternalFindBlock() BlockNumber = %d\n", BlockNumber);
 
 	//
 	// Make sure the block list has entries before I start searching it.
@@ -90,7 +90,7 @@ PCACHE_BLOCK CacheInternalAddBlockToCache(PCACHE_DRIVE CacheDrive, ULONG BlockNu
 {
 	PCACHE_BLOCK	CacheBlock = NULL;
 
-	DbgPrint((DPRINT_CACHE, "CacheInternalAddBlockToCache() BlockNumber = %d\n", BlockNumber));
+	DPRINTM(DPRINT_CACHE, "CacheInternalAddBlockToCache() BlockNumber = %d\n", BlockNumber);
 
 	// Check the size of the cache so we don't exceed our limits
 	CacheInternalCheckCacheSizeLimits(CacheDrive);
@@ -140,7 +140,7 @@ BOOLEAN CacheInternalFreeBlock(PCACHE_DRIVE CacheDrive)
 {
 	PCACHE_BLOCK	CacheBlockToFree;
 
-	DbgPrint((DPRINT_CACHE, "CacheInternalFreeBlock()\n"));
+	DPRINTM(DPRINT_CACHE, "CacheInternalFreeBlock()\n");
 
 	// Get a pointer to the last item in the block list
 	// that isn't forced to be in the cache and remove
@@ -175,7 +175,7 @@ VOID CacheInternalCheckCacheSizeLimits(PCACHE_DRIVE CacheDrive)
 {
 	ULONG		NewCacheSize;
 
-	DbgPrint((DPRINT_CACHE, "CacheInternalCheckCacheSizeLimits()\n"));
+	DPRINTM(DPRINT_CACHE, "CacheInternalCheckCacheSizeLimits()\n");
 
 	// Calculate the size of the cache if we added a block
 	NewCacheSize = (CacheBlockCount + 1) * (CacheDrive->BlockSize * CacheDrive->BytesPerSector);
@@ -192,21 +192,21 @@ VOID CacheInternalDumpBlockList(PCACHE_DRIVE CacheDrive)
 {
 	PCACHE_BLOCK	CacheBlock;
 
-	DbgPrint((DPRINT_CACHE, "Dumping block list for BIOS drive 0x%x.\n", CacheDrive->DriveNumber));
-	DbgPrint((DPRINT_CACHE, "BytesPerSector: %d.\n", CacheDrive->BytesPerSector));
-	DbgPrint((DPRINT_CACHE, "BlockSize: %d.\n", CacheDrive->BlockSize));
-	DbgPrint((DPRINT_CACHE, "CacheSizeLimit: %d.\n", CacheSizeLimit));
-	DbgPrint((DPRINT_CACHE, "CacheSizeCurrent: %d.\n", CacheSizeCurrent));
-	DbgPrint((DPRINT_CACHE, "CacheBlockCount: %d.\n", CacheBlockCount));
+	DPRINTM(DPRINT_CACHE, "Dumping block list for BIOS drive 0x%x.\n", CacheDrive->DriveNumber);
+	DPRINTM(DPRINT_CACHE, "BytesPerSector: %d.\n", CacheDrive->BytesPerSector);
+	DPRINTM(DPRINT_CACHE, "BlockSize: %d.\n", CacheDrive->BlockSize);
+	DPRINTM(DPRINT_CACHE, "CacheSizeLimit: %d.\n", CacheSizeLimit);
+	DPRINTM(DPRINT_CACHE, "CacheSizeCurrent: %d.\n", CacheSizeCurrent);
+	DPRINTM(DPRINT_CACHE, "CacheBlockCount: %d.\n", CacheBlockCount);
 
 	CacheBlock = CONTAINING_RECORD(CacheDrive->CacheBlockHead.Flink, CACHE_BLOCK, ListEntry);
 	while (&CacheBlock->ListEntry != &CacheDrive->CacheBlockHead)
 	{
-		DbgPrint((DPRINT_CACHE, "Cache Block: CacheBlock: 0x%x\n", CacheBlock));
-		DbgPrint((DPRINT_CACHE, "Cache Block: Block Number: %d\n", CacheBlock->BlockNumber));
-		DbgPrint((DPRINT_CACHE, "Cache Block: Access Count: %d\n", CacheBlock->AccessCount));
-		DbgPrint((DPRINT_CACHE, "Cache Block: Block Data: 0x%x\n", CacheBlock->BlockData));
-		DbgPrint((DPRINT_CACHE, "Cache Block: Locked In Cache: %d\n", CacheBlock->LockedInCache));
+		DPRINTM(DPRINT_CACHE, "Cache Block: CacheBlock: 0x%x\n", CacheBlock);
+		DPRINTM(DPRINT_CACHE, "Cache Block: Block Number: %d\n", CacheBlock->BlockNumber);
+		DPRINTM(DPRINT_CACHE, "Cache Block: Access Count: %d\n", CacheBlock->AccessCount);
+		DPRINTM(DPRINT_CACHE, "Cache Block: Block Data: 0x%x\n", CacheBlock->BlockData);
+		DPRINTM(DPRINT_CACHE, "Cache Block: Locked In Cache: %d\n", CacheBlock->LockedInCache);
 
 		if (CacheBlock->BlockData == NULL)
 		{
@@ -220,7 +220,7 @@ VOID CacheInternalDumpBlockList(PCACHE_DRIVE CacheDrive)
 VOID CacheInternalOptimizeBlockList(PCACHE_DRIVE CacheDrive, PCACHE_BLOCK CacheBlock)
 {
 
-	DbgPrint((DPRINT_CACHE, "CacheInternalOptimizeBlockList()\n"));
+	DPRINTM(DPRINT_CACHE, "CacheInternalOptimizeBlockList()\n");
 
 	// Don't do this if this block is already at the head of the list
 	if (&CacheBlock->ListEntry != CacheDrive->CacheBlockHead.Flink)

@@ -17,6 +17,7 @@
 	<define name="USE_COMPILER_EXCEPTIONS" />
 
 	<property name="NTOSKRNL_SHARED" value="-file-alignment=0x1000 -section-alignment=0x1000 -shared"/>
+	<property name="PLATFORM" value="PC"/>
 
 	<if property="OPTIMIZE" value="1">
 		<compilerflag>-Os</compilerflag>

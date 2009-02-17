@@ -38,7 +38,7 @@ ULONG					Ext2GroupDescPerBlock = 0;		// Number of group descriptors in one bloc
 BOOLEAN Ext2OpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector, ULONGLONG PartitionSectorCount)
 {
 
-	DbgPrint((DPRINT_FILESYSTEM, "Ext2OpenVolume() DriveNumber = 0x%x VolumeStartSector = %d\n", DriveNumber, VolumeStartSector));
+	DPRINTM(DPRINT_FILESYSTEM, "Ext2OpenVolume() DriveNumber = 0x%x VolumeStartSector = %d\n", DriveNumber, VolumeStartSector);
 
 	// Store the drive number and start sector
 	Ext2DriveNumber = DriveNumber;
@@ -85,7 +85,7 @@ FILE* Ext2OpenFile(PCSTR FileName)
 	CHAR				FullPath[EXT3_NAME_LEN * 2];
 	ULONG					Index;
 
-	DbgPrint((DPRINT_FILESYSTEM, "Ext2OpenFile() FileName = %s\n", FileName));
+	DPRINTM(DPRINT_FILESYSTEM, "Ext2OpenFile() FileName = %s\n", FileName);
 
 	RtlZeroMemory(SymLinkPath, EXT3_NAME_LEN);
 
@@ -99,7 +99,7 @@ FILE* Ext2OpenFile(PCSTR FileName)
 	// and re-call this function
 	if ((TempExt2FileInfo.Inode.i_mode & EXT2_S_IFMT) == EXT2_S_IFLNK)
 	{
-		DbgPrint((DPRINT_FILESYSTEM, "File is a symbolic link\n"));
+		DPRINTM(DPRINT_FILESYSTEM, "File is a symbolic link\n");
 
 		// Now read in the symbolic link path
 		if (!Ext2ReadFileBig(&TempExt2FileInfo, TempExt2FileInfo.FileSize, NULL, SymLinkPath))
@@ -112,7 +112,7 @@ FILE* Ext2OpenFile(PCSTR FileName)
 			return NULL;
 		}
 
-		DbgPrint((DPRINT_FILESYSTEM, "Symbolic link path = %s\n", SymLinkPath));
+		DPRINTM(DPRINT_FILESYSTEM, "Symbolic link path = %s\n", SymLinkPath);
 
 		// Get the full path
 		if (SymLinkPath[0] == '/' || SymLinkPath[0] == '\\')
@@ -144,7 +144,7 @@ FILE* Ext2OpenFile(PCSTR FileName)
 			strcat(FullPath, SymLinkPath);
 		}
 
-		DbgPrint((DPRINT_FILESYSTEM, "Full file path = %s\n", FullPath));
+		DPRINTM(DPRINT_FILESYSTEM, "Full file path = %s\n", FullPath);
 
 		if (TempExt2FileInfo.FileBlockList != NULL)
 		{
@@ -190,7 +190,7 @@ BOOLEAN Ext2LookupFile(PCSTR FileName, PEXT2_FILE_INFO Ext2FileInfoPointer)
 	EXT2_INODE		InodeData;
 	EXT2_DIR_ENTRY	DirectoryEntry;
 
-	DbgPrint((DPRINT_FILESYSTEM, "Ext2LookupFile() FileName = %s\n", FileName));
+	DPRINTM(DPRINT_FILESYSTEM, "Ext2LookupFile() FileName = %s\n", FileName);
 
 	RtlZeroMemory(Ext2FileInfoPointer, sizeof(EXT2_FILE_INFO));
 
@@ -284,7 +284,7 @@ BOOLEAN Ext2SearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectoryS
 	ULONG				CurrentOffset;
 	PEXT2_DIR_ENTRY	CurrentDirectoryEntry;
 
-	DbgPrint((DPRINT_FILESYSTEM, "Ext2SearchDirectoryBufferForFile() DirectoryBuffer = 0x%x DirectorySize = %d FileName = %s\n", DirectoryBuffer, DirectorySize, FileName));
+	DPRINTM(DPRINT_FILESYSTEM, "Ext2SearchDirectoryBufferForFile() DirectoryBuffer = 0x%x DirectorySize = %d FileName = %s\n", DirectoryBuffer, DirectorySize, FileName);
 
 	for (CurrentOffset=0; CurrentOffset<DirectorySize; )
 	{
@@ -301,7 +301,7 @@ BOOLEAN Ext2SearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectoryS
 			return FALSE;
 		}
 
-		DbgPrint((DPRINT_FILESYSTEM, "Dumping directory entry at offset %d:\n", CurrentOffset));
+		DPRINTM(DPRINT_FILESYSTEM, "Dumping directory entry at offset %d:\n", CurrentOffset);
 		DbgDumpBuffer(DPRINT_FILESYSTEM, CurrentDirectoryEntry, CurrentDirectoryEntry->rec_len);
 
 		if ((_strnicmp(FileName, CurrentDirectoryEntry->name, CurrentDirectoryEntry->name_len) == 0) &&
@@ -309,17 +309,17 @@ BOOLEAN Ext2SearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectoryS
 		{
 			RtlCopyMemory(DirectoryEntry, CurrentDirectoryEntry, sizeof(EXT2_DIR_ENTRY));
 
-			DbgPrint((DPRINT_FILESYSTEM, "EXT2 Directory Entry:\n"));
-			DbgPrint((DPRINT_FILESYSTEM, "inode = %d\n", DirectoryEntry->inode));
-			DbgPrint((DPRINT_FILESYSTEM, "rec_len = %d\n", DirectoryEntry->rec_len));
-			DbgPrint((DPRINT_FILESYSTEM, "name_len = %d\n", DirectoryEntry->name_len));
-			DbgPrint((DPRINT_FILESYSTEM, "file_type = %d\n", DirectoryEntry->file_type));
-			DbgPrint((DPRINT_FILESYSTEM, "name = "));
+			DPRINTM(DPRINT_FILESYSTEM, "EXT2 Directory Entry:\n");
+			DPRINTM(DPRINT_FILESYSTEM, "inode = %d\n", DirectoryEntry->inode);
+			DPRINTM(DPRINT_FILESYSTEM, "rec_len = %d\n", DirectoryEntry->rec_len);
+			DPRINTM(DPRINT_FILESYSTEM, "name_len = %d\n", DirectoryEntry->name_len);
+			DPRINTM(DPRINT_FILESYSTEM, "file_type = %d\n", DirectoryEntry->file_type);
+			DPRINTM(DPRINT_FILESYSTEM, "name = ");
 			for (CurrentOffset=0; CurrentOffset<DirectoryEntry->name_len; CurrentOffset++)
 			{
-				DbgPrint((DPRINT_FILESYSTEM, "%c", DirectoryEntry->name[CurrentOffset]));
+				DPRINTM(DPRINT_FILESYSTEM, "%c", DirectoryEntry->name[CurrentOffset]);
 			}
-			DbgPrint((DPRINT_FILESYSTEM, "\n"));
+			DPRINTM(DPRINT_FILESYSTEM, "\n");
 
 			return TRUE;
 		}
@@ -344,7 +344,7 @@ BOOLEAN Ext2ReadFileBig(FILE *FileHandle, ULONGLONG BytesToRead, ULONGLONG* Byte
 	ULONG				LengthInBlock;
 	ULONG				NumberOfBlocks;
 
-	DbgPrint((DPRINT_FILESYSTEM, "Ext2ReadFileBig() BytesToRead = %d Buffer = 0x%x\n", (ULONG)BytesToRead, Buffer));
+	DPRINTM(DPRINT_FILESYSTEM, "Ext2ReadFileBig() BytesToRead = %d Buffer = 0x%x\n", (ULONG)BytesToRead, Buffer);
 
 	if (BytesRead != NULL)
 	{
@@ -388,7 +388,7 @@ BOOLEAN Ext2ReadFileBig(FILE *FileHandle, ULONGLONG BytesToRead, ULONGLONG* Byte
 	if (((Ext2FileInfo->Inode.i_mode & EXT2_S_IFMT) == EXT2_S_IFLNK) &&
 		(Ext2FileInfo->FileSize <= FAST_SYMLINK_MAX_NAME_SIZE))
 	{
-		DbgPrint((DPRINT_FILESYSTEM, "Reading fast symbolic link data\n"));
+		DPRINTM(DPRINT_FILESYSTEM, "Reading fast symbolic link data\n");
 
 		// Copy the data from the link
 		RtlCopyMemory(Buffer, (PVOID)((ULONG_PTR)Ext2FileInfo->FilePointer + Ext2FileInfo->Inode.i_block), BytesToRead);
@@ -533,7 +533,7 @@ ULONG Ext2GetFileSize(FILE *FileHandle)
 {
 	PEXT2_FILE_INFO	Ext2FileHandle = (PEXT2_FILE_INFO)FileHandle;
 
-	DbgPrint((DPRINT_FILESYSTEM, "Ext2GetFileSize() FileSize = %d\n", Ext2FileHandle->FileSize));
+	DPRINTM(DPRINT_FILESYSTEM, "Ext2GetFileSize() FileSize = %d\n", Ext2FileHandle->FileSize);
 
 	return Ext2FileHandle->FileSize;
 }
@@ -542,7 +542,7 @@ VOID Ext2SetFilePointer(FILE *FileHandle, ULONG NewFilePointer)
 {
 	PEXT2_FILE_INFO	Ext2FileHandle = (PEXT2_FILE_INFO)FileHandle;
 
-	DbgPrint((DPRINT_FILESYSTEM, "Ext2SetFilePointer() NewFilePointer = %d\n", NewFilePointer));
+	DPRINTM(DPRINT_FILESYSTEM, "Ext2SetFilePointer() NewFilePointer = %d\n", NewFilePointer);
 
 	Ext2FileHandle->FilePointer = NewFilePointer;
 }
@@ -551,7 +551,7 @@ ULONG Ext2GetFilePointer(FILE *FileHandle)
 {
 	PEXT2_FILE_INFO	Ext2FileHandle = (PEXT2_FILE_INFO)FileHandle;
 
-	DbgPrint((DPRINT_FILESYSTEM, "Ext2GetFilePointer() FilePointer = %d\n", Ext2FileHandle->FilePointer));
+	DPRINTM(DPRINT_FILESYSTEM, "Ext2GetFilePointer() FilePointer = %d\n", Ext2FileHandle->FilePointer);
 
 	return Ext2FileHandle->FilePointer;
 }
@@ -574,7 +574,7 @@ BOOLEAN Ext2ReadVolumeSectors(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONGLO
 BOOLEAN Ext2ReadSuperBlock(VOID)
 {
 
-	DbgPrint((DPRINT_FILESYSTEM, "Ext2ReadSuperBlock()\n"));
+	DPRINTM(DPRINT_FILESYSTEM, "Ext2ReadSuperBlock()\n");
 
 	//
 	// Free any memory previously allocated
@@ -608,56 +608,56 @@ BOOLEAN Ext2ReadSuperBlock(VOID)
 	}
 	RtlCopyMemory(Ext2SuperBlock, (PVOID)(DISKREADBUFFER + 1024), 1024);
 
-	DbgPrint((DPRINT_FILESYSTEM, "Dumping super block:\n"));
+	DPRINTM(DPRINT_FILESYSTEM, "Dumping super block:\n");
 
-	DbgPrint((DPRINT_FILESYSTEM, "s_inodes_count: %d\n", Ext2SuperBlock->s_inodes_count));
-	DbgPrint((DPRINT_FILESYSTEM, "s_blocks_count: %d\n", Ext2SuperBlock->s_blocks_count));
-	DbgPrint((DPRINT_FILESYSTEM, "s_r_blocks_count: %d\n", Ext2SuperBlock->s_r_blocks_count));
-	DbgPrint((DPRINT_FILESYSTEM, "s_free_blocks_count: %d\n", Ext2SuperBlock->s_free_blocks_count));
-	DbgPrint((DPRINT_FILESYSTEM, "s_free_inodes_count: %d\n", Ext2SuperBlock->s_free_inodes_count));
-	DbgPrint((DPRINT_FILESYSTEM, "s_first_data_block: %d\n", Ext2SuperBlock->s_first_data_block));
-	DbgPrint((DPRINT_FILESYSTEM, "s_log_block_size: %d\n", Ext2SuperBlock->s_log_block_size));
-	DbgPrint((DPRINT_FILESYSTEM, "s_log_frag_size: %d\n", Ext2SuperBlock->s_log_frag_size));
-	DbgPrint((DPRINT_FILESYSTEM, "s_blocks_per_group: %d\n", Ext2SuperBlock->s_blocks_per_group));
-	DbgPrint((DPRINT_FILESYSTEM, "s_frags_per_group: %d\n", Ext2SuperBlock->s_frags_per_group));
-	DbgPrint((DPRINT_FILESYSTEM, "s_inodes_per_group: %d\n", Ext2SuperBlock->s_inodes_per_group));
-	DbgPrint((DPRINT_FILESYSTEM, "s_mtime: %d\n", Ext2SuperBlock->s_mtime));
-	DbgPrint((DPRINT_FILESYSTEM, "s_wtime: %d\n", Ext2SuperBlock->s_wtime));
-	DbgPrint((DPRINT_FILESYSTEM, "s_mnt_count: %d\n", Ext2SuperBlock->s_mnt_count));
-	DbgPrint((DPRINT_FILESYSTEM, "s_max_mnt_count: %d\n", Ext2SuperBlock->s_max_mnt_count));
-	DbgPrint((DPRINT_FILESYSTEM, "s_magic: 0x%x\n", Ext2SuperBlock->s_magic));
-	DbgPrint((DPRINT_FILESYSTEM, "s_state: %d\n", Ext2SuperBlock->s_state));
-	DbgPrint((DPRINT_FILESYSTEM, "s_errors: %d\n", Ext2SuperBlock->s_errors));
-	DbgPrint((DPRINT_FILESYSTEM, "s_minor_rev_level: %d\n", Ext2SuperBlock->s_minor_rev_level));
-	DbgPrint((DPRINT_FILESYSTEM, "s_lastcheck: %d\n", Ext2SuperBlock->s_lastcheck));
-	DbgPrint((DPRINT_FILESYSTEM, "s_checkinterval: %d\n", Ext2SuperBlock->s_checkinterval));
-	DbgPrint((DPRINT_FILESYSTEM, "s_creator_os: %d\n", Ext2SuperBlock->s_creator_os));
-	DbgPrint((DPRINT_FILESYSTEM, "s_rev_level: %d\n", Ext2SuperBlock->s_rev_level));
-	DbgPrint((DPRINT_FILESYSTEM, "s_def_resuid: %d\n", Ext2SuperBlock->s_def_resuid));
-	DbgPrint((DPRINT_FILESYSTEM, "s_def_resgid: %d\n", Ext2SuperBlock->s_def_resgid));
-	DbgPrint((DPRINT_FILESYSTEM, "s_first_ino: %d\n", Ext2SuperBlock->s_first_ino));
-	DbgPrint((DPRINT_FILESYSTEM, "s_inode_size: %d\n", Ext2SuperBlock->s_inode_size));
-	DbgPrint((DPRINT_FILESYSTEM, "s_block_group_nr: %d\n", Ext2SuperBlock->s_block_group_nr));
-	DbgPrint((DPRINT_FILESYSTEM, "s_feature_compat: 0x%x\n", Ext2SuperBlock->s_feature_compat));
-	DbgPrint((DPRINT_FILESYSTEM, "s_feature_incompat: 0x%x\n", Ext2SuperBlock->s_feature_incompat));
-	DbgPrint((DPRINT_FILESYSTEM, "s_feature_ro_compat: 0x%x\n", Ext2SuperBlock->s_feature_ro_compat));
-	DbgPrint((DPRINT_FILESYSTEM, "s_uuid[16] = 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x\n", Ext2SuperBlock->s_uuid[0], Ext2SuperBlock->s_uuid[1], Ext2SuperBlock->s_uuid[2], Ext2SuperBlock->s_uuid[3], Ext2SuperBlock->s_uuid[4], Ext2SuperBlock->s_uuid[5], Ext2SuperBlock->s_uuid[6], Ext2SuperBlock->s_uuid[7], Ext2SuperBlock->s_uuid[8], Ext2SuperBlock->s_uuid[9], Ext2SuperBlock->s_uuid[10], Ext2SuperBlock->s_uuid[11], Ext2SuperBlock->s_uuid[12], Ext2SuperBlock->s_uuid[13], Ext2SuperBlock->s_uuid[14], Ext2SuperBlock->s_uuid[15]));
-	DbgPrint((DPRINT_FILESYSTEM, "s_volume_name[16] = '%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c'\n", Ext2SuperBlock->s_volume_name[0], Ext2SuperBlock->s_volume_name[1], Ext2SuperBlock->s_volume_name[2], Ext2SuperBlock->s_volume_name[3], Ext2SuperBlock->s_volume_name[4], Ext2SuperBlock->s_volume_name[5], Ext2SuperBlock->s_volume_name[6], Ext2SuperBlock->s_volume_name[7], Ext2SuperBlock->s_volume_name[8], Ext2SuperBlock->s_volume_name[9], Ext2SuperBlock->s_volume_name[10], Ext2SuperBlock->s_volume_name[11], Ext2SuperBlock->s_volume_name[12], Ext2SuperBlock->s_volume_name[13], Ext2SuperBlock->s_volume_name[14], Ext2SuperBlock->s_volume_name[15]));
-	DbgPrint((DPRINT_FILESYSTEM, "s_last_mounted[64]='%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c'\n", Ext2SuperBlock->s_last_mounted[0], Ext2SuperBlock->s_last_mounted[1], Ext2SuperBlock->s_last_mounted[2], Ext2SuperBlock->s_last_mounted[3], Ext2SuperBlock->s_last_mounted[4], Ext2SuperBlock->s_last_mounted[5], Ext2SuperBlock->s_last_mounted[6], Ext2SuperBlock->s_last_mounted[7], Ext2SuperBlock->s_last_mounted[8], Ext2SuperBlock->s_last_mounted[9],
+	DPRINTM(DPRINT_FILESYSTEM, "s_inodes_count: %d\n", Ext2SuperBlock->s_inodes_count);
+	DPRINTM(DPRINT_FILESYSTEM, "s_blocks_count: %d\n", Ext2SuperBlock->s_blocks_count);
+	DPRINTM(DPRINT_FILESYSTEM, "s_r_blocks_count: %d\n", Ext2SuperBlock->s_r_blocks_count);
+	DPRINTM(DPRINT_FILESYSTEM, "s_free_blocks_count: %d\n", Ext2SuperBlock->s_free_blocks_count);
+	DPRINTM(DPRINT_FILESYSTEM, "s_free_inodes_count: %d\n", Ext2SuperBlock->s_free_inodes_count);
+	DPRINTM(DPRINT_FILESYSTEM, "s_first_data_block: %d\n", Ext2SuperBlock->s_first_data_block);
+	DPRINTM(DPRINT_FILESYSTEM, "s_log_block_size: %d\n", Ext2SuperBlock->s_log_block_size);
+	DPRINTM(DPRINT_FILESYSTEM, "s_log_frag_size: %d\n", Ext2SuperBlock->s_log_frag_size);
+	DPRINTM(DPRINT_FILESYSTEM, "s_blocks_per_group: %d\n", Ext2SuperBlock->s_blocks_per_group);
+	DPRINTM(DPRINT_FILESYSTEM, "s_frags_per_group: %d\n", Ext2SuperBlock->s_frags_per_group);
+	DPRINTM(DPRINT_FILESYSTEM, "s_inodes_per_group: %d\n", Ext2SuperBlock->s_inodes_per_group);
+	DPRINTM(DPRINT_FILESYSTEM, "s_mtime: %d\n", Ext2SuperBlock->s_mtime);
+	DPRINTM(DPRINT_FILESYSTEM, "s_wtime: %d\n", Ext2SuperBlock->s_wtime);
+	DPRINTM(DPRINT_FILESYSTEM, "s_mnt_count: %d\n", Ext2SuperBlock->s_mnt_count);
+	DPRINTM(DPRINT_FILESYSTEM, "s_max_mnt_count: %d\n", Ext2SuperBlock->s_max_mnt_count);
+	DPRINTM(DPRINT_FILESYSTEM, "s_magic: 0x%x\n", Ext2SuperBlock->s_magic);
+	DPRINTM(DPRINT_FILESYSTEM, "s_state: %d\n", Ext2SuperBlock->s_state);
+	DPRINTM(DPRINT_FILESYSTEM, "s_errors: %d\n", Ext2SuperBlock->s_errors);
+	DPRINTM(DPRINT_FILESYSTEM, "s_minor_rev_level: %d\n", Ext2SuperBlock->s_minor_rev_level);
+	DPRINTM(DPRINT_FILESYSTEM, "s_lastcheck: %d\n", Ext2SuperBlock->s_lastcheck);
+	DPRINTM(DPRINT_FILESYSTEM, "s_checkinterval: %d\n", Ext2SuperBlock->s_checkinterval);
+	DPRINTM(DPRINT_FILESYSTEM, "s_creator_os: %d\n", Ext2SuperBlock->s_creator_os);
+	DPRINTM(DPRINT_FILESYSTEM, "s_rev_level: %d\n", Ext2SuperBlock->s_rev_level);
+	DPRINTM(DPRINT_FILESYSTEM, "s_def_resuid: %d\n", Ext2SuperBlock->s_def_resuid);
+	DPRINTM(DPRINT_FILESYSTEM, "s_def_resgid: %d\n", Ext2SuperBlock->s_def_resgid);
+	DPRINTM(DPRINT_FILESYSTEM, "s_first_ino: %d\n", Ext2SuperBlock->s_first_ino);
+	DPRINTM(DPRINT_FILESYSTEM, "s_inode_size: %d\n", Ext2SuperBlock->s_inode_size);
+	DPRINTM(DPRINT_FILESYSTEM, "s_block_group_nr: %d\n", Ext2SuperBlock->s_block_group_nr);
+	DPRINTM(DPRINT_FILESYSTEM, "s_feature_compat: 0x%x\n", Ext2SuperBlock->s_feature_compat);
+	DPRINTM(DPRINT_FILESYSTEM, "s_feature_incompat: 0x%x\n", Ext2SuperBlock->s_feature_incompat);
+	DPRINTM(DPRINT_FILESYSTEM, "s_feature_ro_compat: 0x%x\n", Ext2SuperBlock->s_feature_ro_compat);
+	DPRINTM(DPRINT_FILESYSTEM, "s_uuid[16] = 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x\n", Ext2SuperBlock->s_uuid[0], Ext2SuperBlock->s_uuid[1], Ext2SuperBlock->s_uuid[2], Ext2SuperBlock->s_uuid[3], Ext2SuperBlock->s_uuid[4], Ext2SuperBlock->s_uuid[5], Ext2SuperBlock->s_uuid[6], Ext2SuperBlock->s_uuid[7], Ext2SuperBlock->s_uuid[8], Ext2SuperBlock->s_uuid[9], Ext2SuperBlock->s_uuid[10], Ext2SuperBlock->s_uuid[11], Ext2SuperBlock->s_uuid[12], Ext2SuperBlock->s_uuid[13], Ext2SuperBlock->s_uuid[14], Ext2SuperBlock->s_uuid[15]);
+	DPRINTM(DPRINT_FILESYSTEM, "s_volume_name[16] = '%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c'\n", Ext2SuperBlock->s_volume_name[0], Ext2SuperBlock->s_volume_name[1], Ext2SuperBlock->s_volume_name[2], Ext2SuperBlock->s_volume_name[3], Ext2SuperBlock->s_volume_name[4], Ext2SuperBlock->s_volume_name[5], Ext2SuperBlock->s_volume_name[6], Ext2SuperBlock->s_volume_name[7], Ext2SuperBlock->s_volume_name[8], Ext2SuperBlock->s_volume_name[9], Ext2SuperBlock->s_volume_name[10], Ext2SuperBlock->s_volume_name[11], Ext2SuperBlock->s_volume_name[12], Ext2SuperBlock->s_volume_name[13], Ext2SuperBlock->s_volume_name[14], Ext2SuperBlock->s_volume_name[15]);
+	DPRINTM(DPRINT_FILESYSTEM, "s_last_mounted[64]='%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c'\n", Ext2SuperBlock->s_last_mounted[0], Ext2SuperBlock->s_last_mounted[1], Ext2SuperBlock->s_last_mounted[2], Ext2SuperBlock->s_last_mounted[3], Ext2SuperBlock->s_last_mounted[4], Ext2SuperBlock->s_last_mounted[5], Ext2SuperBlock->s_last_mounted[6], Ext2SuperBlock->s_last_mounted[7], Ext2SuperBlock->s_last_mounted[8], Ext2SuperBlock->s_last_mounted[9],
 		Ext2SuperBlock->s_last_mounted[10], Ext2SuperBlock->s_last_mounted[11], Ext2SuperBlock->s_last_mounted[12], Ext2SuperBlock->s_last_mounted[13], Ext2SuperBlock->s_last_mounted[14], Ext2SuperBlock->s_last_mounted[15], Ext2SuperBlock->s_last_mounted[16], Ext2SuperBlock->s_last_mounted[17], Ext2SuperBlock->s_last_mounted[18], Ext2SuperBlock->s_last_mounted[19],
 		Ext2SuperBlock->s_last_mounted[20], Ext2SuperBlock->s_last_mounted[21], Ext2SuperBlock->s_last_mounted[22], Ext2SuperBlock->s_last_mounted[23], Ext2SuperBlock->s_last_mounted[24], Ext2SuperBlock->s_last_mounted[25], Ext2SuperBlock->s_last_mounted[26], Ext2SuperBlock->s_last_mounted[27], Ext2SuperBlock->s_last_mounted[28], Ext2SuperBlock->s_last_mounted[29],
 		Ext2SuperBlock->s_last_mounted[30], Ext2SuperBlock->s_last_mounted[31], Ext2SuperBlock->s_last_mounted[32], Ext2SuperBlock->s_last_mounted[33], Ext2SuperBlock->s_last_mounted[34], Ext2SuperBlock->s_last_mounted[35], Ext2SuperBlock->s_last_mounted[36], Ext2SuperBlock->s_last_mounted[37], Ext2SuperBlock->s_last_mounted[38], Ext2SuperBlock->s_last_mounted[39],
 		Ext2SuperBlock->s_last_mounted[40], Ext2SuperBlock->s_last_mounted[41], Ext2SuperBlock->s_last_mounted[42], Ext2SuperBlock->s_last_mounted[43], Ext2SuperBlock->s_last_mounted[44], Ext2SuperBlock->s_last_mounted[45], Ext2SuperBlock->s_last_mounted[46], Ext2SuperBlock->s_last_mounted[47], Ext2SuperBlock->s_last_mounted[48], Ext2SuperBlock->s_last_mounted[49],
 		Ext2SuperBlock->s_last_mounted[50], Ext2SuperBlock->s_last_mounted[51], Ext2SuperBlock->s_last_mounted[52], Ext2SuperBlock->s_last_mounted[53], Ext2SuperBlock->s_last_mounted[54], Ext2SuperBlock->s_last_mounted[55], Ext2SuperBlock->s_last_mounted[56], Ext2SuperBlock->s_last_mounted[57], Ext2SuperBlock->s_last_mounted[58], Ext2SuperBlock->s_last_mounted[59],
-		Ext2SuperBlock->s_last_mounted[60], Ext2SuperBlock->s_last_mounted[61], Ext2SuperBlock->s_last_mounted[62], Ext2SuperBlock->s_last_mounted[63]));
-	DbgPrint((DPRINT_FILESYSTEM, "s_algorithm_usage_bitmap = 0x%x\n", Ext2SuperBlock->s_algorithm_usage_bitmap));
-	DbgPrint((DPRINT_FILESYSTEM, "s_prealloc_blocks = %d\n", Ext2SuperBlock->s_prealloc_blocks));
-	DbgPrint((DPRINT_FILESYSTEM, "s_prealloc_dir_blocks = %d\n", Ext2SuperBlock->s_prealloc_dir_blocks));
-	DbgPrint((DPRINT_FILESYSTEM, "s_padding1 = %d\n", Ext2SuperBlock->s_padding1));
-	DbgPrint((DPRINT_FILESYSTEM, "s_journal_uuid[16] = 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x\n", Ext2SuperBlock->s_journal_uuid[0], Ext2SuperBlock->s_journal_uuid[1], Ext2SuperBlock->s_journal_uuid[2], Ext2SuperBlock->s_journal_uuid[3], Ext2SuperBlock->s_journal_uuid[4], Ext2SuperBlock->s_journal_uuid[5], Ext2SuperBlock->s_journal_uuid[6], Ext2SuperBlock->s_journal_uuid[7], Ext2SuperBlock->s_journal_uuid[8], Ext2SuperBlock->s_journal_uuid[9], Ext2SuperBlock->s_journal_uuid[10], Ext2SuperBlock->s_journal_uuid[11], Ext2SuperBlock->s_journal_uuid[12], Ext2SuperBlock->s_journal_uuid[13], Ext2SuperBlock->s_journal_uuid[14], Ext2SuperBlock->s_journal_uuid[15]));
-	DbgPrint((DPRINT_FILESYSTEM, "s_journal_inum = %d\n", Ext2SuperBlock->s_journal_inum));
-	DbgPrint((DPRINT_FILESYSTEM, "s_journal_dev = %d\n", Ext2SuperBlock->s_journal_dev));
-	DbgPrint((DPRINT_FILESYSTEM, "s_last_orphan = %d\n", Ext2SuperBlock->s_last_orphan));
+		Ext2SuperBlock->s_last_mounted[60], Ext2SuperBlock->s_last_mounted[61], Ext2SuperBlock->s_last_mounted[62], Ext2SuperBlock->s_last_mounted[63]);
+	DPRINTM(DPRINT_FILESYSTEM, "s_algorithm_usage_bitmap = 0x%x\n", Ext2SuperBlock->s_algorithm_usage_bitmap);
+	DPRINTM(DPRINT_FILESYSTEM, "s_prealloc_blocks = %d\n", Ext2SuperBlock->s_prealloc_blocks);
+	DPRINTM(DPRINT_FILESYSTEM, "s_prealloc_dir_blocks = %d\n", Ext2SuperBlock->s_prealloc_dir_blocks);
+	DPRINTM(DPRINT_FILESYSTEM, "s_padding1 = %d\n", Ext2SuperBlock->s_padding1);
+	DPRINTM(DPRINT_FILESYSTEM, "s_journal_uuid[16] = 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x\n", Ext2SuperBlock->s_journal_uuid[0], Ext2SuperBlock->s_journal_uuid[1], Ext2SuperBlock->s_journal_uuid[2], Ext2SuperBlock->s_journal_uuid[3], Ext2SuperBlock->s_journal_uuid[4], Ext2SuperBlock->s_journal_uuid[5], Ext2SuperBlock->s_journal_uuid[6], Ext2SuperBlock->s_journal_uuid[7], Ext2SuperBlock->s_journal_uuid[8], Ext2SuperBlock->s_journal_uuid[9], Ext2SuperBlock->s_journal_uuid[10], Ext2SuperBlock->s_journal_uuid[11], Ext2SuperBlock->s_journal_uuid[12], Ext2SuperBlock->s_journal_uuid[13], Ext2SuperBlock->s_journal_uuid[14], Ext2SuperBlock->s_journal_uuid[15]);
+	DPRINTM(DPRINT_FILESYSTEM, "s_journal_inum = %d\n", Ext2SuperBlock->s_journal_inum);
+	DPRINTM(DPRINT_FILESYSTEM, "s_journal_dev = %d\n", Ext2SuperBlock->s_journal_dev);
+	DPRINTM(DPRINT_FILESYSTEM, "s_last_orphan = %d\n", Ext2SuperBlock->s_last_orphan);
 
 	//
 	// Check the super block magic
@@ -693,13 +693,13 @@ BOOLEAN Ext2ReadSuperBlock(VOID)
 
 	// Calculate the group count
 	Ext2GroupCount = (Ext2SuperBlock->s_blocks_count - Ext2SuperBlock->s_first_data_block + Ext2SuperBlock->s_blocks_per_group - 1) / Ext2SuperBlock->s_blocks_per_group;
-	DbgPrint((DPRINT_FILESYSTEM, "Ext2GroupCount: %d\n", Ext2GroupCount));
+	DPRINTM(DPRINT_FILESYSTEM, "Ext2GroupCount: %d\n", Ext2GroupCount);
 
 	// Calculate the block size
 	Ext2BlockSizeInBytes = 1024 << Ext2SuperBlock->s_log_block_size;
 	Ext2BlockSizeInSectors = Ext2BlockSizeInBytes / Ext2DiskGeometry.BytesPerSector;
-	DbgPrint((DPRINT_FILESYSTEM, "Ext2BlockSizeInBytes: %d\n", Ext2BlockSizeInBytes));
-	DbgPrint((DPRINT_FILESYSTEM, "Ext2BlockSizeInSectors: %d\n", Ext2BlockSizeInSectors));
+	DPRINTM(DPRINT_FILESYSTEM, "Ext2BlockSizeInBytes: %d\n", Ext2BlockSizeInBytes);
+	DPRINTM(DPRINT_FILESYSTEM, "Ext2BlockSizeInSectors: %d\n", Ext2BlockSizeInSectors);
 
 	// Calculate the fragment size
 	if (Ext2SuperBlock->s_log_frag_size >= 0)
@@ -711,8 +711,8 @@ BOOLEAN Ext2ReadSuperBlock(VOID)
 		Ext2FragmentSizeInBytes = 1024 >> -(Ext2SuperBlock->s_log_frag_size);
 	}
 	Ext2FragmentSizeInSectors = Ext2FragmentSizeInBytes / Ext2DiskGeometry.BytesPerSector;
-	DbgPrint((DPRINT_FILESYSTEM, "Ext2FragmentSizeInBytes: %d\n", Ext2FragmentSizeInBytes));
-	DbgPrint((DPRINT_FILESYSTEM, "Ext2FragmentSizeInSectors: %d\n", Ext2FragmentSizeInSectors));
+	DPRINTM(DPRINT_FILESYSTEM, "Ext2FragmentSizeInBytes: %d\n", Ext2FragmentSizeInBytes);
+	DPRINTM(DPRINT_FILESYSTEM, "Ext2FragmentSizeInSectors: %d\n", Ext2FragmentSizeInSectors);
 
 	// Verify that the fragment size and the block size are equal
 	if (Ext2BlockSizeInBytes != Ext2FragmentSizeInBytes)
@@ -723,11 +723,11 @@ BOOLEAN Ext2ReadSuperBlock(VOID)
 
 	// Calculate the number of inodes in one block
 	Ext2InodesPerBlock = Ext2BlockSizeInBytes / EXT3_INODE_SIZE(Ext2SuperBlock);
-	DbgPrint((DPRINT_FILESYSTEM, "Ext2InodesPerBlock: %d\n", Ext2InodesPerBlock));
+	DPRINTM(DPRINT_FILESYSTEM, "Ext2InodesPerBlock: %d\n", Ext2InodesPerBlock);
 
 	// Calculate the number of group descriptors in one block
 	Ext2GroupDescPerBlock = EXT3_DESC_PER_BLOCK(Ext2SuperBlock);
-	DbgPrint((DPRINT_FILESYSTEM, "Ext2GroupDescPerBlock: %d\n", Ext2GroupDescPerBlock));
+	DPRINTM(DPRINT_FILESYSTEM, "Ext2GroupDescPerBlock: %d\n", Ext2GroupDescPerBlock);
 
 	return TRUE;
 }
@@ -737,7 +737,7 @@ BOOLEAN Ext2ReadGroupDescriptors(VOID)
 	ULONG		GroupDescBlockCount;
 	ULONG		CurrentGroupDescBlock;
 
-	DbgPrint((DPRINT_FILESYSTEM, "Ext2ReadGroupDescriptors()\n"));
+	DPRINTM(DPRINT_FILESYSTEM, "Ext2ReadGroupDescriptors()\n");
 
 	//
 	// Free any memory previously allocated
@@ -782,7 +782,7 @@ BOOLEAN Ext2ReadDirectory(ULONG Inode, PVOID* DirectoryBuffer, PEXT2_INODE Inode
 {
 	EXT2_FILE_INFO	DirectoryFileInfo;
 
-	DbgPrint((DPRINT_FILESYSTEM, "Ext2ReadDirectory() Inode = %d\n", Inode));
+	DPRINTM(DPRINT_FILESYSTEM, "Ext2ReadDirectory() Inode = %d\n", Inode);
 
 	// Read the directory inode
 	if (!Ext2ReadInode(Inode, InodePointer))
@@ -841,7 +841,7 @@ BOOLEAN Ext2ReadBlock(ULONG BlockNumber, PVOID Buffer)
 {
 	CHAR			ErrorString[80];
 
-	DbgPrint((DPRINT_FILESYSTEM, "Ext2ReadBlock() BlockNumber = %d Buffer = 0x%x\n", BlockNumber, Buffer));
+	DPRINTM(DPRINT_FILESYSTEM, "Ext2ReadBlock() BlockNumber = %d Buffer = 0x%x\n", BlockNumber, Buffer);
 
 	// Make sure its a valid block
 	if (BlockNumber > Ext2SuperBlock->s_blocks_count)
@@ -854,7 +854,7 @@ BOOLEAN Ext2ReadBlock(ULONG BlockNumber, PVOID Buffer)
 	// Check to see if this is a sparse block
 	if (BlockNumber == 0)
 	{
-		DbgPrint((DPRINT_FILESYSTEM, "Block is part of a sparse file. Zeroing input buffer.\n"));
+		DPRINTM(DPRINT_FILESYSTEM, "Block is part of a sparse file. Zeroing input buffer.\n");
 
 		RtlZeroMemory(Buffer, Ext2BlockSizeInBytes);
 
@@ -871,7 +871,7 @@ BOOLEAN Ext2ReadBlock(ULONG BlockNumber, PVOID Buffer)
 BOOLEAN Ext2ReadPartialBlock(ULONG BlockNumber, ULONG StartingOffset, ULONG Length, PVOID Buffer)
 {
 
-	DbgPrint((DPRINT_FILESYSTEM, "Ext2ReadPartialBlock() BlockNumber = %d StartingOffset = %d Length = %d Buffer = 0x%x\n", BlockNumber, StartingOffset, Length, Buffer));
+	DPRINTM(DPRINT_FILESYSTEM, "Ext2ReadPartialBlock() BlockNumber = %d StartingOffset = %d Length = %d Buffer = 0x%x\n", BlockNumber, StartingOffset, Length, Buffer);
 
 	if (!Ext2ReadBlock(BlockNumber, (PVOID)FILESYSBUFFER))
 	{
@@ -916,7 +916,7 @@ BOOLEAN Ext2ReadInode(ULONG Inode, PEXT2_INODE InodeBuffer)
 	CHAR			ErrorString[80];
 	EXT2_GROUP_DESC	GroupDescriptor;
 
-	DbgPrint((DPRINT_FILESYSTEM, "Ext2ReadInode() Inode = %d\n", Inode));
+	DPRINTM(DPRINT_FILESYSTEM, "Ext2ReadInode() Inode = %d\n", Inode);
 
 	// Make sure its a valid inode
 	if ((Inode < 1) || (Inode > Ext2SuperBlock->s_inodes_count))
@@ -930,9 +930,9 @@ BOOLEAN Ext2ReadInode(ULONG Inode, PEXT2_INODE InodeBuffer)
 	InodeGroupNumber = Ext2GetInodeGroupNumber(Inode);
 	InodeBlockNumber = Ext2GetInodeBlockNumber(Inode);
 	InodeOffsetInBlock = Ext2GetInodeOffsetInBlock(Inode);
-	DbgPrint((DPRINT_FILESYSTEM, "InodeGroupNumber = %d\n", InodeGroupNumber));
-	DbgPrint((DPRINT_FILESYSTEM, "InodeBlockNumber = %d\n", InodeBlockNumber));
-	DbgPrint((DPRINT_FILESYSTEM, "InodeOffsetInBlock = %d\n", InodeOffsetInBlock));
+	DPRINTM(DPRINT_FILESYSTEM, "InodeGroupNumber = %d\n", InodeGroupNumber);
+	DPRINTM(DPRINT_FILESYSTEM, "InodeBlockNumber = %d\n", InodeBlockNumber);
+	DPRINTM(DPRINT_FILESYSTEM, "InodeOffsetInBlock = %d\n", InodeOffsetInBlock);
 
 	// Read the group descriptor
 	if (!Ext2ReadGroupDescriptor(InodeGroupNumber, &GroupDescriptor))
@@ -942,7 +942,7 @@ BOOLEAN Ext2ReadInode(ULONG Inode, PEXT2_INODE InodeBuffer)
 
 	// Add the start block of the inode table to the inode block number
 	InodeBlockNumber += GroupDescriptor.bg_inode_table;
-	DbgPrint((DPRINT_FILESYSTEM, "InodeBlockNumber (after group desc correction) = %d\n", InodeBlockNumber));
+	DPRINTM(DPRINT_FILESYSTEM, "InodeBlockNumber (after group desc correction) = %d\n", InodeBlockNumber);
 
 	// Read the block
 	if (!Ext2ReadBlock(InodeBlockNumber, (PVOID)FILESYSBUFFER))
@@ -953,34 +953,34 @@ BOOLEAN Ext2ReadInode(ULONG Inode, PEXT2_INODE InodeBuffer)
 	// Copy the data to their buffer
 	RtlCopyMemory(InodeBuffer, (PVOID)(ULONG_PTR)(FILESYSBUFFER + (InodeOffsetInBlock * EXT3_INODE_SIZE(Ext2SuperBlock))), sizeof(EXT2_INODE));
 
-	DbgPrint((DPRINT_FILESYSTEM, "Dumping inode information:\n"));
-	DbgPrint((DPRINT_FILESYSTEM, "i_mode = 0x%x\n", InodeBuffer->i_mode));
-	DbgPrint((DPRINT_FILESYSTEM, "i_uid = %d\n", InodeBuffer->i_uid));
-	DbgPrint((DPRINT_FILESYSTEM, "i_size = %d\n", InodeBuffer->i_size));
-	DbgPrint((DPRINT_FILESYSTEM, "i_atime = %d\n", InodeBuffer->i_atime));
-	DbgPrint((DPRINT_FILESYSTEM, "i_ctime = %d\n", InodeBuffer->i_ctime));
-	DbgPrint((DPRINT_FILESYSTEM, "i_mtime = %d\n", InodeBuffer->i_mtime));
-	DbgPrint((DPRINT_FILESYSTEM, "i_dtime = %d\n", InodeBuffer->i_dtime));
-	DbgPrint((DPRINT_FILESYSTEM, "i_gid = %d\n", InodeBuffer->i_gid));
-	DbgPrint((DPRINT_FILESYSTEM, "i_links_count = %d\n", InodeBuffer->i_links_count));
-	DbgPrint((DPRINT_FILESYSTEM, "i_blocks = %d\n", InodeBuffer->i_blocks));
-	DbgPrint((DPRINT_FILESYSTEM, "i_flags = 0x%x\n", InodeBuffer->i_flags));
-	DbgPrint((DPRINT_FILESYSTEM, "i_block[EXT3_N_BLOCKS (%d)] =\n%d,\n%d,\n%d,\n%d,\n%d,\n%d,\n%d,\n%d,\n%d,\n%d,\n%d,\n%d,\n%d,\n%d,\n%d\n", EXT3_N_BLOCKS, InodeBuffer->i_block[0], InodeBuffer->i_block[1], InodeBuffer->i_block[2], InodeBuffer->i_block[3], InodeBuffer->i_block[4], InodeBuffer->i_block[5], InodeBuffer->i_block[6], InodeBuffer->i_block[7], InodeBuffer->i_block[8], InodeBuffer->i_block[9], InodeBuffer->i_block[10], InodeBuffer->i_block[11], InodeBuffer->i_block[12], InodeBuffer->i_block[13], InodeBuffer->i_block[14]));
-	DbgPrint((DPRINT_FILESYSTEM, "i_generation = %d\n", InodeBuffer->i_generation));
-	DbgPrint((DPRINT_FILESYSTEM, "i_file_acl = %d\n", InodeBuffer->i_file_acl));
-	DbgPrint((DPRINT_FILESYSTEM, "i_dir_acl = %d\n", InodeBuffer->i_dir_acl));
-	DbgPrint((DPRINT_FILESYSTEM, "i_faddr = %d\n", InodeBuffer->i_faddr));
-	DbgPrint((DPRINT_FILESYSTEM, "l_i_frag = %d\n", InodeBuffer->osd2.linux2.l_i_frag));
-	DbgPrint((DPRINT_FILESYSTEM, "l_i_fsize = %d\n", InodeBuffer->osd2.linux2.l_i_fsize));
-	DbgPrint((DPRINT_FILESYSTEM, "l_i_uid_high = %d\n", InodeBuffer->osd2.linux2.l_i_uid_high));
-	DbgPrint((DPRINT_FILESYSTEM, "l_i_gid_high = %d\n", InodeBuffer->osd2.linux2.l_i_gid_high));
+	DPRINTM(DPRINT_FILESYSTEM, "Dumping inode information:\n");
+	DPRINTM(DPRINT_FILESYSTEM, "i_mode = 0x%x\n", InodeBuffer->i_mode);
+	DPRINTM(DPRINT_FILESYSTEM, "i_uid = %d\n", InodeBuffer->i_uid);
+	DPRINTM(DPRINT_FILESYSTEM, "i_size = %d\n", InodeBuffer->i_size);
+	DPRINTM(DPRINT_FILESYSTEM, "i_atime = %d\n", InodeBuffer->i_atime);
+	DPRINTM(DPRINT_FILESYSTEM, "i_ctime = %d\n", InodeBuffer->i_ctime);
+	DPRINTM(DPRINT_FILESYSTEM, "i_mtime = %d\n", InodeBuffer->i_mtime);
+	DPRINTM(DPRINT_FILESYSTEM, "i_dtime = %d\n", InodeBuffer->i_dtime);
+	DPRINTM(DPRINT_FILESYSTEM, "i_gid = %d\n", InodeBuffer->i_gid);
+	DPRINTM(DPRINT_FILESYSTEM, "i_links_count = %d\n", InodeBuffer->i_links_count);
+	DPRINTM(DPRINT_FILESYSTEM, "i_blocks = %d\n", InodeBuffer->i_blocks);
+	DPRINTM(DPRINT_FILESYSTEM, "i_flags = 0x%x\n", InodeBuffer->i_flags);
+	DPRINTM(DPRINT_FILESYSTEM, "i_block[EXT3_N_BLOCKS (%d)] =\n%d,\n%d,\n%d,\n%d,\n%d,\n%d,\n%d,\n%d,\n%d,\n%d,\n%d,\n%d,\n%d,\n%d,\n%d\n", EXT3_N_BLOCKS, InodeBuffer->i_block[0], InodeBuffer->i_block[1], InodeBuffer->i_block[2], InodeBuffer->i_block[3], InodeBuffer->i_block[4], InodeBuffer->i_block[5], InodeBuffer->i_block[6], InodeBuffer->i_block[7], InodeBuffer->i_block[8], InodeBuffer->i_block[9], InodeBuffer->i_block[10], InodeBuffer->i_block[11], InodeBuffer->i_block[12], InodeBuffer->i_block[13], InodeBuffer->i_block[14]);
+	DPRINTM(DPRINT_FILESYSTEM, "i_generation = %d\n", InodeBuffer->i_generation);
+	DPRINTM(DPRINT_FILESYSTEM, "i_file_acl = %d\n", InodeBuffer->i_file_acl);
+	DPRINTM(DPRINT_FILESYSTEM, "i_dir_acl = %d\n", InodeBuffer->i_dir_acl);
+	DPRINTM(DPRINT_FILESYSTEM, "i_faddr = %d\n", InodeBuffer->i_faddr);
+	DPRINTM(DPRINT_FILESYSTEM, "l_i_frag = %d\n", InodeBuffer->osd2.linux2.l_i_frag);
+	DPRINTM(DPRINT_FILESYSTEM, "l_i_fsize = %d\n", InodeBuffer->osd2.linux2.l_i_fsize);
+	DPRINTM(DPRINT_FILESYSTEM, "l_i_uid_high = %d\n", InodeBuffer->osd2.linux2.l_i_uid_high);
+	DPRINTM(DPRINT_FILESYSTEM, "l_i_gid_high = %d\n", InodeBuffer->osd2.linux2.l_i_gid_high);
 
 	return TRUE;
 }
 
 BOOLEAN Ext2ReadGroupDescriptor(ULONG Group, PEXT2_GROUP_DESC GroupBuffer)
 {
-	DbgPrint((DPRINT_FILESYSTEM, "Ext2ReadGroupDescriptor()\n"));
+	DPRINTM(DPRINT_FILESYSTEM, "Ext2ReadGroupDescriptor()\n");
 
 	/*if (!Ext2ReadBlock(Ext2GetGroupDescBlockNumber(Group), (PVOID)FILESYSBUFFER))
 	{
@@ -991,13 +991,13 @@ BOOLEAN Ext2ReadGroupDescriptor(ULONG Group, PEXT2_GROUP_DESC GroupBuffer)
 
 	RtlCopyMemory(GroupBuffer, &Ext2GroupDescriptors[Group], sizeof(EXT2_GROUP_DESC));
 
-	DbgPrint((DPRINT_FILESYSTEM, "Dumping group descriptor:\n"));
-	DbgPrint((DPRINT_FILESYSTEM, "bg_block_bitmap = %d\n", GroupBuffer->bg_block_bitmap));
-	DbgPrint((DPRINT_FILESYSTEM, "bg_inode_bitmap = %d\n", GroupBuffer->bg_inode_bitmap));
-	DbgPrint((DPRINT_FILESYSTEM, "bg_inode_table = %d\n", GroupBuffer->bg_inode_table));
-	DbgPrint((DPRINT_FILESYSTEM, "bg_free_blocks_count = %d\n", GroupBuffer->bg_free_blocks_count));
-	DbgPrint((DPRINT_FILESYSTEM, "bg_free_inodes_count = %d\n", GroupBuffer->bg_free_inodes_count));
-	DbgPrint((DPRINT_FILESYSTEM, "bg_used_dirs_count = %d\n", GroupBuffer->bg_used_dirs_count));
+	DPRINTM(DPRINT_FILESYSTEM, "Dumping group descriptor:\n");
+	DPRINTM(DPRINT_FILESYSTEM, "bg_block_bitmap = %d\n", GroupBuffer->bg_block_bitmap);
+	DPRINTM(DPRINT_FILESYSTEM, "bg_inode_bitmap = %d\n", GroupBuffer->bg_inode_bitmap);
+	DPRINTM(DPRINT_FILESYSTEM, "bg_inode_table = %d\n", GroupBuffer->bg_inode_table);
+	DPRINTM(DPRINT_FILESYSTEM, "bg_free_blocks_count = %d\n", GroupBuffer->bg_free_blocks_count);
+	DPRINTM(DPRINT_FILESYSTEM, "bg_free_inodes_count = %d\n", GroupBuffer->bg_free_inodes_count);
+	DPRINTM(DPRINT_FILESYSTEM, "bg_used_dirs_count = %d\n", GroupBuffer->bg_used_dirs_count);
 
 	return TRUE;
 }
@@ -1010,7 +1010,7 @@ ULONG* Ext2ReadBlockPointerList(PEXT2_INODE Inode)
 	ULONG		CurrentBlockInList;
 	ULONG		CurrentBlock;
 
-	DbgPrint((DPRINT_FILESYSTEM, "Ext2ReadBlockPointerList()\n"));
+	DPRINTM(DPRINT_FILESYSTEM, "Ext2ReadBlockPointerList()\n");
 
 	// Get the number of blocks this file occupies
 	// I would just use Inode->i_blocks but it
@@ -1090,7 +1090,7 @@ BOOLEAN Ext2CopyIndirectBlockPointers(ULONG* BlockList, ULONG* CurrentBlockInLis
 	ULONG		CurrentBlock;
 	ULONG		BlockPointersPerBlock;
 
-	DbgPrint((DPRINT_FILESYSTEM, "Ext2CopyIndirectBlockPointers() BlockCount = %d\n", BlockCount));
+	DPRINTM(DPRINT_FILESYSTEM, "Ext2CopyIndirectBlockPointers() BlockCount = %d\n", BlockCount);
 
 	BlockPointersPerBlock = Ext2BlockSizeInBytes / sizeof(ULONG);
 
@@ -1114,7 +1114,7 @@ BOOLEAN Ext2CopyDoubleIndirectBlockPointers(ULONG* BlockList, ULONG* CurrentBloc
 	ULONG		CurrentBlock;
 	ULONG		BlockPointersPerBlock;
 
-	DbgPrint((DPRINT_FILESYSTEM, "Ext2CopyDoubleIndirectBlockPointers() BlockCount = %d\n", BlockCount));
+	DPRINTM(DPRINT_FILESYSTEM, "Ext2CopyDoubleIndirectBlockPointers() BlockCount = %d\n", BlockCount);
 
 	BlockPointersPerBlock = Ext2BlockSizeInBytes / sizeof(ULONG);
 
@@ -1149,7 +1149,7 @@ BOOLEAN Ext2CopyTripleIndirectBlockPointers(ULONG* BlockList, ULONG* CurrentBloc
 	ULONG		CurrentBlock;
 	ULONG		BlockPointersPerBlock;
 
-	DbgPrint((DPRINT_FILESYSTEM, "Ext2CopyTripleIndirectBlockPointers() BlockCount = %d\n", BlockCount));
+	DPRINTM(DPRINT_FILESYSTEM, "Ext2CopyTripleIndirectBlockPointers() BlockCount = %d\n", BlockCount);
 
 	BlockPointersPerBlock = Ext2BlockSizeInBytes / sizeof(ULONG);
 

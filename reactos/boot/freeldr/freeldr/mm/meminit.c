@@ -54,7 +54,7 @@ BOOLEAN MmInitializeMemoryManager(VOID)
 	ULONG		Index;
 #endif
 
-	DbgPrint((DPRINT_MEMORY, "Initializing Memory Manager.\n"));
+	DPRINTM(DPRINT_MEMORY, "Initializing Memory Manager.\n");
 
 	RtlZeroMemory(BiosMemoryMap, sizeof(BIOS_MEMORY_MAP) * 32);
 
@@ -64,10 +64,10 @@ BOOLEAN MmInitializeMemoryManager(VOID)
 	// Dump the system memory map
 	if (BiosMemoryMapEntryCount != 0)
 	{
-		DbgPrint((DPRINT_MEMORY, "System Memory Map (Base Address, Length, Type):\n"));
+		DPRINTM(DPRINT_MEMORY, "System Memory Map (Base Address, Length, Type):\n");
 		for (Index=0; Index<BiosMemoryMapEntryCount; Index++)
 		{
-			DbgPrint((DPRINT_MEMORY, "%x%x\t %x%x\t %s\n", BiosMemoryMap[Index].BaseAddress, BiosMemoryMap[Index].Length, MmGetSystemMemoryMapTypeString(BiosMemoryMap[Index].Type)));
+			DPRINTM(DPRINT_MEMORY, "%x%x\t %x%x\t %s\n", BiosMemoryMap[Index].BaseAddress, BiosMemoryMap[Index].Length, MmGetSystemMemoryMapTypeString(BiosMemoryMap[Index].Type));
 		}
 	}
 #endif
@@ -97,7 +97,7 @@ BOOLEAN MmInitializeMemoryManager(VOID)
 	MmUpdateLastFreePageHint(PageLookupTableAddress, TotalPagesInLookupTable);
 
 	// Add machine-dependent stuff
-#ifdef __i386__
+#if defined (__i386__) || defined (_M_AMD64)
 	MmMarkPagesInLookupTable(PageLookupTableAddress, 0x00, 1, LoaderFirmwarePermanent); // realmode int vectors
 	MmMarkPagesInLookupTable(PageLookupTableAddress, 0x01, 7, LoaderFirmwareTemporary); // freeldr stack + cmdline
 	MmMarkPagesInLookupTable(PageLookupTableAddress, 0x08, 0x70, LoaderLoadedProgram); // freeldr image (roughly max. 0x64 pages)
@@ -116,7 +116,7 @@ BOOLEAN MmInitializeMemoryManager(VOID)
 
 	MmInitializeHeap(PageLookupTableAddress);
 
-	DbgPrint((DPRINT_MEMORY, "Memory Manager initialized. %d pages available.\n", FreePagesInLookupTable));
+	DPRINTM(DPRINT_MEMORY, "Memory Manager initialized. %d pages available.\n", FreePagesInLookupTable);
 	return TRUE;
 }
 
@@ -147,7 +147,7 @@ VOID MmInitializeHeap(PVOID PageLookupTable)
 	// Mark those pages as used
 	MmMarkPagesInLookupTable(PageLookupTableAddress, HeapStart, PagesNeeded, LoaderOsloaderHeap);
 
-	DbgPrint((DPRINT_MEMORY, "Heap initialized, base 0x%08x, pages %d\n", (HeapStart << MM_PAGE_SHIFT), PagesNeeded));
+	DPRINTM(DPRINT_MEMORY, "Heap initialized, base 0x%08x, pages %d\n", (HeapStart << MM_PAGE_SHIFT), PagesNeeded);
 }
 
 #ifdef DBG
@@ -193,7 +193,7 @@ PVOID MmGetEndAddressOfAnyMemory(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MapCount)
 		}
 	}
 
-	DbgPrint((DPRINT_MEMORY, "MmGetEndAddressOfAnyMemory() returning 0x%x\n", (ULONG)EndAddressOfMemory));
+	DPRINTM(DPRINT_MEMORY, "MmGetEndAddressOfAnyMemory() returning 0x%x\n", (ULONG)EndAddressOfMemory);
 
 	return (PVOID)(ULONG_PTR)EndAddressOfMemory;
 }
@@ -214,12 +214,12 @@ ULONG MmGetAddressablePageCountIncludingHoles(PBIOS_MEMORY_MAP BiosMemoryMap, UL
 	{
 		EndAddress = 0x100000000LL;
 
-		DbgPrint((DPRINT_MEMORY, "MmGetEndAddressOfAnyMemory() returned 0xFFFFFFFF, correcting to be 0x100000000.\n"));
+		DPRINTM(DPRINT_MEMORY, "MmGetEndAddressOfAnyMemory() returned 0xFFFFFFFF, correcting to be 0x100000000.\n");
 	}
 
 	PageCount = (EndAddress / MM_PAGE_SIZE);
 
-	DbgPrint((DPRINT_MEMORY, "MmGetAddressablePageCountIncludingHoles() returning %d\n", PageCount));
+	DPRINTM(DPRINT_MEMORY, "MmGetAddressablePageCountIncludingHoles() returning %d\n", PageCount);
 
 	return PageCount;
 }
@@ -258,7 +258,7 @@ PVOID MmFindLocationForPageLookupTable(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG Map
 		}
 	}
 
-	DbgPrint((DPRINT_MEMORY, "MmFindLocationForPageLookupTable() returning 0x%x\n", PageLookupTableMemAddress));
+	DPRINTM(DPRINT_MEMORY, "MmFindLocationForPageLookupTable() returning 0x%x\n", PageLookupTableMemAddress);
 
 	return PageLookupTableMemAddress;
 }
@@ -295,7 +295,7 @@ VOID MmInitPageLookupTable(PVOID PageLookupTable, ULONG TotalPageCount, PBIOS_ME
 	ULONG		PageLookupTablePageCount;
 	ULONG		Index;
 
-	DbgPrint((DPRINT_MEMORY, "MmInitPageLookupTable()\n"));
+	DPRINTM(DPRINT_MEMORY, "MmInitPageLookupTable()\n");
 
 	// Mark every page as allocated initially
 	// We will go through and mark pages again according to the memory map
@@ -322,14 +322,14 @@ VOID MmInitPageLookupTable(PVOID PageLookupTable, ULONG TotalPageCount, PBIOS_ME
 			default:
 				MemoryMapPageAllocated = LoaderSpecialMemory;
 		}
-		DbgPrint((DPRINT_MEMORY, "Marking pages as type %d: StartPage: %d PageCount: %d\n", MemoryMapPageAllocated, MemoryMapStartPage, MemoryMapPageCount));
+		DPRINTM(DPRINT_MEMORY, "Marking pages as type %d: StartPage: %d PageCount: %d\n", MemoryMapPageAllocated, MemoryMapStartPage, MemoryMapPageCount);
 		MmMarkPagesInLookupTable(PageLookupTable, MemoryMapStartPage, MemoryMapPageCount, MemoryMapPageAllocated);
 	}
 
 	// Mark the pages that the lookup table occupies as reserved
 	PageLookupTableStartPage = MmGetPageNumberFromAddress(PageLookupTable);
 	PageLookupTablePageCount = MmGetPageNumberFromAddress((PVOID)((ULONG_PTR)PageLookupTable + ROUND_UP(TotalPageCount * sizeof(PAGE_LOOKUP_TABLE_ITEM), MM_PAGE_SIZE))) - PageLookupTableStartPage;
-	DbgPrint((DPRINT_MEMORY, "Marking the page lookup table pages as reserved StartPage: %d PageCount: %d\n", PageLookupTableStartPage, PageLookupTablePageCount));
+	DPRINTM(DPRINT_MEMORY, "Marking the page lookup table pages as reserved StartPage: %d PageCount: %d\n", PageLookupTableStartPage, PageLookupTablePageCount);
 	MmMarkPagesInLookupTable(PageLookupTable, PageLookupTableStartPage, PageLookupTablePageCount, LoaderFirmwareTemporary);
 }
 
@@ -343,13 +343,13 @@ VOID MmMarkPagesInLookupTable(PVOID PageLookupTable, ULONG StartPage, ULONG Page
 #if 0
 		if ((Index <= (StartPage + 16)) || (Index >= (StartPage+PageCount-16)))
 		{
-			DbgPrint((DPRINT_MEMORY, "Index = %d StartPage = %d PageCount = %d\n", Index, StartPage, PageCount));
+			DPRINTM(DPRINT_MEMORY, "Index = %d StartPage = %d PageCount = %d\n", Index, StartPage, PageCount);
 		}
 #endif
 		RealPageLookupTable[Index].PageAllocated = PageAllocated;
 		RealPageLookupTable[Index].PageAllocationLength = (PageAllocated != LoaderFree) ? 1 : 0;
 	}
-	DbgPrint((DPRINT_MEMORY, "MmMarkPagesInLookupTable() Done\n"));
+	DPRINTM(DPRINT_MEMORY, "MmMarkPagesInLookupTable() Done\n");
 }
 
 VOID MmAllocatePagesInLookupTable(PVOID PageLookupTable, ULONG StartPage, ULONG PageCount, TYPE_OF_MEMORY MemoryType)
@@ -417,7 +417,7 @@ ULONG MmFindAvailablePages(PVOID PageLookupTable, ULONG TotalPageCount, ULONG Pa
 	}
 	else
 	{
-		DbgPrint((DPRINT_MEMORY, "Alloc low memory, LastFreePageHint %d, TPC %d\n", LastFreePageHint, TotalPageCount));
+		DPRINTM(DPRINT_MEMORY, "Alloc low memory, LastFreePageHint %d, TPC %d\n", LastFreePageHint, TotalPageCount);
 		/* Allocate "low" pages */
 		for (Index=1; Index < LastFreePageHint; Index++)
 		{

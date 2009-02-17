@@ -59,12 +59,12 @@ BOOLEAN DiskGetActivePartitionEntry(ULONG DriveNumber,
 	// Make sure there was only one bootable partition
 	if (BootablePartitionCount == 0)
 	{
-		DbgPrint((DPRINT_DISK, "No bootable (active) partitions found.\n"));
+		DPRINTM(DPRINT_DISK, "No bootable (active) partitions found.\n");
 		return FALSE;
 	}
 	else if (BootablePartitionCount != 1)
 	{
-		DbgPrint((DPRINT_DISK, "Too many bootable (active) partitions found.\n"));
+		DPRINTM(DPRINT_DISK, "Too many bootable (active) partitions found.\n");
 		return FALSE;
 	}
 
@@ -207,24 +207,24 @@ BOOLEAN DiskReadBootRecord(ULONG DriveNumber, ULONGLONG LogicalSectorNumber, PMA
 	RtlCopyMemory(BootRecord, (PVOID)DISKREADBUFFER, sizeof(MASTER_BOOT_RECORD));
 
 
-	DbgPrint((DPRINT_DISK, "Dumping partition table for drive 0x%x:\n", DriveNumber));
-	DbgPrint((DPRINT_DISK, "Boot record logical start sector = %d\n", LogicalSectorNumber));
-	DbgPrint((DPRINT_DISK, "sizeof(MASTER_BOOT_RECORD) = 0x%x.\n", sizeof(MASTER_BOOT_RECORD)));
+	DPRINTM(DPRINT_DISK, "Dumping partition table for drive 0x%x:\n", DriveNumber);
+	DPRINTM(DPRINT_DISK, "Boot record logical start sector = %d\n", LogicalSectorNumber);
+	DPRINTM(DPRINT_DISK, "sizeof(MASTER_BOOT_RECORD) = 0x%x.\n", sizeof(MASTER_BOOT_RECORD));
 
 	for (Index=0; Index<4; Index++)
 	{
-		DbgPrint((DPRINT_DISK, "-------------------------------------------\n"));
-		DbgPrint((DPRINT_DISK, "Partition %d\n", (Index + 1)));
-		DbgPrint((DPRINT_DISK, "BootIndicator: 0x%x\n", BootRecord->PartitionTable[Index].BootIndicator));
-		DbgPrint((DPRINT_DISK, "StartHead: 0x%x\n", BootRecord->PartitionTable[Index].StartHead));
-		DbgPrint((DPRINT_DISK, "StartSector (Plus 2 cylinder bits): 0x%x\n", BootRecord->PartitionTable[Index].StartSector));
-		DbgPrint((DPRINT_DISK, "StartCylinder: 0x%x\n", BootRecord->PartitionTable[Index].StartCylinder));
-		DbgPrint((DPRINT_DISK, "SystemIndicator: 0x%x\n", BootRecord->PartitionTable[Index].SystemIndicator));
-		DbgPrint((DPRINT_DISK, "EndHead: 0x%x\n", BootRecord->PartitionTable[Index].EndHead));
-		DbgPrint((DPRINT_DISK, "EndSector (Plus 2 cylinder bits): 0x%x\n", BootRecord->PartitionTable[Index].EndSector));
-		DbgPrint((DPRINT_DISK, "EndCylinder: 0x%x\n", BootRecord->PartitionTable[Index].EndCylinder));
-		DbgPrint((DPRINT_DISK, "SectorCountBeforePartition: 0x%x\n", BootRecord->PartitionTable[Index].SectorCountBeforePartition));
-		DbgPrint((DPRINT_DISK, "PartitionSectorCount: 0x%x\n", BootRecord->PartitionTable[Index].PartitionSectorCount));
+		DPRINTM(DPRINT_DISK, "-------------------------------------------\n");
+		DPRINTM(DPRINT_DISK, "Partition %d\n", (Index + 1));
+		DPRINTM(DPRINT_DISK, "BootIndicator: 0x%x\n", BootRecord->PartitionTable[Index].BootIndicator);
+		DPRINTM(DPRINT_DISK, "StartHead: 0x%x\n", BootRecord->PartitionTable[Index].StartHead);
+		DPRINTM(DPRINT_DISK, "StartSector (Plus 2 cylinder bits): 0x%x\n", BootRecord->PartitionTable[Index].StartSector);
+		DPRINTM(DPRINT_DISK, "StartCylinder: 0x%x\n", BootRecord->PartitionTable[Index].StartCylinder);
+		DPRINTM(DPRINT_DISK, "SystemIndicator: 0x%x\n", BootRecord->PartitionTable[Index].SystemIndicator);
+		DPRINTM(DPRINT_DISK, "EndHead: 0x%x\n", BootRecord->PartitionTable[Index].EndHead);
+		DPRINTM(DPRINT_DISK, "EndSector (Plus 2 cylinder bits): 0x%x\n", BootRecord->PartitionTable[Index].EndSector);
+		DPRINTM(DPRINT_DISK, "EndCylinder: 0x%x\n", BootRecord->PartitionTable[Index].EndCylinder);
+		DPRINTM(DPRINT_DISK, "SectorCountBeforePartition: 0x%x\n", BootRecord->PartitionTable[Index].SectorCountBeforePartition);
+		DPRINTM(DPRINT_DISK, "PartitionSectorCount: 0x%x\n", BootRecord->PartitionTable[Index].PartitionSectorCount);
 	}
 
 	// Check the partition table magic value

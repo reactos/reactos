@@ -125,7 +125,7 @@ BOOLEAN FatOpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector, ULONGLONG 
 	PFAT32_BOOTSECTOR Fat32VolumeBootSector;
 	PFATX_BOOTSECTOR FatXVolumeBootSector;
 
-	DbgPrint((DPRINT_FILESYSTEM, "FatOpenVolume() DriveNumber = 0x%x VolumeStartSector = %d\n", DriveNumber, VolumeStartSector));
+	DPRINTM(DPRINT_FILESYSTEM, "FatOpenVolume() DriveNumber = 0x%x VolumeStartSector = %d\n", DriveNumber, VolumeStartSector);
 
 	// Store the drive number
 	FatDriveNumber = DriveNumber;
@@ -159,81 +159,81 @@ BOOLEAN FatOpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector, ULONGLONG 
 	FatType = FatDetermineFatType(FatVolumeBootSector, PartitionSectorCount);
 
 	// Dump boot sector (and swap it for big endian systems)
-	DbgPrint((DPRINT_FILESYSTEM, "Dumping boot sector:\n"));
+	DPRINTM(DPRINT_FILESYSTEM, "Dumping boot sector:\n");
 	if (ISFATX(FatType))
 	{
 		FatSwapFatXBootSector(FatXVolumeBootSector);
-		DbgPrint((DPRINT_FILESYSTEM, "sizeof(FATX_BOOTSECTOR) = 0x%x.\n", sizeof(FATX_BOOTSECTOR)));
+		DPRINTM(DPRINT_FILESYSTEM, "sizeof(FATX_BOOTSECTOR) = 0x%x.\n", sizeof(FATX_BOOTSECTOR));
 
-		DbgPrint((DPRINT_FILESYSTEM, "FileSystemType: %c%c%c%c.\n", FatXVolumeBootSector->FileSystemType[0], FatXVolumeBootSector->FileSystemType[1], FatXVolumeBootSector->FileSystemType[2], FatXVolumeBootSector->FileSystemType[3]));
-		DbgPrint((DPRINT_FILESYSTEM, "VolumeSerialNumber: 0x%x\n", FatXVolumeBootSector->VolumeSerialNumber));
-		DbgPrint((DPRINT_FILESYSTEM, "SectorsPerCluster: %d\n", FatXVolumeBootSector->SectorsPerCluster));
-		DbgPrint((DPRINT_FILESYSTEM, "NumberOfFats: %d\n", FatXVolumeBootSector->NumberOfFats));
-		DbgPrint((DPRINT_FILESYSTEM, "Unknown: 0x%x\n", FatXVolumeBootSector->Unknown));
+		DPRINTM(DPRINT_FILESYSTEM, "FileSystemType: %c%c%c%c.\n", FatXVolumeBootSector->FileSystemType[0], FatXVolumeBootSector->FileSystemType[1], FatXVolumeBootSector->FileSystemType[2], FatXVolumeBootSector->FileSystemType[3]);
+		DPRINTM(DPRINT_FILESYSTEM, "VolumeSerialNumber: 0x%x\n", FatXVolumeBootSector->VolumeSerialNumber);
+		DPRINTM(DPRINT_FILESYSTEM, "SectorsPerCluster: %d\n", FatXVolumeBootSector->SectorsPerCluster);
+		DPRINTM(DPRINT_FILESYSTEM, "NumberOfFats: %d\n", FatXVolumeBootSector->NumberOfFats);
+		DPRINTM(DPRINT_FILESYSTEM, "Unknown: 0x%x\n", FatXVolumeBootSector->Unknown);
 
-		DbgPrint((DPRINT_FILESYSTEM, "FatType %s\n", FatType == FATX16 ? "FATX16" : "FATX32"));
+		DPRINTM(DPRINT_FILESYSTEM, "FatType %s\n", FatType == FATX16 ? "FATX16" : "FATX32");
 
 	}
 	else if (FatType == FAT32)
 	{
 		FatSwapFat32BootSector(Fat32VolumeBootSector);
-		DbgPrint((DPRINT_FILESYSTEM, "sizeof(FAT32_BOOTSECTOR) = 0x%x.\n", sizeof(FAT32_BOOTSECTOR)));
+		DPRINTM(DPRINT_FILESYSTEM, "sizeof(FAT32_BOOTSECTOR) = 0x%x.\n", sizeof(FAT32_BOOTSECTOR));
 
-		DbgPrint((DPRINT_FILESYSTEM, "JumpBoot: 0x%x 0x%x 0x%x\n", Fat32VolumeBootSector->JumpBoot[0], Fat32VolumeBootSector->JumpBoot[1], Fat32VolumeBootSector->JumpBoot[2]));
-		DbgPrint((DPRINT_FILESYSTEM, "OemName: %c%c%c%c%c%c%c%c\n", Fat32VolumeBootSector->OemName[0], Fat32VolumeBootSector->OemName[1], Fat32VolumeBootSector->OemName[2], Fat32VolumeBootSector->OemName[3], Fat32VolumeBootSector->OemName[4], Fat32VolumeBootSector->OemName[5], Fat32VolumeBootSector->OemName[6], Fat32VolumeBootSector->OemName[7]));
-		DbgPrint((DPRINT_FILESYSTEM, "BytesPerSector: %d\n", Fat32VolumeBootSector->BytesPerSector));
-		DbgPrint((DPRINT_FILESYSTEM, "SectorsPerCluster: %d\n", Fat32VolumeBootSector->SectorsPerCluster));
-		DbgPrint((DPRINT_FILESYSTEM, "ReservedSectors: %d\n", Fat32VolumeBootSector->ReservedSectors));
-		DbgPrint((DPRINT_FILESYSTEM, "NumberOfFats: %d\n", Fat32VolumeBootSector->NumberOfFats));
-		DbgPrint((DPRINT_FILESYSTEM, "RootDirEntries: %d\n", Fat32VolumeBootSector->RootDirEntries));
-		DbgPrint((DPRINT_FILESYSTEM, "TotalSectors: %d\n", Fat32VolumeBootSector->TotalSectors));
-		DbgPrint((DPRINT_FILESYSTEM, "MediaDescriptor: 0x%x\n", Fat32VolumeBootSector->MediaDescriptor));
-		DbgPrint((DPRINT_FILESYSTEM, "SectorsPerFat: %d\n", Fat32VolumeBootSector->SectorsPerFat));
-		DbgPrint((DPRINT_FILESYSTEM, "SectorsPerTrack: %d\n", Fat32VolumeBootSector->SectorsPerTrack));
-		DbgPrint((DPRINT_FILESYSTEM, "NumberOfHeads: %d\n", Fat32VolumeBootSector->NumberOfHeads));
-		DbgPrint((DPRINT_FILESYSTEM, "HiddenSectors: %d\n", Fat32VolumeBootSector->HiddenSectors));
-		DbgPrint((DPRINT_FILESYSTEM, "TotalSectorsBig: %d\n", Fat32VolumeBootSector->TotalSectorsBig));
-		DbgPrint((DPRINT_FILESYSTEM, "SectorsPerFatBig: %d\n", Fat32VolumeBootSector->SectorsPerFatBig));
-		DbgPrint((DPRINT_FILESYSTEM, "ExtendedFlags: 0x%x\n", Fat32VolumeBootSector->ExtendedFlags));
-		DbgPrint((DPRINT_FILESYSTEM, "FileSystemVersion: 0x%x\n", Fat32VolumeBootSector->FileSystemVersion));
-		DbgPrint((DPRINT_FILESYSTEM, "RootDirStartCluster: %d\n", Fat32VolumeBootSector->RootDirStartCluster));
-		DbgPrint((DPRINT_FILESYSTEM, "FsInfo: %d\n", Fat32VolumeBootSector->FsInfo));
-		DbgPrint((DPRINT_FILESYSTEM, "BackupBootSector: %d\n", Fat32VolumeBootSector->BackupBootSector));
-		DbgPrint((DPRINT_FILESYSTEM, "Reserved: 0x%x\n", Fat32VolumeBootSector->Reserved));
-		DbgPrint((DPRINT_FILESYSTEM, "DriveNumber: 0x%x\n", Fat32VolumeBootSector->DriveNumber));
-		DbgPrint((DPRINT_FILESYSTEM, "Reserved1: 0x%x\n", Fat32VolumeBootSector->Reserved1));
-		DbgPrint((DPRINT_FILESYSTEM, "BootSignature: 0x%x\n", Fat32VolumeBootSector->BootSignature));
-		DbgPrint((DPRINT_FILESYSTEM, "VolumeSerialNumber: 0x%x\n", Fat32VolumeBootSector->VolumeSerialNumber));
-		DbgPrint((DPRINT_FILESYSTEM, "VolumeLabel: %c%c%c%c%c%c%c%c%c%c%c\n", Fat32VolumeBootSector->VolumeLabel[0], Fat32VolumeBootSector->VolumeLabel[1], Fat32VolumeBootSector->VolumeLabel[2], Fat32VolumeBootSector->VolumeLabel[3], Fat32VolumeBootSector->VolumeLabel[4], Fat32VolumeBootSector->VolumeLabel[5], Fat32VolumeBootSector->VolumeLabel[6], Fat32VolumeBootSector->VolumeLabel[7], Fat32VolumeBootSector->VolumeLabel[8], Fat32VolumeBootSector->VolumeLabel[9], Fat32VolumeBootSector->VolumeLabel[10]));
-		DbgPrint((DPRINT_FILESYSTEM, "FileSystemType: %c%c%c%c%c%c%c%c\n", Fat32VolumeBootSector->FileSystemType[0], Fat32VolumeBootSector->FileSystemType[1], Fat32VolumeBootSector->FileSystemType[2], Fat32VolumeBootSector->FileSystemType[3], Fat32VolumeBootSector->FileSystemType[4], Fat32VolumeBootSector->FileSystemType[5], Fat32VolumeBootSector->FileSystemType[6], Fat32VolumeBootSector->FileSystemType[7]));
-		DbgPrint((DPRINT_FILESYSTEM, "BootSectorMagic: 0x%x\n", Fat32VolumeBootSector->BootSectorMagic));
+		DPRINTM(DPRINT_FILESYSTEM, "JumpBoot: 0x%x 0x%x 0x%x\n", Fat32VolumeBootSector->JumpBoot[0], Fat32VolumeBootSector->JumpBoot[1], Fat32VolumeBootSector->JumpBoot[2]);
+		DPRINTM(DPRINT_FILESYSTEM, "OemName: %c%c%c%c%c%c%c%c\n", Fat32VolumeBootSector->OemName[0], Fat32VolumeBootSector->OemName[1], Fat32VolumeBootSector->OemName[2], Fat32VolumeBootSector->OemName[3], Fat32VolumeBootSector->OemName[4], Fat32VolumeBootSector->OemName[5], Fat32VolumeBootSector->OemName[6], Fat32VolumeBootSector->OemName[7]);
+		DPRINTM(DPRINT_FILESYSTEM, "BytesPerSector: %d\n", Fat32VolumeBootSector->BytesPerSector);
+		DPRINTM(DPRINT_FILESYSTEM, "SectorsPerCluster: %d\n", Fat32VolumeBootSector->SectorsPerCluster);
+		DPRINTM(DPRINT_FILESYSTEM, "ReservedSectors: %d\n", Fat32VolumeBootSector->ReservedSectors);
+		DPRINTM(DPRINT_FILESYSTEM, "NumberOfFats: %d\n", Fat32VolumeBootSector->NumberOfFats);
+		DPRINTM(DPRINT_FILESYSTEM, "RootDirEntries: %d\n", Fat32VolumeBootSector->RootDirEntries);
+		DPRINTM(DPRINT_FILESYSTEM, "TotalSectors: %d\n", Fat32VolumeBootSector->TotalSectors);
+		DPRINTM(DPRINT_FILESYSTEM, "MediaDescriptor: 0x%x\n", Fat32VolumeBootSector->MediaDescriptor);
+		DPRINTM(DPRINT_FILESYSTEM, "SectorsPerFat: %d\n", Fat32VolumeBootSector->SectorsPerFat);
+		DPRINTM(DPRINT_FILESYSTEM, "SectorsPerTrack: %d\n", Fat32VolumeBootSector->SectorsPerTrack);
+		DPRINTM(DPRINT_FILESYSTEM, "NumberOfHeads: %d\n", Fat32VolumeBootSector->NumberOfHeads);
+		DPRINTM(DPRINT_FILESYSTEM, "HiddenSectors: %d\n", Fat32VolumeBootSector->HiddenSectors);
+		DPRINTM(DPRINT_FILESYSTEM, "TotalSectorsBig: %d\n", Fat32VolumeBootSector->TotalSectorsBig);
+		DPRINTM(DPRINT_FILESYSTEM, "SectorsPerFatBig: %d\n", Fat32VolumeBootSector->SectorsPerFatBig);
+		DPRINTM(DPRINT_FILESYSTEM, "ExtendedFlags: 0x%x\n", Fat32VolumeBootSector->ExtendedFlags);
+		DPRINTM(DPRINT_FILESYSTEM, "FileSystemVersion: 0x%x\n", Fat32VolumeBootSector->FileSystemVersion);
+		DPRINTM(DPRINT_FILESYSTEM, "RootDirStartCluster: %d\n", Fat32VolumeBootSector->RootDirStartCluster);
+		DPRINTM(DPRINT_FILESYSTEM, "FsInfo: %d\n", Fat32VolumeBootSector->FsInfo);
+		DPRINTM(DPRINT_FILESYSTEM, "BackupBootSector: %d\n", Fat32VolumeBootSector->BackupBootSector);
+		DPRINTM(DPRINT_FILESYSTEM, "Reserved: 0x%x\n", Fat32VolumeBootSector->Reserved);
+		DPRINTM(DPRINT_FILESYSTEM, "DriveNumber: 0x%x\n", Fat32VolumeBootSector->DriveNumber);
+		DPRINTM(DPRINT_FILESYSTEM, "Reserved1: 0x%x\n", Fat32VolumeBootSector->Reserved1);
+		DPRINTM(DPRINT_FILESYSTEM, "BootSignature: 0x%x\n", Fat32VolumeBootSector->BootSignature);
+		DPRINTM(DPRINT_FILESYSTEM, "VolumeSerialNumber: 0x%x\n", Fat32VolumeBootSector->VolumeSerialNumber);
+		DPRINTM(DPRINT_FILESYSTEM, "VolumeLabel: %c%c%c%c%c%c%c%c%c%c%c\n", Fat32VolumeBootSector->VolumeLabel[0], Fat32VolumeBootSector->VolumeLabel[1], Fat32VolumeBootSector->VolumeLabel[2], Fat32VolumeBootSector->VolumeLabel[3], Fat32VolumeBootSector->VolumeLabel[4], Fat32VolumeBootSector->VolumeLabel[5], Fat32VolumeBootSector->VolumeLabel[6], Fat32VolumeBootSector->VolumeLabel[7], Fat32VolumeBootSector->VolumeLabel[8], Fat32VolumeBootSector->VolumeLabel[9], Fat32VolumeBootSector->VolumeLabel[10]);
+		DPRINTM(DPRINT_FILESYSTEM, "FileSystemType: %c%c%c%c%c%c%c%c\n", Fat32VolumeBootSector->FileSystemType[0], Fat32VolumeBootSector->FileSystemType[1], Fat32VolumeBootSector->FileSystemType[2], Fat32VolumeBootSector->FileSystemType[3], Fat32VolumeBootSector->FileSystemType[4], Fat32VolumeBootSector->FileSystemType[5], Fat32VolumeBootSector->FileSystemType[6], Fat32VolumeBootSector->FileSystemType[7]);
+		DPRINTM(DPRINT_FILESYSTEM, "BootSectorMagic: 0x%x\n", Fat32VolumeBootSector->BootSectorMagic);
 	}
 	else
 	{
 		FatSwapFatBootSector(FatVolumeBootSector);
-		DbgPrint((DPRINT_FILESYSTEM, "sizeof(FAT_BOOTSECTOR) = 0x%x.\n", sizeof(FAT_BOOTSECTOR)));
+		DPRINTM(DPRINT_FILESYSTEM, "sizeof(FAT_BOOTSECTOR) = 0x%x.\n", sizeof(FAT_BOOTSECTOR));
 
-		DbgPrint((DPRINT_FILESYSTEM, "JumpBoot: 0x%x 0x%x 0x%x\n", FatVolumeBootSector->JumpBoot[0], FatVolumeBootSector->JumpBoot[1], FatVolumeBootSector->JumpBoot[2]));
-		DbgPrint((DPRINT_FILESYSTEM, "OemName: %c%c%c%c%c%c%c%c\n", FatVolumeBootSector->OemName[0], FatVolumeBootSector->OemName[1], FatVolumeBootSector->OemName[2], FatVolumeBootSector->OemName[3], FatVolumeBootSector->OemName[4], FatVolumeBootSector->OemName[5], FatVolumeBootSector->OemName[6], FatVolumeBootSector->OemName[7]));
-		DbgPrint((DPRINT_FILESYSTEM, "BytesPerSector: %d\n", FatVolumeBootSector->BytesPerSector));
-		DbgPrint((DPRINT_FILESYSTEM, "SectorsPerCluster: %d\n", FatVolumeBootSector->SectorsPerCluster));
-		DbgPrint((DPRINT_FILESYSTEM, "ReservedSectors: %d\n", FatVolumeBootSector->ReservedSectors));
-		DbgPrint((DPRINT_FILESYSTEM, "NumberOfFats: %d\n", FatVolumeBootSector->NumberOfFats));
-		DbgPrint((DPRINT_FILESYSTEM, "RootDirEntries: %d\n", FatVolumeBootSector->RootDirEntries));
-		DbgPrint((DPRINT_FILESYSTEM, "TotalSectors: %d\n", FatVolumeBootSector->TotalSectors));
-		DbgPrint((DPRINT_FILESYSTEM, "MediaDescriptor: 0x%x\n", FatVolumeBootSector->MediaDescriptor));
-		DbgPrint((DPRINT_FILESYSTEM, "SectorsPerFat: %d\n", FatVolumeBootSector->SectorsPerFat));
-		DbgPrint((DPRINT_FILESYSTEM, "SectorsPerTrack: %d\n", FatVolumeBootSector->SectorsPerTrack));
-		DbgPrint((DPRINT_FILESYSTEM, "NumberOfHeads: %d\n", FatVolumeBootSector->NumberOfHeads));
-		DbgPrint((DPRINT_FILESYSTEM, "HiddenSectors: %d\n", FatVolumeBootSector->HiddenSectors));
-		DbgPrint((DPRINT_FILESYSTEM, "TotalSectorsBig: %d\n", FatVolumeBootSector->TotalSectorsBig));
-		DbgPrint((DPRINT_FILESYSTEM, "DriveNumber: 0x%x\n", FatVolumeBootSector->DriveNumber));
-		DbgPrint((DPRINT_FILESYSTEM, "Reserved1: 0x%x\n", FatVolumeBootSector->Reserved1));
-		DbgPrint((DPRINT_FILESYSTEM, "BootSignature: 0x%x\n", FatVolumeBootSector->BootSignature));
-		DbgPrint((DPRINT_FILESYSTEM, "VolumeSerialNumber: 0x%x\n", FatVolumeBootSector->VolumeSerialNumber));
-		DbgPrint((DPRINT_FILESYSTEM, "VolumeLabel: %c%c%c%c%c%c%c%c%c%c%c\n", FatVolumeBootSector->VolumeLabel[0], FatVolumeBootSector->VolumeLabel[1], FatVolumeBootSector->VolumeLabel[2], FatVolumeBootSector->VolumeLabel[3], FatVolumeBootSector->VolumeLabel[4], FatVolumeBootSector->VolumeLabel[5], FatVolumeBootSector->VolumeLabel[6], FatVolumeBootSector->VolumeLabel[7], FatVolumeBootSector->VolumeLabel[8], FatVolumeBootSector->VolumeLabel[9], FatVolumeBootSector->VolumeLabel[10]));
-		DbgPrint((DPRINT_FILESYSTEM, "FileSystemType: %c%c%c%c%c%c%c%c\n", FatVolumeBootSector->FileSystemType[0], FatVolumeBootSector->FileSystemType[1], FatVolumeBootSector->FileSystemType[2], FatVolumeBootSector->FileSystemType[3], FatVolumeBootSector->FileSystemType[4], FatVolumeBootSector->FileSystemType[5], FatVolumeBootSector->FileSystemType[6], FatVolumeBootSector->FileSystemType[7]));
-		DbgPrint((DPRINT_FILESYSTEM, "BootSectorMagic: 0x%x\n", FatVolumeBootSector->BootSectorMagic));
+		DPRINTM(DPRINT_FILESYSTEM, "JumpBoot: 0x%x 0x%x 0x%x\n", FatVolumeBootSector->JumpBoot[0], FatVolumeBootSector->JumpBoot[1], FatVolumeBootSector->JumpBoot[2]);
+		DPRINTM(DPRINT_FILESYSTEM, "OemName: %c%c%c%c%c%c%c%c\n", FatVolumeBootSector->OemName[0], FatVolumeBootSector->OemName[1], FatVolumeBootSector->OemName[2], FatVolumeBootSector->OemName[3], FatVolumeBootSector->OemName[4], FatVolumeBootSector->OemName[5], FatVolumeBootSector->OemName[6], FatVolumeBootSector->OemName[7]);
+		DPRINTM(DPRINT_FILESYSTEM, "BytesPerSector: %d\n", FatVolumeBootSector->BytesPerSector);
+		DPRINTM(DPRINT_FILESYSTEM, "SectorsPerCluster: %d\n", FatVolumeBootSector->SectorsPerCluster);
+		DPRINTM(DPRINT_FILESYSTEM, "ReservedSectors: %d\n", FatVolumeBootSector->ReservedSectors);
+		DPRINTM(DPRINT_FILESYSTEM, "NumberOfFats: %d\n", FatVolumeBootSector->NumberOfFats);
+		DPRINTM(DPRINT_FILESYSTEM, "RootDirEntries: %d\n", FatVolumeBootSector->RootDirEntries);
+		DPRINTM(DPRINT_FILESYSTEM, "TotalSectors: %d\n", FatVolumeBootSector->TotalSectors);
+		DPRINTM(DPRINT_FILESYSTEM, "MediaDescriptor: 0x%x\n", FatVolumeBootSector->MediaDescriptor);
+		DPRINTM(DPRINT_FILESYSTEM, "SectorsPerFat: %d\n", FatVolumeBootSector->SectorsPerFat);
+		DPRINTM(DPRINT_FILESYSTEM, "SectorsPerTrack: %d\n", FatVolumeBootSector->SectorsPerTrack);
+		DPRINTM(DPRINT_FILESYSTEM, "NumberOfHeads: %d\n", FatVolumeBootSector->NumberOfHeads);
+		DPRINTM(DPRINT_FILESYSTEM, "HiddenSectors: %d\n", FatVolumeBootSector->HiddenSectors);
+		DPRINTM(DPRINT_FILESYSTEM, "TotalSectorsBig: %d\n", FatVolumeBootSector->TotalSectorsBig);
+		DPRINTM(DPRINT_FILESYSTEM, "DriveNumber: 0x%x\n", FatVolumeBootSector->DriveNumber);
+		DPRINTM(DPRINT_FILESYSTEM, "Reserved1: 0x%x\n", FatVolumeBootSector->Reserved1);
+		DPRINTM(DPRINT_FILESYSTEM, "BootSignature: 0x%x\n", FatVolumeBootSector->BootSignature);
+		DPRINTM(DPRINT_FILESYSTEM, "VolumeSerialNumber: 0x%x\n", FatVolumeBootSector->VolumeSerialNumber);
+		DPRINTM(DPRINT_FILESYSTEM, "VolumeLabel: %c%c%c%c%c%c%c%c%c%c%c\n", FatVolumeBootSector->VolumeLabel[0], FatVolumeBootSector->VolumeLabel[1], FatVolumeBootSector->VolumeLabel[2], FatVolumeBootSector->VolumeLabel[3], FatVolumeBootSector->VolumeLabel[4], FatVolumeBootSector->VolumeLabel[5], FatVolumeBootSector->VolumeLabel[6], FatVolumeBootSector->VolumeLabel[7], FatVolumeBootSector->VolumeLabel[8], FatVolumeBootSector->VolumeLabel[9], FatVolumeBootSector->VolumeLabel[10]);
+		DPRINTM(DPRINT_FILESYSTEM, "FileSystemType: %c%c%c%c%c%c%c%c\n", FatVolumeBootSector->FileSystemType[0], FatVolumeBootSector->FileSystemType[1], FatVolumeBootSector->FileSystemType[2], FatVolumeBootSector->FileSystemType[3], FatVolumeBootSector->FileSystemType[4], FatVolumeBootSector->FileSystemType[5], FatVolumeBootSector->FileSystemType[6], FatVolumeBootSector->FileSystemType[7]);
+		DPRINTM(DPRINT_FILESYSTEM, "BootSectorMagic: 0x%x\n", FatVolumeBootSector->BootSectorMagic);
 	}
 
 	//
@@ -435,7 +435,7 @@ PVOID FatBufferDirectory(ULONG DirectoryStartCluster, ULONG *DirectorySize, BOOL
 {
 	PVOID	DirectoryBuffer;
 
-	DbgPrint((DPRINT_FILESYSTEM, "FatBufferDirectory() DirectoryStartCluster = %d RootDirectory = %s\n", DirectoryStartCluster, (RootDirectory ? "TRUE" : "FALSE")));
+	DPRINTM(DPRINT_FILESYSTEM, "FatBufferDirectory() DirectoryStartCluster = %d RootDirectory = %s\n", DirectoryStartCluster, (RootDirectory ? "TRUE" : "FALSE"));
 
 	/*
 	 * For FAT32, the root directory is nothing special. We can treat it the same
@@ -462,7 +462,7 @@ PVOID FatBufferDirectory(ULONG DirectoryStartCluster, ULONG *DirectorySize, BOOL
 	//
 	// Attempt to allocate memory for directory buffer
 	//
-	DbgPrint((DPRINT_FILESYSTEM, "Trying to allocate (DirectorySize) %d bytes.\n", *DirectorySize));
+	DPRINTM(DPRINT_FILESYSTEM, "Trying to allocate (DirectorySize) %d bytes.\n", *DirectorySize);
 	DirectoryBuffer = MmHeapAlloc(*DirectorySize);
 
 	if (DirectoryBuffer == NULL)
@@ -507,7 +507,7 @@ BOOLEAN FatSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectorySi
 
 	EntryCount = DirectorySize / sizeof(DIRENTRY);
 
-	DbgPrint((DPRINT_FILESYSTEM, "FatSearchDirectoryBufferForFile() DirectoryBuffer = 0x%x EntryCount = %d FileName = %s\n", DirectoryBuffer, EntryCount, FileName));
+	DPRINTM(DPRINT_FILESYSTEM, "FatSearchDirectoryBufferForFile() DirectoryBuffer = 0x%x EntryCount = %d FileName = %s\n", DirectoryBuffer, EntryCount, FileName);
 
 	memset(ShortNameBuffer, 0, 13 * sizeof(CHAR));
 	memset(LfnNameBuffer, 0, 261 * sizeof(CHAR));
@@ -519,7 +519,7 @@ BOOLEAN FatSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectorySi
 		OurDirEntry = *((PDIRENTRY) DirectoryBuffer);
 		FatSwapDirEntry(DirEntry);
 
-		//DbgPrint((DPRINT_FILESYSTEM, "Dumping directory entry %d:\n", CurrentEntry));
+		//DPRINTM(DPRINT_FILESYSTEM, "Dumping directory entry %d:\n", CurrentEntry);
 		//DbgDumpBuffer(DPRINT_FILESYSTEM, DirEntry, sizeof(DIRENTRY));
 
 		//
@@ -620,7 +620,7 @@ BOOLEAN FatSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectorySi
 				LfnNameBuffer[12 + (LfnDirEntry->SequenceNumber * 13)] = (UCHAR)LfnDirEntry->Name11_12[1];
 			}
 
-			//DbgPrint((DPRINT_FILESYSTEM, "Dumping long name buffer:\n"));
+			//DPRINTM(DPRINT_FILESYSTEM, "Dumping long name buffer:\n");
 			//DbgDumpBuffer(DPRINT_FILESYSTEM, LfnNameBuffer, 260);
 
 			continue;
@@ -651,8 +651,8 @@ BOOLEAN FatSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectorySi
 		//
 		FatParseShortFileName(ShortNameBuffer, DirEntry);
 
-		DbgPrint((DPRINT_FILESYSTEM, "Entry: %d LFN = %s\n", CurrentEntry, LfnNameBuffer));
-		DbgPrint((DPRINT_FILESYSTEM, "Entry: %d DOS name = %s\n", CurrentEntry, ShortNameBuffer));
+		DPRINTM(DPRINT_FILESYSTEM, "Entry: %d LFN = %s\n", CurrentEntry, LfnNameBuffer);
+		DPRINTM(DPRINT_FILESYSTEM, "Entry: %d DOS name = %s\n", CurrentEntry, ShortNameBuffer);
 
 		//
 		// See if the file name matches either the short or long name
@@ -665,25 +665,25 @@ BOOLEAN FatSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectorySi
 			FatFileInfoPointer->FileSize = DirEntry->Size;
 			FatFileInfoPointer->FilePointer = 0;
 
-			DbgPrint((DPRINT_FILESYSTEM, "MSDOS Directory Entry:\n"));
-			DbgPrint((DPRINT_FILESYSTEM, "FileName[11] = %c%c%c%c%c%c%c%c%c%c%c\n", DirEntry->FileName[0], DirEntry->FileName[1], DirEntry->FileName[2], DirEntry->FileName[3], DirEntry->FileName[4], DirEntry->FileName[5], DirEntry->FileName[6], DirEntry->FileName[7], DirEntry->FileName[8], DirEntry->FileName[9], DirEntry->FileName[10]));
-			DbgPrint((DPRINT_FILESYSTEM, "Attr = 0x%x\n", DirEntry->Attr));
-			DbgPrint((DPRINT_FILESYSTEM, "ReservedNT = 0x%x\n", DirEntry->ReservedNT));
-			DbgPrint((DPRINT_FILESYSTEM, "TimeInTenths = %d\n", DirEntry->TimeInTenths));
-			DbgPrint((DPRINT_FILESYSTEM, "CreateTime = %d\n", DirEntry->CreateTime));
-			DbgPrint((DPRINT_FILESYSTEM, "CreateDate = %d\n", DirEntry->CreateDate));
-			DbgPrint((DPRINT_FILESYSTEM, "LastAccessDate = %d\n", DirEntry->LastAccessDate));
-			DbgPrint((DPRINT_FILESYSTEM, "ClusterHigh = 0x%x\n", DirEntry->ClusterHigh));
-			DbgPrint((DPRINT_FILESYSTEM, "Time = %d\n", DirEntry->Time));
-			DbgPrint((DPRINT_FILESYSTEM, "Date = %d\n", DirEntry->Date));
-			DbgPrint((DPRINT_FILESYSTEM, "ClusterLow = 0x%x\n", DirEntry->ClusterLow));
-			DbgPrint((DPRINT_FILESYSTEM, "Size = %d\n", DirEntry->Size));
+			DPRINTM(DPRINT_FILESYSTEM, "MSDOS Directory Entry:\n");
+			DPRINTM(DPRINT_FILESYSTEM, "FileName[11] = %c%c%c%c%c%c%c%c%c%c%c\n", DirEntry->FileName[0], DirEntry->FileName[1], DirEntry->FileName[2], DirEntry->FileName[3], DirEntry->FileName[4], DirEntry->FileName[5], DirEntry->FileName[6], DirEntry->FileName[7], DirEntry->FileName[8], DirEntry->FileName[9], DirEntry->FileName[10]);
+			DPRINTM(DPRINT_FILESYSTEM, "Attr = 0x%x\n", DirEntry->Attr);
+			DPRINTM(DPRINT_FILESYSTEM, "ReservedNT = 0x%x\n", DirEntry->ReservedNT);
+			DPRINTM(DPRINT_FILESYSTEM, "TimeInTenths = %d\n", DirEntry->TimeInTenths);
+			DPRINTM(DPRINT_FILESYSTEM, "CreateTime = %d\n", DirEntry->CreateTime);
+			DPRINTM(DPRINT_FILESYSTEM, "CreateDate = %d\n", DirEntry->CreateDate);
+			DPRINTM(DPRINT_FILESYSTEM, "LastAccessDate = %d\n", DirEntry->LastAccessDate);
+			DPRINTM(DPRINT_FILESYSTEM, "ClusterHigh = 0x%x\n", DirEntry->ClusterHigh);
+			DPRINTM(DPRINT_FILESYSTEM, "Time = %d\n", DirEntry->Time);
+			DPRINTM(DPRINT_FILESYSTEM, "Date = %d\n", DirEntry->Date);
+			DPRINTM(DPRINT_FILESYSTEM, "ClusterLow = 0x%x\n", DirEntry->ClusterLow);
+			DPRINTM(DPRINT_FILESYSTEM, "Size = %d\n", DirEntry->Size);
 
 			//
 			// Get the cluster chain
 			//
 			StartCluster = ((ULONG)DirEntry->ClusterHigh << 16) + DirEntry->ClusterLow;
-			DbgPrint((DPRINT_FILESYSTEM, "StartCluster = 0x%x\n", StartCluster));
+			DPRINTM(DPRINT_FILESYSTEM, "StartCluster = 0x%x\n", StartCluster);
 			FatFileInfoPointer->FileFatChain = FatGetClusterChainArray(StartCluster);
 
 			//
@@ -718,7 +718,7 @@ static BOOLEAN FatXSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG Dir
 
 	EntryCount = DirectorySize / sizeof(FATX_DIRENTRY);
 
-	DbgPrint((DPRINT_FILESYSTEM, "FatXSearchDirectoryBufferForFile() DirectoryBuffer = 0x%x EntryCount = %d FileName = %s\n", DirectoryBuffer, EntryCount, FileName));
+	DPRINTM(DPRINT_FILESYSTEM, "FatXSearchDirectoryBufferForFile() DirectoryBuffer = 0x%x EntryCount = %d FileName = %s\n", DirectoryBuffer, EntryCount, FileName);
 
 	FileNameLen = strlen(FileName);
 
@@ -743,17 +743,17 @@ static BOOLEAN FatXSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG Dir
 			FatFileInfoPointer->FileSize = DirEntry->Size;
 			FatFileInfoPointer->FilePointer = 0;
 
-			DbgPrint((DPRINT_FILESYSTEM, "FATX Directory Entry:\n"));
-			DbgPrint((DPRINT_FILESYSTEM, "FileNameSize = %d\n", DirEntry->FileNameSize));
-			DbgPrint((DPRINT_FILESYSTEM, "Attr = 0x%x\n", DirEntry->Attr));
-			DbgPrint((DPRINT_FILESYSTEM, "StartCluster = 0x%x\n", DirEntry->StartCluster));
-			DbgPrint((DPRINT_FILESYSTEM, "Size = %d\n", DirEntry->Size));
-			DbgPrint((DPRINT_FILESYSTEM, "Time = %d\n", DirEntry->Time));
-			DbgPrint((DPRINT_FILESYSTEM, "Date = %d\n", DirEntry->Date));
-			DbgPrint((DPRINT_FILESYSTEM, "CreateTime = %d\n", DirEntry->CreateTime));
-			DbgPrint((DPRINT_FILESYSTEM, "CreateDate = %d\n", DirEntry->CreateDate));
-			DbgPrint((DPRINT_FILESYSTEM, "LastAccessTime = %d\n", DirEntry->LastAccessTime));
-			DbgPrint((DPRINT_FILESYSTEM, "LastAccessDate = %d\n", DirEntry->LastAccessDate));
+			DPRINTM(DPRINT_FILESYSTEM, "FATX Directory Entry:\n");
+			DPRINTM(DPRINT_FILESYSTEM, "FileNameSize = %d\n", DirEntry->FileNameSize);
+			DPRINTM(DPRINT_FILESYSTEM, "Attr = 0x%x\n", DirEntry->Attr);
+			DPRINTM(DPRINT_FILESYSTEM, "StartCluster = 0x%x\n", DirEntry->StartCluster);
+			DPRINTM(DPRINT_FILESYSTEM, "Size = %d\n", DirEntry->Size);
+			DPRINTM(DPRINT_FILESYSTEM, "Time = %d\n", DirEntry->Time);
+			DPRINTM(DPRINT_FILESYSTEM, "Date = %d\n", DirEntry->Date);
+			DPRINTM(DPRINT_FILESYSTEM, "CreateTime = %d\n", DirEntry->CreateTime);
+			DPRINTM(DPRINT_FILESYSTEM, "CreateDate = %d\n", DirEntry->CreateDate);
+			DPRINTM(DPRINT_FILESYSTEM, "LastAccessTime = %d\n", DirEntry->LastAccessTime);
+			DPRINTM(DPRINT_FILESYSTEM, "LastAccessDate = %d\n", DirEntry->LastAccessDate);
 
 			/*
 			 * Get the cluster chain
@@ -792,7 +792,7 @@ BOOLEAN FatLookupFile(PCSTR FileName, PFAT_FILE_INFO FatFileInfoPointer)
 	ULONG		DirectorySize;
 	FAT_FILE_INFO	FatFileInfo;
 
-	DbgPrint((DPRINT_FILESYSTEM, "FatLookupFile() FileName = %s\n", FileName));
+	DPRINTM(DPRINT_FILESYSTEM, "FatLookupFile() FileName = %s\n", FileName);
 
 	memset(FatFileInfoPointer, 0, sizeof(FAT_FILE_INFO));
 
@@ -912,7 +912,7 @@ void FatParseShortFileName(PCHAR Buffer, PDIRENTRY DirEntry)
 		Buffer[Idx++] = (DirEntry->FileName[10] == ' ') ? '\0' : DirEntry->FileName[10];
 	}
 
-	DbgPrint((DPRINT_FILESYSTEM, "FatParseShortFileName() ShortName = %s\n", Buffer));
+	DPRINTM(DPRINT_FILESYSTEM, "FatParseShortFileName() ShortName = %s\n", Buffer);
 }
 
 /*
@@ -926,7 +926,7 @@ BOOLEAN FatGetFatEntry(ULONG Cluster, ULONG* ClusterPointer)
 	UINT32		ThisFatSecNum;
 	UINT32		ThisFatEntOffset;
 
-	DbgPrint((DPRINT_FILESYSTEM, "FatGetFatEntry() Retrieving FAT entry for cluster %d.\n", Cluster));
+	DPRINTM(DPRINT_FILESYSTEM, "FatGetFatEntry() Retrieving FAT entry for cluster %d.\n", Cluster);
 
 	switch(FatType)
 	{
@@ -936,9 +936,9 @@ BOOLEAN FatGetFatEntry(ULONG Cluster, ULONG* ClusterPointer)
 		ThisFatSecNum = ActiveFatSectorStart + (FatOffset / BytesPerSector);
 		ThisFatEntOffset = (FatOffset % BytesPerSector);
 
-		DbgPrint((DPRINT_FILESYSTEM, "FatOffset: %d\n", FatOffset));
-		DbgPrint((DPRINT_FILESYSTEM, "ThisFatSecNum: %d\n", ThisFatSecNum));
-		DbgPrint((DPRINT_FILESYSTEM, "ThisFatEntOffset: %d\n", ThisFatEntOffset));
+		DPRINTM(DPRINT_FILESYSTEM, "FatOffset: %d\n", FatOffset);
+		DPRINTM(DPRINT_FILESYSTEM, "ThisFatSecNum: %d\n", ThisFatSecNum);
+		DPRINTM(DPRINT_FILESYSTEM, "ThisFatEntOffset: %d\n", ThisFatEntOffset);
 
 		if (ThisFatEntOffset == (BytesPerSector - 1))
 		{
@@ -1001,7 +1001,7 @@ BOOLEAN FatGetFatEntry(ULONG Cluster, ULONG* ClusterPointer)
 
 	}
 
-	DbgPrint((DPRINT_FILESYSTEM, "FAT entry is 0x%x.\n", fat));
+	DPRINTM(DPRINT_FILESYSTEM, "FAT entry is 0x%x.\n", fat);
 
 	*ClusterPointer = fat;
 
@@ -1018,7 +1018,7 @@ FILE* FatOpenFile(PCSTR FileName)
 	FAT_FILE_INFO		TempFatFileInfo;
 	PFAT_FILE_INFO		FileHandle;
 
-	DbgPrint((DPRINT_FILESYSTEM, "FatOpenFile() FileName = %s\n", FileName));
+	DPRINTM(DPRINT_FILESYSTEM, "FatOpenFile() FileName = %s\n", FileName);
 
 	if (!FatLookupFile(FileName, &TempFatFileInfo))
 	{
@@ -1041,7 +1041,7 @@ ULONG FatCountClustersInChain(ULONG StartCluster)
 {
 	ULONG	ClusterCount = 0;
 
-	DbgPrint((DPRINT_FILESYSTEM, "FatCountClustersInChain() StartCluster = %d\n", StartCluster));
+	DPRINTM(DPRINT_FILESYSTEM, "FatCountClustersInChain() StartCluster = %d\n", StartCluster);
 
 	while (1)
 	{
@@ -1069,7 +1069,7 @@ ULONG FatCountClustersInChain(ULONG StartCluster)
 		}
 	}
 
-	DbgPrint((DPRINT_FILESYSTEM, "FatCountClustersInChain() ClusterCount = %d\n", ClusterCount));
+	DPRINTM(DPRINT_FILESYSTEM, "FatCountClustersInChain() ClusterCount = %d\n", ClusterCount);
 
 	return ClusterCount;
 }
@@ -1081,7 +1081,7 @@ ULONG* FatGetClusterChainArray(ULONG StartCluster)
 	ULONG*	ArrayPointer;
 	ULONG		Idx;
 
-	DbgPrint((DPRINT_FILESYSTEM, "FatGetClusterChainArray() StartCluster = %d\n", StartCluster));
+	DPRINTM(DPRINT_FILESYSTEM, "FatGetClusterChainArray() StartCluster = %d\n", StartCluster);
 
 	ClusterCount = FatCountClustersInChain(StartCluster) + 1; // Lets get the 0x0ffffff8 on the end of the array
 	ArraySize = ClusterCount * sizeof(ULONG);
@@ -1140,7 +1140,7 @@ BOOLEAN FatReadCluster(ULONG ClusterNumber, PVOID Buffer)
 
 	ClusterStartSector = ((ClusterNumber - 2) * SectorsPerCluster) + DataSectorStart;
 
-	DbgPrint((DPRINT_FILESYSTEM, "FatReadCluster() ClusterNumber = %d Buffer = 0x%x ClusterStartSector = %d\n", ClusterNumber, Buffer, ClusterStartSector));
+	DPRINTM(DPRINT_FILESYSTEM, "FatReadCluster() ClusterNumber = %d Buffer = 0x%x ClusterStartSector = %d\n", ClusterNumber, Buffer, ClusterStartSector);
 
 	if (!FatReadVolumeSectors(FatDriveNumber, ClusterStartSector, SectorsPerCluster, (PVOID)FILESYSBUFFER))
 	{
@@ -1160,12 +1160,12 @@ BOOLEAN FatReadClusterChain(ULONG StartClusterNumber, ULONG NumberOfClusters, PV
 {
 	ULONG		ClusterStartSector;
 
-	DbgPrint((DPRINT_FILESYSTEM, "FatReadClusterChain() StartClusterNumber = %d NumberOfClusters = %d Buffer = 0x%x\n", StartClusterNumber, NumberOfClusters, Buffer));
+	DPRINTM(DPRINT_FILESYSTEM, "FatReadClusterChain() StartClusterNumber = %d NumberOfClusters = %d Buffer = 0x%x\n", StartClusterNumber, NumberOfClusters, Buffer);
 
 	while (NumberOfClusters > 0)
 	{
 
-		DbgPrint((DPRINT_FILESYSTEM, "FatReadClusterChain() StartClusterNumber = %d NumberOfClusters = %d Buffer = 0x%x\n", StartClusterNumber, NumberOfClusters, Buffer));
+		DPRINTM(DPRINT_FILESYSTEM, "FatReadClusterChain() StartClusterNumber = %d NumberOfClusters = %d Buffer = 0x%x\n", StartClusterNumber, NumberOfClusters, Buffer);
 		//
 		// Calculate starting sector for cluster
 		//
@@ -1221,7 +1221,7 @@ BOOLEAN FatReadPartialCluster(ULONG ClusterNumber, ULONG StartingOffset, ULONG L
 {
 	ULONG		ClusterStartSector;
 
-	DbgPrint((DPRINT_FILESYSTEM, "FatReadPartialCluster() ClusterNumber = %d StartingOffset = %d Length = %d Buffer = 0x%x\n", ClusterNumber, StartingOffset, Length, Buffer));
+	DPRINTM(DPRINT_FILESYSTEM, "FatReadPartialCluster() ClusterNumber = %d StartingOffset = %d Length = %d Buffer = 0x%x\n", ClusterNumber, StartingOffset, Length, Buffer);
 
 	ClusterStartSector = ((ClusterNumber - 2) * SectorsPerCluster) + DataSectorStart;
 
@@ -1249,7 +1249,7 @@ BOOLEAN FatReadFile(FILE *FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID
 	ULONG			NumberOfClusters;
 	ULONG			BytesPerCluster;
 
-	DbgPrint((DPRINT_FILESYSTEM, "FatReadFile() BytesToRead = %d Buffer = 0x%x\n", BytesToRead, Buffer));
+	DPRINTM(DPRINT_FILESYSTEM, "FatReadFile() BytesToRead = %d Buffer = 0x%x\n", BytesToRead, Buffer);
 
 	if (BytesRead != NULL)
 	{
@@ -1398,7 +1398,7 @@ ULONG FatGetFileSize(FILE *FileHandle)
 {
 	PFAT_FILE_INFO	FatFileHandle = (PFAT_FILE_INFO)FileHandle;
 
-	DbgPrint((DPRINT_FILESYSTEM, "FatGetFileSize() FileSize = %d\n", FatFileHandle->FileSize));
+	DPRINTM(DPRINT_FILESYSTEM, "FatGetFileSize() FileSize = %d\n", FatFileHandle->FileSize);
 
 	return FatFileHandle->FileSize;
 }
@@ -1407,7 +1407,7 @@ VOID FatSetFilePointer(FILE *FileHandle, ULONG NewFilePointer)
 {
 	PFAT_FILE_INFO	FatFileHandle = (PFAT_FILE_INFO)FileHandle;
 
-	DbgPrint((DPRINT_FILESYSTEM, "FatSetFilePointer() NewFilePointer = %d\n", NewFilePointer));
+	DPRINTM(DPRINT_FILESYSTEM, "FatSetFilePointer() NewFilePointer = %d\n", NewFilePointer);
 
 	FatFileHandle->FilePointer = NewFilePointer;
 }
@@ -1416,7 +1416,7 @@ ULONG FatGetFilePointer(FILE *FileHandle)
 {
 	PFAT_FILE_INFO	FatFileHandle = (PFAT_FILE_INFO)FileHandle;
 
-	DbgPrint((DPRINT_FILESYSTEM, "FatGetFilePointer() FilePointer = %d\n", FatFileHandle->FilePointer));
+	DPRINTM(DPRINT_FILESYSTEM, "FatGetFilePointer() FilePointer = %d\n", FatFileHandle->FilePointer);
 
 	return FatFileHandle->FilePointer;
 }

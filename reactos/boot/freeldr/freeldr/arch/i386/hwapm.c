@@ -37,17 +37,17 @@ FindApmBios(VOID)
 
   if (INT386_SUCCESS(RegsOut))
     {
-      DbgPrint((DPRINT_HWDETECT, "Found APM BIOS\n"));
-      DbgPrint((DPRINT_HWDETECT, "AH: %x\n", RegsOut.b.ah));
-      DbgPrint((DPRINT_HWDETECT, "AL: %x\n", RegsOut.b.al));
-      DbgPrint((DPRINT_HWDETECT, "BH: %x\n", RegsOut.b.bh));
-      DbgPrint((DPRINT_HWDETECT, "BL: %x\n", RegsOut.b.bl));
-      DbgPrint((DPRINT_HWDETECT, "CX: %x\n", RegsOut.w.cx));
+      DPRINTM(DPRINT_HWDETECT, "Found APM BIOS\n");
+      DPRINTM(DPRINT_HWDETECT, "AH: %x\n", RegsOut.b.ah);
+      DPRINTM(DPRINT_HWDETECT, "AL: %x\n", RegsOut.b.al);
+      DPRINTM(DPRINT_HWDETECT, "BH: %x\n", RegsOut.b.bh);
+      DPRINTM(DPRINT_HWDETECT, "BL: %x\n", RegsOut.b.bl);
+      DPRINTM(DPRINT_HWDETECT, "CX: %x\n", RegsOut.w.cx);
 
       return TRUE;
     }
 
-  DbgPrint((DPRINT_HWDETECT, "No APM BIOS found\n"));
+  DPRINTM(DPRINT_HWDETECT, "No APM BIOS found\n");
 
   return FALSE;
 }

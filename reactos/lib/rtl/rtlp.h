@@ -19,9 +19,11 @@ extern VOID FASTCALL CHECK_PAGED_CODE_RTL(char *file, int line);
 #ifdef _PPC_
 #define SWAPD(x) ((((x)&0xff)<<24)|(((x)&0xff00)<<8)|(((x)>>8)&0xff00)|(((x)>>24)&0xff))
 #define SWAPW(x) ((((x)&0xff)<<8)|(((x)>>8)&0xff))
+#define SWAPQ(x) ((SWAPD((x)&0xffffffff) << 32) | (SWAPD((x)>>32)))
 #else
-#define SWAPD(x) x
-#define SWAPW(x) x
+#define SWAPD(x) (x)
+#define SWAPW(x) (x)
+#define SWAPQ(x) (x)
 #endif
 
 #define ROUND_DOWN(n, align) \

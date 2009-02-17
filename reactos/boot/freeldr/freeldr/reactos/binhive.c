@@ -56,7 +56,7 @@ RegImportValue (PHHIVE Hive,
 
   if (ValueCell->Signature != CM_KEY_VALUE_SIGNATURE)
     {
-      DbgPrint((DPRINT_REGISTRY, "Invalid key cell!\n"));
+      DPRINTM(DPRINT_REGISTRY, "Invalid key cell!\n");
       return FALSE;
     }
 
@@ -80,8 +80,8 @@ RegImportValue (PHHIVE Hive,
 
   DataLength = ValueCell->DataLength & REG_DATA_SIZE_MASK;
 
-  DbgPrint((DPRINT_REGISTRY, "ValueName: '%S'\n", wName));
-  DbgPrint((DPRINT_REGISTRY, "DataLength: %u\n", DataLength));
+  DPRINTM(DPRINT_REGISTRY, "ValueName: '%S'\n", wName);
+  DPRINTM(DPRINT_REGISTRY, "DataLength: %u\n", DataLength);
 
   if (DataLength <= sizeof(HCELL_INDEX) && (ValueCell->DataLength & REG_DATA_IN_OFFSET))
     {
@@ -92,7 +92,7 @@ RegImportValue (PHHIVE Hive,
                           DataLength);
       if (Error != ERROR_SUCCESS)
         {
-            DbgPrint((DPRINT_REGISTRY, "RegSetValue() failed!\n"));
+            DPRINTM(DPRINT_REGISTRY, "RegSetValue() failed!\n");
             MmHeapFree (wName);
             return FALSE;
         }
@@ -100,7 +100,7 @@ RegImportValue (PHHIVE Hive,
   else
     {
       DataCell = (PVOID)HvGetCell (Hive, ValueCell->Data);
-      DbgPrint((DPRINT_REGISTRY, "DataCell: %x\n", DataCell));
+      DPRINTM(DPRINT_REGISTRY, "DataCell: %x\n", DataCell);
 
       Error = RegSetValue (Key,
                            wName,
@@ -110,7 +110,7 @@ RegImportValue (PHHIVE Hive,
 
       if (Error != ERROR_SUCCESS)
         {
-          DbgPrint((DPRINT_REGISTRY, "RegSetValue() failed!\n"));
+          DPRINTM(DPRINT_REGISTRY, "RegSetValue() failed!\n");
           MmHeapFree (wName);
           return FALSE;
         }
@@ -133,7 +133,7 @@ RegImportIndexSubKey(PHHIVE Hive,
 {
     ULONG i;
 
-    DbgPrint((DPRINT_REGISTRY, "IndexCell: %x\n", IndexCell));
+    DPRINTM(DPRINT_REGISTRY, "IndexCell: %x\n", IndexCell);
 
     /* Enumerate and add subkeys */
     if (IndexCell->Signature == CM_KEY_INDEX_ROOT ||
@@ -180,11 +180,11 @@ RegImportSubKey(PHHIVE Hive,
     ULONG i;
 
 
-    DbgPrint((DPRINT_REGISTRY, "KeyCell: %x\n", KeyCell));
-    DbgPrint((DPRINT_REGISTRY, "KeyCell->Signature: %x\n", KeyCell->Signature));
+    DPRINTM(DPRINT_REGISTRY, "KeyCell: %x\n", KeyCell);
+    DPRINTM(DPRINT_REGISTRY, "KeyCell->Signature: %x\n", KeyCell->Signature);
     if (KeyCell->Signature != CM_KEY_NODE_SIGNATURE)
     {
-        DbgPrint((DPRINT_REGISTRY, "Invalid key cell Signature!\n"));
+        DPRINTM(DPRINT_REGISTRY, "Invalid key cell Signature!\n");
         return FALSE;
     }
 
@@ -206,7 +206,7 @@ RegImportSubKey(PHHIVE Hive,
         wName[KeyCell->NameLength/sizeof(WCHAR)] = 0;
     }
 
-    DbgPrint((DPRINT_REGISTRY, "KeyName: '%S'\n", wName));
+    DPRINTM(DPRINT_REGISTRY, "KeyName: '%S'\n", wName);
 
     /* Create new sub key */
     Error = RegCreateKey (ParentKey,
@@ -215,25 +215,25 @@ RegImportSubKey(PHHIVE Hive,
     MmHeapFree (wName);
     if (Error != ERROR_SUCCESS)
     {
-        DbgPrint((DPRINT_REGISTRY, "RegCreateKey() failed!\n"));
+        DPRINTM(DPRINT_REGISTRY, "RegCreateKey() failed!\n");
         return FALSE;
     }
-    DbgPrint((DPRINT_REGISTRY, "Subkeys: %u\n", KeyCell->SubKeyCounts));
-    DbgPrint((DPRINT_REGISTRY, "Values: %u\n", KeyCell->ValueList.Count));
+    DPRINTM(DPRINT_REGISTRY, "Subkeys: %u\n", KeyCell->SubKeyCounts);
+    DPRINTM(DPRINT_REGISTRY, "Values: %u\n", KeyCell->ValueList.Count);
 
     /* Enumerate and add values */
     if (KeyCell->ValueList.Count > 0)
     {
         ValueListCell = (PVALUE_LIST_CELL) HvGetCell (Hive, KeyCell->ValueList.List);
-        DbgPrint((DPRINT_REGISTRY, "ValueListCell: %x\n", ValueListCell));
+        DPRINTM(DPRINT_REGISTRY, "ValueListCell: %x\n", ValueListCell);
 
         for (i = 0; i < KeyCell->ValueList.Count; i++)
         {
-            DbgPrint((DPRINT_REGISTRY, "ValueOffset[%d]: %x\n", i, ValueListCell->ValueOffset[i]));
+            DPRINTM(DPRINT_REGISTRY, "ValueOffset[%d]: %x\n", i, ValueListCell->ValueOffset[i]);
 
             ValueCell = (PCM_KEY_VALUE) HvGetCell (Hive, ValueListCell->ValueOffset[i]);
 
-            DbgPrint((DPRINT_REGISTRY, "ValueCell[%d]: %x\n", i, ValueCell));
+            DPRINTM(DPRINT_REGISTRY, "ValueCell[%d]: %x\n", i, ValueCell);
 
             if (!RegImportValue(Hive, ValueCell, SubKey))
                 return FALSE;
@@ -267,7 +267,7 @@ RegImportBinaryHive(PCHAR ChunkBase,
   PHHIVE Hive;
   NTSTATUS Status;
 
-  DbgPrint((DPRINT_REGISTRY, "RegImportBinaryHive(%x, %u) called\n",ChunkBase,ChunkSize));
+  DPRINTM(DPRINT_REGISTRY, "RegImportBinaryHive(%x, %u) called\n",ChunkBase,ChunkSize);
 
   CmHive = CmpAllocate(sizeof(CMHIVE), TRUE, 0);
   Status = HvInitialize (&CmHive->Hive,
@@ -286,22 +286,22 @@ RegImportBinaryHive(PCHAR ChunkBase,
   if (!NT_SUCCESS(Status))
     {
       CmpFree(CmHive, 0);
-      DbgPrint((DPRINT_REGISTRY, "Invalid hive Signature!\n"));
+      DPRINTM(DPRINT_REGISTRY, "Invalid hive Signature!\n");
       return FALSE;
     }
 
   Hive = &CmHive->Hive;
   KeyCell = (PCM_KEY_NODE)HvGetCell (Hive, Hive->BaseBlock->RootCell);
-  DbgPrint((DPRINT_REGISTRY, "KeyCell: %x\n", KeyCell));
-  DbgPrint((DPRINT_REGISTRY, "KeyCell->Signature: %x\n", KeyCell->Signature));
+  DPRINTM(DPRINT_REGISTRY, "KeyCell: %x\n", KeyCell);
+  DPRINTM(DPRINT_REGISTRY, "KeyCell->Signature: %x\n", KeyCell->Signature);
   if (KeyCell->Signature != CM_KEY_NODE_SIGNATURE)
     {
-      DbgPrint((DPRINT_REGISTRY, "Invalid key cell Signature!\n"));
+      DPRINTM(DPRINT_REGISTRY, "Invalid key cell Signature!\n");
       return FALSE;
     }
 
-  DbgPrint((DPRINT_REGISTRY, "Subkeys: %u\n", KeyCell->SubKeyCounts));
-  DbgPrint((DPRINT_REGISTRY, "Values: %u\n", KeyCell->ValueList.Count));
+  DPRINTM(DPRINT_REGISTRY, "Subkeys: %u\n", KeyCell->SubKeyCounts);
+  DPRINTM(DPRINT_REGISTRY, "Values: %u\n", KeyCell->ValueList.Count);
 
   /* Open 'System' key */
   Error = RegOpenKey(NULL,
@@ -309,7 +309,7 @@ RegImportBinaryHive(PCHAR ChunkBase,
              &SystemKey);
   if (Error != ERROR_SUCCESS)
     {
-      DbgPrint((DPRINT_REGISTRY, "Failed to open 'system' key!\n"));
+      DPRINTM(DPRINT_REGISTRY, "Failed to open 'system' key!\n");
       return FALSE;
     }
 
@@ -317,16 +317,16 @@ RegImportBinaryHive(PCHAR ChunkBase,
   if (KeyCell->SubKeyCounts[Stable] > 0)
     {
       HashCell = (PCM_KEY_FAST_INDEX)HvGetCell (Hive, KeyCell->SubKeyLists[Stable]);
-      DbgPrint((DPRINT_REGISTRY, "HashCell: %x\n", HashCell));
-      DbgPrint((DPRINT_REGISTRY, "SubKeyCounts: %x\n", KeyCell->SubKeyCounts[Stable]));
+      DPRINTM(DPRINT_REGISTRY, "HashCell: %x\n", HashCell);
+      DPRINTM(DPRINT_REGISTRY, "SubKeyCounts: %x\n", KeyCell->SubKeyCounts[Stable]);
 
       for (i = 0; i < KeyCell->SubKeyCounts[Stable]; i++)
         {
-          DbgPrint((DPRINT_REGISTRY, "Cell[%d]: %x\n", i, HashCell->List[i].Cell));
+          DPRINTM(DPRINT_REGISTRY, "Cell[%d]: %x\n", i, HashCell->List[i].Cell);
 
           SubKeyCell = (PCM_KEY_NODE)HvGetCell (Hive, HashCell->List[i].Cell);
 
-          DbgPrint((DPRINT_REGISTRY, "SubKeyCell[%d]: %x\n", i, SubKeyCell));
+          DPRINTM(DPRINT_REGISTRY, "SubKeyCell[%d]: %x\n", i, SubKeyCell);
 
           if (!RegImportSubKey(Hive, SubKeyCell, SystemKey))
             return FALSE;

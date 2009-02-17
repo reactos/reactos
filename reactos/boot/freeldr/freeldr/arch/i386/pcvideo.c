@@ -480,37 +480,37 @@ PcVideoVesaGetSVGAModeInformation(USHORT Mode, PSVGA_MODE_INFORMATION ModeInform
 
   RtlCopyMemory(ModeInformation, (PVOID)BIOSCALLBUFFER, sizeof(SVGA_MODE_INFORMATION));
 
-  DbgPrint((DPRINT_UI, "\n"));
-  DbgPrint((DPRINT_UI, "BiosVesaGetSVGAModeInformation() mode 0x%x\n", Mode));
-  DbgPrint((DPRINT_UI, "ModeAttributes = 0x%x\n", ModeInformation->ModeAttributes));
-  DbgPrint((DPRINT_UI, "WindowAttributesA = 0x%x\n", ModeInformation->WindowAttributesA));
-  DbgPrint((DPRINT_UI, "WindowAttributesB = 0x%x\n", ModeInformation->WindowsAttributesB));
-  DbgPrint((DPRINT_UI, "WindowGranularity = %dKB\n", ModeInformation->WindowGranularity));
-  DbgPrint((DPRINT_UI, "WindowSize = %dKB\n", ModeInformation->WindowSize));
-  DbgPrint((DPRINT_UI, "WindowAStartSegment = 0x%x\n", ModeInformation->WindowAStartSegment));
-  DbgPrint((DPRINT_UI, "WindowBStartSegment = 0x%x\n", ModeInformation->WindowBStartSegment));
-  DbgPrint((DPRINT_UI, "WindowPositioningFunction = 0x%x\n", ModeInformation->WindowPositioningFunction));
-  DbgPrint((DPRINT_UI, "BytesPerScanLine = %d\n", ModeInformation->BytesPerScanLine));
-  DbgPrint((DPRINT_UI, "WidthInPixels = %d\n", ModeInformation->WidthInPixels));
-  DbgPrint((DPRINT_UI, "HeightInPixels = %d\n", ModeInformation->HeightInPixels));
-  DbgPrint((DPRINT_UI, "CharacterWidthInPixels = %d\n", ModeInformation->CharacterWidthInPixels));
-  DbgPrint((DPRINT_UI, "CharacterHeightInPixels = %d\n", ModeInformation->CharacterHeightInPixels));
-  DbgPrint((DPRINT_UI, "NumberOfMemoryPlanes = %d\n", ModeInformation->NumberOfMemoryPlanes));
-  DbgPrint((DPRINT_UI, "BitsPerPixel = %d\n", ModeInformation->BitsPerPixel));
-  DbgPrint((DPRINT_UI, "NumberOfBanks = %d\n", ModeInformation->NumberOfBanks));
-  DbgPrint((DPRINT_UI, "MemoryModel = %d\n", ModeInformation->MemoryModel));
-  DbgPrint((DPRINT_UI, "BankSize = %d\n", ModeInformation->BankSize));
-  DbgPrint((DPRINT_UI, "NumberOfImagePlanes = %d\n", ModeInformation->NumberOfImagePanes));
-  DbgPrint((DPRINT_UI, "---VBE v1.2+ ---\n"));
-  DbgPrint((DPRINT_UI, "RedMaskSize = %d\n", ModeInformation->RedMaskSize));
-  DbgPrint((DPRINT_UI, "RedMaskPosition = %d\n", ModeInformation->RedMaskPosition));
-  DbgPrint((DPRINT_UI, "GreenMaskSize = %d\n", ModeInformation->GreenMaskSize));
-  DbgPrint((DPRINT_UI, "GreenMaskPosition = %d\n", ModeInformation->GreenMaskPosition));
-  DbgPrint((DPRINT_UI, "BlueMaskSize = %d\n", ModeInformation->BlueMaskSize));
-  DbgPrint((DPRINT_UI, "BlueMaskPosition = %d\n", ModeInformation->BlueMaskPosition));
-  DbgPrint((DPRINT_UI, "ReservedMaskSize = %d\n", ModeInformation->ReservedMaskSize));
-  DbgPrint((DPRINT_UI, "ReservedMaskPosition = %d\n", ModeInformation->ReservedMaskPosition));
-  DbgPrint((DPRINT_UI, "\n"));
+  DPRINTM(DPRINT_UI, "\n");
+  DPRINTM(DPRINT_UI, "BiosVesaGetSVGAModeInformation() mode 0x%x\n", Mode);
+  DPRINTM(DPRINT_UI, "ModeAttributes = 0x%x\n", ModeInformation->ModeAttributes);
+  DPRINTM(DPRINT_UI, "WindowAttributesA = 0x%x\n", ModeInformation->WindowAttributesA);
+  DPRINTM(DPRINT_UI, "WindowAttributesB = 0x%x\n", ModeInformation->WindowsAttributesB);
+  DPRINTM(DPRINT_UI, "WindowGranularity = %dKB\n", ModeInformation->WindowGranularity);
+  DPRINTM(DPRINT_UI, "WindowSize = %dKB\n", ModeInformation->WindowSize);
+  DPRINTM(DPRINT_UI, "WindowAStartSegment = 0x%x\n", ModeInformation->WindowAStartSegment);
+  DPRINTM(DPRINT_UI, "WindowBStartSegment = 0x%x\n", ModeInformation->WindowBStartSegment);
+  DPRINTM(DPRINT_UI, "WindowPositioningFunction = 0x%x\n", ModeInformation->WindowPositioningFunction);
+  DPRINTM(DPRINT_UI, "BytesPerScanLine = %d\n", ModeInformation->BytesPerScanLine);
+  DPRINTM(DPRINT_UI, "WidthInPixels = %d\n", ModeInformation->WidthInPixels);
+  DPRINTM(DPRINT_UI, "HeightInPixels = %d\n", ModeInformation->HeightInPixels);
+  DPRINTM(DPRINT_UI, "CharacterWidthInPixels = %d\n", ModeInformation->CharacterWidthInPixels);
+  DPRINTM(DPRINT_UI, "CharacterHeightInPixels = %d\n", ModeInformation->CharacterHeightInPixels);
+  DPRINTM(DPRINT_UI, "NumberOfMemoryPlanes = %d\n", ModeInformation->NumberOfMemoryPlanes);
+  DPRINTM(DPRINT_UI, "BitsPerPixel = %d\n", ModeInformation->BitsPerPixel);
+  DPRINTM(DPRINT_UI, "NumberOfBanks = %d\n", ModeInformation->NumberOfBanks);
+  DPRINTM(DPRINT_UI, "MemoryModel = %d\n", ModeInformation->MemoryModel);
+  DPRINTM(DPRINT_UI, "BankSize = %d\n", ModeInformation->BankSize);
+  DPRINTM(DPRINT_UI, "NumberOfImagePlanes = %d\n", ModeInformation->NumberOfImagePanes);
+  DPRINTM(DPRINT_UI, "---VBE v1.2+ ---\n");
+  DPRINTM(DPRINT_UI, "RedMaskSize = %d\n", ModeInformation->RedMaskSize);
+  DPRINTM(DPRINT_UI, "RedMaskPosition = %d\n", ModeInformation->RedMaskPosition);
+  DPRINTM(DPRINT_UI, "GreenMaskSize = %d\n", ModeInformation->GreenMaskSize);
+  DPRINTM(DPRINT_UI, "GreenMaskPosition = %d\n", ModeInformation->GreenMaskPosition);
+  DPRINTM(DPRINT_UI, "BlueMaskSize = %d\n", ModeInformation->BlueMaskSize);
+  DPRINTM(DPRINT_UI, "BlueMaskPosition = %d\n", ModeInformation->BlueMaskPosition);
+  DPRINTM(DPRINT_UI, "ReservedMaskSize = %d\n", ModeInformation->ReservedMaskSize);
+  DPRINTM(DPRINT_UI, "ReservedMaskPosition = %d\n", ModeInformation->ReservedMaskPosition);
+  DPRINTM(DPRINT_UI, "\n");
 
   return TRUE;
 }
@@ -885,21 +885,21 @@ PcVideoSetDisplayMode(char *DisplayModeName, BOOLEAN Init)
 
   if (VIDEOCARD_CGA_OR_OTHER == PcVideoDetectVideoCard())
     {
-      DbgPrint((DPRINT_UI, "CGA or other display adapter detected.\n"));
+      DPRINTM(DPRINT_UI, "CGA or other display adapter detected.\n");
       printf("CGA or other display adapter detected.\n");
       printf("Using 80x25 text mode.\n");
       VideoMode = VIDEOMODE_NORMAL_TEXT;
     }
   else if (VIDEOCARD_EGA == PcVideoDetectVideoCard())
     {
-      DbgPrint((DPRINT_UI, "EGA display adapter detected.\n"));
+      DPRINTM(DPRINT_UI, "EGA display adapter detected.\n");
       printf("EGA display adapter detected.\n");
       printf("Using 80x25 text mode.\n");
       VideoMode = VIDEOMODE_NORMAL_TEXT;
     }
   else /* if (VIDEOCARD_VGA == PcVideoDetectVideoCard()) */
     {
-      DbgPrint((DPRINT_UI, "VGA display adapter detected.\n"));
+      DPRINTM(DPRINT_UI, "VGA display adapter detected.\n");
 
       if (0 == _stricmp(DisplayModeName, "NORMAL_VGA"))
         {
