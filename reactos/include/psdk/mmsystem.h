@@ -197,7 +197,11 @@ extern "C" {
 #define WAVE_FORMAT_96S08           131072
 #define WAVE_FORMAT_96M16           262144
 #define WAVE_FORMAT_96S16           524288
+
+#ifndef WAVE_FORMAT_PCM
 #define WAVE_FORMAT_PCM             1
+#endif
+
 #define MIDIERR_UNPREPARED          MIDIERR_BASE
 #define MIDIERR_STILLPLAYING        (MIDIERR_BASE+1)
 #define MIDIERR_NOMAP               (MIDIERR_BASE+2)
