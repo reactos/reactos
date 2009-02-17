@@ -122,7 +122,7 @@ ExInterlockedCompareExchange64(
     KeAcquireSpinLock(Lock, &OldIrql);
     Result = *Destination;
     if(*Destination == Result)
-    *Destination = *Exchange;
+        *Destination = *Exchange;
     KeReleaseSpinLock(Lock, OldIrql);
     return Result;
 }
