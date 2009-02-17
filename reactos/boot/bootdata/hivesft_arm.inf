@@ -106,6 +106,7 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones","IndexMapping",0x
   "2c0a",  "70",\
   "380a",  "70",\
    "438",  "85",\
+   "48f",  "85",\
    "809",  "85",\
    "816",  "85",\
   "1809",  "85",\
@@ -134,10 +135,12 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones","IndexMapping",0x
    "42d", "105",\
    "80c", "105",\
    "c0a", "105",\
+   "490", "105",\
    "407", "110",\
    "410", "110",\
    "413", "110",\
    "414", "110",\
+   "417", "110",\
    "807", "110",\
    "810", "110",\
    "814", "110",\
@@ -181,6 +184,7 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones","IndexMapping",0x
    "42b", "170",\
    "420", "185",\
    "439", "190",\
+   "445", "190",\
    "421", "205",\
    "41e", "205",\
    "42a", "205",\
