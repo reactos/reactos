@@ -186,6 +186,14 @@ CreateSoundDeviceInstance(
     (*SoundDeviceInstance)->WinMM.ClientCallbackInstanceData = 0;
     (*SoundDeviceInstance)->WinMM.Flags = 0;
 
+    /* Initialise the members of the struct used by the sound thread */
+    (*SoundDeviceInstance)->HeadWaveHeader = NULL;
+    (*SoundDeviceInstance)->TailWaveHeader = NULL;
+
+    (*SoundDeviceInstance)->CurrentWaveHeader = NULL;
+    (*SoundDeviceInstance)->OutstandingBuffers = 0;
+    // TODO: Loop
+
     /* Create the streaming thread (TODO - is this for wave only?) */
     Result = CreateSoundThread(&(*SoundDeviceInstance)->Thread);
     if ( ! MMSUCCESS(Result) )

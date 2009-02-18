@@ -94,7 +94,7 @@ wodMessage(
 
         case WODM_WRITE :
         {
-            Result = MmeEnqueueWaveHeader(PrivateHandle, Parameter1);
+            Result = MmeWriteWaveHeader(PrivateHandle, Parameter1);
             break;
         }
 

@@ -98,9 +98,8 @@ BOOLEAN FoundDevice(
     FuncTable.SetWaveFormat = SetNt4WaveDeviceFormat;
     FuncTable.Open = OpenNt4SoundDevice;
     FuncTable.Close = CloseNt4SoundDevice;
-    FuncTable.PrepareWaveHeader = NULL;
-    FuncTable.UnprepareWaveHeader = NULL;
-    FuncTable.SubmitWaveHeader = NULL;
+    FuncTable.CommitWaveBuffer = WriteFileEx_Committer;
+    //FuncTable.SubmitWaveHeaderToDevice = SubmitWaveHeaderToDevice;
 
     SetSoundDeviceFunctionTable(SoundDevice, &FuncTable);
 

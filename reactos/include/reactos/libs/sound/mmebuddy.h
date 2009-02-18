@@ -32,7 +32,7 @@
         MessageBox(0, dbg_popup_msg, dbg_popup_title, MB_OK | MB_TASKMODAL); \
     }
 
-#ifdef DEBUG_NT4
+#ifndef NDEBUG
     #define SND_ERR(...) \
         { \
             WCHAR dbg_popup_msg[1024]; \
@@ -62,11 +62,24 @@
             } \
         }
 
+    #define DUMP_WAVEHDR_QUEUE(sound_device_instance) \
+        { \
+            PWAVEHDR CurrDumpHdr = sound_device_instance->HeadWaveHeader; \
+            SND_TRACE(L"-- Current wave header list --\n"); \
+            while ( CurrDumpHdr ) \
+            { \
+                SND_TRACE(L"%x | %d bytes | flags: %x\n", CurrDumpHdr->lpData, \
+                          CurrDumpHdr->dwBufferLength, \
+                          CurrDumpHdr->dwFlags); \
+                CurrDumpHdr = CurrDumpHdr->lpNext; \
+            } \
+        }
+
 #else
-    #define SND_ERR(...) while ( 0 ) do {}
-    #define SND_WARN(...) while ( 0 ) do {}
-    #define SND_TRACE(...) while ( 0 ) do {}
-    #define SND_ASSERT(condition) while ( 0 ) do {}
+    #define SND_ERR(...) do {} while ( 0 )
+    #define SND_WARN(...) do {} while ( 0 )
+    #define SND_TRACE(...) do {} while ( 0 )
+    #define SND_ASSERT(condition) do {} while ( 0 )
 #endif
 
 /*
@@ -157,6 +170,28 @@ DEFINE_GETCAPS_FUNCTYPE(MMGETMIDIINCAPS_FUNC,  LPMIDIINCAPS );
 struct _SOUND_DEVICE;
 struct _SOUND_DEVICE_INSTANCE;
 
+
+/*
+    By extending the OVERLAPPED structure, it becomes possible to provide the
+    I/O completion routines with additional information.
+*/
+
+typedef struct _SOUND_OVERLAPPED
+{
+    OVERLAPPED Standard;
+    struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance;
+    PWAVEHDR Header;
+} SOUND_OVERLAPPED, *PSOUND_OVERLAPPED;
+
+typedef MMRESULT (*WAVE_COMMIT_FUNC)(
+    IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance,
+    IN  PVOID OffsetPtr,
+    IN  DWORD Bytes,
+    IN  PSOUND_OVERLAPPED Overlap,
+    IN  LPOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine);
+
+
+
 typedef MMRESULT (*MMWAVEQUERYFORMATSUPPORT_FUNC)(
     IN  struct _SOUND_DEVICE* Device,
     IN  PWAVEFORMATEX WaveFormat,
@@ -179,6 +214,11 @@ typedef MMRESULT (*MMWAVEHEADER_FUNC)(
     IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance,
     IN  PWAVEHDR WaveHeader);
 
+typedef MMRESULT (*MMBUFFER_FUNC)(
+    IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance,
+    IN  PVOID Buffer,
+    IN  DWORD Length);
+
 typedef struct _MMFUNCTION_TABLE
 {
     union
@@ -196,10 +236,18 @@ typedef struct _MMFUNCTION_TABLE
     MMWAVEQUERYFORMATSUPPORT_FUNC   QueryWaveFormatSupport;
     MMWAVESETFORMAT_FUNC            SetWaveFormat;
 
-    MMWAVEHEADER_FUNC               PrepareWaveHeader;
-    MMWAVEHEADER_FUNC               UnprepareWaveHeader;
-    MMWAVEHEADER_FUNC               SubmitWaveHeader;
+    WAVE_COMMIT_FUNC                CommitWaveBuffer;
+
+    // Redundant
+    //MMWAVEHEADER_FUNC               PrepareWaveHeader;
+    //MMWAVEHEADER_FUNC               UnprepareWaveHeader;
+    //MMWAVEHEADER_FUNC               WriteWaveHeader;
+
+    //MMWAVEHEADER_FUNC               SubmitWaveHeaderToDevice;
+    //MMBUFFER_FUNC                   CompleteBuffer;
 } MMFUNCTION_TABLE, *PMMFUNCTION_TABLE;
+
+
 
 typedef MMRESULT (*SOUND_THREAD_REQUEST_HANDLER)(
     IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance,
@@ -252,7 +300,31 @@ typedef struct _SOUND_DEVICE_INSTANCE
         DWORD ClientCallback;
         DWORD ClientCallbackInstanceData;
     } WinMM;
+
+    /* DO NOT TOUCH THESE OUTSIDE OF THE SOUND THREAD */
+
+    union
+    {
+        PWAVEHDR HeadWaveHeader;
+    };
+
+    union
+    {
+        PWAVEHDR TailWaveHeader;
+    };
+
+    PWAVEHDR WaveLoopStart;
+    PWAVEHDR CurrentWaveHeader;
+    DWORD OutstandingBuffers;
 } SOUND_DEVICE_INSTANCE, *PSOUND_DEVICE_INSTANCE;
+
+/* This lives in WAVEHDR.reserved */
+typedef struct _WAVEHDR_EXTENSION
+{
+    DWORD BytesCommitted;
+    DWORD BytesCompleted;
+} WAVEHDR_EXTENSION, *PWAVEHDR_EXTENSION;
+
 
 /*
     reentrancy.c
@@ -308,8 +380,8 @@ MmeCloseDevice(
 #define MmeUnprepareWaveHeader(private_handle, header) \
     UnprepareWaveHeader((PSOUND_DEVICE_INSTANCE)private_handle, (PWAVEHDR)header)
 
-#define MmeEnqueueWaveHeader(private_handle, header) \
-    EnqueueWaveHeader((PSOUND_DEVICE_INSTANCE)private_handle, (PWAVEHDR)header)
+#define MmeWriteWaveHeader(private_handle, header) \
+    WriteWaveHeader((PSOUND_DEVICE_INSTANCE)private_handle, (PWAVEHDR)header)
 
 
 /*
@@ -494,6 +566,16 @@ SetWaveDeviceFormat(
 */
 
 MMRESULT
+EnqueueWaveHeader(
+    PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    IN  PVOID Parameter);
+
+VOID
+CompleteWaveHeader(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    IN  PWAVEHDR Header);
+
+MMRESULT
 PrepareWaveHeader(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
     IN  PWAVEHDR Header);
@@ -504,9 +586,38 @@ UnprepareWaveHeader(
     IN  PWAVEHDR Header);
 
 MMRESULT
-EnqueueWaveHeader(
+WriteWaveHeader(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
     IN  PWAVEHDR Header);
+
+
+/*
+    wave/streaming.c
+*/
+
+MMRESULT
+DoWaveStreaming(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance);
+
+VOID CALLBACK
+CompleteIO(
+    IN  DWORD dwErrorCode,
+    IN  DWORD dwNumberOfBytesTransferred,
+    IN  LPOVERLAPPED lpOverlapped);
+
+MMRESULT
+CommitWaveHeaderToKernelDevice(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    IN  PWAVEHDR Header,
+    IN  WAVE_COMMIT_FUNC CommitFunction);
+
+MMRESULT
+WriteFileEx_Committer(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    IN  PVOID OffsetPtr,
+    IN  DWORD Length,
+    IN  PSOUND_OVERLAPPED Overlap,
+    IN  LPOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine);
 
 
 /*

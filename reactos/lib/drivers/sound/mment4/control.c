@@ -8,6 +8,8 @@
  * PROGRAMMERS: Andrew Greenwood (silverblade@reactos.org)
 */
 
+#define NDEBUG
+
 #include <windows.h>
 #include <mmsystem.h>
 #include <mmddk.h>

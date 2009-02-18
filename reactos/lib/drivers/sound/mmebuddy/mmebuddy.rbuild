@@ -16,7 +16,8 @@
 		<file>widMessage.c</file>
 		<file>wodMessage.c</file>
 		<file>format.c</file>
-        <file>header.c</file>
+		<file>header.c</file>
+		<file>streaming.c</file>
 	</directory>
 	<directory name="midi">
 		<file>midMessage.c</file>

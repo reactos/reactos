@@ -1,243 +1,145 @@
 /*
+ * PROJECT:     ReactOS Sound System
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        dll/win32/wdmaud.drv/wdmaud.c
  *
- * PROJECT:         ReactOS WDM Audio driver mapper
- * FILE:            dll/win32/wdmaud.drv/wdmaud.c
- * PURPOSE:         wdmaud.drv
- * PROGRAMMER:      Dmitry Chapyshev (dmitry@reactos.org)
+ * PURPOSE:     WDM Audio Driver (User-mode part)
+ * PROGRAMMERS: Andrew Greenwood (silverblade@reactos.org)
  *
- * UPDATE HISTORY:
- *      25/05/2008  Created
+ * NOTES:       Looking for wodMessage & co? You won't find them here. Try
+ *              the MME Buddy library, which is where these routines are
+ *              actually implemented.
+ *
  */
 
-#include <stdarg.h>
-
 #include <windows.h>
-#include <mmsystem.h>
+#include <ntddsnd.h>
+#include <sndtypes.h>
 #include <mmddk.h>
-#include <mmreg.h>
-#include <debug.h>
+#include <mmebuddy.h>
 
-DWORD APIENTRY
-mxdMessage(UINT uDevice,
-           UINT uMsg,
-           DWORD dwUser,
-           DWORD dwParam1,
-           DWORD dwParam2)
+#define KERNEL_DEVICE_NAME      L"\\\\Device\\wdmaud"
+
+HANDLE KernelHandle = INVALID_HANDLE_VALUE;
+
+APIENTRY LONG
+DriverProc(
+    DWORD DriverId,
+    HANDLE DriverHandle,
+    UINT Message,
+    LONG Parameter1,
+    LONG Parameter2)
 {
-    DPRINT1("mxdMessage(%04X, %04X, %08X, %08X, %08X);\n", uDevice, uMsg, dwUser, dwParam1, dwParam2);
+    MMRESULT Result;
 
-    switch (uMsg)
+    switch ( Message )
     {
-        case MXDM_INIT:
-        break;
+        case DRV_LOAD :
+        {
+            SND_TRACE(L"DRV_LOAD\n");
 
-        case MXDM_GETNUMDEVS:
-        break;
+            Result = InitEntrypointMutexes();
 
-        case MXDM_GETDEVCAPS:
-        break;
+            if ( ! MMSUCCESS(Result) )
+                return 0L;
 
-        case MXDM_OPEN:
-        break;
+            KernelHandle = CreateFile(KERNEL_DEVICE_NAME,
+                                      GENERIC_READ | GENERIC_WRITE,
+                                      FILE_SHARE_WRITE, // ok?
+                                      NULL,
+                                      OPEN_EXISTING,
+                                      FILE_FLAG_OVERLAPPED,
+                                      NULL);
 
-        case MXDM_CLOSE:
-        break;
+            if ( KernelHandle == INVALID_HANDLE_VALUE )
+            {
+                SND_ERR(L"Failed to open %s", KERNEL_DEVICE_NAME);
+                CleanupEntrypointMutexes();
 
-        case MXDM_GETLINEINFO:
-        break;
+                UnlistAllSoundDevices();
 
-        case MXDM_GETLINECONTROLS:
-        break;
+                return 0L;
+            }
 
-        case MXDM_GETCONTROLDETAILS:
-        break;
+            SND_TRACE(L"Initialisation complete\n");
 
-        case MXDM_SETCONTROLDETAILS:
-        break;
+            return 1L;
+        }
+
+        case DRV_FREE :
+        {
+            SND_TRACE(L"DRV_FREE\n");
+
+            if ( KernelHandle != INVALID_HANDLE_VALUE )
+            {
+                CloseHandle(KernelHandle);
+                KernelHandle = INVALID_HANDLE_VALUE;
+            }
+
+            /* TODO: Clean up the path names! */
+            UnlistAllSoundDevices();
+
+            CleanupEntrypointMutexes();
+
+            SND_TRACE(L"Unfreed memory blocks: %d\n",
+                      GetMemoryAllocationCount());
+
+            return 1L;
+        }
+
+        case DRV_ENABLE :
+        case DRV_DISABLE :
+        {
+            SND_TRACE(L"DRV_ENABLE / DRV_DISABLE\n");
+            return 1L;
+        }
+
+        case DRV_OPEN :
+        case DRV_CLOSE :
+        {
+            SND_TRACE(L"DRV_OPEN / DRV_CLOSE\n");
+            return 1L;
+        }
+
+        case DRV_QUERYCONFIGURE :
+        {
+            SND_TRACE(L"DRV_QUERYCONFIGURE");
+            return 0L;
+        }
+        case DRV_CONFIGURE :
+            return DRVCNF_OK;
+
+        default :
+            SND_TRACE(L"Unhandled message %d\n", Message);
+            return DefDriverProc(DriverId,
+                                 DriverHandle,
+                                 Message,
+                                 Parameter1,
+                                 Parameter2);
     }
-
-    return MMSYSERR_NOTSUPPORTED;
 }
 
-DWORD APIENTRY
-auxMessage(UINT uDevice,
-           UINT uMsg,
-           DWORD dwUser,
-           DWORD dwParam1,
-           DWORD dwParam2)
-{
-    DPRINT1("auxMessage(%04X, %04X, %08X, %08X, %08X);\n", uDevice, uMsg, dwUser, dwParam1, dwParam2);
 
-    switch (uMsg)
+BOOL WINAPI DllMain(
+    HINSTANCE hinstDLL,
+    DWORD fdwReason,
+    LPVOID lpvReserved)
+{
+    switch ( fdwReason )
     {
-        case AUXDM_GETDEVCAPS:
-
-        break;
-
-        case AUXDM_GETNUMDEVS:
-
-        break;
-
-        case AUXDM_GETVOLUME:
-
-        break;
-
-        case AUXDM_SETVOLUME:
-
-        break;
-
-        default:
-            return MMSYSERR_NOTSUPPORTED;
-    }
-
-    return MMSYSERR_NOTSUPPORTED;
-}
-
-DWORD APIENTRY
-wodMessage(UINT uDevice,
-           UINT uMsg,
-           DWORD dwUser,
-           DWORD dwParam1,
-           DWORD dwParam2)
-{
-    DPRINT1("wodMessage(%04X, %04X, %08X, %08X, %08X);\n", uDevice, uMsg, dwUser, dwParam1, dwParam2);
-
-    switch (uMsg)
-    {
-        case WODM_GETNUMDEVS:
-        break;
-
-        case WODM_GETDEVCAPS:
-        break;
-
-        case WODM_OPEN:
-        break;
-
-        case WODM_CLOSE:
-        break;
-
-        case WODM_WRITE:
-        break;
-
-        case WODM_PAUSE:
-        break;
-
-        case WODM_RESTART:
-        break;
-
-        case WODM_RESET:
-        break;
-
-        case WODM_BREAKLOOP:
-        break;
-
-        case WODM_GETPOS:
-        break;
-
-        case WODM_SETPITCH:
-        break;
-
-        case WODM_SETVOLUME:
-        break;
-
-        case WODM_SETPLAYBACKRATE:
-        break;
-
-        case WODM_GETPITCH:
-        break;
-
-        case WODM_GETVOLUME:
-        break;
-
-        case WODM_GETPLAYBACKRATE:
-        break;
-
-        default:
-            return MMSYSERR_NOTSUPPORTED;
-    }
-
-    return MMSYSERR_NOTSUPPORTED;
-}
-
-DWORD APIENTRY
-widMessage(UINT uDevice,
-           UINT uMsg,
-           DWORD dwUser,
-           DWORD dwParam1,
-           DWORD dwParam2)
-{
-    DPRINT1("widMessage(%04X, %04X, %08X, %08X, %08X);\n", uDevice, uMsg, dwUser, dwParam1, dwParam2);
-
-    switch (uMsg)
-    {
-        case WIDM_GETNUMDEVS:
-        break;
-
-        case WIDM_GETDEVCAPS:
-        break;
-
-        case WIDM_OPEN:
-        break;
-
-        case WIDM_CLOSE:
-        break;
-
-        case WIDM_ADDBUFFER:
-        break;
-
-        case WIDM_STOP:
-        break;
-
-        case WIDM_START:
-        break;
-
-        case WIDM_RESET:
-        break;
-
-        case WIDM_GETPOS:
-        break;
-
-        default:
-            return MMSYSERR_NOTSUPPORTED;
-    }
-
-    return MMSYSERR_NOTSUPPORTED;
-}
-
-DWORD APIENTRY
-modMessage(UINT uDevice,
-           UINT uMsg,
-           DWORD dwUser,
-           DWORD dwParam1,
-           DWORD dwParam2)
-{
-    DPRINT1("modMessage(%04X, %04X, %08X, %08X, %08X);\n", uDevice, uMsg, dwUser, dwParam1, dwParam2);
-
-    return MMSYSERR_NOTSUPPORTED;
-}
-
-LRESULT APIENTRY
-DriverProc(DWORD dwDriverID,
-           HDRVR hDriver,
-           UINT uiMessage,
-           LPARAM lParam1,
-           LPARAM lParam2)
-{
-    return DefDriverProc(dwDriverID, hDriver, uiMessage, lParam1, lParam2);
-}
-
-BOOL WINAPI
-DllMain(IN HINSTANCE hinstDLL,
-        IN DWORD dwReason,
-        IN LPVOID lpvReserved)
-{
-    switch (dwReason)
-    {
-        case DLL_PROCESS_ATTACH:
-            DisableThreadLibraryCalls(hinstDLL);
+        case DLL_PROCESS_ATTACH :
+            SND_TRACE(L"WDMAUD.DRV - Process attached\n");
+            break;
+        case DLL_PROCESS_DETACH :
+            SND_TRACE(L"WDMAUD.DRV - Process detached\n");
+            break;
+        case DLL_THREAD_ATTACH :
+            SND_TRACE(L"WDMAUD.DRV - Thread attached\n");
+            break;
+        case DLL_THREAD_DETACH :
+            SND_TRACE(L"WDMAUD.DRV - Thread detached\n");
             break;
     }
 
     return TRUE;
 }
-
