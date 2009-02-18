@@ -21,7 +21,7 @@
 */
 
 #define SOUND_KERNEL_BUFFER_COUNT       10
-#define SOUND_KERNEL_BUFFER_SIZE        200000
+#define SOUND_KERNEL_BUFFER_SIZE        16384
 
 
 /*
@@ -29,13 +29,15 @@
         Check if there is streaming to be done, and if so, do it.
 */
 
-MMRESULT
+VOID
 DoWaveStreaming(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance)
 {
     MMRESULT Result;
     PSOUND_DEVICE SoundDevice;
     PMMFUNCTION_TABLE FunctionTable;
+    PWAVEHDR Header;
+    PWAVEHDR_EXTENSION HeaderExtension;
 
     Result = GetSoundDeviceFromInstance(SoundDeviceInstance, &SoundDevice);
     SND_ASSERT( MMSUCCESS(Result) );
@@ -44,6 +46,91 @@ DoWaveStreaming(
     SND_ASSERT( MMSUCCESS(Result) );
     SND_ASSERT( FunctionTable );
     SND_ASSERT( FunctionTable->CommitWaveBuffer );
+
+    /* No point in doing anything if no resources available to use */
+    if ( SoundDeviceInstance->OutstandingBuffers >= SOUND_KERNEL_BUFFER_COUNT )
+    {
+        SND_TRACE(L"DoWaveStreaming: No available buffers to stream with - doing nothing\n");
+        return;
+    }
+
+    /* Is there any work to do? */
+    Header = SoundDeviceInstance->HeadWaveHeader;
+
+    if ( ! Header )
+    {
+        SND_TRACE(L"DoWaveStreaming: No work to do - doing nothing\n");
+        return;
+    }
+
+    while ( ( SoundDeviceInstance->OutstandingBuffers < SOUND_KERNEL_BUFFER_COUNT ) &&
+            ( Header ) )
+    {
+        HeaderExtension = (PWAVEHDR_EXTENSION) Header->reserved;
+        SND_ASSERT( HeaderExtension );
+
+        /* Can never be *above* the length */
+        SND_ASSERT( HeaderExtension->BytesCommitted <= Header->dwBufferLength );
+
+        if ( HeaderExtension->BytesCommitted == Header->dwBufferLength )
+        {
+            Header = Header->lpNext;
+        }
+        else
+        {
+            PSOUND_OVERLAPPED Overlap;
+            LPVOID OffsetPtr;
+            DWORD BytesRemaining, BytesToCommit;
+            BOOL OK;
+
+            /* Where within the header buffer to stream from */
+            OffsetPtr = Header->lpData + HeaderExtension->BytesCommitted;
+
+            /* How much of this header has not been committed */
+            BytesRemaining = Header->dwBufferLength - HeaderExtension->BytesCommitted;
+
+            /* We can commit anything up to the buffer size limit */
+            BytesToCommit = BytesRemaining > SOUND_KERNEL_BUFFER_SIZE ?
+                            SOUND_KERNEL_BUFFER_SIZE :
+                            BytesRemaining;
+
+            /* Should always have something to commit by this point */
+            SND_ASSERT( BytesToCommit > 0 );
+
+            /* We need a new overlapped info structure for each buffer */
+            Overlap = AllocateStruct(SOUND_OVERLAPPED);
+
+            if ( Overlap )
+            {
+                ZeroMemory(Overlap, sizeof(SOUND_OVERLAPPED));
+                Overlap->SoundDeviceInstance = SoundDeviceInstance;
+                Overlap->Header = Header;
+
+                /* Adjust the commit-related counters */
+                HeaderExtension->BytesCommitted += BytesToCommit;
+                ++ SoundDeviceInstance->OutstandingBuffers;
+
+                OK = MMSUCCESS(FunctionTable->CommitWaveBuffer(SoundDeviceInstance,
+                                                               OffsetPtr,
+                                                               BytesToCommit,
+                                                               Overlap,
+                                                               CompleteIO));
+
+                if ( ! OK )
+                {
+                    /* Clean-up and try again on the next iteration (is this OK?) */
+                    SND_WARN(L"FAILED\n");
+
+                    FreeMemory(Overlap);
+                    HeaderExtension->BytesCommitted -= BytesToCommit;
+                    -- SoundDeviceInstance->OutstandingBuffers;
+                }
+            }
+        }
+    }
+
+
+#if 0
 
     // HACK
     SND_TRACE(L"Calling buffer submit routine\n");
@@ -68,6 +155,7 @@ DoWaveStreaming(
     }
 
     return Result;
+#endif
 }
 
 

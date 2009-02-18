@@ -595,7 +595,7 @@ WriteWaveHeader(
     wave/streaming.c
 */
 
-MMRESULT
+VOID
 DoWaveStreaming(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance);
 
