@@ -684,7 +684,7 @@ KdbInitialize(PKD_DISPATCH_TABLE DispatchTable,
               ULONG BootPhase)
 {
     PCHAR p1, p2;
-    SHORT Found;
+    SHORT Found = FALSE;
     CHAR YesNo;
     LIST_ENTRY *ModuleEntry;
     PLDR_DATA_TABLE_ENTRY DataTableEntry;
@@ -707,12 +707,6 @@ KdbInitialize(PKD_DISPATCH_TABLE DispatchTable,
 
         InitializeListHead(&SymbolFileListHead);
         KeInitializeSpinLock(&SymbolFileListLock);
-
-#ifdef DBG
-        LoadSymbols = TRUE;
-#else
-        LoadSymbols = FALSE;
-#endif
 
         /* Check the command line for /LOADSYMBOLS, /NOLOADSYMBOLS,
         * /LOADSYMBOLS={YES|NO}, /NOLOADSYMBOLS={YES|NO} */
