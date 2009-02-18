@@ -437,6 +437,12 @@ typedef enum
 DEFINE_GUIDSTRUCT("8C134960-51AD-11CF-878A-94F801C10000", KSPROPSETID_Pin);
 #define KSPROPSETID_Pin DEFINE_GUIDNAMED(KSPROPSETID_Pin)
 
+#define STATIC_KSNAME_Pin\
+    0x146F1A80L, 0x4791, 0x11D0, 0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00
+DEFINE_GUIDSTRUCT("146F1A80-4791-11D0-A5D6-28DB04C10000", KSNAME_Pin);
+#define KSNAME_Pin DEFINE_GUIDNAMED(KSNAME_Pin)
+
+
 typedef enum
 {
     KSPROPERTY_PIN_CINSTANCES,
@@ -1416,11 +1422,6 @@ typedef struct
 /* ===============================================================
     Objects ??? SORT ME!
 */
-
-typedef struct
-{
-} KSOBJECT_CREATE, *PKSOBJECT_CREATE;
-
 #if defined(_NTDDK_)
 typedef struct
 {
@@ -1431,6 +1432,11 @@ typedef struct
     ULONG                  Flags;
 } KSOBJECT_CREATE_ITEM, *PKSOBJECT_CREATE_ITEM;
 
+typedef struct
+{
+    ULONG                    CreateItemsCount;
+    PKSOBJECT_CREATE_ITEM    CreateItemsList;
+} KSOBJECT_CREATE, *PKSOBJECT_CREATE;
 
 typedef VOID (*PFNKSITEMFREECALLBACK)(
     IN  PKSOBJECT_CREATE_ITEM CreateItem);
