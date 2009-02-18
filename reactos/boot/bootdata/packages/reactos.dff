@@ -370,6 +370,7 @@ dll\win32\spoolss\spoolss.dll                       1
 dll\win32\srclient\srclient.dll                     1
 dll\win32\stdole2.tlb\stdole2.tlb                   1
 dll\win32\stdole32.tlb\stdole32.tlb                 1
+dll\win32\sti\sti.dll                               1
 dll\win32\sxs\sxs.dll                               1
 dll\win32\syssetup\syssetup.dll                     1
 dll\win32\tapi32\tapi32.dll                         1

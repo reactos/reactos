@@ -119,12 +119,14 @@
   <property name="BASEADDRESS_MSDMO" value="0x73670000" />
   <property name="BASEADDRESS_AVIFIL32" value="0x73ac0000" />
   <property name="BASEADDRESS_DCIMAN32" value="0x73b10000" />
+  <property name="BASEADDRESS_STI" value="0x73b60000" />
   <property name="BASEADDRESS_LZ32" value="0x73d80000" />
   <property name="BASEADDRESS_COREDLL" value="0x73d80000" />
   <property name="BASEADDRESS_KSUSER" value="0x73ea0000" />
   <property name="BASEADDRESS_ICMP" value="0x741f0000" />
   <property name="BASEADDRESS_SPOOLSS" value="0x742a0000" />
   <property name="BASEADDRESS_MSIMTF" value="0x746b0000" />
+  <property name="BASEADDRESS_MSCTF" value="0x746e0000" />
   <property name="BASEADDRESS_QUARTZ" value="0x747d0000" />
   <property name="BASEADDRESS_USERENV" value="0x74850000" />
   <property name="BASEADDRESS_WS2_32" value="0x74aa0000" />
