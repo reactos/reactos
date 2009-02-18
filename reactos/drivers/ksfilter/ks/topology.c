@@ -52,7 +52,8 @@ KspCreateObjectType(
                           NULL,
                           IO_NO_PARAMETER_CHECKING | IO_FORCE_ACCESS_CHECK);
 
-    ExFreePool(Name.Buffer);
+    // HACK HACK HACK HACK
+    //ExFreePool(Name.Buffer);
     return Status;
 }
 
