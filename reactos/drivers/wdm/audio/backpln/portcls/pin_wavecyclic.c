@@ -157,11 +157,11 @@ IPortPinWaveCyclic_fnNewIrpTarget(
     IN WCHAR * Name,
     IN PUNKNOWN Unknown,
     IN POOL_TYPE PoolType,
-    IN PDEVICE_OBJECT * DeviceObject,
+    IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
     IN KSOBJECT_CREATE *CreateObject)
 {
-
+    DPRINT1("IPortPinWaveCyclic_fnNewIrpTarget\n");
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -181,6 +181,7 @@ IPortPinWaveCyclic_fnDeviceIoControl(
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
+    DPRINT1("IPortPinWaveCyclic_fnDeviceIoControl\n");
     if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_PROPERTY)
     {
         /// FIXME

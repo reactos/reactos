@@ -316,7 +316,7 @@ ISubDevice_fnNewIrpTarget(
     IN WCHAR * Name,
     IN PUNKNOWN Unknown,
     IN POOL_TYPE PoolType,
-    IN PDEVICE_OBJECT * DeviceObject,
+    IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp, 
     IN KSOBJECT_CREATE *CreateObject)
 {
@@ -432,152 +432,6 @@ static ISubdeviceVtbl vt_ISubdeviceVtbl =
     ISubDevice_fnPinCount
 };
 
-
-NTSTATUS
-NTAPI
-ITopology_fnDeviceIoControl(
-    PDEVICE_OBJECT DeviceObject,
-    PIRP Irp)
-{
-    DPRINT1("ITopology_fnDeviceIoControl called\n");
-
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-NTAPI
-ITopology_fnRead(
-    PDEVICE_OBJECT DeviceObject,
-    PIRP Irp)
-{
-    DPRINT1("ITopology_fnRead called\n");
-
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-NTAPI
-ITopology_fnWrite(
-    PDEVICE_OBJECT DeviceObject,
-    PIRP Irp)
-{
-    DPRINT1("ITopology_fnWrite called\n");
-
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-NTAPI
-ITopology_fnFlush(
-    PDEVICE_OBJECT DeviceObject,
-    PIRP Irp)
-{
-    DPRINT1("ITopology_fnFlush called\n");
-
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-NTAPI
-ITopology_fnClose(
-    PDEVICE_OBJECT DeviceObject,
-    PIRP Irp)
-{
-    DPRINT1("ITopology_fnClose called\n");
-
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-NTAPI
-ITopology_fnQuerySecurity(
-    PDEVICE_OBJECT DeviceObject,
-    PIRP Irp)
-{
-    DPRINT1("ITopology_fnQuerySecurity called\n");
-
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-NTAPI
-ITopology_fnSetSecurity(
-    PDEVICE_OBJECT DeviceObject,
-    PIRP Irp)
-{
-    DPRINT1("ITopology_fnSetSecurity called\n");
-
-    return STATUS_SUCCESS;
-}
-
-BOOLEAN
-NTAPI
-ITopology_fnFastDeviceIoControl(
-    PFILE_OBJECT FileObject,
-    BOOLEAN Wait,
-    PVOID InputBuffer,
-    ULONG InputBufferLength,
-    PVOID OutputBuffer,
-    ULONG OutputBufferLength,
-    ULONG IoControlCode,
-    PIO_STATUS_BLOCK IoStatus,
-    PDEVICE_OBJECT DeviceObject)
-{
-    DPRINT1("ITopology_fnFastDeviceIoControl called\n");
-
-    return TRUE;
-}
-
-
-BOOLEAN
-NTAPI
-ITopology_fnFastRead(
-    PFILE_OBJECT FileObject,
-    PLARGE_INTEGER FileOffset,
-    ULONG Length,
-    BOOLEAN Wait,
-    ULONG LockKey,
-    PVOID Buffer,
-    PIO_STATUS_BLOCK IoStatus,
-    PDEVICE_OBJECT DeviceObject)
-{
-    DPRINT1("ITopology_fnFastRead called\n");
-
-    return TRUE;
-
-}
-
-BOOLEAN
-NTAPI
-ITopology_fnFastWrite(
-    PFILE_OBJECT FileObject,
-    PLARGE_INTEGER FileOffset,
-    ULONG Length,
-    BOOLEAN Wait,
-    ULONG LockKey,
-    PVOID Buffer,
-    PIO_STATUS_BLOCK IoStatus,
-    PDEVICE_OBJECT DeviceObject)
-{
-    DPRINT1("ITopology_fnFastWrite called\n");
-
-    return TRUE;
-}
-
-static KSDISPATCH_TABLE DispatchTable =
-{
-    ITopology_fnDeviceIoControl,
-    ITopology_fnRead,
-    ITopology_fnWrite,
-    ITopology_fnFlush,
-    ITopology_fnClose,
-    ITopology_fnQuerySecurity,
-    ITopology_fnSetSecurity,
-    ITopology_fnFastDeviceIoControl,
-    ITopology_fnFastRead,
-    ITopology_fnFastWrite,
-};
-
 NTSTATUS
 NTAPI
 PcCreateItemDispatch(
@@ -585,21 +439,21 @@ PcCreateItemDispatch(
     IN  PIRP Irp)
 {
     NTSTATUS Status = STATUS_SUCCESS;
-
+    PIO_STACK_LOCATION IoStack;
     ISubdevice * SubDevice;
     PPCLASS_DEVICE_EXTENSION DeviceExt;
     SUBDEVICE_ENTRY * Entry;
+    IIrpTarget *Filter, *Pin;
     PKSOBJECT_CREATE_ITEM CreateItem;
 
-    DPRINT1("PcCreateItemDispatch called\n");
+    DPRINT1("PcCreateItemDispatch called DeviceObject %p\n", DeviceObject);
 
     /* access the create item */
     CreateItem = KSCREATE_ITEM_IRP_STORAGE(Irp);
     if (!CreateItem)
     {
         DPRINT1("PcCreateItemDispatch no CreateItem\n");
-        Status = STATUS_UNSUCCESSFUL;
-        goto cleanup;
+        return STATUS_UNSUCCESSFUL;
     }
 
     SubDevice = (ISubdevice*)CreateItem->Context;
@@ -608,20 +462,17 @@ PcCreateItemDispatch(
     if (!SubDevice || !DeviceExt)
     {
         DPRINT1("PcCreateItemDispatch SubDevice %p DeviceExt %p\n", SubDevice, DeviceExt);
-
-        Status = STATUS_UNSUCCESSFUL;
-        goto cleanup;
+        return STATUS_UNSUCCESSFUL;
     }
 
     Entry = AllocateItem(NonPagedPool, sizeof(SUBDEVICE_ENTRY), TAG_PORTCLASS);
     if (!Entry)
     {
         DPRINT1("PcCreateItemDispatch no memory\n");
-
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-        goto cleanup;
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
-#if 0
+
+#if KS_IMPLEMENTED
     Status = KsReferenceSoftwareBusObject(DeviceExt->KsDeviceHeader);
     if (!NT_SUCCESS(Status) && Status != STATUS_NOT_IMPLEMENTED)
     {
@@ -632,24 +483,77 @@ PcCreateItemDispatch(
     }
 #endif
 
-    Status = KsAllocateObjectHeader(&Entry->ObjectHeader, 0, NULL, Irp, &DispatchTable);
+
+    /* get current io stack location */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+    /* sanity check */
+    ASSERT(IoStack->FileObject != NULL);
+
+    if (IoStack->FileObject->FsContext != NULL)
+    {
+        /* nothing to do */
+        DPRINT1("FsContext already exists\n");
+        return STATUS_SUCCESS;
+    }
+
+
+    /* get filter object 
+     * is implemented as a singleton
+     */
+    Status = SubDevice->lpVtbl->NewIrpTarget(SubDevice,
+                                             &Filter,
+                                             NULL,
+                                             NULL,
+                                             NonPagedPool,
+                                             DeviceObject,
+                                             Irp,
+                                             NULL);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("KsAllocateObjectHeader failed with %x\n", Status);
-        //KsDereferenceSoftwareBusObject(DeviceExt->KsDeviceHeader);
-        FreeItem(Entry, TAG_PORTCLASS);
+        DPRINT1("Failed to get filter object\n");
         return Status;
     }
 
-    InsertTailList(&DeviceExt->SubDeviceList, &Entry->Entry);
+    /* is just the filter requested */
+    if (IoStack->FileObject->FileName.Buffer == NULL)
+    {
+        /* create the dispatch object */
+        Status = NewDispatchObject(Irp, Filter);
 
+        DPRINT1("Filter %p\n", Filter);
+        DbgBreakPoint();
+    }
+    else
+    {
+        KSOBJECT_CREATE Create;
+        LPWSTR Buffer = IoStack->FileObject->FileName.Buffer;
 
-cleanup:
-   // Irp->IoStatus.Status = Status;
-   // Irp->IoStatus.Information = 0;
-   // IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        static LPWSTR KS_NAME_PIN = L"{146F1A80-4791-11D0-A5D6-28DB04C10000}";
 
-    DPRINT1("PcCreateItemDispatch Status %x\n", Status);
+        /* is the request for a new pin */
+        if (!wcsncmp(KS_NAME_PIN, Buffer, wcslen(KS_NAME_PIN)))
+        {
+            /* try to create new pin */
+            Create.CreateItemsCount = 1;
+            Create.CreateItemsList = (PKSOBJECT_CREATE_ITEM)(IoStack->FileObject->FileName.Buffer + (wcslen(KS_NAME_PIN) + 1));
+
+            Status = Filter->lpVtbl->NewIrpTarget(Filter,
+                                                  &Pin,
+                                                  KS_NAME_PIN,
+                                                  NULL,
+                                                  NonPagedPool,
+                                                  DeviceObject,
+                                                  Irp,
+                                                  &Create);
+            if (NT_SUCCESS(Status))
+            {
+                /* create the dispatch object */
+                Status = NewDispatchObject(Irp, Pin);
+                DPRINT1("Pin %p\n", Pin);
+            }
+        }
+    }
+
     return Status;
 }
 

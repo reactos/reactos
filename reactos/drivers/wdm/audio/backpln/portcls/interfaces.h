@@ -17,7 +17,7 @@ DEFINE_GUID(IID_IIrpTargetFactory, 0xB4C90A62, 0x5791, 0x11D0, 0xF9, 0x86, 0x00,
         IN WCHAR * Name,                                   \
         IN PUNKNOWN Unknown,                               \
         IN POOL_TYPE PoolType,                             \
-        IN PDEVICE_OBJECT * DeviceObject,                  \
+        IN PDEVICE_OBJECT DeviceObject,                    \
         IN PIRP Irp,                                       \
         IN KSOBJECT_CREATE *CreateObject) PURE;            \
                                                            \
@@ -106,9 +106,17 @@ typedef struct
 
 typedef struct
 {
+    ULONG MaxKsPropertySetCount;
+    ULONG FreeKsPropertySetOffset;
+    PKSPROPERTY_SET Properties;
+}KSPROPERTY_SET_LIST;
+
+typedef struct
+{
     ULONG InterfaceCount;
     GUID *Interfaces;
     KSPIN_FACTORY Factory;
+    KSPROPERTY_SET_LIST FilterPropertySet;
 }SUBDEVICE_DESCRIPTOR, *PSUBDEVICE_DESCRIPTOR;
 
 #undef INTERFACE
@@ -128,7 +136,7 @@ DECLARE_INTERFACE_(ISubdevice, IUnknown)
         IN WCHAR * Name,
         IN PUNKNOWN Unknown,
         IN POOL_TYPE PoolType,
-        IN PDEVICE_OBJECT * DeviceObject,
+        IN PDEVICE_OBJECT DeviceObject,
         IN PIRP Irp, 
         IN KSOBJECT_CREATE *CreateObject) PURE;
 

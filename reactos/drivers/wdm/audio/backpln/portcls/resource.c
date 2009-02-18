@@ -37,13 +37,27 @@ IResourceList_fnQueryInterface(
     IN  REFIID refiid,
     OUT PVOID* Output)
 {
+    WCHAR Buffer[100];
+
     IResourceListImpl * This = (IResourceListImpl*)iface;
-    if (IsEqualGUIDAligned(refiid, &IID_IResourceList))
+    if (IsEqualGUIDAligned(refiid, &IID_IResourceList) ||
+        IsEqualGUIDAligned(refiid, &IID_IUnknown))
     {
         *Output = &This->lpVtbl;
         InterlockedIncrement(&This->ref);
         return STATUS_SUCCESS;
     }
+#if 0
+    else if (IsEqualGUIDAligned(refiid, &IID_IDrmPort) ||
+             IsEqualGUIDAligned(refiid, &IID_IDrmPort2))
+    {
+        return NewIDrmPort((PDRMPORT2*)Output);
+    }
+#endif
+    StringFromCLSID(refiid, Buffer);
+    DPRINT1("IResourceList_fnQueryInterface no interface!!! iface %S\n", Buffer);
+    KeBugCheckEx(0, 0, 0, 0, 0);
+
     return STATUS_UNSUCCESSFUL;
 }
 

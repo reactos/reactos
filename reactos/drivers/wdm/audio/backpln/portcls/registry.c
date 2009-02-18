@@ -64,6 +64,7 @@ IRegistryKey_fnQueryInterface(
     }
 
     DPRINT("IRegistryKey_QueryInterface: This %p unknown iid\n", This, This->ref);
+KeBugCheckEx(0,0,0,0,0);
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -138,8 +139,11 @@ IRegistryKey_fnNewSubKey(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
+    if (OuterUnknown)
+        OuterUnknown->lpVtbl->AddRef(OuterUnknown);
+
     NewThis->hKey = hKey;
-    NewThis->ref = 1;
+    NewThis->ref = 2;
     NewThis->lpVtbl = &vt_IRegistryKey;
     *RegistrySubKey = (PREGISTRYKEY)&NewThis->lpVtbl;
 
@@ -222,7 +226,7 @@ static IRegistryKeyVtbl vt_IRegistryKey =
 };
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS NTAPI
 PcNewRegistryKey(
@@ -301,9 +305,12 @@ PcNewRegistryKey(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
+    if (OuterUnknown)
+        OuterUnknown->lpVtbl->AddRef(OuterUnknown);
+
     This->hKey = hHandle;
     This->lpVtbl = &vt_IRegistryKey;
-    This->ref = 1;
+    This->ref = 2;
 
     *OutRegistryKey = (PREGISTRYKEY)&This->lpVtbl;
     DPRINT1("PcNewRegistryKey result %p\n", *OutRegistryKey);

@@ -79,7 +79,7 @@ IPortFilterWaveCyclic_fnNewIrpTarget(
     IN WCHAR * Name,
     IN PUNKNOWN Unknown,
     IN POOL_TYPE PoolType,
-    IN PDEVICE_OBJECT * DeviceObject,
+    IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
     IN KSOBJECT_CREATE *CreateObject)
 {
@@ -284,6 +284,26 @@ IPortFilterWaveCyclic_fnFastWrite(
     return STATUS_SUCCESS;
 }
 
+/*
+ * @implemented
+ */
+static
+NTSTATUS
+NTAPI
+IPortFilterWaveCyclic_fnInit(
+    IN IPortFilterWaveCyclic* iface,
+    IN IPortWaveCyclic* Port)
+{
+    IPortFilterWaveCyclicImpl * This = (IPortFilterWaveCyclicImpl*)iface;
+
+    This->Port = Port;
+
+    /* increment reference count */
+    iface->lpVtbl->AddRef(iface);
+
+    return STATUS_SUCCESS;
+}
+
 static IPortFilterWaveCyclicVtbl vt_IPortFilterWaveCyclic =
 {
     IPortFilterWaveCyclic_fnQueryInterface,
@@ -299,13 +319,13 @@ static IPortFilterWaveCyclicVtbl vt_IPortFilterWaveCyclic =
     IPortFilterWaveCyclic_fnSetSecurity,
     IPortFilterWaveCyclic_fnFastDeviceIoControl,
     IPortFilterWaveCyclic_fnFastRead,
-    IPortFilterWaveCyclic_fnFastWrite
+    IPortFilterWaveCyclic_fnFastWrite,
+    IPortFilterWaveCyclic_fnInit
 };
 
-
-NTSTATUS NewPortFilterWaveCyclic(
-    OUT IPortFilterWaveCyclic ** OutFilter,
-    IN IPortWaveCyclic* iface)
+NTSTATUS 
+NewPortFilterWaveCyclic(
+    OUT IPortFilterWaveCyclic ** OutFilter)
 {
     IPortFilterWaveCyclicImpl * This;
 
@@ -316,10 +336,6 @@ NTSTATUS NewPortFilterWaveCyclic(
     /* initialize IPortFilterWaveCyclic */
     This->ref = 1;
     This->lpVtbl = &vt_IPortFilterWaveCyclic;
-    This->Port = iface;
-
-    /* increment reference count */
-    iface->lpVtbl->AddRef(iface);
 
     /* return result */
     *OutFilter = (IPortFilterWaveCyclic*)&This->lpVtbl;

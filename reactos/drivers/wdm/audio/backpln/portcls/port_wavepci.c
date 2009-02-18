@@ -613,7 +613,7 @@ ISubDevice_fnNewIrpTarget(
     IN WCHAR * Name,
     IN PUNKNOWN Unknown,
     IN POOL_TYPE PoolType,
-    IN PDEVICE_OBJECT * DeviceObject,
+    IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp, 
     IN KSOBJECT_CREATE *CreateObject)
 {

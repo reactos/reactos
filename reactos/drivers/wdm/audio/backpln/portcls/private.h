@@ -83,11 +83,16 @@ NTSTATUS NewPortClsVersion(
     OUT PPORTCLSVERSION * OutVersion);
 
 NTSTATUS NewPortFilterWaveCyclic(
-    OUT IPortFilterWaveCyclic ** OutFilter,
-    IN IPortWaveCyclic* iface);
+    OUT IPortFilterWaveCyclic ** OutFilter);
 
 NTSTATUS NewPortPinWaveCyclic(
     OUT IPortPinWaveCyclic ** OutPin);
+
+NTSTATUS
+NTAPI
+NewDispatchObject(
+    IN PIRP Irp,
+    IN IIrpTarget * Target);
 
 PVOID AllocateItem(IN POOL_TYPE PoolType, IN SIZE_T NumberOfBytes, IN ULONG Tag);
 
@@ -118,6 +123,19 @@ typedef struct
     ULONG ToPin;
 }PHYSICAL_CONNECTION;
 
+NTSTATUS
+NTAPI
+TopologyPropertyHandler(
+    IN PIRP Irp,
+    IN PKSIDENTIFIER  Request,
+    IN OUT PVOID  Data);
+
+NTSTATUS
+NTAPI
+PinPropertyHandler(
+    IN PIRP Irp,
+    IN PKSIDENTIFIER  Request,
+    IN OUT PVOID  Data);
 
 typedef struct
 {

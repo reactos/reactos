@@ -12,6 +12,7 @@
 	<library>libcntpr</library>
 	<file>api.c</file>
 	<file>connection.c</file>
+	<file>dispatcher.c</file>
 	<file>dll.c</file>
 	<file>dma_slave.c</file>
 	<file>drm_port.c</file>
@@ -35,6 +36,7 @@
 	<file>port_topology.c</file>
 	<file>port_wavepci.c</file>
 	<file>port_wavecyclic.c</file>
+	<file>propertyhandler.c</file>
 	<file>miniport.c</file>
 	<file>miniport_dmus.c</file>
 	<file>miniport_fmsynth.c</file>

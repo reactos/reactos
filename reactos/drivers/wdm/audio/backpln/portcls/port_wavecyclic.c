@@ -19,7 +19,10 @@ typedef struct
     PPOWERNOTIFY pPowerNotify;
     PPCFILTER_DESCRIPTOR pDescriptor;
     PSUBDEVICE_DESCRIPTOR SubDeviceDescriptor;
+    IPortFilterWaveCyclic * Filter;
 }IPortWaveCyclicImpl;
+
+GUID KSPROPERTY_SETID_Topology                = {0x720D4AC0L, 0x7533, 0x11D0, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
 
 static GUID InterfaceGuids[3] = 
 {
@@ -36,6 +39,32 @@ static GUID InterfaceGuids[3] =
         0x6994AD04, 0x93EF, 0x11D0, {0xA3, 0xCC, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}
     }
 };
+
+DEFINE_KSPROPERTY_TOPOLOGYSET(PortFilterWaveCyclicTopologySet, TopologyPropertyHandler);
+DEFINE_KSPROPERTY_PINSETCONSTRAINED(PortFilterWaveCyclicPinSet, PinPropertyHandler, PinPropertyHandler, PinPropertyHandler);
+
+KSPROPERTY_SET WaveCyclicPropertySet[] =
+{
+    {
+        &KSPROPSETID_Topology,
+        sizeof(PortFilterWaveCyclicTopologySet) / sizeof(KSPROPERTY_ITEM),
+        (const KSPROPERTY_ITEM*)&PortFilterWaveCyclicTopologySet,
+        0,
+        NULL
+    },
+    {
+        &KSPROPSETID_Pin,
+        sizeof(PortFilterWaveCyclicPinSet) / sizeof(KSPROPERTY_ITEM),
+        (const KSPROPERTY_ITEM*)&PortFilterWaveCyclicPinSet,
+        0,
+        NULL
+    }
+};
+
+//KSEVENTSETID_LoopedStreaming, Type = KSEVENT_LOOPEDSTREAMING_POSITION
+//KSEVENTSETID_Connection, Type = KSEVENT_CONNECTION_ENDOFSTREAM,
+
+
 
 #if 0
 static const KSIDENTIFIER Identifiers[] = 
@@ -319,11 +348,11 @@ IPortWaveCyclic_fnInit(
     /* create the subdevice descriptor */
     Status = PcCreateSubdeviceDescriptor(&This->SubDeviceDescriptor, 
                                          3,
-                                         InterfaceGuids, 
+                                         InterfaceGuids,
                                          0, 
                                          NULL,
-                                         0, 
-                                         NULL,
+                                         2, 
+                                         WaveCyclicPropertySet,
                                          0,
                                          0,
                                          0,
@@ -536,7 +565,7 @@ ISubDevice_fnNewIrpTarget(
     IN WCHAR * Name,
     IN PUNKNOWN Unknown,
     IN POOL_TYPE PoolType,
-    IN PDEVICE_OBJECT * DeviceObject,
+    IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
     IN KSOBJECT_CREATE *CreateObject)
 {
@@ -546,13 +575,28 @@ ISubDevice_fnNewIrpTarget(
 
     DPRINT1("ISubDevice_NewIrpTarget this %p\n", This);
 
-    Status = NewPortFilterWaveCyclic(&Filter, (IPortWaveCyclic*)This);
-    if (NT_SUCCESS(Status))
+    if (This->Filter)
     {
-        *OutTarget = (IIrpTarget*)Filter;
+        *OutTarget = (IIrpTarget*)This->Filter;
+        return STATUS_SUCCESS;
     }
 
-    return STATUS_UNSUCCESSFUL;
+
+    Status = NewPortFilterWaveCyclic(&Filter);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    Status = Filter->lpVtbl->Init(Filter, (IPortWaveCyclic*)This);
+    if (!NT_SUCCESS(Status))
+    {
+        Filter->lpVtbl->Release(Filter);
+        return Status;
+    }
+
+    *OutTarget = (IIrpTarget*)Filter;
+    return Status;
 }
 
 static
