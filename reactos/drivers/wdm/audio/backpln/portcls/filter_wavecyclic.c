@@ -86,13 +86,13 @@ IPortFilterWaveCyclic_fnNewIrpTarget(
     ISubdevice * ISubDevice;
     NTSTATUS Status;
     IPortPinWaveCyclic * Pin;
-
     SUBDEVICE_DESCRIPTOR * Descriptor;
     PKSPIN_CONNECT ConnectDetails;
-
     IPortFilterWaveCyclicImpl * This = (IPortFilterWaveCyclicImpl *)iface;
 
     ASSERT(This->Port);
+
+    DPRINT("IPortFilterWaveCyclic_fnNewIrpTarget entered\n");
 
     Status = This->Port->lpVtbl->QueryInterface(This->Port, &IID_ISubdevice, (PVOID*)&ISubDevice);
     if (!NT_SUCCESS(Status))

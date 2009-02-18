@@ -9,6 +9,12 @@ typedef struct
     IPortWaveCyclic * Port;
     IPortFilterWaveCyclic * Filter;
     KSPIN_DESCRIPTOR * KsPinDescriptor;
+    PMINIPORTWAVECYCLIC Miniport;
+    PSERVICEGROUP ServiceGroup;
+    PDMACHANNEL DmaChannel;
+    PMINIPORTWAVECYCLICSTREAM Stream;
+    KSSTATE State;
+    PKSDATAFORMAT Format;
 
 }IPortPinWaveCyclicImpl;
 
@@ -165,6 +171,139 @@ IPortPinWaveCyclic_fnNewIrpTarget(
     return STATUS_UNSUCCESSFUL;
 }
 
+NTSTATUS
+NTAPI
+IPortPinWaveCyclic_HandleKsProperty(
+    IN IPortPinWaveCyclic * iface,
+    IN PIRP Irp)
+{
+    PKSPROPERTY Property;
+    NTSTATUS Status;
+    UNICODE_STRING GuidString;
+    PIO_STACK_LOCATION IoStack;
+    IPortPinWaveCyclicImpl * This = (IPortPinWaveCyclicImpl*)iface;
+
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    DPRINT1("IPortPinWave_HandleKsProperty entered\n");
+
+    if (IoStack->Parameters.DeviceIoControl.InputBufferLength < sizeof(KSPROPERTY))
+    {
+        Irp->IoStatus.Information = 0;
+        Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    Property = (PKSPROPERTY)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
+
+    if (IsEqualGUIDAligned(&Property->Set, &KSPROPSETID_Connection))
+    {
+        if (Property->Id == KSPROPERTY_CONNECTION_STATE)
+        {
+            PKSSTATE State = (PKSSTATE)Irp->UserBuffer;
+
+            if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(KSSTATE))
+            {
+                Irp->IoStatus.Information = sizeof(KSSTATE);
+                Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
+                return STATUS_BUFFER_TOO_SMALL;
+            }
+
+            if (Property->Id & KSPROPERTY_TYPE_SET)
+            {
+                Irp->IoStatus.Information = 0;
+                Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+                if (This->Stream)
+                {
+                    Status = This->Stream->lpVtbl->SetState(This->Stream, *State);
+
+                    DPRINT1("Setting state %x\n", Status);
+                    if (NT_SUCCESS(Status))
+                    {
+                        This->State = *State;
+                        Irp->IoStatus.Information = sizeof(KSSTATE);
+                        Irp->IoStatus.Status = Status;
+                        return Status;
+                    }
+                    Irp->IoStatus.Status = Status;
+                }
+                return Irp->IoStatus.Status;
+            }
+            else if (Property->Id & KSPROPERTY_TYPE_GET)
+            {
+                *State = This->State;
+                Irp->IoStatus.Information = sizeof(KSSTATE);
+                Irp->IoStatus.Status = STATUS_SUCCESS;
+                return STATUS_SUCCESS;
+            }
+        }
+        else if (Property->Id == KSPROPERTY_CONNECTION_DATAFORMAT)
+        {
+            PKSDATAFORMAT DataFormat = (PKSDATAFORMAT)Irp->UserBuffer;
+            if (Property->Id & KSPROPERTY_TYPE_SET)
+            {
+                PKSDATAFORMAT NewDataFormat = AllocateItem(NonPagedPool, DataFormat->FormatSize, TAG_PORTCLASS);
+                if (!NewDataFormat)
+                {
+                    Irp->IoStatus.Information = 0;
+                    Irp->IoStatus.Status = STATUS_NO_MEMORY;
+                    return STATUS_NO_MEMORY;
+                }
+                RtlMoveMemory(NewDataFormat, DataFormat, DataFormat->FormatSize);
+
+                if (This->Stream)
+                {
+                    Status = This->Stream->lpVtbl->SetFormat(This->Stream, DataFormat);
+                    if (NT_SUCCESS(Status))
+                    {
+                        if (This->Format)
+                            ExFreePoolWithTag(This->Format, TAG_PORTCLASS);
+                        This->Format = NewDataFormat;
+                        Irp->IoStatus.Information = DataFormat->FormatSize;
+                        Irp->IoStatus.Status = STATUS_SUCCESS;
+                        return STATUS_SUCCESS;
+                    }
+                }
+                Irp->IoStatus.Information = 0;
+                Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+                return STATUS_UNSUCCESSFUL;
+            }
+            else if (Property->Id & KSPROPERTY_TYPE_GET)
+            {
+                PKSDATAFORMAT DataFormat = (PKSDATAFORMAT)Irp->UserBuffer;
+                if (!This->Format)
+                {
+                    DPRINT1("No format\n");
+                    Irp->IoStatus.Information = 0;
+                    Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+                    return STATUS_UNSUCCESSFUL;
+                }
+                if (This->Format->FormatSize > IoStack->Parameters.DeviceIoControl.OutputBufferLength)
+                {
+                    Irp->IoStatus.Information = This->Format->FormatSize;
+                    Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
+                    return STATUS_BUFFER_TOO_SMALL;
+                }
+
+                RtlMoveMemory(DataFormat, This->Format, This->Format->FormatSize);
+                Irp->IoStatus.Information = DataFormat->FormatSize;
+                Irp->IoStatus.Status = STATUS_SUCCESS;
+                return STATUS_SUCCESS;
+            }
+        }
+    }
+    RtlStringFromGUID(&Property->Set, &GuidString);
+
+    DPRINT1("Unhandeled property Set %S Id %u Flags %x\n", GuidString.Buffer, Property->Id, Property->Flags);
+    DbgBreakPoint();
+    RtlFreeUnicodeString(&GuidString);
+
+    Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+    Irp->IoStatus.Information = 0;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+
 /*
  * @unimplemented
  */
@@ -181,11 +320,10 @@ IPortPinWaveCyclic_fnDeviceIoControl(
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    DPRINT1("IPortPinWaveCyclic_fnDeviceIoControl\n");
+    DPRINT1("IPortPinWaveCyclic_fnDeviceIoControl %x %x\n",IoStack->Parameters.DeviceIoControl.IoControlCode,  IOCTL_KS_PROPERTY);
     if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_PROPERTY)
     {
-        /// FIXME
-        /// handle property event
+       return IPortPinWaveCyclic_HandleKsProperty(iface, Irp);
     }
     else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_ENABLE_EVENT)
     {
@@ -365,6 +503,8 @@ IPortPinWaveCyclic_fnInit(
     IN KSPIN_CONNECT * ConnectDetails,
     IN KSPIN_DESCRIPTOR * KsPinDescriptor)
 {
+    NTSTATUS Status;
+    PKSDATAFORMAT DataFormat;
     IPortPinWaveCyclicImpl * This = (IPortPinWaveCyclicImpl*)iface;
 
     Port->lpVtbl->AddRef(Port);
@@ -373,6 +513,42 @@ IPortPinWaveCyclic_fnInit(
     This->Port = Port;
     This->Filter = Filter;
     This->KsPinDescriptor = KsPinDescriptor;
+    This->Miniport = GetWaveCyclicMiniport(Port);
+
+    DataFormat = (PKSDATAFORMAT)(ConnectDetails + 1);
+
+    DPRINT("IPortPinWaveCyclic_fnInit entered\n");
+
+    This->Format = ExAllocatePoolWithTag(NonPagedPool, DataFormat->FormatSize, TAG_PORTCLASS);
+    if (!This->Format)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    RtlMoveMemory(This->Format, DataFormat, DataFormat->FormatSize);
+
+    Status = This->Miniport->lpVtbl->NewStream(This->Miniport,
+                                               &This->Stream,
+                                               NULL,
+                                               NonPagedPool,
+                                               FALSE, //FIXME
+                                               ConnectDetails->PinId,
+                                               This->Format,
+                                               &This->DmaChannel,
+                                               &This->ServiceGroup);
+
+    DPRINT("IPortPinWaveCyclic_fnInit Status %x\n", Status);
+
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    Status = This->ServiceGroup->lpVtbl->AddMember(This->ServiceGroup, 
+                                                   (PSERVICESINK)&This->lpVtblServiceSink);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to add pin to service group\n");
+        return Status;
+    }
+
+    This->State = KSSTATE_STOP;
 
     return STATUS_SUCCESS;
 }

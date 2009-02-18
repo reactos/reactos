@@ -709,6 +709,14 @@ static ISubdeviceVtbl vt_ISubdeviceVtbl =
 };
 
 
+///--------------------------------------------------------------
+PMINIPORTWAVECYCLIC
+GetWaveCyclicMiniport(
+    IN IPortWaveCyclic* iface)
+{
+    IPortWaveCyclicImpl * This = (IPortWaveCyclicImpl *)iface;
+    return This->pMiniport;
+}
 
 //---------------------------------------------------------------
 // IPortWaveCyclic constructor

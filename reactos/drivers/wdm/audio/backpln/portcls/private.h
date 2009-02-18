@@ -94,7 +94,15 @@ NewDispatchObject(
     IN PIRP Irp,
     IN IIrpTarget * Target);
 
-PVOID AllocateItem(IN POOL_TYPE PoolType, IN SIZE_T NumberOfBytes, IN ULONG Tag);
+PMINIPORTWAVECYCLIC
+GetWaveCyclicMiniport(
+    IN IPortWaveCyclic* iface);
+
+PVOID
+AllocateItem(
+    IN POOL_TYPE PoolType,
+    IN SIZE_T NumberOfBytes,
+    IN ULONG Tag);
 
 VOID
 FreeItem(

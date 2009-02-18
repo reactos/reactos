@@ -17,6 +17,12 @@ typedef struct
     PSUBDEVICE_DESCRIPTOR SubDeviceDescriptor;
 }IPortTopologyImpl;
 
+typedef struct
+{
+    PIRP Irp;
+    IIrpTarget *Filter;
+
+}PIN_WORKER_CONTEXT, *PPIN_WORKER_CONTEXT;
 
 static GUID InterfaceGuids[2] = 
 {
@@ -432,6 +438,43 @@ static ISubdeviceVtbl vt_ISubdeviceVtbl =
     ISubDevice_fnPinCount
 };
 
+VOID
+NTAPI
+CreatePinWorkerRoutine(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PVOID  Context)
+{
+    NTSTATUS Status;
+    IIrpTarget *Pin;
+    PPIN_WORKER_CONTEXT WorkerContext = (PPIN_WORKER_CONTEXT)Context;
+
+    DPRINT("CreatePinWorkerRoutine called\n");
+
+    Status = WorkerContext->Filter->lpVtbl->NewIrpTarget(WorkerContext->Filter,
+                                                         &Pin,
+                                                         NULL,
+                                                         NULL,
+                                                         NonPagedPool,
+                                                         DeviceObject,
+                                                         WorkerContext->Irp,
+                                                         NULL);
+
+    DPRINT("CreatePinWorkerRoutine Status %x\n", Status);
+
+    if (NT_SUCCESS(Status))
+    {
+        /* create the dispatch object */
+        Status = NewDispatchObject(WorkerContext->Irp, Pin);
+        DPRINT("Pin %p\n", Pin);
+    }
+
+    DPRINT1("CreatePinWorkerRoutine completing irp\n");
+    WorkerContext->Irp->IoStatus.Status = Status;
+    WorkerContext->Irp->IoStatus.Information = 0;
+    IoCompleteRequest(WorkerContext->Irp, IO_SOUND_INCREMENT);
+}
+
+
 NTSTATUS
 NTAPI
 PcCreateItemDispatch(
@@ -521,7 +564,6 @@ PcCreateItemDispatch(
         Status = NewDispatchObject(Irp, Filter);
 
         DPRINT1("Filter %p\n", Filter);
-        DbgBreakPoint();
     }
     else
     {
@@ -534,6 +576,34 @@ PcCreateItemDispatch(
         if (!wcsncmp(KS_NAME_PIN, Buffer, wcslen(KS_NAME_PIN)))
         {
             /* try to create new pin */
+
+           if (KeGetCurrentIrql() >= APC_LEVEL)
+           {
+              PPIN_WORKER_CONTEXT Context = AllocateItem(NonPagedPool, sizeof(PIN_WORKER_CONTEXT), TAG_PORTCLASS);
+              if (!Context)
+               {
+                   Irp->IoStatus.Information = 0;
+                   Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
+                   return STATUS_INSUFFICIENT_RESOURCES;
+               }
+               Context->Filter = Filter;
+               Context->Irp = Irp;
+
+              PIO_WORKITEM WorkItem = IoAllocateWorkItem(DeviceObject);
+               if (!WorkItem)
+               {
+                   Irp->IoStatus.Information = 0;
+                   Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
+                   return STATUS_INSUFFICIENT_RESOURCES;
+               }
+
+               IoQueueWorkItem(WorkItem, CreatePinWorkerRoutine, DelayedWorkQueue, (PVOID)Context);
+               Irp->IoStatus.Information = 0;
+               Irp->IoStatus.Status = STATUS_PENDING;
+               IoMarkIrpPending(Irp);
+               return STATUS_PENDING;
+          }
+
             Create.CreateItemsCount = 1;
             Create.CreateItemsList = (PKSOBJECT_CREATE_ITEM)(IoStack->FileObject->FileName.Buffer + (wcslen(KS_NAME_PIN) + 1));
 
@@ -553,7 +623,8 @@ PcCreateItemDispatch(
             }
         }
     }
-
+    Irp->IoStatus.Information = 0;
+    Irp->IoStatus.Status = Status;
     return Status;
 }
 
