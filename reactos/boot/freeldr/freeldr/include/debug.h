@@ -80,7 +80,7 @@ void	MEMORY_WRITE_BREAKPOINT4(unsigned long addr);
 #else
 
 	#define DebugInit()
-	#define DPRINTM(_x_)
+	#define DPRINTM(_x_, ...)
 	#define BugCheck(_x_)
 	#define DbgDumpBuffer(_x_, _y_, _z_)
 
