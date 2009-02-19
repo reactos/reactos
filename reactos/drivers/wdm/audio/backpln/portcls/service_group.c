@@ -211,7 +211,8 @@ IServiceGroup_fnRequestDelayedService(
 
     if (This->Initialized)
     {
-        KeSetTimer(&This->Timer, DueTime, &This->Dpc);
+        //KeSetTimer(&This->Timer, DueTime, &This->Dpc);
+        KeInsertQueueDpc(&This->Dpc, NULL, NULL);
         KeClearEvent(&This->DpcEvent);
     }
 }
