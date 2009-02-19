@@ -4,6 +4,7 @@
  *
  * Copyright 2005 David Nordenberg
  * Copyright 2008 Daniel Nylander <po@danielnylander.se>
+ * Copyright 2009 Anders Jonsson
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -125,7 +126,7 @@ IDM_WINEFILE MENU FIXED IMPURE
     POPUP "&Fönster" {
         MENUITEM "Nytt &fönster",               ID_WINDOW_NEW
         MENUITEM "Överlappande\tCtrl+F5",       ID_WINDOW_CASCADE
-        MENUITEM "Ordna &horizontellt",         ID_WINDOW_TILE_HORZ
+        MENUITEM "Ordna &horisontellt",         ID_WINDOW_TILE_HORZ
         MENUITEM "Ordna &vertikalt\tCtrl+F4",   ID_WINDOW_TILE_VERT
 #ifndef _NO_EXTENSIONS
         MENUITEM "Ordna automatiskt",           ID_WINDOW_AUTOSORT
@@ -171,10 +172,63 @@ FONT 8, "MS Shell Dlg"
     PUSHBUTTON      "&Bläddra", 254, 158, 43, 47, 14
 }
 
+IDD_DIALOG_VIEW_TYPE DIALOG DISCARDABLE 15, 13, 161, 97
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Efter filtyp"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "&Namn:",-1,7,8,22,10
+    EDITTEXT        IDC_VIEW_PATTERN,31,7,63,12,ES_AUTOHSCROLL
+    GROUPBOX        "Filtyp",-1,7,23,87,56
+    CONTROL         "&Kataloger",IDC_VIEW_TYPE_DIRECTORIES,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,32,70,10
+    CONTROL         "&Program",IDC_VIEW_TYPE_PROGRAMS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,43,70,10
+    CONTROL         "&Dokument",IDC_VIEW_TYPE_DOCUMENTS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,54,70,10
+    CONTROL         "&Andra filer",IDC_VIEW_TYPE_OTHERS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,65,70,10
+    CONTROL         "Visa gömda/&system-filer",IDC_VIEW_TYPE_HIDDEN,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,81,106,9
+    DEFPUSHBUTTON   "OK",IDOK,104,7,50,14
+    PUSHBUTTON      "Avbryt",IDCANCEL,104,24,50,14
+END
+
+IDD_DIALOG_PROPERTIES DIALOG DISCARDABLE  0, 0, 248, 215
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Egenskaper för %s"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,191,7,50,14
+    PUSHBUTTON      "Avbryt",IDCANCEL,191,29,50,14
+    LTEXT           "&Filnamn:",-1,7,7,59,9
+    EDITTEXT        IDC_STATIC_PROP_FILENAME,71,7,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "F&ull sökväg:",-1,7,18,59,9
+    EDITTEXT        IDC_STATIC_PROP_PATH,71,18,120,9, ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "Sist ändrad:",-1,7,29,59,9
+    EDITTEXT        IDC_STATIC_PROP_LASTCHANGE,71,29,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "Version:",-1,7,40,59,9
+    EDITTEXT        IDC_STATIC_PROP_VERSION,71,40,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "Cop&yright:",-1,7,51,59,9
+    EDITTEXT        IDC_STATIC_PROP_COPYRIGHT,71,51,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "Storlek:",-1,7,62,59,9
+    EDITTEXT        IDC_STATIC_PROP_SIZE,71,62,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    GROUPBOX        "Attribut",-1,7,79,158,46
+    CONTROL         "Sk&rivskyddad",IDC_CHECK_READONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,91,68,9
+    CONTROL         "&Dold",IDC_CHECK_HIDDEN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,91,68,9
+    CONTROL         "&Arkiv",IDC_CHECK_ARCHIVE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,101,68,9
+    CONTROL         "&System",IDC_CHECK_SYSTEM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,101,68,9
+    CONTROL         "&Komprimerad",IDC_CHECK_COMPRESSED,"Button", BS_AUTOCHECKBOX | WS_TABSTOP,17,111,68,9
+    GROUPBOX        "&Versionsinfo",-1,7,129,234,79
+    LISTBOX         IDC_LIST_PROP_VERSION_TYPES,13,139,107,63,LBS_SORT | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_LIST_PROP_VERSION_VALUES,123,139,111,63,ES_MULTILINE | ES_READONLY | WS_VSCROLL
+END
+
+
 STRINGTABLE
 {
     IDS_FONT_SEL_DLG_NAME   "Verkställ teckensnittsinställningar"
-    IDS_FONT_SEL_ERROR      "Ett fel uppstog när ett nytt teckensnitt valdes."
+    IDS_FONT_SEL_ERROR      "Ett fel uppstod när ett nytt teckensnitt valdes."
 }
 
 STRINGTABLE
@@ -187,7 +241,7 @@ STRINGTABLE
     IDS_SHELL               "Skal"
     IDS_TITLEFMT            "%s - %s"
     IDS_NO_IMPL             "Inte implementerat ännu"
-    IDS_WINE_FILE           "Wine File"
+    IDS_WINE_FILE           "Winefile"
 }
 
 STRINGTABLE

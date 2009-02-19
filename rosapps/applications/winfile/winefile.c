@@ -2732,7 +2732,7 @@ static void calc_single_width(Pane* pane, int col)
 
 	x = pane->positions[col] + cx;
 
-	for(; col<COLUMNS; ) {
+	for(; col<COLUMNS-1; ) {
 		pane->positions[++col] = x;
 		x += pane->widths[col];
 	}
@@ -4706,7 +4706,7 @@ static void InitInstance(HINSTANCE hinstance)
 }
 
 
-static void show_frame(HWND hwndParent, int cmdshow, LPCTSTR path)
+static BOOL show_frame(HWND hwndParent, int cmdshow, LPCTSTR path)
 {
 	static const TCHAR sMDICLIENT[] = {'M','D','I','C','L','I','E','N','T','\0'};
 
@@ -4718,7 +4718,7 @@ static void show_frame(HWND hwndParent, int cmdshow, LPCTSTR path)
 	CLIENTCREATESTRUCT ccs;
 
 	if (Globals.hMainWnd)
-		return;
+		return TRUE;
 
 	opts = load_registry_settings();
 	hMenuFrame = LoadMenu(Globals.hInstance, MAKEINTRESOURCE(IDM_WINEFILE));
@@ -4796,8 +4796,10 @@ static void show_frame(HWND hwndParent, int cmdshow, LPCTSTR path)
 	child->pos.rcNormalPosition.right = 320;
 	child->pos.rcNormalPosition.bottom = 280;
 
-	if (!create_child_window(child))
+	if (!create_child_window(child)) {
 		HeapFree(GetProcessHeap(), 0, child);
+		return FALSE;
+	}
 
 	SetWindowPlacement(child->hwnd, &child->pos);
 
@@ -4807,7 +4809,7 @@ static void show_frame(HWND hwndParent, int cmdshow, LPCTSTR path)
 
 	UpdateWindow(Globals.hMainWnd);
 
-	if (path && path[0])
+	if (child->hwnd && path && path[0])
 	{
 		int index,count;
 		TCHAR drv[_MAX_DRIVE+1], dir[_MAX_DIR], name[_MAX_FNAME], ext[_MAX_EXT];
@@ -4835,6 +4837,7 @@ static void show_frame(HWND hwndParent, int cmdshow, LPCTSTR path)
 			}
 		}
 	}
+	return TRUE;
 }
 
 static void ExitInstance(void)
@@ -4888,7 +4891,11 @@ static int winefile_main(HINSTANCE hinstance, int cmdshow, LPCTSTR path)
   
 	InitInstance(hinstance);
 
-	show_frame(0, cmdshow, path);
+	if( !show_frame(0, cmdshow, path) )
+	{
+		ExitInstance();
+		return 1;
+	}
 
 	while(GetMessage(&msg, 0, 0, 0)) {
 		if (Globals.hmdiclient && TranslateMDISysAccel(Globals.hmdiclient, &msg))
