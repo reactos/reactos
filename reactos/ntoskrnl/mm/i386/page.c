@@ -671,7 +671,7 @@ BOOLEAN
 NTAPI
 MmIsPagePresent(PEPROCESS Process, PVOID Address)
 {
-    return MmGetPageEntryForProcess(Process, Address) & PA_PRESENT ? TRUE : FALSE;
+    return MmGetPageEntryForProcess(Process, Address) & PA_PRESENT;
 }
 
 BOOLEAN
@@ -680,7 +680,7 @@ MmIsPageSwapEntry(PEPROCESS Process, PVOID Address)
 {
     ULONG Entry;
     Entry = MmGetPageEntryForProcess(Process, Address);
-    return !(Entry & PA_PRESENT) && Entry != 0 ? TRUE : FALSE;
+    return !(Entry & PA_PRESENT) && (Entry & 0x800) && Entry != 0;
 }
 
 NTSTATUS
@@ -841,7 +841,7 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
         if (PageCount > 0x10000 ||
             (ULONG_PTR) Address / PAGE_SIZE + PageCount > 0x100000)
         {
-            DPRINT1("Page count to large\n");
+            DPRINT1("Page count too large\n");
             KeBugCheck(MEMORY_MANAGEMENT);
         }
     }
@@ -856,7 +856,7 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
             (ULONG_PTR) Address / PAGE_SIZE + PageCount >
             (ULONG_PTR)MmSystemRangeStart / PAGE_SIZE)
         {
-            DPRINT1("Page Count to large\n");
+            DPRINT1("Page Count too large\n");
             KeBugCheck(MEMORY_MANAGEMENT);
         }
     }
@@ -909,13 +909,14 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
         
         Pte = *Pt;
         MmMarkPageMapped(Pages[i]);
-        if (PAGE_MASK((Pte)) != 0 && !((Pte) & PA_PRESENT))
+        if (PAGE_MASK(Pte) != 0 && !(Pte & PA_PRESENT) && (Pte & 0x800))
         {
+            DPRINT1("Bad PTE %lx\n", Pte);
             KeBugCheck(MEMORY_MANAGEMENT);
         }
-        if (PAGE_MASK((Pte)) != 0)
+        if (PAGE_MASK(Pte) != 0)
         {
-            MmMarkPageUnmapped(PTE_TO_PFN((Pte)));
+            MmMarkPageUnmapped(PTE_TO_PFN(Pte));
         }
         InterlockedExchangePte(Pt, PFN_TO_PTE(Pages[i]) | Attributes);
         if (Pte != 0)
@@ -1014,6 +1015,7 @@ MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
            Process, Address, flProtect);
     
     Attributes = ProtectToPTE(flProtect);
+
     if (Attributes & 0x80000000)
     {
         NoExecute = TRUE;
