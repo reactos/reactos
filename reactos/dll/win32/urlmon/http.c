@@ -933,7 +933,7 @@ static const IInternetProtocolVtbl HttpProtocolVtbl = {
     HttpProtocol_UnlockRequest
 };
 
-HRESULT create_http_protocol(BOOL https, void **ppobj)
+static HRESULT create_http_protocol(BOOL https, void **ppobj)
 {
     HttpProtocol *ret;
 
