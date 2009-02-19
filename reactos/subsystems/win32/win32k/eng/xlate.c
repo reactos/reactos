@@ -250,7 +250,7 @@ IntEngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
       {
          XlateObj->pulXlate[i] = ClosestColorMatch(
             XlateGDI, SourcePalGDI->IndexedColors + i,
-            DestPalGDI->IndexedColors, XlateObj->cEntries);
+            DestPalGDI->IndexedColors, DestPalGDI->NumColors);
          if (XlateObj->pulXlate[i] != i)
             XlateObj->flXlate &= ~XO_TRIVIAL;
       }
