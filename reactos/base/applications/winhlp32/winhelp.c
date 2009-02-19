@@ -274,7 +274,7 @@ HLPFILE_WINDOWINFO*     WINHELP_GetWindowInfo(HLPFILE* hlpfile, LPCSTR name)
     {
         strcpy(mwi.type, "primary");
         strcpy(mwi.name, "main");
-        if (!LoadString(Globals.hInstance, STID_WINE_HELP, 
+        if (hlpfile && !LoadString(Globals.hInstance, STID_WINE_HELP,
                         mwi.caption, sizeof(mwi.caption)))
             strcpy(mwi.caption, hlpfile->lpszTitle);
         mwi.origin.x = mwi.origin.y = mwi.size.cx = mwi.size.cy = CW_USEDEFAULT;

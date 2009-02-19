@@ -301,7 +301,7 @@ static void on_sizelist_modified(HWND hwndSizeList, LPWSTR wszNewFontSize)
     if(lstrcmpW(sizeBuffer, wszNewFontSize))
     {
         float size = 0;
-        if(number_from_string((LPCWSTR) wszNewFontSize, &size, FALSE)
+        if(number_from_string(wszNewFontSize, &size, FALSE)
            && size > 0)
         {
             set_size(size);
@@ -322,7 +322,7 @@ static void add_size(HWND hSizeListWnd, unsigned size)
     cbItem.iItem = -1;
 
     wsprintfW(buffer, stringFormat, size);
-    cbItem.pszText = (LPWSTR)buffer;
+    cbItem.pszText = buffer;
     SendMessageW(hSizeListWnd, CBEM_INSERTITEMW, 0, (LPARAM)&cbItem);
 }
 
@@ -494,7 +494,7 @@ static void on_fontlist_modified(LPWSTR wszNewFaceName)
     SendMessageW(hEditorWnd, EM_GETCHARFORMAT, SCF_SELECTION, (LPARAM)&format);
 
     if(lstrcmpW(format.szFaceName, wszNewFaceName))
-        set_font((LPCWSTR) wszNewFaceName);
+        set_font(wszNewFaceName);
 }
 
 static void add_font(LPCWSTR fontName, DWORD fontType, HWND hListWnd, const NEWTEXTMETRICEXW *ntmc)
@@ -1412,11 +1412,11 @@ static INT_PTR CALLBACK newfile_proc(HWND hWnd, UINT message, WPARAM wParam, LPA
                 WCHAR buffer[MAX_STRING_LEN];
                 HWND hListWnd = GetDlgItem(hWnd, IDC_NEWFILE);
 
-                LoadStringW(hInstance, STRING_NEWFILE_RICHTEXT, (LPWSTR)buffer, MAX_STRING_LEN);
+                LoadStringW(hInstance, STRING_NEWFILE_RICHTEXT, buffer, MAX_STRING_LEN);
                 SendMessageW(hListWnd, LB_ADDSTRING, 0, (LPARAM)&buffer);
-                LoadStringW(hInstance, STRING_NEWFILE_TXT, (LPWSTR)buffer, MAX_STRING_LEN);
+                LoadStringW(hInstance, STRING_NEWFILE_TXT, buffer, MAX_STRING_LEN);
                 SendMessageW(hListWnd, LB_ADDSTRING, 0, (LPARAM)&buffer);
-                LoadStringW(hInstance, STRING_NEWFILE_TXT_UNICODE, (LPWSTR)buffer, MAX_STRING_LEN);
+                LoadStringW(hInstance, STRING_NEWFILE_TXT_UNICODE, buffer, MAX_STRING_LEN);
                 SendMessageW(hListWnd, LB_ADDSTRING, 0, (LPARAM)&buffer);
 
                 SendMessageW(hListWnd, LB_SETSEL, TRUE, 0);

@@ -95,7 +95,7 @@ static void AddTextButton(HWND hRebarWnd, UINT string, UINT command, UINT id)
     LoadStringW(hInstance, string, text, MAX_STRING_LEN);
     hButton = CreateWindowW(WC_BUTTONW, text,
                             WS_VISIBLE | WS_CHILD, 5, 5, 100, 15,
-                            hRebarWnd, (HMENU)ULongToHandle(command), hInstance, NULL);
+                            hRebarWnd, ULongToHandle(command), hInstance, NULL);
 
     rb.cbSize = sizeof(rb);
     rb.fMask = RBBIM_SIZE | RBBIM_CHILDSIZE | RBBIM_STYLE | RBBIM_CHILD | RBBIM_IDEALSIZE | RBBIM_ID;
@@ -226,12 +226,12 @@ static LPWSTR dialog_print_to_file(HWND hMainWnd)
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
     ofn.hwndOwner = hMainWnd;
     ofn.lpstrFilter = file_filter;
-    ofn.lpstrFile = (LPWSTR)file;
+    ofn.lpstrFile = file;
     ofn.nMaxFile = MAX_PATH;
-    ofn.lpstrDefExt = (LPWSTR)defExt;
+    ofn.lpstrDefExt = defExt;
 
     if(GetSaveFileNameW(&ofn))
-        return (LPWSTR)file;
+        return file;
     else
         return FALSE;
 }
