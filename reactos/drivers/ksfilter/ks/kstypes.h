@@ -39,6 +39,11 @@ typedef struct
 
 }DEVICE_EXTENSION, *PDEVICE_EXTENSION;
 
+typedef struct
+{
+    LIST_ENTRY Entry;
+    PIRP Irp;
+}QUEUE_ENTRY, *PQUEUE_ENTRY;
 
 
 #endif

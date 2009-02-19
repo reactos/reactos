@@ -40,7 +40,7 @@ KspCreateObjectType(
     Status = IoCreateFile(NodeHandle,
                           DesiredAccess,
                           &ObjectAttributes,
-                          &IoStatusBlock, 
+                          &IoStatusBlock,
                           NULL,
                           0,
                           0,

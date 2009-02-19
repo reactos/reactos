@@ -18,9 +18,11 @@ KsAcquireResetValue(
 }
 
 /*
-    @unimplemented
+    @implemented
 */
-KSDDKAPI VOID NTAPI
+KSDDKAPI
+VOID
+NTAPI
 KsAddIrpToCancelableQueue(
     IN  OUT PLIST_ENTRY QueueHead,
     IN  PKSPIN_LOCK SpinLock,
@@ -28,7 +30,26 @@ KsAddIrpToCancelableQueue(
     IN  KSLIST_ENTRY_LOCATION ListLocation,
     IN  PDRIVER_CANCEL DriverCancel OPTIONAL)
 {
-    UNIMPLEMENTED;
+    PQUEUE_ENTRY Entry;
+
+    if (!QueueHead || !SpinLock || !Irp)
+        return;
+
+    Entry = ExAllocatePool(NonPagedPool, sizeof(QUEUE_ENTRY));
+    if (!Entry)
+        return;
+
+    ///FIXME
+    // setup cancel routine
+    //
+
+    Entry->Irp = Irp;
+
+    if (ListLocation == KsListEntryTail)
+        ExInterlockedInsertTailList(QueueHead, &Entry->Entry, SpinLock);
+    else
+        ExInterlockedInsertHeadList(QueueHead, &Entry->Entry, SpinLock);
+
 }
 
 /*
@@ -607,18 +628,60 @@ KsReleaseIrpOnCancelableQueue(
 }
 
 /*
-    @unimplemented
+    @implemented
 */
-KSDDKAPI PIRP NTAPI
+KSDDKAPI
+PIRP
+NTAPI
 KsRemoveIrpFromCancelableQueue(
     IN  OUT PLIST_ENTRY QueueHead,
     IN  PKSPIN_LOCK SpinLock,
     IN  KSLIST_ENTRY_LOCATION ListLocation,
     IN  KSIRP_REMOVAL_OPERATION RemovalOperation)
 {
-    UNIMPLEMENTED;
-    return NULL;
-    /*return STATUS_UNSUCCESSFUL; */
+    PQUEUE_ENTRY Entry = NULL;
+    PIRP Irp;
+    KIRQL OldIrql;
+
+    if (!QueueHead || !SpinLock)
+        return NULL;
+
+    if (ListLocation != KsListEntryTail && ListLocation != KsListEntryHead)
+        return NULL;
+
+    if (RemovalOperation != KsAcquireOnly && RemovalOperation != KsAcquireAndRemove)
+        return NULL;
+
+    KeAcquireSpinLock(SpinLock, &OldIrql);
+
+    if (!IsListEmpty(QueueHead))
+    {
+        if (RemovalOperation == KsAcquireOnly)
+        {
+            if (ListLocation == KsListEntryHead)
+                Entry = (PQUEUE_ENTRY)QueueHead->Flink;
+            else
+                Entry = (PQUEUE_ENTRY)QueueHead->Blink;
+        }
+        else if (RemovalOperation == KsAcquireAndRemove)
+        {
+            if (ListLocation == KsListEntryTail)
+                Entry = (PQUEUE_ENTRY)RemoveTailList(QueueHead);
+            else
+                Entry = (PQUEUE_ENTRY)RemoveHeadList(QueueHead);
+        }
+    }
+    KeReleaseSpinLock(SpinLock, OldIrql);
+
+    if (!Entry)
+        return NULL;
+
+    Irp = Entry->Irp;
+
+    if (RemovalOperation == KsAcquireAndRemove)
+        ExFreePool(Entry);
+
+    return Irp;
 }
 
 /*
