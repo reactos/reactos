@@ -35,10 +35,13 @@ class RosCMS
   private $cookie_password = null;  // user_password (used for keep login function)
   private $cookie_login_name = null; // where username is stored for 'save username' in login options
   private $cookie_security = null; // stores security settings
+  private $cookie_language = null; // stores default language
 
   private $site_name = null; // sites name
   private $site_language = null; // standard language
   private $site_timezone = null; // time difference to utc time from server time
+
+  private $multi_language = null; // is site multilingual
 
   private $path_generated = null; // path to generated files
   private $path_generation_cache = null; // path to cache files while generation process
@@ -117,6 +120,7 @@ class RosCMS
   public function cookiePassword() { if ($this->applied) return $this->cookie_password; }
   public function cookieLoginName() { if ($this->applied) return $this->cookie_login_name; }
   public function cookieSecure() { if ($this->applied) return $this->cookie_security; }
+  public function cookieLanguage() { if ($this->applied) return $this->cookie_language; }
 
   public function limitUserNameMin() { return $this->limit_username_min; }
   public function limitUserNameMax() { return $this->limit_username_max; }
@@ -129,6 +133,8 @@ class RosCMS
   public function siteName() { if ($this->applied) return $this->site_name; }
   public function siteLanguage() { if ($this->applied) return $this->site_language; }
   public function siteTimezone(){ if ($this->applied) return $this->site_timezone; }
+
+  public function multiLanguage(){ if ($this->applied) return $this->multi_language; }
 
   public function pathGenerated() { if ($this->applied) return $this->path_generated; }
   public function pathGenerationCache() { if ($this->applied) return $this->path_generation_cache; }
@@ -173,6 +179,11 @@ class RosCMS
     else die('bad security login cookie name');
   }
 
+  public function setCookieLanguage( $new_value ) {
+    if (preg_match('/[A-Za-z0-9_]+/', $new_value)) $this->config['cookie_language'] = $new_value;
+    else die('bad language login cookie name');
+  }
+
   public function setSiteName( $new_value ) {
     $this->config['site_name'] = $new_value;
   }
@@ -199,6 +210,10 @@ class RosCMS
 
   public function setPathInstance( $new_value ) {
     $this->config['path_instance'] = $new_value;
+  }
+
+  public function setMultiLanguage( $new_value ) {
+    $this->config['multi_language'] = $new_value;
   }
 
 

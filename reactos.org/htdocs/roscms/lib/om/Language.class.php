@@ -17,15 +17,17 @@ class Language
    */
   public static function validate( $lang_code )
   {
-    // check for valid code
-    $stmt=&DBConnection::getInstance()->prepare("SELECT name_short FROM ".ROSCMST_LANGUAGES." WHERE name_short=:code");
-    $stmt->bindParam('code',$lang_code,PDO::PARAM_STR);
-    $stmt->execute();
-    $valid=$stmt->fetchColumn();
-    
-    // if we have a result, thats a valid code
-    if ($valid !== false) {
-      return $valid;
+    if (RosCMS::getInstance()->multiLanguage()) {
+      // check for valid code
+      $stmt=&DBConnection::getInstance()->prepare("SELECT name_short FROM ".ROSCMST_LANGUAGES." WHERE name_short=:code");
+      $stmt->bindParam('code',$lang_code,PDO::PARAM_STR);
+      $stmt->execute();
+      $valid=$stmt->fetchColumn();
+      
+      // if we have a result, thats a valid code
+      if ($valid !== false) {
+        return $valid;
+      }
     }
     return RosCMS::getInstance()->siteLanguage();
   } // end of member function validate

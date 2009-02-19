@@ -105,22 +105,11 @@ class HTML_CMS_Website extends HTML_CMS
             roscms_access['dont_hide_filter'] = ".($thisuser->hasAccess('dont_hide_filter') ? 'true' : 'false').";
             roscms_access['make_stable'] = ".($thisuser->hasAccess('make_stable') ? 'true' : 'false').";
             roscms_access['del_entry'] = ".($thisuser->hasAccess('del_entry') ? 'true' : 'false').";
+            roscms_access['del_entry'] = ".($thisuser->hasAccess('del_entry') ? 'true' : 'false').";
 
         // favorite user language
-        ";
+        var userlang = ".$thisuser->language().";
 
-    // set user language for js
-    $user_lang = $thisuser->language();
-    if (!empty($user_lang)) {
-      echo "var userlang = '".$user_lang."';";
-    }
-    else {
-      echo "var userlang = roscms_standard_language;";
-    }
-
-    echo "
-        
-        
         var exitmsg = ".'"Click Cancel to continue with RosCMS, click OK to leave RosCMS.\n\nThanks for using RosCMS!"'."
       -->
       </script>";echo_strip('
@@ -158,7 +147,7 @@ class HTML_CMS_Website extends HTML_CMS
           <div id="smenutab2" class="lmItemTop" onclick="loadMenu(this.id)">
             <div id="smenutabc2" class="lmItemBottom">Pending</div>
           </div>
-          <div id="smenutab7" class="lmItemTop" onclick="loadMenu(this.id)">
+          <div id="smenutab7" class="lmItemTop" onclick="loadMenu(this.id)"'.($thisuser->language() == Language::getStandardId() ? ' style="display:none;"' : '').'>
             <div id="smenutabc7" class="lmItemBottom">Translate</div>
           </div>
           <div id="smenutab8" class="lmItemTopSelected" onclick="loadMenu(this.id)">
@@ -229,34 +218,40 @@ class HTML_CMS_Website extends HTML_CMS
                       &nbsp;&nbsp;&nbsp;<span class="virtualButton" onclick="'."addUserFilter(filtstring2)".'"><img src="'.RosCMS::getInstance()->pathRosCMS().'images/save.gif" alt="" style="width:14px; height:14px;" />&nbsp;Save</span>
                     </div>
                   </div>
-                </div>
+                </div>');
+
+    if (RosCMS::getInstance()->multiLanguage()) {
+      echo_strip('
                 <div style="position: absolute; top: 9px; right: 13px; text-align:right; white-space: nowrap;">
                   <label for="favlangopt" style="float:left;color: #666;">Working language:</label><br />
                   <select name="favlangopt" id="favlangopt" style="vertical-align: top; width: 22ex;" onchange="setLang(this.value)">');
 
-    // preselect current user language
-    if ($thisuser->hasAccess('more_lang')) {
-      $stmt=&DBConnection::getInstance()->prepare("SELECT id, name FROM ".ROSCMST_LANGUAGES." WHERE level > 0 ORDER BY name ASC");
-    }
-    else {
-      $stmt=&DBConnection::getInstance()->prepare("SELECT id, name FROM ".ROSCMST_LANGUAGES." WHERE id IN(:lang_id,:standard_lang)");
-      $stmt->bindParam('lang_id',$thisuser->language(),PDO::PARAM_INT);
-      $stmt->bindParam('standard_lang',Language::getStandardId(),PDO::PARAM_INT);
-    }
-    $stmt->execute();
-    while($language=$stmt->fetch()) {
-      echo '<option value="'.$language['id'].'"';
+      // preselect current user language
+      if ($thisuser->hasAccess('more_lang') ) {
+        $stmt=&DBConnection::getInstance()->prepare("SELECT id, name FROM ".ROSCMST_LANGUAGES." WHERE level > 0 ORDER BY name ASC");
+      }
+      else {
+        $stmt=&DBConnection::getInstance()->prepare("SELECT id, name FROM ".ROSCMST_LANGUAGES." WHERE id IN(:lang_id,:standard_lang)");
+        $stmt->bindParam('lang_id',$thisuser->language(),PDO::PARAM_INT);
+        $stmt->bindParam('standard_lang',Language::getStandardId(),PDO::PARAM_INT);
+      }
+      $stmt->execute();
+      while($language=$stmt->fetch()) {
+        echo '<option value="'.$language['id'].'"';
 
-      if ($language['id'] == $user_lang) {
-        echo ' selected="selected"';
+        if ($language['id'] == $thisuser->language()) {
+          echo ' selected="selected"';
+        }
+
+        echo '>'.$language['name'].'</option>';
       }
 
-      echo '>'.$language['name'].'</option>';
+      echo_strip('
+          </select>
+        </div>');
     }
 
     echo_strip('
-                  </select>
-                </div>
                 <div style="float: right; white-space: nowrap;padding-top: 1em;">
                   <span id="mtblnav">&nbsp;</span>
                 </div>

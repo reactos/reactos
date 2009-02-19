@@ -125,21 +125,33 @@ class Backend_ViewUserDetails extends Backend
 
       // add membership button
       echo_strip('</select>
-        <button name="addmemb" id="addmemb" onclick="'."addMembership(".$_GET['user'].", document.getElementById('cbmmemb').value)".'">Add Membership</button>
-        <br />
-        <br />
-        <select id="cbmusrlang" name="cbmusrlang">');
+        <button name="addmemb" id="addmemb" onclick="'."addMembership(".$_GET['user'].", document.getElementById('cbmmemb').value)".'">Add Membership</button>');
+      
+      if (RosCMS::getInstance()->multiLanguage()) {
+        echo_strip('
+          <br />
+          <br />
+          <select id="cbmusrlang" name="cbmusrlang">');
 
-      // show available languages, the user can changed to
-      $stmt=&DBConnection::getInstance()->prepare("SELECT id, name FROM ".ROSCMST_LANGUAGES." ORDER BY name ASC");
-      $stmt->execute();
-      while ($lang = $stmt->fetch(PDO::FETCH_ASSOC)) {
-        echo '<option value="'.$lang['id'].'"'.($lang['id'] == $user['lang_id'] ? ' selected="selected"' : '').'>'.$lang['name'].'</option>';
+        // show available languages, the user can changed to
+        if ($thisuser->hasAccess('more_lang')) {
+          $stmt=&DBConnection::getInstance()->prepare("SELECT id, name FROM ".ROSCMST_LANGUAGES." ORDER BY name ASC");
+        }
+        else {
+          $stmt=&DBConnection::getInstance()->prepare("SELECT id, name FROM ".ROSCMST_LANGUAGES." WHERE id IN(:standard_lang, :lang_id) ORDER BY name ASC");
+          $stmt->bindParam('standard_lang',Language::getStandardId(),PDO::PARAM_INT);
+          $stmt->bindParam('lang_id',$thisuser->language(),PDO::PARAM_INT);
+
+        }
+        $stmt->execute();
+        while ($lang = $stmt->fetch(PDO::FETCH_ASSOC)) {
+          echo '<option value="'.$lang['id'].'"'.($lang['id'] == $user['lang_id'] ? ' selected="selected"' : '').'>'.$lang['name'].'</option>';
+        }
+
+        // change language button
+        echo_strip('</select>
+          <input type="button" name="addusrlang" id="addusrlang" value="Update User language" onclick="'."updateUserLang(".$_GET['user'].", document.getElementById('cbmusrlang').value)".'" /><br />');
       }
-
-      // change language button
-      echo_strip('</select>
-        <input type="button" name="addusrlang" id="addusrlang" value="Update User language" onclick="'."updateUserLang(".$_GET['user'].", document.getElementById('cbmusrlang').value)".'" /><br />');
     }
 
     // show interface to add translators

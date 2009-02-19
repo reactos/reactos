@@ -1,7 +1,7 @@
 <?php
     /*
     RosCMS - ReactOS Content Management System
-    Copyright (C) 2008  Danny Götte <dangerground@web.de>
+    Copyright (C) 2008,2009  Danny Götte <dangerground@web.de>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -43,6 +43,8 @@ $config->setSiteName('ReactOS.org'); // sites name
 $config->setSiteLanguage('en'); // standard language
 $config->setSiteTimezone(-2); // time difference to utc time from server time
 
+$config->setMultiLanguage(true);  // is site multilingual
+
 $config->setPathRoscms('/reactos/roscms/'); // path to roscms files
 $config->setPathInstance('/reactos/roscms/'); // path to roscms files
 $config->setPathGenerationCache('../roscms_cache/'); // path to generated files (relative to roscms folder)
@@ -76,5 +78,4 @@ $config->setTable('ROSCMST_TIMEZONES'  , 'roscms_timezones');
 
 // do not change, it's needed to apply those config settings
 $config->apply();
-
 ?>

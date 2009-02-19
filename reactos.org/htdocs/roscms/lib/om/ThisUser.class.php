@@ -46,7 +46,9 @@ class ThisUser
    */
   public function addAccess( $access_area )
   {
-    $this->access[$access_area] = true;
+    if ($access_area != 'more_lang' || RosCMS::getInstance()->multiLanguage()) {
+      $this->access[$access_area] = true;
+    }
   } // end of member function addAccess
 
 
@@ -105,7 +107,10 @@ class ThisUser
    */
   public function language( )
   {
-    return (int)$this->user['language'];
+    if (RosCMS::getInstance()->multiLanguage()) {
+      return (int)$this->user['language'];
+    }
+    return Language::getStandardId();
   } // end of member function language
 
 

@@ -111,7 +111,7 @@ class HTML_CMS_Maintain extends HTML_CMS
           <div id="lmGroups" class="lmItemTop" onclick="loadGroups()"'.(!$thisuser->hasAccess('admin') ? ' style="display: none;"' : '').'>
             <div class="lmItemBottom">Groups</div>
           </div>
-          <div id="lmLanguages" class="lmItemTop" onclick="loadLanguages()"'.(!$thisuser->hasAccess('admin') ? ' style="display: none;"' : '').'>
+          <div id="lmLanguages" class="lmItemTop" onclick="loadLanguages()"'.(!$thisuser->hasAccess('admin') || !RosCMS::getInstance()->multiLanguage() ? ' style="display: none;"' : '').'>
             <div class="lmItemBottom">Languages</div>
           </div>
 
@@ -205,7 +205,14 @@ class HTML_CMS_Maintain extends HTML_CMS
                   <select id="txtaddentrylang" name="txtaddentrylang">');
 
               // display languages
-              $stmt=&DBConnection::getInstance()->prepare("SELECT id, name FROM ".ROSCMST_LANGUAGES." WHERE level > 0 ORDER BY name ASC");
+              if ($thisuser->hasAccess('more_lang')) {
+                $stmt=&DBConnection::getInstance()->prepare("SELECT id, name FROM ".ROSCMST_LANGUAGES." ORDER BY name ASC");
+              }
+              else {
+                $stmt=&DBConnection::getInstance()->prepare("SELECT id, name FROM ".ROSCMST_LANGUAGES." WHERE id IN(:standard_lang,:lang_id) ORDER BY name ASC");
+                $stmt->bindParam('standard_lang',Language::getStandardId(),PDO::PARAM_INT);
+                $stmt->bindParam('lang_id',$thisuser->language(),PDO::PARAM_INT);
+              }
               $stmt->execute();
               while ($language=$stmt->fetch(PDO::FETCH_ASSOC)) {
                 echo '<option value="'.$language['id'].'"'.($language['id']==Language::getStandardId() ? ' selected="selected"' : '').'>'.$language['name'].'</option>';
