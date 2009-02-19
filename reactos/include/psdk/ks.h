@@ -1018,7 +1018,7 @@ typedef enum
     KSSTATE_ACQUIRE,
     KSSTATE_PAUSE,
     KSSTATE_RUN
-} KSSTATE;
+} KSSTATE, *PKSSTATE;
 
 typedef enum
 {
