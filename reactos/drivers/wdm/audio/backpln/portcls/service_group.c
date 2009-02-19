@@ -211,8 +211,11 @@ IServiceGroup_fnRequestDelayedService(
 
     if (This->Initialized)
     {
-        //KeSetTimer(&This->Timer, DueTime, &This->Dpc);
-        KeInsertQueueDpc(&This->Dpc, NULL, NULL);
+        if (KeGetCurrentIrql() <= DISPATCH_LEVEL)
+            KeSetTimer(&This->Timer, DueTime, &This->Dpc);
+        else
+            KeInsertQueueDpc(&This->Dpc, NULL, NULL);
+
         KeClearEvent(&This->DpcEvent);
     }
 }

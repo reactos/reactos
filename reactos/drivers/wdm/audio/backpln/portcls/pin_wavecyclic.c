@@ -105,9 +105,10 @@ IServiceSink_fnRequestService(
     NTSTATUS Status;
 
     IPortPinWaveCyclicImpl * This = (IPortPinWaveCyclicImpl*)CONTAINING_RECORD(iface, IPortPinWaveCyclicImpl, lpVtblServiceSink);
-#if 0
+
     if (This->ActiveIrp && This->ActiveIrpOffset >= This->ActiveIrpBufferSize)
     {
+        This->Stream->lpVtbl->SetState(This->Stream, KSSTATE_PAUSE);
         if (KeGetCurrentIrql() > DISPATCH_LEVEL)
         {
             if (This->DelayedRequestInProgress)
@@ -140,7 +141,6 @@ IServiceSink_fnRequestService(
             return;
         }
     }
-#endif
 
     if (!This->ActiveIrp)
     {
@@ -186,7 +186,8 @@ IServiceSink_fnRequestService(
         }
         else
         {
-            This->Stream->lpVtbl->Silence(This->Stream, (PUCHAR)This->CommonBuffer + This->CommonBufferOffset, BytesToCopy);
+            This->Stream->lpVtbl->SetState(This->Stream, KSSTATE_PAUSE);
+            return;
         }
         BufferLength = Position;
         IrpLength = This->ActiveIrpBufferSize - This->ActiveIrpOffset;
@@ -209,6 +210,12 @@ IServiceSink_fnRequestService(
 
         BytesToCopy = min(BufferLength, IrpLength);
         DPRINT1("Copying %u Remaining %u\n", BytesToCopy, IrpLength);
+
+        if (!BytesToCopy)
+		{
+            This->Stream->lpVtbl->SetState(This->Stream, KSSTATE_PAUSE);
+            return;
+		}
 
             This->DmaChannel->lpVtbl->CopyTo(This->DmaChannel,
                                          (PUCHAR)This->CommonBuffer + This->CommonBufferOffset,
