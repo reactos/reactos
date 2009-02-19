@@ -1613,10 +1613,6 @@ User32DefWindowProc(HWND hWnd,
             break;
         }
 
-        case WM_ENDSESSION:
-            if (wParam) PostQuitMessage(0);
-            return 0;
-
         case WM_QUERYUISTATE:
         {
             LRESULT Ret = 0;
