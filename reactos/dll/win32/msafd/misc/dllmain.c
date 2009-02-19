@@ -351,6 +351,10 @@ DWORD MsafdReturnWithErrno(NTSTATUS Status,
             DbgPrint("MSAFD: STATUS_INVALID_PARAMETER\n");
             *Errno = WSAEINVAL;
             break;
+		case STATUS_CANCELLED:
+			DbgPrint("MSAFD: STATUS_CANCELLED\n");
+			*Errno = WSAENOTSOCK;
+			break;
         default:
             DbgPrint("MSAFD: Error %x is unknown\n", Status);
             *Errno = WSAEINVAL;

@@ -42,7 +42,7 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection,
             Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
             Complete = Bucket->Request.RequestNotifyObject;
             TI_DbgPrint(DEBUG_TCP,
-                        ("Completing Request %x\n", Bucket->Request));
+                        ("Completing Request %x\n", Bucket->Request.RequestContext));
 
             if( (NewState & (SEL_CONNECT | SEL_FIN)) ==
                 (SEL_CONNECT | SEL_FIN) )
@@ -158,7 +158,7 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection,
     }
     if( NewState & SEL_WRITE ) {
 		TI_DbgPrint(DEBUG_TCP,("Writeable: irp list %s\n",
-							   IsListEmpty(&Connection->ReceiveRequest) ?
+							   IsListEmpty(&Connection->SendRequest) ?
 							   "empty" : "nonempty"));
 
 		while( !IsListEmpty( &Connection->SendRequest ) ) {
@@ -282,7 +282,7 @@ PCONNECTION_ENDPOINT TCPAllocateConnectionEndpoint( PVOID ClientContext ) {
 }
 
 VOID TCPFreeConnectionEndpoint( PCONNECTION_ENDPOINT Connection ) {
-    TCPClose( Connection );
+	TI_DbgPrint(DEBUG_TCP, ("Freeing TCP Endpoint\n"));
     exFreePool( Connection );
 }
 
@@ -542,25 +542,29 @@ NTSTATUS TCPConnect
     IP_ADDRESS RemoteAddress;
     USHORT RemotePort;
     PTDI_BUCKET Bucket;
+	PNEIGHBOR_CACHE_ENTRY NCE;
 
     TI_DbgPrint(DEBUG_TCP,("TCPConnect: Called\n"));
-
-    Bucket = exAllocatePool( NonPagedPool, sizeof(*Bucket) );
-    if( !Bucket ) return STATUS_NO_MEMORY;
-
-    TcpipRecursiveMutexEnter( &TCPLock, TRUE );
-
-    /* Freed in TCPSocketState */
-    Bucket->Request.RequestNotifyObject = (PVOID)Complete;
-    Bucket->Request.RequestContext = Context;
-
-    InsertHeadList( &Connection->ConnectRequest, &Bucket->Entry );
 
     Status = AddrBuildAddress
 		((PTRANSPORT_ADDRESS)ConnInfo->RemoteAddress,
 		 &RemoteAddress,
 		 &RemotePort);
 
+	if (!(NCE = RouteGetRouteToDestination(&RemoteAddress)))
+	{
+		return STATUS_NETWORK_UNREACHABLE;
+	}
+
+    TcpipRecursiveMutexEnter( &TCPLock, TRUE );
+
+	if (Connection->State & SEL_FIN)
+	{
+		TcpipRecursiveMutexLeave( &TCPLock );
+		return STATUS_REMOTE_DISCONNECT;
+	}
+
+    /* Freed in TCPSocketState */
     TI_DbgPrint(DEBUG_TCP,
                 ("Connecting to address %x:%x\n",
                  RemoteAddress.Address.IPv4Address,
@@ -574,6 +578,7 @@ NTSTATUS TCPConnect
 
     AddressToConnect.sin_family = AF_INET;
     AddressToBind = AddressToConnect;
+	AddressToBind.sin_addr.s_addr = NCE->Interface->Unicast.Address.IPv4Address;
 
     Status = TCPTranslateError
         ( OskitTCPBind( Connection->SocketContext,
@@ -592,6 +597,17 @@ NTSTATUS TCPConnect
 							   Connection,
 							   &AddressToConnect,
 							   sizeof(AddressToConnect) ) );
+
+		if (Status == STATUS_PENDING)
+		{
+			Bucket = exAllocatePool( NonPagedPool, sizeof(*Bucket) );
+			if( !Bucket ) return STATUS_NO_MEMORY;
+			
+			Bucket->Request.RequestNotifyObject = (PVOID)Complete;
+			Bucket->Request.RequestContext = Context;
+			
+			InsertHeadList( &Connection->ConnectRequest, &Bucket->Entry );
+		}
     }
 
     TcpipRecursiveMutexLeave( &TCPLock );
@@ -678,6 +694,14 @@ NTSTATUS TCPReceiveData
 
     TcpipRecursiveMutexEnter( &TCPLock, TRUE );
 
+	/* Closing */
+	if (Connection->State & SEL_FIN)
+	{
+		TcpipRecursiveMutexLeave( &TCPLock );
+		*BytesReceived = 0;
+		return STATUS_REMOTE_DISCONNECT;
+	}
+
     NdisQueryBuffer( Buffer, &DataBuffer, &DataLen );
 
     TI_DbgPrint(DEBUG_TCP,("TCP>|< Got an MDL %x (%x:%d)\n", Buffer, DataBuffer, DataLen));
@@ -706,7 +730,7 @@ NTSTATUS TCPReceiveData
 		Bucket->Request.RequestContext = Context;
 		*BytesReceived = 0;
 
-		InsertHeadList( &Connection->ReceiveRequest, &Bucket->Entry );
+		InsertTailList( &Connection->ReceiveRequest, &Bucket->Entry );
 		Status = STATUS_PENDING;
 		TI_DbgPrint(DEBUG_TCP,("Queued read irp\n"));
     } else {
@@ -744,6 +768,14 @@ NTSTATUS TCPSendData
     TI_DbgPrint(DEBUG_TCP,("Connection->SocketContext = %x\n",
 						   Connection->SocketContext));
 
+	/* Closing */
+	if (Connection->State & SEL_FIN)
+	{
+		TcpipRecursiveMutexLeave( &TCPLock );
+		*BytesSent = 0;
+		return STATUS_REMOTE_DISCONNECT;
+	}
+
     Status = TCPTranslateError
 		( OskitTCPSend( Connection->SocketContext,
 						(OSK_PCHAR)BufferData, SendLength,
@@ -760,20 +792,20 @@ NTSTATUS TCPSendData
 			TcpipRecursiveMutexLeave( &TCPLock );
 			return STATUS_NO_MEMORY;
 		}
-
+		
 		Bucket->Request.RequestNotifyObject = Complete;
 		Bucket->Request.RequestContext = Context;
 		*BytesSent = 0;
-
-		InsertHeadList( &Connection->SendRequest, &Bucket->Entry );
+		
+		InsertTailList( &Connection->SendRequest, &Bucket->Entry );
 		TI_DbgPrint(DEBUG_TCP,("Queued write irp\n"));
     } else {
 		TI_DbgPrint(DEBUG_TCP,("Got status %x, bytes %d\n", Status, Sent));
 		*BytesSent = Sent;
     }
-
+	
     TcpipRecursiveMutexLeave( &TCPLock );
-
+	
     TI_DbgPrint(DEBUG_TCP,("Status %x\n", Status));
 
     return Status;
@@ -798,9 +830,10 @@ VOID TCPFreePort( UINT Port ) {
     DeallocatePort( &TCPPorts, Port );
 }
 
-NTSTATUS TCPGetPeerAddress
+NTSTATUS TCPGetSockAddress
 ( PCONNECTION_ENDPOINT Connection,
-  PTRANSPORT_ADDRESS Address ) {
+  PTRANSPORT_ADDRESS Address,
+  BOOLEAN GetRemote ) {
     OSK_UINT LocalAddress, RemoteAddress;
     OSK_UI16 LocalPort, RemotePort;
     PTA_IP_ADDRESS AddressIP = (PTA_IP_ADDRESS)Address;
@@ -815,8 +848,9 @@ NTSTATUS TCPGetPeerAddress
     AddressIP->TAAddressCount = 1;
     AddressIP->Address[0].AddressLength = TDI_ADDRESS_LENGTH_IP;
     AddressIP->Address[0].AddressType = TDI_ADDRESS_TYPE_IP;
-    AddressIP->Address[0].Address[0].sin_port = RemotePort;
-    AddressIP->Address[0].Address[0].in_addr = RemoteAddress;
+    AddressIP->Address[0].Address[0].sin_port = GetRemote ? RemotePort : LocalPort;
+    AddressIP->Address[0].Address[0].in_addr = GetRemote ? RemoteAddress : LocalAddress;
+	AddressIP->Address[1].AddressLength = TDI_ADDRESS_LENGTH_IP;
 
     TcpipRecursiveMutexLeave( &TCPLock );
 
@@ -837,13 +871,15 @@ VOID TCPRemoveIRP( PCONNECTION_ENDPOINT Endpoint, PIRP Irp ) {
 
     TcpipAcquireSpinLock( &Endpoint->Lock, &OldIrql );
 
-    for( i = 0; i < 4; i++ ) {
+    for( i = 0; i < 4; i++ )
+	{
 		for( Entry = ListHead[i]->Flink;
 			 Entry != ListHead[i];
-			 Entry = Entry->Flink ) {
+			 Entry = Entry->Flink )
+		{
 			Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
-
-			if( Bucket->Request.RequestContext == Irp ) {
+			if( Bucket->Request.RequestContext == Irp )
+			{
 				RemoveEntryList( &Bucket->Entry );
 				exFreePool( Bucket );
 				break;

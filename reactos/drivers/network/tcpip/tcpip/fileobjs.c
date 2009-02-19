@@ -204,28 +204,6 @@ VOID DeleteAddress(PADDRESS_FILE AddrFile)
 
 
 /*
- * FUNCTION: Deletes a connection endpoint file object
- * ARGUMENTS:
- *     Connection = Pointer to connection endpoint to delete
- */
-VOID DeleteConnectionEndpoint(
-  PCONNECTION_ENDPOINT Connection)
-{
-  KIRQL OldIrql;
-
-  TI_DbgPrint(MID_TRACE, ("Called.\n"));
-
-  /* Remove connection endpoint from the global list */
-  TcpipAcquireSpinLock(&ConnectionEndpointListLock, &OldIrql);
-  RemoveEntryList(&Connection->ListEntry);
-  TcpipReleaseSpinLock(&ConnectionEndpointListLock, OldIrql);
-
-  TCPFreeConnectionEndpoint(Connection);
-
-  TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
-}
-
-/*
  * FUNCTION: Open an address file object
  * ARGUMENTS:
  *     Request  = Pointer to TDI request structure for this request
@@ -395,6 +373,29 @@ NTSTATUS FileCloseAddress(
     break;
   }
 
+  TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
+
+  return Status;
+}
+
+
+/*
+ * FUNCTION: Closes an address file object
+ * ARGUMENTS:
+ *     Request = Pointer to TDI request structure for this request
+ * RETURNS:
+ *     Status of operation
+ */
+NTSTATUS FileFreeAddress(
+  PTDI_REQUEST Request)
+{
+  PADDRESS_FILE AddrFile;
+  NTSTATUS Status = STATUS_SUCCESS;
+
+  AddrFile = Request->Handle.AddressHandle;
+
+  TI_DbgPrint(MID_TRACE, ("Called.\n"));
+
   DeleteAddress(AddrFile);
 
   TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
@@ -493,8 +494,37 @@ NTSTATUS FileCloseConnection(
   Connection = Request->Handle.ConnectionContext;
 
   TcpipRecursiveMutexEnter( &TCPLock, TRUE );
-  DeleteConnectionEndpoint(Connection);
+  TCPClose( Connection );
   TcpipRecursiveMutexLeave( &TCPLock );
+
+  TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
+
+  return STATUS_SUCCESS;
+}
+
+
+/*
+ * FUNCTION: Frees an connection file object
+ * ARGUMENTS:
+ *     Request = Pointer to TDI request structure for this request
+ * RETURNS:
+ *     Status of operation
+ */
+NTSTATUS FileFreeConnection(
+  PTDI_REQUEST Request)
+{
+  KIRQL OldIrql;
+  PCONNECTION_ENDPOINT Connection;
+
+  TI_DbgPrint(MID_TRACE, ("Called.\n"));
+
+  Connection = Request->Handle.ConnectionContext;
+
+  TcpipAcquireSpinLock(&ConnectionEndpointListLock, &OldIrql);
+  RemoveEntryList(&Connection->ListEntry);
+  TcpipReleaseSpinLock(&ConnectionEndpointListLock, OldIrql);
+
+  TCPFreeConnectionEndpoint(Connection);
 
   TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 
@@ -549,7 +579,7 @@ NTSTATUS FileOpenControlChannel(
  * RETURNS:
  *     Status of operation
  */
-NTSTATUS FileCloseControlChannel(
+NTSTATUS FileFreeControlChannel(
   PTDI_REQUEST Request)
 {
   PCONTROL_CHANNEL ControlChannel = Request->Handle.ControlChannel;

@@ -23,6 +23,9 @@ NTSTATUS FileOpenAddress(
 NTSTATUS FileCloseAddress(
   PTDI_REQUEST Request);
 
+NTSTATUS FileFreeAddress(
+  PTDI_REQUEST Request);
+
 NTSTATUS FileOpenConnection(
   PTDI_REQUEST Request,
   PVOID ClientContext);
@@ -32,10 +35,13 @@ PCONNECTION_ENDPOINT FileFindConnectionByContext( PVOID Context );
 NTSTATUS FileCloseConnection(
   PTDI_REQUEST Request);
 
+NTSTATUS FileFreeConnection(
+  PTDI_REQUEST Request);
+
 NTSTATUS FileOpenControlChannel(
   PTDI_REQUEST Request);
 
-NTSTATUS FileCloseControlChannel(
+NTSTATUS FileFreeControlChannel(
   PTDI_REQUEST Request);
 
 #endif /* __FILEOBJS_H */

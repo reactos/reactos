@@ -671,19 +671,34 @@ NTSTATUS DispTdiQueryInformation(
         PTDI_ADDRESS_INFO AddressInfo;
         PADDRESS_FILE AddrFile;
         PTA_IP_ADDRESS Address;
+        PCONNECTION_ENDPOINT Endpoint = NULL;
 
         AddressInfo = (PTDI_ADDRESS_INFO)MmGetSystemAddressForMdl(Irp->MdlAddress);
+		Address = (PTA_IP_ADDRESS)&AddressInfo->Address;
 
         switch ((ULONG)IrpSp->FileObject->FsContext2) {
           case TDI_TRANSPORT_ADDRESS_FILE:
             AddrFile = (PADDRESS_FILE)TranContext->Handle.AddressHandle;
-            break;
+
+			Address->TAAddressCount = 1;
+			Address->Address[0].AddressLength = TDI_ADDRESS_LENGTH_IP;
+			Address->Address[0].AddressType = TDI_ADDRESS_TYPE_IP;
+			Address->Address[0].Address[0].sin_port = AddrFile->Port;
+			Address->Address[0].Address[0].in_addr = AddrFile->Address.Address.IPv4Address;
+			RtlZeroMemory(
+				&Address->Address[0].Address[0].sin_zero,
+				sizeof(Address->Address[0].Address[0].sin_zero));
+			return STATUS_SUCCESS;
 
           case TDI_CONNECTION_FILE:
-            AddrFile =
-              ((PCONNECTION_ENDPOINT)TranContext->Handle.ConnectionContext)->
-              AddressFile;
-            break;
+            Endpoint =
+				(PCONNECTION_ENDPOINT)TranContext->Handle.ConnectionContext;
+			TCPGetSockAddress( Endpoint, (PTRANSPORT_ADDRESS)Address, FALSE );
+			DbgPrint("Returning socket address %x\n", Address->Address[0].Address[0].in_addr);
+			RtlZeroMemory(
+				&Address->Address[0].Address[0].sin_zero,
+				sizeof(Address->Address[0].Address[0].sin_zero));
+			return STATUS_SUCCESS;
 
           default:
             TI_DbgPrint(MIN_TRACE, ("Invalid transport context\n"));
@@ -701,17 +716,6 @@ NTSTATUS DispTdiQueryInformation(
           TI_DbgPrint(MID_TRACE, ("MDL buffer too small.\n"));
           return STATUS_BUFFER_OVERFLOW;
         }
-
-        Address = (PTA_IP_ADDRESS)&AddressInfo->Address;
-        Address->TAAddressCount = 1;
-        Address->Address[0].AddressLength = TDI_ADDRESS_LENGTH_IP;
-        Address->Address[0].AddressType = TDI_ADDRESS_TYPE_IP;
-        Address->Address[0].Address[0].sin_port = AddrFile->Port;
-        Address->Address[0].Address[0].in_addr =
-          AddrFile->Address.Address.IPv4Address;
-        RtlZeroMemory(
-          &Address->Address[0].Address[0].sin_zero,
-          sizeof(Address->Address[0].Address[0].sin_zero));
 
         return STATUS_SUCCESS;
       }
@@ -752,7 +756,7 @@ NTSTATUS DispTdiQueryInformation(
           return STATUS_BUFFER_OVERFLOW;
         }
 
-        return TCPGetPeerAddress( Endpoint, AddressInfo->RemoteAddress );
+        return TCPGetSockAddress( Endpoint, AddressInfo->RemoteAddress, TRUE );
       }
   }
 

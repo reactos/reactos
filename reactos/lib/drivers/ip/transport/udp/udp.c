@@ -185,7 +185,7 @@ NTSTATUS UDPSendDatagram(
     }
 
     if(!(NCE = RouteGetRouteToDestination( &RemoteAddress ))) {
-		return STATUS_UNSUCCESSFUL;
+		return STATUS_NETWORK_UNREACHABLE;
     }
 
 	LocalAddress = AddrFile->Address;

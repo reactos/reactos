@@ -34,7 +34,8 @@ static BOOLEAN CantReadMore( PAFD_FCB FCB ) {
 }
 
 static VOID HandleEOFOnIrp( PAFD_FCB FCB, NTSTATUS Status, UINT Information ) {
-    if( Status == STATUS_SUCCESS && Information == 0 ) {
+    if( !NT_SUCCESS(Status) || 
+		(Status == STATUS_SUCCESS && Information == 0) ) {
         AFD_DbgPrint(MID_TRACE,("Looks like an EOF\n"));
         FCB->PollState |= AFD_EVENT_DISCONNECT;
         PollReeval( FCB->DeviceExt, FCB->FileObject );
@@ -259,10 +260,10 @@ NTSTATUS NTAPI ReceiveComplete
 
     HandleEOFOnIrp( FCB, Irp->IoStatus.Status, Irp->IoStatus.Information );
 
-    ReceiveActivity( FCB, NULL );
+	ReceiveActivity( FCB, NULL );
 
-    PollReeval( FCB->DeviceExt, FCB->FileObject );
-
+	PollReeval( FCB->DeviceExt, FCB->FileObject );
+		
     SocketStateUnlock( FCB );
 
     AFD_DbgPrint(MID_TRACE,("Returned %x\n", Status));

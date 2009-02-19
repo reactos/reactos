@@ -110,7 +110,8 @@ AfdGetSockOrPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
                 }
 
                 Status = TdiQueryInformation
-                    ( FCB->AddressFile.Object,
+                    ( FCB->Connection.Object ? 
+					  FCB->Connection.Object : FCB->AddressFile.Object,
                       TDI_QUERY_ADDRESS_INFO,
                       Mdl );
             } else {
