@@ -324,7 +324,7 @@ class Backend_ViewEditor extends Backend
       $lang=$stmt->fetchColumn();
 
       echo_strip('
-        <span id="bshowdiff" class="frmeditbutton" onclick="'."openOrCloseDiffArea(".$this->rev_id.",".$this->rev_id.")".'">
+        <span id="bshowdiff" class="virtualButton" onclick="'."openOrCloseDiffArea(".$this->rev_id.",".$this->rev_id.")".'">
         <img id="bshowdiffi" src="'.RosCMS::getInstance()->pathRosCMS().'images/tab_closed.gif" alt="" style="width:11px; height:11px; border:0px;" />&nbsp;Compare</span> (no related '.$lang.' entry, choose yourself)&nbsp;');
     }
 
@@ -356,7 +356,7 @@ class Backend_ViewEditor extends Backend
       }
 
       echo_strip('
-        <span id="bshowdiff" class="frmeditbutton" onclick="'."openOrCloseDiffArea('".$diff1."','".$diff2."')".'">
+        <span id="bshowdiff" class="virtualButton" onclick="'."openOrCloseDiffArea('".$diff1."','".$diff2."')".'">
           <img id="bshowdiffi" src="'.RosCMS::getInstance()->pathRosCMS().'images/tab_closed.gif" alt="" style="width:11px; height:11px; border:0px;" />
           &nbsp;Compare
         </span>');
@@ -410,7 +410,7 @@ class Backend_ViewEditor extends Backend
     }
 
     echo_strip('
-        <span id="frmedittags" class="frmeditbutton" onclick="TabOpenClose(this.id)" style="white-space: nowrap;">
+        <span id="frmedittags" class="virtualButton" onclick="TabOpenClose(this.id)" style="white-space: nowrap;">
           <img id="frmedittagsi" src="'.RosCMS::getInstance()->pathRosCMS().'images/tab_closed.gif" alt="" style="width:11px; height:11px; border:0px;" />
           &nbsp;Details
         </span>
@@ -577,7 +577,7 @@ class Backend_ViewEditor extends Backend
         // allow someone to delete his metadata he set and the user-id > 0
       if (($thisuser->hasAccess('system_tags') && $tag['user_id'] == -1) || $tag['user_id'] == $thisuser->id()) {
         echo_strip('&nbsp;&nbsp;
-          <span class="frmeditbutton" onclick="'."delLabelOrTag('".$tag['id']."')".'">
+          <span class="virtualButton" onclick="'."delLabelOrTag('".$tag['id']."')".'">
             <img src="'.RosCMS::getInstance()->pathRosCMS().'images/remove.gif" alt="" style="width:11px; height:11px; border:0px;" />
             &nbsp;Delete
           </span>');
@@ -669,7 +669,6 @@ class Backend_ViewEditor extends Backend
           <select name="dep_type" id ="dep_type">
             <option value="content">Content</option>
             <option value="script">Script</option>
-            <option value="template">Template</option>
             '.(ThisUser::getInstance()->hasAccess('dynamic_pages') ? '<option value="dynamic">Dynamic Page</option>' : '').'
           </select><br />
           <button type="submit" onclick="'."addDepency(".$this->rev_id.")".'">add manual depency</button>
@@ -798,7 +797,6 @@ class Backend_ViewEditor extends Backend
         <option value="page"'.(($data['type'] == 'page') ? ' selected="selected"' : '').'>Page</option>
         <option value="page"'.(($data['type'] == 'dynamic') ? ' selected="selected"' : '').'>Dynamic Page</option>
         <option value="content"'.(($data['type'] == 'content') ? ' selected="selected"' : '').'>Content</option>
-        <option value="template"'.(($data['type'] == 'template') ? ' selected="selected"' : '').'>Template</option>
         <option value="script"'.(($data['type'] == 'script') ? ' selected="selected"' : '').'>Script</option>
       </select><br />
       <br />
@@ -851,7 +849,7 @@ class Backend_ViewEditor extends Backend
     echo_strip('
       <div id="editaddstext"></div>
       <span id="editaddstextcount" style="display: none;">'.$stext_num.'</span>
-      <span class="filterbutton" onclick="addShortTextField()">
+      <span class="virtualButton" onclick="addShortTextField()">
         <img src="'.RosCMS::getInstance()->pathRosCMS().'images/add.gif" alt="" style="width:11px; height:11px; border:0px;" />&nbsp;Add
       </span>
       <br /><br />
@@ -877,7 +875,7 @@ class Backend_ViewEditor extends Backend
     echo_strip('
       <div id="editaddtext"></div>
       <span id="editaddtextcount" style="display: none;">'.$text_num.'</span>
-      <span class="filterbutton" onclick="addTextField()">
+      <span class="virtualButton" onclick="addTextField()">
         <img src="'.RosCMS::getInstance()->pathRosCMS().'images/add.gif" alt="" style="width:11px; height:11px; border:0px;" />&nbsp;Add
       </span>
       <br /><br /><br />

@@ -30,7 +30,7 @@ abstract class HTML_CMS extends HTML
 
 
 
-  protected $branch = 'website';
+  protected $branch = 'welcome';
 
 
 
@@ -50,8 +50,8 @@ abstract class HTML_CMS extends HTML
     }
 
     // register css & js files
-    $this->register_css('cms_navigation.css');
-    $this->register_js('cms_navigation.js');
+    $this->register_css('cms.css');
+    $this->register_js('cms.js');
 
     parent::__construct($page_title);
   }
@@ -74,9 +74,9 @@ abstract class HTML_CMS extends HTML
   /**
    * navigation for our CMS branches
    *
-   * @access private
+   * @access protected
    */
-  private function navigation( )
+  protected function navigation( )
   {
     $thisuser = &ThisUser::getInstance();
 
@@ -86,29 +86,24 @@ abstract class HTML_CMS extends HTML
     $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
     $stmt->execute();
     while($group = $stmt->fetch(PDO::FETCH_ASSOC)) {
-      $group_list .= ($group_list!=''?',':'').$group['name'];
+      $group_list .= ($group_list!=''?', ':'').$group['name'];
     }
 
     // get selected navigation entry
     echo_strip('
       <div id="myReactOS">
         <strong>'.$thisuser->name().'</strong> ('. $group_list .')
-        |
-        <span onclick="refreshPage()" style="color:#006090; cursor:pointer;">
-          <img src="'.RosCMS::getInstance()->pathRosCMS().'images/reload.gif" alt="reload page" width="16" height="16" />
-          <span style="text-decoration:underline;">reload</span>
-        </span>  
-        |
-        <a href="'.RosCMS::getInstance()->pathInstance().'?page=logout">Sign out</a>
+        &nbsp;|&nbsp;
+        <a href="'.RosCMS::getInstance()->pathInstance().'?page=logout">Log out</a>
       </div>
       <div id="roscms_page">
-        <table id="mt" cellpadding="0" cellspacing="0">
+        <table id="tabMenu" cellpadding="0" cellspacing="0">
           <tbody>
             <tr>
-              <th class="int'.(($this->branch == 'welcome') ? '2' : '1').'" onclick="'."loadBranch('welcome')".'">
-                <div class="tcL">
-                  <div class="tcR">
-                    <div class="text">Welcome</div>
+              <th'.(($this->branch == 'welcome') ? ' class="active"' : '').'>
+                <div class="corner_TL">
+                  <div class="corner_TR">
+                    <a class="text" href="'.RosCMS::getInstance()->pathInstance().'?page=data&branch=welcome" onclick="'."loadBranch()".'">Welcome</a>
                   </div>
                 </div>
               </th>
@@ -117,23 +112,10 @@ abstract class HTML_CMS extends HTML
     // Website branch tab
     if ($thisuser->hasAccess('website')) {
       echo_strip('
-              <th class="int'.(($this->branch == 'website') ? '2' : '1').'" onclick="'."loadBranch('website')".'">
-                <div class="tcL">
-                  <div class="tcR">
-                    <div class="text">Website</div>
-                  </div>
-                </div>
-              </th>
-              <td>&nbsp;&nbsp;</td>');
-    }
-
-    // User branch tab
-    if ($thisuser->hasAccess('user')) {
-      echo_strip('
-        <th class="int'.(($this->branch == 'user') ? '2' : '1').'" onclick="'."loadBranch('user')".'">
-          <div class="tcL">
-            <div class="tcR">
-              <div class="text">User</div>
+        <th'.(($this->branch == 'website') ? ' class="active"' : '').'>
+          <div class="corner_TL">
+            <div class="corner_TR">
+              <a class="text" href="'.RosCMS::getInstance()->pathInstance().'?page=data&branch=website" onclick="'."loadBranch()".'">Website</a>
             </div>
           </div>
         </th>
@@ -143,23 +125,10 @@ abstract class HTML_CMS extends HTML
     // Maintain branch tab
     if ($thisuser->hasAccess('maintain')) {
       echo_strip('
-        <th class="int'.(($this->branch == 'maintain') ? '2' : '1').'" onclick="'."loadBranch('maintain')".'">
-          <div class="tcL">
-            <div class="tcR">
-              <div class="text">Maintain</div>
-            </div>
-          </div>
-        </th>
-        <td>&nbsp;&nbsp;</td>');
-    }
-
-    // Administration branch tab
-    if ($thisuser->hasAccess('admin')) {
-      echo_strip('
-        <th class="int'.(($this->branch == 'admin') ? '2' : '1').'" onclick="'."loadBranch('admin')".'">
-          <div class="tcL">
-            <div class="tcR">
-              <div class="text">Administration</div>
+        <th'.(($this->branch == 'maintain') ? ' class="active"' : '').'>
+          <div class="corner_TL">
+            <div class="corner_TR">
+              <a class="text" href="'.RosCMS::getInstance()->pathInstance().'?page=data&branch=maintain" onclick="'."loadBranch()".'">Maintain</a>
             </div>
           </div>
         </th>
@@ -169,17 +138,24 @@ abstract class HTML_CMS extends HTML
     // Statistics branch tab
     if ($thisuser->hasAccess('stats')) {
       echo_strip('
-        <th class="int'.(($this->branch == 'stats') ? '2' : '1').'" onclick="'."loadBranch('stats')".'">
-          <div class="tcL">
-            <div class="tcR">
-              <div class="text">Statistics</div>
+        <th'.(($this->branch == 'stats') ? ' class="active"' : '').'>
+          <div class="corner_TL">
+            <div class="corner_TR">
+              <a class="text" href="'.RosCMS::getInstance()->pathInstance().'?page=data&branch=stats" onclick="'."loadBranch()".'">Statistics</a>
             </div>
           </div>
         </th>
         <td>&nbsp;&nbsp;</td>');
     }
 
-    echo_strip('
+      echo_strip('
+            <th'.(($this->branch == 'help') ? ' class="active"' : '').'>
+              <div class="corner_TL">
+                <div class="corner_TR">
+                  <a class="text" href="'.RosCMS::getInstance()->pathInstance().'?page=data&branch=help" onclick="'."loadBranch()".'">Help</a>
+                </div>
+              </div>
+            </th>
             <td style="width:100%">
               <div id="ajaxloadinginfo" style="visibility:hidden; text-align: center;">
                 <img src="'.RosCMS::getInstance()->pathRosCMS().'images/ajax_loading.gif" alt="loading ..." width="13" height="13" />
@@ -189,37 +165,7 @@ abstract class HTML_CMS extends HTML
         </tbody>
       </table>
 
-      <div class="tcR" style="background-color:#C9DAF8;">
-        <div id="branchInfo">');
-
-    // Branch Info List (below branch tabs)
-    switch ($this->branch) {
-      case 'welcome';
-        echo 'RosCMS v3 - Welcome page';
-        break;
-
-      case 'website':
-        echo_strip('Quick Links: <a href="'.RosCMS::getInstance()->pathInstance().'?page=data&amp;branch=welcome#web_news_langgroup">Translation Group News</a>
-          | <a href="'.RosCMS::getInstance()->pathGenerated().'?page=tutorial_roscms">Text- &amp; Video-Tutorials</a>
-          | <a href="'.RosCMS::getInstance()->pathGenerated().'/forum/viewforum.php?f=18">Website Forum</a>');
-        break;
-        
-      case 'user':
-        echo 'User Account Management Interface';
-        break;
-
-      case 'maintain': 
-        echo 'RosCMS Maintainer Interface';
-        break;
-
-      case 'stats':
-        echo 'RosCMS Website Statistics';
-        break;
-    } // end switch
-
-    echo_strip('
-        </div>
-      </div>');
+      <div class="tcR" style="background-color:#C9DAF8; height: 5px;"></div>');
   } // end of member function navigation
 
 

@@ -84,18 +84,20 @@ class Admin_System extends Backend
     echo_strip('
       <h2>Create new Area Protection List (APL)</h2>
       <form onsubmit="return false;">
-        <fieldset>
-          <legend>Groups Access Rights</legend>
-          <table>
+        <table class="roscmsTable">
+          <thead>
             <tr>
               <th style="vertical-align:bottom;" title="Security Level">SecLvl</th>
               <th style="vertical-align:bottom;">Group Name</th>');
 
     // show areas in head
     foreach ($areas as $area) {
-      echo '<th style="vertical-align:bottom;" title="'.$area['name'].': '.$area['description'].'"><img src="'.RosCMS::getInstance()->pathInstance().'?page=presentation&amp;type=vtext&amp;text='.$area['name'].'" alt="'.$area['name'].'" /></th>';
+      echo '<th style="vertical-align:bottom;" title="'.$area['name'].': '.$area['description'].'"><img src="'.RosCMS::getInstance()->pathInstance().'?page=presentation&amp;type=vtext&amp;text='.$area['name'].'&bgcolor=5984C3&textc=ffffff" alt="'.$area['name'].'" /></th>';
     }
-    echo '</tr>';
+      echo_strip('
+          </tr>
+        </thead>
+        <tbody>');
 
     // check if APL connection exists (used in loop)
     $stmt_is=&DBConnection::getInstance()->prepare("SELECT TRUE FROM ".ROSCMST_AREA." a JOIN ".ROSCMST_AREA_ACCESS." b ON a.id=b.area_id WHERE b.group_id=:group_id AND a.id=:area_id LIMIT 1");
@@ -103,10 +105,12 @@ class Admin_System extends Backend
     // go through groups
     $stmt=&DBConnection::getInstance()->prepare("SELECT id, name, security_level, description FROM ".ROSCMST_GROUPS." ORDER BY security_level ASC, name ASC");
     $stmt->execute();
+    $x = 0;
     while ($group = $stmt->fetch(PDO::FETCH_ASSOC)) {
+      ++$x;
       $stmt_is->bindParam('group_id',$group['id'],PDO::PARAM_INT);
       echo_strip('
-        <tr title="'.htmlspecialchars($group['description']).'">
+        <tr id="tr'.$x.'" title="'.htmlspecialchars($group['description']).'" class="'.($x%2 ? 'even' : 'odd').'" onmouseover="'."hlRow('tr".$x."',1)".'" onmouseout="'."hlRow('tr".$x."',2)".'">
           <td style="text-align:center;">'.$group['security_level'].'</td>
           <td>'.htmlspecialchars($group['name']).'</td>');
 
@@ -122,9 +126,9 @@ class Admin_System extends Backend
     }
 
     echo_strip('
-          </table>
-        </fieldset>
-        <button onclick="'."submitAreaProtection()".'">update APL</button>
+          </tbody>
+        </table>
+        <button onclick="'."submitSystemEdit()".'">update APL</button>
       </form>
     ');
   } // end of member function showAPL

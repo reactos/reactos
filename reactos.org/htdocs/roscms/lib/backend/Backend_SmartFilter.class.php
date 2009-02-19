@@ -35,23 +35,26 @@ class Backend_SmartFilter Extends Backend
    * - delete
    * - show list of filters
    *
+   * @param string type 'entry','user'
    * @access public
    */
-  public function __construct(  )
+  public function __construct( $type )
   {
     // login, prevent caching
     parent::__construct();
 
     // manage actions for adding / deleting filters
-    if ($_GET['d_val'] == 'add') {
-      $this->add($_GET['title'], $_GET['setting']);
-    }
-    elseif ($_GET['d_val'] == 'del') {
-      $this->delete($_GET['id']);
+    if (isset($_GET['action'])) {
+      if ($_GET['action'] == 'add') {
+        $this->add($type, $_GET['title'], $_GET['setting']);
+      }
+      elseif ($_GET['action'] == 'del') {
+        $this->delete($_GET['id']);
+      }
     }
 
     // show updated filter list
-    $this->show();
+    $this->show($type);
 
   } // end of constructor
 
@@ -60,26 +63,29 @@ class Backend_SmartFilter Extends Backend
   /**
    * adds a new filter to users smart filters
    *
+   * @param string type 'entry','user'
    * @param string title the filter name
    * @param string setting filter settings
    * @return 
    * @access private
    */
-  private function add( $title, $setting )
+  private function add( $type, $title, $setting )
   {
     $thisuser = &ThisUser::getInstance();
 
     // check if filter already exists
-    $stmt=&DBConnection::getInstance()->prepare("SELECT 1 FROM ".ROSCMST_FILTER." WHERE user_id = :user_id AND name = :title LIMIT 1");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT 1 FROM ".ROSCMST_FILTER." WHERE user_id = :user_id AND name = :title AND type = :type LIMIT 1");
     $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
     $stmt->bindParam('title',$title,PDO::PARAM_STR);
+    $stmt->bindParam('type',$type,PDO::PARAM_STR);
     $stmt->execute();
     if ($stmt->fetchColumn() === false) {
 
       // insert new filter
-      $stmt=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_FILTER." ( id, user_id, name, setting ) VALUES ( NULL, :user_id, :title, :setting )");
+      $stmt=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_FILTER." ( id, user_id, type, name, setting ) VALUES ( NULL, :user_id, :type, :title, :setting )");
       $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
       $stmt->bindParam('title',$title,PDO::PARAM_STR); 
+      $stmt->bindParam('type',$type,PDO::PARAM_STR);
       $stmt->bindParam('setting',$setting,PDO::PARAM_STR);
       $stmt->execute();
     }
@@ -109,25 +115,30 @@ class Backend_SmartFilter Extends Backend
   /**
    * deletes a smart filter
    *
+   * @param string type 'entry','user'
    * @access private
    */
-  private function show( )
+  private function show( $type )
   {
+    $message = true;
+
     // echo current list of filters
-    $stmt=&DBConnection::getInstance()->prepare("SELECT id, name, setting FROM ".ROSCMST_FILTER." WHERE user_id = :user_id ORDER BY name ASC");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT id, name, setting FROM ".ROSCMST_FILTER." WHERE user_id = :user_id AND type = :type ORDER BY name ASC");
     $stmt->bindParam('user_id',ThisUser::getInstance()->id(),PDO::PARAM_INT);
+    $stmt->bindParam('type',$type,PDO::PARAM_STR);
     $stmt->execute();
     while ($filter = $stmt->fetch(PDO::FETCH_ASSOC)) {
       echo_strip('
-        <span style="cursor:pointer; text-decoration:underline;" onclick="'."selectUserFilter('".$filter['setting']."', '".$filter['name']."')".'">'.$filter['name'].'</span>
-        <span style="cursor:pointer;" onclick="'."deleteUserFilter('".$filter['id']."', '".$filter['name']."')".'">
-          <img src="'.RosCMS::getInstance()->pathRosCMS().'images/remove.gif" alt="-" style="width:11px; height:11px; border:0px;" />
+        <span style="cursor:pointer;" onclick="'."selectUserFilter('".$filter['setting']."', '".$filter['name']."')".'">'.$filter['name'].'</span>
+        <span style="cursor:pointer;" onclick="'."deleteUserFilter('".$filter['id']."', '".$filter['name']."')".'" title="Delete">
+          &nbsp;<img src="'.RosCMS::getInstance()->pathRosCMS().'images/remove.gif" alt="-" style="width:11px; height:11px; border:0px;" />
         </span>
         <br />');
+      $message = false;
     }
 
     // give standard text, if no filters are found
-    if ($filter === false) {
+    if ($message) {
       echo '<span>Compose your favorite filter combinations and afterwards use the &quot;save&quot; function.</span>';
     }
   } // end of member function show

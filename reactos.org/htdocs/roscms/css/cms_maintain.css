@@ -1,1 +1,29 @@
-TEXTAREA { width: 100%; }
+    /*
+    RosCMS - ReactOS Content Management System
+    Copyright (C) 2009  Danny Götte <dangerground@web.de>
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+    */
+#searchfield { color: #999; width: 250px; }
+
+
+#userfilter { background-color: #B5EDA3;}
+#userfilter .content { color: #009900;}
+
+
+#maintainarea { margin-top: 1.5em; border: 1px dashed lightgrey; min-height: 200px; background-color: white; }
+#usertable { min-height: 200px; background-color: white; }
+
+#lmAccess { margin-top: 1.5em; }

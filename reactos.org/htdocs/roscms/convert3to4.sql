@@ -55,6 +55,7 @@ ORDER BY lang_name ASC;
 CREATE TABLE roscms_filter (
   id bigint(20) unsigned NOT NULL auto_increment,
   user_id bigint(20) NOT NULL COMMENT '->accounts(id); -1=system',
+  type ENUM( 'entry', 'user' ) NOT NULL,
   name varchar(32) collate utf8_unicode_ci NOT NULL,
   setting tinytext collate utf8_unicode_ci NOT NULL,
   PRIMARY KEY  (id),
@@ -68,6 +69,7 @@ INSERT INTO roscms_filter
 SELECT
   NULL,
   filt_usrid,
+  'entry',
   filt_title,
   filt_string
 FROM data_user_filter WHERE filt_type = 1
@@ -257,26 +259,25 @@ INSERT INTO roscms_area VALUES
 (16, 'Website Branch', 'website', 'Access to Website branch'),
 (17, 'Pages', 'pages', 'View Pages'),
 (18, 'Dynamic Pages', 'dynamic_pages', 'View Dynamic Pages'),
-(19, 'Templates', 'templates', 'View Page Templates'),
-(20, 'Scripts', 'scripts', 'View Scripts'),
-(21, 'Delete Tags', 'deltag', 'Delete System Tags from entries'),
-(22, 'Update Tags', 'updatetag', 'Update Tag value'),
-(23, 'More Languages', 'more_lang', 'Can change things in more languages than the user has set in his profile'),
-(24, 'Logs', 'logs', 'Can view Logs'),
-(25, 'Delete Entries', 'del_entry', 'Delete Entries'),
-(26, 'Delete without archiv', 'del_wo_archiv', 'delete entries without moving them to archiv'),
-(27, 'add level 0 group', 'addlvl0group', 'Add memberships with group security level 0'),
-(28, 'add level 1 groups', 'addlvl1group', 'Add memberships with group security level 1'),
-(29, 'add level 2 groups', 'addlvl2group', 'Add memberships with group security level 2'),
-(30, 'add level 3 groups', 'addlvl3group', 'Add memberships with group security level 3'),
-(31, 'Mix private & public entries', 'mix_priv_pub', 'show private and public type entries together'),
-(32, 'Entry Details Security', 'entry_security', 'change security settings & name + type of entry'),
-(33, 'show more filter', 'more_filter', 'show more than standard filter'),
-(34, 'show admin filter', 'admin_filter', 'special admin filters'),
-(35, 'Show all filter', 'dont_hide_filter', 'don''t hide filter from users'),
-(36, 'Make Entries Stable', 'make_stable', 'Make Entries Stable'),
-(37, 'show system entries', 'show_sys_entry', 'show entries of type ''system'''),
-(38, 'Add manuel depencies', 'add_depencies', 'add new manuell depencies to entries');
+(19, 'Scripts', 'scripts', 'View Scripts'),
+(20, 'Delete Tags', 'deltag', 'Delete System Tags from entries'),
+(21, 'Update Tags', 'updatetag', 'Update Tag value'),
+(22, 'More Languages', 'more_lang', 'Can change things in more languages than the user has set in his profile'),
+(23, 'Logs', 'logs', 'Can view Logs'),
+(24, 'Delete Entries', 'del_entry', 'Delete Entries'),
+(25, 'Delete without archiv', 'del_wo_archiv', 'delete entries without moving them to archiv'),
+(26, 'add level 0 group', 'addlvl0group', 'Add memberships with group security level 0'),
+(27, 'add level 1 groups', 'addlvl1group', 'Add memberships with group security level 1'),
+(28, 'add level 2 groups', 'addlvl2group', 'Add memberships with group security level 2'),
+(29, 'add level 3 groups', 'addlvl3group', 'Add memberships with group security level 3'),
+(30, 'Mix private & public entries', 'mix_priv_pub', 'show private and public type entries together'),
+(31, 'Entry Details Security', 'entry_security', 'change security settings & name + type of entry'),
+(32, 'show more filter', 'more_filter', 'show more than standard filter'),
+(33, 'show admin filter', 'admin_filter', 'special admin filters'),
+(34, 'Show all filter', 'dont_hide_filter', 'don''t hide filter from users'),
+(35, 'Make Entries Stable', 'make_stable', 'Make Entries Stable'),
+(36, 'show system entries', 'show_sys_entry', 'show entries of type ''system'''),
+(37, 'Add manuel depencies', 'add_depencies', 'add new manuell depencies to entries');
 
 
 
@@ -301,7 +302,7 @@ AND g.security_level = 3)
 OR ((a.name_short = 'admin' OR a.name_short = 'logs' OR a.name_short = 'addlvl3group')
 AND g.name_short = 'ros_sadmin')
 
-OR ((a.name_short='pages' OR a.name_short = 'templates' OR a.name_short = 'scripts')
+OR ((a.name_short='pages' OR a.name_short = 'scripts')
 AND g.security_level > 1 AND g.name_short != 'transmaint')
 
 OR ((a.name_short = 'CMS' OR a.name_short = 'website' OR a.name_short = 'addlvl0group')
@@ -322,7 +323,7 @@ AND (g.name_short = 'ros_sadmin' OR g.name_short = 'ros_admin'));
 -- --------------------------------------------------------
 CREATE TABLE roscms_entries (
   id bigint(20) unsigned NOT NULL auto_increment,
-  type enum('page','content','dynamic','script','template','system') collate utf8_unicode_ci NOT NULL,
+  type enum('page','content','dynamic','script','system') collate utf8_unicode_ci NOT NULL,
   name varchar(64) collate utf8_unicode_ci NOT NULL,
   access_id bigint(20) unsigned COMMENT '->access(id)',
   old_id int(11) NOT NULL,
@@ -342,7 +343,16 @@ SELECT
   s.id,
   d.data_id,
   TRUE
-FROM data_a d JOIN roscms_entries_access s ON d.data_acl=s.name_short
+FROM data_a d JOIN roscms_entries_access s ON d.data_acl=s.name_short WHERE data_type != 'template'
+UNION
+SELECT
+  NULL,
+  'content',
+  d.data_name,
+  s.id,
+  d.data_id,
+  TRUE
+FROM data_a d JOIN roscms_entries_access s ON d.data_acl=s.name_short WHERE data_type = 'template'
 UNION
 SELECT
   NULL,
@@ -351,7 +361,16 @@ SELECT
   s.id,
   d.data_id,
   FALSE
-FROM data_ d JOIN roscms_entries_access s ON d.data_acl=s.name_short;
+FROM data_ d JOIN roscms_entries_access s ON d.data_acl=s.name_short WHERE data_type != 'template'
+UNION
+SELECT
+  NULL,
+  'template',
+  d.data_name,
+  s.id,
+  d.data_id,
+  FALSE
+FROM data_ d JOIN roscms_entries_access s ON d.data_acl=s.name_short WHERE data_type = 'template';
 
 
 

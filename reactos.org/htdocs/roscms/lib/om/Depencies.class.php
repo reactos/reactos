@@ -30,7 +30,7 @@ class Depencies
 {
 
   private $rev_id = 0;
-  private $short = array('template'=>'templ','content'=>'cont','script'=>'include','page'=>'link','dynamic'=>'link');
+  private $short = array('content'=>'cont','script'=>'include','page'=>'link','dynamic'=>'link');
 
 
 
@@ -198,9 +198,6 @@ class Depencies
   {
     // get depency type for database
     switch ($matches[2]) {
-      case 'templ':
-        $type = 'template';
-        break;
       case 'cont':
         $type = 'content';
         break;
@@ -231,10 +228,6 @@ class Depencies
   {
     // is include depency ?
     switch ($type) {
-      case 'template':
-        $depency_name = 'templ_'.$name;
-        $include = true;
-        break;
       case 'content':
         $depency_name = 'cont_'.$name;
         $include = true;

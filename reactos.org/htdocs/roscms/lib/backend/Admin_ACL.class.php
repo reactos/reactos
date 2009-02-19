@@ -50,33 +50,34 @@ class Admin_ACL extends Admin
           <input id="access_name" name="access_name" maxlength="100" value="" />
           <br />
 
-          <label for="access_short">Short Name (Identifier)</label>
-          <input id="access_short" name="access_short" maxlength="50" value="" />
-          <br />
-
           <label for="access_desc">Description</label>
           <input id="access_desc" name="access_desc" maxlength="255" value="" />
         </fieldset>
         <br />
         <fieldset>
           <legend>Groups Access Rights</legend>
-          <table>
-            <tr>
-              <th title="Security Level">SecLvl</th>
-              <th>Group Name</th>');
+          <table class="roscmsTable">
+            <thead>
+              <tr>
+                <th title="Security Level">SecLvl</th>
+                <th>Group Name</th>');
 
     // access rights in head
     foreach ($rights as $right) {
-      echo '<th style="vertical-align:bottom;" title="'.$right['name'].': '.$right['description'].'"><img src="'.RosCMS::getInstance()->pathInstance().'?page=presentation&amp;type=vtext&amp;text='.$right['name'].'" alt="'.$right['name'].'" /></th>';
+      echo '<th style="vertical-align:bottom;" title="'.$right['name'].': '.$right['description'].'"><img src="'.RosCMS::getInstance()->pathInstance().'?page=presentation&amp;type=vtext&amp;text='.$right['name'].'&bgcolor=5984C3&textc=ffffff" alt="'.$right['name'].'" /></th>';
     }
-    echo '</tr>';
+    echo_strip('
+        </tr>
+      </thead>
+      <tbody>');
 
     // list of groups
     $stmt=&DBConnection::getInstance()->prepare("SELECT id, name, security_level, description FROM ".ROSCMST_GROUPS." ORDER BY security_level ASC, name ASC");
     $stmt->execute();
+    $x=0;
     while ($group = $stmt->fetch(PDO::FETCH_ASSOC)) {
       echo_strip('
-        <tr title="'.htmlspecialchars($group['description']).'">
+        <tr title="'.htmlspecialchars($group['description']).'" class="'.(++$x%2 ? 'even' : 'odd').'">
           <td>'.$group['security_level'].'</td>
           <td>'.htmlspecialchars($group['name']).'</td>');
 
@@ -88,9 +89,10 @@ class Admin_ACL extends Admin
     }
 
     echo_strip('
+            </tbody>
           </table>
         </fieldset>
-        <button onclick="'."submitNew('acl')".'">Create new ACL</button>
+        <button onclick="'."submitAccessAdd()".'">Create new ACL</button>
       </form>
     ');
   } // end of member function showNew
@@ -107,9 +109,8 @@ class Admin_ACL extends Admin
     $success = true;
   
     // try to insert new access list
-    $stmt=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_ACCESS." (name, name_short, description) VALUES (:name, :short, :description)");
+    $stmt=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_ACCESS." (name, description) VALUES (:name, :description)");
     $stmt->bindParam('name',$_POST['access_name'],PDO::PARAM_STR);
-    $stmt->bindParam('short',$_POST['access_short'],PDO::PARAM_STR);
     $stmt->bindParam('description',$_POST['access_desc'],PDO::PARAM_STR);
     if ($stmt->execute()) {
     
@@ -161,23 +162,20 @@ class Admin_ACL extends Admin
    */
   protected function showSearch( )
   {
-    echo_strip('
-      <h2>Select ACL to '.($_GET['for']=='edit' ? 'edit' : 'delete').'</h2>
-      <form onsubmit="return false;">
-        <select name="access" id="access">
-          <option value="0">&nbsp;</option>');
-
     // list all ALCs
-    $stmt=&DBConnection::getInstance()->prepare("SELECT id, name, description FROM ".ROSCMST_ACCESS." ORDER BY name ASC");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT id, standard, name, description FROM ".ROSCMST_ACCESS." ORDER BY name ASC");
     $stmt->execute();
+    $x=0;
     while ($access = $stmt->fetch(PDO::FETCH_ASSOC)) {
-      echo '<option value="'.$access['id'].'" title="'.$access['description'].'">'.$access['name'].'</option>';
+      ++$x;
+      echo_strip ('
+        <tr id="tra'.($x).'" class="'.($x%2 ? 'odd' : 'even').'" onclick="'."editAccess(".$access['id'].")".'" onmouseover="'."hlRow(this.id,1)".'" onmouseout="'."hlRow(this.id,2)".'">
+          <td>'.$access['standard'].'</td>
+          <td>'.$access['name'].'</td>
+          <td>'.htmlentities($access['description']).'</td>
+        </tr>');
     }
 
-    echo_strip('
-        </select>
-        <button onclick="'."submitSearch('acl','".($_GET['for'] == 'edit' ? 'edit' : 'delete')."')".'">go on</button>
-      </form>');
   } // end of member function showSearch
 
 
@@ -220,8 +218,8 @@ class Admin_ACL extends Admin
     $rights=$stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // information about current Access
-    $stmt=&DBConnection::getInstance()->prepare("SELECT name, name_short, description, id FROM ".ROSCMST_ACCESS." WHERE id=:access_id");
-    $stmt->bindParam('access_id',$_POST['access'],PDO::PARAM_INT);
+    $stmt=&DBConnection::getInstance()->prepare("SELECT name, description, id FROM ".ROSCMST_ACCESS." WHERE id=:access_id");
+    $stmt->bindParam('access_id',$_REQUEST['access'],PDO::PARAM_INT);
     $stmt->execute();
     $access = $stmt->fetchOnce(PDO::FETCH_ASSOC);
 
@@ -236,26 +234,23 @@ class Admin_ACL extends Admin
           <input id="access_name" name="access_name" maxlength="100" value="'.$access['name'].'" />
           <br />
 
-          <label for="access_short">Short Name (Identifier)</label>
-          <input id="access_short" name="access_short" maxlength="50" value="'.$access['name_short'].'" />
-          <br />
-
           <label for="access_desc">Description</label>
           <input id="access_desc" name="access_desc" maxlength="255" value="'.$access['description'].'" />
         </fieldset>
         <br />
         <fieldset>
           <legend>Groups Access Rights</legend>
-          <table>
-            <tr>
-              <th title="Security Level">SecLvl</th>
-              <th>Group Name</th>');
+          <table class="roscmsTable">
+            <thead>
+              <tr>
+                <th title="Security Level">SecLvl</th>
+                <th>Group Name</th>');
 
     // list rights in table head
     foreach ($rights as $right) {
-      echo '<th style="vertical-align:bottom;" title="'.$right['name'].': '.$right['description'].'"><img src="'.RosCMS::getInstance()->pathInstance().'?page=presentation&amp;type=vtext&amp;text='.$right['name'].'" alt="'.$right['name'].'" /></th>';
+      echo '<th style="vertical-align:bottom;" title="'.$right['name'].': '.$right['description'].'"><img src="'.RosCMS::getInstance()->pathInstance().'?page=presentation&amp;type=vtext&amp;text='.$right['name'].'&bgcolor=5984C3&textc=ffffff" alt="'.$right['name'].'" /></th>';
     }
-    echo '</tr>';
+    echo '</tr></thead><tbody>';
 
     // for usage in loop
     $stmt_is=&DBConnection::getInstance()->prepare("SELECT TRUE FROM ".ROSCMST_ACL." WHERE group_id=:group_id AND right_id=:right_id AND access_id=:access_id LIMIT 1");
@@ -264,10 +259,12 @@ class Admin_ACL extends Admin
     // go through groups
     $stmt=&DBConnection::getInstance()->prepare("SELECT id, name, security_level, description FROM ".ROSCMST_GROUPS." ORDER BY security_level ASC, name ASC");
     $stmt->execute();
+    $x=0;
     while ($group = $stmt->fetch(PDO::FETCH_ASSOC)) {
+      ++$x;
       $stmt_is->bindParam('group_id',$group['id'],PDO::PARAM_INT);
       echo_strip('
-        <tr title="'.htmlspecialchars($group['description']).'">
+        <tr id="tr'.$x.'" title="'.htmlspecialchars($group['description']).'" class="'.($x%2 ? 'even' : 'odd').'" onmouseover="'."hlRow(this.id,1)".'" onmouseout="'."hlRow(this.id,2)".'">
           <td>'.$group['security_level'].'</td>
           <td>'.htmlspecialchars($group['name']).'</td>');
 
@@ -283,9 +280,10 @@ class Admin_ACL extends Admin
     }
 
     echo_strip('
+            </tbody>
           </table>
         </fieldset>
-        <button onclick="'."submitEdit('acl')".'">edit ACL</button>
+        <button onclick="'."submitAccessEdit()".'">edit ACL</button>
       </form>
     ');
   } // end of member function showEdit
@@ -302,9 +300,8 @@ class Admin_ACL extends Admin
     $success = true;
 
     // try to insert new access list
-    $stmt=&DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_ACCESS." SET name=:name, name_short=:short, description=:description WHERE id=:access_id");
+    $stmt=&DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_ACCESS." SET name=:name, description=:description WHERE id=:access_id");
     $stmt->bindParam('name',$_POST['access_name'],PDO::PARAM_STR);
-    $stmt->bindParam('short',$_POST['access_short'],PDO::PARAM_STR);
     $stmt->bindParam('description',$_POST['access_desc'],PDO::PARAM_STR);
     $stmt->bindParam('access_id',$_POST['access_id'],PDO::PARAM_INT);
     $success = $success && $stmt->execute();

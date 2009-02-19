@@ -19,12 +19,12 @@
     */
 
 /**
- * class Backend_Quickinfo
+ * class Backend_EntryTableToolTip
  * 
  * @package Branch_Website
  * @subpackage Backend
  */
-class Backend_QuickInfo extends Backend
+class Backend_EntryTableToolTip extends Backend
 {
 
 
@@ -58,17 +58,17 @@ class Backend_QuickInfo extends Backend
     }
 
     // helper vars
-    $t_s = '<span style="color:#FF6600;">'; // tag start
+    $t_s = '<span style="color:#999;white-space: nowrap;">'; // tag start
     $t_e = ':</span> '; // tag end
     $t_lb = '<br />'; // tag seperation (linebreak)
 
     // start to echo metadata
-    echo $t_s.'Name'.$t_e . wordwrap($revision['name'],14,'<br />',1).$t_lb;
+    echo $t_s.'Name'.$t_e . $revision['name'].$t_lb;
     echo $t_s.'Type'.$t_e . $revision['type'].$t_lb;
     echo $t_s.'Status'.$t_e . $revision['status'].$t_lb;
     echo $t_s.'Version'.$t_e . $revision['version'].$t_lb;
     echo $t_s.'Lang'.$t_e . $revision['language'].$t_lb;
-    echo $t_s.'User'.$t_e . wordwrap($revision['user_name'],13,'<br />',1).$t_lb;
+    echo $t_s.'User'.$t_e . $revision['user_name'].$t_lb;
     
     // list Tags
     $stmt=&DBConnection::getInstance()->prepare("SELECT name, value  FROM ".ROSCMST_TAGS." WHERE user_id IN(-1, 0, :user_id) AND rev_id=:rev_id ORDER BY user_id ASC, name ASC");
@@ -87,9 +87,9 @@ class Backend_QuickInfo extends Backend
     }
 
     // and current Data / Time
-    echo $t_s.'Date / Time'.$t_e.$t_lb.$revision['datetime'];
+    echo $t_s.'Date / Time'.$t_e.$revision['datetime'];
   } // end of member function getInfo
 
 
-} // end of Backend_QuickInfo
+} // end of Backend_EntryTableToolTip
 ?>

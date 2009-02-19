@@ -249,8 +249,11 @@ class Backend_ViewEntryTable extends Backend
                 $column_list_row .= 'Unknown';
               }
               break;
-            case 'Rights':
-              $column_list_row .= 'Depracted';
+            case 'Date':
+              $column_list_row .= $row['datetime'];
+              break;
+            case 'Title':
+              $column_list_row .= $stext_content;
               break;
             case 'Version':
               $column_list_row .= $row['version'] ;
@@ -334,7 +337,7 @@ class Backend_ViewEntryTable extends Backend
 
     // handle filters
     foreach ($filter_list as $key => $value) {
-      $filter_part = explode('_',$value); 
+      $filter_part = explode('_',strtolower($value)); 
       $type_a = $filter_part[0];
       $type_b = @$filter_part[1];
       $type_c = @$filter_part[2];
@@ -363,7 +366,7 @@ class Backend_ViewEntryTable extends Backend
 
             // set order field
             switch ($type_c) {
-              case 'datetime': // date-time
+              case 'date': // date
                 $this->sql_order .= " r.datetime ";
                 break;
               case 'name': // name
@@ -372,13 +375,13 @@ class Backend_ViewEntryTable extends Backend
               case 'lang': // language
                 $this->sql_order .= "r.lang_id ";
                 break;
-              case 'usr': // user
+              case 'user': // user
                 $this->sql_order .= "r.user_id ";
                 break;
-              case 'ver': // version
+              case 'version': // version
                 $this->sql_order .= "r.version ";
                 break;
-              case 'nbr': // number ("dynamic" entry)
+              case 'number': // number ("dynamic" entry)
                 ++$tag_counter;
                 $this->sql_order .= " CAST(t".$tag_counter.".value AS INT)";
                 $this->sql_where .= " AND t".$tag_counter.".name = 'number' ";
@@ -404,9 +407,12 @@ class Backend_ViewEntryTable extends Backend
                 ++$tag_counter;
                 $this->sql_order .= " t".$tag_counter.".value ";
                 $this->sql_where .= " AND t".$tag_counter.".name = 'kind' ";
-              break;
+                break;
+              default:
+                var_dump($filter_part);
+                break;
             }
-            
+
             // set standard order by direction
             if ($type_b == 'desc') {
               $this->sql_order .= ' DESC ';
@@ -487,7 +493,7 @@ class Backend_ViewEntryTable extends Backend
             }
             break;
 
-          // type   (page, content, template, script, system)
+          // type   (page, content, script, system)
           case 'y':
             $this->sql_where .= "d.type".($type_b=='is' ? '=':'!=').DBConnection::getInstance()->quote($type_c,PDO::PARAM_STR);
             break;
@@ -640,8 +646,8 @@ class Backend_ViewEntryTable extends Backend
       $this->sql_where .= " AND r.user_id = '".$thisuser->id()."' ";
     }
 
-    // either show draft (private) OR stable & new (public) entries,   private AND public entries together are NOT allowed => block 
     if (($entries_private > 0 && $entries_public > 0 && !$thisuser->hasAccess('mix_priv_pub')) || (!$thisuser->hasAccess('show_sys_entry') && $entries_system > 0)) {
+    // either show draft (private) OR stable & new (public) entries,   private AND public entries together are NOT allowed => block 
       $this->sql_select = "";
       $this->sql_from   = "";
       $this->sql_where  = " FALSE ";

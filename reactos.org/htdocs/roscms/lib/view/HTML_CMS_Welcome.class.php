@@ -46,11 +46,6 @@ class HTML_CMS_Welcome extends HTML_CMS
   protected function body( )
   {
     echo_strip('
-      <p>&nbsp;</p>
-      <h2>Welcome</h2>
-      <p style="font-weight: bold;">Welcome to RosCMS v3</p>
-      <br />
-      <h3>Content</h3>
       <ul style="font-weight: bold;">
         <li><a href="#web_news">RosCMS Website News</a></li>
         <li><a href="#web_news_langgroup">Translator Information</a></li>

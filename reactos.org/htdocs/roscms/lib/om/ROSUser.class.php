@@ -94,5 +94,119 @@ class ROSUser
 
 
 
+  /**
+   * adds a new account membership
+   *
+   * @param int user
+   * @param int group
+   * @access private
+   */
+  public static function addMembership( $user, $group )
+  {
+    $thisuser=&ThisUser::getInstance();
+
+    // check if user is already member, so we don't add him twice
+    // also check that you don't give accounts a higher seclevel
+    $stmt=&DBConnection::getInstance()->prepare("SELECT DISTINCT g.security_level FROM ".ROSCMST_GROUPS." g JOIN ".ROSCMST_MEMBERSHIPS." m ON m.group_id=g.id WHERE g.id = :group_id AND m.user_id != :user_id LIMIT 1");
+    $stmt->bindParam('group_id',$group,PDO::PARAM_INT);
+    $stmt->bindParam('user_id',$user,PDO::PARAM_INT);
+    $stmt->execute();
+    $level = $stmt->fetchColumn();
+
+    // is user able to add groups of this level
+    if ($level !== false && $thisuser->hasAccess('addlvl'.$level.'group')) {
+
+      // insert new membership
+      $stmt=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_MEMBERSHIPS." ( user_id , group_id ) VALUES ( :user_id, :group_id )");
+      $stmt->bindParam('user_id',$user,PDO::PARAM_INT);
+      $stmt->bindParam('group_id',$group,PDO::PARAM_INT);
+      if ($stmt->execute()) {
+        Log::writeLow('add user account membership: user-id='.$user.', group-id='.$group);
+      }
+    }
+  } // end of member function addMembership
+
+
+
+  /**
+   * delete group membership
+   *
+   * @param int user
+   * @param int group
+   * @access private
+   */
+  public static function deleteMembership( $user, $group )
+  {
+    $stmt=&DBConnection::getInstance()->prepare("DELETE FROM ".ROSCMST_MEMBERSHIPS." WHERE user_id = :user_id AND group_id = :group_id LIMIT 1");
+    $stmt->bindParam('user_id',$user,PDO::PARAM_INT);
+    $stmt->bindParam('group_id',$group,PDO::PARAM_INT);
+    if ($stmt->execute()) {
+      Log::writeLow('delete user account membership: user-id='.$user.', group-id='.$group);
+    }
+  } // end of member function deleteMembership
+
+
+
+  /**
+   * disable user account
+   *
+   * @param int user
+   * @access private
+   */
+  public static function disableAccount( $user )
+  {
+    // only with admin rights
+    if ($thisuser->hasAccess('disableaccount')) {
+      $stmt=&DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_USERS." SET disabled = TRUE WHERE id = :user_id");
+      $stmt->bindParam('user_id',$user,PDO::PARAM_INT);
+      if ($stmt->execute()) {
+        Log::writeMedium('account '.$user.' disabled');
+      }
+    }
+  } // end of member function disableAccount
+
+
+
+
+  /**
+   * reenable user account
+   *
+   * @param int user
+   * @access private
+   */
+  public static function enableAccount( $user )
+  {
+    // enable account only with admin rights
+    if ($thisuser->hasAccess('disableaccount')) {
+      // enable account only, if he has already activated his account
+      $stmt=&DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_USERS." SET disabled = FALSE WHERE activation = '' AND id = :user_id");
+      $stmt->bindParam('user_id',$user,PDO::PARAM_INT);
+      if ($stmt->execute()) {
+        Log::writeMedium('account '.$user.' enabled');
+      }
+    }
+  } // end of member function enableAccount
+
+
+
+
+  /**
+   * reenable user account
+   *
+   * @param int user
+   * @access private
+   */
+  public static function changeLanguage( $user, $lang )
+  {
+    $stmt=&DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_USERS." SET lang_id = :lang WHERE id = :user_id");
+    $stmt->bindParam('lang',$lang);
+    $stmt->bindParam('user_id',$user);
+    if ($stmt->execute()) {
+      Log::writeLow('change user account language: user-id='.$user.', lang-id='.$lang);
+    }
+  } // end of member function changeLanguage
+
+
+
 } // end of ROSUser
 ?>

@@ -17,25 +17,11 @@
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
     */
 
-BODY { font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 83%; margin: 0px 0px 1em 0px; padding: 0px; background: white url('../images/topbar.jpg') repeat-x scroll top left; }
-A { color: #006090; }
-A:hover { color: #000000; }
-HR { margin: 5px 0px; color: #8D8D8D; }
-ADDRESS { font-size: 9px; margin: 0px; }
-
-H1,
 .contentSmallTitle { display: block; line-height: normal; font-size: 14px; font-weight: bold; color: white; background-color: #5984C3; padding: 0px 0px 1px 10px; margin-top: 0px; }
-H1 A { color: white; text-decoration: none; }
-H1 A:hover { text-decoration:underline; }
-
-H2 { font-size: 22px; color: #5984C3; font-weight: bold; margin-top: 15px; }
-H3 { font-size: 18px; color: #5984C3; font-weight: bold; margin-top: 10px; }
-H4 { font-size: 16px; color: #5984C3; font-weight: bold; margin-top: 5px; }
-H5 { font-size: 14px; color: #5984C3; font-weight: bold; margin-top: 5px; }
-H6 { font-size: 12px; color: #5984C3; font-weight: bold; }
+BODY { font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 83%; margin: 0px 0px 1em 0px; padding: 0px; background: white url('../images/topbar.jpg') repeat-x scroll top left; }
 
 
-#top { margin: 0px; background: url("../images/logo.jpg") no-repeat scroll 35px 0; padding: 103px 0px 26px 0px; color: white; }
+#top { margin: 0px; background: url("../images/logo_roscms.jpg") no-repeat scroll 35px 0; padding: 103px 0px 26px 0px; color: white; }
 #top A { color: white; font-size: 13px; text-decoration: none; padding: 1px 5px 1px 5px; }
 #top A:hover { color: black; background-color: #FFCC33; }
 

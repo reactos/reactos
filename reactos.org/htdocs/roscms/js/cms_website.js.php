@@ -24,10 +24,10 @@ require('../lib/RosCMS_Autoloader.class.php');
 // config data
 require_once(ROSCMS_PATH.'config.php');
 RosCMS::getInstance()->apply();
+Login::required();
 
 // get user language
 $thisuser = ThisUser::getInstance();
-$user_lang = $thisuser->language();
 ?>
 
 
@@ -45,7 +45,7 @@ function htmlFilterValues( action, objidval2, filterid ) {
   var filtentryselstrs2 = '';
 
   // hidden filter entries don't need a combobox (only for SecLev = 1 user) 
-  if (objidval2 == 0 && !roscms_access['dont_hide_filter']) { 
+  if (objidval2 == '0' && !roscms_access.dont_hide_filter) { 
     filtentryselstrs1 = '<input type="hidden" name="sfb'+filterid+'" id="sfb'+filterid+'" value="" />';
     filtentryselstrs2 = '<input type="hidden" name="sfc'+filterid+'" id="sfc'+filterid+'" value="" />';
   }
@@ -60,7 +60,7 @@ function htmlFilterValues( action, objidval2, filterid ) {
           filtentryselstrs1 += '<option value="no">is not</option>';
         }
         filtentryselstrs1 += '</select>';
-        filtentryselstrs2 = '<select id="sfc'+filterid+'"><option value="stable">Stable</option><option value="new">New</option><option value="draft">Draft</option><option value="unknown">Unknown or no status</option>';
+        filtentryselstrs2 = '<select id="sfc'+filterid+'"><option value="stable">Published</option><option value="new">Pending</option><option value="draft">Draft</option><option value="unknown">Unknown or no status</option>';
 
         if (roscms_access['more_filter']) {
           filtentryselstrs2 += '<option value="archive">Archive</option>';
@@ -76,7 +76,7 @@ function htmlFilterValues( action, objidval2, filterid ) {
           filtentryselstrs1 += '<option value="no">is not</option>';
         }
         filtentryselstrs1 += '</select>';
-        filtentryselstrs2 = '<select id="sfc'+filterid+'"><option value="page">Page</option><option value="dynamic">Dynamic Page</option><option value="content">Content</option><option value="template">Template</option><option value="script">Script</option><option value="system">System</option></select>';
+        filtentryselstrs2 = '<select id="sfc'+filterid+'"><option value="page">Page</option><option value="dynamic">Dynamic Page</option><option value="content">Content</option><option value="script">Script</option><option value="system">System</option></select>';
         break;
 
       // starred
@@ -89,12 +89,6 @@ function htmlFilterValues( action, objidval2, filterid ) {
       case 'd': 
         filtentryselstrs1 = '<select id="sfb'+filterid+'"><option value="is">is</option><option value="no">is not</option><option value="sm">is smaller</option><option value="la">is larger</option></select>';
         filtentryselstrs2 = '<input id="sfc'+filterid+'" type="text" value="" size="20" maxlength="50" />&nbsp;&nbsp;(e.g. 2007-02-22)';
-        break;
-
-      // time
-      case 't': 
-        filtentryselstrs1 = '<select id="sfb'+filterid+'"><option value="is">is</option><option value="no">is not</option><option value="sm">is smaller</option><option value="la">is larger</option></select>';
-        filtentryselstrs2 = '<input id="sfc'+filterid+'" type="text" value="" size="20" maxlength="50" />&nbsp;&nbsp;(e.g. 15:30)';
         break;
 
       // language
@@ -113,7 +107,7 @@ else {
 }
 $stmt->execute();
 while ($language = $stmt->fetch(PDO::FETCH_ASSOC)) {
-  echo '<option value="'.$language['id'].'"'.(($language['id'] == $user_lang) ? ' selected="selected"' : '').'>'.$language['name'].'</option>';
+  echo '<option value="'.$language['id'].'"'.(($language['id'] == $thisuser->language()) ? ' selected="selected"' : '').'>'.$language['name'].'</option>';
 }
 
 ?></select>';
@@ -130,12 +124,12 @@ if ($thisuser->hasAccess('more_lang')) {
 }
 else {
   $stmt=&DBConnection::getInstance()->prepare("SELECT id, name FROM ".ROSCMST_LANGUAGES." WHERE id=:lang_id AND id != :standard_lang");
-  $stmt->bindParam('lang_id',$user_lang,PDO::PARAM_INT);
+  $stmt->bindParam('lang_id',$thisuser->language(),PDO::PARAM_INT);
 }
 $stmt->bindParam('standard_lang',Language::getStandardId(),PDO::PARAM_INT);
 $stmt->execute();
 while ($language = $stmt->fetch(PDO::FETCH_ASSOC)) {
-  echo '<option value="'.$language['id'].'"'.(($language['id'] == $user_lang) ? ' selected="selected"' : '').'>'.$language['name'].'</option>';
+  echo '<option value="'.$language['id'].'"'.(($language['id'] == $thisuser->language()) ? ' selected="selected"' : '').'>'.$language['name'].'</option>';
 }
  ?></select>';
         break;
@@ -150,26 +144,16 @@ while ($language = $stmt->fetch(PDO::FETCH_ASSOC)) {
         filtentryselstrs2 = '<input id="sfc'+filterid+'" type="text" value="" size="20" maxlength="50" />&nbsp;&nbsp;(e.g. John Doe)';
         break;
 
-      // version
-      case 'v': 
-        filtentryselstrs1 = '<select id="sfb'+filterid+'"><option value="is">is</option><option value="no">is not</option><option value="sm">is smaller</option><option value="la">is larger</option></select>';
-        filtentryselstrs2 = '<input id="sfc'+filterid+'" type="text" value="" size="5" maxlength="10" />&nbsp;&nbsp;(e.g. 12)';
-        break;
-
       // column
       case 'c':
         filtentryselstrs1 = '<select id="sfb'+filterid+'"><option value="is">is</option></select>';
-        filtentryselstrs2 = '<select id="sfc'+filterid+'"><option value="language">Language</option><option value="user">User</option><option value="type">Type</option><option value="version">Version</option>';
-        if (roscms_access['more_filter']) {
-          filtentryselstrs2 += '<option value="security">Security</option><option value="rights">Rights</option>';
-        }
-        filtentryselstrs2 += '</select>';
+        filtentryselstrs2 = '<select id="sfc'+filterid+'"><option value="language">Language</option><option value="user">User</option><option value="type">Type</option><option value="version">Version</option><option value="security">Security</option><option value="date">Date</option><option value="title">Title</option></select>';
         break;
 
       // order by
       case 'o': 
         filtentryselstrs1 = '<select id="sfb'+filterid+'"><option value="asc">Ascending</option><option value="desc">Descending</option></select>';
-        filtentryselstrs2 = '<select id="sfc'+filterid+'"><option value="datetime">Date &amp; Time</option><option value="name">Name</option><option value="lang">Language</option><option value="usr">User</option><option value="type">Type</option><option value="ver">Version</option><option value="nbr">Number ("dynamic" entry)</option>';
+        filtentryselstrs2 = '<select id="sfc'+filterid+'"><option value="date">Date &amp; Time</option><option value="name">Name</option><option value="lang">Language</option><option value="user">User</option><option value="type">Type</option><option value="version">Version</option><option value="number">Number ("dynamic" entry)</option>';
         if (roscms_access['more_filter']) {
           filtentryselstrs2 += '<option value="security">Security</option><option value="revid">RevID</option><option value="ext">Extension</option><option value="status">Status</option><option value="kind">Kind</option>';
         }
@@ -215,14 +199,6 @@ while($ACL=$stmt->fetch(PDO::FETCH_ASSOC)) {
         }
         filtentryselstrs1 +='</select>';
         filtentryselstrs2 = '<input id="sfc'+filterid+'" type="text" value="" size="15" maxlength="30" />&nbsp;&nbsp;(e.g. todo)';
-        break;
-
-      // system
-      case 'e': 
-        if (roscms_access['admin_filter']) {
-          filtentryselstrs1 = '<select id="sfb'+filterid+'"><option value="dataid">Data-ID</option><option value="revid">Rev-ID</option><option value="usrid">User-ID</option><option value="langid">Lang-ID</option></select>';
-          filtentryselstrs2 = '<input id="sfc'+filterid+'" type="text" value="" size="15" maxlength="30" />';
-        }
         break;
     } // end switch
   }

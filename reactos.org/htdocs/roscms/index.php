@@ -96,24 +96,21 @@ switch (@$_GET['page']) {
 
     // select interface menu on top
     switch (@$_GET['branch']) {
-      case 'welcome':
-        new HTML_CMS_Welcome();
-        break;
-      case 'user':
-        new HTML_CMS_User();
-        break;
       case 'maintain':
         new HTML_CMS_Maintain();
-        break;
-      case 'admin':
-        new HTML_CMS_Admin();
         break;
       case 'stats':
         new HTML_CMS_Stats();
         break;
+      case 'help':
+        new HTML_CMS_Help();
+        break;
       case 'website':
-      default:
         new HTML_CMS_Website();
+        break;
+      default:
+      case 'welcome':
+        new HTML_CMS_Welcome();
         break;
     } // end switch
     break;
@@ -124,7 +121,14 @@ switch (@$_GET['page']) {
     // select returned item
     switch ($_GET['type']) {
       case 'xml':
-        new Backend_ViewEntryTable();
+        switch ($_GET['subtype']) {
+          case 'ptm': //  Main Edit Frame
+            new Backend_ViewEntryTable();
+            break;
+          case 'ust': //  user search table
+            new Backend_ViewUserTable();
+            break;
+        } // end switch subtype
         break;
       case 'text':
 
@@ -142,17 +146,23 @@ switch (@$_GET['page']) {
           case 'asi': // Auto Save Info
             new Backend_SaveDraft();
             break;
-          case 'ufs': // User Filter Storage
-            new Backend_SmartFilter();
+          case 'usf': // User Search Filter (maintain tab)
+            new Backend_SmartFilter('user');
+            break;
+          case 'ufs': // User Filter Storage (website tab)
+            new Backend_SmartFilter('entry');
             break;
           case 'ut': // User Tags
             new Backend_Label();
             break;
-          case 'uqi': // User Quick Info
-            new Backend_QuickInfo();
+          case 'tt': // EntryTable Tooltip
+            new Backend_EntryTableToolTip();
             break;
           case 'prv': // Preview
             new Backend_Preview();
+            break;
+          case 'ud': // User Details
+            new Backend_UserDetails();
             break;
         } // end switch subtype
         break;
@@ -160,7 +170,7 @@ switch (@$_GET['page']) {
         new Backend_ViewPreview();
         break;
       case 'user':
-        new Backend_User();
+        new Backend_ViewUserDetails();
         break;
       case 'maintain':
         new Backend_Maintain();
@@ -190,7 +200,12 @@ switch (@$_GET['page']) {
   case 'presentation':
     //switch ($_GET['type']) {
     //  case 'vtext': // vertical text
-        Presentation::verticalText($_GET['text']);
+        if (isset($_GET['bgcolor']) && isset($_GET['textc'])) {
+          Presentation::verticalText($_GET['text'], $_GET['bgcolor'], $_GET['textc']);
+        }
+        else {
+          Presentation::verticalText($_GET['text']);
+        }
     //    break;
     //} // end switch type
     break;

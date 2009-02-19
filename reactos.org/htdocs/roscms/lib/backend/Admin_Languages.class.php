@@ -67,7 +67,7 @@ class Admin_Languages extends Admin
             <option value="10">10 (reserved for standard language)</option>
           </select>
         </fieldset>
-        <button onclick="'."submitNew('lang')".'">Create new Language</button>
+        <button onclick="'."submitLanguageAdd()".'">Create new Language</button>
       </form>
     ');
   } // end of member function showNew
@@ -107,23 +107,19 @@ class Admin_Languages extends Admin
    */
   protected function showSearch( )
   {
-    echo_strip('
-      <h2>Select Language to '.($_GET['for']=='edit' ? 'edit' : 'delete').'</h2>
-      <form onsubmit="return false;">
-        <select name="lang" id="lang">
-          <option value="0">&nbsp;</option>');
-
     // list of available languages
-    $stmt=&DBConnection::getInstance()->prepare("SELECT id, name, name_original FROM ".ROSCMST_LANGUAGES." ORDER BY name ASC");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT id, name, name_short, name_original FROM ".ROSCMST_LANGUAGES." ORDER BY name ASC");
     $stmt->execute();
+    $x=0;
     while ($lang = $stmt->fetch(PDO::FETCH_ASSOC)) {
-      echo '<option value="'.$lang['id'].'">'.$lang['name'].' ('.htmlentities($lang['name_original']).')</option>';
+    ++$x;
+      echo_strip ('
+        <tr id="trl'.($x).'" class="'.($x%2 ? 'odd' : 'even').'" onclick="'."editLanguage(".$lang['id'].")".'" onmouseover="'."hlRow(this.id,1)".'" onmouseout="'."hlRow(this.id,2)".'">
+          <td>'.$lang['name_short'].'</td>
+          <td>'.$lang['name'].'</td>
+          <td>'.htmlentities($lang['name_original']).'</td>
+        </tr>');
     }
-
-    echo_strip('
-        </select>
-        <button onclick="'."submitSearch('lang','".($_GET['for'] == 'edit' ? 'edit' : 'delete')."')".'">go on</button>
-      </form>');
   } // end of member function showSearch
 
 
@@ -162,7 +158,7 @@ class Admin_Languages extends Admin
   {
     // language information
     $stmt=&DBConnection::getInstance()->prepare("SELECT name, name_short, name_original, id, level FROM ".ROSCMST_LANGUAGES." WHERE id=:lang_id");
-    $stmt->bindParam('lang_id',$_POST['lang'],PDO::PARAM_INT);
+    $stmt->bindParam('lang_id',$_REQUEST['lang'],PDO::PARAM_INT);
     $stmt->execute();
     $lang = $stmt->fetchOnce(PDO::FETCH_ASSOC);
 
@@ -200,7 +196,7 @@ class Admin_Languages extends Admin
             <option value="10" '.($lang['level'] == 10 ? ' selected="selected"' : '').'">10 (reserved for standard language)</option>
           </select>
         </fieldset>
-        <button onclick="'."submitEdit('lang')".'">Edit Language</button>
+        <button onclick="'."submitLanguageEdit()".'">Edit Language</button>
       </form>
     ');
   } // end of member function showEdit

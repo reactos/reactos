@@ -21,8 +21,6 @@
 // search filter standard text
 clearSearchFilter();
 
-var nres=0;
-var hlRows=true;
 document.getElementById('tablist').style.display = 'block';
 document.getElementById('frametable').style.display = 'block';
 document.getElementById('frameedit').style.display = 'none';

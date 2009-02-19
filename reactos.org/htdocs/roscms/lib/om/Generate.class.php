@@ -39,7 +39,7 @@ class Generate
   private $lang_id = null;
   private $lang = null;
 
-  private $short = array('template'=>'templ', 'content'=>'cont', 'script'=>'inc');
+  private $short = array('content'=>'cont', 'script'=>'inc');
 
 
 
@@ -101,7 +101,7 @@ class Generate
     }
 
     // execute embedded scripts
-    $content = preg_replace_callback('/\[#inc_([^][#[:space:]]+)\]/', array($this,'evalTemplate'),$content);
+    $content = preg_replace_callback('/\[#inc_([^][#[:space:]]+)\]/', array($this,'evalScript'),$content);
 
     // replace roscms vars
     $content = $this->replaceRoscmsPlaceholder($content);
@@ -217,9 +217,6 @@ class Generate
     // file content
     $content = $revision['content'];
 
-    // used by templates
-    $content = str_replace('[#%NAME%]', $data_name, $content);
-
     // replace depencies
     $stmt_more=&DBConnection::getInstance()->prepare("SELECT d.id, d.type, d.name FROM ".ROSCMST_DEPENCIES." w JOIN ".ROSCMST_ENTRIES." d ON w.child_id=d.id WHERE w.rev_id=:rev_id AND w.include IS TRUE");
     $stmt_more->bindParam('rev_id',$revision['id'],PDO::PARAM_INT);
@@ -233,7 +230,7 @@ class Generate
     } // end foreach
 
     // execute scripts
-    $content = preg_replace_callback('/\[#inc_([^][#[:space:]]+)\]/', array($this,'evalTemplate'),$content);
+    $content = preg_replace_callback('/\[#inc_([^][#[:space:]]+)\]/', array($this,'evalScript'),$content);
 
     // replace roscms vars
     $content = $this->replaceRoscmsPlaceholder($content);
@@ -300,9 +297,6 @@ class Generate
       $this->rev_id = $revision['id'];
       $this->dynamic_num = $i;
 
-      // used by templates
-      $content = str_replace('[#%NAME%]', $data_name, $revision['content']); 
-
       // replace depencies
       $stmt_more=&DBConnection::getInstance()->prepare("SELECT d.id, d.type, d.name FROM ".ROSCMST_DEPENCIES." w JOIN ".ROSCMST_ENTRIES." d ON w.child_id=d.id WHERE w.rev_id=:rev_id AND w.include IS TRUE");
       $stmt_more->bindParam('rev_id',$instance['id'],PDO::PARAM_INT);
@@ -316,7 +310,7 @@ class Generate
       } // end foreach
 
       // replace scripts
-      $content = preg_replace_callback('/\[#inc_([^][#[:space:]]+)\]/', array($this,'evalTemplate'),$content);
+      $content = preg_replace_callback('/\[#inc_([^][#[:space:]]+)\]/', array($this,'evalScript'),$content);
 
       // replace roscms vars
       $content = $this->replaceRoscmsPlaceholder($content);
@@ -439,10 +433,10 @@ class Generate
     }
 
     if ($data_id === null) {
-      $stmt=&DBConnection::getInstance()->prepare("SELECT d.id AS data_id, d.type, d.name, l.id AS lang_id FROM ".ROSCMST_ENTRIES." d CROSS JOIN ".ROSCMST_LANGUAGES." l WHERE d.type = 'content' OR d.type = 'script' OR d.type='template' ORDER BY l.level DESC, l.name ASC");
+      $stmt=&DBConnection::getInstance()->prepare("SELECT d.id AS data_id, d.type, d.name, l.id AS lang_id FROM ".ROSCMST_ENTRIES." d CROSS JOIN ".ROSCMST_LANGUAGES." l WHERE d.type = 'content' OR d.type = 'script' ORDER BY l.level DESC, l.name ASC");
     }
     else {
-      $stmt=&DBConnection::getInstance()->prepare("SELECT id AS data_id, type, name, :lang_id AS lang_id FROM ".ROSCMST_ENTRIES." WHERE id=:data_id");
+      $stmt=&DBConnection::getInstance()->prepare("SELECT id AS data_id, type, name, :lang_id AS lang_id FROM ".ROSCMST_ENTRIES." WHERE id=:data_id AND type != 'system'");
       $stmt->bindParam('data_id',$data_id,PDO::PARAM_INT);
       $stmt->bindParam('lang_id',$this->lang_id,PDO::PARAM_INT);
     }
@@ -473,7 +467,9 @@ class Generate
         else {
           $this->dynamic_num = false;
         }
-        $content = $revision['content'];
+        
+        // get content and replace [#cont_[%NAME%]] with [#cont_~pagename~]
+        $content = preg_replace('/\[#cont_\[%Name%\]\]/i',$this->page_name, $revision['content']);
 
         // replace links
         $content = preg_replace_callback('/\[#link_([^][#[:space:]]+)\]/', array($this, 'replaceWithHyperlink'), $content);
@@ -715,7 +711,7 @@ class Generate
    * @return string
    * @access private
    */
-  private function evalTemplate( $matches )
+  private function evalScript( $matches )
   {  
     // get entry
     $revision=$this->getFrom('script',$matches[1]);
@@ -726,7 +722,7 @@ class Generate
       // catch output
       ob_start();
 
-      // some vars for template usage;
+      // some vars for script usage;
       $roscms_dynamic_number = $this->dynamic_num;
       $roscms_lang_id = $this->lang_id;
 
@@ -745,7 +741,7 @@ class Generate
     }
 
     return $content;
-  } // end of member function evalTemplate
+  } // end of member function evalScript
 
 
 

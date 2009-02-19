@@ -51,7 +51,7 @@ class RosCMS
   private $limit_password_min = 5;
   private $limit_password_max = 50;
 
-  private $system_brand = 'RosCMS v4';
+  private $system_brand = 'RosCMS 4';
   private $system_version = '4.0.0 alpha';
 
 

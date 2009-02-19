@@ -1,0 +1,121 @@
+    /*
+    RosCMS - ReactOS Content Management System
+    Copyright (C) 2007  Klemens Friedl <frik85@reactos.org>
+                  2009  Danny Götte <dangerground@web.de>
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+    */
+
+/* ### HTML definitions ### */
+  BODY { font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 83%; margin: 0px 0px 1em 0px; padding: 0px;}
+
+  A { color: #006090; }
+  A:hover { color: #000000; }
+
+  HR { margin: 5px 0px; color: gray; }
+
+  IMG { border: none; }
+
+  H1 { font-size: 22px; color: #5984C3; font-weight: bold; margin-top: 14px; }
+  H2 { font-size: 20px; color: #5984C3; font-weight: bold; margin-top: 11px; }
+  H3 { font-size: 18px; color: #5984C3; font-weight: bold; margin-top: 8px; }
+  H4 { font-size: 16px; color: #5984C3; font-weight: bold; margin-top: 5px; }
+  H5 { font-size: 14px; color: #5984C3; font-weight: bold; margin-top: 2px; }
+  H6 { font-size: 12px; color: #5984C3; font-weight: bold; }
+
+
+/* container including Tabs */
+  #roscms_page { padding: 0ex 1ex; }
+  #myReactOS { text-align: right; padding-right: 10px; }
+
+/* container including leftmenu & bubble */
+  #roscms_container { position: relative; top: 0px; left: 0px; min-width: 350px; border: 1px dashed white; z-index: 2; }
+
+
+
+/* ### Tab Menu ### */
+  #tabMenu { margin-top: 0.5ex; width: 100%; border: none; border-collapse: separate; }
+
+  #tabMenu TH { background-color: #E5ECF9; font-family: arial,sans-serif; font-size: small; font-weight: bold; text-align: center; }
+  #tabMenu TH.active { background-color: #C9DAF8; }
+
+  #tabMenu A.text { padding: 0px 1em; color: black; text-decoration: none;}
+
+
+
+/* ### Bubble ### */
+  .corner_TL { background: transparent url("../images/ul.gif") no-repeat scroll left top; }
+  .corner_TR { background: transparent url("../images/ur.gif") no-repeat scroll right top; padding: 3px 6px 1px 6px; }
+  .corner_BL { background: transparent url("../images/ll.gif") no-repeat scroll left bottom; }
+  .corner_BR { background: transparent url("../images/lr.gif") no-repeat scroll right bottom; padding: 3px 6px 1px 6px; }
+
+ /* main bubble background */
+  #bubble_bg { background-color: #C9DAF8; }
+
+ /* main bubble content*/
+  #bubble { padding:8px; min-height: 200px; }
+
+ /* alertbox bubble */
+  #alertbox { visibility: hidden; background: #FAD163; width: 400px; margin: 8px auto 5px auto; text-align: center;}
+  #alertboxc { padding: 4px; font-weight: bold; }
+
+
+
+/* ### Left Menu ### */
+  .leftMenu { margin-top: 10px; }
+
+ /* round edges in left menu */
+  .lmItemTop { background: transparent url("../images/ul.gif") no-repeat scroll left top; background-color: white; }
+  .lmItemTopSelected { background: transparent url("../images/ul.gif") no-repeat scroll left top; background-color: #C9DAF8; font-weight: bold; }
+  .lmItemBottom { background: transparent url("../images/ll.gif") no-repeat scroll left bottom; padding: 3px 0px 3px 10px; color: #006090; text-decoration: underline; cursor: pointer; }
+
+  /* left Bubbles */
+  .leftBubble { background-color: lightgrey; width: 140px; margin-top: 1.1em; }
+  .leftBubble .title { cursor: pointer; padding: 0px 4px; }
+  .leftBubble .content { margin: 0px 4px; background-color: white; padding: 3px; }
+
+
+
+/* ### Toolbar ### */
+  .toolbar { text-decoration: none; width: 600px; margin: 3px 0px; clear: left; }
+  .toolbar .button { text-align: center; cursor: pointer; float: left; padding: 2px 4px; margin: 0px 4px 3px 0px; text-decoration: none; }
+  .toolbar .button:hover { background-color: #DAEBF9; border: 1px solid white; padding: 1px 3px; }
+  .toolbar .button:active { background-color: lightgrey; }
+  .toolbar .button IMG { height: 16px; width: 16px; text-decoration: none; }
+  .toolbar .button .text { display: block; color: #000099; white-space: nowrap; }
+
+
+
+/* ### RosCMS Table ### */
+  .roscmsTable { overflow: hidden; width: 100%; font-style: normal; border-collapse: collpse; border: none; border-spacing: 0px; }
+  .roscmsTable THEAD { background: #5984C3; color: white; text-align: left; height:1.7em; }
+  .roscmsTable THEAD TH.sortable { background: #5984C3 url("../images/sort.gif") no-repeat left center; padding-left: 15px; cursor: pointer; }
+  .roscmsTable TBODY { cursor: pointer; }
+  .roscmsTable TBODY TD { color: black; border-bottom: 1px solid #bbb; overflow: hidden; empty-cells: show; }
+
+ /* general row colors */
+  .roscmsTable .odd TD { background-color: #DDD; }
+  .roscmsTable .even TD { background-color: #EEE; }
+  
+ /* error message / empty table space */
+  .tableswhitespace { font-size: smaller; text-align: center; padding: 20px 20px; background-color: white; min-height: 300px; }
+
+
+
+/* ### Virtual buttons ### */
+  .virtualButton { padding: 2px 3px; cursor: pointer; color:#006090; }
+  .virtualLink { text-decoration: underline; color: #006090; font-style: normal; cursor: pointer; }
+
+

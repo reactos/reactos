@@ -186,7 +186,6 @@ class Backend_ViewAddEntry extends Backend
           <select id="txtaddentrytype" name="txtaddentrytype">
             <option value="page">Page</option>
             <option value="content">Content</option>
-            <option value="template">Template</option>
             <option value="script">Script</option>'.(ThisUser::getInstance()->hasAccess('dynamic_pages') ? '
             <option value="dynamic">Dynamic Page</option>' : '').'
           </select>');
@@ -222,7 +221,7 @@ class Backend_ViewAddEntry extends Backend
             <option value="none" selected="selected">no template</option>');
 
         // select templates
-        $stmt=&DBConnection::getInstance()->prepare("SELECT DISTINCT d.name FROM ".ROSCMST_ENTRIES." d ON r.data_id = d.id WHERE r.status = 'stable' AND r.archive IS FALSE AND d.type = 'template' ORDER BY d.name ASC");
+        $stmt=&DBConnection::getInstance()->prepare("SELECT DISTINCT d.name FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id = d.id JOIN ".ROSCMST_TAGS." t ON t.rev_id=r.id WHERE r.status = 'stable' AND r.archive IS FALSE AND t.name = 'kind' AND t.value = 'template' ORDER BY d.name ASC");
         $stmt->execute();
         while ($templates = $stmt->fetch(PDO::FETCH_ASSOC)) {
           echo '<option value="'. $templates['name'] .'">'. $templates['name'] .'</option>';

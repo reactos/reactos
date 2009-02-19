@@ -1,6 +1,6 @@
     /*
     RosCMS - ReactOS Content Management System
-    Copyright (C) 2007  Klemens Friedl <frik85@reactos.org>
+    Copyright (C) 2009  Danny Götte <dangerground@web.de>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -17,14 +17,24 @@
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
     */
 
+// search filter standard text
+clearSearchFilter();
 
-/* fix IE glitch */
-#bubble_bg { margin-bottom: -35px; }
+// open standard left menu
+loadUserSearch();
 
-.virtualButton { padding-top: 4px; padding-bottom: 0px; }
+// load user filter
+document.getElementById('userfilter2c').innerHTML = '<div align="right"><img src="images/ajax_loading.gif" alt="loading ..." style="width:13px; height:13px;" /></div>';
+makeRequest('?page=backend&type=text&subtype=usf&d_val=load', 'usf', 'userfilter2c', 'html', 'GET', '');
 
-/* fix IE glitch */
-.spacer { margin-bottom: -18px; }
+if (readCookie('userfilter') == 0) TabOpenCloseEx('userfilter');
 
-/* without this, IE's trident engine went nuts and forget about "overflow" and "white-space" !!! */
-.roscmsTable { table-layout: fixed; }
+roscms_page_load_finished = true;
+
+// window unload blocker
+if (exitmsg !== '') {
+  window.onbeforeunload = exitmsg;
+}
+else {
+  window.onbeforeunload = false;
+}

@@ -1,6 +1,7 @@
     /*
     RosCMS - ReactOS Content Management System
     Copyright (C) 2007  Klemens Friedl <frik85@reactos.org>
+                  2009  Danny Götte <dangerground@web.de>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,7 +17,33 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
     */
-    
+
+/* ### RosCMS Table Row Colors ### */
+  .roscmsTable .new TD { background-color: #B5EDA3; }
+  .roscmsTable .draft TD { background-color: #FFE4C1; }
+  .roscmsTable .unknown TD { background-color: #FFCCFF; }
+  .roscmsTable .transg TD { background-color: #A3EDB4; }
+  .roscmsTable .transb TD { background-color: #D6CAE4; }
+  .roscmsTable .transr TD { background-color: #FAA5A5; }
+
+
+
+/* ### left Bubble ### */
+ /* smart filter */
+  #smartfilter { background-color: #B5EDA3;}
+  #smartfilter .content { color: #009900;}
+ /* user labels */
+  #userlabel { background-color: #DFD3EC;}
+  #userlabel .content { color: #8868AC;}
+
+
+
+/* ### Tooltip ### */
+#tooltip { border: 1px solid #CCC; background-color: #FFC; color: #333; position: absolute; z-index: 900; padding: 3px; }
+
+
+
+
 
 .editor LABEL,
 .editor H3 { display: block; color: #5984C3; font-weight: bold; font-size: larger; padding-right: 25px; }
@@ -25,84 +52,27 @@
 /* edit entry (information on top) */
 .revDetail { color: #00681C; font-weight: bold;}
 
-#roscms_container { position: relative; top: 0px; left: 0px; min-width: 350px; border: 1px dashed white; z-index: 2; }
-
-/* entryTable */
-#entryTable { overflow: hidden; min-width: 350px; width: 100%; font-family: Verdana, Arial, Helvetica, sans-serif; font-style: normal; }
-#entryTable THEAD { background: #5984C3; color: white; text-align: left; }
-#entryTable TBODY { cursor: pointer; }
-#entryTable TBODY TD { color: black; border-bottom: 1px solid #bbb; overflow: hidden; empty-cells: show; }
-
-/* row colors */
-#entryTable .odd TD { background-color: #E2E2E2; }
-#entryTable .even TD { background-color: #EEEEEE; }
-#entryTable .new TD { background-color: #B5EDA3; }
-#entryTable .draft TD { background-color: #FFE4C1; }
-#entryTable .unknown TD { background-color: #FFCCFF; }
-#entryTable .transg TD { background-color: #A3EDB4; }
-#entryTable .transb TD { background-color: #D6CAE4; }
-#entryTable .transr TD { background-color: #FAA5A5; }
-
 /* Columns: Checkboxes | Star | Name | | ... | Date */
 .cMark { width: 30px; }
 .cStar { width: 18px; }
-.cCid { width: 180px; }
-.cSpace { width: 10px; }
-.cExtraCol { width: 75px; }
+.cCid { width: 180px; margin-left: 10px; }
+.cExtraCol { width: 75px; padding: 0px 3px; }
 .cDate { width: 90px; }
 
-/*table content preview */
-.tcp { color: #777777; }
-
-.cell-height { white-space: nowrap; display: block; vertical-align: middle; text-align: left; width: 100%; float: left;}
+/* title*/
+.cell-height { white-space: nowrap; display: block; vertical-align: middle; text-align: left; width: 100%; color: #777777;}
 
 .cStarOn { border: 0px; background: transparent url("../images/star_on.gif") no-repeat 3px 1px; }
 .cStarOff { border: 0px; background: transparent url("../images/star_off.gif") no-repeat 3px 1px; }
 
 .tabselect { padding: 4px 0px 2px 0px; background-color: #C9DAF8; }
 
-.tableswhitespace { font-size: smaller; text-align: center; padding: 0px 20px; background-color: white; }
-
-#bubble_bg { background-color: #C9DAF8; }
-
-.corner_TL { background: transparent url("../images/ul.gif") no-repeat scroll left top; }
-.corner_TR { background: transparent url("../images/ur.gif") no-repeat scroll right top; padding: 3px 6px 1px 6px; }
-.corner_BL { background: transparent url("../images/ll.gif") no-repeat scroll left bottom; }
-.corner_BR { background: transparent url("../images/lr.gif") no-repeat scroll right bottom; padding: 3px 6px 1px 6px; }
-
-#bubble { padding:8px; }
-
-.subma { background-color: #C9DAF8; }
-.submb { background-color: white; }
-
-.leftMenu { margin-top: 10px; }
-
-/* selected entry on left menu */
-.subm1 { background: transparent url("../images/ul.gif") no-repeat scroll left top; }
-.subm2 { background: transparent url("../images/ll.gif") no-repeat scroll left bottom; padding: 3px 0px 3px 10px; color: #006090; text-decoration: underline; cursor: pointer; }
-
-.leftBubble {  background-color: lightgrey; width: 140px; margin-top: 1.1em; }
-.leftBubble .title { cursor: pointer; padding: 0px 4px; }
-.leftBubble .content { margin: 0px 4px; background-color: white; padding: 3px; }
-
-/* bubble colors */
-#quickinfo { background-color: #FFD4BC;}
-#quickinfo .content { color: black;}
-#quickinfo .content SPAN { color: #FF6600;}
-#smartfilter { background-color: #B5EDA3;}
-#smartfilter .content { color: #009900;}
-#userlabel { background-color: #DFD3EC;}
-#userlabel .content { color: #8868AC;}
 
 .filterbar { padding-bottom: 5px; border-bottom: 1px solid #bbbbbb; }
 .filterbar2 { padding-top: 4px;}
-.filterbutton { padding: 2px 3px; cursor: pointer; color:#006090; }
 #txtfind { color:#999999; }
 
-#alertbox { visibility: hidden; background: #FAD163; width: 400px; margin: 8px auto 5px auto; text-align: center;}
-#alertboxc { padding: 4px; font-weight: bold; }
 
-.button { text-decoration: underline; color: #006090; font-family: Verdana, Arial, Helvetica, sans-serif; font-style: normal; cursor: pointer; }
 
 /* ### Editor ### */
 
@@ -114,12 +84,9 @@
 .detailmenubody { padding: 5px; font-size: 105%; text-decoration: none;}
 .detailmenu { color: #006090; text-decoration: underline; cursor: pointer; }
 
-.frmeditbutton { cursor:pointer; color:#006090; }
-
-#legend { display: block; width: 500px; border: solid 1px black; }
-
-#legend .lbox { border: solid 1px black; width: 17px;}
-
+#legend { margin: 5px 0px 5px 5px;}
+#legendc { display: block; width: 600px; margin: 0px 0px 5px 5px; }
+#legendc .lbox { border: solid 2px white; width: 16px; margin: 1px 3px; display: block; float: left; }
 
 .deletebutton { cursor:pointer; color:#006090; font-weight: bold; }
 

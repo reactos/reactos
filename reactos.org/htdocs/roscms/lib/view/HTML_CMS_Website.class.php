@@ -58,6 +58,10 @@ class HTML_CMS_Website extends HTML_CMS
     parent::__construct( $page_title, $page_css);
   } // end of constructor
 
+  protected function navigation() {
+    echo '<div id="tooltip" style="display: none;"></div>';
+    parent::navigation();
+  }
 
 
   protected function body( )
@@ -75,8 +79,6 @@ class HTML_CMS_Website extends HTML_CMS
         // Navigation Data
         var roscms_current_page = 'new';
         var roscms_prev_page = 'new';
-        var roscms_current_tbl_position = 0;
-        var roscms_intern_entry_per_page = 25;
 
         // editor preferences
         var roscms_archive = false;
@@ -86,15 +88,7 @@ class HTML_CMS_Website extends HTML_CMS
         var autosave_timer;
 
         //
-        var submenu_button = false;
-        var nres=1;
-        var smenutabs = 13; // sync this value with the tab-menu entry-count !!!
-
-        //
-        var filtstring1 = '';
-        var filtstring2 = '';
-
-        var roscms_page_load_finished = false;
+        var smenutabs = 12; // sync this value with the tab-menu entry-count !!!
 
         // map php vars
         var roscms_intern_account_id = ".$thisuser->id().";
@@ -125,11 +119,7 @@ class HTML_CMS_Website extends HTML_CMS
     }
 
     echo "
-        var filtercounter = 0;
-        var filterid = 0;
-        var alertactiv = '';
         
-        var timerquickinfo;
         
         var exitmsg = ".'"Click Cancel to continue with RosCMS, click OK to leave RosCMS.\n\nThanks for using RosCMS!"'."
       -->
@@ -145,95 +135,51 @@ class HTML_CMS_Website extends HTML_CMS
       </div>
 
       <div id="roscms_container">
-        <div class="leftMenu" style="position: absolute; top: 0px; width: 150px; left: 0px; border: 0px; z-index:1;">
-          <div id="smenutab1" class="submb" style="margin-bottom: 1.5em;" onclick="loadMenu(this.id)"'.(!$thisuser->hasAccess('new_entry') ? ' style="display:none;"' : '').'>
-            <div class="subm1">
-              <div id="smenutabc1" class="subm2" style="font-weight: bold;">New Entry</div>
+        <div class="leftMenu" style="position: absolute; top: 0px; width: 150px; left: 0px; z-index:1;">
+          <div id="smenutab1" class="lmItemTop" onclick="loadMenu(this.id)" style="margin-bottom: 1.5em;'.(!$thisuser->hasAccess('new_entry') ? 'display:none;' : '').'">
+            <div id="smenutabc1" class="lmItemBottom" style="font-weight: bold;">Create new entry</div>
+          </div>
+
+          <div style="margin-bottom: 1.5em;'.(!$thisuser->hasAccess('pages') && !$thisuser->hasAccess('dynamic_pages') && !$thisuser->hasAccess('scripts') ? 'display:none;' : '').'">
+            <div id="smenutab3" class="lmItemTop" onclick="loadMenu(this.id)"'.(!$thisuser->hasAccess('pages') ? ' style="display:none;"' : '').'>
+              <div id="smenutabc3" class="lmItemBottom">Page</div>
+            </div>
+            <div id="smenutab5" class="lmItemTop" onclick="loadMenu(this.id)"'.(!$thisuser->hasAccess('dynamic_pages') ? ' style="display:none;"' : '').'>
+              <div id="smenutabc5" class="lmItemBottom">Dynamic&nbsp;Page</div>
+            </div>
+            <div id="smenutab4" class="lmItemTop" onclick="loadMenu(this.id)">
+              <div id="smenutabc4" class="lmItemBottom">Content</div>
+            </div>
+            <div id="smenutab6" class="lmItemTop" onclick="loadMenu(this.id)"'.(!$thisuser->hasAccess('scripts') ? ' style="display:none;"' : '').'>
+              <div id="smenutabc6" class="lmItemBottom">Script</div>
             </div>
           </div>
 
-          <div id="smenutab2" class="subma" onclick="loadMenu(this.id)">
-            <div class="subm1">
-              <div id="smenutabc2" class="subm2"><b>New</b></div>
-            </div>
+          <div id="smenutab2" class="lmItemTop" onclick="loadMenu(this.id)">
+            <div id="smenutabc2" class="lmItemBottom">Pending</div>
           </div>
-
-          <div id="smenutab3" class="submb" onclick="loadMenu(this.id)"'.(!$thisuser->hasAccess('pages') ? ' style="display:none;"' : '').'>
-            <div class="subm1">
-              <div id="smenutabc3" class="subm2">Page</div>
-            </div>
+          <div id="smenutab7" class="lmItemTop" onclick="loadMenu(this.id)">
+            <div id="smenutabc7" class="lmItemBottom">Translate</div>
           </div>
-          <div id="smenutab13" class="submb" onclick="loadMenu(this.id)"'.(!$thisuser->hasAccess('dynamic_pages') ? ' style="display:none;"' : '').'>
-            <div class="subm1">
-              <div id="smenutabc13" class="subm2">Dynamic&nbsp;Page</div>
-            </div>
-          </div>
-          <div id="smenutab4" class="submb" onclick="loadMenu(this.id)">
-            <div class="subm1">
-              <div id="smenutabc4" class="subm2">Content</div>
-            </div>
-          </div>
-          <div id="smenutab5" class="submb" onclick="loadMenu(this.id)"'.(!$thisuser->hasAccess('templates') ? ' style="display:none;"' : '').'>
-            <div class="subm1">
-              <div id="smenutabc5" class="subm2">Template</div>
-            </div>
-          </div>
-          <div id="smenutab6" class="submb" onclick="loadMenu(this.id)"'.(!$thisuser->hasAccess('scripts') ? ' style="display:none;"' : '').'>
-            <div class="subm1">
-              <div id="smenutabc6" class="subm2">Script</div>
-            </div>
-          </div>
-          <div id="smenutab7" class="submb" onclick="loadMenu(this.id)">
-            <div class="subm1">
-              <div id="smenutabc7" class="subm2">Translate</div>
-            </div>
-          </div>
-          <div id="smenutab8" class="submb" onclick="loadMenu(this.id)">
-            <div class="subm1">
-              <div id="smenutabc8" class="subm2">All Entries</div>
-            </div>
+          <div id="smenutab8" class="lmItemTopSelected" onclick="loadMenu(this.id)">
+            <div id="smenutabc8" class="lmItemBottom">All Entries</div>
           </div>
           <br />
 
-          <div id="smenutab9" class="submb" onclick="loadMenu(this.id)">
-            <div class="subm1">
-              <div id="smenutabc9" class="subm2">Bookmark&nbsp;<img src="'.RosCMS::getInstance()->pathRosCMS().'images/star_on_small.gif" alt="" style="width:13px; height:13px; border:0px;" /></div>
+          <div id="smenutab9" class="lmItemTop" onclick="loadMenu(this.id)">
+            <div id="smenutabc9" class="lmItemBottom">
+              Bookmark&nbsp;
+              <img src="'.RosCMS::getInstance()->pathRosCMS().'images/star_on_small.gif" alt="" style="width:13px; height:13px;" />
             </div>
           </div>
-          <div id="smenutab10" class="submb" onclick="loadMenu(this.id)">
-            <div class="subm1">
-              <div id="smenutabc10" class="subm2">Drafts</div>
-            </div>
+          <div id="smenutab10" class="lmItemTop" onclick="loadMenu(this.id)">
+            <div id="smenutabc10" class="lmItemBottom">Drafts</div>
           </div>
-          <div id="smenutab11" class="submb" onclick="loadMenu(this.id)">
-            <div class="subm1">
-              <div id="smenutabc11" class="subm2">My Entries</div>
-            </div>
+          <div id="smenutab11" class="lmItemTop" onclick="loadMenu(this.id)">
+            <div id="smenutabc11" class="lmItemBottom">My Entries</div>
           </div>
-          <div id="smenutab12" class="submb" onclick="loadMenu(this.id)">
-            <div class="subm1">
-              <div id="smenutabc12" class="subm2">Archive</div>
-            </div>
-          </div>
-          
-          <div class="leftBubble" id="quickinfo">
-            <div class="corner_TL">
-              <div class="corner_TR"></div>
-            </div>
-            <div class="title" id="labtitel1" onclick="TabOpenCloseEx(this.id)">
-              <img id="labtitel1i" src="'.RosCMS::getInstance()->pathRosCMS().'images/tab_open.gif" alt="" style="width:11px; height:11px; border:0px;" />&nbsp;Quick Info
-            </div>
-            <div class="content" id="labtitel1c" style="display:block;">
-              <div id="qiload" style="display:none;">
-                <img src="'.RosCMS::getInstance()->pathRosCMS().'images/ajax_loading.gif" alt="loading ..." width="13" height="13" />
-              </div>
-              <div id="lablinks1" class="text">
-                <span>Move the mouse over an item to get some details</span>
-              </div>
-            </div>
-            <div class="corner_BL">
-              <div class="corner_BR"></div>
-            </div>
+          <div id="smenutab12" class="lmItemTop" onclick="loadMenu(this.id)">
+            <div id="smenutabc12" class="lmItemBottom">Archive</div>
           </div>
 
           <div class="leftBubble" id="smartfilter">
@@ -241,7 +187,7 @@ class HTML_CMS_Website extends HTML_CMS
               <div class="corner_TR"></div>
             </div>
             <div class="title" id="labtitel2" onclick="TabOpenCloseEx(this.id)">
-              <img id="labtitel2i" src="'.RosCMS::getInstance()->pathRosCMS().'images/tab_open.gif" alt="" style="width:11px; height:11px; border:0px;" />&nbsp;Smart Filters
+              <img id="labtitel2i" src="'.RosCMS::getInstance()->pathRosCMS().'images/tab_open.gif" alt="" style="width:11px; height:11px;" />&nbsp;Smart Filters
             </div>
             <div class="content" id="labtitel2c">&nbsp;</div>
             <div class="corner_BL">
@@ -254,7 +200,7 @@ class HTML_CMS_Website extends HTML_CMS
               <div class="corner_TR"></div>
             </div>
             <div class="title" id="labtitel3" onclick="TabOpenCloseEx(this.id)">
-              <img id="labtitel3i" src="'.RosCMS::getInstance()->pathRosCMS().'images/tab_open.gif" alt="" style="width:11px; height:11px; border:0px;" />&nbsp;Labels
+              <img id="labtitel3i" src="'.RosCMS::getInstance()->pathRosCMS().'images/tab_open.gif" alt="" style="width:11px; height:11px;" />&nbsp;Labels
             </div>
             <div class="content" id="labtitel3c">&nbsp;</div>
             <div class="corner_BL">
@@ -269,21 +215,23 @@ class HTML_CMS_Website extends HTML_CMS
               <div class="corner_TR"></div>
             </div>
             <div id="bubble">
-              <div id="frametable" style="border: 0px dashed white;">
+              <div id="frametable">
                 <div class="filterbar">
-                  <input id="txtfind" type="text" accesskey="f" tabindex="1" title="Search &amp; Filters" onfocus="'."searchFilter(this.id, this.value, 'Search &amp; Filters', true)".'" onblur="'."searchFilter(this.id, this.value, 'Search &amp; Filters', false)".'" onkeyup="getAllActiveFilters()" value="Search &amp; Filters" size="39" maxlength="250" />&nbsp;
-                  <span id="filters" class="filterbutton" onclick="TabOpenClose(this.id)"><img id="filtersi" src="'.RosCMS::getInstance()->pathRosCMS().'images/tab_closed.gif" alt="" style="width:11px; height:11px; border:0px;" />&nbsp;Filters</span>&nbsp;
+                  <input id="txtfind" type="text" accesskey="f" tabindex="1" title="Searchbox" onfocus="clearSearchBox(this)" onblur="clearSearchBox(this)" onkeyup="getAllActiveFilters()" value="Enter name to search for" size="39" maxlength="250" />
+                  <span class="virtualButton" onclick="searchByFilters()"><img src="'.RosCMS::getInstance()->pathRosCMS().'images/search.gif" alt="" style="width:14px; height:14px;" />&nbsp;Search</span>
+                  <br />
+                  <span id="filters" class="virtualButton" onclick="TabOpenClose(this.id)"><img id="filtersi" src="'.RosCMS::getInstance()->pathRosCMS().'images/tab_closed.gif" alt="" style="width:11px; height:11px;" />&nbsp;Show Filters</span>&nbsp;
                   <div id="filtersc" style="display:none;">
                     <div id="filtersct">&nbsp;</div>
                     <div id="filterOptionsfilt2" class="filterbar2">
-                      <span class="filterbutton" onclick="addFilter()"><img src="'.RosCMS::getInstance()->pathRosCMS().'images/add.gif" alt="" style="width:11px; height:11px; border:0px;" />&nbsp;Add</span>
-                      &nbsp;&nbsp;&nbsp;<span class="filterbutton" onclick="clearAllFilter()"><img src="'.RosCMS::getInstance()->pathRosCMS().'images/clear.gif" alt="" style="width:14px; height:14px; border:0px;" />&nbsp;Clear</span>
-                      &nbsp;&nbsp;&nbsp;<span class="filterbutton" onclick="'."addUserFilter('filter', filtstring2)".'"><img src="'.RosCMS::getInstance()->pathRosCMS().'images/save.gif" alt="" style="width:14px; height:14px; border:0px;" />&nbsp;Save</span>
-                      &nbsp;&nbsp;&nbsp;<span class="filterbutton" onclick="searchByFilters()"><img src="'.RosCMS::getInstance()->pathRosCMS().'images/search.gif" alt="" style="width:14px; height:14px; border:0px;" />&nbsp;Search</span>
+                      <span class="virtualButton" onclick="addFilter()"><img src="'.RosCMS::getInstance()->pathRosCMS().'images/add.gif" alt="" style="width:11px; height:11px; " />&nbsp;Add</span>
+                      &nbsp;&nbsp;&nbsp;<span class="virtualButton" onclick="clearAllFilter()"><img src="'.RosCMS::getInstance()->pathRosCMS().'images/clear.gif" alt="" style="width:14px; height:14px;" />&nbsp;Clear</span>
+                      &nbsp;&nbsp;&nbsp;<span class="virtualButton" onclick="'."addUserFilter(filtstring2)".'"><img src="'.RosCMS::getInstance()->pathRosCMS().'images/save.gif" alt="" style="width:14px; height:14px;" />&nbsp;Save</span>
                     </div>
                   </div>
                 </div>
-                <div style="border: 0px dashed red; position: absolute; top: 9px; right: 13px; text-align:right; white-space: nowrap;">
+                <div style="position: absolute; top: 9px; right: 13px; text-align:right; white-space: nowrap;">
+                  <label for="favlangopt" style="float:left;color: #666;">Working language:</label><br />
                   <select name="favlangopt" id="favlangopt" style="vertical-align: top; width: 22ex;" onchange="setLang(this.value)">');
 
     // preselect current user language
@@ -309,18 +257,68 @@ class HTML_CMS_Website extends HTML_CMS
     echo_strip('
                   </select>
                 </div>
-                <div id="tablecmdbar" style="padding-top: 5px;"></div>
-                <div style="border: 0px dashed red; position: absolute; right: 10px; text-align:right; white-space: nowrap;">
+                <div style="float: right; white-space: nowrap;padding-top: 1em;">
                   <span id="mtblnav">&nbsp;</span>
                 </div>
-                <div class="tabselect">Select: <span id="tabselect1"></span></div>
-                <div id="tablist">&nbsp;</div>
-                <div style="border: 0px dashed red; position: absolute; right: 10px; text-align:right; white-space: nowrap;">
+                <div class="toolbar">
+                  <div class="button" onclick="loadEntryTableWithOffset(roscms_current_tbl_position)">
+                    <img src="'.RosCMS::getInstance()->pathRosCMS().'images/reload.gif" alt="" />
+                    <span class="text">Refresh</span>
+                  </div>
+                  <div id="toolbarExtension"></div> 
+                  <div style="padding: 15px 0px 0px 5px;" id="tabselect1"></div>
+                </div>
+                <div id="tablist" style="clear: left;">&nbsp;</div>
+                <div style="position: absolute; right: 10px; text-align:right; white-space: nowrap;">
                   <span id="mtbl2nav">&nbsp;</span>
                 </div>
-                <div class="tabselect">Select: <span id="tabselect2"></span></div>
+                <div class="tabselect"><span id="tabselect2"></span></div>
+
+                <span id="legend" class="virtualButton" onclick="TabOpenCloseEx(this.id)">
+                  <img id="legendi" src="'.RosCMS::getInstance()->pathRosCMS().'images/tab_'.((isset($_COOKIE['legend']) && $_COOKIE['legend']) ? 'open' : 'closed').'.gif" alt="" style="width:11px; height:11px;" /> Show legend
+                </span>
+                <div id="legendc" style="display:'.((isset($_COOKIE['legend']) && $_COOKIE['legend']) ? 'block' : 'none').';">
+                  
+                  <div style="width: 33%; float: left;">
+                    <span class="lbox" style="background-color:#dddddd;margin-right: 0px; width: 8px;border-right: none;">&nbsp;</span>
+                    <span class="lbox" style="background-color:#eeeeee;margin-left: 0px;border-left: none; width: 8px;">&nbsp;</span>
+                    Published (odd/even)
+                  </div>
+                  <div style="width: 33%; float: left;">
+                    <span class="lbox" style="background-color:#A3EDB4">&nbsp;</span>
+                    Translation up to date
+                  </div>
+                  <div style="width: 33%; float: left;">
+                    <span class="lbox" style="background-color:#ffcc99">&nbsp;</span>
+                    Selected
+                  </div>
+
+                  <div style="width: 33%; float: left;">
+                    <span class="lbox" style="background-color:#B5EDA3">&nbsp;</span>
+                    Pending
+                  </div>
+                  <div style="width: 33%; float: left;">
+                    <span class="lbox" style="background-color:#D6CAE4">&nbsp;</span>
+                    Translation doesn\'t exist
+                  </div>
+                  <div style="width: 33%; float: left;">
+                    <span class="lbox" style="background-color:#FFCCFF">&nbsp;</span>
+                    Unknown
+                  </div>
+
+                  <div style="width: 33%; float: left;">
+                    <span class="lbox" style="background-color:#FFE4C1">&nbsp;</span>
+                    Draft
+                  </div>
+                  <div style="width: 33%; float: left;">
+                    <span class="lbox" style="background-color:#FAA5A5">&nbsp;</span>
+                    Translation outdated
+                  </div>
+
+                  <br style="clear: both;" />
+                </div>
               </div>
-              <div id="frameedit" style="display: block; border: 0px dashed red; ">
+              <div id="frameedit" style="display: block;">
 
                 <div id="frmedithead" style="padding-bottom: 10px;">&nbsp;</div>
                 <div style="width:100%;">
@@ -336,52 +334,14 @@ class HTML_CMS_Website extends HTML_CMS
                 <div id="newentryhead" style="padding-bottom: 10px;">&nbsp;</div>
                 <div id="newentryzone">&nbsp;</div>
               </div>
-
             </div>
+
             <div class="corner_BL">
               <div class="corner_BR"></div>
             </div>
           </div>
-          <br />
-          <table id="legend" cellspacing="5">
-            <caption style="font-weight:bold;text-align:left;">Table Legend</caption>
-            <tr>
-              <td class="lbox" style="background-color:#ddd">&nbsp;</td>
-              <td style="width:205px" rowspan="2">
-                Standard<br />
-                <span class="style2">(odd/even)</span>
-              </td>
-              <td style="width:50px" rowspan="5">&nbsp;</td>
-              <td class="lbox" style="background-color:#ffcc99">&nbsp;</td>
-              <td style="width:205px">Selected</td>
-            </tr>
-            <tr>
-              <td class="lbox" style="background-color:#eeeeee">&nbsp;</td>
-              <td class="lbox" style="background-color:#A3EDB4">&nbsp;</td>
-              <td>Translation up to date</td>
-            </tr>
-            <tr>
-              <td class="lbox" style="background-color:#B5EDA3">&nbsp;</td>
-              <td>New</td>
-              <td class="lbox" style="background-color:#D6CAE4">&nbsp;</td>
-              <td>Translation doesn\'t exist</td>
-            </tr>
-            <tr>
-              <td class="lbox" style="background-color:#FFE4C1">&nbsp;</td>
-              <td>Draft</td>
-              <td class="lbox" style="background-color:#FAA5A5">&nbsp;</td>
-              <td>Translation outdated</td>
-            </tr>
-            <tr>
-              <td class="lbox" style="background-color:#ffffcc">&nbsp;</td>
-              <td>Mouse hover</td>
-              <td class="lbox" style="background-color:#FFCCFF">&nbsp;</td>
-              <td>Unknown</td>
-            </tr>
-          </table>
         </div>
       </div>
-      <br />
       <script type="text/javascript" src="'.RosCMS::getInstance()->pathRosCMS().'js/cms_website-init.js"></script>');
   } // end of member function body
 

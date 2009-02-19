@@ -18,6 +18,64 @@
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
     */
 
+var search_phrase = 'Enter name to search for';
+
+var mousex, mousey;
+// check for quirks / standard mode
+var IEmode = ( typeof document.compatMode != "undefined" && document.compatMode != "BackCompat") ? "documentElement" : "body";
+
+var timerTooltip;
+
+
+document.onmousemove = getMousePosition;
+
+
+
+/**
+ *
+ * @param e
+ */
+function getMousePosition( e )
+{
+  // update mouse position for some browsers
+  if (e) {
+    mousex = e.pageX;
+    mousey = e.pageY;
+  }
+
+  // other browser
+  else {
+    mousex = window.event.x;
+    mousey = window.event.y;
+  }
+
+  // IE needs additional scrollbar position
+  if (document.all && !document.captureEvents) {
+    mousex    += document[docEl].scrollLeft;
+    mousex    += document[docEl].scrollTop;
+  }
+  
+  
+  if (document.getElementById('tooltip').style.display == 'block') {
+    setTooltipPosition();
+  }
+
+} // end of function getMousePosition
+
+
+
+/**
+ *
+ */
+function setTooltipPosition( )
+{
+  if (document.getElementById('tooltip').style.display == 'block') {
+    document.getElementById('tooltip').style.top=(mousey+17)+"px";
+    document.getElementById('tooltip').style.left=(mousex+17)+"px";
+  }
+
+} // end of function getMousePosition
+
 
 
 /**
@@ -43,106 +101,6 @@ function selectRow( cbid )
 
 
 /**
- * colors (background) a row in a given color
- *
- * @param int num number of the row
- * @param string color new color of the row
- */
-function setRowColor( num, color )
-{
-  // check for needed internal functions
-  if (!document.getElementById || !document.getElementsByTagName || !document.getElementById("tr"+num)) {
-    return;
-  }
-
-  // select row
-  var cell_arr = document.getElementById("tr"+num).getElementsByTagName('td');
-
-  // set background color for cells
-  for (var i=0; i<cell_arr.length; i++) {
-    cell_arr[i].style.backgroundColor = color;
-  }
-} // end of function setRowColor
-
-
-
-/**
- * colors a rows background by status
- */
-function setRowColorStatus( num, status )
-{
-  if (status === 'odd' || status === 'even') {
-    if (num%2) {
-      setRowColor(num,"#dddddd");
-    }
-    else {
-      setRowColor(num,"#eeeeee");
-    }
-  }
-  else if(status === 'new') {
-    setRowColor(num,"#B5EDA3");
-  }
-  else if(status === 'draft') {
-    setRowColor(num,"#FFE4C1");
-  }
-  else if(status === 'transg') {
-    setRowColor(num,"#A3EDB4");
-  }
-  else if(status === 'transb') {
-    setRowColor(num,"#D6CAE4");
-  }
-  else if(status === 'transr') {
-    setRowColor(num,"#FAA5A5");
-  }
-  else {
-    setRowColor(num,"#FFCCFF");
-  }
-} // end of function setRowColorStatus
-
-
-
-/**
- * highlights a row
- *
- * @param int num number of the row
- * @param int hlmode highlight mode (mouseover, mouseout, mouseclick)
- */
-function hlRow( rownum, hlmode )
-{
-  var rowstatus = document.getElementById("tr"+rownum).className;
-
-  switch (hlmode) {
-
-    //on mouseover
-    case 1:
-      setRowColor(rownum,"#ffffcc");
-      break;
-
-    //on mouseout
-    case 2:
-      if (document.getElementById("cb"+rownum).checked) {
-        setRowColor(rownum,"#ffcc99");
-      }
-      else {
-        setRowColorStatus(rownum, rowstatus);
-      }
-      break;
-
-    //on click
-    case 3:
-      if (!document.getElementById("cb"+rownum).checked) {
-        setRowColor(rownum,"#ffcc99");
-      }
-      else {
-        setRowColorStatus(rownum, rowstatus);
-      }
-      break;
-  } // end switch
-} // end of function hlRow
-
-
-
-/**
  * selects/deselects all rows
  *
  * @param string status true=select all / false=deselect all
@@ -155,17 +113,17 @@ function selectAll( status )
   // select/deselect all rows
   for (i=1; i<=nres; i++) {
     if (status) {
-      setRowColor(i,"#ffcc99");
+      setRowColor('tr'+i,"#ffcc99");
     }
     else {
       rowstatus = document.getElementById("tr"+i).className;
-      setRowColorStatus(i, rowstatus);
+      setRowColorByStatus('tr'+i, rowstatus);
     }
   }
 
   // select/deselect all checkboxes
   for (i=1; i<=nres; i++) {
-    document.getElementById("cb"+i).checked = status;
+    document.getElementById("cbtr"+i).checked = status;
   }
 } // end of function selectAll
 
@@ -212,12 +170,12 @@ function selectInverse( )
     if(currentcolor == "rgb(255, 204, 153)" || currentcolor == "#ffcc99") {
 
       rowstatus = document.getElementById("tr"+i).className;
-      setRowColorStatus(i, rowstatus);
-      document.getElementById("cb"+i).checked = false;
+      setRowColorByStatus('tr'+i, rowstatus);
+      document.getElementById("cbtr"+i).checked = false;
     }
     else {
       setRowColor(i,"#ffcc99");
-      document.getElementById("cb"+i).checked = true;
+      document.getElementById("cbtr"+i).checked = true;
      }
   }
 } // end of function selectInverse
@@ -225,9 +183,9 @@ function selectInverse( )
 
 
 /**
- * Selects all starred/non-starred rows
+ * Selects all bookmarked/non-bookmarked rows
  *
- * @param bool status true - select starred rows, false - select non-starred rows
+ * @param bool status true - select bookmarked rows, false - select non-bookmarked rows
  */
 function selectStars( status )
 {
@@ -239,8 +197,8 @@ function selectStars( status )
   // select choosen ones
   for (var i=1; i<=nres; i++) {
     if (document.getElementById("tr"+i).getElementsByTagName('td')[1].getElementsByTagName('div')[0].className == sstar) {
-      setRowColor(i,"#ffcc99");
-      document.getElementById("cb"+i).checked = true;
+      setRowColor('tr'+i,"#ffcc99");
+      document.getElementById("cbtr"+i).checked = true;
     }
   }
 } // end of function selectStars
@@ -289,8 +247,8 @@ function selectType( type )
   // select items
   for (var i=1; i<=nres; i++) {
     if (document.getElementById("tr"+i).className == sstar1 || document.getElementById("tr"+i).className == sstar2) {
-      setRowColor(i,"#ffcc99");
-      document.getElementById("cb"+i).checked = true;
+      setRowColor('tr'+i,"#ffcc99");
+      document.getElementById("cbtr"+i).checked = true;
     }
   }
 } // end of function selectType
@@ -320,204 +278,58 @@ function searchFilter( objid, objval, objhint, clear )
 
 
 /**
- * strips invalid characters out
- *
- * @param string str
- */
-function beautifystr( str )
-{
-  // remove invalid characters
-  str = str.replace(/\|/g, '');
-  str = str.replace(/\=/g, '');
-  str = str.replace(/&/g, '');
-  str = str.replace(/_/g, '');
-  return str;
-} // end of function beautifystr
-
-
-
-/**
- * strips invalid characters out
- *
- * @param string str
- */
-function beautifystr2( str )
-{
-  // remove invalid characters
-  str = str.replace(/\|/g, '');
-  str = str.replace(/\=/g, '');
-  str = str.replace(/&/g, '');
-  return str;
-} // end of function beautifystr2
-
-
-
-/**
- * Requests quickinfo data
+ * Requests tooltip data
  *
  * @param string id_set set of data & rev ids in the following format data_id|rev_id
  */
-function loadQuickinfo( id_set)
+function loadTooltip( id_set)
 {
   var qistr = id_set.split('|');
 
-  // deactivate quickinfo-timer
-  window.clearTimeout(timerquickinfo);
+  // deactivate tooltip-timer
+  window.clearTimeout(timerTooltip);
 
   // perform request
-  document.getElementById('qiload').style.display = 'block';
-  makeRequest('?page=backend&type=text&subtype=uqi&d_val=ptm&d_id='+encodeURIComponent(qistr[0].substr(2))+'&d_r_id='+encodeURIComponent(qistr[1]), 'uqi', 'lablinks1', 'html', 'GET', '');
-} // end of function loadQuickinfo
+  makeRequest('?page=backend&type=text&subtype=tt&d_val=ptm&d_id='+encodeURIComponent(qistr[0].substr(2))+'&d_r_id='+encodeURIComponent(qistr[1]), 'tt', 'tooltip', 'html', 'GET', '');
+} // end of function loadTooltip
 
 
 
 /**
- * Disables Quickinfo view
+ * Disables Tooltip view
  */
-function clearQuickinfo( )
+function clearTooltip( )
 {
-  // deactivate quickinfo-timer
-  window.clearTimeout(timerquickinfo);
+  // deactivate tooltip-timer
+  window.clearTimeout(timerTooltip);
 
-  document.getElementById('qiload').style.display = 'none';
-  document.getElementById('lablinks1').innerHTML = '<span style="color:#FF6600;">Move the mouse over an item to get some details</span>';
-} // end of function clearQuickinfo
+  document.getElementById('tooltip').style.display = 'none';
+} // end of function clearTooltip
 
 
 
 /**
- * Saves smart filter setting or user label
+ * wrapper for addUserFilterShared
  *
- * @param string uf_type 'label'/'filter'
  * @param string uf_str
  */
 function addUserFilter( uf_str )
 {
-  var uf_name = '';
-  var uf_objid = '';
-
-  try {
-    uf_name = window.prompt("Input a new Smart Filter name:", "");
-    uf_objid = 'labtitel2c';
-  }
-  catch (e) {
-  }
-
-  // cancel button
-  if (!uf_name) { 
-    return;
-  }
-
-  if (uf_name !== '' && uf_name.length < 50) {
-    makeRequest('?page=backend&type=text&subtype=ufs&action=add&title='+encodeURIComponent(uf_name)+'&setting='+encodeURIComponent(uf_str), 'ufs', uf_objid, 'html', 'GET', '');
-  }
+  addUserFilterShared(uf_str, 'labtitel2c', 'ufs');
 } // end of function addUserFilter
 
 
 
 /**
- * Deletes smart filter setting or user label
+ * wrapper for deleteUserFilterShared
  *
  * @param string uf_id
- * @param string uf_type 'label'/'filter'
  * @param string uf_name
  */
-function deleteUserFilter( uf_id, uf_type, uf_name )
+function deleteUserFilter( uf_id, uf_name )
 {
-  var uf_check = confirm("Do you want to delete Smart Filter '"+uf_name+"' ?");
-  uf_objid = 'labtitel2c';
-
-  if (uf_check === true) {
-    makeRequest('?page=backend&type=text&subtype=ufs&action=del&id='+encodeURIComponent(uf_id), 'ufs', uf_objid, 'html', 'GET', '');
-  }
+  deleteUserFilterShared( uf_id, uf_name, 'labtitel2c', 'ufs' );
 } // end of function deleteUserFilter
-
-
-
-/**
- * toggles arrow right/bottom
- *
- * @param string objid affected object
- */
-function TabOpenClose( objid )
-{
-  if (document.getElementById(objid +'c').style.display === 'none') {
-    document.getElementById(objid +'c').style.display = 'block';
-    document.getElementById(objid +'i').src = 'images/tab_open.gif';
-  }
-  else {
-    document.getElementById(objid +'c').style.display = 'none';
-    document.getElementById(objid +'i').src = 'images/tab_closed.gif';
-  }
-} // end of function TabOpenClose
-
-
-
-/**
- * toggles arrow right/bottom and saves the status in a cookie
- *
- * @param string objid affected object
- */
-function TabOpenCloseEx( objid )
-{
-  if (document.getElementById(objid +'c').style.display === 'none') {
-    document.getElementById(objid +'c').style.display = 'block';
-    document.getElementById(objid +'i').src = 'images/tab_open.gif';
-    createCookie(objid,'1',365); // 365 days
-  }
-  else {
-    document.getElementById(objid +'c').style.display = 'none';
-    document.getElementById(objid +'i').src = 'images/tab_closed.gif';
-    createCookie(objid,'0',365); // 365 days
-  }
-} // end of function TabOpenCloseEx
-
-
-
-/**
- * stores a new cookie
- *
- * @param string name cookie name
- * @param string value cookie value
- * @param int days how many days the cookie is stored
- */
-function createCookie( name, value, days )
-{
-  var expires = "";
-
-  if (days) {
-    var date = new Date();
-    date.setTime(date.getTime()+(days*24*60*60*1000));
-    expires = "; expires="+date.toGMTString();
-  }
-  
-  document.cookie = name+"="+value+expires+"; path=/";
-} // end of function createCookie
-
-
-
-/**
- * gets the value of a cookie
- *
- * @param string name cookie to access
- */
-function readCookie( name )
-{
-  var nameEQ = name + "=";
-  var ca = document.cookie.split(';');
-  var c;
-
-  for(var i=0;i < ca.length;i++) {
-    c = ca[i];
-    while (c.charAt(0)==' ') {
-      c = c.substring(1,c.length);
-    }
-    if (c.indexOf(nameEQ) === 0) {
-      return c.substring(nameEQ.length,c.length);
-    }
-  }
-  return null;
-} // end of function readCookie
 
 
 
@@ -543,9 +355,8 @@ function selectUserFilter( ufiltstr, ufilttitel )
     // reset search box:
     filtstring1 = '';
     document.getElementById('txtfind').value = '';
-    searchFilter('txtfind', document.getElementById('txtfind').value, 'Search & Filters', false);
+    searchFilter('txtfind', document.getElementById('txtfind').value, search_phrase, false);
 
-    chtabtext = null;
     selectAll(false); /* deselect all */
 
     loadEntryTable('all');
@@ -571,9 +382,8 @@ function selectUserTag( value )
   // reset search box:
   filtstring1 = '';
   document.getElementById('txtfind').value = '';
-  searchFilter('txtfind', document.getElementById('txtfind').value, 'Search & Filters', false);
+  searchFilter('txtfind', document.getElementById('txtfind').value, search_phrase, false);
 
-  chtabtext = null;
   selectAll(false); /* deselect all */
 
   loadEntryTable('all');
@@ -589,37 +399,94 @@ function selectUserTag( value )
  */
 function highlightTab( objid )
 {
-  var chtabtext;
-
   for (var i=1; i<=smenutabs; i++) {
-
-    // remove all 'bold' html-tags
-    if (document.getElementById('smenutab'+i).className === 'subma' && i > 1) {
-      chtabtext = '';
-      chtabtext = document.getElementById('smenutabc'+i).innerHTML;
-      chtabtext = chtabtext.replace(/<B>/, '');
-      chtabtext = chtabtext.replace(/<\/B>/, '');
-      chtabtext = chtabtext.replace(/<b>/, '');
-      chtabtext = chtabtext.replace(/<\/b>/, '');
-      document.getElementById('smenutabc'+i).innerHTML = chtabtext;
-    }
 
     // highlight menu_tab_button
     if (i == objid.substring(8)) {
-      document.getElementById('smenutab'+i).className = 'subma';
-      document.getElementById('smenutabc'+i).innerHTML = '<b>'+document.getElementById('smenutabc'+i).innerHTML+'</b>';
+      document.getElementById('smenutab'+i).className = 'lmItemTopSelected';
     }
     else {
-      document.getElementById('smenutab'+i).className = 'submb';
+      document.getElementById('smenutab'+i).className = 'lmItemTop';
     }
   }
-  // clear
-  chtabtext = '';
 } // end of function highlightTab
 
 
 
 /**
+ * table mouse events
+ */
+function registerMouseActions( )
+{
+  var j;
+
+  if (!document.getElementById) {
+    return;
+  }
+
+
+  // Shows Tooltip window for a specific time, and then hides it again 
+  function localStartActive()
+  {
+    hlRow(this.id,1);
+
+    // deactivate Tooltip-timer
+    window.clearTimeout(timerTooltip); 
+
+    timerTooltip = window.setTimeout("loadTooltip('"+this.getElementsByTagName('td')[3].className+"')", 500);
+  } // end of inner function localStartActive 
+
+
+  //sets a timeout to remove Tooltip
+  function localStopActive() {
+    hlRow(this.id,2);
+
+    // deactivate Tooltip-timer
+    window.clearTimeout(timerTooltip); 
+
+    clearTooltip();
+  } // end of inner function localStopActive
+
+
+  function localSetSelected() {
+    hlRow(this.parentNode.id,3);
+    selectRow(this.parentNode.id);
+  } // end of inner function localSetSelected
+
+
+  function localSetBookmark() {
+    setBookmark(this.className, document.getElementById('bstar_'+this.parentNode.id.substr(2,4)).className, roscms_intern_account_id, 'bstar_'+this.parentNode.id.substr(2,4));
+  } // end of inner function localSetBookmark
+
+
+  function localStartEditor() {
+    loadEditor(roscms_current_page, this.className);
+  } // end of inner function localStartEditor
+
+
+  //row highlighting
+  for (var i=1; i<=nres; i++) {
+
+    document.getElementById("tr"+i).onmouseover = localStartActive;
+    document.getElementById("tr"+i).onmouseout = localStopActive;
+    document.getElementById("tr"+i).getElementsByTagName('td')[0].onclick = localSetSelected;
+    document.getElementById("tr"+i).getElementsByTagName('td')[1].onclick = localSetBookmark;
+
+    // support up to 13 columns
+    for(j=2; j<13; j++) {
+      if (document.getElementById("tr"+i).getElementsByTagName('td')[j]) {
+        document.getElementById("tr"+i).getElementsByTagName('td')[j].onclick = localStartEditor;
+      }
+      else {
+        break;
+      }
+    }
+  } // end for
+} // end of function registerMouseActions
+
+
+
+/**@CLEAR
  * loads Table with entries
  *
  * @param string objevent
@@ -633,20 +500,7 @@ function loadEntryTable( objevent )
     document.getElementById('newentryarea').style.display = 'none';
 
     // deactivate alert-timer
-    window.clearTimeout(alertactiv); 
-    document.getElementById('alertbox').style.visibility = 'hidden';
-    document.getElementById('alertboxc').innerHTML = '&nbsp;';
-
-    // deselect all table entries
-    selectAll(false); 
-  }
-
-  // function was called via loadMenu
-  if (submenu_button === true) {
-    roscms_prev_page = roscms_current_page;
-    roscms_current_page = objevent;
-    htmlFilterChoices(filtstring2);
-    submenu_button = '';
+    alertboxClose(0);
   }
 
   // update table-cmdbar
@@ -662,7 +516,6 @@ function loadEntryTable( objevent )
       htmlSelectPresets('basic');
       break;
     case 'script':
-    case 'template':
       htmlCommandBar('script');
       htmlSelectPresets('basic');
       break;
@@ -805,7 +658,7 @@ function loadEditor( objevent, entryid )
   switch (objevent) {
     case 'diffentry':
       showEditor();
-      document.getElementById('frmedithead').innerHTML = '<span class="button" onclick="loadEntryTableWithOffset(roscms_current_tbl_position)"><strong>&laquo; Back</strong></span> &nbsp; <strong>Compare two Entries</strong>';
+      document.getElementById('frmedithead').innerHTML = '<span class="virtualLink" onclick="loadEntryTableWithOffset(roscms_current_tbl_position)"><strong>&laquo; Back</strong></span> &nbsp; <strong>Compare two Entries</strong>';
       break;
 
     default:
@@ -831,7 +684,7 @@ function loadEditor( objevent, entryid )
         roscms_prev_page = roscms_current_page;
         roscms_current_page = objevent;
 
-        document.getElementById('frmedithead').innerHTML = '<span class="button" onclick="loadEntryTableWithOffset(roscms_current_tbl_position)"><strong>&laquo; Back</strong></span> &nbsp; <strong>Edit Entry</strong>';
+        document.getElementById('frmedithead').innerHTML = '<span class="virtualLink" onclick="loadEntryTableWithOffset(roscms_current_tbl_position)"><strong>&laquo; Back</strong></span> &nbsp; <strong>Edit Entry</strong>';
 
         // enable autosave
         autosave_timer = window.setTimeout("tryAutosave()", autosave_coundown);
@@ -847,65 +700,6 @@ function loadEditor( objevent, entryid )
       break;
   } // end switch
 } // end of function loadEditor
-
-
-
-/**
- * displays/closes the orange alertbox on top of the page
- *
- * @param int action
- */
-function alertboxClose( action )
-{
-  switch (action) {
-
-    // close and delete
-    case 0:
-      document.getElementById('alertbox').style.visibility = 'hidden';
-      document.getElementById('alertboxc').innerHTML = '&nbsp;';
-      break;
-
-    // close
-    case 1:
-      document.getElementById('alertbox').style.visibility = 'hidden';
-      alertactiv = window.setTimeout("alertboxClose(2)", 500);
-      break;
-
-    // open
-    default:
-      document.getElementById('alertbox').style.visibility = 'visible';
-      alertactiv = window.setTimeout("alertboxClose(0)", 6000);
-      break;
-  }
-} // end of function alertboxClose
-
-
-
-/**
- * setup text for a new alertbox and shows it
- *
- * @param string text text to be setup in the alert box
- */
-function alertbox( text )
-{
-  window.clearTimeout(alertactiv);
-  document.getElementById('alertbox').style.visibility = 'visible';
-  document.getElementById('alertboxc').innerHTML = text;
-  alertactiv = window.setTimeout("alertboxClose(1)", 500);
-} // end of function alertbox
-
-
-
-/**
- * removes an filter from current setting
- *
- * @param string objid
- */
-function removeFilter( objid )
-{
-  document.getElementById('filt'+objid.substr(4)).style.display = 'none';
-  document.getElementById('filt'+objid.substr(4)).innerHTML = '';
-} // end of function removeFilter
 
 
 
@@ -944,7 +738,7 @@ function clearSearchFilter( )
 {
   document.getElementById('filtersct').innerHTML = '';
   document.getElementById('txtfind').value = '';
-  searchFilter('txtfind', document.getElementById('txtfind').value, 'Search & Filters', false);
+  searchFilter('txtfind', document.getElementById('txtfind').value, search_phrase, false);
   filtercounter = 0;
   filterid = 0;
 } // end of function clearSearchFilter
@@ -966,39 +760,6 @@ function clearAllFilter( )
 
 
 /**
- * get active filters
- */
-function getActiveFilters( )
-{
-  filtstring2 = '';
-
-  for (var i=1; i <= filtercounter; i++) {
-    if (document.getElementById('sfa'+i)) {
-      filtstring2 += beautifystr(document.getElementById('sfa'+i).value);
-      filtstring2 += '_';
-      filtstring2 += beautifystr(document.getElementById('sfb'+i).value);
-      filtstring2 += '_';
-      filtstring2 += beautifystr(document.getElementById('sfc'+i).value);
-
-      // care about visibility-status
-      if (document.getElementById('sfv'+i).id && document.getElementById('sfv'+i).className === "filthidden") {
-        filtstring2 += '_0';
-      }
-      else {
-        filtstring2 += '_1';
-      }
-
-      filtstring2 += '|';
-    }
-  } // end for
-
-  // remove last '|'
-  filtstring2 = filtstring2.substr(0,filtstring2.length-1);
-} // end of function getActiveFilters
-
-
-
-/**
  * get all filters + searchbox
  */
 function getAllActiveFilters( )
@@ -1007,14 +768,14 @@ function getAllActiveFilters( )
 
   // without filters visible
   if (document.getElementById('filtersc').style.display === 'none') { 
-    if (document.getElementById('txtfind').value !== 'Search & Filters') {
+    if (document.getElementById('txtfind').value != search_phrase) {
       if (document.getElementById('txtfind').value.length > 1) {
         filtstring1 = document.getElementById('txtfind').value;
       }
     }
 
     getActiveFilters();
-    loadEntryTable(roscms_current_page);	
+    loadEntryTable(roscms_current_page);
   }
 } // end of function getAllActiveFilters
 
@@ -1026,7 +787,7 @@ function getAllActiveFilters( )
 function searchByFilters( )
 {
   filtstring1 = '';
-  if (document.getElementById('txtfind').value !== 'Search & Filters' && document.getElementById('txtfind').value.length > 1) {
+  if (document.getElementById('txtfind').value != search_phrase && document.getElementById('txtfind').value.length > 1) {
     filtstring1 = document.getElementById('txtfind').value;
   }
 
@@ -1046,50 +807,51 @@ function htmlSelectPresets( preset )
   var selbarstr = '';
 
   // prepare selections
-  var selhtml_space = ', ';
-  var selhtml_all = '<span class="button" onclick="selectAll(true)">All</span>';
-  var selhtml_none = '<span class="button" onclick="javascript:selectAll(false)">None</span>';
-  var selhtml_inv = '<span class="button" onclick="selectInverse()">Inverse</span>';
-  var selhtml_star = '<span class="button" onclick="selectStars(true)">Starred</span>';
-  var selhtml_nostar = '<span class="button" onclick="selectStars(false)">Unstarred</span>';
-  var selhtml_stable = '<span class="button" onclick="selectType(\'stable\')">Stable</span>';
-  var selhtml_new = '<span class="button" onclick="selectType(\'new\')">New</span>';
-  var selhtml_draft = '<span class="button" onclick="selectType(\'draft\')">Draft</span>';
-  var selhtml_uptodate = '<span class="button" onclick="selectType(\'transg\')">Current</span>';
-  var selhtml_outdated = '<span class="button" onclick="selectType(\'transr\')">Outdated</span>';
-  var selhtml_notrans = '<span class="button" onclick="selectType(\'transb\')">Missing</span>';
+  var selhtml_all = '<option onclick="selectAll(true)">All</option>';
+  var selhtml_none = '<option onclick="selectAll(false)">None</option>';
+  var selhtml_inv = '<option onclick="selectInverse()">Inverse Selection</option>';
+  var selhtml_star = '<option onclick="selectStars(true)">Bookmarked</option>';
+  var selhtml_nostar = '<option onclick="selectStars(false)">Not Bookmarked</option>';
+  var selhtml_stable = '<option onclick="selectType(\'stable\')">Published</option>';
+  var selhtml_new = '<option onclick="selectType(\'new\')">Pending</option>';
+  var selhtml_draft = '<option onclick="selectType(\'draft\')">Draft</option>';
+  var selhtml_uptodate = '<option onclick="selectType(\'transg\')">Up-to-date Translations</option>';
+  var selhtml_outdated = '<option onclick="selectType(\'transr\')">Outdated Translations</option>';
+  var selhtml_notrans = '<option onclick="selectType(\'transb\')">Missing Translations</option>';
 
   // use for all types
-  selbarstr += selhtml_all + selhtml_space
-    + selhtml_none + selhtml_space
-    + selhtml_inv + selhtml_space;
+  selbarstr += '<select>'
+    + '<option selected="selected">Select:</option>'
+    + selhtml_all
+    + selhtml_none
+    + selhtml_inv;
 
   // build selection thing
   switch (preset) {
     case 'common':
-      selbarstr += selhtml_star + selhtml_space
-        + selhtml_nostar + selhtml_space
-        + selhtml_stable + selhtml_space
-        + selhtml_new + selhtml_space
+      selbarstr += selhtml_star
+        + selhtml_nostar
+        + selhtml_stable
+        + selhtml_new
         + selhtml_draft;
       break;
 
     case 'trans':
-      selbarstr += selhtml_star + selhtml_space
-        + selhtml_nostar + selhtml_space
-        + selhtml_uptodate + selhtml_space
-        + selhtml_outdated + selhtml_space
+      selbarstr += selhtml_star
+        + selhtml_nostar
+        + selhtml_uptodate
+        + selhtml_outdated
         + selhtml_notrans;
       break;
 
     case 'basic':
-      selbarstr += selhtml_star + selhtml_space
+      selbarstr += selhtml_star
         + selhtml_nostar;
       break;
 
     case 'bookmark':
-      selbarstr += selhtml_stable + selhtml_space
-        + selhtml_new + selhtml_space
+      selbarstr += selhtml_stable
+        + selhtml_new
         + selhtml_draft;
       break;
 
@@ -1098,6 +860,8 @@ function htmlSelectPresets( preset )
       selbarstr = selbarstr.substring(0, selbarstr.length-2);
       break;
   } // end select
+
+  selbarstr += '</select>';
 
   // update current
   document.getElementById('tabselect1').innerHTML = selbarstr;
@@ -1367,7 +1131,7 @@ function delLabelOrTag( tag_id )
  */
 function updateBookmark( rev_id, value, objid )
 {
-  if (value != '') {
+  if (value !== '') {
     makeRequest('?page=backend&type=text&subtype=eta&d_fl=setbookmark&rev='+rev_id+'&tag_value='+encodeURIComponent(value), 'eta', objid, 'html', 'GET', '');
   }
 } // end of function updateBookmark
@@ -1492,11 +1256,11 @@ function tryAutosave( )
 /**
  * loads another tab in the 'new entry' editor interface
  *
- * @param string menumode 'single','dynamic','template'
+ * @param string menumode 'single','dynamic'
  */
 function changeNewEntryTab( mode )
 {
-  if (mode === 'single' || mode === 'dynamic' || mode === 'template') {
+  if (mode === 'single' || mode === 'dynamic' || 'template') {
     makeRequest('?page=backend&type=text&subtype=ned&action=dialog&tab='+mode, 'ned', 'newentryarea', 'html', 'GET', '');
   }
 } // end of function changeNewEntryTab
@@ -1559,12 +1323,12 @@ function openOrCloseDiffArea( revid1, revid2 )
 
   if (document.getElementById('frmdiff').style.display === 'none') {
     document.getElementById('frmdiff').style.display = 'block';
-    document.getElementById('bshowdiffi').src = 'images/tab_open.gif';
+    document.getElementById('bshowdiffi').src = roscms_intern_webserver_roscms+'images/tab_open.gif';
     getDiffEntries(revid1, revid2);
   }
   else {
     document.getElementById('frmdiff').style.display = 'none';
-    document.getElementById('bshowdiffi').src = 'images/tab_closed.gif';
+    document.getElementById('bshowdiffi').src = roscms_intern_webserver_roscms+'images/tab_closed.gif';
   }
 } // end of function openOrCloseDiffArea
 
@@ -1577,7 +1341,7 @@ function openOrCloseDiffArea( revid1, revid2 )
  */
 function changeSelectedTags( ctk )
 {
-  if ((document.getElementById('extraopt').value !== 'sel' && document.getElementById('extraopt').value !== 'no') || ctk === 'ms' || ctk === 'mn') {
+  if (ctk === 'ms' || ctk === 'mn') {
     var tentrs = selectedEntries().split("|");
 
     if (tentrs[0] < 1 || tentrs[0] === '') {
@@ -1595,7 +1359,6 @@ function changeSelectedTags( ctk )
     }
   }
 
-  document.getElementById('extraopt').value = 'sel';
 
   try {
     document.getElementById('cmddiff').focus();
@@ -1603,23 +1366,6 @@ function changeSelectedTags( ctk )
   catch (e) {
   }
 } // end of function changeSelectedTags
-
-
-
-/**
- * hides or shows the ajax loading graphic
- *
- * @param bool show
- */
-function loadingSplash( show )
-{
-  if (show) {
-    document.getElementById('ajaxloadinginfo').style.visibility = 'visible';
-  }
-  else {
-    document.getElementById('ajaxloadinginfo').style.visibility = 'hidden';
-  }
-} // end of function loadingSplash
 
 
 
@@ -1709,8 +1455,9 @@ function makeRequest( url, action, objid, format, kind, parameters )
               break;
 
               // user quick info
-            case 'uqi': 
-              document.getElementById('qiload').style.display = 'none';
+            case 'tt': 
+              document.getElementById('tooltip').style.display='block';
+              setTooltipPosition();
             case 'ufs': // user filter storage
             case 'ut': // user tags
 
@@ -1757,134 +1504,6 @@ function makeRequest( url, action, objid, format, kind, parameters )
 
   return true;
 } // end of function makeRequest
-
-
-
-/**
- * construct a new header for the entry table
- *
- * @param string xtrtblcol
- */
-function htmlEntryTableHeader( xtrtblcol )
-{
-  var xtrtblcols2 ='';
-  var lstHeader = '';
-
-  xtrtblcols2 = xtrtblcol.split('|');
-
-  lstHeader = '<table id="entryTable" cellpadding="1" cellspacing="0">'
-    + '<thead><tr class="head">'
-    + '<th scope="col" class="cMark">&nbsp;</th>'
-    + '<th scope="col" class="cStar">&nbsp;</th>'
-    + '<th scope="col" class="cCid">Name</th>'
-    + '<th scope="col" class="cSpace">&nbsp;</th>'
-    + '<th scope="col" class="cRev">Title</th>';
-
-
-  if (xtrtblcol !== '' && xtrtblcols2.length > 1) {
-    for (var i=1; i < xtrtblcols2.length-1; i++) {
-      lstHeader += '<th scope="col" class="cSpace">&nbsp;</th>'
-        + '<th scope="col" class="cExtraCol">'+xtrtblcols2[i]+'</th>';
-    }
-  }
-
-  lstHeader+= '<th scope="col" class="cSpace">&nbsp;</th>'
-    + '<th scope="col" class="cDate">Date</th>'
-    + '</tr></thead><tbody>\n';
-
-  return lstHeader;
-} // end of function htmlEntryTableHeader
-
-
-
-/**
- * construct a new row for the entry table
- *
- * @param 
- * @param 
- * @param 
- * @param 
- * @param 
- * @param 
- * @param 
- * @param 
- * @param 
- * @param 
- * @param 
- * @param 
- * @param 
- * @param 
- * @param 
- */
-function htmlEntryTableRow( bnr, bclass, bid, bdname, btype, brid, brver, brlang, brdate, bstar, bstarid, brusrid, security, xtrtblcol, bdesc )
-{
-  var xtrtblcols2 = '';
-  var lstBody = '';
-  var tmpdesc = '';
-
-  if (bstar == 1) {
-    bstar = 'cStarOn';
-  }
-  else {
-    bstar = 'cStarOff';
-  }
-
-  xtrtblcols2 = xtrtblcol.split('|');
-
-  lstBody = '<tr class="'+bclass+'" id="tr'+(bnr+1)+'">'
-    + '<td align="right"><input id="cb'+(bnr+1)+'" type="checkbox" onclick="selectRow(this.id)" /></td>'
-    + '<td class="tstar_'+bid+'|'+brid+'-'+bstarid+'"><div id="bstar_'+(bnr+1)+'" class="'+bstar+'">&nbsp;</div></td>'
-    + '<td class="rv'+bid+'|'+brid+'">'+bdname+'</td>'
-    + '<td class="rv'+bid+'|'+brid+'">&nbsp;</td>'
-    + '<td class="rv'+bid+'|'+brid+'" class="cell-height">';
-
-  // not found -> readonly
-  if (security.indexOf("write") < 0 ) { 
-    lstBody += '<img src="'+roscms_intern_webserver_roscms+'images/locked.gif" alt="read-only" style="width:11px; height:12px; border:0px;" /> ';
-  }
-
-  try {
-    tmpdesc = unescape(decodeURI(bdesc));
-    tmpdesc = tmpdesc.replace(/\+/g, ' ');
-    if (tmpdesc.length === 0) {
-      tmpdesc = '&nbsp;';
-    }
-  } catch (e) {
-    tmpdesc = '<em>check the title or description field, it contains non UTF-8 chars</em>';
-  }
-  lstBody += '<span class="tcp">'+tmpdesc+'</span></td>';
-
-  if (xtrtblcol !== '' && xtrtblcols2.length > 1) {
-    for (var i=1; i < xtrtblcols2.length-1; i++) {
-      lstBody += '<td class="rv'+bid+'|'+brid+'">&nbsp;</td>'
-        + '<td class="rv'+bid+'|'+brid+'">'+xtrtblcols2[i]+'</td>';
-    }
-  }
-
-  lstBody += '<td class="rv'+bid+'|'+brid+'">&nbsp;</td>'
-    + '<td class="rv'+bid+'|'+brid+'">'+brdate.substr(0, 10)+'</td>'
-    + '</tr>';
-
-  return lstBody;
-} // end of function htmlEntryTableRow
-
-
-
-/**
- * displays the given number of empty lines
- *
- * @param int spacelines
- */
-function htmlEntryTableMargin( spacelines )
-{
-  var lstSpace = "<br />";
-
-  for (var i=0; i < spacelines; i++) {
-    lstSpace += "<br />";
-  }
-
-  return lstSpace;
-} // end of function htmlEntryTableMargin
 
 
 
@@ -1996,7 +1615,7 @@ function showAutosaveInfo( http_request, objid )
       }
       document.getElementById('mefasi').innerHTML = 'Draft saved at '+ curr_hour +':'+ curr_min;
       
-      if (http_request.responseText != '') {
+      if (http_request.responseText !== '') {
         alertbox('Error: '+http_request.responseText);
       }
       else {
@@ -2060,86 +1679,72 @@ function setBookmark( entryid, dtv, dusr, objid )
 
 
 /**
- * table mouse events
+ * construct a new row for the entry table
+ *
+ * @param 
+ * @param 
+ * @param 
+ * @param 
+ * @param 
+ * @param 
+ * @param 
+ * @param 
+ * @param 
+ * @param 
+ * @param 
+ * @param 
+ * @param 
+ * @param 
+ * @param 
  */
-function registerMouseActions( )
+function htmlEntryTableRow( bnr, bclass, bid, bdname, btype, brid, brver, brlang, brdate, bstar, bstarid, brusrid, security, xtrtblcol, bdesc )
 {
-  var j;
+  var xtrtblcols2 = '';
+  var lstBody = '';
+  var tmpdesc = '';
 
-  if (!document.getElementById) {
-    return;
+  if (bstar == 1) {
+    bstar = 'cStarOn';
+  }
+  else {
+    bstar = 'cStarOff';
   }
 
+  xtrtblcols2 = xtrtblcol.split('|');
 
-  // Shows quickinfo window for a specific time, and then hides it again 
-  function localStartActive()
-  {
-    hlRow(this.id.substr(2,4),1);
+  lstBody = '<tr class="'+bclass+'" id="tr'+(bnr+1)+'">'
+    + '<td align="right"><input id="cbtr'+(bnr+1)+'" type="checkbox" onclick="selectRow(this.id)" /></td>'
+    + '<td class="tstar_'+bid+'|'+brid+'-'+bstarid+'"><div id="bstar_'+(bnr+1)+'" class="'+bstar+'">&nbsp;</div></td>'
+    + '<td class="rv'+bid+'|'+brid+'">'+bdname+'</td>'
+    + '<td class="rv'+bid+'|'+brid+'" class="cell-height tcp">';
 
-    if (document.getElementById('labtitel1c').style.display === 'block') { 
+  // not found -> readonly
+  if (security.indexOf("write") < 0 ) {
+    lstBody += '<img src="'+roscms_intern_webserver_roscms+'images/locked.gif" alt="read-only" style="width:11px; height:12px;" /> ';
+  }
 
-      // deactivate quickinfo-timer
-      window.clearTimeout(timerquickinfo); 
-
-      document.getElementById('qiload').style.display = 'none';
-      timerquickinfo = window.setTimeout("loadQuickinfo('"+this.getElementsByTagName('td')[3].className+"')", 700);
+  try {
+    tmpdesc = unescape(decodeURI(bdesc));
+    tmpdesc = tmpdesc.replace(/\+/g, ' ');
+    if (tmpdesc.length === 0) {
+      tmpdesc = '&nbsp;';
     }
-  } // end of inner function localStartActive 
+  } catch (e) {
+    tmpdesc = '<em>check the title or description field, it contains non UTF-8 chars</em>';
+  }
+  lstBody += tmpdesc+'</td>';
 
-
-  //sets a timeout to remove Quickinfo
-  function localStopActive() {
-    hlRow(this.id.substr(2,4),2);
-    
-    // only if the quick info box is 'visible'
-    if (document.getElementById('labtitel1c').style.display === 'block') {
-
-      // deactivate quickinfo-timer
-      window.clearTimeout(timerquickinfo); 
-
-      document.getElementById('qiload').style.display = 'none';
-      timerquickinfo = window.setTimeout("clearQuickinfo()", 5000);
-    }
-  } // end of inner function localStopActive
-
-
-  function localSetSelected() {
-    hlRow(this.parentNode.id.substr(2,4),3);
-    selectRow(this.parentNode.id.substr(2,4));
-  } // end of inner function localSetSelected
-
-
-  function localSetBookmark() {
-    setBookmark(this.className, document.getElementById('bstar_'+this.parentNode.id.substr(2,4)).className, roscms_intern_account_id, 'bstar_'+this.parentNode.id.substr(2,4));
-  } // end of inner function localSetBookmark
-
-
-  function localStartEditor() {
-    loadEditor(roscms_current_page, this.className);
-  } // end of inner function localStartEditor
-
-
-  //row highlighting
-  if (hlRows) {
-    for (var i=1; i<=nres; i++) {
-
-      document.getElementById("tr"+i).onmouseover = localStartActive;
-      document.getElementById("tr"+i).onmouseout = localStopActive;
-      document.getElementById("tr"+i).getElementsByTagName('td')[0].onclick = localSetSelected;
-      document.getElementById("tr"+i).getElementsByTagName('td')[1].onclick = localSetBookmark;
-
-      // support up to 13 rows
-      for(j=2; j<13; j++) {
-        if (document.getElementById("tr"+i).getElementsByTagName('td')[j]) {
-          document.getElementById("tr"+i).getElementsByTagName('td')[j].onclick = localStartEditor;
-        }
-        else {
-          break;
-        }
-      }
+  if (xtrtblcol !== '' && xtrtblcols2.length > 1) {
+    for (var i=1; i < xtrtblcols2.length-1; i++) {
+      lstBody += '<td class="rv'+bid+'|'+brid+'">'+xtrtblcols2[i]+'</td>';
     }
   }
-} // end of function registerMouseActions
+
+  lstBody += '<td class="rv'+bid+'|'+brid+'">'+brdate.substr(0, 10)+'</td>'
+    + '</tr>';
+
+  return lstBody;
+} // end of function htmlEntryTableRow
 
 
 
@@ -2150,10 +1755,9 @@ function registerMouseActions( )
  */
 function loadMenu( objid )
 {
-  var chtabtext = null;
   var translang = '';
+  var menu_item = null;
 
-  submenu_button = true;
   roscms_archive = false;
 
   // deselect all
@@ -2162,12 +1766,12 @@ function loadMenu( objid )
   // reset search box:
   filtstring1 = '';
   document.getElementById('txtfind').value = '';
-  searchFilter('txtfind', document.getElementById('txtfind').value, 'Search & Filters', false);
+  searchFilter('txtfind', document.getElementById('txtfind').value, search_phrase, false);
 
   window.clearTimeout(autosave_timer);
   autosave_cache = '';
 
-  if (document.getElementById('smenutab'+objid.substring(8)).className !== 'subma') {
+  if (document.getElementById('smenutab'+objid.substring(8)).className !== 'lmItemTopSelected') {
     highlightTab(objid);
   }
 
@@ -2179,33 +1783,28 @@ function loadMenu( objid )
       break;
 
     case '2':
-      filtstring2 = 'k_is_new_0|c_is_type_0|l_is_'+userlang+'_1|o_desc_datetime_1';
-      loadEntryTable('new');
+      filtstring2 = 'k_is_new_0|c_is_user_0|c_is_type_0|l_is_'+userlang+'_1|o_desc_date_1';
+      menu_item = 'new';
       break;
 
     case '3':
       filtstring2 = 'y_is_page_0|k_is_stable_0|c_is_language_1|o_asc_name_1';
-      loadEntryTable('page');
+      menu_item = 'page';
       break;
 
-    case '13':
+    case '5':
       filtstring2 = 'y_is_dynamic_0|k_is_stable_0|c_is_language_1|o_asc_name_1';
-      loadEntryTable('dynamic');
+      menu_item = 'dynamic';
       break;
 
     case '4':
       filtstring2 = 'y_is_content_0|k_is_stable_0|l_is_'+userlang+'_1|o_asc_name_1';
-      loadEntryTable('content');
-      break;
-
-    case '5':
-      filtstring2 = 'y_is_template_0|k_is_stable_0|c_is_language_1|o_asc_name_1';
-      loadEntryTable('template');
+      menu_item = 'content';
       break;
 
     case '6':
       filtstring2 = 'y_is_script_0|k_is_stable_0|c_is_language_1|o_asc_name_1';
-      loadEntryTable('script');
+      menu_item = 'script';
       break;
 
     case '7':
@@ -2216,37 +1815,45 @@ function loadMenu( objid )
       else {
         translang = userlang;
       }
-      filtstring2 = 'y_is_content_1|k_is_stable_0|i_is_translate_0|c_is_user_1|l_is_'+roscms_standard_language+'_0|r_is_'+translang+'_1|o_desc_datetime_1';
-      loadEntryTable('translate');
+      filtstring2 = 'y_is_content_1|k_is_stable_0|i_is_translate_0|c_is_user_1|l_is_'+roscms_standard_language+'_0|r_is_'+translang+'_1|o_desc_date_1';
+      menu_item = 'translate';
       break;
 
     case '8':
     default:
-      filtstring2 = 'c_is_type_1|l_is_'+userlang+'_1|o_desc_datetime_1';
-      loadEntryTable('all');
+      filtstring2 = 'c_is_type_1|l_is_'+userlang+'_1|o_desc_date_1';
+      menu_item = 'all';
       break;
 
     case '9':
-      filtstring2 = 's_is_true_0|c_is_type_1|l_is_'+userlang+'_1|o_desc_datetime_1';
-      loadEntryTable('starred');
+      filtstring2 = 's_is_true_0|c_is_type_1|l_is_'+userlang+'_1|o_desc_date_1';
+      menu_item = 'starred';
       break;
 
     case '10':
-      filtstring2 = 'k_is_draft_0|u_is_'+roscms_intern_login_check_username+'_0|c_is_type_1|o_desc_datetime_1';
-      loadEntryTable('draft');
+      filtstring2 = 'k_is_draft_0|u_is_'+roscms_intern_login_check_username+'_0|c_is_type_1|o_desc_date_1';
+      menu_item = 'draft';
       break;
 
     case '11':
-      filtstring2 = 'u_is_'+roscms_intern_login_check_username+'_0|c_is_type_1|o_desc_datetime_1';
-      loadEntryTable('my');
+      filtstring2 = 'u_is_'+roscms_intern_login_check_username+'_0|c_is_type_1|o_desc_date_1';
+      menu_item = 'my';
       break;
 
     case '12':
-      filtstring2 = 'k_is_archive_0|c_is_version_1|c_is_type_1|l_is_'+userlang+'_1|o_asc_name_1|o_desc_ver_1';
+      filtstring2 = 'k_is_archive_0|c_is_version_1|c_is_type_1|l_is_'+userlang+'_1|o_desc_date_1';
       roscms_archive = true; /* activate archive mode*/
-      loadEntryTable('archive');
+      menu_item = 'archive';
       break;
   } // end switch
+
+  // setup current filter settings
+  if (menu_item !== null) {
+    roscms_prev_page = roscms_current_page;
+    roscms_current_page = menu_item;
+    htmlFilterChoices(filtstring2);
+    loadEntryTable(menu_item);
+  }
 
   return true;
 } // end of function loadMenu
@@ -2330,7 +1937,7 @@ function createNewEntry( menumode )
       makeRequest('?page=backend&type=text&subtype=ned&action=newdynamic&data_id='+encodeURIComponent(document.getElementById('txtadddynsource').value), 'ned', 'newentryarea', 'html', 'GET', '');
       break;
 
-    // new page & content (with template)
+    // new page & content
     case 2:
       if (document.getElementById('txtaddentryname3').value !== "") {
         makeRequest('?page=backend&type=text&subtype=ned&action=newcombo&name='+encodeURIComponent(document.getElementById('txtaddentryname3').value)+'&template='+encodeURIComponent(document.getElementById('txtaddtemplate').value), 'ned', 'newentryarea', 'html', 'GET', '');
@@ -2340,6 +1947,40 @@ function createNewEntry( menumode )
       }
   } // end switch
 } // end of function createNewEntry
+
+
+
+/**
+ * construct a new header for the entry table
+ *
+ * @param string xtrtblcol
+ */
+function htmlEntryTableHeader( xtrtblcol )
+{
+  var xtrtblcols2 ='';
+  var lstHeader = '';
+
+  xtrtblcols2 = xtrtblcol.split('|');
+
+  lstHeader = '<table class="roscmsTable" cellpadding="0" cellspacing="0">'
+    + '<thead><tr>'
+    + '<th scope="col" class="cMark">&nbsp;</th>'
+    + '<th scope="col" class="cStar">&nbsp;</th>'
+    + '<th scope="col" class="cCid sortable" onclick="sortEntryTable(this, \'name\');">Name</th>'
+    + '<th scope="col" class="cRev">Title</th>';
+
+
+  if (xtrtblcol !== '' && xtrtblcols2.length > 1) {
+    for (var i=1; i < xtrtblcols2.length-1; i++) {
+      lstHeader += '<th scope="col" class="cExtraCol sortable" onclick="sortEntryTable(this, \''+xtrtblcols2[i]+'\');">'+xtrtblcols2[i]+'</th>';
+    }
+  }
+
+  lstHeader+= '<th scope="col" class="cDate sortable" onclick="sortEntryTable(this, \'date\');">Date</th>'
+    + '</tr></thead><tbody>';
+
+  return lstHeader;
+} // end of function htmlEntryTableHeader
 
 
 
@@ -2377,7 +2018,7 @@ function showPreview( http_request, objid )
   }
 
   document.getElementById('previewzone').innerHTML = http_request.responseText;
-  document.getElementById('previewhead').innerHTML = '<span class="button" onclick="loadEntryTableWithOffset(roscms_current_tbl_position)"><strong>&laquo; Back</strong></span> &nbsp; <strong>Preview</strong>';
+  document.getElementById('previewhead').innerHTML = '<span class="virtualLink" onclick="loadEntryTableWithOffset(roscms_current_tbl_position)"><strong>&laquo; Back</strong></span> &nbsp; <strong>Preview</strong>';
 } // end of function showPreview
 
 
@@ -2392,7 +2033,7 @@ function addDepency( rev_id )
   var name = document.getElementById('dep_name').value;
 
   // check if name is given
-  if (name != '') {
+  if (name !== '') {
     makeRequest('?page=backend&type=text&subtype=mef&d_fl=adddepency&rev_id='+rev_id+'&dep_name='+encodeURIComponent(name)+'&dep_type='+encodeURIComponent(document.getElementById('dep_type').value), 'mef', 'updatedepencies', 'html', 'GET', '');
   }
 } // addDepency
@@ -2427,127 +2068,8 @@ function showNewEntryDialog( http_request, objid )
   }
 
   document.getElementById('newentryzone').innerHTML = http_request.responseText;
-  document.getElementById('newentryhead').innerHTML = '<span class="button" onclick="loadEntryTableWithOffset(roscms_current_tbl_position)"><strong>&laquo; Back</strong></span> &nbsp; <strong>New Entry</strong>';
+  document.getElementById('newentryhead').innerHTML = '<span class="virtualLink" onclick="loadEntryTableWithOffset(roscms_current_tbl_position)"><strong>&laquo; Back</strong></span> &nbsp; <strong>New Entry</strong>';
 } // end of function showNewEntryDialog
-
-
-
-/**
- * builds a new entry table with the requested data
- *
- * @param object http_request
- * @param string objid
- */
-function buildEntryTable( http_request, objid )
-{
-  var lstData = "";
-  var temp_counter_loop = 0;
-  var xmldoc = http_request.responseXML;
-  var root_node = xmldoc.getElementsByTagName('root').item(0);
-
-  // check if server has send valid data
-  try {
-    if (root_node.firstChild.data) {
-      // temp
-    }
-  }
-  catch (e) {
-    nres = 0;
-    hlRows=false;
-    document.getElementById('mtblnav').innerHTML = '&nbsp;';
-    document.getElementById('mtbl2nav').innerHTML = '&nbsp;';
-    lstData = '<div class="tableswhitespace"><br /><br /><b>No results, due an error in the filter settings or the data metadata.</b><br /><br />If this happens more than a few times, please contact the website admin with the following information:<br />Name: '+ e.name +'<br />Number: '+ e.number +'<br />Message: '+ e.message +'<br />ObjID: '+ objid +'<br />Request: <pre>'+ http_request +'</pre>'+ htmlEntryTableMargin(8)+'</div>';
-    document.getElementById(objid).innerHTML = lstData;
-    return;
-  }
-
-  if ((root_node.firstChild.data.search(/#none#/)) == -1) {
-    var xrow = xmldoc.getElementsByTagName("row");
-    var xview = xmldoc.getElementsByTagName("view");
-    var mtblnavstr = '';
-    var mtblnavfrom = xview[0].getAttributeNode("curpos").value*1+1;
-    var mtblnavto = (xview[0].getAttributeNode("curpos").value*1) + (xview[0].getAttributeNode("pagelimit").value*1);
-
-    roscms_current_tbl_position = xview[0].getAttributeNode("curpos").value;
-
-    // table navigation next page
-    if (xview[0].getAttributeNode("curpos").value >= roscms_intern_entry_per_page*2) {
-      mtblnavstr += '<span class="button" onclick="reloadEntryTableWithOffset(0)"><strong>&laquo;</strong></span>&nbsp;&nbsp;';
-    }
-
-    // table navigation previous page
-    if (xview[0].getAttributeNode("curpos").value > 0) {
-      mtblnavstr += '<span class="button" onclick="reloadEntryTableWithOffset(';
-      if (xview[0].getAttributeNode("curpos").value-roscms_intern_entry_per_page*1 >= 0) {
-        mtblnavstr += xview[0].getAttributeNode("curpos").value-roscms_intern_entry_per_page*1;
-      }
-      else {
-        mtblnavstr += '0';
-      }
-      mtblnavstr += ')"><strong>&lsaquo; Previous</strong></span>&nbsp;&nbsp;';
-    }
-
-    // current entry table begin
-    mtblnavstr += '<strong>'+mtblnavfrom+'</strong> - <strong>';
-
-    // foo from bar entries displayed
-    if (mtblnavto > xview[0].getAttributeNode("pagemax").value) {
-      mtblnavstr += xview[0].getAttributeNode("pagemax").value;
-    }
-    else {
-      mtblnavstr += mtblnavto;
-    }
-    mtblnavstr += '</strong> of <strong>'+xview[0].getAttributeNode("pagemax").value+'</strong>';
-
-    // display navigation
-    if (xview[0].getAttributeNode("curpos").value < xview[0].getAttributeNode("pagemax").value-roscms_intern_entry_per_page*1) {
-      mtblnavstr += '&nbsp;&nbsp;<span class="button" onclick="reloadEntryTableWithOffset(';
-      mtblnavstr += xview[0].getAttributeNode("curpos").value*1+roscms_intern_entry_per_page*1;
-      mtblnavstr += ')"><b>Next &rsaquo;</b></span>';
-    }
-
-    if (xview[0].getAttributeNode("curpos").value < (xview[0].getAttributeNode("pagemax").value*1-roscms_intern_entry_per_page*2)) {
-      mtblnavstr += '&nbsp;&nbsp;<span class="button" onclick="reloadEntryTableWithOffset(';
-      mtblnavstr += xview[0].getAttributeNode("pagemax").value*1-roscms_intern_entry_per_page*1;
-      mtblnavstr += ')"><b>&raquo;</b></span>';
-    }
-    mtblnavstr += '&nbsp;&nbsp;';
-
-    // update current navigation
-    document.getElementById('mtblnav').innerHTML = mtblnavstr;
-    document.getElementById('mtbl2nav').innerHTML = mtblnavstr;
-
-    lstData += htmlEntryTableHeader(xview[0].getAttributeNode("tblcols").value);
-
-    for (var i=0; i < xrow.length; i++) {
-
-      // build current line
-      lstData += htmlEntryTableRow(i, xrow[i].getAttributeNode("status").value, xrow[i].getAttributeNode("id").value, xrow[i].getAttributeNode("dname").value, xrow[i].getAttributeNode("type").value, xrow[i].getAttributeNode("rid").value, xrow[i].getAttributeNode("rver").value, xrow[i].getAttributeNode("rlang").value, xrow[i].getAttributeNode("rdate").value, xrow[i].getAttributeNode("star").value, xrow[i].getAttributeNode("starid").value, xrow[i].getAttributeNode("rusrid").value, xrow[i].getAttributeNode("security").value, xrow[i].getAttributeNode("xtrcol").value, xrow[i].firstChild.data);
-
-      temp_counter_loop = i;
-    }
-    lstData += '</tbody></table>';
-
-    // fillup whitespace
-    if (xrow.length < 15) {
-      lstData += '<div class="tableswhitespace"><br />'+htmlEntryTableMargin(15-xrow.length)+'</div>';
-    }
-
-    nres = (temp_counter_loop+1);
-    hlRows=true;
-    window.setTimeout("registerMouseActions()", 100);
-  }
-  else {
-    nres = 0;
-    hlRows=false;
-    document.getElementById('mtblnav').innerHTML = '&nbsp;';
-    document.getElementById('mtbl2nav').innerHTML = '&nbsp;';
-    lstData = '<div class="tableswhitespace"><br /><br /><b>No results.</b>'+htmlEntryTableMargin(15)+'</div>';
-  }
-
-  // update table
-  document.getElementById(objid).innerHTML = lstData;
-} // end of function buildEntryTable
 
 
 
@@ -2559,52 +2081,29 @@ function buildEntryTable( http_request, objid )
 function htmlCommandBar( preset )
 {
   var cmdbarstr = '';
-  var setbold = 'cmddiff';
 
   // prepare some commands
   var cmdhtml_space = '&nbsp;';
-  var cmdhtml_diff = '<button type="button" id="cmddiff" onclick="compareEntries()">Compare</button>'+cmdhtml_space;
-  var cmdhtml_preview = '<button type="button" id="cmdpreview" onclick="previewPage()">Preview</button>'+cmdhtml_space;
-  var cmdhtml_ready = '<button type="button" id="cmdready" onclick="changeSelectedTags(\'mn\')">Ready</button>'+cmdhtml_space;
-  var cmdhtml_refresh = '<button type="button" id="cmdrefresh" onclick="loadEntryTableWithOffset(roscms_current_tbl_position)">Refresh</button>'+cmdhtml_space;
-  var cmdhtml_select_start = '<select name="extraopt" id="extraopt" style="vertical-align: top; width: 22ex;" onchange="changeSelectedTags(this.value)">'
-        + '<option value="sel" style="color: rgb(119, 119, 119);">More actions...</option>';
-  var cmdhtml_select_as = '<option value="as">&nbsp;&nbsp;&nbsp;Add star</option>';
-  var cmdhtml_select_xs = '<option value="xs">&nbsp;&nbsp;&nbsp;Remove star</option>';
-  var cmdhtml_select_no = '<option value="no" style="color: rgb(119, 119, 119);">&nbsp;&nbsp;&nbsp;-----</option>';
-  var cmdhtml_select_mn = '<option value="mn">&nbsp;&nbsp;&nbsp;Mark as new</option>';
-  var cmdhtml_select_xe2 = '<option value="xe">&nbsp;&nbsp;&nbsp;Delete</option>';
-  var cmdhtml_select_end = '</select>';
+  var cmdhtml_diff = '<div class="button" onclick="compareEntries()"><img src="'+roscms_intern_webserver_roscms+'images/compare.gif" alt="" /><span class="text">Compare</span></div>';
+  var cmdhtml_preview = '<div class="button" onclick="previewPage()"><img src="'+roscms_intern_webserver_roscms+'images/preview.gif" alt="" /><span class="text">Preview</span></div>';
+  var cmdhtml_ready = '<div class="button" onclick="changeSelectedTags(\'mn\')"><img src="'+roscms_intern_webserver_roscms+'images/edit.gif" alt="" /><span class="text">Suggest</span></div>';
+
   
   var cmdhtml_stable = '';
-  var cmdhtml_select_ms = '';
-  var cmdhtml_select_ge = '';
-  var cmdhtml_select_va = '';
-  var cmdhtml_select_xe = '';
+  var cmdhtml_archive = '';
+  var cmdhtml_delete = '';
 
   // mark stable / generate
-  if (roscms_access['make_stable']) {
-    cmdhtml_stable = '<button type="button" id="cmdstable" onclick="changeSelectedTags(\'ms\')">Stable</button>'+cmdhtml_space;
-    cmdhtml_select_ms = '<option value="ms">&nbsp;&nbsp;&nbsp;Mark as stable</option>';
-    cmdhtml_select_ge = '<option value="va">&nbsp;&nbsp;&nbsp;Generate page</option>';
-    
+  if (roscms_access.make_stable) {
+    cmdhtml_stable = '<div class="button" onclick="changeSelectedTags(\'ms\')"><img src="'+roscms_intern_webserver_roscms+'images/mail.gif" alt="" /><span class="text">Publish</span></div>';
   }
 
   // delete entries
-  if (roscms_access['del_entry']) {
-    cmdhtml_select_va = '<option value="va">&nbsp;&nbsp;&nbsp;Move to archive</option>';
-    cmdhtml_select_xe = '<option value="xe">&nbsp;&nbsp;&nbsp;Delete</option>';
+  if (roscms_access.del_entry) {
+    cmdhtml_archive = '<div class="button" onclick="changeSelectedTags(\'va\')"><img src="'+roscms_intern_webserver_roscms+'images/rospc.gif" alt="" /><span class="text">to archive</span></div>';
+    cmdhtml_delete = '<div class="button" onclick="changeSelectedTags(\'xe\')"><img src="'+roscms_intern_webserver_roscms+'images/delete.gif" alt="" /><span class="text">Delete</span></div>';
+
   }
-  
-  var cmdhtml_select_full = cmdhtml_select_start
-        + cmdhtml_select_as
-        + cmdhtml_select_xs
-        + cmdhtml_select_no
-        + cmdhtml_select_mn
-        + cmdhtml_select_ms
-        + cmdhtml_select_va
-        + cmdhtml_select_xe
-        + cmdhtml_select_end;
 
   switch (preset) {
 
@@ -2613,37 +2112,33 @@ function htmlCommandBar( preset )
         + cmdhtml_preview
         + cmdhtml_ready
         + cmdhtml_stable
-        + cmdhtml_refresh
-        + cmdhtml_select_full;
+        + cmdhtml_archive
+        + cmdhtml_delete;
       break;
 
     case 'trans':
-      cmdbarstr += cmdhtml_diff
-        + cmdhtml_preview
-        + cmdhtml_refresh
-        + cmdhtml_select_full;
+      cmdbarstr += cmdhtml_preview;
       break;
 
     case 'new':
       cmdbarstr += cmdhtml_diff
         + cmdhtml_preview
         + cmdhtml_stable
-        + cmdhtml_refresh
-        + cmdhtml_select_full;
+        + cmdhtml_archive
+        + cmdhtml_delete;
       break;
 
     case 'page':
       cmdbarstr += cmdhtml_preview
         + cmdhtml_diff
-        + cmdhtml_refresh
-        + cmdhtml_select_full;
-      setbold = 'cmdpreview';
+        + cmdhtml_archive
+        + cmdhtml_delete;
       break;
 
     case 'script':
       cmdbarstr += cmdhtml_diff
-        + cmdhtml_refresh
-        + cmdhtml_select_full;
+        + cmdhtml_archive
+        + cmdhtml_delete;
       break;
 
     case 'draft':
@@ -2651,52 +2146,16 @@ function htmlCommandBar( preset )
         + cmdhtml_preview
         + cmdhtml_ready
         + cmdhtml_stable
-        + cmdhtml_refresh
-        + cmdhtml_select_start
-        + cmdhtml_select_as
-        + cmdhtml_select_xs
-        + cmdhtml_select_no
-        + cmdhtml_select_mn
-        + cmdhtml_select_ms
-        + cmdhtml_select_va
-        + cmdhtml_select_no
-        + cmdhtml_select_xe2
-        + cmdhtml_select_end;
+        + cmdhtml_archive
+        + cmdhtml_delete;
       break;
 
     case 'archive':
-      cmdbarstr += cmdhtml_refresh
-        + cmdhtml_select_start
-        + cmdhtml_select_as
-        + cmdhtml_select_xs
-        + cmdhtml_select_end;
-      setbold = 'cmdrefresh';
       break;
   } 
 
-  document.getElementById('tablecmdbar').innerHTML = cmdbarstr;
-  document.getElementById(setbold).style.fontWeight = 'bold';
+  document.getElementById('toolbarExtension').innerHTML = cmdbarstr;
 } // end of function htmlCommandBar
-
-
-
-/**
- * adds a new filter to the actual list
- */
-function addFilter( )
-{
-  var new_filter = 'a_is_';
-
-  // fill filtstring2 with content, if available
-  getActiveFilters();
-
-  if (filtstring2 === '') {
-    htmlFilterChoices(new_filter);
-  }
-  else {
-    htmlFilterChoices(filtstring2+'|'+new_filter);
-  }
-} // end of function addFilter
 
 
 
@@ -2723,7 +2182,7 @@ function htmlFilterChoices( filtpopstr )
     for (i=0; i < filtpopstr2.length; i++) {
       lstfilterstr2 = filtpopstr2[i].split('_');
 
-      if (lstfilterstr2[3] == 0 && !roscms_access['dont_hide_filter']) {
+      if (lstfilterstr2[3] == '0' && !roscms_access.dont_hide_filter) {
         filtvisibility = false;
         lstfilterstr +=  '<span style="display: none;">';
       }
@@ -2736,46 +2195,35 @@ function htmlFilterChoices( filtpopstr )
       lstfilterstr +=  '<div id="filt'+indexid+'" class="filterbar2">and&nbsp;';
 
       // hidden filter entries don't need a combobox (only for SecLev = 1 user)
-      if (lstfilterstr2[3] == 0 && !roscms_access['dont_hide_filter']) {  
+      if (lstfilterstr2[3] == '0' && !roscms_access.dont_hide_filter) {  
         lstfilterstr +=  '<input type="hidden" name="sfa'+indexid+'" id="sfa'+indexid+'" value="" />';
       }
       else {
-        lstfilterstr +=  '<select id="sfa'+indexid+'" onchange="isFilterChanged(this.id)">';
-
-        if (roscms_access['more_filter']) { 
-          lstfilterstr += '<option value="k">Status</option>'
-            + '<option value="y">Type</option>';
-        } 
-
-        lstfilterstr += '<option value="n">Name</option>'
-          + '<option value="v">Version</option>'
-          + '<option value="s">Starred</option>'
-          + '<option value="a">Tag</option>'
+        lstfilterstr +=  '<select id="sfa'+indexid+'" onchange="isFilterChanged(this.id)">'
+          + '<option value="k">Status</option>'
+          + '<option value="n">Name</option>'
+          + '<option value="s">Bookmarked</option>'
           + '<option value="l">Language</option>';
 
-        if (roscms_access['more_filter']) {
-          lstfilterstr += '<option value="r">Translate</option>'
+        if (roscms_access.more_filter) {
+          lstfilterstr += '<option value="y">Type</option>'
+            + '<option value="r">Translate</option>'
             + '<option value="i">Security</option>'
             + '<option value="m">Metadata</option>'
             + '<option value="u">User</option>';
-
-          if (roscms_access['admin_filter']) {
-            lstfilterstr += '<option value="e">System</option>';
-          }
         }
 
         lstfilterstr += '<option value="d">Date</option>'
-          + '<option value="t">Time</option>'
           + '<option value="c">Column</option>'
           + '<option value="o">Order</option>'
           + '</select>&nbsp;';
       }
 
       lstfilterstr +=  htmlFilterValues(lstfilterstr2[0], lstfilterstr2[3], indexid)
-        +  '&nbsp;&nbsp;&nbsp;<span id="fdel'+indexid+'" class="filterbutton" onclick="removeFilter(this.id)"><img src="'+roscms_intern_webserver_roscms+'images/remove.gif" alt="" style="width:11px; height:11px; border:0px;" />&nbsp;Delete</span>'
+        +  '&nbsp;&nbsp;&nbsp;<span id="fdel'+indexid+'" class="virtualButton" onclick="removeFilter(this.id)"><img src="'+roscms_intern_webserver_roscms+'images/remove.gif" alt="" style="width:11px; height:11px; border:0px;" />&nbsp;Delete</span>'
         +  '</div>';
 
-      if (lstfilterstr2[3] == 0) {
+      if (lstfilterstr2[3] == '0') {
         lstfilterstr +=  '<span id="sfv'+indexid+'" class="filthidden"></span>'; // store visibility-status
       }
       else {

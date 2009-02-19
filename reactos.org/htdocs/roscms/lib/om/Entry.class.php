@@ -118,7 +118,6 @@ class Entry
       // call old data types as array index to get the short version
       $convert = array(
         'content'=>'cont',
-        'template'=>'templ',
         'script'=>'inc');
 
       // if the datatype has not changed, use the old one
@@ -234,7 +233,7 @@ class Entry
 
     // set page content to template, if selected
     if ($template != '' && $template != 'none') {
-      $content = '[#templ_'.htmlspecialchars($template).']';
+      $content = '[#cont_'.htmlspecialchars($template).']';
     }
     else {
       $content = '';

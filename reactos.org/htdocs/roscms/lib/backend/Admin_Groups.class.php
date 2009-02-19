@@ -68,15 +68,16 @@ class Admin_Groups extends Admin
         <br />
         <fieldset>
           <legend>configure group access rights</legend>
-          <table>
-            <tr>
-              <th>ACL Name</th>');
+          <table class="roscmsTable">
+            <thead>
+              <tr>
+                <th>ACL Name</th>');
 
     // list rights in header
     foreach ($rights as $right) {
       echo '<th style="vertical-align:bottom;" title="'.$right['name'].': '.$right['description'].'"><img src="'.RosCMS::getInstance()->pathInstance().'?page=presentation&amp;type=vtext&amp;text='.$right['name'].'" alt="'.$right['name'].'" /></th>';
     }
-    echo '</tr>';
+    echo '</tr></thead><tbody>';
 
     // get list of Groups
     $stmt=&DBConnection::getInstance()->prepare("SELECT id, name, description FROM ".ROSCMST_ACCESS." ORDER BY name ASC");
@@ -94,30 +95,39 @@ class Admin_Groups extends Admin
     }
 
     echo_strip('
+            </tbody>
           </table>
         </fieldset>
         <br />
         <fieldset>
           <legend>Area Protection List (APL)</legend>
-          <table>
-            <tr>
-              <th>APL Name</th>
-              <th>Status</th>');
+          <table class="roscmsTable">
+            <thead>
+              <tr>
+                <th>APL Name</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>');
 
     // get list of APL
     $stmt=&DBConnection::getInstance()->prepare("SELECT id, name, description FROM ".ROSCMST_AREA." ORDER BY name ASC");
     $stmt->execute();
+    $x=0;
     while ($area = $stmt->fetch(PDO::FETCH_ASSOC)) {
+      ++$x;
       echo_strip('
-        <tr>
+        <tr id="trg'.$x.'" class="'.($x%2 ? 'even' : 'odd').'" onmouseover="'."hlRow('tr".$x."',1)".'" onmouseout="'."hlRow('tr".$x."',2)".'">
           <td title="'.$area['description'].'"><label for="area'.$area['id'].'">'.$area['name'].'</label></td>
           <td><input type="checkbox" value="1" name="area'.$area['id'].'" id="area'.$area['id'].'" /></td>
         </tr>');
     }
 
     echo_strip('
+            </tbody>
+          </table>
         </fieldset>
-        <button onclick="'."submitNew('group')".'">Create new Group</button>
+        <button onclick="'."submitGroupAdd()".'">Create new Group</button>
       </form>
     ');
   } // end of member function showNew
@@ -202,23 +212,19 @@ class Admin_Groups extends Admin
    */
   protected function showSearch( )
   {
-    echo_strip('
-      <h2>Select Group to '.($_GET['for']=='edit' ? 'edit' : 'delete').'</h2>
-      <form onsubmit="return false;">
-        <select name="group" id="group">
-          <option value="0">&nbsp;</option>');
-
     // list of groups
-    $stmt=&DBConnection::getInstance()->prepare("SELECT id, name, description FROM ".ROSCMST_GROUPS." ORDER BY name ASC");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT id, security_level, name, description FROM ".ROSCMST_GROUPS." ORDER BY name ASC");
     $stmt->execute();
+    $x=0;
     while ($group = $stmt->fetch(PDO::FETCH_ASSOC)) {
-      echo '<option value="'.$group['id'].'" title="'.$group['description'].'">'.$group['name'].'</option>';
+      ++$x;
+      echo_strip ('
+        <tr id="tr'.($x).'" class="'.($x%2 ? 'odd' : 'even').'" onclick="'."editGroup(".$group['id'].")".'" onmouseover="'."hlRow(this.id,1)".'" onmouseout="'."hlRow(this.id,2)".'">
+          <td>'.$group['security_level'].'</td>
+          <td>'.$group['name'].'</td>
+          <td>'.htmlentities($group['description']).'</td>
+        </tr>');
     }
-
-    echo_strip('
-        </select>
-        <button onclick="'."submitSearch('group','".($_GET['for'] == 'edit' ? 'edit' : 'delete')."')".'">go on</button>
-      </form>');
   } // end of member function showSearch
 
 
@@ -262,7 +268,7 @@ class Admin_Groups extends Admin
 
     // group information
     $stmt=&DBConnection::getInstance()->prepare("SELECT name, name_short, description, id, security_level FROM ".ROSCMST_GROUPS." WHERE id=:acl_id");
-    $stmt->bindParam('acl_id',$_POST['group'],PDO::PARAM_INT);
+    $stmt->bindParam('acl_id',$_REQUEST['group'],PDO::PARAM_INT);
     $stmt->execute();
     $group = $stmt->fetchOnce(PDO::FETCH_ASSOC);
 
@@ -336,7 +342,7 @@ class Admin_Groups extends Admin
           <legend>Area Protection List (APL)</legend>
           <table>
             <tr>
-              <th>ACL Name</th>
+              <th>APL Name</th>
               <th>Status</th>');
               
     // for usage in loop
@@ -360,7 +366,7 @@ class Admin_Groups extends Admin
 
     echo_strip('
         </fieldset>
-        <button onclick="'."submitEdit('group')".'">Edit Group</button>
+        <button onclick="'."submitGroupEdit()".'">Edit Group</button>
       </form>
     ');
   } // end of member function showEdit

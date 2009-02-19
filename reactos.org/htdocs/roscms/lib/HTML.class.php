@@ -148,11 +148,10 @@ abstract class HTML
 
     // footer information
     echo_strip('
-      <hr />
       <div id="footer" style="text-align:center;">
-        '.RosCMS::getInstance()->systemBrand().' - (c) 2005-2008 Klemens Friedl, Danny G&ouml;tte<br />
-        <br />
-        Page generated in '.$page_time.' seconds
+        <hr />
+        <strong>'.RosCMS::getInstance()->systemBrand().'</strong> &copy; 2005&ndash;2009 by Klemens Friedl, Danny G&ouml;tte
+        <!--Page generated in '.$page_time.' seconds-->
       </div>
       </body>
       </html>');
