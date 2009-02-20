@@ -103,10 +103,12 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 INT_PTR CALLBACK
 TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
+#if 0
     HDC              hdc;
     PAINTSTRUCT      ps;
-    LPRECT           pRC;
     RECT             rc;
+#endif
+    LPRECT           pRC;
     int              idctrl;
     LPNMHDR          pnmh;
     WINDOWPLACEMENT  wp;
@@ -289,7 +291,7 @@ TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             TaskManager_OnTabWndSelChange();
         }
         break;
-
+#if 0
     case WM_NCPAINT:
         hdc = GetDC(hDlg);
         GetClientRect(hDlg, &rc);
@@ -303,7 +305,7 @@ TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         Draw3dRect(hdc, rc.left, rc.top, rc.right, rc.top + 2, GetSysColor(COLOR_3DSHADOW), GetSysColor(COLOR_3DHILIGHT));
         EndPaint(hDlg, &ps);
         break;
-
+#endif
     case WM_SIZING:
         /* Make sure the user is sizing the dialog */
         /* in an acceptable range */
