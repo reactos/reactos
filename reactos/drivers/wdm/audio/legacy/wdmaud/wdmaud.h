@@ -57,28 +57,54 @@ typedef struct
 } WAVEINCAPS; 
 #endif
 
-
-
 #include "interface.h"
 
 typedef struct
 {
-    LIST_ENTRY Entry;
-    HANDLE Handle;
-    UNICODE_STRING SymbolicLink;
+    HANDLE hProcess;
+    HANDLE hSysAudio;
     PFILE_OBJECT FileObject;
-}SYSAUDIO_ENTRY;
+
+}WDMAUD_CLIENT, *PWDMAUD_CLIENT;
+
+typedef struct
+{
+    LIST_ENTRY Entry;
+    UNICODE_STRING SymbolicLink;
+}SYSAUDIO_ENTRY, *PSYSAUDIO_ENTRY;
 
 typedef struct
 {
     KSDEVICE_HEADER DeviceHeader;
     PVOID SysAudioNotification;
 
+    BOOL DeviceInterfaceSupport;
+
+    KSPIN_LOCK Lock;
     ULONG NumSysAudioDevices;
     LIST_ENTRY SysAudioDeviceList;
 
 }WDMAUD_DEVICE_EXTENSION, *PWDMAUD_DEVICE_EXTENSION;
 
+NTSTATUS
+WdmAudRegisterDeviceInterface(
+    IN PDEVICE_OBJECT PhysicalDeviceObject,
+    IN PWDMAUD_DEVICE_EXTENSION DeviceExtension);
 
+NTSTATUS
+WdmAudOpenSysAudioDevices(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PWDMAUD_DEVICE_EXTENSION DeviceExtension);
+
+NTSTATUS
+WdmAudOpenSysaudio(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PWDMAUD_CLIENT *pClient);
+
+NTSTATUS
+NTAPI
+WdmAudDeviceControl(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp);
 
 #endif

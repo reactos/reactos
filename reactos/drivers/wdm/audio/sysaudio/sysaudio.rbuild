@@ -4,7 +4,11 @@
 	<include base="sysaudio">.</include>
 	<library>ntoskrnl</library>
 	<library>ks</library>
+	<library>libcntpr</library>
 	<define name="_COMDDK_" />
+	<file>control.c</file>
+	<file>deviface.c</file>
+	<file>dispatcher.c</file>
 	<file>main.c</file>
 	<file>sysaudio.rc</file>
 </module>
