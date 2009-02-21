@@ -701,7 +701,7 @@ QSI_DEF(SystemPathInformation)
 /* Class 5 - Process Information */
 QSI_DEF(SystemProcessInformation)
 {
-    PSYSTEM_PROCESS_INFORMATION SpiCurrent = NULL;
+    PSYSTEM_PROCESS_INFORMATION SpiCurrent;
     PSYSTEM_THREAD_INFORMATION ThreadInfo;
     PEPROCESS Process = NULL, SystemProcess;
     PETHREAD CurrentThread;
@@ -712,213 +712,176 @@ QSI_DEF(SystemProcessInformation)
     PLIST_ENTRY CurrentEntry;
     ULONG TotalSize = 0, ThreadsCount;
     ULONG TotalUser, TotalKernel;
-    PUCHAR Current = NULL;
+    PUCHAR Current;
     NTSTATUS Status = STATUS_SUCCESS;
     PUNICODE_STRING ProcessImageName;
     PWCHAR szSrc;
 
-    //1 Write in to bufer 
-    //2 Calc size buffer
-    //4 Vista compatible
-    //Flags always start write and calculate size
-    //For Vista compatible add "| 4"
-    USHORT OSMode = 1 | 2; 
-                        
     _SEH2_TRY
     {
         /* scan the process list */
 
         PSYSTEM_PROCESS_INFORMATION Spi
-          = (PSYSTEM_PROCESS_INFORMATION) Buffer;
+            = (PSYSTEM_PROCESS_INFORMATION) Buffer;
 
-        while ((OSMode & 1) || (OSMode & 2))
+        *ReqSize = sizeof(SYSTEM_PROCESS_INFORMATION);
+
+        if (Size < sizeof(SYSTEM_PROCESS_INFORMATION))
         {
-          //Vista first cycle only calc size and readonly
-          if (OSMode & 4 && OSMode & 1)
-              OSMode ^= 1;
-          //not exists byffer or size protect write, only calc size
-          if (OSMode & 1 && ((Size == 0) || (!Buffer)))
-              OSMode ^= 1;
+            _SEH2_YIELD(return STATUS_INFO_LENGTH_MISMATCH); // in case buffer size is too small
+        }
+        RtlZeroMemory(Spi, Size);
 
-          if (OSMode & 1)
-          {
-              //Only in second cycle and vista compatible 
-              if (TotalSize > 0 && TotalSize > Size)
-              {
-                *ReqSize = TotalSize;
-                _SEH2_YIELD(return STATUS_INFO_LENGTH_MISMATCH); // in case buffer size is too small
-              }
-              if (Size > 0) 
-                RtlZeroMemory(Spi, Size);
-              Current = (PUCHAR) Spi;
-              SpiCurrent = NULL;
-          }
+        SystemProcess = PsIdleProcess;
+        Process = SystemProcess;
+        Current = (PUCHAR) Spi;
 
-          SystemProcess = PsIdleProcess;
-          Process = SystemProcess;
+        do
+        {
+            SpiCurrent = (PSYSTEM_PROCESS_INFORMATION) Current;
 
-          do
-          {
-              ThreadsCount = 0;
-              CurrentEntry = Process->ThreadListHead.Flink;
-              while (CurrentEntry != &Process->ThreadListHead)
-              {
+            ThreadsCount = 0;
+            CurrentEntry = Process->ThreadListHead.Flink;
+            while (CurrentEntry != &Process->ThreadListHead)
+            {
                 ThreadsCount++;
                 CurrentEntry = CurrentEntry->Flink;
-              }
+            }
 
-              // size of the structure for every process
-              CurrentSize = sizeof(SYSTEM_PROCESS_INFORMATION) + sizeof(SYSTEM_THREAD_INFORMATION) * ThreadsCount;
-              ImageNameLength = 0;
-              Status = SeLocateProcessImageName(Process, &ProcessImageName);
-              szSrc = NULL;
-              if (NT_SUCCESS(Status) && ProcessImageName->Length > 0)
+            // size of the structure for every process
+            CurrentSize = sizeof(SYSTEM_PROCESS_INFORMATION) + sizeof(SYSTEM_THREAD_INFORMATION) * ThreadsCount;
+            ImageNameLength = 0;
+            Status = SeLocateProcessImageName(Process, &ProcessImageName);
+            szSrc = NULL;
+            if (NT_SUCCESS(Status))
+            {
+              szSrc = (PWCHAR)((PCHAR)ProcessImageName->Buffer + ProcessImageName->Length);
+              /* Loop the file name*/
+              while (szSrc > ProcessImageName->Buffer)
               {
-                szSrc = (PWCHAR)((PCHAR)ProcessImageName->Buffer + ProcessImageName->Length);
-                /* Loop the file name*/
-                while (szSrc > ProcessImageName->Buffer)
+                /* Make sure this isn't a backslash */
+                if (*--szSrc == OBJ_NAME_PATH_SEPARATOR)
                 {
-                  /* Make sure this isn't a backslash */
-                  if (*--szSrc == OBJ_NAME_PATH_SEPARATOR)
-                  {
                     szSrc++;
                     break;
-                  }
-                  else
-                  {
-                    ImageNameLength += sizeof(WCHAR);
-                  }
-                }
-              }
-              if (!ImageNameLength && Process != PsIdleProcess && Process->ImageFileName)
-              {
-                ImageNameLength = strlen(Process->ImageFileName) * sizeof(WCHAR);
-              }
-
-              /* Round up the image name length as NT does */
-              ImageNameMaximumLength = 
-                (ImageNameLength > 0 ? ROUND_UP(ImageNameLength+1, 8) : 0);
-
-              if (OSMode & 2)
-                TotalSize += CurrentSize + ImageNameMaximumLength;
-
-              if ((OSMode & 1) && Buffer && TotalSize <= Size)
-              {
-                //Set prev structure NextEntryOffset next structure only exists write buffer
-                if (SpiCurrent && TotalSize <= Size)
-                  SpiCurrent->NextEntryOffset = Current - (PUCHAR)SpiCurrent;// relative offset to the beginnnig of the next structure
-                SpiCurrent = (PSYSTEM_PROCESS_INFORMATION) Current;
-
-                /* Fill system information */
-                SpiCurrent->NumberOfThreads = ThreadsCount;
-                SpiCurrent->CreateTime = Process->CreateTime;
-                SpiCurrent->ImageName.Length = ImageNameLength;
-                SpiCurrent->ImageName.MaximumLength = ImageNameMaximumLength;
-                SpiCurrent->ImageName.Buffer = (void*)(Current + CurrentSize);
-
-                /* Copy name to the end of the struct */
-                if(Process != PsIdleProcess)
-                {
-                  if (szSrc)
-                  {
-                    RtlCopyMemory(SpiCurrent->ImageName.Buffer, szSrc, SpiCurrent->ImageName.Length);
-                  }
-                  else if (Process->ImageFileName)
-                  {
-                    RtlInitAnsiString(&ImageName, Process->ImageFileName);
-                    RtlAnsiStringToUnicodeString(&SpiCurrent->ImageName, &ImageName, FALSE);
-                  }
                 }
                 else
                 {
-                    RtlInitUnicodeString(&SpiCurrent->ImageName, NULL);
+                    ImageNameLength += sizeof(WCHAR);
                 }
-
-                SpiCurrent->BasePriority = Process->Pcb.BasePriority;
-                SpiCurrent->UniqueProcessId = Process->UniqueProcessId;
-                SpiCurrent->InheritedFromUniqueProcessId = Process->InheritedFromUniqueProcessId;
-                SpiCurrent->HandleCount = ObGetProcessHandleCount(Process);
-                SpiCurrent->PeakVirtualSize = Process->PeakVirtualSize;
-                SpiCurrent->VirtualSize = Process->VirtualSize;
-                SpiCurrent->PageFaultCount = Process->Vm.PageFaultCount;
-                SpiCurrent->PeakWorkingSetSize = Process->Vm.PeakWorkingSetSize;
-                SpiCurrent->WorkingSetSize = Process->Vm.WorkingSetSize;
-                SpiCurrent->QuotaPeakPagedPoolUsage = Process->QuotaPeak[0];
-                SpiCurrent->QuotaPagedPoolUsage = Process->QuotaUsage[0];
-                SpiCurrent->QuotaPeakNonPagedPoolUsage = Process->QuotaPeak[1];
-                SpiCurrent->QuotaNonPagedPoolUsage = Process->QuotaUsage[1];
-                SpiCurrent->PagefileUsage = Process->QuotaUsage[2];
-                SpiCurrent->PeakPagefileUsage = Process->QuotaPeak[2];
-                SpiCurrent->PrivatePageCount = Process->CommitCharge;
-                ThreadInfo = (PSYSTEM_THREAD_INFORMATION)(SpiCurrent + 1);
-
-                CurrentEntry = Process->ThreadListHead.Flink;
-                while (CurrentEntry != &Process->ThreadListHead)
-                {
-                    CurrentThread = CONTAINING_RECORD(CurrentEntry, ETHREAD,
-                                                ThreadListEntry);
-
-                    ThreadInfo->KernelTime.QuadPart = UInt32x32To64(CurrentThread->Tcb.KernelTime, KeMaximumIncrement);
-                    ThreadInfo->UserTime.QuadPart = UInt32x32To64(CurrentThread->Tcb.UserTime, KeMaximumIncrement);
-                    ThreadInfo->CreateTime.QuadPart = CurrentThread->CreateTime.QuadPart;
-                    ThreadInfo->WaitTime = CurrentThread->Tcb.WaitTime;
-                    ThreadInfo->StartAddress = (PVOID) CurrentThread->StartAddress;
-                    ThreadInfo->ClientId = CurrentThread->Cid;
-                    ThreadInfo->Priority = CurrentThread->Tcb.Priority;
-                    ThreadInfo->BasePriority = CurrentThread->Tcb.BasePriority;
-                    ThreadInfo->ContextSwitches = CurrentThread->Tcb.ContextSwitches;
-                    ThreadInfo->ThreadState = CurrentThread->Tcb.State;
-                    ThreadInfo->WaitReason = CurrentThread->Tcb.WaitReason;
-
-                    ThreadInfo++;
-                    CurrentEntry = CurrentEntry->Flink;
-                }
-
-                /* Query total user/kernel times of a process */
-                TotalKernel = KeQueryRuntimeProcess(&Process->Pcb, &TotalUser);
-                SpiCurrent->UserTime.QuadPart = UInt32x32To64(TotalUser, KeMaximumIncrement);
-                SpiCurrent->KernelTime.QuadPart = UInt32x32To64(TotalKernel, KeMaximumIncrement);
               }
-              /* Release the memory allocated by SeLocateProcessImageName */
-              if (NT_SUCCESS(Status)) ExFreePool(ProcessImageName);
+            }
+            if (!ImageNameLength && Process != PsIdleProcess && Process->ImageFileName)
+            {
+              ImageNameLength = strlen(Process->ImageFileName) * sizeof(WCHAR);
+            }
 
-              /* Handle idle process entry */
-              if (Process == PsIdleProcess) Process = NULL;
+            /* Round up the image name length as NT does */
+            ImageNameMaximumLength = ROUND_UP(ImageNameLength, 8);
 
-              Process = PsGetNextProcess(Process);
-              ThreadsCount = 0;
-              if ((Process == SystemProcess) || (Process == NULL))
+            TotalSize += CurrentSize + ImageNameMaximumLength;
+
+            if (TotalSize > Size)
+            {
+                *ReqSize = TotalSize;
+                ObDereferenceObject(Process);
+
+                /* Release the memory allocated by SeLocateProcessImageName */
+                if (NT_SUCCESS(Status)) ExFreePool(ProcessImageName);
+
+                _SEH2_YIELD(return STATUS_INFO_LENGTH_MISMATCH); // in case buffer size is too small
+            }
+
+            /* Fill system information */
+            SpiCurrent->NextEntryOffset = CurrentSize + ImageNameMaximumLength; // relative offset to the beginnnig of the next structure
+            SpiCurrent->NumberOfThreads = ThreadsCount;
+            SpiCurrent->CreateTime = Process->CreateTime;
+            SpiCurrent->ImageName.Length = ImageNameLength;
+            SpiCurrent->ImageName.MaximumLength = ImageNameMaximumLength;
+            SpiCurrent->ImageName.Buffer = (void*)(Current + CurrentSize);
+
+            /* Copy name to the end of the struct */
+            if(Process != PsIdleProcess)
+            {
+              if (szSrc)
               {
+                RtlCopyMemory(SpiCurrent->ImageName.Buffer, szSrc, SpiCurrent->ImageName.Length);
+
+                /* Release the memory allocated by SeLocateProcessImageName */
+                ExFreePool(ProcessImageName);
+              }
+              else if (Process->ImageFileName)
+              {
+                RtlInitAnsiString(&ImageName, Process->ImageFileName);
+                RtlAnsiStringToUnicodeString(&SpiCurrent->ImageName, &ImageName, FALSE);
+              }
+            }
+            else
+            {
+                RtlInitUnicodeString(&SpiCurrent->ImageName, NULL);
+            }
+
+            SpiCurrent->BasePriority = Process->Pcb.BasePriority;
+            SpiCurrent->UniqueProcessId = Process->UniqueProcessId;
+            SpiCurrent->InheritedFromUniqueProcessId = Process->InheritedFromUniqueProcessId;
+            SpiCurrent->HandleCount = ObGetProcessHandleCount(Process);
+            SpiCurrent->PeakVirtualSize = Process->PeakVirtualSize;
+            SpiCurrent->VirtualSize = Process->VirtualSize;
+            SpiCurrent->PageFaultCount = Process->Vm.PageFaultCount;
+            SpiCurrent->PeakWorkingSetSize = Process->Vm.PeakWorkingSetSize;
+            SpiCurrent->WorkingSetSize = Process->Vm.WorkingSetSize;
+            SpiCurrent->QuotaPeakPagedPoolUsage = Process->QuotaPeak[0];
+            SpiCurrent->QuotaPagedPoolUsage = Process->QuotaUsage[0];
+            SpiCurrent->QuotaPeakNonPagedPoolUsage = Process->QuotaPeak[1];
+            SpiCurrent->QuotaNonPagedPoolUsage = Process->QuotaUsage[1];
+            SpiCurrent->PagefileUsage = Process->QuotaUsage[2];
+            SpiCurrent->PeakPagefileUsage = Process->QuotaPeak[2];
+            SpiCurrent->PrivatePageCount = Process->CommitCharge;
+            ThreadInfo = (PSYSTEM_THREAD_INFORMATION)(SpiCurrent + 1);
+
+            CurrentEntry = Process->ThreadListHead.Flink;
+            while (CurrentEntry != &Process->ThreadListHead)
+            {
+                CurrentThread = CONTAINING_RECORD(CurrentEntry, ETHREAD,
+                                            ThreadListEntry);
+
+                ThreadInfo->KernelTime.QuadPart = UInt32x32To64(CurrentThread->Tcb.KernelTime, KeMaximumIncrement);
+                ThreadInfo->UserTime.QuadPart = UInt32x32To64(CurrentThread->Tcb.UserTime, KeMaximumIncrement);
+                ThreadInfo->CreateTime.QuadPart = CurrentThread->CreateTime.QuadPart;
+                ThreadInfo->WaitTime = CurrentThread->Tcb.WaitTime;
+                ThreadInfo->StartAddress = (PVOID) CurrentThread->StartAddress;
+                ThreadInfo->ClientId = CurrentThread->Cid;
+                ThreadInfo->Priority = CurrentThread->Tcb.Priority;
+                ThreadInfo->BasePriority = CurrentThread->Tcb.BasePriority;
+                ThreadInfo->ContextSwitches = CurrentThread->Tcb.ContextSwitches;
+                ThreadInfo->ThreadState = CurrentThread->Tcb.State;
+                ThreadInfo->WaitReason = CurrentThread->Tcb.WaitReason;
+
+                ThreadInfo++;
+                CurrentEntry = CurrentEntry->Flink;
+            }
+
+            /* Query total user/kernel times of a process */
+            TotalKernel = KeQueryRuntimeProcess(&Process->Pcb, &TotalUser);
+            SpiCurrent->UserTime.QuadPart = UInt32x32To64(TotalUser, KeMaximumIncrement);
+            SpiCurrent->KernelTime.QuadPart = UInt32x32To64(TotalKernel, KeMaximumIncrement);
+
+            /* Handle idle process entry */
+            if (Process == PsIdleProcess) Process = NULL;
+
+            Process = PsGetNextProcess(Process);
+            ThreadsCount = 0;
+            if ((Process == SystemProcess) || (Process == NULL))
+            {
+                SpiCurrent->NextEntryOffset = 0;
                 break;
-              }
-              else
-              {
-                if (Current)
-                  Current += CurrentSize + ImageNameMaximumLength;
-              }
+            }
+            else
+                Current += CurrentSize + ImageNameMaximumLength;
           }  while ((Process != SystemProcess) && (Process != NULL));
-          //Break parameters information for only calc size
-          if ((Size == 0) || (!Buffer))
-            break;
-          //Stop write in to buffer
-          if (OSMode & 1)
-            OSMode ^= 1;
-          //Only first cycle calc size
-          if (OSMode & 2)
-            OSMode ^= 2;
-          //Vista next cycle write in to Buffer
-          if (OSMode & 4)
-          {
-            OSMode |= 1;
-            OSMode ^= 4;
-          }
-        };
 
-        if(Process != NULL)
-          ObDereferenceObject(Process);
-        if ((Size == 0) || (!Buffer) || (TotalSize > Size))
-          Status = STATUS_INFO_LENGTH_MISMATCH;
-        else
+          if(Process != NULL)
+            ObDereferenceObject(Process);
           Status = STATUS_SUCCESS;
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -1925,9 +1888,8 @@ NtQuerySystemInformation(IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
         if (PreviousMode != KernelMode)
         {
             /* SystemKernelDebuggerInformation needs only BOOLEAN alignment */
-            if (SystemInformation) 
-                ProbeForWrite(SystemInformation, Length, 1);
-            if (UnsafeResultLength)
+            ProbeForWrite(SystemInformation, Length, 1);
+            if (UnsafeResultLength != NULL)
                 ProbeForWriteUlong(UnsafeResultLength);
         }
 
