@@ -52,8 +52,10 @@ extern "C" {
 
 #define KSDATAFORMAT_BIT_ATTRIBUTES                         1
 #define KSDATAFORMAT_ATTRIBUTES                             (1 << KSDATAFORMAT_BIT_ATTRIBUTES)
-typedef PVOID PKSWORKER;
 
+#if defined(_NTDDK_)
+typedef PVOID PKSWORKER;
+#endif
 /* ===============================================================
     GUID definition helpers
 */
@@ -2355,6 +2357,23 @@ KsFastPropertyHandler(
     Event Functions
 */
 #if defined(_NTDDK_)
+
+#define KSPROBE_STREAMREAD      0x00000000
+#define KSPROBE_STREAMWRITE     0x00000001
+#define KSPROBE_ALLOCATEMDL     0x00000010
+#define KSPROBE_PROBEANDLOCK    0x00000020
+#define KSPROBE_SYSTEMADDRESS   0x00000040
+#define KSPROBE_MODIFY          0x00000200
+#define KSPROBE_STREAMWRITEMODIFY (KSPROBE_MODIFY | KSPROBE_STREAMWRITE)
+#define KSPROBE_ALLOWFORMATCHANGE   0x00000080
+
+#define KSSTREAM_READ           KSPROBE_STREAMREAD
+#define KSSTREAM_WRITE          KSPROBE_STREAMWRITE
+#define KSSTREAM_PAGED_DATA     0x00000000
+#define KSSTREAM_NONPAGED_DATA  0x00000100
+#define KSSTREAM_SYNCHRONOUS    0x00001000
+#define KSSTREAM_FAILUREEXCEPTION 0x00002000
+
 KSDDKAPI NTSTATUS NTAPI
 KsGenerateEvent(
     IN  PKSEVENT_ENTRY EntryEvent);
