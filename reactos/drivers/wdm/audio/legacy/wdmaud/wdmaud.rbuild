@@ -6,6 +6,7 @@
 	<include base="ReactOS">include/reactos/libs/sound</include>
 	<library>ntoskrnl</library>
 	<library>ks</library>
+	<library>pseh</library>
 	<file>control.c</file>
 	<file>deviface.c</file>
 	<file>entry.c</file>

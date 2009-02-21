@@ -44,7 +44,7 @@ typedef struct
         WAVEINCAPS WaveInCaps;
     }u;
 
-}WDMAUD_DEVICE_INFO;
+}WDMAUD_DEVICE_INFO, *PWDMAUD_DEVICE_INFO;
 
 
 

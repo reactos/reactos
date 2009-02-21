@@ -1,6 +1,7 @@
 #ifndef WDMAUD_H__
 #define WDMAUD_H__
 
+#include <pseh/pseh2.h>
 #include <ntddk.h>
 #include <portcls.h>
 #include <ks.h>
@@ -85,6 +86,14 @@ typedef struct
     LIST_ENTRY SysAudioDeviceList;
 
 }WDMAUD_DEVICE_EXTENSION, *PWDMAUD_DEVICE_EXTENSION;
+
+typedef struct
+{
+    PIRP Irp;
+    IO_STATUS_BLOCK StatusBlock;
+    ULONG Length;
+}WRITE_CONTEXT, *PWRITE_CONTEXT;
+
 
 NTSTATUS
 WdmAudRegisterDeviceInterface(

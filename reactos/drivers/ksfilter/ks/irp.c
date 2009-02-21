@@ -188,7 +188,11 @@ KsAllocateDeviceHeader(
         for(Index = 0; Index < ItemsCount; Index++)
         {
             /* copy provided create items */
-            RtlMoveMemory(&Header->ItemList[Index], &ItemsList[Index], sizeof(KSOBJECT_CREATE_ITEM));
+            RtlMoveMemory(&Header->ItemList[Index].CreateItem, &ItemsList[Index], sizeof(KSOBJECT_CREATE_ITEM));
+            if (ItemsList[Index].Create!= NULL)
+            {
+                Header->ItemList[Index].bCreated = TRUE;
+            }
         }
         Header->MaxItems = ItemsCount;
     }
@@ -716,7 +720,7 @@ KsCreate(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
 {
-    PIO_STACK_LOCATION IoStack;
+    //PIO_STACK_LOCATION IoStack;
     PDEVICE_EXTENSION DeviceExtension;
     PKSIDEVICE_HEADER DeviceHeader;
     ULONG Index;
@@ -725,7 +729,7 @@ KsCreate(
 
     DPRINT1("KS / CREATE\n");
     /* get current stack location */
-    IoStack = IoGetCurrentIrpStackLocation(Irp);
+    //IoStack = IoGetCurrentIrpStackLocation(Irp);
     /* get device extension */
     DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
     /* get device header */
@@ -856,7 +860,7 @@ KsWrite(
     }
     else
     {
-        DPRINT1("Expected Object Header\n");
+        DPRINT1("Expected Object Header %p\n", IoStack->FileObject);
         KeBugCheckEx(0, 0, 0, 0, 0);
         return STATUS_SUCCESS;
     }
@@ -1049,9 +1053,11 @@ KsDispatchIrp(
 
 
 /*
-    @unimplemented
+    @implemented
 */
-KSDDKAPI NTSTATUS NTAPI
+KSDDKAPI
+NTSTATUS
+NTAPI
 KsStreamIo(
     IN  PFILE_OBJECT FileObject,
     IN  PKEVENT Event OPTIONAL,
@@ -1065,8 +1071,52 @@ KsStreamIo(
     IN  ULONG Flags,
     IN  KPROCESSOR_MODE RequestorMode)
 {
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
+    PIRP Irp;
+    PIO_STACK_LOCATION IoStack;
+    PDEVICE_OBJECT DeviceObject;
+    ULONG Code;
+    NTSTATUS Status;
+    LARGE_INTEGER Offset;
+
+    if (Flags == KSSTREAM_READ)
+        Code = IRP_MJ_READ;
+    else if (Flags == KSSTREAM_WRITE)
+        Code = IRP_MJ_WRITE;
+    else
+        return STATUS_INVALID_PARAMETER;
+
+    DeviceObject = IoGetRelatedDeviceObject(FileObject);
+    if (!DeviceObject)
+        return STATUS_INVALID_PARAMETER;
+
+    if (Event)
+    {
+        KeResetEvent(Event);
+    }
+
+    Offset.QuadPart = 0LL;
+    Irp = IoBuildSynchronousFsdRequest(Code, DeviceObject, (PVOID)StreamHeaders, Length, &Offset, Event, IoStatusBlock);
+    if (!Irp)
+    {
+        return STATUS_UNSUCCESSFUL;
+    }
+
+
+    if (CompletionRoutine)
+    {
+        IoSetCompletionRoutine(Irp,
+                               CompletionRoutine,
+                               CompletionContext,
+                               (CompletionInvocationFlags & KsInvokeOnSuccess),
+                               (CompletionInvocationFlags & KsInvokeOnError),
+                               (CompletionInvocationFlags & KsInvokeOnCancel));
+    }
+
+    IoStack = IoGetNextIrpStackLocation(Irp);
+    IoStack->FileObject = FileObject;
+
+    Status = IoCallDriver(DeviceObject, Irp);
+    return Status;
 }
 
 /*

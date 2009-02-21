@@ -120,7 +120,7 @@ WdmAudCreate(
     NTSTATUS Status;
 
     PIO_STACK_LOCATION IoStack;
-    WDMAUD_CLIENT *pClient;
+    PWDMAUD_CLIENT pClient;
 
     PWDMAUD_DEVICE_EXTENSION DeviceExtension;
 
@@ -189,11 +189,11 @@ WdmAudClose(
     pClient = (WDMAUD_CLIENT*)IoStack->FileObject->FsContext;
     if (pClient)
     {
+        ObDereferenceObject(pClient->FileObject);
         ZwClose(pClient->hSysAudio);
         ExFreePool(pClient);
         IoStack->FileObject->FsContext = NULL;
     }
-
 
     Irp->IoStatus.Status = Status;
     Irp->IoStatus.Information = 0;

@@ -29,6 +29,7 @@ SetIrpIoStatus(
 {
     Irp->IoStatus.Information = Length;
     Irp->IoStatus.Status = Status;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
     return Status;
 
 }
@@ -242,7 +243,7 @@ SysAudioHandleProperty(
         }
         else if (Property->Id == KSPROPERTY_SYSAUDIO_INSTANCE_INFO)
         {
-            if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(SYSAUDIO_INSTANCE_INFO))
+            if (IoStack->Parameters.DeviceIoControl.InputBufferLength < sizeof(SYSAUDIO_INSTANCE_INFO))
             {
                 /* too small buffer */
                 return SetIrpIoStatus(Irp, STATUS_BUFFER_TOO_SMALL, sizeof(SYSAUDIO_INSTANCE_INFO));

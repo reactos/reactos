@@ -52,6 +52,8 @@ DeviceInterfaceChangeCallback(
             DPRINT1("No Mem\n");
             return STATUS_INSUFFICIENT_RESOURCES;
         }
+
+        RtlZeroMemory(DeviceEntry, sizeof(KSAUDIO_DEVICE_ENTRY));
         DeviceEntry->DeviceName.Length = 0;
         DeviceEntry->DeviceName.MaximumLength = Event->SymbolicLinkName->Length + 5 * sizeof(WCHAR);
         DeviceEntry->DeviceName.Buffer = ExAllocatePool(NonPagedPool, DeviceEntry->DeviceName.MaximumLength);

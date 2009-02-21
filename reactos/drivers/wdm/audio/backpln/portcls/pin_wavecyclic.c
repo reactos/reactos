@@ -350,7 +350,7 @@ IPortPinWaveCyclic_HandleKsProperty(
 {
     PKSPROPERTY Property;
     NTSTATUS Status;
-    UNICODE_STRING GuidString, GuidString2;
+    UNICODE_STRING GuidString;
     PIO_STACK_LOCATION IoStack;
     IPortPinWaveCyclicImpl * This = (IPortPinWaveCyclicImpl*)iface;
 
@@ -413,6 +413,7 @@ IPortPinWaveCyclic_HandleKsProperty(
                         This->State = *State;
                         Irp->IoStatus.Information = sizeof(KSSTATE);
                         Irp->IoStatus.Status = Status;
+                        IoCompleteRequest(Irp, IO_NO_INCREMENT);
                         return Status;
                     }
                     Irp->IoStatus.Status = Status;
@@ -484,11 +485,9 @@ IPortPinWaveCyclic_HandleKsProperty(
 
     }
     RtlStringFromGUID(&Property->Set, &GuidString);
-    RtlStringFromGUID(&KSPROPSETID_Connection, &GuidString2);
-    DPRINT1("Unhandeled property Set |%S| |%S|Id %u Flags %x\n", GuidString.Buffer, GuidString2.Buffer, Property->Id, Property->Flags);
+    DPRINT1("Unhandeled property Set |%S| Id %u Flags %x\n", GuidString.Buffer, Property->Id, Property->Flags);
     DbgBreakPoint();
     RtlFreeUnicodeString(&GuidString);
-    RtlFreeUnicodeString(&GuidString2);
 
     Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
     Irp->IoStatus.Information = 0;
