@@ -73,57 +73,58 @@ IntGetConfigurationValues()
     PCHAR UserName = NULL;
     WCHAR ConfigFile[MAX_PATH];
 
-    /* We only need this if the results are going to be submitted */
-    if(!AppOptions.Submit)
+    /* Most values are only needed if we're going to submit */
+    if(AppOptions.Submit)
     {
-        ReturnValue = TRUE;
-        goto Cleanup;
+        /* Build the path to the configuration file from the application's path */
+        GetModuleFileNameW(NULL, ConfigFile, MAX_PATH);
+        Length = wcsrchr(ConfigFile, '\\') - ConfigFile;
+        wcscpy(&ConfigFile[Length], L"\\rosautotest.ini");
+
+        /* Check if it exists */
+        if(GetFileAttributesW(ConfigFile) == INVALID_FILE_ATTRIBUTES)
+        {
+            StringOut("Missing \"rosautotest.ini\" configuration file!\n");
+            goto Cleanup;
+        }
+
+        /* Get the required length of the authentication request string */
+        DataLength = sizeof(UserNameProp) - 1;
+        Length = IntGetINIValueA(L"Login", L"UserName", ConfigFile, &UserName);
+
+        if(!Length)
+        {
+            StringOut("UserName is missing in the configuration file\n");
+            goto Cleanup;
+        }
+
+        /* Some characters might need to be escaped and an escaped character takes 3 bytes */
+        DataLength += 3 * Length;
+
+        DataLength += sizeof(PasswordProp) - 1;
+        Length = IntGetINIValueA(L"Login", L"Password", ConfigFile, &Password);
+
+        if(!Length)
+        {
+            StringOut("Password is missing in the configuration file\n");
+            goto Cleanup;
+        }
+
+        DataLength += 3 * Length;
+
+        /* Build the string */
+        AuthenticationRequestString = HeapAlloc(hProcessHeap, 0, DataLength + 1);
+
+        strcpy(AuthenticationRequestString, UserNameProp);
+        EscapeString(&AuthenticationRequestString[strlen(AuthenticationRequestString)], UserName);
+
+        strcat(AuthenticationRequestString, PasswordProp);
+        EscapeString(&AuthenticationRequestString[strlen(AuthenticationRequestString)], Password);
+
+        /* If we don't have any Comment string yet, try to find one in the INI file */
+        if(!AppOptions.Comment)
+            IntGetINIValueA(L"Submission", L"Comment", ConfigFile, &AppOptions.Comment);
     }
-
-    /* Build the path to the configuration file from the application's path */
-    GetModuleFileNameW(NULL, ConfigFile, MAX_PATH);
-    Length = wcsrchr(ConfigFile, '\\') - ConfigFile;
-    wcscpy(&ConfigFile[Length], L"\\rosautotest.ini");
-
-    /* Check if it exists */
-    if(GetFileAttributesW(ConfigFile) == INVALID_FILE_ATTRIBUTES)
-    {
-        StringOut("Missing \"rosautotest.ini\" configuration file!\n");
-        goto Cleanup;
-    }
-
-    /* Get the required length of the authentication request string */
-    DataLength = sizeof(UserNameProp) - 1;
-    Length = IntGetINIValueA(L"Login", L"UserName", ConfigFile, &UserName);
-
-    if(!Length)
-    {
-        StringOut("UserName is missing in the configuration file\n");
-        goto Cleanup;
-    }
-
-    /* Some characters might need to be escaped and an escaped character takes 3 bytes */
-    DataLength += 3 * Length;
-
-    DataLength += sizeof(PasswordProp) - 1;
-    Length = IntGetINIValueA(L"Login", L"Password", ConfigFile, &Password);
-
-    if(!Length)
-    {
-        StringOut("Password is missing in the configuration file\n");
-        goto Cleanup;
-    }
-
-    DataLength += 3 * Length;
-
-    /* Build the string */
-    AuthenticationRequestString = HeapAlloc(hProcessHeap, 0, DataLength + 1);
-
-    strcpy(AuthenticationRequestString, UserNameProp);
-    EscapeString(&AuthenticationRequestString[strlen(AuthenticationRequestString)], UserName);
-
-    strcat(AuthenticationRequestString, PasswordProp);
-    EscapeString(&AuthenticationRequestString[strlen(AuthenticationRequestString)], Password);
 
     ReturnValue = TRUE;
 
@@ -235,10 +236,13 @@ IntPrintUsage()
     printf("rosautotest - ReactOS Automatic Testing Utility\n");
     printf("Usage: rosautotest [options] [module] [test]\n");
     printf("  options:\n");
-    printf("    /?  - Shows this help\n");
-    printf("    /s  - Shut down the system after finishing the tests\n");
-    printf("    /w  - Submit the results to the webservice\n");
-    printf("          Requires a \"rosautotest.ini\" with valid login data.\n");
+    printf("    /?           - Shows this help\n");
+    printf("    /c <comment> - Specifies the comment to be submitted to the Web Service.\n");
+    printf("                   Skips the comment set in the configuration file (if any).\n");
+    printf("                   Only has an effect when /w is also used.\n");
+    printf("    /s           - Shut down the system after finishing the tests\n");
+    printf("    /w           - Submit the results to the webservice\n");
+    printf("                   Requires a \"rosautotest.ini\" with valid login data.\n");
     printf("\n");
     printf("  module:\n");
     printf("    The module to be tested (i.e. \"advapi32\")\n");
@@ -256,6 +260,7 @@ int
 wmain(int argc, wchar_t* argv[])
 {
     int ReturnValue = 0;
+    size_t Length;
     UINT i;
 
     hProcessHeap = GetProcessHeap();
@@ -267,6 +272,16 @@ wmain(int argc, wchar_t* argv[])
         {
             switch(argv[i][1])
             {
+                case 'c':
+                    ++i;
+
+                    /* Copy the parameter converted to ASCII */
+                    Length = WideCharToMultiByte(CP_ACP, 0, argv[i], -1, NULL, 0, NULL, NULL);
+                    AppOptions.Comment = HeapAlloc(hProcessHeap, 0, Length);
+                    WideCharToMultiByte(CP_ACP, 0, argv[i], -1, AppOptions.Comment, Length, NULL, NULL);
+
+                    break;
+
                 case 's':
                     AppOptions.Shutdown = TRUE;
                     break;
@@ -286,8 +301,6 @@ wmain(int argc, wchar_t* argv[])
         }
         else
         {
-            size_t Length;
-
             /* Which parameter is this? */
             if(!AppOptions.Module)
             {
@@ -322,6 +335,9 @@ wmain(int argc, wchar_t* argv[])
     OutputDebugStringA("SYSREG_CHECKPOINT:THIRDBOOT_COMPLETE\n");
 
 Cleanup:
+    if(AppOptions.Comment)
+        HeapFree(hProcessHeap, 0, AppOptions.Comment);
+
     if(AppOptions.Module)
         HeapFree(hProcessHeap, 0, AppOptions.Module);
 

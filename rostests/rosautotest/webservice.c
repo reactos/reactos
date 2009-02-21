@@ -142,6 +142,7 @@ PCHAR
 GetTestID(TESTTYPES TestType)
 {
     const CHAR GetTestIDAction[] = "gettestid";
+    const CHAR CommentProp[] = "&comment=";
 
     DWORD DataLength;
     PCHAR Data;
@@ -150,6 +151,10 @@ GetTestID(TESTTYPES TestType)
     /* Build the full request string */
     DataLength  = sizeof(ActionProp) - 1 + sizeof(GetTestIDAction) - 1;
     DataLength += strlen(AuthenticationRequestString) + strlen(SystemInfoRequestString);
+
+    if(AppOptions.Comment)
+        DataLength += sizeof(CommentProp) - 1 + strlen(AppOptions.Comment);
+
     DataLength += sizeof(TestTypeProp) - 1;
 
     switch(TestType)
@@ -164,6 +169,13 @@ GetTestID(TESTTYPES TestType)
     strcat(Data, GetTestIDAction);
     strcat(Data, AuthenticationRequestString);
     strcat(Data, SystemInfoRequestString);
+
+    if(AppOptions.Comment)
+    {
+        strcat(Data, CommentProp);
+        strcat(Data, AppOptions.Comment);
+    }
+
     strcat(Data, TestTypeProp);
 
     switch(TestType)

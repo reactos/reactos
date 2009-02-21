@@ -26,6 +26,7 @@ typedef struct _APP_OPTIONS
 {
     BOOL Shutdown;
     BOOL Submit;
+    PCHAR Comment;
     PWSTR Module;
     PCHAR Test;
 }
