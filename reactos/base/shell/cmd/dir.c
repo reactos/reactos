@@ -250,18 +250,13 @@ DirReadParam(LPTSTR Line,				/* [IN] The line with the parameters & switches */
 	LPTSTR temp;
 
 	/* Initialize parameter array */
-	if(!params)
-		return FALSE;
 	*params = NULL;
 	*entries = 0;
-	ptrStart = NULL;
-	ptrEnd = NULL;
 
 	/* Initialize variables; */
 	cCurSwitch = _T(' ');
 	bNegative = FALSE;
 	bPNegative = FALSE;
-	bIntoQuotes = FALSE;
 
 	/* We suppose that switch parameters
 	   were given to avoid setting them to default
@@ -348,75 +343,45 @@ DirReadParam(LPTSTR Line,				/* [IN] The line with the parameters & switches */
 				cCurSwitch = _T(' ');
 
 		}
-		else if ((cCurSwitch == _T(' ')) || (cCurSwitch == _T('P')))
+		else if (cCurSwitch == _T(' '))
 		{
 			/* 2nd section (see README_DIR.txt) */
 			/* We are expecting parameter or the unknown */
 
 			if (cCurChar == _T('/'))
 				cCurSwitch = _T('/');
-
-			/* Process a spacer */
 			else if (cCurChar == _T(' '))
-			{
-				if (!bIntoQuotes)
-				{
-					cCurSwitch = _T(' ');
-					if(ptrStart && ptrEnd)
-					{
-						temp = cmd_alloc(((ptrEnd - ptrStart) + 2) * sizeof (TCHAR));
-						if(!temp)
-							return FALSE;
-						memcpy(temp, ptrStart, ((ptrEnd - ptrStart) + 2) * sizeof (TCHAR));
-						temp[(ptrEnd - ptrStart + 1)] = _T('\0');
-						if(!add_entry(entries, params, temp))
-						{
-							cmd_free(temp);
-							freep(*params);
-							return FALSE;
-						}
-
-						cmd_free(temp);
-
-						ptrStart = NULL;
-						ptrEnd = NULL;
-					}
-				}
-
-			}
-			else if (cCurChar == _T('\"'))
-			{
-				/* Process a quote */
-				bIntoQuotes = !bIntoQuotes;
-				if(!bIntoQuotes)
-					ptrEnd = Line;
-			}
+				/* do nothing */;
 			else
 			{
-				/* Process a character for parameter */
-				if ((cCurSwitch == _T(' ')) && ptrStart && ptrEnd)
+				/* This is a file/directory name parameter. Find its end */
+				ptrStart = Line;
+				bIntoQuotes = FALSE;
+				while (*Line)
 				{
-					temp = cmd_alloc(((ptrEnd - ptrStart) + 2) * sizeof (TCHAR));
-					if(!temp)
-						return FALSE;
-					memcpy(temp, ptrStart, ((ptrEnd - ptrStart) + 2) * sizeof (TCHAR));
-					temp[(ptrEnd - ptrStart + 1)] = _T('\0');
-					if(!add_entry(entries, params, temp))
-					{
-						cmd_free(temp);
-						freep(*params);
-						return FALSE;
-					}
-
-					cmd_free(temp);
-
-					ptrStart = NULL;
-					ptrEnd = NULL;
+					if (!bIntoQuotes && (*Line == _T('/') || *Line == _T(' ')))
+						break;
+					bIntoQuotes ^= (*Line == _T('"'));
+					Line++;
 				}
-				cCurSwitch = _T('P');
-				if(!ptrStart)
-					ptrStart = ptrEnd = Line;
 				ptrEnd = Line;
+
+				/* Copy it to the entries list */
+				temp = cmd_alloc((ptrEnd - ptrStart + 1) * sizeof (TCHAR));
+				if(!temp)
+					return FALSE;
+				memcpy(temp, ptrStart, (ptrEnd - ptrStart) * sizeof (TCHAR));
+				temp[ptrEnd - ptrStart] = _T('\0');
+				StripQuotes(temp);
+				if(!add_entry(entries, params, temp))
+				{
+					cmd_free(temp);
+					freep(*params);
+					return FALSE;
+				}
+
+				cmd_free(temp);
+				continue;
 			}
 		}
 		else
@@ -564,26 +529,6 @@ DirReadParam(LPTSTR Line,				/* [IN] The line with the parameters & switches */
 
 		Line++;
 	}
-	/* Terminate the parameters */
-	if(ptrStart && ptrEnd)
-	{
-		temp = cmd_alloc((ptrEnd - ptrStart + 2) * sizeof(TCHAR));
-		if(!temp)
-			return FALSE;
-		memcpy(temp, ptrStart, (ptrEnd - ptrStart + 1) * sizeof(TCHAR));
-		temp[(ptrEnd - ptrStart + 1)] = _T('\0');
-		if(!add_entry(entries, params, temp))
-		{
-			cmd_free(temp);
-			freep(*params);
-			return FALSE;
-		}
-
-		cmd_free(temp);
-
-		ptrStart = NULL;
-		ptrEnd = NULL;
-	}
 
 	/* Calculate the switches with no switch paramater  */
 	if (!(lpFlags->stAttribs.bParSetted))
@@ -597,7 +542,7 @@ DirReadParam(LPTSTR Line,				/* [IN] The line with the parameters & switches */
 		lpFlags->stOrderBy.eCriteria[0] = ORDER_NAME;
 		lpFlags->stOrderBy.bCriteriaRev[0] = FALSE;
 	}
-	if (!(lpFlags->stOrderBy.bParSetted))
+	if (!(lpFlags->stTimeField.bParSetted))
 		lpFlags->stTimeField.eTimeField = TF_MODIFIEDDATE ;
 
 	/* Calculate the unsetted switches (the "-" prefixed)*/
