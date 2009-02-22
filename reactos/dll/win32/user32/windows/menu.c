@@ -4033,6 +4033,7 @@ CreatePopupMenu(VOID)
 BOOL WINAPI
 DrawMenuBar(HWND hWnd)
 {
+//  return (BOOL)NtUserCallHwndLock(hWnd, HWNDLOCK_ROUTINE_DRAWMENUBAR);
   ROSMENUINFO MenuInfo;
   HMENU hMenu;
   hMenu = GetMenu(hWnd);
