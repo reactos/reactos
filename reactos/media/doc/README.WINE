@@ -172,6 +172,9 @@ msvcrt -
   reactos/lib/sdk/crt/wine/undname.c            # Synced at XXXXXXXX
   reactos/lib/sdk/crt/thread/thread.c           # Synced at 20080604
 
+snmpapi -
+  reactos/dll/win32/snmpapi/main.c              # Synced at 20090222
+
 User32 -
   reactos/dll/win32/user32/controls/button.c    # Synced to Wine-1_1_13
   reactos/dll/win32/user32/controls/combo.c     # Synced to Wine-1_1_13
