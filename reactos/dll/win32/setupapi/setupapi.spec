@@ -552,7 +552,7 @@
 @ stub pSetupFreeStringArray
 @ stub pSetupGetCurrentDriverSigningPolicy
 @ stdcall pSetupGetField(ptr long)
-@ stub pSetupGetFileTitle
+@ stdcall pSetupGetFileTitle(wstr) MyGetFileTitle
 @ stdcall pSetupGetGlobalFlags()
 @ stub pSetupGetInfSections
 @ stdcall pSetupGetQueueFlags(ptr)
@@ -621,7 +621,6 @@
 @ stub LookUpStringInTable
 @ stub MemoryInitialize
 @ stub MultiSzFromSearchControl
-@ stdcall MyGetFileTitle(wstr)
 @ stdcall QueryRegistryValue(long wstr ptr ptr ptr)
 @ stub ReadAsciiOrUnicodeTextFile
 # Yes, Microsoft really misspelled this one!
