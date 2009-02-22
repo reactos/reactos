@@ -213,7 +213,7 @@
 @ stdcall InstallHinfSection(long long str long) InstallHinfSectionA
 @ stdcall InstallHinfSectionA(long long str long)
 @ stdcall InstallHinfSectionW(long long wstr long)
-@ stdcall IsUserAdmin() shell32.IsUserAnAdmin
+@ stdcall IsUserAdmin()
 @ stdcall MyFree(ptr)
 @ stdcall MyMalloc(long)
 @ stdcall MyRealloc(ptr long)
@@ -566,7 +566,7 @@
 @ stub pSetupInstallStopEx
 @ stdcall pSetupIsGuidNull(ptr)
 @ stub pSetupIsLocalSystem
-@ stub pSetupIsUserAdmin
+@ stdcall pSetupIsUserAdmin() IsUserAdmin
 @ stub pSetupMakeSurePathExists
 @ stub pSetupMalloc
 @ stub pSetupModifyGlobalFlags
