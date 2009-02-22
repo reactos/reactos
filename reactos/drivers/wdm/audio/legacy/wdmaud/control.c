@@ -44,6 +44,7 @@ WdmAudControlOpen(
     ACCESS_MASK DesiredAccess = 0;
     HANDLE PinHandle;
     KSPIN_CONNECT * PinConnect;
+    ULONG Length;
     KSDATAFORMAT_WAVEFORMATEX * DataFormat;
 
     if (DeviceInfo->DeviceType != WAVE_OUT_DEVICE_TYPE)
@@ -52,7 +53,8 @@ WdmAudControlOpen(
         return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, 0);
     }
 
-    InstanceInfo = ExAllocatePool(NonPagedPool, sizeof(KSDATAFORMAT_WAVEFORMATEX) + sizeof(KSPIN_CONNECT));
+    Length = sizeof(KSDATAFORMAT_WAVEFORMATEX) + sizeof(KSPIN_CONNECT) + sizeof(SYSAUDIO_INSTANCE_INFO);
+    InstanceInfo = ExAllocatePool(NonPagedPool, Length);
     if (!InstanceInfo)
     {
         /* no memory */
@@ -90,7 +92,7 @@ WdmAudControlOpen(
         DesiredAccess |= GENERIC_WRITE;
     }
 
-    PinConnect = (KSPIN_CONNECT*)InstanceInfo;
+    PinConnect = (KSPIN_CONNECT*)(InstanceInfo + 1);
 
 
     PinConnect->Interface.Set = KSINTERFACESETID_Standard;
@@ -100,7 +102,7 @@ WdmAudControlOpen(
     PinConnect->Medium.Id = KSMEDIUM_TYPE_ANYINSTANCE;
     PinConnect->Medium.Flags = 0;
     PinConnect->PinId = 0; //FIXME
-    PinConnect->PinToHandle = NULL;
+    PinConnect->PinToHandle = ClientInfo->hSysAudio;
     PinConnect->Priority.PriorityClass = KSPRIORITY_NORMAL;
     PinConnect->Priority.PrioritySubClass = 1;
 
@@ -125,16 +127,25 @@ WdmAudControlOpen(
     DataFormat->DataFormat.Specifier = KSDATAFORMAT_SPECIFIER_WAVEFORMATEX;
     DataFormat->DataFormat.SampleSize = 4;
 
-
-    Status = KsCreatePin(ClientInfo->hSysAudio, PinConnect, DesiredAccess, &PinHandle);
-    DPRINT1("KsCreatePin Status %x\n", Status);
-
-
-    /* free buffer */
-    ExFreePool(InstanceInfo);
-
+    /* ros specific pin creation request */
+    InstanceInfo->Property.Id = (ULONG)-1;
+    Status = KsSynchronousIoControlDevice(ClientInfo->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)InstanceInfo, Length, &PinHandle, sizeof(HANDLE), &BytesReturned);
     if (NT_SUCCESS(Status))
     {
+        PHANDLE Handels = ExAllocatePool(NonPagedPool, sizeof(HANDLE) * (ClientInfo->NumPins+1));
+
+        if (Handels)
+        {
+            if (ClientInfo->NumPins)
+            {
+                RtlMoveMemory(Handels, ClientInfo->hPins, sizeof(HANDLE) * ClientInfo->NumPins);
+                ExFreePool(ClientInfo->hPins);
+            }
+
+            ClientInfo->hPins = Handels;
+            ClientInfo->hPins[ClientInfo->NumPins] = PinHandle;
+            ClientInfo->NumPins++;
+        }
         DeviceInfo->hDevice = PinHandle;
     }
     else
@@ -338,7 +349,6 @@ WdmAudDeviceControl(
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
     DPRINT1("WdmAudDeviceControl entered\n");
-    DbgBreakPoint();
 
     if (IoStack->Parameters.DeviceIoControl.InputBufferLength < sizeof(WDMAUD_DEVICE_INFO))
     {

@@ -220,5 +220,11 @@ PcCreateItemDispatch(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp);
 
+NTSTATUS
+NTAPI
+PcPropertyHandler(
+    IN PIRP Irp,
+    IN PSUBDEVICE_DESCRIPTOR Descriptor);
+
 
 #endif

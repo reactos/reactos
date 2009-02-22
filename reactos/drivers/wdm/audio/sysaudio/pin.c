@@ -23,18 +23,16 @@ Pin_fnDeviceIoControl(
     PIRP Irp)
 {
     PDISPATCH_CONTEXT Context;
-    PKSOBJECT_CREATE_ITEM CreateItem;
     NTSTATUS Status;
     ULONG BytesReturned;
     PIO_STACK_LOCATION IoStack;
 
     DPRINT1("Pin_fnDeviceIoControl called DeviceObject %p Irp %p\n", DeviceObject);
 
-    /* access the create item */
-    CreateItem = KSCREATE_ITEM_IRP_STORAGE(Irp);
-    Context = (PDISPATCH_CONTEXT)CreateItem->Context;
-
     IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    Context = (PDISPATCH_CONTEXT)IoStack->FileObject->FsContext2;
+    ASSERT(Context);
 
     Status = KsSynchronousIoControlDevice(Context->FileObject, KernelMode, IoStack->Parameters.DeviceIoControl.IoControlCode,
                                           IoStack->Parameters.DeviceIoControl.Type3InputBuffer,
@@ -84,18 +82,16 @@ Pin_fnWrite(
     PIRP Irp)
 {
     PDISPATCH_CONTEXT Context;
-    PKSOBJECT_CREATE_ITEM CreateItem;
     PIO_STACK_LOCATION IoStack;
     ULONG BytesReturned;
     NTSTATUS Status;
 
     DPRINT1("Pin_fnWrite called DeviceObject %p Irp %p\n", DeviceObject);
 
-   /* access the create item */
-    CreateItem = KSCREATE_ITEM_IRP_STORAGE(Irp);
-    Context = (PDISPATCH_CONTEXT)CreateItem->Context;
-
     IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    Context = (PDISPATCH_CONTEXT)IoStack->FileObject->FsContext2;
+    ASSERT(Context);
 
     Status = KsSynchronousIoControlDevice(Context->FileObject, KernelMode, IOCTL_KS_WRITE_STREAM,
                                           IoStack->Parameters.DeviceIoControl.Type3InputBuffer,
@@ -228,34 +224,12 @@ static KSDISPATCH_TABLE PinTable =
 
 NTSTATUS
 CreateDispatcher(
-    IN PIRP Irp,
-    IN HANDLE Handle,
-    IN PFILE_OBJECT FileObject)
+    IN PIRP Irp)
 {
-    PKSOBJECT_CREATE_ITEM CreateItem;
     NTSTATUS Status;
     KSOBJECT_HEADER ObjectHeader;
-    PDISPATCH_CONTEXT Context;
-
-    /* allocate create item */
-    CreateItem = ExAllocatePool(NonPagedPool, sizeof(KSOBJECT_CREATE_ITEM));
-    if (!CreateItem)
-        return STATUS_INSUFFICIENT_RESOURCES;
-
-    Context = ExAllocatePool(NonPagedPool, sizeof(DISPATCH_CONTEXT));
-    if (!Context)
-    {
-        ExFreePool(CreateItem);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    Context->Handle = Handle;
-    Context->FileObject = FileObject;
-
-
-     CreateItem->Context = (PVOID)Context;
 
     /* allocate object header */
-    Status = KsAllocateObjectHeader(&ObjectHeader, 1, CreateItem, Irp, &PinTable);
+    Status = KsAllocateObjectHeader(&ObjectHeader, 0, NULL, Irp, &PinTable);
     return Status;
 }

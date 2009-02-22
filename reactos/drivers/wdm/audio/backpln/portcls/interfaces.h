@@ -99,9 +99,20 @@ struct IIrpTargetFactory;
 
 typedef struct
 {
+    ULONG MaxGlobalInstanceCount;
+    ULONG MaxFilterInstanceCount;
+    ULONG MinFilterInstanceCount;
+    ULONG CurrentFilterInstanceCount;
+
+}PIN_INSTANCE_INFO, *PPIN_INSTANCE_INFO;
+
+
+typedef struct
+{
     ULONG PinDescriptorCount;
     ULONG PinDescriptorSize;
     KSPIN_DESCRIPTOR * KsPinDescriptor;
+    PIN_INSTANCE_INFO * Instances;
 }KSPIN_FACTORY;
 
 typedef struct

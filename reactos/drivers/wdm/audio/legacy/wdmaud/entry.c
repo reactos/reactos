@@ -167,8 +167,6 @@ WdmAudClose(
 {
     NTSTATUS Status = STATUS_SUCCESS;
     PWDMAUD_DEVICE_EXTENSION DeviceExtension;
-    PIO_STACK_LOCATION IoStack;
-    WDMAUD_CLIENT *pClient;
 
     DPRINT1("WdmAudClose\n");
 
@@ -184,17 +182,6 @@ WdmAudClose(
     }
 #endif
 
-    IoStack = IoGetCurrentIrpStackLocation(Irp);
-
-    pClient = (WDMAUD_CLIENT*)IoStack->FileObject->FsContext;
-    if (pClient)
-    {
-        ObDereferenceObject(pClient->FileObject);
-        ZwClose(pClient->hSysAudio);
-        ExFreePool(pClient);
-        IoStack->FileObject->FsContext = NULL;
-    }
-
     Irp->IoStatus.Status = Status;
     Irp->IoStatus.Information = 0;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -208,12 +195,36 @@ WdmAudCleanup(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
 {
-    UNIMPLEMENTED
+    PIO_STACK_LOCATION IoStack;
+    WDMAUD_CLIENT *pClient;
+    ULONG Index;
+
+    DPRINT1("WdmAudCleanup\n");
+
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    pClient = (WDMAUD_CLIENT*)IoStack->FileObject->FsContext;
+
+    if (pClient)
+    {
+        for (Index = 0; Index < pClient->NumPins; Index++)
+           ZwClose(pClient->hPins[Index]);
+
+        if (pClient->hPins)
+        {
+            ExFreePool(pClient->hPins);
+        }
+
+        ObDereferenceObject(pClient->FileObject);
+        ZwClose(pClient->hSysAudio);
+        ExFreePool(pClient);
+        IoStack->FileObject->FsContext = NULL;
+    }
 
     Irp->IoStatus.Status = STATUS_SUCCESS;
     Irp->IoStatus.Information = 0;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
+    DPRINT1("WdmAudCleanup complete\n");
     return STATUS_SUCCESS;
 }
 

@@ -65,6 +65,8 @@ typedef struct
     HANDLE hProcess;
     HANDLE hSysAudio;
     PFILE_OBJECT FileObject;
+    ULONG NumPins;
+    HANDLE * hPins;
 
 }WDMAUD_CLIENT, *PWDMAUD_CLIENT;
 

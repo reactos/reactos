@@ -133,7 +133,7 @@ IPortFilterWaveCyclic_fnNewIrpTarget(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI
@@ -142,8 +142,23 @@ IPortFilterWaveCyclic_fnDeviceIoControl(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
+    PIO_STACK_LOCATION IoStack;
+    ISubdevice *SubDevice = NULL;
+    SUBDEVICE_DESCRIPTOR * Descriptor;
 
-    return STATUS_UNSUCCESSFUL;
+    IPortFilterWaveCyclicImpl * This = (IPortFilterWaveCyclicImpl *)iface;
+
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+    ASSERT(IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_PROPERTY);
+    ASSERT(This->Port->lpVtbl->QueryInterface(This->Port, &IID_ISubdevice, (PVOID*)&SubDevice) == STATUS_SUCCESS);
+    ASSERT(SubDevice != NULL);
+
+    ASSERT(SubDevice->lpVtbl->GetDescriptor(SubDevice, &Descriptor) == STATUS_SUCCESS);
+    ASSERT(Descriptor != NULL);
+
+    SubDevice->lpVtbl->Release(SubDevice);
+
+    return PcPropertyHandler(Irp, Descriptor);
 }
 
 /*

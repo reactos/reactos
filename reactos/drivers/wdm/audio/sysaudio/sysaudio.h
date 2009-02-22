@@ -5,8 +5,15 @@ typedef struct
 {
     ULONG NumDevices;
     PULONG Devices;
+    PHANDLE Handels;
 
 }SYSAUDIO_CLIENT, *PSYSAUDIO_CLIENT;
+
+typedef struct
+{
+    HANDLE PinHandle;
+    ULONG References;
+}PIN_INFO;
 
 
 typedef struct
@@ -18,7 +25,7 @@ typedef struct
     ULONG NumberOfClients;
 
     ULONG NumberOfPins;
-    HANDLE * Pins;
+    PIN_INFO * Pins;
 
 }KSAUDIO_DEVICE_ENTRY, *PKSAUDIO_DEVICE_ENTRY;
 
@@ -38,17 +45,22 @@ typedef struct
 
 typedef struct
 {
-    PIRP Irp;
-    PKSAUDIO_DEVICE_ENTRY Entry;
-    KSPIN_CONNECT * PinConnect;
+    HANDLE Handle;
+    PFILE_OBJECT FileObject;
+    ULONG PinId;
+    PKSAUDIO_DEVICE_ENTRY AudioEntry;
 
-}PIN_WORKER_CONTEXT, *PPIN_WORKER_CONTEXT;
+}DISPATCH_CONTEXT, *PDISPATCH_CONTEXT;
 
 typedef struct
 {
-    HANDLE Handle;
-    PFILE_OBJECT FileObject;
-}DISPATCH_CONTEXT, *PDISPATCH_CONTEXT;
+    PIRP Irp;
+    BOOL CreateRealPin;
+    PKSAUDIO_DEVICE_ENTRY Entry;
+    KSPIN_CONNECT * PinConnect;
+    PDISPATCH_CONTEXT DispatchContext;
+    PSYSAUDIO_CLIENT AudioClient;
+}PIN_WORKER_CONTEXT, *PPIN_WORKER_CONTEXT;
 
 NTSTATUS
 SysAudioAllocateDeviceHeader(
@@ -75,8 +87,6 @@ GetListEntry(
 
 NTSTATUS
 CreateDispatcher(
-    IN PIRP Irp,
-    IN HANDLE Handle,
-    IN PFILE_OBJECT FileObject);
+    IN PIRP Irp);
 
 #endif

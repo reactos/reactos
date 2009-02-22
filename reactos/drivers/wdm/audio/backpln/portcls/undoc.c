@@ -108,7 +108,17 @@ AddToPropertyTable(
         RtlMoveMemory((PVOID)Descriptor->FilterPropertySet.Properties[Descriptor->FilterPropertySet.FreeKsPropertySetOffset].PropertyItem,
                       FilterProperty->PropertyItem,
                       sizeof(KSPROPERTY_ITEM) * FilterProperty->PropertiesCount);
+
     }
+    Descriptor->FilterPropertySet.Properties[Descriptor->FilterPropertySet.FreeKsPropertySetOffset].Set = AllocateItem(NonPagedPool, sizeof(GUID), TAG_PORTCLASS);
+    if (!Descriptor->FilterPropertySet.Properties[Descriptor->FilterPropertySet.FreeKsPropertySetOffset].Set)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    RtlCopyMemory((PVOID)Descriptor->FilterPropertySet.Properties[Descriptor->FilterPropertySet.FreeKsPropertySetOffset].Set, FilterProperty->Set, sizeof(GUID));
+
+    /* ignore fast io table for now */
+    Descriptor->FilterPropertySet.Properties[Descriptor->FilterPropertySet.FreeKsPropertySetOffset].FastIoCount = 0;
+    Descriptor->FilterPropertySet.Properties[Descriptor->FilterPropertySet.FreeKsPropertySetOffset].FastIoTable = NULL;
 
     Descriptor->FilterPropertySet.FreeKsPropertySetOffset++;
 
@@ -177,12 +187,22 @@ PcCreateSubdeviceDescriptor(
         if (!Descriptor->Factory.KsPinDescriptor)
             goto cleanup;
 
+        Descriptor->Factory.Instances = AllocateItem(NonPagedPool, FilterDescription->PinCount * sizeof(PIN_INSTANCE_INFO), TAG_PORTCLASS);
+        if (!Descriptor->Factory.Instances)
+            goto cleanup;
+
         Descriptor->Factory.PinDescriptorCount = FilterDescription->PinCount;
         Descriptor->Factory.PinDescriptorSize = FilterDescription->PinSize;
 
         /* copy pin factories */
         for(Index = 0; Index < FilterDescription->PinCount; Index++)
+        {
             RtlMoveMemory(&Descriptor->Factory.KsPinDescriptor[Index], &FilterDescription->Pins[Index].KsPinDescriptor, FilterDescription->PinSize);
+            Descriptor->Factory.Instances[Index].CurrentFilterInstanceCount = 0;
+            Descriptor->Factory.Instances[Index].MaxFilterInstanceCount = FilterDescription->Pins[Index].MaxFilterInstanceCount;
+            Descriptor->Factory.Instances[Index].MaxGlobalInstanceCount = FilterDescription->Pins[Index].MaxGlobalInstanceCount;
+            Descriptor->Factory.Instances[Index].MinFilterInstanceCount = FilterDescription->Pins[Index].MinFilterInstanceCount;
+        }
     }
 
     *OutSubdeviceDescriptor = Descriptor;
