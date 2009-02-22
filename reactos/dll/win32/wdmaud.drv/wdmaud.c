@@ -53,7 +53,7 @@ DriverProc(
 
             if ( KernelHandle == INVALID_HANDLE_VALUE )
             {
-                SND_ERR(L"Failed to open %s", KERNEL_DEVICE_NAME);
+                SND_ERR(L"Failed to open %s\n", KERNEL_DEVICE_NAME);
                 CleanupEntrypointMutexes();
 
                 UnlistAllSoundDevices();
@@ -103,7 +103,7 @@ DriverProc(
 
         case DRV_QUERYCONFIGURE :
         {
-            SND_TRACE(L"DRV_QUERYCONFIGURE");
+            SND_TRACE(L"DRV_QUERYCONFIGURE\n");
             return 0L;
         }
         case DRV_CONFIGURE :
