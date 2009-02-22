@@ -93,6 +93,7 @@ BOOLEAN FoundDevice(
         return FALSE;
 
     /* Set up our function table */
+    ZeroMemory(&FuncTable, sizeof(MMFUNCTION_TABLE));
     FuncTable.GetCapabilities = GetSoundBlasterDeviceCapabilities;
     FuncTable.QueryWaveFormatSupport = QueryNt4WaveDeviceFormatSupport;
     FuncTable.SetWaveFormat = SetNt4WaveDeviceFormat;

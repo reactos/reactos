@@ -235,7 +235,7 @@ EnqueueWaveHeader(
     /* Set the "in queue" flag */
     WaveHeader->dwFlags |= WHDR_INQUEUE;
 
-    if ( ! SoundDeviceInstance->TailWaveHeader )
+    if ( ! SoundDeviceInstance->HeadWaveHeader )
     {
         /* This is the first header in the queue */
         SND_TRACE(L"Enqueued first wave header\n");
@@ -327,10 +327,12 @@ CompleteWaveHeader(
     }
 
     /* Make sure we're not using this as the current buffer any more, either! */
+/*
     if ( SoundDeviceInstance->CurrentWaveHeader == Header )
     {
         SoundDeviceInstance->CurrentWaveHeader = Header->lpNext;
     }
+*/
 
     DUMP_WAVEHDR_QUEUE(SoundDeviceInstance);
 

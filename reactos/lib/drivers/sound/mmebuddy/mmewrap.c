@@ -164,6 +164,9 @@ MmeCloseDevice(
     VALIDATE_MMSYS_PARAMETER( PrivateHandle );
     SoundDeviceInstance = (PSOUND_DEVICE_INSTANCE) PrivateHandle;
 
+    if ( ! IsValidSoundDeviceInstance(SoundDeviceInstance) )
+        return MMSYSERR_INVALHANDLE;
+
     Result = GetSoundDeviceFromInstance(SoundDeviceInstance, &SoundDevice);
     if ( ! MMSUCCESS(Result) )
         return TranslateInternalMmResult(Result);
@@ -172,7 +175,11 @@ MmeCloseDevice(
     if ( ! MMSUCCESS(Result) )
         return TranslateInternalMmResult(Result);
 
+
+    /* TODO: Check device is stopped! */
+
     ReleaseEntrypointMutex(DeviceType);
+    /* TODO: Work with MIDI devices too */
     NotifyMmeClient(SoundDeviceInstance,
                     DeviceType == WAVE_OUT_DEVICE_TYPE ? WOM_CLOSE : WIM_CLOSE,
                     0);
@@ -181,4 +188,18 @@ MmeCloseDevice(
     Result = DestroySoundDeviceInstance(SoundDeviceInstance);
 
     return Result;
+}
+
+MMRESULT
+MmeResetWavePlayback(
+    IN  DWORD PrivateHandle)
+{
+    PSOUND_DEVICE_INSTANCE SoundDeviceInstance;
+
+    SND_TRACE(L"Resetting wave device (WODM_RESET)\n");
+
+    VALIDATE_MMSYS_PARAMETER( PrivateHandle );
+    SoundDeviceInstance = (PSOUND_DEVICE_INSTANCE) PrivateHandle;
+
+    return StopStreaming(SoundDeviceInstance);
 }

@@ -2,6 +2,7 @@
 	<importlibrary definition="wdmaud.spec" />
 	<include base="wdmaud.drv">.</include>
 	<include base="ReactOS">include/reactos/libs/sound</include>
+	<include base="wdmaud_kernel">.</include>
 	<define name="DEBUG_NT4" /><!-- Use custom debug routines -->
 	<library>mmebuddy</library>
 	<library>ntdll</library>

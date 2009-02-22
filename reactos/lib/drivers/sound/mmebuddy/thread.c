@@ -56,7 +56,7 @@ SoundThreadMain(
         else if ( WaitResult == WAIT_IO_COMPLETION )
         {
             SND_TRACE(L"SoundThread - Processing IO completion\n");
-            /* TODO */
+            /* TODO? What do we do here? Stream stuff? */
         }
         else
         {
@@ -66,8 +66,94 @@ SoundThreadMain(
 
     }
 
+    SND_TRACE(L"Sound thread terminated\n");
+
     return 0;
 }
+
+MMRESULT
+CallSoundThread(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    IN  SOUND_THREAD_REQUEST_HANDLER RequestHandler,
+    IN  PVOID Parameter OPTIONAL)
+{
+    PSOUND_THREAD Thread;
+
+    VALIDATE_MMSYS_PARAMETER( IsValidSoundDeviceInstance(SoundDeviceInstance) );
+    VALIDATE_MMSYS_PARAMETER( RequestHandler );
+
+    Thread = SoundDeviceInstance->Thread;
+
+    SND_TRACE(L"Waiting for READY event\n");
+    WaitForSingleObject(Thread->Events.Ready, INFINITE);
+
+    Thread->Request.Result = MMSYSERR_NOTSUPPORTED;
+    Thread->Request.Handler = RequestHandler;
+    Thread->Request.SoundDeviceInstance = SoundDeviceInstance;
+    Thread->Request.Parameter = Parameter;
+
+    /* Notify the thread it has work to do */
+    SND_TRACE(L"Setting REQUEST event\n");
+    SetEvent(Thread->Events.Request);
+
+    /* Wait for the work to be done */
+    SND_TRACE(L"Waiting for DONE event\n");
+    WaitForSingleObject(Thread->Events.Done, INFINITE);
+
+    return Thread->Request.Result;
+}
+
+
+MMRESULT
+SoundThreadTerminator(
+    IN  PSOUND_DEVICE_INSTANCE Instance,
+    IN  PVOID Parameter)
+{
+    PSOUND_THREAD Thread = (PSOUND_THREAD) Parameter;
+
+    SND_TRACE(L"Sound thread terminator routine called\n");
+    SND_ASSERT( Thread );
+
+    Thread->Running = FALSE;
+
+    return MMSYSERR_NOERROR;
+}
+
+MMRESULT
+TerminateSoundThread(
+    IN  PSOUND_THREAD Thread)
+{
+    DWORD WaitResult;
+
+    SND_ASSERT( Thread );
+
+    SND_TRACE(L"Waiting for READY event\n");
+    WaitForSingleObject(Thread->Events.Ready, INFINITE);
+
+    Thread->Request.Result = MMSYSERR_NOTSUPPORTED;
+    Thread->Request.Handler = SoundThreadTerminator;
+    Thread->Request.SoundDeviceInstance = NULL;
+    Thread->Request.Parameter = (PVOID) Thread;
+
+    /* Notify the thread it has work to do */
+    SND_TRACE(L"Setting REQUEST event\n");
+    SetEvent(Thread->Events.Request);
+
+    /* Wait for the work to be done */
+    SND_TRACE(L"Waiting for DONE event\n");
+    WaitForSingleObject(Thread->Events.Done, INFINITE);
+
+    /* Wait for the thread to actually end */
+    WaitResult = WaitForSingleObject(Thread->Handle, INFINITE);
+    SND_ASSERT( WaitResult == WAIT_OBJECT_0 );
+
+    /* Close the thread and invalidate the handle */
+    CloseHandle(Thread->Handle);    /* Is this needed? */
+    Thread->Handle = INVALID_HANDLE_VALUE;
+
+    return MMSYSERR_NOERROR;
+}
+
 
 MMRESULT
 CreateSoundThreadEvents(
@@ -195,39 +281,28 @@ DestroySoundThread(
     IN  PSOUND_THREAD Thread)
 {
     VALIDATE_MMSYS_PARAMETER( Thread );
+    SND_ASSERT( Thread->Handle != INVALID_HANDLE_VALUE );
+
     SND_TRACE(L"Terminating sound thread\n");
-    Thread->Running = FALSE;
-    /* TODO: Implement me! Wait for thread to have finished? */
-    return MMSYSERR_NOTSUPPORTED;
+
+    /* Tell the thread to terminate itself */
+    TerminateSoundThread(Thread);
+
+    SND_TRACE(L"Sound thread terminated, performing cleanup of thread resources\n");
+
+    CloseHandle(Thread->Handle);    /* Is this needed? */
+    Thread->Handle = INVALID_HANDLE_VALUE;
+
+    DestroySoundThreadEvents(Thread->Events.Ready,
+                             Thread->Events.Request,
+                             Thread->Events.Done);
+
+    /* Wipe and free the memory used for the thread */
+    ZeroMemory(Thread, sizeof(SOUND_THREAD));
+    FreeMemory(Thread);
+
+    SND_TRACE(L"Finished thread cleanup\n");
+
+    return MMSYSERR_NOERROR;
 }
 
-MMRESULT
-CallSoundThread(
-    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
-    IN  SOUND_THREAD_REQUEST_HANDLER RequestHandler,
-    IN  PVOID Parameter OPTIONAL)
-{
-    VALIDATE_MMSYS_PARAMETER( SoundDeviceInstance );
-    VALIDATE_MMSYS_PARAMETER( RequestHandler );
-
-    /* TODO: Don't call this directly? */
-    PSOUND_THREAD Thread = SoundDeviceInstance->Thread;
-
-    SND_TRACE(L"Waiting for READY event\n");
-    WaitForSingleObject(Thread->Events.Ready, INFINITE);
-
-    Thread->Request.Result = MMSYSERR_NOTSUPPORTED;
-    Thread->Request.Handler = RequestHandler;
-    Thread->Request.SoundDeviceInstance = SoundDeviceInstance;
-    Thread->Request.Parameter = Parameter;
-
-    /* Notify the thread it has work to do */
-    SND_TRACE(L"Setting REQUEST event\n");
-    SetEvent(Thread->Events.Request);
-
-    /* Wait for the work to be done */
-    SND_TRACE(L"Waiting for DONE event\n");
-    WaitForSingleObject(Thread->Events.Done, INFINITE);
-
-    return Thread->Request.Result;
-}
