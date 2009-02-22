@@ -1694,62 +1694,22 @@ WINAPI
 IsUserAdmin(VOID)
 {
     SID_IDENTIFIER_AUTHORITY Authority = {SECURITY_NT_AUTHORITY};
-    HANDLE hToken;
-    DWORD dwSize;
-    PTOKEN_GROUPS lpGroups;
-    PSID lpSid;
-    DWORD i;
     BOOL bResult = FALSE;
-
-    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken))
-    {
-        return FALSE;
-    }
-
-    if (!GetTokenInformation(hToken, TokenGroups, NULL, 0, &dwSize))
-    {
-        if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
-        {
-            CloseHandle(hToken);
-            return FALSE;
-        }
-    }
-
-    lpGroups = HeapAlloc(GetProcessHeap(), 0, dwSize);
-    if (lpGroups == NULL)
-    {
-        CloseHandle(hToken);
-        return FALSE;
-    }
-
-    if (!GetTokenInformation(hToken, TokenGroups, lpGroups, dwSize, &dwSize))
-    {
-        HeapFree(GetProcessHeap(), 0, lpGroups);
-        CloseHandle(hToken);
-        return FALSE;
-    }
-
-    CloseHandle(hToken);
+    PSID lpSid;
 
     if (!AllocateAndInitializeSid(&Authority, 2, SECURITY_BUILTIN_DOMAIN_RID,
                                   DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0,
                                   &lpSid))
     {
-        HeapFree(GetProcessHeap(), 0, lpGroups);
         return FALSE;
     }
 
-    for (i = 0; i < lpGroups->GroupCount; i++)
+    if (!CheckTokenMembership(NULL, lpSid, &bResult))
     {
-        if (EqualSid(lpSid, lpGroups->Groups[i].Sid))
-        {
-            bResult = TRUE;
-            break;
-        }
+        bResult = FALSE;
     }
 
     FreeSid(lpSid);
-    HeapFree(GetProcessHeap(), 0, lpGroups);
 
     return bResult;
 }
