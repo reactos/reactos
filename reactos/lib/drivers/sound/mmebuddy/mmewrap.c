@@ -60,11 +60,12 @@ MmeGetSoundDeviceCapabilities(
 
     SND_TRACE(L"MME *_GETCAPS for device %d of type %d\n", DeviceId, DeviceType);
 
-    /* FIXME: Validate device type and ID */
+    /* FIXME: Validate device ID */
     VALIDATE_MMSYS_PARAMETER( Capabilities );
-    VALIDATE_MMSYS_PARAMETER( CapabilitiesSize > 0 );
+    VALIDATE_MMSYS_PARAMETER( IS_VALID_SOUND_DEVICE_TYPE(DeviceType) );
 
     /* Our parameter checks are done elsewhere */
+
     Result = GetSoundDevice(DeviceType, DeviceId, &SoundDevice);
 
     if ( ! MMSUCCESS(Result) )
