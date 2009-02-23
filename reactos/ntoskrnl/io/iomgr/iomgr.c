@@ -496,9 +496,6 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Call back drivers that asked for */
     IopReinitializeBootDrivers();
 
-    /* Initialize PnP root relations */
-    IopEnumerateDevice(IopRootDeviceNode->PhysicalDeviceObject);
-
     /* Check if this was a ramdisk boot */
     if (!_strnicmp(LoaderBlock->ArcBootDeviceName, "ramdisk(0)", 10))
     {
@@ -511,6 +508,9 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* Mark the system boot partition */
     if (!IopMarkBootPartition(LoaderBlock)) return FALSE;
+
+    /* Initialize PnP root relations */
+    IopEnumerateDevice(IopRootDeviceNode->PhysicalDeviceObject);
 
 #ifndef _WINKD_
     /* Read KDB Data */
