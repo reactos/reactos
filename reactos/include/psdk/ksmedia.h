@@ -135,6 +135,15 @@ typedef struct {
 
 //#endif
 
+typedef struct {
+   KSDATARANGE              DataRange;
+   ULONG                    MaximumChannels;
+   ULONG                    MinimumBitsPerSample;
+   ULONG                    MaximumBitsPerSample;
+   ULONG                    MinimumSampleFrequency;
+   ULONG                    MaximumSampleFrequency;
+} KSDATARANGE_AUDIO, *PKSDATARANGE_AUDIO;
+
 // 'vids'
 #define STATIC_KSDATAFORMAT_TYPE_VIDEO \
     0x73646976L, 0x0000, 0x0010, {0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71}
