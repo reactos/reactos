@@ -76,6 +76,8 @@ typedef struct _WAVEFORMATEX {
   WORD   wBitsPerSample;
   WORD   cbSize;
 } WAVEFORMATEX, *PWAVEFORMATEX, *NPWAVEFORMATEX, *LPWAVEFORMATEX;
+
+typedef const struct _WAVEFORMATEX *LPCWAVEFORMATEX;
 #endif /* _WAVEFORMATEX_ */
 
 #ifndef WAVE_FORMAT_PCM
