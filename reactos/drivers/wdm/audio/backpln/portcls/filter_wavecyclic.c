@@ -145,6 +145,7 @@ IPortFilterWaveCyclic_fnDeviceIoControl(
     PIO_STACK_LOCATION IoStack;
     ISubdevice *SubDevice = NULL;
     SUBDEVICE_DESCRIPTOR * Descriptor;
+	NTSTATUS Status;
 #if defined(DBG)
     IPortFilterWaveCyclicImpl * This = (IPortFilterWaveCyclicImpl *)iface;
 #endif
@@ -154,7 +155,8 @@ IPortFilterWaveCyclic_fnDeviceIoControl(
     ASSERT(This->Port->lpVtbl->QueryInterface(This->Port, &IID_ISubdevice, (PVOID*)&SubDevice) == STATUS_SUCCESS);
     ASSERT(SubDevice != NULL);
 
-    ASSERT(SubDevice->lpVtbl->GetDescriptor(SubDevice, &Descriptor) == STATUS_SUCCESS);
+	Status = SubDevice->lpVtbl->GetDescriptor(SubDevice, &Descriptor);
+	ASSERT(Status == STATUS_SUCCESS);
     ASSERT(Descriptor != NULL);
 
     SubDevice->lpVtbl->Release(SubDevice);
