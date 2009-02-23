@@ -1,3 +1,6 @@
+/*
+ * Multimedia declarations
+ */
 
 #ifndef _MMSYSTEM_H
 #define _MMSYSTEM_H
@@ -1045,7 +1048,7 @@ typedef struct tWAVEFORMATEX {
 	WORD cbSize;
 } WAVEFORMATEX,*PWAVEFORMATEX,*LPWAVEFORMATEX;
 
-typedef const WAVEFORMATEX *LPCWAVEFORMATEX;
+typedef const struct tWAVEFORMATEX *LPCWAVEFORMATEX;
 #endif
 
 DECLARE_HANDLE(HMIDI);
