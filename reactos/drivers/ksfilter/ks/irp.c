@@ -1146,6 +1146,9 @@ KsDefaultForwardIrp(
     IN PIRP Irp)
 {
     UNIMPLEMENTED;
+    Irp->IoStatus.Information = 0;
+    Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
     return STATUS_UNSUCCESSFUL;
 }
 

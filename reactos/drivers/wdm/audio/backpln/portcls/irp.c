@@ -131,6 +131,7 @@ PortClsPnp(
 
             /* Do not complete? */
             Irp->IoStatus.Status = STATUS_SUCCESS;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
             return STATUS_SUCCESS;
 
         case IRP_MN_QUERY_INTERFACE:
@@ -138,15 +139,24 @@ PortClsPnp(
             /* FIXME
              * call next lower device object */
             Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
-            return Irp->IoStatus.Status;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            return STATUS_UNSUCCESSFUL;
 
         case IRP_MN_QUERY_DEVICE_RELATIONS:
             Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
-            return Irp->IoStatus.Status;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            return STATUS_UNSUCCESSFUL;
+        case IRP_MN_FILTER_RESOURCE_REQUIREMENTS:
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            return STATUS_SUCCESS;
     }
 
     DPRINT1("unhandled function %u\n", IoStack->MinorFunction);
-    return STATUS_SUCCESS;
+
+    Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return STATUS_UNSUCCESSFUL;
 }
 
 /*
@@ -254,19 +264,6 @@ PcCompleteIrp(
     return STATUS_UNSUCCESSFUL;
 }
 
-static
-NTSTATUS
-NTAPI
-IrpCompletionRoutine(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp,
-    IN PVOID Context)
-{
-    KeSetEvent((PRKEVENT)Context, IO_NO_INCREMENT, FALSE);
-    return STATUS_SUCCESS;
-}
-
-
 /*
  * @implemented
  */
@@ -285,9 +282,6 @@ PcForwardIrpSynchronous(
 return STATUS_SUCCESS;
     /* initialize the notification event */
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
-
-    /* setup a completion routine */
-    IoSetCompletionRoutine(Irp, IrpCompletionRoutine, (PVOID)&Event, TRUE, FALSE, FALSE);
 
     /* copy the current stack location */
     IoCopyCurrentIrpStackLocationToNext(Irp);

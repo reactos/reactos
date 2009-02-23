@@ -24,7 +24,7 @@ Dispatch_fnDeviceIoControl(
 {
     PIO_STACK_LOCATION IoStack;
 
-    DPRINT1("Dispatch_fnDeviceIoControl called DeviceObject %p Irp %p\n", DeviceObject);
+    DPRINT("Dispatch_fnDeviceIoControl called DeviceObject %p Irp %p\n", DeviceObject);
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_PROPERTY)
@@ -32,7 +32,13 @@ Dispatch_fnDeviceIoControl(
        return SysAudioHandleProperty(DeviceObject, Irp);
     }
 
-    return STATUS_SUCCESS;
+    DPRINT1("Dispatch_fnDeviceIoControl Unhandeled %x\n", IoStack->Parameters.DeviceIoControl.IoControlCode);
+    DbgBreakPoint();
+
+    Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+    Irp->IoStatus.Information = 0;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return STATUS_UNSUCCESSFUL;
 }
 
 NTSTATUS
@@ -43,7 +49,10 @@ Dispatch_fnRead(
 {
     DPRINT1("Dispatch_fnRead called DeviceObject %p Irp %p\n", DeviceObject);
 
-    return STATUS_SUCCESS;
+    Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+    Irp->IoStatus.Information = 0;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return STATUS_UNSUCCESSFUL;
 }
 
 NTSTATUS
@@ -54,7 +63,10 @@ Dispatch_fnWrite(
 {
     DPRINT1("Dispatch_fnWrite called DeviceObject %p Irp %p\n", DeviceObject);
 
-    return STATUS_SUCCESS;
+    Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+    Irp->IoStatus.Information = 0;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return STATUS_UNSUCCESSFUL;
 }
 
 NTSTATUS
@@ -122,8 +134,10 @@ Dispatch_fnQuerySecurity(
 {
     DPRINT1("Dispatch_fnQuerySecurity called DeviceObject %p Irp %p\n", DeviceObject);
 
-
-    return STATUS_SUCCESS;
+    Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+    Irp->IoStatus.Information = 0;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return STATUS_UNSUCCESSFUL;
 }
 
 NTSTATUS
@@ -135,7 +149,10 @@ Dispatch_fnSetSecurity(
 
     DPRINT1("Dispatch_fnSetSecurity called DeviceObject %p Irp %p\n", DeviceObject);
 
-    return STATUS_SUCCESS;
+    Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+    Irp->IoStatus.Information = 0;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return STATUS_UNSUCCESSFUL;
 }
 
 BOOLEAN

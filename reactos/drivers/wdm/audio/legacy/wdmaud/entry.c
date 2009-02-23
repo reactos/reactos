@@ -165,12 +165,7 @@ WdmAudClose(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
 {
-    NTSTATUS Status = STATUS_SUCCESS;
-    PWDMAUD_DEVICE_EXTENSION DeviceExtension;
-
     DPRINT1("WdmAudClose\n");
-
-    DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
 #if KS_IMPLEMENTED
     Status = KsDereferenceSoftwareBusObject(DeviceExtension->DeviceHeader);
@@ -182,11 +177,11 @@ WdmAudClose(
     }
 #endif
 
-    Irp->IoStatus.Status = Status;
+    Irp->IoStatus.Status = STATUS_SUCCESS;
     Irp->IoStatus.Information = 0;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-    return Status;
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS

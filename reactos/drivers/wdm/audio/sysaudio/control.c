@@ -137,18 +137,18 @@ SysAudioOpenVirtualDevice(
 
     /* copy device count array */
     if (ClientInfo->NumDevices)
-	{
+    {
         RtlMoveMemory(Index, ClientInfo->Devices, ClientInfo->NumDevices * sizeof(ULONG));
         RtlMoveMemory(Handle, ClientInfo->Handels, ClientInfo->NumDevices * sizeof(HANDLE));
-	}
+    }
 
     Index[ClientInfo->NumDevices] = DeviceNumber;
     Handle[ClientInfo->NumDevices] = NULL;
-	ExFreePool(ClientInfo->Handels);
+    ExFreePool(ClientInfo->Handels);
     ExFreePool(ClientInfo->Devices);
     ClientInfo->NumDevices++;
     ClientInfo->Devices = Index;
-	ClientInfo->Handels = Handle;
+    ClientInfo->Handels = Handle;
 
     return SetIrpIoStatus(Irp, STATUS_SUCCESS, 0);
 }
@@ -662,6 +662,5 @@ SysAudioHandleProperty(
     DPRINT1("Unhandeled property Set |%S| Id %u Flags %x\n", GuidString.Buffer, Property->Id, Property->Flags);
     DbgBreakPoint();
     RtlFreeUnicodeString(&GuidString);
-
-    return Status;
+    return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, 0);
 }

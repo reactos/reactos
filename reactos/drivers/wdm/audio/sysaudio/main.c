@@ -48,19 +48,9 @@ SysAudio_Pnp(
 
     IrpStack = IoGetCurrentIrpStackLocation(Irp);
 
-    DPRINT1("SysAudio_Pnp called for func %x\n", IrpStack->MinorFunction);
+    DPRINT("SysAudio_Pnp called for func %x\n", IrpStack->MinorFunction);
 
     DeviceExtension = (SYSAUDIODEVEXT*)DeviceObject->DeviceExtension;
-
-
-    if (IrpStack->MinorFunction == IRP_MN_START_DEVICE)
-    {
-    DPRINT1("SysAudio_Pnp called for func IRP_MN_START_DEVICE\n");
-    Irp->IoStatus.Status = STATUS_SUCCESS;
-    Irp->IoStatus.Information = 0;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return STATUS_SUCCESS;
-	}
 
     if (IrpStack->MinorFunction == IRP_MN_REMOVE_DEVICE)
     {

@@ -144,7 +144,7 @@ IPortFilterWaveCyclic_fnDeviceIoControl(
 {
     PIO_STACK_LOCATION IoStack;
     ISubdevice *SubDevice = NULL;
-    SUBDEVICE_DESCRIPTOR * Descriptor;
+    SUBDEVICE_DESCRIPTOR * Descriptor = NULL;
 	NTSTATUS Status;
 #if defined(DBG)
     IPortFilterWaveCyclicImpl * This = (IPortFilterWaveCyclicImpl *)iface;

@@ -38,6 +38,7 @@ KsDefaultDispatchPnp(
         case IRP_MN_QUERY_DEVICE_RELATIONS:
             Irp->IoStatus.Information = 0;
             Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
             return STATUS_INSUFFICIENT_RESOURCES;
         case IRP_MN_REMOVE_DEVICE:
             // FIXME
@@ -48,10 +49,12 @@ KsDefaultDispatchPnp(
         case IRP_MN_SURPRISE_REMOVAL:
             Irp->IoStatus.Information = 0;
             Irp->IoStatus.Status = STATUS_SUCCESS;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
             return STATUS_SUCCESS;
         default:
             Irp->IoStatus.Information = 0;
             Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
             //Status = IoCallDriver(NULL /* PnpBaseObject */, Irp);
     }
 
@@ -79,6 +82,10 @@ KsDefaultDispatchPower(
     IN  PIRP Irp)
 {
     UNIMPLEMENTED;
+
+    Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+    Irp->IoStatus.Information = 0;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
     return STATUS_UNSUCCESSFUL;
 }
 
