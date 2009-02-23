@@ -560,6 +560,7 @@ media\inf\acpi.inf                                  6
 media\inf\cdrom.inf                                 6
 media\inf\display.inf                               6
 media\inf\font.inf                                  6
+media\inf\fdc.inf                                   6
 media\inf\hdc.inf                                   6
 media\inf\intl.inf                                  6
 media\inf\layout.inf                                6
