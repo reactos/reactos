@@ -227,12 +227,13 @@ Author:
 //
 // KINTERRUPT Offsets
 //
+#define KINTERRUPT_INTERRUPT_LIST_HEAD          0x04
 #define KINTERRUPT_SERVICE_ROUTINE              0x0C
 #define KINTERRUPT_SERVICE_CONTEXT              0x10
 #define KINTERRUPT_TICK_COUNT                   0x18
 #define KINTERRUPT_ACTUAL_LOCK                  0x1C
-#define KINTERRUPT_IRQL                         0x20
 #define KINTERRUPT_VECTOR                       0x24
+#define KINTERRUPT_IRQL                         0x28
 #define KINTERRUPT_SYNCHRONIZE_IRQL             0x29
 #define KINTERRUPT_DISPATCH_COUNT               0x38
 
