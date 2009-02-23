@@ -8,55 +8,7 @@
 #define YDEBUG
 #include <debug.h>
 #include <ksmedia.h>
-
-
-#ifndef MAXPNAMELEN
-#define MAXPNAMELEN      32
-#endif
-
-#ifndef WAVEOUTCAPS
-
-typedef struct
-{
-    USHORT      wMid;
-    USHORT      wPid;
-    ULONG vDriverVersion;
-    WCHAR     szPname[MAXPNAMELEN];
-    ULONG     dwFormats;
-    USHORT      wChannels;
-    USHORT      wReserved1;
-    ULONG     dwSupport;
-} WAVEOUTCAPS;
-
-#endif
-
-#ifndef AUXCAPS
-
-typedef struct { 
-    USHORT      wMid; 
-    USHORT      wPid; 
-    ULONG vDriverVersion; 
-    WCHAR     szPname[MAXPNAMELEN]; 
-    USHORT      wTechnology; 
-    USHORT      wReserved1; 
-    ULONG     dwSupport; 
-} AUXCAPS;
-
-#endif
-
-#ifndef WAVEINCAPS
-
-typedef struct 
-{
-    USHORT      wMid;
-    USHORT      wPid;
-    ULONG vDriverVersion;
-    WCHAR     szPname[MAXPNAMELEN];
-    ULONG     dwFormats;
-    USHORT      wChannels;
-    USHORT      wReserved1;
-} WAVEINCAPS; 
-#endif
+#include <mmsystem.h>	
 
 #include "interface.h"
 

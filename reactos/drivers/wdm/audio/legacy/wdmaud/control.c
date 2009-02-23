@@ -17,7 +17,6 @@ const GUID KSDATAFORMAT_TYPE_AUDIO              = {0x73647561L, 0x0000, 0x0010, 
 const GUID KSDATAFORMAT_SUBTYPE_PCM             = {0x00000001L, 0x0000, 0x0010, {0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71}};
 const GUID KSDATAFORMAT_SPECIFIER_WAVEFORMATEX  = {0x05589f81L, 0xc356, 0x11ce, {0xbf, 0x01, 0x00, 0xaa, 0x00, 0x55, 0x59, 0x5a}};
 
-
 NTSTATUS
 SetIrpIoStatus(
     IN PIRP Irp,
@@ -324,17 +323,140 @@ WdmAudControlWriteData(
     Status = KsSynchronousIoControlDevice(FileObject, KernelMode, IOCTL_KS_WRITE_STREAM, (PVOID)Packet, sizeof(KSSTREAM_HEADER), NULL, 0, &BytesReturned);
 
     DPRINT1("KsSynchronousIoControlDevice result %x\n", Status);
-
-    IoMarkIrpPending(Irp);
-    Irp->IoStatus.Information = DeviceInfo->BufferSize;
-    Irp->IoStatus.Status = Status;
-
     ExFreePool(Buffer);
 
-    return Status;
+    return SetIrpIoStatus(Irp, Status, sizeof(WDMAUD_DEVICE_INFO));
 }
 
+ULONG
+CheckFormatSupport(
+    IN PKSDATARANGE_AUDIO DataRangeAudio,
+    ULONG SampleFrequency,
+    ULONG Mono8Bit,
+    ULONG Stereo8Bit,
+    ULONG Mono16Bit,
+    ULONG Stereo16Bit)
+{
+    ULONG Result = 0;
 
+    if (DataRangeAudio->MinimumSampleFrequency <= SampleFrequency && DataRangeAudio->MaximumSampleFrequency >= SampleFrequency)
+    {
+        if (DataRangeAudio->MinimumBitsPerSample <= 8 && DataRangeAudio->MaximumBitsPerSample >= 8)
+        {
+            Result |= Mono8Bit;
+            if (DataRangeAudio->MaximumChannels >= 2)
+            {
+                Result |= Stereo8Bit;
+            }
+        }
+
+        if (DataRangeAudio->MaximumBitsPerSample <= 16 && DataRangeAudio->MaximumBitsPerSample >= 16)
+        {
+            Result |= Monot16;
+            if (DataRangeAudio->MaximumChannels >= 2)
+            {
+                Result |= Stereo8Bit;
+            }
+        }
+    }
+    return Result;
+
+}
+
+NTSTATUS
+WdmAudCapabilities(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp,
+    IN  PWDMAUD_DEVICE_INFO DeviceInfo,
+    IN  PWDMAUD_CLIENT ClientInfo)
+{
+    KSP_PIN PinProperty;
+    KSPROPERTY Property;
+    KSCOMPONENTID ComponentId;
+    KSMULTIPLE_ITEM * MultipleItem;
+    ULONG BytesReturned;
+    PKSDATARANGE_AUDIO DataRangeAudio;
+    PKSDATARANGE DataRange;
+	NTSTATUS Status;
+    ULONG Index;
+    ULONG wChannels = 0;
+    ULONG dwFormats = 0;
+    ULONG dwSupport = 0;
+
+    Property.Set = KSPROPSETID_General;
+    Property.Id = KSPROPERTY_GENERAL_COMPONENTID;
+    Property.Flags = KSPROPERTY_TYPE_GET;
+
+    RtlZeroMemory(&ComponentId, sizeof(KSCOMPONENTID));
+
+    Status = KsSynchronousIoControlDevice(ClientInfo->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSPROPERTY), (PVOID)&ComponentId, sizeof(KSCOMPONENTID), &BytesReturned);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("KSPROPERTY_GENERAL_COMPONENTID failed with %x\n", Status);
+        return SetIrpIoStatus(Irp, Status, 0);
+    }
+
+    PinProperty.PinId = 0; //FIXME
+    PinProperty.Property.Set = KSPROPSETID_Pin;
+    PinProperty.Property.Id = KSPROPERTY_PIN_DATARANGES;
+    PinProperty.Property.Flags = KSPROPERTY_TYPE_GET;
+
+    Status = KsSynchronousIoControlDevice(ClientInfo->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSPROPERTY), (PVOID)NULL, 0, &BytesReturned);
+    if (Status != STATUS_BUFFER_TOO_SMALL)
+	{
+        DPRINT1("KSPROPERTY_PIN_DATARANGES failed with %x\n", Status);
+        return SetIrpIoStatus(Irp, Status, 0);
+	}
+
+    MultipleItem = ExAllocatePool(NonPagedPool, BytesReturned);
+    if (!MultipleItem)
+    {
+        /* no memory */
+        return SetIrpIoStatus(Irp, STATUS_NO_MEMORY, 0);
+    }
+
+    Status = KsSynchronousIoControlDevice(ClientInfo->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSPROPERTY), (PVOID)MultipleItem, BytesReturned, &BytesReturned);
+    if (!NT_SUCCESS(Status))
+    {
+        ExFreePool(MultipleItem);
+        return SetIrpIoStatus(Irp, Status, 0);
+    }
+
+    DataRange = (PKSDATARANGE) (MultipleItem + 1);
+    for(Index = 0; Index < MultipleItem->Count; Index++)
+    {
+        if (DeviceInfo->DeviceType == WAVE_OUT_DEVICE_TYPE || DeviceInfo->DeviceType == WAVE_IN_DEVICE_TYPE)
+        {
+            if (DataRange->FormatSize == sizeof(KSDATARANGE_AUDIO))
+            {
+                DataRangeAudio = (PKSDATARANGE_AUDIO)DataRange;
+                
+                if (IsEqualGUIDAligned(&DataRangeAudio->DataRange.MajorFormat, &KSDATAFORMAT_TYPE_AUDIO) &&
+                    IsEqualGUIDAligned(&DataRangeAudio->DataRange.SubFormat, &KSDATAFORMAT_SUBTYPE_PCM) &&
+                    IsEqualGUIDAligned(&DataRangeAudio->DataRange.Specifier, &KSDATAFORMAT_SPECIFIER_WAVEFORMATEX))
+                {
+                    dwFormats |= CheckFormatSupport(DataRangeAudio, 11025, WAVE_FORMAT_1M08, WAVE_FORMAT_1S08, WAVE_FORMAT_1M16, WAVE_FORMAT_1S16);
+                    dwFormats |= CheckFormatSupport(DataRangeAudio, 22050, WAVE_FORMAT_2M08, WAVE_FORMAT_2S08, WAVE_FORMAT_2M16, WAVE_FORMAT_2S16);
+                    dwFormats |= CheckFormatSupport(DataRangeAudio, 44100, WAVE_FORMAT_4M08, WAVE_FORMAT_4S08, WAVE_FORMAT_4M16, WAVE_FORMAT_4S16);
+                    dwFormats |= CheckFormatSupport(DataRangeAudio, 48000, WAVE_FORMAT_48M08, WAVE_FORMAT_48S08, WAVE_FORMAT_48M16, WAVE_FORMAT_48S16);
+                    dwFormats |= CheckFormatSupport(DataRangeAudio, 96000, WAVE_FORMAT_96M08, WAVE_FORMAT_96S08, WAVE_FORMAT_96M16, WAVE_FORMAT_96S16);
+
+                    wChannels = DataRangeAudio->MaximumChannels;
+                    dwSupport = WAVECAPS_VOLUME; //FIXME get info from nodes
+                }
+            }
+        }
+
+    }
+
+    DeviceInfo->u.WaveOutCaps.dwFormats = dwFormats;
+    DeviceInfo->u.WaveOutCaps.dwSupport = dwSupport;
+    DeviceInfo->u.WaveOutCaps.wChannels = wChannels;
+    DeviceInfo->u.WaveOutCaps.wMid = ComponentId.Manufacturer.Data1 - 0xd5a47fa7;
+    DeviceInfo->u.WaveOutCaps.vDriverVersion = MAKELONG(ComponentId.Version, ComponentId.Revision);
+
+    return SetIrpIoStatus(Irp, Status, sizeof(WDMAUD_DEVICE_INFO));
+}
 
 NTSTATUS
 NTAPI
@@ -386,12 +508,13 @@ WdmAudDeviceControl(
             return WdmAudControlDeviceState(DeviceObject, Irp, DeviceInfo, ClientInfo);
         case IOCTL_WRITEDATA:
             return WdmAudControlWriteData(DeviceObject, Irp, DeviceInfo, ClientInfo);
-
+        case IOCTL_GETCAPABILITIES:
+            return WdmAudCapabilities(DeviceObject, Irp, DeviceInfo, ClientInfo);
         case IOCTL_CLOSE_WDMAUD:
         case IOCTL_GETDEVID:
         case IOCTL_GETVOLUME:
         case IOCTL_SETVOLUME:
-        case IOCTL_GETCAPABILITIES:
+
            DPRINT1("Unhandeled %x\n", IoStack->Parameters.DeviceIoControl.IoControlCode);
            break;
     }

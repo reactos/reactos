@@ -47,6 +47,7 @@ main(int argc, char* argv[])
 
      DeviceInfo.DeviceType = WAVE_OUT_DEVICE_TYPE;
 
+
      Status = DeviceIoControl(hWdmAud, IOCTL_GETNUMDEVS_TYPE, (LPVOID)&DeviceInfo, sizeof(WDMAUD_DEVICE_INFO), (LPVOID)&DeviceInfo, sizeof(WDMAUD_DEVICE_INFO), &BytesReturned, &Overlapped);
 
      if (!Status)
@@ -74,6 +75,15 @@ main(int argc, char* argv[])
     DeviceInfo.u.WaveFormatEx.nAvgBytesPerSec = 48000 * 4;
     DeviceInfo.u.WaveFormatEx.wBitsPerSample = 16;
 
+    Status = DeviceIoControl(hWdmAud, IOCTL_GETCAPABILITIES, (LPVOID)&DeviceInfo, sizeof(WDMAUD_DEVICE_INFO), (LPVOID)&DeviceInfo, sizeof(WDMAUD_DEVICE_INFO), &BytesReturned, &Overlapped);
+
+    if (!Status)
+    {
+        if (WaitForSingleObject(&Overlapped.hEvent, 5000) != WAIT_OBJECT_0)
+        {
+           printf("Failed to get iocaps %lx\n", GetLastError());
+        }
+    }
 
 
      Status = DeviceIoControl(hWdmAud, IOCTL_OPEN_WDMAUD, (LPVOID)&DeviceInfo, sizeof(WDMAUD_DEVICE_INFO), &DeviceInfo, sizeof(WDMAUD_DEVICE_INFO), &BytesReturned, &Overlapped);
@@ -86,6 +96,9 @@ main(int argc, char* argv[])
              return -1;
          }
      }
+
+
+
 
     //
     // Allocate a buffer for 1 second
@@ -119,7 +132,7 @@ main(int argc, char* argv[])
              return -1;
          }
     }
-
+    
     //
     // Play our 1-second buffer
     //
@@ -136,6 +149,8 @@ main(int argc, char* argv[])
          }
     }
 
+    printf("WDMAUD:  Played buffer\n");
+
     DeviceInfo.State = KSSTATE_STOP;
     Status = DeviceIoControl(hWdmAud, IOCTL_SETDEVICE_STATE, (LPVOID)&DeviceInfo, sizeof(WDMAUD_DEVICE_INFO), &DeviceInfo, sizeof(WDMAUD_DEVICE_INFO), &BytesReturned, &Overlapped);
     if (!Status)
@@ -147,6 +162,9 @@ main(int argc, char* argv[])
             return -1;
          }
     }
+    printf("WDMAUD:  STOPPED\n");
     CloseHandle(hWdmAud);
+    CloseHandle(&Overlapped.hEvent);
+    printf("WDMAUD:  COMPLETE\n");
     return 0;
 }

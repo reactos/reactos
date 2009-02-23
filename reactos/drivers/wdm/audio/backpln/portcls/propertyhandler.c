@@ -133,27 +133,55 @@ PcPropertyHandler(
     PFNKSHANDLER PropertyHandler = NULL;
     UNICODE_STRING GuidString;
     NTSTATUS Status = STATUS_UNSUCCESSFUL;
+    PCPROPERTY_REQUEST PropertyRequest;
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
     Property = (PKSPROPERTY)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
     ASSERT(Property);
 
-    DPRINT1("Num of Property Sets %u\n", Descriptor->FilterPropertySet.FreeKsPropertySetOffset);
+    /* check properties provided by the driver */
+    if (Descriptor->DeviceDescriptor->AutomationTable)
+    {
+        for(Index = 0; Index < Descriptor->DeviceDescriptor->AutomationTable->PropertyCount; Index++)
+        {
+            if (IsEqualGUID(&Descriptor->DeviceDescriptor->AutomationTable->Properties[Index].Set, &Property->Set))
+            {
+                if (Descriptor->DeviceDescriptor->AutomationTable->Properties[Index].Id == Property->Id)
+                {
+                    if(Descriptor->DeviceDescriptor->AutomationTable->Properties[Index].Flags & Property->Flags)
+                    {
+                        RtlZeroMemory(&PropertyRequest, sizeof(PCPROPERTY_REQUEST));
+                        PropertyRequest.PropertyItem = &Descriptor->DeviceDescriptor->AutomationTable->Properties[Index];
+                        PropertyRequest.Verb = Property->Flags;
+                        PropertyRequest.Value = Irp->UserBuffer;
+                        PropertyRequest.ValueSize = IoStack->Parameters.DeviceIoControl.OutputBufferLength;
+                        PropertyRequest.Irp = Irp;
+
+                        DPRINT("Calling handler %p\n", Descriptor->DeviceDescriptor->AutomationTable->Properties[Index].Handler);
+                        Status = Descriptor->DeviceDescriptor->AutomationTable->Properties[Index].Handler(&PropertyRequest);
+
+                        Irp->IoStatus.Information = PropertyRequest.ValueSize;
+                        Irp->IoStatus.Status = Status;
+                        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                        return Status;
+                    }
+                }
+            }
+        }
+    }
+
+    DPRINT("Num of Property Sets %u\n", Descriptor->FilterPropertySet.FreeKsPropertySetOffset);
     for(Index = 0; Index < Descriptor->FilterPropertySet.FreeKsPropertySetOffset; Index++)
     {
-        RtlStringFromGUID ((GUID*)Descriptor->FilterPropertySet.Properties[Index].Set, &GuidString);
-        DPRINT1("Current GUID %S\n", GuidString.Buffer);
-        RtlFreeUnicodeString(&GuidString);
-
         if (IsEqualGUIDAligned(&Property->Set, Descriptor->FilterPropertySet.Properties[Index].Set))
         {
-            DPRINT1("Found Property Set Properties %u\n",  Descriptor->FilterPropertySet.Properties[Index].PropertiesCount);
+            DPRINT("Found Property Set Properties %u\n",  Descriptor->FilterPropertySet.Properties[Index].PropertiesCount);
             for(ItemIndex = 0; ItemIndex < Descriptor->FilterPropertySet.Properties[Index].PropertiesCount; ItemIndex++)
             {
                 if (Descriptor->FilterPropertySet.Properties[Index].PropertyItem[ItemIndex].PropertyId == Property->Id)
                 {
-                    DPRINT1("Found property set identifier %u\n", Property->Id);
+                    DPRINT("Found property set identifier %u\n", Property->Id);
                     if (Property->Flags & KSPROPERTY_TYPE_SET)
                         PropertyHandler = Descriptor->FilterPropertySet.Properties[Index].PropertyItem[ItemIndex].SetPropertyHandler;
 
@@ -165,6 +193,7 @@ PcPropertyHandler(
                         /* too small input buffer */
                         Irp->IoStatus.Information = Descriptor->FilterPropertySet.Properties[Index].PropertyItem[ItemIndex].MinProperty;
                         Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
+                        IoCompleteRequest(Irp, IO_NO_INCREMENT);
                         return STATUS_BUFFER_TOO_SMALL;
                     }
 
@@ -173,19 +202,20 @@ PcPropertyHandler(
                         /* too small output buffer */
                         Irp->IoStatus.Information = Descriptor->FilterPropertySet.Properties[Index].PropertyItem[ItemIndex].MinData;
                         Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
+                        IoCompleteRequest(Irp, IO_NO_INCREMENT);
                         return STATUS_BUFFER_TOO_SMALL;
                     }
 
                     if (PropertyHandler)
                     {
                         KSPROPERTY_ITEM_IRP_STORAGE(Irp) = (PVOID)Descriptor;
-                        DPRINT1("Calling property handler %p\n", PropertyHandler);
+                        DPRINT("Calling property handler %p\n", PropertyHandler);
                         Status = PropertyHandler(Irp, Property, Irp->UserBuffer);
                     }
 
                     /* the information member is set by the handler */
                     Irp->IoStatus.Status = Status;
-                    DPRINT1("Result %x\n", Status);
+                    DPRINT("Result %x\n", Status);
                     IoCompleteRequest(Irp, IO_NO_INCREMENT);
                     return Status;
                 }

@@ -204,7 +204,7 @@ PcCreateSubdeviceDescriptor(
             Descriptor->Factory.Instances[Index].MinFilterInstanceCount = FilterDescription->Pins[Index].MinFilterInstanceCount;
         }
     }
-
+    Descriptor->DeviceDescriptor = FilterDescription;
     *OutSubdeviceDescriptor = Descriptor;
     return STATUS_SUCCESS;
 

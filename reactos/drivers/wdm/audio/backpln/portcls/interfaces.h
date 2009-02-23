@@ -128,6 +128,8 @@ typedef struct
     GUID *Interfaces;
     KSPIN_FACTORY Factory;
     KSPROPERTY_SET_LIST FilterPropertySet;
+
+    PPCFILTER_DESCRIPTOR DeviceDescriptor;
 }SUBDEVICE_DESCRIPTOR, *PSUBDEVICE_DESCRIPTOR;
 
 #undef INTERFACE
