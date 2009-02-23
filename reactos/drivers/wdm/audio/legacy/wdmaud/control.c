@@ -352,7 +352,7 @@ CheckFormatSupport(
 
         if (DataRangeAudio->MaximumBitsPerSample <= 16 && DataRangeAudio->MaximumBitsPerSample >= 16)
         {
-            Result |= Monot16;
+            Result |= Mono16Bit;
             if (DataRangeAudio->MaximumChannels >= 2)
             {
                 Result |= Stereo8Bit;
