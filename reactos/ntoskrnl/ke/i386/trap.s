@@ -1924,10 +1924,6 @@ _KiTrap14:
 NoFixUp:
     mov edi, cr2
 
-    /* ROS HACK: Sometimes we get called with INTS DISABLED! WTF? */
-    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_INTERRUPT_MASK
-    je HandlePf
-
     /* Enable interrupts and check if we got here with interrupts disabled */
     sti
     test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_INTERRUPT_MASK
