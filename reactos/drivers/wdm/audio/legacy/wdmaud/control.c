@@ -8,6 +8,7 @@
  */
 #include "wdmaud.h"
 
+const GUID KSPROPSETID_Pin                     = {0x8C134960L, 0x51AD, 0x11CF, {0x87, 0x8A, 0x94, 0xF8, 0x01, 0xC1, 0x00, 0x00}};
 const GUID KSPROPSETID_Connection               = {0x1D58C920L, 0xAC9B, 0x11CF, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
 const GUID KSPROPSETID_Sysaudio                 = {0xCBE3FAA0L, 0xCC75, 0x11D0, {0xB4, 0x65, 0x00, 0x00, 0x1A, 0x18, 0x18, 0xE6}};
 const GUID KSPROPSETID_General                  = {0x1464EDA5L, 0x6A8F, 0x11D1, {0x9A, 0xA7, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}};
@@ -371,42 +372,55 @@ WdmAudCapabilities(
     IN  PWDMAUD_CLIENT ClientInfo)
 {
     KSP_PIN PinProperty;
-    KSPROPERTY Property;
     KSCOMPONENTID ComponentId;
     KSMULTIPLE_ITEM * MultipleItem;
     ULONG BytesReturned;
     PKSDATARANGE_AUDIO DataRangeAudio;
     PKSDATARANGE DataRange;
-	NTSTATUS Status;
+    NTSTATUS Status;
     ULONG Index;
     ULONG wChannels = 0;
     ULONG dwFormats = 0;
     ULONG dwSupport = 0;
+    ULONG PinId;
 
-    Property.Set = KSPROPSETID_General;
-    Property.Id = KSPROPERTY_GENERAL_COMPONENTID;
-    Property.Flags = KSPROPERTY_TYPE_GET;
+    DPRINT("WdmAudCapabilities entered\n");
+
+    PinProperty.PinId = DeviceInfo->DeviceIndex; // used as index of the virtual audio device
+    PinProperty.Property.Set = KSPROPSETID_Sysaudio;
+    PinProperty.Property.Id = KSPROPERTY_SYSAUDIO_COMPONENT_ID;
+    PinProperty.Property.Flags = KSPROPERTY_TYPE_GET;
 
     RtlZeroMemory(&ComponentId, sizeof(KSCOMPONENTID));
 
-    Status = KsSynchronousIoControlDevice(ClientInfo->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSPROPERTY), (PVOID)&ComponentId, sizeof(KSCOMPONENTID), &BytesReturned);
-    if (!NT_SUCCESS(Status))
+    Status = KsSynchronousIoControlDevice(ClientInfo->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PinProperty, sizeof(KSP_PIN), (PVOID)&ComponentId, sizeof(KSCOMPONENTID), &BytesReturned);
+    if (NT_SUCCESS(Status))
     {
-        DPRINT1("KSPROPERTY_GENERAL_COMPONENTID failed with %x\n", Status);
-        return SetIrpIoStatus(Irp, Status, 0);
+        DeviceInfo->u.WaveOutCaps.wMid = ComponentId.Manufacturer.Data1 - 0xd5a47fa7;
+        DeviceInfo->u.WaveOutCaps.vDriverVersion = MAKELONG(ComponentId.Version, ComponentId.Revision);
     }
 
-    PinProperty.PinId = 0; //FIXME
+    //FIXME
+    // Reserved index defines the audio device index
+    // pin offset should be first determined
+    // by determing the pin type of the target filter
+    PinId = 0;
+
+    PinProperty.Reserved = DeviceInfo->DeviceIndex;
+    PinProperty.PinId = PinId;
     PinProperty.Property.Set = KSPROPSETID_Pin;
     PinProperty.Property.Id = KSPROPERTY_PIN_DATARANGES;
     PinProperty.Property.Flags = KSPROPERTY_TYPE_GET;
 
-    Status = KsSynchronousIoControlDevice(ClientInfo->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSPROPERTY), (PVOID)NULL, 0, &BytesReturned);
+
+    BytesReturned = 0;
+    Status = KsSynchronousIoControlDevice(ClientInfo->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PinProperty, sizeof(KSP_PIN), (PVOID)NULL, 0, &BytesReturned);
     if (Status != STATUS_BUFFER_TOO_SMALL)
-	{
-        DPRINT1("KSPROPERTY_PIN_DATARANGES failed with %x\n", Status);
+    {
         return SetIrpIoStatus(Irp, Status, 0);
-	}
+    }
+
+
 
     MultipleItem = ExAllocatePool(NonPagedPool, BytesReturned);
     if (!MultipleItem)
@@ -415,7 +429,7 @@ WdmAudCapabilities(
         return SetIrpIoStatus(Irp, STATUS_NO_MEMORY, 0);
     }
 
-    Status = KsSynchronousIoControlDevice(ClientInfo->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSPROPERTY), (PVOID)MultipleItem, BytesReturned, &BytesReturned);
+    Status = KsSynchronousIoControlDevice(ClientInfo->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PinProperty, sizeof(KSP_PIN), (PVOID)MultipleItem, BytesReturned, &BytesReturned);
     if (!NT_SUCCESS(Status))
     {
         ExFreePool(MultipleItem);
@@ -452,8 +466,8 @@ WdmAudCapabilities(
     DeviceInfo->u.WaveOutCaps.dwFormats = dwFormats;
     DeviceInfo->u.WaveOutCaps.dwSupport = dwSupport;
     DeviceInfo->u.WaveOutCaps.wChannels = wChannels;
-    DeviceInfo->u.WaveOutCaps.wMid = ComponentId.Manufacturer.Data1 - 0xd5a47fa7;
-    DeviceInfo->u.WaveOutCaps.vDriverVersion = MAKELONG(ComponentId.Version, ComponentId.Revision);
+
+    ExFreePool(MultipleItem);
 
     return SetIrpIoStatus(Irp, Status, sizeof(WDMAUD_DEVICE_INFO));
 }

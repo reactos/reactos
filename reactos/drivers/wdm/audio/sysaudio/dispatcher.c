@@ -27,8 +27,6 @@ Dispatch_fnDeviceIoControl(
     DPRINT1("Dispatch_fnDeviceIoControl called DeviceObject %p Irp %p\n", DeviceObject);
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
-
-
     if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_PROPERTY)
     {
        return SysAudioHandleProperty(DeviceObject, Irp);
@@ -87,26 +85,26 @@ Dispatch_fnClose(
 
     DPRINT1("Dispatch_fnClose called DeviceObject %p Irp %p\n", DeviceObject);
 
-	IoStatus = IoGetCurrentIrpStackLocation(Irp);
+    IoStatus = IoGetCurrentIrpStackLocation(Irp);
 
     Client = (PSYSAUDIO_CLIENT)IoStatus->FileObject->FsContext2;
 
     DPRINT1("Client %p NumDevices %u\n", Client, Client->NumDevices);
     for(Index = 0; Index < Client->NumDevices; Index++)
-	{
+    {
         if (Client->Handels[Index])
-		{
+        {
            ZwClose(Client->Handels[Index]);
-		}
-	}
+        }
+    }
 
-	if (Client->Handels)
-		ExFreePool(Client->Handels);
+    if (Client->Handels)
+        ExFreePool(Client->Handels);
 
-	if (Client->Devices)
-		ExFreePool(Client->Devices);
+    if (Client->Devices)
+        ExFreePool(Client->Devices);
 
-	ExFreePool(Client);
+    ExFreePool(Client);
 
     //FIXME
     // cleanup resources

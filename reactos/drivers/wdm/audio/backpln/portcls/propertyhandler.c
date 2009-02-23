@@ -145,7 +145,7 @@ PcPropertyHandler(
     {
         for(Index = 0; Index < Descriptor->DeviceDescriptor->AutomationTable->PropertyCount; Index++)
         {
-            if (IsEqualGUID(&Descriptor->DeviceDescriptor->AutomationTable->Properties[Index].Set, &Property->Set))
+            if (IsEqualGUID(Descriptor->DeviceDescriptor->AutomationTable->Properties[Index].Set, &Property->Set))
             {
                 if (Descriptor->DeviceDescriptor->AutomationTable->Properties[Index].Id == Property->Id)
                 {
@@ -171,17 +171,14 @@ PcPropertyHandler(
         }
     }
 
-    DPRINT("Num of Property Sets %u\n", Descriptor->FilterPropertySet.FreeKsPropertySetOffset);
     for(Index = 0; Index < Descriptor->FilterPropertySet.FreeKsPropertySetOffset; Index++)
     {
         if (IsEqualGUIDAligned(&Property->Set, Descriptor->FilterPropertySet.Properties[Index].Set))
         {
-            DPRINT("Found Property Set Properties %u\n",  Descriptor->FilterPropertySet.Properties[Index].PropertiesCount);
             for(ItemIndex = 0; ItemIndex < Descriptor->FilterPropertySet.Properties[Index].PropertiesCount; ItemIndex++)
             {
                 if (Descriptor->FilterPropertySet.Properties[Index].PropertyItem[ItemIndex].PropertyId == Property->Id)
                 {
-                    DPRINT("Found property set identifier %u\n", Property->Id);
                     if (Property->Flags & KSPROPERTY_TYPE_SET)
                         PropertyHandler = Descriptor->FilterPropertySet.Properties[Index].PropertyItem[ItemIndex].SetPropertyHandler;
 
@@ -215,7 +212,7 @@ PcPropertyHandler(
 
                     /* the information member is set by the handler */
                     Irp->IoStatus.Status = Status;
-                    DPRINT("Result %x\n", Status);
+                    DPRINT("Result %x Length %u\n", Status, Irp->IoStatus.Information);
                     IoCompleteRequest(Irp, IO_NO_INCREMENT);
                     return Status;
                 }

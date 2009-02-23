@@ -261,14 +261,14 @@ CreatePinWorkerRoutine(
     ASSERT(WorkerContext->DispatchContext->FileObject != NULL);
     ASSERT(WorkerContext->DispatchContext->Handle != NULL);
     ASSERT(WorkerContext->AudioClient);
-	ASSERT(WorkerContext->AudioClient->Handels);
+    ASSERT(WorkerContext->AudioClient->Handels);
     ASSERT(WorkerContext->AudioClient->Handels[WorkerContext->AudioClient->NumDevices -1] == NULL);
 
     /* store pin context */
     FileObject->FsContext2 = (PVOID)WorkerContext->DispatchContext;
 
     /* store pin handle in client specific struct */
-	WorkerContext->AudioClient->Handels[WorkerContext->AudioClient->NumDevices-1] = PinHandle;
+    WorkerContext->AudioClient->Handels[WorkerContext->AudioClient->NumDevices-1] = PinHandle;
 
     DPRINT1("Successfully created Pin %p\n", WorkerContext->Irp);
     *((PHANDLE)WorkerContext->Irp->UserBuffer) = PinHandle;
@@ -319,7 +319,37 @@ SysAudioHandleProperty(
     Property = (PKSPROPERTY)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
     DeviceExtension = (PSYSAUDIODEVEXT)DeviceObject->DeviceExtension;
 
-    if (IsEqualGUIDAligned(&Property->Set, &KSPROPSETID_Sysaudio))
+    if (IsEqualGUIDAligned(&Property->Set, &KSPROPSETID_Pin))
+    {
+        /* ros specific request */
+        if (Property->Id == KSPROPERTY_PIN_DATARANGES)
+        {
+            if (IoStack->Parameters.DeviceIoControl.InputBufferLength < sizeof(KSP_PIN))
+            {
+                /* too small buffer */
+                return SetIrpIoStatus(Irp, STATUS_BUFFER_TOO_SMALL, sizeof(KSPROPERTY) + sizeof(ULONG));
+            }
+
+            Entry = GetListEntry(&DeviceExtension->KsAudioDeviceList, ((KSP_PIN*)Property)->Reserved);
+            if (!Entry)
+            {
+                /* too small buffer */
+                return SetIrpIoStatus(Irp, STATUS_INVALID_PARAMETER, 0);
+            }
+
+            Status = KsSynchronousIoControlDevice(Entry->FileObject, KernelMode, IOCTL_KS_PROPERTY,
+                                                  (PVOID)IoStack->Parameters.DeviceIoControl.Type3InputBuffer,
+                                                  IoStack->Parameters.DeviceIoControl.InputBufferLength,
+                                                  Irp->UserBuffer,
+                                                  IoStack->Parameters.DeviceIoControl.OutputBufferLength,
+                                                  &BytesReturned);
+            Irp->IoStatus.Status = Status;
+            Irp->IoStatus.Information = BytesReturned;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            return Status;
+        }
+    }
+    else if (IsEqualGUIDAligned(&Property->Set, &KSPROPSETID_Sysaudio))
     {
         if (Property->Id == KSPROPERTY_SYSAUDIO_COMPONENT_ID)
         {
@@ -350,7 +380,7 @@ SysAudioHandleProperty(
             PropertyRequest.Flags = KSPROPERTY_TYPE_GET;
 
             /* call the filter */
-            Status = KsSynchronousIoControlDevice(Entry->FileObject, KernelMode, IOCTL_KS_WRITE_STREAM, (PVOID)&PropertyRequest, sizeof(KSPROPERTY), (PVOID)&ComponentId, sizeof(KSCOMPONENTID), &BytesReturned);
+            Status = KsSynchronousIoControlDevice(Entry->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PropertyRequest, sizeof(KSPROPERTY), (PVOID)&ComponentId, sizeof(KSCOMPONENTID), &BytesReturned);
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("KsSynchronousIoControlDevice failed with %x for KSPROPERTY_GENERAL_COMPONENTID\n", Status);

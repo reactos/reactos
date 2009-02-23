@@ -227,6 +227,21 @@ KsSetTargetState(
     UNIMPLEMENTED;
 }
 
+NTSTATUS
+NTAPI
+CompletionRoutine(
+    IN PDEVICE_OBJECT  DeviceObject,
+    IN PIRP  Irp,
+    IN PVOID  Context)
+{
+    PIO_STATUS_BLOCK IoStatusBlock = (PIO_STATUS_BLOCK)Context;
+
+    IoStatusBlock->Information = Irp->IoStatus.Information;
+    IoStatusBlock->Status = Irp->IoStatus.Status;
+
+    return STATUS_SUCCESS;
+}
+
 /*
     @implemented
 */
@@ -269,14 +284,17 @@ KsSynchronousIoControlDevice(
     IoStack = IoGetNextIrpStackLocation(Irp);
     IoStack->FileObject = FileObject;
 
+    IoSetCompletionRoutine(Irp, CompletionRoutine, (PVOID)&IoStatusBlock, TRUE, TRUE, TRUE);
+
     Status = IoCallDriver(DeviceObject, Irp);
     if (Status == STATUS_PENDING)
     {
         KeWaitForSingleObject(&Event, Executive, RequestorMode, FALSE, NULL);
+        Status = IoStatusBlock.Status;
     }
 
     *BytesReturned = IoStatusBlock.Information;
-    return IoStatusBlock.Status;
+    return Status;
 }
 
 
