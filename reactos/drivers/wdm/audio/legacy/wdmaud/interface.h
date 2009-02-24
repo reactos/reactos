@@ -39,9 +39,9 @@ typedef struct
     union
     {
         WAVEFORMATEX WaveFormatEx;
-        WAVEOUTCAPS WaveOutCaps;
-        AUXCAPS     AuxCaps;
-        WAVEINCAPS WaveInCaps;
+        WAVEOUTCAPSW WaveOutCaps;
+        AUXCAPSW     AuxCaps;
+        WAVEINCAPSW WaveInCaps;
     }u;
 
 }WDMAUD_DEVICE_INFO, *PWDMAUD_DEVICE_INFO;
