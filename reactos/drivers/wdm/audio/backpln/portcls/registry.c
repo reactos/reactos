@@ -33,7 +33,7 @@ IRegistryKey_fnRelease(
     IRegistryKeyImpl * This = (IRegistryKeyImpl*)iface;
 
     InterlockedDecrement(&This->ref);
-    DPRINT1("IRegistryKey_fnRelease ref %u this %p entered\n", This->ref, This);
+    DPRINT("IRegistryKey_fnRelease ref %u this %p entered\n", This->ref, This);
     if (This->ref == 0)
     {
         if (This->hKey)
@@ -55,7 +55,7 @@ IRegistryKey_fnQueryInterface(
     OUT PVOID* Output)
 {
     IRegistryKeyImpl * This = (IRegistryKeyImpl*)iface;
-    DPRINT1("IRegistryKey_fnQueryInterface entered\n");
+    DPRINT("IRegistryKey_fnQueryInterface entered\n");
     if (IsEqualGUIDAligned(refiid, &IID_IRegistryKey))
     {
         *Output = (PVOID)&This->lpVtbl;
@@ -64,7 +64,7 @@ IRegistryKey_fnQueryInterface(
     }
 
     DPRINT("IRegistryKey_QueryInterface: This %p unknown iid\n", This, This->ref);
-KeBugCheckEx(0,0,0,0,0);
+    DbgBreakPoint();
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -74,7 +74,7 @@ IRegistryKey_fnDeleteKey(
     IN IRegistryKey* iface)
 {
     IRegistryKeyImpl * This = (IRegistryKeyImpl*)iface;
-    DPRINT1("IRegistryKey_fnDeleteKey entered\n");
+    DPRINT("IRegistryKey_fnDeleteKey entered\n");
     return ZwDeleteKey(This->hKey);
 }
 
@@ -89,7 +89,7 @@ IRegistryKey_fnEnumerateKey(
     OUT PULONG  ResultLength)
 {
     IRegistryKeyImpl * This = (IRegistryKeyImpl*)iface;
-    DPRINT1("IRegistryKey_fnEnumerateKey entered\n");
+    DPRINT("IRegistryKey_fnEnumerateKey entered\n");
     return ZwEnumerateKey(This->hKey, Index, KeyInformationClass, KeyInformation, Length, ResultLength);
 }
 
@@ -104,7 +104,7 @@ IRegistryKey_fnEnumerateKeyValue(
     OUT PULONG  ResultLength)
 {
     IRegistryKeyImpl * This = (IRegistryKeyImpl*)iface;
-    DPRINT1("IRegistryKey_fnEnumerateKeyValue entered\n");
+    DPRINT("IRegistryKey_fnEnumerateKeyValue entered\n");
     return ZwEnumerateValueKey(This->hKey, Index, KeyValueInformationClass, KeyValueInformation, Length, ResultLength);
 }
 
@@ -124,13 +124,16 @@ IRegistryKey_fnNewSubKey(
     HANDLE hKey;
     IRegistryKeyImpl * NewThis, *This = (IRegistryKeyImpl*)iface;
 
-    DPRINT1("IRegistryKey_fnNewSubKey entered\n");
+    DPRINT("IRegistryKey_fnNewSubKey entered %S\n", SubKeyName);
 
     InitializeObjectAttributes(&Attributes, SubKeyName, 0, This->hKey, NULL);
     Status = ZwCreateKey(&hKey, KEY_READ | KEY_WRITE, &Attributes, 0, NULL, 0, Disposition);
     if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("IRegistryKey_fnNewSubKey failed with %x\n", Status);
+        DbgBreakPoint();
         return Status;
-
+    }
 
     NewThis = AllocateItem(NonPagedPool, sizeof(IRegistryKeyImpl), TAG_PORTCLASS);
     if (!NewThis)
@@ -143,11 +146,11 @@ IRegistryKey_fnNewSubKey(
         OuterUnknown->lpVtbl->AddRef(OuterUnknown);
 
     NewThis->hKey = hKey;
-    NewThis->ref = 2;
+    NewThis->ref = 1;
     NewThis->lpVtbl = &vt_IRegistryKey;
     *RegistrySubKey = (PREGISTRYKEY)&NewThis->lpVtbl;
 
-    DPRINT1("IRegistryKey_fnNewSubKey RESULT %p\n", *RegistrySubKey );
+    DPRINT("IRegistryKey_fnNewSubKey RESULT %p\n", *RegistrySubKey );
 
     return STATUS_SUCCESS;
 }
@@ -162,7 +165,7 @@ IRegistryKey_fnQueryKey(
     OUT PULONG  ResultLength)
 {
     IRegistryKeyImpl * This = (IRegistryKeyImpl*)iface;
-    DPRINT1("IRegistryKey_fnQueryKey entered\n");
+    DPRINT("IRegistryKey_fnQueryKey entered\n");
     return ZwQueryKey(This->hKey, KeyInformationClass, KeyInformation, Length, ResultLength);
 }
 
@@ -173,8 +176,9 @@ IRegistryKey_fnQueryRegistryValues(
     IN PRTL_QUERY_REGISTRY_TABLE  QueryTable,
     IN PVOID  Context  OPTIONAL)
 {
-    IRegistryKeyImpl * This = (IRegistryKeyImpl*)iface;
-    DPRINT1("IRegistryKey_QueryRegistryValues: This %p\n", This);
+    //IRegistryKeyImpl * This = (IRegistryKeyImpl*)iface;
+    UNIMPLEMENTED
+    DbgBreakPoint();
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -204,7 +208,7 @@ IRegistryKey_fnSetValueKey(
     )
 {
     IRegistryKeyImpl * This = (IRegistryKeyImpl*)iface;
-    DPRINT1("IRegistryKey_fnSetValueKey entered\n");
+    DPRINT1("IRegistryKey_fnSetValueKey entered %S\n", ValueName->Buffer);
     return ZwSetValueKey(This->hKey, ValueName, 0, Type, Data, DataSize);
 }
 
@@ -245,7 +249,7 @@ PcNewRegistryKey(
     IRegistryKeyImpl * This;
     PPCLASS_DEVICE_EXTENSION DeviceExt;
 
-    DPRINT1("PcNewRegistryKey entered\n");
+    DPRINT("PcNewRegistryKey entered\n");
 
     if (!OutRegistryKey)
         return STATUS_INVALID_PARAMETER;
@@ -290,7 +294,8 @@ PcNewRegistryKey(
     else if (RegistryKeyType == DeviceInterfaceRegistryKey)
     {
         /* FIXME */
-        DPRINT1("fixme\n");
+        UNIMPLEMENTED
+        DbgBreakPoint();
     }
 
     if (!NT_SUCCESS(Status))
@@ -313,7 +318,7 @@ PcNewRegistryKey(
     This->ref = 2;
 
     *OutRegistryKey = (PREGISTRYKEY)&This->lpVtbl;
-    DPRINT1("PcNewRegistryKey result %p\n", *OutRegistryKey);
+    DPRINT("PcNewRegistryKey result %p\n", *OutRegistryKey);
     return STATUS_SUCCESS;
 }
 

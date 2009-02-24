@@ -102,7 +102,7 @@ typedef struct
     ULONG MaxGlobalInstanceCount;
     ULONG MaxFilterInstanceCount;
     ULONG MinFilterInstanceCount;
-    ULONG CurrentFilterInstanceCount;
+    ULONG CurrentPinInstanceCount;
 
 }PIN_INSTANCE_INFO, *PPIN_INSTANCE_INFO;
 

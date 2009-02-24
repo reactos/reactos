@@ -25,7 +25,7 @@ HandlePropertyInstances(
     else
         Instances->PossibleCount = Descriptor->Factory.Instances[Pin->PinId].MaxFilterInstanceCount;
 
-    Instances->CurrentCount = Descriptor->Factory.Instances[Pin->PinId].CurrentFilterInstanceCount;
+    Instances->CurrentCount = Descriptor->Factory.Instances[Pin->PinId].CurrentPinInstanceCount;
 
     Irp->IoStatus.Information = sizeof(KSPIN_CINSTANCES);
     Irp->IoStatus.Status = STATUS_SUCCESS;
@@ -222,7 +222,6 @@ PcPropertyHandler(
 
     RtlStringFromGUID(&Property->Set, &GuidString);
     DPRINT1("Unhandeled property: Set %S Id %u Flags %x\n", GuidString.Buffer, Property->Id, Property->Flags);
-    DbgBreakPoint();
     RtlFreeUnicodeString(&GuidString);
     Irp->IoStatus.Information = 0;
     Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;

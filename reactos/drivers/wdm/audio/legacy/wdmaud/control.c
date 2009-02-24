@@ -351,7 +351,7 @@ CheckFormatSupport(
             }
         }
 
-        if (DataRangeAudio->MaximumBitsPerSample <= 16 && DataRangeAudio->MaximumBitsPerSample >= 16)
+        if (DataRangeAudio->MinimumBitsPerSample <= 16 && DataRangeAudio->MaximumBitsPerSample >= 16)
         {
             Result |= Mono16Bit;
             if (DataRangeAudio->MaximumChannels >= 2)
@@ -449,26 +449,31 @@ WdmAudCapabilities(
                     IsEqualGUIDAligned(&DataRangeAudio->DataRange.SubFormat, &KSDATAFORMAT_SUBTYPE_PCM) &&
                     IsEqualGUIDAligned(&DataRangeAudio->DataRange.Specifier, &KSDATAFORMAT_SPECIFIER_WAVEFORMATEX))
                 {
+                    DPRINT("Min Sample %u Max Sample %u Min Bits %u Max Bits %u Max Channel %u\n", DataRangeAudio->MinimumSampleFrequency, DataRangeAudio->MaximumSampleFrequency,
+                                                             DataRangeAudio->MinimumBitsPerSample, DataRangeAudio->MaximumBitsPerSample, DataRangeAudio->MaximumChannels);
+
                     dwFormats |= CheckFormatSupport(DataRangeAudio, 11025, WAVE_FORMAT_1M08, WAVE_FORMAT_1S08, WAVE_FORMAT_1M16, WAVE_FORMAT_1S16);
                     dwFormats |= CheckFormatSupport(DataRangeAudio, 22050, WAVE_FORMAT_2M08, WAVE_FORMAT_2S08, WAVE_FORMAT_2M16, WAVE_FORMAT_2S16);
                     dwFormats |= CheckFormatSupport(DataRangeAudio, 44100, WAVE_FORMAT_4M08, WAVE_FORMAT_4S08, WAVE_FORMAT_4M16, WAVE_FORMAT_4S16);
                     dwFormats |= CheckFormatSupport(DataRangeAudio, 48000, WAVE_FORMAT_48M08, WAVE_FORMAT_48S08, WAVE_FORMAT_48M16, WAVE_FORMAT_48S16);
                     dwFormats |= CheckFormatSupport(DataRangeAudio, 96000, WAVE_FORMAT_96M08, WAVE_FORMAT_96S08, WAVE_FORMAT_96M16, WAVE_FORMAT_96S16);
 
+
                     wChannels = DataRangeAudio->MaximumChannels;
                     dwSupport = WAVECAPS_VOLUME; //FIXME get info from nodes
                 }
             }
         }
-
+        DataRange = (PKSDATARANGE)((PUCHAR)DataRange + DataRange->FormatSize);
     }
 
     DeviceInfo->u.WaveOutCaps.dwFormats = dwFormats;
     DeviceInfo->u.WaveOutCaps.dwSupport = dwSupport;
     DeviceInfo->u.WaveOutCaps.wChannels = wChannels;
+    DeviceInfo->u.WaveOutCaps.szPname[0] = L'\0';
+
 
     ExFreePool(MultipleItem);
-
     return SetIrpIoStatus(Irp, Status, sizeof(WDMAUD_DEVICE_INFO));
 }
 

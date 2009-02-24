@@ -129,6 +129,10 @@ IPortFilterWaveCyclic_fnNewIrpTarget(
 
     /* store result */
     *OutTarget = (IIrpTarget*)Pin;
+
+    /* increment current instance count */
+    Descriptor->Factory.Instances[ConnectDetails->PinId].CurrentPinInstanceCount++;
+
     return Status;
 }
 
@@ -144,8 +148,8 @@ IPortFilterWaveCyclic_fnDeviceIoControl(
 {
     PIO_STACK_LOCATION IoStack;
     ISubdevice *SubDevice = NULL;
-    SUBDEVICE_DESCRIPTOR * Descriptor = NULL;
-	NTSTATUS Status;
+    SUBDEVICE_DESCRIPTOR * Descriptor;
+    NTSTATUS Status;
 #if defined(DBG)
     IPortFilterWaveCyclicImpl * This = (IPortFilterWaveCyclicImpl *)iface;
 #endif
@@ -155,8 +159,8 @@ IPortFilterWaveCyclic_fnDeviceIoControl(
     ASSERT(This->Port->lpVtbl->QueryInterface(This->Port, &IID_ISubdevice, (PVOID*)&SubDevice) == STATUS_SUCCESS);
     ASSERT(SubDevice != NULL);
 
-	Status = SubDevice->lpVtbl->GetDescriptor(SubDevice, &Descriptor);
-	ASSERT(Status == STATUS_SUCCESS);
+    Status = SubDevice->lpVtbl->GetDescriptor(SubDevice, &Descriptor);
+    ASSERT(Status == STATUS_SUCCESS);
     ASSERT(Descriptor != NULL);
 
     SubDevice->lpVtbl->Release(SubDevice);
@@ -213,6 +217,14 @@ IPortFilterWaveCyclic_fnClose(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
+    DPRINT1("IPortFilterWaveCyclic_fnClose entered\n");
+
+    //FIXME
+    //close all pin instances
+
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+    Irp->IoStatus.Information = 0;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
     return STATUS_UNSUCCESSFUL;
 }

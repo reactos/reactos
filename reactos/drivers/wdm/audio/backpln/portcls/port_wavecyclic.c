@@ -624,7 +624,7 @@ ISubDevice_fnGetDescriptor(
 
     *Descriptor = This->SubDeviceDescriptor;
 
-    DPRINT1("ISubDevice_GetDescriptor this %p desc %p\n", This, This->SubDeviceDescriptor);
+    DPRINT("ISubDevice_GetDescriptor this %p desc %p\n", This, This->SubDeviceDescriptor);
     return STATUS_SUCCESS;
 }
 

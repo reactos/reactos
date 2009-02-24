@@ -147,7 +147,8 @@ PcCreateSubdeviceDescriptor(
     IN PPCFILTER_DESCRIPTOR FilterDescription)
 {
     SUBDEVICE_DESCRIPTOR * Descriptor;
-    ULONG Index;
+    ULONG Index, SubIndex;
+    PKSDATARANGE DataRange;
     NTSTATUS Status = STATUS_INSUFFICIENT_RESOURCES;
 
     Descriptor = AllocateItem(NonPagedPool, sizeof(SUBDEVICE_DESCRIPTOR), TAG_PORTCLASS);
@@ -164,7 +165,6 @@ PcCreateSubdeviceDescriptor(
 
     if (FilterPropertiesCount)
     {
-
        /// FIXME
        /// handle driver properties
        Descriptor->FilterPropertySet.Properties = AllocateItem(NonPagedPool, sizeof(KSPROPERTY_SET) * FilterPropertiesCount, TAG_PORTCLASS);
@@ -198,7 +198,31 @@ PcCreateSubdeviceDescriptor(
         for(Index = 0; Index < FilterDescription->PinCount; Index++)
         {
             RtlMoveMemory(&Descriptor->Factory.KsPinDescriptor[Index], &FilterDescription->Pins[Index].KsPinDescriptor, FilterDescription->PinSize);
-            Descriptor->Factory.Instances[Index].CurrentFilterInstanceCount = 0;
+
+            if (FilterDescription->Pins[Index].KsPinDescriptor.DataRangesCount)
+            {
+                Descriptor->Factory.KsPinDescriptor[Index].DataRanges = AllocateItem(NonPagedPool, FilterDescription->Pins[Index].KsPinDescriptor.DataRangesCount * sizeof(PKSDATARANGE), TAG_PORTCLASS);
+                if(!Descriptor->Factory.KsPinDescriptor[Index].DataRanges)
+                    goto cleanup;
+
+                for (SubIndex = 0; SubIndex < FilterDescription->Pins[Index].KsPinDescriptor.DataRangesCount; SubIndex++)
+                {
+                    DataRange = AllocateItem(NonPagedPool, FilterDescription->Pins[Index].KsPinDescriptor.DataRanges[SubIndex]->FormatSize, TAG_PORTCLASS);
+                    if (!DataRange)
+                        goto cleanup;
+
+                    RtlMoveMemory(DataRange,
+                                  FilterDescription->Pins[Index].KsPinDescriptor.DataRanges[SubIndex],
+                                  FilterDescription->Pins[Index].KsPinDescriptor.DataRanges[SubIndex]->FormatSize);
+
+                    ((PKSDATAFORMAT*)Descriptor->Factory.KsPinDescriptor[Index].DataRanges)[SubIndex] = DataRange;
+
+                }
+
+                Descriptor->Factory.KsPinDescriptor[Index].DataRangesCount = FilterDescription->Pins[Index].KsPinDescriptor.DataRangesCount;
+            }
+
+            Descriptor->Factory.Instances[Index].CurrentPinInstanceCount = 0;
             Descriptor->Factory.Instances[Index].MaxFilterInstanceCount = FilterDescription->Pins[Index].MaxFilterInstanceCount;
             Descriptor->Factory.Instances[Index].MaxGlobalInstanceCount = FilterDescription->Pins[Index].MaxGlobalInstanceCount;
             Descriptor->Factory.Instances[Index].MinFilterInstanceCount = FilterDescription->Pins[Index].MinFilterInstanceCount;

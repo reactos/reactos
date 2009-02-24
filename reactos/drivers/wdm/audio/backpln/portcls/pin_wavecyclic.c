@@ -124,6 +124,8 @@ IServiceSink_fnRequestService(
         {
             if (This->ActiveIrp)
             {
+                This->ActiveIrp->IoStatus.Status = STATUS_SUCCESS;
+                This->ActiveIrp->IoStatus.Information = This->ActiveIrpBufferSize;
                 IoCompleteRequest(This->ActiveIrp, IO_SOUND_INCREMENT);
             }
 
@@ -167,7 +169,7 @@ IServiceSink_fnRequestService(
 
 
     Status = This->Stream->lpVtbl->GetPosition(This->Stream, &Position);
-    DPRINT1("Position %u BufferSize %u ActiveIrpOffset %u\n", Position, This->CommonBufferSize, This->ActiveIrpOffset);
+    DPRINT("Position %u BufferSize %u ActiveIrpOffset %u\n", Position, This->CommonBufferSize, This->ActiveIrpOffset);
 
     if (Position < This->CommonBufferOffset)
     {
@@ -176,7 +178,7 @@ IServiceSink_fnRequestService(
 
         BytesToCopy = min(BufferLength, IrpLength);
 
-        DPRINT1("Copying %u Remaining %u\n", BytesToCopy, IrpLength);
+        DPRINT("Copying %u Remaining %u\n", BytesToCopy, IrpLength);
 
         if (BytesToCopy)
         {
@@ -193,7 +195,7 @@ IServiceSink_fnRequestService(
         IrpLength = This->ActiveIrpBufferSize - This->ActiveIrpOffset;
         BytesToCopy = min(BufferLength, IrpLength);
 
-        DPRINT1("Copying %u Remaining %u\n", BytesToCopy, IrpLength);
+        DPRINT("Copying %u Remaining %u\n", BytesToCopy, IrpLength);
 
         if (BytesToCopy)
         {
@@ -209,13 +211,13 @@ IServiceSink_fnRequestService(
         IrpLength = This->ActiveIrpBufferSize - This->ActiveIrpOffset;
 
         BytesToCopy = min(BufferLength, IrpLength);
-        DPRINT1("Copying %u Remaining %u\n", BytesToCopy, IrpLength);
+        DPRINT("Copying %u Remaining %u\n", BytesToCopy, IrpLength);
 
         if (!BytesToCopy)
-		{
+        {
             This->Stream->lpVtbl->SetState(This->Stream, KSSTATE_PAUSE);
             return;
-		}
+        }
 
             This->DmaChannel->lpVtbl->CopyTo(This->DmaChannel,
                                          (PUCHAR)This->CommonBuffer + This->CommonBufferOffset,
@@ -567,6 +569,12 @@ IPortPinWaveCyclic_fnDeviceIoControl(
     }
 
     UNIMPLEMENTED
+    DbgBreakPoint();
+
+    Irp->IoStatus.Information = 0;
+    Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -619,8 +627,15 @@ IPortPinWaveCyclic_fnClose(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
+    DPRINT1("IPortPinWaveCyclic_fnClose\n");
 
-    return STATUS_UNSUCCESSFUL;
+    //FIXME
+
+    Irp->IoStatus.Information = 0;
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+    return STATUS_SUCCESS;
 }
 
 /*
