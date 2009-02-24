@@ -10,18 +10,16 @@
 typedef struct tagBATCHCONTEXT
 {
 	struct tagBATCHCONTEXT *prev;
-	LPWIN32_FIND_DATA ffind;
 	HANDLE hBatchFile;
 	TCHAR BatchFilePath[MAX_PATH];
-	LPTSTR forproto;
 	LPTSTR params;
 	LPTSTR raw_params;   /* Holds the raw params given by the input */
 	INT    shiftlevel;
 	BOOL   bEcho;        /* Preserve echo flag across batch calls */
-	HANDLE hFind;        /* Preserve find handle when doing a for */
 	REDIRECTION *RedirList;
 	TCHAR forvar;
-	LPTSTR forvalue;
+	UINT   forvarcount;
+	LPTSTR *forvalues;
 } BATCH_CONTEXT, *LPBATCH_CONTEXT;
 
 

@@ -237,7 +237,12 @@ VOID CompleteFilename (LPTSTR, BOOL, LPTSTR, UINT);
 
 
 /* Prototypes for FOR.C */
+#define FOR_DIRS      1 /* /D */
+#define FOR_F         2 /* /F */
+#define FOR_LOOP      4 /* /L */
+#define FOR_RECURSIVE 8 /* /R */
 INT cmd_for (LPTSTR);
+BOOL ExecuteFor(struct _PARSED_COMMAND *Cmd);
 
 
 /* Prototypes for FREE.C */
@@ -342,7 +347,7 @@ INT CommandMsgbox (LPTSTR);
 
 
 /* Prototypes from PARSER.C */
-enum { C_COMMAND, C_QUIET, C_BLOCK, C_MULTI, C_IFFAILURE, C_IFSUCCESS, C_PIPE, C_IF };
+enum { C_COMMAND, C_QUIET, C_BLOCK, C_MULTI, C_IFFAILURE, C_IFSUCCESS, C_PIPE, C_IF, C_FOR };
 typedef struct _PARSED_COMMAND
 {
 	struct _PARSED_COMMAND *Subcommands;
@@ -363,6 +368,14 @@ typedef struct _PARSED_COMMAND
 			TCHAR *LeftArg;
 			TCHAR *RightArg;
 		} If;
+		struct
+		{
+			BYTE Switches;
+			TCHAR Variable;
+			LPTSTR Params;
+			LPTSTR List;
+			struct tagBATCHCONTEXT *Context;
+		} For;
 	};
 } PARSED_COMMAND;
 PARSED_COMMAND *ParseCommand(LPTSTR Line);

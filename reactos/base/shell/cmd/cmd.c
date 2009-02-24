@@ -914,6 +914,9 @@ ExecuteCommand(PARSED_COMMAND *Cmd)
 	case C_IF:
 		Success = ExecuteIf(Cmd);
 		break;
+	case C_FOR:
+		Success = ExecuteFor(Cmd);
+		break;
 	}
 
 	UndoRedirection(Cmd->Redirections, NULL);
@@ -1271,14 +1274,15 @@ SubstituteForVars(TCHAR *Src, TCHAR *Dest)
 		{
 			/* This might be a variable. Search the list of contexts for it */
 			BATCH_CONTEXT *Ctx = bc;
-			while (Ctx && Ctx->forvar != Src[1])
+			while (Ctx && (UINT)(Src[1] - Ctx->forvar) >= Ctx->forvarcount)
 				Ctx = Ctx->prev;
 			if (Ctx)
 			{
 				/* Found it */
-				if (Dest + _tcslen(Ctx->forvalue) > DestEnd)
+				LPTSTR Value = Ctx->forvalues[Src[1] - Ctx->forvar];
+				if (Dest + _tcslen(Value) > DestEnd)
 					return FALSE;
-				Dest = _stpcpy(Dest, Ctx->forvalue);
+				Dest = _stpcpy(Dest, Value);
 				Src += 2;
 				continue;
 			}

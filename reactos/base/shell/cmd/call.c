@@ -84,7 +84,7 @@ INT cmd_call (LPTSTR param)
 	bc->params = NULL;
 	bc->shiftlevel = 0;
 	bc->forvar = 0;        /* HBP004 */
-	bc->forproto = NULL;   /* HBP004 */
+	bc->forvarcount = 0;
 	bc->RedirList = NULL;
 	ParseCommandLine (param);
 

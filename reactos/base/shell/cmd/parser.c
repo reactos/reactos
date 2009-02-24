@@ -413,6 +413,115 @@ condition_done:
 	return Cmd;
 }
 
+/* Parse a FOR command. 
+ * Syntax is: FOR [options] %var IN (list) DO command */
+static PARSED_COMMAND *ParseFor(void)
+{
+	PARSED_COMMAND *Cmd = cmd_alloc(sizeof(PARSED_COMMAND));
+	TCHAR List[CMDLINE_LENGTH];
+	TCHAR *Pos = List;
+
+	memset(Cmd, 0, sizeof(PARSED_COMMAND));
+	Cmd->Type = C_FOR;
+
+	while (1)
+	{
+		if (_tcsicmp(CurrentToken, _T("/D")) == 0)
+			Cmd->For.Switches |= FOR_DIRS;
+		else if (_tcsicmp(CurrentToken, _T("/F")) == 0)
+		{
+			Cmd->For.Switches |= FOR_F;
+			if (!Cmd->For.Params)
+			{
+				ParseToken(0, STANDARD_SEPS);
+				if (CurrentToken[0] == _T('/') || CurrentToken[0] == _T('%'))
+					break;
+				Cmd->For.Params = cmd_dup(CurrentToken);
+			}
+		}
+		else if (_tcsicmp(CurrentToken, _T("/L")) == 0)
+			Cmd->For.Switches |= FOR_LOOP;
+		else if (_tcsicmp(CurrentToken, _T("/R")) == 0)
+		{
+			Cmd->For.Switches |= FOR_RECURSIVE;
+			if (!Cmd->For.Params)
+			{
+				ParseToken(0, STANDARD_SEPS);
+				if (CurrentToken[0] == _T('/') || CurrentToken[0] == _T('%'))
+					break;
+				StripQuotes(CurrentToken);
+				Cmd->For.Params = cmd_dup(CurrentToken);
+			}
+		}
+		else
+			break;
+		ParseToken(0, STANDARD_SEPS);
+	}
+
+	/* Make sure there aren't two different switches specified
+	 * at the same time, unless they're /D and /R */
+	if ((Cmd->For.Switches & (Cmd->For.Switches - 1)) != 0
+	    && Cmd->For.Switches != (FOR_DIRS | FOR_RECURSIVE))
+	{
+		goto error;
+	}
+
+	/* Variable name should be % and just one other character */
+	if (CurrentToken[0] != _T('%') || _tcslen(CurrentToken) != 2)
+		goto error;
+	Cmd->For.Variable = CurrentToken[1];
+
+	ParseToken(0, STANDARD_SEPS);
+	if (_tcsicmp(CurrentToken, _T("in")) != 0)
+		goto error;
+
+	if (ParseToken(_T('('), STANDARD_SEPS) != TOK_BEGIN_BLOCK)
+		goto error;
+
+	while (1)
+	{
+		int Type;
+
+		/* Pretend we're inside a block so the tokenizer will stop on ')' */
+		InsideBlock++;
+		Type = ParseToken(0, STANDARD_SEPS);
+		InsideBlock--;
+
+		if (Type == TOK_END_BLOCK)
+			break;
+
+		if (Type != TOK_NORMAL)
+			goto error;
+
+		if (Pos != List)
+			*Pos++ = _T(' ');
+
+		if (Pos + _tcslen(CurrentToken) >= &List[CMDLINE_LENGTH])
+			goto error;
+		Pos = _stpcpy(Pos, CurrentToken);
+	}
+	*Pos = _T('\0');
+	Cmd->For.List = cmd_dup(List);
+
+	ParseToken(0, STANDARD_SEPS);
+	if (_tcsicmp(CurrentToken, _T("do")) != 0)
+		goto error;
+
+	Cmd->Subcommands = ParseCommandOp(C_OP_LOWEST);
+	if (Cmd->Subcommands == NULL)
+	{
+		FreeCommand(Cmd);
+		return NULL;
+	}
+
+	return Cmd;
+
+error:
+	FreeCommand(Cmd);
+	ParseError();
+	return NULL;
+}
+
 static PARSED_COMMAND *ParseCommandPart(void)
 {
 	TCHAR ParsedLine[CMDLINE_LENGTH];
@@ -486,7 +595,8 @@ static PARSED_COMMAND *ParseCommandPart(void)
 	TailOffset = Pos - ParsedLine;
 
 	/* Check for special forms */
-	if (_tcsicmp(ParsedLine, _T("if")) == 0)
+	if (_tcsicmp(ParsedLine, _T("for")) == 0 ||
+	    _tcsicmp(ParsedLine, _T("if")) == 0)
 	{
 		ParseToken(0, STANDARD_SEPS);
 		/* Do special parsing only if it's not followed by /? */
@@ -498,7 +608,7 @@ static PARSED_COMMAND *ParseCommandPart(void)
 				FreeRedirection(RedirList);
 				return NULL;
 			}
-			return ParseIf();
+			return _totlower(*ParsedLine) == _T('f') ? ParseFor() : ParseIf();
 		}
 		Pos = _stpcpy(Pos, _T(" /?"));
 	}
@@ -665,6 +775,17 @@ EchoCommand(PARSED_COMMAND *Cmd)
 			EchoCommand(Sub->Next);
 		}
 		break;
+	case C_FOR:
+		ConOutPrintf(_T("for"));
+		if (Cmd->For.Switches & FOR_DIRS)      ConOutPrintf(_T(" /D"));
+		if (Cmd->For.Switches & FOR_F)         ConOutPrintf(_T(" /F"));
+		if (Cmd->For.Switches & FOR_LOOP)      ConOutPrintf(_T(" /L"));
+		if (Cmd->For.Switches & FOR_RECURSIVE) ConOutPrintf(_T(" /R"));
+		if (Cmd->For.Params)
+			ConOutPrintf(_T(" %s"), Cmd->For.Params);
+		ConOutPrintf(_T(" %%%c in (%s) do "), Cmd->For.Variable, Cmd->For.List);
+		EchoCommand(Cmd->Subcommands);
+		break;
 	}
 
 	for (Redir = Cmd->Redirections; Redir; Redir = Redir->Next)
@@ -687,6 +808,11 @@ FreeCommand(PARSED_COMMAND *Cmd)
 	{
 		cmd_free(Cmd->If.LeftArg);
 		cmd_free(Cmd->If.RightArg);
+	}
+	else if (Cmd->Type == C_FOR)
+	{
+		cmd_free(Cmd->For.Params);
+		cmd_free(Cmd->For.List);
 	}
 	cmd_free(Cmd);
 }
