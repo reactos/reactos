@@ -716,6 +716,7 @@ QSI_DEF(SystemProcessInformation)
     NTSTATUS Status = STATUS_SUCCESS;
     PUNICODE_STRING ProcessImageName;
     PWCHAR szSrc;
+    BOOLEAN Overflow = FALSE;
 
     _SEH2_TRY
     {
@@ -726,11 +727,12 @@ QSI_DEF(SystemProcessInformation)
 
         *ReqSize = sizeof(SYSTEM_PROCESS_INFORMATION);
 
+        /* Check for overflow */
         if (Size < sizeof(SYSTEM_PROCESS_INFORMATION))
-        {
-            _SEH2_YIELD(return STATUS_INFO_LENGTH_MISMATCH); // in case buffer size is too small
-        }
-        RtlZeroMemory(Spi, Size);
+            Overflow = TRUE;
+
+        /* Zero user's buffer */
+        if (!Overflow) RtlZeroMemory(Spi, Size);
 
         SystemProcess = PsIdleProcess;
         Process = SystemProcess;
@@ -784,90 +786,86 @@ QSI_DEF(SystemProcessInformation)
 
             TotalSize += CurrentSize + ImageNameMaximumLength;
 
+            /* Check for overflow */
             if (TotalSize > Size)
-            {
-                *ReqSize = TotalSize;
-                ObDereferenceObject(Process);
-
-                /* Release the memory allocated by SeLocateProcessImageName */
-                if (NT_SUCCESS(Status)) ExFreePool(ProcessImageName);
-
-                _SEH2_YIELD(return STATUS_INFO_LENGTH_MISMATCH); // in case buffer size is too small
-            }
+                Overflow = TRUE;
 
             /* Fill system information */
-            SpiCurrent->NextEntryOffset = CurrentSize + ImageNameMaximumLength; // relative offset to the beginnnig of the next structure
-            SpiCurrent->NumberOfThreads = ThreadsCount;
-            SpiCurrent->CreateTime = Process->CreateTime;
-            SpiCurrent->ImageName.Length = ImageNameLength;
-            SpiCurrent->ImageName.MaximumLength = ImageNameMaximumLength;
-            SpiCurrent->ImageName.Buffer = (void*)(Current + CurrentSize);
-
-            /* Copy name to the end of the struct */
-            if(Process != PsIdleProcess)
+            if (!Overflow)
             {
-              if (szSrc)
-              {
-                RtlCopyMemory(SpiCurrent->ImageName.Buffer, szSrc, SpiCurrent->ImageName.Length);
+                SpiCurrent->NextEntryOffset = CurrentSize + ImageNameMaximumLength; // relative offset to the beginnnig of the next structure
+                SpiCurrent->NumberOfThreads = ThreadsCount;
+                SpiCurrent->CreateTime = Process->CreateTime;
+                SpiCurrent->ImageName.Length = ImageNameLength;
+                SpiCurrent->ImageName.MaximumLength = ImageNameMaximumLength;
+                SpiCurrent->ImageName.Buffer = (void*)(Current + CurrentSize);
 
-                /* Release the memory allocated by SeLocateProcessImageName */
-                ExFreePool(ProcessImageName);
-              }
-              else if (Process->ImageFileName)
-              {
-                RtlInitAnsiString(&ImageName, Process->ImageFileName);
-                RtlAnsiStringToUnicodeString(&SpiCurrent->ImageName, &ImageName, FALSE);
-              }
+                /* Copy name to the end of the struct */
+                if(Process != PsIdleProcess)
+                {
+                    if (szSrc)
+                    {
+                        RtlCopyMemory(SpiCurrent->ImageName.Buffer, szSrc, SpiCurrent->ImageName.Length);
+
+                        /* Release the memory allocated by SeLocateProcessImageName */
+                        ExFreePool(ProcessImageName);
+                    }
+                    else if (Process->ImageFileName)
+                    {
+                        RtlInitAnsiString(&ImageName, Process->ImageFileName);
+                        RtlAnsiStringToUnicodeString(&SpiCurrent->ImageName, &ImageName, FALSE);
+                    }
+                }
+                else
+                {
+                    RtlInitUnicodeString(&SpiCurrent->ImageName, NULL);
+                }
+
+                SpiCurrent->BasePriority = Process->Pcb.BasePriority;
+                SpiCurrent->UniqueProcessId = Process->UniqueProcessId;
+                SpiCurrent->InheritedFromUniqueProcessId = Process->InheritedFromUniqueProcessId;
+                SpiCurrent->HandleCount = ObGetProcessHandleCount(Process);
+                SpiCurrent->PeakVirtualSize = Process->PeakVirtualSize;
+                SpiCurrent->VirtualSize = Process->VirtualSize;
+                SpiCurrent->PageFaultCount = Process->Vm.PageFaultCount;
+                SpiCurrent->PeakWorkingSetSize = Process->Vm.PeakWorkingSetSize;
+                SpiCurrent->WorkingSetSize = Process->Vm.WorkingSetSize;
+                SpiCurrent->QuotaPeakPagedPoolUsage = Process->QuotaPeak[0];
+                SpiCurrent->QuotaPagedPoolUsage = Process->QuotaUsage[0];
+                SpiCurrent->QuotaPeakNonPagedPoolUsage = Process->QuotaPeak[1];
+                SpiCurrent->QuotaNonPagedPoolUsage = Process->QuotaUsage[1];
+                SpiCurrent->PagefileUsage = Process->QuotaUsage[2];
+                SpiCurrent->PeakPagefileUsage = Process->QuotaPeak[2];
+                SpiCurrent->PrivatePageCount = Process->CommitCharge;
+                ThreadInfo = (PSYSTEM_THREAD_INFORMATION)(SpiCurrent + 1);
+
+                CurrentEntry = Process->ThreadListHead.Flink;
+                while (CurrentEntry != &Process->ThreadListHead)
+                {
+                    CurrentThread = CONTAINING_RECORD(CurrentEntry, ETHREAD,
+                        ThreadListEntry);
+
+                    ThreadInfo->KernelTime.QuadPart = UInt32x32To64(CurrentThread->Tcb.KernelTime, KeMaximumIncrement);
+                    ThreadInfo->UserTime.QuadPart = UInt32x32To64(CurrentThread->Tcb.UserTime, KeMaximumIncrement);
+                    ThreadInfo->CreateTime.QuadPart = CurrentThread->CreateTime.QuadPart;
+                    ThreadInfo->WaitTime = CurrentThread->Tcb.WaitTime;
+                    ThreadInfo->StartAddress = (PVOID) CurrentThread->StartAddress;
+                    ThreadInfo->ClientId = CurrentThread->Cid;
+                    ThreadInfo->Priority = CurrentThread->Tcb.Priority;
+                    ThreadInfo->BasePriority = CurrentThread->Tcb.BasePriority;
+                    ThreadInfo->ContextSwitches = CurrentThread->Tcb.ContextSwitches;
+                    ThreadInfo->ThreadState = CurrentThread->Tcb.State;
+                    ThreadInfo->WaitReason = CurrentThread->Tcb.WaitReason;
+
+                    ThreadInfo++;
+                    CurrentEntry = CurrentEntry->Flink;
+                }
+
+                /* Query total user/kernel times of a process */
+                TotalKernel = KeQueryRuntimeProcess(&Process->Pcb, &TotalUser);
+                SpiCurrent->UserTime.QuadPart = UInt32x32To64(TotalUser, KeMaximumIncrement);
+                SpiCurrent->KernelTime.QuadPart = UInt32x32To64(TotalKernel, KeMaximumIncrement);
             }
-            else
-            {
-                RtlInitUnicodeString(&SpiCurrent->ImageName, NULL);
-            }
-
-            SpiCurrent->BasePriority = Process->Pcb.BasePriority;
-            SpiCurrent->UniqueProcessId = Process->UniqueProcessId;
-            SpiCurrent->InheritedFromUniqueProcessId = Process->InheritedFromUniqueProcessId;
-            SpiCurrent->HandleCount = ObGetProcessHandleCount(Process);
-            SpiCurrent->PeakVirtualSize = Process->PeakVirtualSize;
-            SpiCurrent->VirtualSize = Process->VirtualSize;
-            SpiCurrent->PageFaultCount = Process->Vm.PageFaultCount;
-            SpiCurrent->PeakWorkingSetSize = Process->Vm.PeakWorkingSetSize;
-            SpiCurrent->WorkingSetSize = Process->Vm.WorkingSetSize;
-            SpiCurrent->QuotaPeakPagedPoolUsage = Process->QuotaPeak[0];
-            SpiCurrent->QuotaPagedPoolUsage = Process->QuotaUsage[0];
-            SpiCurrent->QuotaPeakNonPagedPoolUsage = Process->QuotaPeak[1];
-            SpiCurrent->QuotaNonPagedPoolUsage = Process->QuotaUsage[1];
-            SpiCurrent->PagefileUsage = Process->QuotaUsage[2];
-            SpiCurrent->PeakPagefileUsage = Process->QuotaPeak[2];
-            SpiCurrent->PrivatePageCount = Process->CommitCharge;
-            ThreadInfo = (PSYSTEM_THREAD_INFORMATION)(SpiCurrent + 1);
-
-            CurrentEntry = Process->ThreadListHead.Flink;
-            while (CurrentEntry != &Process->ThreadListHead)
-            {
-                CurrentThread = CONTAINING_RECORD(CurrentEntry, ETHREAD,
-                                            ThreadListEntry);
-
-                ThreadInfo->KernelTime.QuadPart = UInt32x32To64(CurrentThread->Tcb.KernelTime, KeMaximumIncrement);
-                ThreadInfo->UserTime.QuadPart = UInt32x32To64(CurrentThread->Tcb.UserTime, KeMaximumIncrement);
-                ThreadInfo->CreateTime.QuadPart = CurrentThread->CreateTime.QuadPart;
-                ThreadInfo->WaitTime = CurrentThread->Tcb.WaitTime;
-                ThreadInfo->StartAddress = (PVOID) CurrentThread->StartAddress;
-                ThreadInfo->ClientId = CurrentThread->Cid;
-                ThreadInfo->Priority = CurrentThread->Tcb.Priority;
-                ThreadInfo->BasePriority = CurrentThread->Tcb.BasePriority;
-                ThreadInfo->ContextSwitches = CurrentThread->Tcb.ContextSwitches;
-                ThreadInfo->ThreadState = CurrentThread->Tcb.State;
-                ThreadInfo->WaitReason = CurrentThread->Tcb.WaitReason;
-
-                ThreadInfo++;
-                CurrentEntry = CurrentEntry->Flink;
-            }
-
-            /* Query total user/kernel times of a process */
-            TotalKernel = KeQueryRuntimeProcess(&Process->Pcb, &TotalUser);
-            SpiCurrent->UserTime.QuadPart = UInt32x32To64(TotalUser, KeMaximumIncrement);
-            SpiCurrent->KernelTime.QuadPart = UInt32x32To64(TotalKernel, KeMaximumIncrement);
 
             /* Handle idle process entry */
             if (Process == PsIdleProcess) Process = NULL;
@@ -876,7 +874,8 @@ QSI_DEF(SystemProcessInformation)
             ThreadsCount = 0;
             if ((Process == SystemProcess) || (Process == NULL))
             {
-                SpiCurrent->NextEntryOffset = 0;
+                if (!Overflow)
+                    SpiCurrent->NextEntryOffset = 0;
                 break;
             }
             else
@@ -894,6 +893,9 @@ QSI_DEF(SystemProcessInformation)
         Status = _SEH2_GetExceptionCode();
     }
     _SEH2_END
+
+    if (Overflow)
+        Status = STATUS_INFO_LENGTH_MISMATCH;
 
     *ReqSize = TotalSize;
     return Status;
