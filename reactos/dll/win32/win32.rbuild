@@ -193,8 +193,14 @@
 <directory name="mscat32">
 	<xi:include href="mscat32/mscat32.rbuild" />
 </directory>
+<directory name="mscms">
+	<xi:include href="mscms/mscms.rbuild" />
+</directory>
 <directory name="mscoree">
 	<xi:include href="mscoree/mscoree.rbuild" />
+</directory>
+<directory name="msftedit">
+	<xi:include href="msftedit/msftedit.rbuild" />
 </directory>
 <directory name="msgina">
 	<xi:include href="msgina/msgina.rbuild" />
@@ -213,6 +219,9 @@
 </directory>
 <directory name="msimtf">
 	<xi:include href="msimtf/msimtf.rbuild" />
+</directory>
+<directory name="msrle32">
+	<xi:include href="msrle32/msrle32.rbuild" />
 </directory>
 <directory name="mstask">
 	<xi:include href="mstask/mstask.rbuild" />

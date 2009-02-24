@@ -65,11 +65,14 @@ reactos/dll/win32/mlang           # Autosync
 reactos/dll/win32/mpr             # Autosync
 reactos/dll/win32/msacm32         # Out of sync
 reactos/dll/win32/mscat32         # Autosync
+reactos/dll/win32/mscms           # Autosync
 reactos/dll/win32/mscoree         # Autosync
+reactos/dll/win32/msftedit        # Autosync
 reactos/dll/win32/mshtml          # Autosync
 reactos/dll/win32/msimg32         # Autosync
 reactos/dll/win32/msi             # Autosync
 reactos/dll/win32/msimtf          # Autosync
+reactos/dll/win32/msrle32         # Autosync
 reactos/dll/win32/mstask          # Autosync
 reactos/dll/win32/msvcrt20        # Autosync
 reactos/dll/win32/msvfw32         # Autosync

@@ -13,6 +13,7 @@
   <property name="BASEADDRESS_DWMAPI" value="0x4A3F0000" />
   <property name="BASEADDRESS_LOADPERF" value="0x4B920000" />
   <property name="BASEADDRESS_MPRAPI" value="0x4C400000" />
+  <property name="BASEADDRESS_MSFTEDIT" value="0x4b460000" />
   <property name="BASEADDRESS_SRCLIENT" value="0x512C0000" />
   <property name="BASEADDRESS_PSTOREC" value="0x513D0000" />
   <property name="BASEADDRESS_LPK" value="0x516C0000" />
@@ -116,8 +117,10 @@
   <property name="BASEADDRESS_WINSPOOL" value="0x72f50000" />
   <property name="BASEADDRESS_MSCAT32" value="0x732b0000" />
   <property name="BASEADDRESS_MSTASK" value="0x73520000" />
+  <property name="BASEADDRESS_MSRLE32" value="0x73660000" />
   <property name="BASEADDRESS_MSDMO" value="0x73670000" />
   <property name="BASEADDRESS_AVIFIL32" value="0x73ac0000" />
+  <property name="BASEADDRESS_MSCMS" value="0x73af0000" />
   <property name="BASEADDRESS_DCIMAN32" value="0x73b10000" />
   <property name="BASEADDRESS_STI" value="0x73b60000" />
   <property name="BASEADDRESS_LZ32" value="0x73d80000" />

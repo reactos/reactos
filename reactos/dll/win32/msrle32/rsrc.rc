@@ -1,0 +1,53 @@
+/*
+ * Top level resource file for MS-RLE
+ *
+ * Copyright 2002 Michael Günnewig
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "windef.h"
+#include "winbase.h"
+
+#include "msrle_private.h"
+
+/*
+ * Everything specific to any language goes
+ * in one of the specific files.
+ * Note that you can and may override resources
+ * which also have a neutral version. This is to
+ * get localized bitmaps for example.
+ */
+
+#include "msrle_Bg.rc"
+#include "msrle_Cs.rc"
+#include "msrle_Da.rc"
+#include "msrle_De.rc"
+#include "msrle_En.rc"
+#include "msrle_Es.rc"
+#include "msrle_Fr.rc"
+#include "msrle_Hu.rc"
+#include "msrle_It.rc"
+#include "msrle_Ja.rc"
+#include "msrle_Ko.rc"
+#include "msrle_Nl.rc"
+#include "msrle_No.rc"
+#include "msrle_Pl.rc"
+#include "msrle_Pt.rc"
+#include "msrle_Ro.rc"
+#include "msrle_Ru.rc"
+#include "msrle_Si.rc"
+#include "msrle_Sv.rc"
+#include "msrle_Tr.rc"
