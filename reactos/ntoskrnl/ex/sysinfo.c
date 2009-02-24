@@ -753,7 +753,7 @@ QSI_DEF(SystemProcessInformation)
             ImageNameLength = 0;
             Status = SeLocateProcessImageName(Process, &ProcessImageName);
             szSrc = NULL;
-            if (NT_SUCCESS(Status))
+            if (NT_SUCCESS(Status) && (ProcessImageName->Length > 0))
             {
               szSrc = (PWCHAR)((PCHAR)ProcessImageName->Buffer + ProcessImageName->Length);
               /* Loop the file name*/
@@ -777,7 +777,10 @@ QSI_DEF(SystemProcessInformation)
             }
 
             /* Round up the image name length as NT does */
-            ImageNameMaximumLength = ROUND_UP(ImageNameLength, 8);
+            if (ImageNameLength > 0)
+                ImageNameMaximumLength = ROUND_UP(ImageNameLength + sizeof(WCHAR), 8);
+            else
+                ImageNameMaximumLength = 0;
 
             TotalSize += CurrentSize + ImageNameMaximumLength;
 
