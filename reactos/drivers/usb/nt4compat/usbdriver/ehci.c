@@ -6221,6 +6221,7 @@ generic_start_io(IN PDEVICE_OBJECT dev_obj, IN PIRP irp)
 }
 
 NTSTATUS
+NTAPI
 DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRING RegistryPath)
 {
     NTSTATUS ntStatus = STATUS_SUCCESS;
