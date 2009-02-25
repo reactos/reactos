@@ -627,7 +627,7 @@ uhci_probe(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, PUSB_DEV_MANAGER d
     pdev = NULL;
 
     //scan the bus to find uhci controller
-    for(bus = 0; bus < 2; bus++)        /*enum only bus0 and bus1 */
+    for(bus = 0; bus < 3; bus++)        /* enum bus0-bus2 */
     {
         for(i = 0; i < PCI_MAX_DEVICES; i++)
         {
