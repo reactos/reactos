@@ -45,15 +45,9 @@
 @ stub EndPagePrinter
 @ stub EnumFormsW
 @ stub EnumJobsW
-@ stub EnumMonitorsW
+@ stdcall EnumMonitorsW(wstr long ptr long ptr ptr)
 @ stub EnumPerMachineConnectionsW
-
-;FIXME: something is seriously broken here
-; the forwarder will break the export table
-
-;@ stdcall EnumPortsW(wstr long ptr ptr ptr ptr) winspool.drv.EnumPortsW
-@ stub EnumPortsW
-
+@ stdcall EnumPortsW(wstr long ptr long ptr ptr)
 @ stub EnumPrintProcessorDatatypesW
 @ stub EnumPrintProcessorsW
 @ stub EnumPrinterDataExW
