@@ -91,30 +91,48 @@ Dispatch_fnClose(
     PIRP Irp)
 {
     PSYSAUDIO_CLIENT Client;
+    PKSAUDIO_DEVICE_ENTRY Entry;
     PIO_STACK_LOCATION IoStatus;
-    ULONG Index;
-
-
-    DPRINT1("Dispatch_fnClose called DeviceObject %p Irp %p\n", DeviceObject);
+    ULONG Index, SubIndex;
+    PSYSAUDIODEVEXT DeviceExtension;
 
     IoStatus = IoGetCurrentIrpStackLocation(Irp);
 
     Client = (PSYSAUDIO_CLIENT)IoStatus->FileObject->FsContext2;
+    DeviceExtension = (PSYSAUDIODEVEXT)DeviceObject->DeviceExtension;
+
 
     DPRINT1("Client %p NumDevices %u\n", Client, Client->NumDevices);
     for(Index = 0; Index < Client->NumDevices; Index++)
     {
-        if (Client->Handels[Index])
+        if (Client->Devs[Index].ClientHandlesCount)
         {
-           ZwClose(Client->Handels[Index]);
+            Entry = GetListEntry(&DeviceExtension->KsAudioDeviceList, Client->Devs[Index].DeviceId);
+            ASSERT(Entry != NULL);
+
+            for(SubIndex = 0; SubIndex < Client->Devs[Index].ClientHandlesCount; SubIndex++)
+            {
+                ASSERT(Entry->NumberOfPins > Client->Devs[Index].ClientHandles[SubIndex].PinId);
+                if (Client->Devs[Index].ClientHandles[SubIndex].bHandle)
+                {
+                    DPRINT1("Closing handle %p\n", Client->Devs[Index].ClientHandles[SubIndex].hPin);
+
+                    ZwClose(Client->Devs[Index].ClientHandles[SubIndex].hPin);
+                    Entry->Pins[Client->Devs[Index].ClientHandles[SubIndex].PinId].References--;
+                }
+                else
+                {
+                    /* this is pin which can only be instantiated once
+                     * so we just need to release the reference count on that pin */
+                    Entry->Pins[Client->Devs[Index].ClientHandles[SubIndex].PinId].References--;
+                }
+            }
+            ExFreePool(Client->Devs[Index].ClientHandles);
         }
     }
 
-    if (Client->Handels)
-        ExFreePool(Client->Handels);
-
-    if (Client->Devices)
-        ExFreePool(Client->Devices);
+    if (Client->Devs)
+        ExFreePool(Client->Devs);
 
     ExFreePool(Client);
 
@@ -250,7 +268,8 @@ DispatchCreateSysAudio(
         if (!wcsncmp(KS_NAME_PIN, Buffer, wcslen(KS_NAME_PIN)))
         {
             Status = CreateDispatcher(Irp);
-            DPRINT1("Virtual pin Status %x\n", Status);
+            DPRINT1("Virtual pin Status %x FileObject %p\n", Status, IoStatus->FileObject);
+DbgBreakPoint();
             Irp->IoStatus.Information = 0;
             Irp->IoStatus.Status = Status;
             IoCompleteRequest(Irp, IO_NO_INCREMENT);

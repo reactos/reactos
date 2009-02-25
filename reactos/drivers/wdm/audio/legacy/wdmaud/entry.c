@@ -203,7 +203,12 @@ WdmAudCleanup(
     if (pClient)
     {
         for (Index = 0; Index < pClient->NumPins; Index++)
-           ZwClose(pClient->hPins[Index]);
+        {
+           if (pClient->hPins[Index])
+           {
+               ZwClose(pClient->hPins[Index]);
+           }
+        }
 
         if (pClient->hPins)
         {

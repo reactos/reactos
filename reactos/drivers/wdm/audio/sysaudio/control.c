@@ -58,8 +58,7 @@ SysAudioOpenVirtualDevice(
     IN ULONG DeviceNumber,
     PSYSAUDIODEVEXT DeviceExtension)
 {
-    PULONG Index;
-    PHANDLE Handle;
+    PSYSAUDIO_CLIENT_HANDELS Index;
     ULONG Count;
     PSYSAUDIO_CLIENT ClientInfo;
     PKSAUDIO_DEVICE_ENTRY Entry;
@@ -85,23 +84,17 @@ SysAudioOpenVirtualDevice(
     if (!ClientInfo->NumDevices)
     {
         /* first device to be openend */
-        ClientInfo->Devices = ExAllocatePool(NonPagedPool, sizeof(ULONG));
-        if (!ClientInfo->Devices)
-        {
-            /* no memory */
-            return SetIrpIoStatus(Irp, STATUS_NO_MEMORY, 0);
-        }
-
-        ClientInfo->Handels = ExAllocatePool(NonPagedPool, sizeof(HANDLE));
-        if (!ClientInfo->Devices)
+        ClientInfo->Devs = ExAllocatePool(NonPagedPool, sizeof(SYSAUDIO_CLIENT_HANDELS));
+        if (!ClientInfo->Devs)
         {
             /* no memory */
             return SetIrpIoStatus(Irp, STATUS_NO_MEMORY, 0);
         }
 
         ClientInfo->NumDevices = 1;
-        ClientInfo->Devices[0] = DeviceNumber;
-        ClientInfo->Handels[0] = NULL;
+        ClientInfo->Devs[0].DeviceId = DeviceNumber;
+        ClientInfo->Devs[0].ClientHandles = NULL;
+        ClientInfo->Devs[0].ClientHandlesCount = 0;
         /* increase usage count */
         Entry->NumberOfClients++;
         return SetIrpIoStatus(Irp, STATUS_SUCCESS, 0);
@@ -110,46 +103,37 @@ SysAudioOpenVirtualDevice(
     /* check if device has already been openend */
     for(Count = 0; Count < ClientInfo->NumDevices; Count++)
     {
-        if (ClientInfo->Devices[Count] == DeviceNumber)
+        if (ClientInfo->Devs[Count].DeviceId == DeviceNumber)
         {
             /* device has already been opened */
             return SetIrpIoStatus(Irp, STATUS_SUCCESS, 0);
         }
     }
     /* new device to be openend */
-    Index = ExAllocatePool(NonPagedPool, sizeof(ULONG) * (ClientInfo->NumDevices + 1));
+    Index = ExAllocatePool(NonPagedPool, sizeof(SYSAUDIO_CLIENT_HANDELS) * (ClientInfo->NumDevices + 1));
     if (!Index)
     {
         /* no memory */
         return SetIrpIoStatus(Irp, STATUS_NO_MEMORY, 0);
     }
 
-    Handle = ExAllocatePool(NonPagedPool, sizeof(HANDLE) * (ClientInfo->NumDevices + 1));
-    if (!Handle)
+    if (ClientInfo->NumDevices)
     {
-        /* no memory */
-        ExFreePool(Index);
-        return SetIrpIoStatus(Irp, STATUS_NO_MEMORY, 0);
+        /* copy device count array */
+        RtlMoveMemory(Index, ClientInfo->Devs, ClientInfo->NumDevices * sizeof(SYSAUDIO_CLIENT_HANDELS));
     }
+
+    Index[ClientInfo->NumDevices].DeviceId = DeviceNumber;
+    Index[ClientInfo->NumDevices].ClientHandlesCount = 0;
+    Index[ClientInfo->NumDevices].ClientHandles = NULL;
 
     /* increase usage count */
     Entry->NumberOfClients++;
 
-    /* copy device count array */
-    if (ClientInfo->NumDevices)
-    {
-        RtlMoveMemory(Index, ClientInfo->Devices, ClientInfo->NumDevices * sizeof(ULONG));
-        RtlMoveMemory(Handle, ClientInfo->Handels, ClientInfo->NumDevices * sizeof(HANDLE));
-    }
+    ExFreePool(ClientInfo->Devs);
 
-    Index[ClientInfo->NumDevices] = DeviceNumber;
-    Handle[ClientInfo->NumDevices] = NULL;
-    ExFreePool(ClientInfo->Handels);
-    ExFreePool(ClientInfo->Devices);
+    ClientInfo->Devs = Index;
     ClientInfo->NumDevices++;
-    ClientInfo->Devices = Index;
-    ClientInfo->Handels = Handle;
-
     return SetIrpIoStatus(Irp, STATUS_SUCCESS, 0);
 }
 
@@ -160,9 +144,12 @@ CreatePinWorkerRoutine(
     IN PVOID  Context)
 {
     NTSTATUS Status;
-    HANDLE PinHandle;
+    PSYSAUDIO_CLIENT AudioClient;
+    HANDLE RealPinHandle, VirtualPinHandle;
     HANDLE Filter;
+    ULONG NumHandels;
     PFILE_OBJECT FileObject;
+    PSYSAUDIO_PIN_HANDLE ClientPinHandle;
     PPIN_WORKER_CONTEXT WorkerContext = (PPIN_WORKER_CONTEXT)Context;
     Filter = WorkerContext->PinConnect->PinToHandle;
 
@@ -172,7 +159,7 @@ CreatePinWorkerRoutine(
     if (WorkerContext->CreateRealPin)
     {
         /* create the real pin */
-        Status = KsCreatePin(WorkerContext->Entry->Handle, WorkerContext->PinConnect, GENERIC_READ | GENERIC_WRITE, &PinHandle);
+        Status = KsCreatePin(WorkerContext->Entry->Handle, WorkerContext->PinConnect, GENERIC_READ | GENERIC_WRITE, &RealPinHandle);
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Failed to create Pin with %x\n", Status);
@@ -182,13 +169,18 @@ CreatePinWorkerRoutine(
         }
 
         /* get pin file object */
-        Status = ObReferenceObjectByHandle(PinHandle,
+        Status = ObReferenceObjectByHandle(RealPinHandle,
                                            GENERIC_READ | GENERIC_WRITE, 
                                            IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
 
-        WorkerContext->Entry->Pins[WorkerContext->PinConnect->PinId].PinHandle = PinHandle;
+        if (WorkerContext->Entry->Pins[WorkerContext->PinConnect->PinId].MaxPinInstanceCount == 1)
+        {
+            /* store the pin handle there is the pin can only be instantiated once*/
+            WorkerContext->Entry->Pins[WorkerContext->PinConnect->PinId].PinHandle = RealPinHandle;
+        }
+
         WorkerContext->Entry->Pins[WorkerContext->PinConnect->PinId].References = 1;
-        WorkerContext->DispatchContext->Handle = PinHandle;
+        WorkerContext->DispatchContext->Handle = RealPinHandle;
         WorkerContext->DispatchContext->PinId = WorkerContext->PinConnect->PinId;
         WorkerContext->DispatchContext->AudioEntry = WorkerContext->Entry;
 
@@ -204,7 +196,7 @@ CreatePinWorkerRoutine(
         WorkerContext->DispatchContext->PinId = WorkerContext->PinConnect->PinId;
 
         /* get pin file object */
-        Status = ObReferenceObjectByHandle(PinHandle,
+        Status = ObReferenceObjectByHandle(WorkerContext->Entry->Pins[WorkerContext->PinConnect->PinId].PinHandle,
                                            GENERIC_READ | GENERIC_WRITE, 
                                            IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
 
@@ -220,7 +212,7 @@ CreatePinWorkerRoutine(
 
     DPRINT1("creating virtual pin\n");
     /* now create the virtual audio pin which is exposed to wdmaud */
-    Status = KsCreatePin(Filter, WorkerContext->PinConnect, GENERIC_READ | GENERIC_WRITE, &PinHandle);
+    Status = KsCreatePin(Filter, WorkerContext->PinConnect, GENERIC_READ | GENERIC_WRITE, &VirtualPinHandle);
 
     if (!NT_SUCCESS(Status))
     {
@@ -237,7 +229,7 @@ CreatePinWorkerRoutine(
     }
 
    /* get pin file object */
-    Status = ObReferenceObjectByHandle(PinHandle,
+    Status = ObReferenceObjectByHandle(VirtualPinHandle,
                                       GENERIC_READ | GENERIC_WRITE, 
                                       IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
 
@@ -250,7 +242,7 @@ CreatePinWorkerRoutine(
             WorkerContext->Entry->Pins[WorkerContext->PinConnect->PinId].References = 0;
         }
 
-        ZwClose(PinHandle);
+        ZwClose(VirtualPinHandle);
         SetIrpIoStatus(WorkerContext->Irp, STATUS_UNSUCCESSFUL, 0);
         ExFreePool(WorkerContext);
         return;
@@ -261,19 +253,59 @@ CreatePinWorkerRoutine(
     ASSERT(WorkerContext->DispatchContext->FileObject != NULL);
     ASSERT(WorkerContext->DispatchContext->Handle != NULL);
     ASSERT(WorkerContext->AudioClient);
-    ASSERT(WorkerContext->AudioClient->Handels);
-    ASSERT(WorkerContext->AudioClient->Handels[WorkerContext->AudioClient->NumDevices -1] == NULL);
+    ASSERT(WorkerContext->AudioClient->NumDevices > 0);
+    ASSERT(WorkerContext->AudioClient->Devs != NULL);
+    ASSERT(WorkerContext->Entry->Pins != NULL);
+    ASSERT(WorkerContext->Entry->NumberOfPins > WorkerContext->PinConnect->PinId);
+
+
+    AudioClient = WorkerContext->AudioClient;
+    NumHandels = AudioClient->Devs[AudioClient->NumDevices -1].ClientHandlesCount;
+
+    ClientPinHandle = ExAllocatePool(NonPagedPool, sizeof(SYSAUDIO_PIN_HANDLE) * (NumHandels+1));
+    if (ClientPinHandle)
+    {
+        if (NumHandels)
+        {
+            ASSERT(AudioClient->Devs[AudioClient->NumDevices -1].ClientHandles != NULL);
+            RtlMoveMemory(ClientPinHandle,
+                          AudioClient->Devs[AudioClient->NumDevices -1].ClientHandles,
+                          sizeof(SYSAUDIO_PIN_HANDLE) * NumHandels);
+            ExFreePool(AudioClient->Devs[AudioClient->NumDevices -1].ClientHandles);
+        }
+
+        AudioClient->Devs[AudioClient->NumDevices -1].ClientHandles = ClientPinHandle;
+
+        /// if the pin can be instantiated more than once
+        /// then store the real pin handle in the client context
+        /// otherwise just the pin id of the available pin
+        if (WorkerContext->Entry->Pins[WorkerContext->PinConnect->PinId].MaxPinInstanceCount > 1)
+        {
+            AudioClient->Devs[AudioClient->NumDevices -1].ClientHandles[NumHandels].bHandle = TRUE;
+            AudioClient->Devs[AudioClient->NumDevices -1].ClientHandles[NumHandels].hPin = RealPinHandle;
+            AudioClient->Devs[AudioClient->NumDevices -1].ClientHandles[NumHandels].PinId = WorkerContext->PinConnect->PinId;
+        }
+        else
+        {
+            AudioClient->Devs[AudioClient->NumDevices -1].ClientHandles[NumHandels].bHandle = FALSE;
+            AudioClient->Devs[AudioClient->NumDevices -1].ClientHandles[NumHandels].hPin = NULL;
+            AudioClient->Devs[AudioClient->NumDevices -1].ClientHandles[NumHandels].PinId = WorkerContext->PinConnect->PinId;
+        }
+
+        /// increase reference count
+        WorkerContext->Entry->Pins[WorkerContext->PinConnect->PinId].References++;
+        AudioClient->Devs[AudioClient->NumDevices -1].ClientHandlesCount++;
+    }
+
 
     /* store pin context */
     FileObject->FsContext2 = (PVOID)WorkerContext->DispatchContext;
 
-    /* store pin handle in client specific struct */
-    WorkerContext->AudioClient->Handels[WorkerContext->AudioClient->NumDevices-1] = PinHandle;
-
-    DPRINT1("Successfully created Pin %p\n", WorkerContext->Irp);
-    *((PHANDLE)WorkerContext->Irp->UserBuffer) = PinHandle;
+    DPRINT1("Successfully created virtual pin %p\n", VirtualPinHandle);
+    *((PHANDLE)WorkerContext->Irp->UserBuffer) = VirtualPinHandle;
 
     SetIrpIoStatus(WorkerContext->Irp, STATUS_SUCCESS, sizeof(HANDLE));
+    ExFreePool(WorkerContext);
 }
 
 
@@ -425,7 +457,7 @@ SysAudioHandleProperty(
                     return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, 0);
                 }
                 /* store last opened device number */
-                *Index = ClientInfo->Devices[ClientInfo->NumDevices-1];
+                *Index = ClientInfo->Devs[ClientInfo->NumDevices-1].DeviceId;
                 /* found no device with that device index open */
                 return SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(ULONG));
             }
@@ -458,7 +490,7 @@ SysAudioHandleProperty(
                 }
                 for(Count = 0; Count < ClientInfo->NumDevices; Count++)
                 {
-                    if (ClientInfo->Devices[Count] == InstanceInfo->DeviceNumber)
+                    if (ClientInfo->Devs[Count].DeviceId == InstanceInfo->DeviceNumber)
                     {
                         /* specified device is open */
                         return SetIrpIoStatus(Irp, STATUS_SUCCESS, 0);
@@ -493,8 +525,8 @@ SysAudioHandleProperty(
             ClientInfo = (PSYSAUDIO_CLIENT)CreateItem->Context;
             ASSERT(ClientInfo);
             ASSERT(ClientInfo->NumDevices >= 1);
-            ASSERT(ClientInfo->Devices != NULL);
-            ASSERT(ClientInfo->Devices[ClientInfo->NumDevices-1] == InstanceInfo->DeviceNumber);
+            ASSERT(ClientInfo->Devs != NULL);
+            ASSERT(ClientInfo->Devs[ClientInfo->NumDevices-1].DeviceId == InstanceInfo->DeviceNumber);
 
             /* get sysaudio entry */
             Entry = GetListEntry(&DeviceExtension->KsAudioDeviceList, InstanceInfo->DeviceNumber);
@@ -541,14 +573,14 @@ SysAudioHandleProperty(
             PinRequest.Property.Flags = KSPROPERTY_TYPE_GET;
             PinRequest.Property.Id = KSPROPERTY_PIN_CINSTANCES;
 
-            //RtlZeroMemory(&PinInstances, sizeof(KSPIN_CINSTANCES));
             Status = KsSynchronousIoControlDevice(Entry->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PinRequest, sizeof(KSP_PIN), (PVOID)&PinInstances, sizeof(KSPIN_CINSTANCES), &BytesReturned);
             if (!NT_SUCCESS(Status))
             {
                 DPRINT("Property Request KSPROPERTY_PIN_GLOBALCINSTANCES failed with %x\n", Status);
                 return SetIrpIoStatus(Irp, Status, 0);
             }
-            DPRINT1("PinInstances Current %u Max %u\n", PinInstances.CurrentCount, PinInstances.PossibleCount);
+            DPRINT("PinInstances Current %u Max %u\n", PinInstances.CurrentCount, PinInstances.PossibleCount);
+            Entry->Pins[PinConnect->PinId].MaxPinInstanceCount = PinInstances.PossibleCount;
 
             WorkItem = IoAllocateWorkItem(DeviceObject);
             if (!WorkItem)
@@ -588,10 +620,10 @@ SysAudioHandleProperty(
                 DbgBreakPoint();
                 ASSERT(Entry->Pins[PinConnect->PinId].PinHandle != NULL);
 
-                if (Entry->Pins[PinConnect->PinId].References != 0)
+                if (Entry->Pins[PinConnect->PinId].References > 1)
                 {
                     /* FIXME need ksmixer */
-                    DPRINT1("Device %u Pin %u is already occupied, try later\n", InstanceInfo->DeviceNumber, PinConnect->PinId);
+                    DPRINT1("Device %u Pin %u References %u is already occupied, try later\n", InstanceInfo->DeviceNumber, PinConnect->PinId, Entry->Pins[PinConnect->PinId].References);
                     IoFreeWorkItem(WorkItem);
                     ExFreePool(WorkerContext);
                     ExFreePool(DispatchContext);

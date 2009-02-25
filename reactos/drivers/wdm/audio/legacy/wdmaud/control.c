@@ -371,13 +371,14 @@ WdmAudCapabilities(
     IN  PWDMAUD_DEVICE_INFO DeviceInfo,
     IN  PWDMAUD_CLIENT ClientInfo)
 {
+    NTSTATUS Status = STATUS_UNSUCCESSFUL;
     KSP_PIN PinProperty;
     KSCOMPONENTID ComponentId;
     KSMULTIPLE_ITEM * MultipleItem;
     ULONG BytesReturned;
     PKSDATARANGE_AUDIO DataRangeAudio;
     PKSDATARANGE DataRange;
-    NTSTATUS Status;
+
     ULONG Index;
     ULONG wChannels = 0;
     ULONG dwFormats = 0;
@@ -419,8 +420,6 @@ WdmAudCapabilities(
     {
         return SetIrpIoStatus(Irp, Status, 0);
     }
-
-
 
     MultipleItem = ExAllocatePool(NonPagedPool, BytesReturned);
     if (!MultipleItem)
@@ -479,6 +478,31 @@ WdmAudCapabilities(
 
 NTSTATUS
 NTAPI
+WdmAudClose(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp,
+    IN  PWDMAUD_DEVICE_INFO DeviceInfo,
+    IN  PWDMAUD_CLIENT ClientInfo)
+{
+    ULONG Index;
+
+    for(Index = 0; Index < ClientInfo->NumPins; Index++)
+    {
+        if (ClientInfo->hPins[Index] == DeviceInfo->hDevice)
+        {
+            DPRINT1("Closing device %p\n", DeviceInfo->hDevice);
+            ZwClose(DeviceInfo->hDevice);
+            ClientInfo->hPins[Index] = NULL;
+            SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(WDMAUD_DEVICE_INFO));
+            return STATUS_SUCCESS;
+        }
+    }
+    SetIrpIoStatus(Irp, STATUS_INVALID_PARAMETER, sizeof(WDMAUD_DEVICE_INFO));
+    return STATUS_INVALID_PARAMETER;
+}
+
+NTSTATUS
+NTAPI
 WdmAudDeviceControl(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
@@ -530,6 +554,7 @@ WdmAudDeviceControl(
         case IOCTL_GETCAPABILITIES:
             return WdmAudCapabilities(DeviceObject, Irp, DeviceInfo, ClientInfo);
         case IOCTL_CLOSE_WDMAUD:
+            return WdmAudClose(DeviceObject, Irp, DeviceInfo, ClientInfo);
         case IOCTL_GETDEVID:
         case IOCTL_GETVOLUME:
         case IOCTL_SETVOLUME:

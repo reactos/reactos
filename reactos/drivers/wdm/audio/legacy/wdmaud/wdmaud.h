@@ -8,7 +8,7 @@
 #define YDEBUG
 #include <debug.h>
 #include <ksmedia.h>
-#include <mmsystem.h>	
+#include <mmsystem.h>
 
 #include "interface.h"
 

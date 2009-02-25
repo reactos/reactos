@@ -225,6 +225,7 @@ PcPropertyHandler(
     RtlFreeUnicodeString(&GuidString);
     Irp->IoStatus.Information = 0;
     Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
     return STATUS_NOT_IMPLEMENTED;
 }
 

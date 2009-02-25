@@ -39,6 +39,7 @@ main(int argc, char* argv[])
      }
 
      printf("WDMAUD: opened\n");
+
      /* clear device info */
      RtlZeroMemory(&DeviceInfo, sizeof(WDMAUD_DEVICE_INFO));
 
@@ -61,19 +62,12 @@ main(int argc, char* argv[])
      }
 
      printf("WDMAUD: Num Devices %lu\n", DeviceInfo.DeviceCount);
+
      if (!DeviceInfo.DeviceCount)
      {
         CloseHandle(hWdmAud);
         return 0;
     }
-
-    DeviceInfo.u.WaveFormatEx.cbSize = sizeof(WAVEFORMATEX);
-    DeviceInfo.u.WaveFormatEx.wFormatTag = 0x1; //WAVE_FORMAT_PCM;
-    DeviceInfo.u.WaveFormatEx.nChannels = 2;
-    DeviceInfo.u.WaveFormatEx.nSamplesPerSec = 48000;
-    DeviceInfo.u.WaveFormatEx.nBlockAlign = 4;
-    DeviceInfo.u.WaveFormatEx.nAvgBytesPerSec = 48000 * 4;
-    DeviceInfo.u.WaveFormatEx.wBitsPerSample = 16;
 
     Status = DeviceIoControl(hWdmAud, IOCTL_GETCAPABILITIES, (LPVOID)&DeviceInfo, sizeof(WDMAUD_DEVICE_INFO), (LPVOID)&DeviceInfo, sizeof(WDMAUD_DEVICE_INFO), &BytesReturned, &Overlapped);
 
@@ -84,6 +78,16 @@ main(int argc, char* argv[])
            printf("Failed to get iocaps %lx\n", GetLastError());
         }
     }
+    printf("WDMAUD: Capabilites NumChannels %x dwFormats %lx\n", DeviceInfo.u.WaveOutCaps.wChannels, DeviceInfo.u.WaveOutCaps.dwFormats);
+
+    DeviceInfo.u.WaveFormatEx.cbSize = sizeof(WAVEFORMATEX);
+    DeviceInfo.u.WaveFormatEx.wFormatTag = WAVE_FORMAT_PCM;
+    DeviceInfo.u.WaveFormatEx.nChannels = 2;
+    DeviceInfo.u.WaveFormatEx.nSamplesPerSec = 48000;
+    DeviceInfo.u.WaveFormatEx.nBlockAlign = 4;
+    DeviceInfo.u.WaveFormatEx.nAvgBytesPerSec = 48000 * 4;
+    DeviceInfo.u.WaveFormatEx.wBitsPerSample = 16;
+
 
 
      Status = DeviceIoControl(hWdmAud, IOCTL_OPEN_WDMAUD, (LPVOID)&DeviceInfo, sizeof(WDMAUD_DEVICE_INFO), &DeviceInfo, sizeof(WDMAUD_DEVICE_INFO), &BytesReturned, &Overlapped);
@@ -97,8 +101,7 @@ main(int argc, char* argv[])
          }
      }
 
-
-
+     printf("WDMAUD: opened device\n");
 
     //
     // Allocate a buffer for 1 second
@@ -163,8 +166,8 @@ main(int argc, char* argv[])
          }
     }
     printf("WDMAUD:  STOPPED\n");
-    CloseHandle(hWdmAud);
     CloseHandle(&Overlapped.hEvent);
+    CloseHandle(hWdmAud);
     printf("WDMAUD:  COMPLETE\n");
     return 0;
 }

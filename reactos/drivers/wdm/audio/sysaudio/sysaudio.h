@@ -3,14 +3,30 @@
 
 typedef struct
 {
+    BOOL bHandle;
+    ULONG PinId;
+    HANDLE hPin;
+}SYSAUDIO_PIN_HANDLE, *PSYSAUDIO_PIN_HANDLE;
+
+
+typedef struct
+{
+    ULONG DeviceId;
+    ULONG ClientHandlesCount;
+    PSYSAUDIO_PIN_HANDLE ClientHandles;
+
+}SYSAUDIO_CLIENT_HANDELS, *PSYSAUDIO_CLIENT_HANDELS;
+
+typedef struct
+{
     ULONG NumDevices;
-    PULONG Devices;
-    PHANDLE Handels;
+    PSYSAUDIO_CLIENT_HANDELS Devs;
 
 }SYSAUDIO_CLIENT, *PSYSAUDIO_CLIENT;
 
 typedef struct
 {
+    ULONG MaxPinInstanceCount;
     HANDLE PinHandle;
     ULONG References;
 }PIN_INFO;
