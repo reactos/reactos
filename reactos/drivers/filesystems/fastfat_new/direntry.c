@@ -12,37 +12,6 @@
 #include "fastfat.h"
 
 /* PROTOTYPES ***************************************************************/
-#define BYTES_PER_DIRENT_LOG 0x05
-
-typedef struct _FAT_ENUM_DIR_CONTEXT *PFAT_ENUM_DIR_CONTEXT;
-
-typedef ULONG (*PFAT_COPY_DIRENT_ROUTINE) (struct _FAT_ENUM_DIR_CONTEXT *, PDIR_ENTRY, PVOID);
-
-typedef struct _FAT_ENUM_DIR_CONTEXT
-{
-    PFILE_OBJECT FileObject;
-    LARGE_INTEGER PageOffset;
-    LONGLONG BeyondLastEntryOffset;
-    PVOID PageBuffer;
-    PBCB PageBcb;
-
-   /*
-    * We should always cache short file name
-    * because we never know if there is a long
-    * name for the dirent and when we find out
-    * that our base dirent might become unpinned.
-    */
-    UCHAR DirentFileName[RTL_FIELD_SIZE(DIR_ENTRY, FileName) + 1];
-    PFAT_COPY_DIRENT_ROUTINE CopyDirent;
-    LONGLONG BytesPerClusterMask;
-   /*
-    * The following fields are
-    * set by the copy routine
-    */
-    PULONG NextEntryOffset;
-    PULONG FileNameLength;
-    PWCHAR FileName;
-} FAT_ENUM_DIR_CONTEXT;
 
 typedef enum _FILE_TIME_INDEX
 {
@@ -51,10 +20,7 @@ typedef enum _FILE_TIME_INDEX
     FileLastWriteTime,
     FileChangeTime
 } FILE_TIME_INDEX;
-
-VOID
-FatQueryFileTimes(OUT PLARGE_INTEGER FileTimes,
-                  IN PDIR_ENTRY Dirent);
+ 
 
 VOID
 Fat8dot3ToUnicodeString(OUT PUNICODE_STRING FileName,
@@ -62,41 +28,426 @@ Fat8dot3ToUnicodeString(OUT PUNICODE_STRING FileName,
                         IN UCHAR Flags);
 
 ULONG
-FatDirentToDirInfo(IN OUT PFAT_ENUM_DIR_CONTEXT Context,
+FatDirentToDirInfo(IN OUT PFAT_ENUM_DIRENT_CONTEXT Context,
                    IN PDIR_ENTRY Dirent,
                    IN PVOID Buffer);
 
 ULONG
-FatDirentToFullDirInfo(IN OUT PFAT_ENUM_DIR_CONTEXT Context,
+FatDirentToFullDirInfo(IN OUT PFAT_ENUM_DIRENT_CONTEXT Context,
                        IN PDIR_ENTRY Dirent,
                        IN PVOID Buffer);
 
 ULONG
-FatDirentToIdFullDirInfo(IN OUT PFAT_ENUM_DIR_CONTEXT Context,
+FatDirentToIdFullDirInfo(IN OUT PFAT_ENUM_DIRENT_CONTEXT Context,
                          IN PDIR_ENTRY Dirent,
                          IN PVOID Buffer);
 
 ULONG
-FatDirentToBothDirInfo(IN OUT PFAT_ENUM_DIR_CONTEXT Context,
+FatDirentToBothDirInfo(IN OUT PFAT_ENUM_DIRENT_CONTEXT Context,
                        IN PDIR_ENTRY Dirent,
                        IN PVOID Buffer);
 
 ULONG
-FatDirentToIdBothDirInfo(IN OUT PFAT_ENUM_DIR_CONTEXT Context,
+FatDirentToIdBothDirInfo(IN OUT PFAT_ENUM_DIRENT_CONTEXT Context,
                          IN PDIR_ENTRY Dirent,
                          IN PVOID Buffer);
 
 ULONG
-FatDirentToNamesInfo(IN OUT PFAT_ENUM_DIR_CONTEXT Context,
+FatDirentToNamesInfo(IN OUT PFAT_ENUM_DIRENT_CONTEXT Context,
                      IN PDIR_ENTRY Dirent,
                      IN PVOID Buffer);
 
 ULONG
-FatDirentToObjectIdInfo(IN OUT PFAT_ENUM_DIR_CONTEXT Context,
+FatDirentToObjectIdInfo(IN OUT PFAT_ENUM_DIRENT_CONTEXT Context,
                         IN PDIR_ENTRY Dirent,
                         IN PVOID Buffer);
 
 /* FUNCTIONS *****************************************************************/
+
+#define FatQueryFileName(xInfo, xDirent)                    \
+{                                                           \
+    UNICODE_STRING FileName;                                \
+    if (Info->FileNameLength == 0)                          \
+    {                                                       \
+        FileName.Buffer = Info->FileName;                   \
+        FileName.MaximumLength = 0x18;                      \
+        Fat8dot3ToUnicodeString(&FileName,                  \
+            (xDirent)->FileName, (xDirent)->Case);          \
+        Info->FileNameLength = FileName.Length;             \
+    }                                                       \
+}
+
+#define FatQueryBothFileName(xInfo, xDirent)                \
+{                                                           \
+    UNICODE_STRING FileName;                                \
+    FileName.MaximumLength = 0x18;                          \
+    if (Info->FileNameLength == 0)                          \
+    {                                                       \
+        FileName.Buffer = Info->FileName;                   \
+        Fat8dot3ToUnicodeString(&FileName,                  \
+            (xDirent)->FileName, (xDirent)->Case);          \
+        Info->FileNameLength = FileName.Length;             \
+        Info->ShortNameLength = 0;                          \
+    }                                                       \
+    else                                                    \
+    {                                                       \
+        FileName.Buffer = Info->ShortName;                  \
+        Fat8dot3ToUnicodeString(&FileName,                  \
+            (xDirent)->FileName, (xDirent)->Case);          \
+        Info->ShortNameLength = (CCHAR) FileName.Length;    \
+    }                                                       \
+}
+
+FORCEINLINE
+UCHAR
+FatLfnChecksum(
+    PUCHAR Buffer
+)
+{
+    UCHAR Index, Chksum;
+
+    for (Index = 0x1, Chksum = *Buffer;
+        Index < RTL_FIELD_SIZE(DIR_ENTRY, FileName);
+        Index ++)
+    {
+        Chksum = (((Chksum & 0x1) << 0x7) | (Chksum >> 0x1))
+            + Buffer[Index];
+    }
+    return Chksum;
+}
+
+VOID
+FatFindDirent(IN OUT PFAT_FIND_DIRENT_CONTEXT Context,
+              OUT PDIR_ENTRY* Dirent,
+              OUT PUNICODE_STRING LongFileName OPTIONAL)
+{
+    PDIR_ENTRY Entry, EndOfPage;
+    UCHAR SeqNum = 0, Checksum = 0;
+    PUNICODE_STRING FileName;
+
+    /* Pin first page. */
+    Entry = (PDIR_ENTRY) FatPinPage(&Context->Page, 0);
+    EndOfPage = FatPinEndOfPage(&Context->Page, PDIR_ENTRY);
+
+    /* Run dirents. */
+    FileName = NULL;
+    while (TRUE)
+    {
+        /* Check if we have entered the area of never used dirents */
+        if (Entry->FileName[0] == FAT_DIRENT_NEVER_USED)
+            ExRaiseStatus(STATUS_OBJECT_NAME_NOT_FOUND);
+
+        /* Just ignore entries marked as deleted */
+        if (Entry->FileName[0] == FAT_DIRENT_DELETED)
+            goto FatFindDirentNext;
+
+        /* Check if it's an lfn */
+        if (Entry->Attributes == FAT_DIRENT_ATTR_LFN)
+        {
+            PLONG_FILE_NAME_ENTRY LfnEntry;
+       
+            FileName = LongFileName;
+            LfnEntry = (PLONG_FILE_NAME_ENTRY) Entry;
+
+            /* Run lfns and collect file name if required */
+            do {
+                PWSTR Lfn;
+
+                /* Check if we just running lfn */
+                if (FileName == NULL)
+                    goto FatFindDirentRunLfn;
+
+                /* Check for cluster index to be zero. */
+                if (LfnEntry->Reserved != 0)
+                {
+                    FileName = NULL;
+                    goto FatFindDirentRunLfn;
+                }
+
+                /* Check if this is the last lfn entry. */
+                if (FlagOn(LfnEntry->SeqNum, FAT_FN_DIR_ENTRY_LAST))
+                {
+                    SeqNum = (LfnEntry->SeqNum & ~FAT_FN_DIR_ENTRY_LAST);
+                    Checksum = LfnEntry->Checksum;
+
+                    /* Check if we exceed max number of lfns */
+                    if (SeqNum > (FAT_FN_MAX_DIR_ENTIES + 1))
+                    {
+                        FileName = NULL;
+                        goto FatFindDirentRunLfn;
+                    }
+
+                    /* Setup maximal expected lfn length */
+                    FileName->Length = (SeqNum * FAT_LFN_NAME_LENGTH);
+
+                    /* Extend lfn buffer if needed */
+                    if (FileName->Length > FileName->MaximumLength)
+                    {
+                        Lfn = ExAllocatePoolWithTag(PagedPool,
+                            LongFileName->Length, TAG_VFAT);
+                        if (Lfn == NULL)
+                            ExRaiseStatus(STATUS_INSUFFICIENT_RESOURCES);
+                        if (FileName->Buffer != NULL)
+                            ExFreePool(FileName->Buffer);
+                        FileName->Buffer = Lfn;
+                        FileName->MaximumLength = FileName->Length;
+                    }
+                }
+                else if (!(LfnEntry->SeqNum == SeqNum
+                    && LfnEntry->Checksum == Checksum))
+                {
+                   /* Wrong SeqNum or CheckSum. */
+                    FileName = NULL;
+                    goto FatFindDirentRunLfn;
+                }
+                /* Gather file name */
+                Lfn = Add2Ptr(FileName->Buffer, (SeqNum * FAT_LFN_NAME_LENGTH)
+                        - sizeof(LfnEntry->NameC), PWSTR);
+                RtlCopyMemory(Lfn, LfnEntry->NameC, sizeof(LfnEntry->NameC));
+                Lfn -= (sizeof(LfnEntry->NameB) / sizeof(WCHAR));
+                RtlCopyMemory(Lfn, LfnEntry->NameB, sizeof(LfnEntry->NameB));
+                Lfn -= (sizeof(LfnEntry->NameA) / sizeof(WCHAR));
+                RtlCopyMemory(Lfn, LfnEntry->NameA, sizeof(LfnEntry->NameA));
+
+                /* If last lfn determine exact lfn length. */
+                if (FlagOn(LfnEntry->SeqNum, FAT_FN_DIR_ENTRY_LAST))
+                {
+                    PWSTR LfnEnd = Add2Ptr(FileName->Buffer,
+                        (FileName->Length - sizeof(WCHAR)), PWSTR);
+
+                    /* Trim trailing 0xffff's */
+                    while (LfnEnd > Lfn && *LfnEnd == 0xffff) --LfnEnd;
+
+                    /* Trim 0 terminator is the one is there. */
+                    if (*LfnEnd == 0x0) --LfnEnd;
+
+                    /* Set correct lfn size */
+                    FileName->Length = (USHORT)PtrOffset(FileName->Buffer, LfnEnd);
+                }
+                /* Setup validation for the next iteration */
+                SeqNum = LfnEntry->SeqNum - 0x1;
+                Checksum = LfnEntry->Checksum;
+
+FatFindDirentRunLfn:
+                /* Get next dirent */
+                LfnEntry ++;
+                if (LfnEntry > (PLONG_FILE_NAME_ENTRY) EndOfPage)
+                {
+                    if (FatPinIsLastPage(&Context->Page))
+                        ExRaiseStatus(STATUS_OBJECT_NAME_NOT_FOUND);
+                    LfnEntry = (PLONG_FILE_NAME_ENTRY) FatPinNextPage(&Context->Page);
+                    EndOfPage = FatPinEndOfPage(&Context->Page, PDIR_ENTRY);
+                }
+            }
+            while (LfnEntry->Attributes == FAT_DIRENT_ATTR_LFN);
+            Entry = (PDIR_ENTRY) LfnEntry;
+            continue;
+        }
+
+        /* If we've got here then this is a normal dirent */
+        if (FileName != NULL && FileName->Length > 0)
+        {
+            /* Check if we have a correct lfn collected. */
+            if (FatLfnChecksum(Entry->FileName) != Checksum)
+            {
+                FileName = NULL;
+            }
+            else
+            {
+                /* See if we were looking for this dirent. */
+                if (!Context->Valid8dot3Name &&
+                    FsRtlAreNamesEqual(FileName, Context->FileName, TRUE, NULL))
+                {
+                    Fat8dot3ToUnicodeString(&Context->ShortName, Entry->FileName, Entry->Case);
+                    *Dirent = Entry;
+                    return;
+                }
+            }
+        }
+
+       /* We surely have a short name, check if we were looking for that. */
+        if (Context->Valid8dot3Name)
+        {
+            Fat8dot3ToUnicodeString(&Context->ShortName,
+                Entry->FileName, Entry->Case);
+            if (FsRtlAreNamesEqual(&Context->ShortName, Context->FileName, TRUE, NULL))
+            {
+                if (ARGUMENT_PRESENT(LongFileName) && FileName == NULL)
+                    LongFileName->Length = 0;
+                *Dirent = Entry;
+                return;
+            }
+        }
+        FileName = NULL;
+
+FatFindDirentNext:
+        Entry ++;
+        if (Entry > EndOfPage)
+        {
+            if (FatPinIsLastPage(&Context->Page))
+                ExRaiseStatus(STATUS_OBJECT_NAME_NOT_FOUND);
+            Entry = (PDIR_ENTRY) FatPinNextPage(&Context->Page);
+            EndOfPage = FatPinEndOfPage(&Context->Page, PDIR_ENTRY);
+        }
+    }
+    /* Should never get here! */
+    ASSERT(TRUE);
+}
+
+VOID
+FatEnumerateDirents(IN OUT PFAT_ENUM_DIRENT_CONTEXT Context,
+                    IN SIZE_T Offset)
+{
+    PUCHAR Entry, EndOfPage;
+    PWSTR FileName;
+    USHORT FileNameLength;
+    USHORT FileNameMaximumLength;
+    PVOID InfoEntry;
+    UCHAR SeqNum = 0;
+    UCHAR Checksum = 0;
+
+    /* Pin first page. */
+    Entry = (PUCHAR)FatPinPage(&Context->Page, Offset);
+    EndOfPage = FatPinEndOfPage(&Context->Page, PUCHAR);
+
+    /* Iterate dirents. */
+    while (TRUE)
+    {
+        /* Check if we have entered the area of never used dirents */
+        if (*Entry == FAT_DIRENT_NEVER_USED)
+            ExRaiseStatus(STATUS_NO_MORE_FILES);
+
+        /* Just ignore entries marked as deleted */
+        if (*Entry == FAT_DIRENT_DELETED)
+            goto FatEnumerateDirentsNext;
+
+        /* Get info pointer. */
+        InfoEntry = Add2Ptr(Context->Buffer, Context->Offset, PVOID);
+
+        /* Check if info class has file name */
+        if (Context->NameOffset == Context->LengthOffset)
+        {
+            FileName = NULL;
+            FileNameMaximumLength = 0;
+        }
+        else
+        {
+            FileName = Add2Ptr(InfoEntry, Context->NameOffset, PWSTR);
+            FileNameMaximumLength = (USHORT) (Context->Length
+                - Context->Offset + Context->NameOffset);
+        }
+        FileNameLength = 0;
+
+        /* Check if it's an lfn */
+        while (Entry[0xb] == FAT_DIRENT_ATTR_LFN)
+        {
+            PWSTR Lfn;
+            PLONG_FILE_NAME_ENTRY LfnEntry;
+
+            /* Check if we just running lfn */
+            if (FileNameMaximumLength == 0)
+                goto FatEnumerateDirentsRunLfn;
+
+            LfnEntry = (PLONG_FILE_NAME_ENTRY) Entry;
+
+            /* Check for cluster index to be zero. */
+            if (LfnEntry->Reserved != 0)
+            {
+                FileNameMaximumLength = 0;
+                goto FatEnumerateDirentsRunLfn;
+            }
+
+            /* Check if this is the last lfn entry. */
+            if (FlagOn(LfnEntry->SeqNum, FAT_FN_DIR_ENTRY_LAST))
+            {
+                SeqNum = (LfnEntry->SeqNum & ~FAT_FN_DIR_ENTRY_LAST);
+                Checksum = LfnEntry->Checksum;
+
+                /* Check if we exceed max number of lfns */
+                if (SeqNum > (FAT_FN_MAX_DIR_ENTIES + 1))
+                {
+                    FileNameMaximumLength = 0;
+                    goto FatEnumerateDirentsRunLfn;
+                }
+
+                /* Setup maximal expected lfn length */
+                FileNameLength = SeqNum * FAT_LFN_NAME_LENGTH;
+
+                /* Validate the maximal expected lfn length */
+                if (FileNameLength > FileNameMaximumLength)
+                    goto FatEnumerateDirentsRunLfn;
+            }
+            else if (!(LfnEntry->SeqNum == SeqNum
+                && LfnEntry->Checksum == Checksum))
+            {
+               /* Wrong SeqNum or CheckSum. */
+                FileNameMaximumLength = 0;
+                goto FatEnumerateDirentsRunLfn;
+            }
+            /* Gather file name */
+            Lfn = Add2Ptr(FileName, (SeqNum * FAT_LFN_NAME_LENGTH)
+                    - sizeof(LfnEntry->NameC), PWSTR);
+            RtlCopyMemory(Lfn, LfnEntry->NameC, sizeof(LfnEntry->NameC));
+            Lfn -= (sizeof(LfnEntry->NameB) / sizeof(WCHAR));
+            RtlCopyMemory(Lfn, LfnEntry->NameB, sizeof(LfnEntry->NameB));
+            Lfn -= (sizeof(LfnEntry->NameA) / sizeof(WCHAR));
+            RtlCopyMemory(Lfn, LfnEntry->NameA, sizeof(LfnEntry->NameA));
+
+            /* If last lfn determine exact lfn length. */
+            if (FlagOn(LfnEntry->SeqNum, FAT_FN_DIR_ENTRY_LAST))
+            {
+                PWSTR LfnEnd = Add2Ptr(FileName, FileNameLength
+                    - sizeof(WCHAR), PWSTR);
+
+                /* Trim trailing 0xffff's */
+                while (LfnEnd > Lfn && *LfnEnd == 0xffff) --LfnEnd;
+
+                /* Trim 0 terminator is the one is there. */
+                if (*LfnEnd == 0x0) --LfnEnd;
+
+                /* Set correct lfn size */
+                FileNameLength = (USHORT)PtrOffset(FileName, LfnEnd);
+            }
+            /* Setup vaidation for the next iteration */
+            SeqNum = LfnEntry->SeqNum - 0x1;
+            Checksum = LfnEntry->Checksum;
+FatEnumerateDirentsRunLfn:
+            Entry = Add2Ptr(Entry, sizeof(DIR_ENTRY), PUCHAR);
+            if (Entry > EndOfPage)
+            {
+                if (FatPinIsLastPage(&Context->Page))
+                    ExRaiseStatus(STATUS_NO_MORE_FILES);
+                Entry = (PUCHAR) FatPinNextPage(&Context->Page);
+                EndOfPage = FatPinEndOfPage(&Context->Page, PUCHAR);
+            }
+        }
+
+        /* if lfn was found, validate and commit. */
+        if (FileNameLength > 0 && FatLfnChecksum(Entry) == Checksum)
+        {
+            *Add2Ptr(InfoEntry, Context->LengthOffset, PULONG) = FileNameLength;
+        }
+        else
+        {
+            *Add2Ptr(InfoEntry, Context->LengthOffset, PULONG) = 0;
+        }
+        /* TODO: Implement Filtering using Context->FileName & Context->CcbFlags. */
+
+        /* Copy the entry values. */
+        Context->Offset += Context->CopyDirent((PFAT_ENUM_DIR_CONTEXT)Context, (PDIR_ENTRY) Entry, InfoEntry);
+
+FatEnumerateDirentsNext:
+        /* Get next entry */
+        Entry = Add2Ptr(Entry, sizeof(DIR_ENTRY), PUCHAR);
+        if (Entry > EndOfPage)
+        {
+            if (FatPinIsLastPage(&Context->Page))
+                ExRaiseStatus(STATUS_NO_MORE_FILES);
+            Entry = (PUCHAR) FatPinNextPage(&Context->Page);
+            EndOfPage = FatPinEndOfPage(&Context->Page, PUCHAR);
+        }
+    }
+}
 
 FORCEINLINE
 VOID
@@ -280,14 +631,13 @@ Fat8dot3ToUnicodeString(OUT PUNICODE_STRING FileName,
 }
 
 ULONG
-FatDirentToDirInfo(IN OUT PFAT_ENUM_DIR_CONTEXT Context,
+FatDirentToDirInfo(IN OUT PFAT_ENUM_DIRENT_CONTEXT Context,
                    IN PDIR_ENTRY Dirent,
                    IN PVOID Buffer)
 {
     PFILE_DIRECTORY_INFORMATION Info;
-    //UNICODE_STRING FileName;
-
     Info = (PFILE_DIRECTORY_INFORMATION) Buffer;
+    Info->FileIndex = 0;
     /* Setup Attributes */
     Info->FileAttributes = Dirent->Attributes;
     /* Setup times */
@@ -297,29 +647,20 @@ FatDirentToDirInfo(IN OUT PFAT_ENUM_DIR_CONTEXT Context,
     Info->AllocationSize.QuadPart =
         (Context->BytesPerClusterMask + Dirent->FileSize)
             & ~(Context->BytesPerClusterMask);
-    //FileName.Buffer = Info->ShortName;
-    //FileName.MaximumLength = sizeof(Info->ShortName);
-    // FatQueryShortName(&FileName, Dirent);
-    // Info->ShortNameLength = (CCHAR) FileName.Length;
+    FatQueryFileName(Info, Dirent);
     Info->NextEntryOffset = sizeof(*Info);
-    /* Associate LFN buffer and length pointers
-     * of this entry with the context.
-     */
-    Context->NextEntryOffset = &Info->NextEntryOffset;
-    Context->FileName = Info->FileName;
-    Context->FileNameLength = &Info->FileNameLength;
-    return Info->NextEntryOffset;
+    return Info->NextEntryOffset + Info->FileNameLength;
 }
 
 ULONG
-FatDirentToFullDirInfo(IN OUT PFAT_ENUM_DIR_CONTEXT Context,
+FatDirentToFullDirInfo(IN OUT PFAT_ENUM_DIRENT_CONTEXT Context,
                        IN PDIR_ENTRY Dirent,
                        IN PVOID Buffer)
 {
     PFILE_FULL_DIR_INFORMATION Info;
-    //UNICODE_STRING FileName;
-
     Info = (PFILE_FULL_DIR_INFORMATION) Buffer;
+    Info->FileIndex = 0;
+    Info->EaSize = 0;
     /* Setup Attributes */
     Info->FileAttributes = Dirent->Attributes;
     /* Setup times */
@@ -329,30 +670,21 @@ FatDirentToFullDirInfo(IN OUT PFAT_ENUM_DIR_CONTEXT Context,
     Info->AllocationSize.QuadPart =
         (Context->BytesPerClusterMask + Dirent->FileSize)
             & ~(Context->BytesPerClusterMask);
-    //FileName.Buffer = Info->ShortName;
-    //FileName.MaximumLength = sizeof(Info->ShortName);
-    // FatQueryShortName(&FileName, Dirent);
-    // Info->ShortNameLength = (CCHAR) FileName.Length;
+    FatQueryFileName(Info, Dirent);
     Info->NextEntryOffset = sizeof(*Info);
-   /*
-    * Associate LFN buffer and length pointers
-    * of this entry with the context.
-    */
-    Context->NextEntryOffset = &Info->NextEntryOffset;
-    Context->FileName = Info->FileName;
-    Context->FileNameLength = &Info->FileNameLength;
-    return Info->NextEntryOffset;
+    return Info->NextEntryOffset + Info->FileNameLength;
 }
 
 ULONG
-FatDirentToIdFullDirInfo(IN OUT PFAT_ENUM_DIR_CONTEXT Context,
+FatDirentToIdFullDirInfo(IN OUT PFAT_ENUM_DIRENT_CONTEXT Context,
                          IN PDIR_ENTRY Dirent,
                          IN PVOID Buffer)
 {
     PFILE_ID_FULL_DIR_INFORMATION Info;
-    //UNICODE_STRING FileName;
-
     Info = (PFILE_ID_FULL_DIR_INFORMATION) Buffer;
+    Info->FileId.QuadPart = 0;
+    Info->FileIndex = 0;
+    Info->EaSize = 0;
     /* Setup Attributes */
     Info->FileAttributes = Dirent->Attributes;
     /* Setup times */
@@ -362,30 +694,20 @@ FatDirentToIdFullDirInfo(IN OUT PFAT_ENUM_DIR_CONTEXT Context,
     Info->AllocationSize.QuadPart =
         (Context->BytesPerClusterMask + Dirent->FileSize)
             & ~(Context->BytesPerClusterMask);
-    //FileName.Buffer = Info->ShortName;
-    //FileName.MaximumLength = sizeof(Info->ShortName);
-    // FatQueryShortName(&FileName, Dirent);
-    // Info->ShortNameLength = (CCHAR) FileName.Length;
+    FatQueryFileName(Info, Dirent);
     Info->NextEntryOffset = sizeof(*Info);
-    /*
-    * Associate LFN buffer and length pointers
-    * of this entry with the context.
-    */
-    Context->NextEntryOffset = &Info->NextEntryOffset;
-    Context->FileName = Info->FileName;
-    Context->FileNameLength = &Info->FileNameLength;
-    return Info->NextEntryOffset;
+    return Info->NextEntryOffset + Info->FileNameLength;
 }
 
 ULONG
-FatDirentToBothDirInfo(IN OUT PFAT_ENUM_DIR_CONTEXT Context,
+FatDirentToBothDirInfo(IN OUT PFAT_ENUM_DIRENT_CONTEXT Context,
                        IN PDIR_ENTRY Dirent,
                        IN PVOID Buffer)
 {
     PFILE_BOTH_DIR_INFORMATION Info;
-    UNICODE_STRING FileName;
-
     Info = (PFILE_BOTH_DIR_INFORMATION) Buffer;
+    Info->FileIndex = 0;
+    Info->EaSize = 0;
     /* Setup Attributes */
     Info->FileAttributes = Dirent->Attributes;
     /* Setup times */
@@ -395,29 +717,21 @@ FatDirentToBothDirInfo(IN OUT PFAT_ENUM_DIR_CONTEXT Context,
     Info->AllocationSize.QuadPart =
         (Context->BytesPerClusterMask + Dirent->FileSize)
             & ~(Context->BytesPerClusterMask);
-    FileName.Buffer = Info->ShortName;
-    FileName.MaximumLength = sizeof(Info->ShortName);
-    Fat8dot3ToUnicodeString(&FileName, Dirent->FileName, Dirent->Case);
-    Info->ShortNameLength = (CCHAR) FileName.Length;
+    FatQueryBothFileName(Info, Dirent);
     Info->NextEntryOffset = sizeof(*Info);
-    /* Associate LFN buffer and length pointers
-     * of this entry with the context.
-     */
-    Context->NextEntryOffset = &Info->NextEntryOffset;
-    Context->FileName = Info->FileName;
-    Context->FileNameLength = &Info->FileNameLength;
-    return Info->NextEntryOffset;
+    return Info->NextEntryOffset + Info->FileNameLength;
 }
 
 ULONG
-FatDirentToIdBothDirInfo(IN OUT PFAT_ENUM_DIR_CONTEXT Context,
+FatDirentToIdBothDirInfo(IN OUT PFAT_ENUM_DIRENT_CONTEXT Context,
                          IN PDIR_ENTRY Dirent,
                          IN PVOID Buffer)
 {
     PFILE_ID_BOTH_DIR_INFORMATION Info;
-    UNICODE_STRING FileName;
-
     Info = (PFILE_ID_BOTH_DIR_INFORMATION) Buffer;
+    Info->FileId.QuadPart = 0;
+    Info->FileIndex = 0;
+    Info->EaSize = 0;
     /* Setup Attributes */
     Info->FileAttributes = Dirent->Attributes;
     /* Setup times */
@@ -427,151 +741,35 @@ FatDirentToIdBothDirInfo(IN OUT PFAT_ENUM_DIR_CONTEXT Context,
     Info->AllocationSize.QuadPart =
         (Context->BytesPerClusterMask + Dirent->FileSize)
             & ~(Context->BytesPerClusterMask);
-    FileName.Buffer = Info->ShortName;
-    FileName.MaximumLength = sizeof(Info->ShortName);
-    Fat8dot3ToUnicodeString(&FileName, Dirent->FileName, Dirent->Case);
-    Info->ShortNameLength = (CCHAR) FileName.Length;
+    FatQueryBothFileName(Info, Dirent);
     Info->NextEntryOffset = sizeof(*Info);
-   /*
-    * Associate LFN buffer and length pointers
-    * of this entry with the context.
-    */
-    Context->NextEntryOffset = &Info->NextEntryOffset;
-    Context->FileName = Info->FileName;
-    Context->FileNameLength = &Info->FileNameLength;
-    return Info->NextEntryOffset;
+    return Info->NextEntryOffset + Info->FileNameLength;
 }
 
 ULONG
-FatDirentToNamesInfo(IN OUT PFAT_ENUM_DIR_CONTEXT Context,
+FatDirentToNamesInfo(IN OUT PFAT_ENUM_DIRENT_CONTEXT Context,
                      IN PDIR_ENTRY Dirent,
                      IN PVOID Buffer)
 {
     PFILE_NAMES_INFORMATION Info;
-
     Info = (PFILE_NAMES_INFORMATION) Buffer;
-//    FatQueryShortName(&FileName, Dirent);
+    Info->FileIndex = 0;
+    FatQueryFileName(Info, Dirent);
     Info->NextEntryOffset = sizeof(*Info);
-    /* Associate LFN buffer and length pointers
-     * of this entry with the context.
-     */
-    Context->NextEntryOffset = &Info->NextEntryOffset;
-    Context->FileName = Info->FileName;
-    Context->FileNameLength = &Info->FileNameLength;
-    return Info->NextEntryOffset;
+    return Info->NextEntryOffset + Info->FileNameLength;
 }
 
 ULONG
-FatDirentToObjectIdInfo(IN OUT PFAT_ENUM_DIR_CONTEXT Context,
+FatDirentToObjectIdInfo(IN OUT PFAT_ENUM_DIRENT_CONTEXT Context,
                         IN PDIR_ENTRY Dirent,
                         IN PVOID Buffer)
 {
     PFILE_OBJECTID_INFORMATION Info;
-
     Info = (PFILE_OBJECTID_INFORMATION) Buffer;
+    Info->FileReference = 0;
+    ((PLONGLONG)Info->ObjectId)[0] = 0LL;
+    ((PLONGLONG)Info->ObjectId)[1] = 0LL;
     return sizeof(*Info);
-}
-
-ULONG
-FatEnumerateDirents(IN OUT PFAT_ENUM_DIR_CONTEXT Context,
-                    IN ULONG Index,
-                    IN BOOLEAN CanWait)
-{
-    LONGLONG PageOffset;
-    SIZE_T OffsetWithinPage, PageValidLength;
-    PUCHAR Entry, BeyondLastEntry;
-    /* Determine page offset and the offset within page
-     * for the first cluster.
-     */
-    PageValidLength = PAGE_SIZE;
-    PageOffset = ((LONGLONG) Index) << BYTES_PER_DIRENT_LOG;
-    OffsetWithinPage = (SIZE_T) (PageOffset & (PAGE_SIZE - 1));
-    PageOffset -= OffsetWithinPage;
-    /* Check if the context already has the required page mapped.
-     * Map the first page is necessary.
-     */
-    if (PageOffset != Context->PageOffset.QuadPart)
-    {
-        Context->PageOffset.QuadPart = PageOffset;
-        if (Context->PageBcb != NULL)
-        {
-            CcUnpinData(Context->PageBcb);
-            Context->PageBcb = NULL;
-        }
-        if (!CcMapData(Context->FileObject,
-                       &Context->PageOffset,
-                       PAGE_SIZE,
-                       CanWait,
-                       &Context->PageBcb,
-                       &Context->PageBuffer))
-        {
-            Context->PageOffset.QuadPart = 0LL;
-            ExRaiseStatus(STATUS_CANT_WAIT);
-        }
-    }
-    Entry = Add2Ptr(Context->PageBuffer, OffsetWithinPage, PUCHAR);
-   /* Next Page Offset */
-    PageOffset = Context->PageOffset.QuadPart + PAGE_SIZE;
-    if (PageOffset > Context->BeyondLastEntryOffset)
-    {
-        PageValidLength = (SIZE_T) (Context->BeyondLastEntryOffset
-            - Context->PageOffset.QuadPart);
-    }
-    BeyondLastEntry = Add2Ptr(Context->PageBuffer, PageValidLength, PUCHAR);
-    while (TRUE)
-    {
-        do
-        {
-            if (*Entry == FAT_DIRENT_NEVER_USED)
-                return 0; // TODO: return something reasonable.
-            if (*Entry == FAT_DIRENT_DELETED)
-            {
-                continue;
-            }
-            if (Entry[0x0a] == FAT_DIRENT_ATTR_LFN)
-            {
-                PLONG_FILE_NAME_ENTRY Lfnent;
-                Lfnent = (PLONG_FILE_NAME_ENTRY) Entry;
-            }
-            else
-            {
-                PDIR_ENTRY Dirent;
-                Dirent = (PDIR_ENTRY) Entry;
-                RtlCopyMemory(Context->DirentFileName,
-                              Dirent->FileName,
-                              sizeof(Dirent->FileName));
-            }
-        } while (++Entry < BeyondLastEntry);
-        /* Check if this is the last available entry */
-        if (PageValidLength < PAGE_SIZE)
-            break;
-        /* We are getting beyond current page and
-         * are still in the continous run, map the next page.
-         */
-        Context->PageOffset.QuadPart = PageOffset;
-        CcUnpinData(Context->PageBcb);
-        if (!CcMapData(Context->FileObject,
-                       &Context->PageOffset,
-                       PAGE_SIZE,
-                       CanWait,
-                       &Context->PageBcb,
-                       &Context->PageBuffer))
-        {
-            Context->PageBcb = NULL;
-            Context->PageOffset.QuadPart = 0LL;
-            ExRaiseStatus(STATUS_CANT_WAIT);
-        }
-        Entry = (PUCHAR) Context->PageBuffer;
-       /* Next Page Offset */
-        PageOffset = Context->PageOffset.QuadPart + PAGE_SIZE;
-        if (PageOffset > Context->BeyondLastEntryOffset)
-        {
-            PageValidLength = (SIZE_T) (Context->BeyondLastEntryOffset
-                - Context->PageOffset.QuadPart);
-        }
-        BeyondLastEntry = Add2Ptr(Context->PageBuffer, PageValidLength, PUCHAR);
-    }
-    return 0;
 }
 
 /* EOF */

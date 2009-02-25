@@ -17,6 +17,7 @@ FAT_GLOBAL_DATA FatGlobalData;
 
 /* FUNCTIONS ****************************************************************/
 
+
 NTSTATUS
 NTAPI
 DriverEntry(PDRIVER_OBJECT DriverObject,
@@ -110,7 +111,6 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
     /* Register and reference our filesystem */
     IoRegisterFileSystem(DeviceObject);
     ObReferenceObject(DeviceObject);
-
     return STATUS_SUCCESS;
 }
 
@@ -221,5 +221,51 @@ FatCompleteRequest(PFAT_IRP_CONTEXT IrpContext OPTIONAL,
     }
 }
 
+VOID
+NTAPI
+FatDequeueRequest(IN PVOID Context)
+{
+    PFAT_IRP_CONTEXT IrpContext;
 
+    IrpContext = (PFAT_IRP_CONTEXT) Context;
+
+    /* Enter critical region. */
+    FsRtlEnterFileSystem();
+
+    /* Handle top level IRP Correctly. */
+    if (!FlagOn(IrpContext->Flags, IRPCONTEXT_TOPLEVEL))
+        IoSetTopLevelIrp((PIRP) FSRTL_FSP_TOP_LEVEL_IRP);
+
+    /* Enable Synchronous IO. */
+    SetFlag(IrpContext->Flags, IRPCONTEXT_CANWAIT);
+
+    /* Invoke the handler routine. */
+    IrpContext->QueuedOperationHandler(IrpContext);
+
+    /* Restore top level IRP. */
+	IoSetTopLevelIrp(NULL);
+
+    /* Leave critical region. */
+	FsRtlExitFileSystem();
+}
+
+VOID
+NTAPI
+FatQueueRequest(IN PFAT_IRP_CONTEXT IrpContext,
+                IN PFAT_OPERATION_HANDLER OperationHandler)
+{
+    /* Save the worker routine. */
+    IrpContext->QueuedOperationHandler = OperationHandler;
+
+    /* Indicate if top level IRP was set. */
+    if (IoGetTopLevelIrp() == IrpContext->Irp)
+        SetFlag(IrpContext->Flags, IRPCONTEXT_TOPLEVEL);
+
+    /* Initialize work item. */
+    ExInitializeWorkItem(&IrpContext->WorkQueueItem,
+        FatDequeueRequest,
+        IrpContext);
+    ExQueueWorkItem(&IrpContext->WorkQueueItem,
+        DelayedWorkQueue);
+}
 /* EOF */
