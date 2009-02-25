@@ -14,6 +14,7 @@
   <property name="BASEADDRESS_LOADPERF" value="0x4B920000" />
   <property name="BASEADDRESS_MPRAPI" value="0x4C400000" />
   <property name="BASEADDRESS_MSFTEDIT" value="0x4b460000" />
+  <property name="BASEADDRESS_WUAPI" value="0x506a0000" />
   <property name="BASEADDRESS_SRCLIENT" value="0x512C0000" />
   <property name="BASEADDRESS_PSTOREC" value="0x513D0000" />
   <property name="BASEADDRESS_LPK" value="0x516C0000" />
@@ -38,6 +39,7 @@
   <property name="BASEADDRESS_DINPUT" value="0x5f580000" />
   <property name="BASEADDRESS_NETID" value="0x5f660000" />
   <property name="BASEADDRESS_NTPRINT" value="0x5f6a0000" />
+  <property name="BASEADDRESS_INSENG" value="0x61000000" />
   <property name="BASEADDRESS_QEDIT" value="0x611c0000" />
   <property name="BASEADDRESS_MODEMUI" value="0x61650000" />
   <property name="BASEADDRESS_MAPI32" value="0x62250000" />
@@ -147,6 +149,7 @@
   <property name="BASEADDRESS_IPHLPAPI" value="0x75700000" />
   <property name="BASEADDRESS_NDDEAPI" value="0x75940000" />
   <property name="BASEADDRESS_MSGINA" value="0x75970000" />
+  <property name="BASEADDRESS_LOCALSPL" value="0x75b80000" />
   <property name="BASEADDRESS_CRYPTNET" value="0x75e60000" />
   <property name="BASEADDRESS_RPCRT4" value="0x76000000" />
   <property name="BASEADDRESS_SHLWAPI" value="0x76120000" />

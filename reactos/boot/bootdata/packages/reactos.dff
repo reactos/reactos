@@ -281,11 +281,13 @@ dll\win32\imagehlp\imagehlp.dll                     1
 dll\win32\imm32\imm32.dll                           1
 dll\win32\inetcomm\inetcomm.dll                     1
 dll\win32\inetmib1\inetmib1.dll                     1
+dll\win32\inseng\inseng.dll                         1
 dll\win32\iphlpapi\iphlpapi.dll                     1
 dll\win32\itss\itss.dll                             1
 dll\win32\jscript\jscript.dll                       1
 dll\win32\kernel32\kernel32.dll                     1
 dll\win32\loadperf\loadperf.dll                     1
+dll\win32\localspl\localspl.dll                     1
 dll\win32\localui\localui.dll                       1
 dll\win32\lsasrv\lsasrv.dll                         1
 dll\win32\lz32\lz32.dll                             1
@@ -406,6 +408,7 @@ dll\win32\wshirda\wshirda.dll                       1
 dll\win32\wshtcpip\wshtcpip.dll                     1
 dll\win32\wsock32\wsock32.dll                       1
 dll\win32\wtsapi32\wtsapi32.dll                     1
+dll\win32\wuapi\wuapi.dll                           1
 dll\win32\winmm\midimap\midimap.dll                 1
 dll\win32\winmm\wavemap\msacm32.drv                 1   optional
 

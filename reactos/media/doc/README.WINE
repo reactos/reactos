@@ -55,9 +55,11 @@ reactos/dll/win32/imm32           # Autosync
 reactos/dll/win32/imagehlp        # Patches for BindImage need review and submission to winehq.
 reactos/dll/win32/inetcomm        # Autosync
 reactos/dll/win32/inetmib1        # Autosync
+reactos/dll/win32/inseng          # Autosync
 reactos/dll/win32/iphlpapi        # Out of sync
 reactos/dll/win32/itss            # Autosync
 reactos/dll/win32/jscript         # Autosync
+reactos/dll/win32/localspl        # Autosync
 reactos/dll/win32/localui         # Autosync
 reactos/dll/win32/lz32            # Autosync
 reactos/dll/win32/mapi32          # Autosync
@@ -129,6 +131,7 @@ reactos/dll/win32/winmm/wavemap   # Forked at Wine-20050628
 reactos/dll/win32/wldap32         # Autosync
 reactos/dll/win32/wmi             # Autosync
 reactos/dll/win32/wtsapi32        # Autosync
+reactos/dll/win32/wuapi           # Autosync
 reactos/dll/directx/dinput        # Synced to Wine-1_1_4
 reactos/dll/directx/dinput8       # Synced to Wine-1_1_4
 reactos/dll/directx/dplay         # Synced to Wine-0_9_5

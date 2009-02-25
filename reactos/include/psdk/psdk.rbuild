@@ -52,6 +52,7 @@
 	<file>mshtmhst.idl</file>
 	<file>exdisp.idl</file>
 	<file>wtypes.idl</file>
+	<file>wuapi.idl</file>
 	<file>comcat.idl</file>
 	<file>xmldso.idl</file>
 	<file>xmldom.idl</file>

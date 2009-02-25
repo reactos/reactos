@@ -139,6 +139,9 @@
 <directory name="inetmib1">
 	<xi:include href="inetmib1/inetmib1.rbuild" />
 </directory>
+<directory name="inseng">
+	<xi:include href="inseng/inseng.rbuild" />
+</directory>
 <directory name="iphlpapi">
 	<xi:include href="iphlpapi/iphlpapi.rbuild" />
 </directory>
@@ -153,6 +156,9 @@
 </directory>
 <directory name="loadperf">
 	<xi:include href="loadperf/loadperf.rbuild" />
+</directory>
+<directory name="localspl">
+	<xi:include href="localspl/localspl.rbuild" />
 </directory>
 <directory name="localui">
 	<xi:include href="localui/localui.rbuild" />
@@ -522,5 +528,8 @@
 </directory>
 <directory name="wtsapi32">
 	<xi:include href="wtsapi32/wtsapi32.rbuild" />
+</directory>
+<directory name="wuapi">
+	<xi:include href="wuapi/wuapi.rbuild" />
 </directory>
 </group>
