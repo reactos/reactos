@@ -616,8 +616,6 @@ SysAudioHandleProperty(
             if (PinInstances.CurrentCount == PinInstances.PossibleCount)
             {
                 /* pin already exists */
-                DPRINT1("Pins %p\n", Entry->Pins);
-                DbgBreakPoint();
                 ASSERT(Entry->Pins[PinConnect->PinId].PinHandle != NULL);
 
                 if (Entry->Pins[PinConnect->PinId].References > 1)

@@ -269,7 +269,7 @@ DispatchCreateSysAudio(
         {
             Status = CreateDispatcher(Irp);
             DPRINT1("Virtual pin Status %x FileObject %p\n", Status, IoStatus->FileObject);
-DbgBreakPoint();
+
             Irp->IoStatus.Information = 0;
             Irp->IoStatus.Status = Status;
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
