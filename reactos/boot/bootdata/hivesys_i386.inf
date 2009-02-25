@@ -922,21 +922,6 @@ HKLM,"SYSTEM\CurrentControlSet\Services\kbdclass","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\kbdclass\Parameters","ConnectMultiplePorts",0x00010001,1
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E96B-E325-11CE-BFC1-08002BE10318}","UpperFilters",0x00010000,"kbdclass"
 
-; SB16 driver
-HKLM,"SYSTEM\CurrentControlSet\Services\sndblst","Group",0x00000000,"Base"
-HKLM,"SYSTEM\CurrentControlSet\Services\sndblst","ServiceType",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\sndblst","Type",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\sndblst","Start",0x00010001,0x00000004
-HKLM,"SYSTEM\CurrentControlSet\Services\sndblst","ErrorControl",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\sndblst","ImagePath",0x00020000,"system32\drivers\sndblst.sys"
-;HKLM,"SYSTEM\CurrentControlSet\Services\sndblst\Parameters\Device0","DmaChannel",0x00010001,0x00000001
-;HKLM,"SYSTEM\CurrentControlSet\Services\sndblst\Parameters\Device0","DmaChannel16",0x00010001,0x00000005
-;HKLM,"SYSTEM\CurrentControlSet\Services\sndblst\Parameters\Device0","Port",0x00010001,0x00000220
-;HKLM,"SYSTEM\CurrentControlSet\Services\sndblst\Parameters\Device0","Interrupt",0x00010001,0x00000005
-;HKLM,"SYSTEM\CurrentControlSet\Services\sndblst\Parameters\Device0","DSP Version",0x00010001,0x00000401
-HKLM,"SYSTEM\CurrentControlSet\Services\sndblst\Parameters\Device0\Devices","SBWaveIn0",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\sndblst\Parameters\Device0\Devices","SBWaveOut0",0x00010001,0x00000002
-
 ; MPU-401 MIDI driver
 HKLM,"SYSTEM\CurrentControlSet\Services\mpu401","Group",0x00000000,"Base"
 HKLM,"SYSTEM\CurrentControlSet\Services\mpu401","ServiceType",0x00010001,0x00000001
