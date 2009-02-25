@@ -261,7 +261,7 @@ ExFreePoolWithTag(IN PVOID Block, IN ULONG Tag)
     else
         BlockTag = EiGetNonPagedPoolTag(Block);
 
-    if (BlockTag != Tag)
+    if (BlockTag != Tag && Tag != 0)
         KeBugCheckEx(BAD_POOL_CALLER, 0x0a, (ULONG_PTR)Block, BlockTag, Tag);
 
     ExFreePool(Block);
