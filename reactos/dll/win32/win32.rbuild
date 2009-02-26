@@ -205,6 +205,9 @@
 <directory name="mscoree">
 	<xi:include href="mscoree/mscoree.rbuild" />
 </directory>
+<directory name="msctf">
+	<xi:include href="msctf/msctf.rbuild" />
+</directory>
 <directory name="msftedit">
 	<xi:include href="msftedit/msftedit.rbuild" />
 </directory>

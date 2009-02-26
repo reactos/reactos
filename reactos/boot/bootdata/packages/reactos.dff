@@ -302,6 +302,7 @@ dll\win32\msafd\msafd.dll                           1
 dll\win32\mscat32\mscat32.dll                       1
 dll\win32\mscms\mscms.dll                           1
 dll\win32\mscoree\mscoree.dll                       1
+dll\win32\msctf\msctf.dll                           1
 dll\win32\msftedit\msftedit.dll                     1
 dll\win32\msgina\msgina.dll                         1
 dll\win32\mshtml\mshtml.dll                         1

@@ -21,6 +21,7 @@
 	<file>indexsrv.idl</file>
 	<file>mimeinfo.idl</file>
 	<file>mlang.idl</file>
+	<file>msctf.idl</file>
 	<file>mshtml.idl</file>
 	<file>mstask.idl</file>
 	<file>msxml.idl</file>
@@ -43,6 +44,7 @@
 	<file>shobjidl.idl</file>
 	<file>shtypes.idl</file>
 	<file>strmif.idl</file>
+	<file>textstor.idl</file>
 	<file>tom.idl</file>
 	<file>unknwn.idl</file>
 	<file>urlhist.idl</file>
