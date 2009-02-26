@@ -96,19 +96,6 @@ void UXINI_CloseINI(PUXINI_FILE uf)
 }
 
 /**********************************************************************
- *      UXINI_ResetINI
- *
- * Reset the current pointer into INI file to the beginning of the file
- *
- * PARAMS
- *     uf                  Theme INI file to reset
- */
-void UXINI_ResetINI(PUXINI_FILE uf)
-{
-    uf->lpCurLoc = uf->lpIni;
-}
-
-/**********************************************************************
  *      UXINI_eof
  *
  * Determines if we are at the end of the INI file
@@ -212,7 +199,6 @@ LPCWSTR UXINI_GetNextSection(PUXINI_FILE uf, DWORD *dwLen)
  *
  * Locate a section with the specified name, search starts
  * at current location in ini file
- * to start search from start, call UXINI_ResetINI
  *
  * PARAMS
  *     uf                  INI file to search, search starts at current location
