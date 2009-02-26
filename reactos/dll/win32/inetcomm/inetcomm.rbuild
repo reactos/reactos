@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
-<module name="inetcomm" type="win32dll" baseaddress="${BASEADDRESS_INETCOMM}" installbase="system32" installname="inetcomm.dll">
+<module name="inetcomm" type="win32dll" baseaddress="${BASEADDRESS_INETCOMM}" installbase="system32" installname="inetcomm.dll" allowwarnings="true">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="inetcomm.spec" />
 	<include base="inetcomm">.</include>

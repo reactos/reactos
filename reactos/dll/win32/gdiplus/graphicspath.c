@@ -1384,16 +1384,33 @@ GpStatus WINGDIPAPI GdipIsVisiblePathPointI(GpPath* path, INT x, INT y, GpGraphi
     return GdipIsVisiblePathPoint(path, x, y, graphics, result);
 }
 
+/*****************************************************************************
+ * GdipIsVisiblePathPoint [GDIPLUS.@]
+ */
 GpStatus WINGDIPAPI GdipIsVisiblePathPoint(GpPath* path, REAL x, REAL y, GpGraphics *graphics, BOOL *result)
 {
-    static int calls;
+    GpRegion *region;
+    HRGN hrgn;
+    GpStatus status;
 
-    if(!path) return InvalidParameter;
+    if(!path || !result) return InvalidParameter;
 
-    if(!(calls++))
-        FIXME("not implemented\n");
+    status = GdipCreateRegionPath(path, &region);
+    if(status != Ok)
+        return status;
 
-    return NotImplemented;
+    status = GdipGetRegionHRgn(region, graphics, &hrgn);
+    if(status != Ok){
+        GdipDeleteRegion(region);
+        return status;
+    }
+
+    *result = PtInRegion(hrgn, roundr(x), roundr(y));
+
+    DeleteObject(hrgn);
+    GdipDeleteRegion(region);
+
+    return Ok;
 }
 
 GpStatus WINGDIPAPI GdipStartPathFigure(GpPath *path)

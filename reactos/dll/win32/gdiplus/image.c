@@ -496,12 +496,6 @@ GpStatus WINGDIPAPI GdipCreateBitmapFromScan0(INT width, INT height, INT stride,
     if(scan0 && !stride)
         return InvalidParameter;
 
-    /* FIXME: windows allows negative stride (reads backwards from scan0) */
-    if(stride < 0){
-        FIXME("negative stride\n");
-        return InvalidParameter;
-    }
-
     *bitmap = GdipAlloc(sizeof(GpBitmap));
     if(!*bitmap)    return OutOfMemory;
 
@@ -527,16 +521,29 @@ GpStatus WINGDIPAPI GdipCreateBitmapFromScan0(INT width, INT height, INT stride,
 
     bmih->biSize            = sizeof(BITMAPINFOHEADER);
     bmih->biWidth           = width;
-    bmih->biHeight          = -height;
     /* FIXME: use the rest of the data from format */
     bmih->biBitCount        = PIXELFORMATBPP(format);
     bmih->biCompression     = BI_RGB;
     bmih->biSizeImage       = datalen;
 
-    if(scan0)
-        memcpy(bmih + 1, scan0, datalen);
+    if (scan0)
+    {
+        if (stride > 0)
+        {
+            bmih->biHeight = -height;
+            memcpy(bmih + 1, scan0, datalen);
+        }
+        else
+        {
+            bmih->biHeight = height;
+            memcpy(bmih + 1, scan0 + stride * (height - 1), datalen);
+        }
+    }
     else
+    {
+        bmih->biHeight = height;
         memset(bmih + 1, 0, datalen);
+    }
 
     if(CreateStreamOnHGlobal(buff, TRUE, &stream) != S_OK){
         ERR("could not make stream\n");
@@ -1492,6 +1499,7 @@ GpStatus WINGDIPAPI GdipCreateBitmapFromHBITMAP(HBITMAP hbm, HPALETTE hpal, GpBi
     BITMAP bm;
     GpStatus retval;
     PixelFormat format;
+    BYTE* bits;
 
     TRACE("%p %p %p\n", hbm, hpal, bitmap);
 
@@ -1532,8 +1540,16 @@ GpStatus WINGDIPAPI GdipCreateBitmapFromHBITMAP(HBITMAP hbm, HPALETTE hpal, GpBi
             return InvalidParameter;
     }
 
-    retval = GdipCreateBitmapFromScan0(bm.bmWidth, bm.bmHeight, bm.bmWidthBytes,
-        format, bm.bmBits, bitmap);
+    if (bm.bmBits)
+        bits = (BYTE*)bm.bmBits + (bm.bmHeight - 1) * bm.bmWidthBytes;
+    else
+    {
+        FIXME("can only get image data from DIB sections\n");
+        bits = NULL;
+    }
+
+    retval = GdipCreateBitmapFromScan0(bm.bmWidth, bm.bmHeight, -bm.bmWidthBytes,
+        format, bits, bitmap);
 
     return retval;
 }

@@ -204,29 +204,6 @@ HRESULT InternetTransport_ChangeStatus(InternetTransport *This, IXPSTATUS Status
     return S_OK;
 }
 
-HRESULT InternetTransport_Read(InternetTransport *This, int cbBuffer,
-    INETXPORT_COMPLETION_FUNCTION fnCompletion)
-{
-    if (This->Status == IXP_DISCONNECTED)
-        return IXP_E_NOT_CONNECTED;
-
-    if (This->fnCompletion)
-        return IXP_E_BUSY;
-
-    This->fnCompletion = fnCompletion;
-
-    This->cbBuffer = cbBuffer;
-    This->pBuffer = HeapAlloc(GetProcessHeap(), 0, This->cbBuffer);
-    This->iCurrentBufferOffset = 0;
-
-    if (WSAAsyncSelect(This->Socket, This->hwnd, IX_READ, FD_READ) == SOCKET_ERROR)
-    {
-        ERR("WSAAsyncSelect failed with error %d\n", WSAGetLastError());
-        /* FIXME: handle error */
-    }
-    return S_OK;
-}
-
 HRESULT InternetTransport_ReadLine(InternetTransport *This,
     INETXPORT_COMPLETION_FUNCTION fnCompletion)
 {

@@ -1125,7 +1125,7 @@ HRESULT MimeBody_create(IUnknown *outer, void **obj)
     body_offsets.cbBodyStart     = body_offsets.cbBodyEnd     = 0;
     MimeBody_set_offsets(This, &body_offsets);
 
-    *obj = (IMimeBody *)&This->lpVtbl;
+    *obj = &This->lpVtbl;
     return S_OK;
 }
 
@@ -2563,7 +2563,7 @@ HRESULT MimeMessage_create(IUnknown *outer, void **obj)
     list_init(&This->body_tree);
     This->next_hbody = (HBODY)1;
 
-    *obj = (IMimeMessage *)&This->lpVtbl;
+    *obj = &This->lpVtbl;
     return S_OK;
 }
 
@@ -2774,7 +2774,7 @@ HRESULT MimeSecurity_create(IUnknown *outer, void **obj)
     This->lpVtbl = &MimeSecurityVtbl;
     This->refs = 1;
 
-    *obj = (IMimeSecurity *)&This->lpVtbl;
+    *obj = &This->lpVtbl;
     return S_OK;
 }
 
