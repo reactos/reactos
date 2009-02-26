@@ -54,7 +54,7 @@ static BOOL g_bInitialFocusInitDlgResult;
 static int g_terminated;
 
 typedef struct {
-    unsigned int id;
+    INT_PTR id;
     int parent;
     DWORD style;
     DWORD exstyle;
@@ -160,7 +160,7 @@ static BOOL CreateWindows (HINSTANCE hinst)
         {
             if (p->id >=  sizeof(hwnd)/sizeof(hwnd[0]))
             {
-                trace ("Control %d is out of range\n", p->id);
+                trace ("Control %ld is out of range\n", p->id);
                 return FALSE;
             }
             else
@@ -168,21 +168,21 @@ static BOOL CreateWindows (HINSTANCE hinst)
         }
         if (p->id <= 0)
         {
-            trace ("Control %d is out of range\n", p->id);
+            trace ("Control %ld is out of range\n", p->id);
             return FALSE;
         }
         if (hwnd[p->id] != 0)
         {
-            trace ("Control %d is used more than once\n", p->id);
+            trace ("Control %ld is used more than once\n", p->id);
             return FALSE;
         }
 
         /* Create the control */
-        sprintf (ctrlname, "ctrl%4.4d", p->id);
+        sprintf (ctrlname, "ctrl%4.4ld", p->id);
         hwnd[p->id] = CreateWindowEx (p->exstyle, TEXT(p->parent ? "static" : "GetNextDlgItemWindowClass"), TEXT(ctrlname), p->style, 10, 10, 10, 10, hwnd[p->parent], p->parent ? (HMENU) (2000 + p->id) : 0, hinst, 0);
         if (!hwnd[p->id])
         {
-            trace ("Failed to create control %d\n", p->id);
+            trace ("Failed to create control %ld\n", p->id);
             return FALSE;
         }
 
@@ -196,7 +196,7 @@ static BOOL CreateWindows (HINSTANCE hinst)
             exstyle = GetWindowLong (hwnd[p->id], GWL_EXSTYLE);
             if (style != p->style || exstyle != p->exstyle)
             {
-                trace ("Style mismatch at %d: %8.8x %8.8x cf %8.8x %8.8x\n", p->id, style, exstyle, p->style, p->exstyle);
+                trace ("Style mismatch at %ld: %8.8x %8.8x cf %8.8x %8.8x\n", p->id, style, exstyle, p->style, p->exstyle);
             }
         }
         p++;
@@ -872,7 +872,7 @@ static void InitialFocusTest (void)
         HANDLE hTemplate;
         DLGTEMPLATE* pTemplate;
 
-        hResource = FindResourceA(g_hinst,"FOCUS_TEST_DIALOG", (LPSTR)RT_DIALOG);
+        hResource = FindResourceA(g_hinst,"FOCUS_TEST_DIALOG", RT_DIALOG);
         hTemplate = LoadResource(g_hinst, hResource);
         pTemplate = LockResource(hTemplate);
 

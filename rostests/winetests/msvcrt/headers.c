@@ -32,7 +32,7 @@
 #include "stdio.h"
 #include "wchar.h"
 #include "ctype.h"
-//#include "crtdbg.h"
+#include "crtdbg.h"
 #include "share.h"
 #include "search.h"
 #include "wctype.h"
@@ -88,6 +88,7 @@ static void test_types(void)
     CHECK_TYPE(_off_t);
     CHECK_TYPE(clock_t);
     CHECK_TYPE(time_t);
+    CHECK_TYPE(__time32_t);
     CHECK_TYPE(__time64_t);
     CHECK_TYPE(fpos_t);
     CHECK_SIZE(FILE);
@@ -462,6 +463,17 @@ static void test_defines(void)
     CHECK_DEF(SIGBREAK);
     CHECK_DEF(SIGABRT);
     CHECK_DEF(NSIG);
+    CHECK_DEF(_FPE_INVALID);
+    CHECK_DEF(_FPE_DENORMAL);
+    CHECK_DEF(_FPE_ZERODIVIDE);
+    CHECK_DEF(_FPE_OVERFLOW);
+    CHECK_DEF(_FPE_UNDERFLOW);
+    CHECK_DEF(_FPE_INEXACT);
+    CHECK_DEF(_FPE_UNEMULATED);
+    CHECK_DEF(_FPE_SQRTNEG);
+    CHECK_DEF(_FPE_STACKOVERFLOW);
+    CHECK_DEF(_FPE_STACKUNDERFLOW);
+    CHECK_DEF(_FPE_EXPLICITGEN);
 #ifdef __i386__
     CHECK_DEF(_EM_INVALID);
     CHECK_DEF(_EM_DENORMAL);

@@ -303,12 +303,20 @@ static void testObjTrust(SAFE_PROVIDER_FUNCTIONS *funcs, GUID *actionID)
         ret = funcs->pfnObjectTrust(&data);
         ok(ret == S_FALSE, "Expected S_FALSE, got %08x\n", ret);
         ok(data.padwTrustStepErrors[TRUSTERROR_STEP_FINAL_OBJPROV] ==
-         TRUST_E_NOSIGNATURE, "Expected TRUST_E_NOSIGNATURE, got %08x\n",
+         TRUST_E_NOSIGNATURE ||
+         data.padwTrustStepErrors[TRUSTERROR_STEP_FINAL_OBJPROV] ==
+         TRUST_E_SUBJECT_FORM_UNKNOWN,
+         "Expected TRUST_E_NOSIGNATURE or TRUST_E_SUBJECT_FORM_UNKNOWN, got %08x\n",
          data.padwTrustStepErrors[TRUSTERROR_STEP_FINAL_OBJPROV]);
-        ok(!memcmp(&provDataSIP.gSubject, &unknown, sizeof(unknown)),
-         "Unexpected subject GUID\n");
-        ok(provDataSIP.pSip != NULL, "Expected a SIP\n");
-        ok(provDataSIP.psSipSubjectInfo != NULL, "Expected a subject info\n");
+        if (data.padwTrustStepErrors[TRUSTERROR_STEP_FINAL_OBJPROV] ==
+         TRUST_E_NOSIGNATURE)
+        {
+            ok(!memcmp(&provDataSIP.gSubject, &unknown, sizeof(unknown)),
+             "Unexpected subject GUID\n");
+            ok(provDataSIP.pSip != NULL, "Expected a SIP\n");
+            ok(provDataSIP.psSipSubjectInfo != NULL,
+             "Expected a subject info\n");
+        }
         funcs->pfnFree(data.padwTrustStepErrors);
     }
 }
@@ -444,10 +452,11 @@ static void test_wintrust(void)
     getNotepadPath(notepadPathW, MAX_PATH);
     file.pcwszFilePath = notepadPathW;
     r = WinVerifyTrust(INVALID_HANDLE_VALUE, &generic_action_v2, &wtd);
-    ok(r == TRUST_E_NOSIGNATURE, "expected TRUST_E_NOSIGNATURE, got %08x\n", r);
+    ok(r == TRUST_E_NOSIGNATURE || r == CRYPT_E_FILE_ERROR,
+     "expected TRUST_E_NOSIGNATURE or CRYPT_E_FILE_ERROR, got %08x\n", r);
     hr = WinVerifyTrustEx(INVALID_HANDLE_VALUE, &generic_action_v2, &wtd);
-    ok(hr == TRUST_E_NOSIGNATURE, "expected TRUST_E_NOSIGNATURE, got %08x\n",
-     hr);
+    ok(hr == TRUST_E_NOSIGNATURE || r == CRYPT_E_FILE_ERROR,
+     "expected TRUST_E_NOSIGNATURE or CRYPT_E_FILE_ERROR, got %08x\n", hr);
 }
 
 static BOOL (WINAPI * pWTHelperGetKnownUsages)(DWORD action, PCCRYPT_OID_INFO **usages);

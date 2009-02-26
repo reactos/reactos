@@ -318,6 +318,67 @@ static void test_getgenericdefault(void)
     expect(Ok, stat);
 }
 
+static void test_stringformatflags(void)
+{
+    GpStringFormat *format;
+    GpStatus stat;
+
+    INT flags;
+
+    stat = GdipCreateStringFormat(0, LANG_NEUTRAL, &format);
+    expect(Ok, stat);
+
+    /* NULL args */
+    stat = GdipSetStringFormatFlags(NULL, 0);
+    expect(InvalidParameter, stat);
+
+    stat = GdipSetStringFormatFlags(format, 0);
+    expect(Ok, stat);
+    stat = GdipGetStringFormatFlags(format, &flags);
+    expect(Ok, stat);
+    expect(0, flags);
+
+    /* Check some valid flags */
+    stat = GdipSetStringFormatFlags(format, StringFormatFlagsDirectionRightToLeft);
+    expect(Ok, stat);
+    stat = GdipGetStringFormatFlags(format, &flags);
+    expect(Ok, stat);
+    expect(StringFormatFlagsDirectionRightToLeft, flags);
+
+    stat = GdipSetStringFormatFlags(format, StringFormatFlagsNoFontFallback);
+    expect(Ok, stat);
+    stat = GdipGetStringFormatFlags(format, &flags);
+    expect(Ok, stat);
+    expect(StringFormatFlagsNoFontFallback, flags);
+
+    /* Check some flag combinations */
+    stat = GdipSetStringFormatFlags(format, StringFormatFlagsDirectionVertical
+        | StringFormatFlagsNoFitBlackBox);
+    expect(Ok, stat);
+    stat = GdipGetStringFormatFlags(format, &flags);
+    expect(Ok, stat);
+    expect((StringFormatFlagsDirectionVertical
+        | StringFormatFlagsNoFitBlackBox), flags);
+
+    stat = GdipSetStringFormatFlags(format, StringFormatFlagsDisplayFormatControl
+        | StringFormatFlagsMeasureTrailingSpaces);
+    expect(Ok, stat);
+    stat = GdipGetStringFormatFlags(format, &flags);
+    expect(Ok, stat);
+    expect((StringFormatFlagsDisplayFormatControl
+        | StringFormatFlagsMeasureTrailingSpaces), flags);
+
+    /* Check invalid flags */
+    stat = GdipSetStringFormatFlags(format, 0xdeadbeef);
+    expect(Ok, stat);
+    stat = GdipGetStringFormatFlags(format, &flags);
+    expect(Ok, stat);
+    expect(0xdeadbeef, flags);
+
+    stat = GdipDeleteStringFormat(format);
+    expect(Ok, stat);
+}
+
 START_TEST(stringformat)
 {
     struct GdiplusStartupInput gdiplusStartupInput;
@@ -336,6 +397,7 @@ START_TEST(stringformat)
     test_getgenerictypographic();
     test_tabstops();
     test_getgenericdefault();
+    test_stringformatflags();
 
     GdiplusShutdown(gdiplusToken);
 }

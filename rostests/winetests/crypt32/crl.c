@@ -219,7 +219,7 @@ static void testFindCRL(void)
     if (!store) return;
     if (!pCertFindCRLInStore)
     {
-        skip("CertFindCRLInStore() is not available\n");
+        win_skip("CertFindCRLInStore() is not available\n");
         return;
     }
 
@@ -619,7 +619,7 @@ static void testFindCertInCRL(void)
 
     if (!pCertFindCertificateInCRL)
     {
-        skip("CertFindCertificateInCRL() is not available\n");
+        win_skip("CertFindCertificateInCRL() is not available\n");
         return;
     }
 

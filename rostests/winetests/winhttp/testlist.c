@@ -7,9 +7,13 @@
 #include "wine/test.h"
 
 extern void func_winhttp(void);
+extern void func_notification(void);
+extern void func_url(void);
 
 const struct test winetest_testlist[] =
 {
 	 { "winhttp", func_winhttp },
+	 { "notification", func_notification },
+	 { "url", func_url },
 	 { 0, 0 }
 };

@@ -176,7 +176,7 @@ static void test_GetProcessImageFileName(void)
     if(!pGetProcessImageFileNameA(hpQI, szImgPath, sizeof(szImgPath)))
     {
         if(GetLastError() == ERROR_INVALID_FUNCTION)
-	    trace("GetProcessImageFileName not implemented\n");
+	    win_skip("GetProcessImageFileName not implemented\n");
 	else if(GetLastError() == 0xdeadbeef)
 	    ok(0, "failed without error code\n");
 	else

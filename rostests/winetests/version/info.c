@@ -383,7 +383,7 @@ static void test_32bit_win(void)
 
     if (is_unicode_enabled)
     { 
-        VS_VERSION_INFO_STRUCT32 *vvis = (VS_VERSION_INFO_STRUCT32 *)pVersionInfoW;
+        VS_VERSION_INFO_STRUCT32 *vvis = pVersionInfoW;
         ok ( retvalW == ((vvis->wLength * 2) + 4) || retvalW == (vvis->wLength * 1.5),
              "Structure is not of the correct size\n");
     }

@@ -27,6 +27,10 @@
  
 #include <stdio.h>
 
+#include "windef.h"
+#include "winbase.h"
+#include "winnls.h"
+
 #include "wine/test.h"
 
 static void test_sprintf( void )
@@ -277,20 +281,50 @@ static void test_sprintf( void )
     ok(!strcmp(buffer,"1   "),"Character zero-padded and/or not left-adjusted \"%s\"\n",buffer);
     ok( r==4, "return count wrong\n");
 
-    format = "%p";
-    r = sprintf(buffer,format,(void *)57);
-    ok(!strcmp(buffer,"00000039"),"Pointer formatted incorrectly \"%s\"\n",buffer);
-    ok( r==8, "return count wrong\n");
+    if (sizeof(void *) == 8)
+    {
+        format = "%p";
+        r = sprintf(buffer,format,(void *)57);
+        ok(!strcmp(buffer,"0000000000000039"),"Pointer formatted incorrectly \"%s\"\n",buffer);
+        ok( r==16, "return count wrong\n");
 
-    format = "%#012p";
-    r = sprintf(buffer,format,(void *)57);
-    ok(!strcmp(buffer,"  0X00000039"),"Pointer formatted incorrectly\n");
-    ok( r==12, "return count wrong\n");
+        format = "%#020p";
+        r = sprintf(buffer,format,(void *)57);
+        ok(!strcmp(buffer,"  0X0000000000000039"),"Pointer formatted incorrectly\n");
+        ok( r==20, "return count wrong\n");
 
-    format = "%Fp";
-    r = sprintf(buffer,format,(void *)57);
-    ok(!strcmp(buffer,"00000039"),"Pointer formatted incorrectly \"%s\"\n",buffer);
-    ok( r==8, "return count wrong\n");
+        format = "%Fp";
+        r = sprintf(buffer,format,(void *)57);
+        ok(!strcmp(buffer,"0000000000000039"),"Pointer formatted incorrectly \"%s\"\n",buffer);
+        ok( r==16, "return count wrong\n");
+
+        format = "%#-020p";
+        r = sprintf(buffer,format,(void *)57);
+        ok(!strcmp(buffer,"0X0000000000000039  "),"Pointer formatted incorrectly\n");
+        ok( r==20, "return count wrong\n");
+    }
+    else
+    {
+        format = "%p";
+        r = sprintf(buffer,format,(void *)57);
+        ok(!strcmp(buffer,"00000039"),"Pointer formatted incorrectly \"%s\"\n",buffer);
+        ok( r==8, "return count wrong\n");
+
+        format = "%#012p";
+        r = sprintf(buffer,format,(void *)57);
+        ok(!strcmp(buffer,"  0X00000039"),"Pointer formatted incorrectly\n");
+        ok( r==12, "return count wrong\n");
+
+        format = "%Fp";
+        r = sprintf(buffer,format,(void *)57);
+        ok(!strcmp(buffer,"00000039"),"Pointer formatted incorrectly \"%s\"\n",buffer);
+        ok( r==8, "return count wrong\n");
+
+        format = "%#-012p";
+        r = sprintf(buffer,format,(void *)57);
+        ok(!strcmp(buffer,"0X00000039  "),"Pointer formatted incorrectly\n");
+        ok( r==12, "return count wrong\n");
+    }
 
     format = "%04s";
     r = sprintf(buffer,format,"foo");
@@ -311,11 +345,6 @@ static void test_sprintf( void )
     r = sprintf(buffer,format,-5,"foo");
     ok(!strcmp(buffer,"foo  "),"Negative field width ignored \"%s\"\n",buffer);
     ok( r==5, "return count wrong\n");
-
-    format = "%#-012p";
-    r = sprintf(buffer,format,(void *)57);
-    ok(!strcmp(buffer,"0X00000039  "),"Pointer formatted incorrectly\n");
-    ok( r==12, "return count wrong\n");
 
     format = "hello";
     r = sprintf(buffer, format);
@@ -455,8 +484,16 @@ static void test_sprintf( void )
 
     format = "%p";
     r = sprintf(buffer, format,0);
-    ok(!strcmp(buffer,"00000000"), "failed\n");
-    ok( r==8, "return count wrong\n");
+    if (sizeof(void *) == 8)
+    {
+        ok(!strcmp(buffer,"0000000000000000"), "failed\n");
+        ok( r==16, "return count wrong\n");
+    }
+    else
+    {
+        ok(!strcmp(buffer,"00000000"), "failed\n");
+        ok( r==8, "return count wrong\n");
+    }
 
     format = "%s";
     r = sprintf(buffer, format,0);
@@ -661,10 +698,39 @@ static void test_fcvt(void)
     ok( 0 == sign, "sign wrong\n");
 }
 
+static int _vsnwprintf_wrapper(wchar_t *str, size_t len, const wchar_t *format, ...)
+{
+    int ret;
+    __ms_va_list valist;
+    __ms_va_start(valist, format);
+    ret = _vsnwprintf(str, len, format, valist);
+    __ms_va_end(valist);
+    return ret;
+}
+
+static void test_vsnwprintf(void)
+{
+    const wchar_t format[] = {'%','w','s','%','w','s','%','w','s',0};
+    const wchar_t one[]    = {'o','n','e',0};
+    const wchar_t two[]    = {'t','w','o',0};
+    const wchar_t three[]  = {'t','h','r','e','e',0};
+
+    int ret;
+    wchar_t str[32];
+    char buf[32];
+
+    ret = _vsnwprintf_wrapper( str, sizeof(str)/sizeof(str[0]), format, one, two, three );
+
+    ok( ret == 11, "got %d expected 11\n", ret );
+    WideCharToMultiByte( CP_ACP, 0, str, -1, buf, sizeof(buf), NULL, NULL );
+    ok( !strcmp(buf, "onetwothree"), "got %s expected 'onetwothree'\n", buf );
+}
+
 START_TEST(printf)
 {
     test_sprintf();
     test_swprintf();
     test_snprintf();
     test_fcvt();
+    test_vsnwprintf();
 }

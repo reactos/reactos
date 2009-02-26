@@ -30,6 +30,7 @@
 #include "winreg.h"
 #include "winsvc.h"
 #include "setupapi.h"
+#include "shlobj.h"
 
 #include "wine/test.h"
 
@@ -137,6 +138,44 @@ static void test_cmdline(void)
     ok(DeleteFile(infwithspaces), "Expected source inf to exist, last error was %d\n", GetLastError());
 }
 
+static const char *cmdline_inf_reg = "[Version]\n"
+    "Signature=\"$Chicago$\"\n"
+    "[DefaultInstall]\n"
+    "DelReg=Del.Settings\n"
+    "[Del.Settings]\n"
+    "HKCU,Software\\Wine\\setupapitest\n";
+
+static void test_registry(void)
+{
+    HKEY key;
+    LONG res;
+    char path[MAX_PATH];
+
+    /* First create a registry structure we would like to be deleted */
+    ok(!RegCreateKeyA(HKEY_CURRENT_USER, "Software\\Wine\\setupapitest\\setupapitest", &key),
+        "Expected RegCreateKeyA to succeed\n");
+
+    /* Doublecheck if the registry key is present */
+    ok(!RegOpenKeyA(HKEY_CURRENT_USER, "Software\\Wine\\setupapitest\\setupapitest", &key),
+        "Expected registry key to exist\n");
+
+    create_inf_file(inffile, cmdline_inf_reg);
+    sprintf(path, "%s\\%s", CURR_DIR, inffile);
+    run_cmdline("DefaultInstall", 128, path);
+
+    /* Check if the registry key is recursively deleted */
+    res = RegOpenKeyA(HKEY_CURRENT_USER, "Software\\Wine\\setupapitest", &key);
+    todo_wine
+    ok(res == ERROR_FILE_NOT_FOUND, "Didn't expect the registry key to exist\n");
+    /* Just in case */
+    if (res == ERROR_SUCCESS)
+    {
+        RegDeleteKeyA(HKEY_CURRENT_USER, "Software\\Wine\\setupapitest\\setupapitest");
+        RegDeleteKeyA(HKEY_CURRENT_USER, "Software\\Wine\\setupapitest");
+    }
+    ok(DeleteFile(inffile), "Expected source inf to exist, last error was %d\n", GetLastError());
+}
+
 static void test_install_svc_from(void)
 {
     char inf[2048];
@@ -151,7 +190,7 @@ static void test_install_svc_from(void)
 
     if (!scm_handle && (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED))
     {
-        skip("OpenSCManagerA is not implemented, we are most likely on win9x\n");
+        win_skip("OpenSCManagerA is not implemented, we are most likely on win9x\n");
         return;
     }
     CloseServiceHandle(scm_handle);
@@ -249,6 +288,13 @@ static void test_install_svc_from(void)
     infhandle = SetupOpenInfFileA(path, NULL, INF_STYLE_WIN4, NULL);
     SetLastError(0xdeadbeef);
     ret = SetupInstallServicesFromInfSectionA(infhandle, "Winetest.Services", 0);
+    if (!ret && GetLastError() == ERROR_ACCESS_DENIED)
+    {
+        skip("Not enough rights to install the service\n");
+        SetupCloseInfFile(infhandle);
+        DeleteFile(inffile);
+        return;
+    }
     ok(ret, "Expected success\n");
     ok(GetLastError() == ERROR_SUCCESS,
         "Expected ERROR_SUCCESS, got %08x\n", GetLastError());
@@ -302,7 +348,12 @@ static void test_driver_install(void)
 
     if (!scm_handle && (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED))
     {
-        skip("OpenSCManagerA is not implemented, we are most likely on win9x\n");
+        win_skip("OpenSCManagerA is not implemented, we are most likely on win9x\n");
+        return;
+    }
+    else if (!scm_handle && (GetLastError() == ERROR_ACCESS_DENIED))
+    {
+        skip("Not enough rights to install the service\n");
         return;
     }
     CloseServiceHandle(scm_handle);
@@ -344,6 +395,77 @@ static void test_driver_install(void)
     DeleteFile(driver);
 }
 
+static void test_profile_items(void)
+{
+    char path[MAX_PATH], commonprogs[MAX_PATH];
+    HMODULE hShell32;
+    BOOL (WINAPI *pSHGetFolderPathA)(HWND hwnd, int nFolder, HANDLE hToken, DWORD dwFlags, LPSTR pszPath);
+
+    static const char *inf =
+        "[Version]\n"
+        "Signature=\"$Chicago$\"\n"
+        "[DefaultInstall]\n"
+        "ProfileItems=TestItem,TestItem2,TestGroup\n"
+        "[TestItem]\n"
+        "Name=TestItem\n"
+        "CmdLine=11,,notepad.exe\n"
+        "[TestItem2]\n"
+        "Name=TestItem2\n"
+        "CmdLine=11,,notepad.exe\n"
+        "SubDir=TestDir\n"
+        "[TestGroup]\n"
+        "Name=TestGroup,4\n"
+        ;
+
+    hShell32 = LoadLibraryA("shell32");
+    pSHGetFolderPathA = (void*)GetProcAddress(hShell32, "SHGetFolderPathA");
+    if (!pSHGetFolderPathA)
+    {
+        win_skip("SHGetFolderPathA is not available\n");
+        goto cleanup;
+    }
+
+    if (S_OK != pSHGetFolderPathA(NULL, CSIDL_COMMON_PROGRAMS, NULL, SHGFP_TYPE_CURRENT, commonprogs))
+    {
+        skip("No common program files directory exists\n");
+        goto cleanup;
+    }
+
+    create_inf_file(inffile, inf);
+    sprintf(path, "%s\\%s", CURR_DIR, inffile);
+    run_cmdline("DefaultInstall", 128, path);
+
+    snprintf(path, MAX_PATH, "%s\\TestItem.lnk", commonprogs);
+    if (INVALID_FILE_ATTRIBUTES == GetFileAttributes(path))
+    {
+        win_skip("ProfileItems not implemented on this system\n");
+    }
+    else
+    {
+        snprintf(path, MAX_PATH, "%s\\TestDir", commonprogs);
+        ok(INVALID_FILE_ATTRIBUTES != GetFileAttributes(path), "directory not created\n");
+        snprintf(path, MAX_PATH, "%s\\TestDir\\TestItem2.lnk", commonprogs);
+        ok(INVALID_FILE_ATTRIBUTES != GetFileAttributes(path), "link not created\n");
+        snprintf(path, MAX_PATH, "%s\\TestGroup", commonprogs);
+        ok(INVALID_FILE_ATTRIBUTES != GetFileAttributes(path), "group not created\n");
+    }
+
+    snprintf(path, MAX_PATH, "%s\\TestItem.lnk", commonprogs);
+    DeleteFile(path);
+    snprintf(path, MAX_PATH, "%s\\TestDir\\TestItem2.lnk", commonprogs);
+    DeleteFile(path);
+    snprintf(path, MAX_PATH, "%s\\TestItem2.lnk", commonprogs);
+    DeleteFile(path);
+    snprintf(path, MAX_PATH, "%s\\TestDir", commonprogs);
+    RemoveDirectory(path);
+    snprintf(path, MAX_PATH, "%s\\TestGroup", commonprogs);
+    RemoveDirectory(path);
+
+cleanup:
+    if (hShell32) FreeLibrary(hShell32);
+    DeleteFile(inffile);
+}
+
 START_TEST(install)
 {
     HMODULE hsetupapi = GetModuleHandle("setupapi.dll");
@@ -378,7 +500,7 @@ START_TEST(install)
         ok(DeleteFile(inffile), "Expected source inf to exist, last error was %d\n", GetLastError());
     }
     if (!pInstallHinfSectionW && !pInstallHinfSectionA)
-        skip("InstallHinfSectionA and InstallHinfSectionW are not available\n");
+        win_skip("InstallHinfSectionA and InstallHinfSectionW are not available\n");
     else
     {
         /* Set CBT hook to disallow MessageBox creation in current thread */
@@ -386,10 +508,15 @@ START_TEST(install)
         assert(hhook != 0);
 
         test_cmdline();
+        test_registry();
         test_install_svc_from();
         test_driver_install();
 
         UnhookWindowsHookEx(hhook);
+
+        /* We have to run this test after the CBT hook is disabled because
+            ProfileItems needs to create a window on Windows XP. */
+        test_profile_items();
     }
 
     SetCurrentDirectory(prev_path);

@@ -98,7 +98,7 @@ START_TEST(apibuf)
     if (pNetApiBufferAllocate && pNetApiBufferFree && pNetApiBufferReallocate && pNetApiBufferSize)
         run_apibuf_tests();
     else
-        skip("Needed functions are not available\n");
+        win_skip("Needed functions are not available\n");
 
     FreeLibrary(hnetapi32);
 }

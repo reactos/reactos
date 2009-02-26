@@ -51,7 +51,8 @@ static void test_SwapPword(void)
     shorts[1] = 0x10ff;
     shorts[2] = 0x2001;
     pSwapPword(shorts, 2);
-    ok(shorts[0] == 0x01ff && shorts[1] == 0xff10 && shorts[2] == 0x2001,
+    ok((shorts[0] == 0x01ff && shorts[1] == 0xff10 && shorts[2] == 0x2001) ||
+       broken(shorts[0] == 0xff01 && shorts[1] == 0x10ff && shorts[2] == 0x2001) /* Win9x */,
        "Expected {0x01ff,0xff10,0x2001}, got {0x%04x,0x%04x,0x%04x}\n",
        shorts[0], shorts[1], shorts[2]);
 }
@@ -68,7 +69,8 @@ static void test_SwapPlong(void)
     longs[1] = 0x1000ffff;
     longs[2] = 0x20000001;
     pSwapPlong(longs, 2);
-    ok(longs[0] == 0x0100ffff && longs[1] == 0xffff0010 && longs[2] == 0x20000001,
+    ok((longs[0] == 0x0100ffff && longs[1] == 0xffff0010 && longs[2] == 0x20000001) ||
+       broken(longs[0] == 0xffff0001 && longs[1] == 0x1000ffff && longs[2] == 0x20000001) /* Win9x */,
        "Expected {0x0100ffff,0xffff0010,0x20000001}, got {0x%08x,0x%08x,0x%08x}\n",
        longs[0], longs[1], longs[2]);
 }
@@ -151,7 +153,8 @@ static void test_CbOfEncoded(void)
         memset(buff, '\0', sizeof(buff));
         memset(buff, '?', i);
         ulRet = pCbOfEncoded(buff);
-        ok(ulRet == ulExpected, "CbOfEncoded(length %d): expected %d, got %d\n",
+        ok(ulRet == ulExpected || broken(ulRet == 0) /* Win9x */,
+           "CbOfEncoded(length %d): expected %d, got %d\n",
            i, ulExpected, ulRet);
     }
 }
@@ -177,7 +180,7 @@ START_TEST(util)
 
     if (!pScInitMapiUtil)
     {
-        skip("ScInitMapiUtil is not available\n");
+        win_skip("ScInitMapiUtil is not available\n");
         FreeLibrary(hMapi32);
         return;
     }
@@ -186,7 +189,7 @@ START_TEST(util)
     ret = pScInitMapiUtil(0);
     if ((ret != S_OK) && (GetLastError() == ERROR_PROC_NOT_FOUND))
     {
-        skip("ScInitMapiUtil is not implemented\n");
+        win_skip("ScInitMapiUtil is not implemented\n");
         FreeLibrary(hMapi32);
         return;
     }

@@ -93,7 +93,7 @@ START_TEST(imalloc)
     pScInitMapiUtil = (void*)GetProcAddress(hMapi32, "ScInitMapiUtil@4");
     if (!pScInitMapiUtil)
     {
-        skip("ScInitMapiUtil is not available\n");
+        win_skip("ScInitMapiUtil is not available\n");
         FreeLibrary(hMapi32);
         return;
     }
@@ -102,7 +102,7 @@ START_TEST(imalloc)
     ret = pScInitMapiUtil(0);
     if ((ret != S_OK) && (GetLastError() == ERROR_PROC_NOT_FOUND))
     {
-        skip("ScInitMapiUtil is not implemented\n");
+        win_skip("ScInitMapiUtil is not implemented\n");
         FreeLibrary(hMapi32);
         return;
     }

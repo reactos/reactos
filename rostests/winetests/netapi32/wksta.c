@@ -51,7 +51,7 @@ static int init_wksta_tests(void)
     dwSize = sizeof(user_name)/sizeof(user_name[0]);
     rc=GetUserNameW(user_name, &dwSize);
     if (rc==FALSE && GetLastError()==ERROR_CALL_NOT_IMPLEMENTED) {
-        skip("GetUserNameW is not implemented\n");
+        win_skip("GetUserNameW is not implemented\n");
         return 0;
     }
     ok(rc, "User Name Retrieved\n");
@@ -192,7 +192,7 @@ START_TEST(wksta)
      * if one is not available, none are.
      */
     if (!pNetApiBufferFree) {
-        skip("Needed functions are not available\n");
+        win_skip("Needed functions are not available\n");
         FreeLibrary(hnetapi32);
         return;
     }

@@ -1960,8 +1960,6 @@ static const struct encodedBits bits[] = {
     { 1, bin54, 2, bin55 },
     /* strange test case, showing cUnusedBits >= 8 is allowed */
     { 9, bin56, 1, bin57 },
-    /* even stranger test case, showing cUnusedBits > cbData * 8 is allowed */
-    { 17, bin58, 0, NULL },
 };
 
 static void test_encodeBits(DWORD dwEncoding)
@@ -7499,7 +7497,7 @@ START_TEST(encode)
     pCryptEncodeObjectEx = (void*)GetProcAddress(hCrypt32, "CryptEncodeObjectEx");
     if (!pCryptDecodeObjectEx || !pCryptEncodeObjectEx)
     {
-        skip("CryptDecodeObjectEx() is not available\n");
+        win_skip("CryptDecodeObjectEx() is not available\n");
         return;
     }
 

@@ -231,7 +231,7 @@ static void test_LZOpenFileA_existing_compressed(void)
   file = LZOpenFileA(_terminated, &test, OF_EXIST);
   ok(file >= 0, "LZOpenFileA failed on switching to a compressed file name\n");
   ok(test.cBytes == sizeof(OFSTRUCT) ||
-     broken(test.cBytes == 40), /* win95 */
+     broken(test.cBytes == FIELD_OFFSET(OFSTRUCT, szPathName) + lstrlenA(test.szPathName)), /* win9x */
      "LZOpenFileA set test.cBytes to %d\n", test.cBytes);
   ok(test.nErrCode == 0, "LZOpenFileA set test.nErrCode to %d\n", 
      test.nErrCode);
@@ -390,8 +390,8 @@ static void test_LZOpenFileA(void)
   file = LZOpenFileA(filename_, &test, OF_READ);
   ok(file >= 0, "LZOpenFileA failed on read\n");
   ok(test.cBytes == sizeof(OFSTRUCT) ||
-     broken(test.cBytes == 40), /* win95 */
-     "LZOpenFileA set test.cBytes to %d\n", test.cBytes);
+     broken(test.cBytes == FIELD_OFFSET(OFSTRUCT, szPathName) + lstrlenA(test.szPathName)), /* win9x */
+     "LZOpenFileA set test.cBytes to %d '%s'('%s')\n", test.cBytes, expected, short_expected);
   ok(test.nErrCode == ERROR_SUCCESS,
      "LZOpenFileA set test.nErrCode to %d\n", test.nErrCode);
   ok(lstrcmpA(test.szPathName, expected) == 0 ||
@@ -406,7 +406,7 @@ static void test_LZOpenFileA(void)
   file = LZOpenFileA(filename_, &test, OF_WRITE);
   ok(file >= 0, "LZOpenFileA failed on write\n");
   ok(test.cBytes == sizeof(OFSTRUCT) ||
-     broken(test.cBytes == 40), /* win95 */
+     broken(test.cBytes == FIELD_OFFSET(OFSTRUCT, szPathName) + lstrlenA(test.szPathName)), /* win9x */
      "LZOpenFileA set test.cBytes to %d\n", test.cBytes);
   ok(test.nErrCode == ERROR_SUCCESS,
      "LZOpenFileA set test.nErrCode to %d\n", test.nErrCode);
@@ -422,7 +422,7 @@ static void test_LZOpenFileA(void)
   file = LZOpenFileA(filename_, &test, OF_READWRITE);
   ok(file >= 0, "LZOpenFileA failed on read/write\n");
   ok(test.cBytes == sizeof(OFSTRUCT) ||
-     broken(test.cBytes == 40), /* win95 */
+     broken(test.cBytes == FIELD_OFFSET(OFSTRUCT, szPathName) + lstrlenA(test.szPathName)), /* win9x */
      "LZOpenFileA set test.cBytes to %d\n", test.cBytes);
   ok(test.nErrCode == ERROR_SUCCESS,
      "LZOpenFileA set test.nErrCode to %d\n", test.nErrCode);
@@ -438,7 +438,7 @@ static void test_LZOpenFileA(void)
   file = LZOpenFileA(filename_, &test, OF_EXIST);
   ok(file >= 0, "LZOpenFileA failed on read/write\n");
   ok(test.cBytes == sizeof(OFSTRUCT) ||
-     broken(test.cBytes == 40), /* win95 */
+     broken(test.cBytes == FIELD_OFFSET(OFSTRUCT, szPathName) + lstrlenA(test.szPathName)), /* win9x */
      "LZOpenFileA set test.cBytes to %d\n", test.cBytes);
   ok(test.nErrCode == ERROR_SUCCESS,
      "LZOpenFileA set test.nErrCode to %d\n", test.nErrCode);
@@ -454,7 +454,7 @@ static void test_LZOpenFileA(void)
   file = LZOpenFileA(filename_, &test, OF_DELETE);
   ok(file >= 0, "LZOpenFileA failed on delete\n");
   ok(test.cBytes == sizeof(OFSTRUCT) ||
-     broken(test.cBytes == 40), /* win95 */
+     broken(test.cBytes == FIELD_OFFSET(OFSTRUCT, szPathName) + lstrlenA(test.szPathName)), /* win9x */
      "LZOpenFileA set test.cBytes to %d\n", test.cBytes);
   ok(test.nErrCode == ERROR_SUCCESS,
      "LZOpenFileA set test.nErrCode to %d\n", test.nErrCode);

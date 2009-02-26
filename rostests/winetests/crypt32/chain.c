@@ -68,7 +68,7 @@ static void testCreateCertChainEngine(void)
 
     if (!pCertCreateCertificateChainEngine || !pCertFreeCertificateChainEngine)
     {
-        skip("Cert*CertificateChainEngine() functions are not available\n");
+        win_skip("Cert*CertificateChainEngine() functions are not available\n");
         return;
     }
 
@@ -1176,14 +1176,14 @@ static void checkElementStatus(const CERT_TRUST_STATUS *expected,
         todo_wine
         ok(got->dwErrorStatus == expected->dwErrorStatus ||
          broken((got->dwErrorStatus & ~ignore->dwErrorStatus) ==
-         expected->dwErrorStatus),
+         (expected->dwErrorStatus & ~ignore->dwErrorStatus)),
          "Chain %d, element [%d,%d]: expected error %08x, got %08x\n",
          testIndex, chainIndex, elementIndex, expected->dwErrorStatus,
          got->dwErrorStatus);
     else
         ok(got->dwErrorStatus == expected->dwErrorStatus ||
          broken((got->dwErrorStatus & ~ignore->dwErrorStatus) ==
-         expected->dwErrorStatus),
+         (expected->dwErrorStatus & ~ignore->dwErrorStatus)),
          "Chain %d, element [%d,%d]: expected error %08x, got %08x\n",
          testIndex, chainIndex, elementIndex, expected->dwErrorStatus,
          got->dwErrorStatus);
@@ -1196,14 +1196,14 @@ static void checkElementStatus(const CERT_TRUST_STATUS *expected,
         todo_wine
         ok(got->dwInfoStatus == expected->dwInfoStatus ||
          broken((got->dwInfoStatus & ~ignore->dwInfoStatus) ==
-         expected->dwInfoStatus),
+         (expected->dwInfoStatus & ~ignore->dwInfoStatus)),
          "Chain %d, element [%d,%d]: expected info %08x, got %08x\n",
          testIndex, chainIndex, elementIndex, expected->dwInfoStatus,
          got->dwInfoStatus);
     else
         ok(got->dwInfoStatus == expected->dwInfoStatus ||
          broken((got->dwInfoStatus & ~ignore->dwInfoStatus) ==
-         expected->dwInfoStatus),
+         (expected->dwInfoStatus & ~ignore->dwInfoStatus)),
          "Chain %d, element [%d,%d]: expected info %08x, got %08x\n",
          testIndex, chainIndex, elementIndex, expected->dwInfoStatus,
          got->dwInfoStatus);
@@ -1249,7 +1249,11 @@ static void checkChainStatus(PCCERT_CHAIN_CONTEXT chain,
     if (todo & TODO_ERROR &&
      chain->TrustStatus.dwErrorStatus != chainStatus->status.dwErrorStatus)
         todo_wine ok(chain->TrustStatus.dwErrorStatus ==
-         chainStatus->status.dwErrorStatus,
+         chainStatus->status.dwErrorStatus ||
+         broken((chain->TrustStatus.dwErrorStatus &
+         ~chainStatus->statusToIgnore.dwErrorStatus) ==
+         (chainStatus->status.dwErrorStatus &
+         ~chainStatus->statusToIgnore.dwErrorStatus)),
          "Chain %d: expected error %08x, got %08x\n",
          testIndex, chainStatus->status.dwErrorStatus,
          chain->TrustStatus.dwErrorStatus);
@@ -1258,14 +1262,19 @@ static void checkChainStatus(PCCERT_CHAIN_CONTEXT chain,
          chainStatus->status.dwErrorStatus ||
          broken((chain->TrustStatus.dwErrorStatus &
          ~chainStatus->statusToIgnore.dwErrorStatus) ==
-         chainStatus->status.dwErrorStatus),
+         (chainStatus->status.dwErrorStatus &
+         ~chainStatus->statusToIgnore.dwErrorStatus)),
          "Chain %d: expected error %08x, got %08x\n",
          testIndex, chainStatus->status.dwErrorStatus,
          chain->TrustStatus.dwErrorStatus);
     if (todo & TODO_INFO &&
      chain->TrustStatus.dwInfoStatus != chainStatus->status.dwInfoStatus)
         todo_wine ok(chain->TrustStatus.dwInfoStatus ==
-         chainStatus->status.dwInfoStatus,
+         chainStatus->status.dwInfoStatus ||
+         broken((chain->TrustStatus.dwInfoStatus &
+         ~chainStatus->statusToIgnore.dwInfoStatus) ==
+         (chainStatus->status.dwInfoStatus &
+         ~chainStatus->statusToIgnore.dwInfoStatus)),
          "Chain %d: expected info %08x, got %08x\n",
          testIndex, chainStatus->status.dwInfoStatus,
          chain->TrustStatus.dwInfoStatus);
@@ -1274,7 +1283,8 @@ static void checkChainStatus(PCCERT_CHAIN_CONTEXT chain,
          chainStatus->status.dwInfoStatus ||
          broken((chain->TrustStatus.dwInfoStatus &
          ~chainStatus->statusToIgnore.dwInfoStatus) ==
-         chainStatus->status.dwInfoStatus),
+         (chainStatus->status.dwInfoStatus &
+         ~chainStatus->statusToIgnore.dwInfoStatus)),
          "Chain %d: expected info %08x, got %08x\n",
          testIndex, chainStatus->status.dwInfoStatus,
          chain->TrustStatus.dwInfoStatus);
@@ -1416,10 +1426,8 @@ static CONST_DATA_BLOB chain9[] = {
  { sizeof(chain7_1), chain7_1 },
 };
 static const CERT_TRUST_STATUS elementStatus9[] = {
- { CERT_TRUST_NO_ERROR,
-   CERT_TRUST_HAS_NAME_MATCH_ISSUER | CERT_TRUST_HAS_PREFERRED_ISSUER },
- { CERT_TRUST_INVALID_BASIC_CONSTRAINTS,
-   CERT_TRUST_HAS_NAME_MATCH_ISSUER | CERT_TRUST_HAS_PREFERRED_ISSUER },
+ { CERT_TRUST_NO_ERROR, CERT_TRUST_HAS_NAME_MATCH_ISSUER },
+ { CERT_TRUST_INVALID_BASIC_CONSTRAINTS, CERT_TRUST_HAS_NAME_MATCH_ISSUER },
  { CERT_TRUST_INVALID_BASIC_CONSTRAINTS | CERT_TRUST_IS_CYCLIC,
    CERT_TRUST_HAS_NAME_MATCH_ISSUER },
 };
@@ -1515,21 +1523,32 @@ static ChainCheck chainCheck[] = {
    { { CERT_TRUST_IS_NOT_TIME_NESTED, CERT_TRUST_HAS_PREFERRED_ISSUER },
      { CERT_TRUST_IS_UNTRUSTED_ROOT | CERT_TRUST_IS_NOT_TIME_VALID, 0 },
      1, simpleStatus2 }, 0 },
+ /* Earlier versions of Windows incorrectly don't set
+  * CERT_TRUST_INVALID_BASIC_CONSTRAINTS on this chain.
+  */
  { { sizeof(chain3) / sizeof(chain3[0]), chain3 },
-   { { CERT_TRUST_IS_NOT_TIME_NESTED, CERT_TRUST_HAS_PREFERRED_ISSUER },
+   { { CERT_TRUST_IS_NOT_TIME_NESTED | CERT_TRUST_INVALID_BASIC_CONSTRAINTS,
+       CERT_TRUST_HAS_PREFERRED_ISSUER },
      { CERT_TRUST_INVALID_BASIC_CONSTRAINTS | CERT_TRUST_IS_UNTRUSTED_ROOT |
        CERT_TRUST_IS_NOT_TIME_VALID, 0 },
      1, simpleStatus3 }, 0 },
+ /* Earlier versions of Windows incorrectly don't set
+  * CERT_TRUST_INVALID_BASIC_CONSTRAINTS on this chain.
+  */
  { { sizeof(chain4) / sizeof(chain4[0]), chain4 },
-   { { CERT_TRUST_IS_NOT_TIME_NESTED, CERT_TRUST_HAS_PREFERRED_ISSUER },
+   { { CERT_TRUST_IS_NOT_TIME_NESTED | CERT_TRUST_INVALID_BASIC_CONSTRAINTS,
+       CERT_TRUST_HAS_PREFERRED_ISSUER },
      { CERT_TRUST_INVALID_BASIC_CONSTRAINTS | CERT_TRUST_IS_UNTRUSTED_ROOT |
        CERT_TRUST_IS_NOT_TIME_VALID, 0 },
      1, simpleStatus4 }, 0 },
  /* Windows versions prior to Vista/2008 incorrectly set
   * CERT_TRUST_HAS_NOT_DEFINED_NAME_CONSTRAINT on this chain, so ignore it.
+  * Similarly, some older versions of Windows incorrectly set
+  * CERT_TRUST_HAS_NOT_PERMITTED_NAME_CONSTRAINT, ignore that too.
   */
  { { sizeof(chain5) / sizeof(chain5[0]), chain5 },
-   { { CERT_TRUST_HAS_NOT_DEFINED_NAME_CONSTRAINT,
+   { { CERT_TRUST_HAS_NOT_DEFINED_NAME_CONSTRAINT |
+       CERT_TRUST_HAS_NOT_PERMITTED_NAME_CONSTRAINT,
        CERT_TRUST_HAS_PREFERRED_ISSUER },
      { CERT_TRUST_HAS_NOT_PERMITTED_NAME_CONSTRAINT |
        CERT_TRUST_IS_UNTRUSTED_ROOT, 0 }, 1, simpleStatus5 }, 0 },
@@ -1539,18 +1558,24 @@ static ChainCheck chainCheck[] = {
  { { sizeof(chain7) / sizeof(chain7[0]), chain7 },
    { { 0, CERT_TRUST_HAS_PREFERRED_ISSUER },
      { CERT_TRUST_IS_UNTRUSTED_ROOT, 0 }, 1, simpleStatus7 }, 0 },
+ /* Earlier versions of Windows incorrectly don't set
+  * CERT_TRUST_INVALID_BASIC_CONSTRAINTS on this chain.
+  */
  { { sizeof(chain8) / sizeof(chain8[0]), chain8 },
-   { { CERT_TRUST_IS_NOT_TIME_NESTED, CERT_TRUST_HAS_PREFERRED_ISSUER },
+   { { CERT_TRUST_IS_NOT_TIME_NESTED | CERT_TRUST_INVALID_BASIC_CONSTRAINTS,
+       CERT_TRUST_HAS_PREFERRED_ISSUER },
      { CERT_TRUST_INVALID_BASIC_CONSTRAINTS | CERT_TRUST_IS_UNTRUSTED_ROOT |
        CERT_TRUST_IS_NOT_TIME_VALID, 0 },
-     1, simpleStatus8 },
-   TODO_ERROR },
+     1, simpleStatus8 }, 0 },
+ /* Earlier versions of Windows incorrectly don't set
+  * CERT_TRUST_INVALID_BASIC_CONSTRAINTS on this chain.
+  */
  { { sizeof(chain9) / sizeof(chain9[0]), chain9 },
-   { { CERT_TRUST_IS_NOT_TIME_NESTED, CERT_TRUST_HAS_PREFERRED_ISSUER },
+   { { CERT_TRUST_IS_NOT_TIME_NESTED | CERT_TRUST_INVALID_BASIC_CONSTRAINTS,
+       CERT_TRUST_HAS_PREFERRED_ISSUER },
      { CERT_TRUST_IS_PARTIAL_CHAIN |
        CERT_TRUST_INVALID_BASIC_CONSTRAINTS | CERT_TRUST_IS_CYCLIC, 0 },
-     1, simpleStatus9 },
-   TODO_INFO },
+     1, simpleStatus9 }, 0 },
  { { sizeof(chain10) / sizeof(chain10[0]), chain10 },
    { { 0, CERT_TRUST_HAS_PREFERRED_ISSUER },
      { CERT_TRUST_IS_UNTRUSTED_ROOT, 0 }, 1, simpleStatus10 }, 0 },
@@ -1595,7 +1620,7 @@ static ChainCheck chainCheckNoStore[] = {
    { { 0, CERT_TRUST_HAS_PREFERRED_ISSUER },
      { CERT_TRUST_IS_PARTIAL_CHAIN, 0 },
      1, simpleStatus8NoStore },
-   TODO_INFO },
+   0 },
 };
 
 /* Wednesday, Oct 1, 2007 */
@@ -1684,103 +1709,110 @@ static void testGetCertChain(void)
 
 typedef struct _ChainPolicyCheck
 {
-    CONST_BLOB_ARRAY         certs;
-    CERT_CHAIN_POLICY_STATUS status;
-    DWORD                    todo;
+    CONST_BLOB_ARRAY                certs;
+    CERT_CHAIN_POLICY_STATUS        status;
+    const CERT_CHAIN_POLICY_STATUS *brokenStatus;
+    DWORD                           todo;
 } ChainPolicyCheck;
 
 static const ChainPolicyCheck basePolicyCheck[] = {
  { { sizeof(chain0) / sizeof(chain0[0]), chain0 },
-   { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, 0 },
+   { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, NULL, 0 },
  { { sizeof(chain1) / sizeof(chain1[0]), chain1 },
-   { 0, TRUST_E_CERT_SIGNATURE, 0, 0, NULL }, 0 },
+   { 0, TRUST_E_CERT_SIGNATURE, 0, 0, NULL }, NULL, 0 },
  { { sizeof(chain2) / sizeof(chain2[0]), chain2 },
-   { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, 0 },
+   { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, NULL, 0 },
  { { sizeof(chain3) / sizeof(chain3[0]), chain3 },
-   { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, 0 },
+   { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, NULL, 0 },
  { { sizeof(chain4) / sizeof(chain4[0]), chain4 },
-   { 0, CERT_E_UNTRUSTEDROOT, 0, 2, NULL }, 0 },
+   { 0, CERT_E_UNTRUSTEDROOT, 0, 2, NULL }, NULL, 0 },
  { { sizeof(chain5) / sizeof(chain5[0]), chain5 },
-   { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, 0 },
+   { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, NULL, 0 },
  { { sizeof(chain6) / sizeof(chain6[0]), chain6 },
-   { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, 0 },
+   { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, NULL, 0 },
  { { sizeof(chain7) / sizeof(chain7[0]), chain7 },
-   { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, 0 },
+   { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, NULL, 0 },
  { { sizeof(chain8) / sizeof(chain8[0]), chain8 },
-   { 0, CERT_E_UNTRUSTEDROOT, 0, 2, NULL }, 0 },
+   { 0, CERT_E_UNTRUSTEDROOT, 0, 2, NULL }, NULL, 0 },
  { { sizeof(chain9) / sizeof(chain9[0]), chain9 },
-   { 0, CERT_E_CHAINING, 0, -1, NULL }, 0 },
+   { 0, CERT_E_CHAINING, 0, -1, NULL }, NULL, 0 },
  { { sizeof(chain10) / sizeof(chain10[0]), chain10 },
-   { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, 0 },
+   { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, NULL, 0 },
  { { sizeof(chain11) / sizeof(chain11[0]), chain11 },
-   { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, 0 },
+   { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, NULL, 0 },
  { { sizeof(chain12) / sizeof(chain12[0]), chain12 },
-   { 0, TRUST_E_CERT_SIGNATURE, 0, 1, NULL }, 0 },
+   { 0, TRUST_E_CERT_SIGNATURE, 0, 1, NULL }, NULL, 0 },
  { { sizeof(selfSignedChain) / sizeof(selfSignedChain[0]), selfSignedChain },
-   { 0, CERT_E_UNTRUSTEDROOT, 0, 0, NULL }, 0 },
+   { 0, CERT_E_UNTRUSTEDROOT, 0, 0, NULL }, NULL, 0 },
 };
 
 static const ChainPolicyCheck authenticodePolicyCheck[] = {
  { { sizeof(chain0) / sizeof(chain0[0]), chain0 },
-   { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, 0 },
+   { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, NULL, 0 },
  { { sizeof(chain1) / sizeof(chain1[0]), chain1 },
-   { 0, TRUST_E_CERT_SIGNATURE, 0, 0, NULL }, 0 },
+   { 0, TRUST_E_CERT_SIGNATURE, 0, 0, NULL }, NULL, 0 },
  { { sizeof(chain2) / sizeof(chain2[0]), chain2 },
-   { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, 0 },
+   { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, NULL, 0 },
  { { sizeof(chain3) / sizeof(chain3[0]), chain3 },
-   { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, 0 },
+   { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, NULL, 0 },
  { { sizeof(chain4) / sizeof(chain4[0]), chain4 },
-   { 0, CERT_E_UNTRUSTEDROOT, 0, 2, NULL }, 0 },
+   { 0, CERT_E_UNTRUSTEDROOT, 0, 2, NULL }, NULL, 0 },
  { { sizeof(chain5) / sizeof(chain5[0]), chain5 },
-   { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, 0 },
+   { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, NULL, 0 },
  { { sizeof(chain6) / sizeof(chain6[0]), chain6 },
-   { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, 0 },
+   { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, NULL, 0 },
  { { sizeof(chain7) / sizeof(chain7[0]), chain7 },
-   { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, 0 },
+   { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, NULL, 0 },
  { { sizeof(chain8) / sizeof(chain8[0]), chain8 },
-   { 0, CERT_E_UNTRUSTEDROOT, 0, 2, NULL }, 0 },
+   { 0, CERT_E_UNTRUSTEDROOT, 0, 2, NULL }, NULL, 0 },
  { { sizeof(chain9) / sizeof(chain9[0]), chain9 },
-   { 0, CERT_E_CHAINING, 0, -1, NULL }, 0 },
+   { 0, CERT_E_CHAINING, 0, -1, NULL }, NULL, 0 },
  { { sizeof(chain10) / sizeof(chain10[0]), chain10 },
-   { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, 0 },
+   { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, NULL, 0 },
  { { sizeof(chain11) / sizeof(chain11[0]), chain11 },
-   { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, 0 },
+   { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, NULL, 0 },
  { { sizeof(chain12) / sizeof(chain12[0]), chain12 },
-   { 0, TRUST_E_CERT_SIGNATURE, 0, 1, NULL }, 0 },
+   { 0, TRUST_E_CERT_SIGNATURE, 0, 1, NULL }, NULL, 0 },
  { { sizeof(selfSignedChain) / sizeof(selfSignedChain[0]), selfSignedChain },
-   { 0, CERT_E_UNTRUSTEDROOT, 0, 0, NULL }, 0 },
+   { 0, CERT_E_UNTRUSTEDROOT, 0, 0, NULL }, NULL, 0 },
 };
+
+/* On some older systems, the element index is set to 2 rather than 1 for
+ * chain 4, because they do not catch the basic constraints error in the
+ * chain, which occurs at element 1.
+ */
+static const CERT_CHAIN_POLICY_STATUS chain4BrokenStatus =
+ { 0, TRUST_E_BASIC_CONSTRAINTS, 0, 2, NULL };
 
 static const ChainPolicyCheck basicConstraintsPolicyCheck[] = {
  { { sizeof(chain0) / sizeof(chain0[0]), chain0 },
-   { 0, 0, -1, -1, NULL }, 0 },
+   { 0, 0, -1, -1, NULL }, NULL, 0 },
  { { sizeof(chain1) / sizeof(chain1[0]), chain1 },
-   { 0, 0, -1, -1, NULL }, 0 },
+   { 0, 0, -1, -1, NULL }, NULL, 0 },
  { { sizeof(chain2) / sizeof(chain2[0]), chain2 },
-   { 0, 0, -1, -1, NULL }, 0 },
+   { 0, 0, -1, -1, NULL }, NULL, 0 },
  { { sizeof(chain3) / sizeof(chain3[0]), chain3 },
-   { 0, TRUST_E_BASIC_CONSTRAINTS, 0, 1, NULL }, 0 },
+   { 0, TRUST_E_BASIC_CONSTRAINTS, 0, 1, NULL }, NULL, 0 },
  { { sizeof(chain4) / sizeof(chain4[0]), chain4 },
-   { 0, TRUST_E_BASIC_CONSTRAINTS, 0, 1, NULL }, 0 },
+   { 0, TRUST_E_BASIC_CONSTRAINTS, 0, 1, NULL }, &chain4BrokenStatus, 0 },
  { { sizeof(chain5) / sizeof(chain5[0]), chain5 },
-   { 0, 0, -1, -1, NULL }, 0 },
+   { 0, 0, -1, -1, NULL }, NULL, 0 },
  { { sizeof(chain6) / sizeof(chain6[0]), chain6 },
-   { 0, 0, -1, -1, NULL }, 0 },
+   { 0, 0, -1, -1, NULL }, NULL, 0 },
  { { sizeof(chain7) / sizeof(chain7[0]), chain7 },
-   { 0, 0, -1, -1, NULL }, 0 },
+   { 0, 0, -1, -1, NULL }, NULL, 0 },
  { { sizeof(chain8) / sizeof(chain8[0]), chain8 },
-   { 0, TRUST_E_BASIC_CONSTRAINTS, 0, 1, NULL },
-   TODO_ERROR | TODO_CHAINS | TODO_ELEMENTS },
+   { 0, TRUST_E_BASIC_CONSTRAINTS, 0, 1, NULL }, NULL, 0 },
  { { sizeof(chain9) / sizeof(chain9[0]), chain9 },
-   { 0, TRUST_E_BASIC_CONSTRAINTS, 0, 1, NULL }, 0 },
+   { 0, TRUST_E_BASIC_CONSTRAINTS, 0, 1, NULL }, NULL, 0 },
  { { sizeof(chain10) / sizeof(chain10[0]), chain10 },
-   { 0, 0, -1, -1, NULL }, 0 },
+   { 0, 0, -1, -1, NULL }, NULL, 0 },
  { { sizeof(chain11) / sizeof(chain11[0]), chain11 },
-   { 0, 0, -1, -1, NULL }, 0 },
+   { 0, 0, -1, -1, NULL }, NULL, 0 },
  { { sizeof(chain12) / sizeof(chain12[0]), chain12 },
-   { 0, 0, -1, -1, NULL }, 0 },
+   { 0, 0, -1, -1, NULL }, NULL, 0 },
  { { sizeof(selfSignedChain) / sizeof(selfSignedChain[0]), selfSignedChain },
-   { 0, 0, -1, -1, NULL }, 0 },
+   { 0, 0, -1, -1, NULL }, NULL, 0 },
 };
 
 static const char *num_to_str(WORD num)
@@ -1825,43 +1857,58 @@ static void checkChainPolicyStatus(LPCSTR policy, const ChainPolicyCheck *check,
         {
             if (check->todo & TODO_ERROR)
                 todo_wine ok(policyStatus.dwError == check->status.dwError ||
-                 broken(policyStatus.dwError == CERT_TRUST_NO_ERROR),
+                 broken(policyStatus.dwError == CERT_TRUST_NO_ERROR) ||
+                 (check->brokenStatus && broken(policyStatus.dwError ==
+                 check->brokenStatus->dwError)),
                  "%s[%d]: expected %08x, got %08x\n",
                  HIWORD(policy) ? policy : num_to_str(LOWORD(policy)),
                  testIndex, check->status.dwError, policyStatus.dwError);
             else
                 ok(policyStatus.dwError == check->status.dwError ||
-                 broken(policyStatus.dwError == CERT_TRUST_NO_ERROR),
+                 broken(policyStatus.dwError == CERT_TRUST_NO_ERROR) ||
+                 (check->brokenStatus && broken(policyStatus.dwError ==
+                 check->brokenStatus->dwError)),
                  "%s[%d]: expected %08x, got %08x\n",
                  HIWORD(policy) ? policy : num_to_str(LOWORD(policy)),
                  testIndex, check->status.dwError, policyStatus.dwError);
             if (policyStatus.dwError != check->status.dwError)
             {
-                skip("error doesn't match, not checking indexes\n");
+                skip("%s[%d]: error %08x doesn't match expected %08x, not checking indexes\n",
+                 HIWORD(policy) ? policy : num_to_str(LOWORD(policy)),
+                 testIndex, policyStatus.dwError, check->status.dwError);
                 pCertFreeCertificateChain(chain);
                 return;
             }
             if (check->todo & TODO_CHAINS)
                 todo_wine ok(policyStatus.lChainIndex ==
-                 check->status.lChainIndex, "%s[%d]: expected %d, got %d\n",
+                 check->status.lChainIndex ||
+                 (check->brokenStatus && broken(policyStatus.lChainIndex ==
+                 check->brokenStatus->lChainIndex)),
+                 "%s[%d]: expected %d, got %d\n",
                  HIWORD(policy) ? policy : num_to_str(LOWORD(policy)),
                  testIndex, check->status.lChainIndex,
                  policyStatus.lChainIndex);
             else
-                ok(policyStatus.lChainIndex == check->status.lChainIndex,
+                ok(policyStatus.lChainIndex == check->status.lChainIndex ||
+                 (check->brokenStatus && broken(policyStatus.lChainIndex ==
+                 check->brokenStatus->lChainIndex)),
                  "%s[%d]: expected %d, got %d\n",
                  HIWORD(policy) ? policy : num_to_str(LOWORD(policy)),
                  testIndex,
                  check->status.lChainIndex, policyStatus.lChainIndex);
             if (check->todo & TODO_ELEMENTS)
                 todo_wine ok(policyStatus.lElementIndex ==
-                 check->status.lElementIndex,
+                 check->status.lElementIndex ||
+                 (check->brokenStatus && broken(policyStatus.lElementIndex ==
+                 check->brokenStatus->lElementIndex)),
                  "%s[%d]: expected %d, got %d\n",
                  HIWORD(policy) ? policy : num_to_str(LOWORD(policy)),
                  testIndex,
                  check->status.lElementIndex, policyStatus.lElementIndex);
             else
-                ok(policyStatus.lElementIndex == check->status.lElementIndex,
+                ok(policyStatus.lElementIndex == check->status.lElementIndex ||
+                 (check->brokenStatus && broken(policyStatus.lElementIndex ==
+                 check->brokenStatus->lElementIndex)),
                  "%s[%d]: expected %d, got %d\n",
                  HIWORD(policy) ? policy : num_to_str(LOWORD(policy)),
                  testIndex,
@@ -1883,7 +1930,7 @@ static void testVerifyCertChainPolicy(void)
 
     if (!pCertVerifyCertificateChainPolicy)
     {
-        skip("CertVerifyCertificateChainPolicy() is not available\n");
+        win_skip("CertVerifyCertificateChainPolicy() is not available\n");
         return;
     }
 
@@ -1963,7 +2010,7 @@ START_TEST(chain)
     testCreateCertChainEngine();
     if (!pCertGetCertificateChain)
     {
-        skip("CertGetCertificateChain() is not available\n");
+        win_skip("CertGetCertificateChain() is not available\n");
     }
     else
     {

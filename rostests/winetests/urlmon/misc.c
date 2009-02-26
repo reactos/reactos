@@ -823,6 +823,27 @@ static void test_SecurityManager(void)
     IInternetSecurityManager_Release(secmgr);
 }
 
+/* Check if Internet Explorer is configured to run in "Enhanced Security Configuration" (aka hardened mode) */
+/* Note: this code is duplicated in dlls/mshtml/tests/dom.c, dlls/mshtml/tests/script.c and dlls/urlmon/tests/misc.c */
+static BOOL is_ie_hardened(void)
+{
+    HKEY zone_map;
+    DWORD ie_harden, type, size;
+
+    ie_harden = 0;
+    if(RegOpenKeyEx(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\ZoneMap",
+                    0, KEY_QUERY_VALUE, &zone_map) == ERROR_SUCCESS) {
+        size = sizeof(DWORD);
+        if (RegQueryValueEx(zone_map, "IEHarden", NULL, &type, (LPBYTE) &ie_harden, &size) != ERROR_SUCCESS ||
+            type != REG_DWORD) {
+            ie_harden = 0;
+        }
+    RegCloseKey(zone_map);
+    }
+
+    return ie_harden != 0;
+}
+
 static void test_url_action(IInternetSecurityManager *secmgr, IInternetZoneManager *zonemgr, DWORD action)
 {
     DWORD res, size, policy, reg_policy;
@@ -863,15 +884,19 @@ static void test_url_action(IInternetSecurityManager *secmgr, IInternetZoneManag
     ok(policy == reg_policy, "(%x) policy=%x, expected %x\n", action, policy, reg_policy);
 
     if(policy != URLPOLICY_QUERY) {
-        policy = 0xdeadbeef;
-        hres = IInternetSecurityManager_ProcessUrlAction(secmgr, url9, action, (BYTE*)&policy,
-                sizeof(WCHAR), NULL, 0, 0, 0);
-        if(reg_policy == URLPOLICY_DISALLOW)
-            ok(hres == S_FALSE, "ProcessUrlAction(%x) failed: %08x, expected S_FALSE\n", action, hres);
-        else
-            ok(hres == S_OK, "ProcessUrlAction(%x) failed: %08x\n", action, hres);
-        ok(policy == 0xdeadbeef, "(%x) policy=%x\n", action, policy);
-    }
+        if(winetest_interactive || ! is_ie_hardened()) {
+            policy = 0xdeadbeef;
+            hres = IInternetSecurityManager_ProcessUrlAction(secmgr, url9, action, (BYTE*)&policy,
+                    sizeof(WCHAR), NULL, 0, 0, 0);
+            if(reg_policy == URLPOLICY_DISALLOW)
+                ok(hres == S_FALSE, "ProcessUrlAction(%x) failed: %08x, expected S_FALSE\n", action, hres);
+            else
+                ok(hres == S_OK, "ProcessUrlAction(%x) failed: %08x\n", action, hres);
+            ok(policy == 0xdeadbeef, "(%x) policy=%x\n", action, policy);
+        }else {
+            skip("IE running in Enhanced Security Configuration\n");
+        }
+	}
 }
 
 static void test_special_url_action(IInternetSecurityManager *secmgr, IInternetZoneManager *zonemgr, DWORD action)
@@ -1305,18 +1330,20 @@ static void test_ReleaseBindInfo(void)
 static void test_CopyStgMedium(void)
 {
     STGMEDIUM src, dst;
+    HGLOBAL empty;
     HRESULT hres;
 
     static WCHAR fileW[] = {'f','i','l','e',0};
 
     memset(&src, 0xf0, sizeof(src));
     memset(&dst, 0xe0, sizeof(dst));
+    memset(&empty, 0xf0, sizeof(empty));
     src.tymed = TYMED_NULL;
     src.pUnkForRelease = NULL;
     hres = CopyStgMedium(&src, &dst);
     ok(hres == S_OK, "CopyStgMedium failed: %08x\n", hres);
     ok(dst.tymed == TYMED_NULL, "tymed=%d\n", dst.tymed);
-    ok(dst.u.hGlobal == (void*)0xf0f0f0f0, "u=%p\n", dst.u.hGlobal);
+    ok(dst.u.hGlobal == empty, "u=%p\n", dst.u.hGlobal);
     ok(!dst.pUnkForRelease, "pUnkForRelease=%p, expected NULL\n", dst.pUnkForRelease);
 
     memset(&dst, 0xe0, sizeof(dst));

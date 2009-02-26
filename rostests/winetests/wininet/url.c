@@ -52,6 +52,7 @@
 #define CREATE_URL10 "about://host/blank"
 #define CREATE_URL11 "about:"
 #define CREATE_URL12 "http://www.winehq.org:65535"
+#define CREATE_URL13 "http://localhost/?test=123"
 
 static void copy_compsA(
     URL_COMPONENTSA *src, 
@@ -268,6 +269,7 @@ static void InternetCrackUrlW_test(void)
         '=','I','D','E','&','A','C','T','I','O','N','=','I','D','E','_','D','E','F','A',
         'U','L','T', 0 };
     static const WCHAR url2[] = { '.','.','/','R','i','t','z','.','x','m','l',0 };
+    static const WCHAR url3[] = { 'h','t','t','p',':','/','/','x','.','o','r','g',0 };
     URL_COMPONENTSW comp;
     WCHAR scheme[20], host[20], user[20], pwd[20], urlpart[50], extra[50];
     DWORD error;
@@ -389,6 +391,32 @@ static void InternetCrackUrlW_test(void)
         "InternetCrackUrl should have failed with error ERROR_INTERNET_UNRECOGNIZED_SCHEME instead of error %d\n",
         GetLastError());
     }
+
+    /* Test to see whether cracking a URL without a filename initializes urlpart */
+    urlpart[0]=0xba;
+    scheme[0]=0;
+    extra[0]=0;
+    host[0]=0;
+    user[0]=0;
+    pwd[0]=0;
+    memset(&comp, 0, sizeof comp);
+    comp.dwStructSize = sizeof comp;
+    comp.lpszScheme = scheme;
+    comp.dwSchemeLength = sizeof scheme;
+    comp.lpszHostName = host;
+    comp.dwHostNameLength = sizeof host;
+    comp.lpszUserName = user;
+    comp.dwUserNameLength = sizeof user;
+    comp.lpszPassword = pwd;
+    comp.dwPasswordLength = sizeof pwd;
+    comp.lpszUrlPath = urlpart;
+    comp.dwUrlPathLength = sizeof urlpart;
+    comp.lpszExtraInfo = extra;
+    comp.dwExtraInfoLength = sizeof extra;
+    r = InternetCrackUrlW(url3, 0, 0, &comp );
+    ok( r, "InternetCrackUrlW failed unexpectedly\n");
+    ok( host[0] == 'x', "host should be x.org\n");
+    ok( urlpart[0] == 0, "urlpart should be empty\n");
 }
 
 static void fill_url_components(LPURL_COMPONENTS lpUrlComponents)
@@ -428,9 +456,12 @@ static void InternetCreateUrlA_test(void)
                     http[]       = "http",
                     https[]      = "https",
                     winehq[]     = "www.winehq.org",
+                    localhost[]  = "localhost",
                     username[]   = "username",
                     password[]   = "password",
+                    root[]       = "/",
                     site_about[] = "/site/about",
+                    extra_info[] = "?test=123",
                     about[]      = "about",
                     blank[]      = "blank",
                     host[]       = "host";
@@ -744,6 +775,26 @@ static void InternetCreateUrlA_test(void)
 	ok(!strcmp(szUrl, CREATE_URL12), "Expected %s, got %s\n", CREATE_URL12, szUrl);
 
 	HeapFree(GetProcessHeap(), 0, szUrl);
+
+    memset(&urlComp, 0, sizeof(urlComp));
+    urlComp.dwStructSize = sizeof(URL_COMPONENTS);
+    urlComp.lpszScheme = http;
+    urlComp.dwSchemeLength = strlen(urlComp.lpszScheme);
+    urlComp.lpszHostName = localhost;
+    urlComp.dwHostNameLength = strlen(urlComp.lpszHostName);
+    urlComp.nPort = 80;
+    urlComp.lpszUrlPath = root;
+    urlComp.dwUrlPathLength = strlen(urlComp.lpszUrlPath);
+    urlComp.lpszExtraInfo = extra_info;
+    urlComp.dwExtraInfoLength = strlen(urlComp.lpszExtraInfo);
+    len = 256;
+    szUrl = HeapAlloc(GetProcessHeap(), 0, len);
+    InternetCreateUrlA(&urlComp, ICU_ESCAPE, szUrl, &len);
+    ok(ret, "Expected success\n");
+    ok(len == strlen(CREATE_URL13), "Got len %u\n", len);
+    ok(!strcmp(szUrl, CREATE_URL13), "Expected \"%s\", got \"%s\"\n", CREATE_URL13, szUrl);
+
+    HeapFree(GetProcessHeap(), 0, szUrl);
 }
 
 START_TEST(url)

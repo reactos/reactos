@@ -51,10 +51,11 @@ static void test_sscanf( void )
     ok( ptr == (void *)0x46F172,"sscanf reads %p instead of %x\n", ptr, 0x46F172 );
 
     ok( sscanf("0x46F173", "%p", &ptr) == 1, "sscanf failed\n"  );
-    ok( ptr == (void *)0,"sscanf reads %p instead of %x\n", ptr, 0 );
+    ok( ptr == NULL,"sscanf reads %p instead of %x\n", ptr, 0 );
 
     ok( sscanf("-46F174", "%p", &ptr) == 1, "sscanf failed\n"  );
-    ok( ptr == (void *)0xFFB90E8C,"sscanf reads %p instead of %x\n", ptr, 0xFFB90E8C );
+    ok( ptr == (void *)(ULONG_PTR)-0x46f174,"sscanf reads %p instead of %p\n",
+        ptr, (void *)(ULONG_PTR)-0x46f174 );
 
     ok( sscanf("+46F175", "%p", &ptr) == 1, "sscanf failed\n"  );
     ok( ptr == (void *)0x46F175,"sscanf reads %p instead of %x\n", ptr, 0x46F175 );

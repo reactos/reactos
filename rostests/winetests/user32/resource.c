@@ -188,29 +188,29 @@ static void test_accel1(void)
         "still should be two entries in table %u/%u\n", r, n);
 
     n=0;
-    ok( ac[n].cmd == 1000, "cmd 0 not preserved\n");
-    ok( ac[n].key == 'A', "key 0 not preserved\n");
-    ok( ac[n].fVirt == (FVIRTKEY | FNOINVERT), "fVirt 0 not preserved\n");
+    ok( ac[n].cmd == 1000, "cmd 0 not preserved got %x\n", ac[n].cmd);
+    ok( ac[n].key == 'A', "key 0 not preserved got %x\n", ac[n].key);
+    ok( ac[n].fVirt == (FVIRTKEY | FNOINVERT), "fVirt 0 not preserved got %x\n", ac[n].fVirt);
 
     if (++n == r) goto done;
-    ok( ac[n].cmd == 0xffff, "cmd 1 not preserved\n");
-    ok( ac[n].key == 0xffff, "key 1 not preserved\n");
-    ok( ac[n].fVirt == 0x007f, "fVirt 1 not changed\n");
+    ok( ac[n].cmd == 0xffff, "cmd 1 not preserved got %x\n", ac[n].cmd);
+    ok( ac[n].key == 0xffff, "key 1 not preserved got %x\n", ac[n].key);
+    ok( ac[n].fVirt == 0x007f, "fVirt 1 wrong got %x\n", ac[n].fVirt);
 
     if (++n == r) goto done;
-    ok( ac[n].cmd == 0xfff0, "cmd 2 not preserved\n");
-    ok( ac[n].key == 0x00ff, "key 2 not preserved\n");
-    ok( ac[n].fVirt == 0x0070, "fVirt 2 not changed\n");
+    ok( ac[n].cmd == 0xfff0, "cmd 2 not preserved got %x\n", ac[n].cmd);
+    ok( (ac[n].key & 0xff) == 0xff, "key 2 not preserved got %x\n", ac[n].key);
+    ok( ac[n].fVirt == 0x0070, "fVirt 2 wrong got %x\n", ac[n].fVirt);
 
     if (++n == r) goto done;
-    ok( ac[n].cmd == 0xfff0, "cmd 3 not preserved\n");
-    ok( ac[n].key == 0x00ff, "key 3 not preserved\n");
-    ok( ac[n].fVirt == 0x0000, "fVirt 3 not changed\n");
+    ok( ac[n].cmd == 0xfff0, "cmd 3 not preserved got %x\n", ac[n].cmd);
+    ok( (ac[n].key & 0xff) == 0xff, "key 3 not preserved got %x\n", ac[n].key);
+    ok( ac[n].fVirt == 0x0000, "fVirt 3 wrong got %x\n", ac[n].fVirt);
 
     if (++n == r) goto done;
-    ok( ac[n].cmd == 0xfff0, "cmd 4 not preserved\n");
-    ok( ac[n].key == 0xffff, "key 4 not preserved\n");
-    ok( ac[n].fVirt == 0x0001, "fVirt 4 not changed\n");
+    ok( ac[n].cmd == 0xfff0, "cmd 4 not preserved got %x\n", ac[n].cmd);
+    ok( ac[n].key == 0xffff, "key 4 not preserved got %x\n", ac[n].key);
+    ok( ac[n].fVirt == 0x0001, "fVirt 4 wrong  got %x\n", ac[n].fVirt);
 done:
     r = DestroyAcceleratorTable( hAccel );
     ok( r, "destroy accelerator table\n");

@@ -181,10 +181,15 @@ static void testAddCert(void)
     context = NULL;
     ret = CertAddEncodedCertificateToStore(0, X509_ASN_ENCODING, bigCert,
      sizeof(bigCert), CERT_STORE_ADD_ALWAYS, &context);
-    ok(ret, "CertAddEncodedCertificateToStore failed: %08x\n",
-     GetLastError());
+    ok(ret || broken(GetLastError() == OSS_DATA_ERROR /* win98 */),
+     "CertAddEncodedCertificateToStore failed: %08x\n", GetLastError());
     if (context)
         CertFreeCertificateContext(context);
+    if (!ret && GetLastError() == OSS_DATA_ERROR)
+    {
+        skip("bigCert can't be decoded, skipping tests\n");
+        return;
+    }
 
     ret = CertAddEncodedCertificateToStore(store, X509_ASN_ENCODING,
      bigCert, sizeof(bigCert), CERT_STORE_ADD_ALWAYS, NULL);
@@ -409,8 +414,8 @@ static void testCertProperties(void)
     CRYPT_DATA_BLOB blob;
     CERT_KEY_CONTEXT keyContext;
 
-    ok(context != NULL, "CertCreateCertificateContext failed: %08x\n",
-     GetLastError());
+    ok(context != NULL || broken(GetLastError() == OSS_DATA_ERROR /* win98 */),
+     "CertCreateCertificateContext failed: %08x\n", GetLastError());
     if (!context)
         return;
 
@@ -641,8 +646,13 @@ static void testDupCert(void)
 
     ret = CertAddEncodedCertificateToStore(store, X509_ASN_ENCODING,
      bigCert, sizeof(bigCert), CERT_STORE_ADD_ALWAYS, &context);
-    ok(ret, "CertAddEncodedCertificateToStore failed: %08x\n",
-     GetLastError());
+    ok(ret || broken(GetLastError() == OSS_DATA_ERROR /* win98 */),
+     "CertAddEncodedCertificateToStore failed: %08x\n", GetLastError());
+    if (!ret && GetLastError() == OSS_DATA_ERROR)
+    {
+        skip("bigCert can't be decoded, skipping tests\n");
+        return;
+    }
     ok(context != NULL, "Expected a valid cert context\n");
     if (context)
     {
@@ -1014,8 +1024,13 @@ static void testFindCert(void)
 
     ret = CertAddEncodedCertificateToStore(store, X509_ASN_ENCODING,
      bigCert, sizeof(bigCert), CERT_STORE_ADD_NEW, NULL);
-    ok(ret, "CertAddEncodedCertificateToStore failed: %08x\n",
-     GetLastError());
+    ok(ret || broken(GetLastError() == OSS_DATA_ERROR /* win98 */),
+     "CertAddEncodedCertificateToStore failed: %08x\n", GetLastError());
+    if (!ret && GetLastError() == OSS_DATA_ERROR)
+    {
+        skip("bigCert can't be decoded, skipping tests\n");
+        return;
+    }
     ret = CertAddEncodedCertificateToStore(store, X509_ASN_ENCODING,
      bigCert2, sizeof(bigCert2), CERT_STORE_ADD_NEW, NULL);
     ok(ret, "CertAddEncodedCertificateToStore failed: %08x\n",
@@ -1199,8 +1214,13 @@ static void testGetSubjectCert(void)
 
     ret = CertAddEncodedCertificateToStore(store, X509_ASN_ENCODING,
      bigCert, sizeof(bigCert), CERT_STORE_ADD_ALWAYS, NULL);
-    ok(ret, "CertAddEncodedCertificateToStore failed: %08x\n",
-     GetLastError());
+    ok(ret || broken(GetLastError() == OSS_DATA_ERROR /* win98 */),
+     "CertAddEncodedCertificateToStore failed: %08x\n", GetLastError());
+    if (!ret && GetLastError() == OSS_DATA_ERROR)
+    {
+        skip("bigCert can't be decoded, skipping tests\n");
+        return;
+    }
     ret = CertAddEncodedCertificateToStore(store, X509_ASN_ENCODING,
      bigCert2, sizeof(bigCert2), CERT_STORE_ADD_NEW, &context1);
     ok(ret, "CertAddEncodedCertificateToStore failed: %08x\n",
@@ -1652,12 +1672,12 @@ static void testVerifyCertSig(HCRYPTPROV csp, const CRYPT_DATA_BLOB *toBeSigned,
 
     if (!pCryptVerifyCertificateSignatureEx)
     {
-        skip("no CryptVerifyCertificateSignatureEx support\n");
+        win_skip("no CryptVerifyCertificateSignatureEx support\n");
         return;
     }
     if (!pCryptEncodeObjectEx)
     {
-        skip("no CryptEncodeObjectEx support\n");
+        win_skip("no CryptEncodeObjectEx support\n");
         return;
     }
     ret = pCryptVerifyCertificateSignatureEx(0, 0, 0, NULL, 0, NULL, 0, NULL);
@@ -1877,7 +1897,7 @@ static void testCreateSelfSignCert(void)
 
     if (!pCertCreateSelfSignCertificate)
     {
-        skip("CertCreateSelfSignCertificate() is not available\n");
+        win_skip("CertCreateSelfSignCertificate() is not available\n");
         return;
     }
 
@@ -2314,7 +2334,7 @@ static void testGetValidUsages(void)
 
     if (!pCertGetValidUsages)
     {
-        skip("CertGetValidUsages() is not available\n");
+        win_skip("CertGetValidUsages() is not available\n");
         return;
     }
 
@@ -2855,7 +2875,7 @@ static void testAcquireCertPrivateKey(void)
 
     if (!pCryptAcquireCertificatePrivateKey)
     {
-        skip("CryptAcquireCertificatePrivateKey() is not available\n");
+        win_skip("CryptAcquireCertificatePrivateKey() is not available\n");
         return;
     }
 

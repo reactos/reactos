@@ -36,6 +36,37 @@
 
 static HANDLE proc_handles[2];
 
+static void test_filbuf( void )
+{
+    FILE *fp;
+    int c;
+    fpos_t pos;
+
+    fp = fopen("filbuf.tst", "wb");
+    fwrite("\n\n\n\n", 1, 4, fp);
+    fclose(fp);
+
+    fp = fopen("filbuf.tst", "rt");
+    c = _filbuf(fp);
+    ok(c == '\n', "read wrong byte\n");
+    /* See bug 16970 for why we care about _filbuf.
+     * ftell returns screwy values on files with lots
+     * of bare LFs in ascii mode because it assumes
+     * that ascii files contain only CRLFs, removes
+     * the CR's early in _filbuf, and adjusts the return
+     * value of ftell to compensate.
+     * native _filbuf will read the whole file, then consume and return
+     * the first one.  That leaves fp->_fd at offset 4, and fp->_ptr
+     * pointing to a buffer of three bare LFs, so
+     * ftell will return 4 - 3 - 3 = -2.
+     */
+    ok(ftell(fp) == -2, "ascii crlf removal does not match native\n");
+    ok(fgetpos(fp, &pos) == 0, "fgetpos fail\n");
+    ok(pos == -2, "ftell does not match fgetpos\n");
+    fclose(fp);
+    unlink("filbuf.tst");
+}
+
 static void test_fdopen( void )
 {
     static const char buffer[] = {0,1,2,3,4,5,6,7,8,9};
@@ -105,11 +136,11 @@ static void test_fileops( void )
 
     rewind(file);
     ok(fgetpos(file,&pos) == 0, "fgetpos failed unexpected\n");
-    ok(pos == 0, "Unexpected result of fgetpos 0x%Lx\n", pos);
-    pos = (ULONGLONG)sizeof (outbuffer);
+    ok(pos == 0, "Unexpected result of fgetpos %x%08x\n", (DWORD)(pos >> 32), (DWORD)pos);
+    pos = sizeof (outbuffer);
     ok(fsetpos(file, &pos) == 0, "fsetpos failed unexpected\n");
     ok(fgetpos(file,&pos) == 0, "fgetpos failed unexpected\n");
-    ok(pos == (ULONGLONG)sizeof (outbuffer), "Unexpected result of fgetpos 0x%Lx\n", pos);
+    ok(pos == sizeof (outbuffer), "Unexpected result of fgetpos %x%08x\n", (DWORD)(pos >> 32), (DWORD)pos);
 
     fclose (file);
     fd = open ("fdopen.tst", O_RDONLY | O_TEXT);
@@ -275,6 +306,7 @@ static void test_asciimode(void)
 {
     FILE *fp;
     char buf[64];
+    int c, i, j;
 
     /* Simple test of CR CR LF handling.  Test both fgets and fread code paths, they're different! */
     fp = fopen("ascii.tst", "wb");
@@ -303,7 +335,82 @@ static void test_asciimode(void)
     ok((fread(buf, 1, sizeof(buf), fp) == 0), "fread after logical EOF\n");
     fclose(fp);
 
+    /* Show ASCII mode handling*/
+    fp= fopen("ascii.tst","wb");
+    fputs("0\r\n1\r\n2\r\n3\r\n4\r\n5\r\n6\r\n7\r\n8\r\n9\r\n", fp);
+    fclose(fp);
+
+    fp = fopen("ascii.tst", "r");
+    c= fgetc(fp);
+    c= fgetc(fp);
+    fseek(fp,0,SEEK_CUR);
+    for(i=1; i<10; i++) {
+	ok((j = ftell(fp)) == i*3, "ftell fails in TEXT mode\n");
+	fseek(fp,0,SEEK_CUR);
+	ok((c = fgetc(fp)) == '0'+ i, "fgetc after fseek failed in line %d\n", i);
+	c= fgetc(fp);
+    }
+    /* Show that fseek doesn't skip \\r !*/
+    rewind(fp);
+    c= fgetc(fp);
+    fseek(fp, 2 ,SEEK_CUR);
+    for(i=1; i<10; i++) {
+	ok((c = fgetc(fp)) == '0'+ i, "fgetc after fseek with pos Offset failed in line %d\n", i);
+	fseek(fp, 2 ,SEEK_CUR);
+    }
+    fseek(fp, 9*3 ,SEEK_SET);
+    c = fgetc(fp);
+    fseek(fp, -4 ,SEEK_CUR);
+    for(i= 8; i>=0; i--) {
+	ok((c = fgetc(fp)) == '0'+ i, "fgetc after fseek with neg Offset failed in line %d\n", i);
+	fseek(fp, -4 ,SEEK_CUR);
+    }
+    /* Show what happens if fseek positions filepointer on \\r */
+    fclose(fp);
+    fp = fopen("ascii.tst", "r");
+    fseek(fp, 3 ,SEEK_SET);
+    ok((c = fgetc(fp)) == '1', "fgetc fails to read next char when positioned on \\r\n");
+    fclose(fp);
+
     unlink("ascii.tst");
+}
+
+static void test_asciimode2(void)
+{
+    /* Error sequence from one app was getchar followed by small fread
+     * with one \r removed had last byte of buffer filled with
+     * next byte of *unbuffered* data rather than next byte from buffer
+     * Test case is a short string of one byte followed by a newline
+     * followed by filler to fill out the sector, then a sector of
+     * some different byte.
+     */
+
+    FILE *fp;
+    char ibuf[4];
+    int i;
+    static const char obuf[] =
+"00\n"
+"000000000000000000000000000000000000000000000000000000000000000000000000000000\n"
+"000000000000000000000000000000000000000000000000000000000000000000000000000000\n"
+"000000000000000000000000000000000000000000000000000000000000000000000000000000\n"
+"000000000000000000000000000000000000000000000000000000000000000000000000000000\n"
+"000000000000000000000000000000000000000000000000000000000000000000000000000000\n"
+"000000000000000000000000000000000000000000000000000000000000000000000000000000\n"
+"000000000000000000\n"
+"1111111111111111111";
+
+    fp = fopen("ascii2.tst", "wt");
+    fwrite(obuf, 1, sizeof(obuf), fp);
+    fclose(fp);
+
+    fp = fopen("ascii2.tst", "rt");
+    ok(getc(fp) == '0', "first char not 0\n");
+    memset(ibuf, 0, sizeof(ibuf));
+    i = fread(ibuf, 1, sizeof(ibuf), fp);
+    ok(i == sizeof(ibuf), "fread i %d != sizeof(ibuf)\n", i);
+    ok(0 == strncmp(ibuf, obuf+1, sizeof(ibuf)), "ibuf != obuf\n");
+    fclose(fp);
+    unlink("ascii2.tst");
 }
 
 static WCHAR* AtoW( const char* p )
@@ -362,9 +469,10 @@ static void test_flsbuf( void )
 {
   char* tempf;
   FILE *tempfh;
+  int  c;
   int  ret;
   int  bufmode;
-  int  bufmodes[] = {_IOFBF,_IONBF};
+  static const int bufmodes[] = {_IOFBF,_IONBF};
 
   tempf=_tempnam(".","wne");
   for (bufmode=0; bufmode < sizeof(bufmodes)/sizeof(bufmodes[0]); bufmode++)
@@ -386,6 +494,26 @@ static void test_flsbuf( void )
   tempfh = fopen(tempf,"rb");
   ret = _flsbuf(0,tempfh);
   ok(EOF == ret, "_flsbuf(0,tempfh) on r/o file expected %x got %x\n", EOF, ret);
+  fclose(tempfh);
+
+  /* See bug 17123, exposed by WinAVR's make */
+  tempfh = fopen(tempf,"w");
+  ok(tempfh->_cnt == 0, "_cnt on freshly opened file was %d\n", tempfh->_cnt);
+  setbuf(tempfh, NULL);
+  ok(tempfh->_cnt == 0, "_cnt on unbuffered file was %d\n", tempfh->_cnt);
+  /* Inlined putchar sets _cnt to -1.  Native seems to ignore the value... */
+  tempfh->_cnt = 1234;
+  ret = _flsbuf('Q',tempfh);
+  ok('Q' == ret, "_flsbuf('Q',tempfh) expected %x got %x\n", 'Q', ret);
+  /* ... and reset it to zero */
+  ok(tempfh->_cnt == 0, "after unbuf _flsbuf, _cnt was %d\n", tempfh->_cnt);
+  fclose(tempfh);
+  /* And just for grins, make sure the file is correct */
+  tempfh = fopen(tempf,"r");
+  c = fgetc(tempfh);
+  ok(c == 'Q', "first byte should be 'Q'\n");
+  c = fgetc(tempfh);
+  ok(c == EOF, "there should only be one byte\n");
   fclose(tempfh);
 
   unlink(tempf);
@@ -425,8 +553,7 @@ static void test_fgetwc( void )
   ok(l==BUFSIZ-2, "ftell expected %d got %ld\n", BUFSIZ-2, l);
   fgetws(wtextW,LLEN,tempfh);
   l=ftell(tempfh);
-  ok(l==BUFSIZ-2+strlen(mytext), "ftell expected %d got %ld\n",
-   BUFSIZ-2+strlen(mytext), l);
+  ok(l==BUFSIZ-2+strlen(mytext), "ftell expected %d got %ld\n", BUFSIZ-2+lstrlen(mytext), l);
   mytextW = AtoW (mytext);
   aptr = mytextW;
   wptr = wtextW;
@@ -903,23 +1030,21 @@ static void test_stat(void)
     fd = open("stat.tst", O_WRONLY | O_CREAT | O_BINARY, _S_IREAD |_S_IWRITE);
     if (fd >= 0)
     {
-        if (fstat(fd, &buf) == 0)
-        {
-            if ((buf.st_mode & _S_IFMT) == _S_IFREG)
-            {
-                ok(buf.st_dev == 0, "st_dev is %d, expected 0\n", buf.st_dev);
-                ok(buf.st_dev == buf.st_rdev, "st_dev (%d) and st_rdev (%d) differ\n",
-                    buf.st_dev, buf.st_rdev);
-                ok(buf.st_nlink == 1, "st_nlink is %d, expected 1\n",
-                    buf.st_nlink);
-                ok(buf.st_size == 0, "st_size is %d, expected 0\n",
-                    buf.st_size);
-            }
-            else
-                skip("file is not a file?\n");
-        }
-        else
-            skip("fstat failed, errno %d\n", errno);
+        ok(fstat(fd, &buf) == 0, "fstat failed: errno=%d\n", errno);
+        ok((buf.st_mode & _S_IFMT) == _S_IFREG, "bad format = %06o\n", buf.st_mode);
+        ok((buf.st_mode & 0777) == 0666, "bad st_mode = %06o\n", buf.st_mode);
+        ok(buf.st_dev == 0, "st_dev is %d, expected 0\n", buf.st_dev);
+        ok(buf.st_dev == buf.st_rdev, "st_dev (%d) and st_rdev (%d) differ\n", buf.st_dev, buf.st_rdev);
+        ok(buf.st_nlink == 1, "st_nlink is %d, expected 1\n", buf.st_nlink);
+        ok(buf.st_size == 0, "st_size is %d, expected 0\n", buf.st_size);
+
+        ok(stat("stat.tst", &buf) == 0, "stat failed: errno=%d\n", errno);
+        ok((buf.st_mode & _S_IFMT) == _S_IFREG, "bad format = %06o\n", buf.st_mode);
+        ok((buf.st_mode & 0777) == 0666, "bad st_mode = %06o\n", buf.st_mode);
+        ok(buf.st_dev == buf.st_rdev, "st_dev (%d) and st_rdev (%d) differ\n", buf.st_dev, buf.st_rdev);
+        ok(buf.st_nlink == 1, "st_nlink is %d, expected 1\n", buf.st_nlink);
+        ok(buf.st_size == 0, "st_size is %d, expected 0\n", buf.st_size);
+
         close(fd);
         remove("stat.tst");
     }
@@ -929,19 +1054,16 @@ static void test_stat(void)
     /* Tests for a char device */
     if (_dup2(0, 10) == 0)
     {
-        if (fstat(10, &buf) == 0)
+        ok(fstat(10, &buf) == 0, "fstat(stdin) failed: errno=%d\n", errno);
+        if ((buf.st_mode & _S_IFMT) == _S_IFCHR)
         {
-            if (buf.st_mode == _S_IFCHR)
-            {
-                ok(buf.st_dev == 10, "st_dev is %d, expected 10\n", buf.st_dev);
-                ok(buf.st_rdev == 10, "st_rdev is %d, expected 10\n", buf.st_rdev);
-                ok(buf.st_nlink == 1, "st_nlink is %d, expected 1\n", buf.st_nlink);
-            }
-            else
-                skip("stdin is not a char device?\n");
+            ok(buf.st_mode == _S_IFCHR, "bad st_mode=%06o\n", buf.st_mode);
+            ok(buf.st_dev == 10, "st_dev is %d, expected 10\n", buf.st_dev);
+            ok(buf.st_rdev == 10, "st_rdev is %d, expected 10\n", buf.st_rdev);
+            ok(buf.st_nlink == 1, "st_nlink is %d, expected 1\n", buf.st_nlink);
         }
         else
-            skip("fstat failed with errno %d\n", errno);
+            skip("stdin is not a char device? st_mode=%06o\n", buf.st_mode);
         close(10);
     }
     else
@@ -950,22 +1072,11 @@ static void test_stat(void)
     /* Tests for pipes */
     if (_pipe(pipes, 1024, O_BINARY) == 0)
     {
-        if (fstat(pipes[0], &buf) == 0)
-        {
-            if (buf.st_mode == _S_IFIFO)
-            {
-                ok(buf.st_dev == pipes[0], "st_dev is %d, expected %d\n",
-                    buf.st_dev, pipes[0]);
-                ok(buf.st_rdev == pipes[0], "st_rdev is %d, expected %d\n",
-                    buf.st_rdev, pipes[0]);
-                ok(buf.st_nlink == 1, "st_nlink is %d, expected 1\n",
-                    buf.st_nlink);
-            }
-            else
-                skip("pipe() didn't make a pipe?\n");
-        }
-        else
-            skip("fstat failed with errno %d\n", errno);
+        ok(fstat(pipes[0], &buf) == 0, "fstat(pipe) failed: errno=%d\n", errno);
+        ok(buf.st_mode == _S_IFIFO, "bad st_mode=%06o\n", buf.st_mode);
+        ok(buf.st_dev == pipes[0], "st_dev is %d, expected %d\n", buf.st_dev, pipes[0]);
+        ok(buf.st_rdev == pipes[0], "st_rdev is %d, expected %d\n", buf.st_rdev, pipes[0]);
+        ok(buf.st_nlink == 1, "st_nlink is %d, expected 1\n", buf.st_nlink);
         close(pipes[0]);
         close(pipes[1]);
     }
@@ -997,7 +1108,7 @@ static void test_pipes_child(int argc, char** args)
 
     for (i=0; i<N_TEST_MESSAGES; i++) {
        nwritten=write(fd, pipe_string, strlen(pipe_string));
-       ok(nwritten == strlen(pipe_string), "i %d, expected to write %d bytes, wrote %d\n", i, strlen(pipe_string), nwritten);
+       ok(nwritten == strlen(pipe_string), "i %d, expected to write '%s' wrote %d\n", i, pipe_string, nwritten);
        /* let other process wake up so they can show off their "keep reading until EOF" behavior */
        if (i < N_TEST_MESSAGES-1)
            Sleep(100);
@@ -1035,7 +1146,7 @@ static void test_pipes(const char* selfname)
 
     for (i=0; i<N_TEST_MESSAGES; i++) {
        r=read(pipes[0], buf, sizeof(buf)-1);
-       ok(r == strlen(pipe_string), "i %d, expected to read %d bytes, got %d\n", i, strlen(pipe_string)+1, r);
+       ok(r == strlen(pipe_string), "i %d, got %d\n", i, r);
        if (r > 0)
            buf[r]='\0';
        ok(strcmp(buf, pipe_string) == 0, "expected to read '%s', got '%s'\n", pipe_string, buf);
@@ -1070,7 +1181,7 @@ static void test_pipes(const char* selfname)
     for (i=0; i<N_TEST_MESSAGES; i++)
        strcat(expected, pipe_string);
     r=fread(buf, 1, sizeof(buf)-1, file);
-    ok(r == strlen(expected), "fread() returned %d instead of %d: ferror=%d\n", r, strlen(expected), ferror(file));
+    ok(r == strlen(expected), "fread() returned %d: ferror=%d\n", r, ferror(file));
     if (r > 0)
        buf[r]='\0';
     ok(strcmp(buf, expected) == 0, "got '%s' expected '%s'\n", buf, expected);
@@ -1125,10 +1236,12 @@ START_TEST(file)
     test_unlink();
 
     /* testing stream I/O */
+    test_filbuf();
     test_fdopen();
     test_fopen_fclose_fcloseall();
     test_fileops();
     test_asciimode();
+    test_asciimode2();
     test_readmode(FALSE); /* binary mode */
     test_readmode(TRUE);  /* ascii mode */
     test_fgetc();

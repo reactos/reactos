@@ -175,7 +175,7 @@ static void do_parent(void)
     startup.dwFlags = STARTF_USESHOWWINDOW;
     startup.wShowWindow = SW_SHOWNORMAL;
 
-    sprintf(path_name, "%s cursoricon %x", test_argv[0], (unsigned int) parent);
+    sprintf(path_name, "%s cursoricon %lx", test_argv[0], (INT_PTR)parent);
     ok(CreateProcessA(NULL, path_name, NULL, NULL, FALSE, 0L, NULL, NULL, &startup, &info), "CreateProcess failed.\n");
     child_process = info.hProcess;
 
@@ -840,7 +840,8 @@ static void test_LoadImage(void)
         ok(icon_info.fIcon == FALSE, "fIcon != FALSE.\n");
         ok(icon_info.xHotspot == 1, "xHotspot is %u.\n", icon_info.xHotspot);
         ok(icon_info.yHotspot == 1, "yHotspot is %u.\n", icon_info.yHotspot);
-        ok(icon_info.hbmColor != NULL, "No hbmColor!\n");
+        ok(icon_info.hbmColor != NULL || broken(!icon_info.hbmColor) /* no color cursor support */,
+           "No hbmColor!\n");
         ok(icon_info.hbmMask != NULL, "No hbmMask!\n");
     }
 
@@ -910,7 +911,8 @@ static void test_CreateIconFromResource(void)
         ok(icon_info.fIcon == FALSE, "fIcon != FALSE.\n");
         ok(icon_info.xHotspot == 3, "xHotspot is %u.\n", icon_info.xHotspot);
         ok(icon_info.yHotspot == 3, "yHotspot is %u.\n", icon_info.yHotspot);
-        ok(icon_info.hbmColor != NULL, "No hbmColor!\n");
+        ok(icon_info.hbmColor != NULL || broken(!icon_info.hbmColor) /* no color cursor support */,
+           "No hbmColor!\n");
         ok(icon_info.hbmMask != NULL, "No hbmMask!\n");
     }
 

@@ -1471,7 +1471,7 @@ static void test_EM_SETOPTIONS(void)
     DestroyWindow(hwndRichEdit);
 
     hwndRichEdit = CreateWindow(RICHEDIT_CLASS, NULL,
-                                WS_POPUP|WS_HSCROLL|WS_VSCROLL,
+                                WS_POPUP|WS_HSCROLL|WS_VSCROLL|WS_VISIBLE,
                                 0, 0, 200, 60, NULL, NULL,
                                 hmoduleRichEdit, NULL);
     ok(hwndRichEdit != NULL, "class: %s, error: %d\n",
@@ -3225,7 +3225,7 @@ static DWORD CALLBACK test_WM_SETTEXT_esCallback(DWORD_PTR dwCookie,
   return 0;
 }
 
-static void test_WM_SETTEXT()
+static void test_WM_SETTEXT(void)
 {
   HWND hwndRichEdit = new_richedit(NULL);
   const char * TestItem1 = "TestSomeText";
@@ -3345,7 +3345,9 @@ static void test_EM_STREAMOUT(void)
 
 static void test_EM_SETTEXTEX(void)
 {
-  HWND hwndRichEdit = new_richedit(NULL);
+  HWND hwndRichEdit, parent;
+  SCROLLINFO si;
+  int sel_start, sel_end;
   SETTEXTEX setText;
   GETTEXTEX getText;
   WCHAR TestItem1[] = {'T', 'e', 's', 't', 
@@ -3392,6 +3394,76 @@ static void test_EM_SETTEXTEX(void)
   int result;
   CHARRANGE cr;
   EDITSTREAM es;
+  WNDCLASSA cls;
+
+  /* Test the scroll position with and without a parent window.
+   *
+   * For some reason the scroll position is 0 after EM_SETTEXTEX
+   * with the ST_SELECTION flag only when the control has a parent
+   * window, even though the selection is at the end. */
+  cls.style = 0;
+  cls.lpfnWndProc = DefWindowProcA;
+  cls.cbClsExtra = 0;
+  cls.cbWndExtra = 0;
+  cls.hInstance = GetModuleHandleA(0);
+  cls.hIcon = 0;
+  cls.hCursor = LoadCursorA(0, IDC_ARROW);
+  cls.hbrBackground = GetStockObject(WHITE_BRUSH);
+  cls.lpszMenuName = NULL;
+  cls.lpszClassName = "ParentTestClass";
+  if(!RegisterClassA(&cls)) assert(0);
+
+  parent = CreateWindow(cls.lpszClassName, NULL, WS_POPUP|WS_VISIBLE,
+                        0, 0, 200, 60, NULL, NULL, NULL, NULL);
+  ok (parent != 0, "Failed to create parent window\n");
+
+  hwndRichEdit = CreateWindowEx(0,
+                        RICHEDIT_CLASS, NULL,
+                        ES_MULTILINE|WS_VSCROLL|WS_VISIBLE|WS_CHILD,
+                        0, 0, 200, 60, parent, NULL,
+                        hmoduleRichEdit, NULL);
+
+  setText.codepage = CP_ACP;
+  setText.flags = ST_SELECTION;
+  SendMessage(hwndRichEdit, EM_SETTEXTEX, (WPARAM)&setText,
+              (LPARAM)"{\\rtf 1\\par 2\\par 3\\par 4\\par 5\\par 6\\par 7\\par 8\\par 9\\par}");
+  si.cbSize = sizeof(si);
+  si.fMask = SIF_ALL;
+  GetScrollInfo(hwndRichEdit, SB_VERT, &si);
+  todo_wine ok(si.nPos == 0, "Position is incorrectly at %d\n", si.nPos);
+  SendMessage(hwndRichEdit, EM_GETSEL, (WPARAM)&sel_start, (LPARAM)&sel_end);
+  ok(sel_start == 18, "Selection start incorrectly at %d\n", sel_start);
+  ok(sel_end == 18, "Selection end incorrectly at %d\n", sel_end);
+
+  DestroyWindow(parent);
+
+  /* Test without a parent window */
+  hwndRichEdit = new_richedit(NULL);
+  setText.codepage = CP_ACP;
+  setText.flags = ST_SELECTION;
+  SendMessage(hwndRichEdit, EM_SETTEXTEX, (WPARAM)&setText,
+              (LPARAM)"{\\rtf 1\\par 2\\par 3\\par 4\\par 5\\par 6\\par 7\\par 8\\par 9\\par}");
+  si.cbSize = sizeof(si);
+  si.fMask = SIF_ALL;
+  GetScrollInfo(hwndRichEdit, SB_VERT, &si);
+  ok(si.nPos != 0, "Position is incorrectly at %d\n", si.nPos);
+  SendMessage(hwndRichEdit, EM_GETSEL, (WPARAM)&sel_start, (LPARAM)&sel_end);
+  ok(sel_start == 18, "Selection start incorrectly at %d\n", sel_start);
+  ok(sel_end == 18, "Selection end incorrectly at %d\n", sel_end);
+
+  /* The scroll position should also be 0 after EM_SETTEXTEX with ST_DEFAULT,
+   * but this time it is because the selection is at the beginning. */
+  setText.codepage = CP_ACP;
+  setText.flags = ST_DEFAULT;
+  SendMessage(hwndRichEdit, EM_SETTEXTEX, (WPARAM)&setText,
+              (LPARAM)"{\\rtf 1\\par 2\\par 3\\par 4\\par 5\\par 6\\par 7\\par 8\\par 9\\par}");
+  si.cbSize = sizeof(si);
+  si.fMask = SIF_ALL;
+  GetScrollInfo(hwndRichEdit, SB_VERT, &si);
+  ok(si.nPos == 0, "Position is incorrectly at %d\n", si.nPos);
+  SendMessage(hwndRichEdit, EM_GETSEL, (WPARAM)&sel_start, (LPARAM)&sel_end);
+  ok(sel_start == 0, "Selection start incorrectly at %d\n", sel_start);
+  ok(sel_end == 0, "Selection end incorrectly at %d\n", sel_end);
 
   setText.codepage = 1200;  /* no constant for unicode */
   getText.codepage = 1200;  /* no constant for unicode */
@@ -3561,6 +3633,22 @@ static void test_EM_SETTEXTEX(void)
   SendMessage(hwndRichEdit, EM_GETTEXTEX, (WPARAM)&getText, (LPARAM) buf);
   ok(lstrcmpW(buf, TestItem1) == 0,
       "EM_GETTEXTEX results not what was set by EM_SETTEXTEX\n");
+
+  /* The following test demonstrates that EM_SETTEXTEX treats text as ASCII if it
+   * starts with ASCII characters "{\rtf" even when the codepage is unicode. */
+  setText.codepage = 1200; /* Lie about code page (actual ASCII) */
+  getText.codepage = CP_ACP;
+  getText.cb = MAX_BUF_LEN;
+  getText.flags = GT_DEFAULT;
+  getText.lpDefaultChar = NULL;
+  getText.lpUsedDefChar = NULL;
+
+  setText.flags = ST_SELECTION;
+  SendMessage(hwndRichEdit, EM_SETSEL, 0, -1);
+  result = SendMessage(hwndRichEdit, EM_SETTEXTEX, (WPARAM)&setText, (LPARAM) "{\\rtf not unicode}");
+  todo_wine ok(result == 11, "EM_SETTEXTEX incorrectly returned %d\n", result);
+  SendMessage(hwndRichEdit, EM_GETTEXTEX, (WPARAM)&getText, (LPARAM) bufACP);
+  ok(lstrcmpA(bufACP, "not unicode") == 0, "'%s' != 'not unicode'\n", bufACP);
 
   /* The following test demonstrates that EM_SETTEXTEX supports RTF strings with a selection */
   SendMessage(hwndRichEdit, WM_SETTEXT, 0, (LPARAM) "TestSomeText"); /* TestItem1 */
@@ -5325,7 +5413,7 @@ static void test_eventMask(void)
     cls.cbWndExtra = 0;
     cls.hInstance = GetModuleHandleA(0);
     cls.hIcon = 0;
-    cls.hCursor = LoadCursorA(0, (LPSTR)IDC_ARROW);
+    cls.hCursor = LoadCursorA(0, IDC_ARROW);
     cls.hbrBackground = GetStockObject(WHITE_BRUSH);
     cls.lpszMenuName = NULL;
     cls.lpszClassName = "EventMaskParentClass";
@@ -5415,7 +5503,7 @@ static void test_WM_NOTIFY(void)
     cls.cbWndExtra = 0;
     cls.hInstance = GetModuleHandleA(0);
     cls.hIcon = 0;
-    cls.hCursor = LoadCursorA(0, (LPSTR)IDC_ARROW);
+    cls.hCursor = LoadCursorA(0, IDC_ARROW);
     cls.hbrBackground = GetStockObject(WHITE_BRUSH);
     cls.lpszMenuName = NULL;
     cls.lpszClassName = "WM_NOTIFY_ParentClass";
@@ -5851,12 +5939,12 @@ static void test_word_wrap(void)
 
     /* Test the effect of EM_SETTARGETDEVICE on word wrap. */
     res = SendMessage(hwnd, EM_SETTARGETDEVICE, 0, 1);
-    todo_wine ok(res, "EM_SETTARGETDEVICE failed (returned %d).\n", res);
+    ok(res, "EM_SETTARGETDEVICE failed (returned %d).\n", res);
     pos = SendMessage(hwnd, EM_CHARFROMPOS, 0, (LPARAM) &point);
     ok(!pos, "pos=%d indicating word wrap when none is expected.\n", pos);
 
     res = SendMessage(hwnd, EM_SETTARGETDEVICE, 0, 0);
-    todo_wine ok(res, "EM_SETTARGETDEVICE failed (returned %d).\n", res);
+    ok(res, "EM_SETTARGETDEVICE failed (returned %d).\n", res);
     pos = SendMessage(hwnd, EM_CHARFROMPOS, 0, (LPARAM) &point);
     ok(pos, "pos=%d indicating no word wrap when it is expected.\n", pos);
     DestroyWindow(hwnd);

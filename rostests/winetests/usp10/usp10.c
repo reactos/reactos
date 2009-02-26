@@ -1382,6 +1382,87 @@ static void test_ScriptGetProperties(void)
     ok(hr == S_OK, "ScriptGetProperties failed: 0x%08x\n", hr);
 }
 
+static void test_ScriptBreak(void)
+{
+    static const WCHAR test[] = {' ','\r','\n',0};
+    SCRIPT_ITEM items[4];
+    SCRIPT_LOGATTR la;
+    HRESULT hr;
+
+    hr = ScriptItemize(test, 3, 4, NULL, NULL, items, NULL);
+    ok(!hr, "ScriptItemize should return S_OK not %08x\n", hr);
+
+    memset(&la, 0, sizeof(la));
+    hr = ScriptBreak(test, 1, &items[0].a, &la);
+    ok(!hr, "ScriptBreak should return S_OK not %08x\n", hr);
+
+    ok(!la.fSoftBreak, "fSoftBreak set\n");
+    ok(la.fWhiteSpace, "fWhiteSpace not set\n");
+    ok(la.fCharStop, "fCharStop not set\n");
+    ok(!la.fWordStop, "fWordStop set\n");
+    ok(!la.fInvalid, "fInvalid set\n");
+    ok(!la.fReserved, "fReserved set\n");
+
+    memset(&la, 0, sizeof(la));
+    hr = ScriptBreak(test + 1, 1, &items[1].a, &la);
+    ok(!hr, "ScriptBreak should return S_OK not %08x\n", hr);
+
+    ok(!la.fSoftBreak, "fSoftBreak set\n");
+    ok(!la.fWhiteSpace, "fWhiteSpace set\n");
+    ok(la.fCharStop, "fCharStop not set\n");
+    ok(!la.fWordStop, "fWordStop set\n");
+    ok(!la.fInvalid, "fInvalid set\n");
+    ok(!la.fReserved, "fReserved set\n");
+
+    memset(&la, 0, sizeof(la));
+    hr = ScriptBreak(test + 2, 1, &items[2].a, &la);
+    ok(!hr, "ScriptBreak should return S_OK not %08x\n", hr);
+
+    ok(!la.fSoftBreak, "fSoftBreak set\n");
+    ok(!la.fWhiteSpace, "fWhiteSpace set\n");
+    ok(la.fCharStop, "fCharStop not set\n");
+    ok(!la.fWordStop, "fWordStop set\n");
+    ok(!la.fInvalid, "fInvalid set\n");
+    ok(!la.fReserved, "fReserved set\n");
+}
+
+static void test_newlines(void)
+{
+    static const WCHAR test1[] = {'t','e','x','t','\r','t','e','x','t',0};
+    static const WCHAR test2[] = {'t','e','x','t','\n','t','e','x','t',0};
+    static const WCHAR test3[] = {'t','e','x','t','\r','\n','t','e','x','t',0};
+    static const WCHAR test4[] = {'t','e','x','t','\n','\r','t','e','x','t',0};
+    static const WCHAR test5[] = {'1','2','3','4','\n','\r','1','2','3','4',0};
+    SCRIPT_ITEM items[5];
+    HRESULT hr;
+    int count;
+
+    count = 0;
+    hr = ScriptItemize(test1, lstrlenW(test1), 5, NULL, NULL, items, &count);
+    ok(hr == S_OK, "ScriptItemize failed: 0x%08x\n", hr);
+    ok(count == 3, "got %d expected 3\n", count);
+
+    count = 0;
+    hr = ScriptItemize(test2, lstrlenW(test2), 5, NULL, NULL, items, &count);
+    ok(hr == S_OK, "ScriptItemize failed: 0x%08x\n", hr);
+    ok(count == 3, "got %d expected 3\n", count);
+
+    count = 0;
+    hr = ScriptItemize(test3, lstrlenW(test3), 5, NULL, NULL, items, &count);
+    ok(hr == S_OK, "ScriptItemize failed: 0x%08x\n", hr);
+    ok(count == 4, "got %d expected 4\n", count);
+
+    count = 0;
+    hr = ScriptItemize(test4, lstrlenW(test4), 5, NULL, NULL, items, &count);
+    ok(hr == S_OK, "ScriptItemize failed: 0x%08x\n", hr);
+    ok(count == 4, "got %d expected 4\n", count);
+
+    count = 0;
+    hr = ScriptItemize(test5, lstrlenW(test5), 5, NULL, NULL, items, &count);
+    ok(hr == S_OK, "ScriptItemize failed: 0x%08x\n", hr);
+    ok(count == 4, "got %d expected 4\n", count);
+}
+
 START_TEST(usp10)
 {
     HWND            hwnd;
@@ -1426,6 +1507,8 @@ START_TEST(usp10)
     test_ScriptLayout();
     test_digit_substitution();
     test_ScriptGetProperties();
+    test_ScriptBreak();
+    test_newlines();
 
     ReleaseDC(hwnd, hdc);
     DestroyWindow(hwnd);

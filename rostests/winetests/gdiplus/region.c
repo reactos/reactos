@@ -709,6 +709,9 @@ static void test_fromhrgn(void)
     UINT needed;
     DWORD buf[220];
     RegionDataPoint *point;
+    GpGraphics *graphics = NULL;
+    HDC hdc;
+    BOOL res;
 
     /* NULL */
     status = GdipCreateRegionHrgn(NULL, NULL);
@@ -716,24 +719,42 @@ static void test_fromhrgn(void)
     status = GdipCreateRegionHrgn(NULL, &region);
     expect(InvalidParameter, status);
     status = GdipCreateRegionHrgn((HRGN)0xdeadbeef, &region);
-    todo_wine expect(InvalidParameter, status);
+    expect(InvalidParameter, status);
+
+    /* empty rectangle */
+    hrgn = CreateRectRgn(0, 0, 0, 0);
+    status = GdipCreateRegionHrgn(hrgn, &region);
+    expect(Ok, status);
+    if(status == Ok) {
+
+    hdc = GetDC(0);
+    status = GdipCreateFromHDC(hdc, &graphics);
+    expect(Ok, status);
+    res = FALSE;
+    status = GdipIsEmptyRegion(region, graphics, &res);
+    expect(Ok, status);
+    expect(TRUE, res);
+    GdipDeleteGraphics(graphics);
+    ReleaseDC(0, hdc);
+    GdipDeleteRegion(region);
+
+    }
+    DeleteObject(hrgn);
 
     /* rectangle */
     hrgn = CreateRectRgn(0, 0, 100, 10);
     status = GdipCreateRegionHrgn(hrgn, &region);
-    todo_wine expect(Ok, status);
+    expect(Ok, status);
 
     status = GdipGetRegionDataSize(region, &needed);
-todo_wine{
     expect(Ok, status);
     expect(56, needed);
-}
 
     status = GdipGetRegionData(region, (BYTE*)buf, sizeof(buf), &needed);
-    todo_wine expect(Ok, status);
+    expect(Ok, status);
 
     if(status == Ok){
-todo_wine{
+
     expect(56, needed);
     expect_dword(buf, 48);
     expect_magic((DWORD*)(buf + 2));
@@ -742,25 +763,23 @@ todo_wine{
     expect_dword(buf + 5, 0x00000020);
     expect_magic((DWORD*)(buf + 6));
     expect_dword(buf + 7, 0x00000004);
-    expect_dword(buf + 8, 0x00006000); /* ?? */
-}
+    todo_wine expect_dword(buf + 8, 0x00006000); /* ?? */
+
     point = (RegionDataPoint*)buf + 9;
 
     expect(0,  point[0].X);
     expect(0,  point[0].Y);
 
-todo_wine{
     expect(100,point[1].X); /* buf + 10 */
     expect(0,  point[1].Y);
     expect(100,point[2].X); /* buf + 11 */
     expect(10, point[2].Y);
-}
+
     expect(0,  point[3].X); /* buf + 12 */
 
-todo_wine{
     expect(10, point[3].Y);
     expect_dword(buf + 13, 0x81010100); /* closed */
-}
+
     }
 
     GdipDeleteRegion(region);
@@ -777,6 +796,10 @@ todo_wine{
     expect(216, needed);
 }
     status = GdipGetRegionData(region, (BYTE*)buf, sizeof(buf), &needed);
+    todo_wine expect(Ok, status);
+
+    if(status == Ok)
+    {
 todo_wine{
     expect(Ok, status);
     expect(216, needed);
@@ -789,6 +812,8 @@ todo_wine{
     expect_dword(buf + 7, 0x00000024);
     expect_dword(buf + 8, 0x00006000); /* ?? */
 }
+    }
+
     GdipDeleteRegion(region);
     DeleteObject(hrgn);
 }
@@ -926,6 +951,236 @@ static void test_gethrgn(void)
     ReleaseDC(0, hdc);
 }
 
+static void test_isequal(void)
+{
+    GpRegion *region1, *region2;
+    GpGraphics *graphics;
+    GpRectF rectf;
+    GpStatus status;
+    HDC hdc = GetDC(0);
+    BOOL res;
+
+    status = GdipCreateFromHDC(hdc, &graphics);
+    ok(status == Ok, "status %08x\n", status);
+
+    status = GdipCreateRegion(&region1);
+    ok(status == Ok, "status %08x\n", status);
+    status = GdipCreateRegion(&region2);
+    ok(status == Ok, "status %08x\n", status);
+
+    /* NULL */
+    status = GdipIsEqualRegion(NULL, NULL, NULL, NULL);
+    ok(status == InvalidParameter, "status %08x\n", status);
+    status = GdipIsEqualRegion(region1, region2, NULL, NULL);
+    ok(status == InvalidParameter, "status %08x\n", status);
+    status = GdipIsEqualRegion(region1, region2, graphics, NULL);
+    ok(status == InvalidParameter, "status %08x\n", status);
+    status = GdipIsEqualRegion(region1, region2, NULL, &res);
+    ok(status == InvalidParameter, "status %08x\n", status);
+
+    /* infinite regions */
+    res = FALSE;
+    status = GdipIsEqualRegion(region1, region2, graphics, &res);
+    ok(status == Ok, "status %08x\n", status);
+    ok(res, "Expected to be equal.\n");
+    /* empty regions */
+    status = GdipSetEmpty(region1);
+    ok(status == Ok, "status %08x\n", status);
+    status = GdipSetEmpty(region2);
+    ok(status == Ok, "status %08x\n", status);
+    res = FALSE;
+    status = GdipIsEqualRegion(region1, region2, graphics, &res);
+    ok(status == Ok, "status %08x\n", status);
+    ok(res, "Expected to be equal.\n");
+    /* empty & infinite */
+    status = GdipSetInfinite(region1);
+    ok(status == Ok, "status %08x\n", status);
+    res = TRUE;
+    status = GdipIsEqualRegion(region1, region2, graphics, &res);
+    ok(status == Ok, "status %08x\n", status);
+    ok(!res, "Expected to be unequal.\n");
+    /* rect & (inf/empty) */
+    rectf.X = rectf.Y = 0.0;
+    rectf.Width = rectf.Height = 100.0;
+    status = GdipCombineRegionRect(region1, &rectf, CombineModeReplace);
+    ok(status == Ok, "status %08x\n", status);
+    res = TRUE;
+    status = GdipIsEqualRegion(region1, region2, graphics, &res);
+    ok(status == Ok, "status %08x\n", status);
+    ok(!res, "Expected to be unequal.\n");
+    status = GdipSetInfinite(region2);
+    ok(status == Ok, "status %08x\n", status);
+    res = TRUE;
+    status = GdipIsEqualRegion(region1, region2, graphics, &res);
+    ok(status == Ok, "status %08x\n", status);
+    ok(!res, "Expected to be unequal.\n");
+    /* roughly equal rectangles */
+    rectf.X = rectf.Y = 0.0;
+    rectf.Width = rectf.Height = 100.001;
+    status = GdipCombineRegionRect(region2, &rectf, CombineModeReplace);
+    ok(status == Ok, "status %08x\n", status);
+    res = FALSE;
+    status = GdipIsEqualRegion(region1, region2, graphics, &res);
+    ok(status == Ok, "status %08x\n", status);
+    ok(res, "Expected to be equal.\n");
+    /* equal rectangles */
+    rectf.X = rectf.Y = 0.0;
+    rectf.Width = rectf.Height = 100.0;
+    status = GdipCombineRegionRect(region2, &rectf, CombineModeReplace);
+    ok(status == Ok, "status %08x\n", status);
+    res = FALSE;
+    status = GdipIsEqualRegion(region1, region2, graphics, &res);
+    ok(status == Ok, "status %08x\n", status);
+    ok(res, "Expected to be equal.\n");
+
+    /* cleanup */
+    status = GdipDeleteRegion(region1);
+    ok(status == Ok, "status %08x\n", status);
+    status = GdipDeleteRegion(region2);
+    ok(status == Ok, "status %08x\n", status);
+    status = GdipDeleteGraphics(graphics);
+    ok(status == Ok, "status %08x\n", status);
+    ReleaseDC(0, hdc);
+}
+
+static void test_translate(void)
+{
+    GpRegion *region, *region2;
+    GpGraphics *graphics;
+    GpPath *path;
+    GpRectF rectf;
+    GpStatus status;
+    HDC hdc = GetDC(0);
+    BOOL res;
+
+    status = GdipCreateFromHDC(hdc, &graphics);
+    ok(status == Ok, "status %08x\n", status);
+
+    status = GdipCreatePath(FillModeAlternate, &path);
+    ok(status == Ok, "status %08x\n", status);
+
+    status = GdipCreateRegion(&region);
+    ok(status == Ok, "status %08x\n", status);
+    status = GdipCreateRegion(&region2);
+    ok(status == Ok, "status %08x\n", status);
+
+    /* NULL */
+    status = GdipTranslateRegion(NULL, 0.0, 0.0);
+    ok(status == InvalidParameter, "status %08x\n", status);
+
+    /* infinite */
+    status = GdipTranslateRegion(region, 10.0, 10.0);
+    ok(status == Ok, "status %08x\n", status);
+    /* empty */
+    status = GdipSetEmpty(region);
+    ok(status == Ok, "status %08x\n", status);
+    status = GdipTranslateRegion(region, 10.0, 10.0);
+    ok(status == Ok, "status %08x\n", status);
+    /* rect */
+    rectf.X = 10.0; rectf.Y = 0.0;
+    rectf.Width = rectf.Height = 100.0;
+    status = GdipCombineRegionRect(region, &rectf, CombineModeReplace);
+    ok(status == Ok, "status %08x\n", status);
+    rectf.X = 15.0; rectf.Y = -2.0;
+    rectf.Width = rectf.Height = 100.0;
+    status = GdipCombineRegionRect(region2, &rectf, CombineModeReplace);
+    ok(status == Ok, "status %08x\n", status);
+    status = GdipTranslateRegion(region, 5.0, -2.0);
+    ok(status == Ok, "status %08x\n", status);
+    res = FALSE;
+    status = GdipIsEqualRegion(region, region2, graphics, &res);
+    ok(status == Ok, "status %08x\n", status);
+    ok(res, "Expected to be equal.\n");
+    /* path */
+    status = GdipAddPathEllipse(path, 0.0, 10.0, 100.0, 150.0);
+    ok(status == Ok, "status %08x\n", status);
+    status = GdipCombineRegionPath(region, path, CombineModeReplace);
+    ok(status == Ok, "status %08x\n", status);
+    status = GdipResetPath(path);
+    ok(status == Ok, "status %08x\n", status);
+    status = GdipAddPathEllipse(path, 10.0, 21.0, 100.0, 150.0);
+    ok(status == Ok, "status %08x\n", status);
+    status = GdipCombineRegionPath(region2, path, CombineModeReplace);
+    ok(status == Ok, "status %08x\n", status);
+    status = GdipTranslateRegion(region, 10.0, 11.0);
+    ok(status == Ok, "status %08x\n", status);
+    res = FALSE;
+    status = GdipIsEqualRegion(region, region2, graphics, &res);
+    ok(status == Ok, "status %08x\n", status);
+    ok(res, "Expected to be equal.\n");
+
+    status = GdipDeleteRegion(region);
+    ok(status == Ok, "status %08x\n", status);
+    status = GdipDeleteRegion(region2);
+    ok(status == Ok, "status %08x\n", status);
+    status = GdipDeleteGraphics(graphics);
+    ok(status == Ok, "status %08x\n", status);
+    status = GdipDeletePath(path);
+    ok(status == Ok, "status %08x\n", status);
+    ReleaseDC(0, hdc);
+}
+
+static void test_getbounds(void)
+{
+    GpRegion *region;
+    GpGraphics *graphics;
+    GpStatus status;
+    GpRectF rectf;
+    HDC hdc = GetDC(0);
+
+    status = GdipCreateFromHDC(hdc, &graphics);
+    ok(status == Ok, "status %08x\n", status);
+    status = GdipCreateRegion(&region);
+    ok(status == Ok, "status %08x\n", status);
+
+    /* NULL */
+    status = GdipGetRegionBounds(NULL, NULL, NULL);
+    ok(status == InvalidParameter, "status %08x\n", status);
+    status = GdipGetRegionBounds(region, NULL, NULL);
+    ok(status == InvalidParameter, "status %08x\n", status);
+    status = GdipGetRegionBounds(region, graphics, NULL);
+    ok(status == InvalidParameter, "status %08x\n", status);
+    /* infinite */
+    rectf.X = rectf.Y = 0.0;
+    rectf.Height = rectf.Width = 100.0;
+    status = GdipGetRegionBounds(region, graphics, &rectf);
+    ok(status == Ok, "status %08x\n", status);
+    ok(rectf.X == -(REAL)(1 << 22), "Expected X = %.2f, got %.2f\n", -(REAL)(1 << 22), rectf.X);
+    ok(rectf.Y == -(REAL)(1 << 22), "Expected Y = %.2f, got %.2f\n", -(REAL)(1 << 22), rectf.Y);
+    ok(rectf.Width  == (REAL)(1 << 23), "Expected width = %.2f, got %.2f\n", (REAL)(1 << 23), rectf.Width);
+    ok(rectf.Height == (REAL)(1 << 23), "Expected height = %.2f, got %.2f\n",(REAL)(1 << 23), rectf.Height);
+    /* empty */
+    rectf.X = rectf.Y = 0.0;
+    rectf.Height = rectf.Width = 100.0;
+    status = GdipSetEmpty(region);
+    ok(status == Ok, "status %08x\n", status);
+    status = GdipGetRegionBounds(region, graphics, &rectf);
+    ok(status == Ok, "status %08x\n", status);
+    ok(rectf.X == 0.0, "Expected X = 0.0, got %.2f\n", rectf.X);
+    ok(rectf.Y == 0.0, "Expected Y = 0.0, got %.2f\n", rectf.Y);
+    ok(rectf.Width  == 0.0, "Expected width = 0.0, got %.2f\n", rectf.Width);
+    ok(rectf.Height == 0.0, "Expected height = 0.0, got %.2f\n", rectf.Height);
+    /* rect */
+    rectf.X = 10.0; rectf.Y = 0.0;
+    rectf.Width = rectf.Height = 100.0;
+    status = GdipCombineRegionRect(region, &rectf, CombineModeReplace);
+    ok(status == Ok, "status %08x\n", status);
+    rectf.X = rectf.Y = 0.0;
+    rectf.Height = rectf.Width = 0.0;
+    status = GdipGetRegionBounds(region, graphics, &rectf);
+    ok(status == Ok, "status %08x\n", status);
+    ok(rectf.X == 10.0, "Expected X = 0.0, got %.2f\n", rectf.X);
+    ok(rectf.Y == 0.0, "Expected Y = 0.0, got %.2f\n", rectf.Y);
+    ok(rectf.Width  == 100.0, "Expected width = 0.0, got %.2f\n", rectf.Width);
+    ok(rectf.Height == 100.0, "Expected height = 0.0, got %.2f\n", rectf.Height);
+
+    status = GdipDeleteRegion(region);
+    ok(status == Ok, "status %08x\n", status);
+    status = GdipDeleteGraphics(graphics);
+    ok(status == Ok, "status %08x\n", status);
+    ReleaseDC(0, hdc);
+}
+
 START_TEST(region)
 {
     struct GdiplusStartupInput gdiplusStartupInput;
@@ -944,6 +1199,9 @@ START_TEST(region)
     test_combinereplace();
     test_fromhrgn();
     test_gethrgn();
+    test_isequal();
+    test_translate();
+    test_getbounds();
 
     GdiplusShutdown(gdiplusToken);
 }

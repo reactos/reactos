@@ -74,7 +74,7 @@ static int init_access_tests(void)
     rc=GetUserNameW(user_name, &dwSize);
     if (rc==FALSE && GetLastError()==ERROR_CALL_NOT_IMPLEMENTED)
     {
-        skip("GetUserNameW is not available.\n");
+        win_skip("GetUserNameW is not available.\n");
         return 0;
     }
     ok(rc, "User Name Retrieved\n");
@@ -251,6 +251,11 @@ static void run_userhandling_tests(void)
         ret = pNetUserDel(NULL, sTooLongName);
         ok(ret == NERR_Success, "Deleting the user failed : %d\n", ret);
     }
+    else if (ret == ERROR_ACCESS_DENIED)
+    {
+        skip("not enough permissions to add a user\n");
+        return;
+    }
     else
         ok(ret == NERR_BadUsername ||
            broken(ret == NERR_PasswordTooShort), /* NT4 */
@@ -260,7 +265,8 @@ static void run_userhandling_tests(void)
     usri.usri1_password = sTooLongPassword;
 
     ret = pNetUserAdd(NULL, 1, (LPBYTE)&usri, NULL);
-    ok(ret == NERR_PasswordTooShort, "Adding user with too long password returned 0x%08x\n", ret);
+    ok(ret == NERR_PasswordTooShort || ret == ERROR_ACCESS_DENIED /* Win2003 */,
+       "Adding user with too long password returned 0x%08x\n", ret);
 
     usri.usri1_name = sTooLongName;
     usri.usri1_password = sTooLongPassword;
@@ -327,7 +333,7 @@ START_TEST(access)
      * if one is not available, none are.
      */
     if (!pNetApiBufferFree) {
-        skip("Needed functions are not available\n");
+        win_skip("Needed functions are not available\n");
         FreeLibrary(hnetapi32);
         return;
     }

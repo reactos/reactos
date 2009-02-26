@@ -196,7 +196,7 @@ static void test_msg_get_param(void)
     ret = CryptMsgGetParam(msg, CMSG_TYPE_PARAM, 0, &value, &size);
     ok(ret, "CryptMsgGetParam failed: %x\n", GetLastError());
     ok(value == CMSG_DATA, "Expected CMSG_DATA, got %d\n", value);
-    for (i = CMSG_CONTENT_PARAM; i <= CMSG_CMS_SIGNER_INFO_PARAM; i++)
+    for (i = CMSG_CONTENT_PARAM; have_nt && (i <= CMSG_CMS_SIGNER_INFO_PARAM); i++)
     {
         size = 0;
         ret = CryptMsgGetParam(msg, i, 0, NULL, &size);
@@ -211,7 +211,7 @@ static void test_msg_get_param(void)
     ret = CryptMsgGetParam(msg, CMSG_TYPE_PARAM, 0, &value, &size);
     ok(ret, "CryptMsgGetParam failed: %x\n", GetLastError());
     ok(value == CMSG_ENVELOPED, "Expected CMSG_ENVELOPED, got %d\n", value);
-    for (i = CMSG_CONTENT_PARAM; i <= CMSG_CMS_SIGNER_INFO_PARAM; i++)
+    for (i = CMSG_CONTENT_PARAM; have_nt && (i <= CMSG_CMS_SIGNER_INFO_PARAM); i++)
     {
         size = 0;
         ret = CryptMsgGetParam(msg, i, 0, NULL, &size);
@@ -226,7 +226,7 @@ static void test_msg_get_param(void)
     ret = CryptMsgGetParam(msg, CMSG_TYPE_PARAM, 0, &value, &size);
     ok(ret, "CryptMsgGetParam failed: %x\n", GetLastError());
     ok(value == CMSG_HASHED, "Expected CMSG_HASHED, got %d\n", value);
-    for (i = CMSG_CONTENT_PARAM; i <= CMSG_CMS_SIGNER_INFO_PARAM; i++)
+    for (i = CMSG_CONTENT_PARAM; have_nt && (i <= CMSG_CMS_SIGNER_INFO_PARAM); i++)
     {
         size = 0;
         ret = CryptMsgGetParam(msg, i, 0, NULL, &size);
@@ -241,7 +241,7 @@ static void test_msg_get_param(void)
     ret = CryptMsgGetParam(msg, CMSG_TYPE_PARAM, 0, &value, &size);
     ok(ret, "CryptMsgGetParam failed: %x\n", GetLastError());
     ok(value == CMSG_SIGNED, "Expected CMSG_SIGNED, got %d\n", value);
-    for (i = CMSG_CONTENT_PARAM; i <= CMSG_CMS_SIGNER_INFO_PARAM; i++)
+    for (i = CMSG_CONTENT_PARAM; have_nt && (i <= CMSG_CMS_SIGNER_INFO_PARAM); i++)
     {
         size = 0;
         ret = CryptMsgGetParam(msg, i, 0, NULL, &size);
@@ -413,18 +413,22 @@ static void test_data_msg_update(void)
     ok(ret, "CryptMsgUpdate failed: %x\n", GetLastError());
     CryptMsgClose(msg);
 
-    /* Calling update after opening with an empty stream info (with a bogus
-     * output function) yields an error:
-     */
-    msg = CryptMsgOpenToEncode(PKCS_7_ASN_ENCODING, 0, CMSG_DATA, NULL, NULL,
-     &streamInfo);
-    SetLastError(0xdeadbeef);
-    ret = CryptMsgUpdate(msg, msgData, sizeof(msgData), FALSE);
-    ok(!ret && (GetLastError() == STATUS_ACCESS_VIOLATION ||
-     GetLastError() == STATUS_ILLEGAL_INSTRUCTION /* WinME */),
-     "Expected STATUS_ACCESS_VIOLATION or STATUS_ILLEGAL_INSTRUCTION, got %x\n",
-     GetLastError());
-    CryptMsgClose(msg);
+    if (have_nt)
+    {
+        /* Calling update after opening with an empty stream info (with a bogus
+         * output function) yields an error:
+         */
+        /* Crashes on some Win9x */
+        msg = CryptMsgOpenToEncode(PKCS_7_ASN_ENCODING, 0, CMSG_DATA, NULL, NULL,
+         &streamInfo);
+        SetLastError(0xdeadbeef);
+        ret = CryptMsgUpdate(msg, msgData, sizeof(msgData), FALSE);
+        ok(!ret && (GetLastError() == STATUS_ACCESS_VIOLATION ||
+         GetLastError() == STATUS_ILLEGAL_INSTRUCTION /* WinME */),
+         "Expected STATUS_ACCESS_VIOLATION or STATUS_ILLEGAL_INSTRUCTION, got %x\n",
+         GetLastError());
+        CryptMsgClose(msg);
+    }
     /* Calling update with a valid output function succeeds, even if the data
      * exceeds the size specified in the stream info.
      */
@@ -2022,29 +2026,33 @@ static void test_decode_msg_update(void)
     ok(ret, "CryptMsgUpdate failed: %x\n", GetLastError());
     CryptMsgClose(msg);
 
-    msg = CryptMsgOpenToDecode(PKCS_7_ASN_ENCODING, 0, 0, 0, NULL, &streamInfo);
-    /* Updating a message that has a NULL stream callback fails */
-    SetLastError(0xdeadbeef);
-    ret = CryptMsgUpdate(msg, dataEmptyContent, sizeof(dataEmptyContent),
-     FALSE);
-    todo_wine
-    ok(!ret && (GetLastError() == STATUS_ACCESS_VIOLATION ||
-     GetLastError() == STATUS_ILLEGAL_INSTRUCTION /* WinME */),
-     "Expected STATUS_ACCESS_VIOLATION or STATUS_ILLEGAL_INSTRUCTION, got %x\n",
-     GetLastError());
-    /* Changing the callback pointer after the fact yields the same error (so
-     * the message must copy the stream info, not just store a pointer to it)
-     */
-    streamInfo.pfnStreamOutput = nop_stream_output;
-    SetLastError(0xdeadbeef);
-    ret = CryptMsgUpdate(msg, dataEmptyContent, sizeof(dataEmptyContent),
-     FALSE);
-    todo_wine
-    ok(!ret && (GetLastError() == STATUS_ACCESS_VIOLATION ||
-     GetLastError() == STATUS_ILLEGAL_INSTRUCTION /* WinME */),
-     "Expected STATUS_ACCESS_VIOLATION or STATUS_ILLEGAL_INSTRUCTION, got %x\n",
-     GetLastError());
-    CryptMsgClose(msg);
+    if (have_nt)
+    {
+        msg = CryptMsgOpenToDecode(PKCS_7_ASN_ENCODING, 0, 0, 0, NULL, &streamInfo);
+        /* Updating a message that has a NULL stream callback fails */
+        SetLastError(0xdeadbeef);
+        /* Crashes on some Win9x */
+        ret = CryptMsgUpdate(msg, dataEmptyContent, sizeof(dataEmptyContent),
+         FALSE);
+        todo_wine
+        ok(!ret && (GetLastError() == STATUS_ACCESS_VIOLATION ||
+         GetLastError() == STATUS_ILLEGAL_INSTRUCTION /* WinME */),
+         "Expected STATUS_ACCESS_VIOLATION or STATUS_ILLEGAL_INSTRUCTION, got %x\n",
+         GetLastError());
+        /* Changing the callback pointer after the fact yields the same error (so
+         * the message must copy the stream info, not just store a pointer to it)
+         */
+        streamInfo.pfnStreamOutput = nop_stream_output;
+        SetLastError(0xdeadbeef);
+        ret = CryptMsgUpdate(msg, dataEmptyContent, sizeof(dataEmptyContent),
+         FALSE);
+        todo_wine
+        ok(!ret && (GetLastError() == STATUS_ACCESS_VIOLATION ||
+         GetLastError() == STATUS_ILLEGAL_INSTRUCTION /* WinME */),
+         "Expected STATUS_ACCESS_VIOLATION or STATUS_ILLEGAL_INSTRUCTION, got %x\n",
+         GetLastError());
+        CryptMsgClose(msg);
+    }
 
     /* Empty non-final updates are allowed when streaming.. */
     msg = CryptMsgOpenToDecode(PKCS_7_ASN_ENCODING, 0, 0, 0, NULL, &streamInfo);
@@ -2353,10 +2361,14 @@ static void test_decode_msg_get_param(void)
 
     msg = CryptMsgOpenToDecode(PKCS_7_ASN_ENCODING, 0, 0, 0, NULL, NULL);
     ret = CryptMsgUpdate(msg, hashEmptyContent, sizeof(hashEmptyContent), TRUE);
-    check_param("empty hash content", msg, CMSG_CONTENT_PARAM, NULL, 0);
-    check_param("empty hash hash data", msg, CMSG_HASH_DATA_PARAM, NULL, 0);
-    check_param("empty hash computed hash", msg, CMSG_COMPUTED_HASH_PARAM,
-     emptyHashParam, sizeof(emptyHashParam));
+    if (ret)
+    {
+        /* Crashes on some Win9x */
+        check_param("empty hash content", msg, CMSG_CONTENT_PARAM, NULL, 0);
+        check_param("empty hash hash data", msg, CMSG_HASH_DATA_PARAM, NULL, 0);
+        check_param("empty hash computed hash", msg, CMSG_COMPUTED_HASH_PARAM,
+         emptyHashParam, sizeof(emptyHashParam));
+    }
     CryptMsgClose(msg);
     msg = CryptMsgOpenToDecode(PKCS_7_ASN_ENCODING, 0, 0, 0, NULL, NULL);
     ret = CryptMsgUpdate(msg, hashContent, sizeof(hashContent), TRUE);
@@ -2477,6 +2489,12 @@ static void test_decode_msg_get_param(void)
     msg = CryptMsgOpenToDecode(PKCS_7_ASN_ENCODING, 0, 0, 0, NULL, NULL);
     ret = CryptMsgUpdate(msg, signedKeyIdEmptyContent,
      sizeof(signedKeyIdEmptyContent), TRUE);
+    if (!ret && GetLastError() == OSS_DATA_ERROR)
+    {
+        /* Subsequent tests crashes on some Win9x, so bail out */
+        CryptMsgClose(msg);
+        return;
+    }
     ok(ret, "CryptMsgUpdate failed: %08x\n", GetLastError());
     size = sizeof(value);
     ret = CryptMsgGetParam(msg, CMSG_SIGNER_COUNT_PARAM, 0, &value, &size);
@@ -2661,27 +2679,31 @@ static void test_msg_control(void)
      "Expected CRYPT_E_INVALID_MSG_TYPE, got %08x\n", GetLastError());
     CryptMsgClose(msg);
 
-    msg = CryptMsgOpenToDecode(PKCS_7_ASN_ENCODING, 0, CMSG_HASHED, 0, NULL,
-     NULL);
-    /* Can't verify the hash of an empty message */
-    SetLastError(0xdeadbeef);
-    ret = CryptMsgControl(msg, 0, CMSG_CTRL_VERIFY_HASH, NULL);
-    todo_wine
-    ok(!ret && GetLastError() == STATUS_ACCESS_VIOLATION,
-     "Expected STATUS_ACCESS_VIOLATION, got %08x\n", GetLastError());
-    /* Crashes
-    ret = CryptMsgControl(msg, 0, CMSG_CTRL_VERIFY_SIGNATURE, NULL);
-     */
-    /* Can't verify the signature of a hash message */
-    ret = CryptMsgControl(msg, 0, CMSG_CTRL_VERIFY_SIGNATURE, &certInfo);
-    ok(!ret && GetLastError() == CRYPT_E_INVALID_MSG_TYPE,
-     "Expected CRYPT_E_INVALID_MSG_TYPE, got %08x\n", GetLastError());
-    CryptMsgUpdate(msg, hashEmptyBareContent, sizeof(hashEmptyBareContent),
-     TRUE);
-    /* Oddly enough, this fails */
-    ret = CryptMsgControl(msg, 0, CMSG_CTRL_VERIFY_HASH, NULL);
-    ok(!ret, "Expected failure\n");
-    CryptMsgClose(msg);
+    if (have_nt)
+    {
+        msg = CryptMsgOpenToDecode(PKCS_7_ASN_ENCODING, 0, CMSG_HASHED, 0, NULL,
+         NULL);
+        /* Can't verify the hash of an empty message */
+        SetLastError(0xdeadbeef);
+        /* Crashes on some Win9x */
+        ret = CryptMsgControl(msg, 0, CMSG_CTRL_VERIFY_HASH, NULL);
+        todo_wine
+        ok(!ret && GetLastError() == STATUS_ACCESS_VIOLATION,
+         "Expected STATUS_ACCESS_VIOLATION, got %08x\n", GetLastError());
+        /* Crashes
+        ret = CryptMsgControl(msg, 0, CMSG_CTRL_VERIFY_SIGNATURE, NULL);
+         */
+        /* Can't verify the signature of a hash message */
+        ret = CryptMsgControl(msg, 0, CMSG_CTRL_VERIFY_SIGNATURE, &certInfo);
+        ok(!ret && GetLastError() == CRYPT_E_INVALID_MSG_TYPE,
+         "Expected CRYPT_E_INVALID_MSG_TYPE, got %08x\n", GetLastError());
+        CryptMsgUpdate(msg, hashEmptyBareContent, sizeof(hashEmptyBareContent),
+         TRUE);
+        /* Oddly enough, this fails, crashes on some Win9x */
+        ret = CryptMsgControl(msg, 0, CMSG_CTRL_VERIFY_HASH, NULL);
+        ok(!ret, "Expected failure\n");
+        CryptMsgClose(msg);
+    }
     msg = CryptMsgOpenToDecode(PKCS_7_ASN_ENCODING, 0, CMSG_HASHED, 0, NULL,
      NULL);
     CryptMsgUpdate(msg, hashBareContent, sizeof(hashBareContent), TRUE);
@@ -2783,63 +2805,71 @@ static void test_msg_control(void)
     /* This cert has a public key, but it's not in a usable form */
     msg = CryptMsgOpenToDecode(PKCS_7_ASN_ENCODING, 0, CMSG_SIGNED, 0, NULL,
      NULL);
-    CryptMsgUpdate(msg, signedWithCertWithPubKeyBareContent,
+    ret = CryptMsgUpdate(msg, signedWithCertWithPubKeyBareContent,
      sizeof(signedWithCertWithPubKeyBareContent), TRUE);
-    /* Again, cert info needs to have a public key set */
-    SetLastError(0xdeadbeef);
-    ret = CryptMsgControl(msg, 0, CMSG_CTRL_VERIFY_SIGNATURE, &certInfo);
-    ok(!ret &&
-     (GetLastError() == CRYPT_E_ASN1_EOD ||
-      GetLastError() == TRUST_E_NOSIGNATURE /* Vista */),
-     "Expected CRYPT_E_ASN1_EOD or TRUST_E_NOSIGNATURE, got %08x\n", GetLastError());
-    /* The public key is supposed to be in encoded form.. */
-    certInfo.SubjectPublicKeyInfo.Algorithm.pszObjId = oid_rsa_rsa;
-    certInfo.SubjectPublicKeyInfo.PublicKey.cbData = sizeof(aKey);
-    certInfo.SubjectPublicKeyInfo.PublicKey.pbData = aKey;
-    SetLastError(0xdeadbeef);
-    ret = CryptMsgControl(msg, 0, CMSG_CTRL_VERIFY_SIGNATURE, &certInfo);
-    ok(!ret &&
-     (GetLastError() == CRYPT_E_ASN1_BADTAG ||
-      GetLastError() == TRUST_E_NOSIGNATURE /* Vista */),
-     "Expected CRYPT_E_ASN1_BADTAG or TRUST_E_NOSIGNATURE, got %08x\n", GetLastError());
-    /* but not as a X509_PUBLIC_KEY_INFO.. */
-    certInfo.SubjectPublicKeyInfo.Algorithm.pszObjId = NULL;
-    certInfo.SubjectPublicKeyInfo.PublicKey.cbData = sizeof(encodedPubKey);
-    certInfo.SubjectPublicKeyInfo.PublicKey.pbData = encodedPubKey;
-    SetLastError(0xdeadbeef);
-    ret = CryptMsgControl(msg, 0, CMSG_CTRL_VERIFY_SIGNATURE, &certInfo);
-    ok(!ret &&
-     (GetLastError() == CRYPT_E_ASN1_BADTAG ||
-      GetLastError() == TRUST_E_NOSIGNATURE /* Vista */),
-     "Expected CRYPT_E_ASN1_BADTAG or TRUST_E_NOSIGNATURE, got %08x\n", GetLastError());
-    /* This decodes successfully, but it doesn't match any key in the message */
-    certInfo.SubjectPublicKeyInfo.PublicKey.cbData = sizeof(mod_encoded);
-    certInfo.SubjectPublicKeyInfo.PublicKey.pbData = mod_encoded;
-    SetLastError(0xdeadbeef);
-    ret = CryptMsgControl(msg, 0, CMSG_CTRL_VERIFY_SIGNATURE, &certInfo);
-    /* In Wine's rsaenh, this fails to decode because the key length is too
-     * small.  Not sure if that's a bug in rsaenh, so leaving todo_wine for
-     * now.
-     */
-    todo_wine
-    ok(!ret &&
-     (GetLastError() == NTE_BAD_SIGNATURE ||
-      GetLastError() == TRUST_E_NOSIGNATURE /* Vista */),
-     "Expected NTE_BAD_SIGNATURE or TRUST_E_NOSIGNATURE, got %08x\n", GetLastError());
+    if (ret)
+    {
+        /* Crashes on some Win9x */
+        /* Again, cert info needs to have a public key set */
+        SetLastError(0xdeadbeef);
+        ret = CryptMsgControl(msg, 0, CMSG_CTRL_VERIFY_SIGNATURE, &certInfo);
+        ok(!ret &&
+         (GetLastError() == CRYPT_E_ASN1_EOD ||
+          GetLastError() == TRUST_E_NOSIGNATURE /* Vista */),
+         "Expected CRYPT_E_ASN1_EOD or TRUST_E_NOSIGNATURE, got %08x\n", GetLastError());
+        /* The public key is supposed to be in encoded form.. */
+        certInfo.SubjectPublicKeyInfo.Algorithm.pszObjId = oid_rsa_rsa;
+        certInfo.SubjectPublicKeyInfo.PublicKey.cbData = sizeof(aKey);
+        certInfo.SubjectPublicKeyInfo.PublicKey.pbData = aKey;
+        SetLastError(0xdeadbeef);
+        ret = CryptMsgControl(msg, 0, CMSG_CTRL_VERIFY_SIGNATURE, &certInfo);
+        ok(!ret &&
+         (GetLastError() == CRYPT_E_ASN1_BADTAG ||
+          GetLastError() == TRUST_E_NOSIGNATURE /* Vista */),
+         "Expected CRYPT_E_ASN1_BADTAG or TRUST_E_NOSIGNATURE, got %08x\n", GetLastError());
+        /* but not as a X509_PUBLIC_KEY_INFO.. */
+        certInfo.SubjectPublicKeyInfo.Algorithm.pszObjId = NULL;
+        certInfo.SubjectPublicKeyInfo.PublicKey.cbData = sizeof(encodedPubKey);
+        certInfo.SubjectPublicKeyInfo.PublicKey.pbData = encodedPubKey;
+        SetLastError(0xdeadbeef);
+        ret = CryptMsgControl(msg, 0, CMSG_CTRL_VERIFY_SIGNATURE, &certInfo);
+        ok(!ret &&
+         (GetLastError() == CRYPT_E_ASN1_BADTAG ||
+          GetLastError() == TRUST_E_NOSIGNATURE /* Vista */),
+         "Expected CRYPT_E_ASN1_BADTAG or TRUST_E_NOSIGNATURE, got %08x\n", GetLastError());
+        /* This decodes successfully, but it doesn't match any key in the message */
+        certInfo.SubjectPublicKeyInfo.PublicKey.cbData = sizeof(mod_encoded);
+        certInfo.SubjectPublicKeyInfo.PublicKey.pbData = mod_encoded;
+        SetLastError(0xdeadbeef);
+        ret = CryptMsgControl(msg, 0, CMSG_CTRL_VERIFY_SIGNATURE, &certInfo);
+        /* In Wine's rsaenh, this fails to decode because the key length is too
+         * small.  Not sure if that's a bug in rsaenh, so leaving todo_wine for
+         * now.
+         */
+        todo_wine
+        ok(!ret &&
+         (GetLastError() == NTE_BAD_SIGNATURE ||
+          GetLastError() == TRUST_E_NOSIGNATURE /* Vista */),
+         "Expected NTE_BAD_SIGNATURE or TRUST_E_NOSIGNATURE, got %08x\n", GetLastError());
+    }
     CryptMsgClose(msg);
     /* A message with no data doesn't have a valid signature */
     msg = CryptMsgOpenToDecode(PKCS_7_ASN_ENCODING, 0, 0, 0, NULL, NULL);
-    CryptMsgUpdate(msg, signedWithCertWithValidPubKeyEmptyContent,
+    ret = CryptMsgUpdate(msg, signedWithCertWithValidPubKeyEmptyContent,
      sizeof(signedWithCertWithValidPubKeyEmptyContent), TRUE);
-    certInfo.SubjectPublicKeyInfo.Algorithm.pszObjId = oid_rsa_rsa;
-    certInfo.SubjectPublicKeyInfo.PublicKey.cbData = sizeof(pubKey);
-    certInfo.SubjectPublicKeyInfo.PublicKey.pbData = pubKey;
-    SetLastError(0xdeadbeef);
-    ret = CryptMsgControl(msg, 0, CMSG_CTRL_VERIFY_SIGNATURE, &certInfo);
-    ok(!ret &&
-     (GetLastError() == NTE_BAD_SIGNATURE ||
-      GetLastError() == TRUST_E_NOSIGNATURE /* Vista */),
-     "Expected NTE_BAD_SIGNATURE or TRUST_E_NOSIGNATURE, got %08x\n", GetLastError());
+    if (ret)
+    {
+        certInfo.SubjectPublicKeyInfo.Algorithm.pszObjId = oid_rsa_rsa;
+        certInfo.SubjectPublicKeyInfo.PublicKey.cbData = sizeof(pubKey);
+        certInfo.SubjectPublicKeyInfo.PublicKey.pbData = pubKey;
+        SetLastError(0xdeadbeef);
+        /* Crashes on some Win9x */
+        ret = CryptMsgControl(msg, 0, CMSG_CTRL_VERIFY_SIGNATURE, &certInfo);
+        ok(!ret &&
+         (GetLastError() == NTE_BAD_SIGNATURE ||
+          GetLastError() == TRUST_E_NOSIGNATURE /* Vista */),
+         "Expected NTE_BAD_SIGNATURE or TRUST_E_NOSIGNATURE, got %08x\n", GetLastError());
+    }
     CryptMsgClose(msg);
     /* Finally, this succeeds */
     msg = CryptMsgOpenToDecode(PKCS_7_ASN_ENCODING, 0, 0, 0, NULL, NULL);
@@ -2968,11 +2998,14 @@ static void test_msg_get_and_verify_signer(void)
 
     msg = CryptMsgOpenToDecode(PKCS_7_ASN_ENCODING, 0, 0, 0, NULL, NULL);
     /* A "signed" message created with no signer cert likewise has no signer */
-    CryptMsgUpdate(msg, signedEmptyContent, sizeof(signedEmptyContent), TRUE);
-    SetLastError(0xdeadbeef);
-    ret = CryptMsgGetAndVerifySigner(msg, 0, NULL, 0, NULL, NULL);
-    ok(!ret && GetLastError() == CRYPT_E_NO_TRUSTED_SIGNER,
-     "expected CRYPT_E_NO_TRUSTED_SIGNER, got 0x%08x\n", GetLastError());
+    ret = CryptMsgUpdate(msg, signedEmptyContent, sizeof(signedEmptyContent), TRUE);
+    if (ret)
+    {
+        /* Crashes on most Win9x */
+        ret = CryptMsgGetAndVerifySigner(msg, 0, NULL, 0, NULL, NULL);
+        ok(!ret && GetLastError() == CRYPT_E_NO_TRUSTED_SIGNER,
+         "expected CRYPT_E_NO_TRUSTED_SIGNER, got 0x%08x\n", GetLastError());
+    }
     CryptMsgClose(msg);
 
     msg = CryptMsgOpenToDecode(PKCS_7_ASN_ENCODING, 0, 0, 0, NULL, NULL);
@@ -3040,6 +3073,8 @@ START_TEST(msg)
 {
     init_function_pointers();
     have_nt = detect_nt();
+    if (!have_nt)
+        win_skip("Win9x crashes on some parameter checks\n");
 
     /* Basic parameter checking tests */
     test_msg_open_to_encode();

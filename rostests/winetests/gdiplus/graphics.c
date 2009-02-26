@@ -486,6 +486,7 @@ static void test_Get_Release_DC(void)
     INT i;
     BOOL res;
     ARGB color = 0x00000000;
+    HRGN hrgn = CreateRectRgn(0, 0, 10, 10);
 
     pt[0].X = 10;
     pt[0].Y = 10;
@@ -653,6 +654,10 @@ static void test_Get_Release_DC(void)
     expect(ObjectBusy, status); status = Ok;
     status = GdipFlush(graphics, FlushIntentionFlush);
     expect(ObjectBusy, status); status = Ok;
+    status = GdipGetClipBounds(graphics, rectf);
+    expect(ObjectBusy, status); status = Ok;
+    status = GdipGetClipBoundsI(graphics, rect);
+    expect(ObjectBusy, status); status = Ok;
     status = GdipGetCompositingMode(graphics, &compmode);
     expect(ObjectBusy, status); status = Ok;
     status = GdipGetCompositingQuality(graphics, &quality);
@@ -711,6 +716,8 @@ static void test_Get_Release_DC(void)
     expect(ObjectBusy, status); status = Ok;
     status = GdipTranslateWorldTransform(graphics, 0.0, 0.0, MatrixOrderPrepend);
     expect(ObjectBusy, status); status = Ok;
+    status = GdipSetClipHrgn(graphics, hrgn, CombineModeReplace);
+    expect(ObjectBusy, status); status = Ok;
     status = GdipSetClipPath(graphics, path, CombineModeReplace);
     expect(ObjectBusy, status); status = Ok;
     status = GdipSetClipRect(graphics, 0.0, 0.0, 10.0, 10.0, CombineModeReplace);
@@ -718,7 +725,11 @@ static void test_Get_Release_DC(void)
     status = GdipSetClipRectI(graphics, 0, 0, 10, 10, CombineModeReplace);
     expect(ObjectBusy, status); status = Ok;
     status = GdipSetClipRegion(graphics, clip, CombineModeReplace);
-    expect(ObjectBusy, status);
+    expect(ObjectBusy, status); status = Ok;
+    status = GdipTranslateClip(graphics, 0.0, 0.0);
+    expect(ObjectBusy, status); status = Ok;
+    status = GdipTranslateClipI(graphics, 0, 0);
+    expect(ObjectBusy, status); status = Ok;
     status = GdipDrawPolygon(graphics, pen, ptf, 5);
     expect(ObjectBusy, status); status = Ok;
     status = GdipDrawPolygonI(graphics, pen, pt, 5);
@@ -746,6 +757,7 @@ static void test_Get_Release_DC(void)
     GdipDeleteBrush((GpBrush*)brush);
     GdipDeleteRegion(region);
     GdipDeleteMatrix(m);
+    DeleteObject(hrgn);
 
     ReleaseDC(0, hdc);
 }

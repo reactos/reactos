@@ -34,7 +34,7 @@
 
 static BOOL CALLBACK FormatTagEnumProc(HACMDRIVERID hadid,
                                        PACMFORMATTAGDETAILS paftd,
-                                       DWORD dwInstance,
+                                       DWORD_PTR dwInstance,
                                        DWORD fdwSupport)
 {
     if (winetest_interactive)
@@ -45,7 +45,7 @@ static BOOL CALLBACK FormatTagEnumProc(HACMDRIVERID hadid,
 
 static BOOL CALLBACK FormatEnumProc(HACMDRIVERID hadid,
                                     LPACMFORMATDETAILS pafd,
-                                    DWORD dwInstance,
+                                    DWORD_PTR dwInstance,
                                     DWORD fd)
 {
     if (winetest_interactive)
@@ -55,7 +55,7 @@ static BOOL CALLBACK FormatEnumProc(HACMDRIVERID hadid,
 }
 
 static BOOL CALLBACK DriverEnumProc(HACMDRIVERID hadid,
-                                    DWORD dwInstance,
+                                    DWORD_PTR dwInstance,
                                     DWORD fdwSupport)
 {
     MMRESULT rc;

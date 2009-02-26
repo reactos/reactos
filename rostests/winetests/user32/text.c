@@ -316,6 +316,23 @@ static void test_DrawTextCalcRect(void)
     ok(textheight==0,"Got textheight from DrawTextExA\n");
     ok(dtp.uiLengthDrawn==1337, "invalid dtp.uiLengthDrawn = %i\n",dtp.uiLengthDrawn);
 
+    /* Margin calculations */
+    dtp.cbSize = sizeof(dtp);
+    dtp.iLeftMargin = 0;
+    dtp.iRightMargin = 0;
+    SetRect( &rect, 0, 0, 0, 0);
+    DrawTextExA(hdc, text, -1, &rect, DT_CALCRECT, &dtp);
+    textlen = rect.right; /* Width without margin */
+    dtp.iLeftMargin = 8;
+    SetRect( &rect, 0, 0, 0, 0);
+    DrawTextExA(hdc, text, -1, &rect, DT_CALCRECT, &dtp);
+    ok(rect.right==dtp.iLeftMargin+textlen  ,"Incorrect left margin calculated  rc(%d,%d)\n", rect.left, rect.right);
+    dtp.iLeftMargin = 0;
+    dtp.iRightMargin = 8;
+    SetRect( &rect, 0, 0, 0, 0);
+    DrawTextExA(hdc, text, -1, &rect, DT_CALCRECT, &dtp);
+    ok(rect.right==dtp.iRightMargin+textlen  ,"Incorrect right margin calculated rc(%d,%d)\n", rect.left, rect.right);
+
     /* Wide char versions */
     SetRect( &rect, 10,10, 100, 100);
     SetLastError( 0);

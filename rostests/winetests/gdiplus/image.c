@@ -18,13 +18,69 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define COBJMACROS
+
+#include <math.h>
+
+#include "initguid.h"
 #include "windows.h"
 #include "gdiplus.h"
 #include "wine/test.h"
-#include <math.h>
-#include "wingdi.h"
 
 #define expect(expected, got) ok(((UINT)got) == ((UINT)expected), "Expected %.8x, got %.8x\n", (UINT)expected, (UINT)got)
+#define expectf(expected, got) ok(fabs(expected - got) < 0.0001, "Expected %.2f, got %.2f\n", expected, got)
+
+static void expect_rawformat(REFGUID expected, GpImage *img, int line, BOOL todo)
+{
+    GUID raw;
+    WCHAR bufferW[39];
+    char buffer[39];
+    char buffer2[39];
+    GpStatus stat;
+
+    stat = GdipGetImageRawFormat(img, &raw);
+    ok_(__FILE__, line)(stat == Ok, "GdipGetImageRawFormat failed with %d\n", stat);
+    if(stat != Ok) return;
+    StringFromGUID2(&raw, bufferW, sizeof(bufferW)/sizeof(bufferW[0]));
+    WideCharToMultiByte(CP_ACP, 0, bufferW, sizeof(bufferW)/sizeof(bufferW[0]), buffer, sizeof(buffer), NULL, NULL);
+    StringFromGUID2(expected, bufferW, sizeof(bufferW)/sizeof(bufferW[0]));
+    WideCharToMultiByte(CP_ACP, 0, bufferW, sizeof(bufferW)/sizeof(bufferW[0]), buffer2, sizeof(buffer2), NULL, NULL);
+    if(todo)
+        todo_wine ok_(__FILE__, line)(IsEqualGUID(&raw, expected), "Expected format %s, got %s\n", buffer2, buffer);
+    else
+        ok_(__FILE__, line)(IsEqualGUID(&raw, expected), "Expected format %s, got %s\n", buffer2, buffer);
+}
+
+static void test_bufferrawformat(void* buff, int size, REFGUID expected, int line, BOOL todo)
+{
+    LPSTREAM stream;
+    HGLOBAL  hglob;
+    LPBYTE   data;
+    HRESULT  hres;
+    GpStatus stat;
+    GpBitmap *bmp;
+
+    hglob = GlobalAlloc (0, size);
+    data = GlobalLock (hglob);
+    memcpy(data, buff, size);
+    GlobalUnlock(hglob); data = NULL;
+
+    hres = CreateStreamOnHGlobal(hglob, TRUE, &stream);
+    ok_(__FILE__, line)(hres == S_OK, "Failed to create a stream\n");
+    if(hres != S_OK) return;
+
+    stat = GdipCreateBitmapFromStream(stream, &bmp);
+    ok_(__FILE__, line)(stat == Ok, "Failed to create a Bitmap\n");
+    if(stat != Ok){
+        IStream_Release(stream);
+        return;
+    }
+
+    expect_rawformat(expected, (GpImage*)bmp, line, todo);
+
+    GdipDisposeImage((GpImage*)bmp);
+    IStream_Release(stream);
+}
 
 static void test_Scan0(void)
 {
@@ -73,10 +129,8 @@ static void test_Scan0(void)
 
     bm = NULL;
     stat = GdipCreateBitmapFromScan0(10, 10, -8, PixelFormat24bppRGB, buff, &bm);
-    todo_wine{
-        expect(Ok, stat);
-        ok(NULL != bm, "Expected bitmap to be initialized\n");
-    }
+    expect(Ok, stat);
+    ok(NULL != bm, "Expected bitmap to be initialized\n");
     if (stat == Ok)
         GdipDisposeImage((GpImage*)bm);
 
@@ -112,8 +166,8 @@ static void test_GetImageDimension(void)
     h = -1;
     stat = GdipGetImageDimension((GpImage*)bm,&w,&h);
     expect(Ok, stat);
-    ok(fabs(WIDTH - w) < 0.0001, "Width wrong\n");
-    ok(fabs(HEIGHT - h) < 0.0001, "Height wrong\n");
+    expectf(WIDTH,  w);
+    expectf(HEIGHT, h);
     GdipDisposeImage((GpImage*)bm);
 }
 
@@ -219,8 +273,8 @@ static void test_SavingImages(void)
     stat = GdipGetImageDimension((GpImage*)bm, &w, &h);
     if (stat != Ok) goto cleanup;
 
-    ok((fabs(w - WIDTH) < 0.01) && (fabs(h - HEIGHT) < 0.01),
-       "Saved image dimensions are different!\n");
+    expectf(WIDTH, w);
+    expectf(HEIGHT, h);
 
  cleanup:
     GdipFree(codecs);
@@ -416,8 +470,8 @@ static void test_GdipCreateBitmapFromHBITMAP(void)
     stat = GdipCreateBitmapFromHBITMAP(hbm, NULL, &gpbm);
     expect(Ok, stat);
     expect(Ok, GdipGetImageDimension((GpImage*) gpbm, &width, &height));
-    ok(fabs(WIDTH1 - width) < .0001, "width wrong\n");
-    ok(fabs(HEIGHT1 - height) < .0001, "height wrong\n");
+    expectf(WIDTH1,  width);
+    expectf(HEIGHT1, height);
     if (stat == Ok)
         GdipDisposeImage((GpImage*)gpbm);
     GlobalFree(hbm);
@@ -425,9 +479,12 @@ static void test_GdipCreateBitmapFromHBITMAP(void)
     hbm = CreateBitmap(WIDTH2, HEIGHT2, 1, 1, &buff);
     stat = GdipCreateBitmapFromHBITMAP(hbm, NULL, &gpbm);
     expect(Ok, stat);
+    /* raw format */
+    expect_rawformat(&ImageFormatMemoryBMP, (GpImage*)gpbm, __LINE__, TRUE);
+
     expect(Ok, GdipGetImageDimension((GpImage*) gpbm, &width, &height));
-    ok(fabs(WIDTH2 - width) < .0001, "width wrong\n");
-    ok(fabs(HEIGHT2 - height) < .0001, "height wrong\n");
+    expectf(WIDTH2,  width);
+    expectf(HEIGHT2, height);
     if (stat == Ok)
         GdipDisposeImage((GpImage*)gpbm);
     GlobalFree(hbm);
@@ -447,15 +504,15 @@ static void test_GdipCreateBitmapFromHBITMAP(void)
     stat = GdipCreateBitmapFromHBITMAP(hbm, NULL, &gpbm);
     expect(Ok, stat);
     expect(Ok, GdipGetImageDimension((GpImage*) gpbm, &width, &height));
-    ok(fabs(WIDTH1 - width) < .0001, "width wrong\n");
-    ok(fabs(HEIGHT1 - height) < .0001, "height wrong\n");
+    expectf(WIDTH1,  width);
+    expectf(HEIGHT1, height);
     if (stat == Ok)
         GdipDisposeImage((GpImage*)gpbm);
 
     LogPal = GdipAlloc(sizeof(LOGPALETTE));
     ok(LogPal != NULL, "unable to allocate LOGPALETTE\n");
     LogPal->palVersion = 0x300;
-    hpal = CreatePalette((const LOGPALETTE*) LogPal);
+    hpal = CreatePalette(LogPal);
     ok(hpal != NULL, "CreatePalette failed\n");
     GdipFree(LogPal);
 
@@ -501,10 +558,12 @@ static void test_GdipCloneImage(void)
     /* Create an image, clone it, delete the original, make sure the copy works */
     stat = GdipCreateBitmapFromScan0(WIDTH, HEIGHT, 0, PixelFormat24bppRGB, NULL, &bm);
     expect(Ok, stat);
+    expect_rawformat(&ImageFormatMemoryBMP, (GpImage*)bm, __LINE__, TRUE);
 
     image_src = ((GpImage*)bm);
     stat = GdipCloneImage(image_src, &image_dest);
     expect(Ok, stat);
+    expect_rawformat(&ImageFormatMemoryBMP, image_dest, __LINE__, TRUE);
 
     stat = GdipDisposeImage((GpImage*)bm);
     expect(Ok, stat);
@@ -512,8 +571,8 @@ static void test_GdipCloneImage(void)
     expect(Ok, stat);
 
     /* Treat FP values carefully */
-    ok(fabsf(rectF.Width-WIDTH)<1e-5, "Expected: %d, got %.05f\n", WIDTH, rectF.Width);
-    ok(fabsf(rectF.Height-HEIGHT)<1e-5, "Expected: %d, got %.05f\n", HEIGHT, rectF.Height);
+    expectf((REAL)WIDTH, rectF.Width);
+    expectf((REAL)HEIGHT, rectF.Height);
 
     stat = GdipDisposeImage(image_dest);
     expect(Ok, stat);
@@ -528,6 +587,150 @@ static void test_testcontrol(void)
     stat = GdipTestControl(TestControlGetBuildNumber, &param);
     expect(Ok, stat);
     ok(param != 0, "Build number expected, got %u\n", param);
+}
+
+static void test_fromhicon(void)
+{
+    static const BYTE bmp_bits[1024];
+    HBITMAP hbmMask, hbmColor;
+    ICONINFO info;
+    HICON hIcon;
+    GpStatus stat;
+    GpBitmap *bitmap = NULL;
+    UINT dim;
+    ImageType type;
+    PixelFormat format;
+
+    /* NULL */
+    stat = GdipCreateBitmapFromHICON(NULL, NULL);
+    expect(InvalidParameter, stat);
+    stat = GdipCreateBitmapFromHICON(NULL, &bitmap);
+    expect(InvalidParameter, stat);
+
+    /* color icon 1 bit */
+    hbmMask = CreateBitmap(16, 16, 1, 1, bmp_bits);
+    ok(hbmMask != 0, "CreateBitmap failed\n");
+    hbmColor = CreateBitmap(16, 16, 1, 1, bmp_bits);
+    ok(hbmColor != 0, "CreateBitmap failed\n");
+    info.fIcon = TRUE;
+    info.xHotspot = 8;
+    info.yHotspot = 8;
+    info.hbmMask = hbmMask;
+    info.hbmColor = hbmColor;
+    hIcon = CreateIconIndirect(&info);
+    ok(hIcon != 0, "CreateIconIndirect failed\n");
+    DeleteObject(hbmMask);
+    DeleteObject(hbmColor);
+
+    stat = GdipCreateBitmapFromHICON(hIcon, &bitmap);
+    expect(Ok, stat);
+    if(stat == Ok){
+       /* check attributes */
+       stat = GdipGetImageHeight((GpImage*)bitmap, &dim);
+       expect(Ok, stat);
+       expect(16, dim);
+       stat = GdipGetImageWidth((GpImage*)bitmap, &dim);
+       expect(Ok, stat);
+       expect(16, dim);
+       stat = GdipGetImageType((GpImage*)bitmap, &type);
+       expect(Ok, stat);
+       expect(ImageTypeBitmap, type);
+       stat = GdipGetImagePixelFormat((GpImage*)bitmap, &format);
+       expect(PixelFormat32bppARGB, format);
+       /* raw format */
+       expect_rawformat(&ImageFormatMemoryBMP, (GpImage*)bitmap, __LINE__, TRUE);
+       GdipDisposeImage((GpImage*)bitmap);
+    }
+    DestroyIcon(hIcon);
+
+    /* color icon 8 bpp */
+    hbmMask = CreateBitmap(16, 16, 1, 8, bmp_bits);
+    ok(hbmMask != 0, "CreateBitmap failed\n");
+    hbmColor = CreateBitmap(16, 16, 1, 8, bmp_bits);
+    ok(hbmColor != 0, "CreateBitmap failed\n");
+    info.fIcon = TRUE;
+    info.xHotspot = 8;
+    info.yHotspot = 8;
+    info.hbmMask = hbmMask;
+    info.hbmColor = hbmColor;
+    hIcon = CreateIconIndirect(&info);
+    ok(hIcon != 0, "CreateIconIndirect failed\n");
+    DeleteObject(hbmMask);
+    DeleteObject(hbmColor);
+
+    stat = GdipCreateBitmapFromHICON(hIcon, &bitmap);
+    expect(Ok, stat);
+    if(stat == Ok){
+        /* check attributes */
+        stat = GdipGetImageHeight((GpImage*)bitmap, &dim);
+        expect(Ok, stat);
+        expect(16, dim);
+        stat = GdipGetImageWidth((GpImage*)bitmap, &dim);
+        expect(Ok, stat);
+        expect(16, dim);
+        stat = GdipGetImageType((GpImage*)bitmap, &type);
+        expect(Ok, stat);
+        expect(ImageTypeBitmap, type);
+        stat = GdipGetImagePixelFormat((GpImage*)bitmap, &format);
+        expect(PixelFormat32bppARGB, format);
+        /* raw format */
+        expect_rawformat(&ImageFormatMemoryBMP, (GpImage*)bitmap, __LINE__, TRUE);
+        GdipDisposeImage((GpImage*)bitmap);
+    }
+    DestroyIcon(hIcon);
+}
+
+/* 1x1 pixel png */
+static const unsigned char pngimage[285] = {
+0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a,0x00,0x00,0x00,0x0d,0x49,0x48,0x44,0x52,
+0x00,0x00,0x00,0x01,0x00,0x00,0x00,0x01,0x08,0x02,0x00,0x00,0x00,0x90,0x77,0x53,
+0xde,0x00,0x00,0x00,0x09,0x70,0x48,0x59,0x73,0x00,0x00,0x0b,0x13,0x00,0x00,0x0b,
+0x13,0x01,0x00,0x9a,0x9c,0x18,0x00,0x00,0x00,0x07,0x74,0x49,0x4d,0x45,0x07,0xd5,
+0x06,0x03,0x0f,0x07,0x2d,0x12,0x10,0xf0,0xfd,0x00,0x00,0x00,0x0c,0x49,0x44,0x41,
+0x54,0x08,0xd7,0x63,0xf8,0xff,0xff,0x3f,0x00,0x05,0xfe,0x02,0xfe,0xdc,0xcc,0x59,
+0xe7,0x00,0x00,0x00,0x00,0x49,0x45,0x4e,0x44,0xae,0x42,0x60,0x82
+};
+/* 1x1 pixel gif */
+static const unsigned char gifimage[35] = {
+0x47,0x49,0x46,0x38,0x37,0x61,0x01,0x00,0x01,0x00,0x80,0x00,0x00,0xff,0xff,0xff,
+0xff,0xff,0xff,0x2c,0x00,0x00,0x00,0x00,0x01,0x00,0x01,0x00,0x00,0x02,0x02,0x44,
+0x01,0x00,0x3b
+};
+/* 1x1 pixel bmp */
+static const unsigned char bmpimage[66] = {
+0x42,0x4d,0x42,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x3e,0x00,0x00,0x00,0x28,0x00,
+0x00,0x00,0x01,0x00,0x00,0x00,0x01,0x00,0x00,0x00,0x01,0x00,0x01,0x00,0x00,0x00,
+0x00,0x00,0x04,0x00,0x00,0x00,0x12,0x0b,0x00,0x00,0x12,0x0b,0x00,0x00,0x02,0x00,
+0x00,0x00,0x02,0x00,0x00,0x00,0xff,0xff,0xff,0x00,0xff,0xff,0xff,0x00,0x00,0x00,
+0x00,0x00
+};
+/* 1x1 pixel jpg */
+static const unsigned char jpgimage[285] = {
+0xff,0xd8,0xff,0xe0,0x00,0x10,0x4a,0x46,0x49,0x46,0x00,0x01,0x01,0x01,0x01,0x2c,
+0x01,0x2c,0x00,0x00,0xff,0xdb,0x00,0x43,0x00,0x05,0x03,0x04,0x04,0x04,0x03,0x05,
+0x04,0x04,0x04,0x05,0x05,0x05,0x06,0x07,0x0c,0x08,0x07,0x07,0x07,0x07,0x0f,0x0b,
+0x0b,0x09,0x0c,0x11,0x0f,0x12,0x12,0x11,0x0f,0x11,0x11,0x13,0x16,0x1c,0x17,0x13,
+0x14,0x1a,0x15,0x11,0x11,0x18,0x21,0x18,0x1a,0x1d,0x1d,0x1f,0x1f,0x1f,0x13,0x17,
+0x22,0x24,0x22,0x1e,0x24,0x1c,0x1e,0x1f,0x1e,0xff,0xdb,0x00,0x43,0x01,0x05,0x05,
+0x05,0x07,0x06,0x07,0x0e,0x08,0x08,0x0e,0x1e,0x14,0x11,0x14,0x1e,0x1e,0x1e,0x1e,
+0x1e,0x1e,0x1e,0x1e,0x1e,0x1e,0x1e,0x1e,0x1e,0x1e,0x1e,0x1e,0x1e,0x1e,0x1e,0x1e,
+0x1e,0x1e,0x1e,0x1e,0x1e,0x1e,0x1e,0x1e,0x1e,0x1e,0x1e,0x1e,0x1e,0x1e,0x1e,0x1e,
+0x1e,0x1e,0x1e,0x1e,0x1e,0x1e,0x1e,0x1e,0x1e,0x1e,0x1e,0x1e,0x1e,0x1e,0xff,0xc0,
+0x00,0x11,0x08,0x00,0x01,0x00,0x01,0x03,0x01,0x22,0x00,0x02,0x11,0x01,0x03,0x11,
+0x01,0xff,0xc4,0x00,0x15,0x00,0x01,0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x08,0xff,0xc4,0x00,0x14,0x10,0x01,0x00,0x00,
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xff,0xc4,
+0x00,0x14,0x01,0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+0x00,0x00,0x00,0x00,0xff,0xc4,0x00,0x14,0x11,0x01,0x00,0x00,0x00,0x00,0x00,0x00,
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xff,0xda,0x00,0x0c,0x03,0x01,
+0x00,0x02,0x11,0x03,0x11,0x00,0x3f,0x00,0xb2,0xc0,0x07,0xff,0xd9
+};
+static void test_getrawformat(void)
+{
+    test_bufferrawformat((void*)pngimage, sizeof(pngimage), &ImageFormatPNG,  __LINE__, TRUE);
+    test_bufferrawformat((void*)gifimage, sizeof(gifimage), &ImageFormatGIF,  __LINE__, TRUE);
+    test_bufferrawformat((void*)bmpimage, sizeof(bmpimage), &ImageFormatBMP,  __LINE__, FALSE);
+    test_bufferrawformat((void*)jpgimage, sizeof(jpgimage), &ImageFormatJPEG, __LINE__, TRUE);
 }
 
 START_TEST(image)
@@ -553,6 +756,8 @@ START_TEST(image)
     test_GdipGetImageFlags();
     test_GdipCloneImage();
     test_testcontrol();
+    test_fromhicon();
+    test_getrawformat();
 
     GdiplusShutdown(gdiplusToken);
 }

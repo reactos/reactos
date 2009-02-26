@@ -1973,7 +1973,7 @@ static BOOL RegisterWindowClasses (void)
     test3.cbWndExtra = 0;
     test3.hInstance = hinst;
     test3.hIcon = 0;
-    test3.hCursor = LoadCursorA(0, (LPSTR)IDC_ARROW);
+    test3.hCursor = LoadCursorA(0, IDC_ARROW);
     test3.hbrBackground = GetStockObject(WHITE_BRUSH);
     test3.lpszMenuName = NULL;
     test3.lpszClassName = szEditTest3Class;
@@ -2001,7 +2001,7 @@ static void UnregisterWindowClasses (void)
     UnregisterClassA(szEditTextPositionClass, hinst);
 }
 
-void test_fontsize(void)
+static void test_fontsize(void)
 {
     HWND hwEdit;
     HFONT hfont;

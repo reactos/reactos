@@ -303,10 +303,8 @@ static void test_WM_LBUTTONDOWN(void)
     hEdit = cbInfo.hwndItem;
     hList = cbInfo.hwndList;
 
-    trace("hMainWnd=%x, hCombo=%x, hList=%x, hEdit=%x\n",
-         (UINT)hMainWnd, (UINT)hCombo, (UINT)hList, (UINT)hEdit);
-    ok(GetFocus() == hMainWnd, "Focus not on Main Window, instead on %x\n",
-       (UINT)GetFocus());
+    trace("hMainWnd=%p, hCombo=%p, hList=%p, hEdit=%p\n", hMainWnd, hCombo, hList, hEdit);
+    ok(GetFocus() == hMainWnd, "Focus not on Main Window, instead on %p\n", GetFocus());
 
     /* Click on the button to drop down the list */
     x = cbInfo.rcButton.left + (cbInfo.rcButton.right-cbInfo.rcButton.left)/2;
@@ -318,14 +316,12 @@ static void test_WM_LBUTTONDOWN(void)
        "The dropdown list should have appeared after clicking the button.\n");
 
     ok(GetFocus() == hEdit,
-       "Focus not on ComboBox's Edit Control, instead on %x\n",
-       (UINT)GetFocus());
+       "Focus not on ComboBox's Edit Control, instead on %p\n", GetFocus());
     result = SendMessage(hCombo, WM_LBUTTONUP, 0, MAKELPARAM(x, y));
     ok(result, "WM_LBUTTONUP was not processed. LastError=%d\n",
        GetLastError());
     ok(GetFocus() == hEdit,
-       "Focus not on ComboBox's Edit Control, instead on %x\n",
-       (UINT)GetFocus());
+       "Focus not on ComboBox's Edit Control, instead on %p\n", GetFocus());
 
     /* Click on the 5th item in the list */
     item_height = SendMessage(hCombo, CB_GETITEMHEIGHT, 0, 0);
@@ -336,15 +332,13 @@ static void test_WM_LBUTTONDOWN(void)
     ok(!result, "WM_LBUTTONDOWN was not processed. LastError=%d\n",
        GetLastError());
     ok(GetFocus() == hEdit,
-       "Focus not on ComboBox's Edit Control, instead on %x\n",
-       (UINT)GetFocus());
+       "Focus not on ComboBox's Edit Control, instead on %p\n", GetFocus());
 
     result = SendMessage(hList, WM_MOUSEMOVE, 0, MAKELPARAM(x, y));
     ok(!result, "WM_MOUSEMOVE was not processed. LastError=%d\n",
        GetLastError());
     ok(GetFocus() == hEdit,
-       "Focus not on ComboBox's Edit Control, instead on %x\n",
-       (UINT)GetFocus());
+       "Focus not on ComboBox's Edit Control, instead on %p\n", GetFocus());
     ok(SendMessage(hCombo, CB_GETDROPPEDSTATE, 0, 0),
        "The dropdown list should still be visible.\n");
 
@@ -352,8 +346,7 @@ static void test_WM_LBUTTONDOWN(void)
     ok(!result, "WM_LBUTTONUP was not processed. LastError=%d\n",
        GetLastError());
     ok(GetFocus() == hEdit,
-       "Focus not on ComboBox's Edit Control, instead on %x\n",
-       (UINT)GetFocus());
+       "Focus not on ComboBox's Edit Control, instead on %p\n", GetFocus());
     ok(!SendMessage(hCombo, CB_GETDROPPEDSTATE, 0, 0),
        "The dropdown list should have been rolled up.\n");
     idx = SendMessage(hCombo, CB_GETCURSEL, 0, 0);

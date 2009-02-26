@@ -907,7 +907,12 @@ static path_test_t addpie_path[] = {
     {79.4, 46.8, PathPointTypeBezier,0, 0}, /*3*/
     {63.9, 49.0, PathPointTypeBezier | PathPointTypeCloseSubpath,  0, 0} /*4*/
     };
-
+static path_test_t addpie_path2[] = {
+    {0.0, 30.0, PathPointTypeStart | PathPointTypeCloseSubpath, 0, 0} /*0*/
+    };
+static path_test_t addpie_path3[] = {
+    {30.0, 0.0, PathPointTypeStart | PathPointTypeCloseSubpath, 0, 0} /*0*/
+    };
 static void test_addpie(void)
 {
     GpStatus status;
@@ -922,6 +927,20 @@ static void test_addpie(void)
     status = GdipAddPathPie(path, 0.0, 0.0, 100.0, 50.0, 10.0, 50.0);
     expect(Ok, status);
     ok_path(path, addpie_path, sizeof(addpie_path)/sizeof(path_test_t), FALSE);
+    status = GdipResetPath(path);
+    expect(Ok, status);
+
+    /* zero width base ellipse */
+    status = GdipAddPathPie(path, 0.0, 0.0, 0.0, 60.0, -90.0, 24.0);
+    expect(InvalidParameter, status);
+    ok_path(path, addpie_path2, sizeof(addpie_path2)/sizeof(path_test_t), FALSE);
+    status = GdipResetPath(path);
+    expect(Ok, status);
+
+    /* zero height base ellipse */
+    status = GdipAddPathPie(path, 0.0, 0.0, 60.0, 0.0 , -90.0, 24.0);
+    expect(InvalidParameter, status);
+    ok_path(path, addpie_path3, sizeof(addpie_path3)/sizeof(path_test_t), FALSE);
 
     GdipDeletePath(path);
 }
@@ -1038,6 +1057,58 @@ static void test_flatten(void)
     GdipDeletePath(path);
 }
 
+static void test_isvisible(void)
+{
+    GpPath *path;
+    GpGraphics *graphics = NULL;
+    HDC hdc = GetDC(0);
+    BOOL result;
+    GpStatus status;
+
+    status = GdipCreateFromHDC(hdc, &graphics);
+    expect(Ok, status);
+    status = GdipCreatePath(FillModeAlternate, &path);
+    expect(Ok, status);
+
+    /* NULL */
+    status = GdipIsVisiblePathPoint(NULL, 0.0, 0.0, NULL, NULL);
+    expect(InvalidParameter, status);
+    status = GdipIsVisiblePathPoint(path, 0.0, 0.0, NULL, NULL);
+    expect(InvalidParameter, status);
+    status = GdipIsVisiblePathPoint(path, 0.0, 0.0, NULL, NULL);
+    expect(InvalidParameter, status);
+    status = GdipIsVisiblePathPoint(path, 0.0, 0.0, graphics, NULL);
+    expect(InvalidParameter, status);
+
+    /* empty path */
+    result = TRUE;
+    status = GdipIsVisiblePathPoint(path, 0.0, 0.0, NULL, &result);
+    expect(Ok, status);
+    expect(FALSE, result);
+    /* rect */
+    status = GdipAddPathRectangle(path, 0.0, 0.0, 10.0, 10.0);
+    expect(Ok, status);
+    result = FALSE;
+    status = GdipIsVisiblePathPoint(path, 0.0, 0.0, NULL, &result);
+    expect(Ok, status);
+    expect(TRUE, result);
+    result = TRUE;
+    status = GdipIsVisiblePathPoint(path, 11.0, 11.0, NULL, &result);
+    expect(Ok, status);
+    expect(FALSE, result);
+    /* not affected by clipping */
+    status = GdipSetClipRect(graphics, 5.0, 5.0, 5.0, 5.0, CombineModeReplace);
+    expect(Ok, status);
+    result = FALSE;
+    status = GdipIsVisiblePathPoint(path, 0.0, 0.0, graphics, &result);
+    expect(Ok, status);
+    expect(TRUE, result);
+
+    GdipDeletePath(path);
+    GdipDeleteGraphics(graphics);
+    ReleaseDC(0, hdc);
+}
+
 START_TEST(graphicspath)
 {
     struct GdiplusStartupInput gdiplusStartupInput;
@@ -1066,6 +1137,7 @@ START_TEST(graphicspath)
     test_reverse();
     test_addpie();
     test_flatten();
+    test_isvisible();
 
     GdiplusShutdown(gdiplusToken);
 }

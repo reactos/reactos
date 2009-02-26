@@ -2404,6 +2404,7 @@ static void test_cloneNode(void )
     long nAttrCnt = 0, nAttrCnt1 = 0;
     IXMLDOMNode *node;
     IXMLDOMNode *node_clone;
+    IXMLDOMNode *node_first;
     HRESULT r;
     BSTR str;
     static const WCHAR szSearch[] = { 'l', 'c', '/', 'p', 'r', 0 };
@@ -2446,6 +2447,20 @@ static void test_cloneNode(void )
         IXMLDOMDocument_Release(doc);
         IXMLDOMNode_Release(node);
         return;
+    }
+
+    r = IXMLDOMNode_get_firstChild(node_clone, &node_first);
+    ok( r == S_OK, "ret %08x\n", r );
+    if(r == S_OK)
+    {
+        IXMLDOMDocument *doc2;
+
+        r = IXMLDOMNode_get_ownerDocument(node_clone, &doc2);
+        ok( r == S_OK, "ret %08x\n", r );
+        if(r == S_OK)
+            IXMLDOMDocument_Release(doc2);
+
+        IXMLDOMNode_Release(node_first);
     }
 
     r = IXMLDOMNode_get_childNodes(node, &pList);
@@ -2494,6 +2509,20 @@ static void test_cloneNode(void )
         IXMLDOMDocument_Release(doc);
         IXMLDOMNode_Release(node);
         return;
+    }
+
+    r = IXMLDOMNode_get_firstChild(node_clone, &node_first);
+    ok( r == S_FALSE, "ret %08x\n", r );
+    if(r == S_OK)
+    {
+        IXMLDOMDocument *doc2;
+
+        r = IXMLDOMNode_get_ownerDocument(node_clone, &doc2);
+        ok( r == S_OK, "ret %08x\n", r );
+        if(r == S_OK)
+            IXMLDOMDocument_Release(doc2);
+
+        IXMLDOMNode_Release(node_first);
     }
 
     r = IXMLDOMNode_get_childNodes(node_clone, &pList);

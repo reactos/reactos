@@ -285,7 +285,7 @@ static void testCollectionStore(void)
 
     if (!pCertAddStoreToCollection)
     {
-        skip("CertAddStoreToCollection() is not available\n");
+        win_skip("CertAddStoreToCollection() is not available\n");
         return;
     }
 
@@ -545,7 +545,7 @@ static void testCollectionStore(void)
 
     if (!pCertRemoveStoreFromCollection)
     {
-        skip("CertRemoveStoreFromCollection() is not available\n");
+        win_skip("CertRemoveStoreFromCollection() is not available\n");
     }
     else
     {
@@ -639,7 +639,7 @@ static void testRegStore(void)
     /* It looks like the remainder pretty much needs CertControlStore() */
     if (!pCertControlStore)
     {
-        skip("CertControlStore() is not available\n");
+        win_skip("CertControlStore() is not available\n");
         return;
     }
 
@@ -1113,7 +1113,7 @@ static void testFileStore(void)
 
     if (!pCertControlStore)
     {
-        skip("CertControlStore() is not available\n");
+        win_skip("CertControlStore() is not available\n");
         return;
     }
 
@@ -1714,7 +1714,7 @@ static void testCertEnumSystemStore(void)
 
     if (!pCertEnumSystemStore)
     {
-        skip("CertEnumSystemStore() is not available\n");
+        win_skip("CertEnumSystemStore() is not available\n");
         return;
     }
 
@@ -1754,7 +1754,7 @@ static void testStoreProperty(void)
 
     if (!pCertGetStoreProperty || !pCertSetStoreProperty)
     {
-        skip("CertGet/SetStoreProperty() is not available\n");
+        win_skip("CertGet/SetStoreProperty() is not available\n");
         return;
     }
 
@@ -2016,7 +2016,7 @@ static void test_I_UpdateStore(void)
 
     if (!pI_CertUpdatestore)
     {
-        skip("No I_CertUpdateStore\n");
+        win_skip("No I_CertUpdateStore\n");
         return;
     }
     store1 = CertOpenStore(CERT_STORE_PROV_MEMORY, 0, 0,

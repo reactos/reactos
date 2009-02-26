@@ -23,12 +23,161 @@
 #include <windef.h>
 #include <winbase.h>
 #include <winhttp.h>
+#include <wincrypt.h>
 
 #include "wine/test.h"
 
 static const WCHAR test_useragent[] =
     {'W','i','n','e',' ','R','e','g','r','e','s','s','i','o','n',' ','T','e','s','t',0};
 static const WCHAR test_server[] = {'w','i','n','e','h','q','.','o','r','g',0};
+
+static void test_QueryOption(void)
+{
+    BOOL ret;
+    HINTERNET session, request, connection;
+    DWORD feature, size;
+
+    SetLastError(0xdeadbeef);
+    session = WinHttpOpen(test_useragent, 0, 0, 0, 0);
+    ok(session != NULL, "WinHttpOpen failed to open session, error %u\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = WinHttpQueryOption(session, WINHTTP_OPTION_REDIRECT_POLICY, NULL, NULL);
+    ok(!ret, "should fail to set redirect policy %u\n", GetLastError());
+    ok(GetLastError() == ERROR_INVALID_PARAMETER,
+       "expected ERROR_INVALID_PARAMETER, got %u\n", GetLastError());
+
+    size = 0xdeadbeef;
+    SetLastError(0xdeadbeef);
+    ret = WinHttpQueryOption(session, WINHTTP_OPTION_REDIRECT_POLICY, NULL, &size);
+    ok(!ret, "should fail to query option\n");
+    ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER,
+       "expected ERROR_INSUFFICIENT_BUFFER, got %u\n", GetLastError());
+    ok(size == 4, "expected 4, got %u\n", size);
+
+    feature = 0xdeadbeef;
+    size = sizeof(feature) - 1;
+    SetLastError(0xdeadbeef);
+    ret = WinHttpQueryOption(session, WINHTTP_OPTION_REDIRECT_POLICY, &feature, &size);
+    ok(!ret, "should fail to query option\n");
+    ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER,
+       "expected ERROR_INSUFFICIENT_BUFFER, got %u\n", GetLastError());
+    ok(size == 4, "expected 4, got %u\n", size);
+
+    feature = 0xdeadbeef;
+    size = sizeof(feature) + 1;
+    SetLastError(0xdeadbeef);
+    ret = WinHttpQueryOption(session, WINHTTP_OPTION_REDIRECT_POLICY, &feature, &size);
+    ok(ret, "failed to query option %u\n", GetLastError());
+    ok(size == sizeof(feature), "WinHttpQueryOption should set the size: %u\n", size);
+    ok(feature == WINHTTP_OPTION_REDIRECT_POLICY_DISALLOW_HTTPS_TO_HTTP,
+       "expected WINHTTP_OPTION_REDIRECT_POLICY_DISALLOW_HTTPS_TO_HTTP, got %#x\n", feature);
+
+    SetLastError(0xdeadbeef);
+    ret = WinHttpSetOption(session, WINHTTP_OPTION_REDIRECT_POLICY, NULL, sizeof(feature));
+    ok(!ret, "should fail to set redirect policy %u\n", GetLastError());
+    ok(GetLastError() == ERROR_INVALID_PARAMETER,
+       "expected ERROR_INVALID_PARAMETER, got %u\n", GetLastError());
+
+    feature = WINHTTP_OPTION_REDIRECT_POLICY_ALWAYS;
+    SetLastError(0xdeadbeef);
+    ret = WinHttpSetOption(session, WINHTTP_OPTION_REDIRECT_POLICY, &feature, sizeof(feature) - 1);
+    ok(!ret, "should fail to set redirect policy %u\n", GetLastError());
+    ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER,
+       "expected ERROR_INSUFFICIENT_BUFFER, got %u\n", GetLastError());
+
+    feature = WINHTTP_OPTION_REDIRECT_POLICY_ALWAYS;
+    SetLastError(0xdeadbeef);
+    ret = WinHttpSetOption(session, WINHTTP_OPTION_REDIRECT_POLICY, &feature, sizeof(feature) + 1);
+    ok(!ret, "should fail to set redirect policy %u\n", GetLastError());
+    ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER,
+       "expected ERROR_INSUFFICIENT_BUFFER, got %u\n", GetLastError());
+
+    feature = WINHTTP_OPTION_REDIRECT_POLICY_ALWAYS;
+    SetLastError(0xdeadbeef);
+    ret = WinHttpSetOption(session, WINHTTP_OPTION_REDIRECT_POLICY, &feature, sizeof(feature));
+    ok(ret, "failed to set redirect policy %u\n", GetLastError());
+
+    feature = 0xdeadbeef;
+    size = sizeof(feature);
+    SetLastError(0xdeadbeef);
+    ret = WinHttpQueryOption(session, WINHTTP_OPTION_REDIRECT_POLICY, &feature, &size);
+    ok(ret, "failed to query option %u\n", GetLastError());
+    ok(feature == WINHTTP_OPTION_REDIRECT_POLICY_ALWAYS,
+       "expected WINHTTP_OPTION_REDIRECT_POLICY_ALWAYS, got %#x\n", feature);
+
+    feature = WINHTTP_DISABLE_COOKIES;
+    SetLastError(0xdeadbeef);
+    ret = WinHttpSetOption(session, WINHTTP_OPTION_DISABLE_FEATURE, &feature, sizeof(feature));
+    ok(!ret, "should fail to set disable feature for a session\n");
+    ok(GetLastError() == ERROR_WINHTTP_INCORRECT_HANDLE_TYPE,
+       "expected ERROR_WINHTTP_INCORRECT_HANDLE_TYPE, got %u\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    connection = WinHttpConnect(session, test_server, INTERNET_DEFAULT_HTTP_PORT, 0);
+    ok(connection != NULL, "WinHttpConnect failed to open a connection, error: %u\n", GetLastError());
+
+    feature = WINHTTP_DISABLE_COOKIES;
+    SetLastError(0xdeadbeef);
+    ret = WinHttpSetOption(connection, WINHTTP_OPTION_DISABLE_FEATURE, &feature, sizeof(feature));
+    ok(!ret, "should fail to set disable feature for a connection\n");
+    ok(GetLastError() == ERROR_WINHTTP_INCORRECT_HANDLE_TYPE,
+       "expected ERROR_WINHTTP_INCORRECT_HANDLE_TYPE, got %u\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    request = WinHttpOpenRequest(connection, NULL, NULL, NULL, WINHTTP_NO_REFERER,
+                                 WINHTTP_DEFAULT_ACCEPT_TYPES, 0);
+    if (request == NULL && GetLastError() == ERROR_WINHTTP_NAME_NOT_RESOLVED)
+    {
+        skip("Network unreachable, skipping the test\n");
+        goto done;
+    }
+
+    feature = 0xdeadbeef;
+    size = sizeof(feature);
+    SetLastError(0xdeadbeef);
+    ret = WinHttpQueryOption(request, WINHTTP_OPTION_DISABLE_FEATURE, &feature, &size);
+    ok(!ret, "should fail to query disable feature for a request\n");
+    ok(GetLastError() == ERROR_INVALID_PARAMETER,
+       "expected ERROR_INVALID_PARAMETER, got %u\n", GetLastError());
+
+    feature = 0;
+    size = sizeof(feature);
+    SetLastError(0xdeadbeef);
+    ret = WinHttpSetOption(request, WINHTTP_OPTION_DISABLE_FEATURE, &feature, sizeof(feature));
+    ok(ret, "failed to set feature %u\n", GetLastError());
+
+    feature = 0xffffffff;
+    size = sizeof(feature);
+    SetLastError(0xdeadbeef);
+    ret = WinHttpSetOption(request, WINHTTP_OPTION_DISABLE_FEATURE, &feature, sizeof(feature));
+    ok(ret, "failed to set feature %u\n", GetLastError());
+
+    feature = WINHTTP_DISABLE_COOKIES;
+    size = sizeof(feature);
+    SetLastError(0xdeadbeef);
+    ret = WinHttpSetOption(request, WINHTTP_OPTION_DISABLE_FEATURE, &feature, sizeof(feature));
+    ok(ret, "failed to set feature %u\n", GetLastError());
+
+    size = 0;
+    SetLastError(0xdeadbeef);
+    ret = WinHttpQueryOption(request, WINHTTP_OPTION_DISABLE_FEATURE, NULL, &size);
+    ok(!ret, "should fail to query disable feature for a request\n");
+    ok(GetLastError() == ERROR_INVALID_PARAMETER,
+       "expected ERROR_INVALID_PARAMETER, got %u\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = WinHttpCloseHandle(request);
+    ok(ret, "WinHttpCloseHandle failed on closing request: %u\n", GetLastError());
+
+done:
+    SetLastError(0xdeadbeef);
+    ret = WinHttpCloseHandle(connection);
+    ok(ret, "WinHttpCloseHandle failed on closing connection: %u\n", GetLastError());
+    SetLastError(0xdeadbeef);
+    ret = WinHttpCloseHandle(session);
+    ok(ret, "WinHttpCloseHandle failed on closing session: %u\n", GetLastError());
+}
 
 static void test_OpenRequest (void)
 {
@@ -272,6 +421,7 @@ static void test_WinHttpAddHeaders(void)
      */
     index = 0;
     len = 5*sizeof(WCHAR);
+    memset(check_buffer, 0xab, sizeof(check_buffer));
     memcpy(buffer, check_buffer, sizeof(buffer));
     ret = WinHttpQueryHeaders(request, WINHTTP_QUERY_CUSTOM | WINHTTP_QUERY_FLAG_REQUEST_HEADERS,
         test_header_name, buffer, &len, &index);
@@ -515,22 +665,22 @@ static void test_WinHttpAddHeaders(void)
         test_header_name, buffer, &len, &index);
     ok(ret == FALSE, "WinHttpQueryHeaders succeeded unexpectedly, found third header.\n");
 
-    ret = WinHttpAddRequestHeaders(request, test_headers[8], ~0UL, WINHTTP_ADDREQ_FLAG_ADD);
+    ret = WinHttpAddRequestHeaders(request, test_headers[8], ~0u, WINHTTP_ADDREQ_FLAG_ADD);
     ok(!ret, "WinHttpAddRequestHeaders failed\n");
 
-    ret = WinHttpAddRequestHeaders(request, test_headers[9], ~0UL, WINHTTP_ADDREQ_FLAG_ADD);
+    ret = WinHttpAddRequestHeaders(request, test_headers[9], ~0u, WINHTTP_ADDREQ_FLAG_ADD);
     ok(ret, "WinHttpAddRequestHeaders failed\n");
 
-    ret = WinHttpAddRequestHeaders(request, test_headers[10], ~0UL, WINHTTP_ADDREQ_FLAG_ADD);
+    ret = WinHttpAddRequestHeaders(request, test_headers[10], ~0u, WINHTTP_ADDREQ_FLAG_ADD);
     ok(!ret, "WinHttpAddRequestHeaders failed\n");
 
-    ret = WinHttpAddRequestHeaders(request, test_headers[11], ~0UL, WINHTTP_ADDREQ_FLAG_ADD);
+    ret = WinHttpAddRequestHeaders(request, test_headers[11], ~0u, WINHTTP_ADDREQ_FLAG_ADD);
     ok(!ret, "WinHttpAddRequestHeaders failed\n");
 
-    ret = WinHttpAddRequestHeaders(request, test_headers[12], ~0UL, WINHTTP_ADDREQ_FLAG_ADD);
+    ret = WinHttpAddRequestHeaders(request, test_headers[12], ~0u, WINHTTP_ADDREQ_FLAG_ADD);
     ok(!ret, "WinHttpAddRequestHeaders failed\n");
 
-    ret = WinHttpAddRequestHeaders(request, test_headers[13], ~0UL, WINHTTP_ADDREQ_FLAG_ADD);
+    ret = WinHttpAddRequestHeaders(request, test_headers[13], ~0u, WINHTTP_ADDREQ_FLAG_ADD);
     ok(ret, "WinHttpAddRequestHeaders failed\n");
 
     index = 0;
@@ -556,8 +706,9 @@ static void test_secure_connection(void)
     static const WCHAR google[] = {'w','w','w','.','g','o','o','g','l','e','.','c','o','m',0};
 
     HANDLE ses, con, req;
-    DWORD size, status, policy;
+    DWORD size, status, policy, bitness;
     BOOL ret;
+    CERT_CONTEXT *cert;
 
     ses = WinHttpOpen(test_useragent, 0, NULL, NULL, 0);
     ok(ses != NULL, "failed to open session %u\n", GetLastError());
@@ -590,6 +741,14 @@ static void test_secure_connection(void)
 
     ret = WinHttpSendRequest(req, NULL, 0, NULL, 0, 0, 0);
     ok(ret, "failed to send request %u\n", GetLastError());
+
+    size = sizeof(cert);
+    ret = WinHttpQueryOption(req, WINHTTP_OPTION_SERVER_CERT_CONTEXT, &cert, &size );
+    ok(ret, "failed to retrieve certificate context %u\n", GetLastError());
+
+    size = sizeof(bitness);
+    ret = WinHttpQueryOption(req, WINHTTP_OPTION_SECURITY_KEY_BITNESS, &bitness, &size );
+    ok(ret, "failed to retrieve key bitness %u\n", GetLastError());
 
     ret = WinHttpReceiveResponse(req, NULL);
     ok(ret, "failed to receive response %u\n", GetLastError());
@@ -667,4 +826,5 @@ START_TEST (winhttp)
     test_WinHttpAddHeaders();
     test_secure_connection();
     test_request_parameter_defaults();
+    test_QueryOption();
 }

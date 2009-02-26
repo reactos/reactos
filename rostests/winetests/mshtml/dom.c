@@ -1798,7 +1798,7 @@ static void _test_border_styles(unsigned line, IHTMLStyle *pStyle, BSTR Name)
     HRESULT hres;
     DISPID dispid;
 
-    hres = IHTMLStyle_GetIDsOfNames(pStyle, &IID_NULL, (LPOLESTR*)&Name, 1,
+    hres = IHTMLStyle_GetIDsOfNames(pStyle, &IID_NULL, &Name, 1,
                         LOCALE_USER_DEFAULT, &dispid);
     ok_(__FILE__,line) (hres == S_OK, "GetIDsOfNames: %08x\n", hres);
     if(hres == S_OK)
@@ -2371,6 +2371,7 @@ static void test_current_style(IHTMLCurrentStyle *current_style)
 {
     BSTR str;
     HRESULT hres;
+    VARIANT v;
 
     test_disp((IUnknown*)current_style, &DIID_DispHTMLCurrentStyle);
     test_ifaces((IUnknown*)current_style, cstyle_iids);
@@ -2379,6 +2380,118 @@ static void test_current_style(IHTMLCurrentStyle *current_style)
     ok(hres == S_OK, "get_display failed: %08x\n", hres);
     ok(!strcmp_wa(str, "block"), "get_display returned %s\n", dbgstr_w(str));
     SysFreeString(str);
+
+    hres = IHTMLCurrentStyle_get_position(current_style, &str);
+    ok(hres == S_OK, "get_position failed: %08x\n", hres);
+    ok(!strcmp_wa(str, "absolute"), "get_position returned %s\n", dbgstr_w(str));
+    SysFreeString(str);
+
+    hres = IHTMLCurrentStyle_get_fontFamily(current_style, &str);
+    ok(hres == S_OK, "get_fontFamily failed: %08x\n", hres);
+    SysFreeString(str);
+
+    hres = IHTMLCurrentStyle_get_fontStyle(current_style, &str);
+    ok(hres == S_OK, "get_fontStyle failed: %08x\n", hres);
+    ok(!strcmp_wa(str, "normal"), "get_fontStyle returned %s\n", dbgstr_w(str));
+    SysFreeString(str);
+
+    hres = IHTMLCurrentStyle_get_backgroundImage(current_style, &str);
+    ok(hres == S_OK, "get_backgroundImage failed: %08x\n", hres);
+    ok(!strcmp_wa(str, "none"), "get_backgroundImage returned %s\n", dbgstr_w(str));
+    SysFreeString(str);
+
+    hres = IHTMLCurrentStyle_get_fontVariant(current_style, &str);
+    ok(hres == S_OK, "get_fontVariant failed: %08x\n", hres);
+    ok(!strcmp_wa(str, "normal"), "get_fontVariant returned %s\n", dbgstr_w(str));
+    SysFreeString(str);
+
+    hres = IHTMLCurrentStyle_get_borderTopStyle(current_style, &str);
+    ok(hres == S_OK, "get_borderTopStyle failed: %08x\n", hres);
+    ok(!strcmp_wa(str, "none"), "get_borderTopStyle returned %s\n", dbgstr_w(str));
+    SysFreeString(str);
+
+    hres = IHTMLCurrentStyle_get_borderRightStyle(current_style, &str);
+    ok(hres == S_OK, "get_borderRightStyle failed: %08x\n", hres);
+    ok(!strcmp_wa(str, "none"), "get_borderRightStyle returned %s\n", dbgstr_w(str));
+    SysFreeString(str);
+
+    hres = IHTMLCurrentStyle_get_borderBottomStyle(current_style, &str);
+    ok(hres == S_OK, "get_borderBottomStyle failed: %08x\n", hres);
+    ok(!strcmp_wa(str, "none"), "get_borderBottomStyle returned %s\n", dbgstr_w(str));
+    SysFreeString(str);
+
+    hres = IHTMLCurrentStyle_get_borderLeftStyle(current_style, &str);
+    ok(hres == S_OK, "get_borderLeftStyle failed: %08x\n", hres);
+    ok(!strcmp_wa(str, "none"), "get_borderLeftStyle returned %s\n", dbgstr_w(str));
+    SysFreeString(str);
+
+    hres = IHTMLCurrentStyle_get_textAlign(current_style, &str);
+    ok(hres == S_OK, "get_textAlign failed: %08x\n", hres);
+    ok(!strcmp_wa(str, "center"), "get_textAlign returned %s\n", dbgstr_w(str));
+    SysFreeString(str);
+
+    hres = IHTMLCurrentStyle_get_textDecoration(current_style, &str);
+    ok(hres == S_OK, "get_textDecoration failed: %08x\n", hres);
+    ok(!strcmp_wa(str, "none"), "get_textDecoration returned %s\n", dbgstr_w(str));
+    SysFreeString(str);
+
+    hres = IHTMLCurrentStyle_get_cursor(current_style, &str);
+    ok(hres == S_OK, "get_cursor failed: %08x\n", hres);
+    ok(!strcmp_wa(str, "default"), "get_cursor returned %s\n", dbgstr_w(str));
+    SysFreeString(str);
+
+    hres = IHTMLCurrentStyle_get_fontWeight(current_style, &v);
+    ok(hres == S_OK, "get_fontWeight failed: %08x\n", hres);
+    ok(V_VT(&v) == VT_I4, "V_VT(v) = %d\n", V_VT(&v));
+    ok( V_I4(&v) == 400, "expect 400 got (%d)\n", V_I4(&v));
+    VariantClear(&v);
+
+    hres = IHTMLCurrentStyle_get_fontSize(current_style, &v);
+    ok(hres == S_OK, "get_fontSize failed: %08x\n", hres);
+    ok(V_VT(&v) == VT_BSTR, "V_VT(v) = %d\n", V_VT(&v));
+    VariantClear(&v);
+
+    hres = IHTMLCurrentStyle_get_left(current_style, &v);
+    ok(hres == S_OK, "get_left failed: %08x\n", hres);
+    ok(V_VT(&v) == VT_BSTR, "V_VT(v) = %d\n", V_VT(&v));
+    VariantClear(&v);
+
+    hres = IHTMLCurrentStyle_get_top(current_style, &v);
+    ok(hres == S_OK, "get_top failed: %08x\n", hres);
+    ok(V_VT(&v) == VT_BSTR, "V_VT(v) = %d\n", V_VT(&v));
+    VariantClear(&v);
+
+    hres = IHTMLCurrentStyle_get_width(current_style, &v);
+    ok(hres == S_OK, "get_width failed: %08x\n", hres);
+    ok(V_VT(&v) == VT_BSTR, "V_VT(v) = %d\n", V_VT(&v));
+    VariantClear(&v);
+
+    hres = IHTMLCurrentStyle_get_height(current_style, &v);
+    ok(hres == S_OK, "get_height failed: %08x\n", hres);
+    ok(V_VT(&v) == VT_BSTR, "V_VT(v) = %d\n", V_VT(&v));
+    VariantClear(&v);
+
+    hres = IHTMLCurrentStyle_get_paddingLeft(current_style, &v);
+    ok(hres == S_OK, "get_paddingLeft failed: %08x\n", hres);
+    ok(V_VT(&v) == VT_BSTR, "V_VT(v) = %d\n", V_VT(&v));
+    VariantClear(&v);
+
+    hres = IHTMLCurrentStyle_get_zIndex(current_style, &v);
+    ok(hres == S_OK, "get_zIndex failed: %08x\n", hres);
+    ok(V_VT(&v) == VT_I4, "V_VT(v) = %d\n", V_VT(&v));
+    ok( V_I4(&v) == 1, "expect 1 got (%d)\n", V_I4(&v));
+    VariantClear(&v);
+
+    hres = IHTMLCurrentStyle_get_verticalAlign(current_style, &v);
+    ok(hres == S_OK, "get_verticalAlign failed: %08x\n", hres);
+    ok(V_VT(&v) == VT_BSTR, "V_VT(v) = %d\n", V_VT(&v));
+    ok(!strcmp_wa(V_BSTR(&v), "middle"), "get_verticalAlign returned %s\n", dbgstr_w(V_BSTR(&v)));
+    VariantClear(&v);
+
+    hres = IHTMLCurrentStyle_get_marginRight(current_style, &v);
+    ok(hres == S_OK, "get_marginRight failed: %08x\n", hres);
+    ok(V_VT(&v) == VT_BSTR, "V_VT(v) = %d\n", V_VT(&v));
+    VariantClear(&v);
 }
 
 static void test_style2(IHTMLStyle2 *style2)
@@ -2403,9 +2516,35 @@ static void test_style2(IHTMLStyle2 *style2)
     SysFreeString(str);
 }
 
+static void test_style4(IHTMLStyle4 *style4)
+{
+    HRESULT hres;
+    VARIANT v;
+    VARIANT vdefault;
+
+    hres = IHTMLStyle4_get_minHeight(style4, &vdefault);
+    ok(hres == S_OK, "get_minHeight failed: %08x\n", hres);
+
+    V_VT(&v) = VT_BSTR;
+    V_BSTR(&v) = a2bstr("10px");
+    hres = IHTMLStyle4_put_minHeight(style4, v);
+    ok(hres == S_OK, "put_minHeight failed: %08x\n", hres);
+    VariantClear(&v);
+
+    hres = IHTMLStyle4_get_minHeight(style4, &v);
+    ok(hres == S_OK, "get_minHeight failed: %08x\n", hres);
+    ok(V_VT(&v) == VT_BSTR, "V_VT(v) = %d\n", V_VT(&v));
+    ok( !strcmp_wa(V_BSTR(&v), "10px"), "expect 10px got (%s)\n", dbgstr_w(V_BSTR(&v)));
+
+    hres = IHTMLStyle4_put_minHeight(style4, vdefault);
+    ok(hres == S_OK, "put_minHeight failed: %08x\n", hres);
+    VariantClear(&vdefault);
+}
+
 static void test_default_style(IHTMLStyle *style)
 {
     IHTMLStyle2 *style2;
+    IHTMLStyle4 *style4;
     VARIANT_BOOL b;
     VARIANT v;
     BSTR str;
@@ -2421,6 +2560,18 @@ static void test_default_style(IHTMLStyle *style)
     hres = IHTMLStyle_get_position(style, &str);
     ok(hres == S_OK, "get_position failed: %08x\n", hres);
     ok(!str, "str=%s\n", dbgstr_w(str));
+
+    V_VT(&v) = VT_NULL;
+    hres = IHTMLStyle_get_marginRight(style, &v);
+    ok(hres == S_OK, "get_marginRight failed: %08x\n", hres);
+    ok(V_VT(&v) == VT_BSTR, "V_VT(marginRight) = %d\n", V_VT(&v));
+    ok(!V_BSTR(&v), "V_BSTR(marginRight) = %s\n", dbgstr_w(V_BSTR(&v)));
+
+    V_VT(&v) = VT_NULL;
+    hres = IHTMLStyle_get_marginLeft(style, &v);
+    ok(hres == S_OK, "get_marginLeft failed: %08x\n", hres);
+    ok(V_VT(&v) == VT_BSTR, "V_VT(marginLeft) = %d\n", V_VT(&v));
+    ok(!V_BSTR(&v), "V_BSTR(marginLeft) = %s\n", dbgstr_w(V_BSTR(&v)));
 
     str = (void*)0xdeadbeef;
     hres = IHTMLStyle_get_fontFamily(style, &str);
@@ -3033,6 +3184,13 @@ static void test_default_style(IHTMLStyle *style)
     if(SUCCEEDED(hres)) {
         test_style2(style2);
         IHTMLStyle2_Release(style2);
+    }
+
+    hres = IHTMLStyle_QueryInterface(style, &IID_IHTMLStyle4, (void**)&style4);
+    ok(hres == S_OK, "Could not get IHTMLStyle4 iface: %08x\n", hres);
+    if(SUCCEEDED(hres)) {
+        test_style4(style4);
+        IHTMLStyle4_Release(style4);
     }
 }
 
