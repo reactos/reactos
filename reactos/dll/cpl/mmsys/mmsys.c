@@ -165,6 +165,7 @@ MMSYS_InstallDevice(HDEVINFO hDevInfo, PSP_DEVINFO_DATA pspDevInfoData)
     HINF hInf;
     PVOID Context;
     BOOL Result;
+    SC_HANDLE hSCManager, hService;
 
     if (!IsEqualIID(&pspDevInfoData->ClassGuid, &GUID_DEVCLASS_SOUND) &&
         !IsEqualIID(&pspDevInfoData->ClassGuid, &GUID_DEVCLASS_MEDIA))
@@ -222,6 +223,25 @@ MMSYS_InstallDevice(HDEVINFO hDevInfo, PSP_DEVINFO_DATA pspDevInfoData)
 
     SetupTermDefaultQueueCallback(Context);
     SetupCloseInfFile(hInf);
+
+
+
+    hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_CONNECT);
+    if (!hSCManager)
+    {
+        return ERROR_DI_DO_DEFAULT;
+    }
+
+    hService = OpenService(hSCManager, L"RosAudioSrv", SERVICE_ALL_ACCESS);
+    if (hService)
+    {
+        /* make RosAudioSrv start automatically */
+        ChangeServiceConfig(hService, SERVICE_NO_CHANGE, SERVICE_AUTO_START, SERVICE_NO_CHANGE, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+
+        StartService(hService, 0, NULL);
+        CloseServiceHandle(hService);
+    }
+    CloseServiceHandle(hSCManager);
 
     return ERROR_DI_DO_DEFAULT;
 
