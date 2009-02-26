@@ -56,7 +56,7 @@ class Backend_SaveDraft extends Backend
   private function save( )
   {
     $thisuser = &ThisUser::getInstance();
-    $rev_id = 0; // helper var, contains current rev_id in force
+    $rev_id = false; // helper var, contains current rev_id in force
     
     if (!$thisuser->hasAccess('more_lang') && $_GET['lang_id'] != $thisuser->language()) {
       die ('Can\'t save drafts of other than your language, due to access restrictions');
@@ -68,15 +68,10 @@ class Backend_SaveDraft extends Backend
     $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
     $stmt->bindParam('lang',$_GET['lang_id'],PDO::PARAM_INT);
     $stmt->execute();
-    $draft_candidate = $stmt->fetchColumn();
-
-    // if there is a valid value returned, use it as rev_id
-    if ($draft_candidate !== false) {
-      $rev_id = $draft_candidate;
-    }
+    $rev_id = $stmt->fetchColumn();
 
     // add new draft, if no autosave-draft exists or draft is submitted
-    if ($rev_id === 0) {
+    if ($rev_id === false) {
 
       // add a new revision
       $rev_id = Revision::add($_GET['data_id'], $_GET['lang_id']);
@@ -84,13 +79,14 @@ class Backend_SaveDraft extends Backend
       // get stable entry
       $stmt=&DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_REVISIONS." WHERE data_id = :data_id AND lang_id = :lang_id AND status = 'stable' AND archive IS FALSE ORDER BY datetime DESC LIMIT 1");
       $stmt->bindParam('data_id',$_GET['data_id'],PDO::PARAM_INT);
-      $stmt->bindParam('lang_id',$_GET['lang_id'],PDO::PARAM_STR);
+      $stmt->bindParam('lang_id',$_GET['lang_id'],PDO::PARAM_INT);
       $stmt->execute();
       $stable = $stmt->fetchColumn();
+
       if ($stable !== false) {
 
         // transfer from stable entry
-        Tag::copyFromRevision($stable, $rev_id);
+        Tag::mergeFromRevision($stable, $rev_id);
       }
     }
 
@@ -111,10 +107,11 @@ class Backend_SaveDraft extends Backend
     // insert/update short text
     $stmt=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_STEXT." ( id , rev_id , name , content ) VALUES ( NULL, :rev_id, :name, :content)");
     $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
-    for ($i=1; $i <= $_POST['stextsum']; ++$i) {  
+    for ($i=1; $i <= $_POST['pstextsum']; ++$i) {  
       $stmt->bindParam('name',$_POST['pdstext'.$i],PDO::PARAM_STR);
       $stmt->bindParam('content',$_POST['pstext'.$i],PDO::PARAM_STR);
       $stmt->execute();
+
     }
 
     // insert/update long text

@@ -1215,7 +1215,7 @@ function addOrReplaceDraft( did, drid )
   var poststr = getEditorTexts();
 
   if (poststr !== false) {
-    makeRequest('?page=backend&type=text&subtype=asi&data_id='+encodeURIComponent(did)+'&rev_id='+encodeURIComponent(drid)+'&lang_id='+encodeURIComponent(document.getElementById("mefrlang").innerHTML), 'asi', 'mefasi', 'html', 'POST', poststr.substr(1));
+    makeRequest('?page=backend&type=text&subtype=asi&data_id='+encodeURIComponent(did)+'&rev_id='+encodeURIComponent(drid)+'&lang_id='+encodeURIComponent(document.getElementById("mefrlang").innerHTML), 'asi', 'mefasi', 'html', 'POST', poststr);
     return true;
   }
   else {
@@ -1341,7 +1341,7 @@ function openOrCloseDiffArea( revid1, revid2 )
  */
 function changeSelectedTags( ctk )
 {
-  if (ctk === 'ms' || ctk === 'mn') {
+  if (ctk === 'ms' || ctk === 'mn' || ctk === 'xe' || ctk === 'va') {
     var tentrs = selectedEntries().split("|");
 
     if (tentrs[0] < 1 || tentrs[0] === '') {
@@ -1580,6 +1580,9 @@ function applyToEditor( http_request, objid )
       objid = tsplits[1];
 
     default:
+      if (objid == 'editzone') {
+        document.getElementById('newentryzone').innerHTML = '';
+      }
       document.getElementById(objid).innerHTML = http_request.responseText;
       autosave_cache = getEditorTexts();
       break;
@@ -1615,7 +1618,7 @@ function showAutosaveInfo( http_request, objid )
       }
       document.getElementById('mefasi').innerHTML = 'Draft saved at '+ curr_hour +':'+ curr_min;
       
-      if (http_request.responseText !== '') {
+      if (http_request.responseText != '') {
         alertbox('Error: '+http_request.responseText);
       }
       else {
@@ -2068,6 +2071,7 @@ function showNewEntryDialog( http_request, objid )
   }
 
   document.getElementById('newentryzone').innerHTML = http_request.responseText;
+  document.getElementById('editzone').innerHTML='';
   document.getElementById('newentryhead').innerHTML = '<span class="virtualLink" onclick="loadEntryTableWithOffset(roscms_current_tbl_position)"><strong>&laquo; Back</strong></span> &nbsp; <strong>New Entry</strong>';
 } // end of function showNewEntryDialog
 

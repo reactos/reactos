@@ -160,6 +160,12 @@ class Revision
     // delete Depencies
     $success = Depencies::removeRevision($rev_id);
 
+    // get data id (check later if we can delete this)
+    $stmt=&DBConnection::getInstance()->prepare("SELECT data_id FROM ".ROSCMST_REVISIONS." WHERE id = :rev_id ");
+    $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
+    $stmt->execute();
+    $data_id=$stmt->fetchColumn();
+
     // delete revision and texts
     $stmt=&DBConnection::getInstance()->prepare("DELETE FROM ".ROSCMST_REVISIONS." WHERE id = :rev_id LIMIT 1");
     $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
@@ -177,6 +183,9 @@ class Revision
     $stmt=&DBConnection::getInstance()->prepare("DELETE FROM ".ROSCMST_TAGS." WHERE rev_id = :rev_id LIMIT 1");
     $stmt->bindParam('rev_id',$rev_id);
     $success = $success && $stmt->execute();
+
+    // if the revision was the last one with this data id, delete the data also
+    Entry::delete($data_id);
 
     // report if everything went right
     return $success;
@@ -454,7 +463,7 @@ class Revision
     $stmt->execute();
 
     // copy data tags and update status
-    Tag::copyFromRevision($revision['id'], $new_rev_id);
+    Tag::mergeFromRevision($revision['id'], $new_rev_id);
 
     // add original translator / translation date
     if (Tag::getValue($revision['id'],'pub_user',-1) != '') {

@@ -231,7 +231,7 @@ class HTML_CMS_Website extends HTML_CMS
         $stmt=&DBConnection::getInstance()->prepare("SELECT id, name FROM ".ROSCMST_LANGUAGES." WHERE level > 0 ORDER BY name ASC");
       }
       else {
-        $stmt=&DBConnection::getInstance()->prepare("SELECT id, name FROM ".ROSCMST_LANGUAGES." WHERE id IN(:lang_id,:standard_lang)");
+        $stmt=&DBConnection::getInstance()->prepare("SELECT id, name FROM ".ROSCMST_LANGUAGES." WHERE id IN(:lang_id,:standard_lang) ORDER BY name ASC");
         $stmt->bindParam('lang_id',$thisuser->language(),PDO::PARAM_INT);
         $stmt->bindParam('standard_lang',Language::getStandardId(),PDO::PARAM_INT);
       }

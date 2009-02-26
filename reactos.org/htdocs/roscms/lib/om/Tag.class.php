@@ -175,7 +175,7 @@ class Tag
    * @return bool
    * @access public
    */
-  public static function copyFromRevision( $old_rev_id, $new_rev_id )
+  public static function mergeFromRevision( $old_rev_id, $new_rev_id )
   {
     // prepare insert for usage in loop
       $stmt_ins=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_TAGS." ( id , rev_id , name , value , user_id ) VALUES (NULL, :rev_id, :tag_name, :tag_value, :user_id)");

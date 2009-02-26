@@ -148,7 +148,7 @@ abstract class HTML_CMS extends HTML
         <td>&nbsp;&nbsp;</td>');
     }
 
-      echo_strip('
+    echo_strip('
             <th'.(($this->branch == 'help') ? ' class="active"' : '').'>
               <div class="corner_TL">
                 <div class="corner_TR">

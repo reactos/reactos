@@ -551,7 +551,7 @@ class Backend_ViewEditor extends Backend
     if ($thisuser->hasAccess('system_tags')) {
       $stmt=&DBConnection::getInstance()->prepare("SELECT id, user_id, name, value FROM ".ROSCMST_TAGS." WHERE rev_id = :rev_id AND user_id IN(-1, :user_id) ORDER BY user_id ASC, name ASC");
     }
-    
+
     // Display only privat labels
     else {
       $stmt=&DBConnection::getInstance()->prepare("SELECT id, user_id, name, value FROM ".ROSCMST_TAGS." WHERE rev_id = :rev_id AND user_id =:user_id ORDER BY user_id ASC, name ASC");

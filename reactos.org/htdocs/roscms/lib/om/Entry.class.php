@@ -166,9 +166,11 @@ class Entry
    * @return bool
    * @access public
    */
-  public static function add($data_name, $data_type = null, $template = '')
+  public static function add($data_name, $data_type = null, $template = '', $dynamic = false)
   {
     $data_name = trim($data_name);
+
+    $rev_id = false;
 
     // check if entry already exists
     $stmt=&DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_ENTRIES." WHERE name = :name AND type = :type LIMIT 1");
@@ -207,13 +209,35 @@ class Entry
       return false;
     }
 
+    // add dynamic content tags and dependencies from parent page
+    if ($dynamic) {
+      $parent_name = preg_replace('/^(.*)_[1-9][0-9]*$/i','$1',$data_name);
+      
+      $stmt=&DBConnection::getInstance()->prepare("SELECT r.id FROM ".ROSCMST_REVISIONS." r JOIN ".ROSCMST_ENTRIES." d ON d.id=r.data_id WHERE d.name=:parent_name AND d.type = 'dynamic' AND r.status='stable' AND r.archive IS FALSE");
+      $stmt->bindParam('parent_name',$parent_name,PDO::PARAM_STR);
+      $stmt->execute();
+      $parent_rev = $stmt->fetchColumn();
+      
+      $next_index = Tag::getValue($parent_rev, 'next_index',-1);
+
+      // add Tags
+      Tag::add($rev_id, 'number', $next_index, -1);
+      Tag::add($rev_id, 'pub_date', date('Y-m-d'), -1);
+      Tag::add($rev_id, 'pub_user', ThisUser::getInstance()->id(), -1);
+
+      // update next number
+      Tag::update(Tag::getId($parent_rev,'next_index',-1),$next_index+1);
+
+      Depencies::addManual($parent_rev, $data_name, 'content');
+    }
+
     // create new stext contents for (dynamic) pages
     $stmt=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_STEXT." ( id , rev_id , name , content ) VALUES ( NULL, :rev_id, :description, :content )");
     $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
     $stmt->bindValue('description','description',PDO::PARAM_STR);
     $stmt->bindValue('content','',PDO::PARAM_STR);
     $stmt->execute();
-    if ($data_type == 'page' || $data_type == 'dynamic') {
+    if ($data_type == 'page' || $data_type == 'dynamic' || $dynamic) {
 
       // add a comment as short text
       $stmt->bindValue('description','comment',PDO::PARAM_STR);
@@ -225,7 +249,7 @@ class Entry
       $stmt->bindValue('content',$data_name,PDO::PARAM_STR);
       $stmt->execute();
 
-      // add next dynamic number for dynamic entries
+      // add initial next dynamic number for dynamic entries
       if ($data_type == 'dynamic') {
         Tag::add($rev_id, 'next_number', 1, -1);
       }
@@ -245,23 +269,34 @@ class Entry
     $stmt->bindParam('content',$content,PDO::PARAM_STR);
     $stmt->execute();
 
-    // add dynamic content tags
-    if (isset($next_number)) {
-
-      // add Tags
-      Tag::add($rev_id, 'number', $next_number, -1);
-      Tag::add($rev_id, 'pub_date', date('Y-m-d'), -1);
-      Tag::add($rev_id, 'pub_user', ThisUser::getInstance()->id(), -1);
-
-      // update next number
-      Tag::update(Tag::getId($rev_id,'number_next',-1),$next_number+1);
-    }
-
+    // add standard page extension
     if ($data_type == 'page' || $data_type == 'dynamic') {
       Tag::add($rev_id, 'extension', 'html', -1);
     }
     return $rev_id;
   } // end of member function add
+
+
+
+  /**
+   * delete a entry, if no revisions are derived from it
+   *
+   * @param int data_id
+   * @return bool
+   * @access public
+   */
+  public static function delete( $data_id )
+  {
+    $stmt=&DBConnection::getInstance()->prepare("SELECT TRUE FROM ".ROSCMST_REVISIONS." WHERE data_id=:data_id");
+    $stmt->bindParam('data_id',$data_id,PDO::PARAM_INT);
+    $stmt->execute();
+    if (!$stmt->fetchColumn()) {
+      $stmt=&DBconnection::getInstance()->prepare("DELETE FROM ".ROSCMST_ENTRIES." WHERE id=:data_id");
+      $stmt->bindParam('data_id',$data_id,PDO::PARAM_INT);
+      return $stmt->execute();
+    }
+    return false;
+  } // end of member function delete
 
 
 

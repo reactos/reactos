@@ -63,7 +63,7 @@ class HTML_CMS_Help extends HTML_CMS
       <div id="roscms_container">
         <div class="leftMenu" style="position: absolute; top: 0px; width: 150px; left: 0px; z-index:1;">
 
-          <div id="lmInfo" class="lmItemTop" onclick="loadInfo()" style="background-color: #C9DAF8; font-weight: bold;">
+          <div id="lmInfo" class="lmItemTopSelected" onclick="loadInfo()">
             <div class="lmItemBottom">Info</div>
           </div>
           <div id="lmFirst" class="lmItemTop" onclick="loadFirstSteps()">

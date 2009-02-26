@@ -39,7 +39,7 @@ class Generate
   private $lang_id = null;
   private $lang = null;
 
-  private $short = array('content'=>'cont', 'script'=>'inc');
+  private $short = array('content'=>'cont', 'dynamic'=>'page', 'page'=>'page', 'script'=>'inc');
 
 
 
@@ -208,7 +208,7 @@ class Generate
     $file_name = $data_name.'.'.$file_extension;
 
     // information, what was generated
-    echo $file_name.'<br />';
+    echo $this->lang_id.'--'.$file_name.'<br />';
 
     // needed by replacing functions
     $this->page_name = $data_name;
@@ -284,33 +284,27 @@ class Generate
 
       // information, what was generated
       echo $this->lang_id.'--'.$file_name.'<br />';
-      
-      // get current instance (dynamic entry revision id)
-      $stmt=&DBConnection::getInstance()->prepare("SELECT r.id, r.lang_id FROM ".ROSCMST_REVISIONS." r JOIN ".ROSCMST_ENTRIES." d ON d.id=r.data_id WHERE d.type='content' AND d.name = CONCAT(:parent_name,'_',:dynamic_num) AND r.status='stable' AND r.archive IS FALSE LIMIT 1");
-      $stmt->bindParam('parent_name',$revision['name'],PDO::PARAM_STR);
-      $stmt->bindParam('dynamic_num',$i,PDO::PARAM_INT);
-      $stmt->execute();
-      $instance = $stmt->fetchOnce(PDO::FETCH_ASSOC);
 
       // needed by replacing functions
       $this->page_name = $data_name;
       $this->rev_id = $revision['id'];
       $this->dynamic_num = $i;
 
+      // copy content
+      $content = $revision['content']; 
+
       // replace depencies
-      $stmt_more=&DBConnection::getInstance()->prepare("SELECT d.id, d.type, d.name FROM ".ROSCMST_DEPENCIES." w JOIN ".ROSCMST_ENTRIES." d ON w.child_id=d.id WHERE w.rev_id=:rev_id AND w.include IS TRUE");
-      $stmt_more->bindParam('rev_id',$instance['id'],PDO::PARAM_INT);
+      $stmt_more=&DBConnection::getInstance()->prepare("SELECT d.id, d.type, d.name FROM ".ROSCMST_DEPENCIES." w JOIN ".ROSCMST_ENTRIES." d ON w.child_id=d.id WHERE w.rev_id=:rev_id AND w.include IS TRUE AND d.type != 'script'");
+      $stmt_more->bindParam('rev_id',$revision['id'],PDO::PARAM_INT);
       $stmt_more->execute();
       while ($depency = $stmt_more->fetch(PDO::FETCH_ASSOC)) {
 
         // replace
-        if ($depency['type'] != 'script') {
-          $content = str_replace('[#'.$this->short[$depency['type']].'_'.$depency['name'].']', $this->getCached(array(null, $this->short[$depency['type']].'_'.$depency['name'])), $content);
-        }
+        $content = str_replace('[#'.$this->short[$depency['type']].'_'.$depency['name'].']', $this->getCached(array(null, $this->short[$depency['type']].'_'.$depency['name'])), $content);
       } // end foreach
 
       // replace scripts
-      $content = preg_replace_callback('/\[#inc_([^][#[:space:]]+)\]/', array($this,'evalScript'),$content);
+      $content = preg_replace_callback('/\[#inc_([a-zA-Z0-9_]+)\]/', array($this,'evalScript'),$content);
 
       // replace roscms vars
       $content = $this->replaceRoscmsPlaceholder($content);
@@ -329,7 +323,7 @@ class Generate
    * @param bool
    * @access private
    */
-  public function update( $rev_id )
+  public function update( $rev_id, $dynamic_num = null )
   {
     static $base_rev;
 
@@ -339,28 +333,52 @@ class Generate
     }
 
     // get revision information
-    $stmt=&DBConnection::getInstance()->prepare("SELECT data_id, lang_id FROM ".ROSCMST_REVISIONS." WHERE id=:rev_id");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT r.data_id, r.lang_id, d.type, d.name FROM ".ROSCMST_REVISIONS." r JOIN ".ROSCMST_ENTRIES." d ON d.id=r.data_id WHERE r.id=:rev_id");
     $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
     $stmt->execute();
     $revision=$stmt->fetchOnce(PDO::FETCH_ASSOC);
 
     // cache revision (set language, cache)
     $this->lang_id = $revision['lang_id'];
-    $this->cacheFiles($revision['data_id']);
-    
-    // for usage in loop
+    $this->cacheFiles($revision['data_id'], false);
+
+    if ($revision['type'] == 'page' || $revision['type'] == 'dynamic') {
+
       // in standard language we may have depencies to other languages, so better generate them all
       if ($revision['lang_id'] == Language::getStandardId()){
-        $stmt_lang=&DBConnection::getInstance()->prepare("SELECT id, name_short FROM ".ROSCMST_LANGUAGES." ORDER BY level DESC, name ASC");
+        $stmt=&DBConnection::getInstance()->prepare("SELECT id, name_short FROM ".ROSCMST_LANGUAGES." ORDER BY level DESC, name ASC");
       }
       else {
-        $stmt_lang=&DBConnection::getInstance()->prepare("SELECT id, name_short FROM ".ROSCMST_LANGUAGES." WHERE id=:lang_id");
-        $stmt_lang->bindParam('lang_id',$revision['lang_id'],PDO::PARAM_INT);
+        $stmt=&DBConnection::getInstance()->prepare("SELECT id, name_short FROM ".ROSCMST_LANGUAGES." WHERE id=:lang_id");
+        $stmt->bindParam('lang_id',$revision['lang_id'],PDO::PARAM_INT);
       }
+      $stmt->execute();
+      while ($language = $stmt->fetch(PDO::FETCH_ASSOC)) {
+
+        // language settings for generating process
+        $this->lang_id=$language['id'];
+        $this->lang=$language['name_short'];
+        $this->lang=$language['name_short'];
+
+        // seperate functions for pages & dynamic pages (in that order)
+        if($revision['type'] == 'page') {
+          $this->oneEntry($revision['name']);
+        }
+        else {
+          if ($dynamic_num === null) {
+            $this->makeDynamic($revision['name']);
+          }
+          else {
+            $this->makeDynamic($revision['name'], $dynamic_num);
+          }
+        }
+      } // end while language
+      return true;
+    }
 
     // get list of entries which depend on this one and handle their types
     $stmt=&DBConnection::getInstance()->prepare("
-        SELECT
+        SELECT DISTINCT
           org.name, org.type, COALESCE( trans.id, org.id ) AS id, org.data_id
         FROM (
           SELECT d.name, d.type, r.id, r.data_id FROM ".ROSCMST_DEPENCIES." w JOIN ".ROSCMST_REVISIONS." r ON r.id=w.rev_id JOIN ".ROSCMST_ENTRIES." d ON d.id=r.data_id WHERE w.child_id=:depency_id AND r.lang_id = :standard_lang AND w.rev_id NOT IN(:rev_id,:rev_id2) AND r.archive IS FALSE AND w.include IS TRUE
@@ -375,38 +393,12 @@ class Generate
     $stmt->execute();
     while ($depency = $stmt->fetch(PDO::FETCH_ASSOC)) {
 
-      // cache recursivly or generate page
-      switch ($depency['type']) {
-        case 'page':
-        case 'dynamic':
+      // only run update once per $rev_id
+      if ($depency['type'] != 'script') {
 
-          // generate pages for all languages, if standard lang, otherwise only once
-          $stmt_lang->execute();
-          while ($language = $stmt_lang->fetch(PDO::FETCH_ASSOC)) {
-
-            // language settings for generating process
-            $this->lang_id=$language['id'];
-            $this->lang=$language['name_short'];
-
-            // seperate functions for pages & dynamic pages (in that order)
-            if($depency['type'] == 'page') {
-              $this->oneEntry($depency['name'], $language['id']);
-            }
-            else {
-              $this->makeDynamic($depency['name'], $language['id']);
-            }
-          } // end while language
-          break;
-
-        case 'script':
-          // scripts are only executed in pages
-          break;
-        default:
-
-          // only run update once per $rev_id
-          $this->update($depency['id']);
-          break;
-      } // end switch
+        $this->update($depency['id'], $dynamic_num);
+        break;
+      }
     } // end while depency
 
     return true;
@@ -418,10 +410,10 @@ class Generate
    * cache files
    *
    * @param int data_id data to be cached, if nothing is set, everything will be cached
-   * @param bool depencies if set to true, it'll be cached recursivly
+   * @param bool recursive if set to true, it'll be cached recursivly
    * @access private
    */
-  private function cacheFiles( $data_id = null, $depencies = true )
+  private function cacheFiles( $data_id = null, $recursive = true )
   {
     // set dir to generate contents
     static $backup;
@@ -443,7 +435,7 @@ class Generate
     $stmt->execute();
 
     // prepare for usage in loop
-      $stmt_more=&DBConnection::getInstance()->prepare("SELECT w.child_id, d.type, d.name FROM ".ROSCMST_DEPENCIES." w JOIN ".ROSCMST_ENTRIES." d ON w.child_id=d.id WHERE w.rev_id=:rev_id AND w.include IS TRUE AND d.type != 'script'");
+      $stmt_more=&DBConnection::getInstance()->prepare("SELECT w.child_id, d.type, d.name FROM ".ROSCMST_DEPENCIES." w JOIN ".ROSCMST_ENTRIES." d ON w.child_id=d.id WHERE w.rev_id=:rev_id AND w.include IS TRUE");
 
     while ($data = $stmt->fetch(PDO::FETCH_ASSOC)) {
 
@@ -475,7 +467,7 @@ class Generate
         $content = preg_replace_callback('/\[#link_([^][#[:space:]]+)\]/', array($this, 'replaceWithHyperlink'), $content);
 
         // do we care about depencies ?
-        if ($depencies) {
+        if ($recursive) {
 
         // process depencies first
           $stmt_more->bindParam('rev_id',$revision['id'],PDO::PARAM_INT);
@@ -490,7 +482,7 @@ class Generate
             }
 
             // replace
-            $content = '~'.$this->lang_id.'~'.str_replace('[#'.$this->short[$depency['type']].'_'.$depency['name'].']', $this->getCached(array(null, $this->short[$depency['type']].'_'.$depency['name'])), $content);
+            $content = str_replace('[#'.$this->short[$depency['type']].'_'.$depency['name'].']', $this->getCached(array(null, $this->short[$depency['type']].'_'.$depency['name'])), $content);
           }
         }
         $this->writeFile($data['lang_id'],$filename, $content);
@@ -522,14 +514,14 @@ class Generate
 
     // take care of dynamic number independent entries
     if ($this->dynamic_num === false) {
-      $content = str_replace('[#roscms_filename]', $this->page_name.'.html', $content); 
+      $content = str_replace('[#roscms_filename]', $this->page_name.'.'.Tag::getValue($this->rev_id,'extension',-1), $content); 
       $content = str_replace('[#roscms_pagename]', $this->page_name, $content); 
       $content = str_replace('[#roscms_pagetitle]', Revision::getSText($this->rev_id, 'title'), $content); 
     }
 
     // replace roscms constants dependent from dynamic number
     else {
-      $content = str_replace('[#roscms_filename]', $this->page_name.'_'.$this->dynamic_num.'.html', $content);
+      $content = str_replace('[#roscms_filename]', $this->page_name.'_'.$this->dynamic_num.'.'.Tag::getValue($this->rev_id,'extension',-1), $content);
       $content = str_replace('[#roscms_pagename]', $this->page_name.'_'.$this->dynamic_num, $content); 
       $content = str_replace('[#roscms_pagetitle]', Revision::getSText($this->rev_id, 'title').' #'.$this->dynamic_num, $content); 
     }
@@ -544,6 +536,9 @@ class Generate
     $content = str_replace('[#roscms_language]', $lang['name'], $content); 
     $content = str_replace('[#roscms_language_short]', $lang['name_short'], $content); 
     $content = str_replace('[#roscms_language_id]', $this->lang_id, $content);
+
+    // eat comments
+    $content = preg_replace('/\[#\*.*\*\]/siU', '', $content);
 
     return $content;
   } // end of member function replaceRoscmsPlaceholder
@@ -598,7 +593,7 @@ class Generate
   private function getFrom( $type, $name )
   {
     // get entry
-    $stmt=&DBConnection::getInstance()->prepare("SELECT t.content, r.id, r.lang_id FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id = d.id JOIN ".ROSCMST_TEXT." t ON t.rev_id = r.id WHERE d.name = :name AND d.type = :type AND r.version > 0 AND r.lang_id = :lang_id AND r.archive IS FALSE AND t.name = 'content' AND status='stable' LIMIT 1");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT t.content, r.id, r.lang_id FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id = d.id JOIN ".ROSCMST_TEXT." t ON t.rev_id = r.id WHERE d.name = :name AND d.type = :type AND r.lang_id = :lang_id AND r.archive IS FALSE AND t.name = 'content' AND status='stable' LIMIT 1");
     $stmt->bindParam('name',$name,PDO::PARAM_STR);
     $stmt->bindParam('type',$type,PDO::PARAM_STR);
     $stmt->bindParam('lang_id',$this->lang_id,PDO::PARAM_INT);
@@ -610,10 +605,6 @@ class Generate
       $stmt->bindParam('lang_id',Language::getStandardId(),PDO::PARAM_INT);
       $stmt->execute();
       $revision=$stmt->fetch(PDO::FETCH_ASSOC);
-      
-      if ($revision === false) {
-        return false;
-      }
     }
     return $revision;
   }

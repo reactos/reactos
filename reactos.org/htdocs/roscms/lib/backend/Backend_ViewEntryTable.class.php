@@ -372,7 +372,7 @@ class Backend_ViewEntryTable extends Backend
               case 'name': // name
                 $this->sql_order .= "d.name ";
                 break;
-              case 'lang': // language
+              case 'language': // language
                 $this->sql_order .= "r.lang_id ";
                 break;
               case 'user': // user

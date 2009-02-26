@@ -256,13 +256,6 @@ class Backend_EntryTable extends Backend
       }
     }
 
-    // get next rev version number (also search archive)
-    $stmt=&DBConnection::getInstance()->prepare("SELECT version FROM ".ROSCMST_REVISIONS." WHERE data_id = :data_id AND version > 0 AND lang_id = :lang ORDER BY version DESC, id DESC LIMIT 1");
-    $stmt->bindParam('data_id',$revision['data_id'],PDO::PARAM_INT);
-    $stmt->bindParam('lang',$revision['lang_id'],PDO::PARAM_INT);
-    $stmt->execute();
-    $version_num = $stmt->fetchColumn()+1;
-
     // get latest stable head entry
     $stmt=&DBConnection::getInstance()->prepare("SELECT id, data_id, lang_id FROM ".ROSCMST_REVISIONS." WHERE data_id = :data_id AND version > 0 AND lang_id = :lang AND archive IS FALSE AND status='stable' ORDER BY version DESC, id DESC LIMIT 1");
     $stmt->bindParam('data_id',$revision['data_id'],PDO::PARAM_INT);
@@ -274,7 +267,7 @@ class Backend_EntryTable extends Backend
     if ($stable_revision !== false) {
 
       // transfer 
-      Tag::copyFromRevision($stable_revision['id'], $revision['id']);
+      Tag::mergeFromRevision($stable_revision['id'], $revision['id']);
 
       // move old revision to archive
       if (!Revision::toArchive($stable_revision['id'])) {
@@ -283,12 +276,6 @@ class Backend_EntryTable extends Backend
         return false;
       }
     }
-
-    // update the version number
-    $stmt=&DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_REVISIONS." SET version = :version WHERE id = :rev_id");
-    $stmt->bindParam('version',$version_num,PDO::PARAM_INT);
-    $stmt->bindParam('rev_id',$revision['id'],PDO::PARAM_INT);
-    $stmt->execute();
 
     // update depencies for new rev
     $depency = new Depencies();
@@ -300,13 +287,40 @@ class Backend_EntryTable extends Backend
     // make entry stable
     Revision::setStatus($revision['id'],'stable');
 
+    // if revision is dynamic content, get the number and give it to the generator
+    $stmt=&DBConnection::getInstance()->prepare("SELECT d.name FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id=d.id WHERE r.id = :rev_id");
+    $stmt->bindParam('rev_id',$revision['id'],PDO::PARAM_INT);
+    $stmt->execute();
+    $dynamic_num = preg_replace('/^.*_([1-9][0-9]*)$/i', '$1',$stmt->fetchColumn());
+
     // generate content
     $generate = new Generate();
-    if (!$generate->update($revision['id'])) {
+    if ($dynamic_num > 0) {
+      $success = $generate->update($revision['id'], $dynamic_num);
+    }
+    else {
+      $success = $generate->update($revision['id']);
+    }
+
+    // was generation not successfull?
+    if (!$success) {
       Revision::setStatus($revision['id'],$revision['status']);
       echo 'Can\'t generate updated entry.';
       return false;
     }
+
+    // get next rev version number (also search archive)
+    $stmt=&DBConnection::getInstance()->prepare("SELECT version FROM ".ROSCMST_REVISIONS." WHERE data_id = :data_id AND version > 0 AND lang_id = :lang ORDER BY version DESC, id DESC LIMIT 1");
+    $stmt->bindParam('data_id',$revision['data_id'],PDO::PARAM_INT);
+    $stmt->bindParam('lang',$revision['lang_id'],PDO::PARAM_INT);
+    $stmt->execute();
+    $version_num = $stmt->fetchColumn()+1;
+
+    // update the version number
+    $stmt=&DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_REVISIONS." SET version = :version WHERE id = :rev_id");
+    $stmt->bindParam('version',$version_num,PDO::PARAM_INT);
+    $stmt->bindParam('rev_id',$revision['id'],PDO::PARAM_INT);
+    $stmt->execute();
 
     Log::writeLow('mark entry as stable: data-id '.$revision['data_id'].', rev-id '.$revision['id']);
 

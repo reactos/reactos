@@ -153,7 +153,7 @@ while ($language = $stmt->fetch(PDO::FETCH_ASSOC)) {
       // order by
       case 'o': 
         filtentryselstrs1 = '<select id="sfb'+filterid+'"><option value="asc">Ascending</option><option value="desc">Descending</option></select>';
-        filtentryselstrs2 = '<select id="sfc'+filterid+'"><option value="date">Date &amp; Time</option><option value="name">Name</option><option value="lang">Language</option><option value="user">User</option><option value="type">Type</option><option value="version">Version</option><option value="number">Number ("dynamic" entry)</option>';
+        filtentryselstrs2 = '<select id="sfc'+filterid+'"><option value="date">Date &amp; Time</option><option value="name">Name</option><option value="language">Language</option><option value="user">User</option><option value="type">Type</option><option value="version">Version</option><option value="number">Number ("dynamic" entry)</option>';
         if (roscms_access['more_filter']) {
           filtentryselstrs2 += '<option value="security">Security</option><option value="revid">RevID</option><option value="ext">Extension</option><option value="status">Status</option><option value="kind">Kind</option>';
         }
