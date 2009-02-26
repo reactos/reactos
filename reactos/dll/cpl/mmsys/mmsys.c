@@ -166,7 +166,8 @@ MMSYS_InstallDevice(HDEVINFO hDevInfo, PSP_DEVINFO_DATA pspDevInfoData)
     PVOID Context;
     BOOL Result;
 
-    if (!IsEqualIID(&pspDevInfoData->ClassGuid, &GUID_DEVCLASS_SOUND))
+    if (!IsEqualIID(&pspDevInfoData->ClassGuid, &GUID_DEVCLASS_SOUND) &&
+        !IsEqualIID(&pspDevInfoData->ClassGuid, &GUID_DEVCLASS_MEDIA))
         return ERROR_DI_DO_DEFAULT;
 
     Length = GetWindowsDirectoryW(szBuffer, MAX_PATH);
