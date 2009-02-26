@@ -189,16 +189,16 @@ free_pending_endp(PUHCI_PENDING_ENDP_POOL pool, PUHCI_PENDING_ENDP pending_endp)
 PUHCI_PENDING_ENDP
 alloc_pending_endp(PUHCI_PENDING_ENDP_POOL pool, LONG count)
 {
-    PUHCI_PENDING_ENDP new;
+    PUHCI_PENDING_ENDP new_endp;
     if (pool == NULL || count != 1)
         return NULL;
 
     if (pool->free_count <= 0)
         return NULL;
 
-    new = (PUHCI_PENDING_ENDP) RemoveHeadList(&pool->free_que);
+    new_endp = (PUHCI_PENDING_ENDP) RemoveHeadList(&pool->free_que);
     pool->free_count--;
-    return new;
+    return new_endp;
 }
 
 BOOLEAN
