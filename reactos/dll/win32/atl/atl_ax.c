@@ -126,11 +126,11 @@ static ULONG IOCS_AddRef(IOCS *This)
     return ref;
 }
 
-#define THIS2IOLECLIENTSITE(This) ((IOleClientSite*)&This->lpOleClientSiteVtbl)
-#define THIS2IOLECONTAINER(This) ((IOleContainer*)&This->lpOleContainerVtbl)
-#define THIS2IOLEINPLACESITEWINDOWLESS(This) ((IOleInPlaceSiteWindowless*)&This->lpOleInPlaceSiteWindowlessVtbl)
-#define THIS2IOLEINPLACEFRAME(This) ((IOleInPlaceFrame*)&This->lpOleInPlaceFrameVtbl)
-#define THIS2IOLECONTROLSITE(This) ((IOleControlSite*)&This->lpOleControlSiteVtbl)
+#define THIS2IOLECLIENTSITE(This) ((IOleClientSite*)&(This)->lpOleClientSiteVtbl)
+#define THIS2IOLECONTAINER(This)             (&(This)->lpOleContainerVtbl)
+#define THIS2IOLEINPLACESITEWINDOWLESS(This) (&(This)->lpOleInPlaceSiteWindowlessVtbl)
+#define THIS2IOLEINPLACEFRAME(This)          (&(This)->lpOleInPlaceFrameVtbl)
+#define THIS2IOLECONTROLSITE(This)           (&(This)->lpOleControlSiteVtbl)
 
 static HRESULT IOCS_QueryInterface(IOCS *This, REFIID riid, void **ppv)
 {

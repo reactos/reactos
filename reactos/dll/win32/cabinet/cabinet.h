@@ -653,8 +653,4 @@ typedef struct {
     struct FILELIST *FilterList;
 } SESSION;
 
-/* from fdi.c */
-void QTMupdatemodel(struct QTMmodel *model, int sym);
-int make_decode_table(cab_ULONG nsyms, cab_ULONG nbits, const cab_UBYTE *length, cab_UWORD *table);
-
 #endif /* __WINE_CABINET_H */

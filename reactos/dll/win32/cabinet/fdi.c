@@ -151,7 +151,7 @@ typedef struct fdi_cds_fwd {
 /****************************************************************
  * QTMupdatemodel (internal)
  */
-void QTMupdatemodel(struct QTMmodel *model, int sym) {
+static void QTMupdatemodel(struct QTMmodel *model, int sym) {
   struct QTMmodelsym temp;
   int i, j;
 
@@ -220,7 +220,8 @@ void QTMupdatemodel(struct QTMmodel *model, int sym) {
  *   OK:    0
  *   error: 1
  */
-int make_decode_table(cab_ULONG nsyms, cab_ULONG nbits, const cab_UBYTE *length, cab_UWORD *table) {
+static int make_decode_table(cab_ULONG nsyms, cab_ULONG nbits,
+                             const cab_UBYTE *length, cab_UWORD *table) {
   register cab_UWORD sym;
   register cab_ULONG leaf;
   register cab_UBYTE bit_num = 1;
