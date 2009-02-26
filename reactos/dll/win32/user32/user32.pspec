@@ -308,7 +308,7 @@
 @ stdcall GetLastActivePopup(long)
 @ stdcall GetLastInputInfo(ptr)
 @ stdcall GetLayeredWindowAttributes(long ptr ptr ptr) NtUserGetLayeredWindowAttributes
-; @ stub GetListBoxInfo
+@ stdcall GetListBoxInfo(long) NtUserGetListBoxInfo
 @ stdcall GetMenu(long)
 @ stdcall GetMenuBarInfo(long long long ptr) NtUserGetMenuBarInfo
 @ stdcall GetMenuCheckMarkDimensions()
