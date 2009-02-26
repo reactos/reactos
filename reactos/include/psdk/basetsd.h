@@ -35,6 +35,7 @@
 #define ULongToPtr( ul )  ((VOID*)(ULONG_PTR)((unsigned long)ul))
 #endif /* !_WIN64 */
 
+#define UlongToHandle(ul) ULongToHandle(ul)
 #define UlongToPtr(ul) ULongToPtr(ul)
 #define UintToPtr(ui) UIntToPtr(ui)
 #define MAXUINT_PTR  (~((UINT_PTR)0))
