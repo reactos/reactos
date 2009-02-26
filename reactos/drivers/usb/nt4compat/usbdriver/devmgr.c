@@ -1246,6 +1246,7 @@ dev_mgr_build_usb_if(PUSB_CONFIGURATION pcfg, PUSB_INTERFACE pif, PUSB_INTERFACE
             pthis_if = (PUSB_INTERFACE) (((PBYTE) pthis) - offsetof(USB_INTERFACE, altif_list));
             pthis_if->altif_count = pif->altif_count;
             ListNext(&pif->altif_list, pthis, pnext);
+            pthis = pnext;
         }
 
     }
