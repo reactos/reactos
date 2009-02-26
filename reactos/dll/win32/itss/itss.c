@@ -363,7 +363,7 @@ static HRESULT ITSS_create(IUnknown *pUnkOuter, LPVOID *ppObj)
     its->ref = 1;
 
     TRACE("-> %p\n", its);
-    *ppObj = (LPVOID) its;
+    *ppObj = its;
 
     ITSS_LockModule();
     return S_OK;

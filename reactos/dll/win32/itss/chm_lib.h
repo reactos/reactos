@@ -104,11 +104,6 @@ typedef int (*CHM_ENUMERATOR)(struct chmFile *h,
 #define CHM_ENUMERATOR_FAILURE  (0)
 #define CHM_ENUMERATOR_CONTINUE (1)
 #define CHM_ENUMERATOR_SUCCESS  (2)
-int chm_enumerate(struct chmFile *h,
-                  int what,
-                  CHM_ENUMERATOR e,
-                  void *context);
-
 int chm_enumerate_dir(struct chmFile *h,
                       const WCHAR *prefix,
                       int what,
