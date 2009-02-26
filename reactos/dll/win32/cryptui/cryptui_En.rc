@@ -102,8 +102,8 @@ STRINGTABLE DISCARDABLE
     IDS_FRIENDLY_NAME_COLUMN "Friendly Name"
     IDS_ALLOWED_PURPOSE_ALL "<All>"
     IDS_ALLOWED_PURPOSE_NONE "<None>"
-    IDS_WARN_REMOVE_MY "You will no longer be able to decrypt mesages with this certificate, or sign messages with it.\nAre you sure you want to remove this certificate?"
-    IDS_WARN_REMOVE_PLURAL_MY "You will no longer be able to decrypt mesages with these certificate, or sign messages with them.\nAre you sure you want to remove these certificates?"
+    IDS_WARN_REMOVE_MY "You will no longer be able to decrypt messages with this certificate, or sign messages with it.\nAre you sure you want to remove this certificate?"
+    IDS_WARN_REMOVE_PLURAL_MY "You will no longer be able to decrypt messages with these certificates, or sign messages with them.\nAre you sure you want to remove these certificates?"
     IDS_WARN_REMOVE_ADDRESSBOOK "You will no longer be able to encrypt messages with this certificate, or verify messages signed with it.\nAre you sure you want to remove this certificate?"
     IDS_WARN_REMOVE_PLURAL_ADDRESSBOOK "You will no longer be able to encrypt messages with these certificates, or verify messages signed with it.\nAre you sure you want to remove these certificates?"
     IDS_WARN_REMOVE_CA "Certificates issued by this certification authority will no longer be trusted.\nAre you sure you want to remove this certificate?"
@@ -161,6 +161,13 @@ STRINGTABLE DISCARDABLE
     IDS_NO "No"
     IDS_EXPORT_SUCCEEDED "The export was successful."
     IDS_EXPORT_FAILED "The export failed."
+    IDS_EXPORT_PRIVATE_KEY_TITLE "Export Private Key"
+    IDS_EXPORT_PRIVATE_KEY_SUBTITLE "The certificate contains a private key which may be exported along with the certificate."
+    IDS_EXPORT_PASSWORD_TITLE "Enter Password"
+    IDS_EXPORT_PASSWORD_SUBTITLE "You may password-protect a private key."
+    IDS_EXPORT_PASSWORD_MISMATCH "The passwords do not match."
+    IDS_EXPORT_PRIVATE_KEY_UNAVAILABLE "Note: The private key for this certificate could not be opened."
+    IDS_EXPORT_PRIVATE_KEY_NON_EXPORTABLE "Note: The private  key for this certificate is not exportable."
 }
 
 IDD_GENERAL DIALOG DISCARDABLE 0, 0, 255, 236
@@ -379,6 +386,29 @@ BEGIN
     -1, 115,56,195,40
   LTEXT "To continue, click Next.",
     -1, 115,103,195,8
+END
+
+IDD_EXPORT_PRIVATE_KEY DIALOG DISCARDABLE 0,0,317,143
+CAPTION "Certificate Export Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  LTEXT "If you choose to export the private key, you will be prompted for a password to protect the private key on a later page.", -1, 21,1,195,23
+  LTEXT "Do you wish to export the private key?", -1, 21,24,195,15
+  AUTORADIOBUTTON "&Yes, export the private key",
+    IDC_EXPORT_PRIVATE_KEY_YES, 31,36,200,12, BS_AUTORADIOBUTTON|WS_TABSTOP
+  AUTORADIOBUTTON "N&o, do not export the private key",
+    IDC_EXPORT_PRIVATE_KEY_NO, 31,48,200,12, BS_AUTORADIOBUTTON
+  LTEXT "", IDC_EXPORT_PRIVATE_KEY_UNAVAILABLE, 21,60,200,24
+END
+
+IDD_EXPORT_PASSWORD DIALOG DISCARDABLE 0,0,317,143
+CAPTION "Certificate Export Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  LTEXT "&Password:", -1, 21,1,195,10
+  EDITTEXT IDC_EXPORT_PASSWORD, 21,11,208,14, ES_AUTOHSCROLL|WS_TABSTOP
+  LTEXT "&Confirm password:", -1, 21,35,195,10
+  EDITTEXT IDC_EXPORT_PASSWORD_CONFIRM, 21,45,208,14, ES_AUTOHSCROLL|WS_TABSTOP
 END
 
 IDD_EXPORT_FORMAT DIALOG DISCARDABLE 0,0,317,143
