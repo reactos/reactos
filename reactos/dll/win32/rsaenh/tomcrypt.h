@@ -235,38 +235,19 @@ typedef int ltm_prime_callback(unsigned char *dst, int len, void *dat);
 /* error code to char* string */
 char *mp_error_to_string(int code);
 
-/* ---> init and deinit bignum functions <--- */
-/* init a bignum */
-int mp_init(mp_int *a);
-
-/* free a bignum */
-void mp_clear(mp_int *a);
-
 /* init a null terminated series of arguments */
 int mp_init_multi(mp_int *mp, ...);
 
 /* clear a null terminated series of arguments */
 void mp_clear_multi(mp_int *mp, ...);
 
-/* exchange two ints */
-void mp_exch(mp_int *a, mp_int *b);
-
 /* shrink ram required for a bignum */
 int mp_shrink(mp_int *a);
-
-/* grow an int to a given size */
-int mp_grow(mp_int *a, int size);
-
-/* init to a given number of digits */
-int mp_init_size(mp_int *a, int size);
 
 /* ---> Basic Manipulations <--- */
 #define mp_iszero(a) (((a)->used == 0) ? MP_YES : MP_NO)
 #define mp_iseven(a) (((a)->used > 0 && (((a)->dp[0] & 1) == 0)) ? MP_YES : MP_NO)
 #define mp_isodd(a)  (((a)->used > 0 && (((a)->dp[0] & 1) == 1)) ? MP_YES : MP_NO)
-
-/* set to zero */
-void mp_zero(mp_int *a);
 
 /* set to a digit */
 void mp_set(mp_int *a, mp_digit b);
@@ -294,30 +275,6 @@ void mp_clamp(mp_int *a);
 
 /* ---> digit manipulation <--- */
 
-/* right shift by "b" digits */
-void mp_rshd(mp_int *a, int b);
-
-/* left shift by "b" digits */
-int mp_lshd(mp_int *a, int b);
-
-/* c = a / 2**b */
-int mp_div_2d(const mp_int *a, int b, mp_int *c, mp_int *d);
-
-/* b = a/2 */
-int mp_div_2(const mp_int *a, mp_int *b);
-
-/* c = a * 2**b */
-int mp_mul_2d(const mp_int *a, int b, mp_int *c);
-
-/* b = a*2 */
-int mp_mul_2(const mp_int *a, mp_int *b);
-
-/* c = a mod 2**d */
-int mp_mod_2d(const mp_int *a, int b, mp_int *c);
-
-/* computes a = 2**b */
-int mp_2expt(mp_int *a, int b);
-
 /* Counts the number of lsbs which are zero before the first zero bit */
 int mp_cnt_lsb(const mp_int *a);
 
@@ -341,9 +298,6 @@ int mp_and(mp_int *a, mp_int *b, mp_int *c);
 /* b = -a */
 int mp_neg(mp_int *a, mp_int *b);
 
-/* b = |a| */
-int mp_abs(const mp_int *a, mp_int *b);
-
 /* compare a to b */
 int mp_cmp(const mp_int *a, const mp_int *b);
 
@@ -362,9 +316,6 @@ int mp_mul(const mp_int *a, const mp_int *b, mp_int *c);
 /* b = a*a  */
 int mp_sqr(const mp_int *a, mp_int *b);
 
-/* a/b => cb + d == a */
-int mp_div(const mp_int *a, const mp_int *b, mp_int *c, mp_int *d);
-
 /* c = a mod b, 0 <= c < b  */
 int mp_mod(const mp_int *a, mp_int *b, mp_int *c);
 
@@ -373,26 +324,14 @@ int mp_mod(const mp_int *a, mp_int *b, mp_int *c);
 /* compare against a single digit */
 int mp_cmp_d(const mp_int *a, mp_digit b);
 
-/* c = a + b */
-int mp_add_d(mp_int *a, mp_digit b, mp_int *c);
-
 /* c = a - b */
 int mp_sub_d(mp_int *a, mp_digit b, mp_int *c);
-
-/* c = a * b */
-int mp_mul_d(const mp_int *a, mp_digit b, mp_int *c);
-
-/* a/b => cb + d == a */
-int mp_div_d(const mp_int *a, mp_digit b, mp_int *c, mp_digit *d);
 
 /* a/3 => 3c + d == a */
 int mp_div_3(mp_int *a, mp_int *c, mp_digit *d);
 
 /* c = a**b */
 int mp_expt_d(mp_int *a, mp_digit b, mp_int *c);
-
-/* c = a mod b, 0 <= c < b  */
-int mp_mod_d(const mp_int *a, mp_digit b, mp_digit *c);
 
 /* ---> number theory <--- */
 
@@ -459,12 +398,6 @@ int mp_montgomery_reduce(mp_int *a, const mp_int *m, mp_digit mp);
 /* returns 1 if a is a valid DR modulus */
 int mp_dr_is_modulus(mp_int *a);
 
-/* sets the value of "d" required for mp_dr_reduce */
-void mp_dr_setup(const mp_int *a, mp_digit *d);
-
-/* reduces a modulo b using the Diminished Radix method */
-int mp_dr_reduce(mp_int *a, const mp_int *b, mp_digit mp);
-
 /* returns true if a can be reduced with mp_reduce_2k */
 int mp_reduce_is_2k(mp_int *a);
 
@@ -482,32 +415,15 @@ int mp_exptmod(const mp_int *a, const mp_int *b, mp_int *c, mp_int *d);
 /* number of primes */
 #define PRIME_SIZE      256
 
-/* result=1 if a is divisible by one of the first PRIME_SIZE primes */
-int mp_prime_is_divisible(const mp_int *a, int *result);
-
 /* performs one Fermat test of "a" using base "b".
  * Sets result to 0 if composite or 1 if probable prime
  */
 int mp_prime_fermat(mp_int *a, mp_int *b, int *result);
 
-/* performs one Miller-Rabin test of "a" using base "b".
- * Sets result to 0 if composite or 1 if probable prime
- */
-int mp_prime_miller_rabin(mp_int *a, const mp_int *b, int *result);
-
 /* This gives [for a given bit size] the number of trials required
  * such that Miller-Rabin gives a prob of failure lower than 2^-96 
  */
 int mp_prime_rabin_miller_trials(int size);
-
-/* performs t rounds of Miller-Rabin on "a" using the first
- * t prime bases.  Also performs an initial sieve of trial
- * division.  Determines if "a" is prime with probability
- * of error no more than (1/4)**t.
- *
- * Sets result to 1 if probably prime, 0 otherwise
- */
-int mp_prime_is_prime(mp_int *a, int t, int *result);
 
 /* finds the next prime after the number "a" using "t" trials
  * of Miller-Rabin.
