@@ -38,7 +38,7 @@ typedef struct {
     const IHTMLGenericElementVtbl *lpHTMLGenericElementVtbl;
 } HTMLGenericElement;
 
-#define HTMLGENERIC(x)  ((IHTMLGenericElement*)  &(x)->lpHTMLGenericElementVtbl)
+#define HTMLGENERIC(x)  (&(x)->lpHTMLGenericElementVtbl)
 
 #define HTMLGENERIC_THIS(iface) DEFINE_THIS(HTMLGenericElement, HTMLGenericElement, iface)
 

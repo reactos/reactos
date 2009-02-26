@@ -39,7 +39,7 @@ typedef struct {
     nsIDOMHTMLImageElement *nsimg;
 } HTMLImgElement;
 
-#define HTMLIMG(x)  ((IHTMLImgElement*)  &(x)->lpHTMLImgElementVtbl)
+#define HTMLIMG(x)  (&(x)->lpHTMLImgElementVtbl)
 
 #define HTMLIMG_THIS(iface) DEFINE_THIS(HTMLImgElement, HTMLImgElement, iface)
 

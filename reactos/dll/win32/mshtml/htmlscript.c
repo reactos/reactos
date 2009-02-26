@@ -39,7 +39,7 @@ typedef struct {
     nsIDOMHTMLScriptElement *nsscript;
 } HTMLScriptElement;
 
-#define HTMLSCRIPT(x)  ((IHTMLScriptElement*)  &(x)->lpHTMLScriptElementVtbl)
+#define HTMLSCRIPT(x)  (&(x)->lpHTMLScriptElementVtbl)
 
 #define HTMLSCRIPT_THIS(iface) DEFINE_THIS(HTMLScriptElement, HTMLScriptElement, iface)
 

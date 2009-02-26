@@ -39,9 +39,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
  * common ProtocolFactory implementation
  */
 
-#define PROTOCOLINFO(x) ((IInternetProtocolInfo*) &(x)->lpInternetProtocolInfoVtbl)
-#define CLASSFACTORY(x) ((IClassFactory*)         &(x)->lpClassFactoryVtbl)
+#define CLASSFACTORY(x) (&(x)->lpClassFactoryVtbl)
 #define PROTOCOL(x)     ((IInternetProtocol*)     &(x)->lpInternetProtocolVtbl)
+#define PROTOCOLINFO(x) ((IInternetProtocolInfo*) &(x)->lpInternetProtocolInfoVtbl)
 
 typedef struct {
     const IInternetProtocolInfoVtbl *lpInternetProtocolInfoVtbl;

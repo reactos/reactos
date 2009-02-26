@@ -41,7 +41,7 @@ typedef struct {
     HTMLDocument *content_doc;
 } HTMLIFrame;
 
-#define HTMLFRAMEBASE2(x)  ((IHTMLFrameBase2*)  &(x)->lpIHTMLFrameBase2Vtbl)
+#define HTMLFRAMEBASE2(x)  (&(x)->lpIHTMLFrameBase2Vtbl)
 
 #define HTMLFRAMEBASE2_THIS(iface) DEFINE_THIS(HTMLIFrame, IHTMLFrameBase2, iface)
 

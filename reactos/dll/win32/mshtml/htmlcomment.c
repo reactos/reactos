@@ -37,7 +37,7 @@ struct HTMLCommentElement {
     const IHTMLCommentElementVtbl   *lpIHTMLCommentElementVtbl;
 };
 
-#define HTMLCOMMENT(x)  ((IHTMLCommentElement*)  &(x)->lpIHTMLCommentElementVtbl)
+#define HTMLCOMMENT(x)  (&(x)->lpIHTMLCommentElementVtbl)
 
 #define HTMLCOMMENT_THIS(iface) DEFINE_THIS(HTMLCommentElement, IHTMLCommentElement, iface)
 

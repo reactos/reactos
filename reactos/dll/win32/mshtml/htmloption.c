@@ -39,7 +39,7 @@ typedef struct {
     nsIDOMHTMLOptionElement *nsoption;
 } HTMLOptionElement;
 
-#define HTMLOPTION(x)  ((IHTMLOptionElement*)  &(x)->lpHTMLOptionElementVtbl)
+#define HTMLOPTION(x)  (&(x)->lpHTMLOptionElementVtbl)
 
 #define HTMLOPTION_THIS(iface) DEFINE_THIS(HTMLOptionElement, HTMLOptionElement, iface)
 

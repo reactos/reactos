@@ -59,6 +59,7 @@ typedef enum {
     STYLEID_MARGIN,
     STYLEID_MARGIN_LEFT,
     STYLEID_MARGIN_RIGHT,
+    STYLEID_MIN_HEIGHT,
     STYLEID_OVERFLOW,
     STYLEID_PADDING_LEFT,
     STYLEID_POSITION,
@@ -76,3 +77,10 @@ void HTMLStyle3_Init(HTMLStyle*);
 
 HRESULT get_nsstyle_attr(nsIDOMCSSStyleDeclaration*,styleid_t,BSTR*);
 HRESULT set_nsstyle_attr(nsIDOMCSSStyleDeclaration*,styleid_t,LPCWSTR,DWORD);
+
+HRESULT set_nsstyle_attr_var(nsIDOMCSSStyleDeclaration *nsstyle, styleid_t sid, VARIANT *value, DWORD flags);
+HRESULT get_nsstyle_attr_var(nsIDOMCSSStyleDeclaration *nsstyle, styleid_t sid, VARIANT *p, DWORD flags);
+
+#define ATTR_FIX_PX      1
+#define ATTR_FIX_URL     2
+#define ATTR_STR_TO_INT  4

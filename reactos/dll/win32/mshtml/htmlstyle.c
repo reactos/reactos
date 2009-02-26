@@ -83,6 +83,8 @@ static const WCHAR attrMarginLeft[] =
     {'m','a','r','g','i','n','-','l','e','f','t',0};
 static const WCHAR attrMarginRight[] =
     {'m','a','r','g','i','n','-','r','i','g','h','t',0};
+static const WCHAR attrMinHeight[] =
+    {'m','i','n','-','h','e','i','g','h','t',0};
 static const WCHAR attrOverflow[] =
     {'o','v','e','r','f','l','o','w',0};
 static const WCHAR attrPaddingLeft[] =
@@ -132,6 +134,7 @@ static const struct{
     {attrMargin,               DISPID_IHTMLSTYLE_MARGIN},
     {attrMarginLeft,           DISPID_IHTMLSTYLE_MARGINLEFT},
     {attrMarginRight,          DISPID_IHTMLSTYLE_MARGINRIGHT},
+    {attrMinHeight,            DISPID_IHTMLSTYLE4_MINHEIGHT},
     {attrOverflow,             DISPID_IHTMLSTYLE_OVERFLOW},
     {attrPaddingLeft,          DISPID_IHTMLSTYLE_PADDINGLEFT},
     {attrPosition,             DISPID_IHTMLSTYLE2_POSITION},
@@ -209,10 +212,6 @@ static LPWSTR fix_url_value(LPCWSTR val)
     return ret;
 }
 
-#define ATTR_FIX_PX      1
-#define ATTR_FIX_URL     2
-#define ATTR_STR_TO_INT  4
-
 HRESULT set_nsstyle_attr(nsIDOMCSSStyleDeclaration *nsstyle, styleid_t sid, LPCWSTR value, DWORD flags)
 {
     nsAString str_name, str_value, str_empty;
@@ -242,7 +241,7 @@ HRESULT set_nsstyle_attr(nsIDOMCSSStyleDeclaration *nsstyle, styleid_t sid, LPCW
     return S_OK;
 }
 
-static HRESULT set_nsstyle_attr_var(nsIDOMCSSStyleDeclaration *nsstyle, styleid_t sid, VARIANT *value, DWORD flags)
+HRESULT set_nsstyle_attr_var(nsIDOMCSSStyleDeclaration *nsstyle, styleid_t sid, VARIANT *value, DWORD flags)
 {
     switch(V_VT(value)) {
     case VT_NULL:
@@ -251,6 +250,13 @@ static HRESULT set_nsstyle_attr_var(nsIDOMCSSStyleDeclaration *nsstyle, styleid_
     case VT_BSTR:
         return set_nsstyle_attr(nsstyle, sid, V_BSTR(value), flags);
 
+    case VT_I4: {
+        WCHAR str[14];
+        static const WCHAR format[] = {'%','d',0};
+
+        wsprintfW(str, format, V_I4(value));
+        return set_nsstyle_attr(nsstyle, sid, str, flags);
+    }
     default:
         FIXME("not implemented vt %d\n", V_VT(value));
         return E_NOTIMPL;
@@ -301,7 +307,7 @@ HRESULT get_nsstyle_attr(nsIDOMCSSStyleDeclaration *nsstyle, styleid_t sid, BSTR
     return S_OK;
 }
 
-static HRESULT get_nsstyle_attr_var(nsIDOMCSSStyleDeclaration *nsstyle, styleid_t sid, VARIANT *p, DWORD flags)
+HRESULT get_nsstyle_attr_var(nsIDOMCSSStyleDeclaration *nsstyle, styleid_t sid, VARIANT *p, DWORD flags)
 {
     nsAString str_value;
     const PRUnichar *value;
@@ -1121,8 +1127,8 @@ static HRESULT WINAPI HTMLStyle_put_marginRight(IHTMLStyle *iface, VARIANT v)
 static HRESULT WINAPI HTMLStyle_get_marginRight(IHTMLStyle *iface, VARIANT *p)
 {
     HTMLStyle *This = HTMLSTYLE_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+    TRACE("(%p)->(%p)\n", This, p);
+    return get_nsstyle_attr_var(This->nsstyle, STYLEID_MARGIN_RIGHT, p, 0);
 }
 
 static HRESULT WINAPI HTMLStyle_put_marginBottom(IHTMLStyle *iface, VARIANT v)
@@ -1186,8 +1192,8 @@ static HRESULT WINAPI HTMLStyle_get_margin(IHTMLStyle *iface, BSTR *p)
 static HRESULT WINAPI HTMLStyle_get_marginLeft(IHTMLStyle *iface, VARIANT *p)
 {
     HTMLStyle *This = HTMLSTYLE_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+    TRACE("(%p)->(%p)\n", This, p);
+    return get_nsstyle_attr_var(This->nsstyle, STYLEID_MARGIN_LEFT, p, 0);
 }
 
 static HRESULT WINAPI HTMLStyle_put_paddingTop(IHTMLStyle *iface, VARIANT v)
@@ -2163,7 +2169,7 @@ static HRESULT WINAPI HTMLStyle_setAttribute(IHTMLStyle *iface, BSTR strAttribut
     if(lFlags == 1)
         FIXME("Parameter lFlags ignored\n");
 
-    hres = HTMLStyle_GetIDsOfNames(iface, &IID_NULL, (LPOLESTR*)&strAttributeName, 1,
+    hres = HTMLStyle_GetIDsOfNames(iface, &IID_NULL, &strAttributeName, 1,
                         LOCALE_USER_DEFAULT, &dispid);
     if(hres == S_OK)
     {
@@ -2205,7 +2211,7 @@ static HRESULT WINAPI HTMLStyle_getAttribute(IHTMLStyle *iface, BSTR strAttribut
     if(lFlags == 1)
         FIXME("Parameter lFlags ignored\n");
 
-    hres = HTMLStyle_GetIDsOfNames(iface, &IID_NULL, (LPOLESTR*)&strAttributeName, 1,
+    hres = HTMLStyle_GetIDsOfNames(iface, &IID_NULL, &strAttributeName, 1,
                         LOCALE_USER_DEFAULT, &dispid);
     if(hres == S_OK)
     {

@@ -40,7 +40,7 @@ typedef struct {
     nsIDOMHTMLTableElement *nstable;
 } HTMLTable;
 
-#define HTMLTABLE(x)  ((IHTMLTable*)  &(x)->lpHTMLTableVtbl)
+#define HTMLTABLE(x)  (&(x)->lpHTMLTableVtbl)
 
 #define HTMLTABLE_THIS(iface) DEFINE_THIS(HTMLTable, HTMLTable, iface)
 

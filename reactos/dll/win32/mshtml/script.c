@@ -63,9 +63,9 @@ typedef struct {
 } ScriptHost;
 
 #define ACTSCPSITE(x)  ((IActiveScriptSite*)               &(x)->lpIActiveScriptSiteVtbl)
-#define ACTSCPPOLL(x)  ((IActiveScriptSiteInterruptPoll*)  &(x)->lpIActiveScriptSiteInterruptPollVtbl)
-#define ACTSCPWIN(x)   ((IActiveScriptSiteWindow*)         &(x)->lpIActiveScriptSiteWindowVtbl)
-#define ACTSCPDBG32(x) ((IActiveScriptSiteDebug32*)        &(x)->lpIActiveScriptSiteDebug32Vtbl)
+#define ACTSCPPOLL(x)  (&(x)->lpIActiveScriptSiteInterruptPollVtbl)
+#define ACTSCPWIN(x)   (&(x)->lpIActiveScriptSiteWindowVtbl)
+#define ACTSCPDBG32(x) (&(x)->lpIActiveScriptSiteDebug32Vtbl)
 
 static BOOL init_script_engine(ScriptHost *script_host)
 {

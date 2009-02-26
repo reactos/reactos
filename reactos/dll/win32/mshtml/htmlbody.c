@@ -42,7 +42,7 @@ typedef struct {
     nsIDOMHTMLBodyElement *nsbody;
 } HTMLBodyElement;
 
-#define HTMLBODY(x)  ((IHTMLBodyElement*)  &(x)->lpHTMLBodyElementVtbl)
+#define HTMLBODY(x)  (&(x)->lpHTMLBodyElementVtbl)
 
 static BOOL variant_to_nscolor(const VARIANT *v, nsAString *nsstr)
 {

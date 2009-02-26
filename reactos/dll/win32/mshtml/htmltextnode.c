@@ -37,7 +37,7 @@ struct HTMLDOMTextNode {
     const IHTMLDOMTextNodeVtbl   *lpIHTMLDOMTextNodeVtbl;
 };
 
-#define HTMLTEXT(x)  ((IHTMLDOMTextNode*)  &(x)->lpIHTMLDOMTextNodeVtbl)
+#define HTMLTEXT(x)  (&(x)->lpIHTMLDOMTextNodeVtbl)
 
 #define HTMLTEXT_THIS(iface) DEFINE_THIS(HTMLDOMTextNode, IHTMLDOMTextNode, iface)
 

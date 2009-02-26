@@ -39,7 +39,7 @@ typedef struct {
     nsIDOMHTMLTableRowElement *nsrow;
 } HTMLTableRow;
 
-#define HTMLTABLEROW(x)  ((IHTMLTableRow*)  &(x)->lpHTMLTableRowVtbl)
+#define HTMLTABLEROW(x)  (&(x)->lpHTMLTableRowVtbl)
 
 #define HTMLTABLEROW_THIS(iface) DEFINE_THIS(HTMLTableRow, HTMLTableRow, iface)
 

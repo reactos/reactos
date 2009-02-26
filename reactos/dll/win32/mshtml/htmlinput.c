@@ -41,7 +41,7 @@ typedef struct {
 } HTMLInputElement;
 
 #define HTMLINPUT(x)      ((IHTMLInputElement*)      &(x)->lpHTMLInputElementVtbl)
-#define HTMLINPUTTEXT(x)  ((IHTMLInputTextElement*)  &(x)->lpHTMLInputTextElementVtbl)
+#define HTMLINPUTTEXT(x)  (&(x)->lpHTMLInputTextElementVtbl)
 
 #define HTMLINPUT_THIS(iface) DEFINE_THIS(HTMLInputElement, HTMLInputElement, iface)
 

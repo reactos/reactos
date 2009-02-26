@@ -72,7 +72,7 @@ HRESULT WINAPI DllCanUnloadNow(void)
 /**********************************************************************
  * OBJSEL_IDsObjectPicker_Destroy (also IUnknown)
  */
-static VOID WINAPI OBJSEL_IDsObjectPicker_Destroy(IDsObjectPickerImpl *This)
+static VOID OBJSEL_IDsObjectPicker_Destroy(IDsObjectPickerImpl *This)
 {
     HeapFree(GetProcessHeap(),
              0,
@@ -142,7 +142,7 @@ static HRESULT WINAPI OBJSEL_IDsObjectPicker_QueryInterface(
     if (IsEqualGUID(riid, &IID_IUnknown) ||
 	IsEqualGUID(riid, &IID_IDsObjectPicker))
     {
-	*ppvObj = (LPVOID)iface;
+        *ppvObj = iface;
 	OBJSEL_IDsObjectPicker_AddRef(iface);
 	return S_OK;
     }

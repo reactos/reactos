@@ -54,11 +54,6 @@ static const WCHAR mshtml_keyW[] =
      '\\','W','i','n','e',
      '\\','M','S','H','T','M','L',0};
 
-static const CHAR mshtml_keyA[] =
-    {'S','o','f','t','w','a','r','e',
-    '\\','W','i','n','e',
-    '\\','M','S','H','T','M','L',0};
-
 static HWND install_dialog = NULL;
 static LPWSTR tmp_file_name = NULL;
 static HANDLE tmp_file = INVALID_HANDLE_VALUE;
@@ -224,18 +219,23 @@ static BOOL install_from_unix_file(const char *file_name)
 static BOOL install_from_registered_dir(void)
 {
     char *file_name;
+    HKEY hkey;
     DWORD res, type, size = MAX_PATH;
     BOOL ret;
 
-    file_name = heap_alloc(size+sizeof(GECKO_FILE_NAME));
     /* @@ Wine registry key: HKCU\Software\Wine\MSHTML */
-    res = RegGetValueA(HKEY_CURRENT_USER, mshtml_keyA, "GeckoCabDir", RRF_RT_ANY, &type, (PBYTE)file_name, &size);
+    res = RegOpenKeyW(HKEY_CURRENT_USER, mshtml_keyW, &hkey);
+    if(res != ERROR_SUCCESS)
+        return FALSE;
+
+    file_name = heap_alloc(size+sizeof(GECKO_FILE_NAME));
+    res = RegQueryValueExA(hkey, "GeckoCabDir", NULL, &type, (PBYTE)file_name, &size);
     if(res == ERROR_MORE_DATA) {
         file_name = heap_realloc(file_name, size+sizeof(GECKO_FILE_NAME));
-        res = RegGetValueA(HKEY_CURRENT_USER, mshtml_keyA, "GeckoCabDir", RRF_RT_ANY, &type, (PBYTE)file_name, &size);
+        res = RegQueryValueExA(hkey, "GeckoCabDir", NULL, &type, (PBYTE)file_name, &size);
     }
-    
-    if(res != ERROR_SUCCESS || (type != REG_SZ && type != REG_EXPAND_SZ)) {
+    RegCloseKey(hkey);
+    if(res != ERROR_SUCCESS || type != REG_SZ) {
         heap_free(file_name);
         return FALSE;
     }

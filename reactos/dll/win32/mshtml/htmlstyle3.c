@@ -409,15 +409,19 @@ static HRESULT WINAPI HTMLStyle4_get_textOverflow(IHTMLStyle4 *iface, BSTR *p)
 static HRESULT WINAPI HTMLStyle4_put_minHeight(IHTMLStyle4 *iface, VARIANT v)
 {
     HTMLStyle *This = HTMLSTYLE4_THIS(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_variant(&v));
+
+    return set_nsstyle_attr_var(This->nsstyle, STYLEID_MIN_HEIGHT, &v, 0);
 }
 
 static HRESULT WINAPI HTMLStyle4_get_minHeight(IHTMLStyle4 *iface, VARIANT *p)
 {
     HTMLStyle *This = HTMLSTYLE4_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    return get_nsstyle_attr_var(This->nsstyle, STYLEID_MIN_HEIGHT, p, 0);
 }
 
 static const IHTMLStyle4Vtbl HTMLStyle4Vtbl = {
