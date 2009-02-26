@@ -2,7 +2,7 @@
 @ stub CMP_GetBlockedDriverInfo
 @ stub CMP_GetServerSideDeviceInstallFlags
 @ stdcall CMP_Init_Detection(long)
-@ stub CMP_RegisterNotification
+@ stdcall CMP_RegisterNotification( ptr ptr long ptr)
 @ stdcall CMP_Report_LogOn(long long)
 @ stub CMP_UnregisterNotification
 @ stdcall CMP_WaitNoPendingInstallEvents(long)
