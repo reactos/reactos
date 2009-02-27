@@ -161,7 +161,6 @@ SysAudioRegisterNotifications(
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("IoRegisterPlugPlayNotification failed with %x\n", Status);
-        return Status;
     }
 
     Status = IoRegisterPlugPlayNotification(EventCategoryDeviceInterfaceChange,
