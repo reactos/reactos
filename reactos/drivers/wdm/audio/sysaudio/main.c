@@ -133,7 +133,7 @@ SysAudio_InstallDevice(
     }
 
     Status = SysAudioRegisterNotifications(DriverObject,
-                                         DeviceExtension);
+                                           DeviceObject);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to register device notifications\n");

@@ -21,6 +21,93 @@ const GUID GUID_DEVICE_INTERFACE_REMOVAL       = {0xCB3A4005L, 0x46F0, 0x11D0, {
 const GUID KS_CATEGORY_AUDIO                   = {0x6994AD04L, 0x93EF, 0x11D0, {0xA3, 0xCC, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}};
 const GUID DMOCATEGORY_ACOUSTIC_ECHO_CANCEL    = {0xBF963D80L, 0xC559, 0x11D0, {0x8A, 0x2B, 0x00, 0xA0, 0xC9, 0x25, 0x5A, 0xC1}};
 
+VOID
+NTAPI
+FilterPinWorkerRoutine(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PVOID  Context)
+{
+    KSPROPERTY PropertyRequest;
+    KSP_PIN PinRequest;
+    KSPIN_DATAFLOW DataFlow;
+    KSPIN_COMMUNICATION Communication;
+    KSPIN_CINSTANCES PinInstances;
+    ULONG Count, Index;
+    NTSTATUS Status;
+    ULONG BytesReturned;
+    PKSAUDIO_DEVICE_ENTRY DeviceEntry = (PKSAUDIO_DEVICE_ENTRY)Context;
+
+
+    DPRINT1("Querying filter...\n");
+
+    PropertyRequest.Set = KSPROPSETID_Pin;
+    PropertyRequest.Flags = KSPROPERTY_TYPE_GET;
+    PropertyRequest.Id = KSPROPERTY_PIN_CTYPES;
+
+    /* query for num of pins */
+    Status = KsSynchronousIoControlDevice(DeviceEntry->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PropertyRequest, sizeof(KSPROPERTY), (PVOID)&Count, sizeof(ULONG), &BytesReturned);
+    if (!NT_SUCCESS(Status))
+    {
+        return;
+    }
+
+    if (!Count)
+        return;
+
+    /* allocate pin array */
+    DeviceEntry->Pins = ExAllocatePool(NonPagedPool, Count * sizeof(PIN_INFO));
+    if (!DeviceEntry->Pins)
+    {
+        /* no memory */
+        return;
+    }
+    /* clear array */
+    RtlZeroMemory(DeviceEntry->Pins, sizeof(PIN_INFO) * Count);
+    DeviceEntry->NumberOfPins = Count;
+
+    for(Index = 0; Index < Count; Index++)
+    {
+        /* get max instance count */
+        PinRequest.PinId = Index;
+        PinRequest.Property.Set = KSPROPSETID_Pin;
+        PinRequest.Property.Flags = KSPROPERTY_TYPE_GET;
+        PinRequest.Property.Id = KSPROPERTY_PIN_CINSTANCES;
+
+        Status = KsSynchronousIoControlDevice(DeviceEntry->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PinRequest, sizeof(KSP_PIN), (PVOID)&PinInstances, sizeof(KSPIN_CINSTANCES), &BytesReturned);
+        if (NT_SUCCESS(Status))
+        {
+            DeviceEntry->Pins[Index].MaxPinInstanceCount = PinInstances.PossibleCount;
+        }
+
+        /* get dataflow direction */
+        PinRequest.Property.Id = KSPROPERTY_PIN_DATAFLOW;
+        Status = KsSynchronousIoControlDevice(DeviceEntry->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PinRequest, sizeof(KSP_PIN), (PVOID)&DataFlow, sizeof(KSPIN_DATAFLOW), &BytesReturned);
+        if (NT_SUCCESS(Status))
+        {
+            DeviceEntry->Pins[Index].DataFlow = DataFlow;
+        }
+
+        /* get irp flow direction */
+        PinRequest.Property.Id = KSPROPERTY_PIN_COMMUNICATION;
+        Status = KsSynchronousIoControlDevice(DeviceEntry->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PinRequest, sizeof(KSP_PIN), (PVOID)&Communication, sizeof(KSPIN_COMMUNICATION), &BytesReturned);
+        if (NT_SUCCESS(Status))
+        {
+            DeviceEntry->Pins[Index].Communication = Communication;
+        }
+
+        if (Communication == KSPIN_COMMUNICATION_SINK && DataFlow == KSPIN_DATAFLOW_IN)
+            DeviceEntry->NumWaveOutPin++;
+
+        if (Communication == KSPIN_COMMUNICATION_SINK && DataFlow == KSPIN_DATAFLOW_OUT)
+            DeviceEntry->NumWaveInPin++;
+
+    }
+
+    DPRINT1("Num Pins %u Num WaveIn Pins %u Name WaveOut Pins %u\n", DeviceEntry->NumberOfPins, DeviceEntry->NumWaveInPin, DeviceEntry->NumWaveOutPin);
+}
+
+
+
 
 NTSTATUS
 NTAPI
@@ -29,8 +116,11 @@ DeviceInterfaceChangeCallback(
     IN PVOID Context)
 {
     DEVICE_INTERFACE_CHANGE_NOTIFICATION * Event;
-    SYSAUDIODEVEXT *DeviceExtension = (SYSAUDIODEVEXT*)Context;
     NTSTATUS Status = STATUS_SUCCESS;
+    PSYSAUDIODEVEXT DeviceExtension;
+    PDEVICE_OBJECT DeviceObject = (PDEVICE_OBJECT)Context;
+
+    DeviceExtension = (PSYSAUDIODEVEXT)DeviceObject->DeviceExtension;
 
     Event = (DEVICE_INTERFACE_CHANGE_NOTIFICATION*)NotificationStructure;
 
@@ -44,7 +134,7 @@ DeviceInterfaceChangeCallback(
         HANDLE NodeHandle;
         IO_STATUS_BLOCK IoStatusBlock;
         OBJECT_ATTRIBUTES ObjectAttributes;
-
+        PIO_WORKITEM WorkItem;
 
         DeviceEntry = ExAllocatePool(NonPagedPool, sizeof(KSAUDIO_DEVICE_ENTRY));
         if (!DeviceEntry)
@@ -116,10 +206,16 @@ DeviceInterfaceChangeCallback(
         DeviceEntry->Handle = NodeHandle;
         DeviceEntry->FileObject = FileObject;
 
-        InsertTailList(&DeviceExtension->KsAudioDeviceList, &DeviceEntry->Entry);
+        DPRINT1("Successfully opened audio device %u handle %p file object %p device object %p\n", DeviceExtension->KsAudioDeviceList, NodeHandle, FileObject, FileObject->DeviceObject);
         DeviceExtension->NumberOfKsAudioDevices++;
 
-        DPRINT1("Successfully opened audio device handle %p file object %p device object %p\n", NodeHandle, FileObject, FileObject->DeviceObject);
+        WorkItem = IoAllocateWorkItem(DeviceObject);
+        if (WorkItem)
+        {
+            IoQueueWorkItem(WorkItem, FilterPinWorkerRoutine, DelayedWorkQueue, (PVOID)DeviceEntry);
+        }
+        InsertTailList(&DeviceExtension->KsAudioDeviceList, &DeviceEntry->Entry);
+
         return Status;
     }
     else if (IsEqualGUIDAligned(&Event->Event,
@@ -144,18 +240,20 @@ DeviceInterfaceChangeCallback(
 
 NTSTATUS
 SysAudioRegisterNotifications(
-    IN  PDRIVER_OBJECT  DriverObject,
-    SYSAUDIODEVEXT *DeviceExtension)
+    IN PDRIVER_OBJECT  DriverObject,
+    IN PDEVICE_OBJECT DeviceObject)
 {
     NTSTATUS Status;
+    PSYSAUDIODEVEXT DeviceExtension;
 
+    DeviceExtension = (PSYSAUDIODEVEXT)DeviceObject->DeviceExtension;
 
     Status = IoRegisterPlugPlayNotification(EventCategoryDeviceInterfaceChange,
                                             PNPNOTIFY_DEVICE_INTERFACE_INCLUDE_EXISTING_INTERFACES,
                                             (PVOID)&KS_CATEGORY_AUDIO,
                                             DriverObject,
                                             DeviceInterfaceChangeCallback,
-                                            (PVOID)DeviceExtension,
+                                            (PVOID)DeviceObject,
                                             (PVOID*)&DeviceExtension->KsAudioNotificationEntry);
 
     if (!NT_SUCCESS(Status))
@@ -168,7 +266,7 @@ SysAudioRegisterNotifications(
                                             (PVOID)&DMOCATEGORY_ACOUSTIC_ECHO_CANCEL,
                                             DriverObject,
                                             DeviceInterfaceChangeCallback,
-                                            (PVOID)DeviceExtension,
+                                            (PVOID)DeviceObject,
                                             (PVOID*)&DeviceExtension->EchoCancelNotificationEntry);
 
     if (!NT_SUCCESS(Status))

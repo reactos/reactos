@@ -308,6 +308,295 @@ CreatePinWorkerRoutine(
     ExFreePool(WorkerContext);
 }
 
+NTSTATUS
+HandleSysAudioFilterPinProperties(
+    PIRP Irp,
+    PKSPROPERTY Property,
+    PSYSAUDIODEVEXT DeviceExtension)
+{
+    PIO_STACK_LOCATION IoStack;
+    NTSTATUS Status;
+    PKSAUDIO_DEVICE_ENTRY Entry;
+    ULONG BytesReturned;
+    PKSP_PIN Pin;
+
+    // in order to access pin properties of a sysaudio device
+    // the caller must provide a KSP_PIN struct, where
+    // Reserved member points to virtual device index
+
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+    if (IoStack->Parameters.DeviceIoControl.InputBufferLength < sizeof(KSP_PIN))
+    {
+        /* too small buffer */
+        return SetIrpIoStatus(Irp, STATUS_BUFFER_TOO_SMALL, sizeof(KSPROPERTY) + sizeof(ULONG));
+    }
+
+    Pin = (PKSP_PIN)Property;
+
+    Entry = GetListEntry(&DeviceExtension->KsAudioDeviceList, ((KSP_PIN*)Property)->Reserved);
+    if (!Entry)
+    {
+        /* invalid device index */
+        return SetIrpIoStatus(Irp, STATUS_INVALID_PARAMETER, 0);
+    }
+
+    if (!Entry->Pins)
+    {
+        /* expected pins */
+        return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, 0);
+    }
+
+    if (Entry->NumberOfPins <= Pin->PinId)
+    {
+        /* invalid pin id */
+        return SetIrpIoStatus(Irp, STATUS_INVALID_PARAMETER, 0);
+    }
+
+    if (Property->Id == KSPROPERTY_PIN_CTYPES)
+    {
+        if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(ULONG))
+        {
+            /* too small buffer */
+            return SetIrpIoStatus(Irp, STATUS_BUFFER_TOO_SMALL, sizeof(ULONG));
+        }
+        /* store result */
+        *((PULONG)Irp->UserBuffer) = Entry->NumberOfPins;
+        return SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(ULONG));
+    }
+    else if (Property->Id == KSPROPERTY_PIN_COMMUNICATION)
+    {
+        if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(KSPIN_COMMUNICATION))
+        {
+            /* too small buffer */
+            return SetIrpIoStatus(Irp, STATUS_BUFFER_TOO_SMALL, sizeof(KSPIN_COMMUNICATION));
+        }
+        /* store result */
+        *((KSPIN_COMMUNICATION*)Irp->UserBuffer) = Entry->Pins[Pin->PinId].Communication;
+        return SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(KSPIN_COMMUNICATION));
+
+    }
+    else if (Property->Id == KSPROPERTY_PIN_DATAFLOW)
+    {
+        if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(KSPIN_DATAFLOW))
+        {
+            /* too small buffer */
+            return SetIrpIoStatus(Irp, STATUS_BUFFER_TOO_SMALL, sizeof(KSPIN_DATAFLOW));
+        }
+        /* store result */
+        *((KSPIN_DATAFLOW*)Irp->UserBuffer) = Entry->Pins[Pin->PinId].DataFlow;
+        return SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(KSPIN_DATAFLOW));
+    }
+    else
+    {
+        /* forward request to the filter implementing the property */
+        Status = KsSynchronousIoControlDevice(Entry->FileObject, KernelMode, IOCTL_KS_PROPERTY,
+                                             (PVOID)IoStack->Parameters.DeviceIoControl.Type3InputBuffer,
+                                             IoStack->Parameters.DeviceIoControl.InputBufferLength,
+                                             Irp->UserBuffer,
+                                             IoStack->Parameters.DeviceIoControl.OutputBufferLength,
+                                             &BytesReturned);
+
+        return SetIrpIoStatus(Irp, Status, BytesReturned);
+    }
+}
+
+NTSTATUS
+HandleSysAudioFilterPinCreation(
+    PIRP Irp,
+    PKSPROPERTY Property,
+    PSYSAUDIODEVEXT DeviceExtension,
+    PDEVICE_OBJECT DeviceObject)
+{
+    ULONG Length, BytesReturned;
+    PKSAUDIO_DEVICE_ENTRY Entry;
+    KSPIN_CONNECT * PinConnect;
+    PIO_STACK_LOCATION IoStack;
+    PSYSAUDIO_INSTANCE_INFO InstanceInfo;
+    PSYSAUDIO_CLIENT ClientInfo;
+    PKSOBJECT_CREATE_ITEM CreateItem;
+    KSP_PIN PinRequest;
+    NTSTATUS Status;
+    KSPIN_CINSTANCES PinInstances;
+    PIO_WORKITEM WorkItem;
+    PFILE_OBJECT FileObject;
+    PPIN_WORKER_CONTEXT WorkerContext;
+    PDISPATCH_CONTEXT DispatchContext;
+
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    Length = sizeof(KSDATAFORMAT) + sizeof(KSPIN_CONNECT) + sizeof(SYSAUDIO_INSTANCE_INFO);
+    if (IoStack->Parameters.DeviceIoControl.InputBufferLength < Length ||
+        IoStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(HANDLE))
+    {
+        /* invalid parameters */
+        return SetIrpIoStatus(Irp, STATUS_INVALID_PARAMETER, 0);
+    }
+
+    /* access the create item */
+    CreateItem = KSCREATE_ITEM_IRP_STORAGE(Irp);
+
+    /* get input parameter */
+    InstanceInfo = (PSYSAUDIO_INSTANCE_INFO)Property;
+    if (DeviceExtension->NumberOfKsAudioDevices <= InstanceInfo->DeviceNumber)
+    {
+        /* invalid parameters */
+        return SetIrpIoStatus(Irp, STATUS_INVALID_PARAMETER, 0);
+    }
+
+    /* get client context */
+    ClientInfo = (PSYSAUDIO_CLIENT)CreateItem->Context;
+    if (!ClientInfo || !ClientInfo->NumDevices || !ClientInfo->Devs ||
+        ClientInfo->Devs[ClientInfo->NumDevices-1].DeviceId != InstanceInfo->DeviceNumber)
+    {
+        /* we have a problem */
+        KeBugCheckEx(0, 0, 0, 0, 0);
+    }
+
+    /* get sysaudio entry */
+    Entry = GetListEntry(&DeviceExtension->KsAudioDeviceList, InstanceInfo->DeviceNumber);
+    if (!Entry)
+    {
+        /* invalid device index */
+        return SetIrpIoStatus(Irp, STATUS_INVALID_PARAMETER, 0);
+    }
+
+    if (!Entry->Pins)
+    {
+        /* should not happen */
+        return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, 0);
+    }
+
+    /* get connect details */
+    PinConnect = (KSPIN_CONNECT*)(InstanceInfo + 1);
+
+    if (Entry->NumberOfPins <= PinConnect->PinId)
+    {
+        DPRINT("Invalid PinId %x\n", PinConnect->PinId);
+        return SetIrpIoStatus(Irp, STATUS_INVALID_PARAMETER, 0);
+    }
+
+    PinRequest.PinId = PinConnect->PinId;
+    PinRequest.Property.Set = KSPROPSETID_Pin;
+    PinRequest.Property.Flags = KSPROPERTY_TYPE_GET;
+    PinRequest.Property.Id = KSPROPERTY_PIN_CINSTANCES;
+
+    Status = KsSynchronousIoControlDevice(Entry->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PinRequest, sizeof(KSP_PIN), (PVOID)&PinInstances, sizeof(KSPIN_CINSTANCES), &BytesReturned);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("Property Request KSPROPERTY_PIN_GLOBALCINSTANCES failed with %x\n", Status);
+        return SetIrpIoStatus(Irp, Status, 0);
+    }
+
+    if (PinInstances.PossibleCount == 0)
+    {
+        /* caller wanted to open an instance-less pin */
+        return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, 0);
+    }
+
+    if (PinInstances.CurrentCount == PinInstances.PossibleCount)
+    {
+        /* pin already exists */
+        ASSERT(Entry->Pins[PinConnect->PinId].PinHandle != NULL);
+        if (Entry->Pins[PinConnect->PinId].References > 1)
+        {
+            /* FIXME need ksmixer */
+            DPRINT1("Device %u Pin %u References %u is already occupied, try later\n", InstanceInfo->DeviceNumber, PinConnect->PinId, Entry->Pins[PinConnect->PinId].References);
+            return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, 0);
+        }
+    }
+
+    WorkItem = IoAllocateWorkItem(DeviceObject);
+    if (!WorkItem)
+    {
+        Irp->IoStatus.Information = 0;
+        Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* create worker context */
+    WorkerContext = ExAllocatePool(NonPagedPool, sizeof(PIN_WORKER_CONTEXT));
+    if (!WorkerContext)
+    {
+        /* invalid parameters */
+        IoFreeWorkItem(WorkItem);
+        return SetIrpIoStatus(Irp, STATUS_NO_MEMORY, 0);
+    }
+
+    /* create worker context */
+    DispatchContext = ExAllocatePool(NonPagedPool, sizeof(DISPATCH_CONTEXT));
+    if (!DispatchContext)
+    {
+        /* invalid parameters */
+        IoFreeWorkItem(WorkItem);
+        ExFreePool(WorkerContext);
+        return SetIrpIoStatus(Irp, STATUS_NO_MEMORY, 0);
+    }
+    /* prepare context */
+    RtlZeroMemory(WorkerContext, sizeof(PIN_WORKER_CONTEXT));
+    RtlZeroMemory(DispatchContext, sizeof(DISPATCH_CONTEXT));
+
+    if (PinInstances.CurrentCount == PinInstances.PossibleCount)
+    {
+        /* re-using pin */
+        PinRequest.Property.Set = KSPROPSETID_Connection;
+        PinRequest.Property.Flags = KSPROPERTY_TYPE_SET;
+        PinRequest.Property.Id = KSPROPERTY_CONNECTION_DATAFORMAT;
+
+        /* get pin file object */
+        Status = ObReferenceObjectByHandle(Entry->Pins[PinConnect->PinId].PinHandle,
+                                           GENERIC_READ | GENERIC_WRITE, 
+                                           IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
+
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Failed to get pin file object with %x\n", Status);
+            IoFreeWorkItem(WorkItem);
+            ExFreePool(WorkerContext);
+            ExFreePool(DispatchContext);
+            return SetIrpIoStatus(Irp, Status, 0);
+        }
+
+        Length -= sizeof(KSPIN_CONNECT) + sizeof(SYSAUDIO_INSTANCE_INFO);
+        Status = KsSynchronousIoControlDevice(FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PinRequest, sizeof(KSPROPERTY),
+                                              (PVOID)(PinConnect + 1), Length, &BytesReturned);
+
+        ObDereferenceObject(FileObject);
+
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Failed to set format with Status %x\n", Status);
+            IoFreeWorkItem(WorkItem);
+            ExFreePool(WorkerContext);
+            ExFreePool(DispatchContext);
+            return SetIrpIoStatus(Irp, Status, 0);
+        }
+
+    }
+    else
+    {
+        /* create the real pin */
+        WorkerContext->CreateRealPin = TRUE;
+    }
+
+    /* set up context */
+
+    WorkerContext->DispatchContext = DispatchContext;
+    WorkerContext->Entry = Entry;
+    WorkerContext->Irp = Irp;
+    WorkerContext->PinConnect = PinConnect;
+    WorkerContext->AudioClient = ClientInfo;
+
+    DPRINT("Queing Irp %p\n", Irp);
+    /* queue the work item */
+    IoMarkIrpPending(Irp);
+    Irp->IoStatus.Status = STATUS_PENDING;
+    Irp->IoStatus.Information = 0;
+    IoQueueWorkItem(WorkItem, CreatePinWorkerRoutine, DelayedWorkQueue, (PVOID)WorkerContext);
+
+    /* mark irp as pending */
+    return STATUS_PENDING;
+}
 
 NTSTATUS
 SysAudioHandleProperty(
@@ -327,24 +616,15 @@ SysAudioHandleProperty(
     ULONG Count, BytesReturned;
     PKSOBJECT_CREATE_ITEM CreateItem;
     UNICODE_STRING GuidString;
-    ULONG Length;
-    KSPIN_CONNECT * PinConnect;
-    KSP_PIN PinRequest;
-    KSPIN_CINSTANCES PinInstances;
-    PPIN_WORKER_CONTEXT WorkerContext;
-    PDISPATCH_CONTEXT DispatchContext;
-    PIO_WORKITEM WorkItem;
-    PFILE_OBJECT FileObject;
 
     /* access the create item */
     CreateItem = KSCREATE_ITEM_IRP_STORAGE(Irp);
-
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
     if (IoStack->Parameters.DeviceIoControl.InputBufferLength < sizeof(KSPROPERTY))
     {
-        /* buffer must be atleast of sizeof KSPROPERTY */
+        /* buffer must be at least of sizeof KSPROPERTY */
         return SetIrpIoStatus(Irp, STATUS_BUFFER_TOO_SMALL, sizeof(KSPROPERTY));
     }
 
@@ -353,33 +633,7 @@ SysAudioHandleProperty(
 
     if (IsEqualGUIDAligned(&Property->Set, &KSPROPSETID_Pin))
     {
-        /* ros specific request */
-        if (Property->Id == KSPROPERTY_PIN_DATARANGES)
-        {
-            if (IoStack->Parameters.DeviceIoControl.InputBufferLength < sizeof(KSP_PIN))
-            {
-                /* too small buffer */
-                return SetIrpIoStatus(Irp, STATUS_BUFFER_TOO_SMALL, sizeof(KSPROPERTY) + sizeof(ULONG));
-            }
-
-            Entry = GetListEntry(&DeviceExtension->KsAudioDeviceList, ((KSP_PIN*)Property)->Reserved);
-            if (!Entry)
-            {
-                /* too small buffer */
-                return SetIrpIoStatus(Irp, STATUS_INVALID_PARAMETER, 0);
-            }
-
-            Status = KsSynchronousIoControlDevice(Entry->FileObject, KernelMode, IOCTL_KS_PROPERTY,
-                                                  (PVOID)IoStack->Parameters.DeviceIoControl.Type3InputBuffer,
-                                                  IoStack->Parameters.DeviceIoControl.InputBufferLength,
-                                                  Irp->UserBuffer,
-                                                  IoStack->Parameters.DeviceIoControl.OutputBufferLength,
-                                                  &BytesReturned);
-            Irp->IoStatus.Status = Status;
-            Irp->IoStatus.Information = BytesReturned;
-            IoCompleteRequest(Irp, IO_NO_INCREMENT);
-            return Status;
-        }
+        return HandleSysAudioFilterPinProperties(Irp, Property, DeviceExtension);
     }
     else if (IsEqualGUIDAligned(&Property->Set, &KSPROPSETID_Sysaudio))
     {
@@ -428,6 +682,7 @@ SysAudioHandleProperty(
                 /* too small buffer */
                 return SetIrpIoStatus(Irp, STATUS_BUFFER_TOO_SMALL, sizeof(ULONG));
             }
+
             *((PULONG)Irp->UserBuffer) = DeviceExtension->NumberOfKsAudioDevices;
             return SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(ULONG));
         }
@@ -504,187 +759,7 @@ SysAudioHandleProperty(
         {
             /* ros specific pin creation request */
             DPRINT1("Initiating create request\n");
-
-            Length = sizeof(KSDATAFORMAT) + sizeof(KSPIN_CONNECT) + sizeof(SYSAUDIO_INSTANCE_INFO);
-            if (IoStack->Parameters.DeviceIoControl.InputBufferLength < Length ||
-                IoStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(HANDLE))
-            {
-                /* invalid parameters */
-                return SetIrpIoStatus(Irp, STATUS_INVALID_PARAMETER, 0);
-            }
-
-            /* get input parameter */
-            InstanceInfo = (PSYSAUDIO_INSTANCE_INFO)Property;
-            if (DeviceExtension->NumberOfKsAudioDevices <= InstanceInfo->DeviceNumber)
-            {
-                /* invalid parameters */
-                return SetIrpIoStatus(Irp, STATUS_INVALID_PARAMETER, 0);
-            }
-
-            /* get client context */
-            ClientInfo = (PSYSAUDIO_CLIENT)CreateItem->Context;
-            ASSERT(ClientInfo);
-            ASSERT(ClientInfo->NumDevices >= 1);
-            ASSERT(ClientInfo->Devs != NULL);
-            ASSERT(ClientInfo->Devs[ClientInfo->NumDevices-1].DeviceId == InstanceInfo->DeviceNumber);
-
-            /* get sysaudio entry */
-            Entry = GetListEntry(&DeviceExtension->KsAudioDeviceList, InstanceInfo->DeviceNumber);
-            ASSERT(Entry != NULL);
-
-            if (!Entry->Pins)
-            {
-                PropertyRequest.Set = KSPROPSETID_Pin;
-                PropertyRequest.Flags = KSPROPERTY_TYPE_GET;
-                PropertyRequest.Id = KSPROPERTY_PIN_CTYPES;
-
-                /* query for num of pins */
-                Status = KsSynchronousIoControlDevice(Entry->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PropertyRequest, sizeof(KSPROPERTY), (PVOID)&Count, sizeof(ULONG), &BytesReturned);
-                if (!NT_SUCCESS(Status))
-                {
-                    DPRINT("Property Request KSPROPERTY_PIN_CTYPES failed with %x\n", Status);
-                    return SetIrpIoStatus(Irp, Status, 0);
-                }
-                DPRINT("KSPROPERTY_TYPE_GET num pins %d\n", Count);
-
-                Entry->Pins = ExAllocatePool(NonPagedPool, Count * sizeof(PIN_INFO));
-                if (!Entry->Pins)
-                {
-                    /* invalid parameters */
-                    return SetIrpIoStatus(Irp, STATUS_NO_MEMORY, 0);
-                }
-                /* clear array */
-                RtlZeroMemory(Entry->Pins, sizeof(PIN_INFO) * Count);
-                Entry->NumberOfPins = Count;
-
-            }
-
-            /* get connect details */
-            PinConnect = (KSPIN_CONNECT*)(InstanceInfo + 1);
-
-            if (Entry->NumberOfPins <= PinConnect->PinId)
-            {
-                DPRINT("Invalid PinId %x\n", PinConnect->PinId);
-                return SetIrpIoStatus(Irp, STATUS_INVALID_PARAMETER, 0);
-            }
-
-            PinRequest.PinId = PinConnect->PinId;
-            PinRequest.Property.Set = KSPROPSETID_Pin;
-            PinRequest.Property.Flags = KSPROPERTY_TYPE_GET;
-            PinRequest.Property.Id = KSPROPERTY_PIN_CINSTANCES;
-
-            Status = KsSynchronousIoControlDevice(Entry->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PinRequest, sizeof(KSP_PIN), (PVOID)&PinInstances, sizeof(KSPIN_CINSTANCES), &BytesReturned);
-            if (!NT_SUCCESS(Status))
-            {
-                DPRINT("Property Request KSPROPERTY_PIN_GLOBALCINSTANCES failed with %x\n", Status);
-                return SetIrpIoStatus(Irp, Status, 0);
-            }
-            DPRINT("PinInstances Current %u Max %u\n", PinInstances.CurrentCount, PinInstances.PossibleCount);
-            Entry->Pins[PinConnect->PinId].MaxPinInstanceCount = PinInstances.PossibleCount;
-
-            WorkItem = IoAllocateWorkItem(DeviceObject);
-            if (!WorkItem)
-            {
-                Irp->IoStatus.Information = 0;
-                Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
-                IoCompleteRequest(Irp, IO_NO_INCREMENT);
-                return STATUS_INSUFFICIENT_RESOURCES;
-            }
-
-            /* create worker context */
-            WorkerContext = ExAllocatePool(NonPagedPool, sizeof(PIN_WORKER_CONTEXT));
-            if (!WorkerContext)
-            {
-                /* invalid parameters */
-                IoFreeWorkItem(WorkItem);
-                return SetIrpIoStatus(Irp, STATUS_NO_MEMORY, 0);
-            }
-
-            /* create worker context */
-            DispatchContext = ExAllocatePool(NonPagedPool, sizeof(DISPATCH_CONTEXT));
-            if (!DispatchContext)
-            {
-                /* invalid parameters */
-                IoFreeWorkItem(WorkItem);
-                ExFreePool(WorkerContext);
-                return SetIrpIoStatus(Irp, STATUS_NO_MEMORY, 0);
-            }
-            /* prepare context */
-            RtlZeroMemory(WorkerContext, sizeof(PIN_WORKER_CONTEXT));
-            RtlZeroMemory(DispatchContext, sizeof(DISPATCH_CONTEXT));
-
-            if (PinInstances.CurrentCount == PinInstances.PossibleCount)
-            {
-                /* pin already exists */
-                ASSERT(Entry->Pins[PinConnect->PinId].PinHandle != NULL);
-
-                if (Entry->Pins[PinConnect->PinId].References > 1)
-                {
-                    /* FIXME need ksmixer */
-                    DPRINT1("Device %u Pin %u References %u is already occupied, try later\n", InstanceInfo->DeviceNumber, PinConnect->PinId, Entry->Pins[PinConnect->PinId].References);
-                    IoFreeWorkItem(WorkItem);
-                    ExFreePool(WorkerContext);
-                    ExFreePool(DispatchContext);
-                    return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, 0);
-                }
-                /* re-using pin */
-                PropertyRequest.Set = KSPROPSETID_Connection;
-                PropertyRequest.Flags = KSPROPERTY_TYPE_SET;
-                PropertyRequest.Id = KSPROPERTY_CONNECTION_DATAFORMAT;
-
-                /* get pin file object */
-                Status = ObReferenceObjectByHandle(Entry->Pins[PinConnect->PinId].PinHandle,
-                                                   GENERIC_READ | GENERIC_WRITE, 
-                                                   IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
-
-                if (!NT_SUCCESS(Status))
-                {
-                    DPRINT1("Failed to get pin file object with %x\n", Status);
-                    IoFreeWorkItem(WorkItem);
-                    ExFreePool(WorkerContext);
-                    ExFreePool(DispatchContext);
-                    return SetIrpIoStatus(Irp, Status, 0);
-                }
-
-                Length -= sizeof(KSPIN_CONNECT) + sizeof(SYSAUDIO_INSTANCE_INFO);
-                Status = KsSynchronousIoControlDevice(FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PropertyRequest, sizeof(KSPROPERTY), 
-                                                      (PVOID)(PinConnect + 1), Length, &BytesReturned);
-
-                ObDereferenceObject(FileObject);
-
-                if (!NT_SUCCESS(Status))
-                {
-                    DPRINT1("Failed to set format with Status %x\n", Status);
-                    IoFreeWorkItem(WorkItem);
-                    ExFreePool(WorkerContext);
-                    ExFreePool(DispatchContext);
-                    return SetIrpIoStatus(Irp, Status, 0);
-                }
-
-            }
-            else
-            {
-                /* create the real pin */
-                WorkerContext->CreateRealPin = TRUE;
-            }
-
-            /* set up context */
-
-            WorkerContext->DispatchContext = DispatchContext;
-            WorkerContext->Entry = Entry;
-            WorkerContext->Irp = Irp;
-            WorkerContext->PinConnect = PinConnect;
-            WorkerContext->AudioClient = ClientInfo;
-
-            DPRINT("Queing Irp %p\n", Irp);
-            /* queue the work item */
-            IoMarkIrpPending(Irp);
-            Irp->IoStatus.Status = STATUS_PENDING;
-            Irp->IoStatus.Information = 0;
-            IoQueueWorkItem(WorkItem, CreatePinWorkerRoutine, DelayedWorkQueue, (PVOID)WorkerContext);
-
-            /* mark irp as pending */
-            return STATUS_PENDING;
+            return HandleSysAudioFilterPinCreation(Irp, Property, DeviceExtension, DeviceObject);
         }
     }
 

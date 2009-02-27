@@ -29,6 +29,8 @@ typedef struct
     ULONG MaxPinInstanceCount;
     HANDLE PinHandle;
     ULONG References;
+    KSPIN_DATAFLOW DataFlow;
+    KSPIN_COMMUNICATION Communication;
 }PIN_INFO;
 
 
@@ -42,6 +44,9 @@ typedef struct
 
     ULONG NumberOfPins;
     PIN_INFO * Pins;
+
+    ULONG NumWaveOutPin;
+    ULONG NumWaveInPin;
 
 }KSAUDIO_DEVICE_ENTRY, *PKSAUDIO_DEVICE_ENTRY;
 
@@ -88,8 +93,8 @@ SysAudioRegisterDeviceInterfaces(
 
 NTSTATUS
 SysAudioRegisterNotifications(
-    IN  PDRIVER_OBJECT  DriverObject,
-    SYSAUDIODEVEXT *DeviceExtension);
+    IN PDRIVER_OBJECT  DriverObject,
+    IN PDEVICE_OBJECT DeviceObject);
 
 NTSTATUS
 SysAudioHandleProperty(
@@ -104,5 +109,10 @@ GetListEntry(
 NTSTATUS
 CreateDispatcher(
     IN PIRP Irp);
+
+ULONG
+GetDeviceCount(
+    PSYSAUDIODEVEXT DeviceExtension,
+    BOOL WaveIn);
 
 #endif

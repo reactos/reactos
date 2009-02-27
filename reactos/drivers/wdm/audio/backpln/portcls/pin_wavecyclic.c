@@ -813,15 +813,16 @@ IPortPinWaveCyclic_fnGetCycleCount(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 ULONG
 NTAPI
 IPortPinWaveCyclic_fnGetDeviceBufferSize(
     IN IPortPinWaveCyclic* iface)
 {
-    UNIMPLEMENTED;
-    return 0;
+    IPortPinWaveCyclicImpl * This = (IPortPinWaveCyclicImpl*)iface;
+
+    return This->CommonBufferSize;
 }
 
 /*
@@ -845,8 +846,9 @@ NTAPI
 IPortPinWaveCyclic_fnGetMiniport(
     IN IPortPinWaveCyclic* iface)
 {
-    UNIMPLEMENTED;
-    return NULL;
+    IPortPinWaveCyclicImpl * This = (IPortPinWaveCyclicImpl*)iface;
+
+    return (PMINIPORT)This->Miniport;
 }
 
 static IPortPinWaveCyclicVtbl vt_IPortPinWaveCyclic =
