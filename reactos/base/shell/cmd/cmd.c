@@ -1529,23 +1529,73 @@ ExecuteAutoRunFile (VOID)
 	RegCloseKey(hkey);
 }
 
+/* Get the command that comes after a /C or /K switch */
+static VOID
+GetCmdLineCommand(TCHAR *commandline, TCHAR *ptr, BOOL AlwaysStrip)
+{
+	TCHAR *LastQuote;
+
+	while (_istspace(*ptr))
+		ptr++;
+
+	/* Remove leading quote, find final quote */
+	if (*ptr == _T('"') &&
+	    (LastQuote = _tcsrchr(++ptr, _T('"'))) != NULL)
+	{
+		TCHAR *Space;
+		/* Under certain circumstances, all quotes are preserved.
+		 * CMD /? documents these conditions as follows:
+		 *  1. No /S switch
+		 *  2. Exactly two quotes
+		 *  3. No "special characters" between the quotes
+		 *     (CMD /? says &<>()@^| but parentheses did not
+		 *     trigger this rule when I tested them.)
+		 *  4. Whitespace exists between the quotes
+		 *  5. Enclosed string is an executable filename
+		 */
+		*LastQuote = _T('\0');
+		for (Space = ptr + 1; Space < LastQuote; Space++)
+		{
+			if (_istspace(*Space))                         /* Rule 4 */
+			{
+				if (!AlwaysStrip &&                        /* Rule 1 */
+				    !_tcspbrk(ptr, _T("\"&<>@^|")) &&      /* Rules 2, 3 */
+				    SearchForExecutable(ptr, commandline)) /* Rule 5 */
+				{
+					/* All conditions met: preserve both the quotes */
+					*LastQuote = _T('"');
+					_tcscpy(commandline, ptr - 1);
+					return;
+				}
+				break;
+			}
+		}
+
+		/* The conditions were not met: remove both the
+		 * leading quote and the last quote */
+		_tcscpy(commandline, ptr);
+		_tcscpy(&commandline[LastQuote - ptr], LastQuote + 1);
+		return;
+	}
+
+	/* No quotes; just copy */
+	_tcscpy(commandline, ptr);
+}
+
 /*
  * set up global initializations and process parameters
- *
- * argc - number of parameters to command.com
- * argv - command-line parameters
- *
  */
 static VOID
-Initialize (int argc, const TCHAR* argv[])
+Initialize()
 {
 	TCHAR commandline[CMDLINE_LENGTH];
 	TCHAR ModuleName[_MAX_PATH + 1];
-	INT i;
 	TCHAR lpBuffer[2];
 
 	//INT len;
-	//TCHAR *ptr, *cmdLine;
+	TCHAR *ptr, *cmdLine;
+	BOOL AlwaysStrip = FALSE;
+	BOOL ShowVersion = TRUE;
 
 	/* get version information */
 	osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
@@ -1572,13 +1622,8 @@ Initialize (int argc, const TCHAR* argv[])
 		NtReadVirtualMemoryPtr = (NtReadVirtualMemoryProc)GetProcAddress(NtDllModule, "NtReadVirtualMemory");
 	}
 
-
-	TRACE ("[command args:\n");
-	for (i = 0; i < argc; i++)
-	{
-		TRACE ("%d. %s\n", i, debugstr_aw(argv[i]));
-	}
-	TRACE ("]\n");
+	cmdLine = GetCommandLine();
+	TRACE ("[command args: %s]\n", debugstr_aw(cmdLine));
 
 	InitLocale ();
 
@@ -1594,22 +1639,22 @@ Initialize (int argc, const TCHAR* argv[])
 	    SetEnvironmentVariable (_T("PROMPT"), _T("$P$G"));
 
 
-	if (argc >= 2 && !_tcsncmp (argv[1], _T("/?"), 2))
-	{
-		ConOutResPaging(TRUE,STRING_CMD_HELP8);
-		cmd_exit(0);
-	}
 	SetConsoleMode (hIn, ENABLE_PROCESSED_INPUT);
 
 #ifdef INCLUDE_CMD_CHDIR
 	InitLastPath ();
 #endif
 
-	if (argc >= 2)
+	for (ptr = cmdLine; *ptr; ptr++)
 	{
-		for (i = 1; i < argc; i++)
+		if (*ptr == _T('/'))
 		{
-			if (!_tcsicmp (argv[i], _T("/p")))
+			if (ptr[1] == _T('?'))
+			{
+				ConOutResPaging(TRUE,STRING_CMD_HELP8);
+				cmd_exit(0);
+			}
+			else if (_totlower(ptr[1]) == _T('p'))
 			{
 				if (!IsExistingFile (_T("\\autoexec.bat")))
 				{
@@ -1626,56 +1671,38 @@ Initialize (int argc, const TCHAR* argv[])
 				}
 				bCanExit = FALSE;
 			}
-			else if (!_tcsicmp (argv[i], _T("/c")))
+			else if (_totlower(ptr[1]) == _T('c'))
 			{
 				/* This just runs a program and exits */
-				++i;
-				if (i < argc)
-				{
-					_tcscpy (commandline, argv[i]);
-					while (++i < argc)
-					{
-						_tcscat (commandline, _T(" "));
-						_tcscat (commandline, argv[i]);
-					}
-
-					ParseCommandLine(commandline);
-					cmd_exit (ProcessInput (TRUE));
-				}
-				else
-				{
-					cmd_exit (0);
-				}
+				GetCmdLineCommand(commandline, &ptr[2], AlwaysStrip);
+				ParseCommandLine(commandline);
+				cmd_exit (ProcessInput (TRUE));
 			}
-			else if (!_tcsicmp (argv[i], _T("/k")))
+			else if (_totlower(ptr[1]) == _T('k'))
 			{
 				/* This just runs a program and remains */
-				++i;
-				if (i < argc)
-				{
-					_tcscpy (commandline, _T("\""));
-					_tcscat (commandline, argv[i]);
-					_tcscat (commandline, _T("\""));
-					while (++i < argc)
-					{
-						_tcscat (commandline, _T(" "));
-						_tcscat (commandline, argv[i]);
-					}
-					ParseCommandLine(commandline);
-				}
+				GetCmdLineCommand(commandline, &ptr[2], AlwaysStrip);
+				ParseCommandLine(commandline);
+				ShowVersion = FALSE;
+				break;
+			}
+			else if (_totlower(ptr[1]) == _T('s'))
+			{
+				AlwaysStrip = TRUE;
 			}
 #ifdef INCLUDE_CMD_COLOR
-			else if (!_tcsnicmp (argv[i], _T("/t:"), 3))
+			else if (!_tcsnicmp(ptr, _T("/t:"), 3))
 			{
 				/* process /t (color) argument */
-				wDefColor = (WORD)_tcstoul (&argv[i][3], NULL, 16);
+				wDefColor = (WORD)_tcstoul(&ptr[3], &ptr, 16);
 				wColor = wDefColor;
 				SetScreenColor (wColor, TRUE);
 			}
 #endif
 		}
 	}
-    else
+
+	if (ShowVersion)
     {
         /* Display a simple version string */
         ConOutPrintf(_T("ReactOS Operating System [Version %s-%s]\n"), 
@@ -1710,7 +1737,7 @@ Initialize (int argc, const TCHAR* argv[])
 }
 
 
-static VOID Cleanup (int argc, const TCHAR *argv[])
+static VOID Cleanup()
 {
 	/* run cmdexit.bat */
 	if (IsExistingFile (_T("cmdexit.bat")))
@@ -1782,13 +1809,13 @@ int cmd_main (int argc, const TCHAR *argv[])
 	CMD_ModuleHandle = GetModuleHandle(NULL);
 
 	/* check switches on command-line */
-	Initialize(argc, argv);
+	Initialize();
 
 	/* call prompt routine */
 	nExitCode = ProcessInput(FALSE);
 
 	/* do the cleanup */
-	Cleanup(argc, argv);
+	Cleanup();
 
 	cmd_exit(nExitCode);
 	return(nExitCode);
