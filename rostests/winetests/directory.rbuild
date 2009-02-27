@@ -136,8 +136,17 @@
 	<directory name="oleaut32">
 		<xi:include href="oleaut32/oleaut32.rbuild" />
 	</directory>
+	<directory name="pdh">
+		<xi:include href="pdh/pdh.rbuild" />
+	</directory>
 	<directory name="psapi">
 		<xi:include href="psapi/psapi.rbuild" />
+	</directory>
+	<directory name="qmgr">
+		<xi:include href="qmgr/qmgr.rbuild" />
+	</directory>
+	<directory name="rasapi32">
+		<xi:include href="rasapi32/rasapi32.rbuild" />
 	</directory>
 	<directory name="powrprof">
 		<xi:include href="powrprof/powrprof.rbuild" />
@@ -160,6 +169,9 @@
 	<directory name="schannel">
 		<xi:include href="schannel/schannel.rbuild" />
 	</directory>
+	<directory name="serialui">
+		<xi:include href="serialui/serialui.rbuild" />
+	</directory>
 	<directory name="setupapi">
 		<xi:include href="setupapi/setupapi.rbuild" />
 	</directory>
@@ -172,11 +184,23 @@
 	<directory name="shlwapi">
 		<xi:include href="shlwapi/shlwapi.rbuild" />
 	</directory>
+	<directory name="snmpapi">
+		<xi:include href="snmpapi/snmpapi.rbuild" />
+	</directory>
+	<directory name="spoolss">
+		<xi:include href="spoolss/spoolss.rbuild" />
+	</directory>
+	<directory name="twain_32">
+		<xi:include href="twain_32/twain_32.rbuild" />
+	</directory>
 	<directory name="urlmon">
 		<xi:include href="urlmon/urlmon.rbuild" />
 	</directory>
 	<directory name="user32">
 		<xi:include href="user32/user32.rbuild" />
+	</directory>
+	<directory name="userenv">
+		<xi:include href="userenv/userenv.rbuild" />
 	</directory>
 	<directory name="usp10">
 		<xi:include href="usp10/usp10.rbuild" />
@@ -195,6 +219,9 @@
 	</directory>
 	<directory name="wintrust">
 		<xi:include href="wintrust/wintrust.rbuild" />
+	</directory>
+	<directory name="wldap32">
+		<xi:include href="wldap32/wldap32.rbuild" />
 	</directory>
 	<directory name="ws2_32">
 		<xi:include href="ws2_32/ws2_32.rbuild" />
