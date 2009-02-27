@@ -3752,7 +3752,6 @@ uhci_init_hcd_interface(PUHCI_DEV uhci)
     uhci->hcd_interf.flags = HCD_TYPE_UHCI;     //hcd types | hcd id
 }
 
-
 NTSTATUS NTAPI
 generic_dispatch_irp(IN PDEVICE_OBJECT dev_obj, IN PIRP irp)
 {
@@ -3807,9 +3806,9 @@ NTSTATUS
 NTAPI
 DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRING RegistryPath)
 {
-#if DBG
     NTSTATUS ntStatus = STATUS_SUCCESS;
 
+#if DBG
     // should be done before any debug output is done.
     // read our debug verbosity level from the registry
     //NetacOD_GetRegistryDword( NetacOD_REGISTRY_PARAMETERS_PATH, //absolute registry path
@@ -3866,6 +3865,9 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRING RegistryPath)
     }
 
     dev_mgr_start_hcd(&g_dev_mgr);
+
+    /* Wait till all drivers are initialized */
+    ntStatus = KeWaitForSingleObject(&g_dev_mgr.drivers_inited, Executive, KernelMode, TRUE, NULL);
 
     uhci_dbg_print_cond(DBGLVL_DEFAULT, DEBUG_UHCI, ("DriverEntry(): exiting... (%x)\n", ntStatus));
     return STATUS_SUCCESS;

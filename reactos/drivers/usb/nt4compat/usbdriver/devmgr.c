@@ -202,6 +202,7 @@ dev_mgr_strobe(PUSB_DEV_MANAGER dev_mgr)
     pevent->context = (ULONG) dev_mgr;
 
     KeInitializeEvent(&dev_mgr->wake_up_event, SynchronizationEvent, FALSE);
+    KeInitializeEvent(&dev_mgr->drivers_inited, NotificationEvent, FALSE);
 
     InsertTailList(&dev_mgr->event_list, &pevent->event_link);
 
@@ -273,6 +274,9 @@ dev_mgr_event_init(PUSB_DEV pdev,       //always null. we do not use this param
         KeSetTimerEx(&dev_mgr->dev_mgr_timer,
                      due_time, DEV_MGR_TIMER_INTERVAL_MS, &dev_mgr->dev_mgr_timer_dpc);
 
+        /* Signal we're done initing */
+        KeSetEvent(&dev_mgr->drivers_inited, 0, FALSE);
+
         return TRUE;
     }
 
@@ -286,6 +290,7 @@ dev_mgr_event_init(PUSB_DEV pdev,       //always null. we do not use this param
 
     KeCancelTimer(&dev_mgr->dev_mgr_timer);
     KeRemoveQueueDpc(&dev_mgr->dev_mgr_timer_dpc);
+    KeSetEvent(&dev_mgr->drivers_inited, 0, FALSE);
     return FALSE;
 
 }

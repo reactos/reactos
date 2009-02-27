@@ -98,6 +98,7 @@ typedef struct _USB_DEV_MANAGER
     LIST_HEAD           event_list;
 	USB_EVENT_POOL   	event_pool;
 
+    KEVENT              drivers_inited;
 	KTIMER   			dev_mgr_timer;
 	KDPC   				dev_mgr_timer_dpc;
     KSPIN_LOCK          timer_svc_list_lock;
