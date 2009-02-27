@@ -91,6 +91,9 @@
 	<directory name="msacm32">
 		<xi:include href="msacm32/msacm32.rbuild" />
 	</directory>
+	<directory name="msctf">
+		<xi:include href="msctf/msctf.rbuild" />
+	</directory>
 	<directory name="mshtml">
 		<xi:include href="mshtml/mshtml.rbuild" />
 	</directory>
@@ -103,6 +106,9 @@
 	<directory name="msvcrt">
 		<xi:include href="msvcrt/msvcrt.rbuild" />
 	</directory>
+	<directory name="msvfw32">
+		<xi:include href="msvfw32/msvfw32.rbuild" />
+	</directory>
 	<directory name="msxml3">
 		<xi:include href="msxml3/msxml3.rbuild" />
 	</directory>
@@ -112,11 +118,20 @@
 	<directory name="ntdll">
 		<xi:include href="ntdll/ntdll.rbuild" />
 	</directory>
+	<directory name="ntdsapi">
+		<xi:include href="ntdsapi/ntdsapi.rbuild" />
+	</directory>
+	<directory name="ntprint">
+		<xi:include href="ntprint/ntprint.rbuild" />
+	</directory>
 	<directory name="odbccp32">
 		<xi:include href="odbccp32/odbccp32.rbuild" />
 	</directory>
 	<directory name="ole32">
 		<xi:include href="ole32/ole32.rbuild" />
+	</directory>
+	<directory name="oleacc">
+		<xi:include href="oleacc/oleacc.rbuild" />
 	</directory>
 	<directory name="oleaut32">
 		<xi:include href="oleaut32/oleaut32.rbuild" />
