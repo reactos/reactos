@@ -91,6 +91,9 @@
 	<directory name="msacm32">
 		<xi:include href="msacm32/msacm32.rbuild" />
 	</directory>
+	<directory name="mscms">
+		<xi:include href="mscms/mscms.rbuild" />
+	</directory>
 	<directory name="msctf">
 		<xi:include href="msctf/msctf.rbuild" />
 	</directory>
@@ -105,6 +108,9 @@
 	</directory>
 	<directory name="msvcrt">
 		<xi:include href="msvcrt/msvcrt.rbuild" />
+	</directory>
+	<directory name="msvcrtd">
+		<xi:include href="msvcrtd/msvcrtd.rbuild" />
 	</directory>
 	<directory name="msvfw32">
 		<xi:include href="msvfw32/msvfw32.rbuild" />
@@ -145,6 +151,9 @@
 	<directory name="qmgr">
 		<xi:include href="qmgr/qmgr.rbuild" />
 	</directory>
+	<directory name="quartz">
+		<xi:include href="quartz/quartz.rbuild" />
+	</directory>
 	<directory name="rasapi32">
 		<xi:include href="rasapi32/rasapi32.rbuild" />
 	</directory>
@@ -168,6 +177,9 @@
 	</directory>
 	<directory name="schannel">
 		<xi:include href="schannel/schannel.rbuild" />
+	</directory>
+	<directory name="secur32">
+		<xi:include href="secur32/secur32.rbuild" />
 	</directory>
 	<directory name="serialui">
 		<xi:include href="serialui/serialui.rbuild" />
