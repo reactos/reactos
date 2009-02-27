@@ -22,7 +22,7 @@
 #include <ksmedia.h>
 #include "interface.h"
 
-#define KERNEL_DEVICE_NAME      L"\\\\Device\\wdmaud"
+#define KERNEL_DEVICE_NAME      L"\\\\.\\wdmaud"
 
 PWSTR UnknownWaveIn = L"Wave Input";
 PWSTR UnknownWaveOut = L"Wave Output";
@@ -57,8 +57,9 @@ GetNumWdmDevs(
                                            sizeof(WDMAUD_DEVICE_INFO),
                                            NULL);
 
-    if ( ! Result )
+    if ( ! MMSUCCESS( Result ) )
     {
+        SND_ERR(L"Call to IOCTL_GETNUMDEVS_TYPE failed\n");
         *DeviceCount = 0;
         return TranslateInternalMmResult(Result);
     }
@@ -128,6 +129,7 @@ OpenWdmSoundDevice(
     /* Only open this if it's not already open */
     if ( KernelHandle == INVALID_HANDLE_VALUE )
     {
+        SND_TRACE(L"Opening wdmaud device\n");
         KernelHandle = CreateFile(KERNEL_DEVICE_NAME,
                                   GENERIC_READ | GENERIC_WRITE,
                                   0,
@@ -153,7 +155,11 @@ CloseWdmSoundDevice(
     IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance, /* NOT USED */
     IN  PVOID Handle)
 {
-    SND_ASSERT( OpenCount > 0 );
+    if ( OpenCount == 0 )
+    {
+        return MMSYSERR_NOERROR;
+    }
+
     SND_ASSERT( KernelHandle != INVALID_HANDLE_VALUE );
 
     -- OpenCount;
