@@ -147,7 +147,7 @@ class Revision
 
   /**
    * delete a revision
-   * removes also depencies to this revision
+   * removes also dependencies to this revision
    *
    * @param int rev_id
    * @return bool
@@ -157,8 +157,8 @@ class Revision
   {
     Log::writeMedium('delete entry: rev-id [rev-id: '.$rev_id.']');
 
-    // delete Depencies
-    $success = Depencies::removeRevision($rev_id);
+    // delete dependencies
+    $success = Dependencies::removeRevision($rev_id);
 
     // get data id (check later if we can delete this)
     $stmt=&DBConnection::getInstance()->prepare("SELECT data_id FROM ".ROSCMST_REVISIONS." WHERE id = :rev_id ");
@@ -405,8 +405,8 @@ class Revision
    */
   public static function toArchive( $rev_id )
   {
-    // remove depencies
-    Depencies::removeRevision($rev_id);
+    // remove dependencies
+    Dependencies::removeRevision($rev_id);
 
     // move into archive
     $stmt=&DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_REVISIONS." SET archive = TRUE WHERE id=:rev_id");

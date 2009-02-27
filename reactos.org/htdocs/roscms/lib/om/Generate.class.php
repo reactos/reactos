@@ -88,15 +88,15 @@ class Generate
     $stmt->execute();
     $content = $stmt->fetchColumn();
 
-    // replace depencies
-    $stmt=&DBConnection::getInstance()->prepare("SELECT d.type, d.name FROM ".ROSCMST_DEPENCIES." w JOIN ".ROSCMST_ENTRIES." d ON w.child_id=d.id WHERE w.rev_id=:rev_id AND w.include IS TRUE");
+    // replace dependencies
+    $stmt=&DBConnection::getInstance()->prepare("SELECT d.type, d.name FROM ".ROSCMST_DEPENDENCIES." w JOIN ".ROSCMST_ENTRIES." d ON w.child_id=d.id WHERE w.rev_id=:rev_id AND w.include IS TRUE");
     $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
     $stmt->execute();
-    while ($depency = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    while ($dependency = $stmt->fetch(PDO::FETCH_ASSOC)) {
 
       // replace
-      if ($depency['type'] != 'script') {
-        $content = str_replace('[#'.$this->short[$depency['type']].'_'.$depency['name'].']', $this->getCached(array(null, $this->short[$depency['type']].'_'.$depency['name'])), $content);
+      if ($dependency['type'] != 'script') {
+        $content = str_replace('[#'.$this->short[$dependency['type']].'_'.$dependency['name'].']', $this->getCached(array(null, $this->short[$dependency['type']].'_'.$dependency['name'])), $content);
       }
     }
 
@@ -217,15 +217,15 @@ class Generate
     // file content
     $content = $revision['content'];
 
-    // replace depencies
-    $stmt_more=&DBConnection::getInstance()->prepare("SELECT d.id, d.type, d.name FROM ".ROSCMST_DEPENCIES." w JOIN ".ROSCMST_ENTRIES." d ON w.child_id=d.id WHERE w.rev_id=:rev_id AND w.include IS TRUE");
+    // replace dependencies
+    $stmt_more=&DBConnection::getInstance()->prepare("SELECT d.id, d.type, d.name FROM ".ROSCMST_DEPENDENCIES." w JOIN ".ROSCMST_ENTRIES." d ON w.child_id=d.id WHERE w.rev_id=:rev_id AND w.include IS TRUE");
     $stmt_more->bindParam('rev_id',$revision['id'],PDO::PARAM_INT);
     $stmt_more->execute();
-    while ($depency = $stmt_more->fetch(PDO::FETCH_ASSOC)) {
+    while ($dependency = $stmt_more->fetch(PDO::FETCH_ASSOC)) {
 
       // replace
-      if ($depency['type'] != 'script') {
-        $content = str_replace('[#'.$this->short[$depency['type']].'_'.$depency['name'].']', $this->getCached(array(null, $this->short[$depency['type']].'_'.$depency['name'])), $content);
+      if ($dependency['type'] != 'script') {
+        $content = str_replace('[#'.$this->short[$dependency['type']].'_'.$dependency['name'].']', $this->getCached(array(null, $this->short[$dependency['type']].'_'.$dependency['name'])), $content);
       }
     } // end foreach
 
@@ -293,14 +293,14 @@ class Generate
       // copy content
       $content = $revision['content']; 
 
-      // replace depencies
-      $stmt_more=&DBConnection::getInstance()->prepare("SELECT d.id, d.type, d.name FROM ".ROSCMST_DEPENCIES." w JOIN ".ROSCMST_ENTRIES." d ON w.child_id=d.id WHERE w.rev_id=:rev_id AND w.include IS TRUE AND d.type != 'script'");
+      // replace dependencies
+      $stmt_more=&DBConnection::getInstance()->prepare("SELECT d.id, d.type, d.name FROM ".ROSCMST_DEPENDENCIES." w JOIN ".ROSCMST_ENTRIES." d ON w.child_id=d.id WHERE w.rev_id=:rev_id AND w.include IS TRUE AND d.type != 'script'");
       $stmt_more->bindParam('rev_id',$revision['id'],PDO::PARAM_INT);
       $stmt_more->execute();
-      while ($depency = $stmt_more->fetch(PDO::FETCH_ASSOC)) {
+      while ($dependency = $stmt_more->fetch(PDO::FETCH_ASSOC)) {
 
         // replace
-        $content = str_replace('[#'.$this->short[$depency['type']].'_'.$depency['name'].']', $this->getCached(array(null, $this->short[$depency['type']].'_'.$depency['name'])), $content);
+        $content = str_replace('[#'.$this->short[$dependency['type']].'_'.$dependency['name'].']', $this->getCached(array(null, $this->short[$dependency['type']].'_'.$dependency['name'])), $content);
       } // end foreach
 
       // replace scripts
@@ -344,7 +344,7 @@ class Generate
 
     if ($revision['type'] == 'page' || $revision['type'] == 'dynamic') {
 
-      // in standard language we may have depencies to other languages, so better generate them all
+      // in standard language we may have dependencies to other languages, so better generate them all
       if ($revision['lang_id'] == Language::getStandardId()){
         $stmt=&DBConnection::getInstance()->prepare("SELECT id, name_short FROM ".ROSCMST_LANGUAGES." ORDER BY level DESC, name ASC");
       }
@@ -381,25 +381,25 @@ class Generate
         SELECT DISTINCT
           org.name, org.type, COALESCE( trans.id, org.id ) AS id, org.data_id
         FROM (
-          SELECT d.name, d.type, r.id, r.data_id FROM ".ROSCMST_DEPENCIES." w JOIN ".ROSCMST_REVISIONS." r ON r.id=w.rev_id JOIN ".ROSCMST_ENTRIES." d ON d.id=r.data_id WHERE w.child_id=:depency_id AND r.lang_id = :standard_lang AND w.rev_id NOT IN(:rev_id,:rev_id2) AND r.archive IS FALSE AND w.include IS TRUE
+          SELECT d.name, d.type, r.id, r.data_id FROM ".ROSCMST_DEPENDENCIES." w JOIN ".ROSCMST_REVISIONS." r ON r.id=w.rev_id JOIN ".ROSCMST_ENTRIES." d ON d.id=r.data_id WHERE w.child_id=:dependency_id AND r.lang_id = :standard_lang AND w.rev_id NOT IN(:rev_id,:rev_id2) AND r.archive IS FALSE AND w.include IS TRUE
         ) AS org LEFT OUTER JOIN (
-          SELECT d.name, d.type, r.id, r.data_id FROM ".ROSCMST_DEPENCIES." w JOIN ".ROSCMST_REVISIONS." r ON r.id=w.rev_id JOIN ".ROSCMST_ENTRIES." d ON d.id=r.data_id WHERE w.child_id=:depency_id AND r.lang_id = :lang_id AND w.rev_id NOT IN(:rev_id,:rev_id2) AND r.archive IS FALSE AND w.include IS TRUE
+          SELECT d.name, d.type, r.id, r.data_id FROM ".ROSCMST_DEPENDENCIES." w JOIN ".ROSCMST_REVISIONS." r ON r.id=w.rev_id JOIN ".ROSCMST_ENTRIES." d ON d.id=r.data_id WHERE w.child_id=:dependency_id AND r.lang_id = :lang_id AND w.rev_id NOT IN(:rev_id,:rev_id2) AND r.archive IS FALSE AND w.include IS TRUE
         ) AS trans ON org.data_id = trans.data_id");
-    $stmt->bindParam('depency_id',$revision['data_id'],PDO::PARAM_INT);
+    $stmt->bindParam('dependency_id',$revision['data_id'],PDO::PARAM_INT);
     $stmt->bindParam('rev_id',$base_rev,PDO::PARAM_INT);
     $stmt->bindParam('rev_id2',$rev_id,PDO::PARAM_INT);
     $stmt->bindParam('standard_lang',Language::getStandardId(),PDO::PARAM_INT);
     $stmt->bindParam('lang_id',$revision['lang_id'],PDO::PARAM_INT);
     $stmt->execute();
-    while ($depency = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    while ($dependency = $stmt->fetch(PDO::FETCH_ASSOC)) {
 
       // only run update once per $rev_id
-      if ($depency['type'] != 'script') {
+      if ($dependency['type'] != 'script') {
 
-        $this->update($depency['id'], $dynamic_num);
+        $this->update($dependency['id'], $dynamic_num);
         break;
       }
-    } // end while depency
+    } // end while dependency
 
     return true;
   } // end of member function update
@@ -435,7 +435,7 @@ class Generate
     $stmt->execute();
 
     // prepare for usage in loop
-      $stmt_more=&DBConnection::getInstance()->prepare("SELECT w.child_id, d.type, d.name FROM ".ROSCMST_DEPENCIES." w JOIN ".ROSCMST_ENTRIES." d ON w.child_id=d.id WHERE w.rev_id=:rev_id AND w.include IS TRUE");
+      $stmt_more=&DBConnection::getInstance()->prepare("SELECT w.child_id, d.type, d.name FROM ".ROSCMST_DEPENDENCIES." w JOIN ".ROSCMST_ENTRIES." d ON w.child_id=d.id WHERE w.rev_id=:rev_id AND w.include IS TRUE");
 
     while ($data = $stmt->fetch(PDO::FETCH_ASSOC)) {
 
@@ -466,23 +466,23 @@ class Generate
         // replace links
         $content = preg_replace_callback('/\[#link_([^][#[:space:]]+)\]/', array($this, 'replaceWithHyperlink'), $content);
 
-        // do we care about depencies ?
+        // do we care about dependencies ?
         if ($recursive) {
 
-        // process depencies first
+        // process dependencies first
           $stmt_more->bindParam('rev_id',$revision['id'],PDO::PARAM_INT);
           $stmt_more->execute();
-          $depencies = $stmt_more->fetchAll(PDO::FETCH_ASSOC);
-          foreach ($depencies as $depency) {
+          $dependencies = $stmt_more->fetchAll(PDO::FETCH_ASSOC);
+          foreach ($dependencies as $dependency) {
 
             // cache dependent entries first
-            $depency_file = $data['lang_id'].'/'.$this->short[$depency['type']].'_'.$depency['name'].'.rcf';
-            if (!file_exists($this->cache_dir.$depency_file) || $this->begin > date('Y-m-d H:i:s',filemtime($this->cache_dir.$depency_file))) {
-              $this->cacheFiles($depency['child_id']);
+            $dependency_file = $data['lang_id'].'/'.$this->short[$dependency['type']].'_'.$dependency['name'].'.rcf';
+            if (!file_exists($this->cache_dir.$dependency_file) || $this->begin > date('Y-m-d H:i:s',filemtime($this->cache_dir.$dependency_file))) {
+              $this->cacheFiles($dependency['child_id']);
             }
 
             // replace
-            $content = str_replace('[#'.$this->short[$depency['type']].'_'.$depency['name'].']', $this->getCached(array(null, $this->short[$depency['type']].'_'.$depency['name'])), $content);
+            $content = str_replace('[#'.$this->short[$dependency['type']].'_'.$dependency['name'].']', $this->getCached(array(null, $this->short[$dependency['type']].'_'.$dependency['name'])), $content);
           }
         }
         $this->writeFile($data['lang_id'],$filename, $content);
@@ -600,7 +600,7 @@ class Generate
     $stmt->execute();
     $revision=$stmt->fetch(PDO::FETCH_ASSOC);
 
-    // check if depency not available
+    // check if dependency not available
     if ($revision === false) {
       $stmt->bindParam('lang_id',Language::getStandardId(),PDO::PARAM_INT);
       $stmt->execute();

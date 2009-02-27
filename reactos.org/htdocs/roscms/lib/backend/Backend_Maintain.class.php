@@ -46,8 +46,8 @@ class Backend_Maintain extends Backend
         $this->generateAll();
         break;
 
-      case 'rebuilddepencies':
-        $this->rebuildDepencies();
+      case 'rebuilddependencies':
+        $this->rebuildDependencies();
         break;
 
       case 'genone':
@@ -66,7 +66,7 @@ class Backend_Maintain extends Backend
   private function optimize( )
   {
     // call optimize table MySQL function
-    $stmt=&DBConnection::getInstance()->prepare("OPTIMIZE TABLE ".ROSCMST_AREA.",".ROSCMST_USERS.",".ROSCMST_FORBIDDEN.",".ROSCMST_SESSIONS.",".ROSCMST_COUNTRIES.",".ROSCMST_ENTRIES.",".ROSCMST_ACCESS.",".ROSCMST_RIGHTS.",".ROSCMST_REVISIONS.",".ROSCMST_STEXT.",".ROSCMST_TAGS.",".ROSCMST_TEXT.",".ROSCMST_FILTER.",".ROSCMST_GROUPS.",".ROSCMST_JOBS.",".ROSCMST_LANGUAGES.",".ROSCMST_SUBSYS.",".ROSCMST_MEMBERSHIPS.",".ROSCMST_AREA_ACCESS.",".ROSCMST_DEPENCIES.",".ROSCMST_ACL.",".ROSCMST_TIMEZONES);
+    $stmt=&DBConnection::getInstance()->prepare("OPTIMIZE TABLE ".ROSCMST_AREA.",".ROSCMST_USERS.",".ROSCMST_FORBIDDEN.",".ROSCMST_SESSIONS.",".ROSCMST_COUNTRIES.",".ROSCMST_ENTRIES.",".ROSCMST_ACCESS.",".ROSCMST_RIGHTS.",".ROSCMST_REVISIONS.",".ROSCMST_STEXT.",".ROSCMST_TAGS.",".ROSCMST_TEXT.",".ROSCMST_FILTER.",".ROSCMST_GROUPS.",".ROSCMST_JOBS.",".ROSCMST_LANGUAGES.",".ROSCMST_SUBSYS.",".ROSCMST_MEMBERSHIPS.",".ROSCMST_AREA_ACCESS.",".ROSCMST_DEPENDENCIES.",".ROSCMST_ACL.",".ROSCMST_TIMEZONES);
     $stmt->execute();
 
     Log::writeHigh('optimize database tables: done by '.ThisUser::getInstance()->id().' {data_maintain_out}');
@@ -140,21 +140,21 @@ class Backend_Maintain extends Backend
    *
    * @access private
    */
-  private function rebuildDepencies( )
+  private function rebuildDependencies( )
   {
-    Log::writeGenerateHigh('rebuilding depency tree - start');
+    Log::writeGenerateHigh('rebuilding dependency tree - start');
 
     // start timer
     $gentimeA = explode(' ',microtime()); 
     $gentimeA = $gentimeA[1] + $gentimeA[0];
 
-    // rebuild depencies
-    $depencies = new Depencies();
-    if ($depencies->rebuild()) {
+    // rebuild dependencies
+    $dependencies = new Dependencies();
+    if ($dependencies->rebuild()) {
       echo 'done';
     }
     else {
-      echo 'Error: a problem occoured while rebuilding depencies';
+      echo 'Error: a problem occoured while rebuilding dependencies';
     }
 
     // stop timer
@@ -165,8 +165,8 @@ class Backend_Maintain extends Backend
     $totaltimef = ($gentimeB - $gentimeA); 
     $showtimef = number_format($totaltimef, 4, '.', ''); 
 
-    Log::writeGenerateHigh('rebuilding depency tree - end: '.$showtimef.' seconds');
-  } // end of member function rebuildDepencies
+    Log::writeGenerateHigh('rebuilding dependency tree - end: '.$showtimef.' seconds');
+  } // end of member function rebuildDependencies
 
 
 

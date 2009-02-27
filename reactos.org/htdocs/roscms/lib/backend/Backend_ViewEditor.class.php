@@ -31,12 +31,12 @@ class Backend_ViewEditor extends Backend
 
 
   // Type of detail
-  const METADATA = 0;
-  const FIELDS   = 1;
-  const HISTORY  = 2;
-  const SECURITY = 3;
-  const REVISION = 4;
-  const DEPENCIES= 5;
+  const METADATA     = 0;
+  const FIELDS       = 1;
+  const HISTORY      = 2;
+  const SECURITY     = 3;
+  const REVISION     = 4;
+  const DEPENDENCIES = 5;
 
   // 
   private $data_id;
@@ -109,28 +109,28 @@ class Backend_ViewEditor extends Backend
         $this->showEntryDetails(self::HISTORY);
         break;
 
-      // show Depencies
-      case 'showdepencies':
-        $this->showEntryDetails(self::DEPENCIES);
+      // show dependencies
+      case 'showdependencies':
+        $this->showEntryDetails(self::DEPENDENCIES);
         break;
 
-      // add Depencies
-      case 'adddepency':
-        if (Depencies::addManual($_GET['rev_id'],$_GET['dep_name'],$_GET['dep_type'])) {
-          echo 'Adding user defined depency was successful.';
+      // add dependencies
+      case 'adddependency':
+        if (Dependencies::addManual($_GET['rev_id'],$_GET['dep_name'],$_GET['dep_type'])) {
+          echo 'Adding user defined dependency was successful.';
         }
         else {
-          echo 'Error while adding user defined depency.';
+          echo 'Error while adding user defined dependency.';
         }
         break;
 
-      // delete Depencies
-      case 'deletedepency':
-        if (Depencies::deleteManual($_GET['dep_id'])) {
-          echo 'Deleting user defined depency was successful.';
+      // delete dependencies
+      case 'deletedependency':
+        if (Dependencies::deleteManual($_GET['dep_id'])) {
+          echo 'Deleting user defined dependency was successful.';
         }
         else {
-          echo 'Error while deleting user defined depency.';
+          echo 'Error while deleting user defined dependency.';
         }
         break;
 
@@ -455,15 +455,15 @@ class Backend_ViewEditor extends Backend
       }
     }
 
-    // Depencies
-    if (Entry::hasAccess($this->data_id,'depencies')) {
+    // dependencies
+    if (Entry::hasAccess($this->data_id,'dependencies')) {
       echo '&nbsp;|&nbsp;';
 
-      if ($mode == self::DEPENCIES) {
-        echo '<strong>Depencies</strong>';
+      if ($mode == self::DEPENDENCIES) {
+        echo '<strong>Dependencies</strong>';
       }
       else {
-        echo '<span class="detailmenu" onclick="'."showEditorTabDepencies(".$this->rev_id.")".'">Depencies</span>';
+        echo '<span class="detailmenu" onclick="'."showEditorTabDependencies(".$this->rev_id.")".'">Dependencies</span>';
       }
     }
 
@@ -518,8 +518,8 @@ class Backend_ViewEditor extends Backend
       case self::HISTORY:
         $this->showEntryDetailsHistory();
         break;
-      case self::DEPENCIES:
-        $this->showEntryDepencies($this->data_id);
+      case self::DEPENDENCIES:
+        $this->showEntryDependencies($this->data_id);
         break;
       case self::SECURITY:
         $this->showEntryDetailsEntry();
@@ -650,17 +650,17 @@ class Backend_ViewEditor extends Backend
 
 
   /**
-   * Interface for depenciess
+   * Interface for dependencies
    *
    * @access private
    */
-  private function showEntryDepencies()
+  private function showEntryDependencies()
   {
   
-    // add manual depency
-    if (ThisUser::getInstance()->hasAccess('add_depencies')) {
+    // add manual dependency
+    if (ThisUser::getInstance()->hasAccess('add_dependencies')) {
       echo_strip('
-        <h3>Add Depency</h3>
+        <h3>Add Dependency</h3>
         <fieldset>
           <label for="dep_name">Name:</label> 
           <input type="text" name="dep_name" id="dep_name" /><br />
@@ -671,22 +671,22 @@ class Backend_ViewEditor extends Backend
             <option value="script">Script</option>
             '.(ThisUser::getInstance()->hasAccess('dynamic_pages') ? '<option value="dynamic">Dynamic Page</option>' : '').'
           </select><br />
-          <button type="submit" onclick="'."addDepency(".$this->rev_id.")".'">add manual depency</button>
+          <button type="submit" onclick="'."addDependency(".$this->rev_id.")".'">add manual dependency</button>
         </fieldset>');
     }
 
-    // print depency tree
+    // print dependency tree
     echo '<h3>Dependent Entries</h3>';
-    $this->buildDepencyTree($this->data_id);
+    $this->buildDependencyTree($this->data_id);
 
     // required articles that don't exist
-    $stmt=&DBConnection::getInstance()->prepare("SELECT DISTINCT child_name, include, id, user_defined FROM ".ROSCMST_DEPENCIES." WHERE rev_id=:rev_id AND child_id IS NULL ORDER BY include DESC, child_name ASC");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT DISTINCT child_name, include, id, user_defined FROM ".ROSCMST_DEPENDENCIES." WHERE rev_id=:rev_id AND child_id IS NULL ORDER BY include DESC, child_name ASC");
     $stmt->bindParam('rev_id',$this->rev_id, PDO::PARAM_INT);
     $stmt->execute();
     $required_fail = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // articles that exist
-    $stmt=&DBConnection::getInstance()->prepare("SELECT DISTINCT d.name, d.type, w.include, w.id, w.user_defined FROM ".ROSCMST_DEPENCIES." w JOIN ".ROSCMST_ENTRIES." d ON d.id=w.child_id WHERE rev_id=:rev_id AND w.child_name IS NULL ORDER BY w.include DESC, d.name ASC, d.type ASC");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT DISTINCT d.name, d.type, w.include, w.id, w.user_defined FROM ".ROSCMST_DEPENDENCIES." w JOIN ".ROSCMST_ENTRIES." d ON d.id=w.child_id WHERE rev_id=:rev_id AND w.child_name IS NULL ORDER BY w.include DESC, d.name ASC, d.type ASC");
     $stmt->bindParam('rev_id',$this->rev_id, PDO::PARAM_INT);
     $stmt->execute();
     $required_exist = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -700,9 +700,9 @@ class Backend_ViewEditor extends Backend
         foreach($required_exist as $required) {
           echo '<li>['.$required['type'].'] '.$required['name'].' ('.($required['include']==true ? 'include' : 'link').')';
 
-          // delete manual depency
-          if (ThisUser::getInstance()->hasAccess('add_depencies') && $required['user_defined']) {
-            echo ' <span class="deletebutton" onclick="'."deleteDepency(".$required['id'].")".'"><img src="'.RosCMS::getInstance()->pathRosCMS().'images/remove.gif" alt="" /> Delete</span>';
+          // delete manual dependency
+          if (ThisUser::getInstance()->hasAccess('add_dependencies') && $required['user_defined']) {
+            echo ' <span class="deletebutton" onclick="'."deleteDependency(".$required['id'].")".'"><img src="'.RosCMS::getInstance()->pathRosCMS().'images/remove.gif" alt="" /> Delete</span>';
           }
 
           echo '</li>';
@@ -717,9 +717,9 @@ class Backend_ViewEditor extends Backend
         foreach($required_fail as $required) {
           echo '<li>'.$required['child_name'].' ('.($required['include']==true ? 'include' : 'link').')';
 
-          // delete manual depency
-          if (ThisUser::getInstance()->hasAccess('add_depencies') && $required['user_defined']) {
-            echo ' <span class="deletebutton" onclick="'."deleteDepency(".$required['id'].")".'"><img src="'.RosCMS::getInstance()->pathRosCMS().'images/remove.gif" alt="" /> Delete</span>';
+          // delete manual dependency
+          if (ThisUser::getInstance()->hasAccess('add_dependencies') && $required['user_defined']) {
+            echo ' <span class="deletebutton" onclick="'."deleteDependency(".$required['id'].")".'"><img src="'.RosCMS::getInstance()->pathRosCMS().'images/remove.gif" alt="" /> Delete</span>';
           }
 
           echo '</li>';
@@ -727,37 +727,37 @@ class Backend_ViewEditor extends Backend
         echo '</ul>';
       }
     }
-  } // end of member function showEntryDepencies
+  } // end of member function showEntryDependencies
 
 
 
   /**
-   * recursive function to build our depency tree
+   * recursive function to build our dependency tree
    *
    * @access private
    */
-  private function buildDepencyTree( $data_id )
+  private function buildDependencyTree( $data_id )
   {
     // get current childs
-    $stmt=&DBConnection::getInstance()->prepare("SELECT d.name, l.name AS language, d.type, r.data_id, w.user_defined, w.id FROM ".ROSCMST_DEPENCIES." w JOIN ".ROSCMST_REVISIONS." r ON w.rev_id = r.id JOIN ".ROSCMST_ENTRIES." d ON d.id=r.data_id JOIN ".ROSCMST_LANGUAGES." l ON l.id=r.lang_id WHERE w.child_id=:data_id AND w.include IS TRUE ORDER BY l.name ASC, d.name ASC");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT d.name, l.name AS language, d.type, r.data_id, w.user_defined, w.id FROM ".ROSCMST_DEPENDENCIES." w JOIN ".ROSCMST_REVISIONS." r ON w.rev_id = r.id JOIN ".ROSCMST_ENTRIES." d ON d.id=r.data_id JOIN ".ROSCMST_LANGUAGES." l ON l.id=r.lang_id WHERE w.child_id=:data_id AND w.include IS TRUE ORDER BY l.name ASC, d.name ASC");
     $stmt->bindParam('data_id',$data_id, PDO::PARAM_INT);
     $stmt->execute();
-    $depencies = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $dependencies = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 
     // output childs
-    if (count($depencies) > 0) {
+    if (count($dependencies) > 0) {
       echo '<ul>';
 
-      // show Depencies
+      // show dependencies
       $x=0;
-      foreach ($depencies as $depency) {
+      foreach ($dependencies as $dependency) {
         $x++;
-        echo '<li style="color: #'.($x%2 ? '000' : '777').';">['.$depency['type'].'] '.$depency['name'].' <span style="color: #'.($x%2 ? 'AAA' : 'CCC').';">('.$depency['language'].')</span>';
+        echo '<li style="color: #'.($x%2 ? '000' : '777').';">['.$dependency['type'].'] '.$dependency['name'].' <span style="color: #'.($x%2 ? 'AAA' : 'CCC').';">('.$dependency['language'].')</span>';
 
         // get childs
-        if ($data_id != $depency['data_id']) {
-          $this->buildDepencyTree( $depency['data_id']);
+        if ($data_id != $dependency['data_id']) {
+          $this->buildDependencyTree( $dependency['data_id']);
         }
         echo '</li>';
       } // end foreach
@@ -767,7 +767,7 @@ class Backend_ViewEditor extends Backend
     elseif ($this->data_id === $data_id) {
       echo 'Looks like, no other entries depend on this entry.';
     }
-  } // end of member function buildDepencyTree
+  } // end of member function buildDependencyTree
 
 
 

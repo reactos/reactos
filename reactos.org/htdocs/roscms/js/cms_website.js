@@ -1053,14 +1053,14 @@ function showEditorTabHistory( drid )
 
 
 /**
- * requests the depencies tab in the entry details
+ * requests the dependencies tab in the entry details
  *
  * @param int drid revision id
  */
-function showEditorTabDepencies(  drid )
+function showEditorTabDependencies( drid )
 {
-  makeRequest('?page=backend&type=text&subtype=mef&d_fl=showdepencies&d_r_id='+drid, 'mef', 'frmedittagsc2', 'html', 'GET', '');
-} // end of function showEditorTabDepencies
+  makeRequest('?page=backend&type=text&subtype=mef&d_fl=showdependencies&d_r_id='+drid, 'mef', 'frmedittagsc2', 'html', 'GET', '');
+} // end of function showEditorTabDependencies
 
 
 
@@ -1570,9 +1570,9 @@ function applyToEditor( http_request, objid )
       alertbox('Entry updated');
       break;
 
-    case 'updatedepencies':
+    case 'updatedependencies':
       alertbox(http_request.responseText);
-      makeRequest('?page=backend&type=text&subtype=mef&d_fl=showdepencies&d_r_id='+document.getElementById('mefrrevid').innerHTML, 'mef', 'frmedittagsc2', 'html', 'GET', '');
+      makeRequest('?page=backend&type=text&subtype=mef&d_fl=showdependencies&d_r_id='+document.getElementById('mefrrevid').innerHTML, 'mef', 'frmedittagsc2', 'html', 'GET', '');
       break;
 
     case 'updatetag':
@@ -2027,31 +2027,31 @@ function showPreview( http_request, objid )
 
 
 /**
- * add a new manual depency
+ * add a new manual dependency
  *
  * @param int rev_id
  */
-function addDepency( rev_id )
+function addDependency( rev_id )
 {
   var name = document.getElementById('dep_name').value;
 
   // check if name is given
   if (name !== '') {
-    makeRequest('?page=backend&type=text&subtype=mef&d_fl=adddepency&rev_id='+rev_id+'&dep_name='+encodeURIComponent(name)+'&dep_type='+encodeURIComponent(document.getElementById('dep_type').value), 'mef', 'updatedepencies', 'html', 'GET', '');
+    makeRequest('?page=backend&type=text&subtype=mef&d_fl=adddependency&rev_id='+rev_id+'&dep_name='+encodeURIComponent(name)+'&dep_type='+encodeURIComponent(document.getElementById('dep_type').value), 'mef', 'updatedependencies', 'html', 'GET', '');
   }
-} // addDepency
+} // addDependency
 
 
 
 /**
- * delete a new manual depency
+ * delete a new manual dependency
  *
- * @param int dep_id depency id
+ * @param int dep_id dependency id
  */
-function deleteDepency( dep_id )
+function deleteDependency( dep_id )
 {
-  makeRequest('?page=backend&type=text&subtype=mef&d_fl=deletedepency&dep_id='+dep_id, 'mef', 'updatedepencies', 'html', 'GET', '');
-} // deleteDepency
+  makeRequest('?page=backend&type=text&subtype=mef&d_fl=deletedependency&dep_id='+dep_id, 'mef', 'updatedependencies', 'html', 'GET', '');
+} // deleteDependency
 
 
 

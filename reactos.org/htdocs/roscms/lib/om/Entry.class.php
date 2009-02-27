@@ -228,7 +228,7 @@ class Entry
       // update next number
       Tag::update(Tag::getId($parent_rev,'next_index',-1),$next_index+1);
 
-      Depencies::addManual($parent_rev, $data_name, 'content');
+      Dependencies::addManual($parent_rev, $data_name, 'content');
     }
 
     // create new stext contents for (dynamic) pages

@@ -110,16 +110,16 @@ function generateAllPages( )
 
 
 /**
- * rebuild the depency tree
+ * rebuild the dependency tree
  */
-function rebuildDepencies( )
+function rebuildDependencies( )
 {
   var uf_check = confirm("Do you want to continue?");
 
   if (uf_check) {
     document.getElementById('maintainarea').style.display = 'block';
-    document.getElementById('maintainarea').innerHTML = 'rebuilding depencies, this may take a while ...';
-    makeRequest('?page=backend&type=maintain&action=rebuilddepencies', 'gen', '', 'text', 'GET');
+    document.getElementById('maintainarea').innerHTML = 'rebuilding dependencies, this may take a while ...';
+    makeRequest('?page=backend&type=maintain&action=rebuilddependencies', 'gen', '', 'text', 'GET');
   }
 }
 

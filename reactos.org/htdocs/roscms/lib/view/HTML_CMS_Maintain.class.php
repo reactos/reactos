@@ -180,9 +180,9 @@ class HTML_CMS_Maintain extends HTML_CMS
                     <img src="'.RosCMS::getInstance()->pathRosCMS().'images/clear.gif" alt="" />
                     <span class="text">Optimize Tables</span>
                   </div>
-                  <div class="button" onclick="rebuildDepencies()">
+                  <div class="button" onclick="rebuildDependencies()">
                     <img src="'.RosCMS::getInstance()->pathRosCMS().'images/tool.gif" alt="" />
-                    <span class="text">Rebuild Depency Tree</span>
+                    <span class="text">Rebuild Dependency Tree</span>
                   </div>
                   <div class="button" onclick="generateAllPages()">
                     <img src="'.RosCMS::getInstance()->pathRosCMS().'images/active.gif" alt="" />

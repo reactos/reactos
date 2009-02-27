@@ -277,10 +277,10 @@ class Backend_EntryTable extends Backend
       }
     }
 
-    // update depencies for new rev
-    $depency = new Depencies();
-    if (!$depency->addRevision($revision['id'])) {
-      echo 'Error while updating depencies';
+    // update dependencies for new rev
+    $dependency = new Dependencies();
+    if (!$dependency->addRevision($revision['id'])) {
+      echo 'Error while updating dependencies';
       return false;
     }
 

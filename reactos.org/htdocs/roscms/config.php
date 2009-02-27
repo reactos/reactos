@@ -53,28 +53,28 @@ $config->setPathGenerated('../'); // path to generated files (relative to roscms
 
 
 // RosCMS Table Names
-$config->setTable('ROSCMST_AREA'       , 'roscms_area');
-$config->setTable('ROSCMST_USERS'      , 'roscms_accounts');
-$config->setTable('ROSCMST_FORBIDDEN'  , 'roscms_accounts_forbidden');
-$config->setTable('ROSCMST_SESSIONS'   , 'roscms_accounts_sessions');
-$config->setTable('ROSCMST_COUNTRIES'  , 'roscms_countries');
-$config->setTable('ROSCMST_ENTRIES'    , 'roscms_entries');
-$config->setTable('ROSCMST_ACCESS'     , 'roscms_entries_access');
-$config->setTable('ROSCMST_RIGHTS'     , 'roscms_entries_areas');
-$config->setTable('ROSCMST_REVISIONS'  , 'roscms_entries_revisions');
-$config->setTable('ROSCMST_STEXT'      , 'roscms_entries_stext');
-$config->setTable('ROSCMST_TAGS'       , 'roscms_entries_tags');
-$config->setTable('ROSCMST_TEXT'       , 'roscms_entries_text');
-$config->setTable('ROSCMST_FILTER'     , 'roscms_filter');
-$config->setTable('ROSCMST_GROUPS'     , 'roscms_groups');
-$config->setTable('ROSCMST_JOBS'       , 'roscms_jobs');
-$config->setTable('ROSCMST_LANGUAGES'  , 'roscms_languages');
-$config->setTable('ROSCMST_SUBSYS'     , 'roscms_rel_accounts_subsys');
-$config->setTable('ROSCMST_MEMBERSHIPS', 'roscms_rel_groups_accounts');
-$config->setTable('ROSCMST_AREA_ACCESS', 'roscms_rel_groups_area');
-$config->setTable('ROSCMST_DEPENCIES'  , 'roscms_rel_revisions_depencies');
-$config->setTable('ROSCMST_ACL'        , 'roscms_rel_acl');
-$config->setTable('ROSCMST_TIMEZONES'  , 'roscms_timezones');
+$config->setTable('ROSCMST_AREA'         , 'roscms_area');
+$config->setTable('ROSCMST_USERS'        , 'roscms_accounts');
+$config->setTable('ROSCMST_FORBIDDEN'    , 'roscms_accounts_forbidden');
+$config->setTable('ROSCMST_SESSIONS'     , 'roscms_accounts_sessions');
+$config->setTable('ROSCMST_COUNTRIES'    , 'roscms_countries');
+$config->setTable('ROSCMST_ENTRIES'      , 'roscms_entries');
+$config->setTable('ROSCMST_ACCESS'       , 'roscms_entries_access');
+$config->setTable('ROSCMST_RIGHTS'       , 'roscms_entries_areas');
+$config->setTable('ROSCMST_REVISIONS'    , 'roscms_entries_revisions');
+$config->setTable('ROSCMST_STEXT'        , 'roscms_entries_stext');
+$config->setTable('ROSCMST_TAGS'         , 'roscms_entries_tags');
+$config->setTable('ROSCMST_TEXT'         , 'roscms_entries_text');
+$config->setTable('ROSCMST_FILTER'       , 'roscms_filter');
+$config->setTable('ROSCMST_GROUPS'       , 'roscms_groups');
+$config->setTable('ROSCMST_JOBS'         , 'roscms_jobs');
+$config->setTable('ROSCMST_LANGUAGES'    , 'roscms_languages');
+$config->setTable('ROSCMST_SUBSYS'       , 'roscms_rel_accounts_subsys');
+$config->setTable('ROSCMST_MEMBERSHIPS'  , 'roscms_rel_groups_accounts');
+$config->setTable('ROSCMST_AREA_ACCESS'  , 'roscms_rel_groups_area');
+$config->setTable('ROSCMST_DEPENDENCIES' , 'roscms_rel_revisions_dependencies');
+$config->setTable('ROSCMST_ACL'          , 'roscms_rel_acl');
+$config->setTable('ROSCMST_TIMEZONES'    , 'roscms_timezones');
 
 // do not change, it's needed to apply those config settings
 $config->apply();

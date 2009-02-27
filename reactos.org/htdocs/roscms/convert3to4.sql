@@ -107,9 +107,9 @@ ORDER BY usrgroup_name;
 
 
 -- --------------------------------------------------------
--- create depency table (nothing to convert, as it's new and will be filled later)
+-- create dependency table (nothing to convert, as it's new and will be filled later)
 -- --------------------------------------------------------
-CREATE TABLE roscms_rel_revisions_depencies (
+CREATE TABLE roscms_rel_revisions_dependencies (
   id bigint(20) NOT NULL auto_increment,
   rev_id bigint(20) unsigned NOT NULL COMMENT '->revisions(id)',
   child_id bigint(20) unsigned default NULL COMMENT '->entries(id)',
@@ -120,7 +120,7 @@ CREATE TABLE roscms_rel_revisions_depencies (
   KEY rev_id (rev_id),
   KEY child_id (child_id),
   KEY child_name (child_name)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='if depency_id is NULL-> set name & type';
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='if dependency_id is NULL-> set name & type';
 
 
 
@@ -170,7 +170,7 @@ INSERT INTO roscms_entries_areas VALUES
 (3, 'View History', 'history', 'view History tab'),
 (4, 'View Fields', 'fields', 'view fields tab'),
 (5, 'View Revision Tab', 'revision', 'view revision tab'),
-(6, 'View Depencies', 'depencies', 'view depencies tab'),
+(6, 'View Dependencies', 'dependencies', 'view dependencies tab'),
 (7, 'System metadata', 'system_meta', 'modify System metadata'),
 (8, 'Add Fields', 'add_fields', 'add new text fields'),
 (9, 'Read', 'read', 'can view this entry');
@@ -218,7 +218,7 @@ OR (s.sec_allow LIKE CONCAT('%',s.sec_allow,'%') AND r.name_short='add_fields')
 OR (s.sec_allow LIKE CONCAT('%',s.sec_allow,'%') AND r.name_short='translate')
 
 OR (g.security_level = 3 AND r.name_short='system_meta')
-OR (g.security_level > 1 AND r.name_short='depencies')
+OR (g.security_level > 1 AND r.name_short='dependencies')
 
 OR r.name_short = 'metadata'
 OR r.name_short = 'history')
@@ -277,7 +277,7 @@ INSERT INTO roscms_area VALUES
 (34, 'Show all filter', 'dont_hide_filter', 'don''t hide filter from users'),
 (35, 'Make Entries Stable', 'make_stable', 'Make Entries Stable'),
 (36, 'show system entries', 'show_sys_entry', 'show entries of type ''system'''),
-(37, 'Add manuel depencies', 'add_depencies', 'add new manuell depencies to entries');
+(37, 'Add manuel dependencies', 'add_dependencies', 'add new manuell dependencies to entries');
 
 
 
@@ -296,7 +296,7 @@ FROM roscms_area a JOIN roscms_groups g
 WHERE ((a.name_short = 'system_tags' OR a.name_short = 'entry_details' OR a.name_short = 'new_entry' OR a.name_short = 'deltag' OR a.name_short = 'del_entry' OR a.name_short = 'mix_priv_pub' OR a.name_short = 'show_sys_entry' OR a.name_short = 'addlvl1group' OR a.name_short = 'more_filter' OR a.name_short = 'make_stable' OR a.name_short = 'dont_hide_filter')
 AND g.security_level > 1)
 
-OR ((a.name_short = 'delete_file' OR a.name_short = 'delmembership' OR a.name_short = 'disableaccount' OR a.name_short = 'user_details' OR a.name_short = 'other_drafts' OR a.name_short = 'stats' OR a.name_short = 'dynamic_pages' OR a.name_short = 'updatetag' OR a.name_short = 'del_wo_archiv' OR a.name_short = 'addlvl2group' OR a.name_short = 'user' OR a.name_short = 'addmembership' OR a.name_short = 'maintain' OR a.name_short = 'admin_filter' OR a.name_short = 'add_depencies')
+OR ((a.name_short = 'delete_file' OR a.name_short = 'delmembership' OR a.name_short = 'disableaccount' OR a.name_short = 'user_details' OR a.name_short = 'other_drafts' OR a.name_short = 'stats' OR a.name_short = 'dynamic_pages' OR a.name_short = 'updatetag' OR a.name_short = 'del_wo_archiv' OR a.name_short = 'addlvl2group' OR a.name_short = 'user' OR a.name_short = 'addmembership' OR a.name_short = 'maintain' OR a.name_short = 'admin_filter' OR a.name_short = 'add_dependencies')
 AND g.security_level = 3)
 
 OR ((a.name_short = 'admin' OR a.name_short = 'logs' OR a.name_short = 'addlvl3group')
@@ -721,19 +721,6 @@ CREATE TABLE roscms_accounts_sessions (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 INSERT INTO roscms_accounts_sessions SELECT * FROM user_sessions;
-
-
-
--- --------------------------------------------------------
--- create jobs (e.g. stuff that has to be performed while generating pages)
--- --------------------------------------------------------
-CREATE TABLE roscms_jobs (
-  id bigint(20) unsigned NOT NULL,
-  name varchar(32) collate utf8_unicode_ci NOT NULL,
-  content text collate utf8_unicode_ci NOT NULL,
-  PRIMARY KEY  (id),
-  KEY name (name)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 
 
