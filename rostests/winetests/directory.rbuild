@@ -55,14 +55,29 @@
 	<directory name="imm32">
 		<xi:include href="imm32/imm32.rbuild" />
 	</directory>
+	<directory name="inetcomm">
+		<xi:include href="inetcomm/inetcomm.rbuild" />
+	</directory>
+	<directory name="inetmib1">
+		<xi:include href="inetmib1/inetmib1.rbuild" />
+	</directory>
 	<directory name="iphlpapi">
 		<xi:include href="iphlpapi/iphlpapi.rbuild" />
+	</directory>
+	<directory name="itss">
+		<xi:include href="itss/itss.rbuild" />
 	</directory>
 	<directory name="jscript">
 		<xi:include href="jscript/jscript.rbuild" />
 	</directory>
 	<directory name="kernel32">
 		<xi:include href="kernel32/kernel32.rbuild" />
+	</directory>
+	<directory name="localspl">
+		<xi:include href="localspl/localspl.rbuild" />
+	</directory>
+	<directory name="localui">
+		<xi:include href="localui/localui.rbuild" />
 	</directory>
 	<directory name="lz32">
 		<xi:include href="lz32/lz32.rbuild" />
