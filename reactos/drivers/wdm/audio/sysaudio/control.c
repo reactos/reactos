@@ -155,15 +155,24 @@ CreatePinWorkerRoutine(
 
     WorkerContext->PinConnect->PinToHandle = NULL;
 
+    DPRINT1("CreatePinWorkerRoutine entered\n");
+
+    ASSERT(WorkerContext->Entry);
+    ASSERT(WorkerContext->PinConnect);
+    ASSERT(WorkerContext->Entry->Pins);
+    ASSERT(WorkerContext->Entry->NumberOfPins > WorkerContext->PinConnect->PinId);
 
     if (WorkerContext->CreateRealPin)
     {
         /* create the real pin */
+        DPRINT("Creating real pin\n");
         Status = KsCreatePin(WorkerContext->Entry->Handle, WorkerContext->PinConnect, GENERIC_READ | GENERIC_WRITE, &RealPinHandle);
+        DPRINT1("Status %x\n", Status);
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Failed to create Pin with %x\n", Status);
             SetIrpIoStatus(WorkerContext->Irp, STATUS_UNSUCCESSFUL, 0);
+            ExFreePool(WorkerContext->DispatchContext);
             ExFreePool(WorkerContext);
             return;
         }
@@ -172,6 +181,16 @@ CreatePinWorkerRoutine(
         Status = ObReferenceObjectByHandle(RealPinHandle,
                                            GENERIC_READ | GENERIC_WRITE, 
                                            IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
+
+        DPRINT1("Status %x\n", Status);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Failed to get file object with %x\n", Status);
+            SetIrpIoStatus(WorkerContext->Irp, STATUS_UNSUCCESSFUL, 0);
+            ExFreePool(WorkerContext->DispatchContext);
+            ExFreePool(WorkerContext);
+            return;
+        }
 
         if (WorkerContext->Entry->Pins[WorkerContext->PinConnect->PinId].MaxPinInstanceCount == 1)
         {
@@ -183,11 +202,7 @@ CreatePinWorkerRoutine(
         WorkerContext->DispatchContext->Handle = RealPinHandle;
         WorkerContext->DispatchContext->PinId = WorkerContext->PinConnect->PinId;
         WorkerContext->DispatchContext->AudioEntry = WorkerContext->Entry;
-
-        if (NT_SUCCESS(Status))
-            WorkerContext->DispatchContext->FileObject = FileObject;
-        else
-            WorkerContext->DispatchContext->FileObject = NULL;
+        WorkerContext->DispatchContext->FileObject = FileObject;
     }
     else
     {
@@ -204,6 +219,7 @@ CreatePinWorkerRoutine(
         {
             DPRINT1("Failed to get file object with %x\n", Status);
             SetIrpIoStatus(WorkerContext->Irp, STATUS_UNSUCCESSFUL, 0);
+            ExFreePool(WorkerContext->DispatchContext);
             ExFreePool(WorkerContext);
             return;
         }
@@ -224,6 +240,7 @@ CreatePinWorkerRoutine(
         }
 
         SetIrpIoStatus(WorkerContext->Irp, STATUS_UNSUCCESSFUL, 0);
+        ExFreePool(WorkerContext->DispatchContext);
         ExFreePool(WorkerContext);
         return;
     }
@@ -236,14 +253,10 @@ CreatePinWorkerRoutine(
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to get file object with %x\n", Status);
-        if (WorkerContext->CreateRealPin)
-        {
-            /* mark pin as free to use */
-            WorkerContext->Entry->Pins[WorkerContext->PinConnect->PinId].References = 0;
-        }
 
         ZwClose(VirtualPinHandle);
         SetIrpIoStatus(WorkerContext->Irp, STATUS_UNSUCCESSFUL, 0);
+        ExFreePool(WorkerContext->DispatchContext);
         ExFreePool(WorkerContext);
         return;
     }
@@ -256,8 +269,6 @@ CreatePinWorkerRoutine(
     ASSERT(WorkerContext->AudioClient->NumDevices > 0);
     ASSERT(WorkerContext->AudioClient->Devs != NULL);
     ASSERT(WorkerContext->Entry->Pins != NULL);
-    ASSERT(WorkerContext->Entry->NumberOfPins > WorkerContext->PinConnect->PinId);
-
 
     AudioClient = WorkerContext->AudioClient;
     NumHandels = AudioClient->Devs[AudioClient->NumDevices -1].ClientHandlesCount;
