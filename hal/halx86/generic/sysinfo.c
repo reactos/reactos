@@ -12,12 +12,7 @@
 #define NDEBUG
 #include <debug.h>
 
-#ifdef __GNUC__
-static PUCHAR realKdComPortInUse = 0;
-PUCHAR *_KdComPortInUse = &realKdComPortInUse;
-#else
-PUCHAR _KdComPortInUse = 0;
-#endif
+PUCHAR KdComPortInUse;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -40,20 +35,10 @@ HaliQuerySystemInformation(IN     HAL_QUERY_INFORMATION_CLASS InformationClass,
 		REPORT_THIS_CASE(HalMapRegisterInformation);
 		REPORT_THIS_CASE(HalMcaLogInformation);
 		case HalFrameBufferCachingInformation:
-		if (BufferSize >= 1)
 		{
-			// The only caller that has been seen calling this function told
-			// us it expected a single byte back. We therefore guess it expects
-			// a BOOLEAN, and we dream up the value TRUE to (we think) tell it
-			// "Sure, the framebuffer is cached".
-			BOOLEAN ToReturn = TRUE;
-			DPRINT("%s: caller expects %u bytes (should be 1)\n", "HalFrameBufferCachingInformation", BufferSize);
-			ASSERT(sizeof(BOOLEAN) == 1);
-			*ReturnedLength = sizeof(BOOLEAN);
-			RtlCopyMemory(Buffer, &ToReturn, sizeof(BOOLEAN));
-			return STATUS_SUCCESS;
+            /* FIXME: TODO */
+            return STATUS_NOT_IMPLEMENTED;
 		}
-		break;
 		REPORT_THIS_CASE(HalDisplayBiosInformation);
 		REPORT_THIS_CASE(HalProcessorFeatureInformation);
 		REPORT_THIS_CASE(HalNumaTopologyInterface);

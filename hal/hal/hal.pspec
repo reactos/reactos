@@ -78,7 +78,7 @@
 @ stdcall IoSetPartitionInformation(ptr long long long) HalpSetPartitionInformation
 @ stdcall IoWritePartitionTable(ptr long long long ptr) HalpWritePartitionTable
 @ stdcall KeAcquireSpinLock(ptr ptr)
-@ extern KdComPortInUse _KdComPortInUse
+@ extern KdComPortInUse
 @ stdcall KeFlushWriteBuffer()
 @ stdcall KeGetCurrentIrql()
 @ stdcall KeLowerIrql(long)

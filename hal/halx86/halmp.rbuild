@@ -2,7 +2,7 @@
 <!DOCTYPE group SYSTEM "../../tools/rbuild/project.dtd">
 <group xmlns:xi="http://www.w3.org/2001/XInclude">
 	<module name="halmp" type="kernelmodedll" entrypoint="0">
-		<importlibrary base="hal" definition="hal.spec.def" />
+		<importlibrary base="hal" definition="hal.pspec" />
 		<bootstrap installbase="$(CDOUTPUT)" />
 		<include>include</include>
 		<include base="ntoskrnl">include</include>

@@ -34,7 +34,7 @@ BOOLEAN HalIsaProbe(VOID)
 }
 
 
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 HalpTranslateIsaBusAddress(PBUS_HANDLER BusHandler,
 			   ULONG BusNumber,
 			   PHYSICAL_ADDRESS BusAddress,
@@ -59,7 +59,7 @@ HalpTranslateIsaBusAddress(PBUS_HANDLER BusHandler,
    return Result;
 }
 
-ULONG STDCALL
+ULONG NTAPI
 HalpGetIsaInterruptVector(PVOID BusHandler,
 			  ULONG BusNumber,
 			  ULONG BusInterruptLevel,

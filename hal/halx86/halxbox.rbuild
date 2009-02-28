@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <!DOCTYPE group SYSTEM "../../tools/rbuild/project.dtd">
 <group xmlns:xi="http://www.w3.org/2001/XInclude">
-	<module name="halxbox" type="kernelmodedll" entrypoint="0" allowwarnings="true">
-		<importlibrary base="hal" definition="hal.spec.def" />
+	<module name="halxbox" type="kernelmodedll" entrypoint="0">
+		<importlibrary base="hal" definition="hal.pspec" />
 		<include>include</include>
 		<include base="ntoskrnl">include</include>
 		<define name="_DISABLE_TIDENTS" />

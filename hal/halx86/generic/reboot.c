@@ -29,7 +29,7 @@ HalpReboot(VOID)
 {
     UCHAR Data;
     PVOID HalpZeroPageMapping;
-    PHYSICAL_ADDRESS Null = {{0}};
+    PHYSICAL_ADDRESS Null = {{0, 0}};
 
     /* Enable warm reboot */
     HalpZeroPageMapping = MmMapIoSpace(Null, PAGE_SIZE, MmNonCached);

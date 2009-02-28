@@ -223,72 +223,6 @@ VOID APICDisable(VOID)
   APICWrite(APIC_SIVR, tmp);
 }
 
-
-__inline ULONG _APICRead(ULONG Offset)
-{
-   PULONG p;
-
-   p = (PULONG)((ULONG)APICBase + Offset);
-   return *p;
-}
-
-#if 0
-__inline VOID APICWrite(ULONG Offset,
-		      ULONG Value)
-{
-   PULONG p;
-
-   p = (PULONG)((ULONG)APICBase + Offset);
-
-   *p = Value;
-}
-#else
-__inline VOID APICWrite(ULONG Offset,
-		      ULONG Value)
-{
-   PULONG p;
-   ULONG CPU = (_APICRead(APIC_ID) & APIC_ID_MASK) >> 24;
-
-   lastregw[CPU] = Offset;
-   lastvalw[CPU] = Value;
-
-   p = (PULONG)((ULONG)APICBase + Offset);
-
-   *p = Value;
-}
-#endif
-
-
-#if 0
-__inline ULONG APICRead(ULONG Offset)
-{
-   PULONG p;
-
-   p = (PULONG)((ULONG)APICBase + Offset);
-   return *p;
-}
-#else
-__inline ULONG APICRead(ULONG Offset)
-{
-   PULONG p;
-   ULONG CPU = (_APICRead(APIC_ID) & APIC_ID_MASK) >> 24;
-
-   lastregr[CPU] = Offset;
-   lastvalr[CPU] = 0;
-
-   p = (PULONG)((ULONG)APICBase + Offset);
-
-   lastvalr[CPU] = *p;
-   return lastvalr[CPU];
-}
-#endif
-
-__inline VOID APICSendEOI(VOID)
-{
-  // Send the EOI
-  APICWrite(APIC_EOI, 0);
-}
-
 static VOID APICDumpBit(ULONG base)
 {
 	ULONG v, i, j;
@@ -316,8 +250,7 @@ VOID APICDump(VOID)
 {
   ULONG v, ver, maxlvt;
   ULONG r1, r2, w1, w2;
-  ULONG CPU = ThisCPU();;
-
+  ULONG CPU = ThisCPU();
 
 
   r1 = lastregr[CPU];
@@ -837,12 +770,12 @@ VOID APICSetupLVTT(ULONG ClockTicks)
    tmp = GET_APIC_VERSION(APICRead(APIC_VER));
    if (!APIC_INTEGRATED(tmp))
    {
-      tmp = SET_APIC_TIMER_BASE(APIC_TIMER_BASE_DIV) | APIC_LVT_PERIODIC | LOCAL_TIMER_VECTOR;;
+      tmp = SET_APIC_TIMER_BASE(APIC_TIMER_BASE_DIV) | APIC_LVT_PERIODIC | LOCAL_TIMER_VECTOR;
    }
    else
    {
       /* Periodic timer */
-      tmp = APIC_LVT_PERIODIC | LOCAL_TIMER_VECTOR;;
+      tmp = APIC_LVT_PERIODIC | LOCAL_TIMER_VECTOR;
    }
    APICWrite(APIC_LVTT, tmp);
 
