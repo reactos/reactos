@@ -211,7 +211,7 @@ BEGIN
 	IDS_REG_SUCCESS "OK"
 	IDS_REG_FAIL "Error"
 	IDS_DDTEST_ERROR "Test failed!"
-	IDS_DDTEST_DESCRIPTION "This will start DirecDraw interface test. Continue?"
+	IDS_DDTEST_DESCRIPTION "This will start DirectDraw interface test. Continue?"
 	IDS_DDPRIMARY_DESCRIPTION "This test will use DirectDraw to draw on primary surface. Black and white rectangles should be drawn. Continue?"
 	IDS_DDPRIMARY_RESULT "Did you see black and white rectangles?"
 	IDS_DDOFFSCREEN_DESCRIPTION "This test will use DirectDraw to draw in an offscreen buffer. Moving white rectangle should be drawn. Continue?"

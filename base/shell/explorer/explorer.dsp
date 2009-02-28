@@ -388,6 +388,26 @@ SOURCE=.\res\drivebar.bmp
 # End Source File
 # Begin Source File
 
+SOURCE=".\explorer-bg.rc"
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
+SOURCE=".\explorer-bn.rc"
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
+SOURCE=".\explorer-cn-msvc.rc"
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
+SOURCE=".\explorer-cn.rc"
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
 SOURCE=".\explorer-cz.rc"
 # PROP Exclude_From_Build 1
 # End Source File
@@ -413,12 +433,42 @@ SOURCE=".\explorer-fr.rc"
 # End Source File
 # Begin Source File
 
+SOURCE=".\explorer-gr.rc"
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
 SOURCE=".\explorer-hu.rc"
 # PROP Exclude_From_Build 1
 # End Source File
 # Begin Source File
 
+SOURCE=".\explorer-id.rc"
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
+SOURCE=".\explorer-it.rc"
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
 SOURCE=".\explorer-jp.rc"
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
+SOURCE=".\explorer-ko.rc"
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
+SOURCE=".\explorer-nl.rc"
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
+SOURCE=".\explorer-no.rc"
 # PROP Exclude_From_Build 1
 # End Source File
 # Begin Source File
@@ -443,6 +493,11 @@ SOURCE=".\explorer-ru.rc"
 # End Source File
 # Begin Source File
 
+SOURCE=".\explorer-sk.rc"
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
 SOURCE=".\explorer-sv.rc"
 # PROP Exclude_From_Build 1
 # End Source File
@@ -458,6 +513,11 @@ SOURCE=.\explorer.exe.manifest
 # Begin Source File
 
 SOURCE=.\res\explorer.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\explorer.rc
+# PROP Exclude_From_Build 1
 # End Source File
 # Begin Source File
 
@@ -582,6 +642,10 @@ SOURCE=".\res\recent-documents.ico"
 # Begin Source File
 
 SOURCE=.\resource.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\restart.ico
 # End Source File
 # Begin Source File
 

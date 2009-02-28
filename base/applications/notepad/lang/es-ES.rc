@@ -31,7 +31,9 @@ BEGIN
     "^F", CMD_SEARCH
     "^G", CMD_GOTO
     "H", CMD_REPLACE, VIRTKEY, CONTROL
+    "^N", CMD_NEW
     "^O", CMD_OPEN
+    "^P", CMD_PRINT
     "^S", CMD_SAVE
     "^V", CMD_PASTE
     "^X", CMD_CUT
@@ -42,54 +44,54 @@ END
 
 MAIN_MENU MENU
 BEGIN
-	POPUP "&Archivo"
-	BEGIN
-		MENUITEM "&Nuevo...",                   CMD_NEW
-		MENUITEM "&Abrir\tCtrl+O",              CMD_OPEN
-		MENUITEM "&Guardar\tCtrl+S",            CMD_SAVE
-		MENUITEM "Guardar &como...",            CMD_SAVE_AS
-		MENUITEM SEPARATOR
-		MENUITEM "&Imprimir",                   CMD_PRINT
-		MENUITEM "Configurar &página...",       CMD_PAGE_SETUP
-		MENUITEM "Configuración &impresora...", CMD_PRINTER_SETUP
-		MENUITEM SEPARATOR
-		MENUITEM "&Salir",                      CMD_EXIT
-	END
-	POPUP "&Edición"
-	BEGIN
-		MENUITEM "&Deshacer\tCtrl+Z",         CMD_UNDO
-		MENUITEM SEPARATOR
-		MENUITEM "Cor&tar\tCtrl+X",           CMD_CUT
-		MENUITEM "&Copiar\tCtrl+C",           CMD_COPY
-		MENUITEM "&Pegar\tCtrl+V",            CMD_PASTE
-		MENUITEM "&Eliminar\tDel",            CMD_DELETE
-		MENUITEM SEPARATOR
-		MENUITEM "&Buscar\tCtrl+F",       CMD_SEARCH
-		MENUITEM "Buscar &siguiente\tF3", CMD_SEARCH_NEXT
-		MENUITEM "Reemplazar\tCtrl+H",   CMD_REPLACE
-		MENUITEM "Ir a...\tCtrl+G",  CMD_GOTO
-		MENUITEM SEPARATOR
-		MENUITEM "Seleccionar t&odo\tCtrl+A", CMD_SELECT_ALL
-		MENUITEM "&Hora y fecha\tF5",         CMD_TIME_DATE
-	END
-	POPUP "F&ormato"
-	BEGIN
-		MENUITEM "&Ajuste de línea",          CMD_WRAP
-		MENUITEM "Tipo de &letra...",         CMD_FONT
-	END
-	POPUP "&Ver"
-	BEGIN
-		MENUITEM "Barra d&e estado",    CMD_STATUSBAR
+    POPUP "&Archivo"
+    BEGIN
+        MENUITEM "&Nuevo\tCtrl+N",              CMD_NEW
+        MENUITEM "&Abrir\tCtrl+O",              CMD_OPEN
+        MENUITEM "&Guardar\tCtrl+S",            CMD_SAVE
+        MENUITEM "Guardar &como...",            CMD_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "&Imprimir\tCtrl+P",           CMD_PRINT
+        MENUITEM "Configurar &página...",       CMD_PAGE_SETUP
+        MENUITEM "Configuración &impresora...", CMD_PRINTER_SETUP
+        MENUITEM SEPARATOR
+        MENUITEM "&Salir",                      CMD_EXIT
+    END
+    POPUP "&Edición"
+    BEGIN
+        MENUITEM "&Deshacer\tCtrl+Z",         CMD_UNDO
+        MENUITEM SEPARATOR
+        MENUITEM "Cor&tar\tCtrl+X",           CMD_CUT
+        MENUITEM "&Copiar\tCtrl+C",           CMD_COPY
+        MENUITEM "&Pegar\tCtrl+V",            CMD_PASTE
+        MENUITEM "&Eliminar\tDel",            CMD_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "&Buscar\tCtrl+F",           CMD_SEARCH
+        MENUITEM "Buscar &siguiente\tF3",     CMD_SEARCH_NEXT
+        MENUITEM "Reemplazar\tCtrl+H",        CMD_REPLACE
+        MENUITEM "Ir a...\tCtrl+G",           CMD_GOTO
+        MENUITEM SEPARATOR
+        MENUITEM "Seleccionar t&odo\tCtrl+A", CMD_SELECT_ALL
+        MENUITEM "&Hora y fecha\tF5",         CMD_TIME_DATE
+    END
+    POPUP "F&ormato"
+    BEGIN
+        MENUITEM "&Ajuste de línea",  CMD_WRAP
+        MENUITEM "Tipo de &letra...", CMD_FONT
+    END
+    POPUP "&Ver"
+    BEGIN
+        MENUITEM "Barra d&e estado", CMD_STATUSBAR
         END
-	POPUP "A&yuda"
-	BEGIN
-		MENUITEM "Í&ndice",               CMD_HELP_CONTENTS
-		MENUITEM "&Buscar...",            CMD_HELP_SEARCH
-		MENUITEM "A&yuda sobre la ayuda", CMD_HELP_ON_HELP
-		MENUITEM SEPARATOR
-		MENUITEM "&Acerca de"             CMD_ABOUT
-		MENUITEM "&Información...",      CMD_ABOUT_WINE
-	END
+    POPUP "A&yuda"
+    BEGIN
+        MENUITEM "Í&ndice",               CMD_HELP_CONTENTS
+        MENUITEM "&Buscar...",            CMD_HELP_SEARCH
+        MENUITEM "A&yuda sobre la ayuda", CMD_HELP_ON_HELP
+        MENUITEM SEPARATOR
+        MENUITEM "&Acerca de"             CMD_ABOUT
+        MENUITEM "&Información...",       CMD_ABOUT_WINE
+    END
 END
 
 /* Dialog `Page setup' */
@@ -195,7 +197,7 @@ STRING_NOTFOUND,                "No se encontró '%s'."
 STRING_OUT_OF_MEMORY,           "No hay suficiente memoria para terminar esta \
                                  tarea. \nCierre una o más aplicaciones para \
                                  aumentar la cantidad \nde memoria libre."
-STRING_CANNOTFIND               "No pudo encontrar '%s'"
+STRING_CANNOTFIND               "No se encontró '%s'"
 STRING_ANSI,                    "ANSI"
 STRING_UNICODE,                 "Unicode"
 STRING_UNICODE_BE,              "Unicode (big endian)"
@@ -203,5 +205,6 @@ STRING_UTF8,                    "UTF-8"
 STRING_CRLF,                    "Windows"
 STRING_LF,                      "Unix"
 STRING_CR,                      "Mac"
+STRING_LINE_COLUMN,             "Línea %d, columna %d"
 
 END

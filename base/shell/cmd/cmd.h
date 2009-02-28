@@ -102,6 +102,8 @@ BOOL ExecuteCommand(struct _PARSED_COMMAND *Cmd);
 LPCTSTR GetEnvVarOrSpecial ( LPCTSTR varName );
 VOID AddBreakHandler (VOID);
 VOID RemoveBreakHandler (VOID);
+BOOL SubstituteForVars(TCHAR *Src, TCHAR *Dest);
+LPTSTR DoDelayedExpansion(LPTSTR Line);
 BOOL DoCommand (LPTSTR line);
 BOOL ReadLine(TCHAR *commandline, BOOL bMore);
 int cmd_main (int argc, const TCHAR *argv[]);
@@ -235,7 +237,12 @@ VOID CompleteFilename (LPTSTR, BOOL, LPTSTR, UINT);
 
 
 /* Prototypes for FOR.C */
+#define FOR_DIRS      1 /* /D */
+#define FOR_F         2 /* /F */
+#define FOR_LOOP      4 /* /L */
+#define FOR_RECURSIVE 8 /* /R */
 INT cmd_for (LPTSTR);
+BOOL ExecuteFor(struct _PARSED_COMMAND *Cmd);
 
 
 /* Prototypes for FREE.C */
@@ -256,6 +263,15 @@ VOID CleanHistory(VOID);
 VOID History_del_current_entry(LPTSTR str);/*CTRL-D*/
 INT CommandHistory (LPTSTR param);
 #endif
+
+
+/* Prototypes for IF.C */
+#define IFFLAG_NEGATE 1     /* NOT */
+#define IFFLAG_IGNORECASE 2 /* /I  */
+enum { IF_CMDEXTVERSION, IF_DEFINED, IF_ERRORLEVEL, IF_EXIST,
+       IF_STRINGEQ,         /* == */
+       IF_EQU, IF_GTR, IF_GEQ, IF_LSS, IF_LEQ, IF_NEQ };
+BOOL ExecuteIf(struct _PARSED_COMMAND *Cmd);
 
 
 /* Prototypes for INTERNAL.C */
@@ -302,6 +318,7 @@ TCHAR  cgetchar (VOID);
 BOOL   CheckCtrlBreak (INT);
 BOOL add_entry (LPINT ac, LPTSTR **arg, LPCTSTR entry);
 LPTSTR *split (LPTSTR, LPINT, BOOL);
+LPTSTR *splitspace (LPTSTR, LPINT);
 VOID   freep (LPTSTR *);
 LPTSTR _stpcpy (LPTSTR, LPCTSTR);
 VOID   StripQuotes(LPTSTR);
@@ -330,15 +347,36 @@ INT CommandMsgbox (LPTSTR);
 
 
 /* Prototypes from PARSER.C */
-enum { C_COMMAND, C_QUIET, C_BLOCK, C_MULTI, C_IFFAILURE, C_IFSUCCESS, C_PIPE };
+enum { C_COMMAND, C_QUIET, C_BLOCK, C_MULTI, C_IFFAILURE, C_IFSUCCESS, C_PIPE, C_IF, C_FOR };
 typedef struct _PARSED_COMMAND
 {
 	struct _PARSED_COMMAND *Subcommands;
 	struct _PARSED_COMMAND *Next;
 	struct _REDIRECTION *Redirections;
-	TCHAR *Tail;
 	BYTE Type;
-	TCHAR CommandLine[];
+	union
+	{
+		struct
+		{
+			TCHAR *Tail;
+			TCHAR CommandLine[];
+		} Command;
+		struct
+		{
+			BYTE Flags;
+			BYTE Operator;
+			TCHAR *LeftArg;
+			TCHAR *RightArg;
+		} If;
+		struct
+		{
+			BYTE Switches;
+			TCHAR Variable;
+			LPTSTR Params;
+			LPTSTR List;
+			struct tagBATCHCONTEXT *Context;
+		} For;
+	};
 } PARSED_COMMAND;
 PARSED_COMMAND *ParseCommand(LPTSTR Line);
 VOID EchoCommand(PARSED_COMMAND *Cmd);

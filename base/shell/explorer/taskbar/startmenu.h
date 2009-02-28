@@ -370,6 +370,8 @@ struct StartMenuRoot : public StartMenuHandler
 	static HWND Create(HWND hwndDesktopBar, int icon_size);
 	void	TrackStartmenu();
 
+	HWND	_hwndStartButton;
+
 protected:
 	LRESULT	Init(LPCREATESTRUCT pcs);
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);

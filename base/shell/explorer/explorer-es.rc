@@ -38,7 +38,7 @@ BEGIN
     BEGIN
         MENUITEM "&Herramientas",               ID_VIEW_TOOL_BAR
         MENUITEM "Barra &Extra",                ID_VIEW_EXTRA_BAR
-        MENUITEM "Barra de &Unidades",          ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "Barra de &Unidades",          ID_VIEW_DRIVE_BAR
         MENUITEM "Barra &Lateral",              ID_VIEW_SIDE_BAR
         MENUITEM "Barra de &Estado",            ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
@@ -55,7 +55,7 @@ BEGIN
         MENUITEM "Agrupar Automaticamente",     ID_WINDOW_AUTOSORT
         MENUITEM "Agrupar &Símbolos",           ID_WINDOW_ARRANGE
     END
-    POPUP "&Tools"
+    POPUP "Herramientas"
     BEGIN
         MENUITEM "&Opciones",                    ID_TOOLS_OPTIONS
     END
@@ -340,7 +340,7 @@ BEGIN
     IDS_EXPLORE             "Explorar"
     IDS_EMPTY               "(Vacío)"
     IDS_RECENT              "Documentos Recientes"
-    IDS_ADMIN               "Administracion"
+    IDS_ADMIN               "Administración"
 END
 
 STRINGTABLE DISCARDABLE
@@ -377,7 +377,7 @@ BEGIN
     IDS_ABOUT_EXPLORER      "&Acerca de Explorer..."
     IDS_LAUNCH_MANY_PROGRAMS
                             "Ha seleccionado más de un programa.\n¿Está seguro de que desea ejecutarlos todos?"
-    IDS_DESKTOPBAR_SETTINGS "Configuracion del Escritorio"
+    IDS_DESKTOPBAR_SETTINGS "Configuración del Escritorio"
     IDS_DESKTOP             "Escritorio"
     IDS_TASKBAR             "Barra de Tareas"
     IDS_NAMECOLUMN          "Nombre"

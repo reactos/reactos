@@ -95,7 +95,7 @@ static void AddTextButton(HWND hRebarWnd, UINT string, UINT command, UINT id)
     LoadStringW(hInstance, string, text, MAX_STRING_LEN);
     hButton = CreateWindowW(WC_BUTTONW, text,
                             WS_VISIBLE | WS_CHILD, 5, 5, 100, 15,
-                            hRebarWnd, (HMENU)ULongToHandle(command), hInstance, NULL);
+                            hRebarWnd, ULongToHandle(command), hInstance, NULL);
 
     rb.cbSize = sizeof(rb);
     rb.fMask = RBBIM_SIZE | RBBIM_CHILDSIZE | RBBIM_STYLE | RBBIM_CHILD | RBBIM_IDEALSIZE | RBBIM_ID;
@@ -132,24 +132,22 @@ static HDC make_dc(void)
 
 static LONG twips_to_centmm(int twips)
 {
-    return MulDiv(twips, 1000, TWIPS_PER_CM);
+    return MulDiv(twips, CENTMM_PER_INCH, TWIPS_PER_INCH);
 }
 
-LONG centmm_to_twips(int mm)
+static LONG centmm_to_twips(int mm)
 {
-    return MulDiv(mm, TWIPS_PER_CM, 1000);
+    return MulDiv(mm, TWIPS_PER_INCH, CENTMM_PER_INCH);
 }
 
 static LONG twips_to_pixels(int twips, int dpi)
 {
-    float ret = ((float)twips / ((float)TWIPS_PER_CM * 2.54)) * (float)dpi;
-    return (LONG)ret;
+    return MulDiv(twips, dpi, TWIPS_PER_INCH);
 }
 
 static LONG devunits_to_twips(int units, int dpi)
 {
-    float ret = ((float)units / (float)dpi) * (float)TWIPS_PER_CM * 2.54;
-    return (LONG)ret;
+    return MulDiv(units, TWIPS_PER_INCH, dpi);
 }
 
 
@@ -181,25 +179,35 @@ static RECT get_print_rect(HDC hdc)
 void target_device(HWND hMainWnd, DWORD wordWrap)
 {
     HWND hEditorWnd = GetDlgItem(hMainWnd, IDC_EDITOR);
-    HDC hdc = make_dc();
-    int width = 0;
 
     if(wordWrap == ID_WORDWRAP_MARGIN)
     {
+        int width = 0;
+        LRESULT result;
+        HDC hdc = make_dc();
         RECT rc = get_print_rect(hdc);
+
         width = rc.right - rc.left;
+        if(!hdc)
+        {
+            HDC hMaindc = GetDC(hMainWnd);
+            hdc = CreateCompatibleDC(hMaindc);
+            ReleaseDC(hMainWnd, hMaindc);
+        }
+        result = SendMessageW(hEditorWnd, EM_SETTARGETDEVICE, (WPARAM)hdc, width);
+        DeleteDC(hdc);
+        if (result)
+            return;
+        /* otherwise EM_SETTARGETDEVICE failed, so fall back on wrapping
+         * to window using the NULL DC. */
     }
 
-    if(!hdc)
-    {
-        HDC hMaindc = GetDC(hMainWnd);
-        hdc = CreateCompatibleDC(hMaindc);
-        ReleaseDC(hMainWnd, hMaindc);
+    if (wordWrap != ID_WORDWRAP_NONE) {
+        SendMessageW(hEditorWnd, EM_SETTARGETDEVICE, 0, 0);
+    } else {
+        SendMessageW(hEditorWnd, EM_SETTARGETDEVICE, 0, 1);
     }
 
-    SendMessageW(hEditorWnd, EM_SETTARGETDEVICE, (WPARAM)hdc, width);
-
-    DeleteDC(hdc);
 }
 
 static LPWSTR dialog_print_to_file(HWND hMainWnd)
@@ -218,12 +226,12 @@ static LPWSTR dialog_print_to_file(HWND hMainWnd)
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
     ofn.hwndOwner = hMainWnd;
     ofn.lpstrFilter = file_filter;
-    ofn.lpstrFile = (LPWSTR)file;
+    ofn.lpstrFile = file;
     ofn.nMaxFile = MAX_PATH;
-    ofn.lpstrDefExt = (LPWSTR)defExt;
+    ofn.lpstrDefExt = defExt;
 
     if(GetSaveFileNameW(&ofn))
-        return (LPWSTR)file;
+        return file;
     else
         return FALSE;
 }
@@ -502,7 +510,7 @@ static void add_ruler_units(HDC hdcRuler, RECT* drawRect, BOOL NewMetrics, long 
 
         hdc = CreateCompatibleDC(0);
 
-        CmPixels = twips_to_pixels(TWIPS_PER_CM, GetDeviceCaps(hdc, LOGPIXELSX));
+        CmPixels = twips_to_pixels(centmm_to_twips(1000), GetDeviceCaps(hdc, LOGPIXELSX));
         QuarterCmPixels = (int)((float)CmPixels / 4.0);
 
         hBitmap = CreateCompatibleBitmap(hdc, drawRect->right, drawRect->bottom);
@@ -620,7 +628,7 @@ LRESULT CALLBACK ruler_proc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
-void draw_preview_page(HDC hdc, HDC* hdcSized, FORMATRANGE* lpFr, float ratio, int bmNewWidth, int bmNewHeight, int bmWidth, int bmHeight)
+static void draw_preview_page(HDC hdc, HDC* hdcSized, FORMATRANGE* lpFr, float ratio, int bmNewWidth, int bmNewHeight, int bmWidth, int bmHeight)
 {
     HBITMAP hBitmapScaled = CreateCompatibleBitmap(hdc, bmNewWidth, bmNewHeight);
     HPEN hPen;
@@ -800,7 +808,7 @@ LRESULT print_preview(HWND hMainWnd)
     return 0;
 }
 
-void update_preview(HWND hWnd)
+static void update_preview(HWND hWnd)
 {
     RECT rc;
 

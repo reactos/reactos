@@ -50,6 +50,7 @@ BEGIN
     IDS_SOL_ABOUT   "Solitarioa J Brown\n\nCardLib-k egina  1.0. bertsioa"
     IDS_SOL_QUIT    "Uneko jokoa amaitu?"
     IDS_SOL_WIN     "Zorionak, irabazi duzu!!"
+    IDS_SOL_DEAL    "Deal again?"
 END
 
 

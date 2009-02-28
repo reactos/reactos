@@ -2,7 +2,7 @@
  //
  // XML storage C++ classes version 1.3
  //
- // Copyright (c) 2004, 2005, 2006, 2007, 2008 Martin Fuchs <martin-fuchs@gmx.net>
+ // Copyright (c) 2004, 2005, 2006, 2007, 2008, 2009 Martin Fuchs <martin-fuchs@gmx.net>
  //
 
  /// \file xmlstorage.cpp
@@ -37,12 +37,13 @@
 
 */
 
+#include <precomp.h>
+
 #ifndef XS_NO_COMMENT
-#define XS_NO_COMMENT	// no #pragma comment(lib, ...) statements in .lib files
+#define XS_NO_COMMENT	// no #pragma comment(lib, ...) statements in .lib files to enable static linking
 #endif
 
 //#include "xmlstorage.h"
-#include <precomp.h>
 
 
 namespace XMLStorage {
@@ -280,15 +281,17 @@ XMLNode* XMLNode::create_relative(const XPath& xpath)
 	XMLNode* node = this;
 
 	for(XPath::const_iterator it=xpath.begin(); it!=xpath.end(); ++it) {
-		XMLNode* child = it->find(this);
+		XMLNode* child = it->find(node);
 
 		if (!child) {
 			child = new XMLNode(it->_child_name);
-			add_child(child);
+			node->add_child(child);
 
 			if (!it->_attr_name.empty())
 				(*this)[it->_attr_name] = it->_attr_value;
 		}
+
+		node = child;
 	}
 
 	return node;
@@ -374,7 +377,7 @@ std::string EncodeXMLString(const XS_String& str, bool cdata)
 
 	if (cdata) {
 		 // encode the whole string in a CDATA section
-		std::string ret = "<![CDATA[";
+		std::string ret = CDATA_START;
 
 #ifdef XS_STRING_UTF8
 		ret += str;
@@ -382,7 +385,7 @@ std::string EncodeXMLString(const XS_String& str, bool cdata)
 		ret += get_utf8(str);
 #endif
 
-		ret += "]]>";
+		ret += CDATA_END;
 
 		return ret;
 	} else if (l <= BUFFER_LEN) {
@@ -471,9 +474,16 @@ std::string EncodeXMLString(const XS_String& str, bool cdata)
 }
 
  /// decode XML string literals
-XS_String DecodeXMLString(const XS_String& str)
+XS_String DecodeXMLString(const std::string& str)
 {
-	LPCXSSTR s = str.c_str();
+#ifdef XS_STRING_UTF8
+	const XS_String& str_utf8 = str;
+#else
+	XS_String str_utf8;
+	assign_utf8(str_utf8, str.c_str(), str.length());
+#endif
+
+	LPCXSSTR s = str_utf8.c_str();
 	LPXSSTR buffer = (LPXSSTR)alloca(sizeof(XS_CHAR)*XS_len(s));
 	LPXSSTR o = buffer;
 
@@ -497,7 +507,7 @@ XS_String DecodeXMLString(const XS_String& str)
 			} else	//@@ maybe decode "&#xx;" special characters
 				*o++ = *p;
 		} else if (*p=='<' && !XS_nicmp(p+1,XS_TEXT("![CDATA["),8)) {
-			LPCXSSTR e = XS_strstr(p+9, XS_TEXT("]]>"));
+			LPCXSSTR e = XS_strstr(p+9, XS_TEXT(CDATA_END));
 			if (e) {
 				p += 9;
 				size_t l = e - p;
@@ -514,7 +524,7 @@ XS_String DecodeXMLString(const XS_String& str)
 
 
  /// write node with children tree to output stream using original white space
-void XMLNode::write_worker(std::ostream& out) const
+void XMLNode::original_write_worker(std::ostream& out) const
 {
 	out << _leading << '<' << EncodeXMLString(*this);
 
@@ -522,10 +532,15 @@ void XMLNode::write_worker(std::ostream& out) const
 		out << ' ' << EncodeXMLString(it->first) << "=\"" << EncodeXMLString(it->second) << "\"";
 
 	if (!_children.empty() || !_content.empty()) {
-		out << '>' << _content;
+		out << '>';
+
+		if (_cdata_content)
+			out << CDATA_START << _content << CDATA_END;
+		else
+			out << _content;
 
 		for(Children::const_iterator it=_children.begin(); it!=_children.end(); ++it)
-			(*it)->write_worker(out);
+			(*it)->original_write_worker(out);
 
 		out << _end_leading << "</" << EncodeXMLString(*this) << '>';
 	} else
@@ -619,7 +634,9 @@ void XMLNode::smart_write_worker(std::ostream& out, const XMLFormat& format, int
 	else {
 		out << '>';
 
-		if (!*content)
+		if (_cdata_content)
+			out << CDATA_START << _content << CDATA_END;
+		else if (!*content)
 			out << format._endl;
 		else
 			out << content;
@@ -883,14 +900,18 @@ void XMLReaderBase::EndElementHandler()
 	const char* e = s + _content.length();
 	const char* p;
 
-	if (!strncmp(s,"<![CDATA[",9) && !strncmp(e-3,"]]>",3)) {
+	if (!strncmp(s,CDATA_START,9) && !strncmp(e-3,CDATA_END,3)) {
 		s += 9;
 		p = (e-=3);
+
+		_pos->_cdata_content = true;
 	} else {
 		 // search for content end leaving only white space for _end_leading
 		for(p=e; p>s; --p)
 			if (!isspace((unsigned char)p[-1]))
 				break;
+
+		_pos->_cdata_content = false;
 	}
 
 	if (p != s)

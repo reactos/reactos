@@ -12,7 +12,7 @@
 
 MUI_LAYOUTS ltLTLayouts[] =
 {
-    { L"0427", L"00000427" },
+    { L"0427", L"00010427" },
     { L"0409", L"00000409" },
     { NULL, NULL }
 };
@@ -1480,6 +1480,11 @@ MUI_ERROR ltLTErrorEntries[] =
     {
         //ERROR_ADDING_KBLAYOUTS,
         "Setup failed to add keyboard layouts to registry.\n"
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_UPDATE_GEOID,
+        "Setup could not set the geo id.\n"
         "ENTER = Reboot computer"
     },
     {

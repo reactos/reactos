@@ -51,10 +51,8 @@ struct MainFrameBase : public PreTranslateWindow
 	WindowHandle _hwndrebar;
 
 	WindowHandle _htoolbar;
+	WindowHandle _haddrcombo;
 	WindowHandle _hstatusbar;
-
-	WindowHandle _haddressedit;
-	WindowHandle _hcommandedit;
 
 	WindowHandle _hsidebar;
 	HIMAGELIST	_himl;
@@ -88,8 +86,6 @@ protected:
 
 	void	FillBookmarks();
 	virtual bool go_to(LPCTSTR url, bool new_window);
-
-	void	ExecuteCommandbar(LPCTSTR dir);
 };
 
 

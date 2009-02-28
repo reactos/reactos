@@ -13,6 +13,9 @@
 	<directory name="hostname">
 		<xi:include href="hostname/hostname.rbuild" />
 	</directory>
+	<directory name="lodctr">
+		<xi:include href="lodctr/lodctr.rbuild" />
+	</directory>
 	<directory name="more">
 		<xi:include href="more/more.rbuild" />
 	</directory>

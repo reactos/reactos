@@ -1,19 +1,158 @@
 /* TRANSLATOR :  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR.:  xx-xx-2007
- * LAST UPDATE:  06-07-2008
+ * LAST UPDATE:  03-12-2008
+ */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 
 IDD_STARTPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Inötal·cia systÈmu ReactOS"
+CAPTION "Inötal·cia systÈmu ReactOS" //ReactOS Setup
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "VÌta V·s sprievodca inötal·ciou systÈmu ReactOS.", IDC_STARTTITLE, 115, 8, 195, 24
-    LTEXT "SystÈm ReactOS sa z tohto CD ned· nainötalovaù ihneÔ! "\
-          "Reötartujte, prosÌm, poËÌtaË a inötalaËnÈ CD nechajte "\
-	  "vloûenÈ, aby sa mohol systÈm ReactOS nainötalovaù.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "SystÈm ReactOS sa z tohto CD ned· nainötalovaù ihneÔ! Reötartujte, prosÌm, poËÌtaË a inötalaËnÈ CD nechajte vloûenÈ, aby sa mohol systÈm ReactOS nainötalovaù.", IDC_STATIC, 115, 40, 195, 100
     LTEXT "Inötal·ciu ukonËÌte kliknutÌm na tlaËidlo DokonËiù.", IDC_STATIC, 115, 169, 195, 17
 END
 
+IDD_LANGSELPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Inötal·cia systÈmu ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "IDB_LOGO", IDB_ROSLOGO, "Static", WS_CHILD | WS_VISIBLE | SS_OWNERDRAW, 18, 0, 290, 99
+    CONTROL "Jazyk inötal·cie:", IDC_STATIC, "Static", WS_CHILD | WS_VISIBLE | WS_GROUP | SS_RIGHT, 20, 109, 106, 11
+    CONTROL "", IDC_LANGUAGES, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 132, 107, 176, 142
+    CONTROL "Keyboard or input method:", IDC_STATIC, "Static", WS_CHILD | WS_VISIBLE | WS_GROUP | SS_RIGHT, 20, 142, 106, 11
+    CONTROL "", IDC_KEYLAYOUT, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 132, 141, 176, 81
+    LTEXT "Click Next to select the setup type.", IDC_STATIC, 10, 180 ,297, 10
+END
+
+IDD_TYPEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Inötal·cia systÈmu ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "Typ inötal·cie", IDC_STATIC, "Button", BS_GROUPBOX, 10,0,297,172
+    CONTROL "Nainötalovaù systÈm ReactOS", IDC_INSTALL, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 20, 15, 277, 10
+    CONTROL "Opraviù alebo aktualizovaù nainötalovan˝ systÈm ReactOS", IDC_SETUP, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_DISABLED , 20, 30, 277, 10
+    LTEXT "Click Next to setup the devices.", IDC_STATIC, 10, 180 ,297, 10
+END
+
+IDD_DEVICEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Inötal·cia systÈmu ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "Nastavenia zariadenÌ", IDC_STATIC, "Button", BS_GROUPBOX, 10,0,297,172
+    LTEXT "PoËÌtaË:", IDC_STATIC, 20,15, 80, 10
+    CONTROL "", IDC_COMPUTER, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST , 100, 15, 180, 80
+    LTEXT "Obrazovka:", IDC_STATIC, 20,35, 80, 10
+    CONTROL "", IDC_DISPLAY, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST , 100, 35, 180, 80
+    LTEXT "Kl·vesnica:", IDC_STATIC, 20,55, 80, 10
+    CONTROL "", IDC_KEYBOARD, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST , 100, 55, 180, 80
+    LTEXT "Click Next setup of the installation device.", IDC_STATIC, 10, 180 ,277, 20
+END
+
+IDD_DRIVEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Inötal·cia systÈmu ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "PartÌcia na nainötalovanie systÈmu ReactOS", IDC_STATIC, "Button", BS_GROUPBOX, 10,1,298,176
+    LISTBOX IDC_PARTITION, 20,12,278,142,LBS_HASSTRINGS | WS_VSCROLL
+    PUSHBUTTON "&Vytvoriù", IDC_PARTCREATE, 20,155,50,15
+    PUSHBUTTON "O&dstr·niù", IDC_PARTDELETE, 76,155,50,15
+    PUSHBUTTON "D&river", IDC_DEVICEDRIVER, 162,155,50,15, WS_DISABLED
+    PUSHBUTTON "RozöÌrenÈ &moûnosti...", IDC_PARTMOREOPTS, 218,155,80,15
+    LTEXT "Click Next to check the summary.", IDC_STATIC, 10, 180 ,277, 20
+END
+
+IDD_PARTITION DIALOGEX DISCARDABLE  0, 0, 145, 90
+STYLE WS_VISIBLE|WS_CAPTION|WS_SYSMENU|WS_THICKFRAME
+CAPTION "Vytvoriù partÌciu"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  CONTROL "",IDC_UPDOWN1,"msctls_updown32", WS_VISIBLE,104,22,9,13
+  CONTROL "Vytvoriù a naform·tovaù partÌciu",IDC_STATIC,"Button",BS_GROUPBOX,7,5,129,57
+  LTEXT "Veækosù:",IDC_STATIC, 13,24,27,9
+  EDITTEXT IDC_PARTSIZE,52,23,53,13, WS_VISIBLE|WS_TABSTOP
+  LTEXT "GB",IDC_UNIT, 117,24,14,9
+  LTEXT "SystÈm s˙borov:",IDC_STATIC,13,46,35,9
+  CONTROL "",IDC_FSTYPE,"ComboBox",WS_VISIBLE|WS_TABSTOP|CBS_DROPDOWNLIST,52,42,79,50
+  PUSHBUTTON "&OK",IDOK,35,68,47,15, WS_VISIBLE|WS_TABSTOP
+  PUSHBUTTON "&Zruöiù",IDCANCEL,87,68,47,15, WS_VISIBLE|WS_TABSTOP
+END
+
+IDD_BOOTOPTIONS DIALOGEX DISCARDABLE  0, 0, 305, 105
+STYLE WS_VISIBLE|WS_CAPTION|WS_THICKFRAME
+CAPTION "RozöÌrenÈ nastavenia partÌcie"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "InötalaËn˝ prieËinok", IDC_STATIC, "Button", BS_GROUPBOX, 4,1,298,30
+    EDITTEXT IDC_PATH, 10,11,278,13, WS_VISIBLE
+
+    CONTROL "Inötal·cia zav·dzaËa systÈmu", IDC_STATIC, "Button", BS_GROUPBOX, 4,36,298,41
+
+    CONTROL "Nainötalovaù zav·dzaË systÈmu na pevn˝ disk (MBR)", IDC_INSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10,46,278,11
+    CONTROL "Nenainötalovaù zav·dzaË systÈmu", IDC_NOINSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_DISABLED , 10,57,278,11
+    PUSHBUTTON "&OK", IDOK, 180,83,50,15, WS_TABSTOP | WS_VISIBLE
+    PUSHBUTTON "&Zruöiù", IDCANCEL, 240,83,50,15, WS_TABSTOP | WS_VISIBLE
+END
+
+IDD_SUMMARYPAGE DIALOGEX 0, 0, 317, 193
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Inötal·cia systÈmu ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "Zhrnutie inötal·cie", IDC_ACTION, "Button", BS_GROUPBOX, 10,0,297,172
+    LTEXT "KliknutÌm na tlaËidlo œalej spustÌte inötalaËn˝ proces.", IDC_STATIC, 10, 180 ,277, 20
+END
+
+IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 193
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Inötal·cia systÈmu ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "Setup action", IDC_ACTION, "Button", BS_GROUPBOX, 10,0,297,172
+    LTEXT "Install files...", IDC_ACTIVITY, 20, 50, 277, 10
+    LTEXT "test.txt", IDC_ITEM, 30, 80, 257, 10
+    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32",
+            PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
+END
+
+
+IDD_RESTARTPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Completing ReactOS Setup"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "Completing the first stage of ReactOS Setup", IDC_FINISHTITLE, "Button", BS_GROUPBOX, 10,0,297,172
+    LTEXT "You have successfully completed the first stage of ReactOS Setup.", IDC_STATIC, 20, 50, 277, 10
+ 
+    LTEXT "KliknutÌm na tlaËidlo DokonËiù reötartujete poËÌtaË.", IDC_STATIC, 20, 80, 277, 10
+    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
+    LTEXT "If there is a CD in a drive, remove it. Then, to restart your computer, click Finish.", IDC_STATIC, 10, 180, 297, 20
+END
+
+
+STRINGTABLE
+BEGIN
+	IDS_LANGTITLE		"V˝ber jazyka" //Voæba jazyka
+	IDS_LANGSUBTITLE	"Voæba jazyka pre inötal·tor a v˝sledn˝ systÈm." //Choose lang., Vyberte, Zvoæte
+	IDS_TYPETITLE		"VÌta V·s inötal·tor systÈmu ReactOS" //Welcome to ReactOS Setup
+	IDS_TYPESUBTITLE	"Choose setup type."
+	IDS_DEVICETITLE		"Setup the basic devices"
+	IDS_DEVICESUBTITLE	"Set the settings of display and keyboard."
+	IDS_DRIVETITLE		"Setup the installation partition and system folder"
+	IDS_DRIVESUBTITLE	"Prepare installation partition, system folder and boot loader."
+	IDS_PROCESSTITLE	"Prepare partition, copy files and setup system"
+	IDS_PROCESSSUBTITLE	"Create and format partition, copy files, install and setup boot loader"
+	IDS_RESTARTTITLE	"First stage of setup finished"
+	IDS_RESTARTSUBTITLE	"The first stage of setup has been completed, restart to continue with second stage"
+	IDS_SUMMARYTITLE	"Zhrnutie inötal·cie"
+	IDS_SUMMARYSUBTITLE	"List installation properties to check before apply to the installation device"
+	IDS_ABORTSETUP		"ReactOS is not completely installed on your computer. If you quit Setup now, you will need to run Setup again to install Reactos. Naozaj skonËiù?"
+	IDS_ABORTSETUP2		"Preruöiù inötal·ciu?"
+END
 /* EOF */

@@ -12,7 +12,7 @@
 
 /* FUNCTIONS ****************************************************************/
 
-DWORD STDCALL RpcThreadRoutine(LPVOID lpParameter)
+DWORD WINAPI RpcThreadRoutine(LPVOID lpParameter)
 {
     RPC_STATUS Status;
 
@@ -41,10 +41,104 @@ DWORD STDCALL RpcThreadRoutine(LPVOID lpParameter)
     return 0;
 }
 
+IELF_HANDLE ElfCreateEventLogHandle(WCHAR *Name)
+{
+    PEVENTSOURCE EventSourceHandle;
+    PLOGFILE currentLogFile = NULL;
+    HKEY hLogSourceNameKey = NULL;
+	WCHAR *SourceNameRegKey = NULL;
+    DWORD dwError, dwSize;
+    INT i, LogsActive;
+
+    EventSourceHandle = HeapAlloc(GetProcessHeap(), 0, sizeof(EVENTSOURCE));
+    if (!EventSourceHandle)
+    {
+        DPRINT1("Failed to allocate Heap!\n");
+        return NULL;
+    }
+
+    EventSourceHandle->Name = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY ,(wcslen(Name) + 1) * sizeof(WCHAR));
+    if (!EventSourceHandle->Name)
+    {
+        HeapFree(GetProcessHeap(),0, EventSourceHandle);
+        DPRINT1("Failed to allocate Heap!\n");
+        return NULL;
+    }
+
+    wcscpy(EventSourceHandle->Name, Name);
+
+    /* Get the number of Log Files the EventLog service found */
+    LogsActive = LogfListItemCount();
+    if (LogsActive == 0)
+    {
+        DPRINT1("EventLog service reports no log files!\n");
+        goto Cleanup;
+    }
+
+    /* Default to the Application Log, as documented on MSDN */
+    EventSourceHandle->LogFile = LogfListItemByName(L"Application");
+
+    for (i = 1; i <= LogsActive; i++)
+    {
+        currentLogFile = LogfListItemByIndex(i);
+        //DPRINT1("LogFile = %S\n",currentLogFile->LogName);
+
+        dwSize = 90;
+        dwSize += (wcslen(currentLogFile->LogName) + 3) * sizeof(WCHAR);
+        dwSize += (wcslen(Name) + 1) * sizeof(WCHAR);
+
+        SourceNameRegKey = HeapAlloc(GetProcessHeap(), 0, dwSize);
+
+        wcscpy(SourceNameRegKey, L"SYSTEM\\CurrentControlSet\\Services\\EventLog\\");
+        wcsncat(SourceNameRegKey, currentLogFile->LogName, wcslen(currentLogFile->LogName));
+        wcsncat(SourceNameRegKey, L"\\",2);
+        wcsncat(SourceNameRegKey, Name, wcslen(Name));
+
+        dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                                SourceNameRegKey,
+                                0,
+                                KEY_READ,
+                                &hLogSourceNameKey);
+
+        HeapFree(GetProcessHeap(), 0, SourceNameRegKey);
+
+        if (dwError == ERROR_SUCCESS)
+        {
+            EventSourceHandle->LogFile = currentLogFile;
+            break;
+        }
+    }
+
+    /* If hLogSourceRegKey is NULL */
+    if (!hLogSourceNameKey)
+    {
+        DPRINT1("Could not find subkey %S under any of the eventlog logfiles in registry. Using default of Application.\n",Name);
+    }
+
+    if (hLogSourceNameKey) RegCloseKey(hLogSourceNameKey);
+
+    return EventSourceHandle;
+
+Cleanup:
+    HeapFree(GetProcessHeap(), 0, EventSourceHandle->Name);
+    HeapFree(GetProcessHeap(), 0, EventSourceHandle);
+    return NULL;
+}
+
+BOOL ElfDeleteEventLogHandle(IELF_HANDLE EventLogHandle)
+{
+    PEVENTSOURCE pHandle = (PEVENTSOURCE) EventLogHandle;
+
+    if (pHandle->LogFile->Header.Signature != LOGFILE_SIGNATURE)
+        return FALSE;
+
+    HeapFree(GetProcessHeap(),0,pHandle->Name);
+    HeapFree(GetProcessHeap(),0,pHandle);
+    return TRUE;
+}
 
 /* Function 0 */
 NTSTATUS ElfrClearELFW(
-    handle_t BindingHandle,
     IELF_HANDLE LogHandle,
     PRPC_UNICODE_STRING BackupFileName)
 {
@@ -55,7 +149,6 @@ NTSTATUS ElfrClearELFW(
 
 /* Function 1 */
 NTSTATUS ElfrBackupELFW(
-    handle_t BindingHandle,
     IELF_HANDLE LogHandle,
     PRPC_UNICODE_STRING BackupFileName)
 {
@@ -66,7 +159,6 @@ NTSTATUS ElfrBackupELFW(
 
 /* Function 2 */
 NTSTATUS ElfrCloseEL(
-    handle_t BindingHandle,
     IELF_HANDLE *LogHandle)
 {
     UNIMPLEMENTED;
@@ -76,7 +168,6 @@ NTSTATUS ElfrCloseEL(
 
 /* Function 3 */
 NTSTATUS ElfrDeregisterEventSource(
-    handle_t BindingHandle,
     IELF_HANDLE *LogHandle)
 {
     UNIMPLEMENTED;
@@ -86,7 +177,6 @@ NTSTATUS ElfrDeregisterEventSource(
 
 /* Function 4 */
 NTSTATUS ElfrNumberOfRecords(
-    handle_t BindingHandle,
     IELF_HANDLE LogHandle,
     DWORD *NumberOfRecords)
 {
@@ -97,7 +187,6 @@ NTSTATUS ElfrNumberOfRecords(
 
 /* Function 5 */
 NTSTATUS ElfrOldestRecord(
-    handle_t BindingHandle,
     IELF_HANDLE LogHandle,
     DWORD *OldestRecordNumber)
 {
@@ -108,7 +197,6 @@ NTSTATUS ElfrOldestRecord(
 
 /* Function 6 */
 NTSTATUS ElfrChangeNotify(
-    handle_t BindingHandle,
     IELF_HANDLE *LogHandle,
     RPC_CLIENT_ID ClientId,
     DWORD Event)
@@ -120,7 +208,6 @@ NTSTATUS ElfrChangeNotify(
 
 /* Function 7 */
 NTSTATUS ElfrOpenELW(
-    handle_t BindingHandle,
     EVENTLOG_HANDLE_W UNCServerName,
     PRPC_UNICODE_STRING ModuleName,
     PRPC_UNICODE_STRING RegModuleName,
@@ -129,14 +216,13 @@ NTSTATUS ElfrOpenELW(
     IELF_HANDLE *LogHandle)
 {
     UNIMPLEMENTED;
-    *LogHandle = 1;
+    *LogHandle = (IELF_HANDLE)1;
     return STATUS_SUCCESS;
 }
 
 
 /* Function 8 */
 NTSTATUS ElfrRegisterEventSourceW(
-    handle_t BindingHandle,
     EVENTLOG_HANDLE_W UNCServerName,
     PRPC_UNICODE_STRING ModuleName,
     PRPC_UNICODE_STRING RegModuleName,
@@ -145,14 +231,13 @@ NTSTATUS ElfrRegisterEventSourceW(
     IELF_HANDLE *LogHandle)
 {
     UNIMPLEMENTED;
-    *LogHandle = 1;
+    *LogHandle = (IELF_HANDLE)1;
     return STATUS_SUCCESS;
 }
 
 
 /* Function 9 */
 NTSTATUS ElfrOpenBELW(
-    handle_t BindingHandle,
     EVENTLOG_HANDLE_W UNCServerName,
     PRPC_UNICODE_STRING BackupFileName,
     DWORD MajorVersion,
@@ -166,7 +251,6 @@ NTSTATUS ElfrOpenBELW(
 
 /* Function 10 */
 NTSTATUS ElfrReadELW(
-    handle_t BindingHandle,
     IELF_HANDLE LogHandle,
     DWORD ReadFlags,
     DWORD RecordOffset,
@@ -182,7 +266,6 @@ NTSTATUS ElfrReadELW(
 
 /* Function 11 */
 NTSTATUS ElfrReportEventW(
-    handle_t BindingHandle,
     IELF_HANDLE LogHandle,
     DWORD Time,
     USHORT EventType,
@@ -206,23 +289,23 @@ NTSTATUS ElfrReportEventW(
         switch (EventType)
         {
             case EVENTLOG_SUCCESS:
-                DPRINT1("Success: %S\n", Strings[i]);
+                DPRINT1("Success: %wZ\n", Strings[i]);
                 break;
 
             case EVENTLOG_ERROR_TYPE:
-                DPRINT1("Error: %S\n", Strings[i]);
+                DPRINT1("Error: %wZ\n", Strings[i]);
                 break;
 
             case EVENTLOG_WARNING_TYPE:
-                DPRINT1("Warning: %S\n", Strings[i]);
+                DPRINT1("Warning: %wZ\n", Strings[i]);
                 break;
 
             case EVENTLOG_INFORMATION_TYPE:
-                DPRINT1("Info: %S\n", Strings[i]);
+                DPRINT1("Info: %wZ\n", Strings[i]);
                 break;
 
             default:
-                DPRINT1("Type %hu: %S\n", EventType, Strings[i]);
+                DPRINT1("Type %hu: %wZ\n", EventType, Strings[i]);
                 break;
         }
     }
@@ -233,7 +316,6 @@ NTSTATUS ElfrReportEventW(
 
 /* Function 12 */
 NTSTATUS ElfrClearELFA(
-    handle_t BindingHandle,
     IELF_HANDLE LogHandle,
     PRPC_STRING BackupFileName)
 {
@@ -244,7 +326,6 @@ NTSTATUS ElfrClearELFA(
 
 /* Function 13 */
 NTSTATUS ElfrBackupELFA(
-    handle_t BindingHandle,
     IELF_HANDLE LogHandle,
     PRPC_STRING BackupFileName)
 {
@@ -255,7 +336,6 @@ NTSTATUS ElfrBackupELFA(
 
 /* Function 14 */
 NTSTATUS ElfrOpenELA(
-    handle_t BindingHandle,
     EVENTLOG_HANDLE_A UNCServerName,
     PRPC_STRING ModuleName,
     PRPC_STRING RegModuleName,
@@ -263,9 +343,9 @@ NTSTATUS ElfrOpenELA(
     DWORD MinorVersion,
     IELF_HANDLE *LogHandle)
 {
-    UNICODE_STRING UNCServerNameW = { 0, };
-    UNICODE_STRING ModuleNameW = { 0, };
-    UNICODE_STRING RegModuleNameW = { 0, };
+    UNICODE_STRING UNCServerNameW = { 0, 0, NULL };
+    UNICODE_STRING ModuleNameW    = { 0, 0, NULL };
+    UNICODE_STRING RegModuleNameW = { 0, 0, NULL };
     NTSTATUS Status;
 
     if (UNCServerName &&
@@ -290,7 +370,6 @@ NTSTATUS ElfrOpenELA(
     }
 
     Status = ElfrOpenELW(
-        BindingHandle,
         UNCServerName ? UNCServerNameW.Buffer : NULL,
         ModuleName ? (PRPC_UNICODE_STRING)&ModuleNameW : NULL,
         RegModuleName ? (PRPC_UNICODE_STRING)&RegModuleNameW : NULL,
@@ -308,7 +387,6 @@ NTSTATUS ElfrOpenELA(
 
 /* Function 15 */
 NTSTATUS ElfrRegisterEventSourceA(
-    handle_t BindingHandle,
     EVENTLOG_HANDLE_A UNCServerName,
     PRPC_STRING ModuleName,
     PRPC_STRING RegModuleName,
@@ -323,7 +401,6 @@ NTSTATUS ElfrRegisterEventSourceA(
 
 /* Function 16 */
 NTSTATUS ElfrOpenBELA(
-    handle_t BindingHandle,
     EVENTLOG_HANDLE_A UNCServerName,
     PRPC_STRING BackupFileName,
     DWORD MajorVersion,
@@ -337,7 +414,6 @@ NTSTATUS ElfrOpenBELA(
 
 /* Function 17 */
 NTSTATUS ElfrReadELA(
-    handle_t BindingHandle,
     IELF_HANDLE LogHandle,
     DWORD ReadFlags,
     DWORD RecordOffset,
@@ -353,7 +429,6 @@ NTSTATUS ElfrReadELA(
 
 /* Function 18 */
 NTSTATUS ElfrReportEventA(
-    handle_t BindingHandle,
     IELF_HANDLE LogHandle,
     DWORD Time,
     USHORT EventType,
@@ -403,7 +478,6 @@ NTSTATUS ElfrWriteClusterEvents(
 
 /* Function 22 */
 NTSTATUS ElfrGetLogInformation(
-    handle_t BindingHandle,
     IELF_HANDLE LogHandle,
     DWORD InfoLevel,
     BYTE *Buffer,
@@ -417,7 +491,6 @@ NTSTATUS ElfrGetLogInformation(
 
 /* Function 23 */
 NTSTATUS ElfrFlushEL(
-    handle_t BindingHandle,
     IELF_HANDLE LogHandle)
 {
     UNIMPLEMENTED;
@@ -427,7 +500,6 @@ NTSTATUS ElfrFlushEL(
 
 /* Function 24 */
 NTSTATUS ElfrReportEventAndSourceW(
-    handle_t BindingHandle,
     IELF_HANDLE LogHandle,
     DWORD Time,
     USHORT EventType,

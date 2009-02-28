@@ -250,18 +250,13 @@ DirReadParam(LPTSTR Line,				/* [IN] The line with the parameters & switches */
 	LPTSTR temp;
 
 	/* Initialize parameter array */
-	if(!params)
-		return FALSE;
 	*params = NULL;
 	*entries = 0;
-	ptrStart = NULL;
-	ptrEnd = NULL;
 
 	/* Initialize variables; */
 	cCurSwitch = _T(' ');
 	bNegative = FALSE;
 	bPNegative = FALSE;
-	bIntoQuotes = FALSE;
 
 	/* We suppose that switch parameters
 	   were given to avoid setting them to default
@@ -348,75 +343,45 @@ DirReadParam(LPTSTR Line,				/* [IN] The line with the parameters & switches */
 				cCurSwitch = _T(' ');
 
 		}
-		else if ((cCurSwitch == _T(' ')) || (cCurSwitch == _T('P')))
+		else if (cCurSwitch == _T(' '))
 		{
 			/* 2nd section (see README_DIR.txt) */
 			/* We are expecting parameter or the unknown */
 
 			if (cCurChar == _T('/'))
 				cCurSwitch = _T('/');
-
-			/* Process a spacer */
 			else if (cCurChar == _T(' '))
-			{
-				if (!bIntoQuotes)
-				{
-					cCurSwitch = _T(' ');
-					if(ptrStart && ptrEnd)
-					{
-						temp = cmd_alloc(((ptrEnd - ptrStart) + 2) * sizeof (TCHAR));
-						if(!temp)
-							return FALSE;
-						memcpy(temp, ptrStart, ((ptrEnd - ptrStart) + 2) * sizeof (TCHAR));
-						temp[(ptrEnd - ptrStart + 1)] = _T('\0');
-						if(!add_entry(entries, params, temp))
-						{
-							cmd_free(temp);
-							freep(*params);
-							return FALSE;
-						}
-
-						cmd_free(temp);
-
-						ptrStart = NULL;
-						ptrEnd = NULL;
-					}
-				}
-
-			}
-			else if (cCurChar == _T('\"'))
-			{
-				/* Process a quote */
-				bIntoQuotes = !bIntoQuotes;
-				if(!bIntoQuotes)
-					ptrEnd = Line;
-			}
+				/* do nothing */;
 			else
 			{
-				/* Process a character for parameter */
-				if ((cCurSwitch == _T(' ')) && ptrStart && ptrEnd)
+				/* This is a file/directory name parameter. Find its end */
+				ptrStart = Line;
+				bIntoQuotes = FALSE;
+				while (*Line)
 				{
-					temp = cmd_alloc(((ptrEnd - ptrStart) + 2) * sizeof (TCHAR));
-					if(!temp)
-						return FALSE;
-					memcpy(temp, ptrStart, ((ptrEnd - ptrStart) + 2) * sizeof (TCHAR));
-					temp[(ptrEnd - ptrStart + 1)] = _T('\0');
-					if(!add_entry(entries, params, temp))
-					{
-						cmd_free(temp);
-						freep(*params);
-						return FALSE;
-					}
-
-					cmd_free(temp);
-
-					ptrStart = NULL;
-					ptrEnd = NULL;
+					if (!bIntoQuotes && (*Line == _T('/') || *Line == _T(' ')))
+						break;
+					bIntoQuotes ^= (*Line == _T('"'));
+					Line++;
 				}
-				cCurSwitch = _T('P');
-				if(!ptrStart)
-					ptrStart = ptrEnd = Line;
 				ptrEnd = Line;
+
+				/* Copy it to the entries list */
+				temp = cmd_alloc((ptrEnd - ptrStart + 1) * sizeof (TCHAR));
+				if(!temp)
+					return FALSE;
+				memcpy(temp, ptrStart, (ptrEnd - ptrStart) * sizeof (TCHAR));
+				temp[ptrEnd - ptrStart] = _T('\0');
+				StripQuotes(temp);
+				if(!add_entry(entries, params, temp))
+				{
+					cmd_free(temp);
+					freep(*params);
+					return FALSE;
+				}
+
+				cmd_free(temp);
+				continue;
 			}
 		}
 		else
@@ -564,26 +529,6 @@ DirReadParam(LPTSTR Line,				/* [IN] The line with the parameters & switches */
 
 		Line++;
 	}
-	/* Terminate the parameters */
-	if(ptrStart && ptrEnd)
-	{
-		temp = cmd_alloc((ptrEnd - ptrStart + 2) * sizeof(TCHAR));
-		if(!temp)
-			return FALSE;
-		memcpy(temp, ptrStart, (ptrEnd - ptrStart + 1) * sizeof(TCHAR));
-		temp[(ptrEnd - ptrStart + 1)] = _T('\0');
-		if(!add_entry(entries, params, temp))
-		{
-			cmd_free(temp);
-			freep(*params);
-			return FALSE;
-		}
-
-		cmd_free(temp);
-
-		ptrStart = NULL;
-		ptrEnd = NULL;
-	}
 
 	/* Calculate the switches with no switch paramater  */
 	if (!(lpFlags->stAttribs.bParSetted))
@@ -597,7 +542,7 @@ DirReadParam(LPTSTR Line,				/* [IN] The line with the parameters & switches */
 		lpFlags->stOrderBy.eCriteria[0] = ORDER_NAME;
 		lpFlags->stOrderBy.bCriteriaRev[0] = FALSE;
 	}
-	if (!(lpFlags->stOrderBy.bParSetted))
+	if (!(lpFlags->stTimeField.bParSetted))
 		lpFlags->stTimeField.eTimeField = TF_MODIFIEDDATE ;
 
 	/* Calculate the unsetted switches (the "-" prefixed)*/
@@ -989,7 +934,7 @@ DirPrintNewList(LPWIN32_FIND_DATA ptrFiles[],	/* [IN]Files' Info */
   INT iSizeFormat;
   ULARGE_INTEGER u64FileSize;
 
-  for (i = 0;i < dwCount;i++)
+  for (i = 0; i < dwCount && !bCtrlBreak; i++)
   {
     /* Calculate size */
     if (ptrFiles[i]->dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT)
@@ -1094,71 +1039,43 @@ DirPrintWideList(LPWIN32_FIND_DATA ptrFiles[],	/* [IN] Files' Info */
   if (!(iColumns))
     iColumns = 1;
 
-  /* Print Column sorted */
-  if (lpFlags->bWideListColSort)
+  /* Calculate the lines that will be printed */
+  iLines = (USHORT)((dwCount + iColumns - 1) / iColumns);
+
+  for (i = 0; i < iLines && !bCtrlBreak; i++)
   {
-    /* Calculate the lines that will be printed */
-//    iLines = ceil((float)dwCount/(float)iColumns);
-    iLines = (USHORT)(dwCount / iColumns);
-
-    for (i = 0;i < iLines;i++)
+    for (j = 0; j < iColumns; j++)
     {
-      for (j = 0; j < iColumns; j++)
+      if (lpFlags->bWideListColSort)
       {
+        /* Print Column sorted */
         temp = (j * iLines) + i;
-        if (temp >= dwCount)
-           break;
-
-        if (ptrFiles[temp]->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-          _stprintf(szTempFname, _T("[%s]"), ptrFiles[temp]->cFileName);
-        else
-          _stprintf(szTempFname, _T("%s"), ptrFiles[temp]->cFileName);
-
-        if(lpFlags->bPause)
-		   ConOutPrintfPaging(FALSE,_T("%-*s"), iLongestName + 1 , szTempFname);
-		else
-		   ConOutPrintf(_T("%-*s"), iLongestName + 1 , szTempFname);
+      }
+      else
+      {
+        /* Print Line sorted */
+        temp = (i * iColumns) + j;
       }
 
-      if(lpFlags->bPause)
-		 ConOutPrintfPaging(FALSE,_T("\n"));
-	  else
-		 ConOutPrintf(_T("\n"));
-    }
-  }
-  else
-  {
-    /* Print Line sorted */
-    for (i = 0; i < dwCount; i++)
-    {
-      if (ptrFiles[i]->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-        _stprintf(szTempFname, _T("[%s]"), ptrFiles[i]->cFileName);
+      if (temp >= dwCount)
+         break;
+
+      if (ptrFiles[temp]->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+        _stprintf(szTempFname, _T("[%s]"), ptrFiles[temp]->cFileName);
       else
-        _stprintf(szTempFname, _T("%s"), ptrFiles[i]->cFileName);
+        _stprintf(szTempFname, _T("%s"), ptrFiles[temp]->cFileName);
 
       if(lpFlags->bPause)
-		 ConOutPrintfPaging(FALSE,_T("%-*s"), iLongestName + 1, szTempFname );
-	  else
-		 ConOutPrintf(_T("%-*s"), iLongestName + 1, szTempFname );
-
-      /*
-       * We print a new line at the end of each column
-       * except for the case that it is the last item.
-       */
-	  if (!((i + 1) % iColumns) && (i < (dwCount - 1)))
-	  {
-		  if(lpFlags->bPause)
-			 ConOutPrintfPaging(FALSE,_T("\n"));
-		  else
-		     ConOutPrintf(_T("\n"));
-	  }
+        ConOutPrintfPaging(FALSE,_T("%-*s"), iLongestName + 1 , szTempFname);
+      else
+        ConOutPrintf(_T("%-*s"), iLongestName + 1 , szTempFname);
     }
 
-    /* Add a new line after the last item */
+    /* Add a new line after the last item in the column */
     if(lpFlags->bPause)
-	   ConOutPrintfPaging(FALSE,_T("\n"));
-	else
-	   ConOutPrintf(_T("\n"));
+      ConOutPrintfPaging(FALSE,_T("\n"));
+    else
+      ConOutPrintf(_T("\n"));
   }
 }
 
@@ -1182,7 +1099,7 @@ TCHAR szSize[30];				/* The size of file */
 int iSizeFormat;				/* The format of size field */
 ULARGE_INTEGER u64FileSize;		/* The file size */
 
-	for(i = 0;i < dwCount;i++)
+	for (i = 0; i < dwCount && !bCtrlBreak; i++)
 	{
 		/* Broke 8.3 format */
 		if (*ptrFiles[i]->cAlternateFileName )
@@ -1256,7 +1173,7 @@ DirPrintBareList(LPWIN32_FIND_DATA ptrFiles[],	/* [IN] Files' Info */
 	TCHAR szFullName[MAX_PATH];
 	DWORD i;
 
-	for (i = 0; i < dwCount; i++)
+	for (i = 0; i < dwCount && !bCtrlBreak; i++)
 	{
 		if ((_tcscmp(ptrFiles[i]->cFileName, _T(".")) == 0) ||
 		    (_tcscmp(ptrFiles[i]->cFileName, _T("..")) == 0))
@@ -1544,21 +1461,22 @@ QsortFiles(LPWIN32_FIND_DATA ptrArray[],	/* [IN/OUT] The array with file info po
 static INT
 DirList(LPTSTR szPath,			/* [IN] The path that dir starts */
 		LPDIRSWITCHFLAGS lpFlags)	/* [IN] The flags of the listing */
-{
+{	
+	BOOL fPoint;							/* If szPath is a file with extension fPoint will be True*/
 	HANDLE hSearch;							/* The handle of the search */
 	HANDLE hRecSearch;						/* The handle for searching recursivly */
 	WIN32_FIND_DATA wfdFileInfo;			/* The info of file that found */
 	LPWIN32_FIND_DATA * ptrFileArray;		/* An array of pointers with all the files */
-	PDIRFINDLISTNODE ptrStartNode;	/* The pointer to the first node */
-	PDIRFINDLISTNODE ptrNextNode;	/* A pointer used for relatives refernces */
-TCHAR szFullPath[MAX_PATH];				/* The full path that we are listing with trailing \ */
-TCHAR szSubPath[MAX_PATH];
-LPTSTR pszFilePart;
-DWORD dwCount;							/* A counter of files found in directory */
-DWORD dwCountFiles;						/* Counter for files */
-DWORD dwCountDirs;						/* Counter for directories */
-ULARGE_INTEGER u64CountBytes;			/* Counter for bytes */
-ULARGE_INTEGER u64Temp;					/* A temporary counter */
+	PDIRFINDLISTNODE ptrStartNode;			/* The pointer to the first node */
+	PDIRFINDLISTNODE ptrNextNode;			/* A pointer used for relatives refernces */
+	TCHAR szFullPath[MAX_PATH];				/* The full path that we are listing with trailing \ */
+	TCHAR szSubPath[MAX_PATH];
+	LPTSTR pszFilePart;
+	DWORD dwCount;							/* A counter of files found in directory */
+	DWORD dwCountFiles;						/* Counter for files */
+	DWORD dwCountDirs;						/* Counter for directories */
+	ULARGE_INTEGER u64CountBytes;			/* Counter for bytes */
+	ULARGE_INTEGER u64Temp;					/* A temporary counter */
 
 	/* Initialize Variables */
 	ptrStartNode = NULL;
@@ -1567,6 +1485,7 @@ ULARGE_INTEGER u64Temp;					/* A temporary counter */
 	dwCountFiles = 0;
 	dwCountDirs = 0;
 	u64CountBytes.QuadPart = 0;
+	fPoint= FALSE;
 
 	/* Create szFullPath */
 	if (GetFullPathName(szPath, sizeof(szFullPath) / sizeof(TCHAR), szFullPath, &pszFilePart) == 0)
@@ -1595,66 +1514,74 @@ ULARGE_INTEGER u64Temp;					/* A temporary counter */
 	}
 	ptrNextNode = ptrStartNode;
 
+	/*Checking ir szPath is a File with/wout extension*/
+	if (szPath[_tcslen(szPath) - 1] == _T('.'))
+		fPoint= TRUE;
+
 	/* Collect the results for the current folder */
 	hSearch = FindFirstFile(szFullPath, &wfdFileInfo);
 	do
 	{
 		if (hSearch != INVALID_HANDLE_VALUE)
 		{
-			/* Here we filter all the specified attributes */
-			if ((wfdFileInfo.dwFileAttributes & lpFlags->stAttribs.dwAttribMask )
-				== (lpFlags->stAttribs.dwAttribMask & lpFlags->stAttribs.dwAttribVal ))
+			/*If retrieved FileName has extension,and szPath doesnt have extension then JUMP the retrieved FileName*/
+			if(_tcschr(wfdFileInfo.cFileName,_T('.'))&&(fPoint==TRUE))
 			{
-				ptrNextNode->ptrNext = cmd_alloc(sizeof(DIRFINDLISTNODE));
-				if (ptrNextNode->ptrNext == NULL)
+				continue;
+			/* Here we filter all the specified attributes */
+			}else if ((wfdFileInfo.dwFileAttributes & lpFlags->stAttribs.dwAttribMask )
+					== (lpFlags->stAttribs.dwAttribMask & lpFlags->stAttribs.dwAttribVal ))
 				{
-					WARN("DEBUG: Cannot allocate memory for ptrNextNode->ptrNext!\n");
-					while (ptrStartNode)
+					ptrNextNode->ptrNext = cmd_alloc(sizeof(DIRFINDLISTNODE));
+					if (ptrNextNode->ptrNext == NULL)
 					{
-						ptrNextNode = ptrStartNode->ptrNext;
-						cmd_free(ptrStartNode);
-						ptrStartNode = ptrNextNode;
-						dwCount --;
+						WARN("DEBUG: Cannot allocate memory for ptrNextNode->ptrNext!\n");
+						while (ptrStartNode)
+						{
+							ptrNextNode = ptrStartNode->ptrNext;
+							cmd_free(ptrStartNode);
+							ptrStartNode = ptrNextNode;
+							dwCount --;
+						}
+						return 1;
 					}
-					return 1;
-				}
 
 				/* If cmd_alloc fails we go to next file in hope it works,
 				   without braking the linked list! */
-				if (ptrNextNode->ptrNext)
-				{
+					if (ptrNextNode->ptrNext)
+					{
 					/* Copy the info of search at linked list */
-					memcpy(&ptrNextNode->ptrNext->stFindInfo,
-					       &wfdFileInfo,
-					       sizeof(WIN32_FIND_DATA));
+						memcpy(&ptrNextNode->ptrNext->stFindInfo,
+								&wfdFileInfo,
+								sizeof(WIN32_FIND_DATA));
 
 					/* If lower case is selected do it here */
-					if (lpFlags->bLowerCase)
-					{
+						if (lpFlags->bLowerCase)
+						{
 						_tcslwr(ptrNextNode->ptrNext->stFindInfo.cAlternateFileName);
 						_tcslwr(ptrNextNode->ptrNext->stFindInfo.cFileName);
-					}
+						}
 
 					/* Continue at next node at linked list */
-					ptrNextNode = ptrNextNode->ptrNext;
-					dwCount ++;
+						ptrNextNode = ptrNextNode->ptrNext;
+						dwCount ++;
 
 					/* Grab statistics */
-					if (wfdFileInfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-					{
+						if (wfdFileInfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+						{
 						/* Directory */
-						dwCountDirs++;
-					}
-					else
-					{
+							dwCountDirs++;
+						}
+						else
+							{
 						/* File */
-						dwCountFiles++;
-						u64Temp.HighPart = wfdFileInfo.nFileSizeHigh;
-						u64Temp.LowPart = wfdFileInfo.nFileSizeLow;
-						u64CountBytes.QuadPart += u64Temp.QuadPart;
+							dwCountFiles++;
+							u64Temp.HighPart = wfdFileInfo.nFileSizeHigh;
+							u64Temp.LowPart = wfdFileInfo.nFileSizeLow;
+							u64CountBytes.QuadPart += u64Temp.QuadPart;
+						}
 					}
 				}
-			}
 		}
 	} while(FindNextFile(hSearch, &wfdFileInfo));
 	FindClose(hSearch);
@@ -1709,6 +1636,15 @@ ULARGE_INTEGER u64Temp;					/* A temporary counter */
 
 	/* Free array */
 	cmd_free(ptrFileArray);
+	/* Free linked list */
+	while (ptrStartNode)
+	{
+		ptrNextNode = ptrStartNode->ptrNext;
+		cmd_free(ptrStartNode);
+		ptrStartNode = ptrNextNode;
+		dwCount --;
+	}
+
 	if (CheckCtrlBreak(BREAK_INPUT))
 		return 1;
 
@@ -1767,15 +1703,6 @@ ULARGE_INTEGER u64Temp;					/* A temporary counter */
 			}
 		}while(FindNextFile(hRecSearch,&wfdFileInfo));
 		FindClose(hRecSearch);
-	}
-
-	/* Free linked list */
-	while (ptrStartNode)
-	{
-		ptrNextNode = ptrStartNode->ptrNext;
-		cmd_free(ptrStartNode);
-		ptrStartNode = ptrNextNode;
-		dwCount --;
 	}
 
 	return 0;

@@ -110,8 +110,8 @@ STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Data i godzina"
 FONT 10, "MS Sans Serif"
 BEGIN
-    LTEXT        "Dostêpne formaty",0,3,2,100,15
-    LISTBOX      IDC_DATETIME,3,12,80,65,LBS_NOINTEGRALHEIGHT
+    LTEXT        "Dostêpne formaty",-1,3,2,100,15
+    LISTBOX      IDC_DATETIME,3,12,80,65,LBS_NOINTEGRALHEIGHT | LBS_NOTIFY
     PUSHBUTTON   "&OK",IDOK,87,12,40,12
     PUSHBUTTON   "&Anuluj",IDCANCEL,87,26,40,12
 END
@@ -121,7 +121,7 @@ STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Nowy"
 FONT 10, "MS Sans Serif"
 BEGIN
-    LTEXT        "Typ nowego dokumentu",0,3,2,100,15
+    LTEXT        "Typ nowego dokumentu",-1,3,2,100,15
     LISTBOX      IDC_NEWFILE,3,12,90,65,LBS_NOINTEGRALHEIGHT
     PUSHBUTTON   "&OK",IDOK,97,12,40,12
     PUSHBUTTON   "&Anuluj",IDCANCEL,97,26,40,12
@@ -132,14 +132,14 @@ STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 Caption "Format akapitu"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Wciêcia", 0, 10, 10, 120, 68
-    LTEXT "Z lewej", 0, 15, 22, 40, 13
+    GROUPBOX "Wciêcia", -1, 10, 10, 120, 68
+    LTEXT "Z lewej", -1, 15, 22, 40, 13
     EDITTEXT IDC_PARA_LEFT, 55, 20, 60, 13
-    LTEXT "Z prawej", 0, 15, 40, 40, 13
+    LTEXT "Z prawej", -1, 15, 40, 40, 13
     EDITTEXT IDC_PARA_RIGHT, 55, 38, 60, 13
-    LTEXT "Pierwszy wiersz", 0, 15, 55, 40, 19
+    LTEXT "Pierwszy wiersz", -1, 15, 55, 40, 19
     EDITTEXT IDC_PARA_FIRST, 55, 56, 60, 13
-    LTEXT "Wyrównanie", 0, 15, 87, 40, 13
+    LTEXT "Wyrównanie", -1, 15, 87, 40, 13
     COMBOBOX IDC_PARA_ALIGN, 55, 85, 60, 60, CBS_DROPDOWNLIST
     PUSHBUTTON "&OK", IDOK, 137, 15, 50, 15
     PUSHBUTTON "&Anuluj", IDCANCEL, 137, 33, 50, 15
@@ -150,7 +150,7 @@ STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 Caption "Tabulatory"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Pozycje tabulatorów", 0, 10, 10, 120, 90
+    GROUPBOX "Pozycje tabulatorów", -1, 10, 10, 120, 90
     COMBOBOX IDC_TABSTOPS, 20, 20, 100, 60, CBS_SIMPLE | CBS_SORT
     DEFPUSHBUTTON "&Dodaj", ID_TAB_ADD, 20, 80, 45, 15
     PUSHBUTTON "&Usuñ", ID_TAB_DEL, 72, 80, 45, 15
@@ -164,10 +164,11 @@ STYLE DS_SYSMODAL
 Caption ""
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Zawijanie wierszy", 0, 10, 10, 130, 85
-    RADIOBUTTON "Zawijaj do &brzegu okna", IDC_PAGEFMT_WW, 18, 25, 117, 15
-    RADIOBUTTON "Zawijaj do &marginesu", IDC_PAGEFMT_WM, 18, 45, 117, 15
-    GROUPBOX "Paski narzêdzi", 0, 150, 10, 120, 85
+    GROUPBOX "Zawijanie wierszy", -1, 10, 10, 130, 85
+    RADIOBUTTON "No line wrapping", IDC_PAGEFMT_WN, 18, 25, 117, 15
+    RADIOBUTTON "Zawijaj do &brzegu okna", IDC_PAGEFMT_WW, 18, 45, 117, 15
+    RADIOBUTTON "Zawijaj do &marginesu", IDC_PAGEFMT_WM, 18, 65, 117, 15
+    GROUPBOX "Paski narzêdzi", -1, 150, 10, 120, 85
     CHECKBOX "Pasek &narzêdzi", IDC_PAGEFMT_TB, 160, 20, 80, 15
     CHECKBOX "Pasek &formatu", IDC_PAGEFMT_FB, 160, 38, 80, 15
     CHECKBOX "&Linijka", IDC_PAGEFMT_RU, 160, 56, 80, 15

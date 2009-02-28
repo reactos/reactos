@@ -51,7 +51,7 @@ CreateCommonFreeLoaderSections(PINICACHE IniCache)
 	  	    NULL,
 		    INSERT_LAST,
 		    L"DefaultOS",
-		    L"ReactOS_Debug");
+		    L"ReactOS_KdSerial");
   }
   else
 #endif
@@ -381,13 +381,20 @@ CreateFreeLoaderIniForReactos(PWCHAR IniPath,
 		    L"\"ReactOS (Debug)\"");
 
 #ifdef DBG
+  /* ReactOS_KdSerial="ReactOS (RosDbg)" */
+  IniCacheInsertKey(IniSection,
+		    NULL,
+		    INSERT_LAST,
+		    L"ReactOS_KdSerial",
+		    L"\"ReactOS (RosDbg)\"");
+
   /* ReactOS_WinLdr="ReactOS (WinLdr)" */
   IniCacheInsertKey(IniSection,
 		    NULL,
 		    INSERT_LAST,
 		    L"ReactOS_WinLdr",
 		    L"\"ReactOS (WinLdr)\"");
-    
+
   /* ReactOS_Ram="ReactOS (RAM Disk)" */
   IniCacheInsertKey(IniSection,
                     NULL,
@@ -447,6 +454,34 @@ CreateFreeLoaderIniForReactos(PWCHAR IniPath,
 		    L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS");
 
 #ifdef DBG
+
+  /* Create "ReactOS_KdSerial" section */
+  IniSection = IniCacheAppendSection(IniCache,
+				     L"ReactOS_KdSerial");
+
+  /* BootType=ReactOS */
+  IniCacheInsertKey(IniSection,
+		    NULL,
+		    INSERT_LAST,
+		    L"BootType",
+		    L"ReactOS");
+
+  /* SystemPath=<ArcPath> */
+  IniCacheInsertKey(IniSection,
+		    NULL,
+		    INSERT_LAST,
+		    L"SystemPath",
+		    ArcPath);
+
+  /* Options=/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS*/
+  IniCacheInsertKey(IniSection,
+		    NULL,
+		    INSERT_LAST,
+		    L"Options",
+		    L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS /KDSERIAL");
+
+/* ------------------------------------------------------------------------------ */
+
   /* Create "ReactOS_WinLdr" section */
   IniSection = IniCacheAppendSection(IniCache,
 				     L"ReactOS_WinLdr");
@@ -472,7 +507,7 @@ CreateFreeLoaderIniForReactos(PWCHAR IniPath,
 		    L"Options",
 		    L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS");
     
-  /* Create "ReactOS_WinLdr" section */
+  /* Create "ReactOS_Ram" section */
   IniSection = IniCacheAppendSection(IniCache,
                                      L"ReactOS_Ram");
     
@@ -496,6 +531,7 @@ CreateFreeLoaderIniForReactos(PWCHAR IniPath,
                     INSERT_LAST,
                     L"Options",
                     L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS /RDIMAGEPATH=reactos.img /RDIMAGEOFFSET=32256");
+
 #endif
 
   /* Save the ini file */

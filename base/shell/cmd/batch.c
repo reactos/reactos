@@ -188,12 +188,6 @@ VOID ExitBatch (LPTSTR msg)
 		if (bc->params)
 			cmd_free(bc->params);
 
-		if (bc->forproto)
-			cmd_free(bc->forproto);
-
-		if (bc->ffind)
-			cmd_free(bc->ffind);
-
 		UndoRedirection(bc->RedirList, NULL);
 		FreeRedirection(bc->RedirList);
 
@@ -269,11 +263,9 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param, BOOL forcenew)
 	SetFilePointer (bc->hBatchFile, 0, NULL, FILE_BEGIN);
 	bc->bEcho = bEcho; /* Preserve echo across batch calls */
 	bc->shiftlevel = 0;
-	bc->bCmdBlock = -1;
 	
-	bc->ffind = NULL;
 	bc->forvar = _T('\0');
-	bc->forproto = NULL;
+	bc->forvarcount = 0;
 	bc->params = BatchParams (firstword, param);
     //
     // Allocate enough memory to hold the params and copy them over without modifications
@@ -352,82 +344,7 @@ LPTSTR ReadBatchLine ()
 		if (bc == NULL)
 			return NULL;
 
-		/* If its a FOR context... */
-		if (bc->forvar)
-		{
-			LPTSTR sp = bc->forproto; /* pointer to prototype command */
-			LPTSTR dp = textline;     /* Place to expand protoype */
-			LPTSTR fv = FindArg (0);  /* Next list element */
-
-			/* End of list so... */
-			if ((fv == NULL) || (*fv == _T('\0')))
-			{
-				/* just exit this context */
-				ExitBatch (NULL);
-				continue;
-			}
-
-			if (_tcscspn (fv, _T("?*")) == _tcslen (fv))
-			{
-				/* element is wild file */
-				bc->shiftlevel++;       /* No use it and shift list */
-			}
-			else
-			{
-				/* Wild file spec, find first (or next) file name */
-				if (bc->ffind)
-				{
-					/* First already done so do next */
-
-					fv = FindNextFile (bc->hFind, bc->ffind) ? bc->ffind->cFileName : NULL;
-				}
-				else
-				{
-					/*  For first find, allocate a find first block */
-					if ((bc->ffind = (LPWIN32_FIND_DATA)cmd_alloc (sizeof (WIN32_FIND_DATA))) == NULL)
-					{
-						error_out_of_memory();
-						return NULL;
-					}
-
-					bc->hFind = FindFirstFile (fv, bc->ffind);
-
-					fv = !(bc->hFind==INVALID_HANDLE_VALUE) ? bc->ffind->cFileName : NULL;
-				}
-
-				if (fv == NULL)
-				{
-					/* Null indicates no more files.. */
-					cmd_free (bc->ffind);      /* free the buffer */
-					bc->ffind = NULL;
-					bc->shiftlevel++;     /* On to next list element */
-					continue;
-				}
-			}
-
-			/* At this point, fv points to parameter string */
-			while (*sp)
-			{
-				if ((*sp == _T('%')) && (*(sp + 1) == bc->forvar))
-				{
-					/* replace % var */
-					dp = _stpcpy (dp, fv);
-					sp += 2;
-				}
-				else
-				{
-					/* Else just copy */
-					*dp++ = *sp++;
-				}
-			}
-
-			*dp++ = _T('\n');
-			*dp = _T('\0');
-
-			return textline;
-		}
-
-		if (!FileGetString (bc->hBatchFile, textline, sizeof (textline) / sizeof (textline[0])))
+		if (!FileGetString (bc->hBatchFile, textline, sizeof (textline) / sizeof (textline[0]) - 1))
 		{
 			TRACE ("ReadBatchLine(): Reached EOF!\n");
 			/* End of file.... */
@@ -440,40 +357,10 @@ LPTSTR ReadBatchLine ()
 		}
 		TRACE ("ReadBatchLine(): textline: \'%s\'\n", debugstr_aw(textline));
 
-		first = textline;
+		if (textline[_tcslen(textline) - 1] != _T('\n'))
+			_tcscat(textline, _T("\n"));
 
-		/* cmd block over multiple lines (..) */
-		if (bc->bCmdBlock >= 0)
-		{
-			if (*first == _T(')'))
-			{
-				first++;
-				/* Strip leading spaces and trailing space/control chars */
-				while(_istspace (*first))
-					first++;
-				if ((_tcsncicmp (first, _T("else"), 4) == 0) && (_tcschr(first, _T('('))))
-				{
-					bc->bExecuteBlock[bc->bCmdBlock] = !bc->bExecuteBlock[bc->bCmdBlock];
-				}
-				else
-				{
-					bc->bCmdBlock--;
-				}
-				continue;
-			}
-			if (bc->bCmdBlock < MAX_PATH)
-				if (!bc->bExecuteBlock[bc->bCmdBlock])
-				{
-					/* increase the bCmdBlock count when there is another conditon which opens a new bracket */
-					if ((_tcsncicmp (first, _T("if"), 2) == 0)  && _tcschr(first, _T('(')))
-					{
-						bc->bCmdBlock++;
-						if ((bc->bCmdBlock > 0) && (bc->bCmdBlock < MAX_PATH))
-							bc->bExecuteBlock[bc->bCmdBlock] = bc->bExecuteBlock[bc->bCmdBlock - 1];
-					}
-					continue;
-				}
-		}
+		first = textline;
 
 		break;
 	}

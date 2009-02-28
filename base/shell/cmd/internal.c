@@ -431,6 +431,12 @@ MakeFullPath(TCHAR * DirPath)
     TCHAR *p = DirPath;
     INT  n;
 
+    if (CreateDirectory(DirPath, NULL))
+        return TRUE;
+    else if (GetLastError() != ERROR_PATH_NOT_FOUND)
+        return FALSE;
+
+    /* got ERROR_PATH_NOT_FOUND, so try building it up one component at a time */
     if (p[0] && p[1] == _T(':'))
         p += 2;
     while (*p == _T('\\'))
@@ -445,8 +451,6 @@ MakeFullPath(TCHAR * DirPath)
            (GetLastError() != ERROR_ALREADY_EXISTS))
            return FALSE;
     } while (p != NULL);
-    if (GetLastError() == ERROR_ALREADY_EXISTS)
-       SetLastError(ERROR_SUCCESS);
 
     return TRUE;
 }
@@ -457,55 +461,42 @@ MakeFullPath(TCHAR * DirPath)
  */
 INT cmd_mkdir (LPTSTR param)
 {
-	LPTSTR dir;		/* pointer to the directory to change to */
-	LPTSTR *p = NULL;
-	INT argc;
-	nErrorLevel = 0;
+	LPTSTR *p;
+	INT argc, i;
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
 		ConOutResPaging(TRUE,STRING_MKDIR_HELP);
 		return 0;
 	}
 
-
-		p = split (param, &argc, FALSE);
-		if (argc > 1)
-		{
-			/*JPP 20-Jul-1998 use standard error message */
-			error_too_many_parameters (param);
-			freep (p);
-			return 1;
-		}
-		else
-			dir = p[0];
-
-	if (!dir)
+	p = split (param, &argc, FALSE);
+	if (argc == 0)
 	{
-		ConErrResPuts (STRING_ERROR_REQ_PARAM_MISSING);
+		ConErrResPuts(STRING_ERROR_REQ_PARAM_MISSING);
 		nErrorLevel = 1;
-		if(p != NULL)
-			freep (p);
+		freep(p);
 		return 1;
 	}
 
-    if (!MakeFullPath(dir))
-    {
-        if(GetLastError() == ERROR_PATH_NOT_FOUND)
-        {
-            ConErrResPuts(STRING_MD_ERROR2);
-        }
-        else
-        {
-            ErrorMessage (GetLastError(), _T("MD"));
-        }
-        nErrorLevel = 1;
-        freep (p);
-        return 1;
-    }
+	nErrorLevel = 0;
+	for (i = 0; i < argc; i++)
+	{
+		if (!MakeFullPath(p[i]))
+		{
+			if(GetLastError() == ERROR_PATH_NOT_FOUND)
+			{
+				ConErrResPuts(STRING_MD_ERROR2);
+			}
+			else
+			{
+				ErrorMessage (GetLastError(), _T("MD"));
+			}
+			nErrorLevel = 1;
+		}
+	}
 
 	freep (p);
-
-	return 0;
+	return nErrorLevel;
 }
 #endif
 
@@ -551,16 +542,15 @@ BOOL DeleteFolder(LPTSTR FileName)
 }
 INT cmd_rmdir (LPTSTR param)
 {
-	TCHAR dir[MAX_PATH];		/* pointer to the directory to change to */
 	TCHAR ch;
 	INT args;
-	LPTSTR *arg = NULL;
+	INT dirCount;
+	LPTSTR *arg;
 	INT i;
 	BOOL RD_SUB = FALSE;
 	BOOL RD_QUIET = FALSE;
-	HANDLE hFile;
-	WIN32_FIND_DATA f;
 	INT res;
+	INT nError = 0;
 	TCHAR szFullPath[MAX_PATH];
 
 	if (!_tcsncmp (param, _T("/?"), 2))
@@ -569,19 +559,8 @@ INT cmd_rmdir (LPTSTR param)
 		return 0;
 	}
 
-	nErrorLevel = 0;
-
 	arg = split (param, &args, FALSE);
-
-	if (args == 0)
-	{
-		/* only command given */
-		error_req_param_missing ();
-		freep (arg);
-		return 1;
-	}
-
-	dir[0] = 0;
+	dirCount = 0;
 
 	/* check for options anywhere in command line */
 	for (i = 0; i < args; i++)
@@ -605,76 +584,61 @@ INT cmd_rmdir (LPTSTR param)
 		}
 		else
 		{
-			/* get the folder name */
-			_tcscpy(dir,arg[i]);
+			dirCount++;
 		}
 	}
 
-	if (dir[0] == _T('\0'))
+	if (dirCount == 0)
 	{
 		/* No folder to remove */
-		ConErrResPuts(STRING_ERROR_REQ_PARAM_MISSING);
+		error_req_param_missing();
 		freep(arg);
 		return 1;
 	}
 
-	GetFullPathName(dir,MAX_PATH,szFullPath,NULL);
-
-	/* remove trailing \ if any, but ONLY if dir is not the root dir */
-	if (_tcslen (szFullPath) >= 2 && szFullPath[_tcslen (szFullPath) - 1] == _T('\\'))
-		szFullPath[_tcslen(szFullPath) - 1] = _T('\0');
-
-	if(RD_SUB)
+	for (i = 0; i < args; i++)
 	{
-		/* ask if they want to delete evrything in the folder */
-		if (!RD_QUIET)
-		{
-			res = FilePromptYNA (STRING_DEL_HELP2);
-			if ((res == PROMPT_NO) || (res == PROMPT_BREAK))
-			{
-				freep(arg);
-				nErrorLevel = 1;
-				return 1;
-			}
-		}
+		if (*arg[i] == _T('/'))
+			continue;
 
-	}
-	else
-	{
-		/* check for files in the folder */
-		_tcscat(szFullPath,_T("\\*"));
-
-		hFile = FindFirstFile(szFullPath, &f);
-		if (hFile != INVALID_HANDLE_VALUE)
+		if (RD_SUB)
 		{
-			do
+			/* ask if they want to delete evrything in the folder */
+			if (!RD_QUIET)
 			{
-				if (!_tcscmp(f.cFileName,_T(".")) ||
-					!_tcscmp(f.cFileName,_T("..")))
+				res = FilePromptYNA (STRING_DEL_HELP2);
+				if (res == PROMPT_NO || res == PROMPT_BREAK)
+				{
+					nError = 1;
 					continue;
-				ConOutResPuts(STRING_RMDIR_HELP2);
-				freep(arg);
-				FindClose (hFile);
-				nErrorLevel = 1;
-				return 1;
-			} while (FindNextFile (hFile, &f));
-			FindClose (hFile);
-		}
-		/* reovme the \\* */
-		szFullPath[_tcslen(szFullPath) - 2] = _T('\0');
-	}
+				}
+				if (res == PROMPT_ALL)
+					RD_QUIET = TRUE;
+			}
+			/* get the folder name */
+			GetFullPathName(arg[i],MAX_PATH,szFullPath,NULL);
 
-	if (!DeleteFolder(szFullPath))
-	{
-		/* Couldnt delete the folder, clean up and print out the error */
-		ErrorMessage (GetLastError(), _T("RD"));
-		freep (arg);
-		nErrorLevel = 1;
-		return 1;
+			/* remove trailing \ if any, but ONLY if dir is not the root dir */
+			if (_tcslen (szFullPath) >= 2 && szFullPath[_tcslen (szFullPath) - 1] == _T('\\'))
+				szFullPath[_tcslen(szFullPath) - 1] = _T('\0');
+
+			res = DeleteFolder(szFullPath);
+		}
+		else
+		{
+			res = RemoveDirectory(arg[i]);
+		}
+
+		if (!res)
+		{
+			/* Couldn't delete the folder, print out the error */
+			nError = GetLastError();
+			ErrorMessage(nError, _T("RD"));
+		}
 	}
 
 	freep (arg);
-	return 0;
+	return nError;
 }
 #endif
 

@@ -12,6 +12,8 @@ HINSTANCE hInst = 0;
 
 HWND hMainWnd;                   /* Main Window */
 HWND hTabWnd;                    /* Tab Control Window */
+UINT uXIcon = 0, uYIcon = 0;     /* Icon sizes */
+HICON hDialogIcon = NULL;
 
 void MsConfig_OnTabWndSelChange(void);
 
@@ -21,12 +23,12 @@ BOOL OnCreate(HWND hWnd)
     TCITEM  item;
 
     hTabWnd = GetDlgItem(hWnd, IDC_TAB);
-    hGeneralPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_GENERAL_PAGE), hWnd, (DLGPROC) GeneralPageWndProc);
-    hSystemPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_SYSTEM_PAGE), hWnd, (DLGPROC) SystemPageWndProc);
-    hFreeLdrPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_FREELDR_PAGE), hWnd, (DLGPROC) FreeLdrPageWndProc);
-    hServicesPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_SERVICES_PAGE), hWnd, (DLGPROC) ServicesPageWndProc);
-    hStartupPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_STARTUP_PAGE), hWnd, (DLGPROC) StartupPageWndProc);
-    hToolsPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_TOOLS_PAGE), hWnd, (DLGPROC) ToolsPageWndProc);
+    hGeneralPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_GENERAL_PAGE), hWnd,  GeneralPageWndProc);
+    hSystemPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_SYSTEM_PAGE), hWnd,  SystemPageWndProc);
+    hFreeLdrPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_FREELDR_PAGE), hWnd,  FreeLdrPageWndProc);
+    hServicesPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_SERVICES_PAGE), hWnd,  ServicesPageWndProc);
+    hStartupPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_STARTUP_PAGE), hWnd,  StartupPageWndProc);
+    hToolsPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_TOOLS_PAGE), hWnd,  ToolsPageWndProc);
 
     LoadString(hInst, IDS_MSCONFIG, szTemp, 256);
     SetWindowText(hWnd, szTemp);
@@ -94,7 +96,7 @@ void MsConfig_OnTabWndSelChange(void)
         ShowWindow(hFreeLdrPage, SW_HIDE);
         ShowWindow(hServicesPage, SW_HIDE);
         BringWindowToTop(hSystemPage);
-		break;
+        break;
     case 2: //Freeldr
         ShowWindow(hGeneralPage, SW_HIDE);
         ShowWindow(hSystemPage, SW_HIDE);
@@ -135,29 +137,56 @@ void MsConfig_OnTabWndSelChange(void)
 }
 
 
+static
+VOID
+SetDialogIcon(HWND hDlg)
+{
+    if (hDialogIcon) DestroyIcon(hDialogIcon);
+
+    hDialogIcon = LoadImage(GetModuleHandle(NULL),
+                            MAKEINTRESOURCE(IDI_APPICON),
+                            IMAGE_ICON,
+                            uXIcon,
+                            uYIcon,
+                            0);
+    SendMessage(hDlg,
+                WM_SETICON,
+                ICON_SMALL,
+                (LPARAM)hDialogIcon);
+}
+
+
 /* Message handler for dialog box. */
 INT_PTR CALLBACK
 MsConfigWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     int             idctrl;
     LPNMHDR         pnmh;
-	static 			HICON hIcon;
+    UINT            uXIconNew, uYIconNew;
 
     switch (message)
     {
         case WM_INITDIALOG:
             hMainWnd = hDlg;
-            hIcon = LoadImage(GetModuleHandle(NULL),
-                              MAKEINTRESOURCE(IDI_APPICON),
-                              IMAGE_ICON,
-                              16,
-                              16,
-                              0);
-            SendMessage(hDlg,
-                        WM_SETICON,
-                        ICON_SMALL,
-                        (LPARAM)hIcon);
+
+            uXIcon = GetSystemMetrics(SM_CXSMICON);
+            uYIcon = GetSystemMetrics(SM_CYSMICON);
+
+            SetDialogIcon(hDlg);
+
             return OnCreate(hDlg);
+
+        case WM_SETTINGCHANGE:
+            uXIconNew = GetSystemMetrics(SM_CXSMICON);
+            uYIconNew = GetSystemMetrics(SM_CYSMICON);
+
+            if ((uXIcon != uXIconNew) || (uYIcon != uYIconNew))
+            {
+                uXIcon = uXIconNew;
+                uYIcon = uYIconNew;
+                SetDialogIcon(hDlg);
+            }
+            break;
 
         case WM_COMMAND:
 
@@ -173,7 +202,7 @@ MsConfigWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             break;
 
         case WM_NOTIFY:
-            idctrl = (int)wParam;
+            idctrl = wParam;
             pnmh = (LPNMHDR)lParam;
             if ((pnmh->hwndFrom == hTabWnd) &&
                 (pnmh->idFrom == IDC_TAB) &&
@@ -196,8 +225,8 @@ MsConfigWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                 DestroyWindow(hFreeLdrPage);
             if (hSystemPage)
                 DestroyWindow(hSystemPage);
-            if (hIcon)
-                DestroyIcon(hIcon);
+            if (hDialogIcon)
+                DestroyIcon(hDialogIcon);
             return DefWindowProc(hDlg, message, wParam, lParam);
     }
 
@@ -222,7 +251,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 
     hInst = hInstance;
  
-    DialogBox(hInst, (LPCTSTR)IDD_MSCONFIG_DIALOG, NULL, (DLGPROC) MsConfigWndProc);
+    DialogBox(hInst, (LPCTSTR)IDD_MSCONFIG_DIALOG, NULL,  MsConfigWndProc);
   
     return 0;
 }

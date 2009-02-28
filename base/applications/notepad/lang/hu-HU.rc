@@ -30,7 +30,9 @@ BEGIN
     "^F", CMD_SEARCH
     "^G", CMD_GOTO
     "H", CMD_REPLACE, VIRTKEY, CONTROL
+    "^N", CMD_NEW
     "^O", CMD_OPEN
+    "^P", CMD_PRINT
     "^S", CMD_SAVE
     "^V", CMD_PASTE
     "^X", CMD_CUT
@@ -41,54 +43,54 @@ END
 
 MAIN_MENU MENU
 BEGIN
-	POPUP "&Fájl"
-	BEGIN
-		MENUITEM "Ú&j",           CMD_NEW
-		MENUITEM "Meg&nyitás...",             CMD_OPEN
-		MENUITEM "&Mentés",             CMD_SAVE
-		MENUITEM "Mentés má&sként...",       CMD_SAVE_AS
-		MENUITEM SEPARATOR
-		MENUITEM "&Oldalbeállítás...",    CMD_PAGE_SETUP
-		MENUITEM "Nyom&tatás...",            CMD_PRINT
-		MENUITEM "Nyomtató &beállítás...", CMD_PRINTER_SETUP
-		MENUITEM SEPARATOR
-		MENUITEM "&Kilépés",             CMD_EXIT
-	END
-	POPUP "S&zerkesztés"
-	BEGIN
-		MENUITEM "&Visszavonás\tCtrl+Z",     CMD_UNDO
-		MENUITEM SEPARATOR
-		MENUITEM "Kivá&gás\tCtrl+X",      CMD_CUT
-		MENUITEM "&Másolás\tCtrl+C",     CMD_COPY
-		MENUITEM "&Beillesztés\tCtrl+V",    CMD_PASTE
-		MENUITEM "Tör&lés\tDel",      CMD_DELETE
-		MENUITEM SEPARATOR
-		MENUITEM "&Keresés...",           CMD_SEARCH
-		MENUITEM "Köve&tkezõ keresése\tF3",  CMD_SEARCH_NEXT
-		MENUITEM "Replace\tCtrl+H",   CMD_REPLACE
-		MENUITEM "Go To...\tCtrl+G",  CMD_GOTO
-		MENUITEM SEPARATOR
-		MENUITEM "&Az összes kijelölése",       CMD_SELECT_ALL
-		MENUITEM "&Idõ/dátum\tF5",    CMD_TIME_DATE
-	END
-	POPUP "F&ormat"
-	BEGIN
-		MENUITEM "&Hosszú sorok tördelése",  CMD_WRAP
-		MENUITEM "&Font...",          CMD_FONT
-	END
-	POPUP "&View"
-	BEGIN
-		MENUITEM "Status&bar",    CMD_STATUSBAR
-	END
-	POPUP "&Súgó"
-	BEGIN
-		MENUITEM "&Témakörök",         CMD_HELP_CONTENTS
-		MENUITEM "&Keresés...",        CMD_HELP_SEARCH
-		MENUITEM "&Használat",     CMD_HELP_ON_HELP
-		MENUITEM SEPARATOR
-		MENUITEM "&About"             CMD_ABOUT
-		MENUITEM "Inf&ormáció...",      CMD_ABOUT_WINE
-	END
+    POPUP "&Fájl"
+    BEGIN
+        MENUITEM "Ú&j\tCtrl+N",            CMD_NEW
+        MENUITEM "Meg&nyitás\tCtrl+O",     CMD_OPEN
+        MENUITEM "&Mentés\tCtrl+S",        CMD_SAVE
+        MENUITEM "Mentés má&sként...",     CMD_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "&Oldalbeállítás...",     CMD_PAGE_SETUP
+        MENUITEM "Nyom&tatás\tCtrl+P",     CMD_PRINT
+        MENUITEM "Nyomtató &beállítás...", CMD_PRINTER_SETUP
+        MENUITEM SEPARATOR
+        MENUITEM "&Kilépés",               CMD_EXIT
+    END
+    POPUP "S&zerkesztés"
+    BEGIN
+        MENUITEM "&Visszavonás\tCtrl+Z",    CMD_UNDO
+        MENUITEM SEPARATOR
+        MENUITEM "Kivá&gás\tCtrl+X",        CMD_CUT
+        MENUITEM "&Másolás\tCtrl+C",        CMD_COPY
+        MENUITEM "&Beillesztés\tCtrl+V",    CMD_PASTE
+        MENUITEM "Tör&lés\tDel",            CMD_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "&Keresés...",             CMD_SEARCH
+        MENUITEM "Köve&tkezõ keresése\tF3", CMD_SEARCH_NEXT
+        MENUITEM "Replace\tCtrl+H",         CMD_REPLACE
+        MENUITEM "Go To...\tCtrl+G",        CMD_GOTO
+        MENUITEM SEPARATOR
+        MENUITEM "&Az összes kijelölése",   CMD_SELECT_ALL
+        MENUITEM "&Idõ/dátum\tF5",          CMD_TIME_DATE
+    END
+    POPUP "F&ormat"
+    BEGIN
+        MENUITEM "&Hosszú sorok tördelése", CMD_WRAP
+        MENUITEM "&Font...",                CMD_FONT
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "Status&bar", CMD_STATUSBAR
+    END
+    POPUP "&Súgó"
+    BEGIN
+        MENUITEM "&Témakörök",     CMD_HELP_CONTENTS
+        MENUITEM "&Keresés...",    CMD_HELP_SEARCH
+        MENUITEM "&Használat",     CMD_HELP_ON_HELP
+        MENUITEM SEPARATOR
+        MENUITEM "&About"          CMD_ABOUT
+        MENUITEM "Inf&ormáció...", CMD_ABOUT_WINE
+    END
 END
 
 /* Dialog `Page setup' */
@@ -202,4 +204,5 @@ STRING_UTF8,                                    "UTF-8"
 STRING_CRLF,                                    "Windows"
 STRING_LF,                                      "Unix"
 STRING_CR,                                      "Mac"
+STRING_LINE_COLUMN,                             "Line %d, column %d"
 END

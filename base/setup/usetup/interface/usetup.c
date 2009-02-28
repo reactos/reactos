@@ -45,6 +45,7 @@ LONG UnattendFormatPartition = 0;
 LONG AutoPartition = 0;
 WCHAR UnattendInstallationDirectory[MAX_PATH];
 PWCHAR SelectedLanguageId;
+WCHAR LocaleID[9];
 WCHAR DefaultLanguage[20];
 WCHAR DefaultKBLayout[20];
 BOOLEAN RepairUpdateFlag = FALSE;
@@ -555,8 +556,16 @@ CheckUnattendedSetup(VOID)
         }
     }
 
-    SetupCloseInfFile(UnattendInf);
+	/* search for LocaleID in the 'Unattend' section*/
+	if (SetupFindFirstLineW (UnattendInf, L"Unattend", L"LocaleID", &Context)){
+		if (INF_GetData (&Context, NULL, &Value)){
+			LONG Id = wcstol(Value, NULL, 16);
+			swprintf(LocaleID,L"%08lx", Id);			
+       }       
+    }
 
+	SetupCloseInfFile(UnattendInf);
+	
     DPRINT("Running unattended setup\n");
 }
 
@@ -699,7 +708,8 @@ SetupStartPage(PINPUT_RECORD Ir)
     INFCONTEXT Context;
     PWCHAR Value;
     UINT ErrorLine;
-    SIZE_T ReturnSize;
+    ULONG ReturnSize;
+    PGENERIC_LIST_ENTRY ListEntry;
 
     CONSOLE_SetStatusText(MUIGetString(STRING_PLEASEWAIT));
 
@@ -797,8 +807,43 @@ SetupStartPage(PINPUT_RECORD Ir)
         KeyboardList = CreateKeyboardDriverList(SetupInf);
         LayoutList = CreateKeyboardLayoutList(SetupInf, DefaultKBLayout);
         LanguageList = CreateLanguageList(SetupInf, DefaultLanguage);
+		
+		/* new part */
+		
+		wcscpy(SelectedLanguageId,LocaleID);
+		
+				
+		/* first we hack LanguageList */
+		ListEntry = GetFirstListEntry(LanguageList);
 
-        return INSTALL_INTRO_PAGE;
+		while (ListEntry != NULL)
+		{
+			if (!wcscmp(LocaleID, GetListEntryUserData(ListEntry)))
+			{
+				DPRINT("found %S in LanguageList\n",GetListEntryUserData(ListEntry));
+				SetCurrentListEntry(LanguageList, ListEntry);
+				break;
+			}
+
+			ListEntry = GetNextListEntry(ListEntry);
+		}
+		/* now LayoutList */
+		ListEntry = GetFirstListEntry(LayoutList);
+
+		while (ListEntry != NULL)
+		{
+			if (!wcscmp(LocaleID, GetListEntryUserData(ListEntry)))
+			{
+				DPRINT("found %S in LayoutList\n",GetListEntryUserData(ListEntry));
+				SetCurrentListEntry(LayoutList, ListEntry);
+				break;
+			}
+
+			ListEntry = GetNextListEntry(ListEntry);
+		}
+        SetConsoleCodePage();
+
+	    return INSTALL_INTRO_PAGE;
     }
 
     return LANGUAGE_PAGE;
@@ -3008,18 +3053,9 @@ SetupUpdateMemoryInfo(IN PCOPYCONTEXT CopyContext,
     }
 
     /* Set current values */
-    ProgressSetStep(CopyContext->MemoryBars[0], PerfInfo.PagedPoolPages);
-    ProgressSetStep(CopyContext->MemoryBars[1], PerfInfo.NonPagedPoolPages);
+    ProgressSetStep(CopyContext->MemoryBars[0], PerfInfo.PagedPoolPages + PerfInfo.NonPagedPoolPages);
+    ProgressSetStep(CopyContext->MemoryBars[1], PerfInfo.ResidentSystemCachePage);
     ProgressSetStep(CopyContext->MemoryBars[2], PerfInfo.AvailablePages);
-
-    /* Check if memory dropped below 40%! */
-    if (CopyContext->MemoryBars[2]->Percent <= 40)
-    {
-        /* Wait a while until Mm does its thing */
-        LARGE_INTEGER Interval;
-        Interval.QuadPart = -1 * 15 * 1000 * 100;
-        NtDelayExecution(FALSE, &Interval);
-    }
 }
 
 static UINT CALLBACK
@@ -3093,7 +3129,7 @@ FileCopyPage(PINPUT_RECORD Ir)
 						  13,
                                                   44,
                                                   FALSE,
-                                                  "Paged Memory");
+                                                  "Kernel Pool");
 
     /* Create the non paged pool progress bar */
     CopyContext.MemoryBars[1] = CreateProgressBar((xScreen / 2)- (mem_bar_width / 2),
@@ -3103,7 +3139,7 @@ FileCopyPage(PINPUT_RECORD Ir)
                                                   (xScreen / 2)- (mem_bar_width / 2),
                                                   44,
                                                   FALSE,
-                                                  "Nonpaged Memory");
+                                                  "Kernel Cache");
 
     /* Create the global memory progress bar */
     CopyContext.MemoryBars[2] = CreateProgressBar(xScreen - 13 - mem_bar_width,
@@ -3235,14 +3271,24 @@ RegistryPage(PINPUT_RECORD Ir)
         return QUIT_PAGE;
     }
 
-    /* Update keyboard layout settings */
-    CONSOLE_SetStatusText(MUIGetString(STRING_KEYBOARDSETTINGSUPDATE));
-    if (!ProcessKeyboardLayoutRegistry(LayoutList))
+    /* Set GeoID */
+
+    if (!SetGeoID(MUIGetGeoID()))
     {
-        MUIDisplayError(ERROR_UPDATE_KBSETTINGS, Ir, POPUP_WAIT_ENTER);
+        MUIDisplayError(ERROR_UPDATE_GEOID, Ir, POPUP_WAIT_ENTER);
         return QUIT_PAGE;
     }
 
+    if (!IsUnattendedSetup){
+        
+       /* Update keyboard layout settings */
+       CONSOLE_SetStatusText(MUIGetString(STRING_KEYBOARDSETTINGSUPDATE));
+       if (!ProcessKeyboardLayoutRegistry(LayoutList))
+       {
+           MUIDisplayError(ERROR_UPDATE_KBSETTINGS, Ir, POPUP_WAIT_ENTER);
+           return QUIT_PAGE;
+       }
+    }
     /* Add codepage information to registry */
     CONSOLE_SetStatusText(MUIGetString(STRING_CODEPAGEINFOUPDATE));
     if (!AddCodePage())
@@ -3381,7 +3427,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
             }
             else if (Line == 14)
             {
-                return SUCCESS_PAGE;;
+                return SUCCESS_PAGE;
             }
 
             return BOOT_LOADER_PAGE;

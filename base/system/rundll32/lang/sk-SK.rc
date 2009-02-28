@@ -1,11 +1,13 @@
-#include "resource.h"
-/*
- * Slovak translation by Kario  2007 <kario@szm.sk>
+/* TRANSLATOR :  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
+ * DATE OF TR.:  xx-xx-2007
+ * LAST CHANGE:  18-09-2008
  */
+
+#include "resource.h"
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_DllNotLoaded,   "NaËÌtanie kniûnice zlyhalo pri pokus naËÌtaù '%s'"
+    IDS_DllNotLoaded,   "LoadLibrary sa nepodarilo naËÌtaù '%s'"
     IDS_MissingEntry,   "Chybn˝ vstupn˝ bod:%s\nv %s"
 END

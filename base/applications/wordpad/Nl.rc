@@ -110,8 +110,8 @@ STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Datum en tijd"
 FONT 10, "MS Sans Serif"
 BEGIN
-    LTEXT        "Beschikbare formaten",0,3,2,100,15
-    LISTBOX      IDC_DATETIME,3,12,80,65,LBS_NOINTEGRALHEIGHT
+    LTEXT        "Beschikbare formaten",-1,3,2,100,15
+    LISTBOX      IDC_DATETIME,3,12,80,65,LBS_NOINTEGRALHEIGHT | LBS_NOTIFY
     PUSHBUTTON   "&OK",IDOK,87,12,40,12
     PUSHBUTTON   "&Annuleren",IDCANCEL,87,26,40,12
 END
@@ -121,7 +121,7 @@ STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Nieuw"
 FONT 10, "MS Sans Serif"
 BEGIN
-    LTEXT        "Nieuw document type",0,3,2,100,15
+    LTEXT        "Nieuw document type",-1,3,2,100,15
     LISTBOX      IDC_NEWFILE,3,12,90,65,LBS_NOINTEGRALHEIGHT
     PUSHBUTTON   "&OK",IDOK,97,12,40,12
     PUSHBUTTON   "&Annuleren",IDCANCEL,97,26,40,12
@@ -132,14 +132,14 @@ STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 Caption "Paragraaf formaat"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Indentation", 0, 10, 10, 120, 68
-    LTEXT "Links", 0, 15, 22, 40, 13
+    GROUPBOX "Indentation", -1, 10, 10, 120, 68
+    LTEXT "Links", -1, 15, 22, 40, 13
     EDITTEXT IDC_PARA_LEFT, 55, 20, 60, 13
-    LTEXT "Rechts", 0, 15, 40, 40, 13
+    LTEXT "Rechts", -1, 15, 40, 40, 13
     EDITTEXT IDC_PARA_RIGHT, 55, 38, 60, 13
-    LTEXT "Eerste regel", 0, 15, 58, 40, 13
+    LTEXT "Eerste regel", -1, 15, 58, 40, 13
     EDITTEXT IDC_PARA_FIRST, 55, 56, 60, 13
-    LTEXT "Uitlijning", 0, 15, 87, 40, 13
+    LTEXT "Uitlijning", -1, 15, 87, 40, 13
     COMBOBOX IDC_PARA_ALIGN, 55, 85, 60, 60, CBS_DROPDOWNLIST
     PUSHBUTTON "&OK", IDOK, 137, 15, 50, 15
     PUSHBUTTON "&Annuleren", IDCANCEL, 137, 33, 50, 15
@@ -150,7 +150,7 @@ STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 Caption "Tabs"
 FONT 8, "MS SHell DLg"
 BEGIN
-    GROUPBOX "Tab stops", 0, 10, 10, 120, 90
+    GROUPBOX "Tab stops", -1, 10, 10, 120, 90
     COMBOBOX IDC_TABSTOPS, 20, 20, 100, 60, CBS_SIMPLE | CBS_SORT
     DEFPUSHBUTTON "&Toevoegen", ID_TAB_ADD, 20, 80, 45, 15
     PUSHBUTTON "&Verwijderen", ID_TAB_DEL, 72, 80, 45, 15
@@ -164,10 +164,11 @@ STYLE DS_SYSMODAL
 Caption ""
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Regel afbreken", 0, 10, 10, 130, 85
-    RADIOBUTTON "Breek tekst af bij &venster rand", IDC_PAGEFMT_WW, 18, 25, 117, 15
-    RADIOBUTTON "Breek tekst af bij de &marge", IDC_PAGEFMT_WM, 18, 45, 117, 15
-    GROUPBOX "Toolbars", 0, 150, 10, 120, 85
+    GROUPBOX "Regel afbreken", -1, 10, 10, 130, 85
+    RADIOBUTTON "No line wrapping", IDC_PAGEFMT_WN, 18, 25, 117, 15
+    RADIOBUTTON "Breek tekst af bij &venster rand", IDC_PAGEFMT_WW, 18, 45, 117, 15
+    RADIOBUTTON "Breek tekst af bij de &marge", IDC_PAGEFMT_WM, 18, 65, 117, 15
+    GROUPBOX "Toolbars", -1, 150, 10, 120, 85
     CHECKBOX "&Toolbalk", IDC_PAGEFMT_TB, 160, 20, 80, 15
     CHECKBOX "&Formaatbalk", IDC_PAGEFMT_FB, 160, 38, 80, 15
     CHECKBOX "&Lineaal", IDC_PAGEFMT_RU, 160, 56, 80, 15
@@ -239,4 +240,5 @@ BEGIN
     STRING_WRITE_ACCESS_DENIED,  "Onvoldoende rechten om het bestand op te slaan."
     STRING_OPEN_FAILED,          "Bestand kon niet geopend worden."
     STRING_OPEN_ACCESS_DENIED,   "Onvoldoende rechten om het bestand te openen."
+    STRING_PRINTING_NOT_IMPLEMENTED, "Printen is nog niet geimplementeerd"
 END

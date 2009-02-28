@@ -1,8 +1,8 @@
 /*
  * PROJECT:     ReactOS Calculator
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        rosapps/roscalc/lang/uk-UA.rc
- * PURPOSE:     Ukraianian Language File for roscalc
+ * FILE:        base/applications/calc/lang/uk-UA.rc
+ * PURPOSE:     Ukraianian Language File for ReactOS Calc
  * TRANSLATOR:  Artem Reznikov
  */
 
@@ -17,14 +17,10 @@ MENU IDR_MENU_SCIENTIFIC_1
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     GROUPBOX        "",IDC_STATIC,4,16,132,21
-    CONTROL         "Hex",IDC_RADIO_HEX,"Button",BS_AUTORADIOBUTTON,8,24,29,
-                    10
-    CONTROL         "Dec",IDC_RADIO_DEC,"Button",BS_AUTORADIOBUTTON,40,24,29,
-                    10
-    CONTROL         "Oct",IDC_RADIO_OCT,"Button",BS_AUTORADIOBUTTON,72,24,27,
-                    10
-    CONTROL         "Bin",IDC_RADIO_BIN,"Button",BS_AUTORADIOBUTTON,100,24,
-                    26,10
+    CONTROL         "Hex",IDC_RADIO_HEX,"Button",BS_AUTORADIOBUTTON,8,24,29,10
+    CONTROL         "Dec",IDC_RADIO_DEC,"Button",BS_AUTORADIOBUTTON,40,24,29,10
+    CONTROL         "Oct",IDC_RADIO_OCT,"Button",BS_AUTORADIOBUTTON,72,24,27,10
+    CONTROL         "Bin",IDC_RADIO_BIN,"Button",BS_AUTORADIOBUTTON,100,24,26,10
     GROUPBOX        "",IDC_STATIC,4,36,76,21
     CONTROL         "Inv",IDC_CHECK_INV,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,8,44,26,10
@@ -239,20 +235,20 @@ END
 
 IDD_DIALOG_CONVERSION DIALOGEX 0, 0, 320, 130
 STYLE WS_MINIMIZEBOX | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Calculator"
+CAPTION "Калькулятор ReactOS"
 MENU IDR_MENU_STANDARD
 FONT 8, "MS Shell Dlg"
 BEGIN
-    PUSHBUTTON      "Convert",IDC_BUTTON_CONVERT,35,105,76,17
+    PUSHBUTTON      "Перевести",IDC_BUTTON_CONVERT,35,105,76,17
     COMBOBOX        IDC_COMBO_CATEGORY,4,31,140,168,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP | CBS_SORT
-    LTEXT           "Category:",IDC_STATIC,4,20,56,8
+    LTEXT           "Категорія:",IDC_STATIC,4,20,56,8
     COMBOBOX        IDC_COMBO_FROM,4,60,140,168,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP | CBS_SORT
-    LTEXT           "Convert from:",IDC_STATIC,4,49,56,8
+    LTEXT           "Вихідна величина (\"з\"):",IDC_STATIC,4,49,56,8
     COMBOBOX        IDC_COMBO_TO,4,87,140,168,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP | CBS_SORT
-    LTEXT           "Convert to:",IDC_STATIC,4,76,56,8
+    LTEXT           "Кінцева величина (\"в\"):",IDC_STATIC,4,76,56,8
     CONTROL         "C",IDC_BUTTON_CANC,"Button",BS_OWNERDRAW | BS_CENTER | 
                     BS_VCENTER | BS_NOTIFY | WS_TABSTOP,276,24,40,17
     CONTROL         "CE",IDC_BUTTON_CE,"Button",BS_OWNERDRAW | BS_CENTER | 
@@ -348,7 +344,6 @@ BEGIN
     CTEXT           "n=0",IDC_TEXT_NITEMS,4,68,156,12,SS_CENTERIMAGE | 
                     SS_SUNKEN
 END
-
 
 // Menus
 
@@ -452,17 +447,27 @@ END
 // types of conversion
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_CONV_AREA           "Area"
-    IDS_CONV_CONSUMPTION    "Consumption (engines)"
-    IDS_CONV_CURRENCY       "Currencies"
-    IDS_CONV_ENERGY         "Energy"
-    IDS_CONV_LENGTH         "Lenghts"
-    IDS_CONV_POWER          "Power"
-    IDS_CONV_PRESSURE       "Pressure"
-    IDS_CONV_TEMPERATURE    "Temperature"
-    IDS_CONV_VELOCITY       "Velocity"
-    IDS_CONV_VOLUME         "Volume"
-    IDS_CONV_WEIGHT         "Weights"
+    IDS_CONV_ANGLE          "Кут"
+    IDS_CONV_AREA           "Площа"
+    IDS_CONV_CONSUMPTION    "Витрата палива (двигуни)"
+    IDS_CONV_CURRENCY       "Валюта"
+    IDS_CONV_ENERGY         "Енергія"
+    IDS_CONV_LENGTH         "Довжина"
+    IDS_CONV_POWER          "Потужність"
+    IDS_CONV_PRESSURE       "Тиск"
+    IDS_CONV_TEMPERATURE    "Температура"
+    IDS_CONV_TIME           "Час"
+    IDS_CONV_VELOCITY       "Швидкість"
+    IDS_CONV_VOLUME         "Об'єм"
+    IDS_CONV_WEIGHT         "Вага"
+END
+
+// TYPES OF ANGLES
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ANGLE_DEGREES       "градус"
+    IDS_ANGLE_GRADIANS      "град"
+    IDS_ANGLE_RADIANS       "радіан"
 END
 
 // TYPES OF AREAS
@@ -493,7 +498,7 @@ BEGIN
     IDS_AREA_SQUARE_INCHES          "Square inches"
     IDS_AREA_SQUARE_KILOMETERS      "Square kilometers"
     IDS_AREA_SQUARE_LAR             "Square lar"
-    IDS_AREA_SQUARE_METER           "Square meter"
+    IDS_AREA_SQUARE_METER           "квадратний метр"
     IDS_AREA_SQUARE_MILES           "Square miles"
     IDS_AREA_SQUARE_MILLIMETERS     "Square millimeters"
     IDS_AREA_SQUARE_SHAKU           "Square shaku"
@@ -519,9 +524,10 @@ BEGIN
     IDS_CURRENCY_AUSTRIAN_SCHILLING "Austrian schilling"
     IDS_CURRENCY_BELGIAN_FRANC      "Belgian franc"
     IDS_CURRENCY_CYPRIOT_POUND      "Cypriot pound"
+    IDS_CURRENCY_CZECH_KORUNA       "Чеська крона"
     IDS_CURRENCY_DEUTSCHE_MARK      "Deutsche Mark"
     IDS_CURRENCY_DUTCH_GUILDER      "Dutch guilder"
-    IDS_CURRENCY_EURO               "Euro"
+    IDS_CURRENCY_EURO               "Євро"
     IDS_CURRENCY_FINNISH_MARKKA     "Finnish markka"
     IDS_CURRENCY_FRENCH_FRANC       "French franc"
     IDS_CURRENCY_GREEK_DRACHMA      "Greek Drachma"
@@ -530,6 +536,7 @@ BEGIN
     IDS_CURRENCY_LUXEMBOURG_FRANC   "Luxembourg franc"
     IDS_CURRENCY_MALTESE_LIRA       "Maltese lira"
     IDS_CURRENCY_PORTOGUESE_ESCUDO  "Portoguese escudo"
+    IDS_CURRENCY_SLOVAK_KORUNA      "Словацька крона"
     IDS_CURRENCY_SLOVENIAN_TOLAR    "Slovenian tolar"
     IDS_CURRENCY_SPANISH_PESETA     "Spanish peseta"
 END
@@ -537,21 +544,25 @@ END
 // TYPES OF ENERGIES
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_ENERGY_15_C_CALORIES        "15 ^C calories"
-    IDS_ENERGY_ERGS                 "Ergs"
-    IDS_ENERGY_IT_CALORIES          "International Table calories"
-    IDS_ENERGY_JOULES               "Joules"
+    IDS_ENERGY_15_C_CALORIES        "калорія 15-градусна"
+    IDS_ENERGY_BTUS                 "британська теплова одиниця"
+    IDS_ENERGY_ERGS                 "ерг"
+    IDS_ENERGY_EVS                  "електронвольт"
+    IDS_ENERGY_FOOT_POUNDS          "Foot-Pounds"
+    IDS_ENERGY_IT_CALORIES          "калорія міжнародна"
+    IDS_ENERGY_IT_KILOCALORIES      "International Table kilocalories"
+    IDS_ENERGY_JOULES               "джоуль"
     IDS_ENERGY_KILOJOULES           "Kilojoules"
     IDS_ENERGY_KILOWATT_HOURS       "Kilowatt hours"
     IDS_ENERGY_NUTRITION_CALORIES   "Nutrition calories"
-    IDS_ENERGY_TH_CALORIES          "Thermochemical calorie"
+    IDS_ENERGY_TH_CALORIES          "калорія термохімічна"
 END
 
 // TYPES OF LENGTHS
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_LENGTH_ANGSTROMS            "Angstroms"
-    IDS_LENGTH_ASTRONOMILA_UNITS    "Astronomila units"
+    IDS_LENGTH_ANGSTROMS            "ангстрем"
+    IDS_LENGTH_ASTRONOMICAL_UNITS   "астрономічна одиниця"
     IDS_LENGTH_BARLEYCORNS          "Barleycorns"
     IDS_LENGTH_CENTIMETERS          "Centimeters"
     IDS_LENGTH_CHAINS_UK            "Chains (UK)"
@@ -574,17 +585,19 @@ BEGIN
     IDS_LENGTH_KEUB                 "Keub"
     IDS_LENGTH_KILOMETERS           "Kilometers"
     IDS_LENGTH_LAR                  "Lar"
-    IDS_LENGTH_LIGHT_YEARS          "Light years"
+    IDS_LENGTH_LIGHT_YEARS          "світловий рік"
     IDS_LENGTH_LINKS_UK             "Links (UK)"
-    IDS_LENGTH_METERS               "Meters"
-    IDS_LENGTH_MILES                "Miles"
-    IDS_LENGTH_MILLIMETERS          "Millimeters"
+    IDS_LENGTH_METERS               "метр"
+    IDS_LENGTH_MICRONS              "мікрометр"
+    IDS_LENGTH_MILES                "миля"
+    IDS_LENGTH_MILLIMETERS          "міліметр"
     IDS_LENGTH_NAUTICAL_MILES       "Nautical miles"
     IDS_LENGTH_NIEU                 "Nieu"
-    IDS_LENGTH_PARSECS              "Parsecs"
+    IDS_LENGTH_PARSECS              "парсек"
     IDS_LENGTH_PICAS                "Picas"
     IDS_LENGTH_RI_JAPAN             "Ri (Japan)"
     IDS_LENGTH_RI_KOREA             "Ri (Korea)"
+    IDS_LENGTH_RODS                 "Rods"
     IDS_LENGTH_SAWK                 "Sawk"
     IDS_LENGTH_SEN                  "Sen"
     IDS_LENGTH_SHAKU                "Shaku"
@@ -600,10 +613,12 @@ END
 // TYPES OF POWERS
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_POWER_HORSEPOWER            "Horsepower"
-    IDS_POWER_KILOWATTS             "Kilowatts"
-    IDS_POWER_MEGAWATTS             "Megawatts"
-    IDS_POWER_WATTS                 "Watts"
+    IDS_POWER_BTUS_PER_MINUTE       "британська теплова одиниця за хвилину"
+    IDS_POWER_FPS_PER_MINUTE        "Foot-Pounds per minute"
+    IDS_POWER_HORSEPOWER            "кінська сила"
+    IDS_POWER_KILOWATTS             "кіловат"
+    IDS_POWER_MEGAWATTS             "мегават"
+    IDS_POWER_WATTS                 "ват"
 END
 
 // TYPE OF PRESSURES
@@ -611,25 +626,42 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_PRESSURE_ATMOSPHERES        "Atmospheres"
     IDS_PRESSURE_BARS               "Bars"
+    IDS_PRESSURE_HECTOPASCALS       "гектопаскаль"
+    IDS_PRESSURE_KILOPASCALS        "кілопаскаль"
     IDS_PRESSURE_MM_OF_MERCURY      "Millimeters of mercury"
-    IDS_PRESSURE_PASCALS            "Pascals"
+    IDS_PRESSURE_PASCALS            "паскаль"
     IDS_PRESSURE_PSI                "Pounds-force per square inch"
 END
 
 // TYPES OF TEMPERATURES
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_TEMPERATURE_CELSIUS         "Celsius"
-    IDS_TEMPERATURE_FAHRENHEIT      "Fahrenheit"
-    IDS_TEMPERATURE_KELVIN          "Kelvin"
-    IDS_TEMPERATURE_RANKINE         "Rankine"
+    IDS_TEMPERATURE_CELSIUS         "градус (за шкалою Цельсія)"
+    IDS_TEMPERATURE_FAHRENHEIT      "градус (за шкалою Фаренгейта)"
+    IDS_TEMPERATURE_KELVIN          "градус (за шкалою Кельвіна)"
+    IDS_TEMPERATURE_RANKINE         "градус (за шкалою Ранкіна)"
+END
+
+// TYPES OF TIME
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_TIME_DAYS         "доба"
+    IDS_TIME_HOURS        "година"
+    IDS_TIME_MICROSECONDS "мікросекунда"
+    IDS_TIME_MILLISECONDS "мілісекунда"
+    IDS_TIME_MINUTES      "хвилина"
+    IDS_TIME_SECONDS      "секунда"
+    IDS_TIME_WEEKS        "тиждень"
+    IDS_TIME_YEARS        "рік"
 END
 
 // TYPES OF VELOCITIES
 STRINGTABLE DISCARDABLE
 BEGIN
+    IDS_VELOCITY_CMS_SECOND         "Centimeters/hour"
     IDS_VELOCITY_FEET_HOUR          "Feet/hour"
-    IDS_VELOCITY_KILOMETERS_HOUR    "Kilometers/hour"
+    IDS_VELOCITY_FEET_SECOND        "Feet/second"
+    IDS_VELOCITY_KILOMETERS_HOUR    "кілометр за годину"
     IDS_VELOCITY_KNOTS              "Knots"
     IDS_VELOCITY_MACH               "Mach"
     IDS_VELOCITY_METERS_SECOND      "Meters/second"
@@ -694,9 +726,9 @@ BEGIN
     IDS_WEIGHT_LIANG_CHINA          "Liang (China)"
     IDS_WEIGHT_LIANG_TAIWAN         "Liang (Taiwan)"
     IDS_WEIGHT_MONME                "Monme"
-    IDS_WEIGHT_OUNCES_AVOIRDUPOIS   "Ounces, avoirdupois"
-    IDS_WEIGHT_OUNCES_TROY          "Ounces, troy"
-    IDS_WEIGHT_POUNDS               "Pounds"
+    IDS_WEIGHT_OUNCES_AVOIRDUPOIS   "унція торговельна"
+    IDS_WEIGHT_OUNCES_TROY          "унція тройська"
+    IDS_WEIGHT_POUNDS               "фунт"
     IDS_WEIGHT_QUINTAL_METRIC       "Quintal (metric)"
     IDS_WEIGHT_SALOUNG              "Saloung"
     IDS_WEIGHT_STONES               "Stones"

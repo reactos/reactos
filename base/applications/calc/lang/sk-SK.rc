@@ -1,6 +1,6 @@
 /* TRANSLATOR :  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR.:  30-01-2008
- * LAST CHANGE:  10-07-2008 
+ * LAST CHANGE:  27-01-2009
  * ---------------------------------------
  * TODO:
  * 1. treba usporiadaù jednotky podæa abecedy
@@ -18,14 +18,10 @@ MENU IDR_MENU_SCIENTIFIC_1
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     GROUPBOX        "",IDC_STATIC,4,16,132,21
-    CONTROL         "Hex",IDC_RADIO_HEX,"Button",BS_AUTORADIOBUTTON,8,24,29,
-                    10
-    CONTROL         "Dec",IDC_RADIO_DEC,"Button",BS_AUTORADIOBUTTON,40,24,29,
-                    10
-    CONTROL         "Oct",IDC_RADIO_OCT,"Button",BS_AUTORADIOBUTTON,72,24,27,
-                    10
-    CONTROL         "Bin",IDC_RADIO_BIN,"Button",BS_AUTORADIOBUTTON,100,24,
-                    26,10
+    CONTROL         "Hex",IDC_RADIO_HEX,"Button",BS_AUTORADIOBUTTON,8,24,29,10
+    CONTROL         "Dec",IDC_RADIO_DEC,"Button",BS_AUTORADIOBUTTON,40,24,29,10
+    CONTROL         "Oct",IDC_RADIO_OCT,"Button",BS_AUTORADIOBUTTON,72,24,27,10
+    CONTROL         "Bin",IDC_RADIO_BIN,"Button",BS_AUTORADIOBUTTON,100,24,26,10
     GROUPBOX        "",IDC_STATIC,4,36,76,21
     CONTROL         "Inv",IDC_CHECK_INV,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,8,44,26,10
@@ -350,7 +346,6 @@ BEGIN
                     SS_SUNKEN
 END
 
-
 // Menus
 
 IDR_MENU_SCIENTIFIC_1 MENU DISCARDABLE 
@@ -445,7 +440,7 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_STRING_LICENSE      "KalkulaËka systÈmu ReactOS je voæn˝ softvÈr vydan˝ pod licenciou GNU GPL.\r\n\r\nKÛpiu licenie GNU GPL mÙûete zÌskaù tu:\r\nhttp://www.gnu.org/licenses/gpl.html\r\n\r\nRovnako mÙûete zÌskaù preklad licencie GNU GPL tu:\r\nhttp://www.gnu.org/licenses/translations.html"
+    IDS_STRING_LICENSE      "KalkulaËka systÈmu ReactOS je voæn˝ softvÈr vydan˝ pod licenciou GNU GPL.\r\n\r\nKÛpiu licencie GNU GPL mÙûete zÌskaù tu:\r\nhttp://www.gnu.org/licenses/gpl.html\r\n\r\nRovnako mÙûete zÌskaù preklad licencie GNU GPL tu:\r\nhttp://www.gnu.org/licenses/translations.html"
     IDS_MATH_ERROR          "Chyba"
     IDS_QUICKHELP           "R˝chla pomoc"
 END
@@ -453,6 +448,7 @@ END
 // types of conversion
 STRINGTABLE DISCARDABLE
 BEGIN
+    IDS_CONV_TIME           "»as"
     IDS_CONV_LENGTH         "DÂûka"
     IDS_CONV_ENERGY         "Energia"
     IDS_CONV_WEIGHT         "Hmotnosù"
@@ -463,7 +459,16 @@ BEGIN
     IDS_CONV_CONSUMPTION    "Spotreba motorov" //Spotreba (motory)
     IDS_CONV_TEMPERATURE    "Teplota"
     IDS_CONV_PRESSURE       "Tlak"
+    IDS_CONV_ANGLE          "Uhol"
     IDS_CONV_POWER          "V˝kon"
+END
+
+// TYPES OF ANGLES
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ANGLE_GRADIANS "Grady"
+    IDS_ANGLE_RADIANS  "Radi·ny"
+    IDS_ANGLE_DEGREES  "Stupne"
 END
 
 // TYPES OF AREAS
@@ -517,30 +522,36 @@ END
 // TYPES OF CURRENCIES
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_CURRENCY_AUSTRIAN_SCHILLING "Rak˙zsky öiling"
     IDS_CURRENCY_BELGIAN_FRANC      "Belgick˝ frank"
-    IDS_CURRENCY_CYPRIOT_POUND      "Cypriot pound"
-    IDS_CURRENCY_DEUTSCHE_MARK      "Nemeck· marka"
-    IDS_CURRENCY_DUTCH_GUILDER      "Holandsk˝ gulden"
+    IDS_CURRENCY_CYPRIOT_POUND      "Cypersk· libra"
+    IDS_CURRENCY_CZECH_KORUNA       "»esk· koruna"
     IDS_CURRENCY_EURO               "Euro"
     IDS_CURRENCY_FINNISH_MARKKA     "Finsk· marka"
     IDS_CURRENCY_FRENCH_FRANC       "Franc˙zsky frank"
     IDS_CURRENCY_GREEK_DRACHMA      "GrÈcka drachma"
+    IDS_CURRENCY_DUTCH_GUILDER      "Holandsk˝ gulden"
     IDS_CURRENCY_IRISH_POUND        "Irish pound"
-    IDS_CURRENCY_ITALIAN_LIRA       "Italian lira"
     IDS_CURRENCY_LUXEMBOURG_FRANC   "Luxembourg franc"
     IDS_CURRENCY_MALTESE_LIRA       "Maltese lira"
+    IDS_CURRENCY_DEUTSCHE_MARK      "Nemeck· marka"
     IDS_CURRENCY_PORTOGUESE_ESCUDO  "Portoguese escudo"
+    IDS_CURRENCY_AUSTRIAN_SCHILLING "Rak˙zsky öiling"
+    IDS_CURRENCY_SLOVAK_KORUNA      "Slovensk· koruna"
     IDS_CURRENCY_SLOVENIAN_TOLAR    "Slovinsk˝ toliar"
     IDS_CURRENCY_SPANISH_PESETA     "äpanielska peseta"
+    IDS_CURRENCY_ITALIAN_LIRA       "Talianska lÌra"
 END
 
 // TYPES OF ENERGIES
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_ENERGY_15_C_CALORIES        "15 ^C calories"
+    IDS_ENERGY_15_C_CALORIES        "15 ∞C calories"
+    IDS_ENERGY_BTUS                 "British Thermal Units"
     IDS_ENERGY_ERGS                 "Ergs"
+    IDS_ENERGY_EVS                  "Electron-Volts"
+    IDS_ENERGY_FOOT_POUNDS          "Foot-Pounds"
     IDS_ENERGY_IT_CALORIES          "International Table calories"
+    IDS_ENERGY_IT_KILOCALORIES      "International Table kilocalories"
     IDS_ENERGY_JOULES               "Joules"
     IDS_ENERGY_KILOJOULES           "Kilojoules"
     IDS_ENERGY_KILOWATT_HOURS       "Kilowatthodiny"
@@ -552,7 +563,7 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_LENGTH_ANGSTROMS            "Angstroms"
-    IDS_LENGTH_ASTRONOMILA_UNITS    "Astronomila units"
+    IDS_LENGTH_ASTRONOMICAL_UNITS   "Astronomical units"
     IDS_LENGTH_BARLEYCORNS          "Barleycorns"
     IDS_LENGTH_CENTIMETERS          "Centimetre"
     IDS_LENGTH_CHAINS_UK            "Chains (UK)"
@@ -560,14 +571,10 @@ BEGIN
     IDS_LENGTH_CHOU                 "Chou"
     IDS_LENGTH_CHR                  "Chr"
     IDS_LENGTH_CUN                  "Cun"
-    IDS_LENGTH_FATHOMS              "Siahy"
-    IDS_LENGTH_FATHOMS_HUNGARY      "Siahy (MaÔarsko)"
-    IDS_LENGTH_FEET                 "Stopy"
     IDS_LENGTH_FURLONGS             "Furlongs"
     IDS_LENGTH_GAN                  "Gan"
     IDS_LENGTH_HANDS                "Hands"
     IDS_LENGTH_HUNH                 "Hunh"
-    IDS_LENGTH_INCHES               "Palce"
     IDS_LENGTH_JA                   "Ja"
     IDS_LENGTH_JEONG                "Jeong"
     IDS_LENGTH_KABIET               "Kabiet"
@@ -575,22 +582,28 @@ BEGIN
     IDS_LENGTH_KEUB                 "Keub"
     IDS_LENGTH_KILOMETERS           "Kilometre"
     IDS_LENGTH_LAR                  "Lar"
-    IDS_LENGTH_LIGHT_YEARS          "SvetelnÈ roky"
     IDS_LENGTH_LINKS_UK             "Links (UK)"
     IDS_LENGTH_METERS               "Metre"
+    IDS_LENGTH_MICRONS              "MikrÛny"
     IDS_LENGTH_MILES                "MÌle"
     IDS_LENGTH_MILLIMETERS          "Milimetre"
     IDS_LENGTH_NAUTICAL_MILES       "N·mornÈ mÌle"
     IDS_LENGTH_NIEU                 "Nieu"
+    IDS_LENGTH_INCHES               "Palce"
     IDS_LENGTH_PARSECS              "Parsecy"
     IDS_LENGTH_PICAS                "Picas"
     IDS_LENGTH_RI_JAPAN             "Ri (Japonsko)"
     IDS_LENGTH_RI_KOREA             "Ri (KÛrea)"
+    IDS_LENGTH_RODS                 "Rods"
     IDS_LENGTH_SAWK                 "Sawk"
     IDS_LENGTH_SEN                  "Sen"
     IDS_LENGTH_SHAKU                "Shaku"
+    IDS_LENGTH_FATHOMS              "Siahy"
+    IDS_LENGTH_FATHOMS_HUNGARY      "Siahy (MaÔarsko)"
     IDS_LENGTH_SPAN                 "Span"
+    IDS_LENGTH_FEET                 "Stopy"
     IDS_LENGTH_SUN                  "Sun"
+    IDS_LENGTH_LIGHT_YEARS          "SvetelnÈ roky"
     IDS_LENGTH_TSUEN                "Tsuen"
     IDS_LENGTH_VA                   "Va"
     IDS_LENGTH_YARDS                "Yardy"
@@ -601,8 +614,10 @@ END
 // TYPES OF POWERS
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_POWER_HORSEPOWER            "KoÚskÈ sily"
+    IDS_POWER_BTUS_PER_MINUTE       "BritskÈ term·lne jednotky za min˙tu"
+    IDS_POWER_FPS_PER_MINUTE        "Foot-Pounds za min˙tu"
     IDS_POWER_KILOWATTS             "Kilowatty"
+    IDS_POWER_HORSEPOWER            "KoÚskÈ sily"
     IDS_POWER_MEGAWATTS             "Megawatty"
     IDS_POWER_WATTS                 "Watty"
 END
@@ -612,9 +627,11 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_PRESSURE_ATMOSPHERES        "AtmosfÈry"
     IDS_PRESSURE_BARS               "Bary"
+    IDS_PRESSURE_HECTOPASCALS       "Hektopascals"
+    IDS_PRESSURE_KILOPASCALS        "Kilopascals"
+    IDS_PRESSURE_PSI                "Libry na ötvorcov˝ palec"
     IDS_PRESSURE_MM_OF_MERCURY      "Millimeters of mercury"
     IDS_PRESSURE_PASCALS            "Pascals"
-    IDS_PRESSURE_PSI                "Pounds-force per square inch"
 END
 
 // TYPES OF TEMPERATURES
@@ -626,15 +643,30 @@ BEGIN
     IDS_TEMPERATURE_RANKINE         "Rankine"
 END
 
+// TYPES OF TIME
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_TIME_DAYS         "Dni"
+    IDS_TIME_HOURS        "Hodiny"
+    IDS_TIME_MICROSECONDS "Mikrosekundy"
+    IDS_TIME_MILLISECONDS "Milisekundy"
+    IDS_TIME_MINUTES      "Min˙ty"
+    IDS_TIME_YEARS        "Roky"
+    IDS_TIME_SECONDS      "Sekundy"
+    IDS_TIME_WEEKS        "T˝ûdne"
+END
+
 // TYPES OF VELOCITIES
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_VELOCITY_FEET_HOUR          "Stopy/hodinu"
+    IDS_VELOCITY_CMS_SECOND         "Centimetre/hodinu"
     IDS_VELOCITY_KILOMETERS_HOUR    "Kilometre/hodinu"
     IDS_VELOCITY_KNOTS              "Knots"
     IDS_VELOCITY_MACH               "Mach"
     IDS_VELOCITY_METERS_SECOND      "Metre/sekundu"
     IDS_VELOCITY_MILES_HOUR         "MÌle/hodinu"
+    IDS_VELOCITY_FEET_HOUR          "Stopy/hodinu"
+    IDS_VELOCITY_FEET_SECOND        "Stopy/sekundu"
 END
 
 // TYPES OF VOLUMES
@@ -645,11 +677,6 @@ BEGIN
     IDS_VOLUME_BUN                  "Bun"
     IDS_VOLUME_BUSHELS_UK           "Buöely (UK)" //Buöel, Buöle? Buöly?
     IDS_VOLUME_BUSHELS_US           "Buöely (USA)"
-    IDS_VOLUME_CUBIC_CENTIMETERS    "KubickÈ centimetre"
-    IDS_VOLUME_CUBIC_FEET           "KubickÈ stopy"
-    IDS_VOLUME_CUBIC_INCHES         "KubickÈ palce"
-    IDS_VOLUME_CUBIC_METERS         "KubickÈ metre"
-    IDS_VOLUME_CUBIC_YARDS          "KubickÈ yardy"
     IDS_VOLUME_DOE                  "Doe"
     IDS_VOLUME_FLUID_OUNCES_UK      "Fluid ounces (UK)"
     IDS_VOLUME_FLUID_OUNCES_US      "Fluid ounces (USA)"
@@ -659,6 +686,11 @@ BEGIN
     IDS_VOLUME_GOU                  "Gou"
     IDS_VOLUME_HOP                  "Hop"
     IDS_VOLUME_ICCE                 "Icce"
+    IDS_VOLUME_CUBIC_CENTIMETERS    "KubickÈ centimetre"
+    IDS_VOLUME_CUBIC_FEET           "KubickÈ stopy"
+    IDS_VOLUME_CUBIC_INCHES         "KubickÈ palce"
+    IDS_VOLUME_CUBIC_METERS         "KubickÈ metre"
+    IDS_VOLUME_CUBIC_YARDS          "KubickÈ yardy"
     IDS_VOLUME_KWIAN                "Kwian"
     IDS_VOLUME_LITERS               "Litre"
     IDS_VOLUME_MAL                  "Mal"
@@ -680,7 +712,7 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_WEIGHT_BAHT                 "Baht"
-    IDS_WEIGHT_CARATS               "Kar·ty"
+    IDS_WEIGHT_QUINTAL_METRIC       "Cent (metrick˝)"
     IDS_WEIGHT_CHUNG                "Chung"
     IDS_WEIGHT_DON                  "Don"
     IDS_WEIGHT_GEUN                 "Geun"
@@ -690,19 +722,19 @@ BEGIN
     IDS_WEIGHT_JIN_CHINA            "Jin (»Ìna)"
     IDS_WEIGHT_JIN_TAIWAN           "Jin (Tchajvan)"
     IDS_WEIGHT_KAN                  "Kan"
+    IDS_WEIGHT_CARATS               "Kar·ty"
     IDS_WEIGHT_KILOGRAMS            "Kilogramy"
     IDS_WEIGHT_KIN                  "Kin"
     IDS_WEIGHT_LIANG_CHINA          "Liang (»Ìna)"
     IDS_WEIGHT_LIANG_TAIWAN         "Liang (Tchajvan)"
-    IDS_WEIGHT_MONME                "Monme"
-    IDS_WEIGHT_OUNCES_AVOIRDUPOIS   "Unce, anglosask·"
-    IDS_WEIGHT_OUNCES_TROY          "Unce, trÛjska"
     IDS_WEIGHT_POUNDS               "Libry"
-    IDS_WEIGHT_QUINTAL_METRIC       "Cent (metrick˝)"
+    IDS_WEIGHT_MONME                "Monme"
     IDS_WEIGHT_SALOUNG              "Saloung"
     IDS_WEIGHT_STONES               "Stones"
     IDS_WEIGHT_TAMLUNG              "Tamlung"
     IDS_WEIGHT_TONNES               "Tony"
     IDS_WEIGHT_TONS_UK              "Tony (UK)"
     IDS_WEIGHT_TONS_US              "Tony (USA)"
+    IDS_WEIGHT_OUNCES_AVOIRDUPOIS   "Unce, anglosask·"
+    IDS_WEIGHT_OUNCES_TROY          "Unce, trÛjska"
 END

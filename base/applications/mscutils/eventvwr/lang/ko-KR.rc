@@ -8,7 +8,7 @@ IDC_EVENTVWR MENU
 BEGIN
 	POPUP "로그(&L)"
 	BEGIN
-		MENUITEM "애플리케이션(&A)",              ID_LOG_APPLICATION, CHECKED
+		MENUITEM "애플리케이션(&A)",              ID_LOG_APPLICATION
 		MENUITEM "보안(&S)",                 ID_LOG_SECURITY
 		MENUITEM "시스템(&S)",                   ID_LOG_SYSTEM
 		MENUITEM SEPARATOR

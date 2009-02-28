@@ -81,13 +81,16 @@ ScreenSaverProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		{
              BITMAP bm; /* Bitmap structure as seen in bmWidth & bmHeight */ 
              PAINTSTRUCT ps; 
+             HDC hdc;
+             HDC hdcMem;
+             HBITMAP hbmOld;
 
              // Obtain window coordinates.
              GetClientRect (hWnd, &rect);
 
-             HDC hdc = BeginPaint(hWnd, &ps); 
-             HDC hdcMem = CreateCompatibleDC(hdc); 
-             HBITMAP hbmOld = SelectObject(hdcMem, bitmap); 
+             hdc = BeginPaint(hWnd, &ps); 
+             hdcMem = CreateCompatibleDC(hdc); 
+             hbmOld = SelectObject(hdcMem, bitmap); 
 
              GetObject(bitmap, sizeof(bm), &bm);
 

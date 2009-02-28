@@ -29,16 +29,15 @@
 //     originally part of KeyTrans.cpp                 //
 /////////////////////////////////////////////////////////
 
+#include "tmapldr.h"
+#include "tnconfig.h"
+
 #ifdef __BORLANDC__
 #include <fstream.h>
 #else
 #include <string>
 #include <fstream>
 #endif
-
-#include "tmapldr.h"
-#include "tnerror.h"
-#include "tnconfig.h"
 
 // It's probably a good idea to turn off the "identifier was truncated" warning
 // in MSVC (Paul Brannan 5/25/98)
@@ -589,7 +588,7 @@ int TMapLoader::Load(const char * filename, const char * szActiveEmul) {
 #ifdef KEYDEBUG
 			printit("\r                                                                      \r");
 #endif
-			AllOk = SA.Add(temps);;
+			AllOk = SA.Add(temps);
 			if ( !AllOk ) break;
 		} else {
 			//       cerr << "Unexpected line '" << buf << "'\n";

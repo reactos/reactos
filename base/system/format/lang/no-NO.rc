@@ -7,7 +7,7 @@
 LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
 STRINGTABLE DISCARDABLE
 BEGIN
-STRING_HELP,  "bruk: %S stasjon: [-FS:fil-system] [-V:merke] [-Q] [-A:størrelse] [-C]\n\n\
+STRING_HELP,  "bruk: %s stasjon: [-FS:fil-system] [-V:merke] [-Q] [-A:størrelse] [-C]\n\n\
   [stasjon:]         Spesifisere stasjon til formater.\n\
   -FS:file-system  Spesifisere typen av fil system (%s).\n\
   -V:merke         Spesifisere volum merke.\n\
@@ -29,7 +29,7 @@ STRING_NO_SUPPORT  "Operasjon ikke støttet"
 
 STRING_FMIFS_FAIL  "Kunne ikke befinne seg FMIFS artikkel momenter.\n\n"
 
-STRING_UNKNOW_ARG  "Ukjent argument: %S\n"
+STRING_UNKNOW_ARG  "Ukjent argument: %s\n"
 
 STRING_DRIVE_PARM  "Obligatorisk drive parameter er mistet.\n\n"
 
@@ -41,7 +41,7 @@ STRING_NO_VOLUME         "Kunne ikke spørre om volumet"
 
 STRING_NO_VOLUME_SIZE    "Kunne ikke spørre om volumet størrelse"
 
-STRING_FILESYSTEM        "Typen av filsystem er %S.\n"
+STRING_FILESYSTEM        "Typen av filsystem er %s.\n"
 
 STRING_LABEL_NAME_EDIT  "Velg aktuell volum merke for stasjon %C: "
 

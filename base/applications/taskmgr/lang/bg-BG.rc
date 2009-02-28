@@ -192,21 +192,21 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "List2",IDC_APPLIST,"SysListView32",LVS_REPORT |
                     LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP,7,7,233,177
-    PUSHBUTTON      "&Нова задача...",IDC_NEWTASK,187,189,53,14
-    PUSHBUTTON      "Пре&включване на",IDC_SWITCHTO,131,189,53,14,WS_DISABLED
-    PUSHBUTTON      "&Прекратяване на задача",IDC_ENDTASK,75,189,53,14,WS_DISABLED
+    PUSHBUTTON      "&Нова задача...",IDC_NEWTASK,176,189,66,14
+    PUSHBUTTON      "Пре&включване на...",IDC_SWITCHTO,102,189,75,14,WS_DISABLED
+    PUSHBUTTON      "&Прекратяване на задача",IDC_ENDTASK,7,189,95,14,WS_DISABLED
 END
 
-IDD_PROCESS_PAGE DIALOGEX DISCARDABLE  0, 0, 247, 210
+IDD_PROCESS_PAGE DIALOGEX DISCARDABLE  0, 0, 247, 220
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "List2",IDC_PROCESSLIST,"SysListView32",LVS_REPORT |
                     LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_OWNERDATA |
                     WS_BORDER | WS_TABSTOP,7,7,233,177
-    PUSHBUTTON      "&Прекратяване на задача",IDC_ENDPROCESS,171,189,69,14
+    PUSHBUTTON      "&Прекратяване на задачата",IDC_ENDPROCESS,144,203,100,14
     CONTROL         "&Показване на действията на всички потребители",IDC_SHOWALLPROCESSES,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,191,111,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,191,190,10
 END
 
 //IDD_PERFORMANCE_PAGE DIALOGEX 0, 0, 247, 210
@@ -215,9 +215,9 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX        "Натоварване на ЦПУ",IDC_CPU_USAGE_FRAME,5,5,60,54,WS_TABSTOP, WS_EX_TRANSPARENT
-    GROUPBOX        "Употреба на памет",IDC_MEM_USAGE_FRAME,5,63,60,54,BS_LEFTTEXT, WS_EX_TRANSPARENT
+    GROUPBOX        "Заета памет",IDC_MEM_USAGE_FRAME,5,63,60,54,BS_LEFTTEXT, WS_EX_TRANSPARENT
     GROUPBOX        "Общо",IDC_TOTALS_FRAME,5,122,111,39,0,WS_EX_TRANSPARENT
-    GROUPBOX        "Commit Charge (K)",IDC_COMMIT_CHARGE_FRAME,5,166,111,39,0,WS_EX_TRANSPARENT
+    GROUPBOX        "Заделена памет (K)",IDC_COMMIT_CHARGE_FRAME,5,166,111,39,0,WS_EX_TRANSPARENT
     GROUPBOX        "Действителна памет (K)",IDC_PHYSICAL_MEMORY_FRAME,131,122,111,39,0,WS_EX_TRANSPARENT
     GROUPBOX        "Памет на ядрото (K)",IDC_KERNEL_MEMORY_FRAME,131,166,111,39,0,WS_EX_TRANSPARENT
     LTEXT           "Описатели",IDS_TOTALS_HANDLE_COUNT,12,131,57,8
@@ -229,9 +229,9 @@ BEGIN
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER
     EDITTEXT        IDC_TOTALS_PROCESS_COUNT,65,149,45,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER
-    LTEXT           "Общо",IDS_COMMIT_CHARGE_TOTAL,12,175,27,8
-    LTEXT           "Ограничение",IDS_COMMIT_CHARGE_LIMIT,12,184,15,8
-    LTEXT           "Върхово",IDS_COMMIT_CHARGE_PEAK,12,193,34,8
+    LTEXT           "Общо",IDS_COMMIT_CHARGE_TOTAL,12,175,45,8
+    LTEXT           "Ограничение",IDS_COMMIT_CHARGE_LIMIT,12,184,45,8
+    LTEXT           "Върхово",IDS_COMMIT_CHARGE_PEAK,12,193,45,8
     EDITTEXT        IDC_COMMIT_CHARGE_TOTAL,65,174,45,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER
     EDITTEXT        IDC_COMMIT_CHARGE_LIMIT,65,184,45,8,ES_RIGHT |
@@ -240,7 +240,7 @@ BEGIN
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER
     LTEXT           "Общо",IDS_PHYSICAL_MEMORY_TOTAL,137,131,27,8
     LTEXT           "Налично",IDS_PHYSICAL_MEMORY_AVAILABLE,137,140,30,8
-    LTEXT           "Системен склад",IDS_PHYSICAL_MEMORY_SYSTEM_CACHE,137,149,46,8
+    LTEXT           "Системен склад",IDS_PHYSICAL_MEMORY_SYSTEM_CACHE,137,149,55,8
     EDITTEXT        IDC_PHYSICAL_MEMORY_TOTAL,185,131,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER
     EDITTEXT        IDC_PHYSICAL_MEMORY_AVAILABLE,185,140,48,8,ES_RIGHT |
@@ -248,8 +248,8 @@ BEGIN
     EDITTEXT        IDC_PHYSICAL_MEMORY_SYSTEM_CACHE,185,149,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER
     LTEXT           "Общо",IDS_KERNEL_MEMORY_TOTAL,137,174,27,8
-    LTEXT           "Страниран",IDS_KERNEL_MEMORY_PAGED,137,184,21,8
-    LTEXT           "Нестраниран",IDS_KERNEL_MEMORY_NONPAGED,137,193,34,8
+    LTEXT           "Странирана",IDS_KERNEL_MEMORY_PAGED,137,184,50,8
+    LTEXT           "Нестранирана",IDS_KERNEL_MEMORY_NONPAGED,137,193,50,8
     EDITTEXT        IDC_KERNEL_MEMORY_TOTAL,185,174,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER
     EDITTEXT        IDC_KERNEL_MEMORY_PAGED,185,184,48,8,ES_RIGHT |
@@ -354,7 +354,7 @@ BEGIN
                     WS_DISABLED | WS_TABSTOP,175,119,41,10
 END
 
-IDD_COLUMNS_DIALOG DIALOGEX DISCARDABLE  0, 0, 195, 199
+IDD_COLUMNS_DIALOG DIALOGEX DISCARDABLE  0, 0, 240, 199
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Избор на стълбове"
 FONT 8, "MS Shell Dlg"
@@ -363,56 +363,56 @@ BEGIN
     PUSHBUTTON      "Отказ",IDCANCEL,138,178,50,14
     LTEXT           "Избор на стълбове, които да се появяват в страницата с действията на задачния управител.",
                     IDC_STATIC,7,7,181,17
-    CONTROL         "име на &изображението",IDC_IMAGENAME,"Button",BS_AUTOCHECKBOX |
-                    WS_DISABLED | WS_TABSTOP,7,28,56,10
+    CONTROL         "Име на &изображението",IDC_IMAGENAME,"Button",BS_AUTOCHECKBOX |
+                    WS_DISABLED | WS_TABSTOP,7,28,115,10
     CONTROL         "&PID (Process Identifier)",IDC_PID,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,7,39,88,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,39,115,10
     CONTROL         "Натоварване на &ЦПУ",IDC_CPUUSAGE,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,7,50,53,10
+                    WS_TABSTOP,7,50,115,10
     CONTROL         "&Време на ЦПУ",IDC_CPUTIME,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,7,61,48,10
-    CONTROL         "Заетост на &паметта",IDC_MEMORYUSAGE,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,7,72,63,10
-    CONTROL         "&Промяна на заетостта на паметта",IDC_MEMORYUSAGEDELTA,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,7,83,82,10
+                    WS_TABSTOP,7,61,115,10
+    CONTROL         "Заета на &памет",IDC_MEMORYUSAGE,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,7,72,115,10
+    CONTROL         "&Промяна заетостта на паметта",IDC_MEMORYUSAGEDELTA,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,83,115,10
     CONTROL         "Върхова заетост на паметта",IDC_PEAKMEMORYUSAGE,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,7,94,82,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,94,115,10
     CONTROL         "Page &Faults",IDC_PAGEFAULTS,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,7,105,53,10
+                    WS_TABSTOP,7,105,115,10
     CONTROL         "&USER Objects",IDC_USEROBJECTS,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,7,116,62,10
+                    WS_TABSTOP,7,116,115,10
     CONTROL         "Брой четения",IDC_IOREADS,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,7,127,49,10
+                    WS_TABSTOP,7,127,115,10
     CONTROL         "Прочетени байтове",IDC_IOREADBYTES,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,7,138,65,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,138,115,10
     CONTROL         "&Означение на срока",IDC_SESSIONID,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,7,149,50,10
+                    WS_TABSTOP,7,149,115,10
     CONTROL         "Потребителско &име",IDC_USERNAME,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,7,160,51,10
+                    WS_TABSTOP,7,160,115,10
     CONTROL         "Page F&aults Delta",IDC_PAGEFAULTSDELTA,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,107,28,72,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,125,28,115,10
     CONTROL         "&Размер на привидната памет",IDC_VIRTUALMEMORYSIZE,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,107,39,77,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,125,39,115,10
     CONTROL         "Pa&ged Pool",IDC_PAGEDPOOL,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,107,50,53,10
+                    WS_TABSTOP,125,50,115,10
     CONTROL         "N&on-paged Pool",IDC_NONPAGEDPOOL,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,107,61,67,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,125,61,115,10
     CONTROL         "Base P&riority",IDC_BASEPRIORITY,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,107,72,55,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,125,72,115,10
     CONTROL         "&Брой описатели",IDC_HANDLECOUNT,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,107,83,59,10
+                    WS_TABSTOP,125,83,115,10
     CONTROL         "&Thread Count",IDC_THREADCOUNT,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,107,94,59,10
+                    WS_TABSTOP,125,94,115,10
     CONTROL         "GDI Objects",IDC_GDIOBJECTS,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,107,105,55,10
+                    WS_TABSTOP,125,105,115,10
     CONTROL         "I/O Writes",IDC_IOWRITES,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,107,116,49,10
+                    WS_TABSTOP,125,116,115,10
     CONTROL         "I/O Write Bytes",IDC_IOWRITEBYTES,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,107,127,65,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,125,127,65,10
     CONTROL         "I/O Other",IDC_IOOTHER,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,107,138,46,10
+                    WS_TABSTOP,125,138,115,10
     CONTROL         "I/O Other Bytes",IDC_IOOTHERBYTES,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,107,149,65,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,125,149,115,10
 END
 
 
@@ -610,7 +610,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_TAB_APPS                  "Приложения"
     IDS_TAB_PROCESSES             "Действия"
-    IDS_TAB_PERFORMANCE           "Performance"
+    IDS_TAB_PERFORMANCE           "Производителност"
     IDS_TAB_TASK                  "Задача"
     IDS_TAB_STATUS                "Състояние"
     IDS_TAB_IMAGENAME             "Име на образа"
@@ -661,7 +661,7 @@ BEGIN
     IDS_MSG_UNABLECHANGEPRIORITY  "Невъзможно намаляване на първенство"
     IDS_MSG_WARNINGCHANGEPRIORITY "ВНИМАНИЕ: Промяната на първенството на това действие може да\nпричини нежелани последствия, включително неустойчивост на системата. Сигурен ли сте, \nче искате да смените старшинството?"
     IDS_MSG_TRAYICONCPUUSAGE      "Заетост на ЦПУ: %d%%"
-    IDS_STATUS_MEMUSAGE           "Заетост на памет: %dK / %dK"
+    IDS_STATUS_MEMUSAGE           "Заета на памет: %dK / %dK"
     IDS_STATUS_CPUUSAGE           "Заетост на ЦПУ: %3d%%"
     IDS_STATUS_PROCESSES          "Действия: %d"
     IDS_Not_Responding            "Не отговаря"

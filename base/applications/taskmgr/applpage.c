@@ -41,6 +41,7 @@ static int      nApplicationPageHeight;
 static HANDLE   hApplicationPageEvent = NULL;   /* When this event becomes signaled then we refresh the app list */
 static BOOL     bSortAscending = TRUE;
 DWORD WINAPI    ApplicationPageRefreshThread(void *lpParameter);
+BOOL            noApps;
 BOOL CALLBACK   EnumWindowsProc(HWND hWnd, LPARAM lParam);
 void            AddOrUpdateHwnd(HWND hWnd, WCHAR *szTitle, HICON hIcon, BOOL bHung);
 void            ApplicationPageUpdate(void);
@@ -239,7 +240,10 @@ DWORD WINAPI ApplicationPageRefreshThread(void *lpParameter)
              *
              * Should this be EnumDesktopWindows() instead?
              */
+            noApps = TRUE;
             EnumWindows(EnumWindowsProc, 0);
+            if (noApps)
+                (void)ListView_DeleteAllItems(hApplicationPageListCtrl);
         }
     }
 }
@@ -274,6 +278,7 @@ BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam)
         return TRUE; /* Skip this window */
     }
 
+    noApps = FALSE;
     /* Get the icon for this window */
     hIcon = NULL;
     SendMessageTimeoutW(hWnd, WM_GETICON,bLargeIcon ? ICON_BIG /*1*/ : ICON_SMALL /*0*/, 0, 0, 1000, (PDWORD_PTR)xhIcon);
@@ -429,16 +434,23 @@ void ApplicationPageUpdate(void)
     if (ListView_GetSelectedCount(hApplicationPageListCtrl))
     {
         EnableWindow(hApplicationPageEndTaskButton, TRUE);
-        EnableWindow(hApplicationPageSwitchToButton, TRUE);
     }
     else
     {
         EnableWindow(hApplicationPageEndTaskButton, FALSE);
-        EnableWindow(hApplicationPageSwitchToButton, FALSE);
+    }
+    /* Enable "Switch To" button only if one app is selected */
+    if (ListView_GetSelectedCount(hApplicationPageListCtrl) == 1 )
+    {
+        EnableWindow(hApplicationPageSwitchToButton, TRUE);
+    }
+    else
+    {
+    EnableWindow(hApplicationPageSwitchToButton, FALSE);
     }
 
-    /* If we are on the applications tab the the windows menu will */
-    /* be present on the menu bar so enable & disable the menu items */
+    /* If we are on the applications tab the windows menu will be */
+    /* present on the menu bar so enable & disable the menu items */
     if (TabCtrl_GetCurSel(hTabWnd) == 0)
     {
         HMENU  hMenu;

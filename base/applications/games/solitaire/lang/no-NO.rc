@@ -51,6 +51,7 @@ BEGIN
     IDS_SOL_ABOUT   "Kabal av J Brown\n\nCardLib versjon 1.0."
     IDS_SOL_QUIT    "Slutt nåværende spill?"
     IDS_SOL_WIN     "Gratulerer, du vant!!"
+    IDS_SOL_DEAL    "Del ut igjen?"
 END
 
 

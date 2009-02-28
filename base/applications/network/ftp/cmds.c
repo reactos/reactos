@@ -48,7 +48,6 @@ static char sccsid[] = "@(#)cmds.c	5.18 (Berkeley) 4/20/89";
 extern	char *globerr;
 extern	char home[];
 extern	char *remglob();
-extern	char *getenv();
 extern	int allbinary;
 extern off_t restart_point;
 extern char reply_string[];
@@ -417,7 +416,7 @@ void mput(argc, argv)
 					if (!*tp) {
 						tp = cp;
 						tp2 = tmpbuf;
-						while ((*tp2 = *tp) != (int) NULL) {
+						while ((*tp2 = *tp)) {
 						     if (isupper(*tp2)) {
 						        *tp2 = 'a' + *tp2 - 'A';
 						     }
@@ -574,7 +573,7 @@ usage:
 		if (!*tp) {
 			tp = argv[2];
 			tp2 = tmpbuf;
-			while ((*tp2 = *tp) != (int) NULL) {
+			while ((*tp2 = *tp)) {
 				if (isupper(*tp2)) {
 					*tp2 = 'a' + *tp2 - 'A';
 				}
@@ -716,7 +715,7 @@ void mget(argc, argv)
 				if (!*tp) {
 					tp = cp;
 					tp2 = tmpbuf;
-					while ((*tp2 = *tp) != (int) NULL) {
+					while ((*tp2 = *tp)) {
 						if (isupper(*tp2)) {
 							*tp2 = 'a' + *tp2 - 'A';
 						}
@@ -1687,7 +1686,7 @@ void disconnect()
 	if (!connected)
 		return;
 	(void) command("QUIT");
-	cout = (int) NULL;
+	cout = 0;
 	connected = 0;
 	data = -1;
 	if (!proxy) {
@@ -2195,7 +2194,6 @@ void restart(argc, argv)
 	int argc;
 	char *argv[];
 {
-	extern long atol();
 	if (argc != 2)
 		printf("restart: offset not specified\n");
 	else {

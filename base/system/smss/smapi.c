@@ -1,10 +1,12 @@
-/* $Id$
- *
- * smapi.c - \SmApiPort LPC port message management
- *
- * Reactos Session Manager
- *
+/*
+ * PROJECT:         ReactOS Session Manager
+ * LICENSE:         GPL v2 or later - See COPYING in the top level directory
+ * FILE:            base/system/smss/print.c
+ * PURPOSE:         \SmApiPort LPC port message management.
+ * PROGRAMMERS:     ReactOS Development Team
  */
+
+/* INCLUDES ******************************************************************/
 #include "smss.h"
 
 #define NDEBUG
@@ -44,7 +46,7 @@ PSM_CONNECT_DATA FASTCALL SmpGetConnectData (PSM_PORT_MESSAGE Request)
 	return (PSM_CONNECT_DATA)(PortMessage + 1);
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 SmpHandleConnectionRequest (PSM_PORT_MESSAGE Request);
 
 /**********************************************************************
@@ -107,7 +109,7 @@ SmpCallbackServer (PSM_PORT_MESSAGE Request,
  * DESCRIPTION
  * 	Entry point for the listener thread of LPC port "\SmApiPort".
  */
-VOID STDCALL
+VOID NTAPI
 SmpApiConnectedThread(PVOID pConnectedPort)
 {
 	NTSTATUS	Status = STATUS_SUCCESS;
@@ -175,7 +177,7 @@ SmpApiConnectedThread(PVOID pConnectedPort)
  * REMARKS
  * 	Quoted in http://support.microsoft.com/kb/258060/EN-US/
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 SmpHandleConnectionRequest (PSM_PORT_MESSAGE Request)
 {
 	PSM_CONNECT_DATA ConnectData = SmpGetConnectData (Request);
@@ -291,7 +293,7 @@ SmpHandleConnectionRequest (PSM_PORT_MESSAGE Request)
  * 	necessary in NT LPC, because server side connected ports are
  * 	never used to receive requests.
  */
-VOID STDCALL
+VOID NTAPI
 SmpApiThread (HANDLE ListeningPort)
 {
 	NTSTATUS	Status = STATUS_SUCCESS;

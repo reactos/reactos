@@ -25,20 +25,6 @@
  // Martin Fuchs, 23.07.2003
  //
 
-#ifdef __cplusplus
-
-#ifdef _MSC_VER
-#pragma warning(disable: 4786)	// disable warnings about too long debug information symbols
-#endif
-
- // STL headers for strings and streams
-#include <string>
-#include <iostream>
-using namespace std;
-
-#endif /* __cplusplus */
-
-
  // standard windows headers
 #define WIN32_LEAN_AND_MEAN
 #define WIN32_EXTRA_LEAN
@@ -63,6 +49,19 @@ using namespace std;
 #include <stdlib.h>		// for _MAX_DIR, ...
 #include <stdio.h>		// for sprintf()
 #include <time.h>
+
+#ifdef __cplusplus
+
+#ifdef _MSC_VER
+#pragma warning(disable: 4786)	// disable warnings about too long debug information symbols
+#endif
+
+ // STL headers for strings and streams
+#include <string>
+#include <iostream>
+using namespace std;
+
+#endif /* __cplusplus */
 
 #ifndef _MAX_PATH
 #define _MAX_DRIVE	3
@@ -192,11 +191,12 @@ BOOL exists_path(LPCTSTR path);
 #else	// __STDC_WANT_SECURE_LIB__
 
 #define strcpy_s(d, l, s) strcpy(d, s)
-#define _tcscpy_s(d, l, s) _tcscpy(d, s)
+#define wcscpy_s(d, l, s) wcscpy(d, s)
 #define wcsncpy_s(d, l, s, n) wcsncpy(d, s, n)
 #define _stprintf_s1(b, l, f, p1) _stprintf(b, f, p1)
 #define _stprintf_s2(b, l, f, p1,p2) _stprintf(b, f, p1,p2)
-#define _tsplitpath_s(f, d,dl, p,pl, n,nl, e,el) _tsplitpath(f, d, p, n, e)
+#define _wsplitpath_s(f, d,dl, p,pl, n,nl, e,el) _wsplitpath(f, d, p, n, e)
+#define _splitpath_s(f, d,dl, p,pl, n,nl, e,el) _splitpath(f, d, p, n, e)
 
 #endif	// __STDC_WANT_SECURE_LIB__
 

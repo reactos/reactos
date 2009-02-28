@@ -4,7 +4,7 @@ LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 BEGIN
-STRING_HELP,  "Pemakaian: %S drive: [-FS:file-system] [-V:label] [-Q] [-A:size] [-C]\n\n\
+STRING_HELP,  "Pemakaian: %s drive: [-FS:file-system] [-V:label] [-Q] [-A:size] [-C]\n\n\
   [drive:]         Menetapkan drive yang akan diformat.\n\
   -FS:file-system  Menetapkan tipe sistem file (%s).\n\
   -V:label         Menetapkan label volume.\n\
@@ -26,7 +26,7 @@ STRING_NO_SUPPORT  "Operasi Tida Didukung"
 
 STRING_FMIFS_FAIL  "Tidak bisa menemukan FMIFS entry points.\n\n"
 
-STRING_UNKNOW_ARG  "Argumen tidak dikenal: %S\n"
+STRING_UNKNOW_ARG  "Argumen tidak dikenal: %s\n"
 
 STRING_DRIVE_PARM  "Parameter drive yang diperlukan kurang.\n\n"
 
@@ -38,7 +38,7 @@ STRING_NO_VOLUME         "Tidak bisa memdapatkan volume"
 
 STRING_NO_VOLUME_SIZE    "Tidak bisa mendapatkan ukuran volume"
 
-STRING_FILESYSTEM        "Tipe sistem file adalah %S.\n"
+STRING_FILESYSTEM        "Tipe sistem file adalah %s.\n"
 
 STRING_LABEL_NAME_EDIT  "Masukkan label volume saat ini untuk drive %C: "
 

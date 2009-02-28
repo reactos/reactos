@@ -141,7 +141,7 @@ TrayClockWnd_GetMinimumSize(IN OUT PTRAY_CLOCK_WND_DATA This,
 {
     WORD iLinesVisible = 0;
     INT i;
-    SIZE szMax = {0};
+    SIZE szMax = { 0, 0 };
 
     if (!This->LinesMeasured)
         This->LinesMeasured = TrayClockWnd_MeasureLines(This);
@@ -713,7 +713,7 @@ typedef struct _TRAY_NOTIFY_WND_DATA
 static VOID
 TrayNotifyWnd_UpdateStyle(IN OUT PTRAY_NOTIFY_WND_DATA This)
 {
-    RECT rcClient = {0};
+    RECT rcClient = { 0, 0, 0, 0 };
 
     if (AdjustWindowRectEx(&rcClient,
                            GetWindowLong(This->hWnd,
@@ -758,7 +758,7 @@ TrayNotifyWnd_GetMinimumSize(IN OUT PTRAY_NOTIFY_WND_DATA This,
 
     if (!This->HideClock)
     {
-        SIZE szClock = {0};
+        SIZE szClock = { 0, 0 };
 
         if (Horizontal)
         {

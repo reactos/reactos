@@ -18,12 +18,14 @@
 
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
+#pragma code_page(65001)
+
 IDM_MAINMENU MENU DISCARDABLE
 BEGIN
     POPUP "&Datei"
     BEGIN
         MENUITEM "&Neu...\tStrg+N",          ID_FILE_NEW
-        MENUITEM "Ö&ffnen...\tStrg+O",    ID_FILE_OPEN
+        MENUITEM "Ã–&ffnen...\tStrg+O",    ID_FILE_OPEN
         MENUITEM "&Speichern\tStrg+S",    ID_FILE_SAVE
         MENUITEM "Speichern &unter...",   ID_FILE_SAVEAS
         MENUITEM SEPARATOR
@@ -35,21 +37,21 @@ BEGIN
     END
     POPUP "&Bearbeiten"
     BEGIN
-        MENUITEM "&Rückgängig\tStrg+Z",         ID_EDIT_UNDO
+        MENUITEM "&RÃ¼ckgÃ¤ngig\tStrg+Z",         ID_EDIT_UNDO
         MENUITEM "&Wiederholen\tStrg+Y",        ID_EDIT_REDO
         MENUITEM SEPARATOR
         MENUITEM "&Ausschneiden\tStrg+X",       ID_EDIT_CUT
         MENUITEM "&Kopieren\tStrg+C",           ID_EDIT_COPY
-        MENUITEM "&Einfügen\tStrg+V",           ID_EDIT_PASTE
-        MENUITEM "&Löschen\tEntf",              ID_EDIT_CLEAR
+        MENUITEM "&EinfÃ¼gen\tStrg+V",           ID_EDIT_PASTE
+        MENUITEM "&LÃ¶schen\tEntf",              ID_EDIT_CLEAR
         MENUITEM "Alles &markieren\tStrg+A",    ID_EDIT_SELECTALL
         MENUITEM SEPARATOR
         MENUITEM "&Suchen...\tStrg+F",          ID_FIND
         MENUITEM "&Weitersuchen\tF3",           ID_FIND_NEXT
         MENUITEM "Erset&zen...\tStrg+H",        ID_REPLACE
         MENUITEM SEPARATOR
-        MENUITEM "Schreibgeschü&tzt",           ID_EDIT_READONLY
-        MENUITEM "&Geändert",                   ID_EDIT_MODIFIED
+        MENUITEM "SchreibgeschÃ¼&tzt",           ID_EDIT_READONLY
+        MENUITEM "&GeÃ¤ndert",                   ID_EDIT_MODIFIED
         MENUITEM SEPARATOR
         POPUP "&Extras"
         BEGIN
@@ -69,14 +71,14 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Optionen...",          ID_VIEWPROPERTIES
     END
-    POPUP "&Einfügen"
+    POPUP "&EinfÃ¼gen"
     BEGIN
         MENUITEM "&Datum und Uhrzeit...",  ID_DATETIME
     END
     POPUP "Forma&t"
     BEGIN
         MENUITEM "Sch&riftart...",               ID_FONTSETTINGS
-        MENUITEM "Auf&zählungszeichen"           ID_BULLET
+        MENUITEM "Auf&zÃ¤hlungszeichen"           ID_BULLET
         MENUITEM "&Absatz..."                    ID_PARAFORMAT
         MENUITEM "&Tabstopps..."                 ID_TABSTOPS
         POPUP "&Hintergrund"
@@ -87,7 +89,7 @@ BEGIN
     END
     POPUP "&?"
     BEGIN
-        MENUITEM "Ü&ber Wine Wordpad"       ID_ABOUT
+        MENUITEM "Ãœ&ber Wine Wordpad"       ID_ABOUT
     END
 END
 
@@ -97,9 +99,9 @@ BEGIN
     BEGIN
         MENUITEM "Aus&schneiden",       ID_EDIT_CUT
         MENUITEM "&Kopieren",           ID_EDIT_COPY
-        MENUITEM "&Einfügen",           ID_EDIT_PASTE
+        MENUITEM "&EinfÃ¼gen",           ID_EDIT_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "Auf&zählungszeichen"  ID_BULLET
+        MENUITEM "Auf&zÃ¤hlungszeichen"  ID_BULLET
         MENUITEM "&Absatz..."           ID_PARAFORMAT
     END
 END
@@ -109,8 +111,8 @@ STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Datum und Uhrzeit"
 FONT 10, "MS Sans Serif"
 BEGIN
-    LTEXT        "Verfügbare Formate",0,3,2,100,15
-    LISTBOX      IDC_DATETIME,3,12,80,65,LBS_NOINTEGRALHEIGHT
+    LTEXT        "VerfÃ¼gbare Formate",-1,3,2,100,15
+    LISTBOX      IDC_DATETIME,3,12,80,65,LBS_NOINTEGRALHEIGHT | LBS_NOTIFY
     PUSHBUTTON   "&OK",IDOK,87,12,40,12
     PUSHBUTTON   "A&bbrechen",IDCANCEL,87,26,40,12
 END
@@ -120,7 +122,7 @@ STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Neu"
 FONT 10, "MS Sans Serif"
 BEGIN
-    LTEXT        "Neuer Dokumenttyp",0,3,2,100,15
+    LTEXT        "Neuer Dokumenttyp",-1,3,2,100,15
     LISTBOX      IDC_NEWFILE,3,12,90,65,LBS_NOINTEGRALHEIGHT
     PUSHBUTTON   "&OK",IDOK,97,12,40,12
     PUSHBUTTON   "A&bbrechen",IDCANCEL,97,26,40,12
@@ -131,14 +133,14 @@ STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 Caption "Absatz"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Einzug", 0, 10, 10, 120, 68
-    LTEXT "Links", 0, 15, 22, 40, 13
+    GROUPBOX "Einzug", -1, 10, 10, 120, 68
+    LTEXT "Links", -1, 15, 22, 40, 13
     EDITTEXT IDC_PARA_LEFT, 55, 20, 60, 13
-    LTEXT "Rechts", 0, 15, 40, 40, 13
+    LTEXT "Rechts", -1, 15, 40, 40, 13
     EDITTEXT IDC_PARA_RIGHT, 55, 38, 60, 13
-    LTEXT "Erste Zeile", 0, 15, 58, 40, 13
+    LTEXT "Erste Zeile", -1, 15, 58, 40, 13
     EDITTEXT IDC_PARA_FIRST, 55, 56, 60, 13
-    LTEXT "Ausrichtung", 0, 15, 87, 40, 13
+    LTEXT "Ausrichtung", -1, 15, 87, 40, 13
     COMBOBOX IDC_PARA_ALIGN, 55, 85, 60, 60, CBS_DROPDOWNLIST
     PUSHBUTTON "&OK", IDOK, 137, 15, 50, 15
     PUSHBUTTON "A&bbrechen", IDCANCEL, 137, 33, 50, 15
@@ -149,13 +151,13 @@ STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 Caption "Tabstopps"
 FONT 8, "MS SHell DLg"
 BEGIN
-    GROUPBOX "Tabstoppposition", 0, 10, 10, 120, 90
+    GROUPBOX "Tabstoppposition", -1, 10, 10, 120, 90
     COMBOBOX IDC_TABSTOPS, 20, 20, 100, 60, CBS_SIMPLE | CBS_SORT
     DEFPUSHBUTTON "&Festlegen", ID_TAB_ADD, 20, 80, 45, 15
-    PUSHBUTTON "&Löschen", ID_TAB_DEL, 72, 80, 45, 15
+    PUSHBUTTON "&LÃ¶schen", ID_TAB_DEL, 72, 80, 45, 15
     PUSHBUTTON "&OK", IDOK, 137, 15, 50, 15
     PUSHBUTTON "A&bbrechen", IDCANCEL, 137, 33, 50, 15
-    PUSHBUTTON "&Alle löschen", ID_TAB_EMPTY, 137, 51, 50, 15
+    PUSHBUTTON "&Alle lÃ¶schen", ID_TAB_EMPTY, 137, 51, 50, 15
 END
 
 IDD_FORMATOPTS DIALOG DISCARDABLE 0, 0, 280, 110
@@ -163,10 +165,11 @@ STYLE DS_SYSMODAL
 Caption ""
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Zeilenumbruch", 0, 10, 10, 130, 85
-    RADIOBUTTON "&Am Fenster umbrechen", IDC_PAGEFMT_WW, 18, 25, 117, 15
-    RADIOBUTTON "A&m Lineal umbrechen", IDC_PAGEFMT_WM, 18, 45, 117, 15
-    GROUPBOX "Symbolleisten", 0, 150, 10, 120, 85
+    GROUPBOX "Zeilenumbruch", -1, 10, 10, 130, 85
+    RADIOBUTTON "No line wrapping", IDC_PAGEFMT_WN, 18, 25, 117, 15
+    RADIOBUTTON "&Am Fenster umbrechen", IDC_PAGEFMT_WW, 18, 45, 117, 15
+    RADIOBUTTON "A&m Lineal umbrechen", IDC_PAGEFMT_WM, 18, 65, 117, 15
+    GROUPBOX "Symbolleisten", -1, 150, 10, 120, 85
     CHECKBOX "&Symbolleiste", IDC_PAGEFMT_TB, 160, 20, 80, 15
     CHECKBOX "&Formatierungsleiste", IDC_PAGEFMT_FB, 160, 38, 80, 15
     CHECKBOX "L&ineal", IDC_PAGEFMT_RU, 160, 56, 80, 15
@@ -211,11 +214,11 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     STRING_PREVIEW_PRINT,            "&Drucken"
-    STRING_PREVIEW_NEXTPAGE,         "&Nächste"
+    STRING_PREVIEW_NEXTPAGE,         "&NÃ¤chste"
     STRING_PREVIEW_PREVPAGE,         "&Vorherige"
     STRING_PREVIEW_TWOPAGES,         "Zwei Seiten"
     STRING_PREVIEW_ONEPAGE,          "Eine Seite"
-    STRING_PREVIEW_CLOSE,            "&Schließen"
+    STRING_PREVIEW_CLOSE,            "&SchlieÃŸen"
 END
 
 STRINGTABLE DISCARDABLE
@@ -226,12 +229,19 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     STRING_DEFAULT_FILENAME,     "Dokument"
-    STRING_PROMPT_SAVE_CHANGES,  "Änderungen an '%s' speichern?"
+    STRING_PROMPT_SAVE_CHANGES,  "Ã„nderungen an '%s' speichern?"
     STRING_SEARCH_FINISHED,      "Wordpad hat das Durchsuchen des Dokuments beendet."
     STRING_LOAD_RICHED_FAILED,   "Die RichEdit-Bibliothek konnte nicht geladen werden."
     STRING_SAVE_LOSEFORMATTING,  "Sie sind dabei, die Datei als Textdatei zu speichern. " \
                                  "Dadurch geht die Formatierung verloren. " \
-                                 "Möchten Sie den Vorgang trotzdem fortsetzen?"
-    STRING_INVALID_NUMBER,       "Diese Maßeinheit ist nicht zulässig."
-    STRING_OLE_STORAGE_NOT_SUPPORTED, "OLE-Dokumentenspeicherung wird nicht unterstützt."
+                                 "MÃ¶chten Sie den Vorgang trotzdem fortsetzen?"
+    STRING_INVALID_NUMBER,       "Diese MaÃŸeinheit ist nicht zulÃ¤ssig."
+    STRING_OLE_STORAGE_NOT_SUPPORTED, "OLE-Dokumentenspeicherung wird nicht unterstÃ¼tzt."
+    STRING_WRITE_FAILED,         "Die Datei konnte nicht gespeichert werden."
+    STRING_WRITE_ACCESS_DENIED,  "Sie haben keine ausreichende Zugriffsberechtigung um die Datei zu speichern."
+    STRING_OPEN_FAILED,          "Die Datei konnte nicht geÃ¶ffnet werden."
+    STRING_OPEN_ACCESS_DENIED,   "Sie haben keine ausreichende Zugriffsberechtigung um die Datei zu Ã¶ffnen."
+    STRING_PRINTING_NOT_IMPLEMENTED, "Drucken ist nicht implementiert"
 END
+
+#pragma code_page(default)

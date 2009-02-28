@@ -31,3 +31,4 @@
 #define IDS_SOL_ABOUT                   1301
 #define IDS_SOL_QUIT                    1302
 #define IDS_SOL_WIN                     1303
+#define IDS_SOL_DEAL                    1304

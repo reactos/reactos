@@ -2062,7 +2062,7 @@ IsConsoleBoot(VOID)
         NextOption = wcschr(CurrentOption, L' ');
         if (NextOption)
             *NextOption = L'\0';
-        if (wcsicmp(CurrentOption, L"CONSOLE") == 0)
+        if (_wcsicmp(CurrentOption, L"CONSOLE") == 0)
         {
             DPRINT("Found %S. Switching to console boot\n", CurrentOption);
             ConsoleBoot = TRUE;
@@ -2193,7 +2193,11 @@ PnpEventThread(LPVOID lpParameter)
         }
         else
         {
-            DPRINT1("Unknown event\n");
+            DPRINT1("Unknown event, GUID {%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}\n",
+                PnpEvent->EventGuid.Data1, PnpEvent->EventGuid.Data2, PnpEvent->EventGuid.Data3,
+                PnpEvent->EventGuid.Data4[0], PnpEvent->EventGuid.Data4[1], PnpEvent->EventGuid.Data4[2],
+                PnpEvent->EventGuid.Data4[3], PnpEvent->EventGuid.Data4[4], PnpEvent->EventGuid.Data4[5],
+                PnpEvent->EventGuid.Data4[6], PnpEvent->EventGuid.Data4[7]);
         }
 
         /* Dequeue the current pnp event and signal the next one */
@@ -2216,11 +2220,6 @@ ServiceMain(DWORD argc, LPTSTR *argv)
     UNREFERENCED_PARAMETER(argv);
 
     DPRINT("ServiceMain() called\n");
-
-    hNoPendingInstalls = CreateEventW(NULL,
-                                      TRUE,
-                                      FALSE,
-                                      L"Global\\PnP_No_Pending_Install_Events");
 
     hThread = CreateThread(NULL,
                            0,
@@ -2273,6 +2272,17 @@ wmain(int argc, WCHAR *argv[])
 
     hDeviceInstallListNotEmpty = CreateEvent(NULL, FALSE, FALSE, NULL);
     if (hDeviceInstallListNotEmpty == NULL)
+    {
+        dwError = GetLastError();
+        DPRINT1("Could not create the Event! (Error %lu)\n", dwError);
+        return dwError;
+    }
+
+    hNoPendingInstalls = CreateEventW(NULL,
+                                      TRUE,
+                                      FALSE,
+                                      L"Global\\PnP_No_Pending_Install_Events");
+    if (hNoPendingInstalls == NULL)
     {
         dwError = GetLastError();
         DPRINT1("Could not create the Event! (Error %lu)\n", dwError);

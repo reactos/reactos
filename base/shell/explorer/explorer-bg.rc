@@ -381,9 +381,9 @@ BEGIN
     IDS_DESKTOPBAR_SETTINGS "Настройки на работната площ"
     IDS_DESKTOP             "Работна площ"
     IDS_TASKBAR             "Задачна лента"
-    IDS_NAMECOLUMN          "Name"
-    IDS_PATHCOLUMN          "Path"
-    IDS_MENUCOLUMN          "Menu path"
+    IDS_NAMECOLUMN          "Име"
+    IDS_PATHCOLUMN          "Път"
+    IDS_MENUCOLUMN          "Път на изборника"
 END
 
 #endif    // Bulgarian (Bg) resources

@@ -436,9 +436,10 @@ BEGIN
     IDS_QUICKHELP           "Quick help"
 END
 
-// types of conversion
+// Types of conversion
 STRINGTABLE DISCARDABLE
 BEGIN
+    IDS_CONV_ANGLE          "Angle"
     IDS_CONV_AREA           "Area"
     IDS_CONV_CONSUMPTION    "Consumption (engines)"
     IDS_CONV_CURRENCY       "Currencies"
@@ -447,9 +448,18 @@ BEGIN
     IDS_CONV_POWER          "Power"
     IDS_CONV_PRESSURE       "Pressure"
     IDS_CONV_TEMPERATURE    "Temperature"
+    IDS_CONV_TIME           "Time"
     IDS_CONV_VELOCITY       "Velocity"
     IDS_CONV_VOLUME         "Volume"
     IDS_CONV_WEIGHT         "Weights"
+END
+
+// TYPES OF ANGLES
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ANGLE_DEGREES       "Degrees"
+    IDS_ANGLE_GRADIANS      "Gradians"
+    IDS_ANGLE_RADIANS       "Radians"
 END
 
 // TYPES OF AREAS
@@ -506,6 +516,7 @@ BEGIN
     IDS_CURRENCY_AUSTRIAN_SCHILLING "Austrian schilling"
     IDS_CURRENCY_BELGIAN_FRANC      "Belgian franc"
     IDS_CURRENCY_CYPRIOT_POUND      "Cypriot pound"
+    IDS_CURRENCY_CZECH_KORUNA       "Czech koruna"
     IDS_CURRENCY_DEUTSCHE_MARK      "Deutsche Mark"
     IDS_CURRENCY_DUTCH_GUILDER      "Dutch guilder"
     IDS_CURRENCY_EURO               "Euro"
@@ -517,6 +528,7 @@ BEGIN
     IDS_CURRENCY_LUXEMBOURG_FRANC   "Luxembourg franc"
     IDS_CURRENCY_MALTESE_LIRA       "Maltese lira"
     IDS_CURRENCY_PORTOGUESE_ESCUDO  "Portoguese escudo"
+    IDS_CURRENCY_SLOVAK_KORUNA      "Slovak koruna"
     IDS_CURRENCY_SLOVENIAN_TOLAR    "Slovenian tolar"
     IDS_CURRENCY_SPANISH_PESETA     "Spanish peseta"
 END
@@ -524,9 +536,13 @@ END
 // TYPES OF ENERGIES
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_ENERGY_15_C_CALORIES        "15 ^C calories"
+    IDS_ENERGY_15_C_CALORIES        "15 °C calories"
+    IDS_ENERGY_BTUS                 "British Thermal Units"
     IDS_ENERGY_ERGS                 "Ergs"
+    IDS_ENERGY_EVS                  "Electron-Volts"
+    IDS_ENERGY_FOOT_POUNDS          "Foot-Pounds"
     IDS_ENERGY_IT_CALORIES          "International Table calories"
+    IDS_ENERGY_IT_KILOCALORIES      "International Table kilocalories"
     IDS_ENERGY_JOULES               "Joules"
     IDS_ENERGY_KILOJOULES           "Kilojoules"
     IDS_ENERGY_KILOWATT_HOURS       "Kilowatt hours"
@@ -537,8 +553,8 @@ END
 // TYPES OF LENGTHS
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_LENGTH_ANGSTROMS            "Angstroms"
-    IDS_LENGTH_ASTRONOMILA_UNITS    "Astronomila units"
+    IDS_LENGTH_ANGSTROMS            "Ångströms"
+    IDS_LENGTH_ASTRONOMICAL_UNITS   "Astronomical units"
     IDS_LENGTH_BARLEYCORNS          "Barleycorns"
     IDS_LENGTH_CENTIMETERS          "Centimeters"
     IDS_LENGTH_CHAINS_UK            "Chains (UK)"
@@ -564,6 +580,7 @@ BEGIN
     IDS_LENGTH_LIGHT_YEARS          "Light years"
     IDS_LENGTH_LINKS_UK             "Links (UK)"
     IDS_LENGTH_METERS               "Meters"
+    IDS_LENGTH_MICRONS              "Microns"
     IDS_LENGTH_MILES                "Miles"
     IDS_LENGTH_MILLIMETERS          "Millimeters"
     IDS_LENGTH_NAUTICAL_MILES       "Nautical miles"
@@ -572,6 +589,7 @@ BEGIN
     IDS_LENGTH_PICAS                "Picas"
     IDS_LENGTH_RI_JAPAN             "Ri (Japan)"
     IDS_LENGTH_RI_KOREA             "Ri (Korea)"
+    IDS_LENGTH_RODS                 "Rods"
     IDS_LENGTH_SAWK                 "Sawk"
     IDS_LENGTH_SEN                  "Sen"
     IDS_LENGTH_SHAKU                "Shaku"
@@ -587,6 +605,8 @@ END
 // TYPES OF POWERS
 STRINGTABLE DISCARDABLE
 BEGIN
+    IDS_POWER_BTUS_PER_MINUTE       "British Thermal Units per minute"
+    IDS_POWER_FPS_PER_MINUTE        "Foot-Pounds per minute"
     IDS_POWER_HORSEPOWER            "Horsepower"
     IDS_POWER_KILOWATTS             "Kilowatts"
     IDS_POWER_MEGAWATTS             "Megawatts"
@@ -598,6 +618,8 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_PRESSURE_ATMOSPHERES        "Atmospheres"
     IDS_PRESSURE_BARS               "Bars"
+    IDS_PRESSURE_HECTOPASCALS       "Hectopascals"
+    IDS_PRESSURE_KILOPASCALS        "Kilopascals"
     IDS_PRESSURE_MM_OF_MERCURY      "Millimeters of mercury"
     IDS_PRESSURE_PASCALS            "Pascals"
     IDS_PRESSURE_PSI                "Pounds-force per square inch"
@@ -612,10 +634,25 @@ BEGIN
     IDS_TEMPERATURE_RANKINE         "Rankine"
 END
 
+// TYPES OF TIME
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_TIME_DAYS         "Days"
+    IDS_TIME_HOURS        "Hours"
+    IDS_TIME_MICROSECONDS "Microseconds"
+    IDS_TIME_MILLISECONDS "Milliseconds"
+    IDS_TIME_MINUTES      "Minutes"
+    IDS_TIME_SECONDS      "Seconds"
+    IDS_TIME_WEEKS        "Weeks"
+    IDS_TIME_YEARS        "Years"
+END
+
 // TYPES OF VELOCITIES
 STRINGTABLE DISCARDABLE
 BEGIN
+    IDS_VELOCITY_CMS_SECOND         "Centimeters/hour"
     IDS_VELOCITY_FEET_HOUR          "Feet/hour"
+    IDS_VELOCITY_FEET_SECOND        "Feet/second"
     IDS_VELOCITY_KILOMETERS_HOUR    "Kilometers/hour"
     IDS_VELOCITY_KNOTS              "Knots"
     IDS_VELOCITY_MACH               "Mach"

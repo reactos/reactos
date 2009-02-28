@@ -162,7 +162,9 @@ EnumDeviceClasses(INT ClassIndex,
         }
 
         if (Ret == CR_INVALID_DATA)
+        {
             ; /*FIXME: what should we do here? */
+        }
 
         /* handle other errors... */
     }

@@ -5,7 +5,9 @@
  *  Proofread 1998 by David Lee Lambert <lamber45@egr.msu.edu>
  *  Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
  *  Translation:
- *  Copyleft 2007 Kario <kario@szm.sk>
+ *  TRANSLATOR :  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
+ *  DATE OF TR.:  xx-xx-2007 
+ *  LAST CHANGE:  27-12-2008
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
@@ -17,7 +19,9 @@ BEGIN
     "^F", CMD_SEARCH
     "^G", CMD_GOTO
     "H", CMD_REPLACE, VIRTKEY, CONTROL
+    "^N", CMD_NEW
     "^O", CMD_OPEN
+    "^P", CMD_PRINT
     "^S", CMD_SAVE
     "^V", CMD_PASTE
     "^X", CMD_CUT
@@ -28,54 +32,53 @@ END
 
 MAIN_MENU MENU
 BEGIN
-	POPUP "&S˙bor"
-	BEGIN
-		MENUITEM "&Nov˝...",		CMD_NEW
-		MENUITEM "&Otvoriù",		CMD_OPEN
-		MENUITEM "&Uloûiù",		CMD_SAVE
-		MENUITEM "Uloûiù &ako...",	CMD_SAVE_AS
-		MENUITEM SEPARATOR
-		MENUITEM "&TlaËiù",		CMD_PRINT
-		MENUITEM "Nasta&venie strany...",	CMD_PAGE_SETUP
-		MENUITEM "Nastavenie tlaËia&rne...", CMD_PRINTER_SETUP
-		MENUITEM SEPARATOR
-		MENUITEM "&SkonËiù",		CMD_EXIT
+    POPUP "&S˙bor"
+    BEGIN
+        MENUITEM "&Nov˝\tCtrl+N",            CMD_NEW
+        MENUITEM "&Otvoriù...\tCtrl+O",       CMD_OPEN
+        MENUITEM "&Uloûiù\tCtrl+S",           CMD_SAVE
+        MENUITEM "Uloûiù &ako...",            CMD_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "&TlaËiù\tCtrl+P",           CMD_PRINT
+        MENUITEM "Nasta&venie strany...",    CMD_PAGE_SETUP
+        MENUITEM "Nastavenie tlaËia&rne...", CMD_PRINTER_SETUP
+        MENUITEM SEPARATOR
+        MENUITEM "&SkonËiù",                  CMD_EXIT
  END
-	POPUP "⁄pr&avy"
-	BEGIN
-		MENUITEM "&Sp‰ù\tCtrl+Z",	CMD_UNDO
-		MENUITEM SEPARATOR
-		MENUITEM "&Vystrihn˙ù\tCtrl+X",	CMD_CUT
-		MENUITEM "&KopÌrovaù\tCtrl+C",	CMD_COPY
-		MENUITEM "Pri&lepiù\tCtrl+V",	CMD_PASTE
-		MENUITEM "&Odstr·niù\tDel",	CMD_DELETE
-		MENUITEM SEPARATOR
-		MENUITEM "&Hæadaù", CMD_SEARCH
-		MENUITEM "Hæa&daù Ôalej\tF3",	CMD_SEARCH_NEXT
-		MENUITEM "&Nahradiù\tCtrl+H",   CMD_REPLACE
-		MENUITEM "Pr&ejsù na...\tCtrl+G",  CMD_GOTO
-		MENUITEM SEPARATOR
-		MENUITEM "Vy&braù vöetko",	CMD_SELECT_ALL
-		MENUITEM "»as alebo d·tu&m\tF5",	CMD_TIME_DATE
-	END
-	POPUP "F&orm·t"
-	BEGIN
-		MENUITEM "&Zalomiù text",	CMD_WRAP
-		MENUITEM "&PÌsmo...",          CMD_FONT
+    POPUP "⁄pr&avy"
+    BEGIN
+        MENUITEM "&Sp‰ù\tCtrl+Z",         CMD_UNDO
+        MENUITEM SEPARATOR
+        MENUITEM "&Vystrihn˙ù\tCtrl+X",   CMD_CUT
+        MENUITEM "&KopÌrovaù\tCtrl+C",    CMD_COPY
+        MENUITEM "Pri&lepiù\tCtrl+V",     CMD_PASTE
+        MENUITEM "&Odstr·niù\tDel",       CMD_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "&Hæadaù",               CMD_SEARCH
+        MENUITEM "Hæa&daù Ôalej\tF3",     CMD_SEARCH_NEXT
+        MENUITEM "&Nahradiù\tCtrl+H",     CMD_REPLACE
+        MENUITEM "Pr&ejsù na...\tCtrl+G", CMD_GOTO
+        MENUITEM SEPARATOR
+        MENUITEM "Vy&braù vöetko",        CMD_SELECT_ALL
+        MENUITEM "»as alebo d·tu&m\tF5", CMD_TIME_DATE
+    END
+    POPUP "F&orm·t"
+    BEGIN
+        MENUITEM "&Zalomiù text", CMD_WRAP
+        MENUITEM "&PÌsmo...",    CMD_FONT
         END
-	POPUP "&Zobraziù"
-	BEGIN
-		MENUITEM "Stavov˝ &riadok",    CMD_STATUSBAR
-	END
-	POPUP "&PomocnÌk"
-	BEGIN
-		MENUITEM "&TÈmy PomocnÌka",		CMD_HELP_CONTENTS
-		MENUITEM "&Hæadaù...",	CMD_HELP_SEARCH
-		MENUITEM "&Pomoc",	CMD_HELP_ON_HELP
-		MENUITEM SEPARATOR
-		MENUITEM SEPARATOR
-		MENUITEM "»&o je Pozn·mkov˝ blok"             CMD_ABOUT
-		MENUITEM "»o je &VÌno (Wine)",	CMD_ABOUT_WINE
+    POPUP "&Zobraziù"
+    BEGIN
+        MENUITEM "Stavov˝ &riadok", CMD_STATUSBAR
+    END
+    POPUP "&PomocnÌk"
+    BEGIN
+        MENUITEM "&TÈmy PomocnÌka",       CMD_HELP_CONTENTS
+        MENUITEM "&Hæadaù...",             CMD_HELP_SEARCH
+        MENUITEM "&Pomoc",                CMD_HELP_ON_HELP
+        MENUITEM SEPARATOR
+        MENUITEM "»&o je Pozn·mkov˝ blok" CMD_ABOUT
+        MENUITEM "»o je &VÌno (Wine)",    CMD_ABOUT_WINE
   END
  END
 
@@ -148,38 +151,38 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  STRING_LICENSE, "Tento program je voæn˝ softvÈr; mÙûete ho öÌriù a/alebo modifikovaù podæa podmienok GNU Vöeobecnej verejnej licencie (GNU General Public License) ako bola zverejnen· nad·ciou Free Software Foundation; buÔ verzie 2 tejto licencie, alebo (podæa V·öho uv·ûenia) niektorej neskoröej verzie.\r\n\r\nTento program je distribuovan˝ v n·deji, ûe bude uûitoËn˝, avöak BEZ AKEJKOºVEK Z¡RUKY; rovnako bez z·ruky PREDAJNOSTI alebo VHODNOSTI PRE UR»IT› ⁄»EL. Pre viac detailov si pozrite GNU Vöeobecn˙ verejn˙ licenciu (GNU General Public License).\r\n\r\nKÛpiu Vöeobecnej verejnej licencie GNU Ste mali dostaù spolu s t˝mto programom; ak nie, napÌöte si o Úu na Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
+  STRING_LICENSE, "Tento program je voæn˝ softvÈr; mÙûete ho öÌriù a/alebo modifikovaù podæa podmienok GNU Vöeobecnej verejnej licencie (GNU General Public License) ako bola zverejnen· nad·ciou Free Software Foundation; buÔ verzie 2 tejto licencie, alebo (podæa V·öho uv·ûenia) niektorej neskoröej verzie.\r\n\r\nTento program je distribuovan˝ v n·deji, ûe bude uûitoËn˝, avöak BEZ AKEJKOºVEK Z¡RUKY; rovnako bez z·ruky PREDAJNOSTI alebo VHODNOSTI PRE UR»IT› ⁄»EL. Pre viac detailov si pozrite GNU Vöeobecn˙ verejn˙ licenciu (GNU General Public License).\r\n\r\nKÛpiu Vöeobecnej verejnej licencie GNU ste mali dostaù spolu s t˝mto programom; ak nie, napÌöte si o Úu na Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-STRING_PAGESETUP_HEADERVALUE,	"&n"        /* FIXME */
-STRING_PAGESETUP_FOOTERVALUE,	"Strana &s"   /* FIXME */
-STRING_PAGESETUP_LEFTVALUE,		"20 mm"     /* FIXME */
-STRING_PAGESETUP_RIGHTVALUE,	"20 mm"     /* FIXME */
-STRING_PAGESETUP_TOPVALUE,		"25 mm"     /* FIXME */
-STRING_PAGESETUP_BOTTOMVALUE,	"25 mm"     /* FIXME */
+STRING_PAGESETUP_HEADERVALUE,    "&n"        /* FIXME */
+STRING_PAGESETUP_FOOTERVALUE,    "Strana &s"   /* FIXME */
+STRING_PAGESETUP_LEFTVALUE,        "20 mm"     /* FIXME */
+STRING_PAGESETUP_RIGHTVALUE,    "20 mm"     /* FIXME */
+STRING_PAGESETUP_TOPVALUE,        "25 mm"     /* FIXME */
+STRING_PAGESETUP_BOTTOMVALUE,    "25 mm"     /* FIXME */
 
-STRING_NOTEPAD,					"Pozn·mkov˝ blok"
-STRING_ERROR,					"CHYBA"
-STRING_WARNING,					"UPOZORNENIE"
-STRING_INFO,					"Inform·cie"
+STRING_NOTEPAD,                    "Pozn·mkov˝ blok"
+STRING_ERROR,                    "CHYBA"
+STRING_WARNING,                    "UPOZORNENIE"
+STRING_INFO,                    "Inform·cie"
 
-STRING_UNTITLED,				"(bez n·zvu)"
+STRING_UNTITLED,                "(bez n·zvu)"
 
-STRING_ALL_FILES,				"Vöetky s˙bory (*.*)"
-STRING_TEXT_FILES_TXT,			"TextovÈ s˙bory (*.txt)"
+STRING_ALL_FILES,                "Vöetky s˙bory (*.*)"
+STRING_TEXT_FILES_TXT,            "TextovÈ s˙bory (*.txt)"
 
-STRING_TOOLARGE,				"S˙bor '%s' je pre Pozn·mkov˝ blok prÌliö veæk˝.\n \
+STRING_TOOLARGE,                "S˙bor '%s' je pre Pozn·mkov˝ blok prÌliö veæk˝.\n \
 Na otvorenie s˙boru pouûite in˝ editor."
-STRING_NOTEXT,					"Nevloûili Ste ûiadny text. \
+STRING_NOTEXT,                    "Nevloûili ste ûiadny text. \
 \nProsÌm, napÌöte nieËo a sk˙ste to znova."
-STRING_DOESNOTEXIST,				"Nie je moûnÈ n·jsù s˙bor '%s'\n\n \
+STRING_DOESNOTEXIST,                "Nie je moûnÈ n·jsù s˙bor '%s'\n\n \
 Chcete vytvoriù nov˝ s˙bor?"
-STRING_NOTSAVED,				"Text s˙boru '%s'\nsa zmenil.\n\n \
+STRING_NOTSAVED,                "Text s˙boru '%s'\nsa zmenil.\n\n \
 Chcete uloûiù zmeny?"
-STRING_NOTFOUND,					"Nie je moûnÈ n·jsù '%s' ."
-STRING_OUT_OF_MEMORY,			"Nedostatok pam‰te na dokonËenie tejto oper·cie. Zatvorte jednu \n \
+STRING_NOTFOUND,                    "Nie je moûnÈ n·jsù '%s' ."
+STRING_OUT_OF_MEMORY,            "Nedostatok pam‰te na dokonËenie tejto oper·cie. Zatvorte jednu \n \
 alebo viac aplik·ciÌ, aby sa uvoænila pam‰ù a sk˙ste to znova."
 STRING_CANNOTFIND                               "Nemoûno n·jsù '%s'"
 STRING_ANSI,                                    "ANSI"
@@ -189,4 +192,5 @@ STRING_UTF8,                                    "UTF-8"
 STRING_CRLF,                                    "Windows"
 STRING_LF,                                      "Unix"
 STRING_CR,                                      "Mac"
+STRING_LINE_COLUMN,                             "Riadok %d, stÂpec %d"
 END

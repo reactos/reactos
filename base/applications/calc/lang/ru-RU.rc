@@ -9,14 +9,10 @@ MENU IDR_MENU_SCIENTIFIC_1
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     GROUPBOX        "",IDC_STATIC,4,16,132,21
-    CONTROL         "Hex",IDC_RADIO_HEX,"Button",BS_AUTORADIOBUTTON,8,24,29,
-                    10
-    CONTROL         "Dec",IDC_RADIO_DEC,"Button",BS_AUTORADIOBUTTON,40,24,29,
-                    10
-    CONTROL         "Oct",IDC_RADIO_OCT,"Button",BS_AUTORADIOBUTTON,72,24,27,
-                    10
-    CONTROL         "Bin",IDC_RADIO_BIN,"Button",BS_AUTORADIOBUTTON,100,24,
-                    26,10
+    CONTROL         "Hex",IDC_RADIO_HEX,"Button",BS_AUTORADIOBUTTON,8,24,29,10
+    CONTROL         "Dec",IDC_RADIO_DEC,"Button",BS_AUTORADIOBUTTON,40,24,29,10
+    CONTROL         "Oct",IDC_RADIO_OCT,"Button",BS_AUTORADIOBUTTON,72,24,27,10
+    CONTROL         "Bin",IDC_RADIO_BIN,"Button",BS_AUTORADIOBUTTON,100,24,26,10
     GROUPBOX        "",IDC_STATIC,4,36,76,21
     CONTROL         "Inv",IDC_CHECK_INV,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,8,44,26,10
@@ -341,7 +337,6 @@ BEGIN
                     SS_SUNKEN
 END
 
-
 // Menus
 
 IDR_MENU_SCIENTIFIC_1 MENU DISCARDABLE 
@@ -436,7 +431,7 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_STRING_LICENSE      "Калькулятор ReactOS - свободное программное обеспецение, распространяющееся по лицензии GNU GPL.\r\n\r\nВы можете получить копию лицензии GNU GPL здесь:\r\nhttp://www.gnu.org/licenses/gpl.html\r\n\r\nПолучить переведенную на ваш язык копию лицензии GNU GPL можно здесь:\r\nhttp://www.gnu.org/licenses/translations.html"
+    IDS_STRING_LICENSE      "Калькулятор ReactOS - свободное программное обеспецение, распространяющееся по лицензии GNU GPL.\r\n\r\nВы можете получить копию лицензии GNU GPL здесь:\r\nhttp://www.gnu.org/licenses/gpl.html\r\n\r\nОзнакомиться c переводом лицензии GNU GPL можно здесь:\r\nhttp://www.gnu.org/licenses/translations.html"
     IDS_MATH_ERROR          "Ошибка"
     IDS_QUICKHELP           "Быстрая справка"
 END
@@ -444,17 +439,27 @@ END
 // types of conversion
 STRINGTABLE DISCARDABLE
 BEGIN
+    IDS_CONV_ANGLE          "Угол"
     IDS_CONV_AREA           "Площадь"
     IDS_CONV_CONSUMPTION    "Расход топлива (двигатели)"
     IDS_CONV_CURRENCY       "Валюта"
     IDS_CONV_ENERGY         "Энергия"
-    IDS_CONV_LENGTH         "Длинна"
+    IDS_CONV_LENGTH         "Длина"
     IDS_CONV_POWER          "Мощность"
     IDS_CONV_PRESSURE       "Давление"
     IDS_CONV_TEMPERATURE    "Температура"
+    IDS_CONV_TIME           "Время"
     IDS_CONV_VELOCITY       "Скорость"
     IDS_CONV_VOLUME         "Объем"
     IDS_CONV_WEIGHT         "Вес"
+END
+
+// TYPES OF ANGLES
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ANGLE_DEGREES       "градус"
+    IDS_ANGLE_GRADIANS      "град"
+    IDS_ANGLE_RADIANS       "радиан"
 END
 
 // TYPES OF AREAS
@@ -511,6 +516,7 @@ BEGIN
     IDS_CURRENCY_AUSTRIAN_SCHILLING "Австралийский шиллинг"
     IDS_CURRENCY_BELGIAN_FRANC      "Бельгийский франк"
     IDS_CURRENCY_CYPRIOT_POUND      "Киприотский фунт"
+    IDS_CURRENCY_CZECH_KORUNA       "Чешская крона"
     IDS_CURRENCY_DEUTSCHE_MARK      "Немецкая марка"
     IDS_CURRENCY_DUTCH_GUILDER      "Голландский гульден"
     IDS_CURRENCY_EURO               "Евро"
@@ -522,6 +528,7 @@ BEGIN
     IDS_CURRENCY_LUXEMBOURG_FRANC   "Люксембургский франк"
     IDS_CURRENCY_MALTESE_LIRA       "Мальтийская лира"
     IDS_CURRENCY_PORTOGUESE_ESCUDO  "Португальское эскудо"
+    IDS_CURRENCY_SLOVAK_KORUNA      "Словацкая крона"
     IDS_CURRENCY_SLOVENIAN_TOLAR    "Словенский толар"
     IDS_CURRENCY_SPANISH_PESETA     "Испанская песета"
 END
@@ -529,9 +536,13 @@ END
 // TYPES OF ENERGIES
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_ENERGY_15_C_CALORIES        "калория патнадцатиградусная"
+    IDS_ENERGY_15_C_CALORIES        "калория пятнадцатиградусная"
+    IDS_ENERGY_BTUS                 "британская тепловая единица"
     IDS_ENERGY_ERGS                 "эрг"
+    IDS_ENERGY_EVS                  "электронвольт"
+    IDS_ENERGY_FOOT_POUNDS          "футофунт"
     IDS_ENERGY_IT_CALORIES          "калория международная"
+    IDS_ENERGY_IT_KILOCALORIES      "килокалория международная"
     IDS_ENERGY_JOULES               "джоуль"
     IDS_ENERGY_KILOJOULES           "килоджоуль"
     IDS_ENERGY_KILOWATT_HOURS       "киловатт-час"
@@ -543,7 +554,7 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_LENGTH_ANGSTROMS            "ангстрем"
-    IDS_LENGTH_ASTRONOMILA_UNITS    "астрономическая еденица"
+    IDS_LENGTH_ASTRONOMICAL_UNITS   "астрономическая еденица"
     IDS_LENGTH_BARLEYCORNS          "барлейкорн"
     IDS_LENGTH_CENTIMETERS          "сантиметр"
     IDS_LENGTH_CHAINS_UK            "чейн (британский)"
@@ -569,6 +580,7 @@ BEGIN
     IDS_LENGTH_LIGHT_YEARS          "световой год"
     IDS_LENGTH_LINKS_UK             "линк (британский)"
     IDS_LENGTH_METERS               "метр"
+    IDS_LENGTH_MICRONS              "микрометр"
     IDS_LENGTH_MILES                "миля"
     IDS_LENGTH_MILLIMETERS          "миллиметр"
     IDS_LENGTH_NAUTICAL_MILES       "морская миля"
@@ -577,6 +589,7 @@ BEGIN
     IDS_LENGTH_PICAS                "пика"
     IDS_LENGTH_RI_JAPAN             "ри (японская)"
     IDS_LENGTH_RI_KOREA             "ри (корейская)"
+    IDS_LENGTH_RODS                 "род"
     IDS_LENGTH_SAWK                 "соук"
     IDS_LENGTH_SEN                  "сен"
     IDS_LENGTH_SHAKU                "шаку"
@@ -592,7 +605,9 @@ END
 // TYPES OF POWERS
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_POWER_HORSEPOWER            "лошадинная сила"
+    IDS_POWER_BTUS_PER_MINUTE       "британская тепловая единица в минуту"
+    IDS_POWER_FPS_PER_MINUTE        "футофунт в минуту"
+    IDS_POWER_HORSEPOWER            "лошадиная сила"
     IDS_POWER_KILOWATTS             "киловатт"
     IDS_POWER_MEGAWATTS             "мегаватт"
     IDS_POWER_WATTS                 "ватт"
@@ -603,6 +618,8 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_PRESSURE_ATMOSPHERES        "атмосфера (физическая)"
     IDS_PRESSURE_BARS               "бар"
+    IDS_PRESSURE_HECTOPASCALS       "гектопаскаль"
+    IDS_PRESSURE_KILOPASCALS        "килопаскаль"
     IDS_PRESSURE_MM_OF_MERCURY      "миллиметр ртутного столба"
     IDS_PRESSURE_PASCALS            "паскаль"
     IDS_PRESSURE_PSI                "фунт на квадратный дюйм"
@@ -617,15 +634,30 @@ BEGIN
     IDS_TEMPERATURE_RANKINE         "градус (по шкале Rankine)"
 END
 
+// TYPES OF TIME
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_TIME_DAYS         "день"
+    IDS_TIME_HOURS        "час"
+    IDS_TIME_MICROSECONDS "микросекунда"
+    IDS_TIME_MILLISECONDS "миллисекунда"
+    IDS_TIME_MINUTES      "минута"
+    IDS_TIME_SECONDS      "секунда"
+    IDS_TIME_WEEKS        "неделя"
+    IDS_TIME_YEARS        "год"
+END
+
 // TYPES OF VELOCITIES
 STRINGTABLE DISCARDABLE
 BEGIN
+    IDS_VELOCITY_CMS_SECOND         "сантиметр в час"
     IDS_VELOCITY_FEET_HOUR          "фут в час"
-    IDS_VELOCITY_KILOMETERS_HOUR    "километр/час"
+    IDS_VELOCITY_FEET_SECOND        "фут в секунду"
+    IDS_VELOCITY_KILOMETERS_HOUR    "километр в час"
     IDS_VELOCITY_KNOTS              "узел"
     IDS_VELOCITY_MACH               "мах"
     IDS_VELOCITY_METERS_SECOND      "метр в секунду"
-    IDS_VELOCITY_MILES_HOUR         "миль в час"
+    IDS_VELOCITY_MILES_HOUR         "миля в час"
 END
 
 // TYPES OF VOLUMES
@@ -645,8 +677,8 @@ BEGIN
     IDS_VOLUME_FLUID_OUNCES_UK      "жидкая унция (британская)"
     IDS_VOLUME_FLUID_OUNCES_US      "жидкая унция (США)"
     IDS_VOLUME_GALLONS_UK           "галлон (британский)"
-    IDS_VOLUME_GALLONS_DRY_US       "галлон (для жидкостей, США)"
-    IDS_VOLUME_GALLONS_LIQUID_US    "галлон (для сухих веществ, США)"
+    IDS_VOLUME_GALLONS_DRY_US       "галлон (для сухих веществ, США)"
+    IDS_VOLUME_GALLONS_LIQUID_US    "галлон (для жидкостей, США)"
     IDS_VOLUME_GOU                  "гоу"
     IDS_VOLUME_HOP                  "хоп"
     IDS_VOLUME_ICCE                 "иккэ"
@@ -655,11 +687,11 @@ BEGIN
     IDS_VOLUME_MAL                  "маль"
     IDS_VOLUME_MILLILITERS          "миллилитр"
     IDS_VOLUME_PINTS_UK             "пинта (британская)"
-    IDS_VOLUME_PINTS_DRY_US         "пинта (для жидкостей, США)"
-    IDS_VOLUME_PINTS_LIQUID_US      "пинта (для сухих веществ, США)"
+    IDS_VOLUME_PINTS_DRY_US         "пинта (для сухих веществ, США)"
+    IDS_VOLUME_PINTS_LIQUID_US      "пинта (для жидкостей, США)"
     IDS_VOLUME_QUARTS_UK            "кварта (британская)"
-    IDS_VOLUME_QUARTS_DRY_US        "кварта (для жидкостей, США)"
-    IDS_VOLUME_QUARTS_LIQUID_US     "кварта (для сухих веществ, США)"
+    IDS_VOLUME_QUARTS_DRY_US        "кварта (для сухих веществ, США)"
+    IDS_VOLUME_QUARTS_LIQUID_US     "кварта (для жидкостей, США)"
     IDS_VOLUME_SEKI                 "сэки"
     IDS_VOLUME_SYOU                 "сё"
     IDS_VOLUME_TANANLOUNG           "тананлунг"
@@ -686,7 +718,7 @@ BEGIN
     IDS_WEIGHT_LIANG_CHINA          "лианг (китайский)"
     IDS_WEIGHT_LIANG_TAIWAN         "лианг (тайвань)"
     IDS_WEIGHT_MONME                "монм"
-    IDS_WEIGHT_OUNCES_AVOIRDUPOIS   "унция (американская)"
+    IDS_WEIGHT_OUNCES_AVOIRDUPOIS   "унция (торговая)"
     IDS_WEIGHT_OUNCES_TROY          "унция (тройская)"
     IDS_WEIGHT_POUNDS               "фунт"
     IDS_WEIGHT_QUINTAL_METRIC       "квинтал (метрический)"
@@ -694,6 +726,6 @@ BEGIN
     IDS_WEIGHT_STONES               "стоун"
     IDS_WEIGHT_TAMLUNG              "тамлунг"
     IDS_WEIGHT_TONNES               "тонна"
-    IDS_WEIGHT_TONS_UK              "тонна (UK)"
-    IDS_WEIGHT_TONS_US              "тонна (US)"
+    IDS_WEIGHT_TONS_UK              "тонна (британская)"
+    IDS_WEIGHT_TONS_US              "тонна (США)"
 END

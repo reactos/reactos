@@ -14,6 +14,7 @@
 #endif
 
 extern TCHAR MsgWin[128];
+extern TCHAR MsgDeal[128];
 
 CardStack activepile;
 bool fGameStarted = false;
@@ -117,8 +118,8 @@ bool CARDLIBPROC RowStackDropProc(CardRegion &stackobj,  const CardStack &dragca
         }
 
         //can only drop if card is different colour
-        if( mystack[0].IsBlack() && !dragcard.IsRed() ||
-           !mystack[0].IsBlack() &&  dragcard.IsRed() )
+        if( (mystack[0].IsBlack() && !dragcard.IsRed()) ||
+           (!mystack[0].IsBlack() &&  dragcard.IsRed()) )
         {
             TRACE("EXIT RowStackDropProc(false)\n");
             return false;
@@ -254,8 +255,19 @@ void CARDLIBPROC SuitStackAddProc(CardRegion &stackobj, const CardStack &added)
         {
             pSuitStack[i]->Flash(11, 100);
         }
-        fGameStarted = false;
+
+        if( IDYES == MessageBox(SolWnd, MsgDeal, szAppName, MB_YESNO | MB_ICONQUESTION) )
+        {
+            NewGame();
+        }
+        else
+        {
+            SolWnd.EmptyStacks();
+
+            fGameStarted = false;
+        }
     }
+
     TRACE("EXIT SuitStackAddProc()\n");
 }
 

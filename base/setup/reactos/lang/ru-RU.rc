@@ -8,9 +8,7 @@ CAPTION "Установка ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Вас приветствует программа установки ReactOS.", IDC_STARTTITLE, 115, 8, 195, 24
-    LTEXT "Установку ReactOS можно производить только загрузившись с этого диска! "\
-          "После перезапуска компьютера выберите загрузку с CD и начните"\
-	      " установку ReactOS.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Установку ReactOS можно производить только загрузившись с этого диска! После перезапуска компьютера выберите загрузку с CD и начните установку ReactOS.", IDC_STATIC, 115, 40, 195, 100
     LTEXT "Нажмите кнопку ""Завершить"" для выхода.", IDC_STATIC, 115, 169, 195, 17
 END
 
@@ -78,6 +76,8 @@ BEGIN
 
     CONTROL "Установить загрузчик на диск (MBR)", IDC_INSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10,49,278,11
     CONTROL "Не устанавливать загрузчик", IDC_NOINSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_DISABLED , 10,60,278,11
+    PUSHBUTTON "&OK", IDOK, 180,83,50,15, WS_TABSTOP | WS_VISIBLE
+    PUSHBUTTON "&Отмена", IDCANCEL, 240,83,50,15, WS_TABSTOP | WS_VISIBLE
 END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 193
@@ -103,8 +103,7 @@ BEGIN
  
     LTEXT "После нажатия клавиши ""Завершить"" ваш компьютер будет перезагружен.", IDC_STATIC, 20, 80, 277, 10
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
-    LTEXT "Вы можете извлечь установочный диск. Для перезагрузки компьютера "\
-          "нажмите клавишу ""Завершить"".", IDC_STATIC, 10, 176, 297, 20
+    LTEXT "Вы можете извлечь установочный диск. Для перезагрузки компьютера нажмите клавишу ""Завершить"".", IDC_STATIC, 10, 176, 297, 20
 END
 
 

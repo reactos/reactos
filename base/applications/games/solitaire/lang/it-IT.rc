@@ -51,6 +51,7 @@ BEGIN
     IDS_SOL_ABOUT   "Solitario by J Brown\n\nCardLib versione 1.0."
     IDS_SOL_QUIT    "Chiudere la partita in corso?"
     IDS_SOL_WIN     "Congratulazioni, hai vinto!!"
+    IDS_SOL_DEAL    "Nuova partita?"
 END
 
 

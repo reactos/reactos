@@ -57,7 +57,7 @@ typedef struct
 INT_PTR CALLBACK HexEditWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 ATOM
-STDCALL
+WINAPI
 RegisterHexEditorClass(HINSTANCE hInstance)
 {
   WNDCLASSEX WndClass;
@@ -76,7 +76,7 @@ RegisterHexEditorClass(HINSTANCE hInstance)
 }
 
 BOOL
-STDCALL
+WINAPI
 UnregisterHexEditorClass(HINSTANCE hInstance)
 {
   return UnregisterClass(HEX_EDIT_CLASS_NAME, hInstance);

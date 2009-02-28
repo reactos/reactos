@@ -85,7 +85,7 @@ int main(int argc, char **argv)
 	struct sockaddr_in sin;
 	struct hostent *hp;
 	struct servent *sp;
-	int s;
+	SOCKET s;
 
 	WORD wVersionRequested;
 	WSADATA wsaData;
@@ -130,9 +130,9 @@ int main(int argc, char **argv)
 	}
 
 	memcpy((char *)&sin.sin_addr, hp->h_addr, hp->h_length);
-	sp = getservbyname("whois", "tcp");
+	sp = getservbyname("nicname", "tcp");
 	if (sp == NULL) {
-		(void)fprintf(stderr, "whois: whois/tcp: unknown service\n");
+		(void)fprintf(stderr, "whois: nicname/tcp: unknown service\n");
 		cleanup(1);
 	}
 

@@ -164,20 +164,12 @@ typedef int (*HLPFILE_BPTreeCompare)(void *p, const void *key,
 typedef void (*HLPFILE_BPTreeCallback)(void *p, void **next, void *cookie);
 
 HLPFILE*      HLPFILE_ReadHlpFile(LPCSTR lpszPath);
-HLPFILE_PAGE* HLPFILE_Contents(HLPFILE* hlpfile, ULONG* relative);
 HLPFILE_PAGE* HLPFILE_PageByHash(HLPFILE* hlpfile, LONG lHash, ULONG* relative);
 HLPFILE_PAGE* HLPFILE_PageByMap(HLPFILE* hlpfile, LONG lMap, ULONG* relative);
 HLPFILE_PAGE* HLPFILE_PageByOffset(HLPFILE* hlpfile, LONG offset, ULONG* relative);
 LONG          HLPFILE_Hash(LPCSTR lpszContext);
 void          HLPFILE_FreeHlpFile(HLPFILE*);
-unsigned      HLPFILE_HalfPointsToTwips(unsigned pts);
 
-static inline unsigned HLPFILE_PointsToTwips(unsigned pts)
-{
-    return HLPFILE_HalfPointsToTwips(2 * pts);
-}
-
-void* HLPFILE_BPTreeSearch(BYTE*, const void*, HLPFILE_BPTreeCompare);
 void  HLPFILE_BPTreeEnum(BYTE*, HLPFILE_BPTreeCallback cb, void *cookie);
 
 struct RtfData {

@@ -88,7 +88,7 @@ static void SidToUserName(PSID Sid, LPWSTR szBuffer, DWORD BufferSize)
 
 void PerfDataRefresh(void)
 {
-    SIZE_T                                    ulSize;
+    ULONG                                      ulSize;
     NTSTATUS                                   status;
     LPBYTE                                     pBuffer;
     ULONG                                      BufferSize;
@@ -241,7 +241,8 @@ void PerfDataRefresh(void)
         HeapFree(GetProcessHeap(), 0, pPerfDataOld);
     }
     pPerfDataOld = pPerfData;
-    pPerfData = (PPERFDATA)HeapAlloc(GetProcessHeap(), 0, sizeof(PERFDATA) * ProcessCount);
+    /* Clear out process perf data structures with HEAP_ZERO_MEMORY flag: */
+    pPerfData = (PPERFDATA)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(PERFDATA) * ProcessCount);
     pSPI = (PSYSTEM_PROCESS_INFORMATION)pBuffer;
     for (Idx=0; Idx<ProcessCount; Idx++) {
         /* Get the old perf data for this process (if any) */
@@ -254,14 +255,16 @@ void PerfDataRefresh(void)
             }
         }
 
-        /* Clear out process perf data structure */
-        memset(&pPerfData[Idx], 0, sizeof(PERFDATA));
-
-        if (pSPI->ImageName.Buffer)
-            wcscpy(pPerfData[Idx].ImageName, pSPI->ImageName.Buffer);
-        else
+        if (pSPI->ImageName.Buffer) {
+            /* Don't assume a UNICODE_STRING Buffer is zero terminated: */
+            int len = pSPI->ImageName.Length / 2;
+            /* Check against max size and allow for terminating zero (already zeroed): */
+            if(len >= MAX_PATH)len=MAX_PATH - 1;
+            wcsncpy(pPerfData[Idx].ImageName, pSPI->ImageName.Buffer, len);
+        } else {
             LoadStringW(hInst, IDS_IDLE_PROCESS, pPerfData[Idx].ImageName,
                        sizeof(pPerfData[Idx].ImageName) / sizeof(pPerfData[Idx].ImageName[0]));
+        }
 
         pPerfData[Idx].ProcessId = pSPI->UniqueProcessId;
 
@@ -393,7 +396,7 @@ int PerfGetIndexByProcessId(DWORD dwProcessId)
 
     for (Index = 0; Index < ProcessCount; Index++)
     {
-        if ((DWORD)pPerfData[Index].ProcessId == dwProcessId)
+        if (PtrToUlong(pPerfData[Index].ProcessId) == dwProcessId)
         {
             FoundIndex = Index;
             break;
@@ -412,7 +415,7 @@ ULONG PerfDataGetProcessId(ULONG Index)
     EnterCriticalSection(&PerfDataCriticalSection);
 
     if (Index < ProcessCount)
-        ProcessId = (ULONG)pPerfData[Index].ProcessId;
+        ProcessId = PtrToUlong(pPerfData[Index].ProcessId);
     else
         ProcessId = 0;
 

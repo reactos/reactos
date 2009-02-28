@@ -23,7 +23,7 @@ static UINT_PTR IdTimer;
 
 /* FUNCTIONS ****************************************************************/
 
-static BOOL CALLBACK
+static INT_PTR CALLBACK
 DefaultWlxWindowProc(
 	IN HWND hwndDlg,
 	IN UINT uMsg,
@@ -39,7 +39,7 @@ DefaultWlxWindowProc(
 	else if (uMsg == WM_INITDIALOG)
 	{
 		IdTimer = SetTimer(hwndDlg, 0, WLSession->DialogTimeout * 1000, NULL);
-		return PreviousWindowProc(hwndDlg, uMsg, wParam, lParam);;
+		return PreviousWindowProc(hwndDlg, uMsg, wParam, lParam);
 	}
 	else if (uMsg == WM_NCDESTROY)
 	{

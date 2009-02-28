@@ -450,9 +450,17 @@ dhcpack(struct packet *packet)
 	bind_lease(ip);
 }
 
-void set_name_servers( struct client_lease *new_lease ) {
+void set_name_servers( PDHCP_ADAPTER Adapter, struct client_lease *new_lease ) {
+    CHAR Buffer[200] = "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\";
+    HKEY RegKey;
+
+    strcat(Buffer, Adapter->DhclientInfo.name);
+    if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, Buffer, 0, KEY_WRITE, &RegKey ) != ERROR_SUCCESS)
+        return;
+
+
     if( new_lease->options[DHO_DOMAIN_NAME_SERVERS].len ) {
-        HKEY RegKey;
+
         struct iaddr nameserver;
         char *nsbuf;
         int i, addrs =
@@ -461,12 +469,9 @@ void set_name_servers( struct client_lease *new_lease ) {
                /* XXX I'm setting addrs to 1 until we are ready up the chain */
                addrs = 1;
         nsbuf = malloc( addrs * sizeof(IP_ADDRESS_STRING) );
-        nsbuf[0] = 0;
 
-        if( nsbuf && !RegOpenKeyEx
-            ( HKEY_LOCAL_MACHINE,
-              "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters",
-              0, KEY_WRITE, &RegKey ) ) {
+        if( nsbuf) {
+            nsbuf[0] = 0;
             for( i = 0; i < addrs; i++ ) {
                 nameserver.len = sizeof(ULONG);
                 memcpy( nameserver.iabuf,
@@ -478,16 +483,30 @@ void set_name_servers( struct client_lease *new_lease ) {
 
             DH_DbgPrint(MID_TRACE,("Setting DhcpNameserver: %s\n", nsbuf));
 
-            RegSetValueEx( RegKey, "DhcpNameServer", 0, REG_SZ,
-                           (LPBYTE)nsbuf, strlen(nsbuf) + 1);
-
+            RegSetValueExA( RegKey, "DhcpNameServer", 0, REG_SZ,
+                           (LPBYTE)nsbuf, strlen(nsbuf) + 1 );
             free( nsbuf );
         }
+
+    } else {
+            RegDeleteValueW( RegKey, L"DhcpNameServer" );
     }
+
+    RegCloseKey( RegKey );
+
 }
 
 void setup_adapter( PDHCP_ADAPTER Adapter, struct client_lease *new_lease ) {
+    CHAR Buffer[200] = "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\";
     struct iaddr netmask;
+    HKEY hkey;
+    int i;
+    DWORD dwEnableDHCP;
+
+    strcat(Buffer, Adapter->DhclientInfo.name);
+    if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, Buffer, 0, KEY_WRITE, &hkey) != ERROR_SUCCESS)
+        hkey = NULL;
+
 
     if( Adapter->NteContext )
         DeleteIPAddress( Adapter->NteContext );
@@ -499,13 +518,27 @@ void setup_adapter( PDHCP_ADAPTER Adapter, struct client_lease *new_lease ) {
         memcpy( netmask.iabuf,
                 new_lease->options[DHO_SUBNET_MASK].data,
                 new_lease->options[DHO_SUBNET_MASK].len );
-
         Status = AddIPAddress
             ( *((ULONG*)new_lease->address.iabuf),
               *((ULONG*)netmask.iabuf),
               Adapter->IfMib.dwIndex,
               &Adapter->NteContext,
               &Adapter->NteInstance );
+        if (hkey) {
+            RegSetValueExA(hkey, "DhcpIPAddress", 0, REG_SZ, (LPBYTE)piaddr(new_lease->address), strlen(piaddr(new_lease->address))+1);
+            Buffer[0] = '\0';
+            for(i = 0; i < new_lease->options[DHO_SUBNET_MASK].len; i++)
+            {
+                sprintf(&Buffer[strlen(Buffer)], "%u", new_lease->options[DHO_SUBNET_MASK].data[i]);
+                if (i + 1 < new_lease->options[DHO_SUBNET_MASK].len)
+                    strcat(Buffer, ".");
+            }
+            RegSetValueExA(hkey, "DhcpSubnetMask", 0, REG_SZ, (LPBYTE)Buffer, strlen(Buffer)+1);
+            RegSetValueExA(hkey, "IPAddress", 0, REG_SZ, (LPBYTE)"0.0.0.0", 8);
+            RegSetValueExA(hkey, "SubnetMask", 0, REG_SZ, (LPBYTE)"0.0.0.0", 8);
+            dwEnableDHCP = 1;
+            RegSetValueExA(hkey, "EnableDHCP", 0, REG_DWORD, (LPBYTE)&dwEnableDHCP, sizeof(DWORD));
+        }
 
         if( !NT_SUCCESS(Status) )
             warning("AddIPAddress: %lx\n", Status);
@@ -534,7 +567,22 @@ void setup_adapter( PDHCP_ADAPTER Adapter, struct client_lease *new_lease ) {
             warning("CreateIpForwardEntry: %lx\n", Status);
         else
             old_default_route = RouterMib.dwForwardNextHop;
+
+        if (hkey) {
+            Buffer[0] = '\0';
+            for(i = 0; i < new_lease->options[DHO_ROUTERS].len; i++)
+            {
+                sprintf(&Buffer[strlen(Buffer)], "%u", new_lease->options[DHO_ROUTERS].data[i]);
+                if (i + 1 < new_lease->options[DHO_ROUTERS].len)
+                    strcat(Buffer, ".");
+            }
+            RegSetValueExA(hkey, "DhcpDefaultGateway", 0, REG_SZ, (LPBYTE)Buffer, strlen(Buffer)+1);
+            RegSetValueExA(hkey, "DefaultGateway", 0, REG_SZ, (LPBYTE)"0.0.0.0", 8);
+        }
     }
+
+    if (hkey)
+        RegCloseKey(hkey);
 }
 
 
@@ -567,7 +615,7 @@ bind_lease(struct interface_info *ip)
     if( Adapter )  setup_adapter( Adapter, new_lease );
     else warning("Could not find adapter for info %p\n", ip);
 
-    set_name_servers( new_lease );
+    set_name_servers( Adapter, new_lease );
 
     reinitialize_interfaces();
 }
@@ -1706,7 +1754,7 @@ supersede:
 					len = ip->client->
 					    config->defaults[i].len +
 					    lease->options[i].len;
-					if (len > sizeof(dbuf)) {
+					if (len >= sizeof(dbuf)) {
 						warning("no space to %s %s",
 						    "prepend option",
 						    dhcp_options[i].name);
@@ -1727,7 +1775,7 @@ supersede:
 				case ACTION_APPEND:
 					len = ip->client->
 					    config->defaults[i].len +
-					    lease->options[i].len;
+					    lease->options[i].len + 1;
 					if (len > sizeof(dbuf)) {
 						warning("no space to %s %s",
 						    "append option",

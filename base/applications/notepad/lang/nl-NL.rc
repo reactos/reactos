@@ -27,7 +27,9 @@ BEGIN
     "^F", CMD_SEARCH
     "^G", CMD_GOTO
     "H", CMD_REPLACE, VIRTKEY, CONTROL
+    "^N", CMD_NEW
     "^O", CMD_OPEN
+    "^P", CMD_PRINT
     "^S", CMD_SAVE
     "^V", CMD_PASTE
     "^X", CMD_CUT
@@ -38,54 +40,54 @@ END
 
 MAIN_MENU MENU
 BEGIN
-	POPUP "&Bestand"
-	BEGIN
-		MENUITEM "&Nieuw...",		     CMD_NEW
-		MENUITEM "&Openen\tCtrl+O",	     CMD_OPEN
-		MENUITEM "O&pslaan\tCtrl+p",	     CMD_SAVE
-		MENUITEM "Ops&laan als...",	     CMD_SAVE_AS
-		MENUITEM SEPARATOR
-		MENUITEM "&Afdrukken",	     CMD_PRINT
-		MENUITEM "Pagina-in&stelling...",  CMD_PAGE_SETUP
-		MENUITEM "Printerinstellingen...", CMD_PRINTER_SETUP
-		MENUITEM SEPARATOR
-		MENUITEM "&Afsluiten",             CMD_EXIT
-	END
-	POPUP "Be&werken"
-	BEGIN
-		MENUITEM "&Ongedaan maken\tCtrl+Z",    CMD_UNDO
-		MENUITEM SEPARATOR
-		MENUITEM "K&nippen\tCtrl+X",           CMD_CUT
-		MENUITEM "&Kopiëren\tCtrl+C",         CMD_COPY
-		MENUITEM "&Plakken\tCtrl+V",           CMD_PASTE
-		MENUITEM "&Verwijderen\tDel",          CMD_DELETE
-		MENUITEM SEPARATOR
-		MENUITEM "&Zoeken\tCtrl+Z",       CMD_SEARCH
-		MENUITEM "&Volgende zoeken\tF3",  CMD_SEARCH_NEXT
-		MENUITEM "Replace\tCtrl+H",   CMD_REPLACE
-		MENUITEM "Go To...\tCtrl+G",  CMD_GOTO
-		MENUITEM SEPARATOR
-		MENUITEM "&Alles selecteren\tCtrl+A",  CMD_SELECT_ALL
-		MENUITEM "Tijd/&datum\tF5",            CMD_TIME_DATE
-	END
-	POPUP "F&ormat"
-	BEGIN
-		MENUITEM "A&utomatische terugloop",    CMD_WRAP
-		MENUITEM "&Lettertype instellen...",   CMD_FONT
-	END
-	POPUP "&View"
-	BEGIN
-		MENUITEM "Status&bar",    CMD_STATUSBAR
-	END
-	POPUP "&Help"
-	BEGIN
-		MENUITEM "&Help-onderwerpen",  CMD_HELP_CONTENTS
-		MENUITEM "&Zoeken...",         CMD_HELP_SEARCH
-		MENUITEM "&Hulp bij Help",     CMD_HELP_ON_HELP
-		MENUITEM SEPARATOR
-		MENUITEM "&About"             CMD_ABOUT
-		MENUITEM "Inf&o...",        CMD_ABOUT_WINE
-	END
+    POPUP "&Bestand"
+    BEGIN
+        MENUITEM "&Nieuw\tCtrl+N",         CMD_NEW
+        MENUITEM "&Openen\tCtrl+O",        CMD_OPEN
+        MENUITEM "O&pslaan\tCtrl+S",       CMD_SAVE
+        MENUITEM "Ops&laan als...",        CMD_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "&Afdrukken\tCtrl+P",     CMD_PRINT
+        MENUITEM "Pagina-in&stelling...",  CMD_PAGE_SETUP
+        MENUITEM "Printerinstellingen...", CMD_PRINTER_SETUP
+        MENUITEM SEPARATOR
+        MENUITEM "&Afsluiten",             CMD_EXIT
+    END
+    POPUP "Be&werken"
+    BEGIN
+        MENUITEM "&Ongedaan maken\tCtrl+Z",   CMD_UNDO
+        MENUITEM SEPARATOR
+        MENUITEM "K&nippen\tCtrl+X",          CMD_CUT
+        MENUITEM "&Kopiëren\tCtrl+C",         CMD_COPY
+        MENUITEM "&Plakken\tCtrl+V",          CMD_PASTE
+        MENUITEM "&Verwijderen\tDel",         CMD_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "&Zoeken\tCtrl+Z",           CMD_SEARCH
+        MENUITEM "&Volgende zoeken\tF3",      CMD_SEARCH_NEXT
+        MENUITEM "Replace\tCtrl+H",           CMD_REPLACE
+        MENUITEM "Go To...\tCtrl+G",          CMD_GOTO
+        MENUITEM SEPARATOR
+        MENUITEM "&Alles selecteren\tCtrl+A", CMD_SELECT_ALL
+        MENUITEM "Tijd/&datum\tF5",           CMD_TIME_DATE
+    END
+    POPUP "F&ormat"
+    BEGIN
+        MENUITEM "A&utomatische terugloop",  CMD_WRAP
+        MENUITEM "&Lettertype instellen...", CMD_FONT
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "Status&bar", CMD_STATUSBAR
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&Help-onderwerpen", CMD_HELP_CONTENTS
+        MENUITEM "&Zoeken...",        CMD_HELP_SEARCH
+        MENUITEM "&Hulp bij Help",    CMD_HELP_ON_HELP
+        MENUITEM SEPARATOR
+        MENUITEM "&About"             CMD_ABOUT
+        MENUITEM "Inf&o...",          CMD_ABOUT_WINE
+    END
 END
 
 /* Dialog `Page setup' */
@@ -198,4 +200,5 @@ STRING_UTF8,                                    "UTF-8"
 STRING_CRLF,                                    "Windows"
 STRING_LF,                                      "Unix"
 STRING_CR,                                      "Mac"
+STRING_LINE_COLUMN,                             "Line %d, column %d"
 END

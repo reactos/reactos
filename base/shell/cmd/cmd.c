@@ -307,10 +307,10 @@ static BOOL RunFile(LPTSTR filename)
 
 	ret = (hShExt)(NULL, _T("open"), filename, NULL, NULL, SW_SHOWNORMAL);
 
-	TRACE ("RunFile: ShellExecuteA/W returned %d\n", (DWORD)ret);
+	TRACE ("RunFile: ShellExecuteA/W returned 0x%p\n", ret);
 
 	FreeLibrary(hShell32);
-	return (((DWORD)ret) > 32);
+	return (((DWORD_PTR)ret) > 32);
 }
 
 
@@ -868,6 +868,7 @@ ExecuteCommand(PARSED_COMMAND *Cmd)
 {
 	BOOL bNewBatch = TRUE;
 	PARSED_COMMAND *Sub;
+	LPTSTR ExpandedLine;
 	BOOL Success = TRUE;
 
 	if (!PerformRedirection(Cmd->Redirections))
@@ -879,7 +880,14 @@ ExecuteCommand(PARSED_COMMAND *Cmd)
 		if(bc)
 			bNewBatch = FALSE;
 
-		Success = DoCommand(Cmd->CommandLine);
+		ExpandedLine = DoDelayedExpansion(Cmd->Command.CommandLine);
+		if (!ExpandedLine)
+		{
+			Success = FALSE;
+			break;
+		}
+		Success = DoCommand(ExpandedLine);
+		cmd_free(ExpandedLine);
 
 		if(bNewBatch && bc)
 			AddBatchRedirection(&Cmd->Redirections);
@@ -902,6 +910,12 @@ ExecuteCommand(PARSED_COMMAND *Cmd)
 		break;
 	case C_PIPE:
 		ExecutePipeline(Cmd);
+		break;
+	case C_IF:
+		Success = ExecuteIf(Cmd);
+		break;
+	case C_FOR:
+		Success = ExecuteFor(Cmd);
 		break;
 	}
 
@@ -1094,8 +1108,11 @@ GetBatchVar ( LPCTSTR varName, UINT* varNameLen )
 	return NULL;
 }
 
+BOOL bNoInteractive;
+BOOL bIsBatch;
+
 BOOL
-SubstituteVars(TCHAR *Src, TCHAR *Dest, TCHAR Delim, BOOL bIsBatch)
+SubstituteVars(TCHAR *Src, TCHAR *Dest, TCHAR Delim)
 {
 #define APPEND(From, Length) { \
 	if (Dest + (Length) > DestEnd) \
@@ -1247,14 +1264,64 @@ too_long:
 #undef APPEND1
 }
 
+BOOL
+SubstituteForVars(TCHAR *Src, TCHAR *Dest)
+{
+	TCHAR *DestEnd = &Dest[CMDLINE_LENGTH - 1];
+	while (*Src)
+	{
+		if (Src[0] == _T('%') && Src[1] != _T('\0'))
+		{
+			/* This might be a variable. Search the list of contexts for it */
+			BATCH_CONTEXT *Ctx = bc;
+			while (Ctx && (UINT)(Src[1] - Ctx->forvar) >= Ctx->forvarcount)
+				Ctx = Ctx->prev;
+			if (Ctx)
+			{
+				/* Found it */
+				LPTSTR Value = Ctx->forvalues[Src[1] - Ctx->forvar];
+				if (Dest + _tcslen(Value) > DestEnd)
+					return FALSE;
+				Dest = _stpcpy(Dest, Value);
+				Src += 2;
+				continue;
+			}
+		}
+		/* Not a variable; just copy the character */
+		if (Dest >= DestEnd)
+			return FALSE;
+		*Dest++ = *Src++;
+	}
+	*Dest = _T('\0');
+	return TRUE;
+}
+
+LPTSTR
+DoDelayedExpansion(LPTSTR Line)
+{
+	TCHAR Buf1[CMDLINE_LENGTH];
+	TCHAR Buf2[CMDLINE_LENGTH];
+
+	/* First, substitute FOR variables */
+	if (!SubstituteForVars(Line, Buf1))
+		return NULL;
+
+	if (!_tcschr(Buf1, _T('!')))
+		return cmd_dup(Buf1);
+
+	/* FIXME: Delayed substitutions actually aren't quite the same as
+	 * immediate substitutions. In particular, it's possible to escape
+	 * the exclamation point using ^. */
+	if (!SubstituteVars(Buf1, Buf2, _T('!')))
+		return NULL;
+	return cmd_dup(Buf2);
+}
+
 
 /*
  * do the prompt/input/process loop
  *
  */
-
-BOOL bNoInteractive;
-BOOL bIsBatch;
 
 BOOL
 ReadLine (TCHAR *commandline, BOOL bMore)
@@ -1296,15 +1363,7 @@ ReadLine (TCHAR *commandline, BOOL bMore)
 		bIsBatch = TRUE;
 	}
 
-	if (!SubstituteVars(ip, commandline, _T('%'), bIsBatch))
-		return FALSE;
-
-	/* FIXME: !vars! should be substituted later, after parsing. */
-	if (!SubstituteVars(commandline, readline, _T('!'), bIsBatch))
-		return FALSE;
-	_tcscpy(commandline, readline);
-
-	return TRUE;
+	return SubstituteVars(ip, commandline, _T('%'));
 }
 
 static INT

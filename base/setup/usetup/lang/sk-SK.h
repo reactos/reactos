@@ -1,7 +1,7 @@
 /* TRANSLATOR:  M rio KaŸm r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR:  22-01-2008
  * Encoding  :  Latin II (852)
- * LastChange:  15-06-08
+ * LastChange:  14-12-2008
  */
 
 #ifndef LANG_SK_SK_H__
@@ -370,34 +370,34 @@ static MUI_ENTRY skSKDevicePageEntries[] =
         TEXT_STYLE_NORMAL
     },
     {
-        8,
+        24,
         11,
-        "        PoŸ¡taŸ:",
-        TEXT_STYLE_NORMAL
+        "PoŸ¡taŸ:",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
-        8,
+        24,
         12,
-        "        Monitor:",
-        TEXT_STYLE_NORMAL,
+        "Monitor:",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
-        8,
+        24,
         13,
-        "     Kl vesnica:",
-        TEXT_STYLE_NORMAL
+        "Kl vesnica:",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
-        8,
+        24,
         14,
-        " Rozlo§enie kl.:",
-        TEXT_STYLE_NORMAL
+        "Rozlo§enie kl.:",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
-        8,
+        24,
         16,
-        "     Akceptovaœ:",
-        TEXT_STYLE_NORMAL
+        "Akceptovaœ:",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
         25,
@@ -842,7 +842,6 @@ static MUI_ENTRY skSKSelectPartitionEntries[] =
         0,
         "PoŸkajte, pros¡m ...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
-
     },
     {
         0,
@@ -950,19 +949,19 @@ static MUI_ENTRY skSKFileCopyEntries[] =
         11,
         12,
         "PoŸkajte, pros¡m, kìm Inçtal tor skop¡ruje s£bory do inçtalaŸn‚ho",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
         30,
         13,
         "prieŸinka pre ReactOS.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
         20,
         14,
         "DokonŸenie m“§e trvaœ nieko–ko min£t.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
         50,
@@ -1216,7 +1215,7 @@ static MUI_ENTRY skSKDeletePartitionEntries[] =
     {
         6,
         8,
-        "Vybrali Ste si odstr nenie oblasti",
+        "Vybrali ste si odstr nenie oblasti",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1324,7 +1323,8 @@ MUI_ERROR skSKErrorEntries[] =
     },
     {
         //ERROR_WRITE_BOOT,
-        "Setup failed to install FAT bootcode on the system partition.",
+        "Inçtal toru sa nepodarilo nainçtalovaœ zav dzac¡ k¢d s£borov‚ho\n"
+        "syst‚mu FAT na syst‚mov£ part¡ciu.",
         "ENTER = Reçtart poŸ¡taŸa"
     },
     {
@@ -1375,7 +1375,8 @@ MUI_ERROR skSKErrorEntries[] =
     },
     {
         //ERROR_INSTALL_BOOTCODE,
-        "Setup failed to install the FAT bootcode on the system partition.",
+        "Inçtal toru sa nepodarilo nainçtalovaœ zav dzac¡ k¢d s£borov‚ho\n"
+        "syst‚mu FAT na syst‚mov£ part¡ciu.",
         "ENTER = Reçtart poŸ¡taŸa"
     },
     {
@@ -1480,6 +1481,11 @@ MUI_ERROR skSKErrorEntries[] =
         //ERROR_ADDING_KBLAYOUTS,
         "Inçtal tor zlyhal pri prid van¡ rozlo§en¡ kl vesnice do registrov.\n"
         "ENTER = Reçtart poŸ¡taŸa"
+    },
+    {
+        //ERROR_UPDATE_GEOID,
+        "Setup could not set the geo id.\n"
+        "ENTER = Reboot computer"
     },
     {
         NULL,
@@ -1599,7 +1605,7 @@ MUI_STRING skSKStrings[] =
     {STRING_PARTITIONSIZE,
      "Ve–kosœ novej oblasti:"},
     {STRING_CHOOSENEWPARTITION,
-     "Zvolili Ste vytvorenie novej oblasti na"},
+     "Zvolili ste vytvorenie novej oblasti na"},
     {STRING_HDDSIZE,
     "Zadajte, pros¡m, ve–kosœ novej oblasti v megabajtoch."},
     {STRING_CREATEPARTITION,
@@ -1607,7 +1613,7 @@ MUI_STRING skSKStrings[] =
     {STRING_PARTFORMAT,
     "T to oblasœ sa bude form tovaœ ako Ôalçia."},
     {STRING_NONFORMATTEDPART,
-    "Zvolili Ste inçtal ciu syst‚mu ReactOS na nov£ alebo nenaform tovan£ oblasœ."},
+    "Zvolili ste inçtal ciu syst‚mu ReactOS na nov£ alebo nenaform tovan£ oblasœ."},
     {STRING_INSTALLONPART,
     "Inçtal tor nainçtaluje syst‚m ReactOS na oblasœ"},
     {STRING_CHECKINGPART,

@@ -93,6 +93,7 @@ LRESULT DesktopBar::Init(LPCREATESTRUCT pcs)
 	 // create start button
 	ResString start_str(IDS_START);
 	WindowCanvas canvas(_hwnd);
+	FontSelection font(canvas, GetStockFont(ANSI_VAR_FONT));
 	RECT rect = {0, 0};
 	DrawText(canvas, start_str, -1, &rect, DT_SINGLELINE|DT_CALCRECT);
 	int start_btn_width = rect.right+16+8;
@@ -101,6 +102,7 @@ LRESULT DesktopBar::Init(LPCREATESTRUCT pcs)
 
 	 // create "Start" button
 	HWND hwndStart = Button(_hwnd, start_str, 1, 1, start_btn_width, REBARBAND_HEIGHT, IDC_START, WS_VISIBLE|WS_CHILD|BS_OWNERDRAW);
+	SetWindowFont(hwndStart, GetStockFont(ANSI_VAR_FONT), FALSE);
 	new StartButton(hwndStart);
 
 	/* Save the handle to the window, needed for push-state handling */
@@ -151,7 +153,7 @@ LRESULT DesktopBar::Init(LPCREATESTRUCT pcs)
 	TCHAR QuickLaunchBand[] = _T("Quicklaunch");
 	rbBand.lpText = QuickLaunchBand;
 	rbBand.hwndChild = _hwndQuickLaunch;
-	rbBand.cx = 250;
+	rbBand.cx = 120;
 	rbBand.wID = IDW_QUICKLAUNCHBAR;
 	SendMessage(_hwndrebar, RB_INSERTBAND, (WPARAM)-1, (LPARAM)&rbBand);
 
@@ -167,7 +169,8 @@ LRESULT DesktopBar::Init(LPCREATESTRUCT pcs)
 	RegisterHotkeys();
 
 	 // prepare Startmenu, but hide it for now
-	_startMenuRoot = GET_WINDOW(StartMenuRoot, StartMenuRoot::Create(_hwnd, STARTMENUROOT_ICON_SIZE));
+	_startMenuRoot = GET_WINDOW(StartMenuRoot, StartMenuRoot::Create(_hwndStartButton, STARTMENUROOT_ICON_SIZE));
+	_startMenuRoot->_hwndStartButton = _hwndStartButton;
 
 	return 0;
 }
@@ -425,9 +428,7 @@ int DesktopBar::Command(int id, int code)
 		break;
 
 	  case ID_SWITCH_DESKTOP_1:
-	  case ID_SWITCH_DESKTOP_1+1:
-	  case ID_SWITCH_DESKTOP_1+2:
-	  case ID_SWITCH_DESKTOP_1+3: {
+	  case ID_SWITCH_DESKTOP_1+1: {
 		int desktop_idx = id - ID_SWITCH_DESKTOP_1;
 
 		g_Globals._desktops.SwitchToDesktop(desktop_idx);

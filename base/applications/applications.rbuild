@@ -25,11 +25,9 @@
 	<directory name="hh">
 		<xi:include href="hh/hh.rbuild" />
 	</directory>
-<!--
 	<directory name="iexplore">
 		<xi:include href="iexplore/iexplore.rbuild" />
 	</directory>
--->
 	<directory name="kbswitch">
 		<xi:include href="kbswitch/kbswitch.rbuild" />
 	</directory>

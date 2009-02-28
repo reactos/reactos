@@ -85,7 +85,7 @@ PCHAR RegReadString( HKEY Root, PCHAR Subkey, PCHAR Value ) {
     goto cleanup;
 
 regerror:
-    if( SubOut ) free( SubOut );
+    if( SubOut ) { free( SubOut ); SubOut = NULL; }
 cleanup:
     if( ValueKey && ValueKey != Root ) {
         DH_DbgPrint(MID_TRACE,("Closing key %x\n", ValueKey));
@@ -103,8 +103,7 @@ HKEY FindAdapterKey( PDHCP_ADAPTER Adapter ) {
         "SYSTEM\\CurrentControlSet\\Control\\Class\\"
         "{4D36E972-E325-11CE-BFC1-08002BE10318}";
     PCHAR TargetKeyNameStart =
-        "SYSTEM\\CurrentControlSet\\Services\\";
-    PCHAR TargetKeyNameEnd = "\\Parameters\\Tcpip";
+        "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\";
     PCHAR TargetKeyName = NULL;
     PCHAR *EnumKeysLinkage = GetSubkeyNames( EnumKeyName, "\\Linkage" );
     PCHAR *EnumKeysTop     = GetSubkeyNames( EnumKeyName, "" );
@@ -126,12 +125,11 @@ HKEY FindAdapterKey( PDHCP_ADAPTER Adapter ) {
             !strcmp( RootDevice, Adapter->DhclientInfo.name ) ) {
             TargetKeyName =
                 (CHAR*) malloc( strlen( TargetKeyNameStart ) +
-                        strlen( RootDevice ) +
-                        strlen( TargetKeyNameEnd ) + 1 );
+                        strlen( RootDevice ) + 1);
             if( !TargetKeyName ) goto cleanup;
-            sprintf( TargetKeyName, "%s%s%s",
-                     TargetKeyNameStart, RootDevice, TargetKeyNameEnd );
-            Error = RegOpenKey( HKEY_LOCAL_MACHINE, TargetKeyName, &OutKey );
+            sprintf( TargetKeyName, "%s%s",
+                     TargetKeyNameStart, RootDevice );
+            Error = RegCreateKeyExA( HKEY_LOCAL_MACHINE, TargetKeyName, 0, NULL, 0, KEY_READ, NULL, &OutKey, NULL );
             break;
         } else {
             free( RootDevice ); RootDevice = 0;

@@ -6,7 +6,5 @@
 	<library>urlmon</library>
 	<library>wininet</library>
 	<library>uuid</library>
-	<define name="WINVER">0x0501</define>
-	<define name="_WIN32_IE">0x0600</define>
 	<file>dwnl.c</file>
 </module>

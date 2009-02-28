@@ -3,9 +3,7 @@
 <module name="umpnpmgr" type="win32cui" installbase="system32" installname="umpnpmgr.exe" unicode="yes">
 	<include base="umpnpmgr">.</include>
 	<include base="pnp_server">.</include>
-	<define name="WINVER">0x600</define>
-	<define name="_WIN32_IE">0x0500</define>
-	<define name="_WIN32_WINNT">0x0600</define>
+	<define name="_WIN32_WINNT">0x600</define>
 	<library>pnp_server</library>
 	<library>ntdll</library>
 	<library>kernel32</library>

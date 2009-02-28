@@ -676,16 +676,15 @@ VOID DIALOG_EditTimeDate(VOID)
 {
     SYSTEMTIME   st;
     TCHAR        szDate[MAX_STRING_LEN];
-    static const TCHAR space[] = _T(" ");
+    TCHAR        szText[MAX_STRING_LEN * 2 + 2];
 
     GetLocalTime(&st);
 
     GetTimeFormat(LOCALE_USER_DEFAULT, 0, &st, NULL, szDate, MAX_STRING_LEN);
-    SendMessage(Globals.hEdit, EM_REPLACESEL, TRUE, (LPARAM)szDate);
-
-    SendMessage(Globals.hEdit, EM_REPLACESEL, TRUE, (LPARAM)space);
-
+    _tcscpy(szText, szDate);
+    _tcscat(szText, _T(" "));
     GetDateFormat(LOCALE_USER_DEFAULT, DATE_LONGDATE, &st, NULL, szDate, MAX_STRING_LEN);
+    _tcscat(szText, szDate);
     SendMessage(Globals.hEdit, EM_REPLACESEL, TRUE, (LPARAM)szDate);
 }
 
@@ -871,19 +870,15 @@ VOID DIALOG_GoTo(VOID)
 
 VOID DIALOG_StatusBarUpdateCaretPos(VOID)
 {
-    int line;
-    int col;
-    int ccol;
-    POINT point;
+    int line, col;
     TCHAR buff[MAX_PATH];
+    DWORD dwStart, dwSize;
 
-    GetCaretPos(&point);
-    line = (int) SendMessage(Globals.hEdit, EM_LINEFROMCHAR, (WPARAM)-1, (LPARAM)0);
-    ccol = (int) SendMessage(Globals.hEdit, EM_CHARFROMPOS, (WPARAM)0, (LPARAM)MAKELPARAM(point.x, point.y));
-    ccol = LOWORD(ccol);
-    col = ccol - (int) SendMessage(Globals.hEdit, EM_LINEINDEX, (WPARAM)line, (LPARAM)0);
+    SendMessage(Globals.hEdit, EM_GETSEL, (WPARAM)&dwStart, (LPARAM)&dwSize);
+    line = SendMessage(Globals.hEdit, EM_LINEFROMCHAR, (WPARAM)dwStart, 0);
+    col  = dwStart - SendMessage(Globals.hEdit, EM_LINEINDEX, (WPARAM)line, 0);
 
-    _stprintf(buff, TEXT("%S %d, %S %d"), Globals.szStatusBarLine, line+1, Globals.szStatusBarCol, col+1);
+    _stprintf(buff, Globals.szStatusBarLineCol, line+1, col+1);
     SendMessage(Globals.hStatusBar, SB_SETTEXT, (WPARAM) SB_SIMPLEID, (LPARAM)buff);
 }
 
@@ -896,8 +891,7 @@ VOID DIALOG_ViewStatusBar(VOID)
    if ( !Globals.hStatusBar )
    {
        Globals.hStatusBar = CreateStatusWindow(WS_CHILD | WS_VISIBLE | WS_EX_STATICEDGE, TEXT("test"), Globals.hMainWnd, CMD_STATUSBAR_WND_ID );
-       LoadString(Globals.hInstance, STRING_LINE, Globals.szStatusBarLine, MAX_PATH-1);
-       LoadString(Globals.hInstance, STRING_COLUMN, Globals.szStatusBarCol, MAX_PATH-1);
+       LoadString(Globals.hInstance, STRING_LINE_COLUMN, Globals.szStatusBarLineCol, MAX_PATH-1);
        SendMessage(Globals.hStatusBar, SB_SIMPLE, (WPARAM)TRUE, (LPARAM)0);
    }
     CheckMenuItem(GetMenu(Globals.hMainWnd), CMD_STATUSBAR,
@@ -931,7 +925,7 @@ VOID DIALOG_HelpHelp(VOID)
 #ifdef _MSC_VER
 #pragma warning(disable : 4100)
 #endif
-BOOL CALLBACK
+INT_PTR CALLBACK
 AboutDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     HWND    hLicenseEditWnd;

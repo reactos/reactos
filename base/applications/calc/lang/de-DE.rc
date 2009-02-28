@@ -9,14 +9,10 @@ MENU IDR_MENU_SCIENTIFIC_1
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     GROUPBOX        "",IDC_STATIC,4,16,132,21
-    CONTROL         "Hex",IDC_RADIO_HEX,"Button",BS_AUTORADIOBUTTON,8,24,29,
-                    10
-    CONTROL         "Dez",IDC_RADIO_DEC,"Button",BS_AUTORADIOBUTTON,40,24,29,
-                    10
-    CONTROL         "Okt",IDC_RADIO_OCT,"Button",BS_AUTORADIOBUTTON,72,24,27,
-                    10
-    CONTROL         "Bin",IDC_RADIO_BIN,"Button",BS_AUTORADIOBUTTON,100,24,
-                    26,10
+    CONTROL         "Hex",IDC_RADIO_HEX,"Button",BS_AUTORADIOBUTTON,8,24,29,10
+    CONTROL         "Dez",IDC_RADIO_DEC,"Button",BS_AUTORADIOBUTTON,40,24,29,10
+    CONTROL         "Okt",IDC_RADIO_OCT,"Button",BS_AUTORADIOBUTTON,72,24,27,10
+    CONTROL         "Bin",IDC_RADIO_BIN,"Button",BS_AUTORADIOBUTTON,100,24,26,10
     GROUPBOX        "",IDC_STATIC,4,36,76,21
     CONTROL         "Inv",IDC_CHECK_INV,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,8,44,26,10
@@ -341,7 +337,6 @@ BEGIN
                     SS_SUNKEN
 END
 
-
 // Menus
 
 IDR_MENU_SCIENTIFIC_1 MENU DISCARDABLE 
@@ -455,6 +450,16 @@ BEGIN
     IDS_CONV_CONSUMPTION    "Verbrauch (Motoren)"
     IDS_CONV_VOLUME         "Volumeneinheit"
     IDS_CONV_CURRENCY       "Währung"
+    IDS_CONV_ANGLE          "Winkel"
+    IDS_CONV_TIME           "Zeit"
+END
+
+// WINKELTYPEN
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ANGLE_GRADIANS      "Gon"
+    IDS_ANGLE_DEGREES       "Grad"
+    IDS_ANGLE_RADIANS       "Radiant"
 END
 
 // FLÄCHENTYPEN
@@ -521,18 +526,24 @@ BEGIN
     IDS_CURRENCY_DUTCH_GUILDER      "Niederländische Guilder"
     IDS_CURRENCY_AUSTRIAN_SCHILLING "Österreichische Schilling"
     IDS_CURRENCY_PORTOGUESE_ESCUDO  "Portugiesische Escudo"
+    IDS_CURRENCY_SLOVAK_KORUNA      "Slowakische Krone"
     IDS_CURRENCY_SLOVENIAN_TOLAR    "Slovenische Tolar"
     IDS_CURRENCY_SPANISH_PESETA     "Spanische Peseta"
+    IDS_CURRENCY_CZECH_KORUNA       "Tschechische Krone"
     IDS_CURRENCY_CYPRIOT_POUND      "Zypriotische Pfund"
 END
 
 // ENERGIETYPEN
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_ENERGY_15_C_CALORIES        "15 ^C Kalorien"
+    IDS_ENERGY_15_C_CALORIES        "15 °C Kalorien"
+    IDS_ENERGY_BTUS                 "British thermal unit"
+    IDS_ENERGY_EVS                  "Elektronenvolt"
     IDS_ENERGY_ERGS                 "Ergs"
     IDS_ENERGY_NUTRITION_CALORIES   "Ernährung Kalorien"
+    IDS_ENERGY_FOOT_POUNDS          "Foot-Pound"
     IDS_ENERGY_IT_CALORIES          "International Kalorien"
+    IDS_ENERGY_IT_KILOCALORIES      "International Kilokalorien"
     IDS_ENERGY_JOULES               "Joules"
     IDS_ENERGY_KILOJOULES           "Kilojoules"
     IDS_ENERGY_KILOWATT_HOURS       "Kilowattstunden"
@@ -543,7 +554,7 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_LENGTH_ANGSTROMS            "Angströms"
-    IDS_LENGTH_ASTRONOMILA_UNITS    "Astronomische Einheiten"
+    IDS_LENGTH_ASTRONOMICAL_UNITS   "Astronomische Einheiten"
     IDS_LENGTH_CHAINS_UK            "Chains (UK)"
     IDS_LENGTH_CHI                  "Chi"
     IDS_LENGTH_CHOU                 "Chou"
@@ -568,6 +579,7 @@ BEGIN
     IDS_LENGTH_LINKS_UK             "Links (UK)"
     IDS_LENGTH_MILES                "Meilen"
     IDS_LENGTH_METERS               "Meter"
+    IDS_LENGTH_MICRONS              "Mikrometer"
     IDS_LENGTH_MILLIMETERS          "Millimeter"
     IDS_LENGTH_NAUTICAL_MILES       "Nautische Meilen"
     IDS_LENGTH_NIEU                 "Nieu"
@@ -575,6 +587,7 @@ BEGIN
     IDS_LENGTH_PICAS                "Picas"
     IDS_LENGTH_RI_JAPAN             "Ri (Japan)"
     IDS_LENGTH_RI_KOREA             "Ri (Korea)"
+    IDS_LENGTH_RODS                 "Rods"
     IDS_LENGTH_SAWK                 "Sawk"
     IDS_LENGTH_SEN                  "Sen"
     IDS_LENGTH_SHAKU                "Shaku"
@@ -592,6 +605,8 @@ END
 // ARBEITSTYPEN
 STRINGTABLE DISCARDABLE
 BEGIN
+    IDS_POWER_BTUS_PER_MINUTE       "BTU pro Minute"
+    IDS_POWER_FPS_PER_MINUTE        "Foot-Pound pro Minute"
     IDS_POWER_KILOWATTS             "Kilowatt"
     IDS_POWER_MEGAWATTS             "Megawatt"
     IDS_POWER_HORSEPOWER            "Pferdestärken"
@@ -603,6 +618,8 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_PRESSURE_ATMOSPHERES        "Atmosphären"
     IDS_PRESSURE_BARS               "Bar"
+    IDS_PRESSURE_HECTOPASCALS       "Hektopascal"
+    IDS_PRESSURE_KILOPASCALS        "Kilopascal"
     IDS_PRESSURE_MM_OF_MERCURY      "Millimeter auf dem Quecksilber"
     IDS_PRESSURE_PASCALS            "Pascal"
     IDS_PRESSURE_PSI                "Pfunddruck pro Quadratzoll"
@@ -617,9 +634,24 @@ BEGIN
     IDS_TEMPERATURE_RANKINE         "Rankine"
 END
 
+// TYPES OF TIME
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_TIME_DAYS         "Tagen"
+    IDS_TIME_HOURS        "Stunden"
+    IDS_TIME_MICROSECONDS "Mikrosekunden"
+    IDS_TIME_MILLISECONDS "Millisekunden"
+    IDS_TIME_MINUTES      "Minuten"
+    IDS_TIME_SECONDS      "Sekunden"
+    IDS_TIME_WEEKS        "Wochen"
+    IDS_TIME_YEARS        "Jahren"
+END
+
 // GESCHWINDIGKEITSTYPEN
 STRINGTABLE DISCARDABLE
 BEGIN
+    IDS_VELOCITY_CMS_SECOND         "Zentimeter/Sekunde"
+    IDS_VELOCITY_FEET_SECOND        "Fuß/Sekunde"
     IDS_VELOCITY_FEET_HOUR          "Fuß/Stunde"
     IDS_VELOCITY_KILOMETERS_HOUR    "Kilometer/Stunde"
     IDS_VELOCITY_KNOTS              "Knoten"

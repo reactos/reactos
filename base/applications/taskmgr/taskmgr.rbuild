@@ -2,10 +2,7 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="taskmgr" type="win32gui" installbase="system32" installname="taskmgr.exe" unicode="yes">
 	<include base="taskmgr">.</include>
-	<define name="_WIN32_IE">0x0501</define>
-	<define name="_WIN32_WINNT">0x0501</define>
-	<library>msvcrt</library>
-	<library>ntdll</library>
+	<library>ntsys</library>
 	<library>kernel32</library>
 	<library>advapi32</library>
 	<library>user32</library>

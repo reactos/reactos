@@ -43,6 +43,7 @@
 #include <stdio.h>
 #include <windows.h>
 #include <wine/debug.h>
+#include <wine/unicode.h>
 #include "xcopy.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(xcopy);
@@ -983,7 +984,8 @@ int XCOPY_wprintf(const WCHAR *format, ...) {
 #define MAX_WRITECONSOLE_SIZE 65535
 
     va_list parms;
-    DWORD   len, nOut;
+    DWORD   nOut;
+    int len;
     DWORD   res = 0;
 
     /*
@@ -999,10 +1001,13 @@ int XCOPY_wprintf(const WCHAR *format, ...) {
       return 0;
     }
 
-    /* Use wvsprintf to store output into unicode buffer */
     va_start(parms, format);
-    len = vswprintf(output_bufW, format, parms);
+    len = vsnprintfW(output_bufW, MAX_WRITECONSOLE_SIZE/sizeof(WCHAR), format, parms);
     va_end(parms);
+    if (len < 0) {
+      WINE_FIXME("String too long.\n");
+      return 0;
+    }
 
     /* Try to write as unicode all the time we think its a console */
     if (toConsole) {

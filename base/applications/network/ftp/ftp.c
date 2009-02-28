@@ -295,7 +295,7 @@ int command(const char *fmt, ...)
 		printf("\n");
 		(void) fflush(stdout);
 	}
-	if (cout == (int) NULL) {
+	if (cout == 0) {
 		perror ("No control connection for command");
 		code = -1;
 		return (0);
@@ -461,7 +461,7 @@ void sendrequest(const char *cmd, const char *local, const char *remote, int pri
 {
 	FILE *fin;
 	int dout = 0;
-	int (*closefunc)(), _pclose(), fclose();
+	int (*closefunc)();
 	sig_t (*oldintr)(), (*oldintp)();
 	char buf[BUFSIZ], *bufp;
 	long bytes = 0, hashbytes = HASHBYTES;
@@ -583,7 +583,7 @@ null();//				(void) signal(SIGPIPE, oldintp);
 			return;
 		}
 	dout = dataconn(mode);
-	if (dout == (int)NULL)
+	if (!dout)
 		goto abort;
 	(void) gettimeofday(&start, (struct timezone *)0);
 null();//	oldintp = signal(SIGPIPE, SIG_IGN);
@@ -735,7 +735,7 @@ void recvrequest(const char *cmd, const char *local, const char *remote, const c
 {
 	FILE *fout = stdout;
 	int din = 0;
-	int (*closefunc)(), _pclose(), fclose();
+	int (*closefunc)();
 	void (*oldintr)(int), (*oldintp)(int);
 	int oldverbose = 0, oldtype = 0, is_retr, tcrflag, nfnd, bare_lfs = 0;
 	char msg;
@@ -748,7 +748,6 @@ void recvrequest(const char *cmd, const char *local, const char *remote, const c
 	register int c, d;
 	struct timeval start, stop;
 //	struct stat st;
-	extern void *malloc();
 
 	is_retr = strcmp(cmd, "RETR") == 0;
 	if (is_retr && verbose && printnames) {
@@ -888,7 +887,7 @@ null();//			(void) signal(SIGINT, oldintr);
 		}
 	}
 	din = dataconn("r");
-	if (din == (int)NULL)
+	if (!din)
 		goto abort;
 	if (strcmp(local, "-") == 0)
 		fout = stdout;
@@ -1272,7 +1271,7 @@ int dataconn(const char *mode)
 	if (s < 0) {
 		perror("ftp: accept");
 		(void) closesocket(data), data = -1;
-		return (int) (NULL);
+		return 0;
 	}
 	if(closesocket(data)) {
 		int iret=WSAGetLastError ();

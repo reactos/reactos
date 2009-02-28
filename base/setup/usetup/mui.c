@@ -112,6 +112,13 @@ MUIDefaultKeyboardLayout(VOID)
     return LanguageList[lngIndex].MuiLayouts[0].LayoutID;
 }
 
+PWCHAR
+MUIGetGeoID(VOID)
+{
+    ULONG lngIndex = max(FindLanguageIndex(), 0);
+    return LanguageList[lngIndex].GeoID;
+}
+
 const MUI_LAYOUTS *
 MUIGetLayoutsList(VOID)
 {
@@ -391,19 +398,19 @@ AddKbLayoutsToRegistry(IN const MUI_LAYOUTS * MuiLayouts)
     {
         if (uIndex > 19) break;
 
-        swprintf(szValueName, L"%d", uIndex + 1);
+        swprintf(szValueName, L"%u", uIndex + 1);
         RtlInitUnicodeString(&ValueName, szValueName);
 
         swprintf(szLangID, L"0000%s", MuiLayouts[uIndex].LangID);
 
-        if (wcscmp(szLangID, MuiLayouts[uIndex].LayoutID) == 0)
+        if (_wcsicmp(szLangID, MuiLayouts[uIndex].LayoutID) == 0)
         {
             Status = NtSetValueKey(KeyHandle,
                                    &ValueName,
                                    0,
                                    REG_SZ,
                                    (PVOID)MuiLayouts[uIndex].LayoutID,
-                                   wcslen(MuiLayouts[uIndex].LayoutID) * sizeof(WCHAR));
+                                   (wcslen(MuiLayouts[uIndex].LayoutID)+1) * sizeof(WCHAR));
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("NtSetValueKey() failed (Status = %lx, uIndex = %d)\n", Status, uIndex);
@@ -414,13 +421,13 @@ AddKbLayoutsToRegistry(IN const MUI_LAYOUTS * MuiLayouts)
         }
         else
         {
-            swprintf(szLangID, L"d%03d%s", uCount, MuiLayouts[uIndex].LangID);
+            swprintf(szLangID, L"d%03u%s", uCount, MuiLayouts[uIndex].LangID);
             Status = NtSetValueKey(KeyHandle,
                                    &ValueName,
                                    0,
                                    REG_SZ,
                                    (PVOID)szLangID,
-                                   wcslen(szLangID) * sizeof(WCHAR));
+                                   (wcslen(szLangID)+1) * sizeof(WCHAR));
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("NtSetValueKey() failed (Status = %lx, uIndex = %d)\n", Status, uIndex);
@@ -436,10 +443,10 @@ AddKbLayoutsToRegistry(IN const MUI_LAYOUTS * MuiLayouts)
                                    0,
                                    REG_SZ,
                                    (PVOID)MuiLayouts[uIndex].LayoutID,
-                                   wcslen(MuiLayouts[uIndex].LayoutID) * sizeof(WCHAR));
+                                   (wcslen(MuiLayouts[uIndex].LayoutID)+1) * sizeof(WCHAR));
             if (!NT_SUCCESS(Status))
             {
-                DPRINT1("NtSetValueKey() failed (Status = %lx, uIndex = %d)\n", Status, uIndex);
+                DPRINT1("NtSetValueKey() failed (Status = %lx, uIndex = %u)\n", Status, uIndex);
                 NtClose(SubKeyHandle);
                 NtClose(KeyHandle);
                 return FALSE;
@@ -513,7 +520,7 @@ AddCodepageToRegistry(IN LPCWSTR ACPage, IN LPCWSTR OEMCPage, IN LPCWSTR MACCPag
                            0,
                            REG_SZ,
                            (PVOID)ACPage,
-                           wcslen(ACPage) * sizeof(PWCHAR));
+                           (wcslen(ACPage)+1) * sizeof(PWCHAR));
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
@@ -528,7 +535,7 @@ AddCodepageToRegistry(IN LPCWSTR ACPage, IN LPCWSTR OEMCPage, IN LPCWSTR MACCPag
                            0,
                            REG_SZ,
                            (PVOID)OEMCPage,
-                           wcslen(OEMCPage) * sizeof(PWCHAR));
+                           (wcslen(OEMCPage)+1) * sizeof(PWCHAR));
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
@@ -543,7 +550,7 @@ AddCodepageToRegistry(IN LPCWSTR ACPage, IN LPCWSTR OEMCPage, IN LPCWSTR MACCPag
                            0,
                            REG_SZ,
                            (PVOID)MACCPage,
-                           wcslen(MACCPage) * sizeof(PWCHAR));
+                           (wcslen(MACCPage)+1) * sizeof(PWCHAR));
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);

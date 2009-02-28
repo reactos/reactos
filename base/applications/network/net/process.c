@@ -208,7 +208,7 @@ INT row_scanner_service(CHAR *buffer, LONG* pos, LONG size,
 	}
 
 	/* Compare now */
-	if (strnicmp(name,&buffer[t],strlen(&buffer[t]))==0)
+	if (_strnicmp(name,&buffer[t],strlen(&buffer[t]))==0)
 	{
 		if (save != NULL)
 		{

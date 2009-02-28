@@ -309,7 +309,7 @@ CAPTION "Om ReactOS kalkulator"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,105,148,52,16
-    CONTROL         106,IDC_STATIC,"Static",SS_BITMAP | SS_CENTERIMAGE | 
+    CONTROL         IDB_BITMAP_ROS,IDC_STATIC,"Static",SS_BITMAP | SS_CENTERIMAGE | 
                     SS_REALSIZEIMAGE | WS_BORDER,4,4,104,48
     LTEXT           "ReactOS kalkulator",IDC_STATIC,120,12,132,8,
                     SS_CENTERIMAGE
@@ -337,38 +337,37 @@ BEGIN
                     SS_SUNKEN
 END
 
-
 // Menus
 
 IDR_MENU_SCIENTIFIC_1 MENU DISCARDABLE 
 BEGIN
     POPUP "Rediger"
     BEGIN
-        MENUITEM "Kopier\tCTRL-C",                IDM_EDIT_COPY
-        MENUITEM "Lim inn\tCTRL-V",               IDM_EDIT_PASTE
+        MENUITEM "Kopier\tCTRL-C",              IDM_EDIT_COPY
+        MENUITEM "Lim inn\tCTRL-V",             IDM_EDIT_PASTE
     END
     POPUP "Vis"
     BEGIN
         MENUITEM "Standard",                    IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "Vitenskapelig",                  IDM_VIEW_SCIENTIFIC, CHECKED
-        MENUITEM "Konvertering",                  IDM_VIEW_CONVERSION
+        MENUITEM "Vitenskapelig",               IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "Konvertering",                IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
-        MENUITEM "Heksadesimalt\tF5",                     IDM_VIEW_HEX, CHECKED
-        MENUITEM "Desimalt\tF6",                 IDM_VIEW_DEC, CHECKED
-        MENUITEM "Oktalt\tF7",                   IDM_VIEW_OCT, CHECKED
+        MENUITEM "Heksadesimalt\tF5",           IDM_VIEW_HEX, CHECKED
+        MENUITEM "Desimalt\tF6",                IDM_VIEW_DEC, CHECKED
+        MENUITEM "Oktalt\tF7",                  IDM_VIEW_OCT, CHECKED
         MENUITEM "Binært\tF8",                  IDM_VIEW_BIN, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "Grader\tF2",                 IDM_VIEW_DEG, CHECKED
-        MENUITEM "Radianer\tF3",                 IDM_VIEW_RAD, CHECKED
-        MENUITEM "Gradienter\tF4",                   IDM_VIEW_GRAD, CHECKED
+        MENUITEM "Grader\tF2",                  IDM_VIEW_DEG, CHECKED
+        MENUITEM "Radianer\tF3",                IDM_VIEW_RAD, CHECKED
+        MENUITEM "Gradienter\tF4",              IDM_VIEW_GRAD, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "Siffergruppering",                IDM_VIEW_GROUP, CHECKED
+        MENUITEM "Siffergruppering",            IDM_VIEW_GROUP, CHECKED
     END
     POPUP "Hjelp"
     BEGIN
-        MENUITEM "Emner i hjelp",                 IDM_HELP_HELP
+        MENUITEM "Emner i hjelp",               IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "Om ReactOS kalkulator",          IDM_HELP_ABOUT
+        MENUITEM "Om ReactOS kalkulator",       IDM_HELP_ABOUT
     END
 END
 
@@ -376,18 +375,18 @@ IDR_MENU_SCIENTIFIC_2 MENU DISCARDABLE
 BEGIN
     POPUP "Rediger"
     BEGIN
-        MENUITEM "Kopier\tCTRL-C",                IDM_EDIT_COPY
-        MENUITEM "Lim inn\tCTRL-V",               IDM_EDIT_PASTE
+        MENUITEM "Kopier\tCTRL-C",              IDM_EDIT_COPY
+        MENUITEM "Lim inn\tCTRL-V",             IDM_EDIT_PASTE
     END
     POPUP "Vis"
     BEGIN
         MENUITEM "Standard",                    IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "Vitenskapelig",                  IDM_VIEW_SCIENTIFIC, CHECKED
-        MENUITEM "konvertering",                  IDM_VIEW_CONVERSION
+        MENUITEM "Vitenskapelig",               IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "konvertering",                IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
-        MENUITEM "Heksadesimalt\tF5",                     IDM_VIEW_HEX, CHECKED
+        MENUITEM "Heksadesimalt\tF5",           IDM_VIEW_HEX, CHECKED
         MENUITEM "Desimal\tF6",                 IDM_VIEW_DEC, CHECKED
-        MENUITEM "Oktalt\tF7",                   IDM_VIEW_OCT, CHECKED
+        MENUITEM "Oktalt\tF7",                  IDM_VIEW_OCT, CHECKED
         MENUITEM "Binært\tF8",                  IDM_VIEW_BIN, CHECKED
         MENUITEM SEPARATOR
         MENUITEM "Qword\tF12",                  IDM_VIEW_QWORD, CHECKED
@@ -395,13 +394,13 @@ BEGIN
         MENUITEM "Word\tF3",                    IDM_VIEW_WORD, CHECKED
         MENUITEM "Tegn\tF4",                    IDM_VIEW_BYTE, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "Digital gruppe",                IDM_VIEW_GROUP, CHECKED
+        MENUITEM "Digital gruppe",              IDM_VIEW_GROUP, CHECKED
     END
     POPUP "Hjelp"
     BEGIN
-        MENUITEM "Emner i hjelp",                 IDM_HELP_HELP
+        MENUITEM "Emner i hjelp",               IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "Om ReactOS Kalkulator",          IDM_HELP_ABOUT
+        MENUITEM "Om ReactOS Kalkulator",       IDM_HELP_ABOUT
     END
 END
 
@@ -409,22 +408,22 @@ IDR_MENU_STANDARD MENU DISCARDABLE
 BEGIN
     POPUP "Rediger"
     BEGIN
-        MENUITEM "Kopier\tCTRL-C",                IDM_EDIT_COPY
-        MENUITEM "Lim inn\tCTRL-V",               IDM_EDIT_PASTE
+        MENUITEM "Kopier\tCTRL-C",              IDM_EDIT_COPY
+        MENUITEM "Lim inn\tCTRL-V",             IDM_EDIT_PASTE
     END
     POPUP "Vis"
     BEGIN
         MENUITEM "Standard",                    IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "Vitenskapelig",                  IDM_VIEW_SCIENTIFIC, CHECKED
-        MENUITEM "konvertering",                  IDM_VIEW_CONVERSION
+        MENUITEM "Vitenskapelig",               IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "konvertering",                IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
-        MENUITEM "Siffergruppering",                IDM_VIEW_GROUP, CHECKED
+        MENUITEM "Siffergruppering",            IDM_VIEW_GROUP, CHECKED
     END
     POPUP "Hjelp"
     BEGIN
-        MENUITEM "Emner i hjelp",                 IDM_HELP_HELP
+        MENUITEM "Emner i hjelp",               IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "Om Reactos Kalkulator",          IDM_HELP_ABOUT
+        MENUITEM "Om Reactos Kalkulator",       IDM_HELP_ABOUT
     END
 END
 
@@ -432,14 +431,15 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_STRING_LICENSE      "ReactOS kalkulator er gratis pogramvare utgitt under GNU GPL lisensen.\r\n\r\nYou can get a copy of GNU GPL license here:\r\nhttp://www.gnu.org/licenses/gpl.html\r\n\r\nDu kan også få en oversettelse av GNU GPL lisensen here:\r\nhttp://www.gnu.org/licenses/translations.html"
+    IDS_STRING_LICENSE      "ReactOS kalkulator er gratis programvare utgitt under GNU GPL lisensen.\r\n\r\nDu kan få en kopi av GNU GPL lisensen her:\r\nhttp://www.gnu.org/licenses/gpl.html\r\n\r\nDu kan også få en oversettelse av GNU GPL lisensen her:\r\nhttp://www.gnu.org/licenses/translations.html"
     IDS_MATH_ERROR          "Feil"
     IDS_QUICKHELP           "Rask hjelp"
 END
 
-// types of conversion
+// Types of conversion
 STRINGTABLE DISCARDABLE
 BEGIN
+    IDS_CONV_ANGLE          "Vinkel"
     IDS_CONV_AREA           "Område"
     IDS_CONV_CONSUMPTION    "Forbruk (maskin)"
     IDS_CONV_CURRENCY       "Valuta"
@@ -448,9 +448,18 @@ BEGIN
     IDS_CONV_POWER          "Strøm"
     IDS_CONV_PRESSURE       "Trykk"
     IDS_CONV_TEMPERATURE    "Temperatur"
+    IDS_CONV_TIME           "Tid"
     IDS_CONV_VELOCITY       "Hastighet"
     IDS_CONV_VOLUME         "Volum"
     IDS_CONV_WEIGHT         "Vekt"
+END
+
+// TYPES OF ANGLES
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ANGLE_DEGREES       "Grader"
+    IDS_ANGLE_GRADIANS      "Gradianer"
+    IDS_ANGLE_RADIANS       "Radianer"
 END
 
 // TYPES OF AREAS
@@ -507,6 +516,7 @@ BEGIN
     IDS_CURRENCY_AUSTRIAN_SCHILLING "Austrian schilling"
     IDS_CURRENCY_BELGIAN_FRANC      "Belgian franc"
     IDS_CURRENCY_CYPRIOT_POUND      "Cypriot pound"
+    IDS_CURRENCY_CZECH_KORUNA       "Tsjekkisk koruna"
     IDS_CURRENCY_DEUTSCHE_MARK      "Deutsche Mark"
     IDS_CURRENCY_DUTCH_GUILDER      "Dutch guilder"
     IDS_CURRENCY_EURO               "Euro"
@@ -518,6 +528,7 @@ BEGIN
     IDS_CURRENCY_LUXEMBOURG_FRANC   "Luxembourg franc"
     IDS_CURRENCY_MALTESE_LIRA       "Maltese lira"
     IDS_CURRENCY_PORTOGUESE_ESCUDO  "Portoguese escudo"
+    IDS_CURRENCY_SLOVAK_KORUNA      "Slovakisk koruna"
     IDS_CURRENCY_SLOVENIAN_TOLAR    "Slovenian tolar"
     IDS_CURRENCY_SPANISH_PESETA     "Spanish peseta"
 END
@@ -525,9 +536,13 @@ END
 // TYPES OF ENERGIES
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_ENERGY_15_C_CALORIES        "15 ^C calories"
+    IDS_ENERGY_15_C_CALORIES        "15 °C calories"
+    IDS_ENERGY_BTUS                 "British Thermal Units"
     IDS_ENERGY_ERGS                 "Ergs"
+    IDS_ENERGY_EVS                  "Electron-Volts"
+    IDS_ENERGY_FOOT_POUNDS          "Foot-Pounds"
     IDS_ENERGY_IT_CALORIES          "International Table calories"
+    IDS_ENERGY_IT_KILOCALORIES      "International Table kilocalories"
     IDS_ENERGY_JOULES               "Joules"
     IDS_ENERGY_KILOJOULES           "Kilojoules"
     IDS_ENERGY_KILOWATT_HOURS       "Kilowatt hours"
@@ -539,7 +554,7 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_LENGTH_ANGSTROMS            "Angstroms"
-    IDS_LENGTH_ASTRONOMILA_UNITS    "Astronomila units"
+    IDS_LENGTH_ASTRONOMICAL_UNITS   "Astronomical units"
     IDS_LENGTH_BARLEYCORNS          "Barleycorns"
     IDS_LENGTH_CENTIMETERS          "Centimeters"
     IDS_LENGTH_CHAINS_UK            "Chains (UK)"
@@ -565,6 +580,7 @@ BEGIN
     IDS_LENGTH_LIGHT_YEARS          "Light years"
     IDS_LENGTH_LINKS_UK             "Links (UK)"
     IDS_LENGTH_METERS               "Meters"
+    IDS_LENGTH_MICRONS              "Microns"
     IDS_LENGTH_MILES                "Miles"
     IDS_LENGTH_MILLIMETERS          "Millimeters"
     IDS_LENGTH_NAUTICAL_MILES       "Nautical miles"
@@ -573,6 +589,7 @@ BEGIN
     IDS_LENGTH_PICAS                "Picas"
     IDS_LENGTH_RI_JAPAN             "Ri (Japan)"
     IDS_LENGTH_RI_KOREA             "Ri (Korea)"
+    IDS_LENGTH_RODS                 "Rods"
     IDS_LENGTH_SAWK                 "Sawk"
     IDS_LENGTH_SEN                  "Sen"
     IDS_LENGTH_SHAKU                "Shaku"
@@ -588,6 +605,8 @@ END
 // TYPES OF POWERS
 STRINGTABLE DISCARDABLE
 BEGIN
+    IDS_POWER_BTUS_PER_MINUTE       "British Thermal Units per minute"
+    IDS_POWER_FPS_PER_MINUTE        "Foot-Pounds per minute"
     IDS_POWER_HORSEPOWER            "hestekrefter"
     IDS_POWER_KILOWATTS             "Kilowatt"
     IDS_POWER_MEGAWATTS             "Megawatt"
@@ -599,6 +618,8 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_PRESSURE_ATMOSPHERES        "Atmosfæretrykk"
     IDS_PRESSURE_BARS               "Bars"
+    IDS_PRESSURE_HECTOPASCALS       "Hectopascals"
+    IDS_PRESSURE_KILOPASCALS        "Kilopascals"
     IDS_PRESSURE_MM_OF_MERCURY      "Millimeters of mercury"
     IDS_PRESSURE_PASCALS            "Pascals"
     IDS_PRESSURE_PSI                "Pounds-force per square inch"
@@ -613,10 +634,25 @@ BEGIN
     IDS_TEMPERATURE_RANKINE         "Rankine"
 END
 
+// TYPES OF TIME
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_TIME_DAYS         "**"
+    IDS_TIME_HOURS        "**"
+    IDS_TIME_MICROSECONDS "**"
+    IDS_TIME_MILLISECONDS "**"
+    IDS_TIME_MINUTES      "**"
+    IDS_TIME_SECONDS      "**"
+    IDS_TIME_WEEKS        "**"
+    IDS_TIME_YEARS        "**"
+END
+
 // TYPES OF VELOCITIES
 STRINGTABLE DISCARDABLE
 BEGIN
+    IDS_VELOCITY_CMS_SECOND         "Centimeters/hour"
     IDS_VELOCITY_FEET_HOUR          "Feet/time"
+    IDS_VELOCITY_FEET_SECOND        "Feet/second"
     IDS_VELOCITY_KILOMETERS_HOUR    "kilometer/time"
     IDS_VELOCITY_KNOTS              "Knot"
     IDS_VELOCITY_MACH               "Mach"
@@ -663,3 +699,33 @@ BEGIN
     IDS_VOLUME_TO                   "To"
 END
 
+// TYPES OF WEIGHTS
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_WEIGHT_BAHT                 "Baht"
+    IDS_WEIGHT_CARATS               "Carats"
+    IDS_WEIGHT_CHUNG                "Chung"
+    IDS_WEIGHT_DON                  "Don"
+    IDS_WEIGHT_GEUN                 "Geun"
+    IDS_WEIGHT_GRAMS                "Grams"
+    IDS_WEIGHT_GWAN                 "Gwan"
+    IDS_WEIGHT_HARB                 "Harb"
+    IDS_WEIGHT_JIN_CHINA            "Jin (China)"
+    IDS_WEIGHT_JIN_TAIWAN           "Jin (Taiwan)"
+    IDS_WEIGHT_KAN                  "Kan"
+    IDS_WEIGHT_KILOGRAMS            "Kilograms"
+    IDS_WEIGHT_KIN                  "Kin"
+    IDS_WEIGHT_LIANG_CHINA          "Liang (China)"
+    IDS_WEIGHT_LIANG_TAIWAN         "Liang (Taiwan)"
+    IDS_WEIGHT_MONME                "Monme"
+    IDS_WEIGHT_OUNCES_AVOIRDUPOIS   "Ounces, avoirdupois"
+    IDS_WEIGHT_OUNCES_TROY          "Ounces, troy"
+    IDS_WEIGHT_POUNDS               "Pounds"
+    IDS_WEIGHT_QUINTAL_METRIC       "Quintal (metric)"
+    IDS_WEIGHT_SALOUNG              "Saloung"
+    IDS_WEIGHT_STONES               "Stones"
+    IDS_WEIGHT_TAMLUNG              "Tamlung"
+    IDS_WEIGHT_TONNES               "Tonnes"
+    IDS_WEIGHT_TONS_UK              "Tons (UK)"
+    IDS_WEIGHT_TONS_US              "Tons (US)"
+END

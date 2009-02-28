@@ -7,6 +7,7 @@
 
     The base units for all categories are:
 
+    ANGLE..........degrees
     AREA...........square meters
     CONSUMPTION....kilometers per liter
     CURRENCY.......Euro
@@ -15,9 +16,10 @@
     POWER..........Watt
     PRESSURE.......Pascal
     TEMPERATURE....kelvin
+    TIME...........seconds
     VELOCITY.......meters per second
     VOLUME.........liter
-    WEIGHT.........kilogram
+    WEIGHT.........gram
 
     The '$' character is used as "what you read into the display".
 */
@@ -40,6 +42,17 @@ typedef struct {
 
 #define DECLARE_CONV_END \
     { 0, NULL, NULL },
+
+/*
+    1 gradian = 0.9 deg
+    1 radian = 57.29577951308233 deg
+*/
+static const conv_t conv_ANGLE[] = {
+    DECLARE_CONV_UNIT(ANGLE, DEGREES,  "$", "$")
+    DECLARE_CONV_UNIT(ANGLE, GRADIANS, "$*0.9", "$/0.9")
+    DECLARE_CONV_UNIT(ANGLE, RADIANS,  "$*180/P", "$*P/180")
+    DECLARE_CONV_END
+};
 
 /*
     1 acre ................ = 4840 square yd = 4046,8564224 mq
@@ -131,6 +144,7 @@ static const conv_t conv_CURRENCY[] = {
     DECLARE_CONV_UNIT(CURRENCY, AUSTRIAN_SCHILLING, "$/13,7603", "$*13,7603")
     DECLARE_CONV_UNIT(CURRENCY, BELGIAN_FRANC,      "$/40,3399", "$*40,3399")
     DECLARE_CONV_UNIT(CURRENCY, CYPRIOT_POUND,      "$/0,585274","$*0,585274")
+    DECLARE_CONV_UNIT(CURRENCY, CZECH_KORUNA,       "$/27,9766", "$*27,9766")
     DECLARE_CONV_UNIT(CURRENCY, DEUTSCHE_MARK,      "$/1,9558",  "$*1,9558")
     DECLARE_CONV_UNIT(CURRENCY, DUTCH_GUILDER,      "$/2,20371", "$*2,20371")
     DECLARE_CONV_UNIT(CURRENCY, EURO,               "$",         "$")
@@ -142,15 +156,20 @@ static const conv_t conv_CURRENCY[] = {
     DECLARE_CONV_UNIT(CURRENCY, LUXEMBOURG_FRANC,   "$/40,3399", "$*40,3399")
     DECLARE_CONV_UNIT(CURRENCY, MALTESE_LIRA,       "$/0.42930", "$*0.42930")
     DECLARE_CONV_UNIT(CURRENCY, PORTOGUESE_ESCUDO,  "$/200,482", "$*200,482")
+    DECLARE_CONV_UNIT(CURRENCY, SLOVAK_KORUNA,      "$/30,126",  "$*30,126")
     DECLARE_CONV_UNIT(CURRENCY, SLOVENIAN_TOLAR,    "$/239,640", "$*239,640")
     DECLARE_CONV_UNIT(CURRENCY, SPANISH_PESETA,     "$/166,386", "$*166,386")
     DECLARE_CONV_END
 };
 
 /*
-    1 15^C ..... = 4.1855 J
+    1 cal15 .... = 4.1855 J
+    1 BTU ...... = 1055.056 J
     1 ERG ...... = 0.0000001 J
+    1 EV ....... = 0.000000000000000000160217653 J
+    1 Foot-Pound = 1.3558179483314004 J
     1 IT calorie = 4.1868 J
+    1 KCa ...... = 4186.8 J
     1 KJ ....... = 1000 J
     1 KWh ...... = 3600 J
     1 IUNS ..... = 4.182 J
@@ -158,8 +177,12 @@ static const conv_t conv_CURRENCY[] = {
 */
 static const conv_t conv_ENERGY[] = {
     DECLARE_CONV_UNIT(ENERGY, 15_C_CALORIES,        "$*4.1855",   "$/4.1855")
+    DECLARE_CONV_UNIT(ENERGY, BTUS,                 "$*1055.056", "$/1055.056")
     DECLARE_CONV_UNIT(ENERGY, ERGS,                 "$*.0000001", "$/.0000001")
+    DECLARE_CONV_UNIT(ENERGY, EVS,                  "$*.000000000000000000160217653", "$/.000000000000000000160217653")
+    DECLARE_CONV_UNIT(ENERGY, FOOT_POUNDS,          "$*1.3558179483314004",   "$/1.3558179483314004")
     DECLARE_CONV_UNIT(ENERGY, IT_CALORIES,          "$*4.1868",   "$/4.1868")
+    DECLARE_CONV_UNIT(ENERGY, IT_KILOCALORIES,      "$*4186.8",   "$/4186.8")
     DECLARE_CONV_UNIT(ENERGY, JOULES,               "$",          "$")
     DECLARE_CONV_UNIT(ENERGY, KILOJOULES,           "$*1000",     "$/1000")
     DECLARE_CONV_UNIT(ENERGY, KILOWATT_HOURS,       "$*3600",     "$/3600")
@@ -170,7 +193,7 @@ static const conv_t conv_ENERGY[] = {
 
 /*
     1 angstrom ....... = 0.0000000001 m
-    1 astronomila unit = 149598000000 m
+    1 astronomical unit= 149598000000 m
     1 barleycorn ..... = 1/3 inch = 0.9144/108 m
     1 cm ............. = 1/100 m
     1 chain uk ....... = 22 yards = 22*0.9144 m
@@ -194,6 +217,7 @@ static const conv_t conv_ENERGY[] = {
     1 lar ............ = 
     1 light year ..... = 9460730472580800 m
     1 link uk ........ = 0.01 chains = 0.22*0.9144 m
+    1 micron ......... = 0.000001 m
     1 mile ........... = 1760 yards = 1609.344 m
     1 millimeter ..... = 1/1000 m
     1 nautical mile .. = 1852 m
@@ -202,6 +226,7 @@ static const conv_t conv_ENERGY[] = {
     1 pica ........... = yard/216 = 0.9144/216 m
     1 ri japan ....... = 
     1 ri korea ....... = 
+    1 rod ............ = 5.0292 m
     1 sawk ........... = 
     1 sen ............ = 
     1 shaku .......... = 10/33 m
@@ -215,7 +240,7 @@ static const conv_t conv_ENERGY[] = {
 */
 static const conv_t conv_LENGTH[] = {
     DECLARE_CONV_UNIT(LENGTH, ANGSTROMS,            "$*0.0000000001",   "$/0.0000000001")
-    DECLARE_CONV_UNIT(LENGTH, ASTRONOMILA_UNITS,    "$*149598000000",   "$/149598000000")
+    DECLARE_CONV_UNIT(LENGTH, ASTRONOMICAL_UNITS,   "$*149598000000",   "$/149598000000")
     DECLARE_CONV_UNIT(LENGTH, BARLEYCORNS,          "$*0.9144/108",     "$/0.9144*108")
     DECLARE_CONV_UNIT(LENGTH, CENTIMETERS,          "$/100",            "$*100")
     DECLARE_CONV_UNIT(LENGTH, CHAINS_UK,            "$*20.1168",        "$/20.1168")
@@ -241,12 +266,14 @@ static const conv_t conv_LENGTH[] = {
     DECLARE_CONV_UNIT(LENGTH, LIGHT_YEARS,          "$*9460730472580800", "$/9460730472580800")
     DECLARE_CONV_UNIT(LENGTH, LINKS_UK,             "$*0.201168",       "$/0.201168")
     DECLARE_CONV_UNIT(LENGTH, METERS,               "$",                "$")
+    DECLARE_CONV_UNIT(LENGTH, MICRONS,              "$*0.000001",       "$/0.000001")
     DECLARE_CONV_UNIT(LENGTH, MILES,                "$*1609.344",       "$/1609.344")
     DECLARE_CONV_UNIT(LENGTH, MILLIMETERS,          "$/1000",           "$*1000")
     DECLARE_CONV_UNIT(LENGTH, NAUTICAL_MILES,       "$*1852",           "$/1852")
 //    DECLARE_CONV_UNIT(LENGTH, NIEU,                 "$", "$")
     DECLARE_CONV_UNIT(LENGTH, PARSECS,              "$*30856800000000000", "$/30856800000000000")
     DECLARE_CONV_UNIT(LENGTH, PICAS,                "$*0.9144/216",     "$/0.9144*216")
+    DECLARE_CONV_UNIT(LENGTH, RODS,                 "$*5.0292",         "$/5.0292")
 //    DECLARE_CONV_UNIT(LENGTH, RI_JAPAN,             "$", "$")
 //    DECLARE_CONV_UNIT(LENGTH, RI_KOREA,             "$", "$")
 //    DECLARE_CONV_UNIT(LENGTH, SAWK,                 "$", "$")
@@ -263,30 +290,58 @@ static const conv_t conv_LENGTH[] = {
 };
 
 /*
+    1 BTU/min = 17.5842642 W
+    1 Foot-pound/minute = 0.02259696580552333 W
     1 hp = 745.69987158227022 W
     1 KW = 1000 W
     1 MW = 1000000 W
 */
 static const conv_t conv_POWER[] = {
-    DECLARE_CONV_UNIT(POWER, HORSEPOWER,    "$*745.69987158227022", "$/745.69987158227022")
-    DECLARE_CONV_UNIT(POWER, KILOWATTS,     "$*1000", "$/1000")
-    DECLARE_CONV_UNIT(POWER, MEGAWATTS,     "$*1000000", "$/1000000")
-    DECLARE_CONV_UNIT(POWER, WATTS,         "$", "$")
+    DECLARE_CONV_UNIT(POWER, BTUS_PER_MINUTE, "$*17.5842642", "$/17.5842642")
+    DECLARE_CONV_UNIT(POWER, FPS_PER_MINUTE,  "$*0.02259696580552333", "$/0.02259696580552333")
+    DECLARE_CONV_UNIT(POWER, HORSEPOWER,      "$*745.69987158227022", "$/745.69987158227022")
+    DECLARE_CONV_UNIT(POWER, KILOWATTS,       "$*1000", "$/1000")
+    DECLARE_CONV_UNIT(POWER, MEGAWATTS,       "$*1000000", "$/1000000")
+    DECLARE_CONV_UNIT(POWER, WATTS,           "$", "$")
     DECLARE_CONV_END
 };
 
 /*
     1 ATM   = 101325 Pa
     1 BAR   = 100000 Pa
+    1 hPa   = 100 Pa
+    1 kPa   = 1000 Pa
     1 mm HG = 133.322 Pa
     1 psi   = 6894.757 Pa 
 */
 static const conv_t conv_PRESSURE[] = {
     DECLARE_CONV_UNIT(PRESSURE, ATMOSPHERES,   "$*101325",   "$/101325")
     DECLARE_CONV_UNIT(PRESSURE, BARS,          "$*100000",   "$/100000")
+    DECLARE_CONV_UNIT(PRESSURE, HECTOPASCALS,  "$*100",      "$/100")
+    DECLARE_CONV_UNIT(PRESSURE, KILOPASCALS,   "$*1000",     "$/1000")
     DECLARE_CONV_UNIT(PRESSURE, MM_OF_MERCURY, "$*133.322",  "$/133.322")
     DECLARE_CONV_UNIT(PRESSURE, PASCALS,       "$",          "$")
     DECLARE_CONV_UNIT(PRESSURE, PSI,           "$*6894.757", "$/6894.757")
+    DECLARE_CONV_END
+};
+
+/*
+    1 day ....... = 86400 s
+    1 hour ...... = 3600 s
+    1 microsecond = 0.000001 s
+    1 millisecond = 0.001 s
+    1 minute .... = 60 s
+    1 week ...... = 669600 s
+*/
+static const conv_t conv_TIME[] = {
+    DECLARE_CONV_UNIT(TIME, MINUTES,      "$*60",       "$/60")
+    DECLARE_CONV_UNIT(TIME, DAYS,         "$*86400",    "$/86400")
+    DECLARE_CONV_UNIT(TIME, HOURS,        "$*3600",     "$/3600")
+    DECLARE_CONV_UNIT(TIME, MILLISECONDS, "$*0.001",    "$/0.001")
+    DECLARE_CONV_UNIT(TIME, MICROSECONDS, "$*0.000001", "$/0.000001")
+    DECLARE_CONV_UNIT(TIME, SECONDS,      "$",          "$")
+    DECLARE_CONV_UNIT(TIME, WEEKS,        "$*604800",   "$/604800")
+    DECLARE_CONV_UNIT(TIME, YEARS,        "$*31556952", "$/31556952")
     DECLARE_CONV_END
 };
 
@@ -304,14 +359,18 @@ static const conv_t conv_TEMPERATURE[] = {
 };
 
 /*
-    1 f/h  = 0.3048 m/s
+    1 cm/s = 0.01 m/s
+    1 f/h  = 0.0000846666667 m/s
+    1 f/s  = 0.3048 m/s
     1 Km/h = 10/36 m/s -> 0.27778 m/s
     1 knot = 18.52/36 m/s -> 0.51444444 m/s
     1 mach = 340.3 m/s
     1 mph  = 0.44704 m/s
 */
 static const conv_t conv_VELOCITY[] = {
-    DECLARE_CONV_UNIT(VELOCITY, FEET_HOUR,          "$*.3048",    "$/.3048")
+    DECLARE_CONV_UNIT(VELOCITY, CMS_SECOND,         "$*.01",      "$/.01")
+    DECLARE_CONV_UNIT(VELOCITY, FEET_SECOND,        "$*.3048",    "$/.3048")
+    DECLARE_CONV_UNIT(VELOCITY, FEET_HOUR,          "$*.0000846666667", "$/.0000846666667")
     DECLARE_CONV_UNIT(VELOCITY, KILOMETERS_HOUR,    "$*10/36",    "$*36/10")
     DECLARE_CONV_UNIT(VELOCITY, KNOTS,              "$*18.52/36", "$*36/18.52")
     DECLARE_CONV_UNIT(VELOCITY, MACH,               "$*340.3",    "$/340.3")
@@ -417,8 +476,8 @@ static const conv_t conv_VOLUME[] = {
     1 stone ........... = 6350.29318 g
     1 tamlung ......... = 
     1 ton ............. = 1000000 g
-    1 ton uk .......... = 1016046.9088 g
-    1 ton us .......... = 907184.74 g
+    1 ton uk .......... = 1016046.9088 g  // long ton
+    1 ton us .......... = 907184.74 g     // short ton
 */
 static const conv_t conv_WEIGHT[] = {
     DECLARE_CONV_UNIT(WEIGHT, BAHT,                 "$*12.244",       "$/12.244")
@@ -451,6 +510,7 @@ static const conv_t conv_WEIGHT[] = {
 };
 
 static const conv_category_t conv_table[] = {
+    DECLARE_CONV_CAT(ANGLE)
     DECLARE_CONV_CAT(AREA)
     DECLARE_CONV_CAT(CONSUMPTION)
     DECLARE_CONV_CAT(CURRENCY)
@@ -458,6 +518,7 @@ static const conv_category_t conv_table[] = {
     DECLARE_CONV_CAT(LENGTH)
     DECLARE_CONV_CAT(POWER)
     DECLARE_CONV_CAT(PRESSURE)
+    DECLARE_CONV_CAT(TIME)
     DECLARE_CONV_CAT(TEMPERATURE)
     DECLARE_CONV_CAT(VELOCITY)
     DECLARE_CONV_CAT(VOLUME)
