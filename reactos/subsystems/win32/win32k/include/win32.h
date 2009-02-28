@@ -39,8 +39,8 @@ typedef struct _THREADINFO
     PCLIENTINFO         pClientInfo;
     FLONG               TIF_flags;
     HANDLE              hDesktop;
-    UINT                cPaintsReady;
-    UINT                cTimersReady;
+    UINT                cPaintsReady; /* Count of paints pending. */
+    UINT                cTimersReady; /* Count of timers pending. */
     LIST_ENTRY          PtiLink;
 
   LIST_ENTRY WindowListHead;
