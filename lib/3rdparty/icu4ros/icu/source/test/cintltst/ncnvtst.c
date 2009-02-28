@@ -962,7 +962,7 @@ static void TestWithBufferSize(int32_t insize, int32_t outsize){
 
         if(!testConvertToU(sampleText1, sizeof(sampleText1),
                  expected1, sizeof(expected1)/sizeof(expected1[0]),"utf8", UCNV_TO_U_CALLBACK_SUBSTITUTE, offsets1,FALSE))
-            log_err("utf8->u with substitute did not match.\n");;
+            log_err("utf8->u with substitute did not match.\n");
     }
 
 #if !UCONFIG_NO_LEGACY_CONVERSION

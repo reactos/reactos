@@ -12,18 +12,11 @@
 /*
  * @implemented
  */
-wchar_t* _wstrtime(wchar_t* buf)
+wchar_t* _wstrtime(wchar_t* time)
 {
-    time_t t;
-    struct tm* d;
-    wchar_t* dt = (wchar_t*)buf;
+   static const WCHAR format[] = { 'H','H','\'',':','\'','m','m','\'',':','\'','s','s',0 };
 
-    if ( buf == NULL ) {
-        __set_errno(EINVAL);
-        return NULL;
-    }
-    t = time(NULL);
-    d = localtime(&t);
-    swprintf(dt,L"%d:%d:%d",d->tm_hour,d->tm_min,d->tm_sec);
-    return dt;
+   GetTimeFormatW(LOCALE_NEUTRAL, 0, NULL, format, (LPWSTR)time, 9);
+
+   return time;
 }

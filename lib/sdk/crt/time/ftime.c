@@ -17,6 +17,7 @@
 /*
  * @implemented
  */
+#undef _ftime
 void _ftime( struct _timeb *tm )
 {
   int ret = 0;

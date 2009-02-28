@@ -46,6 +46,7 @@ modules_defines = {
     "DOCBparser" : "LIBXML_DOCB_ENABLED",
     "xmlmodule" : "LIBXML_MODULES_ENABLED",
     "pattern" : "LIBXML_PATTERN_ENABLED",
+    "schematron" : "LIBXML_SCHEMATRON_ENABLED",
 }
 
 #
@@ -173,7 +174,8 @@ skipped_memcheck = [ "xmlLoadCatalog", "xmlAddEncodingAlias",
    "xmlInitCharEncodingHandlers", "xmlCatalogCleanup",
    "xmlSchemaGetBuiltInType",
    "htmlParseFile", "htmlCtxtReadFile", # loads the catalogs
-   "xmlTextReaderSchemaValidate", "xmlSchemaCleanupTypes" # initialize the schemas type system
+   "xmlTextReaderSchemaValidate", "xmlSchemaCleanupTypes", # initialize the schemas type system
+   "xmlCatalogResolve", "xmlIOParseDTD" # loads the catalogs
 ]
 
 #
@@ -206,6 +208,8 @@ extra_pre_call = {
 extra_post_call = {
    "xmlAddChild": 
        "if (ret_val == NULL) { xmlFreeNode(cur) ; cur = NULL ; }",
+   "xmlAddEntity":
+       "if (ret_val != NULL) { xmlFreeNode(ret_val) ; ret_val = NULL; }",
    "xmlAddChildList": 
        "if (ret_val == NULL) { xmlFreeNodeList(cur) ; cur = NULL ; }",
    "xmlAddSibling":
@@ -256,6 +260,7 @@ extra_post_call = {
    "xmlParseChunk": "if (ctxt != NULL) {xmlFreeDoc(ctxt->myDoc); ctxt->myDoc = NULL;}",
    "xmlParseExtParsedEnt": "if (ctxt != NULL) {xmlFreeDoc(ctxt->myDoc); ctxt->myDoc = NULL;}",
    "xmlDOMWrapAdoptNode": "if ((node != NULL) && (node->parent == NULL)) {xmlUnlinkNode(node);xmlFreeNode(node);node = NULL;}",
+   "xmlBufferSetAllocationScheme": "if ((buf != NULL) && (scheme == XML_BUFFER_ALLOC_IMMUTABLE) && (buf->content != NULL) && (buf->content != static_buf_content)) { xmlFree(buf->content); buf->content = NULL;}"
 }
 
 modules = []
@@ -818,11 +823,14 @@ test_%s(void) {
     i = 0;
     for arg in t_args:
         (nam, type, rtype, crtype, info) = arg;
-	#
-	test.write("        des_%s(n_%s, " % (type, nam))
-	if rtype != crtype:
-	    test.write("(%s)" % rtype)
-	test.write("%s, %d);\n" % (nam, i))
+	# This is a hack to prevent generating a destructor for the
+	# 'input' argument in xmlTextReaderSetup.  There should be
+	# a better, more generic way to do this!
+	if string.find(info, 'destroy') == -1:
+	    test.write("        des_%s(n_%s, " % (type, nam))
+	    if rtype != crtype:
+	        test.write("(%s)" % rtype)
+	    test.write("%s, %d);\n" % (nam, i))
 	i = i + 1;
 
     test.write("        xmlResetLastError();\n");

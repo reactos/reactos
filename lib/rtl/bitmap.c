@@ -440,12 +440,12 @@ NTAPI
 RtlClearBit(PRTL_BITMAP BitMapHeader,
             ULONG BitNumber)
 {
-    PULONG Ptr;
+    PUCHAR Ptr;
 
     if (BitNumber >= BitMapHeader->SizeOfBitMap) return;
 
-    Ptr = (PULONG)BitMapHeader->Buffer + (BitNumber / 32);
-    *Ptr &= ~(1 << (BitNumber % 32));
+    Ptr = (PUCHAR)BitMapHeader->Buffer + (BitNumber / 8);
+    *Ptr &= ~(1 << (BitNumber % 8));
 }
 
 /*
@@ -457,7 +457,7 @@ RtlClearBits(IN PRTL_BITMAP BitMapHeader,
              IN ULONG StartingIndex,
              IN ULONG NumberToClear)
 {
- LPBYTE lpOut;
+  LPBYTE lpOut;
 
   if (!BitMapHeader || !NumberToClear ||
       StartingIndex >= BitMapHeader->SizeOfBitMap ||
@@ -540,12 +540,6 @@ RtlFindClearBits(PRTL_BITMAP BitMapHeader,
   return ~0U;
 }
 
-
-
-
-
-
-
 /*
  * @implemented
  */
@@ -557,7 +551,6 @@ RtlFindClearRuns(PRTL_BITMAP BitMapHeader,
 {
     return NTDLL_FindRuns(BitMapHeader, RunArray, SizeOfRunArray, LocateLongestRuns, NTDLL_FindClearRun);
 }
-
 
 /*
  * @unimplemented
@@ -658,7 +651,8 @@ ULONG NTAPI
 RtlFindLongestRunClear(PRTL_BITMAP BitMapHeader,
 		       PULONG StartingIndex)
 {
-  RTL_BITMAP_RUN br;
+  /* GCC complaints that it may be used uninitialized */
+  RTL_BITMAP_RUN br = { 0, 0 };
 
   if (RtlFindClearRuns(BitMapHeader, &br, 1, TRUE) == 1)
   {
@@ -677,7 +671,8 @@ ULONG NTAPI
 RtlFindLongestRunSet(PRTL_BITMAP BitMapHeader,
 		     PULONG StartingIndex)
 {
-  RTL_BITMAP_RUN br;
+  /* GCC complaints that it may be used uninitialized */
+  RTL_BITMAP_RUN br = { 0, 0 };
 
   if (NTDLL_FindRuns(BitMapHeader, &br, 1, TRUE, NTDLL_FindSetRun) == 1)
   {
@@ -745,9 +740,6 @@ RtlFindSetBitsAndClear(PRTL_BITMAP BitMapHeader,
 }
 
 
-
-
-
 /*
  * @implemented
  */
@@ -772,9 +764,12 @@ RtlNumberOfSetBits(PRTL_BITMAP BitMapHeader)
       lpOut++;
     }
 
-    bMasked = *lpOut & NTDLL_maskBits[ulRemainder];
-    ulSet += NTDLL_nibbleBitCount[bMasked >> 4];
-    ulSet += NTDLL_nibbleBitCount[bMasked & 0xf];
+    if (ulRemainder)
+    {
+      bMasked = *lpOut & NTDLL_maskBits[ulRemainder];
+      ulSet += NTDLL_nibbleBitCount[bMasked >> 4];
+      ulSet += NTDLL_nibbleBitCount[bMasked & 0xf];
+    }
   }
   return ulSet;
 }
@@ -797,14 +792,14 @@ VOID NTAPI
 RtlSetBit(PRTL_BITMAP BitMapHeader,
 	  ULONG BitNumber)
 {
-  PULONG Ptr;
+  PUCHAR Ptr;
 
   if (BitNumber >= BitMapHeader->SizeOfBitMap)
     return;
 
-  Ptr = (PULONG)BitMapHeader->Buffer + (BitNumber / 32);
+  Ptr = (PUCHAR)BitMapHeader->Buffer + (BitNumber / 8);
 
-  *Ptr |= (1 << (BitNumber % 32));
+  *Ptr |= (1 << (BitNumber % 8));
 }
 
 
@@ -856,7 +851,8 @@ RtlSetBits(PRTL_BITMAP BitMapHeader,
   }
 
   /* Set remaining bits, if any */
-  *lpOut |= NTDLL_maskBits[NumberToSet & 0x7];
+  if (NumberToSet & 0x7)
+    *lpOut |= NTDLL_maskBits[NumberToSet & 0x7];
 }
 
 

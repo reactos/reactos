@@ -13,8 +13,8 @@ import sys
 import string
 import time
 
-webpage = "http://www.unicode.org/Public/4.0-Update1/UCD-4.0.1d5b.html"
-sources = "Blocks-4.0.1d1b.txt UnicodeData-4.0.1d1b.txt"
+webpage = "http://www.unicode.org/Public/4.0-Update1/UCD-4.0.1.html"
+sources = "Blocks-4.0.1.txt UnicodeData-4.0.1.txt"
 
 #
 # blockAliases is a small hack - it is used for mapping block names which
@@ -227,6 +227,8 @@ header.write(
 
 #include <libxml/xmlversion.h>
 
+#ifdef LIBXML_UNICODE_ENABLED
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -310,7 +312,7 @@ for name in ckeys:
       (low, high) = range
       if high < 0x10000:
         if numshort == 0:
-          pline = "static xmlChSRange xml%sS[] = {" % name
+          pline = "static const xmlChSRange xml%sS[] = {" % name
           sptr = "xml%sS" % name
         else:
           pline += ", "
@@ -319,7 +321,7 @@ for name in ckeys:
         if numlong == 0:
           if numshort > 0:
             output.write(pline + " };\n")
-          pline = "static xmlChLRange xml%sL[] = {" % name
+          pline = "static const xmlChLRange xml%sL[] = {" % name
           lptr = "xml%sL" % name
         else:
           pline += ", "
@@ -333,8 +335,8 @@ for name in ckeys:
 
 
 output.write(
-"""xmlUnicodeNameTable xmlUnicodeBlockTbl = {xmlUnicodeBlocks, %s};
-xmlUnicodeNameTable xmlUnicodeCatTbl = {xmlUnicodeCats, %s};
+"""static xmlUnicodeNameTable xmlUnicodeBlockTbl = {xmlUnicodeBlocks, %s};
+static xmlUnicodeNameTable xmlUnicodeCatTbl = {xmlUnicodeCats, %s};
 
 /**
  * xmlUnicodeLookup:
@@ -349,6 +351,8 @@ static xmlIntFunc
 *xmlUnicodeLookup(xmlUnicodeNameTable *tptr, const char *tname) {
     int low, high, mid, cmp;
     xmlUnicodeRange *sptr;
+
+    if ((tptr == NULL) || (tname == NULL)) return(NULL);
 
     low = 0;
     high = tptr->numentries - 1;
@@ -455,7 +459,8 @@ xmlUCSIsCat(int code, const char *cat) {
     return (func(code));
 }
 
-
+#define bottom_xmlunicode
+#include "elfgcchack.h"
 #endif /* LIBXML_UNICODE_ENABLED */
 """)
 
@@ -463,6 +468,9 @@ header.write("""
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* LIBXML_UNICODE_ENABLED */
+
 #endif /* __XML_UNICODE_H__ */
 """);
 

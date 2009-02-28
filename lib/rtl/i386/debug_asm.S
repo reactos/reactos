@@ -67,13 +67,11 @@ _DebugService@20:
     /* Setup the stack */
     push ebp
     mov ebp, esp
-
+ 
     /* Save the registers */
-    push ecx
     push ebx
     push edi
-    push edx
-
+ 
     /* Call the Interrupt */
     mov eax, [ebp+8]
     mov ecx, [ebp+12]
@@ -82,14 +80,12 @@ _DebugService@20:
     mov edi, [ebp+24]
     int 0x2D
     int 3
-
+ 
     /* Restore registers */
-    pop edx
     pop edi
     pop ebx
-    pop ecx
-
+ 
     /* Return */
-    leave
+    pop ebp
     ret 20
 .endfunc

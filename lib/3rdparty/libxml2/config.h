@@ -227,7 +227,7 @@
 #define HAVE_SYS_TIMEB_H 1
 
 /* Define to 1 if you have the <sys/time.h> header file. */
-#define HAVE_SYS_TIME_H 1
+//#define HAVE_SYS_TIME_H 1
 
 /* Define to 1 if you have the <sys/types.h> header file. */
 #define HAVE_SYS_TYPES_H 1
@@ -298,5 +298,6 @@
 /* ss_family is not defined here, use __ss_family instead */
 /* #undef ss_family */
 
-/* Win32 Std C name mangling work-around */
+#if !defined(__MINGW32__) || defined(__NO_ISOCEXT)
 #define vsnprintf _vsnprintf
+#endif

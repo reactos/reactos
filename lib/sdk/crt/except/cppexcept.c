@@ -23,20 +23,11 @@
  * www.thecodeproject.com.
  */
 
-#include "wine/config.h"
-#include "wine/port.h"
-
+#define __WINE_DEBUG_CHANNEL__
+#include <precomp.h>
 #include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "winreg.h"
-#include "winternl.h"
 #include <internal/wine/msvcrt.h>
-#include "wine/exception.h"
-#include "excpt.h"
-#include "wine/debug.h"
-
 #include <internal/wine/cppexcept.h>
 
 #ifdef __i386__  /* CxxFrameHandler is not supported on non-i386 */
@@ -114,6 +105,7 @@ static void dump_exception_type( const cxx_exception_type *type )
 
 static void dump_function_descr( const cxx_function_descr *descr )
 {
+#ifndef WINE_NO_TRACE_MSGS
     UINT i;
     int j;
 
@@ -131,6 +123,7 @@ static void dump_function_descr( const cxx_function_descr *descr )
                  descr->tryblock[i].start_level, descr->tryblock[i].end_level,
                  descr->tryblock[i].catch_level, descr->tryblock[i].catchblock,
                  descr->tryblock[i].catchblock_count );
+
         for (j = 0; j < descr->tryblock[i].catchblock_count; j++)
         {
             const catchblock_info *ptr = &descr->tryblock[i].catchblock[j];
@@ -139,6 +132,7 @@ static void dump_function_descr( const cxx_function_descr *descr )
                      ptr->type_info, dbgstr_type_info( ptr->type_info ) );
         }
     }
+#endif
 }
 
 /* check if the exception type is caught by a given catch block, and return the type that matched */
@@ -328,7 +322,7 @@ static inline void call_catch_block( PEXCEPTION_RECORD rec, cxx_exception_frame 
 
             /* setup an exception block for nested exceptions */
 
-            nested_frame.frame.Handler = (PEXCEPTION_HANDLER)catch_function_nested_handler;
+            nested_frame.frame.Handler = (PEXCEPTION_ROUTINE)catch_function_nested_handler;
             nested_frame.prev_rec  = thread_data->exc_record;
             nested_frame.cxx_frame = frame;
             nested_frame.descr     = descr;

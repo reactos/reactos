@@ -438,7 +438,7 @@ static void TestGetSetDateAPI()
     log_verbose("\nTesting if the function ucal_setTimeZone() works fine\n");
     ucal_setMillis(caldef2, d2, &status); 
     if(U_FAILURE(status)){
-        log_err("Error in getMillis : %s\n", u_errorName(status));;
+        log_err("Error in getMillis : %s\n", u_errorName(status));
     }
     hour=ucal_get(caldef2, UCAL_HOUR_OF_DAY, &status);
         
@@ -735,7 +735,7 @@ static void TestAddRollExtensive()
     tzID=(UChar*)malloc(sizeof(UChar) * 4);
     u_uastrcpy(tzID, "PST");
     /*open the calendar used */
-    cal=ucal_open(tzID, u_strlen(tzID), "en_US", UCAL_GREGORIAN, &status);;
+    cal=ucal_open(tzID, u_strlen(tzID), "en_US", UCAL_GREGORIAN, &status);
     if (U_FAILURE(status)) {
         log_err("ucal_open() failed : %s\n", u_errorName(status)); 
         return; 
@@ -895,7 +895,7 @@ static void TestGetLimits()
     tzID=(UChar*)malloc(sizeof(UChar) * 4);
     u_uastrcpy(tzID, "PST");
     /*open the calendar used */
-    cal=ucal_open(tzID, u_strlen(tzID), "en_US", UCAL_GREGORIAN, &status);;
+    cal=ucal_open(tzID, u_strlen(tzID), "en_US", UCAL_GREGORIAN, &status);
     if (U_FAILURE(status)) {
         log_err("ucal_open() for gregorian calendar failed in TestGetLimits: %s\n", u_errorName(status));
         return; 
@@ -995,7 +995,7 @@ static void TestDOWProgression()
     tzID=(UChar*)malloc(sizeof(UChar) * 4);
     u_strcpy(tzID, fgGMTID);
     /*open the calendar used */
-    cal=ucal_open(tzID, u_strlen(tzID), "en_US", UCAL_TRADITIONAL, &status);;
+    cal=ucal_open(tzID, u_strlen(tzID), "en_US", UCAL_TRADITIONAL, &status);
     if (U_FAILURE(status)) {
         log_err("ucal_open failed: %s\n", u_errorName(status));
         return; 
@@ -1071,7 +1071,7 @@ static void testZones(int32_t yr, int32_t mo, int32_t dt, int32_t hr, int32_t mn
 
     tzID=(UChar*)malloc(sizeof(UChar) * 4);
     u_strcpy(tzID, fgGMTID);
-    gmtcal=ucal_open(tzID, 3, "en_US", UCAL_TRADITIONAL, &status);;
+    gmtcal=ucal_open(tzID, 3, "en_US", UCAL_TRADITIONAL, &status);
     if (U_FAILURE(status)) {
         log_err("ucal_open failed: %s\n", u_errorName(status)); 
         return; 

@@ -1314,7 +1314,7 @@ UnicodeString::cloneArrayIfNeeded(int32_t newCapacity,
    */
   if(forceClone ||
      fFlags & kBufferIsReadonly ||
-     fFlags & kRefCounted && refCount() > 1 ||
+     (fFlags & kRefCounted && refCount() > 1) ||
      newCapacity > fCapacity
   ) {
     // save old values
@@ -1330,7 +1330,7 @@ UnicodeString::cloneArrayIfNeeded(int32_t newCapacity,
 
     // allocate a new array
     if(allocate(growCapacity) ||
-       newCapacity < growCapacity && allocate(newCapacity)
+       (newCapacity < growCapacity && allocate(newCapacity))
     ) {
       if(doCopyArray) {
         // copy the contents
@@ -1377,7 +1377,7 @@ The vector deleting destructor is already a part of UObject,
 but defining it here makes sure that it is included with this object file.
 This makes sure that static library dependencies are kept to a minimum.
 */
-static void uprv_UnicodeStringDummy(void) {
+/* static */ void uprv_UnicodeStringDummy(void) {
     U_NAMESPACE_USE
     delete [] (new UnicodeString[2]);
 }

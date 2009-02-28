@@ -9,7 +9,7 @@
 #define NDEBUG
 #include <debug.h>
 
-static PHCELL __inline CMAPI
+static __inline PHCELL CMAPI
 HvpGetCellHeader(
    PHHIVE RegistryHive,
    HCELL_INDEX CellIndex)
@@ -74,7 +74,7 @@ HvGetCell(
    return (PVOID)(HvpGetCellHeader(RegistryHive, CellIndex) + 1);
 }
 
-static LONG __inline CMAPI
+static __inline LONG CMAPI
 HvpGetCellFullSize(
    PHHIVE RegistryHive,
    PVOID Cell)
@@ -124,6 +124,8 @@ BOOLEAN CMAPI
 HvIsCellDirty(IN PHHIVE Hive,
               IN HCELL_INDEX Cell)
 {
+   BOOLEAN IsDirty = FALSE;
+
    /* Sanity checks */
    ASSERT(Hive->ReadOnly == FALSE);
 
@@ -132,10 +134,14 @@ HvIsCellDirty(IN PHHIVE Hive,
       return TRUE;
 
    /* Check if the dirty bit is set */
-   return RtlCheckBit(&Hive->DirtyVector, Cell / HV_BLOCK_SIZE);
+   if (RtlCheckBit(&Hive->DirtyVector, Cell / HV_BLOCK_SIZE))
+       IsDirty = TRUE;
+
+   /* Return result as boolean*/
+   return IsDirty;
 }
 
-static ULONG __inline CMAPI
+static __inline ULONG CMAPI
 HvpComputeFreeListIndex(
    ULONG Size)
 {
@@ -418,7 +424,7 @@ HvReallocateCell(
     * FIXME: Merge with adjacent free cell if possible.
     * FIXME: Implement shrinking.
     */
-   if (Size > OldCellSize)
+   if (Size > (ULONG)OldCellSize)
    {
       NewCellIndex = HvAllocateCell(RegistryHive, Size, Storage, HCELL_NIL);
       if (NewCellIndex == HCELL_NIL)

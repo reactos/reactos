@@ -1,6 +1,6 @@
 /*************************************************************************
  *
- * $Id: trionan.h,v 1.6 2003/08/06 04:43:53 wbrack Exp $
+ * $Id: trionan.h 2026 2003-08-06 04:43:55Z wbrack $
  *
  * Copyright (C) 2001 Bjorn Reese <breese@users.sourceforge.net>
  *
@@ -46,7 +46,7 @@ TRIO_PUBLIC double trio_pinf TRIO_PROTO((void));
  * Return negative infinity.
  */
 TRIO_PUBLIC double trio_ninf TRIO_PROTO((void));
-
+  
 /*
  * Return negative zero.
  */

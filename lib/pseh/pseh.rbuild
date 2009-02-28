@@ -4,6 +4,8 @@
 	<if property="ARCH" value="i386">
 		<directory name="i386">
 			<file>framebased.S</file>
+			<file>framebased-gcchack.c</file>
+			<file>framebased-gcchack-asm.S</file>
 		</directory>
 	</if>
 	<if property="ARCH" value="powerpc">

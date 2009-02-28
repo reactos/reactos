@@ -15,6 +15,13 @@
 
 /* FUNCTIONS ***************************************************************/
 
+VOID
+SwapSplayLinks(PRTL_SPLAY_LINKS LinkA,
+               PRTL_SPLAY_LINKS LinkB)
+{
+    DPRINT1("UNIMPLEMENTED!\n");
+}
+
 /*
  * @implemented
  */
@@ -32,15 +39,14 @@ RtlDelete(PRTL_SPLAY_LINKS Links)
         SP = RtlSubtreePredecessor(N);
 
         /* Swap it with N, this will guarantee that N will have only a child */
-        //SwapSplayLinks(SP, N);
-        DPRINT1("UNIMPLEMENTED!\n");
+        SwapSplayLinks(SP, N);
     }
 
     /* Check if we have no children */
     if (!(RtlLeftChild(N)) && !(RtlRightChild(N)))
     {
         /* If we are also the root, then the tree is gone */
-        return NULL;
+        if (RtlIsRoot(N)) return NULL;
 
         /* Get our parent */
         P = RtlParent(N);
@@ -103,12 +109,10 @@ RtlDelete(PRTL_SPLAY_LINKS Links)
 */
 VOID
 NTAPI
-RtlDeleteNoSplay (
-	PRTL_SPLAY_LINKS Links,
-	PRTL_SPLAY_LINKS *Root
-	)
+RtlDeleteNoSplay(PRTL_SPLAY_LINKS Links,
+                 PRTL_SPLAY_LINKS *Root)
 {
-	UNIMPLEMENTED;
+    UNIMPLEMENTED;
 }
 
 /*
@@ -508,8 +512,8 @@ RtlSplay(PRTL_SPLAY_LINKS Links)
         }
     }
 
-	/* Return the root entry */
-	return N;
+    /* Return the root entry */
+    return N;
 }
 
 /*

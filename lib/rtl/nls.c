@@ -144,13 +144,12 @@ RtlInitCodePageTable(IN PUSHORT TableBase,
                      OUT PCPTABLEINFO CodePageTable)
 {
    PNLS_FILE_HEADER NlsFileHeader;
-   PUSHORT Ptr;
-   USHORT Offset;
 
    DPRINT("RtlInitCodePageTable() called\n");
 
    NlsFileHeader = (PNLS_FILE_HEADER)TableBase;
 
+   /* Copy header fields first */
    CodePageTable->CodePage = NlsFileHeader->CodePage;
    CodePageTable->MaximumCharacterSize = NlsFileHeader->MaximumCharacterSize;
    CodePageTable->DefaultChar = NlsFileHeader->DefaultChar;
@@ -162,35 +161,30 @@ RtlInitCodePageTable(IN PUSHORT TableBase,
                  &NlsFileHeader->LeadByte,
                  MAXIMUM_LEADBYTES);
 
-   /* Set Pointer to start of multi byte table */
-   Ptr = (PUSHORT)((ULONG_PTR)TableBase + 2 * NlsFileHeader->HeaderSize);
+   /* Offset to wide char table is after the header */
+   CodePageTable->WideCharTable = TableBase + NlsFileHeader->HeaderSize + 1 +
+                                  TableBase[NlsFileHeader->HeaderSize];
 
-   /* Get offset to the wide char table */
-   Offset = (USHORT)(*Ptr++) + NlsFileHeader->HeaderSize + 1;
+   /* Then multibyte table (256 wchars) follows */
+   CodePageTable->MultiByteTable = TableBase + NlsFileHeader->HeaderSize + 1;
 
-   /* Set pointer to the multi byte table */
-   CodePageTable->MultiByteTable = Ptr;
+   /* Check the presence of glyph table (256 wchars) */
+   if (!CodePageTable->MultiByteTable[256])
+      CodePageTable->DBCSRanges = CodePageTable->MultiByteTable + 256 + 1;
+   else
+      CodePageTable->DBCSRanges = CodePageTable->MultiByteTable + 256 + 1 + 256;
 
-   /* Skip ANSI and OEM table */
-   Ptr += 256;
-   if (*Ptr++)
-      Ptr += 256;
-
-   /* Set pointer to DBCS ranges */
-   CodePageTable->DBCSRanges = (PUSHORT)Ptr;
-
-   if (*Ptr > 0)
+   /* Is this double-byte code page? */
+   if (*CodePageTable->DBCSRanges)
    {
       CodePageTable->DBCSCodePage = 1;
-      CodePageTable->DBCSOffsets = (PUSHORT)++Ptr;
+      CodePageTable->DBCSOffsets = CodePageTable->DBCSRanges + 1;
    }
    else
    {
       CodePageTable->DBCSCodePage = 0;
-      CodePageTable->DBCSOffsets = 0;
+      CodePageTable->DBCSOffsets = NULL;
    }
-
-   CodePageTable->WideCharTable = (PVOID)((ULONG_PTR)TableBase + 2 * Offset);
 }
 
 
@@ -366,7 +360,7 @@ RtlOemToUnicodeN (PWCHAR UnicodeString,
 
       for (i = 0; i < Size; i++)
       {
-         *UnicodeString = NlsOemToUnicodeTable[(INT)*OemString];
+         *UnicodeString = NlsOemToUnicodeTable[(UCHAR)*OemString];
          UnicodeString++;
          OemString++;
       }

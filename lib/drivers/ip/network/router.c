@@ -51,7 +51,7 @@ VOID FreeFIB(
  *     Object = Pointer to an forward information base structure
  */
 {
-    PoolFreeBuffer(Object);
+    exFreePool(Object);
 }
 
 
@@ -213,7 +213,7 @@ PFIB_ENTRY RouterAddRoute(
 			       A2S(Netmask),
 			       A2S(&Router->Address)));
 
-    FIBE = PoolAllocateBuffer(sizeof(FIB_ENTRY));
+    FIBE = exAllocatePool(NonPagedPool, sizeof(FIB_ENTRY));
     if (!FIBE) {
         TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
         return NULL;
@@ -390,7 +390,7 @@ NTSTATUS RouterRemoveRoute(PIP_ADDRESS Target, PIP_ADDRESS Router)
 
     TI_DbgPrint(DEBUG_ROUTER, ("Leaving\n"));
 
-    return Found ? STATUS_NO_SUCH_FILE : STATUS_SUCCESS;
+    return Found ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
 }
 
 

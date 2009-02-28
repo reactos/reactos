@@ -15,6 +15,8 @@
 #define NDEBUG
 #include <debug.h>
 
+#include <wine/unicode.h>
+
 /* GLOBALS *******************************************************************/
 
 extern BOOLEAN NlsMbCodePageTag;
@@ -229,56 +231,56 @@ RtlCharToInteger(
     char bMinus = 0;
 
     while (*str != '\0' && *str <= ' ') {
-	str++;
+    str++;
     } /* while */
 
     if (*str == '+') {
-	str++;
+    str++;
     } else if (*str == '-') {
-	bMinus = 1;
-	str++;
+    bMinus = 1;
+    str++;
     } /* if */
 
     if (base == 0) {
-	base = 10;
-	if (str[0] == '0') {
-	    if (str[1] == 'b') {
-		str += 2;
-		base = 2;
-	    } else if (str[1] == 'o') {
-		str += 2;
-		base = 8;
-	    } else if (str[1] == 'x') {
-		str += 2;
-		base = 16;
-	    } /* if */
-	} /* if */
+    base = 10;
+    if (str[0] == '0') {
+        if (str[1] == 'b') {
+        str += 2;
+        base = 2;
+        } else if (str[1] == 'o') {
+        str += 2;
+        base = 8;
+        } else if (str[1] == 'x') {
+        str += 2;
+        base = 16;
+        } /* if */
+    } /* if */
     } else if (base != 2 && base != 8 && base != 10 && base != 16) {
-	return STATUS_INVALID_PARAMETER;
+    return STATUS_INVALID_PARAMETER;
     } /* if */
 
     if (value == NULL) {
-	return STATUS_ACCESS_VIOLATION;
+    return STATUS_ACCESS_VIOLATION;
     } /* if */
 
     while (*str != '\0') {
-	chCurrent = *str;
-	if (chCurrent >= '0' && chCurrent <= '9') {
-	    digit = chCurrent - '0';
-	} else if (chCurrent >= 'A' && chCurrent <= 'Z') {
-	    digit = chCurrent - 'A' + 10;
-	} else if (chCurrent >= 'a' && chCurrent <= 'z') {
-	    digit = chCurrent - 'a' + 10;
-	} else {
-	    digit = -1;
-	} /* if */
-	if (digit < 0 || digit >= (int)base) {
-	    *value = bMinus ? -RunningTotal : RunningTotal;
-	    return STATUS_SUCCESS;
-	} /* if */
+    chCurrent = *str;
+    if (chCurrent >= '0' && chCurrent <= '9') {
+        digit = chCurrent - '0';
+    } else if (chCurrent >= 'A' && chCurrent <= 'Z') {
+        digit = chCurrent - 'A' + 10;
+    } else if (chCurrent >= 'a' && chCurrent <= 'z') {
+        digit = chCurrent - 'a' + 10;
+    } else {
+        digit = -1;
+    } /* if */
+    if (digit < 0 || digit >= (int)base) {
+        *value = bMinus ? -RunningTotal : RunningTotal;
+        return STATUS_SUCCESS;
+    } /* if */
 
-	RunningTotal = RunningTotal * base + digit;
-	str++;
+    RunningTotal = RunningTotal * base + digit;
+    str++;
     } /* while */
 
     *value = bMinus ? -RunningTotal : RunningTotal;
@@ -546,34 +548,34 @@ NTSTATUS NTAPI RtlIntegerToChar(
     ULONG len;
 
     if (base == 0) {
-	base = 10;
+    base = 10;
     } else if (base != 2 && base != 8 && base != 10 && base != 16) {
-	return STATUS_INVALID_PARAMETER;
+    return STATUS_INVALID_PARAMETER;
     } /* if */
 
     pos = &buffer[32];
     *pos = '\0';
 
     do {
-	pos--;
-	digit = value % base;
-	value = value / base;
-	if (digit < 10) {
-	    *pos = '0' + digit;
-	} else {
-	    *pos = 'A' + digit - 10;
-	} /* if */
+    pos--;
+    digit = value % base;
+    value = value / base;
+    if (digit < 10) {
+        *pos = '0' + digit;
+    } else {
+        *pos = 'A' + digit - 10;
+    } /* if */
     } while (value != 0L);
 
     len = &buffer[32] - pos;
     if (len > length) {
-	return STATUS_BUFFER_OVERFLOW;
+    return STATUS_BUFFER_OVERFLOW;
     } else if (str == NULL) {
-	return STATUS_ACCESS_VIOLATION;
+    return STATUS_ACCESS_VIOLATION;
     } else if (len == length) {
-	memcpy(str, pos, len);
+    memcpy(str, pos, len);
     } else {
-	memcpy(str, pos, len + 1);
+    memcpy(str, pos, len + 1);
     } /* if */
     return STATUS_SUCCESS;
 }
@@ -800,65 +802,65 @@ RtlUnicodeStringToInteger(const UNICODE_STRING *str, /* [I] Unicode string to be
     char bMinus = 0;
 
     while (CharsRemaining >= 1 && *lpwstr <= ' ') {
-	lpwstr++;
-	CharsRemaining--;
+    lpwstr++;
+    CharsRemaining--;
     } /* while */
 
     if (CharsRemaining >= 1) {
-	if (*lpwstr == '+') {
-	    lpwstr++;
-	    CharsRemaining--;
-	} else if (*lpwstr == '-') {
-	    bMinus = 1;
-	    lpwstr++;
-	    CharsRemaining--;
-	} /* if */
+    if (*lpwstr == '+') {
+        lpwstr++;
+        CharsRemaining--;
+    } else if (*lpwstr == '-') {
+        bMinus = 1;
+        lpwstr++;
+        CharsRemaining--;
+    } /* if */
     } /* if */
 
     if (base == 0) {
-	base = 10;
-	if (CharsRemaining >= 2 && lpwstr[0] == '0') {
-	    if (lpwstr[1] == 'b') {
-		lpwstr += 2;
-		CharsRemaining -= 2;
-		base = 2;
-	    } else if (lpwstr[1] == 'o') {
-		lpwstr += 2;
-		CharsRemaining -= 2;
-		base = 8;
-	    } else if (lpwstr[1] == 'x') {
-		lpwstr += 2;
-		CharsRemaining -= 2;
-		base = 16;
-	    } /* if */
-	} /* if */
+    base = 10;
+    if (CharsRemaining >= 2 && lpwstr[0] == '0') {
+        if (lpwstr[1] == 'b') {
+        lpwstr += 2;
+        CharsRemaining -= 2;
+        base = 2;
+        } else if (lpwstr[1] == 'o') {
+        lpwstr += 2;
+        CharsRemaining -= 2;
+        base = 8;
+        } else if (lpwstr[1] == 'x') {
+        lpwstr += 2;
+        CharsRemaining -= 2;
+        base = 16;
+        } /* if */
+    } /* if */
     } else if (base != 2 && base != 8 && base != 10 && base != 16) {
-	return STATUS_INVALID_PARAMETER;
+    return STATUS_INVALID_PARAMETER;
     } /* if */
 
     if (value == NULL) {
-	return STATUS_ACCESS_VIOLATION;
+    return STATUS_ACCESS_VIOLATION;
     } /* if */
 
     while (CharsRemaining >= 1) {
-	wchCurrent = *lpwstr;
-	if (wchCurrent >= '0' && wchCurrent <= '9') {
-	    digit = wchCurrent - '0';
-	} else if (wchCurrent >= 'A' && wchCurrent <= 'Z') {
-	    digit = wchCurrent - 'A' + 10;
-	} else if (wchCurrent >= 'a' && wchCurrent <= 'z') {
-	    digit = wchCurrent - 'a' + 10;
-	} else {
-	    digit = -1;
-	} /* if */
-	if (digit < 0 || digit >= base) {
-	    *value = bMinus ? -RunningTotal : RunningTotal;
-	    return STATUS_SUCCESS;
-	} /* if */
+    wchCurrent = *lpwstr;
+    if (wchCurrent >= '0' && wchCurrent <= '9') {
+        digit = wchCurrent - '0';
+    } else if (wchCurrent >= 'A' && wchCurrent <= 'Z') {
+        digit = wchCurrent - 'A' + 10;
+    } else if (wchCurrent >= 'a' && wchCurrent <= 'z') {
+        digit = wchCurrent - 'a' + 10;
+    } else {
+        digit = -1;
+    } /* if */
+    if (digit < 0 || digit >= base) {
+        *value = bMinus ? -RunningTotal : RunningTotal;
+        return STATUS_SUCCESS;
+    } /* if */
 
-	RunningTotal = RunningTotal * base + digit;
-	lpwstr++;
-	CharsRemaining--;
+    RunningTotal = RunningTotal * base + digit;
+    lpwstr++;
+    CharsRemaining--;
     } /* while */
 
     *value = bMinus ? -RunningTotal : RunningTotal;
@@ -1057,12 +1059,14 @@ RtlUnicodeStringToOemString(
  */
 BOOLEAN
 NTAPI
-RtlIsTextUnicode( LPCVOID buf, INT len, INT *pf )
+RtlIsTextUnicode( PVOID buf, INT len, INT *pf )
 {
+    static const WCHAR std_control_chars[] = {'\r','\n','\t',' ',0x3000,0};
+    static const WCHAR byterev_control_chars[] = {0x0d00,0x0a00,0x0900,0x2000,0};
     const WCHAR *s = buf;
     int i;
     unsigned int flags = ~0U, out_flags = 0;
-    
+
     if (len < sizeof(WCHAR))
     {
         /* FIXME: MSDN documents IS_TEXT_UNICODE_BUFFER_TOO_SMALL but there is no such thing... */
@@ -1077,21 +1081,21 @@ RtlIsTextUnicode( LPCVOID buf, INT len, INT *pf )
      * the output flags. But some of the tests are mutually
      * exclusive, so I don't see how you could pass all tests ...
      */
-    
+
     /* Check for an odd length ... pass if even. */
     if (len & 1) out_flags |= IS_TEXT_UNICODE_ODD_LENGTH;
-    
+
     if (((char *)buf)[len - 1] == 0)
         len--;  /* Windows seems to do something like that to avoid e.g. false IS_TEXT_UNICODE_NULL_BYTES  */
-    
+
     len /= sizeof(WCHAR);
     /* Windows only checks the first 256 characters */
     if (len > 256) len = 256;
-    
+
     /* Check for the special byte order unicode marks. */
     if (*s == 0xFEFF) out_flags |= IS_TEXT_UNICODE_SIGNATURE;
     if (*s == 0xFFFE) out_flags |= IS_TEXT_UNICODE_REVERSE_SIGNATURE;
-    
+
     /* apply some statistical analysis */
     if (flags & IS_TEXT_UNICODE_STATISTICS)
     {
@@ -1104,7 +1108,7 @@ RtlIsTextUnicode( LPCVOID buf, INT len, INT *pf )
         if (stats > len / 2)
             out_flags |= IS_TEXT_UNICODE_STATISTICS;
     }
-    
+
     /* Check for unicode NULL chars */
     if (flags & IS_TEXT_UNICODE_NULL_BYTES)
     {
@@ -1117,7 +1121,31 @@ RtlIsTextUnicode( LPCVOID buf, INT len, INT *pf )
             }
         }
     }
-    
+
+    if (flags & IS_TEXT_UNICODE_CONTROLS)
+    {
+        for (i = 0; i < len; i++)
+        {
+            if (strchrW(std_control_chars, s[i]))
+            {
+                out_flags |= IS_TEXT_UNICODE_CONTROLS;
+                break;
+            }
+        }
+    }
+
+    if (flags & IS_TEXT_UNICODE_REVERSE_CONTROLS)
+    {
+        for (i = 0; i < len; i++)
+        {
+            if (strchrW(byterev_control_chars, s[i]))
+            {
+                out_flags |= IS_TEXT_UNICODE_REVERSE_CONTROLS;
+                break;
+            }
+        }
+    }
+
     if (pf)
     {
         out_flags &= *pf;
@@ -1154,29 +1182,35 @@ RtlOemStringToCountedUnicodeString(
 
     PAGED_CODE_RTL();
 
+    /* Calculate size of the string */
     Length = RtlOemStringToCountedUnicodeSize(OemSource);
 
+    /* If it's 0 then zero out dest string and return */
     if (!Length)
     {
         RtlZeroMemory(UniDest, sizeof(UNICODE_STRING));
         return STATUS_SUCCESS;
     }
 
+    /* Check if length is a sane value */
     if (Length > MAXUSHORT) return STATUS_INVALID_PARAMETER_2;
 
+    /* Store it in dest string */
     UniDest->Length = (USHORT)Length;
 
+    /* If we're asked to alloc the string - do so */
     if (AllocateDestinationString)
     {
         UniDest->Buffer = RtlpAllocateStringMemory(Length, TAG_USTR);
         UniDest->MaximumLength = Length;
         if (!UniDest->Buffer) return STATUS_NO_MEMORY;
     }
-    else if (UniDest->Length >= UniDest->MaximumLength)
+    else if (UniDest->Length > UniDest->MaximumLength)
     {
         return STATUS_BUFFER_OVERFLOW;
     }
 
+    /* Do the conversion */
     Status = RtlOemToUnicodeN(UniDest->Buffer,
                               UniDest->Length,
                               &Index,
@@ -1185,6 +1219,7 @@ RtlOemStringToCountedUnicodeString(
 
     if (!NT_SUCCESS(Status) && AllocateDestinationString)
     {
+        /* Conversion failed, free dest string and return status code */
         RtlpFreeStringMemory(UniDest->Buffer, TAG_USTR);
         UniDest->Buffer = NULL;
         return Status;
@@ -1464,38 +1499,47 @@ RtlUnicodeStringToCountedOemString(
 
     PAGED_CODE_RTL();
 
+    /* Calculate size of the string */
     Length = RtlUnicodeStringToCountedOemSize(UniSource);
 
+    /* If it's 0 then zero out dest string and return */
     if (!Length)
     {
         RtlZeroMemory(OemDest, sizeof(OEM_STRING));
+        return STATUS_SUCCESS;
     }
 
+    /* Check if length is a sane value */
     if (Length > MAXUSHORT) return STATUS_INVALID_PARAMETER_2;
 
+    /* Store it in dest string */
     OemDest->Length = (USHORT)Length;
 
+    /* If we're asked to alloc the string - do so */
     if (AllocateDestinationString)
     {
         OemDest->Buffer = RtlpAllocateStringMemory(Length, TAG_OSTR);
         OemDest->MaximumLength = Length;
         if (!OemDest->Buffer) return STATUS_NO_MEMORY;
     }
-    else if (OemDest->Length >= OemDest->MaximumLength)
+    else if (OemDest->Length > OemDest->MaximumLength)
     {
         return STATUS_BUFFER_OVERFLOW;
     }
 
+    /* Do the conversion */
     Status = RtlUnicodeToOemN(OemDest->Buffer,
                               OemDest->Length,
                               &Index,
                               UniSource->Buffer,
                               UniSource->Length);
 
-    /* FIXME: Special check needed and return STATUS_UNMAPPABLE_CHARACTER */
+    /* FIXME: Check if everything mapped correctly and
+     * return STATUS_UNMAPPABLE_CHARACTER */
 
     if (!NT_SUCCESS(Status) && AllocateDestinationString)
     {
+        /* Conversion failed, free dest string and return status code */
         RtlpFreeStringMemory(OemDest->Buffer, TAG_OSTR);
         OemDest->Buffer = NULL;
         return Status;
@@ -1515,56 +1559,67 @@ RtlLargeIntegerToChar(
    IN ULONG  Length,
    IN OUT PCHAR  String)
 {
-   NTSTATUS Status = STATUS_SUCCESS;
-   ULONG Radix;
-   CHAR  temp[65];
-   ULONGLONG v = Value->QuadPart;
-   ULONG i;
-   PCHAR tp;
-   PCHAR sp;
+    ULONGLONG Val = Value->QuadPart;
+    NTSTATUS Status = STATUS_SUCCESS;
+    CHAR Buffer[65];
+    CHAR Digit;
+    ULONG Len;
+    PCHAR Pos;
 
-   Radix = Base;
-   if (Radix == 0)
-      Radix = 10;
+    if (Base == 0) Base = 10;
 
-   if ((Radix != 2) && (Radix != 8) &&
-         (Radix != 10) && (Radix != 16))
-      return STATUS_INVALID_PARAMETER;
+    if ((Base != 2) && (Base != 8) &&
+        (Base != 10) && (Base != 16))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
 
-   tp = temp;
-   while (v || tp == temp)
-   {
-      i = v % Radix;
-      v = v / Radix;
-      if (i < 10)
-         *tp = i + '0';
-      else
-         *tp = i + 'A' - 10;
-      tp++;
-   }
+    Pos = &Buffer[64];
+    *Pos = '\0';
 
-   if ((ULONG)((ULONG_PTR)tp - (ULONG_PTR)temp) > Length)
-      return STATUS_BUFFER_OVERFLOW;
+    do
+    {
+        Pos--;
+        Digit = Val % Base;
+        Val = Val / Base;
+        if (Digit < 10)
+            *Pos = '0' + Digit;
+        else
+            *Pos = 'A' + Digit - 10;
+    }
+    while (Val != 0L);
 
-   //_SEH_TRY
-   {
-      sp = String;
-      while (tp > temp)
-         *sp++ = *--tp;
+    Len = &Buffer[64] - Pos;
 
-      if((ULONG)((ULONG_PTR)sp - (ULONG_PTR)String) < Length)
-         *sp = 0;
-   }
-#if 0
-   _SEH_HANDLE
-   {
-      /* Get the error code */
-      Status = _SEH_GetExceptionCode();
-   }
-   _SEH_END;
+    if (Len > Length)
+        return STATUS_BUFFER_OVERFLOW;
+
+#if 1 /* It needs to be removed, when will probably use SEH in rtl */
+    if (String == NULL)
+    {
+        return STATUS_ACCESS_VIOLATION;
+    }
 #endif
 
-   return Status;
+#if 0
+    _SEH2_TRY
+    {
+#endif
+        if (Len == Length)
+            RtlCopyMemory(String, Pos, Len);
+        else
+            RtlCopyMemory(String, Pos, Len + 1);
+#if 0
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        /* Get the error code */
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+#endif
+
+    return Status;
 }
 
 /*
@@ -2233,4 +2288,92 @@ RtlValidateUnicodeString(IN ULONG Flags,
   }
 }
 
-/* EOF */
+NTSTATUS
+NTAPI
+RtlFindCharInUnicodeString(IN ULONG Flags,
+                           IN PUNICODE_STRING SearchString,
+                           IN PCUNICODE_STRING MatchString,
+                           OUT PUSHORT Position)
+{
+    int main_idx;
+    unsigned int search_idx;
+
+    switch (Flags)
+    {
+        case 0:
+        {
+            for (main_idx = 0; main_idx < SearchString->Length / sizeof(WCHAR); main_idx++)
+            {
+                for (search_idx = 0; search_idx < MatchString->Length / sizeof(WCHAR); search_idx++)
+                {
+                    if (SearchString->Buffer[main_idx] == MatchString->Buffer[search_idx])
+                    {
+                        *Position = (main_idx + 1) * sizeof(WCHAR);
+                        return STATUS_SUCCESS;
+                    }
+                }
+            }
+            *Position = 0;
+            return STATUS_NOT_FOUND;
+        }
+
+        case 1:
+        {
+            for (main_idx = SearchString->Length / sizeof(WCHAR) - 1; main_idx >= 0; main_idx--)
+            {
+                for (search_idx = 0; search_idx < MatchString->Length / sizeof(WCHAR); search_idx++)
+                {
+                    if (SearchString->Buffer[main_idx] == MatchString->Buffer[search_idx])
+                    {
+                        *Position = main_idx * sizeof(WCHAR);
+                        return STATUS_SUCCESS;
+                    }
+                }
+            }
+            *Position = 0;
+            return STATUS_NOT_FOUND;
+        }
+
+        case 2:
+        {
+            for (main_idx = 0; main_idx < SearchString->Length / sizeof(WCHAR); main_idx++)
+            {
+                search_idx = 0;
+                while (search_idx < MatchString->Length / sizeof(WCHAR) &&
+                       SearchString->Buffer[main_idx] != MatchString->Buffer[search_idx])
+                {
+                    search_idx++;
+                }
+                if (search_idx >= MatchString->Length / sizeof(WCHAR))
+                {
+                    *Position = (main_idx + 1) * sizeof(WCHAR);
+                    return STATUS_SUCCESS;
+                }
+            }
+            *Position = 0;
+            return STATUS_NOT_FOUND;
+        }
+
+        case 3:
+        {
+            for (main_idx = SearchString->Length / sizeof(WCHAR) - 1; main_idx >= 0; main_idx--)
+            {
+                search_idx = 0;
+                while (search_idx < MatchString->Length / sizeof(WCHAR) &&
+                       SearchString->Buffer[main_idx] != MatchString->Buffer[search_idx])
+                {
+                    search_idx++;
+                }
+                if (search_idx >= MatchString->Length / sizeof(WCHAR))
+                {
+                    *Position = main_idx * sizeof(WCHAR);
+                    return STATUS_SUCCESS;
+                }
+            }
+            *Position = 0;
+            return STATUS_NOT_FOUND;
+        }
+    } /* switch */
+
+    return STATUS_NOT_FOUND;
+}

@@ -16,9 +16,12 @@ VOID DGRemoveIRP(
 {
     PLIST_ENTRY ListEntry;
     PDATAGRAM_RECEIVE_REQUEST ReceiveRequest;
+    KIRQL OldIrql;
 
     TI_DbgPrint(MAX_TRACE, ("Called (Cancel IRP %08x for file %08x).\n",
                             Irp, AddrFile));
+
+    KeAcquireSpinLock(&AddrFile->Lock, &OldIrql);
 
     for( ListEntry = AddrFile->ReceiveQueue.Flink; 
          ListEntry != &AddrFile->ReceiveQueue;
@@ -36,6 +39,8 @@ VOID DGRemoveIRP(
             break;
         }
     }
+
+    KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
 
     TI_DbgPrint(MAX_TRACE, ("Done.\n"));
 }
@@ -254,6 +259,9 @@ NTSTATUS DGReceiveDatagram(
             {
 		ReceiveRequest->RemotePort    = 0;
             }
+
+	    IoMarkIrpPending(Irp);
+
 	    ReceiveRequest->ReturnInfo = ReturnInfo;
 	    ReceiveRequest->Buffer = BufferData;
 	    ReceiveRequest->BufferSize = ReceiveLength;

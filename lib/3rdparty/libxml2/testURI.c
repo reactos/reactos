@@ -18,6 +18,7 @@
 
 static const char *base = NULL;
 static int escape = 0;
+static int debug = 0;
 
 static void handleURI(const char *str) {
     int ret;
@@ -31,6 +32,19 @@ static void handleURI(const char *str) {
 	if (ret != 0)
 	    printf("%s : error %d\n", str, ret);
 	else {
+	    if (debug) {
+	        if (uri->scheme) printf("scheme: %s\n", uri->scheme);
+	        if (uri->opaque) printf("opaque: %s\n", uri->opaque);
+	        if (uri->authority) printf("authority: %s\n", uri->authority);
+	        if (uri->server) printf("server: %s\n", uri->server);
+	        if (uri->user) printf("user: %s\n", uri->user);
+	        if (uri->port != 0) printf("port: %d\n", uri->port);
+	        if (uri->path) printf("path: %s\n", uri->path);
+	        if (uri->query) printf("query: %s\n", uri->query);
+	        if (uri->fragment) printf("fragment: %s\n", uri->fragment);
+	        if (uri->query_raw) printf("query_raw: %s\n", uri->query_raw);
+	        if (uri->cleanup != 0) printf("cleanup\n");
+	    }
 	    xmlNormalizeURIPath(uri->path);
 	    if (escape != 0) {
 		parsed = xmlSaveUri(uri);
@@ -71,6 +85,11 @@ int main(int argc, char **argv) {
 	((!strcmp(argv[arg], "-escape")) || (!strcmp(argv[arg], "--escape")))) {
 	arg++;
 	escape++;
+    }
+    if ((argc > arg) && (argv[arg] != NULL) &&
+	((!strcmp(argv[arg], "-debug")) || (!strcmp(argv[arg], "--debug")))) {
+	arg++;
+	debug++;
     }
     if (argv[arg] == NULL) {
 	char str[1024];

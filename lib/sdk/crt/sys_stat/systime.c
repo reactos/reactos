@@ -19,6 +19,8 @@ unsigned int _getsystime(struct tm* tp)
 {
     SYSTEMTIME Time;
     int i;
+    DWORD TimeZoneId;
+    TIME_ZONE_INFORMATION TimeZoneInformation;
 
     GetLocalTime(&Time);
 
@@ -32,14 +34,12 @@ unsigned int _getsystime(struct tm* tp)
 
     tp->tm_isdst = -1;
 
-    //FIXME GetTimeZoneInformation currently not in kernel32
-
-    //TimeZoneId =  GetTimeZoneInformation(&TimeZoneInformation );
-    //if ( TimeZoneId == TIME_ZONE_ID_DAYLIGHT ) {
-    //  tp->tm_isdst = 1;
-    //}
-    //else
-    //  tp->tm_isdst = 0;
+    TimeZoneId =  GetTimeZoneInformation(&TimeZoneInformation);
+    if (TimeZoneId == TIME_ZONE_ID_DAYLIGHT){
+      tp->tm_isdst = 1;
+    }
+    else
+      tp->tm_isdst = 0;
 
     if (tp->tm_year % 4 == 0) {
         if (tp->tm_year % 100 != 0)

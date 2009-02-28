@@ -1,6 +1,6 @@
 /*************************************************************************
  *
- * $Id: triop.h,v 1.5 2003/04/03 15:28:28 veillard Exp $
+ * $Id: triop.h 1886 2003-04-03 15:28:28Z veillard $
  *
  * Copyright (C) 2000 Bjorn Reese and Daniel Stenberg.
  *

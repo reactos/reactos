@@ -36,11 +36,14 @@
 #include <cmfuncs.h>
 
 ULONG
-__cdecl
-DbgPrint(
-    IN PCCH  Format,
-    IN ...
-);
+NTAPI
+vDbgPrintExWithPrefix(
+  IN LPCSTR Prefix,
+  IN ULONG ComponentId,
+  IN ULONG Level,
+  IN LPCSTR Format,
+  IN va_list ap);
+
 
 static const char * const debug_classes[] = { "fixme", "err", "warn", "trace" };
 
@@ -185,7 +188,7 @@ static void debug_init(void)
     char *wine_debug;
     DWORD dwLength;
     /* GetEnvironmentVariableA will change LastError! */
-    DWORD LastError = GetLastError(); 
+    DWORD LastError = GetLastError();
 
     if (nb_debug_options != -1) return;  /* already initialized */
     nb_debug_options = 0;
@@ -255,7 +258,7 @@ int wine_dbg_log( enum __wine_debug_class cls, struct __wine_debug_channel *chan
 static char *get_temp_buffer( size_t size )
 {
     static char *list[32];
-    static long pos;
+    static LONG pos;
     char *ret;
     int idx;
 
@@ -275,7 +278,7 @@ static void release_temp_buffer( char *buffer, size_t size )
 /* default implementation of wine_dbgstr_an */
 static const char *default_dbgstr_an( const char *str, int n )
 {
-    static const char hex[16] = "0123456789abcdef";
+    static const char hex[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
     char *dst, *res;
     size_t size;
 
@@ -387,10 +390,7 @@ static const char *default_dbgstr_wn( const WCHAR *str, int n )
 /* default implementation of wine_dbg_vprintf */
 static int default_dbg_vprintf( const char *format, va_list args )
 {
-    char buffer[512];
-    vsnprintf( buffer, sizeof(buffer), format, args );
-    buffer[sizeof(buffer) - 1] = '\0';
-    return DbgPrint( "%s", buffer );
+    return vDbgPrintExWithPrefix("", -1, 0, format, args);
 }
 
 

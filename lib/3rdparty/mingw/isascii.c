@@ -13,6 +13,10 @@
 
 #include <ctype.h>
 
+#ifdef isascii
+#undef isascii
+#endif
+
 int
 isascii (int c)
 {

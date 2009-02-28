@@ -3,7 +3,7 @@
  *
  * Reference:
  *   http://www.w3.org/TR/2001/REC-xmlschema-1-20010502/
- *   to some extent
+ *   to some extent 
  *   http://www.w3.org/TR/1999/REC-xml-19991116
  *
  * See Copyright for the status of this software.
@@ -20,7 +20,7 @@
  *   and indicating we are on / (the document node), probably need
  *   something similar for .
  * - get rid of the "compile" starting with lowercase
- * - get rid of the Strdup/Strndup in case of dictionary
+ * - DONE (2006-05-16): get rid of the Strdup/Strndup in case of dictionary
  */
 
 #define IN_LIBXML
@@ -46,19 +46,42 @@
 #define XML_STREAM_STEP_FINAL	2
 #define XML_STREAM_STEP_ROOT	4
 #define XML_STREAM_STEP_ATTR	8
+#define XML_STREAM_STEP_NODE	16
+#define XML_STREAM_STEP_IN_SET	32
 
 /*
-* TODO: This is used on _xmlStreamCtxt, so don't use any values
-* from xmlPatternFlags.
+* NOTE: Those private flags (XML_STREAM_xxx) are used
+*   in _xmlStreamCtxt->flag. They extend the public
+*   xmlPatternFlags, so be carefull not to interfere with the
+*   reserved values for xmlPatternFlags. 
 */
+#define XML_STREAM_FINAL_IS_ANY_NODE 1<<14
+#define XML_STREAM_FROM_ROOT 1<<15
 #define XML_STREAM_DESC 1<<16
+
+/*
+* XML_STREAM_ANY_NODE is used for comparison against
+* xmlElementType enums, to indicate a node of any type.
+*/
+#define XML_STREAM_ANY_NODE 100
 
 #define XML_PATTERN_NOTPATTERN  (XML_PATTERN_XPATH | \
 				 XML_PATTERN_XSSEL | \
 				 XML_PATTERN_XSFIELD)
 
-#define XML_STREAM_XS_IDC(item) (item->flags & \
+#define XML_STREAM_XS_IDC(c) ((c)->flags & \
     (XML_PATTERN_XSSEL | XML_PATTERN_XSFIELD))
+
+#define XML_STREAM_XS_IDC_SEL(c) ((c)->flags & XML_PATTERN_XSSEL)
+
+#define XML_STREAM_XS_IDC_FIELD(c) ((c)->flags & XML_PATTERN_XSFIELD)
+
+#define XML_PAT_COPY_NSNAME(c, r, nsname) \
+    if ((c)->comp->dict) \
+	r = (xmlChar *) xmlDictLookup((c)->comp->dict, BAD_CAST nsname, -1); \
+    else r = xmlStrdup(BAD_CAST nsname);
+
+#define XML_PAT_FREE_STRING(c, r) if ((c)->comp->dict == NULL) xmlFree(r);
 
 typedef struct _xmlStreamStep xmlStreamStep;
 typedef xmlStreamStep *xmlStreamStepPtr;
@@ -66,6 +89,7 @@ struct _xmlStreamStep {
     int flags;			/* properties of that step */
     const xmlChar *name;	/* first string value if NULL accept all */
     const xmlChar *ns;		/* second string value */
+    int nodeType;		/* type of node */
 };
 
 typedef struct _xmlStreamComp xmlStreamComp;
@@ -128,7 +152,7 @@ typedef xmlStepOp *xmlStepOpPtr;
 struct _xmlStepOp {
     xmlPatOp op;
     const xmlChar *value;
-    const xmlChar *value2;
+    const xmlChar *value2; /* The namespace name */
 };
 
 #define PAT_FROM_ROOT	(1<<8)
@@ -139,7 +163,7 @@ struct _xmlPattern {
     xmlDictPtr dict;		/* the optional dictionary */
     struct _xmlPattern *next;	/* next pattern if | is used */
     const xmlChar *pattern;	/* the pattern */
-    xmlPatternFlags flags;	/* flags */
+    int flags;			/* flags */
     int nbStep;
     int maxStep;
     xmlStepOpPtr steps;        /* ops for computation */
@@ -154,7 +178,7 @@ struct _xmlPatParserContext {
     int	           error;		/* error code */
     xmlDictPtr     dict;		/* the dictionary if any */
     xmlPatternPtr  comp;		/* the result */
-    xmlNodePtr     elem;		/* the current node if any */
+    xmlNodePtr     elem;		/* the current node if any */    
     const xmlChar **namespaces;		/* the namespaces definitions */
     int   nb_namespaces;		/* the number of namespaces */
 };
@@ -299,7 +323,7 @@ xmlNewPatParserContext(const xmlChar *pattern, xmlDictPtr dict,
 static void
 xmlFreePatParserContext(xmlPatParserContextPtr ctxt) {
     if (ctxt == NULL)
-	return;
+	return;    
     memset(ctxt, -1, sizeof(xmlPatParserContext));
     xmlFree(ctxt);
 }
@@ -607,8 +631,6 @@ restart:
 		    goto rollback;
 		node = node->parent;
 		while (node != NULL) {
-		    if (node == NULL)
-			goto rollback;
 		    if ((node->type == XML_ELEMENT_NODE) &&
 			(step->value[0] == node->name[0]) &&
 			(xmlStrEqual(step->value, node->name))) {
@@ -690,6 +712,7 @@ rollback:
 #define CUR (*ctxt->cur)
 #define SKIP(val) ctxt->cur += (val)
 #define NXT(val) ctxt->cur[(val)]
+#define PEEKPREV(val) ctxt->cur[-(val)]
 #define CUR_PTR ctxt->cur
 
 #define SKIP_BLANKS 							\
@@ -742,7 +765,10 @@ xmlPatScanLiteral(xmlPatParserContextPtr ctxt) {
 	    ctxt->error = 1;
 	    return(NULL);
 	} else {
-	    ret = xmlStrndup(q, cur - q);
+	    if (ctxt->dict)
+		ret = (xmlChar *) xmlDictLookup(ctxt->dict, q, cur - q);
+	    else
+		ret = xmlStrndup(q, cur - q);	    
         }
 	cur += len;
 	CUR_PTR = cur;
@@ -758,7 +784,10 @@ xmlPatScanLiteral(xmlPatParserContextPtr ctxt) {
 	    ctxt->error = 1;
 	    return(NULL);
 	} else {
-	    ret = xmlStrndup(q, cur - q);
+	    if (ctxt->dict)
+		ret = (xmlChar *) xmlDictLookup(ctxt->dict, q, cur - q);
+	    else
+		ret = xmlStrndup(q, cur - q);	    
         }
 	cur += len;
 	CUR_PTR = cur;
@@ -775,7 +804,7 @@ xmlPatScanLiteral(xmlPatParserContextPtr ctxt) {
  * xmlPatScanName:
  * @ctxt:  the XPath Parser context
  *
- * [4] NameChar ::= Letter | Digit | '.' | '-' | '_' |
+ * [4] NameChar ::= Letter | Digit | '.' | '-' | '_' | 
  *                  CombiningChar | Extender
  *
  * [5] Name ::= (Letter | '_' | ':') (NameChar)*
@@ -800,13 +829,16 @@ xmlPatScanName(xmlPatParserContextPtr ctxt) {
 
     while ((IS_LETTER(val)) || (IS_DIGIT(val)) ||
            (val == '.') || (val == '-') ||
-	   (val == '_') ||
+	   (val == '_') || 
 	   (IS_COMBINING(val)) ||
 	   (IS_EXTENDER(val))) {
 	cur += len;
 	val = xmlStringCurrentChar(NULL, cur, &len);
     }
-    ret = xmlStrndup(q, cur - q);
+    if (ctxt->dict)
+	ret = (xmlChar *) xmlDictLookup(ctxt->dict, q, cur - q);
+    else
+	ret = xmlStrndup(q, cur - q);    
     CUR_PTR = cur;
     return(ret);
 }
@@ -841,7 +873,10 @@ xmlPatScanNCName(xmlPatParserContextPtr ctxt) {
 	cur += len;
 	val = xmlStringCurrentChar(NULL, cur, &len);
     }
-    ret = xmlStrndup(q, cur - q);
+    if (ctxt->dict)
+	ret = (xmlChar *) xmlDictLookup(ctxt->dict, q, cur - q);
+    else
+	ret = xmlStrndup(q, cur - q);
     CUR_PTR = cur;
     return(ret);
 }
@@ -883,7 +918,8 @@ xmlCompileAttributeTest(xmlPatParserContextPtr ctxt) {
     xmlChar *token = NULL;
     xmlChar *name = NULL;
     xmlChar *URL = NULL;
-
+    
+    SKIP_BLANKS;
     name = xmlPatScanNCName(ctxt);
     if (name == NULL) {
 	if (CUR == '*') {
@@ -899,27 +935,41 @@ xmlCompileAttributeTest(xmlPatParserContextPtr ctxt) {
     if (CUR == ':') {
 	int i;
 	xmlChar *prefix = name;
-
+	
 	NEXT;
+
+	if (IS_BLANK_CH(CUR)) {	    
+	    ERROR5(NULL, NULL, NULL, "Invalid QName.\n", NULL);
+	    XML_PAT_FREE_STRING(ctxt, prefix);
+	    ctxt->error = 1;
+	    goto error;
+	}
 	/*
 	* This is a namespace match
 	*/
 	token = xmlPatScanName(ctxt);
-	for (i = 0;i < ctxt->nb_namespaces;i++) {
-	    if (xmlStrEqual(ctxt->namespaces[2 * i + 1], prefix)) {
-		URL = xmlStrdup(ctxt->namespaces[2 * i]);
-		break;
+	if ((prefix[0] == 'x') &&
+	    (prefix[1] == 'm') &&
+	    (prefix[2] == 'l') &&
+	    (prefix[3] == 0))
+	{
+	    XML_PAT_COPY_NSNAME(ctxt, URL, XML_XML_NAMESPACE);	    
+	} else {
+	    for (i = 0;i < ctxt->nb_namespaces;i++) {
+		if (xmlStrEqual(ctxt->namespaces[2 * i + 1], prefix)) {
+		    XML_PAT_COPY_NSNAME(ctxt, URL, ctxt->namespaces[2 * i])		    
+		    break;
+		}
+	    }
+	    if (i >= ctxt->nb_namespaces) {
+		ERROR5(NULL, NULL, NULL,
+		    "xmlCompileAttributeTest : no namespace bound to prefix %s\n",
+		    prefix);
+		ctxt->error = 1;	    
+		goto error;
 	    }
 	}
-	if (i >= ctxt->nb_namespaces) {
-	    ERROR5(NULL, NULL, NULL,
-		"xmlCompileAttributeTest : no namespace bound to prefix %s\n",
-		prefix);
-	    ctxt->error = 1;
-	    goto error;
-	}
-
-	xmlFree(prefix);
+	XML_PAT_FREE_STRING(ctxt, prefix);
 	if (token == NULL) {
 	    if (CUR == '*') {
 		NEXT;
@@ -929,7 +979,7 @@ xmlCompileAttributeTest(xmlPatParserContextPtr ctxt) {
 		    "xmlCompileAttributeTest : Name expected\n");
 		ctxt->error = 1;
 		goto error;
-	    }
+	    }	    
 	} else {
 	    PUSH(XML_OP_ATTR, token, URL);
 	}
@@ -939,11 +989,10 @@ xmlCompileAttributeTest(xmlPatParserContextPtr ctxt) {
     return;
 error:
     if (URL != NULL)
-	xmlFree(URL);
+	XML_PAT_FREE_STRING(ctxt, URL)	
     if (token != NULL)
-	xmlFree(token);
+	XML_PAT_FREE_STRING(ctxt, token);
 }
-
 
 /**
  * xmlCompileStepPattern:
@@ -953,7 +1002,7 @@ error:
  * form suitable for fast matching.
  *
  * [3]    Step    ::=    '.' | NameTest
- * [4]    NameTest    ::=    QName | '*' | NCName ':' '*'
+ * [4]    NameTest    ::=    QName | '*' | NCName ':' '*' 
  */
 
 static void
@@ -961,11 +1010,31 @@ xmlCompileStepPattern(xmlPatParserContextPtr ctxt) {
     xmlChar *token = NULL;
     xmlChar *name = NULL;
     xmlChar *URL = NULL;
+    int hasBlanks = 0;
 
     SKIP_BLANKS;
     if (CUR == '.') {
+	/*
+	* Context node.
+	*/
 	NEXT;
 	PUSH(XML_OP_ELEM, NULL, NULL);
+	return;
+    }
+    if (CUR == '@') {
+	/*
+	* Attribute test.
+	*/
+	if (XML_STREAM_XS_IDC_SEL(ctxt->comp)) {
+	    ERROR5(NULL, NULL, NULL,
+		"Unexpected attribute axis in '%s'.\n", ctxt->base);
+	    ctxt->error = 1;
+	    return;
+	}
+	NEXT;
+	xmlCompileAttributeTest(ctxt);
+	if (ctxt->error != 0) 
+	    goto error;
 	return;
     }
     name = xmlPatScanNCName(ctxt);
@@ -974,12 +1043,6 @@ xmlCompileStepPattern(xmlPatParserContextPtr ctxt) {
 	    NEXT;
 	    PUSH(XML_OP_ALL, NULL, NULL);
 	    return;
-	} else if (CUR == '@') {
-	    NEXT;
-	    xmlCompileAttributeTest(ctxt);
-	    if (ctxt->error != 0)
-		goto error;
-	    return;
 	} else {
 	    ERROR(NULL, NULL, NULL,
 		    "xmlCompileStepPattern : Name expected\n");
@@ -987,31 +1050,48 @@ xmlCompileStepPattern(xmlPatParserContextPtr ctxt) {
 	    return;
 	}
     }
-    SKIP_BLANKS;
+    if (IS_BLANK_CH(CUR)) {
+	hasBlanks = 1;
+	SKIP_BLANKS;
+    }
     if (CUR == ':') {
 	NEXT;
 	if (CUR != ':') {
 	    xmlChar *prefix = name;
-	    int i;
+	    int i;	    
 
+	    if (hasBlanks || IS_BLANK_CH(CUR)) {
+		ERROR5(NULL, NULL, NULL, "Invalid QName.\n", NULL);
+		ctxt->error = 1;
+		goto error;
+	    }
 	    /*
 	     * This is a namespace match
 	     */
 	    token = xmlPatScanName(ctxt);
-	    for (i = 0;i < ctxt->nb_namespaces;i++) {
-	        if (xmlStrEqual(ctxt->namespaces[2 * i + 1], prefix)) {
-		    URL = xmlStrdup(ctxt->namespaces[2 * i]);
-		    break;
+	    if ((prefix[0] == 'x') &&
+		(prefix[1] == 'm') &&
+		(prefix[2] == 'l') &&
+		(prefix[3] == 0))
+	    {
+		XML_PAT_COPY_NSNAME(ctxt, URL, XML_XML_NAMESPACE)
+	    } else {
+		for (i = 0;i < ctxt->nb_namespaces;i++) {
+		    if (xmlStrEqual(ctxt->namespaces[2 * i + 1], prefix)) {
+			XML_PAT_COPY_NSNAME(ctxt, URL, ctxt->namespaces[2 * i])
+			break;
+		    }
+		}
+		if (i >= ctxt->nb_namespaces) {
+		    ERROR5(NULL, NULL, NULL,
+			"xmlCompileStepPattern : no namespace bound to prefix %s\n",
+			prefix);
+		    ctxt->error = 1;
+		    goto error;
 		}
 	    }
-	    if (i >= ctxt->nb_namespaces) {
-		ERROR5(NULL, NULL, NULL,
-		    "xmlCompileStepPattern : no namespace bound to prefix %s\n",
-		    prefix);
-		ctxt->error = 1;
-		goto error;
-	    }
-	    xmlFree(prefix);
+	    XML_PAT_FREE_STRING(ctxt, prefix);
+	    name = NULL;
 	    if (token == NULL) {
 		if (CUR == '*') {
 		    NEXT;
@@ -1027,8 +1107,8 @@ xmlCompileStepPattern(xmlPatParserContextPtr ctxt) {
 	    }
 	} else {
 	    NEXT;
-	    if (xmlStrEqual(name, (const xmlChar *) "child")) {
-		xmlFree(name);
+	    if (xmlStrEqual(name, (const xmlChar *) "child")) {		
+		XML_PAT_FREE_STRING(ctxt, name);
 		name = xmlPatScanName(ctxt);
 		if (name == NULL) {
 		    if (CUR == '*') {
@@ -1045,26 +1125,40 @@ xmlCompileStepPattern(xmlPatParserContextPtr ctxt) {
 		if (CUR == ':') {
 		    xmlChar *prefix = name;
 		    int i;
-
+		    
 		    NEXT;
+		    if (IS_BLANK_CH(CUR)) {
+			ERROR5(NULL, NULL, NULL, "Invalid QName.\n", NULL);
+			ctxt->error = 1;
+			goto error;
+		    }
 		    /*
 		    * This is a namespace match
 		    */
 		    token = xmlPatScanName(ctxt);
-		    for (i = 0;i < ctxt->nb_namespaces;i++) {
-			if (xmlStrEqual(ctxt->namespaces[2 * i + 1], prefix)) {
-			    URL = xmlStrdup(ctxt->namespaces[2 * i]);
-			    break;
+		    if ((prefix[0] == 'x') &&
+			(prefix[1] == 'm') &&
+			(prefix[2] == 'l') &&
+			(prefix[3] == 0))
+		    {
+			XML_PAT_COPY_NSNAME(ctxt, URL, XML_XML_NAMESPACE)			
+		    } else {
+			for (i = 0;i < ctxt->nb_namespaces;i++) {
+			    if (xmlStrEqual(ctxt->namespaces[2 * i + 1], prefix)) {
+				XML_PAT_COPY_NSNAME(ctxt, URL, ctxt->namespaces[2 * i])				
+				break;
+			    }
+			}
+			if (i >= ctxt->nb_namespaces) {
+			    ERROR5(NULL, NULL, NULL,
+				"xmlCompileStepPattern : no namespace bound "
+				"to prefix %s\n", prefix);
+			    ctxt->error = 1;
+			    goto error;
 			}
 		    }
-		    if (i >= ctxt->nb_namespaces) {
-			ERROR5(NULL, NULL, NULL,
-			    "xmlCompileStepPattern : no namespace bound "
-			    	"to prefix %s\n", prefix);
-			ctxt->error = 1;
-			goto error;
-		    }
-		    xmlFree(prefix);
+		    XML_PAT_FREE_STRING(ctxt, prefix);
+		    name = NULL;
 		    if (token == NULL) {
 			if (CUR == '*') {
 			    NEXT;
@@ -1082,19 +1176,24 @@ xmlCompileStepPattern(xmlPatParserContextPtr ctxt) {
 		    PUSH(XML_OP_CHILD, name, NULL);
 		return;
 	    } else if (xmlStrEqual(name, (const xmlChar *) "attribute")) {
-		xmlFree(name);
+		XML_PAT_FREE_STRING(ctxt, name)
 		name = NULL;
+		if (XML_STREAM_XS_IDC_SEL(ctxt->comp)) {
+		    ERROR5(NULL, NULL, NULL,
+			"Unexpected attribute axis in '%s'.\n", ctxt->base);
+		    ctxt->error = 1;
+		    goto error;
+		}
 		xmlCompileAttributeTest(ctxt);
 		if (ctxt->error != 0)
 		    goto error;
 		return;
 	    } else {
-		ERROR(NULL, NULL, NULL,
-		    "xmlCompileStepPattern : 'child' or 'attribute' expected\n");
+		ERROR5(NULL, NULL, NULL,
+		    "The 'element' or 'attribute' axis is expected.\n", NULL);
 		ctxt->error = 1;
 		goto error;
-	    }
-	    /* NOT REACHED xmlFree(name); */
+	    }	    
 	}
     } else if (CUR == '*') {
         if (name != NULL) {
@@ -1104,20 +1203,16 @@ xmlCompileStepPattern(xmlPatParserContextPtr ctxt) {
 	NEXT;
 	PUSH(XML_OP_ALL, token, NULL);
     } else {
-	if (name == NULL) {
-	    ctxt->error = 1;
-	    goto error;
-	}
 	PUSH(XML_OP_ELEM, name, NULL);
     }
     return;
 error:
     if (URL != NULL)
-	xmlFree(URL);
+	XML_PAT_FREE_STRING(ctxt, URL)	
     if (token != NULL)
-	xmlFree(token);
+	XML_PAT_FREE_STRING(ctxt, token)
     if (name != NULL)
-	xmlFree(name);
+	XML_PAT_FREE_STRING(ctxt, name)
 }
 
 /**
@@ -1127,7 +1222,7 @@ error:
  * Compile the Path Pattern and generates a precompiled
  * form suitable for fast matching.
  *
- * [5]    Path    ::=    ('.//')? ( Step '/' )* ( Step | '@' NameTest )
+ * [5]    Path    ::=    ('.//')? ( Step '/' )* ( Step | '@' NameTest ) 
  */
 static void
 xmlCompilePathPattern(xmlPatParserContextPtr ctxt) {
@@ -1137,7 +1232,7 @@ xmlCompilePathPattern(xmlPatParserContextPtr ctxt) {
     } else if ((CUR == '.') || (ctxt->comp->flags & XML_PATTERN_NOTPATTERN)) {
         ctxt->comp->flags |= PAT_FROM_CUR;
     }
-
+	
     if ((CUR == '/') && (NXT(1) == '/')) {
 	PUSH(XML_OP_ANCESTOR, NULL, NULL);
 	NEXT;
@@ -1147,20 +1242,41 @@ xmlCompilePathPattern(xmlPatParserContextPtr ctxt) {
 	NEXT;
 	NEXT;
 	NEXT;
+	/* Check for incompleteness. */
+	SKIP_BLANKS;
+	if (CUR == 0) {
+	    ERROR5(NULL, NULL, NULL,
+	       "Incomplete expression '%s'.\n", ctxt->base);
+	    ctxt->error = 1;
+	    goto error;
+	}
     }
     if (CUR == '@') {
 	NEXT;
 	xmlCompileAttributeTest(ctxt);
 	SKIP_BLANKS;
+	/* TODO: check for incompleteness */
 	if (CUR != 0) {
 	    xmlCompileStepPattern(ctxt);
+	    if (ctxt->error != 0)
+		goto error;
 	}
     } else {
         if (CUR == '/') {
 	    PUSH(XML_OP_ROOT, NULL, NULL);
 	    NEXT;
+	    /* Check for incompleteness. */
+	    SKIP_BLANKS;
+	    if (CUR == 0) {
+		ERROR5(NULL, NULL, NULL,
+		    "Incomplete expression '%s'.\n", ctxt->base);
+		ctxt->error = 1;
+		goto error;
+	    }
 	}
 	xmlCompileStepPattern(ctxt);
+	if (ctxt->error != 0)
+	    goto error;
 	SKIP_BLANKS;
 	while (CUR == '/') {
 	    if (NXT(1) == '/') {
@@ -1169,13 +1285,21 @@ xmlCompilePathPattern(xmlPatParserContextPtr ctxt) {
 		NEXT;
 		SKIP_BLANKS;
 		xmlCompileStepPattern(ctxt);
+		if (ctxt->error != 0)
+		    goto error;
 	    } else {
 	        PUSH(XML_OP_PARENT, NULL, NULL);
 		NEXT;
 		SKIP_BLANKS;
-		if (CUR != 0) {
-		    xmlCompileStepPattern(ctxt);
+		if (CUR == 0) {
+		    ERROR5(NULL, NULL, NULL,
+		    "Incomplete expression '%s'.\n", ctxt->base);
+		    ctxt->error = 1;
+		    goto error;		    
 		}
+		xmlCompileStepPattern(ctxt);
+		if (ctxt->error != 0)
+		    goto error;
 	    }
 	}
     }
@@ -1185,6 +1309,107 @@ xmlCompilePathPattern(xmlPatParserContextPtr ctxt) {
 	ctxt->error = 1;
     }
 error:
+    return;
+}
+
+/**
+ * xmlCompileIDCXPathPath:
+ * @ctxt:  the compilation context
+ *
+ * Compile the Path Pattern and generates a precompiled
+ * form suitable for fast matching.
+ *
+ * [5]    Path    ::=    ('.//')? ( Step '/' )* ( Step | '@' NameTest ) 
+ */
+static void
+xmlCompileIDCXPathPath(xmlPatParserContextPtr ctxt) {
+    SKIP_BLANKS;
+    if (CUR == '/') {
+	ERROR5(NULL, NULL, NULL,
+	    "Unexpected selection of the document root in '%s'.\n",
+	    ctxt->base);
+	goto error;
+    }
+    ctxt->comp->flags |= PAT_FROM_CUR;
+
+    if (CUR == '.') {
+	/* "." - "self::node()" */
+	NEXT;
+	SKIP_BLANKS;
+	if (CUR == 0) {
+	    /*
+	    * Selection of the context node.
+	    */
+	    PUSH(XML_OP_ELEM, NULL, NULL);
+	    return;
+	}
+	if (CUR != '/') {
+	    /* TODO: A more meaningful error message. */
+	    ERROR5(NULL, NULL, NULL,
+	    "Unexpected token after '.' in '%s'.\n", ctxt->base);
+	    goto error;
+	}
+	/* "./" - "self::node()/" */
+	NEXT;
+	SKIP_BLANKS;
+	if (CUR == '/') {
+	    if (IS_BLANK_CH(PEEKPREV(1))) {
+		/*
+		* Disallow "./ /"
+		*/
+		ERROR5(NULL, NULL, NULL,
+		    "Unexpected '/' token in '%s'.\n", ctxt->base);
+		goto error;
+	    }
+	    /* ".//" - "self:node()/descendant-or-self::node()/" */
+	    PUSH(XML_OP_ANCESTOR, NULL, NULL);
+	    NEXT;
+	    SKIP_BLANKS;
+	}
+	if (CUR == 0)
+	    goto error_unfinished;
+    }
+    /*
+    * Process steps.
+    */
+    do {
+	xmlCompileStepPattern(ctxt);
+	if (ctxt->error != 0) 
+	    goto error;
+	SKIP_BLANKS;
+	if (CUR != '/')
+	    break;
+	PUSH(XML_OP_PARENT, NULL, NULL);
+	NEXT;
+	SKIP_BLANKS;
+	if (CUR == '/') {
+	    /*
+	    * Disallow subsequent '//'.
+	    */
+	    ERROR5(NULL, NULL, NULL,
+		"Unexpected subsequent '//' in '%s'.\n",
+		ctxt->base);
+	    goto error;
+	}
+	if (CUR == 0)
+	    goto error_unfinished;
+	
+    } while (CUR != 0);
+
+    if (CUR != 0) {
+	ERROR5(NULL, NULL, NULL,
+	    "Failed to compile expression '%s'.\n", ctxt->base);
+	ctxt->error = 1;
+    }
+    return;
+error:
+    ctxt->error = 1;
+    return;
+
+error_unfinished:
+    ctxt->error = 1;
+    ERROR5(NULL, NULL, NULL,
+	"Unfinished expression '%s'.\n", ctxt->base);    
     return;
 }
 
@@ -1314,7 +1539,7 @@ xmlFreeStreamComp(xmlStreamCompPtr comp) {
  */
 static int
 xmlStreamCompAddStep(xmlStreamCompPtr comp, const xmlChar *name,
-                     const xmlChar *ns, int flags) {
+                     const xmlChar *ns, int nodeType, int flags) {
     xmlStreamStepPtr cur;
 
     if (comp->nbStep >= comp->maxStep) {
@@ -1332,13 +1557,14 @@ xmlStreamCompAddStep(xmlStreamCompPtr comp, const xmlChar *name,
     cur->flags = flags;
     cur->name = name;
     cur->ns = ns;
+    cur->nodeType = nodeType;
     return(comp->nbStep - 1);
 }
 
 /**
  * xmlStreamCompile:
  * @comp: the precompiled pattern
- *
+ * 
  * Tries to stream compile a pattern
  *
  * Returns -1 in case of failure and 0 in case of success.
@@ -1346,7 +1572,8 @@ xmlStreamCompAddStep(xmlStreamCompPtr comp, const xmlChar *name,
 static int
 xmlStreamCompile(xmlPatternPtr comp) {
     xmlStreamCompPtr stream;
-    int i, s = 0, root = 0, flags = 0;
+    int i, s = 0, root = 0, flags = 0, prevs = -1;
+    xmlStepOp step;
 
     if ((comp == NULL) || (comp->steps == NULL))
         return(-1);
@@ -1360,6 +1587,8 @@ xmlStreamCompile(xmlPatternPtr comp) {
 	stream = xmlNewStreamComp(0);
 	if (stream == NULL)
 	    return(-1);
+	/* Note that the stream will have no steps in this case. */
+	stream->flags |= XML_STREAM_FINAL_IS_ANY_NODE;
 	comp->stream = stream;
 	return(0);
     }
@@ -1372,19 +1601,13 @@ xmlStreamCompile(xmlPatternPtr comp) {
 	xmlDictReference(stream->dict);
     }
 
-    /*
-     * Skip leading ./ on relative paths
-     */
-    i = 0;
-    while ((comp->flags & PAT_FROM_CUR) && (comp->nbStep > i + 2) &&
-        (comp->steps[i].op == XML_OP_ELEM) &&
-	(comp->steps[i].value == NULL) &&
-	(comp->steps[i].value2 == NULL) &&
-	(comp->steps[i + 1].op == XML_OP_PARENT)) {
-	i += 2;
-    }
+    i = 0;        
+    if (comp->flags & PAT_FROM_ROOT)
+	stream->flags |= XML_STREAM_FROM_ROOT;
+
     for (;i < comp->nbStep;i++) {
-        switch (comp->steps[i].op) {
+	step = comp->steps[i];
+        switch (step.op) {
 	    case XML_OP_END:
 	        break;
 	    case XML_OP_ROOT:
@@ -1393,51 +1616,95 @@ xmlStreamCompile(xmlPatternPtr comp) {
 		root = 1;
 		break;
 	    case XML_OP_NS:
-		s = xmlStreamCompAddStep(stream, NULL,
-		    comp->steps[i].value, flags);
-		flags = 0;
+		s = xmlStreamCompAddStep(stream, NULL, step.value,
+		    XML_ELEMENT_NODE, flags);		
 		if (s < 0)
 		    goto error;
-		break;
+		prevs = s;
+		flags = 0;		
+		break;	    
 	    case XML_OP_ATTR:
 		flags |= XML_STREAM_STEP_ATTR;
-		s = xmlStreamCompAddStep(stream, comp->steps[i].value,
-		    comp->steps[i].value2, flags);
+		prevs = -1;
+		s = xmlStreamCompAddStep(stream,
+		    step.value, step.value2, XML_ATTRIBUTE_NODE, flags);
 		flags = 0;
 		if (s < 0)
 		    goto error;
 		break;
-	    case XML_OP_ELEM:
-	        if ((comp->steps[i].value == NULL) &&
-		    (comp->steps[i].value2 == NULL) &&
-		    (comp->nbStep > i + 2) &&
-		    (comp->steps[i + 1].op == XML_OP_PARENT)) {
-		    i++;
-		    continue;
-		 }
+	    case XML_OP_ELEM:		
+	        if ((step.value == NULL) && (step.value2 == NULL)) {
+		    /*
+		    * We have a "." or "self::node()" here.
+		    * Eliminate redundant self::node() tests like in "/./."
+		    * or "//./"
+		    * The only case we won't eliminate is "//.", i.e. if
+		    * self::node() is the last node test and we had
+		    * continuation somewhere beforehand.
+		    */
+		    if ((comp->nbStep == i + 1) &&
+			(flags & XML_STREAM_STEP_DESC)) {
+			/*
+			* Mark the special case where the expression resolves
+			* to any type of node.
+			*/
+			if (comp->nbStep == i + 1) {
+			    stream->flags |= XML_STREAM_FINAL_IS_ANY_NODE;
+			}
+			flags |= XML_STREAM_STEP_NODE;			
+			s = xmlStreamCompAddStep(stream, NULL, NULL,
+			    XML_STREAM_ANY_NODE, flags);
+			if (s < 0)
+			    goto error;
+			flags = 0;
+			/*
+			* If there was a previous step, mark it to be added to
+			* the result node-set; this is needed since only
+			* the last step will be marked as "final" and only
+			* "final" nodes are added to the resulting set.
+			*/
+			if (prevs != -1) {
+			    stream->steps[prevs].flags |= XML_STREAM_STEP_IN_SET;
+			    prevs = -1;
+			}
+			break;	
+
+		    } else {
+			/* Just skip this one. */
+			continue;
+		    }
+		}
+		/* An element node. */		
+	        s = xmlStreamCompAddStep(stream, step.value, step.value2,
+		    XML_ELEMENT_NODE, flags);		
+		if (s < 0)
+		    goto error;
+		prevs = s;
+		flags = 0;		
+		break;		
 	    case XML_OP_CHILD:
-	        s = xmlStreamCompAddStep(stream, comp->steps[i].value,
-		                         comp->steps[i].value2, flags);
-		flags = 0;
+		/* An element node child. */
+	        s = xmlStreamCompAddStep(stream, step.value, step.value2,
+		    XML_ELEMENT_NODE, flags);		
 		if (s < 0)
 		    goto error;
-		break;
+		prevs = s;
+		flags = 0;
+		break;	    
 	    case XML_OP_ALL:
-	        s = xmlStreamCompAddStep(stream, NULL, NULL, flags);
-		flags = 0;
+	        s = xmlStreamCompAddStep(stream, NULL, NULL,
+		    XML_ELEMENT_NODE, flags);		
 		if (s < 0)
 		    goto error;
+		prevs = s;
+		flags = 0;
 		break;
-	    case XML_OP_PARENT:
-	        if ((comp->nbStep > i + 1) &&
-		    (comp->steps[i + 1].op == XML_OP_ELEM) &&
-		    (comp->steps[i + 1].value == NULL) &&
-		    (comp->steps[i + 1].value2 == NULL)) {
-		    i++;
-		    continue;
-		 }
+	    case XML_OP_PARENT:	
 	        break;
 	    case XML_OP_ANCESTOR:
+		/* Skip redundant continuations. */
+		if (flags & XML_STREAM_STEP_DESC)
+		    break;
 	        flags |= XML_STREAM_STEP_DESC;
 		/*
 		* Mark the expression as having "//".
@@ -1446,7 +1713,7 @@ xmlStreamCompile(xmlPatternPtr comp) {
 		    stream->flags |= XML_STREAM_DESC;
 		break;
 	}
-    }
+    }    
     if ((! root) && (comp->flags & XML_PATTERN_NOTPATTERN) == 0) {
 	/*
 	* If this should behave like a real pattern, we will mark
@@ -1458,9 +1725,11 @@ xmlStreamCompile(xmlPatternPtr comp) {
 
 	if (stream->nbStep > 0) {
 	    if ((stream->steps[0].flags & XML_STREAM_STEP_DESC) == 0)
-		stream->steps[0].flags |= XML_STREAM_STEP_DESC;
+		stream->steps[0].flags |= XML_STREAM_STEP_DESC;	    
 	}
     }
+    if (stream->nbStep <= s)
+	goto error;
     stream->steps[s].flags |= XML_STREAM_STEP_FINAL;
     if (root)
 	stream->steps[0].flags |= XML_STREAM_STEP_ROOT;
@@ -1583,9 +1852,10 @@ xmlStreamCtxtAddState(xmlStreamCtxtPtr comp, int idx, int level) {
 static int
 xmlStreamPushInternal(xmlStreamCtxtPtr stream,
 		      const xmlChar *name, const xmlChar *ns,
-		      xmlElementType nodeType) {
-    int ret = 0, err = 0, final = 0, tmp, i, m, match, step, desc;
+		      int nodeType) {
+    int ret = 0, err = 0, final = 0, tmp, i, m, match, stepNr, desc;
     xmlStreamCompPtr comp;
+    xmlStreamStep step;
 #ifdef DEBUG_STREAMING
     xmlStreamCtxtPtr orig = stream;
 #endif
@@ -1595,16 +1865,34 @@ xmlStreamPushInternal(xmlStreamCtxtPtr stream,
 
     while (stream != NULL) {
 	comp = stream->comp;
-	if ((name == NULL) && (ns == NULL)) {
+
+	if ((nodeType == XML_ELEMENT_NODE) &&
+	    (name == NULL) && (ns == NULL)) {
+	    /* We have a document node here (or a reset). */
 	    stream->nbState = 0;
 	    stream->level = 0;
 	    stream->blockLevel = -1;
-	    if (comp->steps[0].flags & XML_STREAM_STEP_ROOT) {
-		tmp = xmlStreamCtxtAddState(stream, 0, 0);
-		if (tmp < 0)
-		    err++;
-		if (comp->nbStep == 0)
+	    if (comp->flags & XML_STREAM_FROM_ROOT) {
+		if (comp->nbStep == 0) {
+		    /* TODO: We have a "/." here? */
 		    ret = 1;
+		} else {
+		    if ((comp->nbStep == 1) &&
+			(comp->steps[0].nodeType == XML_STREAM_ANY_NODE) &&
+			(comp->steps[0].flags & XML_STREAM_STEP_DESC))
+		    {
+			/*
+			* In the case of "//." the document node will match
+			* as well.
+			*/
+			ret = 1;
+		    } else if (comp->steps[0].flags & XML_STREAM_STEP_ROOT) {
+			/* TODO: Do we need this ? */
+			tmp = xmlStreamCtxtAddState(stream, 0, 0);
+			if (tmp < 0)
+			    err++;
+		    }
+		}
 	    }
 	    stream = stream->next;
 	    continue; /* while */
@@ -1615,14 +1903,22 @@ xmlStreamPushInternal(xmlStreamCtxtPtr stream,
 	*/
 	if (comp->nbStep == 0) {
 	    /*
+	     * / and . are handled at the XPath node set creation
+	     * level by checking min depth
+	     */
+	    if (stream->flags & XML_PATTERN_XPATH) {
+		stream = stream->next;
+		continue; /* while */
+	    }
+	    /*
 	    * For non-pattern like evaluation like XML Schema IDCs
 	    * or traditional XPath expressions, this will match if
 	    * we are at the first level only, otherwise on every level.
 	    */
-	    if ((nodeType == XML_ELEMENT_NODE) &&
+	    if ((nodeType != XML_ATTRIBUTE_NODE) &&
 		(((stream->flags & XML_PATTERN_NOTPATTERN) == 0) ||
 		(stream->level == 0))) {
-		    ret = 1;
+		    ret = 1;		
 	    }
 	    stream->level++;
 	    goto stream_next;
@@ -1634,6 +1930,19 @@ xmlStreamPushInternal(xmlStreamCtxtPtr stream,
     	    stream->level++;
 	    goto stream_next;
 	}
+
+	if ((nodeType != XML_ELEMENT_NODE) &&
+	    (nodeType != XML_ATTRIBUTE_NODE) &&
+	    ((comp->flags & XML_STREAM_FINAL_IS_ANY_NODE) == 0)) {
+	    /*
+	    * No need to process nodes of other types if we don't
+	    * resolve to those types.
+	    * TODO: Do we need to block the context here?
+	    */
+	    stream->level++;
+	    goto stream_next;
+	}
+
 	/*
 	 * Check evolution of existing states
 	 */
@@ -1645,7 +1954,7 @@ xmlStreamPushInternal(xmlStreamCtxtPtr stream,
 		* If there is no "//", then only the last
 		* added state is of interest.
 		*/
-		step = stream->states[2 * (stream->nbState -1)];
+		stepNr = stream->states[2 * (stream->nbState -1)];
 		/*
 		* TODO: Security check, should not happen, remove it.
 		*/
@@ -1661,11 +1970,11 @@ xmlStreamPushInternal(xmlStreamCtxtPtr stream,
 		* If there are "//", then we need to process every "//"
 		* occuring in the states, plus any other state for this
 		* level.
-		*/
-		step = stream->states[2 * i];
+		*/		
+		stepNr = stream->states[2 * i];
 
 		/* TODO: should not happen anymore: dead states */
-		if (step < 0)
+		if (stepNr < 0)
 		    goto next_state;
 
 		tmp = stream->states[(2 * i) + 1];
@@ -1675,60 +1984,89 @@ xmlStreamPushInternal(xmlStreamCtxtPtr stream,
 		    goto next_state;
 
 		/* skip states at ancestor levels, except if "//" */
-		desc = comp->steps[step].flags & XML_STREAM_STEP_DESC;
+		desc = comp->steps[stepNr].flags & XML_STREAM_STEP_DESC;
 		if ((tmp < stream->level) && (!desc))
 		    goto next_state;
 	    }
-	    /*
+	    /* 
 	    * Check for correct node-type.
 	    */
-	    if ((nodeType == XML_ATTRIBUTE_NODE) &&
-		((comp->steps[step].flags & XML_STREAM_STEP_ATTR) == 0))
-		goto next_state;
+	    step = comp->steps[stepNr];
+	    if (step.nodeType != nodeType) {
+		if (step.nodeType == XML_ATTRIBUTE_NODE) {
+		    /*
+		    * Block this expression for deeper evaluation.
+		    */
+		    if ((comp->flags & XML_STREAM_DESC) == 0)
+			stream->blockLevel = stream->level +1;
+		    goto next_state;
+		} else if (step.nodeType != XML_STREAM_ANY_NODE)
+		    goto next_state;
+	    }	    
 	    /*
 	    * Compare local/namespace-name.
 	    */
 	    match = 0;
-	    if (comp->dict) {
-		if (comp->steps[step].name == NULL) {
-		    if (comp->steps[step].ns == NULL)
+	    if (step.nodeType == XML_STREAM_ANY_NODE) {
+		match = 1;
+	    } else if (step.name == NULL) {
+		if (step.ns == NULL) {
+		    /*
+		    * This lets through all elements/attributes.
+		    */
+		    match = 1;
+		} else if (ns != NULL)
+		    match = xmlStrEqual(step.ns, ns);
+	    } else if (((step.ns != NULL) == (ns != NULL)) &&
+		(name != NULL) &&
+		(step.name[0] == name[0]) &&
+		xmlStrEqual(step.name, name) &&
+		((step.ns == ns) || xmlStrEqual(step.ns, ns)))
+	    {
+		match = 1;	    
+	    }	 
+#if 0 
+/*
+* TODO: Pointer comparison won't work, since not guaranteed that the given
+*  values are in the same dict; especially if it's the namespace name,
+*  normally coming from ns->href. We need a namespace dict mechanism !
+*/
+	    } else if (comp->dict) {
+		if (step.name == NULL) {
+		    if (step.ns == NULL)
 			match = 1;
 		    else
-			match = (comp->steps[step].ns == ns);
+			match = (step.ns == ns);
 		} else {
-		    match = ((comp->steps[step].name == name) &&
-			     (comp->steps[step].ns == ns));
+		    match = ((step.name == name) && (step.ns == ns));
 		}
-	    } else {
-		if (comp->steps[step].name == NULL) {
-		    if (comp->steps[step].ns == NULL)
-			match = 1;
-		    else
-			match = xmlStrEqual(comp->steps[step].ns, ns);
-		} else {
-		    match = ((xmlStrEqual(comp->steps[step].name, name)) &&
-			     (xmlStrEqual(comp->steps[step].ns, ns)));
-		}
-	    }
-	    if (match) {
-		final = comp->steps[step].flags & XML_STREAM_STEP_FINAL;
+#endif /* if 0 ------------------------------------------------------- */	    
+	    if (match) {		
+		final = step.flags & XML_STREAM_STEP_FINAL;
 		if (desc) {
 		    if (final) {
 			ret = 1;
 		    } else {
 			/* descending match create a new state */
-			xmlStreamCtxtAddState(stream, step + 1,
+			xmlStreamCtxtAddState(stream, stepNr + 1,
 			                      stream->level + 1);
 		    }
 		} else {
 		    if (final) {
 			ret = 1;
 		    } else {
-			xmlStreamCtxtAddState(stream, step + 1,
+			xmlStreamCtxtAddState(stream, stepNr + 1,
 			                      stream->level + 1);
 		    }
 		}
-	    }
+		if ((ret != 1) && (step.flags & XML_STREAM_STEP_IN_SET)) {
+		    /*
+		    * Check if we have a special case like "foo/bar//.", where
+		    * "foo" is selected as well.
+		    */
+		    ret = 1;
+		}
+	    }	    
 	    if (((comp->flags & XML_STREAM_DESC) == 0) &&
 		((! match) || final))  {
 		/*
@@ -1746,17 +2084,20 @@ next_state:
 
 	/*
 	* Re/enter the expression.
+	* Don't reenter if it's an absolute expression like "/foo",
+	*   except "//foo".
 	*/
-	if (comp->steps[0].flags & XML_STREAM_STEP_ROOT)
+	step = comp->steps[0];
+	if (step.flags & XML_STREAM_STEP_ROOT)
 	    goto stream_next;
 
-	desc = comp->steps[0].flags & XML_STREAM_STEP_DESC;
+	desc = step.flags & XML_STREAM_STEP_DESC;
 	if (stream->flags & XML_PATTERN_NOTPATTERN) {
 	    /*
 	    * Re/enter the expression if it is a "descendant" one,
 	    * or if we are at the 1st level of evaluation.
 	    */
-
+	    
 	    if (stream->level == 1) {
 		if (XML_STREAM_XS_IDC(stream)) {
 		    /*
@@ -1766,7 +2107,7 @@ next_state:
 		    goto stream_next;
 		} else
 		    goto compare;
-	    }
+	    }	    
 	    /*
 	    * A "//" is always reentrant.
 	    */
@@ -1776,48 +2117,59 @@ next_state:
 	    /*
 	    * XS-IDC: Process the 2nd level, since the missing
 	    * "self::node()" is responsible for the 2nd level being
-	    * the real start level.
-	    */
+	    * the real start level.	    
+	    */	    
 	    if ((stream->level == 2) && XML_STREAM_XS_IDC(stream))
 		goto compare;
 
 	    goto stream_next;
 	}
-
+	
 compare:
 	/*
 	* Check expected node-type.
 	*/
-	if ((nodeType == XML_ATTRIBUTE_NODE) &&
-	    ((comp->steps[0].flags & XML_STREAM_STEP_ATTR) == 0))
-	    goto stream_next;
+	if (step.nodeType != nodeType) {
+	    if (nodeType == XML_ATTRIBUTE_NODE)
+		goto stream_next;
+	    else if (step.nodeType != XML_STREAM_ANY_NODE)
+		goto stream_next;	     
+	}
 	/*
 	* Compare local/namespace-name.
 	*/
 	match = 0;
-	if (comp->steps[0].name == NULL) {
-	    if (comp->steps[0].ns == NULL)
+	if (step.nodeType == XML_STREAM_ANY_NODE) {
+	    match = 1;
+	} else if (step.name == NULL) {
+	    if (step.ns == NULL) {
+		/*
+		* This lets through all elements/attributes.
+		*/
 		match = 1;
-	    else {
-		if (comp->dict)
-		    match = (comp->steps[0].ns == ns);
-		else
-		    match = xmlStrEqual(comp->steps[0].ns, ns);
-	    }
-	} else {
-	    if (comp->dict)
-		match = ((comp->steps[0].name == name) &&
-		    (comp->steps[0].ns == ns));
-	    else
-		match = ((xmlStrEqual(comp->steps[0].name, name)) &&
-		    (xmlStrEqual(comp->steps[0].ns, ns)));
-	}
-	if (match) {
-	    final = comp->steps[0].flags & XML_STREAM_STEP_FINAL;
+	    } else if (ns != NULL)
+		match = xmlStrEqual(step.ns, ns);
+	} else if (((step.ns != NULL) == (ns != NULL)) &&
+	    (name != NULL) &&
+	    (step.name[0] == name[0]) &&
+	    xmlStrEqual(step.name, name) &&
+	    ((step.ns == ns) || xmlStrEqual(step.ns, ns)))
+	{
+	    match = 1;	    
+	}	    
+	final = step.flags & XML_STREAM_STEP_FINAL;
+	if (match) {	    
 	    if (final)
 		ret = 1;
 	    else
 		xmlStreamCtxtAddState(stream, 1, stream->level);
+	    if ((ret != 1) && (step.flags & XML_STREAM_STEP_IN_SET)) {
+		/*
+		* Check if we have a special case like "foo//.", where
+		* "foo" is selected as well.
+		*/
+		ret = 1;
+	    }
 	}
 	if (((comp->flags & XML_STREAM_DESC) == 0) &&
 	    ((! match) || final))  {
@@ -1831,7 +2183,7 @@ compare:
 stream_next:
         stream = stream->next;
     } /* while stream != NULL */
-
+ 
     if (err > 0)
         ret = -1;
 #ifdef DEBUG_STREAMING
@@ -1851,6 +2203,7 @@ stream_next:
  * to come from the dictionary.
  * Both @name and @ns being NULL means the / i.e. the root of the document.
  * This can also act as a reset.
+ * Otherwise the function will act as if it has been given an element-node.
  *
  * Returns: -1 in case of error, 1 if the current state in the stream is a
  *    match and 0 otherwise.
@@ -1858,7 +2211,35 @@ stream_next:
 int
 xmlStreamPush(xmlStreamCtxtPtr stream,
               const xmlChar *name, const xmlChar *ns) {
-    return (xmlStreamPushInternal(stream, name, ns, XML_ELEMENT_NODE));
+    return (xmlStreamPushInternal(stream, name, ns, (int) XML_ELEMENT_NODE));
+}
+
+/**
+ * xmlStreamPushNode:
+ * @stream: the stream context
+ * @name: the current name
+ * @ns: the namespace name
+ * @nodeType: the type of the node being pushed
+ *
+ * Push new data onto the stream. NOTE: if the call xmlPatterncompile()
+ * indicated a dictionary, then strings for name and ns will be expected
+ * to come from the dictionary.
+ * Both @name and @ns being NULL means the / i.e. the root of the document.
+ * This can also act as a reset.
+ * Different from xmlStreamPush() this function can be fed with nodes of type:
+ * element-, attribute-, text-, cdata-section-, comment- and
+ * processing-instruction-node.
+ *
+ * Returns: -1 in case of error, 1 if the current state in the stream is a
+ *    match and 0 otherwise.
+ */
+int
+xmlStreamPushNode(xmlStreamCtxtPtr stream,
+		  const xmlChar *name, const xmlChar *ns,
+		  int nodeType)
+{
+    return (xmlStreamPushInternal(stream, name, ns,
+	nodeType));
 }
 
 /**
@@ -1872,6 +2253,7 @@ xmlStreamPush(xmlStreamCtxtPtr stream,
 * to come from the dictionary.
 * Both @name and @ns being NULL means the / i.e. the root of the document.
 * This can also act as a reset.
+* Otherwise the function will act as if it has been given an attribute-node.
 *
 * Returns: -1 in case of error, 1 if the current state in the stream is a
 *    match and 0 otherwise.
@@ -1879,7 +2261,7 @@ xmlStreamPush(xmlStreamCtxtPtr stream,
 int
 xmlStreamPushAttr(xmlStreamCtxtPtr stream,
 		  const xmlChar *name, const xmlChar *ns) {
-    return (xmlStreamPushInternal(stream, name, ns, XML_ATTRIBUTE_NODE));
+    return (xmlStreamPushInternal(stream, name, ns, (int) XML_ATTRIBUTE_NODE));
 }
 
 /**
@@ -1893,11 +2275,9 @@ xmlStreamPushAttr(xmlStreamCtxtPtr stream,
 int
 xmlStreamPop(xmlStreamCtxtPtr stream) {
     int i, lev;
-    int ret;
-
+    
     if (stream == NULL)
         return(-1);
-    ret = 0;
     while (stream != NULL) {
 	/*
 	* Reset block-level.
@@ -1905,12 +2285,16 @@ xmlStreamPop(xmlStreamCtxtPtr stream) {
 	if (stream->blockLevel == stream->level)
 	    stream->blockLevel = -1;
 
-	stream->level--;
-	if (stream->level < 0)
-	    ret = -1;
+	/*
+	 *  stream->level can be zero when XML_FINAL_IS_ANY_NODE is set
+	 *  (see the thread at
+	 *  http://mail.gnome.org/archives/xslt/2008-July/msg00027.html)
+	 */
+	if (stream->level)
+	    stream->level--;
 	/*
 	 * Check evolution of existing states
-	 */
+	 */	
 	for (i = stream->nbState -1; i >= 0; i--) {
 	    /* discard obsoleted states */
 	    lev = stream->states[(2 * i) + 1];
@@ -1920,6 +2304,31 @@ xmlStreamPop(xmlStreamCtxtPtr stream) {
 		break;
 	}
 	stream = stream->next;
+    }
+    return(0);
+}
+
+/**
+ * xmlStreamWantsAnyNode:
+ * @streamCtxt: the stream context
+ *
+ * Query if the streaming pattern additionally needs to be fed with
+ * text-, cdata-section-, comment- and processing-instruction-nodes.
+ * If the result is 0 then only element-nodes and attribute-nodes
+ * need to be pushed.
+ *
+ * Returns: 1 in case of need of nodes of the above described types,
+ *          0 otherwise. -1 on API errors.
+ */
+int
+xmlStreamWantsAnyNode(xmlStreamCtxtPtr streamCtxt)
+{    
+    if (streamCtxt == NULL)
+	return(-1);
+    while (streamCtxt != NULL) {
+	if (streamCtxt->comp->flags & XML_STREAM_FINAL_IS_ANY_NODE)	
+	    return(1);
+	streamCtxt = streamCtxt->next;
     }
     return(0);
 }
@@ -1934,7 +2343,7 @@ xmlStreamPop(xmlStreamCtxtPtr stream) {
  * xmlPatterncompile:
  * @pattern: the pattern to compile
  * @dict: an optional dictionary for interned strings
- * @flags: compilation flags, undefined yet
+ * @flags: compilation flags, see xmlPatternFlags
  * @namespaces: the prefix definitions, array of [URI, prefix] or NULL
  *
  * Compile a pattern.
@@ -1942,8 +2351,7 @@ xmlStreamPop(xmlStreamCtxtPtr stream) {
  * Returns the compiled form of the pattern or NULL in case of error
  */
 xmlPatternPtr
-xmlPatterncompile(const xmlChar *pattern, xmlDict *dict,
-                  xmlPatternFlags flags,
+xmlPatterncompile(const xmlChar *pattern, xmlDict *dict, int flags,
                   const xmlChar **namespaces) {
     xmlPatternPtr ret = NULL, cur;
     xmlPatParserContextPtr ctxt = NULL;
@@ -1969,9 +2377,16 @@ xmlPatterncompile(const xmlChar *pattern, xmlDict *dict,
 	    }
 	    or++;
 	}
-	if (ctxt == NULL) goto error;
+	if (ctxt == NULL) goto error;	
 	cur = xmlNewPattern();
 	if (cur == NULL) goto error;
+	/*
+	* Assign string dict.
+	*/
+	if (dict) {	    
+	    cur->dict = dict;
+	    xmlDictReference(dict);
+	}
 	if (ret == NULL)
 	    ret = cur;
 	else {
@@ -1981,7 +2396,10 @@ xmlPatterncompile(const xmlChar *pattern, xmlDict *dict,
 	cur->flags = flags;
 	ctxt->comp = cur;
 
-	xmlCompilePathPattern(ctxt);
+	if (XML_STREAM_XS_IDC(cur))
+	    xmlCompileIDCXPathPath(ctxt);
+	else
+	    xmlCompilePathPattern(ctxt);
 	if (ctxt->error != 0)
 	    goto error;
 	xmlFreePatParserContext(ctxt);
@@ -2138,7 +2556,33 @@ xmlPatternMaxDepth(xmlPatternPtr comp) {
 	comp = comp->next;
     }
     return(ret);
+}
 
+/**
+ * xmlPatternMinDepth:
+ * @comp: the precompiled pattern
+ *
+ * Check the minimum depth reachable by a pattern, 0 mean the / or . are
+ * part of the set.
+ *
+ * Returns -1 in case of error otherwise the depth,
+ *         
+ */
+int
+xmlPatternMinDepth(xmlPatternPtr comp) {
+    int ret = 12345678;
+    if (comp == NULL)
+        return(-1);
+    while (comp != NULL) {
+        if (comp->stream == NULL)
+	    return(-1);
+	if (comp->stream->nbStep < ret)
+	    ret = comp->stream->nbStep;
+	if (ret == 0)
+	    return(0);
+	comp = comp->next;
+    }
+    return(ret);
 }
 
 /**

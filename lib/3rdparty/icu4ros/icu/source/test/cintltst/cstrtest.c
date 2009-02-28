@@ -115,10 +115,10 @@ static void TestAPI(void)
         log_err("FAIL: T_CString_stricmp() where the second string is null failed. Expected: 1, returned %d\n", intValue);
     }
     if((intValue=T_CString_stricmp(NULL, NULL)) != 0){
-        log_err("FAIL: T_CString_stricmp(NULL, NULL) failed.  Expected:  0, returned %d\n", intValue);;
+        log_err("FAIL: T_CString_stricmp(NULL, NULL) failed.  Expected:  0, returned %d\n", intValue);
     }
     if((intValue=T_CString_stricmp("", "")) != 0){
-        log_err("FAIL: T_CString_stricmp(\"\", \"\") failed.  Expected:  0, returned %d\n", intValue);;
+        log_err("FAIL: T_CString_stricmp(\"\", \"\") failed.  Expected:  0, returned %d\n", intValue);
     }
     if((intValue=T_CString_stricmp("", "abc")) != -1){
         log_err("FAIL: T_CString_stricmp(\"\", \"abc\") failed.  Expected: -1, returned %d\n", intValue);
@@ -144,10 +144,10 @@ static void TestAPI(void)
         log_err("FAIL: T_CString_strnicmp() where the second string is null failed. Expected: 1, returned %d\n", intValue);
     }
     if((intValue=T_CString_strnicmp(NULL, NULL, 10)) != 0){
-        log_err("FAIL: T_CString_strnicmp(NULL, NULL, 10) failed.  Expected:  0, returned %d\n", intValue);;
+        log_err("FAIL: T_CString_strnicmp(NULL, NULL, 10) failed.  Expected:  0, returned %d\n", intValue);
     }
     if((intValue=T_CString_strnicmp("", "", 10)) != 0){
-        log_err("FAIL: T_CString_strnicmp(\"\", \"\") failed.  Expected:  0, returned %d\n", intValue);;
+        log_err("FAIL: T_CString_strnicmp(\"\", \"\") failed.  Expected:  0, returned %d\n", intValue);
     }
     if((intValue=T_CString_strnicmp("", "abc", 10)) != -1){
         log_err("FAIL: T_CString_stricmp(\"\", \"abc\", 10) failed.  Expected: -1, returned %d\n", intValue);

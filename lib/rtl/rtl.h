@@ -28,12 +28,9 @@
 #include "rtlp.h"
 
 /* PSEH Support */
-#include <reactos/helper.h>
-#include <pseh/pseh.h>
+#include <pseh/pseh2.h>
 
-#ifndef _MSC_VER
 #include <intrin.h>
-#endif
 
 #endif /* RTL_H */
 

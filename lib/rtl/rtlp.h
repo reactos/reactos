@@ -19,10 +19,18 @@ extern VOID FASTCALL CHECK_PAGED_CODE_RTL(char *file, int line);
 #ifdef _PPC_
 #define SWAPD(x) ((((x)&0xff)<<24)|(((x)&0xff00)<<8)|(((x)>>8)&0xff00)|(((x)>>24)&0xff))
 #define SWAPW(x) ((((x)&0xff)<<8)|(((x)>>8)&0xff))
+#define SWAPQ(x) ((SWAPD((x)&0xffffffff) << 32) | (SWAPD((x)>>32)))
 #else
-#define SWAPD(x) x
-#define SWAPW(x) x
+#define SWAPD(x) (x)
+#define SWAPW(x) (x)
+#define SWAPQ(x) (x)
 #endif
+
+#define ROUND_DOWN(n, align) \
+    (((ULONG)n) & ~((align) - 1l))
+
+#define ROUND_UP(n, align) \
+    ROUND_DOWN(((ULONG)n) + (align) - 1, (align))
 
 VOID
 NTAPI
@@ -36,6 +44,13 @@ RtlpGetExceptionList(VOID);
 VOID
 NTAPI
 RtlpSetExceptionList(PEXCEPTION_REGISTRATION_RECORD NewExceptionList);
+
+BOOLEAN
+NTAPI
+RtlCallVectoredExceptionHandlers(
+    IN PEXCEPTION_RECORD ExceptionRecord,
+    IN PCONTEXT Context
+);
 
 typedef struct _DISPATCHER_CONTEXT
 {

@@ -1,7 +1,7 @@
 /*
  * regexp.c: generic and extensible Regular Expression engine
  *
- * Basically designed with the purpose of compiling regexps for
+ * Basically designed with the purpose of compiling regexps for 
  * the variety of validation/shemas mechanisms now available in
  * XML related specifications these include:
  *    - XML-1.0 DTD validation
@@ -42,6 +42,8 @@
 /* #define DEBUG_PUSH */
 /* #define DEBUG_COMPACTION */
 
+#define MAX_PUSH 10000000
+
 #define ERROR(str)							\
     ctxt->error = XML_REGEXP_COMPILE_ERROR;				\
     xmlRegexpErrCompile(ctxt, str);
@@ -52,6 +54,11 @@
 #define CUR_SCHAR(s, l) xmlStringCurrentChar(NULL, s, &l)
 #define NEXTL(l) ctxt->cur += l;
 #define XML_REG_STRING_SEPARATOR '|'
+/*
+ * Need PREV to check on a '-' within a Character Group. May only be used
+ * when it's guaranteed that cur is not at the beginning of ctxt->string!
+ */
+#define PREV (ctxt->cur[-1])
 
 /**
  * TODO:
@@ -69,24 +76,27 @@
  * 									*
  ************************************************************************/
 
+/*
+ * Note: the order of the enums below is significant, do not shuffle
+ */
 typedef enum {
     XML_REGEXP_EPSILON = 1,
     XML_REGEXP_CHARVAL,
     XML_REGEXP_RANGES,
-    XML_REGEXP_SUBREG,
+    XML_REGEXP_SUBREG,  /* used for () sub regexps */
     XML_REGEXP_STRING,
     XML_REGEXP_ANYCHAR, /* . */
     XML_REGEXP_ANYSPACE, /* \s */
     XML_REGEXP_NOTSPACE, /* \S */
     XML_REGEXP_INITNAME, /* \l */
-    XML_REGEXP_NOTINITNAME, /* \l */
+    XML_REGEXP_NOTINITNAME, /* \L */
     XML_REGEXP_NAMECHAR, /* \c */
     XML_REGEXP_NOTNAMECHAR, /* \C */
     XML_REGEXP_DECIMAL, /* \d */
-    XML_REGEXP_NOTDECIMAL, /* \d */
+    XML_REGEXP_NOTDECIMAL, /* \D */
     XML_REGEXP_REALCHAR, /* \w */
-    XML_REGEXP_NOTREALCHAR, /* \w */
-    XML_REGEXP_LETTER,
+    XML_REGEXP_NOTREALCHAR, /* \W */
+    XML_REGEXP_LETTER = 100,
     XML_REGEXP_LETTER_UPPERCASE,
     XML_REGEXP_LETTER_LOWERCASE,
     XML_REGEXP_LETTER_TITLECASE,
@@ -140,7 +150,8 @@ typedef enum {
     XML_REGEXP_START_STATE = 1,
     XML_REGEXP_FINAL_STATE,
     XML_REGEXP_TRANS_STATE,
-    XML_REGEXP_SINK_STATE
+    XML_REGEXP_SINK_STATE,
+    XML_REGEXP_UNREACH_STATE
 } xmlRegStateType;
 
 typedef enum {
@@ -178,6 +189,7 @@ struct _xmlRegAtom {
     int neg;
     int codepoint;
     xmlRegStatePtr start;
+    xmlRegStatePtr start0;
     xmlRegStatePtr stop;
     int maxRanges;
     int nbRanges;
@@ -201,6 +213,7 @@ struct _xmlRegTrans {
     int to;
     int counter;
     int count;
+    int nd;
 };
 
 struct _xmlAutomataState {
@@ -211,6 +224,10 @@ struct _xmlAutomataState {
     int maxTrans;
     int nbTrans;
     xmlRegTrans *trans;
+    /*  knowing states ponting to us can speed things up */
+    int maxTransTo;
+    int nbTransTo;
+    int *transTo;
 };
 
 typedef struct _xmlAutomata xmlRegParserCtxt;
@@ -242,6 +259,7 @@ struct _xmlAutomata {
     xmlRegCounter *counters;
 
     int determinist;
+    int negs;
 };
 
 struct _xmlRegexp {
@@ -321,6 +339,7 @@ struct _xmlRegExecCtxt {
     xmlRegStatePtr errState;    /* the error state */
     xmlChar *errString;		/* the string raising the error */
     int *errCounts;		/* counters at the error state */
+    int nbPush;
 };
 
 #define REGEXP_ALL_COUNTER	0x123456
@@ -329,6 +348,10 @@ struct _xmlRegExecCtxt {
 static void xmlFAParseRegExp(xmlRegParserCtxtPtr ctxt, int top);
 static void xmlRegFreeState(xmlRegStatePtr state);
 static void xmlRegFreeAtom(xmlRegAtomPtr atom);
+static int xmlRegStrEqualWildcard(const xmlChar *expStr, const xmlChar *valStr);
+static int xmlRegCheckCharacter(xmlRegAtomPtr atom, int codepoint);
+static int xmlRegCheckCharacterRange(xmlRegAtomType type, int codepoint,
+                  int neg, int start, int end, const xmlChar *blockName);
 
 /************************************************************************
  *									*
@@ -411,9 +434,13 @@ xmlRegEpxFromParse(xmlRegParserCtxtPtr ctxt) {
     ret->nbCounters = ctxt->nbCounters;
     ret->counters = ctxt->counters;
     ret->determinist = ctxt->determinist;
+    if (ret->determinist == -1) {
+        xmlRegexpIsDeterminist(ret);
+    }
 
     if ((ret->determinist != 0) &&
 	(ret->nbCounters == 0) &&
+	(ctxt->negs == 0) &&
 	(ret->atoms != NULL) &&
 	(ret->atoms[0] != NULL) &&
 	(ret->atoms[0]->type == XML_REGEXP_STRING)) {
@@ -562,7 +589,6 @@ xmlRegEpxFromParse(xmlRegParserCtxtPtr ctxt) {
 			       i, j, trans->atom->no, trans->to, atomno, targetno);
 			printf("       previous to is %d\n", prev);
 #endif
-			ret->determinist = 0;
 			if (transdata != NULL)
 			    xmlFree(transdata);
 			xmlFree(transitions);
@@ -656,6 +682,7 @@ xmlRegNewParserCtxt(const xmlChar *string) {
 	ret->string = xmlStrdup(string);
     ret->cur = ret->string;
     ret->neg = 0;
+    ret->negs = 0;
     ret->error = 0;
     ret->determinist = -1;
     return(ret);
@@ -707,11 +734,41 @@ xmlRegFreeRange(xmlRegRangePtr range) {
 }
 
 /**
+ * xmlRegCopyRange:
+ * @range:  the regexp range
+ *
+ * Copy a regexp range
+ *
+ * Returns the new copy or NULL in case of error.
+ */
+static xmlRegRangePtr
+xmlRegCopyRange(xmlRegParserCtxtPtr ctxt, xmlRegRangePtr range) {
+    xmlRegRangePtr ret;
+
+    if (range == NULL)
+	return(NULL);
+
+    ret = xmlRegNewRange(ctxt, range->neg, range->type, range->start,
+                         range->end);
+    if (ret == NULL)
+        return(NULL);
+    if (range->blockName != NULL) {
+	ret->blockName = xmlStrdup(range->blockName);
+	if (ret->blockName == NULL) {
+	    xmlRegexpErrMemory(ctxt, "allocating range");
+	    xmlRegFreeRange(ret);
+	    return(NULL);
+	}
+    }
+    return(ret);
+}
+
+/**
  * xmlRegNewAtom:
  * @ctxt:  the regexp parser context
  * @type:  the type of atom
  *
- * Allocate a new regexp range
+ * Allocate a new atom
  *
  * Returns the new atom or NULL in case of error
  */
@@ -751,9 +808,57 @@ xmlRegFreeAtom(xmlRegAtomPtr atom) {
 	xmlFree(atom->ranges);
     if ((atom->type == XML_REGEXP_STRING) && (atom->valuep != NULL))
 	xmlFree(atom->valuep);
+    if ((atom->type == XML_REGEXP_STRING) && (atom->valuep2 != NULL))
+	xmlFree(atom->valuep2);
     if ((atom->type == XML_REGEXP_BLOCK_NAME) && (atom->valuep != NULL))
 	xmlFree(atom->valuep);
     xmlFree(atom);
+}
+
+/**
+ * xmlRegCopyAtom:
+ * @ctxt:  the regexp parser context
+ * @atom:  the oiginal atom
+ *
+ * Allocate a new regexp range
+ *
+ * Returns the new atom or NULL in case of error
+ */
+static xmlRegAtomPtr
+xmlRegCopyAtom(xmlRegParserCtxtPtr ctxt, xmlRegAtomPtr atom) {
+    xmlRegAtomPtr ret;
+
+    ret = (xmlRegAtomPtr) xmlMalloc(sizeof(xmlRegAtom));
+    if (ret == NULL) {
+	xmlRegexpErrMemory(ctxt, "copying atom");
+	return(NULL);
+    }
+    memset(ret, 0, sizeof(xmlRegAtom));
+    ret->type = atom->type;
+    ret->quant = atom->quant;
+    ret->min = atom->min;
+    ret->max = atom->max;
+    if (atom->nbRanges > 0) {
+        int i;
+
+        ret->ranges = (xmlRegRangePtr *) xmlMalloc(sizeof(xmlRegRangePtr) *
+	                                           atom->nbRanges);
+	if (ret->ranges == NULL) {
+	    xmlRegexpErrMemory(ctxt, "copying atom");
+	    goto error;
+	}
+	for (i = 0;i < atom->nbRanges;i++) {
+	    ret->ranges[i] = xmlRegCopyRange(ctxt, atom->ranges[i]);
+	    if (ret->ranges[i] == NULL)
+	        goto error;
+	    ret->nbRanges = i + 1;
+	}
+    }
+    return(ret);
+
+error:
+    xmlRegFreeAtom(ret);
+    return(NULL);
 }
 
 static xmlRegStatePtr
@@ -784,6 +889,8 @@ xmlRegFreeState(xmlRegStatePtr state) {
 
     if (state->trans != NULL)
 	xmlFree(state->trans);
+    if (state->transTo != NULL)
+	xmlFree(state->transTo);
     xmlFree(state);
 }
 
@@ -971,6 +1078,8 @@ xmlRegPrintAtom(FILE *output, xmlRegAtomPtr atom) {
 	fprintf(output, "NULL\n");
 	return;
     }
+    if (atom->neg)
+        fprintf(output, "not ");
     xmlRegPrintAtomType(output, atom->type);
     xmlRegPrintQuantType(output, atom->quant);
     if (atom->quant == XML_REGEXP_QUANT_RANGE)
@@ -1002,6 +1111,12 @@ xmlRegPrintTrans(FILE *output, xmlRegTransPtr trans) {
 	fprintf(output, "removed\n");
 	return;
     }
+    if (trans->nd != 0) {
+	if (trans->nd == 2)
+	    fprintf(output, "last not determinist, ");
+	else
+	    fprintf(output, "not determinist, ");
+    }
     if (trans->counter >= 0) {
 	fprintf(output, "counted %d, ", trans->counter);
     }
@@ -1018,7 +1133,7 @@ xmlRegPrintTrans(FILE *output, xmlRegTransPtr trans) {
 	fprintf(output, "char %c ", trans->atom->codepoint);
     fprintf(output, "atom %d, to %d\n", trans->atom->no, trans->to);
 }
-
+    
 static void
 xmlRegPrintState(FILE *output, xmlRegStatePtr state) {
     int i;
@@ -1032,7 +1147,7 @@ xmlRegPrintState(FILE *output, xmlRegStatePtr state) {
 	fprintf(output, "START ");
     if (state->type == XML_REGEXP_FINAL_STATE)
 	fprintf(output, "FINAL ");
-
+    
     fprintf(output, "%d, %d transitions:\n", state->no, state->nbTrans);
     for (i = 0;i < state->nbTrans; i++) {
 	xmlRegPrintTrans(output, &(state->trans[i]));
@@ -1087,7 +1202,7 @@ xmlRegPrintCtxt(FILE *output, xmlRegParserCtxtPtr ctxt) {
  * 									*
  ************************************************************************/
 
-static void
+static void 
 xmlRegAtomAddRange(xmlRegParserCtxtPtr ctxt, xmlRegAtomPtr atom,
 	           int neg, xmlRegAtomType type, int start, int end,
 		   xmlChar *blockName) {
@@ -1127,7 +1242,7 @@ xmlRegAtomAddRange(xmlRegParserCtxtPtr ctxt, xmlRegAtomPtr atom,
 	return;
     range->blockName = blockName;
     atom->ranges[atom->nbRanges++] = range;
-
+    
 }
 
 static int
@@ -1158,7 +1273,7 @@ xmlRegGetCounter(xmlRegParserCtxtPtr ctxt) {
     return(ctxt->nbCounters++);
 }
 
-static int
+static int 
 xmlRegAtomPush(xmlRegParserCtxtPtr ctxt, xmlRegAtomPtr atom) {
     if (atom == NULL) {
 	ERROR("atom push: atom is NULL");
@@ -1190,7 +1305,35 @@ xmlRegAtomPush(xmlRegParserCtxtPtr ctxt, xmlRegAtomPtr atom) {
     return(0);
 }
 
-static void
+static void 
+xmlRegStateAddTransTo(xmlRegParserCtxtPtr ctxt, xmlRegStatePtr target,
+                      int from) {
+    if (target->maxTransTo == 0) {
+	target->maxTransTo = 8;
+	target->transTo = (int *) xmlMalloc(target->maxTransTo *
+		                             sizeof(int));
+	if (target->transTo == NULL) {
+	    xmlRegexpErrMemory(ctxt, "adding transition");
+	    target->maxTransTo = 0;
+	    return;
+	}
+    } else if (target->nbTransTo >= target->maxTransTo) {
+	int *tmp;
+	target->maxTransTo *= 2;
+	tmp = (int *) xmlRealloc(target->transTo, target->maxTransTo *
+		                             sizeof(int));
+	if (tmp == NULL) {
+	    xmlRegexpErrMemory(ctxt, "adding transition");
+	    target->maxTransTo /= 2;
+	    return;
+	}
+	target->transTo = tmp;
+    }
+    target->transTo[target->nbTransTo] = from;
+    target->nbTransTo++;
+}
+
+static void 
 xmlRegStateAddTrans(xmlRegParserCtxtPtr ctxt, xmlRegStatePtr state,
 	            xmlRegAtomPtr atom, xmlRegStatePtr target,
 		    int counter, int count) {
@@ -1211,21 +1354,22 @@ xmlRegStateAddTrans(xmlRegParserCtxtPtr ctxt, xmlRegStatePtr state,
      * so, silently ignore this request.
      */
 
-    for (nrtrans=0; nrtrans<state->nbTrans; nrtrans++) {
-        if ((state->trans[nrtrans].atom == atom) &&
-            (state->trans[nrtrans].to == target->no) &&
-            (state->trans[nrtrans].counter == counter) &&
-            (state->trans[nrtrans].count == count)) {
+    for (nrtrans = state->nbTrans - 1; nrtrans >= 0; nrtrans--) {
+	xmlRegTransPtr trans = &(state->trans[nrtrans]);
+	if ((trans->atom == atom) &&
+	    (trans->to == target->no) &&
+	    (trans->counter == counter) &&
+	    (trans->count == count)) {
 #ifdef DEBUG_REGEXP_GRAPH
-            printf("Ignoring duplicate transition from %d to %d\n",
-                    state->no, target->no);
+	    printf("Ignoring duplicate transition from %d to %d\n",
+		    state->no, target->no);
 #endif
-            return;
-        }
+	    return;
+	}
     }
 
     if (state->maxTrans == 0) {
-	state->maxTrans = 4;
+	state->maxTrans = 8;
 	state->trans = (xmlRegTrans *) xmlMalloc(state->maxTrans *
 		                             sizeof(xmlRegTrans));
 	if (state->trans == NULL) {
@@ -1255,7 +1399,7 @@ xmlRegStateAddTrans(xmlRegParserCtxtPtr ctxt, xmlRegStatePtr state,
 	printf("counted %d\n", counter);
     else if (atom == NULL)
 	printf("epsilon transition\n");
-    else if (atom != NULL)
+    else if (atom != NULL) 
         xmlRegPrintAtom(stdout, atom);
 #endif
 
@@ -1263,7 +1407,9 @@ xmlRegStateAddTrans(xmlRegParserCtxtPtr ctxt, xmlRegStatePtr state,
     state->trans[state->nbTrans].to = target->no;
     state->trans[state->nbTrans].counter = counter;
     state->trans[state->nbTrans].count = count;
+    state->trans[state->nbTrans].nd = 0;
     state->nbTrans++;
+    xmlRegStateAddTransTo(ctxt, target, state->no);
 }
 
 static int
@@ -1386,6 +1532,8 @@ xmlFAGenerateCountedTransition(xmlRegParserCtxtPtr ctxt,
 static int
 xmlFAGenerateTransitions(xmlRegParserCtxtPtr ctxt, xmlRegStatePtr from,
 	                 xmlRegStatePtr to, xmlRegAtomPtr atom) {
+    xmlRegStatePtr end;
+
     if (atom == NULL) {
 	ERROR("genrate transition: atom == NULL");
 	return(-1);
@@ -1404,11 +1552,25 @@ xmlFAGenerateTransitions(xmlRegParserCtxtPtr ctxt, xmlRegStatePtr from,
 	     * Generate an epsilon transition to link to the target
 	     */
 	    xmlFAGenerateEpsilonTransition(ctxt, atom->stop, to);
+#ifdef DV
+	} else if ((to == NULL) && (atom->quant != XML_REGEXP_QUANT_RANGE) && 
+		   (atom->quant != XML_REGEXP_QUANT_ONCE)) {
+	    to = xmlRegNewState(ctxt);
+	    xmlRegStatePush(ctxt, to);
+	    ctxt->state = to;
+	    xmlFAGenerateEpsilonTransition(ctxt, atom->stop, to);
+#endif
 	}
 	switch (atom->quant) {
 	    case XML_REGEXP_QUANT_OPT:
 		atom->quant = XML_REGEXP_QUANT_ONCE;
-		xmlFAGenerateEpsilonTransition(ctxt, atom->start, atom->stop);
+		/*
+		 * transition done to the state after end of atom.
+		 *      1. set transition from atom start to new state
+		 *      2. set transition from atom end to this state. 
+		 */
+		xmlFAGenerateEpsilonTransition(ctxt, atom->start, 0);
+		xmlFAGenerateEpsilonTransition(ctxt, atom->stop, ctxt->state);
 		break;
 	    case XML_REGEXP_QUANT_MULT:
 		atom->quant = XML_REGEXP_QUANT_ONCE;
@@ -1421,53 +1583,94 @@ xmlFAGenerateTransitions(xmlRegParserCtxtPtr ctxt, xmlRegStatePtr from,
 		break;
 	    case XML_REGEXP_QUANT_RANGE: {
 		int counter;
-		xmlRegStatePtr newstate;
+		xmlRegStatePtr inter, newstate;
 
 		/*
-		 * This one is nasty:
-		 *   1/ if range has minOccurs == 0, create a new state
-		 *	and create epsilon transitions from atom->start
-		 *	to atom->stop, as well as atom->start to the new
-		 *	state
-		 *   2/ register a new counter
-		 *   3/ register an epsilon transition associated to
-		 *      this counter going from atom->stop to atom->start
-		 *   4/ create a new state
-		 *   5/ generate a counted transition from atom->stop to
-		 *      that state
+		 * create the final state now if needed
 		 */
-		if (atom->min == 0) {
-		    xmlFAGenerateEpsilonTransition(ctxt, atom->start,
-			atom->stop);
-		    newstate = xmlRegNewState(ctxt);
-		    xmlRegStatePush(ctxt, newstate);
-		    ctxt->state = newstate;
-		    xmlFAGenerateEpsilonTransition(ctxt, atom->start,
-			newstate);
-		}
-		counter = xmlRegGetCounter(ctxt);
-		ctxt->counters[counter].min = atom->min - 1;
-		ctxt->counters[counter].max = atom->max - 1;
-		atom->min = 0;
-		atom->max = 0;
-		atom->quant = XML_REGEXP_QUANT_ONCE;
-		xmlFAGenerateCountedEpsilonTransition(ctxt, atom->stop,
-			                              atom->start, counter);
 		if (to != NULL) {
 		    newstate = to;
 		} else {
 		    newstate = xmlRegNewState(ctxt);
 		    xmlRegStatePush(ctxt, newstate);
-		    ctxt->state = newstate;
 		}
-		xmlFAGenerateCountedTransition(ctxt, atom->stop,
-			                       newstate, counter);
+
+		/*
+		 * The principle here is to use counted transition
+		 * to avoid explosion in the number of states in the
+		 * graph. This is clearly more complex but should not
+		 * be exploitable at runtime.
+		 */
+		if ((atom->min == 0) && (atom->start0 == NULL)) {
+		    xmlRegAtomPtr copy;
+		    /*
+		     * duplicate a transition based on atom to count next
+		     * occurences after 1. We cannot loop to atom->start
+		     * directly because we need an epsilon transition to 
+		     * newstate.
+		     */
+		     /* ???? For some reason it seems we never reach that
+		        case, I suppose this got optimized out before when
+			building the automata */
+		    copy = xmlRegCopyAtom(ctxt, atom);
+		    if (copy == NULL)
+		        return(-1);
+		    copy->quant = XML_REGEXP_QUANT_ONCE;
+		    copy->min = 0;
+		    copy->max = 0;
+
+		    if (xmlFAGenerateTransitions(ctxt, atom->start, NULL, copy)
+		        < 0)
+			return(-1);
+		    inter = ctxt->state;
+		    counter = xmlRegGetCounter(ctxt);
+		    ctxt->counters[counter].min = atom->min - 1;
+		    ctxt->counters[counter].max = atom->max - 1;
+		    /* count the number of times we see it again */
+		    xmlFAGenerateCountedEpsilonTransition(ctxt, inter,
+						   atom->stop, counter);
+		    /* allow a way out based on the count */
+		    xmlFAGenerateCountedTransition(ctxt, inter,
+			                           newstate, counter);
+		    /* and also allow a direct exit for 0 */
+		    xmlFAGenerateEpsilonTransition(ctxt, atom->start,
+		                                   newstate);
+		} else {
+		    /*
+		     * either we need the atom at least once or there
+		     * is an atom->start0 allowing to easilly plug the
+		     * epsilon transition.
+		     */
+		    counter = xmlRegGetCounter(ctxt);
+		    ctxt->counters[counter].min = atom->min - 1;
+		    ctxt->counters[counter].max = atom->max - 1;
+		    /* count the number of times we see it again */
+		    xmlFAGenerateCountedEpsilonTransition(ctxt, atom->stop,
+						   atom->start, counter);
+		    /* allow a way out based on the count */
+		    xmlFAGenerateCountedTransition(ctxt, atom->stop,
+			                           newstate, counter);
+		    /* and if needed allow a direct exit for 0 */
+		    if (atom->min == 0)
+			xmlFAGenerateEpsilonTransition(ctxt, atom->start0,
+						       newstate);
+
+		}
+		atom->min = 0;
+		atom->max = 0;
+		atom->quant = XML_REGEXP_QUANT_ONCE;
+		ctxt->state = newstate;
 	    }
 	    default:
 		break;
 	}
 	return(0);
-    } else {
+    } 
+    if ((atom->min == 0) && (atom->max == 0) &&
+               (atom->quant == XML_REGEXP_QUANT_RANGE)) {
+        /*
+	 * we can discard the atom and generate an epsilon transition instead
+	 */
 	if (to == NULL) {
 	    to = xmlRegNewState(ctxt);
 	    if (to != NULL)
@@ -1476,12 +1679,43 @@ xmlFAGenerateTransitions(xmlRegParserCtxtPtr ctxt, xmlRegStatePtr from,
 		return(-1);
 	    }
 	}
-	if (xmlRegAtomPush(ctxt, atom) < 0) {
+	xmlFAGenerateEpsilonTransition(ctxt, from, to);
+	ctxt->state = to;
+	xmlRegFreeAtom(atom);
+	return(0);
+    }
+    if (to == NULL) {
+	to = xmlRegNewState(ctxt);
+	if (to != NULL)
+	    xmlRegStatePush(ctxt, to);
+	else {
 	    return(-1);
 	}
-	xmlRegStateAddTrans(ctxt, from, atom, to, -1, -1);
-	ctxt->state = to;
+    } 
+    end = to;
+    if ((atom->quant == XML_REGEXP_QUANT_MULT) || 
+        (atom->quant == XML_REGEXP_QUANT_PLUS)) {
+	/*
+	 * Do not pollute the target state by adding transitions from
+	 * it as it is likely to be the shared target of multiple branches.
+	 * So isolate with an epsilon transition.
+	 */
+        xmlRegStatePtr tmp;
+	
+	tmp = xmlRegNewState(ctxt);
+	if (tmp != NULL)
+	    xmlRegStatePush(ctxt, tmp);
+	else {
+	    return(-1);
+	}
+	xmlFAGenerateEpsilonTransition(ctxt, tmp, to);
+	to = tmp;
     }
+    if (xmlRegAtomPush(ctxt, atom) < 0) {
+	return(-1);
+    }
+    xmlRegStateAddTrans(ctxt, from, atom, to, -1, -1);
+    ctxt->state = end;
     switch (atom->quant) {
 	case XML_REGEXP_QUANT_OPT:
 	    atom->quant = XML_REGEXP_QUANT_ONCE;
@@ -1496,6 +1730,13 @@ xmlFAGenerateTransitions(xmlRegParserCtxtPtr ctxt, xmlRegStatePtr from,
 	    atom->quant = XML_REGEXP_QUANT_ONCE;
 	    xmlRegStateAddTrans(ctxt, to, atom, to, -1, -1);
 	    break;
+	case XML_REGEXP_QUANT_RANGE: 
+#if DV_test
+	    if (atom->min == 0) {
+		xmlFAGenerateEpsilonTransition(ctxt, from, to);
+	    }
+#endif
+	    break;
 	default:
 	    break;
     }
@@ -1506,7 +1747,7 @@ xmlFAGenerateTransitions(xmlRegParserCtxtPtr ctxt, xmlRegStatePtr from,
  * xmlFAReduceEpsilonTransitions:
  * @ctxt:  a regexp parser context
  * @fromnr:  the from state
- * @tonr:  the to state
+ * @tonr:  the to state 
  * @counter:  should that transition be associated to a counted
  *
  */
@@ -1538,6 +1779,8 @@ xmlFAReduceEpsilonTransitions(xmlRegParserCtxtPtr ctxt, int fromnr,
 	from->type = XML_REGEXP_FINAL_STATE;
     }
     for (transnr = 0;transnr < to->nbTrans;transnr++) {
+        if (to->trans[transnr].to < 0)
+	    continue;
 	if (to->trans[transnr].atom == NULL) {
 	    /*
 	     * Don't remove counted transitions
@@ -1548,7 +1791,7 @@ xmlFAReduceEpsilonTransitions(xmlRegParserCtxtPtr ctxt, int fromnr,
 		    int newto = to->trans[transnr].to;
 
 		    xmlRegStateAddTrans(ctxt, from, NULL,
-					ctxt->states[newto],
+					ctxt->states[newto], 
 					-1, to->trans[transnr].count);
 		} else {
 #ifdef DEBUG_REGEXP_GRAPH
@@ -1570,11 +1813,11 @@ xmlFAReduceEpsilonTransitions(xmlRegParserCtxtPtr ctxt, int fromnr,
 	    int newto = to->trans[transnr].to;
 
 	    if (to->trans[transnr].counter >= 0) {
-		xmlRegStateAddTrans(ctxt, from, to->trans[transnr].atom,
-				    ctxt->states[newto],
+		xmlRegStateAddTrans(ctxt, from, to->trans[transnr].atom, 
+				    ctxt->states[newto], 
 				    to->trans[transnr].counter, -1);
 	    } else {
-		xmlRegStateAddTrans(ctxt, from, to->trans[transnr].atom,
+		xmlRegStateAddTrans(ctxt, from, to->trans[transnr].atom, 
 				    ctxt->states[newto], counter, -1);
 	    }
 	}
@@ -1582,6 +1825,80 @@ xmlFAReduceEpsilonTransitions(xmlRegParserCtxtPtr ctxt, int fromnr,
     to->mark = XML_REGEXP_MARK_NORMAL;
 }
 
+/**
+ * xmlFAEliminateSimpleEpsilonTransitions:
+ * @ctxt:  a regexp parser context
+ *
+ * Eliminating general epsilon transitions can get costly in the general 
+ * algorithm due to the large amount of generated new transitions and
+ * associated comparisons. However for simple epsilon transition used just
+ * to separate building blocks when generating the automata this can be
+ * reduced to state elimination:
+ *    - if there exists an epsilon from X to Y
+ *    - if there is no other transition from X
+ * then X and Y are semantically equivalent and X can be eliminated
+ * If X is the start state then make Y the start state, else replace the
+ * target of all transitions to X by transitions to Y.
+ */
+static void
+xmlFAEliminateSimpleEpsilonTransitions(xmlRegParserCtxtPtr ctxt) {
+    int statenr, i, j, newto;
+    xmlRegStatePtr state, tmp;
+
+    for (statenr = 0;statenr < ctxt->nbStates;statenr++) {
+	state = ctxt->states[statenr];
+	if (state == NULL)
+	    continue;
+	if (state->nbTrans != 1)
+	    continue;
+	if (state->type == XML_REGEXP_UNREACH_STATE)
+	    continue;
+	/* is the only transition out a basic transition */
+	if ((state->trans[0].atom == NULL) &&
+	    (state->trans[0].to >= 0) &&
+	    (state->trans[0].to != statenr) &&
+	    (state->trans[0].counter < 0) &&
+	    (state->trans[0].count < 0)) {
+	    newto = state->trans[0].to;
+
+            if (state->type == XML_REGEXP_START_STATE) {
+#ifdef DEBUG_REGEXP_GRAPH
+		printf("Found simple epsilon trans from start %d to %d\n",
+		       statenr, newto);
+#endif     
+            } else {
+#ifdef DEBUG_REGEXP_GRAPH
+		printf("Found simple epsilon trans from %d to %d\n",
+		       statenr, newto);
+#endif     
+	        for (i = 0;i < state->nbTransTo;i++) {
+		    tmp = ctxt->states[state->transTo[i]];
+		    for (j = 0;j < tmp->nbTrans;j++) {
+			if (tmp->trans[j].to == statenr) {
+#ifdef DEBUG_REGEXP_GRAPH
+			    printf("Changed transition %d on %d to go to %d\n",
+				   j, tmp->no, newto);
+#endif     
+			    tmp->trans[j].to = -1;
+			    xmlRegStateAddTrans(ctxt, tmp, tmp->trans[j].atom,
+			    			ctxt->states[newto],
+					        tmp->trans[j].counter,
+						tmp->trans[j].count);
+			}
+		    }
+		}
+		if (state->type == XML_REGEXP_FINAL_STATE)
+		    ctxt->states[newto]->type = XML_REGEXP_FINAL_STATE;
+		/* eliminate the transition completely */
+		state->nbTrans = 0;
+
+                state->type = XML_REGEXP_UNREACH_STATE;
+
+	    }
+            
+	}
+    }
+}
 /**
  * xmlFAEliminateEpsilonTransitions:
  * @ctxt:  a regexp parser context
@@ -1591,16 +1908,37 @@ static void
 xmlFAEliminateEpsilonTransitions(xmlRegParserCtxtPtr ctxt) {
     int statenr, transnr;
     xmlRegStatePtr state;
+    int has_epsilon;
 
     if (ctxt->states == NULL) return;
 
+    /*
+     * Eliminate simple epsilon transition and the associated unreachable
+     * states.
+     */
+    xmlFAEliminateSimpleEpsilonTransitions(ctxt);
+    for (statenr = 0;statenr < ctxt->nbStates;statenr++) {
+	state = ctxt->states[statenr];
+	if ((state != NULL) && (state->type == XML_REGEXP_UNREACH_STATE)) {
+#ifdef DEBUG_REGEXP_GRAPH
+	    printf("Removed unreachable state %d\n", statenr);
+#endif
+	    xmlRegFreeState(state);
+	    ctxt->states[statenr] = NULL;
+	}
+    }
+
+    has_epsilon = 0;
 
     /*
-     * build the completed transitions bypassing the epsilons
+     * Build the completed transitions bypassing the epsilons
      * Use a marking algorithm to avoid loops
-     * mark sink states too.
+     * Mark sink states too.
+     * Process from the latests states backward to the start when
+     * there is long cascading epsilon chains this minimize the
+     * recursions and transition compares when adding the new ones
      */
-    for (statenr = 0;statenr < ctxt->nbStates;statenr++) {
+    for (statenr = ctxt->nbStates - 1;statenr >= 0;statenr--) {
 	state = ctxt->states[statenr];
 	if (state == NULL)
 	    continue;
@@ -1624,6 +1962,8 @@ xmlFAEliminateEpsilonTransitions(xmlRegParserCtxtPtr ctxt) {
 		    printf("Found epsilon trans %d from %d to %d\n",
 			   transnr, statenr, newto);
 #endif
+		    has_epsilon = 1;
+		    state->trans[transnr].to = -2;
 		    state->mark = XML_REGEXP_MARK_START;
 		    xmlFAReduceEpsilonTransitions(ctxt, statenr,
 				      newto, state->trans[transnr].counter);
@@ -1640,15 +1980,18 @@ xmlFAEliminateEpsilonTransitions(xmlRegParserCtxtPtr ctxt) {
     /*
      * Eliminate the epsilon transitions
      */
-    for (statenr = 0;statenr < ctxt->nbStates;statenr++) {
-	state = ctxt->states[statenr];
-	if (state == NULL)
-	    continue;
-	for (transnr = 0;transnr < state->nbTrans;transnr++) {
-	    if ((state->trans[transnr].atom == NULL) &&
-		(state->trans[transnr].count < 0) &&
-		(state->trans[transnr].to >= 0)) {
-		state->trans[transnr].to = -1;
+    if (has_epsilon) {
+	for (statenr = 0;statenr < ctxt->nbStates;statenr++) {
+	    state = ctxt->states[statenr];
+	    if (state == NULL)
+		continue;
+	    for (transnr = 0;transnr < state->nbTrans;transnr++) {
+		xmlRegTransPtr trans = &(state->trans[transnr]);
+		if ((trans->atom == NULL) &&
+		    (trans->count < 0) &&
+		    (trans->to >= 0)) {
+		    trans->to = -1;
+		}
 	    }
 	}
     }
@@ -1713,38 +2056,493 @@ xmlFAEliminateEpsilonTransitions(xmlRegParserCtxtPtr ctxt) {
 
 }
 
+static int
+xmlFACompareRanges(xmlRegRangePtr range1, xmlRegRangePtr range2) {
+    int ret = 0;
+
+    if ((range1->type == XML_REGEXP_RANGES) ||
+        (range2->type == XML_REGEXP_RANGES) ||
+        (range2->type == XML_REGEXP_SUBREG) ||
+        (range1->type == XML_REGEXP_SUBREG) ||
+        (range1->type == XML_REGEXP_STRING) ||
+        (range2->type == XML_REGEXP_STRING))
+	return(-1);
+
+    /* put them in order */
+    if (range1->type > range2->type) {
+        xmlRegRangePtr tmp;
+
+	tmp = range1;
+	range1 = range2;
+	range2 = tmp;
+    }
+    if ((range1->type == XML_REGEXP_ANYCHAR) ||
+        (range2->type == XML_REGEXP_ANYCHAR)) {
+	ret = 1;
+    } else if ((range1->type == XML_REGEXP_EPSILON) ||
+               (range2->type == XML_REGEXP_EPSILON)) {
+	return(0);
+    } else if (range1->type == range2->type) {
+        if ((range1->type != XML_REGEXP_CHARVAL) ||
+	    (range1->end < range2->start) ||
+	    (range2->end < range1->start))
+	    ret = 1;
+	else
+	    ret = 0;
+    } else if (range1->type == XML_REGEXP_CHARVAL) {
+        int codepoint;
+	int neg = 0;
+
+	/*
+	 * just check all codepoints in the range for acceptance,
+	 * this is usually way cheaper since done only once at
+	 * compilation than testing over and over at runtime or 
+	 * pushing too many states when evaluating.
+	 */
+	if (((range1->neg == 0) && (range2->neg != 0)) ||
+	    ((range1->neg != 0) && (range2->neg == 0)))
+	    neg = 1;
+
+	for (codepoint = range1->start;codepoint <= range1->end ;codepoint++) {
+	    ret = xmlRegCheckCharacterRange(range2->type, codepoint,
+					    0, range2->start, range2->end,
+					    range2->blockName);
+	    if (ret < 0)
+	        return(-1);
+	    if (((neg == 1) && (ret == 0)) ||
+	        ((neg == 0) && (ret == 1)))
+		return(1);
+	}
+	return(0);
+    } else if ((range1->type == XML_REGEXP_BLOCK_NAME) ||
+               (range2->type == XML_REGEXP_BLOCK_NAME)) {
+	if (range1->type == range2->type) {
+	    ret = xmlStrEqual(range1->blockName, range2->blockName);
+	} else {
+	    /*
+	     * comparing a block range with anything else is way
+	     * too costly, and maintining the table is like too much
+	     * memory too, so let's force the automata to save state
+	     * here.
+	     */
+	    return(1);
+	}
+    } else if ((range1->type < XML_REGEXP_LETTER) ||
+               (range2->type < XML_REGEXP_LETTER)) {
+	if ((range1->type == XML_REGEXP_ANYSPACE) &&
+	    (range2->type == XML_REGEXP_NOTSPACE))
+	    ret = 0;
+	else if ((range1->type == XML_REGEXP_INITNAME) &&
+	         (range2->type == XML_REGEXP_NOTINITNAME))
+	    ret = 0;
+	else if ((range1->type == XML_REGEXP_NAMECHAR) &&
+	         (range2->type == XML_REGEXP_NOTNAMECHAR))
+	    ret = 0;
+	else if ((range1->type == XML_REGEXP_DECIMAL) &&
+	         (range2->type == XML_REGEXP_NOTDECIMAL))
+	    ret = 0;
+	else if ((range1->type == XML_REGEXP_REALCHAR) &&
+	         (range2->type == XML_REGEXP_NOTREALCHAR))
+	    ret = 0;
+	else {
+	    /* same thing to limit complexity */
+	    return(1);
+	}
+    } else {
+        ret = 0;
+        /* range1->type < range2->type here */
+        switch (range1->type) {
+	    case XML_REGEXP_LETTER:
+	         /* all disjoint except in the subgroups */
+	         if ((range2->type == XML_REGEXP_LETTER_UPPERCASE) ||
+		     (range2->type == XML_REGEXP_LETTER_LOWERCASE) ||
+		     (range2->type == XML_REGEXP_LETTER_TITLECASE) ||
+		     (range2->type == XML_REGEXP_LETTER_MODIFIER) ||
+		     (range2->type == XML_REGEXP_LETTER_OTHERS))
+		     ret = 1;
+		 break;
+	    case XML_REGEXP_MARK:
+	         if ((range2->type == XML_REGEXP_MARK_NONSPACING) ||
+		     (range2->type == XML_REGEXP_MARK_SPACECOMBINING) ||
+		     (range2->type == XML_REGEXP_MARK_ENCLOSING))
+		     ret = 1;
+		 break;
+	    case XML_REGEXP_NUMBER:
+	         if ((range2->type == XML_REGEXP_NUMBER_DECIMAL) ||
+		     (range2->type == XML_REGEXP_NUMBER_LETTER) ||
+		     (range2->type == XML_REGEXP_NUMBER_OTHERS))
+		     ret = 1;
+		 break;
+	    case XML_REGEXP_PUNCT:
+	         if ((range2->type == XML_REGEXP_PUNCT_CONNECTOR) ||
+		     (range2->type == XML_REGEXP_PUNCT_DASH) ||
+		     (range2->type == XML_REGEXP_PUNCT_OPEN) ||
+		     (range2->type == XML_REGEXP_PUNCT_CLOSE) ||
+		     (range2->type == XML_REGEXP_PUNCT_INITQUOTE) ||
+		     (range2->type == XML_REGEXP_PUNCT_FINQUOTE) ||
+		     (range2->type == XML_REGEXP_PUNCT_OTHERS))
+		     ret = 1;
+		 break;
+	    case XML_REGEXP_SEPAR:
+	         if ((range2->type == XML_REGEXP_SEPAR_SPACE) ||
+		     (range2->type == XML_REGEXP_SEPAR_LINE) ||
+		     (range2->type == XML_REGEXP_SEPAR_PARA))
+		     ret = 1;
+		 break;
+	    case XML_REGEXP_SYMBOL:
+	         if ((range2->type == XML_REGEXP_SYMBOL_MATH) ||
+		     (range2->type == XML_REGEXP_SYMBOL_CURRENCY) ||
+		     (range2->type == XML_REGEXP_SYMBOL_MODIFIER) ||
+		     (range2->type == XML_REGEXP_SYMBOL_OTHERS))
+		     ret = 1;
+		 break;
+	    case XML_REGEXP_OTHER:
+	         if ((range2->type == XML_REGEXP_OTHER_CONTROL) ||
+		     (range2->type == XML_REGEXP_OTHER_FORMAT) ||
+		     (range2->type == XML_REGEXP_OTHER_PRIVATE))
+		     ret = 1;
+		 break;
+            default:
+	         if ((range2->type >= XML_REGEXP_LETTER) &&
+		     (range2->type < XML_REGEXP_BLOCK_NAME))
+		     ret = 0;
+		 else {
+		     /* safety net ! */
+		     return(1);
+		 }
+	}
+    }
+    if (((range1->neg == 0) && (range2->neg != 0)) ||
+        ((range1->neg != 0) && (range2->neg == 0)))
+	ret = !ret;
+    return(1);
+}
+
 /**
- * xmlFACompareAtoms:
+ * xmlFACompareAtomTypes:
+ * @type1:  an atom type
+ * @type2:  an atom type
+ *
+ * Compares two atoms type to check whether they intersect in some ways,
+ * this is used by xmlFACompareAtoms only
+ *
+ * Returns 1 if they may intersect and 0 otherwise
+ */
+static int
+xmlFACompareAtomTypes(xmlRegAtomType type1, xmlRegAtomType type2) {
+    if ((type1 == XML_REGEXP_EPSILON) ||
+        (type1 == XML_REGEXP_CHARVAL) ||
+	(type1 == XML_REGEXP_RANGES) ||
+	(type1 == XML_REGEXP_SUBREG) ||
+	(type1 == XML_REGEXP_STRING) ||
+	(type1 == XML_REGEXP_ANYCHAR))
+	return(1);
+    if ((type2 == XML_REGEXP_EPSILON) ||
+        (type2 == XML_REGEXP_CHARVAL) ||
+	(type2 == XML_REGEXP_RANGES) ||
+	(type2 == XML_REGEXP_SUBREG) ||
+	(type2 == XML_REGEXP_STRING) ||
+	(type2 == XML_REGEXP_ANYCHAR))
+	return(1);
+
+    if (type1 == type2) return(1);
+
+    /* simplify subsequent compares by making sure type1 < type2 */
+    if (type1 > type2) {
+        xmlRegAtomType tmp = type1;
+	type1 = type2;
+	type2 = tmp;
+    }
+    switch (type1) {
+        case XML_REGEXP_ANYSPACE: /* \s */
+	    /* can't be a letter, number, mark, pontuation, symbol */
+	    if ((type2 == XML_REGEXP_NOTSPACE) ||
+		((type2 >= XML_REGEXP_LETTER) &&
+		 (type2 <= XML_REGEXP_LETTER_OTHERS)) ||
+	        ((type2 >= XML_REGEXP_NUMBER) &&
+		 (type2 <= XML_REGEXP_NUMBER_OTHERS)) ||
+	        ((type2 >= XML_REGEXP_MARK) &&
+		 (type2 <= XML_REGEXP_MARK_ENCLOSING)) ||
+	        ((type2 >= XML_REGEXP_PUNCT) &&
+		 (type2 <= XML_REGEXP_PUNCT_OTHERS)) ||
+	        ((type2 >= XML_REGEXP_SYMBOL) &&
+		 (type2 <= XML_REGEXP_SYMBOL_OTHERS))
+	        ) return(0);
+	    break;
+        case XML_REGEXP_NOTSPACE: /* \S */
+	    break;
+        case XML_REGEXP_INITNAME: /* \l */
+	    /* can't be a number, mark, separator, pontuation, symbol or other */
+	    if ((type2 == XML_REGEXP_NOTINITNAME) ||
+	        ((type2 >= XML_REGEXP_NUMBER) &&
+		 (type2 <= XML_REGEXP_NUMBER_OTHERS)) ||
+	        ((type2 >= XML_REGEXP_MARK) &&
+		 (type2 <= XML_REGEXP_MARK_ENCLOSING)) ||
+	        ((type2 >= XML_REGEXP_SEPAR) &&
+		 (type2 <= XML_REGEXP_SEPAR_PARA)) ||
+	        ((type2 >= XML_REGEXP_PUNCT) &&
+		 (type2 <= XML_REGEXP_PUNCT_OTHERS)) ||
+	        ((type2 >= XML_REGEXP_SYMBOL) &&
+		 (type2 <= XML_REGEXP_SYMBOL_OTHERS)) ||
+	        ((type2 >= XML_REGEXP_OTHER) &&
+		 (type2 <= XML_REGEXP_OTHER_NA))
+		) return(0);
+	    break;
+        case XML_REGEXP_NOTINITNAME: /* \L */
+	    break;
+        case XML_REGEXP_NAMECHAR: /* \c */
+	    /* can't be a mark, separator, pontuation, symbol or other */
+	    if ((type2 == XML_REGEXP_NOTNAMECHAR) ||
+	        ((type2 >= XML_REGEXP_MARK) &&
+		 (type2 <= XML_REGEXP_MARK_ENCLOSING)) ||
+	        ((type2 >= XML_REGEXP_PUNCT) &&
+		 (type2 <= XML_REGEXP_PUNCT_OTHERS)) ||
+	        ((type2 >= XML_REGEXP_SEPAR) &&
+		 (type2 <= XML_REGEXP_SEPAR_PARA)) ||
+	        ((type2 >= XML_REGEXP_SYMBOL) &&
+		 (type2 <= XML_REGEXP_SYMBOL_OTHERS)) ||
+	        ((type2 >= XML_REGEXP_OTHER) &&
+		 (type2 <= XML_REGEXP_OTHER_NA))
+		) return(0);
+	    break;
+        case XML_REGEXP_NOTNAMECHAR: /* \C */
+	    break;
+        case XML_REGEXP_DECIMAL: /* \d */
+	    /* can't be a letter, mark, separator, pontuation, symbol or other */
+	    if ((type2 == XML_REGEXP_NOTDECIMAL) ||
+	        (type2 == XML_REGEXP_REALCHAR) ||
+		((type2 >= XML_REGEXP_LETTER) &&
+		 (type2 <= XML_REGEXP_LETTER_OTHERS)) ||
+	        ((type2 >= XML_REGEXP_MARK) &&
+		 (type2 <= XML_REGEXP_MARK_ENCLOSING)) ||
+	        ((type2 >= XML_REGEXP_PUNCT) &&
+		 (type2 <= XML_REGEXP_PUNCT_OTHERS)) ||
+	        ((type2 >= XML_REGEXP_SEPAR) &&
+		 (type2 <= XML_REGEXP_SEPAR_PARA)) ||
+	        ((type2 >= XML_REGEXP_SYMBOL) &&
+		 (type2 <= XML_REGEXP_SYMBOL_OTHERS)) ||
+	        ((type2 >= XML_REGEXP_OTHER) &&
+		 (type2 <= XML_REGEXP_OTHER_NA))
+		)return(0);
+	    break;
+        case XML_REGEXP_NOTDECIMAL: /* \D */
+	    break;
+        case XML_REGEXP_REALCHAR: /* \w */
+	    /* can't be a mark, separator, pontuation, symbol or other */
+	    if ((type2 == XML_REGEXP_NOTDECIMAL) ||
+	        ((type2 >= XML_REGEXP_MARK) &&
+		 (type2 <= XML_REGEXP_MARK_ENCLOSING)) ||
+	        ((type2 >= XML_REGEXP_PUNCT) &&
+		 (type2 <= XML_REGEXP_PUNCT_OTHERS)) ||
+	        ((type2 >= XML_REGEXP_SEPAR) &&
+		 (type2 <= XML_REGEXP_SEPAR_PARA)) ||
+	        ((type2 >= XML_REGEXP_SYMBOL) &&
+		 (type2 <= XML_REGEXP_SYMBOL_OTHERS)) ||
+	        ((type2 >= XML_REGEXP_OTHER) &&
+		 (type2 <= XML_REGEXP_OTHER_NA))
+		)return(0);
+	    break;
+        case XML_REGEXP_NOTREALCHAR: /* \W */
+	    break;
+	/*
+	 * at that point we know both type 1 and type2 are from
+	 * character categories are ordered and are different,
+	 * it becomes simple because this is a partition
+	 */
+        case XML_REGEXP_LETTER:
+	    if (type2 <= XML_REGEXP_LETTER_OTHERS)
+	        return(1);
+	    return(0);
+        case XML_REGEXP_LETTER_UPPERCASE:
+        case XML_REGEXP_LETTER_LOWERCASE:
+        case XML_REGEXP_LETTER_TITLECASE:
+        case XML_REGEXP_LETTER_MODIFIER:
+        case XML_REGEXP_LETTER_OTHERS:
+	    return(0);
+        case XML_REGEXP_MARK:
+	    if (type2 <= XML_REGEXP_MARK_ENCLOSING)
+	        return(1);
+	    return(0);
+        case XML_REGEXP_MARK_NONSPACING:
+        case XML_REGEXP_MARK_SPACECOMBINING:
+        case XML_REGEXP_MARK_ENCLOSING:
+	    return(0);
+        case XML_REGEXP_NUMBER:
+	    if (type2 <= XML_REGEXP_NUMBER_OTHERS)
+	        return(1);
+	    return(0);
+        case XML_REGEXP_NUMBER_DECIMAL:
+        case XML_REGEXP_NUMBER_LETTER:
+        case XML_REGEXP_NUMBER_OTHERS:
+	    return(0);
+        case XML_REGEXP_PUNCT:
+	    if (type2 <= XML_REGEXP_PUNCT_OTHERS)
+	        return(1);
+	    return(0);
+        case XML_REGEXP_PUNCT_CONNECTOR:
+        case XML_REGEXP_PUNCT_DASH:
+        case XML_REGEXP_PUNCT_OPEN:
+        case XML_REGEXP_PUNCT_CLOSE:
+        case XML_REGEXP_PUNCT_INITQUOTE:
+        case XML_REGEXP_PUNCT_FINQUOTE:
+        case XML_REGEXP_PUNCT_OTHERS:
+	    return(0);
+        case XML_REGEXP_SEPAR:
+	    if (type2 <= XML_REGEXP_SEPAR_PARA)
+	        return(1);
+	    return(0);
+        case XML_REGEXP_SEPAR_SPACE:
+        case XML_REGEXP_SEPAR_LINE:
+        case XML_REGEXP_SEPAR_PARA:
+	    return(0);
+        case XML_REGEXP_SYMBOL:
+	    if (type2 <= XML_REGEXP_SYMBOL_OTHERS)
+	        return(1);
+	    return(0);
+        case XML_REGEXP_SYMBOL_MATH:
+        case XML_REGEXP_SYMBOL_CURRENCY:
+        case XML_REGEXP_SYMBOL_MODIFIER:
+        case XML_REGEXP_SYMBOL_OTHERS:
+	    return(0);
+        case XML_REGEXP_OTHER:
+	    if (type2 <= XML_REGEXP_OTHER_NA)
+	        return(1);
+	    return(0);
+        case XML_REGEXP_OTHER_CONTROL:
+        case XML_REGEXP_OTHER_FORMAT:
+        case XML_REGEXP_OTHER_PRIVATE:
+        case XML_REGEXP_OTHER_NA:
+	    return(0);
+	default:
+	    break;
+    }
+    return(1);
+}
+
+/**
+ * xmlFAEqualAtoms:
  * @atom1:  an atom
  * @atom2:  an atom
  *
- * Compares two atoms to check whether they are equivalents
+ * Compares two atoms to check whether they are the same exactly
+ * this is used to remove equivalent transitions
  *
- * Returns 1 if yes and 0 otherwise
+ * Returns 1 if same and 0 otherwise
  */
 static int
-xmlFACompareAtoms(xmlRegAtomPtr atom1, xmlRegAtomPtr atom2) {
+xmlFAEqualAtoms(xmlRegAtomPtr atom1, xmlRegAtomPtr atom2) {
+    int ret = 0;
+
     if (atom1 == atom2)
 	return(1);
     if ((atom1 == NULL) || (atom2 == NULL))
 	return(0);
 
     if (atom1->type != atom2->type)
-	return(0);
+        return(0);
     switch (atom1->type) {
-        case XML_REGEXP_STRING:
-	    return(xmlStrEqual((xmlChar *)atom1->valuep,
-			       (xmlChar *)atom2->valuep));
         case XML_REGEXP_EPSILON:
-	    return(1);
+	    ret = 0;
+	    break;
+        case XML_REGEXP_STRING:
+	    ret = xmlStrEqual((xmlChar *)atom1->valuep,
+	                      (xmlChar *)atom2->valuep);
+	    break;
         case XML_REGEXP_CHARVAL:
-	    return(atom1->codepoint == atom2->codepoint);
-        case XML_REGEXP_RANGES:
-	    TODO;
-	    return(0);
+	    ret = (atom1->codepoint == atom2->codepoint);
+	    break;
+	case XML_REGEXP_RANGES:
+	    /* too hard to do in the general case */
+	    ret = 0;
 	default:
 	    break;
     }
+    return(ret);
+}
+
+/**
+ * xmlFACompareAtoms:
+ * @atom1:  an atom
+ * @atom2:  an atom
+ *
+ * Compares two atoms to check whether they intersect in some ways,
+ * this is used by xmlFAComputesDeterminism and xmlFARecurseDeterminism only
+ *
+ * Returns 1 if yes and 0 otherwise
+ */
+static int
+xmlFACompareAtoms(xmlRegAtomPtr atom1, xmlRegAtomPtr atom2) {
+    int ret = 1;
+
+    if (atom1 == atom2)
+	return(1);
+    if ((atom1 == NULL) || (atom2 == NULL))
+	return(0);
+
+    if ((atom1->type == XML_REGEXP_ANYCHAR) ||
+        (atom2->type == XML_REGEXP_ANYCHAR))
+	return(1);
+
+    if (atom1->type > atom2->type) {
+	xmlRegAtomPtr tmp;
+	tmp = atom1;
+	atom1 = atom2;
+	atom2 = tmp;
+    }
+    if (atom1->type != atom2->type) {
+        ret = xmlFACompareAtomTypes(atom1->type, atom2->type);
+	/* if they can't intersect at the type level break now */
+	if (ret == 0)
+	    return(0);
+    }
+    switch (atom1->type) {
+        case XML_REGEXP_STRING:
+	    ret = xmlRegStrEqualWildcard((xmlChar *)atom1->valuep,
+	                                 (xmlChar *)atom2->valuep);
+	    break;
+        case XML_REGEXP_EPSILON:
+	    goto not_determinist;
+        case XML_REGEXP_CHARVAL:
+	    if (atom2->type == XML_REGEXP_CHARVAL) {
+		ret = (atom1->codepoint == atom2->codepoint);
+	    } else {
+	        ret = xmlRegCheckCharacter(atom2, atom1->codepoint);
+		if (ret < 0)
+		    ret = 1;
+	    }
+	    break;
+        case XML_REGEXP_RANGES:
+	    if (atom2->type == XML_REGEXP_RANGES) {
+	        int i, j, res;
+		xmlRegRangePtr r1, r2;
+
+		/*
+		 * need to check that none of the ranges eventually matches
+		 */
+		for (i = 0;i < atom1->nbRanges;i++) {
+		    for (j = 0;j < atom2->nbRanges;j++) {
+			r1 = atom1->ranges[i];
+			r2 = atom2->ranges[j];
+			res = xmlFACompareRanges(r1, r2);
+			if (res == 1) {
+			    ret = 1;
+			    goto done;
+			}
+		    }
+		}
+		ret = 0;
+	    }
+	    break;
+	default:
+	    goto not_determinist;
+    }
+done:
+    if (atom1->neg != atom2->neg) {
+        ret = !ret;
+    }
+    if (ret == 0)
+        return(0);
+not_determinist:
     return(1);
 }
 
@@ -1760,29 +2558,40 @@ static int
 xmlFARecurseDeterminism(xmlRegParserCtxtPtr ctxt, xmlRegStatePtr state,
 	                 int to, xmlRegAtomPtr atom) {
     int ret = 1;
-    int transnr;
+    int res;
+    int transnr, nbTrans;
     xmlRegTransPtr t1;
 
     if (state == NULL)
 	return(ret);
-    for (transnr = 0;transnr < state->nbTrans;transnr++) {
+    /*
+     * don't recurse on transitions potentially added in the course of
+     * the elimination.
+     */
+    nbTrans = state->nbTrans;
+    for (transnr = 0;transnr < nbTrans;transnr++) {
 	t1 = &(state->trans[transnr]);
 	/*
 	 * check transitions conflicting with the one looked at
 	 */
 	if (t1->atom == NULL) {
-	    if (t1->to == -1)
+	    if (t1->to < 0)
 		continue;
-	    ret = xmlFARecurseDeterminism(ctxt, ctxt->states[t1->to],
+	    res = xmlFARecurseDeterminism(ctxt, ctxt->states[t1->to],
 		                           to, atom);
-	    if (ret == 0)
-		return(0);
+	    if (res == 0) {
+	        ret = 0;
+		/* t1->nd = 1; */
+	    }
 	    continue;
 	}
 	if (t1->to != to)
 	    continue;
-	if (xmlFACompareAtoms(t1->atom, atom))
-	    return(0);
+	if (xmlFACompareAtoms(t1->atom, atom)) {
+	    ret = 0;
+	    /* mark the transition as non-deterministic */
+	    t1->nd = 1;
+	}
     }
     return(ret);
 }
@@ -1799,7 +2608,7 @@ static int
 xmlFAComputesDeterminism(xmlRegParserCtxtPtr ctxt) {
     int statenr, transnr;
     xmlRegStatePtr state;
-    xmlRegTransPtr t1, t2;
+    xmlRegTransPtr t1, t2, last;
     int i;
     int ret = 1;
 
@@ -1811,12 +2620,13 @@ xmlFAComputesDeterminism(xmlRegParserCtxtPtr ctxt) {
 	return(ctxt->determinist);
 
     /*
-     * Check for all states that there aren't 2 transitions
-     * with the same atom and a different target.
+     * First cleanup the automata removing cancelled transitions
      */
     for (statenr = 0;statenr < ctxt->nbStates;statenr++) {
 	state = ctxt->states[statenr];
 	if (state == NULL)
+	    continue;
+	if (state->nbTrans < 2)
 	    continue;
 	for (transnr = 0;transnr < state->nbTrans;transnr++) {
 	    t1 = &(state->trans[transnr]);
@@ -1824,8 +2634,10 @@ xmlFAComputesDeterminism(xmlRegParserCtxtPtr ctxt) {
 	     * Determinism checks in case of counted or all transitions
 	     * will have to be handled separately
 	     */
-	    if (t1->atom == NULL)
+	    if (t1->atom == NULL) {
+		/* t1->nd = 1; */
 		continue;
+	    }
 	    if (t1->to == -1) /* eliminated */
 		continue;
 	    for (i = 0;i < transnr;i++) {
@@ -1834,12 +2646,48 @@ xmlFAComputesDeterminism(xmlRegParserCtxtPtr ctxt) {
 		    continue;
 		if (t2->atom != NULL) {
 		    if (t1->to == t2->to) {
-			if (xmlFACompareAtoms(t1->atom, t2->atom))
+			if (xmlFAEqualAtoms(t1->atom, t2->atom))
 			    t2->to = -1; /* eliminated */
-		    } else {
-			/* not determinist ! */
-			if (xmlFACompareAtoms(t1->atom, t2->atom))
-			    ret = 0;
+		    }
+		}
+	    }
+	}
+    }
+
+    /*
+     * Check for all states that there aren't 2 transitions
+     * with the same atom and a different target.
+     */
+    for (statenr = 0;statenr < ctxt->nbStates;statenr++) {
+	state = ctxt->states[statenr];
+	if (state == NULL)
+	    continue;
+	if (state->nbTrans < 2)
+	    continue;
+	last = NULL;
+	for (transnr = 0;transnr < state->nbTrans;transnr++) {
+	    t1 = &(state->trans[transnr]);
+	    /*
+	     * Determinism checks in case of counted or all transitions
+	     * will have to be handled separately
+	     */
+	    if (t1->atom == NULL) {
+		continue;
+	    }
+	    if (t1->to == -1) /* eliminated */
+		continue;
+	    for (i = 0;i < transnr;i++) {
+		t2 = &(state->trans[i]);
+		if (t2->to == -1) /* eliminated */
+		    continue;
+		if (t2->atom != NULL) {
+		    /* not determinist ! */
+		    if (xmlFACompareAtoms(t1->atom, t2->atom)) {
+			ret = 0;
+			/* mark the transitions as non-deterministic ones */
+			t1->nd = 1;
+			t2->nd = 1;
+			last = t1;
 		    }
 		} else if (t1->to != -1) {
 		    /*
@@ -1848,16 +2696,39 @@ xmlFAComputesDeterminism(xmlRegParserCtxtPtr ctxt) {
 		     */
 		    ret = xmlFARecurseDeterminism(ctxt, ctxt->states[t1->to],
 						   t2->to, t2->atom);
+		    /* don't shortcut the computation so all non deterministic
+		       transition get marked down
 		    if (ret == 0)
 			return(0);
+		     */
+		    if (ret == 0) {
+			t1->nd = 1;
+			/* t2->nd = 1; */
+			last = t1;
+		    }
 		}
 	    }
+	    /* don't shortcut the computation so all non deterministic
+	       transition get marked down
 	    if (ret == 0)
-		break;
+		break; */
 	}
+
+	/*
+	 * mark specifically the last non-deterministic transition
+	 * from a state since there is no need to set-up rollback
+	 * from it
+	 */
+	if (last != NULL) {
+	    last->nd = 2;
+	}
+
+	/* don't shortcut the computation so all non deterministic
+	   transition get marked down
 	if (ret == 0)
-	    break;
+	    break; */
     }
+
     ctxt->determinist = ret;
     return(ret);
 }
@@ -1894,7 +2765,7 @@ xmlRegCheckCharacterRange(xmlRegAtomType type, int codepoint, int neg,
         case XML_REGEXP_NOTINITNAME:
 	    neg = !neg;
         case XML_REGEXP_INITNAME:
-	    ret = (IS_LETTER(codepoint) ||
+	    ret = (IS_LETTER(codepoint) || 
 		   (codepoint == '_') || (codepoint == ':'));
 	    break;
         case XML_REGEXP_NOTNAMECHAR:
@@ -2155,7 +3026,8 @@ xmlFARegDebugExec(xmlRegExecCtxtPtr exec) {
 	int i;
 	printf(": ");
 	for (i = 0;(i < 3) && (i < exec->inputStackNr);i++)
-	    printf("%s ", exec->inputStack[exec->inputStackNr - (i + 1)]);
+	    printf("%s ", (const char *)
+	           exec->inputStack[exec->inputStackNr - (i + 1)].value);
     } else {
 	printf(": %s", &(exec->inputString[exec->index]));
     }
@@ -2170,6 +3042,12 @@ xmlFARegExecSave(xmlRegExecCtxtPtr exec) {
     exec->transno++;
     xmlFARegDebugExec(exec);
     exec->transno--;
+#endif
+#ifdef MAX_PUSH
+    if (exec->nbPush > MAX_PUSH) {
+        return;
+    }
+    exec->nbPush++;
 #endif
 
     if (exec->maxRollbacks == 0) {
@@ -2257,10 +3135,11 @@ static int
 xmlFARegExec(xmlRegexpPtr comp, const xmlChar *content) {
     xmlRegExecCtxt execval;
     xmlRegExecCtxtPtr exec = &execval;
-    int ret, codepoint = 0, len;
+    int ret, codepoint = 0, len, deter;
 
     exec->inputString = content;
     exec->index = 0;
+    exec->nbPush = 0;
     exec->determinist = 1;
     exec->maxRollbacks = 0;
     exec->nbRollbacks = 0;
@@ -2283,7 +3162,8 @@ xmlFARegExec(xmlRegexpPtr comp, const xmlChar *content) {
 	exec->counts = NULL;
     while ((exec->status == 0) &&
 	   ((exec->inputString[exec->index] != 0) ||
-	    (exec->state->type != XML_REGEXP_FINAL_STATE))) {
+	    ((exec->state != NULL) &&
+	     (exec->state->type != XML_REGEXP_FINAL_STATE)))) {
 	xmlRegTransPtr trans;
 	xmlRegAtomPtr atom;
 
@@ -2294,6 +3174,7 @@ xmlFARegExec(xmlRegexpPtr comp, const xmlChar *content) {
 	 * if we are working on a range like "AB{0,2}", where B is not present,
 	 * we don't want to break.
 	 */
+	len = 1;
 	if ((exec->inputString[exec->index] == 0) && (exec->counts == NULL)) {
 	    /*
 	     * if there is a transition, we must check if
@@ -2317,10 +3198,15 @@ xmlFARegExec(xmlRegexpPtr comp, const xmlChar *content) {
 		continue;
 	    atom = trans->atom;
 	    ret = 0;
+	    deter = 1;
 	    if (trans->count >= 0) {
 		int count;
 		xmlRegCounterPtr counter;
 
+		if (exec->counts == NULL) {
+		    exec->status = -1;
+		    goto error;
+		}
 		/*
 		 * A counted transition.
 		 */
@@ -2332,6 +3218,8 @@ xmlFARegExec(xmlRegexpPtr comp, const xmlChar *content) {
 		       trans->count, count, counter->min,  counter->max);
 #endif
 		ret = ((count >= counter->min) && (count <= counter->max));
+		if ((ret) && (counter->min != counter->max))
+		    deter = 0;
 	    } else if (atom == NULL) {
 		fprintf(stderr, "epsilon transition left at runtime\n");
 		exec->status = -2;
@@ -2344,7 +3232,29 @@ xmlFARegExec(xmlRegexpPtr comp, const xmlChar *content) {
 
 		    /*
 		     * this is a multiple input sequence
+		     * If there is a counter associated increment it now.
+		     * before potentially saving and rollback
+		     * do not increment if the counter is already over the
+		     * maximum limit in which case get to next transition
 		     */
+		    if (trans->counter >= 0) {
+			xmlRegCounterPtr counter;
+
+			if ((exec->counts == NULL) ||
+			    (exec->comp == NULL) ||
+			    (exec->comp->counters == NULL)) {
+			    exec->status = -1;
+			    goto error;
+			}
+			counter = &exec->comp->counters[trans->counter];
+			if (exec->counts[trans->counter] >= counter->max)
+			    continue; /* for loop on transitions */
+
+#ifdef DEBUG_REGEXP_EXEC
+			printf("Increasing count %d\n", trans->counter);
+#endif
+			exec->counts[trans->counter]++;
+		    }
 		    if (exec->state->nbTrans > exec->transno + 1) {
 			xmlFARegExecSave(exec);
 		    }
@@ -2394,6 +3304,16 @@ xmlFARegExec(xmlRegexpPtr comp, const xmlChar *content) {
 		    if (ret == 0) {
 			goto rollback;
 		    }
+		    if (trans->counter >= 0) {
+			if (exec->counts == NULL) {
+			    exec->status = -1;
+			    goto error;
+			}
+#ifdef DEBUG_REGEXP_EXEC
+			printf("Decreasing count %d\n", trans->counter);
+#endif
+			exec->counts[trans->counter]--;
+		    }
 		} else if ((ret == 0) && (atom->min == 0) && (atom->max > 0)) {
 		    /*
 		     * we don't match on the codepoint, but minOccurs of 0
@@ -2411,14 +3331,48 @@ xmlFARegExec(xmlRegexpPtr comp, const xmlChar *content) {
 		ret = 1;
 	    }
 	    if (ret == 1) {
-		if (exec->state->nbTrans > exec->transno + 1) {
+		if ((trans->nd == 1) ||
+		    ((trans->count >= 0) && (deter == 0) &&
+		     (exec->state->nbTrans > exec->transno + 1))) {
+#ifdef DEBUG_REGEXP_EXEC
+		    if (trans->nd == 1)
+		        printf("Saving on nd transition atom %d for %c at %d\n",
+			       trans->atom->no, codepoint, exec->index);
+		    else
+		        printf("Saving on counted transition count %d for %c at %d\n",
+			       trans->count, codepoint, exec->index);
+#endif
 		    xmlFARegExecSave(exec);
 		}
 		if (trans->counter >= 0) {
+		    xmlRegCounterPtr counter;
+
+                    /* make sure we don't go over the counter maximum value */
+		    if ((exec->counts == NULL) ||
+			(exec->comp == NULL) ||
+			(exec->comp->counters == NULL)) {
+			exec->status = -1;
+			goto error;
+		    }
+		    counter = &exec->comp->counters[trans->counter];
+		    if (exec->counts[trans->counter] >= counter->max)
+			continue; /* for loop on transitions */
 #ifdef DEBUG_REGEXP_EXEC
 		    printf("Increasing count %d\n", trans->counter);
 #endif
 		    exec->counts[trans->counter]++;
+		}
+		if ((trans->count >= 0) &&
+		    (trans->count < REGEXP_ALL_COUNTER)) {
+		    if (exec->counts == NULL) {
+		        exec->status = -1;
+			goto error;
+		    }
+#ifdef DEBUG_REGEXP_EXEC
+		    printf("resetting count %d on transition\n",
+		           trans->count);
+#endif
+		    exec->counts[trans->count] = 0;
 		}
 #ifdef DEBUG_REGEXP_EXEC
 		printf("entering state %d\n", trans->to);
@@ -2440,11 +3394,16 @@ rollback:
 	     * Failed to find a way out
 	     */
 	    exec->determinist = 0;
+#ifdef DEBUG_REGEXP_EXEC
+	    printf("rollback from state %d on %d:%c\n", exec->state->no,
+	           codepoint,codepoint);
+#endif
 	    xmlFARegExecRollBack(exec);
 	}
 progress:
 	continue;
     }
+error:
     if (exec->rollbacks != NULL) {
 	if (exec->counts != NULL) {
 	    int i;
@@ -2459,8 +3418,11 @@ progress:
 	xmlFree(exec->counts);
     if (exec->status == 0)
 	return(1);
-    if (exec->status == -1)
+    if (exec->status == -1) {
+	if (exec->nbPush > MAX_PUSH)
+	    return(-1);
 	return(0);
+    }
     return(exec->status);
 }
 
@@ -2535,6 +3497,7 @@ xmlRegNewExecCtxt(xmlRegexpPtr comp, xmlRegExecCallbacks callback, void *data) {
     exec->inputStack = NULL;
     exec->errStateNo = -1;
     exec->errString = NULL;
+    exec->nbPush = 0;
     return(exec);
 }
 
@@ -2583,7 +3546,7 @@ xmlFARegExecSaveInputString(xmlRegExecCtxtPtr exec, const xmlChar *value,
 #endif
     if (exec->inputStackMax == 0) {
 	exec->inputStackMax = 4;
-	exec->inputStack = (xmlRegInputTokenPtr)
+	exec->inputStack = (xmlRegInputTokenPtr) 
 	    xmlMalloc(exec->inputStackMax * sizeof(xmlRegInputToken));
 	if (exec->inputStack == NULL) {
 	    xmlRegexpErrMemory(NULL, "pushing input string");
@@ -2612,11 +3575,11 @@ xmlFARegExecSaveInputString(xmlRegExecCtxtPtr exec, const xmlChar *value,
 
 /**
  * xmlRegStrEqualWildcard:
- * @expStr:  the string to be evaluated
+ * @expStr:  the string to be evaluated 
  * @valStr:  the validation string
  *
  * Checks if both strings are equal or have the same content. "*"
- * can be used as a wildcard in @valStr; "|" is used as a seperator of
+ * can be used as a wildcard in @valStr; "|" is used as a seperator of 
  * substrings in both @expStr and @valStr.
  *
  * Returns 1 if the comparison is satisfied and the number of substrings
@@ -2633,6 +3596,14 @@ xmlRegStrEqualWildcard(const xmlChar *expStr, const xmlChar *valStr) {
 	* Eval if we have a wildcard for the current item.
 	*/
         if (*expStr != *valStr) {
+	    /* if one of them starts with a wildcard make valStr be it */
+	    if (*valStr == '*') {
+	        const xmlChar *tmp;
+
+		tmp = valStr;
+		valStr = expStr;
+		expStr = tmp;
+	    }
 	    if ((*valStr != 0) && (*expStr != 0) && (*expStr++ == '*')) {
 		do {
 		    if (*valStr == XML_REG_STRING_SEPARATOR)
@@ -2674,7 +3645,7 @@ xmlRegCompactPushString(xmlRegExecCtxtPtr exec,
 
     if ((comp == NULL) || (comp->compact == NULL) || (comp->stringMap == NULL))
 	return(-1);
-
+    
     if (value == NULL) {
 	/*
 	 * are we at a final state ?
@@ -2695,9 +3666,9 @@ xmlRegCompactPushString(xmlRegExecCtxtPtr exec,
     for (i = 0;i < comp->nbstrings;i++) {
 	target = comp->compact[state * (comp->nbstrings + 1) + i + 1];
 	if ((target > 0) && (target <= comp->nbstates)) {
-	    target--; /* to avoid 0 */
+	    target--; /* to avoid 0 */    
 	    if (xmlRegStrEqualWildcard(comp->stringMap[i], value)) {
-		exec->index = target;
+		exec->index = target;		
 		if ((exec->callback != NULL) && (comp->transdata != NULL)) {
 		    exec->callback(exec->data, value,
 			  comp->transdata[state * comp->nbstrings + i], data);
@@ -2736,19 +3707,20 @@ error:
 }
 
 /**
- * xmlRegExecPushString:
+ * xmlRegExecPushStringInternal:
  * @exec: a regexp execution context or NULL to indicate the end
  * @value: a string token input
  * @data: data associated to the token to reuse in callbacks
+ * @compound: value was assembled from 2 strings
  *
  * Push one input token in the execution context
  *
  * Returns: 1 if the regexp reached a final state, 0 if non-final, and
  *     a negative value in case of error.
  */
-int
-xmlRegExecPushString(xmlRegExecCtxtPtr exec, const xmlChar *value,
-	             void *data) {
+static int
+xmlRegExecPushStringInternal(xmlRegExecCtxtPtr exec, const xmlChar *value,
+	                     void *data, int compound) {
     xmlRegTransPtr trans;
     xmlRegAtomPtr atom;
     int ret;
@@ -2830,7 +3802,7 @@ xmlRegExecPushString(xmlRegExecCtxtPtr exec, const xmlChar *value,
 			    continue;
 			counter = &exec->comp->counters[t->counter];
 			count = exec->counts[t->counter];
-			if ((count < counter->max) &&
+			if ((count < counter->max) && 
 		            (t->atom != NULL) &&
 			    (xmlStrEqual(value, t->atom->valuep))) {
 			    ret = 0;
@@ -2838,6 +3810,7 @@ xmlRegExecPushString(xmlRegExecCtxtPtr exec, const xmlChar *value,
 			}
 			if ((count >= counter->min) &&
 			    (count < counter->max) &&
+			    (t->atom != NULL) &&
 			    (xmlStrEqual(value, t->atom->valuep))) {
 			    ret = 1;
 			    break;
@@ -2890,6 +3863,11 @@ xmlRegExecPushString(xmlRegExecCtxtPtr exec, const xmlChar *value,
 		break;
 	    } else if (value != NULL) {
 		ret = xmlRegStrEqualWildcard(atom->valuep, value);
+		if (atom->neg) {
+		    ret = !ret;
+		    if (!compound)
+		        ret = 0;
+		}
 		if ((ret == 1) && (trans->counter >= 0)) {
 		    xmlRegCounterPtr counter;
 		    int count;
@@ -2984,6 +3962,14 @@ xmlRegExecPushString(xmlRegExecCtxtPtr exec, const xmlChar *value,
 		    printf("Increasing count %d\n", trans->counter);
 #endif
 		    exec->counts[trans->counter]++;
+		}
+		if ((trans->count >= 0) &&
+		    (trans->count < REGEXP_ALL_COUNTER)) {
+#ifdef DEBUG_REGEXP_EXEC
+		    printf("resetting count %d on transition\n",
+		           trans->count);
+#endif
+		    exec->counts[trans->count] = 0;
 		}
 #ifdef DEBUG_PUSH
 		printf("entering state %d\n", trans->to);
@@ -3081,6 +4067,23 @@ progress:
 }
 
 /**
+ * xmlRegExecPushString:
+ * @exec: a regexp execution context or NULL to indicate the end
+ * @value: a string token input
+ * @data: data associated to the token to reuse in callbacks
+ *
+ * Push one input token in the execution context
+ *
+ * Returns: 1 if the regexp reached a final state, 0 if non-final, and
+ *     a negative value in case of error.
+ */
+int
+xmlRegExecPushString(xmlRegExecCtxtPtr exec, const xmlChar *value,
+	             void *data) {
+    return(xmlRegExecPushStringInternal(exec, value, data, 0));
+}
+
+/**
  * xmlRegExecPushString2:
  * @exec: a regexp execution context or NULL to indicate the end
  * @value: the first string token input
@@ -3129,15 +4132,15 @@ xmlRegExecPushString2(xmlRegExecCtxtPtr exec, const xmlChar *value,
     if (exec->comp->compact != NULL)
 	ret = xmlRegCompactPushString(exec, exec->comp, str, data);
     else
-        ret = xmlRegExecPushString(exec, str, data);
+        ret = xmlRegExecPushStringInternal(exec, str, data, 1);
 
     if (str != buf)
-        xmlFree(buf);
+        xmlFree(str);
     return(ret);
 }
 
 /**
- * xmlRegExecGetalues:
+ * xmlRegExecGetValues:
  * @exec: a regexp execution context
  * @err: error extraction or normal one
  * @nbval: pointer to the number of accepted values IN/OUT
@@ -3157,7 +4160,7 @@ xmlRegExecGetValues(xmlRegExecCtxtPtr exec, int err,
     int maxval;
     int nb = 0;
 
-    if ((exec == NULL) || (nbval == NULL) || (nbneg == NULL) ||
+    if ((exec == NULL) || (nbval == NULL) || (nbneg == NULL) || 
         (values == NULL) || (*nbval <= 0))
         return(-1);
 
@@ -3237,26 +4240,33 @@ xmlRegExecGetValues(xmlRegExecCtxtPtr exec, int err,
 	        /* this should not be reached but ... */
 	        TODO;
 	    } else if (trans->counter >= 0) {
-		xmlRegCounterPtr counter;
+		xmlRegCounterPtr counter = NULL;
 		int count;
 
 		if (err)
 		    count = exec->errCounts[trans->counter];
 		else
 		    count = exec->counts[trans->counter];
-		counter = &exec->comp->counters[trans->counter];
-		if (count < counter->max) {
-		    values[nb++] = (xmlChar *) atom->valuep;
+		if (exec->comp != NULL)
+		    counter = &exec->comp->counters[trans->counter];
+		if ((counter == NULL) || (count < counter->max)) {
+		    if (atom->neg)
+			values[nb++] = (xmlChar *) atom->valuep2;
+		    else
+			values[nb++] = (xmlChar *) atom->valuep;
 		    (*nbval)++;
 		}
 	    } else {
                 if ((exec->comp->states[trans->to] != NULL) &&
 		    (exec->comp->states[trans->to]->type !=
 		     XML_REGEXP_SINK_STATE)) {
-		    values[nb++] = (xmlChar *) atom->valuep;
+		    if (atom->neg)
+			values[nb++] = (xmlChar *) atom->valuep2;
+		    else
+			values[nb++] = (xmlChar *) atom->valuep;
 		    (*nbval)++;
 		}
-	    }
+	    } 
 	}
 	for (transno = 0;
 	     (transno < state->nbTrans) && (nb < maxval);
@@ -3277,10 +4287,13 @@ xmlRegExecGetValues(xmlRegExecCtxtPtr exec, int err,
                 if ((exec->comp->states[trans->to] != NULL) &&
 		    (exec->comp->states[trans->to]->type ==
 		     XML_REGEXP_SINK_STATE)) {
-		    values[nb++] = (xmlChar *) atom->valuep;
+		    if (atom->neg)
+			values[nb++] = (xmlChar *) atom->valuep2;
+		    else
+			values[nb++] = (xmlChar *) atom->valuep;
 		    (*nbneg)++;
 		}
-	    }
+	    } 
 	}
     }
     return(0);
@@ -3468,6 +4481,15 @@ xmlRegExecPushChar(xmlRegExecCtxtPtr exec, int UCS) {
 		if (exec->state->nbTrans > exec->transno + 1) {
 		    xmlFARegExecSave(exec);
 		}
+		/*
+		 * restart count for expressions like this ((abc){2})*
+		 */
+		if (trans->count >= 0) {
+#ifdef DEBUG_REGEXP_EXEC
+		    printf("Reset count %d\n", trans->count);
+#endif
+		    exec->counts[trans->count] = 0;
+		}
 		if (trans->counter >= 0) {
 #ifdef DEBUG_REGEXP_EXEC
 		    printf("Increasing count %d\n", trans->counter);
@@ -3534,7 +4556,7 @@ xmlFAIsChar(xmlRegParserCtxtPtr ctxt) {
  *
  * [27]   charProp   ::=   IsCategory | IsBlock
  * [28]   IsCategory ::= Letters | Marks | Numbers | Punctuation |
- *                       Separators | Symbols | Others
+ *                       Separators | Symbols | Others 
  * [29]   Letters   ::=   'L' [ultmo]?
  * [30]   Marks   ::=   'M' [nce]?
  * [31]   Numbers   ::=   'N' [dlo]?
@@ -3549,7 +4571,7 @@ xmlFAParseCharProp(xmlRegParserCtxtPtr ctxt) {
     int cur;
     xmlRegAtomType type = (xmlRegAtomType) 0;
     xmlChar *blockName = NULL;
-
+    
     cur = CUR;
     if (cur == 'L') {
 	NEXT;
@@ -3721,15 +4743,15 @@ xmlFAParseCharProp(xmlRegParserCtxtPtr ctxt) {
 	NEXT;
 	start = ctxt->cur;
 	cur = CUR;
-	if (((cur >= 'a') && (cur <= 'z')) ||
-	    ((cur >= 'A') && (cur <= 'Z')) ||
-	    ((cur >= '0') && (cur <= '9')) ||
+	if (((cur >= 'a') && (cur <= 'z')) || 
+	    ((cur >= 'A') && (cur <= 'Z')) || 
+	    ((cur >= '0') && (cur <= '9')) || 
 	    (cur == 0x2D)) {
 	    NEXT;
 	    cur = CUR;
-	    while (((cur >= 'a') && (cur <= 'z')) ||
-		((cur >= 'A') && (cur <= 'Z')) ||
-		((cur >= '0') && (cur <= '9')) ||
+	    while (((cur >= 'a') && (cur <= 'z')) || 
+		((cur >= 'A') && (cur <= 'Z')) || 
+		((cur >= '0') && (cur <= '9')) || 
 		(cur == 0x2D)) {
 		NEXT;
 		cur = CUR;
@@ -3755,7 +4777,7 @@ xmlFAParseCharProp(xmlRegParserCtxtPtr ctxt) {
  * xmlFAParseCharClassEsc:
  * @ctxt:  a regexp parser context
  *
- * [23] charClassEsc ::= ( SingleCharEsc | MultiCharEsc | catEsc | complEsc )
+ * [23] charClassEsc ::= ( SingleCharEsc | MultiCharEsc | catEsc | complEsc ) 
  * [24] SingleCharEsc ::= '\' [nrt\|.?*+(){}#x2D#x5B#x5D#x5E]
  * [25] catEsc   ::=   '\p{' charProp '}'
  * [26] complEsc ::=   '\P{' charProp '}'
@@ -3815,8 +4837,21 @@ xmlFAParseCharClassEsc(xmlRegParserCtxtPtr ctxt) {
 	(cur == 0x5E)) {
 	if (ctxt->atom == NULL) {
 	    ctxt->atom = xmlRegNewAtom(ctxt, XML_REGEXP_CHARVAL);
-	    if (ctxt->atom != NULL)
-		ctxt->atom->codepoint = cur;
+	    if (ctxt->atom != NULL) {
+	        switch (cur) {
+		    case 'n':
+		        ctxt->atom->codepoint = '\n';
+			break;
+		    case 'r':
+		        ctxt->atom->codepoint = '\r';
+			break;
+		    case 't':
+		        ctxt->atom->codepoint = '\t';
+			break;
+		    default:
+			ctxt->atom->codepoint = cur;
+		}
+	    }
 	} else if (ctxt->atom->type == XML_REGEXP_RANGES) {
 	    xmlRegAtomAddRange(ctxt, ctxt->atom, ctxt->neg,
 			       XML_REGEXP_CHARVAL, cur, cur, NULL);
@@ -3828,34 +4863,34 @@ xmlFAParseCharClassEsc(xmlRegParserCtxtPtr ctxt) {
 	xmlRegAtomType type = XML_REGEXP_ANYSPACE;
 
 	switch (cur) {
-	    case 's':
+	    case 's': 
 		type = XML_REGEXP_ANYSPACE;
 		break;
-	    case 'S':
+	    case 'S': 
 		type = XML_REGEXP_NOTSPACE;
 		break;
-	    case 'i':
+	    case 'i': 
 		type = XML_REGEXP_INITNAME;
 		break;
-	    case 'I':
+	    case 'I': 
 		type = XML_REGEXP_NOTINITNAME;
 		break;
-	    case 'c':
+	    case 'c': 
 		type = XML_REGEXP_NAMECHAR;
 		break;
-	    case 'C':
+	    case 'C': 
 		type = XML_REGEXP_NOTNAMECHAR;
 		break;
-	    case 'd':
+	    case 'd': 
 		type = XML_REGEXP_DECIMAL;
 		break;
-	    case 'D':
+	    case 'D': 
 		type = XML_REGEXP_NOTDECIMAL;
 		break;
-	    case 'w':
+	    case 'w': 
 		type = XML_REGEXP_REALCHAR;
 		break;
-	    case 'W':
+	    case 'W': 
 		type = XML_REGEXP_NOTREALCHAR;
 		break;
 	}
@@ -3866,71 +4901,16 @@ xmlFAParseCharClassEsc(xmlRegParserCtxtPtr ctxt) {
 	    xmlRegAtomAddRange(ctxt, ctxt->atom, ctxt->neg,
 			       type, 0, 0, NULL);
 	}
-    }
-}
-
-/**
- * xmlFAParseCharRef:
- * @ctxt:  a regexp parser context
- *
- * [19]   XmlCharRef   ::=   ( '&#' [0-9]+ ';' ) | (' &#x' [0-9a-fA-F]+ ';' )
- */
-static int
-xmlFAParseCharRef(xmlRegParserCtxtPtr ctxt) {
-    int ret = 0, cur;
-
-    if ((CUR != '&') || (NXT(1) != '#'))
-	return(-1);
-    NEXT;
-    NEXT;
-    cur = CUR;
-    if (cur == 'x') {
-	NEXT;
-	cur = CUR;
-	if (((cur >= '0') && (cur <= '9')) ||
-	    ((cur >= 'a') && (cur <= 'f')) ||
-	    ((cur >= 'A') && (cur <= 'F'))) {
-	    while (((cur >= '0') && (cur <= '9')) ||
-		   ((cur >= 'A') && (cur <= 'F'))) {
-		if ((cur >= '0') && (cur <= '9'))
-		    ret = ret * 16 + cur - '0';
-		else if ((cur >= 'a') && (cur <= 'f'))
-		    ret = ret * 16 + 10 + (cur - 'a');
-		else
-		    ret = ret * 16 + 10 + (cur - 'A');
-		NEXT;
-		cur = CUR;
-	    }
-	} else {
-	    ERROR("Char ref: expecting [0-9A-F]");
-	    return(-1);
-	}
     } else {
-	if ((cur >= '0') && (cur <= '9')) {
-	    while ((cur >= '0') && (cur <= '9')) {
-		ret = ret * 10 + cur - '0';
-		NEXT;
-		cur = CUR;
-	    }
-	} else {
-	    ERROR("Char ref: expecting [0-9]");
-	    return(-1);
-	}
+	ERROR("Wrong escape sequence, misuse of character '\\'");
     }
-    if (cur != ';') {
-	ERROR("Char ref: expecting ';'");
-	return(-1);
-    } else {
-	NEXT;
-    }
-    return(ret);
 }
 
 /**
  * xmlFAParseCharRange:
  * @ctxt:  a regexp parser context
  *
- * [17]   charRange   ::=     seRange | XmlCharRef | XmlCharIncDash
+ * [17]   charRange   ::=     seRange | XmlCharRef | XmlCharIncDash 
  * [18]   seRange   ::=   charOrEsc '-' charOrEsc
  * [20]   charOrEsc   ::=   XmlChar | SingleCharEsc
  * [21]   XmlChar   ::=   [^\#x2D#x5B#x5D]
@@ -3942,12 +4922,11 @@ xmlFAParseCharRange(xmlRegParserCtxtPtr ctxt) {
     int start = -1;
     int end = -1;
 
-    if ((CUR == '&') && (NXT(1) == '#')) {
-	end = start = xmlFAParseCharRef(ctxt);
-        xmlRegAtomAddRange(ctxt, ctxt->atom, ctxt->neg,
-	                   XML_REGEXP_CHARVAL, start, end, NULL);
+    if (CUR == '\0') {
+        ERROR("Expecting ']'");
 	return;
     }
+
     cur = CUR;
     if (cur == '\\') {
 	NEXT;
@@ -3972,10 +4951,15 @@ xmlFAParseCharRange(xmlRegParserCtxtPtr ctxt) {
 	ERROR("Expecting a char range");
 	return;
     }
-    NEXTL(len);
-    if (start == '-') {
+    /*
+     * Since we are "inside" a range, we can assume ctxt->cur is past
+     * the start of ctxt->string, and PREV should be safe
+     */
+    if ((start == '-') && (NXT(1) != ']') && (PREV != '[') && (PREV != '^')) {
+	NEXTL(len);
 	return;
     }
+    NEXTL(len);
     cur = CUR;
     if ((cur != '-') || (NXT(1) == ']')) {
         xmlRegAtomAddRange(ctxt, ctxt->atom, ctxt->neg,
@@ -4026,13 +5010,13 @@ xmlFAParseCharRange(xmlRegParserCtxtPtr ctxt) {
 static void
 xmlFAParsePosCharGroup(xmlRegParserCtxtPtr ctxt) {
     do {
-	if ((CUR == '\\') || (CUR == '.')) {
+	if (CUR == '\\') {
 	    xmlFAParseCharClassEsc(ctxt);
 	} else {
 	    xmlFAParseCharRange(ctxt);
 	}
     } while ((CUR != ']') && (CUR != '^') && (CUR != '-') &&
-	     (ctxt->error == 0));
+             (CUR != 0) && (ctxt->error == 0));
 }
 
 /**
@@ -4041,7 +5025,7 @@ xmlFAParsePosCharGroup(xmlRegParserCtxtPtr ctxt) {
  *
  * [13]   charGroup    ::= posCharGroup | negCharGroup | charClassSub
  * [15]   negCharGroup ::= '^' posCharGroup
- * [16]   charClassSub ::= ( posCharGroup | negCharGroup ) '-' charClassExpr
+ * [16]   charClassSub ::= ( posCharGroup | negCharGroup ) '-' charClassExpr  
  * [12]   charClassExpr ::= '[' charGroup ']'
  */
 static void
@@ -4215,9 +5199,15 @@ xmlFAParseAtom(xmlRegParserCtxtPtr ctxt) {
     } else if (CUR == ')') {
 	return(0);
     } else if (CUR == '(') {
-	xmlRegStatePtr start, oldend;
+	xmlRegStatePtr start, oldend, start0;
 
 	NEXT;
+	/*
+	 * this extra Epsilon transition is needed if we count with 0 allowed
+	 * unfortunately this can't be known at that point
+	 */
+	xmlFAGenerateEpsilonTransition(ctxt, ctxt->state, NULL);
+	start0 = ctxt->state;
 	xmlFAGenerateEpsilonTransition(ctxt, ctxt->state, NULL);
 	start = ctxt->state;
 	oldend = ctxt->end;
@@ -4233,6 +5223,7 @@ xmlFAParseAtom(xmlRegParserCtxtPtr ctxt) {
 	if (ctxt->atom == NULL)
 	    return(-1);
 	ctxt->atom->start = start;
+	ctxt->atom->start0 = start0;
 	ctxt->atom->stop = ctxt->state;
 	ctxt->end = oldend;
 	return(1);
@@ -4267,19 +5258,23 @@ xmlFAParsePiece(xmlRegParserCtxtPtr ctxt) {
 /**
  * xmlFAParseBranch:
  * @ctxt:  a regexp parser context
+ * @to: optional target to the end of the branch
+ *
+ * @to is used to optimize by removing duplicate path in automata
+ * in expressions like (a|b)(c|d)
  *
  * [2]   branch   ::=   piece*
- 8
  */
 static int
-xmlFAParseBranch(xmlRegParserCtxtPtr ctxt) {
+xmlFAParseBranch(xmlRegParserCtxtPtr ctxt, xmlRegStatePtr to) {
     xmlRegStatePtr previous;
     int ret;
 
     previous = ctxt->state;
     ret = xmlFAParsePiece(ctxt);
     if (ret != 0) {
-	if (xmlFAGenerateTransitions(ctxt, previous, NULL, ctxt->atom) < 0)
+	if (xmlFAGenerateTransitions(ctxt, previous, 
+	        (CUR=='|' || CUR==')') ? to : NULL, ctxt->atom) < 0)
 	    return(-1);
 	previous = ctxt->state;
 	ctxt->atom = NULL;
@@ -4287,8 +5282,8 @@ xmlFAParseBranch(xmlRegParserCtxtPtr ctxt) {
     while ((ret != 0) && (ctxt->error == 0)) {
 	ret = xmlFAParsePiece(ctxt);
 	if (ret != 0) {
-	    if (xmlFAGenerateTransitions(ctxt, previous, NULL,
-					 ctxt->atom) < 0)
+	    if (xmlFAGenerateTransitions(ctxt, previous, 
+	            (CUR=='|' || CUR==')') ? to : NULL, ctxt->atom) < 0)
 		    return(-1);
 	    previous = ctxt->state;
 	    ctxt->atom = NULL;
@@ -4311,7 +5306,7 @@ xmlFAParseRegExp(xmlRegParserCtxtPtr ctxt, int top) {
     /* if not top start should have been generated by an epsilon trans */
     start = ctxt->state;
     ctxt->end = NULL;
-    xmlFAParseBranch(ctxt);
+    xmlFAParseBranch(ctxt, NULL);
     if (top) {
 #ifdef DEBUG_REGEXP_GRAPH
 	printf("State %d is final\n", ctxt->state->no);
@@ -4327,15 +5322,7 @@ xmlFAParseRegExp(xmlRegParserCtxtPtr ctxt, int top) {
 	NEXT;
 	ctxt->state = start;
 	ctxt->end = NULL;
-	xmlFAParseBranch(ctxt);
-	if (top) {
-	    ctxt->state->type = XML_REGEXP_FINAL_STATE;
-#ifdef DEBUG_REGEXP_GRAPH
-	    printf("State %d is final\n", ctxt->state->no);
-#endif
-	} else {
-	    xmlFAGenerateEpsilonTransition(ctxt, ctxt->state, end);
-	}
+	xmlFAParseBranch(ctxt, end);
     }
     if (!top) {
 	ctxt->state = end;
@@ -4414,6 +5401,10 @@ xmlRegexpCompile(const xmlChar *regexp) {
     xmlFAParseRegExp(ctxt, 1);
     if (CUR != 0) {
 	ERROR("xmlFAParseRegExp: extra characters");
+    }
+    if (ctxt->error != 0) {
+	xmlRegFreeParserCtxt(ctxt);
+	return(NULL);
     }
     ctxt->end = ctxt->state;
     ctxt->start->type = XML_REGEXP_START_STATE;
@@ -4554,6 +5545,7 @@ xmlNewAutomata(void) {
 	xmlFreeAutomata(ctxt);
 	return(NULL);
     }
+    ctxt->start->type = XML_REGEXP_START_STATE;
     if (xmlRegStatePush(ctxt, ctxt->start) < 0) {
         xmlRegFreeState(ctxt->start);
 	xmlFreeAutomata(ctxt);
@@ -4671,9 +5663,9 @@ xmlAutomataNewTransition2(xmlAutomataPtr am, xmlAutomataStatePtr from,
     if ((am == NULL) || (from == NULL) || (token == NULL))
 	return(NULL);
     atom = xmlRegNewAtom(am, XML_REGEXP_STRING);
-    atom->data = data;
     if (atom == NULL)
 	return(NULL);
+    atom->data = data;
     if ((token2 == NULL) || (*token2 == 0)) {
 	atom->valuep = xmlStrdup(token);
     } else {
@@ -4706,6 +5698,72 @@ xmlAutomataNewTransition2(xmlAutomataPtr am, xmlAutomataStatePtr from,
 }
 
 /**
+ * xmlAutomataNewNegTrans:
+ * @am: an automata
+ * @from: the starting point of the transition
+ * @to: the target point of the transition or NULL
+ * @token: the first input string associated to that transition
+ * @token2: the second input string associated to that transition
+ * @data: data passed to the callback function if the transition is activated
+ *
+ * If @to is NULL, this creates first a new target state in the automata
+ * and then adds a transition from the @from state to the target state
+ * activated by any value except (@token,@token2)
+ * Note that if @token2 is not NULL, then (X, NULL) won't match to follow
+ # the semantic of XSD ##other
+ *
+ * Returns the target state or NULL in case of error
+ */
+xmlAutomataStatePtr
+xmlAutomataNewNegTrans(xmlAutomataPtr am, xmlAutomataStatePtr from,
+		       xmlAutomataStatePtr to, const xmlChar *token,
+		       const xmlChar *token2, void *data) {
+    xmlRegAtomPtr atom;
+    xmlChar err_msg[200];
+
+    if ((am == NULL) || (from == NULL) || (token == NULL))
+	return(NULL);
+    atom = xmlRegNewAtom(am, XML_REGEXP_STRING);
+    if (atom == NULL)
+	return(NULL);
+    atom->data = data;
+    atom->neg = 1;
+    if ((token2 == NULL) || (*token2 == 0)) {
+	atom->valuep = xmlStrdup(token);
+    } else {
+	int lenn, lenp;
+	xmlChar *str;
+
+	lenn = strlen((char *) token2);
+	lenp = strlen((char *) token);
+
+	str = (xmlChar *) xmlMallocAtomic(lenn + lenp + 2);
+	if (str == NULL) {
+	    xmlRegFreeAtom(atom);
+	    return(NULL);
+	}
+	memcpy(&str[0], token, lenp);
+	str[lenp] = '|';
+	memcpy(&str[lenp + 1], token2, lenn);
+	str[lenn + lenp + 1] = 0;
+
+	atom->valuep = str;
+    }
+    snprintf((char *) err_msg, 199, "not %s", (const char *) atom->valuep);
+    err_msg[199] = 0;
+    atom->valuep2 = xmlStrdup(err_msg);
+
+    if (xmlFAGenerateTransitions(am, from, to, atom) < 0) {
+        xmlRegFreeAtom(atom);
+	return(NULL);
+    }
+    am->negs++;
+    if (to == NULL)
+	return(am->state);
+    return(to);
+}
+
+/**
  * xmlAutomataNewCountTrans2:
  * @am: an automata
  * @from: the starting point of the transition
@@ -4718,7 +5776,7 @@ xmlAutomataNewTransition2(xmlAutomataPtr am, xmlAutomataStatePtr from,
  *
  * If @to is NULL, this creates first a new target state in the automata
  * and then adds a transition from the @from state to the target state
- * activated by a succession of input of value @token and @token2 and
+ * activated by a succession of input of value @token and @token2 and 
  * whose number is between @min and @max
  *
  * Returns the target state or NULL in case of error
@@ -4872,8 +5930,8 @@ xmlAutomataNewCountTrans(xmlAutomataPtr am, xmlAutomataStatePtr from,
  *
  * If @to is NULL, this creates first a new target state in the automata
  * and then adds a transition from the @from state to the target state
- * activated by a succession of input of value @token and @token2 and whose
- * number is between @min and @max, moreover that transition can only be
+ * activated by a succession of input of value @token and @token2 and whose 
+ * number is between @min and @max, moreover that transition can only be 
  * crossed once.
  *
  * Returns the target state or NULL in case of error
@@ -4915,13 +5973,10 @@ xmlAutomataNewOnceTrans2(xmlAutomataPtr am, xmlAutomataStatePtr from,
 	str[lenn + lenp + 1] = 0;
 
 	atom->valuep = str;
-    }
+    }    
     atom->data = data;
     atom->quant = XML_REGEXP_QUANT_ONCEONLY;
-    if (min == 0)
-	atom->min = 1;
-    else
-	atom->min = min;
+    atom->min = min;
     atom->max = max;
     /*
      * associate a counter to the transition.
@@ -4941,7 +5996,7 @@ xmlAutomataNewOnceTrans2(xmlAutomataPtr am, xmlAutomataStatePtr from,
     return(to);
 }
 
-
+    
 
 /**
  * xmlAutomataNewOnceTrans:
@@ -4980,10 +6035,7 @@ xmlAutomataNewOnceTrans(xmlAutomataPtr am, xmlAutomataStatePtr from,
     atom->valuep = xmlStrdup(token);
     atom->data = data;
     atom->quant = XML_REGEXP_QUANT_ONCEONLY;
-    if (min == 0)
-	atom->min = 1;
-    else
-	atom->min = min;
+    atom->min = min;
     atom->max = max;
     /*
      * associate a counter to the transition.
@@ -5013,7 +6065,7 @@ xmlAutomataNewOnceTrans(xmlAutomataPtr am, xmlAutomataStatePtr from,
  */
 xmlAutomataStatePtr
 xmlAutomataNewState(xmlAutomataPtr am) {
-    xmlAutomataStatePtr to;
+    xmlAutomataStatePtr to; 
 
     if (am == NULL)
 	return(NULL);
@@ -5080,7 +6132,7 @@ xmlAutomataNewAllTrans(xmlAutomataPtr am, xmlAutomataStatePtr from,
  *
  * Returns the counter number or -1 in case of error
  */
-int
+int		
 xmlAutomataNewCounter(xmlAutomataPtr am, int min, int max) {
     int ret;
 
@@ -5152,7 +6204,7 @@ xmlAutomataNewCounterTrans(xmlAutomataPtr am, xmlAutomataStatePtr from,
  *
  * Returns the compiled regexp or NULL in case of error
  */
-xmlRegexpPtr
+xmlRegexpPtr          
 xmlAutomataCompile(xmlAutomataPtr am) {
     xmlRegexpPtr ret;
 
@@ -5172,7 +6224,7 @@ xmlAutomataCompile(xmlAutomataPtr am) {
  *
  * Returns 1 if true, 0 if not, and -1 in case of error
  */
-int
+int          
 xmlAutomataIsDeterminist(xmlAutomataPtr am) {
     int ret;
 
@@ -5183,6 +6235,1850 @@ xmlAutomataIsDeterminist(xmlAutomataPtr am) {
     return(ret);
 }
 #endif /* LIBXML_AUTOMATA_ENABLED */
+
+#ifdef LIBXML_EXPR_ENABLED
+/************************************************************************
+ *									*
+ *		Formal Expression handling code				*
+ *									*
+ ************************************************************************/
+/************************************************************************
+ *									*
+ *		Expression handling context				*
+ *									*
+ ************************************************************************/
+
+struct _xmlExpCtxt {
+    xmlDictPtr dict;
+    xmlExpNodePtr *table;
+    int size;
+    int nbElems;
+    int nb_nodes;
+    const char *expr;
+    const char *cur;
+    int nb_cons;
+    int tabSize;
+};
+
+/**
+ * xmlExpNewCtxt:
+ * @maxNodes:  the maximum number of nodes
+ * @dict:  optional dictionnary to use internally
+ *
+ * Creates a new context for manipulating expressions
+ *
+ * Returns the context or NULL in case of error
+ */
+xmlExpCtxtPtr
+xmlExpNewCtxt(int maxNodes, xmlDictPtr dict) {
+    xmlExpCtxtPtr ret;
+    int size = 256;
+
+    if (maxNodes <= 4096)
+        maxNodes = 4096;
+    
+    ret = (xmlExpCtxtPtr) xmlMalloc(sizeof(xmlExpCtxt));
+    if (ret == NULL)
+        return(NULL);
+    memset(ret, 0, sizeof(xmlExpCtxt));
+    ret->size = size;
+    ret->nbElems = 0;
+    ret->table = xmlMalloc(size * sizeof(xmlExpNodePtr));
+    if (ret->table == NULL) {
+        xmlFree(ret);
+	return(NULL);
+    }
+    memset(ret->table, 0, size * sizeof(xmlExpNodePtr));
+    if (dict == NULL) {
+        ret->dict = xmlDictCreate();
+	if (ret->dict == NULL) {
+	    xmlFree(ret->table);
+	    xmlFree(ret);
+	    return(NULL);
+	}
+    } else {
+        ret->dict = dict;
+	xmlDictReference(ret->dict);
+    }
+    return(ret);
+}
+
+/**
+ * xmlExpFreeCtxt:
+ * @ctxt:  an expression context
+ *
+ * Free an expression context
+ */
+void
+xmlExpFreeCtxt(xmlExpCtxtPtr ctxt) {
+    if (ctxt == NULL)
+        return;
+    xmlDictFree(ctxt->dict);
+    if (ctxt->table != NULL)
+	xmlFree(ctxt->table);
+    xmlFree(ctxt);
+}
+
+/************************************************************************
+ *									*
+ *		Structure associated to an expression node		*
+ *									*
+ ************************************************************************/
+#define MAX_NODES 10000
+
+/* #define DEBUG_DERIV */
+
+/*
+ * TODO: 
+ * - Wildcards
+ * - public API for creation
+ *
+ * Started
+ * - regression testing
+ *
+ * Done
+ * - split into module and test tool
+ * - memleaks
+ */
+
+typedef enum {
+    XML_EXP_NILABLE = (1 << 0)
+} xmlExpNodeInfo;
+
+#define IS_NILLABLE(node) ((node)->info & XML_EXP_NILABLE)
+
+struct _xmlExpNode {
+    unsigned char type;/* xmlExpNodeType */
+    unsigned char info;/* OR of xmlExpNodeInfo */
+    unsigned short key;	/* the hash key */
+    unsigned int ref;	/* The number of references */
+    int c_max;		/* the maximum length it can consume */
+    xmlExpNodePtr exp_left;
+    xmlExpNodePtr next;/* the next node in the hash table or free list */
+    union {
+	struct {
+	    int f_min;
+	    int f_max;
+	} count;
+	struct {
+	    xmlExpNodePtr f_right;
+	} children;
+        const xmlChar *f_str;
+    } field;
+};
+
+#define exp_min field.count.f_min
+#define exp_max field.count.f_max
+/* #define exp_left field.children.f_left */
+#define exp_right field.children.f_right
+#define exp_str field.f_str
+
+static xmlExpNodePtr xmlExpNewNode(xmlExpCtxtPtr ctxt, xmlExpNodeType type);
+static xmlExpNode forbiddenExpNode = {
+    XML_EXP_FORBID, 0, 0, 0, 0, NULL, NULL, {{ 0, 0}}
+};
+xmlExpNodePtr forbiddenExp = &forbiddenExpNode;
+static xmlExpNode emptyExpNode = {
+    XML_EXP_EMPTY, 1, 0, 0, 0, NULL, NULL, {{ 0, 0}}
+};
+xmlExpNodePtr emptyExp = &emptyExpNode;
+
+/************************************************************************
+ *									*
+ *  The custom hash table for unicity and canonicalization		*
+ *  of sub-expressions pointers						*
+ *									*
+ ************************************************************************/
+/*
+ * xmlExpHashNameComputeKey:
+ * Calculate the hash key for a token
+ */
+static unsigned short
+xmlExpHashNameComputeKey(const xmlChar *name) {
+    unsigned short value = 0L;
+    char ch;
+    
+    if (name != NULL) {
+	value += 30 * (*name);
+	while ((ch = *name++) != 0) {
+	    value = value ^ ((value << 5) + (value >> 3) + (unsigned long)ch);
+	}
+    }
+    return (value);
+}
+
+/*
+ * xmlExpHashComputeKey:
+ * Calculate the hash key for a compound expression
+ */
+static unsigned short
+xmlExpHashComputeKey(xmlExpNodeType type, xmlExpNodePtr left,
+                     xmlExpNodePtr right) {
+    unsigned long value;
+    unsigned short ret;
+    
+    switch (type) {
+        case XML_EXP_SEQ:
+	    value = left->key;
+	    value += right->key;
+	    value *= 3;
+	    ret = (unsigned short) value;
+	    break;
+        case XML_EXP_OR:
+	    value = left->key;
+	    value += right->key;
+	    value *= 7;
+	    ret = (unsigned short) value;
+	    break;
+        case XML_EXP_COUNT:
+	    value = left->key;
+	    value += right->key;
+	    ret = (unsigned short) value;
+	    break;
+	default:
+	    ret = 0;
+    }
+    return(ret);
+}
+
+
+static xmlExpNodePtr
+xmlExpNewNode(xmlExpCtxtPtr ctxt, xmlExpNodeType type) {
+    xmlExpNodePtr ret;
+
+    if (ctxt->nb_nodes >= MAX_NODES)
+        return(NULL);
+    ret = (xmlExpNodePtr) xmlMalloc(sizeof(xmlExpNode));
+    if (ret == NULL)
+        return(NULL);
+    memset(ret, 0, sizeof(xmlExpNode));
+    ret->type = type;
+    ret->next = NULL;
+    ctxt->nb_nodes++;
+    ctxt->nb_cons++;
+    return(ret);
+}
+
+/**
+ * xmlExpHashGetEntry:
+ * @table: the hash table
+ *
+ * Get the unique entry from the hash table. The entry is created if
+ * needed. @left and @right are consumed, i.e. their ref count will
+ * be decremented by the operation.
+ *
+ * Returns the pointer or NULL in case of error
+ */
+static xmlExpNodePtr
+xmlExpHashGetEntry(xmlExpCtxtPtr ctxt, xmlExpNodeType type,
+                   xmlExpNodePtr left, xmlExpNodePtr right,
+		   const xmlChar *name, int min, int max) {
+    unsigned short kbase, key;
+    xmlExpNodePtr entry;
+    xmlExpNodePtr insert;
+
+    if (ctxt == NULL)
+	return(NULL);
+
+    /*
+     * Check for duplicate and insertion location.
+     */
+    if (type == XML_EXP_ATOM) {
+	kbase = xmlExpHashNameComputeKey(name);
+    } else if (type == XML_EXP_COUNT) {
+        /* COUNT reduction rule 1 */
+	/* a{1} -> a */
+	if (min == max) {
+	    if (min == 1) {
+		return(left);
+	    }
+	    if (min == 0) {
+		xmlExpFree(ctxt, left);
+	        return(emptyExp);
+	    }
+	}
+	if (min < 0) {
+	    xmlExpFree(ctxt, left);
+	    return(forbiddenExp);
+	}
+        if (max == -1)
+	    kbase = min + 79;
+	else
+	    kbase = max - min;
+	kbase += left->key;
+    } else if (type == XML_EXP_OR) {
+        /* Forbid reduction rules */
+        if (left->type == XML_EXP_FORBID) {
+	    xmlExpFree(ctxt, left);
+	    return(right);
+	}
+        if (right->type == XML_EXP_FORBID) {
+	    xmlExpFree(ctxt, right);
+	    return(left);
+	}
+
+        /* OR reduction rule 1 */
+	/* a | a reduced to a */
+        if (left == right) {
+	    left->ref--;
+	    return(left);
+	}
+        /* OR canonicalization rule 1 */
+	/* linearize (a | b) | c into a | (b | c) */
+        if ((left->type == XML_EXP_OR) && (right->type != XML_EXP_OR)) {
+	    xmlExpNodePtr tmp = left;
+            left = right;
+	    right = tmp;
+	}
+        /* OR reduction rule 2 */
+	/* a | (a | b) and b | (a | b) are reduced to a | b */
+        if (right->type == XML_EXP_OR) {
+	    if ((left == right->exp_left) ||
+	        (left == right->exp_right)) {
+		xmlExpFree(ctxt, left);
+		return(right);
+	    }
+	}
+        /* OR canonicalization rule 2 */
+	/* linearize (a | b) | c into a | (b | c) */
+        if (left->type == XML_EXP_OR) {
+	    xmlExpNodePtr tmp;
+
+	    /* OR canonicalization rule 2 */
+	    if ((left->exp_right->type != XML_EXP_OR) &&
+	        (left->exp_right->key < left->exp_left->key)) {
+	        tmp = left->exp_right;
+		left->exp_right = left->exp_left;
+		left->exp_left = tmp;
+	    }
+	    left->exp_right->ref++;
+	    tmp = xmlExpHashGetEntry(ctxt, XML_EXP_OR, left->exp_right, right,
+	                             NULL, 0, 0);
+	    left->exp_left->ref++;
+	    tmp = xmlExpHashGetEntry(ctxt, XML_EXP_OR, left->exp_left, tmp,
+	                             NULL, 0, 0);
+	
+	    xmlExpFree(ctxt, left);
+	    return(tmp);
+	}
+	if (right->type == XML_EXP_OR) {
+	    /* Ordering in the tree */
+	    /* C | (A | B) -> A | (B | C) */
+	    if (left->key > right->exp_right->key) {
+		xmlExpNodePtr tmp;
+		right->exp_right->ref++;
+		tmp = xmlExpHashGetEntry(ctxt, XML_EXP_OR, right->exp_right,
+		                         left, NULL, 0, 0);
+		right->exp_left->ref++;
+		tmp = xmlExpHashGetEntry(ctxt, XML_EXP_OR, right->exp_left,
+		                         tmp, NULL, 0, 0);
+		xmlExpFree(ctxt, right);
+		return(tmp);
+	    }
+	    /* Ordering in the tree */
+	    /* B | (A | C) -> A | (B | C) */
+	    if (left->key > right->exp_left->key) {
+		xmlExpNodePtr tmp;
+		right->exp_right->ref++;
+		tmp = xmlExpHashGetEntry(ctxt, XML_EXP_OR, left,
+		                         right->exp_right, NULL, 0, 0);
+		right->exp_left->ref++;
+		tmp = xmlExpHashGetEntry(ctxt, XML_EXP_OR, right->exp_left,
+		                         tmp, NULL, 0, 0);
+		xmlExpFree(ctxt, right);
+		return(tmp);
+	    }
+	}
+	/* we know both types are != XML_EXP_OR here */
+        else if (left->key > right->key) {
+	    xmlExpNodePtr tmp = left;
+            left = right;
+	    right = tmp;
+	}
+	kbase = xmlExpHashComputeKey(type, left, right);
+    } else if (type == XML_EXP_SEQ) {
+        /* Forbid reduction rules */
+        if (left->type == XML_EXP_FORBID) {
+	    xmlExpFree(ctxt, right);
+	    return(left);
+	}
+        if (right->type == XML_EXP_FORBID) {
+	    xmlExpFree(ctxt, left);
+	    return(right);
+	}
+        /* Empty reduction rules */
+        if (right->type == XML_EXP_EMPTY) {
+	    return(left);
+	}
+        if (left->type == XML_EXP_EMPTY) {
+	    return(right);
+	}
+	kbase = xmlExpHashComputeKey(type, left, right);
+    } else 
+        return(NULL);
+
+    key = kbase % ctxt->size;
+    if (ctxt->table[key] != NULL) {
+	for (insert = ctxt->table[key]; insert != NULL;
+	     insert = insert->next) {
+	    if ((insert->key == kbase) &&
+	        (insert->type == type)) {
+		if (type == XML_EXP_ATOM) {
+		    if (name == insert->exp_str) {
+			insert->ref++;
+			return(insert);
+		    }
+		} else if (type == XML_EXP_COUNT) {
+		    if ((insert->exp_min == min) && (insert->exp_max == max) &&
+		        (insert->exp_left == left)) {
+			insert->ref++;
+			left->ref--;
+			return(insert);
+		    }
+		} else if ((insert->exp_left == left) &&
+			   (insert->exp_right == right)) {
+		    insert->ref++;
+		    left->ref--;
+		    right->ref--;
+		    return(insert);
+		}
+	    }
+	}
+    }
+
+    entry = xmlExpNewNode(ctxt, type);
+    if (entry == NULL)
+        return(NULL);
+    entry->key = kbase;
+    if (type == XML_EXP_ATOM) {
+	entry->exp_str = name;
+	entry->c_max = 1;
+    } else if (type == XML_EXP_COUNT) {
+        entry->exp_min = min;
+        entry->exp_max = max;
+	entry->exp_left = left;
+	if ((min == 0) || (IS_NILLABLE(left)))
+	    entry->info |= XML_EXP_NILABLE;
+	if (max < 0)
+	    entry->c_max = -1;
+	else
+	    entry->c_max = max * entry->exp_left->c_max;
+    } else {
+	entry->exp_left = left;
+	entry->exp_right = right;
+	if (type == XML_EXP_OR) {
+	    if ((IS_NILLABLE(left)) || (IS_NILLABLE(right)))
+		entry->info |= XML_EXP_NILABLE;
+	    if ((entry->exp_left->c_max == -1) ||
+	        (entry->exp_right->c_max == -1))
+		entry->c_max = -1;
+	    else if (entry->exp_left->c_max > entry->exp_right->c_max)
+	        entry->c_max = entry->exp_left->c_max;
+	    else
+	        entry->c_max = entry->exp_right->c_max;
+	} else {
+	    if ((IS_NILLABLE(left)) && (IS_NILLABLE(right)))
+		entry->info |= XML_EXP_NILABLE;
+	    if ((entry->exp_left->c_max == -1) ||
+	        (entry->exp_right->c_max == -1))
+		entry->c_max = -1;
+	    else
+	        entry->c_max = entry->exp_left->c_max + entry->exp_right->c_max;
+	}
+    }
+    entry->ref = 1;
+    if (ctxt->table[key] != NULL)
+        entry->next = ctxt->table[key];
+
+    ctxt->table[key] = entry;
+    ctxt->nbElems++;
+
+    return(entry);
+}
+
+/**
+ * xmlExpFree:
+ * @ctxt: the expression context
+ * @exp: the expression
+ *
+ * Dereference the expression
+ */
+void
+xmlExpFree(xmlExpCtxtPtr ctxt, xmlExpNodePtr exp) {
+    if ((exp == NULL) || (exp == forbiddenExp) || (exp == emptyExp))
+        return;
+    exp->ref--;
+    if (exp->ref == 0) {
+        unsigned short key;
+
+        /* Unlink it first from the hash table */
+	key = exp->key % ctxt->size;
+	if (ctxt->table[key] == exp) {
+	    ctxt->table[key] = exp->next;
+	} else {
+	    xmlExpNodePtr tmp;
+
+	    tmp = ctxt->table[key];
+	    while (tmp != NULL) {
+	        if (tmp->next == exp) {
+		    tmp->next = exp->next;
+		    break;
+		}
+	        tmp = tmp->next;
+	    }
+	}
+
+        if ((exp->type == XML_EXP_SEQ) || (exp->type == XML_EXP_OR)) {
+	    xmlExpFree(ctxt, exp->exp_left);
+	    xmlExpFree(ctxt, exp->exp_right);
+	} else if (exp->type == XML_EXP_COUNT) {
+	    xmlExpFree(ctxt, exp->exp_left);
+	}
+        xmlFree(exp);
+	ctxt->nb_nodes--;
+    }
+}
+
+/**
+ * xmlExpRef:
+ * @exp: the expression
+ *
+ * Increase the reference count of the expression
+ */
+void
+xmlExpRef(xmlExpNodePtr exp) {
+    if (exp != NULL)
+        exp->ref++;
+}
+
+/**
+ * xmlExpNewAtom:
+ * @ctxt: the expression context
+ * @name: the atom name
+ * @len: the atom name lenght in byte (or -1);
+ *
+ * Get the atom associated to this name from that context
+ *
+ * Returns the node or NULL in case of error
+ */
+xmlExpNodePtr
+xmlExpNewAtom(xmlExpCtxtPtr ctxt, const xmlChar *name, int len) {
+    if ((ctxt == NULL) || (name == NULL))
+        return(NULL);
+    name = xmlDictLookup(ctxt->dict, name, len);
+    if (name == NULL)
+        return(NULL);
+    return(xmlExpHashGetEntry(ctxt, XML_EXP_ATOM, NULL, NULL, name, 0, 0));
+}
+
+/**
+ * xmlExpNewOr:
+ * @ctxt: the expression context
+ * @left: left expression
+ * @right: right expression
+ *
+ * Get the atom associated to the choice @left | @right
+ * Note that @left and @right are consumed in the operation, to keep
+ * an handle on them use xmlExpRef() and use xmlExpFree() to release them,
+ * this is true even in case of failure (unless ctxt == NULL).
+ *
+ * Returns the node or NULL in case of error
+ */
+xmlExpNodePtr
+xmlExpNewOr(xmlExpCtxtPtr ctxt, xmlExpNodePtr left, xmlExpNodePtr right) {
+    if (ctxt == NULL)
+        return(NULL);
+    if ((left == NULL) || (right == NULL)) {
+        xmlExpFree(ctxt, left);
+        xmlExpFree(ctxt, right);
+        return(NULL);
+    }
+    return(xmlExpHashGetEntry(ctxt, XML_EXP_OR, left, right, NULL, 0, 0));
+}
+
+/**
+ * xmlExpNewSeq:
+ * @ctxt: the expression context
+ * @left: left expression
+ * @right: right expression
+ *
+ * Get the atom associated to the sequence @left , @right
+ * Note that @left and @right are consumed in the operation, to keep
+ * an handle on them use xmlExpRef() and use xmlExpFree() to release them,
+ * this is true even in case of failure (unless ctxt == NULL).
+ *
+ * Returns the node or NULL in case of error
+ */
+xmlExpNodePtr
+xmlExpNewSeq(xmlExpCtxtPtr ctxt, xmlExpNodePtr left, xmlExpNodePtr right) {
+    if (ctxt == NULL)
+        return(NULL);
+    if ((left == NULL) || (right == NULL)) {
+        xmlExpFree(ctxt, left);
+        xmlExpFree(ctxt, right);
+        return(NULL);
+    }
+    return(xmlExpHashGetEntry(ctxt, XML_EXP_SEQ, left, right, NULL, 0, 0));
+}
+
+/**
+ * xmlExpNewRange:
+ * @ctxt: the expression context
+ * @subset: the expression to be repeated
+ * @min: the lower bound for the repetition
+ * @max: the upper bound for the repetition, -1 means infinite
+ *
+ * Get the atom associated to the range (@subset){@min, @max}
+ * Note that @subset is consumed in the operation, to keep
+ * an handle on it use xmlExpRef() and use xmlExpFree() to release it,
+ * this is true even in case of failure (unless ctxt == NULL).
+ *
+ * Returns the node or NULL in case of error
+ */
+xmlExpNodePtr
+xmlExpNewRange(xmlExpCtxtPtr ctxt, xmlExpNodePtr subset, int min, int max) {
+    if (ctxt == NULL)
+        return(NULL);
+    if ((subset == NULL) || (min < 0) || (max < -1) ||
+        ((max >= 0) && (min > max))) {
+	xmlExpFree(ctxt, subset);
+        return(NULL);
+    }
+    return(xmlExpHashGetEntry(ctxt, XML_EXP_COUNT, subset,
+                              NULL, NULL, min, max));
+}
+
+/************************************************************************
+ *									*
+ *		Public API for operations on expressions		*
+ *									*
+ ************************************************************************/
+
+static int
+xmlExpGetLanguageInt(xmlExpCtxtPtr ctxt, xmlExpNodePtr exp, 
+                     const xmlChar**list, int len, int nb) {
+    int tmp, tmp2;
+tail:
+    switch (exp->type) {
+        case XML_EXP_EMPTY:
+	    return(0);
+        case XML_EXP_ATOM:
+	    for (tmp = 0;tmp < nb;tmp++)
+	        if (list[tmp] == exp->exp_str)
+		    return(0);
+            if (nb >= len)
+	        return(-2);
+	    list[nb++] = exp->exp_str;
+	    return(1);
+        case XML_EXP_COUNT:
+	    exp = exp->exp_left;
+	    goto tail;
+        case XML_EXP_SEQ:
+        case XML_EXP_OR:
+	    tmp = xmlExpGetLanguageInt(ctxt, exp->exp_left, list, len, nb);
+	    if (tmp < 0)
+	        return(tmp);
+	    tmp2 = xmlExpGetLanguageInt(ctxt, exp->exp_right, list, len,
+	                                nb + tmp);
+	    if (tmp2 < 0)
+	        return(tmp2);
+            return(tmp + tmp2);
+    }
+    return(-1);
+}
+
+/**
+ * xmlExpGetLanguage:
+ * @ctxt: the expression context
+ * @exp: the expression
+ * @langList: where to store the tokens
+ * @len: the allocated lenght of @list
+ *
+ * Find all the strings used in @exp and store them in @list
+ *
+ * Returns the number of unique strings found, -1 in case of errors and
+ *         -2 if there is more than @len strings
+ */
+int
+xmlExpGetLanguage(xmlExpCtxtPtr ctxt, xmlExpNodePtr exp, 
+                  const xmlChar**langList, int len) {
+    if ((ctxt == NULL) || (exp == NULL) || (langList == NULL) || (len <= 0))
+        return(-1);
+    return(xmlExpGetLanguageInt(ctxt, exp, langList, len, 0));
+}
+
+static int
+xmlExpGetStartInt(xmlExpCtxtPtr ctxt, xmlExpNodePtr exp, 
+                  const xmlChar**list, int len, int nb) {
+    int tmp, tmp2;
+tail:
+    switch (exp->type) {
+        case XML_EXP_FORBID:
+	    return(0);
+        case XML_EXP_EMPTY:
+	    return(0);
+        case XML_EXP_ATOM:
+	    for (tmp = 0;tmp < nb;tmp++)
+	        if (list[tmp] == exp->exp_str)
+		    return(0);
+            if (nb >= len)
+	        return(-2);
+	    list[nb++] = exp->exp_str;
+	    return(1);
+        case XML_EXP_COUNT:
+	    exp = exp->exp_left;
+	    goto tail;
+        case XML_EXP_SEQ:
+	    tmp = xmlExpGetStartInt(ctxt, exp->exp_left, list, len, nb);
+	    if (tmp < 0)
+	        return(tmp);
+	    if (IS_NILLABLE(exp->exp_left)) {
+		tmp2 = xmlExpGetStartInt(ctxt, exp->exp_right, list, len,
+					    nb + tmp);
+		if (tmp2 < 0)
+		    return(tmp2);
+		tmp += tmp2;
+	    }
+            return(tmp);
+        case XML_EXP_OR:
+	    tmp = xmlExpGetStartInt(ctxt, exp->exp_left, list, len, nb);
+	    if (tmp < 0)
+	        return(tmp);
+	    tmp2 = xmlExpGetStartInt(ctxt, exp->exp_right, list, len,
+	                                nb + tmp);
+	    if (tmp2 < 0)
+	        return(tmp2);
+            return(tmp + tmp2);
+    }
+    return(-1);
+}
+
+/**
+ * xmlExpGetStart:
+ * @ctxt: the expression context
+ * @exp: the expression
+ * @tokList: where to store the tokens
+ * @len: the allocated lenght of @list
+ *
+ * Find all the strings that appears at the start of the languages
+ * accepted by @exp and store them in @list. E.g. for (a, b) | c
+ * it will return the list [a, c]
+ *
+ * Returns the number of unique strings found, -1 in case of errors and
+ *         -2 if there is more than @len strings
+ */
+int
+xmlExpGetStart(xmlExpCtxtPtr ctxt, xmlExpNodePtr exp, 
+               const xmlChar**tokList, int len) {
+    if ((ctxt == NULL) || (exp == NULL) || (tokList == NULL) || (len <= 0))
+        return(-1);
+    return(xmlExpGetStartInt(ctxt, exp, tokList, len, 0));
+}
+
+/**
+ * xmlExpIsNillable:
+ * @exp: the expression
+ *
+ * Finds if the expression is nillable, i.e. if it accepts the empty sequqnce
+ *
+ * Returns 1 if nillable, 0 if not and -1 in case of error
+ */
+int
+xmlExpIsNillable(xmlExpNodePtr exp) {
+    if (exp == NULL)
+        return(-1);
+    return(IS_NILLABLE(exp) != 0);
+}
+
+static xmlExpNodePtr
+xmlExpStringDeriveInt(xmlExpCtxtPtr ctxt, xmlExpNodePtr exp, const xmlChar *str)
+{
+    xmlExpNodePtr ret;
+
+    switch (exp->type) {
+	case XML_EXP_EMPTY:
+	    return(forbiddenExp);
+	case XML_EXP_FORBID:
+	    return(forbiddenExp);
+	case XML_EXP_ATOM:
+	    if (exp->exp_str == str) {
+#ifdef DEBUG_DERIV
+		printf("deriv atom: equal => Empty\n");
+#endif
+	        ret = emptyExp;
+	    } else {
+#ifdef DEBUG_DERIV
+		printf("deriv atom: mismatch => forbid\n");
+#endif
+	        /* TODO wildcards here */
+		ret = forbiddenExp;
+	    }
+	    return(ret);
+	case XML_EXP_OR: {
+	    xmlExpNodePtr tmp;
+
+#ifdef DEBUG_DERIV
+	    printf("deriv or: => or(derivs)\n");
+#endif
+	    tmp = xmlExpStringDeriveInt(ctxt, exp->exp_left, str);
+	    if (tmp == NULL) {
+		return(NULL);
+	    }
+	    ret = xmlExpStringDeriveInt(ctxt, exp->exp_right, str);
+	    if (ret == NULL) {
+	        xmlExpFree(ctxt, tmp);
+		return(NULL);
+	    }
+            ret = xmlExpHashGetEntry(ctxt, XML_EXP_OR, tmp, ret,
+			     NULL, 0, 0);
+	    return(ret);
+	}
+	case XML_EXP_SEQ:
+#ifdef DEBUG_DERIV
+	    printf("deriv seq: starting with left\n");
+#endif
+	    ret = xmlExpStringDeriveInt(ctxt, exp->exp_left, str);
+	    if (ret == NULL) {
+	        return(NULL);
+	    } else if (ret == forbiddenExp) {
+	        if (IS_NILLABLE(exp->exp_left)) {
+#ifdef DEBUG_DERIV
+		    printf("deriv seq: left failed but nillable\n");
+#endif
+		    ret = xmlExpStringDeriveInt(ctxt, exp->exp_right, str);
+		}
+	    } else {
+#ifdef DEBUG_DERIV
+		printf("deriv seq: left match => sequence\n");
+#endif
+	        exp->exp_right->ref++;
+	        ret = xmlExpHashGetEntry(ctxt, XML_EXP_SEQ, ret, exp->exp_right,
+		                         NULL, 0, 0);
+	    }
+	    return(ret);
+	case XML_EXP_COUNT: {
+	    int min, max;
+	    xmlExpNodePtr tmp;
+
+	    if (exp->exp_max == 0)
+		return(forbiddenExp);
+	    ret = xmlExpStringDeriveInt(ctxt, exp->exp_left, str);
+	    if (ret == NULL)
+	        return(NULL);
+	    if (ret == forbiddenExp) {
+#ifdef DEBUG_DERIV
+		printf("deriv count: pattern mismatch => forbid\n");
+#endif
+	        return(ret);
+	    }
+	    if (exp->exp_max == 1)
+		return(ret);
+	    if (exp->exp_max < 0) /* unbounded */
+		max = -1;
+	    else
+		max = exp->exp_max - 1;
+	    if (exp->exp_min > 0)
+		min = exp->exp_min - 1;
+	    else
+		min = 0;
+	    exp->exp_left->ref++;
+	    tmp = xmlExpHashGetEntry(ctxt, XML_EXP_COUNT, exp->exp_left, NULL,
+				     NULL, min, max);
+	    if (ret == emptyExp) {
+#ifdef DEBUG_DERIV
+		printf("deriv count: match to empty => new count\n");
+#endif
+	        return(tmp);
+	    }
+#ifdef DEBUG_DERIV
+	    printf("deriv count: match => sequence with new count\n");
+#endif
+	    return(xmlExpHashGetEntry(ctxt, XML_EXP_SEQ, ret, tmp,
+	                              NULL, 0, 0));
+	}
+    }
+    return(NULL);
+}
+
+/**
+ * xmlExpStringDerive:
+ * @ctxt: the expression context
+ * @exp: the expression
+ * @str: the string
+ * @len: the string len in bytes if available
+ *
+ * Do one step of Brzozowski derivation of the expression @exp with
+ * respect to the input string
+ *
+ * Returns the resulting expression or NULL in case of internal error
+ */
+xmlExpNodePtr
+xmlExpStringDerive(xmlExpCtxtPtr ctxt, xmlExpNodePtr exp,
+                   const xmlChar *str, int len) {
+    const xmlChar *input;
+
+    if ((exp == NULL) || (ctxt == NULL) || (str == NULL)) {
+        return(NULL);
+    }
+    /*
+     * check the string is in the dictionnary, if yes use an interned
+     * copy, otherwise we know it's not an acceptable input
+     */
+    input = xmlDictExists(ctxt->dict, str, len);
+    if (input == NULL) {
+        return(forbiddenExp);
+    }
+    return(xmlExpStringDeriveInt(ctxt, exp, input));
+}
+
+static int
+xmlExpCheckCard(xmlExpNodePtr exp, xmlExpNodePtr sub) {
+    int ret = 1;
+
+    if (sub->c_max == -1) {
+        if (exp->c_max != -1)
+	    ret = 0;
+    } else if ((exp->c_max >= 0) && (exp->c_max < sub->c_max)) {
+        ret = 0;
+    }
+#if 0
+    if ((IS_NILLABLE(sub)) && (!IS_NILLABLE(exp)))
+        ret = 0;
+#endif
+    return(ret);
+}
+
+static xmlExpNodePtr xmlExpExpDeriveInt(xmlExpCtxtPtr ctxt, xmlExpNodePtr exp,
+                                        xmlExpNodePtr sub);
+/**
+ * xmlExpDivide:
+ * @ctxt: the expressions context
+ * @exp: the englobing expression
+ * @sub: the subexpression
+ * @mult: the multiple expression
+ * @remain: the remain from the derivation of the multiple
+ *
+ * Check if exp is a multiple of sub, i.e. if there is a finite number n
+ * so that sub{n} subsume exp
+ *
+ * Returns the multiple value if successful, 0 if it is not a multiple
+ *         and -1 in case of internel error.
+ */
+
+static int
+xmlExpDivide(xmlExpCtxtPtr ctxt, xmlExpNodePtr exp, xmlExpNodePtr sub,
+             xmlExpNodePtr *mult, xmlExpNodePtr *remain) {
+    int i;
+    xmlExpNodePtr tmp, tmp2;
+
+    if (mult != NULL) *mult = NULL;
+    if (remain != NULL) *remain = NULL;
+    if (exp->c_max == -1) return(0);
+    if (IS_NILLABLE(exp) && (!IS_NILLABLE(sub))) return(0);
+
+    for (i = 1;i <= exp->c_max;i++) {
+        sub->ref++;
+        tmp = xmlExpHashGetEntry(ctxt, XML_EXP_COUNT,
+				 sub, NULL, NULL, i, i);
+	if (tmp == NULL) {
+	    return(-1);
+	}
+	if (!xmlExpCheckCard(tmp, exp)) {
+	    xmlExpFree(ctxt, tmp);
+	    continue;
+	}
+	tmp2 = xmlExpExpDeriveInt(ctxt, tmp, exp);
+	if (tmp2 == NULL) {
+	    xmlExpFree(ctxt, tmp);
+	    return(-1);
+	}
+	if ((tmp2 != forbiddenExp) && (IS_NILLABLE(tmp2))) {
+	    if (remain != NULL)
+	        *remain = tmp2;
+	    else
+	        xmlExpFree(ctxt, tmp2);
+	    if (mult != NULL)
+	        *mult = tmp;
+	    else
+	        xmlExpFree(ctxt, tmp);
+#ifdef DEBUG_DERIV
+	    printf("Divide succeeded %d\n", i);
+#endif
+	    return(i);
+	}
+	xmlExpFree(ctxt, tmp);
+	xmlExpFree(ctxt, tmp2);
+    }
+#ifdef DEBUG_DERIV
+    printf("Divide failed\n");
+#endif
+    return(0);
+}
+
+/**
+ * xmlExpExpDeriveInt:
+ * @ctxt: the expressions context
+ * @exp: the englobing expression
+ * @sub: the subexpression
+ *
+ * Try to do a step of Brzozowski derivation but at a higher level
+ * the input being a subexpression.
+ *
+ * Returns the resulting expression or NULL in case of internal error
+ */
+static xmlExpNodePtr
+xmlExpExpDeriveInt(xmlExpCtxtPtr ctxt, xmlExpNodePtr exp, xmlExpNodePtr sub) {
+    xmlExpNodePtr ret, tmp, tmp2, tmp3;
+    const xmlChar **tab;
+    int len, i;
+
+    /*
+     * In case of equality and if the expression can only consume a finite
+     * amount, then the derivation is empty
+     */
+    if ((exp == sub) && (exp->c_max >= 0)) {
+#ifdef DEBUG_DERIV
+        printf("Equal(exp, sub) and finite -> Empty\n");
+#endif
+        return(emptyExp);
+    }
+    /*
+     * decompose sub sequence first
+     */
+    if (sub->type == XML_EXP_EMPTY) {
+#ifdef DEBUG_DERIV
+        printf("Empty(sub) -> Empty\n");
+#endif
+	exp->ref++;
+        return(exp);
+    }
+    if (sub->type == XML_EXP_SEQ) {
+#ifdef DEBUG_DERIV
+        printf("Seq(sub) -> decompose\n");
+#endif
+        tmp = xmlExpExpDeriveInt(ctxt, exp, sub->exp_left);
+	if (tmp == NULL)
+	    return(NULL);
+	if (tmp == forbiddenExp)
+	    return(tmp);
+	ret = xmlExpExpDeriveInt(ctxt, tmp, sub->exp_right);
+	xmlExpFree(ctxt, tmp);
+	return(ret);
+    }
+    if (sub->type == XML_EXP_OR) {
+#ifdef DEBUG_DERIV
+        printf("Or(sub) -> decompose\n");
+#endif
+        tmp = xmlExpExpDeriveInt(ctxt, exp, sub->exp_left);
+	if (tmp == forbiddenExp)
+	    return(tmp);
+	if (tmp == NULL)
+	    return(NULL);
+	ret = xmlExpExpDeriveInt(ctxt, exp, sub->exp_right);
+	if ((ret == NULL) || (ret == forbiddenExp)) {
+	    xmlExpFree(ctxt, tmp);
+	    return(ret);
+	}
+	return(xmlExpHashGetEntry(ctxt, XML_EXP_OR, tmp, ret, NULL, 0, 0));
+    }
+    if (!xmlExpCheckCard(exp, sub)) {
+#ifdef DEBUG_DERIV
+        printf("CheckCard(exp, sub) failed -> Forbid\n");
+#endif
+        return(forbiddenExp);
+    }
+    switch (exp->type) {
+        case XML_EXP_EMPTY:
+	    if (sub == emptyExp)
+	        return(emptyExp);
+#ifdef DEBUG_DERIV
+	    printf("Empty(exp) -> Forbid\n");
+#endif
+	    return(forbiddenExp);
+        case XML_EXP_FORBID:
+#ifdef DEBUG_DERIV
+	    printf("Forbid(exp) -> Forbid\n");
+#endif
+	    return(forbiddenExp);
+        case XML_EXP_ATOM:
+	    if (sub->type == XML_EXP_ATOM) {
+	        /* TODO: handle wildcards */
+	        if (exp->exp_str == sub->exp_str) {
+#ifdef DEBUG_DERIV
+		    printf("Atom match -> Empty\n");
+#endif
+		    return(emptyExp);
+                }
+#ifdef DEBUG_DERIV
+		printf("Atom mismatch -> Forbid\n");
+#endif
+	        return(forbiddenExp);
+	    }
+	    if ((sub->type == XML_EXP_COUNT) &&
+	        (sub->exp_max == 1) &&
+	        (sub->exp_left->type == XML_EXP_ATOM)) {
+	        /* TODO: handle wildcards */
+	        if (exp->exp_str == sub->exp_left->exp_str) {
+#ifdef DEBUG_DERIV
+		    printf("Atom match -> Empty\n");
+#endif
+		    return(emptyExp);
+		}
+#ifdef DEBUG_DERIV
+		printf("Atom mismatch -> Forbid\n");
+#endif
+	        return(forbiddenExp);
+	    }
+#ifdef DEBUG_DERIV
+	    printf("Compex exp vs Atom -> Forbid\n");
+#endif
+	    return(forbiddenExp);
+        case XML_EXP_SEQ:
+	    /* try to get the sequence consumed only if possible */
+	    if (xmlExpCheckCard(exp->exp_left, sub)) {
+		/* See if the sequence can be consumed directly */
+#ifdef DEBUG_DERIV
+		printf("Seq trying left only\n");
+#endif
+		ret = xmlExpExpDeriveInt(ctxt, exp->exp_left, sub);
+		if ((ret != forbiddenExp) && (ret != NULL)) {
+#ifdef DEBUG_DERIV
+		    printf("Seq trying left only worked\n");
+#endif
+		    /*
+		     * TODO: assumption here that we are determinist
+		     *       i.e. we won't get to a nillable exp left
+		     *       subset which could be matched by the right
+		     *       part too.
+		     * e.g.: (a | b)+,(a | c) and 'a+,a'
+		     */
+		    exp->exp_right->ref++;
+		    return(xmlExpHashGetEntry(ctxt, XML_EXP_SEQ, ret,
+					      exp->exp_right, NULL, 0, 0));
+		}
+#ifdef DEBUG_DERIV
+	    } else {
+		printf("Seq: left too short\n");
+#endif
+	    }
+	    /* Try instead to decompose */
+	    if (sub->type == XML_EXP_COUNT) {
+		int min, max;
+
+#ifdef DEBUG_DERIV
+		printf("Seq: sub is a count\n");
+#endif
+	        ret = xmlExpExpDeriveInt(ctxt, exp->exp_left, sub->exp_left);
+		if (ret == NULL)
+		    return(NULL);
+		if (ret != forbiddenExp) {
+#ifdef DEBUG_DERIV
+		    printf("Seq , Count match on left\n");
+#endif
+		    if (sub->exp_max < 0)
+		        max = -1;
+	            else
+		        max = sub->exp_max -1;
+		    if (sub->exp_min > 0)
+		        min = sub->exp_min -1;
+		    else
+		        min = 0;
+		    exp->exp_right->ref++;
+		    tmp = xmlExpHashGetEntry(ctxt, XML_EXP_SEQ, ret,
+		                             exp->exp_right, NULL, 0, 0);
+		    if (tmp == NULL)
+		        return(NULL);
+
+		    sub->exp_left->ref++;
+		    tmp2 = xmlExpHashGetEntry(ctxt, XML_EXP_COUNT,
+				      sub->exp_left, NULL, NULL, min, max);
+		    if (tmp2 == NULL) {
+		        xmlExpFree(ctxt, tmp);
+			return(NULL);
+		    }
+		    ret = xmlExpExpDeriveInt(ctxt, tmp, tmp2);
+		    xmlExpFree(ctxt, tmp);
+		    xmlExpFree(ctxt, tmp2);
+		    return(ret);
+		}
+	    }
+	    /* we made no progress on structured operations */
+	    break;
+        case XML_EXP_OR:
+#ifdef DEBUG_DERIV
+	    printf("Or , trying both side\n");
+#endif
+	    ret = xmlExpExpDeriveInt(ctxt, exp->exp_left, sub);
+	    if (ret == NULL)
+	        return(NULL);
+	    tmp = xmlExpExpDeriveInt(ctxt, exp->exp_right, sub);
+	    if (tmp == NULL) {
+		xmlExpFree(ctxt, ret);
+	        return(NULL);
+	    }
+	    return(xmlExpHashGetEntry(ctxt, XML_EXP_OR, ret, tmp, NULL, 0, 0));
+        case XML_EXP_COUNT: {
+	    int min, max;
+
+	    if (sub->type == XML_EXP_COUNT) {
+	        /*
+		 * Try to see if the loop is completely subsumed
+		 */
+	        tmp = xmlExpExpDeriveInt(ctxt, exp->exp_left, sub->exp_left);
+		if (tmp == NULL)
+		    return(NULL);
+		if (tmp == forbiddenExp) {
+		    int mult;
+
+#ifdef DEBUG_DERIV
+		    printf("Count, Count inner don't subsume\n");
+#endif
+		    mult = xmlExpDivide(ctxt, sub->exp_left, exp->exp_left,
+		                        NULL, &tmp);
+		    if (mult <= 0) {
+#ifdef DEBUG_DERIV
+			printf("Count, Count not multiple => forbidden\n");
+#endif
+                        return(forbiddenExp);
+		    }
+		    if (sub->exp_max == -1) {
+		        max = -1;
+			if (exp->exp_max == -1) {
+			    if (exp->exp_min <= sub->exp_min * mult)
+			        min = 0;
+			    else
+			        min = exp->exp_min - sub->exp_min * mult;
+			} else {
+#ifdef DEBUG_DERIV
+			    printf("Count, Count finite can't subsume infinite\n");
+#endif
+                            xmlExpFree(ctxt, tmp);
+			    return(forbiddenExp);
+			}
+		    } else {
+			if (exp->exp_max == -1) {
+#ifdef DEBUG_DERIV
+			    printf("Infinite loop consume mult finite loop\n");
+#endif
+			    if (exp->exp_min > sub->exp_min * mult) {
+				max = -1;
+				min = exp->exp_min - sub->exp_min * mult;
+			    } else {
+				max = -1;
+				min = 0;
+			    }
+			} else {
+			    if (exp->exp_max < sub->exp_max * mult) {
+#ifdef DEBUG_DERIV
+				printf("loops max mult mismatch => forbidden\n");
+#endif
+				xmlExpFree(ctxt, tmp);
+				return(forbiddenExp);
+			    }
+			    if (sub->exp_max * mult > exp->exp_min)
+				min = 0;
+			    else
+				min = exp->exp_min - sub->exp_max * mult;
+			    max = exp->exp_max - sub->exp_max * mult;
+			}
+		    }
+		} else if (!IS_NILLABLE(tmp)) {
+		    /*
+		     * TODO: loop here to try to grow if working on finite
+		     *       blocks.
+		     */
+#ifdef DEBUG_DERIV
+		    printf("Count, Count remain not nillable => forbidden\n");
+#endif
+		    xmlExpFree(ctxt, tmp);
+		    return(forbiddenExp);
+		} else if (sub->exp_max == -1) {
+		    if (exp->exp_max == -1) {
+		        if (exp->exp_min <= sub->exp_min) {
+#ifdef DEBUG_DERIV
+			    printf("Infinite loops Okay => COUNT(0,Inf)\n");
+#endif
+                            max = -1;
+			    min = 0;
+			} else {
+#ifdef DEBUG_DERIV
+			    printf("Infinite loops min => Count(X,Inf)\n");
+#endif
+                            max = -1;
+			    min = exp->exp_min - sub->exp_min;
+			}
+		    } else if (exp->exp_min > sub->exp_min) {
+#ifdef DEBUG_DERIV
+			printf("loops min mismatch 1 => forbidden ???\n");
+#endif
+		        xmlExpFree(ctxt, tmp);
+		        return(forbiddenExp);
+		    } else {
+			max = -1;
+			min = 0;
+		    }
+		} else {
+		    if (exp->exp_max == -1) {
+#ifdef DEBUG_DERIV
+			printf("Infinite loop consume finite loop\n");
+#endif
+		        if (exp->exp_min > sub->exp_min) {
+			    max = -1;
+			    min = exp->exp_min - sub->exp_min;
+			} else {
+			    max = -1;
+			    min = 0;
+			}
+		    } else {
+		        if (exp->exp_max < sub->exp_max) {
+#ifdef DEBUG_DERIV
+			    printf("loops max mismatch => forbidden\n");
+#endif
+			    xmlExpFree(ctxt, tmp);
+			    return(forbiddenExp);
+			}
+			if (sub->exp_max > exp->exp_min)
+			    min = 0;
+			else
+			    min = exp->exp_min - sub->exp_max;
+			max = exp->exp_max - sub->exp_max;
+		    }
+		}
+#ifdef DEBUG_DERIV
+		printf("loops match => SEQ(COUNT())\n");
+#endif
+		exp->exp_left->ref++;
+		tmp2 = xmlExpHashGetEntry(ctxt, XML_EXP_COUNT, exp->exp_left,
+		                          NULL, NULL, min, max);
+		if (tmp2 == NULL) {
+		    return(NULL);
+		}
+                ret = xmlExpHashGetEntry(ctxt, XML_EXP_SEQ, tmp, tmp2,
+		                         NULL, 0, 0);
+		return(ret);
+	    }
+	    tmp = xmlExpExpDeriveInt(ctxt, exp->exp_left, sub);
+	    if (tmp == NULL)
+		return(NULL);
+	    if (tmp == forbiddenExp) {
+#ifdef DEBUG_DERIV
+		printf("loop mismatch => forbidden\n");
+#endif
+		return(forbiddenExp);
+	    }
+	    if (exp->exp_min > 0)
+		min = exp->exp_min - 1;
+	    else
+		min = 0;
+	    if (exp->exp_max < 0)
+		max = -1;
+	    else
+		max = exp->exp_max - 1;
+
+#ifdef DEBUG_DERIV
+	    printf("loop match => SEQ(COUNT())\n");
+#endif
+	    exp->exp_left->ref++;
+	    tmp2 = xmlExpHashGetEntry(ctxt, XML_EXP_COUNT, exp->exp_left,
+				      NULL, NULL, min, max);
+	    if (tmp2 == NULL)
+		return(NULL);
+	    ret = xmlExpHashGetEntry(ctxt, XML_EXP_SEQ, tmp, tmp2,
+				     NULL, 0, 0);
+	    return(ret);
+	}
+    }
+
+#ifdef DEBUG_DERIV
+    printf("Fallback to derivative\n");
+#endif
+    if (IS_NILLABLE(sub)) {
+        if (!(IS_NILLABLE(exp)))
+	    return(forbiddenExp);
+	else
+	    ret = emptyExp;
+    } else
+	ret = NULL;
+    /*
+     * here the structured derivation made no progress so
+     * we use the default token based derivation to force one more step
+     */
+    if (ctxt->tabSize == 0)
+        ctxt->tabSize = 40;
+
+    tab = (const xmlChar **) xmlMalloc(ctxt->tabSize *
+	                               sizeof(const xmlChar *));
+    if (tab == NULL) {
+	return(NULL);
+    }
+
+    /*
+     * collect all the strings accepted by the subexpression on input
+     */
+    len = xmlExpGetStartInt(ctxt, sub, tab, ctxt->tabSize, 0);
+    while (len < 0) {
+        const xmlChar **temp;
+	temp = (const xmlChar **) xmlRealloc((xmlChar **) tab, ctxt->tabSize * 2 *
+	                                     sizeof(const xmlChar *));
+	if (temp == NULL) {
+	    xmlFree((xmlChar **) tab);
+	    return(NULL);
+	}
+	tab = temp;
+	ctxt->tabSize *= 2;
+	len = xmlExpGetStartInt(ctxt, sub, tab, ctxt->tabSize, 0);
+    }
+    for (i = 0;i < len;i++) {
+        tmp = xmlExpStringDeriveInt(ctxt, exp, tab[i]);
+	if ((tmp == NULL) || (tmp == forbiddenExp)) {
+	    xmlExpFree(ctxt, ret);
+	    xmlFree((xmlChar **) tab);
+	    return(tmp);
+	}
+	tmp2 = xmlExpStringDeriveInt(ctxt, sub, tab[i]);
+	if ((tmp2 == NULL) || (tmp2 == forbiddenExp)) {
+	    xmlExpFree(ctxt, tmp);
+	    xmlExpFree(ctxt, ret);
+	    xmlFree((xmlChar **) tab);
+	    return(tmp);
+	}
+	tmp3 = xmlExpExpDeriveInt(ctxt, tmp, tmp2);
+	xmlExpFree(ctxt, tmp);
+	xmlExpFree(ctxt, tmp2);
+
+	if ((tmp3 == NULL) || (tmp3 == forbiddenExp)) {
+	    xmlExpFree(ctxt, ret);
+	    xmlFree((xmlChar **) tab);
+	    return(tmp3);
+	}
+
+	if (ret == NULL)
+	    ret = tmp3;
+	else {
+	    ret = xmlExpHashGetEntry(ctxt, XML_EXP_OR, ret, tmp3, NULL, 0, 0);
+	    if (ret == NULL) {
+		xmlFree((xmlChar **) tab);
+	        return(NULL);
+	    }
+	}
+    }
+    xmlFree((xmlChar **) tab);
+    return(ret);
+}
+    
+/**
+ * xmlExpExpDerive:
+ * @ctxt: the expressions context
+ * @exp: the englobing expression
+ * @sub: the subexpression
+ *
+ * Evaluates the expression resulting from @exp consuming a sub expression @sub
+ * Based on algebraic derivation and sometimes direct Brzozowski derivation
+ * it usually tatkes less than linear time and can handle expressions generating
+ * infinite languages.
+ *
+ * Returns the resulting expression or NULL in case of internal error, the
+ *         result must be freed
+ */
+xmlExpNodePtr
+xmlExpExpDerive(xmlExpCtxtPtr ctxt, xmlExpNodePtr exp, xmlExpNodePtr sub) {
+    if ((exp == NULL) || (ctxt == NULL) || (sub == NULL))
+        return(NULL);
+
+    /*
+     * O(1) speedups
+     */
+    if (IS_NILLABLE(sub) && (!IS_NILLABLE(exp))) {
+#ifdef DEBUG_DERIV
+	printf("Sub nillable and not exp : can't subsume\n");
+#endif
+        return(forbiddenExp);
+    }
+    if (xmlExpCheckCard(exp, sub) == 0) {
+#ifdef DEBUG_DERIV
+	printf("sub generate longuer sequances than exp : can't subsume\n");
+#endif
+        return(forbiddenExp);
+    }
+    return(xmlExpExpDeriveInt(ctxt, exp, sub));
+}
+
+/**
+ * xmlExpSubsume:
+ * @ctxt: the expressions context
+ * @exp: the englobing expression
+ * @sub: the subexpression
+ *
+ * Check whether @exp accepts all the languages accexpted by @sub
+ * the input being a subexpression.
+ *
+ * Returns 1 if true 0 if false and -1 in case of failure.
+ */
+int
+xmlExpSubsume(xmlExpCtxtPtr ctxt, xmlExpNodePtr exp, xmlExpNodePtr sub) {
+    xmlExpNodePtr tmp;
+    
+    if ((exp == NULL) || (ctxt == NULL) || (sub == NULL))
+        return(-1);
+
+    /*
+     * TODO: speedup by checking the language of sub is a subset of the
+     *       language of exp
+     */
+    /*
+     * O(1) speedups
+     */
+    if (IS_NILLABLE(sub) && (!IS_NILLABLE(exp))) {
+#ifdef DEBUG_DERIV
+	printf("Sub nillable and not exp : can't subsume\n");
+#endif
+        return(0);
+    }
+    if (xmlExpCheckCard(exp, sub) == 0) {
+#ifdef DEBUG_DERIV
+	printf("sub generate longuer sequances than exp : can't subsume\n");
+#endif
+        return(0);
+    }
+    tmp = xmlExpExpDeriveInt(ctxt, exp, sub);
+#ifdef DEBUG_DERIV
+    printf("Result derivation :\n");
+    PRINT_EXP(tmp);
+#endif
+    if (tmp == NULL)
+        return(-1);
+    if (tmp == forbiddenExp)
+	return(0);
+    if (tmp == emptyExp)
+	return(1);
+    if ((tmp != NULL) && (IS_NILLABLE(tmp))) {
+        xmlExpFree(ctxt, tmp);
+        return(1);
+    }
+    xmlExpFree(ctxt, tmp);
+    return(0);
+}
+
+/************************************************************************
+ *									*
+ *			Parsing expression 				*
+ *									*
+ ************************************************************************/
+
+static xmlExpNodePtr xmlExpParseExpr(xmlExpCtxtPtr ctxt);
+
+#undef CUR
+#define CUR (*ctxt->cur)
+#undef NEXT
+#define NEXT ctxt->cur++;
+#undef IS_BLANK
+#define IS_BLANK(c) ((c == ' ') || (c == '\n') || (c == '\r') || (c == '\t'))
+#define SKIP_BLANKS while (IS_BLANK(*ctxt->cur)) ctxt->cur++;
+
+static int
+xmlExpParseNumber(xmlExpCtxtPtr ctxt) {
+    int ret = 0;
+
+    SKIP_BLANKS
+    if (CUR == '*') {
+	NEXT
+	return(-1);
+    }
+    if ((CUR < '0') || (CUR > '9'))
+        return(-1);
+    while ((CUR >= '0') && (CUR <= '9')) {
+        ret = ret * 10 + (CUR - '0');
+	NEXT
+    }
+    return(ret);
+}
+
+static xmlExpNodePtr
+xmlExpParseOr(xmlExpCtxtPtr ctxt) {
+    const char *base;
+    xmlExpNodePtr ret;
+    const xmlChar *val;
+
+    SKIP_BLANKS
+    base = ctxt->cur;
+    if (*ctxt->cur == '(') {
+        NEXT
+	ret = xmlExpParseExpr(ctxt);
+	SKIP_BLANKS
+	if (*ctxt->cur != ')') {
+	    fprintf(stderr, "unbalanced '(' : %s\n", base);
+	    xmlExpFree(ctxt, ret);
+	    return(NULL);
+	}
+	NEXT;
+	SKIP_BLANKS
+	goto parse_quantifier;
+    }
+    while ((CUR != 0) && (!(IS_BLANK(CUR))) && (CUR != '(') &&
+           (CUR != ')') && (CUR != '|') && (CUR != ',') && (CUR != '{') &&
+	   (CUR != '*') && (CUR != '+') && (CUR != '?') && (CUR != '}'))
+	NEXT;
+    val = xmlDictLookup(ctxt->dict, BAD_CAST base, ctxt->cur - base);
+    if (val == NULL)
+        return(NULL);
+    ret = xmlExpHashGetEntry(ctxt, XML_EXP_ATOM, NULL, NULL, val, 0, 0);
+    if (ret == NULL)
+        return(NULL);
+    SKIP_BLANKS
+parse_quantifier:
+    if (CUR == '{') {
+        int min, max;
+
+        NEXT
+	min = xmlExpParseNumber(ctxt);
+	if (min < 0) {
+	    xmlExpFree(ctxt, ret);
+	    return(NULL);
+	}
+	SKIP_BLANKS
+	if (CUR == ',') {
+	    NEXT
+	    max = xmlExpParseNumber(ctxt);
+	    SKIP_BLANKS
+	} else
+	    max = min;
+	if (CUR != '}') {
+	    xmlExpFree(ctxt, ret);
+	    return(NULL);
+	}
+        NEXT
+	ret = xmlExpHashGetEntry(ctxt, XML_EXP_COUNT, ret, NULL, NULL,
+	                         min, max);
+	SKIP_BLANKS
+    } else if (CUR == '?') {
+        NEXT
+	ret = xmlExpHashGetEntry(ctxt, XML_EXP_COUNT, ret, NULL, NULL,
+	                         0, 1);
+	SKIP_BLANKS
+    } else if (CUR == '+') {
+        NEXT
+	ret = xmlExpHashGetEntry(ctxt, XML_EXP_COUNT, ret, NULL, NULL,
+	                         1, -1);
+	SKIP_BLANKS
+    } else if (CUR == '*') {
+        NEXT
+	ret = xmlExpHashGetEntry(ctxt, XML_EXP_COUNT, ret, NULL, NULL,
+	                         0, -1);
+	SKIP_BLANKS
+    } 
+    return(ret);
+}
+
+
+static xmlExpNodePtr
+xmlExpParseSeq(xmlExpCtxtPtr ctxt) {
+    xmlExpNodePtr ret, right;
+
+    ret = xmlExpParseOr(ctxt);
+    SKIP_BLANKS
+    while (CUR == '|') {
+        NEXT
+	right = xmlExpParseOr(ctxt);
+	if (right == NULL) {
+	    xmlExpFree(ctxt, ret);
+	    return(NULL);
+	}
+	ret = xmlExpHashGetEntry(ctxt, XML_EXP_OR, ret, right, NULL, 0, 0);
+	if (ret == NULL)
+	    return(NULL);
+    }
+    return(ret);
+}
+
+static xmlExpNodePtr
+xmlExpParseExpr(xmlExpCtxtPtr ctxt) {
+    xmlExpNodePtr ret, right;
+
+    ret = xmlExpParseSeq(ctxt);
+    SKIP_BLANKS
+    while (CUR == ',') {
+        NEXT
+	right = xmlExpParseSeq(ctxt);
+	if (right == NULL) {
+	    xmlExpFree(ctxt, ret);
+	    return(NULL);
+	}
+	ret = xmlExpHashGetEntry(ctxt, XML_EXP_SEQ, ret, right, NULL, 0, 0);
+	if (ret == NULL)
+	    return(NULL);
+    }
+    return(ret);
+}
+
+/**
+ * xmlExpParse:
+ * @ctxt: the expressions context
+ * @expr: the 0 terminated string
+ *
+ * Minimal parser for regexps, it understand the following constructs
+ *  - string terminals
+ *  - choice operator |
+ *  - sequence operator ,
+ *  - subexpressions (...)
+ *  - usual cardinality operators + * and ?
+ *  - finite sequences  { min, max }
+ *  - infinite sequences { min, * }
+ * There is minimal checkings made especially no checking on strings values
+ *
+ * Returns a new expression or NULL in case of failure
+ */
+xmlExpNodePtr
+xmlExpParse(xmlExpCtxtPtr ctxt, const char *expr) {
+    xmlExpNodePtr ret;
+
+    ctxt->expr = expr;
+    ctxt->cur = expr;
+
+    ret = xmlExpParseExpr(ctxt);
+    SKIP_BLANKS
+    if (*ctxt->cur != 0) {
+        xmlExpFree(ctxt, ret);
+        return(NULL);
+    }
+    return(ret);
+}
+
+static void
+xmlExpDumpInt(xmlBufferPtr buf, xmlExpNodePtr expr, int glob) {
+    xmlExpNodePtr c;
+
+    if (expr == NULL) return;
+    if (glob) xmlBufferWriteChar(buf, "(");
+    switch (expr->type) {
+        case XML_EXP_EMPTY:
+	    xmlBufferWriteChar(buf, "empty");
+	    break;
+        case XML_EXP_FORBID:
+	    xmlBufferWriteChar(buf, "forbidden");
+	    break;
+        case XML_EXP_ATOM:
+	    xmlBufferWriteCHAR(buf, expr->exp_str);
+	    break;
+        case XML_EXP_SEQ:
+	    c = expr->exp_left;
+	    if ((c->type == XML_EXP_SEQ) || (c->type == XML_EXP_OR))
+	        xmlExpDumpInt(buf, c, 1);
+	    else
+	        xmlExpDumpInt(buf, c, 0);
+	    xmlBufferWriteChar(buf, " , ");
+	    c = expr->exp_right;
+	    if ((c->type == XML_EXP_SEQ) || (c->type == XML_EXP_OR))
+	        xmlExpDumpInt(buf, c, 1);
+	    else
+	        xmlExpDumpInt(buf, c, 0);
+            break;
+        case XML_EXP_OR:
+	    c = expr->exp_left;
+	    if ((c->type == XML_EXP_SEQ) || (c->type == XML_EXP_OR))
+	        xmlExpDumpInt(buf, c, 1);
+	    else
+	        xmlExpDumpInt(buf, c, 0);
+	    xmlBufferWriteChar(buf, " | ");
+	    c = expr->exp_right;
+	    if ((c->type == XML_EXP_SEQ) || (c->type == XML_EXP_OR))
+	        xmlExpDumpInt(buf, c, 1);
+	    else
+	        xmlExpDumpInt(buf, c, 0);
+            break;
+        case XML_EXP_COUNT: {
+	    char rep[40];
+	    
+	    c = expr->exp_left;
+	    if ((c->type == XML_EXP_SEQ) || (c->type == XML_EXP_OR))
+	        xmlExpDumpInt(buf, c, 1);
+	    else
+	        xmlExpDumpInt(buf, c, 0);
+	    if ((expr->exp_min == 0) && (expr->exp_max == 1)) {
+		rep[0] = '?';
+		rep[1] = 0;
+	    } else if ((expr->exp_min == 0) && (expr->exp_max == -1)) {
+		rep[0] = '*';
+		rep[1] = 0;
+	    } else if ((expr->exp_min == 1) && (expr->exp_max == -1)) {
+		rep[0] = '+';
+		rep[1] = 0;
+	    } else if (expr->exp_max == expr->exp_min) {
+	        snprintf(rep, 39, "{%d}", expr->exp_min);
+	    } else if (expr->exp_max < 0) {
+	        snprintf(rep, 39, "{%d,inf}", expr->exp_min);
+	    } else {
+	        snprintf(rep, 39, "{%d,%d}", expr->exp_min, expr->exp_max);
+	    }
+	    rep[39] = 0;
+	    xmlBufferWriteChar(buf, rep);
+	    break;
+	}
+	default:
+	    fprintf(stderr, "Error in tree\n");
+    }
+    if (glob)
+        xmlBufferWriteChar(buf, ")");
+}
+/**
+ * xmlExpDump:
+ * @buf:  a buffer to receive the output
+ * @expr:  the compiled expression
+ *
+ * Serialize the expression as compiled to the buffer
+ */
+void
+xmlExpDump(xmlBufferPtr buf, xmlExpNodePtr expr) {
+    if ((buf == NULL) || (expr == NULL))
+        return;
+    xmlExpDumpInt(buf, expr, 0);
+}
+
+/**
+ * xmlExpMaxToken:
+ * @expr: a compiled expression
+ *
+ * Indicate the maximum number of input a expression can accept
+ *
+ * Returns the maximum length or -1 in case of error
+ */
+int
+xmlExpMaxToken(xmlExpNodePtr expr) {
+    if (expr == NULL)
+        return(-1);
+    return(expr->c_max);
+}
+
+/**
+ * xmlExpCtxtNbNodes:
+ * @ctxt: an expression context
+ *
+ * Debugging facility provides the number of allocated nodes at a that point
+ *
+ * Returns the number of nodes in use or -1 in case of error
+ */
+int
+xmlExpCtxtNbNodes(xmlExpCtxtPtr ctxt) {
+    if (ctxt == NULL)
+        return(-1);
+    return(ctxt->nb_nodes);
+}
+
+/**
+ * xmlExpCtxtNbCons:
+ * @ctxt: an expression context
+ *
+ * Debugging facility provides the number of allocated nodes over lifetime
+ *
+ * Returns the number of nodes ever allocated or -1 in case of error
+ */
+int
+xmlExpCtxtNbCons(xmlExpCtxtPtr ctxt) {
+    if (ctxt == NULL)
+        return(-1);
+    return(ctxt->nb_cons);
+}
+
+#endif /* LIBXML_EXPR_ENABLED */
 #define bottom_xmlregexp
 #include "elfgcchack.h"
 #endif /* LIBXML_REGEXP_ENABLED */

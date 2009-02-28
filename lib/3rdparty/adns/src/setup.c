@@ -131,13 +131,13 @@ static void ccf_search(adns_state ads, const char *fn, int lno, const char *buf)
   while (nextword(&bufp,&word,&l)) { count++; tl += l+1; }
 
   newptrs= malloc(sizeof(char*)*count);  if (!newptrs) { saveerr(ads,errno); return; }
-  newchars= malloc((size_t) tl);  if (!newchars) { saveerr(ads,errno); free(newptrs); return; }
+  newchars= malloc(tl);  if (!newchars) { saveerr(ads,errno); free(newptrs); return; }
 
   bufp= buf;
   pp= newptrs;
   while (nextword(&bufp,&word,&l)) {
     *pp++= newchars;
-    memcpy(newchars,word,(size_t) l);
+    memcpy(newchars,word,l);
     newchars += l;
     *newchars++ = 0;
   }
@@ -163,12 +163,12 @@ static void ccf_sortlist(adns_state ads, const char *fn, int lno, const char *bu
       return;
     }
 
-    if (l >= (int)sizeof(tbuf)) {
+    if (l >= sizeof(tbuf)) {
       configparseerr(ads,fn,lno,"sortlist entry `%.*s' too long",l,word);
       continue;
     }
 
-    memcpy(tbuf,word, (size_t) l); tbuf[l]= 0;
+    memcpy(tbuf,word,l); tbuf[l]= 0;
     slash= strchr(tbuf,'/');
     if (slash) *slash++= 0;
 
@@ -198,7 +198,7 @@ static void ccf_sortlist(adns_state ads, const char *fn, int lno, const char *bu
       }
     } else {
       baselocal= ntohl(base.s_addr);
-      if (!baselocal & 0x080000000UL) /* class A */
+      if (!(baselocal & 0x080000000UL)) /* class A */
 	mask.s_addr= htonl(0x0ff000000UL);
       else if ((baselocal & 0x0c0000000UL) == 0x080000000UL)
 	mask.s_addr= htonl(0x0ffff0000UL); /* class B */
@@ -351,7 +351,7 @@ static int gl_text(adns_state ads, getline_ctx *src_io, const char *filename,
     return -2;
   }
 
-  memcpy(buf,cp, (size_t) l);
+  memcpy(buf,cp,l);
   buf[l]= 0;
   return l;
 }
@@ -382,7 +382,7 @@ static void readconfiggeneric(adns_state ads, const char *filename,
     while (*q && !ctype_whitespace(*q)) q++;
     dirl= q-p;
     for (ccip=configcommandinfos;
-	 ccip->name && !((int)strlen(ccip->name)==dirl && !memcmp(ccip->name,p,(size_t) (q-p)));
+	 ccip->name && !((int)strlen(ccip->name)==dirl && !memcmp(ccip->name,p,q-p));
 	 ccip++);
     if (!ccip->name) {
       adns__diag(ads,-1,0,"%s:%d: unknown configuration directive `%.*s'",
@@ -457,7 +457,7 @@ static void readconfigenvtext(adns_state ads, const char *envvar) {
 int adns__setnonblock(adns_state ads, ADNS_SOCKET fd) {
 #ifdef ADNS_JGAA_WIN32
    unsigned long Val = 1;
-   return (ioctlsocket (fd, (long) FIONBIO, &Val) == 0) ? 0 : -1;
+   return (ioctlsocket (fd, FIONBIO, &Val) == 0) ? 0 : -1;
 #else
   int r;
 
@@ -488,7 +488,7 @@ static int init_begin(adns_state *ads_r, adns_initflags flags, FILE *diagfile) {
   LIST_INIT(ads->output);
   ads->forallnext= 0;
   ads->nextid= 0x311f;
-  ads->udpsocket= ads->tcpsocket= ((unsigned) -1);
+  ads->udpsocket= ads->tcpsocket= -1;
   adns__vbuf_init(&ads->tcpsend);
   adns__vbuf_init(&ads->tcprecv);
   ads->tcprecv_skip= 0;
@@ -525,7 +525,7 @@ static int init_finish(adns_state ads) {
   struct protoent *proto;
   int r;
 
-  if (!ads->nservers && !(ads->iflags & adns_if_noserver)) {
+  if (!ads->nservers) {
     if (ads->diagfile && ads->iflags & adns_if_debug)
       fprintf(ads->diagfile,"adns: no nameservers, using localhost\n");
     ia.s_addr= htonl(INADDR_LOOPBACK);
@@ -536,7 +536,7 @@ static int init_finish(adns_state ads) {
   ADNS_CLEAR_ERRNO;
   ads->udpsocket= socket(AF_INET,SOCK_DGRAM,proto->p_proto);
   ADNS_CAPTURE_ERRNO;
-  if (ads->udpsocket == INVALID_SOCKET) { r= errno; goto x_free; }
+  if (ads->udpsocket<0) { r= errno; goto x_free; }
 
   r= adns__setnonblock(ads,ads->udpsocket);
   if (r) { r= errno; goto x_closeudp; }
@@ -573,7 +573,7 @@ int adns_init(adns_state *ads_r, adns_initflags flags, FILE *diagfile) {
   char PathBuf[MAX_PATH];
   struct in_addr addr;
   #define ADNS_PFIXED_INFO_BLEN (2048)
-  PFIXED_INFO network_info = (PFIXED_INFO)alloca(ADNS_PFIXED_INFO_BLEN);
+  PFIXED_INFO network_info = (PFIXED_INFO)_alloca(ADNS_PFIXED_INFO_BLEN);
   ULONG network_info_blen = ADNS_PFIXED_INFO_BLEN;
   DWORD network_info_result;
   PIP_ADDR_STRING pip;
@@ -589,35 +589,33 @@ int adns_init(adns_state *ads_r, adns_initflags flags, FILE *diagfile) {
   ccf_options(ads,"ADNS_RES_OPTIONS",-1,adns_res_options);
 
 #ifdef ADNS_JGAA_WIN32
-  if (!(flags & adns_if_noserver)) {
-    GetWindowsDirectory(PathBuf, SECURE_PATH_LEN);
-    strcat(PathBuf,"\\resolv.conf");
-    readconfig(ads,PathBuf,1);
-    GetWindowsDirectory(PathBuf, SECURE_PATH_LEN);
-    strcat(PathBuf,"\\resolv-adns.conf");
-    readconfig(ads,PathBuf,0);
-    GetWindowsDirectory(PathBuf, SECURE_PATH_LEN);
-    strcat(PathBuf,"\\System32\\Drivers\\etc\\resolv.conf");
-    readconfig(ads,PathBuf,1);
-    GetWindowsDirectory(PathBuf, SECURE_PATH_LEN);
-    strcat(PathBuf,"\\System32\\Drivers\\etc\\resolv-adns.conf");
-    readconfig(ads,PathBuf,0);
-    network_info_result = GetNetworkParams(network_info, &network_info_blen);
-    if (network_info_result != ERROR_SUCCESS){
-      switch(network_info_result) {
-      case ERROR_BUFFER_OVERFLOW: network_err_str = "ERROR_BUFFER_OVERFLOW"; break;
-      case ERROR_INVALID_PARAMETER: network_err_str = "ERROR_INVALID_PARAMETER"; break;
-      case ERROR_NO_DATA: network_err_str = "ERROR_NO_DATA"; break;
-      case ERROR_NOT_SUPPORTED: network_err_str = "ERROR_NOT_SUPPORTED"; break;}
-      adns__diag(ads,-1,0,"GetNetworkParams() failed with error [%d] %s",
-		 network_info_result,network_err_str);
+  GetWindowsDirectory(PathBuf, SECURE_PATH_LEN);
+  strcat(PathBuf,"\\resolv.conf");
+  readconfig(ads,PathBuf,1);
+  GetWindowsDirectory(PathBuf, SECURE_PATH_LEN);
+  strcat(PathBuf,"\\resolv-adns.conf");
+  readconfig(ads,PathBuf,0);
+  GetWindowsDirectory(PathBuf, SECURE_PATH_LEN);
+  strcat(PathBuf,"\\System32\\Drivers\\etc\\resolv.conf");
+  readconfig(ads,PathBuf,1);
+  GetWindowsDirectory(PathBuf, SECURE_PATH_LEN);
+  strcat(PathBuf,"\\System32\\Drivers\\etc\\resolv-adns.conf");
+  readconfig(ads,PathBuf,0);
+  network_info_result = GetNetworkParams(network_info, &network_info_blen);
+  if (network_info_result != ERROR_SUCCESS){
+    switch(network_info_result) {
+    case ERROR_BUFFER_OVERFLOW: network_err_str = "ERROR_BUFFER_OVERFLOW"; break;
+    case ERROR_INVALID_PARAMETER: network_err_str = "ERROR_INVALID_PARAMETER"; break;
+    case ERROR_NO_DATA: network_err_str = "ERROR_NO_DATA"; break;
+    case ERROR_NOT_SUPPORTED: network_err_str = "ERROR_NOT_SUPPORTED"; break;}
+    adns__diag(ads,-1,0,"GetNetworkParams() failed with error [%d] %s",
+      network_info_result,network_err_str);
     }
-    else {
-      for(pip = &(network_info->DnsServerList); pip; pip = pip->Next) {
-	addr.s_addr = inet_addr(pip->IpAddress.String);
-	if ((addr.s_addr != INADDR_ANY) && (addr.s_addr != INADDR_NONE))
-	  addserver(ads, addr);
-      }
+  else {
+    for(pip = &(network_info->DnsServerList); pip; pip = pip->Next) {
+      addr.s_addr = inet_addr(pip->IpAddress.String);
+      if ((addr.s_addr != INADDR_ANY) && (addr.s_addr != INADDR_NONE))
+        addserver(ads, addr);
     }
   }
 #else
@@ -682,7 +680,7 @@ void adns_finish(adns_state ads) {
     else break;
   }
   adns_socket_close(ads->udpsocket);
-  if (ads->tcpsocket != INVALID_SOCKET) adns_socket_close(ads->tcpsocket);
+  if (ads->tcpsocket >= 0) adns_socket_close(ads->tcpsocket);
   adns__vbuf_free(&ads->tcpsend);
   adns__vbuf_free(&ads->tcprecv);
   freesearchlist(ads);

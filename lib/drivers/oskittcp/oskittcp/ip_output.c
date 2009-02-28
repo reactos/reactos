@@ -88,7 +88,7 @@ ip_output(m0, opt, ro, flags, imo)
 #endif
 	register struct mbuf *m = m0;
 	register int hlen = sizeof (struct ip);
-	int len, off, error = 0;
+	int len = 0, off, error = 0;
 	/*
 	 * It might seem obvious at first glance that one could easily
 	 * make a one-behind cache out of this by simply making `iproute'
@@ -108,7 +108,7 @@ ip_output(m0, opt, ro, flags, imo)
 	 */
 	struct route iproute;
 	struct sockaddr_in *dst;
-	struct in_ifaddr *ia;
+	struct in_ifaddr *ia = NULL;
 
 #ifdef	DIAGNOSTIC
 	if ((m->m_flags & M_PKTHDR) == 0)
@@ -380,7 +380,7 @@ sendit:
 		m_copydata( m, 0, htons(ip->ip_len), new_m->m_data );
 		new_m->m_len = htons(ip->ip_len);
 		error = OtcpEvent.PacketSend( OtcpEvent.ClientData,
-					      new_m->m_data, new_m->m_len );
+					      (OSK_PCHAR)new_m->m_data, new_m->m_len );
 		m_free( new_m );
 		goto done;
 	    }
@@ -520,7 +520,7 @@ sendorfree:
 	    m_copydata( m, 0, htons(ip->ip_len), new_m->m_data );
 	    new_m->m_len = htons(ip->ip_len);
 	    error = OtcpEvent.PacketSend( OtcpEvent.ClientData,
-					  new_m->m_data, new_m->m_len );
+					  (OSK_PCHAR)new_m->m_data, new_m->m_len );
 	    m_free( new_m );
 	    goto done;
 	}

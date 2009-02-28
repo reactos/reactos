@@ -19,19 +19,29 @@ VOID NBCompleteSend( PVOID Context,
     TI_DbgPrint(MID_TRACE, ("Called\n"));
     ASSERT_KM_POINTER(Packet);
     ASSERT_KM_POINTER(Packet->Complete);
-    Packet->Complete( Packet->Context, Packet->Packet, STATUS_SUCCESS );
+    Packet->Complete( Packet->Context, Packet->Packet, Status );
     TI_DbgPrint(MID_TRACE, ("Completed\n"));
-    PoolFreeBuffer( Packet );
+    exFreePool( Packet );
     TI_DbgPrint(MID_TRACE, ("Freed\n"));
 }
 
 VOID NBSendPackets( PNEIGHBOR_CACHE_ENTRY NCE ) {
     PLIST_ENTRY PacketEntry;
     PNEIGHBOR_PACKET Packet;
+    UINT HashValue;
+
+    if(!(NCE->State & NUD_CONNECTED))
+       return;
+
+    HashValue  = *(PULONG)(&NCE->Address.Address);
+    HashValue ^= HashValue >> 16;
+    HashValue ^= HashValue >> 8;
+    HashValue ^= HashValue >> 4;
+    HashValue &= NB_HASHMASK;
 
     /* Send any waiting packets */
     PacketEntry = ExInterlockedRemoveHeadList(&NCE->PacketQueue,
-                                              &NCE->Table->Lock);
+                                              &NeighborCache[HashValue].Lock);
     if( PacketEntry != NULL ) {
 	Packet = CONTAINING_RECORD( PacketEntry, NEIGHBOR_PACKET, Next );
 
@@ -54,7 +64,7 @@ VOID NBSendPackets( PNEIGHBOR_CACHE_ENTRY NCE ) {
 
 /* Must be called with table lock acquired */
 VOID NBFlushPacketQueue( PNEIGHBOR_CACHE_ENTRY NCE,
-			 BOOL CallComplete,
+			 BOOLEAN CallComplete,
 			 NTSTATUS ErrorCode ) {
     PLIST_ENTRY PacketEntry;
     PNEIGHBOR_PACKET Packet;
@@ -76,10 +86,10 @@ VOID NBFlushPacketQueue( PNEIGHBOR_CACHE_ENTRY NCE,
             ASSERT_KM_POINTER(Packet->Complete);
 	    Packet->Complete( Packet->Context,
 			      Packet->Packet,
-			      NDIS_STATUS_REQUEST_ABORTED );
+			      ErrorCode );
         }
 
-	PoolFreeBuffer( Packet );
+	exFreePool( Packet );
     }
 }
 
@@ -273,7 +283,7 @@ PNEIGHBOR_CACHE_ENTRY NBAddNeighbor(
 	"LinkAddress (0x%X)  LinkAddressLength (%d)  State (0x%X)\n",
 	Interface, Address, LinkAddress, LinkAddressLength, State));
 
-  NCE = ExAllocatePool
+  NCE = exAllocatePool
       (NonPagedPool, sizeof(NEIGHBOR_CACHE_ENTRY) + LinkAddressLength);
   if (NCE == NULL)
     {
@@ -330,15 +340,22 @@ VOID NBUpdateNeighbor(
  */
 {
     KIRQL OldIrql;
+    UINT HashValue;
 
     TI_DbgPrint(DEBUG_NCACHE, ("Called. NCE (0x%X)  LinkAddress (0x%X)  State (0x%X).\n", NCE, LinkAddress, State));
 
-    TcpipAcquireSpinLock(&NCE->Table->Lock, &OldIrql);
+    HashValue  = *(PULONG)(&NCE->Address.Address);
+    HashValue ^= HashValue >> 16;
+    HashValue ^= HashValue >> 8;
+    HashValue ^= HashValue >> 4;
+    HashValue &= NB_HASHMASK;
+
+    TcpipAcquireSpinLock(&NeighborCache[HashValue].Lock, &OldIrql);
 
     RtlCopyMemory(NCE->LinkAddress, LinkAddress, NCE->LinkAddressLength);
     NCE->State = State;
 
-    TcpipReleaseSpinLock(&NCE->Table->Lock, OldIrql);
+    TcpipReleaseSpinLock(&NeighborCache[HashValue].Lock, OldIrql);
 
     if( NCE->State & NUD_CONNECTED )
 	NBSendPackets( NCE );
@@ -412,11 +429,13 @@ PNEIGHBOR_CACHE_ENTRY NBFindOrCreateNeighbor(
             TI_DbgPrint(MID_TRACE,("Packet targeted at broadcast addr\n"));
             NCE = NBAddNeighbor(Interface, Address, NULL,
                                 Interface->AddressLength, NUD_CONNECTED);
+            if (!NCE) return NULL;
             NCE->EventTimer = 0;
             NCE->EventCount = 0;
         } else {
             NCE = NBAddNeighbor(Interface, Address, NULL,
                                 Interface->AddressLength, NUD_INCOMPLETE);
+            if (!NCE) return NULL;
             NCE->EventTimer = 1;
             NCE->EventCount = 0;
         }
@@ -439,29 +458,33 @@ BOOLEAN NBQueuePacket(
  *   TRUE if the packet was successfully queued, FALSE if not
  */
 {
-  PKSPIN_LOCK Lock;
   KIRQL OldIrql;
   PNEIGHBOR_PACKET Packet;
+  UINT HashValue;
 
   TI_DbgPrint
       (DEBUG_NCACHE,
        ("Called. NCE (0x%X)  NdisPacket (0x%X).\n", NCE, NdisPacket));
 
-  Packet = PoolAllocateBuffer( sizeof(NEIGHBOR_PACKET) );
+  Packet = exAllocatePool( NonPagedPool, sizeof(NEIGHBOR_PACKET) );
   if( !Packet ) return FALSE;
 
   /* FIXME: Should we limit the number of queued packets? */
 
-  Lock = &NCE->Table->Lock;
+  HashValue  = *(PULONG)(&NCE->Address.Address);
+  HashValue ^= HashValue >> 16;
+  HashValue ^= HashValue >> 8;
+  HashValue ^= HashValue >> 4;
+  HashValue &= NB_HASHMASK;
 
-  TcpipAcquireSpinLock(Lock, &OldIrql);
+  TcpipAcquireSpinLock(&NeighborCache[HashValue].Lock, &OldIrql);
 
   Packet->Complete = PacketComplete;
   Packet->Context = PacketContext;
   Packet->Packet = NdisPacket;
   InsertTailList( &NCE->PacketQueue, &Packet->Next );
 
-  TcpipReleaseSpinLock(Lock, OldIrql);
+  TcpipReleaseSpinLock(&NeighborCache[HashValue].Lock, OldIrql);
 
   if( NCE->State & NUD_CONNECTED )
       NBSendPackets( NCE );
@@ -506,7 +529,7 @@ VOID NBRemoveNeighbor(
           *PrevNCE = CurNCE->Next;
 
 	  NBFlushPacketQueue( CurNCE, TRUE, NDIS_STATUS_REQUEST_ABORTED );
-          ExFreePool(CurNCE);
+          exFreePool(CurNCE);
 
 	  break;
         }

@@ -81,6 +81,29 @@ RtlImpersonateSelf(IN SECURITY_IMPERSONATION_LEVEL ImpersonationLevel)
    return(Status);
 }
 
+/*
+ * @unimplemented
+ */
+NTSTATUS
+NTAPI
+RtlAcquirePrivilege(IN PULONG Privilege,
+                    IN ULONG NumPriv,
+                    IN ULONG Flags,
+                    OUT PVOID *ReturnedState)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+NTAPI
+RtlReleasePrivilege(IN PVOID ReturnedState)
+{
+    UNIMPLEMENTED;
+}
 
 /*
  * @implemented
@@ -205,8 +228,49 @@ RtlQuerySecurityObject(IN PSECURITY_DESCRIPTOR ObjectDescriptor,
                        IN ULONG DescriptorLength,
                        OUT PULONG ReturnLength)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+    SECURITY_DESCRIPTOR desc;
+    BOOLEAN defaulted, present;
+    PACL pacl;
+    PSID psid;
+
+    Status = RtlCreateSecurityDescriptor(&desc, SECURITY_DESCRIPTOR_REVISION);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    if (SecurityInformation & OWNER_SECURITY_INFORMATION)
+    {
+        Status = RtlGetOwnerSecurityDescriptor(ObjectDescriptor, &psid, &defaulted);
+        if (!NT_SUCCESS(Status)) return Status;
+        Status = RtlSetOwnerSecurityDescriptor(&desc, psid, defaulted);
+        if (!NT_SUCCESS(Status)) return Status;
+    }
+
+    if (SecurityInformation & GROUP_SECURITY_INFORMATION)
+    {
+        Status = RtlGetGroupSecurityDescriptor(ObjectDescriptor, &psid, &defaulted);
+        if (!NT_SUCCESS(Status)) return Status;
+        Status = RtlSetGroupSecurityDescriptor(&desc, psid, defaulted);
+        if (!NT_SUCCESS(Status)) return Status;
+    }
+
+    if (SecurityInformation & DACL_SECURITY_INFORMATION)
+    {
+        Status = RtlGetDaclSecurityDescriptor(ObjectDescriptor, &present, &pacl, &defaulted);
+        if (!NT_SUCCESS(Status)) return Status;
+        Status = RtlSetDaclSecurityDescriptor(&desc, present, pacl, defaulted);
+        if (!NT_SUCCESS(Status)) return Status;
+    }
+
+    if (SecurityInformation & SACL_SECURITY_INFORMATION)
+    {
+        Status = RtlGetSaclSecurityDescriptor(ObjectDescriptor, &present, &pacl, &defaulted);
+        if (!NT_SUCCESS(Status)) return Status;
+        Status = RtlSetSaclSecurityDescriptor(&desc, present, pacl, defaulted);
+        if (!NT_SUCCESS(Status)) return Status;
+    }
+
+    *ReturnLength = DescriptorLength;
+    return RtlAbsoluteToSelfRelativeSD(&desc, ResultantDescriptor, ReturnLength);
 }
 
 
@@ -224,4 +288,26 @@ RtlSetSecurityObject(IN SECURITY_INFORMATION SecurityInformation,
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
-/* EOF */
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+NTAPI
+RtlRegisterSecureMemoryCacheCallback(IN PRTL_SECURE_MEMORY_CACHE_CALLBACK Callback)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+BOOLEAN
+NTAPI
+RtlFlushSecureMemoryCache(IN PVOID MemoryCache,
+                          IN OPTIONAL SIZE_T MemoryLength)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}

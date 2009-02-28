@@ -19,8 +19,6 @@
 
 /* FUNCTIONS ***************************************************************/
 
-typedef VOID (CALLBACK *WAITORTIMERCALLBACKFUNC) (PVOID, BOOLEAN );
-
 HANDLE TimerThreadHandle = NULL;
 
 NTSTATUS
@@ -507,10 +505,13 @@ NTSTATUS WINAPI RtlDeleteTimer(HANDLE TimerQueue, HANDLE Timer,
                                HANDLE CompletionEvent)
 {
     struct queue_timer *t = Timer;
-    struct timer_queue *q = t->q;
+    struct timer_queue *q;
     NTSTATUS status = STATUS_PENDING;
     HANDLE event = NULL;
 
+    if (!Timer)
+        return STATUS_INVALID_PARAMETER_1;
+    q = t->q;
     if (CompletionEvent == INVALID_HANDLE_VALUE)
         status = NtCreateEvent(&event, EVENT_ALL_ACCESS, NULL, FALSE, FALSE);
     else if (CompletionEvent)

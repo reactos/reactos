@@ -23,13 +23,12 @@ _memcpy:
 /*
  *  Make the destination dword aligned
  */
-        mov	%edi,%ecx
-        and	$3,%ecx
-        sub	$5,%ecx
-        not	%ecx
-        sub	%ecx,%edx
-        rep	movsb
-        mov	%edx,%ecx	
+	mov	%edi,%ecx
+	neg %ecx
+	and	$3,%ecx
+	sub	%ecx,%edx
+	rep	movsb
+	mov	%edx,%ecx	
 .L2:
 	shr	$2,%ecx
 	rep	movsl

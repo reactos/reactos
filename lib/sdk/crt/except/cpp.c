@@ -19,28 +19,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "wine/config.h"
-#include "wine/port.h"
-
-#include <stdarg.h>
-
-#include "windef.h"
-#include "winbase.h"
-#include "winreg.h"
-#include "winternl.h"
-#include "wine/exception.h"
-#include "winnt.h"
-#include "excpt.h"
-#include "wine/debug.h"
-#include <malloc.h>
-#include <stdlib.h>
-#include <stdio.h>
+#include <precomp.h>
 
 #include <internal/wine/msvcrt.h>
 #include <internal/wine/cppexcept.h>
-#include <internal/mtdll.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(msvcrt);
 
 typedef exception bad_cast;
 typedef exception bad_typeid;
@@ -75,7 +57,6 @@ typedef struct _rtti_object_locator
   const type_info *type_descriptor;
   const rtti_object_hierarchy *type_hierarchy;
 } rtti_object_locator;
-
 
 #ifdef __i386__  /* thiscall functions are i386-specific */
 

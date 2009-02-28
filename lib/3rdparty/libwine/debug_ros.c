@@ -8,6 +8,7 @@
 
 #include "debug.c"
 
+__MINGW_ATTRIB_MALLOC
 void *malloc(size_t size)
 {
     return LocalAlloc(0, size);
@@ -24,6 +25,7 @@ void *realloc(void *ptr, size_t size)
     return LocalReAlloc(ptr, size, LMEM_MOVEABLE);
 }
 
+__MINGW_ATTRIB_MALLOC
 char *_strdup(const char *str)
 {
     char *newstr = malloc(strlen(str) + 1);

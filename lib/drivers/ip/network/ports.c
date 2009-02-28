@@ -15,10 +15,9 @@ NTSTATUS PortsStartup( PPORT_SET PortSet,
 		   UINT PortsToManage ) {
     PortSet->StartingPort = StartingPort;
     PortSet->PortsToOversee = PortsToManage;
-    PortSet->LastAllocatedPort = PortSet->StartingPort +
-                                 PortSet->PortsToOversee - 1;
+
     PortSet->ProtoBitBuffer =
-	PoolAllocateBuffer( (PortSet->PortsToOversee + 7) / 8 );
+	exAllocatePool( NonPagedPool, (PortSet->PortsToOversee + 7) / 8 );
     if(!PortSet->ProtoBitBuffer) return STATUS_INSUFFICIENT_RESOURCES;
     RtlInitializeBitMap( &PortSet->ProtoBitmap,
 			 PortSet->ProtoBitBuffer,
@@ -29,7 +28,7 @@ NTSTATUS PortsStartup( PPORT_SET PortSet,
 }
 
 VOID PortsShutdown( PPORT_SET PortSet ) {
-    PoolFreeBuffer( PortSet->ProtoBitBuffer );
+    exFreePool( PortSet->ProtoBitBuffer );
 }
 
 VOID DeallocatePort( PPORT_SET PortSet, ULONG Port ) {
@@ -43,7 +42,13 @@ BOOLEAN AllocatePort( PPORT_SET PortSet, ULONG Port ) {
     BOOLEAN Clear;
 
     Port = htons(Port);
-    ASSERT(Port >= PortSet->StartingPort);
+
+    if ((Port < PortSet->StartingPort) ||
+        (Port >= PortSet->StartingPort + PortSet->PortsToOversee))
+    {
+       return FALSE;
+    }
+
     Port -= PortSet->StartingPort;
 
     ExAcquireFastMutex( &PortSet->Mutex );
@@ -56,58 +61,41 @@ BOOLEAN AllocatePort( PPORT_SET PortSet, ULONG Port ) {
 
 ULONG AllocateAnyPort( PPORT_SET PortSet ) {
     ULONG AllocatedPort;
-    ULONG Next;
-
-    if (PortSet->StartingPort + PortSet->PortsToOversee <=
-        PortSet->LastAllocatedPort + 1) {
-	Next = PortSet->StartingPort;
-    } else {
-	Next = PortSet->LastAllocatedPort + 1;
-    }
-    Next -= PortSet->StartingPort;
 
     ExAcquireFastMutex( &PortSet->Mutex );
     AllocatedPort = RtlFindClearBits( &PortSet->ProtoBitmap, 1, 0 );
     if( AllocatedPort != (ULONG)-1 ) {
 	RtlSetBit( &PortSet->ProtoBitmap, AllocatedPort );
 	AllocatedPort += PortSet->StartingPort;
-	PortSet->LastAllocatedPort = AllocatedPort;
+	ExReleaseFastMutex( &PortSet->Mutex );
+	return htons(AllocatedPort);
     }
     ExReleaseFastMutex( &PortSet->Mutex );
 
-    AllocatedPort = htons(AllocatedPort);
-
-    return AllocatedPort;
+    return -1;
 }
 
 ULONG AllocatePortFromRange( PPORT_SET PortSet, ULONG Lowest, ULONG Highest ) {
     ULONG AllocatedPort;
-    ULONG Next;
 
-    if (PortSet->StartingPort + PortSet->PortsToOversee <=
-        PortSet->LastAllocatedPort + 1) {
-	Next = PortSet->StartingPort;
-    } else {
-	Next = PortSet->LastAllocatedPort + 1;
+    if ((Lowest < PortSet->StartingPort) ||
+        (Highest >= PortSet->StartingPort + PortSet->PortsToOversee))
+    {
+        return -1;
     }
-    if (Next < Lowest || Highest <= Next) {
-	Next = Lowest;
-    }
-    Next -= PortSet->StartingPort;
+
     Lowest -= PortSet->StartingPort;
     Highest -= PortSet->StartingPort;
 
     ExAcquireFastMutex( &PortSet->Mutex );
-    AllocatedPort = RtlFindClearBits( &PortSet->ProtoBitmap, 1, Next );
-    if( AllocatedPort != (ULONG)-1 && AllocatedPort >= Lowest &&
-        AllocatedPort <= Highest) {
+    AllocatedPort = RtlFindClearBits( &PortSet->ProtoBitmap, 1, Lowest );
+    if( AllocatedPort != (ULONG)-1 && AllocatedPort <= Highest) {
 	RtlSetBit( &PortSet->ProtoBitmap, AllocatedPort );
 	AllocatedPort += PortSet->StartingPort;
-	PortSet->LastAllocatedPort = AllocatedPort;
+	ExReleaseFastMutex( &PortSet->Mutex );
+	return htons(AllocatedPort);
     }
     ExReleaseFastMutex( &PortSet->Mutex );
 
-    AllocatedPort = htons(AllocatedPort);
-
-    return AllocatedPort;
+    return -1;
 }

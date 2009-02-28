@@ -41,7 +41,7 @@ PIPDATAGRAM_HOLE CreateHoleDescriptor(
 
 	TI_DbgPrint(DEBUG_IP, ("Called. First (%d)  Last (%d).\n", First, Last));
 
-	Hole = TcpipAllocateFromNPagedLookasideList(&IPHoleList);
+	Hole = exAllocateFromNPagedLookasideList(&IPHoleList);
 	if (!Hole) {
 	    TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
 	    return NULL;
@@ -82,7 +82,7 @@ VOID FreeIPDR(
     TI_DbgPrint(DEBUG_IP, ("Freeing hole descriptor at (0x%X).\n", CurrentH));
 
     /* And free the hole descriptor */
-    TcpipFreeToNPagedLookasideList(&IPHoleList, CurrentH);
+    exFreeToNPagedLookasideList(&IPHoleList, CurrentH);
 
     CurrentEntry = NextEntry;
   }
@@ -103,13 +103,13 @@ VOID FreeIPDR(
     TI_DbgPrint(DEBUG_IP, ("Freeing fragment at (0x%X).\n", CurrentF));
 
     /* And free the fragment descriptor */
-    TcpipFreeToNPagedLookasideList(&IPFragmentList, CurrentF);
+    exFreeToNPagedLookasideList(&IPFragmentList, CurrentF);
     CurrentEntry = NextEntry;
   }
 
   TI_DbgPrint(DEBUG_IP, ("Freeing IPDR data at (0x%X).\n", IPDR));
 
-  TcpipFreeToNPagedLookasideList(&IPDRList, IPDR);
+  exFreeToNPagedLookasideList(&IPDRList, IPDR);
 }
 
 
@@ -250,8 +250,7 @@ PIP_PACKET ReassembleDatagram(
 __inline VOID Cleanup(
   PKSPIN_LOCK Lock,
   KIRQL OldIrql,
-  PIPDATAGRAM_REASSEMBLY IPDR,
-  PVOID Buffer OPTIONAL)
+  PIPDATAGRAM_REASSEMBLY IPDR)
 /*
  * FUNCTION: Performs cleaning operations on errors
  * ARGUMENTS:
@@ -266,8 +265,6 @@ __inline VOID Cleanup(
   TcpipReleaseSpinLock(Lock, OldIrql);
   RemoveIPDR(IPDR);
   FreeIPDR(IPDR);
-  if (Buffer)
-    exFreePool(Buffer);
 }
 
 
@@ -311,7 +308,7 @@ VOID ProcessFragment(
     TI_DbgPrint(DEBUG_IP, ("Starting new assembly.\n"));
 
     /* We don't have a reassembly structure, create one */
-    IPDR = TcpipAllocateFromNPagedLookasideList(&IPDRList);
+    IPDR = exAllocateFromNPagedLookasideList(&IPDRList);
     if (!IPDR)
       /* We don't have the resources to process this packet, discard it */
       return;
@@ -322,7 +319,7 @@ VOID ProcessFragment(
     Hole = CreateHoleDescriptor(0, 65536);
     if (!Hole) {
       /* We don't have the resources to process this packet, discard it */
-      TcpipFreeToNPagedLookasideList(&IPDRList, IPDR);
+      exFreeToNPagedLookasideList(&IPDRList, IPDR);
       return;
     }
     AddrInitIPv4(&IPDR->SrcAddr, IPv4Header->SrcAddr);
@@ -375,7 +372,8 @@ VOID ProcessFragment(
       NewHole = CreateHoleDescriptor(Hole->First, FragLast - 1);
       if (!NewHole) {
         /* We don't have the resources to process this packet, discard it */
-        Cleanup(&IPDR->Lock, OldIrql, IPDR, Hole);
+        exFreeToNPagedLookasideList(&IPHoleList, Hole);
+        Cleanup(&IPDR->Lock, OldIrql, IPDR);
         return;
       }
 
@@ -385,12 +383,12 @@ VOID ProcessFragment(
 
     if ((FragLast < Hole->Last) && (MoreFragments)) {
       /* We can reuse the descriptor for the new hole */
-		  Hole->First = FragLast + 1;
+      Hole->First = FragLast + 1;
 
-		  /* Put the new hole descriptor in the list */
+      /* Put the new hole descriptor in the list */
       InsertTailList(&IPDR->HoleListHead, &Hole->ListEntry);
     } else
-      TcpipFreeToNPagedLookasideList(&IPHoleList, Hole);
+      exFreeToNPagedLookasideList(&IPHoleList, Hole);
 
     /* If this is the first fragment, save the IP header */
     if (FragFirst == 0) {
@@ -404,10 +402,10 @@ VOID ProcessFragment(
     /* Create a buffer, copy the data into it and put it
        in the fragment list */
 
-    Fragment = TcpipAllocateFromNPagedLookasideList(&IPFragmentList);
+    Fragment = exAllocateFromNPagedLookasideList(&IPFragmentList);
     if (!Fragment) {
       /* We don't have the resources to process this packet, discard it */
-      Cleanup(&IPDR->Lock, OldIrql, IPDR, NULL);
+      Cleanup(&IPDR->Lock, OldIrql, IPDR);
       return;
     }
 
@@ -417,7 +415,8 @@ VOID ProcessFragment(
     Fragment->Data = exAllocatePool(NonPagedPool, Fragment->Size);
     if (!Fragment->Data) {
       /* We don't have the resources to process this packet, discard it */
-      Cleanup(&IPDR->Lock, OldIrql, IPDR, Fragment);
+      exFreeToNPagedLookasideList(&IPFragmentList, Fragment);
+      Cleanup(&IPDR->Lock, OldIrql, IPDR);
       return;
     }
 

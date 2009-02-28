@@ -1,6 +1,6 @@
 /*************************************************************************
  *
- * $Id: triostr.h,v 1.3 2003/04/03 15:28:28 veillard Exp $
+ * $Id: triostr.h 3600 2007-04-17 12:44:58Z veillard $
  *
  * Copyright (C) 2001 Bjorn Reese and Daniel Stenberg.
  *
@@ -65,7 +65,9 @@ TRIO_STRING_PUBLIC int trio_contains TRIO_PROTO((const char *string, const char 
 TRIO_STRING_PUBLIC int trio_copy TRIO_PROTO((char *target, const char *source));
 TRIO_STRING_PUBLIC char *trio_duplicate_max TRIO_PROTO((const char *source, size_t max));
 TRIO_STRING_PUBLIC int trio_equal_case_max TRIO_PROTO((const char *first, size_t max, const char *second));
+#if !defined(_WIN32_WCE)
 TRIO_STRING_PUBLIC size_t trio_format_date_max TRIO_PROTO((char *target, size_t max, const char *format, const struct tm *datetime));
+#endif
 TRIO_STRING_PUBLIC unsigned long trio_hash TRIO_PROTO((const char *string, int type));
 TRIO_STRING_PUBLIC char *trio_index TRIO_PROTO((const char *string, int character));
 TRIO_STRING_PUBLIC char *trio_index_last TRIO_PROTO((const char *string, int character));
@@ -114,7 +116,9 @@ TRIO_STRING_PUBLIC int trio_string_equal TRIO_PROTO((trio_string_t *self, trio_s
 TRIO_STRING_PUBLIC int trio_string_equal_max TRIO_PROTO((trio_string_t *self, size_t max, trio_string_t *second));
 TRIO_STRING_PUBLIC int trio_string_equal_case TRIO_PROTO((trio_string_t *self, trio_string_t *other));
 TRIO_STRING_PUBLIC int trio_string_equal_case_max TRIO_PROTO((trio_string_t *self, size_t max, trio_string_t *other));
+#if !defined(_WIN32_WCE)
 TRIO_STRING_PUBLIC size_t trio_string_format_date_max TRIO_PROTO((trio_string_t *self, size_t max, const char *format, const struct tm *datetime));
+#endif
 TRIO_STRING_PUBLIC char *trio_string_index TRIO_PROTO((trio_string_t *self, int character));
 TRIO_STRING_PUBLIC char *trio_string_index_last TRIO_PROTO((trio_string_t *self, int character));
 TRIO_STRING_PUBLIC int trio_string_length TRIO_PROTO((trio_string_t *self));

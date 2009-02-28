@@ -34,12 +34,12 @@
 
 #include <libxml/xmlreader.h>
 
-int debug = 0;
-int dump = 0;
-int noent = 0;
-int count = 0;
-int valid = 0;
-int consumed = 0;
+static int debug = 0;
+static int dump = 0;
+static int noent = 0;
+static int count = 0;
+static int valid = 0;
+static int consumed = 0;
 
 static void usage(const char *progname) {
     printf("Usage : %s [options] XMLfiles ...\n", progname);

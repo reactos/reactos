@@ -9,9 +9,9 @@
  */
 
 #define IN_LIBXML
+#include "libxml.h"
 #include <string.h>
 
-#include "libxml.h"
 #include <libxml/xmlmemory.h>
 #include <libxml/parser.h>
 #include <libxml/uri.h>
@@ -23,6 +23,25 @@
 
 #define B64LINELEN 72
 #define B64CRLF "\r\n"
+
+/*
+ * The following VA_COPY was coded following an example in
+ * the Samba project.  It may not be sufficient for some
+ * esoteric implementations of va_list (i.e. it may need
+ * something involving a memcpy) but (hopefully) will be
+ * sufficient for libxml2.
+ */
+#ifndef VA_COPY
+  #ifdef HAVE_VA_COPY
+    #define VA_COPY(dest, src) va_copy(dest, src)
+  #else
+    #ifdef HAVE___VA_COPY
+      #define VA_COPY(dest,src) __va_copy(dest, src)
+    #else
+      #define VA_COPY(dest,src) (dest) = (src)
+    #endif
+  #endif
+#endif
 
 /*
  * Types are kept private
@@ -72,17 +91,16 @@ struct _xmlTextWriter {
     char qchar;                 /* character used for quoting attribute values */
     xmlParserCtxtPtr ctxt;
     int no_doc_free;
+    xmlDocPtr doc;
 };
 
 static void xmlFreeTextWriterStackEntry(xmlLinkPtr lk);
 static int xmlCmpTextWriterStackEntry(const void *data0,
                                       const void *data1);
+static int xmlTextWriterOutputNSDecl(xmlTextWriterPtr writer);
 static void xmlFreeTextWriterNsStackEntry(xmlLinkPtr lk);
 static int xmlCmpTextWriterNsStackEntry(const void *data0,
                                         const void *data1);
-static int xmlTextWriterWriteMemCallback(void *context,
-                                         const xmlChar * str, int len);
-static int xmlTextWriterCloseMemCallback(void *context);
 static int xmlTextWriterWriteDocCallback(void *context,
                                          const xmlChar * str, int len);
 static int xmlTextWriterCloseDocCallback(void *context);
@@ -199,6 +217,9 @@ xmlNewTextWriter(xmlOutputBufferPtr out)
                         "xmlNewTextWriter : out of memory!\n");
         return NULL;
     }
+
+    ret->doc = xmlNewDoc(NULL);
+
     ret->no_doc_free = 0;
 
     return ret;
@@ -256,11 +277,8 @@ xmlNewTextWriterMemory(xmlBufferPtr buf, int compression ATTRIBUTE_UNUSED)
     xmlOutputBufferPtr out;
 
 /*::todo handle compression */
-    out = xmlOutputBufferCreateIO((xmlOutputWriteCallback)
-                                  xmlTextWriterWriteMemCallback,
-                                  (xmlOutputCloseCallback)
-                                  xmlTextWriterCloseMemCallback,
-                                  (void *) buf, NULL);
+    out = xmlOutputBufferCreateBuffer(buf, NULL);
+
     if (out == NULL) {
         xmlWriterErrMsg(NULL, XML_ERR_NO_MEMORY,
                         "xmlNewTextWriterMemory : out of memory!\n");
@@ -474,6 +492,9 @@ xmlFreeTextWriter(xmlTextWriterPtr writer)
         xmlFreeParserCtxt(writer->ctxt);
     }
 
+    if (writer->doc != NULL)
+        xmlFreeDoc(writer->doc);
+
     if (writer->ichar != NULL)
         xmlFree(writer->ichar);
     xmlFree(writer);
@@ -524,8 +545,12 @@ xmlTextWriterStartDocument(xmlTextWriterPtr writer, const char *version,
 
     writer->out->encoder = encoder;
     if (encoder != NULL) {
-        writer->out->conv = xmlBufferCreateSize(4000);
+	if (writer->out->conv == NULL) {
+	    writer->out->conv = xmlBufferCreateSize(4000);
+	}
         xmlCharEncOutFunc(encoder, writer->out->conv, NULL);
+        if ((writer->doc != NULL) && (writer->doc->encoding == NULL))
+            writer->doc->encoding = xmlStrdup((xmlChar *)writer->out->encoder->name);
     } else
         writer->out->conv = NULL;
 
@@ -601,9 +626,10 @@ xmlTextWriterStartDocument(xmlTextWriterPtr writer, const char *version,
  * xmlTextWriterEndDocument:
  * @writer:  the xmlTextWriterPtr
  *
- * End an xml document. All open elements are closed
+ * End an xml document. All open elements are closed, and
+ * the content is flushed to the output.
  *
- * Returns the bytes written (may be 0 because of buffering) or -1 in case of error
+ * Returns the bytes written or -1 in case of error
  */
 int
 xmlTextWriterEndDocument(xmlTextWriterPtr writer)
@@ -677,6 +703,9 @@ xmlTextWriterEndDocument(xmlTextWriterPtr writer)
             return -1;
         sum += count;
     }
+
+    sum += xmlTextWriterFlush(writer);
+
     return sum;
 }
 
@@ -712,6 +741,11 @@ xmlTextWriterStartComment(xmlTextWriterPtr writer)
                 case XML_TEXTWRITER_NONE:
                     break;
                 case XML_TEXTWRITER_NAME:
+                    /* Output namespace declarations */
+                    count = xmlTextWriterOutputNSDecl(writer);
+                    if (count < 0)
+                        return -1;
+                    sum += count;
                     count = xmlOutputBufferWriteString(writer->out, ">");
                     if (count < 0)
                         return -1;
@@ -739,7 +773,7 @@ xmlTextWriterStartComment(xmlTextWriterPtr writer)
         return -1;
     }
 
-    p->name = 0;
+    p->name = NULL;
     p->state = XML_TEXTWRITER_COMMENT;
 
     xmlListPushFront(writer->nodes, p);
@@ -825,7 +859,7 @@ xmlTextWriterEndComment(xmlTextWriterPtr writer)
  *
  * Returns the bytes written (may be 0 because of buffering) or -1 in case of error
  */
-int
+int XMLCDECL
 xmlTextWriterWriteFormatComment(xmlTextWriterPtr writer,
                                 const char *format, ...)
 {
@@ -943,6 +977,11 @@ xmlTextWriterStartElement(xmlTextWriterPtr writer, const xmlChar * name)
 					sum += count;
 					/* fallthrough */
                 case XML_TEXTWRITER_NAME:
+                    /* Output namespace declarations */
+                    count = xmlTextWriterOutputNSDecl(writer);
+                    if (count < 0)
+                        return -1;
+                    sum += count;
                     count = xmlOutputBufferWriteString(writer->out, ">");
                     if (count < 0)
                         return -1;
@@ -1018,7 +1057,7 @@ xmlTextWriterStartElementNS(xmlTextWriterPtr writer,
     if ((writer == NULL) || (name == NULL) || (*name == '\0'))
         return -1;
 
-    buf = 0;
+    buf = NULL;
     if (prefix != 0) {
         buf = xmlStrdup(prefix);
         buf = xmlStrcat(buf, BAD_CAST ":");
@@ -1033,17 +1072,31 @@ xmlTextWriterStartElementNS(xmlTextWriterPtr writer,
     sum += count;
 
     if (namespaceURI != 0) {
+        xmlTextWriterNsStackEntry *p = (xmlTextWriterNsStackEntry *) 
+        xmlMalloc(sizeof(xmlTextWriterNsStackEntry));
+        if (p == 0) {
+            xmlWriterErrMsg(writer, XML_ERR_NO_MEMORY, 
+                            "xmlTextWriterStartElementNS : out of memory!\n");
+            return -1;
+        }
+
         buf = xmlStrdup(BAD_CAST "xmlns");
         if (prefix != 0) {
             buf = xmlStrcat(buf, BAD_CAST ":");
             buf = xmlStrcat(buf, prefix);
         }
 
-        count = xmlTextWriterWriteAttribute(writer, buf, namespaceURI);
-        xmlFree(buf);
-        if (count < 0)
+        p->prefix = buf;
+        p->uri = xmlStrdup(namespaceURI);
+        if (p->uri == 0) {
+            xmlWriterErrMsg(writer, XML_ERR_NO_MEMORY,
+                            "xmlTextWriterStartElementNS : out of memory!\n");
+            xmlFree(p);
             return -1;
-        sum += count;
+        }
+        p->elem = xmlListFront(writer->nodes);
+
+        xmlListPushFront(writer->nsstack, p);
     }
 
     return sum;
@@ -1069,22 +1122,37 @@ xmlTextWriterEndElement(xmlTextWriterPtr writer)
         return -1;
 
     lk = xmlListFront(writer->nodes);
-    if (lk == 0)
+    if (lk == 0) {
+        xmlListDelete(writer->nsstack);
+        writer->nsstack = NULL;
         return -1;
+    }
 
     p = (xmlTextWriterStackEntry *) xmlLinkGetData(lk);
-    if (p == 0)
+    if (p == 0) {
+        xmlListDelete(writer->nsstack);
+        writer->nsstack = NULL;
         return -1;
+    }
 
     sum = 0;
     switch (p->state) {
         case XML_TEXTWRITER_ATTRIBUTE:
             count = xmlTextWriterEndAttribute(writer);
-            if (count < 0)
+            if (count < 0) {
+                xmlListDelete(writer->nsstack);
+                writer->nsstack = NULL;
                 return -1;
+            }
             sum += count;
             /* fallthrough */
         case XML_TEXTWRITER_NAME:
+            /* Output namespace declarations */
+            count = xmlTextWriterOutputNSDecl(writer);
+            if (count < 0)
+                return -1;
+            sum += count;
+
             if (writer->indent) /* next element needs indent */
                 writer->doindent = 1;
             count = xmlOutputBufferWriteString(writer->out, "/>");
@@ -1162,12 +1230,26 @@ xmlTextWriterFullEndElement(xmlTextWriterPtr writer)
             sum += count;
             /* fallthrough */
         case XML_TEXTWRITER_NAME:
+            /* Output namespace declarations */
+            count = xmlTextWriterOutputNSDecl(writer);
+            if (count < 0)
+                return -1;
+            sum += count;
+
             count = xmlOutputBufferWriteString(writer->out, ">");
             if (count < 0)
                 return -1;
             sum += count;
+            if (writer->indent)
+                writer->doindent = 0;
             /* fallthrough */
         case XML_TEXTWRITER_TEXT:
+            if ((writer->indent) && (writer->doindent)) {
+                count = xmlTextWriterWriteIndent(writer);
+                sum += count;
+                writer->doindent = 1;
+            } else
+                writer->doindent = 1;
             count = xmlOutputBufferWriteString(writer->out, "</");
             if (count < 0)
                 return -1;
@@ -1186,6 +1268,11 @@ xmlTextWriterFullEndElement(xmlTextWriterPtr writer)
             return -1;
     }
 
+    if (writer->indent) {
+        count = xmlOutputBufferWriteString(writer->out, "\n");
+        sum += count;
+    }
+
     xmlListPopFront(writer->nodes);
     return sum;
 }
@@ -1200,7 +1287,7 @@ xmlTextWriterFullEndElement(xmlTextWriterPtr writer)
  *
  * Returns the bytes written (may be 0 because of buffering) or -1 in case of error
  */
-int
+int XMLCDECL
 xmlTextWriterWriteFormatRaw(xmlTextWriterPtr writer, const char *format,
                             ...)
 {
@@ -1326,7 +1413,7 @@ xmlTextWriterWriteRaw(xmlTextWriterPtr writer, const xmlChar * content)
  *
  * Returns the bytes written (may be 0 because of buffering) or -1 in case of error
  */
-int
+int XMLCDECL
 xmlTextWriterWriteFormatString(xmlTextWriterPtr writer, const char *format,
                                ...)
 {
@@ -1412,7 +1499,7 @@ xmlTextWriterWriteString(xmlTextWriterPtr writer, const xmlChar * content)
                     break;
                 case XML_TEXTWRITER_ATTRIBUTE:
                     buf = NULL;
-                    xmlAttrSerializeTxtContent(writer->out->buffer, NULL,
+                    xmlAttrSerializeTxtContent(writer->out->buffer, writer->doc,
                                                NULL, content);
                     break;
 		default:
@@ -1573,7 +1660,7 @@ xmlTextWriterWriteBase64(xmlTextWriterPtr writer, const char *data,
  * Write hqx encoded data to an xmlOutputBuffer.
  * ::todo
  *
- * Returns the bytes written (may be 0 because of buffering)
+ * Returns the bytes written (may be 0 because of buffering) 
  * or -1 in case of error
  */
 static int
@@ -1582,7 +1669,7 @@ xmlOutputBufferWriteBinHex(xmlOutputBufferPtr out,
 {
     int count;
     int sum;
-    static char hex[16] =
+    static char hex[16] = 
     	{'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
     int i;
 
@@ -1745,7 +1832,58 @@ xmlTextWriterStartAttributeNS(xmlTextWriterPtr writer,
     if ((writer == NULL) || (name == NULL) || (*name == '\0'))
         return -1;
 
-    buf = 0;
+    /* Handle namespace first in case of error */
+    if (namespaceURI != 0) {
+        xmlTextWriterNsStackEntry nsentry, *curns;
+
+        buf = xmlStrdup(BAD_CAST "xmlns");
+        if (prefix != 0) {
+            buf = xmlStrcat(buf, BAD_CAST ":");
+            buf = xmlStrcat(buf, prefix);
+        }
+
+        nsentry.prefix = buf;
+        nsentry.uri = (xmlChar *)namespaceURI;
+        nsentry.elem = xmlListFront(writer->nodes);
+
+        curns = (xmlTextWriterNsStackEntry *)xmlListSearch(writer->nsstack, 
+                                                           (void *)&nsentry);
+        if ((curns != NULL)) {
+            xmlFree(buf);
+            if (xmlStrcmp(curns->uri, namespaceURI) == 0) {
+                /* Namespace already defined on element skip */
+                buf = NULL;
+            } else {
+                /* Prefix mismatch so error out */
+                return -1;
+            }
+        }
+
+        /* Do not add namespace decl to list - it is already there */
+        if (buf != NULL) {
+            p = (xmlTextWriterNsStackEntry *)
+                xmlMalloc(sizeof(xmlTextWriterNsStackEntry));
+            if (p == 0) {
+                xmlWriterErrMsg(writer, XML_ERR_NO_MEMORY,
+								        "xmlTextWriterStartAttributeNS : out of memory!\n");
+                return -1;
+            }
+
+            p->prefix = buf;
+            p->uri = xmlStrdup(namespaceURI);
+            if (p->uri == 0) {
+                xmlWriterErrMsg(writer, XML_ERR_NO_MEMORY,
+                        "xmlTextWriterStartAttributeNS : out of memory!\n");
+                xmlFree(p);
+                return -1;
+            }
+            p->elem = xmlListFront(writer->nodes);
+
+            xmlListPushFront(writer->nsstack, p);
+        }
+    }
+
+    buf = NULL;
     if (prefix != 0) {
         buf = xmlStrdup(prefix);
         buf = xmlStrcat(buf, BAD_CAST ":");
@@ -1758,34 +1896,6 @@ xmlTextWriterStartAttributeNS(xmlTextWriterPtr writer,
     if (count < 0)
         return -1;
     sum += count;
-
-    if (namespaceURI != 0) {
-        buf = xmlStrdup(BAD_CAST "xmlns");
-        if (prefix != 0) {
-            buf = xmlStrcat(buf, BAD_CAST ":");
-            buf = xmlStrcat(buf, prefix);
-        }
-
-        p = (xmlTextWriterNsStackEntry *)
-            xmlMalloc(sizeof(xmlTextWriterNsStackEntry));
-        if (p == 0) {
-            xmlWriterErrMsg(writer, XML_ERR_NO_MEMORY,
-                            "xmlTextWriterStartAttributeNS : out of memory!\n");
-            return -1;
-        }
-
-        p->prefix = buf;
-        p->uri = xmlStrdup(namespaceURI);
-        if (p->uri == 0) {
-            xmlWriterErrMsg(writer, XML_ERR_NO_MEMORY,
-                            "xmlTextWriterStartAttributeNS : out of memory!\n");
-            xmlFree(p);
-            return -1;
-        }
-        p->elem = xmlListFront(writer->nodes);
-
-        xmlListPushFront(writer->nsstack, p);
-    }
 
     return sum;
 }
@@ -1805,22 +1915,17 @@ xmlTextWriterEndAttribute(xmlTextWriterPtr writer)
     int sum;
     xmlLinkPtr lk;
     xmlTextWriterStackEntry *p;
-    xmlTextWriterNsStackEntry *np;
 
     if (writer == NULL)
         return -1;
 
     lk = xmlListFront(writer->nodes);
     if (lk == 0) {
-        xmlListDelete(writer->nsstack);
-	writer->nsstack = NULL;
         return -1;
     }
 
     p = (xmlTextWriterStackEntry *) xmlLinkGetData(lk);
     if (p == 0) {
-        xmlListDelete(writer->nsstack);
-	writer->nsstack = NULL;
         return -1;
     }
 
@@ -1831,45 +1936,11 @@ xmlTextWriterEndAttribute(xmlTextWriterPtr writer)
 
             count = xmlOutputBufferWrite(writer->out, 1, &writer->qchar);
             if (count < 0) {
-                xmlListDelete(writer->nsstack);
-		writer->nsstack = NULL;
                 return -1;
             }
             sum += count;
-
-            while (!xmlListEmpty(writer->nsstack)) {
-	        xmlChar *namespaceURI = NULL;
-		xmlChar *prefix = NULL;
-
-                lk = xmlListFront(writer->nsstack);
-                np = (xmlTextWriterNsStackEntry *) xmlLinkGetData(lk);
-
-		if (np != 0) {
-		    namespaceURI = xmlStrdup(np->uri);
-		    prefix = xmlStrdup(np->prefix);
-		}
-
-		xmlListPopFront(writer->nsstack);
-
-                if (np != 0) {
-                    count =
-                        xmlTextWriterWriteAttribute(writer, prefix,
-                                                    namespaceURI);
-		    xmlFree(namespaceURI);
-		    xmlFree(prefix);
-
-                    if (count < 0) {
-                        xmlListDelete(writer->nsstack);
-			writer->nsstack = NULL;
-                        return -1;
-                    }
-                    sum += count;
-                }
-            }
             break;
-
         default:
-            xmlListClear(writer->nsstack);
             return -1;
     }
 
@@ -1887,7 +1958,7 @@ xmlTextWriterEndAttribute(xmlTextWriterPtr writer)
  *
  * Returns the bytes written (may be 0 because of buffering) or -1 in case of error
  */
-int
+int XMLCDECL
 xmlTextWriterWriteFormatAttribute(xmlTextWriterPtr writer,
                                   const xmlChar * name, const char *format,
                                   ...)
@@ -1982,7 +2053,7 @@ xmlTextWriterWriteAttribute(xmlTextWriterPtr writer, const xmlChar * name,
  *
  * Returns the bytes written (may be 0 because of buffering) or -1 in case of error
  */
-int
+int XMLCDECL
 xmlTextWriterWriteFormatAttributeNS(xmlTextWriterPtr writer,
                                     const xmlChar * prefix,
                                     const xmlChar * name,
@@ -2058,38 +2129,24 @@ xmlTextWriterWriteAttributeNS(xmlTextWriterPtr writer,
 {
     int count;
     int sum;
-    xmlChar *buf;
 
     if ((writer == NULL) || (name == NULL) || (*name == '\0'))
         return -1;
 
-    buf = 0;
-    if (prefix != NULL) {
-        buf = xmlStrdup(prefix);
-        buf = xmlStrcat(buf, BAD_CAST ":");
-    }
-    buf = xmlStrcat(buf, name);
-
     sum = 0;
-    count = xmlTextWriterWriteAttribute(writer, buf, content);
-    xmlFree(buf);
+    count = xmlTextWriterStartAttributeNS(writer, prefix, name, namespaceURI);
+    if (count < 0)
+        return -1;
+    sum += count;
+    count = xmlTextWriterWriteString(writer, content);
+    if (count < 0)
+        return -1;
+    sum += count;
+    count = xmlTextWriterEndAttribute(writer);
     if (count < 0)
         return -1;
     sum += count;
 
-    if (namespaceURI != NULL) {
-        buf = 0;
-        buf = xmlStrdup(BAD_CAST "xmlns");
-        if (prefix != NULL) {
-            buf = xmlStrcat(buf, BAD_CAST ":");
-            buf = xmlStrcat(buf, prefix);
-        }
-        count = xmlTextWriterWriteAttribute(writer, buf, namespaceURI);
-        xmlFree(buf);
-        if (count < 0)
-            return -1;
-        sum += count;
-    }
     return sum;
 }
 
@@ -2104,7 +2161,7 @@ xmlTextWriterWriteAttributeNS(xmlTextWriterPtr writer,
  *
  * Returns the bytes written (may be 0 because of buffering) or -1 in case of error
  */
-int
+int XMLCDECL
 xmlTextWriterWriteFormatElement(xmlTextWriterPtr writer,
                                 const xmlChar * name, const char *format,
                                 ...)
@@ -2199,7 +2256,7 @@ xmlTextWriterWriteElement(xmlTextWriterPtr writer, const xmlChar * name,
  *
  * Returns the bytes written (may be 0 because of buffering) or -1 in case of error
  */
-int
+int XMLCDECL
 xmlTextWriterWriteFormatElementNS(xmlTextWriterPtr writer,
                                   const xmlChar * prefix,
                                   const xmlChar * name,
@@ -2336,6 +2393,11 @@ xmlTextWriterStartPI(xmlTextWriterPtr writer, const xmlChar * target)
                     sum += count;
                     /* fallthrough */
                 case XML_TEXTWRITER_NAME:
+                    /* Output namespace declarations */
+                    count = xmlTextWriterOutputNSDecl(writer);
+                    if (count < 0)
+                        return -1;
+                    sum += count;
                     count = xmlOutputBufferWriteString(writer->out, ">");
                     if (count < 0)
                         return -1;
@@ -2429,6 +2491,13 @@ xmlTextWriterEndPI(xmlTextWriterPtr writer)
             return -1;
     }
 
+    if (writer->indent) {
+        count = xmlOutputBufferWriteString(writer->out, "\n");
+      	if (count < 0)
+       	return -1;
+        sum += count;
+    }
+
     xmlListPopFront(writer->nodes);
     return sum;
 }
@@ -2444,7 +2513,7 @@ xmlTextWriterEndPI(xmlTextWriterPtr writer)
  *
  * Returns the bytes written (may be 0 because of buffering) or -1 in case of error
  */
-int
+int XMLCDECL
 xmlTextWriterWriteFormatPI(xmlTextWriterPtr writer, const xmlChar * target,
                            const char *format, ...)
 {
@@ -2553,6 +2622,7 @@ xmlTextWriterStartCDATA(xmlTextWriterPtr writer)
         if (p != 0) {
             switch (p->state) {
                 case XML_TEXTWRITER_NONE:
+		case XML_TEXTWRITER_TEXT:
                 case XML_TEXTWRITER_PI:
                 case XML_TEXTWRITER_PI_TEXT:
                     break;
@@ -2563,6 +2633,11 @@ xmlTextWriterStartCDATA(xmlTextWriterPtr writer)
                     sum += count;
                     /* fallthrough */
                 case XML_TEXTWRITER_NAME:
+                    /* Output namespace declarations */
+                    count = xmlTextWriterOutputNSDecl(writer);
+                    if (count < 0)
+                        return -1;
+                    sum += count;
                     count = xmlOutputBufferWriteString(writer->out, ">");
                     if (count < 0)
                         return -1;
@@ -2587,7 +2662,7 @@ xmlTextWriterStartCDATA(xmlTextWriterPtr writer)
         return -1;
     }
 
-    p->name = 0;
+    p->name = NULL;
     p->state = XML_TEXTWRITER_CDATA;
 
     xmlListPushFront(writer->nodes, p);
@@ -2653,7 +2728,7 @@ xmlTextWriterEndCDATA(xmlTextWriterPtr writer)
  *
  * Returns the bytes written (may be 0 because of buffering) or -1 in case of error
  */
-int
+int XMLCDECL
 xmlTextWriterWriteFormatCDATA(xmlTextWriterPtr writer, const char *format,
                               ...)
 {
@@ -2842,8 +2917,11 @@ xmlTextWriterStartDTD(xmlTextWriterPtr writer,
             if (count < 0)
                 return -1;
             sum += count;
-        } else if (writer->indent) {
+        } else {
+			if (writer->indent)
             count = xmlOutputBufferWriteString(writer->out, "\n       ");
+            else
+                count = xmlOutputBufferWrite(writer->out, 1, " ");
             if (count < 0)
                 return -1;
             sum += count;
@@ -2959,7 +3037,7 @@ xmlTextWriterEndDTD(xmlTextWriterPtr writer)
  *
  * Returns the bytes written (may be 0 because of buffering) or -1 in case of error
  */
-int
+int XMLCDECL
 xmlTextWriterWriteFormatDTD(xmlTextWriterPtr writer,
                             const xmlChar * name,
                             const xmlChar * pubid,
@@ -3203,7 +3281,7 @@ xmlTextWriterEndDTDElement(xmlTextWriterPtr writer)
  *
  * Returns the bytes written (may be 0 because of buffering) or -1 in case of error
  */
-int
+int XMLCDECL
 xmlTextWriterWriteFormatDTDElement(xmlTextWriterPtr writer,
                                    const xmlChar * name,
                                    const char *format, ...)
@@ -3440,7 +3518,7 @@ xmlTextWriterEndDTDAttlist(xmlTextWriterPtr writer)
  *
  * Returns the bytes written (may be 0 because of buffering) or -1 in case of error
  */
-int
+int XMLCDECL
 xmlTextWriterWriteFormatDTDAttlist(xmlTextWriterPtr writer,
                                    const xmlChar * name,
                                    const char *format, ...)
@@ -3697,7 +3775,7 @@ xmlTextWriterEndDTDEntity(xmlTextWriterPtr writer)
  *
  * Returns the bytes written (may be 0 because of buffering) or -1 in case of error
  */
-int
+int XMLCDECL
 xmlTextWriterWriteFormatDTDInternalEntity(xmlTextWriterPtr writer,
                                           int pe,
                                           const xmlChar * name,
@@ -4216,6 +4294,51 @@ xmlCmpTextWriterStackEntry(const void *data0, const void *data1)
  */
 
 /**
+ * xmlTextWriterOutputNSDecl:
+ * @writer:  the xmlTextWriterPtr
+ *
+ * Output the current namespace declarations.
+ */
+static int
+xmlTextWriterOutputNSDecl(xmlTextWriterPtr writer)
+{
+    xmlLinkPtr lk;
+    xmlTextWriterNsStackEntry *np;
+    int count;
+    int sum;
+
+    sum = 0;
+    while (!xmlListEmpty(writer->nsstack)) {
+        xmlChar *namespaceURI = NULL;
+        xmlChar *prefix = NULL;
+
+        lk = xmlListFront(writer->nsstack);
+        np = (xmlTextWriterNsStackEntry *) xmlLinkGetData(lk);
+
+        if (np != 0) {
+            namespaceURI = xmlStrdup(np->uri);
+            prefix = xmlStrdup(np->prefix);
+        }
+
+        xmlListPopFront(writer->nsstack);
+
+        if (np != 0) {
+            count = xmlTextWriterWriteAttribute(writer, prefix, namespaceURI);
+            xmlFree(namespaceURI);
+            xmlFree(prefix);
+
+            if (count < 0) {
+                xmlListDelete(writer->nsstack);
+                writer->nsstack = NULL;
+                return -1;
+            }
+            sum += count;
+        }
+    }
+    return sum;
+}
+
+/**
  * xmlFreeTextWriterNsStackEntry:
  * @lk:  the xmlLinkPtr
  *
@@ -4268,44 +4391,10 @@ xmlCmpTextWriterNsStackEntry(const void *data0, const void *data1)
 
     rc = xmlStrcmp(p0->prefix, p1->prefix);
 
-    if (rc == 0)
-        rc = p0->elem == p1->elem;
+    if ((rc != 0) || (p0->elem != p1->elem))
+        rc = -1;
 
     return rc;
-}
-
-/**
- * xmlTextWriterWriteMemCallback:
- * @context:  the xmlBufferPtr
- * @str:  the data to write
- * @len:  the length of the data
- *
- * Write callback for the xmlOutputBuffer with target xmlBuffer
- *
- * Returns -1, 0, 1
- */
-static int
-xmlTextWriterWriteMemCallback(void *context, const xmlChar * str, int len)
-{
-    xmlBufferPtr buf = (xmlBufferPtr) context;
-
-    xmlBufferAdd(buf, str, len);
-
-    return len;
-}
-
-/**
- * xmlTextWriterCloseMemCallback:
- * @context:  the xmlBufferPtr
- *
- * Close callback for the xmlOutputBuffer with target xmlBuffer
- *
- * Returns -1, 0, 1
- */
-static int
-xmlTextWriterCloseMemCallback(void *context ATTRIBUTE_UNUSED)
-{
-    return 0;
 }
 
 /**
@@ -4373,6 +4462,7 @@ xmlTextWriterVSprintf(const char *format, va_list argptr)
     int size;
     int count;
     xmlChar *buf;
+    va_list locarg;
 
     size = BUFSIZ;
     buf = (xmlChar *) xmlMalloc(size);
@@ -4382,8 +4472,10 @@ xmlTextWriterVSprintf(const char *format, va_list argptr)
         return NULL;
     }
 
-    while (((count = vsnprintf((char *) buf, size, format, argptr)) < 0)
+    VA_COPY(locarg, argptr);
+    while (((count = vsnprintf((char *) buf, size, format, locarg)) < 0)
            || (count == size - 1) || (count == size) || (count > size)) {
+	va_end(locarg);
         xmlFree(buf);
         size += BUFSIZ;
         buf = (xmlChar *) xmlMalloc(size);
@@ -4392,7 +4484,9 @@ xmlTextWriterVSprintf(const char *format, va_list argptr)
                             "xmlTextWriterVSprintf : out of memory!\n");
             return NULL;
         }
+	VA_COPY(locarg, argptr);
     }
+    va_end(locarg);
 
     return buf;
 }
@@ -4565,6 +4659,11 @@ xmlTextWriterHandleStateDependencies(xmlTextWriterPtr writer,
         sum = 0;
         switch (p->state) {
             case XML_TEXTWRITER_NAME:
+                /* Output namespace declarations */
+                count = xmlTextWriterOutputNSDecl(writer);
+                if (count < 0)
+                    return -1;
+                sum += count;
                 extra[0] = '>';
                 p->state = XML_TEXTWRITER_TEXT;
                 break;

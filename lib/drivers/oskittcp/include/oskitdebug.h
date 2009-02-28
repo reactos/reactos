@@ -33,9 +33,6 @@
 #define OSK_DEBUG_CPOINT    0x00800000
 #define OSK_DEBUG_ULTRA     0xFFFFFFFF
 
-#ifndef _MSC_VER
-#include <roscfg.h>
-#endif/*_MSC_VER*/
 #include <oskittypes.h>
 
 #ifdef DBG

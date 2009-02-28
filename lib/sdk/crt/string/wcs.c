@@ -430,7 +430,7 @@ static void pf_rebuild_format_string( char *p, pf_flags *flags )
 
 /* pf_integer_conv:  prints x to buf, including alternate formats and
    additional precision digits, but not field characters or the sign */
-static void pf_integer_conv( char *buf, int buf_len, pf_flags *flags,
+static void pf_integer_conv( char *buf, unsigned int buf_len, pf_flags *flags,
                              LONGLONG x )
 {
     unsigned int base;
@@ -679,8 +679,8 @@ static int pf_vsnprintf( pf_output *out, const WCHAR *format, va_list valist )
                * Includes extra bytes: 1 byte for null, 1 byte for sign,
                  4 bytes for exponent, 2 bytes for alternate formats, 1 byte 
                  for a decimal, and 1 byte for an additional float digit. */
-            int x_len = ((flags.FieldLength > flags.Precision) ? 
-                        flags.FieldLength : flags.Precision) + 10;
+            unsigned x_len = ((flags.FieldLength > flags.Precision) ? 
+                              flags.FieldLength : flags.Precision) + 10;
 
             if( x_len >= sizeof number)
                 x = HeapAlloc( GetProcessHeap(), 0, x_len );
@@ -702,8 +702,8 @@ static int pf_vsnprintf( pf_output *out, const WCHAR *format, va_list valist )
                * Includes extra bytes: 1 byte for null, 1 byte for sign,
                  4 bytes for exponent, 2 bytes for alternate formats, 1 byte 
                  for a decimal, and 1 byte for an additional float digit. */
-            int x_len = ((flags.FieldLength > flags.Precision) ? 
-                        flags.FieldLength : flags.Precision) + 10;
+            unsigned x_len = ((flags.FieldLength > flags.Precision) ? 
+                              flags.FieldLength : flags.Precision) + 10;
 
             if( x_len >= sizeof number)
                 x = HeapAlloc( GetProcessHeap(), 0, x_len );
@@ -1138,3 +1138,36 @@ INT CDECL wcscpy_s( wchar_t* wcDest, size_t numElement, const  wchar_t *wcSrc)
     return 0;
 }
 #endif
+
+/******************************************************************
+ *		wcsncpy_s (MSVCRT.@)
+ */
+INT CDECL wcsncpy_s( wchar_t* wcDest, size_t numElement, const wchar_t *wcSrc,
+                            size_t count )
+{
+    size_t size = 0;
+
+    if (!wcDest || !numElement)
+        return EINVAL;
+
+    wcDest[0] = 0;
+
+    if (!wcSrc)
+    {
+        return EINVAL;
+    }
+
+    size = min(strlenW(wcSrc), count);
+
+    if (size >= numElement)
+    {
+        return ERANGE;
+    }
+
+    memcpy( wcDest, wcSrc, size*sizeof(WCHAR) );
+    wcDest[size] = '\0';
+
+    return 0;
+}
+
+

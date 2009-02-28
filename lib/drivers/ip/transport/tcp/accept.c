@@ -87,13 +87,13 @@ NTSTATUS TCPListen( PCONNECTION_ENDPOINT Connection, UINT Backlog ) {
 
     TI_DbgPrint(DEBUG_TCP,("AddressToBind - %x:%x\n", AddressToBind.sin_addr, AddressToBind.sin_port));
 
-    OskitTCPBind( Connection->SocketContext,
-		  Connection,
-		  &AddressToBind,
-		  sizeof(AddressToBind) );
+    Status = TCPTranslateError( OskitTCPBind( Connection->SocketContext,
+		                Connection,
+		                &AddressToBind,
+		                sizeof(AddressToBind) ) );
 
-    Status = TCPTranslateError( OskitTCPListen( Connection->SocketContext,
-						Backlog ) );
+    if (NT_SUCCESS(Status))
+        Status = TCPTranslateError( OskitTCPListen( Connection->SocketContext, Backlog ) );
 
     TcpipRecursiveMutexLeave( &TCPLock );
 
@@ -112,12 +112,14 @@ VOID TCPAbortListenForSocket( PCONNECTION_ENDPOINT Listener,
     ListEntry = Listener->ListenRequest.Flink;
     while ( ListEntry != &Listener->ListenRequest ) {
 	Bucket = CONTAINING_RECORD(ListEntry, TDI_BUCKET, Entry);
-	ListEntry = ListEntry->Flink;
 
 	if( Bucket->AssociatedEndpoint == Connection ) {
-	    RemoveEntryList( ListEntry->Blink );
-	    ExFreePool( Bucket );
+	    RemoveEntryList( &Bucket->Entry );
+	    exFreePool( Bucket );
+	    break;
 	}
+
+	ListEntry = ListEntry->Flink;
     }
 
    TcpipRecursiveMutexLeave( &TCPLock );
@@ -140,11 +142,15 @@ NTSTATUS TCPAccept
 				       (PTDI_REQUEST_KERNEL)Request );
 
    if( Status == STATUS_PENDING ) {
-       Bucket = ExAllocatePool( NonPagedPool, sizeof(*Bucket) );
-       Bucket->AssociatedEndpoint = Connection;
-       Bucket->Request.RequestNotifyObject = Complete;
-       Bucket->Request.RequestContext = Context;
-       InsertHeadList( &Listener->ListenRequest, &Bucket->Entry );
+       Bucket = exAllocatePool( NonPagedPool, sizeof(*Bucket) );
+
+       if( Bucket ) {
+           Bucket->AssociatedEndpoint = Connection;
+           Bucket->Request.RequestNotifyObject = Complete;
+           Bucket->Request.RequestContext = Context;
+           InsertHeadList( &Listener->ListenRequest, &Bucket->Entry );
+       } else
+           Status = STATUS_NO_MEMORY;
    }
 
    TcpipRecursiveMutexLeave( &TCPLock );

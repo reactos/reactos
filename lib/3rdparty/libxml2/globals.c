@@ -44,7 +44,7 @@ static xmlMutexPtr xmlThrDefMutex = NULL;
  *
  * Additional initialisation for multi-threading
  */
-void xmlInitGlobals()
+void xmlInitGlobals(void)
 {
     xmlThrDefMutex = xmlNewMutex();
 }
@@ -54,12 +54,13 @@ void xmlInitGlobals()
  *
  * Additional cleanup for multi-threading
  */
-void xmlCleanupGlobals()
+void xmlCleanupGlobals(void)
 {
     if (xmlThrDefMutex != NULL) {
 	xmlFreeMutex(xmlThrDefMutex);
 	xmlThrDefMutex = NULL;
     }
+    __xmlGlobalInitMutexDestroy();
 }
 
 /************************************************************************
@@ -243,7 +244,7 @@ static int xmlPedanticParserDefaultValueThrDef = 0;
  * xmlLineNumbersDefaultValue:
  *
  * Global setting, indicate that the parser should store the line number
- * in the content field of elements in the DOM tree.
+ * in the content field of elements in the DOM tree. 
  * Disabled by default since this may not be safe for old classes of
  * applicaton.
  */
@@ -289,7 +290,7 @@ static xmlOutputBufferCreateFilenameFunc xmlOutputBufferCreateFilenameValueThrDe
 
 /* xmlGenericErrorFunc xmlGenericError = xmlGenericErrorDefaultFunc; */
 /* Must initialize xmlGenericError in xmlInitParser */
-void xmlGenericErrorDefaultFunc	(void *ctx ATTRIBUTE_UNUSED,
+void XMLCDECL xmlGenericErrorDefaultFunc	(void *ctx ATTRIBUTE_UNUSED,
 				 const char *msg,
 				 ...);
 /**
@@ -344,7 +345,7 @@ static const char *xmlTreeIndentStringThrDef = "  ";
  * Disabled by default
  */
 int xmlSaveNoEmptyTags = 0;
-int xmlSaveNoEmptyTagsThrDef = 0;
+static int xmlSaveNoEmptyTagsThrDef = 0;
 
 #ifdef LIBXML_SAX1_ENABLED
 /**
@@ -496,7 +497,7 @@ xmlInitializeGlobalState(xmlGlobalStatePtr gs)
 
     xmlMutexLock(xmlThrDefMutex);
 
-#if defined(LIBXML_DOCB_ENABLED) && defined(LIBXML_LEGACY_ENABLED)
+#if defined(LIBXML_DOCB_ENABLED) && defined(LIBXML_LEGACY_ENABLED) && defined(LIBXML_SAX1_ENABLED)
     initdocbDefaultSAXHandler(&gs->docbDefaultSAXHandler);
 #endif
 #if defined(LIBXML_HTML_ENABLED) && defined(LIBXML_LEGACY_ENABLED)
@@ -513,7 +514,7 @@ xmlInitializeGlobalState(xmlGlobalStatePtr gs)
     gs->xmlDefaultSAXLocator.getSystemId = xmlSAX2GetSystemId;
     gs->xmlDefaultSAXLocator.getLineNumber = xmlSAX2GetLineNumber;
     gs->xmlDefaultSAXLocator.getColumnNumber = xmlSAX2GetColumnNumber;
-    gs->xmlDoValidityCheckingDefaultValue =
+    gs->xmlDoValidityCheckingDefaultValue = 
          xmlDoValidityCheckingDefaultValueThrDef;
 #if defined(DEBUG_MEMORY_LOCATION) | defined(DEBUG_MEMORY)
     gs->xmlFree = (xmlFreeFunc) xmlMemFree;
@@ -538,7 +539,7 @@ xmlInitializeGlobalState(xmlGlobalStatePtr gs)
     gs->xmlParserVersion = LIBXML_VERSION_STRING;
     gs->xmlPedanticParserDefaultValue = xmlPedanticParserDefaultValueThrDef;
     gs->xmlSaveNoEmptyTags = xmlSaveNoEmptyTagsThrDef;
-    gs->xmlSubstituteEntitiesDefaultValue =
+    gs->xmlSubstituteEntitiesDefaultValue = 
         xmlSubstituteEntitiesDefaultValueThrDef;
 
     gs->xmlGenericError = xmlGenericErrorThrDef;
@@ -589,7 +590,7 @@ xmlRegisterNodeFunc
 xmlRegisterNodeDefault(xmlRegisterNodeFunc func)
 {
     xmlRegisterNodeFunc old = xmlRegisterNodeDefaultValue;
-
+    
     __xmlRegisterCallbacks = 1;
     xmlRegisterNodeDefaultValue = func;
     return(old);
@@ -599,10 +600,10 @@ xmlRegisterNodeFunc
 xmlThrDefRegisterNodeDefault(xmlRegisterNodeFunc func)
 {
     xmlRegisterNodeFunc old;
-
+    
     xmlMutexLock(xmlThrDefMutex);
     old = xmlRegisterNodeDefaultValueThrDef;
-
+    
     __xmlRegisterCallbacks = 1;
     xmlRegisterNodeDefaultValueThrDef = func;
     xmlMutexUnlock(xmlThrDefMutex);
@@ -622,7 +623,7 @@ xmlDeregisterNodeFunc
 xmlDeregisterNodeDefault(xmlDeregisterNodeFunc func)
 {
     xmlDeregisterNodeFunc old = xmlDeregisterNodeDefaultValue;
-
+    
     __xmlRegisterCallbacks = 1;
     xmlDeregisterNodeDefaultValue = func;
     return(old);
@@ -635,7 +636,7 @@ xmlThrDefDeregisterNodeDefault(xmlDeregisterNodeFunc func)
 
     xmlMutexLock(xmlThrDefMutex);
     old = xmlDeregisterNodeDefaultValueThrDef;
-
+    
     __xmlRegisterCallbacks = 1;
     xmlDeregisterNodeDefaultValueThrDef = func;
     xmlMutexUnlock(xmlThrDefMutex);
@@ -647,7 +648,7 @@ xmlParserInputBufferCreateFilenameFunc
 xmlThrDefParserInputBufferCreateFilenameDefault(xmlParserInputBufferCreateFilenameFunc func)
 {
     xmlParserInputBufferCreateFilenameFunc old;
-
+    
     xmlMutexLock(xmlThrDefMutex);
     old = xmlParserInputBufferCreateFilenameValueThrDef;
     if (old == NULL) {
@@ -664,7 +665,7 @@ xmlOutputBufferCreateFilenameFunc
 xmlThrDefOutputBufferCreateFilenameDefault(xmlOutputBufferCreateFilenameFunc func)
 {
     xmlOutputBufferCreateFilenameFunc old;
-
+    
     xmlMutexLock(xmlThrDefMutex);
     old = xmlOutputBufferCreateFilenameValueThrDef;
 #ifdef LIBXML_OUTPUT_ENABLED

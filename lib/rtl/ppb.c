@@ -121,7 +121,7 @@ RtlCreateProcessParameters(PRTL_USER_PROCESS_PARAMETERS *ProcessParameters,
    Length += ALIGN(RuntimeData->MaximumLength, sizeof(ULONG));
 
    /* Calculate the required block size */
-   RegionSize = ROUNDUP(Length, PAGE_SIZE);
+   RegionSize = ROUND_UP(Length, PAGE_SIZE);
 
    Status = ZwAllocateVirtualMemory(NtCurrentProcess(),
 				    (PVOID*)&Param,
