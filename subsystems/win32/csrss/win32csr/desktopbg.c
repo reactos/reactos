@@ -7,9 +7,8 @@
  * ReactOS Operating System
  */
 
-#include "w32csr.h"
-
 #define NDEBUG
+#include "w32csr.h"
 #include <debug.h>
 
 #define DESKTOP_WINDOW_ATOM 32880
@@ -149,7 +148,7 @@ DtbgInit()
   return TRUE;
 }
 
-static DWORD STDCALL
+static DWORD WINAPI
 DtbgDesktopThread(PVOID Data)
 {
   HWND BackgroundWnd;

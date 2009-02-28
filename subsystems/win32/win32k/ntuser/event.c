@@ -105,7 +105,7 @@ IntCallLowLevelEvent( PEVENTHOOK pEH,
 
    /* FIXME should get timeout from
     * HKEY_CURRENT_USER\Control Panel\Desktop\LowLevelHooksTimeout */
-   Status = co_MsqSendMessage(((PW32THREAD)pEH->Thread->Tcb.Win32Thread)->MessageQueue,
+   Status = co_MsqSendMessage(((PTHREADINFO)pEH->Thread->Tcb.Win32Thread)->MessageQueue,
                                            hwnd,
                                           event,
                                               0,
@@ -141,8 +141,8 @@ LRESULT
 FASTCALL
 co_EVENT_CallEvents( DWORD event,
                        HWND hwnd, 
-                   LONG idObject,
-                    LONG idChild)
+                    UINT_PTR idObject,
+                    LONG_PTR idChild)
 {
    PEVENTHOOK pEH;
    LRESULT Result;
@@ -185,14 +185,14 @@ IntNotifyWinEvent(
         if ((pEH->Thread != PsGetCurrentThread()) && (pEH->Thread != NULL))
         { // if all process || all thread || other thread same process
            if (!(pEH->idProcess) || !(pEH->idThread) || 
-               ((DWORD)(NtCurrentTeb()->ClientId).UniqueProcess == pEH->idProcess))
+               (NtCurrentTeb()->ClientId.UniqueProcess == (PVOID)pEH->idProcess))
            {
               Result = IntCallLowLevelEvent(pEH, Event, Window->hSelf, idObject, idChild);
            }
         }// if ^skip own thread && ((Pid && CPid == Pid && ^skip own process) || all process)
         else if ( !(pEH->Flags & WINEVENT_SKIPOWNTHREAD) &&
                    ( ((pEH->idProcess &&
-              (DWORD)(NtCurrentTeb()->ClientId).UniqueProcess == pEH->idProcess) &&
+                     NtCurrentTeb()->ClientId.UniqueProcess == (PVOID)pEH->idProcess) &&
                      !(pEH->Flags & WINEVENT_SKIPOWNPROCESS)) ||
                      !pEH->idProcess ) )
         {
@@ -201,7 +201,7 @@ IntNotifyWinEvent(
                                      Window->hSelf,
                                           idObject,
                                            idChild,
-    (DWORD)(NtCurrentTeb()->ClientId).UniqueThread,
+             PtrToUint(NtCurrentTeb()->ClientId.UniqueThread),
                           (DWORD)EngGetTickCount(),
                                          pEH->Proc);
         }
@@ -213,7 +213,7 @@ IntNotifyWinEvent(
 }            
 
 VOID
-STDCALL
+APIENTRY
 NtUserNotifyWinEvent(
    DWORD Event,
    HWND  hWnd,
@@ -240,7 +240,7 @@ NtUserNotifyWinEvent(
 }
 
 HWINEVENTHOOK
-STDCALL
+APIENTRY
 NtUserSetWinEventHook(
    UINT eventMin,
    UINT eventMax,
@@ -263,6 +263,11 @@ NtUserSetWinEventHook(
    if ( !GlobalEvents )
    {
       GlobalEvents = ExAllocatePoolWithTag(PagedPool, sizeof(EVENTTABLE), TAG_HOOK);
+      if (GlobalEvents == NULL)
+      {
+         SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+         goto SetEventExit;
+      }
       GlobalEvents->Counts = 0;      
       InitializeListHead(&GlobalEvents->Events);
    }
@@ -348,7 +353,7 @@ NtUserSetWinEventHook(
 
          if (! NT_SUCCESS(Status))
          {
-            ExFreePool(pEH->ModuleName.Buffer);
+            ExFreePoolWithTag(pEH->ModuleName.Buffer, TAG_HOOK);
             UserDereferenceObject(pEH);
             IntRemoveEvent(pEH);
             SetLastNtError(Status);
@@ -375,7 +380,7 @@ SetEventExit:
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtUserUnhookWinEvent(
    HWINEVENTHOOK hWinEventHook)
 {

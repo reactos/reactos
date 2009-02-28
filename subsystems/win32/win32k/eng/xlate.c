@@ -250,7 +250,7 @@ IntEngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
       {
          XlateObj->pulXlate[i] = ClosestColorMatch(
             XlateGDI, SourcePalGDI->IndexedColors + i,
-            DestPalGDI->IndexedColors, XlateObj->cEntries);
+            DestPalGDI->IndexedColors, DestPalGDI->NumColors);
          if (XlateObj->pulXlate[i] != i)
             XlateObj->flXlate &= ~XO_TRIVIAL;
       }
@@ -358,8 +358,8 @@ IntEngCreateMonoXlate(
 
 XLATEOBJ* FASTCALL
 IntEngCreateSrcMonoXlate(HPALETTE PaletteDest,
-                         ULONG ForegroundColor,
-                         ULONG BackgroundColor)
+                         ULONG Color0,
+                         ULONG Color1)
 {
    XLATEOBJ *XlateObj;
    XLATEGDI *XlateGDI;
@@ -403,8 +403,9 @@ IntEngCreateSrcMonoXlate(HPALETTE PaletteDest,
    XlateGDI->GreenShift = CalculateShift(RGB(0x00, 0xFF, 0x00)) - CalculateShift(XlateGDI->GreenMask);
    XlateGDI->BlueShift =  CalculateShift(RGB(0x00, 0x00, 0xFF)) - CalculateShift(XlateGDI->BlueMask);
 
-   XlateObj->pulXlate[0] = ShiftAndMask(XlateGDI, BackgroundColor);
-   XlateObj->pulXlate[1] = ShiftAndMask(XlateGDI, ForegroundColor);
+   /* Yes, that's how Windows works, ... */
+   XlateObj->pulXlate[1] = ShiftAndMask(XlateGDI, Color1);
+   XlateObj->pulXlate[0] = ShiftAndMask(XlateGDI, Color0);
 
    if (XlateObj->iDstType == PAL_INDEXED)
    {
@@ -445,7 +446,7 @@ IntEngGetXlatePalette(XLATEOBJ *XlateObj,
 
 XLATEOBJ*
 FASTCALL
-IntCreateXlateForBlt(PDC pDCDest, PDC pDCSrc, BITMAPOBJ* pDestSurf, BITMAPOBJ* pSrcSurf)
+IntCreateXlateForBlt(PDC pDCDest, PDC pDCSrc, SURFACE* psurfDest, SURFACE* psurfSrc)
 {
 	XLATEOBJ *XlateObj;
 	HPALETTE DestPalette, SourcePalette;
@@ -453,23 +454,23 @@ IntCreateXlateForBlt(PDC pDCDest, PDC pDCSrc, BITMAPOBJ* pDestSurf, BITMAPOBJ* p
 
 	DPRINT("Enter IntCreateXlateFromDCs\n");
 
-	if (pDestSurf == pSrcSurf)
+	if (psurfDest == psurfSrc)
 	{
 		return NULL;
 	}
 
-	DestPalette = pDestSurf->hDIBPalette;
+	DestPalette = psurfDest->hDIBPalette;
 	if (!DestPalette) DestPalette = pPrimarySurface->DevInfo.hpalDefault;
 
-	SourcePalette = pSrcSurf->hDIBPalette;
+	SourcePalette = psurfSrc->hDIBPalette;
 	if (!SourcePalette) SourcePalette = pPrimarySurface->DevInfo.hpalDefault;
 
 	DPRINT("DestPalette = %p, SourcePalette = %p, DefaultPatelle = %p\n", DestPalette, SourcePalette, NtGdiGetStockObject((INT)DEFAULT_PALETTE));
 
 	/* KB41464 details how to convert between mono and color */
-	if (pDestSurf->SurfObj.iBitmapFormat == BMF_1BPP)
+	if (psurfDest->SurfObj.iBitmapFormat == BMF_1BPP)
 	{
-		if (pSrcSurf->SurfObj.iBitmapFormat == BMF_1BPP)
+		if (psurfSrc->SurfObj.iBitmapFormat == BMF_1BPP)
 		{
 			XlateObj = NULL;
 		}
@@ -482,11 +483,26 @@ IntCreateXlateForBlt(PDC pDCDest, PDC pDCSrc, BITMAPOBJ* pDestSurf, BITMAPOBJ* p
 	}
 	else
 	{
-		if (pSrcSurf->SurfObj.iBitmapFormat == BMF_1BPP)
+		if (psurfSrc->SurfObj.iBitmapFormat == BMF_1BPP)
 		{
-			pDc_Attr = pDCDest->pDc_Attr;
-			if (!pDc_Attr) pDc_Attr = &pDCDest->Dc_Attr;
-			XlateObj = IntEngCreateSrcMonoXlate(DestPalette, pDc_Attr->crBackgroundClr, pDc_Attr->crForegroundClr);
+			/* DIB sections need special handling */
+			if (psurfSrc->hSecure)
+			{
+				PPALGDI ppal = PALETTE_LockPalette(psurfSrc->hDIBPalette);
+				if (ppal)
+				{
+					XlateObj = IntEngCreateSrcMonoXlate(DestPalette, ((ULONG*)ppal->IndexedColors)[0], ((ULONG*)ppal->IndexedColors)[1]);
+					PALETTE_UnlockPalette(ppal);
+				}
+				else
+					XlateObj = NULL;
+			}
+			else
+			{
+				pDc_Attr = pDCDest->pDc_Attr;
+				if (!pDc_Attr) pDc_Attr = &pDCDest->Dc_Attr;
+				XlateObj = IntEngCreateSrcMonoXlate(DestPalette, pDc_Attr->crForegroundClr, pDc_Attr->crBackgroundClr);
+			}
 		}
 		else
 		{
@@ -518,6 +534,8 @@ EngDeleteXlate(XLATEOBJ *XlateObj)
 
    XlateGDI = ObjToGDI(XlateObj, XLATE);
 
+   if (!XlateGDI) return;
+
    if ((XlateObj->flXlate & XO_TABLE) &&
        XlateObj->pulXlate != NULL)
    {
@@ -530,7 +548,7 @@ EngDeleteXlate(XLATEOBJ *XlateObj)
 /*
  * @implemented
  */
-PULONG STDCALL
+PULONG APIENTRY
 XLATEOBJ_piVector(XLATEOBJ *XlateObj)
 {
    if (XlateObj->iSrcType == PAL_INDEXED)
@@ -544,7 +562,7 @@ XLATEOBJ_piVector(XLATEOBJ *XlateObj)
 /*
  * @implemented
  */
-ULONG STDCALL
+ULONG APIENTRY
 XLATEOBJ_iXlate(XLATEOBJ *XlateObj, ULONG Color)
 {
    XLATEGDI *XlateGDI;
@@ -601,7 +619,7 @@ XLATEOBJ_iXlate(XLATEOBJ *XlateObj, ULONG Color)
 /*
  * @implemented
  */
-ULONG STDCALL
+ULONG APIENTRY
 XLATEOBJ_cGetPalette(XLATEOBJ *XlateObj, ULONG PalOutType, ULONG cPal,
    ULONG *OutPal)
 {

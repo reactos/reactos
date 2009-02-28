@@ -47,7 +47,8 @@ typedef enum _USER_OBJECT_TYPE
   otWindow,
   otMenu,
   otCursorIcon,
-  otHook = 5,
+  otDWP,
+  otHook,
   otCallProc = 7,
   otAccel,
   otMonitor = 12,
@@ -86,7 +87,7 @@ typedef struct _USER_REFERENCE_ENTRY
 static __inline VOID
 UserAssertLastRef(PVOID obj, const char *file, int line)
 {
-    PW32THREAD W32Thread;
+    PTHREADINFO W32Thread;
     PSINGLE_LIST_ENTRY ReferenceEntry;
     PUSER_REFERENCE_ENTRY UserReferenceEntry;
 
@@ -121,7 +122,7 @@ VOID UserInitHandleTable(PUSER_HANDLE_TABLE ht, PVOID mem, ULONG bytes);
 static __inline VOID
 UserRefObjectCo(PVOID obj, PUSER_REFERENCE_ENTRY UserReferenceEntry)
 {
-    PW32THREAD W32Thread;
+    PTHREADINFO W32Thread;
 
     W32Thread = PsGetCurrentThreadWin32Thread();
     ASSERT(W32Thread != NULL);
@@ -134,7 +135,7 @@ UserRefObjectCo(PVOID obj, PUSER_REFERENCE_ENTRY UserReferenceEntry)
 static __inline VOID
 UserDerefObjectCo(PVOID obj)
 {
-    PW32THREAD W32Thread;
+    PTHREADINFO W32Thread;
     PSINGLE_LIST_ENTRY ReferenceEntry;
     PUSER_REFERENCE_ENTRY UserReferenceEntry;
 

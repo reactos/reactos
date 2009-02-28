@@ -36,9 +36,12 @@
 #include <debug.h>
 
 extern BYTE gQueueKeyStateTable[];
+extern NTSTATUS Win32kInitWin32Thread(PETHREAD Thread);
 
 /* GLOBALS *******************************************************************/
 
+PTHREADINFO ptiRawInput;
+PKTIMER MasterTimer;
 
 static HANDLE MouseDeviceHandle;
 static HANDLE MouseThreadHandle;
@@ -46,6 +49,8 @@ static CLIENT_ID MouseThreadId;
 static HANDLE KeyboardThreadHandle;
 static CLIENT_ID KeyboardThreadId;
 static HANDLE KeyboardDeviceHandle;
+static HANDLE RawInputThreadHandle;
+static CLIENT_ID RawInputThreadId;
 static KEVENT InputThreadsStart;
 static BOOLEAN InputThreadsRunning = FALSE;
 
@@ -81,32 +86,32 @@ DWORD IntLastInputTick(BOOL LastInputTickSetGet)
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtUserGetLastInputInfo(PLASTINPUTINFO plii)
 {
     BOOL ret = TRUE;
 
     UserEnterShared();
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         if (ProbeForReadUint(&plii->cbSize) != sizeof(LASTINPUTINFO))
         {
             SetLastWin32Error(ERROR_INVALID_PARAMETER);
             ret = FALSE;
-            _SEH_LEAVE;
+            _SEH2_LEAVE;
         }
 
         ProbeForWrite(plii, sizeof(LASTINPUTINFO), sizeof(DWORD));
 
         plii->dwTime = IntLastInputTick(FALSE);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        SetLastNtError(_SEH_GetExceptionCode());
+        SetLastNtError(_SEH2_GetExceptionCode());
         ret = FALSE;
     }
-    _SEH_END;
+    _SEH2_END;
 
     UserLeave();
 
@@ -201,7 +206,7 @@ ProcessMouseInputData(PMOUSE_INPUT_DATA Data, ULONG InputCount)
 
 
 
-VOID STDCALL
+VOID APIENTRY
 MouseThreadMain(PVOID StartContext)
 {
    UNICODE_STRING MouseDeviceName = RTL_CONSTANT_STRING(L"\\Device\\PointerClass0");
@@ -290,7 +295,7 @@ MouseThreadMain(PVOID StartContext)
 /* Returns a value that indicates if the key is a modifier key, and
  * which one.
  */
-static UINT STDCALL
+static UINT APIENTRY
 IntKeyboardGetModifiers(KEYBOARD_INPUT_DATA *InputData)
 {
    if (InputData->Flags & KEY_E1)
@@ -337,7 +342,7 @@ IntKeyboardGetModifiers(KEYBOARD_INPUT_DATA *InputData)
 /* Asks the keyboard driver to send a small table that shows which
  * lights should connect with which scancodes
  */
-static NTSTATUS STDCALL
+static NTSTATUS APIENTRY
 IntKeyboardGetIndicatorTrans(HANDLE KeyboardDeviceHandle,
                              PKEYBOARD_INDICATOR_TRANSLATION *IndicatorTrans)
 {
@@ -366,7 +371,7 @@ IntKeyboardGetIndicatorTrans(HANDLE KeyboardDeviceHandle,
       if (Status != STATUS_BUFFER_TOO_SMALL)
          break;
 
-      ExFreePool(Ret);
+      ExFreePoolWithTag(Ret, TAG_KEYBOARD);
 
       Size += sizeof(KEYBOARD_INDICATOR_TRANSLATION);
 
@@ -380,7 +385,7 @@ IntKeyboardGetIndicatorTrans(HANDLE KeyboardDeviceHandle,
 
    if (Status != STATUS_SUCCESS)
    {
-      ExFreePool(Ret);
+      ExFreePoolWithTag(Ret, TAG_KEYBOARD);
       return Status;
    }
 
@@ -390,7 +395,7 @@ IntKeyboardGetIndicatorTrans(HANDLE KeyboardDeviceHandle,
 
 /* Sends the keyboard commands to turn on/off the lights.
  */
-static NTSTATUS STDCALL
+static NTSTATUS APIENTRY
 IntKeyboardUpdateLeds(HANDLE KeyboardDeviceHandle,
                       PKEYBOARD_INPUT_DATA KeyInput,
                       PKEYBOARD_INDICATOR_TRANSLATION IndicatorTrans)
@@ -431,7 +436,7 @@ IntKeyboardUpdateLeds(HANDLE KeyboardDeviceHandle,
    return STATUS_SUCCESS;
 }
 
-static VOID STDCALL
+static VOID APIENTRY
 IntKeyboardSendWinKeyMsg()
 {
    PWINDOW_OBJECT Window;
@@ -452,13 +457,13 @@ IntKeyboardSendWinKeyMsg()
    MsqPostMessage(Window->MessageQueue, &Mesg, FALSE, QS_HOTKEY);
 }
 
-static VOID STDCALL
+static VOID APIENTRY
 co_IntKeyboardSendAltKeyMsg()
 {
    co_MsqPostKeyboardMessage(WM_SYSCOMMAND,SC_KEYMENU,0);
 }
 
-static VOID STDCALL
+static VOID APIENTRY
 KeyboardThreadMain(PVOID StartContext)
 {
    UNICODE_STRING KeyboardDeviceName = RTL_CONSTANT_STRING(L"\\Device\\KeyboardClass0");
@@ -468,7 +473,6 @@ KeyboardThreadMain(PVOID StartContext)
    MSG msg;
    PUSER_MESSAGE_QUEUE FocusQueue;
    struct _ETHREAD *FocusThread;
-   extern NTSTATUS Win32kInitWin32Thread(PETHREAD Thread);
 
    PKEYBOARD_INDICATOR_TRANSLATION IndicatorTrans = NULL;
    UINT ModifierState = 0;
@@ -790,14 +794,14 @@ KeyboardThreadMain(PVOID StartContext)
             FocusThread = FocusQueue->Thread;
 
             if (!(FocusThread && FocusThread->Tcb.Win32Thread &&
-                  ((PW32THREAD)FocusThread->Tcb.Win32Thread)->KeyboardLayout))
+                  ((PTHREADINFO)FocusThread->Tcb.Win32Thread)->KeyboardLayout))
                continue;
 
             /* This function uses lParam to fill wParam according to the
              * keyboard layout in use.
              */
             W32kKeyProcessMessage(&msg,
-                                  ((PW32THREAD)FocusThread->Tcb.Win32Thread)->KeyboardLayout->KBTables,
+                                  ((PTHREADINFO)FocusThread->Tcb.Win32Thread)->KeyboardLayout->KBTables,
                                   KeyInput.Flags & KEY_E0 ? 0xE0 :
                                   (KeyInput.Flags & KEY_E1 ? 0xE1 : 0));
 
@@ -832,6 +836,79 @@ KeyboardEscape:
 }
 
 
+static PVOID Objects[2];
+/*
+    Raw Input Thread.
+    Since this relies on InputThreadsStart, just fake it.
+ */
+static VOID APIENTRY
+RawInputThreadMain(PVOID StartContext)
+{
+  NTSTATUS Status;
+  LARGE_INTEGER DueTime;
+
+  DueTime.QuadPart = (LONGLONG)(-10000000);
+
+  do
+  {
+      KEVENT Event;
+      KeInitializeEvent(&Event, NotificationEvent, FALSE);
+      Status = KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, &DueTime);
+  } while (!NT_SUCCESS(Status));
+
+
+  Objects[0] = &InputThreadsStart;
+
+  MasterTimer = ExAllocatePoolWithTag(NonPagedPool, sizeof(KTIMER), TAG_INPUT);
+  if (!MasterTimer)
+  {   
+     DPRINT1("Win32K: Failed making Raw Input thread a win32 thread.\n");
+     return;
+  }
+  KeInitializeTimer(MasterTimer);
+  Objects[1] = MasterTimer;
+
+  // This thread requires win32k!
+  Status = Win32kInitWin32Thread(PsGetCurrentThread());
+  if (!NT_SUCCESS(Status))
+  {
+     DPRINT1("Win32K: Failed making Raw Input thread a win32 thread.\n");
+     return; //(Status);
+  }
+
+  ptiRawInput = PsGetCurrentThreadWin32Thread();
+  DPRINT1("\nRaw Input Thread 0x%x \n", ptiRawInput);
+
+
+  KeSetPriorityThread(&PsGetCurrentThread()->Tcb,
+                       LOW_REALTIME_PRIORITY + 3);
+
+  UserEnterExclusive();
+  StartTheTimers();
+  UserLeave();
+
+  //
+  // ATM, we just have one job to handle, merge the other two later.
+  //
+  for(;;)
+  {
+      DPRINT( "Raw Input Thread Waiting for start event\n" );
+
+      Status = KeWaitForMultipleObjects( 2,
+                                         Objects,
+                                         WaitAll, //WaitAny,
+                                         WrUserRequest,
+                                         KernelMode,
+                                         TRUE,
+                                         NULL,
+                                         NULL);
+      DPRINT( "Raw Input Thread Starting...\n" );
+
+      ProcessTimers();
+  }
+  DPRINT1("Raw Input Thread Exit!\n");
+}
+
 NTSTATUS FASTCALL
 InitInputImpl(VOID)
 {
@@ -843,6 +920,18 @@ InitInputImpl(VOID)
    if(!UserInitDefaultKeyboardLayout())
    {
       DPRINT1("Failed to initialize default keyboard layout!\n");
+   }
+
+   Status = PsCreateSystemThread(&RawInputThreadHandle,
+                                 THREAD_ALL_ACCESS,
+                                 NULL,
+                                 NULL,
+                                 &RawInputThreadId,
+                                 RawInputThreadMain,
+                                 NULL);
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT1("Win32K: Failed to create raw thread.\n");
    }
 
    Status = PsCreateSystemThread(&KeyboardThreadHandle,
@@ -882,7 +971,7 @@ CleanupInputImp(VOID)
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtUserDragDetect(
    HWND hWnd,
    POINT pt) // Just like the User call.
@@ -892,9 +981,9 @@ NtUserDragDetect(
 }
 
 BOOL FASTCALL
-IntBlockInput(PW32THREAD W32Thread, BOOL BlockIt)
+IntBlockInput(PTHREADINFO W32Thread, BOOL BlockIt)
 {
-   PW32THREAD OldBlock;
+   PTHREADINFO OldBlock;
    ASSERT(W32Thread);
 
    if(!W32Thread->Desktop || (W32Thread->IsExiting && BlockIt))
@@ -935,7 +1024,7 @@ IntBlockInput(PW32THREAD W32Thread, BOOL BlockIt)
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtUserBlockInput(
    BOOL BlockIt)
 {
@@ -984,8 +1073,8 @@ IntMouseInput(MOUSEINPUT *mi)
    BOOL DoMove, SwapButtons;
    MSG Msg;
    HBITMAP hBitmap;
-   BITMAPOBJ *BitmapObj;
-   SURFOBJ *SurfObj;
+   SURFACE *psurf;
+   SURFOBJ *pso;
    PDC dc;
    PWINDOW_OBJECT DesktopWindow;
 
@@ -1083,21 +1172,21 @@ IntMouseInput(MOUSEINPUT *mi)
          hBitmap = dc->w.hBitmap;
          DC_UnlockDc(dc);
 
-         BitmapObj = BITMAPOBJ_LockBitmap(hBitmap);
-         if (BitmapObj)
+         psurf = SURFACE_LockSurface(hBitmap);
+         if (psurf)
          {
-            SurfObj = &BitmapObj->SurfObj;
+            pso = &psurf->SurfObj;
 
             if (CurInfo->ShowingCursor)
             {
-               IntEngMovePointer(SurfObj, MousePos.x, MousePos.y, &(GDIDEV(SurfObj)->Pointer.Exclude));
+               IntEngMovePointer(pso, MousePos.x, MousePos.y, &(GDIDEV(pso)->Pointer.Exclude));
             }
             /* Only now, update the info in the GDIDEVICE, so EngMovePointer can
             * use the old values to move the pointer image */
-            GDIDEV(SurfObj)->Pointer.Pos.x = MousePos.x;
-            GDIDEV(SurfObj)->Pointer.Pos.y = MousePos.y;
+            gpsi->ptCursor.x = MousePos.x;
+            gpsi->ptCursor.y = MousePos.y;
 
-            BITMAPOBJ_UnlockBitmap(BitmapObj);
+            SURFACE_UnlockSurface(psurf);
          }
       }
    }
@@ -1109,6 +1198,17 @@ IntMouseInput(MOUSEINPUT *mi)
    Msg.wParam = CurInfo->ButtonsDown;
    Msg.lParam = MAKELPARAM(MousePos.x, MousePos.y);
    Msg.pt = MousePos;
+
+   if (gQueueKeyStateTable[VK_SHIFT] & 0xc0)
+   {
+      Msg.wParam |= MK_SHIFT;
+   }
+
+   if (gQueueKeyStateTable[VK_CONTROL] & 0xc0)
+   {
+      Msg.wParam |= MK_CONTROL;
+   }
+
    if(DoMove)
    {
       Msg.message = WM_MOUSEMOVE;
@@ -1219,13 +1319,13 @@ IntKeyboardInput(KEYBDINPUT *ki)
 }
 
 UINT
-STDCALL
+APIENTRY
 NtUserSendInput(
    UINT nInputs,
    LPINPUT pInput,
    INT cbSize)
 {
-   PW32THREAD W32Thread;
+   PTHREADINFO W32Thread;
    UINT cnt;
    DECLARE_RETURN(UINT);
 

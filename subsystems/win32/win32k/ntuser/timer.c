@@ -37,6 +37,9 @@
 /* GLOBALS *******************************************************************/
 
 static PTIMER FirstpTmr = NULL;
+static LONG TimeLast = 0;
+
+#define MAX_ELAPSE_TIME 0x7FFFFFFF
 
 /* Windows 2000 has room for 32768 window-less timers */
 #define NUM_WINDOW_LESS_TIMERS   1024
@@ -54,13 +57,353 @@ static ULONG          HintIndex = 0;
   ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&Mutex)
 
 /* FUNCTIONS *****************************************************************/
+static
+PTIMER
+FASTCALL
+CreateTimer(VOID)
+{
+  HANDLE Handle;
+  PTIMER Ret = NULL;
 
+  if (!FirstpTmr)
+  {
+      FirstpTmr = UserCreateObject(gHandleTable, &Handle, otTimer, sizeof(TIMER));
+      if (FirstpTmr) InitializeListHead(&FirstpTmr->ptmrList);
+      Ret = FirstpTmr;
+  }
+  else
+  {
+      Ret = UserCreateObject(gHandleTable, &Handle, otTimer, sizeof(TIMER));
+      if (Ret) InsertTailList(&FirstpTmr->ptmrList, &Ret->ptmrList);
+  } 
+  return Ret;
+}
 
+static
+BOOL
+FASTCALL
+RemoveTimer(PTIMER pTmr)
+{
+  if (pTmr)
+  {
+     RemoveEntryList(&pTmr->ptmrList);
+     UserDeleteObject( USER_BODY_TO_HEADER(pTmr)->hSelf, otTimer);
+     return TRUE;
+  }
+  return FALSE;
+}
+
+PTIMER
+FASTCALL
+FindTimer(PWINDOW_OBJECT Window,
+          UINT_PTR nID,
+          UINT flags,
+          BOOL Distroy)
+{
+  PTIMER pTmr = FirstpTmr;
+  KeEnterCriticalRegion();
+  do
+  {
+    if (!pTmr) break;
+
+    if ( pTmr->nID == nID &&
+         pTmr->pWnd == Window &&
+        (pTmr->flags & (TMRF_SYSTEM|TMRF_RIT)) == (flags & (TMRF_SYSTEM|TMRF_RIT)))
+    {
+       if (Distroy)
+       {
+          RemoveTimer(pTmr);
+          pTmr = (PTIMER)1; // We are here to remove the timer.
+       }
+       break;
+    }
+
+    pTmr = (PTIMER)pTmr->ptmrList.Flink;
+  } while (pTmr != FirstpTmr);
+  KeLeaveCriticalRegion();
+
+  return pTmr;
+}
+
+PTIMER
+FASTCALL
+FindSystemTimer(PMSG pMsg)
+{
+  PTIMER pTmr = FirstpTmr;
+  KeEnterCriticalRegion();
+  do
+  {
+    if (!pTmr) break;
+
+    if ( pMsg->lParam == (LPARAM)pTmr->pfn &&
+         (pTmr->flags & TMRF_SYSTEM) )
+       break;
+
+    pTmr = (PTIMER)pTmr->ptmrList.Flink;
+  } while (pTmr != FirstpTmr);
+  KeLeaveCriticalRegion();
+
+  return pTmr;
+}
+
+BOOL
+FASTCALL
+ValidateTimerCallback(PTHREADINFO pti,
+                      PWINDOW_OBJECT Window,
+                      WPARAM wParam,
+                      LPARAM lParam)
+{
+  PTIMER pTmr = FirstpTmr;
+
+  if (!pTmr) return FALSE;
+
+  KeEnterCriticalRegion();
+  do
+  {
+    if ( (lParam == (LPARAM)pTmr->pfn) &&
+         (pTmr->flags & (TMRF_SYSTEM|TMRF_RIT)) &&
+         (pTmr->pti->ThreadInfo->kpi == pti->ThreadInfo->kpi) )
+       break;
+
+    pTmr = (PTIMER)pTmr->ptmrList.Flink;
+  } while (pTmr != FirstpTmr);
+  KeLeaveCriticalRegion();
+
+  if (!pTmr) return FALSE;
+
+  return TRUE;
+}
+
+// Rename it to IntSetTimer after move.
+UINT_PTR FASTCALL
+InternalSetTimer( PWINDOW_OBJECT Window,
+                  UINT_PTR IDEvent,
+                  UINT Elapse,
+                  TIMERPROC TimerFunc,
+                  INT Type)
+{
+  PTIMER pTmr;
+  LARGE_INTEGER DueTime;
+  DueTime.QuadPart = (LONGLONG)(-10000000);
+
+#if 0
+  /* Windows NT/2k/XP behaviour */
+  if (Elapse > MAX_ELAPSE_TIME)
+  {
+     DPRINT("Adjusting uElapse\n");
+     Elapse = 1;
+  }
+#else
+  /* Windows XP SP2 and Windows Server 2003 behaviour */
+  if (Elapse > MAX_ELAPSE_TIME)
+  {
+     DPRINT("Adjusting uElapse\n");
+     Elapse = MAX_ELAPSE_TIME;
+  }
+#endif
+
+  /* Windows 2k/XP and Windows Server 2003 SP1 behaviour */
+  if (Elapse < 10)
+  {
+     DPRINT("Adjusting uElapse\n");
+     Elapse = 10;
+  }
+
+  pTmr = FindTimer(Window, IDEvent, Type, FALSE);
+  if (!pTmr)
+  {
+     pTmr = CreateTimer();
+     if (!pTmr) return 0;
+
+    if (Window && (Type & TMRF_TIFROMWND))
+       pTmr->pti = Window->OwnerThread->Tcb.Win32Thread;
+    else
+    {
+       if (Type & TMRF_RIT)
+          pTmr->pti = ptiRawInput;
+       else
+          pTmr->pti = PsGetCurrentThreadWin32Thread();
+     }
+     pTmr->pWnd    = Window;
+     pTmr->cmsCountdown = Elapse;
+     pTmr->cmsRate = Elapse;
+     pTmr->flags   = Type|TMRF_INIT; // Set timer to Init mode.
+     pTmr->pfn     = TimerFunc;
+     pTmr->nID     = IDEvent;
+
+     InsertTailList(&FirstpTmr->ptmrList, &pTmr->ptmrList);
+  }
+
+  // Start the timer thread!
+  KeSetTimer(MasterTimer, DueTime, NULL);
+
+  if (!pTmr->nID) return 1;
+  return pTmr->nID;
+}
+
+//
+// Process win32k system timers.
+//
+VOID
+CALLBACK
+SystemTimerProc(HWND hwnd,
+                UINT uMsg,
+         UINT_PTR idEvent,
+             DWORD dwTime)
+{
+  DPRINT( "Timer Running!\n" );
+}
+
+VOID
+FASTCALL
+StartTheTimers(VOID)
+{
+  // Need to start gdi syncro timers then start timer with Hang App proc
+  // that calles Idle process so the screen savers will know to run......    
+  InternalSetTimer(NULL, 0, 1000, SystemTimerProc, TMRF_RIT);
+}
+
+UINT_PTR
+FASTCALL
+SetSystemTimer( PWINDOW_OBJECT Window,
+                UINT_PTR nIDEvent,
+                UINT uElapse,
+                TIMERPROC lpTimerFunc) 
+{
+  if (Window && Window->OwnerThread->ThreadsProcess != PsGetCurrentProcess())
+  {
+     SetLastWin32Error(ERROR_ACCESS_DENIED);
+     return 0;
+  }
+  return InternalSetTimer( Window, nIDEvent, uElapse, lpTimerFunc, TMRF_SYSTEM);
+}
+
+BOOL
+FASTCALL
+PostTimerMessages(HWND hWnd)
+{
+  PUSER_MESSAGE_QUEUE ThreadQueue;
+  MSG Msg;
+  PTHREADINFO pti;
+  PWINDOW_OBJECT pWnd = NULL;
+  BOOL Hit = FALSE;
+  PTIMER pTmr = FirstpTmr;
+
+  if (!pTmr) return FALSE;
+
+  if (hWnd)
+  {
+     pWnd = UserGetWindowObject(hWnd);
+     if (!pWnd || !pWnd->Wnd) return FALSE;
+  }
+
+  pti = PsGetCurrentThreadWin32Thread();
+  ThreadQueue = pti->MessageQueue;
+
+  KeEnterCriticalRegion();
+  do
+  {
+     if ( (pTmr->flags & TMRF_READY) &&
+          (pTmr->pti == pti) &&
+          (pTmr->pWnd == pWnd))
+        {
+           Msg.hwnd    = hWnd;
+           Msg.message = (pTmr->flags & TMRF_SYSTEM) ? WM_SYSTIMER : WM_TIMER;
+           Msg.wParam  = (WPARAM) pTmr->nID;
+           Msg.lParam  = (LPARAM) pTmr->pfn;
+           MsqPostMessage(ThreadQueue, &Msg, FALSE, QS_POSTMESSAGE);
+
+           pTmr->flags &= ~TMRF_READY;
+           ThreadQueue->WakeMask = ~QS_TIMER;
+           Hit = TRUE;
+        }
+
+     pTmr = (PTIMER)pTmr->ptmrList.Flink;
+  } while (pTmr != FirstpTmr);
+  KeLeaveCriticalRegion();
+
+  return Hit;
+}
+
+VOID
+FASTCALL
+ProcessTimers(VOID)
+{
+  LARGE_INTEGER TickCount, DueTime;
+  LONG Time;
+  PTIMER pTmr = FirstpTmr;
+
+  if (!pTmr) return;
+
+  UserEnterExclusive();
+
+  KeQueryTickCount(&TickCount);
+  Time = MsqCalculateMessageTime(&TickCount);
+
+  DueTime.QuadPart = (LONGLONG)(-10000000);
+
+  do
+  {
+    if (pTmr->flags & TMRF_WAITING)
+    {
+       pTmr = (PTIMER)pTmr->ptmrList.Flink;
+       continue;
+    }
+
+    if (pTmr->flags & TMRF_INIT)  
+       pTmr->flags &= ~TMRF_INIT; // Skip this run.
+    else
+    {
+       if (pTmr->cmsCountdown < 0)
+       {
+          if (!(pTmr->flags & TMRF_READY))
+          {
+             if (pTmr->flags & TMRF_ONESHOT)
+                pTmr->flags |= TMRF_WAITING;
+
+             if (pTmr->flags & TMRF_RIT)
+             {
+                // Hard coded call here, inside raw input thread.
+                pTmr->pfn(NULL, WM_SYSTIMER, pTmr->nID, (LPARAM)pTmr);
+             }
+             else
+             {
+                pTmr->flags |= TMRF_READY; // Set timer ready to be ran.
+                // Set thread message queue for this timer.
+                if (pTmr->pti->MessageQueue)
+                {  // Wakeup thread
+                   pTmr->pti->MessageQueue->WakeMask |= QS_TIMER;
+                   KeSetEvent(pTmr->pti->MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
+                }
+             }
+          }
+          pTmr->cmsCountdown = pTmr->cmsRate;
+       }
+       else
+          pTmr->cmsCountdown -= Time - TimeLast;
+    }
+    pTmr = (PTIMER)pTmr->ptmrList.Flink;
+  } while (pTmr != FirstpTmr);
+
+  // Restart the timer thread!
+  KeSetTimer(MasterTimer, DueTime, NULL);
+
+  TimeLast = Time;
+
+  UserLeave();
+}
+
+//
+//
+// Old Timer Queueing
+//
+//
 UINT_PTR FASTCALL
 IntSetTimer(HWND Wnd, UINT_PTR IDEvent, UINT Elapse, TIMERPROC TimerFunc, BOOL SystemTimer)
 {
    PWINDOW_OBJECT Window;
    UINT_PTR Ret = 0;
+   PTHREADINFO pti;
    PUSER_MESSAGE_QUEUE MessageQueue;
 
    DPRINT("IntSetTimer wnd %x id %p elapse %u timerproc %p systemtimer %s\n",
@@ -84,7 +427,8 @@ IntSetTimer(HWND Wnd, UINT_PTR IDEvent, UINT Elapse, TIMERPROC TimerFunc, BOOL S
       HintIndex = ++IDEvent;
       IntUnlockWindowlessTimerBitmap();
       Ret = IDEvent;
-      MessageQueue = PsGetCurrentThreadWin32Thread()->MessageQueue;
+      pti = PsGetCurrentThreadWin32Thread();
+      MessageQueue = pti->MessageQueue;
    }
    else
    {
@@ -149,16 +493,18 @@ IntSetTimer(HWND Wnd, UINT_PTR IDEvent, UINT Elapse, TIMERPROC TimerFunc, BOOL S
 BOOL FASTCALL
 IntKillTimer(HWND Wnd, UINT_PTR IDEvent, BOOL SystemTimer)
 {
+   PTHREADINFO pti;
    PWINDOW_OBJECT Window = NULL;
    
    DPRINT("IntKillTimer wnd %x id %p systemtimer %s\n",
           Wnd, IDEvent, SystemTimer ? "TRUE" : "FALSE");
 
+   pti = PsGetCurrentThreadWin32Thread();
    if (Wnd)
    {
       Window = UserGetWindowObject(Wnd);
    
-      if (! MsqKillTimer(PsGetCurrentThreadWin32Thread()->MessageQueue, Wnd,
+      if (! MsqKillTimer(pti->MessageQueue, Wnd,
                                 IDEvent, SystemTimer ? WM_SYSTIMER : WM_TIMER))
       {
          // Give it another chance to find the timer.
@@ -175,7 +521,7 @@ IntKillTimer(HWND Wnd, UINT_PTR IDEvent, BOOL SystemTimer)
    /* window-less timer? */
    if ((Wnd == NULL) && ! SystemTimer)
    {
-      if (! MsqKillTimer(PsGetCurrentThreadWin32Thread()->MessageQueue, Wnd,
+      if (! MsqKillTimer(pti->MessageQueue, Wnd,
                                 IDEvent, SystemTimer ? WM_SYSTIMER : WM_TIMER))
       {
          DPRINT1("Unable to locate timer in message queue for Window-less timer.\n");
@@ -216,18 +562,11 @@ InitTimerImpl(VOID)
    /* yes we need this, since ExAllocatePool isn't supposed to zero out allocated memory */
    RtlClearAllBits(&WindowLessTimersBitMap);
 
-   if (!FirstpTmr)
-   {
-      FirstpTmr = ExAllocatePoolWithTag(PagedPool, sizeof(TIMER), TAG_TIMERBMP);
-      if (FirstpTmr) InitializeListHead(&FirstpTmr->ptmrList);
-   }
-
    return STATUS_SUCCESS;
 }
 
-
 UINT_PTR
-STDCALL
+APIENTRY
 NtUserSetTimer
 (
    HWND hWnd,
@@ -251,7 +590,7 @@ CLEANUP:
 
 
 BOOL
-STDCALL
+APIENTRY
 NtUserKillTimer
 (
    HWND hWnd,
@@ -273,7 +612,7 @@ CLEANUP:
 
 
 UINT_PTR
-STDCALL
+APIENTRY
 NtUserSetSystemTimer(
    HWND hWnd,
    UINT_PTR nIDEvent,
@@ -286,6 +625,7 @@ NtUserSetSystemTimer(
    DPRINT("Enter NtUserSetSystemTimer\n");
    UserEnterExclusive();
 
+   // This is wrong, lpTimerFunc is NULL!
    RETURN(IntSetTimer(hWnd, nIDEvent, uElapse, lpTimerFunc, TRUE));
 
 CLEANUP:

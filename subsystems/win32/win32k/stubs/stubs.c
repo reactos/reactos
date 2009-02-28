@@ -750,21 +750,34 @@ EngDitherColor(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL APIENTRY
 EngQuerySystemAttribute(
    IN ENG_SYSTEM_ATTRIBUTE CapNum,
    OUT PDWORD pCapability)
 {
+  SYSTEM_BASIC_INFORMATION sbi;
+  SYSTEM_PROCESSOR_INFORMATION spi;
+
    switch (CapNum)
    {
       case EngNumberOfProcessors:
-         *pCapability = 1;
+         NtQuerySystemInformation(
+                SystemBasicInformation,
+               &sbi,
+                sizeof(SYSTEM_BASIC_INFORMATION),
+                NULL);
+         *pCapability = sbi.NumberOfProcessors;
          return TRUE;
 
       case EngProcessorFeature:
-         *pCapability = 0;
+         NtQuerySystemInformation(
+                SystemProcessorInformation,
+               &spi,
+                sizeof(SYSTEM_PROCESSOR_INFORMATION),
+                NULL);
+         *pCapability = spi.ProcessorFeatureBits;
          return TRUE;
 
       default:
@@ -905,6 +918,19 @@ EngQueryDeviceAttribute(
 /*
  * @unimplemented
  */
+LARGE_INTEGER
+APIENTRY
+EngQueryFileTimeStamp(IN LPWSTR FileName)
+{
+   LARGE_INTEGER FileTime;
+   FileTime.QuadPart = 0;
+   UNIMPLEMENTED;
+   return FileTime;
+}
+
+/*
+ * @unimplemented
+ */
 LONG APIENTRY
 EngReadStateEvent(
    IN PEVENT Event)
@@ -912,26 +938,6 @@ EngReadStateEvent(
    UNIMPLEMENTED;
    return 0;
 }
-BOOL APIENTRY
-EngStretchBltROP(
-   IN SURFOBJ *Dest,
-   IN SURFOBJ *Source,
-   IN SURFOBJ *Mask,
-   IN CLIPOBJ *Clip,
-   IN XLATEOBJ *Xlate,
-   IN COLORADJUSTMENT *ColorAdjustment,
-   IN POINTL *BrushOrigin,
-   IN RECTL *DestRect,
-   IN RECTL *SourceRect,
-   IN POINTL *MaskPoint,
-   IN ULONG Mode,
-   IN BRUSHOBJ *BrushObj,
-   IN DWORD ROP4)
-{
-   UNIMPLEMENTED;
-   return FALSE;
-}
-
 
 /*
  * @unimplemented
@@ -1972,19 +1978,6 @@ NtGdiGetColorSpaceforBitmap(
  */
 BOOL
 APIENTRY
-NtGdiGetDeviceCapsAll (
-    IN HDC hdc,
-    OUT PDEVCAPS pDevCaps)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
- /*
- * @unimplemented
- */
-BOOL
-APIENTRY
 NtGdiGetETM(
     IN HDC hdc,
     OUT EXTTEXTMETRIC *petm)
@@ -2112,20 +2105,6 @@ NtGdiGetMonitorID(
  */
 BOOL
 APIENTRY
-NtGdiGetRealizationInfo(
-    IN HDC hdc,
-    OUT PREALIZATION_INFO pri,
-    IN HFONT hf)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
- /*
- * @unimplemented
- */
-BOOL
-APIENTRY
 NtGdiDrawStream(
     IN HDC hdcDst,
     IN ULONG cjIn,
@@ -2222,19 +2201,6 @@ ULONG
 APIENTRY
 NtGdiQueryFontAssocInfo(
     IN HDC hdc)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
- /*
- * @unimplemented
- */
-DWORD
-APIENTRY
-NtGdiGetFontUnicodeRanges(
-    IN HDC hdc,
-    OUT OPTIONAL LPGLYPHSET pgs)
 {
     UNIMPLEMENTED;
     return 0;
@@ -2693,36 +2659,8 @@ NtGdiMakeFontDir(
  */
 BOOL
 APIENTRY
-NtGdiMakeInfoDC(
-    IN HDC hdc,
-    IN BOOL bSet)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
- /*
- * @unimplemented
- */
-BOOL
-APIENTRY
 NtGdiMonoBitmap(
     IN HBITMAP hbm)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
- /*
- * @unimplemented
- */
-BOOL
-APIENTRY
-NtGdiMoveTo(
-    IN HDC hdc,
-    IN INT x,
-    IN INT y,
-    OUT OPTIONAL LPPOINT pptOut)
 {
     UNIMPLEMENTED;
     return FALSE;
@@ -2820,7 +2758,7 @@ NtGdiUnmapMemFont(
 }
 
 BOOL
-STDCALL
+APIENTRY
 EngControlSprites(
   IN WNDOBJ  *pwo,
   IN FLONG  fl)
@@ -2930,12 +2868,21 @@ EngFreeSectionMem(IN PVOID SectionObject OPTIONAL,
     UNIMPLEMENTED;
     return FALSE;
 }
- 
+
 ULONGLONG
 APIENTRY
 EngGetTickCount(VOID)
 {
- return ((ULONGLONG)SharedUserData->TickCountLowDeprecated * SharedUserData->TickCountMultiplier / 16777216);
+    ULONG Multiplier;
+    LARGE_INTEGER TickCount;
+
+    /* Get the multiplier and current tick count */
+    KeQueryTickCount(&TickCount);
+    Multiplier = SharedUserData->TickCountMultiplier;
+
+    /* Convert to milliseconds and return */
+    return (Int64ShrlMod32(UInt32x32To64(Multiplier, TickCount.LowPart), 24) +
+            (Multiplier * (TickCount.HighPart << 8)));
 }
  
 BOOLEAN

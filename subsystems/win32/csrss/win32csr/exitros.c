@@ -7,12 +7,10 @@
  */
 
 /* INCLUDES ******************************************************************/
-
+#define NDEBUG
 #include "w32csr.h"
 #include <sddl.h>
 #include "resource.h"
-
-#define NDEBUG
 #include <debug.h>
 
 static HWND LogonNotifyWindow = NULL;
@@ -197,7 +195,7 @@ EndNowDlgProc(HWND Dlg, UINT Msg, WPARAM wParam, LPARAM lParam)
   return Result;
 }
 
-typedef void (STDCALL *INITCOMMONCONTROLS_PROC)(void);
+typedef void (WINAPI *INITCOMMONCONTROLS_PROC)(void);
 
 static void FASTCALL
 CallInitCommonControls()
@@ -551,7 +549,7 @@ typedef struct tagPROCESS_ENUM_CONTEXT
   DWORD CsrssProcess;
 } PROCESS_ENUM_CONTEXT, *PPROCESS_ENUM_CONTEXT;
 
-static NTSTATUS STDCALL
+static NTSTATUS WINAPI
 ExitReactosProcessEnum(PCSRSS_PROCESS_DATA ProcessData, PVOID Data)
 {
   HANDLE Process;

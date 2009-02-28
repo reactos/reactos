@@ -44,29 +44,11 @@
 static PAGED_LOOKASIDE_LIST gProcessLookasideList;
 static LIST_ENTRY gCurIconList;
 
-/* Look up the location of the cursor in the GDIDEVICE structure
- * when all we know is the window station object
- * Actually doesn't use the window station, but should... */
 BOOL FASTCALL
 IntGetCursorLocation(PWINSTATION_OBJECT WinSta, POINT *loc)
 {
-   HDC hDC;
-   PDC dc;
-   GDIDEVICE *GDIDevice;
-
-#if 1
-   /* FIXME - get the screen dc from the window station or desktop */
-   if (!(hDC = IntGetScreenDC()))
-      return FALSE;
-#endif
-
-   if (!(dc = DC_LockDc(hDC)))
-      return FALSE;
-   GDIDevice = (GDIDEVICE *)dc->pPDev;
-   DC_UnlockDc(dc);
-
-   loc->x = GDIDevice->Pointer.Pos.x;
-   loc->y = GDIDevice->Pointer.Pos.y;
+   loc->x = gpsi->ptCursor.x;
+   loc->y = gpsi->ptCursor.y;
 
    return TRUE;
 }
@@ -100,14 +82,14 @@ HCURSOR FASTCALL
 IntSetCursor(PWINSTATION_OBJECT WinSta, PCURICON_OBJECT NewCursor,
              BOOL ForceChange)
 {
-   BITMAPOBJ *BitmapObj;
-   SURFOBJ *SurfObj;
+   SURFACE *psurf;
+   SURFOBJ *pso;
    PDEVINFO DevInfo;
-   PBITMAPOBJ MaskBmpObj = NULL;
+   PSURFACE MaskBmpObj = NULL;
    PSYSTEM_CURSORINFO CurInfo;
    PCURICON_OBJECT OldCursor;
    HCURSOR Ret = (HCURSOR)0;
-   HBITMAP dcbmp, hColor = (HBITMAP)0;
+   HBITMAP dcbmp;
    HBITMAP hMask = 0;
    SURFOBJ *soMask = NULL, *soColor = NULL;
    XLATEOBJ *XlateObj = NULL;
@@ -141,10 +123,10 @@ IntSetCursor(PWINSTATION_OBJECT WinSta, PCURICON_OBJECT NewCursor,
    DevInfo = (PDEVINFO)&((GDIDEVICE *)dc->pPDev)->DevInfo;
    DC_UnlockDc(dc);
 
-   BitmapObj = BITMAPOBJ_LockBitmap(dcbmp);
-   if (!BitmapObj)
+   psurf = SURFACE_LockSurface(dcbmp);
+   if (!psurf)
       return (HCURSOR)0;
-   SurfObj = &BitmapObj->SurfObj;
+   pso = &psurf->SurfObj;
 
    if (!NewCursor)
    {
@@ -157,37 +139,37 @@ IntSetCursor(PWINSTATION_OBJECT WinSta, PCURICON_OBJECT NewCursor,
             {
                 DPRINT1("Removing pointer!\n");
                /* Remove the cursor if it was displayed */
-               IntEngMovePointer(SurfObj, -1, -1, &GDIDEV(SurfObj)->Pointer.Exclude);
+               IntEngMovePointer(pso, -1, -1, &GDIDEV(pso)->Pointer.Exclude);
             }
          }
 
-         GDIDEV(SurfObj)->Pointer.Status = SPS_ACCEPT_NOEXCLUDE;
+         GDIDEV(pso)->Pointer.Status = SPS_ACCEPT_NOEXCLUDE;
 
          CurInfo->CurrentCursorObject = NewCursor; /* i.e. CurrentCursorObject = NULL */
          CurInfo->ShowingCursor = 0;
       }
 
-      BITMAPOBJ_UnlockBitmap(BitmapObj);
+      SURFACE_UnlockSurface(psurf);
       return Ret;
    }
 
    /* TODO: Fixme. Logic is screwed above */
 
-   MaskBmpObj = BITMAPOBJ_LockBitmap(NewCursor->IconInfo.hbmMask);
+   MaskBmpObj = SURFACE_LockSurface(NewCursor->IconInfo.hbmMask);
    if (MaskBmpObj)
    {
       const int maskBpp = BitsPerFormat(MaskBmpObj->SurfObj.iBitmapFormat);
-      BITMAPOBJ_UnlockBitmap(MaskBmpObj);
+      SURFACE_UnlockSurface(MaskBmpObj);
       if (maskBpp != 1)
       {
          DPRINT1("SetCursor: The Mask bitmap must have 1BPP!\n");
-         BITMAPOBJ_UnlockBitmap(BitmapObj);
+         SURFACE_UnlockSurface(psurf);
          return Ret;
       }
 
       if ((DevInfo->flGraphicsCaps2 & GCAPS2_ALPHACURSOR) &&
-            SurfObj->iBitmapFormat >= BMF_16BPP &&
-            SurfObj->iBitmapFormat <= BMF_32BPP &&
+            pso->iBitmapFormat >= BMF_16BPP &&
+            pso->iBitmapFormat <= BMF_32BPP &&
             NewCursor->Shadow && COLORCURSORS_ALLOWED)
       {
          /* FIXME - Create a color pointer, only 32bit bitmap, set alpha bits!
@@ -208,7 +190,7 @@ IntSetCursor(PWINSTATION_OBJECT WinSta, PCURICON_OBJECT NewCursor,
          }
          else
          {
-            MaskBmpObj = BITMAPOBJ_LockBitmap(NewCursor->IconInfo.hbmMask);
+            MaskBmpObj = SURFACE_LockSurface(NewCursor->IconInfo.hbmMask);
             if(MaskBmpObj)
             {
                RECTL DestRect = {0, 0, MaskBmpObj->SurfObj.sizlBitmap.cx, MaskBmpObj->SurfObj.sizlBitmap.cy};
@@ -225,14 +207,14 @@ IntSetCursor(PWINSTATION_OBJECT WinSta, PCURICON_OBJECT NewCursor,
                           NULL);
                if ( !hMask )
                {
-                  BITMAPOBJ_UnlockBitmap(MaskBmpObj);
-                  BITMAPOBJ_UnlockBitmap(BitmapObj);
+                  SURFACE_UnlockSurface(MaskBmpObj);
+                  SURFACE_UnlockSurface(psurf);
                   return (HCURSOR)0;
                }
                soMask = EngLockSurface((HSURF)hMask);
                EngCopyBits(soMask, &MaskBmpObj->SurfObj, NULL, NULL,
                            &DestRect, &SourcePoint);
-               BITMAPOBJ_UnlockBitmap(MaskBmpObj);
+               SURFACE_UnlockSurface(MaskBmpObj);
             }
          }
       }
@@ -252,58 +234,54 @@ IntSetCursor(PWINSTATION_OBJECT WinSta, PCURICON_OBJECT NewCursor,
       UserDereferenceObject(OldCursor);
    }
 
-   if (GDIDEVFUNCS(SurfObj).SetPointerShape)
+   if (GDIDEVFUNCS(pso).SetPointerShape)
    {
-      GDIDEV(SurfObj)->Pointer.Status =
-         GDIDEVFUNCS(SurfObj).SetPointerShape(
-            SurfObj, soMask, soColor, XlateObj,
+      GDIDEV(pso)->Pointer.Status =
+         GDIDEVFUNCS(pso).SetPointerShape(
+            pso, soMask, soColor, XlateObj,
             NewCursor->IconInfo.xHotspot,
             NewCursor->IconInfo.yHotspot,
-            GDIDEV(SurfObj)->Pointer.Pos.x,
-            GDIDEV(SurfObj)->Pointer.Pos.y,
-            &(GDIDEV(SurfObj)->Pointer.Exclude),
+            gpsi->ptCursor.x,
+            gpsi->ptCursor.y,
+            &(GDIDEV(pso)->Pointer.Exclude),
             SPS_CHANGE);
       DPRINT("SetCursor: DrvSetPointerShape() returned %x\n",
-             GDIDEV(SurfObj)->Pointer.Status);
+             GDIDEV(pso)->Pointer.Status);
    }
    else
    {
-      GDIDEV(SurfObj)->Pointer.Status = SPS_DECLINE;
+      GDIDEV(pso)->Pointer.Status = SPS_DECLINE;
    }
 
-   if(GDIDEV(SurfObj)->Pointer.Status == SPS_DECLINE)
+   if(GDIDEV(pso)->Pointer.Status == SPS_DECLINE)
    {
-      GDIDEV(SurfObj)->Pointer.Status = EngSetPointerShape(
-                                           SurfObj, soMask, soColor, XlateObj,
+      GDIDEV(pso)->Pointer.Status = EngSetPointerShape(
+                                           pso, soMask, soColor, XlateObj,
                                            NewCursor->IconInfo.xHotspot,
                                            NewCursor->IconInfo.yHotspot,
-                                           GDIDEV(SurfObj)->Pointer.Pos.x,
-                                           GDIDEV(SurfObj)->Pointer.Pos.y,
-                                           &(GDIDEV(SurfObj)->Pointer.Exclude),
+                                           gpsi->ptCursor.x,
+                                           gpsi->ptCursor.y,
+                                           &(GDIDEV(pso)->Pointer.Exclude),
                                            SPS_CHANGE);
-      GDIDEV(SurfObj)->Pointer.MovePointer = NULL;
+      GDIDEV(pso)->Pointer.MovePointer = NULL;
    }
    else
    {
-      GDIDEV(SurfObj)->Pointer.MovePointer = GDIDEVFUNCS(SurfObj).MovePointer;
+      GDIDEV(pso)->Pointer.MovePointer = GDIDEVFUNCS(pso).MovePointer;
    }
 
-   BITMAPOBJ_UnlockBitmap(BitmapObj);
+   SURFACE_UnlockSurface(psurf);
    if(hMask)
    {
       EngUnlockSurface(soMask);
       EngDeleteSurface((HSURF)hMask);
-   }
-   if(hColor)
-   {
-      EngDeleteSurface((HSURF)hColor);
    }
    if(XlateObj)
    {
       EngDeleteXlate(XlateObj);
    }
 
-   if(GDIDEV(SurfObj)->Pointer.Status == SPS_ERROR)
+   if(GDIDEV(pso)->Pointer.Status == SPS_ERROR)
       DPRINT1("SetCursor: DrvSetPointerShape() returned SPS_ERROR\n");
 
    return Ret;
@@ -554,12 +532,12 @@ IntCleanupCurIcons(struct _EPROCESS *Process, PW32PROCESS Win32Process)
  * @implemented
  */
 HANDLE
-STDCALL
+APIENTRY
 NtUserCreateCursorIconHandle(PICONINFO IconInfo OPTIONAL, BOOL Indirect)
 {
    PCURICON_OBJECT CurIcon;
    PWINSTATION_OBJECT WinSta;
-   PBITMAPOBJ bmp;
+   PSURFACE psurfBmp;
    NTSTATUS Status;
    HANDLE Ret;
    DECLARE_RETURN(HANDLE);
@@ -589,26 +567,26 @@ NtUserCreateCursorIconHandle(PICONINFO IconInfo OPTIONAL, BOOL Indirect)
       {
          if(Indirect)
          {
-            CurIcon->IconInfo.hbmMask = BITMAPOBJ_CopyBitmap(CurIcon->IconInfo.hbmMask);
-            CurIcon->IconInfo.hbmColor = BITMAPOBJ_CopyBitmap(CurIcon->IconInfo.hbmColor);
+            CurIcon->IconInfo.hbmMask = BITMAP_CopyBitmap(CurIcon->IconInfo.hbmMask);
+            CurIcon->IconInfo.hbmColor = BITMAP_CopyBitmap(CurIcon->IconInfo.hbmColor);
          }
          if(CurIcon->IconInfo.hbmColor &&
-               (bmp = BITMAPOBJ_LockBitmap(CurIcon->IconInfo.hbmColor)))
+               (psurfBmp = SURFACE_LockSurface(CurIcon->IconInfo.hbmColor)))
          {
-            CurIcon->Size.cx = bmp->SurfObj.sizlBitmap.cx;
-            CurIcon->Size.cy = bmp->SurfObj.sizlBitmap.cy;
-            BITMAPOBJ_UnlockBitmap(bmp);
+            CurIcon->Size.cx = psurfBmp->SurfObj.sizlBitmap.cx;
+            CurIcon->Size.cy = psurfBmp->SurfObj.sizlBitmap.cy;
+            SURFACE_UnlockSurface(psurfBmp);
             GDIOBJ_SetOwnership(CurIcon->IconInfo.hbmColor, NULL);
          }
          if(CurIcon->IconInfo.hbmMask &&
-               (bmp = BITMAPOBJ_LockBitmap(CurIcon->IconInfo.hbmMask)))
+               (psurfBmp = SURFACE_LockSurface(CurIcon->IconInfo.hbmMask)))
          {
             if (CurIcon->IconInfo.hbmColor == NULL)
             {
-               CurIcon->Size.cx = bmp->SurfObj.sizlBitmap.cx;
-               CurIcon->Size.cy = bmp->SurfObj.sizlBitmap.cy / 2;
+               CurIcon->Size.cx = psurfBmp->SurfObj.sizlBitmap.cx;
+               CurIcon->Size.cy = psurfBmp->SurfObj.sizlBitmap.cy / 2;
             }
-            BITMAPOBJ_UnlockBitmap(bmp);
+            SURFACE_UnlockSurface(psurfBmp);
             GDIOBJ_SetOwnership(CurIcon->IconInfo.hbmMask, NULL);
          }
       }
@@ -633,7 +611,7 @@ CLEANUP:
  * @implemented
  */
 BOOL
-STDCALL
+APIENTRY
 NtUserGetIconInfo(
    HANDLE hCurIcon,
    PICONINFO IconInfo,
@@ -673,38 +651,38 @@ NtUserGetIconInfo(
    RtlCopyMemory(&ii, &CurIcon->IconInfo, sizeof(ICONINFO));
 
    /* Copy bitmaps */
-   ii.hbmMask = BITMAPOBJ_CopyBitmap(CurIcon->IconInfo.hbmMask);
-   ii.hbmColor = BITMAPOBJ_CopyBitmap(CurIcon->IconInfo.hbmColor);
+   ii.hbmMask = BITMAP_CopyBitmap(CurIcon->IconInfo.hbmMask);
+   ii.hbmColor = BITMAP_CopyBitmap(CurIcon->IconInfo.hbmColor);
 
    /* Copy fields */
-   _SEH_TRY
+   _SEH2_TRY
    {
        ProbeForWrite(IconInfo, sizeof(ICONINFO), 1);
        RtlCopyMemory(IconInfo, &ii, sizeof(ICONINFO));
 
        if (pbpp)
        {
-           PBITMAPOBJ bmp;
+           PSURFACE psurfBmp;
            int colorBpp = 0;
 
            ProbeForWrite(pbpp, sizeof(DWORD), 1);
 
-           bmp = BITMAPOBJ_LockBitmap(CurIcon->IconInfo.hbmColor);
-           if (bmp)
+           psurfBmp = SURFACE_LockSurface(CurIcon->IconInfo.hbmColor);
+           if (psurfBmp)
            {
-               colorBpp = BitsPerFormat(bmp->SurfObj.iBitmapFormat);
-               BITMAPOBJ_UnlockBitmap(bmp);
+               colorBpp = BitsPerFormat(psurfBmp->SurfObj.iBitmapFormat);
+               SURFACE_UnlockSurface(psurfBmp);
            }
 
            RtlCopyMemory(pbpp, &colorBpp, sizeof(DWORD));
        }
 
    }
-   _SEH_HANDLE
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
-       Status = _SEH_GetExceptionCode();
+       Status = _SEH2_GetExceptionCode();
    }
-   _SEH_END
+   _SEH2_END
 
    if (NT_SUCCESS(Status))
       Ret = TRUE;
@@ -726,7 +704,7 @@ CLEANUP:
  * @implemented
  */
 BOOL
-NTAPI
+APIENTRY
 NtUserGetIconSize(
     HANDLE hCurIcon,
     UINT istepIfAniCur,
@@ -745,18 +723,18 @@ NtUserGetIconSize(
       goto cleanup;
    }
 
-   _SEH_TRY
+   _SEH2_TRY
    {
        ProbeForWrite(plcx, sizeof(LONG), 1);
        RtlCopyMemory(plcx, &CurIcon->Size.cx, sizeof(LONG));
        ProbeForWrite(plcy, sizeof(LONG), 1);
        RtlCopyMemory(plcy, &CurIcon->Size.cy, sizeof(LONG));
    }
-   _SEH_HANDLE
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
-       Status = _SEH_GetExceptionCode();
+       Status = _SEH2_GetExceptionCode();
    }
-   _SEH_END
+   _SEH2_END
 
    if(NT_SUCCESS(Status))
       bRet = TRUE;
@@ -776,7 +754,7 @@ cleanup:
  * @unimplemented
  */
 DWORD
-STDCALL
+APIENTRY
 NtUserGetCursorFrameInfo(
    DWORD Unknown0,
    DWORD Unknown1,
@@ -793,46 +771,23 @@ NtUserGetCursorFrameInfo(
  * @implemented
  */
 BOOL
-STDCALL
+APIENTRY
 NtUserGetCursorInfo(
    PCURSORINFO pci)
 {
    CURSORINFO SafeCi;
    PSYSTEM_CURSORINFO CurInfo;
    PWINSTATION_OBJECT WinSta;
-   NTSTATUS Status;
+   NTSTATUS Status = STATUS_SUCCESS;
    PCURICON_OBJECT CurIcon;
-   HDC hDC;
+   BOOL Ret = FALSE;
    DECLARE_RETURN(BOOL);
 
    DPRINT("Enter NtUserGetCursorInfo\n");
    UserEnterExclusive();
 
-#if 1
-
-
-   /* FIXME - get the screen dc from the window station or desktop */
-   if (!(hDC = IntGetScreenDC()))
-   {
-      RETURN( FALSE);
-   }
-#endif
-
-   Status = MmCopyFromCaller(&SafeCi.cbSize, pci, sizeof(DWORD));
-   if(!NT_SUCCESS(Status))
-   {
-      SetLastNtError(Status);
-      RETURN( FALSE);
-   }
-
-   if(SafeCi.cbSize != sizeof(CURSORINFO))
-   {
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
-      RETURN( FALSE);
-   }
-
    WinSta = IntGetWinStaObj();
-   if(WinSta == NULL)
+   if (WinSta == NULL)
    {
       RETURN( FALSE);
    }
@@ -840,21 +795,37 @@ NtUserGetCursorInfo(
    CurInfo = IntGetSysCursorInfo(WinSta);
    CurIcon = (PCURICON_OBJECT)CurInfo->CurrentCursorObject;
 
+   SafeCi.cbSize = sizeof(CURSORINFO);
    SafeCi.flags = ((CurInfo->ShowingCursor && CurIcon) ? CURSOR_SHOWING : 0);
    SafeCi.hCursor = (CurIcon ? (HCURSOR)CurIcon->Self : (HCURSOR)0);
 
    IntGetCursorLocation(WinSta, &SafeCi.ptScreenPos);
 
-   Status = MmCopyToCaller(pci, &SafeCi, sizeof(CURSORINFO));
-   if(!NT_SUCCESS(Status))
+   _SEH2_TRY
    {
-      ObDereferenceObject(WinSta);
+      if (pci->cbSize == sizeof(CURSORINFO))
+      {
+         ProbeForWrite(pci, sizeof(CURSORINFO), 1);
+         RtlCopyMemory(pci, &SafeCi, sizeof(CURSORINFO));
+         Ret = TRUE;
+      }
+      else
+      {
+         SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      }
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+      Status = _SEH2_GetExceptionCode();
+   }
+   _SEH2_END;
+   if (!NT_SUCCESS(Status))
+   {
       SetLastNtError(Status);
-      RETURN( FALSE);
    }
 
    ObDereferenceObject(WinSta);
-   RETURN( TRUE);
+   RETURN(Ret);
 
 CLEANUP:
    DPRINT("Leave NtUserGetCursorInfo, ret=%i\n",_ret_);
@@ -867,7 +838,7 @@ CLEANUP:
  * @implemented
  */
 BOOL
-STDCALL
+APIENTRY
 NtUserClipCursor(
    RECT *UnsafeRect)
 {
@@ -940,7 +911,7 @@ CLEANUP:
  * @implemented
  */
 BOOL
-STDCALL
+APIENTRY
 NtUserDestroyCursor(
    HANDLE hCurIcon,
    DWORD Unknown)
@@ -982,7 +953,7 @@ CLEANUP:
  * @implemented
  */
 HICON
-STDCALL
+APIENTRY
 NtUserFindExistingCursorIcon(
    HMODULE hModule,
    HRSRC hRsrc,
@@ -1028,7 +999,7 @@ CLEANUP:
  * @implemented
  */
 BOOL
-STDCALL
+APIENTRY
 NtUserGetClipCursor(
    RECT *lpRect)
 {
@@ -1090,7 +1061,7 @@ CLEANUP:
  * @implemented
  */
 HCURSOR
-STDCALL
+APIENTRY
 NtUserSetCursor(
    HCURSOR hCursor)
 {
@@ -1142,14 +1113,14 @@ CLEANUP:
  * @implemented
  */
 BOOL
-STDCALL
+APIENTRY
 NtUserSetCursorContents(
    HANDLE hCurIcon,
    PICONINFO UnsafeIconInfo)
 {
    PCURICON_OBJECT CurIcon;
    ICONINFO IconInfo;
-   PBITMAPOBJ bmp;
+   PSURFACE psurfBmp;
    PWINSTATION_OBJECT WinSta;
    NTSTATUS Status;
    BOOL Ret = FALSE;
@@ -1191,24 +1162,24 @@ NtUserSetCursorContents(
    /* Copy new IconInfo field */
    CurIcon->IconInfo = IconInfo;
 
-   bmp = BITMAPOBJ_LockBitmap(CurIcon->IconInfo.hbmColor);
-   if(bmp)
+   psurfBmp = SURFACE_LockSurface(CurIcon->IconInfo.hbmColor);
+   if(psurfBmp)
    {
-      CurIcon->Size.cx = bmp->SurfObj.sizlBitmap.cx;
-      CurIcon->Size.cy = bmp->SurfObj.sizlBitmap.cy;
-      BITMAPOBJ_UnlockBitmap(bmp);
+      CurIcon->Size.cx = psurfBmp->SurfObj.sizlBitmap.cx;
+      CurIcon->Size.cy = psurfBmp->SurfObj.sizlBitmap.cy;
+      SURFACE_UnlockSurface(psurfBmp);
       GDIOBJ_SetOwnership(CurIcon->IconInfo.hbmColor, NULL);
    }
    else
    {
-      bmp = BITMAPOBJ_LockBitmap(CurIcon->IconInfo.hbmMask);
-      if(!bmp)
+      psurfBmp = SURFACE_LockSurface(CurIcon->IconInfo.hbmMask);
+      if(!psurfBmp)
          goto done;
 
-      CurIcon->Size.cx = bmp->SurfObj.sizlBitmap.cx;
-      CurIcon->Size.cy = bmp->SurfObj.sizlBitmap.cy / 2;
+      CurIcon->Size.cx = psurfBmp->SurfObj.sizlBitmap.cx;
+      CurIcon->Size.cy = psurfBmp->SurfObj.sizlBitmap.cy / 2;
 
-      BITMAPOBJ_UnlockBitmap(bmp);
+      SURFACE_UnlockSurface(psurfBmp);
       GDIOBJ_SetOwnership(CurIcon->IconInfo.hbmMask, NULL);
    }
 
@@ -1235,7 +1206,7 @@ CLEANUP:
  */
 #if 0
 BOOL
-NTAPI
+APIENTRY
 NtUserSetCursorIconData(
   HANDLE Handle,
   HMODULE hModule,
@@ -1244,7 +1215,7 @@ NtUserSetCursorIconData(
 {
    PCURICON_OBJECT CurIcon;
    PWINSTATION_OBJECT WinSta;
-   PBITMAPOBJ pBmpObj;
+   PSURFACE psurfBmp;
    NTSTATUS Status = STATUS_SUCCESS;
    BOOL Ret = FALSE;
    DECLARE_RETURN(BOOL);
@@ -1268,21 +1239,21 @@ NtUserSetCursorIconData(
    CurIcon->hRsrc = NULL; //hRsrc;
    CurIcon->hGroupRsrc = NULL; //hGroupRsrc;
 
-   _SEH_TRY
+   _SEH2_TRY
    {
        ProbeForRead(pIconInfo, sizeof(ICONINFO), 1);
        RtlCopyMemory(&CurIcon->IconInfo, pIconInfo, sizeof(ICONINFO));
 
-       CurIcon->IconInfo.hbmMask = BITMAPOBJ_CopyBitmap(pIconInfo->hbmMask);
-       CurIcon->IconInfo.hbmColor = BITMAPOBJ_CopyBitmap(pIconInfo->hbmColor);
+       CurIcon->IconInfo.hbmMask = BITMAP_CopyBitmap(pIconInfo->hbmMask);
+       CurIcon->IconInfo.hbmColor = BITMAP_CopyBitmap(pIconInfo->hbmColor);
 
        if (CurIcon->IconInfo.hbmColor)
        {
-           if ((pBmpObj = BITMAPOBJ_LockBitmap(CurIcon->IconInfo.hbmColor)))
+           if ((psurfBmp = SURFACE_LockSurface(CurIcon->IconInfo.hbmColor)))
            {
-               CurIcon->Size.cx = pBmpObj->SurfObj.sizlBitmap.cx;
-               CurIcon->Size.cy = pBmpObj->SurfObj.sizlBitmap.cy;
-               BITMAPOBJ_UnlockBitmap(pBmpObj);
+               CurIcon->Size.cx = psurfBmp->SurfObj.sizlBitmap.cx;
+               CurIcon->Size.cy = psurfBmp->SurfObj.sizlBitmap.cy;
+               SURFACE_UnlockSurface(psurfBmp);
                GDIOBJ_SetOwnership(GdiHandleTable, CurIcon->IconInfo.hbmMask, NULL);
            }
        }
@@ -1290,21 +1261,21 @@ NtUserSetCursorIconData(
        {
            if (CurIcon->IconInfo.hbmColor == NULL)
            {
-               if ((pBmpObj = BITMAPOBJ_LockBitmap(CurIcon->IconInfo.hbmMask)))
+               if ((psurfBmp = SURFACE_LockSurface(CurIcon->IconInfo.hbmMask)))
                {
-                   CurIcon->Size.cx = pBmpObj->SurfObj.sizlBitmap.cx;
-                   CurIcon->Size.cy = pBmpObj->SurfObj.sizlBitmap.cy;
-                   BITMAPOBJ_UnlockBitmap(pBmpObj);
+                   CurIcon->Size.cx = psurfBmp->SurfObj.sizlBitmap.cx;
+                   CurIcon->Size.cy = psurfBmp->SurfObj.sizlBitmap.cy;
+                   SURFACE_UnlockSurface(psurfBmp);
                }
            }
            GDIOBJ_SetOwnership(GdiHandleTable, CurIcon->IconInfo.hbmMask, NULL);
        }
    }
-   _SEH_HANDLE
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
    }
-   _SEH_END
+   _SEH2_END
 
    if(!NT_SUCCESS(Status))
       SetLastNtError(Status);
@@ -1322,7 +1293,7 @@ CLEANUP:
 }
 #else
 BOOL
-STDCALL
+APIENTRY
 NtUserSetCursorIconData(
    HANDLE hCurIcon,
    PBOOL fIcon,
@@ -1409,7 +1380,7 @@ CLEANUP:
  * @unimplemented
  */
 BOOL
-STDCALL
+APIENTRY
 NtUserSetSystemCursor(
    HCURSOR hcur,
    DWORD id)
@@ -1528,12 +1499,12 @@ UserDrawIconEx(
    if (istepIfAniCur)
       DPRINT1("NtUserDrawIconEx: istepIfAniCur is not supported!\n");
 
-   if (!hbmMask || !IntGdiGetObject(hbmMask, sizeof(BITMAP), &bmpMask))
+   if (!hbmMask || !IntGdiGetObject(hbmMask, sizeof(BITMAP), (PVOID)&bmpMask))
    {
       return FALSE;
    }
 
-   if (hbmColor && !IntGdiGetObject(hbmColor, sizeof(BITMAP), &bmpColor))
+   if (hbmColor && !IntGdiGetObject(hbmColor, sizeof(BITMAP), (PVOID)&bmpColor))
    {
       return FALSE;
    }
@@ -1574,7 +1545,7 @@ UserDrawIconEx(
    {
       RECT r;
       BITMAP bm;
-      BITMAPOBJ *BitmapObj = NULL;
+      SURFACE *psurfOff = NULL;
 
       r.right = cxWidth;
       r.bottom = cyHeight;
@@ -1595,18 +1566,18 @@ UserDrawIconEx(
 
       /* make sure we have a 32 bit offscreen bitmap
         otherwise we can't do alpha blending */
-      BitmapObj = BITMAPOBJ_LockBitmap(hbmOff);
-      if (BitmapObj == NULL)
+      psurfOff = SURFACE_LockSurface(hbmOff);
+      if (psurfOff == NULL)
       {
-          DPRINT1("GDIOBJ_LockObj() failed!\n");
+          DPRINT1("BITMAPOBJ_LockBitmap() failed!\n");
           goto cleanup;
       }
-      BITMAP_GetObject(BitmapObj, sizeof(BITMAP), &bm);
+      BITMAP_GetObject(psurfOff, sizeof(BITMAP), (PVOID)&bm);
 
       if (bm.bmBitsPixel != 32)
         bAlpha = FALSE;
 
-      BITMAPOBJ_UnlockBitmap(BitmapObj);
+      SURFACE_UnlockSurface(psurfOff);
 
       hOldOffBmp = NtGdiSelectBitmap(hdcOff, hbmOff);
       if (!hOldOffBmp)
@@ -1620,7 +1591,7 @@ UserDrawIconEx(
           hOldOffBrush = NtGdiSelectBrush(hdcOff, hbrFlickerFreeDraw);
           if (!hOldOffBrush)
           {
-             DPRINT1("NtGdiSelectBitmap() failed!\n");
+             DPRINT1("NtGdiSelectBrush() failed!\n");
              goto cleanup;
           }
 
@@ -1651,21 +1622,18 @@ UserDrawIconEx(
          goto cleanup;
       }
 
-      DoStretchBlt(hdcOff, (DoFlickerFree ? 0 : xLeft),
-                   (DoFlickerFree ? 0 : yTop), cxWidth, cyHeight, hdcMem,
-                   0, 0, IconSize.cx, IconSize.cy,
-                   ((diFlags & DI_IMAGE) ? SRCAND : SRCCOPY), FALSE);
-
-      if (!hbmColor && (bmpMask.bmHeight == 2 * bmpMask.bmWidth)
-         && (diFlags & DI_IMAGE))
-      {
-         DoStretchBlt(hdcOff, (DoFlickerFree ? 0 : xLeft),
-                      (DoFlickerFree ? 0 : yTop), cxWidth, cyHeight, hdcMem,
-                      0, IconSize.cy, IconSize.cx, IconSize.cy, SRCINVERT,
-                      FALSE);
-
-         diFlags &= ~DI_IMAGE;
-      }
+      DoStretchBlt(hdcOff,
+                   (DoFlickerFree || bAlpha ? 0 : xLeft),
+                   (DoFlickerFree || bAlpha ? 0 : yTop), 
+                   cxWidth,
+                   cyHeight,
+                   hdcMem,
+                   0,
+                   0,
+                   IconSize.cx,
+                   IconSize.cy,
+                   ((diFlags & DI_IMAGE) ? SRCAND : SRCCOPY),
+                   FALSE);
 
       NtGdiSelectBitmap(hdcMem, hOldMem);
    }
@@ -1674,9 +1642,16 @@ UserDrawIconEx(
    {
       hOldMem = NtGdiSelectBitmap(hdcMem, (hbmColor ? hbmColor : hbmMask));
 
-      DoStretchBlt(hdcOff, (DoFlickerFree ? 0 : xLeft),
-                   (DoFlickerFree ? 0 : yTop), cxWidth, cyHeight, hdcMem,
-                   0, (hbmColor ? 0 : IconSize.cy), IconSize.cx, IconSize.cy,
+      DoStretchBlt(hdcOff, 
+                   (DoFlickerFree || bAlpha ? 0 : xLeft),
+                   (DoFlickerFree || bAlpha ? 0 : yTop),
+                   cxWidth,
+                   cyHeight,
+                   hdcMem,
+                   0,
+                   (hbmColor ? 0 : IconSize.cy),
+                   IconSize.cx,
+                   IconSize.cy,
                    ((diFlags & DI_MASK) ? SRCINVERT : SRCCOPY),
                    NULL != hbmColor);
 
@@ -1686,32 +1661,32 @@ UserDrawIconEx(
     if (bAlpha)
     {
         BITMAP bm;
-        BITMAPOBJ *BitmapObj = NULL;
+        SURFACE *psurfOff = NULL;
         PBYTE pBits = NULL;
-        BLENDFUNCTION  BlendFunc;
+        BLENDFUNCTION BlendFunc;
         DWORD Pixel;
         BYTE Red, Green, Blue, Alpha;
         DWORD Count = 0;
         INT i, j;
 
-        BitmapObj = BITMAPOBJ_LockBitmap(hbmOff);
-        if (BitmapObj == NULL)
+        psurfOff = SURFACE_LockSurface(hbmOff);
+        if (psurfOff == NULL)
         {
-            DPRINT1("GDIOBJ_LockObj() failed!\n");
+            DPRINT1("BITMAPOBJ_LockBitmap() failed!\n");
             goto cleanup;
         }
-        BITMAP_GetObject(BitmapObj, sizeof(BITMAP), &bm);
+        BITMAP_GetObject(psurfOff, sizeof(BITMAP), (PVOID)&bm);
 
         pBits = ExAllocatePoolWithTag(PagedPool, bm.bmWidthBytes * abs(bm.bmHeight), TAG_BITMAP);
         if (pBits == NULL)
         {
             DPRINT1("ExAllocatePoolWithTag() failed!\n");
-            BITMAPOBJ_UnlockBitmap(BitmapObj);
+            SURFACE_UnlockSurface(psurfOff);
             goto cleanup;
         }
 
         /* get icon bits */
-        IntGetBitmapBits(BitmapObj, bm.bmWidthBytes * abs(bm.bmHeight), pBits);
+        IntGetBitmapBits(psurfOff, bm.bmWidthBytes * abs(bm.bmHeight), pBits);
 
         /* premultiply with the alpha channel value */
         for (i = 0; i < cyHeight; i++)
@@ -1733,10 +1708,10 @@ UserDrawIconEx(
         }
 
         /* set icon bits */
-        IntSetBitmapBits(BitmapObj, bm.bmWidthBytes * abs(bm.bmHeight), pBits);
-        ExFreePool(pBits);
+        IntSetBitmapBits(psurfOff, bm.bmWidthBytes * abs(bm.bmHeight), pBits);
+        ExFreePoolWithTag(pBits, TAG_BITMAP);
 
-        BITMAPOBJ_UnlockBitmap(BitmapObj);
+        SURFACE_UnlockSurface(psurfOff);
 
         BlendFunc.BlendOp = AC_SRC_OVER;
         BlendFunc.BlendFlags = 0;
@@ -1775,7 +1750,7 @@ cleanup:
  * @implemented
  */
 BOOL
-STDCALL
+APIENTRY
 NtUserDrawIconEx(
    HDC hdc,
    int xLeft,
@@ -1821,17 +1796,18 @@ NtUserDrawIconEx(
 /* Called from NtUserCallOneParam with Routine ONEPARAM_ROUTINE_SHOWCURSOR
  * User32 macro NtUserShowCursor */
 int
-NTAPI
+APIENTRY
 UserShowCursor(BOOL bShow)
 {
-    PWINSTATION_OBJECT WinSta = PsGetCurrentThreadWin32Thread()->Desktop->WindowStation;
+    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
+    PWINSTATION_OBJECT WinSta = pti->Desktop->WindowStation;
     PSYSTEM_CURSORINFO CurInfo;
 
     HDC Screen;
     PDC dc;
-    HBITMAP dcbmp;
+    HBITMAP hbmpDc;
     SURFOBJ *SurfObj;
-    BITMAPOBJ *BitmapObj;
+    SURFACE *psurfDc;
     GDIDEVICE *ppdev;
     GDIPOINTER *pgp;
     int showpointer=0;
@@ -1848,20 +1824,19 @@ UserShowCursor(BOOL bShow)
         return showpointer; /* No mouse */
     }
 
-    dcbmp = dc->w.hBitmap;
+    hbmpDc = dc->w.hBitmap;
     DC_UnlockDc(dc);
 
-    BitmapObj = BITMAPOBJ_LockBitmap(dcbmp);
-    if ( !BitmapObj )
+    psurfDc = SURFACE_LockSurface(hbmpDc);
+    if ( !psurfDc )
     {
-        BITMAPOBJ_UnlockBitmap(BitmapObj);
         return showpointer; /* No Mouse */
     }
 
-    SurfObj = &BitmapObj->SurfObj;
+    SurfObj = &psurfDc->SurfObj;
     if (SurfObj == NULL)
     {
-        BITMAPOBJ_UnlockBitmap(BitmapObj);
+        SURFACE_UnlockSurface(psurfDc);
         return showpointer; /* No mouse */
     }
 
@@ -1869,7 +1844,7 @@ UserShowCursor(BOOL bShow)
 
     if(ppdev == NULL)
     {
-        BITMAPOBJ_UnlockBitmap(BitmapObj);
+        SURFACE_UnlockSurface(psurfDc);
         return showpointer; /* No mouse */
     }
 
@@ -1906,6 +1881,6 @@ UserShowCursor(BOOL bShow)
         }
     }
 
-    BITMAPOBJ_UnlockBitmap(BitmapObj);
+    SURFACE_UnlockSurface(psurfDc);
     return showpointer;
 }

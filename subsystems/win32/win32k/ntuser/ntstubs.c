@@ -13,7 +13,7 @@
 #include <debug.h>
 
 DWORD
-NTAPI
+APIENTRY
 NtUserAssociateInputContext(
     DWORD dwUnknown1,
     DWORD dwUnknown2,
@@ -25,7 +25,7 @@ NtUserAssociateInputContext(
 
 
 BOOL
-NTAPI
+APIENTRY
 NtUserAttachThreadInput(
     IN DWORD idAttach,
     IN DWORD idAttachTo,
@@ -40,7 +40,7 @@ NtUserAttachThreadInput(
 // Works like BitBlt, http://msdn.microsoft.com/en-us/library/ms532278(VS.85).aspx
 //
 BOOL
-NTAPI
+APIENTRY
 NtUserBitBltSysBmp(
    HDC hdc,
    INT nXDest,
@@ -71,7 +71,7 @@ NtUserBitBltSysBmp(
 }
 
 DWORD
-NTAPI
+APIENTRY
 NtUserBuildHimcList(
     DWORD dwUnknown1,
     DWORD dwUnknown2,
@@ -83,7 +83,7 @@ NtUserBuildHimcList(
 }
 
 DWORD
-STDCALL
+APIENTRY
 NtUserConvertMemHandle(
    DWORD Unknown0,
    DWORD Unknown1)
@@ -94,7 +94,7 @@ NtUserConvertMemHandle(
 }
 
 DWORD
-STDCALL
+APIENTRY
 NtUserCreateLocalMemHandle(
    DWORD Unknown0,
    DWORD Unknown1,
@@ -107,7 +107,7 @@ NtUserCreateLocalMemHandle(
 }
 
 BOOL
-NTAPI
+APIENTRY
 NtUserDdeGetQualityOfService(
    IN HWND hwndClient,
    IN HWND hWndServer,
@@ -119,7 +119,7 @@ NtUserDdeGetQualityOfService(
 }
 
 DWORD
-STDCALL
+APIENTRY
 NtUserDdeInitialize(
    DWORD Unknown0,
    DWORD Unknown1,
@@ -133,7 +133,7 @@ NtUserDdeInitialize(
 }
 
 BOOL
-NTAPI
+APIENTRY
 NtUserDdeSetQualityOfService(
    IN  HWND hwndClient,
    IN  PSECURITY_QUALITY_OF_SERVICE pqosNew,
@@ -145,7 +145,7 @@ NtUserDdeSetQualityOfService(
 }
 
 DWORD
-NTAPI
+APIENTRY
 NtUserDragObject(
    HWND    hwnd1,
    HWND    hwnd2,
@@ -160,7 +160,7 @@ NtUserDragObject(
 }
 
 BOOL
-NTAPI
+APIENTRY
 NtUserDrawAnimatedRects(
    HWND hwnd,
    INT idAni,
@@ -173,7 +173,7 @@ NtUserDrawAnimatedRects(
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtUserEnumDisplayDevices (
    PUNICODE_STRING lpDevice, /* device name */
    DWORD iDevNum, /* display device */
@@ -206,7 +206,7 @@ NtUserEnumDisplayDevices (
 }
 
 DWORD
-STDCALL
+APIENTRY
 NtUserEvent(
    DWORD Unknown0)
 {
@@ -216,7 +216,7 @@ NtUserEvent(
 }
 
 DWORD
-NTAPI
+APIENTRY
 NtUserExcludeUpdateRgn(
   HDC hDC,
   HWND hWnd)
@@ -227,12 +227,12 @@ NtUserExcludeUpdateRgn(
 }
 
 BOOL
-NTAPI
+APIENTRY
 NtUserGetAltTabInfo(
    HWND hwnd,
    INT  iItem,
    PALTTABINFO pati,
-   LPTSTR pszItemText,
+   LPWSTR pszItemText,
    UINT   cchItemText,
    BOOL   Ansi)
 {
@@ -242,7 +242,7 @@ NtUserGetAltTabInfo(
 }
 
 HBRUSH
-NTAPI
+APIENTRY
 NtUserGetControlBrush(
    HWND hwnd,
    HDC  hdc,
@@ -258,7 +258,7 @@ NtUserGetControlBrush(
  * Called from PaintRect, works almost like wine PaintRect16 but returns hBrush.
  */
 HBRUSH
-STDCALL
+APIENTRY
 NtUserGetControlColor(
    HWND hwndParent,
    HWND hwnd, 
@@ -271,7 +271,7 @@ NtUserGetControlColor(
 }
 
 DWORD
-STDCALL
+APIENTRY
 NtUserGetCPD(
    DWORD Unknown0,
    DWORD Unknown1,
@@ -283,7 +283,7 @@ NtUserGetCPD(
 }
 
 DWORD
-STDCALL
+APIENTRY
 NtUserGetImeHotKey(
    DWORD Unknown0,
    DWORD Unknown1,
@@ -297,7 +297,7 @@ NtUserGetImeHotKey(
 
 
 DWORD
-STDCALL
+APIENTRY
 NtUserGetMouseMovePointsEx(
    UINT cbSize,
    LPMOUSEMOVEPOINT lppt,
@@ -342,7 +342,7 @@ NtUserGetMouseMovePointsEx(
 
 
 BOOL
-NTAPI
+APIENTRY
 NtUserImpersonateDdeClientWindow(
    HWND hWndClient,
    HWND hWndServer)
@@ -353,7 +353,7 @@ NtUserImpersonateDdeClientWindow(
 }
 
 NTSTATUS
-STDCALL
+APIENTRY
 NtUserInitializeClientPfnArrays(
   PPFNCLIENT pfnClientA,
   PPFNCLIENT pfnClientW,
@@ -366,7 +366,7 @@ NtUserInitializeClientPfnArrays(
 }
 
 DWORD
-STDCALL
+APIENTRY
 NtUserInitTask(
    DWORD Unknown0,
    DWORD Unknown1,
@@ -387,7 +387,7 @@ NtUserInitTask(
 }
 
 BOOL
-NTAPI
+APIENTRY
 NtUserLockWorkStation(VOID)
 {
    UNIMPLEMENTED
@@ -396,7 +396,7 @@ NtUserLockWorkStation(VOID)
 }
 
 DWORD
-STDCALL
+APIENTRY
 NtUserMNDragLeave(VOID)
 {
    UNIMPLEMENTED
@@ -405,7 +405,7 @@ NtUserMNDragLeave(VOID)
 }
 
 DWORD
-STDCALL
+APIENTRY
 NtUserMNDragOver(
    DWORD Unknown0,
    DWORD Unknown1)
@@ -416,7 +416,7 @@ NtUserMNDragOver(
 }
 
 DWORD
-STDCALL
+APIENTRY
 NtUserModifyUserStartupInfoFlags(
    DWORD Unknown0,
    DWORD Unknown1)
@@ -427,7 +427,7 @@ NtUserModifyUserStartupInfoFlags(
 }
 
 DWORD
-STDCALL
+APIENTRY
 NtUserNotifyIMEStatus(
    DWORD Unknown0,
    DWORD Unknown1,
@@ -439,7 +439,7 @@ NtUserNotifyIMEStatus(
 }
 
 DWORD
-STDCALL
+APIENTRY
 NtUserQueryUserCounters(
    DWORD Unknown0,
    DWORD Unknown1,
@@ -454,7 +454,7 @@ NtUserQueryUserCounters(
 
 
 DWORD
-STDCALL
+APIENTRY
 NtUserRegisterTasklist(
    DWORD Unknown0)
 {
@@ -465,7 +465,7 @@ NtUserRegisterTasklist(
 
 
 DWORD
-STDCALL
+APIENTRY
 NtUserSBGetParms(
    DWORD Unknown0,
    DWORD Unknown1,
@@ -478,7 +478,7 @@ NtUserSBGetParms(
 }
 
 DWORD
-STDCALL
+APIENTRY
 NtUserSetConsoleReserveKeys(
    DWORD Unknown0,
    DWORD Unknown1)
@@ -489,7 +489,7 @@ NtUserSetConsoleReserveKeys(
 }
 
 DWORD
-STDCALL
+APIENTRY
 NtUserSetDbgTag(
    DWORD Unknown0,
    DWORD Unknown1)
@@ -500,7 +500,7 @@ NtUserSetDbgTag(
 }
 
 DWORD
-STDCALL
+APIENTRY
 NtUserSetImeHotKey(
    DWORD Unknown0,
    DWORD Unknown1,
@@ -515,7 +515,7 @@ NtUserSetImeHotKey(
 
 
 DWORD
-STDCALL
+APIENTRY
 NtUserSetRipFlags(
    DWORD Unknown0,
    DWORD Unknown1)
@@ -526,7 +526,7 @@ NtUserSetRipFlags(
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtUserSetSysColors(
    int cElements,
    IN CONST INT *lpaElements,
@@ -536,7 +536,7 @@ NtUserSetSysColors(
   DWORD Ret = FALSE;
   NTSTATUS Status = STATUS_SUCCESS;
   UserEnterExclusive();
-  _SEH_TRY
+  _SEH2_TRY
   {
      ProbeForRead(lpaElements,
                    sizeof(INT),
@@ -547,11 +547,11 @@ NtUserSetSysColors(
 // Developers: We are thread locked and calling gdi.
      Ret = IntSetSysColors(cElements, (INT*)lpaElements, (COLORREF*)lpaRgbValues);
   }
-  _SEH_HANDLE
+  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
   {
-      Status = _SEH_GetExceptionCode();
+      Status = _SEH2_GetExceptionCode();
   }
-  _SEH_END;
+  _SEH2_END;
   if (!NT_SUCCESS(Status))
   {
       SetLastNtError(Status);
@@ -566,7 +566,7 @@ NtUserSetSysColors(
 }
 
 DWORD
-STDCALL
+APIENTRY
 NtUserSetThreadState(
    DWORD Unknown0,
    DWORD Unknown1)
@@ -577,7 +577,7 @@ NtUserSetThreadState(
 }
 
 BOOL
-NTAPI
+APIENTRY
 NtUserTrackMouseEvent(
    LPTRACKMOUSEEVENT lpEventTrack)
 {
@@ -588,7 +588,7 @@ NtUserTrackMouseEvent(
 
 
 DWORD
-STDCALL
+APIENTRY
 NtUserUpdateInputContext(
    DWORD Unknown0,
    DWORD Unknown1,
@@ -600,7 +600,7 @@ NtUserUpdateInputContext(
 }
 
 DWORD
-STDCALL
+APIENTRY
 NtUserUpdateInstance(
    DWORD Unknown0,
    DWORD Unknown1,
@@ -612,7 +612,7 @@ NtUserUpdateInstance(
 }
 
 BOOL
-NTAPI
+APIENTRY
 NtUserUserHandleGrantAccess(
    IN HANDLE hUserHandle,
    IN HANDLE hJob,
@@ -624,7 +624,7 @@ NtUserUserHandleGrantAccess(
 }
 
 DWORD
-STDCALL
+APIENTRY
 NtUserWaitForMsgAndEvent(
    DWORD Unknown0)
 {
@@ -634,7 +634,7 @@ NtUserWaitForMsgAndEvent(
 }
 
 DWORD
-STDCALL
+APIENTRY
 NtUserWin32PoolAllocationStats(
    DWORD Unknown0,
    DWORD Unknown1,
@@ -649,7 +649,7 @@ NtUserWin32PoolAllocationStats(
 }
 
 DWORD
-STDCALL
+APIENTRY
 NtUserYieldTask(VOID)
 {
    UNIMPLEMENTED
@@ -659,7 +659,7 @@ NtUserYieldTask(VOID)
 
 
 DWORD
-STDCALL
+APIENTRY
 NtUserCheckImeHotKey(
     DWORD dwUnknown1,
     DWORD dwUnknown2)
@@ -669,7 +669,7 @@ NtUserCheckImeHotKey(
 }
 
 DWORD
-NTAPI
+APIENTRY
 NtUserConsoleControl(
     DWORD dwUnknown1,
     DWORD dwUnknown2,
@@ -680,7 +680,7 @@ NtUserConsoleControl(
 }
 
 DWORD
-NTAPI
+APIENTRY
 NtUserCreateInputContext(
     DWORD dwUnknown1)
 {
@@ -689,7 +689,7 @@ NtUserCreateInputContext(
 }
 
 DWORD
-NTAPI
+APIENTRY
 NtUserDestroyInputContext(
     DWORD dwUnknown1)
 {
@@ -698,7 +698,7 @@ NtUserDestroyInputContext(
 }
 
 DWORD
-NTAPI
+APIENTRY
 NtUserDisableThreadIme(
     DWORD dwUnknown1)
 {
@@ -707,7 +707,7 @@ NtUserDisableThreadIme(
 }
 
 DWORD
-NTAPI
+APIENTRY
 NtUserGetAppImeLevel(
     DWORD dwUnknown1)
 {
@@ -716,7 +716,7 @@ NtUserGetAppImeLevel(
 }
 
 DWORD
-NTAPI
+APIENTRY
 NtUserGetAtomName(
     ATOM nAtom,
     LPWSTR lpBuffer)
@@ -726,7 +726,7 @@ NtUserGetAtomName(
 }
 
 DWORD
-NTAPI
+APIENTRY
 NtUserGetImeInfoEx(
     DWORD dwUnknown1,
     DWORD dwUnknown2)
@@ -736,7 +736,7 @@ NtUserGetImeInfoEx(
 }
 
 DWORD
-NTAPI
+APIENTRY
 NtUserGetRawInputBuffer(
     PRAWINPUT pData,
     PUINT pcbSize,
@@ -747,7 +747,7 @@ NtUserGetRawInputBuffer(
 }
 
 DWORD
-NTAPI
+APIENTRY
 NtUserGetRawInputData(
     HRAWINPUT hRawInput,
     UINT uiCommand,
@@ -760,7 +760,7 @@ NtUserGetRawInputData(
 }
 
 DWORD
-NTAPI
+APIENTRY
 NtUserGetRawInputDeviceInfo(
     HANDLE hDevice,
     UINT uiCommand,
@@ -773,7 +773,7 @@ NtUserGetRawInputDeviceInfo(
 }
 
 DWORD
-NTAPI
+APIENTRY
 NtUserGetRawInputDeviceList(
     PRAWINPUTDEVICELIST pRawInputDeviceList,
     PUINT puiNumDevices,
@@ -784,7 +784,7 @@ NtUserGetRawInputDeviceList(
 }
 
 DWORD
-NTAPI
+APIENTRY
 NtUserGetRegisteredRawInputDevices(
     PRAWINPUTDEVICE pRawInputDevices,
     PUINT puiNumDevices,
@@ -795,7 +795,7 @@ NtUserGetRegisteredRawInputDevices(
 }
 
 DWORD
-NTAPI
+APIENTRY
 NtUserHardErrorControl(
     DWORD dwUnknown1,
     DWORD dwUnknown2,
@@ -805,19 +805,46 @@ NtUserHardErrorControl(
     return 0;
 }
 
-DWORD
-NTAPI
+/*
+    Called from win32csr.
+ */
+NTSTATUS
+APIENTRY
 NtUserInitialize(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3)
+  DWORD   dwWinVersion,
+  HANDLE  hPowerRequestEvent,
+  HANDLE  hMediaRequestEvent)
 {
+    UserEnterExclusive();
     UNIMPLEMENTED;
-    return 0;
+// Check to see we have the right version.
+// Initialize Power Request List.
+// Initialize Media Change.
+// Initialize CSRSS
+// {
+//    Startup DxGraphics.
+//    calls ** IntGdiGetLanguageID() and sets it **.
+//    Enables Fonts drivers, Initialize Font table & Stock Fonts.
+// }
+// Set W32PF_Flags |= (W32PF_READSCREENACCESSGRANTED | W32PF_IOWINSTA)
+// Create Object Directory,,, Looks like create workstation. "\\Windows\\WindowStations"
+// Create Event for Diconnect Desktop.
+// Initialize Video.
+// {
+//     DrvInitConsole.
+//     DrvChangeDisplaySettings.
+//     Update Shared Device Caps.
+//     Initialize User Screen.
+// }
+// Create ThreadInfo for this Thread!
+// Set Global SERVERINFO Error flags.
+// Load Resources.
+    UserLeave();
+    return STATUS_SUCCESS;
 }
 
 DWORD
-NTAPI
+APIENTRY
 NtUserMinMaximize(
     HWND hWnd,
     UINT cmd, // Wine SW_ commands
@@ -828,7 +855,7 @@ NtUserMinMaximize(
 }
 
 DWORD
-NTAPI
+APIENTRY
 NtUserNotifyProcessCreate(
     DWORD dwUnknown1,
     DWORD dwUnknown2,
@@ -840,7 +867,7 @@ NtUserNotifyProcessCreate(
 }
 
 BOOL
-NTAPI
+APIENTRY
 NtUserPrintWindow(
     HWND hwnd,
     HDC  hdcBlt,
@@ -850,19 +877,19 @@ NtUserPrintWindow(
     return 0;
 }
 
-DWORD
-NTAPI
+NTSTATUS
+APIENTRY
 NtUserProcessConnect(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3)
+    HANDLE Process,
+    PUSERCONNECT pUserConnect,
+    DWORD Size)
 {
     UNIMPLEMENTED;
     return 0;
 }
 
 DWORD
-NTAPI
+APIENTRY
 NtUserQueryInformationThread(
     DWORD dwUnknown1,
     DWORD dwUnknown2,
@@ -875,7 +902,7 @@ NtUserQueryInformationThread(
 }
 
 DWORD
-NTAPI
+APIENTRY
 NtUserQueryInputContext(
     DWORD dwUnknown1,
     DWORD dwUnknown2)
@@ -885,7 +912,7 @@ NtUserQueryInputContext(
 }
 
 DWORD
-NTAPI
+APIENTRY
 NtUserRealInternalGetMessage(
     DWORD dwUnknown1,
     DWORD dwUnknown2,
@@ -899,7 +926,7 @@ NtUserRealInternalGetMessage(
 }
 
 DWORD
-NTAPI
+APIENTRY
 NtUserRealWaitMessageEx(
     DWORD dwUnknown1,
     DWORD dwUnknown2)
@@ -909,7 +936,7 @@ NtUserRealWaitMessageEx(
 }
 
 DWORD
-NTAPI
+APIENTRY
 NtUserRegisterUserApiHook(
     DWORD dwUnknown1,
     DWORD dwUnknown2)
@@ -919,7 +946,7 @@ NtUserRegisterUserApiHook(
 }
 
 BOOL
-NTAPI
+APIENTRY
 NtUserRegisterRawInputDevices(
     IN PCRAWINPUTDEVICE pRawInputDevices,
     IN UINT uiNumDevices,
@@ -930,7 +957,7 @@ NtUserRegisterRawInputDevices(
 }
 
 DWORD
-NTAPI
+APIENTRY
 NtUserResolveDesktop(
     DWORD dwUnknown1,
     DWORD dwUnknown2,
@@ -942,7 +969,7 @@ NtUserResolveDesktop(
 }
 
 DWORD
-NTAPI
+APIENTRY
 NtUserSetAppImeLevel(
     DWORD dwUnknown1,
     DWORD dwUnknown2)
@@ -952,7 +979,7 @@ NtUserSetAppImeLevel(
 }
 
 DWORD
-NTAPI
+APIENTRY
 NtUserSetImeInfoEx(
     DWORD dwUnknown1)
 {
@@ -961,7 +988,7 @@ NtUserSetImeInfoEx(
 }
 
 DWORD
-NTAPI
+APIENTRY
 NtUserSetInformationProcess(
     DWORD dwUnknown1,
     DWORD dwUnknown2,
@@ -973,7 +1000,7 @@ NtUserSetInformationProcess(
 }
 
 DWORD
-NTAPI
+APIENTRY
 NtUserSetInformationThread(
     DWORD dwUnknown1,
     DWORD dwUnknown2,
@@ -985,7 +1012,7 @@ NtUserSetInformationThread(
 }
 
 DWORD
-NTAPI
+APIENTRY
 NtUserSetThreadLayoutHandles(
     DWORD dwUnknown1,
     DWORD dwUnknown2)
@@ -995,7 +1022,7 @@ NtUserSetThreadLayoutHandles(
 }
 
 BOOL
-NTAPI
+APIENTRY
 NtUserSoundSentry(VOID)
 {
     UNIMPLEMENTED;
@@ -1003,7 +1030,7 @@ NtUserSoundSentry(VOID)
 }
 
 DWORD
-NTAPI
+APIENTRY
 NtUserTestForInteractiveUser(
     DWORD dwUnknown1)
 {
@@ -1013,7 +1040,7 @@ NtUserTestForInteractiveUser(
 
 /* http://www.cyber-ta.org/releases/malware-analysis/public/SOURCES/b47155634ccb2c30630da7e3666d3d07/b47155634ccb2c30630da7e3666d3d07.trace.html#NtUserGetIconSize */
 DWORD
-NTAPI
+APIENTRY
 NtUserCalcMenuBar(
     DWORD dwUnknown1,
     DWORD dwUnknown2,
@@ -1026,7 +1053,7 @@ NtUserCalcMenuBar(
 }
 
 DWORD
-NTAPI
+APIENTRY
 NtUserPaintMenuBar(
     DWORD dwUnknown1,
     DWORD dwUnknown2,
@@ -1040,7 +1067,7 @@ NtUserPaintMenuBar(
 }
 
 DWORD
-NTAPI
+APIENTRY
 NtUserUnregisterUserApiHook(VOID)
 {
     UNIMPLEMENTED;
@@ -1048,7 +1075,7 @@ NtUserUnregisterUserApiHook(VOID)
 }
 
 BOOL
-NTAPI
+APIENTRY
 NtUserGetLayeredWindowAttributes(
     HWND hwnd,
     COLORREF *pcrKey,
@@ -1062,7 +1089,7 @@ NtUserGetLayeredWindowAttributes(
 /* ValidateRect gets redirected to NtUserValidateRect:
    http://blog.csdn.net/ntdll/archive/2005/10/19/509299.aspx */
 BOOL
-NTAPI
+APIENTRY
 NtUserValidateRect(
     HWND hWnd,
     CONST RECT *lpRect)
@@ -1071,19 +1098,34 @@ NtUserValidateRect(
     return 0;
 }
 
-DWORD
-NTAPI
+BOOL
+APIENTRY
 NtUserValidateTimerCallback(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3)
+    HWND hWnd,
+    WPARAM wParam,
+    LPARAM lParam)
 {
-    UNIMPLEMENTED;
-    return 0;
+  BOOL Ret = FALSE;
+  PWINDOW_OBJECT Window = NULL;
+
+  UserEnterShared();
+
+  if (hWnd)
+  {
+     Window = UserGetWindowObject(hWnd);
+     if (!Window || !Window->Wnd)
+        goto Exit;
+  }
+
+  Ret = ValidateTimerCallback(PsGetCurrentThreadWin32Thread(), Window, wParam, lParam);
+
+Exit:
+  UserLeave();
+  return Ret;
 }
 
 DWORD
-NTAPI
+APIENTRY
 NtUserRemoteConnect(
     DWORD dwUnknown1,
     DWORD dwUnknown2,
@@ -1094,7 +1136,7 @@ NtUserRemoteConnect(
 }
 
 DWORD
-NTAPI
+APIENTRY
 NtUserRemoteRedrawRectangle(
     DWORD dwUnknown1,
     DWORD dwUnknown2,
@@ -1106,7 +1148,7 @@ NtUserRemoteRedrawRectangle(
 }
 
 DWORD
-NTAPI
+APIENTRY
 NtUserRemoteRedrawScreen(VOID)
 {
     UNIMPLEMENTED;
@@ -1114,7 +1156,7 @@ NtUserRemoteRedrawScreen(VOID)
 }
 
 DWORD
-NTAPI
+APIENTRY
 NtUserRemoteStopScreenUpdates(VOID)
 {
     UNIMPLEMENTED;
@@ -1122,7 +1164,7 @@ NtUserRemoteStopScreenUpdates(VOID)
 }
 
 DWORD
-NTAPI
+APIENTRY
 NtUserCtxDisplayIOCtl(
     DWORD dwUnknown1,
     DWORD dwUnknown2,

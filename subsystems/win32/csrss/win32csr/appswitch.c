@@ -7,8 +7,8 @@
  * PROGRAMMERS:     Johannes Anderwald (janderwald@reactos.org)
  */
 
+#define NDEBUG
 #include "w32csr.h"
-//#define NDEBUG
 #include <debug.h>
 
 typedef struct APPSWITCH_ITEM
@@ -25,6 +25,9 @@ static PAPPSWITCH_ITEM pRoot = NULL;
 static DWORD NumOfWindows = 0;
 static HWND hAppWindowDlg = NULL;
 static HHOOK hhk = NULL;
+
+UINT WINAPI PrivateExtractIconExW(LPCWSTR,int,HICON*,HICON*,UINT);
+
 
 BOOL
 CALLBACK 
@@ -55,7 +58,7 @@ EnumWindowEnumProc(
            if (GetModuleFileNameExW(hProcess, NULL, szFileName, MAX_PATH))
            {
                szFileName[MAX_PATH-1] = L'\0';
-               ExtractIconExW(szFileName, 0, &hIcon, NULL, 1);
+               PrivateExtractIconExW(szFileName, 0, &hIcon, NULL, 1);
            }
        }
     }
@@ -258,7 +261,7 @@ SwitchWindowDlgProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam)
 }
 
 VOID
-STDCALL
+WINAPI
 InitializeAppSwitchHook()
 {
     hhk = SetWindowsHookEx(WH_KEYBOARD_LL, KeyboardHookProc, NULL, 0);

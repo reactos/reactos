@@ -4,11 +4,13 @@
 #include "msgqueue.h"
 #include "window.h"
 
-typedef struct _DESKTOP_OBJECT
+typedef struct _DESKTOP
 {
     CSHORT Type;
     CSHORT Size;
     LIST_ENTRY ListEntry;
+
+    LIST_ENTRY PtiList;
 
     /* Pointer to the associated window station. */
     struct _WINSTATION_OBJECT *WindowStation;
@@ -23,12 +25,12 @@ typedef struct _DESKTOP_OBJECT
 
     LIST_ENTRY ShellHookWindows;
 
-    HANDLE hDesktopHeap;
+    PWIN32HEAP pheapDesktop;
     PSECTION_OBJECT DesktopHeapSection;
-    PDESKTOP DesktopInfo;
-} DESKTOP_OBJECT, *PDESKTOP_OBJECT;
+    PDESKTOPINFO DesktopInfo;
+} DESKTOP, *PDESKTOP;
 
-extern PDESKTOP_OBJECT InputDesktop;
+extern PDESKTOP InputDesktop;
 extern HDESK InputDesktopHandle;
 extern PWINDOWCLASS DesktopWindowClass;
 extern HDC ScreenDeviceContext;
@@ -47,7 +49,7 @@ NTSTATUS FASTCALL
 CleanupDesktopImpl(VOID);
 
 NTSTATUS
-STDCALL
+APIENTRY
 IntDesktopObjectParse(IN PVOID ParseObject,
                       IN PVOID ObjectType,
                       IN OUT PACCESS_STATE AccessState,
@@ -59,11 +61,11 @@ IntDesktopObjectParse(IN PVOID ParseObject,
                       IN PSECURITY_QUALITY_OF_SERVICE SecurityQos OPTIONAL,
                       OUT PVOID *Object);
 
-VOID STDCALL
+VOID APIENTRY
 IntDesktopObjectDelete(PWIN32_DELETEMETHOD_PARAMETERS Parameters);
 
 VOID FASTCALL
-IntGetDesktopWorkArea(PDESKTOP_OBJECT Desktop, PRECT Rect);
+IntGetDesktopWorkArea(PDESKTOP Desktop, PRECT Rect);
 
 LRESULT CALLBACK
 IntDesktopWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -86,19 +88,19 @@ IntGetFocusMessageQueue(VOID);
 VOID FASTCALL
 IntSetFocusMessageQueue(PUSER_MESSAGE_QUEUE NewQueue);
 
-PDESKTOP_OBJECT FASTCALL
+PDESKTOP FASTCALL
 IntGetActiveDesktop(VOID);
 
 NTSTATUS FASTCALL
-co_IntShowDesktop(PDESKTOP_OBJECT Desktop, ULONG Width, ULONG Height);
+co_IntShowDesktop(PDESKTOP Desktop, ULONG Width, ULONG Height);
 
 NTSTATUS FASTCALL
-IntHideDesktop(PDESKTOP_OBJECT Desktop);
+IntHideDesktop(PDESKTOP Desktop);
 
 HDESK FASTCALL
-IntGetDesktopObjectHandle(PDESKTOP_OBJECT DesktopObject);
+IntGetDesktopObjectHandle(PDESKTOP DesktopObject);
 
-BOOL IntSetThreadDesktop(IN PDESKTOP_OBJECT DesktopObject,
+BOOL IntSetThreadDesktop(IN PDESKTOP DesktopObject,
                          IN BOOL FreeOnFailure);
 
 NTSTATUS FASTCALL
@@ -106,7 +108,7 @@ IntValidateDesktopHandle(
    HDESK Desktop,
    KPROCESSOR_MODE AccessMode,
    ACCESS_MASK DesiredAccess,
-   PDESKTOP_OBJECT *Object);
+   PDESKTOP *Object);
 
 NTSTATUS FASTCALL
 IntParseDesktopPath(PEPROCESS Process,
@@ -137,7 +139,7 @@ static __inline PVOID
 DesktopHeapAlloc(IN PDESKTOP Desktop,
                  IN SIZE_T Bytes)
 {
-    return RtlAllocateHeap(Desktop->hKernelHeap,
+    return RtlAllocateHeap(Desktop->pheapDesktop,
                            HEAP_NO_SERIALIZE,
                            Bytes);
 }
@@ -146,7 +148,7 @@ static __inline BOOL
 DesktopHeapFree(IN PDESKTOP Desktop,
                 IN PVOID lpMem)
 {
-    return RtlFreeHeap(Desktop->hKernelHeap,
+    return RtlFreeHeap(Desktop->pheapDesktop,
                        HEAP_NO_SERIALIZE,
                        lpMem);
 }
@@ -158,7 +160,7 @@ DesktopHeapReAlloc(IN PDESKTOP Desktop,
 {
 #if 0
     /* NOTE: ntoskrnl doesn't export RtlReAllocateHeap... */
-    return RtlReAllocateHeap(Desktop->hKernelHeap,
+    return RtlReAllocateHeap(Desktop->pheapDesktop,
                              HEAP_NO_SERIALIZE,
                              lpMem,
                              Bytes);
@@ -166,14 +168,14 @@ DesktopHeapReAlloc(IN PDESKTOP Desktop,
     SIZE_T PrevSize;
     PVOID pNew;
 
-    PrevSize = RtlSizeHeap(Desktop->hKernelHeap,
+    PrevSize = RtlSizeHeap(Desktop->pheapDesktop,
                            HEAP_NO_SERIALIZE,
                            lpMem);
 
     if (PrevSize == Bytes)
         return lpMem;
 
-    pNew = RtlAllocateHeap(Desktop->hKernelHeap,
+    pNew = RtlAllocateHeap(Desktop->pheapDesktop,
                            HEAP_NO_SERIALIZE,
                            Bytes);
     if (pNew != NULL)
@@ -185,7 +187,7 @@ DesktopHeapReAlloc(IN PDESKTOP Desktop,
                       lpMem,
                       Bytes);
 
-        RtlFreeHeap(Desktop->hKernelHeap,
+        RtlFreeHeap(Desktop->pheapDesktop,
                     HEAP_NO_SERIALIZE,
                     lpMem);
     }
@@ -198,16 +200,22 @@ static __inline ULONG_PTR
 DesktopHeapGetUserDelta(VOID)
 {
     PW32HEAP_USER_MAPPING Mapping;
-    HANDLE hDesktopHeap;
+    PTHREADINFO pti;
+    PW32PROCESS W32Process;
+    PWIN32HEAP pheapDesktop;
     ULONG_PTR Delta = 0;
 
-    ASSERT(PsGetCurrentThreadWin32Thread()->Desktop != NULL);
-    hDesktopHeap = PsGetCurrentThreadWin32Thread()->Desktop->hDesktopHeap;
+    pti = PsGetCurrentThreadWin32Thread();
+    if (!pti->Desktop)
+        return 0;
 
-    Mapping = PsGetCurrentProcessWin32Process()->HeapMappings.Next;
+    pheapDesktop = pti->Desktop->pheapDesktop;
+
+    W32Process = PsGetCurrentProcessWin32Process();
+    Mapping = W32Process->HeapMappings.Next;
     while (Mapping != NULL)
     {
-        if (Mapping->KernelMapping == (PVOID)hDesktopHeap)
+        if (Mapping->KernelMapping == (PVOID)pheapDesktop)
         {
             Delta = (ULONG_PTR)Mapping->KernelMapping - (ULONG_PTR)Mapping->UserMapping;
             break;
@@ -223,8 +231,10 @@ static __inline PVOID
 DesktopHeapAddressToUser(PVOID lpMem)
 {
     PW32HEAP_USER_MAPPING Mapping;
+    PW32PROCESS W32Process;
 
-    Mapping = PsGetCurrentProcessWin32Process()->HeapMappings.Next;
+    W32Process = PsGetCurrentProcessWin32Process();
+    Mapping = W32Process->HeapMappings.Next;
     while (Mapping != NULL)
     {
         if ((ULONG_PTR)lpMem >= (ULONG_PTR)Mapping->KernelMapping &&

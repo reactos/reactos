@@ -36,12 +36,12 @@
 /* FUNCTIONS *****************************************************************/
 
 BOOL
-STDCALL
+APIENTRY
 EngRestoreFloatingPointState ( IN VOID *Buffer )
 {
   NTSTATUS Status;
   Status = KeRestoreFloatingPointState((PKFLOATING_SAVE)Buffer);
-  if (Status != STATUS_SUCCESS)
+  if (!NT_SUCCESS(Status))
     {
       return FALSE;
     }
@@ -49,7 +49,7 @@ EngRestoreFloatingPointState ( IN VOID *Buffer )
 }
 
 ULONG
-STDCALL
+APIENTRY
 EngSaveFloatingPointState(OUT VOID  *Buffer,
      IN ULONG  BufferSize)
 {

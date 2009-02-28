@@ -10,7 +10,7 @@
  */
 
 #define DC_GET_VAL( func_type, func_name, dc_field ) \
-func_type STDCALL  func_name( HDC hdc ) \
+func_type APIENTRY  func_name( HDC hdc ) \
 {                                   \
   func_type  ft;                    \
   PDC  dc = DC_LockDc( hdc );       \
@@ -44,7 +44,7 @@ VOID FASTCALL Int##FuncName ( PDC dc, LP##type pt) \
 }
 
 #if 0
-BOOL STDCALL NtGdi##FuncName ( HDC hdc, LP##type pt ) \
+BOOL APIENTRY NtGdi##FuncName ( HDC hdc, LP##type pt ) \
 { \
   NTSTATUS Status = STATUS_SUCCESS; \
   type Safept; \
@@ -61,18 +61,18 @@ BOOL STDCALL NtGdi##FuncName ( HDC hdc, LP##type pt ) \
   } \
   Int##FuncName( dc, &Safept); \
   DC_UnlockDc(dc); \
-  _SEH_TRY \
+  _SEH2_TRY \
   { \
     ProbeForWrite(pt, \
                   sizeof( type ), \
                   1); \
     *pt = Safept; \
   } \
-  _SEH_HANDLE \
+  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) \
   { \
-    Status = _SEH_GetExceptionCode(); \
+    Status = _SEH2_GetExceptionCode(); \
   } \
-  _SEH_END; \
+  _SEH2_END; \
   if(!NT_SUCCESS(Status)) \
   { \
     SetLastNtError(Status); \
@@ -83,7 +83,7 @@ BOOL STDCALL NtGdi##FuncName ( HDC hdc, LP##type pt ) \
 #endif
 
 #define DC_SET_MODE( func_name, dc_field, min_val, max_val ) \
-INT STDCALL  func_name( HDC hdc, INT mode ) \
+INT APIENTRY  func_name( HDC hdc, INT mode ) \
 {                                           \
   INT  prevMode;                            \
   PDC  dc;                                  \
@@ -117,7 +117,7 @@ CopytoUserDcAttr(PDC dc, PDC_ATTR Dc_Attr)
   dc->Dc_Attr.mxDeviceToWorld = dc->DcLevel.mxDeviceToWorld;
   dc->Dc_Attr.mxWorldToPage = dc->DcLevel.mxWorldToPage;
 
-  _SEH_TRY
+  _SEH2_TRY
   {
       ProbeForWrite( Dc_Attr,
              sizeof(DC_ATTR),
@@ -126,11 +126,11 @@ CopytoUserDcAttr(PDC dc, PDC_ATTR Dc_Attr)
                 &dc->Dc_Attr,
              sizeof(DC_ATTR));
   }
-  _SEH_HANDLE
+  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
   {
-     Status = _SEH_GetExceptionCode();
+     Status = _SEH2_GetExceptionCode();
   }
-  _SEH_END;
+  _SEH2_END;
 }
 
 
@@ -170,7 +170,6 @@ DC_GET_VAL( INT, IntGdiGetStretchBltMode, jStretchBltMode )
 DC_GET_VAL( UINT, IntGdiGetTextAlign, lTextAlign )
 DC_GET_VAL( COLORREF, IntGdiGetTextColor, crForegroundClr )
 
-DC_GET_VAL_EX( GetViewportExtEx, szlViewportExt.cx, szlViewportExt.cy, SIZE, cx, cy )
 DC_GET_VAL_EX( GetViewportOrgEx, ptlViewportOrg.x, ptlViewportOrg.y, POINT, x, y )
 DC_GET_VAL_EX( GetWindowExtEx, szlWindowExt.cx, szlWindowExt.cy, SIZE, cx, cy )
 DC_GET_VAL_EX( GetWindowOrgEx, ptlWindowOrg.x, ptlWindowOrg.y, POINT, x, y )
@@ -199,7 +198,7 @@ IntGdiSetBkColor(HDC hDC, COLORREF color)
   oldColor = Dc_Attr->crBackgroundClr;
   Dc_Attr->crBackgroundClr = color;
   Dc_Attr->ulBackgroundClr = (ULONG)color;
-  Dc_Attr->ulDirty_ &= ~DIRTY_LINE; // Clear Flag if set.
+  Dc_Attr->ulDirty_ &= ~(DIRTY_BACKGROUND|DIRTY_LINE|DIRTY_FILL); // Clear Flag if set.
   hBrush = Dc_Attr->hbrush;
   DC_UnlockDc(dc);
   NtGdiSelectBrush(hDC, hBrush);
@@ -271,6 +270,7 @@ IntGdiSetTextColor(HDC hDC,
   oldColor = Dc_Attr->crForegroundClr;
   Dc_Attr->crForegroundClr = color;
   hBrush = Dc_Attr->hbrush;
+  Dc_Attr->ulDirty_ &= ~(DIRTY_TEXT|DIRTY_LINE|DIRTY_FILL);
   DC_UnlockDc( dc );
   NtGdiSelectBrush(hDC, hBrush);
   return  oldColor;

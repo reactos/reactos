@@ -85,9 +85,9 @@ IntDestroyClass(IN OUT PWINDOWCLASS Class)
     }
 
     /* free the structure */
-    if (Class->Desktop != NULL)
+    if (Class->rpdeskParent != NULL)
     {
-        DesktopHeapFree(Class->Desktop,
+        DesktopHeapFree(Class->rpdeskParent,
                         Class);
     }
     else
@@ -403,7 +403,7 @@ IntGetClassForDesktop(IN OUT PWINDOWCLASS BaseClass,
     ASSERT(Desktop != NULL);
     ASSERT(BaseClass->Base == BaseClass);
 
-    if (BaseClass->Desktop == Desktop)
+    if (BaseClass->rpdeskParent == Desktop)
     {
         /* it is most likely that a window is created on the same
            desktop as the window class. */
@@ -411,7 +411,7 @@ IntGetClassForDesktop(IN OUT PWINDOWCLASS BaseClass,
         return BaseClass;
     }
 
-    if (BaseClass->Desktop == NULL)
+    if (BaseClass->rpdeskParent == NULL)
     {
         ASSERT(BaseClass->Windows == 0);
         ASSERT(BaseClass->Clone == NULL);
@@ -430,7 +430,7 @@ IntGetClassForDesktop(IN OUT PWINDOWCLASS BaseClass,
         Class = BaseClass->Clone;
         while (Class != NULL)
         {
-            if (Class->Desktop == Desktop)
+            if (Class->rpdeskParent == Desktop)
             {
                 ASSERT(Class->Base == BaseClass);
                 ASSERT(Class->Clone == NULL);
@@ -457,10 +457,10 @@ IntGetClassForDesktop(IN OUT PWINDOWCLASS BaseClass,
                           ClassSize);
 
             /* update some pointers and link the class */
-            Class->Desktop = Desktop;
+            Class->rpdeskParent = Desktop;
             Class->Windows = 0;
 
-            if (BaseClass->Desktop == NULL)
+            if (BaseClass->rpdeskParent == NULL)
             {
                 /* we don't really need the base class on the shared
                    heap anymore, delete it so the only class left is
@@ -528,9 +528,9 @@ IntMakeCloneBaseClass(IN OUT PWINDOWCLASS Class,
 
     ASSERT(Class->Base != Class);
     ASSERT(Class->Base->Clone != NULL);
-    ASSERT(Class->Desktop != NULL);
+    ASSERT(Class->rpdeskParent != NULL);
     ASSERT(Class->Windows != 0);
-    ASSERT(Class->Base->Desktop != NULL);
+    ASSERT(Class->Base->rpdeskParent != NULL);
     ASSERT(Class->Base->Windows == 0);
 
     /* unlink the clone */
@@ -563,7 +563,7 @@ IntMakeCloneBaseClass(IN OUT PWINDOWCLASS Class,
 
 VOID
 IntDereferenceClass(IN OUT PWINDOWCLASS Class,
-                    IN PDESKTOP Desktop,
+                    IN PDESKTOPINFO Desktop,
                     IN PW32PROCESSINFO pi)
 {
     PWINDOWCLASS *PrevLink, BaseClass, CurrentClass;
@@ -648,7 +648,7 @@ IntMoveClassToSharedHeap(IN OUT PWINDOWCLASS Class,
     SIZE_T ClassSize;
 
     ASSERT(Class->Base == Class);
-    ASSERT(Class->Desktop != NULL);
+    ASSERT(Class->rpdeskParent != NULL);
     ASSERT(Class->Windows == 0);
     ASSERT(Class->Clone == NULL);
 
@@ -662,7 +662,7 @@ IntMoveClassToSharedHeap(IN OUT PWINDOWCLASS Class,
                       Class,
                       ClassSize);
 
-        NewClass->Desktop = NULL;
+        NewClass->rpdeskParent = NULL;
         NewClass->Base = NewClass;
 
         /* replace the class in the list */
@@ -704,7 +704,7 @@ IntCheckDesktopClasses(IN PDESKTOP Desktop,
 
         ASSERT(Class->Base == Class);
 
-        if (Class->Desktop == Desktop &&
+        if (Class->rpdeskParent == Desktop &&
             Class->Windows == 0)
         {
             /* there shouldn't be any clones around anymore! */
@@ -838,7 +838,7 @@ IntCreateClass(IN CONST WNDCLASSEXW* lpwcx,
         RtlZeroMemory(Class,
                       ClassSize);
 
-        Class->Desktop = Desktop;
+        Class->rpdeskParent = Desktop;
         Class->Base = Class;
         Class->Atom = Atom;
 
@@ -849,7 +849,7 @@ IntCreateClass(IN CONST WNDCLASSEXW* lpwcx,
             Class->System = TRUE;
         }
 
-        _SEH_TRY
+        _SEH2_TRY
         {
             PWSTR pszMenuNameBuffer = pszMenuName;
 
@@ -898,7 +898,7 @@ IntCreateClass(IN CONST WNDCLASSEXW* lpwcx,
                     DPRINT1("Failed to convert unicode menu name to ansi!\n");
 
                     /* life would've been much prettier if ntoskrnl exported RtlRaiseStatus()... */
-                    _SEH_LEAVE;
+                    _SEH2_LEAVE;
                 }
             }
             else
@@ -910,11 +910,11 @@ IntCreateClass(IN CONST WNDCLASSEXW* lpwcx,
             if (Class->Style & CS_GLOBALCLASS)
                 Class->Global = TRUE;
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
 
         if (!NT_SUCCESS(Status))
         {
@@ -1131,6 +1131,7 @@ UserRegisterClass(IN CONST WNDCLASSEXW* lpwcx,
                   IN WNDPROC wpExtra,
                   IN DWORD dwFlags)
 {
+    PTHREADINFO pti;
     PW32THREADINFO ti;
     PW32PROCESSINFO pi;
     PWINDOWCLASS Class;
@@ -1139,6 +1140,7 @@ UserRegisterClass(IN CONST WNDCLASSEXW* lpwcx,
 
     /* NOTE: Accessing the buffers in ClassName and MenuName may raise exceptions! */
 
+    pti = PsGetCurrentThreadWin32Thread();
     ti = GetW32ThreadInfo();
     if (ti == NULL || !ti->kpi->RegisteredSysClasses)
     {
@@ -1180,7 +1182,7 @@ UserRegisterClass(IN CONST WNDCLASSEXW* lpwcx,
                            MenuName,
                            wpExtra,
                            dwFlags,
-                           ti->Desktop,
+                           pti->Desktop,
                            pi);
 
     if (Class != NULL)
@@ -1274,7 +1276,7 @@ UserGetClassName(IN PWINDOWCLASS Class,
 
     /* Note: Accessing the buffer in ClassName may raise an exception! */
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         if (Ansi)
         {
@@ -1311,7 +1313,7 @@ UserGetClassName(IN PWINDOWCLASS Class,
                 if (szTemp == NULL)
                 {
                     SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-                    _SEH_LEAVE;
+                    _SEH2_LEAVE;
                 }
 
                 /* query the class name */
@@ -1338,7 +1340,7 @@ UserGetClassName(IN PWINDOWCLASS Class,
                 if (!NT_SUCCESS(Status))
                 {
                     SetLastNtError(Status);
-                    _SEH_LEAVE;
+                    _SEH2_LEAVE;
                 }
             }
 
@@ -1359,17 +1361,17 @@ UserGetClassName(IN PWINDOWCLASS Class,
             if (!NT_SUCCESS(Status))
             {
                 SetLastNtError(Status);
-                _SEH_LEAVE;
+                _SEH2_LEAVE;
             }
 
             Ret = BufLen / sizeof(WCHAR);
         }
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        SetLastNtError(_SEH_GetExceptionCode());
+        SetLastNtError(_SEH2_GetExceptionCode());
     }
-    _SEH_END;
+    _SEH2_END;
 
     if (Ansi && szTemp != NULL && szTemp != szStaticTemp)
     {
@@ -1491,7 +1493,7 @@ IntSetClassMenuName(IN PWINDOWCLASS Class,
                                 AnsiString.MaximumLength);
         if (strBufW != NULL)
         {
-            _SEH_TRY
+            _SEH2_TRY
             {
                 NTSTATUS Status;
 
@@ -1509,16 +1511,16 @@ IntSetClassMenuName(IN PWINDOWCLASS Class,
                 if (!NT_SUCCESS(Status))
                 {
                     SetLastNtError(Status);
-                    _SEH_LEAVE;
+                    _SEH2_LEAVE;
                 }
 
                 Ret = TRUE;
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-                SetLastNtError(_SEH_GetExceptionCode());
+                SetLastNtError(_SEH2_GetExceptionCode());
             }
-            _SEH_END;
+            _SEH2_END;
 
             if (Ret)
             {
@@ -1876,7 +1878,7 @@ UserRegisterSystemClasses(IN ULONG Count,
 /* SYSCALLS *****************************************************************/
 
 
-RTL_ATOM NTAPI
+RTL_ATOM APIENTRY
 NtUserRegisterClassEx(IN CONST WNDCLASSEXW* lpwcx,
                       IN PUNICODE_STRING ClassName,
                       IN PUNICODE_STRING MenuName,
@@ -1908,7 +1910,7 @@ NtUserRegisterClassEx(IN CONST WNDCLASSEXW* lpwcx,
 
     UserEnterExclusive();
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Probe the parameters and basic parameter checks */
         if (ProbeForReadUint(&lpwcx->cbSize) != sizeof(WNDCLASSEXW))
@@ -1961,7 +1963,7 @@ NtUserRegisterClassEx(IN CONST WNDCLASSEXW* lpwcx,
         {
 InvalidParameter:
             SetLastWin32Error(ERROR_INVALID_PARAMETER);
-            _SEH_LEAVE;
+            _SEH2_LEAVE;
         }
 
         /* Register the class */
@@ -1973,11 +1975,11 @@ InvalidParameter:
                                 Flags);
 
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        SetLastNtError(_SEH_GetExceptionCode());
+        SetLastNtError(_SEH2_GetExceptionCode());
     }
-    _SEH_END;
+    _SEH2_END;
 
     UserLeave();
 
@@ -1986,7 +1988,7 @@ InvalidParameter:
 
 
 RTL_ATOM
-NTAPI
+APIENTRY
 NtUserRegisterClassExWOW(
     WNDCLASSEXW* lpwcx,
     PUNICODE_STRING ClassName,
@@ -2002,7 +2004,7 @@ NtUserRegisterClassExWOW(
 
     UserEnterExclusive();
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Probe the parameters and basic parameter checks */
         if (ProbeForReadUint(&lpwcx->cbSize) != sizeof(WNDCLASSEXW))
@@ -2067,7 +2069,7 @@ NtUserRegisterClassExWOW(
         {
 InvalidParameter:
             SetLastWin32Error(ERROR_INVALID_PARAMETER);
-            _SEH_LEAVE;
+            _SEH2_LEAVE;
         }
 
         /* Register the class */
@@ -2079,11 +2081,11 @@ InvalidParameter:
 //                                Flags);
 
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        SetLastNtError(_SEH_GetExceptionCode());
+        SetLastNtError(_SEH2_GetExceptionCode());
     }
-    _SEH_END;
+    _SEH2_END;
 
     UserLeave();
 
@@ -2091,7 +2093,7 @@ InvalidParameter:
 }
 
 
-ULONG_PTR NTAPI
+ULONG_PTR APIENTRY
 NtUserGetClassLong(IN HWND hWnd,
                    IN INT Offset,
                    IN BOOL Ansi)
@@ -2128,7 +2130,7 @@ NtUserGetClassLong(IN HWND hWnd,
 
 
 
-ULONG_PTR STDCALL
+ULONG_PTR APIENTRY
 NtUserSetClassLong(HWND hWnd,
                    INT Offset,
                    ULONG_PTR dwNewLong,
@@ -2153,7 +2155,7 @@ NtUserSetClassLong(HWND hWnd,
             goto Cleanup;
         }
 
-        _SEH_TRY
+        _SEH2_TRY
         {
             UNICODE_STRING Value;
 
@@ -2182,7 +2184,7 @@ NtUserSetClassLong(HWND hWnd,
                     {
 InvalidParameter:
                         SetLastWin32Error(ERROR_INVALID_PARAMETER);
-                        _SEH_LEAVE;
+                        _SEH2_LEAVE;
                     }
                 }
 
@@ -2194,11 +2196,11 @@ InvalidParameter:
                                       dwNewLong,
                                       Ansi);
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            SetLastNtError(_SEH_GetExceptionCode());
+            SetLastNtError(_SEH2_GetExceptionCode());
         }
-        _SEH_END;
+        _SEH2_END;
     }
 
 Cleanup:
@@ -2208,7 +2210,7 @@ Cleanup:
 }
 
 WORD
-STDCALL
+APIENTRY
 NtUserSetClassWord(
   HWND hWnd,
   INT nIndex,
@@ -2217,7 +2219,7 @@ NtUserSetClassWord(
    return(0);
 }
 
-BOOL NTAPI
+BOOL APIENTRY
 NtUserUnregisterClass(IN PUNICODE_STRING ClassNameOrAtom,
                       IN HINSTANCE hInstance,
                       OUT PCLSMENUNAME pClassMenuName)
@@ -2227,7 +2229,7 @@ NtUserUnregisterClass(IN PUNICODE_STRING ClassNameOrAtom,
 
     UserEnterExclusive();
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* probe the paramters */
         CapturedClassName = ProbeForReadUnicodeString(ClassNameOrAtom);
@@ -2248,7 +2250,7 @@ NtUserUnregisterClass(IN PUNICODE_STRING ClassNameOrAtom,
             {
 InvalidParameter:
                 SetLastWin32Error(ERROR_INVALID_PARAMETER);
-                _SEH_LEAVE;
+                _SEH2_LEAVE;
             }
         }
 
@@ -2256,11 +2258,11 @@ InvalidParameter:
         Ret = UserUnregisterClass(&CapturedClassName,
                                   hInstance);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        SetLastNtError(_SEH_GetExceptionCode());
+        SetLastNtError(_SEH2_GetExceptionCode());
     }
-    _SEH_END;
+    _SEH2_END;
 
     UserLeave();
 
@@ -2268,7 +2270,7 @@ InvalidParameter:
 }
 
 /* NOTE: for system classes hInstance is not NULL here, but User32Instance */
-BOOL STDCALL
+BOOL APIENTRY
 NtUserGetClassInfo(
    HINSTANCE hInstance,
    PUNICODE_STRING ClassName,
@@ -2292,7 +2294,7 @@ NtUserGetClassInfo(
         ERR("GetW32ProcessInfo() returned NULL!\n");
         goto Cleanup;
     }
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* probe the paramters */
         CapturedClassName = ProbeForReadUnicodeString(ClassName);
@@ -2326,7 +2328,7 @@ NtUserGetClassInfo(
         {
 InvalidParameter:
             SetLastWin32Error(ERROR_INVALID_PARAMETER);
-            _SEH_LEAVE;
+            _SEH2_LEAVE;
         }
 
         ProbeForWrite(lpWndClassEx,
@@ -2367,11 +2369,11 @@ InvalidParameter:
          else
             SetLastWin32Error(ERROR_CLASS_DOES_NOT_EXIST);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
          SetLastWin32Error(ERROR_CLASS_DOES_NOT_EXIST);
     }
-    _SEH_END;
+    _SEH2_END;
 
 Cleanup:
     UserLeave();
@@ -2380,7 +2382,7 @@ Cleanup:
 
 
 
-INT NTAPI
+INT APIENTRY
 NtUserGetClassName (IN HWND hWnd,
                     OUT PUNICODE_STRING ClassName,
                     IN BOOL Ansi)
@@ -2394,7 +2396,7 @@ NtUserGetClassName (IN HWND hWnd,
     Window = UserGetWindowObject(hWnd);
     if (Window != NULL)
     {
-        _SEH_TRY
+        _SEH2_TRY
         {
             ProbeForWriteUnicodeString(ClassName);
             CapturedClassName = *ClassName;
@@ -2410,11 +2412,11 @@ NtUserGetClassName (IN HWND hWnd,
                 ClassName->Length = CapturedClassName.Length;
             }
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            SetLastNtError(_SEH_GetExceptionCode());
+            SetLastNtError(_SEH2_GetExceptionCode());
         }
-        _SEH_END;
+        _SEH2_END;
     }
 
     UserLeave();
@@ -2422,7 +2424,7 @@ NtUserGetClassName (IN HWND hWnd,
     return Ret;
 }
 
-DWORD STDCALL
+DWORD APIENTRY
 NtUserGetWOWClass(DWORD Unknown0,
                   DWORD Unknown1)
 {

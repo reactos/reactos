@@ -21,7 +21,7 @@
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 NTSTATUS
-NTAPI
+APIENTRY
 NtUserEnumDisplaySettings(
    PUNICODE_STRING pusDeviceName,
    DWORD iModeNum,
@@ -35,18 +35,18 @@ NtUserEnumDisplaySettings(
     USHORT Size = 0, ExtraSize = 0;
 
     /* Copy the devmode */
-    _SEH_TRY
+    _SEH2_TRY
     {
         ProbeForRead(lpDevMode, sizeof(DEVMODEW), 1);
         Size = lpDevMode->dmSize;
         ExtraSize = lpDevMode->dmDriverExtra;
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         DPRINT("FIXME ? : Out of range of DEVMODEW size \n");
-        _SEH_YIELD(return _SEH_GetExceptionCode());
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
     }
-    _SEH_END;
+    _SEH2_END;
 
     if (Size != sizeof(DEVMODEW))
     {
@@ -86,7 +86,7 @@ NtUserEnumDisplaySettings(
     }
 
     /* Copy some information back */
-    _SEH_TRY
+    _SEH2_TRY
     {
         ProbeForWrite(lpDevMode,Size + ExtraSize, 1);
         lpDevMode->dmPelsWidth = pSafeDevMode->dmPelsWidth;
@@ -101,11 +101,11 @@ NtUserEnumDisplaySettings(
             memcpy((PCHAR)lpDevMode + Size, (PCHAR)pSafeDevMode + Size, ExtraSize);
         }
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
 
     ExFreePool(pSafeDevMode);
     return Status;
@@ -113,7 +113,7 @@ NtUserEnumDisplaySettings(
 
 
 LONG
-NTAPI
+APIENTRY
 NtUserChangeDisplaySettings(
    PUNICODE_STRING lpszDeviceName,
    LPDEVMODEW lpDevMode,

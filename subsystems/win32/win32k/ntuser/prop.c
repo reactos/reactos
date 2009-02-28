@@ -56,7 +56,7 @@ IntGetProp(PWINDOW_OBJECT Window, ATOM Atom)
    return(NULL);
 }
 
-NTSTATUS STDCALL
+NTSTATUS APIENTRY
 NtUserBuildPropList(HWND hWnd,
                     LPVOID Buffer,
                     DWORD BufferSize,
@@ -129,7 +129,7 @@ CLEANUP:
    END_CLEANUP;
 }
 
-HANDLE STDCALL
+HANDLE APIENTRY
 NtUserRemoveProp(HWND hWnd, ATOM Atom)
 {
    PWINDOW_OBJECT Window;
@@ -190,7 +190,7 @@ IntSetProp(PWINDOW_OBJECT pWnd, ATOM Atom, HANDLE Data)
 }
 
 
-BOOL STDCALL
+BOOL APIENTRY
 NtUserSetProp(HWND hWnd, ATOM Atom, HANDLE Data)
 {
    PWINDOW_OBJECT Window;

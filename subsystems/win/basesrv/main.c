@@ -32,7 +32,7 @@ HANDLE DllHandle = 0;
 
 /* FUNCTIONS *****************************************************************/
 
-BOOL STDCALL DllMain(HANDLE hDll, DWORD dwReason, LPVOID lpReserved)
+BOOL WINAPI DllMain(HANDLE hDll, DWORD dwReason, LPVOID lpReserved)
 {
   if (DLL_PROCESS_ATTACH == dwReason)
     {

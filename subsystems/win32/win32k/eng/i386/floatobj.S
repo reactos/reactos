@@ -1,5 +1,5 @@
 /* 
- * COPYRIGHT:         See COPYING in the top level directory
+ * COPYRIGHT:         LGPL, see LGPL.txt in the top level directory
  * PROJECT:           ReactOS Win32 subsystem
  * PURPOSE:           FLOATOBJ floating point emulation functions for x86
  * FILE:              subsystems/win32/win32k/objects/i386/floatobj.S
@@ -33,7 +33,7 @@
  * Optimization notes:
  *
  * - shld is slow (4 cycles) and not pairable, mov + shl is faster
- * - esp is used, beacuse it's available earlier
+ * - esp is used, because it's available earlier
  * - bsr is very slow on old cpus (up to 72 cycles on a p1) while being much
  *   faster on modern cpus (2-11 cycles). Workarounds using branch trees or
  *   table lookups are of no use nowadays.
@@ -570,7 +570,6 @@ _FLOATOBJ_LessThanLong@8:
  */
 _FLOATOBJ_Mul@8:
 .global _FLOATOBJ_Mul@8
-//jmp _FLOATOBJ_Mul2@8
 	push ebp
 	mov ebp, esp
 

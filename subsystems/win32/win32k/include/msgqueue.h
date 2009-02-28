@@ -116,7 +116,7 @@ typedef struct _USER_MESSAGE_QUEUE
   LIST_ENTRY LocalDispatchingMessagesHead;
 
   /* Desktop that the message queue is attached to */
-  struct _DESKTOP_OBJECT *Desktop;
+  struct _DESKTOP *Desktop;
 } USER_MESSAGE_QUEUE, *PUSER_MESSAGE_QUEUE;
 
 BOOL FASTCALL
@@ -135,7 +135,7 @@ MsqPostMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 	       MSG* Msg, BOOLEAN FreeLParam, DWORD MessageBits);
 VOID FASTCALL
 MsqPostQuitMessage(PUSER_MESSAGE_QUEUE MessageQueue, ULONG ExitCode);
-BOOLEAN STDCALL
+BOOLEAN APIENTRY
 co_MsqFindMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
 	       IN BOOLEAN Hardware,
 	       IN BOOLEAN Remove,
@@ -204,8 +204,8 @@ MsqSetStateWindow(PUSER_MESSAGE_QUEUE MessageQueue, ULONG Type, HWND hWnd);
 __inline BOOL MsqIsSignaled( PUSER_MESSAGE_QUEUE queue );
 __inline VOID MsqSetQueueBits( PUSER_MESSAGE_QUEUE queue, WORD bits );
 __inline VOID MsqClearQueueBits( PUSER_MESSAGE_QUEUE queue, WORD bits );
-BOOL STDCALL IntInitMessagePumpHook();
-BOOL STDCALL IntUninitMessagePumpHook();
+BOOL APIENTRY IntInitMessagePumpHook();
+BOOL APIENTRY IntUninitMessagePumpHook();
 #define MAKE_LONG(x, y) ((((y) & 0xFFFF) << 16) | ((x) & 0xFFFF))
 
 PHOOKTABLE FASTCALL MsqGetHooks(PUSER_MESSAGE_QUEUE Queue);
@@ -213,7 +213,7 @@ VOID FASTCALL MsqSetHooks(PUSER_MESSAGE_QUEUE Queue, PHOOKTABLE Hooks);
 
 LPARAM FASTCALL MsqSetMessageExtraInfo(LPARAM lParam);
 LPARAM FASTCALL MsqGetMessageExtraInfo(VOID);
-VOID STDCALL MsqRemoveWindowMessagesFromQueue(PVOID pWindow); /* F*(&$ headers, will be gone in the rewrite! */
+VOID APIENTRY MsqRemoveWindowMessagesFromQueue(PVOID pWindow); /* F*(&$ headers, will be gone in the rewrite! */
 
 #define IntLockHardwareMessageQueue(MsgQueue) \
   KeWaitForMutexObject(&(MsgQueue)->HardwareLock, UserRequest, KernelMode, FALSE, NULL)

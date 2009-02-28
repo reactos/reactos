@@ -241,7 +241,7 @@ co_WinPosArrangeIconicWindows(PWINDOW_OBJECT parent)
 }
 
 
-VOID static FASTCALL
+static VOID FASTCALL
 WinPosFindIconPos(PWINDOW_OBJECT Window, POINT *Pos)
 {
    /* FIXME */
@@ -257,7 +257,8 @@ WinPosInitInternalPos(PWINDOW_OBJECT Window, POINT *pt, PRECT RestoreRect)
    if (!Wnd->InternalPosInitialized)
    {
       RECT WorkArea;
-      PDESKTOP_OBJECT Desktop = PsGetCurrentThreadWin32Thread()->Desktop; /* Or rather get it from the window? */
+      PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
+      PDESKTOP Desktop = pti->Desktop; /* Or rather get it from the window? */
 
       Parent = Window->Parent;
       if(Parent)
@@ -401,7 +402,8 @@ WinPosFillMinMaxInfoStruct(PWINDOW_OBJECT Window, MINMAXINFO *Info)
 {
    UINT XInc, YInc;
    RECT WorkArea;
-   PDESKTOP_OBJECT Desktop = PsGetCurrentThreadWin32Thread()->Desktop; /* Or rather get it from the window? */
+   PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
+   PDESKTOP Desktop = pti->Desktop; /* Or rather get it from the window? */
 
    IntGetDesktopWorkArea(Desktop, &WorkArea);
 
@@ -883,6 +885,7 @@ co_WinPosSetWindowPos(
    HDC Dc;
    RECT CopyRect;
    RECT TempRect;
+   PWINDOW_OBJECT Ancestor;
 
    ASSERT_REFS_CO(Window);
 
@@ -921,11 +924,10 @@ co_WinPosSetWindowPos(
       return FALSE;
    }
 
+   Ancestor = UserGetAncestor(Window, GA_PARENT);
    if ((WinPos.flags & (SWP_NOZORDER | SWP_HIDEWINDOW | SWP_SHOWWINDOW)) !=
          SWP_NOZORDER &&
-//         UserGetAncestor(WinPos.hwnd, GA_PARENT) == IntGetDesktopWindow())
-//faxme: is WinPos.hwnd constant?? (WinPos.hwnd = Window->hSelf above)
-         UserGetAncestor(Window, GA_PARENT)->hSelf == IntGetDesktopWindow())
+         Ancestor && Ancestor->hSelf == IntGetDesktopWindow())
    {
       WinPos.hwndInsertAfter = WinPosDoOwnedPopups(WinPos.hwnd, WinPos.hwndInsertAfter);
    }
@@ -1322,6 +1324,8 @@ co_WinPosShowWindow(PWINDOW_OBJECT Window, INT Cmd)
    ASSERT_REFS_CO(Window);
    Wnd = Window->Wnd;
 
+   if (!Wnd) return FALSE;
+   
    WasVisible = (Wnd->Style & WS_VISIBLE) != 0;
 
    switch (Cmd)
@@ -1660,7 +1664,7 @@ co_WinPosWindowFromPoint(PWINDOW_OBJECT ScopeWin, PUSER_MESSAGE_QUEUE OnlyHitTes
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtUserGetMinMaxInfo(
    HWND hWnd,
    MINMAXINFO *MinMaxInfo,
@@ -1671,7 +1675,7 @@ NtUserGetMinMaxInfo(
    PWINDOW Wnd;
    MINMAXINFO SafeMinMax;
    NTSTATUS Status;
-   DECLARE_RETURN(BOOL);
+   BOOL ret;
    USER_REFERENCE_ENTRY Ref;
 
    DPRINT("Enter NtUserGetMinMaxInfo\n");
@@ -1679,7 +1683,8 @@ NtUserGetMinMaxInfo(
 
    if(!(Window = UserGetWindowObject(hWnd)))
    {
-      RETURN( FALSE);
+      ret = FALSE;
+      goto cleanup;
    }
 
    UserRefObjectCo(Window, &Ref);
@@ -1703,17 +1708,18 @@ NtUserGetMinMaxInfo(
    if(!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-      RETURN( FALSE);
+      ret = FALSE;
+      goto cleanup;
    }
 
-   RETURN( TRUE);
+   ret = TRUE;
 
-CLEANUP:
+cleanup:
    if (Window) UserDerefObjectCo(Window);
 
-   DPRINT("Leave NtUserGetMinMaxInfo, ret=%i\n",_ret_);
+   DPRINT("Leave NtUserGetMinMaxInfo, ret=%i\n", ret);
    UserLeave();
-   END_CLEANUP;
+   return ret;
 }
 
 /* EOF */

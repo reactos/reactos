@@ -41,12 +41,19 @@ typedef struct _GRAPHICS_DRIVER
 } GRAPHICS_DRIVER, *PGRAPHICS_DRIVER;
 
 static PGRAPHICS_DRIVER  DriverList;
-static PGRAPHICS_DRIVER  GenericDriver = 0;
+static PGRAPHICS_DRIVER  GenericDriver = NULL;
 
 BOOL DRIVER_RegisterDriver(LPCWSTR  Name, PGD_ENABLEDRIVER  EnableDriver)
 {
-  PGRAPHICS_DRIVER  Driver = ExAllocatePoolWithTag(PagedPool, sizeof(*Driver), TAG_DRIVER);
+  PGRAPHICS_DRIVER  Driver;
+  
   DPRINT( "DRIVER_RegisterDriver( Name: %S )\n", Name );
+  
+  if (GenericDriver != NULL)
+  {
+     return FALSE;
+  }
+  Driver = ExAllocatePoolWithTag(PagedPool, sizeof(*Driver), TAG_DRIVER);
   if (!Driver)  return  FALSE;
   Driver->ReferenceCount = 0;
   Driver->EnableDriver = EnableDriver;
@@ -58,7 +65,7 @@ BOOL DRIVER_RegisterDriver(LPCWSTR  Name, PGD_ENABLEDRIVER  EnableDriver)
     if (Driver->Name == NULL)
     {
         DPRINT1("Out of memory\n");
-        ExFreePool(Driver);
+        ExFreePoolWithTag(Driver, TAG_DRIVER);
         return  FALSE;
     }
 
@@ -66,12 +73,6 @@ BOOL DRIVER_RegisterDriver(LPCWSTR  Name, PGD_ENABLEDRIVER  EnableDriver)
     Driver->Next  = DriverList;
     DriverList = Driver;
     return  TRUE;
-  }
-
-  if (GenericDriver != NULL)
-  {
-    ExFreePool(Driver);
-    return  FALSE;
   }
 
   GenericDriver = Driver;
@@ -156,7 +157,7 @@ PGD_ENABLEDRIVER DRIVER_FindDDIDriver(LPCWSTR Name)
   ExistingDriver = DRIVER_FindExistingDDIDriver(FullName);
   if (ExistingDriver)
   {
-    ExFreePool(FullName);
+    ExFreePoolWithTag(FullName, TAG_DRIVER);
     return ExistingDriver;
   }
 
@@ -172,7 +173,7 @@ PGD_ENABLEDRIVER DRIVER_FindDDIDriver(LPCWSTR Name)
 
   DRIVER_RegisterDriver( L"DISPLAY", GdiDriverInfo.EntryPoint);
   DRIVER_RegisterDriver( FullName, GdiDriverInfo.EntryPoint);
-  ExFreePool(FullName);
+  ExFreePoolWithTag(FullName, TAG_DRIVER);
   return (PGD_ENABLEDRIVER)GdiDriverInfo.EntryPoint;
 }
 
@@ -490,7 +491,7 @@ BOOL DRIVER_BuildDDIFunctions(PDRVENABLEDATA  DED,
 }
 
 typedef LONG VP_STATUS;
-typedef VP_STATUS (STDCALL *PMP_DRIVERENTRY)(PVOID, PVOID);
+typedef VP_STATUS (APIENTRY *PMP_DRIVERENTRY)(PVOID, PVOID);
 
 PFILE_OBJECT DRIVER_FindMPDriver(ULONG DisplayNumber)
 {

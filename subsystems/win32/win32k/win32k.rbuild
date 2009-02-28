@@ -9,11 +9,11 @@
 	<include base="freetype">include</include>
 	<include base="ReactOS">include/reactos/subsys</include>
 	<include base="ReactOS">include/reactos/drivers</include>
-	<define name="_WIN32_WINNT">0x0501</define>
-	<define name="WINVER">0x600</define>
 	<define name="LANGPACK" />
 	<define name="_WIN32K_" />
-	<pch>w32k.h</pch>
+	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38269
+	<pch>pch.h</pch>
+	-->
 
 	<directory name="dib" root="intermediate">
 		<file>dib8gen.c</file>
@@ -28,6 +28,7 @@
 		<file>dib16bpp.c</file>
 		<file>dib24bpp.c</file>
 		<file>dib32bpp.c</file>
+		<file>dibXXbpp.c</file>
 		<file>dib.c</file>
 
 		<if property="ARCH" value="i386">
@@ -84,6 +85,7 @@
 		<file>driver.c</file>
 		<file>err.c</file>
 		<file>math.c</file>
+		<file>rtlstr.c</file>
 		<file>copy.c</file>
 		<file>usrheap.c</file>
 		<if property="ARCH" value="i386">
@@ -163,6 +165,8 @@
 		<file>dibobj.c</file>
 		<file>drawing.c</file>
 		<file>fillshap.c</file>
+		<file>font.c</file>
+		<file>freetype.c</file>
 		<file>gdibatch.c</file>
 		<file>gdiobj.c</file>
 		<file>icm.c</file>
@@ -183,13 +187,15 @@
 	<directory name="stubs">
 		<file>stubs.c</file>
 	</directory>
+
+	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38054#c7 -->
+	<compilerflag>-fno-unit-at-a-time</compilerflag>
 </module>
-<module name="win32k" type="kernelmodedriver" installbase="system32" installname="win32k.sys" allowwarnings="true">
-	<importlibrary definition="win32k.def" />
+<module name="win32k" type="kernelmodedriver" installbase="system32" installname="win32k.sys" crt="libcntpr">
+	<importlibrary definition="win32k.pspec" />
 	<library>win32k_base</library>
 	<library>pseh</library>
 	<library>ntoskrnl</library>
-	<library>libcntpr</library>
 	<library>hal</library>
 	<library>freetype</library>
 	<library>dxguid</library>

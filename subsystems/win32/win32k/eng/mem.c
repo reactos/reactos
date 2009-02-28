@@ -42,7 +42,7 @@ USERMEMHEADER, *PUSERMEMHEADER;
 /*
  * @implemented
  */
-PVOID STDCALL
+PVOID APIENTRY
 EngAllocMem(ULONG Flags,
 	    ULONG MemSize,
 	    ULONG Tag)
@@ -62,7 +62,7 @@ EngAllocMem(ULONG Flags,
 /*
  * @implemented
  */
-VOID STDCALL
+VOID APIENTRY
 EngFreeMem(PVOID Mem)
 {
   ExFreePool(Mem);
@@ -71,12 +71,12 @@ EngFreeMem(PVOID Mem)
 /*
  * @implemented
  */
-PVOID STDCALL
+PVOID APIENTRY
 EngAllocUserMem(SIZE_T cj, ULONG Tag)
 {
   PVOID NewMem = NULL;
   NTSTATUS Status;
-  ULONG MemSize = sizeof(USERMEMHEADER) + cj;
+  SIZE_T MemSize = sizeof(USERMEMHEADER) + cj;
   PUSERMEMHEADER Header;
 
   Status = ZwAllocateVirtualMemory(NtCurrentProcess(), &NewMem, 0, &MemSize, MEM_COMMIT, PAGE_READWRITE);
@@ -96,11 +96,11 @@ EngAllocUserMem(SIZE_T cj, ULONG Tag)
 /*
  * @implemented
  */
-VOID STDCALL
+VOID APIENTRY
 EngFreeUserMem(PVOID pv)
 {
   PUSERMEMHEADER Header = ((PUSERMEMHEADER) pv) - 1;
-  ULONG MemSize = sizeof(USERMEMHEADER) + Header->MemSize;
+  SIZE_T MemSize = sizeof(USERMEMHEADER) + Header->MemSize;
 
   ZwFreeVirtualMemory(NtCurrentProcess(), (PVOID *) &Header, &MemSize, MEM_RELEASE);
 }
@@ -108,7 +108,7 @@ EngFreeUserMem(PVOID pv)
 
 
 PVOID
-NTAPI
+APIENTRY
 HackSecureVirtualMemory(
 	IN PVOID Address,
 	IN SIZE_T Size,
@@ -129,15 +129,15 @@ HackSecureVirtualMemory(
 		return NULL;
 	}
 
-	_SEH_TRY
+	_SEH2_TRY
 	{
 		MmProbeAndLockPages(mdl, UserMode, Operation);
 	}
-	_SEH_HANDLE
+	_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
 	{
-		Status = _SEH_GetExceptionCode();
+		Status = _SEH2_GetExceptionCode();
 	}
-	_SEH_END
+	_SEH2_END
 
 	if (!NT_SUCCESS(Status))
 	{
@@ -158,7 +158,7 @@ HackSecureVirtualMemory(
 }
 
 VOID
-NTAPI
+APIENTRY
 HackUnsecureVirtualMemory(
 	IN PVOID  SecureHandle)
 {
@@ -171,7 +171,7 @@ HackUnsecureVirtualMemory(
 /*
  * @implemented
  */
-HANDLE STDCALL
+HANDLE APIENTRY
 EngSecureMem(PVOID Address, ULONG Length)
 {
   return MmSecureVirtualMemory(Address, Length, PAGE_READWRITE);
@@ -180,7 +180,7 @@ EngSecureMem(PVOID Address, ULONG Length)
 /*
  * @implemented
  */
-VOID STDCALL
+VOID APIENTRY
 EngUnsecureMem(HANDLE Mem)
 {
   return MmUnsecureVirtualMemory((PVOID) Mem);

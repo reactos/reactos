@@ -16,12 +16,11 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
- *
+/*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Message queues
- * FILE:             subsys/win32k/ntuser/msgqueue.c
+ * FILE:             subsystems/win32/win32k/ntuser/msgqueue.c
  * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
  * REVISION HISTORY:
  *       06-06-2001  CSH  Created
@@ -93,7 +92,7 @@ IdlePing(VOID)
 HANDLE FASTCALL
 IntMsqSetWakeMask(DWORD WakeMask)
 {
-   PW32THREAD Win32Thread;
+   PTHREADINFO Win32Thread;
    PUSER_MESSAGE_QUEUE MessageQueue;
    HANDLE MessageEventHandle;
 
@@ -111,7 +110,7 @@ IntMsqSetWakeMask(DWORD WakeMask)
 BOOL FASTCALL
 IntMsqClearWakeMask(VOID)
 {
-   PW32THREAD Win32Thread;
+   PTHREADINFO Win32Thread;
    PUSER_MESSAGE_QUEUE MessageQueue;
 
    Win32Thread = PsGetCurrentThreadWin32Thread();
@@ -119,6 +118,7 @@ IntMsqClearWakeMask(VOID)
       return FALSE;
 
    MessageQueue = Win32Thread->MessageQueue;
+// HACK!!!!!!! Newbies that wrote this should hold your head down in shame! (jt)
    MessageQueue->WakeMask = ~0;
 
    return TRUE;
@@ -235,17 +235,19 @@ MsqInsertSystemMessage(MSG* Msg)
 BOOL FASTCALL
 MsqIsDblClk(LPMSG Msg, BOOL Remove)
 {
+   PTHREADINFO pti;
    PWINSTATION_OBJECT WinStaObject;
    PSYSTEM_CURSORINFO CurInfo;
    LONG dX, dY;
    BOOL Res;
 
-   if (PsGetCurrentThreadWin32Thread()->Desktop == NULL)
+   pti = PsGetCurrentThreadWin32Thread();
+   if (pti->Desktop == NULL)
    {
       return FALSE;
    }
 
-   WinStaObject = PsGetCurrentThreadWin32Thread()->Desktop->WindowStation;
+   WinStaObject = pti->Desktop->WindowStation;
 
    CurInfo = IntGetSysCursorInfo(WinStaObject);
    Res = (Msg->hwnd == (HWND)CurInfo->LastClkWnd) &&
@@ -293,7 +295,7 @@ MsqIsDblClk(LPMSG Msg, BOOL Remove)
    return Res;
 }
 
-BOOL static STDCALL
+static BOOL APIENTRY
 co_MsqTranslateMouseMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd, UINT FilterLow, UINT FilterHigh,
                             PUSER_MESSAGE Message, BOOL Remove, PBOOL Freed,
                             PWINDOW_OBJECT ScopeWin, PPOINT ScreenPoint, BOOL FromGlobalQueue, PLIST_ENTRY *Next)
@@ -504,7 +506,7 @@ co_MsqTranslateMouseMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd, UINT Fi
    return(TRUE);
 }
 
-BOOL STDCALL
+BOOL APIENTRY
 co_MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
                           UINT FilterLow, UINT FilterHigh, BOOL Remove,
                           PUSER_MESSAGE* Message)
@@ -518,7 +520,7 @@ co_MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
    NTSTATUS WaitStatus;
    DECLARE_RETURN(BOOL);
    USER_REFERENCE_ENTRY Ref;
-   PDESKTOP Desk = NULL;
+   PDESKTOPINFO Desk = NULL;
 
    WaitObjects[1] = MessageQueue->NewMessages;
    WaitObjects[0] = &HardwareMessageQueueLock;
@@ -737,12 +739,18 @@ co_MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
    LARGE_INTEGER LargeTickCount;
    KBDLLHOOKSTRUCT KbdHookData;
    EVENTMSG Event;
+   BOOLEAN Entered = FALSE;
 
    DPRINT("MsqPostKeyboardMessage(uMsg 0x%x, wParam 0x%x, lParam 0x%x)\n",
           uMsg, wParam, lParam);
 
    // Condition may arise when calling MsqPostMessage and waiting for an event.
-   if (!UserIsEntered()) UserEnterExclusive(); // Fixme: Not sure ATM if this thread is locked.
+   if (!UserIsEntered())
+   {
+         // Fixme: Not sure ATM if this thread is locked.
+         UserEnterExclusive();
+         Entered = TRUE;
+   }
 
    FocusMessageQueue = IntGetFocusMessageQueue();
 
@@ -780,12 +788,14 @@ co_MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
    {
       DPRINT("Kbd msg %d wParam %d lParam 0x%08x dropped by WH_KEYBOARD_LL hook\n",
              Msg.message, Msg.wParam, Msg.lParam);
+      if (Entered) UserLeave();
       return;
    }
 
    if (FocusMessageQueue == NULL)
    {
          DPRINT("No focus message queue\n");
+         if (Entered) UserLeave();
          return;
    }
 
@@ -804,14 +814,16 @@ co_MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
    {
          DPRINT("Invalid focus window handle\n");
    }
-   if (UserIsEntered()) UserLeave();
+
+   if (Entered) UserLeave();
+   return;
 }
 
 VOID FASTCALL
 MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
    PWINDOW_OBJECT Window;
-   PW32THREAD Win32Thread;
+   PTHREADINFO Win32Thread;
    PWINSTATION_OBJECT WinSta;
    MSG Mesg;
    LARGE_INTEGER LargeTickCount;
@@ -940,8 +952,8 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
    {
       Result = co_EVENT_CallEvents( Message->Msg.message,
                                     Message->Msg.hwnd,
-                             (LONG) Message->Msg.wParam,
-                             (LONG) Message->Msg.lParam);                                  
+                                    Message->Msg.wParam,
+                                    Message->Msg.lParam);                                  
    }
    else
    {
@@ -1008,7 +1020,7 @@ Notified:
    return(TRUE);
 }
 
-VOID STDCALL
+VOID APIENTRY
 MsqRemoveWindowMessagesFromQueue(PVOID pWindow)
 {
    PUSER_SENT_MESSAGE SentMessage;
@@ -1100,6 +1112,7 @@ co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
                   UINT uTimeout, BOOL Block, INT HookMessage,
                   ULONG_PTR *uResult)
 {
+   PTHREADINFO pti;
    PUSER_SENT_MESSAGE Message;
    KEVENT CompletionEvent;
    NTSTATUS WaitStatus;
@@ -1116,7 +1129,8 @@ co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 
    KeInitializeEvent(&CompletionEvent, NotificationEvent, FALSE);
 
-   ThreadQueue = PsGetCurrentThreadWin32Thread()->MessageQueue;
+   pti = PsGetCurrentThreadWin32Thread();
+   ThreadQueue = pti->MessageQueue;
    ASSERT(ThreadQueue != MessageQueue);
 
    Timeout.QuadPart = (LONGLONG) uTimeout * (LONGLONG) -10000;
@@ -1308,7 +1322,7 @@ MsqPostQuitMessage(PUSER_MESSAGE_QUEUE MessageQueue, ULONG ExitCode)
       KeSetEvent(MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
 }
 
-BOOLEAN STDCALL
+BOOLEAN APIENTRY
 co_MsqFindMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
                   IN BOOLEAN Hardware,
                   IN BOOLEAN Remove,
@@ -1419,6 +1433,7 @@ MsqInitializeMessageQueue(struct _ETHREAD *Thread, PUSER_MESSAGE_QUEUE MessageQu
    MessageQueue->LastMsgRead = LargeTickCount.u.LowPart;
    MessageQueue->FocusWindow = NULL;
    MessageQueue->PaintCount = 0;
+// HACK!!!!!!! Newbies that wrote this should hold your head down in shame! (jt)
    MessageQueue->WakeMask = ~0;
    MessageQueue->NewMessagesHandle = NULL;
 
@@ -1571,7 +1586,7 @@ MsqCreateMessageQueue(struct _ETHREAD *Thread)
 VOID FASTCALL
 MsqDestroyMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
 {
-   PDESKTOP_OBJECT desk;
+   PDESKTOP desk;
 
    /* remove the message queue from any desktops */
    if ((desk = InterlockedExchangePointer((PVOID*)&MessageQueue->Desktop, 0)))
@@ -1603,9 +1618,11 @@ LPARAM FASTCALL
 MsqSetMessageExtraInfo(LPARAM lParam)
 {
    LPARAM Ret;
+   PTHREADINFO pti;
    PUSER_MESSAGE_QUEUE MessageQueue;
 
-   MessageQueue = PsGetCurrentThreadWin32Thread()->MessageQueue;
+   pti = PsGetCurrentThreadWin32Thread();
+   MessageQueue = pti->MessageQueue;
    if(!MessageQueue)
    {
       return 0;
@@ -1620,9 +1637,11 @@ MsqSetMessageExtraInfo(LPARAM lParam)
 LPARAM FASTCALL
 MsqGetMessageExtraInfo(VOID)
 {
+   PTHREADINFO pti;
    PUSER_MESSAGE_QUEUE MessageQueue;
 
-   MessageQueue = PsGetCurrentThreadWin32Thread()->MessageQueue;
+   pti = PsGetCurrentThreadWin32Thread();
+   MessageQueue = pti->MessageQueue;
    if(!MessageQueue)
    {
       return 0;
@@ -1822,6 +1841,7 @@ MsqGetTimerMessage(PUSER_MESSAGE_QUEUE MessageQueue,
    LARGE_INTEGER LargeTickCount;
    PLIST_ENTRY EnumEntry;
    BOOLEAN GotMessage;
+   PTHREADINFO pti;
 
    DPRINT("MsqGetTimerMessage queue %p msg %p restart %s\n",
           MessageQueue, Msg, Restart ? "TRUE" : "FALSE");
@@ -1873,7 +1893,8 @@ MsqGetTimerMessage(PUSER_MESSAGE_QUEUE MessageQueue,
    Msg->lParam = (LPARAM) Timer->TimerFunc;
    KeQueryTickCount(&LargeTickCount);
    Msg->time = MsqCalculateMessageTime(&LargeTickCount);
-   IntGetCursorLocation(PsGetCurrentThreadWin32Thread()->Desktop->WindowStation,
+   pti = PsGetCurrentThreadWin32Thread();
+   IntGetCursorLocation(pti->Desktop->WindowStation,
                         &Msg->pt);
 
    if (Restart)

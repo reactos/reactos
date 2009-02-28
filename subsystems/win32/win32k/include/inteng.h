@@ -44,7 +44,7 @@ VOID FASTCALL
 IntEngCleanupDriverObjs(struct _EPROCESS *Process,
                         PW32PROCESS Win32Process);
 
-BOOL STDCALL
+BOOL APIENTRY
 IntEngLineTo(SURFOBJ *Surface,
              CLIPOBJ *Clip,
              BRUSHOBJ *Brush,
@@ -55,7 +55,7 @@ IntEngLineTo(SURFOBJ *Surface,
              RECTL *RectBounds,
              MIX mix);
 
-BOOL STDCALL
+BOOL APIENTRY
 IntEngBitBltEx(SURFOBJ *DestObj,
                SURFOBJ *SourceObj,
                SURFOBJ *Mask,
@@ -75,7 +75,7 @@ IntEngBitBltEx(SURFOBJ *DestObj,
                        (ColorTranslation), (DestRect), (SourcePoint), \
                        (MaskOrigin), (Brush), (BrushOrigin), (Rop4), TRUE)
 
-BOOL STDCALL
+BOOL APIENTRY
 IntEngStretchBlt(SURFOBJ *DestObj,
                  SURFOBJ *SourceObj,
                  SURFOBJ *Mask,
@@ -88,7 +88,7 @@ IntEngStretchBlt(SURFOBJ *DestObj,
                  POINTL *BrushOrigin,
                  ULONG Mode);
 
-BOOL STDCALL
+BOOL APIENTRY
 IntEngGradientFill(SURFOBJ *psoDest,
                    CLIPOBJ *pco,
                    XLATEOBJ *pxlo,
@@ -114,14 +114,14 @@ IntEngCreateMonoXlate(USHORT SourcePalType,
 
 XLATEOBJ* FASTCALL
 IntEngCreateSrcMonoXlate(HPALETTE PaletteDest,
-                         ULONG ForegroundColor,
-                         ULONG BackgroundColor);
+                         ULONG Color0,
+                         ULONG Color1);
 
 HPALETTE FASTCALL
 IntEngGetXlatePalette(XLATEOBJ *XlateObj,
                       ULONG Palette);
 
-BOOL STDCALL
+BOOL APIENTRY
 IntEngPolyline(SURFOBJ *DestSurf,
                CLIPOBJ *Clip,
                BRUSHOBJ *Brush,
@@ -153,20 +153,20 @@ IntEngTransparentBlt(SURFOBJ *Dest,
                      ULONG iTransColor,
                      ULONG Reserved);
 
-BOOL STDCALL
+BOOL APIENTRY
 IntEngPaint(IN SURFOBJ *Surface,
             IN CLIPOBJ *ClipRegion,
             IN BRUSHOBJ *Brush,
             IN POINTL *BrushOrigin,
             IN MIX Mix);
 
-VOID STDCALL
+VOID APIENTRY
 IntEngMovePointer(IN SURFOBJ *pso,
                   IN LONG x,
                   IN LONG y,
                   IN RECTL *prcl);
 
-BOOL STDCALL
+BOOL APIENTRY
 IntEngAlphaBlend(IN SURFOBJ *Dest,
                  IN SURFOBJ *Source,
                  IN CLIPOBJ *ClipRegion,

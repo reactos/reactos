@@ -7,7 +7,7 @@
  * a couple macros to fill a single pixel or a line
  */
 #define PUTPIXEL(x,y,BrushInst)        \
-  ret = ret && IntEngLineTo(&BitmapObj->SurfObj, \
+  ret = ret && IntEngLineTo(&psurf->SurfObj, \
        dc->CombinedClip,                         \
        &BrushInst.BrushObject,                   \
        x, y, (x)+1, y,                           \
@@ -15,7 +15,7 @@
        ROP2_TO_MIX(Dc_Attr->jROP2));
 
 #define PUTLINE(x1,y1,x2,y2,BrushInst) \
-  ret = ret && IntEngLineTo(&BitmapObj->SurfObj, \
+  ret = ret && IntEngLineTo(&psurf->SurfObj, \
        dc->CombinedClip,                         \
        &BrushInst.BrushObject,                   \
        x1, y1, x2, y2,                           \
@@ -46,7 +46,7 @@ IntArc( DC *dc,
     RECTL RectBounds, RectSEpts;
     PGDIBRUSHOBJ PenBrushObj;
     GDIBRUSHINST PenBrushInst;
-    BITMAPOBJ *BitmapObj;
+    SURFACE *psurf;
     BOOL ret = TRUE;
     LONG PenWidth, PenOrigWidth;
     double AngleStart, AngleEnd;
@@ -158,8 +158,8 @@ IntArc( DC *dc,
               arctype,
              PenBrushObj);
 
-    BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
-    if (NULL == BitmapObj)
+    psurf = SURFACE_LockSurface(dc->w.hBitmap);
+    if (NULL == psurf)
     {
         DPRINT1("Arc Fail 2\n");
         PENOBJ_UnlockPen(PenBrushObj);
@@ -178,7 +178,7 @@ IntArc( DC *dc,
         PUTLINE(EfCx + CenterX, EfCy + CenterY, SfCx + CenterX, SfCy + CenterY, PenBrushInst);
            
     PenBrushObj->ptPenWidth.x = PenOrigWidth;
-    BITMAPOBJ_UnlockBitmap(BitmapObj);
+    SURFACE_UnlockSurface(psurf);
     PENOBJ_UnlockPen(PenBrushObj);
     DPRINT("IntArc Exit.\n");
     return ret;
@@ -199,6 +199,7 @@ IntGdiArcInternal(
           int YEndArc)
 {
   BOOL Ret;
+  PDC_ATTR pDc_Attr;
 
   DPRINT("StartX: %d, StartY: %d, EndX: %d, EndY: %d\n",
            XStartArc,YStartArc,XEndArc,YEndArc);
@@ -220,6 +221,15 @@ IntGdiArcInternal(
                  YEndArc,
                  arctype);
   }
+
+  pDc_Attr = dc->pDc_Attr;
+  if (!pDc_Attr) pDc_Attr = &dc->Dc_Attr;
+
+  if (pDc_Attr->ulDirty_ & DC_BRUSH_DIRTY)
+     IntGdiSelectBrush(dc,pDc_Attr->hbrush);
+
+  if (pDc_Attr->ulDirty_ & DC_PEN_DIRTY)
+     IntGdiSelectPen(dc,pDc_Attr->hpen);
 
   if (arctype == GdiTypeArcTo)
   {
@@ -331,7 +341,7 @@ NtGdiAngleArc(
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiArcInternal(
         ARCTYPE arctype,
         HDC  hDC,

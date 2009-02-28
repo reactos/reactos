@@ -149,7 +149,7 @@ int FASTCALL GdiExtSelectClipRgn(PDC dc,
 }
 
 
-int STDCALL NtGdiExtSelectClipRgn(HDC  hDC,
+int APIENTRY NtGdiExtSelectClipRgn(HDC  hDC,
                                 HRGN  hrgn,
                                int  fnMode)
 {
@@ -193,7 +193,7 @@ GdiGetClipBox(HDC hDC, LPRECT rc)
    return retval;
 }
 
-INT STDCALL
+INT APIENTRY
 NtGdiGetAppClipBox(HDC hDC, LPRECT rc)
 {
   INT Ret;
@@ -202,18 +202,18 @@ NtGdiGetAppClipBox(HDC hDC, LPRECT rc)
 
   Ret = GdiGetClipBox(hDC, &Saferect);
 
-  _SEH_TRY
+  _SEH2_TRY
   {
     ProbeForWrite(rc,
                   sizeof(RECT),
                   1);
     *rc = Saferect;
   }
-  _SEH_HANDLE
+  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
   {
-    Status = _SEH_GetExceptionCode();
+    Status = _SEH2_GetExceptionCode();
   }
-  _SEH_END;
+  _SEH2_END;
 
   if(!NT_SUCCESS(Status))
   {
@@ -224,7 +224,7 @@ NtGdiGetAppClipBox(HDC hDC, LPRECT rc)
   return Ret;
 }
 
-int STDCALL NtGdiExcludeClipRect(HDC  hDC,
+int APIENTRY NtGdiExcludeClipRect(HDC  hDC,
                          int  LeftRect,
                          int  TopRect,
                          int  RightRect,
@@ -275,7 +275,7 @@ int STDCALL NtGdiExcludeClipRect(HDC  hDC,
    return Result;
 }
 
-int STDCALL NtGdiIntersectClipRect(HDC  hDC,
+int APIENTRY NtGdiIntersectClipRect(HDC  hDC,
                            int  LeftRect,
                            int  TopRect,
                            int  RightRect,
@@ -325,7 +325,7 @@ int STDCALL NtGdiIntersectClipRect(HDC  hDC,
    return Result;
 }
 
-int STDCALL NtGdiOffsetClipRgn(HDC  hDC,
+int APIENTRY NtGdiOffsetClipRgn(HDC  hDC,
                        int  XOffset,
                        int  YOffset)
 {
@@ -354,7 +354,7 @@ int STDCALL NtGdiOffsetClipRgn(HDC  hDC,
   return Result;
 }
 
-BOOL STDCALL NtGdiPtVisible(HDC  hDC,
+BOOL APIENTRY NtGdiPtVisible(HDC  hDC,
                     int  X,
                     int  Y)
 {
@@ -373,7 +373,7 @@ BOOL STDCALL NtGdiPtVisible(HDC  hDC,
   return (rgn ? NtGdiPtInRegion(rgn, X, Y) : FALSE);
 }
 
-BOOL STDCALL NtGdiRectVisible(HDC  hDC,
+BOOL APIENTRY NtGdiRectVisible(HDC  hDC,
                       CONST PRECT  UnsafeRect)
 {
    NTSTATUS Status = STATUS_SUCCESS;
@@ -388,18 +388,18 @@ BOOL STDCALL NtGdiRectVisible(HDC  hDC,
       return FALSE;
    }
 
-   _SEH_TRY
+   _SEH2_TRY
    {
       ProbeForRead(UnsafeRect,
                    sizeof(RECT),
                    1);
       Rect = *UnsafeRect;
    }
-   _SEH_HANDLE
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
-      Status = _SEH_GetExceptionCode();
+      Status = _SEH2_GetExceptionCode();
    }
-   _SEH_END;
+   _SEH2_END;
 
    if(!NT_SUCCESS(Status))
    {
@@ -478,7 +478,7 @@ IntGdiSetMetaRgn(PDC pDC)
 }
 
 
-int STDCALL NtGdiSetMetaRgn(HDC  hDC)
+int APIENTRY NtGdiSetMetaRgn(HDC  hDC)
 {
   INT Ret;
   PDC pDC = DC_LockDc(hDC);

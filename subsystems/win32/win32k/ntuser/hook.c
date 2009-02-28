@@ -72,9 +72,9 @@ PHOOK FASTCALL IntGetHookObject(HHOOK hHook)
 static PHOOK
 IntAddHook(PETHREAD Thread, int HookId, BOOLEAN Global, PWINSTATION_OBJECT WinStaObj)
 {
-   PW32THREAD W32Thread;
+   PTHREADINFO W32Thread;
    PHOOK Hook;
-   PHOOKTABLE Table = Global ? GlobalHooks : MsqGetHooks(((PW32THREAD)Thread->Tcb.Win32Thread)->MessageQueue);
+   PHOOKTABLE Table = Global ? GlobalHooks : MsqGetHooks(((PTHREADINFO)Thread->Tcb.Win32Thread)->MessageQueue);
    HANDLE Handle;
 
    if (NULL == Table)
@@ -90,7 +90,7 @@ IntAddHook(PETHREAD Thread, int HookId, BOOLEAN Global, PWINSTATION_OBJECT WinSt
       }
       else
       {
-         MsqSetHooks(((PW32THREAD)Thread->Tcb.Win32Thread)->MessageQueue, Table);
+         MsqSetHooks(((PTHREADINFO)Thread->Tcb.Win32Thread)->MessageQueue, Table);
       }
    }
 
@@ -106,7 +106,7 @@ IntAddHook(PETHREAD Thread, int HookId, BOOLEAN Global, PWINSTATION_OBJECT WinSt
 
    if (Thread)
    {
-      W32Thread = ((PW32THREAD)Thread->Tcb.Win32Thread);
+      W32Thread = ((PTHREADINFO)Thread->Tcb.Win32Thread);
       ASSERT(W32Thread != NULL);
       W32Thread->Hooks |= HOOKID_TO_FLAG(HookId);
       if (W32Thread->ThreadInfo != NULL)
@@ -130,7 +130,7 @@ IntGetTable(PHOOK Hook)
       return GlobalHooks;
    }
 
-   return MsqGetHooks(((PW32THREAD)Hook->Thread->Tcb.Win32Thread)->MessageQueue);
+   return MsqGetHooks(((PTHREADINFO)Hook->Thread->Tcb.Win32Thread)->MessageQueue);
 }
 
 /* get the first hook in the chain */
@@ -208,7 +208,7 @@ IntFreeHook(PHOOKTABLE Table, PHOOK Hook, PWINSTATION_OBJECT WinStaObj)
 static VOID
 IntRemoveHook(PHOOK Hook, PWINSTATION_OBJECT WinStaObj, BOOL TableAlreadyLocked)
 {
-   PW32THREAD W32Thread;
+   PTHREADINFO W32Thread;
    PHOOKTABLE Table = IntGetTable(Hook);
 
    ASSERT(NULL != Table);
@@ -217,7 +217,7 @@ IntRemoveHook(PHOOK Hook, PWINSTATION_OBJECT WinStaObj, BOOL TableAlreadyLocked)
       return;
    }
 
-   W32Thread = ((PW32THREAD)Hook->Thread->Tcb.Win32Thread);
+   W32Thread = ((PTHREADINFO)Hook->Thread->Tcb.Win32Thread);
    ASSERT(W32Thread != NULL);
    W32Thread->Hooks &= ~HOOKID_TO_FLAG(Hook->HookId);
    if (W32Thread->ThreadInfo != NULL)
@@ -274,7 +274,7 @@ IntCallLowLevelHook(PHOOK Hook, INT Code, WPARAM wParam, LPARAM lParam)
 
    /* FIXME should get timeout from
     * HKEY_CURRENT_USER\Control Panel\Desktop\LowLevelHooksTimeout */
-   Status = co_MsqSendMessage(((PW32THREAD)Hook->Thread->Tcb.Win32Thread)->MessageQueue,
+   Status = co_MsqSendMessage(((PTHREADINFO)Hook->Thread->Tcb.Win32Thread)->MessageQueue,
                                     (HWND) Code,
                                    Hook->HookId,
                                          wParam,
@@ -295,8 +295,8 @@ FASTCALL
 co_HOOK_CallHooks(INT HookId, INT Code, WPARAM wParam, LPARAM lParam)
 {
    PHOOK Hook, SaveHook;
-   PW32THREAD Win32Thread;
-   PW32CLIENTINFO ClientInfo;
+   PTHREADINFO pti;
+   PCLIENTINFO ClientInfo;
    PHOOKTABLE Table;
    LRESULT Result;
    PWINSTATION_OBJECT WinStaObj;
@@ -304,14 +304,14 @@ co_HOOK_CallHooks(INT HookId, INT Code, WPARAM wParam, LPARAM lParam)
 
    ASSERT(WH_MINHOOK <= HookId && HookId <= WH_MAXHOOK);
 
-   Win32Thread = PsGetCurrentThreadWin32Thread();
-   if (NULL == Win32Thread)
+   pti = PsGetCurrentThreadWin32Thread();
+   if (!pti)
    {
       Table = NULL;
    }
    else
    {
-      Table = MsqGetHooks(Win32Thread->MessageQueue);
+      Table = MsqGetHooks(pti->MessageQueue);
    }
 
    if (NULL == Table || ! (Hook = IntGetFirstValidHook(Table, HookId)))
@@ -361,7 +361,7 @@ co_HOOK_CallHooks(INT HookId, INT Code, WPARAM wParam, LPARAM lParam)
    }
    else
    {
-      IntReleaseHookChain(MsqGetHooks(PsGetCurrentThreadWin32Thread()->MessageQueue), HookId, WinStaObj);
+      IntReleaseHookChain(MsqGetHooks(pti->MessageQueue), HookId, WinStaObj);
       IntReleaseHookChain(GlobalHooks, HookId, WinStaObj);
       ObDereferenceObject(WinStaObj);
    }
@@ -450,7 +450,7 @@ IntCallDebugHook(
 
    if (lParam)
    {
-      _SEH_TRY
+      _SEH2_TRY
       {
           ProbeForRead((PVOID)lParam,
                        sizeof(DEBUGHOOKINFO),
@@ -459,11 +459,11 @@ IntCallDebugHook(
                   (PVOID)lParam,
                   sizeof(DEBUGHOOKINFO));
       }
-      _SEH_HANDLE
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
           BadChk = TRUE;
       }
-      _SEH_END;
+      _SEH2_END;
       if (BadChk)
       {
           DPRINT1("HOOK WH_DEBUG read from lParam ERROR!\n");
@@ -529,7 +529,7 @@ IntCallDebugHook(
 
    if (HooklParam)
    {
-      _SEH_TRY
+      _SEH2_TRY
       {
           ProbeForRead((PVOID)Debug.lParam,
                                       Size,
@@ -538,11 +538,11 @@ IntCallDebugHook(
                 (PVOID)Debug.lParam,
                                Size);
       }
-      _SEH_HANDLE
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
           BadChk = TRUE;
       }
-      _SEH_END;
+      _SEH2_END;
       if (BadChk)
       {
           DPRINT1("HOOK WH_DEBUG read from Debug.lParam ERROR!\n");
@@ -553,7 +553,7 @@ IntCallDebugHook(
 
    if (HooklParam) Debug.lParam = (LPARAM)HooklParam;
    lResult = co_HOOK_CallHookNext(Hook, Code, wParam, (LPARAM)&Debug);
-   if (HooklParam) ExFreePool(HooklParam);
+   if (HooklParam) ExFreePoolWithTag(HooklParam, TAG_HOOK);
    return lResult;
 }
 
@@ -579,7 +579,7 @@ UserCallNextHookEx(
      MOUSEHOOKSTRUCTEX Mouse;
      if (lParam)
      {
-        _SEH_TRY
+        _SEH2_TRY
         {
            ProbeForRead((PVOID)lParam,
                         sizeof(MOUSEHOOKSTRUCTEX),
@@ -588,11 +588,11 @@ UserCallNextHookEx(
                    (PVOID)lParam,
                    sizeof(MOUSEHOOKSTRUCTEX));
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
            BadChk = TRUE;
         }
-        _SEH_END;
+        _SEH2_END;
         if (BadChk)
         {
             DPRINT1("HOOK WH_MOUSE read from lParam ERROR!\n");
@@ -612,7 +612,7 @@ UserCallNextHookEx(
          MSLLHOOKSTRUCT Mouse;
          if (lParam)
          {
-            _SEH_TRY
+            _SEH2_TRY
             {
                 ProbeForRead((PVOID)lParam,
                              sizeof(MSLLHOOKSTRUCT),
@@ -621,11 +621,11 @@ UserCallNextHookEx(
                         (PVOID)lParam,
                         sizeof(MSLLHOOKSTRUCT));
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                BadChk = TRUE;
             }
-            _SEH_END;
+            _SEH2_END;
             if (BadChk)
             {
                 DPRINT1("HOOK WH_MOUSE_LL read from lParam ERROR!\n");
@@ -643,7 +643,7 @@ UserCallNextHookEx(
          KBDLLHOOKSTRUCT Keyboard;
          if (lParam)
          {
-            _SEH_TRY
+            _SEH2_TRY
             {
                 ProbeForRead((PVOID)lParam,
                              sizeof(KBDLLHOOKSTRUCT),
@@ -652,11 +652,11 @@ UserCallNextHookEx(
                         (PVOID)lParam,
                         sizeof(KBDLLHOOKSTRUCT));
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                BadChk = TRUE;
             }
-            _SEH_END;
+            _SEH2_END;
             if (BadChk)
             {
                 DPRINT1("HOOK WH_KEYBORD_LL read from lParam ERROR!\n");
@@ -676,7 +676,7 @@ UserCallNextHookEx(
          MSG Msg;
          if (lParam)
          {
-            _SEH_TRY
+            _SEH2_TRY
             {
                ProbeForRead((PVOID)lParam,
                                sizeof(MSG),
@@ -685,11 +685,11 @@ UserCallNextHookEx(
                      (PVOID)lParam,
                        sizeof(MSG));
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
               BadChk = TRUE;
             }
-            _SEH_END;
+            _SEH2_END;
             if (BadChk)
             {
                DPRINT1("HOOK WH_XMESSAGEX read from lParam ERROR!\n");
@@ -700,7 +700,7 @@ UserCallNextHookEx(
             lResult = co_HOOK_CallHookNext(Hook, Code, wParam, (LPARAM)&Msg);
             if (lParam && (Hook->HookId == WH_GETMESSAGE))
             {
-               _SEH_TRY
+               _SEH2_TRY
                {
                   ProbeForWrite((PVOID)lParam,
                                   sizeof(MSG),
@@ -709,11 +709,11 @@ UserCallNextHookEx(
                                          &Msg,
                                   sizeof(MSG));
                }
-               _SEH_HANDLE
+               _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                {
                  BadChk = TRUE;
                }
-               _SEH_END;
+               _SEH2_END;
                if (BadChk)
                {
                   DPRINT1("HOOK WH_GETMESSAGE write to lParam ERROR!\n");
@@ -738,7 +738,7 @@ UserCallNextHookEx(
                DPRINT1("HOOK HCBT_MOVESIZE\n");
                if (lParam)
                {
-                  _SEH_TRY
+                  _SEH2_TRY
                   {
                       ProbeForRead((PVOID)lParam,
                                     sizeof(RECT),
@@ -747,11 +747,11 @@ UserCallNextHookEx(
                            (PVOID)lParam,
                             sizeof(RECT));
                   }
-                  _SEH_HANDLE
+                  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                   {
                      BadChk = TRUE;
                   }
-                  _SEH_END;
+                  _SEH2_END;
                   if (BadChk)
                   {
                       DPRINT1("HOOK HCBT_MOVESIZE read from lParam ERROR!\n");
@@ -770,7 +770,7 @@ UserCallNextHookEx(
                DPRINT1("HOOK HCBT_ACTIVATE\n");
                if (lParam)
                {
-                  _SEH_TRY
+                  _SEH2_TRY
                   {
                       ProbeForRead((PVOID)lParam,
                                    sizeof(CBTACTIVATESTRUCT),
@@ -779,11 +779,11 @@ UserCallNextHookEx(
                              (PVOID)lParam,
                              sizeof(CBTACTIVATESTRUCT));
                   }
-                  _SEH_HANDLE
+                  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                   {
                      BadChk = TRUE;
                   }
-                  _SEH_END;
+                  _SEH2_END;
                   if (BadChk)
                   {
                       DPRINT1("HOOK HCBT_ACTIVATE read from lParam ERROR!\n");
@@ -811,7 +811,7 @@ UserCallNextHookEx(
          EVENTMSG EventMsg;
          if (lParam)
          {
-            _SEH_TRY
+            _SEH2_TRY
             {
                 ProbeForRead((PVOID)lParam,
                              sizeof(EVENTMSG),
@@ -820,11 +820,11 @@ UserCallNextHookEx(
                         (PVOID)lParam,
                         sizeof(EVENTMSG));
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                BadChk = TRUE;
             }
-            _SEH_END;
+            _SEH2_END;
             if (BadChk)
             {
                 DPRINT1("HOOK WH_JOURNAL read from lParam ERROR!\n");
@@ -835,7 +835,7 @@ UserCallNextHookEx(
             lResult = co_HOOK_CallHookNext(Hook, Code, wParam, (LPARAM)(lParam ? &EventMsg : NULL));
             if (lParam)
             {
-               _SEH_TRY
+               _SEH2_TRY
                {
                   ProbeForWrite((PVOID)lParam,
                                   sizeof(EVENTMSG),
@@ -844,11 +844,11 @@ UserCallNextHookEx(
                                          &EventMsg,
                                   sizeof(EVENTMSG));
                }
-               _SEH_HANDLE
+               _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                {
                  BadChk = TRUE;
                }
-               _SEH_END;
+               _SEH2_END;
                if (BadChk)
                {
                   DPRINT1("HOOK WH_JOURNAL write to lParam ERROR!\n");
@@ -878,7 +878,7 @@ UserCallNextHookEx(
 }
 
 LRESULT
-STDCALL
+APIENTRY
 NtUserCallNextHookEx(
    int Code,
    WPARAM wParam,
@@ -886,7 +886,7 @@ NtUserCallNextHookEx(
    BOOL Ansi)
 {
    PHOOK HookObj, NextObj;
-   PW32CLIENTINFO ClientInfo;
+   PCLIENTINFO ClientInfo;
    PWINSTATION_OBJECT WinStaObj;
    NTSTATUS Status;
    DECLARE_RETURN(LRESULT);
@@ -940,7 +940,7 @@ CLEANUP:
 }
 
 HHOOK
-STDCALL
+APIENTRY
 NtUserSetWindowsHookAW(
    int idHook, 
    HOOKPROC lpfn,
@@ -952,7 +952,7 @@ NtUserSetWindowsHookAW(
 }
 
 HHOOK
-STDCALL
+APIENTRY
 NtUserSetWindowsHookEx(
    HINSTANCE Mod,
    PUNICODE_STRING UnsafeModuleName,
@@ -962,13 +962,14 @@ NtUserSetWindowsHookEx(
    BOOL Ansi)
 {
    PWINSTATION_OBJECT WinStaObj;
-   PW32CLIENTINFO ClientInfo;
+   PCLIENTINFO ClientInfo;
    BOOLEAN Global;
    PETHREAD Thread;
    PHOOK Hook;
    UNICODE_STRING ModuleName;
    NTSTATUS Status;
    HHOOK Handle;
+   BOOLEAN ThreadReferenced = FALSE;
    DECLARE_RETURN(HHOOK);
 
    DPRINT("Enter NtUserSetWindowsHookEx\n");
@@ -1008,6 +1009,8 @@ NtUserSetWindowsHookEx(
          SetLastWin32Error(ERROR_INVALID_PARAMETER);
          RETURN( NULL);
       }
+      /* Thread was referenced */
+      ThreadReferenced = TRUE;
       if (Thread->ThreadsProcess != PsGetCurrentProcess())
       {
          ObDereferenceObject(Thread);
@@ -1032,6 +1035,9 @@ NtUserSetWindowsHookEx(
             SetLastNtError(Status);
             RETURN( (HANDLE) NULL);
          }
+
+         /* Thread was referenced */
+         ThreadReferenced = TRUE;
       }
       else if (NULL ==  Mod)
       {
@@ -1056,10 +1062,8 @@ NtUserSetWindowsHookEx(
       DPRINT1("Not implemented: HookId %d Global %s\n", HookId, Global ? "TRUE" : "FALSE");
 #endif
 
-      if (NULL != Thread)
-      {
-         ObDereferenceObject(Thread);
-      }
+      /* Dereference thread if needed */
+      if (ThreadReferenced) ObDereferenceObject(Thread);
       SetLastWin32Error(ERROR_NOT_SUPPORTED);
       RETURN( NULL);
    }
@@ -1071,10 +1075,8 @@ NtUserSetWindowsHookEx(
 
    if (! NT_SUCCESS(Status))
    {
-      if (NULL != Thread)
-      {
-         ObDereferenceObject(Thread);
-      }
+      /* Dereference thread if needed */
+      if (ThreadReferenced) ObDereferenceObject(Thread);
       SetLastNtError(Status);
       RETURN( (HANDLE) NULL);
    }
@@ -1082,15 +1084,14 @@ NtUserSetWindowsHookEx(
    Hook = IntAddHook(Thread, HookId, Global, WinStaObj);
    if (NULL == Hook)
    {
-      if (NULL != Thread)
-      {
-         ObDereferenceObject(Thread);
-      }
+      /* Dereference thread if needed */
+      if (ThreadReferenced) ObDereferenceObject(Thread);
       ObDereferenceObject(WinStaObj);
       RETURN( NULL);
    }
 
-   if (NULL != Thread)
+   /* Let IntFreeHook now that this thread needs a dereference */
+   if (ThreadReferenced)
    {
       Hook->Flags |= HOOK_THREAD_REFERENCED;
    }
@@ -1102,10 +1103,6 @@ NtUserSetWindowsHookEx(
       {
          UserDereferenceObject(Hook);
          IntRemoveHook(Hook, WinStaObj, FALSE);
-         if (NULL != Thread)
-         {
-            ObDereferenceObject(Thread);
-         }
          ObDereferenceObject(WinStaObj);
          SetLastNtError(Status);
          RETURN( NULL);
@@ -1117,10 +1114,6 @@ NtUserSetWindowsHookEx(
       {
          UserDereferenceObject(Hook);
          IntRemoveHook(Hook, WinStaObj, FALSE);
-         if (NULL != Thread)
-         {
-            ObDereferenceObject(Thread);
-         }
          ObDereferenceObject(WinStaObj);
          SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
          RETURN( NULL);
@@ -1131,13 +1124,9 @@ NtUserSetWindowsHookEx(
                                 ModuleName.MaximumLength);
       if (! NT_SUCCESS(Status))
       {
-         ExFreePool(Hook->ModuleName.Buffer);
+         ExFreePoolWithTag(Hook->ModuleName.Buffer, TAG_HOOK);
          UserDereferenceObject(Hook);
          IntRemoveHook(Hook, WinStaObj, FALSE);
-         if (NULL != Thread)
-         {
-            ObDereferenceObject(Thread);
-         }
          ObDereferenceObject(WinStaObj);
          SetLastNtError(Status);
          RETURN( NULL);
@@ -1154,8 +1143,9 @@ NtUserSetWindowsHookEx(
 
 // Clear the client threads next hook.
    ClientInfo->phkCurrent = 0;
-   
+
    UserDereferenceObject(Hook);
+
    ObDereferenceObject(WinStaObj);
 
    RETURN( Handle);
@@ -1168,7 +1158,7 @@ CLEANUP:
 
 
 BOOL
-STDCALL
+APIENTRY
 NtUserUnhookWindowsHookEx(
    HHOOK Hook)
 {

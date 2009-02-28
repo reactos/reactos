@@ -24,14 +24,14 @@ RTL_CRITICAL_SECTION ProcessDataLock;
 
 /* FUNCTIONS *****************************************************************/
 
-VOID STDCALL CsrInitProcessData(VOID)
+VOID WINAPI CsrInitProcessData(VOID)
 {
    RtlZeroMemory (ProcessData, sizeof ProcessData);
    NrProcess = sizeof ProcessData / sizeof ProcessData[0];
    RtlInitializeCriticalSection( &ProcessDataLock );
 }
 
-PCSRSS_PROCESS_DATA STDCALL CsrGetProcessData(HANDLE ProcessId)
+PCSRSS_PROCESS_DATA WINAPI CsrGetProcessData(HANDLE ProcessId)
 {
    ULONG hash;
    PCSRSS_PROCESS_DATA pProcessData;
@@ -50,7 +50,7 @@ PCSRSS_PROCESS_DATA STDCALL CsrGetProcessData(HANDLE ProcessId)
    return pProcessData;
 }
 
-PCSRSS_PROCESS_DATA STDCALL CsrCreateProcessData(HANDLE ProcessId)
+PCSRSS_PROCESS_DATA WINAPI CsrCreateProcessData(HANDLE ProcessId)
 {
    ULONG hash;
    PCSRSS_PROCESS_DATA pProcessData;
@@ -125,11 +125,12 @@ PCSRSS_PROCESS_DATA STDCALL CsrCreateProcessData(HANDLE ProcessId)
    return pProcessData;
 }
 
-NTSTATUS STDCALL CsrFreeProcessData(HANDLE Pid)
+NTSTATUS WINAPI CsrFreeProcessData(HANDLE Pid)
 {
   ULONG hash;
   UINT c;
   PCSRSS_PROCESS_DATA pProcessData, *pPrevLink;
+  HANDLE Process;
 
   hash = ((ULONG_PTR)Pid >> 2) % (sizeof(ProcessData) / sizeof(*ProcessData));
   pPrevLink = &ProcessData[hash];
@@ -144,10 +145,7 @@ NTSTATUS STDCALL CsrFreeProcessData(HANDLE Pid)
   if (pProcessData)
     {
       DPRINT("CsrFreeProcessData pid: %d\n", Pid);
-      if (pProcessData->Process)
-      {
-         NtClose(pProcessData->Process);
-      }
+      Process = pProcessData->Process;
       if (pProcessData->HandleTable)
         {
           for (c = 0; c < pProcessData->HandleTableSize; c++)
@@ -177,6 +175,10 @@ NTSTATUS STDCALL CsrFreeProcessData(HANDLE Pid)
 
       RtlFreeHeap(CsrssApiHeap, 0, pProcessData);
       UNLOCK;
+      if (Process)
+        {
+          NtClose(Process);
+        }
       return STATUS_SUCCESS;
    }
 
@@ -184,7 +186,7 @@ NTSTATUS STDCALL CsrFreeProcessData(HANDLE Pid)
    return STATUS_INVALID_PARAMETER;
 }
 
-NTSTATUS STDCALL
+NTSTATUS WINAPI
 CsrEnumProcesses(CSRSS_ENUM_PROCESS_PROC EnumProc, PVOID Context)
 {
   UINT Hash;

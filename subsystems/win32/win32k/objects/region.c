@@ -420,7 +420,7 @@ static __inline int xmemcheck(ROSRGNDATA *reg, PRECT *rect, PRECT *firstrect)
         }
         temp = ExAllocatePoolWithTag(PagedPool, NewSize, TAG_REGION);
 
-        if (temp == 0)
+        if (temp == NULL)
         {
             return 0;
         }
@@ -431,7 +431,7 @@ static __inline int xmemcheck(ROSRGNDATA *reg, PRECT *rect, PRECT *firstrect)
         reg->rdh.nRgnSize = NewSize;
         if (*firstrect != &reg->rdh.rcBound)
         {
-            ExFreePool(*firstrect);
+            ExFreePoolWithTag(*firstrect, TAG_REGION);
         }
         *firstrect = temp;
         *rect = (*firstrect)+reg->rdh.nCount;
@@ -520,7 +520,7 @@ REGION_CopyRegion(
                 return FALSE;
 
             if (dst->Buffer && dst->Buffer != &dst->rdh.rcBound)
-                ExFreePool(dst->Buffer);	//free the old buffer
+                ExFreePoolWithTag(dst->Buffer, TAG_REGION);	//free the old buffer
             dst->Buffer = temp;
             dst->rdh.nRgnSize = src->rdh.nCount * sizeof(RECT);  //size of region buffer
         }
@@ -608,7 +608,7 @@ REGION_CropAndOffsetRegion(
         {
             xrect = ExAllocatePoolWithTag(PagedPool, rgnSrc->rdh.nCount * sizeof(RECT), TAG_REGION);
             if (rgnDst->Buffer && rgnDst->Buffer != &rgnDst->rdh.rcBound)
-                ExFreePool(rgnDst->Buffer); //free the old buffer. will be assigned to xrect below.
+                ExFreePoolWithTag(rgnDst->Buffer, TAG_REGION); //free the old buffer. will be assigned to xrect below.
         }
 
         if (xrect)
@@ -676,7 +676,7 @@ REGION_CropAndOffsetRegion(
                 return FALSE;
 
             if (rgnDst->Buffer && rgnDst->Buffer != &rgnDst->rdh.rcBound)
-                ExFreePool(rgnDst->Buffer); //free the old buffer
+                ExFreePoolWithTag(rgnDst->Buffer, TAG_REGION); //free the old buffer
             rgnDst->Buffer = temp;
             rgnDst->rdh.nCount = i;
             rgnDst->rdh.nRgnSize = i * sizeof(RECT);
@@ -1169,7 +1169,7 @@ REGION_RegionOp(
                 newReg->rdh.nRgnSize = newReg->rdh.nCount*sizeof(RECT);
                 COPY_RECTS(newReg->Buffer, prev_rects, newReg->rdh.nCount);
                 if (prev_rects != &newReg->rdh.rcBound)
-                    ExFreePool(prev_rects);
+                    ExFreePoolWithTag(prev_rects, TAG_REGION);
             }
         }
         else
@@ -1180,7 +1180,7 @@ REGION_RegionOp(
              */
             newReg->rdh.nRgnSize = sizeof(RECT);
             if (newReg->Buffer != &newReg->rdh.rcBound)
-                ExFreePool(newReg->Buffer);
+                ExFreePoolWithTag(newReg->Buffer, TAG_REGION);
             newReg->Buffer = ExAllocatePoolWithTag(PagedPool, sizeof(RECT), TAG_REGION);
             ASSERT(newReg->Buffer);
         }
@@ -1188,7 +1188,7 @@ REGION_RegionOp(
     newReg->rdh.iType = RDH_RECTANGLES;
 
     if (oldRects != &newReg->rdh.rcBound)
-        ExFreePool(oldRects);
+        ExFreePoolWithTag(oldRects, TAG_REGION);
     return;
 }
 
@@ -2092,7 +2092,7 @@ IntGdiReleaseRaoRgn(PDC pDC)
   INT Index = GDI_HANDLE_GET_INDEX(pDC->BaseObject.hHmgr);
   PGDI_TABLE_ENTRY Entry = &GdiHandleTable->Entries[Index];
   pDC->DC_Flags |= DC_FLAG_DIRTY_RAO;
-  Entry->Flags |= GDI_ENTRY_FLAG_NEED_UPDATE;
+  Entry->Flags |= GDI_ENTRY_VALIDATE_VIS;
   IntGdiSetEmptyRect((PRECT)&pDC->erclClip);
 }
 
@@ -2103,7 +2103,7 @@ IntGdiReleaseVisRgn(PDC pDC)
   INT Index = GDI_HANDLE_GET_INDEX(pDC->BaseObject.hHmgr);
   PGDI_TABLE_ENTRY Entry = &GdiHandleTable->Entries[Index];
   pDC->DC_Flags |= DC_FLAG_DIRTY_RAO;
-  Entry->Flags |= GDI_ENTRY_FLAG_NEED_UPDATE;
+  Entry->Flags |= GDI_ENTRY_VALIDATE_VIS;
   IntGdiSetEmptyRect((PRECT)&pDC->erclClip);
   REGION_Delete(pDC->prgnVis);
   pDC->prgnVis = prgnDefault;
@@ -2117,7 +2117,7 @@ IntUpdateVisRectRgn(PDC pDC, PROSRGNDATA pRgn)
   PDC_ATTR pDc_Attr;
   RECTL rcl;
 
-  if (Entry->Flags & GDI_ENTRY_FLAG_NEED_UPDATE)
+  if (Entry->Flags & GDI_ENTRY_VALIDATE_VIS)
   {
      pDc_Attr = pDC->pDc_Attr;
      if ( !pDc_Attr ) pDc_Attr = &pDC->Dc_Attr; 
@@ -2141,7 +2141,7 @@ IntUpdateVisRectRgn(PDC pDC, PROSRGNDATA pRgn)
 
      pDc_Attr->VisRectRegion.Rect = rcl;
 
-     Entry->Flags &= ~GDI_ENTRY_FLAG_NEED_UPDATE;
+     Entry->Flags &= ~GDI_ENTRY_VALIDATE_VIS;
   }
 }
 
@@ -2203,7 +2203,7 @@ IntGdiCombineRgn(PROSRGNDATA destRgn,
 
 // NtGdi Exported Functions
 INT
-STDCALL
+APIENTRY
 NtGdiCombineRgn(HRGN  hDest,
                 HRGN  hSrc1,
                 HRGN  hSrc2,
@@ -2268,7 +2268,7 @@ NtGdiCombineRgn(HRGN  hDest,
 }
 
 HRGN
-STDCALL
+APIENTRY
 NtGdiCreateEllipticRgn(
     INT Left,
     INT Top,
@@ -2297,7 +2297,7 @@ IntGdiCreateRectRgn(INT LeftRect, INT TopRect, INT RightRect, INT BottomRect)
 }
 
 
-HRGN STDCALL
+HRGN APIENTRY
 NtGdiCreateRectRgn(INT LeftRect, INT TopRect, INT RightRect, INT BottomRect)
 {
     PROSRGNDATA pRgn;
@@ -2319,7 +2319,7 @@ NtGdiCreateRectRgn(INT LeftRect, INT TopRect, INT RightRect, INT BottomRect)
 
 
 HRGN
-STDCALL
+APIENTRY
 NtGdiCreateRoundRectRgn(
     INT left,
     INT top,
@@ -2437,7 +2437,7 @@ NtGdiCreateRoundRectRgn(
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiEqualRgn(
     HRGN  hSrcRgn1,
     HRGN  hSrcRgn2
@@ -2488,7 +2488,7 @@ exit:
 }
 
 HRGN
-STDCALL
+APIENTRY
 NtGdiExtCreateRegion(
     OPTIONAL LPXFORM Xform,
     DWORD Count,
@@ -2499,28 +2499,27 @@ NtGdiExtCreateRegion(
     PROSRGNDATA Region;
     DWORD nCount = 0;
     NTSTATUS Status = STATUS_SUCCESS;
+    MATRIX matrix;
 
-    if (Count < FIELD_OFFSET(RGNDATA, Buffer))
-    {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
-        return NULL;
-    }
-
-    _SEH_TRY
+    DPRINT("NtGdiExtCreateRegion\n");
+    _SEH2_TRY
     {
         ProbeForRead(RgnData, Count, 1);
         nCount = RgnData->rdh.nCount;
-        if ((Count - FIELD_OFFSET(RGNDATA, Buffer)) / sizeof(RECT) < nCount)
+        if (Count < sizeof(RGNDATAHEADER) + nCount * sizeof(RECT) ||
+            nCount == 0 ||
+            RgnData->rdh.iType != RDH_RECTANGLES ||
+            RgnData->rdh.dwSize != sizeof(RGNDATAHEADER))
         {
             Status = STATUS_INVALID_PARAMETER;
-            _SEH_LEAVE;
+            _SEH2_LEAVE;
         }
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
     if (!NT_SUCCESS(Status))
     {
         SetLastNtError(Status);
@@ -2536,20 +2535,46 @@ NtGdiExtCreateRegion(
     }
     hRgn = Region->BaseObject.hHmgr;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
-        RtlCopyMemory(&Region->rdh,
-        RgnData,
-        FIELD_OFFSET(RGNDATA, Buffer));
-        RtlCopyMemory(Region->Buffer,
-                      RgnData->Buffer,
-                      Count - FIELD_OFFSET(RGNDATA, Buffer));
+        /* Copy header */
+        Region->rdh = RgnData->rdh;
+
+        if (Xform)
+        {
+            ULONG ret;
+
+            /* Init the XFORMOBJ from the Xform struct */
+            Status = STATUS_INVALID_PARAMETER;
+            ret = XFORMOBJ_iSetXform((XFORMOBJ*)&matrix, (XFORML*)Xform);
+
+            /* Check for error, also no scale and shear allowed */
+            if (ret != DDI_ERROR && ret != GX_GENERAL)
+            {
+                /* Apply the coordinate transformation on the rects */
+                if (XFORMOBJ_bApplyXform((XFORMOBJ*)&matrix,
+                                         XF_LTOL,
+                                         nCount * 2,
+                                         RgnData->Buffer,
+                                         Region->Buffer))
+                {
+                    Status = STATUS_SUCCESS;
+                }
+            }
+        }
+        else
+        {
+            /* Copy rect coordinates */
+            RtlCopyMemory(Region->Buffer,
+                          RgnData->Buffer,
+                          nCount * sizeof(RECT));
+        }
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
     if (!NT_SUCCESS(Status))
     {
         SetLastWin32Error(ERROR_INVALID_PARAMETER);
@@ -2564,7 +2589,7 @@ NtGdiExtCreateRegion(
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiFillRgn(
     HDC hDC,
     HRGN hRgn,
@@ -2598,7 +2623,7 @@ NtGdiFillRgn(
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiFrameRgn(
     HDC hDC,
     HRGN hRgn,
@@ -2660,7 +2685,7 @@ REGION_GetRgnBox(
       API region is the intersection of the meta region and the clipping region,
       clearly named after the fact that it is controlled by GDI API calls.
 */
-INT STDCALL
+INT APIENTRY
 NtGdiGetRandomRgn(
     HDC hDC,
     HRGN hDest,
@@ -2726,7 +2751,7 @@ NtGdiGetRandomRgn(
     return ret;
 }
 
-INT STDCALL
+INT APIENTRY
 IntGdiGetRgnBox(
     HRGN hRgn,
     LPRECT pRect
@@ -2747,7 +2772,7 @@ IntGdiGetRgnBox(
 }
 
 
-INT STDCALL
+INT APIENTRY
 NtGdiGetRgnBox(
     HRGN hRgn,
     LPRECT pRect
@@ -2770,16 +2795,16 @@ NtGdiGetRgnBox(
         return ret;
     }
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ProbeForWrite(pRect, sizeof(RECT), 1);
         *pRect = SafeRect;
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
     if (!NT_SUCCESS(Status))
     {
         return ERROR;
@@ -2789,7 +2814,7 @@ NtGdiGetRgnBox(
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiInvertRgn(
     HDC hDC,
     HRGN hRgn
@@ -2822,7 +2847,7 @@ NtGdiInvertRgn(
 }
 
 INT
-STDCALL
+APIENTRY
 NtGdiOffsetRgn(
     HRGN hRgn,
     INT XOffset,
@@ -2883,7 +2908,7 @@ IntGdiPaintRgn(
     PGDIBRUSHOBJ pBrush;
     GDIBRUSHINST BrushInst;
     POINTL BrushOrigin;
-    BITMAPOBJ *BitmapObj;
+    SURFACE *psurf;
     PDC_ATTR Dc_Attr;
 
     if (!dc) return FALSE;
@@ -2919,16 +2944,16 @@ IntGdiPaintRgn(
 
     BrushOrigin.x = Dc_Attr->ptlBrushOrigin.x;
     BrushOrigin.y = Dc_Attr->ptlBrushOrigin.y;
-    BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
-    /* FIXME - Handle BitmapObj == NULL !!!! */
+    psurf = SURFACE_LockSurface(dc->w.hBitmap);
+    /* FIXME - Handle psurf == NULL !!!! */
 
-    bRet = IntEngPaint(&BitmapObj->SurfObj,
+    bRet = IntEngPaint(&psurf->SurfObj,
                        ClipRegion,
                        &BrushInst.BrushObject,
                        &BrushOrigin,
                        0xFFFF);//FIXME:don't know what to put here
 
-    BITMAPOBJ_UnlockBitmap(BitmapObj);
+    SURFACE_UnlockSurface(psurf);
     BRUSHOBJ_UnlockBrush(pBrush);
     REGION_UnlockRgn(visrgn);
     NtGdiDeleteObject(tmpVisRgn);
@@ -2938,7 +2963,7 @@ IntGdiPaintRgn(
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiPtInRegion(
     HRGN hRgn,
     INT X,
@@ -2995,7 +3020,7 @@ REGION_RectInRegion(
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiRectInRegion(
     HRGN  hRgn,
     LPRECT unsaferc
@@ -3011,16 +3036,16 @@ NtGdiRectInRegion(
         return ERROR;
     }
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ProbeForRead(unsaferc, sizeof(RECT), 1);
         rc = *unsaferc;
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
 
     if (!NT_SUCCESS(Status))
     {
@@ -3076,7 +3101,7 @@ REGION_SetRectRgn(
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiSetRectRgn(
     HRGN hRgn,
     INT LeftRect,
@@ -3098,7 +3123,7 @@ NtGdiSetRectRgn(
     return TRUE;
 }
 
-HRGN STDCALL
+HRGN APIENTRY
 NtGdiUnionRectWithRgn(
     HRGN hDest,
     CONST PRECT UnsafeRect
@@ -3114,16 +3139,16 @@ NtGdiUnionRectWithRgn(
         return NULL;
     }
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ProbeForRead(UnsafeRect, sizeof(RECT), 1);
         SafeRect = *UnsafeRect;
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
 
     if (! NT_SUCCESS(Status))
     {
@@ -3147,7 +3172,7 @@ NtGdiUnionRectWithRgn(
  *
  * If the function fails, the return value is zero."
  */
-DWORD STDCALL
+DWORD APIENTRY
 NtGdiGetRegionData(
     HRGN hrgn,
     DWORD count,
@@ -3171,17 +3196,17 @@ NtGdiGetRegionData(
             return size + sizeof(RGNDATAHEADER);
     }
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ProbeForWrite(rgndata, count, 1);
         RtlCopyMemory(rgndata, &obj->rdh, sizeof(RGNDATAHEADER));
         RtlCopyMemory(rgndata->Buffer, obj->Buffer, size);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
 
     if (!NT_SUCCESS(Status))
     {
@@ -3451,7 +3476,7 @@ REGION_PtsToRegion(
     {
         COPY_RECTS(temp, reg->Buffer, reg->rdh.nCount);
         if (reg->Buffer != &reg->rdh.rcBound)
-            ExFreePool(reg->Buffer);
+            ExFreePoolWithTag(reg->Buffer, TAG_REGION);
     }
     reg->Buffer = temp;
 
@@ -3536,7 +3561,7 @@ REGION_PtsToRegion(
  */
 static void FASTCALL
 REGION_CreateETandAET(
-    const INT *Count,
+    const ULONG *Count,
     INT nbpolygons,
     const POINT *pts,
     EdgeTable *ET,
@@ -3633,7 +3658,7 @@ REGION_CreateETandAET(
 HRGN FASTCALL
 IntCreatePolyPolygonRgn(
     POINT *Pts,
-    INT *Count,
+    PULONG Count,
     INT nbpolygons,
     INT mode
 )
@@ -3656,6 +3681,8 @@ IntCreatePolyPolygonRgn(
     POINTBLOCK *tmpPtBlock;
     int numFullPtBlocks = 0;
     INT poly, total;
+
+    if (mode == 0 || mode > 2) return 0;
 
     if (!(region = REGION_AllocRgnWithHandle(nbpolygons)))
         return 0;
@@ -3728,7 +3755,7 @@ IntCreatePolyPolygonRgn(
                     if (!tmpPtBlock)
                     {
                         DPRINT1("Can't alloc tPB\n");
-                        ExFreePool(pETEs);
+                        ExFreePoolWithTag(pETEs, TAG_REGION);
                         return 0;
                     }
                     curPtBlock->next = tmpPtBlock;
@@ -3787,7 +3814,7 @@ IntCreatePolyPolygonRgn(
                         if (!tmpPtBlock)
                         {
                             DPRINT1("Can't alloc tPB\n");
-                            ExFreePool(pETEs);
+                            ExFreePoolWithTag(pETEs, TAG_REGION);
                             NtGdiDeleteObject(hrgn);
                             return 0;
                         }
@@ -3819,147 +3846,12 @@ IntCreatePolyPolygonRgn(
     for (curPtBlock = FirstPtBlock.next; --numFullPtBlocks >= 0;)
     {
         tmpPtBlock = curPtBlock->next;
-        ExFreePool(curPtBlock);
+        ExFreePoolWithTag(curPtBlock, TAG_REGION);
         curPtBlock = tmpPtBlock;
     }
-    ExFreePool(pETEs);
+    ExFreePoolWithTag(pETEs, TAG_REGION);
     REGION_UnlockRgn(region);
     return hrgn;
-}
-
-
-HRGN
-FASTCALL
-GdiCreatePolyPolygonRgn(
-    CONST PPOINT pt,
-    CONST PINT  PolyCounts,
-    INT  Count,
-    INT  PolyFillMode
-)
-{
-    POINT *Safept;
-    INT *SafePolyCounts;
-    INT nPoints, nEmpty, nInvalid, i;
-    HRGN hRgn;
-    NTSTATUS Status = STATUS_SUCCESS;
-
-    if (pt == NULL || PolyCounts == NULL || Count == 0 ||
-            (PolyFillMode != WINDING && PolyFillMode != ALTERNATE))
-    {
-        /* Windows doesn't set a last error here */
-        return (HRGN)0;
-    }
-
-    _SEH_TRY
-    {
-        ProbeForRead(PolyCounts, Count * sizeof(INT), 1);
-        /* just probe one point for now, we don't know the length of the array yet */
-        ProbeForRead(pt, sizeof(POINT), 1);
-    }
-    _SEH_HANDLE
-    {
-        Status = _SEH_GetExceptionCode();
-    }
-    _SEH_END;
-
-    if (!NT_SUCCESS(Status))
-    {
-        SetLastNtError(Status);
-        return (HRGN)0;
-    }
-
-    if (!(SafePolyCounts = ExAllocatePoolWithTag(PagedPool, Count * sizeof(INT), TAG_REGION)))
-    {
-        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-        return (HRGN)0;
-    }
-
-    _SEH_TRY
-    {
-        /* pointers were already probed! */
-        RtlCopyMemory(SafePolyCounts,
-        PolyCounts,
-        Count * sizeof(INT));
-    }
-    _SEH_HANDLE
-    {
-        Status = _SEH_GetExceptionCode();
-    }
-    _SEH_END;
-
-    if (!NT_SUCCESS(Status))
-    {
-        ExFreePool(SafePolyCounts);
-        SetLastNtError(Status);
-        return (HRGN)0;
-    }
-
-    /* validate poligons */
-    nPoints = 0;
-    nEmpty = 0;
-    nInvalid = 0;
-    for (i = 0; i < Count; i++)
-    {
-        if (SafePolyCounts[i] == 0)
-        {
-            nEmpty++;
-        }
-        if (SafePolyCounts[i] == 1)
-        {
-            nInvalid++;
-        }
-        nPoints += SafePolyCounts[i];
-    }
-
-    if (nEmpty == Count)
-    {
-        /* if all polygon counts are zero, return without setting a last error code. */
-        ExFreePool(SafePolyCounts);
-        return (HRGN)0;
-    }
-    if (nInvalid != 0)
-    {
-        /* if at least one poly count is 1, fail */
-        ExFreePool(SafePolyCounts);
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
-        return (HRGN)0;
-    }
-
-    /* copy points */
-    if (!(Safept = ExAllocatePoolWithTag(PagedPool, nPoints * sizeof(POINT), TAG_REGION)))
-    {
-        ExFreePool(SafePolyCounts);
-        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-        return (HRGN)0;
-    }
-
-    _SEH_TRY
-    {
-        ProbeForRead(pt, nPoints * sizeof(POINT), 1);
-        /* pointers were already probed! */
-        RtlCopyMemory(Safept,
-                      pt,
-                      nPoints * sizeof(POINT));
-    }
-    _SEH_HANDLE
-    {
-        Status = _SEH_GetExceptionCode();
-    }
-    _SEH_END;
-    if (!NT_SUCCESS(Status))
-    {
-        ExFreePool(Safept);
-        ExFreePool(SafePolyCounts);
-        SetLastNtError(Status);
-        return (HRGN)0;
-    }
-
-    /* now we're ready to calculate the region safely */
-    hRgn = IntCreatePolyPolygonRgn(Safept, SafePolyCounts, Count, PolyFillMode);
-
-    ExFreePool(Safept);
-    ExFreePool(SafePolyCounts);
-    return hRgn;
 }
 
 /* EOF */

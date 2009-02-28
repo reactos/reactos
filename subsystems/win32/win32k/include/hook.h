@@ -18,7 +18,7 @@ typedef struct tagHOOK
 #define NB_HOOKS (WH_MAXHOOK-WH_MINHOOK+1)
 #define HOOKID_TO_INDEX(HookId) (HookId - WH_MINHOOK)
 #define HOOKID_TO_FLAG(HookId) (1 << ((HookId) + 1))
-#define ISITHOOKED(HookId) (PsGetCurrentThreadWin32Thread()->Hooks & HOOKID_TO_FLAG(HookId))
+#define ISITHOOKED(HookId) (((PTHREADINFO)PsGetCurrentThreadWin32Thread())->Hooks & HOOKID_TO_FLAG(HookId))
 
 typedef struct tagHOOKTABLE
 {
@@ -48,7 +48,7 @@ typedef struct tagEVENTTABLE
 } EVENTTABLE, *PEVENTTABLE;
 
 LRESULT FASTCALL co_HOOK_CallHooks(INT HookId, INT Code, WPARAM wParam, LPARAM lParam);
-LRESULT FASTCALL co_EVENT_CallEvents(DWORD, HWND, LONG, LONG);
+LRESULT FASTCALL co_EVENT_CallEvents(DWORD, HWND, UINT_PTR, LONG_PTR);
 VOID FASTCALL HOOK_DestroyThreadHooks(PETHREAD Thread);
 PHOOK FASTCALL IntGetHookObject(HHOOK);
 PHOOK FASTCALL IntGetNextHook(PHOOK Hook);

@@ -40,8 +40,11 @@ IntGetFocusWindow()
 HWND FASTCALL
 IntGetThreadFocusWindow()
 {
+   PTHREADINFO pti;
    PUSER_MESSAGE_QUEUE ThreadQueue;
-   ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetCurrentThreadWin32Thread()->MessageQueue;
+
+   pti = PsGetCurrentThreadWin32Thread();
+   ThreadQueue = pti->MessageQueue;
    return ThreadQueue != NULL ? ThreadQueue->FocusWindow : 0;
 }
 
@@ -312,6 +315,7 @@ co_IntMouseActivateWindow(PWINDOW_OBJECT Window)
 HWND FASTCALL
 co_IntSetActiveWindow(PWINDOW_OBJECT Window OPTIONAL)
 {
+   PTHREADINFO pti;
    PUSER_MESSAGE_QUEUE ThreadQueue;
    HWND hWndPrev;
    HWND hWnd = 0;
@@ -320,7 +324,8 @@ co_IntSetActiveWindow(PWINDOW_OBJECT Window OPTIONAL)
    if (Window)
       ASSERT_REFS_CO(Window);
 
-   ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetCurrentThreadWin32Thread()->MessageQueue;
+   pti = PsGetCurrentThreadWin32Thread();
+   ThreadQueue = pti->MessageQueue;
    ASSERT(ThreadQueue != 0);
 
    if (Window != 0)
@@ -358,12 +363,14 @@ HWND FASTCALL
 co_IntSetFocusWindow(PWINDOW_OBJECT Window OPTIONAL)
 {
    HWND hWndPrev = 0;
+   PTHREADINFO pti;
    PUSER_MESSAGE_QUEUE ThreadQueue;
 
    if (Window)
       ASSERT_REFS_CO(Window);
 
-   ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetCurrentThreadWin32Thread()->MessageQueue;
+   pti = PsGetCurrentThreadWin32Thread();
+   ThreadQueue = pti->MessageQueue;
    ASSERT(ThreadQueue != 0);
 
    hWndPrev = ThreadQueue->FocusWindow;
@@ -406,7 +413,7 @@ UserGetForegroundWindow(VOID)
 /*
  * @implemented
  */
-HWND STDCALL
+HWND APIENTRY
 NtUserGetForegroundWindow(VOID)
 {
    DECLARE_RETURN(HWND);
@@ -425,13 +432,16 @@ CLEANUP:
 
 HWND FASTCALL UserGetActiveWindow()
 {
+   PTHREADINFO pti;
    PUSER_MESSAGE_QUEUE ThreadQueue;
-   ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetCurrentThreadWin32Thread()->MessageQueue;
+
+   pti = PsGetCurrentThreadWin32Thread();
+   ThreadQueue = pti->MessageQueue;
    return( ThreadQueue ? ThreadQueue->ActiveWindow : 0);
 }
 
 
-HWND STDCALL
+HWND APIENTRY
 NtUserSetActiveWindow(HWND hWnd)
 {
    USER_REFERENCE_ENTRY Ref;
@@ -443,6 +453,7 @@ NtUserSetActiveWindow(HWND hWnd)
    if (hWnd)
    {
       PWINDOW_OBJECT Window;
+      PTHREADINFO pti;
       PUSER_MESSAGE_QUEUE ThreadQueue;
       HWND hWndPrev;
 
@@ -451,7 +462,8 @@ NtUserSetActiveWindow(HWND hWnd)
          RETURN( 0);
       }
 
-      ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetCurrentThreadWin32Thread()->MessageQueue;
+      pti = PsGetCurrentThreadWin32Thread();
+      ThreadQueue = pti->MessageQueue;
 
       if (Window->MessageQueue != ThreadQueue)
       {
@@ -479,15 +491,17 @@ CLEANUP:
 /*
  * @implemented
  */
-HWND STDCALL
+HWND APIENTRY
 IntGetCapture(VOID)
 {
+   PTHREADINFO pti;
    PUSER_MESSAGE_QUEUE ThreadQueue;
    DECLARE_RETURN(HWND);
 
    DPRINT("Enter IntGetCapture\n");
 
-   ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetCurrentThreadWin32Thread()->MessageQueue;
+   pti = PsGetCurrentThreadWin32Thread();
+   ThreadQueue = pti->MessageQueue;
    RETURN( ThreadQueue ? ThreadQueue->CaptureWindow : 0);
 
 CLEANUP:
@@ -498,9 +512,10 @@ CLEANUP:
 /*
  * @implemented
  */
-HWND STDCALL
+HWND APIENTRY
 NtUserSetCapture(HWND hWnd)
 {
+   PTHREADINFO pti;
    PUSER_MESSAGE_QUEUE ThreadQueue;
    PWINDOW_OBJECT Window;
    HWND hWndPrev;
@@ -509,7 +524,8 @@ NtUserSetCapture(HWND hWnd)
    DPRINT("Enter NtUserSetCapture(%x)\n", hWnd);
    UserEnterExclusive();
 
-   ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetCurrentThreadWin32Thread()->MessageQueue;
+   pti = PsGetCurrentThreadWin32Thread();
+   ThreadQueue = pti->MessageQueue;
 
    if((Window = UserGetWindowObject(hWnd)))
    {
@@ -545,6 +561,7 @@ HWND FASTCALL co_UserSetFocus(PWINDOW_OBJECT Window OPTIONAL)
 {
    if (Window)
    {
+      PTHREADINFO pti;
       PUSER_MESSAGE_QUEUE ThreadQueue;
       HWND hWndPrev;
       PWINDOW_OBJECT TopWnd;
@@ -553,7 +570,8 @@ HWND FASTCALL co_UserSetFocus(PWINDOW_OBJECT Window OPTIONAL)
 
       ASSERT_REFS_CO(Window);
 
-      ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetCurrentThreadWin32Thread()->MessageQueue;
+      pti = PsGetCurrentThreadWin32Thread();
+      ThreadQueue = pti->MessageQueue;
 
       Wnd = Window->Wnd;
       if (Wnd->Style & (WS_MINIMIZE | WS_DISABLED))
@@ -591,7 +609,7 @@ HWND FASTCALL co_UserSetFocus(PWINDOW_OBJECT Window OPTIONAL)
 /*
  * @implemented
  */
-HWND STDCALL
+HWND APIENTRY
 NtUserSetFocus(HWND hWnd)
 {
    PWINDOW_OBJECT Window;

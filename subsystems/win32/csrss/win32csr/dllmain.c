@@ -7,16 +7,14 @@
  */
 
 /* INCLUDES ******************************************************************/
-
-#include "w32csr.h"
-
 #define NDEBUG
+#include "w32csr.h"
 #include <debug.h>
 
 /* Not defined in any header file */
-extern VOID STDCALL PrivateCsrssManualGuiCheck(LONG Check);
-extern VOID STDCALL PrivateCsrssInitialized();
-extern VOID STDCALL InitializeAppSwitchHook();
+extern VOID WINAPI PrivateCsrssManualGuiCheck(LONG Check);
+extern VOID WINAPI PrivateCsrssInitialized();
+extern VOID WINAPI InitializeAppSwitchHook();
 
 /* GLOBALS *******************************************************************/
 
@@ -88,7 +86,7 @@ static CSRSS_OBJECT_DEFINITION Win32CsrObjectDefinitions[] =
 
 /* FUNCTIONS *****************************************************************/
 
-BOOL STDCALL
+BOOL WINAPI
 DllMain(HANDLE hDll,
 	DWORD dwReason,
 	LPVOID lpReserved)
@@ -174,7 +172,7 @@ Win32CsrEnumProcesses(CSRSS_ENUM_PROCESS_PROC EnumProc,
   return (CsrExports.CsrEnumProcessesProc)(EnumProc, Context);
 }
 
-static BOOL STDCALL
+static BOOL WINAPI
 Win32CsrInitComplete(void)
 {
   PrivateCsrssInitialized();
@@ -182,7 +180,7 @@ Win32CsrInitComplete(void)
   return TRUE;
 }
 
-static BOOL STDCALL
+static BOOL WINAPI
 Win32CsrHardError(IN PCSRSS_PROCESS_DATA ProcessData,
                   IN PHARDERROR_MSG HardErrorMessage)
 {
@@ -578,7 +576,7 @@ Win32CsrHardError(IN PCSRSS_PROCESS_DATA ProcessData,
 }
 
 
-BOOL STDCALL
+BOOL WINAPI
 Win32CsrInitialization(PCSRSS_API_DEFINITION *ApiDefinitions,
                        PCSRSS_OBJECT_DEFINITION *ObjectDefinitions,
                        CSRPLUGIN_INIT_COMPLETE_PROC *InitComplete,
@@ -586,8 +584,11 @@ Win32CsrInitialization(PCSRSS_API_DEFINITION *ApiDefinitions,
                        PCSRSS_EXPORTED_FUNCS Exports,
                        HANDLE CsrssApiHeap)
 {
+  NTSTATUS Status;
   CsrExports = *Exports;
   Win32CsrApiHeap = CsrssApiHeap;
+
+  Status = NtUserInitialize(0 ,NULL, NULL);
 
   PrivateCsrssManualGuiCheck(0);
   CsrInitConsoleSupport();

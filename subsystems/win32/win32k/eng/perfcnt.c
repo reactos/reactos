@@ -33,7 +33,7 @@
 /*
  * @implemented
  */
-VOID STDCALL
+VOID APIENTRY
 EngQueryPerformanceFrequency(LONGLONG *Frequency)
 {
   LARGE_INTEGER Freq;
@@ -45,7 +45,7 @@ EngQueryPerformanceFrequency(LONGLONG *Frequency)
 /*
  * @implemented
  */
-VOID STDCALL
+VOID APIENTRY
 EngQueryPerformanceCounter(LONGLONG *Count)
 {
   LARGE_INTEGER PerfCount;

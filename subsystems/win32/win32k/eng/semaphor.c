@@ -7,7 +7,7 @@
  * @implemented
  */
 HSEMAPHORE
-STDCALL
+APIENTRY
 EngCreateSemaphore ( VOID )
 {
   // www.osr.com/ddk/graphics/gdifncs_95lz.htm
@@ -16,7 +16,7 @@ EngCreateSemaphore ( VOID )
     return NULL;
   if ( !NT_SUCCESS(ExInitializeResourceLite ( psem )) )
   {
-    ExFreePool ( psem );
+    ExFreePoolWithTag ( psem, TAG_GSEM );
     return NULL;
   }
   return (HSEMAPHORE)psem;
@@ -34,7 +34,7 @@ IntGdiAcquireSemaphore ( HSEMAPHORE hsem )
  * @implemented
  */
 VOID
-STDCALL
+APIENTRY
 EngAcquireSemaphore ( IN HSEMAPHORE hsem )
 {
   // www.osr.com/ddk/graphics/gdifncs_14br.htm
@@ -58,7 +58,7 @@ IntGdiReleaseSemaphore ( HSEMAPHORE hsem )
  * @implemented
  */
 VOID
-STDCALL
+APIENTRY
 EngReleaseSemaphore ( IN HSEMAPHORE hsem )
 {
   // www.osr.com/ddk/graphics/gdifncs_5u3r.htm
@@ -73,7 +73,7 @@ EngReleaseSemaphore ( IN HSEMAPHORE hsem )
  * @implemented
  */
 VOID
-STDCALL
+APIENTRY
 EngDeleteSemaphore ( IN HSEMAPHORE hsem )
 {
   // www.osr.com/ddk/graphics/gdifncs_13c7.htm
@@ -81,14 +81,14 @@ EngDeleteSemaphore ( IN HSEMAPHORE hsem )
 
   ExDeleteResourceLite((PERESOURCE)hsem);
 
-  ExFreePool ( (PVOID)hsem );
+  ExFreePoolWithTag( (PVOID)hsem, TAG_GSEM);
 }
 
 /*
  * @implemented
  */
 BOOL
-STDCALL
+APIENTRY
 EngIsSemaphoreOwned ( IN HSEMAPHORE hsem )
 {
   // www.osr.com/ddk/graphics/gdifncs_6wmf.htm
@@ -100,7 +100,7 @@ EngIsSemaphoreOwned ( IN HSEMAPHORE hsem )
  * @implemented
  */
 BOOL
-STDCALL
+APIENTRY
 EngIsSemaphoreOwnedByCurrentThread ( IN HSEMAPHORE hsem )
 {
   // www.osr.com/ddk/graphics/gdifncs_9yxz.htm
@@ -111,7 +111,7 @@ EngIsSemaphoreOwnedByCurrentThread ( IN HSEMAPHORE hsem )
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL APIENTRY
 EngInitializeSafeSemaphore(
    OUT ENGSAFESEMAPHORE *Semaphore)
 {
@@ -144,7 +144,7 @@ EngInitializeSafeSemaphore(
 /*
  * @implemented
  */
-VOID STDCALL
+VOID APIENTRY
 EngDeleteSafeSemaphore(
    IN OUT ENGSAFESEMAPHORE *Semaphore)
 {

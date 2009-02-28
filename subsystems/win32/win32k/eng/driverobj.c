@@ -43,17 +43,19 @@ IntEngCleanupDriverObjs(struct _EPROCESS *Process,
                         PW32PROCESS Win32Process)
 {
   PDRIVERGDI DrvObjInt;
+  PW32PROCESS CurrentWin32Process;
 
-  IntEngLockProcessDriverObjs(PsGetCurrentProcessWin32Process());
+  CurrentWin32Process = PsGetCurrentProcessWin32Process();
+  IntEngLockProcessDriverObjs(CurrentWin32Process);
   while (!IsListEmpty(&Win32Process->DriverObjListHead))
     {
       DrvObjInt = CONTAINING_RECORD(Win32Process->DriverObjListHead.Flink,
                                     DRIVERGDI, ListEntry);
-      IntEngUnLockProcessDriverObjs(PsGetCurrentProcessWin32Process());
+      IntEngUnLockProcessDriverObjs(CurrentWin32Process);
       EngDeleteDriverObj((HDRVOBJ)(&DrvObjInt->DriverObj), TRUE, FALSE);
-      IntEngLockProcessDriverObjs(PsGetCurrentProcessWin32Process());
+      IntEngLockProcessDriverObjs(CurrentWin32Process);
     }
-  IntEngUnLockProcessDriverObjs(PsGetCurrentProcessWin32Process());
+  IntEngUnLockProcessDriverObjs(CurrentWin32Process);
 }
 
 
@@ -61,7 +63,7 @@ IntEngCleanupDriverObjs(struct _EPROCESS *Process,
  * @implemented
  */
 HDRVOBJ
-STDCALL
+APIENTRY
 EngCreateDriverObj(
 	IN PVOID        pvObj,
 	IN FREEOBJPROC  pFreeObjProc,
@@ -70,6 +72,7 @@ EngCreateDriverObj(
 {
   PDRIVERGDI DrvObjInt;
   PDRIVEROBJ DrvObjUser;
+  PW32PROCESS CurrentWin32Process;
 
   /* Create DRIVEROBJ */
   DrvObjInt = EngAllocMem(0, sizeof (DRIVERGDI), TAG_DRIVEROBJ);
@@ -88,9 +91,10 @@ EngCreateDriverObj(
 
   /* fill internal object */
   ExInitializeFastMutex(&DrvObjInt->Lock);
-  IntEngLockProcessDriverObjs(PsGetCurrentProcessWin32Process());
-  InsertTailList(&PsGetCurrentProcessWin32Process()->DriverObjListHead, &DrvObjInt->ListEntry);
-  IntEngUnLockProcessDriverObjs(PsGetCurrentProcessWin32Process());
+  CurrentWin32Process = PsGetCurrentProcessWin32Process();
+  IntEngLockProcessDriverObjs(CurrentWin32Process);
+  InsertTailList(&CurrentWin32Process->DriverObjListHead, &DrvObjInt->ListEntry);
+  IntEngUnLockProcessDriverObjs(CurrentWin32Process);
 
   return (HDRVOBJ)DrvObjUser;
 }
@@ -100,7 +104,7 @@ EngCreateDriverObj(
  * @implemented
  */
 BOOL
-STDCALL
+APIENTRY
 EngDeleteDriverObj(
 	IN HDRVOBJ  hdo,
 	IN BOOL  bCallBack,
@@ -109,6 +113,7 @@ EngDeleteDriverObj(
 {
   PDRIVEROBJ DrvObjUser = (PDRIVEROBJ)hdo;
   PDRIVERGDI DrvObjInt = ObjToGDI(DrvObjUser, DRIVER);
+  PW32PROCESS CurrentWin32Process;
 
   /* Make sure the obj is locked */
   if (!bLocked)
@@ -129,9 +134,10 @@ EngDeleteDriverObj(
     }
 
   /* Free the DRIVEROBJ */
-  IntEngLockProcessDriverObjs(PsGetCurrentProcessWin32Process());
+  CurrentWin32Process = PsGetCurrentProcessWin32Process();
+  IntEngLockProcessDriverObjs(CurrentWin32Process);
   RemoveEntryList(&DrvObjInt->ListEntry);
-  IntEngUnLockProcessDriverObjs(PsGetCurrentProcessWin32Process());
+  IntEngUnLockProcessDriverObjs(CurrentWin32Process);
   EngFreeMem(DrvObjInt);
 
   return TRUE;
@@ -142,7 +148,7 @@ EngDeleteDriverObj(
  * @implemented
  */
 PDRIVEROBJ
-STDCALL
+APIENTRY
 EngLockDriverObj( IN HDRVOBJ hdo )
 {
   PDRIVEROBJ DrvObjUser = (PDRIVEROBJ)hdo;
@@ -161,7 +167,7 @@ EngLockDriverObj( IN HDRVOBJ hdo )
  * @implemented
  */
 BOOL
-STDCALL
+APIENTRY
 EngUnlockDriverObj ( IN HDRVOBJ hdo )
 {
   PDRIVERGDI DrvObjInt = ObjToGDI((PDRIVEROBJ)hdo, DRIVER);

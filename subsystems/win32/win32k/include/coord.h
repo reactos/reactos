@@ -14,7 +14,7 @@ int
 FASTCALL
 IntGetGraphicsMode ( PDC dc );
 
-int STDCALL IntGdiSetMapMode(PDC, int);
+int APIENTRY IntGdiSetMapMode(PDC, int);
 
 BOOL
 FASTCALL
@@ -23,5 +23,6 @@ IntGdiModifyWorldTransform(PDC pDc,
                            DWORD Mode);
 
 VOID FASTCALL IntMirrorWindowOrg(PDC);
+void FASTCALL IntFixIsotropicMapping(PDC dc);
 
 #endif
