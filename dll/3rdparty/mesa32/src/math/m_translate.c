@@ -28,9 +28,9 @@
  */
 
 
-#include "glheader.h"
-#include "mtypes.h"		/* GLchan hack */
-#include "colormac.h"
+#include "main/glheader.h"
+#include "main/mtypes.h"		/* GLchan hack */
+#include "main/colormac.h"
 
 #include "m_translate.h"
 

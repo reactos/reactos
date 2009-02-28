@@ -17,7 +17,7 @@ INCLUDE_DIRS = \
 default: gen_matypes matypes.h
 
 clean:
-	rm -f matypes.h gen_matypes
+	-rm -f matypes.h gen_matypes
 
 
 gen_matypes: gen_matypes.c

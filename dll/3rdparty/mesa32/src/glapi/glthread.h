@@ -259,11 +259,11 @@ typedef benaphore _glthread_Mutex;
  * THREADS not defined
  */
 
-typedef GLuint _glthread_TSD;
+typedef int _glthread_TSD;
 
-typedef GLuint _glthread_Thread;
+typedef int _glthread_Thread;
 
-typedef GLuint _glthread_Mutex;
+typedef int _glthread_Mutex;
 
 #define _glthread_DECLARE_STATIC_MUTEX(name)  static _glthread_Mutex name = 0
 
@@ -297,6 +297,10 @@ _glthread_GetTSD(_glthread_TSD *);
 
 extern void
 _glthread_SetTSD(_glthread_TSD *, void *);
+
+#if !defined __GNUC__ || __GNUC__ < 3
+#  define __builtin_expect(x, y) x
+#endif
 
 #if defined(GLX_USE_TLS)
 

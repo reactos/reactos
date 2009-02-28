@@ -1,6 +1,6 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5.3
+ * Version:  7.1
  *
  * Copyright (C) 1999-2007  Brian Paul   All Rights Reserved.
  *
@@ -25,16 +25,17 @@
  *    Keith Whitwell <keith@tungstengraphics.com>
  */
 
-#include "glheader.h"
-#include "imports.h"
-#include "colormac.h"
-#include "ss_context.h"
-#include "ss_triangle.h"
-#include "swrast_setup.h"
+#include "main/glheader.h"
+#include "main/imports.h"
+#include "main/colormac.h"
 #include "tnl/tnl.h"
 #include "tnl/t_context.h"
 #include "tnl/t_pipeline.h"
 #include "tnl/t_vertex.h"
+#include "swrast_setup.h"
+#include "ss_context.h"
+#include "ss_triangle.h"
+
 
 /* Need to check lighting state and vertex program state to know
  * if two-sided lighting is in effect.
@@ -111,25 +112,39 @@ setup_vertex_format(GLcontext *ctx)
 {
    TNLcontext *tnl = TNL_CONTEXT(ctx);
    SScontext *swsetup = SWSETUP_CONTEXT(ctx);
+   GLboolean intColors = !ctx->FragmentProgram._Current
+                      && !ctx->ATIFragmentShader._Enabled
+                      && ctx->RenderMode == GL_RENDER
+                      && CHAN_TYPE == GL_UNSIGNED_BYTE;
 
-   if (!RENDERINPUTS_EQUAL(tnl->render_inputs_bitset,
+   if (intColors != swsetup->intColors ||
+       !RENDERINPUTS_EQUAL(tnl->render_inputs_bitset,
                            swsetup->last_index_bitset)) {
       DECLARE_RENDERINPUTS(index_bitset);
       struct tnl_attr_map map[_TNL_ATTRIB_MAX];
       int i, e = 0;
 
+      swsetup->intColors = intColors;
+
       RENDERINPUTS_COPY( index_bitset, tnl->render_inputs_bitset );
 
-      EMIT_ATTR( _TNL_ATTRIB_POS, EMIT_4F_VIEWPORT, win );
+      EMIT_ATTR( _TNL_ATTRIB_POS, EMIT_4F_VIEWPORT, attrib[FRAG_ATTRIB_WPOS] );
 
-      if (RENDERINPUTS_TEST( index_bitset, _TNL_ATTRIB_COLOR0 ))
-         EMIT_ATTR( _TNL_ATTRIB_COLOR0, EMIT_4CHAN_4F_RGBA, color );
+      if (RENDERINPUTS_TEST( index_bitset, _TNL_ATTRIB_COLOR0 )) {
+         if (swsetup->intColors)
+            EMIT_ATTR( _TNL_ATTRIB_COLOR0, EMIT_4CHAN_4F_RGBA, color );
+         else
+            EMIT_ATTR( _TNL_ATTRIB_COLOR0, EMIT_4F, attrib[FRAG_ATTRIB_COL0]);
+      }
 
-      if (RENDERINPUTS_TEST( index_bitset, _TNL_ATTRIB_COLOR1 ))
-         EMIT_ATTR( _TNL_ATTRIB_COLOR1, EMIT_4CHAN_4F_RGBA, specular);
+      if (RENDERINPUTS_TEST( index_bitset, _TNL_ATTRIB_COLOR1 )) {
+         EMIT_ATTR( _TNL_ATTRIB_COLOR1, EMIT_4F, attrib[FRAG_ATTRIB_COL1]);
+      }
 
-      if (RENDERINPUTS_TEST( index_bitset, _TNL_ATTRIB_COLOR_INDEX ))
-         EMIT_ATTR( _TNL_ATTRIB_COLOR_INDEX, EMIT_1F, index );
+      if (RENDERINPUTS_TEST( index_bitset, _TNL_ATTRIB_COLOR_INDEX )) {
+         EMIT_ATTR( _TNL_ATTRIB_COLOR_INDEX, EMIT_1F,
+                    attrib[FRAG_ATTRIB_CI][0] );
+      }
 
       if (RENDERINPUTS_TEST( index_bitset, _TNL_ATTRIB_FOG )) {
          const GLint emit = ctx->FragmentProgram._Current ? EMIT_4F : EMIT_1F;
@@ -184,7 +199,14 @@ _swsetup_RenderStart( GLcontext *ctx )
       _swsetup_choose_trifuncs(ctx);
    }
 
+   if (swsetup->NewState & _NEW_PROGRAM) {
+      RENDERINPUTS_ZERO( swsetup->last_index_bitset );
+   }
+
    swsetup->NewState = 0;
+
+   /* This will change if drawing unfilled tris */
+   _swrast_SetFacing(ctx, 0);
 
    _swrast_render_start(ctx);
 
@@ -258,31 +280,35 @@ _swsetup_Translate( GLcontext *ctx, const void *vertex, SWvertex *dest )
 
    _tnl_get_attr( ctx, vertex, _TNL_ATTRIB_POS, tmp );
 
-   dest->win[0] = m[0]  * tmp[0] + m[12];
-   dest->win[1] = m[5]  * tmp[1] + m[13];
-   dest->win[2] = m[10] * tmp[2] + m[14];
-   dest->win[3] =         tmp[3];
+   dest->attrib[FRAG_ATTRIB_WPOS][0] = m[0]  * tmp[0] + m[12];
+   dest->attrib[FRAG_ATTRIB_WPOS][1] = m[5]  * tmp[1] + m[13];
+   dest->attrib[FRAG_ATTRIB_WPOS][2] = m[10] * tmp[2] + m[14];
+   dest->attrib[FRAG_ATTRIB_WPOS][3] =         tmp[3];
 
    /** XXX try to limit these loops someday */
    for (i = 0 ; i < ctx->Const.MaxTextureCoordUnits ; i++)
-      _tnl_get_attr( ctx, vertex, _TNL_ATTRIB_TEX0+i,
+      _tnl_get_attr( ctx, vertex, _TNL_ATTRIB_TEX0 + i,
                      dest->attrib[FRAG_ATTRIB_TEX0 + i] );
 
    for (i = 0 ; i < ctx->Const.MaxVarying ; i++)
-      _tnl_get_attr( ctx, vertex, _TNL_ATTRIB_GENERIC0+i,
+      _tnl_get_attr( ctx, vertex, _TNL_ATTRIB_GENERIC0 + i,
                      dest->attrib[FRAG_ATTRIB_VAR0 + i] );
 
-   _tnl_get_attr( ctx, vertex, _TNL_ATTRIB_COLOR0, tmp );
-   UNCLAMPED_FLOAT_TO_RGBA_CHAN( dest->color, tmp );
+   if (ctx->Visual.rgbMode) {
+      _tnl_get_attr( ctx, vertex, _TNL_ATTRIB_COLOR0,
+                     dest->attrib[FRAG_ATTRIB_COL0] );
+      UNCLAMPED_FLOAT_TO_RGBA_CHAN( dest->color, tmp );
 
-   _tnl_get_attr( ctx, vertex, _TNL_ATTRIB_COLOR1, tmp );
-   UNCLAMPED_FLOAT_TO_RGBA_CHAN( dest->specular, tmp );
+      _tnl_get_attr( ctx, vertex, _TNL_ATTRIB_COLOR1,
+                     dest->attrib[FRAG_ATTRIB_COL1]);
+   }
+   else {
+      _tnl_get_attr( ctx, vertex, _TNL_ATTRIB_COLOR_INDEX, tmp );
+      dest->attrib[FRAG_ATTRIB_CI][0] = tmp[0];
+   }
 
    _tnl_get_attr( ctx, vertex, _TNL_ATTRIB_FOG, tmp );
    dest->attrib[FRAG_ATTRIB_FOGC][0] = tmp[0];
-
-   _tnl_get_attr( ctx, vertex, _TNL_ATTRIB_COLOR_INDEX, tmp );
-   dest->index = tmp[0];
 
    /* XXX See _tnl_get_attr about pointsize ... */
    _tnl_get_attr( ctx, vertex, _TNL_ATTRIB_POINTSIZE, tmp );

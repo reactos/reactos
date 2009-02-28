@@ -29,14 +29,216 @@
  */
 
 
-#include "glheader.h"
+#include "main/glheader.h"
+#include "main/context.h"
+#include "main/hash.h"
+#include "main/imports.h"
+#include "main/macros.h"
+#include "main/mtypes.h"
 #include "arbprogram.h"
 #include "arbprogparse.h"
-#include "context.h"
-#include "imports.h"
-#include "macros.h"
-#include "mtypes.h"
 #include "program.h"
+
+
+
+/**
+ * Mixing ARB and NV vertex/fragment programs can be tricky.
+ * Note: GL_VERTEX_PROGRAM_ARB == GL_VERTEX_PROGRAM_NV
+ *  but, GL_FRAGMENT_PROGRAM_ARB != GL_FRAGMENT_PROGRAM_NV
+ * The two different fragment program targets are supposed to be compatible
+ * to some extent (see GL_ARB_fragment_program spec).
+ * This function does the compatibility check.
+ */
+static GLboolean
+compatible_program_targets(GLenum t1, GLenum t2)
+{
+   if (t1 == t2)
+      return GL_TRUE;
+   if (t1 == GL_FRAGMENT_PROGRAM_ARB && t2 == GL_FRAGMENT_PROGRAM_NV)
+      return GL_TRUE;
+   if (t1 == GL_FRAGMENT_PROGRAM_NV && t2 == GL_FRAGMENT_PROGRAM_ARB)
+      return GL_TRUE;
+   return GL_FALSE;
+}
+
+
+/**
+ * Bind a program (make it current)
+ * \note Called from the GL API dispatcher by both glBindProgramNV
+ * and glBindProgramARB.
+ */
+void GLAPIENTRY
+_mesa_BindProgram(GLenum target, GLuint id)
+{
+   struct gl_program *curProg, *newProg;
+   GET_CURRENT_CONTEXT(ctx);
+   ASSERT_OUTSIDE_BEGIN_END(ctx);
+
+   FLUSH_VERTICES(ctx, _NEW_PROGRAM);
+
+   /* Error-check target and get curProg */
+   if ((target == GL_VERTEX_PROGRAM_ARB) && /* == GL_VERTEX_PROGRAM_NV */
+        (ctx->Extensions.NV_vertex_program ||
+         ctx->Extensions.ARB_vertex_program)) {
+      curProg = &ctx->VertexProgram.Current->Base;
+   }
+   else if ((target == GL_FRAGMENT_PROGRAM_NV
+             && ctx->Extensions.NV_fragment_program) ||
+            (target == GL_FRAGMENT_PROGRAM_ARB
+             && ctx->Extensions.ARB_fragment_program)) {
+      curProg = &ctx->FragmentProgram.Current->Base;
+   }
+   else {
+      _mesa_error(ctx, GL_INVALID_ENUM, "glBindProgramNV/ARB(target)");
+      return;
+   }
+
+   /*
+    * Get pointer to new program to bind.
+    * NOTE: binding to a non-existant program is not an error.
+    * That's supposed to be caught in glBegin.
+    */
+   if (id == 0) {
+      /* Bind a default program */
+      newProg = NULL;
+      if (target == GL_VERTEX_PROGRAM_ARB) /* == GL_VERTEX_PROGRAM_NV */
+         newProg = &ctx->Shared->DefaultVertexProgram->Base;
+      else
+         newProg = &ctx->Shared->DefaultFragmentProgram->Base;
+   }
+   else {
+      /* Bind a user program */
+      newProg = _mesa_lookup_program(ctx, id);
+      if (!newProg || newProg == &_mesa_DummyProgram) {
+         /* allocate a new program now */
+         newProg = ctx->Driver.NewProgram(ctx, target, id);
+         if (!newProg) {
+            _mesa_error(ctx, GL_OUT_OF_MEMORY, "glBindProgramNV/ARB");
+            return;
+         }
+         _mesa_HashInsert(ctx->Shared->Programs, id, newProg);
+      }
+      else if (!compatible_program_targets(newProg->Target, target)) {
+         _mesa_error(ctx, GL_INVALID_OPERATION,
+                     "glBindProgramNV/ARB(target mismatch)");
+         return;
+      }
+   }
+
+   /** All error checking is complete now **/
+
+   if (curProg->Id == id) {
+      /* binding same program - no change */
+      return;
+   }
+
+   /* bind newProg */
+   if (target == GL_VERTEX_PROGRAM_ARB) { /* == GL_VERTEX_PROGRAM_NV */
+      _mesa_reference_vertprog(ctx, &ctx->VertexProgram.Current,
+                               (struct gl_vertex_program *) newProg);
+   }
+   else if (target == GL_FRAGMENT_PROGRAM_NV ||
+            target == GL_FRAGMENT_PROGRAM_ARB) {
+      _mesa_reference_fragprog(ctx, &ctx->FragmentProgram.Current,
+                               (struct gl_fragment_program *) newProg);
+   }
+
+   /* Never null pointers */
+   ASSERT(ctx->VertexProgram.Current);
+   ASSERT(ctx->FragmentProgram.Current);
+
+   if (ctx->Driver.BindProgram)
+      ctx->Driver.BindProgram(ctx, target, newProg);
+}
+
+
+/**
+ * Delete a list of programs.
+ * \note Not compiled into display lists.
+ * \note Called by both glDeleteProgramsNV and glDeleteProgramsARB.
+ */
+void GLAPIENTRY 
+_mesa_DeletePrograms(GLsizei n, const GLuint *ids)
+{
+   GLint i;
+   GET_CURRENT_CONTEXT(ctx);
+   ASSERT_OUTSIDE_BEGIN_END_AND_FLUSH(ctx);
+
+   if (n < 0) {
+      _mesa_error( ctx, GL_INVALID_VALUE, "glDeleteProgramsNV" );
+      return;
+   }
+
+   for (i = 0; i < n; i++) {
+      if (ids[i] != 0) {
+         struct gl_program *prog = _mesa_lookup_program(ctx, ids[i]);
+         if (prog == &_mesa_DummyProgram) {
+            _mesa_HashRemove(ctx->Shared->Programs, ids[i]);
+         }
+         else if (prog) {
+            /* Unbind program if necessary */
+            if (prog->Target == GL_VERTEX_PROGRAM_ARB || /* == GL_VERTEX_PROGRAM_NV */
+                prog->Target == GL_VERTEX_STATE_PROGRAM_NV) {
+               if (ctx->VertexProgram.Current &&
+                   ctx->VertexProgram.Current->Base.Id == ids[i]) {
+                  /* unbind this currently bound program */
+                  _mesa_BindProgram(prog->Target, 0);
+               }
+            }
+            else if (prog->Target == GL_FRAGMENT_PROGRAM_NV ||
+                     prog->Target == GL_FRAGMENT_PROGRAM_ARB) {
+               if (ctx->FragmentProgram.Current &&
+                   ctx->FragmentProgram.Current->Base.Id == ids[i]) {
+                  /* unbind this currently bound program */
+                  _mesa_BindProgram(prog->Target, 0);
+               }
+            }
+            else {
+               _mesa_problem(ctx, "bad target in glDeleteProgramsNV");
+               return;
+            }
+            /* The ID is immediately available for re-use now */
+            _mesa_HashRemove(ctx->Shared->Programs, ids[i]);
+            _mesa_reference_program(ctx, &prog, NULL);
+         }
+      }
+   }
+}
+
+
+/**
+ * Generate a list of new program identifiers.
+ * \note Not compiled into display lists.
+ * \note Called by both glGenProgramsNV and glGenProgramsARB.
+ */
+void GLAPIENTRY
+_mesa_GenPrograms(GLsizei n, GLuint *ids)
+{
+   GLuint first;
+   GLuint i;
+   GET_CURRENT_CONTEXT(ctx);
+   ASSERT_OUTSIDE_BEGIN_END(ctx);
+
+   if (n < 0) {
+      _mesa_error(ctx, GL_INVALID_VALUE, "glGenPrograms");
+      return;
+   }
+
+   if (!ids)
+      return;
+
+   first = _mesa_HashFindFreeKeyBlock(ctx->Shared->Programs, n);
+
+   /* Insert pointer to dummy program as placeholder */
+   for (i = 0; i < (GLuint) n; i++) {
+      _mesa_HashInsert(ctx->Shared->Programs, first + i, &_mesa_DummyProgram);
+   }
+
+   /* Return the program names */
+   for (i = 0; i < (GLuint) n; i++) {
+      ids[i] = first + i;
+   }
+}
 
 
 void GLAPIENTRY
@@ -229,7 +431,7 @@ _mesa_ProgramStringARB(GLenum target, GLenum format, GLsizei len,
       struct gl_vertex_program *prog = ctx->VertexProgram.Current;
       _mesa_parse_arb_vertex_program(ctx, target, string, len, prog);
       
-      if (ctx->Driver.ProgramStringNotify)
+      if (ctx->Program.ErrorPos == -1 && ctx->Driver.ProgramStringNotify)
 	 ctx->Driver.ProgramStringNotify( ctx, target, &prog->Base );
    }
    else if (target == GL_FRAGMENT_PROGRAM_ARB
@@ -237,7 +439,7 @@ _mesa_ProgramStringARB(GLenum target, GLenum format, GLsizei len,
       struct gl_fragment_program *prog = ctx->FragmentProgram.Current;
       _mesa_parse_arb_fragment_program(ctx, target, string, len, prog);
 
-      if (ctx->Driver.ProgramStringNotify)
+      if (ctx->Program.ErrorPos == -1 && ctx->Driver.ProgramStringNotify)
 	 ctx->Driver.ProgramStringNotify( ctx, target, &prog->Base );
    }
    else {
@@ -247,6 +449,12 @@ _mesa_ProgramStringARB(GLenum target, GLenum format, GLsizei len,
 }
 
 
+/**
+ * Set a program env parameter register.
+ * \note Called from the GL API dispatcher.
+ * Note, this function is also used by the GL_NV_vertex_program extension
+ * (alias to ProgramParameterdNV)
+ */
 void GLAPIENTRY
 _mesa_ProgramEnvParameter4dARB(GLenum target, GLuint index,
                                GLdouble x, GLdouble y, GLdouble z, GLdouble w)
@@ -256,6 +464,12 @@ _mesa_ProgramEnvParameter4dARB(GLenum target, GLuint index,
 }
 
 
+/**
+ * Set a program env parameter register.
+ * \note Called from the GL API dispatcher.
+ * Note, this function is also used by the GL_NV_vertex_program extension
+ * (alias to ProgramParameterdvNV)
+ */
 void GLAPIENTRY
 _mesa_ProgramEnvParameter4dvARB(GLenum target, GLuint index,
                                 const GLdouble *params)
@@ -266,6 +480,12 @@ _mesa_ProgramEnvParameter4dvARB(GLenum target, GLuint index,
 }
 
 
+/**
+ * Set a program env parameter register.
+ * \note Called from the GL API dispatcher.
+ * Note, this function is also used by the GL_NV_vertex_program extension
+ * (alias to ProgramParameterfNV)
+ */
 void GLAPIENTRY
 _mesa_ProgramEnvParameter4fARB(GLenum target, GLuint index,
                                GLfloat x, GLfloat y, GLfloat z, GLfloat w)
@@ -283,8 +503,8 @@ _mesa_ProgramEnvParameter4fARB(GLenum target, GLuint index,
       }
       ASSIGN_4V(ctx->FragmentProgram.Parameters[index], x, y, z, w);
    }
-   else if (target == GL_VERTEX_PROGRAM_ARB
-       && ctx->Extensions.ARB_vertex_program) {
+   else if (target == GL_VERTEX_PROGRAM_ARB /* == GL_VERTEX_PROGRAM_NV */
+       && (ctx->Extensions.ARB_vertex_program || ctx->Extensions.NV_vertex_program)) {
       if (index >= ctx->Const.VertexProgram.MaxEnvParams) {
          _mesa_error(ctx, GL_INVALID_VALUE, "glProgramEnvParameter(index)");
          return;
@@ -297,7 +517,12 @@ _mesa_ProgramEnvParameter4fARB(GLenum target, GLuint index,
    }
 }
 
-
+/**
+ * Set a program env parameter register.
+ * \note Called from the GL API dispatcher.
+ * Note, this function is also used by the GL_NV_vertex_program extension
+ * (alias to ProgramParameterfvNV)
+ */
 void GLAPIENTRY
 _mesa_ProgramEnvParameter4fvARB(GLenum target, GLuint index,
                                    const GLfloat *params)
@@ -582,6 +807,7 @@ _mesa_GetProgramLocalParameterdvARB(GLenum target, GLuint index,
 {
    GET_CURRENT_CONTEXT(ctx);
    GLfloat floatParams[4];
+   ASSIGN_4V(floatParams, 0.0F, 0.0F, 0.0F, 0.0F);
    _mesa_GetProgramLocalParameterfvARB(target, index, floatParams);
    if (ctx->ErrorValue == GL_NO_ERROR) {
       COPY_4V(params, floatParams);

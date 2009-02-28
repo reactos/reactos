@@ -70,18 +70,6 @@ extern void GLAPIENTRY
 _mesa_LoadProgramNV(GLenum target, GLuint id, GLsizei len, const GLubyte *program);
 
 extern void GLAPIENTRY
-_mesa_ProgramParameter4dNV(GLenum target, GLuint index, GLdouble x, GLdouble y, GLdouble z, GLdouble w);
-
-extern void GLAPIENTRY
-_mesa_ProgramParameter4dvNV(GLenum target, GLuint index, const GLdouble *params);
-
-extern void GLAPIENTRY
-_mesa_ProgramParameter4fNV(GLenum target, GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
-
-extern void GLAPIENTRY
-_mesa_ProgramParameter4fvNV(GLenum target, GLuint index, const GLfloat *params);
-
-extern void GLAPIENTRY
 _mesa_ProgramParameters4dvNV(GLenum target, GLuint index, GLuint num, const GLdouble *params);
 
 extern void GLAPIENTRY

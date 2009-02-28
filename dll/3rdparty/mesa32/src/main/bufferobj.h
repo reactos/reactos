@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.3
+ * Version:  7.2
  *
- * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2008  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -38,6 +38,9 @@
 extern void
 _mesa_init_buffer_objects( GLcontext *ctx );
 
+extern void
+_mesa_update_default_objects_buffer_objects(GLcontext *ctx);
+
 extern struct gl_buffer_object *
 _mesa_new_buffer_object( GLcontext *ctx, GLuint name, GLenum target );
 
@@ -52,10 +55,9 @@ _mesa_initialize_buffer_object( struct gl_buffer_object *obj,
 				GLuint name, GLenum target );
 
 extern void
-_mesa_save_buffer_object( GLcontext *ctx, struct gl_buffer_object *obj );
-
-extern void
-_mesa_remove_buffer_object( GLcontext *ctx, struct gl_buffer_object *bufObj );
+_mesa_reference_buffer_object(GLcontext *ctx,
+                              struct gl_buffer_object **ptr,
+                              struct gl_buffer_object *bufObj);
 
 extern void
 _mesa_buffer_data( GLcontext *ctx, GLenum target, GLsizeiptrARB size,
@@ -86,8 +88,35 @@ _mesa_validate_pbo_access(GLuint dimensions,
                           GLsizei width, GLsizei height, GLsizei depth,
                           GLenum format, GLenum type, const GLvoid *ptr);
 
+extern const GLubyte *
+_mesa_map_bitmap_pbo(GLcontext *ctx,
+                     const struct gl_pixelstore_attrib *unpack,
+                     const GLubyte *bitmap);
+
 extern void
-_mesa_unbind_buffer_object( GLcontext *ctx, struct gl_buffer_object *bufObj );
+_mesa_unmap_bitmap_pbo(GLcontext *ctx,
+                       const struct gl_pixelstore_attrib *unpack);
+
+extern const GLvoid *
+_mesa_map_drawpix_pbo(GLcontext *ctx,
+                      const struct gl_pixelstore_attrib *unpack,
+                      const GLvoid *pixels);
+
+extern void
+_mesa_unmap_drapix_pbo(GLcontext *ctx,
+                       const struct gl_pixelstore_attrib *unpack);
+
+
+extern void *
+_mesa_map_readpix_pbo(GLcontext *ctx,
+                      const struct gl_pixelstore_attrib *pack,
+                      GLvoid *dest);
+
+extern void
+_mesa_unmap_readpix_pbo(GLcontext *ctx,
+                        const struct gl_pixelstore_attrib *pack);
+
+
 
 /*
  * API functions

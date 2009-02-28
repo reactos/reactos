@@ -37,17 +37,17 @@
  * including any use thereof or modifications thereto.
  */
 
-#include "glheader.h"
-#include "context.h"
-#include "hash.h"
-#include "imports.h"
-#include "macros.h"
+#include "main/glheader.h"
+#include "main/context.h"
+#include "main/hash.h"
+#include "main/imports.h"
+#include "main/macros.h"
+#include "program.h"
 #include "prog_parameter.h"
 #include "prog_instruction.h"
 #include "nvfragparse.h"
 #include "nvvertparse.h"
 #include "nvprogram.h"
-#include "program.h"
 
 
 
@@ -571,75 +571,6 @@ _mesa_LoadProgramNV(GLenum target, GLuint id, GLsizei len,
    else {
       _mesa_error(ctx, GL_INVALID_ENUM, "glLoadProgramNV(target)");
    }
-}
-
-
-
-/**
- * Set a program parameter register.
- * \note Called from the GL API dispatcher.
- */
-void GLAPIENTRY
-_mesa_ProgramParameter4dNV(GLenum target, GLuint index,
-                           GLdouble x, GLdouble y, GLdouble z, GLdouble w)
-{
-   _mesa_ProgramParameter4fNV(target, index, 
-		   	      (GLfloat)x, (GLfloat)y, (GLfloat)z, (GLfloat)w);
-}
-
-
-/**
- * Set a program parameter register.
- * \note Called from the GL API dispatcher.
- */
-void GLAPIENTRY
-_mesa_ProgramParameter4dvNV(GLenum target, GLuint index,
-                            const GLdouble *params)
-{
-   _mesa_ProgramParameter4fNV(target, index,
-                              (GLfloat)params[0], (GLfloat)params[1], 
-			      (GLfloat)params[2], (GLfloat)params[3]);
-}
-
-
-/**
- * Set a program parameter register.
- * \note Called from the GL API dispatcher.
- */
-void GLAPIENTRY
-_mesa_ProgramParameter4fNV(GLenum target, GLuint index,
-                           GLfloat x, GLfloat y, GLfloat z, GLfloat w)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   ASSERT_OUTSIDE_BEGIN_END(ctx);
-
-   if (target == GL_VERTEX_PROGRAM_NV && ctx->Extensions.NV_vertex_program) {
-      if (index < MAX_NV_VERTEX_PROGRAM_PARAMS) {
-         FLUSH_VERTICES(ctx, _NEW_PROGRAM);
-         ASSIGN_4V(ctx->VertexProgram.Parameters[index], x, y, z, w);
-      }
-      else {
-         _mesa_error(ctx, GL_INVALID_VALUE, "glProgramParameterNV(index)");
-         return;
-      }
-   }
-   else {
-      _mesa_error(ctx, GL_INVALID_ENUM, "glProgramParameterNV");
-      return;
-   }
-}
-
-
-/**
- * Set a program parameter register.
- * \note Called from the GL API dispatcher.
- */
-void GLAPIENTRY
-_mesa_ProgramParameter4fvNV(GLenum target, GLuint index,
-                            const GLfloat *params)
-{
-   _mesa_ProgramParameter4fNV(target, index,
-                              params[0], params[1], params[2], params[3]);
 }
 
 

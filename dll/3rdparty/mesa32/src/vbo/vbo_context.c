@@ -25,11 +25,11 @@
  *    Keith Whitwell <keith@tungstengraphics.com>
  */
 
-#include "mtypes.h"
+#include "main/imports.h"
+#include "main/mtypes.h"
+#include "main/api_arrayelt.h"
 #include "vbo.h"
 #include "vbo_context.h"
-#include "imports.h"
-#include "api_arrayelt.h"
 
 /* Reach out and grab this to use as the default:
  */
@@ -112,6 +112,8 @@ static void init_mat_currval(GLcontext *ctx)
    struct gl_client_array *arrays = vbo->mat_currval;
    GLuint i;
 
+   ASSERT(NR_MAT_ATTRIBS == MAT_ATTRIB_MAX);
+
    memset(arrays, 0, sizeof(*arrays) * NR_MAT_ATTRIBS);
 
    /* Set up a constant (StrideB == 0) array for each current
@@ -137,11 +139,7 @@ static void init_mat_currval(GLcontext *ctx)
 	 break;
       }
 
-      if (i < MAT_ATTRIB_MAX)
-	 cl->Ptr = (const void *)ctx->Light.Material.Attrib[i];
-      else 
-	 cl->Ptr = (const void *)ctx->Current.Attrib[VERT_ATTRIB_GENERIC0 + i];
-
+      cl->Ptr = (const void *)ctx->Light.Material.Attrib[i];
       cl->Type = GL_FLOAT;
       cl->Stride = 0;
       cl->StrideB = 0;
@@ -221,9 +219,10 @@ GLboolean _vbo_CreateContext( GLcontext *ctx )
     * vtxfmt mechanism can be removed now.
     */
    vbo_exec_init( ctx );
+#if FEATURE_dlist
    vbo_save_init( ctx );
+#endif
 
-   
    return GL_TRUE;
 }
 
@@ -242,6 +241,9 @@ void _vbo_DestroyContext( GLcontext *ctx )
    }
 
    vbo_exec_destroy(ctx);
+#if FEATURE_dlist
+   vbo_save_destroy(ctx);
+#endif
    FREE(vbo_context(ctx));
    ctx->swtnl_im = NULL;
 }

@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5.2
+ * Version:  7.0.3
  *
- * Copyright (C) 1999-2006  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2007  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -22,28 +22,33 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "glheader.h"
-#include "colormac.h"
-#include "context.h"
-#include "prog_instruction.h"
+#include "main/glheader.h"
+#include "main/colormac.h"
+#include "main/context.h"
+#include "main/texstate.h"
+#include "shader/prog_instruction.h"
 
 #include "s_fragprog.h"
 #include "s_span.h"
 
 
 /**
- * Fetch a texel.
+ * Fetch a texel with given lod.
+ * Called via machine->FetchTexelLod()
  */
 static void
-fetch_texel( GLcontext *ctx, const GLfloat texcoord[4], GLfloat lambda,
-             GLuint unit, GLfloat color[4] )
+fetch_texel_lod( GLcontext *ctx, const GLfloat texcoord[4], GLfloat lambda,
+                 GLuint unit, GLfloat color[4] )
 {
    GLchan rgba[4];
    SWcontext *swrast = SWRAST_CONTEXT(ctx);
+   const struct gl_texture_object *texObj = ctx->Texture.Unit[unit]._Current;
+
+   if (texObj)
+      lambda = CLAMP(lambda, texObj->MinLod, texObj->MaxLod);
 
    /* XXX use a float-valued TextureSample routine here!!! */
-   swrast->TextureSample[unit](ctx, ctx->Texture.Unit[unit]._Current,
-                               1, (const GLfloat (*)[4]) texcoord,
+   swrast->TextureSample[unit](ctx, texObj, 1, (const GLfloat (*)[4]) texcoord,
                                &lambda, &rgba);
    color[0] = CHAN_TO_FLOAT(rgba[0]);
    color[1] = CHAN_TO_FLOAT(rgba[1]);
@@ -55,28 +60,34 @@ fetch_texel( GLcontext *ctx, const GLfloat texcoord[4], GLfloat lambda,
 /**
  * Fetch a texel with the given partial derivatives to compute a level
  * of detail in the mipmap.
+ * Called via machine->FetchTexelDeriv()
  */
 static void
 fetch_texel_deriv( GLcontext *ctx, const GLfloat texcoord[4],
                    const GLfloat texdx[4], const GLfloat texdy[4],
-                   GLuint unit, GLfloat color[4] )
+                   GLfloat lodBias, GLuint unit, GLfloat color[4] )
 {
    SWcontext *swrast = SWRAST_CONTEXT(ctx);
    const struct gl_texture_object *texObj = ctx->Texture.Unit[unit]._Current;
-   const struct gl_texture_image *texImg = texObj->Image[0][texObj->BaseLevel];
-   const GLfloat texW = (GLfloat) texImg->WidthScale;
-   const GLfloat texH = (GLfloat) texImg->HeightScale;
+   GLfloat lambda;
    GLchan rgba[4];
 
-   GLfloat lambda = _swrast_compute_lambda(texdx[0], texdy[0], /* ds/dx, ds/dy */
-                                         texdx[1], texdy[1], /* dt/dx, dt/dy */
-                                         texdx[3], texdy[2], /* dq/dx, dq/dy */
-                                         texW, texH,
-                                         texcoord[0], texcoord[1], texcoord[3],
-                                         1.0F / texcoord[3]);
+   if (texObj) {
+      const struct gl_texture_image *texImg = texObj->Image[0][texObj->BaseLevel];
+      const GLfloat texW = (GLfloat) texImg->WidthScale;
+      const GLfloat texH = (GLfloat) texImg->HeightScale;
 
-   swrast->TextureSample[unit](ctx, ctx->Texture.Unit[unit]._Current,
-                               1, (const GLfloat (*)[4]) texcoord,
+      lambda = _swrast_compute_lambda(texdx[0], texdy[0], /* ds/dx, ds/dy */
+                                      texdx[1], texdy[1], /* dt/dx, dt/dy */
+                                      texdx[3], texdy[2], /* dq/dx, dq/dy */
+                                      texW, texH,
+                                      texcoord[0], texcoord[1], texcoord[3],
+                                      1.0F / texcoord[3]) + lodBias;
+
+      lambda = CLAMP(lambda, texObj->MinLod, texObj->MaxLod);
+   }
+
+   swrast->TextureSample[unit](ctx, texObj, 1, (const GLfloat (*)[4]) texcoord,
                                &lambda, &rgba);
    color[0] = CHAN_TO_FLOAT(rgba[0]);
    color[1] = CHAN_TO_FLOAT(rgba[1]);
@@ -112,9 +123,13 @@ init_machine(GLcontext *ctx, struct gl_program_machine *machine,
    machine->DerivY = (GLfloat (*)[4]) span->attrStepY;
    machine->NumDeriv = FRAG_ATTRIB_MAX;
 
+   machine->Samplers = program->Base.SamplerUnits;
+
+   /* if running a GLSL program (not ARB_fragment_program) */
    if (ctx->Shader.CurrentProgram) {
       /* Store front/back facing value in register FOGC.Y */
-      machine->Attribs[FRAG_ATTRIB_FOGC][col][1] = (GLfloat) ctx->_Facing;
+      machine->Attribs[FRAG_ATTRIB_FOGC][col][1] = 1.0 - span->facing;
+      /* Note FOGC.ZW is gl_PointCoord if drawing a sprite */
    }
 
    machine->CurElement = col;
@@ -128,7 +143,7 @@ init_machine(GLcontext *ctx, struct gl_program_machine *machine,
    /* init call stack */
    machine->StackDepth = 0;
 
-   machine->FetchTexelLod = fetch_texel;
+   machine->FetchTexelLod = fetch_texel_lod;
    machine->FetchTexelDeriv = fetch_texel_deriv;
 }
 
@@ -161,11 +176,11 @@ run_program(GLcontext *ctx, SWspan *span, GLuint start, GLuint end)
                 * Note that colors beyond 0 and 1 will overwrite other
                 * attributes, such as FOGC, TEX0, TEX1, etc.  That's OK.
                 */
-               GLuint output;
-               for (output = 0; output < swrast->_NumColorOutputs; output++) {
-                  if (outputsWritten & (1 << (FRAG_RESULT_DATA0 + output))) {
-                     COPY_4V(span->array->attribs[FRAG_ATTRIB_COL0+output][i],
-                             machine->Outputs[FRAG_RESULT_DATA0 + output]);
+               GLuint buf;
+               for (buf = 0; buf < ctx->DrawBuffer->_NumColorDrawBuffers; buf++) {
+                  if (outputsWritten & (1 << (FRAG_RESULT_DATA0 + buf))) {
+                     COPY_4V(span->array->attribs[FRAG_ATTRIB_COL0 + buf][i],
+                             machine->Outputs[FRAG_RESULT_DATA0 + buf]);
                   }
                }
             }

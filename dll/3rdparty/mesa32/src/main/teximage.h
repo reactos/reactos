@@ -107,18 +107,27 @@ _mesa_test_proxy_teximage(GLcontext *ctx, GLenum target, GLint level,
                          GLint width, GLint height, GLint depth, GLint border);
 
 
-/* Lock a texture for updating.  See also _mesa_lock_context_textures().
+extern GLuint
+_mesa_tex_target_to_face(GLenum target);
+
+
+extern GLboolean
+_mesa_is_color_format(GLenum format);
+
+
+/**
+ * Lock a texture for updating.  See also _mesa_lock_context_textures().
  */
-static INLINE void _mesa_lock_texture(GLcontext *ctx,
-				      struct gl_texture_object *texObj)
+static INLINE void
+_mesa_lock_texture(GLcontext *ctx, struct gl_texture_object *texObj)
 {
    _glthread_LOCK_MUTEX(ctx->Shared->TexMutex);
    ctx->Shared->TextureStateStamp++;
    (void) texObj;
 }
 
-static INLINE void _mesa_unlock_texture(GLcontext *ctx,
-					struct gl_texture_object *texObj)
+static INLINE void
+_mesa_unlock_texture(GLcontext *ctx, struct gl_texture_object *texObj)
 {
    _glthread_UNLOCK_MUTEX(ctx->Shared->TexMutex);
 }

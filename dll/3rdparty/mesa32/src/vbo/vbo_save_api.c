@@ -1,6 +1,6 @@
 /**************************************************************************
 
-Copyright 2002 Tungsten Graphics Inc., Cedar Park, Texas.
+Copyright 2002-2008 Tungsten Graphics Inc., Cedar Park, Texas.
 
 All Rights Reserved.
 
@@ -67,15 +67,16 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 
-#include "glheader.h"
-#include "context.h"
-#include "dlist.h"
-#include "enums.h"
-#include "macros.h"
-#include "api_validate.h"
-#include "api_arrayelt.h"
-#include "vtxfmt.h"
-#include "dispatch.h"
+#include "main/glheader.h"
+#include "main/bufferobj.h"
+#include "main/context.h"
+#include "main/dlist.h"
+#include "main/enums.h"
+#include "main/macros.h"
+#include "main/api_validate.h"
+#include "main/api_arrayelt.h"
+#include "main/vtxfmt.h"
+#include "glapi/dispatch.h"
 
 #include "vbo_context.h"
 
@@ -83,6 +84,10 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifdef ERROR
 #undef ERROR
 #endif
+
+
+/* An interesting VBO number/name to help with debugging */
+#define VBO_BUF_ID  12345
 
 
 /*
@@ -170,7 +175,9 @@ static struct vbo_save_vertex_store *alloc_vertex_store( GLcontext *ctx )
     * user.  Perhaps there could be a special number for internal
     * buffers:
     */
-   vertex_store->bufferobj = ctx->Driver.NewBufferObject(ctx, 1, GL_ARRAY_BUFFER_ARB);
+   vertex_store->bufferobj = ctx->Driver.NewBufferObject(ctx,
+                                                         VBO_BUF_ID,
+                                                         GL_ARRAY_BUFFER_ARB);
 
    ctx->Driver.BufferData( ctx, 
 			   GL_ARRAY_BUFFER_ARB, 
@@ -190,8 +197,9 @@ static void free_vertex_store( GLcontext *ctx, struct vbo_save_vertex_store *ver
 {
    assert(!vertex_store->buffer);
 
-   if (vertex_store->bufferobj)
-      ctx->Driver.DeleteBuffer( ctx, vertex_store->bufferobj );
+   if (vertex_store->bufferobj) {
+      _mesa_reference_buffer_object(ctx, &vertex_store->bufferobj, NULL);
+   }
 
    FREE( vertex_store );
 }
@@ -864,6 +872,9 @@ static void GLAPIENTRY _save_OBE_DrawElements(GLenum mode, GLsizei count, GLenum
 
    _ae_map_vbos( ctx );
 
+   if (ctx->Array.ElementArrayBufferObj->Name)
+      indices = ADD_POINTERS(ctx->Array.ElementArrayBufferObj->Pointer, indices);
+
    vbo_save_NotifyBegin( ctx, mode | VBO_SAVE_PRIM_WEAK );
 
    switch (type) {
@@ -1034,6 +1045,32 @@ void vbo_save_NewList( GLcontext *ctx, GLuint list, GLenum mode )
 void vbo_save_EndList( GLcontext *ctx )
 {
    struct vbo_save_context *save = &vbo_context(ctx)->save;
+
+   /* EndList called inside a (saved) Begin/End pair?
+    */
+   if (ctx->Driver.CurrentSavePrimitive != PRIM_OUTSIDE_BEGIN_END) {
+
+      if (save->prim_count > 0) {
+         GLint i = save->prim_count - 1;
+         ctx->Driver.CurrentSavePrimitive = PRIM_OUTSIDE_BEGIN_END;
+         save->prim[i].end = 0;
+         save->prim[i].count = (save->vert_count - 
+                                save->prim[i].start);
+      }
+
+      /* Make sure this vertex list gets replayed by the "loopback"
+       * mechanism:
+       */
+      save->dangling_attr_ref = 1;
+      vbo_save_SaveFlushVertices( ctx );
+
+      /* Swap out this vertex format while outside begin/end.  Any color,
+       * etc. received between here and the next begin will be compiled
+       * as opcodes.
+       */   
+      _mesa_install_save_vtxfmt( ctx, &ctx->ListState.ListVtxfmt );
+   }
+
    unmap_vertex_store( ctx, save->vertex_store );
 
    assert(save->vertex_size == 0);
@@ -1136,6 +1173,7 @@ void vbo_save_api_init( struct vbo_save_context *save )
    _save_vtxfmt_init( ctx );
    _save_current_init( ctx );
 
+   /* These will actually get set again when binding/drawing */
    for (i = 0; i < VBO_ATTRIB_MAX; i++)
       save->inputs[i] = &save->arrays[i];
 

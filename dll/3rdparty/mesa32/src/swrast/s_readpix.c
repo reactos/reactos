@@ -1,6 +1,6 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5.3
+ * Version:  7.0.3
  *
  * Copyright (C) 1999-2007  Brian Paul   All Rights Reserved.
  *
@@ -23,17 +23,17 @@
  */
 
 
-#include "glheader.h"
-#include "bufferobj.h"
-#include "colormac.h"
-#include "convolve.h"
-#include "context.h"
-#include "feedback.h"
-#include "image.h"
-#include "macros.h"
-#include "imports.h"
-#include "pixel.h"
-#include "state.h"
+#include "main/glheader.h"
+#include "main/bufferobj.h"
+#include "main/colormac.h"
+#include "main/convolve.h"
+#include "main/context.h"
+#include "main/feedback.h"
+#include "main/image.h"
+#include "main/macros.h"
+#include "main/imports.h"
+#include "main/pixel.h"
+#include "main/state.h"
 
 #include "s_context.h"
 #include "s_depth.h"
@@ -129,7 +129,8 @@ read_depth_pixels( GLcontext *ctx,
          rb->GetRow(ctx, rb, width, x, y, dest);
          /* convert range from 24-bit to 32-bit */
          for (k = 0; k < width; k++) {
-            dest[k] = (dest[k] << 8) | (dest[k] >> 24);
+            /* Note: put MSByte of 24-bit value into LSByte */
+            dest[k] = (dest[k] << 8) | ((dest[k] >> 16) & 0xff);
          }
       }
    }
@@ -569,29 +570,14 @@ _swrast_ReadPixels( GLcontext *ctx,
    /* Do all needed clipping here, so that we can forget about it later */
    if (!_mesa_clip_readpixels(ctx, &x, &y, &width, &height, &clippedPacking)) {
       /* The ReadPixels region is totally outside the window bounds */
-      goto end;
+      RENDER_FINISH(swrast, ctx);
+      return;
    }
 
-   if (clippedPacking.BufferObj->Name) {
-      /* pack into PBO */
-      GLubyte *buf;
-      if (!_mesa_validate_pbo_access(2, &clippedPacking, width, height, 1,
-                                     format, type, pixels)) {
-         _mesa_error(ctx, GL_INVALID_OPERATION,
-                     "glReadPixels(invalid PBO access)");
-         goto end;
-      }
-      buf = (GLubyte *) ctx->Driver.MapBuffer(ctx, GL_PIXEL_PACK_BUFFER_EXT,
-                                              GL_WRITE_ONLY_ARB,
-                                              clippedPacking.BufferObj);
-      if (!buf) {
-         /* buffer is already mapped - that's an error */
-         _mesa_error(ctx, GL_INVALID_OPERATION, "glReadPixels(PBO is mapped)");
-         goto end;
-      }
-      pixels = ADD_POINTERS(buf, pixels);
-   }
-
+   pixels = _mesa_map_readpix_pbo(ctx, &clippedPacking, pixels);
+   if (!pixels)
+      return;
+  
    switch (format) {
       case GL_COLOR_INDEX:
          read_index_pixels(ctx, x, y, width, height, type, pixels,
@@ -628,13 +614,7 @@ _swrast_ReadPixels( GLcontext *ctx,
          /* don't return yet, clean-up */
    }
 
-
-end:
    RENDER_FINISH(swrast, ctx);
 
-   if (clippedPacking.BufferObj->Name) {
-      /* done with PBO so unmap it now */
-      ctx->Driver.UnmapBuffer(ctx, GL_PIXEL_PACK_BUFFER_EXT,
-                              clippedPacking.BufferObj);
-   }
+   _mesa_unmap_readpix_pbo(ctx, &clippedPacking);
 }

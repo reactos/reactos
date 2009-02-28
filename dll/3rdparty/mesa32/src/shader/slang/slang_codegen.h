@@ -27,8 +27,22 @@
 #define SLANG_CODEGEN_H
 
 
-#include "imports.h"
+#include "main/imports.h"
 #include "slang_compile.h"
+
+
+typedef struct slang_assemble_ctx_
+{
+   slang_atom_pool *atoms;
+   slang_name_space space;
+   struct gl_program *program;
+   struct gl_sl_pragmas *pragmas;
+   slang_var_table *vartable;
+   slang_info_log *log;
+   struct slang_label_ *curFuncEndLabel;
+   struct slang_ir_node_ *CurLoop;
+   struct slang_function_ *CurFunction;
+} slang_assemble_ctx;
 
 
 extern GLuint

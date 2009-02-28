@@ -23,14 +23,14 @@
  */
 
 
-#include "glheader.h"
-#include "imports.h"
-#include "macros.h"
+#include "main/glheader.h"
+#include "main/imports.h"
+#include "main/macros.h"
+#include "main/mtypes.h"
 #include "swrast/s_aaline.h"
 #include "swrast/s_context.h"
 #include "swrast/s_span.h"
 #include "swrast/swrast.h"
-#include "mtypes.h"
 
 
 #define SUB_PIXEL 4
@@ -59,19 +59,13 @@ struct LineInfo
 
    /* DO_Z */
    GLfloat zPlane[4];
-   /* DO_FOG */
-   GLfloat fPlane[4];
    /* DO_RGBA */
    GLfloat rPlane[4], gPlane[4], bPlane[4], aPlane[4];
    /* DO_INDEX */
    GLfloat iPlane[4];
-   /* DO_SPEC */
-   GLfloat srPlane[4], sgPlane[4], sbPlane[4];
    /* DO_ATTRIBS */
-   GLfloat sPlane[FRAG_ATTRIB_MAX][4];
-   GLfloat tPlane[FRAG_ATTRIB_MAX][4];
-   GLfloat uPlane[FRAG_ATTRIB_MAX][4];
-   GLfloat vPlane[FRAG_ATTRIB_MAX][4];
+   GLfloat wPlane[4];
+   GLfloat attrPlane[FRAG_ATTRIB_MAX][4][4];
    GLfloat lambda[FRAG_ATTRIB_MAX];
    GLfloat texWidth[FRAG_ATTRIB_MAX];
    GLfloat texHeight[FRAG_ATTRIB_MAX];
@@ -483,32 +477,21 @@ segment(GLcontext *ctx,
 
 #define NAME(x) aa_ci_##x
 #define DO_Z
-#define DO_FOG
+#define DO_ATTRIBS /* for fog */
 #define DO_INDEX
 #include "s_aalinetemp.h"
 
 
 #define NAME(x) aa_rgba_##x
 #define DO_Z
-#define DO_FOG
 #define DO_RGBA
 #include "s_aalinetemp.h"
 
 
-#define NAME(x)  aa_tex_rgba_##x
+#define NAME(x)  aa_general_rgba_##x
 #define DO_Z
-#define DO_FOG
 #define DO_RGBA
 #define DO_ATTRIBS
-#include "s_aalinetemp.h"
-
-
-#define NAME(x)  aa_multitex_spec_##x
-#define DO_Z
-#define DO_FOG
-#define DO_RGBA
-#define DO_ATTRIBS
-#define DO_SPEC
 #include "s_aalinetemp.h"
 
 
@@ -523,14 +506,12 @@ _swrast_choose_aa_line_function(GLcontext *ctx)
    if (ctx->Visual.rgbMode) {
       /* RGBA */
       if (ctx->Texture._EnabledCoordUnits != 0
-          || ctx->FragmentProgram._Current) {
-
-         if (ctx->Light.Model.ColorControl==GL_SEPARATE_SPECULAR_COLOR || 
-             ctx->Fog.ColorSumEnabled)
-            swrast->Line = aa_multitex_spec_line;
-         else
-            swrast->Line = aa_tex_rgba_line;
-
+          || ctx->FragmentProgram._Current
+          || (ctx->Light.Enabled &&
+              ctx->Light.Model.ColorControl == GL_SEPARATE_SPECULAR_COLOR)
+          || ctx->Fog.ColorSumEnabled
+          || swrast->_FogEnabled) {
+         swrast->Line = aa_general_rgba_line;
       }
       else {
          swrast->Line = aa_rgba_line;

@@ -1,10 +1,11 @@
 	;
 /*
- * Written by José Fonseca <j_r_fonseca@yahoo.co.uk>
+ * Written by Josï¿½ Fonseca <j_r_fonseca@yahoo.co.uk>
  */
 
 
 #ifdef USE_MMX_ASM
+#include "assyntax.h"
 #include "matypes.h"
 
 /* integer multiplication - alpha plus one

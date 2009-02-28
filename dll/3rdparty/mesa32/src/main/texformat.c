@@ -55,10 +55,10 @@ nonlinear_to_linear(GLubyte cs8)
       for (i = 0; i < 256; i++) {
          const GLfloat cs = UBYTE_TO_FLOAT(i);
          if (cs <= 0.04045) {
-            table[i] = cs / 12.92;
+            table[i] = cs / 12.92f;
          }
          else {
-            table[i] = _mesa_pow((cs + 0.055) / 1.055, 2.4);
+            table[i] = (GLfloat) _mesa_pow((cs + 0.055) / 1.055, 2.4);
          }
       }
       tableReady = GL_TRUE;
@@ -871,6 +871,30 @@ const struct gl_texture_format _mesa_texformat_rgb565_rev = {
    store_texel_rgb565_rev		/* StoreTexel */
 };
 
+const struct gl_texture_format _mesa_texformat_rgba4444 = {
+   MESA_FORMAT_RGBA4444,		/* MesaFormat */
+   GL_RGBA,				/* BaseFormat */
+   GL_UNSIGNED_NORMALIZED_ARB,		/* DataType */
+   4,					/* RedBits */
+   4,					/* GreenBits */
+   4,					/* BlueBits */
+   4,					/* AlphaBits */
+   0,					/* LuminanceBits */
+   0,					/* IntensityBits */
+   0,					/* IndexBits */
+   0,					/* DepthBits */
+   0,					/* StencilBits */
+   2,					/* TexelBytes */
+   _mesa_texstore_rgba4444,		/* StoreTexImageFunc */
+   fetch_texel_1d_rgba4444,		/* FetchTexel1D */
+   fetch_texel_2d_rgba4444,		/* FetchTexel2D */
+   fetch_texel_3d_rgba4444,		/* FetchTexel3D */
+   NULL,				/* FetchTexel1Df */
+   NULL,				/* FetchTexel2Df */
+   NULL,				/* FetchTexel3Df */
+   store_texel_rgba4444			/* StoreTexel */
+};
+
 const struct gl_texture_format _mesa_texformat_argb4444 = {
    MESA_FORMAT_ARGB4444,		/* MesaFormat */
    GL_RGBA,				/* BaseFormat */
@@ -917,6 +941,30 @@ const struct gl_texture_format _mesa_texformat_argb4444_rev = {
    NULL,				/* FetchTexel2Df */
    NULL,				/* FetchTexel3Df */
    store_texel_argb4444_rev		/* StoreTexel */
+};
+
+const struct gl_texture_format _mesa_texformat_rgba5551 = {
+   MESA_FORMAT_RGBA5551,		/* MesaFormat */
+   GL_RGBA,				/* BaseFormat */
+   GL_UNSIGNED_NORMALIZED_ARB,		/* DataType */
+   5,					/* RedBits */
+   5,					/* GreenBits */
+   5,					/* BlueBits */
+   1,					/* AlphaBits */
+   0,					/* LuminanceBits */
+   0,					/* IntensityBits */
+   0,					/* IndexBits */
+   0,					/* DepthBits */
+   0,					/* StencilBits */
+   2,					/* TexelBytes */
+   _mesa_texstore_rgba5551,		/* StoreTexImageFunc */
+   fetch_texel_1d_rgba5551,		/* FetchTexel1D */
+   fetch_texel_2d_rgba5551,		/* FetchTexel2D */
+   fetch_texel_3d_rgba5551,		/* FetchTexel3D */
+   NULL,				/* FetchTexel1Df */
+   NULL,				/* FetchTexel2Df */
+   NULL,				/* FetchTexel3Df */
+   store_texel_rgba5551			/* StoreTexel */
 };
 
 const struct gl_texture_format _mesa_texformat_argb1555 = {
@@ -1207,6 +1255,30 @@ const struct gl_texture_format _mesa_texformat_z24_s8 = {
    store_texel_z24_s8			/* StoreTexel */
 };
 
+const struct gl_texture_format _mesa_texformat_s8_z24 = {
+   MESA_FORMAT_S8_Z24,			/* MesaFormat */
+   GL_DEPTH_STENCIL_EXT,		/* BaseFormat */
+   GL_UNSIGNED_NORMALIZED_ARB,		/* DataType */
+   0,					/* RedBits */
+   0,					/* GreenBits */
+   0,					/* BlueBits */
+   0,					/* AlphaBits */
+   0,					/* LuminanceBits */
+   0,					/* IntensityBits */
+   0,					/* IndexBits */
+   24,					/* DepthBits */
+   8,					/* StencilBits */
+   4,					/* TexelBytes */
+   _mesa_texstore_s8_z24,		/* StoreTexImageFunc */
+   NULL,				/* FetchTexel1D */
+   NULL,				/* FetchTexel2D */
+   NULL,				/* FetchTexel3D */
+   fetch_texel_1d_f_s8_z24,		/* FetchTexel1Df */
+   fetch_texel_2d_f_s8_z24,		/* FetchTexel2Df */
+   fetch_texel_3d_f_s8_z24,		/* FetchTexel3Df */
+   store_texel_s8_z24			/* StoreTexel */
+};
+
 const struct gl_texture_format _mesa_texformat_z16 = {
    MESA_FORMAT_Z16,			/* MesaFormat */
    GL_DEPTH_COMPONENT,			/* BaseFormat */
@@ -1396,14 +1468,13 @@ _mesa_choose_tex_format( GLcontext *ctx, GLint internalFormat,
          ; /* fallthrough */
    }
 
-   if (ctx->Extensions.SGIX_depth_texture ||
-       ctx->Extensions.ARB_depth_texture) {
+   if (ctx->Extensions.ARB_depth_texture) {
       switch (internalFormat) {
          case GL_DEPTH_COMPONENT:
-         case GL_DEPTH_COMPONENT24_SGIX:
-         case GL_DEPTH_COMPONENT32_SGIX:
+         case GL_DEPTH_COMPONENT24:
+         case GL_DEPTH_COMPONENT32:
             return &_mesa_texformat_z32;
-         case GL_DEPTH_COMPONENT16_SGIX:
+         case GL_DEPTH_COMPONENT16:
             return &_mesa_texformat_z16;
          default:
             ; /* fallthrough */
@@ -1421,21 +1492,27 @@ _mesa_choose_tex_format( GLcontext *ctx, GLint internalFormat,
          case GL_COMPRESSED_INTENSITY_ARB:
             return &_mesa_texformat_intensity;
          case GL_COMPRESSED_RGB_ARB:
+#if FEATURE_texture_fxt1
             if (ctx->Extensions.TDFX_texture_compression_FXT1)
                return &_mesa_texformat_rgb_fxt1;
-            else if (ctx->Extensions.EXT_texture_compression_s3tc ||
-                     ctx->Extensions.S3_s3tc)
+#endif
+#if FEATURE_texture_s3tc
+            if (ctx->Extensions.EXT_texture_compression_s3tc ||
+                ctx->Extensions.S3_s3tc)
                return &_mesa_texformat_rgb_dxt1;
-            else
-               return &_mesa_texformat_rgb;
+#endif
+            return &_mesa_texformat_rgb;
          case GL_COMPRESSED_RGBA_ARB:
+#if FEATURE_texture_fxt1
             if (ctx->Extensions.TDFX_texture_compression_FXT1)
                return &_mesa_texformat_rgba_fxt1;
-            else if (ctx->Extensions.EXT_texture_compression_s3tc ||
-                     ctx->Extensions.S3_s3tc)
+#endif
+#if FEATURE_texture_s3tc
+            if (ctx->Extensions.EXT_texture_compression_s3tc ||
+                ctx->Extensions.S3_s3tc)
                return &_mesa_texformat_rgba_dxt3; /* Not rgba_dxt1, see spec */
-            else
-               return &_mesa_texformat_rgba;
+#endif
+            return &_mesa_texformat_rgba;
          default:
             ; /* fallthrough */
       }
@@ -1450,6 +1527,7 @@ _mesa_choose_tex_format( GLcontext *ctx, GLint internalFormat,
       }
    }
 
+#if FEATURE_texture_fxt1
    if (ctx->Extensions.TDFX_texture_compression_FXT1) {
       switch (internalFormat) {
          case GL_COMPRESSED_RGB_FXT1_3DFX:
@@ -1460,7 +1538,9 @@ _mesa_choose_tex_format( GLcontext *ctx, GLint internalFormat,
             ; /* fallthrough */
       }
    }
+#endif
 
+#if FEATURE_texture_s3tc
    if (ctx->Extensions.EXT_texture_compression_s3tc) {
       switch (internalFormat) {
          case GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
@@ -1488,6 +1568,7 @@ _mesa_choose_tex_format( GLcontext *ctx, GLint internalFormat,
             ; /* fallthrough */
       }
    }
+#endif
 
    if (ctx->Extensions.ARB_texture_float) {
       switch (internalFormat) {
@@ -1568,4 +1649,175 @@ _mesa_choose_tex_format( GLcontext *ctx, GLint internalFormat,
 
    _mesa_problem(ctx, "unexpected format in _mesa_choose_tex_format()");
    return NULL;
+}
+
+
+
+/**
+ * Return datatype and number of components per texel for the
+ * given gl_texture_format.
+ */
+void
+_mesa_format_to_type_and_comps(const struct gl_texture_format *format,
+                               GLenum *datatype, GLuint *comps)
+{
+   switch (format->MesaFormat) {
+   case MESA_FORMAT_RGBA8888:
+   case MESA_FORMAT_RGBA8888_REV:
+   case MESA_FORMAT_ARGB8888:
+   case MESA_FORMAT_ARGB8888_REV:
+      *datatype = CHAN_TYPE;
+      *comps = 4;
+      return;
+   case MESA_FORMAT_RGB888:
+   case MESA_FORMAT_BGR888:
+      *datatype = GL_UNSIGNED_BYTE;
+      *comps = 3;
+      return;
+   case MESA_FORMAT_RGB565:
+   case MESA_FORMAT_RGB565_REV:
+      *datatype = GL_UNSIGNED_SHORT_5_6_5;
+      *comps = 3;
+      return;
+
+   case MESA_FORMAT_ARGB4444:
+   case MESA_FORMAT_ARGB4444_REV:
+      *datatype = GL_UNSIGNED_SHORT_4_4_4_4;
+      *comps = 4;
+      return;
+
+   case MESA_FORMAT_ARGB1555:
+   case MESA_FORMAT_ARGB1555_REV:
+      *datatype = GL_UNSIGNED_SHORT_1_5_5_5_REV;
+      *comps = 4;
+      return;
+
+   case MESA_FORMAT_AL88:
+   case MESA_FORMAT_AL88_REV:
+      *datatype = GL_UNSIGNED_BYTE;
+      *comps = 2;
+      return;
+   case MESA_FORMAT_RGB332:
+      *datatype = GL_UNSIGNED_BYTE_3_3_2;
+      *comps = 3;
+      return;
+
+   case MESA_FORMAT_A8:
+   case MESA_FORMAT_L8:
+   case MESA_FORMAT_I8:
+   case MESA_FORMAT_CI8:
+      *datatype = GL_UNSIGNED_BYTE;
+      *comps = 1;
+      return;
+
+   case MESA_FORMAT_YCBCR:
+   case MESA_FORMAT_YCBCR_REV:
+      *datatype = GL_UNSIGNED_SHORT;
+      *comps = 2;
+      return;
+
+   case MESA_FORMAT_Z24_S8:
+      *datatype = GL_UNSIGNED_INT;
+      *comps = 1; /* XXX OK? */
+      return;
+
+   case MESA_FORMAT_Z16:
+      *datatype = GL_UNSIGNED_SHORT;
+      *comps = 1;
+      return;
+
+   case MESA_FORMAT_Z32:
+      *datatype = GL_UNSIGNED_INT;
+      *comps = 1;
+      return;
+
+   case MESA_FORMAT_SRGB8:
+      *datatype = GL_UNSIGNED_BYTE;
+      *comps = 3;
+      return;
+   case MESA_FORMAT_SRGBA8:
+      *datatype = GL_UNSIGNED_BYTE;
+      *comps = 4;
+      return;
+   case MESA_FORMAT_SL8:
+      *datatype = GL_UNSIGNED_BYTE;
+      *comps = 1;
+      return;
+   case MESA_FORMAT_SLA8:
+      *datatype = GL_UNSIGNED_BYTE;
+      *comps = 2;
+      return;
+
+   case MESA_FORMAT_RGB_FXT1:
+   case MESA_FORMAT_RGBA_FXT1:
+   case MESA_FORMAT_RGB_DXT1:
+   case MESA_FORMAT_RGBA_DXT1:
+   case MESA_FORMAT_RGBA_DXT3:
+   case MESA_FORMAT_RGBA_DXT5:
+      /* XXX generate error instead? */
+      *datatype = GL_UNSIGNED_BYTE;
+      *comps = 0;
+      return;
+
+   case MESA_FORMAT_RGBA:
+      *datatype = CHAN_TYPE;
+      *comps = 4;
+      return;
+   case MESA_FORMAT_RGB:
+      *datatype = CHAN_TYPE;
+      *comps = 3;
+      return;
+   case MESA_FORMAT_LUMINANCE_ALPHA:
+      *datatype = CHAN_TYPE;
+      *comps = 2;
+      return;
+   case MESA_FORMAT_ALPHA:
+   case MESA_FORMAT_LUMINANCE:
+   case MESA_FORMAT_INTENSITY:
+      *datatype = CHAN_TYPE;
+      *comps = 1;
+      return;
+
+   case MESA_FORMAT_RGBA_FLOAT32:
+      *datatype = GL_FLOAT;
+      *comps = 4;
+      return;
+   case MESA_FORMAT_RGBA_FLOAT16:
+      *datatype = GL_HALF_FLOAT_ARB;
+      *comps = 4;
+      return;
+   case MESA_FORMAT_RGB_FLOAT32:
+      *datatype = GL_FLOAT;
+      *comps = 3;
+      return;
+   case MESA_FORMAT_RGB_FLOAT16:
+      *datatype = GL_HALF_FLOAT_ARB;
+      *comps = 3;
+      return;
+   case MESA_FORMAT_LUMINANCE_ALPHA_FLOAT32:
+      *datatype = GL_FLOAT;
+      *comps = 2;
+      return;
+   case MESA_FORMAT_LUMINANCE_ALPHA_FLOAT16:
+      *datatype = GL_HALF_FLOAT_ARB;
+      *comps = 2;
+      return;
+   case MESA_FORMAT_ALPHA_FLOAT32:
+   case MESA_FORMAT_LUMINANCE_FLOAT32:
+   case MESA_FORMAT_INTENSITY_FLOAT32:
+      *datatype = GL_FLOAT;
+      *comps = 1;
+      return;
+   case MESA_FORMAT_ALPHA_FLOAT16:
+   case MESA_FORMAT_LUMINANCE_FLOAT16:
+   case MESA_FORMAT_INTENSITY_FLOAT16:
+      *datatype = GL_HALF_FLOAT_ARB;
+      *comps = 1;
+      return;
+
+   default:
+      _mesa_problem(NULL, "bad format in _mesa_format_to_type_and_comps");
+      *datatype = 0;
+      *comps = 1;
+   }
 }

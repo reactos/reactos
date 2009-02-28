@@ -26,10 +26,10 @@
  *    Gareth Hughes
  */
 
-#include "glheader.h"
-#include "context.h"
-#include "macros.h"
-#include "imports.h"
+#include "main/glheader.h"
+#include "main/context.h"
+#include "main/macros.h"
+#include "main/imports.h"
 
 #include "m_matrix.h"
 #include "m_xform.h"
@@ -171,7 +171,7 @@ static void ref_norm_transform_normalize( const GLmatrix *mat,
             out[i][0] = out[i][1] = out[i][2] = 0;
          }
       } else {
-         scale = lengths[i];;
+         scale = lengths[i];
 	 SCALE_SCALAR_3V( out[i], scale, t );
       }
 

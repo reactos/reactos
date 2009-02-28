@@ -26,8 +26,8 @@
 #ifndef _M_TRANSLATE_H_
 #define _M_TRANSLATE_H_
 
-#include "config.h"
-#include "mtypes.h"		/* hack for GLchan */
+#include "main/config.h"
+#include "main/mtypes.h"		/* hack for GLchan */
 
 
 /**

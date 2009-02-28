@@ -49,8 +49,8 @@
 #ifndef _T_CONTEXT_H
 #define _T_CONTEXT_H
 
-#include "glheader.h"
-#include "mtypes.h"
+#include "main/glheader.h"
+#include "main/mtypes.h"
 
 #include "math/m_matrix.h"
 #include "math/m_vector.h"
@@ -385,19 +385,6 @@ struct tnl_clipspace
 };
 
 
-struct tnl_cache_item {
-   GLuint hash;
-   void *key;
-   void *data;
-   struct tnl_cache_item *next;
-};
-
-struct tnl_cache {
-   struct tnl_cache_item **items;
-   GLuint size, n_items;
-};
-
-
 struct tnl_device_driver
 {
    /***
@@ -548,10 +535,6 @@ typedef struct
     */
    GLubyte *block[VERT_ATTRIB_MAX];
    GLuint nr_blocks;
-
-   /* Cache of fixed-function-replacing vertex programs:
-    */
-   struct tnl_cache *vp_cache;
 
 } TNLcontext;
 

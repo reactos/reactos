@@ -29,7 +29,7 @@
  */
 
 #ifndef USE_EXTERNAL_DXTN_LIB
-#define USE_EXTERNAL_DXTN_LIB 0
+#define USE_EXTERNAL_DXTN_LIB 1
 #endif
 
 #include "glheader.h"
@@ -37,14 +37,11 @@
 #include "colormac.h"
 #include "context.h"
 #include "convolve.h"
+#include "dlopen.h"
 #include "image.h"
 #include "texcompress.h"
 #include "texformat.h"
 #include "texstore.h"
-
-#if USE_EXTERNAL_DXTN_LIB && !defined(__MINGW32__)
-#include <dlfcn.h>
-#endif
 
 #ifdef __MINGW32__
 #define DXTN_LIBNAME "dxtn.dll"
@@ -74,72 +71,6 @@ static dxtCompressTexFuncExt ext_tx_compress_dxtn = NULL;
 static void *dxtlibhandle = NULL;
 
 
-typedef void (*GenericFunc)(void);
-
-
-/**
- * Wrapper for dlopen().
- * XXX Probably move this and the following wrappers into imports.h someday.
- */
-static void *
-_mesa_dlopen(const char *libname, int flags)
-{
-#if USE_EXTERNAL_DXTN_LIB
-#ifdef __MINGW32__
-   return LoadLibrary(libname);
-#else
-   return dlopen(libname, flags);
-#endif
-#else
-   return NULL;
-#endif /* USE_EXTERNAL_DXTN_LIB */
-}
-
-
-/**
- * Wrapper for dlsym() that does a cast to a generic function type,
- * rather than a void *.  This reduces the number of warnings that are
- * generated.
- */
-static GenericFunc
-_mesa_dlsym(void *handle, const char *fname)
-{
-#if USE_EXTERNAL_DXTN_LIB
-#ifdef __MINGW32__
-   return (GenericFunc) GetProcAddress(handle, fname);
-#elif defined(__DJGPP__)
-   /* need '_' prefix on symbol names */
-   char fname2[1000];
-   fname2[0] = '_';
-   _mesa_strncpy(fname2 + 1, fname, 998);
-   fname2[999] = 0;
-   return (GenericFunc) dlsym(handle, fname2);
-#else
-   return (GenericFunc) dlsym(handle, fname);
-#endif
-#else
-   return (GenericFunc) NULL;
-#endif /* USE_EXTERNAL_DXTN_LIB */
-}
-
-
-/**
- * Wrapper for dlclose().
- */
-static void
-_mesa_dlclose(void *handle)
-{
-#if USE_EXTERNAL_DXTN_LIB
-#ifdef __MINGW32__
-   FreeLibrary(handle);
-#else
-   dlclose(handle);
-#endif
-#endif
-}
-
-
-
 void
 _mesa_init_texture_s3tc( GLcontext *ctx )
 {
@@ -147,7 +78,7 @@ _mesa_init_texture_s3tc( GLcontext *ctx )
    ctx->Mesa_DXTn = GL_FALSE;
 #if USE_EXTERNAL_DXTN_LIB
    if (!dxtlibhandle) {
-      dxtlibhandle = _mesa_dlopen(DXTN_LIBNAME, RTLD_LAZY | RTLD_GLOBAL);
+      dxtlibhandle = _mesa_dlopen(DXTN_LIBNAME, 0);
       if (!dxtlibhandle) {
 	 _mesa_warning(ctx, "couldn't open " DXTN_LIBNAME ", software DXTn "
 	    "compression/decompression unavailable");
@@ -576,6 +507,32 @@ const struct gl_texture_format _mesa_texformat_rgb_dxt1 = {
    NULL, /*impossible*/ 		/* FetchTexel3Df */
    NULL					/* StoreTexel */
 };
+
+#if FEATURE_EXT_texture_sRGB
+const struct gl_texture_format _mesa_texformat_srgb_dxt1 = {
+   MESA_FORMAT_SRGB_DXT1,		/* MesaFormat */
+   GL_RGB,				/* BaseFormat */
+   GL_UNSIGNED_NORMALIZED_ARB,		/* DataType */
+   4, /*approx*/			/* RedBits */
+   4, /*approx*/			/* GreenBits */
+   4, /*approx*/			/* BlueBits */
+   0,					/* AlphaBits */
+   0,					/* LuminanceBits */
+   0,					/* IntensityBits */
+   0,					/* IndexBits */
+   0,					/* DepthBits */
+   0,					/* StencilBits */
+   0,					/* TexelBytes */
+   texstore_rgb_dxt1,			/* StoreTexImageFunc */
+   NULL, /*impossible*/ 		/* FetchTexel1D */
+   fetch_texel_2d_rgb_dxt1, 		/* FetchTexel2D */
+   NULL, /*impossible*/ 		/* FetchTexel3D */
+   NULL, /*impossible*/ 		/* FetchTexel1Df */
+   fetch_texel_2d_f_rgb_dxt1, 		/* FetchTexel2Df */
+   NULL, /*impossible*/ 		/* FetchTexel3Df */
+   NULL					/* StoreTexel */
+};
+#endif
 
 const struct gl_texture_format _mesa_texformat_rgba_dxt1 = {
    MESA_FORMAT_RGBA_DXT1,		/* MesaFormat */

@@ -28,12 +28,12 @@
  */
 
 
-#include "glheader.h"
-#include "context.h"
-#include "colormac.h"
-#include "context.h"
-#include "macros.h"
-#include "imports.h"
+#include "main/glheader.h"
+#include "main/context.h"
+#include "main/colormac.h"
+#include "main/context.h"
+#include "main/macros.h"
+#include "main/imports.h"
 #include "s_aatriangle.h"
 #include "s_context.h"
 #include "s_span.h"
@@ -141,6 +141,19 @@ solve_plane_chan(GLfloat x, GLfloat y, const GLfloat plane[4])
       return CHAN_MAX;
    return (GLchan) IROUND_POS(z);
 #endif
+}
+
+
+static INLINE GLfloat
+plane_dx(const GLfloat plane[4])
+{
+   return -plane[0] / plane[2];
+}
+
+static INLINE GLfloat
+plane_dy(const GLfloat plane[4])
+{
+   return -plane[1] / plane[2];
 }
 
 
@@ -337,7 +350,6 @@ compute_coveragei(const GLfloat v0[3], const GLfloat v1[3],
 }
 
 
-
 static void
 rgba_aa_tri(GLcontext *ctx,
 	    const SWvertex *v0,
@@ -345,7 +357,6 @@ rgba_aa_tri(GLcontext *ctx,
 	    const SWvertex *v2)
 {
 #define DO_Z
-#define DO_FOG
 #define DO_RGBA
 #include "s_aatritemp.h"
 }
@@ -358,72 +369,21 @@ index_aa_tri(GLcontext *ctx,
 	     const SWvertex *v2)
 {
 #define DO_Z
-#define DO_FOG
+#define DO_ATTRIBS
 #define DO_INDEX
 #include "s_aatritemp.h"
 }
 
 
-/*
- * Compute mipmap level of detail.
- * XXX we should really include the R coordinate in this computation
- * in order to do 3-D texture mipmapping.
- */
-static INLINE GLfloat
-compute_lambda(const GLfloat sPlane[4], const GLfloat tPlane[4],
-               const GLfloat qPlane[4], GLfloat cx, GLfloat cy,
-               GLfloat invQ, GLfloat texWidth, GLfloat texHeight)
-{
-   const GLfloat s = solve_plane(cx, cy, sPlane);
-   const GLfloat t = solve_plane(cx, cy, tPlane);
-   const GLfloat invQ_x1 = solve_plane_recip(cx+1.0F, cy, qPlane);
-   const GLfloat invQ_y1 = solve_plane_recip(cx, cy+1.0F, qPlane);
-   const GLfloat s_x1 = s - sPlane[0] / sPlane[2];
-   const GLfloat s_y1 = s - sPlane[1] / sPlane[2];
-   const GLfloat t_x1 = t - tPlane[0] / tPlane[2];
-   const GLfloat t_y1 = t - tPlane[1] / tPlane[2];
-   GLfloat dsdx = s_x1 * invQ_x1 - s * invQ;
-   GLfloat dsdy = s_y1 * invQ_y1 - s * invQ;
-   GLfloat dtdx = t_x1 * invQ_x1 - t * invQ;
-   GLfloat dtdy = t_y1 * invQ_y1 - t * invQ;
-   GLfloat maxU, maxV, rho, lambda;
-   dsdx = FABSF(dsdx);
-   dsdy = FABSF(dsdy);
-   dtdx = FABSF(dtdx);
-   dtdy = FABSF(dtdy);
-   maxU = MAX2(dsdx, dsdy) * texWidth;
-   maxV = MAX2(dtdx, dtdy) * texHeight;
-   rho = MAX2(maxU, maxV);
-   lambda = LOG2(rho);
-   return lambda;
-}
-
-
 static void
-tex_aa_tri(GLcontext *ctx,
-	   const SWvertex *v0,
-	   const SWvertex *v1,
-	   const SWvertex *v2)
+general_aa_tri(GLcontext *ctx,
+               const SWvertex *v0,
+               const SWvertex *v1,
+               const SWvertex *v2)
 {
 #define DO_Z
-#define DO_FOG
 #define DO_RGBA
 #define DO_ATTRIBS
-#include "s_aatritemp.h"
-}
-
-
-static void
-spec_tex_aa_tri(GLcontext *ctx,
-		const SWvertex *v0,
-		const SWvertex *v1,
-		const SWvertex *v2)
-{
-#define DO_Z
-#define DO_FOG
-#define DO_RGBA
-#define DO_ATTRIBS
-#define DO_SPEC
 #include "s_aatritemp.h"
 }
 
@@ -436,16 +396,15 @@ spec_tex_aa_tri(GLcontext *ctx,
 void
 _swrast_set_aa_triangle_function(GLcontext *ctx)
 {
+   SWcontext *swrast = SWRAST_CONTEXT(ctx);
+
    ASSERT(ctx->Polygon.SmoothFlag);
 
    if (ctx->Texture._EnabledCoordUnits != 0
-       || ctx->FragmentProgram._Current) {
-      if (NEED_SECONDARY_COLOR(ctx)) {
-         SWRAST_CONTEXT(ctx)->Triangle = spec_tex_aa_tri;
-      }
-      else {
-         SWRAST_CONTEXT(ctx)->Triangle = tex_aa_tri;
-      }
+       || ctx->FragmentProgram._Current
+       || swrast->_FogEnabled
+       || NEED_SECONDARY_COLOR(ctx)) {
+      SWRAST_CONTEXT(ctx)->Triangle = general_aa_tri;
    }
    else if (ctx->Visual.rgbMode) {
       SWRAST_CONTEXT(ctx)->Triangle = rgba_aa_tri;

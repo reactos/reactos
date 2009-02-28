@@ -694,7 +694,7 @@ static void store_texel_argb8888_rev(struct gl_texture_image *texImage,
 {
    const GLubyte *rgba = (const GLubyte *) texel;
    GLuint *dst = TEXEL_ADDR(GLuint, texImage, i, j, k, 1);
-   *dst = PACK_COLOR_8888(rgba[ACOMP], rgba[RCOMP], rgba[GCOMP], rgba[BCOMP]);
+   *dst = PACK_COLOR_8888(rgba[BCOMP], rgba[GCOMP], rgba[RCOMP], rgba[ACOMP]);
 }
 #endif
 
@@ -803,6 +803,30 @@ static void store_texel_rgb565_rev(struct gl_texture_image *texImage,
 }
 #endif
 
+/* MESA_FORMAT_RGBA4444 ******************************************************/
+
+/* Fetch texel from 1D, 2D or 3D argb444 texture, return 4 GLchans */
+static void FETCH(rgba4444)( const struct gl_texture_image *texImage,
+			     GLint i, GLint j, GLint k, GLchan *texel )
+{
+   const GLushort *src = TEXEL_ADDR(GLushort, texImage, i, j, k, 1);
+   const GLushort s = *src;
+   texel[RCOMP] = UBYTE_TO_CHAN( ((s >> 12) & 0xf) | ((s >> 8) & 0xf0) );
+   texel[GCOMP] = UBYTE_TO_CHAN( ((s >>  8) & 0xf) | ((s >> 4) & 0xf0) );
+   texel[BCOMP] = UBYTE_TO_CHAN( ((s >>  4) & 0xf) | ((s     ) & 0xf0) );
+   texel[ACOMP] = UBYTE_TO_CHAN( ((s      ) & 0xf) | ((s << 4) & 0xf0) );
+}
+
+#if DIM == 3
+static void store_texel_rgba4444(struct gl_texture_image *texImage,
+                                 GLint i, GLint j, GLint k, const void *texel)
+{
+   const GLubyte *rgba = (const GLubyte *) texel;
+   GLushort *dst = TEXEL_ADDR(GLushort, texImage, i, j, k, 1);
+   *dst = PACK_COLOR_4444(rgba[RCOMP], rgba[GCOMP], rgba[BCOMP], rgba[ACOMP]);
+}
+#endif
+
 
 /* MESA_FORMAT_ARGB4444 ******************************************************/
 
@@ -824,7 +848,7 @@ static void store_texel_argb4444(struct gl_texture_image *texImage,
 {
    const GLubyte *rgba = (const GLubyte *) texel;
    GLushort *dst = TEXEL_ADDR(GLushort, texImage, i, j, k, 1);
-   *dst = PACK_COLOR_4444(rgba[RCOMP], rgba[GCOMP], rgba[BCOMP], rgba[ACOMP]);
+   *dst = PACK_COLOR_4444(rgba[ACOMP], rgba[RCOMP], rgba[GCOMP], rgba[BCOMP]);
 }
 #endif
 
@@ -852,6 +876,29 @@ static void store_texel_argb4444_rev(struct gl_texture_image *texImage,
 }
 #endif
 
+/* MESA_FORMAT_RGBA5551 ******************************************************/
+
+/* Fetch texel from 1D, 2D or 3D argb1555 texture, return 4 GLchans */
+static void FETCH(rgba5551)( const struct gl_texture_image *texImage,
+			     GLint i, GLint j, GLint k, GLchan *texel )
+{
+   const GLushort *src = TEXEL_ADDR(GLushort, texImage, i, j, k, 1);
+   const GLushort s = *src;
+   texel[RCOMP] = UBYTE_TO_CHAN( ((s >>  8) & 0xf8) | ((s >> 13) & 0x7) );
+   texel[GCOMP] = UBYTE_TO_CHAN( ((s >>  3) & 0xf8) | ((s >>  8) & 0x7) );
+   texel[BCOMP] = UBYTE_TO_CHAN( ((s <<  2) & 0xf8) | ((s >>  3) & 0x7) );
+   texel[ACOMP] = UBYTE_TO_CHAN( ((s) & 0x01) ? 255 : 0);
+}
+
+#if DIM == 3
+static void store_texel_rgba5551(struct gl_texture_image *texImage,
+                                 GLint i, GLint j, GLint k, const void *texel)
+{
+   const GLubyte *rgba = (const GLubyte *) texel;
+   GLushort *dst = TEXEL_ADDR(GLushort, texImage, i, j, k, 1);
+   *dst = PACK_COLOR_5551(rgba[RCOMP], rgba[GCOMP], rgba[BCOMP], rgba[ACOMP]);
+}
+#endif
 
 /* MESA_FORMAT_ARGB1555 ******************************************************/
 
@@ -1084,7 +1131,7 @@ static void FETCH(ci8)( const struct gl_texture_image *texImage,
          texelUB[GCOMP] =
          texelUB[BCOMP] = 0;
          texelUB[ACOMP] = table[index];
-         break;;
+         break;
       case GL_LUMINANCE:
          texelUB[RCOMP] =
          texelUB[GCOMP] =
@@ -1096,27 +1143,28 @@ static void FETCH(ci8)( const struct gl_texture_image *texImage,
          texelUB[GCOMP] =
          texelUB[BCOMP] =
          texelUB[ACOMP] = table[index];
-         break;;
+         break;
       case GL_LUMINANCE_ALPHA:
          texelUB[RCOMP] =
          texelUB[GCOMP] =
          texelUB[BCOMP] = table[index * 2 + 0];
          texelUB[ACOMP] = table[index * 2 + 1];
-         break;;
+         break;
       case GL_RGB:
          texelUB[RCOMP] = table[index * 3 + 0];
          texelUB[GCOMP] = table[index * 3 + 1];
          texelUB[BCOMP] = table[index * 3 + 2];
          texelUB[ACOMP] = 255;
-         break;;
+         break;
       case GL_RGBA:
          texelUB[RCOMP] = table[index * 4 + 0];
          texelUB[GCOMP] = table[index * 4 + 1];
          texelUB[BCOMP] = table[index * 4 + 2];
          texelUB[ACOMP] = table[index * 4 + 3];
-         break;;
+         break;
       default:
          _mesa_problem(ctx, "Bad palette format in fetch_texel_ci8");
+         return;
       }
 #if CHAN_TYPE == GL_UNSIGNED_BYTE
       COPY_4UBV(texel, texelUB);
@@ -1362,6 +1410,32 @@ static void store_texel_z24_s8(struct gl_texture_image *texImage,
 }
 #endif
 
+
+/* MESA_TEXFORMAT_S8_Z24 ***************************************************/
+
+static void FETCH(f_s8_z24)( const struct gl_texture_image *texImage,
+                             GLint i, GLint j, GLint k, GLfloat *texel )
+{
+   /* only return Z, not stencil data */
+   const GLuint *src = TEXEL_ADDR(GLuint, texImage, i, j, k, 1);
+   const GLfloat scale = 1.0F / (GLfloat) 0xffffff;
+   texel[0] = ((*src) & 0x00ffffff) * scale;
+   ASSERT(texImage->TexFormat->MesaFormat == MESA_FORMAT_S8_Z24);
+   ASSERT(texel[0] >= 0.0F);
+   ASSERT(texel[0] <= 1.0F);
+}
+
+#if DIM == 3
+static void store_texel_s8_z24(struct gl_texture_image *texImage,
+                               GLint i, GLint j, GLint k, const void *texel)
+{
+   /* only store Z, not stencil */
+   GLuint *dst = TEXEL_ADDR(GLuint, texImage, i, j, k, 1);
+   GLfloat depth = *((GLfloat *) texel);
+   GLuint zi = (GLuint) (depth * 0xffffff);
+   *dst = zi | (*dst & 0xff000000);
+}
+#endif
 
 
 #undef TEXEL_ADDR

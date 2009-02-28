@@ -130,7 +130,7 @@ extern void WMesaPaletteChange(HPALETTE Pal);
 
 extern void WMesaMove(void);
 
-
+void WMesaShareLists(WMesaContext ctx_to_share, WMesaContext ctx);
 
 #ifdef __cplusplus
 }

@@ -32,8 +32,8 @@
  * \author Brian Paul
  */
 
-#include "context.h"
-#include "macros.h"
+#include "main/context.h"
+#include "main/macros.h"
 #include "slang_mem.h"
 
 
@@ -184,6 +184,7 @@ _slang_realloc(void *oldBuffer, GLuint oldSize, GLuint newSize)
 #else
    GET_CURRENT_CONTEXT(ctx);
    slang_mempool *pool = (slang_mempool *) ctx->Shader.MemPool;
+   (void) pool;
 
    if (newSize < oldSize) {
       return oldBuffer;
@@ -235,6 +236,7 @@ _slang_free(void *addr)
    if (addr) {
       GET_CURRENT_CONTEXT(ctx);
       slang_mempool *pool = (slang_mempool *) ctx->Shader.MemPool;
+      (void) pool;
       ASSERT(is_valid_address(pool, addr));
    }
 #endif

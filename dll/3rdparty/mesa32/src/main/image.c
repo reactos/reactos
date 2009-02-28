@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.0.1
+ * Version:  7.1
  *
- * Copyright (C) 1999-2007  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2008  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -34,7 +34,6 @@
 #include "context.h"
 #include "image.h"
 #include "imports.h"
-#include "histogram.h"
 #include "macros.h"
 #include "pixel.h"
 
@@ -62,7 +61,7 @@
 /**
  * \return GL_TRUE if type is packed pixel type, GL_FALSE otherwise.
  */
-static GLboolean
+GLboolean
 _mesa_type_is_packed(GLenum type)
 {
    switch (type) {
@@ -1011,6 +1010,488 @@ _mesa_pack_bitmap( GLint width, GLint height, const GLubyte *source,
 }
 
 
+/**********************************************************************/
+/*****                  Pixel processing functions               ******/
+/**********************************************************************/
+
+/*
+ * Apply scale and bias factors to an array of RGBA pixels.
+ */
+void
+_mesa_scale_and_bias_rgba(GLuint n, GLfloat rgba[][4],
+                          GLfloat rScale, GLfloat gScale,
+                          GLfloat bScale, GLfloat aScale,
+                          GLfloat rBias, GLfloat gBias,
+                          GLfloat bBias, GLfloat aBias)
+{
+   if (rScale != 1.0 || rBias != 0.0) {
+      GLuint i;
+      for (i = 0; i < n; i++) {
+         rgba[i][RCOMP] = rgba[i][RCOMP] * rScale + rBias;
+      }
+   }
+   if (gScale != 1.0 || gBias != 0.0) {
+      GLuint i;
+      for (i = 0; i < n; i++) {
+         rgba[i][GCOMP] = rgba[i][GCOMP] * gScale + gBias;
+      }
+   }
+   if (bScale != 1.0 || bBias != 0.0) {
+      GLuint i;
+      for (i = 0; i < n; i++) {
+         rgba[i][BCOMP] = rgba[i][BCOMP] * bScale + bBias;
+      }
+   }
+   if (aScale != 1.0 || aBias != 0.0) {
+      GLuint i;
+      for (i = 0; i < n; i++) {
+         rgba[i][ACOMP] = rgba[i][ACOMP] * aScale + aBias;
+      }
+   }
+}
+
+
+/*
+ * Apply pixel mapping to an array of floating point RGBA pixels.
+ */
+void
+_mesa_map_rgba( const GLcontext *ctx, GLuint n, GLfloat rgba[][4] )
+{
+   const GLfloat rscale = (GLfloat) (ctx->PixelMaps.RtoR.Size - 1);
+   const GLfloat gscale = (GLfloat) (ctx->PixelMaps.GtoG.Size - 1);
+   const GLfloat bscale = (GLfloat) (ctx->PixelMaps.BtoB.Size - 1);
+   const GLfloat ascale = (GLfloat) (ctx->PixelMaps.AtoA.Size - 1);
+   const GLfloat *rMap = ctx->PixelMaps.RtoR.Map;
+   const GLfloat *gMap = ctx->PixelMaps.GtoG.Map;
+   const GLfloat *bMap = ctx->PixelMaps.BtoB.Map;
+   const GLfloat *aMap = ctx->PixelMaps.AtoA.Map;
+   GLuint i;
+   for (i=0;i<n;i++) {
+      GLfloat r = CLAMP(rgba[i][RCOMP], 0.0F, 1.0F);
+      GLfloat g = CLAMP(rgba[i][GCOMP], 0.0F, 1.0F);
+      GLfloat b = CLAMP(rgba[i][BCOMP], 0.0F, 1.0F);
+      GLfloat a = CLAMP(rgba[i][ACOMP], 0.0F, 1.0F);
+      rgba[i][RCOMP] = rMap[IROUND(r * rscale)];
+      rgba[i][GCOMP] = gMap[IROUND(g * gscale)];
+      rgba[i][BCOMP] = bMap[IROUND(b * bscale)];
+      rgba[i][ACOMP] = aMap[IROUND(a * ascale)];
+   }
+}
+
+
+/*
+ * Apply the color matrix and post color matrix scaling and biasing.
+ */
+void
+_mesa_transform_rgba(const GLcontext *ctx, GLuint n, GLfloat rgba[][4])
+{
+   const GLfloat rs = ctx->Pixel.PostColorMatrixScale[0];
+   const GLfloat rb = ctx->Pixel.PostColorMatrixBias[0];
+   const GLfloat gs = ctx->Pixel.PostColorMatrixScale[1];
+   const GLfloat gb = ctx->Pixel.PostColorMatrixBias[1];
+   const GLfloat bs = ctx->Pixel.PostColorMatrixScale[2];
+   const GLfloat bb = ctx->Pixel.PostColorMatrixBias[2];
+   const GLfloat as = ctx->Pixel.PostColorMatrixScale[3];
+   const GLfloat ab = ctx->Pixel.PostColorMatrixBias[3];
+   const GLfloat *m = ctx->ColorMatrixStack.Top->m;
+   GLuint i;
+   for (i = 0; i < n; i++) {
+      const GLfloat r = rgba[i][RCOMP];
+      const GLfloat g = rgba[i][GCOMP];
+      const GLfloat b = rgba[i][BCOMP];
+      const GLfloat a = rgba[i][ACOMP];
+      rgba[i][RCOMP] = (m[0] * r + m[4] * g + m[ 8] * b + m[12] * a) * rs + rb;
+      rgba[i][GCOMP] = (m[1] * r + m[5] * g + m[ 9] * b + m[13] * a) * gs + gb;
+      rgba[i][BCOMP] = (m[2] * r + m[6] * g + m[10] * b + m[14] * a) * bs + bb;
+      rgba[i][ACOMP] = (m[3] * r + m[7] * g + m[11] * b + m[15] * a) * as + ab;
+   }
+}
+
+
+/**
+ * Apply a color table lookup to an array of floating point RGBA colors.
+ */
+void
+_mesa_lookup_rgba_float(const struct gl_color_table *table,
+                        GLuint n, GLfloat rgba[][4])
+{
+   const GLint max = table->Size - 1;
+   const GLfloat scale = (GLfloat) max;
+   const GLfloat *lut = table->TableF;
+   GLuint i;
+
+   if (!table->TableF || table->Size == 0)
+      return;
+
+   switch (table->_BaseFormat) {
+      case GL_INTENSITY:
+         /* replace RGBA with I */
+         for (i = 0; i < n; i++) {
+            GLint j = IROUND(rgba[i][RCOMP] * scale);
+            GLfloat c = lut[CLAMP(j, 0, max)];
+            rgba[i][RCOMP] =
+            rgba[i][GCOMP] =
+            rgba[i][BCOMP] =
+            rgba[i][ACOMP] = c;
+         }
+         break;
+      case GL_LUMINANCE:
+         /* replace RGB with L */
+         for (i = 0; i < n; i++) {
+            GLint j = IROUND(rgba[i][RCOMP] * scale);
+            GLfloat c = lut[CLAMP(j, 0, max)];
+            rgba[i][RCOMP] =
+            rgba[i][GCOMP] =
+            rgba[i][BCOMP] = c;
+         }
+         break;
+      case GL_ALPHA:
+         /* replace A with A */
+         for (i = 0; i < n; i++) {
+            GLint j = IROUND(rgba[i][ACOMP] * scale);
+            rgba[i][ACOMP] = lut[CLAMP(j, 0, max)];
+         }
+         break;
+      case GL_LUMINANCE_ALPHA:
+         /* replace RGBA with LLLA */
+         for (i = 0; i < n; i++) {
+            GLint jL = IROUND(rgba[i][RCOMP] * scale);
+            GLint jA = IROUND(rgba[i][ACOMP] * scale);
+            GLfloat luminance, alpha;
+            jL = CLAMP(jL, 0, max);
+            jA = CLAMP(jA, 0, max);
+            luminance = lut[jL * 2 + 0];
+            alpha     = lut[jA * 2 + 1];
+            rgba[i][RCOMP] =
+            rgba[i][GCOMP] =
+            rgba[i][BCOMP] = luminance;
+            rgba[i][ACOMP] = alpha;;
+         }
+         break;
+      case GL_RGB:
+         /* replace RGB with RGB */
+         for (i = 0; i < n; i++) {
+            GLint jR = IROUND(rgba[i][RCOMP] * scale);
+            GLint jG = IROUND(rgba[i][GCOMP] * scale);
+            GLint jB = IROUND(rgba[i][BCOMP] * scale);
+            jR = CLAMP(jR, 0, max);
+            jG = CLAMP(jG, 0, max);
+            jB = CLAMP(jB, 0, max);
+            rgba[i][RCOMP] = lut[jR * 3 + 0];
+            rgba[i][GCOMP] = lut[jG * 3 + 1];
+            rgba[i][BCOMP] = lut[jB * 3 + 2];
+         }
+         break;
+      case GL_RGBA:
+         /* replace RGBA with RGBA */
+         for (i = 0; i < n; i++) {
+            GLint jR = IROUND(rgba[i][RCOMP] * scale);
+            GLint jG = IROUND(rgba[i][GCOMP] * scale);
+            GLint jB = IROUND(rgba[i][BCOMP] * scale);
+            GLint jA = IROUND(rgba[i][ACOMP] * scale);
+            jR = CLAMP(jR, 0, max);
+            jG = CLAMP(jG, 0, max);
+            jB = CLAMP(jB, 0, max);
+            jA = CLAMP(jA, 0, max);
+            rgba[i][RCOMP] = lut[jR * 4 + 0];
+            rgba[i][GCOMP] = lut[jG * 4 + 1];
+            rgba[i][BCOMP] = lut[jB * 4 + 2];
+            rgba[i][ACOMP] = lut[jA * 4 + 3];
+         }
+         break;
+      default:
+         _mesa_problem(NULL, "Bad format in _mesa_lookup_rgba_float");
+         return;
+   }
+}
+
+
+
+/**
+ * Apply a color table lookup to an array of ubyte/RGBA colors.
+ */
+void
+_mesa_lookup_rgba_ubyte(const struct gl_color_table *table,
+                        GLuint n, GLubyte rgba[][4])
+{
+   const GLubyte *lut = table->TableUB;
+   const GLfloat scale = (GLfloat) (table->Size - 1) / (GLfloat)255.0;
+   GLuint i;
+
+   if (!table->TableUB || table->Size == 0)
+      return;
+
+   switch (table->_BaseFormat) {
+   case GL_INTENSITY:
+      /* replace RGBA with I */
+      if (table->Size == 256) {
+         for (i = 0; i < n; i++) {
+            const GLubyte c = lut[rgba[i][RCOMP]];
+            rgba[i][RCOMP] =
+            rgba[i][GCOMP] =
+            rgba[i][BCOMP] =
+            rgba[i][ACOMP] = c;
+         }
+      }
+      else {
+         for (i = 0; i < n; i++) {
+            GLint j = IROUND((GLfloat) rgba[i][RCOMP] * scale);
+            rgba[i][RCOMP] =
+            rgba[i][GCOMP] =
+            rgba[i][BCOMP] =
+            rgba[i][ACOMP] = lut[j];
+         }
+      }
+      break;
+   case GL_LUMINANCE:
+      /* replace RGB with L */
+      if (table->Size == 256) {
+         for (i = 0; i < n; i++) {
+            const GLubyte c = lut[rgba[i][RCOMP]];
+            rgba[i][RCOMP] =
+            rgba[i][GCOMP] =
+            rgba[i][BCOMP] = c;
+         }
+      }
+      else {
+         for (i = 0; i < n; i++) {
+            GLint j = IROUND((GLfloat) rgba[i][RCOMP] * scale);
+            rgba[i][RCOMP] =
+            rgba[i][GCOMP] =
+            rgba[i][BCOMP] = lut[j];
+         }
+      }
+      break;
+   case GL_ALPHA:
+      /* replace A with A */
+      if (table->Size == 256) {
+         for (i = 0; i < n; i++) {
+            rgba[i][ACOMP] = lut[rgba[i][ACOMP]];
+         }
+      }
+      else {
+         for (i = 0; i < n; i++) {
+            GLint j = IROUND((GLfloat) rgba[i][ACOMP] * scale);
+            rgba[i][ACOMP] = lut[j];
+         }
+      }
+      break;
+   case GL_LUMINANCE_ALPHA:
+      /* replace RGBA with LLLA */
+      if (table->Size == 256) {
+         for (i = 0; i < n; i++) {
+            GLubyte l = lut[rgba[i][RCOMP] * 2 + 0];
+            GLubyte a = lut[rgba[i][ACOMP] * 2 + 1];;
+            rgba[i][RCOMP] =
+            rgba[i][GCOMP] =
+            rgba[i][BCOMP] = l;
+            rgba[i][ACOMP] = a;
+         }
+      }
+      else {
+         for (i = 0; i < n; i++) {
+            GLint jL = IROUND((GLfloat) rgba[i][RCOMP] * scale);
+            GLint jA = IROUND((GLfloat) rgba[i][ACOMP] * scale);
+            GLubyte luminance = lut[jL * 2 + 0];
+            GLubyte alpha     = lut[jA * 2 + 1];
+            rgba[i][RCOMP] =
+            rgba[i][GCOMP] =
+            rgba[i][BCOMP] = luminance;
+            rgba[i][ACOMP] = alpha;
+         }
+      }
+      break;
+   case GL_RGB:
+      if (table->Size == 256) {
+         for (i = 0; i < n; i++) {
+            rgba[i][RCOMP] = lut[rgba[i][RCOMP] * 3 + 0];
+            rgba[i][GCOMP] = lut[rgba[i][GCOMP] * 3 + 1];
+            rgba[i][BCOMP] = lut[rgba[i][BCOMP] * 3 + 2];
+         }
+      }
+      else {
+         for (i = 0; i < n; i++) {
+            GLint jR = IROUND((GLfloat) rgba[i][RCOMP] * scale);
+            GLint jG = IROUND((GLfloat) rgba[i][GCOMP] * scale);
+            GLint jB = IROUND((GLfloat) rgba[i][BCOMP] * scale);
+            rgba[i][RCOMP] = lut[jR * 3 + 0];
+            rgba[i][GCOMP] = lut[jG * 3 + 1];
+            rgba[i][BCOMP] = lut[jB * 3 + 2];
+         }
+      }
+      break;
+   case GL_RGBA:
+      if (table->Size == 256) {
+         for (i = 0; i < n; i++) {
+            rgba[i][RCOMP] = lut[rgba[i][RCOMP] * 4 + 0];
+            rgba[i][GCOMP] = lut[rgba[i][GCOMP] * 4 + 1];
+            rgba[i][BCOMP] = lut[rgba[i][BCOMP] * 4 + 2];
+            rgba[i][ACOMP] = lut[rgba[i][ACOMP] * 4 + 3];
+         }
+      }
+      else {
+         for (i = 0; i < n; i++) {
+            GLint jR = IROUND((GLfloat) rgba[i][RCOMP] * scale);
+            GLint jG = IROUND((GLfloat) rgba[i][GCOMP] * scale);
+            GLint jB = IROUND((GLfloat) rgba[i][BCOMP] * scale);
+            GLint jA = IROUND((GLfloat) rgba[i][ACOMP] * scale);
+            CLAMPED_FLOAT_TO_CHAN(rgba[i][RCOMP], lut[jR * 4 + 0]);
+            CLAMPED_FLOAT_TO_CHAN(rgba[i][GCOMP], lut[jG * 4 + 1]);
+            CLAMPED_FLOAT_TO_CHAN(rgba[i][BCOMP], lut[jB * 4 + 2]);
+            CLAMPED_FLOAT_TO_CHAN(rgba[i][ACOMP], lut[jA * 4 + 3]);
+         }
+      }
+      break;
+   default:
+      _mesa_problem(NULL, "Bad format in _mesa_lookup_rgba_chan");
+      return;
+   }
+}
+
+
+
+/*
+ * Map color indexes to float rgba values.
+ */
+void
+_mesa_map_ci_to_rgba( const GLcontext *ctx, GLuint n,
+                      const GLuint index[], GLfloat rgba[][4] )
+{
+   GLuint rmask = ctx->PixelMaps.ItoR.Size - 1;
+   GLuint gmask = ctx->PixelMaps.ItoG.Size - 1;
+   GLuint bmask = ctx->PixelMaps.ItoB.Size - 1;
+   GLuint amask = ctx->PixelMaps.ItoA.Size - 1;
+   const GLfloat *rMap = ctx->PixelMaps.ItoR.Map;
+   const GLfloat *gMap = ctx->PixelMaps.ItoG.Map;
+   const GLfloat *bMap = ctx->PixelMaps.ItoB.Map;
+   const GLfloat *aMap = ctx->PixelMaps.ItoA.Map;
+   GLuint i;
+   for (i=0;i<n;i++) {
+      rgba[i][RCOMP] = rMap[index[i] & rmask];
+      rgba[i][GCOMP] = gMap[index[i] & gmask];
+      rgba[i][BCOMP] = bMap[index[i] & bmask];
+      rgba[i][ACOMP] = aMap[index[i] & amask];
+   }
+}
+
+
+/**
+ * Map ubyte color indexes to ubyte/RGBA values.
+ */
+void
+_mesa_map_ci8_to_rgba8(const GLcontext *ctx, GLuint n, const GLubyte index[],
+                       GLubyte rgba[][4])
+{
+   GLuint rmask = ctx->PixelMaps.ItoR.Size - 1;
+   GLuint gmask = ctx->PixelMaps.ItoG.Size - 1;
+   GLuint bmask = ctx->PixelMaps.ItoB.Size - 1;
+   GLuint amask = ctx->PixelMaps.ItoA.Size - 1;
+   const GLubyte *rMap = ctx->PixelMaps.ItoR.Map8;
+   const GLubyte *gMap = ctx->PixelMaps.ItoG.Map8;
+   const GLubyte *bMap = ctx->PixelMaps.ItoB.Map8;
+   const GLubyte *aMap = ctx->PixelMaps.ItoA.Map8;
+   GLuint i;
+   for (i=0;i<n;i++) {
+      rgba[i][RCOMP] = rMap[index[i] & rmask];
+      rgba[i][GCOMP] = gMap[index[i] & gmask];
+      rgba[i][BCOMP] = bMap[index[i] & bmask];
+      rgba[i][ACOMP] = aMap[index[i] & amask];
+   }
+}
+
+
+void
+_mesa_scale_and_bias_depth(const GLcontext *ctx, GLuint n,
+                           GLfloat depthValues[])
+{
+   const GLfloat scale = ctx->Pixel.DepthScale;
+   const GLfloat bias = ctx->Pixel.DepthBias;
+   GLuint i;
+   for (i = 0; i < n; i++) {
+      GLfloat d = depthValues[i] * scale + bias;
+      depthValues[i] = CLAMP(d, 0.0F, 1.0F);
+   }
+}
+
+
+void
+_mesa_scale_and_bias_depth_uint(const GLcontext *ctx, GLuint n,
+                                GLuint depthValues[])
+{
+   const GLdouble max = (double) 0xffffffff;
+   const GLdouble scale = ctx->Pixel.DepthScale;
+   const GLdouble bias = ctx->Pixel.DepthBias * max;
+   GLuint i;
+   for (i = 0; i < n; i++) {
+      GLdouble d = (GLdouble) depthValues[i] * scale + bias;
+      d = CLAMP(d, 0.0, max);
+      depthValues[i] = (GLuint) d;
+   }
+}
+
+
+
+/*
+ * Update the min/max values from an array of fragment colors.
+ */
+static void
+update_minmax(GLcontext *ctx, GLuint n, const GLfloat rgba[][4])
+{
+   GLuint i;
+   for (i = 0; i < n; i++) {
+      /* update mins */
+      if (rgba[i][RCOMP] < ctx->MinMax.Min[RCOMP])
+         ctx->MinMax.Min[RCOMP] = rgba[i][RCOMP];
+      if (rgba[i][GCOMP] < ctx->MinMax.Min[GCOMP])
+         ctx->MinMax.Min[GCOMP] = rgba[i][GCOMP];
+      if (rgba[i][BCOMP] < ctx->MinMax.Min[BCOMP])
+         ctx->MinMax.Min[BCOMP] = rgba[i][BCOMP];
+      if (rgba[i][ACOMP] < ctx->MinMax.Min[ACOMP])
+         ctx->MinMax.Min[ACOMP] = rgba[i][ACOMP];
+
+      /* update maxs */
+      if (rgba[i][RCOMP] > ctx->MinMax.Max[RCOMP])
+         ctx->MinMax.Max[RCOMP] = rgba[i][RCOMP];
+      if (rgba[i][GCOMP] > ctx->MinMax.Max[GCOMP])
+         ctx->MinMax.Max[GCOMP] = rgba[i][GCOMP];
+      if (rgba[i][BCOMP] > ctx->MinMax.Max[BCOMP])
+         ctx->MinMax.Max[BCOMP] = rgba[i][BCOMP];
+      if (rgba[i][ACOMP] > ctx->MinMax.Max[ACOMP])
+         ctx->MinMax.Max[ACOMP] = rgba[i][ACOMP];
+   }
+}
+
+
+/*
+ * Update the histogram values from an array of fragment colors.
+ */
+static void
+update_histogram(GLcontext *ctx, GLuint n, const GLfloat rgba[][4])
+{
+   const GLint max = ctx->Histogram.Width - 1;
+   GLfloat w = (GLfloat) max;
+   GLuint i;
+
+   if (ctx->Histogram.Width == 0)
+      return;
+
+   for (i = 0; i < n; i++) {
+      GLint ri = IROUND(rgba[i][RCOMP] * w);
+      GLint gi = IROUND(rgba[i][GCOMP] * w);
+      GLint bi = IROUND(rgba[i][BCOMP] * w);
+      GLint ai = IROUND(rgba[i][ACOMP] * w);
+      ri = CLAMP(ri, 0, max);
+      gi = CLAMP(gi, 0, max);
+      bi = CLAMP(bi, 0, max);
+      ai = CLAMP(ai, 0, max);
+      ctx->Histogram.Count[ri][RCOMP]++;
+      ctx->Histogram.Count[gi][GCOMP]++;
+      ctx->Histogram.Count[bi][BCOMP]++;
+      ctx->Histogram.Count[ai][ACOMP]++;
+   }
+}
+
+
 /**
  * Apply various pixel transfer operations to an array of RGBA pixels
  * as indicated by the transferOps bitmask
@@ -1066,11 +1547,11 @@ _mesa_apply_rgba_transfer_ops(GLcontext *ctx, GLbitfield transferOps,
    }
    /* update histogram count */
    if (transferOps & IMAGE_HISTOGRAM_BIT) {
-      _mesa_update_histogram(ctx, n, (CONST GLfloat (*)[4]) rgba);
+      update_histogram(ctx, n, (CONST GLfloat (*)[4]) rgba);
    }
    /* update min/max values */
    if (transferOps & IMAGE_MIN_MAX_BIT) {
-      _mesa_update_minmax(ctx, n, (CONST GLfloat (*)[4]) rgba);
+      update_minmax(ctx, n, (CONST GLfloat (*)[4]) rgba);
    }
    /* clamping to [0,1] */
    if (transferOps & IMAGE_CLAMP_BIT) {
@@ -1169,7 +1650,7 @@ _mesa_apply_stencil_transfer_ops(const GLcontext *ctx, GLuint n,
       GLuint mask = ctx->PixelMaps.StoS.Size - 1;
       GLuint i;
       for (i = 0; i < n; i++) {
-         stencil[i] = ctx->PixelMaps.StoS.Map[ stencil[i] & mask ];
+         stencil[i] = (GLstencil)ctx->PixelMaps.StoS.Map[ stencil[i] & mask ];
       }
    }
 }
@@ -1208,7 +1689,7 @@ _mesa_pack_rgba_span_float(GLcontext *ctx, GLuint n, GLfloat rgba[][4],
 
    if (dstFormat == GL_LUMINANCE || dstFormat == GL_LUMINANCE_ALPHA) {
       /* compute luminance values */
-      if (dstType != GL_FLOAT || ctx->Color.ClampReadColor == GL_TRUE) {
+      if (transferOps & IMAGE_CLAMP_BIT) {
          for (i = 0; i < n; i++) {
             GLfloat sum = rgba[i][RCOMP] + rgba[i][GCOMP] + rgba[i][BCOMP];
             luminance[i] = CLAMP(sum, 0.0F, 1.0F);
@@ -3680,7 +4161,7 @@ _mesa_unpack_stencil_span( const GLcontext *ctx, GLuint n,
          const GLuint mask = ctx->PixelMaps.StoS.Size - 1;
          GLuint i;
          for (i = 0; i < n; i++) {
-            indexes[i] = ctx->PixelMaps.StoS.Map[ indexes[i] & mask ];
+            indexes[i] = (GLuint)ctx->PixelMaps.StoS.Map[ indexes[i] & mask ];
          }
       }
 
@@ -3886,12 +4367,12 @@ _mesa_pack_stencil_span( const GLcontext *ctx, GLuint n,
  * The glPixelTransfer (scale/bias) params will be applied.
  *
  * \param dstType  one of GL_UNSIGNED_SHORT, GL_UNSIGNED_INT, GL_FLOAT
- * \param depthScale  scale factor (max value) for returned GLushort or
- *                    GLuint values (ignored for GLfloat).
+ * \param depthMax  max value for returned GLushort or GLuint values
+ *                  (ignored for GLfloat).
  */
 void
 _mesa_unpack_depth_span( const GLcontext *ctx, GLuint n,
-                         GLenum dstType, GLvoid *dest, GLfloat depthScale,
+                         GLenum dstType, GLvoid *dest, GLuint depthMax,
                          GLenum srcType, const GLvoid *source,
                          const struct gl_pixelstore_attrib *srcPacking )
 {
@@ -3916,7 +4397,7 @@ _mesa_unpack_depth_span( const GLcontext *ctx, GLuint n,
       }
       if (srcType == GL_UNSIGNED_SHORT
           && dstType == GL_UNSIGNED_INT
-          && depthScale == (GLfloat) 0xffffffff) {
+          && depthMax == 0xffffffff) {
          const GLushort *src = (const GLushort *) source;
          GLuint *dst = (GLuint *) dest;
          GLuint i;
@@ -3963,8 +4444,8 @@ _mesa_unpack_depth_span( const GLcontext *ctx, GLuint n,
          DEPTH_VALUES(GLuint, UINT_TO_FLOAT);
          break;
       case GL_UNSIGNED_INT_24_8_EXT: /* GL_EXT_packed_depth_stencil */
-         if (dstType == GL_UNSIGNED_INT &&
-             depthScale == (GLfloat) 0xffffff &&
+         if (dstType == GL_UNSIGNED_INT_24_8_EXT &&
+             depthMax == 0xffffff &&
              ctx->Pixel.DepthScale == 1.0 &&
              ctx->Pixel.DepthBias == 0.0) {
             const GLuint *src = (const GLuint *) source;
@@ -4032,7 +4513,7 @@ _mesa_unpack_depth_span( const GLcontext *ctx, GLuint n,
    if (needClamp) {
       GLuint i;
       for (i = 0; i < n; i++) {
-         depthValues[i] = CLAMP(depthValues[i], 0.0, 1.0);
+         depthValues[i] = (GLfloat)CLAMP(depthValues[i], 0.0, 1.0);
       }
    }
 
@@ -4042,16 +4523,16 @@ _mesa_unpack_depth_span( const GLcontext *ctx, GLuint n,
    if (dstType == GL_UNSIGNED_INT) {
       GLuint *zValues = (GLuint *) dest;
       GLuint i;
-      if (depthScale <= (GLfloat) 0xffffff) {
+      if (depthMax <= 0xffffff) {
          /* no overflow worries */
          for (i = 0; i < n; i++) {
-            zValues[i] = (GLuint) (depthValues[i] * depthScale);
+            zValues[i] = (GLuint) (depthValues[i] * (GLfloat) depthMax);
          }
       }
       else {
          /* need to use double precision to prevent overflow problems */
          for (i = 0; i < n; i++) {
-            GLdouble z = depthValues[i] * depthScale;
+            GLdouble z = depthValues[i] * (GLfloat) depthMax;
             if (z >= (GLdouble) 0xffffffff)
                zValues[i] = 0xffffffff;
             else
@@ -4062,14 +4543,14 @@ _mesa_unpack_depth_span( const GLcontext *ctx, GLuint n,
    else if (dstType == GL_UNSIGNED_SHORT) {
       GLushort *zValues = (GLushort *) dest;
       GLuint i;
-      ASSERT(depthScale <= 65535.0);
+      ASSERT(depthMax <= 0xffff);
       for (i = 0; i < n; i++) {
-         zValues[i] = (GLushort) (depthValues[i] * depthScale);
+         zValues[i] = (GLushort) (depthValues[i] * (GLfloat) depthMax);
       }
    }
    else {
       ASSERT(dstType == GL_FLOAT);
-      ASSERT(depthScale == 1.0F);
+      /*ASSERT(depthMax == 1.0F);*/
    }
 }
 
@@ -4622,6 +5103,37 @@ _mesa_clip_readpixels(const GLcontext *ctx,
 
 
 /**
+ * Do clipping for a glCopyTexSubImage call.
+ * The framebuffer source region might extend outside the framebuffer
+ * bounds.  Clip the source region against the framebuffer bounds and
+ * adjust the texture/dest position and size accordingly.
+ *
+ * \return GL_FALSE if region is totally clipped, GL_TRUE otherwise.
+ */
+GLboolean
+_mesa_clip_copytexsubimage(const GLcontext *ctx,
+                           GLint *destX, GLint *destY,
+                           GLint *srcX, GLint *srcY,
+                           GLsizei *width, GLsizei *height)
+{
+   const struct gl_framebuffer *fb = ctx->ReadBuffer;
+   const GLint srcX0 = *srcX, srcY0 = *srcY;
+
+   if (_mesa_clip_to_region(0, 0, fb->Width, fb->Height,
+                            srcX, srcY, width, height)) {
+      *destX = *destX + *srcX - srcX0;
+      *destY = *destY + *srcY - srcY0;
+
+      return GL_TRUE;
+   }
+   else {
+      return GL_FALSE;
+   }
+}
+
+
+
+/**
  * Clip the rectangle defined by (x, y, width, height) against the bounds
  * specified by [xmin, xmax) and [ymin, ymax).
  * \return GL_FALSE if rect is totally clipped, GL_TRUE otherwise.
@@ -4640,7 +5152,7 @@ _mesa_clip_to_region(GLint xmin, GLint ymin,
 
    /* right clipping */
    if (*x + *width > xmax)
-      *width -= (*x + *width - xmax - 1);
+      *width -= (*x + *width - xmax);
 
    if (*width <= 0)
       return GL_FALSE;
@@ -4653,7 +5165,7 @@ _mesa_clip_to_region(GLint xmin, GLint ymin,
 
    /* top (or bottom) clipping */
    if (*y + *height > ymax)
-      *height -= (*y + *height - ymax - 1);
+      *height -= (*y + *height - ymax);
 
    if (*height <= 0)
       return GL_FALSE;

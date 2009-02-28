@@ -19,10 +19,6 @@
 
 #define INT_TO_BOOLEAN(I)     ( (I) ? GL_TRUE : GL_FALSE )
 
-#define ENUM_TO_BOOLEAN(E)    ( (E) ? GL_TRUE : GL_FALSE )
-#define ENUM_TO_INT(E)        ( (GLint) (E) )
-#define ENUM_TO_FLOAT(E)      ( (GLfloat) (E) )
-
 #define BOOLEAN_TO_INT(B)     ( (GLint) (B) )
 #define BOOLEAN_TO_FLOAT(B)   ( (B) ? 1.0F : 0.0F )
 
@@ -293,7 +289,7 @@ _mesa_GetBooleanv( GLenum pname, GLboolean *params )
          params[0] = INT_TO_BOOLEAN(ctx->DrawBuffer->Visual.depthBits);
          break;
       case GL_DEPTH_CLEAR_VALUE:
-         params[0] = FLOAT_TO_BOOLEAN(ctx->Depth.Clear);
+         params[0] = FLOAT_TO_BOOLEAN(((GLfloat) ctx->Depth.Clear));
          break;
       case GL_DEPTH_FUNC:
          params[0] = ENUM_TO_BOOLEAN(ctx->Depth.Func);
@@ -753,6 +749,15 @@ _mesa_GetBooleanv( GLenum pname, GLboolean *params )
       case GL_POLYGON_OFFSET_UNITS:
          params[0] = FLOAT_TO_BOOLEAN(ctx->Polygon.OffsetUnits );
          break;
+      case GL_POLYGON_OFFSET_POINT:
+         params[0] = ctx->Polygon.OffsetPoint;
+         break;
+      case GL_POLYGON_OFFSET_LINE:
+         params[0] = ctx->Polygon.OffsetLine;
+         break;
+      case GL_POLYGON_OFFSET_FILL:
+         params[0] = ctx->Polygon.OffsetFill;
+         break;
       case GL_POLYGON_SMOOTH:
          params[0] = ctx->Polygon.SmoothFlag;
          break;
@@ -870,6 +875,14 @@ _mesa_GetBooleanv( GLenum pname, GLboolean *params )
       case GL_TEXTURE_3D:
          params[0] = _mesa_IsEnabled(GL_TEXTURE_3D);
          break;
+      case GL_TEXTURE_1D_ARRAY_EXT:
+         CHECK_EXT1(MESA_texture_array, "GetBooleanv");
+         params[0] = _mesa_IsEnabled(GL_TEXTURE_1D_ARRAY_EXT);
+         break;
+      case GL_TEXTURE_2D_ARRAY_EXT:
+         CHECK_EXT1(MESA_texture_array, "GetBooleanv");
+         params[0] = _mesa_IsEnabled(GL_TEXTURE_2D_ARRAY_EXT);
+         break;
       case GL_TEXTURE_BINDING_1D:
          params[0] = INT_TO_BOOLEAN(ctx->Texture.Unit[ctx->Texture.CurrentUnit].Current1D->Name);
          break;
@@ -879,17 +892,13 @@ _mesa_GetBooleanv( GLenum pname, GLboolean *params )
       case GL_TEXTURE_BINDING_3D:
          params[0] = INT_TO_BOOLEAN(ctx->Texture.Unit[ctx->Texture.CurrentUnit].Current3D->Name);
          break;
-      case GL_TEXTURE_ENV_COLOR:
-         {
-         const GLfloat *color = ctx->Texture.Unit[ctx->Texture.CurrentUnit].EnvColor;
-         params[0] = FLOAT_TO_BOOLEAN(color[0]);
-         params[1] = FLOAT_TO_BOOLEAN(color[1]);
-         params[2] = FLOAT_TO_BOOLEAN(color[2]);
-         params[3] = FLOAT_TO_BOOLEAN(color[3]);
-         }
+      case GL_TEXTURE_BINDING_1D_ARRAY_EXT:
+         CHECK_EXT1(MESA_texture_array, "GetBooleanv");
+         params[0] = INT_TO_BOOLEAN(ctx->Texture.Unit[ctx->Texture.CurrentUnit].Current1DArray->Name);
          break;
-      case GL_TEXTURE_ENV_MODE:
-         params[0] = ENUM_TO_BOOLEAN(ctx->Texture.Unit[ctx->Texture.CurrentUnit].EnvMode);
+      case GL_TEXTURE_BINDING_2D_ARRAY_EXT:
+         CHECK_EXT1(MESA_texture_array, "GetBooleanv");
+         params[0] = INT_TO_BOOLEAN(ctx->Texture.Unit[ctx->Texture.CurrentUnit].Current2DArray->Name);
          break;
       case GL_TEXTURE_GEN_S:
          params[0] = ((ctx->Texture.Unit[ctx->Texture.CurrentUnit].TexGenEnabled & S_BIT) ? 1 : 0);
@@ -1083,7 +1092,7 @@ _mesa_GetBooleanv( GLenum pname, GLboolean *params )
          GLuint i, n = _mesa_get_compressed_formats(ctx, formats, GL_FALSE);
          ASSERT(n <= 100);
          for (i = 0; i < n; i++)
-            params[i] = ENUM_TO_INT(formats[i]);
+            params[i] = ENUM_TO_BOOLEAN(formats[i]);
          }
          break;
       case GL_ARRAY_ELEMENT_LOCK_FIRST_EXT:
@@ -1864,6 +1873,10 @@ _mesa_GetBooleanv( GLenum pname, GLboolean *params )
          CHECK_EXT1(EXT_framebuffer_object, "GetBooleanv");
          params[0] = INT_TO_BOOLEAN(ctx->Const.MaxRenderbufferSize);
          break;
+      case GL_READ_FRAMEBUFFER_BINDING_EXT:
+         CHECK_EXT1(EXT_framebuffer_blit, "GetBooleanv");
+         params[0] = INT_TO_BOOLEAN(ctx->ReadBuffer->Name);
+         break;
       case GL_MAX_FRAGMENT_UNIFORM_COMPONENTS_ARB:
          CHECK_EXT1(ARB_fragment_shader, "GetBooleanv");
          params[0] = INT_TO_BOOLEAN(ctx->Const.FragmentProgram.MaxUniformComponents);
@@ -2124,7 +2137,7 @@ _mesa_GetFloatv( GLenum pname, GLfloat *params )
          params[0] = (GLfloat)(ctx->DrawBuffer->Visual.depthBits);
          break;
       case GL_DEPTH_CLEAR_VALUE:
-         params[0] = ctx->Depth.Clear;
+         params[0] = ((GLfloat) ctx->Depth.Clear);
          break;
       case GL_DEPTH_FUNC:
          params[0] = ENUM_TO_FLOAT(ctx->Depth.Func);
@@ -2584,6 +2597,15 @@ _mesa_GetFloatv( GLenum pname, GLfloat *params )
       case GL_POLYGON_OFFSET_UNITS:
          params[0] = ctx->Polygon.OffsetUnits ;
          break;
+      case GL_POLYGON_OFFSET_POINT:
+         params[0] = BOOLEAN_TO_FLOAT(ctx->Polygon.OffsetPoint);
+         break;
+      case GL_POLYGON_OFFSET_LINE:
+         params[0] = BOOLEAN_TO_FLOAT(ctx->Polygon.OffsetLine);
+         break;
+      case GL_POLYGON_OFFSET_FILL:
+         params[0] = BOOLEAN_TO_FLOAT(ctx->Polygon.OffsetFill);
+         break;
       case GL_POLYGON_SMOOTH:
          params[0] = BOOLEAN_TO_FLOAT(ctx->Polygon.SmoothFlag);
          break;
@@ -2701,6 +2723,14 @@ _mesa_GetFloatv( GLenum pname, GLfloat *params )
       case GL_TEXTURE_3D:
          params[0] = BOOLEAN_TO_FLOAT(_mesa_IsEnabled(GL_TEXTURE_3D));
          break;
+      case GL_TEXTURE_1D_ARRAY_EXT:
+         CHECK_EXT1(MESA_texture_array, "GetFloatv");
+         params[0] = BOOLEAN_TO_FLOAT(_mesa_IsEnabled(GL_TEXTURE_1D_ARRAY_EXT));
+         break;
+      case GL_TEXTURE_2D_ARRAY_EXT:
+         CHECK_EXT1(MESA_texture_array, "GetFloatv");
+         params[0] = BOOLEAN_TO_FLOAT(_mesa_IsEnabled(GL_TEXTURE_2D_ARRAY_EXT));
+         break;
       case GL_TEXTURE_BINDING_1D:
          params[0] = (GLfloat)(ctx->Texture.Unit[ctx->Texture.CurrentUnit].Current1D->Name);
          break;
@@ -2710,17 +2740,13 @@ _mesa_GetFloatv( GLenum pname, GLfloat *params )
       case GL_TEXTURE_BINDING_3D:
          params[0] = (GLfloat)(ctx->Texture.Unit[ctx->Texture.CurrentUnit].Current3D->Name);
          break;
-      case GL_TEXTURE_ENV_COLOR:
-         {
-         const GLfloat *color = ctx->Texture.Unit[ctx->Texture.CurrentUnit].EnvColor;
-         params[0] = color[0];
-         params[1] = color[1];
-         params[2] = color[2];
-         params[3] = color[3];
-         }
+      case GL_TEXTURE_BINDING_1D_ARRAY_EXT:
+         CHECK_EXT1(MESA_texture_array, "GetFloatv");
+         params[0] = (GLfloat)(ctx->Texture.Unit[ctx->Texture.CurrentUnit].Current1DArray->Name);
          break;
-      case GL_TEXTURE_ENV_MODE:
-         params[0] = ENUM_TO_FLOAT(ctx->Texture.Unit[ctx->Texture.CurrentUnit].EnvMode);
+      case GL_TEXTURE_BINDING_2D_ARRAY_EXT:
+         CHECK_EXT1(MESA_texture_array, "GetFloatv");
+         params[0] = (GLfloat)(ctx->Texture.Unit[ctx->Texture.CurrentUnit].Current2DArray->Name);
          break;
       case GL_TEXTURE_GEN_S:
          params[0] = BOOLEAN_TO_FLOAT(((ctx->Texture.Unit[ctx->Texture.CurrentUnit].TexGenEnabled & S_BIT) ? 1 : 0));
@@ -2914,7 +2940,7 @@ _mesa_GetFloatv( GLenum pname, GLfloat *params )
          GLuint i, n = _mesa_get_compressed_formats(ctx, formats, GL_FALSE);
          ASSERT(n <= 100);
          for (i = 0; i < n; i++)
-            params[i] = ENUM_TO_INT(formats[i]);
+            params[i] = ENUM_TO_FLOAT(formats[i]);
          }
          break;
       case GL_ARRAY_ELEMENT_LOCK_FIRST_EXT:
@@ -3695,6 +3721,10 @@ _mesa_GetFloatv( GLenum pname, GLfloat *params )
          CHECK_EXT1(EXT_framebuffer_object, "GetFloatv");
          params[0] = (GLfloat)(ctx->Const.MaxRenderbufferSize);
          break;
+      case GL_READ_FRAMEBUFFER_BINDING_EXT:
+         CHECK_EXT1(EXT_framebuffer_blit, "GetFloatv");
+         params[0] = (GLfloat)(ctx->ReadBuffer->Name);
+         break;
       case GL_MAX_FRAGMENT_UNIFORM_COMPONENTS_ARB:
          CHECK_EXT1(ARB_fragment_shader, "GetFloatv");
          params[0] = (GLfloat)(ctx->Const.FragmentProgram.MaxUniformComponents);
@@ -3955,7 +3985,7 @@ _mesa_GetIntegerv( GLenum pname, GLint *params )
          params[0] = ctx->DrawBuffer->Visual.depthBits;
          break;
       case GL_DEPTH_CLEAR_VALUE:
-         params[0] = IROUND(ctx->Depth.Clear);
+         params[0] = FLOAT_TO_INT(((GLfloat) ctx->Depth.Clear));
          break;
       case GL_DEPTH_FUNC:
          params[0] = ENUM_TO_INT(ctx->Depth.Func);
@@ -4415,6 +4445,15 @@ _mesa_GetIntegerv( GLenum pname, GLint *params )
       case GL_POLYGON_OFFSET_UNITS:
          params[0] = IROUND(ctx->Polygon.OffsetUnits );
          break;
+      case GL_POLYGON_OFFSET_POINT:
+         params[0] = BOOLEAN_TO_INT(ctx->Polygon.OffsetPoint);
+         break;
+      case GL_POLYGON_OFFSET_LINE:
+         params[0] = BOOLEAN_TO_INT(ctx->Polygon.OffsetLine);
+         break;
+      case GL_POLYGON_OFFSET_FILL:
+         params[0] = BOOLEAN_TO_INT(ctx->Polygon.OffsetFill);
+         break;
       case GL_POLYGON_SMOOTH:
          params[0] = BOOLEAN_TO_INT(ctx->Polygon.SmoothFlag);
          break;
@@ -4532,6 +4571,14 @@ _mesa_GetIntegerv( GLenum pname, GLint *params )
       case GL_TEXTURE_3D:
          params[0] = BOOLEAN_TO_INT(_mesa_IsEnabled(GL_TEXTURE_3D));
          break;
+      case GL_TEXTURE_1D_ARRAY_EXT:
+         CHECK_EXT1(MESA_texture_array, "GetIntegerv");
+         params[0] = BOOLEAN_TO_INT(_mesa_IsEnabled(GL_TEXTURE_1D_ARRAY_EXT));
+         break;
+      case GL_TEXTURE_2D_ARRAY_EXT:
+         CHECK_EXT1(MESA_texture_array, "GetIntegerv");
+         params[0] = BOOLEAN_TO_INT(_mesa_IsEnabled(GL_TEXTURE_2D_ARRAY_EXT));
+         break;
       case GL_TEXTURE_BINDING_1D:
          params[0] = ctx->Texture.Unit[ctx->Texture.CurrentUnit].Current1D->Name;
          break;
@@ -4541,17 +4588,13 @@ _mesa_GetIntegerv( GLenum pname, GLint *params )
       case GL_TEXTURE_BINDING_3D:
          params[0] = ctx->Texture.Unit[ctx->Texture.CurrentUnit].Current3D->Name;
          break;
-      case GL_TEXTURE_ENV_COLOR:
-         {
-         const GLfloat *color = ctx->Texture.Unit[ctx->Texture.CurrentUnit].EnvColor;
-         params[0] = FLOAT_TO_INT(color[0]);
-         params[1] = FLOAT_TO_INT(color[1]);
-         params[2] = FLOAT_TO_INT(color[2]);
-         params[3] = FLOAT_TO_INT(color[3]);
-         }
+      case GL_TEXTURE_BINDING_1D_ARRAY_EXT:
+         CHECK_EXT1(MESA_texture_array, "GetIntegerv");
+         params[0] = ctx->Texture.Unit[ctx->Texture.CurrentUnit].Current1DArray->Name;
          break;
-      case GL_TEXTURE_ENV_MODE:
-         params[0] = ENUM_TO_INT(ctx->Texture.Unit[ctx->Texture.CurrentUnit].EnvMode);
+      case GL_TEXTURE_BINDING_2D_ARRAY_EXT:
+         CHECK_EXT1(MESA_texture_array, "GetIntegerv");
+         params[0] = ctx->Texture.Unit[ctx->Texture.CurrentUnit].Current2DArray->Name;
          break;
       case GL_TEXTURE_GEN_S:
          params[0] = BOOLEAN_TO_INT(((ctx->Texture.Unit[ctx->Texture.CurrentUnit].TexGenEnabled & S_BIT) ? 1 : 0));
@@ -5525,6 +5568,10 @@ _mesa_GetIntegerv( GLenum pname, GLint *params )
       case GL_MAX_RENDERBUFFER_SIZE_EXT:
          CHECK_EXT1(EXT_framebuffer_object, "GetIntegerv");
          params[0] = ctx->Const.MaxRenderbufferSize;
+         break;
+      case GL_READ_FRAMEBUFFER_BINDING_EXT:
+         CHECK_EXT1(EXT_framebuffer_blit, "GetIntegerv");
+         params[0] = ctx->ReadBuffer->Name;
          break;
       case GL_MAX_FRAGMENT_UNIFORM_COMPONENTS_ARB:
          CHECK_EXT1(ARB_fragment_shader, "GetIntegerv");

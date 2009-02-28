@@ -112,6 +112,10 @@ _mesa_SecondaryColorPointerEXT(GLint size, GLenum type,
 
 
 extern void GLAPIENTRY
+_mesa_PointSizePointer(GLenum type, GLsizei stride, const GLvoid *ptr);
+
+
+extern void GLAPIENTRY
 _mesa_VertexAttribPointerNV(GLuint index, GLint size, GLenum type,
                             GLsizei stride, const GLvoid *pointer);
 
@@ -146,6 +150,11 @@ _mesa_MultiModeDrawElementsIBM( const GLenum * mode, const GLsizei * count,
 				GLenum type, const GLvoid * const * indices,
 				GLsizei primcount, GLint modestride );
 
+extern void GLAPIENTRY
+_mesa_LockArraysEXT(GLint first, GLsizei count);
+
+extern void GLAPIENTRY
+_mesa_UnlockArraysEXT( void );
 
 extern void
 _mesa_init_varray( GLcontext * ctx );

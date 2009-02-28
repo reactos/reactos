@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5.3
+ * Version:  7.1
  *
- * Copyright (C) 2005-2007  Brian Paul   All Rights Reserved.
+ * Copyright (C) 2005-2008  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -26,23 +26,29 @@
 #define SLANG_EMIT_H
 
 
-#include "imports.h"
+#include "main/imports.h"
 #include "slang_compile.h"
 #include "slang_ir.h"
-#include "mtypes.h"
+#include "main/mtypes.h"
 
 
 extern void
 slang_print_ir(const slang_ir_node *n, int indent);
 
 
-extern slang_ir_storage *
-_slang_new_ir_storage(enum register_file file, GLint index, GLint size);
+extern GLuint
+_slang_swizzle_swizzle(GLuint swz1, GLuint swz2);
+
+
+extern GLuint
+_slang_var_swizzle(GLint size, GLint comp);
 
 
 extern GLboolean
 _slang_emit_code(slang_ir_node *n, slang_var_table *vartable,
-                 struct gl_program *prog, GLboolean withEnd,
+                 struct gl_program *prog,
+                 const struct gl_sl_pragmas *pragmas,
+                 GLboolean withEnd,
                  slang_info_log *log);
 
 

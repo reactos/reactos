@@ -27,10 +27,11 @@
  * extensions into either swrast or a sister module.  
  */
 
+#include "main/glheader.h"
+#include "main/colortab.h"
+#include "main/convolve.h"
 #include "s_context.h"
 #include "s_span.h"
-#include "colortab.h"
-#include "convolve.h"
 
 
 void

@@ -185,7 +185,7 @@ extern char *mesa_profile;
 
 #endif
 
-#elif defined(__amd64__)
+#elif defined(__x86_64__)
 
 #define rdtscll(val) do { \
      unsigned int a,d; \
@@ -303,7 +303,7 @@ enum { NIL = 0, ONE = 1, NEG = -1, VAR = 2 };
  */
 #if defined(__GNUC__)
 #  define ALIGN16(type, array)	type array __attribute__ ((aligned (16)))
-#elif defined(__MSC__)
+#elif defined(_MSC_VER)
 #  define ALIGN16(type, array)	type array __declspec(align(16)) /* GH: Does this work? */
 #elif defined(__WATCOMC__)
 #  define ALIGN16(type, array)	                    /* Watcom does not support this */ 

@@ -197,7 +197,7 @@
         FT_UInt     glyph_index;
         FT_Int      best_point, best_y, best_first, best_last;
         FT_Vector*  points;
-        FT_Bool     round;
+        FT_Bool     round = 0;
 
 
         AF_LOG(( "'%c'", *p ));

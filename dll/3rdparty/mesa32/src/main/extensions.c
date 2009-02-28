@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5.1
+ * Version:  7.3
  *
- * Copyright (C) 1999-2006  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2008  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -47,10 +47,11 @@ static const struct {
    { OFF, "GL_ARB_depth_texture",              F(ARB_depth_texture) },
    { OFF, "GL_ARB_draw_buffers",               F(ARB_draw_buffers) },
    { OFF, "GL_ARB_fragment_program",           F(ARB_fragment_program) },
+   { OFF, "GL_ARB_fragment_program_shadow",    F(ARB_fragment_program_shadow) },
    { OFF, "GL_ARB_fragment_shader",            F(ARB_fragment_shader) },
    { OFF, "GL_ARB_half_float_pixel",           F(ARB_half_float_pixel) },
    { OFF, "GL_ARB_imaging",                    F(ARB_imaging) },
-   { ON, "GL_ARB_multisample",                F(ARB_multisample) },
+   { OFF, "GL_ARB_multisample",                F(ARB_multisample) },
    { OFF, "GL_ARB_multitexture",               F(ARB_multitexture) },
    { OFF, "GL_ARB_occlusion_query",            F(ARB_occlusion_query) },
    { OFF, "GL_ARB_pixel_buffer_object",        F(EXT_pixel_buffer_object) },
@@ -145,6 +146,7 @@ static const struct {
    { OFF, "GL_MESA_packed_depth_stencil",      F(MESA_packed_depth_stencil) },
    { OFF, "GL_MESA_program_debug",             F(MESA_program_debug) },
    { OFF, "GL_MESA_resize_buffers",            F(MESA_resize_buffers) },
+   { OFF, "GL_MESA_texture_array",             F(MESA_texture_array) },
    { OFF, "GL_MESA_ycbcr_texture",             F(MESA_ycbcr_texture) },
    { ON,  "GL_MESA_window_pos",                F(ARB_window_pos) },
    { OFF, "GL_NV_blend_square",                F(NV_blend_square) },
@@ -163,7 +165,7 @@ static const struct {
    { OFF, "GL_SGIS_texture_border_clamp",      F(ARB_texture_border_clamp) },
    { ON,  "GL_SGIS_texture_edge_clamp",        F(SGIS_texture_edge_clamp) },
    { ON,  "GL_SGIS_texture_lod",               F(SGIS_texture_lod) },
-   { OFF, "GL_SGIX_depth_texture",             F(SGIX_depth_texture) },
+   { OFF, "GL_SGIX_depth_texture",             F(ARB_depth_texture) },
    { OFF, "GL_SGIX_shadow",                    F(SGIX_shadow) },
    { OFF, "GL_SGIX_shadow_ambient",            F(SGIX_shadow_ambient) },
    { OFF, "GL_SUN_multi_draw_arrays",          F(EXT_multi_draw_arrays) },
@@ -183,6 +185,7 @@ _mesa_enable_sw_extensions(GLcontext *ctx)
    ctx->Extensions.ARB_draw_buffers = GL_TRUE;
 #if FEATURE_ARB_fragment_program
    ctx->Extensions.ARB_fragment_program = GL_TRUE;
+   ctx->Extensions.ARB_fragment_program_shadow = GL_TRUE;
 #endif
 #if FEATURE_ARB_fragment_shader
    ctx->Extensions.ARB_fragment_shader = GL_TRUE;
@@ -201,7 +204,7 @@ _mesa_enable_sw_extensions(GLcontext *ctx)
    ctx->Extensions.ARB_shading_language_100 = GL_TRUE;
 #endif
 #if FEATURE_ARB_shading_language_120
-   ctx->Extensions.ARB_shading_language_120 = GL_TRUE;
+   ctx->Extensions.ARB_shading_language_120 = GL_FALSE; /* not quite done */
 #endif
    ctx->Extensions.ARB_shadow = GL_TRUE;
    ctx->Extensions.ARB_texture_border_clamp = GL_TRUE;
@@ -270,6 +273,7 @@ _mesa_enable_sw_extensions(GLcontext *ctx)
    ctx->Extensions.MESA_program_debug = GL_TRUE;
 #endif
    ctx->Extensions.MESA_resize_buffers = GL_TRUE;
+   ctx->Extensions.MESA_texture_array = GL_TRUE;
    ctx->Extensions.MESA_ycbcr_texture = GL_TRUE;
    ctx->Extensions.NV_blend_square = GL_TRUE;
    /*ctx->Extensions.NV_light_max_exponent = GL_TRUE;*/
@@ -288,11 +292,19 @@ _mesa_enable_sw_extensions(GLcontext *ctx)
    ctx->Extensions.SGI_texture_color_table = GL_TRUE;
    ctx->Extensions.SGIS_generate_mipmap = GL_TRUE;
    ctx->Extensions.SGIS_texture_edge_clamp = GL_TRUE;
-   ctx->Extensions.SGIX_depth_texture = GL_TRUE;
    ctx->Extensions.SGIX_shadow = GL_TRUE;
    ctx->Extensions.SGIX_shadow_ambient = GL_TRUE;
 #if FEATURE_ARB_vertex_program || FEATURE_ARB_fragment_program
    ctx->Extensions.EXT_gpu_program_parameters = GL_TRUE;
+#endif
+#if FEATURE_texture_fxt1
+   _mesa_enable_extension(ctx, "GL_3DFX_texture_compression_FXT1");
+#endif
+#if FEATURE_texture_s3tc
+   if (ctx->Mesa_DXTn) {
+      _mesa_enable_extension(ctx, "GL_EXT_texture_compression_s3tc");
+      _mesa_enable_extension(ctx, "GL_S3_s3tc");
+   }
 #endif
 }
 
@@ -305,6 +317,7 @@ _mesa_enable_imaging_extensions(GLcontext *ctx)
 {
    ctx->Extensions.ARB_imaging = GL_TRUE;
    ctx->Extensions.EXT_blend_color = GL_TRUE;
+   ctx->Extensions.EXT_blend_logic_op = GL_TRUE;
    ctx->Extensions.EXT_blend_minmax = GL_TRUE;
    ctx->Extensions.EXT_blend_subtract = GL_TRUE;
    ctx->Extensions.EXT_convolution = GL_TRUE;
@@ -349,7 +362,6 @@ _mesa_enable_1_4_extensions(GLcontext *ctx)
    ctx->Extensions.ARB_window_pos = GL_TRUE;
    ctx->Extensions.EXT_blend_color = GL_TRUE;
    ctx->Extensions.EXT_blend_func_separate = GL_TRUE;
-   ctx->Extensions.EXT_blend_logic_op = GL_TRUE;
    ctx->Extensions.EXT_blend_minmax = GL_TRUE;
    ctx->Extensions.EXT_blend_subtract = GL_TRUE;
    ctx->Extensions.EXT_fog_coord = GL_TRUE;
@@ -415,7 +427,7 @@ _mesa_enable_2_1_extensions(GLcontext *ctx)
    ctx->Extensions.EXT_texture_sRGB = GL_TRUE;
 #endif
 #ifdef FEATURE_ARB_shading_language_120
-   ctx->Extensions.ARB_shading_language_120 = GL_TRUE;
+   ctx->Extensions.ARB_shading_language_120 = GL_FALSE; /* not quite done */
 #endif
 }
 

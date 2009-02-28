@@ -27,7 +27,6 @@
 #define S_LOGIC_H
 
 
-#include "mtypes.h"
 #include "swrast.h"
 
 

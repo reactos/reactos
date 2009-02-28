@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5
  *
  * Copyright (C) 2004-2006  Brian Paul   All Rights Reserved.
+ * Copyright (C) 2008 VMware, Inc.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -32,29 +32,47 @@
  * usage:
  *   syn2c slang_shader.syn > slang_shader_syn.h
  *
- * when modifying or extending this file, several things must be taken into consideration:
- * - when adding new operators that were marked as reserved in the initial specification,
- *   one must only uncomment particular lines of code that refer to operators being added;
- * - when adding new shader target, one must reserve new value for shader_type register and
- *   use it in .if constructs for symbols that are exclusive for that shader;
- * - some symbols mimic output of other symbols - the best example is the "for" construct:
- *   expression "for (foo(); ; bar())" is seen as "for (foo(); true; bar())" by the output
- *   processor - hence, special care must be taken when rearranging output of essential symbols;
- * - order of single-quoted tokens does matter in alternatives - so do not parse "<" operator
- *   before "<<" and "<<" before "<<=";
- * - all double-quoted tokens are internally preprocessed to eliminate problems with parsing
- *   strings that are prefixes of other strings, like "sampler1D" and "sampler1DShadow";
+ * when modifying or extending this file, several things must be taken into
+ * consideration:
+ *
+ * - when adding new operators that were marked as reserved in the
+ *   initial specification, one must only uncomment particular lines of
+ *   code that refer to operators being added;
+ *
+ * - when adding new shader targets, one must reserve a new value for
+ *   shader_type register and use it in .if constructs for symbols that
+ *   are exclusive for that shader;
+ *
+ * - some symbols mimic output of other symbols - the best example is
+ *   the "for" construct: expression "for (foo(); ; bar())" is seen as
+ *   "for (foo(); true; bar())" by the output processor - hence, special
+ *   care must be taken when rearranging output of essential symbols;
+ *
+ * - order of single-quoted tokens does matter in alternatives - so do not
+ *   parse "<" operator before "<<" and "<<" before "<<=";
+ *
+ * - all double-quoted tokens are internally preprocessed to eliminate
+ *   problems with parsing strings that are prefixes of other strings,
+ *   like "sampler1D" and "sampler1DShadow";
  */
 
 .syntax translation_unit;
 
 /* revision number - increment after each change affecting emitted output */
-.emtcode REVISION                                   3
+.emtcode REVISION                                   5
 
-/* external declaration */
+/* external declaration (or precision or invariant stmt) */
 .emtcode EXTERNAL_NULL                              0
 .emtcode EXTERNAL_FUNCTION_DEFINITION               1
 .emtcode EXTERNAL_DECLARATION                       2
+.emtcode DEFAULT_PRECISION                          3
+.emtcode INVARIANT_STMT                             4
+
+/* precision */
+.emtcode PRECISION_DEFAULT                          0
+.emtcode PRECISION_LOW                              1
+.emtcode PRECISION_MEDIUM                           2
+.emtcode PRECISION_HIGH                             3
 
 /* declaration */
 .emtcode DECLARATION_FUNCTION_PROTOTYPE             1
@@ -64,6 +82,10 @@
 .emtcode FUNCTION_ORDINARY                          0
 .emtcode FUNCTION_CONSTRUCTOR                       1
 .emtcode FUNCTION_OPERATOR                          2
+
+/* function call type */
+.emtcode FUNCTION_CALL_NONARRAY                     0
+.emtcode FUNCTION_CALL_ARRAY                        1
 
 /* operator type */
 .emtcode OPERATOR_ADDASSIGN                         1
@@ -116,6 +138,14 @@
 .emtcode TYPE_QUALIFIER_FIXEDOUTPUT                 5
 .emtcode TYPE_QUALIFIER_FIXEDINPUT                  6
 
+/* invariant qualifier */
+.emtcode TYPE_VARIANT                               90
+.emtcode TYPE_INVARIANT                             91
+
+/* centroid qualifier */
+.emtcode TYPE_CENTER                                95
+.emtcode TYPE_CENTROID                              96
+
 /* type specifier */
 .emtcode TYPE_SPECIFIER_VOID                        0
 .emtcode TYPE_SPECIFIER_BOOL                        1
@@ -152,6 +182,9 @@
 .emtcode TYPE_SPECIFIER_MAT34                       30
 .emtcode TYPE_SPECIFIER_MAT43                       31
 
+/* type specifier array */
+.emtcode TYPE_SPECIFIER_NONARRAY                    0
+.emtcode TYPE_SPECIFIER_ARRAY                       1
 
 /* structure field */
 .emtcode FIELD_NONE                                 0
@@ -221,6 +254,8 @@
 .emtcode OP_FIELD                                   59
 .emtcode OP_POSTINCREMENT                           60
 .emtcode OP_POSTDECREMENT                           61
+.emtcode OP_PRECISION                               62
+.emtcode OP_METHOD                                  63
 
 /* parameter qualifier */
 .emtcode PARAM_QUALIFIER_IN                         0
@@ -235,50 +270,60 @@
 .emtcode PARAMETER_ARRAY_NOT_PRESENT                0
 .emtcode PARAMETER_ARRAY_PRESENT                    1
 
-.errtext INVALID_EXTERNAL_DECLARATION               "2001: Invalid external declaration."
+/* INVALID_EXTERNAL_DECLARATION seems to be reported when there's */
+/* any syntax errors... */
+.errtext INVALID_EXTERNAL_DECLARATION               "2001: Syntax error."
 .errtext INVALID_OPERATOR_OVERRIDE                  "2002: Invalid operator override."
 .errtext LBRACE_EXPECTED                            "2003: '{' expected but '$err_token$' found."
 .errtext LPAREN_EXPECTED                            "2004: '(' expected but '$err_token$' found."
 .errtext RPAREN_EXPECTED                            "2005: ')' expected but '$err_token$' found."
+.errtext INVALID_PRECISION                          "2006: Invalid precision specifier '$err_token$'."
+.errtext INVALID_PRECISION_TYPE                     "2007: Invalid precision type '$err_token$'."
 
-/* tells whether the shader that is being parsed is a built-in shader or not */
-/*   0 - normal behaviour */
-/*   1 - accepts constructor and operator definitions and __asm statements */
-/* the implementation will set it to 1 when compiling internal built-in shaders */
+
+/*
+ * tells whether the shader that is being parsed is a built-in shader or not
+ *  0 - normal behaviour
+ *  1 - accepts constructor and operator definitions and __asm statements
+ * the implementation will set it to 1 when compiling internal built-in shaders
+ */
 .regbyte parsing_builtin                            0
 
-/* holds the type of the shader being parsed; possible values are listed below */
-/*   FRAGMENT_SHADER            1 */
-/*   VERTEX_SHADER              2 */
-/* shader type is set by the caller before parsing */
+/*
+ * holds the type of the shader being parsed; possible values are
+ * listed below.
+ *   FRAGMENT_SHADER            1
+ *   VERTEX_SHADER              2
+ * shader type is set by the caller before parsing
+ */
 .regbyte shader_type                                0
 
 /*
-    <variable_identifier>               ::= <identifier>
-*/
+ * <variable_identifier> ::= <identifier>
+ */
 variable_identifier
     identifier .emit OP_PUSH_IDENTIFIER;
 
 /*
-    <primary_expression>                ::= <variable_identifier>
-                                          | <intconstant>
-                                          | <floatconstant>
-                                          | <boolconstant>
-                                          | "(" <expression> ")"
-*/
+ *  <primary_expression> ::= <variable_identifier>
+ *                         | <intconstant>
+ *                         | <floatconstant>
+ *                         | <boolconstant>
+ *                         | "(" <expression> ")"
+ */
 primary_expression
     floatconstant .or boolconstant .or intconstant .or variable_identifier .or primary_expression_1;
 primary_expression_1
     lparen .and expression .and rparen;
 
 /*
-    <postfix_expression>                ::= <primary_expression>
-                                          | <postfix_expression> "[" <integer_expression> "]"
-                                          | <function_call>
-                                          | <postfix_expression> "." <field_selection>
-                                          | <postfix_expression> "++"
-                                          | <postfix_expression> "--"
-*/
+ * <postfix_expression> ::= <primary_expression>
+ *                        | <postfix_expression> "[" <integer_expression> "]"
+ *                        | <function_call>
+ *                        | <postfix_expression> "." <field_selection>
+ *                        | <postfix_expression> "++"
+ *                        | <postfix_expression> "--"
+ */
 postfix_expression
     postfix_expression_1 .and .loop postfix_expression_2;
 postfix_expression_1
@@ -293,21 +338,40 @@ postfix_expression_4
     dot .and field_selection .emit OP_FIELD;
 
 /*
-    <integer_expression>                ::= <expression>
-*/
+ * <integer_expression> ::= <expression>
+ */
 integer_expression
     expression;
 
 /*
-    <function_call>                     ::= <function_call_generic>
-*/
+ * <function_call> ::= <function_call_generic>
+ */
 function_call
+    function_call_or_method;
+
+/*
+ * <function_call_or_method> ::= <regular_function_call>
+ *                             | <postfix_expression> "." <function_call_generic>
+ */
+function_call_or_method
+    regular_function_call .or method_call;
+
+/*
+ * <method_call> ::= <identifier> "." <function_call_generic>
+ */
+method_call
+    identifier .emit OP_METHOD .and dot .and function_call_generic .and .true .emit OP_END;
+
+/*
+ * <regular_function_call> ::= <function_call_generic>
+ */
+regular_function_call
     function_call_generic .emit OP_CALL .and .true .emit OP_END;
 
 /*
-    <function_call_generic>             ::= <function_call_header_with_parameters> ")"
-                                          | <function_call_header_no_parameters> ")"
-*/
+ * <function_call_generic> ::= <function_call_header_with_parameters> ")"
+ *                           | <function_call_header_no_parameters> ")"
+ */
 function_call_generic
     function_call_generic_1 .or function_call_generic_2;
 function_call_generic_1
@@ -316,19 +380,18 @@ function_call_generic_2
     function_call_header_no_parameters .and rparen .error RPAREN_EXPECTED;
 
 /*
-    <function_call_header_no_parameters>::= <function_call_header> "void"
-                                          | <function_call_header>
-*/
+ * <function_call_header_no_parameters>::= <function_call_header> "void"
+ *                                        | <function_call_header>
+ */
 function_call_header_no_parameters
     function_call_header .and function_call_header_no_parameters_1;
 function_call_header_no_parameters_1
     "void" .or .true;
 
 /*
-    <function_call_header_with_parameters>::= <function_call_header> <assignment_expression>
-                                            | <function_call_header_with_parameters> ","
-                                              <assignment_expression>
-*/
+ * <function_call_header_with_parameters> ::= <function_call_header> <assignment_expression>
+ *                                          | <function_call_header_with_parameters> "," <assignment_expression>
+ */
 function_call_header_with_parameters
     function_call_header .and assignment_expression .and .true .emit OP_END .and
     .loop function_call_header_with_parameters_1;
@@ -336,31 +399,37 @@ function_call_header_with_parameters_1
     comma .and assignment_expression .and .true .emit OP_END;
 
 /*
-    <function_call_header>              ::= <function_identifier> "("
-*/
+ * <function_call_header> ::= <function_identifier> "("
+ */
 function_call_header
     function_identifier .and lparen;
 
 /*
-    <function_identifier>               ::= <constructor_identifier>
-                                          | <identifier>
-
-note: <constructor_identifier> has been deleted
-*/
+ * <function_identifier> ::= <constructor_identifier>
+ *                         | <identifier>
+ *                         | <type_specifier>
+ *
+ * note: <constructor_identifier> and <type_specifier> have been deleted
+ */
 function_identifier
-    identifier;
+    identifier .and function_identifier_opt_array;
+function_identifier_opt_array
+    function_identifier_array .emit FUNCTION_CALL_ARRAY .or
+    .true .emit FUNCTION_CALL_NONARRAY;
+function_identifier_array
+    lbracket .and constant_expression .and rbracket;
 
 /*
-    <unary_expression>                  ::= <postfix_expression>
-                                          | "++" <unary_expression>
-                                          | "--" <unary_expression>
-                                          | <unary_operator> <unary_expression>
-
-    <unary_operator>                    ::= "+"
-                                          | "-"
-                                          | "!"
-                                          | "~" // reserved
-*/
+ * <unary_expression> ::= <postfix_expression>
+ *                      | "++" <unary_expression>
+ *                      | "--" <unary_expression>
+ *                      | <unary_operator> <unary_expression>
+ *
+ * <unary_operator>   ::= "+"
+ *                      | "-"
+ *                      | "!"
+ *                      | "~" // reserved
+ */
 unary_expression
     postfix_expression .or unary_expression_1 .or unary_expression_2 .or unary_expression_3 .or
     unary_expression_4 .or unary_expression_5/* .or unary_expression_6*/;
@@ -378,11 +447,11 @@ unary_expression_5
     tilde .and unary_expression .and .true .emit OP_COMPLEMENT;*/
 
 /*
-    <multiplicative_expression>         ::= <unary_expression>
-                                          | <multiplicative_expression> "*" <unary_expression>
-                                          | <multiplicative_expression> "/" <unary_expression>
-                                          | <multiplicative_expression> "%" <unary_expression> // reserved
-*/
+ * <multiplicative_expression> ::= <unary_expression>
+ *                               | <multiplicative_expression> "*" <unary_expression>
+ *                               | <multiplicative_expression> "/" <unary_expression>
+ *                               | <multiplicative_expression> "%" <unary_expression> // reserved
+ */
 multiplicative_expression
     unary_expression .and .loop multiplicative_expression_1;
 multiplicative_expression_1
@@ -395,10 +464,10 @@ multiplicative_expression_3
     percent .and unary_expression .and .true .emit OP_MODULUS;*/
 
 /*
-    <additive_expression>               ::= <multiplicative_expression>
-                                          | <additive_expression> "+" <multiplicative_expression>
-                                          | <additive_expression> "-" <multiplicative_expression>
-*/
+ * <additive_expression> ::= <multiplicative_expression>
+ *                         | <additive_expression> "+" <multiplicative_expression>
+ *                         | <additive_expression> "-" <multiplicative_expression>
+ */
 additive_expression
     multiplicative_expression .and .loop additive_expression_1;
 additive_expression_1
@@ -409,10 +478,10 @@ additive_expression_3
     minus .and multiplicative_expression .and .true .emit OP_SUBTRACT;
 
 /*
-    <shift_expression>                  ::= <additive_expression>
-                                          | <shift_expression> "<<" <additive_expression> // reserved
-                                          | <shift_expression> ">>" <additive_expression> // reserved
-*/
+ * <shift_expression> ::= <additive_expression>
+ *                      | <shift_expression> "<<" <additive_expression> // reserved
+ *                      | <shift_expression> ">>" <additive_expression> // reserved
+ */
 shift_expression
     additive_expression/* .and .loop shift_expression_1*/;
 /*shift_expression_1
@@ -423,12 +492,12 @@ shift_expression
     greatergreater .and additive_expression .and .true .emit OP_RSHIFT;*/
 
 /*
-    <relational_expression>             ::= <shift_expression>
-                                          | <relational_expression> "<" <shift_expression>
-                                          | <relational_expression> ">" <shift_expression>
-                                          | <relational_expression> "<=" <shift_expression>
-                                          | <relational_expression> ">=" <shift_expression>
-*/
+ * <relational_expression> ::= <shift_expression>
+ *                           | <relational_expression> "<" <shift_expression>
+ *                           | <relational_expression> ">" <shift_expression>
+ *                           | <relational_expression> "<=" <shift_expression>
+ *                           | <relational_expression> ">=" <shift_expression>
+ */
 relational_expression
     shift_expression .and .loop relational_expression_1;
 relational_expression_1
@@ -444,10 +513,10 @@ relational_expression_5
     greater .and shift_expression .and .true .emit OP_GREATER;
 
 /*
-    <equality_expression>               ::= <relational_expression>
-                                          | <equality_expression> "==" <relational_expression>
-                                          | <equality_expression> "!=" <relational_expression>
-*/
+ * <equality_expression> ::= <relational_expression>
+ *                         | <equality_expression> "==" <relational_expression>
+ *                         | <equality_expression> "!=" <relational_expression>
+ */
 equality_expression
     relational_expression .and .loop equality_expression_1;
 equality_expression_1
@@ -458,86 +527,84 @@ equality_expression_3
     bangequals .and relational_expression .and .true .emit OP_NOTEQUAL;
 
 /*
-    <and_expression>                    ::= <equality_expression>
-                                          | <and_expression> "&" <equality_expression> // reserved
-*/
+ * <and_expression> ::= <equality_expression>
+ *                    | <and_expression> "&" <equality_expression> // reserved
+ */
 and_expression
     equality_expression/* .and .loop and_expression_1*/;
 /*and_expression_1
     ampersand .and equality_expression .and .true .emit OP_BITAND;*/
 
 /*
-    <exclusive_or_expression>           ::= <and_expression>
-                                          | <exclusive_or_expression> "^" <and_expression> // reserved
-*/
+ * <exclusive_or_expression> ::= <and_expression>
+ *                             | <exclusive_or_expression> "^" <and_expression> // reserved
+ */
 exclusive_or_expression
     and_expression/* .and .loop exclusive_or_expression_1*/;
 /*exclusive_or_expression_1
     caret .and and_expression .and .true .emit OP_BITXOR;*/
 
 /*
-    <inclusive_or_expression>           ::= <exclusive_or_expression>
-                                          | <inclusive_or_expression> "|" <exclusive_or_expression> // reserved
-*/
+ * <inclusive_or_expression> ::= <exclusive_or_expression>
+ *                             | <inclusive_or_expression> "|" <exclusive_or_expression> // reserved
+ */
 inclusive_or_expression
     exclusive_or_expression/* .and .loop inclusive_or_expression_1*/;
 /*inclusive_or_expression_1
     bar .and exclusive_or_expression .and .true .emit OP_BITOR;*/
 
 /*
-    <logical_and_expression>            ::= <inclusive_or_expression>
-                                          | <logical_and_expression> "&&" <inclusive_or_expression>
-*/
+ * <logical_and_expression> ::= <inclusive_or_expression>
+ *                            | <logical_and_expression> "&&" <inclusive_or_expression>
+ */
 logical_and_expression
     inclusive_or_expression .and .loop logical_and_expression_1;
 logical_and_expression_1
     ampersandampersand .and inclusive_or_expression .and .true .emit OP_LOGICALAND;
 
 /*
-    <logical_xor_expression>            ::= <logical_and_expression>
-                                          | <logical_xor_expression> "^^" <logical_and_expression>
-*/
+ * <logical_xor_expression> ::= <logical_and_expression>
+ *                            | <logical_xor_expression> "^^" <logical_and_expression>
+ */
 logical_xor_expression
     logical_and_expression .and .loop logical_xor_expression_1;
 logical_xor_expression_1
     caretcaret .and logical_and_expression .and .true .emit OP_LOGICALXOR;
 
 /*
-    <logical_or_expression>             ::= <logical_xor_expression>
-                                          | <logical_or_expression> "||" <logical_xor_expression>
-*/
+ * <logical_or_expression> ::= <logical_xor_expression>
+ *                           | <logical_or_expression> "||" <logical_xor_expression>
+ */
 logical_or_expression
     logical_xor_expression .and .loop logical_or_expression_1;
 logical_or_expression_1
     barbar .and logical_xor_expression .and .true .emit OP_LOGICALOR;
 
 /*
-    <conditional_expression>            ::= <logical_or_expression>
-                                          | <logical_or_expression> "?" <expression> ":"
-                                            <conditional_expression>
-*/
+ * <conditional_expression> ::= <logical_or_expression>
+ *                            | <logical_or_expression> "?" <expression> ":" <conditional_expression>
+ */
 conditional_expression
     logical_or_expression .and .loop conditional_expression_1;
 conditional_expression_1
     question .and expression .and colon .and conditional_expression .and .true .emit OP_SELECT;
 
 /*
-    <assignment_expression>             ::= <conditional_expression>
-                                          | <unary_expression> <assignment_operator>
-                                            <assignment_expression>
-
-    <assignment_operator>               ::= "="
-                                          | "*="
-                                          | "/="
-                                          | "+="
-                                          | "-="
-                                          | "%=" // reserved
-                                          | "<<=" // reserved
-                                          | ">>=" // reserved
-                                          | "&=" // reserved
-                                          | "^=" // reserved
-                                          | "|=" // reserved
-*/
+ * <assignment_expression> ::= <conditional_expression>
+ *                           | <unary_expression> <assignment_operator> <assignment_expression>
+ *
+ * <assignment_operator> ::= "="
+ *                         | "*="
+ *                         | "/="
+ *                         | "+="
+ *                         | "-="
+ *                         | "%=" // reserved
+ *                         | "<<=" // reserved
+ *                         | ">>=" // reserved
+ *                         | "&=" // reserved
+ *                         | "^=" // reserved
+ *                         | "|=" // reserved
+ */
 assignment_expression
     assignment_expression_1 .or assignment_expression_2 .or assignment_expression_3 .or
     assignment_expression_4 .or assignment_expression_5/* .or assignment_expression_6 .or
@@ -568,24 +635,24 @@ assignment_expression_5
     unary_expression .and barequals .and assignment_expression .and .true .emit OP_ORASSIGN;*/
 
 /*
-    <expression>                        ::= <assignment_expression>
-                                          | <expression> "," <assignment_expression>
-*/
+ * <expression> ::= <assignment_expression>
+ *                | <expression> "," <assignment_expression>
+ */
 expression
     assignment_expression .and .loop expression_1;
 expression_1
     comma .and assignment_expression .and .true .emit OP_SEQUENCE;
 
 /*
-    <constant_expression>               ::= <conditional_expression>
-*/
+ * <constant_expression> ::= <conditional_expression>
+ */
 constant_expression
     conditional_expression .and .true .emit OP_END;
 
 /*
-    <declaration>                       ::= <function_prototype> ";"
-                                          | <init_declarator_list> ";"
-*/
+ * <declaration> ::= <function_prototype> ";"
+ *                 | <init_declarator_list> ";"
+ */
 declaration
     declaration_1 .or declaration_2;
 declaration_1
@@ -594,9 +661,9 @@ declaration_2
     init_declarator_list .emit DECLARATION_INIT_DECLARATOR_LIST .and semicolon;
 
 /*
-    <function_prototype>                ::= <function_header> "void" ")"
-                                          | <function_declarator> ")"
-*/
+ * <function_prototype> ::= <function_header> "void" ")"
+ *                        | <function_declarator> ")"
+ */
 function_prototype
     function_prototype_1 .or function_prototype_2;
 function_prototype_1
@@ -605,25 +672,25 @@ function_prototype_2
     function_declarator .and rparen .error RPAREN_EXPECTED .emit PARAMETER_NONE;
 
 /*
-    <function_declarator>               ::= <function_header>
-                                          | <function_header_with_parameters>
-*/
+ * <function_declarator> ::= <function_header>
+ *                         | <function_header_with_parameters>
+ */
 function_declarator
     function_header_with_parameters .or function_header;
 
 /*
-    <function_header_with_parameters>   ::= <function_header> <parameter_declaration>
-                                          | <function_header_with_parameters> ","
-                                            <parameter_declaration>
-*/
+ * <function_header_with_parameters> ::= <function_header> <parameter_declaration>
+ *                                     | <function_header_with_parameters> ","
+ *                                       <parameter_declaration>
+ */
 function_header_with_parameters
     function_header .and parameter_declaration .and .loop function_header_with_parameters_1;
 function_header_with_parameters_1
     comma .and parameter_declaration;
 
 /*
-    <function_header>                   ::= <fully_specified_type> <identifier> "("
-*/
+ * <function_header> ::= <fully_specified_type> <identifier> "("
+ */
 function_header
     function_header_nospace .or function_header_space;
 function_header_space
@@ -632,64 +699,64 @@ function_header_nospace
     fully_specified_type_nospace .and function_decl_identifier .and lparen;
 
 /*
-    <function_decl_identifier>          ::= "__constructor"
-                                          | <__operator>
-                                          | <identifier>
-
-note: this is an extension to the standard language specification - normally slang disallows
-      operator and constructor prototypes and definitions
-*/
+ * <function_decl_identifier> ::= "__constructor"
+ *                              | <__operator>
+ *                              | <identifier>
+ *
+ * note: this is an extension to the standard language specification.
+ * normally slang disallows operator and constructor prototypes and definitions
+ */
 function_decl_identifier
     .if (parsing_builtin != 0) __operator .emit FUNCTION_OPERATOR .or
     .if (parsing_builtin != 0) "__constructor" .emit FUNCTION_CONSTRUCTOR .or
     identifier .emit FUNCTION_ORDINARY;
 
 /*
-    <__operator>                        ::= "__operator" <overriden_op>
-
-note: this is an extension to the standard language specification - normally slang disallows
-      operator prototypes and definitions
-*/
+ * <__operator> ::= "__operator" <overriden_op>
+ *
+ * note: this is an extension to the standard language specification.
+ * normally slang disallows operator prototypes and definitions
+ */
 __operator
     "__operator" .and overriden_operator .error INVALID_OPERATOR_OVERRIDE;
 
 /*
-    <overriden_op>                      ::= "="
-                                          | "+="
-                                          | "-="
-                                          | "*="
-                                          | "/="
-                                          | "%=" // reserved
-                                          | "<<=" // reserved
-                                          | ">>=" // reserved
-                                          | "&=" // reserved
-                                          | "^=" // reserved
-                                          | "|=" // reserved
-                                          | "^^"
-                                          | "|" // reserved
-                                          | "^" // reserved
-                                          | "&" // reserved
-                                          | "=="
-                                          | "!="
-                                          | "<"
-                                          | ">"
-                                          | "<="
-                                          | ">="
-                                          | "<<" // reserved
-                                          | ">>" // reserved
-                                          | "*"
-                                          | "/"
-                                          | "%" // reserved
-                                          | "++"
-                                          | "--"
-                                          | "+"
-                                          | "-"
-                                          | "~" // reserved
-                                          | "!"
-
-note: this is an extension to the standard language specification - normally slang disallows
-      operator prototypes and definitions
-*/
+ * <overriden_op> ::= "="
+ *                  | "+="
+ *                  | "-="
+ *                  | "*="
+ *                  | "/="
+ *                  | "%=" // reserved
+ *                  | "<<=" // reserved
+ *                  | ">>=" // reserved
+ *                  | "&=" // reserved
+ *                  | "^=" // reserved
+ *                  | "|=" // reserved
+ *                  | "^^"
+ *                  | "|" // reserved
+ *                  | "^" // reserved
+ *                  | "&" // reserved
+ *                  | "=="
+ *                  | "!="
+ *                  | "<"
+ *                  | ">"
+ *                  | "<="
+ *                  | ">="
+ *                  | "<<" // reserved
+ *                  | ">>" // reserved
+ *                  | "*"
+ *                  | "/"
+ *                  | "%" // reserved
+ *                  | "++"
+ *                  | "--"
+ *                  | "+"
+ *                  | "-"
+ *                  | "~" // reserved
+ *                  | "!"
+ *
+ * note: this is an extension to the standard language specification.
+ * normally slang disallows operator prototypes and definitions
+ */
 overriden_operator
     plusplus .emit OPERATOR_INCREMENT .or
     plusequals .emit OPERATOR_ADDASSIGN .or
@@ -722,10 +789,9 @@ overriden_operator
     caret .emit OPERATOR_BITXOR*/;
 
 /*
-    <parameter_declarator>              ::= <type_specifier> <identifier>
-                                          | <type_specifier> <identifier> "[" <constant_expression>
-                                            "]"
-*/
+ * <parameter_declarator> ::= <type_specifier> <identifier>
+ *                          | <type_specifier> <identifier> "[" <constant_expression> "]"
+ */
 parameter_declarator
     parameter_declarator_nospace .or parameter_declarator_space;
 parameter_declarator_nospace
@@ -739,13 +805,21 @@ parameter_declarator_2
     lbracket .and constant_expression .and rbracket;
 
 /*
-    <parameter_declaration>             ::= <type_qualifier> <parameter_qualifier>
-                                            <parameter_declarator>
-                                          | <type_qualifier> <parameter_qualifier>
-                                            <parameter_type_specifier>
-                                          | <parameter_qualifier> <parameter_declarator>
-                                          | <parameter_qualifier> <parameter_type_specifier>
-*/
+ * <parameter_declaration> ::= <type_qualifier> <parameter_qualifier>
+ *                             <precision> <parameter_declarator>
+ *                           | <type_qualifier> <parameter_qualifier>
+ *                             <precision> <parameter_type_specifier>
+ *                           | <type_qualifier> <parameter_qualifier>
+ *                             <parameter_declarator>
+ *                           | <type_qualifier> <parameter_qualifier>
+ *                             <parameter_type_specifier>
+ *                           | <parameter_qualifier> <precision>
+ *                             <parameter_declarator>
+ *                           | <parameter_qualifier> <precision>
+ *                             <parameter_type_specifier>
+ *                           | <parameter_qualifier> <parameter_declarator>
+ *                           | <parameter_qualifier> <parameter_type_specifier>
+ */
 parameter_declaration
     parameter_declaration_1 .emit PARAMETER_NEXT;
 parameter_declaration_1
@@ -755,14 +829,20 @@ parameter_declaration_2
 parameter_declaration_3
     parameter_qualifier .emit TYPE_QUALIFIER_NONE .and parameter_declaration_4;
 parameter_declaration_4
+    parameter_declaration_optprec .and parameter_declaration_rest;
+parameter_declaration_optprec
+    parameter_declaration_prec .or .true .emit PRECISION_DEFAULT;
+parameter_declaration_prec
+    precision .and space;
+parameter_declaration_rest
     parameter_declarator .or parameter_type_specifier;
 
 /*
-    <parameter_qualifier>               ::= "in"
-                                          | "out"
-                                          | "inout"
-                                          | ""
-*/
+ * <parameter_qualifier> ::= "in"
+ *                         | "out"
+ *                         | "inout"
+ *                         | ""
+ */
 parameter_qualifier
     parameter_qualifier_1 .or .true .emit PARAM_QUALIFIER_IN;
 parameter_qualifier_1
@@ -773,9 +853,9 @@ parameter_qualifier_2
     "inout" .emit PARAM_QUALIFIER_INOUT;
 
 /*
-    <parameter_type_specifier>          ::= <type_specifier>
-                                          | <type_specifier> "[" <constant_expression> "]"
-*/
+ * <parameter_type_specifier> ::= <type_specifier>
+ *                              | <type_specifier> "[" <constant_expression> "]"
+ */
 parameter_type_specifier
     parameter_type_specifier_1 .and .true .emit '\0' .and parameter_type_specifier_2;
 parameter_type_specifier_1
@@ -787,14 +867,12 @@ parameter_type_specifier_3
     lbracket .and constant_expression .and rbracket;
 
 /*
-    <init_declarator_list>              ::= <single_declaration>
-                                          | <init_declarator_list> "," <identifier>
-                                          | <init_declarator_list> "," <identifier> "[" "]"
-                                          | <init_declarator_list> "," <identifier> "["
-                                            <constant_expression> "]"
-                                          | <init_declarator_list> "," <identifier> "="
-                                            <initializer>
-*/
+ * <init_declarator_list> ::= <single_declaration>
+ *                          | <init_declarator_list> "," <identifier>
+ *                          | <init_declarator_list> "," <identifier> "[" "]"
+ *                          | <init_declarator_list> "," <identifier> "[" <constant_expression> "]"
+ *                          | <init_declarator_list> "," <identifier> "=" <initializer>
+ */
 init_declarator_list
     single_declaration .and .loop init_declarator_list_1 .emit DECLARATOR_NEXT .and
     .true .emit DECLARATOR_NONE;
@@ -810,13 +888,12 @@ init_declarator_list_5
     constant_expression .emit VARIABLE_ARRAY_EXPLICIT .or .true .emit VARIABLE_ARRAY_UNKNOWN;
 
 /*
-    <single_declaration>                ::= <fully_specified_type>
-                                          | <fully_specified_type> <identifier>
-                                          | <fully_specified_type> <identifier> "[" "]"
-                                          | <fully_specified_type> <identifier> "["
-                                            <constant_expression> "]"
-                                          | <fully_specified_type> <identifier> "=" <initializer>
-*/
+ * <single_declaration> ::= <fully_specified_type>
+ *                        | <fully_specified_type> <identifier>
+ *                        | <fully_specified_type> <identifier> "[" "]"
+ *                        | <fully_specified_type> <identifier> "[" <constant_expression> "]"
+ *                        | <fully_specified_type> <identifier> "=" <initializer>
+ */
 single_declaration
     single_declaration_nospace .or single_declaration_space;
 single_declaration_space
@@ -841,72 +918,95 @@ single_declaration_6
     constant_expression .emit VARIABLE_ARRAY_EXPLICIT .or .true .emit VARIABLE_ARRAY_UNKNOWN;
 
 /*
-    <fully_specified_type>              ::= <type_specifier>
-                                          | <type_qualifier> <type_specifier>
-*/
+ * <fully_specified_type> ::= <opt_invariant> <opt_centroid> <opt_qualifer> <opt_precision> <type_specifier>
+ *
+ * Example: "invariant varying highp vec3"
+ */
 fully_specified_type_space
-    fully_specified_type_1 .and type_specifier_space;
+    fully_specified_type_optinvariant .and fully_specified_type_optcentroid .and fully_specified_type_optqual .and fully_specified_type_optprec .and type_specifier_space;
 fully_specified_type_nospace
-    fully_specified_type_1 .and type_specifier_nospace;
-fully_specified_type_1
-    fully_specified_type_2 .or .true .emit TYPE_QUALIFIER_NONE;
-fully_specified_type_2
+    fully_specified_type_optinvariant .and fully_specified_type_optcentroid .and fully_specified_type_optqual .and fully_specified_type_optprec .and type_specifier_nospace;
+fully_specified_type_optinvariant
+    fully_specified_type_invariant .or .true .emit TYPE_VARIANT;
+fully_specified_type_invariant
+    invariant_qualifier .and space;
+fully_specified_type_optcentroid
+    fully_specified_type_centroid .or .true .emit TYPE_CENTER;
+fully_specified_type_centroid
+    centroid_qualifier .and space;
+fully_specified_type_optqual
+    fully_specified_type_qual .or .true .emit TYPE_QUALIFIER_NONE;
+fully_specified_type_qual
     type_qualifier .and space;
+fully_specified_type_optprec
+    fully_specified_type_prec .or .true .emit PRECISION_DEFAULT;
+fully_specified_type_prec
+    precision .and space;
 
 /*
-    <type_qualifier>                    ::= "const"
-                                          | "attribute" // Vertex only.
-                                          | "varying"
-                                          | "uniform"
-										  | "__fixed_output"
-										  | "__fixed_input"
+ * <invariant_qualifier> ::= "invariant"
+ */
+invariant_qualifier
+    "invariant" .emit TYPE_INVARIANT;
 
-note: this is an extension to the standard language specification - normally slang disallows
-      __fixed_output and __fixed_input type qualifiers
-*/
+centroid_qualifier
+    "centroid" .emit TYPE_CENTROID;
+
+
+/*
+ * <type_qualifier> ::= "const"
+ *                    | "attribute" // Vertex only.
+ *                    | "varying"
+ *                    | "uniform"
+ *                    | "__fixed_output"
+ *                    | "__fixed_input"
+ *
+ * note: this is an extension to the standard language specification,
+ * normally slang disallows __fixed_output and __fixed_input type qualifiers
+ */
 type_qualifier
     "const" .emit TYPE_QUALIFIER_CONST .or
     .if (shader_type == 2) "attribute" .emit TYPE_QUALIFIER_ATTRIBUTE .or
     "varying" .emit TYPE_QUALIFIER_VARYING .or
     "uniform" .emit TYPE_QUALIFIER_UNIFORM .or
-	.if (parsing_builtin != 0) "__fixed_output" .emit TYPE_QUALIFIER_FIXEDOUTPUT .or
-	.if (parsing_builtin != 0) "__fixed_input" .emit TYPE_QUALIFIER_FIXEDINPUT;
+    .if (parsing_builtin != 0) "__fixed_output" .emit TYPE_QUALIFIER_FIXEDOUTPUT .or
+    .if (parsing_builtin != 0) "__fixed_input" .emit TYPE_QUALIFIER_FIXEDINPUT;
 
 /*
-    <type_specifier>                    ::= "void"
-                                          | "float"
-                                          | "int"
-                                          | "bool"
-                                          | "vec2"
-                                          | "vec3"
-                                          | "vec4"
-                                          | "bvec2"
-                                          | "bvec3"
-                                          | "bvec4"
-                                          | "ivec2"
-                                          | "ivec3"
-                                          | "ivec4"
-                                          | "mat2"
-                                          | "mat3"
-                                          | "mat4"
-                                          | "mat2x3"
-                                          | "mat3x2"
-                                          | "mat2x4"
-                                          | "mat4x2"
-                                          | "mat3x4"
-                                          | "mat4x3"
-                                          | "sampler1D"
-                                          | "sampler2D"
-                                          | "sampler3D"
-                                          | "samplerCube"
-                                          | "sampler1DShadow"
-                                          | "sampler2DShadow"
-					  | "sampler2DRect"
-					  | "sampler2DRectShadow"
-                                          | <struct_specifier>
-                                          | <type_name>
-*/
-type_specifier_space
+ * <type_specifier_nonarray> ::= "void"
+ *                             | "float"
+ *                             | "int"
+ *                             | "bool"
+ *                             | "vec2"
+ *                             | "vec3"
+ *                             | "vec4"
+ *                             | "bvec2"
+ *                             | "bvec3"
+ *                             | "bvec4"
+ *                             | "ivec2"
+ *                             | "ivec3"
+ *                             | "ivec4"
+ *                             | "mat2"
+ *                             | "mat3"
+ *                             | "mat4"
+ *                             | "mat2x3"
+ *                             | "mat3x2"
+ *                             | "mat2x4"
+ *                             | "mat4x2"
+ *                             | "mat3x4"
+ *                             | "mat4x3"
+ *                             | "sampler1D"
+ *                             | "sampler2D"
+ *                             | "sampler3D"
+ *                             | "samplerCube"
+ *                             | "sampler1DShadow"
+ *                             | "sampler2DShadow"
+ *                             | "sampler2DRect"
+ *                             | "sampler2DRectShadow"
+ *                             | <struct_specifier>
+ *                             | <type_name>
+ */
+type_specifier_nonarray_space
     "void" .emit TYPE_SPECIFIER_VOID .or
     "float" .emit TYPE_SPECIFIER_FLOAT .or
     "int" .emit TYPE_SPECIFIER_INT .or
@@ -938,13 +1038,28 @@ type_specifier_space
     "sampler2DRect" .emit TYPE_SPECIFIER_SAMPLER2DRECT .or
     "sampler2DRectShadow" .emit TYPE_SPECIFIER_SAMPLER2DRECTSHADOW .or
     type_name .emit TYPE_SPECIFIER_TYPENAME;
-type_specifier_nospace
+type_specifier_nonarray_nospace
     struct_specifier .emit TYPE_SPECIFIER_STRUCT;
+type_specifier_nonarray
+    type_specifier_nonarray_nospace .or type_specifier_nonarray_space;
 
 /*
-    <struct_specifier>                  ::= "struct" <identifier> "{" <struct_declaration_list> "}"
-                                          | "struct" "{" <struct_declaration_list> "}"
-*/
+ * <type_specifier> ::= <type_specifier_nonarray>
+ *                    | <type_specifier_nonarray> "[" <constant_expression> "]"
+ */
+type_specifier_space
+    type_specifier_nonarray_space .and .true .emit TYPE_SPECIFIER_NONARRAY;
+type_specifier_nospace
+    type_specifier_nospace_array .or type_specifier_nospace_1;
+type_specifier_nospace_1
+    type_specifier_nonarray_nospace .and .true .emit TYPE_SPECIFIER_NONARRAY;
+type_specifier_nospace_array
+    type_specifier_nonarray .and lbracket .emit TYPE_SPECIFIER_ARRAY .and constant_expression .and rbracket;
+
+/*
+ * <struct_specifier> ::= "struct" <identifier> "{" <struct_declaration_list> "}"
+ *                      | "struct" "{" <struct_declaration_list> "}"
+ */
 struct_specifier
     "struct" .and struct_specifier_1 .and optional_space .and lbrace .error LBRACE_EXPECTED .and
     struct_declaration_list .and rbrace .emit FIELD_NONE;
@@ -954,15 +1069,15 @@ struct_specifier_2
     space .and identifier;
 
 /*
-    <struct_declaration_list>           ::= <struct_declaration>
-                                          | <struct_declaration_list> <struct_declaration>
-*/
+ * <struct_declaration_list> ::= <struct_declaration>
+ *                             | <struct_declaration_list> <struct_declaration>
+ */
 struct_declaration_list
     struct_declaration .and .loop struct_declaration .emit FIELD_NEXT;
 
 /*
-    <struct_declaration>                ::= <type_specifier> <struct_declarator_list> ";"
-*/
+ * <struct_declaration> ::= <type_specifier> <struct_declarator_list> ";"
+ */
 struct_declaration
     struct_declaration_nospace .or struct_declaration_space;
 struct_declaration_space
@@ -971,18 +1086,18 @@ struct_declaration_nospace
     type_specifier_nospace .and struct_declarator_list .and semicolon .emit FIELD_NONE;
 
 /*
-    <struct_declarator_list>            ::= <struct_declarator>
-                                          | <struct_declarator_list> "," <struct_declarator>
-*/
+ * <struct_declarator_list> ::= <struct_declarator>
+ *                            | <struct_declarator_list> "," <struct_declarator>
+ */
 struct_declarator_list
     struct_declarator .and .loop struct_declarator_list_1 .emit FIELD_NEXT;
 struct_declarator_list_1
     comma .and struct_declarator;
 
 /*
-    <struct_declarator>                 ::= <identifier>
-                                          | <identifier> "[" <constant_expression> "]"
-*/
+ * <struct_declarator> ::= <identifier>
+ *                       | <identifier> "[" <constant_expression> "]"
+ */
 struct_declarator
     identifier .and struct_declarator_1;
 struct_declarator_1
@@ -991,21 +1106,21 @@ struct_declarator_2
     lbracket .and constant_expression .and rbracket;
 
 /*
-    <initializer>                       ::= <assignment_expression>
-*/
+ * <initializer> ::= <assignment_expression>
+ */
 initializer
     assignment_expression .and .true .emit OP_END;
 
 /*
-    <declaration_statement>             ::= <declaration>
-*/
+ * <declaration_statement> ::= <declaration>
+ */
 declaration_statement
     declaration;
 
 /*
-    <statement>                         ::= <compound_statement>
-                                          | <simple_statement>
-*/
+ * <statement> ::= <compound_statement>
+ *               | <simple_statement>
+ */
 statement
     compound_statement .or simple_statement;
 statement_space
@@ -1014,28 +1129,29 @@ statement_space_1
     space .and simple_statement;
 
 /*
-    <simple_statement>                  ::= <__asm_statement>
-                                          | <selection_statement>
-                                          | <iteration_statement>
-                                          | <jump_statement>
-                                          | <expression_statement>
-                                          | <declaration_statement>
-
-note: this is an extension to the standard language specification - normally slang disallows
-      use of __asm statements
-*/
+ * <simple_statement> ::= <__asm_statement>
+ *                      | <selection_statement>
+ *                      | <iteration_statement>
+ *                      | <jump_statement>
+ *                      | <expression_statement>
+ *                      | <declaration_statement>
+ *
+ * note: this is an extension to the standard language specification.
+ * normally slang disallows use of __asm statements
+ */
 simple_statement
     .if (parsing_builtin != 0) __asm_statement .emit OP_ASM .or
     selection_statement .or
     iteration_statement .or
+    precision_stmt .emit OP_PRECISION .or
     jump_statement .or
     expression_statement .emit OP_EXPRESSION .or
     declaration_statement .emit OP_DECLARE;
 
 /*
-    <compound_statement>                ::= "{" "}"
-                                          | "{" <statement_list> "}"
-*/
+ * <compound_statement> ::= "{" "}"
+ *                        | "{" <statement_list> "}"
+ */
 compound_statement
     compound_statement_1 .emit OP_BLOCK_BEGIN_NEW_SCOPE .and .true .emit OP_END;
 compound_statement_1
@@ -1046,16 +1162,9 @@ compound_statement_3
     lbrace .and statement_list .and rbrace;
 
 /*
-    <statement_no_new_scope>            ::= <compound_statement_no_new_scope>
-                                          | <simple_statement>
-*/
-statement_no_new_scope
-    compound_statement_no_new_scope .or simple_statement;
-
-/*
-    <compound_statement_no_new_scope>   ::= "{" "}"
-                                          | "{" <statement_list> "}"
-*/
+ * <compound_statement_no_new_scope> ::= "{" "}"
+ *                                     | "{" <statement_list> "}"
+ */
 compound_statement_no_new_scope
     compound_statement_no_new_scope_1 .emit OP_BLOCK_BEGIN_NO_NEW_SCOPE .and .true .emit OP_END;
 compound_statement_no_new_scope_1
@@ -1065,17 +1174,18 @@ compound_statement_no_new_scope_2
 compound_statement_no_new_scope_3
     lbrace .and statement_list .and rbrace;
 
+
 /*
-    <statement_list>                    ::= <statement>
-                                          | <statement_list> <statement>
-*/
+ * <statement_list> ::= <statement>
+ *                    | <statement_list> <statement>
+ */
 statement_list
     statement .and .loop statement;
 
 /*
-    <expression_statement>              ::= ";"
-                                          | <expression> ";"
-*/
+ * <expression_statement> ::= ";"
+ *                          | <expression> ";"
+ */
 expression_statement
     expression_statement_1 .or expression_statement_2;
 expression_statement_1
@@ -1084,16 +1194,16 @@ expression_statement_2
     expression .and semicolon .emit OP_END;
 
 /*
-    <selection_statement>               ::= "if" "(" <expression> ")" <selection_rest_statement>
-*/
+ * <selection_statement> ::= "if" "(" <expression> ")" <selection_rest_statement>
+ */
 selection_statement
     "if" .emit OP_IF .and lparen .error LPAREN_EXPECTED .and expression .and
     rparen .error RPAREN_EXPECTED .emit OP_END .and selection_rest_statement;
 
 /*
-    <selection_rest_statement>          ::= <statement> "else" <statement>
-                                          | <statement>
-*/
+ * <selection_rest_statement> ::= <statement> "else" <statement>
+ *                              | <statement>
+ */
 selection_rest_statement
     statement .and selection_rest_statement_1;
 selection_rest_statement_1
@@ -1102,11 +1212,12 @@ selection_rest_statement_2
     "else" .and optional_space .and statement;
 
 /*
-    <condition>                         ::= <expression>
-                                          | <fully_specified_type> <identifier> "=" <initializer>
-
-note: if <condition_1> is executed, the emit format must match <declaration> emit format
-*/
+ * <condition> ::= <expression>
+ *               | <fully_specified_type> <identifier> "=" <initializer>
+ *
+ * note: if <condition_1> is executed, the emit format must
+ * match <declaration> emit format
+ */
 condition
     condition_1 .emit OP_DECLARE .emit DECLARATION_INIT_DECLARATOR_LIST .or
     condition_3 .emit OP_EXPRESSION;
@@ -1123,11 +1234,10 @@ condition_3
     expression .and .true .emit OP_END;
 
 /*
-    <iteration_statement>               ::= "while" "(" <condition> ")" <statement>
-                                          | "do" <statement> "while" "(" <expression> ")" ";"
-                                          | "for" "(" <for_init_statement> <for_rest_statement> ")"
-                                            <statement_no_new_scope>
-*/
+ * <iteration_statement> ::= "while" "(" <condition> ")" <statement>
+ *                         | "do" <statement> "while" "(" <expression> ")" ";"
+ *                         | "for" "(" <for_init_statement> <for_rest_statement> ")" <statement>
+ */
 iteration_statement
     iteration_statement_1 .or iteration_statement_2 .or iteration_statement_3;
 iteration_statement_1
@@ -1138,30 +1248,31 @@ iteration_statement_2
     expression .and rparen .error RPAREN_EXPECTED .emit OP_END .and semicolon;
 iteration_statement_3
     "for" .emit OP_FOR .and lparen .error LPAREN_EXPECTED .and for_init_statement .and
-    for_rest_statement .and rparen .error RPAREN_EXPECTED .and statement_no_new_scope;
+    for_rest_statement .and rparen .error RPAREN_EXPECTED .and statement;
 
 /*
-    <for_init_statement>                ::= <expression_statement>
-                                          | <declaration_statement>
-*/
+ * <for_init_statement> ::= <expression_statement>
+ *                        | <declaration_statement>
+ */
 for_init_statement
     expression_statement .emit OP_EXPRESSION .or declaration_statement .emit OP_DECLARE;
 
 /*
-    <conditionopt>                      ::= <condition>
-                                          | ""
-
-note: <conditionopt> is used only by "for" statement - if <condition> is ommitted, parser
-      simulates default behaviour, that is simulates "true" expression
-*/
+ * <conditionopt> ::= <condition>
+ *                  | ""
+ *
+ * note: <conditionopt> is used only by "for" statement.
+ * if <condition> is ommitted, parser simulates default behaviour,
+ * that is simulates "true" expression
+ */
 conditionopt
     condition .or
     .true .emit OP_EXPRESSION .emit OP_PUSH_BOOL .emit 2 .emit '1' .emit '\0' .emit OP_END;
 
 /*
-    <for_rest_statement>                ::= <conditionopt> ";"
-                                          | <conditionopt> ";" <expression>
-*/
+ * <for_rest_statement> ::= <conditionopt> ";"
+ *                        | <conditionopt> ";" <expression>
+ */
 for_rest_statement
     conditionopt .and semicolon .and for_rest_statement_1;
 for_rest_statement_1
@@ -1170,12 +1281,12 @@ for_rest_statement_2
     expression .and .true .emit OP_END;
 
 /*
-    <jump_statement>                    ::= "continue" ";"
-                                          | "break" ";"
-                                          | "return" ";"
-                                          | "return" <expression> ";"
-                                          | "discard" ";" // Fragment shader only.
-*/
+ * <jump_statement> ::= "continue" ";"
+ *                    | "break" ";"
+ *                    | "return" ";"
+ *                    | "return" <expression> ";"
+ *                    | "discard" ";" // Fragment shader only.
+ */
 jump_statement
     jump_statement_1 .or jump_statement_2 .or jump_statement_3 .or jump_statement_4 .or
     .if (shader_type == 1) jump_statement_5;
@@ -1191,33 +1302,33 @@ jump_statement_5
     "discard" .and semicolon .emit OP_DISCARD;
 
 /*
-    <__asm_statement>                   ::= "__asm" <identifier> <asm_arguments> ";"
-
-note: this is an extension to the standard language specification - normally slang disallows
-      __asm statements
-*/
+ * <__asm_statement> ::= "__asm" <identifier> <asm_arguments> ";"
+ *
+ * note: this is an extension to the standard language specification.
+ * normally slang disallows __asm statements
+ */
 __asm_statement
     "__asm" .and space .and identifier .and space .and asm_arguments .and semicolon .emit OP_END;
 
 /*
-    <asm_arguments>                     ::= <asm_argument>
-                                          | <asm_arguments> "," <asm_argument>
-
-note: this is an extension to the standard language specification - normally slang disallows
-      __asm statements
-*/
+ * <asm_arguments> ::= <asm_argument>
+ *                   | <asm_arguments> "," <asm_argument>
+ *
+ * note: this is an extension to the standard language specification.
+ * normally slang disallows __asm statements
+ */
 asm_arguments
     asm_argument .and .true .emit OP_END .and .loop asm_arguments_1;
 asm_arguments_1
     comma .and asm_argument .and .true .emit OP_END;
 
 /*
-    <asm_argument>                      ::= <variable_identifier>
-                                          | <floatconstant>
-
-note: this is an extension to the standard language specification - normally slang disallows
-      __asm statements
-*/
+ * <asm_argument> ::= <variable_identifier>
+ *                  | <floatconstant>
+ *
+ * note: this is an extension to the standard language specification.
+ * normally slang disallows __asm statements
+ */
 asm_argument
     var_with_field .or
     variable_identifier .or
@@ -1226,30 +1337,80 @@ asm_argument
 var_with_field
     variable_identifier .and dot .and field_selection .emit OP_FIELD;
 
+
 /*
-    <translation_unit>                  ::= <external_declaration>
-                                          | <translation_unit> <external_declaration>
-*/
+ * <translation_unit> ::= <external_declaration>
+ *                      | <translation_unit> <external_declaration>
+ */
 translation_unit
     optional_space .emit REVISION .and external_declaration .error INVALID_EXTERNAL_DECLARATION .and
     .loop external_declaration .and optional_space .and
     '\0' .error INVALID_EXTERNAL_DECLARATION .emit EXTERNAL_NULL;
 
-/*
-    <external_declaration>              ::= <function_definition>
-                                          | <declaration>
-*/
-external_declaration
-    function_definition .emit EXTERNAL_FUNCTION_DEFINITION .or
-    declaration .emit EXTERNAL_DECLARATION;
 
 /*
-    <function_definition>               :: <function_prototype> <compound_statement_no_new_scope>
-*/
+ * <external_declaration> ::= <function_definition>
+ *                          | <declaration>
+ */
+external_declaration
+    precision_stmt .emit DEFAULT_PRECISION .or
+    function_definition .emit EXTERNAL_FUNCTION_DEFINITION .or
+    invariant_stmt .emit INVARIANT_STMT .or
+    declaration .emit EXTERNAL_DECLARATION;
+
+
+/*
+ * <precision_stmt> ::= "precision" <precision> <prectype>
+ */
+precision_stmt
+    "precision" .and space .and precision .error INVALID_PRECISION .and space .and prectype .error INVALID_PRECISION_TYPE .and semicolon;
+
+/*
+ * <precision> ::= "lowp"
+ *               | "mediump"
+ *               | "highp"
+ */
+precision
+    "lowp" .emit PRECISION_LOW .or
+    "mediump" .emit PRECISION_MEDIUM .or
+    "highp" .emit PRECISION_HIGH;
+
+/*
+ * <prectype> ::= "int"
+ *              | "float"
+ *              | "a sampler type"
+ */
+prectype
+    "int" .emit TYPE_SPECIFIER_INT .or
+    "float" .emit TYPE_SPECIFIER_FLOAT .or
+    "sampler1D" .emit TYPE_SPECIFIER_SAMPLER1D .or
+    "sampler2D" .emit TYPE_SPECIFIER_SAMPLER2D .or
+    "sampler3D" .emit TYPE_SPECIFIER_SAMPLER3D .or
+    "samplerCube" .emit TYPE_SPECIFIER_SAMPLERCUBE .or
+    "sampler1DShadow" .emit TYPE_SPECIFIER_SAMPLER1DSHADOW .or
+    "sampler2DShadow" .emit TYPE_SPECIFIER_SAMPLER2DSHADOW .or
+    "sampler2DRect" .emit TYPE_SPECIFIER_SAMPLER2DRECT .or
+    "sampler2DRectShadow" .emit TYPE_SPECIFIER_SAMPLER2DRECTSHADOW;
+
+
+/*
+ * <invariant_stmt> ::= "invariant" identifier;
+ */
+invariant_stmt
+    "invariant" .and space .and identifier .and semicolon;
+
+
+/*
+ * <function_definition> :: <function_prototype> <compound_statement_no_new_scope>
+ */
 function_definition
     function_prototype .and compound_statement_no_new_scope;
 
-/* helper rulez, not part of the official language syntax */
+
+
+/*
+ * helper rules, not part of the official language syntax
+ */
 
 digit_oct
     '0'-'7';
@@ -1270,11 +1431,13 @@ identifier
     id_character_first .emit * .and .loop id_character_next .emit * .and .true .emit '\0';
 
 float
-    float_1 .or float_2;
+    float_1 .or float_2 .or float_3;
 float_1
-    float_fractional_constant .and float_optional_exponent_part;
+    float_fractional_constant .and float_optional_exponent_part .and optional_f_suffix;
 float_2
-    float_digit_sequence .and .true .emit '\0' .and float_exponent_part;
+    float_digit_sequence .and .true .emit '\0' .and float_exponent_part .and optional_f_suffix;
+float_3
+    float_digit_sequence .and .true .emit '\0' .and 'f' .emit '\0';
 
 float_fractional_constant
     float_fractional_constant_1 .or float_fractional_constant_2 .or float_fractional_constant_3;
@@ -1303,6 +1466,10 @@ float_optional_sign
 
 float_sign
     '+' .or '-' .emit '-';
+
+optional_f_suffix
+    'f' .or .true;
+
 
 integer
     integer_hex .or integer_oct .or integer_dec;
@@ -1387,7 +1554,7 @@ cpp_style_comment_block_3
 cpp_style_comment_char
     '\x0E'-'\xFF' .or '\x01'-'\x09' .or '\x0B'-'\x0C';
 
-/* lexical rulez */
+/* lexical rules */
 
 /*ampersand
     optional_space .and '&' .and optional_space;*/
@@ -1524,7 +1691,7 @@ starequals
 /*tilde
     optional_space .and '~' .and optional_space;*/
 
-/* string rulez - these are used internally by the parser when parsing quoted strings */
+/* string rules - these are used internally by the parser when parsing quoted strings */
 
 .string string_lexer;
 
@@ -1537,7 +1704,7 @@ lex_first_identifier_character
 lex_next_identifier_character
     'a'-'z' .or 'A'-'Z' .or '0'-'9' .or '_';
 
-/* error rulez - these are used by error messages */
+/* error rules - these are used by error messages */
 
 err_token
     '~' .or '`' .or '!' .or '@' .or '#' .or '$' .or '%' .or '^' .or '&' .or '*' .or '(' .or ')' .or

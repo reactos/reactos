@@ -30,14 +30,13 @@
 
 
 #include "glheader.h"
-#include "glapi.h"
-#include "glapitable.h"
 #include "macros.h"
-#include "colormac.h"
 #include "api_loopback.h"
-#include "glthread.h"
 #include "mtypes.h"
-#include "dispatch.h"
+#include "glapi/glapi.h"
+#include "glapi/glapitable.h"
+#include "glapi/glthread.h"
+#include "glapi/dispatch.h"
 
 /* KW: A set of functions to convert unusual Color/Normal/Vertex/etc
  * calls to a smaller set of driver-provided formats.  Currently just
