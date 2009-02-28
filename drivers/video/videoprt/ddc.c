@@ -35,11 +35,11 @@
 #define WRITE_SDA(state)  (i2c->WriteDataLine(HwDeviceExtension, state))
 #define WRITE_SCL(state)  (i2c->WriteClockLine(HwDeviceExtension, state))
 
-STATIC LARGE_INTEGER HalfPeriodDelay = { { 70LL } };
+static LARGE_INTEGER HalfPeriodDelay = {{0, 70}};
 #define DELAY_HALF()      KeDelayExecutionThread(KernelMode, FALSE, &HalfPeriodDelay)
 
 
-STATIC BOOL
+static BOOL
 I2CWrite(PVOID HwDeviceExtension, PI2C_CALLBACKS i2c, UCHAR Data)
 {
    UCHAR Bit;
@@ -73,7 +73,7 @@ I2CWrite(PVOID HwDeviceExtension, PI2C_CALLBACKS i2c, UCHAR Data)
 }
 
 
-STATIC UCHAR
+static UCHAR
 I2CRead(PVOID HwDeviceExtension, PI2C_CALLBACKS i2c, BOOL Ack)
 {
    INT Bit = 0x80;
@@ -109,7 +109,7 @@ I2CRead(PVOID HwDeviceExtension, PI2C_CALLBACKS i2c, BOOL Ack)
 }
 
 
-STATIC VOID
+static VOID
 I2CStop(PVOID HwDeviceExtension, PI2C_CALLBACKS i2c)
 {
    WRITE_SCL(LOW);
@@ -121,7 +121,7 @@ I2CStop(PVOID HwDeviceExtension, PI2C_CALLBACKS i2c)
 }
 
 
-STATIC BOOL
+static BOOL
 I2CStart(PVOID HwDeviceExtension, PI2C_CALLBACKS i2c, UCHAR Address)
 {
    /* make sure the bus is free */
@@ -147,7 +147,7 @@ I2CStart(PVOID HwDeviceExtension, PI2C_CALLBACKS i2c, UCHAR Address)
 }
 
 
-STATIC BOOL
+static BOOL
 I2CRepStart(PVOID HwDeviceExtension, PI2C_CALLBACKS i2c, UCHAR Address)
 {
    /* setup lines for repeated start condition */

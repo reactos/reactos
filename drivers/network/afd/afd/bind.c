@@ -33,12 +33,17 @@ NTSTATUS WarmSocketForBind( PAFD_FCB FCB ) {
                                 &FCB->AddressFile.Handle,
                                 &FCB->AddressFile.Object );
 
+	if (NT_SUCCESS(Status)) 
+	{
+		ObReferenceObject(FCB->AddressFile.Object);
+	}
+
     AFD_DbgPrint(MID_TRACE,("Returning %x\n", Status));
 
     return Status;
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 AfdBindSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	      PIO_STACK_LOCATION IrpSp) {
     NTSTATUS Status = STATUS_SUCCESS;

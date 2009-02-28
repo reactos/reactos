@@ -76,7 +76,7 @@ NTSTATUS NTAPI Ext2PassDownMultiReadWriteIRP(
 			if ( !PtrSyncEvent )
 			{
 				RC = STATUS_INSUFFICIENT_RESOURCES;
-				try_return ( RC );
+				try_return();
 			}
 			KeInitializeEvent( PtrSyncEvent, SynchronizationEvent, FALSE );
 		}
@@ -87,7 +87,7 @@ NTSTATUS NTAPI Ext2PassDownMultiReadWriteIRP(
 		if ( !PtrIoContext )
 		{
 			RC = STATUS_INSUFFICIENT_RESOURCES;
-			try_return ( RC );
+			try_return();
 		}
 
 		RtlZeroMemory( PtrIoContext, sizeof(EXT2_IO_CONTEXT) );
@@ -198,13 +198,13 @@ NTSTATUS NTAPI Ext2PassDownMultiReadWriteIRP(
 			KeWaitForSingleObject( PtrSyncEvent,
 				Executive, KernelMode, FALSE, (PLARGE_INTEGER)NULL );
                         DbgPrint("DEADLY WAIT DONE\n");
-			try_return ( RC );
+			try_return();
 		}
 		else
 		{
 			//	Asynchronous IO...
 			RC = STATUS_PENDING;
-			try_return ( RC );
+			try_return();
 		}
 	
 		try_exit:	NOTHING;
@@ -259,7 +259,7 @@ NTSTATUS NTAPI Ext2PassDownSingleReadWriteIRP(
 			if ( !PtrSyncEvent )
 			{
 				RC = STATUS_INSUFFICIENT_RESOURCES;
-				try_return ( RC );
+				try_return();
 			}
 			KeInitializeEvent( PtrSyncEvent, SynchronizationEvent, FALSE );
 		}
@@ -271,7 +271,7 @@ NTSTATUS NTAPI Ext2PassDownSingleReadWriteIRP(
 		if ( !PtrIoContext )
 		{
 			RC = STATUS_INSUFFICIENT_RESOURCES;
-			try_return ( RC );
+			try_return();
 		}
 
 		RtlZeroMemory( PtrIoContext, sizeof(EXT2_IO_CONTEXT) );

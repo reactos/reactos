@@ -176,40 +176,40 @@ typedef struct _ADDRESS_FILE {
     /* Connection indication handler */
     PTDI_IND_CONNECT ConnectHandler;
     PVOID ConnectHandlerContext;
-    BOOL RegisteredConnectHandler;
+    BOOLEAN RegisteredConnectHandler;
     /* Disconnect indication handler */
     PTDI_IND_DISCONNECT DisconnectHandler;
     PVOID DisconnectHandlerContext;
-    BOOL RegisteredDisconnectHandler;
+    BOOLEAN RegisteredDisconnectHandler;
     /* Error indication handler */
     PTDI_IND_ERROR ErrorHandler;
     PVOID ErrorHandlerContext;
     PVOID ErrorHandlerOwner;
-    BOOL RegisteredErrorHandler;
+    BOOLEAN RegisteredErrorHandler;
     /* Receive indication handler */
     PTDI_IND_RECEIVE ReceiveHandler;
     PVOID ReceiveHandlerContext;
-    BOOL RegisteredReceiveHandler;
+    BOOLEAN RegisteredReceiveHandler;
     /* Receive datagram indication handler */
     PTDI_IND_RECEIVE_DATAGRAM ReceiveDatagramHandler;
     PVOID ReceiveDatagramHandlerContext;
-    BOOL RegisteredReceiveDatagramHandler;
+    BOOLEAN RegisteredReceiveDatagramHandler;
     /* Expedited receive indication handler */
     PTDI_IND_RECEIVE_EXPEDITED ExpeditedReceiveHandler;
     PVOID ExpeditedReceiveHandlerContext;
-    BOOL RegisteredExpeditedReceiveHandler;
+    BOOLEAN RegisteredExpeditedReceiveHandler;
     /* Chained receive indication handler */
     PTDI_IND_CHAINED_RECEIVE ChainedReceiveHandler;
     PVOID ChainedReceiveHandlerContext;
-    BOOL RegisteredChainedReceiveHandler;
+    BOOLEAN RegisteredChainedReceiveHandler;
     /* Chained receive datagram indication handler */
     PTDI_IND_CHAINED_RECEIVE_DATAGRAM ChainedReceiveDatagramHandler;
     PVOID ChainedReceiveDatagramHandlerContext;
-    BOOL RegisteredChainedReceiveDatagramHandler;
+    BOOLEAN RegisteredChainedReceiveDatagramHandler;
     /* Chained expedited receive indication handler */
     PTDI_IND_CHAINED_RECEIVE_EXPEDITED ChainedReceiveExpeditedHandler;
     PVOID ChainedReceiveExpeditedHandlerContext;
-    BOOL RegisteredChainedReceiveExpeditedHandler;
+    BOOLEAN RegisteredChainedReceiveExpeditedHandler;
 } ADDRESS_FILE, *PADDRESS_FILE;
 
 /* Address File Flag constants */
@@ -334,7 +334,7 @@ typedef struct _TRANSPORT_CONTEXT {
         CONNECTION_CONTEXT ConnectionContext;
         HANDLE ControlChannel;
     } Handle;
-    BOOL CancelIrps;
+    BOOLEAN CancelIrps;
     KEVENT CleanupEvent;
 } TRANSPORT_CONTEXT, *PTRANSPORT_CONTEXT;
 

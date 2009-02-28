@@ -845,7 +845,7 @@ dev_mgr_get_desc_completion(PURB purb, PVOID context)
     PUSB_CTRL_SETUP_PACKET psetup;
     PHCD hcd;
 
-    USE_BASIC_NON_PENDING_IRQL;;
+    USE_BASIC_NON_PENDING_IRQL;
 
     if (purb == NULL)
         return;
@@ -1033,7 +1033,7 @@ dev_mgr_start_select_driver(PUSB_DEV pdev)
     PUSB_EVENT pevent;
     BOOLEAN bret;
 
-    USE_BASIC_NON_PENDING_IRQL;;
+    USE_BASIC_NON_PENDING_IRQL;
 
     if (pdev == NULL)
         return FALSE;
@@ -1246,6 +1246,7 @@ dev_mgr_build_usb_if(PUSB_CONFIGURATION pcfg, PUSB_INTERFACE pif, PUSB_INTERFACE
             pthis_if = (PUSB_INTERFACE) (((PBYTE) pthis) - offsetof(USB_INTERFACE, altif_list));
             pthis_if->altif_count = pif->altif_count;
             ListNext(&pif->altif_list, pthis, pnext);
+            pthis = pnext;
         }
 
     }

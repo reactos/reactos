@@ -17,7 +17,6 @@
 #include <ntddvol.h>
 #include <mountdev.h>
 #include <mountmgr.h>
-#include <helper.h>
 #include <ketypes.h>
 #include <iotypes.h>
 #include <rtlfuncs.h>
@@ -1199,7 +1198,7 @@ RamdiskGetPartitionInfo(IN PIRP Irp,
     NTSTATUS Status;
     PPARTITION_INFORMATION PartitionInfo;
     PVOID BaseAddress;
-    LARGE_INTEGER Zero = {{0}};
+    LARGE_INTEGER Zero = {{0, 0}};
     ULONG Length;
     PIO_STACK_LOCATION IoStackLocation;
     

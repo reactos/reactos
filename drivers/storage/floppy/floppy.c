@@ -686,16 +686,16 @@ static NTSTATUS NTAPI InitController(PCONTROLLER_INFO ControllerInfo)
       return STATUS_IO_DEVICE_ERROR;
     }
 
-/* Check if floppy drive exists */
+  /* Check if floppy drive exists */
   if(HwSenseInterruptStatus(ControllerInfo) != STATUS_SUCCESS)
-	{
-	  WARN_(FLOPPY, "Floppy drive not detected! Returning STATUS_IO_DEVICE_ERROR\n");
-	  return STATUS_IO_DEVICE_ERROR;
-	}
+    {
+      WARN_(FLOPPY, "Floppy drive not detected!\n");
+      return STATUS_NO_SUCH_DEVICE;
+    }
 
   INFO_(FLOPPY, "InitController: resetting the controller after floppy detection\n");
 
-  /* Reset the controller */
+  /* Reset the controller again after drive detection */
   if(HwReset(ControllerInfo) != STATUS_SUCCESS)
     {
       WARN_(FLOPPY, "InitController: unable to reset controller\n");
@@ -984,6 +984,9 @@ static BOOLEAN NTAPI AddControllers(PDRIVER_OBJECT DriverObject)
 
 	  /* 3i: Now that we're done, set the Initialized flag so we know to free this in Unload */
 	  gControllerInfo[i].DriveInfo[j].Initialized = TRUE;
+
+	  /* 3j: Clear the DO_DEVICE_INITIALIZING flag */
+      gControllerInfo[i].DriveInfo[j].DeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
         }
     }
 

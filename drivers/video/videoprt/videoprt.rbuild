@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="videoprt" type="kernelmodedriver" installbase="system32/drivers" installname="videoprt.sys">
-	<importlibrary definition="videoprt.spec.def" />
+	<importlibrary definition="videoprt.spec" />
 	<include base="videoprt">.</include>
 	<include base="ntoskrnl">include</include>
 	<define name="_VIDEOPORT_" />
@@ -22,5 +22,4 @@
 	<file>timer.c</file>
 	<file>videoprt.c</file>
 	<file>videoprt.rc</file>
-	<file>videoprt.spec</file>
 </module>

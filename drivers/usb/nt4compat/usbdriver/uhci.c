@@ -189,16 +189,16 @@ free_pending_endp(PUHCI_PENDING_ENDP_POOL pool, PUHCI_PENDING_ENDP pending_endp)
 PUHCI_PENDING_ENDP
 alloc_pending_endp(PUHCI_PENDING_ENDP_POOL pool, LONG count)
 {
-    PUHCI_PENDING_ENDP new;
+    PUHCI_PENDING_ENDP new_endp;
     if (pool == NULL || count != 1)
         return NULL;
 
     if (pool->free_count <= 0)
         return NULL;
 
-    new = (PUHCI_PENDING_ENDP) RemoveHeadList(&pool->free_que);
+    new_endp = (PUHCI_PENDING_ENDP) RemoveHeadList(&pool->free_que);
     pool->free_count--;
-    return new;
+    return new_endp;
 }
 
 BOOLEAN
@@ -627,7 +627,7 @@ uhci_probe(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, PUSB_DEV_MANAGER d
     pdev = NULL;
 
     //scan the bus to find uhci controller
-    for(bus = 0; bus < 2; bus++)        /*enum only bus0 and bus1 */
+    for(bus = 0; bus < 3; bus++)        /* enum bus0-bus2 */
     {
         for(i = 0; i < PCI_MAX_DEVICES; i++)
         {
@@ -698,6 +698,8 @@ uhci_alloc(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, ULONG bus_addr, PU
 
 
     pdev = uhci_create_device(drvr_obj, dev_mgr);
+    if (pdev == NULL)
+        return pdev;
     pdev_ext = pdev->DeviceExtension;
 
     pdev_ext->pci_addr = bus_addr;
@@ -706,9 +708,6 @@ uhci_alloc(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, ULONG bus_addr, PU
     slot_num.u.AsULONG = 0;
     slot_num.u.bits.DeviceNumber = ((bus_addr & 0xff) >> 3);
     slot_num.u.bits.FunctionNumber = (bus_addr & 0x07);
-
-    if (pdev == NULL)
-        return pdev;
 
     //now create adapter object
     RtlZeroMemory(&dev_desc, sizeof(dev_desc));
@@ -2348,7 +2347,7 @@ uhci_internal_submit_iso(PUHCI_DEV uhci, PURB urb)
     PUHCI_TD ptd;
     LIST_ENTRY td_list, *pthis, *pnext;
     int i;
-    BOOLEAN toggle, ret;
+    BOOLEAN toggle = FALSE, ret;
 
     if (uhci == NULL || urb == NULL)
         return STATUS_INVALID_PARAMETER;
@@ -2784,7 +2783,7 @@ uhci_insert_urb_schedule(PUHCI_DEV uhci, PURB urb)
             uhci->fsbr_cnt++;
             if (uhci->fsbr_cnt == 1)
             {
-                uhci->skel_term_qh->link = uhci->skel_hs_control_qh->phy_addr;;
+                uhci->skel_term_qh->link = uhci->skel_hs_control_qh->phy_addr;
             }
 
             return TRUE;
@@ -3122,9 +3121,10 @@ uhci_generic_urb_completion(PURB purb, PVOID context)
     if (old_irql < DISPATCH_LEVEL)
         KeRaiseIrql(DISPATCH_LEVEL, &old_irql);
 
-    pdev = purb->pdev;
     if (purb == NULL)
         return;
+
+    pdev = purb->pdev;
 
     if (pdev == NULL)
         return;
@@ -3804,6 +3804,7 @@ generic_start_io(IN PDEVICE_OBJECT dev_obj, IN PIRP irp)
 }
 
 NTSTATUS
+NTAPI
 DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRING RegistryPath)
 {
 #if DBG

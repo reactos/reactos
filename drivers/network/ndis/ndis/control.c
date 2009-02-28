@@ -87,6 +87,7 @@ NdisAcquireReadWriteLock(
         }
       }
     }
+    Lock->Context = PsGetCurrentThread();
     LockState->LockState = 3;
   }
 }

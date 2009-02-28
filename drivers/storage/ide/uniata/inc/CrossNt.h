@@ -7,7 +7,7 @@ extern "C" {
 
 #if !defined(NT_INCLUDED)
 #include <ntddk.h>                  // various NT definitions
-#endif
+#endif 
 
 #include <stddef.h>
 #include <string.h>

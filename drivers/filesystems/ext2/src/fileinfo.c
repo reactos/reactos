@@ -144,7 +144,7 @@ PIRP							PtrIrp)
 		{
 			// This is not allowed. Caller must use get/set volume information instead.
 			RC = STATUS_INVALID_PARAMETER;
-			try_return(RC);
+			try_return();
 		}
 
 		//	ASSERT(PtrFCB->NodeIdentifier.NodeType == EXT2_NODE_TYPE_FCB);
@@ -205,14 +205,14 @@ PIRP							PtrIrp)
 				DebugTrace(DEBUG_TRACE_FILEINFO,   "FileNetworkOpenInformation requested for %S", PtrFCB->FCBName->ObjectName.Buffer );
 				RC = Ext2GetNetworkOpenInformation(PtrFCB, (PFILE_NETWORK_OPEN_INFORMATION)PtrSystemBuffer, &BufferLength);
 				//	RC = STATUS_INVALID_PARAMETER;
-				//	try_return(RC);
+				//	try_return();
 				break;
 #endif	// _WIN32_WINNT >= 0x0400
 			case FileInternalInformation:
 				DebugTrace(DEBUG_TRACE_FILEINFO,   "FileInternalInformation requested for %S", PtrFCB->FCBName->ObjectName.Buffer );
 				// RC = Ext2GetInternalInformation(...);
 				RC = STATUS_INVALID_PARAMETER;
-				try_return(RC);
+				try_return();
 				break;
 			case FileEaInformation:
 				DebugTrace(DEBUG_TRACE_FILEINFO,   "FileEaInformation requested for %S", PtrFCB->FCBName->ObjectName.Buffer );
@@ -246,7 +246,7 @@ PIRP							PtrIrp)
 				// RC = Ext2GetFileStreamInformation(...);
 
 				RC = STATUS_INVALID_PARAMETER;
-				try_return(RC);
+				try_return();
 				
 				break;
 			case FileAllInformation:
@@ -274,11 +274,11 @@ PIRP							PtrIrp)
 					if (!NT_SUCCESS(RC = Ext2GetBasicInformation(PtrFCB, (PFILE_BASIC_INFORMATION)&(PtrAllInfo->BasicInformation),
 																					&BufferLength))) 
 					{
-						try_return(RC);
+						try_return();
 					}
 					if (!NT_SUCCESS(RC = Ext2GetStandardInformation(PtrFCB, &(PtrAllInfo->StandardInformation), &BufferLength))) 
 					{
-						try_return(RC);
+						try_return();
 					}
 					// Similarly, get all of the others ...
 				}
@@ -291,19 +291,19 @@ PIRP							PtrIrp)
 			case FileAlternateNameInformation:
 				DebugTrace(DEBUG_TRACE_FILEINFO,   "FileAlternateNameInformation requested for %S", PtrFCB->FCBName->ObjectName.Buffer );
 				RC = STATUS_INVALID_PARAMETER;
-				try_return(RC);
+				try_return();
 				// RC = Ext2GetAltNameInformation(...);
 				break;
 			case FileCompressionInformation:
 				DebugTrace(DEBUG_TRACE_FILEINFO,   "FileCompressionInformation requested for %S", PtrFCB->FCBName->ObjectName.Buffer );
 				RC = STATUS_INVALID_PARAMETER;
-				try_return(RC);
+				try_return();
 				// RC = Ext2GetCompressionInformation(...);
 				break;
 
 			default:
 				RC = STATUS_INVALID_PARAMETER;
-				try_return(RC);
+				try_return();
 			}
 
 			// If we completed successfully, the return the amount of information transferred.
@@ -409,7 +409,7 @@ PIRP							PtrIrp)
 				DebugTrace(DEBUG_TRACE_FILEINFO,   "Attempt to set FileEndOfFileInformation for %S", PtrFCB->FCBName->ObjectName.Buffer );
 				// RC = Ext2SetEOF(...);
 				RC = STATUS_INVALID_PARAMETER;
-				try_return(RC);
+				try_return();
 				break;
 
 			case FilePositionInformation:
@@ -449,7 +449,7 @@ PIRP							PtrIrp)
 			case FileLinkInformation:
 				DebugTrace(DEBUG_TRACE_FILEINFO,   "Attempt to set FileLinkInformation for %S", PtrFCB->FCBName->ObjectName.Buffer );
 				RC = STATUS_INVALID_PARAMETER;
-				try_return(RC);
+				try_return();
 				// When you implement your rename/link routine, be careful to
 				// check the following two arguments:
 				// TargetFileObject = PtrIoStackLocation->Parameters.SetFile.FileObject;
@@ -484,7 +484,7 @@ PIRP							PtrIrp)
 			default:
 				DebugTrace(DEBUG_TRACE_FILEINFO,   "Unrecoganised SetFileInformation code for %S", PtrFCB->FCBName->ObjectName.Buffer );
 				RC = STATUS_INVALID_PARAMETER;
-				try_return(RC);
+				try_return();
 			}
 		}
 
@@ -934,7 +934,7 @@ PFILE_DISPOSITION_INFORMATION	PtrBuffer)
 			// "un-delete" the file.
 			Ext2ClearFlag(PtrFCB->FCBFlags, EXT2_FCB_DELETE_ON_CLOSE);
 			PtrFileObject->DeletePending = FALSE;
-			try_return(RC);
+			try_return();
 		}
 
 		// Do some checking to see if the file can even be deleted.
@@ -942,7 +942,7 @@ PFILE_DISPOSITION_INFORMATION	PtrBuffer)
 		if (PtrFCB->FCBFlags & EXT2_FCB_DELETE_ON_CLOSE) 
 		{
 			// All done!
-			try_return(RC);
+			try_return();
 		}
 
 		if (PtrFCB->FCBFlags & EXT2_FCB_READ_ONLY) 

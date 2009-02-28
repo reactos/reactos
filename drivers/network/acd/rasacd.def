@@ -1,8 +1,0 @@
-; RAS Automatic Connection Driver - ReactOS Operating System
-
-LIBRARY RASACD.SYS
-
-EXPORTS
-
-
-; EOF

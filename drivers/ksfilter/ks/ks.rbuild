@@ -1,16 +1,19 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<module name="ks" type="kernelmodedriver" installbase="system32/drivers" installname="ks.sys" allowwarnings="true">
+<module name="ks" type="kernelmodedriver" installbase="system32/drivers" installname="ks.sys">
 	<include base="ks">.</include>
 	<include base="ks">..</include>
 	<include base="ks">../include</include>
-	<importlibrary definition="ks.spec.def" />
+	<importlibrary definition="ks.spec" />
 	<library>ntoskrnl</library>
+	<library>hal</library>
 	<define name="BUILDING_KS" />
-	<define name="_NTDDK_" />
 	<define name="_COMDDK_" />
 	<file>ks.rc</file>
 	<file>allocators.c</file>
+	<file>bag.c</file>
+	<file>device.c</file>
+	<file>driver.c</file>
 	<file>clocks.c</file>
 	<file>connectivity.c</file>
 	<file>events.c</file>
@@ -21,5 +24,4 @@
 	<file>topology.c</file>
 	<file>worker.c</file>
 	<file>kcom.c</file>
-	<file>ks.spec</file>
 </module>

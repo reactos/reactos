@@ -180,8 +180,7 @@ umss_bulkonly_send_cbw_completion(IN PURB purb, IN PVOID context)
         umss_bulkonly_transfer_data(pdev_ext);
     }
 
-    if (purb)
-        usb_free_mem(purb);
+    usb_free_mem(purb);
 
     purb = NULL;
     return;

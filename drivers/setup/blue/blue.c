@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
  * FILE:                 services/dd/blue/blue.c
@@ -103,7 +102,7 @@ static const UCHAR DefaultPalette[] =
 static VOID FASTCALL
 ScrSetRegisters(const VGA_REGISTERS *Registers)
 {
-    UINT i;
+    UINT32 i;
 
     /* Update misc output register */
     WRITE_PORT_UCHAR(MISC, Registers->Misc);
@@ -227,11 +226,11 @@ ScrAcquireOwnership(PDEVICE_EXTENSION DeviceExtension)
             DeviceExtension->ScanLines);
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 DriverEntry (PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath);
 
 static DRIVER_DISPATCH ScrCreate;
-static NTSTATUS STDCALL
+static NTSTATUS NTAPI
 ScrCreate(PDEVICE_OBJECT DeviceObject,
 	  PIRP Irp)
 {
@@ -265,7 +264,7 @@ ScrCreate(PDEVICE_OBJECT DeviceObject,
 }
 
 static DRIVER_DISPATCH ScrWrite;
-static NTSTATUS STDCALL
+static NTSTATUS NTAPI
 ScrWrite(PDEVICE_OBJECT DeviceObject,
 	 PIRP Irp)
 {
@@ -407,7 +406,7 @@ ScrWrite(PDEVICE_OBJECT DeviceObject,
 }
 
 static DRIVER_DISPATCH ScrIoControl;
-static NTSTATUS STDCALL
+static NTSTATUS NTAPI
 ScrIoControl(PDEVICE_OBJECT DeviceObject,
 	     PIRP Irp)
 {
@@ -692,7 +691,7 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
         {
           PCONSOLE_DRAW ConsoleDraw;
           PUCHAR Src, Dest;
-          UINT SrcDelta, DestDelta, i, Offset;
+          UINT32 SrcDelta, DestDelta, i, Offset;
 
           ConsoleDraw = (PCONSOLE_DRAW) MmGetSystemAddressForMdl(Irp->MdlAddress);
           Src = (PUCHAR) (ConsoleDraw + 1);
@@ -725,7 +724,7 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
 
       case IOCTL_CONSOLE_LOADFONT:
           {
-              UINT CodePage = (UINT)*(PULONG)Irp->AssociatedIrp.SystemBuffer;
+              UINT32 CodePage = (UINT32)*(PULONG)Irp->AssociatedIrp.SystemBuffer;
 
               // Upload a font for the codepage if needed
               ScrLoadFontTable(CodePage);
@@ -746,7 +745,7 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
 }
 
 static DRIVER_DISPATCH ScrDispatch;
-static NTSTATUS STDCALL
+static NTSTATUS NTAPI
 ScrDispatch(PDEVICE_OBJECT DeviceObject,
 	    PIRP Irp)
 {
@@ -775,7 +774,7 @@ ScrDispatch(PDEVICE_OBJECT DeviceObject,
 /*
  * Module entry point
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 DriverEntry (PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 {
     PDEVICE_OBJECT DeviceObject;

@@ -47,13 +47,13 @@
 #include <debug.h>
 
 NTSTATUS
-STDCALL
+NTAPI
 DriverEntry(
     IN PDRIVER_OBJECT DriverObject,
     IN PUNICODE_STRING RegistryPath);
 
 static VOID
-STDCALL
+NTAPI
 MiniportHandleInterrupt(
     IN NDIS_HANDLE MiniportAdapterContext)
 /*
@@ -68,6 +68,8 @@ MiniportHandleInterrupt(
   USHORT Data;
 
   DPRINT("Called\n");
+
+  ASSERT_IRQL_EQUAL(DISPATCH_LEVEL);
 
   NdisDprAcquireSpinLock(&Adapter->Lock);
 
@@ -526,7 +528,7 @@ MiFreeSharedMemory(
 }
 
 static BOOLEAN
-STDCALL
+NTAPI
 MiSyncStop(
     IN PVOID SynchronizeContext)
 /*
@@ -542,7 +544,7 @@ MiSyncStop(
 }
 
 static VOID
-STDCALL
+NTAPI
 MiniportHalt(
     IN NDIS_HANDLE MiniportAdapterContext)
 /*
@@ -571,6 +573,9 @@ MiniportHalt(
   /* deregister i/o port range */
   NdisMDeregisterIoPortRange(Adapter->MiniportAdapterHandle, Adapter->IoBaseAddress, NUMBER_OF_PORTS, (PVOID)Adapter->PortOffset);
 
+  /* deregister the shutdown routine */
+  NdisMDeregisterAdapterShutdownHandler(Adapter->MiniportAdapterHandle);
+
   /* free shared memory */
   MiFreeSharedMemory(Adapter);
 
@@ -585,7 +590,7 @@ MiniportHalt(
 }
 
 static BOOLEAN
-STDCALL
+NTAPI
 MiSyncMediaDetection(
     IN PVOID SynchronizeContext)
 /*
@@ -608,7 +613,7 @@ MiSyncMediaDetection(
 }
 
 static VOID
-STDCALL
+NTAPI
 MiniportMediaDetectionTimer(
     IN PVOID SystemSpecific1,
     IN PVOID FunctionContext,
@@ -623,6 +628,8 @@ MiniportMediaDetectionTimer(
  */
 {
   PADAPTER Adapter = (PADAPTER)FunctionContext;
+
+  ASSERT_IRQL_EQUAL(DISPATCH_LEVEL);
 
   if (NdisMSynchronizeWithInterrupt(&Adapter->InterruptObject,
                                     MiSyncMediaDetection,
@@ -777,8 +784,20 @@ MiTestCard(
 }
 #endif
 
+VOID
+NTAPI
+MiniportShutdown( PVOID Context )
+{
+  PADAPTER Adapter = Context;
+
+  DPRINT("Stopping the chip\n");
+
+  NdisRawWritePortUshort(Adapter->PortOffset + RAP, CSR0);
+  NdisRawWritePortUshort(Adapter->PortOffset + RDP, CSR0_STOP);
+}
+
 static NDIS_STATUS
-STDCALL
+NTAPI
 MiniportInitialize(
     OUT PNDIS_STATUS OpenErrorStatus,
     OUT PUINT SelectedMediumIndex,
@@ -811,6 +830,8 @@ MiniportInitialize(
   PADAPTER Adapter = 0;
   NDIS_STATUS Status = NDIS_STATUS_FAILURE;
   BOOLEAN InterruptRegistered = FALSE;
+
+  ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
   /* Pick a medium */
   for(i = 0; i < MediumArraySize; i++)
@@ -946,13 +967,15 @@ MiniportInitialize(
     ASSERT(0);
 #endif
 
+  NdisMRegisterAdapterShutdownHandler(Adapter->MiniportAdapterHandle, Adapter, MiniportShutdown);
+
   DPRINT("returning 0x%x\n", Status);
   *OpenErrorStatus = Status;
   return Status;
 }
 
 static VOID
-STDCALL
+NTAPI
 MiniportISR(
     OUT PBOOLEAN InterruptRecognized,
     OUT PBOOLEAN QueueMiniportHandleInterrupt,
@@ -1005,7 +1028,7 @@ MiniportISR(
 }
 
 static NDIS_STATUS
-STDCALL
+NTAPI
 MiniportReset(
     OUT PBOOLEAN AddressingReset,
     IN NDIS_HANDLE MiniportAdapterContext)
@@ -1023,6 +1046,8 @@ MiniportReset(
 {
   DPRINT("Called\n");
 
+  ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
+
   /* MiniportReset doesn't do anything at the moment... perhaps this should be fixed. */
 
   *AddressingReset = FALSE;
@@ -1030,7 +1055,7 @@ MiniportReset(
 }
 
 static BOOLEAN
-STDCALL
+NTAPI
 MiSyncStartTransmit(
     IN PVOID SynchronizeContext)
 /*
@@ -1046,7 +1071,7 @@ MiSyncStartTransmit(
 }
 
 static NDIS_STATUS
-STDCALL
+NTAPI
 MiniportSend(
     IN NDIS_HANDLE MiniportAdapterContext,
     IN PNDIS_PACKET Packet,
@@ -1071,6 +1096,8 @@ MiniportSend(
   UINT TotalPacketLength, SourceLength, Position = 0;
 
   DPRINT("Called\n");
+
+  ASSERT_IRQL_EQUAL(DISPATCH_LEVEL);
 
   NdisDprAcquireSpinLock(&Adapter->Lock);
 
@@ -1135,7 +1162,7 @@ MiniportSend(
 }
 
 static ULONG
-STDCALL
+NTAPI
 MiEthernetCrc(UCHAR *Address)
 /*
  * FUNCTION: Calculate Ethernet CRC32
@@ -1162,7 +1189,7 @@ MiEthernetCrc(UCHAR *Address)
 }
 
 NDIS_STATUS
-STDCALL
+NTAPI
 MiSetMulticast(
     PADAPTER Adapter,
     UCHAR *Addresses,
@@ -1185,7 +1212,7 @@ MiSetMulticast(
 }
 
 NDIS_MEDIA_STATE
-STDCALL
+NTAPI
 MiGetMediaState(PADAPTER Adapter)
 /*
  * FUNCTION: Determine the link state
@@ -1203,7 +1230,7 @@ MiGetMediaState(PADAPTER Adapter)
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 DriverEntry(
     IN PDRIVER_OBJECT DriverObject,
     IN PUNICODE_STRING RegistryPath)

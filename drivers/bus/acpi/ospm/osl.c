@@ -36,7 +36,7 @@ static KDPC AcpiDpc;
 static PVOID IVTVirtualAddress = NULL;
 
 
-VOID STDCALL
+VOID NTAPI
 OslDpcStub(
   IN PKDPC Dpc,
   IN PVOID DeferredContext,
@@ -182,7 +182,7 @@ acpi_os_get_physical_address(void *virt, ACPI_PHYSICAL_ADDRESS *phys)
   return AE_OK;
 }
 
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 OslIsrStub(
   PKINTERRUPT Interrupt,
   PVOID ServiceContext)
@@ -635,7 +635,7 @@ acpi_os_wait_semaphore(
 
   DPRINT("Waiting for semaphore[%p|%d|%d]\n", handle, units, timeout);
 
-  //ExAcquireFastMutex(Mutex);
+  ExAcquireFastMutex(Mutex);
 
   return AE_OK;
 }
@@ -654,7 +654,7 @@ acpi_os_signal_semaphore(
 
   DPRINT("Signaling semaphore[%p|%d]\n", handle, units);
 
-  //ExReleaseFastMutex(Mutex);
+  ExReleaseFastMutex(Mutex);
 
   return AE_OK;
 }

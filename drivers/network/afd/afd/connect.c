@@ -29,6 +29,11 @@ NTSTATUS WarmSocketForConnection( PAFD_FCB FCB ) {
                                           FCB->Connection.Object );
     }
 
+	if (NT_SUCCESS(Status)) 
+	{
+		ObReferenceObject(FCB->Connection.Object);
+	}
+
     return Status;
 }
 
@@ -83,6 +88,13 @@ static NTSTATUS NTAPI StreamSocketConnectComplete
 
     AFD_DbgPrint(MID_TRACE,("Irp->IoStatus.Status = %x\n",
 			    Irp->IoStatus.Status));
+
+    FCB->ConnectIrp.InFlightRequest = NULL;
+
+    if( Irp->Cancel ) {
+        SocketStateUnlock( FCB );
+	return STATUS_CANCELLED;
+    }
 
     if( NT_SUCCESS(Irp->IoStatus.Status) ) {
 	FCB->PollState |= AFD_EVENT_CONNECT | AFD_EVENT_SEND;
@@ -140,7 +152,7 @@ static NTSTATUS NTAPI StreamSocketConnectComplete
 
 /* Return the socket object for ths request only if it is a connected or
    stream type. */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 		       PIO_STACK_LOCATION IrpSp) {
     NTSTATUS Status = STATUS_INVALID_PARAMETER;

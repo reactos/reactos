@@ -1,4 +1,0 @@
-; vgaddi.def
-LIBRARY vgaddi.dll
-EXPORTS
-DrvEnableDriver@12

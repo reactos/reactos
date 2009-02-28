@@ -8,7 +8,7 @@
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 CTEBlock (
 	ULONG	Unknown0
 	)
@@ -21,7 +21,7 @@ CTEBlock (
  * @unimplemented
  */
 VOID
-STDCALL
+NTAPI
 CTEInitEvent (
 	ULONG	Unknown0,
 	ULONG	Unknown1
@@ -34,7 +34,7 @@ CTEInitEvent (
  * @unimplemented
  */
 VOID
-STDCALL
+NTAPI
 CTEInitTimer (
 	ULONG	Unknown0
 	)
@@ -46,7 +46,7 @@ CTEInitTimer (
  * @unimplemented
  */
 BOOLEAN
-STDCALL
+NTAPI
 CTEInitialize (
 	VOID
 	)
@@ -60,7 +60,7 @@ CTEInitialize (
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 CTELogEvent (
 	ULONG	Unknown0,
 	ULONG	Unknown1,
@@ -83,7 +83,7 @@ CTELogEvent (
  * @unimplemented
  */
 BOOLEAN
-STDCALL
+NTAPI
 CTEScheduleEvent (
 	ULONG	Unknown0,
 	ULONG	Unknown1
@@ -97,7 +97,7 @@ CTEScheduleEvent (
  * @unimplemented
  */
 LONG
-STDCALL
+NTAPI
 CTESignal (
 	ULONG	Unknown0,
 	ULONG	Unknown1
@@ -120,7 +120,7 @@ CTESignal (
  * @unimplemented
  */
 BOOLEAN
-STDCALL
+NTAPI
 CTEStartTimer (
 	ULONG	Unknown0,
 	ULONG	Unknown1,
@@ -136,7 +136,7 @@ CTEStartTimer (
  * @unimplemented
  */
 ULONG
-STDCALL
+NTAPI
 CTESystemUpTime (
 	VOID
 	)

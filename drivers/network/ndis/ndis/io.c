@@ -28,37 +28,15 @@ VOID NTAPI HandleDeferredProcessing(
  *     SystemArgument2 = Unused
  */
 {
-  BOOLEAN WasBusy;
   PLOGICAL_ADAPTER Adapter = GET_LOGICAL_ADAPTER(DeferredContext);
 
   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
   ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
 
-  /* XXX try to grok WasBusy */
-  KeAcquireSpinLockAtDpcLevel(&Adapter->NdisMiniportBlock.Lock);
-    {
-      WasBusy = Adapter->MiniportBusy;
-      Adapter->MiniportBusy = TRUE;
-    }
-  KeReleaseSpinLockFromDpcLevel(&Adapter->NdisMiniportBlock.Lock);
-
   /* Call the deferred interrupt service handler for this adapter */
   (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.HandleInterruptHandler)(
       Adapter->NdisMiniportBlock.MiniportAdapterContext);
-
-  KeAcquireSpinLockAtDpcLevel(&Adapter->NdisMiniportBlock.Lock);
-    {
-      if ((!WasBusy) && (Adapter->WorkQueueHead))
-        {
-          KeInsertQueueDpc(&Adapter->NdisMiniportBlock.DeferredDpc, NULL, NULL);
-        }
-      else
-        {
-          Adapter->MiniportBusy = WasBusy;
-        }
-    }
-  KeReleaseSpinLockFromDpcLevel(&Adapter->NdisMiniportBlock.Lock);
 
   /* re-enable the interrupt */
   NDIS_DbgPrint(MAX_TRACE, ("re-enabling the interrupt\n"));
@@ -77,27 +55,37 @@ BOOLEAN NTAPI ServiceRoutine(
  * FUNCTION: Interrupt service routine
  * ARGUMENTS:
  *     Interrupt      = Pointer to interrupt object
- *     ServiceContext = Pointer to context information (LOGICAL_ADAPTER)
+ *     ServiceContext = Pointer to context information (PNDIS_MINIPORT_INTERRUPT)
  * RETURNS
  *     TRUE if a miniport controlled device generated the interrupt
  */
 {
-  BOOLEAN InterruptRecognized;
-  BOOLEAN QueueMiniportHandleInterrupt;
-  PNDIS_MINIPORT_BLOCK Adapter = (PNDIS_MINIPORT_BLOCK)ServiceContext;
+  BOOLEAN InterruptRecognized = FALSE;
+  BOOLEAN QueueMiniportHandleInterrupt = FALSE;
+  PNDIS_MINIPORT_INTERRUPT NdisInterrupt = ServiceContext;
+  PNDIS_MINIPORT_BLOCK NdisMiniportBlock = NdisInterrupt->Miniport;
 
-  NDIS_DbgPrint(MAX_TRACE, ("Called. Adapter (0x%X)\n", Adapter));
+  NDIS_DbgPrint(MAX_TRACE, ("Called. Interrupt (0x%X)\n", NdisInterrupt));
 
-  (*Adapter->DriverHandle->MiniportCharacteristics.ISRHandler)(
-      &InterruptRecognized,
-      &QueueMiniportHandleInterrupt,
-      Adapter->MiniportAdapterContext);
+  if (NdisInterrupt->IsrRequested) {
+      (*NdisMiniportBlock->DriverHandle->MiniportCharacteristics.ISRHandler)(
+          &InterruptRecognized,
+          &QueueMiniportHandleInterrupt,
+          NdisMiniportBlock->MiniportAdapterContext);
+
+  } else if (NdisMiniportBlock->DriverHandle->MiniportCharacteristics.DisableInterruptHandler) {
+      (*NdisMiniportBlock->DriverHandle->MiniportCharacteristics.DisableInterruptHandler)(
+          NdisMiniportBlock->MiniportAdapterContext);
+       QueueMiniportHandleInterrupt = TRUE;
+       InterruptRecognized = TRUE;
+  }
+
 
   if (QueueMiniportHandleInterrupt)
-    {
-      NDIS_DbgPrint(MAX_TRACE, ("Queueing DPC.\n"));
-      KeInsertQueueDpc(&Adapter->Interrupt->InterruptDpc, NULL, NULL);
-    }
+  {
+      NDIS_DbgPrint(MAX_TRACE, ("Queuing DPC.\n"));
+      KeInsertQueueDpc(&NdisInterrupt->InterruptDpc, NULL, NULL);
+  }
 
   NDIS_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 
@@ -198,7 +186,7 @@ NdisImmediateWritePortUlong(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 EXPORT
@@ -229,15 +217,15 @@ IO_ALLOCATION_ACTION NTAPI NdisMapRegisterCallback (
  *     - Called at IRQL = DISPATCH_LEVEL
  */
 {
-  PNDIS_MINIPORT_BLOCK Adapter = (PNDIS_MINIPORT_BLOCK)Context;
+  PLOGICAL_ADAPTER Adapter = Context;
 
   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
-  Adapter->MapRegisters[Adapter->CurrentMapRegister].MapRegister = MapRegisterBase;
+  Adapter->NdisMiniportBlock.MapRegisters[Adapter->NdisMiniportBlock.CurrentMapRegister].MapRegister = MapRegisterBase;
 
   NDIS_DbgPrint(MAX_TRACE, ("setting event and leaving.\n"));
 
-  KeSetEvent(Adapter->AllocationEvent, 0, FALSE);
+  KeSetEvent(Adapter->NdisMiniportBlock.AllocationEvent, 0, FALSE);
 
   /* this is only the thing to do for busmaster NICs */
   return DeallocateObjectKeepRegisters;
@@ -290,7 +278,7 @@ NdisMAllocateMapRegisters(
   UINT                 MapRegistersPerBaseRegister = 0;
   ULONG                AvailableMapRegisters;
   NTSTATUS             NtStatus;
-  PNDIS_MINIPORT_BLOCK Adapter = 0;
+  PLOGICAL_ADAPTER     Adapter;
   PDEVICE_OBJECT       DeviceObject = 0;
   KEVENT               AllocationEvent;
   KIRQL                OldIrql;
@@ -300,19 +288,19 @@ NdisMAllocateMapRegisters(
 
   memset(&Description,0,sizeof(Description));
 
-  Adapter = (PNDIS_MINIPORT_BLOCK)MiniportAdapterHandle;
+  Adapter = (PLOGICAL_ADAPTER)MiniportAdapterHandle;
 
   ASSERT(Adapter);
 
   /* only bus masters may call this routine */
-  ASSERT(Adapter->Flags & NDIS_ATTRIBUTE_BUS_MASTER);
-  if(!(Adapter->Flags & NDIS_ATTRIBUTE_BUS_MASTER))
+  ASSERT(Adapter->NdisMiniportBlock.Flags & NDIS_ATTRIBUTE_BUS_MASTER);
+  if(!(Adapter->NdisMiniportBlock.Flags & NDIS_ATTRIBUTE_BUS_MASTER))
     return NDIS_STATUS_SUCCESS;
 
-  DeviceObject = Adapter->DeviceObject;
+  DeviceObject = Adapter->NdisMiniportBlock.DeviceObject;
 
   KeInitializeEvent(&AllocationEvent, NotificationEvent, FALSE);
-  Adapter->AllocationEvent = &AllocationEvent;
+  Adapter->NdisMiniportBlock.AllocationEvent = &AllocationEvent;
 
   /*
   * map registers correlate to physical pages.  ndis documents a
@@ -332,12 +320,12 @@ NdisMAllocateMapRegisters(
   Description.Master = TRUE;                         /* implied by calling this function */
   Description.ScatterGather = TRUE;                  /* XXX UNTRUE: All BM DMA are S/G (ms seems to do this) */
   Description.Dma32BitAddresses = DmaSize;
-  Description.BusNumber = Adapter->BusNumber;
-  Description.InterfaceType = Adapter->BusType;
+  Description.BusNumber = Adapter->NdisMiniportBlock.BusNumber;
+  Description.InterfaceType = Adapter->NdisMiniportBlock.BusType;
   Description.DmaChannel = DmaChannel;
   Description.MaximumLength = MaximumBufferSize;
 
-  if(Adapter->AdapterType == Isa)
+  if(Adapter->NdisMiniportBlock.AdapterType == Isa)
     {
       /* system dma */
       if(DmaChannel < 4)
@@ -347,7 +335,7 @@ NdisMAllocateMapRegisters(
 
       Description.DmaSpeed = Compatible;
     }
-  else if(Adapter->AdapterType == PCIBus)
+  else if(Adapter->NdisMiniportBlock.AdapterType == PCIBus)
     {
       if(DmaSize == NDIS_DMA_64BITS)
         Description.Dma64BitAddresses = TRUE;
@@ -361,7 +349,7 @@ NdisMAllocateMapRegisters(
     }
 
   AdapterObject = IoGetDmaAdapter(
-    Adapter->PhysicalDeviceObject, &Description, &AvailableMapRegisters);
+    Adapter->NdisMiniportBlock.PhysicalDeviceObject, &Description, &AvailableMapRegisters);
 
   if(!AdapterObject)
     {
@@ -369,7 +357,7 @@ NdisMAllocateMapRegisters(
       return NDIS_STATUS_RESOURCES;
     }
 
-  Adapter->SystemAdapterObject = AdapterObject;
+  Adapter->NdisMiniportBlock.SystemAdapterObject = AdapterObject;
 
   if(AvailableMapRegisters < MapRegistersPerBaseRegister)
     {
@@ -380,22 +368,22 @@ NdisMAllocateMapRegisters(
     }
 
   /* allocate & zero space in the miniport block for the registers */
-  Adapter->MapRegisters = ExAllocatePool(NonPagedPool, BaseMapRegistersNeeded * sizeof(MAP_REGISTER_ENTRY));
-  if(!Adapter->MapRegisters)
+  Adapter->NdisMiniportBlock.MapRegisters = ExAllocatePool(NonPagedPool, BaseMapRegistersNeeded * sizeof(MAP_REGISTER_ENTRY));
+  if(!Adapter->NdisMiniportBlock.MapRegisters)
     {
       NDIS_DbgPrint(MIN_TRACE, ("insufficient resources.\n"));
       return NDIS_STATUS_RESOURCES;
     }
 
-  memset(Adapter->MapRegisters, 0, BaseMapRegistersNeeded * sizeof(MAP_REGISTER_ENTRY));
-  Adapter->BaseMapRegistersNeeded = (USHORT)BaseMapRegistersNeeded;
+  memset(Adapter->NdisMiniportBlock.MapRegisters, 0, BaseMapRegistersNeeded * sizeof(MAP_REGISTER_ENTRY));
+  Adapter->NdisMiniportBlock.BaseMapRegistersNeeded = (USHORT)BaseMapRegistersNeeded;
 
   while(BaseMapRegistersNeeded)
     {
       NDIS_DbgPrint(MAX_TRACE, ("iterating, basemapregistersneeded = %d\n", BaseMapRegistersNeeded));
 
       BaseMapRegistersNeeded--;
-      Adapter->CurrentMapRegister = (USHORT)BaseMapRegistersNeeded;
+      Adapter->NdisMiniportBlock.CurrentMapRegister = (USHORT)BaseMapRegistersNeeded;
       KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
         {
           NtStatus = AdapterObject->DmaOperations->AllocateAdapterChannel(
@@ -407,6 +395,7 @@ NdisMAllocateMapRegisters(
       if(!NT_SUCCESS(NtStatus))
         {
           NDIS_DbgPrint(MIN_TRACE, ("IoAllocateAdapterChannel failed: 0x%x\n", NtStatus));
+          ExFreePool(Adapter->NdisMiniportBlock.MapRegisters);
           return NDIS_STATUS_RESOURCES;
         }
 
@@ -417,6 +406,7 @@ NdisMAllocateMapRegisters(
       if(!NT_SUCCESS(NtStatus))
         {
           NDIS_DbgPrint(MIN_TRACE, ("KeWaitForSingleObject failed: 0x%x\n", NtStatus));
+          ExFreePool(Adapter->NdisMiniportBlock.MapRegisters);
           return NDIS_STATUS_RESOURCES;
         }
 
@@ -459,7 +449,7 @@ NdisMStartBufferPhysicalMapping(
  *     - The caller supplies storage for the physical address array.
  */
 {
-  PNDIS_MINIPORT_BLOCK Adapter;
+  PLOGICAL_ADAPTER Adapter;
   PVOID CurrentVa;
   ULONG TotalLength;
   PHYSICAL_ADDRESS ReturnedAddress;
@@ -468,7 +458,7 @@ NdisMStartBufferPhysicalMapping(
   ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
   ASSERT(MiniportAdapterHandle && Buffer && PhysicalAddressArray && ArraySize);
 
-  Adapter = (PNDIS_MINIPORT_BLOCK)MiniportAdapterHandle;
+  Adapter = (PLOGICAL_ADAPTER)MiniportAdapterHandle;
   CurrentVa = MmGetMdlVirtualAddress(Buffer);
   TotalLength = MmGetMdlByteCount(Buffer);
 
@@ -476,12 +466,12 @@ NdisMStartBufferPhysicalMapping(
     {
       ULONG Length = TotalLength;
 
-      ReturnedAddress = Adapter->SystemAdapterObject->DmaOperations->MapTransfer(
-          Adapter->SystemAdapterObject, Buffer,
-          Adapter->MapRegisters[PhysicalMapRegister].MapRegister,
+      ReturnedAddress = Adapter->NdisMiniportBlock.SystemAdapterObject->DmaOperations->MapTransfer(
+          Adapter->NdisMiniportBlock.SystemAdapterObject, Buffer,
+          Adapter->NdisMiniportBlock.MapRegisters[PhysicalMapRegister].MapRegister,
           CurrentVa, &Length, WriteToDevice);
 
-      Adapter->MapRegisters[PhysicalMapRegister].WriteToDevice = WriteToDevice;
+      Adapter->NdisMiniportBlock.MapRegisters[PhysicalMapRegister].WriteToDevice = WriteToDevice;
 
       PhysicalAddressArray[LoopCount].PhysicalAddress = ReturnedAddress;
       PhysicalAddressArray[LoopCount].Length = Length;
@@ -515,22 +505,22 @@ NdisMCompleteBufferPhysicalMapping(
  *     - May be called at IRQL <= DISPATCH_LEVEL
  */
 {
-  PNDIS_MINIPORT_BLOCK Adapter;
+  PLOGICAL_ADAPTER Adapter;
   VOID *CurrentVa;
   ULONG Length;
 
   ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
   ASSERT(MiniportAdapterHandle && Buffer);
 
-  Adapter = (PNDIS_MINIPORT_BLOCK)MiniportAdapterHandle;
+  Adapter = (PLOGICAL_ADAPTER)MiniportAdapterHandle;
   CurrentVa = MmGetMdlVirtualAddress(Buffer);
   Length = MmGetMdlByteCount(Buffer);
 
-  Adapter->SystemAdapterObject->DmaOperations->FlushAdapterBuffers(
-      Adapter->SystemAdapterObject, Buffer,
-      Adapter->MapRegisters[PhysicalMapRegister].MapRegister,
+  Adapter->NdisMiniportBlock.SystemAdapterObject->DmaOperations->FlushAdapterBuffers(
+      Adapter->NdisMiniportBlock.SystemAdapterObject, Buffer,
+      Adapter->NdisMiniportBlock.MapRegisters[PhysicalMapRegister].MapRegister,
       CurrentVa, Length,
-      Adapter->MapRegisters[PhysicalMapRegister].WriteToDevice);
+      Adapter->NdisMiniportBlock.MapRegisters[PhysicalMapRegister].WriteToDevice);
 }
 
 
@@ -561,6 +551,10 @@ NdisMDeregisterInterrupt(
 {
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
     IoDisconnectInterrupt(Interrupt->InterruptObject);
+    Interrupt->Miniport->RegisteredInterrupts--;
+
+    if (Interrupt->Miniport->Interrupt == Interrupt)
+        Interrupt->Miniport->Interrupt = NULL;
 }
 
 
@@ -602,7 +596,7 @@ NdisMFreeMapRegisters(
  */
 {
   KIRQL                OldIrql;
-  PNDIS_MINIPORT_BLOCK Adapter = (PNDIS_MINIPORT_BLOCK)MiniportAdapterHandle;
+  PLOGICAL_ADAPTER Adapter = (PLOGICAL_ADAPTER)MiniportAdapterHandle;
   PDMA_ADAPTER         AdapterObject;
   UINT                 MapRegistersPerBaseRegister;
   UINT                 i;
@@ -612,31 +606,31 @@ NdisMFreeMapRegisters(
   ASSERT(Adapter);
 
   /* only bus masters may call this routine */
-  ASSERT(Adapter->Flags & NDIS_ATTRIBUTE_BUS_MASTER);
-  if(!(Adapter->Flags & NDIS_ATTRIBUTE_BUS_MASTER) ||
-     Adapter->SystemAdapterObject == NULL)
+  ASSERT(Adapter->NdisMiniportBlock.Flags & NDIS_ATTRIBUTE_BUS_MASTER);
+  if(!(Adapter->NdisMiniportBlock.Flags & NDIS_ATTRIBUTE_BUS_MASTER) ||
+     Adapter->NdisMiniportBlock.SystemAdapterObject == NULL)
     return;
 
-  MapRegistersPerBaseRegister = ((Adapter->MaximumPhysicalMapping - 2) / PAGE_SIZE) + 2;
+  MapRegistersPerBaseRegister = ((Adapter->NdisMiniportBlock.MaximumPhysicalMapping - 2) / PAGE_SIZE) + 2;
 
-  AdapterObject = Adapter->SystemAdapterObject;
+  AdapterObject = Adapter->NdisMiniportBlock.SystemAdapterObject;
 
   KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
     {
-      for(i = 0; i < Adapter->BaseMapRegistersNeeded; i++)
+      for(i = 0; i < Adapter->NdisMiniportBlock.BaseMapRegistersNeeded; i++)
         {
           AdapterObject->DmaOperations->FreeMapRegisters(
-              Adapter->SystemAdapterObject,
-              Adapter->MapRegisters[i].MapRegister,
+              Adapter->NdisMiniportBlock.SystemAdapterObject,
+              Adapter->NdisMiniportBlock.MapRegisters[i].MapRegister,
               MapRegistersPerBaseRegister);
         }
     }
  KeLowerIrql(OldIrql);
 
  AdapterObject->DmaOperations->PutDmaAdapter(AdapterObject);
- Adapter->SystemAdapterObject = NULL;
+ Adapter->NdisMiniportBlock.SystemAdapterObject = NULL;
 
- ExFreePool(Adapter->MapRegisters);
+ ExFreePool(Adapter->NdisMiniportBlock.MapRegisters);
 }
 
 
@@ -772,7 +766,7 @@ NdisMRegisterInterrupt(
   ULONG MappedIRQ;
   KIRQL DIrql;
   KAFFINITY Affinity;
-  PNDIS_MINIPORT_BLOCK Adapter = (PNDIS_MINIPORT_BLOCK)MiniportAdapterHandle;
+  PLOGICAL_ADAPTER Adapter = (PLOGICAL_ADAPTER)MiniportAdapterHandle;
 
   NDIS_DbgPrint(MAX_TRACE, ("Called. InterruptVector (0x%X)  InterruptLevel (0x%X)  "
       "SharedInterrupt (%d)  InterruptMode (0x%X)\n",
@@ -787,22 +781,25 @@ NdisMRegisterInterrupt(
   KeInitializeEvent(&Interrupt->DpcsCompletedEvent, NotificationEvent, FALSE);
 
   Interrupt->SharedInterrupt = SharedInterrupt;
+  Interrupt->IsrRequested = RequestIsr;
+  Interrupt->Miniport = &Adapter->NdisMiniportBlock;
 
-  Adapter->Interrupt = Interrupt;
-
-  MappedIRQ = HalGetInterruptVector(Adapter->BusType, Adapter->BusNumber,
+  MappedIRQ = HalGetInterruptVector(Adapter->NdisMiniportBlock.BusType, Adapter->NdisMiniportBlock.BusNumber,
                                     InterruptLevel, InterruptVector, &DIrql,
                                     &Affinity);
 
   NDIS_DbgPrint(MAX_TRACE, ("Connecting to interrupt vector (0x%X)  Affinity (0x%X).\n", MappedIRQ, Affinity));
 
-  Status = IoConnectInterrupt(&Interrupt->InterruptObject, ServiceRoutine, Adapter, &Interrupt->DpcCountLock, MappedIRQ,
+  Status = IoConnectInterrupt(&Interrupt->InterruptObject, ServiceRoutine, Interrupt, &Interrupt->DpcCountLock, MappedIRQ,
       DIrql, DIrql, InterruptMode, SharedInterrupt, Affinity, FALSE);
 
   NDIS_DbgPrint(MAX_TRACE, ("Leaving. Status (0x%X).\n", Status));
 
-  if (NT_SUCCESS(Status))
-    return NDIS_STATUS_SUCCESS;
+  if (NT_SUCCESS(Status)) {
+      Adapter->NdisMiniportBlock.Interrupt = Interrupt;
+      Adapter->NdisMiniportBlock.RegisteredInterrupts++;
+      return NDIS_STATUS_SUCCESS;
+  }
 
   if (Status == STATUS_INSUFFICIENT_RESOURCES)
     {
@@ -817,7 +814,7 @@ NdisMRegisterInterrupt(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 NDIS_STATUS
 EXPORT
@@ -838,7 +835,7 @@ NdisMRegisterIoPortRange(
  */
 {
   PHYSICAL_ADDRESS     PortAddress, TranslatedAddress;
-  PNDIS_MINIPORT_BLOCK Adapter  = (PNDIS_MINIPORT_BLOCK)MiniportAdapterHandle;
+  PLOGICAL_ADAPTER Adapter  = (PLOGICAL_ADAPTER)MiniportAdapterHandle;
   ULONG                AddressSpace = 1;    /* FIXME The HAL handles this wrong atm */
 
   *PortOffset = 0;
@@ -860,7 +857,7 @@ NdisMRegisterIoPortRange(
 
   NDIS_DbgPrint(MAX_TRACE, ("Translating address 0x%x 0x%x\n", PortAddress.u.HighPart, PortAddress.u.LowPart));
 
-  if(!HalTranslateBusAddress(Adapter->BusType, Adapter->BusNumber,
+  if(!HalTranslateBusAddress(Adapter->NdisMiniportBlock.BusType, Adapter->NdisMiniportBlock.BusNumber,
                              PortAddress, &AddressSpace, &TranslatedAddress))
     {
       NDIS_DbgPrint(MIN_TRACE, ("Unable to translate address\n"));

@@ -402,7 +402,7 @@ AcpiCheckIfIsSerialDebugPort(
       case io:
       {
         IO_RESOURCE *io_data = (IO_RESOURCE*) &resource->data;
-        if (*KdComPortInUse == ULongToPtr(io_data->min_base_address))
+        if (KdComPortInUse == (PUCHAR)io_data->min_base_address)
         {
           ExFreePool(Buffer.pointer);
           return TRUE;
@@ -775,7 +775,9 @@ FdoStartDevice(
   KeInitializeSpinLock(&DeviceExtension->DeviceListLock);
   DeviceExtension->DeviceListCount = 0;
 
+#if 0
   ACPIEnumerateDevices(DeviceExtension);
+#endif
 
   ACPIInitializeInternalDrivers(DeviceExtension);
 
@@ -848,7 +850,7 @@ FdoSetPower(
 /*** PUBLIC ******************************************************************/
 
 NTSTATUS
-STDCALL
+NTAPI
 FdoPnpControl(
   PDEVICE_OBJECT DeviceObject,
   PIRP Irp)
@@ -937,7 +939,7 @@ FdoPnpControl(
 
 
 NTSTATUS
-STDCALL
+NTAPI
 FdoPowerControl(
   PDEVICE_OBJECT DeviceObject,
   PIRP Irp)

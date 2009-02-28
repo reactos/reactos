@@ -1,10 +1,10 @@
 /*
- * PROJECT:         ReactOS Kernel
+ * PROJECT:         ReactOS WMI driver
  * COPYRIGHT:       GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/ex/atom.c
- * PURPOSE:         Executive Atom Functions
- * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
- *                  Gunnar Dalsnes
+ * FILE:            drivers/wmi/wmilib.c
+ * PURPOSE:         Windows Management Intstrumentation
+ * PROGRAMMERS:     Aleksey Bragin (aleksey@reactos.org)
+ *                  
  */
 
 /* INCLUDES *****************************************************************/

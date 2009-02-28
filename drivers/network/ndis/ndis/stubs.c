@@ -301,7 +301,10 @@ NdisOpenFile(
   memmove ( FullFileName.Buffer, NDIS_FILE_FOLDER, FullFileName.Length );
   *Status = RtlAppendUnicodeStringToString ( &FullFileName, FileName );
   if ( !NT_SUCCESS(*Status) )
+  {
+    *Status = NDIS_STATUS_FAILURE;
     goto cleanup;
+  }
 
   InitializeObjectAttributes ( &ObjectAttributes,
     &FullFileName,
@@ -321,6 +324,11 @@ NdisOpenFile(
     FILE_SYNCHRONOUS_IO_NONALERT, // ULONG CreateOptions
     0, // PVOID EaBuffer
     0 ); // ULONG EaLength
+  
+  if ( !NT_SUCCESS(*Status) )
+  {
+    *Status = NDIS_STATUS_FAILURE;
+  }
 
 cleanup:
   if ( FullFileName.Buffer != NULL )
@@ -524,17 +532,19 @@ NdisGetReceivedPacket(
  */
 VOID
 EXPORT
-NdisGetSystemUpTime(
-    OUT PULONG  pSystemUpTime)
-/*
- * FUNCTION:
- * ARGUMENTS:
- * NOTES:
- *    NDIS 5.0
- */
+NdisGetSystemUpTime(OUT PULONG pSystemUpTime)
 {           
-    /* Get the uptime of the system in msec */
-     *pSystemUpTime = ( (SharedUserData->TickCountLowDeprecated *  SharedUserData->TickCountMultiplier) / 0x1000000); 
+    ULONG Increment;
+    LARGE_INTEGER TickCount;
+
+    /* Get the increment and current tick count */
+    Increment = KeQueryTimeIncrement();
+    KeQueryTickCount(&TickCount);
+
+    /* Convert to milliseconds and return */
+    TickCount.QuadPart *= Increment;
+    TickCount.QuadPart /= (10 * 1000);
+    *pSystemUpTime = TickCount.LowPart;
 }
 
 
@@ -1038,7 +1048,7 @@ NdisIMInitializeDeviceInstanceEx(
 
  
 VOID
-STDCALL
+NTAPI
 ndisProcWorkItemHandler(PVOID pContext)
 {
     PNDIS_WORK_ITEM pNdisItem = (PNDIS_WORK_ITEM)pContext;
@@ -1055,7 +1065,3 @@ NdisScheduleWorkItem(
     ExQueueWorkItem(pntWorkItem, CriticalWorkQueue);
     return NDIS_STATUS_SUCCESS;
 }
-
-
-
-/* EOF */

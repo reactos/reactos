@@ -13,7 +13,9 @@
     rights information) but is needed for linking with PORTCLS.
 */
 
-#include <drmk.h>
+#include <ntddk.h>
+#include <portcls.h>
+#include <debug.h>
 
 /*
     Provide a driver interface consisting of functions for handling DRM

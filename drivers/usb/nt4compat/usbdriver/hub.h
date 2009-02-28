@@ -208,7 +208,7 @@ typedef struct _HUB2_EXTENSION
 	USB_HUB_STATUS   			hub_status;
 	USB_PORT_STATUS				port_status;		//working data buf for get port feature
 
-	USB_PORT_STATUS				rh_port_status[ EHCI_MAX_ROOT_PORTS ]; 	//working buf for get rh ports feature
+	USB_PORT_STATUS				rh_port_status[ EHCI_MAX_ROOT_PORTS + 1 ]; 	//working buf for get rh ports feature
 
 	UCHAR						multiple_tt;			// boolean
 	ULONG						tt_status_map[ 4 ];		// bit map to indicate the indexed tt's periodic buffer busy or not

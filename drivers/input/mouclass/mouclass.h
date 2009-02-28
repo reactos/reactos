@@ -2,7 +2,7 @@
 #include <kbdmou.h>
 #include <ntddkbd.h>
 #include <stdio.h>
-#include <pseh/pseh.h>
+#include <pseh/pseh2.h>
 
 #include <debug.h>
 

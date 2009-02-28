@@ -38,10 +38,10 @@ void OskitDumpBuffer( PCHAR Data, UINT Len ) {
 
 /* FUNCTIONS */
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath);
 
-static NTSTATUS STDCALL
+static NTSTATUS NTAPI
 AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 		PIO_STACK_LOCATION IrpSp) {
     PAFD_FCB FCB;
@@ -52,6 +52,7 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     ULONG EaLength;
     PWCHAR EaInfoValue = NULL;
     UINT Disposition, i;
+    NTSTATUS Status = STATUS_SUCCESS;
 
     AFD_DbgPrint(MID_TRACE,
 		 ("AfdCreate(DeviceObject %p Irp %p)\n", DeviceObject, Irp));
@@ -140,16 +141,27 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         AFD_DbgPrint(MID_TRACE,("Packet oriented socket\n"));
 	/* Allocate our backup buffer */
 	FCB->Recv.Window = ExAllocatePool( NonPagedPool, FCB->Recv.Size );
+	if( !FCB->Recv.Window ) Status = STATUS_NO_MEMORY;
         FCB->Send.Window = ExAllocatePool( NonPagedPool, FCB->Send.Size );
+	if( !FCB->Send.Window ) {
+	    if( FCB->Recv.Window ) ExFreePool( FCB->Recv.Window );
+	    Status = STATUS_NO_MEMORY;
+	}
 	/* A datagram socket is always sendable */
 	FCB->PollState |= AFD_EVENT_SEND;
         PollReeval( FCB->DeviceExt, FCB->FileObject );
     }
 
-    Irp->IoStatus.Status = STATUS_SUCCESS;
+    if( !NT_SUCCESS(Status) ) {
+	if( FCB->TdiDeviceName.Buffer ) ExFreePool( FCB->TdiDeviceName.Buffer );
+	ExFreePool( FCB );
+	FileObject->FsContext = NULL;
+    }
+
+    Irp->IoStatus.Status = Status;
     IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
 
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 VOID DestroySocket( PAFD_FCB FCB ) {
@@ -209,12 +221,19 @@ VOID DestroySocket( PAFD_FCB FCB ) {
 	ExFreePool( FCB->LocalAddress );
     if( FCB->RemoteAddress )
 	ExFreePool( FCB->RemoteAddress );
-    if( FCB->ListenIrp.ConnectionReturnInfo )
-	ExFreePool( FCB->ListenIrp.ConnectionReturnInfo );
-    if( FCB->ListenIrp.ConnectionCallInfo )
-	ExFreePool( FCB->ListenIrp.ConnectionCallInfo );
     if( FCB->TdiDeviceName.Buffer )
 	ExFreePool(FCB->TdiDeviceName.Buffer);
+
+	if (FCB->Connection.Object)
+	{
+		NtClose(FCB->Connection.Handle);
+		ObDereferenceObject(FCB->Connection.Object);
+	}
+	if (FCB->AddressFile.Object)
+	{
+		NtClose(FCB->AddressFile.Handle);
+		ObDereferenceObject(FCB->AddressFile.Object);
+	}
 
     ExFreePool(FCB);
     AFD_DbgPrint(MIN_TRACE,("Deleted (%x)\n", FCB));
@@ -222,7 +241,7 @@ VOID DestroySocket( PAFD_FCB FCB ) {
     AFD_DbgPrint(MIN_TRACE,("Leaving\n"));
 }
 
-static NTSTATUS STDCALL
+static NTSTATUS NTAPI
 AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	       PIO_STACK_LOCATION IrpSp)
 {
@@ -252,7 +271,7 @@ AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     return STATUS_SUCCESS;
 }
 
-static NTSTATUS STDCALL
+static NTSTATUS NTAPI
 AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	      PIO_STACK_LOCATION IrpSp) {
     PFILE_OBJECT FileObject = IrpSp->FileObject;
@@ -303,7 +322,7 @@ AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL );
 }
 
-static NTSTATUS STDCALL
+static NTSTATUS NTAPI
 AfdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
@@ -491,12 +510,12 @@ AfdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     return (Status);
 }
 
-static VOID STDCALL
+static VOID NTAPI
 AfdUnload(PDRIVER_OBJECT DriverObject)
 {
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 {
     PDEVICE_OBJECT DeviceObject;

@@ -3,11 +3,7 @@
     IRP Helpers
 */
 
-#include <ntddk.h>
-#include <debug.h>
-#include <ks.h>
-
-#define TAG(A, B, C, D) (IN ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
+#include "priv.h"
 
 /*
     @unimplemented
@@ -22,9 +18,11 @@ KsAcquireResetValue(
 }
 
 /*
-    @unimplemented
+    @implemented
 */
-KSDDKAPI VOID NTAPI
+KSDDKAPI
+VOID
+NTAPI
 KsAddIrpToCancelableQueue(
     IN  OUT PLIST_ENTRY QueueHead,
     IN  PKSPIN_LOCK SpinLock,
@@ -32,22 +30,26 @@ KsAddIrpToCancelableQueue(
     IN  KSLIST_ENTRY_LOCATION ListLocation,
     IN  PDRIVER_CANCEL DriverCancel OPTIONAL)
 {
-    UNIMPLEMENTED;
-}
+    PQUEUE_ENTRY Entry;
 
-/*
-    @unimplemented
-*/
-KSDDKAPI NTSTATUS NTAPI
-KsAddObjectCreateItemToDeviceHeader(
-    IN  KSDEVICE_HEADER Header,
-    IN  PDRIVER_DISPATCH Create,
-    IN  PVOID Context,
-    IN  PWCHAR ObjectClass,
-    IN  PSECURITY_DESCRIPTOR SecurityDescriptor)
-{
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
+    if (!QueueHead || !SpinLock || !Irp)
+        return;
+
+    Entry = ExAllocatePool(NonPagedPool, sizeof(QUEUE_ENTRY));
+    if (!Entry)
+        return;
+
+    ///FIXME
+    // setup cancel routine
+    //
+
+    Entry->Irp = Irp;
+
+    if (ListLocation == KsListEntryTail)
+        ExInterlockedInsertTailList(QueueHead, &Entry->Entry, SpinLock);
+    else
+        ExInterlockedInsertHeadList(QueueHead, &Entry->Entry, SpinLock);
+
 }
 
 /*
@@ -65,43 +67,194 @@ KsAddObjectCreateItemToObjectHeader(
     return STATUS_UNSUCCESSFUL;
 }
 
+
 /*
-    @unimplemented
+    @implemented
 */
-KSDDKAPI NTSTATUS NTAPI
+KSDDKAPI
+NTSTATUS
+NTAPI
+KsAddObjectCreateItemToDeviceHeader(
+    IN  KSDEVICE_HEADER DevHeader,
+    IN  PDRIVER_DISPATCH Create,
+    IN  PVOID Context,
+    IN  PWCHAR ObjectClass,
+    IN  PSECURITY_DESCRIPTOR SecurityDescriptor)
+{
+    PKSIDEVICE_HEADER Header;
+    ULONG FreeIndex, Index;
+
+    Header = (PKSIDEVICE_HEADER)DevHeader;
+
+    DPRINT1("KsAddObjectCreateItemToDeviceHeader entered\n");
+
+     /* check if a device header has been provided */
+    if (!DevHeader)
+        return STATUS_INVALID_PARAMETER_1;
+
+    /* check if a create item has been provided */
+    if (!Create)
+        return STATUS_INVALID_PARAMETER_2;
+
+    /* check if a object class has been provided */
+    if (!ObjectClass)
+        return STATUS_INVALID_PARAMETER_4;
+
+    FreeIndex = (ULONG)-1;
+    /* now scan the list and check for a free item */
+    for(Index = 0; Index < Header->MaxItems; Index++)
+    {
+        if (!Header->ItemList[Index].bCreated)
+        {
+            if (FreeIndex == (ULONG)-1)
+                FreeIndex = Index;
+
+            continue;
+        }
+        else if (!wcsicmp(ObjectClass, Header->ItemList[Index].CreateItem.ObjectClass.Buffer))
+        {
+            /* the same object class already exists */
+            return STATUS_OBJECT_NAME_COLLISION;
+        }
+    }
+    /* found a free index */
+    if (FreeIndex == (ULONG)-1)
+    {
+        /* allocate a new device entry */
+        PDEVICE_ITEM Item = ExAllocatePoolWithTag(NonPagedPool, sizeof(DEVICE_ITEM) * (Header->MaxItems + 1), TAG_DEVICE_HEADER);
+        if (!Item)
+            return STATUS_INSUFFICIENT_RESOURCES;
+
+        RtlMoveMemory(Item, Header->ItemList, Header->MaxItems * sizeof(DEVICE_ITEM));
+        ExFreePoolWithTag(Header->ItemList, TAG_DEVICE_HEADER);
+        
+        Header->ItemList = Item;
+        FreeIndex = Header->MaxItems;
+        Header->MaxItems++;
+    }
+
+    /* store the new item */
+    Header->ItemList[FreeIndex].bCreated = TRUE;
+    Header->ItemList[FreeIndex].CreateItem.Create = Create;
+    Header->ItemList[FreeIndex].CreateItem.Context = Context;
+    RtlInitUnicodeString(&Header->ItemList[FreeIndex].CreateItem.ObjectClass, ObjectClass);
+    Header->ItemList[FreeIndex].CreateItem.SecurityDescriptor = SecurityDescriptor;
+    Header->ItemList[FreeIndex].CreateItem.Flags = 0;
+    return STATUS_SUCCESS;
+}
+
+/*
+    @implemented
+*/
+KSDDKAPI
+NTSTATUS
+NTAPI
 KsAllocateDeviceHeader(
-    OUT KSDEVICE_HEADER* Header,
+    OUT KSDEVICE_HEADER* OutHeader,
     IN  ULONG ItemsCount,
     IN  PKSOBJECT_CREATE_ITEM ItemsList OPTIONAL)
 {
-    /* Allocates memory for the KSDEVICE_HEADER structure */
+    ULONG Index = 0;
+    PKSIDEVICE_HEADER Header;
 
-    if ( ! Header )
+    if (!OutHeader)
         return STATUS_INVALID_PARAMETER;
 
-    Header = ExAllocatePoolWithTag(PagedPool, sizeof(KSDEVICE_HEADER), TAG('H','D','S','K'));
+    /* allocate a device header */
+    Header = ExAllocatePoolWithTag(PagedPool, sizeof(KSIDEVICE_HEADER), TAG_DEVICE_HEADER);
 
-    if ( ! Header )
+    /* check for success */
+    if (!Header)
         return STATUS_INSUFFICIENT_RESOURCES;
 
-    /* TODO: Actually do something with the header, perhaps? */
+    /* clear all memory */
+    RtlZeroMemory(Header, sizeof(KSIDEVICE_HEADER));
+
+    /* initialize spin lock */
+    KeInitializeSpinLock(&Header->ItemListLock);
+
+    /* are there any create items provided */
+    if (ItemsCount && ItemsList)
+    {
+        /* allocate space for device item list */
+        Header->ItemList = ExAllocatePoolWithTag(NonPagedPool, sizeof(DEVICE_ITEM) * ItemsCount, TAG_DEVICE_HEADER);
+        if (!Header->ItemList)
+        {
+            ExFreePoolWithTag(Header, TAG_DEVICE_HEADER);
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+        RtlZeroMemory(Header->ItemList, sizeof(DEVICE_ITEM) * ItemsCount);
+
+        for(Index = 0; Index < ItemsCount; Index++)
+        {
+            /* copy provided create items */
+            RtlMoveMemory(&Header->ItemList[Index].CreateItem, &ItemsList[Index], sizeof(KSOBJECT_CREATE_ITEM));
+            if (ItemsList[Index].Create!= NULL)
+            {
+                Header->ItemList[Index].bCreated = TRUE;
+            }
+        }
+        Header->MaxItems = ItemsCount;
+    }
+
+    /* store result */
+    *OutHeader = Header;
 
     return STATUS_SUCCESS;
 }
 
 /*
     @unimplemented
+
+    http://www.osronline.com/DDKx/stream/ksfunc_3sc3.htm
 */
-KSDDKAPI VOID NTAPI
-KsFreeDeviceHeader(
-    IN  KSDEVICE_HEADER Header)
+KSDDKAPI
+NTSTATUS
+NTAPI
+KsAllocateObjectCreateItem(
+    IN  KSDEVICE_HEADER DevHeader,
+    IN  PKSOBJECT_CREATE_ITEM CreateItem,
+    IN  BOOLEAN AllocateEntry,
+    IN  PFNKSITEMFREECALLBACK ItemFreeCallback OPTIONAL)
 {
-    if ( ! Header )
+    PKSIDEVICE_HEADER Header;
+
+    Header = (PKSIDEVICE_HEADER)DevHeader;
+
+    if (!DevHeader)
+        return STATUS_INVALID_PARAMETER_1;
+
+    if (!CreateItem)
+        return STATUS_INVALID_PARAMETER_2;
+
+    //FIXME
+    //handle ItemFreeCallback
+    //
+    if (AllocateEntry && ItemFreeCallback)
+        DPRINT1("Ignoring ItemFreeCallback\n");
+
+    return KsAddObjectCreateItemToDeviceHeader(DevHeader, CreateItem->Create, CreateItem->Context, CreateItem->ObjectClass.Buffer, CreateItem->SecurityDescriptor);
+}
+
+
+/*
+    @implemented
+*/
+KSDDKAPI
+VOID
+NTAPI
+KsFreeDeviceHeader(
+    IN  KSDEVICE_HEADER DevHeader)
+{
+    PKSIDEVICE_HEADER Header;
+
+    Header = (PKSIDEVICE_HEADER)DevHeader;
+
+    if (!DevHeader)
         return;
 
-    /* TODO: Free content first */
-
-    ExFreePoolWithTag(Header, TAG('H','D','S','K'));
+    ExFreePoolWithTag(Header->ItemList, TAG_DEVICE_HEADER);
+    ExFreePoolWithTag(Header, TAG_DEVICE_HEADER);
 }
 
 /*
@@ -120,22 +273,6 @@ KsAllocateExtraData(
 /*
     @unimplemented
 
-    http://www.osronline.com/DDKx/stream/ksfunc_3sc3.htm
-*/
-KSDDKAPI NTSTATUS NTAPI
-KsAllocateObjectCreateItem(
-    IN  KSDEVICE_HEADER Header,
-    IN  PKSOBJECT_CREATE_ITEM CreateItem,
-    IN  BOOL AllocateEntry,
-    IN  PFNKSITEMFREECALLBACK ItemFreeCallback OPTIONAL)
-{
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
-}
-
-/*
-    @unimplemented
-
     Initialize the required file context header.
     Allocates KSOBJECT_HEADER structure.
     Irp is an IRP_MJ_CREATE structure.
@@ -143,48 +280,112 @@ KsAllocateObjectCreateItem(
 
     http://www.osronline.com/DDKx/stream/ksfunc_0u2b.htm
 */
-KSDDKAPI NTSTATUS NTAPI
+KSDDKAPI
+NTSTATUS
+NTAPI
 KsAllocateObjectHeader(
-    OUT PVOID Header,
+    OUT KSOBJECT_HEADER *Header,
     IN  ULONG ItemsCount,
     IN  PKSOBJECT_CREATE_ITEM ItemsList OPTIONAL,
     IN  PIRP Irp,
     IN  KSDISPATCH_TABLE* Table)
 {
-    /* NOTE: PKSOBJECT_HEADER is not defined yet */
-#if 0
-    PKSOBJECT_HEADER object_header;
+    PIO_STACK_LOCATION IoStack;
+    PDEVICE_EXTENSION DeviceExtension;
+    PKSIDEVICE_HEADER DeviceHeader;
+    PKSIOBJECT_HEADER ObjectHeader;
+    WCHAR ObjectClass[50];
 
-    /* TODO: Validate parameters */
+    if (!Header)
+        return STATUS_INVALID_PARAMETER_1;
 
-    object_header = ExAllocatePoolWithTag(PagedPool, sizeof(KSOBJECT_HEADER), TAG('H','O','S','K'));
+    if (!Irp)
+        return STATUS_INVALID_PARAMETER_4;
 
-    if ( ! object_header )
+    if (!Table)
+        return STATUS_INVALID_PARAMETER_5;
+
+    /* get current stack location */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+    /* get device extension */
+    DeviceExtension = (PDEVICE_EXTENSION)IoStack->DeviceObject->DeviceExtension;
+    /* get device header */
+    DeviceHeader = DeviceExtension->DeviceHeader;
+
+    ObjectClass[0] = L'\0';
+    /* check for an file object */
+    if (IoStack->FileObject != NULL)
     {
+        /* validate the file name */
+        if (IoStack->FileObject->FileName.Length >= 38)
+        {
+            RtlMoveMemory(ObjectClass, IoStack->FileObject->FileName.Buffer, 38 * sizeof(WCHAR));
+            ObjectClass[38] = L'\0';
+            DPRINT1("ObjectClass %S\n", ObjectClass);
+        }
+    }
+    /* allocate the object header */
+    ObjectHeader = ExAllocatePoolWithTag(NonPagedPool, sizeof(KSIOBJECT_HEADER), TAG_DEVICE_HEADER);
+    if (!ObjectHeader)
         return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* initialize object header */
+    RtlZeroMemory(ObjectHeader, sizeof(KSIOBJECT_HEADER));
+
+    /* do we have a name */
+    if (ObjectClass[0])
+    {
+        ObjectHeader->ObjectClass = ExAllocatePoolWithTag(NonPagedPool, 40 * sizeof(WCHAR), TAG_DEVICE_HEADER);
+        if (ObjectHeader->ObjectClass)
+        {
+            wcscpy(ObjectHeader->ObjectClass, ObjectClass);
+        }
     }
 
-    (PVOID)(*Header) = object_header;
+    /* copy dispatch table */
+    RtlCopyMemory(&ObjectHeader->DispatchTable, Table, sizeof(KSDISPATCH_TABLE));
+    /* store create items */
+    if (ItemsCount && ItemsList)
+    {
+        ObjectHeader->ItemCount = ItemsCount;
+        ObjectHeader->CreateItem = ItemsList;
+    }
 
-    /* TODO ... */
-#endif
+    /* was the request for a pin/clock/node */
+    if (IoStack->FileObject)
+    {
+        /* store the object in the file object */
+        ASSERT(IoStack->FileObject->FsContext == NULL);
+        IoStack->FileObject->FsContext = ObjectHeader;
+    }
+    else
+    {
+        /* the object header is for device */
+        ASSERT(DeviceHeader->DeviceIndex < DeviceHeader->MaxItems);
+        DeviceHeader->ItemList[DeviceHeader->DeviceIndex].ObjectHeader = ObjectHeader;
+    }
 
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
+    /* store result */
+    *Header = ObjectHeader;
+
+
+    DPRINT1("KsAllocateObjectHeader ObjectClass %S FileObject %p, ObjectHeader %p\n", ObjectClass, IoStack->FileObject, ObjectHeader);
+
+    return STATUS_SUCCESS;
+
 }
 
 /*
     @unimplemented
 */
-KSDDKAPI VOID NTAPI
+KSDDKAPI
+VOID
+NTAPI
 KsFreeObjectHeader(
     IN  PVOID Header)
 {
-    ExFreePoolWithTag(Header, TAG('H','O','S','K'));
 
-    /* TODO */
 
-    UNIMPLEMENTED;
 }
 
 /*
@@ -269,26 +470,6 @@ KsDispatchInvalidDeviceRequest(
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
     return STATUS_INVALID_DEVICE_REQUEST;
-}
-
-/*
-    @unimplemented
-*/
-KSDDKAPI NTSTATUS NTAPI
-KsDispatchIrp(
-    IN  PDEVICE_OBJECT DeviceObject,
-    IN  PIRP Irp)
-{
-    /* Calls a dispatch routine corresponding to the function code of the IRP */
-
-    /*
-        First we need to get the dispatch table. An opaque header is pointed to by
-        FsContext. The first element points to this table. This table is the key
-        to dispatching the IRP correctly.
-    */
-
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
 }
 
 /*
@@ -451,18 +632,60 @@ KsReleaseIrpOnCancelableQueue(
 }
 
 /*
-    @unimplemented
+    @implemented
 */
-KSDDKAPI PIRP NTAPI
+KSDDKAPI
+PIRP
+NTAPI
 KsRemoveIrpFromCancelableQueue(
     IN  OUT PLIST_ENTRY QueueHead,
     IN  PKSPIN_LOCK SpinLock,
     IN  KSLIST_ENTRY_LOCATION ListLocation,
     IN  KSIRP_REMOVAL_OPERATION RemovalOperation)
 {
-    UNIMPLEMENTED;
-    return NULL;
-    /*return STATUS_UNSUCCESSFUL; */
+    PQUEUE_ENTRY Entry = NULL;
+    PIRP Irp;
+    KIRQL OldIrql;
+
+    if (!QueueHead || !SpinLock)
+        return NULL;
+
+    if (ListLocation != KsListEntryTail && ListLocation != KsListEntryHead)
+        return NULL;
+
+    if (RemovalOperation != KsAcquireOnly && RemovalOperation != KsAcquireAndRemove)
+        return NULL;
+
+    KeAcquireSpinLock(SpinLock, &OldIrql);
+
+    if (!IsListEmpty(QueueHead))
+    {
+        if (RemovalOperation == KsAcquireOnly)
+        {
+            if (ListLocation == KsListEntryHead)
+                Entry = (PQUEUE_ENTRY)QueueHead->Flink;
+            else
+                Entry = (PQUEUE_ENTRY)QueueHead->Blink;
+        }
+        else if (RemovalOperation == KsAcquireAndRemove)
+        {
+            if (ListLocation == KsListEntryTail)
+                Entry = (PQUEUE_ENTRY)RemoveTailList(QueueHead);
+            else
+                Entry = (PQUEUE_ENTRY)RemoveHeadList(QueueHead);
+        }
+    }
+    KeReleaseSpinLock(SpinLock, OldIrql);
+
+    if (!Entry)
+        return NULL;
+
+    Irp = Entry->Irp;
+
+    if (RemovalOperation == KsAcquireAndRemove)
+        ExFreePool(Entry);
+
+    return Irp;
 }
 
 /*
@@ -491,19 +714,44 @@ KsSetInformationFile(
 
 
 
-/*
-    IRP handlers
-    NOT USED
-*/
-#if 0
-static NTAPI
+NTAPI
 NTSTATUS
 KsCreate(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
 {
-    DPRINT1("KS / Create\n");
-    return STATUS_UNSUCCESSFUL;
+    //PIO_STACK_LOCATION IoStack;
+    PDEVICE_EXTENSION DeviceExtension;
+    PKSIDEVICE_HEADER DeviceHeader;
+    ULONG Index;
+    NTSTATUS Status = STATUS_SUCCESS;
+    KIRQL OldLevel;
+
+    DPRINT1("KS / CREATE\n");
+    /* get current stack location */
+    //IoStack = IoGetCurrentIrpStackLocation(Irp);
+    /* get device extension */
+    DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    /* get device header */
+    DeviceHeader = DeviceExtension->DeviceHeader;
+
+    /* acquire list lock */
+    KeAcquireSpinLock(&DeviceHeader->ItemListLock, &OldLevel);
+    /* loop all device items */
+    for(Index = 0; Index < DeviceHeader->MaxItems; Index++)
+    {
+        if (DeviceHeader->ItemList[Index].bCreated && DeviceHeader->ItemList[Index].ObjectHeader == NULL)
+        {
+            DeviceHeader->DeviceIndex = Index;
+             /* set object create item */
+            KSCREATE_ITEM_IRP_STORAGE(Irp) = &DeviceHeader->ItemList[Index].CreateItem;
+            Status = DeviceHeader->ItemList[Index].CreateItem.Create(DeviceObject, Irp);
+        }
+    }
+
+    /* release lock */
+    KeReleaseSpinLock(&DeviceHeader->ItemListLock, OldLevel);
+    return Status;
 }
 
 static NTAPI
@@ -512,8 +760,26 @@ KsClose(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
 {
-    DPRINT1("KS / Close\n");
-    return STATUS_UNSUCCESSFUL;
+    PIO_STACK_LOCATION IoStack;
+    PKSIOBJECT_HEADER ObjectHeader;
+
+    /* get current stack location */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    DPRINT1("KS / CLOSE\n");
+
+    if (IoStack->FileObject && IoStack->FileObject->FsContext)
+    {
+        ObjectHeader = (PKSIOBJECT_HEADER) IoStack->FileObject->FsContext;
+
+        KSCREATE_ITEM_IRP_STORAGE(Irp) = ObjectHeader->CreateItem;
+        return ObjectHeader->DispatchTable.Close(DeviceObject, Irp);
+    }
+    else
+    {
+        DPRINT1("Expected Object Header\n");
+        return STATUS_SUCCESS;
+    }
 }
 
 static NTAPI
@@ -522,8 +788,26 @@ KsDeviceControl(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
 {
+    PIO_STACK_LOCATION IoStack;
+    PKSIOBJECT_HEADER ObjectHeader;
+
+    /* get current stack location */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
     DPRINT1("KS / DeviceControl\n");
-    return STATUS_UNSUCCESSFUL;
+    if (IoStack->FileObject && IoStack->FileObject->FsContext)
+    {
+        ObjectHeader = (PKSIOBJECT_HEADER) IoStack->FileObject->FsContext;
+
+        KSCREATE_ITEM_IRP_STORAGE(Irp) = ObjectHeader->CreateItem;
+        return ObjectHeader->DispatchTable.DeviceIoControl(DeviceObject, Irp);
+    }
+    else
+    {
+        DPRINT1("Expected Object Header\n");
+        KeBugCheckEx(0, 0, 0, 0, 0);
+        return STATUS_SUCCESS;
+    }
 }
 
 static NTAPI
@@ -532,8 +816,26 @@ KsRead(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
 {
+    PIO_STACK_LOCATION IoStack;
+    PKSIOBJECT_HEADER ObjectHeader;
+
+    /* get current stack location */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
     DPRINT1("KS / Read\n");
-    return STATUS_UNSUCCESSFUL;
+    if (IoStack->FileObject && IoStack->FileObject->FsContext)
+    {
+        ObjectHeader = (PKSIOBJECT_HEADER) IoStack->FileObject->FsContext;
+
+        KSCREATE_ITEM_IRP_STORAGE(Irp) = ObjectHeader->CreateItem;
+        return ObjectHeader->DispatchTable.Read(DeviceObject, Irp);
+    }
+    else
+    {
+        DPRINT1("Expected Object Header\n");
+        KeBugCheckEx(0, 0, 0, 0, 0);
+        return STATUS_SUCCESS;
+    }
 }
 
 static NTAPI
@@ -542,8 +844,26 @@ KsWrite(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
 {
+    PIO_STACK_LOCATION IoStack;
+    PKSIOBJECT_HEADER ObjectHeader;
+
+    /* get current stack location */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
     DPRINT1("KS / Write\n");
-    return STATUS_UNSUCCESSFUL;
+    if (IoStack->FileObject && IoStack->FileObject->FsContext)
+    {
+        ObjectHeader = (PKSIOBJECT_HEADER) IoStack->FileObject->FsContext;
+
+        KSCREATE_ITEM_IRP_STORAGE(Irp) = ObjectHeader->CreateItem;
+        return ObjectHeader->DispatchTable.Write(DeviceObject, Irp);
+    }
+    else
+    {
+        DPRINT1("Expected Object Header %p\n", IoStack->FileObject);
+        KeBugCheckEx(0, 0, 0, 0, 0);
+        return STATUS_SUCCESS;
+    }
 }
 
 static NTAPI
@@ -552,8 +872,26 @@ KsFlushBuffers(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
 {
+    PIO_STACK_LOCATION IoStack;
+    PKSIOBJECT_HEADER ObjectHeader;
+
+    /* get current stack location */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
     DPRINT1("KS / FlushBuffers\n");
-    return STATUS_UNSUCCESSFUL;
+    if (IoStack->FileObject && IoStack->FileObject->FsContext)
+    {
+        ObjectHeader = (PKSIOBJECT_HEADER) IoStack->FileObject->FsContext;
+
+        KSCREATE_ITEM_IRP_STORAGE(Irp) = ObjectHeader->CreateItem;
+        return ObjectHeader->DispatchTable.Flush(DeviceObject, Irp);
+    }
+    else
+    {
+        DPRINT1("Expected Object Header\n");
+        KeBugCheckEx(0, 0, 0, 0, 0);
+        return STATUS_SUCCESS;
+    }
 }
 
 static NTAPI
@@ -562,8 +900,26 @@ KsQuerySecurity(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
 {
+    PIO_STACK_LOCATION IoStack;
+    PKSIOBJECT_HEADER ObjectHeader;
+
+    /* get current stack location */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
     DPRINT1("KS / QuerySecurity\n");
-    return STATUS_UNSUCCESSFUL;
+    if (IoStack->FileObject && IoStack->FileObject->FsContext)
+    {
+        ObjectHeader = (PKSIOBJECT_HEADER) IoStack->FileObject->FsContext;
+
+        KSCREATE_ITEM_IRP_STORAGE(Irp) = ObjectHeader->CreateItem;
+        return ObjectHeader->DispatchTable.QuerySecurity(DeviceObject, Irp);
+    }
+    else
+    {
+        DPRINT1("Expected Object Header\n");
+        KeBugCheckEx(0, 0, 0, 0, 0);
+        return STATUS_SUCCESS;
+    }
 }
 
 static NTAPI
@@ -572,41 +928,30 @@ KsSetSecurity(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
 {
+    PIO_STACK_LOCATION IoStack;
+    PKSIOBJECT_HEADER ObjectHeader;
+
+    /* get current stack location */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
     DPRINT1("KS / SetSecurity\n");
-    return STATUS_UNSUCCESSFUL;
-}
-#endif
-
-
-static NTAPI
-NTSTATUS
-KsInternalIrpDispatcher(
-    IN  PDEVICE_OBJECT DeviceObject,
-    IN  PIRP Irp)
-{
-    /* TODO - Nothing implemented really yet! */
-
-    DPRINT1("KS IRP dispatch function called\n");
-
-    //PKSDISPATCH_TABLE ks_dispatch_table = NULL;
-
-    /* ks_dispatch_table is the first element in a structure pointed to by FsContext */
-
-    switch ( IoGetCurrentIrpStackLocation(Irp)->MajorFunction )
+    if (IoStack->FileObject && IoStack->FileObject->FsContext)
     {
-        case IRP_MJ_CREATE :
-/*            return ks_dispatch_table->Create(DeviceObject, Irp);*/
+        ObjectHeader = (PKSIOBJECT_HEADER) IoStack->FileObject->FsContext;
 
-        /* TODO ... */
-
-        default :
-            return STATUS_INVALID_PARAMETER;
-    };
+        KSCREATE_ITEM_IRP_STORAGE(Irp) = ObjectHeader->CreateItem;
+        return ObjectHeader->DispatchTable.SetSecurity(DeviceObject, Irp);
+    }
+    else
+    {
+        DPRINT1("Expected Object Header\n");
+        KeBugCheckEx(0, 0, 0, 0, 0);
+        return STATUS_SUCCESS;
+    }
 }
-
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI NTSTATUS NTAPI
 KsSetMajorFunctionHandler(
@@ -622,18 +967,32 @@ KsSetMajorFunctionHandler(
 
     switch ( MajorFunction )
     {
-        case IRP_MJ_CREATE :
-        case IRP_MJ_CLOSE :
-        case IRP_MJ_DEVICE_CONTROL :
-        case IRP_MJ_READ :
-        case IRP_MJ_WRITE :
+        case IRP_MJ_CREATE:
+            DriverObject->MajorFunction[MajorFunction] = KsCreate;
+            break;
+        case IRP_MJ_CLOSE:
+            DriverObject->MajorFunction[MajorFunction] = KsClose;
+            break;
+        case IRP_MJ_DEVICE_CONTROL:
+            DriverObject->MajorFunction[MajorFunction] = KsDeviceControl;
+            break;
+        case IRP_MJ_READ:
+            DriverObject->MajorFunction[MajorFunction] = KsRead;
+            break;
+        case IRP_MJ_WRITE:
+            DriverObject->MajorFunction[MajorFunction] = KsWrite;
+            break;
         case IRP_MJ_FLUSH_BUFFERS :
-        case IRP_MJ_QUERY_SECURITY :
-        case IRP_MJ_SET_SECURITY :
-            DriverObject->MajorFunction[MajorFunction] = KsInternalIrpDispatcher;
+            DriverObject->MajorFunction[MajorFunction] = KsFlushBuffers;
+            break;
+        case IRP_MJ_QUERY_SECURITY:
+            DriverObject->MajorFunction[MajorFunction] = KsQuerySecurity;
+            break;
+        case IRP_MJ_SET_SECURITY:
+            DriverObject->MajorFunction[MajorFunction] = KsSetSecurity;
             break;
 
-        default :
+        default:
             return STATUS_INVALID_PARAMETER;    /* is this right? */
     };
 
@@ -641,9 +1000,64 @@ KsSetMajorFunctionHandler(
 }
 
 /*
-    @unimplemented
+    @implemented
 */
-KSDDKAPI NTSTATUS NTAPI
+KSDDKAPI
+NTSTATUS
+NTAPI
+KsDispatchIrp(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp)
+{
+    PIO_STACK_LOCATION IoStack;
+
+    /* Calls a dispatch routine corresponding to the function code of the IRP */
+    /*
+        First we need to get the dispatch table. An opaque header is pointed to by
+        FsContext. The first element points to this table. This table is the key
+        to dispatching the IRP correctly.
+    */
+
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+    DPRINT1("KsDispatchIrp %x\n", IoStack->MajorFunction);
+
+    switch (IoStack->MajorFunction)
+    {
+        case IRP_MJ_CREATE:
+            return KsCreate(DeviceObject, Irp);
+        case IRP_MJ_CLOSE:
+            return KsClose(DeviceObject, Irp);
+            break;
+        case IRP_MJ_DEVICE_CONTROL:
+            return KsDeviceControl(DeviceObject, Irp);
+            break;
+        case IRP_MJ_READ:
+            return KsRead(DeviceObject, Irp);
+            break;
+        case IRP_MJ_WRITE:
+            return KsWrite(DeviceObject, Irp);
+            break;
+        case IRP_MJ_FLUSH_BUFFERS:
+            return KsFlushBuffers(DeviceObject, Irp);
+            break;
+        case IRP_MJ_QUERY_SECURITY:
+            return KsQuerySecurity(DeviceObject, Irp);
+            break;
+        case IRP_MJ_SET_SECURITY:
+            return KsSetSecurity(DeviceObject, Irp);
+            break;
+        default:
+            return STATUS_INVALID_PARAMETER;    /* is this right? */
+    };
+}
+
+
+/*
+    @implemented
+*/
+KSDDKAPI
+NTSTATUS
+NTAPI
 KsStreamIo(
     IN  PFILE_OBJECT FileObject,
     IN  PKEVENT Event OPTIONAL,
@@ -657,8 +1071,52 @@ KsStreamIo(
     IN  ULONG Flags,
     IN  KPROCESSOR_MODE RequestorMode)
 {
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
+    PIRP Irp;
+    PIO_STACK_LOCATION IoStack;
+    PDEVICE_OBJECT DeviceObject;
+    ULONG Code;
+    NTSTATUS Status;
+    LARGE_INTEGER Offset;
+
+    if (Flags == KSSTREAM_READ)
+        Code = IRP_MJ_READ;
+    else if (Flags == KSSTREAM_WRITE)
+        Code = IRP_MJ_WRITE;
+    else
+        return STATUS_INVALID_PARAMETER;
+
+    DeviceObject = IoGetRelatedDeviceObject(FileObject);
+    if (!DeviceObject)
+        return STATUS_INVALID_PARAMETER;
+
+    if (Event)
+    {
+        KeResetEvent(Event);
+    }
+
+    Offset.QuadPart = 0LL;
+    Irp = IoBuildSynchronousFsdRequest(Code, DeviceObject, (PVOID)StreamHeaders, Length, &Offset, Event, IoStatusBlock);
+    if (!Irp)
+    {
+        return STATUS_UNSUCCESSFUL;
+    }
+
+
+    if (CompletionRoutine)
+    {
+        IoSetCompletionRoutine(Irp,
+                               CompletionRoutine,
+                               CompletionContext,
+                               (CompletionInvocationFlags & KsInvokeOnSuccess),
+                               (CompletionInvocationFlags & KsInvokeOnError),
+                               (CompletionInvocationFlags & KsInvokeOnCancel));
+    }
+
+    IoStack = IoGetNextIrpStackLocation(Irp);
+    IoStack->FileObject = FileObject;
+
+    Status = IoCallDriver(DeviceObject, Irp);
+    return Status;
 }
 
 /*
@@ -678,3 +1136,19 @@ KsWriteFile(
     UNIMPLEMENTED;
     return STATUS_UNSUCCESSFUL;
 }
+
+/*
+    @unimplemented
+*/
+KSDDKAPI NTSTATUS NTAPI
+KsDefaultForwardIrp(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp)
+{
+    UNIMPLEMENTED;
+    Irp->IoStatus.Information = 0;
+    Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return STATUS_UNSUCCESSFUL;
+}
+

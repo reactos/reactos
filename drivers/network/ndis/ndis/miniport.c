@@ -134,6 +134,55 @@ MiniDisplayPacket2(
 #endif /* DBG */
 }
 
+PNDIS_MINIPORT_WORK_ITEM
+MiniGetFirstWorkItem(
+    PLOGICAL_ADAPTER Adapter,
+    NDIS_WORK_ITEM_TYPE Type)
+{
+    PNDIS_MINIPORT_WORK_ITEM CurrentEntry = Adapter->WorkQueueHead;
+
+    while (CurrentEntry)
+    {
+      if (CurrentEntry->WorkItemType == Type)
+          return CurrentEntry;
+
+      CurrentEntry = (PNDIS_MINIPORT_WORK_ITEM)CurrentEntry->Link.Next;
+    }
+
+    return NULL;
+}
+
+BOOLEAN
+MiniIsBusy(
+    PLOGICAL_ADAPTER Adapter,
+    NDIS_WORK_ITEM_TYPE Type)
+{
+    BOOLEAN Busy = FALSE;
+    KIRQL OldIrql;
+
+    KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &OldIrql);
+
+    if (Type == NdisWorkItemRequest &&
+        (Adapter->NdisMiniportBlock.PendingRequest || MiniGetFirstWorkItem(Adapter, NdisWorkItemRequest)))
+    {
+       Busy = TRUE;
+    }
+    else if (Type == NdisWorkItemSend &&
+             (Adapter->NdisMiniportBlock.FirstPendingPacket || MiniGetFirstWorkItem(Adapter, NdisWorkItemSend)))
+    {
+       Busy = TRUE;
+    }
+    else if (Type == NdisWorkItemResetRequested &&
+             (Adapter->NdisMiniportBlock.ResetStatus == NDIS_STATUS_PENDING || MiniGetFirstWorkItem(Adapter, NdisWorkItemResetRequested)))
+    {
+       Busy = TRUE;
+    }
+
+    KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
+
+    return Busy;
+}
+
 
 VOID
 MiniIndicateData(
@@ -182,28 +231,6 @@ MiniIndicateData(
           AdapterBinding = CONTAINING_RECORD(CurrentEntry, ADAPTER_BINDING, AdapterListEntry);
 	  NDIS_DbgPrint(DEBUG_MINIPORT, ("AdapterBinding = %x\n", AdapterBinding));
 
-          KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
-
-#ifdef DBG
-          if(!AdapterBinding)
-            {
-              NDIS_DbgPrint(MIN_TRACE, ("AdapterBinding was null\n"));
-              break;
-            }
-
-          if(!AdapterBinding->ProtocolBinding)
-            {
-              NDIS_DbgPrint(MIN_TRACE, ("AdapterBinding->ProtocolBinding was null\n"));
-              break;
-            }
-
-          if(!AdapterBinding->ProtocolBinding->Chars.ReceiveHandler)
-            {
-              NDIS_DbgPrint(MIN_TRACE, ("AdapterBinding->ProtocolBinding->Chars.ReceiveHandler was null\n"));
-              break;
-            }
-#endif
-
 	  NDIS_DbgPrint
 	      (MID_TRACE,
 	       ("XXX (%x) %x %x %x %x %x %x %x XXX\n",
@@ -226,8 +253,6 @@ MiniIndicateData(
               LookaheadBufferSize,
               PacketSize);
 
-          KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &OldIrql);
-
           CurrentEntry = CurrentEntry->Flink;
         }
     }
@@ -239,60 +264,46 @@ MiniIndicateData(
 
 VOID NTAPI
 MiniIndicateReceivePacket(
-    IN  NDIS_HANDLE    Miniport,
+    IN  NDIS_HANDLE    MiniportAdapterHandle,
     IN  PPNDIS_PACKET  PacketArray,
     IN  UINT           NumberOfPackets)
 /*
  * FUNCTION: receives miniport packet array indications
  * ARGUMENTS:
- *     Miniport: Miniport handle for the adapter
+ *     MiniportAdapterHandle: Miniport handle for the adapter
  *     PacketArray: pointer to a list of packet pointers to indicate
  *     NumberOfPackets: number of packets to indicate
- * NOTES:
- *     - This currently is a big temporary hack.  In the future this should
- *       call ProtocolReceivePacket() on each bound protocol if it exists.
- *       For now it just mimics NdisMEthIndicateReceive.
+ *
  */
 {
+  PLOGICAL_ADAPTER Adapter = MiniportAdapterHandle;
+  PLIST_ENTRY CurrentEntry;
+  PADAPTER_BINDING AdapterBinding;
+  KIRQL OldIrql;
   UINT i;
 
-  for(i = 0; i < NumberOfPackets; i++)
-    {
-      PCHAR PacketBuffer = 0;
-      UINT PacketLength = 0;
-      PNDIS_BUFFER NdisBuffer = 0;
+  KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &OldIrql);
 
-#define PACKET_TAG (('k' << 24) + ('P' << 16) + ('D' << 8) + 'N')
+  CurrentEntry = Adapter->ProtocolListHead.Flink;
 
-      NdisAllocateMemoryWithTag((PVOID)&PacketBuffer, 1518, PACKET_TAG);
-      if(!PacketBuffer)
-        {
-          NDIS_DbgPrint(MIN_TRACE, ("insufficient resources\n"));
-          return;
-        }
+  while (CurrentEntry != &Adapter->ProtocolListHead)
+  {
+      AdapterBinding = CONTAINING_RECORD(CurrentEntry, ADAPTER_BINDING, AdapterListEntry);
 
-      NdisQueryPacket(PacketArray[i], NULL, NULL, &NdisBuffer, NULL);
+      if (AdapterBinding->ProtocolBinding->Chars.ReceivePacketHandler)
+      {
+          for (i = 0; i < NumberOfPackets; i++)
+          {
+              (*AdapterBinding->ProtocolBinding->Chars.ReceivePacketHandler)(
+               AdapterBinding->NdisOpenBlock.ProtocolBindingContext,
+               PacketArray[i]);
+          }
+      }
 
-      while(NdisBuffer)
-        {
-          PNDIS_BUFFER CurrentBuffer;
-          PVOID BufferVa;
-          UINT BufferLen;
+      CurrentEntry = CurrentEntry->Flink;
+  }
 
-          NdisQueryBuffer(NdisBuffer, &BufferVa, &BufferLen);
-          memcpy(PacketBuffer + PacketLength, BufferVa, BufferLen);
-          PacketLength += BufferLen;
-
-          CurrentBuffer = NdisBuffer;
-          NdisGetNextBuffer(CurrentBuffer, &NdisBuffer);
-        }
-
-      NDIS_DbgPrint(MID_TRACE, ("indicating a %d-byte packet\n", PacketLength));
-
-      MiniIndicateData(Miniport, NULL, PacketBuffer, 14, PacketBuffer+14, PacketLength-14, PacketLength-14);
-
-      NdisFreeMemory(PacketBuffer, 0, 0);
-    }
+  KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
 }
 
 
@@ -302,20 +313,53 @@ MiniResetComplete(
     IN  NDIS_STATUS Status,
     IN  BOOLEAN     AddressingReset)
 {
-    UNIMPLEMENTED
+    PLOGICAL_ADAPTER Adapter = MiniportAdapterHandle;
+    PLIST_ENTRY CurrentEntry;
+    PADAPTER_BINDING AdapterBinding;
+    KIRQL OldIrql;
+
+    NdisMIndicateStatus(Adapter, NDIS_STATUS_RESET_END, NULL, 0);
+    NdisMIndicateStatusComplete(Adapter);
+
+    KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &OldIrql);
+
+    Adapter->NdisMiniportBlock.ResetStatus = Status;
+
+    CurrentEntry = Adapter->ProtocolListHead.Flink;
+
+    while (CurrentEntry != &Adapter->ProtocolListHead)
+    {
+        AdapterBinding = CONTAINING_RECORD(CurrentEntry, ADAPTER_BINDING, AdapterListEntry);
+
+        (*AdapterBinding->ProtocolBinding->Chars.ResetCompleteHandler)(
+               AdapterBinding->NdisOpenBlock.ProtocolBindingContext,
+               Status);
+
+        CurrentEntry = CurrentEntry->Flink;
+    }
+
+    KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
 }
 
 
 
 VOID NTAPI
 MiniRequestComplete(
-    IN PNDIS_MINIPORT_BLOCK Adapter,
+    IN PNDIS_HANDLE MiniportAdapterHandle,
     IN PNDIS_REQUEST Request,
     IN NDIS_STATUS Status)
 {
+    PLOGICAL_ADAPTER Adapter = (PLOGICAL_ADAPTER)MiniportAdapterHandle;
     PNDIS_REQUEST_MAC_BLOCK MacBlock = (PNDIS_REQUEST_MAC_BLOCK)Request->MacReserved;
+    KIRQL OldIrql;
 
     NDIS_DbgPrint(DEBUG_MINIPORT, ("Called.\n"));
+
+    KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+
+    KeAcquireSpinLockAtDpcLevel(&Adapter->NdisMiniportBlock.Lock);
+    Adapter->NdisMiniportBlock.PendingRequest = NULL;
+    KeReleaseSpinLockFromDpcLevel(&Adapter->NdisMiniportBlock.Lock);
 
     if( MacBlock->Binding->RequestCompleteHandler ) {
         (*MacBlock->Binding->RequestCompleteHandler)(
@@ -323,6 +367,7 @@ MiniRequestComplete(
             Request,
             Status);
     }
+    KeLowerIrql(OldIrql);
 }
 
 VOID NTAPI
@@ -340,15 +385,18 @@ MiniSendComplete(
  */
 {
     PADAPTER_BINDING AdapterBinding;
+    KIRQL OldIrql;
 
     NDIS_DbgPrint(DEBUG_MINIPORT, ("Called.\n"));
 
     AdapterBinding = (PADAPTER_BINDING)Packet->Reserved[0];
 
+    KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
     (*AdapterBinding->ProtocolBinding->Chars.SendCompleteHandler)(
         AdapterBinding->NdisOpenBlock.ProtocolBindingContext,
         Packet,
         Status);
+    KeLowerIrql(OldIrql);
 }
 
 
@@ -370,15 +418,18 @@ MiniTransferDataComplete(
     IN  UINT            BytesTransferred)
 {
     PADAPTER_BINDING AdapterBinding;
+    KIRQL OldIrql;
 
     NDIS_DbgPrint(DEBUG_MINIPORT, ("Called.\n"));
 
     AdapterBinding = (PADAPTER_BINDING)Packet->Reserved[0];
 
+    KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
     (*AdapterBinding->ProtocolBinding->Chars.SendCompleteHandler)(
         AdapterBinding->NdisOpenBlock.ProtocolBindingContext,
         Packet,
         Status);
+    KeLowerIrql(OldIrql);
 }
 
 
@@ -548,10 +599,12 @@ MiniQueryInformation(
 {
   NDIS_STATUS NdisStatus;
   ULONG BytesNeeded;
+  KIRQL OldIrql;
 
   NDIS_DbgPrint(DEBUG_MINIPORT, ("Called.\n"));
 
   /* call the miniport's queryinfo handler */
+  KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
   NdisStatus = (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.QueryInformationHandler)(
       Adapter->NdisMiniportBlock.MiniportAdapterContext,
       Oid,
@@ -559,64 +612,170 @@ MiniQueryInformation(
       Size,
       BytesWritten,
       &BytesNeeded);
+  KeLowerIrql(OldIrql);
 
   /* FIXME: Wait in pending case! */
 
   return NdisStatus;
 }
 
-
+BOOLEAN
+MiniCheckForHang( PLOGICAL_ADAPTER Adapter )
+/*
+ * FUNCTION: Checks to see if the miniport is hung
+ * ARGUMENTS:
+ *     Adapter = Pointer to the logical adapter object
+ * RETURNS:
+ *     TRUE if the miniport is hung
+ *     FALSE if the miniport is not hung
+ */
+{
+   BOOLEAN Ret = FALSE;
+   KIRQL OldIrql;
+
+   KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+   if (Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.CheckForHangHandler)
+       Ret = (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.CheckForHangHandler)(
+         Adapter->NdisMiniportBlock.MiniportAdapterContext);
+   KeLowerIrql(OldIrql);
+
+   return Ret;
+}
+
 NDIS_STATUS
+MiniReset(
+    PLOGICAL_ADAPTER Adapter,
+    PBOOLEAN AddressingReset)
+/*
+ * FUNCTION: Resets the miniport
+ * ARGUMENTS:
+ *     Adapter = Pointer to the logical adapter object
+ *     AddressingReset = Set to TRUE if we need to call MiniportSetInformation later
+ * RETURNS:
+ *     Status of the operation
+ */
+{
+   NDIS_STATUS Status;
+   KIRQL OldIrql;
+
+   if (MiniIsBusy(Adapter, NdisWorkItemResetRequested)) {
+       MiniQueueWorkItem(Adapter, NdisWorkItemResetRequested, NULL, FALSE);
+       return NDIS_STATUS_PENDING;
+   }
+
+   NdisMIndicateStatus(Adapter, NDIS_STATUS_RESET_START, NULL, 0);
+   NdisMIndicateStatusComplete(Adapter);
+
+   KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+   Status = (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.ResetHandler)(
+            Adapter->NdisMiniportBlock.MiniportAdapterContext,
+            AddressingReset);
+
+   KeAcquireSpinLockAtDpcLevel(&Adapter->NdisMiniportBlock.Lock);
+   Adapter->NdisMiniportBlock.ResetStatus = Status;
+   KeReleaseSpinLockFromDpcLevel(&Adapter->NdisMiniportBlock.Lock);
+
+   KeLowerIrql(OldIrql);
+
+   if (Status != NDIS_STATUS_PENDING) {
+       NdisMIndicateStatus(Adapter, NDIS_STATUS_RESET_END, NULL, 0);
+       NdisMIndicateStatusComplete(Adapter);
+   }
+
+   return Status;
+}
+
+VOID NTAPI
+MiniportHangDpc(
+        PKDPC Dpc,
+        PVOID DeferredContext,
+        PVOID SystemArgument1,
+        PVOID SystemArgument2)
+{
+  PLOGICAL_ADAPTER Adapter = DeferredContext;
+  BOOLEAN AddressingReset = FALSE;
+
+
+  if (MiniCheckForHang(Adapter)) {
+      NDIS_DbgPrint(MIN_TRACE, ("Miniport detected adapter hang\n"));
+      MiniReset(Adapter, &AddressingReset);
+  }
+
+  /* FIXME: We should call MiniportSetInformation if AddressingReset is TRUE */
+}
+
+
+VOID
 FASTCALL
 MiniQueueWorkItem(
     PLOGICAL_ADAPTER     Adapter,
     NDIS_WORK_ITEM_TYPE  WorkItemType,
-    PVOID                WorkItemContext)
+    PVOID                WorkItemContext,
+    BOOLEAN              Top)
 /*
  * FUNCTION: Queues a work item for execution at a later time
  * ARGUMENTS:
  *     Adapter         = Pointer to the logical adapter object to queue work item on
  *     WorkItemType    = Type of work item to queue
  *     WorkItemContext = Pointer to context information for work item
- * NOTES:
- *     Adapter lock must be held when called
  * RETURNS:
  *     Status of operation
  */
 {
-    PNDIS_MINIPORT_WORK_ITEM Item;
+    PNDIS_MINIPORT_WORK_ITEM MiniportWorkItem;
+    PIO_WORKITEM IoWorkItem;
+    KIRQL OldIrql;
 
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
     ASSERT(Adapter);
-    ASSERT(KeGetCurrentIrql() >= DISPATCH_LEVEL);
 
-    Item = ExAllocatePool(NonPagedPool, sizeof(NDIS_MINIPORT_WORK_ITEM));
-    if (Item == NULL)
+    KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &OldIrql);
+    if (Top)
     {
-        NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
-        return NDIS_STATUS_RESOURCES;
-    }
-
-    Item->WorkItemType    = WorkItemType;
-    Item->WorkItemContext = WorkItemContext;
-
-    /* safe due to adapter lock held */
-    Item->Link.Next = NULL;
-    if (!Adapter->WorkQueueHead)
-    {
-        Adapter->WorkQueueHead = Item;
-        Adapter->WorkQueueTail = Item;
+        if (WorkItemType == NdisWorkItemSend)
+        {
+            NDIS_DbgPrint(MIN_TRACE, ("Requeuing failed packet (%x).\n", WorkItemContext));
+            Adapter->NdisMiniportBlock.FirstPendingPacket = WorkItemContext;
+        }
+        else
+        {
+            //This should never happen
+            ASSERT(FALSE);
+        }
     }
     else
     {
-        Adapter->WorkQueueTail->Link.Next = (PSINGLE_LIST_ENTRY)Item;
-        Adapter->WorkQueueTail = Item;
+        MiniportWorkItem = ExAllocatePool(NonPagedPool, sizeof(NDIS_MINIPORT_WORK_ITEM));
+        if (!MiniportWorkItem)
+        {
+            KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
+            NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
+            return;
+        }
+
+        MiniportWorkItem->WorkItemType    = WorkItemType;
+        MiniportWorkItem->WorkItemContext = WorkItemContext;
+
+        /* safe due to adapter lock held */
+        MiniportWorkItem->Link.Next = NULL;
+        if (!Adapter->WorkQueueHead)
+        {
+            Adapter->WorkQueueHead = MiniportWorkItem;
+            Adapter->WorkQueueTail = MiniportWorkItem;
+        }
+        else
+        {
+            Adapter->WorkQueueTail->Link.Next = (PSINGLE_LIST_ENTRY)MiniportWorkItem;
+            Adapter->WorkQueueTail = MiniportWorkItem;
+        }
     }
 
-    KeInsertQueueDpc(&Adapter->NdisMiniportBlock.DeferredDpc, NULL, NULL);
+    IoWorkItem = IoAllocateWorkItem(Adapter->NdisMiniportBlock.DeviceObject);
+    if (IoWorkItem)
+        IoQueueWorkItem(IoWorkItem, MiniportWorker, CriticalWorkQueue, IoWorkItem);
 
-    return NDIS_STATUS_SUCCESS;
+    KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
 }
 
 
@@ -639,35 +798,47 @@ MiniDequeueWorkItem(
  *     Status of operation
  */
 {
-    PNDIS_MINIPORT_WORK_ITEM Item;
+    PNDIS_MINIPORT_WORK_ITEM MiniportWorkItem;
+    PNDIS_PACKET Packet;
 
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
-    Item = Adapter->WorkQueueHead;
+    MiniportWorkItem = Adapter->WorkQueueHead;
 
-    if (Item)
+    if ((Packet = Adapter->NdisMiniportBlock.FirstPendingPacket))
     {
-        /* safe due to adapter lock held */
-        Adapter->WorkQueueHead = (PNDIS_MINIPORT_WORK_ITEM)Item->Link.Next;
+        Adapter->NdisMiniportBlock.FirstPendingPacket = NULL;
 
-        if (Item == Adapter->WorkQueueTail)
-            Adapter->WorkQueueTail = NULL;
-
-        *WorkItemType    = Item->WorkItemType;
-        *WorkItemContext = Item->WorkItemContext;
-
-        ExFreePool(Item);
+        *WorkItemType = NdisWorkItemSend;
+        *WorkItemContext = Packet;
 
         return NDIS_STATUS_SUCCESS;
     }
+    else if (MiniportWorkItem)
+    {
+        /* safe due to adapter lock held */
+        Adapter->WorkQueueHead = (PNDIS_MINIPORT_WORK_ITEM)MiniportWorkItem->Link.Next;
 
-    return NDIS_STATUS_FAILURE;
+        if (MiniportWorkItem == Adapter->WorkQueueTail)
+            Adapter->WorkQueueTail = NULL;
+
+        *WorkItemType    = MiniportWorkItem->WorkItemType;
+        *WorkItemContext = MiniportWorkItem->WorkItemContext;
+
+        ExFreePool(MiniportWorkItem);
+
+        return NDIS_STATUS_SUCCESS;
+    }
+    else
+    {
+        return NDIS_STATUS_FAILURE;
+    }
 }
 
 
 NDIS_STATUS
 MiniDoRequest(
-    PNDIS_MINIPORT_BLOCK Adapter,
+    PLOGICAL_ADAPTER Adapter,
     PNDIS_REQUEST NdisRequest)
 /*
  * FUNCTION: Sends a request to a miniport
@@ -678,15 +849,21 @@ MiniDoRequest(
  *     Status of operation
  */
 {
+    NDIS_STATUS Status;
+    KIRQL OldIrql;
     NDIS_DbgPrint(DEBUG_MINIPORT, ("Called.\n"));
 
-    Adapter->MediaRequest = NdisRequest;
+    KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+
+    KeAcquireSpinLockAtDpcLevel(&Adapter->NdisMiniportBlock.Lock);
+    Adapter->NdisMiniportBlock.PendingRequest = NdisRequest;
+    KeReleaseSpinLockFromDpcLevel(&Adapter->NdisMiniportBlock.Lock);
 
     switch (NdisRequest->RequestType)
     {
     case NdisRequestQueryInformation:
-        return (*Adapter->DriverHandle->MiniportCharacteristics.QueryInformationHandler)(
-            Adapter->MiniportAdapterContext,
+        Status = (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.QueryInformationHandler)(
+            Adapter->NdisMiniportBlock.MiniportAdapterContext,
             NdisRequest->DATA.QUERY_INFORMATION.Oid,
             NdisRequest->DATA.QUERY_INFORMATION.InformationBuffer,
             NdisRequest->DATA.QUERY_INFORMATION.InformationBufferLength,
@@ -695,8 +872,8 @@ MiniDoRequest(
         break;
 
     case NdisRequestSetInformation:
-        return (*Adapter->DriverHandle->MiniportCharacteristics.SetInformationHandler)(
-            Adapter->MiniportAdapterContext,
+        Status = (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.SetInformationHandler)(
+            Adapter->NdisMiniportBlock.MiniportAdapterContext,
             NdisRequest->DATA.SET_INFORMATION.Oid,
             NdisRequest->DATA.SET_INFORMATION.InformationBuffer,
             NdisRequest->DATA.SET_INFORMATION.InformationBufferLength,
@@ -705,8 +882,38 @@ MiniDoRequest(
         break;
 
     default:
-        return NDIS_STATUS_FAILURE;
+        Status = NDIS_STATUS_FAILURE;
     }
+
+    if (Status != NDIS_STATUS_PENDING) {
+        KeAcquireSpinLockAtDpcLevel(&Adapter->NdisMiniportBlock.Lock);
+        Adapter->NdisMiniportBlock.PendingRequest = NULL;
+        KeReleaseSpinLockFromDpcLevel(&Adapter->NdisMiniportBlock.Lock);
+    }
+
+    KeLowerIrql(OldIrql);
+    return Status;
+}
+
+
+/*
+ * @implemented
+ */
+#undef NdisMSetInformationComplete
+VOID
+EXPORT
+NdisMSetInformationComplete(
+    IN  NDIS_HANDLE MiniportAdapterHandle,
+    IN  NDIS_STATUS Status)
+{
+  PLOGICAL_ADAPTER Adapter =
+	(PLOGICAL_ADAPTER)MiniportAdapterHandle;
+  KIRQL OldIrql;
+  ASSERT(Adapter);
+  KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+  if (Adapter->NdisMiniportBlock.SetCompleteHandler)
+     (Adapter->NdisMiniportBlock.SetCompleteHandler)(MiniportAdapterHandle, Status);
+  KeLowerIrql(OldIrql);
 }
 
 
@@ -720,38 +927,36 @@ NdisMQueryInformationComplete(
     IN  NDIS_HANDLE MiniportAdapterHandle,
     IN  NDIS_STATUS Status)
 {
-    PNDIS_MINIPORT_BLOCK MiniportBlock =
-	(PNDIS_MINIPORT_BLOCK)MiniportAdapterHandle;
-    ASSERT(MiniportBlock);
-    if( MiniportBlock->QueryCompleteHandler )
-	(MiniportBlock->QueryCompleteHandler)(MiniportAdapterHandle, Status);
+    PLOGICAL_ADAPTER Adapter =
+	(PLOGICAL_ADAPTER)MiniportAdapterHandle;
+    KIRQL OldIrql;
+    ASSERT(Adapter);
+    KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+    if( Adapter->NdisMiniportBlock.QueryCompleteHandler )
+	(Adapter->NdisMiniportBlock.QueryCompleteHandler)(MiniportAdapterHandle, Status);
+    KeLowerIrql(OldIrql);
 }
 
-
-VOID NTAPI MiniportDpc(
-    IN PKDPC Dpc,
-    IN PVOID DeferredContext,
-    IN PVOID SystemArgument1,
-    IN PVOID SystemArgument2)
-/*
- * FUNCTION: Deferred routine to handle serialization
- * ARGUMENTS:
- *     Dpc             = Pointer to DPC object
- *     DeferredContext = Pointer to context information (LOGICAL_ADAPTER)
- *     SystemArgument1 = Unused
- *     SystemArgument2 = Unused
- */
+VOID
+NTAPI
+MiniportWorker(IN PDEVICE_OBJECT DeviceObject, IN PVOID Context)
 {
+  PLOGICAL_ADAPTER Adapter = DeviceObject->DeviceExtension;
+  KIRQL OldIrql, RaiseOldIrql;
   NDIS_STATUS NdisStatus;
   PVOID WorkItemContext;
   NDIS_WORK_ITEM_TYPE WorkItemType;
-  PLOGICAL_ADAPTER Adapter = GET_LOGICAL_ADAPTER(DeferredContext);
+  BOOLEAN AddressingReset;
 
-  NDIS_DbgPrint(DEBUG_MINIPORT, ("Called.\n"));
+  IoFreeWorkItem((PIO_WORKITEM)Context);
+
+  KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &OldIrql);
 
   NdisStatus =
       MiniDequeueWorkItem
       (Adapter, &WorkItemType, &WorkItemContext);
+
+  KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
 
   if (NdisStatus == NDIS_STATUS_SUCCESS)
     {
@@ -761,37 +966,62 @@ VOID NTAPI MiniportDpc(
             /*
              * called by ProSend when protocols want to send packets to the miniport
              */
-#ifdef DBG
-            MiniDisplayPacket((PNDIS_PACKET)WorkItemContext);
-#endif
+
             if(Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.SendPacketsHandler)
               {
-                NDIS_DbgPrint(MAX_TRACE, ("Calling miniport's SendPackets handler\n"));
+                if(Adapter->NdisMiniportBlock.Flags & NDIS_ATTRIBUTE_DESERIALIZE)
+                {
+                    NDIS_DbgPrint(MAX_TRACE, ("Calling miniport's SendPackets handler\n"));
+                    (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.SendPacketsHandler)(
+                     Adapter->NdisMiniportBlock.MiniportAdapterContext, (PPNDIS_PACKET)&WorkItemContext, 1);
+                    NdisStatus = NDIS_GET_PACKET_STATUS((PNDIS_PACKET)WorkItemContext);
+                }
+                else
+                {
+                    /* SendPackets is called at DISPATCH_LEVEL for all serialized miniports */
+                    KeRaiseIrql(DISPATCH_LEVEL, &RaiseOldIrql);
+                    {
+                      NDIS_DbgPrint(MAX_TRACE, ("Calling miniport's SendPackets handler\n"));
+                      (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.SendPacketsHandler)(
+                       Adapter->NdisMiniportBlock.MiniportAdapterContext, (PPNDIS_PACKET)&WorkItemContext, 1);
+                    }
+                    KeLowerIrql(RaiseOldIrql);
 
-                /*
-                 * XXX assumes single-packet - prolly OK since we'll call something
-                 * different on multi-packet sends
-                 */
-                (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.SendPacketsHandler)(
-                    Adapter->NdisMiniportBlock.MiniportAdapterContext, (PPNDIS_PACKET)&WorkItemContext, 1);
-		NdisStatus =
-		    NDIS_GET_PACKET_STATUS((PNDIS_PACKET)WorkItemContext);
-
-                NDIS_DbgPrint(MAX_TRACE, ("back from miniport's SendPackets handler\n"));
+                    NdisStatus = NDIS_GET_PACKET_STATUS((PNDIS_PACKET)WorkItemContext);
+                    if( NdisStatus == NDIS_STATUS_RESOURCES ) {
+                        MiniQueueWorkItem(Adapter, WorkItemType, WorkItemContext, TRUE);
+                        break;
+                    }
+                }
               }
             else
               {
-                NDIS_DbgPrint(MAX_TRACE, ("Calling miniport's Send handler\n"));
-
-                NdisStatus = (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.SendHandler)(
-                    Adapter->NdisMiniportBlock.MiniportAdapterContext, (PNDIS_PACKET)WorkItemContext, 0);
-
-                NDIS_DbgPrint(MAX_TRACE, ("back from miniport's Send handler\n"));
+                if(Adapter->NdisMiniportBlock.Flags & NDIS_ATTRIBUTE_DESERIALIZE)
+                {
+                  NDIS_DbgPrint(MAX_TRACE, ("Calling miniport's Send handler\n"));
+                  NdisStatus = (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.SendHandler)(
+                                Adapter->NdisMiniportBlock.MiniportAdapterContext, (PNDIS_PACKET)WorkItemContext, 0);
+                  NDIS_DbgPrint(MAX_TRACE, ("back from miniport's send handler\n"));
+                }
+                else
+                {
+                  /* Send is called at DISPATCH_LEVEL for all serialized miniports */
+                  KeRaiseIrql(DISPATCH_LEVEL, &RaiseOldIrql);
+                  NDIS_DbgPrint(MAX_TRACE, ("Calling miniport's Send handler\n"));
+                  NdisStatus = (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.SendHandler)(
+                                Adapter->NdisMiniportBlock.MiniportAdapterContext, (PNDIS_PACKET)WorkItemContext, 0);
+                  NDIS_DbgPrint(MAX_TRACE, ("back from miniport's send handler\n"));
+                  KeLowerIrql(RaiseOldIrql);
+                  if( NdisStatus == NDIS_STATUS_RESOURCES ) {
+                      MiniQueueWorkItem(Adapter, WorkItemType, WorkItemContext, TRUE);
+                      break;
+                  }
+                }
               }
+
 	    if( NdisStatus != NDIS_STATUS_PENDING ) {
 		NdisMSendComplete
 		    ( Adapter, (PNDIS_PACKET)WorkItemContext, NdisStatus );
-		Adapter->MiniportBusy = FALSE;
 	    }
             break;
 
@@ -801,13 +1031,34 @@ VOID NTAPI MiniportDpc(
              */
             /* XXX atm ProIndicatePacket sends a packet up via the loopback adapter only */
             NdisStatus = ProIndicatePacket(Adapter, (PNDIS_PACKET)WorkItemContext);
-            MiniSendComplete((NDIS_HANDLE)Adapter, (PNDIS_PACKET)WorkItemContext, NdisStatus);
+
+            if( NdisStatus != NDIS_STATUS_PENDING )
+                MiniSendComplete((NDIS_HANDLE)Adapter, (PNDIS_PACKET)WorkItemContext, NdisStatus);
             break;
 
           case NdisWorkItemReturnPackets:
             break;
 
           case NdisWorkItemResetRequested:
+            NdisMIndicateStatus(Adapter, NDIS_STATUS_RESET_START, NULL, 0);
+            NdisMIndicateStatusComplete(Adapter);
+
+            KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+            NdisStatus = (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.ResetHandler)(
+                          Adapter->NdisMiniportBlock.MiniportAdapterContext,
+                          &AddressingReset);
+
+            if (NdisStatus == NDIS_STATUS_PENDING)
+            {
+                KeAcquireSpinLockAtDpcLevel(&Adapter->NdisMiniportBlock.Lock);
+                Adapter->NdisMiniportBlock.ResetStatus = NDIS_STATUS_PENDING;
+                KeReleaseSpinLockFromDpcLevel(&Adapter->NdisMiniportBlock.Lock);
+            }
+
+            KeLowerIrql(OldIrql);
+
+            if (NdisStatus != NDIS_STATUS_PENDING)
+               MiniResetComplete(Adapter, NdisStatus, AddressingReset);
             break;
 
           case NdisWorkItemResetInProgress:
@@ -817,7 +1068,7 @@ VOID NTAPI MiniportDpc(
             break;
 
           case NdisWorkItemRequest:
-            NdisStatus = MiniDoRequest(&Adapter->NdisMiniportBlock, (PNDIS_REQUEST)WorkItemContext);
+            NdisStatus = MiniDoRequest(Adapter, (PNDIS_REQUEST)WorkItemContext);
 
             if (NdisStatus == NDIS_STATUS_PENDING)
               break;
@@ -826,16 +1077,17 @@ VOID NTAPI MiniportDpc(
               {
                 case NdisRequestQueryInformation:
 		  NdisMQueryInformationComplete((NDIS_HANDLE)Adapter, NdisStatus);
-                  MiniRequestComplete( &Adapter->NdisMiniportBlock, (PNDIS_REQUEST)WorkItemContext, NdisStatus );
+                  MiniRequestComplete( (NDIS_HANDLE)Adapter, (PNDIS_REQUEST)WorkItemContext, NdisStatus );
                   break;
 
                 case NdisRequestSetInformation:
                   NdisMSetInformationComplete((NDIS_HANDLE)Adapter, NdisStatus);
-                  MiniRequestComplete( &Adapter->NdisMiniportBlock, (PNDIS_REQUEST)WorkItemContext, NdisStatus );
+                  MiniRequestComplete( (NDIS_HANDLE)Adapter, (PNDIS_REQUEST)WorkItemContext, NdisStatus );
                   break;
 
                 default:
                   NDIS_DbgPrint(MIN_TRACE, ("Unknown NDIS request type.\n"));
+                  MiniRequestComplete( (NDIS_HANDLE)Adapter, (PNDIS_REQUEST)WorkItemContext, NdisStatus );
                   break;
               }
             break;
@@ -847,6 +1099,7 @@ VOID NTAPI MiniportDpc(
     }
 }
 
+
 
 VOID
 NTAPI
@@ -856,7 +1109,29 @@ MiniStatus(
     IN PVOID  StatusBuffer,
     IN UINT  StatusBufferSize)
 {
-    UNIMPLEMENTED
+    PLOGICAL_ADAPTER Adapter = MiniportHandle;
+    PLIST_ENTRY CurrentEntry;
+    PADAPTER_BINDING AdapterBinding;
+    KIRQL OldIrql;
+
+    KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &OldIrql);
+
+    CurrentEntry = Adapter->ProtocolListHead.Flink;
+
+    while (CurrentEntry != &Adapter->ProtocolListHead)
+    {
+       AdapterBinding = CONTAINING_RECORD(CurrentEntry, ADAPTER_BINDING, AdapterListEntry);
+
+       (*AdapterBinding->ProtocolBinding->Chars.StatusHandler)(
+           AdapterBinding->NdisOpenBlock.ProtocolBindingContext,
+           GeneralStatus,
+           StatusBuffer,
+           StatusBufferSize);
+
+       CurrentEntry = CurrentEntry->Flink;
+    }
+
+    KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
 }
 
 
@@ -865,7 +1140,26 @@ NTAPI
 MiniStatusComplete(
     IN NDIS_HANDLE  MiniportAdapterHandle)
 {
-    UNIMPLEMENTED
+    PLOGICAL_ADAPTER Adapter = MiniportAdapterHandle;
+    PLIST_ENTRY CurrentEntry;
+    PADAPTER_BINDING AdapterBinding;
+    KIRQL OldIrql;
+
+    KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &OldIrql);
+
+    CurrentEntry = Adapter->ProtocolListHead.Flink;
+
+    while (CurrentEntry != &Adapter->ProtocolListHead)
+    {
+       AdapterBinding = CONTAINING_RECORD(CurrentEntry, ADAPTER_BINDING, AdapterListEntry);
+
+       (*AdapterBinding->ProtocolBinding->Chars.StatusCompleteHandler)(
+           AdapterBinding->NdisOpenBlock.ProtocolBindingContext);
+
+       CurrentEntry = CurrentEntry->Flink;
+    }
+
+    KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
 }
 
 
@@ -913,8 +1207,10 @@ NdisMDeregisterAdapterShutdownHandler(
 
   NDIS_DbgPrint(DEBUG_MINIPORT, ("Called.\n"));
 
-  if(Adapter->BugcheckContext->ShutdownHandler)
+  if(Adapter->BugcheckContext->ShutdownHandler) {
     KeDeregisterBugCheckCallback(Adapter->BugcheckContext->CallbackRecord);
+    IoUnregisterShutdownNotification(Adapter->NdisMiniportBlock.DeviceObject);
+  }
 }
 
 
@@ -930,7 +1226,7 @@ NdisMFlushLog(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 #undef NdisMIndicateStatus
 VOID
@@ -941,11 +1237,11 @@ NdisMIndicateStatus(
     IN  PVOID       StatusBuffer,
     IN  UINT        StatusBufferSize)
 {
-    UNIMPLEMENTED
+    MiniStatus(MiniportAdapterHandle, GeneralStatus, StatusBuffer, StatusBufferSize);
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 #undef NdisMIndicateStatusComplete
 VOID
@@ -953,7 +1249,7 @@ EXPORT
 NdisMIndicateStatusComplete(
     IN  NDIS_HANDLE MiniportAdapterHandle)
 {
-    UNIMPLEMENTED
+    MiniStatusComplete(MiniportAdapterHandle);
 }
 
 
@@ -1079,16 +1375,12 @@ NdisMRegisterAdapterShutdownHandler(
  *     ShutdownHandler:  Function to call to handle the bugcheck
  * NOTES:
  *     - I'm not sure about ShutdownContext
- *     - FIXME - memory leak below
  */
 {
   PLOGICAL_ADAPTER            Adapter = (PLOGICAL_ADAPTER)MiniportHandle;
-  PMINIPORT_BUGCHECK_CONTEXT  BugcheckContext = Adapter->BugcheckContext;
+  PMINIPORT_BUGCHECK_CONTEXT  BugcheckContext;
 
   NDIS_DbgPrint(DEBUG_MINIPORT, ("Called.\n"));
-
-  if(BugcheckContext)
-    return;
 
   BugcheckContext = ExAllocatePool(NonPagedPool, sizeof(MINIPORT_BUGCHECK_CONTEXT));
   if(!BugcheckContext)
@@ -1100,11 +1392,20 @@ NdisMRegisterAdapterShutdownHandler(
   BugcheckContext->ShutdownHandler = ShutdownHandler;
   BugcheckContext->DriverContext = ShutdownContext;
 
-  /* not sure if this needs to be initialized or not... oh well, it's a leak. */
   BugcheckContext->CallbackRecord = ExAllocatePool(NonPagedPool, sizeof(KBUGCHECK_CALLBACK_RECORD));
+  if (!BugcheckContext->CallbackRecord) {
+      ExFreePool(BugcheckContext);
+      return;
+  }
+
+  Adapter->BugcheckContext = BugcheckContext;
+
+  KeInitializeCallbackRecord(BugcheckContext->CallbackRecord);
 
   KeRegisterBugCheckCallback(BugcheckContext->CallbackRecord, NdisIBugcheckCallback,
       BugcheckContext, sizeof(BugcheckContext), (PUCHAR)"Ndis Miniport");
+
+  IoRegisterShutdownNotification(Adapter->NdisMiniportBlock.DeviceObject);
 }
 
 
@@ -1181,16 +1482,18 @@ DoQueries(
       return NdisStatus;
     }
 
-  NDIS_DbgPrint(DEBUG_MINIPORT, ("CurLookaheadLength (0x%X).\n", Adapter->NdisMiniportBlock.CurrentLookahead));
+  NdisStatus = MiniQueryInformation(Adapter, OID_GEN_MAXIMUM_SEND_PACKETS, sizeof(ULONG),
+                                    &Adapter->NdisMiniportBlock.MaxSendPackets, &BytesWritten);
 
-  if (Adapter->NdisMiniportBlock.MaximumLookahead != 0)
+  if (NdisStatus != NDIS_STATUS_SUCCESS)
     {
-      Adapter->LookaheadLength = Adapter->NdisMiniportBlock.MaximumLookahead + Adapter->MediumHeaderSize;
-      Adapter->LookaheadBuffer = ExAllocatePool(NonPagedPool, Adapter->LookaheadLength);
+      NDIS_DbgPrint(MIN_TRACE, ("OID_GEN_MAXIMUM_SEND_PACKETS failed. NdisStatus (0x%X).\n", NdisStatus));
 
-      if (!Adapter->LookaheadBuffer)
-        return NDIS_STATUS_RESOURCES;
+      /* Set it to 1 if it fails because some drivers don't support this (?)*/
+      Adapter->NdisMiniportBlock.MaxSendPackets = 1;
     }
+
+  NDIS_DbgPrint(DEBUG_MINIPORT, ("CurLookaheadLength (0x%X).\n", Adapter->NdisMiniportBlock.CurrentLookahead));
 
   return STATUS_SUCCESS;
 }
@@ -1262,7 +1565,8 @@ NdisIPnPStartDevice(
   PNDIS_CONFIGURATION_PARAMETER ConfigParam;
   NDIS_HANDLE ConfigHandle;
   ULONG Size;
-/* FIXME - KIRQL OldIrql; */
+  LARGE_INTEGER Timeout;
+  /* FIXME - KIRQL OldIrql; */
 
   /*
    * Prepare wrapper context used by HW and configuration routines.
@@ -1281,6 +1585,7 @@ NdisIPnPStartDevice(
   if (!NT_SUCCESS(Status))
     {
       NDIS_DbgPrint(MIN_TRACE,("failed to open adapter-specific reg key\n"));
+      ExInterlockedRemoveEntryList( &Adapter->ListEntry, &AdapterListLock );
       return Status;
     }
 
@@ -1316,7 +1621,7 @@ NdisIPnPStartDevice(
 
   if (Stack->Parameters.StartDevice.AllocatedResourcesTranslated != NULL)
     {
-      ResourceCount = Stack->Parameters.StartDevice.AllocatedResources->List[0].
+      ResourceCount = Stack->Parameters.StartDevice.AllocatedResourcesTranslated->List[0].
                       PartialResourceList.Count;
       ResourceListSize =
         FIELD_OFFSET(CM_RESOURCE_LIST, List[0].PartialResourceList.
@@ -1421,13 +1726,18 @@ NdisIPnPStartDevice(
 
   ZwClose(WrapperContext.RegistryHandle);
 
-  if (NdisStatus != NDIS_STATUS_SUCCESS ||
-      SelectedMediumIndex >= MEDIA_ARRAY_SIZE)
+  if (NdisStatus != NDIS_STATUS_SUCCESS)
     {
       NDIS_DbgPrint(MIN_TRACE, ("MiniportInitialize() failed for an adapter.\n"));
       ExInterlockedRemoveEntryList( &Adapter->ListEntry, &AdapterListLock );
-      if (NdisStatus == NDIS_STATUS_SUCCESS) NdisStatus = NDIS_STATUS_FAILURE;
-      return (NTSTATUS)NdisStatus;
+      return NdisStatus;
+    }
+
+  if (SelectedMediumIndex >= MEDIA_ARRAY_SIZE)
+    {
+      NDIS_DbgPrint(MIN_TRACE, ("MiniportInitialize() failed for an adapter\n"));
+      ExInterlockedRemoveEntryList( &Adapter->ListEntry, &AdapterListLock );
+      return NDIS_STATUS_UNSUPPORTED_MEDIA;
     }
 
   Adapter->NdisMiniportBlock.MediaType = MediaArray[SelectedMediumIndex];
@@ -1460,21 +1770,23 @@ NdisIPnPStartDevice(
         return STATUS_UNSUCCESSFUL;
     }
 
-  if (!Success || NdisStatus != NDIS_STATUS_SUCCESS)
+  if (NdisStatus != NDIS_STATUS_SUCCESS)
     {
       NDIS_DbgPrint(MAX_TRACE, ("couldn't create filter (%x)\n", NdisStatus));
-      if (Adapter->LookaheadBuffer)
-        {
-          ExFreePool(Adapter->LookaheadBuffer);
-          Adapter->LookaheadBuffer = NULL;
-        }
-      ExInterlockedRemoveEntryList( &Adapter->ListEntry, &AdapterListLock );
-      if (NdisStatus == NDIS_STATUS_SUCCESS) NdisStatus = NDIS_STATUS_FAILURE;
-      return (NTSTATUS)NdisStatus;
+      return NdisStatus;
     }
+
+  /* Check for a hang every two seconds if it wasn't set in MiniportInitialize */
+  if (Adapter->NdisMiniportBlock.CheckForHangSeconds == 0)
+      Adapter->NdisMiniportBlock.CheckForHangSeconds = 2;
 
   Adapter->NdisMiniportBlock.OldPnPDeviceState = Adapter->NdisMiniportBlock.PnPDeviceState;
   Adapter->NdisMiniportBlock.PnPDeviceState = NdisPnPDeviceStarted;
+
+  Timeout.QuadPart = (LONGLONG)Adapter->NdisMiniportBlock.CheckForHangSeconds * -1000000;
+  KeSetTimerEx(&Adapter->NdisMiniportBlock.WakeUpDpcTimer.Timer, Timeout,
+               Adapter->NdisMiniportBlock.CheckForHangSeconds * 1000,
+               &Adapter->NdisMiniportBlock.WakeUpDpcTimer.Dpc);
 
   /* Put adapter in adapter list for this miniport */
   ExInterlockedInsertTailList(&Adapter->NdisMiniportBlock.DriverHandle->DeviceList, &Adapter->MiniportListEntry, &Adapter->NdisMiniportBlock.DriverHandle->Lock);
@@ -1498,25 +1810,17 @@ NdisIPnPStopDevice(
  */
 {
   PLOGICAL_ADAPTER Adapter = (PLOGICAL_ADAPTER)DeviceObject->DeviceExtension;
-  KIRQL OldIrql;
 
   /* Remove adapter from adapter list for this miniport */
-  KeAcquireSpinLock(&Adapter->NdisMiniportBlock.DriverHandle->Lock, &OldIrql);
-  RemoveEntryList(&Adapter->MiniportListEntry);
-  KeReleaseSpinLock(&Adapter->NdisMiniportBlock.DriverHandle->Lock, OldIrql);
+  ExInterlockedRemoveEntryList(&Adapter->MiniportListEntry, &Adapter->NdisMiniportBlock.DriverHandle->Lock);
 
   /* Remove adapter from global adapter list */
-  KeAcquireSpinLock(&AdapterListLock, &OldIrql);
-  RemoveEntryList(&Adapter->ListEntry);
-  KeReleaseSpinLock(&AdapterListLock, OldIrql);
+  ExInterlockedRemoveEntryList(&Adapter->ListEntry, &AdapterListLock);
+
+  KeCancelTimer(&Adapter->NdisMiniportBlock.WakeUpDpcTimer.Timer);
 
   (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.HaltHandler)(Adapter);
 
-  if (Adapter->LookaheadBuffer)
-    {
-      ExFreePool(Adapter->LookaheadBuffer);
-      Adapter->LookaheadBuffer = NULL;
-    }
   if (Adapter->NdisMiniportBlock.AllocatedResources)
     {
       ExFreePool(Adapter->NdisMiniportBlock.AllocatedResources);
@@ -1530,6 +1834,28 @@ NdisIPnPStopDevice(
 
   Adapter->NdisMiniportBlock.OldPnPDeviceState = Adapter->NdisMiniportBlock.PnPDeviceState;
   Adapter->NdisMiniportBlock.PnPDeviceState = NdisPnPDeviceStopped;
+
+  return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+NdisIShutdown(
+    IN PDEVICE_OBJECT DeviceObject,
+    PIRP Irp)
+{
+  PLOGICAL_ADAPTER Adapter = DeviceObject->DeviceExtension;
+  PMINIPORT_BUGCHECK_CONTEXT Context = Adapter->BugcheckContext;
+  ADAPTER_SHUTDOWN_HANDLER ShutdownHandler = Context->ShutdownHandler;
+
+  ASSERT(ShutdownHandler);
+
+  ShutdownHandler(Context->DriverContext);
+
+  Irp->IoStatus.Status = STATUS_SUCCESS;
+  Irp->IoStatus.Information = 0;
+
+  IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
   return STATUS_SUCCESS;
 }
@@ -1717,7 +2043,8 @@ NdisIAddDevice(
   Adapter->NdisMiniportBlock.OldPnPDeviceState = 0;
   Adapter->NdisMiniportBlock.PnPDeviceState = NdisPnPDeviceAdded;
 
-  KeInitializeDpc(&Adapter->NdisMiniportBlock.DeferredDpc, MiniportDpc, (PVOID)Adapter);
+  KeInitializeTimer(&Adapter->NdisMiniportBlock.WakeUpDpcTimer.Timer);
+  KeInitializeDpc(&Adapter->NdisMiniportBlock.WakeUpDpcTimer.Dpc, MiniportHangDpc, Adapter);
 
   DeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
 
@@ -1826,6 +2153,7 @@ NdisMRegisterMiniport(
   *MiniportPtr = Miniport;
 
   Miniport->DriverObject->MajorFunction[IRP_MJ_PNP] = NdisIDispatchPnp;
+  Miniport->DriverObject->MajorFunction[IRP_MJ_SHUTDOWN] = NdisIShutdown;
   Miniport->DriverObject->DriverExtension->AddDevice = NdisIAddDevice;
 
   return NDIS_STATUS_SUCCESS;
@@ -1902,20 +2230,6 @@ NdisMTransferDataComplete(
 /*
  * @implemented
  */
-#undef NdisMSetInformationComplete
-VOID
-EXPORT
-NdisMSetInformationComplete(
-    IN  NDIS_HANDLE MiniportAdapterHandle,
-    IN  NDIS_STATUS Status)
-{
-  (*((PNDIS_MINIPORT_BLOCK)(MiniportAdapterHandle))->SetCompleteHandler)(MiniportAdapterHandle, Status);
-}
-
-
-/*
- * @implemented
- */
 #undef NdisMSetAttributes
 VOID
 EXPORT
@@ -1962,8 +2276,6 @@ NdisMSetAttributesEx(
  *     AdapterType               = Specifies the I/O bus interface of the caller's NIC
  */
 {
-  /* TODO: Take CheckForHandTimeInSeconds into account! */
-
   PLOGICAL_ADAPTER Adapter = GET_LOGICAL_ADAPTER(MiniportAdapterHandle);
 
   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
@@ -1971,6 +2283,8 @@ NdisMSetAttributesEx(
   Adapter->NdisMiniportBlock.MiniportAdapterContext = MiniportAdapterContext;
   Adapter->NdisMiniportBlock.Flags = AttributeFlags;
   Adapter->NdisMiniportBlock.AdapterType = AdapterType;
+  if (CheckForHangTimeInSeconds > 0)
+      Adapter->NdisMiniportBlock.CheckForHangSeconds = CheckForHangTimeInSeconds;
   if (AttributeFlags & NDIS_ATTRIBUTE_INTERMEDIATE_DRIVER)
     NDIS_DbgPrint(MAX_TRACE, ("Intermediate drivers not supported yet.\n"));
 }
@@ -2084,6 +2398,7 @@ NdisTerminateWrapper(
 
   ExFreePool(Miniport->RegistryPath->Buffer);
   ExFreePool(Miniport->RegistryPath);
+  ExInterlockedRemoveEntryList(&Miniport->ListEntry, &MiniportListLock);
   ExFreePool(Miniport);
 }
 

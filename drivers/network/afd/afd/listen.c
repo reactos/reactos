@@ -102,14 +102,14 @@ static NTSTATUS NTAPI ListenComplete
     PAFD_FCB FCB = (PAFD_FCB)Context;
     PAFD_TDI_OBJECT_QELT Qelt;
 
-    if( Irp->Cancel ) {
-	if( FCB ) FCB->ListenIrp.InFlightRequest = NULL;
-	return STATUS_CANCELLED;
-    }
-
     if( !SocketAcquireStateLock( FCB ) ) return STATUS_FILE_CLOSED;
 
     FCB->ListenIrp.InFlightRequest = NULL;
+
+    if( Irp->Cancel ) {
+        SocketStateUnlock( FCB );
+	return STATUS_CANCELLED;
+    }
 
     if( FCB->State == SOCKET_STATE_CLOSED ) {
 	SocketStateUnlock( FCB );
@@ -159,8 +159,16 @@ static NTSTATUS NTAPI ListenComplete
 				 ListEntry ) );
     }
 
-    if( FCB->ListenIrp.ConnectionCallInfo ) ExFreePool( FCB->ListenIrp.ConnectionCallInfo );
-    if( FCB->ListenIrp.ConnectionReturnInfo ) ExFreePool( FCB->ListenIrp.ConnectionReturnInfo );
+    if( FCB->ListenIrp.ConnectionCallInfo ) {
+        ExFreePool( FCB->ListenIrp.ConnectionCallInfo );
+        FCB->ListenIrp.ConnectionCallInfo = NULL;
+    }
+
+    if( FCB->ListenIrp.ConnectionReturnInfo ) {
+        ExFreePool( FCB->ListenIrp.ConnectionReturnInfo );
+        FCB->ListenIrp.ConnectionReturnInfo = NULL;
+    }
+
     FCB->NeedsNewListen = TRUE;
 
     /* Trigger a select return if appropriate */

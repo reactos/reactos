@@ -40,15 +40,15 @@ static NTSTATUS NTAPI SendComplete
 
     ASSERT_IRQL(APC_LEVEL);
 
-    if( Irp->Cancel ) {
-	if( FCB ) FCB->SendIrp.InFlightRequest = NULL;
-	return STATUS_CANCELLED;
-    }
-
     if( !SocketAcquireStateLock( FCB ) ) return Status;
 
     FCB->SendIrp.InFlightRequest = NULL;
     /* Request is not in flight any longer */
+
+    if( Irp->Cancel ) {
+        SocketStateUnlock( FCB );
+	return STATUS_CANCELLED;
+    }
 
     if( FCB->State == SOCKET_STATE_CLOSED ) {
 	SocketStateUnlock( FCB );
@@ -176,19 +176,19 @@ static NTSTATUS NTAPI PacketSocketSendComplete
 			    Irp->IoStatus.Status,
 			    Irp->IoStatus.Information));
 
-    if( Irp->Cancel ) {
-	if( FCB ) FCB->SendIrp.InFlightRequest = NULL;
-	return STATUS_CANCELLED;
-    }
-
     /* It's ok if the FCB already died */
     if( !SocketAcquireStateLock( FCB ) ) return STATUS_SUCCESS;
 
-    FCB->PollState |= AFD_EVENT_SEND;
-    PollReeval( FCB->DeviceExt, FCB->FileObject );
-
     FCB->SendIrp.InFlightRequest = NULL;
     /* Request is not in flight any longer */
+
+    if( Irp->Cancel ) {
+        SocketStateUnlock( FCB );
+	return STATUS_CANCELLED;
+    }
+
+    FCB->PollState |= AFD_EVENT_SEND;
+    PollReeval( FCB->DeviceExt, FCB->FileObject );
 
     if( FCB->State == SOCKET_STATE_CLOSED ) {
 	SocketStateUnlock( FCB );
@@ -201,7 +201,7 @@ static NTSTATUS NTAPI PacketSocketSendComplete
     return STATUS_SUCCESS;
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 			    PIO_STACK_LOCATION IrpSp, BOOLEAN Short) {
     NTSTATUS Status = STATUS_SUCCESS;
@@ -380,7 +380,7 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     }
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 			 PIO_STACK_LOCATION IrpSp) {
     NTSTATUS Status = STATUS_SUCCESS;

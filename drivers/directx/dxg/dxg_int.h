@@ -17,22 +17,23 @@
 #include <winerror.h>
 #include <wingdi.h>
 #include <winddi.h>
-#include <winuser.h>
 #include <prntfont.h>
 #include <dde.h>
-#include <wincon.h>
 
-/* Public Win32K Headers */
-#include <win32k/ntusrtyp.h>
-#include <win32k/ntuser.h>
-#include <win32k/ntgdityp.h>
-#include <win32k/ntgdihdl.h>
-#include <win32.h>
-#include <gdiobj.h>
-#include <dc.h>
+/* DXG treats this as opaque */
+typedef PVOID PDC;
+typedef PVOID PW32THREAD;
+
+typedef struct _DD_BASEOBJECT
+{
+  HGDIOBJ     hHmgr;
+  ULONG       ulShareCount;
+  USHORT      cExclusiveLock;
+  USHORT      BaseFlags;
+  PW32THREAD  Tid;
+} DD_BASEOBJECT, *PDD_BASEOBJECT;
 
 #include <drivers/directx/directxint.h>
-
 #include <drivers/directx/dxg.h>
 #include <drivers/directx/dxeng.h>
 
@@ -90,10 +91,10 @@ extern PEPROCESS gpepSession;
 extern PLARGE_INTEGER gpLockShortDelay;
 
 /* Driver list export functions */
-DWORD STDCALL DxDxgGenericThunk(ULONG_PTR ulIndex, ULONG_PTR ulHandle, SIZE_T *pdwSizeOfPtr1, PVOID pvPtr1, SIZE_T *pdwSizeOfPtr2, PVOID pvPtr2);
-DWORD STDCALL DxDdIoctl(ULONG ulIoctl, PVOID pBuffer, ULONG ulBufferSize);
-PDD_SURFACE_LOCAL STDCALL DxDdLockDirectDrawSurface(HANDLE hDdSurface);
-BOOL STDCALL DxDdUnlockDirectDrawSurface(PDD_SURFACE_LOCAL pSurface);
+DWORD NTAPI DxDxgGenericThunk(ULONG_PTR ulIndex, ULONG_PTR ulHandle, SIZE_T *pdwSizeOfPtr1, PVOID pvPtr1, SIZE_T *pdwSizeOfPtr2, PVOID pvPtr2);
+DWORD NTAPI DxDdIoctl(ULONG ulIoctl, PVOID pBuffer, ULONG ulBufferSize);
+PDD_SURFACE_LOCAL NTAPI DxDdLockDirectDrawSurface(HANDLE hDdSurface);
+BOOL NTAPI DxDdUnlockDirectDrawSurface(PDD_SURFACE_LOCAL pSurface);
 
 /* Internal functions */
 BOOL FASTCALL VerifyObjectOwner(PDD_ENTRY pEntry);

@@ -35,6 +35,7 @@ typedef PVOID PBCB;
 #define except(x) if (0 && (x))
 #define finally if (1)
 #define GetExceptionInformation() 0
+#define GetExceptionCode() 0
 
 // we will use the LARGE_INTEGER structure as defined by NT
 

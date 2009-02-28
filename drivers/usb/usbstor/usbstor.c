@@ -15,7 +15,7 @@
 
 /* PUBLIC AND PRIVATE FUNCTIONS **********************************************/
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 IrpStub(IN PDEVICE_OBJECT DeviceObject,
         IN PIRP Irp)
 {
@@ -25,25 +25,25 @@ IrpStub(IN PDEVICE_OBJECT DeviceObject,
     return Status;
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 AddDevice(IN PDRIVER_OBJECT DriverObject,
           IN PDEVICE_OBJECT pdo)
 {
     return STATUS_SUCCESS;
 }
 
-VOID STDCALL
+VOID NTAPI
 DriverUnload(PDRIVER_OBJECT DriverObject)
 {
 }
 
-VOID STDCALL
+VOID NTAPI
 StartIo(PUSBSTOR_DEVICE_EXTENSION DeviceExtension,
         PIRP Irp)
 {
 }
 
-static NTSTATUS STDCALL
+static NTSTATUS NTAPI
 DispatchClose(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
     Irp->IoStatus.Information = 0;
@@ -52,44 +52,44 @@ DispatchClose(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     return STATUS_SUCCESS;
 }
 
-static NTSTATUS STDCALL
+static NTSTATUS NTAPI
 DispatchCleanup(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
     return STATUS_SUCCESS;
 }
 
-static NTSTATUS STDCALL
+static NTSTATUS NTAPI
 DispatchDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
     return STATUS_SUCCESS;
 }
 
 
-static NTSTATUS STDCALL
+static NTSTATUS NTAPI
 DispatchScsi(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
     return STATUS_SUCCESS;
 }
 
-static NTSTATUS STDCALL
+static NTSTATUS NTAPI
 DispatchReadWrite(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
     return STATUS_SUCCESS;
 }
 
-static NTSTATUS STDCALL
+static NTSTATUS NTAPI
 DispatchSystemControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
     return STATUS_SUCCESS;
 }
 
-static NTSTATUS STDCALL
+static NTSTATUS NTAPI
 DispatchPnp(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
     return STATUS_SUCCESS;
 }
 
-static NTSTATUS STDCALL
+static NTSTATUS NTAPI
 DispatchPower(PDEVICE_OBJECT fido, PIRP Irp)
 {
     DPRINT1("USBSTOR: IRP_MJ_POWER unimplemented\n");
@@ -104,7 +104,7 @@ DispatchPower(PDEVICE_OBJECT fido, PIRP Irp)
 /*
  * Standard DriverEntry method.
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRING RegPath)
 {
     ULONG i;

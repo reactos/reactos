@@ -1,7 +1,4 @@
 
-
-
-/* DDK/NDK/SDK Headers */
 /* DDK/NDK/SDK Headers */
 #include <ddk/ntddk.h>
 #include <ddk/ntddmou.h>
@@ -14,10 +11,9 @@
 #include <winerror.h>
 #include <wingdi.h>
 #include <winddi.h>
-#include <winuser.h>
 #include <prntfont.h>
 #include <dde.h>
-#include <wincon.h>
+
 
 #include <ddk/ddkmapi.h>
 

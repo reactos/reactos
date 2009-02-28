@@ -1,6 +1,4 @@
-#include <ntddk.h>
-#include <debug.h>
-#include <ks.h>
+#include "priv.h"
 
 /* ===============================================================
     Misc. Helper Functions
@@ -13,7 +11,7 @@ KSDDKAPI NTSTATUS NTAPI
 KsCacheMedium(
     IN  PUNICODE_STRING SymbolicLink,
     IN  PKSPIN_MEDIUM Medium,
-    IN  DWORD PinDirection)
+    IN  ULONG PinDirection)
 {
     UNIMPLEMENTED;
     return STATUS_UNSUCCESSFUL;
@@ -22,13 +20,45 @@ KsCacheMedium(
 /*
     @unimplemented
 */
+
 KSDDKAPI NTSTATUS NTAPI
 KsDefaultDispatchPnp(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
 {
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
+    PIO_STACK_LOCATION IoStack;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    DPRINT1("KsDefaultDispatchPnp entered with func %x\n", IoStack->MinorFunction);
+
+    switch(IoStack->MinorFunction)
+    {
+        case IRP_MN_QUERY_DEVICE_RELATIONS:
+            Irp->IoStatus.Information = 0;
+            Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            return STATUS_INSUFFICIENT_RESOURCES;
+        case IRP_MN_REMOVE_DEVICE:
+            // FIXME
+            // destroy device header, detach device and delete device
+        case IRP_MN_START_DEVICE:
+        case IRP_MN_QUERY_REMOVE_DEVICE:
+        case IRP_MN_CANCEL_STOP_DEVICE:
+        case IRP_MN_SURPRISE_REMOVAL:
+            Irp->IoStatus.Information = 0;
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            return STATUS_SUCCESS;
+        default:
+            Irp->IoStatus.Information = 0;
+            Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            //Status = IoCallDriver(NULL /* PnpBaseObject */, Irp);
+    }
+
+    return Status;
 }
 
 /*
@@ -52,6 +82,10 @@ KsDefaultDispatchPower(
     IN  PIRP Irp)
 {
     UNIMPLEMENTED;
+
+    Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+    Irp->IoStatus.Information = 0;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -200,35 +234,114 @@ KsSetTargetState(
     UNIMPLEMENTED;
 }
 
-/*
-    @unimplemented
-*/
-KSDDKAPI NTSTATUS NTAPI
-KsSynchronousIoControlDevice(
-    IN  PFILE_OBJECT FileObject,
-    IN  KPROCESSOR_MODE RequestorMode,
-    IN  DWORD IoControl,
-    IN  PVOID InBuffer,
-    IN  ULONG InSize,
-    OUT PVOID OutBuffer,
-    IN  ULONG OUtSize,
-    OUT PULONG BytesReturned)
+NTSTATUS
+NTAPI
+CompletionRoutine(
+    IN PDEVICE_OBJECT  DeviceObject,
+    IN PIRP  Irp,
+    IN PVOID  Context)
 {
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
+    PIO_STATUS_BLOCK IoStatusBlock = (PIO_STATUS_BLOCK)Context;
+
+    IoStatusBlock->Information = Irp->IoStatus.Information;
+    IoStatusBlock->Status = Irp->IoStatus.Status;
+
+    return STATUS_SUCCESS;
 }
 
 /*
-    @unimplemented
+    @implemented
 */
-KSDDKAPI NTSTATUS NTAPI
-KsInitializeDriver(
-    IN PDRIVER_OBJECT  DriverObject,
-    IN PUNICODE_STRING  RegistryPath,
-    IN const KSDEVICE_DESCRIPTOR  *Descriptor OPTIONAL
-)
+KSDDKAPI
+NTSTATUS
+NTAPI
+KsSynchronousIoControlDevice(
+    IN  PFILE_OBJECT FileObject,
+    IN  KPROCESSOR_MODE RequestorMode,
+    IN  ULONG IoControl,
+    IN  PVOID InBuffer,
+    IN  ULONG InSize,
+    OUT PVOID OutBuffer,
+    IN  ULONG OutSize,
+    OUT PULONG BytesReturned)
 {
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
+    PDEVICE_OBJECT DeviceObject;
+    KEVENT Event;
+    PIRP Irp;
+    IO_STATUS_BLOCK IoStatusBlock;
+    PIO_STACK_LOCATION IoStack;
+    NTSTATUS Status;
+
+    /* check for valid file object */
+    if (!FileObject)
+        return STATUS_INVALID_PARAMETER;
+
+    /* get device object to send the request to */
+    DeviceObject = IoGetRelatedDeviceObject(FileObject);
+    if (!DeviceObject)
+        return STATUS_UNSUCCESSFUL;
+
+    /* initialize the event */
+    KeInitializeEvent(&Event, NotificationEvent, FALSE);
+
+    /* create the irp */
+    Irp =  IoBuildDeviceIoControlRequest(IoControl, DeviceObject, InBuffer, InSize, OutBuffer, OutSize, FALSE, &Event, &IoStatusBlock);
+
+    /* HACK */
+    IoStack = IoGetNextIrpStackLocation(Irp);
+    IoStack->FileObject = FileObject;
+
+    IoSetCompletionRoutine(Irp, CompletionRoutine, (PVOID)&IoStatusBlock, TRUE, TRUE, TRUE);
+
+    Status = IoCallDriver(DeviceObject, Irp);
+    if (Status == STATUS_PENDING)
+    {
+        KeWaitForSingleObject(&Event, Executive, RequestorMode, FALSE, NULL);
+        Status = IoStatusBlock.Status;
+    }
+
+    *BytesReturned = IoStatusBlock.Information;
+    return Status;
+}
+
+
+/*
+    @implemented
+*/
+KSDDKAPI
+VOID
+NTAPI
+KsAcquireDeviceSecurityLock(
+    IN KSDEVICE_HEADER DevHeader,
+    IN BOOLEAN Exclusive)
+{
+    NTSTATUS Status;
+    PKSIDEVICE_HEADER Header = (PKSIDEVICE_HEADER)DevHeader;
+
+    KeEnterCriticalRegion();
+
+    if (Exclusive)
+    {
+        Status = ExAcquireResourceExclusiveLite(&Header->SecurityLock, TRUE);
+    }
+    else
+    {
+        Status = ExAcquireResourceSharedLite(&Header->SecurityLock, TRUE);
+    }
+}
+
+/*
+    @implemented
+*/
+KSDDKAPI
+VOID
+NTAPI
+KsReleaseDeviceSecurityLock(
+    IN KSDEVICE_HEADER DevHeader)
+{
+    PKSIDEVICE_HEADER Header = (PKSIDEVICE_HEADER)DevHeader;
+
+    ExReleaseResourceLite(&Header->SecurityLock);
+    KeLeaveCriticalRegion();
 }
 

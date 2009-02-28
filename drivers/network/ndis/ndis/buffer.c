@@ -465,7 +465,7 @@ NdisAllocatePacketPool(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 EXPORT
@@ -694,7 +694,7 @@ NdisCopyFromPacketToPacket(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 EXPORT
@@ -710,12 +710,42 @@ NdisDprAllocatePacket(
  *     PoolHandle = Handle returned by NdisAllocatePacketPool
  */
 {
-    *Status = NDIS_STATUS_FAILURE;
+    PNDIS_PACKET Temp;
+    PNDISI_PACKET_POOL Pool = (PNDISI_PACKET_POOL)PoolHandle;
+
+    NDIS_DbgPrint(MAX_TRACE, ("Status (0x%X)  Packet (0x%X)  PoolHandle (0x%X).\n",
+        Status, Packet, PoolHandle));
+
+    *Packet = NULL;
+
+    if (Pool == NULL)
+    {
+        *Status = NDIS_STATUS_FAILURE;
+        return;
+    }
+
+    KeAcquireSpinLockAtDpcLevel(&Pool->SpinLock.SpinLock);
+
+    if (Pool->FreeList) {
+        Temp           = Pool->FreeList;
+        Pool->FreeList = (PNDIS_PACKET)Temp->Private.Head;
+
+        KeReleaseSpinLockFromDpcLevel(&Pool->SpinLock.SpinLock);
+
+        RtlZeroMemory(&Temp->Private, sizeof(NDIS_PACKET_PRIVATE));
+        Temp->Private.Pool = Pool;
+
+        *Packet = Temp;
+        *Status = NDIS_STATUS_SUCCESS;
+    } else {
+        *Status = NDIS_STATUS_RESOURCES;
+        KeReleaseSpinLockFromDpcLevel(&Pool->SpinLock.SpinLock);
+    }
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 EXPORT
@@ -731,12 +761,37 @@ NdisDprAllocatePacketNonInterlocked(
  *     PoolHandle = Handle returned by NdisAllocatePacketPool
  */
 {
-    *Status = NDIS_STATUS_FAILURE;
+    PNDIS_PACKET Temp;
+    PNDISI_PACKET_POOL Pool = (PNDISI_PACKET_POOL)PoolHandle;
+
+    NDIS_DbgPrint(MAX_TRACE, ("Status (0x%X)  Packet (0x%X)  PoolHandle (0x%X).\n",
+        Status, Packet, PoolHandle));
+
+    *Packet = NULL;
+
+    if (Pool == NULL)
+    {
+        *Status = NDIS_STATUS_FAILURE;
+        return;
+    }
+
+    if (Pool->FreeList) {
+        Temp           = Pool->FreeList;
+        Pool->FreeList = (PNDIS_PACKET)Temp->Private.Head;
+
+        RtlZeroMemory(&Temp->Private, sizeof(NDIS_PACKET_PRIVATE));
+        Temp->Private.Pool = Pool;
+
+        *Packet = Temp;
+        *Status = NDIS_STATUS_SUCCESS;
+    } else {
+        *Status = NDIS_STATUS_RESOURCES;
+    }
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 EXPORT
@@ -748,11 +803,17 @@ NdisDprFreePacket(
  *     Packet = Pointer to packet to free
  */
 {
+    NDIS_DbgPrint(MAX_TRACE, ("Packet (0x%X).\n", Packet));
+
+    KeAcquireSpinLockAtDpcLevel(&((NDISI_PACKET_POOL*)Packet->Private.Pool)->SpinLock.SpinLock);
+    Packet->Private.Head           = (PNDIS_BUFFER)((NDISI_PACKET_POOL*)Packet->Private.Pool)->FreeList;
+    ((NDISI_PACKET_POOL*)Packet->Private.Pool)->FreeList = Packet;
+    KeReleaseSpinLockFromDpcLevel(&((NDISI_PACKET_POOL*)Packet->Private.Pool)->SpinLock.SpinLock);
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 EXPORT
@@ -764,6 +825,10 @@ NdisDprFreePacketNonInterlocked(
  *     Packet = Pointer to packet to free
  */
 {
+    NDIS_DbgPrint(MAX_TRACE, ("Packet (0x%X).\n", Packet));
+
+    Packet->Private.Head           = (PNDIS_BUFFER)((NDISI_PACKET_POOL*)Packet->Private.Pool)->FreeList;
+    ((NDISI_PACKET_POOL*)Packet->Private.Pool)->FreeList = Packet;
 }
 
 
@@ -891,13 +956,15 @@ NdisGetFirstBufferFromPacket(
 
     Buffer          = _Packet->Private.Head;
     *_FirstBuffer   = Buffer;
-    *_FirstBufferVA = MmGetMdlVirtualAddress(Buffer);
 
     if (Buffer != NULL) {
         *_FirstBufferLength = MmGetMdlByteCount(Buffer);
+        *_FirstBufferVA = MmGetSystemAddressForMdl(Buffer);
         Buffer = Buffer->Next;
-    } else
+    } else {
         *_FirstBufferLength = 0;
+        *_FirstBufferVA = NULL;
+    }
 
     *_TotalBufferLength = *_FirstBufferLength;
 

@@ -21,7 +21,7 @@ TDI_STATUS InfoTdiQueryGetAddrTable( PNDIS_BUFFER Buffer,
     UINT Count = 0;
     UINT IfCount = CountInterfaces();
     PIPADDR_ENTRY IpAddress =
-	ExAllocatePool( NonPagedPool, sizeof( IPADDR_ENTRY ) * IfCount );
+	exAllocatePool( NonPagedPool, sizeof( IPADDR_ENTRY ) * IfCount );
     PIPADDR_ENTRY IpCurrent = IpAddress;
     IF_LIST_ITER(CurrentIF);
 
@@ -58,7 +58,7 @@ TDI_STATUS InfoTdiQueryGetAddrTable( PNDIS_BUFFER Buffer,
     Status = InfoCopyOut( (PCHAR)IpAddress, sizeof(*IpAddress) * IfCount,
 			  Buffer, BufferSize );
 
-    ExFreePool( IpAddress );
+    exFreePool( IpAddress );
 
     TI_DbgPrint(DEBUG_INFO, ("Returning %08x\n", Status));
 
@@ -72,17 +72,17 @@ TDI_STATUS InfoTdiQueryGetRouteTable( PNDIS_BUFFER Buffer, PUINT BufferSize ) {
     UINT RtCount = CountFIBs();
     UINT Size = sizeof( IPROUTE_ENTRY ) * RtCount;
     PFIB_ENTRY RCache =
-	ExAllocatePool( NonPagedPool, sizeof( FIB_ENTRY ) * RtCount ),
+	exAllocatePool( NonPagedPool, sizeof( FIB_ENTRY ) * RtCount ),
 	RCacheCur = RCache;
-    PIPROUTE_ENTRY RouteEntries = ExAllocatePool( NonPagedPool, Size ),
+    PIPROUTE_ENTRY RouteEntries = exAllocatePool( NonPagedPool, Size ),
 	RtCurrent = RouteEntries;
 
     TI_DbgPrint(DEBUG_INFO, ("Called, routes = %d, RCache = %08x\n",
 			    RtCount, RCache));
 
     if( !RCache || !RouteEntries ) {
-	if( RCache ) ExFreePool( RCache );
-	if( RouteEntries ) ExFreePool( RouteEntries );
+	if( RCache ) exFreePool( RCache );
+	if( RouteEntries ) exFreePool( RouteEntries );
 	return TDI_NO_RESOURCES;
     }
 
@@ -133,8 +133,8 @@ TDI_STATUS InfoTdiQueryGetRouteTable( PNDIS_BUFFER Buffer, PUINT BufferSize ) {
 
     Status = InfoCopyOut( (PCHAR)RouteEntries, Size, Buffer, BufferSize );
 
-    ExFreePool( RouteEntries );
-    ExFreePool( RCache );
+    exFreePool( RouteEntries );
+    exFreePool( RCache );
 
     TI_DbgPrint(DEBUG_INFO, ("Returning %08x\n", Status));
 

@@ -415,18 +415,18 @@ FillEntries(
 	}
 	else
 	{
-		_SEH_TRY
+		_SEH2_TRY
 		{
 			RtlCopyMemory(
 				Irp->UserBuffer,
 				DataStart,
 				NumberOfEntries * sizeof(MOUSE_INPUT_DATA));
 		}
-		_SEH_HANDLE
+		_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
 		{
-			Status = _SEH_GetExceptionCode();
+			Status = _SEH2_GetExceptionCode();
 		}
-		_SEH_END;
+		_SEH2_END;
 	}
 
 	return Status;
@@ -821,7 +821,7 @@ SearchForLegacyDrivers(
 {
 	UNICODE_STRING DeviceMapKeyU = RTL_CONSTANT_STRING(L"\\REGISTRY\\MACHINE\\HARDWARE\\DEVICEMAP");
 	PCLASS_DRIVER_EXTENSION DriverExtension;
-	UNICODE_STRING PortBaseName = {0, };
+	UNICODE_STRING PortBaseName = { 0, 0, NULL };
 	PKEY_VALUE_BASIC_INFORMATION KeyValueInformation = NULL;
 	OBJECT_ATTRIBUTES ObjectAttributes;
 	HANDLE hDeviceMapKey = (HANDLE)-1;

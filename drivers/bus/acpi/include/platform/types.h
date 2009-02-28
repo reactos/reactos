@@ -16,8 +16,4 @@
 #include <ntddk.h>
 #include <stdio.h>
 
-typedef UCHAR                              UINT8;
-typedef USHORT                             UINT16;
-typedef ULONGLONG                          UINT64;
-
 #endif /* __INCLUDE_ACPI_TYPES_H */

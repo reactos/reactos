@@ -155,7 +155,7 @@ VOID KillSelectsForFCB( PAFD_DEVICE_EXTENSION DeviceExt,
     AFD_DbgPrint(MID_TRACE,("Done\n"));
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 AfdSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	   PIO_STACK_LOCATION IrpSp ) {
     NTSTATUS Status = STATUS_NO_MEMORY;
@@ -268,7 +268,7 @@ AfdSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     return Status;
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 AfdEventSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 		PIO_STACK_LOCATION IrpSp ) {
     PFILE_OBJECT FileObject = IrpSp->FileObject;
@@ -311,11 +311,11 @@ AfdEventSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     AFD_DbgPrint(MID_TRACE,("Returning %x\n", Status));
 
-    return UnlockAndMaybeComplete( FCB, STATUS_SUCCESS, Irp,
+    return UnlockAndMaybeComplete( FCB, Status, Irp,
 				   0, NULL );
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 AfdEnumEvents( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	       PIO_STACK_LOCATION IrpSp ) {
     PFILE_OBJECT FileObject = IrpSp->FileObject;
