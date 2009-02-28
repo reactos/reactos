@@ -515,7 +515,7 @@ BOOL FileGetString (HANDLE hFile, LPTSTR lpBuffer, INT nBufferLength)
 		   ReadFile(hFile, &ch, 1, &dwRead, NULL) && dwRead)
 	{
         lpString[len++] = ch;
-        if ((ch == _T('\n')) || (ch == _T('\r')))
+        if (ch == '\n')
 		{
 			/* break at new line*/
 			break;
@@ -530,7 +530,7 @@ BOOL FileGetString (HANDLE hFile, LPTSTR lpBuffer, INT nBufferLength)
 		return FALSE;
 	}
 
-	lpString[len++] = _T('\0');
+	lpString[len++] = '\0';
 #ifdef _UNICODE
 	MultiByteToWideChar(CP_ACP, 0, lpString, -1, lpBuffer, len);
 	cmd_free(lpString);
