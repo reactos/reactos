@@ -887,18 +887,6 @@ getchar:
 	ret
 
 
-;
-; pollchar: check if we have an input character pending (ZF = 0)
-;
-pollchar:
-	pushad
-	mov ah,1		; Poll keyboard
-	int 16h
-	popad
-	ret
-
-
-
 isolinux_banner	db CR, LF, 'Loading IsoBoot...', CR, LF, 0
 copyright_str	db ' Copyright (C) 1994-2002 H. Peter Anvin', CR, LF, 0
 presskey_msg	db 'Press any key to boot from CD', 0

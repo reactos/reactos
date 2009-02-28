@@ -115,6 +115,14 @@ VOID RunLoader(VOID)
 		{
 			LoadAndBootReactOS(OperatingSystemSectionNames[SelectedOperatingSystem]);
 		}
+#ifdef FREELDR_REACTOS_SETUP
+        else if (_stricmp(SettingValue, "ReactOSSetup") == 0)
+        {
+            // In future we could pass the selected OS details through this
+            // to have different install methods, etc.
+            LoadReactOSSetup();
+        }
+#endif
 #ifdef __i386__
 		else if (_stricmp(SettingValue, "WindowsNT40") == 0)
 		{

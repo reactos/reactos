@@ -50,6 +50,17 @@ typedef struct
 
 #endif // defined __i386__ or _PPC_ or _MIPS_
 
+#if defined (_AMD64_)
+
+#define MM_PAGE_SIZE	4096
+#define MM_PAGE_MASK	0xFFF
+#define MM_PAGE_SHIFT	12
+
+#define MM_SIZE_TO_PAGES(a)  \
+	( ((a) >> MM_PAGE_SHIFT) + ((a) & MM_PAGE_MASK ? 1 : 0) )
+
+#endif
+
 // HEAP and STACK size
 #define HEAP_PAGES	0x400
 #define STACK_PAGES	0x00
@@ -94,6 +105,7 @@ ULONG		MmFindAvailablePagesBeforePage(PVOID PageLookupTable, ULONG TotalPageCoun
 VOID	MmFixupSystemMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG* MapCount);	// Removes entries in the memory map that describe memory above 4G
 VOID	MmUpdateLastFreePageHint(PVOID PageLookupTable, ULONG TotalPageCount);	// Sets the LastFreePageHint to the last usable page of memory
 BOOLEAN	MmAreMemoryPagesAvailable(PVOID PageLookupTable, ULONG TotalPageCount, PVOID PageAddress, ULONG PageCount);	// Returns TRUE if the specified pages of memory are available, otherwise FALSE
+VOID	MmSetMemoryType(PVOID MemoryAddress, ULONG MemorySize, TYPE_OF_MEMORY NewType); // Use with EXTREME caution!
 
 ULONG		GetSystemMemorySize(VOID);								// Returns the amount of total memory in the system
 PPAGE_LOOKUP_TABLE_ITEM MmGetMemoryMap(ULONG *NoEntries);			// Returns a pointer to the memory mapping table and a number of entries in it

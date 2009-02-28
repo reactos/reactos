@@ -32,7 +32,7 @@ PcMemGetExtendedMemorySize(VOID)
   REGS RegsOut;
   ULONG MemorySize;
 
-  DbgPrint((DPRINT_MEMORY, "GetExtendedMemorySize()\n"));
+  DPRINTM(DPRINT_MEMORY, "GetExtendedMemorySize()\n");
 
   /* Int 15h AX=E801h
    * Phoenix BIOS v4.0 - GET MEMORY SIZE FOR >64M CONFIGURATIONS
@@ -49,12 +49,12 @@ PcMemGetExtendedMemorySize(VOID)
   RegsIn.w.ax = 0xE801;
   Int386(0x15, &RegsIn, &RegsOut);
 
-  DbgPrint((DPRINT_MEMORY, "Int15h AX=E801h\n"));
-  DbgPrint((DPRINT_MEMORY, "AX = 0x%x\n", RegsOut.w.ax));
-  DbgPrint((DPRINT_MEMORY, "BX = 0x%x\n", RegsOut.w.bx));
-  DbgPrint((DPRINT_MEMORY, "CX = 0x%x\n", RegsOut.w.cx));
-  DbgPrint((DPRINT_MEMORY, "DX = 0x%x\n", RegsOut.w.dx));
-  DbgPrint((DPRINT_MEMORY, "CF set = %s\n\n", (RegsOut.x.eflags & I386FLAG_CF) ? "TRUE" : "FALSE"));
+  DPRINTM(DPRINT_MEMORY, "Int15h AX=E801h\n");
+  DPRINTM(DPRINT_MEMORY, "AX = 0x%x\n", RegsOut.w.ax);
+  DPRINTM(DPRINT_MEMORY, "BX = 0x%x\n", RegsOut.w.bx);
+  DPRINTM(DPRINT_MEMORY, "CX = 0x%x\n", RegsOut.w.cx);
+  DPRINTM(DPRINT_MEMORY, "DX = 0x%x\n", RegsOut.w.dx);
+  DPRINTM(DPRINT_MEMORY, "CF set = %s\n\n", (RegsOut.x.eflags & I386FLAG_CF) ? "TRUE" : "FALSE");
 
   if (INT386_SUCCESS(RegsOut))
     {
@@ -93,9 +93,9 @@ PcMemGetExtendedMemorySize(VOID)
   RegsIn.b.ah = 0x88;
   Int386(0x15, &RegsIn, &RegsOut);
 
-  DbgPrint((DPRINT_MEMORY, "Int15h AH=88h\n"));
-  DbgPrint((DPRINT_MEMORY, "AX = 0x%x\n", RegsOut.w.ax));
-  DbgPrint((DPRINT_MEMORY, "CF set = %s\n\n", (RegsOut.x.eflags & I386FLAG_CF) ? "TRUE" : "FALSE"));
+  DPRINTM(DPRINT_MEMORY, "Int15h AH=88h\n");
+  DPRINTM(DPRINT_MEMORY, "AX = 0x%x\n", RegsOut.w.ax);
+  DPRINTM(DPRINT_MEMORY, "CF set = %s\n\n", (RegsOut.x.eflags & I386FLAG_CF) ? "TRUE" : "FALSE");
 
   if (INT386_SUCCESS(RegsOut) && RegsOut.w.ax != 0)
     {
@@ -110,8 +110,8 @@ PcMemGetExtendedMemorySize(VOID)
   MemorySize = (MemorySize & 0xFFFF);
   MemorySize = (MemorySize << 8);
 
-  DbgPrint((DPRINT_MEMORY, "Int15h Failed\n"));
-  DbgPrint((DPRINT_MEMORY, "CMOS reports: 0x%x\n", MemorySize));
+  DPRINTM(DPRINT_MEMORY, "Int15h Failed\n");
+  DPRINTM(DPRINT_MEMORY, "CMOS reports: 0x%x\n", MemorySize);
 
   return MemorySize;
 }
@@ -121,7 +121,7 @@ PcMemGetConventionalMemorySize(VOID)
 {
   REGS Regs;
 
-  DbgPrint((DPRINT_MEMORY, "GetConventionalMemorySize()\n"));
+  DPRINTM(DPRINT_MEMORY, "GetConventionalMemorySize()\n");
 
   /* Int 12h
    * BIOS - GET MEMORY SIZE
@@ -135,8 +135,8 @@ PcMemGetConventionalMemorySize(VOID)
   Regs.w.ax = 0;
   Int386(0x12, &Regs, &Regs);
 
-  DbgPrint((DPRINT_MEMORY, "Int12h\n"));
-  DbgPrint((DPRINT_MEMORY, "AX = 0x%x\n\n", Regs.w.ax));
+  DPRINTM(DPRINT_MEMORY, "Int12h\n");
+  DPRINTM(DPRINT_MEMORY, "AX = 0x%x\n\n", Regs.w.ax);
 
   return (ULONG)Regs.w.ax;
 }
@@ -147,7 +147,7 @@ PcMemGetBiosMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MaxMemoryMapSize)
   REGS Regs;
   ULONG MapCount;
 
-  DbgPrint((DPRINT_MEMORY, "GetBiosMemoryMap()\n"));
+  DPRINTM(DPRINT_MEMORY, "GetBiosMemoryMap()\n");
 
   /* Int 15h AX=E820h
    * Newer BIOSes - GET SYSTEM MEMORY MAP
@@ -177,12 +177,12 @@ PcMemGetBiosMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MaxMemoryMapSize)
     {
       Int386(0x15, &Regs, &Regs);
 
-      DbgPrint((DPRINT_MEMORY, "Memory Map Entry %d\n", MapCount));
-      DbgPrint((DPRINT_MEMORY, "Int15h AX=E820h\n"));
-      DbgPrint((DPRINT_MEMORY, "EAX = 0x%x\n", Regs.x.eax));
-      DbgPrint((DPRINT_MEMORY, "EBX = 0x%x\n", Regs.x.ebx));
-      DbgPrint((DPRINT_MEMORY, "ECX = 0x%x\n", Regs.x.ecx));
-      DbgPrint((DPRINT_MEMORY, "CF set = %s\n", (Regs.x.eflags & I386FLAG_CF) ? "TRUE" : "FALSE"));
+      DPRINTM(DPRINT_MEMORY, "Memory Map Entry %d\n", MapCount);
+      DPRINTM(DPRINT_MEMORY, "Int15h AX=E820h\n");
+      DPRINTM(DPRINT_MEMORY, "EAX = 0x%x\n", Regs.x.eax);
+      DPRINTM(DPRINT_MEMORY, "EBX = 0x%x\n", Regs.x.ebx);
+      DPRINTM(DPRINT_MEMORY, "ECX = 0x%x\n", Regs.x.ecx);
+      DPRINTM(DPRINT_MEMORY, "CF set = %s\n", (Regs.x.eflags & I386FLAG_CF) ? "TRUE" : "FALSE");
 
       /* If the BIOS didn't return 'SMAP' in EAX then
        * it doesn't support this call */
@@ -194,11 +194,11 @@ PcMemGetBiosMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MaxMemoryMapSize)
       /* Copy data to caller's buffer */
       RtlCopyMemory(&BiosMemoryMap[MapCount], (PVOID)BIOSCALLBUFFER, Regs.x.ecx);
 
-      DbgPrint((DPRINT_MEMORY, "BaseAddress: 0x%p\n", (PVOID)(ULONG_PTR)BiosMemoryMap[MapCount].BaseAddress));
-      DbgPrint((DPRINT_MEMORY, "Length: 0x%p\n", (PVOID)(ULONG_PTR)BiosMemoryMap[MapCount].Length));
-      DbgPrint((DPRINT_MEMORY, "Type: 0x%x\n", BiosMemoryMap[MapCount].Type));
-      DbgPrint((DPRINT_MEMORY, "Reserved: 0x%x\n", BiosMemoryMap[MapCount].Reserved));
-      DbgPrint((DPRINT_MEMORY, "\n"));
+      DPRINTM(DPRINT_MEMORY, "BaseAddress: 0x%p\n", (PVOID)(ULONG_PTR)BiosMemoryMap[MapCount].BaseAddress);
+      DPRINTM(DPRINT_MEMORY, "Length: 0x%p\n", (PVOID)(ULONG_PTR)BiosMemoryMap[MapCount].Length);
+      DPRINTM(DPRINT_MEMORY, "Type: 0x%x\n", BiosMemoryMap[MapCount].Type);
+      DPRINTM(DPRINT_MEMORY, "Reserved: 0x%x\n", BiosMemoryMap[MapCount].Reserved);
+      DPRINTM(DPRINT_MEMORY, "\n");
 
       /* If the continuation value is zero or the
        * carry flag is set then this was
@@ -206,7 +206,7 @@ PcMemGetBiosMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MaxMemoryMapSize)
       if (Regs.x.ebx == 0x00000000 || !INT386_SUCCESS(Regs))
         {
           MapCount++;
-          DbgPrint((DPRINT_MEMORY, "End Of System Memory Map!\n\n"));
+          DPRINTM(DPRINT_MEMORY, "End Of System Memory Map!\n\n");
           break;
         }
 

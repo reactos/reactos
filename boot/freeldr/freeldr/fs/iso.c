@@ -32,7 +32,7 @@ BOOLEAN IsoOpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector, ULONGLONG 
 {
 	PPVD Pvd = (PPVD)DISKREADBUFFER;
 
-	DbgPrint((DPRINT_FILESYSTEM, "IsoOpenVolume() DriveNumber = 0x%x VolumeStartSector = 16\n", DriveNumber));
+	DPRINTM(DPRINT_FILESYSTEM, "IsoOpenVolume() DriveNumber = 0x%x VolumeStartSector = 16\n", DriveNumber);
 
 	// Store the drive number
 	IsoDriveNumber = DriveNumber;
@@ -49,7 +49,7 @@ BOOLEAN IsoOpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector, ULONGLONG 
 	IsoRootSector = Pvd->RootDirRecord.ExtentLocationL;
 	IsoRootLength = Pvd->RootDirRecord.DataLengthL;
 
-	DbgPrint((DPRINT_FILESYSTEM, "IsoRootSector = %u  IsoRootLegth = %u\n", IsoRootSector, IsoRootLength));
+	DPRINTM(DPRINT_FILESYSTEM, "IsoRootSector = %u  IsoRootLegth = %u\n", IsoRootSector, IsoRootLength);
 
 	return TRUE;
 }
@@ -62,7 +62,7 @@ static BOOLEAN IsoSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG Dire
 	ULONG i;
 	CHAR Name[32];
 
-	DbgPrint((DPRINT_FILESYSTEM, "IsoSearchDirectoryBufferForFile() DirectoryBuffer = 0x%x DirectoryLength = %d FileName = %s\n", DirectoryBuffer, DirectoryLength, FileName));
+	DPRINTM(DPRINT_FILESYSTEM, "IsoSearchDirectoryBufferForFile() DirectoryBuffer = 0x%x DirectoryLength = %d FileName = %s\n", DirectoryBuffer, DirectoryLength, FileName);
 
 	RtlZeroMemory(Name, 32 * sizeof(UCHAR));
 
@@ -84,18 +84,18 @@ static BOOLEAN IsoSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG Dire
 
 		if (Record->FileIdLength == 1 && Record->FileId[0] == 0)
 		{
-			DbgPrint((DPRINT_FILESYSTEM, "Name '.'\n"));
+			DPRINTM(DPRINT_FILESYSTEM, "Name '.'\n");
 		}
 		else if (Record->FileIdLength == 1 && Record->FileId[0] == 1)
 		{
-			DbgPrint((DPRINT_FILESYSTEM, "Name '..'\n"));
+			DPRINTM(DPRINT_FILESYSTEM, "Name '..'\n");
 		}
 		else
 		{
 			for (i = 0; i < Record->FileIdLength && Record->FileId[i] != ';'; i++)
 				Name[i] = Record->FileId[i];
 			Name[i] = 0;
-			DbgPrint((DPRINT_FILESYSTEM, "Name '%s'\n", Name));
+			DPRINTM(DPRINT_FILESYSTEM, "Name '%s'\n", Name);
 
 			if (strlen(FileName) == strlen(Name) && _stricmp(FileName, Name) == 0)
 			{
@@ -130,15 +130,15 @@ static PVOID IsoBufferDirectory(ULONG DirectoryStartSector, ULONG DirectoryLengt
 	ULONG	SectorCount;
 	ULONG	i;
 
-	DbgPrint((DPRINT_FILESYSTEM, "IsoBufferDirectory() DirectoryStartSector = %d DirectoryLength = %d\n", DirectoryStartSector, DirectoryLength));
+	DPRINTM(DPRINT_FILESYSTEM, "IsoBufferDirectory() DirectoryStartSector = %d DirectoryLength = %d\n", DirectoryStartSector, DirectoryLength);
 
 	SectorCount = ROUND_UP(DirectoryLength, SECTORSIZE) / SECTORSIZE;
-	DbgPrint((DPRINT_FILESYSTEM, "Trying to read (DirectoryCount) %d sectors.\n", SectorCount));
+	DPRINTM(DPRINT_FILESYSTEM, "Trying to read (DirectoryCount) %d sectors.\n", SectorCount);
 
 	//
 	// Attempt to allocate memory for directory buffer
 	//
-	DbgPrint((DPRINT_FILESYSTEM, "Trying to allocate (DirectoryLength) %d bytes.\n", DirectoryLength));
+	DPRINTM(DPRINT_FILESYSTEM, "Trying to allocate (DirectoryLength) %d bytes.\n", DirectoryLength);
 	DirectoryBuffer = MmHeapAlloc(DirectoryLength);
 
 	if (DirectoryBuffer == NULL)
@@ -172,7 +172,7 @@ static PVOID IsoBufferDirectory(ULONG DirectoryStartSector, ULONG DirectoryLengt
  */
 static BOOLEAN IsoLookupFile(PCSTR FileName, PISO_FILE_INFO IsoFileInfoPointer)
 {
-	UINT		i;
+	UINT32		i;
 	ULONG			NumberOfPathParts;
 	CHAR		PathPart[261];
 	PVOID		DirectoryBuffer;
@@ -180,7 +180,7 @@ static BOOLEAN IsoLookupFile(PCSTR FileName, PISO_FILE_INFO IsoFileInfoPointer)
 	ULONG		DirectoryLength;
 	ISO_FILE_INFO	IsoFileInfo;
 
-	DbgPrint((DPRINT_FILESYSTEM, "IsoLookupFile() FileName = %s\n", FileName));
+	DPRINTM(DPRINT_FILESYSTEM, "IsoLookupFile() FileName = %s\n", FileName);
 
 	RtlZeroMemory(IsoFileInfoPointer, sizeof(ISO_FILE_INFO));
 
@@ -258,7 +258,7 @@ FILE* IsoOpenFile(PCSTR FileName)
 	ISO_FILE_INFO		TempFileInfo;
 	PISO_FILE_INFO		FileHandle;
 
-	DbgPrint((DPRINT_FILESYSTEM, "IsoOpenFile() FileName = %s\n", FileName));
+	DPRINTM(DPRINT_FILESYSTEM, "IsoOpenFile() FileName = %s\n", FileName);
 
 	if (!IsoLookupFile(FileName, &TempFileInfo))
 	{
@@ -292,7 +292,7 @@ BOOLEAN IsoReadFile(FILE *FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID
 	ULONG		NumberOfSectors;
 	ULONG		i;
 
-	DbgPrint((DPRINT_FILESYSTEM, "IsoReadFile() BytesToRead = %d Buffer = 0x%x\n", BytesToRead, Buffer));
+	DPRINTM(DPRINT_FILESYSTEM, "IsoReadFile() BytesToRead = %d Buffer = 0x%x\n", BytesToRead, Buffer);
 
 	if (BytesRead != NULL)
 	{
@@ -435,7 +435,7 @@ BOOLEAN IsoReadFile(FILE *FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID
 		Buffer = (PVOID)((ULONG_PTR)Buffer + BytesToRead);
 	}
 
-	DbgPrint((DPRINT_FILESYSTEM, "IsoReadFile() done\n"));
+	DPRINTM(DPRINT_FILESYSTEM, "IsoReadFile() done\n");
 
 	return TRUE;
 }
@@ -445,7 +445,7 @@ ULONG IsoGetFileSize(FILE *FileHandle)
 {
 	PISO_FILE_INFO	IsoFileHandle = (PISO_FILE_INFO)FileHandle;
 
-	DbgPrint((DPRINT_FILESYSTEM, "IsoGetFileSize() FileSize = %d\n", IsoFileHandle->FileSize));
+	DPRINTM(DPRINT_FILESYSTEM, "IsoGetFileSize() FileSize = %d\n", IsoFileHandle->FileSize);
 
 	return IsoFileHandle->FileSize;
 }
@@ -454,7 +454,7 @@ VOID IsoSetFilePointer(FILE *FileHandle, ULONG NewFilePointer)
 {
 	PISO_FILE_INFO	IsoFileHandle = (PISO_FILE_INFO)FileHandle;
 
-	DbgPrint((DPRINT_FILESYSTEM, "IsoSetFilePointer() NewFilePointer = %d\n", NewFilePointer));
+	DPRINTM(DPRINT_FILESYSTEM, "IsoSetFilePointer() NewFilePointer = %d\n", NewFilePointer);
 
 	IsoFileHandle->FilePointer = NewFilePointer;
 }
@@ -463,7 +463,7 @@ ULONG IsoGetFilePointer(FILE *FileHandle)
 {
 	PISO_FILE_INFO	IsoFileHandle = (PISO_FILE_INFO)FileHandle;
 
-	DbgPrint((DPRINT_FILESYSTEM, "IsoGetFilePointer() FilePointer = %d\n", IsoFileHandle->FilePointer));
+	DPRINTM(DPRINT_FILESYSTEM, "IsoGetFilePointer() FilePointer = %d\n", IsoFileHandle->FilePointer);
 
 	return IsoFileHandle->FilePointer;
 }

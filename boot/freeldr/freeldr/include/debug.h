@@ -16,36 +16,38 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-
+#include <reactos/debug.h>
 
 #ifndef __DEBUG_H
 #define __DEBUG_H
 
-#define DPRINT_NONE		0x00000000  // No debug print
-#define DPRINT_WARNING		0x00000001  // OR this with DebugPrintMask to enable debugger messages and other misc stuff
-#define DPRINT_MEMORY		0x00000002  // OR this with DebugPrintMask to enable memory management messages
-#define DPRINT_FILESYSTEM	0x00000004  // OR this with DebugPrintMask to enable file system messages
-#define DPRINT_INIFILE		0x00000008  // OR this with DebugPrintMask to enable .ini file messages
-#define DPRINT_UI		0x00000010  // OR this with DebugPrintMask to enable user interface messages
-#define DPRINT_DISK		0x00000020  // OR this with DebugPrintMask to enable disk messages
-#define DPRINT_CACHE		0x00000040  // OR this with DebugPrintMask to enable cache messages
-#define DPRINT_REGISTRY		0x00000080  // OR this with DebugPrintMask to enable registry messages
-#define DPRINT_REACTOS		0x00000100  // OR this with DebugPrintMask to enable ReactOS messages
-#define DPRINT_LINUX		0x00000200  // OR this with DebugPrintMask to enable Linux messages
-#define DPRINT_HWDETECT		0x00000400  // OR this with DebugPrintMask to enable hardware detection messages
-#define DPRINT_WINDOWS		0x00000800  // OR this with DebugPrintMask to enable messages from Windows loader
+#define DPRINT_NONE         0x00000000  // No debug print
+#define DPRINT_WARNING      0x00000001  // OR this with DebugPrintMask to enable debugger messages and other misc stuff
+#define DPRINT_MEMORY       0x00000002  // OR this with DebugPrintMask to enable memory management messages
+#define DPRINT_FILESYSTEM   0x00000004  // OR this with DebugPrintMask to enable file system messages
+#define DPRINT_INIFILE      0x00000008  // OR this with DebugPrintMask to enable .ini file messages
+#define DPRINT_UI           0x00000010  // OR this with DebugPrintMask to enable user interface messages
+#define DPRINT_DISK         0x00000020  // OR this with DebugPrintMask to enable disk messages
+#define DPRINT_CACHE        0x00000040  // OR this with DebugPrintMask to enable cache messages
+#define DPRINT_REGISTRY     0x00000080  // OR this with DebugPrintMask to enable registry messages
+#define DPRINT_REACTOS      0x00000100  // OR this with DebugPrintMask to enable ReactOS messages
+#define DPRINT_LINUX        0x00000200  // OR this with DebugPrintMask to enable Linux messages
+#define DPRINT_HWDETECT     0x00000400  // OR this with DebugPrintMask to enable hardware detection messages
+#define DPRINT_WINDOWS      0x00000800  // OR this with DebugPrintMask to enable messages from Windows loader
 
-VOID	DebugPrint(ULONG Mask, char *format, ...);
+extern char* g_file;
+extern int g_line;
 
 #ifdef DBG
 
+    VOID	DbgPrintMask(ULONG Mask, char *format, ...);
 	VOID	DebugInit(VOID);
-	VOID	DebugPrint1(char *format, ...);
+    ULONG   DbgPrint(const char *Format, ...);
+
 	VOID	DebugDumpBuffer(ULONG Mask, PVOID Buffer, ULONG Length);
 
-	#define DbgPrint(_x_)					DebugPrint _x_ ;
-	#define DPRINT1							DebugPrint1
-	#define BugCheck(_x_)					{ DebugPrint(DPRINT_WARNING, "Fatal Error: %s:%d(%s)\n", __FILE__, __LINE__, __FUNCTION__); DebugPrint _x_ ; for (;;); }
+	#define DPRINTM					        g_file=__FILE__;g_line=__LINE__;DbgPrintMask
+	#define BugCheck(_x_)					{ DbgPrintMask(DPRINT_WARNING, "Fatal Error: %s:%d(%s)\n", __FILE__, __LINE__, __FUNCTION__); DbgPrintMask _x_ ; for (;;); }
 	#define DbgDumpBuffer(_x_, _y_, _z_)	DebugDumpBuffer(_x_, _y_, _z_)
 
 #ifdef __i386__
@@ -78,13 +80,10 @@ void	MEMORY_WRITE_BREAKPOINT4(unsigned long addr);
 #else
 
 	#define DebugInit()
-    #define DbgPrint(_x_) { if (0) DebugPrint _x_; }
-	#define DPRINT1(_x_) { if (0) printf _x_; }
+	#define DPRINTM(_x_, ...)
 	#define BugCheck(_x_)
 	#define DbgDumpBuffer(_x_, _y_, _z_)
 
 #endif // defined DBG
-
-#define UNIMPLEMENTED   BugCheck((DPRINT_WARNING, "This function is unimplemented!\n"))
 
 #endif // defined __DEBUG_H

@@ -112,6 +112,7 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones","IndexMapping",0x
   "2c0a",  "70",\
   "380a",  "70",\
    "438",  "85",\
+   "48f",  "85",\
    "809",  "85",\
    "816",  "85",\
   "1809",  "85",\
@@ -140,10 +141,12 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones","IndexMapping",0x
    "42d", "105",\
    "80c", "105",\
    "c0a", "105",\
+   "490", "105",\
    "407", "110",\
    "410", "110",\
    "413", "110",\
    "414", "110",\
+   "417", "110",\
    "807", "110",\
    "810", "110",\
    "814", "110",\
@@ -184,8 +187,10 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones","IndexMapping",0x
    "429", "160",\
   "2001", "165",\
   "3801", "165",\
+   "42b", "170",\
    "420", "185",\
    "439", "190",\
+   "445", "190",\
    "421", "205",\
    "41e", "205",\
    "42a", "205",\
@@ -973,6 +978,8 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\43","Coun
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\43","Name",0x00000000,"Austria"
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\44","CountryCode",0x00010001,0x0000002c
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\44","Name",0x00000000,"United Kingdom"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\45","CountryCode",0x00010001,0x0000002D
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\45","Name",0x00000000,"Denmark"
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\46","CountryCode",0x00010001,0x0000002e
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\46","Name",0x00000000,"Sweden"
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\47","CountryCode",0x00010001,0x0000002f
@@ -1003,6 +1010,8 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\63","Coun
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\63","Name",0x00000000,"Philippines"
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\64","CountryCode",0x00010001,0x00000040
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\64","Name",0x00000000,"New Zealand"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\66","CountryCode",0x00010001,0x00000042
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\66","Name",0x00000000,"Thailand"
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\7","CountryCode",0x00010001,0x00000007
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\7","Name",0x00000000,"Russia"
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\705","CountryCode",0x00010001,0x000002C1
@@ -1055,7 +1064,7 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\998","Cou
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\998","Name",0x00000000,"Uzbekistan"
 
 ;Cursors Schemes
-HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Control Panel\Cursors\Schemes","ReactOS Default",0x00020000,"\",,,,,,,,,,,,,\""
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Control Panel\Cursors\Schemes","ReactOS Default",0x00020000,""",,,,,,,,,,,,,"""
 
 ;PowerCfg
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Controls Folder\PowerCfg","LastID",0x00000002,"0"
@@ -1074,9 +1083,6 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Controls Folder\Device\shellex\P
 
 ; deskmon.dll shell extension
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Controls Folder\Device\shellex\PropertySheetHandlers\Display Monitor CPL Extension","",0x00000000,"{42071713-76d4-11d1-8b24-00a0c9068ff3}"
-
-; Where to download the Mozilla ActiveX control
-HKLM,"SOFTWARE\ReactOS\shdocvw","MozillaUrl",0x00000000,"http://links.reactos.org/mozactivex"
 
 ; Keyboard layout switcher
 ;HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Run","kbswitch",0x00000000,"kbswitch.exe"

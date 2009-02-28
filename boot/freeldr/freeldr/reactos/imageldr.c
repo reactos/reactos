@@ -1,6 +1,5 @@
 #include <freeldr.h>
 #include <debug.h>
-#undef DbgPrint
 
 extern BOOLEAN FrLdrBootType;
 
@@ -446,13 +445,15 @@ FrLdrReadAndMapImage(IN FILE *Image,
     PIMAGE_NT_HEADERS NtHeader;
     PIMAGE_SECTION_HEADER Section;
     NTSTATUS Status = STATUS_SUCCESS;
+    PLOADER_MODULE pModule;
 
     /* Try to see, maybe it's loaded already */
-    if (LdrGetModuleObject(Name) != NULL)
+    if ((pModule = LdrGetModuleObject(Name)) != NULL)
     {
-        /* It's loaded, return NULL. It would be wise to return
-         correct LoadBase, but it seems to be ignored almost everywhere */
-        return NULL;
+        /* It's loaded, return LoadBase */
+        ImageBase = (PVOID)pModule->ModStart;
+        LoadBase = RVA(ImageBase, -KSEG0_BASE);
+        return LoadBase;
     }
 
     /* Set the virtual (image) and physical (load) addresses */
@@ -481,6 +482,11 @@ FrLdrReadAndMapImage(IN FILE *Image,
 
     /* Get image headers */
     NtHeader = RtlImageNtHeader(ReadBuffer);
+    if (!NtHeader)
+    {
+	DbgPrint("Failed to read image (bad PE signature) %s\n", Name);
+	return NULL;
+    }
 
     /* Allocate memory for the driver */
     ImageSize = NtHeader->OptionalHeader.SizeOfImage;
@@ -543,6 +549,12 @@ FrLdrReadAndMapImage(IN FILE *Image,
                               Section[i].Misc.VirtualSize);
             }
         }
+        else
+        {
+            DbgPrint("Section %s in %s doesn't fit: VA: %lx, Size: %lx\n", 
+                      Section[i].Name, Name, Section[i].VirtualAddress,
+                      Section[i].Misc.VirtualSize);
+        }
     }
 
     /* Calculate Difference between Real Base and Compiled Base*/
@@ -551,7 +563,11 @@ FrLdrReadAndMapImage(IN FILE *Image,
                                       (ULONG_PTR)LoadBase,
                                       "FreeLdr",
                                       STATUS_SUCCESS,
+#ifdef _M_AMD64
+                                      STATUS_SUCCESS, // allow stripped files
+#else
                                       STATUS_UNSUCCESSFUL,
+#endif
                                       STATUS_UNSUCCESSFUL);
     if (!NT_SUCCESS(Status))
     {

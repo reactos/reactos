@@ -42,11 +42,11 @@ extern BOOLEAN FrLdrLoadNlsFile(PCSTR szFileName, PCSTR szModuleName);
 
 #define USE_UI
 
-VOID RunLoader(VOID)
+VOID LoadReactOSSetup(VOID)
 {
     ULONG i;
     LPCSTR SourcePath;
-    LPCSTR LoadOptions, DbgLoadOptions;
+    LPCSTR LoadOptions, DbgLoadOptions = "";
     LPCSTR sourcePaths[] = {
       "", /* Only for floppy boot */
 #if defined(_M_IX86)
@@ -153,8 +153,6 @@ VOID RunLoader(VOID)
 	if (!InfGetDataField (&InfContext, 1, &DbgLoadOptions))
 	    DbgLoadOptions = "";
     }
-#else
-    DbgLoadOptions = "";
 #endif
   if (!strlen(DbgLoadOptions) && !InfFindFirstLine (InfHandle,
 			 "SetupData",
@@ -187,7 +185,11 @@ VOID RunLoader(VOID)
 
     /* Load the kernel */
     LoadBase = FrLdrLoadImage(FileName, 5, 1);
-    if (!LoadBase) return;
+    if (!LoadBase)
+    {
+        DPRINT1("Loading the kernel failed!\n");
+        return;
+    }
 
     /* Get the NT header, kernel base and kernel entry */
     NtHeader = RtlImageNtHeader(LoadBase);
@@ -304,7 +306,10 @@ VOID RunLoader(VOID)
                 if (strcmp(Media, "x") == 0)
                 {
                     if (!FrLdrLoadDriver((PCHAR)DriverName,0))
+                    {
+                        DPRINTM(DPRINT_WARNING, "could not load %s, %s\n", SourcePath, DriverName);
                         return;
+                    }
                 }
             }
         } while (InfFindNextLine(&InfContext, &InfContext));
