@@ -1,4 +1,5 @@
 /*
+ * Maritsa - Bulgarian keyboard layout
  * Марица - Българска клавиатурна подредба по БДС 5237-78 за РеактОС
  * Copyright (C) 2007 ReactOS
  * License: LGPL, see: LGPL.txt
@@ -165,7 +166,7 @@ ROSDATA VK_TO_BIT modifier_keys[] = {
 ROSDATA MODIFIERS modifier_bits = {
   modifier_keys,
   3,
-  { 0, 1, 2, 3, 0, 0, 0xC0 } /* Modifier bit order, NONE, SHIFT, CTRL, ALT, MENU, SHIFT + MENU, CTRL + MENU */
+  { 0, 1, 2, 3 }
 };
 
 #define NOCAPS 0
@@ -397,17 +398,17 @@ ROSDATA KBDTABLES keyboard_layout_table = {
 
   MAKELONG(0,1), /* Version 1.0 */
 
-  /* Ligatures -- Russian doesn't have any */
+  /* Ligatures -- Bulgarian doesn't have any */
   0,
   0,
   NULL
 };
 
-PKBDTABLES STDCALL KbdLayerDescriptor(VOID) {
+PKBDTABLES WINAPI KbdLayerDescriptor(VOID) {
   return &keyboard_layout_table;
 }
 
-INT STDCALL
+INT WINAPI
 DllMain(
   PVOID hinstDll,
   ULONG dwReason,

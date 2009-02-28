@@ -32,6 +32,8 @@
 #define KNUMS    0xc00  /* Special + number pad */
 #define KMEXT    0x300  /* Multi + ext */
 
+#define SHFT_INVALID 0x0F
+
 ROSDATA USHORT scancode_to_vk[] = {
   /* Numbers Row */
   /* - 00 - */
@@ -162,7 +164,8 @@ ROSDATA VK_TO_BIT modifier_keys[] = {
 ROSDATA MODIFIERS modifier_bits = {
   modifier_keys,
   7,
-  { 0, 1, 2, 0 ,0, 0,3,0} /* Modifier bit order, NONE, SHIFT, CTRL, SHIFT+CTRL,ALT(not used),SHIFT-ALT (not used), CTR+ALT, SHIFT-CTRL-ALT*/
+  { 0, 1, 2, 0, 0, 0, 3, 0 }
+  /* Modifier bit order: NONE, SHIFT, CTRL, SHIFT-CTRL, ALT (not used), SHIFT-ALT (not used), CTRL-ALT, SHIFT-CTRL-ALT */
 };
 
 #define NOCAPS 0
@@ -455,7 +458,7 @@ ROSDATA KBDTABLES keyboard_layout_table = {
   extcode1_to_vk,
 
 
-  MAKELONG(0,1), /* Version 1.0 */
+  MAKELONG(1,1), /* Version 1.0 */
 
   /* Ligatures -- Slovak doesn't have any */
   0,
@@ -463,6 +466,6 @@ ROSDATA KBDTABLES keyboard_layout_table = {
   NULL
 };
 
-PKBDTABLES STDCALL KbdLayerDescriptor(VOID) {
+PKBDTABLES WINAPI KbdLayerDescriptor(VOID) {
   return &keyboard_layout_table;
 }

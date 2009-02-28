@@ -361,8 +361,7 @@ ROSDATA KBDTABLES keyboard_layout_table = {
   vk_to_wchar_master_table,
 
   /* diacritical marks -- currently implemented by wine code */
-  /* English doesn't have any, anyway */
-   deadkey,
+  deadkey,
 
   /* Key names */
   (VSC_LPWSTR *)key_names,
@@ -383,6 +382,6 @@ ROSDATA KBDTABLES keyboard_layout_table = {
   NULL
 };
 
-PKBDTABLES STDCALL KbdLayerDescriptor(VOID) {
+PKBDTABLES WINAPI KbdLayerDescriptor(VOID) {
   return &keyboard_layout_table;
 }

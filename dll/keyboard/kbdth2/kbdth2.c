@@ -1,5 +1,5 @@
 /*
- * ReactOS Thai keyboard layout (traditional)
+ * ReactOS Thai Kedmanee (non-ShiftLock) Keyboard layout
  * Copyright (C) 2007 ReactOS
  * License: LGPL, see: LGPL.txt
  *
@@ -377,7 +377,7 @@ ROSDATA KBDTABLES keyboard_layout_table = {
   NULL
 };
 
-PKBDTABLES STDCALL KbdLayerDescriptor(VOID) {
+PKBDTABLES WINAPI KbdLayerDescriptor(VOID) {
   return &keyboard_layout_table;
 }
 

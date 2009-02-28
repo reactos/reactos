@@ -1,11 +1,9 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<module name="kbdja" type="keyboardlayout" entrypoint="0" installbase="system32" installname="kbdja.dll" allowwarnings="true">
-	<importlibrary definition="kbdja.spec.def" />
+<module name="kbdja" type="keyboardlayout" entrypoint="0" installbase="system32" installname="kbdja.dll">
+	<importlibrary definition="kbdja.spec" />
 	<include base="ntoskrnl">include</include>
 	<define name="_DISABLE_TIDENTS" />
-	<define name="_WIN32_WINNT">0x0500</define>
 	<file>kbdja.c</file>
 	<file>kbdja.rc</file>
-	<file>kbdja.spec</file>
 </module>

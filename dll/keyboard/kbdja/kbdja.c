@@ -1,5 +1,5 @@
 /*
- * ReactOS USASCII Keyboard layout
+ * ReactOS Japanese (JIS 106) keyboard layout
  * Copyright (C) 2003 ReactOS
  * License: LGPL, see: LGPL.txt
  *
@@ -63,7 +63,7 @@ ROSDATA USHORT scancode_to_vk[] = {
   /* Third letters row */
   'Z',          'X',          'C',          'V',
   'B',          'N',          'M',          VK_OEM_COMMA,
-  VK_OEM_PERIOD,VK_OEM_2,/*VK_OEM_5,*/    VK_RSHIFT,
+  VK_OEM_PERIOD,VK_OEM_2, VK_RSHIFT,
   /* - 37 - */
   /* Bottom Row */
   VK_MULTIPLY,  VK_LMENU,     VK_SPACE,     VK_CAPITAL,
@@ -100,13 +100,13 @@ ROSDATA USHORT scancode_to_vk[] = {
   /* Not sure who uses these codes */
   VK_EMPTY, VK_EMPTY, VK_EMPTY,
   /* - 72 - */
-  VK_EMPTY, VK_EMPTY, VK_EMPTY, VK_EMPTY,
+  VK_EMPTY, VK_OEM_102, VK_EMPTY, VK_EMPTY,
   /* - 76 - */
   /* One more f-key */
   VK_F24,
   /* - 77 - */
   VK_EMPTY, VK_EMPTY, VK_EMPTY, VK_EMPTY,
-  VK_EMPTY, VK_EMPTY, VK_EMPTY, VK_EMPTY, /* PA1 */
+  VK_EMPTY, VK_EMPTY, VK_OEM_5, VK_EMPTY, /* PA1 */
   VK_EMPTY,
   /* - 80 - */
   0
@@ -181,11 +181,12 @@ ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
 ROSDATA VK_TO_WCHARS3 key_to_chars_3mod[] = {
   /* Normal, Shifted, Ctrl */
   /* Legacy (telnet-style) ascii escapes */
-  { VK_OEM_4, 0, {'[', '{', 0x1b /* ESC */} },
-  { VK_OEM_6, 0, {']', '}', 0x1d /* GS */} },
-  { VK_OEM_5, 0, {'\\','|', 0x1c /* FS */} },
-  { VK_RETURN,0, {'\r', '\r', '\n'} },
-  { 0,0 }
+  { VK_OEM_4,   NOCAPS, {'[' , '{' , 0x1b /* ESC */} },
+  { VK_OEM_6,   NOCAPS, {']' , '}' , 0x1d /* GS  */} },
+  { VK_OEM_5,   NOCAPS, {'\\', '|' , 0x1c /* FS  */} }, /* Yen  */
+  { VK_OEM_102, NOCAPS, {'\\', '_' , 0x1c /* FS  */} }, /* 'ro' */
+  { VK_RETURN,  NOCAPS, {'\r', '\r', '\n'          } },
+  { 0, 0 }
 };
 
 ROSDATA VK_TO_WCHARS4 key_to_chars_4mod[] = {
@@ -239,7 +240,7 @@ ROSDATA VK_TO_WCHARS1 keypad_numbers[] = {
   { VK_NUMPAD9, 0, {'9'} },
   { VK_DECIMAL, 0, {'.'} },
   { VK_BACK,    0, {'\010'} },
-  { 0,0 }
+  { 0, 0 }
 };
 
 #define vk_master(n,x) { (PVK_TO_WCHARS1)x, n, sizeof(x[0]) }
@@ -249,7 +250,7 @@ ROSDATA VK_TO_WCHAR_TABLE vk_to_wchar_master_table[] = {
   vk_master(2,key_to_chars_2mod),
   vk_master(3,key_to_chars_3mod),
   vk_master(4,key_to_chars_4mod),
-  { 0,0,0 }
+  { 0, 0, 0 }
 };
 
 ROSDATA VSC_LPWSTR key_names[] = {
@@ -343,7 +344,6 @@ ROSDATA KBDTABLES keyboard_layout_table = {
   vk_to_wchar_master_table,
 
   /* diacritical marks -- currently implemented by wine code */
-  /* English doesn't have any, anyway */
   NULL,
 
   /* Key names */
@@ -359,14 +359,13 @@ ROSDATA KBDTABLES keyboard_layout_table = {
 
   MAKELONG(0,1), /* Version 1.0 */
 
-  /* Ligatures -- English doesn't have any */
+  /* Ligatures -- Japanese doesn't have any */
   0,
   0,
   NULL
 };
 
-PKBDTABLES STDCALL KbdLayerDescriptor() {
+PKBDTABLES WINAPI KbdLayerDescriptor() {
   return &keyboard_layout_table;
 }
-
 

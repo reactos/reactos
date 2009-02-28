@@ -15,10 +15,6 @@
 
 typedef NTSTATUS (NTAPI *USER_CALL)(PVOID Argument, ULONG ArgumentLength);
 
-EXCEPTION_DISPOSITION NTAPI
-RtlpExecuteVectoredExceptionHandlers(IN PEXCEPTION_RECORD  ExceptionRecord,
-                                     IN PCONTEXT  Context);
-
 /* FUNCTIONS ****************************************************************/
 
 /*
@@ -32,26 +28,16 @@ KiUserExceptionDispatcher(PEXCEPTION_RECORD ExceptionRecord,
     EXCEPTION_RECORD NestedExceptionRecord;
     NTSTATUS Status;
 
-    /* call the vectored exception handlers */
-    if(RtlpExecuteVectoredExceptionHandlers(ExceptionRecord,
-                                            Context) != ExceptionContinueExecution)
+    /* Dispatch the exception and check the result */
+    if (RtlDispatchException(ExceptionRecord, Context))
     {
-        goto ContinueExecution;
+        /* Continue executing */
+        Status = NtContinue(Context, FALSE);
     }
     else
     {
-        /* Dispatch the exception and check the result */
-        if(RtlDispatchException(ExceptionRecord, Context))
-        {
-ContinueExecution:
-            /* Continue executing */
-            Status = NtContinue(Context, FALSE);
-        }
-        else
-        {
-            /* Raise an exception */
-            Status = NtRaiseException(ExceptionRecord, Context, FALSE);
-        }
+        /* Raise an exception */
+        Status = NtRaiseException(ExceptionRecord, Context, FALSE);
     }
 
     /* Setup the Exception record */
