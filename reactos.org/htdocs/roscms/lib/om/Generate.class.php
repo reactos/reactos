@@ -218,19 +218,17 @@ class Generate
     $content = $revision['content'];
 
     // replace dependencies
-    $stmt_more=&DBConnection::getInstance()->prepare("SELECT d.id, d.type, d.name FROM ".ROSCMST_DEPENDENCIES." w JOIN ".ROSCMST_ENTRIES." d ON w.child_id=d.id WHERE w.rev_id=:rev_id AND w.include IS TRUE");
+    $stmt_more=&DBConnection::getInstance()->prepare("SELECT d.id, d.type, d.name FROM ".ROSCMST_DEPENDENCIES." w JOIN ".ROSCMST_ENTRIES." d ON w.child_id=d.id WHERE w.rev_id=:rev_id AND w.include IS TRUE AND d.type != 'script'");
     $stmt_more->bindParam('rev_id',$revision['id'],PDO::PARAM_INT);
     $stmt_more->execute();
     while ($dependency = $stmt_more->fetch(PDO::FETCH_ASSOC)) {
 
       // replace
-      if ($dependency['type'] != 'script') {
-        $content = str_replace('[#'.$this->short[$dependency['type']].'_'.$dependency['name'].']', $this->getCached(array(null, $this->short[$dependency['type']].'_'.$dependency['name'])), $content);
-      }
+      $content = str_replace('[#'.$this->short[$dependency['type']].'_'.$dependency['name'].']', $this->getCached(array(null, $this->short[$dependency['type']].'_'.$dependency['name'])), $content);
     } // end foreach
 
     // execute scripts
-    $content = preg_replace_callback('/\[#inc_([^][#[:space:]]+)\]/', array($this,'evalScript'),$content);
+    $content = preg_replace_callback('/\[#inc_([a-zA-Z0-9_]+)\]/', array($this,'evalScript'),$content);
 
     // replace roscms vars
     $content = $this->replaceRoscmsPlaceholder($content);
@@ -435,7 +433,7 @@ class Generate
     $stmt->execute();
 
     // prepare for usage in loop
-      $stmt_more=&DBConnection::getInstance()->prepare("SELECT w.child_id, d.type, d.name FROM ".ROSCMST_DEPENDENCIES." w JOIN ".ROSCMST_ENTRIES." d ON w.child_id=d.id WHERE w.rev_id=:rev_id AND w.include IS TRUE");
+      $stmt_more=&DBConnection::getInstance()->prepare("SELECT w.child_id, d.type, d.name FROM ".ROSCMST_DEPENDENCIES." w JOIN ".ROSCMST_ENTRIES." d ON w.child_id=d.id WHERE w.rev_id=:rev_id AND w.include IS TRUE AND d.type != 'script'");
 
     while ($data = $stmt->fetch(PDO::FETCH_ASSOC)) {
 

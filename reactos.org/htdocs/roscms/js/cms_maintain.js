@@ -390,6 +390,36 @@ function submitAccessEdit( )
 /**
  * @FILLME
  */
+function deleteAccess( id )
+{
+  // highlight left menu entry
+  highlightMenu('Access');
+  
+  document.getElementById('accessList').style.display = 'none';
+  document.getElementById('accessDetails').style.display = 'block';
+
+  // get language list
+  makeRequest('?page=backend&type=admin&subtype=acl&action=delete&access='+id, 'apply', 'accessDetails', 'html', 'GET');
+  return true;
+} // end of function loadGenerate
+
+
+
+/**
+ * @FILLME
+ */
+function submitAccessDelete( )
+{
+  makeRequest('?page=backend&type=admin&subtype=acl&action=delete&submit=true', 'apply', 'accessDetails', 'html', 'POST');
+  
+  loadAccess();
+}
+
+
+
+/**
+ * @FILLME
+ */
 function loadSystem( )
 {
 
@@ -487,7 +517,37 @@ function editGroup( id )
  */
 function submitGroupEdit( )
 {
-  makeRequest('?page=backend&type=admin&subtype=group&action=edit&submit=true', 'apply', 'groupDetails', 'html', 'POST');
+  makeRequest('?page=backend&type=admin&subtype=group&action=delete&submit=true', 'apply', 'groupDetails', 'html', 'POST');
+  
+  loadGroups();
+}
+
+
+
+/**
+ * @FILLME
+ */
+function deleteGroup( id )
+{
+  // highlight left menu entry
+  highlightMenu('Groups');
+  
+  document.getElementById('groupList').style.display = 'none';
+  document.getElementById('groupDetails').style.display = 'block';
+
+  // get language list
+  makeRequest('?page=backend&type=admin&subtype=group&action=delete&group='+id, 'apply', 'groupDetails', 'html', 'GET');
+  return true;
+} // end of function loadGenerate
+
+
+
+/**
+ * @FILLME
+ */
+function submitGroupDelete( )
+{
+  makeRequest('?page=backend&type=admin&subtype=group&action=delete&submit=true', 'apply', 'groupDetails', 'html', 'POST');
   
   loadGroups();
 }

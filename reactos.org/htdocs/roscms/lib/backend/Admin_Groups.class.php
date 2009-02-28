@@ -275,6 +275,7 @@ class Admin_Groups extends Admin
     echo_strip('
       <h2>Edit Group</h2>
       <form onsubmit="return false;">
+        <button onclick="'."deleteGroup(".$group['id'].")".'">show Delete Group</button>
         <fieldset>
           <legend>Group Data</legend>
           <input type="hidden" name="group_id" id="group_id" value="'.$group['id'].'" />
@@ -451,7 +452,7 @@ class Admin_Groups extends Admin
   {
     // get Group information
     $stmt=&DBConnection::getInstance()->prepare("SELECT name, description, id FROM ".ROSCMST_GROUPS." WHERE id=:group_id");
-    $stmt->bindParam('group_id',$_POST['group'],PDO::PARAM_INT);
+    $stmt->bindParam('group_id',$_GET['group'],PDO::PARAM_INT);
     $stmt->execute();
     $group = $stmt->fetchOnce(PDO::FETCH_ASSOC);
 
@@ -461,7 +462,7 @@ class Admin_Groups extends Admin
           <input type="hidden" name="group_id" id="group_id" value="'.$group['id'].'" />
 
           Do you really want to delete the Group &quot;<span title="'.$group['description'].'">'.$group['name'].'</span>&quot; ?
-          <button style="color: red;" onclick="'."submitDelete('group')".'" name="uaq" value="yes">Yes, Delete it.</button>
+          <button style="color: red;" onclick="'."submitGroupDelete()".'" name="uaq" value="yes">Yes, Delete it.</button>
           <button style="color: green;" name="uaq" value="no">No</button>
         </div>
       </form>');
@@ -480,7 +481,7 @@ class Admin_Groups extends Admin
 
     // delete group
     $stmt=&DBConnection::getInstance()->prepare("DELETE FROM ".ROSCMST_GROUPS." WHERE id=:group_id");
-    $stmt->bindParam('group_id',$_POST['group_id'],PDO::PARAM_INT);
+    $stmt->bindParam('group_id',$_REQUEST['group_id'],PDO::PARAM_INT);
     $success = $success && $stmt->execute();
 
     // delete connections
@@ -488,17 +489,17 @@ class Admin_Groups extends Admin
 
       // delete ACL connections
       $stmt=&DBConnection::getInstance()->prepare("DELETE FROM ".ROSCMST_ACL." WHERE group_id=:group_id");
-      $stmt->bindParam('group_id',$_POST['group_id'],PDO::PARAM_INT);
+      $stmt->bindParam('group_id',$_REQUEST['group_id'],PDO::PARAM_INT);
       $success = $success && $stmt->execute();
 
       // delete APL connections
       $stmt=&DBConnection::getInstance()->prepare("DELETE FROM ".ROSCMST_AREA_ACCESS." WHERE group_id=:group_id");
-      $stmt->bindParam('group_id',$_POST['group_id'],PDO::PARAM_INT);
+      $stmt->bindParam('group_id',$_REQUEST['group_id'],PDO::PARAM_INT);
       $success = $success && $stmt->execute();
 
       // delete memberships
       $stmt=&DBConnection::getInstance()->prepare("DELETE FROM ".ROSCMST_MEMBERSHIPS." WHERE group_id=:group_id");
-      $stmt->bindParam('group_id',$_POST['group_id'],PDO::PARAM_INT);
+      $stmt->bindParam('group_id',$_REQUEST['group_id'],PDO::PARAM_INT);
       $success = $success && $stmt->execute();
     }
 

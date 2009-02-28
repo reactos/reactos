@@ -24,7 +24,8 @@ var mousex, mousey;
 // check for quirks / standard mode
 var IEmode = ( typeof document.compatMode != "undefined" && document.compatMode != "BackCompat") ? "documentElement" : "body";
 
-var timerTooltip;
+var timerTooltip, timer_tooltip_delete;
+var tooltip_row = null;
 
 
 document.onmousemove = getMousePosition;
@@ -302,8 +303,22 @@ function clearTooltip( )
 {
   // deactivate tooltip-timer
   window.clearTimeout(timerTooltip);
+  
+  window.clearTimeout(timer_tooltip_delete);
+  timer_tooltip_delete = window.setTimeout("deleteTooltip()", 300);
+} // end of function clearTooltip
 
+
+
+/**
+ * Disables Tooltip view
+ */
+function deleteTooltip( )
+{
   document.getElementById('tooltip').style.display = 'none';
+
+  // deactivate tooltip-timer
+  window.clearTimeout(timer_tooltip_delete);
 } // end of function clearTooltip
 
 
@@ -433,16 +448,20 @@ function registerMouseActions( )
     // deactivate Tooltip-timer
     window.clearTimeout(timerTooltip); 
 
-    timerTooltip = window.setTimeout("loadTooltip('"+this.getElementsByTagName('td')[3].className+"')", 500);
+    if (tooltip_row == this.id) {
+      window.clearTimeout(timer_tooltip_delete);
+    }
+    else {
+      tooltip_row = this.id;
+
+      timerTooltip = window.setTimeout("loadTooltip('"+this.getElementsByTagName('td')[3].className+"')", 500);
+    }
   } // end of inner function localStartActive 
 
 
   //sets a timeout to remove Tooltip
   function localStopActive() {
     hlRow(this.id,2);
-
-    // deactivate Tooltip-timer
-    window.clearTimeout(timerTooltip); 
 
     clearTooltip();
   } // end of inner function localStopActive
@@ -460,6 +479,8 @@ function registerMouseActions( )
 
 
   function localStartEditor() {
+    clearTooltip();
+
     loadEditor(roscms_current_page, this.className);
   } // end of inner function localStartEditor
 

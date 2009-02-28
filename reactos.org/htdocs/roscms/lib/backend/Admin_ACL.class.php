@@ -226,6 +226,7 @@ class Admin_ACL extends Admin
     echo_strip('
       <h2>Edit Access Control List (ACL)</h2>
       <form onsubmit="return false;">
+        <button onclick="'."deleteAccess(".$access['id'].")".'">show Delete ACL</button>
         <fieldset>
           <legend>Access Control List Options</legend>
           <input type="hidden" name="access_id" id="access_id" value="'.$access['id'].'" />
@@ -349,7 +350,7 @@ class Admin_ACL extends Admin
   {
     // check how many entries are depend on this ACL
     $stmt=&DBConnection::getInstance()->prepare("SELECT COUNT(id) FROM ".ROSCMST_ENTRIES." WHERE access_id=:access_id");
-    $stmt->bindParam('access_id',$_POST['access'],PDO::PARAM_INT);
+    $stmt->bindParam('access_id',$_REQUEST['access'],PDO::PARAM_INT);
     $stmt->execute();
     $data_count = $stmt->fetchColumn();
 
@@ -360,8 +361,8 @@ class Admin_ACL extends Admin
     else {
 
       // ACL information
-      $stmt=&DBConnection::getInstance()->prepare("SELECT name, name_short, description, id FROM ".ROSCMST_ACCESS." WHERE id=:access_id");
-      $stmt->bindParam('access_id',$_POST['access'],PDO::PARAM_INT);
+      $stmt=&DBConnection::getInstance()->prepare("SELECT name, description, id FROM ".ROSCMST_ACCESS." WHERE id=:access_id");
+      $stmt->bindParam('access_id',$_REQUEST['access'],PDO::PARAM_INT);
       $stmt->execute();
       $access = $stmt->fetchOnce(PDO::FETCH_ASSOC);
 
@@ -371,7 +372,7 @@ class Admin_ACL extends Admin
             <input type="hidden" name="access_id" id="access_id" value="'.$access['id'].'" />
 
             Do you really want to delete the access &quot;<span title="'.$access['description'].'">'.$access['name'].'</span>&quot; ?
-            <button style="color: red;" onclick="'."submitDelete('acl')".'" name="uaq" value="yes">Yes, Delete it.</button>
+            <button style="color: red;" onclick="'."submitAccessDelete()".'" name="uaq" value="yes">Yes, Delete it.</button>
             <button style="color: green;" name="uaq" value="no">No</button>
           </div>
         </form>');

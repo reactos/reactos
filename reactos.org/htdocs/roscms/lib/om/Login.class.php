@@ -83,8 +83,8 @@ class Login
         $stmt=&DBConnection::getInstance()->prepare("SELECT s.user_id, s.expires FROM ".ROSCMST_SESSIONS." s JOIN ".ROSCMST_USERS." u ON u.id = s.user_id WHERE s.id = :session_id AND (u.match_ip IS FALSE OR s.ip=:ip ) AND (u.match_browseragent IS FALSE OR s.browseragent = :agent) AND u.disabled IS FALSE LIMIT 1");
       }
       else{
-        $stmt=&DBConnection::getInstance()->prepare("SELECT m.user_id, s.expires FROM ".ROSCMST_SESSIONS." s JOIN ".ROSCMST_USERS." u ON u.id = s.user_id JOIN ".ROSCMST_SUBSYS." m ON m.user_id = s.user_id WHERE s.id = :session_id AND (u.match_ip IS FALSE OR s.ip = :ip) AND (u.match_browseragent IS FALSE OR s.browseragent = :agent) AND m.subsys = :subsys AND u.disabled IS FALSE LIMIT 1");
-          $stmt->bindParam('subsys',$subsys,PDO::PARAM_STR);
+        $stmt=&DBConnection::getInstance()->prepare("SELECT m.subsys_user_id AS user_id, s.expires FROM ".ROSCMST_SESSIONS." s JOIN ".ROSCMST_USERS." u ON u.id = s.user_id JOIN ".ROSCMST_SUBSYS." m ON m.user_id = s.user_id WHERE s.id = :session_id AND (u.match_ip IS FALSE OR s.ip = :ip) AND (u.match_browseragent IS FALSE OR s.browseragent = :agent) AND m.subsys = :subsys AND u.disabled IS FALSE LIMIT 1");
+        $stmt->bindParam('subsys',$subsys,PDO::PARAM_STR);
       }
       $stmt->bindParam('session_id',$session_id,PDO::PARAM_INT);
       $stmt->bindParam('ip',$remote_addr,PDO::PARAM_STR);

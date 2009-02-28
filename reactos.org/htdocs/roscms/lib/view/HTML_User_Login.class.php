@@ -99,7 +99,7 @@ class HTML_User_Login extends HTML_User
       }
       else {
         $this->loginPage('You have specified an incorrect username.');
-        exit;
+        return false;
       }
 
       // Check password. It should only contain printable ASCII chars
@@ -108,7 +108,7 @@ class HTML_User_Login extends HTML_User
       }
       else {
         $this->loginPage('You have specified an invalid password.');
-        exit;
+        return false;
       }
 
       // get user data
@@ -128,14 +128,14 @@ class HTML_User_Login extends HTML_User
       }
 
       if ($a_password != $user['password']) {
-        $this->loginPage("You have specified an incorrect or inactive username, or an invalid password.");
-        exit;
+        $this->loginPage('You have specified an incorrect or inactive username, or an invalid password.');
+        return false;
       }
 
       // if the account is NOT enabled; e.g. a reason could be that a member of the admin group has disabled this account because of spamming, etc.
       if ($user['disabled'] == true) { 
         $this->loginPage('Account is not activated or disabled!<br /><br />Check your email inbox (and spam folder), maybe you have overseen the activation information.');
-        exit;
+        return false;
       }
 
       // if the user account setting is "multisession" (a by user setting), it is set to "false" by default

@@ -154,7 +154,7 @@ abstract class Subsystem extends Login
    */
   protected function updateUser( $user_id, $subsys_user )
   {
-    $user = ROSUser::getDetailsById($user_id);
+    $user = self::getRoscmsUser($user_id);
     if ($user === false) {
       return false;
     }
