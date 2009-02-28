@@ -28,7 +28,7 @@ UNICODE_STRING DllDirectory = {0, 0, NULL};
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 CreateDirectoryA (
         LPCSTR                  lpPathName,
         LPSECURITY_ATTRIBUTES   lpSecurityAttributes
@@ -48,7 +48,7 @@ CreateDirectoryA (
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 CreateDirectoryExA (
         LPCSTR                  lpTemplateDirectory,
         LPCSTR                  lpNewDirectory,
@@ -85,7 +85,7 @@ CreateDirectoryExA (
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 CreateDirectoryW (
         LPCWSTR                 lpPathName,
         LPSECURITY_ATTRIBUTES   lpSecurityAttributes
@@ -116,15 +116,14 @@ CreateDirectoryW (
                                    (lpSecurityAttributes ? lpSecurityAttributes->lpSecurityDescriptor : NULL));
 
         Status = NtCreateFile (&DirectoryHandle,
-                               FILE_LIST_DIRECTORY | SYNCHRONIZE |
-                                   FILE_OPEN_FOR_BACKUP_INTENT,
+                               FILE_LIST_DIRECTORY | SYNCHRONIZE,
                                &ObjectAttributes,
                                &IoStatusBlock,
                                NULL,
                                FILE_ATTRIBUTE_NORMAL,
                                FILE_SHARE_READ | FILE_SHARE_WRITE,
                                FILE_CREATE,
-                               FILE_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT,
+                               FILE_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT | FILE_OPEN_FOR_BACKUP_INTENT,
                                NULL,
                                0);
 
@@ -149,7 +148,7 @@ CreateDirectoryW (
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 CreateDirectoryExW (
         LPCWSTR                 lpTemplateDirectory,
         LPCWSTR                 lpNewDirectory,
@@ -494,7 +493,7 @@ CleanupNoNtPath:
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 RemoveDirectoryA (
         LPCSTR  lpPathName
         )
@@ -514,7 +513,7 @@ RemoveDirectoryA (
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 RemoveDirectoryW (
         LPCWSTR lpPathName
         )
@@ -588,7 +587,7 @@ RemoveDirectoryW (
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 GetFullPathNameA (
         LPCSTR  lpFileName,
         DWORD   nBufferLength,
@@ -646,7 +645,7 @@ GetFullPathNameA (
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 GetFullPathNameW (
         LPCWSTR lpFileName,
         DWORD   nBufferLength,
@@ -676,7 +675,7 @@ GetFullPathNameW (
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 GetShortPathNameA (
         LPCSTR  longpath,
         LPSTR   shortpath,
@@ -716,7 +715,7 @@ GetShortPathNameA (
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 GetShortPathNameW (
         LPCWSTR longpath,
         LPWSTR  shortpath,
@@ -820,7 +819,7 @@ GetShortPathNameW (
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 SearchPathA (
         LPCSTR  lpPath,
         LPCSTR  lpFileName,
@@ -830,10 +829,10 @@ SearchPathA (
         LPSTR   *lpFilePart
         )
 {
-        UNICODE_STRING PathU = {0};
-        UNICODE_STRING FileNameU = {0};
-        UNICODE_STRING ExtensionU = {0};
-        UNICODE_STRING BufferU = {0};
+        UNICODE_STRING PathU      = { 0, 0, NULL };
+        UNICODE_STRING FileNameU  = { 0, 0, NULL };
+        UNICODE_STRING ExtensionU = { 0, 0, NULL };
+        UNICODE_STRING BufferU    = { 0, 0, NULL };
         ANSI_STRING Path;
         ANSI_STRING FileName;
         ANSI_STRING Extension;
@@ -915,19 +914,23 @@ SearchPathA (
                 BufferU.Length = wcslen(BufferU.Buffer) * sizeof(WCHAR);
                 /* convert ansi (or oem) string to unicode */
                 if (bIsFileApiAnsi)
-                        RtlUnicodeStringToAnsiString (&Buffer,
-                                                      &BufferU,
-                                                      FALSE);
+                    Status = RtlUnicodeStringToAnsiString(&Buffer,
+                                                          &BufferU,
+                                                          FALSE);
                 else
-                        RtlUnicodeStringToOemString (&Buffer,
-                                                     &BufferU,
-                                                     FALSE);
-                /* nul-terminate ascii string */
-                Buffer.Buffer[BufferU.Length / sizeof(WCHAR)] = '\0';
+                    Status = RtlUnicodeStringToOemString(&Buffer,
+                                                         &BufferU,
+                                                         FALSE);
 
-                if (NULL != lpFilePart && BufferU.Length != 0)
+                if (NT_SUCCESS(Status) && Buffer.Buffer)
                 {
+                    /* nul-terminate ascii string */
+                    Buffer.Buffer[BufferU.Length / sizeof(WCHAR)] = '\0';
+
+                    if (NULL != lpFilePart && BufferU.Length != 0)
+                    {
                         *lpFilePart = strrchr (lpBuffer, '\\') + 1;
+                    }
                 }
         }
 
@@ -959,7 +962,7 @@ Cleanup:
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 SearchPathW (
         LPCWSTR lpPath,
         LPCWSTR lpFileName,
@@ -1135,7 +1138,7 @@ SearchPathW (
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 SetDllDirectoryW(
     LPCWSTR lpPathName
     )
@@ -1181,7 +1184,7 @@ SetDllDirectoryW(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 SetDllDirectoryA(
     LPCSTR lpPathName /* can be NULL */
     )
@@ -1201,7 +1204,7 @@ SetDllDirectoryA(
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 GetDllDirectoryW(
     DWORD nBufferLength,
     LPWSTR lpBuffer
@@ -1238,7 +1241,7 @@ GetDllDirectoryW(
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 GetDllDirectoryA(
     DWORD nBufferLength,
     LPSTR lpBuffer
@@ -1265,7 +1268,7 @@ GetDllDirectoryA(
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 NeedCurrentDirectoryForExePathW(LPCWSTR ExeName)
 {
     static const WCHAR env_name[] = {'N','o','D','e','f','a','u','l','t',
@@ -1291,7 +1294,7 @@ NeedCurrentDirectoryForExePathW(LPCWSTR ExeName)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 NeedCurrentDirectoryForExePathA(LPCSTR ExeName)
 {
     WCHAR *ExeNameW;
@@ -1316,7 +1319,7 @@ NeedCurrentDirectoryForExePathA(LPCSTR ExeName)
  *  shortpath=NULL: LastError=ERROR_INVALID_PARAMETER, ret=0
  *  shortpath="":   LastError=ERROR_PATH_NOT_FOUND, ret=0
  */
-DWORD STDCALL GetLongPathNameW( LPCWSTR shortpath, LPWSTR longpath, DWORD longlen )
+DWORD WINAPI GetLongPathNameW( LPCWSTR shortpath, LPWSTR longpath, DWORD longlen )
 {
 #define    MAX_PATHNAME_LEN 1024
 
@@ -1415,7 +1418,7 @@ DWORD STDCALL GetLongPathNameW( LPCWSTR shortpath, LPWSTR longpath, DWORD longle
 /***********************************************************************
  *           GetLongPathNameA   (KERNEL32.@)
  */
-DWORD STDCALL GetLongPathNameA( LPCSTR shortpath, LPSTR longpath, DWORD longlen )
+DWORD WINAPI GetLongPathNameA( LPCSTR shortpath, LPSTR longpath, DWORD longlen )
 {
     WCHAR *shortpathW;
     WCHAR longpathW[MAX_PATH];

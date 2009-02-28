@@ -21,7 +21,6 @@
 #ifndef __WINE_RPC_MESSAGE_H
 #define __WINE_RPC_MESSAGE_H
 
-#include "wine/rpcss_shared.h"
 #include "rpc_defs.h"
 
 typedef unsigned int NCA_STATUS;
@@ -34,7 +33,8 @@ RpcPktHdr *RPCRT4_BuildBindAckHeader(unsigned long DataRepresentation, unsigned 
 VOID RPCRT4_FreeHeader(RpcPktHdr *Header);
 RPC_STATUS RPCRT4_Send(RpcConnection *Connection, RpcPktHdr *Header, void *Buffer, unsigned int BufferLength);
 RPC_STATUS RPCRT4_Receive(RpcConnection *Connection, RpcPktHdr **Header, PRPC_MESSAGE pMsg);
+RPC_STATUS RPCRT4_ReceiveWithAuth(RpcConnection *Connection, RpcPktHdr **Header, PRPC_MESSAGE pMsg, unsigned char **auth_data_out, unsigned long *auth_length_out);
 NCA_STATUS RPC2NCA_STATUS(RPC_STATUS status);
-RPC_STATUS NCA2RPC_STATUS(NCA_STATUS status);
+RPC_STATUS RPCRT4_AuthorizeConnection(RpcConnection* conn, BYTE *challenge, ULONG count);
 
 #endif

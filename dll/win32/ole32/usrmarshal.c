@@ -260,7 +260,7 @@ void __RPC_USER CLIPFORMAT_UserFree(ULONG *pFlags, CLIPFORMAT *pCF)
      * so nothing to do */
 }
 
-static ULONG __RPC_USER handle_UserSize(ULONG *pFlags, ULONG StartingSize, HANDLE *handle)
+static ULONG handle_UserSize(ULONG *pFlags, ULONG StartingSize, HANDLE *handle)
 {
     if (LOWORD(*pFlags) == MSHCTX_DIFFERENTMACHINE)
     {
@@ -271,7 +271,7 @@ static ULONG __RPC_USER handle_UserSize(ULONG *pFlags, ULONG StartingSize, HANDL
     return StartingSize + sizeof(RemotableHandle);
 }
 
-static unsigned char * __RPC_USER handle_UserMarshal(ULONG *pFlags, unsigned char *pBuffer, HANDLE *handle)
+static unsigned char * handle_UserMarshal(ULONG *pFlags, unsigned char *pBuffer, HANDLE *handle)
 {
     RemotableHandle *remhandle = (RemotableHandle *)pBuffer;
     if (LOWORD(*pFlags) == MSHCTX_DIFFERENTMACHINE)
@@ -285,7 +285,7 @@ static unsigned char * __RPC_USER handle_UserMarshal(ULONG *pFlags, unsigned cha
     return pBuffer + sizeof(RemotableHandle);
 }
 
-static unsigned char * __RPC_USER handle_UserUnmarshal(ULONG *pFlags, unsigned char *pBuffer, HANDLE *handle)
+static unsigned char * handle_UserUnmarshal(ULONG *pFlags, unsigned char *pBuffer, HANDLE *handle)
 {
     RemotableHandle *remhandle = (RemotableHandle *)pBuffer;
     if (remhandle->fContext != WDT_INPROC_CALL)
@@ -294,7 +294,7 @@ static unsigned char * __RPC_USER handle_UserUnmarshal(ULONG *pFlags, unsigned c
     return pBuffer + sizeof(RemotableHandle);
 }
 
-static void __RPC_USER handle_UserFree(ULONG *pFlags, HANDLE *phMenu)
+static void handle_UserFree(ULONG *pFlags, HANDLE *phMenu)
 {
     /* nothing to do */
 }
@@ -642,6 +642,105 @@ unsigned char * __RPC_USER HBITMAP_UserUnmarshal(ULONG *pFlags, unsigned char *p
  *  This function is only intended to be called by the RPC runtime.
  */
 void __RPC_USER HBITMAP_UserFree(ULONG *pFlags, HBITMAP *phBmp)
+{
+    FIXME(":stub\n");
+}
+
+/******************************************************************************
+ *           HICON_UserSize [OLE32.@]
+ *
+ * Calculates the buffer size required to marshal an icon.
+ *
+ * PARAMS
+ *  pFlags       [I] Flags. See notes.
+ *  StartingSize [I] Starting size of the buffer. This value is added on to
+ *                   the buffer size required for the icon.
+ *  phIcon       [I] Icon to size.
+ *
+ * RETURNS
+ *  The buffer size required to marshal an icon plus the starting size.
+ *
+ * NOTES
+ *  Even though the function is documented to take a pointer to a ULONG in
+ *  pFlags, it actually takes a pointer to a USER_MARSHAL_CB structure, of which
+ *  the first parameter is a ULONG.
+ *  This function is only intended to be called by the RPC runtime.
+ */
+ULONG __RPC_USER HICON_UserSize(ULONG *pFlags, ULONG StartingSize, HICON *phIcon)
+{
+    FIXME(":stub\n");
+    return StartingSize;
+}
+
+/******************************************************************************
+*           HICON_UserMarshal [OLE32.@]
+*
+* Marshals an icon into a buffer.
+*
+* PARAMS
+*  pFlags  [I] Flags. See notes.
+*  pBuffer [I] Buffer to marshal the icon into.
+*  phIcon  [I] Icon to marshal.
+*
+* RETURNS
+*  The end of the marshaled data in the buffer.
+*
+* NOTES
+*  Even though the function is documented to take a pointer to a ULONG in
+*  pFlags, it actually takes a pointer to a USER_MARSHAL_CB structure, of which
+*  the first parameter is a ULONG.
+*  This function is only intended to be called by the RPC runtime.
+*/
+unsigned char * __RPC_USER HICON_UserMarshal(ULONG *pFlags, unsigned char *pBuffer, HICON *phIcon)
+{
+    FIXME(":stub\n");
+    return pBuffer;
+}
+
+/******************************************************************************
+ *           HICON_UserUnmarshal [OLE32.@]
+ *
+ * Unmarshals an icon from a buffer.
+ *
+ * PARAMS
+ *  pFlags   [I] Flags. See notes.
+ *  pBuffer  [I] Buffer to marshal the icon from.
+ *  phIcon   [O] Address that receive the unmarshaled icon.
+ *
+ * RETURNS
+ *  The end of the marshaled data in the buffer.
+ *
+ * NOTES
+ *  Even though the function is documented to take a pointer to an ULONG in
+ *  pFlags, it actually takes a pointer to a USER_MARSHAL_CB structure, of which
+ *  the first parameter is an ULONG.
+ *  This function is only intended to be called by the RPC runtime.
+ */
+unsigned char * __RPC_USER HICON_UserUnmarshal(ULONG *pFlags, unsigned char *pBuffer, HICON *phIcon)
+{
+    FIXME(":stub\n");
+    return pBuffer;
+}
+
+/******************************************************************************
+ *           HICON_UserFree [OLE32.@]
+ *
+ * Frees an unmarshaled icon.
+ *
+ * PARAMS
+ *  pFlags   [I] Flags. See notes.
+ *  phIcon   [I] Icon to free.
+ *
+ * RETURNS
+ *  The end of the marshaled data in the buffer.
+ *
+ * NOTES
+ *  Even though the function is documented to take a pointer to a ULONG in
+ *  pFlags, it actually takes a pointer to a USER_MARSHAL_CB structure, of
+ *  which the first parameter is a ULONG.
+ *  This function is only intended to be called by the RPC runtime.
+ */
+void __RPC_USER HICON_UserFree(ULONG *pFlags, HICON *phIcon)
 {
     FIXME(":stub\n");
 }
@@ -1891,25 +1990,26 @@ void __RPC_USER STGMEDIUM_UserFree(ULONG *pFlags, STGMEDIUM *pStgMedium)
 
 ULONG __RPC_USER ASYNC_STGMEDIUM_UserSize(ULONG *pFlags, ULONG StartingSize, ASYNC_STGMEDIUM *pStgMedium)
 {
-    FIXME(":stub\n");
-    return StartingSize;
+    TRACE("\n");
+    return STGMEDIUM_UserSize(pFlags, StartingSize, pStgMedium);
 }
 
 unsigned char * __RPC_USER ASYNC_STGMEDIUM_UserMarshal(  ULONG *pFlags, unsigned char *pBuffer, ASYNC_STGMEDIUM *pStgMedium)
 {
-    FIXME(":stub\n");
-    return pBuffer;
+    TRACE("\n");
+    return STGMEDIUM_UserMarshal(pFlags, pBuffer, pStgMedium);
 }
 
 unsigned char * __RPC_USER ASYNC_STGMEDIUM_UserUnmarshal(ULONG *pFlags, unsigned char *pBuffer, ASYNC_STGMEDIUM *pStgMedium)
 {
-    FIXME(":stub\n");
-    return pBuffer;
+    TRACE("\n");
+    return STGMEDIUM_UserUnmarshal(pFlags, pBuffer, pStgMedium);
 }
 
 void __RPC_USER ASYNC_STGMEDIUM_UserFree(ULONG *pFlags, ASYNC_STGMEDIUM *pStgMedium)
 {
-    FIXME(":stub\n");
+    TRACE("\n");
+    STGMEDIUM_UserFree(pFlags, pStgMedium);
 }
 
 ULONG __RPC_USER FLAG_STGMEDIUM_UserSize(ULONG *pFlags, ULONG StartingSize, FLAG_STGMEDIUM *pStgMedium)
@@ -1956,4 +2056,843 @@ unsigned char * __RPC_USER SNB_UserUnmarshal(ULONG *pFlags, unsigned char *pBuff
 void __RPC_USER SNB_UserFree(ULONG *pFlags, SNB *pSnb)
 {
     FIXME(":stub\n");
+}
+
+/* call_as/local stubs for unknwn.idl */
+
+HRESULT CALLBACK IClassFactory_CreateInstance_Proxy(
+    IClassFactory* This,
+    IUnknown *pUnkOuter,
+    REFIID riid,
+    void **ppvObject)
+{
+    TRACE("(%p, %s, %p)\n", pUnkOuter, debugstr_guid(riid), ppvObject);
+    *ppvObject = NULL;
+    if (pUnkOuter)
+    {
+        ERR("aggregation is not allowed on remote objects\n");
+        return CLASS_E_NOAGGREGATION;
+    }
+    return IClassFactory_RemoteCreateInstance_Proxy(This, riid,
+                                                    (IUnknown **) ppvObject);
+}
+
+HRESULT __RPC_STUB IClassFactory_CreateInstance_Stub(
+    IClassFactory* This,
+    REFIID riid,
+    IUnknown **ppvObject)
+{
+    TRACE("(%s, %p)\n", debugstr_guid(riid), ppvObject);
+    return IClassFactory_CreateInstance(This, NULL, riid, (void **) ppvObject);
+}
+
+HRESULT CALLBACK IClassFactory_LockServer_Proxy(
+    IClassFactory* This,
+    BOOL fLock)
+{
+    FIXME(":stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT __RPC_STUB IClassFactory_LockServer_Stub(
+    IClassFactory* This,
+    BOOL fLock)
+{
+    FIXME(":stub\n");
+    return E_NOTIMPL;
+}
+
+/* call_as/local stubs for objidl.idl */
+
+HRESULT CALLBACK IEnumUnknown_Next_Proxy(
+    IEnumUnknown* This,
+    ULONG celt,
+    IUnknown **rgelt,
+    ULONG *pceltFetched)
+{
+    ULONG fetched;
+    TRACE("(%p)->(%d, %p, %p)\n", This, celt, rgelt, pceltFetched);
+    if (!pceltFetched) pceltFetched = &fetched;
+    return IEnumUnknown_RemoteNext_Proxy(This, celt, rgelt, pceltFetched);
+}
+
+HRESULT __RPC_STUB IEnumUnknown_Next_Stub(
+    IEnumUnknown* This,
+    ULONG celt,
+    IUnknown **rgelt,
+    ULONG *pceltFetched)
+{
+    HRESULT hr;
+    TRACE("(%p)->(%d, %p, %p)\n", This, celt, rgelt, pceltFetched);
+    *pceltFetched = 0;
+    hr = IEnumUnknown_Next(This, celt, rgelt, pceltFetched);
+    if (hr == S_OK) *pceltFetched = celt;
+    return hr;
+}
+
+HRESULT CALLBACK IBindCtx_SetBindOptions_Proxy(
+    IBindCtx* This,
+    BIND_OPTS *pbindopts)
+{
+    FIXME(":stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT __RPC_STUB IBindCtx_SetBindOptions_Stub(
+    IBindCtx* This,
+    BIND_OPTS2 *pbindopts)
+{
+    FIXME(":stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT CALLBACK IBindCtx_GetBindOptions_Proxy(
+    IBindCtx* This,
+    BIND_OPTS *pbindopts)
+{
+    FIXME(":stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT __RPC_STUB IBindCtx_GetBindOptions_Stub(
+    IBindCtx* This,
+    BIND_OPTS2 *pbindopts)
+{
+    FIXME(":stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT CALLBACK IEnumMoniker_Next_Proxy(
+    IEnumMoniker* This,
+    ULONG celt,
+    IMoniker **rgelt,
+    ULONG *pceltFetched)
+{
+    ULONG fetched;
+    TRACE("(%p)->(%d, %p, %p)\n", This, celt, rgelt, pceltFetched);
+    if (!pceltFetched) pceltFetched = &fetched;
+    return IEnumMoniker_RemoteNext_Proxy(This, celt, rgelt, pceltFetched);
+}
+
+HRESULT __RPC_STUB IEnumMoniker_Next_Stub(
+    IEnumMoniker* This,
+    ULONG celt,
+    IMoniker **rgelt,
+    ULONG *pceltFetched)
+{
+    HRESULT hr;
+    TRACE("(%p)->(%d, %p, %p)\n", This, celt, rgelt, pceltFetched);
+    *pceltFetched = 0;
+    hr = IEnumMoniker_Next(This, celt, rgelt, pceltFetched);
+    if (hr == S_OK) *pceltFetched = celt;
+    return hr;
+}
+
+BOOL CALLBACK IRunnableObject_IsRunning_Proxy(
+    IRunnableObject* This)
+{
+    BOOL rv;
+    FIXME(":stub\n");
+    memset(&rv, 0, sizeof rv);
+    return rv;
+}
+
+HRESULT __RPC_STUB IRunnableObject_IsRunning_Stub(
+    IRunnableObject* This)
+{
+    FIXME(":stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT CALLBACK IMoniker_BindToObject_Proxy(
+    IMoniker* This,
+    IBindCtx *pbc,
+    IMoniker *pmkToLeft,
+    REFIID riidResult,
+    void **ppvResult)
+{
+    FIXME(":stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT __RPC_STUB IMoniker_BindToObject_Stub(
+    IMoniker* This,
+    IBindCtx *pbc,
+    IMoniker *pmkToLeft,
+    REFIID riidResult,
+    IUnknown **ppvResult)
+{
+    FIXME(":stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT CALLBACK IMoniker_BindToStorage_Proxy(
+    IMoniker* This,
+    IBindCtx *pbc,
+    IMoniker *pmkToLeft,
+    REFIID riid,
+    void **ppvObj)
+{
+    FIXME(":stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT __RPC_STUB IMoniker_BindToStorage_Stub(
+    IMoniker* This,
+    IBindCtx *pbc,
+    IMoniker *pmkToLeft,
+    REFIID riid,
+    IUnknown **ppvObj)
+{
+    FIXME(":stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT CALLBACK IEnumString_Next_Proxy(
+    IEnumString* This,
+    ULONG celt,
+    LPOLESTR *rgelt,
+    ULONG *pceltFetched)
+{
+    ULONG fetched;
+    TRACE("(%p)->(%d, %p, %p)\n", This, celt, rgelt, pceltFetched);
+    if (!pceltFetched) pceltFetched = &fetched;
+    return IEnumString_RemoteNext_Proxy(This, celt, rgelt, pceltFetched);
+}
+
+HRESULT __RPC_STUB IEnumString_Next_Stub(
+    IEnumString* This,
+    ULONG celt,
+    LPOLESTR *rgelt,
+    ULONG *pceltFetched)
+{
+    HRESULT hr;
+    TRACE("(%p)->(%d, %p, %p)\n", This, celt, rgelt, pceltFetched);
+    *pceltFetched = 0;
+    hr = IEnumString_Next(This, celt, rgelt, pceltFetched);
+    if (hr == S_OK) *pceltFetched = celt;
+    return hr;
+}
+
+HRESULT CALLBACK ISequentialStream_Read_Proxy(
+    ISequentialStream* This,
+    void *pv,
+    ULONG cb,
+    ULONG *pcbRead)
+{
+    FIXME(":stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT __RPC_STUB ISequentialStream_Read_Stub(
+    ISequentialStream* This,
+    byte *pv,
+    ULONG cb,
+    ULONG *pcbRead)
+{
+    FIXME(":stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT CALLBACK ISequentialStream_Write_Proxy(
+    ISequentialStream* This,
+    const void *pv,
+    ULONG cb,
+    ULONG *pcbWritten)
+{
+    FIXME(":stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT __RPC_STUB ISequentialStream_Write_Stub(
+    ISequentialStream* This,
+    const byte *pv,
+    ULONG cb,
+    ULONG *pcbWritten)
+{
+    FIXME(":stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT CALLBACK IStream_Seek_Proxy(
+    IStream* This,
+    LARGE_INTEGER dlibMove,
+    DWORD dwOrigin,
+    ULARGE_INTEGER *plibNewPosition)
+{
+    FIXME(":stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT __RPC_STUB IStream_Seek_Stub(
+    IStream* This,
+    LARGE_INTEGER dlibMove,
+    DWORD dwOrigin,
+    ULARGE_INTEGER *plibNewPosition)
+{
+    FIXME(":stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT CALLBACK IStream_CopyTo_Proxy(
+    IStream* This,
+    IStream *pstm,
+    ULARGE_INTEGER cb,
+    ULARGE_INTEGER *pcbRead,
+    ULARGE_INTEGER *pcbWritten)
+{
+    FIXME(":stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT __RPC_STUB IStream_CopyTo_Stub(
+    IStream* This,
+    IStream *pstm,
+    ULARGE_INTEGER cb,
+    ULARGE_INTEGER *pcbRead,
+    ULARGE_INTEGER *pcbWritten)
+{
+    FIXME(":stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT CALLBACK IEnumSTATSTG_Next_Proxy(
+    IEnumSTATSTG* This,
+    ULONG celt,
+    STATSTG *rgelt,
+    ULONG *pceltFetched)
+{
+    ULONG fetched;
+    TRACE("(%p)->(%d, %p, %p)\n", This, celt, rgelt, pceltFetched);
+    if (!pceltFetched) pceltFetched = &fetched;
+    return IEnumSTATSTG_RemoteNext_Proxy(This, celt, rgelt, pceltFetched);
+}
+
+HRESULT __RPC_STUB IEnumSTATSTG_Next_Stub(
+    IEnumSTATSTG* This,
+    ULONG celt,
+    STATSTG *rgelt,
+    ULONG *pceltFetched)
+{
+    HRESULT hr;
+    TRACE("(%p)->(%d, %p, %p)\n", This, celt, rgelt, pceltFetched);
+    *pceltFetched = 0;
+    hr = IEnumSTATSTG_Next(This, celt, rgelt, pceltFetched);
+    if (hr == S_OK) *pceltFetched = celt;
+    return hr;
+}
+
+HRESULT CALLBACK IStorage_OpenStream_Proxy(
+    IStorage* This,
+    LPCOLESTR pwcsName,
+    void *reserved1,
+    DWORD grfMode,
+    DWORD reserved2,
+    IStream **ppstm)
+{
+    FIXME(":stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT __RPC_STUB IStorage_OpenStream_Stub(
+    IStorage* This,
+    LPCOLESTR pwcsName,
+    unsigned long cbReserved1,
+    byte *reserved1,
+    DWORD grfMode,
+    DWORD reserved2,
+    IStream **ppstm)
+{
+    FIXME(":stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT CALLBACK IStorage_EnumElements_Proxy(
+    IStorage* This,
+    DWORD reserved1,
+    void *reserved2,
+    DWORD reserved3,
+    IEnumSTATSTG **ppenum)
+{
+    FIXME(":stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT __RPC_STUB IStorage_EnumElements_Stub(
+    IStorage* This,
+    DWORD reserved1,
+    unsigned long cbReserved2,
+    byte *reserved2,
+    DWORD reserved3,
+    IEnumSTATSTG **ppenum)
+{
+    FIXME(":stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT CALLBACK ILockBytes_ReadAt_Proxy(
+    ILockBytes* This,
+    ULARGE_INTEGER ulOffset,
+    void *pv,
+    ULONG cb,
+    ULONG *pcbRead)
+{
+    FIXME(":stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT __RPC_STUB ILockBytes_ReadAt_Stub(
+    ILockBytes* This,
+    ULARGE_INTEGER ulOffset,
+    byte *pv,
+    ULONG cb,
+    ULONG *pcbRead)
+{
+    FIXME(":stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT CALLBACK ILockBytes_WriteAt_Proxy(
+    ILockBytes* This,
+    ULARGE_INTEGER ulOffset,
+    const void *pv,
+    ULONG cb,
+    ULONG *pcbWritten)
+{
+    FIXME(":stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT __RPC_STUB ILockBytes_WriteAt_Stub(
+    ILockBytes* This,
+    ULARGE_INTEGER ulOffset,
+    const byte *pv,
+    ULONG cb,
+    ULONG *pcbWritten)
+{
+    FIXME(":stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT CALLBACK IFillLockBytes_FillAppend_Proxy(
+    IFillLockBytes* This,
+    const void *pv,
+    ULONG cb,
+    ULONG *pcbWritten)
+{
+    FIXME(":stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT __RPC_STUB IFillLockBytes_FillAppend_Stub(
+    IFillLockBytes* This,
+    const byte *pv,
+    ULONG cb,
+    ULONG *pcbWritten)
+{
+    FIXME(":stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT CALLBACK IFillLockBytes_FillAt_Proxy(
+    IFillLockBytes* This,
+    ULARGE_INTEGER ulOffset,
+    const void *pv,
+    ULONG cb,
+    ULONG *pcbWritten)
+{
+    FIXME(":stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT __RPC_STUB IFillLockBytes_FillAt_Stub(
+    IFillLockBytes* This,
+    ULARGE_INTEGER ulOffset,
+    const byte *pv,
+    ULONG cb,
+    ULONG *pcbWritten)
+{
+    FIXME(":stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT CALLBACK IEnumFORMATETC_Next_Proxy(
+    IEnumFORMATETC* This,
+    ULONG celt,
+    FORMATETC *rgelt,
+    ULONG *pceltFetched)
+{
+    ULONG fetched;
+    if (!pceltFetched) pceltFetched = &fetched;
+    return IEnumFORMATETC_RemoteNext_Proxy(This, celt, rgelt, pceltFetched);
+}
+
+HRESULT __RPC_STUB IEnumFORMATETC_Next_Stub(
+    IEnumFORMATETC* This,
+    ULONG celt,
+    FORMATETC *rgelt,
+    ULONG *pceltFetched)
+{
+    HRESULT hr;
+    *pceltFetched = 0;
+    hr = IEnumFORMATETC_Next(This, celt, rgelt, pceltFetched);
+    if (hr == S_OK) *pceltFetched = celt;
+    return hr;
+}
+
+HRESULT CALLBACK IEnumSTATDATA_Next_Proxy(
+    IEnumSTATDATA* This,
+    ULONG celt,
+    STATDATA *rgelt,
+    ULONG *pceltFetched)
+{
+    ULONG fetched;
+    TRACE("(%p)->(%d, %p, %p)\n", This, celt, rgelt, pceltFetched);
+    if (!pceltFetched) pceltFetched = &fetched;
+    return IEnumSTATDATA_RemoteNext_Proxy(This, celt, rgelt, pceltFetched);
+}
+
+HRESULT __RPC_STUB IEnumSTATDATA_Next_Stub(
+    IEnumSTATDATA* This,
+    ULONG celt,
+    STATDATA *rgelt,
+    ULONG *pceltFetched)
+{
+    HRESULT hr;
+    TRACE("(%p)->(%d, %p, %p)\n", This, celt, rgelt, pceltFetched);
+    *pceltFetched = 0;
+    hr = IEnumSTATDATA_Next(This, celt, rgelt, pceltFetched);
+    if (hr == S_OK) *pceltFetched = celt;
+    return hr;
+}
+
+void CALLBACK IAdviseSink_OnDataChange_Proxy(
+    IAdviseSink* This,
+    FORMATETC *pFormatetc,
+    STGMEDIUM *pStgmed)
+{
+    FIXME(":stub\n");
+}
+
+HRESULT __RPC_STUB IAdviseSink_OnDataChange_Stub(
+    IAdviseSink* This,
+    FORMATETC *pFormatetc,
+    ASYNC_STGMEDIUM *pStgmed)
+{
+    FIXME(":stub\n");
+    return E_NOTIMPL;
+}
+
+void CALLBACK IAdviseSink_OnViewChange_Proxy(
+    IAdviseSink* This,
+    DWORD dwAspect,
+    LONG lindex)
+{
+    FIXME(":stub\n");
+}
+
+HRESULT __RPC_STUB IAdviseSink_OnViewChange_Stub(
+    IAdviseSink* This,
+    DWORD dwAspect,
+    LONG lindex)
+{
+    FIXME(":stub\n");
+    return E_NOTIMPL;
+}
+
+void CALLBACK IAdviseSink_OnRename_Proxy(
+    IAdviseSink* This,
+    IMoniker *pmk)
+{
+    FIXME(":stub\n");
+}
+
+HRESULT __RPC_STUB IAdviseSink_OnRename_Stub(
+    IAdviseSink* This,
+    IMoniker *pmk)
+{
+    FIXME(":stub\n");
+    return E_NOTIMPL;
+}
+
+void CALLBACK IAdviseSink_OnSave_Proxy(
+    IAdviseSink* This)
+{
+    FIXME(":stub\n");
+}
+
+HRESULT __RPC_STUB IAdviseSink_OnSave_Stub(
+    IAdviseSink* This)
+{
+    FIXME(":stub\n");
+    return E_NOTIMPL;
+}
+
+void CALLBACK IAdviseSink_OnClose_Proxy(
+    IAdviseSink* This)
+{
+    FIXME(":stub\n");
+}
+
+HRESULT __RPC_STUB IAdviseSink_OnClose_Stub(
+    IAdviseSink* This)
+{
+    FIXME(":stub\n");
+    return E_NOTIMPL;
+}
+
+void CALLBACK IAdviseSink2_OnLinkSrcChange_Proxy(
+    IAdviseSink2* This,
+    IMoniker *pmk)
+{
+    FIXME(":stub\n");
+}
+
+HRESULT __RPC_STUB IAdviseSink2_OnLinkSrcChange_Stub(
+    IAdviseSink2* This,
+    IMoniker *pmk)
+{
+    FIXME(":stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT CALLBACK IDataObject_GetData_Proxy(
+    IDataObject* This,
+    FORMATETC *pformatetcIn,
+    STGMEDIUM *pmedium)
+{
+    FIXME(":stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT __RPC_STUB IDataObject_GetData_Stub(
+    IDataObject* This,
+    FORMATETC *pformatetcIn,
+    STGMEDIUM *pRemoteMedium)
+{
+    FIXME(":stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT CALLBACK IDataObject_GetDataHere_Proxy(
+    IDataObject* This,
+    FORMATETC *pformatetc,
+    STGMEDIUM *pmedium)
+{
+    FIXME(":stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT __RPC_STUB IDataObject_GetDataHere_Stub(
+    IDataObject* This,
+    FORMATETC *pformatetc,
+    STGMEDIUM *pRemoteMedium)
+{
+    FIXME(":stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT CALLBACK IDataObject_SetData_Proxy(
+    IDataObject* This,
+    FORMATETC *pformatetc,
+    STGMEDIUM *pmedium,
+    BOOL fRelease)
+{
+    FIXME(":stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT __RPC_STUB IDataObject_SetData_Stub(
+    IDataObject* This,
+    FORMATETC *pformatetc,
+    FLAG_STGMEDIUM *pmedium,
+    BOOL fRelease)
+{
+    FIXME(":stub\n");
+    return E_NOTIMPL;
+}
+
+/* call_as/local stubs for oleidl.idl */
+
+HRESULT CALLBACK IOleInPlaceActiveObject_TranslateAccelerator_Proxy(
+    IOleInPlaceActiveObject* This,
+    LPMSG lpmsg)
+{
+    FIXME(":stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT __RPC_STUB IOleInPlaceActiveObject_TranslateAccelerator_Stub(
+    IOleInPlaceActiveObject* This)
+{
+    FIXME(":stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT CALLBACK IOleInPlaceActiveObject_ResizeBorder_Proxy(
+    IOleInPlaceActiveObject* This,
+    LPCRECT prcBorder,
+    IOleInPlaceUIWindow *pUIWindow,
+    BOOL fFrameWindow)
+{
+    FIXME(":stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT __RPC_STUB IOleInPlaceActiveObject_ResizeBorder_Stub(
+    IOleInPlaceActiveObject* This,
+    LPCRECT prcBorder,
+    REFIID riid,
+    IOleInPlaceUIWindow *pUIWindow,
+    BOOL fFrameWindow)
+{
+    FIXME(":stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT CALLBACK IOleCache2_UpdateCache_Proxy(
+    IOleCache2* This,
+    LPDATAOBJECT pDataObject,
+    DWORD grfUpdf,
+    LPVOID pReserved)
+{
+    FIXME(":stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT __RPC_STUB IOleCache2_UpdateCache_Stub(
+    IOleCache2* This,
+    LPDATAOBJECT pDataObject,
+    DWORD grfUpdf,
+    LONG_PTR pReserved)
+{
+    FIXME(":stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT CALLBACK IEnumOLEVERB_Next_Proxy(
+    IEnumOLEVERB* This,
+    ULONG celt,
+    LPOLEVERB rgelt,
+    ULONG *pceltFetched)
+{
+    ULONG fetched;
+    TRACE("(%p)->(%d, %p, %p)\n", This, celt, rgelt, pceltFetched);
+    if (!pceltFetched) pceltFetched = &fetched;
+    return IEnumOLEVERB_RemoteNext_Proxy(This, celt, rgelt, pceltFetched);
+}
+
+HRESULT __RPC_STUB IEnumOLEVERB_Next_Stub(
+    IEnumOLEVERB* This,
+    ULONG celt,
+    LPOLEVERB rgelt,
+    ULONG *pceltFetched)
+{
+    HRESULT hr;
+    TRACE("(%p)->(%d, %p, %p)\n", This, celt, rgelt, pceltFetched);
+    *pceltFetched = 0;
+    hr = IEnumOLEVERB_Next(This, celt, rgelt, pceltFetched);
+    if (hr == S_OK) *pceltFetched = celt;
+    return hr;
+}
+
+HRESULT CALLBACK IViewObject_Draw_Proxy(
+    IViewObject* This,
+    DWORD dwDrawAspect,
+    LONG lindex,
+    void *pvAspect,
+    DVTARGETDEVICE *ptd,
+    HDC hdcTargetDev,
+    HDC hdcDraw,
+    LPCRECTL lprcBounds,
+    LPCRECTL lprcWBounds,
+    BOOL (STDMETHODCALLTYPE *pfnContinue)(ULONG_PTR dwContinue),
+    ULONG_PTR dwContinue)
+{
+    FIXME(":stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT __RPC_STUB IViewObject_Draw_Stub(
+    IViewObject* This,
+    DWORD dwDrawAspect,
+    LONG lindex,
+    ULONG_PTR pvAspect,
+    DVTARGETDEVICE *ptd,
+    ULONG_PTR hdcTargetDev,
+    ULONG_PTR hdcDraw,
+    LPCRECTL lprcBounds,
+    LPCRECTL lprcWBounds,
+    IContinue *pContinue)
+{
+    FIXME(":stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT CALLBACK IViewObject_GetColorSet_Proxy(
+    IViewObject* This,
+    DWORD dwDrawAspect,
+    LONG lindex,
+    void *pvAspect,
+    DVTARGETDEVICE *ptd,
+    HDC hicTargetDev,
+    LOGPALETTE **ppColorSet)
+{
+    FIXME(":stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT __RPC_STUB IViewObject_GetColorSet_Stub(
+    IViewObject* This,
+    DWORD dwDrawAspect,
+    LONG lindex,
+    ULONG_PTR pvAspect,
+    DVTARGETDEVICE *ptd,
+    ULONG_PTR hicTargetDev,
+    LOGPALETTE **ppColorSet)
+{
+    FIXME(":stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT CALLBACK IViewObject_Freeze_Proxy(
+    IViewObject* This,
+    DWORD dwDrawAspect,
+    LONG lindex,
+    void *pvAspect,
+    DWORD *pdwFreeze)
+{
+    FIXME(":stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT __RPC_STUB IViewObject_Freeze_Stub(
+    IViewObject* This,
+    DWORD dwDrawAspect,
+    LONG lindex,
+    ULONG_PTR pvAspect,
+    DWORD *pdwFreeze)
+{
+    FIXME(":stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT CALLBACK IViewObject_GetAdvise_Proxy(
+    IViewObject* This,
+    DWORD *pAspects,
+    DWORD *pAdvf,
+    IAdviseSink **ppAdvSink)
+{
+    FIXME(":stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT __RPC_STUB IViewObject_GetAdvise_Stub(
+    IViewObject* This,
+    DWORD *pAspects,
+    DWORD *pAdvf,
+    IAdviseSink **ppAdvSink)
+{
+    FIXME(":stub\n");
+    return E_NOTIMPL;
 }

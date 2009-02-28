@@ -360,7 +360,7 @@ static void *SHELL_BuildEnvW( const WCHAR *path )
     while (*p)
     {
         int len = wcslen(p) + 1;
-        if (!wcsnicmp( p, wPath, 5 )) got_path = TRUE;
+        if (!_wcsnicmp( p, wPath, 5 )) got_path = TRUE;
         total += len;
         p += len;
     }
@@ -378,7 +378,7 @@ static void *SHELL_BuildEnvW( const WCHAR *path )
     {
         int len = wcslen(p) + 1;
         memcpy( p2, p, len * sizeof(WCHAR) );
-        if (!wcsnicmp( p, wPath, 5 ))
+        if (!_wcsnicmp( p, wPath, 5 ))
         {
             p2[len - 1] = ';';
             wcscpy( p2 + len, path );
@@ -566,7 +566,7 @@ UINT SHELL_FindExecutable(LPCWSTR lpPath, LPCWSTR lpFile, LPCWSTR lpOperation,
     else
     {
         /* First thing we need is the file's extension */
-        extension = wcschr(xlpFile, '.'); /* Assume last "." is the one; */
+        extension = wcsrchr(xlpFile, '.'); /* Assume last "." is the one; */
         /* File->Run in progman uses */
         /* .\FILE.EXE :( */
         TRACE("xlpFile=%s,extension=%s\n", debugstr_w(xlpFile), debugstr_w(extension));
@@ -908,6 +908,8 @@ static UINT_PTR execute_from_key(LPWSTR key, LPCWSTR lpFile, WCHAR *env, LPCWSTR
 
         /* Is there a replace() function anywhere? */
         cmdlen /= sizeof(WCHAR);
+        if (cmdlen >= sizeof(cmd)/sizeof(WCHAR))
+            cmdlen = sizeof(cmd)/sizeof(WCHAR)-1;
         cmd[cmdlen] = '\0';
         SHELL_ArgifyW(param, sizeof(param)/sizeof(WCHAR), cmd, lpFile, psei->lpIDList, szCommandline, &resultLen);
         if (resultLen > sizeof(param)/sizeof(WCHAR))
@@ -1627,7 +1629,7 @@ BOOL SHELL_execute( LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc )
 
         /* Remove File Protocol from lpFile */
         /* In the case file://path/file     */
-        if (!wcsnicmp(lpFile, wFile, iSize))
+        if (!_wcsnicmp(lpFile, wFile, iSize))
         {
             lpFile += iSize;
             while (*lpFile == ':') lpFile++;
@@ -1635,7 +1637,7 @@ BOOL SHELL_execute( LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc )
         retval = execute_from_key(lpstrProtocol, lpFile, NULL, sei_tmp.lpParameters, wcmd, execfunc, &sei_tmp, sei);
     }
     /* Check if file specified is in the form www.??????.*** */
-    else if (!wcsnicmp(lpFile, wWww, 3))
+    else if (!_wcsnicmp(lpFile, wWww, 3))
     {
         /* if so, append lpFile http:// and call ShellExecute */
         WCHAR lpstrTmpFile[256];

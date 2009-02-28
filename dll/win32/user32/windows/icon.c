@@ -147,7 +147,7 @@ ICON_CreateCursorFromData(HDC hDC, PVOID ImageData, ICONIMAGE* IconImage, int cx
  * @implemented
  */
 HICON
-STDCALL
+WINAPI
 CopyIcon(HICON hIcon)
 {
     HICON hRetIcon = NULL;
@@ -168,7 +168,7 @@ CopyIcon(HICON hIcon)
  * @implemented
  */
 HICON
-STDCALL
+WINAPI
 CreateIcon(
   HINSTANCE hInstance,
   int nWidth,
@@ -203,7 +203,7 @@ CreateIcon(
  * @implemented
  */
 HICON
-STDCALL
+WINAPI
 CreateIconFromResource(
   PBYTE presbits,
   DWORD dwResSize,
@@ -218,7 +218,7 @@ CreateIconFromResource(
  * @implemented
  */
 HICON
-STDCALL
+WINAPI
 CreateIconFromResourceEx(
   PBYTE pbIconBits,
   DWORD cbIconBits,
@@ -291,6 +291,8 @@ CreateIconFromResourceEx(
   Data = (PBYTE)SafeIconImage + HeaderSize;
 
   /* get a handle to the screen dc, the icon we create is going to be compatable with this */
+  // FIXME!!! This is a victim of the Win32k Initialization BUG!!!!!
+  //hScreenDc = CreateDCW(NULL, NULL, NULL, NULL);
   hScreenDc = CreateCompatibleDC(NULL);
   if (hScreenDc == NULL)
     {
@@ -313,7 +315,7 @@ CreateIconFromResourceEx(
  * @implemented
  */
 HICON
-STDCALL
+WINAPI
 CreateIconIndirect(PICONINFO IconInfo)
 {
   BITMAP ColorBitmap;
@@ -351,7 +353,7 @@ CreateIconIndirect(PICONINFO IconInfo)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 DestroyIcon(
   HICON hIcon)
 {
@@ -363,7 +365,7 @@ DestroyIcon(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 DrawIcon(
   HDC hDC,
   int X,
@@ -377,7 +379,7 @@ DrawIcon(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 DrawIconEx(
   HDC hdc,
   int xLeft,
@@ -399,7 +401,7 @@ DrawIconEx(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetIconInfo(
   HICON hIcon,
   PICONINFO IconInfo)
@@ -412,7 +414,7 @@ GetIconInfo(
  * @implemented
  */
 HICON
-STDCALL
+WINAPI
 LoadIconA(
   HINSTANCE hInstance,
   LPCSTR lpIconName)
@@ -425,7 +427,7 @@ LoadIconA(
  * @implemented
  */
 HICON
-STDCALL
+WINAPI
 LoadIconW(
   HINSTANCE hInstance,
   LPCWSTR lpIconName)
@@ -438,7 +440,7 @@ LoadIconW(
  * @implemented
  */
 int
-STDCALL
+WINAPI
 LookupIconIdFromDirectory(
   PBYTE presbits,
   BOOL fIcon)
@@ -656,6 +658,9 @@ LookupIconIdFromDirectoryEx(PBYTE xdir,
 {
     GRPCURSORICONDIR *dir = (GRPCURSORICONDIR*)xdir;
     UINT retVal = 0;
+
+    GetConnected();
+
     if(dir && !dir->idReserved && (IMAGE_ICON == dir->idType || IMAGE_CURSOR == dir->idType))
     {
         GRPCURSORICONDIRENTRY *entry = NULL;
@@ -665,11 +670,13 @@ LookupIconIdFromDirectoryEx(PBYTE xdir,
         {
             ColorBits = 1;
         }
+        else if (cFlag & LR_VGACOLOR)
+        {
+            ColorBits = 4;
+        }
         else
         {
-            HDC hdc = CreateICW(NULL, NULL, NULL, NULL);
-            ColorBits = GetDeviceCaps(hdc, BITSPIXEL);
-            DeleteDC(hdc);
+            ColorBits = g_psi->BitsPixel;
         }
 
         if(bIcon)

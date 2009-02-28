@@ -1,0 +1,247 @@
+/*
+ * Copyright 2006-2008 Samuel Lidén Borell
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+
+LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_MESSAGE_BOX_TITLE, "Wine Internet Explorer"
+}
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_PRINT_HEADER_TEMPLATE "&w&bSida &p" /* FIXME: should be "&w&bPage &p of &P" */
+    IDS_PRINT_FOOTER_TEMPLATE "&u&b&d"
+}
+
+IDR_BROWSE_CONTEXT_MENU MENU
+{
+    POPUP "Standard"
+    {
+        MENUITEM "&Bakåt",                          IDM_GOBACKWARD
+        MENUITEM "&Framåt",                         IDM_GOFORWARD
+        MENUITEM SEPARATOR
+        MENUITEM "Spara bakg&rund som...",          IDM_SAVEBACKGROUND
+        MENUITEM "A&nvänd som skrivbordsbakgrund",  IDM_SETWALLPAPER
+        MENUITEM "K&opiera bakgrund",               IDM_COPYBACKGROUND
+        MENUITEM "Använd som &skrivbordsobjekt",    IDM_SETDESKTOPITEM
+        MENUITEM SEPARATOR
+        MENUITEM "&Markera allt",                   IDM_SELECTALL
+        MENUITEM "K&listra in",                     IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Skapa genv&äg",                   IDM_CREATESHORTCUT
+        MENUITEM "Lägg till &i Favoriter",          IDM_ADDFAVORITES
+        MENUITEM "&Visa källkod",                   IDM_VIEWSOURCE
+        MENUITEM SEPARATOR
+        MENUITEM "Tecken&kodning",                  IDM_LANGUAGE
+        MENUITEM SEPARATOR
+        MENUITEM "Skriv &ut",                       IDM_PRINT
+        MENUITEM "Upp&datera",                      _IDM_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM SEPARATOR
+        MENUITEM "&Egenskaper",                     IDM_PROPERTIES
+    }
+
+    POPUP "Bild"
+    {
+        MENUITEM "&Öppna länk",                        IDM_FOLLOWLINKC
+        MENUITEM "Öppna länk i nytt &fönster",         IDM_FOLLOWLINKN
+        MENUITEM "Spara &mål som...",                  IDM_SAVETARGET
+        MENUITEM "Skriv ut m&ål",                      IDM_PRINTTARGET
+        MENUITEM SEPARATOR
+        MENUITEM "Visa &bild",                         IDM_SHOWPICTURE
+        MENUITEM "Spara bil&d som...",                 IDM_SAVEPICTURE
+        MENUITEM "Ski&cka bild i e-postmeddelande...", IDM_MP_EMAILPICTURE
+        MENUITEM "Skriv &ut bild...",                  IDM_MP_PRINTPICTURE
+        MENUITEM "&Gå till Mina bilder",               IDM_MP_MYPICS
+        MENUITEM "A&nvänd som skrivbordsbakgrund",     IDM_SETWALLPAPER
+        MENUITEM "Använd som &skrivbordsobjekt...",    IDM_SETDESKTOPITEM
+        MENUITEM SEPARATOR
+        MENUITEM "&Klipp ut",                          IDM_CUT
+        MENUITEM "K&opiera",                           IDM_COPY
+        MENUITEM "Kopier&a genväg",                    IDM_COPYSHORTCUT
+        MENUITEM "K&listra in",                        IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Lägg till &i Favoriter...",          IDM_ADDFAVORITES
+        MENUITEM SEPARATOR
+        MENUITEM SEPARATOR
+        MENUITEM "&Egenskaper",                        IDM_PROPERTIES
+    }
+
+    POPUP "Kontroll"
+    {
+        MENUITEM "&Ångra",        IDM_UNDO
+        MENUITEM SEPARATOR
+        MENUITEM "&Klipp ut",     IDM_CUT
+        MENUITEM "K&opiera",      IDM_COPY
+        MENUITEM "K&listra in",   IDM_PASTE
+        MENUITEM "&Ta bort",      IDM_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM SEPARATOR
+        MENUITEM "&Markera allt", IDM_SELECTALL
+    }
+
+    POPUP "Tabell"
+    {
+        POPUP "&Markera"
+        {
+            MENUITEM "&Cell",         IDM_CELLSELECT
+            MENUITEM "&Rad",          IDM_ROWSELECT
+            MENUITEM "&Kolumn",       IDM_COLUMNSELECT
+            MENUITEM "&Tabell",       IDM_TABLESELECT
+        }
+        MENUITEM SEPARATOR
+        MENUITEM SEPARATOR
+        MENUITEM "&Cellegenskaper",   IDM_CELLPROPERTIES
+        MENUITEM "&Tabellegenskaper", IDM_TABLEPROPERTIES
+    }
+
+    POPUP "1DSite Select"
+    {
+        MENUITEM "&Klipp ut",     IDM_CUT
+        MENUITEM "K&opiera",      IDM_COPY
+        MENUITEM "K&listra in"  , IDM_PASTE
+        MENUITEM "&Markera allt", IDM_SELECTALL
+        MENUITEM "Skriv &ut",     IDM_PRINT
+        MENUITEM SEPARATOR
+    }
+
+    POPUP "Ankare"
+    {
+        MENUITEM "&Öppna",                    IDM_FOLLOWLINKC
+        MENUITEM "Öppna i nytt &fönster",     IDM_FOLLOWLINKN
+        MENUITEM "Spara &mål som...",         IDM_SAVETARGET
+        MENUITEM "Skriv ut m&ål",             IDM_PRINTTARGET
+        MENUITEM SEPARATOR
+        MENUITEM "&Klipp ut",                 IDM_CUT
+        MENUITEM "K&opiera",                  IDM_COPY
+        MENUITEM "Kopier&a genväg",           IDM_COPYSHORTCUT
+        MENUITEM "K&listra in",               IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Lägg till &i Favoriter...", IDM_ADDFAVORITES
+        MENUITEM SEPARATOR
+        MENUITEM SEPARATOR
+        MENUITEM "&Egenskaper",               IDM_PROPERTIES
+    }
+
+    POPUP "Context Unknown"
+    {
+        MENUITEM SEPARATOR
+    }
+
+    POPUP "DYNSRC-bild"
+    {
+        MENUITEM "&Öppna",                          IDM_FOLLOWLINKC
+        MENUITEM "Öppna i nytt &fönster",           IDM_FOLLOWLINKN
+        MENUITEM "Spara &mål som...",               IDM_SAVETARGET
+        MENUITEM "Skriv ut m&ål",                   IDM_PRINTTARGET
+        MENUITEM SEPARATOR
+        MENUITEM "Visa &bild",                      IDM_SHOWPICTURE
+        MENUITEM "Spara bil&d som...",              IDM_SAVEPICTURE
+        MENUITEM "A&nvänd som skrivbordsbakgrund",  IDM_SETWALLPAPER
+        MENUITEM "Använd som &skrivbordsobjekt...", IDM_SETDESKTOPITEM
+        MENUITEM SEPARATOR
+        MENUITEM "&Klipp ut",                       IDM_CUT
+        MENUITEM "K&opiera",                        IDM_COPY
+        MENUITEM "Kopier&a genväg",                 IDM_COPYSHORTCUT
+        MENUITEM "K&listra in",                     IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Lägg till &i Favoriter...",       IDM_ADDFAVORITES
+        MENUITEM SEPARATOR
+        MENUITEM SEPARATOR
+        MENUITEM "Spela upp",                       IDM_DYNSRCPLAY
+        MENUITEM "Stoppa",                          IDM_DYNSRCSTOP
+        MENUITEM "&Egenskaper",                     IDM_PROPERTIES
+    }
+
+    POPUP "ART-bild"
+    {
+        MENUITEM "&Öppna",                          IDM_FOLLOWLINKC
+        MENUITEM "Öppna i nytt &fönster",           IDM_FOLLOWLINKN
+        MENUITEM "Spara &mål som...",               IDM_SAVETARGET
+        MENUITEM "Skriv ut m&ål",                   IDM_PRINTTARGET
+        MENUITEM SEPARATOR
+        MENUITEM "Visa &bild",                      IDM_SHOWPICTURE
+        MENUITEM "Spara bil&d som...",              IDM_SAVEPICTURE
+        MENUITEM "A&nvänd som skrivbordsbakgrund",  IDM_SETWALLPAPER
+        MENUITEM "Använd som &skrivbordsobjekt...", IDM_SETDESKTOPITEM
+        MENUITEM SEPARATOR
+        MENUITEM "&Klipp ut",                       IDM_CUT
+        MENUITEM "K&opiera",                        IDM_COPY
+        MENUITEM "Kopier&a genväg",                 IDM_COPYSHORTCUT
+        MENUITEM "K&listra in",                     IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Lägg till &i Favoriter...",       IDM_ADDFAVORITES
+        MENUITEM SEPARATOR
+        MENUITEM "Spela upp",                       IDM_IMGARTPLAY
+        MENUITEM "Stoppa",                          IDM_IMGARTSTOP
+        MENUITEM "Spola tillbaka",                  IDM_IMGARTREWIND
+        MENUITEM SEPARATOR
+        MENUITEM SEPARATOR
+        MENUITEM "&Egenskaper",                     IDM_PROPERTIES
+    }
+
+    POPUP "Debug"
+    {
+        MENUITEM "Trace Tags",         IDM_TRACETAGS
+        MENUITEM "Resource Failures",  IDM_RESOURCEFAILURES
+        MENUITEM "Dump Tracking Info", IDM_DUMPTRACKINGINFO
+        MENUITEM "Debug Break",        IDM_DEBUGBREAK
+        MENUITEM "Debug View",         IDM_DEBUGVIEW
+        MENUITEM "Dump Tree",          IDM_DUMPTREE
+        MENUITEM "Dump Lines",         IDM_DUMPLINES
+        MENUITEM "Dump DisplayTree",   IDM_DUMPDISPLAYTREE
+        MENUITEM "Dump FormatCaches",  IDM_DUMPFORMATCACHES
+        MENUITEM "Dump LayoutRects",   IDM_DUMPLAYOUTRECTS
+        MENUITEM "Minnesmätare",     IDM_MEMORYMONITOR
+        MENUITEM "Prestandamätare", IDM_PERFORMANCEMETERS
+        MENUITEM "Spara HTML",          IDM_SAVEHTML
+        MENUITEM SEPARATOR
+        MENUITEM "&Bläddra vy",       IDM_BROWSEMODE
+        MENUITEM "R&edigera vy",         IDM_EDITMODE
+    }
+
+    POPUP "Vertikal rullningslist"
+    {
+        MENUITEM "Rulla hit",    IDM_SCROLL_HERE
+        MENUITEM SEPARATOR
+        MENUITEM "Längst upp",   IDM_SCROLL_TOP
+        MENUITEM "Längst ned",   IDM_SCROLL_BOTTOM
+        MENUITEM SEPARATOR
+        MENUITEM "En sida upp",  IDM_SCROLL_PAGEUP
+        MENUITEM "En sida ned",  IDM_SCROLL_PAGEDOWN
+        MENUITEM SEPARATOR
+        MENUITEM "Rulla uppåt",  IDM_SCROLL_UP
+        MENUITEM "Rulla nedåt",  IDM_SCROLL_DOWN
+    }
+
+    POPUP "Horisontell rullningslist"
+    {
+        MENUITEM "Rulla hit",          IDM_SCROLL_HERE
+        MENUITEM SEPARATOR
+        MENUITEM "Längst åt vänster",  IDM_SCROLL_LEFTEDGE
+        MENUITEM "Längst åt höger",    IDM_SCROLL_RIGHTEDGE
+        MENUITEM SEPARATOR
+        MENUITEM "En sida åt vänster", IDM_SCROLL_PAGELEFT
+        MENUITEM "En sida åt höger",   IDM_SCROLL_PAGERIGHT
+        MENUITEM SEPARATOR
+        MENUITEM "Rulla åt vänster",   IDM_SCROLL_LEFT
+        MENUITEM "Rulla åt höger",     IDM_SCROLL_RIGHT
+    }
+}

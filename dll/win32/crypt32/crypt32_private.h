@@ -84,20 +84,20 @@ BOOL CRYPT_AsnEncodePKCSDigestedData(CRYPT_DIGESTED_DATA *digestedData,
 
 typedef struct _CRYPT_SIGNED_INFO
 {
-    DWORD              version;
-    DWORD              cCertEncoded;
-    PCERT_BLOB         rgCertEncoded;
-    DWORD              cCrlEncoded;
-    PCRL_BLOB          rgCrlEncoded;
-    CRYPT_CONTENT_INFO content;
-    DWORD              cSignerInfo;
-    PCMSG_SIGNER_INFO  rgSignerInfo;
+    DWORD                 version;
+    DWORD                 cCertEncoded;
+    PCERT_BLOB            rgCertEncoded;
+    DWORD                 cCrlEncoded;
+    PCRL_BLOB             rgCrlEncoded;
+    CRYPT_CONTENT_INFO    content;
+    DWORD                 cSignerInfo;
+    PCMSG_CMS_SIGNER_INFO rgSignerInfo;
 } CRYPT_SIGNED_INFO;
 
-BOOL CRYPT_AsnEncodePKCSSignedInfo(CRYPT_SIGNED_INFO *, void *pvData,
+BOOL CRYPT_AsnEncodeCMSSignedInfo(CRYPT_SIGNED_INFO *, void *pvData,
  DWORD *pcbData);
 
-BOOL CRYPT_AsnDecodePKCSSignedInfo(const BYTE *pbEncoded, DWORD cbEncoded,
+BOOL CRYPT_AsnDecodeCMSSignedInfo(const BYTE *pbEncoded, DWORD cbEncoded,
  DWORD dwFlags, PCRYPT_DECODE_PARA pDecodePara,
  CRYPT_SIGNED_INFO *signedInfo, DWORD *pcbSignedInfo);
 
@@ -123,7 +123,9 @@ BOOL CRYPT_AsnDecodePKCSDigestedData(const BYTE *pbEncoded, DWORD cbEncoded,
  */
 HCRYPTPROV CRYPT_GetDefaultProvider(void);
 
-void crypt_oid_init(HINSTANCE hinst);
+HINSTANCE hInstance;
+
+void crypt_oid_init(void);
 void crypt_oid_free(void);
 void crypt_sip_free(void);
 void root_store_free(void);
@@ -227,6 +229,7 @@ typedef struct WINE_CRYPTCERTSTORE
     PFN_CERT_STORE_PROV_CLOSE   closeStore;
     CONTEXT_FUNCS               certs;
     CONTEXT_FUNCS               crls;
+    CONTEXT_FUNCS               ctls;
     PFN_CERT_STORE_PROV_CONTROL control; /* optional */
     PCONTEXT_PROPERTY_LIST      properties;
 } WINECRYPT_CERTSTORE, *PWINECRYPT_CERTSTORE;
@@ -282,6 +285,13 @@ BOOL CRYPT_ReadSerializedStoreFromFile(HANDLE file, HCERTSTORE store);
  * appropriate memory locations.
  */
 void CRYPT_FixKeyProvInfoPointers(PCRYPT_KEY_PROV_INFO info);
+
+/**
+ *  String functions
+ */
+
+DWORD cert_name_to_str_with_indent(DWORD dwCertEncodingType, DWORD indent,
+ PCERT_NAME_BLOB pName, DWORD dwStrType, LPWSTR psz, DWORD csz);
 
 /**
  *  Context functions
@@ -369,8 +379,15 @@ void *ContextList_Enum(struct ContextList *list, void *pPrev);
 
 void ContextList_Delete(struct ContextList *list, void *context);
 
-void ContextList_Empty(struct ContextList *list);
-
 void ContextList_Free(struct ContextList *list);
+
+/**
+ *  Utilities.
+ */
+
+/* Align up to a DWORD_PTR boundary
+ */
+#define ALIGN_DWORD_PTR(x) (((x) + sizeof(DWORD_PTR) - 1) & ~(sizeof(DWORD_PTR) - 1))
+#define POINTER_ALIGN_DWORD_PTR(p) ((LPVOID)ALIGN_DWORD_PTR((DWORD_PTR)(p)))
 
 #endif

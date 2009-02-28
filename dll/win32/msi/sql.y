@@ -81,7 +81,7 @@ static struct expr * EXPR_wildcard( void *info );
     int integer;
 }
 
-%token TK_ALTER TK_AND TK_BY TK_CHAR TK_COMMA TK_CREATE TK_DELETE
+%token TK_ALTER TK_AND TK_BY TK_CHAR TK_COMMA TK_CREATE TK_DELETE TK_DROP
 %token TK_DISTINCT TK_DOT TK_EQ TK_FREE TK_FROM TK_GE TK_GT TK_HOLD TK_ADD
 %token <str> TK_ID
 %token TK_ILLEGAL TK_INSERT TK_INT
@@ -106,7 +106,7 @@ static struct expr * EXPR_wildcard( void *info );
 %type <column_list> selcollist column column_and_type column_def table_def
 %type <column_list> column_assignment update_assign_list constlist
 %type <query> query from fromtable selectfrom unorderedsel
-%type <query> oneupdate onedelete oneselect onequery onecreate oneinsert onealter
+%type <query> oneupdate onedelete oneselect onequery onecreate oneinsert onealter onedrop
 %type <expr> expr val column_val const_val
 %type <column_type> column_type data_type data_type_l data_count
 %type <integer> number alterop
@@ -135,6 +135,7 @@ onequery:
   | oneupdate
   | onedelete
   | onealter
+  | onedrop
     ;
 
 oneinsert:
@@ -264,6 +265,19 @@ alterop:
   | TK_FREE
         {
             $$ = -1;
+        }
+  ;
+
+onedrop:
+    TK_DROP TK_TABLE table
+        {
+            SQL_input* sql = (SQL_input*) info;
+            UINT r;
+
+            $$ = NULL;
+            r = DROP_CreateView( sql->db, &$$, $3 );
+            if( r != ERROR_SUCCESS || !$$ )
+                YYABORT;
         }
   ;
 

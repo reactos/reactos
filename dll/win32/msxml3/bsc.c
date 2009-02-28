@@ -69,7 +69,7 @@ static HRESULT WINAPI bsc_QueryInterface(
         return S_OK;
     }
 
-    FIXME("interface %s not implemented\n", debugstr_guid(riid));
+    TRACE("interface %s not implemented\n", debugstr_guid(riid));
     return E_NOINTERFACE;
 }
 
@@ -114,7 +114,7 @@ static HRESULT WINAPI bsc_OnStartBinding(
     TRACE("(%p)->(%x %p)\n", This, dwReserved, pib);
 
     This->binding = pib;
-    IBindStatusCallback_AddRef(pib);
+    IBinding_AddRef(pib);
 
     hr = CreateStreamOnHGlobal(NULL, TRUE, &This->memstream);
     if(FAILED(hr))
@@ -294,6 +294,12 @@ HRESULT bind_url(LPCWSTR url, HRESULT (*onDataAvailable)(void*,char*,DWORD), voi
                 IStream_Release(stream);
         }
         IBindCtx_Release(pbc);
+    }
+
+    if(FAILED(hr))
+    {
+        IBindStatusCallback_Release((IBindStatusCallback*)&bsc->lpVtbl);
+        bsc = NULL;
     }
 
     *ret = bsc;

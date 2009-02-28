@@ -31,7 +31,8 @@ typedef INT
 #define METAFILE_DISK   2
 
 /* MACRO ********************************************************************/
-#define ROP_USES_SOURCE(Rop)   ((Rop << 2) ^ Rop) & 0xCC0000
+
+#define ROP_USES_SOURCE(Rop)   (((Rop) << 2 ^ Rop) & 0xCC0000)
 
 /* TYPES *********************************************************************/
 
@@ -78,6 +79,34 @@ typedef struct tagENHMETAFILE {
   INT        technology;
   INT        planes;
 } ENHMETAFILE,*PENHMETAFILE;
+
+
+#define PDEV_UMPD_ID  0xFEDCBA98
+// UMPDEV flags
+#define UMPDEV_NO_ESCAPE      0x0002
+#define UMPDEV_SUPPORT_ESCAPE 0x0004
+typedef struct _UMPDEV
+{
+  DWORD           Sig;            // Init with PDEV_UMPD_ID
+  struct _UMPDEV *pumpdNext;
+  PDRIVER_INFO_5W pdi5Info;
+  HMODULE         hModule;
+  DWORD           dwFlags;
+  DWORD           dwDriverAttributes;
+  DWORD           dwConfigVersion; // Number of times the configuration
+                                   // file for this driver has been upgraded
+                                   // or downgraded since the last spooler restart.
+  DWORD           dwDriverCount;   // After init should be 2
+  DWORD           WOW64_UMPDev;
+  DWORD           WOW64_hMod;
+  WCHAR           String[188];
+} UMPDEV, *PUMPDEV;
+
+#define LOCALFONT_COUNT 10
+typedef struct _LOCALFONT
+{
+  FONT_ATTR  lfa[LOCALFONT_COUNT];
+} LOCALFONT, *PLOCALFONT;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -132,7 +161,7 @@ PLDC
 GdiGetLDC(HDC hDC);
 
 HGDIOBJ
-STDCALL
+WINAPI
 GdiFixUpHandle(HGDIOBJ hGO);
 
 BOOL
@@ -157,15 +186,15 @@ NTAPI
 GdiConvertToDevmodeW(DEVMODEA *dm);
 
 DWORD
-STDCALL
+WINAPI
 GetAndSetDCDWord( HDC, INT, DWORD, DWORD, DWORD, DWORD );
 
 DWORD
-STDCALL
+WINAPI
 GetDCDWord( HDC, INT, DWORD);
 
 HGDIOBJ
-STDCALL
+WINAPI
 GetDCObject( HDC, INT);
 
 VOID
@@ -183,7 +212,7 @@ LogFontW2A(
 );
 
 VOID
-STDCALL
+WINAPI
 EnumLogFontExW2A(
     LPENUMLOGFONTEXA fontA,
     CONST ENUMLOGFONTEXW *fontW );
@@ -194,12 +223,18 @@ WINAPI
 UserRealizePalette(HDC hDC);
 
 int
-STDCALL
+WINAPI
 GdiAddFontResourceW(LPCWSTR lpszFilename,FLONG fl,DESIGNVECTOR *pdv);
 
 VOID
-STDCALL
+WINAPI
 GdiSetLastError( DWORD dwErrCode );
 
-/* EOF */
+DWORD WINAPI GdiGetCodePage(HDC);
+UINT FASTCALL DIB_BitmapBitsSize( PBITMAPINFO );
 
+int
+WINAPI
+GdiGetBitmapBitsSize(BITMAPINFO *lpbmi);
+
+/* EOF */

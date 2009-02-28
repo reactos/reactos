@@ -660,10 +660,10 @@ ProcessLongMidiMessage(
     DeviceInfo* device_info,
     MIDIHDR* header)
 {
-    int index = 0;
+    unsigned int index = 0;
     UCHAR* midi_bytes = (UCHAR*) header->lpData;
 
-    int msg_index = 0;
+    unsigned int msg_index = 0;
     UCHAR msg[3];
 
     /* Initialize the buffer */

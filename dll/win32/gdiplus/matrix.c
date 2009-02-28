@@ -221,7 +221,7 @@ GpStatus WINGDIPAPI GdipIsMatrixInvertible(GDIPCONST GpMatrix *matrix, BOOL *res
     return Ok;
 }
 
-GpStatus WINGDIPAPI GdipMultiplyMatrix(GpMatrix *matrix, GpMatrix* matrix2,
+GpStatus WINGDIPAPI GdipMultiplyMatrix(GpMatrix *matrix, GDIPCONST GpMatrix* matrix2,
     GpMatrixOrder order)
 {
     TRACE("(%p, %p, %d)\n", matrix, matrix2, order);

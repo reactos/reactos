@@ -1,14 +1,12 @@
-<module name="shell32" type="win32dll" baseaddress="${BASEADDRESS_SHELL32}" installbase="system32" installname="shell32.dll">
+<module name="shell32" type="win32dll" baseaddress="${BASEADDRESS_SHELL32}" installbase="system32" installname="shell32.dll" crt="msvcrt">
 	<autoregister infsection="OleControlDlls" type="Both" />
-	<importlibrary definition="shell32.spec.def" />
+	<importlibrary definition="shell32.spec" />
 	<include base="shell32">.</include>
 	<include base="recyclebin">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
-	<define name="_WIN32_IE">0x600</define>
-	<define name="_WIN32_WINNT">0x600</define>
-	<define name="WINVER">0x600</define>
 	<define name="_SHELL32_" />
 	<define name="COM_NO_WINDOWS_H" />
+	<define name="_WIN32_WINNT">0x600</define>
 	<library>wine</library>
 	<library>uuid</library>
 	<library>recyclebin</library>
@@ -71,8 +69,8 @@
 	<file>shpolicy.c</file>
 	<file>shv_def_cmenu.c</file>
 	<file>startmenu.c</file>
+	<file>stubs.c</file>
 	<file>ros-systray.c</file>
-	<file>shell32.spec</file>
 	<file>fprop.c</file>
 	<file>drive.c</file>
 	<file>she_ocmenu.c</file>

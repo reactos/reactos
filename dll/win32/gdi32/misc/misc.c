@@ -35,7 +35,7 @@ DWORD GDI_BatchLimit = 1;
 
 
 BOOL
-STDCALL
+WINAPI
 GdiAlphaBlend(
             HDC hDCDst,
             int DstX,
@@ -73,7 +73,7 @@ GdiAlphaBlend(
  * @implemented
  */
 HGDIOBJ
-STDCALL
+WINAPI
 GdiFixUpHandle(HGDIOBJ hGdiObj)
 {
     PGDI_TABLE_ENTRY Entry;
@@ -95,7 +95,7 @@ GdiFixUpHandle(HGDIOBJ hGdiObj)
  * @implemented
  */
 PVOID
-STDCALL
+WINAPI
 GdiQueryTable(VOID)
 {
   return (PVOID)GdiHandleTable;
@@ -136,15 +136,15 @@ BOOL GdiGetHandleUserData(HGDIOBJ hGdiObj, DWORD ObjectType, PVOID *UserData)
       if(Entry->UserData)
       {
          volatile CHAR *Current = (volatile CHAR*)Entry->UserData;
-         _SEH_TRY
+         _SEH2_TRY
          {
            *Current = *Current;
          }
-         _SEH_HANDLE
+         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
          {
            Result = FALSE;
          }
-         _SEH_END
+         _SEH2_END
       }
        else
          Result = FALSE; // Can not be zero.
@@ -168,7 +168,7 @@ PLDC GdiGetLDC(HDC hDC)
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 GdiSetBatchLimit(DWORD	Limit)
 {
     DWORD OldLimit = GDI_BatchLimit;
@@ -189,7 +189,7 @@ GdiSetBatchLimit(DWORD	Limit)
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 GdiGetBatchLimit()
 {
     return GDI_BatchLimit;
@@ -199,14 +199,14 @@ GdiGetBatchLimit()
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 GdiReleaseDC(HDC hdc)
 {
     return 0;
 }
 
 INT
-STDCALL
+WINAPI
 ExtEscape(HDC hDC,
           int nEscape,
           int cbInput,
@@ -221,14 +221,14 @@ ExtEscape(HDC hDC,
  * @implemented
  */
 VOID
-STDCALL
+WINAPI
 GdiSetLastError(DWORD dwErrCode)
 {
-    NtCurrentTeb ()->LastErrorValue = (ULONG) dwErrCode;
+    NtCurrentTeb()->LastErrorValue = (ULONG) dwErrCode;
 }
 
 BOOL
-STDCALL
+WINAPI
 GdiAddGlsBounds(HDC hdc,LPRECT prc)
 {
     //FIXME: Lookup what 0x8000 means

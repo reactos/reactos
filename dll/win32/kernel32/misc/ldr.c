@@ -31,13 +31,14 @@ extern BOOLEAN InWindows;
  * @remarks Returned pointer must be freed by caller.
  */
 
-LPWSTR STDCALL
+LPWSTR WINAPI
 GetDllLoadPath(LPCWSTR lpModule)
 {
 	ULONG Pos = 0, Length = 0;
 	PWCHAR EnvironmentBufferW = NULL;
 	LPCWSTR lpModuleEnd = NULL;
 	UNICODE_STRING ModuleName;
+	DWORD LastError = GetLastError(); /* GetEnvironmentVariable changes LastError */
 
 	if (lpModule != NULL)
 	{
@@ -89,6 +90,7 @@ GetDllLoadPath(LPCWSTR lpModule)
 	Pos += GetEnvironmentVariableW(L"PATH", EnvironmentBufferW + Pos, Length - Pos);
 	EnvironmentBufferW[Pos] = 0;
 
+	SetLastError(LastError);
 	return EnvironmentBufferW;
 }
 
@@ -96,7 +98,7 @@ GetDllLoadPath(LPCWSTR lpModule)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 DisableThreadLibraryCalls (
 	HMODULE	hLibModule
 	)
@@ -117,7 +119,7 @@ DisableThreadLibraryCalls (
  * @implemented
  */
 HINSTANCE
-STDCALL
+WINAPI
 LoadLibraryA (
 	LPCSTR	lpLibFileName
 	)
@@ -130,7 +132,7 @@ LoadLibraryA (
  * @implemented
  */
 HINSTANCE
-STDCALL
+WINAPI
 LoadLibraryExA (
 	LPCSTR	lpLibFileName,
 	HANDLE	hFile,
@@ -150,7 +152,7 @@ LoadLibraryExA (
  * @implemented
  */
 HINSTANCE
-STDCALL
+WINAPI
 LoadLibraryW (
 	LPCWSTR	lpLibFileName
 	)
@@ -163,7 +165,7 @@ LoadLibraryW (
  * @implemented
  */
 HINSTANCE
-STDCALL
+WINAPI
 LoadLibraryExW (
 	LPCWSTR	lpLibFileName,
 	HANDLE	hFile,
@@ -175,6 +177,7 @@ LoadLibraryExW (
 	NTSTATUS Status;
 	PWSTR SearchPath;
     ULONG DllCharacteristics;
+	BOOL FreeString = FALSE;
 
         (void)hFile;
 
@@ -197,6 +200,17 @@ LoadLibraryExW (
 	  dwFlags & LOAD_WITH_ALTERED_SEARCH_PATH ? lpLibFileName : NULL);
 
 	RtlInitUnicodeString(&DllName, (LPWSTR)lpLibFileName);
+	if (DllName.Buffer[DllName.Length/sizeof(WCHAR) - 1] == L' ')
+	{
+		RtlCreateUnicodeString(&DllName, (LPWSTR)lpLibFileName);
+		while (DllName.Length > sizeof(WCHAR) &&
+				DllName.Buffer[DllName.Length/sizeof(WCHAR) - 1] == L' ')
+		{
+			DllName.Length -= sizeof(WCHAR);
+		}
+		DllName.Buffer[DllName.Length/sizeof(WCHAR)] = UNICODE_NULL;
+		FreeString = TRUE;
+	}
     if (InWindows)
     {
         /* Call the API Properly */
@@ -211,6 +225,8 @@ LoadLibraryExW (
         Status = LdrLoadDll(SearchPath, &dwFlags, &DllName, (PVOID*)&hInst);
     }
 	RtlFreeHeap(RtlGetProcessHeap(), 0, SearchPath);
+	if (FreeString)
+		RtlFreeUnicodeString(&DllName);
 	if ( !NT_SUCCESS(Status))
 	{
 		SetLastErrorByStatus (Status);
@@ -225,27 +241,34 @@ LoadLibraryExW (
  * @implemented
  */
 FARPROC
-STDCALL
+WINAPI
 GetProcAddress( HMODULE hModule, LPCSTR lpProcName )
 {
 	ANSI_STRING ProcedureName;
 	FARPROC fnExp = NULL;
+	NTSTATUS Status;
 
 	if (HIWORD(lpProcName) != 0)
 	{
 		RtlInitAnsiString (&ProcedureName,
 		                   (LPSTR)lpProcName);
-		LdrGetProcedureAddress ((PVOID)hModule,
+		Status = LdrGetProcedureAddress ((PVOID)hModule,
 		                        &ProcedureName,
 		                        0,
 		                        (PVOID*)&fnExp);
 	}
 	else
 	{
-		LdrGetProcedureAddress ((PVOID)hModule,
+		Status = LdrGetProcedureAddress ((PVOID)hModule,
 		                        NULL,
 		                        (ULONG)lpProcName,
 		                        (PVOID*)&fnExp);
+	}
+
+	if (!NT_SUCCESS(Status))
+	{
+		SetLastError( RtlNtStatusToDosError( Status ) );
+		fnExp = NULL;
 	}
 
 	return fnExp;
@@ -256,7 +279,7 @@ GetProcAddress( HMODULE hModule, LPCSTR lpProcName )
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 FreeLibrary( HMODULE hLibModule )
 {
 	LdrUnloadDll(hLibModule);
@@ -268,7 +291,7 @@ FreeLibrary( HMODULE hLibModule )
  * @implemented
  */
 VOID
-STDCALL
+WINAPI
 FreeLibraryAndExitThread (
 	HMODULE	hLibModule,
 	DWORD	dwExitCode
@@ -285,7 +308,7 @@ FreeLibraryAndExitThread (
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 GetModuleFileNameA (
 	HINSTANCE	hModule,
 	LPSTR		lpFilename,
@@ -313,27 +336,25 @@ GetModuleFileNameA (
 		Module = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
 		if (Module->DllBase == (PVOID)hModule)
 		{
-			if (nSize * sizeof(WCHAR) < Module->FullDllName.Length)
-			{
-				SetLastErrorByStatus (STATUS_BUFFER_TOO_SMALL);
-			}
-			else
-			{
-				FileName.Length = 0;
-				FileName.MaximumLength = (USHORT)nSize * sizeof(WCHAR);
-				FileName.Buffer = lpFilename;
+			Length = min(nSize, Module->FullDllName.Length / sizeof(WCHAR));
+			FileName.Length = 0;
+			FileName.MaximumLength = (USHORT)Length * sizeof(WCHAR);
+			FileName.Buffer = lpFilename;
 
-				/* convert unicode string to ansi (or oem) */
-				if (bIsFileApiAnsi)
-					RtlUnicodeStringToAnsiString (&FileName,
-					                              &Module->FullDllName,
-					                              FALSE);
-				else
-					RtlUnicodeStringToOemString (&FileName,
-					                             &Module->FullDllName,
-					                             FALSE);
-				Length = Module->FullDllName.Length / sizeof(WCHAR);
-			}
+			/* convert unicode string to ansi (or oem) */
+			if (bIsFileApiAnsi)
+				RtlUnicodeStringToAnsiString (&FileName,
+				                              &Module->FullDllName,
+				                              FALSE);
+			else
+				RtlUnicodeStringToOemString (&FileName,
+				                             &Module->FullDllName,
+				                             FALSE);
+				
+			if (nSize < Length)
+				SetLastErrorByStatus (STATUS_BUFFER_TOO_SMALL);
+			else
+				lpFilename[Length] = '\0';
 
 			RtlLeaveCriticalSection (Peb->LoaderLock);
 			return Length;
@@ -353,7 +374,7 @@ GetModuleFileNameA (
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 GetModuleFileNameW (
 	HINSTANCE	hModule,
 	LPWSTR		lpFilename,
@@ -381,22 +402,20 @@ GetModuleFileNameW (
 
 		if (Module->DllBase == (PVOID)hModule)
 		{
-			if (nSize * sizeof(WCHAR) < Module->FullDllName.Length)
-			{
-				SetLastErrorByStatus (STATUS_BUFFER_TOO_SMALL);
-			}
-			else
-			{
-				FileName.Length = 0;
-				FileName.MaximumLength =(USHORT)nSize * sizeof(WCHAR);
-				FileName.Buffer = lpFilename;
+			Length = min(nSize, Module->FullDllName.Length / sizeof(WCHAR));
+			FileName.Length = 0;
+			FileName.MaximumLength = (USHORT) Length * sizeof(WCHAR);
+			FileName.Buffer = lpFilename;
 
-				RtlCopyUnicodeString (&FileName,
-				                      &Module->FullDllName);
-				Length = Module->FullDllName.Length / sizeof(WCHAR);
-			}
+			RtlCopyUnicodeString (&FileName,
+			                      &Module->FullDllName);
+			if (nSize < Length)
+				SetLastErrorByStatus (STATUS_BUFFER_TOO_SMALL);
+			else
+				lpFilename[Length] = L'\0';
 
 			RtlLeaveCriticalSection (Peb->LoaderLock);
+
 			return Length;
 		}
 
@@ -414,7 +433,7 @@ GetModuleFileNameW (
  * @implemented
  */
 HMODULE
-STDCALL
+WINAPI
 GetModuleHandleA ( LPCSTR lpModuleName )
 {
 	ANSI_STRING ModuleName;
@@ -446,7 +465,7 @@ GetModuleHandleA ( LPCSTR lpModuleName )
  * @implemented
  */
 HMODULE
-STDCALL
+WINAPI
 GetModuleHandleW (LPCWSTR lpModuleName)
 {
 	UNICODE_STRING ModuleName;
@@ -477,7 +496,7 @@ GetModuleHandleW (LPCWSTR lpModuleName)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetModuleHandleExW(IN DWORD dwFlags,
                    IN LPCWSTR lpModuleName  OPTIONAL,
                    OUT HMODULE* phModule)
@@ -544,7 +563,7 @@ GetModuleHandleExW(IN DWORD dwFlags,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetModuleHandleExA(IN DWORD dwFlags,
                    IN LPCSTR lpModuleName  OPTIONAL,
                    OUT HMODULE* phModule)
@@ -589,7 +608,7 @@ GetModuleHandleExA(IN DWORD dwFlags,
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 LoadModule (
     LPCSTR  lpModuleName,
     LPVOID  lpParameterBlock

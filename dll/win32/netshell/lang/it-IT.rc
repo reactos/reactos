@@ -1,0 +1,130 @@
+LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
+
+IDD_NETPROPERTIES DIALOGEX DISCARDABLE  0, 0, 246, 246
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
+CAPTION "General"
+FONT 8, "MS Shell Dlg"
+BEGIN
+ CONTROL "", IDC_COMPONENTSLIST, "SysListView32", LVS_LIST | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 9, 71, 230, 55
+ LTEXT "Connessione con:", -1, 9,9,217,8
+ EDITTEXT IDC_NETCARDNAME, 9, 21, 230, 12, WS_BORDER | WS_DISABLED | WS_TABSTOP
+ PUSHBUTTON "&Configura", IDC_CONFIGURE, 189, 38, 50, 14
+ LTEXT "Componenti verificati sono usati da questa connessione:", -1, 9, 59, 217, 8
+ PUSHBUTTON "&Installa", IDC_INSTALL, 9, 130, 65, 14, WS_DISABLED | WS_TABSTOP
+ PUSHBUTTON "&Disinstalla", IDC_UNINSTALL, 90, 130, 65, 14, WS_DISABLED | WS_TABSTOP
+ PUSHBUTTON "&Proprietà", IDC_PROPERTIES, 174, 130, 65, 14
+ GROUPBOX "Descrizione", -1, 9, 153, 230, 46, BS_GROUPBOX
+ LTEXT "Component Description goes here...", IDC_DESCRIPTION, 15, 165, 217, 28, WS_GROUP
+ CHECKBOX "Visualizzare l'icona nella barra dei task durante la connessione", IDC_SHOWTASKBAR, 9, 206, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+ CHECKBOX "Notificare quando la connessione è limitata o non attiva", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+END
+
+IDD_STATUS DIALOGEX DISCARDABLE  0, 0, 200, 280
+STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Allgemein"
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+
+IDD_LAN_NETSTATUS DIALOGEX DISCARDABLE  0, 0, 200,180
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
+CAPTION "Generale"
+FONT 8, "MS Shell Dlg"
+BEGIN
+ GROUPBOX "Connessione", -1, 9, 8, 182, 58, BS_GROUPBOX
+ LTEXT "Stato:", -1, 19, 20, 60, 8
+ LTEXT "Durata:", -1, 19, 34, 60, 8
+ LTEXT "Velocità:", -1, 19, 48, 60, 8
+ GROUPBOX "Attività", -1, 9, 74, 182, 70, BS_GROUPBOX
+ RTEXT "Inviati", -1, 26, 90, 60, 8
+ ICON IDI_HORIZONTAL, -1, 90, 85, 18, 20
+ ICON IDI_NETSTAT, -1, 110, 85, 18, 20
+ ICON IDI_HORIZONTAL, -1, 130, 85, 18, 20
+ LTEXT "Ricevuti", -1, 149, 90, 37, 8
+ LTEXT "Byte:", -1, 17, 115, 32, 8
+ RTEXT "000.000.000", IDC_SEND, 63, 115, 44, 8
+ ICON IDI_VERTICAL, -1, 110, 108, 18, 20
+ RTEXT "000.000.000", IDC_RECEIVED, 139, 115, 44, 8
+ PUSHBUTTON "&Proprietà", IDC_STATUS_PROPERTIES, 10, 150, 50, 14
+ PUSHBUTTON "&Disabilita", IDC_ENDISABLE, 66, 150, 50, 14
+ RTEXT "",IDC_STATUS,83,20,98,8
+ RTEXT "",IDC_DURATION,83,34,98,8
+ RTEXT "",IDC_SPEED,83,48,98,8
+END
+
+IDD_LAN_NETSTATUSADVANCED DIALOGEX DISCARDABLE  0, 0, 200,180
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Supporto"
+FONT 8, "MS Shell Dlg"
+BEGIN
+ GROUPBOX "Stato della connessione", -1, 9, 8, 200, 88, BS_GROUPBOX
+ LTEXT "Tipo di indirizzo:", -1, 22, 20, 80, 8
+ LTEXT "Indirizzo IP:", -1, 22, 34, 80, 8
+ LTEXT "SubNet mask:", -1, 22, 48, 80, 8
+ LTEXT "Default gateway:", -1, 22, 62, 80, 8
+
+ RTEXT "N/A", IDC_DETAILSTYPE, 122, 20, 80, 8
+ RTEXT "000.000.000.000", IDC_DETAILSIP, 122, 34, 80, 8
+ RTEXT "000.000.000.000", IDC_DETAILSSUBNET, 122, 48, 80, 8
+ RTEXT "", IDC_DETAILSGATEWAY, 122, 62, 80, 8
+
+ PUSHBUTTON "&Dettagli...", IDC_DETAILS, 22, 76, 62, 14
+END
+
+IDD_LAN_NETSTATUSDETAILS DIALOGEX DISCARDABLE  0, 0, 200,200
+STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
+CAPTION "Network Connection Details"
+FONT 8, "MS Shell Dlg"
+BEGIN
+ LTEXT "Network Connection &Details:", -1, 15, 9, 170, 12
+ CONTROL "", IDC_DETAILS, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 15, 25, 170, 130
+ PUSHBUTTON "&Close", IDC_CLOSE, 125, 165, 62, 14
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_PHYSICAL_ADDRESS        "Indirizzo fisico"
+	IDS_IP_ADDRESS              "Indirizzo IP"
+	IDS_SUBNET_MASK             "Subnet Mask"
+	IDS_DEF_GATEWAY             "Default Gateway"
+	IDS_DHCP_SERVER             "DHCP Server"
+	IDS_LEASE_OBTAINED          "Indirizzo ottenuto"
+	IDS_LEASE_EXPIRES           "Indirizzo con scadenza"
+	IDS_DNS_SERVERS             "DNS Servers"
+	IDS_WINS_SERVERS            "WINS Servers"
+	IDS_PROPERTY                "Proprietà"
+	IDS_VALUE                   "Valore"
+	IDS_NETWORKCONNECTION       "Connessione di rete"
+	IDS_SHV_COLUMN_NAME         "Nome"
+	IDS_SHV_COLUMN_TYPE         "Tipo"
+	IDS_SHV_COLUMN_STATE        "Stato"
+	IDS_SHV_COLUMN_DEVNAME      "Nome del dispositivo"
+	IDS_SHV_COLUMN_PHONE        "Numero di telefono o indirizzo dell'host"
+	IDS_SHV_COLUMN_OWNER        "Proprietario"
+	IDS_TYPE_ETHERNET           "LAN o internet ad alta velocità"
+	IDS_STATUS_NON_OPERATIONAL  "Disabilitato"
+	IDS_STATUS_UNREACHABLE      "Non connesso"
+	IDS_STATUS_DISCONNECTED     "Cavo di rete scollegato"
+	IDS_STATUS_CONNECTING       "Acquisizione indirizzo di rete"
+	IDS_STATUS_CONNECTED        "Connesso"
+	IDS_STATUS_OPERATIONAL      "Connesso"
+
+	IDS_NET_ACTIVATE            "Abilita"
+	IDS_NET_DEACTIVATE          "Disabilita"
+	IDS_NET_STATUS              "Stato"
+	IDS_NET_REPAIR              "Ripara"
+	IDS_NET_CREATELINK          "Crea collegamento"
+	IDS_NET_DELETE              "Cancella"
+	IDS_NET_PROPERTIES          "Proprietà"
+
+	IDS_FORMAT_BIT              "%u Bit/s"
+	IDS_FORMAT_KBIT             "%u KBit/s"
+	IDS_FORMAT_MBIT             "%u MBit/s"
+	IDS_FORMAT_GBIT             "%u GBit/s"
+	IDS_DURATION_DAY            "%d Giorno %s"
+	IDS_DURATION_DAYS           "%d Giorni %s"
+	IDS_ASSIGNED_DHCP           "Assegnato da DHCP"
+	IDS_ASSIGNED_MANUAL         "Configurato manualmente"
+END
+

@@ -1,0 +1,7 @@
+#include <windows.h>
+
+#define REACTOS_VERSION_DLL
+#define REACTOS_STR_FILE_DESCRIPTION	"Unicode name DLL\0"
+#define REACTOS_STR_INTERNAL_NAME	"getuname\0"
+#define REACTOS_STR_ORIGINAL_FILENAME	"getuname.dll\0"
+#include <reactos/version.rc>

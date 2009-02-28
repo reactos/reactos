@@ -8,8 +8,8 @@ const GUID CLSID_NetworkConnections      = {0x7007ACC7, 0x3202, 0x11D1, {0xAA, 0
 const GUID CLSID_LanConnectStatusUI      = {0x7007ACCF, 0x3202, 0x11D1, {0xAA, 0xD2, 0x00, 0x80, 0x5F, 0xC1, 0x27, 0x0E}};
 
 static const WCHAR szNetConnectClass[]    = L"CLSID\\{7007ACC7-3202-11D1-AAD2-00805FC1270E}";
-static const WCHAR szLanConnectUI[]       = L"CLSID\\{7007ACC5-3202-11D1-AA-D200805FC1270E}";
-static const WCHAR szLanConnectStatusUI[] = L"CLSID\\{7007ACCF-3202-11D1-AA-D200805FC1270E}";
+static const WCHAR szLanConnectUI[]       = L"CLSID\\{7007ACC5-3202-11D1-AAD2-00805FC1270E}";
+static const WCHAR szLanConnectStatusUI[] = L"CLSID\\{7007ACCF-3202-11D1-AAD2-00805FC1270E}";
 static const WCHAR szNamespaceKey[] = L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ControlPanel\\NameSpace\\{7007ACC7-3202-11D1-AAD2-00805FC1270E}";
 
 static INTERFACE_TABLE InterfaceTable[] =
@@ -191,7 +191,7 @@ DllGetClassObject(
 }
 
 VOID
-STDCALL
+WINAPI
 NcFreeNetconProperties (NETCON_PROPERTIES* pProps)
 {
     CoTaskMemFree(pProps->pszwName);

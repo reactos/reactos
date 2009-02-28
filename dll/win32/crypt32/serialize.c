@@ -627,7 +627,7 @@ static BOOL CRYPT_WriteSerializedStoreToFile(HANDLE file, HCERTSTORE store)
 static BOOL CRYPT_SavePKCSToMem(HCERTSTORE store,
  DWORD dwMsgAndCertEncodingType, void *handle)
 {
-    CERT_BLOB *blob = (CERT_BLOB *)handle;
+    CERT_BLOB *blob = handle;
     CRYPT_SIGNED_INFO signedInfo = { 0 };
     PCCERT_CONTEXT cert = NULL;
     PCCRL_CONTEXT crl = NULL;
@@ -697,7 +697,7 @@ static BOOL CRYPT_SavePKCSToMem(HCERTSTORE store,
     }
     if (ret)
     {
-        ret = CRYPT_AsnEncodePKCSSignedInfo(&signedInfo, NULL, &size);
+        ret = CRYPT_AsnEncodeCMSSignedInfo(&signedInfo, NULL, &size);
         if (ret)
         {
             if (!blob->pbData)
@@ -711,7 +711,7 @@ static BOOL CRYPT_SavePKCSToMem(HCERTSTORE store,
             else
             {
                 blob->cbData = size;
-                ret = CRYPT_AsnEncodePKCSSignedInfo(&signedInfo, blob->pbData,
+                ret = CRYPT_AsnEncodeCMSSignedInfo(&signedInfo, blob->pbData,
                  &blob->cbData);
             }
         }
@@ -767,7 +767,7 @@ struct MemWrittenTracker
 /* handle is a pointer to a MemWrittenTracker.  Assumes its pointer is valid. */
 static BOOL CRYPT_MemOutputFunc(void *handle, const void *buffer, DWORD size)
 {
-    struct MemWrittenTracker *tracker = (struct MemWrittenTracker *)handle;
+    struct MemWrittenTracker *tracker = handle;
     BOOL ret;
 
     if (tracker->written + size > tracker->cbData)
@@ -797,8 +797,8 @@ static BOOL CRYPT_CountSerializedBytes(void *handle, const void *buffer,
 static BOOL CRYPT_SaveSerializedToMem(HCERTSTORE store,
  DWORD dwMsgAndCertEncodingType, void *handle)
 {
-    CERT_BLOB *blob = (CERT_BLOB *)handle;
-    DWORD size;
+    CERT_BLOB *blob = handle;
+    DWORD size = 0;
     BOOL ret;
 
     ret = CRYPT_WriteSerializedStoreToStream(store, CRYPT_CountSerializedBytes,
@@ -833,7 +833,7 @@ BOOL WINAPI CertSaveStore(HCERTSTORE hCertStore, DWORD dwMsgAndCertEncodingType,
 {
     BOOL (*saveFunc)(HCERTSTORE, DWORD, void *);
     void *handle;
-    BOOL ret;
+    BOOL ret, closeFile = TRUE;
 
     TRACE("(%p, %08x, %d, %d, %p, %08x)\n", hCertStore,
           dwMsgAndCertEncodingType, dwSaveAs, dwSaveTo, pvSaveToPara, dwFlags);
@@ -841,7 +841,16 @@ BOOL WINAPI CertSaveStore(HCERTSTORE hCertStore, DWORD dwMsgAndCertEncodingType,
     switch (dwSaveAs)
     {
     case CERT_STORE_SAVE_AS_STORE:
+        if (dwSaveTo == CERT_STORE_SAVE_TO_MEMORY)
+            saveFunc = CRYPT_SaveSerializedToMem;
+        else
+            saveFunc = CRYPT_SaveSerializedToFile;
+        break;
     case CERT_STORE_SAVE_AS_PKCS7:
+        if (dwSaveTo == CERT_STORE_SAVE_TO_MEMORY)
+            saveFunc = CRYPT_SavePKCSToMem;
+        else
+            saveFunc = CRYPT_SavePKCSToFile;
         break;
     default:
         WARN("unimplemented for %d\n", dwSaveAs);
@@ -852,25 +861,18 @@ BOOL WINAPI CertSaveStore(HCERTSTORE hCertStore, DWORD dwMsgAndCertEncodingType,
     {
     case CERT_STORE_SAVE_TO_FILE:
         handle = pvSaveToPara;
-        saveFunc = dwSaveAs == CERT_STORE_SAVE_AS_STORE ?
-         CRYPT_SaveSerializedToFile : CRYPT_SavePKCSToFile;
+        closeFile = FALSE;
         break;
     case CERT_STORE_SAVE_TO_FILENAME_A:
-        handle = CreateFileA((LPCSTR)pvSaveToPara, GENERIC_WRITE, 0, NULL,
+        handle = CreateFileA(pvSaveToPara, GENERIC_WRITE, 0, NULL,
          CREATE_ALWAYS, 0, NULL);
-        saveFunc = dwSaveAs == CERT_STORE_SAVE_AS_STORE ?
-         CRYPT_SaveSerializedToFile : CRYPT_SavePKCSToFile;
         break;
     case CERT_STORE_SAVE_TO_FILENAME_W:
-        handle = CreateFileW((LPCWSTR)pvSaveToPara, GENERIC_WRITE, 0, NULL,
+        handle = CreateFileW(pvSaveToPara, GENERIC_WRITE, 0, NULL,
          CREATE_ALWAYS, 0, NULL);
-        saveFunc = dwSaveAs == CERT_STORE_SAVE_AS_STORE ?
-         CRYPT_SaveSerializedToFile : CRYPT_SavePKCSToFile;
         break;
     case CERT_STORE_SAVE_TO_MEMORY:
         handle = pvSaveToPara;
-        saveFunc = dwSaveAs == CERT_STORE_SAVE_AS_STORE ?
-         CRYPT_SaveSerializedToMem : CRYPT_SavePKCSToMem;
         break;
     default:
         WARN("unimplemented for %d\n", dwSaveTo);
@@ -878,6 +880,8 @@ BOOL WINAPI CertSaveStore(HCERTSTORE hCertStore, DWORD dwMsgAndCertEncodingType,
         return FALSE;
     }
     ret = saveFunc(hCertStore, dwMsgAndCertEncodingType, handle);
+    if (closeFile)
+        CloseHandle(handle);
     TRACE("returning %d\n", ret);
     return ret;
 }

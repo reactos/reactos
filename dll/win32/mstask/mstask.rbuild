@@ -3,7 +3,7 @@
 <group>
 <module name="mstask" type="win32dll" baseaddress="${BASEADDRESS_MSTASK}" installbase="system32" installname="mstask.dll" allowwarnings="true">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
-	<importlibrary definition="mstask.spec.def" />
+	<importlibrary definition="mstask.spec" />
 	<include base="mstask">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
@@ -14,13 +14,15 @@
 	<file>task.c</file>
 	<file>task_scheduler.c</file>
 	<file>task_trigger.c</file>
-	<file>mstask_local.idl</file>
 	<file>rsrc.rc</file>
-	<file>mstask.spec</file>
+	<library>mstask_local_interface</library>
 	<library>wine</library>
 	<library>uuid</library>
 	<library>ole32</library>
 	<library>kernel32</library>
 	<library>ntdll</library>
+</module>
+<module name="mstask_local_interface" type="idlinterface">
+	<file>mstask_local.idl</file>
 </module>
 </group>

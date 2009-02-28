@@ -72,8 +72,8 @@ HBRUSH DefWndControlColor(HDC hDC, UINT ctlType);
 static LRESULT WINAPI ScrollBarWndProcW( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
 static LRESULT WINAPI ScrollBarWndProcA( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
 
-UINT STDCALL SetSystemTimer(HWND,UINT_PTR,UINT,TIMERPROC);
-BOOL STDCALL KillSystemTimer(HWND,UINT_PTR);
+UINT WINAPI SetSystemTimer(HWND,UINT_PTR,UINT,TIMERPROC);
+BOOL WINAPI KillSystemTimer(HWND,UINT_PTR);
 
 /*********************************************************************
  * scrollbar class descriptor
@@ -82,8 +82,8 @@ const struct builtin_class_descr SCROLL_builtin_class =
 {
     L"ScrollBar",           /* name */
     CS_DBLCLKS | CS_VREDRAW | CS_HREDRAW | CS_PARENTDC, /* style */
-    ScrollBarWndProcW,      /* procW */
     ScrollBarWndProcA,      /* procA */
+    ScrollBarWndProcW,      /* procW */
     0,                      /* extra */
     IDC_ARROW,              /* cursor */
     0                       /* brush */
@@ -1358,7 +1358,7 @@ ScrollBarWndProc(WNDPROC DefWindowProc, HWND Wnd, UINT Msg, WPARAM wParam, LPARA
               Rect.bottom = Rect.top + ThumbSize;
             }
           HideCaret(Wnd);
-          NtUserInvalidateRect(Wnd, &Rect, FALSE);
+          InvalidateRect(Wnd, &Rect, FALSE);
           DestroyCaret();
         }
         break;
@@ -1479,25 +1479,7 @@ ScrollBarWndProcA(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 /*
  * @implemented
  */
-BOOL STDCALL
-EnableScrollBar(HWND hWnd, UINT wSBflags, UINT wArrows)
-{
-  return NtUserEnableScrollBar(hWnd, wSBflags, wArrows);
-}
-
-/*
- * @implemented
- */
-BOOL STDCALL
-GetScrollBarInfo(HWND hWnd, LONG idObject, PSCROLLBARINFO psbi)
-{
-  return NtUserGetScrollBarInfo(hWnd, idObject, psbi);
-}
-
-/*
- * @implemented
- */
-BOOL STDCALL
+BOOL WINAPI
 GetScrollInfo(HWND Wnd, INT SBType, LPSCROLLINFO Info)
 {
   if (SB_CTL == SBType)
@@ -1513,7 +1495,7 @@ GetScrollInfo(HWND Wnd, INT SBType, LPSCROLLINFO Info)
 /*
  * @implemented
  */
-INT STDCALL
+INT WINAPI
 GetScrollPos(HWND Wnd, INT Bar)
 {
   TRACE("Wnd=%p Bar=%d\n", Wnd, Bar);
@@ -1532,7 +1514,7 @@ GetScrollPos(HWND Wnd, INT Bar)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetScrollRange(HWND Wnd, int Bar, LPINT MinPos, LPINT MaxPos)
 {
   TRACE("Wnd=%x Bar=%d Min=%p Max=%p\n", Wnd, Bar, MinPos, MaxPos);
@@ -1551,7 +1533,7 @@ GetScrollRange(HWND Wnd, int Bar, LPINT MinPos, LPINT MaxPos)
 /*
  * @implemented
  */
-INT STDCALL
+INT WINAPI
 SetScrollInfo(HWND Wnd, int SBType, LPCSCROLLINFO Info, BOOL bRedraw)
 {
   if (SB_CTL == SBType)
@@ -1567,7 +1549,7 @@ SetScrollInfo(HWND Wnd, int SBType, LPCSCROLLINFO Info, BOOL bRedraw)
 /*
  * @implemented
  */
-INT STDCALL
+INT WINAPI
 SetScrollPos(HWND hWnd, INT nBar, INT nPos, BOOL bRedraw)
 {
   INT Result = 0;
@@ -1597,7 +1579,7 @@ SetScrollPos(HWND hWnd, INT nBar, INT nPos, BOOL bRedraw)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetScrollRange(HWND hWnd, INT nBar, INT nMinPos, INT nMaxPos, BOOL bRedraw)
 {
   SCROLLINFO ScrollInfo;
@@ -1609,13 +1591,4 @@ SetScrollRange(HWND hWnd, INT nBar, INT nMinPos, INT nMaxPos, BOOL bRedraw)
   NtUserSetScrollInfo(hWnd, nBar, &ScrollInfo, bRedraw);
 
   return TRUE;
-}
-
-/*
- * @implemented
- */
-BOOL STDCALL
-ShowScrollBar(HWND hWnd, INT wBar, BOOL bShow)
-{
-  return NtUserShowScrollBar(hWnd, wBar, bShow);
 }

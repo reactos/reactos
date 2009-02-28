@@ -3,11 +3,10 @@
 <group>
 <module name="urlmon" type="win32dll" baseaddress="${BASEADDRESS_URLMON}" installbase="system32" installname="urlmon.dll" allowwarnings="true">
 	<autoregister infsection="OleControlDlls" type="Both" />
-	<importlibrary definition="urlmon.spec.def" />
+	<importlibrary definition="urlmon.spec" />
 	<include base="urlmon">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
-	<define name="WINVER">0x600</define>
 	<define name="_WIN32_WINNT">0x600</define>
 	<file>bindctx.c</file>
 	<file>binding.c</file>
@@ -26,7 +25,6 @@
 	<file>umstream.c</file>
 	<file>urlmon_main.c</file>
 	<file>rsrc.rc</file>
-	<file>urlmon.spec</file>
 	<library>wine</library>
 	<library>uuid</library>
 	<library>ole32</library>

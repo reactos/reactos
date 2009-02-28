@@ -44,8 +44,14 @@
 #include <commctrl.h>
 #include <ole2.h>
 #include <richole.h>
+#include "imm.h"
+#include <textserv.h>
 
 #include "wine/debug.h"
+
+#ifdef __i386__
+extern struct ITextHostVtbl itextHostStdcallVtbl;
+#endif /* __i386__ */
 
 typedef struct tagME_String
 {
@@ -90,7 +96,7 @@ typedef enum {
   diUndoPotentialEndTransaction, /* 20 - allows grouping typed chars for undo */
 } ME_DIType;
 
-#define SELECTIONBAR_WIDTH 9
+#define SELECTIONBAR_WIDTH 8
 
 /******************************** run flags *************************/
 #define MERF_STYLEFLAGS 0x0FFF
@@ -156,7 +162,6 @@ typedef struct tagME_Run
   int nAscent, nDescent; /* pixels above/below baseline */
   POINT pt; /* relative to para's position */
   REOBJECT *ole_obj; /* FIXME: should be a union with strText (at least) */
-  int nCR; int nLF;  /* for MERF_ENDPARA: number of \r and \n characters encoded by run */
 } ME_Run;
 
 typedef struct tagME_Document {
@@ -189,7 +194,7 @@ typedef struct tagME_Paragraph
   int nCharOfs;
   int nFlags;
   POINT pt;
-  int nHeight;
+  int nHeight, nWidth;
   int nLastPaintYPos, nLastPaintHeight;
   int nRows;
   struct tagME_DisplayItem *prev_para, *next_para, *document;
@@ -246,7 +251,7 @@ typedef struct tagME_UndoItem
 {
   ME_DisplayItem di;
   int nStart, nLen;
-  int nCR, nLF;      /* used by diUndoSplitParagraph */
+  ME_String *eol_str; /* used by diUndoSplitParagraph */
 } ME_UndoItem;
 
 typedef struct tagME_TextBuffer
@@ -327,13 +332,16 @@ typedef struct tagME_FontCacheItem
 typedef struct tagME_TextEditor
 {
   HWND hWnd;
+  ITextHost *texthost;
   BOOL bEmulateVersion10;
   ME_TextBuffer *pBuffer;
   ME_Cursor *pCursors;
+  DWORD styleFlags;
+  DWORD exStyleFlags;
   int nCursors;
   SIZE sizeWindow;
   int nTotalLength, nLastTotalLength;
-  int nHeight;
+  int nTotalWidth, nLastTotalWidth;
   int nUDArrowX;
   int nSequence;
   COLORREF rgbBackColor;
@@ -350,10 +358,10 @@ typedef struct tagME_TextEditor
   ME_DisplayItem *pLastSelStartPara, *pLastSelEndPara;
   ME_FontCacheItem pFontCache[HFONT_CACHE_SIZE];
   int nZoomNumerator, nZoomDenominator;
+  RECT prevClientRect;
   RECT rcFormat;
-  BOOL bRedraw;
+  BOOL bDefaultFormatRect;
   BOOL bWordWrap;
-  int nInvalidOfs;
   int nTextLimit;
   EDITWORDBREAKPROCW pfnWordBreak;
   LPRICHEDITOLECALLBACK lpOleCallback;
@@ -374,8 +382,10 @@ typedef struct tagME_TextEditor
   /* Track previous notified selection */
   CHARRANGE notified_cr;
 
-  /* Cache previously set vertical scrollbar info */
-  SCROLLINFO vert_si;
+  /* Cache previously set scrollbar info */
+  SCROLLINFO vert_si, horz_si;
+
+  BOOL bMouseCaptured;
 } ME_TextEditor;
 
 typedef struct tagME_Context
@@ -401,7 +411,7 @@ typedef struct tagME_WrapContext
   int nAvailWidth;
   int nRow;
   POINT pt;
-  BOOL bOverflown;
+  BOOL bOverflown, bWordWrap;
   ME_DisplayItem *pRowStart;
   
   ME_DisplayItem *pLastSplittableRun;

@@ -384,18 +384,18 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	GROUPBOX "Tâches", -1, 7, 10, 249, 45
 	ICON "", 30109, 14, 25, 21, 20, SS_REALSIZECONTROL
-	AUTORADIOBUTTON "Afficher les tâches habituelles dans les dossiers", 14001, 40, 25, 120, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Utiliser les dossiers ReactOS class&iques", 14002, 40, 37, 120, 10, WS_TABSTOP
+	AUTORADIOBUTTON "Afficher les tâches habituelles dans les dossiers", 14001, 40, 25, 120, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Utiliser les dossiers ReactOS class&iques", 14002, 40, 37, 120, 10, WS_TABSTOP | WS_GROUP
 	GROUPBOX "Parcourir les dossiers", -1, 7, 60, 249, 45, WS_TABSTOP
 	ICON "", 30110, 14, 70, 21, 20, SS_REALSIZECONTROL
-	AUTORADIOBUTTON "Ouvrir tous les dossiers dans la &même fenêtre", 14004, 40, 70, 140, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Ouvrir chaque dossier dans sa propre fenêtre", 14005, 40, 82, 140, 10, WS_TABSTOP
+	AUTORADIOBUTTON "Ouvrir tous les dossiers dans la &même fenêtre", 14004, 40, 70, 140, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Ouvrir chaque dossier dans sa propre fenêtre", 14005, 40, 82, 140, 10, WS_TABSTOP | WS_GROUP
 	GROUPBOX "Cliquer sur les éléments de la façon suivante", -1, 7, 110, 249, 60
 	ICON "", 30111, 14, 120, 21, 20, SS_REALSIZECONTROL
-	AUTORADIOBUTTON "Clic unique pour ouvrir un élément (pointer pour sélectionner)", 14007, 40, 120, 170, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Toujours souligner les titres des icônes comme dans le navigateur", 14008, 50, 132, 170, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Souligner les titres des icônes seulement quand je les &pointe", 14009, 50, 144, 170, 10, WS_TABSTOP
-	AUTORADIOBUTTON "&Double-cliquer pour ouvrir un élément (clic unique pour le sélectionner)", 14010, 40, 156, 170, 10, WS_TABSTOP
+	AUTORADIOBUTTON "Clic unique pour ouvrir un élément (pointer pour sélectionner)", 14007, 40, 120, 170, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Toujours souligner les titres des icônes comme dans le navigateur", 14008, 50, 132, 170, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Souligner les titres des icônes seulement quand je les &pointe", 14009, 50, 144, 170, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "&Double-cliquer pour ouvrir un élément (clic unique pour le sélectionner)", 14010, 40, 156, 170, 10, WS_TABSTOP | WS_GROUP
 	PUSHBUTTON "Pa&ramètres par défaut", 14011, 180, 180, 60, 14, WS_TABSTOP
 END
 
@@ -569,14 +569,14 @@ END
 
 CHKDSK_DLG DIALOGEX 50, 50, 194, 120
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Check Disk"
+CAPTION "Vérifier le disque"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	DEFPUSHBUTTON "Start", IDOK, 53, 100, 60, 14
-	GROUPBOX "Check disk options", -1, 7, 6, 179, 50
-	PUSHBUTTON "Cancel", IDCANCEL, 118, 100, 60, 14
-	AUTOCHECKBOX "Automatically fix file system errors", 14000, 16, 15, 155, 10
-	AUTOCHECKBOX "&Scan for and attempt recovery of bad sectors", 14001, 16, 30, 165, 10
+	DEFPUSHBUTTON "Démarrer", IDOK, 53, 100, 60, 14
+	GROUPBOX "Options de vérification", -1, 7, 6, 179, 50
+	PUSHBUTTON "Annuler", IDCANCEL, 118, 100, 60, 14
+	AUTOCHECKBOX "Réparer automatiquement les erreurs du système de fichiers", 14000, 16, 15, 155, 10
+	AUTOCHECKBOX "&Scanner pour rechercher et réparer les secteurs défectueux", 14001, 16, 30, 165, 10
 	CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 60, 170, 8
 	LTEXT "", 14003, 60, 80, 170, 10
 END
@@ -627,7 +627,7 @@ BEGIN
 	IDS_MYCOMPUTER              "Poste de travail"
 	IDS_RECYCLEBIN_FOLDER_NAME  "Corbeille"
 	IDS_CONTROLPANEL            "Panneau de configuration"
-	IDS_ADMINISTRATIVETOOLS     "Administrative Tools"
+	IDS_ADMINISTRATIVETOOLS     "Outils d'administration"
 
 	/* context menus */
 	IDS_VIEW_LARGE              "&Grandes icônes"
@@ -642,9 +642,9 @@ BEGIN
 	IDS_PROPERTIES              "&Propriétés"
 	IDS_CUT                     "C&ouper"
 	IDS_RESTORE                 "Res&taurer"
-	IDS_FORMATDRIVE             "Format..."
-	IDS_RENAME                  "Rename"
-	IDS_INSERT                  "Insert"
+	IDS_FORMATDRIVE             "Formater..."
+	IDS_RENAME                  "Renommer"
+	IDS_INSERT                  "Insérer"
 
 	IDS_CREATEFOLDER_DENIED     "Impossible de créer le nouveau dossier : permission refusée."
 	IDS_CREATEFOLDER_CAPTION    "Erreur lors de la création du nouveau dossier"

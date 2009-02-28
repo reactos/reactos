@@ -306,6 +306,7 @@ static const MSIVIEWOPS join_ops =
     NULL,
     NULL,
     JOIN_sort,
+    NULL,
 };
 
 UINT JOIN_CreateView( MSIDATABASE *db, MSIVIEW **view, LPWSTR tables )

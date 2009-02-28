@@ -47,12 +47,12 @@ typedef struct
 #define NATIVEFONT_GetInfoPtr(hwnd) ((NATIVEFONT_INFO *)GetWindowLongPtrW (hwnd, 0))
 
 static LRESULT
-NATIVEFONT_Create (HWND hwnd, WPARAM wParam, LPARAM lParam)
+NATIVEFONT_Create (HWND hwnd)
 {
     NATIVEFONT_INFO *infoPtr;
 
     /* allocate memory for info structure */
-    infoPtr = (NATIVEFONT_INFO *)Alloc (sizeof(NATIVEFONT_INFO));
+    infoPtr = Alloc (sizeof(NATIVEFONT_INFO));
     SetWindowLongPtrW (hwnd, 0, (DWORD_PTR)infoPtr);
 
     /* initialize info structure */
@@ -85,7 +85,7 @@ NATIVEFONT_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     switch (uMsg)
     {
 	case WM_CREATE:
-	    return NATIVEFONT_Create (hwnd, wParam, lParam);
+	    return NATIVEFONT_Create (hwnd);
 
 	case WM_DESTROY:
 	    return NATIVEFONT_Destroy (infoPtr);
@@ -101,7 +101,7 @@ NATIVEFONT_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	    return DefWindowProcW (hwnd, uMsg, wParam, lParam);
 
 	default:
-	    if ((uMsg >= WM_USER) && (uMsg < WM_APP))
+	    if ((uMsg >= WM_USER) && (uMsg < WM_APP) && !COMCTL32_IsReflectedMessage(uMsg))
 		ERR("unknown msg %04x wp=%08lx lp=%08lx\n",
 		     uMsg, wParam, lParam);
 	    return DefWindowProcW (hwnd, uMsg, wParam, lParam);

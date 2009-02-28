@@ -14,6 +14,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+/* @makedep: msxml3_v1.tlb */
+1 TYPELIB LOADONCALL DISCARDABLE msxml3_v1.tlb
+
 #define WINE_OLESELFREGISTER
 #define WINE_FILEDESCRIPTION_STR "Wine MSXML 3.0"
 #define WINE_FILENAME_STR "msxml3.dll"

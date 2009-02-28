@@ -1,0 +1,90 @@
+/*
+ * avifile (Simplified and Traditional Chinese Resources)
+ *
+ * Copyright 2008 Hongbo Ni <hongbo.at.njstar.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+/* Chinese text is encoded in UTF-8 */
+#pragma code_page(65001)
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+IDD_SAVEOPTIONS DIALOG FIXED IMPURE  43, 37, 226, 82
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "压缩选项"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT           "选择来源(&C):",-1,2,5,154,10
+    COMBOBOX        IDC_STREAM,2,18,154,61,CBS_DROPDOWNLIST | WS_VSCROLL |
+                    WS_TABSTOP
+    PUSHBUTTON      "选项(&O)...",IDC_OPTIONS,170,17,50,14
+    AUTOCHECKBOX    "交织: 每",IDC_INTERLEAVE,3,42,85,11,WS_TABSTOP
+    EDITTEXT        IDC_INTERLEAVEEVERY,91,41,32,12,ES_AUTOHSCROLL
+    LTEXT           "帧数",-1,129,43,36,9
+    LTEXT           "当前格式:",-1,3,56,73,9
+    LTEXT           "(?)",IDC_FORMATTEXT,75,56,90,26
+    DEFPUSHBUTTON   "确定",IDOK,170,42,50,14
+    PUSHBUTTON      "取消",IDCANCEL,170,61,50,14
+END
+
+STRINGTABLE DISCARDABLE
+{
+  IDS_WAVESTREAMFORMAT	"波形: %s"
+  IDS_WAVEFILETYPE	    "波形"
+  IDS_ALLMULTIMEDIA	    "所有多媒体文件"
+  IDS_ALLFILES		    "所有文件 (*.*)@*.*"
+  IDS_VIDEO		        "视频"
+  IDS_AUDIO		        "音频"
+  IDS_AVISTREAMFORMAT	"%s %s #%d"
+  IDS_AVIFILETYPE	    "Wine AVI-默认处理器"
+  IDS_UNCOMPRESSED      "未压缩"
+}
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+
+IDD_SAVEOPTIONS DIALOG FIXED IMPURE  43, 37, 226, 82
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "壓縮選項"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT           "選擇來源(&C):",-1,2,5,154,10
+    COMBOBOX        IDC_STREAM,2,18,154,61,CBS_DROPDOWNLIST | WS_VSCROLL |
+                    WS_TABSTOP
+    PUSHBUTTON      "選項(&O)...",IDC_OPTIONS,170,17,50,14
+    AUTOCHECKBOX    "交織: 每",IDC_INTERLEAVE,3,42,85,11,WS_TABSTOP
+    EDITTEXT        IDC_INTERLEAVEEVERY,91,41,32,12,ES_AUTOHSCROLL
+    LTEXT           "幀數",-1,129,43,36,9
+    LTEXT           "當前格式:",-1,3,56,73,9
+    LTEXT           "(?)",IDC_FORMATTEXT,75,56,90,26
+    DEFPUSHBUTTON   "確定",IDOK,170,42,50,14
+    PUSHBUTTON      "取消",IDCANCEL,170,61,50,14
+END
+
+STRINGTABLE DISCARDABLE
+{
+  IDS_WAVESTREAMFORMAT	"波形: %s"
+  IDS_WAVEFILETYPE	    "波形"
+  IDS_ALLMULTIMEDIA	    "所有多媒體檔案"
+  IDS_ALLFILES		    "所有檔案 (*.*)@*.*"
+  IDS_VIDEO		        "視頻"
+  IDS_AUDIO		        "音頻"
+  IDS_AVISTREAMFORMAT	"%s %s #%d"
+  IDS_AVIFILETYPE	    "Wine AVI-默認處理器"
+  IDS_UNCOMPRESSED      "未壓縮"
+}
+
+#pragma code_page(default)

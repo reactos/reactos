@@ -20,6 +20,10 @@
 
 #include "hhctrl.h"
 
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(htmlhelp);
+
 #define ICOM_THIS_MULTI(impl,field,iface) impl* const This=(impl*)((char*)(iface) - offsetof(impl,field))
 
 typedef struct IOleClientSiteImpl
@@ -37,45 +41,62 @@ typedef struct IOleClientSiteImpl
     HWND hwndWindow;
 } IOleClientSiteImpl;
 
+#define CLIENTSITE(x)    ((IOleClientSite*)     &(x)->lpVtbl)
+#define DOCHOSTUI(x)     ((IDocHostUIHandler*)  &(x)->lpvtblDocHostUIHandler)
+#define INPLACESITE(x)   ((IOleInPlaceSite*)    &(x)->lpvtblOleInPlaceSite)
+#define INPLACEFRAME(x)  ((IOleInPlaceFrame*)   &(x)->lpvtblOleInPlaceFrame)
+
 static HRESULT STDMETHODCALLTYPE Site_QueryInterface(IOleClientSite *iface, REFIID riid, void **ppvObj)
 {
     ICOM_THIS_MULTI(IOleClientSiteImpl, lpVtbl, iface);
+
     *ppvObj = NULL;
 
-    if (IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, &IID_IOleClientSite))
-    {
-        *ppvObj = This;
-    }
-    else if (IsEqualIID(riid, &IID_IOleInPlaceSite))
-    {
+    if (IsEqualIID(riid, &IID_IUnknown)) {
+        TRACE("(%p)->(IID_IUnknown %p)\n", This, ppvObj);
+        *ppvObj = CLIENTSITE(This);
+    }else if(IsEqualIID(riid, &IID_IOleClientSite)) {
+        TRACE("(%p)->(IID_IOleClientSite %p)\n", This, ppvObj);
+        *ppvObj = CLIENTSITE(This);
+    }else if (IsEqualIID(riid, &IID_IOleInPlaceSite)) {
+        TRACE("(%p)->(IID_IOleInPlaceSite %p)\n", This, ppvObj);
         *ppvObj = &(This->lpvtblOleInPlaceSite);
-    }
-    else if (IsEqualIID(riid, &IID_IDocHostUIHandler))
-    {
+    }else if (IsEqualIID(riid, &IID_IOleInPlaceFrame)) {
+        TRACE("(%p)->(IID_IOleInPlaceFrame %p)\n", This, ppvObj);
+        *ppvObj = &(This->lpvtblOleInPlaceSite);
+    }else if (IsEqualIID(riid, &IID_IDocHostUIHandler)) {
+        TRACE("(%p)->(IID_IDocHostUIHandler %p)\n", This, ppvObj);
         *ppvObj = &(This->lpvtblDocHostUIHandler);
-    }
-    else
+    }else {
+        TRACE("(%p)->(%s %p)\n", This, debugstr_guid(riid), ppvObj);
         return E_NOINTERFACE;
+    }
 
+    IUnknown_AddRef((IUnknown*)*ppvObj);
     return S_OK;
 }
 
 static ULONG STDMETHODCALLTYPE Site_AddRef(IOleClientSite *iface)
 {
     ICOM_THIS_MULTI(IOleClientSiteImpl, lpVtbl, iface);
-    return InterlockedIncrement(&This->ref);
+    LONG ref = InterlockedIncrement(&This->ref);
+
+    TRACE("(%p) ref=%d\n", This, ref);
+
+    return ref;
 }
 
 static ULONG STDMETHODCALLTYPE Site_Release(IOleClientSite *iface)
 {
     ICOM_THIS_MULTI(IOleClientSiteImpl, lpVtbl, iface);
-    LONG refCount = InterlockedDecrement(&This->ref);
+    LONG ref = InterlockedDecrement(&This->ref);
 
-    if (refCount)
-        return refCount;
+    TRACE("(%p) ref=%d\n", This, ref);
 
-    heap_free(This);
-    return 0;
+    if(!ref)
+        heap_free(This);
+
+    return ref;
 }
 
 static HRESULT STDMETHODCALLTYPE Site_SaveObject(IOleClientSite *iface)
@@ -126,17 +147,22 @@ static const IOleClientSiteVtbl MyIOleClientSiteTable =
 static HRESULT STDMETHODCALLTYPE UI_QueryInterface(IDocHostUIHandler *iface, REFIID riid, LPVOID *ppvObj)
 {
     ICOM_THIS_MULTI(IOleClientSiteImpl, lpvtblDocHostUIHandler, iface);
-    return Site_QueryInterface((IOleClientSite *)This, riid, ppvObj);
+
+    return IOleClientSite_QueryInterface(CLIENTSITE(This), riid, ppvObj);
 }
 
 static ULONG STDMETHODCALLTYPE UI_AddRef(IDocHostUIHandler *iface)
 {
-    return 1;
+    ICOM_THIS_MULTI(IOleClientSiteImpl, lpvtblDocHostUIHandler, iface);
+
+    return IOleClientSite_AddRef(CLIENTSITE(This));
 }
 
 static ULONG STDMETHODCALLTYPE UI_Release(IDocHostUIHandler * iface)
 {
-    return 2;
+    ICOM_THIS_MULTI(IOleClientSiteImpl, lpvtblDocHostUIHandler, iface);
+
+    return IOleClientSite_Release(CLIENTSITE(This));
 }
 
 static HRESULT STDMETHODCALLTYPE UI_ShowContextMenu(IDocHostUIHandler *iface, DWORD dwID, POINT *ppt, IUnknown *pcmdtReserved, IDispatch *pdispReserved)
@@ -246,17 +272,22 @@ static const IDocHostUIHandlerVtbl MyIDocHostUIHandlerTable =
 static HRESULT STDMETHODCALLTYPE InPlace_QueryInterface(IOleInPlaceSite *iface, REFIID riid, LPVOID *ppvObj)
 {
     ICOM_THIS_MULTI(IOleClientSiteImpl, lpvtblOleInPlaceSite, iface);
-    return Site_QueryInterface((IOleClientSite *)This, riid, ppvObj);
+
+    return IOleClientSite_QueryInterface(CLIENTSITE(This), riid, ppvObj);
 }
 
 static ULONG STDMETHODCALLTYPE InPlace_AddRef(IOleInPlaceSite *iface)
 {
-    return 1;
+    ICOM_THIS_MULTI(IOleClientSiteImpl, lpvtblOleInPlaceSite, iface);
+
+    return IOleClientSite_AddRef(CLIENTSITE(This));
 }
 
 static ULONG STDMETHODCALLTYPE InPlace_Release(IOleInPlaceSite *iface)
 {
-    return 2;
+    ICOM_THIS_MULTI(IOleClientSiteImpl, lpvtblOleInPlaceSite, iface);
+
+    return IOleClientSite_Release(CLIENTSITE(This));
 }
 
 static HRESULT STDMETHODCALLTYPE InPlace_GetWindow(IOleInPlaceSite *iface, HWND *lphwnd)
@@ -290,7 +321,10 @@ static HRESULT STDMETHODCALLTYPE InPlace_OnUIActivate(IOleInPlaceSite *iface)
 static HRESULT STDMETHODCALLTYPE InPlace_GetWindowContext(IOleInPlaceSite *iface, LPOLEINPLACEFRAME *lplpFrame, LPOLEINPLACEUIWINDOW *lplpDoc, LPRECT lprcPosRect, LPRECT lprcClipRect, LPOLEINPLACEFRAMEINFO lpFrameInfo)
 {
     ICOM_THIS_MULTI(IOleClientSiteImpl, lpvtblOleInPlaceSite, iface);
-    *lplpFrame = (LPOLEINPLACEFRAME)&This->lpvtblOleInPlaceFrame;
+
+    *lplpFrame = INPLACEFRAME(This);
+    IOleInPlaceFrame_AddRef(INPLACEFRAME(This));
+
     *lplpDoc = NULL;
 
     lpFrameInfo->fMDIApp = FALSE;
@@ -331,8 +365,12 @@ static HRESULT STDMETHODCALLTYPE InPlace_OnPosRectChange(IOleInPlaceSite *iface,
     ICOM_THIS_MULTI(IOleClientSiteImpl, lpvtblOleInPlaceSite, iface);
     IOleInPlaceObject *inplace;
 
-    if (!IOleObject_QueryInterface(This->pBrowserObject, &IID_IOleInPlaceObject, (void **)&inplace))
+    if (IOleObject_QueryInterface(This->pBrowserObject, &IID_IOleInPlaceObject,
+                                  (void **)&inplace) == S_OK)
+    {
         IOleInPlaceObject_SetObjectRects(inplace, lprcPosRect, lprcPosRect);
+        IOleInPlaceObject_Release(inplace);
+    }
 
     return S_OK;
 }
@@ -358,17 +396,23 @@ static const IOleInPlaceSiteVtbl MyIOleInPlaceSiteTable =
 
 static HRESULT STDMETHODCALLTYPE Frame_QueryInterface(IOleInPlaceFrame *iface, REFIID riid, LPVOID *ppvObj)
 {
-    return E_NOTIMPL;
+    ICOM_THIS_MULTI(IOleClientSiteImpl, lpvtblOleInPlaceFrame, iface);
+
+    return IOleClientSite_QueryInterface(CLIENTSITE(This), riid, ppvObj);
 }
 
 static ULONG STDMETHODCALLTYPE Frame_AddRef(IOleInPlaceFrame *iface)
 {
-    return 1;
+    ICOM_THIS_MULTI(IOleClientSiteImpl, lpvtblOleInPlaceFrame, iface);
+
+    return IOleClientSite_AddRef(CLIENTSITE(This));
 }
 
 static ULONG STDMETHODCALLTYPE Frame_Release(IOleInPlaceFrame *iface)
 {
-    return 2;
+    ICOM_THIS_MULTI(IOleClientSiteImpl, lpvtblOleInPlaceFrame, iface);
+
+    return IOleClientSite_Release(CLIENTSITE(This));
 }
 
 static HRESULT STDMETHODCALLTYPE Frame_GetWindow(IOleInPlaceFrame *iface, HWND *lphwnd)

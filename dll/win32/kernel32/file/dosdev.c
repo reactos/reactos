@@ -22,7 +22,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(kernel32file);
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 DefineDosDeviceA(
     DWORD dwFlags,
     LPCSTR lpDeviceName,
@@ -69,7 +69,7 @@ DefineDosDeviceA(
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 DefineDosDeviceW(
     DWORD dwFlags,
     LPCWSTR lpDeviceName,
@@ -84,7 +84,7 @@ DefineDosDeviceW(
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 QueryDosDeviceA(
     LPCSTR lpDeviceName,
     LPSTR lpTargetPath,
@@ -165,7 +165,7 @@ QueryDosDeviceA(
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 QueryDosDeviceW(
     LPCWSTR lpDeviceName,
     LPWSTR lpTargetPath,

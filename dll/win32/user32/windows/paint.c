@@ -38,7 +38,7 @@ static HBRUSH FrameBrushes[13];
 static HBITMAP hHatch;
 const DWORD HatchBitmap[4] = {0x5555AAAA, 0x5555AAAA, 0x5555AAAA, 0x5555AAAA};
 
-BOOL STDCALL PolyPatBlt(HDC,DWORD,PPATRECT,INT,ULONG);
+BOOL WINAPI PolyPatBlt(HDC,DWORD,PPATRECT,INT,ULONG);
 
 /* FUNCTIONS *****************************************************************/
 
@@ -81,51 +81,12 @@ DeleteFrameBrushes(VOID)
     }
 }
 
-/*
- * @implemented
- */
-HDC
-STDCALL
-BeginPaint(
-  HWND hwnd,
-  LPPAINTSTRUCT lpPaint)
-{
-  return NtUserBeginPaint(hwnd, lpPaint);
-}
-
 
 /*
  * @implemented
  */
 BOOL
-STDCALL
-EndPaint(
-  HWND hWnd,
-  CONST PAINTSTRUCT *lpPaint)
-{
-  return NtUserEndPaint(hWnd, lpPaint);
-}
-
-
-/*
- * @unimplemented
- */
-int
-STDCALL
-ExcludeUpdateRgn(
-  HDC hDC,
-  HWND hWnd)
-{
-  UNIMPLEMENTED;
-  return 0;
-}
-
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
+WINAPI
 GetUpdateRect(
   HWND Wnd,
   LPRECT Rect,
@@ -139,7 +100,7 @@ GetUpdateRect(
  * @implemented
  */
 int
-STDCALL
+WINAPI
 GetUpdateRgn(
   HWND hWnd,
   HRGN hRgn,
@@ -149,41 +110,10 @@ GetUpdateRgn(
 }
 
 
-
-
 /*
  * @implemented
  */
-BOOL
-STDCALL
-InvalidateRgn(
-  HWND hWnd,
-  HRGN hRgn,
-  BOOL bErase)
-{
-  return NtUserInvalidateRgn(hWnd, hRgn, bErase);
-}
-
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
-RedrawWindow(
-  HWND hWnd,
-  CONST RECT *lprcUpdate,
-  HRGN hrgnUpdate,
-  UINT flags)
-{
- return NtUserRedrawWindow(hWnd, lprcUpdate, hrgnUpdate, flags);
-}
-
-
-/*
- * @implemented
- */
-BOOL STDCALL
+BOOL WINAPI
 ScrollDC(HDC hDC, int dx, int dy, CONST RECT *lprcScroll, CONST RECT *lprcClip,
    HRGN hrgnUpdate, LPRECT lprcUpdate)
 {
@@ -206,7 +136,7 @@ ScrollDC(HDC hDC, int dx, int dy, CONST RECT *lprcScroll, CONST RECT *lprcClip,
  * @implemented
  */
 int
-STDCALL
+WINAPI
 SetWindowRgn(
   HWND hWnd,
   HRGN hRgn,
@@ -220,7 +150,7 @@ SetWindowRgn(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 UpdateWindow(
   HWND hWnd)
 {
@@ -232,7 +162,7 @@ UpdateWindow(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 ValidateRect(
   HWND hWnd,
   CONST RECT *lpRect)
@@ -247,7 +177,7 @@ ValidateRect(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 ValidateRgn(
   HWND hWnd,
   HRGN hRgn)
@@ -262,7 +192,7 @@ ValidateRgn(
  * @implemented
  */
 int
-STDCALL
+WINAPI
 GetWindowRgn(
   HWND hWnd,
   HRGN hRgn)
@@ -275,7 +205,7 @@ GetWindowRgn(
  * @implemented
  */
 int
-STDCALL
+WINAPI
 GetWindowRgnBox(
     HWND hWnd,
     LPRECT lprc)
@@ -289,7 +219,7 @@ const BYTE MappingTable[33] = {5,9,2,3,5,7,0,0,0,7,5,5,3,2,7,5,3,3,0,5,7,10,5,0,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 DrawFrame(
 	  HDC    hDc,
 	  RECT  *r,

@@ -1,0 +1,248 @@
+/*
+ * Copyright 2005 Jacek Caban
+ * Copyright 2005 YunSong Hwang
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+
+LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_MESSAGE_BOX_TITLE, "Wine 인터넷 Explorer"
+}
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_PRINT_HEADER_TEMPLATE "&w&bPage &p" /* FIXME: should be "&w&bPage &p of &P" */
+    IDS_PRINT_FOOTER_TEMPLATE "&u&b&d"
+}
+
+IDR_BROWSE_CONTEXT_MENU MENU
+{
+    POPUP "기본"
+    {
+        MENUITEM "뒤로(&B)",                IDM_GOBACKWARD
+        MENUITEM "앞으로(&O)",               IDM_GOFORWARD
+        MENUITEM SEPARATOR
+        MENUITEM "배경으로 저장(&S)...", IDM_SAVEBACKGROUND
+        MENUITEM "배경으로 설정(&G)",     IDM_SETWALLPAPER
+        MENUITEM "배경으로 복사(&C)",       IDM_COPYBACKGROUND
+        MENUITEM "데스크탑 아이템으로 설정(&D)",   IDM_SETDESKTOPITEM
+        MENUITEM SEPARATOR
+        MENUITEM "모두 선택(&A)",            IDM_SELECTALL
+        MENUITEM "붙여넣기(&P)",                 IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "바로가기 만들기(&T)",       IDM_CREATESHORTCUT
+        MENUITEM "즐겨찾기에 더하기(&F)",     IDM_ADDFAVORITES
+        MENUITEM "소스 보기(&V)",           IDM_VIEWSOURCE
+        MENUITEM SEPARATOR
+        MENUITEM "인코딩(&E)",              IDM_LANGUAGE
+        MENUITEM SEPARATOR
+        MENUITEM "인쇄(&I)",                 IDM_PRINT
+        MENUITEM "다시 읽기(&R)",               _IDM_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM SEPARATOR
+        MENUITEM "옵션(&P)",            IDM_PROPERTIES
+    }
+
+    POPUP "이미지"
+    {
+        MENUITEM "링크 열기(&O)",               IDM_FOLLOWLINKC
+        MENUITEM "새 창에 링크 열기(&N)", IDM_FOLLOWLINKN
+        MENUITEM "다른 이름으로 저장(&A)...",       IDM_SAVETARGET
+        MENUITEM "타겟 저장(&P)",            IDM_PRINTTARGET
+        MENUITEM SEPARATOR
+        MENUITEM "그림 보기(&H)",            IDM_SHOWPICTURE
+        MENUITEM "그림 다른 이름으로 저장(&S)...",      IDM_SAVEPICTURE
+        MENUITEM "그림을 이메일로(&E)...",       IDM_MP_EMAILPICTURE
+        MENUITEM "그림 인쇄(&I)...",        IDM_MP_PRINTPICTURE
+        MENUITEM "내 그림으로 가기(&G)",       IDM_MP_MYPICS
+        MENUITEM "배경으로 설정(&G)",       IDM_SETWALLPAPER
+        MENUITEM "데스크탑 아이템으로 설정(&D)...",  IDM_SETDESKTOPITEM
+        MENUITEM SEPARATOR
+        MENUITEM "잘라내기(&T)",                     IDM_CUT
+        MENUITEM "복사(&C)",                    IDM_COPY
+        MENUITEM "바로 가기 복사(&T)",           IDM_COPYSHORTCUT
+        MENUITEM "붙여넣기(&P)",                   IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "즐겨 찾기에 추가(&F)...",     IDM_ADDFAVORITES
+        MENUITEM SEPARATOR
+        MENUITEM SEPARATOR
+        MENUITEM "속성(&R)",              IDM_PROPERTIES
+    }
+
+    POPUP "제어"
+    {
+        MENUITEM "되돌리기(&U)",       IDM_UNDO
+        MENUITEM SEPARATOR
+        MENUITEM "잘라내기(&T)",        IDM_CUT
+        MENUITEM "복사(&C)",       IDM_COPY
+        MENUITEM "붙여넣기(&P)",      IDM_PASTE
+        MENUITEM "지우기(&D)",     IDM_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM SEPARATOR
+        MENUITEM "모두 선택(&A)", IDM_SELECTALL
+    }
+
+    POPUP "표"
+    {
+        POPUP "선택(&S)"
+        {
+            MENUITEM "칸(&C)",         IDM_CELLSELECT
+            MENUITEM "가로줄(&R)",          IDM_ROWSELECT
+            MENUITEM "세로줄(&C)",       IDM_COLUMNSELECT
+            MENUITEM "표(&T)",        IDM_TABLESELECT
+        }
+        MENUITEM SEPARATOR
+        MENUITEM SEPARATOR
+        MENUITEM "가로줄 속성(&C)",  IDM_CELLPROPERTIES
+        MENUITEM "표 속성(&T)", IDM_TABLEPROPERTIES
+    }
+
+    POPUP "1DSite 선택"
+    {
+        MENUITEM "잘라내기(&T)",        IDM_CUT
+        MENUITEM "복사(&C)",       IDM_COPY
+        MENUITEM "붙여넣기",       IDM_PASTE
+        MENUITEM "모두 선택(&A)", IDM_SELECTALL
+        MENUITEM "인쇄(&P)",      IDM_PRINT
+        MENUITEM SEPARATOR
+    }
+
+    POPUP "닻"
+    {
+        MENUITEM "열기(&O)",                IDM_FOLLOWLINKC
+        MENUITEM "새 창에 열기(&N)",  IDM_FOLLOWLINKN
+        MENUITEM "다른 이름으로 저장(&A)...",   IDM_SAVETARGET
+        MENUITEM "대상 인쇄(&P)",        IDM_PRINTTARGET
+        MENUITEM SEPARATOR
+        MENUITEM "잘라내기",                  IDM_CUT
+        MENUITEM "복사(&C)",                IDM_COPY
+        MENUITEM "바로가기 복사(&T)",       IDM_COPYSHORTCUT
+        MENUITEM "붙여넣기(&P)",               IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "즐겨찾기에 더하기(&F)...", IDM_ADDFAVORITES
+        MENUITEM SEPARATOR
+        MENUITEM SEPARATOR
+        MENUITEM "속성(&R)",          IDM_PROPERTIES
+    }
+
+    POPUP "알수 없는 내용"
+    {
+        MENUITEM SEPARATOR
+    }
+
+    POPUP "DYNSRC 그림"
+    {
+        MENUITEM "링크 열기(&O)",               IDM_FOLLOWLINKC
+        MENUITEM "새 창에 링크 열기(&N)", IDM_FOLLOWLINKN
+        MENUITEM "다른 이름으로 저장(&A)...",       IDM_SAVETARGET
+        MENUITEM "대상 인쇄(&P)",            IDM_PRINTTARGET
+        MENUITEM SEPARATOR
+        MENUITEM "그림 보기(&H)",            IDM_SHOWPICTURE
+        MENUITEM "비디오 다른 이름으로 저장(&S)...",        IDM_SAVEPICTURE
+        MENUITEM "배경으로 설정(&g)",       IDM_SETWALLPAPER
+        MENUITEM "데스크탑 아이템으로 설정(&D)...",  IDM_SETDESKTOPITEM
+        MENUITEM SEPARATOR
+        MENUITEM "잘라내기(&T)",                     IDM_CUT
+        MENUITEM "복사(&C)",                    IDM_COPY
+        MENUITEM "바로 가기 복사(&T)",           IDM_COPYSHORTCUT
+        MENUITEM "붙여넣기(&P)",                   IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "즐겨찾기에 더하기(&F)...",     IDM_ADDFAVORITES
+        MENUITEM SEPARATOR
+        MENUITEM SEPARATOR
+        MENUITEM "재생",                     IDM_DYNSRCPLAY
+        MENUITEM "정지",                     IDM_DYNSRCSTOP
+        MENUITEM "속성(&R)",              IDM_PROPERTIES
+    }
+
+    POPUP "ART 그림"
+    {
+        MENUITEM "링크 열기(&O)",               IDM_FOLLOWLINKC
+        MENUITEM "새 창에 링크 열기(&N)", IDM_FOLLOWLINKN
+        MENUITEM "다른 이름으로 저장(&A)...",       IDM_SAVETARGET
+        MENUITEM "타겟 인쇄(&P)",            IDM_PRINTTARGET
+        MENUITEM SEPARATOR
+        MENUITEM "그림 보기(&H)",            IDM_SHOWPICTURE
+        MENUITEM "그림 다른 이름으로 저장(&S)...",      IDM_SAVEPICTURE
+        MENUITEM "배경으로 설정(&g)",       IDM_SETWALLPAPER
+        MENUITEM "데스크탑 아이템으로 설정(&D)...",  IDM_SETDESKTOPITEM
+        MENUITEM SEPARATOR
+        MENUITEM "잘라내기(&T)",                     IDM_CUT
+        MENUITEM "복사(&C)",                    IDM_COPY
+        MENUITEM "바로가기 복사(&T)",           IDM_COPYSHORTCUT
+        MENUITEM "붙여놓기(&P)",                   IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "즐겨찾기에 더하기(&F)...",     IDM_ADDFAVORITES
+        MENUITEM SEPARATOR
+        MENUITEM "재생",                     IDM_IMGARTPLAY
+        MENUITEM "정지",                     IDM_IMGARTSTOP
+        MENUITEM "다시 감기",                   IDM_IMGARTREWIND
+        MENUITEM SEPARATOR
+        MENUITEM SEPARATOR
+        MENUITEM "속성(&R)",              IDM_PROPERTIES
+    }
+
+    POPUP "디버그"
+    {
+        MENUITEM "태그 추적",         IDM_TRACETAGS
+        MENUITEM "리소스 실패",  IDM_RESOURCEFAILURES
+        MENUITEM "추적 정보 덤프", IDM_DUMPTRACKINGINFO
+        MENUITEM "디버그 브레이크",        IDM_DEBUGBREAK
+        MENUITEM "디버그 보기",         IDM_DEBUGVIEW
+        MENUITEM "트리 덤프",          IDM_DUMPTREE
+        MENUITEM "라인 덤프",         IDM_DUMPLINES
+        MENUITEM "디스플레이트리 덤프",   IDM_DUMPDISPLAYTREE
+        MENUITEM "포맷캐쉬 덤프",  IDM_DUMPFORMATCACHES
+        MENUITEM "레이아웃렉트 덤프",   IDM_DUMPLAYOUTRECTS
+        MENUITEM "메모리 모니터",     IDM_MEMORYMONITOR
+        MENUITEM "성능 측정", IDM_PERFORMANCEMETERS
+        MENUITEM "HTML 저장",          IDM_SAVEHTML
+        MENUITEM SEPARATOR
+        MENUITEM "보기 상태(&B)",       IDM_BROWSEMODE
+        MENUITEM "편집 상태(&E)",         IDM_EDITMODE
+    }
+
+    POPUP "세로 스크롤바"
+    {
+        MENUITEM "여기서 스크롤",  IDM_SCROLL_HERE
+        MENUITEM SEPARATOR
+        MENUITEM "위",          IDM_SCROLL_TOP
+        MENUITEM "아래",       IDM_SCROLL_BOTTOM
+        MENUITEM SEPARATOR
+        MENUITEM "위 페이지",      IDM_SCROLL_PAGEUP
+        MENUITEM "아래 페이지",    IDM_SCROLL_PAGEDOWN
+        MENUITEM SEPARATOR
+        MENUITEM "위로 스크롤",    IDM_SCROLL_UP
+        MENUITEM "아래로 스크롤",  IDM_SCROLL_DOWN
+    }
+
+    POPUP "가로 스크롤바"
+    {
+        MENUITEM "여기서 스크롤",  IDM_SCROLL_HERE
+        MENUITEM SEPARATOR
+        MENUITEM "왼쪽 가장자리",    IDM_SCROLL_LEFTEDGE
+        MENUITEM "오른쪽 가장자리",   IDM_SCROLL_RIGHTEDGE
+        MENUITEM SEPARATOR
+        MENUITEM "페이지 왼쪽",    IDM_SCROLL_PAGELEFT
+        MENUITEM "페이지 오른쪽",   IDM_SCROLL_PAGERIGHT
+        MENUITEM SEPARATOR
+        MENUITEM "왼쪽으로 스크롤",  IDM_SCROLL_LEFT
+        MENUITEM "오른쪽으로 스크롤", IDM_SCROLL_RIGHT
+    }
+}

@@ -21,9 +21,11 @@
 #include "editstr.h"
 #include "wine/unicode.h"
 
+struct _RTF_Info;
+
 extern HANDLE me_heap;
 
-static inline void *heap_alloc( size_t len )
+static inline void * __WINE_ALLOC_SIZE(1) heap_alloc( size_t len )
 {
     return HeapAlloc( me_heap, 0, len );
 }
@@ -33,7 +35,7 @@ static inline BOOL heap_free( void *ptr )
     return HeapFree( me_heap, 0, ptr );
 }
 
-static inline void *heap_realloc( void *ptr, size_t len )
+static inline void * __WINE_ALLOC_SIZE(2) heap_realloc( void *ptr, size_t len )
 {
     return HeapReAlloc( me_heap, 0, ptr, len );
 }
@@ -69,7 +71,6 @@ void ME_DumpStyleToBuf(CHARFORMAT2W *pFmt, char buf[2048]);
 void ME_DumpStyle(ME_Style *s);
 CHARFORMAT2W *ME_ToCF2W(CHARFORMAT2W *to, CHARFORMAT2W *from);
 void ME_CopyToCF2W(CHARFORMAT2W *to, CHARFORMAT2W *from);
-CHARFORMAT2W *ME_ToCFAny(CHARFORMAT2W *to, CHARFORMAT2W *from);
 void ME_CopyToCFAny(CHARFORMAT2W *to, CHARFORMAT2W *from);
 void ME_CopyCharFormat(CHARFORMAT2W *pDest, const CHARFORMAT2W *pSrc); /* only works with 2W structs */
 void ME_CharFormatFromLogFont(HDC hDC, const LOGFONTW *lf, CHARFORMAT2W *fmt); /* ditto */
@@ -81,14 +82,12 @@ ME_DisplayItem *ME_FindItemBack(ME_DisplayItem *di, ME_DIType nTypeOrClass);
 ME_DisplayItem *ME_FindItemFwd(ME_DisplayItem *di, ME_DIType nTypeOrClass);
 ME_DisplayItem *ME_FindItemBackOrHere(ME_DisplayItem *di, ME_DIType nTypeOrClass);
 ME_DisplayItem *ME_FindItemFwdOrHere(ME_DisplayItem *di, ME_DIType nTypeOrClass);
-BOOL ME_DITypesEqual(ME_DIType type, ME_DIType nTypeOrClass);
 ME_DisplayItem *ME_MakeDI(ME_DIType type);
 void ME_DestroyDisplayItem(ME_DisplayItem *item);
 void ME_DumpDocument(ME_TextBuffer *buffer);
 const char *ME_GetDITypeName(ME_DIType type);
 
 /* string.c */
-int ME_GetOptimalBuffer(int nLen);
 ME_String *ME_MakeString(LPCWSTR szText);
 ME_String *ME_MakeStringN(LPCWSTR szText, int nMaxChars);
 ME_String *ME_MakeStringR(WCHAR cRepeat, int nMaxChars);
@@ -175,7 +174,6 @@ void ME_SetDefaultCharFormat(ME_TextEditor *editor, CHARFORMAT2W *mod);
 
 /* caret.c */
 int ME_SetSelection(ME_TextEditor *editor, int from, int to);
-void ME_SelectByType(ME_TextEditor *editor, ME_SelectionType selectionType);
 void ME_HideCaret(ME_TextEditor *ed);
 void ME_ShowCaret(ME_TextEditor *ed);
 void ME_MoveCaret(ME_TextEditor *ed);
@@ -202,11 +200,10 @@ BOOL ME_InternalDeleteText(ME_TextEditor *editor, int nOfs, int nChars, BOOL bFo
 int ME_GetTextLength(ME_TextEditor *editor);
 int ME_GetTextLengthEx(ME_TextEditor *editor, const GETTEXTLENGTHEX *how);
 ME_Style *ME_GetSelectionInsertStyle(ME_TextEditor *editor);
-BOOL ME_UpdateSelection(ME_TextEditor *editor, const ME_Cursor *pTempCursor);
 
 /* context.c */
 void ME_InitContext(ME_Context *c, ME_TextEditor *editor, HDC hDC);
-void ME_DestroyContext(ME_Context *c, HWND release);
+void ME_DestroyContext(ME_Context *c);
 
 /* wrap.c */
 BOOL ME_WrapMarkedParagraphs(ME_TextEditor *editor);
@@ -217,17 +214,14 @@ void ME_SendRequestResize(ME_TextEditor *editor, BOOL force);
 ME_DisplayItem *ME_GetParagraph(ME_DisplayItem *run); 
 void ME_GetSelectionParas(ME_TextEditor *editor, ME_DisplayItem **para, ME_DisplayItem **para_end);
 void ME_MakeFirstParagraph(ME_TextEditor *editor);
-ME_DisplayItem *ME_SplitParagraph(ME_TextEditor *editor, ME_DisplayItem *rp, ME_Style *style, int numCR, int numLF, int paraFlags);
+ME_DisplayItem *ME_SplitParagraph(ME_TextEditor *editor, ME_DisplayItem *rp, ME_Style *style, ME_String *eol_str, int paraFlags);
 ME_DisplayItem *ME_JoinParagraphs(ME_TextEditor *editor, ME_DisplayItem *tp,
                                   BOOL keepFirstParaFormat);
 void ME_DumpParaStyle(ME_Paragraph *s);
 void ME_DumpParaStyleToBuf(const PARAFORMAT2 *pFmt, char buf[2048]);
-BOOL ME_SetParaFormat(ME_TextEditor *editor, ME_DisplayItem *para, const PARAFORMAT2 *pFmt);
 BOOL ME_SetSelectionParaFormat(ME_TextEditor *editor, const PARAFORMAT2 *pFmt);
-void ME_GetParaFormat(ME_TextEditor *editor, const ME_DisplayItem *para, PARAFORMAT2 *pFmt);
 void ME_GetSelectionParaFormat(ME_TextEditor *editor, PARAFORMAT2 *pFmt);
 /* marks from first up to (but not including) last */
-void ME_MarkForWrapping(ME_TextEditor *editor, ME_DisplayItem *first, const ME_DisplayItem *last);
 void ME_MarkForPainting(ME_TextEditor *editor, ME_DisplayItem *first, const ME_DisplayItem *last);
 void ME_MarkAllForWrapping(ME_TextEditor *editor);
 void ME_SetDefaultParaFormat(PARAFORMAT2 *pFmt);
@@ -237,23 +231,22 @@ void ME_PaintContent(ME_TextEditor *editor, HDC hDC, BOOL bOnlyNew, const RECT *
 void ME_Repaint(ME_TextEditor *editor);
 void ME_RewrapRepaint(ME_TextEditor *editor);
 void ME_UpdateRepaint(ME_TextEditor *editor);
-void ME_DrawParagraph(ME_Context *c, ME_DisplayItem *paragraph);
-void ME_EnsureVisible(ME_TextEditor *editor, ME_DisplayItem *pRun);
+void ME_EnsureVisible(ME_TextEditor *editor, ME_Cursor *pCursor);
 void ME_InvalidateSelection(ME_TextEditor *editor);
-void ME_QueueInvalidateFromCursor(ME_TextEditor *editor, int nCursor);
 BOOL ME_SetZoom(ME_TextEditor *editor, int numerator, int denominator);
 int  ME_twips2pointsX(ME_Context *c, int x);
 int  ME_twips2pointsY(ME_Context *c, int y);
 
 /* scroll functions in paint.c */
 
-void ME_ScrollAbs(ME_TextEditor *editor, int absY);
+void ME_ScrollAbs(ME_TextEditor *editor, int x, int y);
+void ME_HScrollAbs(ME_TextEditor *editor, int x);
+void ME_VScrollAbs(ME_TextEditor *editor, int y);
 void ME_ScrollUp(ME_TextEditor *editor, int cy);
 void ME_ScrollDown(ME_TextEditor *editor, int cy);
-void ME_Scroll(ME_TextEditor *editor, int value, int type);
+void ME_ScrollLeft(ME_TextEditor *editor, int cx);
+void ME_ScrollRight(ME_TextEditor *editor, int cx);
 void ME_UpdateScrollBar(ME_TextEditor *editor);
-int ME_GetYScrollPos(ME_TextEditor *editor);
-BOOL ME_GetYScrollVisible(ME_TextEditor *editor);
 
 /* other functions in paint.c */
 int  ME_GetParaBorderWidth(ME_TextEditor *editor, int);
@@ -266,24 +259,19 @@ void ME_GetOLEObjectSize(ME_Context *c, ME_Run *run, SIZE *pSize);
 void ME_CopyReObject(REOBJECT* dst, const REOBJECT* src);
 void ME_DeleteReObject(REOBJECT* reo);
 
-/* wintest.c */
-
 /* editor.c */
-ME_TextEditor *ME_MakeEditor(HWND hWnd);
-void ME_DestroyEditor(ME_TextEditor *editor);
+ME_TextEditor *ME_MakeEditor(ITextHost *texthost, BOOL bEmulateVersion10);
+LRESULT ME_HandleMessage(ME_TextEditor *editor, UINT msg, WPARAM wParam,
+                         LPARAM lParam, BOOL unicode, HRESULT* phresult);
 void ME_SendOldNotify(ME_TextEditor *editor, int nCode);
-void ME_LinkNotify(ME_TextEditor *editor, UINT msg, WPARAM wParam, LPARAM lParam);
 int ME_GetTextW(ME_TextEditor *editor, WCHAR *buffer, int nStart, int nChars, BOOL bCRLF);
-ME_DisplayItem *ME_FindItemAtOffset(ME_TextEditor *editor, ME_DIType nItemType, int nOffset, int *nItemOffset);
+void ME_RTFCharAttrHook(struct _RTF_Info *info);
+void ME_RTFParAttrHook(struct _RTF_Info *info);
+void ME_RTFTblAttrHook(struct _RTF_Info *info);
+void ME_RTFSpecialCharHook(struct _RTF_Info *info);
 void ME_StreamInFill(ME_InStream *stream);
-int ME_AutoURLDetect(ME_TextEditor *editor, WCHAR curChar);
 extern int me_debug;
 extern void DoWrap(ME_TextEditor *editor);
-extern BOOL ME_FindNextURLCandidate(ME_TextEditor *editor, int sel_min, int sel_max,
-        int * candidate_min, int * candidate_max);
-extern BOOL ME_IsCandidateAnURL(ME_TextEditor *editor, int sel_min, int sel_max);
-BOOL ME_UpdateLinkAttribute(ME_TextEditor *editor, int sel_min, int sel_max);
-void ME_UpdateSelectionLinkAttribute(ME_TextEditor *editor);
 
 /* table.c */
 BOOL ME_IsInTable(ME_DisplayItem *pItem);
@@ -296,9 +284,59 @@ ME_DisplayItem *ME_GetTableRowEnd(ME_DisplayItem *para);
 ME_DisplayItem *ME_GetTableRowStart(ME_DisplayItem *para);
 void ME_CheckTablesForCorruption(ME_TextEditor *editor);
 void ME_ProtectPartialTableDeletion(ME_TextEditor *editor, int nOfs,int *nChars);
+ME_DisplayItem* ME_AppendTableRow(ME_TextEditor *editor, ME_DisplayItem *table_row);
 void ME_TabPressedInTable(ME_TextEditor *editor, BOOL bSelectedRow);
+void ME_MoveCursorFromTableRowStartParagraph(ME_TextEditor *editor);
 struct RTFTable *ME_MakeTableDef(ME_TextEditor *editor);
 void ME_InitTableDef(ME_TextEditor *editor, struct RTFTable *tableDef);
+
+/* txthost.c */
+ITextHost *ME_CreateTextHost(HWND hwnd, BOOL bEmulateVersion10);
+#ifdef __i386__ /* Use wrappers to perform thiscall on i386 */
+#define TXTHOST_VTABLE(This) (&itextHostStdcallVtbl)
+#else /* __i386__ */
+#define TXTHOST_VTABLE(This) (This)->lpVtbl
+#endif /* __i386__ */
+ /*** ITextHost methods ***/
+#define ITextHost_TxGetDC(This) TXTHOST_VTABLE(This)->TxGetDC(This)
+#define ITextHost_TxReleaseDC(This,a) TXTHOST_VTABLE(This)->TxReleaseDC(This,a)
+#define ITextHost_TxShowScrollBar(This,a,b) TXTHOST_VTABLE(This)->TxShowScrollBar(This,a,b)
+#define ITextHost_TxEnableScrollBar(This,a,b) TXTHOST_VTABLE(This)->TxEnableScrollBar(This,a,b)
+#define ITextHost_TxSetScrollRange(This,a,b,c,d) TXTHOST_VTABLE(This)->TxSetScrollRange(This,a,b,c,d)
+#define ITextHost_TxSetScrollPos(This,a,b,c) TXTHOST_VTABLE(This)->TxSetScrollPos(This,a,b,c)
+#define ITextHost_TxInvalidateRect(This,a,b) TXTHOST_VTABLE(This)->TxInvalidateRect(This,a,b)
+#define ITextHost_TxViewChange(This,a) TXTHOST_VTABLE(This)->TxViewChange(This,a)
+#define ITextHost_TxCreateCaret(This,a,b,c) TXTHOST_VTABLE(This)->TxCreateCaret(This,a,b,c)
+#define ITextHost_TxShowCaret(This,a) TXTHOST_VTABLE(This)->TxShowCaret(This,a)
+#define ITextHost_TxSetCaretPos(This,a,b) TXTHOST_VTABLE(This)->TxSetCaretPos(This,a,b)
+#define ITextHost_TxSetTimer(This,a,b) TXTHOST_VTABLE(This)->TxSetTimer(This,a,b)
+#define ITextHost_TxKillTimer(This,a) TXTHOST_VTABLE(This)->TxKillTimer(This,a)
+#define ITextHost_TxScrollWindowEx(This,a,b,c,d,e,f,g) TXTHOST_VTABLE(This)->TxScrollWindowEx(This,a,b,c,d,e,f,g)
+#define ITextHost_TxSetCapture(This,a) TXTHOST_VTABLE(This)->TxSetCapture(This,a)
+#define ITextHost_TxSetFocus(This) TXTHOST_VTABLE(This)->TxSetFocus(This)
+#define ITextHost_TxSetCursor(This,a,b) TXTHOST_VTABLE(This)->TxSetCursor(This,a,b)
+#define ITextHost_TxScreenToClient(This,a) TXTHOST_VTABLE(This)->TxScreenToClient(This,a)
+#define ITextHost_TxClientToScreen(This,a) TXTHOST_VTABLE(This)->TxClientToScreen(This,a)
+#define ITextHost_TxActivate(This,a) TXTHOST_VTABLE(This)->TxActivate(This,a)
+#define ITextHost_TxDeactivate(This,a) TXTHOST_VTABLE(This)->TxDeactivate(This,a)
+#define ITextHost_TxGetClientRect(This,a) TXTHOST_VTABLE(This)->TxGetClientRect(This,a)
+#define ITextHost_TxGetViewInset(This,a) TXTHOST_VTABLE(This)->TxGetViewInset(This,a)
+#define ITextHost_TxGetCharFormat(This,a) TXTHOST_VTABLE(This)->TxGetCharFormat(This,a)
+#define ITextHost_TxGetParaFormat(This,a) TXTHOST_VTABLE(This)->TxGetParaFormat(This,a)
+#define ITextHost_TxGetSysColor(This,a) TXTHOST_VTABLE(This)->TxGetSysColor(This,a)
+#define ITextHost_TxGetBackStyle(This,a) TXTHOST_VTABLE(This)->TxGetBackStyle(This,a)
+#define ITextHost_TxGetMaxLength(This,a) TXTHOST_VTABLE(This)->TxGetMaxLength(This,a)
+#define ITextHost_TxGetScrollBars(This,a) TXTHOST_VTABLE(This)->TxGetScrollBars(This,a)
+#define ITextHost_TxGetPasswordChar(This,a) TXTHOST_VTABLE(This)->TxGetPasswordChar(This,a)
+#define ITextHost_TxGetAcceleratorPos(This,a) TXTHOST_VTABLE(This)->TxGetAcceleratorPos(This,a)
+#define ITextHost_TxGetExtent(This,a) TXTHOST_VTABLE(This)->TxGetExtent(This,a)
+#define ITextHost_OnTxCharFormatChange(This,a) TXTHOST_VTABLE(This)->OnTxCharFormatChange(This,a)
+#define ITextHost_OnTxParaFormatChange(This,a) TXTHOST_VTABLE(This)->OnTxParaFormatChange(This,a)
+#define ITextHost_TxGetPropertyBits(This,a,b) TXTHOST_VTABLE(This)->TxGetPropertyBits(This,a,b)
+#define ITextHost_TxNotify(This,a,b) TXTHOST_VTABLE(This)->TxNotify(This,a,b)
+#define ITextHost_TxImmGetContext(This) TXTHOST_VTABLE(This)->TxImmGetContext(This)
+#define ITextHost_TxImmReleaseContext(This,a) TXTHOST_VTABLE(This)->TxImmReleaseContext(This,a)
+#define ITextHost_TxGetSelectionBarWidth(This,a) TXTHOST_VTABLE(This)->TxGetSelectionBarWidth(This,a)
 
 /* undo.c */
 ME_UndoItem *ME_AddUndoItem(ME_TextEditor *editor, ME_DIType type, const ME_DisplayItem *pdi);

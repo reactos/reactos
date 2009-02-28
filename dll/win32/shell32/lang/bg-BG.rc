@@ -379,18 +379,18 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	GROUPBOX "Задачи", -1, 7, 10, 249, 45
 	ICON "", 30109, 14, 25, 21, 20, SS_REALSIZECONTROL
-	AUTORADIOBUTTON "Показване на общите задачи в папките", 14001, 20, 25, 210, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Използване на обичайните папки на Windows", 14002, 20, 37, 210, 10, WS_TABSTOP
+	AUTORADIOBUTTON "Показване на общите задачи в папките", 14001, 20, 25, 210, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Използване на обичайните папки на Windows", 14002, 20, 37, 210, 10, WS_TABSTOP | WS_GROUP
 	GROUPBOX "Обзор на папките", -1, 7, 60, 249, 45, WS_TABSTOP
 	ICON "", 30110, 14, 70, 21, 20, SS_REALSIZECONTROL
-	AUTORADIOBUTTON "Отваряне на всички папки в &един прозорец", 14004, 20, 70, 210, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Отваряне на всяка папка в от&делен прозорец", 14005, 20, 82, 210, 10, WS_TABSTOP
+	AUTORADIOBUTTON "Отваряне на всички папки в &един прозорец", 14004, 20, 70, 210, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Отваряне на всяка папка в от&делен прозорец", 14005, 20, 82, 210, 10, WS_TABSTOP | WS_GROUP
 	GROUPBOX "Цъкането действа така:", -1, 7, 110, 249, 60
 	ICON "", 30111, 14, 120, 21, 20, SS_REALSIZECONTROL
-	AUTORADIOBUTTON "&Отваряне с единично цъкане (избор с посочване)", 14007, 20, 120, 210, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Подчертаване заглавията на значетата съгласно &обзорника ми", 14008, 30, 220, 170, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Подчертаване на заглавията на значетата при &посочване", 14009, 30, 144, 220, 10, WS_TABSTOP
-	AUTORADIOBUTTON "&Отваряне с двойно цъкане (избиране с единично)", 14010, 20, 156, 170, 10, WS_TABSTOP
+	AUTORADIOBUTTON "&Отваряне с единично цъкане (избор с посочване)", 14007, 20, 120, 210, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Подчертаване заглавията на значетата съгласно &обзорника ми", 14008, 30, 220, 170, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Подчертаване на заглавията на значетата при &посочване", 14009, 30, 144, 220, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "&Отваряне с двойно цъкане (избиране с единично)", 14010, 20, 156, 170, 10, WS_TABSTOP | WS_GROUP
 	PUSHBUTTON "От под&разбираните", 14011, 160, 180, 75, 14, WS_TABSTOP
 END
 
@@ -624,7 +624,7 @@ BEGIN
 	IDS_MYCOMPUTER              "Моят компютър"
 	IDS_RECYCLEBIN_FOLDER_NAME  "Кошче"
 	IDS_CONTROLPANEL            "Крило за управление"
-	IDS_ADMINISTRATIVETOOLS     "Управленски средства"
+	IDS_ADMINISTRATIVETOOLS     "Управнически средства"
 
 	// context menus 
 	IDS_VIEW_LARGE              "&Големи значета"
@@ -668,10 +668,10 @@ BEGIN
 	IDS_SHUTDOWN_PROMPT         "Искате ли да изключите компютъра?"
 
 	// shell folder path default values 
-	IDS_PROGRAMS                "Start Menu\\Programs"
+	IDS_PROGRAMS                "Пусков изборник\\Приложения"
 	IDS_PERSONAL                "Книжа"
 	IDS_FAVORITES               "Любимки"
-	IDS_STARTUP                 "Start Menu\\Programs\\StartUp"
+	IDS_STARTUP                 "Пусков изборник\\Приложения\\Самозапускащи"
 	IDS_RECENT                  "Скорошни"
 	IDS_SENDTO                  "Изпращане"
 	IDS_STARTMENU               "Пусков изборник"
@@ -682,19 +682,19 @@ BEGIN
 	IDS_TEMPLATES               "Шаблони"
 	IDS_APPDATA                 "Приложни данни"
 	IDS_PRINTHOOD               "Съседски печатачи"
-	IDS_LOCAL_APPDATA           "Local Settings\\Application Data"
-	IDS_INTERNET_CACHE          "Local Settings\\Temporary Internet Files"
+	IDS_LOCAL_APPDATA           "Местни настройки\\Приложни данни"
+	IDS_INTERNET_CACHE          "Местни настройки\\Temporary Internet Files"
 	IDS_COOKIES                 "Бисквитки"
-	IDS_HISTORY                 "Local Settings\\History"
+	IDS_HISTORY                 "Местни настройки\\History"
 	IDS_PROGRAM_FILES           "Program Files"
 	IDS_MYPICTURES              "Моите изображения"
 	IDS_PROGRAM_FILES_COMMON    "Program Files\\Common Files"
 	IDS_COMMON_DOCUMENTS        "Документи"
-	IDS_ADMINTOOLS              "Start Menu\\Programs\\Administrative Tools"
-	IDS_COMMON_MUSIC            "Documents\\Музиката ми"
-	IDS_COMMON_PICTURES         "Documents\\Рисунките ми"
-	IDS_COMMON_VIDEO            "Documents\\Лентите ми"
-	IDS_CDBURN_AREA             "Local Settings\\Application Data\\Microsoft\\CD Burning"
+	IDS_ADMINTOOLS              "Пусков изборник\\Приложения\\Управнически средства"
+	IDS_COMMON_MUSIC            "Документи\\Музиката ми"
+	IDS_COMMON_PICTURES         "Документи\\Рисунките ми"
+	IDS_COMMON_VIDEO            "Документи\\Лентите ми"
+	IDS_CDBURN_AREA             "Местни настройки\\Приложни данни\\Microsoft\\CD Burning"
 	IDS_NETWORKPLACE            "Моята мрежа"
 
 	IDS_NEWFOLDER               "Нова папка"
@@ -718,7 +718,7 @@ BEGIN
 	IDS_PICK_ICON_TITLE         "Изберете значе"
 	IDS_PICK_ICON_FILTER        "Файлове със значета(*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
 	IDS_OPEN_WITH_FILTER        "Изпълними файлове\0*.exe\0"
-	IDS_DIRECTORY                "Папка"
+	IDS_DIRECTORY               "Папка"
 	IDS_VIRTUAL_DRIVER          "Водач на привидно устройство"
 	IDS_BAT_FILE                "Пакетен файл на РеактОС"
 	IDS_CMD_FILE                "Писание за управление на РеактОС"

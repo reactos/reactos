@@ -19,6 +19,8 @@
 
 #define IDI_ROSLOGO                     20000
 
+#define IDI_LOCKICON                    21
+
 #define IDS_LOGGEDOUTSAS                40000
 #define IDS_LOCKEDSAS                   40001
 #define IDS_PRESSCTRLALTDELETE          40002

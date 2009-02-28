@@ -43,6 +43,7 @@
 #include "shlwapi_Ro.rc"
 #include "shlwapi_Ru.rc"
 #include "shlwapi_Si.rc"
+#include "shlwapi_Sk.rc"
 #include "shlwapi_Sv.rc"
 #include "shlwapi_Tr.rc"
 #include "shlwapi_Uk.rc"

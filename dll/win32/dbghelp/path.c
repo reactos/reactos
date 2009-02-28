@@ -1,7 +1,7 @@
 /*
  * File path.c - managing path in debugging environments
  *
- * Copyright (C) 2004, Eric Pouech
+ * Copyright (C) 2004,2008, Eric Pouech
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -329,18 +329,6 @@ BOOL WINAPI EnumDirTree(HANDLE hProcess, PCSTR root, PCSTR file,
 
 struct sffip
 {
-    enum module_type            kind;
-    /* pe:  id  -> DWORD:timestamp
-     *      two -> size of image (from PE header)
-     * pdb: id  -> PDB signature
-     *            I think either DWORD:timestamp or GUID:guid depending on PDB version
-     *      two -> PDB age ???
-     * elf: id  -> DWORD:CRC 32 of ELF image (Wine only)
-     */
-    PVOID                       id;
-    DWORD                       two;
-    DWORD                       three;
-    DWORD                       flags;
     PFINDFILEINPATHCALLBACKW    cb;
     void*                       user;
 };
@@ -353,110 +341,8 @@ struct sffip
 static BOOL CALLBACK sffip_cb(PCWSTR buffer, PVOID user)
 {
     struct sffip*       s = (struct sffip*)user;
-    DWORD               size, checksum;
 
-    /* FIXME: should check that id/two/three match the file pointed
-     * by buffer
-     */
-    switch (s->kind)
-    {
-    case DMT_PE:
-        {
-            HANDLE  hFile, hMap;
-            void*   mapping;
-            DWORD   timestamp;
-
-            timestamp = ~(DWORD_PTR)s->id;
-            size = ~s->two;
-            hFile = CreateFileW(buffer, GENERIC_READ, FILE_SHARE_READ, NULL,
-                                OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-            if (hFile == INVALID_HANDLE_VALUE) return FALSE;
-            if ((hMap = CreateFileMappingW(hFile, NULL, PAGE_READONLY, 0, 0, NULL)) != NULL)
-            {
-                if ((mapping = MapViewOfFile(hMap, FILE_MAP_READ, 0, 0, 0)) != NULL)
-                {
-                    IMAGE_NT_HEADERS*   nth = RtlImageNtHeader(mapping);
-                    timestamp = nth->FileHeader.TimeDateStamp;
-                    size = nth->OptionalHeader.SizeOfImage;
-                    UnmapViewOfFile(mapping);
-                }
-                CloseHandle(hMap);
-            }
-            CloseHandle(hFile);
-            if (timestamp != (DWORD_PTR)s->id || size != s->two)
-            {
-                WARN("Found %s, but wrong size or timestamp\n", debugstr_w(buffer));
-                return FALSE;
-            }
-        }
-        break;
-    case DMT_ELF:
-        if (elf_fetch_file_info(buffer, 0, &size, &checksum))
-        {
-            if (checksum != (DWORD_PTR)s->id)
-            {
-                WARN("Found %s, but wrong checksums: %08x %08lx\n",
-                     debugstr_w(buffer), checksum, (DWORD_PTR)s->id);
-                return FALSE;
-            }
-        }
-        else
-        {
-            WARN("Couldn't read %s\n", debugstr_w(buffer));
-            return FALSE;
-        }
-        break;
-    case DMT_PDB:
-        {
-            struct pdb_lookup   pdb_lookup;
-            char                fn[MAX_PATH];
-
-            WideCharToMultiByte(CP_ACP, 0, buffer, -1, fn, MAX_PATH, NULL, NULL);
-            pdb_lookup.filename = fn;
-
-            if (!pdb_fetch_file_info(&pdb_lookup)) return FALSE;
-            switch (pdb_lookup.kind)
-            {
-            case PDB_JG:
-                if (s->flags & SSRVOPT_GUIDPTR)
-                {
-                    WARN("Found %s, but wrong PDB version\n", debugstr_w(buffer));
-                    return FALSE;
-                }
-                if (pdb_lookup.u.jg.timestamp != (DWORD_PTR)s->id)
-                {
-                    WARN("Found %s, but wrong signature: %08x %08lx\n",
-                         debugstr_w(buffer), pdb_lookup.u.jg.timestamp, (DWORD_PTR)s->id);
-                    return FALSE;
-                }
-                break;
-            case PDB_DS:
-                if (!(s->flags & SSRVOPT_GUIDPTR))
-                {
-                    WARN("Found %s, but wrong PDB version\n", debugstr_w(buffer));
-                    return FALSE;
-                }
-                if (memcmp(&pdb_lookup.u.ds.guid, (GUID*)s->id, sizeof(GUID)))
-                {
-                    WARN("Found %s, but wrong GUID: %s %s\n",
-                         debugstr_w(buffer), debugstr_guid(&pdb_lookup.u.ds.guid),
-                         debugstr_guid((GUID*)s->id));
-                    return FALSE;
-                }
-                break;
-            }
-            if (pdb_lookup.age != s->two)
-            {
-                WARN("Found %s, but wrong age: %08x %08x\n",
-                     debugstr_w(buffer), pdb_lookup.age, s->two);
-                return FALSE;
-            }
-        }
-        break;
-    default:
-        FIXME("What the heck??\n");
-        return FALSE;
-    }
+    if (!s->cb) return TRUE;
     /* yes, EnumDirTree/do_search and SymFindFileInPath callbacks use the opposite
      * convention to stop/continue enumeration. sigh.
      */
@@ -485,15 +371,10 @@ BOOL WINAPI SymFindFileInPathW(HANDLE hProcess, PCWSTR searchPath, PCWSTR full_p
     if (!pcs) return FALSE;
     if (!searchPath) searchPath = pcs->search_path;
 
-    s.id = id;
-    s.two = two;
-    s.three = three;
-    s.flags = flags;
     s.cb = cb;
     s.user = user;
 
     filename = file_nameW(full_path);
-    s.kind = module_get_type_by_name(filename);
 
     /* first check full path to file */
     if (sffip_cb(full_path, &s))
@@ -554,4 +435,240 @@ BOOL WINAPI SymFindFileInPath(HANDLE hProcess, PCSTR searchPath, PCSTR full_path
                                    bufferW, enum_dir_treeWA, &edt)))
         WideCharToMultiByte(CP_ACP, 0, bufferW, -1, buffer, MAX_PATH, NULL, NULL);
     return ret;
+}
+
+struct module_find
+{
+    enum module_type            kind;
+    /* pe:  dw1         DWORD:timestamp
+     *      dw2         size of image (from PE header)
+     * pdb: guid        PDB guid (if DS PDB file)
+     *      or dw1      PDB timestamp (if JG PDB file)
+     *      dw2         PDB age
+     * elf: dw1         DWORD:CRC 32 of ELF image (Wine only)
+     */
+    const GUID*                 guid;
+    DWORD                       dw1;
+    DWORD                       dw2;
+    WCHAR                       filename[MAX_PATH];
+    unsigned                    matched;
+};
+
+/* checks that buffer (as found by matching the name) matches the info
+ * (information is based on file type)
+ * returns TRUE when file is found, FALSE to continue searching
+ * (NB this is the opposite convention of SymFindFileInPathProc)
+ */
+static BOOL CALLBACK module_find_cb(PCWSTR buffer, PVOID user)
+{
+    struct module_find* mf = (struct module_find*)user;
+    DWORD               size, checksum, timestamp;
+    unsigned            matched = 0;
+
+    /* the matching weights:
+     * +1 if a file with same name is found and is a decent file of expected type
+     * +1 if first parameter and second parameter match
+     */
+
+    /* FIXME: should check that id/two match the file pointed
+     * by buffer
+     */
+    switch (mf->kind)
+    {
+    case DMT_PE:
+        {
+            HANDLE  hFile, hMap;
+            void*   mapping;
+            DWORD   timestamp;
+
+            timestamp = ~mf->dw1;
+            size = ~mf->dw2;
+            hFile = CreateFileW(buffer, GENERIC_READ, FILE_SHARE_READ, NULL,
+                                OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+            if (hFile == INVALID_HANDLE_VALUE) return FALSE;
+            if ((hMap = CreateFileMappingW(hFile, NULL, PAGE_READONLY, 0, 0, NULL)) != NULL)
+            {
+                if ((mapping = MapViewOfFile(hMap, FILE_MAP_READ, 0, 0, 0)) != NULL)
+                {
+                    IMAGE_NT_HEADERS*   nth = RtlImageNtHeader(mapping);
+
+                    matched++;
+                    timestamp = nth->FileHeader.TimeDateStamp;
+                    size = nth->OptionalHeader.SizeOfImage;
+                    UnmapViewOfFile(mapping);
+                }
+                CloseHandle(hMap);
+            }
+            CloseHandle(hFile);
+            if (timestamp != mf->dw1)
+                WARN("Found %s, but wrong timestamp\n", debugstr_w(buffer));
+            if (size != mf->dw2)
+                WARN("Found %s, but wrong size\n", debugstr_w(buffer));
+            if (timestamp == mf->dw1 && size == mf->dw2) matched++;
+        }
+        break;
+    case DMT_ELF:
+        if (elf_fetch_file_info(buffer, 0, &size, &checksum))
+        {
+            matched++;
+            if (checksum == mf->dw1) matched++;
+            else
+                WARN("Found %s, but wrong checksums: %08x %08x\n",
+                     debugstr_w(buffer), checksum, mf->dw1);
+        }
+        else
+        {
+            WARN("Couldn't read %s\n", debugstr_w(buffer));
+            return FALSE;
+        }
+        break;
+    case DMT_PDB:
+        {
+            struct pdb_lookup   pdb_lookup;
+            char                fn[MAX_PATH];
+
+            WideCharToMultiByte(CP_ACP, 0, buffer, -1, fn, MAX_PATH, NULL, NULL);
+            pdb_lookup.filename = fn;
+
+            if (!pdb_fetch_file_info(&pdb_lookup)) return FALSE;
+            matched++;
+            switch (pdb_lookup.kind)
+            {
+            case PDB_JG:
+                if (mf->guid)
+                {
+                    WARN("Found %s, but wrong PDB version\n", debugstr_w(buffer));
+                }
+                else if (pdb_lookup.u.jg.timestamp == mf->dw1)
+                    matched++;
+                else
+                    WARN("Found %s, but wrong signature: %08x %08x\n",
+                         debugstr_w(buffer), pdb_lookup.u.jg.timestamp, mf->dw1);
+                break;
+            case PDB_DS:
+                if (!mf->guid)
+                {
+                    WARN("Found %s, but wrong PDB version\n", debugstr_w(buffer));
+                }
+                else if (!memcmp(&pdb_lookup.u.ds.guid, mf->guid, sizeof(GUID)))
+                    matched++;
+                else
+                    WARN("Found %s, but wrong GUID: %s %s\n",
+                         debugstr_w(buffer), debugstr_guid(&pdb_lookup.u.ds.guid),
+                         debugstr_guid(mf->guid));
+                break;
+            }
+            if (pdb_lookup.age != mf->dw2)
+            {
+                matched--;
+                WARN("Found %s, but wrong age: %08x %08x\n",
+                     debugstr_w(buffer), pdb_lookup.age, mf->dw2);
+            }
+        }
+        break;
+    case DMT_DBG:
+        {
+            HANDLE  hFile, hMap;
+            void*   mapping;
+
+            timestamp = ~mf->dw1;
+            hFile = CreateFileW(buffer, GENERIC_READ, FILE_SHARE_READ, NULL,
+                                OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+            if (hFile == INVALID_HANDLE_VALUE) return FALSE;
+            if ((hMap = CreateFileMappingW(hFile, NULL, PAGE_READONLY, 0, 0, NULL)) != NULL)
+            {
+                if ((mapping = MapViewOfFile(hMap, FILE_MAP_READ, 0, 0, 0)) != NULL)
+                {
+                    const IMAGE_SEPARATE_DEBUG_HEADER*  hdr;
+                    hdr = (const IMAGE_SEPARATE_DEBUG_HEADER*)mapping;
+
+                    if (hdr->Signature == IMAGE_SEPARATE_DEBUG_SIGNATURE)
+                    {
+                        matched++;
+                        timestamp = hdr->TimeDateStamp;
+                    }
+                    UnmapViewOfFile(mapping);
+                }
+                CloseHandle(hMap);
+            }
+            CloseHandle(hFile);
+            if (timestamp == mf->dw1) matched++;
+            else WARN("Found %s, but wrong timestamp\n", debugstr_w(buffer));
+        }
+        break;
+    default:
+        FIXME("What the heck??\n");
+        return FALSE;
+    }
+    if (matched > mf->matched)
+    {
+        strcpyW(mf->filename, buffer);
+        mf->matched = matched;
+    }
+    /* yes, EnumDirTree/do_search and SymFindFileInPath callbacks use the opposite
+     * convention to stop/continue enumeration. sigh.
+     */
+    return mf->matched == 2;
+}
+
+BOOL path_find_symbol_file(const struct process* pcs, PCSTR full_path,
+                           const GUID* guid, DWORD dw1, DWORD dw2, PSTR buffer,
+                           BOOL* is_unmatched)
+{
+    struct module_find  mf;
+    WCHAR               full_pathW[MAX_PATH];
+    WCHAR               tmp[MAX_PATH];
+    WCHAR*              ptr;
+    const WCHAR*        filename;
+    WCHAR*              searchPath = pcs->search_path;
+
+    TRACE("(pcs = %p, full_path = %s, guid = %s, dw1 = 0x%08x, dw2 = 0x%08x, buffer = %p)\n",
+          pcs, debugstr_a(full_path), debugstr_guid(guid), dw1, dw2, buffer);
+
+    mf.guid = guid;
+    mf.dw1 = dw1;
+    mf.dw2 = dw2;
+    mf.matched = 0;
+
+    MultiByteToWideChar(CP_ACP, 0, full_path, -1, full_pathW, MAX_PATH);
+    filename = file_nameW(full_pathW);
+    mf.kind = module_get_type_by_name(filename);
+    *is_unmatched = FALSE;
+
+    /* first check full path to file */
+    if (module_find_cb(full_pathW, &mf))
+    {
+        WideCharToMultiByte(CP_ACP, 0, full_pathW, -1, buffer, MAX_PATH, NULL, NULL);
+        return TRUE;
+    }
+
+    while (searchPath)
+    {
+        ptr = strchrW(searchPath, ';');
+        if (ptr)
+        {
+            memcpy(tmp, searchPath, (ptr - searchPath) * sizeof(WCHAR));
+            tmp[ptr - searchPath] = '\0';
+            searchPath = ptr + 1;
+        }
+        else
+        {
+            strcpyW(tmp, searchPath);
+            searchPath = NULL;
+        }
+        if (do_searchW(filename, tmp, FALSE, module_find_cb, &mf))
+        {
+            /* return first fully matched file */
+            WideCharToMultiByte(CP_ACP, 0, tmp, -1, buffer, MAX_PATH, NULL, NULL);
+            return TRUE;
+        }
+    }
+    /* if no fully matching file is found, return the best matching file if any */
+    if ((dbghelp_options & SYMOPT_LOAD_ANYTHING) && mf.matched)
+    {
+        WideCharToMultiByte(CP_ACP, 0, mf.filename, -1, buffer, MAX_PATH, NULL, NULL);
+        *is_unmatched = TRUE;
+        return TRUE;
+    }
+    return FALSE;
 }

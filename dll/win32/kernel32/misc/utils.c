@@ -26,7 +26,7 @@ PRTL_CONVERT_STRING Basep8BitStringToUnicodeString;
  * Converts an ANSI or OEM String to the specified Unicode String
  */
 NTSTATUS
-STDCALL
+WINAPI
 Basep8BitStringToLiveUnicodeString(OUT PUNICODE_STRING UnicodeString,
                                    IN LPCSTR String)
 {
@@ -54,7 +54,7 @@ Basep8BitStringToLiveUnicodeString(OUT PUNICODE_STRING UnicodeString,
  * Converts an ANSI or OEM String to the TEB StaticUnicodeString
  */
 PUNICODE_STRING
-STDCALL
+WINAPI
 Basep8BitStringToCachedUnicodeString(IN LPCSTR String)
 {
     PUNICODE_STRING StaticString = &NtCurrentTeb()->StaticUnicodeString;
@@ -81,7 +81,7 @@ Basep8BitStringToCachedUnicodeString(IN LPCSTR String)
 }
 
 NTSTATUS
-STDCALL
+WINAPI
 Basep8BitStringToHeapUnicodeString(OUT PUNICODE_STRING UnicodeString,
                                    IN LPCSTR String)
 {
@@ -109,7 +109,7 @@ Basep8BitStringToHeapUnicodeString(OUT PUNICODE_STRING UnicodeString,
  * Allocates space from the Heap and converts an Ansi String into it
  */
 VOID
-STDCALL
+WINAPI
 BasepAnsiStringToHeapUnicodeString(IN LPCSTR AnsiString,
                                    OUT LPWSTR* UnicodeString)
 {
@@ -137,7 +137,7 @@ BasepAnsiStringToHeapUnicodeString(IN LPCSTR AnsiString,
  * Converts lpSecurityAttributes + Object Name into ObjectAttributes.
  */
 POBJECT_ATTRIBUTES
-STDCALL
+WINAPI
 BasepConvertObjectAttributes(OUT POBJECT_ATTRIBUTES ObjectAttributes,
                              IN PSECURITY_ATTRIBUTES SecurityAttributes OPTIONAL,
                              IN PUNICODE_STRING ObjectName)
@@ -187,7 +187,7 @@ BasepConvertObjectAttributes(OUT POBJECT_ATTRIBUTES ObjectAttributes,
  * Creates a stack for a thread or fiber
  */
 NTSTATUS
-STDCALL
+WINAPI
 BasepCreateStack(HANDLE hProcess,
                  ULONG StackReserve,
                  ULONG StackCommit,
@@ -312,7 +312,7 @@ BasepCreateStack(HANDLE hProcess,
 }
 
 VOID
-STDCALL
+WINAPI
 BasepFreeStack(HANDLE hProcess,
                PINITIAL_TEB InitialTeb)
 {
@@ -329,7 +329,7 @@ BasepFreeStack(HANDLE hProcess,
  * Creates the Initial Context for a Thread or Fiber
  */
 VOID
-STDCALL
+WINAPI
 BasepInitializeContext(IN PCONTEXT Context,
                        IN PVOID Parameter,
                        IN PVOID StartAddress,
@@ -385,7 +385,7 @@ BasepInitializeContext(IN PCONTEXT Context,
  * Checks if the privilege for Real-Time Priority is there
  */
 BOOLEAN
-STDCALL
+WINAPI
 BasepCheckRealTimePrivilege(VOID)
 {
     return TRUE;
@@ -395,7 +395,7 @@ BasepCheckRealTimePrivilege(VOID)
  * Maps an image file into a section
  */
 NTSTATUS
-STDCALL
+WINAPI
 BasepMapFile(IN LPCWSTR lpApplicationName,
              OUT PHANDLE hSection,
              IN PUNICODE_STRING ApplicationName)

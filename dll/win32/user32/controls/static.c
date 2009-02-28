@@ -97,23 +97,13 @@ static pfPaint staticPaintFunc[SS_TYPEMASK+1] =
  */
 const struct builtin_class_descr STATIC_builtin_class =
 {
-#ifdef __REACTOS__
     L"Static",            /* name */
-    CS_DBLCLKS | CS_PARENTDC, /* style  */
-    (WNDPROC) StaticWndProcW,                  /* procW */
-    (WNDPROC) StaticWndProcA,                  /* procA */
-    STATIC_EXTRA_BYTES,                        /* extra */
-    (LPCWSTR) IDC_ARROW,                        /* cursor */ /* FIXME Wine uses IDC_ARROWA */
-    0                                          /* brush */
-#else
-    "Static",            /* name */
     CS_DBLCLKS | CS_PARENTDC, /* style  */
     StaticWndProcA,      /* procA */
     StaticWndProcW,      /* procW */
     STATIC_EXTRA_BYTES,  /* extra */
     IDC_ARROW,           /* cursor */
     0                    /* brush */
-#endif
 };
 
 static __inline void set_ui_state( HWND hwnd, LONG flags )

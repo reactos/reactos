@@ -1,9 +1,7 @@
-<module name="gdi32" type="win32dll" baseaddress="${BASEADDRESS_GDI32}" installbase="system32" installname="gdi32.dll" unicode="yes">
-	<importlibrary definition="gdi32.def" />
+<module name="gdi32" type="win32dll" baseaddress="${BASEADDRESS_GDI32}" installbase="system32" installname="gdi32.dll" unicode="yes" crt="dll" allowwarnings="true">
+	<importlibrary definition="gdi32.spec" />
 	<include base="gdi32">include</include>
 	<define name="_DISABLE_TIDENTS" />
-	<define name="WINVER">0x0600</define>
-	<define name="_WIN32_WINNT">0x0501</define>
 	<define name="LANGPACK" />
 	<library>user32</library>
 	<library>kernel32</library>
@@ -12,10 +10,11 @@
 	<library>pseh</library>
 	<library>dxguid</library>
 	<library>ntdll</library>
-
+	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38269
 	<directory name="include">
 		<pch>precomp.h</pch>
 	</directory>
+	-->
 	<directory name="main">
 		<file>dllmain.c</file>
 	</directory>
@@ -51,4 +50,6 @@
 		<file>path.c</file>
 	</directory>
 	<file>gdi32.rc</file>
+	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38054#c7 -->
+	<compilerflag>-fno-unit-at-a-time</compilerflag>
 </module>

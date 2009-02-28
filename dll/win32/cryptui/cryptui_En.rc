@@ -1,0 +1,461 @@
+/*
+ * cryptui dll resources
+ *
+ * Copyright 2008 Juan Lang
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_CERTIFICATE "Certificate"
+    IDS_CERTIFICATEINFORMATION "Certificate Information"
+    IDS_CERT_INFO_BAD_SIG "This certificate has an invalid signature.  The certificate may have been altered or corrupted."
+    IDS_CERT_INFO_UNTRUSTED_CA "This root certificate is not trusted.  To trust it, add it to your system's trusted root certificate store."
+    IDS_CERT_INFO_UNTRUSTED_ROOT "This certificate could not be validated to a trusted root certificate."
+    IDS_CERT_INFO_PARTIAL_CHAIN "This certificate's issuer could not be found."
+    IDS_CERT_INFO_BAD_PURPOSES "All the intended purposes of this certificate could not be verified."
+    IDS_CERT_INFO_PURPOSES "This cerificate is intended for the following purposes:"
+    IDS_SUBJECT_HEADING "Issued to: "
+    IDS_ISSUER_HEADING "Issued by: "
+    IDS_VALID_FROM "Valid from "
+    IDS_VALID_TO " to "
+    IDS_CERTIFICATE_BAD_SIGNATURE "This certificate has an invalid signature."
+    IDS_CERTIFICATE_BAD_TIME "This certificate has expired or is not yet valid."
+    IDS_CERTIFICATE_BAD_TIMENEST "This certificate's validity period exceeds that of its issuer."
+    IDS_CERTIFICATE_REVOKED "This certificate was revoked by its issuer."
+    IDS_CERTIFICATE_VALID "This certificate is OK."
+    IDS_FIELD "Field"
+    IDS_VALUE "Value"
+    IDS_FIELDS_ALL "<All>"
+    IDS_FIELDS_V1 "Version 1 Fields Only"
+    IDS_FIELDS_EXTENSIONS "Extensions Only"
+    IDS_FIELDS_CRITICAL_EXTENSIONS "Critical Extensions Only"
+    IDS_FIELDS_PROPERTIES "Properties Only"
+    IDS_FIELD_VERSION "Version"
+    IDS_FIELD_SERIAL_NUMBER "Serial number"
+    IDS_FIELD_ISSUER "Issuer"
+    IDS_FIELD_VALID_FROM "Valid from"
+    IDS_FIELD_VALID_TO "Valid to"
+    IDS_FIELD_SUBJECT "Subject"
+    IDS_FIELD_PUBLIC_KEY "Public key"
+    IDS_FIELD_PUBLIC_KEY_FORMAT "%s (%d bits)"
+    IDS_PROP_HASH "SHA1 hash"
+    IDS_PROP_ENHKEY_USAGE "Enhanced key usage (property)"
+    IDS_PROP_FRIENDLY_NAME "Friendly name"
+    IDS_PROP_DESCRIPTION "Description"
+    IDS_CERTIFICATE_PROPERTIES "Certificate Properties"
+    IDS_CERTIFICATE_PURPOSE_ERROR "Please enter an OID in the form 1.2.3.4"
+    IDS_CERTIFICATE_PURPOSE_EXISTS "The OID you entered already exists."
+    IDS_SELECT_STORE_TITLE "Select Certificate Store"
+    IDS_SELECT_STORE "Please select a certificate store."
+    IDS_IMPORT_WIZARD "Certificate Import Wizard"
+    IDS_IMPORT_TYPE_MISMATCH "The file contains objects that do not match the given criteria.  Please select another file."
+    IDS_IMPORT_FILE_TITLE "File to Import"
+    IDS_IMPORT_FILE_SUBTITLE "Specify the file you want to import."
+    IDS_IMPORT_STORE_TITLE "Certificate Store"
+    IDS_IMPORT_STORE_SUBTITLE "Certificate stores are collections of certificates, certificate revocation lists, and certificate trust lists."
+    IDS_IMPORT_FILTER_CERT "X.509 Certificate (*.cer; *.crt)"
+    IDS_IMPORT_FILTER_PFX "Personal Information Exchange (*.pfx; *.p12)"
+    IDS_IMPORT_FILTER_CRL "Certificate Revocation List (*.crl)"
+    IDS_IMPORT_FILTER_CTL "Certificate Trust List (*.stl)"
+    IDS_IMPORT_FILTER_SERIALIZED_STORE "Microsoft Serialized Certificate Store (*.sst)"
+    IDS_IMPORT_FILTER_CMS "CMS/PKCS #7 Messages (*.spc; *.p7b)"
+    IDS_IMPORT_FILTER_ALL "All Files (*.*)"
+    IDS_IMPORT_EMPTY_FILE "Please select a file."
+    IDS_IMPORT_BAD_FORMAT "The file format is not recognized.  Please select another file."
+    IDS_IMPORT_OPEN_FAILED "Could not open "
+    IDS_IMPORT_DEST_DETERMINED "Determined by the program"
+    IDS_IMPORT_SELECT_STORE "Please select a store"
+    IDS_IMPORT_STORE_SELECTION "Certificate Store Selected"
+    IDS_IMPORT_DEST_AUTOMATIC "Automatically determined by the program"
+    IDS_IMPORT_FILE "File"
+    IDS_IMPORT_CONTENT "Content"
+    IDS_IMPORT_CONTENT_CERT "Certificate"
+    IDS_IMPORT_CONTENT_CRL "Certificate Revocation List"
+    IDS_IMPORT_CONTENT_CTL "Certificate Trust List"
+    IDS_IMPORT_CONTENT_CMS "CMS/PKCS #7 Message"
+    IDS_IMPORT_CONTENT_PFX "Personal Information Exchange"
+    IDS_IMPORT_CONTENT_STORE "Certificate Store"
+    IDS_IMPORT_SUCCEEDED "The import was successful."
+    IDS_IMPORT_FAILED "The import failed."
+    IDS_WIZARD_TITLE_FONT "Arial"
+    IDS_PURPOSE_ALL "<All>"
+    IDS_PURPOSE_ADVANCED "<Advanced Purposes>"
+    IDS_SUBJECT_COLUMN "Issued To"
+    IDS_ISSUER_COLUMN "Issued By"
+    IDS_EXPIRATION_COLUMN "Expiration Date"
+    IDS_FRIENDLY_NAME_COLUMN "Friendly Name"
+    IDS_ALLOWED_PURPOSE_ALL "<All>"
+    IDS_ALLOWED_PURPOSE_NONE "<None>"
+    IDS_WARN_REMOVE_MY "You will no longer be able to decrypt messages with this certificate, or sign messages with it.\nAre you sure you want to remove this certificate?"
+    IDS_WARN_REMOVE_PLURAL_MY "You will no longer be able to decrypt messages with these certificates, or sign messages with them.\nAre you sure you want to remove these certificates?"
+    IDS_WARN_REMOVE_ADDRESSBOOK "You will no longer be able to encrypt messages with this certificate, or verify messages signed with it.\nAre you sure you want to remove this certificate?"
+    IDS_WARN_REMOVE_PLURAL_ADDRESSBOOK "You will no longer be able to encrypt messages with these certificates, or verify messages signed with it.\nAre you sure you want to remove these certificates?"
+    IDS_WARN_REMOVE_CA "Certificates issued by this certification authority will no longer be trusted.\nAre you sure you want to remove this certificate?"
+    IDS_WARN_REMOVE_PLURAL_CA "Certificates issued by these certification authorities will no longer be trusted.\nAre you sure you want to remove these certificates?"
+    IDS_WARN_REMOVE_ROOT "Certificates issued by this root certification authority, or any certification authorities it issued, will no longer be trusted.\nAre you sure you want to remove this trusted root certificate?"
+    IDS_WARN_REMOVE_PLURAL_ROOT "Certificates issued by these root certification authorities, or any certification authorities they issued, will no longer be trusted.\nAre you sure you want to remove these trusted root certificates?"
+    IDS_WARN_REMOVE_TRUSTEDPUBLISHER "Software signed by this publisher will no longer be trusted.\nAre you sure you want to remove this certificate?"
+    IDS_WARN_REMOVE_PLURAL_TRUSTEDPUBLISHER "Software signed by these publishers will no longer be trusted.\nAre you sure you want to remove these certificates?"
+    IDS_WARN_REMOVE_DEFAULT "Are you sure you want to remove this certificate?"
+    IDS_WARN_REMOVE_PLURAL_DEFAULT "Are you sure you want to remove these certificates?"
+    IDS_CERT_MGR "Certificates"
+    IDS_PURPOSE_SERVER_AUTH "Ensures the identify of a remote computer"
+    IDS_PURPOSE_CLIENT_AUTH "Proves your identity to a remote computer"
+    IDS_PURPOSE_CODE_SIGNING "Ensures software came from software publisher\nProtects software from alteration after publication"
+    IDS_PURPOSE_EMAIL_PROTECTION "Protects e-mail messges"
+    IDS_PURPOSE_IPSEC "Allows secure communication over the Internet"
+    IDS_PURPOSE_TIMESTAMP_SIGNING "Allows data to be signed with the current time"
+    IDS_PURPOSE_CTL_USAGE_SIGNING "Allows you to digitally sign a certificate trust list"
+    IDS_PURPOSE_EFS "Allows data on disk to be encrypted"
+    IDS_PURPOSE_EFS_RECOVERY "File Recovery"
+    IDS_PURPOSE_WHQL "Windows Hardware Driver Verification"
+    IDS_PURPOSE_NT5 "Windows System Component Verification"
+    IDS_PURPOSE_OEM_WHQL "OEM Windows System Component Verification"
+    IDS_PURPOSE_EMBEDDED_NT "Embedded Windows System Component Verification"
+    IDS_PURPOSE_ROOT_LIST_SIGNER "Root List Signer"
+    IDS_PURPOSE_QUALIFIED_SUBORDINATION "Qualified Subordination"
+    IDS_PURPOSE_KEY_RECOVERY "Key Recovery"
+    IDS_PURPOSE_DOCUMENT_SIGNING "Document Signing"
+    IDS_PURPOSE_LIFETIME_SIGNING "Lifetime Signing"
+    IDS_PURPOSE_DRM "Digital Rights"
+    IDS_PURPOSE_LICENSES "Key Pack Licenses"
+    IDS_PURPOSE_LICENSE_SERVER "License Server Verification"
+    IDS_PURPOSE_ENROLLMENT_AGENT "Certificate Request Agent"
+    IDS_PURPOSE_SMARTCARD_LOGON "Smart Card Logon"
+    IDS_PURPOSE_CA_EXCHANGE "Private Key Archival"
+    IDS_PURPOSE_KEY_RECOVERY_AGENT "Key Recovery Agent"
+    IDS_PURPOSE_DS_EMAIL_REPLICATION "Directory Service Email Replication"
+    IDS_EXPORT_WIZARD "Certificate Export Wizard"
+    IDS_EXPORT_FORMAT_TITLE "Export Format"
+    IDS_EXPORT_FORMAT_SUBTITLE "Choose the format in which the content will be saved."
+    IDS_EXPORT_FILE_TITLE "Export Filename"
+    IDS_EXPORT_FILE_SUBTITLE "Specify the name of the file in which the content will be saved."
+    IDS_EXPORT_FILE_EXISTS "The specified file already exists.  Do you want to replace it?"
+    IDS_EXPORT_FILTER_CERT "DER-Encoded Binary X.509 (*.cer)"
+    IDS_EXPORT_FILTER_BASE64_CERT "Base64-Encoded X.509 (*.cer)"
+    IDS_EXPORT_FILTER_CRL "Certificate Revocation List (*.crl)"
+    IDS_EXPORT_FILTER_CTL "Certificate Trust List (*.stl)"
+    IDS_EXPORT_FILTER_CMS "CMS/PKCS #7 Messages (*.p7b)"
+    IDS_EXPORT_FILTER_PFX "Personal Information Exchange (*.pfx)"
+    IDS_EXPORT_FILTER_SERIALIZED_CERT_STORE "Serialized Certificate Store (*.sst)"
+    IDS_EXPORT_FORMAT "File Format"
+    IDS_EXPORT_INCLUDE_CHAIN "Include all certificates in certificate path"
+    IDS_EXPORT_KEYS "Export keys"
+    IDS_YES "Yes"
+    IDS_NO "No"
+    IDS_EXPORT_SUCCEEDED "The export was successful."
+    IDS_EXPORT_FAILED "The export failed."
+    IDS_EXPORT_PRIVATE_KEY_TITLE "Export Private Key"
+    IDS_EXPORT_PRIVATE_KEY_SUBTITLE "The certificate contains a private key which may be exported along with the certificate."
+    IDS_EXPORT_PASSWORD_TITLE "Enter Password"
+    IDS_EXPORT_PASSWORD_SUBTITLE "You may password-protect a private key."
+    IDS_EXPORT_PASSWORD_MISMATCH "The passwords do not match."
+    IDS_EXPORT_PRIVATE_KEY_UNAVAILABLE "Note: The private key for this certificate could not be opened."
+    IDS_EXPORT_PRIVATE_KEY_NON_EXPORTABLE "Note: The private  key for this certificate is not exportable."
+}
+
+IDD_GENERAL DIALOG DISCARDABLE 0, 0, 255, 236
+CAPTION "General"
+STYLE WS_VISIBLE
+FONT 8, "MS Shell Dlg"
+BEGIN
+  CONTROL "", -1, "Static", WS_BORDER|SS_WHITERECT, 6,10,241,200
+  CONTROL "", IDC_CERTIFICATE_ICON,"RichEdit20W",
+    ES_READONLY|WS_DISABLED,8,11,26,26
+  CONTROL "", IDC_CERTIFICATE_INFO,"RichEdit20W",
+    ES_READONLY|WS_DISABLED,34,11,212,26
+  CONTROL "", -1, "Static", SS_BLACKFRAME, 16,37,222,1
+  CONTROL "", IDC_CERTIFICATE_STATUS,"RichEdit20W",
+    ES_READONLY|ES_MULTILINE,8,38,238,78
+  CONTROL "", -1, "Static", SS_BLACKFRAME, 16,116,222,1
+  CONTROL "", IDC_CERTIFICATE_NAMES,"RichEdit20W",
+    ES_READONLY|ES_MULTILINE|WS_DISABLED,8,118,238,90
+  PUSHBUTTON "&Install Certificate...", IDC_ADDTOSTORE,103,216,70,14
+  PUSHBUTTON "Issuer &Statement", IDC_ISSUERSTATEMENT,177,216,70,14
+END
+
+IDD_DETAIL DIALOG DISCARDABLE 0, 0, 255, 236
+CAPTION "Details"
+STYLE WS_VISIBLE
+FONT 8, "MS Shell Dlg"
+BEGIN
+  LTEXT "&Show:", -1, 6,12,40,14
+  COMBOBOX IDC_DETAIL_SELECT, 28,10,100,14,
+    CBS_DROPDOWNLIST|WS_BORDER|WS_VSCROLL|WS_TABSTOP
+  CONTROL "", IDC_DETAIL_LIST, "SysListView32",
+    LVS_REPORT|LVS_SINGLESEL|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER,
+    6,28,241,100
+  CONTROL "", IDC_DETAIL_VALUE, "RichEdit20W",
+    ES_READONLY|ES_MULTILINE|WS_TABSTOP, 6,136,241,70
+  PUSHBUTTON "&Edit Properties...", IDC_EDITPROPERTIES,103,216,70,14
+  PUSHBUTTON "&Copy to File...", IDC_EXPORT,177,216,70,14
+END
+
+IDD_HIERARCHY DIALOG DISCARDABLE 0, 0, 255, 236
+CAPTION "Certification Path"
+STYLE WS_VISIBLE
+FONT 8, "MS Shell Dlg"
+BEGIN
+  GROUPBOX "Certification &path", -1,6,10,245,165, BS_GROUPBOX
+  CONTROL "",IDC_CERTPATH, "SysTreeView32", TVS_HASLINES|WS_BORDER,
+    13,22,231,130
+  PUSHBUTTON "&View Certificate", IDC_VIEWCERTIFICATE,175,156,70,14
+  LTEXT "Certificate &status:", IDC_CERTIFICATESTATUS,6,183,70,14
+  CONTROL "", IDC_CERTIFICATESTATUSTEXT,"RichEdit20W",
+    WS_BORDER|ES_READONLY|ES_MULTILINE|WS_DISABLED,6,195,245,36
+END
+
+IDD_USERNOTICE DIALOG DISCARDABLE 0, 0, 255, 256
+CAPTION "Disclaimer"
+STYLE WS_VISIBLE
+FONT 8, "MS Shell Dlg"
+BEGIN
+  CONTROL "", IDC_USERNOTICE,"RichEdit20W",
+    WS_BORDER|ES_READONLY|ES_MULTILINE|WS_DISABLED,6,10,241,200
+  PUSHBUTTON "Close", IDOK,103,216,70,14
+  PUSHBUTTON "More &Info", IDC_CPS,177,216,70,14
+END
+
+IDD_CERT_PROPERTIES_GENERAL DIALOG DISCARDABLE 0, 0, 255, 236
+CAPTION "General"
+STYLE WS_VISIBLE
+FONT 8, "MS Shell Dlg"
+BEGIN
+  LTEXT "&Friendly name:", -1, 6,14,60,14
+  EDITTEXT IDC_FRIENDLY_NAME, 60,12,191,14, ES_AUTOHSCROLL|WS_TABSTOP
+  LTEXT "&Description:", -1, 6,32,60,14
+  EDITTEXT IDC_DESCRIPTION, 60,30,191,14, ES_AUTOVSCROLL|ES_MULTILINE|WS_TABSTOP|WS_VSCROLL
+  GROUPBOX "Certificate purposes", -1,6,48,245,165, BS_GROUPBOX
+  AUTORADIOBUTTON "&Enable all purposes for this certificate",
+    IDC_ENABLE_ALL_PURPOSES, 12,58,180,14, BS_AUTORADIOBUTTON|WS_TABSTOP
+  AUTORADIOBUTTON "D&isable all purposes for this certificate",
+    IDC_DISABLE_ALL_PURPOSES, 12,70,180,14, BS_AUTORADIOBUTTON
+  AUTORADIOBUTTON "Enable &only the following purposes for this certificate:",
+    IDC_ENABLE_SELECTED_PURPOSES, 12,82,180,14, BS_AUTORADIOBUTTON
+  CONTROL "", IDC_CERTIFICATE_USAGES,"SysListView32",
+    LVS_REPORT|LVS_NOCOLUMNHEADER|LVS_SINGLESEL|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER,
+    24,100,220,90
+  PUSHBUTTON "Add &Purpose...", IDC_ADD_PURPOSE,184,194,60,14
+END
+
+IDD_ADD_CERT_PURPOSE DIALOG DISCARDABLE 0,0,200,68
+CAPTION "Add Purpose"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  LTEXT "Add the object identifier (OID) for the certificate purpose you wish to add:",
+    -1, 6,6,190,28
+  EDITTEXT IDC_NEW_PURPOSE, 6,28,190,14, ES_AUTOVSCROLL|ES_MULTILINE|WS_TABSTOP|WS_VSCROLL
+  PUSHBUTTON "OK", IDOK, 33,48,60,14
+  PUSHBUTTON "Cancel", IDCANCEL, 100,48,60,14
+END
+
+IDD_SELECT_STORE DIALOG DISCARDABLE 0,0,200,136
+CAPTION "Select Certificate Store"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  LTEXT "Select the certificate store you want to use:", IDC_STORE_TEXT, 6,6,190,28
+  CONTROL "",IDC_STORE_LIST, "SysTreeView32", TVS_HASLINES|WS_BORDER|WS_TABSTOP,
+    6,28,188,70
+  CHECKBOX "&Show physical stores", IDC_SHOW_PHYSICAL_STORES, 6,102,90,14,
+    BS_AUTOCHECKBOX|WS_TABSTOP
+  PUSHBUTTON "OK", IDOK, 90,118,50,14, BS_DEFPUSHBUTTON
+  PUSHBUTTON "Cancel", IDCANCEL, 144,118,50,14
+END
+
+IDD_IMPORT_WELCOME DIALOG DISCARDABLE 0,0,317,143
+CAPTION "Certificate Import Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  LTEXT "Welcome to the Certificate Import Wizard", IDC_IMPORT_TITLE,
+    115,1,195,40
+  LTEXT "This wizard helps you import certificates, certificate revocation lists, and certificate trust lists from a file to a certificate store.",
+    -1, 115,33,195,16
+  LTEXT "A certificate can be used to identify you or the computer with which you are communicating.  It can also be used for authentication, and to sign messages.  Certificate stores are collections of certificates, certificate revocation lists, and certificate trust lists.",
+    -1, 115,56,195,40
+  LTEXT "To continue, click Next.",
+    -1, 115,103,195,8
+END
+
+IDD_IMPORT_FILE DIALOG DISCARDABLE 0,0,317,143
+CAPTION "Certificate Import Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  LTEXT "&File name:", -1, 21,1,195,10
+  EDITTEXT IDC_IMPORT_FILENAME, 21,11,208,14, ES_AUTOHSCROLL|WS_TABSTOP
+  PUSHBUTTON "B&rowse...", IDC_IMPORT_BROWSE_FILE, 236,11,60,14
+  LTEXT "Note:  The following file formats may contain more than one certificate, certificate revocation list, or certificate trust list:",
+    -1, 21,26,265,16
+  LTEXT "Cryptographic Message Syntax Standard/PKCS #7 Messages (.p7b)",
+    -1, 31,49,265,10
+  LTEXT "Personal Information Exchange/PKCS #12 (.pfx, .p12)",
+    -1, 31,64,265,10
+  LTEXT "Microsoft Serialized Certificate Store (.sst)",
+    -1, 31,79,265,10
+END
+
+IDD_IMPORT_STORE DIALOG DISCARDABLE 0,0,317,143
+CAPTION "Certificate Import Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  LTEXT "Wine can automatically select the certificate store, or you can specify a location for the certificates.",
+    -1, 21,1,195,20
+  AUTORADIOBUTTON "&Automatically select certificate store",
+    IDC_IMPORT_AUTO_STORE, 31,18,180,12, BS_AUTORADIOBUTTON|WS_TABSTOP
+  AUTORADIOBUTTON "&Place all certificates in the following store:",
+    IDC_IMPORT_SPECIFY_STORE, 31,30,180,12, BS_AUTORADIOBUTTON
+  EDITTEXT IDC_IMPORT_STORE, 44,49,185,14, ES_READONLY
+  PUSHBUTTON "B&rowse...", IDC_IMPORT_BROWSE_STORE, 236,49,60,14
+END
+
+IDD_IMPORT_FINISH DIALOG DISCARDABLE 0,0,317,143
+CAPTION "Certificate Import Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  LTEXT "Completing the Certificate Import Wizard", IDC_IMPORT_TITLE,
+    115,1,195,40
+  LTEXT "You have successfully completed the Certificate Import Wizard.",
+    -1, 115,33,195,24
+  LTEXT "You have specified the following settings:",
+    -1, 115,57,195,12
+  CONTROL "", IDC_IMPORT_SETTINGS, "SysListView32",
+    LVS_REPORT|LVS_NOCOLUMNHEADER|LVS_SINGLESEL|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER,
+    115,67,174,100
+END
+
+IDD_CERT_MGR DIALOG DISCARDABLE 0,0,335,270
+CAPTION "Certificates"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  LTEXT "I&ntended purpose:", -1, 7,9,100,12
+  COMBOBOX IDC_MGR_PURPOSE_SELECTION, 83,7,245,14,
+    CBS_DROPDOWNLIST|WS_BORDER|WS_VSCROLL|WS_TABSTOP
+  CONTROL "", IDC_MGR_STORES, "SysTabControl32",
+    WS_CLIPSIBLINGS|WS_TABSTOP, 7,25,321,140
+  CONTROL "", IDC_MGR_CERTS, "SysListView32",
+    LVS_REPORT|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER, 15,46,305,111
+  PUSHBUTTON "&Import...", IDC_MGR_IMPORT, 7,172,51,14
+  PUSHBUTTON "&Export...", IDC_MGR_EXPORT, 62,172,51,14, WS_DISABLED
+  PUSHBUTTON "&Remove", IDC_MGR_REMOVE, 117,172,51,14, WS_DISABLED
+  PUSHBUTTON "&Advanced...", IDC_MGR_ADVANCED, 277,172,51,14
+  GROUPBOX "Certificate intended purposes", -1,7,194,321,47, BS_GROUPBOX
+  LTEXT "", IDC_MGR_PURPOSES, 13,208,252,30
+  PUSHBUTTON "&View...", IDC_MGR_VIEW, 269,218,51,14, WS_DISABLED
+  PUSHBUTTON "&Close", IDCANCEL, 277,249,51,14, BS_DEFPUSHBUTTON
+END
+
+IDD_CERT_MGR_ADVANCED DIALOG DISCARDABLE 0,0,248,176
+CAPTION "Advanced Options"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  GROUPBOX "Certificate purpose", -1, 7,7,234,141, BS_GROUPBOX
+  LTEXT "Select one or more purposes to be listed when Advanced Purposes is selected.",
+    -1, 14,18,220,16
+  LTEXT "&Certificate purposes:", -1, 14,41,90,12, WS_TABSTOP
+  CONTROL "", IDC_CERTIFICATE_USAGES,"SysListView32",
+    LVS_REPORT|LVS_NOCOLUMNHEADER|LVS_SINGLESEL|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER,
+    14,51,220,90
+  PUSHBUTTON "OK", IDOK, 132,155,51,14, BS_DEFPUSHBUTTON
+  PUSHBUTTON "Cancel", IDCANCEL, 190,155,51,14
+END
+
+IDD_EXPORT_WELCOME DIALOG DISCARDABLE 0,0,317,143
+CAPTION "Certificate Export Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  LTEXT "Welcome to the Certificate Export Wizard", IDC_EXPORT_TITLE,
+    115,1,195,40
+  LTEXT "This wizard helps you export certificates, certificate revocation lists, and certificate trust lists from a certificate store to a file.",
+    -1, 115,33,195,16
+  LTEXT "A certificate can be used to identify you or the computer with which you are communicating.  It can also be used for authentication, and to sign messages.  Certificate stores are collections of certificates, certificate revocation lists, and certificate trust lists.",
+    -1, 115,56,195,40
+  LTEXT "To continue, click Next.",
+    -1, 115,103,195,8
+END
+
+IDD_EXPORT_PRIVATE_KEY DIALOG DISCARDABLE 0,0,317,143
+CAPTION "Certificate Export Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  LTEXT "If you choose to export the private key, you will be prompted for a password to protect the private key on a later page.", -1, 21,1,195,23
+  LTEXT "Do you wish to export the private key?", -1, 21,24,195,15
+  AUTORADIOBUTTON "&Yes, export the private key",
+    IDC_EXPORT_PRIVATE_KEY_YES, 31,36,200,12, BS_AUTORADIOBUTTON|WS_TABSTOP
+  AUTORADIOBUTTON "N&o, do not export the private key",
+    IDC_EXPORT_PRIVATE_KEY_NO, 31,48,200,12, BS_AUTORADIOBUTTON
+  LTEXT "", IDC_EXPORT_PRIVATE_KEY_UNAVAILABLE, 21,60,200,24
+END
+
+IDD_EXPORT_PASSWORD DIALOG DISCARDABLE 0,0,317,143
+CAPTION "Certificate Export Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  LTEXT "&Password:", -1, 21,1,195,10
+  EDITTEXT IDC_EXPORT_PASSWORD, 21,11,208,14, ES_AUTOHSCROLL|WS_TABSTOP
+  LTEXT "&Confirm password:", -1, 21,35,195,10
+  EDITTEXT IDC_EXPORT_PASSWORD_CONFIRM, 21,45,208,14, ES_AUTOHSCROLL|WS_TABSTOP
+END
+
+IDD_EXPORT_FORMAT DIALOG DISCARDABLE 0,0,317,143
+CAPTION "Certificate Export Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  LTEXT "Select the format you want to use:", -1, 21,1,195,10
+  AUTORADIOBUTTON "&DER-encoded X.509 (.cer)",
+    IDC_EXPORT_FORMAT_DER, 31,18,200,12, BS_AUTORADIOBUTTON|WS_TABSTOP
+  AUTORADIOBUTTON "Ba&se64-encoded X.509 (.cer):",
+    IDC_EXPORT_FORMAT_BASE64, 31,30,200,12, BS_AUTORADIOBUTTON
+  AUTORADIOBUTTON "&Cryptographic Message Syntax Standard/PKCS #7 Message (.p7b)",
+    IDC_EXPORT_FORMAT_CMS, 31,42,200,12, BS_AUTORADIOBUTTON
+  CHECKBOX "&Include all certificates in the certification path if possible",
+    IDC_EXPORT_CMS_INCLUDE_CHAIN, 44,57,200,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
+  AUTORADIOBUTTON "&Personal Information Exchange/PKCS #12 (.pfx)",
+    IDC_EXPORT_FORMAT_PFX, 31,72,200,12, BS_AUTORADIOBUTTON|WS_DISABLED
+  CHECKBOX "Incl&ude all certificates in the certification path if possible",
+    IDC_EXPORT_PFX_INCLUDE_CHAIN, 44,87,200,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
+  CHECKBOX "&Enable strong encryption",
+    IDC_EXPORT_PFX_STRONG_ENCRYPTION, 44,102,200,8,
+    BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
+  CHECKBOX "Delete the private &key if the export is successful",
+    IDC_EXPORT_PFX_DELETE_PRIVATE_KEY, 44,117,200,8,
+    BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
+END
+
+IDD_EXPORT_FILE DIALOG DISCARDABLE 0,0,317,143
+CAPTION "Certificate Export Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  LTEXT "&File name:", -1, 21,1,195,10
+  EDITTEXT IDC_EXPORT_FILENAME, 21,11,208,14, ES_AUTOHSCROLL|WS_TABSTOP
+  PUSHBUTTON "B&rowse...", IDC_EXPORT_BROWSE_FILE, 236,11,60,14
+END
+
+IDD_EXPORT_FINISH DIALOG DISCARDABLE 0,0,317,143
+CAPTION "Certificate Export Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  LTEXT "Completing the Certificate Export Wizard", IDC_EXPORT_TITLE,
+    115,1,195,40
+  LTEXT "You have successfully completed the Certificate Export Wizard.",
+    -1, 115,33,195,24
+  LTEXT "You have specified the following settings:",
+    -1, 115,57,195,12
+  CONTROL "", IDC_EXPORT_SETTINGS, "SysListView32",
+    LVS_REPORT|LVS_NOCOLUMNHEADER|LVS_SINGLESEL|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER,
+    115,67,174,100
+END

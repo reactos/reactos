@@ -155,6 +155,73 @@ static void ACTION_FreeSignature(MSISIGNATURE *sig)
     msi_free(sig->Languages);
 }
 
+static LPWSTR app_search_file(LPWSTR path, MSISIGNATURE *sig)
+{
+    VS_FIXEDFILEINFO *info;
+    DWORD attr, handle, size;
+    LPWSTR val = NULL;
+    LPBYTE buffer;
+
+    static const WCHAR root[] = {'\\',0};
+
+    if (!sig->File)
+    {
+        PathRemoveFileSpecW(path);
+        PathAddBackslashW(path);
+
+        attr = GetFileAttributesW(path);
+        if (attr != INVALID_FILE_ATTRIBUTES &&
+            (attr & FILE_ATTRIBUTE_DIRECTORY))
+            return strdupW(path);
+
+        return NULL;
+    }
+
+    attr = GetFileAttributesW(path);
+    if (attr == INVALID_FILE_ATTRIBUTES || attr == FILE_ATTRIBUTE_DIRECTORY)
+        return NULL;
+
+    size = GetFileVersionInfoSizeW(path, &handle);
+    if (!size)
+        return strdupW(path);
+
+    buffer = msi_alloc(size);
+    if (!buffer)
+        return NULL;
+
+    if (!GetFileVersionInfoW(path, 0, size, buffer))
+        goto done;
+
+    if (!VerQueryValueW(buffer, root, (LPVOID)&info, &size) || !info)
+        goto done;
+
+    if (sig->MinVersionLS || sig->MinVersionMS)
+    {
+        if (info->dwFileVersionMS < sig->MinVersionMS)
+            goto done;
+
+        if (info->dwFileVersionMS == sig->MinVersionMS &&
+            info->dwFileVersionLS < sig->MinVersionLS)
+            goto done;
+    }
+
+    if (sig->MaxVersionLS || sig->MaxVersionMS)
+    {
+        if (info->dwFileVersionMS > sig->MaxVersionMS)
+            goto done;
+
+        if (info->dwFileVersionMS == sig->MaxVersionMS &&
+            info->dwFileVersionLS > sig->MaxVersionLS)
+            goto done;
+    }
+
+    val = strdupW(path);
+
+done:
+    msi_free(buffer);
+    return val;
+}
+
 static UINT ACTION_AppSearchComponents(MSIPACKAGE *package, LPWSTR *appValue, MSISIGNATURE *sig)
 {
     static const WCHAR query[] =  {
@@ -211,7 +278,7 @@ static UINT ACTION_AppSearchComponents(MSIPACKAGE *package, LPWSTR *appValue, MS
 
     if (type != msidbLocatorTypeDirectory && sigpresent && !isdir)
     {
-        *appValue = strdupW(path);
+        *appValue = app_search_file(path, sig);
     }
     else if (!sigpresent && (type != msidbLocatorTypeDirectory || isdir))
     {
@@ -225,6 +292,15 @@ static UINT ACTION_AppSearchComponents(MSIPACKAGE *package, LPWSTR *appValue, MS
 
         *appValue = strdupW(path);
     }
+    else if (sigpresent)
+    {
+        PathAddBackslashW(path);
+        lstrcatW(path, MSI_RecordGetString(rec, 2));
+
+        attr = GetFileAttributesW(path);
+        if (attr != INVALID_FILE_ATTRIBUTES && attr != FILE_ATTRIBUTE_DIRECTORY)
+            *appValue = strdupW(path);
+    }
 
 done:
     if (rec) msiobj_release(&rec->hdr);
@@ -236,8 +312,9 @@ static void ACTION_ConvertRegValue(DWORD regType, const BYTE *value, DWORD sz,
  LPWSTR *appValue)
 {
     static const WCHAR dwordFmt[] = { '#','%','d','\0' };
-    static const WCHAR expandSzFmt[] = { '#','%','%','%','s','\0' };
-    static const WCHAR binFmt[] = { '#','x','%','x','\0' };
+    static const WCHAR binPre[] = { '#','x','\0' };
+    static const WCHAR binFmt[] = { '%','0','2','X','\0' };
+    LPWSTR ptr;
     DWORD i;
 
     switch (regType)
@@ -264,15 +341,17 @@ static void ACTION_ConvertRegValue(DWORD regType, const BYTE *value, DWORD sz,
             sprintfW(*appValue, dwordFmt, *(const DWORD *)value);
             break;
         case REG_EXPAND_SZ:
-            /* space for extra #% characters in front */
-            *appValue = msi_alloc(sz + 2 * sizeof(WCHAR));
-            sprintfW(*appValue, expandSzFmt, (LPCWSTR)value);
+            sz = ExpandEnvironmentStringsW((LPCWSTR)value, NULL, 0);
+            *appValue = msi_alloc(sz * sizeof(WCHAR));
+            ExpandEnvironmentStringsW((LPCWSTR)value, *appValue, sz);
             break;
         case REG_BINARY:
-            /* 3 == length of "#x<nibble>" */
-            *appValue = msi_alloc((sz * 3 + 1) * sizeof(WCHAR));
-            for (i = 0; i < sz; i++)
-                sprintfW(*appValue + i * 3, binFmt, value[i]);
+            /* #x<nibbles>\0 */
+            *appValue = msi_alloc((sz * 2 + 3) * sizeof(WCHAR));
+            lstrcpyW(*appValue, binPre);
+            ptr = *appValue + lstrlenW(binPre);
+            for (i = 0; i < sz; i++, ptr += 2)
+                sprintfW(ptr, binFmt, value[i]);
             break;
         default:
             WARN("unimplemented for values of type %d\n", regType);
@@ -293,6 +372,7 @@ static UINT ACTION_AppSearchReg(MSIPACKAGE *package, LPWSTR *appValue, MSISIGNAT
         'S','i','g','n','a','t','u','r','e','_',' ','=',' ', '\'','%','s','\'',0};
     LPWSTR keyPath = NULL, valueName = NULL;
     LPWSTR deformatted = NULL;
+    LPWSTR ptr = NULL, end;
     int root, type;
     HKEY rootKey, key = NULL;
     DWORD sz = 0, regType;
@@ -365,13 +445,18 @@ static UINT ACTION_AppSearchReg(MSIPACKAGE *package, LPWSTR *appValue, MSISIGNAT
     if (sz == 0)
         goto end;
 
+    if ((ptr = strchrW((LPWSTR)value, '"')) && (end = strchrW(++ptr, '"')))
+        *end = '\0';
+    else
+        ptr = (LPWSTR)value;
+
     switch (type & 0x0f)
     {
     case msidbLocatorTypeDirectory:
-        rc = ACTION_SearchDirectory(package, sig, (LPWSTR)value, 0, appValue);
+        rc = ACTION_SearchDirectory(package, sig, ptr, 0, appValue);
         break;
     case msidbLocatorTypeFileName:
-        *appValue = strdupW((LPWSTR)value);
+        *appValue = app_search_file(ptr, sig);
         break;
     case msidbLocatorTypeRawValue:
         ACTION_ConvertRegValue(regType, value, sz, appValue);
@@ -391,6 +476,32 @@ end:
     msiobj_release(&row->hdr);
 
     return ERROR_SUCCESS;
+}
+
+static LPWSTR get_ini_field(LPWSTR buf, int field)
+{
+    LPWSTR beg, end;
+    int i = 1;
+
+    if (field == 0)
+        return strdupW(buf);
+
+    beg = buf;
+    while ((end = strchrW(beg, ',')) && i < field)
+    {
+        beg = end + 1;
+        while (*beg && *beg == ' ')
+            beg++;
+
+        i++;
+    }
+
+    end = strchrW(beg, ',');
+    if (!end)
+        end = beg + lstrlenW(beg);
+
+    *end = '\0';
+    return strdupW(beg);
 }
 
 static UINT ACTION_AppSearchIni(MSIPACKAGE *package, LPWSTR *appValue,
@@ -434,13 +545,13 @@ static UINT ACTION_AppSearchIni(MSIPACKAGE *package, LPWSTR *appValue,
         switch (type & 0x0f)
         {
         case msidbLocatorTypeDirectory:
-            FIXME("unimplemented for Directory (%s)\n", debugstr_w(buf));
+            ACTION_SearchDirectory(package, sig, buf, 0, appValue);
             break;
         case msidbLocatorTypeFileName:
-            FIXME("unimplemented for File (%s)\n", debugstr_w(buf));
+            *appValue = app_search_file(buf, sig);
             break;
         case msidbLocatorTypeRawValue:
-            *appValue = strdupW(buf);
+            *appValue = get_ini_field(buf, field);
             break;
         }
     }
@@ -483,7 +594,7 @@ static void ACTION_ExpandAnyPath(MSIPACKAGE *package, WCHAR *src, WCHAR *dst,
         ptr = src;
 
     deformat_string(package, ptr, &deformatted);
-    if (!deformatted || lstrlenW(deformatted) > len - 1)
+    if (!deformatted || strlenW(deformatted) > len - 1)
     {
         msi_free(deformatted);
         return;
@@ -528,8 +639,7 @@ static UINT ACTION_FileVersionMatches(const MSISIGNATURE *sig, LPCWSTR filePath,
                     VerQueryValueW(buf, rootW, &subBlock, &versionLen);
                 if (subBlock)
                 {
-                    VS_FIXEDFILEINFO *info =
-                     (VS_FIXEDFILEINFO *)subBlock;
+                    VS_FIXEDFILEINFO *info = subBlock;
 
                     TRACE("Comparing file version %d.%d.%d.%d:\n",
                      HIWORD(info->dwFileVersionMS),
@@ -546,11 +656,12 @@ static UINT ACTION_FileVersionMatches(const MSISIGNATURE *sig, LPCWSTR filePath,
                          HIWORD(sig->MinVersionLS),
                          LOWORD(sig->MinVersionLS));
                     }
-                    else if (info->dwFileVersionMS < sig->MinVersionMS
-                     || (info->dwFileVersionMS == sig->MinVersionMS &&
-                     info->dwFileVersionLS < sig->MinVersionLS))
+                    else if ((sig->MaxVersionMS || sig->MaxVersionLS) &&
+                             (info->dwFileVersionMS > sig->MaxVersionMS ||
+                              (info->dwFileVersionMS == sig->MaxVersionMS &&
+                               info->dwFileVersionLS > sig->MaxVersionLS)))
                     {
-                        TRACE("Greater than minimum version %d.%d.%d.%d\n",
+                        TRACE("Greater than maximum version %d.%d.%d.%d\n",
                          HIWORD(sig->MaxVersionMS),
                          LOWORD(sig->MaxVersionMS),
                          HIWORD(sig->MaxVersionLS),
@@ -622,79 +733,92 @@ static UINT ACTION_FileMatchesSig(const MSISIGNATURE *sig,
 static UINT ACTION_RecurseSearchDirectory(MSIPACKAGE *package, LPWSTR *appValue,
  MSISIGNATURE *sig, LPCWSTR dir, int depth)
 {
-    static const WCHAR starDotStarW[] = { '*','.','*',0 };
+    HANDLE hFind;
+    WIN32_FIND_DATAW findData;
     UINT rc = ERROR_SUCCESS;
     size_t dirLen = lstrlenW(dir), fileLen = lstrlenW(sig->File);
+    WCHAR subpath[MAX_PATH];
     WCHAR *buf;
 
+    static const WCHAR dot[] = {'.',0};
+    static const WCHAR dotdot[] = {'.','.',0};
+    static const WCHAR starDotStarW[] = { '*','.','*',0 };
+
     TRACE("Searching directory %s for file %s, depth %d\n", debugstr_w(dir),
-     debugstr_w(sig->File), depth);
+          debugstr_w(sig->File), depth);
 
     if (depth < 0)
-        return ERROR_INVALID_PARAMETER;
+        return ERROR_SUCCESS;
 
     *appValue = NULL;
     /* We need the buffer in both paths below, so go ahead and allocate it
      * here.  Add two because we might need to add a backslash if the dir name
      * isn't backslash-terminated.
      */
-    buf = msi_alloc( (dirLen + max(fileLen, lstrlenW(starDotStarW)) + 2) * sizeof(WCHAR));
-    if (buf)
-    {
-        /* a depth of 0 implies we should search dir, so go ahead and search */
-        HANDLE hFind;
-        WIN32_FIND_DATAW findData;
+    buf = msi_alloc( (dirLen + max(fileLen, strlenW(starDotStarW)) + 2) * sizeof(WCHAR));
+    if (!buf)
+        return ERROR_OUTOFMEMORY;
 
-        memcpy(buf, dir, dirLen * sizeof(WCHAR));
-        if (buf[dirLen - 1] != '\\')
-            buf[dirLen++ - 1] = '\\';
-        memcpy(buf + dirLen, sig->File, (fileLen + 1) * sizeof(WCHAR));
-        hFind = FindFirstFileW(buf, &findData);
-        if (hFind != INVALID_HANDLE_VALUE)
+    lstrcpyW(buf, dir);
+    PathAddBackslashW(buf);
+    lstrcatW(buf, sig->File);
+
+    hFind = FindFirstFileW(buf, &findData);
+    if (hFind != INVALID_HANDLE_VALUE)
+    {
+        if (!(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
         {
             BOOL matches;
 
-            /* assuming Signature can't contain wildcards for the file name,
-             * so don't bother with FindNextFileW here.
-             */
-            if (!(rc = ACTION_FileMatchesSig(sig, &findData, buf, &matches))
-             && matches)
+            rc = ACTION_FileMatchesSig(sig, &findData, buf, &matches);
+            if (rc == ERROR_SUCCESS && matches)
             {
                 TRACE("found file, returning %s\n", debugstr_w(buf));
                 *appValue = buf;
             }
+        }
+        FindClose(hFind);
+    }
+
+    if (rc == ERROR_SUCCESS && !*appValue)
+    {
+        lstrcpyW(buf, dir);
+        PathAddBackslashW(buf);
+        lstrcatW(buf, starDotStarW);
+
+        hFind = FindFirstFileW(buf, &findData);
+        if (hFind != INVALID_HANDLE_VALUE)
+        {
+            if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY &&
+                lstrcmpW(findData.cFileName, dot) &&
+                lstrcmpW(findData.cFileName, dotdot))
+            {
+                lstrcpyW(subpath, dir);
+                PathAppendW(subpath, findData.cFileName);
+                rc = ACTION_RecurseSearchDirectory(package, appValue, sig,
+                                                   subpath, depth - 1);
+            }
+
+            while (rc == ERROR_SUCCESS && !*appValue &&
+                   FindNextFileW(hFind, &findData) != 0)
+            {
+                if (!lstrcmpW(findData.cFileName, dot) ||
+                    !lstrcmpW(findData.cFileName, dotdot))
+                    continue;
+
+                lstrcpyW(subpath, dir);
+                PathAppendW(subpath, findData.cFileName);
+                if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+                    rc = ACTION_RecurseSearchDirectory(package, appValue,
+                                                       sig, subpath, depth - 1);
+            }
+
             FindClose(hFind);
         }
-        if (rc == ERROR_SUCCESS && !*appValue && depth > 0)
-        {
-            HANDLE hFind;
-            WIN32_FIND_DATAW findData;
-
-            memcpy(buf, dir, dirLen * sizeof(WCHAR));
-            if (buf[dirLen - 1] != '\\')
-                buf[dirLen++ - 1] = '\\';
-            lstrcpyW(buf + dirLen, starDotStarW);
-            hFind = FindFirstFileW(buf, &findData);
-            if (hFind != INVALID_HANDLE_VALUE)
-            {
-                if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-                    rc = ACTION_RecurseSearchDirectory(package, appValue, sig,
-                     findData.cFileName, depth - 1);
-                while (rc == ERROR_SUCCESS && !*appValue &&
-                 FindNextFileW(hFind, &findData) != 0)
-                {
-                    if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-                        rc = ACTION_RecurseSearchDirectory(package, appValue,
-                         sig, findData.cFileName, depth - 1);
-                }
-                FindClose(hFind);
-            }
-        }
-        if (!*appValue)
-            msi_free(buf);
     }
-    else
-        rc = ERROR_OUTOFMEMORY;
+
+    if (!*appValue)
+        msi_free(buf);
 
     return rc;
 }
@@ -731,20 +855,22 @@ static UINT ACTION_SearchDirectory(MSIPACKAGE *package, MSISIGNATURE *sig,
  LPCWSTR path, int depth, LPWSTR *appValue)
 {
     UINT rc;
+    DWORD attr;
+    LPWSTR val = NULL;
 
     TRACE("%p, %p, %s, %d, %p\n", package, sig, debugstr_w(path), depth,
      appValue);
+
     if (ACTION_IsFullPath(path))
     {
         if (sig->File)
-            rc = ACTION_RecurseSearchDirectory(package, appValue, sig,
-             path, depth);
+            rc = ACTION_RecurseSearchDirectory(package, &val, sig, path, depth);
         else
         {
             /* Recursively searching a directory makes no sense when the
              * directory to search is the thing you're trying to find.
              */
-            rc = ACTION_CheckDirectory(package, path, appValue);
+            rc = ACTION_CheckDirectory(package, path, &val);
         }
     }
     else
@@ -754,24 +880,39 @@ static UINT ACTION_SearchDirectory(MSIPACKAGE *package, MSISIGNATURE *sig,
         int i;
 
         rc = ERROR_SUCCESS;
-        *appValue = NULL;
-        for (i = 0; rc == ERROR_SUCCESS && !*appValue && i < 26; i++)
-            if (drives & (1 << i))
-            {
-                pathWithDrive[0] = 'A' + i;
-                if (GetDriveTypeW(pathWithDrive) == DRIVE_FIXED)
-                {
-                    lstrcpynW(pathWithDrive + 3, path,
-                              sizeof(pathWithDrive) / sizeof(pathWithDrive[0]) - 3);
-                    if (sig->File)
-                        rc = ACTION_RecurseSearchDirectory(package, appValue,
-                         sig, pathWithDrive, depth);
-                    else
-                        rc = ACTION_CheckDirectory(package, pathWithDrive,
-                         appValue);
-                }
-            }
+        for (i = 0; rc == ERROR_SUCCESS && !val && i < 26; i++)
+        {
+            if (!(drives & (1 << i)))
+                continue;
+
+            pathWithDrive[0] = 'A' + i;
+            if (GetDriveTypeW(pathWithDrive) != DRIVE_FIXED)
+                continue;
+
+            lstrcpynW(pathWithDrive + 3, path,
+                      sizeof(pathWithDrive) / sizeof(pathWithDrive[0]) - 3);
+
+            if (sig->File)
+                rc = ACTION_RecurseSearchDirectory(package, &val, sig,
+                                                   pathWithDrive, depth);
+            else
+                rc = ACTION_CheckDirectory(package, pathWithDrive, &val);
+        }
     }
+
+    attr = GetFileAttributesW(val);
+    if ((attr & FILE_ATTRIBUTE_DIRECTORY) &&
+        val && val[lstrlenW(val) - 1] != '\\')
+    {
+        val = msi_realloc(val, (lstrlenW(val) + 2) * sizeof(WCHAR));
+        if (!val)
+            rc = ERROR_OUTOFMEMORY;
+        else
+            PathAddBackslashW(val);
+    }
+
+    *appValue = val;
+
     TRACE("returning %d\n", rc);
     return rc;
 }
@@ -787,16 +928,15 @@ static UINT ACTION_AppSearchDr(MSIPACKAGE *package, LPWSTR *appValue, MSISIGNATU
         'D','r','L','o','c','a','t','o','r',' ',
         'w','h','e','r','e',' ',
         'S','i','g','n','a','t','u','r','e','_',' ','=',' ', '\'','%','s','\'',0};
-    LPWSTR parentName = NULL, path = NULL, parent = NULL;
+    LPWSTR parentName = NULL, parent = NULL;
+    WCHAR path[MAX_PATH];
     WCHAR expanded[MAX_PATH];
     MSIRECORD *row;
     int depth;
+    DWORD sz;
     UINT rc;
 
     TRACE("%s\n", debugstr_w(sig->Name));
-
-    msi_free(sig->File);
-    sig->File = NULL;
 
     *appValue = NULL;
 
@@ -817,33 +957,35 @@ static UINT ACTION_AppSearchDr(MSIPACKAGE *package, LPWSTR *appValue, MSISIGNATU
         ACTION_FreeSignature(&parentSig);
         msi_free(parentName);
     }
-    /* now look for path */
-    path = msi_dup_record_field(row,3);
+
+    sz = MAX_PATH;
+    MSI_RecordGetStringW(row, 3, path, &sz);
+
     if (MSI_RecordIsNull(row,4))
         depth = 0;
     else
         depth = MSI_RecordGetInteger(row,4);
+
     ACTION_ExpandAnyPath(package, path, expanded, MAX_PATH);
-    msi_free(path);
+
     if (parent)
     {
-        path = msi_alloc((strlenW(parent) + strlenW(expanded) + 1) * sizeof(WCHAR));
-        if (!path)
+        if (!(GetFileAttributesW(parent) & FILE_ATTRIBUTE_DIRECTORY))
         {
-            rc = ERROR_OUTOFMEMORY;
-            goto end;
+            PathRemoveFileSpecW(parent);
+            PathAddBackslashW(parent);
         }
+
         strcpyW(path, parent);
         strcatW(path, expanded);
     }
     else
-        path = expanded;
+        strcpyW(path, expanded);
+
+    PathAddBackslashW(path);
 
     rc = ACTION_SearchDirectory(package, sig, path, depth, appValue);
 
-end:
-    if (path != expanded)
-        msi_free(path);
     msi_free(parent);
     msiobj_release(&row->hdr);
 

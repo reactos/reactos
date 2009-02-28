@@ -613,7 +613,7 @@ LRESULT WINAPI FileMenu_DrawItem(
 
 	ExtTextOutW (lpdis->hDC, xt , yt, ETO_OPAQUE, &TextRect, pMyItem->szItemText, pMyItem->cchItemText, NULL);
 
-	Shell_GetImageList(0, &hImageList);
+	Shell_GetImageLists(0, &hImageList);
 	ImageList_Draw(hImageList, pMyItem->iIconIndex, lpdis->hDC, xi, yi, ILD_NORMAL);
 
 	TRACE("-- 0x%04x 0x%04x 0x%04x 0x%04x\n", TextRect.left, TextRect.top, TextRect.right, TextRect.bottom);

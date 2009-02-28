@@ -15,6 +15,8 @@
 #define NDEBUG
 #include <debug.h>
 
+#define UNICODIZE1(x) L##x
+#define UNICODIZE(x) UNICODIZE1(x)
 
 /* FUNCTIONS ******************************************************************/
 
@@ -23,7 +25,7 @@
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 GetVersion(VOID)
 {
   PPEB pPeb = NtCurrentPeb();
@@ -47,7 +49,7 @@ GetVersion(VOID)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetVersionExW(
     LPOSVERSIONINFOW lpVersionInformation
     )
@@ -97,7 +99,7 @@ GetVersionExW(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetVersionExA(
     LPOSVERSIONINFOA lpVersionInformation
     )
@@ -175,7 +177,7 @@ GetVersionExA(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 VerifyVersionInfoW(
     LPOSVERSIONINFOEXW lpVersionInformation,
     DWORD dwTypeMask,
@@ -209,7 +211,7 @@ VerifyVersionInfoW(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 VerifyVersionInfoA(
     LPOSVERSIONINFOEXA lpVersionInformation,
     DWORD dwTypeMask,

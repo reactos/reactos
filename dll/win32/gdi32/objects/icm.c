@@ -29,7 +29,7 @@ IntCreateColorSpaceW(
  * @implemented
  */
 HCOLORSPACE
-STDCALL
+WINAPI
 CreateColorSpaceW(
 	LPLOGCOLORSPACEW lplcpw
 	)
@@ -42,7 +42,7 @@ CreateColorSpaceW(
  * @implemented
  */
 HCOLORSPACE
-STDCALL
+WINAPI
 CreateColorSpaceA(
 	LPLOGCOLORSPACEA lplcpa
 	)
@@ -80,7 +80,7 @@ CreateColorSpaceA(
  * @implemented
  */
 HCOLORSPACE
-STDCALL
+WINAPI
 GetColorSpace(HDC hDC)
 {
   PDC_ATTR pDc_Attr;
@@ -98,7 +98,7 @@ GetColorSpace(HDC hDC)
  * @implemented
  */
 HCOLORSPACE
-STDCALL
+WINAPI
 SetColorSpace(
 	HDC hDC,
 	HCOLORSPACE hCS

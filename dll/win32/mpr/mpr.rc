@@ -45,4 +45,5 @@
 #include "mpr_Si.rc"
 #include "mpr_Sv.rc"
 #include "mpr_Tr.rc"
+#include "mpr_Zh.rc"
 #include "mpr_Uk.rc"

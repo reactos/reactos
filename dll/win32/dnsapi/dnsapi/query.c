@@ -53,18 +53,18 @@ DnsQuery_A(LPCSTR Name,
            PVOID *Reserved)
 {
     adns_state astate;
-    int quflags = 0, i;
+    int quflags = 0;
     int adns_error;
     adns_answer *answer;
     LPSTR CurrentName;
-    unsigned CNameLoop;
+    unsigned i, CNameLoop;
 
     *QueryResultSet = 0;
 
     switch(Type)
     {
         case DNS_TYPE_A:
-            adns_error = adns_init(&astate, adns_if_noenv | adns_if_noerrprint | adns_if_noserverwarn | (Servers ? adns_if_noserver : 0), 0);
+            adns_error = adns_init(&astate, adns_if_noenv | adns_if_noerrprint | adns_if_noserverwarn, 0);
 
             if(adns_error != adns_s_ok)
                 return DnsIntTranslateAdnsToDNS_STATUS(adns_error);

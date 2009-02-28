@@ -39,7 +39,7 @@ static inline BYTE hex( BYTE x )
     return x + 'A' - 10;
 }
 
-static inline CHAR ctox( CHAR x )
+static inline signed char ctox( CHAR x )
 {
     if( ( x >= '0' ) && ( x <= '9' ) )
         return x - '0';
@@ -282,7 +282,7 @@ UINT WINAPI WNetEnumCachedPasswords(
         /* decode the value */
         for(j=5; j<val_sz; j+=2 )
         {
-            CHAR hi = ctox( val[j] ), lo = ctox( val[j+1] );
+            signed char hi = ctox( val[j] ), lo = ctox( val[j+1] );
             if( ( hi < 0 ) || ( lo < 0 ) )
                 break;
             val[(j-5)/2] = (hi<<4) | lo;

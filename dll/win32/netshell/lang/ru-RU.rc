@@ -19,7 +19,14 @@ BEGIN
 	CHECKBOX "Оповещать в случае разрыва соединения", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
 END
 
-IDD_NETSTATUS DIALOGEX DISCARDABLE  0, 0, 216, 180
+IDD_STATUS DIALOGEX DISCARDABLE  0, 0, 200, 280
+STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Свойства"
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+IDD_LAN_NETSTATUS DIALOGEX DISCARDABLE  0, 0, 216, 180
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Общие"
 FONT 8, "MS Shell Dlg"
@@ -30,13 +37,10 @@ BEGIN
 	LTEXT "Скорость:", -1, 19, 48, 60, 8
 	GROUPBOX "Активность", -1, 9, 74, 198, 70, BS_GROUPBOX
 	RTEXT "Отправлено", -1, 20, 90, 60, 8
-	ICON IDI_HORIZONTAL, -1, 90, 85, 18, 20
-	ICON IDI_NETSTAT, -1, 110, 85, 18, 20
-	ICON IDI_HORIZONTAL, -1, 130, 85, 18, 20
+        ICON IDI_NETSTAT, -1, 110, 85, 32, 32
 	LTEXT "Принято", -1, 158, 90, 37, 8
 	LTEXT "Байт:", -1, 17, 115, 32, 8
 	RTEXT "000.000.000", IDC_SEND, 54, 115, 44, 8
-	ICON IDI_VERTICAL, -1, 110, 108, 18, 20
 	RTEXT "000.000.000", IDC_RECEIVED, 139, 115, 46, 8
 	PUSHBUTTON "&Свойства", IDC_STATUS_PROPERTIES, 10, 150, 50, 14
 	PUSHBUTTON "&Отключить", IDC_ENDISABLE, 66, 150, 50, 14
@@ -45,9 +49,48 @@ BEGIN
 	RTEXT "", IDC_SPEED, 100, 48, 98, 8
 END
 
+IDD_LAN_NETSTATUSADVANCED DIALOGEX DISCARDABLE  0, 0, 200,180
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Поддежка"
+FONT 8, "MS Shell Dlg"
+BEGIN
+ GROUPBOX "Статус подключения", -1, 9, 8, 200, 88, BS_GROUPBOX
+ LTEXT "Тип адреса:", -1, 22, 20, 80, 8
+ LTEXT "IP адрес:", -1, 22, 34, 80, 8
+ LTEXT "Маска подсети:", -1, 22, 48, 80, 8
+ LTEXT "Шлюз по умолчанию:", -1, 22, 62, 80, 8
+
+ RTEXT "н/а", IDC_DETAILSTYPE, 122, 20, 80, 8
+ RTEXT "000.000.000.000", IDC_DETAILSIP, 122, 34, 80, 8
+ RTEXT "000.000.000.000", IDC_DETAILSSUBNET, 122, 48, 80, 8
+ RTEXT "", IDC_DETAILSGATEWAY, 122, 62, 80, 8
+
+ PUSHBUTTON "&Подробности...", IDC_DETAILS, 22, 76, 62, 14
+END
+
+IDD_LAN_NETSTATUSDETAILS DIALOGEX DISCARDABLE  0, 0, 200, 172
+STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
+CAPTION "Детали сетевого подключения"
+FONT 8, "MS Shell Dlg"
+BEGIN
+ LTEXT "&Дополнительные сведения о сети:", -1, 5, 4, 170, 12
+ CONTROL "", IDC_DETAILS, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 5, 17, 190, 130
+ PUSHBUTTON "&Закрыть", IDC_CLOSE, 132, 153, 62, 14
+END
 
 STRINGTABLE DISCARDABLE
 BEGIN
+	IDS_PHYSICAL_ADDRESS        "Физический адрес"
+	IDS_IP_ADDRESS              "IP-адрес"
+	IDS_SUBNET_MASK             "Маска подсети"
+	IDS_DEF_GATEWAY             "Основной шлюз"
+	IDS_DHCP_SERVER             "DHCP-сервер"
+	IDS_LEASE_OBTAINED          "Аренда получена"
+	IDS_LEASE_EXPIRES           "Аренда истекает"
+	IDS_DNS_SERVERS             "DNS-серверы"
+	IDS_WINS_SERVERS            "WINS-сервер"
+	IDS_PROPERTY                "Свойство"
+	IDS_VALUE                   "Значение"
 	IDS_NETWORKCONNECTION       "Сетевые подключения"
 	IDS_SHV_COLUMN_NAME         "Имя"
 	IDS_SHV_COLUMN_TYPE         "Тип"
@@ -70,4 +113,13 @@ BEGIN
 	IDS_NET_CREATELINK          "Создать ярлык"
 	IDS_NET_DELETE              "Удалить"
 	IDS_NET_PROPERTIES          "Свойства"
+
+	IDS_FORMAT_BIT              "%u Байт/s"
+	IDS_FORMAT_KBIT             "%u КБайт/s"
+	IDS_FORMAT_MBIT             "%u МБайт/s"
+	IDS_FORMAT_GBIT             "%u ГБайт/s"
+	IDS_DURATION_DAY            "%d день %s"
+	IDS_DURATION_DAYS           "%d дней %s"
+	IDS_ASSIGNED_DHCP           "Присвоен DHCP"
+	IDS_ASSIGNED_MANUAL         "Настроен вручную"
 END

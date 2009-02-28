@@ -30,9 +30,9 @@ typedef struct _TIMEZONE_ENTRY
 {
   struct _TIMEZONE_ENTRY *Prev;
   struct _TIMEZONE_ENTRY *Next;
-  TCHAR Description[64];   /* 'Display' */
-  TCHAR StandardName[32];  /* 'Std' */
-  TCHAR DaylightName[32];  /* 'Dlt' */
+  WCHAR Description[64];   /* 'Display' */
+  WCHAR StandardName[32];  /* 'Std' */
+  WCHAR DaylightName[32];  /* 'Dlt' */
   TZ_INFO TimezoneInfo;    /* 'TZI' */
   ULONG Index;
 } TIMEZONE_ENTRY, *PTIMEZONE_ENTRY;
@@ -41,13 +41,12 @@ typedef struct _SETUPDATA
 {
   HFONT hTitleFont;
 
-  TCHAR OwnerName[51];
-  TCHAR OwnerOrganization[51];
-  TCHAR ComputerName[MAX_COMPUTERNAME_LENGTH + 1];	/* max. 63 characters */
-  TCHAR AdminPassword[15];				/* max. 14 characters */
+  WCHAR OwnerName[51];
+  WCHAR OwnerOrganization[51];
+  WCHAR ComputerName[MAX_COMPUTERNAME_LENGTH + 1];	/* max. 63 characters */
+  WCHAR AdminPassword[15];				/* max. 14 characters */
   BOOL  UnattendSetup;
   BOOL  DisableVmwInst;
-  DWORD BootCDRegtestActive;
 
   SYSTEMTIME SystemTime;
   PTIMEZONE_ENTRY TimeZoneListHead;

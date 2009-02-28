@@ -128,6 +128,8 @@ static BOOL queue_timer(thread_data_t *thread_data, task_timer_t *timer)
 {
     task_timer_t *iter;
 
+    list_remove(&timer->entry);
+
     if(list_empty(&thread_data->timer_list)
        || LIST_ENTRY(list_head(&thread_data->timer_list), task_timer_t, entry)->time > timer->time) {
 
@@ -159,6 +161,7 @@ DWORD set_task_timer(HTMLDocument *doc, DWORD msec, BOOL interval, IDispatch *di
     timer->doc = doc;
     timer->time = tc + msec;
     timer->interval = interval ? msec : 0;
+    list_init(&timer->entry);
 
     IDispatch_AddRef(disp);
     timer->disp = disp;
@@ -257,6 +260,8 @@ static void set_parsecomplete(HTMLDocument *doc)
     call_explorer_69(doc);
     call_property_onchanged(&doc->cp_propnotif, 1005);
     call_explorer_69(doc);
+
+    /* FIXME: IE7 calls EnableModelless(TRUE), EnableModelless(FALSE) and sets interactive state here */
 
     doc->readystate = READYSTATE_INTERACTIVE;
     call_property_onchanged(&doc->cp_propnotif, DISPID_READYSTATE);
@@ -360,9 +365,25 @@ static void process_task(task_t *task)
     }
 }
 
+static void call_timer_disp(IDispatch *disp)
+{
+    DISPPARAMS dp = {NULL, NULL, 0, 0};
+    EXCEPINFO ei;
+    VARIANT res;
+    HRESULT hres;
+
+    V_VT(&res) = VT_EMPTY;
+    memset(&ei, 0, sizeof(ei));
+    hres = IDispatch_Invoke(disp, DISPID_VALUE, &IID_NULL, 0, DISPATCH_METHOD, &dp, &res, &ei, NULL);
+    TRACE("ret %08x %s\n", hres, debugstr_variant(&res));
+    VariantClear(&res);
+}
+
 static LRESULT process_timer(void)
 {
     thread_data_t *thread_data = get_thread_data(TRUE);
+    HTMLDocument *doc;
+    IDispatch *disp;
     DWORD tc;
     task_timer_t *timer;
 
@@ -377,10 +398,9 @@ static LRESULT process_timer(void)
             return 0;
         }
 
-        list_remove(&timer->entry);
-        list_init(&timer->entry);
-
-        call_disp_func(timer->doc, timer->disp);
+        doc = timer->doc;
+        disp = timer->disp;
+        IDispatch_AddRef(disp);
 
         if(timer->interval) {
             timer->time += timer->interval;
@@ -388,6 +408,10 @@ static LRESULT process_timer(void)
         }else {
             release_task_timer(thread_data->thread_hwnd, timer);
         }
+
+        call_timer_disp(disp);
+
+        IDispatch_Release(disp);
     }
 
     KillTimer(thread_data->thread_hwnd, TIMER_ID);

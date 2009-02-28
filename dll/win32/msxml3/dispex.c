@@ -79,6 +79,7 @@ static REFIID tid_ids[] = {
     &IID_IXMLDOMAttribute,
     &IID_IXMLDOMCDATASection,
     &IID_IXMLDOMComment,
+    &IID_IXMLDOMDocument,
     &IID_IXMLDOMDocument2,
     &IID_IXMLDOMDocumentFragment,
     &IID_IXMLDOMElement,
@@ -93,6 +94,7 @@ static REFIID tid_ids[] = {
     &IID_IXMLDOMText,
     &IID_IXMLElement,
     &IID_IXMLDOMDocument,
+    &IID_IXMLHTTPRequest,
     &IID_IVBSAXAttributes,
     &IID_IVBSAXContentHandler,
     &IID_IVBSAXDeclHandler,
@@ -434,18 +436,37 @@ static HRESULT WINAPI DispatchEx_GetDispID(IDispatchEx *iface, BSTR bstrName, DW
     }
 
     if(grfdex & fdexNameEnsure) {
+        dispex_dynamic_data_t *dynamic_data;
+
         TRACE("creating dynamic prop %s\n", debugstr_w(bstrName));
 
-        if(!This->dynamic_data) {
-            This->dynamic_data = heap_alloc_zero(sizeof(dispex_dynamic_data_t));
-            This->dynamic_data->props = heap_alloc(This->dynamic_data->buf_size = 4);
-        }else if(This->dynamic_data->buf_size == This->dynamic_data->prop_cnt) {
-            This->dynamic_data->props = heap_realloc(This->dynamic_data->props, This->dynamic_data->buf_size<<=1);
+        if(This->dynamic_data) {
+            dynamic_data = This->dynamic_data;
+        }else {
+            dynamic_data = This->dynamic_data = heap_alloc_zero(sizeof(dispex_dynamic_data_t));
+            if(!dynamic_data)
+                return E_OUTOFMEMORY;
         }
 
-        This->dynamic_data->props[This->dynamic_data->prop_cnt].name = heap_strdupW(bstrName);
-        VariantInit(&This->dynamic_data->props[This->dynamic_data->prop_cnt].var);
-        *pid = DISPID_DYNPROP_0 + This->dynamic_data->prop_cnt++;
+        if(!dynamic_data->buf_size) {
+            dynamic_data->props = heap_alloc(sizeof(dynamic_prop_t)*4);
+            if(!dynamic_data->props)
+                return E_OUTOFMEMORY;
+            dynamic_data->buf_size = 4;
+        }else if(dynamic_data->buf_size == dynamic_data->prop_cnt) {
+            dynamic_prop_t *new_props;
+
+            new_props = heap_realloc(dynamic_data->props, sizeof(dynamic_prop_t)*(dynamic_data->buf_size<<1));
+            if(!new_props)
+                return E_OUTOFMEMORY;
+
+            dynamic_data->props = new_props;
+            dynamic_data->buf_size <<= 1;
+        }
+
+        dynamic_data->props[dynamic_data->prop_cnt].name = heap_strdupW(bstrName);
+        VariantInit(&dynamic_data->props[dynamic_data->prop_cnt].var);
+        *pid = DISPID_DYNPROP_0 + dynamic_data->prop_cnt++;
 
         return S_OK;
     }
@@ -542,42 +563,42 @@ static HRESULT WINAPI DispatchEx_InvokeEx(IDispatchEx *iface, DISPID id, LCID lc
 static HRESULT WINAPI DispatchEx_DeleteMemberByName(IDispatchEx *iface, BSTR bstrName, DWORD grfdex)
 {
     DispatchEx *This = impl_from_IDispatchEx(iface);
-    FIXME("(%p)->(%s %x)\n", This, debugstr_w(bstrName), grfdex);
-    return S_OK;
+    TRACE("Not implemented in native msxml3 (%p)->(%s %x)\n", This, debugstr_w(bstrName), grfdex);
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI DispatchEx_DeleteMemberByDispID(IDispatchEx *iface, DISPID id)
 {
     DispatchEx *This = impl_from_IDispatchEx(iface);
-    FIXME("(%p)->(%x)\n", This, id);
+    TRACE("Not implemented in native msxml3 (%p)->(%x)\n", This, id);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI DispatchEx_GetMemberProperties(IDispatchEx *iface, DISPID id, DWORD grfdexFetch, DWORD *pgrfdex)
 {
     DispatchEx *This = impl_from_IDispatchEx(iface);
-    FIXME("(%p)->(%x %x %p)\n", This, id, grfdexFetch, pgrfdex);
+    TRACE("Not implemented in native msxml3 (%p)->(%x %x %p)\n", This, id, grfdexFetch, pgrfdex);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI DispatchEx_GetMemberName(IDispatchEx *iface, DISPID id, BSTR *pbstrName)
 {
     DispatchEx *This = impl_from_IDispatchEx(iface);
-    FIXME("(%p)->(%x %p)\n", This, id, pbstrName);
+    TRACE("Not implemented in native msxml3 (%p)->(%x %p)\n", This, id, pbstrName);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI DispatchEx_GetNextDispID(IDispatchEx *iface, DWORD grfdex, DISPID id, DISPID *pid)
 {
     DispatchEx *This = impl_from_IDispatchEx(iface);
-    FIXME("(%p)->(%x %x %p)\n", This, grfdex, id, pid);
+    TRACE(" Not implemented in native msxml3 (%p)->(%x %x %p)\n", This, grfdex, id, pid);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI DispatchEx_GetNameSpaceParent(IDispatchEx *iface, IUnknown **ppunk)
 {
     DispatchEx *This = impl_from_IDispatchEx(iface);
-    FIXME("(%p)->(%p)\n", This, ppunk);
+    TRACE("Not implemented in native msxml3 (%p)->(%p)\n", This, ppunk);
     return E_NOTIMPL;
 }
 

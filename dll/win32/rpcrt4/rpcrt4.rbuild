@@ -1,18 +1,15 @@
-<module name="rpcrt4" type="win32dll" baseaddress="${BASEADDRESS_RPCRT4}" installbase="system32" installname="rpcrt4.dll" allowwarnings="true">
+<module name="rpcrt4" type="win32dll" baseaddress="${BASEADDRESS_RPCRT4}" installbase="system32" installname="rpcrt4.dll" allowwarnings="true" crt="msvcrt">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
-	<importlibrary definition="rpcrt4.spec.def" />
+	<importlibrary definition="rpcrt4.spec" />
 	<include base="rpcrt4">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
-	<define name="__USE_W32API" />
-	<define name="_WIN32_IE">0x600</define>
-	<define name="_WIN32_WINNT">0x501</define>
-	<define name="WINVER">0x501</define>
-	<define name="_STDDEF_H" />
+	<define name="_WIN32_WINNT">0x600</define>
 	<define name="_RPCRT4_" />
 	<define name="COM_NO_WINDOWS_H" />
 	<define name="MSWMSG" />
 	<library>wine</library>
 	<library>uuid</library>
+	<library>rpcrt4_epm_client</library>
 	<library>kernel32</library>
 	<library>user32</library>
 	<library>advapi32</library>
@@ -20,6 +17,7 @@
 	<library>iphlpapi</library>
 	<library>ws2_32</library>
 	<library>ntdll</library>
+	<library>pseh</library>
 	<file>cproxy.c</file>
 	<file>cpsf.c</file>
 	<file>cstub.c</file>
@@ -37,8 +35,14 @@
 	<file>rpc_server.c</file>
 	<file>rpc_transport.c</file>
 	<file>rpcrt4_main.c</file>
-	<file>rpcss_np_client.c</file>
 	<file>unix_func.c</file>
+	<file>ndr_es.c</file>
 	<file>rpcrt4.rc</file>
-	<file>rpcrt4.spec</file>
+	<file>epm.idl</file>
+	<include base="rpcrt4" root="intermediate">.</include>
+	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38054#c7 -->
+	<compilerflag>-fno-unit-at-a-time</compilerflag>
+</module>
+<module name="rpcrt4_epm_client" type="rpcclient">
+	<file>epm.idl</file>
 </module>

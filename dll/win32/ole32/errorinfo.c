@@ -42,7 +42,7 @@
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
 /* this code is from SysAllocStringLen (ole2disp.c in oleaut32) */
-static BSTR WINAPI ERRORINFO_SysAllocString(const OLECHAR* in)
+static BSTR ERRORINFO_SysAllocString(const OLECHAR* in)
 {
     DWORD  bufferSize;
     DWORD* newBuffer;
@@ -99,7 +99,7 @@ static BSTR WINAPI ERRORINFO_SysAllocString(const OLECHAR* in)
 }
 
 /* this code is from SysFreeString (ole2disp.c in oleaut32)*/
-static VOID WINAPI ERRORINFO_SysFreeString(BSTR in)
+static VOID ERRORINFO_SysFreeString(BSTR in)
 {
     DWORD* bufferPointer;
 

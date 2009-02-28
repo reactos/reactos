@@ -43,9 +43,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(uxtheme);
  * Defines and global variables
  */
 
-BOOL MSSTYLES_GetNextInteger(LPCWSTR lpStringStart, LPCWSTR lpStringEnd, LPCWSTR *lpValEnd, int *value);
-BOOL MSSTYLES_GetNextToken(LPCWSTR lpStringStart, LPCWSTR lpStringEnd, LPCWSTR *lpValEnd, LPWSTR lpBuff, DWORD buffSize);
-void MSSTYLES_ParseThemeIni(PTHEME_FILE tf, BOOL setMetrics);
+static BOOL MSSTYLES_GetNextInteger(LPCWSTR lpStringStart, LPCWSTR lpStringEnd, LPCWSTR *lpValEnd, int *value);
+static BOOL MSSTYLES_GetNextToken(LPCWSTR lpStringStart, LPCWSTR lpStringEnd, LPCWSTR *lpValEnd, LPWSTR lpBuff, DWORD buffSize);
+static void MSSTYLES_ParseThemeIni(PTHEME_FILE tf, BOOL setMetrics);
 static HRESULT MSSTYLES_GetFont (LPCWSTR lpStringStart, LPCWSTR lpStringEnd, LPCWSTR *lpValEnd, LOGFONTW* logfont);
 
 extern HINSTANCE hDllInst;
@@ -132,14 +132,14 @@ HRESULT MSSTYLES_OpenThemeFile(LPCWSTR lpThemeFile, LPCWSTR pszColorName, LPCWST
         hr = HRESULT_FROM_WIN32(ERROR_BAD_FORMAT);
         goto invalid_theme;
     }
-    pszColors = (LPWSTR)LoadResource(hTheme, hrsc);
+    pszColors = LoadResource(hTheme, hrsc);
 
     if(!(hrsc = FindResourceW(hTheme, MAKEINTRESOURCEW(1), szSizeNamesResource))) {
         TRACE("Size names resource not found\n");
         hr = HRESULT_FROM_WIN32(ERROR_BAD_FORMAT);
         goto invalid_theme;
     }
-    pszSizes = (LPWSTR)LoadResource(hTheme, hrsc);
+    pszSizes = LoadResource(hTheme, hrsc);
 
     /* Validate requested color against what's available from the theme */
     if(pszColorName) {
@@ -298,7 +298,7 @@ static PUXINI_FILE MSSTYLES_GetActiveThemeIni(PTHEME_FILE tf)
         TRACE("FILERESNAMES map not found\n");
         return NULL;
     }
-    tmp = (LPWSTR)LoadResource(tf->hTheme, hrsc);
+    tmp = LoadResource(tf->hTheme, hrsc);
     dwResourceIndex = (dwSizeCount * dwColorNum) + dwSizeNum;
     for(i=0; i < dwResourceIndex; i++) {
         tmp += lstrlenW(tmp)+1;
@@ -685,9 +685,9 @@ static BOOL parse_handle_color_property (struct PARSECOLORSTATE* state,
 {
     int r,g,b;
     LPCWSTR lpValueEnd = lpValue + dwValueLen;
-    MSSTYLES_GetNextInteger(lpValue, lpValueEnd, &lpValue, &r);
-    MSSTYLES_GetNextInteger(lpValue, lpValueEnd, &lpValue, &g);
-    if(MSSTYLES_GetNextInteger(lpValue, lpValueEnd, &lpValue, &b)) {
+    if(MSSTYLES_GetNextInteger(lpValue, lpValueEnd, &lpValue, &r) &&
+    MSSTYLES_GetNextInteger(lpValue, lpValueEnd, &lpValue, &g) &&
+    MSSTYLES_GetNextInteger(lpValue, lpValueEnd, &lpValue, &b)) {
 	state->colorElements[state->colorCount] = iPropertyId - TMT_FIRSTCOLOR;
 	state->colorRgb[state->colorCount++] = RGB(r,g,b);
 	switch (iPropertyId)
@@ -733,9 +733,9 @@ static inline void parse_init_nonclient (struct PARSENONCLIENTSTATE* state)
     memset (state, 0, sizeof (*state));
     state->metrics.cbSize = sizeof (NONCLIENTMETRICSW);
     SystemParametersInfoW (SPI_GETNONCLIENTMETRICS, sizeof (NONCLIENTMETRICSW),
-        (PVOID)&state->metrics, 0);
+        &state->metrics, 0);
     SystemParametersInfoW (SPI_GETICONTITLELOGFONT, sizeof (LOGFONTW),
-        (PVOID)&state->iconTitleFont, 0);
+        &state->iconTitleFont, 0);
 }
 
 static BOOL parse_handle_nonclient_font (struct PARSENONCLIENTSTATE* state, 
@@ -838,9 +838,9 @@ static void parse_apply_nonclient (struct PARSENONCLIENTSTATE* state)
     if (state->metricsDirty)
     {
         SystemParametersInfoW (SPI_SETNONCLIENTMETRICS, sizeof (state->metrics),
-            (PVOID)&state->metrics, 0);
+            &state->metrics, 0);
         SystemParametersInfoW (SPI_SETICONTITLELOGFONT, sizeof (state->iconTitleFont),
-            (PVOID)&state->iconTitleFont, 0);
+            &state->iconTitleFont, 0);
     }
 }
 
@@ -852,7 +852,7 @@ static void parse_apply_nonclient (struct PARSENONCLIENTSTATE* state)
  * PARAMS
  *     tf                  Theme to parse
  */
-void MSSTYLES_ParseThemeIni(PTHEME_FILE tf, BOOL setMetrics)
+static void MSSTYLES_ParseThemeIni(PTHEME_FILE tf, BOOL setMetrics)
 {
     static const WCHAR szSysMetrics[] = {'S','y','s','M','e','t','r','i','c','s','\0'};
     static const WCHAR szGlobals[] = {'g','l','o','b','a','l','s','\0'};
@@ -1086,7 +1086,7 @@ static BOOL prepare_alpha (HBITMAP bmp, BOOL* hasAlpha)
         return TRUE;
 
     *hasAlpha = TRUE;
-    p = (BYTE*)dib.dsBm.bmBits;
+    p = dib.dsBm.bmBits;
     n = abs(dib.dsBmih.biHeight) * dib.dsBmih.biWidth;
     /* AlphaBlend() wants premultiplied alpha, so do that now */
     while (n-- > 0)
@@ -1139,7 +1139,7 @@ HBITMAP MSSTYLES_LoadBitmap (PTHEME_CLASS tc, LPCWSTR lpFilename, BOOL* hasAlpha
     return img->image;
 }
 
-BOOL MSSTYLES_GetNextInteger(LPCWSTR lpStringStart, LPCWSTR lpStringEnd, LPCWSTR *lpValEnd, int *value)
+static BOOL MSSTYLES_GetNextInteger(LPCWSTR lpStringStart, LPCWSTR lpStringEnd, LPCWSTR *lpValEnd, int *value)
 {
     LPCWSTR cur = lpStringStart;
     int total = 0;
@@ -1163,7 +1163,7 @@ BOOL MSSTYLES_GetNextInteger(LPCWSTR lpStringStart, LPCWSTR lpStringEnd, LPCWSTR
     return TRUE;
 }
 
-BOOL MSSTYLES_GetNextToken(LPCWSTR lpStringStart, LPCWSTR lpStringEnd, LPCWSTR *lpValEnd, LPWSTR lpBuff, DWORD buffSize) {
+static BOOL MSSTYLES_GetNextToken(LPCWSTR lpStringStart, LPCWSTR lpStringEnd, LPCWSTR *lpValEnd, LPWSTR lpBuff, DWORD buffSize) {
     LPCWSTR cur = lpStringStart;
     LPCWSTR start;
     LPCWSTR end;
@@ -1210,8 +1210,14 @@ HRESULT MSSTYLES_GetPropertyColor(PTHEME_PROPERTY tp, COLORREF *pColor)
     lpCur = tp->lpValue;
     lpEnd = tp->lpValue + tp->dwValueLen;
 
-    MSSTYLES_GetNextInteger(lpCur, lpEnd, &lpCur, &red);
-    MSSTYLES_GetNextInteger(lpCur, lpEnd, &lpCur, &green);
+    if(!MSSTYLES_GetNextInteger(lpCur, lpEnd, &lpCur, &red)) {
+        TRACE("Could not parse color property\n");
+        return E_PROP_ID_UNSUPPORTED;
+    }
+    if(!MSSTYLES_GetNextInteger(lpCur, lpEnd, &lpCur, &green)) {
+        TRACE("Could not parse color property\n");
+        return E_PROP_ID_UNSUPPORTED;
+    }
     if(!MSSTYLES_GetNextInteger(lpCur, lpEnd, &lpCur, &blue)) {
         TRACE("Could not parse color property\n");
         return E_PROP_ID_UNSUPPORTED;
@@ -1316,7 +1322,10 @@ HRESULT MSSTYLES_GetPropertyPosition(PTHEME_PROPERTY tp, POINT *pPoint)
     LPCWSTR lpCur = tp->lpValue;
     LPCWSTR lpEnd = tp->lpValue + tp->dwValueLen;
 
-    MSSTYLES_GetNextInteger(lpCur, lpEnd, &lpCur, &x);
+    if(!MSSTYLES_GetNextInteger(lpCur, lpEnd, &lpCur, &x)) {
+        TRACE("Could not parse position property\n");
+        return E_PROP_ID_UNSUPPORTED;
+    }
     if(!MSSTYLES_GetNextInteger(lpCur, lpEnd, &lpCur, &y)) {
         TRACE("Could not parse position property\n");
         return E_PROP_ID_UNSUPPORTED;

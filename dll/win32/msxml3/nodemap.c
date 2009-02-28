@@ -265,6 +265,10 @@ static HRESULT WINAPI xmlnodemap_setNamedItem(
             return E_FAIL;
         }
 
+        if(!ThisNew->node->parent)
+            if(xmldoc_remove_orphan(ThisNew->node->doc, ThisNew->node) != S_OK)
+                WARN("%p is not an orphan of %p\n", ThisNew->node, ThisNew->node->doc);
+
         nodeNew = xmlAddChild(node, ThisNew->node);
 
         if(namedItem)
@@ -283,8 +287,44 @@ static HRESULT WINAPI xmlnodemap_removeNamedItem(
     BSTR name,
     IXMLDOMNode** namedItem)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    xmlnodemap *This = impl_from_IXMLDOMNamedNodeMap( iface );
+    xmlChar *element_name;
+    xmlAttrPtr attr;
+    xmlNodePtr node;
+
+    TRACE("%p %s %p\n", This, debugstr_w(name), namedItem );
+
+    if ( !name)
+        return E_INVALIDARG;
+
+    node = xmlNodePtr_from_domnode( This->node, 0 );
+    if ( !node )
+        return E_FAIL;
+
+    element_name = xmlChar_from_wchar( name );
+    attr = xmlHasNsProp( node, element_name, NULL );
+    HeapFree( GetProcessHeap(), 0, element_name );
+
+    if ( !attr )
+    {
+        if( namedItem )
+            *namedItem = NULL;
+        return S_FALSE;
+    }
+
+    if ( namedItem )
+    {
+        xmlUnlinkNode( (xmlNodePtr) attr );
+        xmldoc_add_orphan( attr->doc, (xmlNodePtr) attr );
+        *namedItem = create_node( (xmlNodePtr) attr );
+    }
+    else
+    {
+        if( xmlRemoveProp( attr ) == -1 )
+            ERR("xmlRemoveProp failed\n");
+    }
+
+    return S_OK;
 }
 
 static HRESULT WINAPI xmlnodemap_get_item(
@@ -331,6 +371,9 @@ static HRESULT WINAPI xmlnodemap_get_length(
     xmlnodemap *This = impl_from_IXMLDOMNamedNodeMap( iface );
 
     TRACE("%p\n", This);
+
+    if( !listLength )
+        return E_INVALIDARG;
 
     node = xmlNodePtr_from_domnode( This->node, 0 );
     if ( !node )

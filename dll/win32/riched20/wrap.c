@@ -50,8 +50,10 @@ static void ME_BeginRow(ME_WrapContext *wc, ME_DisplayItem *para)
   wc->pRowStart = NULL;
   wc->bOverflown = FALSE;
   wc->pLastSplittableRun = NULL;
+  wc->bWordWrap = wc->context->editor->bWordWrap;
   if (para->member.para.nFlags & (MEPF_ROWSTART|MEPF_ROWEND)) {
     wc->nAvailWidth = 0;
+    wc->bWordWrap = FALSE;
     if (para->member.para.nFlags & MEPF_ROWEND)
     {
       ME_Cell *cell = &ME_FindItemBack(para, diCell)->member.cell;
@@ -73,11 +75,10 @@ static void ME_BeginRow(ME_WrapContext *wc, ME_DisplayItem *para)
 
     wc->nAvailWidth = cell->nWidth
         - (wc->nRow ? wc->nLeftMargin : wc->nFirstMargin) - wc->nRightMargin;
-  } else if (wc->context->editor->bWordWrap) {
+    wc->bWordWrap = TRUE;
+  } else {
     wc->nAvailWidth = wc->context->rcView.right - wc->context->rcView.left
         - (wc->nRow ? wc->nLeftMargin : wc->nFirstMargin) - wc->nRightMargin;
-  } else {
-    wc->nAvailWidth = ~0u >> 1;
   }
   wc->pt.x = wc->context->pt.x;
   if (wc->context->editor->bEmulateVersion10 && /* v1.0 - 3.0 */
@@ -132,6 +133,7 @@ static void ME_InsertRowStart(ME_WrapContext *wc, const ME_DisplayItem *pEnd)
       }
   }
 
+  para->member.para.nWidth = max(para->member.para.nWidth, width);
   row = ME_MakeRow(ascent+descent, ascent, width);
   if (wc->context->editor->bEmulateVersion10 && /* v1.0 - 3.0 */
       pFmt->dwMask & PFM_TABLE && pFmt->wEffects & PFE_TABLE)
@@ -148,9 +150,9 @@ static void ME_InsertRowStart(ME_WrapContext *wc, const ME_DisplayItem *pEnd)
   assert(para->member.para.pFmt->dwMask & PFM_ALIGNMENT);
   align = para->member.para.pFmt->wAlignment;
   if (align == PFA_CENTER)
-    shift = (wc->nAvailWidth-width)/2;
+    shift = max((wc->nAvailWidth-width)/2, 0);
   if (align == PFA_RIGHT)
-    shift = wc->nAvailWidth-width;
+    shift = max(wc->nAvailWidth-width, 0);
   for (p = wc->pRowStart; p!=pEnd; p = p->next)
   {
     if (p->type==diRun) { /* FIXME add more run types */
@@ -377,7 +379,8 @@ static ME_DisplayItem *ME_WrapHandleRun(ME_WrapContext *wc, ME_DisplayItem *p)
   }
 
   /* will current run fit? */
-  if (wc->pt.x + run->nWidth > wc->context->pt.x + wc->nAvailWidth)
+  if (wc->bWordWrap &&
+      wc->pt.x + run->nWidth - wc->context->pt.x > wc->nAvailWidth)
   {
     int loc = wc->context->pt.x + wc->nAvailWidth - wc->pt.x;
     /* total white run ? */
@@ -416,9 +419,11 @@ static ME_DisplayItem *ME_WrapHandleRun(ME_WrapContext *wc, ME_DisplayItem *p)
     {
       if (run->nFlags & MERF_STARTWHITE)
       {
-          /* we had only spaces so far, so we must be on the first line of the
-           * paragraph, since no other lines of the paragraph start with spaces. */
-          assert(!wc->nRow);
+          /* We had only spaces so far, so we must be on the first line of the
+           * paragraph (or the first line after MERF_ENDROW forced the line
+           * break within the paragraph), since no other lines of the paragraph
+           * start with spaces. */
+
           /* The lines will only contain spaces, and the rest of the run will
            * overflow onto the next line. */
           wc->bOverflown = TRUE;
@@ -453,7 +458,7 @@ static ME_DisplayItem *ME_WrapHandleRun(ME_WrapContext *wc, ME_DisplayItem *p)
 
 static void ME_PrepareParagraphForWrapping(ME_Context *c, ME_DisplayItem *tp);
 
-static void ME_WrapTextParagraph(ME_Context *c, ME_DisplayItem *tp, DWORD beginofs) {
+static void ME_WrapTextParagraph(ME_Context *c, ME_DisplayItem *tp) {
   ME_DisplayItem *p;
   ME_WrapContext wc;
   int border = 0;
@@ -532,6 +537,7 @@ static void ME_WrapTextParagraph(ME_Context *c, ME_DisplayItem *tp, DWORD begino
 static void ME_PrepareParagraphForWrapping(ME_Context *c, ME_DisplayItem *tp) {
   ME_DisplayItem *p, *pRow;
 
+  tp->member.para.nWidth = 0;
   /* remove all items that will be reinserted by paragraph wrapper anyway */
   tp->member.para.nRows = 0;
   for (p = tp->next; p!=tp->member.para.next_para; p = p->next) {
@@ -568,28 +574,27 @@ static void ME_PrepareParagraphForWrapping(ME_Context *c, ME_DisplayItem *tp) {
   }
 }
 
-BOOL ME_WrapMarkedParagraphs(ME_TextEditor *editor) {
+BOOL ME_WrapMarkedParagraphs(ME_TextEditor *editor)
+{
   ME_DisplayItem *item;
   ME_Context c;
   BOOL bModified = FALSE;
   int yStart = -1;
-  int yLastPos = 0;
+  int totalWidth = 0;
 
-  ME_InitContext(&c, editor, GetDC(editor->hWnd));
-  c.pt.x = editor->selofs;
-  editor->nHeight = 0;
+  ME_InitContext(&c, editor, ITextHost_TxGetDC(editor->texthost));
+  c.pt.x = 0;
   item = editor->pBuffer->pFirst->next;
   while(item != editor->pBuffer->pLast) {
     BOOL bRedraw = FALSE;
 
     assert(item->type == diParagraph);
-    editor->nHeight = max(editor->nHeight, item->member.para.pt.y);
     if ((item->member.para.nFlags & MEPF_REWRAP)
      || (item->member.para.pt.y != c.pt.y))
       bRedraw = TRUE;
     item->member.para.pt = c.pt;
 
-    ME_WrapTextParagraph(&c, item, editor->selofs);
+    ME_WrapTextParagraph(&c, item);
 
     if (bRedraw)
     {
@@ -599,8 +604,6 @@ BOOL ME_WrapMarkedParagraphs(ME_TextEditor *editor) {
     }
 
     bModified = bModified | bRedraw;
-
-    yLastPos = max(yLastPos, c.pt.y);
 
     if (item->member.para.nFlags & MEPF_ROWSTART)
     {
@@ -638,6 +641,7 @@ BOOL ME_WrapMarkedParagraphs(ME_TextEditor *editor) {
       ME_DisplayItem *startRowPara;
       int prevHeight, nHeight, bottomBorder = 0;
       ME_DisplayItem *cell = ME_FindItemBack(item, diCell);
+      item->member.para.nWidth = cell->member.cell.pt.x + cell->member.cell.nWidth;
       if (!(item->member.para.next_para->member.para.nFlags & MEPF_ROWSTART))
       {
         /* Last row, the bottom border is added to the height. */
@@ -693,7 +697,8 @@ BOOL ME_WrapMarkedParagraphs(ME_TextEditor *editor) {
       c.pt.x = cell->pt.x + cell->nWidth;
       c.pt.y = cell->pt.y;
       cell->next_cell->member.cell.pt = c.pt;
-      c.pt.y += cell->yTextOffset;
+      if (!(item->member.para.next_para->member.para.nFlags & MEPF_ROWEND))
+        c.pt.y += cell->yTextOffset;
     }
     else
     {
@@ -702,60 +707,58 @@ BOOL ME_WrapMarkedParagraphs(ME_TextEditor *editor) {
         c.pt.x = item->member.para.pCell->member.cell.pt.x;
       } else {
         /* Normal paragraph */
-        c.pt.x = editor->selofs;
+        c.pt.x = 0;
       }
       c.pt.y += item->member.para.nHeight;
     }
+
+    totalWidth = max(totalWidth, item->member.para.nWidth);
     item = item->member.para.next_para;
   }
   editor->sizeWindow.cx = c.rcView.right-c.rcView.left;
   editor->sizeWindow.cy = c.rcView.bottom-c.rcView.top;
-  
+
   editor->nTotalLength = c.pt.y;
+  editor->nTotalWidth = totalWidth;
   editor->pBuffer->pLast->member.para.pt.x = 0;
-  editor->pBuffer->pLast->member.para.pt.y = yLastPos;
+  editor->pBuffer->pLast->member.para.pt.y = c.pt.y;
 
-  ME_DestroyContext(&c, editor->hWnd);
-
-  /* Each paragraph may contain multiple rows, which should be scrollable, even
-     if the containing paragraph has pt.y == 0 */
-  item = editor->pBuffer->pFirst;
-  while ((item = ME_FindItemFwd(item, diStartRow)) != NULL) {
-    assert(item->type == diStartRow);
-    editor->nHeight = max(editor->nHeight, item->member.row.pt.y);
-  }
+  ME_DestroyContext(&c);
 
   if (bModified || editor->nTotalLength < editor->nLastTotalLength)
     ME_InvalidateMarkedParagraphs(editor);
   return bModified;
 }
 
-void ME_InvalidateMarkedParagraphs(ME_TextEditor *editor) {
+void ME_InvalidateMarkedParagraphs(ME_TextEditor *editor)
+{
   ME_Context c;
+  RECT rc;
+  int ofs;
+  ME_DisplayItem *item;
 
-  ME_InitContext(&c, editor, GetDC(editor->hWnd));
-  if (editor->bRedraw)
-  {
-    RECT rc = c.rcView;
-    int ofs = ME_GetYScrollPos(editor); 
-     
-    ME_DisplayItem *item = editor->pBuffer->pFirst;
-    while(item != editor->pBuffer->pLast) {
-      if (item->member.para.nFlags & MEPF_REPAINT) { 
-        rc.top = item->member.para.pt.y - ofs;
-        rc.bottom = item->member.para.pt.y + item->member.para.nHeight - ofs;
-        InvalidateRect(editor->hWnd, &rc, TRUE);
-      }
-      item = item->member.para.next_para;
+  ME_InitContext(&c, editor, ITextHost_TxGetDC(editor->texthost));
+  rc = c.rcView;
+  ofs = editor->vert_si.nPos;
+
+  item = editor->pBuffer->pFirst;
+  while(item != editor->pBuffer->pLast) {
+    if (item->member.para.nFlags & MEPF_REPAINT) {
+      rc.top = c.rcView.top + item->member.para.pt.y - ofs;
+      rc.bottom = max(c.rcView.top + item->member.para.pt.y
+                      + item->member.para.nHeight - ofs,
+                      c.rcView.bottom);
+      ITextHost_TxInvalidateRect(editor->texthost, &rc, TRUE);
     }
-    if (editor->nTotalLength < editor->nLastTotalLength)
-    {
-      rc.top = editor->nTotalLength - ofs;
-      rc.bottom = editor->nLastTotalLength - ofs;
-      InvalidateRect(editor->hWnd, &rc, TRUE);
-    }
+    item = item->member.para.next_para;
   }
-  ME_DestroyContext(&c, editor->hWnd);
+  if (editor->nTotalLength < editor->nLastTotalLength)
+  {
+    rc.top = c.rcView.top + editor->nTotalLength - ofs;
+    rc.bottom = c.rcView.top + editor->nLastTotalLength - ofs;
+    ITextHost_TxInvalidateRect(editor->texthost, &rc, TRUE);
+  }
+  ME_DestroyContext(&c);
 }
 
 
@@ -766,21 +769,19 @@ ME_SendRequestResize(ME_TextEditor *editor, BOOL force)
   {
     RECT rc;
 
-    GetClientRect(editor->hWnd, &rc);
+    ITextHost_TxGetClientRect(editor->texthost, &rc);
 
     if (force || rc.bottom != editor->nTotalLength)
     {
       REQRESIZE info;
 
-      info.nmhdr.hwndFrom = editor->hWnd;
-      info.nmhdr.idFrom = GetWindowLongW(editor->hWnd, GWLP_ID);
       info.nmhdr.code = EN_REQUESTRESIZE;
       info.rc = rc;
+      info.rc.right = editor->nTotalWidth;
       info.rc.bottom = editor->nTotalLength;
 
       editor->nEventMask &= ~ENM_REQUESTRESIZE;
-      SendMessageW(GetParent(editor->hWnd), WM_NOTIFY,
-                   info.nmhdr.idFrom, (LPARAM)&info);
+      ITextHost_TxNotify(editor->texthost, info.nmhdr.code, &info);
       editor->nEventMask |= ENM_REQUESTRESIZE;
     }
   }

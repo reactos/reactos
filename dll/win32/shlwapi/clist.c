@@ -91,8 +91,7 @@ HRESULT WINAPI SHAddDataBlock(LPDBLIST* lppList, const DATABLOCK_HEADER *lpNewIt
   if(!*lppList)
   {
     /* An empty list. Allocate space for terminal ulSize also */
-    *lppList = (LPDATABLOCK_HEADER)LocalAlloc(LMEM_ZEROINIT,
-                                           ulSize + sizeof(ULONG));
+    *lppList = LocalAlloc(LMEM_ZEROINIT, ulSize + sizeof(ULONG));
     lpInsertAt = *lppList;
   }
   else
@@ -109,8 +108,7 @@ HRESULT WINAPI SHAddDataBlock(LPDBLIST* lppList, const DATABLOCK_HEADER *lpNewIt
     }
 
     /* Increase the size of the list */
-    lpIter = (LPDATABLOCK_HEADER)LocalReAlloc((HLOCAL)*lppList,
-                                          ulTotalSize + ulSize+sizeof(ULONG),
+    lpIter = LocalReAlloc(*lppList, ulTotalSize + ulSize+sizeof(ULONG),
                                           LMEM_ZEROINIT | LMEM_MOVEABLE);
     if(lpIter)
     {
@@ -247,7 +245,7 @@ HRESULT WINAPI SHReadDataBlockList(IStream* lpStream, LPDBLIST* lppList)
   if(*lppList)
   {
     /* Free any existing list */
-    LocalFree((HLOCAL)*lppList);
+    LocalFree(*lppList);
     *lppList = NULL;
   }
 
@@ -283,10 +281,9 @@ HRESULT WINAPI SHReadDataBlockList(IStream* lpStream, LPDBLIST* lppList)
         LPDATABLOCK_HEADER lpTemp;
 
         if (pItem == bBuff)
-          lpTemp = (LPDATABLOCK_HEADER)LocalAlloc(LMEM_ZEROINIT, ulSize);
+          lpTemp = LocalAlloc(LMEM_ZEROINIT, ulSize);
         else
-          lpTemp = (LPDATABLOCK_HEADER)LocalReAlloc((HLOCAL)pItem, ulSize,
-                                                 LMEM_ZEROINIT|LMEM_MOVEABLE);
+          lpTemp = LocalReAlloc(pItem, ulSize, LMEM_ZEROINIT|LMEM_MOVEABLE);
 
         if(!lpTemp)
         {
@@ -312,7 +309,7 @@ HRESULT WINAPI SHReadDataBlockList(IStream* lpStream, LPDBLIST* lppList)
 
   /* If we allocated space, free it */
   if(pItem != bBuff)
-    LocalFree((HLOCAL)pItem);
+    LocalFree(pItem);
 
   return hRet;
 }
@@ -336,7 +333,7 @@ VOID WINAPI SHFreeDataBlockList(LPDBLIST lpList)
   TRACE("(%p)\n", lpList);
 
   if (lpList)
-    LocalFree((HLOCAL)lpList);
+    LocalFree(lpList);
 }
 
 /*************************************************************************
@@ -389,20 +386,19 @@ BOOL WINAPI SHRemoveDataBlock(LPDBLIST* lppList, DWORD dwSignature)
     lpList = NextItem(lpList);
 
   /* Resize the list */
-  ulNewSize = LocalSize((HLOCAL)*lppList) - lpItem->cbSize;
+  ulNewSize = LocalSize(*lppList) - lpItem->cbSize;
 
   /* Copy following elements over lpItem */
   memmove(lpItem, lpNext, (char *)lpList - (char *)lpNext + sizeof(ULONG));
 
   if(ulNewSize <= sizeof(ULONG))
   {
-    LocalFree((HLOCAL)*lppList);
+    LocalFree(*lppList);
     *lppList = NULL; /* Removed the last element */
   }
   else
   {
-    lpList = (LPDATABLOCK_HEADER)LocalReAlloc((HLOCAL)*lppList, ulNewSize,
-                                           LMEM_ZEROINIT|LMEM_MOVEABLE);
+    lpList = LocalReAlloc(*lppList, ulNewSize, LMEM_ZEROINIT|LMEM_MOVEABLE);
     if(lpList)
       *lppList = lpList;
   }

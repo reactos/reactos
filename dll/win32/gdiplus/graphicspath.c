@@ -524,6 +524,28 @@ GpStatus WINGDIPAPI GdipAddPathCurve2I(GpPath *path, GDIPCONST GpPoint *points,
     return stat;
 }
 
+GpStatus WINGDIPAPI GdipAddPathCurve3(GpPath *path, GDIPCONST GpPointF *points,
+    INT count, INT offset, INT nseg, REAL tension)
+{
+    TRACE("(%p, %p, %d, %d, %d, %.2f)\n", path, points, count, offset, nseg, tension);
+
+    if(!path || !points || offset + 1 >= count || count - offset < nseg + 1)
+        return InvalidParameter;
+
+    return GdipAddPathCurve2(path, &points[offset], nseg + 1, tension);
+}
+
+GpStatus WINGDIPAPI GdipAddPathCurve3I(GpPath *path, GDIPCONST GpPoint *points,
+    INT count, INT offset, INT nseg, REAL tension)
+{
+    TRACE("(%p, %p, %d, %d, %d, %.2f)\n", path, points, count, offset, nseg, tension);
+
+    if(!path || !points || offset + 1 >= count || count - offset < nseg + 1)
+        return InvalidParameter;
+
+    return GdipAddPathCurve2I(path, &points[offset], nseg + 1, tension);
+}
+
 GpStatus WINGDIPAPI GdipAddPathEllipse(GpPath *path, REAL x, REAL y, REAL width,
     REAL height)
 {
@@ -700,6 +722,17 @@ GpStatus WINGDIPAPI GdipAddPathPie(GpPath *path, REAL x, REAL y, REAL width, REA
 
     if(!path)
         return InvalidParameter;
+
+    /* on zero width/height only start point added */
+    if(width <= 1e-7 || height <= 1e-7){
+        if(!lengthen_path(path, 1))
+            return OutOfMemory;
+        path->pathdata.Points[0].X = x + width  / 2.0;
+        path->pathdata.Points[0].Y = y + height / 2.0;
+        path->pathdata.Types[0] = PathPointTypeStart | PathPointTypeCloseSubpath;
+        path->pathdata.Count = 1;
+        return InvalidParameter;
+    }
 
     count = arc2polybezier(NULL, x, y, width, height, startAngle, sweepAngle);
 
@@ -984,17 +1017,17 @@ GpStatus WINGDIPAPI GdipFlattenPath(GpPath *path, GpMatrix* matrix, REAL flatnes
 
         /* always add line points and start points */
         if((type == PathPointTypeStart) || (type == PathPointTypeLine)){
-            type = (path->pathdata.Types[i] & ~PathPointTypeBezier) | PathPointTypeLine;
-            if(!add_path_list_node(node, pt.X, pt.Y, type))
+            if(!add_path_list_node(node, pt.X, pt.Y, path->pathdata.Types[i]))
                 goto memout;
 
             node = node->next;
+            ++i;
             continue;
         }
 
         /* Bezier curve always stored as 4 points */
         if((path->pathdata.Types[i-1] & PathPointTypePathTypeMask) != PathPointTypeStart){
-            type = (path->pathdata.Types[i] & ~PathPointTypeBezier) | PathPointTypeLine;
+            type = (path->pathdata.Types[i] & ~PathPointTypePathTypeMask) | PathPointTypeLine;
             if(!add_path_list_node(node, pt.X, pt.Y, type))
                 goto memout;
 
@@ -1014,7 +1047,7 @@ GpStatus WINGDIPAPI GdipFlattenPath(GpPath *path, GpMatrix* matrix, REAL flatnes
 
         start = node;
         /* add Bezier end point */
-        type = (path->pathdata.Types[i] & ~PathPointTypeBezier) | PathPointTypeLine;
+        type = (path->pathdata.Types[i] & ~PathPointTypePathTypeMask) | PathPointTypeLine;
         if(!add_path_list_node(node, pt.X, pt.Y, type))
             goto memout;
         node = node->next;
@@ -1351,16 +1384,33 @@ GpStatus WINGDIPAPI GdipIsVisiblePathPointI(GpPath* path, INT x, INT y, GpGraphi
     return GdipIsVisiblePathPoint(path, x, y, graphics, result);
 }
 
+/*****************************************************************************
+ * GdipIsVisiblePathPoint [GDIPLUS.@]
+ */
 GpStatus WINGDIPAPI GdipIsVisiblePathPoint(GpPath* path, REAL x, REAL y, GpGraphics *graphics, BOOL *result)
 {
-    static int calls;
+    GpRegion *region;
+    HRGN hrgn;
+    GpStatus status;
 
-    if(!path) return InvalidParameter;
+    if(!path || !result) return InvalidParameter;
 
-    if(!(calls++))
-        FIXME("not implemented\n");
+    status = GdipCreateRegionPath(path, &region);
+    if(status != Ok)
+        return status;
 
-    return NotImplemented;
+    status = GdipGetRegionHRgn(region, graphics, &hrgn);
+    if(status != Ok){
+        GdipDeleteRegion(region);
+        return status;
+    }
+
+    *result = PtInRegion(hrgn, roundr(x), roundr(y));
+
+    DeleteObject(hrgn);
+    GdipDeleteRegion(region);
+
+    return Ok;
 }
 
 GpStatus WINGDIPAPI GdipStartPathFigure(GpPath *path)

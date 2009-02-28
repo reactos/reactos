@@ -715,6 +715,17 @@ end:
     return status;
 }
 
+GpStatus trace_path(GpGraphics *graphics, GpPath *path)
+{
+    GpStatus result;
+
+    BeginPath(graphics->hdc);
+    result = draw_poly(graphics, NULL, path->pathdata.Points,
+                       path->pathdata.Types, path->pathdata.Count, FALSE);
+    EndPath(graphics->hdc);
+    return result;
+}
+
 GpStatus WINGDIPAPI GdipCreateFromHDC(HDC hdc, GpGraphics **graphics)
 {
     TRACE("(%p, %p)\n", hdc, graphics);
@@ -763,6 +774,7 @@ GpStatus WINGDIPAPI GdipCreateFromHDC2(HDC hdc, HANDLE hDevice, GpGraphics **gra
     (*graphics)->unit = UnitDisplay;
     (*graphics)->scale = 1.0;
     (*graphics)->busy = FALSE;
+    (*graphics)->textcontrast = 4;
 
     return Ok;
 }
@@ -1889,7 +1901,6 @@ GpStatus WINGDIPAPI GdipDrawString(GpGraphics *graphics, GDIPCONST WCHAR *string
         j++;
     }
 
-    stringdup[j] = 0;
     length = j;
 
     while(sum < length){
@@ -2363,18 +2374,39 @@ GpStatus WINGDIPAPI GdipFillRectanglesI(GpGraphics *graphics, GpBrush *brush, GD
     return ret;
 }
 
+/*****************************************************************************
+ * GdipFillRegion [GDIPLUS.@]
+ */
 GpStatus WINGDIPAPI GdipFillRegion(GpGraphics* graphics, GpBrush* brush,
         GpRegion* region)
 {
+    INT save_state;
+    GpStatus status;
+    HRGN hrgn;
+
+    TRACE("(%p, %p, %p)\n", graphics, brush, region);
+
     if (!(graphics && brush && region))
         return InvalidParameter;
 
     if(graphics->busy)
         return ObjectBusy;
 
-    FIXME("(%p, %p, %p): stub\n", graphics, brush, region);
+    status = GdipGetRegionHRgn(region, graphics, &hrgn);
+    if(status != Ok)
+        return status;
 
-    return NotImplemented;
+    save_state = SaveDC(graphics->hdc);
+    EndPath(graphics->hdc);
+    SelectObject(graphics->hdc, GetStockObject(NULL_PEN));
+
+    FillRgn(graphics->hdc, hrgn, brush->gdibrush);
+
+    RestoreDC(graphics->hdc, save_state);
+
+    DeleteObject(hrgn);
+
+    return Ok;
 }
 
 GpStatus WINGDIPAPI GdipFlush(GpGraphics *graphics, GpFlushIntention intention)
@@ -2391,6 +2423,38 @@ GpStatus WINGDIPAPI GdipFlush(GpGraphics *graphics, GpFlushIntention intention)
         FIXME("not implemented\n");
 
     return NotImplemented;
+}
+
+/*****************************************************************************
+ * GdipGetClipBounds [GDIPLUS.@]
+ */
+GpStatus WINGDIPAPI GdipGetClipBounds(GpGraphics *graphics, GpRectF *rect)
+{
+    TRACE("(%p, %p)\n", graphics, rect);
+
+    if(!graphics)
+        return InvalidParameter;
+
+    if(graphics->busy)
+        return ObjectBusy;
+
+    return GdipGetRegionBounds(graphics->clip, graphics, rect);
+}
+
+/*****************************************************************************
+ * GdipGetClipBoundsI [GDIPLUS.@]
+ */
+GpStatus WINGDIPAPI GdipGetClipBoundsI(GpGraphics *graphics, GpRect *rect)
+{
+    TRACE("(%p, %p)\n", graphics, rect);
+
+    if(!graphics)
+        return InvalidParameter;
+
+    if(graphics->busy)
+        return ObjectBusy;
+
+    return GdipGetRegionBoundsI(graphics->clip, graphics, rect);
 }
 
 /* FIXME: Compositing mode is not used anywhere except the getter/setter. */
@@ -2442,6 +2506,19 @@ GpStatus WINGDIPAPI GdipGetInterpolationMode(GpGraphics *graphics,
     *mode = graphics->interpolation;
 
     return Ok;
+}
+
+GpStatus WINGDIPAPI GdipGetNearestColor(GpGraphics *graphics, ARGB* argb)
+{
+    if(!graphics || !argb)
+        return InvalidParameter;
+
+    if(graphics->busy)
+        return ObjectBusy;
+
+    FIXME("(%p, %p): stub\n", graphics, argb);
+
+    return NotImplemented;
 }
 
 GpStatus WINGDIPAPI GdipGetPageScale(GpGraphics *graphics, REAL *scale)
@@ -2503,6 +2580,18 @@ GpStatus WINGDIPAPI GdipGetSmoothingMode(GpGraphics *graphics, SmoothingMode *mo
         return ObjectBusy;
 
     *mode = graphics->smoothing;
+
+    return Ok;
+}
+
+GpStatus WINGDIPAPI GdipGetTextContrast(GpGraphics *graphics, UINT *contrast)
+{
+    TRACE("(%p, %p)\n", graphics, contrast);
+
+    if(!graphics || !contrast)
+        return InvalidParameter;
+
+    *contrast = graphics->textcontrast;
 
     return Ok;
 }
@@ -2583,6 +2672,32 @@ GpStatus WINGDIPAPI GdipIsClipEmpty(GpGraphics *graphics, BOOL *res)
     return GdipIsEmptyRegion(graphics->clip, graphics, res);
 }
 
+GpStatus WINGDIPAPI GdipIsVisiblePoint(GpGraphics *graphics, REAL x, REAL y, BOOL *result)
+{
+    FIXME("(%p, %.2f, %.2f, %p) stub\n", graphics, x, y, result);
+
+    if(!graphics || !result)
+        return InvalidParameter;
+
+    if(graphics->busy)
+        return ObjectBusy;
+
+    return NotImplemented;
+}
+
+GpStatus WINGDIPAPI GdipIsVisiblePointI(GpGraphics *graphics, INT x, INT y, BOOL *result)
+{
+    FIXME("(%p, %d, %d, %p) stub\n", graphics, x, y, result);
+
+    if(!graphics || !result)
+        return InvalidParameter;
+
+    if(graphics->busy)
+        return ObjectBusy;
+
+    return NotImplemented;
+}
+
 GpStatus WINGDIPAPI GdipMeasureCharacterRanges(GpGraphics* graphics,
         GDIPCONST WCHAR* string, INT length, GDIPCONST GpFont* font,
         GDIPCONST RectF* layoutRect, GDIPCONST GpStringFormat *stringFormat,
@@ -2615,17 +2730,15 @@ GpStatus WINGDIPAPI GdipMeasureString(GpGraphics *graphics,
     if(!graphics || !string || !font || !rect)
         return InvalidParameter;
 
-    if(codepointsfitted || linesfilled){
-        FIXME("not implemented for given parameters\n");
-        return NotImplemented;
-    }
+    if(linesfilled) *linesfilled = 0;
+    if(codepointsfitted) *codepointsfitted = 0;
 
     if(format)
         TRACE("may be ignoring some format flags: attr %x\n", format->attr);
 
     if(length == -1) length = lstrlenW(string);
 
-    stringdup = GdipAlloc(length * sizeof(WCHAR));
+    stringdup = GdipAlloc((length + 1) * sizeof(WCHAR));
     if(!stringdup) return OutOfMemory;
 
     oldfont = SelectObject(graphics->hdc, CreateFontIndirectW(&font->lfw));
@@ -2683,7 +2796,10 @@ GpStatus WINGDIPAPI GdipMeasureString(GpGraphics *graphics,
                               nwidth, &j, NULL, &size);
 
         sum += fit + (lret < fitcpy ? 1 : 0);
+        if(codepointsfitted) *codepointsfitted = sum;
+
         height += size.cy;
+        if(linesfilled) *linesfilled += size.cy;
         max_width = max(max_width, size.cx);
 
         if(height > nheight)
@@ -2748,7 +2864,7 @@ GpStatus WINGDIPAPI GdipRestoreGraphics(GpGraphics *graphics, GraphicsState stat
     if(!(calls++))
         FIXME("graphics state not implemented\n");
 
-    return NotImplemented;
+    return Ok;
 }
 
 GpStatus WINGDIPAPI GdipRotateWorldTransform(GpGraphics *graphics, REAL angle,
@@ -2775,7 +2891,29 @@ GpStatus WINGDIPAPI GdipSaveGraphics(GpGraphics *graphics, GraphicsState *state)
     if(!(calls++))
         FIXME("graphics state not implemented\n");
 
-    return NotImplemented;
+    *state = 0xdeadbeef;
+    return Ok;
+}
+
+GpStatus WINGDIPAPI GdipBeginContainer2(GpGraphics *graphics, GraphicsContainer *state)
+{
+    FIXME("(%p, %p)\n", graphics, state);
+
+    if(!graphics || !state)
+        return InvalidParameter;
+
+    *state = 0xdeadbeef;
+    return Ok;
+}
+
+GpStatus WINGDIPAPI GdipEndContainer(GpGraphics *graphics, GraphicsState state)
+{
+    FIXME("(%p, 0x%x)\n", graphics, state);
+
+    if(!graphics || !state)
+        return InvalidParameter;
+
+    return Ok;
 }
 
 GpStatus WINGDIPAPI GdipScaleWorldTransform(GpGraphics *graphics, REAL sx,
@@ -2790,6 +2928,17 @@ GpStatus WINGDIPAPI GdipScaleWorldTransform(GpGraphics *graphics, REAL sx,
         return ObjectBusy;
 
     return GdipScaleMatrix(graphics->worldtrans, sx, sy, order);
+}
+
+GpStatus WINGDIPAPI GdipSetClipGraphics(GpGraphics *graphics, GpGraphics *srcgraphics,
+    CombineMode mode)
+{
+    TRACE("(%p, %p, %d)\n", graphics, srcgraphics, mode);
+
+    if(!graphics || !srcgraphics)
+        return InvalidParameter;
+
+    return GdipCombineRegionRegion(graphics->clip, srcgraphics->clip, mode);
 }
 
 GpStatus WINGDIPAPI GdipSetCompositingMode(GpGraphics *graphics,
@@ -2904,6 +3053,18 @@ GpStatus WINGDIPAPI GdipSetSmoothingMode(GpGraphics *graphics, SmoothingMode mod
     return Ok;
 }
 
+GpStatus WINGDIPAPI GdipSetTextContrast(GpGraphics *graphics, UINT contrast)
+{
+    TRACE("(%p, %d)\n", graphics, contrast);
+
+    if(!graphics)
+        return InvalidParameter;
+
+    graphics->textcontrast = contrast;
+
+    return Ok;
+}
+
 GpStatus WINGDIPAPI GdipSetTextRenderingHint(GpGraphics *graphics,
     TextRenderingHint hint)
 {
@@ -2948,11 +3109,32 @@ GpStatus WINGDIPAPI GdipTranslateWorldTransform(GpGraphics *graphics, REAL dx,
     return GdipTranslateMatrix(graphics->worldtrans, dx, dy, order);
 }
 
-GpStatus WINGDIPAPI GdipSetClipRectI(GpGraphics *graphics, INT x, INT y,
-                                     INT width, INT height,
-                                     CombineMode combineMode)
+/*****************************************************************************
+ * GdipSetClipHrgn [GDIPLUS.@]
+ */
+GpStatus WINGDIPAPI GdipSetClipHrgn(GpGraphics *graphics, HRGN hrgn, CombineMode mode)
 {
-    static int calls;
+    GpRegion *region;
+    GpStatus status;
+
+    TRACE("(%p, %p, %d)\n", graphics, hrgn, mode);
+
+    if(!graphics)
+        return InvalidParameter;
+
+    status = GdipCreateRegionHrgn(hrgn, &region);
+    if(status != Ok)
+        return status;
+
+    status = GdipSetClipRegion(graphics, region, mode);
+
+    GdipDeleteRegion(region);
+    return status;
+}
+
+GpStatus WINGDIPAPI GdipSetClipPath(GpGraphics *graphics, GpPath *path, CombineMode mode)
+{
+    TRACE("(%p, %p, %d)\n", graphics, path, mode);
 
     if(!graphics)
         return InvalidParameter;
@@ -2960,10 +3142,44 @@ GpStatus WINGDIPAPI GdipSetClipRectI(GpGraphics *graphics, INT x, INT y,
     if(graphics->busy)
         return ObjectBusy;
 
-    if(!(calls++))
-        FIXME("not implemented\n");
+    return GdipCombineRegionPath(graphics->clip, path, mode);
+}
 
-    return NotImplemented;
+GpStatus WINGDIPAPI GdipSetClipRect(GpGraphics *graphics, REAL x, REAL y,
+                                    REAL width, REAL height,
+                                    CombineMode mode)
+{
+    GpRectF rect;
+
+    TRACE("(%p, %.2f, %.2f, %.2f, %.2f, %d)\n", graphics, x, y, width, height, mode);
+
+    if(!graphics)
+        return InvalidParameter;
+
+    if(graphics->busy)
+        return ObjectBusy;
+
+    rect.X = x;
+    rect.Y = y;
+    rect.Width  = width;
+    rect.Height = height;
+
+    return GdipCombineRegionRect(graphics->clip, &rect, mode);
+}
+
+GpStatus WINGDIPAPI GdipSetClipRectI(GpGraphics *graphics, INT x, INT y,
+                                     INT width, INT height,
+                                     CombineMode mode)
+{
+    TRACE("(%p, %d, %d, %d, %d, %d)\n", graphics, x, y, width, height, mode);
+
+    if(!graphics)
+        return InvalidParameter;
+
+    if(graphics->busy)
+        return ObjectBusy;
+
+    return GdipSetClipRect(graphics, (REAL)x, (REAL)y, (REAL)width, (REAL)height, mode);
 }
 
 GpStatus WINGDIPAPI GdipSetClipRegion(GpGraphics *graphics, GpRegion *region,
@@ -3088,7 +3304,7 @@ GpStatus WINGDIPAPI GdipMultiplyWorldTransform(GpGraphics *graphics, GDIPCONST G
 
     m = *(graphics->worldtrans);
 
-    ret = GdipMultiplyMatrix(&m, (GpMatrix*)matrix, order);
+    ret = GdipMultiplyMatrix(&m, matrix, order);
     if(ret == Ok)
         *(graphics->worldtrans) = m;
 
@@ -3169,4 +3385,43 @@ GpStatus WINGDIPAPI GdipTransformPointsI(GpGraphics *graphics, GpCoordinateSpace
     FIXME("(%p, %d, %d, %p, %d): stub\n", graphics, dst_space, src_space, points, count);
 
     return NotImplemented;
+}
+
+HPALETTE WINGDIPAPI GdipCreateHalftonePalette(void)
+{
+    FIXME("\n");
+
+    return NULL;
+}
+
+/*****************************************************************************
+ * GdipTranslateClip [GDIPLUS.@]
+ */
+GpStatus WINGDIPAPI GdipTranslateClip(GpGraphics *graphics, REAL dx, REAL dy)
+{
+    TRACE("(%p, %.2f, %.2f)\n", graphics, dx, dy);
+
+    if(!graphics)
+        return InvalidParameter;
+
+    if(graphics->busy)
+        return ObjectBusy;
+
+    return GdipTranslateRegion(graphics->clip, dx, dy);
+}
+
+/*****************************************************************************
+ * GdipTranslateClipI [GDIPLUS.@]
+ */
+GpStatus WINGDIPAPI GdipTranslateClipI(GpGraphics *graphics, INT dx, INT dy)
+{
+    TRACE("(%p, %d, %d)\n", graphics, dx, dy);
+
+    if(!graphics)
+        return InvalidParameter;
+
+    if(graphics->busy)
+        return ObjectBusy;
+
+    return GdipTranslateRegion(graphics->clip, (REAL)dx, (REAL)dy);
 }

@@ -627,7 +627,7 @@ static DWORD fill_file_list(SESSION *session, LPCSTR szCabName, LPCSTR szFileLis
     struct FILELIST *pNode;
 
     session->Operation |= EXTRACT_FILLFILELIST;
-    if (pExtract(session, szCabName))
+    if (pExtract(session, szCabName) != S_OK)
     {
         session->Operation &= ~EXTRACT_FILLFILELIST;
         return -1;
@@ -709,7 +709,7 @@ HRESULT WINAPI ExtractFilesA(LPCSTR CabName, LPCSTR ExpandDir, DWORD Flags,
     if (FileList)
     {
         szConvertedList = convert_file_list(FileList, &dwFileCount);
-        if (!szConvertedList || dwFileCount == -1)
+        if (!szConvertedList)
         {
             res = E_FAIL;
             goto done;

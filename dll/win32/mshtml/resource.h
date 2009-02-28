@@ -52,6 +52,5 @@
 
 #define IDD_HYPERLINK           8000
 
-#define IDC_STATIC              9000
 #define IDC_URL                 9001
 #define IDC_TYPE                9002

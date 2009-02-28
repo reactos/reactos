@@ -365,7 +365,7 @@ SaveCustomPath(
 			TRACE("ComboBox_GetLBText() failed\n");
 			goto cleanup;
 		}
-		else if (UseCustomPath && wcsicmp(CustomPath, pBuffer) == 0)
+		else if (UseCustomPath && _wcsicmp(CustomPath, pBuffer) == 0)
 			UseCustomPath = FALSE;
 		pBuffer += 1 + Length;
 	}
@@ -650,7 +650,9 @@ CHSourceDlgProc(
 						}
 					}
 					else
+					{
 						/* FIXME */;
+					}
 					return TRUE;
 
 				default:

@@ -2,12 +2,10 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
 <module name="comdlg32" type="win32dll" baseaddress="${BASEADDRESS_COMDLG32}" installbase="system32" installname="comdlg32.dll" allowwarnings="true">
-	<importlibrary definition="comdlg32.spec.def" />
+	<importlibrary definition="comdlg32.spec" />
 	<include base="comdlg32">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
-	<define name="WINVER">0x600</define>
-	<define name="_WIN32_WINNT">0x600</define>
 	<file>cdlg32.c</file>
 	<file>colordlg.c</file>
 	<file>filedlg.c</file>
@@ -17,7 +15,6 @@
 	<file>fontdlg.c</file>
 	<file>printdlg.c</file>
 	<file>rsrc.rc</file>
-	<file>comdlg32.spec</file>
 	<library>wine</library>
 	<library>uuid</library>
 	<library>shell32</library>

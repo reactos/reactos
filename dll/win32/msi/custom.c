@@ -659,7 +659,7 @@ static UINT get_action_info( const GUID *guid, INT *type, MSIHANDLE *handle,
     return ERROR_SUCCESS;
 }
 
-static DWORD WINAPI ACTION_CallDllFunction( const GUID *guid )
+static DWORD ACTION_CallDllFunction( const GUID *guid )
 {
     MsiCustomActionEntryPoint fn;
     MSIHANDLE hPackage, handle;
@@ -744,7 +744,7 @@ static DWORD WINAPI DllThread( LPVOID arg )
     return rc;
 }
 
-static DWORD WINAPI ACTION_CAInstallPackage(const GUID *guid)
+static DWORD ACTION_CAInstallPackage(const GUID *guid)
 {
     msi_custom_action_info *info;
     UINT r = ERROR_FUNCTION_FAILED;
@@ -1147,7 +1147,7 @@ static UINT HANDLE_CustomType34(MSIPACKAGE *package, LPCWSTR source,
     return wait_process_handle(package, type, info.hProcess, action);
 }
 
-static DWORD WINAPI ACTION_CallScript( const GUID *guid )
+static DWORD ACTION_CallScript( const GUID *guid )
 {
     msi_custom_action_info *info;
     MSIHANDLE hPackage;

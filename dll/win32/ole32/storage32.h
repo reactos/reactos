@@ -152,27 +152,7 @@ struct StgProperty
  * this section appear in stg_bigblockfile.c
  */
 
-/*
- * Declaration of the data structures
- */
 typedef struct BigBlockFile BigBlockFile,*LPBIGBLOCKFILE;
-typedef struct MappedPage   MappedPage,*LPMAPPEDPAGE;
-
-struct BigBlockFile
-{
-  BOOL fileBased;
-  ULARGE_INTEGER filesize;
-  ULONG blocksize;
-  HANDLE hfile;
-  HANDLE hfilemap;
-  DWORD flProtect;
-  MappedPage *maplist;
-  MappedPage *victimhead, *victimtail;
-  ULONG num_victim_pages;
-  ILockBytes *pLkbyt;
-  HGLOBAL hbytearray;
-  LPVOID pbytearray;
-};
 
 /*
  * Declaration of the functions used to manipulate the BigBlockFile
@@ -184,8 +164,8 @@ BigBlockFile*  BIGBLOCKFILE_Construct(HANDLE hFile,
                                       ULONG blocksize,
                                       BOOL fileBased);
 void           BIGBLOCKFILE_Destructor(LPBIGBLOCKFILE This);
-void           BIGBLOCKFILE_EnsureExists(LPBIGBLOCKFILE This, ULONG index);
-void           BIGBLOCKFILE_SetSize(LPBIGBLOCKFILE This, ULARGE_INTEGER newSize);
+HRESULT        BIGBLOCKFILE_EnsureExists(LPBIGBLOCKFILE This, ULONG index);
+HRESULT        BIGBLOCKFILE_SetSize(LPBIGBLOCKFILE This, ULARGE_INTEGER newSize);
 HRESULT        BIGBLOCKFILE_ReadAt(LPBIGBLOCKFILE This, ULARGE_INTEGER offset,
            void* buffer, ULONG size, ULONG* bytesRead);
 HRESULT        BIGBLOCKFILE_WriteAt(LPBIGBLOCKFILE This, ULARGE_INTEGER offset,

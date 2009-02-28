@@ -17,13 +17,15 @@
 #include <debug.h>
 
 
+typedef INT (WINAPI *MessageBoxW_Proc) (HWND, LPCWSTR, LPCWSTR, UINT);
+
 /* GLOBALS *******************************************************************/
 
 WaitForInputIdleType  lpfnGlobalRegisterWaitForInputIdle;
 
 LPSTARTUPINFOA lpLocalStartupInfo = NULL;
 
-VOID STDCALL
+VOID WINAPI
 RegisterWaitForInputIdle(WaitForInputIdleType lpfnRegisterWaitForInputIdle);
 
 /* FUNCTIONS ****************************************************************/
@@ -31,7 +33,7 @@ RegisterWaitForInputIdle(WaitForInputIdleType lpfnRegisterWaitForInputIdle);
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetProcessAffinityMask (HANDLE hProcess,
 			LPDWORD lpProcessAffinityMask,
 			LPDWORD lpSystemAffinityMask)
@@ -71,7 +73,7 @@ GetProcessAffinityMask (HANDLE hProcess,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetProcessAffinityMask (HANDLE hProcess,
 			DWORD dwProcessAffinityMask)
 {
@@ -94,7 +96,7 @@ SetProcessAffinityMask (HANDLE hProcess,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetProcessShutdownParameters (LPDWORD lpdwLevel,
 			      LPDWORD lpdwFlags)
 {
@@ -123,7 +125,7 @@ GetProcessShutdownParameters (LPDWORD lpdwLevel,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetProcessShutdownParameters (DWORD dwLevel,
 			      DWORD dwFlags)
 {
@@ -152,7 +154,7 @@ SetProcessShutdownParameters (DWORD dwLevel,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetProcessWorkingSetSize (HANDLE hProcess,
 			  PSIZE_T lpMinimumWorkingSetSize,
 			  PSIZE_T lpMaximumWorkingSetSize)
@@ -181,7 +183,7 @@ GetProcessWorkingSetSize (HANDLE hProcess,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetProcessWorkingSetSize(HANDLE hProcess,
 			 SIZE_T dwMinimumWorkingSetSize,
 			 SIZE_T dwMaximumWorkingSetSize)
@@ -209,7 +211,7 @@ SetProcessWorkingSetSize(HANDLE hProcess,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetProcessTimes(HANDLE hProcess,
 		LPFILETIME lpCreationTime,
 		LPFILETIME lpExitTime,
@@ -249,7 +251,7 @@ GetProcessTimes(HANDLE hProcess,
 /*
  * @implemented
  */
-HANDLE STDCALL
+HANDLE WINAPI
 GetCurrentProcess(VOID)
 {
   return((HANDLE)NtCurrentProcess());
@@ -259,7 +261,7 @@ GetCurrentProcess(VOID)
 /*
  * @implemented
  */
-HANDLE STDCALL
+HANDLE WINAPI
 GetCurrentThread(VOID)
 {
   return((HANDLE)NtCurrentThread());
@@ -269,7 +271,7 @@ GetCurrentThread(VOID)
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD WINAPI
 GetCurrentProcessId(VOID)
 {
   return((DWORD)GetTeb()->ClientId.UniqueProcess);
@@ -279,7 +281,7 @@ GetCurrentProcessId(VOID)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetExitCodeProcess(HANDLE hProcess,
 		   LPDWORD lpExitCode)
 {
@@ -307,7 +309,7 @@ GetExitCodeProcess(HANDLE hProcess,
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 GetProcessId(HANDLE Process)
 {
   PROCESS_BASIC_INFORMATION ProcessBasic;
@@ -331,7 +333,7 @@ GetProcessId(HANDLE Process)
 /*
  * @implemented
  */
-HANDLE STDCALL
+HANDLE WINAPI
 OpenProcess(DWORD dwDesiredAccess,
 	    BOOL bInheritHandle,
 	    DWORD dwProcessId)
@@ -366,7 +368,7 @@ OpenProcess(DWORD dwDesiredAccess,
 /*
  * @implemented
  */
-UINT STDCALL
+UINT WINAPI
 WinExec(LPCSTR lpCmdLine,
 	UINT uCmdShow)
 {
@@ -410,7 +412,7 @@ WinExec(LPCSTR lpCmdLine,
 /*
  * @implemented
  */
-VOID STDCALL
+VOID WINAPI
 RegisterWaitForInputIdle (
 	WaitForInputIdleType	lpfnRegisterWaitForInputIdle
 	)
@@ -422,7 +424,7 @@ RegisterWaitForInputIdle (
 /*
  * @implemented
  */
-VOID STDCALL
+VOID WINAPI
 GetStartupInfoW(LPSTARTUPINFOW lpStartupInfo)
 {
   PRTL_USER_PROCESS_PARAMETERS Params;
@@ -459,7 +461,7 @@ GetStartupInfoW(LPSTARTUPINFOW lpStartupInfo)
 /*
  * @implemented
  */
-VOID STDCALL
+VOID WINAPI
 GetStartupInfoA(LPSTARTUPINFOA lpStartupInfo)
 {
   PRTL_USER_PROCESS_PARAMETERS Params;
@@ -538,7 +540,7 @@ GetStartupInfoA(LPSTARTUPINFOA lpStartupInfo)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 FlushInstructionCache (HANDLE	hProcess,
 		       LPCVOID	lpBaseAddress,
 		       DWORD	dwSize)
@@ -560,7 +562,7 @@ FlushInstructionCache (HANDLE	hProcess,
 /*
  * @implemented
  */
-VOID STDCALL
+VOID WINAPI
 ExitProcess(UINT uExitCode)
 {
   CSR_API_MESSAGE CsrRequest;
@@ -597,7 +599,7 @@ ExitProcess(UINT uExitCode)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 TerminateProcess (HANDLE	hProcess,
 		  UINT	uExitCode)
 {
@@ -616,9 +618,9 @@ TerminateProcess (HANDLE	hProcess,
 /*
  * @unimplemented
  */
-VOID STDCALL
-FatalAppExitA (UINT	uAction,
-	       LPCSTR	lpMessageText)
+VOID WINAPI
+FatalAppExitA(UINT uAction,
+	          LPCSTR lpMessageText)
 {
   UNICODE_STRING MessageTextU;
   ANSI_STRING MessageText;
@@ -638,18 +640,33 @@ FatalAppExitA (UINT	uAction,
 /*
  * @unimplemented
  */
-VOID STDCALL
+VOID WINAPI
 FatalAppExitW(UINT uAction,
-	      LPCWSTR lpMessageText)
+              LPCWSTR lpMessageText)
 {
-  return;
+    static const WCHAR szUser32[] = L"user32.dll\0";
+
+    HMODULE hModule = GetModuleHandleW(szUser32);
+    MessageBoxW_Proc pMessageBoxW = NULL;
+
+    DPRINT1("AppExit\n");
+
+    if (hModule)
+        pMessageBoxW = (MessageBoxW_Proc) GetProcAddress(hModule, "MessageBoxW");
+
+    if (pMessageBoxW)
+        pMessageBoxW(0, lpMessageText, NULL, MB_SYSTEMMODAL | MB_OK);
+    else
+        DPRINT1("%s\n", lpMessageText);
+
+    ExitProcess(0);
 }
 
 
 /*
  * @implemented
  */
-VOID STDCALL
+VOID WINAPI
 FatalExit (int ExitCode)
 {
   ExitProcess(ExitCode);
@@ -659,7 +676,7 @@ FatalExit (int ExitCode)
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD WINAPI
 GetPriorityClass (HANDLE hProcess)
 {
   NTSTATUS Status;
@@ -705,7 +722,7 @@ GetPriorityClass (HANDLE hProcess)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetPriorityClass (HANDLE hProcess,
 		  DWORD	dwPriorityClass)
 {
@@ -763,7 +780,7 @@ SetPriorityClass (HANDLE hProcess,
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD WINAPI
 GetProcessVersion (DWORD ProcessId)
 {
   DWORD			Version = 0;
@@ -795,7 +812,7 @@ GetProcessVersion (DWORD ProcessId)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetProcessIoCounters(
   HANDLE hProcess,
   PIO_COUNTERS lpIoCounters)
@@ -821,7 +838,7 @@ GetProcessIoCounters(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetProcessPriorityBoost(HANDLE hProcess,
                         PBOOL pDisablePriorityBoost)
 {
@@ -848,7 +865,7 @@ GetProcessPriorityBoost(HANDLE hProcess,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 SetProcessPriorityBoost(HANDLE hProcess,
                         BOOL bDisablePriorityBoost)
 {
@@ -873,7 +890,7 @@ SetProcessPriorityBoost(HANDLE hProcess,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetProcessHandleCount(HANDLE hProcess,
                       PDWORD pdwHandleCount)
 {
@@ -893,6 +910,36 @@ GetProcessHandleCount(HANDLE hProcess,
 
     SetLastErrorByStatus(Status);
     return FALSE;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+IsWow64Process(
+    HANDLE hProcess,
+    PBOOL Wow64Process
+    )
+{
+    ULONG pbi;
+    NTSTATUS Status;
+
+    Status = NtQueryInformationProcess(hProcess,
+                                       ProcessWow64Information,
+                                       &pbi,
+                                       sizeof(pbi),
+                                       NULL);
+
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
+
+    *Wow64Process = (pbi != 0);
+    return TRUE;
 }
 
 /* EOF */

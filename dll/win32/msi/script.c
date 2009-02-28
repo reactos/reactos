@@ -138,14 +138,14 @@ DWORD call_script(MSIHANDLE hPackage, INT type, LPCWSTR script, LPCWSTR function
     if (FAILED(hr)) goto done;
 
     /* Initialize the script engine */
-    hr = IActiveScriptParse_InitNew(pActiveScriptParse);
+    hr = IActiveScriptParse64_InitNew(pActiveScriptParse);
     if (FAILED(hr)) goto done;
 
     /* Add the session object */
     hr = IActiveScript_AddNamedItem(pActiveScript, szSession, SCRIPTITEM_ISVISIBLE);
 
     /* Pass the script to the engine */
-    hr = IActiveScriptParse_ParseScriptText(pActiveScriptParse, script, NULL, NULL, NULL, 0, 0, 0L, NULL, NULL);
+    hr = IActiveScriptParse64_ParseScriptText(pActiveScriptParse, script, NULL, NULL, NULL, 0, 0, 0L, NULL, NULL);
     if (FAILED(hr)) goto done;
 
     /* Start processing the script */

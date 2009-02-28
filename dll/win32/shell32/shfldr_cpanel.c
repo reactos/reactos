@@ -420,7 +420,8 @@ static BOOL CreateCPanelEnumList(
 
                 if (!(wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
                     strcpy(p, wfd.cFileName);
-                    SHELL_RegisterCPanelApp((IEnumIDList*)iface, szPath);
+                    if (strcmp(wfd.cFileName, "ncpa.cpl"))
+                        SHELL_RegisterCPanelApp((IEnumIDList*)iface, szPath);
                 }
             } while(FindNextFileA(hFile, &wfd));
             FindClose(hFile);
@@ -595,10 +596,14 @@ ISF_ControlPanel_fnGetUIObjectOf(IShellFolder2 * iface,
 	*ppvOut = NULL;
 
 	if (IsEqualIID(riid, &IID_IContextMenu) &&(cidl >= 1)) {
+		// TODO
+		// create a seperate item struct
+		//
 		pObj = (IUnknown*)(&This->lpVtblContextMenu);
 		This->apidl = apidl;
 		This->cidl = cidl;
 		IUnknown_AddRef(pObj);
+		hr = S_OK;
 	} else if (IsEqualIID(riid, &IID_IDataObject) &&(cidl >= 1)) {
 	    pObj = (LPUNKNOWN) IDataObject_Constructor(hwndOwner, This->pidlRoot, apidl, cidl);
 	    hr = S_OK;
@@ -1207,7 +1212,7 @@ static HRESULT WINAPI ICPanel_IContextMenu2_QueryContextMenu(
     if (LoadStringW(shell32_hInstance, IDS_OPEN, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
     {
         szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
-        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count, MFT_STRING, szBuffer, MFS_DEFAULT);
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, IDS_OPEN, MFT_STRING, szBuffer, MFS_DEFAULT); //FIXME identifier
         Count++;
     }
 
@@ -1219,7 +1224,7 @@ static HRESULT WINAPI ICPanel_IContextMenu2_QueryContextMenu(
         }
         szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
 
-        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count, MFT_STRING, szBuffer, MFS_ENABLED);
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, IDS_CREATELINK, MFT_STRING, szBuffer, MFS_ENABLED); //FIXME identifier
         Count++;
     }
     return MAKE_HRESULT(SEVERITY_SUCCESS, 0, Count);
@@ -1246,7 +1251,7 @@ static HRESULT WINAPI ICPanel_IContextMenu2_InvokeCommand(
 
     TRACE("(%p)->(invcom=%p verb=%p wnd=%p)\n",This,lpcmi,lpcmi->lpVerb, lpcmi->hwnd);
 
-    if (lpcmi->lpVerb == MAKEINTRESOURCEA(1))
+    if (lpcmi->lpVerb == MAKEINTRESOURCEA(IDS_OPEN)) //FIXME
     {
        ZeroMemory(&sei, sizeof(sei));
        sei.cbSize = sizeof(sei);
@@ -1259,7 +1264,7 @@ static HRESULT WINAPI ICPanel_IContextMenu2_InvokeCommand(
        if (sei.hInstApp <= (HINSTANCE)32)
           return E_FAIL;
     }
-    else if (lpcmi->lpVerb == MAKEINTRESOURCEA(2))
+    else if (lpcmi->lpVerb == MAKEINTRESOURCEA(IDS_CREATELINK)) //FIXME
     {
         if (!SHGetSpecialFolderPathW(NULL, szPath, CSIDL_DESKTOPDIRECTORY, FALSE))
              return E_FAIL;

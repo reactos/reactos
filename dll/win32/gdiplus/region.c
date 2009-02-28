@@ -268,7 +268,6 @@ GpStatus WINGDIPAPI GdipCombineRegionPath(GpRegion *region, GpPath *path, Combin
 
 out:
     GdipFree(left);
-    delete_element(right);
     GdipDeleteRegion(path_region);
     return stat;
 }
@@ -315,7 +314,6 @@ GpStatus WINGDIPAPI GdipCombineRegionRect(GpRegion *region,
 
 out:
     GdipFree(left);
-    delete_element(right);
     GdipDeleteRegion(rect_region);
     return stat;
 }
@@ -341,6 +339,9 @@ GpStatus WINGDIPAPI GdipCombineRegionRectI(GpRegion *region,
     return GdipCombineRegionRect(region, &rectf, mode);
 }
 
+/*****************************************************************************
+ * GdipCombineRegionRegion [GDIPLUS.@]
+ */
 GpStatus WINGDIPAPI GdipCombineRegionRegion(GpRegion *region1,
         GpRegion *region2, CombineMode mode)
 {
@@ -360,6 +361,7 @@ GpStatus WINGDIPAPI GdipCombineRegionRegion(GpRegion *region1,
 
         delete_element(&region1->node);
         memcpy(region1, reg2copy, sizeof(GpRegion));
+        GdipFree(reg2copy);
         return Ok;
     }
 
@@ -372,7 +374,6 @@ GpStatus WINGDIPAPI GdipCombineRegionRegion(GpRegion *region1,
     if (stat != Ok)
     {
         GdipFree(left);
-        delete_element(right);
         return OutOfMemory;
     }
 
@@ -546,6 +547,9 @@ GpStatus WINGDIPAPI GdipCreateRegionRect(GDIPCONST GpRectF *rect,
     return Ok;
 }
 
+/*****************************************************************************
+ * GdipCreateRegionRectI [GDIPLUS.@]
+ */
 GpStatus WINGDIPAPI GdipCreateRegionRectI(GDIPCONST GpRect *rect,
         GpRegion **region)
 {
@@ -569,14 +573,63 @@ GpStatus WINGDIPAPI GdipCreateRegionRgnData(GDIPCONST BYTE *data, INT size, GpRe
     return NotImplemented;
 }
 
+
+/******************************************************************************
+ * GdipCreateRegionHrgn [GDIPLUS.@]
+ */
 GpStatus WINGDIPAPI GdipCreateRegionHrgn(HRGN hrgn, GpRegion **region)
 {
-    FIXME("(%p, %p): stub\n", hrgn, region);
+    union {
+        RGNDATA data;
+        char buf[sizeof(RGNDATAHEADER) + sizeof(RECT)];
+    } rdata;
+    DWORD size;
+    GpRectF rectf;
+    GpPath *path;
+    GpStatus stat;
 
-    *region = NULL;
-    return NotImplemented;
+    TRACE("(%p, %p)\n", hrgn, region);
+
+    if(!region || !(size = GetRegionData(hrgn, 0, NULL)))
+        return InvalidParameter;
+
+    if(size > sizeof(RGNDATAHEADER) + sizeof(RECT)){
+        FIXME("Only simple rect regions supported.\n");
+        *region = NULL;
+        return NotImplemented;
+    }
+
+    if(!GetRegionData(hrgn, sizeof(rdata), &rdata.data))
+        return GenericError;
+
+    /* return empty region */
+    if(IsRectEmpty(&rdata.data.rdh.rcBound)){
+        stat = GdipCreateRegion(region);
+        if(stat == Ok)
+            GdipSetEmpty(*region);
+        return stat;
+    }
+
+    rectf.X = (REAL)rdata.data.rdh.rcBound.left;
+    rectf.Y = (REAL)rdata.data.rdh.rcBound.top;
+    rectf.Width  = (REAL)rdata.data.rdh.rcBound.right - rectf.X;
+    rectf.Height = (REAL)rdata.data.rdh.rcBound.bottom - rectf.Y;
+
+    stat = GdipCreatePath(FillModeAlternate, &path);
+    if(stat != Ok)
+        return stat;
+
+    GdipAddPathRectangle(path, rectf.X, rectf.Y, rectf.Width, rectf.Height);
+
+    stat = GdipCreateRegionPath(path, region);
+    GdipDeletePath(path);
+
+    return stat;
 }
 
+/*****************************************************************************
+ * GdipDeleteRegion [GDIPLUS.@]
+ */
 GpStatus WINGDIPAPI GdipDeleteRegion(GpRegion *region)
 {
     TRACE("%p\n", region);
@@ -590,18 +643,66 @@ GpStatus WINGDIPAPI GdipDeleteRegion(GpRegion *region)
     return Ok;
 }
 
+/*****************************************************************************
+ * GdipGetRegionBounds [GDIPLUS.@]
+ */
 GpStatus WINGDIPAPI GdipGetRegionBounds(GpRegion *region, GpGraphics *graphics, GpRectF *rect)
 {
-    FIXME("(%p, %p, %p): stub\n", region, graphics, rect);
+    HRGN hrgn;
+    RECT r;
+    GpStatus status;
 
-    return NotImplemented;
+    TRACE("(%p, %p, %p)\n", region, graphics, rect);
+
+    if(!region || !graphics || !rect)
+        return InvalidParameter;
+
+    status = GdipGetRegionHRgn(region, graphics, &hrgn);
+    if(status != Ok)
+        return status;
+
+    /* infinite */
+    if(!hrgn){
+        rect->X = rect->Y = -(REAL)(1 << 22);
+        rect->Width = rect->Height = (REAL)(1 << 23);
+        return Ok;
+    }
+
+    if(!GetRgnBox(hrgn, &r)){
+        DeleteObject(hrgn);
+        return GenericError;
+    }
+
+    rect->X = r.left;
+    rect->Y = r.top;
+    rect->Width  = r.right  - r.left;
+    rect->Height = r.bottom - r.top;
+
+    return Ok;
 }
 
+/*****************************************************************************
+ * GdipGetRegionBoundsI [GDIPLUS.@]
+ */
 GpStatus WINGDIPAPI GdipGetRegionBoundsI(GpRegion *region, GpGraphics *graphics, GpRect *rect)
 {
-    FIXME("(%p, %p, %p): stub\n", region, graphics, rect);
+    GpRectF rectf;
+    GpStatus status;
 
-    return NotImplemented;
+    TRACE("(%p, %p, %p)\n", region, graphics, rect);
+
+    if(!rect)
+        return InvalidParameter;
+
+    status = GdipGetRegionBounds(region, graphics, &rectf);
+    if(status == Ok){
+        rect->X = roundr(rectf.X);
+        rect->Y = roundr(rectf.X);
+        rect->Width  = roundr(rectf.Width);
+        rect->Height = roundr(rectf.Height);
+    }
+
+    return status;
 }
 
 static inline void write_dword(DWORD* location, INT* offset, const DWORD write)
@@ -707,7 +808,7 @@ static void write_element(const region_element* element, DWORD *buffer,
  *
  * RETURNS
  *  SUCCESS: Ok
- *  FAILURE: InvalidParamter
+ *  FAILURE: InvalidParameter
  *
  * NOTES
  *  The header contains the size, a checksum, a version string, and the number
@@ -765,15 +866,189 @@ GpStatus WINGDIPAPI GdipGetRegionDataSize(GpRegion *region, UINT *needed)
     return Ok;
 }
 
+static GpStatus get_path_hrgn(GpPath *path, GpGraphics *graphics, HRGN *hrgn)
+{
+    HDC new_hdc=NULL;
+    GpStatus stat;
+    INT save_state;
+
+    if (!graphics)
+    {
+        new_hdc = GetDC(0);
+        if (!new_hdc)
+            return OutOfMemory;
+
+        stat = GdipCreateFromHDC(new_hdc, &graphics);
+        if (stat != Ok)
+        {
+            ReleaseDC(0, new_hdc);
+            return stat;
+        }
+    }
+
+    save_state = SaveDC(graphics->hdc);
+    EndPath(graphics->hdc);
+
+    SetPolyFillMode(graphics->hdc, (path->fill == FillModeAlternate ? ALTERNATE
+                                                                    : WINDING));
+
+    stat = trace_path(graphics, path);
+    if (stat == Ok)
+    {
+        *hrgn = PathToRegion(graphics->hdc);
+        stat = *hrgn ? Ok : OutOfMemory;
+    }
+
+    RestoreDC(graphics->hdc, save_state);
+    if (new_hdc)
+    {
+        ReleaseDC(0, new_hdc);
+        GdipDeleteGraphics(graphics);
+    }
+
+    return stat;
+}
+
+static GpStatus get_region_hrgn(struct region_element *element, GpGraphics *graphics, HRGN *hrgn)
+{
+    switch (element->type)
+    {
+        case RegionDataInfiniteRect:
+            *hrgn = NULL;
+            return Ok;
+        case RegionDataEmptyRect:
+            *hrgn = CreateRectRgn(0, 0, 0, 0);
+            return *hrgn ? Ok : OutOfMemory;
+        case RegionDataPath:
+            return get_path_hrgn(element->elementdata.pathdata.path, graphics, hrgn);
+        case RegionDataRect:
+        {
+            GpPath* path;
+            GpStatus stat;
+            GpRectF* rc = &element->elementdata.rect;
+
+            stat = GdipCreatePath(FillModeAlternate, &path);
+            if (stat != Ok)
+                return stat;
+            stat = GdipAddPathRectangle(path, rc->X, rc->Y, rc->Width, rc->Height);
+
+            if (stat == Ok)
+                stat = get_path_hrgn(path, graphics, hrgn);
+
+            GdipDeletePath(path);
+
+            return stat;
+        }
+        case CombineModeIntersect:
+        case CombineModeUnion:
+        case CombineModeXor:
+        case CombineModeExclude:
+        case CombineModeComplement:
+        {
+            HRGN left, right;
+            GpStatus stat;
+            int ret;
+
+            stat = get_region_hrgn(element->elementdata.combine.left, graphics, &left);
+            if (stat != Ok)
+            {
+                *hrgn = NULL;
+                return stat;
+            }
+
+            if (left == NULL)
+            {
+                /* existing region is infinite */
+                switch (element->type)
+                {
+                    case CombineModeIntersect:
+                        return get_region_hrgn(element->elementdata.combine.right, graphics, hrgn);
+                    case CombineModeXor: case CombineModeExclude:
+                        FIXME("cannot exclude from an infinite region\n");
+                        /* fall-through */
+                    case CombineModeUnion: case CombineModeComplement:
+                        *hrgn = NULL;
+                        return Ok;
+                }
+            }
+
+            stat = get_region_hrgn(element->elementdata.combine.right, graphics, &right);
+            if (stat != Ok)
+            {
+                DeleteObject(left);
+                *hrgn = NULL;
+                return stat;
+            }
+
+            if (right == NULL)
+            {
+                /* new region is infinite */
+                switch (element->type)
+                {
+                    case CombineModeIntersect:
+                        *hrgn = left;
+                        return Ok;
+                    case CombineModeXor: case CombineModeComplement:
+                        FIXME("cannot exclude from an infinite region\n");
+                        /* fall-through */
+                    case CombineModeUnion: case CombineModeExclude:
+                        DeleteObject(left);
+                        *hrgn = NULL;
+                        return Ok;
+                }
+            }
+
+            switch (element->type)
+            {
+                case CombineModeIntersect:
+                    ret = CombineRgn(left, left, right, RGN_AND);
+                    break;
+                case CombineModeUnion:
+                    ret = CombineRgn(left, left, right, RGN_OR);
+                    break;
+                case CombineModeXor:
+                    ret = CombineRgn(left, left, right, RGN_XOR);
+                    break;
+                case CombineModeExclude:
+                    ret = CombineRgn(left, left, right, RGN_DIFF);
+                    break;
+                case CombineModeComplement:
+                    ret = CombineRgn(left, right, left, RGN_DIFF);
+                    break;
+                default:
+                    ret = ERROR;
+            }
+
+            DeleteObject(right);
+
+            if (ret == ERROR)
+            {
+                DeleteObject(left);
+                *hrgn = NULL;
+                return GenericError;
+            }
+
+            *hrgn = left;
+            return Ok;
+        }
+        default:
+            FIXME("GdipGetRegionHRgn unimplemented for region type=%x\n", element->type);
+            *hrgn = NULL;
+            return NotImplemented;
+    }
+}
+
 /*****************************************************************************
  * GdipGetRegionHRgn [GDIPLUS.@]
  */
 GpStatus WINGDIPAPI GdipGetRegionHRgn(GpRegion *region, GpGraphics *graphics, HRGN *hrgn)
 {
-    FIXME("(%p, %p, %p): stub\n", region, graphics, hrgn);
+    TRACE("(%p, %p, %p)\n", region, graphics, hrgn);
 
-    *hrgn = NULL;
-    return NotImplemented;
+    if (!region || !hrgn)
+        return InvalidParameter;
+
+    return get_region_hrgn(&region->node, graphics, hrgn);
 }
 
 GpStatus WINGDIPAPI GdipIsEmptyRegion(GpRegion *region, GpGraphics *graphics, BOOL *res)
@@ -788,12 +1063,39 @@ GpStatus WINGDIPAPI GdipIsEmptyRegion(GpRegion *region, GpGraphics *graphics, BO
     return Ok;
 }
 
+/*****************************************************************************
+ * GdipIsEqualRegion [GDIPLUS.@]
+ */
 GpStatus WINGDIPAPI GdipIsEqualRegion(GpRegion *region, GpRegion *region2, GpGraphics *graphics,
                                       BOOL *res)
 {
-    FIXME("(%p, %p, %p, %p): stub\n", region, region2, graphics, res);
+    HRGN hrgn1, hrgn2;
+    GpStatus stat;
 
-    return NotImplemented;
+    TRACE("(%p, %p, %p, %p)\n", region, region2, graphics, res);
+
+    if(!region || !region2 || !graphics || !res)
+        return InvalidParameter;
+
+    stat = GdipGetRegionHRgn(region, graphics, &hrgn1);
+    if(stat != Ok)
+        return stat;
+    stat = GdipGetRegionHRgn(region2, graphics, &hrgn2);
+    if(stat != Ok){
+        DeleteObject(hrgn1);
+        return stat;
+    }
+
+    *res = EqualRgn(hrgn1, hrgn2);
+
+    /* one of GpRegions is infinite */
+    if(*res == ERROR)
+        *res = (!hrgn1 && !hrgn2);
+
+    DeleteObject(hrgn1);
+    DeleteObject(hrgn2);
+
+    return Ok;
 }
 
 /*****************************************************************************
@@ -852,16 +1154,54 @@ GpStatus WINGDIPAPI GdipTransformRegion(GpRegion *region, GpMatrix *matrix)
     return NotImplemented;
 }
 
-GpStatus WINGDIPAPI GdipTranslateRegion(GpRegion *region, REAL dx, REAL dy)
+/* Translates GpRegion elements with specified offsets */
+static void translate_region_element(region_element* element, REAL dx, REAL dy)
 {
-    FIXME("(%p, %f, %f): stub\n", region, dx, dy);
+    INT i;
 
-    return NotImplemented;
+    switch(element->type)
+    {
+        case RegionDataEmptyRect:
+        case RegionDataInfiniteRect:
+            return;
+        case RegionDataRect:
+            element->elementdata.rect.X += dx;
+            element->elementdata.rect.Y += dy;
+            return;
+        case RegionDataPath:
+            for(i = 0; i < element->elementdata.pathdata.path->pathdata.Count; i++){
+                element->elementdata.pathdata.path->pathdata.Points[i].X += dx;
+                element->elementdata.pathdata.path->pathdata.Points[i].Y += dy;
+            }
+            return;
+        default:
+            translate_region_element(element->elementdata.combine.left,  dx, dy);
+            translate_region_element(element->elementdata.combine.right, dx, dy);
+            return;
+    }
 }
 
+/*****************************************************************************
+ * GdipTranslateRegion [GDIPLUS.@]
+ */
+GpStatus WINGDIPAPI GdipTranslateRegion(GpRegion *region, REAL dx, REAL dy)
+{
+    TRACE("(%p, %f, %f)\n", region, dx, dy);
+
+    if(!region)
+        return InvalidParameter;
+
+    translate_region_element(&region->node, dx, dy);
+
+    return Ok;
+}
+
+/*****************************************************************************
+ * GdipTranslateRegionI [GDIPLUS.@]
+ */
 GpStatus WINGDIPAPI GdipTranslateRegionI(GpRegion *region, INT dx, INT dy)
 {
-    FIXME("(%p, %d, %d): stub\n", region, dx, dy);
+    TRACE("(%p, %d, %d)\n", region, dx, dy);
 
-    return NotImplemented;
+    return GdipTranslateRegion(region, (REAL)dx, (REAL)dy);
 }

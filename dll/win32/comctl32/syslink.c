@@ -136,7 +136,7 @@ static PDOC_ITEM SYSLINK_AppendDocItem (SYSLINK_INFO *infoPtr, LPCWSTR Text, UIN
 {
     PDOC_ITEM Item;
 
-    textlen = min(textlen, lstrlenW(Text));
+    textlen = min(textlen, strlenW(Text));
     Item = Alloc(FIELD_OFFSET(DOC_ITEM, Text[textlen + 1]));
     if(Item == NULL)
     {
@@ -286,8 +286,6 @@ CheckParameter:
                             ValidLink = TRUE;
                             taglen++;
                         }
-                        else
-                            tmp++;
                     }
                 }
                 
@@ -1750,7 +1748,7 @@ static LRESULT WINAPI SysLinkWindowProc(HWND hwnd, UINT message,
 
     default:
 HandleDefaultMessage:
-        if ((message >= WM_USER) && (message < WM_APP))
+        if ((message >= WM_USER) && (message < WM_APP) && !COMCTL32_IsReflectedMessage(message))
         {
             ERR("unknown msg %04x wp=%04lx lp=%08lx\n", message, wParam, lParam );
         }

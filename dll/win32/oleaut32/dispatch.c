@@ -39,7 +39,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
-static IDispatch * WINAPI StdDispatch_Construct(IUnknown * punkOuter, void * pvThis, ITypeInfo * pTypeInfo);
+static IDispatch * StdDispatch_Construct(IUnknown * punkOuter, void * pvThis, ITypeInfo * pTypeInfo);
 
 /******************************************************************************
  *		DispInvoke (OLEAUT32.30)
@@ -425,7 +425,7 @@ static const IDispatchVtbl StdDispatch_VTable =
   StdDispatch_Invoke
 };
 
-static IDispatch * WINAPI StdDispatch_Construct(
+static IDispatch * StdDispatch_Construct(
   IUnknown * punkOuter,
   void * pvThis,
   ITypeInfo * pTypeInfo)

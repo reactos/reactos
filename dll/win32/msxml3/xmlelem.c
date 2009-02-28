@@ -38,6 +38,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(msxml);
 
 #ifdef HAVE_LIBXML2
 
+static HRESULT XMLElementCollection_create( IUnknown *pUnkOuter, xmlNodePtr node, LPVOID *ppObj );
+
 /**********************************************************************
  * IXMLElement
  */
@@ -514,7 +516,7 @@ static HRESULT WINAPI xmlelem_collection_QueryInterface(IXMLElementCollection *i
     }
     else if (IsEqualGUID(riid, &IID_IEnumVARIANT))
     {
-        *ppvObject = (IEnumVARIANT *)&(This->lpvtblIEnumVARIANT);
+        *ppvObject = &(This->lpvtblIEnumVARIANT);
     }
     else
     {
@@ -732,7 +734,7 @@ static const struct IEnumVARIANTVtbl xmlelem_collection_IEnumVARIANTvtbl =
     xmlelem_collection_IEnumVARIANT_Clone
 };
 
-HRESULT XMLElementCollection_create(IUnknown *pUnkOuter, xmlNodePtr node, LPVOID *ppObj)
+static HRESULT XMLElementCollection_create(IUnknown *pUnkOuter, xmlNodePtr node, LPVOID *ppObj)
 {
     xmlelem_collection *collection;
     xmlNodePtr ptr;

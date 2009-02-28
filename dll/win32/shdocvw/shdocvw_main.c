@@ -3,6 +3,7 @@
  *
  * Copyright 2001 John R. Sheets (for CodeWeavers)
  * Copyright 2004 Mike McCormack (for CodeWeavers)
+ * Copyright 2008 Detlef Riekenberg
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,32 +17,22 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include "config.h"
 
 #include <stdarg.h>
 #include <stdio.h>
-#include <string.h>
-
-#define COBJMACROS
-#define COM_NO_WINDOWS_H
-
-#include "windef.h"
-#include "winbase.h"
-#include "winreg.h"
-#include "winuser.h"
-#include "winnls.h"
-#include "ole2.h"
-#include "shlwapi.h"
-
-#include "shdocvw.h"
-#include "uuids.h"
-#include "urlmon.h"
 
 #include "wine/unicode.h"
 #include "wine/debug.h"
+
+#include "shdocvw.h"
+
+#include "winreg.h"
+#include "shlwapi.h"
+#include "wininet.h"
 
 #include "initguid.h"
 
@@ -49,61 +40,31 @@ WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
 
 LONG SHDOCVW_refCount = 0;
 
-static const WCHAR szMozDlPath[] = {
-    'S','o','f','t','w','a','r','e','\\','R','e','a','c','t','O','S','\\',
-    's','h','d','o','c','v','w',0
-};
-
-DEFINE_GUID( CLSID_MozillaBrowser, 0x1339B54C,0x3453,0x11D2,0x93,0xB9,0x00,0x00,0x00,0x00,0x00,0x00);
-
-typedef HRESULT (WINAPI *fnGetClassObject)(REFCLSID rclsid, REFIID iid, LPVOID *ppv);
-typedef HRESULT (WINAPI *fnCanUnloadNow)(void);
-
 HINSTANCE shdocvw_hinstance = 0;
 static HMODULE SHDOCVW_hshell32 = 0;
-static HMODULE hMozCtl = (HMODULE)~0UL;
+static ITypeInfo *wb_typeinfo = NULL;
 
-
-/* convert a guid to a wide character string */
-static void SHDOCVW_guid2wstr( const GUID *guid, LPWSTR wstr )
+HRESULT get_typeinfo(ITypeInfo **typeinfo)
 {
-    char str[40];
+    ITypeLib *typelib;
+    HRESULT hres;
 
-    sprintf(str, "{%08lX-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}",
-           guid->Data1, guid->Data2, guid->Data3,
-           guid->Data4[0], guid->Data4[1], guid->Data4[2], guid->Data4[3],
-           guid->Data4[4], guid->Data4[5], guid->Data4[6], guid->Data4[7] );
-    MultiByteToWideChar( CP_ACP, 0, str, -1, wstr, 40 );
-}
+    if(wb_typeinfo) {
+        *typeinfo = wb_typeinfo;
+        return S_OK;
+    }
 
-static BOOL SHDOCVW_GetMozctlPath( LPWSTR szPath, DWORD sz )
-{
-    DWORD r, type;
-    BOOL ret = FALSE;
-    HKEY hkey;
-    static const WCHAR szPre[] = {
-        'S','o','f','t','w','a','r','e','\\',
-        'C','l','a','s','s','e','s','\\',
-        'C','L','S','I','D','\\',0 };
-    static const WCHAR szPost[] = {
-        '\\','I','n','p','r','o','c','S','e','r','v','e','r','3','2',0 };
-    WCHAR szRegPath[(sizeof(szPre)+sizeof(szPost))/sizeof(WCHAR)+40];
+    hres = LoadRegTypeLib(&LIBID_SHDocVw, 1, 1, LOCALE_SYSTEM_DEFAULT, &typelib);
+    if(FAILED(hres)) {
+        ERR("LoadRegTypeLib failed: %08x\n", hres);
+        return hres;
+    }
 
-    strcpyW( szRegPath, szPre );
-    SHDOCVW_guid2wstr( &CLSID_MozillaBrowser, &szRegPath[strlenW(szRegPath)] );
-    strcatW( szRegPath, szPost );
+    hres = ITypeLib_GetTypeInfoOfGuid(typelib, &IID_IWebBrowser2, &wb_typeinfo);
+    ITypeLib_Release(typelib);
 
-    TRACE("key = %s\n", debugstr_w( szRegPath ) );
-
-    r = RegOpenKeyW( HKEY_LOCAL_MACHINE, szRegPath, &hkey );
-    if( r != ERROR_SUCCESS )
-        return FALSE;
-
-    r = RegQueryValueExW( hkey, NULL, NULL, &type, (LPBYTE)szPath, &sz );
-    ret = ( r == ERROR_SUCCESS ) && ( type == REG_SZ );
-    RegCloseKey( hkey );
-
-    return ret;
+    *typeinfo = wb_typeinfo;
+    return hres;
 }
 
 /*************************************************************************
@@ -111,18 +72,21 @@ static BOOL SHDOCVW_GetMozctlPath( LPWSTR szPath, DWORD sz )
  */
 BOOL WINAPI DllMain(HINSTANCE hinst, DWORD fdwReason, LPVOID fImpLoad)
 {
-	TRACE("%p 0x%lx %p\n", hinst, fdwReason, fImpLoad);
-	switch (fdwReason)
-	{
-	  case DLL_PROCESS_ATTACH:
-	    shdocvw_hinstance = hinst;
-	    break;
-	  case DLL_PROCESS_DETACH:
-	    if (SHDOCVW_hshell32) FreeLibrary(SHDOCVW_hshell32);
-	    if (hMozCtl && hMozCtl != (HMODULE)~0UL) FreeLibrary(hMozCtl);
-	    break;
-	}
-	return TRUE;
+    TRACE("%p 0x%x %p\n", hinst, fdwReason, fImpLoad);
+    switch (fdwReason)
+    {
+        case DLL_PROCESS_ATTACH:
+        shdocvw_hinstance = hinst;
+        register_iewindow_class();
+        break;
+    case DLL_PROCESS_DETACH:
+        if (SHDOCVW_hshell32) FreeLibrary(SHDOCVW_hshell32);
+        unregister_iewindow_class();
+        if(wb_typeinfo)
+            ITypeInfo_Release(wb_typeinfo);
+        break;
+    }
+    return TRUE;
 }
 
 /*************************************************************************
@@ -130,370 +94,7 @@ BOOL WINAPI DllMain(HINSTANCE hinst, DWORD fdwReason, LPVOID fImpLoad)
  */
 HRESULT WINAPI DllCanUnloadNow(void)
 {
-    HRESULT moz_can_unload = S_OK;
-    fnCanUnloadNow pCanUnloadNow;
-
-    if (hMozCtl)
-    {
-        pCanUnloadNow = (fnCanUnloadNow)
-            GetProcAddress(hMozCtl, "DllCanUnloadNow");
-        if (pCanUnloadNow)
-            moz_can_unload = pCanUnloadNow();
-    }
-
-    if (moz_can_unload == S_OK && SHDOCVW_refCount == 0)
-        return S_OK;
-
-    return S_FALSE;
-}
-
-/*************************************************************************
- *              SHDOCVW_TryDownloadMozillaControl
- */
-typedef struct _IBindStatusCallbackImpl {
-    const IBindStatusCallbackVtbl *vtbl;
-    LONG ref;
-    HWND hDialog;
-    BOOL *pbCancelled;
-} IBindStatusCallbackImpl;
-
-static HRESULT WINAPI
-dlQueryInterface( IBindStatusCallback* This, REFIID riid, void** ppvObject )
-{
-    if (ppvObject == NULL) return E_POINTER;
-
-    if( IsEqualIID(riid, &IID_IUnknown) ||
-        IsEqualIID(riid, &IID_IBindStatusCallback))
-    {
-        IBindStatusCallback_AddRef( This );
-        *ppvObject = This;
-        return S_OK;
-    }
-    return E_NOINTERFACE;
-}
-
-static ULONG WINAPI dlAddRef( IBindStatusCallback* iface )
-{
-    IBindStatusCallbackImpl *This = (IBindStatusCallbackImpl *) iface;
-
-    SHDOCVW_LockModule();
-
-    return InterlockedIncrement( &This->ref );
-}
-
-static ULONG WINAPI dlRelease( IBindStatusCallback* iface )
-{
-    IBindStatusCallbackImpl *This = (IBindStatusCallbackImpl *) iface;
-    DWORD ref = InterlockedDecrement( &This->ref );
-
-    if( !ref )
-    {
-        DestroyWindow( This->hDialog );
-        HeapFree( GetProcessHeap(), 0, This );
-    }
-
-    SHDOCVW_UnlockModule();
-
-    return ref;
-}
-
-static HRESULT WINAPI
-dlOnStartBinding( IBindStatusCallback* iface, DWORD dwReserved, IBinding* pib)
-{
-    ERR("\n");
-    return S_OK;
-}
-
-static HRESULT WINAPI
-dlGetPriority( IBindStatusCallback* iface, LONG* pnPriority)
-{
-    ERR("\n");
-    return S_OK;
-}
-
-static HRESULT WINAPI
-dlOnLowResource( IBindStatusCallback* iface, DWORD reserved)
-{
-    ERR("\n");
-    return S_OK;
-}
-
-static HRESULT WINAPI
-dlOnProgress( IBindStatusCallback* iface, ULONG ulProgress,
-              ULONG ulProgressMax, ULONG ulStatusCode, LPCWSTR szStatusText)
-{
-    IBindStatusCallbackImpl *This = (IBindStatusCallbackImpl *) iface;
-    HWND hItem;
-    LONG r;
-
-    hItem = GetDlgItem( This->hDialog, 1000 );
-    if( hItem && ulProgressMax )
-        SendMessageW(hItem,PBM_SETPOS,(ulProgress*100)/ulProgressMax,0);
-
-    hItem = GetDlgItem(This->hDialog, 104);
-    if( hItem )
-        SendMessageW(hItem,WM_SETTEXT, 0, (LPARAM) szStatusText);
-
-    SetLastError(0);
-    r = GetWindowLongPtrW( This->hDialog, GWLP_USERDATA );
-    if( r || GetLastError() )
-    {
-        *This->pbCancelled = TRUE;
-        ERR("Cancelled\n");
-        return E_ABORT;
-    }
-
-    return S_OK;
-}
-
-static HRESULT WINAPI
-dlOnStopBinding( IBindStatusCallback* iface, HRESULT hresult, LPCWSTR szError)
-{
-    ERR("\n");
-    return S_OK;
-}
-
-static HRESULT WINAPI
-dlGetBindInfo( IBindStatusCallback* iface, DWORD* grfBINDF, BINDINFO* pbindinfo)
-{
-    ERR("\n");
-    return S_OK;
-}
-
-static HRESULT WINAPI
-dlOnDataAvailable( IBindStatusCallback* iface, DWORD grfBSCF,
-                   DWORD dwSize, FORMATETC* pformatetc, STGMEDIUM* pstgmed)
-{
-    ERR("\n");
-    return S_OK;
-}
-
-static HRESULT WINAPI
-dlOnObjectAvailable( IBindStatusCallback* iface, REFIID riid, IUnknown* punk)
-{
-    ERR("\n");
-    return S_OK;
-}
-
-static const IBindStatusCallbackVtbl dlVtbl =
-{
-    dlQueryInterface,
-    dlAddRef,
-    dlRelease,
-    dlOnStartBinding,
-    dlGetPriority,
-    dlOnLowResource,
-    dlOnProgress,
-    dlOnStopBinding,
-    dlGetBindInfo,
-    dlOnDataAvailable,
-    dlOnObjectAvailable
-};
-
-static IBindStatusCallback* create_dl(HWND dlg, BOOL *pbCancelled)
-{
-    IBindStatusCallbackImpl *This;
-
-    This = HeapAlloc( GetProcessHeap(), 0, sizeof *This );
-    This->vtbl = &dlVtbl;
-    This->ref = 1;
-    This->hDialog = dlg;
-    This->pbCancelled = pbCancelled;
-
-    return (IBindStatusCallback*) This;
-}
-
-static DWORD WINAPI ThreadFunc( LPVOID info )
-{
-    IBindStatusCallback *dl;
-    static const WCHAR szUrlVal[] = {'M','o','z','i','l','l','a','U','r','l',0};
-    static const WCHAR szFileProtocol[] = {'f','i','l','e',':','/','/','/',0};
-    WCHAR path[MAX_PATH], szUrl[MAX_PATH];
-    LPWSTR p;
-    STARTUPINFOW si;
-    PROCESS_INFORMATION pi;
-    HWND hDlg = info;
-    DWORD r, sz, type;
-    HKEY hkey;
-    BOOL bCancelled = FALSE;
-    BOOL bTempfile = FALSE;
-
-    /* find the name of the thing to download */
-    szUrl[0] = 0;
-    /* @@ Wine registry key: HKCU\Software\Wine\shdocvw */
-    r = RegOpenKeyW( HKEY_LOCAL_MACHINE, szMozDlPath, &hkey );
-    if( r == ERROR_SUCCESS )
-    {
-        sz = MAX_PATH;
-        r = RegQueryValueExW( hkey, szUrlVal, NULL, &type, (LPBYTE)szUrl, &sz );
-        RegCloseKey( hkey );
-    }
-    if( r != ERROR_SUCCESS )
-        goto end;
-
-    if( !strncmpW(szUrl, szFileProtocol, strlenW(szFileProtocol)) )
-        lstrcpynW( path, szUrl+strlenW(szFileProtocol), MAX_PATH );
-    else
-    {
-        /* built the path for the download */
-        p = strrchrW( szUrl, '/' );
-        if (!p)
-            goto end;
-        if (!GetTempPathW( MAX_PATH, path ))
-            goto end;
-        strcatW( path, p+1 );
-
-        /* download it */
-        bTempfile = TRUE;
-        dl = create_dl(info, &bCancelled);
-        r = URLDownloadToFileW( NULL, szUrl, path, 0, dl );
-        if( dl )
-            IBindStatusCallback_Release( dl );
-        if( (r != S_OK) || bCancelled )
-            goto end;
-    }
-
-    /* run it */
-    memset( &si, 0, sizeof si );
-    si.cb = sizeof si;
-    r = CreateProcessW( path, NULL, NULL, NULL, 0, 0, NULL, NULL, &si, &pi );
-    if( !r )
-        goto end;
-    WaitForSingleObject( pi.hProcess, INFINITE );
-    CloseHandle( pi.hProcess );
-    CloseHandle( pi.hThread );
-
-end:
-    if( bTempfile )
-        DeleteFileW( path );
-    EndDialog( hDlg, 0 );
-    return 0;
-}
-
-static INT_PTR CALLBACK
-dlProc ( HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-    HANDLE hThread;
-    DWORD ThreadId;
-    HWND hItem;
-
-    switch (uMsg)
-    {
-    case WM_INITDIALOG:
-        SetWindowLongPtrW( hwndDlg, GWLP_USERDATA, 0 );
-        hItem = GetDlgItem(hwndDlg, 1000);
-        if( hItem )
-        {
-            SendMessageW(hItem,PBM_SETRANGE,0,MAKELPARAM(0,100));
-            SendMessageW(hItem,PBM_SETPOS,0,0);
-        }
-        hThread = CreateThread(NULL,0,ThreadFunc,hwndDlg,0,&ThreadId);
-        if (!hThread)
-            return FALSE;
-        return TRUE;
-    case WM_COMMAND:
-        if( wParam == IDCANCEL )
-            SetWindowLongPtrW( hwndDlg, GWLP_USERDATA, 1 );
-        return FALSE;
-    default:
-        return FALSE;
-    }
-}
-
-static BOOL SHDOCVW_TryDownloadMozillaControl(void)
-{
-    DWORD r;
-    WCHAR buf[0x100];
-    static const WCHAR szTitle[] = { 'R','e','a','c','t','O','S',0 };
-    HANDLE hsem;
-	BOOL ret = TRUE;
-
-    SetLastError( ERROR_SUCCESS );
-    hsem = CreateSemaphoreA( NULL, 0, 1, "mozctl_install_semaphore");
-    if( GetLastError() != ERROR_ALREADY_EXISTS )
-    {
-        LoadStringW( shdocvw_hinstance, 1001, buf, sizeof buf/sizeof(WCHAR) );
-        r = MessageBoxW(NULL, buf, szTitle, MB_YESNO | MB_ICONQUESTION);
-        if( r == IDYES )
-			DialogBoxW(shdocvw_hinstance, MAKEINTRESOURCEW(100), 0, dlProc);
-		else
-			ret = FALSE;
-    }
-    else
-        WaitForSingleObject( hsem, INFINITE );
-
-    ReleaseSemaphore( hsem, 1, NULL );
-    CloseHandle( hsem );
-
-    return ret;
-}
-
-static BOOL SHDOCVW_TryLoadMozillaControl(void)
-{
-    WCHAR szPath[MAX_PATH];
-    BOOL bTried = FALSE;
-
-    if( hMozCtl != (HMODULE)~0UL )
-        return hMozCtl ? TRUE : FALSE;
-
-    while( 1 )
-    {
-        if( SHDOCVW_GetMozctlPath( szPath, sizeof szPath ) )
-        {
-            hMozCtl = LoadLibraryExW(szPath, NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
-            if( hMozCtl )
-                return TRUE;
-        }
-        if( bTried )
-        {
-            MESSAGE("You need to install the Mozilla ActiveX control to\n");
-            MESSAGE("use ReactOS's builtin CLSID_WebBrowser from SHDOCVW.DLL\n");
-            return FALSE;
-        }
-        SHDOCVW_TryDownloadMozillaControl();
-        bTried = TRUE;
-    }
-}
-
-/*************************************************************************
- *              DllGetClassObject (SHDOCVW.@)
- */
-HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
-{
-    TRACE("\n");
-
-    if( IsEqualGUID( &CLSID_WebBrowser, rclsid ) &&
-        SHDOCVW_TryLoadMozillaControl() )
-    {
-        HRESULT r;
-        fnGetClassObject pGetClassObject;
-
-        TRACE("WebBrowser class %s\n", debugstr_guid(rclsid) );
-
-        pGetClassObject = (fnGetClassObject)
-            GetProcAddress( hMozCtl, "DllGetClassObject" );
-
-        if( !pGetClassObject )
-            return CLASS_E_CLASSNOTAVAILABLE;
-        r = pGetClassObject( &CLSID_MozillaBrowser, riid, ppv );
-
-        TRACE("r = %08lx  *ppv = %p\n", r, *ppv );
-
-        return r;
-    }
-
-    if (IsEqualCLSID(&CLSID_WebBrowser, rclsid) &&
-        IsEqualIID(&IID_IClassFactory, riid))
-    {
-        /* Pass back our shdocvw class factory */
-        *ppv = (LPVOID)&SHDOCVW_ClassFactory;
-        IClassFactory_AddRef((IClassFactory*)&SHDOCVW_ClassFactory);
-
-        return S_OK;
-    }
-
-    /* As a last resort, figure if the CLSID belongs to a 'Shell Instance Object' */
-    return SHDOCVW_GetShellInstanceObjectClassObject(rclsid, riid, ppv);
+    return SHDOCVW_refCount ? S_FALSE : S_OK;
 }
 
 /***********************************************************************
@@ -527,7 +128,7 @@ HRESULT WINAPI DllInstall(BOOL bInstall, LPCWSTR cmdline)
  *
  * makes sure the handle to shell32 is valid
  */
- BOOL SHDOCVW_LoadShell32(void)
+static BOOL SHDOCVW_LoadShell32(void)
 {
      if (SHDOCVW_hshell32)
        return TRUE;
@@ -562,7 +163,7 @@ BOOL WINAPI ShellDDEInit(BOOL start)
     {
       if (!SHDOCVW_LoadShell32())
         return FALSE;
-      pShellDDEInit = GetProcAddress(SHDOCVW_hshell32, (LPCSTR)188);
+      pShellDDEInit = (void *)GetProcAddress(SHDOCVW_hshell32, (LPCSTR)188);
     }
 
     if (pShellDDEInit)
@@ -588,6 +189,220 @@ DWORD WINAPI RunInstallUninstallStubs(void)
  */
 DWORD WINAPI SetQueryNetSessionCount(DWORD arg)
 {
-    FIXME("(%lu), stub!\n", arg);
+    FIXME("(%u), stub!\n", arg);
     return 0;
+}
+
+/**********************************************************************
+ * OpenURL  (SHDOCVW.@)
+ */
+void WINAPI OpenURL(HWND hWnd, HINSTANCE hInst, LPCSTR lpcstrUrl, int nShowCmd)
+{
+    FIXME("%p %p %s %d\n", hWnd, hInst, debugstr_a(lpcstrUrl), nShowCmd);
+}
+
+/**********************************************************************
+ * Some forwards (by ordinal) to SHLWAPI
+ */
+
+static void* fetch_shlwapi_ordinal(UINT_PTR ord)
+{
+    static const WCHAR shlwapiW[] = {'s','h','l','w','a','p','i','.','d','l','l','\0'};
+    static HANDLE h;
+
+    if (!h && !(h = GetModuleHandleW(shlwapiW))) return NULL;
+    return (void*)GetProcAddress(h, (const char*)ord);
+}
+
+/******************************************************************
+ *		WhichPlatformFORWARD            (SHDOCVW.@)
+ */
+DWORD WINAPI WhichPlatformFORWARD(void)
+{
+    static DWORD (WINAPI *p)(void);
+
+    if (p || (p = fetch_shlwapi_ordinal(276))) return p();
+    return 1; /* not integrated, see shlwapi.WhichPlatform */
+}
+
+/******************************************************************
+ *		StopWatchModeFORWARD            (SHDOCVW.@)
+ */
+void WINAPI StopWatchModeFORWARD(void)
+{
+    static void (WINAPI *p)(void);
+
+    if (p || (p = fetch_shlwapi_ordinal(241))) p();
+}
+
+/******************************************************************
+ *		StopWatchFlushFORWARD            (SHDOCVW.@)
+ */
+void WINAPI StopWatchFlushFORWARD(void)
+{
+    static void (WINAPI *p)(void);
+
+    if (p || (p = fetch_shlwapi_ordinal(242))) p();
+}
+
+/******************************************************************
+ *		StopWatchWFORWARD            (SHDOCVW.@)
+ */
+DWORD WINAPI StopWatchWFORWARD(DWORD dwClass, LPCWSTR lpszStr, DWORD dwUnknown,
+                               DWORD dwMode, DWORD dwTimeStamp)
+{
+    static DWORD (WINAPI *p)(DWORD, LPCWSTR, DWORD, DWORD, DWORD);
+
+    if (p || (p = fetch_shlwapi_ordinal(243)))
+        return p(dwClass, lpszStr, dwUnknown, dwMode, dwTimeStamp);
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+/******************************************************************
+ *		StopWatchAFORWARD            (SHDOCVW.@)
+ */
+DWORD WINAPI StopWatchAFORWARD(DWORD dwClass, LPCSTR lpszStr, DWORD dwUnknown,
+                               DWORD dwMode, DWORD dwTimeStamp)
+{
+    static DWORD (WINAPI *p)(DWORD, LPCSTR, DWORD, DWORD, DWORD);
+
+    if (p || (p = fetch_shlwapi_ordinal(244)))
+        return p(dwClass, lpszStr, dwUnknown, dwMode, dwTimeStamp);
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+/******************************************************************
+ *  URLSubRegQueryA (SHDOCVW.151)
+ */
+HRESULT WINAPI URLSubRegQueryA(LPCSTR regpath, LPCSTR name, DWORD type,
+                               LPSTR out, DWORD outlen, DWORD unknown)
+{
+    CHAR buffer[INTERNET_MAX_URL_LENGTH];
+    DWORD len;
+    LONG res;
+
+    TRACE("(%s, %s, %d, %p, %d, %d)\n", debugstr_a(regpath), debugstr_a(name),
+            type, out, outlen, unknown);
+
+    if (!out) return S_OK;
+
+    len = sizeof(buffer);
+    res = SHRegGetUSValueA(regpath, name, NULL, buffer,  &len, FALSE, NULL, 0);
+    if (!res) {
+        lstrcpynA(out, buffer, outlen);
+        return S_OK;
+    }
+
+    return E_FAIL;
+}
+
+/******************************************************************
+ *  ParseURLFromOutsideSourceW (SHDOCVW.170)
+ */
+DWORD WINAPI ParseURLFromOutsideSourceW(LPCWSTR url, LPWSTR out, LPDWORD plen, LPDWORD unknown)
+{
+    WCHAR buffer_in[INTERNET_MAX_URL_LENGTH];
+    WCHAR buffer_out[INTERNET_MAX_URL_LENGTH];
+    LPCWSTR ptr = url;
+    HRESULT hr;
+    DWORD needed;
+    DWORD len;
+    DWORD res = 0;
+
+
+    TRACE("(%s, %p, %p, %p) len: %d, unknown: 0x%x\n", debugstr_w(url), out, plen, unknown,
+            plen ? *plen : 0, unknown ? *unknown : 0);
+
+    if (!PathIsURLW(ptr)) {
+        len = sizeof(buffer_in) / sizeof(buffer_in[0]);
+        buffer_in[0] = 0;
+        hr = UrlApplySchemeW(ptr, buffer_in, &len, URL_APPLY_GUESSSCHEME);
+        TRACE("got 0x%x with %s\n", hr, debugstr_w(buffer_in));
+        if (hr != S_OK) {
+            /* when we can't guess the scheme, use the default scheme */
+            len = sizeof(buffer_in) / sizeof(buffer_in[0]);
+            hr = UrlApplySchemeW(ptr, buffer_in, &len, URL_APPLY_DEFAULT);
+        }
+
+        if (hr == S_OK) {
+            /* we parsed the url to buffer_in */
+            ptr = buffer_in;
+        }
+        else
+        {
+            FIXME("call search hook for %s\n", debugstr_w(ptr));
+        }
+    }
+
+    len = sizeof(buffer_out) / sizeof(buffer_out[0]);
+    buffer_out[0] = '\0';
+    hr = UrlCanonicalizeW(ptr, buffer_out, &len, URL_ESCAPE_SPACES_ONLY);
+    needed = lstrlenW(buffer_out)+1;
+    TRACE("got 0x%x with %s (need %d)\n", hr, debugstr_w(buffer_out), needed);
+
+    if (*plen >= needed) {
+        if (out != NULL) {
+            lstrcpyW(out, buffer_out);
+            res++;
+        }
+        needed--;
+    }
+
+    *plen = needed;
+
+    TRACE("=> %d\n", res);
+    return res;
+}
+
+/******************************************************************
+ *  ParseURLFromOutsideSourceA (SHDOCVW.169)
+ *
+ * See ParseURLFromOutsideSourceW
+ */
+DWORD WINAPI ParseURLFromOutsideSourceA(LPCSTR url, LPSTR out, LPDWORD plen, LPDWORD unknown)
+{
+    WCHAR buffer[INTERNET_MAX_URL_LENGTH];
+    LPWSTR urlW = NULL;
+    DWORD needed;
+    DWORD res;
+    DWORD len;
+
+    TRACE("(%s, %p, %p, %p) len: %d, unknown: 0x%x\n", debugstr_a(url), out, plen, unknown,
+            plen ? *plen : 0, unknown ? *unknown : 0);
+
+    if (url) {
+        len = MultiByteToWideChar(CP_ACP, 0, url, -1, NULL, 0);
+        urlW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        MultiByteToWideChar(CP_ACP, 0, url, -1, urlW, len);
+    }
+
+    len = sizeof(buffer) / sizeof(buffer[0]);
+    res = ParseURLFromOutsideSourceW(urlW, buffer, &len, unknown);
+    HeapFree(GetProcessHeap(), 0, urlW);
+
+    needed = WideCharToMultiByte(CP_ACP, 0, buffer, -1, NULL, 0, NULL, NULL);
+
+    res = 0;
+    if (*plen >= needed) {
+        if (out != NULL) {
+            WideCharToMultiByte(CP_ACP, 0, buffer, -1, out, *plen, NULL, NULL);
+            res = needed;
+        }
+        needed--;
+    }
+
+    *plen = needed;
+
+    TRACE("=> %d\n", res);
+    return res;
+}
+
+/******************************************************************
+ *  IEParseDisplayNameWithBCW (SHDOCVW.218)
+ */
+HRESULT WINAPI IEParseDisplayNameWithBCW(DWORD codepage, LPCWSTR lpszDisplayName, LPBC pbc, LPITEMIDLIST *ppidl)
+{
+    /* Guessing at parameter 3 based on IShellFolder's  ParseDisplayName */
+    FIXME("stub: 0x%x %s %p %p\n",codepage,debugstr_w(lpszDisplayName),pbc,ppidl);
+    return E_FAIL;
 }

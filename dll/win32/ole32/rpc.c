@@ -1,7 +1,7 @@
 /*
  *	RPC Manager
  *
- * Copyright 2001  Ove Kåven, TransGaming Technologies
+ * Copyright 2001  Ove KÃ¥ven, TransGaming Technologies
  * Copyright 2002  Marcus Meissner
  * Copyright 2005  Mike Hearn, Rob Shearman for CodeWeavers
  *
@@ -568,7 +568,7 @@ static HRESULT WINAPI ServerRpcChannelBuffer_GetBuffer(LPRPCCHANNELBUFFER iface,
     /* save away the message state again */
     msg->Handle = message_state;
 
-    TRACE("-- %ld\n", status);
+    TRACE("-- %d\n", status);
 
     return HRESULT_FROM_WIN32(status);
 }
@@ -751,7 +751,7 @@ static HRESULT WINAPI ClientRpcChannelBuffer_GetBuffer(LPRPCCHANNELBUFFER iface,
 
     HeapFree(GetProcessHeap(), 0, channel_hook_data);
 
-    TRACE("-- %ld\n", status);
+    TRACE("-- %d\n", status);
 
     return HRESULT_FROM_WIN32(status);
 }
@@ -771,7 +771,7 @@ static DWORD WINAPI rpc_sendreceive_thread(LPVOID param)
      * RPC functions do */
     data->status = I_RpcSendReceive((RPC_MESSAGE *)data->msg);
 
-    TRACE("completed with status 0x%lx\n", data->status);
+    TRACE("completed with status 0x%x\n", data->status);
 
     SetEvent(data->handle);
 
@@ -893,7 +893,7 @@ static HRESULT WINAPI ClientRpcChannelBuffer_SendReceive(LPRPCCHANNELBUFFER ifac
     orpcthat.flags = ORPCF_NULL;
     orpcthat.extensions = NULL;
 
-    TRACE("RPC call status: 0x%lx\n", status);
+    TRACE("RPC call status: 0x%x\n", status);
     if (status != RPC_S_OK)
         hr = HRESULT_FROM_WIN32(status);
 
@@ -967,7 +967,7 @@ static HRESULT WINAPI ServerRpcChannelBuffer_FreeBuffer(LPRPCCHANNELBUFFER iface
 
     msg->Handle = message_state;
 
-    TRACE("-- %ld\n", status);
+    TRACE("-- %d\n", status);
 
     return HRESULT_FROM_WIN32(status);
 }
@@ -1003,7 +1003,7 @@ static HRESULT WINAPI ClientRpcChannelBuffer_FreeBuffer(LPRPCCHANNELBUFFER iface
         IRpcChannelBuffer_Release(message_state->params.chan);
     HeapFree(GetProcessHeap(), 0, message_state);
 
-    TRACE("-- %ld\n", status);
+    TRACE("-- %d\n", status);
 
     return HRESULT_FROM_WIN32(status);
 }
@@ -1104,7 +1104,7 @@ HRESULT RPC_CreateClientChannel(const OXID *oxid, const IPID *ipid,
 
     if (status != RPC_S_OK)
     {
-        ERR("Couldn't get binding for endpoint %s, status = %ld\n", debugstr_w(endpoint), status);
+        ERR("Couldn't get binding for endpoint %s, status = %d\n", debugstr_w(endpoint), status);
         return HRESULT_FROM_WIN32(status);
     }
 
@@ -1536,7 +1536,7 @@ HRESULT RPC_RegisterInterface(REFIID riid)
                 list_add_tail(&registered_interfaces, &rif->entry);
             else
             {
-                ERR("RpcServerRegisterIfEx failed with error %ld\n", status);
+                ERR("RpcServerRegisterIfEx failed with error %d\n", status);
                 HeapFree(GetProcessHeap(), 0, rif);
                 hr = HRESULT_FROM_WIN32(status);
             }
@@ -1584,7 +1584,7 @@ HRESULT RPC_ResolveOxid(OXID oxid, OXID_INFO *oxid_info)
     oxid_info->ipidRemUnknown.Data1 = 0xffffffff;
     oxid_info->ipidRemUnknown.Data2 = 0xffff;
     oxid_info->ipidRemUnknown.Data3 = 0xffff;
-    memcpy(&oxid_info->ipidRemUnknown.Data4, &oxid, sizeof(OXID));
+    memcpy(oxid_info->ipidRemUnknown.Data4, &oxid, sizeof(OXID));
     oxid_info->psa = NULL /* FIXME */;
 
     return S_OK;
@@ -1861,6 +1861,7 @@ static DWORD WINAPI local_server_thread(LPVOID param)
     BOOL multi_use = lsp->multi_use;
     OVERLAPPED ovl;
     HANDLE pipe_event;
+    DWORD  bytes;
 
     TRACE("Starting threader for %s.\n",debugstr_guid(&lsp->clsid));
 
@@ -1929,7 +1930,7 @@ static DWORD WINAPI local_server_thread(LPVOID param)
         }
         
         WriteFile(hPipe,buffer,buflen,&res,&ovl);
-        GetOverlappedResult(hPipe, &ovl, NULL, TRUE);
+        GetOverlappedResult(hPipe, &ovl, &bytes, TRUE);
         HeapFree(GetProcessHeap(),0,buffer);
 
         FlushFileBuffers(hPipe);

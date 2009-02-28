@@ -1156,7 +1156,7 @@ BOOL WINAPI PathFileExistsDefExtA(LPSTR lpszPath,DWORD dwWhich)
  *
  * Internal helper for SHLWAPI_PathFindOnPathExA/W.
  */
-static BOOL WINAPI SHLWAPI_PathFindInOtherDirs(LPWSTR lpszFile, DWORD dwWhich)
+static BOOL SHLWAPI_PathFindInOtherDirs(LPWSTR lpszFile, DWORD dwWhich)
 {
   static const WCHAR szSystem[] = { 'S','y','s','t','e','m','\0'};
   static const WCHAR szPath[] = { 'P','A','T','H','\0'};
@@ -1792,7 +1792,7 @@ BOOL WINAPI PathFileExistsAndAttributesW(LPCWSTR lpszPath, DWORD *dwAttr)
 /*************************************************************************
  * PathMatchSingleMaskA	[internal]
  */
-static BOOL WINAPI PathMatchSingleMaskA(LPCSTR name, LPCSTR mask)
+static BOOL PathMatchSingleMaskA(LPCSTR name, LPCSTR mask)
 {
   while (*name && *mask && *mask!=';')
   {
@@ -1826,7 +1826,7 @@ static BOOL WINAPI PathMatchSingleMaskA(LPCSTR name, LPCSTR mask)
 /*************************************************************************
  * PathMatchSingleMaskW	[internal]
  */
-static BOOL WINAPI PathMatchSingleMaskW(LPCWSTR name, LPCWSTR mask)
+static BOOL PathMatchSingleMaskW(LPCWSTR name, LPCWSTR mask)
 {
   while (*name && *mask && *mask != ';')
   {
@@ -2991,7 +2991,7 @@ UINT WINAPI PathGetCharTypeW(WCHAR ch)
  *
  * Internal helper for PathMakeSystemFolderW.
  */
-static BOOL WINAPI SHLWAPI_UseSystemForSystemFolders(void)
+static BOOL SHLWAPI_UseSystemForSystemFolders(void)
 {
   static BOOL bCheckedReg = FALSE;
   static BOOL bUseSystemForSystemFolders = FALSE;

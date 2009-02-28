@@ -31,11 +31,11 @@ TlsAlloc(VOID)
 
     /* Try to get regular TEB slot. */
     Index = RtlFindClearBitsAndSet(NtCurrentPeb()->TlsBitmap, 1, 0);
-    if (Index == ~0)
+    if (Index == ~0U)
     {
         /* If it fails, try to find expansion TEB slot. */
         Index = RtlFindClearBitsAndSet(NtCurrentPeb()->TlsExpansionBitmap, 1, 0);
-        if (Index != ~0)
+        if (Index != ~0U)
         {
             if (NtCurrentTeb()->TlsExpansionSlots == NULL)
             {

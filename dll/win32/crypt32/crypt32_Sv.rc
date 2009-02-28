@@ -19,7 +19,7 @@
  */
 #pragma code_page(65001)
 
-LANGUAGE LANG_SWEDISH, SUBLANG_DEFAULT
+LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 
 STRINGTABLE DISCARDABLE
 {
@@ -159,11 +159,6 @@ STRINGTABLE DISCARDABLE
     IDS_IPSEC_IKE_INTERMEDIATE "IP security IKE intermediate"
     IDS_FILE_RECOVERY "File Recovery"
     IDS_ROOT_LIST_SIGNER "Root List Signer"
-    IDS_ANY_APPLICATION_POLICIES "All application policies"
-    IDS_DS_EMAIL_REPLICATION "Directory Service Email Replication"
-    IDS_ENROLLMENT_AGENT "Certificate Request Agent"
-    IDS_LIFETIME_SIGNING "Lifetime Signing"
-    IDS_ANY_CERT_POLICY "All issuance policies"
 }
 
 #pragma code_page(default)

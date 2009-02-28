@@ -1,11 +1,10 @@
-<module name="msvcrt" type="win32dll" baseaddress="${BASEADDRESS_MSVCRT}" mangledsymbols="true" installbase="system32" installname="msvcrt.dll">
+<module name="msvcrt" type="win32dll" baseaddress="${BASEADDRESS_MSVCRT}" mangledsymbols="true" installbase="system32" installname="msvcrt.dll" iscrt="yes">
 	<importlibrary definition="msvcrt.def" />
 	<include base="msvcrt">.</include>
 	<include base="crt">include</include>
 	<define name="_DISABLE_TIDENTS" />
-	<define name="_WIN32_IE">0x600</define>
-	<define name="_WIN32_WINNT">0x501</define>
 	<define name="USE_MSVCRT_PREFIX" />
+	<define name="_MSVCRT_" />
 	<define name="_MSVCRT_LIB_" />
 	<define name="_MT" />
 	<define name="__NO_CTYPE_INLINES" />
@@ -21,6 +20,7 @@
 	<library>wine</library>
 	<library>kernel32</library>
 	<library>ntdll</library>
+	<library>pseh</library>
 	<pch>precomp.h</pch>
 	<file>dllmain.c</file>
 	<file>msvcrt.rc</file>

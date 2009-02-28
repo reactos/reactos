@@ -177,7 +177,7 @@ FilenameW2A_N(
  * @implemented
  */
 VOID
-STDCALL
+WINAPI
 SetFileApisToOEM(VOID)
 {
     /* Set the correct Base Api */
@@ -192,7 +192,7 @@ SetFileApisToOEM(VOID)
  * @implemented
  */
 VOID
-STDCALL
+WINAPI
 SetFileApisToANSI(VOID)
 {
     /* Set the correct Base Api */
@@ -206,7 +206,7 @@ SetFileApisToANSI(VOID)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 AreFileApisANSI(VOID)
 {
    return bIsFileApiAnsi;
@@ -216,7 +216,7 @@ AreFileApisANSI(VOID)
 /*
  * @implemented
  */
-HFILE STDCALL
+HFILE WINAPI
 OpenFile(LPCSTR lpFileName,
 	 LPOFSTRUCT lpReOpenBuff,
 	 UINT uStyle)
@@ -236,8 +236,55 @@ OpenFile(LPCSTR lpFileName,
 
 	if (lpReOpenBuff == NULL)
 	{
-		return FALSE;
+		return HFILE_ERROR;
 	}
+
+    lpReOpenBuff->cBytes = sizeof(OFSTRUCT);
+    lpReOpenBuff->nErrCode = 0;
+
+	if (uStyle & OF_REOPEN) lpFileName = lpReOpenBuff->szPathName;
+
+	if (!lpFileName)
+	{
+		return HFILE_ERROR;
+	}
+
+	if (!GetFullPathNameA(lpFileName,
+						  sizeof(lpReOpenBuff->szPathName),
+						  lpReOpenBuff->szPathName,
+						  NULL))
+	{
+	    lpReOpenBuff->nErrCode = GetLastError();
+		return HFILE_ERROR;
+	}
+
+    if (uStyle & OF_PARSE)
+    {
+        lpReOpenBuff->fFixedDisk = (GetDriveTypeA(lpReOpenBuff->szPathName) != DRIVE_REMOVABLE);
+        TRACE("(%s): OF_PARSE, res = '%s'\n", lpFileName, lpReOpenBuff->szPathName);
+        return 0;
+    }
+
+    if ((uStyle & OF_EXIST) && !(uStyle & OF_CREATE))
+    {
+        DWORD dwAttributes = GetFileAttributesA(lpReOpenBuff->szPathName);
+
+        switch (dwAttributes)
+        {
+            case 0xFFFFFFFF: /* File does not exist */
+                SetLastError(ERROR_FILE_NOT_FOUND);
+                lpReOpenBuff->nErrCode = (WORD) ERROR_FILE_NOT_FOUND;
+                return -1;
+
+            case FILE_ATTRIBUTE_DIRECTORY:
+                SetLastError(ERROR_ACCESS_DENIED);
+                lpReOpenBuff->nErrCode = (WORD) ERROR_ACCESS_DENIED;
+                return -1;
+
+            default:
+                return 1;
+        }
+    }
 
 	if ((uStyle & OF_CREATE) == OF_CREATE)
 	{
@@ -280,8 +327,20 @@ OpenFile(LPCSTR lpFileName,
 
 	if (Len == 0 || Len > OFS_MAXPATHNAME)
 	{
+		lpReOpenBuff->nErrCode = GetLastError();
 		return (HFILE)INVALID_HANDLE_VALUE;
 	}
+
+    if (uStyle & OF_DELETE)
+    {
+        if (!DeleteFileW(PathNameW))
+		{
+			lpReOpenBuff->nErrCode = GetLastError();
+			return HFILE_ERROR;
+		}
+        TRACE("(%s): OF_DELETE return = OK\n", lpFileName);
+        return TRUE;
+    }
 
 	FileName.Buffer = lpReOpenBuff->szPathName;
 	FileName.Length = 0;
@@ -306,14 +365,6 @@ OpenFile(LPCSTR lpFileName,
 	// FILE_SHARE_READ
 	// FILE_NO_INTERMEDIATE_BUFFERING
 
-	if ((uStyle & OF_PARSE) == OF_PARSE)
-	{
-		RtlFreeHeap(RtlGetProcessHeap(),
-                            0,
-                            FileNameString.Buffer);
-		return (HFILE)NULL;
-	}
-
 	ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
 	ObjectAttributes.RootDirectory = NULL;
 	ObjectAttributes.ObjectName = &FileNameString;
@@ -328,16 +379,20 @@ OpenFile(LPCSTR lpFileName,
 	                      FILE_SHARE_READ,
 	                      FILE_NON_DIRECTORY_FILE|FILE_SYNCHRONOUS_IO_NONALERT);
 
-	RtlFreeHeap(RtlGetProcessHeap(),
-                    0,
-                    FileNameString.Buffer);
+	RtlFreeHeap(RtlGetProcessHeap(), 0, FileNameString.Buffer);
 
-	lpReOpenBuff->nErrCode = (WORD)RtlNtStatusToDosError(errCode);
+	lpReOpenBuff->nErrCode = RtlNtStatusToDosError(errCode);
 
 	if (!NT_SUCCESS(errCode))
 	{
 		SetLastErrorByStatus (errCode);
 		return (HFILE)INVALID_HANDLE_VALUE;
+	}
+
+	if (uStyle & OF_EXIST)
+	{
+		NtClose(FileHandle);
+		return (HFILE)1;
 	}
 
 	return (HFILE)FileHandle;
@@ -347,7 +402,7 @@ OpenFile(LPCSTR lpFileName,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 FlushFileBuffers(HANDLE hFile)
 {
    NTSTATUS errCode;
@@ -374,7 +429,7 @@ FlushFileBuffers(HANDLE hFile)
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD WINAPI
 SetFilePointer(HANDLE hFile,
            LONG lDistanceToMove,
            PLONG lpDistanceToMoveHigh,
@@ -479,7 +534,7 @@ SetFilePointer(HANDLE hFile,
         *lpDistanceToMoveHigh = FilePosition.CurrentByteOffset.u.HighPart;
      }
 
-   if (FilePosition.CurrentByteOffset.u.LowPart == -1)
+   if (FilePosition.CurrentByteOffset.u.LowPart == -1U)
      {
        /* The value of -1 is valid here, especially when the new
           file position is greater than 4 GB. Since NtSetInformationFile
@@ -497,7 +552,7 @@ SetFilePointer(HANDLE hFile,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 SetFilePointerEx(HANDLE hFile,
 		 LARGE_INTEGER liDistanceToMove,
 		 PLARGE_INTEGER lpNewFilePointer,
@@ -569,7 +624,7 @@ SetFilePointerEx(HANDLE hFile,
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD WINAPI
 GetFileType(HANDLE hFile)
 {
   FILE_FS_DEVICE_INFORMATION DeviceInfo;
@@ -631,7 +686,7 @@ GetFileType(HANDLE hFile)
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD WINAPI
 GetFileSize(HANDLE hFile,
 	    LPDWORD lpFileSizeHigh)
 {
@@ -667,7 +722,7 @@ GetFileSize(HANDLE hFile,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetFileSizeEx(
     HANDLE hFile,
     PLARGE_INTEGER lpFileSize
@@ -697,7 +752,7 @@ GetFileSizeEx(
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD WINAPI
 GetCompressedFileSizeA(LPCSTR lpFileName,
 		       LPDWORD lpFileSizeHigh)
 {
@@ -713,7 +768,7 @@ GetCompressedFileSizeA(LPCSTR lpFileName,
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD WINAPI
 GetCompressedFileSizeW(LPCWSTR lpFileName,
 		       LPDWORD lpFileSizeHigh)
 {
@@ -758,7 +813,7 @@ GetCompressedFileSizeW(LPCWSTR lpFileName,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetFileInformationByHandle(HANDLE hFile,
 			   LPBY_HANDLE_FILE_INFORMATION lpFileInformation)
 {
@@ -852,7 +907,7 @@ GetFileInformationByHandle(HANDLE hFile,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetFileAttributesExW(LPCWSTR lpFileName,
 		     GET_FILEEX_INFO_LEVELS fInfoLevelId,
 		     LPVOID lpFileInformation)
@@ -919,7 +974,7 @@ GetFileAttributesExW(LPCWSTR lpFileName,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetFileAttributesExA(LPCSTR lpFileName,
 		     GET_FILEEX_INFO_LEVELS fInfoLevelId,
 		     LPVOID lpFileInformation)
@@ -936,7 +991,7 @@ GetFileAttributesExA(LPCSTR lpFileName,
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD WINAPI
 GetFileAttributesA(LPCSTR lpFileName)
 {
    WIN32_FILE_ATTRIBUTE_DATA FileAttributeData;
@@ -955,7 +1010,7 @@ GetFileAttributesA(LPCSTR lpFileName)
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD WINAPI
 GetFileAttributesW(LPCWSTR lpFileName)
 {
   WIN32_FILE_ATTRIBUTE_DATA FileAttributeData;
@@ -972,7 +1027,7 @@ GetFileAttributesW(LPCWSTR lpFileName)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetFileAttributesByHandle(IN HANDLE hFile,
                           OUT LPDWORD dwFileAttributes,
                           IN DWORD dwFlags)
@@ -1008,7 +1063,7 @@ GetFileAttributesByHandle(IN HANDLE hFile,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetFileAttributesByHandle(IN HANDLE hFile,
                           IN DWORD dwFileAttributes,
                           IN DWORD dwFlags)
@@ -1054,7 +1109,7 @@ SetFileAttributesByHandle(IN HANDLE hFile,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetFileAttributesA(
    LPCSTR lpFileName,
 	DWORD dwFileAttributes)
@@ -1071,7 +1126,7 @@ SetFileAttributesA(
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetFileAttributesW(LPCWSTR lpFileName,
 		   DWORD dwFileAttributes)
 {
@@ -1240,7 +1295,7 @@ UINT WINAPI GetTempFileNameW( LPCWSTR path, LPCWSTR prefix, UINT unique, LPWSTR 
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetFileTime(HANDLE hFile,
 	    LPFILETIME lpCreationTime,
 	    LPFILETIME lpLastAccessTime,
@@ -1281,7 +1336,7 @@ GetFileTime(HANDLE hFile,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetFileTime(HANDLE hFile,
 	    CONST FILETIME *lpCreationTime,
 	    CONST FILETIME *lpLastAccessTime,
@@ -1337,7 +1392,7 @@ SetFileTime(HANDLE hFile,
  *
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetEndOfFile(HANDLE hFile)
 {
 	IO_STATUS_BLOCK  IoStatusBlock;
@@ -1414,7 +1469,7 @@ SetEndOfFile(HANDLE hFile)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 SetFileValidData(
     HANDLE hFile,
     LONGLONG ValidDataLength
@@ -1448,7 +1503,7 @@ SetFileValidData(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 SetFileShortNameW(
   HANDLE hFile,
   LPCWSTR lpShortName)
@@ -1504,7 +1559,7 @@ SetFileShortNameW(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 SetFileShortNameA(
     HANDLE hFile,
     LPCSTR lpShortName
@@ -1535,7 +1590,7 @@ SetFileShortNameA(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 CheckNameLegalDOS8Dot3W(
     LPCWSTR lpName,
     LPSTR lpOemName OPTIONAL,
@@ -1576,7 +1631,7 @@ CheckNameLegalDOS8Dot3W(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 CheckNameLegalDOS8Dot3A(
     LPCSTR lpName,
     LPSTR lpOemName OPTIONAL,
@@ -1783,6 +1838,169 @@ OpenFileById(IN HANDLE hFile,
 {
     UNIMPLEMENTED;
     return INVALID_HANDLE_VALUE;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+ReplaceFileA(
+    LPCSTR  lpReplacedFileName,
+    LPCSTR  lpReplacementFileName,
+    LPCSTR  lpBackupFileName,
+    DWORD   dwReplaceFlags,
+    LPVOID  lpExclude,
+    LPVOID  lpReserved
+    )
+{
+    WCHAR *replacedW, *replacementW, *backupW = NULL;
+    BOOL ret;
+
+    /* This function only makes sense when the first two parameters are defined */
+    if (!lpReplacedFileName || !(replacedW = FilenameA2W(lpReplacedFileName, TRUE)))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    if (!lpReplacementFileName || !(replacementW = FilenameA2W(lpReplacementFileName, TRUE)))
+    {
+        HeapFree(GetProcessHeap(), 0, replacedW);
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    /* The backup parameter, however, is optional */
+    if (lpBackupFileName)
+    {
+        if (!(backupW = FilenameA2W(lpBackupFileName, TRUE)))
+        {
+            HeapFree(GetProcessHeap(), 0, replacedW);
+            HeapFree(GetProcessHeap(), 0, replacementW);
+            SetLastError(ERROR_INVALID_PARAMETER);
+            return FALSE;
+        }
+    }
+
+    ret = ReplaceFileW(replacedW, replacementW, backupW, dwReplaceFlags, lpExclude, lpReserved);
+    HeapFree(GetProcessHeap(), 0, replacedW);
+    HeapFree(GetProcessHeap(), 0, replacementW);
+    HeapFree(GetProcessHeap(), 0, backupW);
+
+    return ret;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+ReplaceFileW(
+    LPCWSTR lpReplacedFileName,
+    LPCWSTR lpReplacementFileName,
+    LPCWSTR lpBackupFileName,
+    DWORD   dwReplaceFlags,
+    LPVOID  lpExclude,
+    LPVOID  lpReserved
+    )
+{
+    HANDLE hReplaced = NULL, hReplacement = NULL, hBackup = NULL;
+    UNICODE_STRING NtReplacedName, NtReplacementName;
+    DWORD Error = ERROR_SUCCESS;
+    NTSTATUS Status;
+    BOOL Ret = FALSE;
+    IO_STATUS_BLOCK IoStatusBlock;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+
+    if (dwReplaceFlags)
+        FIXME("Ignoring flags %x\n", dwReplaceFlags);
+
+    /* First two arguments are mandatory */
+    if (!lpReplacedFileName || !lpReplacementFileName)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    /* Open the "replaced" file for reading and writing */
+    if (!(RtlDosPathNameToNtPathName_U(lpReplacedFileName, &NtReplacedName, NULL, NULL)))
+    {
+        Error = ERROR_PATH_NOT_FOUND;
+        goto Cleanup;
+    }
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &NtReplacedName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    Status = NtOpenFile(&hReplaced,
+                        GENERIC_READ | GENERIC_WRITE | DELETE | SYNCHRONIZE,
+                        &ObjectAttributes,
+                        &IoStatusBlock,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                        FILE_SYNCHRONOUS_IO_NONALERT | FILE_NON_DIRECTORY_FILE);
+
+    if (!NT_SUCCESS(Status))
+    {
+        if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
+            Error = ERROR_FILE_NOT_FOUND;
+        else
+            Error = ERROR_UNABLE_TO_REMOVE_REPLACED;
+        goto Cleanup;
+    }
+
+    /*
+     * Open the replacement file for reading, writing, and deleting
+     * (writing and deleting are needed when finished)
+     */
+    if (!(RtlDosPathNameToNtPathName_U(lpReplacementFileName, &NtReplacementName, NULL, NULL)))
+    {
+        Error = ERROR_PATH_NOT_FOUND;
+        goto Cleanup;
+    }
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &NtReplacementName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    Status = NtOpenFile(&hReplacement,
+                        GENERIC_READ | GENERIC_WRITE | DELETE | WRITE_DAC | SYNCHRONIZE,
+                        &ObjectAttributes,
+                        &IoStatusBlock,
+                        0,
+                        FILE_SYNCHRONOUS_IO_NONALERT | FILE_NON_DIRECTORY_FILE);
+
+    if (!NT_SUCCESS(Status))
+    {
+        Error = RtlNtStatusToDosError(Status);
+        goto Cleanup;
+    }
+
+    /* Not success :( */
+    FIXME("ReplaceFileW not implemented, but it is returned TRUE!\n");
+    Ret = TRUE;
+
+    /* Perform resource cleanup */
+Cleanup:
+    if (hBackup) NtClose(hBackup);
+    if (hReplaced) NtClose(hReplaced);
+    if (hReplacement) NtClose(hReplacement);
+
+    RtlFreeUnicodeString(&NtReplacementName);
+    RtlFreeUnicodeString(&NtReplacedName);
+
+    /* If there was an error, set the error code */
+    if(!Ret)
+    {
+        TRACE("ReplaceFileW failed (error=%d)\n", Error);
+        SetLastError(Error);
+    }
+    return Ret;
 }
 
 /* EOF */

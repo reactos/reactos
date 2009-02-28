@@ -296,6 +296,11 @@ GetFreeBytesShare(LARGE_INTEGER TotalNumberOfFreeBytes, LARGE_INTEGER TotalNumbe
 {
    LARGE_INTEGER Temp, Result, Remainder;
 
+   if (TotalNumberOfFreeBytes.QuadPart == 0LL)
+   {
+      return ConvertUlongToLargeInteger(0);
+   }
+
    Temp = LargeIntegerDivide(TotalNumberOfBytes, ConvertUlongToLargeInteger(100), &Remainder);
    if (Temp.QuadPart >= TotalNumberOfFreeBytes.QuadPart)
    {
@@ -350,11 +355,11 @@ PaintStaticControls(HWND hwndDlg, LPDRAWITEMSTRUCT drawItem)
       horzsize = rect.right - rect.left;
       Result.QuadPart = (Result.QuadPart * horzsize) / 100;
 
-      rect.right = rect.left + Result.QuadPart;
-      FillRect(drawItem->hDC, &rect, hMagBrush);
+      rect.right = drawItem->rcItem.right - Result.QuadPart;
+      FillRect(drawItem->hDC, &rect, hBlueBrush);
       rect.left = rect.right;
       rect.right = drawItem->rcItem.right;
-      FillRect(drawItem->hDC, &rect, hBlueBrush);
+      FillRect(drawItem->hDC, &rect, hMagBrush);
       DeleteObject(hBlueBrush);
       DeleteObject(hMagBrush);
    }
@@ -388,7 +393,7 @@ InitializeGeneralDriveDialog(HWND hwndDlg, WCHAR * szDrive)
    }
 
    DriveType = GetDriveTypeW(szDrive);
-   if (DriveType == DRIVE_FIXED)
+   if (DriveType == DRIVE_FIXED || DriveType == DRIVE_CDROM)
    {
 
       if(GetDiskFreeSpaceExW(szDrive, &FreeBytesAvailable, (PULARGE_INTEGER)&TotalNumberOfBytes, (PULARGE_INTEGER)&TotalNumberOfFreeBytes))
@@ -650,11 +655,12 @@ struct
 {
    LPSTR resname;
    DLGPROC dlgproc;
+   UINT DriveType;
 } PropPages[] =
 {
-    { "DRIVE_GENERAL_DLG", DriveGeneralDlg },
-    { "DRIVE_EXTRA_DLG", DriveExtraDlg },
-    { "DRIVE_HARDWARE_DLG", DriveHardwareDlg },
+    { "DRIVE_GENERAL_DLG", DriveGeneralDlg, -1},
+    { "DRIVE_EXTRA_DLG", DriveExtraDlg, DRIVE_FIXED},
+    { "DRIVE_HARDWARE_DLG", DriveHardwareDlg, -1},
 };
 
 HRESULT
@@ -678,9 +684,10 @@ SH_ShowDriveProperties(WCHAR * drive, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST * 
    PROPSHEETHEADERW psh;
    BOOL ret;
    UINT i;
-   WCHAR szName[MAX_PATH];
+   WCHAR szName[MAX_PATH+6];
    DWORD dwMaxComponent, dwFileSysFlags;
    IDataObject * pDataObj = NULL;
+   UINT DriveType;
 
    ZeroMemory(&psh, sizeof(PROPSHEETHEADERW));
    psh.dwSize = sizeof(PROPSHEETHEADERW);
@@ -688,7 +695,6 @@ SH_ShowDriveProperties(WCHAR * drive, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST * 
    psh.hwndParent = NULL;
    psh.nStartPage = 0;
    psh.phpage = hpsp;
-
 
    if (GetVolumeInformationW(drive, szName, sizeof(szName)/sizeof(WCHAR), NULL, &dwMaxComponent,
                              &dwFileSysFlags, NULL, 0))
@@ -700,8 +706,8 @@ SH_ShowDriveProperties(WCHAR * drive, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST * 
           /* FIXME
            * check if disk is a really a local hdd 
            */
-          i = LoadStringW(shell32_hInstance, IDS_DRIVE_FIXED, szName, sizeof(szName)/sizeof(WCHAR));
-          if (i > 0 && i < (sizeof(szName)/sizeof(WCHAR)) + 6)
+          i = LoadStringW(shell32_hInstance, IDS_DRIVE_FIXED, szName, sizeof(szName)/sizeof(WCHAR)-6);
+          if (i > 0 && i < (sizeof(szName)/sizeof(WCHAR)) - 6)
           {
               szName[i] = L' ';
               szName[i+1] = L'(';
@@ -712,15 +718,20 @@ SH_ShowDriveProperties(WCHAR * drive, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST * 
       }
    }
 
+   DriveType = GetDriveTypeW(drive);
    for (i = 0; i < DRIVE_PROPERTY_PAGES; i++)
    {
-       HPROPSHEETPAGE hprop = SH_CreatePropertySheetPage(PropPages[i].resname, PropPages[i].dlgproc, (LPARAM)drive, NULL);
-       if (hprop)
+       if (PropPages[i].DriveType == (UINT)-1 || (PropPages[i].DriveType != (UINT)-1 &&  PropPages[i].DriveType == DriveType))
        {
-          hpsp[psh.nPages] = hprop;
-          psh.nPages++;
+           HPROPSHEETPAGE hprop = SH_CreatePropertySheetPage(PropPages[i].resname, PropPages[i].dlgproc, (LPARAM)drive, NULL);
+           if (hprop)
+           {
+              hpsp[psh.nPages] = hprop;
+              psh.nPages++;
+           }
        }
    }
+
    if (SHCreateDataObject(pidlFolder, 1, apidl, NULL, &IID_IDataObject, (void**)&pDataObj) == S_OK)
    {
        hpsx = SHCreatePropSheetExtArrayEx(HKEY_CLASSES_ROOT, L"Drive", MAX_PROPERTY_SHEET_PAGE-DRIVE_PROPERTY_PAGES, pDataObj);
@@ -929,6 +940,8 @@ InitializeFormatDriveDlg(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
     HWND hDlgCtrl;
 
     Length = GetWindowTextW(hwndDlg, szText, sizeof(szText)/sizeof(WCHAR));
+    if (Length < 0)
+        Length = 0;
     szDrive[0] = pContext->Drive + L'A';
     if (GetVolumeInformationW(szDrive, &szText[Length+1], (sizeof(szText)/sizeof(WCHAR))- Length - 2, &dwSerial, &dwMaxComp, &dwFileSys, szFs, sizeof(szFs)/sizeof(WCHAR)))
     {

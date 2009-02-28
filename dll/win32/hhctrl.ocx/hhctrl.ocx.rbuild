@@ -3,12 +3,11 @@
 <group>
 <module name="hhctrl" type="win32ocx" baseaddress="${BASEADDRESS_HHCTRL}" installbase="system32" installname="hhctrl.ocx" allowwarnings="true">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
-	<importlibrary definition="hhctrl.ocx.spec.def" />
+	<importlibrary definition="hhctrl.ocx.spec" />
 	<include base="hhctrl">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<include base="ReactOS" root="intermediate">include/reactos</include>
 	<define name="__WINESRC__" />
-	<define name="WINVER">0x600</define>
 	<define name="_WIN32_WINNT">0x600</define>
 	<dependency>wineheaders</dependency>
 	<file>chm.c</file>
@@ -18,7 +17,6 @@
 	<file>regsvr.c</file>
 	<file>webbrowser.c</file>
 	<file>hhctrl.rc</file>
-	<file>hhctrl.ocx.spec</file>
 	<library>wine</library>
 	<library>advapi32</library>
 	<library>comctl32</library>

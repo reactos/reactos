@@ -1,13 +1,14 @@
 <module name="advapi32" type="win32dll" baseaddress="${BASEADDRESS_ADVAPI32}" installbase="system32" installname="advapi32.dll" unicode="yes">
 
-	<importlibrary definition="advapi32.def" />
+	<importlibrary definition="advapi32.spec" />
 	<include base="advapi32">.</include>
 	<include base="scm_client">.</include>
 	<include base="lsa_client">.</include>
 	<include base="eventlog_client">.</include>
-	<define name="WINVER">0x600</define>
-	<define name="_WIN32_IE">0x0500</define>
-	<define name="_WIN32_WINNT">0x0600</define>
+
+	<define name="_WIN32_WINNT">0x600</define>
+
+	<define name="_ADVAPI32_" />
 	<library>scm_client</library>
 	<library>lsa_client</library>
 	<library>eventlog_client</library>
@@ -53,11 +54,11 @@
 			<file>rpc.c</file>
 			<file>scm.c</file>
 			<file>sctrl.c</file>
-			<file>undoc.c</file>
 	</directory>
 	<directory name="token">
 			<file>privilege.c</file>
 			<file>token.c</file>
 	</directory>
 	<file>advapi32.rc</file>
+	<compilerflag>-fno-unit-at-a-time</compilerflag>
 </module>

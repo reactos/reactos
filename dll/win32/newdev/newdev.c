@@ -383,7 +383,7 @@ SearchDriverRecursive(
 		{
 			LPCWSTR pszExtension = GetFileExt(FileName);
 
-			if ((wcsicmp(pszExtension, L".inf") == 0) && (wcscmp(LastDirPath, DirPath) != 0))
+			if ((_wcsicmp(pszExtension, L".inf") == 0) && (wcscmp(LastDirPath, DirPath) != 0))
 			{
 				wcscpy(LastDirPath, DirPath);
 

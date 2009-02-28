@@ -1,7 +1,7 @@
 /*
  * RPC binding API
  *
- * Copyright 2001 Ove Kåven, TransGaming Technologies
+ * Copyright 2001 Ove KÃ¥ven, TransGaming Technologies
  * Copyright 2003 Mike Hearn
  * Copyright 2004 Filip Navara
  * Copyright 2006 CodeWeavers
@@ -157,20 +157,19 @@ static RPC_STATUS RPCRT4_CompleteBindingA(RpcBinding* Binding, LPCSTR NetworkAdd
   RPCRT4_strfree(Binding->NetworkAddr);
   Binding->NetworkAddr = RPCRT4_strdupA(NetworkAddr);
   RPCRT4_strfree(Binding->Endpoint);
-  if (Endpoint) {
-    Binding->Endpoint = RPCRT4_strdupA(Endpoint);
-  } else {
-    Binding->Endpoint = RPCRT4_strdupA("");
-  }
+  Binding->Endpoint = RPCRT4_strdupA(Endpoint);
   HeapFree(GetProcessHeap(), 0, Binding->NetworkOptions);
   Binding->NetworkOptions = RPCRT4_strdupAtoW(NetworkOptions);
-  if (!Binding->Endpoint) ERR("out of memory?\n");
 
-  status = RPCRT4_GetAssociation(Binding->Protseq, Binding->NetworkAddr,
-                                 Binding->Endpoint, Binding->NetworkOptions,
-                                 &Binding->Assoc);
-  if (status != RPC_S_OK)
-      return status;
+  /* only attempt to get an association if the binding is complete */
+  if (Endpoint && Endpoint[0] != '\0')
+  {
+    status = RPCRT4_GetAssociation(Binding->Protseq, Binding->NetworkAddr,
+                                   Binding->Endpoint, Binding->NetworkOptions,
+                                   &Binding->Assoc);
+    if (status != RPC_S_OK)
+        return status;
+  }
 
   return RPC_S_OK;
 }
@@ -186,20 +185,19 @@ static RPC_STATUS RPCRT4_CompleteBindingW(RpcBinding* Binding, LPCWSTR NetworkAd
   RPCRT4_strfree(Binding->NetworkAddr);
   Binding->NetworkAddr = RPCRT4_strdupWtoA(NetworkAddr);
   RPCRT4_strfree(Binding->Endpoint);
-  if (Endpoint) {
-    Binding->Endpoint = RPCRT4_strdupWtoA(Endpoint);
-  } else {
-    Binding->Endpoint = RPCRT4_strdupA("");
-  }
-  if (!Binding->Endpoint) ERR("out of memory?\n");
+  Binding->Endpoint = RPCRT4_strdupWtoA(Endpoint);
   HeapFree(GetProcessHeap(), 0, Binding->NetworkOptions);
   Binding->NetworkOptions = RPCRT4_strdupW(NetworkOptions);
 
-  status = RPCRT4_GetAssociation(Binding->Protseq, Binding->NetworkAddr,
-                                 Binding->Endpoint, Binding->NetworkOptions,
-                                 &Binding->Assoc);
-  if (status != RPC_S_OK)
-      return status;
+  /* only attempt to get an association if the binding is complete */
+  if (Endpoint && Endpoint[0] != '\0')
+  {
+    status = RPCRT4_GetAssociation(Binding->Protseq, Binding->NetworkAddr,
+                                   Binding->Endpoint, Binding->NetworkOptions,
+                                   &Binding->Assoc);
+    if (status != RPC_S_OK)
+        return status;
+  }
 
   return RPC_S_OK;
 }
@@ -213,7 +211,7 @@ RPC_STATUS RPCRT4_ResolveBinding(RpcBinding* Binding, LPCSTR Endpoint)
   RPCRT4_strfree(Binding->Endpoint);
   Binding->Endpoint = RPCRT4_strdupA(Endpoint);
 
-  RpcAssoc_Release(Binding->Assoc);
+  if (Binding->Assoc) RpcAssoc_Release(Binding->Assoc);
   Binding->Assoc = NULL;
   status = RPCRT4_GetAssociation(Binding->Protseq, Binding->NetworkAddr,
                                  Binding->Endpoint, Binding->NetworkOptions,
@@ -227,7 +225,7 @@ RPC_STATUS RPCRT4_ResolveBinding(RpcBinding* Binding, LPCSTR Endpoint)
 RPC_STATUS RPCRT4_SetBindingObject(RpcBinding* Binding, const UUID* ObjectUuid)
 {
   TRACE("(*RpcBinding == ^%p, UUID == %s)\n", Binding, debugstr_guid(ObjectUuid)); 
-  if (ObjectUuid) memcpy(&Binding->ObjectUuid, ObjectUuid, sizeof(UUID));
+  if (ObjectUuid) Binding->ObjectUuid = *ObjectUuid;
   else UuidCreateNil(&Binding->ObjectUuid);
   return RPC_S_OK;
 }
@@ -249,14 +247,12 @@ RPC_STATUS RPCRT4_MakeBinding(RpcBinding** Binding, RpcConnection* Connection)
   return RPC_S_OK;
 }
 
-RPC_STATUS RPCRT4_ExportBinding(RpcBinding** Binding, RpcBinding* OldBinding)
+void RPCRT4_AddRefBinding(RpcBinding* Binding)
 {
-  InterlockedIncrement(&OldBinding->refs);
-  *Binding = OldBinding;
-  return RPC_S_OK;
+  InterlockedIncrement(&Binding->refs);
 }
 
-RPC_STATUS RPCRT4_DestroyBinding(RpcBinding* Binding)
+RPC_STATUS RPCRT4_ReleaseBinding(RpcBinding* Binding)
 {
   if (InterlockedDecrement(&Binding->refs))
     return RPC_S_OK;
@@ -310,21 +306,6 @@ RPC_STATUS RPCRT4_CloseBinding(RpcBinding* Binding, RpcConnection* Connection)
   }
 }
 
-/* utility functions for string composing and parsing */
-static unsigned RPCRT4_strcopyA(LPSTR data, LPCSTR src)
-{
-  unsigned len = strlen(src);
-  memcpy(data, src, len*sizeof(CHAR));
-  return len;
-}
-
-static unsigned RPCRT4_strcopyW(LPWSTR data, LPCWSTR src)
-{
-  unsigned len = strlenW(src);
-  memcpy(data, src, len*sizeof(WCHAR));
-  return len;
-}
-
 static LPSTR RPCRT4_strconcatA(LPSTR dst, LPCSTR src)
 {
   DWORD len = strlen(dst), slen = strlen(src);
@@ -353,6 +334,123 @@ static LPWSTR RPCRT4_strconcatW(LPWSTR dst, LPCWSTR src)
   return ndst;
 }
 
+/* Copies the escaped version of a component into a string binding.
+ * Note: doesn't nul-terminate the string */
+static RPC_CSTR escape_string_binding_component(RPC_CSTR string_binding,
+                                                const unsigned char *component)
+{
+  for (; *component; component++) {
+    switch (*component) {
+      case '@':
+      case ':':
+      case '[':
+      case ']':
+      case '\\':
+        *string_binding++ = '\\';
+        *string_binding++ = *component;
+        break;
+      default:
+        *string_binding++ = *component;
+        break;
+    }
+  }
+  return string_binding;
+}
+
+static RPC_WSTR escape_string_binding_componentW(RPC_WSTR string_binding,
+                                                 const WCHAR *component)
+{
+  for (; *component; component++) {
+    switch (*component) {
+      case '@':
+      case ':':
+      case '[':
+      case ']':
+      case '\\':
+        *string_binding++ = '\\';
+        *string_binding++ = *component;
+        break;
+      default:
+        *string_binding++ = *component;
+        break;
+    }
+  }
+  return string_binding;
+}
+
+static const unsigned char *string_binding_find_delimiter(
+    const unsigned char *string_binding, unsigned char delim)
+{
+  const unsigned char *next;
+  for (next = string_binding; *next; next++) {
+    if (*next == '\\') {
+      next++;
+      continue;
+    }
+    if (*next == delim)
+      return next;
+  }
+  return NULL;
+}
+
+static const WCHAR *string_binding_find_delimiterW(
+    const WCHAR *string_binding, WCHAR delim)
+{
+  const WCHAR *next;
+  for (next = string_binding; *next; next++) {
+    if (*next == '\\') {
+      next++;
+      continue;
+    }
+    if (*next == delim)
+      return next;
+  }
+  return NULL;
+}
+
+static RPC_CSTR unescape_string_binding_component(
+    const unsigned char *string_binding, int len)
+{
+  RPC_CSTR component, p;
+
+  if (len == -1) len = strlen((const char *)string_binding);
+
+  component = HeapAlloc(GetProcessHeap(), 0, (len + 1) * sizeof(*component));
+  if (!component) return NULL;
+  for (p = component; len > 0; string_binding++, len--) {
+    if (*string_binding == '\\') {
+      string_binding++;
+      len--;
+      *p++ = *string_binding;
+    } else {
+      *p++ = *string_binding;
+    }
+  }
+  *p = '\0';
+  return component;
+}
+
+static RPC_WSTR unescape_string_binding_componentW(
+    const WCHAR *string_binding, int len)
+{
+  RPC_WSTR component, p;
+
+  if (len == -1) len = strlenW(string_binding);
+
+  component = HeapAlloc(GetProcessHeap(), 0, (len + 1) * sizeof(*component));
+  if (!component) return NULL;
+  for (p = component; len > 0; string_binding++, len--) {
+    if (*string_binding == '\\') {
+      string_binding++;
+      len--;
+      *p++ = *string_binding;
+    } else {
+      *p++ = *string_binding;
+    }
+  }
+  *p = '\0';
+  return component;
+}
 
 /***********************************************************************
  *             RpcStringBindingComposeA (RPCRT4.@)
@@ -362,42 +460,43 @@ RPC_STATUS WINAPI RpcStringBindingComposeA(RPC_CSTR ObjUuid, RPC_CSTR Protseq,
                                            RPC_CSTR Options, RPC_CSTR *StringBinding )
 {
   DWORD len = 1;
-  LPSTR data;
+  RPC_CSTR data;
 
   TRACE( "(%s,%s,%s,%s,%s,%p)\n",
         debugstr_a( (char*)ObjUuid ), debugstr_a( (char*)Protseq ),
         debugstr_a( (char*)NetworkAddr ), debugstr_a( (char*)Endpoint ),
         debugstr_a( (char*)Options ), StringBinding );
 
-  if (ObjUuid && *ObjUuid) len += strlen((char*)ObjUuid) + 1;
-  if (Protseq && *Protseq) len += strlen((char*)Protseq) + 1;
-  if (NetworkAddr && *NetworkAddr) len += strlen((char*)NetworkAddr);
-  if (Endpoint && *Endpoint) len += strlen((char*)Endpoint) + 2;
-  if (Options && *Options) len += strlen((char*)Options) + 2;
+  /* overestimate for each component for escaping of delimiters */
+  if (ObjUuid && *ObjUuid) len += strlen((char*)ObjUuid) * 2 + 1;
+  if (Protseq && *Protseq) len += strlen((char*)Protseq) * 2 + 1;
+  if (NetworkAddr && *NetworkAddr) len += strlen((char*)NetworkAddr) * 2;
+  if (Endpoint && *Endpoint) len += strlen((char*)Endpoint) * 2 + 2;
+  if (Options && *Options) len += strlen((char*)Options) * 2 + 2;
 
   data = HeapAlloc(GetProcessHeap(), 0, len);
-  *StringBinding = (unsigned char*)data;
+  *StringBinding = data;
 
   if (ObjUuid && *ObjUuid) {
-    data += RPCRT4_strcopyA(data, (char*)ObjUuid);
+    data = escape_string_binding_component(data, ObjUuid);
     *data++ = '@';
   }
   if (Protseq && *Protseq) {
-    data += RPCRT4_strcopyA(data, (char*)Protseq);
+    data = escape_string_binding_component(data, Protseq);
     *data++ = ':';
   }
   if (NetworkAddr && *NetworkAddr)
-    data += RPCRT4_strcopyA(data, (char*)NetworkAddr);
+    data = escape_string_binding_component(data, NetworkAddr);
 
   if ((Endpoint && *Endpoint) ||
       (Options && *Options)) {
     *data++ = '[';
     if (Endpoint && *Endpoint) {
-      data += RPCRT4_strcopyA(data, (char*)Endpoint);
+      data = escape_string_binding_component(data, Endpoint);
       if (Options && *Options) *data++ = ',';
     }
     if (Options && *Options) {
-      data += RPCRT4_strcopyA(data, (char*)Options);
+      data = escape_string_binding_component(data, Options);
     }
     *data++ = ']';
   }
@@ -421,35 +520,36 @@ RPC_STATUS WINAPI RpcStringBindingComposeW( RPC_WSTR ObjUuid, RPC_WSTR Protseq,
        debugstr_w( NetworkAddr ), debugstr_w( Endpoint ),
        debugstr_w( Options ), StringBinding);
 
-  if (ObjUuid && *ObjUuid) len += strlenW(ObjUuid) + 1;
-  if (Protseq && *Protseq) len += strlenW(Protseq) + 1;
-  if (NetworkAddr && *NetworkAddr) len += strlenW(NetworkAddr);
-  if (Endpoint && *Endpoint) len += strlenW(Endpoint) + 2;
-  if (Options && *Options) len += strlenW(Options) + 2;
+  /* overestimate for each component for escaping of delimiters */
+  if (ObjUuid && *ObjUuid) len += strlenW(ObjUuid) * 2 + 1;
+  if (Protseq && *Protseq) len += strlenW(Protseq) * 2 + 1;
+  if (NetworkAddr && *NetworkAddr) len += strlenW(NetworkAddr) * 2;
+  if (Endpoint && *Endpoint) len += strlenW(Endpoint) * 2 + 2;
+  if (Options && *Options) len += strlenW(Options) * 2 + 2;
 
   data = HeapAlloc(GetProcessHeap(), 0, len*sizeof(WCHAR));
   *StringBinding = data;
 
   if (ObjUuid && *ObjUuid) {
-    data += RPCRT4_strcopyW(data, ObjUuid);
+    data = escape_string_binding_componentW(data, ObjUuid);
     *data++ = '@';
   }
   if (Protseq && *Protseq) {
-    data += RPCRT4_strcopyW(data, Protseq);
+    data = escape_string_binding_componentW(data, Protseq);
     *data++ = ':';
   }
   if (NetworkAddr && *NetworkAddr) {
-    data += RPCRT4_strcopyW(data, NetworkAddr);
+    data = escape_string_binding_componentW(data, NetworkAddr);
   }
   if ((Endpoint && *Endpoint) ||
       (Options && *Options)) {
     *data++ = '[';
     if (Endpoint && *Endpoint) {
-      data += RPCRT4_strcopyW(data, Endpoint);
+      data = escape_string_binding_componentW(data, Endpoint);
       if (Options && *Options) *data++ = ',';
     }
     if (Options && *Options) {
-      data += RPCRT4_strcopyW(data, Options);
+      data = escape_string_binding_componentW(data, Options);
     }
     *data++ = ']';
   }
@@ -466,8 +566,9 @@ RPC_STATUS WINAPI RpcStringBindingParseA( RPC_CSTR StringBinding, RPC_CSTR *ObjU
                                           RPC_CSTR *Protseq, RPC_CSTR *NetworkAddr,
                                           RPC_CSTR *Endpoint, RPC_CSTR *Options)
 {
-  CHAR *data, *next;
+  const unsigned char *data, *next;
   static const char ep_opt[] = "endpoint=";
+  BOOL endpoint_already_found = FALSE;
 
   TRACE("(%s,%p,%p,%p,%p,%p)\n", debugstr_a((char*)StringBinding),
        ObjUuid, Protseq, NetworkAddr, Endpoint, Options);
@@ -478,57 +579,75 @@ RPC_STATUS WINAPI RpcStringBindingParseA( RPC_CSTR StringBinding, RPC_CSTR *ObjU
   if (Endpoint) *Endpoint = NULL;
   if (Options) *Options = NULL;
 
-  data = (char*) StringBinding;
+  data = StringBinding;
 
-  next = strchr(data, '@');
+  next = string_binding_find_delimiter(data, '@');
   if (next) {
-    if (ObjUuid) *ObjUuid = (unsigned char*)RPCRT4_strndupA(data, next - data);
+    UUID uuid;
+    RPC_STATUS status;
+    RPC_CSTR str_uuid = unescape_string_binding_component(data, next - data);
+    status = UuidFromStringA(str_uuid, &uuid);
+    if (status != RPC_S_OK) {
+      HeapFree(GetProcessHeap(), 0, str_uuid);
+      return status;
+    }
+    if (ObjUuid)
+      *ObjUuid = str_uuid;
+    else
+      HeapFree(GetProcessHeap(), 0, str_uuid);
     data = next+1;
   }
 
-  next = strchr(data, ':');
+  next = string_binding_find_delimiter(data, ':');
   if (next) {
-    if (Protseq) *Protseq = (unsigned char*)RPCRT4_strndupA(data, next - data);
+    if (Protseq) *Protseq = unescape_string_binding_component(data, next - data);
     data = next+1;
   }
 
-  next = strchr(data, '[');
+  next = string_binding_find_delimiter(data, '[');
   if (next) {
-    CHAR *close, *opt;
+    const unsigned char *close;
+    RPC_CSTR opt;
 
-    if (NetworkAddr) *NetworkAddr = (unsigned char*)RPCRT4_strndupA(data, next - data);
+    if (NetworkAddr) *NetworkAddr = unescape_string_binding_component(data, next - data);
     data = next+1;
-    close = strchr(data, ']');
+    close = string_binding_find_delimiter(data, ']');
     if (!close) goto fail;
 
     /* tokenize options */
     while (data < close) {
-      next = strchr(data, ',');
+      next = string_binding_find_delimiter(data, ',');
       if (!next || next > close) next = close;
       /* FIXME: this is kind of inefficient */
-      opt = RPCRT4_strndupA(data, next - data);
+      opt = unescape_string_binding_component(data, next - data);
       data = next+1;
 
       /* parse option */
-      next = strchr(opt, '=');
+      next = string_binding_find_delimiter(opt, '=');
       if (!next) {
         /* not an option, must be an endpoint */
-        if (*Endpoint) goto fail;
-        *Endpoint = (unsigned char*) opt;
+        if (endpoint_already_found) goto fail;
+        if (Endpoint) *Endpoint = opt;
+        else HeapFree(GetProcessHeap(), 0, opt);
+        endpoint_already_found = TRUE;
       } else {
-        if (strncmp(opt, ep_opt, strlen(ep_opt)) == 0) {
+        if (strncmp((const char *)opt, ep_opt, strlen(ep_opt)) == 0) {
           /* endpoint option */
-          if (*Endpoint) goto fail;
-          *Endpoint = (unsigned char*) RPCRT4_strdupA(next+1);
+          if (endpoint_already_found) goto fail;
+          if (Endpoint) *Endpoint = unescape_string_binding_component(next+1, -1);
           HeapFree(GetProcessHeap(), 0, opt);
+          endpoint_already_found = TRUE;
         } else {
           /* network option */
-          if (*Options) {
-            /* FIXME: this is kind of inefficient */
-            *Options = (unsigned char*) RPCRT4_strconcatA( (char*)*Options, opt);
+          if (Options) {
+            if (*Options) {
+              /* FIXME: this is kind of inefficient */
+              *Options = (unsigned char*) RPCRT4_strconcatA( (char*)*Options, (char *)opt);
+              HeapFree(GetProcessHeap(), 0, opt);
+            } else
+              *Options = opt;
+          } else
             HeapFree(GetProcessHeap(), 0, opt);
-          } else 
-	    *Options = (unsigned char*) opt;
         }
       }
     }
@@ -537,7 +656,7 @@ RPC_STATUS WINAPI RpcStringBindingParseA( RPC_CSTR StringBinding, RPC_CSTR *ObjU
     if (*data) goto fail;
   }
   else if (NetworkAddr) 
-    *NetworkAddr = (unsigned char*)RPCRT4_strdupA(data);
+    *NetworkAddr = unescape_string_binding_component(data, -1);
 
   return RPC_S_OK;
 
@@ -557,8 +676,9 @@ RPC_STATUS WINAPI RpcStringBindingParseW( RPC_WSTR StringBinding, RPC_WSTR *ObjU
                                           RPC_WSTR *Protseq, RPC_WSTR *NetworkAddr,
                                           RPC_WSTR *Endpoint, RPC_WSTR *Options)
 {
-  WCHAR *data, *next;
+  const WCHAR *data, *next;
   static const WCHAR ep_opt[] = {'e','n','d','p','o','i','n','t','=',0};
+  BOOL endpoint_already_found = FALSE;
 
   TRACE("(%s,%p,%p,%p,%p,%p)\n", debugstr_w(StringBinding),
        ObjUuid, Protseq, NetworkAddr, Endpoint, Options);
@@ -571,55 +691,73 @@ RPC_STATUS WINAPI RpcStringBindingParseW( RPC_WSTR StringBinding, RPC_WSTR *ObjU
 
   data = StringBinding;
 
-  next = strchrW(data, '@');
+  next = string_binding_find_delimiterW(data, '@');
   if (next) {
-    if (ObjUuid) *ObjUuid = RPCRT4_strndupW(data, next - data);
+    UUID uuid;
+    RPC_STATUS status;
+    RPC_WSTR str_uuid = unescape_string_binding_componentW(data, next - data);
+    status = UuidFromStringW(str_uuid, &uuid);
+    if (status != RPC_S_OK) {
+      HeapFree(GetProcessHeap(), 0, str_uuid);
+      return status;
+    }
+    if (ObjUuid)
+      *ObjUuid = str_uuid;
+    else
+      HeapFree(GetProcessHeap(), 0, str_uuid);
     data = next+1;
   }
 
-  next = strchrW(data, ':');
+  next = string_binding_find_delimiterW(data, ':');
   if (next) {
-    if (Protseq) *Protseq = RPCRT4_strndupW(data, next - data);
+    if (Protseq) *Protseq = unescape_string_binding_componentW(data, next - data);
     data = next+1;
   }
 
-  next = strchrW(data, '[');
+  next = string_binding_find_delimiterW(data, '[');
   if (next) {
-    WCHAR *close, *opt;
+    const WCHAR *close;
+    RPC_WSTR opt;
 
-    if (NetworkAddr) *NetworkAddr = RPCRT4_strndupW(data, next - data);
+    if (NetworkAddr) *NetworkAddr = unescape_string_binding_componentW(data, next - data);
     data = next+1;
-    close = strchrW(data, ']');
+    close = string_binding_find_delimiterW(data, ']');
     if (!close) goto fail;
 
     /* tokenize options */
     while (data < close) {
-      next = strchrW(data, ',');
+      next = string_binding_find_delimiterW(data, ',');
       if (!next || next > close) next = close;
       /* FIXME: this is kind of inefficient */
-      opt = RPCRT4_strndupW(data, next - data);
+      opt = unescape_string_binding_componentW(data, next - data);
       data = next+1;
 
       /* parse option */
-      next = strchrW(opt, '=');
+      next = string_binding_find_delimiterW(opt, '=');
       if (!next) {
         /* not an option, must be an endpoint */
-        if (*Endpoint) goto fail;
-        *Endpoint = opt;
+        if (endpoint_already_found) goto fail;
+        if (Endpoint) *Endpoint = opt;
+        else HeapFree(GetProcessHeap(), 0, opt);
+        endpoint_already_found = TRUE;
       } else {
         if (strncmpW(opt, ep_opt, strlenW(ep_opt)) == 0) {
           /* endpoint option */
-          if (*Endpoint) goto fail;
-          *Endpoint = RPCRT4_strdupW(next+1);
+          if (endpoint_already_found) goto fail;
+          if (Endpoint) *Endpoint = unescape_string_binding_componentW(next+1, -1);
           HeapFree(GetProcessHeap(), 0, opt);
+          endpoint_already_found = TRUE;
         } else {
           /* network option */
-          if (*Options) {
-            /* FIXME: this is kind of inefficient */
-            *Options = RPCRT4_strconcatW(*Options, opt);
+          if (Options) {
+            if (*Options) {
+              /* FIXME: this is kind of inefficient */
+              *Options = RPCRT4_strconcatW(*Options, opt);
+              HeapFree(GetProcessHeap(), 0, opt);
+            } else
+              *Options = opt;
+          } else
             HeapFree(GetProcessHeap(), 0, opt);
-          } else 
-	    *Options = opt;
         }
       }
     }
@@ -627,7 +765,7 @@ RPC_STATUS WINAPI RpcStringBindingParseW( RPC_WSTR StringBinding, RPC_WSTR *ObjU
     data = close+1;
     if (*data) goto fail;
   } else if (NetworkAddr) 
-    *NetworkAddr = RPCRT4_strdupW(data);
+    *NetworkAddr = unescape_string_binding_componentW(data, -1);
 
   return RPC_S_OK;
 
@@ -647,7 +785,7 @@ RPC_STATUS WINAPI RpcBindingFree( RPC_BINDING_HANDLE* Binding )
 {
   RPC_STATUS status;
   TRACE("(%p) = %p\n", Binding, *Binding);
-  status = RPCRT4_DestroyBinding(*Binding);
+  status = RPCRT4_ReleaseBinding(*Binding);
   if (status == RPC_S_OK) *Binding = 0;
   return status;
 }
@@ -677,10 +815,10 @@ RPC_STATUS WINAPI RpcBindingInqObject( RPC_BINDING_HANDLE Binding, UUID* ObjectU
   RpcBinding* bind = (RpcBinding*)Binding;
 
   TRACE("(%p,%p) = %s\n", Binding, ObjectUuid, debugstr_guid(&bind->ObjectUuid));
-  memcpy(ObjectUuid, &bind->ObjectUuid, sizeof(UUID));
+  *ObjectUuid = bind->ObjectUuid;
   return RPC_S_OK;
 }
-  
+
 /***********************************************************************
  *             RpcBindingSetObject (RPCRT4.@)
  */
@@ -713,8 +851,8 @@ RPC_STATUS WINAPI RpcBindingFromStringBindingA( RPC_CSTR StringBinding, RPC_BIND
 
   if (ret == RPC_S_OK)
     ret = RPCRT4_CreateBindingA(&bind, FALSE, (char*)Protseq);
-  if (ret == RPC_S_OK)
-    ret = RPCRT4_SetBindingObject(bind, &Uuid);
+  if (ret != RPC_S_OK) return ret;
+  ret = RPCRT4_SetBindingObject(bind, &Uuid);
   if (ret == RPC_S_OK)
     ret = RPCRT4_CompleteBindingA(bind, (char*)NetworkAddr, (char*)Endpoint, (char*)Options);
 
@@ -727,7 +865,7 @@ RPC_STATUS WINAPI RpcBindingFromStringBindingA( RPC_CSTR StringBinding, RPC_BIND
   if (ret == RPC_S_OK) 
     *Binding = (RPC_BINDING_HANDLE)bind;
   else 
-    RPCRT4_DestroyBinding(bind);
+    RPCRT4_ReleaseBinding(bind);
 
   return ret;
 }
@@ -752,8 +890,8 @@ RPC_STATUS WINAPI RpcBindingFromStringBindingW( RPC_WSTR StringBinding, RPC_BIND
 
   if (ret == RPC_S_OK)
     ret = RPCRT4_CreateBindingW(&bind, FALSE, Protseq);
-  if (ret == RPC_S_OK)
-    ret = RPCRT4_SetBindingObject(bind, &Uuid);
+  if (ret != RPC_S_OK) return ret;
+  ret = RPCRT4_SetBindingObject(bind, &Uuid);
   if (ret == RPC_S_OK)
     ret = RPCRT4_CompleteBindingW(bind, NetworkAddr, Endpoint, Options);
 
@@ -766,7 +904,7 @@ RPC_STATUS WINAPI RpcBindingFromStringBindingW( RPC_WSTR StringBinding, RPC_BIND
   if (ret == RPC_S_OK)
     *Binding = (RPC_BINDING_HANDLE)bind;
   else
-    RPCRT4_DestroyBinding(bind);
+    RPCRT4_ReleaseBinding(bind);
 
   return ret;
 }
@@ -782,8 +920,13 @@ RPC_STATUS WINAPI RpcBindingToStringBindingA( RPC_BINDING_HANDLE Binding, RPC_CS
 
   TRACE("(%p,%p)\n", Binding, StringBinding);
 
-  ret = UuidToStringA(&bind->ObjectUuid, &ObjectUuid);
-  if (ret != RPC_S_OK) return ret;
+  if (UuidIsNil(&bind->ObjectUuid, &ret))
+    ObjectUuid = NULL;
+  else
+  {
+    ret = UuidToStringA(&bind->ObjectUuid, &ObjectUuid);
+    if (ret != RPC_S_OK) return ret;
+  }
 
   ret = RpcStringBindingComposeA(ObjectUuid, (unsigned char*)bind->Protseq, (unsigned char*) bind->NetworkAddr,
                                  (unsigned char*) bind->Endpoint, NULL, StringBinding);
@@ -805,6 +948,17 @@ RPC_STATUS WINAPI RpcBindingToStringBindingW( RPC_BINDING_HANDLE Binding, RPC_WS
   *StringBinding = RPCRT4_strdupAtoW((char*)str);
   RpcStringFreeA((unsigned char**)&str);
   return ret;
+}
+
+/***********************************************************************
+ *             I_RpcBindingInqTransportType (RPCRT4.@)
+ */
+RPC_STATUS WINAPI I_RpcBindingInqTransportType( RPC_BINDING_HANDLE Binding, unsigned int * Type )
+{
+
+  FIXME( "(%p,%p): stub\n", Binding, Type);
+  *Type = TRANSPORT_TYPE_LPC;
+  return RPC_S_OK;
 }
 
 /***********************************************************************
@@ -856,6 +1010,23 @@ RPC_STATUS RPC_ENTRY RpcBindingCopy(
 
   *DestinationBinding = DestBinding;
   return RPC_S_OK;
+}
+
+/***********************************************************************
+ *             RpcBindingReset (RPCRT4.@)
+ */
+RPC_STATUS RPC_ENTRY RpcBindingReset(RPC_BINDING_HANDLE Binding)
+{
+    RpcBinding *bind = Binding;
+
+    TRACE("(%p)\n", Binding);
+
+    RPCRT4_strfree(bind->Endpoint);
+    bind->Endpoint = NULL;
+    if (bind->Assoc) RpcAssoc_Release(bind->Assoc);
+    bind->Assoc = NULL;
+
+    return RPC_S_OK;
 }
 
 /***********************************************************************
@@ -937,6 +1108,7 @@ static RPC_STATUS RpcAuthInfo_Create(ULONG AuthnLevel, ULONG AuthnSvc,
     AuthInfo->exp = exp;
     AuthInfo->cbMaxToken = cbMaxToken;
     AuthInfo->identity = identity;
+    AuthInfo->server_principal_name = NULL;
 
     /* duplicate the SEC_WINNT_AUTH_IDENTITY structure, if applicable, to
      * enable better matching in RpcAuthInfo_IsEqual */
@@ -967,9 +1139,9 @@ static RPC_STATUS RpcAuthInfo_Create(ULONG AuthnLevel, ULONG AuthnSvc,
             AuthInfo->nt_identity->Password = RPCRT4_strndupAtoW((const char *)nt_identity->Password, nt_identity->PasswordLength);
         AuthInfo->nt_identity->PasswordLength = nt_identity->PasswordLength;
 
-        if (!AuthInfo->nt_identity->User ||
-            !AuthInfo->nt_identity->Domain ||
-            !AuthInfo->nt_identity->Password)
+        if ((nt_identity->User && !AuthInfo->nt_identity->User) ||
+            (nt_identity->Domain && !AuthInfo->nt_identity->Domain) ||
+            (nt_identity->Password && !AuthInfo->nt_identity->Password))
         {
             HeapFree(GetProcessHeap(), 0, AuthInfo->nt_identity->User);
             HeapFree(GetProcessHeap(), 0, AuthInfo->nt_identity->Domain);
@@ -1004,6 +1176,7 @@ ULONG RpcAuthInfo_Release(RpcAuthInfo *AuthInfo)
             HeapFree(GetProcessHeap(), 0, AuthInfo->nt_identity->Password);
             HeapFree(GetProcessHeap(), 0, AuthInfo->nt_identity);
         }
+        HeapFree(GetProcessHeap(), 0, AuthInfo->server_principal_name);
         HeapFree(GetProcessHeap(), 0, AuthInfo);
     }
 
@@ -1199,7 +1372,7 @@ BOOL RpcQualityOfService_IsEqual(const RpcQualityOfService *qos1, const RpcQuali
     if (!qos1 || !qos2)
         return FALSE;
 
-    TRACE("qos1 = { %ld %ld %ld %ld }, qos2 = { %ld %ld %ld %ld }\n",
+    TRACE("qos1 = { %d %d %d %d }, qos2 = { %d %d %d %d }\n",
         qos1->qos->Capabilities, qos1->qos->IdentityTracking,
         qos1->qos->ImpersonationType, qos1->qos->AdditionalSecurityInfoType,
         qos2->qos->Capabilities, qos2->qos->IdentityTracking,
@@ -1344,14 +1517,14 @@ RpcBindingSetAuthInfoExA( RPC_BINDING_HANDLE Binding, RPC_CSTR ServerPrincName,
   {
       RPC_STATUS status;
 
-      TRACE("SecurityQos { Version=%ld, Capabilties=0x%lx, IdentityTracking=%ld, ImpersonationLevel=%ld",
+      TRACE("SecurityQos { Version=%d, Capabilities=0x%x, IdentityTracking=%d, ImpersonationLevel=%d",
             SecurityQos->Version, SecurityQos->Capabilities, SecurityQos->IdentityTracking, SecurityQos->ImpersonationType);
       if (SecurityQos->Version >= 2)
       {
           const RPC_SECURITY_QOS_V2_A *SecurityQos2 = (const RPC_SECURITY_QOS_V2_A *)SecurityQos;
-          TRACE(", AdditionalSecurityInfoType=%ld", SecurityQos2->AdditionalSecurityInfoType);
+          TRACE(", AdditionalSecurityInfoType=%d", SecurityQos2->AdditionalSecurityInfoType);
           if (SecurityQos2->AdditionalSecurityInfoType == RPC_C_AUTHN_INFO_TYPE_HTTP)
-              TRACE(", { %p, 0x%lx, %ld, %ld, %p, %s }",
+              TRACE(", { %p, 0x%x, %d, %d, %p, %s }",
                     SecurityQos2->u.HttpCredentials->TransportCredentials,
                     SecurityQos2->u.HttpCredentials->Flags,
                     SecurityQos2->u.HttpCredentials->AuthenticationTarget,
@@ -1390,7 +1563,8 @@ RpcBindingSetAuthInfoExA( RPC_BINDING_HANDLE Binding, RPC_CSTR ServerPrincName,
     return RPC_S_UNKNOWN_AUTHN_LEVEL;
   }
 
-  if (AuthzSvr)
+  /* RPC_C_AUTHN_WINNT ignores the AuthzSvr parameter */
+  if (AuthzSvr && AuthnSvc != RPC_C_AUTHN_WINNT)
   {
     FIXME("unsupported AuthzSvr %u\n", AuthzSvr);
     return RPC_S_UNKNOWN_AUTHZ_SERVICE;
@@ -1415,19 +1589,32 @@ RpcBindingSetAuthInfoExA( RPC_BINDING_HANDLE Binding, RPC_CSTR ServerPrincName,
   }
 
   TRACE("found package %s for service %u\n", packages[i].Name, AuthnSvc);
-  r = AcquireCredentialsHandleA((SEC_CHAR *)ServerPrincName, packages[i].Name, SECPKG_CRED_OUTBOUND, NULL,
+  r = AcquireCredentialsHandleA(NULL, packages[i].Name, SECPKG_CRED_OUTBOUND, NULL,
                                 AuthIdentity, NULL, NULL, &cred, &exp);
   cbMaxToken = packages[i].cbMaxToken;
   FreeContextBuffer(packages);
   if (r == ERROR_SUCCESS)
   {
-    if (bind->AuthInfo) RpcAuthInfo_Release(bind->AuthInfo);
-    bind->AuthInfo = NULL;
+    RpcAuthInfo *new_auth_info;
     r = RpcAuthInfo_Create(AuthnLevel, AuthnSvc, cred, exp, cbMaxToken,
-                           AuthIdentity, &bind->AuthInfo);
-    if (r != RPC_S_OK)
+                           AuthIdentity, &new_auth_info);
+    if (r == RPC_S_OK)
+    {
+      new_auth_info->server_principal_name = RPCRT4_strdupAtoW((char *)ServerPrincName);
+      if (new_auth_info->server_principal_name)
+      {
+        if (bind->AuthInfo) RpcAuthInfo_Release(bind->AuthInfo);
+        bind->AuthInfo = new_auth_info;
+      }
+      else
+      {
+        RpcAuthInfo_Release(new_auth_info);
+        r = ERROR_OUTOFMEMORY;
+      }
+    }
+    else
       FreeCredentialsHandle(&cred);
-    return RPC_S_OK;
+    return r;
   }
   else
   {
@@ -1460,14 +1647,14 @@ RpcBindingSetAuthInfoExW( RPC_BINDING_HANDLE Binding, RPC_WSTR ServerPrincName, 
   {
       RPC_STATUS status;
 
-      TRACE("SecurityQos { Version=%ld, Capabilties=0x%lx, IdentityTracking=%ld, ImpersonationLevel=%ld",
+      TRACE("SecurityQos { Version=%d, Capabilities=0x%x, IdentityTracking=%d, ImpersonationLevel=%d",
             SecurityQos->Version, SecurityQos->Capabilities, SecurityQos->IdentityTracking, SecurityQos->ImpersonationType);
       if (SecurityQos->Version >= 2)
       {
           const RPC_SECURITY_QOS_V2_W *SecurityQos2 = (const RPC_SECURITY_QOS_V2_W *)SecurityQos;
-          TRACE(", AdditionalSecurityInfoType=%ld", SecurityQos2->AdditionalSecurityInfoType);
+          TRACE(", AdditionalSecurityInfoType=%d", SecurityQos2->AdditionalSecurityInfoType);
           if (SecurityQos2->AdditionalSecurityInfoType == RPC_C_AUTHN_INFO_TYPE_HTTP)
-              TRACE(", { %p, 0x%lx, %ld, %ld, %p, %s }",
+              TRACE(", { %p, 0x%x, %d, %d, %p, %s }",
                     SecurityQos2->u.HttpCredentials->TransportCredentials,
                     SecurityQos2->u.HttpCredentials->Flags,
                     SecurityQos2->u.HttpCredentials->AuthenticationTarget,
@@ -1506,7 +1693,8 @@ RpcBindingSetAuthInfoExW( RPC_BINDING_HANDLE Binding, RPC_WSTR ServerPrincName, 
     return RPC_S_UNKNOWN_AUTHN_LEVEL;
   }
 
-  if (AuthzSvr)
+  /* RPC_C_AUTHN_WINNT ignores the AuthzSvr parameter */
+  if (AuthzSvr && AuthnSvc != RPC_C_AUTHN_WINNT)
   {
     FIXME("unsupported AuthzSvr %u\n", AuthzSvr);
     return RPC_S_UNKNOWN_AUTHZ_SERVICE;
@@ -1515,7 +1703,7 @@ RpcBindingSetAuthInfoExW( RPC_BINDING_HANDLE Binding, RPC_WSTR ServerPrincName, 
   r = EnumerateSecurityPackagesW(&package_count, &packages);
   if (r != SEC_E_OK)
   {
-    ERR("EnumerateSecurityPackagesA failed with error 0x%08x\n", r);
+    ERR("EnumerateSecurityPackagesW failed with error 0x%08x\n", r);
     return RPC_S_SEC_PKG_ERROR;
   }
 
@@ -1531,23 +1719,36 @@ RpcBindingSetAuthInfoExW( RPC_BINDING_HANDLE Binding, RPC_WSTR ServerPrincName, 
   }
 
   TRACE("found package %s for service %u\n", debugstr_w(packages[i].Name), AuthnSvc);
-  r = AcquireCredentialsHandleW((SEC_WCHAR *)ServerPrincName, packages[i].Name, SECPKG_CRED_OUTBOUND, NULL,
+  r = AcquireCredentialsHandleW(NULL, packages[i].Name, SECPKG_CRED_OUTBOUND, NULL,
                                 AuthIdentity, NULL, NULL, &cred, &exp);
   cbMaxToken = packages[i].cbMaxToken;
   FreeContextBuffer(packages);
   if (r == ERROR_SUCCESS)
   {
-    if (bind->AuthInfo) RpcAuthInfo_Release(bind->AuthInfo);
-    bind->AuthInfo = NULL;
+    RpcAuthInfo *new_auth_info;
     r = RpcAuthInfo_Create(AuthnLevel, AuthnSvc, cred, exp, cbMaxToken,
-                           AuthIdentity, &bind->AuthInfo);
-    if (r != RPC_S_OK)
+                           AuthIdentity, &new_auth_info);
+    if (r == RPC_S_OK)
+    {
+      new_auth_info->server_principal_name = RPCRT4_strdupW(ServerPrincName);
+      if (!ServerPrincName || new_auth_info->server_principal_name)
+      {
+        if (bind->AuthInfo) RpcAuthInfo_Release(bind->AuthInfo);
+        bind->AuthInfo = new_auth_info;
+      }
+      else
+      {
+        RpcAuthInfo_Release(new_auth_info);
+        r = ERROR_OUTOFMEMORY;
+      }
+    }
+    else
       FreeCredentialsHandle(&cred);
-    return RPC_S_OK;
+    return r;
   }
   else
   {
-    ERR("AcquireCredentialsHandleA failed with error 0x%08x\n", r);
+    ERR("AcquireCredentialsHandleW failed with error 0x%08x\n", r);
     return RPC_S_SEC_PKG_ERROR;
   }
 }
@@ -1579,8 +1780,8 @@ RpcBindingSetAuthInfoW( RPC_BINDING_HANDLE Binding, RPC_WSTR ServerPrincName, UL
 /***********************************************************************
  *             RpcBindingSetOption (RPCRT4.@)
  */
-RPC_STATUS WINAPI RpcBindingSetOption(RPC_BINDING_HANDLE BindingHandle, ULONG Option, ULONG OptionValue)
+RPC_STATUS WINAPI RpcBindingSetOption(RPC_BINDING_HANDLE BindingHandle, ULONG Option, ULONG_PTR OptionValue)
 {
-    FIXME("(%p, %d, %d): stub\n", BindingHandle, Option, OptionValue);
+    FIXME("(%p, %d, %ld): stub\n", BindingHandle, Option, OptionValue);
     return RPC_S_OK;
 }

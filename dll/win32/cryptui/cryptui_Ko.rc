@@ -1,0 +1,447 @@
+/*
+ * cryptui dll Korean resources
+
+ * Copyright 2008 Juan Lang
+ * Copyright 2008 YunSong Hwang
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+
+LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_CERTIFICATE "인증서"
+    IDS_CERTIFICATEINFORMATION "인증서 정보"
+    IDS_CERT_INFO_BAD_SIG "이 인증서는 올바르지 않은 서명을 가지고 있습니다.  이 인증서는 아마도 고쳐졌거나 망가진 것같습니가"
+    IDS_CERT_INFO_UNTRUSTED_CA "이 루트 인증서는 신뢰 할 수 없습니다.  이것을 신뢰하려면,당신의 시스템의 신뢰된  루트 인증서 보관소에 추가하십시오."
+    IDS_CERT_INFO_UNTRUSTED_ROOT "이 인증서는 신뢰된 루트 인증서로 허가될 수 없습니다."
+    IDS_CERT_INFO_PARTIAL_CHAIN "이 인증서의 발행자를 찾을 수 없습니다."
+    IDS_CERT_INFO_BAD_PURPOSES "이 인증서의 모든 계획된 목적은 검증될 수 없습니다."
+    IDS_CERT_INFO_PURPOSES "이 인증서는 다음의 목적으로 계획되어있습니다:"
+    IDS_SUBJECT_HEADING "발행대상: "
+    IDS_ISSUER_HEADING "발행자: "
+    IDS_VALID_FROM "유효기간(시작) "
+    IDS_VALID_TO "유효기간(끝) "
+    IDS_CERTIFICATE_BAD_SIGNATURE "이 인증서는 올바르지 않은 서명을 가지고 있습니다."
+    IDS_CERTIFICATE_BAD_TIME "이 인증서는 만료되었거나 아직 유효하지 않습니다."
+    IDS_CERTIFICATE_BAD_TIMENEST "이 인증서는 발행자가 정한 유효시간을 초과했습니다"
+    IDS_CERTIFICATE_REVOKED "이 인증서는 발행자에 의하여 취소되었습니다."
+    IDS_CERTIFICATE_VALID "이 인증서는 올바릅니다.."
+    IDS_FIELD "필드"
+    IDS_VALUE "값"
+    IDS_FIELDS_ALL "<모두>"
+    IDS_FIELDS_V1 "오직 버젼 1 필드만"
+    IDS_FIELDS_EXTENSIONS "오직 확장만"
+    IDS_FIELDS_CRITICAL_EXTENSIONS "오직 중요한 확장만"
+    IDS_FIELDS_PROPERTIES "오직 속성만"
+    IDS_FIELD_VERSION "버젼"
+    IDS_FIELD_SERIAL_NUMBER "시리얼 번호"
+    IDS_FIELD_ISSUER "발행자"
+    IDS_FIELD_VALID_FROM "유효기간(시작)"
+    IDS_FIELD_VALID_TO "유효기간(끝)"
+    IDS_FIELD_SUBJECT "제목"
+    IDS_FIELD_PUBLIC_KEY "공용 키"
+    IDS_FIELD_PUBLIC_KEY_FORMAT "%s (%d 비트)"
+    IDS_PROP_HASH "SHA1 해쉬"
+    IDS_PROP_ENHKEY_USAGE "확장 키 사용 (속성)"
+    IDS_PROP_FRIENDLY_NAME "애칭"
+    IDS_PROP_DESCRIPTION "설명"
+    IDS_CERTIFICATE_PROPERTIES "인증서 속성"
+    IDS_CERTIFICATE_PURPOSE_ERROR "폼 1,2,3,4에 하나의 OID를 입력하십시오"
+    IDS_CERTIFICATE_PURPOSE_EXISTS "당신이 입력한 OID는 이미 존재합니다."
+    IDS_SELECT_STORE_TITLE "인증서 저장소 선택"
+    IDS_SELECT_STORE "인증서 저장소를 선택하십시오."
+    IDS_IMPORT_WIZARD "인증서 가져오기 마법사"
+    IDS_IMPORT_TYPE_MISMATCH "이 파일은 주어진 기존에 맞지 않는 객체를 포함하고 있습니다. 다른 파일을 선택하십시오."
+    IDS_IMPORT_FILE_TITLE "가져올 파일"
+    IDS_IMPORT_FILE_SUBTITLE "가져올 파일 선택."
+    IDS_IMPORT_STORE_TITLE "인증서 보관소"
+    IDS_IMPORT_STORE_SUBTITLE "인증서 보관소는 인증서, 인증서 파기 목록, 인증서 신뢰 목록의 집합소입니다."
+    IDS_IMPORT_FILTER_CERT "X.509 인증서 (*.cer; *.crt)"
+    IDS_IMPORT_FILTER_PFX "개인 정보 교환 (*.pfx; *.p12)"
+    IDS_IMPORT_FILTER_CRL "인증소 파기 목록 (*.crl)"
+    IDS_IMPORT_FILTER_CTL "인증서 신뢰 목록 (*.stl)"
+    IDS_IMPORT_FILTER_SERIALIZED_STORE "Microsoft 연속 인증서 보관소 (*.sst)"
+    IDS_IMPORT_FILTER_CMS "CMS/PKCS #7 메세지 (*.spc; *.p7b)"
+    IDS_IMPORT_FILTER_ALL "모든 파일 (*.*)"
+    IDS_IMPORT_EMPTY_FILE "파일을 선택하십시오."
+    IDS_IMPORT_BAD_FORMAT "이 파일 형식은 인식할 수 없습니다. 다른 파일을 선택하십시오."
+    IDS_IMPORT_OPEN_FAILED "열수 없습니다 "
+    IDS_IMPORT_DEST_DETERMINED "프로그램에 의해 결정"
+    IDS_IMPORT_SELECT_STORE "보관소를 선택하십시오"
+    IDS_IMPORT_STORE_SELECTION "인증서 보관소가 선택됨"
+    IDS_IMPORT_DEST_AUTOMATIC "자동으로 프로그램에 의해 결정"
+    IDS_IMPORT_FILE "파일"
+    IDS_IMPORT_CONTENT "내용"
+    IDS_IMPORT_CONTENT_CERT "인증서"
+    IDS_IMPORT_CONTENT_CRL "인증서 파기 목록"
+    IDS_IMPORT_CONTENT_CTL "인증서 신뢰 목록"
+    IDS_IMPORT_CONTENT_CMS "CMS/PKCS #7 메세지"
+    IDS_IMPORT_CONTENT_PFX "개인 정보 교환"
+    IDS_IMPORT_CONTENT_STORE "인증서 보관소"
+    IDS_IMPORT_SUCCEEDED "가져오기 성공."
+    IDS_IMPORT_FAILED "가져오기 실패."
+    IDS_WIZARD_TITLE_FONT "Arial"
+    IDS_PURPOSE_ALL "<모두>"
+    IDS_PURPOSE_ADVANCED "<추가 용도>"
+    IDS_SUBJECT_COLUMN "발행목적"
+    IDS_ISSUER_COLUMN "발행자"
+    IDS_EXPIRATION_COLUMN "만기일"
+    IDS_FRIENDLY_NAME_COLUMN "애칭"
+    IDS_ALLOWED_PURPOSE_ALL "<모두>"
+    IDS_ALLOWED_PURPOSE_NONE "<없음>"
+    IDS_WARN_REMOVE_MY "당신은 더 이상 이 인증서를 이용해서 메세지를 해독하거나,아니면 서명을 할 수 없을 것입니다.\n당신은 정말로 이 인증서를 제거하기를 원합니까?"
+    IDS_WARN_REMOVE_PLURAL_MY "당신은 더 이상 이 인증서다들를 이용해서 메세지를 해독하거나,아니면 서명을 할 수 없을 것입니다.\n당신은 정말로 이 인증서들를 제거하기를 원합니까??"
+    IDS_WARN_REMOVE_ADDRESSBOOK "당신은 더 이상 이 인증서를 이용해서 메세지를 암호하거나,아니면 서명된 것을 검증할 수 없을 것입니다.\n당신은 정말로 이 인증서를 제거하기를 원합니까?"
+    IDS_WARN_REMOVE_PLURAL_ADDRESSBOOK "당신은 더 이상 이 인증서들를 이용해서 메세지를 암호하거나,아니면 서명된 것을 검증할 수 없을 것입니다.\n당신은 정말로 이 인증서들를 제거하기를 원합니까?"
+    IDS_WARN_REMOVE_CA "이 인증 기관이 발급한 인증서를 더 이상 신뢰할 수 없을 것입니다.\n당신은 정말로 이 인증서를 제거하기를 원합니까?"
+    IDS_WARN_REMOVE_PLURAL_CA "이 인증 기관이 발급한 인증서들를 더 이상 신뢰할 수 없을 것입니다.\n당신은 정말로 이 인증서들를 제거하기를 원합니까?"
+    IDS_WARN_REMOVE_ROOT "이 루트인증 기관이나 다른 어떤 인증기관에에서 발급한 인증서를 더 이상 신뢰할 수 없을 것입니다.\n당신은 정말로 이 신뢰된 루트인증서를 제거하기를 원합니까?"
+    IDS_WARN_REMOVE_PLURAL_ROOT "이 루트인증 기관이나 다른 어떤 인증기관에에서 발급한 인증서를 더 이상 신뢰할 수 없을 것입니다.\n당신은 정말로 이 신뢰된 루트인증서들를 제거하기를 원합니까?"
+    IDS_WARN_REMOVE_TRUSTEDPUBLISHER "이 발행자에 의해 서명된 소프트웨어는 더 이상 신뢰할 수 없을 것입니다.\n당신은 정말로 이 인증서를 제거하기를 원합니까?"
+    IDS_WARN_REMOVE_PLURAL_TRUSTEDPUBLISHER "이 발행자들에 의해 서명된 소프트웨어는 더 이상 신뢰할 수 없을 것입니다.\n당신은 정말로 이 인증서들를 제거하기를 원합니까?"
+    IDS_WARN_REMOVE_DEFAULT "이 인증거를 제거하기를 원합니까?"
+    IDS_WARN_REMOVE_PLURAL_DEFAULT "이 인증서들를 제거하기를 원합니까?"
+    IDS_CERT_MGR "인증서"
+    IDS_PURPOSE_SERVER_AUTH "원격 컴퓨터의 동일성 보증"
+    IDS_PURPOSE_CLIENT_AUTH "당신의 신원을 원격컴퓨터로 인증"
+    IDS_PURPOSE_CODE_SIGNING "소프트웨어 발행자로부터 온 소프트웨어 보증\n발행된 후의 소프트웨어를 개조로부터 보호"
+    IDS_PURPOSE_EMAIL_PROTECTION "전자우편 메시지 보호"
+    IDS_PURPOSE_IPSEC "인터넷을 통한 보안 통신 허용"
+    IDS_PURPOSE_TIMESTAMP_SIGNING "현재 시간에 따른 서명 허용"
+    IDS_PURPOSE_CTL_USAGE_SIGNING "신뢰할 수 있는 증명서 목록에 전자 서명 허용"
+    IDS_PURPOSE_EFS "디스크에 데이타 암호화 허용"
+    IDS_PURPOSE_EFS_RECOVERY "파일 복구"
+    IDS_PURPOSE_WHQL "윈도우즈 하드웨어 드라이버 확인"
+    IDS_PURPOSE_NT5 "윈도우즈 시스템 컴포넌트 확인"
+    IDS_PURPOSE_OEM_WHQL "OEM 윈도우즈 시스템 컴포넌트 확인"
+    IDS_PURPOSE_EMBEDDED_NT "임베디드 윈도우즈 시스템 컴포넌트 확인"
+    IDS_PURPOSE_ROOT_LIST_SIGNER "루트 목록 서명자"
+    IDS_PURPOSE_QUALIFIED_SUBORDINATION "자격있는 종속"
+    IDS_PURPOSE_KEY_RECOVERY "키 복구"
+    IDS_PURPOSE_DOCUMENT_SIGNING "문서 서명"
+    IDS_PURPOSE_LIFETIME_SIGNING "유효기간"
+    IDS_PURPOSE_DRM "디지털 권리"
+    IDS_PURPOSE_LICENSES "키 팩 라이센스"
+    IDS_PURPOSE_LICENSE_SERVER "라이센스 서버 확인"
+    IDS_PURPOSE_ENROLLMENT_AGENT "인증서 요청 에이전트"
+    IDS_PURPOSE_SMARTCARD_LOGON "스마트 카드 로그온"
+    IDS_PURPOSE_CA_EXCHANGE "사적 키 보관소"
+    IDS_PURPOSE_KEY_RECOVERY_AGENT "키 복구 에이전트"
+    IDS_PURPOSE_DS_EMAIL_REPLICATION "디렉토리 서비스 전자우편 복제"
+    IDS_EXPORT_WIZARD "인증서 내보내기 마법사"
+    IDS_EXPORT_FORMAT_TITLE "내보낼 형식"
+    IDS_EXPORT_FORMAT_SUBTITLE "내용을 저장할 형식 선택."
+    IDS_EXPORT_FILE_TITLE "내보낼 파일이름"
+    IDS_EXPORT_FILE_SUBTITLE "내용을 저장할 파일 이름 지정."
+    IDS_EXPORT_FILE_EXISTS "지정된 파일은 이미 존재합니다.덮어 쓰시겠습니까?"
+    IDS_EXPORT_FILTER_CERT "DER-암호화된 바이너리 X.509 (*.cer)"
+    IDS_EXPORT_FILTER_BASE64_CERT "Base64-암호화된 X.509 (*.cer)"
+    IDS_EXPORT_FILTER_CRL "인증서 폐기 목록 (*.crl)"
+    IDS_EXPORT_FILTER_CTL "인증서 신뢰 목록 (*.stl)"
+    IDS_EXPORT_FILTER_CMS "CMS/PKCS #7 메세지 (*.p7b)"
+    IDS_EXPORT_FILTER_PFX "개인 정보 교환 (*.pfx)"
+    IDS_EXPORT_FILTER_SERIALIZED_CERT_STORE "나열된 인증서 저장소 (*.sst)"
+    IDS_EXPORT_FORMAT "파일 형식"
+    IDS_EXPORT_INCLUDE_CHAIN "인증 경로에 있는 모든 인증서 포함"
+    IDS_EXPORT_KEYS "내보낼 키"
+    IDS_YES "예"
+    IDS_NO "아니오"
+    IDS_EXPORT_SUCCEEDED "내보내기 성공."
+    IDS_EXPORT_FAILED "내보내기 실패."
+    IDS_EXPORT_PRIVATE_KEY_TITLE "내보낼 개인 키"
+    IDS_EXPORT_PRIVATE_KEY_SUBTITLE "이 인증서는  인증서를 내보낼 때 같이 나갈 개인키를 포함하고 있습니다."
+    IDS_EXPORT_PASSWORD_TITLE "암호 입력"
+    IDS_EXPORT_PASSWORD_SUBTITLE "이 개인키는 아마도 암호로 보호되어있는 것 같습니다."
+    IDS_EXPORT_PASSWORD_MISMATCH "이 암호는 맞지 않습니다."
+    IDS_EXPORT_PRIVATE_KEY_UNAVAILABLE "주의: 이 인증서를 위한 개인 키를 열 수 없습니다."
+    IDS_EXPORT_PRIVATE_KEY_NON_EXPORTABLE "주의: 이 인증서를 위한 개인 키를 내보낼 수 없습니다."
+
+}
+
+IDD_GENERAL DIALOG DISCARDABLE 0, 0, 255, 236
+CAPTION "일반"
+STYLE WS_VISIBLE
+FONT 8, "MS Shell Dlg"
+BEGIN
+  CONTROL "", -1, "Static", WS_BORDER|SS_WHITERECT, 6,10,241,200
+  CONTROL "", IDC_CERTIFICATE_ICON,"RichEdit20W",
+    ES_READONLY|WS_DISABLED,8,11,26,26
+  CONTROL "", IDC_CERTIFICATE_INFO,"RichEdit20W",
+    ES_READONLY|WS_DISABLED,34,11,212,26
+  CONTROL "", -1, "Static", SS_BLACKFRAME, 16,37,222,1
+  CONTROL "", IDC_CERTIFICATE_STATUS,"RichEdit20W",
+    ES_READONLY|ES_MULTILINE,8,38,238,78
+  CONTROL "", -1, "Static", SS_BLACKFRAME, 16,116,222,1
+  CONTROL "", IDC_CERTIFICATE_NAMES,"RichEdit20W",
+    ES_READONLY|ES_MULTILINE|WS_DISABLED,8,118,238,90
+  PUSHBUTTON "인증서 설치(&I)...", IDC_ADDTOSTORE,103,216,70,14
+  PUSHBUTTON "발행자 설명(&S)", IDC_ISSUERSTATEMENT,177,216,70,14
+END
+
+IDD_DETAIL DIALOG DISCARDABLE 0, 0, 255, 236
+CAPTION "자세히"
+STYLE WS_VISIBLE
+FONT 8, "MS Shell Dlg"
+BEGIN
+  LTEXT "표시(&S):", -1, 6,12,40,14
+  COMBOBOX IDC_DETAIL_SELECT, 28,10,100,14,
+    CBS_DROPDOWNLIST|WS_BORDER|WS_VSCROLL|WS_TABSTOP
+  CONTROL "", IDC_DETAIL_LIST, "SysListView32",
+    LVS_REPORT|LVS_SINGLESEL|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER,
+    6,28,241,100
+  CONTROL "", IDC_DETAIL_VALUE, "RichEdit20W",
+    ES_READONLY|ES_MULTILINE|WS_TABSTOP, 6,136,241,70
+  PUSHBUTTON "속성 편집(&E)...", IDC_EDITPROPERTIES,103,216,70,14
+  PUSHBUTTON "파일로 복사(&C)...", IDC_EXPORT,177,216,70,14
+END
+
+IDD_HIERARCHY DIALOG DISCARDABLE 0, 0, 255, 236
+CAPTION "인증서 경로"
+STYLE WS_VISIBLE
+FONT 8, "MS Shell Dlg"
+BEGIN
+  GROUPBOX "인증서 경로(&P)", -1,6,10,245,165, BS_GROUPBOX
+  CONTROL "",IDC_CERTPATH, "SysTreeView32", TVS_HASLINES|WS_BORDER,
+    13,22,231,130
+  PUSHBUTTON "인증서 보기(&V)", IDC_VIEWCERTIFICATE,175,156,70,14
+  LTEXT "인증서 상태(&S):", IDC_CERTIFICATESTATUS,6,183,70,14
+  CONTROL "", IDC_CERTIFICATESTATUSTEXT,"RichEdit20W",
+    WS_BORDER|ES_READONLY|ES_MULTILINE|WS_DISABLED,6,195,245,36
+END
+
+IDD_USERNOTICE DIALOG DISCARDABLE 0, 0, 255, 256
+CAPTION "거부"
+STYLE WS_VISIBLE
+FONT 8, "MS Shell Dlg"
+BEGIN
+  CONTROL "", IDC_USERNOTICE,"RichEdit20W",
+    WS_BORDER|ES_READONLY|ES_MULTILINE|WS_DISABLED,6,10,241,200
+  PUSHBUTTON "닫기", IDOK,103,216,70,14
+  PUSHBUTTON "추가 정보(&I)", IDC_CPS,177,216,70,14
+END
+
+IDD_CERT_PROPERTIES_GENERAL DIALOG DISCARDABLE 0, 0, 255, 236
+CAPTION "일반"
+STYLE WS_VISIBLE
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "애칭(&F):", -1, 6,14,60,14
+	EDITTEXT IDC_FRIENDLY_NAME, 60,12,191,14, ES_AUTOHSCROLL|WS_TABSTOP
+	LTEXT "설명(&D):", -1, 6,32,60,14
+	EDITTEXT IDC_DESCRIPTION, 60,30,191,14, ES_AUTOVSCROLL|ES_MULTILINE|WS_TABSTOP|WS_VSCROLL
+	GROUPBOX "인증서 용도", -1,6,48,245,165, BS_GROUPBOX
+	AUTORADIOBUTTON "인증서를 모든 용도로 사용 가능(&E)",
+	IDC_ENABLE_ALL_PURPOSES, 12,58,180,14, BS_AUTORADIOBUTTON|WS_TABSTOP
+	AUTORADIOBUTTON "인증서를 모든 용도로 사용하지 않음(&I)",
+	IDC_DISABLE_ALL_PURPOSES, 12,70,180,14, BS_AUTORADIOBUTTON
+	AUTORADIOBUTTON "인증서를 오직 다음의 용도로만 사용(&O):",
+	IDC_ENABLE_SELECTED_PURPOSES, 12,82,180,14, BS_AUTORADIOBUTTON
+	CONTROL "", IDC_CERTIFICATE_USAGES,"SysListView32",
+	LVS_REPORT|LVS_NOCOLUMNHEADER|LVS_SINGLESEL|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER,24,100,220,90
+	PUSHBUTTON "용도 추가(&)...", IDC_ADD_PURPOSE,184,194,60,14
+END
+
+IDD_ADD_CERT_PURPOSE DIALOG DISCARDABLE 0,0,200,68
+CAPTION "용도 추가"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "추가하고자 하는 인증서 용도의 객체 식별자(OID) 추가:",-1, 6,6,190,28
+	EDITTEXT IDC_NEW_PURPOSE, 6,28,190,14, ES_AUTOVSCROLL|ES_MULTILINE|WS_TABSTOP|WS_VSCROLL
+	PUSHBUTTON "확인", IDOK, 33,48,60,14
+	PUSHBUTTON "취소", IDCANCEL, 100,48,60,14
+END
+
+IDD_SELECT_STORE DIALOG DISCARDABLE 0,0,200,136
+CAPTION "인증서 저장소 선택"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "사용하고자 하는 인증서 저장소를 선택하십시오:", IDC_STORE_TEXT, 6,6,190,28
+	CONTROL "",IDC_STORE_LIST, "SysTreeView32", TVS_HASLINES|WS_BORDER|WS_TABSTOP,6,28,188,70
+	CHECKBOX "물리적 저장소 보여주기(&S)", IDC_SHOW_PHYSICAL_STORES, 6,102,90,14,BS_AUTOCHECKBOX|WS_TABSTOP
+	PUSHBUTTON "확인", IDOK, 90,118,50,14, BS_DEFPUSHBUTTON
+	PUSHBUTTON "취소", IDCANCEL, 144,118,50,14
+END
+
+IDD_IMPORT_WELCOME DIALOG DISCARDABLE 0,0,317,143
+CAPTION "인증서 가져오기 마법사"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "인증서 가져오기 마법사에 온 것을 환영합니다", IDC_IMPORT_TITLE,115,1,195,40
+	LTEXT "이 마법사는 당신이 파일로부터 인증서,인증서 파기 목록,인증서 신뢰 목록을 인증서 보관소에 가져오는 것을 도와줍니다.",-1, 115,33,195,16
+	LTEXT "이 인증서는 당신이나 당신이 통신에 사용하는 컴퓨터를 신원보증하는 데 사용됩니다.  또한  메세지에 사인하고 인증하는 데도 사용됩니다. 인증서 보관소는 인증서, 인증서 파기 목록, 인증서 신뢰 목록의 저장소입니다.",-1, 115,56,195,40
+	LTEXT "계속하려면, 다음을 클릭하십시오.",-1, 115,103,195,8
+END
+
+IDD_IMPORT_FILE DIALOG DISCARDABLE 0,0,317,143
+CAPTION "인증서 가져오기 마법사"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "파일 이름(&F):", -1, 21,1,195,10
+	EDITTEXT IDC_IMPORT_FILENAME, 21,11,208,14, ES_AUTOHSCROLL|WS_TABSTOP
+	PUSHBUTTON "찾기(&R)...", IDC_IMPORT_BROWSE_FILE, 236,11,60,14
+	LTEXT "주의:  이 파일 형식은 아마도 하나 이상의 인증서,인증서 파기 목록,인증서 신뢰 목록을 가지고 있을 수 있습니다:", -1, 21,26,265,16
+	LTEXT "암호화 메세지 문법 표준/PKCS #7 메시지 (.p7b)",-1, 31,49,265,10
+	LTEXT "개인 정보 교환/PKCS #12 (.pfx, .p12)",-1, 31,64,265,10
+	LTEXT "Microsoft 연속 인증서 보관소 (.sst)",-1, 31,79,265,10
+END
+
+IDD_IMPORT_STORE DIALOG DISCARDABLE 0,0,317,143
+CAPTION "인증서 가져오기 마법사"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Wine이 자동으로 인증서 저장소를 선택하거나, 아니면 직접 저장할 곳을 선택할 수 있습니다.", -1, 21,1,195,20
+	AUTORADIOBUTTON "자동으로 인증서 저장소 선택(&A)",IDC_IMPORT_AUTO_STORE, 31,18,180,12, BS_AUTORADIOBUTTON|WS_TABSTOP
+	AUTORADIOBUTTON "다음 저장소에 모든 인증서 저장(&P):",IDC_IMPORT_SPECIFY_STORE, 31,30,180,12, BS_AUTORADIOBUTTON
+	EDITTEXT IDC_IMPORT_STORE, 44,49,185,14, ES_READONLY
+	PUSHBUTTON "찾기(&R)...", IDC_IMPORT_BROWSE_STORE, 236,49,60,14
+END
+
+IDD_IMPORT_FINISH DIALOG DISCARDABLE 0,0,317,143
+CAPTION "인증서 가져오기 마법사"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "인증서 가져오기 마법사 마치는 중", IDC_IMPORT_TITLE,115,1,195,40
+	LTEXT "당신은 인증서 가져오기 마법사를 마치는데 성공했습니다.",-1, 115,33,195,24
+	LTEXT "당신은 다음 설정을 지정했습니다:",-1, 115,57,195,12
+	CONTROL "", IDC_IMPORT_SETTINGS, "SysListView32",
+	LVS_REPORT|LVS_NOCOLUMNHEADER|LVS_SINGLESEL|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER,
+    115,67,174,100
+END
+
+IDD_CERT_MGR DIALOG DISCARDABLE 0,0,335,270
+CAPTION "인증서"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  LTEXT "지정된 용도(&N):", -1, 7,9,100,12
+  COMBOBOX IDC_MGR_PURPOSE_SELECTION, 83,7,245,14,
+    CBS_DROPDOWNLIST|WS_BORDER|WS_VSCROLL|WS_TABSTOP
+  CONTROL "", IDC_MGR_STORES, "SysTabControl32",
+    WS_CLIPSIBLINGS|WS_TABSTOP, 7,25,321,140
+  CONTROL "", IDC_MGR_CERTS, "SysListView32",
+    LVS_REPORT|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER, 15,46,305,111
+  PUSHBUTTON "불러오기(&I)...", IDC_MGR_IMPORT, 7,172,51,14
+  PUSHBUTTON "내보내기(&E)...", IDC_MGR_EXPORT, 62,172,51,14, WS_DISABLED
+  PUSHBUTTON "제거하기(&R)", IDC_MGR_REMOVE, 117,172,51,14, WS_DISABLED
+  PUSHBUTTON "추가(&A)...", IDC_MGR_ADVANCED, 277,172,51,14
+  GROUPBOX "인증서 지정 용도", -1,7,194,321,47, BS_GROUPBOX
+  LTEXT "", IDC_MGR_PURPOSES, 13,208,252,30
+  PUSHBUTTON "보기(&V)...", IDC_MGR_VIEW, 269,218,51,14, WS_DISABLED
+  PUSHBUTTON "닫기(&C)", IDCANCEL, 277,249,51,14, BS_DEFPUSHBUTTON
+END
+
+IDD_CERT_MGR_ADVANCED DIALOG DISCARDABLE 0,0,248,176
+CAPTION "추가 옵션"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  GROUPBOX "인증서 용도", -1, 7,7,234,141, BS_GROUPBOX
+  LTEXT "추가 용도가 선택되었을 때 나타나는 하나나 다수의 용도 선택.",
+    -1, 14,18,220,16
+  LTEXT "인증서 용도(&C):", -1, 14,41,90,12, WS_TABSTOP
+  CONTROL "", IDC_CERTIFICATE_USAGES,"SysListView32",
+    LVS_REPORT|LVS_NOCOLUMNHEADER|LVS_SINGLESEL|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER,
+    14,51,220,90
+  PUSHBUTTON "확인", IDOK, 132,155,51,14, BS_DEFPUSHBUTTON
+  PUSHBUTTON "취소", IDCANCEL, 190,155,51,14
+END
+
+
+IDD_EXPORT_WELCOME DIALOG DISCARDABLE 0,0,317,143
+CAPTION "인증서 내보내기 마법사"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  LTEXT "인증서 내보내기 마법사에 오신 것을 환영합니다", IDC_EXPORT_TITLE,
+    115,1,195,40
+  LTEXT "이 마법사는 인증서,인증서 폐기 목록,인증서 신뢰 목록을 인증서 저장소로부터 파일로 내보내는 것을 도와줄겁니다.",
+    -1, 115,33,195,16
+  LTEXT " 인증서는 당신이나 당신이 통신에 사용하는 컴퓨터를 신원보증하는 데 사용됩니다.  또한  메세지에 사인하고 인증하는 데도 사용됩니다. 인증서 보관소는 인증서, 인증서 파기 목록, 인증서 신뢰 목록의 저장소입니다..",
+    -1, 115,56,195,40
+  LTEXT "계속 하실려면, <다음>을 클릭하십시오.",
+    -1, 115,103,195,8
+END
+
+IDD_EXPORT_PRIVATE_KEY DIALOG DISCARDABLE 0,0,317,143
+CAPTION "인증서 내보내기 마법사"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "당신이  개인 키를 내보내기를 선택하면, 당신은 다음 페이지에서 개인 키를 보호할 암호를 입력하게 될 것입니다.", -1, 21,1,195,23
+	LTEXT "개인 키를 내보내기를 원합니까?", -1, 21,24,195,15
+	AUTORADIOBUTTON "예(&Y), 개인 키 내보내기",
+	IDC_EXPORT_PRIVATE_KEY_YES, 31,36,200,12, BS_AUTORADIOBUTTON|WS_TABSTOP
+	AUTORADIOBUTTON "아니오(&O), 개인 키 안 내보내기",
+	IDC_EXPORT_PRIVATE_KEY_NO, 31,48,200,12, BS_AUTORADIOBUTTON
+	LTEXT "", IDC_EXPORT_PRIVATE_KEY_UNAVAILABLE, 21,60,200,24
+END
+
+IDD_EXPORT_PASSWORD DIALOG DISCARDABLE 0,0,317,143
+CAPTION "인증서 내보내기 마법사"
+FONT 8, "MS Shell Dlg"
+BEGIN
+LTEXT "암호(&P):", -1, 21,1,195,10
+EDITTEXT IDC_EXPORT_PASSWORD, 21,11,208,14, ES_AUTOHSCROLL|WS_TABSTOP
+LTEXT "암호 확인(&C):", -1, 21,35,195,10
+EDITTEXT IDC_EXPORT_PASSWORD_CONFIRM, 21,45,208,14, ES_AUTOHSCROLL|WS_TABSTOP
+END
+
+IDD_EXPORT_FORMAT DIALOG DISCARDABLE 0,0,317,143
+CAPTION "인증서 내보내기 마법사"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  LTEXT "사용할 파일 형식 선택:", -1, 21,1,195,10
+  AUTORADIOBUTTON "&DER-암호화된 X.509 (.cer)",
+    IDC_EXPORT_FORMAT_DER, 31,18,200,12, BS_AUTORADIOBUTTON|WS_TABSTOP
+  AUTORADIOBUTTON "Ba&se64-암호화된 X.509 (.cer):",
+    IDC_EXPORT_FORMAT_BASE64, 31,30,200,12, BS_AUTORADIOBUTTON
+  AUTORADIOBUTTON "암호 메시지 문법 표준/PKCS #7 메시지(&C) (.p7b)",
+    IDC_EXPORT_FORMAT_CMS, 31,42,200,12, BS_AUTORADIOBUTTON
+  CHECKBOX "가능한 인증서 경로에 있는 모든 인증서 포함(&I)",
+    IDC_EXPORT_CMS_INCLUDE_CHAIN, 44,57,200,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
+  AUTORADIOBUTTON "개인 정보 교환(&P)/PKCS #12 (.pfx)",
+    IDC_EXPORT_FORMAT_PFX, 31,72,200,12, BS_AUTORADIOBUTTON|WS_DISABLED
+  CHECKBOX "가능한 인증서 경로에 있는 모든 인증서 포함(&U)",
+    IDC_EXPORT_PFX_INCLUDE_CHAIN, 44,87,200,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
+  CHECKBOX "강한 암호화 가능(&E)",
+    IDC_EXPORT_PFX_STRONG_ENCRYPTION, 44,102,200,8,
+    BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
+  CHECKBOX "내보내기가 성공하면 개인 키 지우기(&K)",
+    IDC_EXPORT_PFX_DELETE_PRIVATE_KEY, 44,117,200,8,
+    BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
+END
+
+IDD_EXPORT_FILE DIALOG DISCARDABLE 0,0,317,143
+CAPTION "인증서 내보내기 마법사"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  LTEXT "파일 이름(&F):", -1, 21,1,195,10
+  EDITTEXT IDC_EXPORT_FILENAME, 21,11,208,14, ES_AUTOHSCROLL|WS_TABSTOP
+  PUSHBUTTON "찾기(&R)...", IDC_EXPORT_BROWSE_FILE, 236,11,60,14
+END
+
+IDD_EXPORT_FINISH DIALOG DISCARDABLE 0,0,317,143
+CAPTION "인증서 내보내기 마법사"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  LTEXT "인증서 내보내기 마법서 완료하는 중", IDC_EXPORT_TITLE,
+    115,1,195,40
+  LTEXT "당신은 인증서 내보내기 마법를 완료하는 데 성공하였습니다.",
+    -1, 115,33,195,24
+  LTEXT "당신은 다음 설정을 지정했습니다:",
+    -1, 115,57,195,12
+  CONTROL "", IDC_EXPORT_SETTINGS, "SysListView32",
+    LVS_REPORT|LVS_NOCOLUMNHEADER|LVS_SINGLESEL|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER,
+    115,67,174,100
+END

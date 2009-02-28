@@ -195,6 +195,8 @@ BEGIN
     IDS_CMT_DEVMGMT     "设备管理"
     IDS_CMT_SERVMAN     "服务"
     IDS_CMT_RDESKTOP    "远程桌面连接"
+    IDS_CMT_EVENTVIEW   "Launch Event Viewer"
+    IDS_CMT_MSCONFIG    "Launch System Configuration program"
 END
 
 STRINGTABLE
@@ -244,10 +246,12 @@ BEGIN
     IDS_SHORT_SNAP       "屏幕截图.lnk"
     IDS_SHORT_SOLITAIRE  "纸牌.lnk"
     IDS_SHORT_WINEMINE   "扫雷.lnk"
-	IDS_SHORT_CHARMAP    "字符映射表.lnk"
-	IDS_SHORT_MAGNIFY    "放大镜.lnk"
+    IDS_SHORT_CHARMAP    "字符映射表.lnk"
+    IDS_SHORT_MAGNIFY    "放大镜.lnk"
     IDS_SHORT_RDESKTOP   "远程桌面连接.lnk"
-	IDS_SHORT_KBSWITCH   "Keyboard Layout Switcher.lnk"
+    IDS_SHORT_KBSWITCH   "Keyboard Layout Switcher.lnk"
+    IDS_SHORT_EVENTVIEW  "Event Viewer.lnk"
+    IDS_SHORT_MSCONFIG   "System Configuration.lnk"
 END
 
 STRINGTABLE

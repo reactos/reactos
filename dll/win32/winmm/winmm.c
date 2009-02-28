@@ -1525,7 +1525,7 @@ static	BOOL	MMSYSTEM_MidiStream_MessageHandler(WINE_MIDIStream* lpMidiStrm, LPWI
 	 * 3b 4c 00 99 23 5e 04 89 3b 00 00 89 23 00 7c 99 ;L..#^..;...#.|.
 	 */
 	lpMidiHdr = (LPMIDIHDR)msg->lParam;
-	lpData = lpMidiHdr->lpData;
+	lpData = (LPBYTE)lpMidiHdr->lpData;
 	TRACE("Adding %s lpMidiHdr=%p [lpData=0x%08lx dwBufferLength=%lu/%lu dwFlags=0x%08lx size=%u]\n",
 	      (lpMidiHdr->dwFlags & MHDR_ISSTRM) ? "stream" : "regular", lpMidiHdr,
 	      (DWORD)lpMidiHdr, lpMidiHdr->dwBufferLength, lpMidiHdr->dwBytesRecorded,
@@ -1632,7 +1632,7 @@ static	DWORD	CALLBACK	MMSYSTEM_MidiStream_Player(LPVOID pmt)
 	}
 
 	if (!lpData)
-	    lpData = lpMidiHdr->lpData;
+	    lpData = (LPBYTE)lpMidiHdr->lpData;
 
 	me = (LPMIDIEVENT)(lpData + lpMidiHdr->dwOffset);
 
@@ -2551,7 +2551,7 @@ UINT WINAPI waveInGetDevCapsA(UINT_PTR uDeviceID, LPWAVEINCAPSA lpCaps, UINT uSi
 /**************************************************************************
  * 				waveInOpen			[WINMM.@]
  */
-MMRESULT WINAPI waveInOpen(HWAVEIN* lphWaveIn, UINT uDeviceID,
+MMRESULT WINAPI waveInOpen(LPHWAVEIN lphWaveIn, UINT uDeviceID,
 		       LPCWAVEFORMATEX lpFormat, DWORD_PTR dwCallback,
 		       DWORD_PTR dwInstance, DWORD dwFlags)
 {

@@ -5,15 +5,24 @@
 #define IDI_HORIZONTAL           101
 #define IDI_NETSTAT              102
 #define IDI_VERTICAL             103
+#define IDI_NET_ERROR            104
+#define IDI_NET_IDLE             105
+#define IDI_NET_OFF              106
+#define IDI_NET_REC              107
+#define IDI_NET_TRANS            108
+#define IDI_NET_TRANSREC         109
 
 /* dialogs */
 #define IDD_NETPROPERTIES             400
-#define IDD_NETSTATUS                 401
+#define IDD_LAN_NETSTATUS             401
+#define IDD_STATUS                    402
+#define IDD_LAN_NETSTATUSADVANCED     403
+#define IDD_LAN_NETSTATUSDETAILS      404
 
 /* dialog controls */
 #define IDC_NETCARDNAME              1000
 #define IDC_CONFIGURE                1001
-#define IDC_COMPONENTSLIST           2800
+#define IDC_COMPONENTSLIST           1002
 #define IDC_INSTALL                  1003
 #define IDC_UNINSTALL                1004
 #define IDC_PROPERTIES               1005
@@ -28,7 +37,15 @@
 #define IDC_STATUS                   1104
 #define IDC_DURATION                 1105
 #define IDC_SPEED                    1106
+#define IDC_NETSTAT                  1107
 
+#define IDC_DETAILSTYPE              1200
+#define IDC_DETAILSIP                1201
+#define IDC_DETAILSSUBNET            1202
+#define IDC_DETAILSGATEWAY           1203
+#define IDC_DETAILS                  1204
+
+#define IDC_CLOSE                    1300
 
 /* resource constants */
 
@@ -55,3 +72,25 @@
 #define IDS_NET_DELETE              10105
 #define IDS_NET_RENAME              10106
 #define IDS_NET_PROPERTIES          10107
+
+#define IDS_FORMAT_BIT              10200
+#define IDS_FORMAT_MBIT             10201
+#define IDS_FORMAT_KBIT             10202
+#define IDS_FORMAT_GBIT             10203
+#define IDS_DURATION_DAY            10204
+#define IDS_DURATION_DAYS           10205
+#define IDS_ASSIGNED_DHCP           10206
+#define IDS_ASSIGNED_MANUAL         10207
+
+#define IDS_PHYSICAL_ADDRESS        10300
+#define IDS_IP_ADDRESS              10301
+#define IDS_SUBNET_MASK             10302
+#define IDS_DEF_GATEWAY             10303
+#define IDS_DHCP_SERVER             10304
+#define IDS_LEASE_OBTAINED          10305
+#define IDS_LEASE_EXPIRES           10306
+#define IDS_DNS_SERVERS             10307
+#define IDS_WINS_SERVERS            10308
+#define IDS_PROPERTY                10309
+#define IDS_VALUE                   10310
+

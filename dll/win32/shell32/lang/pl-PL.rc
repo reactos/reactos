@@ -387,18 +387,18 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	GROUPBOX "Zadania", -1, 7, 10, 249, 45
 	ICON "", 30109, 14, 25, 21, 20, SS_REALSIZECONTROL
-	AUTORADIOBUTTON "Poka¿ podstawowe zadania w &katalogach", 14001, 40, 25, 120, 10, WS_TABSTOP
-	AUTORADIOBUTTON "U¿yj klasycznych katalogów &ReactOS", 14002, 40, 37, 120, 10, WS_TABSTOP
+	AUTORADIOBUTTON "Poka¿ podstawowe zadania w &katalogach", 14001, 40, 25, 120, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "U¿yj klasycznych katalogów &ReactOS", 14002, 40, 37, 120, 10, WS_TABSTOP | WS_GROUP
 	GROUPBOX "Przegl¹daj katalogi", -1, 7, 60, 249, 45, WS_TABSTOP
 	ICON "", 30110, 14, 70, 21, 20, SS_REALSIZECONTROL
-	AUTORADIOBUTTON "Otwórz ka¿dy katalog w tym &samym oknie", 14004, 40, 70, 140, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Otwórz ka¿dy katalog w &osobnym oknie", 14005, 40, 82, 140, 10, WS_TABSTOP
+	AUTORADIOBUTTON "Otwórz ka¿dy katalog w tym &samym oknie", 14004, 40, 70, 140, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Otwórz ka¿dy katalog w &osobnym oknie", 14005, 40, 82, 140, 10, WS_TABSTOP | WS_GROUP
 	GROUPBOX "Dzia³anie przycisków myszki", -1, 7, 110, 249, 60
 	ICON "", 30111, 14, 120, 21, 20, SS_REALSIZECONTROL
-	AUTORADIOBUTTON "&Pojedyncze klikniêcie by otworzyæ cel (najechanie by wskazaæ)", 14007, 40, 120, 170, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Podkreœ&laj tytu³y ikon tak jak w przegl¹darce", 14008, 50, 132, 170, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Podkreœlaj &tytu³y ikon tylko po najechaniu na nie kursorem", 14009, 50, 144, 170, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Po&dwójne klikniêcie by otworzyæ (pojedyncze klikniêcie by wskazaæ)", 14010, 40, 156, 170, 10, WS_TABSTOP
+	AUTORADIOBUTTON "&Pojedyncze klikniêcie by otworzyæ cel (najechanie by wskazaæ)", 14007, 40, 120, 170, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Podkreœ&laj tytu³y ikon tak jak w przegl¹darce", 14008, 50, 132, 170, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Podkreœlaj &tytu³y ikon tylko po najechaniu na nie kursorem", 14009, 50, 144, 170, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Po&dwójne klikniêcie by otworzyæ (pojedyncze klikniêcie by wskazaæ)", 14010, 40, 156, 170, 10, WS_TABSTOP | WS_GROUP
 	PUSHBUTTON "&Ustawienia domyœlne", 14011, 180, 180, 60, 14, WS_TABSTOP
 END
 

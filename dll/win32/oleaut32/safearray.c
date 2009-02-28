@@ -207,7 +207,7 @@ static void SAFEARRAY_SetFeatures(VARTYPE vt, SAFEARRAY *psa)
 static SAFEARRAY* SAFEARRAY_Create(VARTYPE vt, UINT cDims, const SAFEARRAYBOUND *rgsabound, ULONG ulSize)
 {
   SAFEARRAY *psa = NULL;
-  int i;
+  unsigned int i;
 
   if (!rgsabound)
     return NULL;
@@ -314,8 +314,7 @@ static HRESULT SAFEARRAY_DestroyData(SAFEARRAY *psa, ULONG ulStartCell)
 
       while(ulCellCount--)
       {
-        if (*lpBstr)
-          SysFreeString(*lpBstr);
+        SysFreeString(*lpBstr);
         lpBstr++;
       }
     }
@@ -865,8 +864,7 @@ HRESULT WINAPI SafeArrayPutElement(SAFEARRAY *psa, LONG *rgIndices, void *pvData
         BSTR  lpBstr = (BSTR)pvData;
         BSTR* lpDest = (BSTR*)lpvDest;
 
-        if (*lpDest)
-         SysFreeString(*lpDest);
+        SysFreeString(*lpDest);
 
         *lpDest = SysAllocStringByteLen((char*)lpBstr, SysStringByteLen(lpBstr));
         if (!*lpDest)
@@ -1500,6 +1498,8 @@ HRESULT WINAPI SafeArrayGetVartype(SAFEARRAY* psa, VARTYPE* pvt)
 
   if (psa->fFeatures & FADF_RECORD)
     *pvt = VT_RECORD;
+  else if ((psa->fFeatures & (FADF_HAVEIID|FADF_DISPATCH)) == (FADF_HAVEIID|FADF_DISPATCH))
+    *pvt = VT_DISPATCH;
   else if (psa->fFeatures & FADF_HAVEIID)
     *pvt = VT_UNKNOWN;
   else if (psa->fFeatures & FADF_HAVEVARTYPE)

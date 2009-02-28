@@ -405,7 +405,7 @@ InternalGetAtomName(BOOLEAN Local,
     if (!NT_SUCCESS(Status))
     {
         /* Fail */
-        DPRINT1("Failed: %lx\n", Status);
+        DPRINT("Failed: %lx\n", Status);
         SetLastErrorByStatus(Status);
     }
 

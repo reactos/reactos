@@ -54,6 +54,8 @@ extern void calc_curve_bezier_endp(REAL xend, REAL yend, REAL xadj, REAL yadj,
 
 extern BOOL lengthen_path(GpPath *path, INT len);
 
+extern GpStatus trace_path(GpGraphics *graphics, GpPath *path);
+
 typedef struct region_element region_element;
 extern inline void delete_element(region_element *element);
 
@@ -100,12 +102,20 @@ struct GpGraphics{
     GpMatrix * worldtrans; /* world transform */
     BOOL busy;      /* hdc handle obtained by GdipGetDC */
     GpRegion *clip;
+    UINT textcontrast; /* not used yet. get/set only */
 };
 
 struct GpBrush{
     HBRUSH gdibrush;
     GpBrushType bt;
     LOGBRUSH lb;
+};
+
+struct GpHatch{
+    GpBrush brush;
+    HatchStyle hatchstyle;
+    ARGB forecol;
+    ARGB backcol;
 };
 
 struct GpSolidFill{
@@ -138,6 +148,8 @@ struct GpLineGradient{
 
 struct GpTexture{
     GpBrush brush;
+    GpMatrix *transform;
+    WrapMode wrap;  /* not used yet */
 };
 
 struct GpPath{
@@ -193,6 +205,10 @@ struct GpBitmap{
     BYTE *bitmapbits;   /* pointer to the buffer we passed in BitmapLockBits */
 };
 
+struct GpCachedBitmap{
+    GpImage *image;
+};
+
 struct GpImageAttributes{
     WrapMode wrap;
 };
@@ -200,6 +216,8 @@ struct GpImageAttributes{
 struct GpFont{
     LOGFONTW lfw;
     REAL emSize;
+    UINT height;
+    LONG line_spacing;
     Unit unit;
 };
 
@@ -218,7 +236,8 @@ struct GpStringFormat{
 };
 
 struct GpFontCollection{
-    GpFontFamily* FontFamilies;
+    GpFontFamily **FontFamilies;
+    INT count;
 };
 
 struct GpFontFamily{

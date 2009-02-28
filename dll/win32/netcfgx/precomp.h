@@ -10,6 +10,10 @@
 #include <setupapi.h>
 #include <stdio.h>
 #include <iphlpapi.h>
+#include <olectl.h>
+#include <netcfgn.h>
+#include "resource.h"
+#include <prsht.h>
 
 typedef HRESULT (CALLBACK *LPFNCREATEINSTANCE)(IUnknown* pUnkOuter, REFIID riid, LPVOID* ppvObject);
 typedef struct {
@@ -30,6 +34,7 @@ typedef struct tagNetCfgComponentItem
     ULONG Status;               //Y
     BOOL bChanged;              //Y
     struct tagNetCfgComponentItem * pNext;
+    INetCfgComponentControl * pNCCC;
 }NetCfgComponentItem;
 
 /* netcfg_iface.c */
@@ -42,7 +47,12 @@ IClassFactory * IClassFactory_fnConstructor(LPFNCREATEINSTANCE lpfnCI, PLONG pcR
 extern HINSTANCE netcfgx_hInstance;
 
 /* inetcfgcomp_iface.c */
-HRESULT STDCALL INetCfgComponent_Constructor (IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv, NetCfgComponentItem * pItem);
-HRESULT STDCALL IEnumNetCfgComponent_Constructor (IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv, NetCfgComponentItem * pItem);
+HRESULT WINAPI INetCfgComponent_Constructor (IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv, NetCfgComponentItem * pItem,INetCfg * iface);
+HRESULT WINAPI IEnumNetCfgComponent_Constructor (IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv, NetCfgComponentItem * pItem, INetCfg * iface);
+
+/* tcpipconf_notify.c */
+HRESULT WINAPI TcpipConfigNotify_Constructor (IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv);
+
+extern const GUID CLSID_TcpipConfigNotifyObject;
 
 #endif

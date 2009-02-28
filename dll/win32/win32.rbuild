@@ -7,11 +7,17 @@
 <directory name="aclui">
 	<xi:include href="aclui/aclui.rbuild" />
 </directory>
+<directory name="activeds">
+	<xi:include href="activeds/activeds.rbuild" />
+</directory>
 <directory name="advapi32">
 	<xi:include href="advapi32/advapi32.rbuild" />
 </directory>
 <directory name="advpack">
 	<xi:include href="advpack/advpack.rbuild" />
+</directory>
+<directory name="actxprxy">
+	<xi:include href="actxprxy/actxprxy.rbuild" />
 </directory>
 <directory name="atl">
 	<xi:include href="atl/atl.rbuild" />
@@ -52,11 +58,17 @@
 <directory name="compstui">
 	<xi:include href="compstui/compstui.rbuild" />
 </directory>
+<directory name="credui">
+	<xi:include href="credui/credui.rbuild" />
+</directory>
 <directory name="crtdll">
 	<xi:include href="crtdll/crtdll.rbuild" />
 </directory>
 <directory name="crypt32">
 	<xi:include href="crypt32/crypt32.rbuild" />
+</directory>
+<directory name="cryptdlg">
+	<xi:include href="cryptdlg/cryptdlg.rbuild" />
 </directory>
 <directory name="cryptdll">
 	<xi:include href="cryptdll/cryptdll.rbuild" />
@@ -73,6 +85,9 @@
 <directory name="dciman32">
 	<xi:include href="dciman32/dciman32.rbuild" />
 </directory>
+<directory name="dwmapi">
+	<xi:include href="dwmapi/dwmapi.rbuild" />
+</directory>
 <directory name="devmgr">
 	<xi:include href="devmgr/devmgr.rbuild" />
 </directory>
@@ -85,11 +100,17 @@
 <directory name="fmifs">
 	<xi:include href="fmifs/fmifs.rbuild" />
 </directory>
+<directory name="fusion">
+	<xi:include href="fusion/fusion.rbuild" />
+</directory>
 <directory name="gdi32">
 	<xi:include href="gdi32/gdi32.rbuild" />
 </directory>
 <directory name="gdiplus">
 	<xi:include href="gdiplus/gdiplus.rbuild" />
+</directory>
+<directory name="getuname">
+	<xi:include href="getuname/getuname.rbuild" />
 </directory>
 <directory name="glu32">
 	<xi:include href="glu32/glu32.rbuild" />
@@ -118,11 +139,29 @@
 <directory name="inetmib1">
 	<xi:include href="inetmib1/inetmib1.rbuild" />
 </directory>
+<directory name="inseng">
+	<xi:include href="inseng/inseng.rbuild" />
+</directory>
 <directory name="iphlpapi">
 	<xi:include href="iphlpapi/iphlpapi.rbuild" />
 </directory>
+<directory name="itss">
+	<xi:include href="itss/itss.rbuild" />
+</directory>
+<directory name="jscript">
+	<xi:include href="jscript/jscript.rbuild" />
+</directory>
 <directory name="kernel32">
 	<xi:include href="kernel32/kernel32.rbuild" />
+</directory>
+<directory name="loadperf">
+	<xi:include href="loadperf/loadperf.rbuild" />
+</directory>
+<directory name="localspl">
+	<xi:include href="localspl/localspl.rbuild" />
+</directory>
+<directory name="localui">
+	<xi:include href="localui/localui.rbuild" />
 </directory>
 <directory name="lpk">
 	<xi:include href="lpk/lpk.rbuild" />
@@ -148,14 +187,29 @@
 <directory name="mpr">
 	<xi:include href="mpr/mpr.rbuild" />
 </directory>
+<directory name="mprapi">
+	<xi:include href="mprapi/mprapi.rbuild" />
+</directory>
 <directory name="msacm32">
 	<xi:include href="msacm32/msacm32.rbuild" />
 </directory>
 <directory name="msafd">
 	<xi:include href="msafd/msafd.rbuild" />
 </directory>
+<directory name="mscat32">
+	<xi:include href="mscat32/mscat32.rbuild" />
+</directory>
+<directory name="mscms">
+	<xi:include href="mscms/mscms.rbuild" />
+</directory>
 <directory name="mscoree">
 	<xi:include href="mscoree/mscoree.rbuild" />
+</directory>
+<directory name="msctf">
+	<xi:include href="msctf/msctf.rbuild" />
+</directory>
+<directory name="msftedit">
+	<xi:include href="msftedit/msftedit.rbuild" />
 </directory>
 <directory name="msgina">
 	<xi:include href="msgina/msgina.rbuild" />
@@ -163,11 +217,20 @@
 <directory name="mshtml">
 	<xi:include href="mshtml/mshtml.rbuild" />
 </directory>
+<directory name="mshtml.tlb">
+	<xi:include href="mshtml.tlb/mshtml.tlb.rbuild" />
+</directory>
 <directory name="msi">
 	<xi:include href="msi/msi.rbuild" />
 </directory>
 <directory name="msimg32">
 	<xi:include href="msimg32/msimg32.rbuild" />
+</directory>
+<directory name="msimtf">
+	<xi:include href="msimtf/msimtf.rbuild" />
+</directory>
+<directory name="msrle32">
+	<xi:include href="msrle32/msrle32.rbuild" />
 </directory>
 <directory name="mstask">
 	<xi:include href="mstask/mstask.rbuild" />
@@ -214,6 +277,9 @@
 <directory name="ntmarta">
 	<xi:include href="ntmarta/ntmarta.rbuild" />
 </directory>
+<directory name="ntprint">
+	<xi:include href="ntprint/ntprint.rbuild" />
+</directory>
 <directory name="objsel">
 	<xi:include href="objsel/objsel.rbuild" />
 </directory>
@@ -232,11 +298,20 @@
 <directory name="oleaut32">
 	<xi:include href="oleaut32/oleaut32.rbuild" />
 </directory>
+<directory name="olecli32">
+	<xi:include href="olecli32/olecli32.rbuild" />
+</directory>
 <directory name="oledlg">
 	<xi:include href="oledlg/oledlg.rbuild" />
 </directory>
 <directory name="olepro32">
 	<xi:include href="olepro32/olepro32.rbuild" />
+</directory>
+<directory name="olesvr32">
+	<xi:include href="olesvr32/olesvr32.rbuild" />
+</directory>
+<directory name="olethk32">
+	<xi:include href="olethk32/olethk32.rbuild" />
 </directory>
 <directory name="opengl32">
 	<xi:include href="opengl32/opengl32.rbuild" />
@@ -255,6 +330,12 @@
 </directory>
 <directory name="pstorec">
 	<xi:include href="pstorec/pstorec.rbuild" />
+</directory>
+<directory name="qmgr">
+	<xi:include href="qmgr/qmgr.rbuild" />
+</directory>
+<directory name="qmgrprxy">
+	<xi:include href="qmgrprxy/qmgrprxy.rbuild" />
 </directory>
 <directory name="rasapi32">
 	<xi:include href="rasapi32/rasapi32.rbuild" />
@@ -310,6 +391,9 @@
 <directory name="sfc_os">
 	<xi:include href="sfc_os/sfc_os.rbuild" />
 </directory>
+<directory name="shdoclc">
+	<xi:include href="shdoclc/shdoclc.rbuild" />
+</directory>
 <directory name="shdocvw">
 	<xi:include href="shdocvw/shdocvw.rbuild" />
 </directory>
@@ -328,11 +412,26 @@
 <directory name="smdll">
 	<xi:include href="smdll/smdll.rbuild" />
 </directory>
+<directory name="sndblst">
+	<xi:include href="sndblst/sndblst.rbuild" />
+</directory>
 <directory name="snmpapi">
 	<xi:include href="snmpapi/snmpapi.rbuild" />
 </directory>
+<directory name="spoolss">
+	<xi:include href="spoolss/spoolss.rbuild" />
+</directory>
+<directory name="srclient">
+	<xi:include href="srclient/srclient.rbuild" />
+</directory>
 <directory name="stdole2.tlb">
 	<xi:include href="stdole2.tlb/stdole2.rbuild" />
+</directory>
+<directory name="stdole32.tlb">
+	<xi:include href="stdole32.tlb/stdole32.rbuild" />
+</directory>
+<directory name="sti">
+	<xi:include href="sti/sti.rbuild" />
 </directory>
 <directory name="sxs">
 	<xi:include href="sxs/sxs.rbuild" />
@@ -360,6 +459,9 @@
 </directory>
 <directory name="untfs">
 	<xi:include href="untfs/untfs.rbuild" />
+</directory>
+<directory name="url">
+	<xi:include href="url/url.rbuild" />
 </directory>
 <directory name="urlmon">
 	<xi:include href="urlmon/urlmon.rbuild" />
@@ -409,6 +511,9 @@
 <directory name="wldap32">
 	<xi:include href="wldap32/wldap32.rbuild" />
 </directory>
+<directory name="wmi">
+	<xi:include href="wmi/wmi.rbuild" />
+</directory>
 <directory name="ws2_32">
 	<xi:include href="ws2_32/ws2_32.rbuild" />
 </directory>
@@ -426,5 +531,8 @@
 </directory>
 <directory name="wtsapi32">
 	<xi:include href="wtsapi32/wtsapi32.rbuild" />
+</directory>
+<directory name="wuapi">
+	<xi:include href="wuapi/wuapi.rbuild" />
 </directory>
 </group>

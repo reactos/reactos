@@ -78,9 +78,12 @@
 
 #include "storage32.h"
 
-#define HANDLE_ERROR(err) { hr = err; TRACE("(HRESULT=%x)\n", (HRESULT)err); goto CLEANUP; }
+#include "compobj_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
+
+#define HANDLE_ERROR(err) do { hr = err; TRACE("(HRESULT=%x)\n", (HRESULT)err); goto CLEANUP; } while (0)
+
 
 /****************************************************************************
  * OLEClipbrd
@@ -313,12 +316,19 @@ HRESULT WINAPI OleSetClipboard(IDataObject* pDataObj)
   IEnumFORMATETC* penumFormatetc = NULL;
   FORMATETC rgelt;
   BOOL bClipboardOpen = FALSE;
+  struct oletls *info = COM_CurrentInfo();
 /*
   HGLOBAL hDataObject = 0;
   OLEClipbrd **ppDataObject;
 */
 
   TRACE("(%p)\n", pDataObj);
+
+  if(!info)
+    WARN("Could not allocate tls\n");
+  else
+    if(!info->ole_inits)
+      return CO_E_NOTINITIALIZED;
 
   /*
    * Make sure we have a clipboard object
@@ -414,7 +424,7 @@ HRESULT WINAPI OleSetClipboard(IDataObject* pDataObj)
    if (hDataObject==0)
      HANDLE_ERROR( E_OUTOFMEMORY );
 
-   ppDataObject = (OLEClipbrd**)GlobalLock(hDataObject);
+   ppDataObject = GlobalLock(hDataObject);
    *ppDataObject = theOleClipboard;
    GlobalUnlock(hDataObject);
 
@@ -582,6 +592,9 @@ HRESULT WINAPI OleIsCurrentClipboard(IDataObject *pDataObject)
 
   if (!theOleClipboard)
     return E_OUTOFMEMORY;
+
+  if (pDataObject == NULL)
+    return S_FALSE;
 
   return (pDataObject == theOleClipboard->pIDataObjectSrc) ? S_OK : S_FALSE;
 }
@@ -953,9 +966,9 @@ static HRESULT OLEClipbrd_RenderFormat(IDataObject *pIDataObject, LPFORMATETC pF
 
       /* Get the metafile picture out of it */
 
-      if (!FAILED(hr = IDataObject_GetData(theOleClipboard->pIDataObjectSrc, &fmt2, &std2)))
+      if (SUCCEEDED(hr = IDataObject_GetData(theOleClipboard->pIDataObjectSrc, &fmt2, &std2)))
       {
-        mfp = (METAFILEPICT *)GlobalLock(std2.u.hGlobal);
+        mfp = GlobalLock(std2.u.hGlobal);
       }
 
       if (mfp)
@@ -1234,7 +1247,8 @@ static HRESULT WINAPI OLEClipbrd_IDataObject_GetData(
   }
 
   if ( pformatetcIn->lindex != -1 )
-    return DV_E_LINDEX;
+    return DV_E_FORMATETC;
+
   if ( (pformatetcIn->tymed & TYMED_HGLOBAL) != TYMED_HGLOBAL )
     return DV_E_TYMED;
 /*

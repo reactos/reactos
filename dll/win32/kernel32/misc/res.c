@@ -1092,7 +1092,7 @@ done:
  * @implemented
  */
 HRSRC
-STDCALL
+WINAPI
 FindResourceA (
 	HINSTANCE	hModule,
 	LPCSTR		lpName,
@@ -1107,7 +1107,7 @@ FindResourceA (
  * @implemented
  */
 HRSRC
-STDCALL
+WINAPI
 FindResourceExA(
 	HINSTANCE	hModule,
 	LPCSTR		lpType,
@@ -1167,7 +1167,7 @@ FindResourceExA(
  * @implemented
  */
 HRSRC
-STDCALL
+WINAPI
 FindResourceW (
 	HINSTANCE	hModule,
 	LPCWSTR		lpName,
@@ -1182,7 +1182,7 @@ FindResourceW (
  * @implemented
  */
 HRSRC
-STDCALL
+WINAPI
 FindResourceExW (
 	HINSTANCE	hModule,
 	LPCWSTR		lpType,
@@ -1197,21 +1197,30 @@ FindResourceExW (
 	if ( hModule == NULL )
 		hModule = (HINSTANCE)GetModuleHandleW(NULL);
 
-	if ( !IS_INTRESOURCE(lpName) && lpName[0] == L'#' ) {
-		lpName = MAKEINTRESOURCEW(wcstoul(lpName + 1, NULL, 10));
-	}
-	if ( !IS_INTRESOURCE(lpType) && lpType[0] == L'#' ) {
-		lpType = MAKEINTRESOURCEW(wcstoul(lpType + 1, NULL, 10));
-	}
+	_SEH2_TRY
+	{
+		if ( !IS_INTRESOURCE(lpName) && lpName[0] == L'#' ) {
+			lpName = MAKEINTRESOURCEW(wcstoul(lpName + 1, NULL, 10));
+		}
+		if ( !IS_INTRESOURCE(lpType) && lpType[0] == L'#' ) {
+			lpType = MAKEINTRESOURCEW(wcstoul(lpType + 1, NULL, 10));
+		}
 
-	ResourceInfo.Type = (ULONG)lpType;
-	ResourceInfo.Name = (ULONG)lpName;
-	ResourceInfo.Language = (ULONG)wLanguage;
+		ResourceInfo.Type = (ULONG)lpType;
+		ResourceInfo.Name = (ULONG)lpName;
+		ResourceInfo.Language = (ULONG)wLanguage;
 
-	Status = LdrFindResource_U (hModule,
-				    &ResourceInfo,
-				    RESOURCE_DATA_LEVEL,
-				    &ResourceDataEntry);
+		Status = LdrFindResource_U (hModule,
+						&ResourceInfo,
+						RESOURCE_DATA_LEVEL,
+						&ResourceDataEntry);
+	}
+	_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+	{
+		Status = _SEH2_GetExceptionCode();
+	}
+	_SEH2_END;
+
 	if (!NT_SUCCESS(Status))
 	{
 		SetLastErrorByStatus (Status);
@@ -1226,7 +1235,7 @@ FindResourceExW (
  * @implemented
  */
 HGLOBAL
-STDCALL
+WINAPI
 LoadResource (
 	HINSTANCE	hModule,
 	HRSRC		hResInfo
@@ -1256,7 +1265,7 @@ LoadResource (
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 SizeofResource (
 	HINSTANCE	hModule,
 	HRSRC		hResInfo
@@ -1270,7 +1279,7 @@ SizeofResource (
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 FreeResource (
 	HGLOBAL	hResData
 	)
@@ -1283,7 +1292,7 @@ FreeResource (
  * @implemented
  */
 LPVOID
-STDCALL
+WINAPI
 LockResource (
 	HGLOBAL	hResData
 	)
@@ -1296,7 +1305,7 @@ LockResource (
  * @implemented
  */
 HANDLE
-STDCALL
+WINAPI
 BeginUpdateResourceW (
 	LPCWSTR	pFileName,
 	BOOL	bDeleteExistingResources
@@ -1347,7 +1356,7 @@ BeginUpdateResourceW (
  * @implemented
  */
 HANDLE
-STDCALL
+WINAPI
 BeginUpdateResourceA (
 	LPCSTR	pFileName,
 	BOOL	bDeleteExistingResources
@@ -1366,7 +1375,7 @@ BeginUpdateResourceA (
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 EndUpdateResourceW (
 	HANDLE	hUpdate,
 	BOOL	fDiscard
@@ -1397,7 +1406,7 @@ EndUpdateResourceW (
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 EndUpdateResourceA (
 	HANDLE	hUpdate,
 	BOOL	fDiscard
@@ -1414,7 +1423,7 @@ EndUpdateResourceA (
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 EnumResourceLanguagesW(
 	HMODULE hmod,
 	LPCWSTR type,
@@ -1463,7 +1472,7 @@ done:
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 EnumResourceLanguagesA(
 	HMODULE hmod,
 	LPCSTR type,
@@ -1512,7 +1521,7 @@ done:
 /**********************************************************************
  * EnumResourceNamesA   (KERNEL32.@)
  */
-BOOL STDCALL EnumResourceNamesA( HMODULE hmod, LPCSTR type, ENUMRESNAMEPROCA lpfun, LONG_PTR lparam )
+BOOL WINAPI EnumResourceNamesA( HMODULE hmod, LPCSTR type, ENUMRESNAMEPROCA lpfun, LONG_PTR lparam )
 {
     int i;
     BOOL ret = FALSE;
@@ -1575,7 +1584,7 @@ done:
 /**********************************************************************
  * EnumResourceNamesW   (KERNEL32.@)
  */
-BOOL STDCALL EnumResourceNamesW( HMODULE hmod, LPCWSTR type, ENUMRESNAMEPROCW lpfun, LONG_PTR lparam )
+BOOL WINAPI EnumResourceNamesW( HMODULE hmod, LPCWSTR type, ENUMRESNAMEPROCW lpfun, LONG_PTR lparam )
 {
     int i, len = 0;
     BOOL ret = FALSE;
@@ -1636,7 +1645,7 @@ done:
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 EnumResourceTypesW (
 	HMODULE hmod,
 	ENUMRESTYPEPROCW lpfun,
@@ -1691,7 +1700,7 @@ EnumResourceTypesW (
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 EnumResourceTypesA (
 	HMODULE hmod,
 	ENUMRESTYPEPROCA lpfun,
@@ -1748,7 +1757,7 @@ EnumResourceTypesA (
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 UpdateResourceA (
 	HANDLE	hUpdate,
 	LPCSTR	lpType,
@@ -1780,7 +1789,7 @@ UpdateResourceA (
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 UpdateResourceW (
 	HANDLE	hUpdate,
 	LPCWSTR	lpType,

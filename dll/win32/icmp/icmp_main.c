@@ -143,6 +143,22 @@ static int in_cksum(u_short *addr, int len)
  * Exported Routines.
  */
 
+BOOL WINAPI DllMain (HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+{
+  WSADATA wsaData;
+
+  switch (fdwReason) {
+    case DLL_PROCESS_ATTACH:
+      WSAStartup(MAKEWORD(2, 2), &wsaData);
+      break;
+
+    case DLL_PROCESS_DETACH:
+      WSACleanup();
+      break;
+  }
+  return TRUE;
+}
+
 /***********************************************************************
  *		IcmpCreateFile (ICMP.@)
  */
@@ -231,7 +247,7 @@ DWORD WINAPI IcmpSendEcho(
     /* check the request size against SO_MAX_MSG_SIZE using getsockopt */
 
     /* Prepare the request */
-    id=_getpid() & 0xFFFF;
+    id=GetCurrentProcessId() & 0xFFFF;
     seq=InterlockedIncrement(&icmp_sequence) & 0xFFFF;
 
     reqsize=ICMP_MINLEN+RequestSize;
@@ -257,7 +273,7 @@ DWORD WINAPI IcmpSendEcho(
     if (RequestOptions!=NULL) {
         int val;
         if (icp->default_opts.OptionsSize==IP_OPTS_UNKNOWN) {
-            unsigned int len;
+            int len;
             /* Before we mess with the options, get the default values */
             len=sizeof(val);
             getsockopt(icp->sid,IPPROTO_IP,IP_TTL,(char *)&val,&len);
@@ -316,21 +332,21 @@ DWORD WINAPI IcmpSendEcho(
 #endif
 
     send_time = GetTickCount();
-    res=sendto(icp->sid, reqbuf, reqsize, 0, (struct sockaddr*)&addr, sizeof(addr));
+    res=sendto(icp->sid, (const char*)reqbuf, reqsize, 0, (struct sockaddr*)&addr, sizeof(addr));
     HeapFree(GetProcessHeap (), 0, reqbuf);
     if (res<0) {
-        if (errno==EMSGSIZE)
+        if (WSAGetLastError()==WSAEMSGSIZE)
             SetLastError(IP_PACKET_TOO_BIG);
         else {
-            switch (errno) {
-            case ENETUNREACH:
+            switch (WSAGetLastError()) {
+            case WSAENETUNREACH:
                 SetLastError(IP_DEST_NET_UNREACHABLE);
                 break;
-            case EHOSTUNREACH:
+            case WSAEHOSTUNREACH:
                 SetLastError(IP_DEST_HOST_UNREACHABLE);
                 break;
             default:
-                TRACE("unknown error: errno=%d\n",errno);
+                TRACE("unknown error: errno=%d\n",WSAGetLastError());
                 SetLastError(IP_GENERAL_FAILURE);
             }
         }
@@ -341,7 +357,7 @@ DWORD WINAPI IcmpSendEcho(
     ip_header_len=0; /* because gcc was complaining */
     while ((res=select(icp->sid+1,&fdr,NULL,NULL,&timeout))>0) {
         recv_time = GetTickCount();
-        res=recvfrom(icp->sid, (char*)ip_header, maxlen, 0, (struct sockaddr*)&addr,&addrlen);
+        res=recvfrom(icp->sid, (char*)ip_header, maxlen, 0, (struct sockaddr*)&addr,(int*)&addrlen);
         TRACE("received %d bytes from %s\n",res, inet_ntoa(addr.sin_addr));
         ier->Status=IP_REQ_TIMED_OUT;
 

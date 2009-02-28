@@ -7,13 +7,10 @@
 <directory name="wavemap">
 	<xi:include href="wavemap/wavemap.rbuild" />
 </directory>
-<module name="winmm" type="win32dll" baseaddress="${BASEADDRESS_WINMM}" installbase="system32" installname="winmm.dll" allowwarnings="true">
-	<importlibrary definition="winmm.spec.def" />
+<module name="winmm" type="win32dll" baseaddress="${BASEADDRESS_WINMM}" installbase="system32" installname="winmm.dll" crt="msvcrt">
+	<importlibrary definition="winmm.spec" />
 	<include base="winmm">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
-	<define name="_WIN32_IE">0x600</define>
-	<define name="_WIN32_WINNT">0x501</define>
-	<define name="WINVER">0x501</define>
 	<library>wine</library>
 	<library>ntdll</library>
 	<library>kernel32</library>
@@ -29,6 +26,5 @@
 	<file>winmm.c</file>
 	<file>registry.c</file>
 	<file>winmm_res.rc</file>
-	<file>winmm.spec</file>
 </module>
 </group>

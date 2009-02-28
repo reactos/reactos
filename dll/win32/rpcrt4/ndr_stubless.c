@@ -1,7 +1,7 @@
 /*
  * NDR -Oi,-Oif,-Oicf Interpreter
  *
- * Copyright 2001 Ove Kåven, TransGaming Technologies
+ * Copyright 2001 Ove KÃ¥ven, TransGaming Technologies
  * Copyright 2003-5 Robert Shearman (for CodeWeavers)
  *
  * This library is free software; you can redistribute it and/or
@@ -91,29 +91,6 @@ static inline void call_freer(PMIDL_STUB_MESSAGE pStubMsg, unsigned char *pMemor
     if (m) m(pStubMsg, pMemory, pFormat);
 }
 
-static inline unsigned long call_memory_sizer(PMIDL_STUB_MESSAGE pStubMsg, PFORMAT_STRING pFormat)
-{
-    NDR_MEMORYSIZE m = NdrMemorySizer[pFormat[0] & NDR_TABLE_MASK];
-    if (m)
-    {
-        unsigned char *saved_buffer = pStubMsg->Buffer;
-        unsigned long ret;
-        int saved_ignore_embedded_pointers = pStubMsg->IgnoreEmbeddedPointers;
-        pStubMsg->MemorySize = 0;
-        pStubMsg->IgnoreEmbeddedPointers = 1;
-        ret = m(pStubMsg, pFormat);
-        pStubMsg->IgnoreEmbeddedPointers = saved_ignore_embedded_pointers;
-        pStubMsg->Buffer = saved_buffer;
-        return ret;
-    }
-    else
-    {
-        FIXME("format type 0x%x not implemented\n", pFormat[0]);
-        RpcRaiseException(RPC_X_BAD_STUB_DATA);
-        return 0;
-    }
-}
-
 #define STUBLESS_UNMARSHAL  1
 #define STUBLESS_INITOUT    2
 #define STUBLESS_CALLSERVER 3
@@ -130,7 +107,7 @@ void WINAPI NdrRpcSmSetClientToOsf(PMIDL_STUB_MESSAGE pMessage)
 #endif
 }
 
-static void WINAPI dump_RPC_FC_PROC_PF(PARAM_ATTRIBUTES param_attributes)
+static void dump_RPC_FC_PROC_PF(PARAM_ATTRIBUTES param_attributes)
 {
     if (param_attributes.MustSize) TRACE(" MustSize");
     if (param_attributes.MustFree) TRACE(" MustFree");
@@ -146,7 +123,7 @@ static void WINAPI dump_RPC_FC_PROC_PF(PARAM_ATTRIBUTES param_attributes)
     if (param_attributes.ServerAllocSize) TRACE(" ServerAllocSize = %d", param_attributes.ServerAllocSize * 8);
 }
 
-static void WINAPI dump_INTERPRETER_OPT_FLAGS(INTERPRETER_OPT_FLAGS Oi2Flags)
+static void dump_INTERPRETER_OPT_FLAGS(INTERPRETER_OPT_FLAGS Oi2Flags)
 {
     if (Oi2Flags.ServerMustSize) TRACE(" ServerMustSize");
     if (Oi2Flags.ClientMustSize) TRACE(" ClientMustSize");
@@ -159,7 +136,7 @@ static void WINAPI dump_INTERPRETER_OPT_FLAGS(INTERPRETER_OPT_FLAGS Oi2Flags)
     TRACE("\n");
 }
 
-#define ARG_FROM_OFFSET(stubMsg, offset) ((stubMsg).StackTop + (offset))
+#define ARG_FROM_OFFSET(args, offset) ((args) + (offset))
 
 static PFORMAT_STRING client_get_handle(
     PMIDL_STUB_MESSAGE pStubMsg, const NDR_PROC_HEADER *pProcHeader,
@@ -179,9 +156,9 @@ static PFORMAT_STRING client_get_handle(
                 TRACE("Explicit primitive handle @ %d\n", pDesc->offset);
 
                 if (pDesc->flag) /* pointer to binding */
-                    *phBinding = **(handle_t **)ARG_FROM_OFFSET(*pStubMsg, pDesc->offset);
+                    *phBinding = **(handle_t **)ARG_FROM_OFFSET(pStubMsg->StackTop, pDesc->offset);
                 else
-                    *phBinding = *(handle_t *)ARG_FROM_OFFSET(*pStubMsg, pDesc->offset);
+                    *phBinding = *(handle_t *)ARG_FROM_OFFSET(pStubMsg->StackTop, pDesc->offset);
                 return pFormat + sizeof(NDR_EHD_PRIMITIVE);
             }
         case RPC_FC_BIND_GENERIC: /* explicit generic */
@@ -194,9 +171,9 @@ static PFORMAT_STRING client_get_handle(
                 TRACE("Explicit generic binding handle #%d\n", pDesc->binding_routine_pair_index);
 
                 if (pDesc->flag_and_size & HANDLE_PARAM_IS_VIA_PTR)
-                    pArg = *(void **)ARG_FROM_OFFSET(*pStubMsg, pDesc->offset);
+                    pArg = *(void **)ARG_FROM_OFFSET(pStubMsg->StackTop, pDesc->offset);
                 else
-                    pArg = (void *)ARG_FROM_OFFSET(*pStubMsg, pDesc->offset);
+                    pArg = (void *)ARG_FROM_OFFSET(pStubMsg->StackTop, pDesc->offset);
                 memcpy(&pObject, pArg, pDesc->flag_and_size & 0xf);
                 pGenPair = &pStubMsg->StubDesc->aGenericBindingRoutinePairs[pDesc->binding_routine_pair_index];
                 *phBinding = pGenPair->pfnBind(pObject);
@@ -210,10 +187,10 @@ static PFORMAT_STRING client_get_handle(
                 if (pDesc->flags & HANDLE_PARAM_IS_VIA_PTR)
                 {
                     TRACE("\tHANDLE_PARAM_IS_VIA_PTR\n");
-                    context_handle = **(NDR_CCONTEXT **)ARG_FROM_OFFSET(*pStubMsg, pDesc->offset);
+                    context_handle = **(NDR_CCONTEXT **)ARG_FROM_OFFSET(pStubMsg->StackTop, pDesc->offset);
                 }
                 else
-                    context_handle = *(NDR_CCONTEXT *)ARG_FROM_OFFSET(*pStubMsg, pDesc->offset);
+                    context_handle = *(NDR_CCONTEXT *)ARG_FROM_OFFSET(pStubMsg->StackTop, pDesc->offset);
                 if ((pDesc->flags & NDR_CONTEXT_HANDLE_CANNOT_BE_NULL) &&
                     !context_handle)
                 {
@@ -277,9 +254,9 @@ static void client_free_handle(
                 TRACE("Explicit generic binding handle #%d\n", pDesc->binding_routine_pair_index);
 
                 if (pDesc->flag_and_size & HANDLE_PARAM_IS_VIA_PTR)
-                    pArg = *(void **)ARG_FROM_OFFSET(*pStubMsg, pDesc->offset);
+                    pArg = *(void **)ARG_FROM_OFFSET(pStubMsg->StackTop, pDesc->offset);
                 else
-                    pArg = (void *)ARG_FROM_OFFSET(*pStubMsg, pDesc->offset);
+                    pArg = (void *)ARG_FROM_OFFSET(pStubMsg->StackTop, pDesc->offset);
                 memcpy(&pObject, pArg, pDesc->flag_and_size & 0xf);
                 pGenPair = &pStubMsg->StubDesc->aGenericBindingRoutinePairs[pDesc->binding_routine_pair_index];
                 pGenPair->pfnUnbind(pObject, hBinding);
@@ -308,7 +285,8 @@ static void client_free_handle(
 }
 
 static void client_do_args(PMIDL_STUB_MESSAGE pStubMsg, PFORMAT_STRING pFormat,
-    int phase, unsigned short number_of_params, unsigned char *pRetVal)
+    int phase, unsigned char *args, unsigned short number_of_params,
+    unsigned char *pRetVal)
 {
     /* current format string offset */
     int current_offset = 0;
@@ -324,7 +302,7 @@ static void client_do_args(PMIDL_STUB_MESSAGE pStubMsg, PFORMAT_STRING pFormat,
         unsigned char * pArg;
 
         current_stack_offset = pParam->stack_offset;
-        pArg = ARG_FROM_OFFSET(*pStubMsg, current_stack_offset);
+        pArg = ARG_FROM_OFFSET(args, current_stack_offset);
 
         TRACE("param[%d]: new format\n", i);
         TRACE("\tparam_attributes:"); dump_RPC_FC_PROC_PF(pParam->param_attributes); TRACE("\n");
@@ -426,9 +404,44 @@ static void client_do_args(PMIDL_STUB_MESSAGE pStubMsg, PFORMAT_STRING pFormat,
     }
 }
 
-static void client_do_args_old_format(PMIDL_STUB_MESSAGE pStubMsg,
-    PFORMAT_STRING pFormat, int phase, unsigned short stack_size,
-    unsigned char *pRetVal, BOOL object_proc)
+static unsigned int type_stack_size(unsigned char fc)
+{
+    switch (fc)
+    {
+    case RPC_FC_BYTE:
+    case RPC_FC_CHAR:
+    case RPC_FC_SMALL:
+    case RPC_FC_USMALL:
+        return sizeof(char);
+    case RPC_FC_WCHAR:
+    case RPC_FC_SHORT:
+    case RPC_FC_USHORT:
+        return sizeof(short);
+    case RPC_FC_LONG:
+    case RPC_FC_ULONG:
+    case RPC_FC_ENUM16:
+    case RPC_FC_ENUM32:
+        return sizeof(int);
+    case RPC_FC_FLOAT:
+        return sizeof(float);
+    case RPC_FC_DOUBLE:
+        return sizeof(double);
+    case RPC_FC_HYPER:
+        return sizeof(ULONGLONG);
+    case RPC_FC_ERROR_STATUS_T:
+        return sizeof(error_status_t);
+    case RPC_FC_IGNORE:
+        return sizeof(void *);
+    default:
+        ERR("invalid base type 0x%x\n", fc);
+        RpcRaiseException(RPC_S_INTERNAL_ERROR);
+    }
+}
+
+void client_do_args_old_format(PMIDL_STUB_MESSAGE pStubMsg,
+    PFORMAT_STRING pFormat, int phase, unsigned char *args,
+    unsigned short stack_size,
+    unsigned char *pRetVal, BOOL object_proc, BOOL ignore_retval)
 {
     /* current format string offset */
     int current_offset = 0;
@@ -437,7 +450,7 @@ static void client_do_args_old_format(PMIDL_STUB_MESSAGE pStubMsg,
     /* counter */
     unsigned short i;
 
-    /* NOTE: V1 style format does't terminate on the number_of_params
+    /* NOTE: V1 style format doesn't terminate on the number_of_params
      * condition as it doesn't have this attribute. Instead it
      * terminates when the stack size given in the header is exceeded.
      */
@@ -449,7 +462,7 @@ static void client_do_args_old_format(PMIDL_STUB_MESSAGE pStubMsg,
          * if present, so adjust this */
         unsigned short current_stack_offset_adjusted = current_stack_offset +
             (object_proc ? sizeof(void *) : 0);
-        unsigned char * pArg = ARG_FROM_OFFSET(*pStubMsg, current_stack_offset_adjusted);
+        unsigned char * pArg = ARG_FROM_OFFSET(args, current_stack_offset_adjusted);
 
         /* no more parameters; exit loop */
         if (current_stack_offset_adjusted >= stack_size)
@@ -479,10 +492,11 @@ static void client_do_args_old_format(PMIDL_STUB_MESSAGE pStubMsg,
                     call_marshaller(pStubMsg, pArg, pTypeFormat);
                 break;
             case PROXY_UNMARSHAL:
-                if (pParam->param_direction == RPC_FC_RETURN_PARAM_BASETYPE)
+                if (!ignore_retval &&
+                    pParam->param_direction == RPC_FC_RETURN_PARAM_BASETYPE)
                 {
                     if (pParam->param_direction & RPC_FC_RETURN_PARAM)
-                        call_unmarshaller(pStubMsg, (unsigned char **)pRetVal, pTypeFormat, 0);
+                        call_unmarshaller(pStubMsg, &pRetVal, pTypeFormat, 0);
                     else
                         call_unmarshaller(pStubMsg, &pArg, pTypeFormat, 0);
                 }
@@ -491,7 +505,7 @@ static void client_do_args_old_format(PMIDL_STUB_MESSAGE pStubMsg,
                 RpcRaiseException(RPC_S_INTERNAL_ERROR);
             }
 
-            current_stack_offset += call_memory_sizer(pStubMsg, pTypeFormat);
+            current_stack_offset += type_stack_size(*pTypeFormat);
             current_offset += sizeof(NDR_PARAM_OI_BASETYPE);
         }
         else
@@ -569,12 +583,7 @@ LONG_PTR WINAPIV NdrClientCall2(PMIDL_STUB_DESC pStubDesc, PFORMAT_STRING pForma
 
     TRACE("pStubDesc %p, pFormat %p, ...\n", pStubDesc, pFormat);
 
-    /* Later NDR language versions probably won't be backwards compatible */
-    if (pStubDesc->Version > 0x50002)
-    {
-        FIXME("Incompatible stub description version: 0x%x\n", pStubDesc->Version);
-        RpcRaiseException(RPC_X_WRONG_STUB_VERSION);
-    }
+    TRACE("NDR Version: 0x%x\n", pStubDesc->Version);
 
     if (pProcHeader->Oi_flags & RPC_FC_PROC_OIF_RPCFLAGS)
     {
@@ -705,12 +714,12 @@ LONG_PTR WINAPIV NdrClientCall2(PMIDL_STUB_DESC pStubDesc, PFORMAT_STRING pForma
                 case PROXY_MARSHAL:
                 case PROXY_UNMARSHAL:
                     if (bV2Format)
-                        client_do_args(&stubMsg, pFormat, phase, number_of_params,
-                            (unsigned char *)&RetVal);
+                        client_do_args(&stubMsg, pFormat, phase, stubMsg.StackTop,
+                            number_of_params, (unsigned char *)&RetVal);
                     else
-                        client_do_args_old_format(&stubMsg, pFormat, phase, stack_size,
-                            (unsigned char *)&RetVal,
-                            (pProcHeader->Oi_flags & RPC_FC_PROC_OIF_OBJECT));
+                        client_do_args_old_format(&stubMsg, pFormat, phase,
+                            stubMsg.StackTop, stack_size, (unsigned char *)&RetVal,
+                            (pProcHeader->Oi_flags & RPC_FC_PROC_OIF_OBJECT), FALSE);
                     break;
                 default:
                     ERR("shouldn't reach here. phase %d\n", phase);
@@ -718,7 +727,7 @@ LONG_PTR WINAPIV NdrClientCall2(PMIDL_STUB_DESC pStubDesc, PFORMAT_STRING pForma
                 }
             }
         }
-        __EXCEPT(NULL)
+        __EXCEPT_ALL
         {
             RetVal = NdrProxyErrorHandler(GetExceptionCode());
         }
@@ -783,12 +792,12 @@ LONG_PTR WINAPIV NdrClientCall2(PMIDL_STUB_DESC pStubDesc, PFORMAT_STRING pForma
             case PROXY_MARSHAL:
             case PROXY_UNMARSHAL:
                 if (bV2Format)
-                    client_do_args(&stubMsg, pFormat, phase, number_of_params,
-                        (unsigned char *)&RetVal);
+                    client_do_args(&stubMsg, pFormat, phase, stubMsg.StackTop,
+                        number_of_params, (unsigned char *)&RetVal);
                 else
-                    client_do_args_old_format(&stubMsg, pFormat, phase, stack_size,
-                        (unsigned char *)&RetVal,
-                        (pProcHeader->Oi_flags & RPC_FC_PROC_OIF_OBJECT));
+                    client_do_args_old_format(&stubMsg, pFormat, phase,
+                        stubMsg.StackTop, stack_size, (unsigned char *)&RetVal,
+                        (pProcHeader->Oi_flags & RPC_FC_PROC_OIF_OBJECT), FALSE);
                 break;
             default:
                 ERR("shouldn't reach here. phase %d\n", phase);
@@ -826,7 +835,7 @@ LONG_PTR WINAPIV NdrClientCall2(PMIDL_STUB_DESC pStubDesc, PFORMAT_STRING pForma
     return RetVal;
 }
 
-/* calls a function with the specificed arguments, restoring the stack
+/* Calls a function with the specified arguments, restoring the stack
  * properly afterwards as we don't know the calling convention of the
  * function */
 #if defined __i386__ && defined _MSC_VER
@@ -1160,7 +1169,7 @@ static LONG_PTR *stub_do_old_args(MIDL_STUB_MESSAGE *pStubMsg,
                     RpcRaiseException(RPC_S_INTERNAL_ERROR);
             }
 
-            current_stack_offset += call_memory_sizer(pStubMsg, pTypeFormat);
+            current_stack_offset += type_stack_size(*pTypeFormat);
             current_offset += sizeof(NDR_PARAM_OI_BASETYPE);
         }
         else
@@ -1279,12 +1288,7 @@ LONG WINAPI NdrStubCall2(
     pFormat = pServerInfo->ProcString + pServerInfo->FmtStringOffset[pRpcMsg->ProcNum];
     pProcHeader = (const NDR_PROC_HEADER *)&pFormat[0];
 
-    /* Later NDR language versions probably won't be backwards compatible */
-    if (pStubDesc->Version > 0x50002)
-    {
-        FIXME("Incompatible stub description version: 0x%x\n", pStubDesc->Version);
-        RpcRaiseException(RPC_X_WRONG_STUB_VERSION);
-    }
+    TRACE("NDR Version: 0x%x\n", pStubDesc->Version);
 
     /* create the full pointer translation tables, if requested */
     if (pProcHeader->Oi_flags & RPC_FC_PROC_OIF_FULLPTR)
@@ -1464,9 +1468,7 @@ LONG WINAPI NdrStubCall2(
                 Status = I_RpcGetBuffer(pRpcMsg); 
                 if (Status)
                     RpcRaiseException(Status);
-                stubMsg.BufferStart = pRpcMsg->Buffer;
-                stubMsg.BufferEnd = stubMsg.BufferStart + stubMsg.BufferLength;
-                stubMsg.Buffer = stubMsg.BufferStart;
+                stubMsg.Buffer = pRpcMsg->Buffer;
             }
             break;
         case STUBLESS_UNMARSHAL:

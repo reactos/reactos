@@ -166,7 +166,7 @@ int CC_RGBtoHSL(char c, int r, int g, int b)
 	   else
 	   {
 	    result = mmdif * 240;       /* 0...61200=255*240 */
-	    result /= (mmsum > 255 ? mmsum = 510 - mmsum : mmsum); /* 0..255 */
+	    result /= (mmsum > 255 ? 510 - mmsum : mmsum); /* 0..255 */
 	   }
 	   break;
   /* hue */
@@ -463,7 +463,7 @@ void CC_PaintTriangle( HWND hDlg, int y)
  RECT rect;
  HBRUSH hbr;
  HWND hwnd = GetDlgItem(hDlg, 0x2be);
- LPCCPRIV lpp = (LPCCPRIV) GetPropW( hDlg, szColourDialogProp );
+ LPCCPRIV lpp = GetPropW( hDlg, szColourDialogProp );
 
  if (IsWindowVisible( GetDlgItem(hDlg, 0x2c6)))   /* if full size */
  {
@@ -509,7 +509,7 @@ void CC_PaintCross( HWND hDlg, int x, int y)
  int w = GetDialogBaseUnits() - 1;
  int wc = GetDialogBaseUnits() * 3 / 4;
  HWND hwnd = GetDlgItem(hDlg, 0x2c6);
- LPCCPRIV lpp = (LPCCPRIV) GetPropW( hDlg, szColourDialogProp );
+ LPCCPRIV lpp = GetPropW( hDlg, szColourDialogProp );
  RECT rect;
  POINT point, p;
  HPEN hPen;
@@ -560,7 +560,7 @@ static void CC_PrepareColorGraph( HWND hDlg )
 {
  int sdif, hdif, xdif, ydif, r, g, b, hue, sat;
  HWND hwnd = GetDlgItem(hDlg, 0x2c6);
- LPCCPRIV lpp = (LPCCPRIV) GetPropW( hDlg, szColourDialogProp );
+ LPCCPRIV lpp = GetPropW( hDlg, szColourDialogProp );
  HBRUSH hbrush;
  HDC hdc ;
  RECT rect, client;
@@ -603,7 +603,7 @@ static void CC_PrepareColorGraph( HWND hDlg )
 static void CC_PaintColorGraph( HWND hDlg )
 {
  HWND hwnd = GetDlgItem( hDlg, 0x2c6 );
- LPCCPRIV lpp = (LPCCPRIV) GetPropW( hDlg, szColourDialogProp );
+ LPCCPRIV lpp = GetPropW( hDlg, szColourDialogProp );
  HDC  hDC;
  RECT rect;
  if (IsWindowVisible(hwnd))   /* if full size */
@@ -663,7 +663,7 @@ static void CC_PaintLumBar( HWND hDlg, int hue, int sat )
 void CC_EditSetRGB( HWND hDlg, COLORREF cr )
 {
  char buffer[10];
- LPCCPRIV lpp = (LPCCPRIV) GetPropW( hDlg, szColourDialogProp );
+ LPCCPRIV lpp = GetPropW( hDlg, szColourDialogProp );
  int r = GetRValue(cr);
  int g = GetGValue(cr);
  int b = GetBValue(cr);
@@ -686,7 +686,7 @@ void CC_EditSetRGB( HWND hDlg, COLORREF cr )
 void CC_EditSetHSL( HWND hDlg, int h, int s, int l )
 {
  char buffer[10];
- LPCCPRIV lpp = (LPCCPRIV) GetPropW( hDlg, szColourDialogProp );
+ LPCCPRIV lpp = GetPropW( hDlg, szColourDialogProp );
 
  if (IsWindowVisible( GetDlgItem(hDlg, 0x2c6) ))   /* if full size */
  {
@@ -708,7 +708,7 @@ void CC_EditSetHSL( HWND hDlg, int h, int s, int l )
 void CC_SwitchToFullSize( HWND hDlg, COLORREF result, LPCRECT lprect )
 {
  int i;
- LPCCPRIV lpp = (LPCCPRIV) GetPropW( hDlg, szColourDialogProp );
+ LPCCPRIV lpp = GetPropW( hDlg, szColourDialogProp );
 
  EnableWindow( GetDlgItem(hDlg, 0x2cf), FALSE);
  CC_PrepareColorGraph(hDlg);
@@ -744,7 +744,7 @@ static void CC_PaintPredefColorArray( HWND hDlg, int rows, int cols)
  HDC  hdc;
  HBRUSH hBrush;
  int dx, dy, i, j, k;
- LPCCPRIV lpp = (LPCCPRIV) GetPropW( hDlg, szColourDialogProp );
+ LPCCPRIV lpp = GetPropW( hDlg, szColourDialogProp );
 
  GetClientRect(hwnd, &rect);
  dx = rect.right / cols;
@@ -791,7 +791,7 @@ void CC_PaintUserColorArray( HWND hDlg, int rows, int cols, const COLORREF *lpcr
  HDC  hdc;
  HBRUSH hBrush;
  int dx, dy, i, j, k;
- LPCCPRIV lpp = (LPCCPRIV) GetPropW( hDlg, szColourDialogProp );
+ LPCCPRIV lpp = GetPropW( hDlg, szColourDialogProp );
 
  GetClientRect(hwnd, &rect);
 
@@ -961,7 +961,8 @@ LRESULT CC_WMCommand( HWND hDlg, WPARAM wParam, LPARAM lParam, WORD notifyCode, 
     UINT cokmsg;
     HDC hdc;
     COLORREF *cr;
-    LPCCPRIV lpp = (LPCCPRIV) GetPropW( hDlg, szColourDialogProp );
+    LPCCPRIV lpp = GetPropW( hDlg, szColourDialogProp );
+
     TRACE("CC_WMCommand wParam=%lx lParam=%lx\n", wParam, lParam);
     switch (LOWORD(wParam))
     {
@@ -1083,7 +1084,7 @@ LRESULT CC_WMCommand( HWND hDlg, WPARAM wParam, LPARAM lParam, WORD notifyCode, 
 LRESULT CC_WMPaint( HWND hDlg, WPARAM wParam, LPARAM lParam )
 {
     PAINTSTRUCT ps;
-    LPCCPRIV lpp = (LPCCPRIV) GetPropW( hDlg, szColourDialogProp );
+    LPCCPRIV lpp = GetPropW( hDlg, szColourDialogProp );
 
     BeginPaint(hDlg, &ps);
     /* we have to paint dialog children except text and buttons */
@@ -1104,7 +1105,8 @@ LRESULT CC_WMPaint( HWND hDlg, WPARAM wParam, LPARAM lParam )
  */
 LRESULT CC_WMLButtonUp( HWND hDlg, WPARAM wParam, LPARAM lParam )
 {
-   LPCCPRIV lpp = (LPCCPRIV) GetPropW( hDlg, szColourDialogProp );
+   LPCCPRIV lpp = GetPropW( hDlg, szColourDialogProp );
+
    if (lpp->capturedGraph)
    {
        lpp->capturedGraph = 0;
@@ -1120,7 +1122,7 @@ LRESULT CC_WMLButtonUp( HWND hDlg, WPARAM wParam, LPARAM lParam )
  */
 LRESULT CC_WMMouseMove( HWND hDlg, LPARAM lParam )
 {
-   LPCCPRIV lpp = (LPCCPRIV) GetPropW( hDlg, szColourDialogProp );
+   LPCCPRIV lpp = GetPropW( hDlg, szColourDialogProp );
    int r, g, b;
 
    if (lpp->capturedGraph)
@@ -1158,7 +1160,7 @@ LRESULT CC_WMMouseMove( HWND hDlg, LPARAM lParam )
  */
 LRESULT CC_WMLButtonDown( HWND hDlg, WPARAM wParam, LPARAM lParam )
 {
-   LPCCPRIV lpp = (LPCCPRIV) GetPropW( hDlg, szColourDialogProp );
+   LPCCPRIV lpp = GetPropW( hDlg, szColourDialogProp );
    int r, g, b, i;
    i = 0;
 
@@ -1217,7 +1219,8 @@ static INT_PTR CALLBACK ColorDlgProc( HWND hDlg, UINT message,
 {
 
  int res;
- LPCCPRIV lpp = (LPCCPRIV) GetPropW( hDlg, szColourDialogProp );
+ LPCCPRIV lpp = GetPropW( hDlg, szColourDialogProp );
+
  if (message != WM_INITDIALOG)
  {
   if (!lpp)

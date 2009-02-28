@@ -6,7 +6,6 @@
  * COPYRIGHT:       Copyright 2005 Art Yerkes <ayerkes@speakeasy.net>
  */
 
-#include <roscfg.h>
 #include <winsock2.h>
 #include <dhcpcsdk.h>
 #include <time.h>
@@ -218,7 +217,7 @@ DWORD APIENTRY DhcpRosGetAdapterInfo( DWORD AdapterIndex,
     return Reply.Reply;
 }
 
-INT STDCALL
+INT WINAPI
 DllMain(PVOID hinstDll,
 	ULONG dwReason,
 	PVOID reserved)

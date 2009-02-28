@@ -55,8 +55,7 @@ ME_UndoItem *ME_AddUndoItem(ME_TextEditor *editor, ME_DIType type, const ME_Disp
     return NULL;
   else
   {
-    ME_DisplayItem *pItem = (ME_DisplayItem *)ALLOC_OBJ(ME_UndoItem);
-    ((ME_UndoItem *)pItem)->nCR = ((ME_UndoItem *)pItem)->nLF = -1;
+    ME_DisplayItem *pItem = ALLOC_OBJ(ME_UndoItem);
     switch(type)
     {
     case diUndoPotentialEndTransaction:
@@ -96,6 +95,7 @@ ME_UndoItem *ME_AddUndoItem(ME_TextEditor *editor, ME_DIType type, const ME_Disp
       pItem->member.para.pFmt->cbSize = sizeof(PARAFORMAT2);
       pItem->member.para.pFmt->dwMask = 0;
       *pItem->member.para.pFmt = *pdi->member.para.pFmt;
+      pItem->member.para.border = pdi->member.para.border;
       pItem->member.para.nFlags = prev_para->member.para.nFlags & ~MEPF_CELL;
       pItem->member.para.pCell = NULL;
       break;
@@ -293,6 +293,7 @@ static void ME_PlayUndoItem(ME_TextEditor *editor, ME_DisplayItem *pItem)
     para = ME_FindItemBack(tmp.pRun, diParagraph);
     ME_AddUndoItem(editor, diUndoSetParagraphFormat, para);
     *para->member.para.pFmt = *pItem->member.para.pFmt;
+    para->member.para.border = pItem->member.para.border;
     break;
   }
   case diUndoSetCharFormat:
@@ -327,8 +328,7 @@ static void ME_PlayUndoItem(ME_TextEditor *editor, ME_DisplayItem *pItem)
     ME_CursorFromCharOfs(editor, pUItem->nStart, &tmp);
     if (tmp.nOffset)
       tmp.pRun = ME_SplitRunSimple(editor, tmp.pRun, tmp.nOffset);
-    assert(pUItem->nCR >= 0);
-    assert(pUItem->nLF >= 0);
+    assert(pUItem->eol_str);
     this_para = ME_GetParagraph(tmp.pRun);
     bFixRowStart = this_para->member.para.nFlags & MEPF_ROWSTART;
     if (bFixRowStart)
@@ -338,17 +338,19 @@ static void ME_PlayUndoItem(ME_TextEditor *editor, ME_DisplayItem *pItem)
       this_para->member.para.nFlags &= ~MEPF_ROWSTART;
     }
     new_para = ME_SplitParagraph(editor, tmp.pRun, tmp.pRun->member.run.style,
-                                 pUItem->nCR, pUItem->nLF, paraFlags);
+                                 pUItem->eol_str, paraFlags);
     if (bFixRowStart)
       new_para->member.para.nFlags |= MEPF_ROWSTART;
     assert(pItem->member.para.pFmt->cbSize == sizeof(PARAFORMAT2));
     *new_para->member.para.pFmt = *pItem->member.para.pFmt;
+    new_para->member.para.border = pItem->member.para.border;
     if (pItem->member.para.pCell)
     {
       ME_DisplayItem *pItemCell, *pCell;
       pItemCell = pItem->member.para.pCell;
       pCell = new_para->member.para.pCell;
       pCell->member.cell.nRightBoundary = pItemCell->member.cell.nRightBoundary;
+      pCell->member.cell.border = pItemCell->member.cell.border;
     }
     break;
   }
@@ -386,6 +388,7 @@ BOOL ME_Undo(ME_TextEditor *editor) {
   } while(p && p->type != diUndoEndTransaction);
   if (p)
     p->prev = NULL;
+  ME_MoveCursorFromTableRowStartParagraph(editor);
   ME_AddUndoItem(editor, diUndoEndTransaction, NULL);
   ME_CheckTablesForCorruption(editor);
   editor->nUndoStackSize--;
@@ -422,6 +425,7 @@ BOOL ME_Redo(ME_TextEditor *editor) {
   } while(p && p->type != diUndoEndTransaction);
   if (p)
     p->prev = NULL;
+  ME_MoveCursorFromTableRowStartParagraph(editor);
   ME_AddUndoItem(editor, diUndoEndTransaction, NULL);
   ME_CheckTablesForCorruption(editor);
   editor->nUndoMode = nMode;

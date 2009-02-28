@@ -1,0 +1,11 @@
+--- dll\win32\fusion\fusion_main - Kopie.c	Fr Sep  5 17:28:27 2008
++++ dll\win32\fusion\fusion_main.c	Mi Sep 10 10:38:55 2008
+@@ -34,8 +34,6 @@
+ 
+     switch (fdwReason)
+     {
+-        case DLL_WINE_PREATTACH:
+-            return FALSE;    /* prefer native version */
+         case DLL_PROCESS_ATTACH:
+             DisableThreadLibraryCalls(hinstDLL);
+             break;

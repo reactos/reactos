@@ -18,38 +18,37 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "comcat_private.h"
+#include <stdarg.h>
 
-#include "wine/debug.h"
+#define COBJMACROS
 
-WINE_DEFAULT_DEBUG_CHANNEL(ole);
-
-LONG dll_ref = 0;
-
-/***********************************************************************
- *		Global string constant definitions
- */
-const WCHAR clsid_keyname[6] = { 'C', 'L', 'S', 'I', 'D', 0 };
-
-/***********************************************************************
- *		DllGetClassObject (COMCAT.@)
- */
-HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID iid, LPVOID *ppv)
-{
-    *ppv = NULL;
-    if (IsEqualGUID(rclsid, &CLSID_StdComponentCategoriesMgr)) {
-	return IClassFactory_QueryInterface((LPCLASSFACTORY)&COMCAT_ClassFactory, iid, ppv);
-    }
-    FIXME("\n\tCLSID:\t%s,\n\tIID:\t%s\n",debugstr_guid(rclsid),debugstr_guid(iid));
-    return CLASS_E_CLASSNOTAVAILABLE;
-}
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "winreg.h"
+#include "winerror.h"
+#include "ole2.h"
 
 /***********************************************************************
  *		DllCanUnloadNow (COMCAT.@)
  */
 HRESULT WINAPI DllCanUnloadNow(void)
 {
-    return dll_ref != 0 ? S_FALSE : S_OK;
+    return S_FALSE;
 }
 
-/* NOTE: DllRegisterServer and DllUnregisterServer are in regsvr.c */
+/***********************************************************************
+ *		DllRegisterServer (COMCAT.@)
+ */
+HRESULT WINAPI DllRegisterServer(void)
+{
+    return S_OK;
+}
+
+/***********************************************************************
+ *		DllUnregisterServer (COMCAT.@)
+ */
+HRESULT WINAPI DllUnregisterServer(void)
+{
+    return S_OK;
+}

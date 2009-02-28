@@ -194,7 +194,7 @@ static HRESULT COMDLG32_StrRetToStrNW (LPVOID dest, DWORD len, LPSTRRET src, LPC
 IShellBrowser * IShellBrowserImpl_Construct(HWND hwndOwner)
 {
     IShellBrowserImpl *sb;
-    FileOpenDlgInfos *fodInfos = (FileOpenDlgInfos *) GetPropA(hwndOwner,FileOpenDlgInfosStr);
+    FileOpenDlgInfos *fodInfos = GetPropA(hwndOwner,FileOpenDlgInfosStr);
 
     sb=(IShellBrowserImpl*)COMDLG32_SHAlloc(sizeof(IShellBrowserImpl));
 
@@ -361,7 +361,7 @@ static HRESULT WINAPI IShellBrowserImpl_BrowseObject(IShellBrowser *iface,
     TRACE("(%p)(pidl=%p,flags=0x%08x)\n", This, pidl, wFlags);
     COMDLG32_DumpSBSPFlags(wFlags);
 
-    fodInfos = (FileOpenDlgInfos *) GetPropA(This->hwndOwner,FileOpenDlgInfosStr);
+    fodInfos = GetPropA(This->hwndOwner,FileOpenDlgInfosStr);
 
     /* Format the pidl according to its parameter's category */
     if(wFlags & SBSP_RELATIVE)
@@ -569,7 +569,7 @@ static HRESULT WINAPI IShellBrowserImpl_QueryActiveShellView(IShellBrowser *ifac
 
     TRACE("(%p)\n", This);
 
-    fodInfos = (FileOpenDlgInfos *) GetPropA(This->hwndOwner,FileOpenDlgInfosStr);
+    fodInfos = GetPropA(This->hwndOwner,FileOpenDlgInfosStr);
 
     if(!(*ppshv = fodInfos->Shell.FOIShellView))
     {
@@ -773,7 +773,7 @@ static HRESULT WINAPI IShellBrowserImpl_ICommDlgBrowser_OnDefaultCommand(ICommDl
 
     TRACE("(%p)\n", This);
 
-    fodInfos = (FileOpenDlgInfos *) GetPropA(This->hwndOwner,FileOpenDlgInfosStr);
+    fodInfos = GetPropA(This->hwndOwner,FileOpenDlgInfosStr);
 
     /* If the selected object is not a folder, send an IDOK command to parent window */
     if((pidl = GetPidlFromDataObject(fodInfos->Shell.FOIDataObject, 1)))
@@ -827,7 +827,7 @@ static HRESULT WINAPI IShellBrowserImpl_ICommDlgBrowser_OnStateChange(ICommDlgBr
             break;
         case CDBOSC_KILLFOCUS:
 	    {
-		FileOpenDlgInfos *fodInfos = (FileOpenDlgInfos *) GetPropA(This->hwndOwner,FileOpenDlgInfosStr);
+                FileOpenDlgInfos *fodInfos = GetPropA(This->hwndOwner,FileOpenDlgInfosStr);
 		if(fodInfos->DlgInfos.dwDlgProp & FODPROP_SAVEDLG)
 		{
 		    WCHAR szSave[16];
@@ -862,7 +862,7 @@ static HRESULT WINAPI IShellBrowserImpl_ICommDlgBrowser_IncludeObject(ICommDlgBr
 
     TRACE("(%p)\n", This);
 
-    fodInfos = (FileOpenDlgInfos *) GetPropA(This->hwndOwner,FileOpenDlgInfosStr);
+    fodInfos = GetPropA(This->hwndOwner,FileOpenDlgInfosStr);
 
     ulAttr = SFGAO_HIDDEN | SFGAO_FOLDER | SFGAO_FILESYSTEM | SFGAO_FILESYSANCESTOR | SFGAO_LINK;
     IShellFolder_GetAttributesOf(fodInfos->Shell.FOIShellFolder, 1, &pidl, &ulAttr);
@@ -900,7 +900,7 @@ static HRESULT IShellBrowserImpl_ICommDlgBrowser_OnSelChange(ICommDlgBrowser *if
 
     IShellBrowserImpl *This = impl_from_ICommDlgBrowser(iface);
 
-    fodInfos = (FileOpenDlgInfos *) GetPropA(This->hwndOwner,FileOpenDlgInfosStr);
+    fodInfos = GetPropA(This->hwndOwner,FileOpenDlgInfosStr);
     TRACE("(%p do=%p view=%p)\n", This, fodInfos->Shell.FOIDataObject, fodInfos->Shell.FOIShellView);
 
     /* release old selections */

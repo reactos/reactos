@@ -217,7 +217,7 @@
 217 stdcall -noname SHUnicodeToAnsi(wstr ptr ptr)
 218 stdcall -noname SHUnicodeToAnsiCP(long wstr ptr ptr)
 219 stdcall -noname QISearch(long long long long)
-220 stub -noname SHSetDefaultDialogFont
+220 stdcall -noname SHSetDefaultDialogFont(ptr long)
 221 stdcall -noname SHRemoveDefaultDialogFont(ptr)
 222 stdcall -noname SHGlobalCounterCreate(long)
 223 stdcall -noname SHGlobalCounterGetValue(long)
@@ -429,8 +429,8 @@
 429 stdcall -noname MLIsMLHInstance(long)
 430 stdcall -noname MLSetMLHInstance(long long)
 431 stdcall -noname MLClearMLHInstance(long)
-432 stub -noname SHSendMessageBroadcastA
-433 stub -noname SHSendMessageBroadcastW
+432 stdcall -noname SHSendMessageBroadcastA(long long long)
+433 stdcall -noname SHSendMessageBroadcastW(long long long)
 434 stdcall -noname SendMessageTimeoutWrapW(long long long long long long ptr) user32.SendMessageTimeoutW
 435 stdcall -noname CLSIDFromProgIDWrap(wstr ptr) ole32.CLSIDFromProgID
 436 stdcall -noname CLSIDFromStringWrap(wstr ptr)

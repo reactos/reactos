@@ -67,7 +67,7 @@ CURSORICONDIRENTRY *CURSORICON_FindBestCursor( CURSORICONDIR *dir, int width, in
 /*
  * @implemented
  */
-HANDLE STDCALL
+HANDLE WINAPI
 LoadImageA(HINSTANCE hinst,
 	   LPCSTR lpszName,
 	   UINT uType,
@@ -412,6 +412,7 @@ LoadBitmapImage(HINSTANCE hInstance, LPCWSTR lpszName, UINT fuLoad)
    ULONG HeaderSize;
    ULONG ColorCount;
    PVOID Data;
+   BOOL Hit = FALSE;
 
    if (!(fuLoad & LR_LOADFROMFILE))
    {
@@ -470,8 +471,26 @@ LoadBitmapImage(HINSTANCE hInstance, LPCWSTR lpszName, UINT fuLoad)
          UnmapViewOfFile(BitmapInfo);
       return NULL;
    }
-   memcpy(PrivateInfo, BitmapInfo, HeaderSize);
 
+   _SEH2_TRY
+   {
+   memcpy(PrivateInfo, BitmapInfo, HeaderSize);
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+      Hit = TRUE;
+   }
+   _SEH2_END;
+
+   if (Hit)
+   {
+      DbgPrint("We have a thread overrun, these are already freed! pi -> %d bi -> %d\n", PrivateInfo, BitmapInfo);
+      RtlFreeHeap(GetProcessHeap(), 0, PrivateInfo);
+      if (fuLoad & LR_LOADFROMFILE)
+         UnmapViewOfFile(BitmapInfo);
+      return NULL;
+   }
+   
    /* FIXME: Handle color conversion and transparency. */
 
    hScreenDc = CreateCompatibleDC(NULL);
@@ -507,7 +526,7 @@ LoadBitmapImage(HINSTANCE hInstance, LPCWSTR lpszName, UINT fuLoad)
    return hBitmap;
 }
 
-HANDLE STDCALL
+HANDLE WINAPI
 LoadImageW(
    IN HINSTANCE hinst,
    IN LPCWSTR lpszName,
@@ -553,7 +572,7 @@ LoadImageW(
 /*
  * @implemented
  */
-HBITMAP STDCALL
+HBITMAP WINAPI
 LoadBitmapA(HINSTANCE hInstance, LPCSTR lpBitmapName)
 {
    return LoadImageA(hInstance, lpBitmapName, IMAGE_BITMAP, 0, 0, 0);
@@ -563,7 +582,7 @@ LoadBitmapA(HINSTANCE hInstance, LPCSTR lpBitmapName)
 /*
  * @implemented
  */
-HBITMAP STDCALL
+HBITMAP WINAPI
 LoadBitmapW(HINSTANCE hInstance, LPCWSTR lpBitmapName)
 {
    return LoadImageW(hInstance, lpBitmapName, IMAGE_BITMAP, 0, 0, 0);

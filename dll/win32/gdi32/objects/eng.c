@@ -13,7 +13,7 @@
  * @implemented
  */
 VOID
-STDCALL
+WINAPI
 EngAcquireSemaphore ( IN HSEMAPHORE hsem )
 {
     RtlEnterCriticalSection((PRTL_CRITICAL_SECTION)hsem);
@@ -38,7 +38,7 @@ copy_my_glyphset( FD_GLYPHSET *dst_glyphset , FD_GLYPHSET * src_glyphset, ULONG 
     return retValue;
 }
 
-FD_GLYPHSET* STDCALL
+FD_GLYPHSET* WINAPI
 EngComputeGlyphSet(INT nCodePage,INT nFirstChar,INT cChars)
 {
     FD_GLYPHSET * ntfd_glyphset;
@@ -69,7 +69,7 @@ EngComputeGlyphSet(INT nCodePage,INT nFirstChar,INT cChars)
  * @implemented
  */
 HSEMAPHORE
-STDCALL
+WINAPI
 EngCreateSemaphore ( VOID )
 {
     PRTL_CRITICAL_SECTION CritSect = RtlAllocateHeap(GetProcessHeap(), 0, sizeof(RTL_CRITICAL_SECTION));
@@ -86,7 +86,7 @@ EngCreateSemaphore ( VOID )
  * @implemented
  */
 VOID
-STDCALL
+WINAPI
 EngDeleteSemaphore ( IN HSEMAPHORE hsem )
 {
     if (hsem)
@@ -99,7 +99,7 @@ EngDeleteSemaphore ( IN HSEMAPHORE hsem )
 /*
  * @implemented
  */
-PVOID STDCALL
+PVOID WINAPI
 EngFindResource(HANDLE h,
                 int iName,
                 int iType,
@@ -128,7 +128,7 @@ EngFindResource(HANDLE h,
 /*
  * @implemented
  */
-VOID STDCALL
+VOID WINAPI
 EngFreeModule(HANDLE h)
 {
     FreeLibrary(h);
@@ -138,7 +138,7 @@ EngFreeModule(HANDLE h)
  * @implemented
  */
 
-VOID STDCALL
+VOID WINAPI
 EngGetCurrentCodePage( OUT PUSHORT OemCodePage,
                        OUT PUSHORT AnsiCodePage)
 {
@@ -150,44 +150,42 @@ EngGetCurrentCodePage( OUT PUSHORT OemCodePage,
 /*
  * @implemented
  */
-LPWSTR STDCALL
+LPWSTR WINAPI
 EngGetDriverName(HDEV hdev)
 {
   // DHPDEV from NtGdiGetDhpdev must be from print driver.
-  PDRIVER_INFO_2W pDrvInfo2 = (PDRIVER_INFO_2W)NtGdiGetDhpdev(hdev);
+  PUMPDEV pPDev = (PUMPDEV)NtGdiGetDhpdev(hdev);
 
-  if (!pDrvInfo2) return NULL;
+  if (!pPDev) return NULL;
   
-  if (pDrvInfo2->cVersion != 0xFEDCBA98 ) // Init mask for ver 2+
+  if (pPDev->Sig != PDEV_UMPD_ID)
   {
-     PDRIVER_INFO_1W pDrvInfo1 = (PDRIVER_INFO_1W) pDrvInfo2;
-        return pDrvInfo1->pName;
+     pPDev = (PUMPDEV)pPDev->Sig;
   }
-  return pDrvInfo2->pDriverPath;
+  return pPDev->pdi5Info->pDriverPath;
 }
 
 /*
  * @implemented
  */
-LPWSTR STDCALL
+LPWSTR WINAPI
 EngGetPrinterDataFileName(HDEV hdev)
 {
-  PDRIVER_INFO_2W pDrvInfo2 = (PDRIVER_INFO_2W)NtGdiGetDhpdev(hdev);
+  PUMPDEV pPDev = (PUMPDEV)NtGdiGetDhpdev(hdev);
 
-  if (!pDrvInfo2) return NULL;
+  if (!pPDev) return NULL;
 
-  if (pDrvInfo2->cVersion != 0xFEDCBA98 )
+  if (pPDev->Sig != PDEV_UMPD_ID)
   {
-     PDRIVER_INFO_1W pDrvInfo1 = (PDRIVER_INFO_1W) pDrvInfo2;
-        return pDrvInfo1->pName;
+     pPDev = (PUMPDEV)pPDev->Sig;
   }
-  return pDrvInfo2->pDataFile;
+  return pPDev->pdi5Info->pDataFile;
 }
 
 /*
  * @implemented
  */
-HANDLE STDCALL
+HANDLE WINAPI
 EngLoadModule(LPWSTR pwsz)
 {
    return LoadLibraryExW ( pwsz, NULL, LOAD_LIBRARY_AS_DATAFILE);
@@ -196,7 +194,7 @@ EngLoadModule(LPWSTR pwsz)
 /*
  * @implemented
  */
-INT STDCALL
+INT WINAPI
 EngMultiByteToWideChar(UINT CodePage,
                        LPWSTR WideCharString,
                        INT BytesInWideCharString,
@@ -209,7 +207,7 @@ EngMultiByteToWideChar(UINT CodePage,
 /*
  * @implemented
  */
-VOID STDCALL
+VOID WINAPI
 EngQueryLocalTime(PENG_TIME_FIELDS etf)
 {
   SYSTEMTIME SystemTime;
@@ -228,7 +226,7 @@ EngQueryLocalTime(PENG_TIME_FIELDS etf)
  * @implemented
  */
 VOID
-STDCALL
+WINAPI
 EngReleaseSemaphore ( IN HSEMAPHORE hsem )
 {
   RtlLeaveCriticalSection( (PRTL_CRITICAL_SECTION) hsem);
@@ -241,7 +239,7 @@ EngReleaseSemaphore ( IN HSEMAPHORE hsem )
  * @implemented
  */
 INT
-STDCALL
+WINAPI
 EngWideCharToMultiByte( UINT CodePage,
                         LPWSTR WideCharString,
                         INT BytesInWideCharString,

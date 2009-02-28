@@ -715,6 +715,18 @@ static BOOL resort_symbols(struct module* module)
     return module->sortlist_valid = TRUE;
 }
 
+static void symt_get_length(struct symt* symt, ULONG64* size)
+{
+    DWORD       type_index;
+
+    if (symt_get_info(symt, TI_GET_LENGTH, size) && *size)
+        return;
+
+    if (symt_get_info(symt, TI_GET_TYPE, &type_index) &&
+        symt_get_info((struct symt*)type_index, TI_GET_LENGTH, size)) return;
+    *size = 0x1000; /* arbitrary value */
+}
+
 /* assume addr is in module */
 struct symt_ht* symt_find_nearest(struct module* module, DWORD addr)
 {
@@ -737,8 +749,7 @@ struct symt_ht* symt_find_nearest(struct module* module, DWORD addr)
     if (high)
     {
         symt_get_info(&module->addr_sorttab[high - 1]->symt, TI_GET_ADDRESS, &ref_addr);
-        if (!symt_get_info(&module->addr_sorttab[high - 1]->symt, TI_GET_LENGTH, &ref_size) || !ref_size)
-            ref_size = 0x1000; /* arbitrary value */
+        symt_get_length(&module->addr_sorttab[high - 1]->symt, &ref_size);
         if (addr >= ref_addr + ref_size) return NULL;
     }
     
@@ -772,8 +783,7 @@ struct symt_ht* symt_find_nearest(struct module* module, DWORD addr)
     /* finally check that we fit into the found symbol */
     symt_get_info(&module->addr_sorttab[low]->symt, TI_GET_ADDRESS, &ref_addr);
     if (addr < ref_addr) return NULL;
-    if (!symt_get_info(&module->addr_sorttab[high - 1]->symt, TI_GET_LENGTH, &ref_size) || !ref_size)
-        ref_size = 0x1000; /* arbitrary value */
+    symt_get_length(&module->addr_sorttab[low]->symt, &ref_size);
     if (addr >= ref_addr + ref_size) return NULL;
 
     return module->addr_sorttab[low];
@@ -785,7 +795,7 @@ static BOOL symt_enum_locals_helper(struct module_pair* pair,
 {
     struct symt*        lsym = NULL;
     DWORD               pc = pair->pcs->ctx_frame.InstructionOffset;
-    int                 i;
+    unsigned int        i;
 
     for (i=0; i<vector_length(v); i++)
     {
@@ -854,7 +864,7 @@ static BOOL symt_enum_locals(struct process* pcs, const char* mask,
 /******************************************************************
  *		copy_symbolW
  *
- * Helper for transforming an ANSI symbol info into an UNICODE one.
+ * Helper for transforming an ANSI symbol info into a UNICODE one.
  * Assume that MaxNameLen is the same for both version (A & W).
  */
 void copy_symbolW(SYMBOL_INFOW* siw, const SYMBOL_INFO* si)
@@ -997,30 +1007,6 @@ static BOOL CALLBACK sym_enumW(PSYMBOL_INFO si, ULONG size, PVOID ctx)
     copy_symbolW(sew->sym_info, si);
 
     return (sew->cb)(sew->sym_info, size, sew->ctx);
-}
-
-/******************************************************************
- *		SymEnumSymbolsForAddrW (DBGHELP.@)
- *
- */
-BOOL WINAPI SymEnumSymbolsForAddrW(HANDLE hProcess, DWORD64 Address, 
-                                   PSYM_ENUMERATESYMBOLS_CALLBACKW EnumSymbolsCallback,
-                                   PVOID UserContext)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-/******************************************************************
- *		SymEnumSymbolsForAddr (DBGHELP.@)
- *
- */
-BOOL WINAPI SymEnumSymbolsForAddr(HANDLE hProcess, DWORD64 Address,
-                                  PSYM_ENUMERATESYMBOLS_CALLBACK EnumSymbolsCallback,
-                                  PVOID UserContext)
-{
-    UNIMPLEMENTED;
-    return FALSE;
 }
 
 /******************************************************************
@@ -1729,4 +1715,50 @@ BOOL WINAPI SymSearchW(HANDLE hProcess, ULONG64 BaseOfDll, DWORD Index,
     HeapFree(GetProcessHeap(), 0, maskA);
 
     return ret;
+}
+
+/******************************************************************
+ *		SymAddSymbol (DBGHELP.@)
+ *
+ */
+BOOL WINAPI SymAddSymbol(HANDLE hProcess, ULONG64 BaseOfDll, PCSTR name,
+                         DWORD64 addr, DWORD size, DWORD flags)
+{
+    WCHAR       nameW[MAX_SYM_NAME];
+
+    MultiByteToWideChar(CP_ACP, 0, name, -1, nameW, sizeof(nameW) / sizeof(WCHAR));
+    return SymAddSymbolW(hProcess, BaseOfDll, nameW, addr, size, flags);
+}
+
+/******************************************************************
+ *		SymAddSymbolW (DBGHELP.@)
+ *
+ */
+BOOL WINAPI SymAddSymbolW(HANDLE hProcess, ULONG64 BaseOfDll, PCWSTR name,
+                          DWORD64 addr, DWORD size, DWORD flags)
+{
+    struct module_pair  pair;
+
+    TRACE("(%p %s %s %u)\n", hProcess, wine_dbgstr_w(name), wine_dbgstr_longlong(addr), size);
+
+    pair.pcs = process_find_by_handle(hProcess);
+    if (!pair.pcs) return FALSE;
+    pair.requested = module_find_by_addr(pair.pcs, BaseOfDll, DMT_UNKNOWN);
+    if (!module_get_debug(&pair)) return FALSE;
+
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+/******************************************************************
+ *		SymSetScopeFromAddr (DBGHELP.@)
+ */
+BOOL WINAPI SymSetScopeFromAddr(HANDLE hProcess, ULONG64 addr)
+{
+    struct process*     pcs;
+
+    FIXME("(%p %s): stub\n", hProcess, wine_dbgstr_longlong(addr));
+
+    if (!(pcs = process_find_by_handle(hProcess))) return FALSE;
+    return TRUE;
 }

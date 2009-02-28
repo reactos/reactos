@@ -33,6 +33,7 @@
 #include "winreg.h"
 #include "wine/debug.h"
 #include "winnls.h"
+#include "winternl.h"
 
 #include "shellapi.h"
 #include "objbase.h"
@@ -520,7 +521,8 @@ WORD WINAPI ArrangeWindows(
 	WORD cKids,
 	CONST HWND * lpKids)
 {
-    FIXME("(%p 0x%08x %p 0x%04x %p):stub.\n",
+    /* Unimplemented in WinXP SP3 */
+    TRACE("(%p 0x%08x %p 0x%04x %p):stub.\n",
 	   hwndParent, dwReserved, lpRect, cKids, lpKids);
     return 0;
 }
@@ -1413,17 +1415,18 @@ HRESULT WINAPI SHLoadOLE(LPARAM lParam)
  *
  */
 HRESULT WINAPI DriveType(int DriveType)
-{	
+{
     WCHAR root[] = L"A:\\";
 	root[0] = L'A' + DriveType;
 	return GetDriveTypeW(root);
 }
 /*************************************************************************
  * InvalidateDriveType			[SHELL32.65]
- *
+ * Unimplemented in XP SP3
  */
 int WINAPI InvalidateDriveType(int u)
-{	FIXME("0x%08x stub\n",u);
+{
+	TRACE("0x%08x stub\n",u);
 	return 0;
 }
 /*************************************************************************
@@ -1451,8 +1454,8 @@ int WINAPI SHOutOfMemoryMessageBox(
  *
  */
 HRESULT WINAPI SHFlushClipboard(void)
-{	FIXME("stub\n");
-	return 1;
+{
+	return OleFlushClipboard();
 }
 
 /*************************************************************************
@@ -1466,21 +1469,6 @@ BOOL WINAPI SHWaitForFileToOpen(
 {
 	FIXME("%p 0x%08x 0x%08x stub\n", pidl, dwFlags, dwTimeout);
 	return 0;
-}
-
-/************************************************************************
- *	@				[SHELL32.654]
- *
- * NOTES
- *  first parameter seems to be a pointer (same as passed to WriteCabinetState)
- *  second one could be a size (0x0c). The size is the same as the structure saved to
- *  HCU\Software\Microsoft\Windows\CurrentVersion\Explorer\CabinetState
- *  I'm (js) guessing: this one is just ReadCabinetState ;-)
- */
-HRESULT WINAPI shell32_654 (CABINETSTATE *cs, int length)
-{
-	TRACE("%p %d\n",cs,length);
-	return ReadCabinetState(cs,length);
 }
 
 /************************************************************************
@@ -1546,8 +1534,21 @@ DWORD WINAPI DoEnvironmentSubstA(LPSTR pszString, UINT cchString)
  */
 DWORD WINAPI DoEnvironmentSubstW(LPWSTR pszString, UINT cchString)
 {
-	FIXME("(%s, %d): stub\n", debugstr_w(pszString), cchString);
-	return MAKELONG(FALSE,cchString);
+    LPWSTR dst;
+    BOOL res = FALSE;
+    FIXME("(%s, %d): stub\n", debugstr_w(pszString), cchString);
+    if ((dst = HeapAlloc(GetProcessHeap(), 0, cchString * sizeof(WCHAR))))
+    {
+        DWORD num = ExpandEnvironmentStringsW(pszString, dst, cchString);
+        if (num)
+        {
+            res = TRUE;
+            wcscpy(pszString, dst);
+        }
+        HeapFree(GetProcessHeap(), 0, dst);
+    }
+
+    return MAKELONG(res,cchString);
 }
 
 /************************************************************************
@@ -1563,25 +1564,41 @@ DWORD WINAPI DoEnvironmentSubstAW(LPVOID x, UINT y)
 }
 
 /*************************************************************************
- *      @                             [SHELL32.243]
- *
- * Win98+ by-ordinal routine.  In Win98 this routine returns zero and
- * does nothing else.  Possibly this does something in NT or SHELL32 5.0?
- *
+ *      GUIDFromStringA   [SHELL32.703]
  */
-
-BOOL WINAPI shell32_243(DWORD a, DWORD b)
+BOOL WINAPI GUIDFromStringA(LPCSTR str, LPGUID guid)
 {
-  return FALSE;
+    TRACE("GUIDFromStringA() stub\n");
+    return FALSE;
 }
 
 /*************************************************************************
- *      @	[SHELL32.714]
+ *      GUIDFromStringW   [SHELL32.704]
  */
-DWORD WINAPI SHELL32_714(LPVOID x)
+BOOL WINAPI GUIDFromStringW(LPCWSTR str, LPGUID guid)
 {
- 	FIXME("(%s)stub\n", debugstr_w(x));
-	return 0;
+    UNICODE_STRING guid_str;
+
+    RtlInitUnicodeString(&guid_str, str);
+    return !RtlGUIDFromString(&guid_str, guid);
+}
+
+/*************************************************************************
+ *      PathIsTemporaryW	[SHELL32.714]
+ */
+BOOL WINAPI PathIsTemporaryW(LPWSTR Str)
+{
+ 	FIXME("(%s)stub\n", debugstr_w(Str));
+	return FALSE;
+}
+
+/*************************************************************************
+ *      PathIsTemporaryA	[SHELL32.713]
+ */
+BOOL WINAPI PathIsTemporaryA(LPSTR Str)
+{
+ 	FIXME("(%s)stub\n", debugstr_a(Str));
+	return FALSE;
 }
 
 typedef struct _PSXA
@@ -1870,15 +1887,15 @@ HRESULT WINAPI SHCreateStdEnumFmtEtc(
 
 
 /*************************************************************************
- *		SHELL32_256 (SHELL32.256)
+ *		SHCreateShellFolderView (SHELL32.256)
  */
-HRESULT WINAPI SHELL32_256(LPDWORD lpdw0, LPDWORD lpdw1)
+HRESULT WINAPI SHCreateShellFolderView(const SFV_CREATE *pcsfv, IShellView **ppsv)
 {
     HRESULT ret = S_OK;
 
-    FIXME("stub %p 0x%08x %p\n", lpdw0, lpdw0 ? *lpdw0 : 0, lpdw1);
+    FIXME("SHCreateShellFolderView() stub\n");
 
-    if (!lpdw0 || *lpdw0 != 0x10)
+    if (!pcsfv || sizeof(*pcsfv) != pcsfv->cbSize)
         ret = E_INVALIDARG;
     else
     {
@@ -2097,6 +2114,12 @@ HRESULT WINAPI SHQueryRecycleBinW(LPCWSTR pszRootPath, LPSHQUERYRBINFO pSHQueryR
 {
     FIXME("%s, %p - stub\n", debugstr_w(pszRootPath), pSHQueryRBInfo);
 
+    if (!(pszRootPath) || (pszRootPath[0] == 0) ||
+        !(pSHQueryRBInfo) || (pSHQueryRBInfo->cbSize < sizeof(SHQUERYRBINFO)))
+    {
+        return E_INVALIDARG;
+    }
+
     pSHQueryRBInfo->i64Size = 0;
     pSHQueryRBInfo->i64NumItems = 0;
 
@@ -2131,6 +2154,26 @@ BOOL WINAPI LinkWindow_UnregisterClass(void)
     return TRUE;
 
 }
+
+/*************************************************************************
+ *              SHFlushSFCache (SHELL32.526)
+ *
+ * Notifies the shell that a user-specified special folder location has changed.
+ *
+ * NOTES
+ *   In Wine, the shell folder registry values are not cached, so this function
+ *   has no effect.
+ */
+void WINAPI SHFlushSFCache(void)
+{
+}
+
+HRESULT WINAPI SHGetImageList(int iImageList, REFIID riid, void **ppv)
+{
+    FIXME("STUB: %i %s\n",iImageList,debugstr_guid(riid));
+    return E_NOINTERFACE;
+}
+
 /*************************************************************************
  *    SHParseDisplayName        [shell version 6.0]
  */

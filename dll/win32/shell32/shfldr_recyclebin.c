@@ -1013,7 +1013,7 @@ static HRESULT WINAPI RecycleBin_IContextMenu2Item_QueryContextMenu(
         _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_STRING, szBuffer, MFS_ENABLED);
     }
 
-    if (LoadStringW(shell32_hInstance, IDS_DELETE, szBuffer, sizeof(szBuffer)/sizeof(char)))
+    if (LoadStringW(shell32_hInstance, IDS_DELETE, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
     {
         szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
         _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_SEPARATOR, NULL, MFS_ENABLED);
@@ -1218,7 +1218,7 @@ InitializeBitBucketDlg(HWND hwndDlg, WCHAR DefaultDrive)
             li.iSubItem = 0;
             li.pszText = szVolume;
             li.iItem = itemCount;
-            (void)SendMessageW(hDlgCtrl, LVM_INSERTCOLUMN, 0, (LPARAM)&li);
+            (void)SendMessageW(hDlgCtrl, LVM_INSERTITEMW, 0, (LPARAM)&li);
             if (GetDiskFreeSpaceExW(szDrive, &FreeBytesAvailable , &TotalNumberOfBytes, &TotalNumberOfFreeBytes))
             {
                 if (StrFormatByteSizeW(TotalNumberOfFreeBytes.QuadPart, szVolume, sizeof(szVolume) / sizeof(WCHAR)))
@@ -1287,7 +1287,7 @@ static BOOL StoreDriveSettings(HWND hwndDlg)
    DWORD dwSize;
 
 
-   if (RegOpenKeyExW(HKEY_CURRENT_USER, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Bitbucket\\Volume", 0, KEY_WRITE, &hKey) != ERROR_SUCCESS)
+   if (RegCreateKeyExW(HKEY_CURRENT_USER, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Bitbucket\\Volume", 0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL) != ERROR_SUCCESS)
       return FALSE;
 
    iCount = ListView_GetItemCount(hDlgCtrl);
@@ -1383,11 +1383,17 @@ BitBucketDlg(
     PDRIVE_ITEM_CONTEXT pItem;
     BOOL bSuccess;
     UINT uResult;
+    PROPSHEETPAGE * page;
+    DWORD dwStyle;
 
     switch(uMsg)
     {
-    case WM_INITDIALOG:
-        InitializeBitBucketDlg(hwndDlg, (WCHAR)lParam);
+    case WM_INITDIALOG:	
+        page = (PROPSHEETPAGE*)lParam;
+        InitializeBitBucketDlg(hwndDlg, (WCHAR)page->lParam);
+        dwStyle = (DWORD) SendDlgItemMessage(hwndDlg, 14000, LVM_GETEXTENDEDLISTVIEWSTYLE, 0, 0);
+        dwStyle = dwStyle | LVS_EX_FULLROWSELECT;
+        SendDlgItemMessage(hwndDlg, 14000, LVM_SETEXTENDEDLISTVIEWSTYLE, 0, dwStyle);
         if (GetDlgCtrlID((HWND)wParam) != 14000)
         {
             SetFocus(GetDlgItem(hwndDlg, 14000));

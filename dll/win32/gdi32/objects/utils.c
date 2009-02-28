@@ -22,7 +22,7 @@
  *    TRUE if the input values together form a valid image, FALSE otherwise.
  */
 
-BOOL STDCALL
+BOOL WINAPI
 CalculateColorTableSize(
    CONST BITMAPINFOHEADER *BitmapInfoHeader,
    UINT *ColorSpec,
@@ -168,7 +168,7 @@ CalculateColorTableSize(
  *    }
  */
 
-LPBITMAPINFO STDCALL
+LPBITMAPINFO WINAPI
 ConvertBitmapInfo(
    CONST BITMAPINFO *BitmapInfo,
    UINT ColorSpec,
@@ -188,9 +188,10 @@ ConvertBitmapInfo(
     * description).
     */
 
-   if (BitmapInfo->bmiHeader.biSize != sizeof(BITMAPCOREHEADER) &&
+   if ( !BitmapInfo || 
+        (BitmapInfo->bmiHeader.biSize != sizeof(BITMAPCOREHEADER) &&
        (BitmapInfo->bmiHeader.biSize < sizeof(BITMAPINFOHEADER) ||
-        BitmapInfo->bmiHeader.biSize > sizeof(BITMAPV5HEADER)))
+        BitmapInfo->bmiHeader.biSize > sizeof(BITMAPV5HEADER))))
    {
       return NULL;
    }
@@ -213,32 +214,7 @@ ConvertBitmapInfo(
 
    if (FollowedByData)
    {
-      if (BitmapInfo->bmiHeader.biSize == sizeof(BITMAPCOREHEADER))
-      {
-         DataSize =
-            CoreBitmapInfo->bmciHeader.bcHeight *
-            CoreBitmapInfo->bmciHeader.bcWidth *
-            CoreBitmapInfo->bmciHeader.bcBitCount;
-         DataSize = ((DataSize + 31) & ~31) / 8;
-         DataSize *= CoreBitmapInfo->bmciHeader.bcPlanes;
-      }
-      else
-      {
-         if (BitmapInfo->bmiHeader.biCompression == BI_RGB ||
-             BitmapInfo->bmiHeader.biCompression == BI_BITFIELDS)
-         {
-            DataSize =
-               abs(BitmapInfo->bmiHeader.biHeight) *
-               BitmapInfo->bmiHeader.biWidth *
-               BitmapInfo->bmiHeader.biBitCount;
-            DataSize = ((DataSize + 31) & ~31) / 8;
-            DataSize *= BitmapInfo->bmiHeader.biPlanes;
-         }
-         else
-         {
-            DataSize = BitmapInfo->bmiHeader.biSizeImage;
-         }
-      }
+      DataSize = DIB_BitmapBitsSize((PBITMAPINFO)BitmapInfo );
    }
 
    /*
@@ -333,7 +309,7 @@ ConvertBitmapInfo(
 }
 
 VOID
-STDCALL
+WINAPI
 LogFontA2W(LPLOGFONTW pW, CONST LOGFONTA *pA)
 {
 #define COPYS(f,len) MultiByteToWideChar ( CP_THREAD_ACP, 0, pA->f, len, pW->f, len )
@@ -353,13 +329,14 @@ LogFontA2W(LPLOGFONTW pW, CONST LOGFONTA *pA)
   COPYN(lfQuality);
   COPYN(lfPitchAndFamily);
   COPYS(lfFaceName,LF_FACESIZE);
+  pW->lfFaceName[LF_FACESIZE - 1] = '\0';
 
 #undef COPYN
 #undef COPYS
 }
 
 VOID
-STDCALL
+WINAPI
 LogFontW2A(LPLOGFONTA pA, CONST LOGFONTW *pW)
 {
 #define COPYS(f,len) WideCharToMultiByte ( CP_THREAD_ACP, 0, pW->f, len, pA->f, len, NULL, NULL )
@@ -379,13 +356,14 @@ LogFontW2A(LPLOGFONTA pA, CONST LOGFONTW *pW)
   COPYN(lfQuality);
   COPYN(lfPitchAndFamily);
   COPYS(lfFaceName,LF_FACESIZE);
+  pA->lfFaceName[LF_FACESIZE - 1] = '\0';
 
 #undef COPYN
 #undef COPYS
 }
 
 VOID
-STDCALL
+WINAPI
 EnumLogFontExW2A( LPENUMLOGFONTEXA fontA, CONST ENUMLOGFONTEXW *fontW )
 {
     LogFontW2A( (LPLOGFONTA)fontA, (CONST LOGFONTW *)fontW );

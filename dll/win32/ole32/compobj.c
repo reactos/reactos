@@ -34,9 +34,6 @@
  *   - Implement the OXID resolver so we don't need magic endpoint names for
  *     clients and servers to meet up
  *
- *   - Make all ole interface marshaling use NDR to be wire compatible with
- *     native DCOM
- *
  */
 
 #include "config.h"
@@ -58,6 +55,7 @@
 #include "objbase.h"
 #include "ole2.h"
 #include "ole2ver.h"
+#include "ctxtcall.h"
 
 #include "compobj_private.h"
 
@@ -66,14 +64,10 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
-HINSTANCE OLE32_hInstance = 0; /* FIXME: make static ... */
-
 #define ARRAYSIZE(array) (sizeof(array)/sizeof((array)[0]))
 
 /****************************************************************************
  * This section defines variables internal to the COM module.
- *
- * TODO: Most of these things will have to be made thread-safe.
  */
 
 static HRESULT COM_GetRegisteredClassObject(const struct apartment *apt, REFCLSID rclsid,
@@ -116,7 +110,7 @@ static LONG s_COMServerProcessReferences = 0;
  * objects.
  *
  * TODO: Make this data structure aware of inter-process communication. This
- *       means that parts of this will be exported to the Wine Server.
+ *       means that parts of this will be exported to rpcss.
  */
 typedef struct tagRegisteredClass
 {
@@ -209,19 +203,19 @@ static void COMPOBJ_InitProcess( void )
      * following class is created. The *caller* of CoMarshalInterface (i.e., the
      * application) is responsible for pumping the message loop in that thread.
      * The WM_USER messages which point to the RPCs are then dispatched to
-     * COM_AptWndProc by the user's code from the apartment in which the interface
-     * was unmarshalled.
+     * apartment_wndproc by the user's code from the apartment in which the
+     * interface was unmarshalled.
      */
     memset(&wclass, 0, sizeof(wclass));
     wclass.lpfnWndProc = apartment_wndproc;
-    wclass.hInstance = OLE32_hInstance;
+    wclass.hInstance = hProxyDll;
     wclass.lpszClassName = wszAptWinClass;
     RegisterClassW(&wclass);
 }
 
 static void COMPOBJ_UninitProcess( void )
 {
-    UnregisterClassW(wszAptWinClass, OLE32_hInstance);
+    UnregisterClassW(wszAptWinClass, hProxyDll);
 }
 
 static void COM_TlsDestroy(void)
@@ -232,6 +226,7 @@ static void COM_TlsDestroy(void)
         if (info->apt) apartment_release(info->apt);
         if (info->errorinfo) IErrorInfo_Release(info->errorinfo);
         if (info->state) IUnknown_Release(info->state);
+        if (info->spy) IUnknown_Release(info->spy);
         HeapFree(GetProcessHeap(), 0, info);
         NtCurrentTeb()->ReservedForOle = NULL;
     }
@@ -560,6 +555,8 @@ struct host_thread_params
     HWND apartment_hwnd;
 };
 
+/* thread for hosting an object to allow an object to appear to be created in
+ * an apartment with an incompatible threading model */
 static DWORD CALLBACK apartment_hostobject_thread(LPVOID p)
 {
     struct host_thread_params *params = p;
@@ -609,7 +606,12 @@ static DWORD CALLBACK apartment_hostobject_thread(LPVOID p)
     return S_OK;
 }
 
-static HRESULT apartment_hostobject_in_hostapt(struct apartment *apt, BOOL multi_threaded, BOOL main_apartment, HKEY hkeydll, REFCLSID rclsid, REFIID riid, void **ppv)
+/* finds or creates a host apartment, creates the object inside it and returns
+ * a proxy to it so that the object can be used in the apartment of the
+ * caller of this function */
+static HRESULT apartment_hostobject_in_hostapt(
+    struct apartment *apt, BOOL multi_threaded, BOOL main_apartment,
+    HKEY hkeydll, REFCLSID rclsid, REFIID riid, void **ppv)
 {
     struct host_object_params params;
     HWND apartment_hwnd = NULL;
@@ -715,6 +717,8 @@ static HRESULT apartment_hostobject_in_hostapt(struct apartment *apt, BOOL multi
     return hr;
 }
 
+/* create a window for the apartment or return the current one if one has
+ * already been created */
 HRESULT apartment_createwindowifneeded(struct apartment *apt)
 {
     if (apt->multi_threaded)
@@ -724,7 +728,7 @@ HRESULT apartment_createwindowifneeded(struct apartment *apt)
     {
         HWND hwnd = CreateWindowW(wszAptWinClass, NULL, 0,
                                   0, 0, 0, 0,
-                                  HWND_MESSAGE, 0, OLE32_hInstance, NULL);
+                                  HWND_MESSAGE, 0, hProxyDll, NULL);
         if (!hwnd)
         {
             ERR("CreateWindow failed with error %d\n", GetLastError());
@@ -738,6 +742,7 @@ HRESULT apartment_createwindowifneeded(struct apartment *apt)
     return S_OK;
 }
 
+/* retrieves the window for the main- or apartment-threaded apartment */
 HWND apartment_getwindow(const struct apartment *apt)
 {
     assert(!apt->multi_threaded);
@@ -750,6 +755,8 @@ void apartment_joinmta(void)
     COM_CurrentInfo()->apt = MTA;
 }
 
+/* gets the specified class object by loading the appropriate DLL, if
+ * necessary and calls the DllGetClassObject function for the DLL */
 static HRESULT apartment_getclassobject(struct apartment *apt, LPCWSTR dllpath,
                                         BOOL apartment_threaded,
                                         REFCLSID rclsid, REFIID riid, void **ppv)
@@ -822,6 +829,8 @@ static HRESULT apartment_getclassobject(struct apartment *apt, LPCWSTR dllpath,
     return hr;
 }
 
+/* frees unused libraries loaded by apartment_getclassobject by calling the
+ * DLL's DllCanUnloadNow entry point */
 static void apartment_freeunusedlibraries(struct apartment *apt, DWORD delay)
 {
     struct apartment_loaded_dll *entry, *next;
@@ -834,6 +843,10 @@ static void apartment_freeunusedlibraries(struct apartment *apt, DWORD delay)
 
             if (real_delay == INFINITE)
             {
+                /* DLLs that return multi-threaded objects aren't unloaded
+                 * straight away to cope for programs that have races between
+                 * last object destruction and threads in the DLLs that haven't
+                 * finished, despite DllCanUnloadNow returning S_OK */
                 if (entry->multi_threaded)
                     real_delay = 10 * 60 * 1000; /* 10 minutes */
                 else
@@ -1001,6 +1014,80 @@ DWORD WINAPI CoBuildVersion(void)
 }
 
 /******************************************************************************
+ *              CoRegisterInitializeSpy [OLE32.@]
+ *
+ * Add a Spy that watches CoInitializeEx calls
+ *
+ * PARAMS
+ *  spy [I] Pointer to IUnknown interface that will be QueryInterface'd.
+ *  cookie [II] cookie receiver
+ *
+ * RETURNS
+ *  Success: S_OK if not already initialized, S_FALSE otherwise.
+ *  Failure: HRESULT code.
+ *
+ * SEE ALSO
+ *   CoInitializeEx
+ */
+HRESULT WINAPI CoRegisterInitializeSpy(IInitializeSpy *spy, ULARGE_INTEGER *cookie)
+{
+    struct oletls *info = COM_CurrentInfo();
+    HRESULT hr;
+
+    TRACE("(%p, %p)\n", spy, cookie);
+
+    if (!spy || !cookie || !info)
+    {
+        if (!info)
+            WARN("Could not allocate tls\n");
+        return E_INVALIDARG;
+    }
+
+    if (info->spy)
+    {
+        FIXME("Already registered?\n");
+        return E_UNEXPECTED;
+    }
+
+    hr = IUnknown_QueryInterface(spy, &IID_IInitializeSpy, (void **) &info->spy);
+    if (SUCCEEDED(hr))
+    {
+        cookie->QuadPart = (DWORD_PTR)spy;
+        return S_OK;
+    }
+    return hr;
+}
+
+/******************************************************************************
+ *              CoRevokeInitializeSpy [OLE32.@]
+ *
+ * Remove a spy that previously watched CoInitializeEx calls
+ *
+ * PARAMS
+ *  cookie [I] The cookie obtained from a previous CoRegisterInitializeSpy call
+ *
+ * RETURNS
+ *  Success: S_OK if a spy is removed
+ *  Failure: E_INVALIDARG
+ *
+ * SEE ALSO
+ *   CoInitializeEx
+ */
+HRESULT WINAPI CoRevokeInitializeSpy(ULARGE_INTEGER cookie)
+{
+    struct oletls *info = COM_CurrentInfo();
+    TRACE("(%s)\n", wine_dbgstr_longlong(cookie.QuadPart));
+
+    if (!info || !info->spy || cookie.QuadPart != (DWORD_PTR)info->spy)
+        return E_INVALIDARG;
+
+    IUnknown_Release(info->spy);
+    info->spy = NULL;
+    return S_OK;
+}
+
+
+/******************************************************************************
  *		CoInitialize	[OLE32.@]
  *
  * Initializes the COM libraries by calling CoInitializeEx with
@@ -1056,6 +1143,7 @@ HRESULT WINAPI CoInitialize(LPVOID lpReserved)
  */
 HRESULT WINAPI CoInitializeEx(LPVOID lpReserved, DWORD dwCoInit)
 {
+  struct oletls *info = COM_CurrentInfo();
   HRESULT hr = S_OK;
   APARTMENT *apt;
 
@@ -1083,7 +1171,10 @@ HRESULT WINAPI CoInitializeEx(LPVOID lpReserved, DWORD dwCoInit)
     RunningObjectTableImpl_Initialize();
   }
 
-  if (!(apt = COM_CurrentInfo()->apt))
+  if (info->spy)
+      IInitializeSpy_PreInitialize(info->spy, dwCoInit, info->inits);
+
+  if (!(apt = info->apt))
   {
     apt = apartment_get_or_create(dwCoInit);
     if (!apt) return E_OUTOFMEMORY;
@@ -1100,7 +1191,10 @@ HRESULT WINAPI CoInitializeEx(LPVOID lpReserved, DWORD dwCoInit)
   else
     hr = S_FALSE;
 
-  COM_CurrentInfo()->inits++;
+  info->inits++;
+
+  if (info->spy)
+      IInitializeSpy_PostInitialize(info->spy, hr, dwCoInit, info->inits);
 
   return hr;
 }
@@ -1131,10 +1225,16 @@ void WINAPI CoUninitialize(void)
   /* will only happen on OOM */
   if (!info) return;
 
+  if (info->spy)
+      IInitializeSpy_PreUninitialize(info->spy, info->inits);
+
   /* sanity check */
   if (!info->inits)
   {
     ERR("Mismatched CoUninitialize\n");
+
+    if (info->spy)
+        IInitializeSpy_PostUninitialize(info->spy, info->inits);
     return;
   }
 
@@ -1160,6 +1260,8 @@ void WINAPI CoUninitialize(void)
     ERR( "CoUninitialize() - not CoInitialized.\n" );
     InterlockedExchangeAdd(&s_COMLockCount,1); /* restore the lock count. */
   }
+  if (info->spy)
+      IInitializeSpy_PostUninitialize(info->spy, info->inits);
 }
 
 /******************************************************************************
@@ -1254,7 +1356,7 @@ HRESULT WINAPI CoCreateGuid(GUID *pguid)
  * SEE ALSO
  *  StringFromCLSID
  */
-static HRESULT WINAPI __CLSIDFromString(LPCWSTR s, CLSID *id)
+static HRESULT __CLSIDFromString(LPCWSTR s, CLSID *id)
 {
   int	i;
   BYTE table[256];
@@ -1391,7 +1493,7 @@ HRESULT WINAPI StringFromCLSID(REFCLSID id, LPOLESTR *idstr)
 		return ret;
 
 	ret=WINE_StringFromCLSID(id,buf);
-	if (!ret) {
+	if (ret == S_OK) {
             DWORD len = MultiByteToWideChar( CP_ACP, 0, buf, -1, NULL, 0 );
             *idstr = IMalloc_Alloc( mllc, len * sizeof(WCHAR) );
             MultiByteToWideChar( CP_ACP, 0, buf, -1, *idstr, len );
@@ -1592,7 +1694,7 @@ HRESULT WINAPI CLSIDFromProgID(LPCOLESTR progid, LPCLSID clsid)
         return CO_E_CLASSSTRING;
     }
     RegCloseKey(xhkey);
-    return CLSIDFromString(buf2,clsid);
+    return __CLSIDFromString(buf2,clsid);
 }
 
 
@@ -2806,7 +2908,7 @@ HRESULT WINAPI CoTreatAsClass(REFCLSID clsidOld, REFCLSID clsidNew)
     if (!memcmp( clsidOld, clsidNew, sizeof(*clsidOld) ))
     {
        if (!RegQueryValueW(hkey, wszAutoTreatAs, auto_treat_as, &auto_treat_as_size) &&
-           !CLSIDFromString(auto_treat_as, &id))
+           CLSIDFromString(auto_treat_as, &id) == S_OK)
        {
            if (RegSetValueW(hkey, wszTreatAs, REG_SZ, auto_treat_as, sizeof(auto_treat_as)))
            {
@@ -3250,10 +3352,46 @@ HRESULT WINAPI CoCopyProxy(IUnknown *pProxy, IUnknown **ppCopy)
  */
 HRESULT WINAPI CoGetCallContext(REFIID riid, void **ppv)
 {
-    FIXME("(%s, %p): stub\n", debugstr_guid(riid), ppv);
+    struct oletls *info = COM_CurrentInfo();
 
-    *ppv = NULL;
-    return E_NOINTERFACE;
+    TRACE("(%s, %p)\n", debugstr_guid(riid), ppv);
+
+    if (!info)
+        return E_OUTOFMEMORY;
+
+    if (!info->call_state)
+        return RPC_E_CALL_COMPLETE;
+
+    return IUnknown_QueryInterface(info->call_state, riid, ppv);
+}
+
+/***********************************************************************
+ *           CoSwitchCallContext [OLE32.@]
+ *
+ * Switches the context of the currently executing server call in the current
+ * thread.
+ *
+ * PARAMS
+ *  pObject     [I] Pointer to new context object
+ *  ppOldObject [O] Pointer to memory that will receive old context object pointer
+ *
+ * RETURNS
+ *  Success: S_OK.
+ *  Failure: HRESULT code.
+ */
+HRESULT WINAPI CoSwitchCallContext(IUnknown *pObject, IUnknown **ppOldObject)
+{
+    struct oletls *info = COM_CurrentInfo();
+
+    TRACE("(%p, %p)\n", pObject, ppOldObject);
+
+    if (!info)
+        return E_OUTOFMEMORY;
+
+    *ppOldObject = info->call_state;
+    info->call_state = pObject; /* CoSwitchCallContext does not addref nor release objects */
+
+    return S_OK;
 }
 
 /***********************************************************************
@@ -3602,19 +3740,37 @@ HRESULT WINAPI CoRegisterChannelHook(REFGUID guidExtension, IChannelHook *pChann
 typedef struct Context
 {
     const IComThreadingInfoVtbl *lpVtbl;
+    const IContextCallbackVtbl  *lpCallbackVtbl;
     LONG refs;
     APTTYPE apttype;
 } Context;
 
-static HRESULT WINAPI Context_QueryInterface(IComThreadingInfo *iface, REFIID riid, LPVOID *ppv)
+static inline Context *impl_from_IComThreadingInfo( IComThreadingInfo *iface )
+{
+        return (Context *)((char*)iface - FIELD_OFFSET(Context, lpVtbl));
+}
+
+static inline Context *impl_from_IContextCallback( IContextCallback *iface )
+{
+        return (Context *)((char*)iface - FIELD_OFFSET(Context, lpCallbackVtbl));
+}
+
+static HRESULT Context_QueryInterface(Context *iface, REFIID riid, LPVOID *ppv)
 {
     *ppv = NULL;
 
     if (IsEqualIID(riid, &IID_IComThreadingInfo) ||
         IsEqualIID(riid, &IID_IUnknown))
     {
-        *ppv = iface;
-        IUnknown_AddRef(iface);
+        *ppv = &iface->lpVtbl;
+    } else if (IsEqualIID(riid, &IID_IContextCallback))
+    {
+        *ppv = &iface->lpCallbackVtbl;
+    }
+
+    if (*ppv)
+    {
+        IUnknown_AddRef((IUnknown*)*ppv);
         return S_OK;
     }
 
@@ -3622,24 +3778,40 @@ static HRESULT WINAPI Context_QueryInterface(IComThreadingInfo *iface, REFIID ri
     return E_NOINTERFACE;
 }
 
-static ULONG WINAPI Context_AddRef(IComThreadingInfo *iface)
+static ULONG Context_AddRef(Context *This)
 {
-    Context *This = (Context *)iface;
     return InterlockedIncrement(&This->refs);
 }
 
-static ULONG WINAPI Context_Release(IComThreadingInfo *iface)
+static ULONG Context_Release(Context *This)
 {
-    Context *This = (Context *)iface;
     ULONG refs = InterlockedDecrement(&This->refs);
     if (!refs)
         HeapFree(GetProcessHeap(), 0, This);
     return refs;
 }
 
-static HRESULT WINAPI Context_GetCurrentApartmentType(IComThreadingInfo *iface, APTTYPE *apttype)
+static HRESULT WINAPI Context_CTI_QueryInterface(IComThreadingInfo *iface, REFIID riid, LPVOID *ppv)
 {
-    Context *This = (Context *)iface;
+    Context *This = impl_from_IComThreadingInfo(iface);
+    return Context_QueryInterface(This, riid, ppv);
+}
+
+static ULONG WINAPI Context_CTI_AddRef(IComThreadingInfo *iface)
+{
+    Context *This = impl_from_IComThreadingInfo(iface);
+    return Context_AddRef(This);
+}
+
+static ULONG WINAPI Context_CTI_Release(IComThreadingInfo *iface)
+{
+    Context *This = impl_from_IComThreadingInfo(iface);
+    return Context_Release(This);
+}
+
+static HRESULT WINAPI Context_CTI_GetCurrentApartmentType(IComThreadingInfo *iface, APTTYPE *apttype)
+{
+    Context *This = impl_from_IComThreadingInfo(iface);
 
     TRACE("(%p)\n", apttype);
 
@@ -3647,9 +3819,9 @@ static HRESULT WINAPI Context_GetCurrentApartmentType(IComThreadingInfo *iface, 
     return S_OK;
 }
 
-static HRESULT WINAPI Context_GetCurrentThreadType(IComThreadingInfo *iface, THDTYPE *thdtype)
+static HRESULT WINAPI Context_CTI_GetCurrentThreadType(IComThreadingInfo *iface, THDTYPE *thdtype)
 {
-    Context *This = (Context *)iface;
+    Context *This = impl_from_IComThreadingInfo(iface);
 
     TRACE("(%p)\n", thdtype);
 
@@ -3666,13 +3838,13 @@ static HRESULT WINAPI Context_GetCurrentThreadType(IComThreadingInfo *iface, THD
     return S_OK;
 }
 
-static HRESULT WINAPI Context_GetCurrentLogicalThreadId(IComThreadingInfo *iface, GUID *logical_thread_id)
+static HRESULT WINAPI Context_CTI_GetCurrentLogicalThreadId(IComThreadingInfo *iface, GUID *logical_thread_id)
 {
     FIXME("(%p): stub\n", logical_thread_id);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI Context_SetCurrentLogicalThreadId(IComThreadingInfo *iface, REFGUID logical_thread_id)
+static HRESULT WINAPI Context_CTI_SetCurrentLogicalThreadId(IComThreadingInfo *iface, REFGUID logical_thread_id)
 {
     FIXME("(%s): stub\n", debugstr_guid(logical_thread_id));
     return E_NOTIMPL;
@@ -3680,14 +3852,50 @@ static HRESULT WINAPI Context_SetCurrentLogicalThreadId(IComThreadingInfo *iface
 
 static const IComThreadingInfoVtbl Context_Threading_Vtbl =
 {
-    Context_QueryInterface,
-    Context_AddRef,
-    Context_Release,
-    Context_GetCurrentApartmentType,
-    Context_GetCurrentThreadType,
-    Context_GetCurrentLogicalThreadId,
-    Context_SetCurrentLogicalThreadId
+    Context_CTI_QueryInterface,
+    Context_CTI_AddRef,
+    Context_CTI_Release,
+    Context_CTI_GetCurrentApartmentType,
+    Context_CTI_GetCurrentThreadType,
+    Context_CTI_GetCurrentLogicalThreadId,
+    Context_CTI_SetCurrentLogicalThreadId
 };
+
+static HRESULT WINAPI Context_CC_QueryInterface(IContextCallback *iface, REFIID riid, LPVOID *ppv)
+{
+    Context *This = impl_from_IContextCallback(iface);
+    return Context_QueryInterface(This, riid, ppv);
+}
+
+static ULONG WINAPI Context_CC_AddRef(IContextCallback *iface)
+{
+    Context *This = impl_from_IContextCallback(iface);
+    return Context_AddRef(This);
+}
+
+static ULONG WINAPI Context_CC_Release(IContextCallback *iface)
+{
+    Context *This = impl_from_IContextCallback(iface);
+    return Context_Release(This);
+}
+
+static HRESULT WINAPI Context_CC_ContextCallback(IContextCallback *iface, PFNCONTEXTCALL pCallback,
+                            ComCallData *param, REFIID riid, int method, IUnknown *punk)
+{
+    Context *This = impl_from_IContextCallback(iface);
+
+    FIXME("(%p/%p)->(%p, %p, %s, %d, %p)\n", This, iface, pCallback, param, debugstr_guid(riid), method, punk);
+    return E_NOTIMPL;
+}
+
+static const IContextCallbackVtbl Context_Callback_Vtbl =
+{
+    Context_CC_QueryInterface,
+    Context_CC_AddRef,
+    Context_CC_Release,
+    Context_CC_ContextCallback
+};
+
 
 /***********************************************************************
  *           CoGetObjectContext [OLE32.@]
@@ -3722,6 +3930,7 @@ HRESULT WINAPI CoGetObjectContext(REFIID riid, void **ppv)
         return E_OUTOFMEMORY;
 
     context->lpVtbl = &Context_Threading_Vtbl;
+    context->lpCallbackVtbl = &Context_Callback_Vtbl;
     context->refs = 1;
     if (apt->multi_threaded)
         context->apttype = APTTYPE_MTA;
@@ -3742,8 +3951,12 @@ HRESULT WINAPI CoGetObjectContext(REFIID riid, void **ppv)
  */
 HRESULT WINAPI CoGetContextToken( ULONG_PTR *token )
 {
-    FIXME( "stub\n" );
-    if (token) *token = 0;
+    struct oletls *info = COM_CurrentInfo();
+    static int calls;
+    if(!(calls++)) FIXME( "stub\n" );
+    if (!info)
+        return E_OUTOFMEMORY;
+    if (token) *token = info->context_token;
     return E_NOTIMPL;
 }
 
@@ -3757,7 +3970,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
 
     switch(fdwReason) {
     case DLL_PROCESS_ATTACH:
-        OLE32_hInstance = hinstDLL;
+        hProxyDll = hinstDLL;
         COMPOBJ_InitProcess();
 	if (TRACE_ON(ole)) CoRegisterMallocSpy((LPVOID)-1);
 	break;
@@ -3768,7 +3981,6 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
         COMPOBJ_UninitProcess();
         RPC_UnregisterAllChannelHooks();
         COMPOBJ_DllList_Free();
-        OLE32_hInstance = 0;
 	break;
 
     case DLL_THREAD_DETACH:

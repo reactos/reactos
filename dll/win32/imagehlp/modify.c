@@ -21,8 +21,6 @@
 
 #include "precomp.h"
 
-//#define NDEBUG
-#include <debug.h>
 #define _WINNT_H
 #include "wine/debug.h"
 
@@ -159,12 +157,12 @@ NextForwarder:
     strcat(DllName, ".DLL");
 
     /* Load it */
-    DPRINT("Loading the Thunk Library: %s \n", DllName);
+    TRACE("Loading the Thunk Library: %s \n", DllName);
     Library = ImageLoad(DllName, DllPath);
     if (!Library) return ForwarderString;
 
     /* Move past the name */
-    DPRINT("It Loaded at: %p \n", Library->MappedAddress);
+    TRACE("It Loaded at: %p \n", Library->MappedAddress);
     FunctionName = TempDllName += 1;
 
     /* Load Exports */
@@ -275,7 +273,7 @@ NextForwarder:
     ExportsBase += OptionalHeader->ImageBase;
 
     /* Is this yet another Forward? */
-    DPRINT("I've thunked it\n");
+    TRACE("I've thunked it\n");
     if ((ForwardedAddress > ExportsBase) &&
         (ForwardedAddress < (ExportsBase + ExportSize)))
     {
@@ -289,7 +287,7 @@ NextForwarder:
     else
     {
         /* Update the pointer and return success */
-        ForwarderString = (PUCHAR)ForwardedAddress;
+        ForwarderString = (PCHAR)ForwardedAddress;
         *ForwarderBound = TRUE;
     }
 
@@ -323,7 +321,7 @@ BindpLookupThunk(PIMAGE_THUNK_DATA Thunk,
     PIMAGE_OPTIONAL_HEADER LibraryOptionalHeader = NULL;
     BOOL ForwarderBound = FALSE;
     PUCHAR ForwarderName;
-    DPRINT("Binding a Thunk\n");
+    TRACE("Binding a Thunk\n");
 
     /* Get the Pointers to the Tables */
     AddressOfNames = ImageRvaToVa(Library->FileHeader,
@@ -351,7 +349,7 @@ BindpLookupThunk(PIMAGE_THUNK_DATA Thunk,
         ImportName = (PIMAGE_IMPORT_BY_NAME)NameBuffer;
 
         /* Setup the name for this ordinal */
-        sprintf(ImportName->Name, "Ordinal%lx\n", OrdinalNumber);
+        sprintf((PCHAR)ImportName->Name, "Ordinal%lx\n", OrdinalNumber);
     }
     else
     {    
@@ -372,7 +370,7 @@ BindpLookupThunk(PIMAGE_THUNK_DATA Thunk,
                                       (ULONG)AddressOfNames[HintIndex], 
                                       &Library->LastRvaSection);
             /* Check if it's the one we want */
-            if (!strcmp(ImportName->Name, ExportName))
+            if (!strcmp((PCHAR)ImportName->Name, ExportName))
             {
                 OrdinalNumber = AddressOfOrdinals[HintIndex];
             }
@@ -390,7 +388,7 @@ BindpLookupThunk(PIMAGE_THUNK_DATA Thunk,
                                           &Library->LastRvaSection);
             
                 /* Check if it's the one we want */
-                if (!strcmp(ImportName->Name, ExportName))
+                if (!strcmp((PCHAR)ImportName->Name, ExportName))
                 {
                     OrdinalNumber = AddressOfOrdinals[HintIndex];
                     break;
@@ -423,7 +421,7 @@ BindpLookupThunk(PIMAGE_THUNK_DATA Thunk,
         /* Make sure we have a descriptor */
         if (BoundImportDescriptor)
         {
-            DPRINT("This Thunk is a forward...calling forward thunk bounder\n");
+            TRACE("This Thunk is a forward...calling forward thunk bounder\n");
 
             /* Get the VA of the pointer containg the name */
             ForwarderName = ImageRvaToVa(Library->FileHeader,
@@ -434,10 +432,10 @@ BindpLookupThunk(PIMAGE_THUNK_DATA Thunk,
             /* Replace the Forwarder String by the actual name */
             ThunkFunction->u1.ForwarderString =
                 PtrToUlong(BindpAddForwarderReference(Image->ModuleName,
-                                                      ImportName->Name,
+                                                      (PCHAR)ImportName->Name,
                                                       BoundImportDescriptor,
                                                       DllPath,
-                                                      ForwarderName,
+                                                      (PCHAR)ForwarderName,
                                                       &ForwarderBound));
         }
 
@@ -493,7 +491,7 @@ BindpCreateNewImportSection(PIMPORT_DESCRIPTOR *BoundImportDescriptor,
 
     /* Add Terminator for PE Loader*/
     BoundImportTableSize += sizeof(IMAGE_BOUND_IMPORT_DESCRIPTOR);
-    DPRINT("Table size: %lx\n", BoundImportTableSize);
+    TRACE("Table size: %lx\n", BoundImportTableSize);
 
     /* Name of Libraries Bound in Bound Import Table */
     BoundLibraryNamesSize = (ULONG)((ULONG_PTR)BoundLibrariesPointer -
@@ -521,7 +519,7 @@ BindpCreateNewImportSection(PIMPORT_DESCRIPTOR *BoundImportDescriptor,
     {
         /* Copy the data */
         BoundTableEntry->TimeDateStamp = Descriptor->TimeDateStamp;
-        BoundTableEntry->OffsetModuleName = (USHORT)(BoundImportTableSize +
+        BoundTableEntry->OffsetModuleName = (USHORT)(ULONG_PTR)(BoundImportTableSize +
                                                      (Descriptor->ModuleName -
                                                       (ULONG_PTR)BoundLibraries));
         BoundTableEntry->NumberOfModuleForwarderRefs = Descriptor->ForwaderReferences;
@@ -533,7 +531,7 @@ BindpCreateNewImportSection(PIMPORT_DESCRIPTOR *BoundImportDescriptor,
         {
             /* Copy the data */
             BoundForwarder->TimeDateStamp = Forwarder->TimeDateStamp;
-            BoundForwarder->OffsetModuleName = (USHORT)(BoundImportTableSize +
+            BoundForwarder->OffsetModuleName = (USHORT)(ULONG_PTR)(BoundImportTableSize +
                                                        (Forwarder->ModuleName -
                                                        (ULONG_PTR)BoundLibraries));
 
@@ -601,7 +599,7 @@ BindpWalkAndProcessImports(PLOADED_IMAGE File,
     ULONG BoundImportTableSize, OldBoundImportTableSize;
     ULONG VirtBytesFree, HeaderBytesFree, FirstFreeByte, PhysBytesFree;
     BOOL ThunkStatus;
-    DPRINT("BindpWalkAndBindImports Called\n");
+    TRACE("BindpWalkAndBindImports Called\n");
 
     /* Assume untouched image */
     *UpdateImage = FALSE;
@@ -636,7 +634,7 @@ BindpWalkAndProcessImports(PLOADED_IMAGE File,
                                        &File->LastRvaSection);
         if (ImportedLibrary)
         {
-            DPRINT("Loading Imported DLL: %s \n", ImportedLibrary);
+            TRACE("Loading Imported DLL: %s \n", ImportedLibrary);
             
             /* Load the DLL */
             LoadedLibrary = ImageLoad(ImportedLibrary, DllPath);
@@ -654,7 +652,7 @@ BindpWalkAndProcessImports(PLOADED_IMAGE File,
             }
 
             /* Now load the Exports */
-            DPRINT("DLL Loaded at: %p \n", LoadedLibrary->MappedAddress);
+            TRACE("DLL Loaded at: %p \n", LoadedLibrary->MappedAddress);
             Exports = ImageDirectoryEntryToData(LoadedLibrary->MappedAddress, 
                                                 FALSE, 
                                                 IMAGE_DIRECTORY_ENTRY_EXPORT, 
@@ -673,7 +671,7 @@ BindpWalkAndProcessImports(PLOADED_IMAGE File,
             if (!(Thunks) || !(Thunks->u1.Function)) continue;
         
             /* Create Bound Import Descriptor */
-            DPRINT("Creating Bound Descriptor for this DLL\n");
+            TRACE("Creating Bound Descriptor for this DLL\n");
             BoundImportDescriptor = BindpAddImportDescriptor(&TopBoundDescriptor,
                                                              Imports,
                                                              ImportedLibrary,
@@ -695,7 +693,7 @@ BindpWalkAndProcessImports(PLOADED_IMAGE File,
                                     SizeOfThunks);
 
             /* Setup the initial data pointers */
-            DPRINT("Binding Thunks\n");
+            TRACE("Binding Thunks\n");
             TempThunk = Thunks;
             TempBoundThunk = BoundThunks;
             TopForwarderChain = -1;
@@ -760,7 +758,7 @@ BindpWalkAndProcessImports(PLOADED_IMAGE File,
                 if (memcmp(TempThunk, BoundThunks, SizeOfThunks))
                 {
                     /* Copy the Pointers and let caller know */
-                    DPRINT("Copying Bound Thunks\n");
+                    TRACE("Copying Bound Thunks\n");
                     RtlCopyMemory(TempThunk, BoundThunks, SizeOfThunks);
                     *UpdateImage = TRUE;
                 }
@@ -786,13 +784,13 @@ BindpWalkAndProcessImports(PLOADED_IMAGE File,
             /* Free the Allocated Memory */
             HeapFree(IMAGEHLP_hHeap, 0, BoundThunks);
 
-            DPRINT("Moving to next File\n");
+            TRACE("Moving to next File\n");
             Imports++;
         }
     }
 
     /* Create the Bound Import Table */
-    DPRINT("Creating Bound Import Section\n");
+    TRACE("Creating Bound Import Section\n");
     BoundImportTable = BindpCreateNewImportSection(&TopBoundDescriptor,
                                                    &BoundImportTableSize);
 
@@ -817,7 +815,7 @@ BindpWalkAndProcessImports(PLOADED_IMAGE File,
         OptionalHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_BOUND_IMPORT].Size = 0;
 
         /* Check if we have enough space */
-        DPRINT("Calculating Space\n");
+        TRACE("Calculating Space\n");
         FirstFreeByte = GetImageUnusedHeaderBytes(File, &VirtBytesFree);
         HeaderBytesFree = File->Sections->VirtualAddress -
                           OptionalHeader->SizeOfHeaders + VirtBytesFree;
@@ -830,7 +828,7 @@ BindpWalkAndProcessImports(PLOADED_IMAGE File,
             /* Check if we have no space a tall */
             if (BoundImportTableSize > HeaderBytesFree)
             {
-                DPRINT1("Not enough Space\n");
+                ERR("Not enough Space\n");
                 return; /* Fail...not enough space */
             }
 
@@ -838,7 +836,7 @@ BindpWalkAndProcessImports(PLOADED_IMAGE File,
             if (BoundImportTableSize <= PhysBytesFree)
             {
                 /* We have enough NULLs to add it, simply enlarge header data */
-                DPRINT("Header Recalculation\n");
+                TRACE("Header Recalculation\n");
                 OptionalHeader->SizeOfHeaders = OptionalHeader->SizeOfHeaders -
                                                 VirtBytesFree +
                                                 BoundImportTableSize +
@@ -848,7 +846,7 @@ BindpWalkAndProcessImports(PLOADED_IMAGE File,
             else 
             {
                 /* Resize the Headers */
-                DPRINT1("UNIMPLEMENTED: Header Resizing\n");
+                FIXME("UNIMPLEMENTED: Header Resizing\n");
 
                 /* Recalculate Headers */
                 FileHeader = &File->FileHeader->FileHeader;
@@ -863,7 +861,7 @@ BindpWalkAndProcessImports(PLOADED_IMAGE File,
             [IMAGE_DIRECTORY_ENTRY_BOUND_IMPORT].Size = BoundImportTableSize;
     
         /* Copy the Bound Import Table */
-        DPRINT("Copying Bound Import Table\n");
+        TRACE("Copying Bound Import Table\n");
         RtlCopyMemory(File->MappedAddress + FirstFreeByte,
                       BoundImportTable,
                       BoundImportTableSize);
@@ -890,7 +888,7 @@ BOOL IMAGEAPI BindImageEx(
     FILETIME LastWriteTime;
     BOOLEAN UpdateImage;
     DWORD DataSize;
-    DPRINT("BindImageEx Called for: %s \n", ImageName);
+    TRACE("BindImageEx Called for: %s \n", ImageName);
 
     /* Set and Clear Buffer */
     File = &FileData;
@@ -900,7 +898,7 @@ BOOL IMAGEAPI BindImageEx(
     if (MapAndLoad(ImageName, DllPath, File, TRUE, FALSE))
     {
         /* Write the image's name */
-        DPRINT("Image Mapped and Loaded\n");
+        TRACE("Image Mapped and Loaded\n");
         File->ModuleName = ImageName;
 
         /* Check if the image is valid and if it should be bound */
@@ -938,7 +936,7 @@ BOOL IMAGEAPI BindImageEx(
                 /* FIXME: Update symbols */
         
                 /* Update Checksum */
-                DPRINT("Binding Completed, getting Checksum\n");
+                TRACE("Binding Completed, getting Checksum\n");
                 OldChecksum = File->FileHeader->OptionalHeader.CheckSum;
                 CheckSumMappedFile(File->MappedAddress,
                                    GetFileSize(File->hFile, NULL),
@@ -947,11 +945,11 @@ BOOL IMAGEAPI BindImageEx(
                 File->FileHeader->OptionalHeader.CheckSum = CheckSum;
 
                 /* Save Changes */
-                DPRINT("Saving Changes to file\n");
+                TRACE("Saving Changes to file\n");
                 FlushViewOfFile(File->MappedAddress, File->SizeOfImage);
 
                 /* Save new Modified Time */
-                DPRINT("Setting time\n");
+                TRACE("Setting time\n");
                 GetSystemTime(&SystemTime);
                 SystemTimeToFileTime(&SystemTime, &LastWriteTime);
                 SetFileTime(File->hFile, NULL, NULL, &LastWriteTime);
@@ -971,7 +969,7 @@ Skip:
     if (!(Flags & BIND_CACHE_IMPORT_DLLS)) UnloadAllImages();
    
     /* Return success */
-    DPRINT("Done\n");
+    TRACE("Done\n");
     return TRUE;
 }
 
@@ -1046,7 +1044,7 @@ DWORD IMAGEAPI MapFileAndCheckSumA(
 			      0,
 			      0,
 			      0);
-  if (hMapping == 0)
+  if (BaseAddress == NULL)
   {
     CloseHandle(hMapping);
     CloseHandle(hFile);
@@ -1112,7 +1110,7 @@ DWORD IMAGEAPI MapFileAndCheckSumW(
 			      0,
 			      0,
 			      0);
-  if (hMapping == 0)
+  if (BaseAddress == NULL)
   {
     CloseHandle(hMapping);
     CloseHandle(hFile);

@@ -1,5 +1,5 @@
 <module name="samlib" type="win32dll" baseaddress="${BASEADDRESS_SAMLIB}" installbase="system32" installname="samlib.dll">
-	<importlibrary definition="samlib.def" />
+	<importlibrary definition="samlib.spec" />
 	<include base="samlib">.</include>
 	<define name="_DISABLE_TIDENTS" />
 	<library>ntdll</library>

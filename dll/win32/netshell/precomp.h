@@ -1,8 +1,6 @@
 #ifndef _PRECOMP_H__
 #define _PRECOMP_H__
 
-#include "config.h"
-
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,7 +12,7 @@
 #define COBJMACROS
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
-
+#include <winsock2.h>
 #include <windows.h>
 
 #include <shlguid.h>
@@ -36,6 +34,7 @@
 #include <docobj.h>
 #include <netcfgx.h>
 #include <netcfgn.h>
+#include <prsht.h>
 
 
 #include "wine/debug.h"
@@ -76,10 +75,12 @@ typedef struct tagVALUEStruct
 extern HINSTANCE netshell_hInstance;
 extern const GUID CLSID_NetworkConnections;
 extern const GUID CLSID_LANConnectUI;
+extern const GUID CLSID_LanConnectStatusUI;
 extern const GUID GUID_DEVCLASS_NET;
 
 
 /* shfldr_netconnect.c */
+HRESULT ShowNetConnectionProperties(INetConnection * pNetConnect, HWND hwnd);
 HRESULT WINAPI ISF_NetConnect_Constructor (IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv);
 
 /* enumlist.c */
@@ -95,8 +96,10 @@ IClassFactory * IClassFactory_fnConstructor(LPFNCREATEINSTANCE lpfnCI, PLONG pcR
 
 /* connectmanager.c */
 HRESULT WINAPI INetConnectionManager_Constructor (IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv);
+BOOL GetAdapterIndexFromNetCfgInstanceId(PIP_ADAPTER_INFO pAdapterInfo, LPWSTR szNetCfg, PDWORD pIndex);
 
 /* lanconnectui.c */
+HPROPSHEETPAGE InitializePropertySheetPage(LPWSTR resname, DLGPROC dlgproc, LPARAM lParam, LPWSTR szTitle);
 HRESULT WINAPI LanConnectUI_Constructor (IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv);
 
 /* lanstatusui.c */

@@ -10,33 +10,6 @@
  *
  */
 
-/*
- * @implemented
- *
- */
-BOOL
-STDCALL
-OffsetViewportOrgEx(HDC hdc,
-                    int nXOffset,
-                    int nYOffset,
-                    LPPOINT lpPoint)
-{
-    return  NtGdiOffsetViewportOrgEx(hdc, nXOffset, nYOffset, lpPoint);
-}
-
-/*
- * @implemented
- *
- */
-BOOL
-STDCALL
-OffsetWindowOrgEx(HDC hdc,
-                  int nXOffset,
-                  int nYOffset,
-                  LPPOINT lpPoint)
-{
-    return NtGdiOffsetWindowOrgEx(hdc, nXOffset, nYOffset, lpPoint);
-}
 
 
 

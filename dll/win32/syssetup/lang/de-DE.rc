@@ -206,6 +206,8 @@ BEGIN
     IDS_CMT_DEVMGMT     "Starte Geräte-Manager"
     IDS_CMT_SERVMAN     "Starte Dienst-Manager"
     IDS_CMT_RDESKTOP    "Starte Remote Desktop"
+    IDS_CMT_EVENTVIEW   "Starte Ereignisanzeige"
+    IDS_CMT_MSCONFIG    "Starte Systemkonfigurations Programm"
 END
 
 STRINGTABLE
@@ -260,6 +262,8 @@ BEGIN
     IDS_SHORT_MAGNIFY    "Bildschirmlupe.lnk"
     IDS_SHORT_RDESKTOP   "Remote Desktop.lnk"
     IDS_SHORT_KBSWITCH   "Tastaturlayout-Umschalter.lnk"
+    IDS_SHORT_EVENTVIEW  "Ereignisanzeige.lnk"
+    IDS_SHORT_MSCONFIG   "Systemkonfiguration.lnk"
 END
 
 STRINGTABLE
@@ -268,7 +272,7 @@ BEGIN
     IDS_WZD_SETCOMPUTERNAME  "Setup konnte den Computernamen nicht setzen."
     IDS_WZD_COMPUTERNAME  "Setup kann erst fortgesetzt werden kann, wenn ein Computername eingegeben wurde."
     IDS_WZD_PASSWORDEMPTY  "Sie müssen ein Passwort setzen!"
-    IDS_WZD_PASSWORDMATCH  "Die Passwörter sind nicht gleich. Bitte setzen Sie die Passwöter erneut."
+    IDS_WZD_PASSWORDMATCH  "Die Passwörter sind nicht gleich. Bitte setzen Sie die Passwörter erneut."
     IDS_WZD_PASSWORDCHAR  "Das Passwort das sie setzten enthält ungültige Zeichen. Bitte setzen Sie ein gültiges Passwort."
     IDS_WZD_LOCALTIME    "Setup konnte die lokale Zeit nicht setzen."
 END

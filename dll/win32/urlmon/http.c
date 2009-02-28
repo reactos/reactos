@@ -63,6 +63,7 @@ typedef struct {
     const IInternetProtocolVtbl *lpInternetProtocolVtbl;
     const IInternetPriorityVtbl *lpInternetPriorityVtbl;
 
+    BOOL https;
     DWORD flags, grfBINDF;
     BINDINFO bind_info;
     IInternetProtocolSink *protocol_sink;
@@ -309,7 +310,8 @@ static HRESULT WINAPI HttpProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl
     LPOLESTR user_agent = NULL, accept_mimes[257];
     HRESULT hres;
 
-    static const WCHAR wszHttp[] = {'h','t','t','p',':'};
+    static const WCHAR httpW[] = {'h','t','t','p',':'};
+    static const WCHAR httpsW[] = {'h','t','t','p','s',':'};
     static const WCHAR wszBindVerb[BINDVERB_CUSTOM][5] =
         {{'G','E','T',0},
          {'P','O','S','T',0},
@@ -330,8 +332,9 @@ static HRESULT WINAPI HttpProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl
         goto done;
     }
 
-    if (lstrlenW(szUrl) < sizeof(wszHttp)/sizeof(WCHAR)
-        || memcmp(szUrl, wszHttp, sizeof(wszHttp)))
+    if(This->https
+        ? strncmpW(szUrl, httpsW, sizeof(httpsW)/sizeof(WCHAR))
+        : strncmpW(szUrl, httpW, sizeof(httpW)/sizeof(WCHAR)))
     {
         hres = MK_E_SYNTAX;
         goto done;
@@ -351,7 +354,7 @@ static HRESULT WINAPI HttpProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl
     user = strndupW(url.lpszUserName, url.dwUserNameLength);
     pass = strndupW(url.lpszPassword, url.dwPasswordLength);
     if (!url.nPort)
-        url.nPort = INTERNET_DEFAULT_HTTP_PORT;
+        url.nPort = This->https ? INTERNET_DEFAULT_HTTPS_PORT : INTERNET_DEFAULT_HTTP_PORT;
 
     if(!(This->grfBINDF & BINDF_FROMURLMON))
         IInternetProtocolSink_ReportProgress(This->protocol_sink, BINDSTATUS_DIRECTBIND, NULL);
@@ -397,7 +400,9 @@ static HRESULT WINAPI HttpProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl
     InternetSetStatusCallbackW(This->internet, HTTPPROTOCOL_InternetStatusCallback);
 
     This->connect = InternetConnectW(This->internet, host, url.nPort, user,
-                                     pass, INTERNET_SERVICE_HTTP, 0, (DWORD)This);
+                                     pass, INTERNET_SERVICE_HTTP,
+                                     This->https ? INTERNET_FLAG_SECURE : 0,
+                                     (DWORD_PTR)This);
     if (!This->connect)
     {
         WARN("InternetConnect failed: %d\n", GetLastError());
@@ -421,11 +426,13 @@ static HRESULT WINAPI HttpProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl
         request_flags |= INTERNET_FLAG_NO_CACHE_WRITE;
     if (This->grfBINDF & BINDF_NEEDFILE)
         request_flags |= INTERNET_FLAG_NEED_FILE;
+    if (This->https)
+        request_flags |= INTERNET_FLAG_SECURE;
     This->request = HttpOpenRequestW(This->connect, This->bind_info.dwBindVerb < BINDVERB_CUSTOM ?
                                      wszBindVerb[This->bind_info.dwBindVerb] :
                                      This->bind_info.szCustomVerb,
                                      path, NULL, NULL, (LPCWSTR *)accept_mimes,
-                                     request_flags, (DWORD)This);
+                                     request_flags, (DWORD_PTR)This);
     if (!This->request)
     {
         WARN("HttpOpenRequest failed: %d\n", GetLastError());
@@ -617,6 +624,9 @@ static HRESULT WINAPI HttpProtocol_Continue(IInternetProtocol *iface, PROTOCOLDA
                 }
             }
         }
+
+        if(This->https)
+            IInternetProtocolSink_ReportProgress(This->protocol_sink, BINDSTATUS_ACCEPTRANGES, NULL);
 
         len = 0;
         if ((!HttpQueryInfoW(This->request, HTTP_QUERY_CONTENT_TYPE, content_type, &len, NULL) &&
@@ -923,36 +933,36 @@ static const IInternetProtocolVtbl HttpProtocolVtbl = {
     HttpProtocol_UnlockRequest
 };
 
-HRESULT HttpProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj)
+static HRESULT create_http_protocol(BOOL https, void **ppobj)
 {
     HttpProtocol *ret;
 
-    TRACE("(%p %p)\n", pUnkOuter, ppobj);
-
-    URLMON_LockModule();
-
-    ret = heap_alloc(sizeof(HttpProtocol));
+    ret = heap_alloc_zero(sizeof(HttpProtocol));
+    if(!ret)
+        return E_OUTOFMEMORY;
 
     ret->lpInternetProtocolVtbl = &HttpProtocolVtbl;
     ret->lpInternetPriorityVtbl = &HttpPriorityVtbl;
-    ret->flags = ret->grfBINDF = 0;
-    memset(&ret->bind_info, 0, sizeof(ret->bind_info));
-    ret->protocol_sink = 0;
-    ret->http_negotiate = 0;
-    ret->internet = ret->connect = ret->request = 0;
-    ret->full_header = 0;
-    ret->lock = 0;
-    ret->current_position = ret->content_length = ret->available_bytes = 0;
-    ret->priority = 0;
+
+    ret->https = https;
     ret->ref = 1;
 
     *ppobj = PROTOCOL(ret);
     
+    URLMON_LockModule();
     return S_OK;
+}
+
+HRESULT HttpProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj)
+{
+    TRACE("(%p %p)\n", pUnkOuter, ppobj);
+
+    return create_http_protocol(FALSE, ppobj);
 }
 
 HRESULT HttpSProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj)
 {
-    FIXME("(%p %p)\n", pUnkOuter, ppobj);
-    return E_NOINTERFACE;
+    TRACE("(%p %p)\n", pUnkOuter, ppobj);
+
+    return create_http_protocol(TRUE, ppobj);
 }

@@ -1,18 +1,25 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
+ * WINE COPYRIGHT: 
+ * Copyright 1999, 2000 Juergen Schmied <juergen.schmied@debitel.net>
+ * Copyright 2003 CodeWeavers Inc. (Ulrich Czekalla)
+ * Copyright 2006 Robert Reif
+ *
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/advapi32/sec/misc.c
+ * FILE:            dll/win32/advapi32/sec/misc.c
  * PURPOSE:         Miscellaneous security functions (some ported from Wine)
  */
 
 #include <advapi32.h>
+#include "wine/unicode.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 
 /* Needed for LookupAccountNameW implementation from Wine */
 
-typedef struct _AccountSid {
+typedef struct _AccountSid
+{
     WELL_KNOWN_SID_TYPE type;
     LPCWSTR account;
     LPCWSTR domain;
@@ -126,6 +133,101 @@ static const AccountSid ACCOUNT_SIDS[] = {
     { WinBuiltinPerfLoggingUsersSid, Performance_Log_Users, BUILTIN, SidTypeAlias },
 };
 
+static const WCHAR SE_CREATE_TOKEN_NAME_W[] =
+ { 'S','e','C','r','e','a','t','e','T','o','k','e','n','P','r','i','v','i','l','e','g','e',0 };
+static const WCHAR SE_ASSIGNPRIMARYTOKEN_NAME_W[] =
+ { 'S','e','A','s','s','i','g','n','P','r','i','m','a','r','y','T','o','k','e','n','P','r','i','v','i','l','e','g','e',0 };
+static const WCHAR SE_LOCK_MEMORY_NAME_W[] =
+ { 'S','e','L','o','c','k','M','e','m','o','r','y','P','r','i','v','i','l','e','g','e',0 };
+static const WCHAR SE_INCREASE_QUOTA_NAME_W[] =
+ { 'S','e','I','n','c','r','e','a','s','e','Q','u','o','t','a','P','r','i','v','i','l','e','g','e',0 };
+static const WCHAR SE_MACHINE_ACCOUNT_NAME_W[] =
+ { 'S','e','M','a','c','h','i','n','e','A','c','c','o','u','n','t','P','r','i','v','i','l','e','g','e',0 };
+static const WCHAR SE_TCB_NAME_W[] =
+ { 'S','e','T','c','b','P','r','i','v','i','l','e','g','e',0 };
+static const WCHAR SE_SECURITY_NAME_W[] =
+ { 'S','e','S','e','c','u','r','i','t','y','P','r','i','v','i','l','e','g','e',0 };
+static const WCHAR SE_TAKE_OWNERSHIP_NAME_W[] =
+ { 'S','e','T','a','k','e','O','w','n','e','r','s','h','i','p','P','r','i','v','i','l','e','g','e',0 };
+static const WCHAR SE_LOAD_DRIVER_NAME_W[] =
+ { 'S','e','L','o','a','d','D','r','i','v','e','r','P','r','i','v','i','l','e','g','e',0 };
+static const WCHAR SE_SYSTEM_PROFILE_NAME_W[] =
+ { 'S','e','S','y','s','t','e','m','P','r','o','f','i','l','e','P','r','i','v','i','l','e','g','e',0 };
+static const WCHAR SE_SYSTEMTIME_NAME_W[] =
+ { 'S','e','S','y','s','t','e','m','t','i','m','e','P','r','i','v','i','l','e','g','e',0 };
+static const WCHAR SE_PROF_SINGLE_PROCESS_NAME_W[] =
+ { 'S','e','P','r','o','f','i','l','e','S','i','n','g','l','e','P','r','o','c','e','s','s','P','r','i','v','i','l','e','g','e',0 };
+static const WCHAR SE_INC_BASE_PRIORITY_NAME_W[] =
+ { 'S','e','I','n','c','r','e','a','s','e','B','a','s','e','P','r','i','o','r','i','t','y','P','r','i','v','i','l','e','g','e',0 };
+static const WCHAR SE_CREATE_PAGEFILE_NAME_W[] =
+ { 'S','e','C','r','e','a','t','e','P','a','g','e','f','i','l','e','P','r','i','v','i','l','e','g','e',0 };
+static const WCHAR SE_CREATE_PERMANENT_NAME_W[] =
+ { 'S','e','C','r','e','a','t','e','P','e','r','m','a','n','e','n','t','P','r','i','v','i','l','e','g','e',0 };
+static const WCHAR SE_BACKUP_NAME_W[] =
+ { 'S','e','B','a','c','k','u','p','P','r','i','v','i','l','e','g','e',0 };
+static const WCHAR SE_RESTORE_NAME_W[] =
+ { 'S','e','R','e','s','t','o','r','e','P','r','i','v','i','l','e','g','e',0 };
+static const WCHAR SE_SHUTDOWN_NAME_W[] =
+ { 'S','e','S','h','u','t','d','o','w','n','P','r','i','v','i','l','e','g','e',0 };
+static const WCHAR SE_DEBUG_NAME_W[] =
+ { 'S','e','D','e','b','u','g','P','r','i','v','i','l','e','g','e',0 };
+static const WCHAR SE_AUDIT_NAME_W[] =
+ { 'S','e','A','u','d','i','t','P','r','i','v','i','l','e','g','e',0 };
+static const WCHAR SE_SYSTEM_ENVIRONMENT_NAME_W[] =
+ { 'S','e','S','y','s','t','e','m','E','n','v','i','r','o','n','m','e','n','t','P','r','i','v','i','l','e','g','e',0 };
+static const WCHAR SE_CHANGE_NOTIFY_NAME_W[] =
+ { 'S','e','C','h','a','n','g','e','N','o','t','i','f','y','P','r','i','v','i','l','e','g','e',0 };
+static const WCHAR SE_REMOTE_SHUTDOWN_NAME_W[] =
+ { 'S','e','R','e','m','o','t','e','S','h','u','t','d','o','w','n','P','r','i','v','i','l','e','g','e',0 };
+static const WCHAR SE_UNDOCK_NAME_W[] =
+ { 'S','e','U','n','d','o','c','k','P','r','i','v','i','l','e','g','e',0 };
+static const WCHAR SE_SYNC_AGENT_NAME_W[] =
+ { 'S','e','S','y','n','c','A','g','e','n','t','P','r','i','v','i','l','e','g','e',0 };
+static const WCHAR SE_ENABLE_DELEGATION_NAME_W[] =
+ { 'S','e','E','n','a','b','l','e','D','e','l','e','g','a','t','i','o','n','P','r','i','v','i','l','e','g','e',0 };
+static const WCHAR SE_MANAGE_VOLUME_NAME_W[] =
+ { 'S','e','M','a','n','a','g','e','V','o','l','u','m','e','P','r','i','v','i','l','e','g','e',0 };
+static const WCHAR SE_IMPERSONATE_NAME_W[] =
+ { 'S','e','I','m','p','e','r','s','o','n','a','t','e','P','r','i','v','i','l','e','g','e',0 };
+static const WCHAR SE_CREATE_GLOBAL_NAME_W[] =
+ { 'S','e','C','r','e','a','t','e','G','l','o','b','a','l','P','r','i','v','i','l','e','g','e',0 };
+
+static const WCHAR * const WellKnownPrivNames[SE_MAX_WELL_KNOWN_PRIVILEGE + 1] =
+{
+    NULL,
+    NULL,
+    SE_CREATE_TOKEN_NAME_W,
+    SE_ASSIGNPRIMARYTOKEN_NAME_W,
+    SE_LOCK_MEMORY_NAME_W,
+    SE_INCREASE_QUOTA_NAME_W,
+    SE_MACHINE_ACCOUNT_NAME_W,
+    SE_TCB_NAME_W,
+    SE_SECURITY_NAME_W,
+    SE_TAKE_OWNERSHIP_NAME_W,
+    SE_LOAD_DRIVER_NAME_W,
+    SE_SYSTEM_PROFILE_NAME_W,
+    SE_SYSTEMTIME_NAME_W,
+    SE_PROF_SINGLE_PROCESS_NAME_W,
+    SE_INC_BASE_PRIORITY_NAME_W,
+    SE_CREATE_PAGEFILE_NAME_W,
+    SE_CREATE_PERMANENT_NAME_W,
+    SE_BACKUP_NAME_W,
+    SE_RESTORE_NAME_W,
+    SE_SHUTDOWN_NAME_W,
+    SE_DEBUG_NAME_W,
+    SE_AUDIT_NAME_W,
+    SE_SYSTEM_ENVIRONMENT_NAME_W,
+    SE_CHANGE_NOTIFY_NAME_W,
+    SE_REMOTE_SHUTDOWN_NAME_W,
+    SE_UNDOCK_NAME_W,
+    SE_SYNC_AGENT_NAME_W,
+    SE_ENABLE_DELEGATION_NAME_W,
+    SE_MANAGE_VOLUME_NAME_W,
+    SE_IMPERSONATE_NAME_W,
+    SE_CREATE_GLOBAL_NAME_W,
+};
+
+
 /* Interface to ntmarta.dll ***************************************************/
 
 NTMARTA NtMartaStatic = { 0 };
@@ -138,6 +240,7 @@ static PNTMARTA NtMarta = NULL;
     {                                                                          \
         return GetLastError();                                                 \
     }
+
 
 static DWORD
 LoadAndInitializeNtMarta(VOID)
@@ -180,6 +283,7 @@ LoadAndInitializeNtMarta(VOID)
     return ERROR_SUCCESS;
 }
 
+
 DWORD
 CheckNtMartaPresent(VOID)
 {
@@ -221,7 +325,9 @@ CheckNtMartaPresent(VOID)
     return ErrorCode;
 }
 
-VOID UnloadNtMarta(VOID)
+
+VOID
+UnloadNtMarta(VOID)
 {
     if (InterlockedExchangePointer(&NtMarta,
                                    NULL) != NULL)
@@ -230,29 +336,57 @@ VOID UnloadNtMarta(VOID)
     }
 }
 
+
 /******************************************************************************/
 
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL
+WINAPI
 AreAllAccessesGranted(DWORD GrantedAccess,
-		      DWORD DesiredAccess)
+                      DWORD DesiredAccess)
 {
-  return((BOOL)RtlAreAllAccessesGranted(GrantedAccess,
-					DesiredAccess));
+    return (BOOL)RtlAreAllAccessesGranted(GrantedAccess,
+                                          DesiredAccess);
 }
 
 
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL
+WINAPI
 AreAnyAccessesGranted(DWORD GrantedAccess,
-		      DWORD DesiredAccess)
+                      DWORD DesiredAccess)
 {
-  return((BOOL)RtlAreAnyAccessesGranted(GrantedAccess,
-					DesiredAccess));
+    return (BOOL)RtlAreAnyAccessesGranted(GrantedAccess,
+                                          DesiredAccess);
+}
+
+
+/************************************************************
+ *                ADVAPI_IsLocalComputer
+ *
+ * Checks whether the server name indicates local machine.
+ */
+BOOL ADVAPI_IsLocalComputer(LPCWSTR ServerName)
+{
+    DWORD dwSize = MAX_COMPUTERNAME_LENGTH + 1;
+    BOOL Result;
+    LPWSTR buf;
+
+    if (!ServerName || !ServerName[0])
+        return TRUE;
+
+    buf = HeapAlloc(GetProcessHeap(), 0, dwSize * sizeof(WCHAR));
+    Result = GetComputerNameW(buf,  &dwSize);
+    if (Result && (ServerName[0] == '\\') && (ServerName[1] == '\\'))
+        ServerName += 2;
+    Result = Result && !lstrcmpW(ServerName, buf);
+    HeapFree(GetProcessHeap(), 0, buf);
+
+    return Result;
 }
 
 
@@ -278,142 +412,136 @@ AreAnyAccessesGranted(DWORD GrantedAccess,
  *
  * @implemented
  */
-BOOL WINAPI
+BOOL
+WINAPI
 GetFileSecurityA(LPCSTR lpFileName,
-		 SECURITY_INFORMATION RequestedInformation,
-		 PSECURITY_DESCRIPTOR pSecurityDescriptor,
-		 DWORD nLength,
-		 LPDWORD lpnLengthNeeded)
+                 SECURITY_INFORMATION RequestedInformation,
+                 PSECURITY_DESCRIPTOR pSecurityDescriptor,
+                 DWORD nLength,
+                 LPDWORD lpnLengthNeeded)
 {
-  UNICODE_STRING FileName;
-  NTSTATUS Status;
-  BOOL bResult;
+    UNICODE_STRING FileName;
+    NTSTATUS Status;
+    BOOL bResult;
 
-  Status = RtlCreateUnicodeStringFromAsciiz(&FileName,
-					    (LPSTR)lpFileName);
-  if (!NT_SUCCESS(Status))
+    Status = RtlCreateUnicodeStringFromAsciiz(&FileName,
+                                              (LPSTR)lpFileName);
+    if (!NT_SUCCESS(Status))
     {
-      SetLastError(RtlNtStatusToDosError(Status));
-      return FALSE;
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
     }
 
-  bResult = GetFileSecurityW(FileName.Buffer,
-			     RequestedInformation,
-			     pSecurityDescriptor,
-			     nLength,
-			     lpnLengthNeeded);
+    bResult = GetFileSecurityW(FileName.Buffer,
+                               RequestedInformation,
+                               pSecurityDescriptor,
+                               nLength,
+                               lpnLengthNeeded);
 
-  RtlFreeUnicodeString(&FileName);
+    RtlFreeUnicodeString(&FileName);
 
-  return bResult;
+    return bResult;
 }
 
 
 /*
  * @implemented
  */
-BOOL WINAPI
+BOOL
+WINAPI
 GetFileSecurityW(LPCWSTR lpFileName,
-		 SECURITY_INFORMATION RequestedInformation,
-		 PSECURITY_DESCRIPTOR pSecurityDescriptor,
-		 DWORD nLength,
-		 LPDWORD lpnLengthNeeded)
+                 SECURITY_INFORMATION RequestedInformation,
+                 PSECURITY_DESCRIPTOR pSecurityDescriptor,
+                 DWORD nLength,
+                 LPDWORD lpnLengthNeeded)
 {
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  IO_STATUS_BLOCK StatusBlock;
-  UNICODE_STRING FileName;
-  ULONG AccessMask = 0;
-  HANDLE FileHandle;
-  NTSTATUS Status;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK StatusBlock;
+    UNICODE_STRING FileName;
+    ULONG AccessMask = 0;
+    HANDLE FileHandle;
+    NTSTATUS Status;
 
-  TRACE("GetFileSecurityW() called\n");
+    TRACE("GetFileSecurityW() called\n");
 
-  if (RequestedInformation &
-      (OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION))
+    QuerySecurityAccessMask(RequestedInformation, &AccessMask);
+
+    if (!RtlDosPathNameToNtPathName_U(lpFileName,
+                                      &FileName,
+                                      NULL,
+                                      NULL))
     {
-      AccessMask |= READ_CONTROL;
+        ERR("Invalid path\n");
+        SetLastError(ERROR_INVALID_NAME);
+        return FALSE;
     }
 
-  if (RequestedInformation & SACL_SECURITY_INFORMATION)
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &FileName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    Status = NtOpenFile(&FileHandle,
+                        AccessMask,
+                        &ObjectAttributes,
+                        &StatusBlock,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                        0);
+
+    RtlFreeHeap(RtlGetProcessHeap(),
+                0,
+                FileName.Buffer);
+
+    if (!NT_SUCCESS(Status))
     {
-      AccessMask |= ACCESS_SYSTEM_SECURITY;
+        ERR("NtOpenFile() failed (Status %lx)\n", Status);
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
     }
 
-  if (!RtlDosPathNameToNtPathName_U(lpFileName,
-				    &FileName,
-				    NULL,
-				    NULL))
+    Status = NtQuerySecurityObject(FileHandle,
+                                   RequestedInformation,
+                                   pSecurityDescriptor,
+                                   nLength,
+                                   lpnLengthNeeded);
+    NtClose(FileHandle);
+    if (!NT_SUCCESS(Status))
     {
-      ERR("Invalid path\n");
-      SetLastError(ERROR_INVALID_NAME);
-      return FALSE;
+        ERR("NtQuerySecurityObject() failed (Status %lx)\n", Status);
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
     }
 
-  InitializeObjectAttributes(&ObjectAttributes,
-			     &FileName,
-			     OBJ_CASE_INSENSITIVE,
-			     NULL,
-			     NULL);
-
-  Status = NtOpenFile(&FileHandle,
-		      AccessMask,
-		      &ObjectAttributes,
-		      &StatusBlock,
-		      FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-		      0);
-
-  RtlFreeHeap(RtlGetProcessHeap(),
-              0,
-              FileName.Buffer);
-
-  if (!NT_SUCCESS(Status))
-    {
-      ERR("NtOpenFile() failed (Status %lx)\n", Status);
-      SetLastError(RtlNtStatusToDosError(Status));
-      return FALSE;
-    }
-
-  Status = NtQuerySecurityObject(FileHandle,
-				 RequestedInformation,
-				 pSecurityDescriptor,
-				 nLength,
-				 lpnLengthNeeded);
-  NtClose(FileHandle);
-
-  if (!NT_SUCCESS(Status))
-    {
-      ERR("NtQuerySecurityObject() failed (Status %lx)\n", Status);
-      SetLastError(RtlNtStatusToDosError(Status));
-      return FALSE;
-    }
-
-  return TRUE;
+    return TRUE;
 }
 
 
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL
+WINAPI
 GetKernelObjectSecurity(HANDLE Handle,
-			SECURITY_INFORMATION RequestedInformation,
-			PSECURITY_DESCRIPTOR pSecurityDescriptor,
-			DWORD nLength,
-			LPDWORD lpnLengthNeeded)
+                        SECURITY_INFORMATION RequestedInformation,
+                        PSECURITY_DESCRIPTOR pSecurityDescriptor,
+                        DWORD nLength,
+                        LPDWORD lpnLengthNeeded)
 {
-  NTSTATUS Status;
+    NTSTATUS Status;
 
-  Status = NtQuerySecurityObject(Handle,
-				 RequestedInformation,
-				 pSecurityDescriptor,
-				 nLength,
-				 lpnLengthNeeded);
-  if (!NT_SUCCESS(Status))
+    Status = NtQuerySecurityObject(Handle,
+                                   RequestedInformation,
+                                   pSecurityDescriptor,
+                                   nLength,
+                                   lpnLengthNeeded);
+    if (!NT_SUCCESS(Status))
     {
-      SetLastError(RtlNtStatusToDosError(Status));
-      return(FALSE);
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
     }
-  return(TRUE);
+
+    return TRUE;
 }
 
 
@@ -423,30 +551,31 @@ GetKernelObjectSecurity(HANDLE Handle,
  *
  * @implemented
  */
-BOOL STDCALL
-SetFileSecurityA (LPCSTR lpFileName,
-		  SECURITY_INFORMATION SecurityInformation,
-		  PSECURITY_DESCRIPTOR pSecurityDescriptor)
+BOOL
+WINAPI
+SetFileSecurityA(LPCSTR lpFileName,
+                 SECURITY_INFORMATION SecurityInformation,
+                 PSECURITY_DESCRIPTOR pSecurityDescriptor)
 {
-  UNICODE_STRING FileName;
-  NTSTATUS Status;
-  BOOL bResult;
+    UNICODE_STRING FileName;
+    NTSTATUS Status;
+    BOOL bResult;
 
-  Status = RtlCreateUnicodeStringFromAsciiz(&FileName,
-					    (LPSTR)lpFileName);
-  if (!NT_SUCCESS(Status))
+    Status = RtlCreateUnicodeStringFromAsciiz(&FileName,
+                                              (LPSTR)lpFileName);
+    if (!NT_SUCCESS(Status))
     {
-      SetLastError(RtlNtStatusToDosError(Status));
-      return FALSE;
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
     }
 
-  bResult = SetFileSecurityW(FileName.Buffer,
-			     SecurityInformation,
-			     pSecurityDescriptor);
+    bResult = SetFileSecurityW(FileName.Buffer,
+                               SecurityInformation,
+                               pSecurityDescriptor);
 
-  RtlFreeUnicodeString(&FileName);
+    RtlFreeUnicodeString(&FileName);
 
-  return bResult;
+    return bResult;
 }
 
 
@@ -456,105 +585,94 @@ SetFileSecurityA (LPCSTR lpFileName,
  *
  * @implemented
  */
-BOOL STDCALL
-SetFileSecurityW (LPCWSTR lpFileName,
-		  SECURITY_INFORMATION SecurityInformation,
-		  PSECURITY_DESCRIPTOR pSecurityDescriptor)
+BOOL
+WINAPI
+SetFileSecurityW(LPCWSTR lpFileName,
+                 SECURITY_INFORMATION SecurityInformation,
+                 PSECURITY_DESCRIPTOR pSecurityDescriptor)
 {
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  IO_STATUS_BLOCK StatusBlock;
-  UNICODE_STRING FileName;
-  ULONG AccessMask = 0;
-  HANDLE FileHandle;
-  NTSTATUS Status;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK StatusBlock;
+    UNICODE_STRING FileName;
+    ULONG AccessMask = 0;
+    HANDLE FileHandle;
+    NTSTATUS Status;
 
-  TRACE("SetFileSecurityW() called\n");
+    TRACE("SetFileSecurityW() called\n");
 
-  if (SecurityInformation &
-      (OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION))
+    SetSecurityAccessMask(SecurityInformation, &AccessMask);
+
+    if (!RtlDosPathNameToNtPathName_U(lpFileName,
+                                      &FileName,
+                                      NULL,
+                                      NULL))
     {
-      AccessMask |= WRITE_OWNER;
+        ERR("Invalid path\n");
+        SetLastError(ERROR_INVALID_NAME);
+        return FALSE;
     }
 
-  if (SecurityInformation & DACL_SECURITY_INFORMATION)
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &FileName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    Status = NtOpenFile(&FileHandle,
+                        AccessMask,
+                        &ObjectAttributes,
+                        &StatusBlock,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                        0);
+
+    RtlFreeHeap(RtlGetProcessHeap(),
+                0,
+                FileName.Buffer);
+
+    if (!NT_SUCCESS(Status))
     {
-      AccessMask |= WRITE_DAC;
+        ERR("NtOpenFile() failed (Status %lx)\n", Status);
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
     }
 
-  if (SecurityInformation & SACL_SECURITY_INFORMATION)
+    Status = NtSetSecurityObject(FileHandle,
+                                 SecurityInformation,
+                                 pSecurityDescriptor);
+    NtClose(FileHandle);
+
+    if (!NT_SUCCESS(Status))
     {
-      AccessMask |= ACCESS_SYSTEM_SECURITY;
+        ERR("NtSetSecurityObject() failed (Status %lx)\n", Status);
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
     }
 
-  if (!RtlDosPathNameToNtPathName_U(lpFileName,
-				    &FileName,
-				    NULL,
-				    NULL))
-    {
-      ERR("Invalid path\n");
-      SetLastError(ERROR_INVALID_NAME);
-      return FALSE;
-    }
-
-  InitializeObjectAttributes(&ObjectAttributes,
-			     &FileName,
-			     OBJ_CASE_INSENSITIVE,
-			     NULL,
-			     NULL);
-
-  Status = NtOpenFile(&FileHandle,
-		      AccessMask,
-		      &ObjectAttributes,
-		      &StatusBlock,
-		      FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-		      0);
-
-  RtlFreeHeap(RtlGetProcessHeap(),
-              0,
-              FileName.Buffer);
-
-  if (!NT_SUCCESS(Status))
-    {
-      ERR("NtOpenFile() failed (Status %lx)\n", Status);
-      SetLastError(RtlNtStatusToDosError(Status));
-      return FALSE;
-    }
-
-  Status = NtSetSecurityObject(FileHandle,
-			       SecurityInformation,
-			       pSecurityDescriptor);
-  NtClose(FileHandle);
-
-  if (!NT_SUCCESS(Status))
-    {
-      ERR("NtSetSecurityObject() failed (Status %lx)\n", Status);
-      SetLastError(RtlNtStatusToDosError(Status));
-      return FALSE;
-    }
-
-  return TRUE;
+    return TRUE;
 }
 
 
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL
+WINAPI
 SetKernelObjectSecurity(HANDLE Handle,
-			SECURITY_INFORMATION SecurityInformation,
-			PSECURITY_DESCRIPTOR SecurityDescriptor)
+                        SECURITY_INFORMATION SecurityInformation,
+                        PSECURITY_DESCRIPTOR SecurityDescriptor)
 {
-  NTSTATUS Status;
+    NTSTATUS Status;
 
-  Status = NtSetSecurityObject(Handle,
-			       SecurityInformation,
-			       SecurityDescriptor);
-  if (!NT_SUCCESS(Status))
+    Status = NtSetSecurityObject(Handle,
+                                 SecurityInformation,
+                                 SecurityDescriptor);
+    if (!NT_SUCCESS(Status))
     {
-      SetLastError(RtlNtStatusToDosError(Status));
-      return FALSE;
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
     }
-  return TRUE;
+
+    return TRUE;
 }
 
 
@@ -568,6 +686,89 @@ ImpersonateAnonymousToken(IN HANDLE ThreadHandle)
     NTSTATUS Status;
 
     Status = NtImpersonateAnonymousToken(ThreadHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+ImpersonateLoggedOnUser(HANDLE hToken)
+{
+    SECURITY_QUALITY_OF_SERVICE Qos;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE NewToken;
+    TOKEN_TYPE Type;
+    ULONG ReturnLength;
+    BOOL Duplicated;
+    NTSTATUS Status;
+
+    /* Get the token type */
+    Status = NtQueryInformationToken(hToken,
+                                     TokenType,
+                                     &Type,
+                                     sizeof(TOKEN_TYPE),
+                                     &ReturnLength);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
+
+    if (Type == TokenPrimary)
+    {
+        /* Create a duplicate impersonation token */
+        Qos.Length = sizeof(SECURITY_QUALITY_OF_SERVICE);
+        Qos.ImpersonationLevel = SecurityImpersonation;
+        Qos.ContextTrackingMode = SECURITY_DYNAMIC_TRACKING;
+        Qos.EffectiveOnly = FALSE;
+
+        ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
+        ObjectAttributes.RootDirectory = NULL;
+        ObjectAttributes.ObjectName = NULL;
+        ObjectAttributes.Attributes = 0;
+        ObjectAttributes.SecurityDescriptor = NULL;
+        ObjectAttributes.SecurityQualityOfService = &Qos;
+
+        Status = NtDuplicateToken(hToken,
+                                  TOKEN_IMPERSONATE | TOKEN_QUERY,
+                                  &ObjectAttributes,
+                                  FALSE,
+                                  TokenImpersonation,
+                                  &NewToken);
+        if (!NT_SUCCESS(Status))
+        {
+            SetLastError(RtlNtStatusToDosError(Status));
+            return FALSE;
+        }
+
+        Duplicated = TRUE;
+    }
+    else
+    {
+        /* User the original impersonation token */
+        NewToken = hToken;
+        Duplicated = FALSE;
+    }
+
+    /* Impersonate the the current thread */
+    Status = NtSetInformationThread(NtCurrentThread(),
+                                    ThreadImpersonationToken,
+                                    &NewToken,
+                                    sizeof(HANDLE));
+
+    if (Duplicated == TRUE)
+    {
+        NtClose(NewToken);
+    }
 
     if (!NT_SUCCESS(Status))
     {
@@ -582,123 +783,44 @@ ImpersonateAnonymousToken(IN HANDLE ThreadHandle)
 /*
  * @implemented
  */
-BOOL STDCALL
-ImpersonateLoggedOnUser(HANDLE hToken)
-{
-  SECURITY_QUALITY_OF_SERVICE Qos;
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  HANDLE NewToken;
-  TOKEN_TYPE Type;
-  ULONG ReturnLength;
-  BOOL Duplicated;
-  NTSTATUS Status;
-
-  /* Get the token type */
-  Status = NtQueryInformationToken (hToken,
-				    TokenType,
-				    &Type,
-				    sizeof(TOKEN_TYPE),
-				    &ReturnLength);
-  if (!NT_SUCCESS(Status))
-    {
-      SetLastError (RtlNtStatusToDosError (Status));
-      return FALSE;
-    }
-
-  if (Type == TokenPrimary)
-    {
-      /* Create a duplicate impersonation token */
-      Qos.Length = sizeof(SECURITY_QUALITY_OF_SERVICE);
-      Qos.ImpersonationLevel = SecurityImpersonation;
-      Qos.ContextTrackingMode = SECURITY_DYNAMIC_TRACKING;
-      Qos.EffectiveOnly = FALSE;
-
-      ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
-      ObjectAttributes.RootDirectory = NULL;
-      ObjectAttributes.ObjectName = NULL;
-      ObjectAttributes.Attributes = 0;
-      ObjectAttributes.SecurityDescriptor = NULL;
-      ObjectAttributes.SecurityQualityOfService = &Qos;
-
-      Status = NtDuplicateToken (hToken,
-				 TOKEN_IMPERSONATE | TOKEN_QUERY,
-				 &ObjectAttributes,
-				 FALSE,
-				 TokenImpersonation,
-				 &NewToken);
-      if (!NT_SUCCESS(Status))
-	{
-	  SetLastError (RtlNtStatusToDosError (Status));
-	  return FALSE;
-	}
-
-      Duplicated = TRUE;
-    }
-  else
-    {
-      /* User the original impersonation token */
-      NewToken = hToken;
-      Duplicated = FALSE;
-    }
-
-  /* Impersonate the the current thread */
-  Status = NtSetInformationThread (NtCurrentThread (),
-				   ThreadImpersonationToken,
-				   &NewToken,
-				   sizeof(HANDLE));
-
-  if (Duplicated == TRUE)
-    {
-      NtClose (NewToken);
-    }
-
-  if (!NT_SUCCESS(Status))
-    {
-      SetLastError (RtlNtStatusToDosError (Status));
-      return FALSE;
-    }
-
-  return TRUE;
-}
-
-
-/*
- * @implemented
- */
-BOOL STDCALL
+BOOL
+WINAPI
 ImpersonateSelf(SECURITY_IMPERSONATION_LEVEL ImpersonationLevel)
 {
-  NTSTATUS Status;
+    NTSTATUS Status;
 
-  Status = RtlImpersonateSelf(ImpersonationLevel);
-  if (!NT_SUCCESS(Status))
+    Status = RtlImpersonateSelf(ImpersonationLevel);
+    if (!NT_SUCCESS(Status))
     {
-      SetLastError(RtlNtStatusToDosError(Status));
-      return FALSE;
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
     }
-  return TRUE;
+
+    return TRUE;
 }
 
 
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL
+WINAPI
 RevertToSelf(VOID)
 {
-  NTSTATUS Status;
-  HANDLE Token = NULL;
+    NTSTATUS Status;
+    HANDLE Token = NULL;
 
-  Status = NtSetInformationThread(NtCurrentThread(),
-				  ThreadImpersonationToken,
-				  &Token,
-				  sizeof(HANDLE));
-  if (!NT_SUCCESS(Status))
+    Status = NtSetInformationThread(NtCurrentThread(),
+                                    ThreadImpersonationToken,
+                                    &Token,
+                                    sizeof(HANDLE));
+    if (!NT_SUCCESS(Status))
     {
-      SetLastError(RtlNtStatusToDosError(Status));
-      return FALSE;
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
     }
-  return TRUE;
+
+    return TRUE;
 }
 
 
@@ -714,41 +836,44 @@ RevertToSelf(VOID)
  *
  * @implemented
  */
-BOOL WINAPI
-GetUserNameA( LPSTR lpszName, LPDWORD lpSize )
+BOOL
+WINAPI
+GetUserNameA(LPSTR lpszName,
+             LPDWORD lpSize)
 {
-  UNICODE_STRING NameW;
-  ANSI_STRING NameA;
-  BOOL Ret;
+    UNICODE_STRING NameW;
+    ANSI_STRING NameA;
+    BOOL Ret;
 
-  /* apparently Win doesn't check whether lpSize is valid at all! */
+    /* apparently Win doesn't check whether lpSize is valid at all! */
 
-  NameW.MaximumLength = (*lpSize) * sizeof(WCHAR);
-  NameW.Buffer = LocalAlloc(LMEM_FIXED, NameW.MaximumLength);
-  if(NameW.Buffer == NULL)
-  {
-    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-    return FALSE;
-  }
+    NameW.MaximumLength = (*lpSize) * sizeof(WCHAR);
+    NameW.Buffer = LocalAlloc(LMEM_FIXED, NameW.MaximumLength);
+    if(NameW.Buffer == NULL)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
 
-  NameA.Length = 0;
-  NameA.MaximumLength = ((*lpSize) < 0xFFFF ? (USHORT)(*lpSize) : 0xFFFF);
-  NameA.Buffer = lpszName;
+    NameA.Length = 0;
+    NameA.MaximumLength = ((*lpSize) < 0xFFFF ? (USHORT)(*lpSize) : 0xFFFF);
+    NameA.Buffer = lpszName;
 
-  Ret = GetUserNameW(NameW.Buffer,
-                     lpSize);
-  if(Ret)
-  {
-    NameW.Length = (*lpSize - 1) * sizeof(WCHAR);
-    RtlUnicodeStringToAnsiString(&NameA, &NameW, FALSE);
+    Ret = GetUserNameW(NameW.Buffer,
+                       lpSize);
+    if(Ret)
+    {
+        NameW.Length = (*lpSize - 1) * sizeof(WCHAR);
+        RtlUnicodeStringToAnsiString(&NameA, &NameW, FALSE);
 
-    *lpSize = NameA.Length + 1;
-  }
+        *lpSize = NameA.Length + 1;
+    }
 
-  LocalFree(NameW.Buffer);
+    LocalFree(NameW.Buffer);
 
-  return Ret;
+    return Ret;
 }
+
 
 /******************************************************************************
  * GetUserNameW [ADVAPI32.@]
@@ -757,8 +882,10 @@ GetUserNameA( LPSTR lpszName, LPDWORD lpSize )
  *
  * @implemented
  */
-BOOL WINAPI
-GetUserNameW ( LPWSTR lpszName, LPDWORD lpSize )
+BOOL
+WINAPI
+GetUserNameW(LPWSTR lpszName,
+             LPDWORD lpSize )
 {
   HANDLE hToken = INVALID_HANDLE_VALUE;
   DWORD tu_len = 0;
@@ -862,14 +989,15 @@ GetUserNameW ( LPWSTR lpszName, LPDWORD lpSize )
  *
  * @implemented
  */
-BOOL STDCALL
-LookupAccountSidA (LPCSTR lpSystemName,
-		   PSID lpSid,
-		   LPSTR lpName,
-		   LPDWORD cchName,
-		   LPSTR lpReferencedDomainName,
-		   LPDWORD cchReferencedDomainName,
-		   PSID_NAME_USE peUse)
+BOOL
+WINAPI
+LookupAccountSidA(LPCSTR lpSystemName,
+                  PSID lpSid,
+                  LPSTR lpName,
+                  LPDWORD cchName,
+                  LPSTR lpReferencedDomainName,
+                  LPDWORD cchReferencedDomainName,
+                  PSID_NAME_USE peUse)
 {
   UNICODE_STRING NameW, ReferencedDomainNameW, SystemNameW;
   DWORD szName, szReferencedDomainName;
@@ -1003,14 +1131,13 @@ LookupAccountSidA (LPCSTR lpSystemName,
  * @implemented
  */
 BOOL WINAPI
-LookupAccountSidW (
-	LPCWSTR pSystemName,
-	PSID pSid,
-	LPWSTR pAccountName,
-	LPDWORD pdwAccountName,
-	LPWSTR pDomainName,
-	LPDWORD pdwDomainName,
-	PSID_NAME_USE peUse )
+LookupAccountSidW(LPCWSTR pSystemName,
+                  PSID pSid,
+                  LPWSTR pAccountName,
+                  LPDWORD pdwAccountName,
+                  LPWSTR pDomainName,
+                  LPDWORD pdwDomainName,
+                  PSID_NAME_USE peUse)
 {
 	LSA_UNICODE_STRING SystemName;
 	LSA_OBJECT_ATTRIBUTES ObjectAttributes = {0};
@@ -1098,14 +1225,15 @@ LookupAccountSidW (
  *
  * @implemented
  */
-BOOL STDCALL
-LookupAccountNameA (LPCSTR SystemName,
-                    LPCSTR AccountName,
-                    PSID Sid,
-                    LPDWORD SidLength,
-                    LPSTR ReferencedDomainName,
-                    LPDWORD hReferencedDomainNameLength,
-                    PSID_NAME_USE SidNameUse)
+BOOL
+WINAPI
+LookupAccountNameA(LPCSTR SystemName,
+                   LPCSTR AccountName,
+                   PSID Sid,
+                   LPDWORD SidLength,
+                   LPSTR ReferencedDomainName,
+                   LPDWORD hReferencedDomainNameLength,
+                   PSID_NAME_USE SidNameUse)
 {
     BOOL ret;
     UNICODE_STRING lpSystemW;
@@ -1116,15 +1244,28 @@ LookupAccountNameA (LPCSTR SystemName,
     RtlCreateUnicodeStringFromAsciiz(&lpAccountW, AccountName);
 
     if (ReferencedDomainName)
-        lpReferencedDomainNameW = HeapAlloc(GetProcessHeap(), 0, *hReferencedDomainNameLength * sizeof(WCHAR));
+        lpReferencedDomainNameW = HeapAlloc(GetProcessHeap(),
+                                            0,
+                                            *hReferencedDomainNameLength * sizeof(WCHAR));
 
-    ret = LookupAccountNameW(lpSystemW.Buffer, lpAccountW.Buffer, Sid, SidLength, lpReferencedDomainNameW,
-        hReferencedDomainNameLength, SidNameUse);
+    ret = LookupAccountNameW(lpSystemW.Buffer,
+                             lpAccountW.Buffer,
+                             Sid,
+                             SidLength,
+                             lpReferencedDomainNameW,
+                             hReferencedDomainNameLength,
+                             SidNameUse);
 
     if (ret && lpReferencedDomainNameW)
     {
-        WideCharToMultiByte(CP_ACP, 0, lpReferencedDomainNameW, *hReferencedDomainNameLength,
-            ReferencedDomainName, *hReferencedDomainNameLength, NULL, NULL);
+        WideCharToMultiByte(CP_ACP,
+                            0,
+                            lpReferencedDomainNameW,
+                            *hReferencedDomainNameLength + 1,
+                            ReferencedDomainName,
+                            *hReferencedDomainNameLength + 1,
+                            NULL,
+                            NULL);
     }
 
     RtlFreeUnicodeString(&lpSystemW);
@@ -1140,9 +1281,15 @@ LookupAccountNameA (LPCSTR SystemName,
  *
  * @unimplemented
  */
-BOOL WINAPI LookupAccountNameW(LPCWSTR lpSystemName, LPCWSTR lpAccountName, PSID Sid,
-                               LPDWORD cbSid, LPWSTR ReferencedDomainName,
-                               LPDWORD cchReferencedDomainName, PSID_NAME_USE peUse)
+BOOL
+WINAPI
+LookupAccountNameW(LPCWSTR lpSystemName,
+                   LPCWSTR lpAccountName,
+                   PSID Sid,
+                   LPDWORD cbSid,
+                   LPWSTR ReferencedDomainName,
+                   LPDWORD cchReferencedDomainName,
+                   PSID_NAME_USE peUse)
 {
     /* Default implementation: Always return a default SID */
     SID_IDENTIFIER_AUTHORITY identifierAuthority = {SECURITY_NT_AUTHORITY};
@@ -1153,6 +1300,12 @@ BOOL WINAPI LookupAccountNameW(LPCWSTR lpSystemName, LPCWSTR lpAccountName, PSID
 
     TRACE("%s %s %p %p %p %p %p - stub\n", lpSystemName, lpAccountName,
           Sid, cbSid, ReferencedDomainName, cchReferencedDomainName, peUse);
+
+    if (!ADVAPI_IsLocalComputer(lpSystemName))
+    {
+        SetLastError(RPC_S_SERVER_UNAVAILABLE);
+        return FALSE;
+    }
 
     for (i = 0; i < (sizeof(ACCOUNT_SIDS) / sizeof(ACCOUNT_SIDS[0])); i++)
     {
@@ -1174,33 +1327,38 @@ BOOL WINAPI LookupAccountNameW(LPCWSTR lpSystemName, LPCWSTR lpAccountName, PSID
         &pSid);
 
     if (!ret)
-       return FALSE;
+        return FALSE;
 
     if (!RtlValidSid(pSid))
     {
-       FreeSid(pSid);
-       return FALSE;
+        FreeSid(pSid);
+        return FALSE;
     }
 
     if (Sid != NULL && (*cbSid >= GetLengthSid(pSid)))
-       CopySid(*cbSid, Sid, pSid);
+        CopySid(*cbSid, Sid, pSid);
+
     if (*cbSid < GetLengthSid(pSid))
     {
-       SetLastError(ERROR_INSUFFICIENT_BUFFER);
-       ret = FALSE;
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        ret = FALSE;
     }
+
     *cbSid = GetLengthSid(pSid);
-    
+
     if (ReferencedDomainName != NULL && (*cchReferencedDomainName > wcslen(dm)))
-      wcscpy(ReferencedDomainName, dm);
+        wcscpy(ReferencedDomainName, dm);
 
-    if (*cchReferencedDomainName <= wcslen(dm))
+    if ((*cchReferencedDomainName <= wcslen(dm)) || (!ret))
     {
-       SetLastError(ERROR_INSUFFICIENT_BUFFER);
-       ret = FALSE;
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        ret = FALSE;
+        *cchReferencedDomainName = wcslen(dm) + 1;
     }
-
-    *cchReferencedDomainName = wcslen(dm)+1;
+    else
+    {
+        *cchReferencedDomainName = wcslen(dm);
+    }
 
     FreeSid(pSid);
 
@@ -1213,45 +1371,48 @@ BOOL WINAPI LookupAccountNameW(LPCWSTR lpSystemName, LPCWSTR lpAccountName, PSID
  *
  * @implemented
  */
-BOOL STDCALL
-LookupPrivilegeValueA (LPCSTR lpSystemName,
-		       LPCSTR lpName,
-		       PLUID lpLuid)
+BOOL
+WINAPI
+LookupPrivilegeValueA(LPCSTR lpSystemName,
+                      LPCSTR lpName,
+                      PLUID lpLuid)
 {
-  UNICODE_STRING SystemName;
-  UNICODE_STRING Name;
-  BOOL Result;
+    UNICODE_STRING SystemName;
+    UNICODE_STRING Name;
+    BOOL Result;
 
-  /* Remote system? */
-  if (lpSystemName != NULL)
+    /* Remote system? */
+    if (lpSystemName != NULL)
     {
-      RtlCreateUnicodeStringFromAsciiz (&SystemName,
-					(LPSTR)lpSystemName);
+        RtlCreateUnicodeStringFromAsciiz(&SystemName,
+                                         (LPSTR)lpSystemName);
+    }
+	else
+		SystemName.Buffer = NULL;
+
+    /* Check the privilege name is not NULL */
+    if (lpName == NULL)
+    {
+        SetLastError(ERROR_NO_SUCH_PRIVILEGE);
+        return FALSE;
     }
 
-  /* Check the privilege name is not NULL */
-  if (lpName == NULL)
+    RtlCreateUnicodeStringFromAsciiz(&Name,
+                                     (LPSTR)lpName);
+
+    Result = LookupPrivilegeValueW(SystemName.Buffer,
+                                   Name.Buffer,
+                                   lpLuid);
+
+    RtlFreeUnicodeString(&Name);
+
+    /* Remote system? */
+    if (SystemName.Buffer != NULL)
     {
-      SetLastError (ERROR_INVALID_PARAMETER);
-      return FALSE;
+        RtlFreeUnicodeString(&SystemName);
     }
 
-  RtlCreateUnicodeStringFromAsciiz (&Name,
-				    (LPSTR)lpName);
-
-  Result = LookupPrivilegeValueW ((lpSystemName != NULL) ? SystemName.Buffer : NULL,
-				  Name.Buffer,
-				  lpLuid);
-
-  RtlFreeUnicodeString (&Name);
-
-  /* Remote system? */
-  if (lpSystemName != NULL)
-    {
-      RtlFreeUnicodeString (&SystemName);
-    }
-
-  return Result;
+    return Result;
 }
 
 
@@ -1260,10 +1421,11 @@ LookupPrivilegeValueA (LPCSTR lpSystemName,
  *
  * @unimplemented
  */
-BOOL STDCALL
-LookupPrivilegeValueW (LPCWSTR SystemName,
-		       LPCWSTR PrivName,
-		       PLUID Luid)
+BOOL
+WINAPI
+LookupPrivilegeValueW(LPCWSTR SystemName,
+                      LPCWSTR PrivName,
+                      PLUID Luid)
 {
   static const WCHAR * const DefaultPrivNames[] =
     {
@@ -1271,7 +1433,6 @@ LookupPrivilegeValueW (LPCWSTR SystemName,
       L"SeAssignPrimaryTokenPrivilege",
       L"SeLockMemoryPrivilege",
       L"SeIncreaseQuotaPrivilege",
-      L"SeUnsolicitedInputPrivilege",
       L"SeMachineAccountPrivilege",
       L"SeTcbPrivilege",
       L"SeSecurityPrivilege",
@@ -1300,6 +1461,12 @@ LookupPrivilegeValueW (LPCWSTR SystemName,
     };
   unsigned Priv;
 
+  if (!ADVAPI_IsLocalComputer(SystemName))
+    {
+        SetLastError(RPC_S_SERVER_UNAVAILABLE);
+        return FALSE;
+    }
+
   if (NULL != SystemName && L'\0' != *SystemName)
     {
       FIXME("LookupPrivilegeValueW: not implemented for remote system\n");
@@ -1309,9 +1476,9 @@ LookupPrivilegeValueW (LPCWSTR SystemName,
 
   for (Priv = 0; Priv < sizeof(DefaultPrivNames) / sizeof(DefaultPrivNames[0]); Priv++)
     {
-      if (0 == wcscmp(PrivName, DefaultPrivNames[Priv]))
+      if (0 == _wcsicmp(PrivName, DefaultPrivNames[Priv]))
         {
-          Luid->LowPart = Priv + 1;
+          Luid->LowPart = Priv + SE_MIN_WELL_KNOWN_PRIVILEGE;
           Luid->HighPart = 0;
           return TRUE;
         }
@@ -1328,16 +1495,17 @@ LookupPrivilegeValueW (LPCWSTR SystemName,
  *
  * @unimplemented
  */
-BOOL STDCALL
-LookupPrivilegeDisplayNameA (LPCSTR lpSystemName,
-			     LPCSTR lpName,
-			     LPSTR lpDisplayName,
-			     LPDWORD cbDisplayName,
-			     LPDWORD lpLanguageId)
+BOOL
+WINAPI
+LookupPrivilegeDisplayNameA(LPCSTR lpSystemName,
+                            LPCSTR lpName,
+                            LPSTR lpDisplayName,
+                            LPDWORD cbDisplayName,
+                            LPDWORD lpLanguageId)
 {
-  FIXME("%s() not implemented!\n", __FUNCTION__);
-  SetLastError (ERROR_CALL_NOT_IMPLEMENTED);
-  return FALSE;
+    FIXME("%s() not implemented!\n", __FUNCTION__);
+    SetLastError (ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
 }
 
 
@@ -1346,59 +1514,129 @@ LookupPrivilegeDisplayNameA (LPCSTR lpSystemName,
  *
  * @unimplemented
  */
-BOOL STDCALL
-LookupPrivilegeDisplayNameW (LPCWSTR lpSystemName,
-			     LPCWSTR lpName,
-			     LPWSTR lpDisplayName,
-			     LPDWORD cbDisplayName,
-			     LPDWORD lpLanguageId)
+BOOL
+WINAPI
+LookupPrivilegeDisplayNameW(LPCWSTR lpSystemName,
+                            LPCWSTR lpName,
+                            LPWSTR lpDisplayName,
+                            LPDWORD cbDisplayName,
+                            LPDWORD lpLanguageId)
 {
-  FIXME("%s() not implemented!\n", __FUNCTION__);
-  SetLastError (ERROR_CALL_NOT_IMPLEMENTED);
-  return FALSE;
+    FIXME("%s() not implemented!\n", __FUNCTION__);
+    SetLastError (ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
 }
 
 
 /**********************************************************************
  * LookupPrivilegeNameA				EXPORTED
  *
- * @unimplemented
+ * @implemented
  */
-BOOL STDCALL
-LookupPrivilegeNameA (LPCSTR lpSystemName,
-		      PLUID lpLuid,
-		      LPSTR lpName,
-		      LPDWORD cbName)
+BOOL
+WINAPI
+LookupPrivilegeNameA(LPCSTR lpSystemName,
+                     PLUID lpLuid,
+                     LPSTR lpName,
+                     LPDWORD cchName)
 {
-  FIXME("%s() not implemented!\n", __FUNCTION__);
-  SetLastError (ERROR_CALL_NOT_IMPLEMENTED);
-  return FALSE;
+    UNICODE_STRING lpSystemNameW;
+    BOOL ret;
+    DWORD wLen = 0;
+
+    TRACE("%s %p %p %p\n", debugstr_a(lpSystemName), lpLuid, lpName, cchName);
+
+    RtlCreateUnicodeStringFromAsciiz(&lpSystemNameW, lpSystemName);
+    ret = LookupPrivilegeNameW(lpSystemNameW.Buffer, lpLuid, NULL, &wLen);
+    if (!ret && GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+    {
+        LPWSTR lpNameW = HeapAlloc(GetProcessHeap(), 0, wLen * sizeof(WCHAR));
+
+        ret = LookupPrivilegeNameW(lpSystemNameW.Buffer, lpLuid, lpNameW,
+         &wLen);
+        if (ret)
+        {
+            /* Windows crashes if cchName is NULL, so will I */
+            unsigned int len = WideCharToMultiByte(CP_ACP, 0, lpNameW, -1, lpName,
+             *cchName, NULL, NULL);
+
+            if (len == 0)
+            {
+                /* WideCharToMultiByte failed */
+                ret = FALSE;
+            }
+            else if (len > *cchName)
+            {
+                *cchName = len;
+                SetLastError(ERROR_INSUFFICIENT_BUFFER);
+                ret = FALSE;
+            }
+            else
+            {
+                /* WideCharToMultiByte succeeded, output length needs to be
+                 * length not including NULL terminator
+                 */
+                *cchName = len - 1;
+            }
+        }
+        HeapFree(GetProcessHeap(), 0, lpNameW);
+    }
+    RtlFreeUnicodeString(&lpSystemNameW);
+    return ret;
 }
 
 
 /**********************************************************************
  * LookupPrivilegeNameW				EXPORTED
  *
- * @unimplemented
+ * @implemented
  */
-BOOL STDCALL
-LookupPrivilegeNameW (LPCWSTR lpSystemName,
-		      PLUID lpLuid,
-		      LPWSTR lpName,
-		      LPDWORD cbName)
+BOOL
+WINAPI
+LookupPrivilegeNameW(LPCWSTR lpSystemName,
+                     PLUID lpLuid,
+                     LPWSTR lpName,
+                     LPDWORD cchName)
 {
-  FIXME("%s() not implemented!\n", __FUNCTION__);
-  SetLastError (ERROR_CALL_NOT_IMPLEMENTED);
-  return FALSE;
+    size_t privNameLen;
+
+    TRACE("%s,%p,%p,%p\n",debugstr_w(lpSystemName), lpLuid, lpName, cchName);
+
+    if (!ADVAPI_IsLocalComputer(lpSystemName))
+    {
+        SetLastError(RPC_S_SERVER_UNAVAILABLE);
+        return FALSE;
+    }
+
+    if (lpLuid->HighPart || (lpLuid->LowPart < SE_MIN_WELL_KNOWN_PRIVILEGE ||
+     lpLuid->LowPart > SE_MAX_WELL_KNOWN_PRIVILEGE))
+    {
+        SetLastError(ERROR_NO_SUCH_PRIVILEGE);
+        return FALSE;
+    }
+    privNameLen = strlenW(WellKnownPrivNames[lpLuid->LowPart]);
+    /* Windows crashes if cchName is NULL, so will I */
+    if (*cchName <= privNameLen)
+    {
+        *cchName = privNameLen + 1;
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        return FALSE;
+    }
+    else
+    {
+        strcpyW(lpName, WellKnownPrivNames[lpLuid->LowPart]);
+        *cchName = privNameLen;
+        return TRUE;
+    }
 }
 
 
 static DWORD
 pGetSecurityInfoCheck(SECURITY_INFORMATION SecurityInfo,
-                      PSID* ppsidOwner,
-                      PSID* ppsidGroup,
-                      PACL* ppDacl,
-                      PACL* ppSacl,
+                      PSID *ppsidOwner,
+                      PSID *ppsidGroup,
+                      PACL *ppDacl,
+                      PACL *ppSacl,
                       PSECURITY_DESCRIPTOR* ppSecurityDescriptor)
 {
     if ((SecurityInfo & (OWNER_SECURITY_INFORMATION |
@@ -1574,7 +1812,8 @@ ProtectSacl:
  *
  * @implemented
  */
-DWORD STDCALL
+DWORD
+WINAPI
 GetNamedSecurityInfoW(LPWSTR pObjectName,
                       SE_OBJECT_TYPE ObjectType,
                       SECURITY_INFORMATION SecurityInfo,
@@ -1624,7 +1863,8 @@ GetNamedSecurityInfoW(LPWSTR pObjectName,
  *
  * @implemented
  */
-DWORD STDCALL
+DWORD
+WINAPI
 GetNamedSecurityInfoA(LPSTR pObjectName,
                       SE_OBJECT_TYPE ObjectType,
                       SECURITY_INFORMATION SecurityInfo,
@@ -1665,7 +1905,8 @@ GetNamedSecurityInfoA(LPSTR pObjectName,
  *
  * @implemented
  */
-DWORD STDCALL
+DWORD
+WINAPI
 SetNamedSecurityInfoW(LPWSTR pObjectName,
                       SE_OBJECT_TYPE ObjectType,
                       SECURITY_INFORMATION SecurityInfo,
@@ -1712,7 +1953,8 @@ SetNamedSecurityInfoW(LPWSTR pObjectName,
  *
  * @implemented
  */
-DWORD STDCALL
+DWORD
+WINAPI
 SetNamedSecurityInfoA(LPSTR pObjectName,
                       SE_OBJECT_TYPE ObjectType,
                       SECURITY_INFORMATION SecurityInfo,
@@ -1751,15 +1993,16 @@ SetNamedSecurityInfoA(LPSTR pObjectName,
  *
  * @implemented
  */
-DWORD STDCALL
+DWORD
+WINAPI
 GetSecurityInfo(HANDLE handle,
                 SE_OBJECT_TYPE ObjectType,
                 SECURITY_INFORMATION SecurityInfo,
-                PSID* ppsidOwner,
-                PSID* ppsidGroup,
-                PACL* ppDacl,
-                PACL* ppSacl,
-                PSECURITY_DESCRIPTOR* ppSecurityDescriptor)
+                PSID *ppsidOwner,
+                PSID *ppsidGroup,
+                PACL *ppDacl,
+                PACL *ppSacl,
+                PSECURITY_DESCRIPTOR *ppSecurityDescriptor)
 {
     DWORD ErrorCode;
 
@@ -1847,40 +2090,40 @@ SetSecurityInfo(HANDLE handle,
 /******************************************************************************
  * GetSecurityInfoExW         EXPORTED
  */
-DWORD WINAPI GetSecurityInfoExA(
-   HANDLE hObject,
-   SE_OBJECT_TYPE ObjectType,
-   SECURITY_INFORMATION SecurityInfo,
-   LPCSTR lpProvider,
-   LPCSTR lpProperty,
-   PACTRL_ACCESSA *ppAccessList,
-   PACTRL_AUDITA *ppAuditList,
-   LPSTR *lppOwner,
-   LPSTR *lppGroup
-   )
+DWORD
+WINAPI
+GetSecurityInfoExA(HANDLE hObject,
+                   SE_OBJECT_TYPE ObjectType,
+                   SECURITY_INFORMATION SecurityInfo,
+                   LPCSTR lpProvider,
+                   LPCSTR lpProperty,
+                   PACTRL_ACCESSA *ppAccessList,
+                   PACTRL_AUDITA *ppAuditList,
+                   LPSTR *lppOwner,
+                   LPSTR *lppGroup)
 {
-  FIXME("%s() not implemented!\n", __FUNCTION__);
-  return ERROR_BAD_PROVIDER;
+    FIXME("%s() not implemented!\n", __FUNCTION__);
+    return ERROR_BAD_PROVIDER;
 }
 
 
 /******************************************************************************
  * GetSecurityInfoExW         EXPORTED
  */
-DWORD WINAPI GetSecurityInfoExW(
-   HANDLE hObject,
-   SE_OBJECT_TYPE ObjectType,
-   SECURITY_INFORMATION SecurityInfo,
-   LPCWSTR lpProvider,
-   LPCWSTR lpProperty,
-   PACTRL_ACCESSW *ppAccessList,
-   PACTRL_AUDITW *ppAuditList,
-   LPWSTR *lppOwner,
-   LPWSTR *lppGroup
-   )
+DWORD
+WINAPI
+GetSecurityInfoExW(HANDLE hObject,
+                   SE_OBJECT_TYPE ObjectType,
+                   SECURITY_INFORMATION SecurityInfo,
+                   LPCWSTR lpProvider,
+                   LPCWSTR lpProperty,
+                   PACTRL_ACCESSW *ppAccessList,
+                   PACTRL_AUDITW *ppAuditList,
+                   LPWSTR *lppOwner,
+                   LPWSTR *lppGroup)
 {
-  FIXME("%s() not implemented!\n", __FUNCTION__);
-  return ERROR_BAD_PROVIDER;
+    FIXME("%s() not implemented!\n", __FUNCTION__);
+    return ERROR_BAD_PROVIDER;
 }
 
 
@@ -1889,38 +2132,40 @@ DWORD WINAPI GetSecurityInfoExW(
  *
  * @implemented
  */
-BOOL STDCALL
+BOOL
+WINAPI
 ImpersonateNamedPipeClient(HANDLE hNamedPipe)
 {
-  IO_STATUS_BLOCK StatusBlock;
-  NTSTATUS Status;
+    IO_STATUS_BLOCK StatusBlock;
+    NTSTATUS Status;
 
-  TRACE("ImpersonateNamedPipeClient() called\n");
+    TRACE("ImpersonateNamedPipeClient() called\n");
 
-  Status = NtFsControlFile(hNamedPipe,
-			   NULL,
-			   NULL,
-			   NULL,
-			   &StatusBlock,
-			   FSCTL_PIPE_IMPERSONATE,
-			   NULL,
-			   0,
-			   NULL,
-			   0);
-  if (!NT_SUCCESS(Status))
-  {
-    SetLastError(RtlNtStatusToDosError(Status));
-    return FALSE;
-  }
+    Status = NtFsControlFile(hNamedPipe,
+                             NULL,
+                             NULL,
+                             NULL,
+                             &StatusBlock,
+                             FSCTL_PIPE_IMPERSONATE,
+                             NULL,
+                             0,
+                             NULL,
+                             0);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
 
-  return TRUE;
+    return TRUE;
 }
 
 
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL
+WINAPI
 CreatePrivateObjectSecurity(PSECURITY_DESCRIPTOR ParentDescriptor,
                             PSECURITY_DESCRIPTOR CreatorDescriptor,
                             PSECURITY_DESCRIPTOR *NewDescriptor,
@@ -1949,7 +2194,8 @@ CreatePrivateObjectSecurity(PSECURITY_DESCRIPTOR ParentDescriptor,
 /*
  * @unimplemented
  */
-BOOL STDCALL
+BOOL
+WINAPI
 CreatePrivateObjectSecurityEx(PSECURITY_DESCRIPTOR ParentDescriptor,
                               PSECURITY_DESCRIPTOR CreatorDescriptor,
                               PSECURITY_DESCRIPTOR* NewDescriptor,
@@ -1967,7 +2213,8 @@ CreatePrivateObjectSecurityEx(PSECURITY_DESCRIPTOR ParentDescriptor,
 /*
  * @unimplemented
  */
-BOOL STDCALL
+BOOL
+WINAPI
 CreatePrivateObjectSecurityWithMultipleInheritance(PSECURITY_DESCRIPTOR ParentDescriptor,
                                                    PSECURITY_DESCRIPTOR CreatorDescriptor,
                                                    PSECURITY_DESCRIPTOR* NewDescriptor,
@@ -1986,7 +2233,8 @@ CreatePrivateObjectSecurityWithMultipleInheritance(PSECURITY_DESCRIPTOR ParentDe
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL
+WINAPI
 DestroyPrivateObjectSecurity(PSECURITY_DESCRIPTOR *ObjectDescriptor)
 {
     NTSTATUS Status;
@@ -2005,15 +2253,17 @@ DestroyPrivateObjectSecurity(PSECURITY_DESCRIPTOR *ObjectDescriptor)
 /*
  * @implemented
  */
-BOOL STDCALL
-GetPrivateObjectSecurity(PSECURITY_DESCRIPTOR ObjectDescriptor,
-                         SECURITY_INFORMATION SecurityInformation,
-                         PSECURITY_DESCRIPTOR ResultantDescriptor,
-                         DWORD DescriptorLength,
-                         PDWORD ReturnLength)
+BOOL
+WINAPI
+GetPrivateObjectSecurity(IN PSECURITY_DESCRIPTOR ObjectDescriptor,
+                         IN SECURITY_INFORMATION SecurityInformation,
+                         OUT PSECURITY_DESCRIPTOR ResultantDescriptor OPTIONAL,
+                         IN DWORD DescriptorLength,
+                         OUT PDWORD ReturnLength)
 {
     NTSTATUS Status;
 
+    /* Call RTL */
     Status = RtlQuerySecurityObject(ObjectDescriptor,
                                     SecurityInformation,
                                     ResultantDescriptor,
@@ -2021,10 +2271,12 @@ GetPrivateObjectSecurity(PSECURITY_DESCRIPTOR ObjectDescriptor,
                                     ReturnLength);
     if (!NT_SUCCESS(Status))
     {
+        /* Fail */
         SetLastError(RtlNtStatusToDosError(Status));
         return FALSE;
     }
 
+    /* Success */
     return TRUE;
 }
 
@@ -2032,7 +2284,8 @@ GetPrivateObjectSecurity(PSECURITY_DESCRIPTOR ObjectDescriptor,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL
+WINAPI
 SetPrivateObjectSecurity(SECURITY_INFORMATION SecurityInformation,
                          PSECURITY_DESCRIPTOR ModificationDescriptor,
                          PSECURITY_DESCRIPTOR *ObjectsSecurityDescriptor,
@@ -2059,7 +2312,8 @@ SetPrivateObjectSecurity(SECURITY_INFORMATION SecurityInformation,
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD
+WINAPI
 TreeResetNamedSecurityInfoW(LPWSTR pObjectName,
                             SE_OBJECT_TYPE ObjectType,
                             SECURITY_INFORMATION SecurityInfo,
@@ -2136,7 +2390,7 @@ typedef struct _INERNAL_FNPROGRESSW_DATA
     PVOID Args;
 } INERNAL_FNPROGRESSW_DATA, *PINERNAL_FNPROGRESSW_DATA;
 
-static VOID STDCALL
+static VOID WINAPI
 InternalfnProgressW(LPWSTR pObjectName,
                     DWORD Status,
                     PPROG_INVOKE_SETTING pInvokeSetting,
@@ -2191,7 +2445,8 @@ InternalfnProgressW(LPWSTR pObjectName,
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD
+WINAPI
 TreeResetNamedSecurityInfoA(LPSTR pObjectName,
                             SE_OBJECT_TYPE ObjectType,
                             SECURITY_INFORMATION SecurityInfo,

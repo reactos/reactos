@@ -381,18 +381,18 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	GROUPBOX "Attività", -1, 7, 10, 249, 45
 	ICON "", 30109, 14, 25, 21, 20, SS_REALSIZECONTROL
-	AUTORADIOBUTTON "Mostrare le attività comuni nelle cartelle", 14001, 40, 25, 120, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Utilizzare le cartelle nella forma 'ReactOS class&ic' ", 14002, 40, 37, 120, 10, WS_TABSTOP
+	AUTORADIOBUTTON "Mostrare le attività comuni nelle cartelle", 14001, 40, 25, 120, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Utilizzare le cartelle nella forma 'ReactOS class&ic' ", 14002, 40, 37, 120, 10, WS_TABSTOP | WS_GROUP
 	GROUPBOX "Sfoglia cartelle", -1, 7, 60, 249, 45, WS_TABSTOP
 	ICON "", 30110, 14, 70, 21, 20, SS_REALSIZECONTROL
-	AUTORADIOBUTTON "Aprire ogni cartella nella stessa finestra", 14004, 40, 70, 140, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Aprire ogni cartella in una nuova finestra", 14005, 40, 82, 140, 10, WS_TABSTOP
+	AUTORADIOBUTTON "Aprire ogni cartella nella stessa finestra", 14004, 40, 70, 140, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Aprire ogni cartella in una nuova finestra", 14005, 40, 82, 140, 10, WS_TABSTOP | WS_GROUP
 	GROUPBOX "Click sugli elementi come segue", -1, 7, 110, 249, 60
 	ICON "", 30111, 14, 120, 21, 20, SS_REALSIZECONTROL
-	AUTORADIOBUTTON "&Click singolo per aprire un elemento (seleziona ed apre)", 14007, 40, 120, 170, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Sottolinea i titoli delle icone in modo coerente con il &browser", 14008, 50, 132, 170, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Sottolinea i titoli delle icone solo se &selezionate", 14009, 50, 144, 170, 10, WS_TABSTOP
-	AUTORADIOBUTTON "&Doppio click per aprire un elemento (click singolo per selezionare)", 14010, 40, 156, 170, 10, WS_TABSTOP
+	AUTORADIOBUTTON "&Click singolo per aprire un elemento (seleziona ed apre)", 14007, 40, 120, 170, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Sottolinea i titoli delle icone in modo coerente con il &browser", 14008, 50, 132, 170, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Sottolinea i titoli delle icone solo se &selezionate", 14009, 50, 144, 170, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "&Doppio click per aprire un elemento (click singolo per selezionare)", 14010, 40, 156, 170, 10, WS_TABSTOP | WS_GROUP
 	PUSHBUTTON "&Ripristina le impostazioni predefinite", 14011, 180, 180, 60, 14, WS_TABSTOP
 END
 

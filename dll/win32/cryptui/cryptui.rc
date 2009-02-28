@@ -1,0 +1,50 @@
+/*
+ * cryptui dll resources
+ *
+ * Copyright 2008 Juan Lang
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "commctrl.h"
+#include "dlgs.h"
+
+#include "cryptuires.h"
+
+/* @makedep: smallicons.bmp */
+IDB_SMALL_ICONS BITMAP LOADONCALL DISCARDABLE smallicons.bmp
+
+/* @makedep: cert.bmp */
+IDB_CERT BITMAP LOADONCALL DISCARDABLE cert.bmp
+
+/* @makedep: certerror.bmp */
+IDB_CERT_ERROR BITMAP LOADONCALL DISCARDABLE certerror.bmp
+
+/* @makedep: certwarning.bmp */
+IDB_CERT_WARNING BITMAP LOADONCALL DISCARDABLE certwarning.bmp
+
+/* @makedep: checks.bmp */
+IDB_CHECKS BITMAP LOADONCALL DISCARDABLE checks.bmp
+
+/* @makedep: certwatermark.bmp */
+IDB_CERT_WATERMARK BITMAP LOADONCALL DISCARDABLE certwatermark.bmp
+
+/* @makedep: certheader.bmp */
+IDB_CERT_HEADER BITMAP LOADONCALL DISCARDABLE certheader.bmp
+
+#include "cryptui_En.rc"
+#include "cryptui_Ko.rc"

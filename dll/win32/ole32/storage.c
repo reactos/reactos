@@ -706,8 +706,7 @@ STORAGE_look_for_named_pps(stream_access16*str,int n,LPOLESTR name) {
 /******************************************************************************
  *		STORAGE_dump_pps_entry	[Internal]
  *
- * FIXME
- *    Function is unused
+ * This function is there to simplify debugging. It is otherwise unused.
  */
 void
 STORAGE_dump_pps_entry(struct storage_pps_entry *stde) {
@@ -1622,46 +1621,6 @@ typedef struct
         HANDLE                          hf;
         ULARGE_INTEGER                  offset;
 } IStream32Impl;
-
-/*****************************************************************************
- *		IStream32_QueryInterface	[VTABLE]
- */
-HRESULT WINAPI IStream_fnQueryInterface(
-	IStream* iface,REFIID refiid,LPVOID *obj
-) {
-	IStream32Impl *This = (IStream32Impl *)iface;
-
-	TRACE_(relay)("(%p)->(%s,%p)\n",This,debugstr_guid(refiid),obj);
-	if (!memcmp(&IID_IUnknown,refiid,sizeof(IID_IUnknown))) {
-		*obj = This;
-		return 0;
-	}
-	return OLE_E_ENUM_NOMORE;
-
-}
-
-/******************************************************************************
- * IStream32_AddRef [VTABLE]
- */
-ULONG WINAPI IStream_fnAddRef(IStream* iface) {
-	IStream32Impl *This = (IStream32Impl *)iface;
-	return InterlockedIncrement(&This->ref);
-}
-
-/******************************************************************************
- * IStream32_Release [VTABLE]
- */
-ULONG WINAPI IStream_fnRelease(IStream* iface) {
-	IStream32Impl *This = (IStream32Impl *)iface;
-        ULONG ref;
-	FlushFileBuffers(This->hf);
-        ref = InterlockedDecrement(&This->ref);
-	if (!ref) {
-		CloseHandle(This->hf);
-		HeapFree( GetProcessHeap(), 0, This );
-	}
-	return ref;
-}
 
 /******************************************************************************
  *		IStorage16_QueryInterface	[STORAGE.500]

@@ -179,6 +179,34 @@ static void set_st_entry( string_table *st, UINT n, LPWSTR str, UINT refcount, e
         st->freeslot = n + 1;
 }
 
+static UINT msi_string2idA( const string_table *st, LPCSTR buffer, UINT *id )
+{
+    DWORD sz;
+    UINT r = ERROR_INVALID_PARAMETER;
+    LPWSTR str;
+
+    TRACE("Finding string %s in string table\n", debugstr_a(buffer) );
+
+    if( buffer[0] == 0 )
+    {
+        *id = 0;
+        return ERROR_SUCCESS;
+    }
+
+    sz = MultiByteToWideChar( st->codepage, 0, buffer, -1, NULL, 0 );
+    if( sz <= 0 )
+        return r;
+    str = msi_alloc( sz*sizeof(WCHAR) );
+    if( !str )
+        return ERROR_NOT_ENOUGH_MEMORY;
+    MultiByteToWideChar( st->codepage, 0, buffer, -1, str, sz );
+
+    r = msi_string2idW( st, str, id );
+    msi_free( str );
+
+    return r;
+}
+
 static int msi_addstring( string_table *st, UINT n, const CHAR *data, int len, UINT refcount, enum StringPersistence persistence )
 {
     LPWSTR str;
@@ -300,45 +328,6 @@ const WCHAR *msi_string_lookup_id( const string_table *st, UINT id )
 }
 
 /*
- *  msi_id2stringW
- *
- *  [in] st         - pointer to the string table
- *  [in] id  - id of the string to retrieve
- *  [out] buffer    - destination of the string
- *  [in/out] sz     - number of bytes available in the buffer on input
- *                    number of bytes used on output
- *
- *   The size includes the terminating nul character.  Short buffers
- *  will be filled, but not nul terminated.
- */
-UINT msi_id2stringW( const string_table *st, UINT id, LPWSTR buffer, UINT *sz )
-{
-    UINT len;
-    const WCHAR *str;
-
-    TRACE("Finding string %d of %d\n", id, st->maxcount);
-
-    str = msi_string_lookup_id( st, id );
-    if( !str )
-        return ERROR_FUNCTION_FAILED;
-
-    len = strlenW( str ) + 1;
-
-    if( !buffer )
-    {
-        *sz = len;
-        return ERROR_SUCCESS;
-    }
-
-    if( *sz < len )
-        *sz = len;
-    memcpy( buffer, str, (*sz)*sizeof(WCHAR) ); 
-    *sz = len;
-
-    return ERROR_SUCCESS;
-}
-
-/*
  *  msi_id2stringA
  *
  *  [in] st         - pointer to the string table
@@ -350,7 +339,7 @@ UINT msi_id2stringW( const string_table *st, UINT id, LPWSTR buffer, UINT *sz )
  *   The size includes the terminating nul character.  Short buffers
  *  will be filled, but not nul terminated.
  */
-UINT msi_id2stringA( const string_table *st, UINT id, LPSTR buffer, UINT *sz )
+static UINT msi_id2stringA( const string_table *st, UINT id, LPSTR buffer, UINT *sz )
 {
     UINT len;
     const WCHAR *str;
@@ -407,52 +396,6 @@ UINT msi_string2idW( const string_table *st, LPCWSTR str, UINT *id )
     }
 
     return ERROR_INVALID_PARAMETER;
-}
-
-UINT msi_string2idA( const string_table *st, LPCSTR buffer, UINT *id )
-{
-    DWORD sz;
-    UINT r = ERROR_INVALID_PARAMETER;
-    LPWSTR str;
-
-    TRACE("Finding string %s in string table\n", debugstr_a(buffer) );
-
-    if( buffer[0] == 0 )
-    {
-        *id = 0;
-        return ERROR_SUCCESS;
-    }
-
-    sz = MultiByteToWideChar( st->codepage, 0, buffer, -1, NULL, 0 );
-    if( sz <= 0 )
-        return r;
-    str = msi_alloc( sz*sizeof(WCHAR) );
-    if( !str )
-        return ERROR_NOT_ENOUGH_MEMORY;
-    MultiByteToWideChar( st->codepage, 0, buffer, -1, str, sz );
-
-    r = msi_string2idW( st, str, id );
-    msi_free( str );
-
-    return r;
-}
-
-UINT msi_strcmp( const string_table *st, UINT lval, UINT rval, UINT *res )
-{
-    const WCHAR *l_str, *r_str;
-
-    l_str = msi_string_lookup_id( st, lval );
-    if( !l_str )
-        return ERROR_INVALID_PARAMETER;
-    
-    r_str = msi_string_lookup_id( st, rval );
-    if( !r_str )
-        return ERROR_INVALID_PARAMETER;
-
-    /* does this do the right thing for all UTF-8 strings? */
-    *res = strcmpW( l_str, r_str );
-
-    return ERROR_SUCCESS;
 }
 
 static void string_totalsize( const string_table *st, UINT *datasize, UINT *poolsize )

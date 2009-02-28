@@ -330,8 +330,7 @@ BOOL serialize(const struct protect_data_t *pInfo, DATA_BLOB *pSerial)
 
     if (ptr - pSerial->pbData != dwStruct)
     {
-        ERR("struct size changed!? %u != expected %u\n",
-            ptr - pSerial->pbData, dwStruct);
+        ERR("struct size changed!? expected %u\n", dwStruct);
         LocalFree(pSerial->pbData);
         pSerial->pbData=NULL;
         pSerial->cbData=0;
@@ -607,8 +606,7 @@ BOOL fill_protect_data(struct protect_data_t * pInfo, LPCWSTR szDataDescr,
     pInfo->hash_len=CRYPT32_PROTECTDATA_HASH_LEN;
 
     /* allocate memory to hold a salt */
-    pInfo->salt.cbData=CRYPT32_PROTECTDATA_SALT_LEN;
-    if ((pInfo->salt.pbData=CryptMemAlloc(pInfo->salt.cbData)))
+    if ((pInfo->salt.pbData=CryptMemAlloc(CRYPT32_PROTECTDATA_SALT_LEN)))
     {
         /* generate random salt */
         if (!CryptGenRandom(hProv, pInfo->salt.cbData, pInfo->salt.pbData))
@@ -617,6 +615,7 @@ BOOL fill_protect_data(struct protect_data_t * pInfo, LPCWSTR szDataDescr,
             free_protect_data(pInfo);
             return FALSE;
         }
+        pInfo->salt.cbData=CRYPT32_PROTECTDATA_SALT_LEN;
     }
 
     /* debug: show our salt */

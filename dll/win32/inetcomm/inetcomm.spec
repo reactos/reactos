@@ -1,10 +1,10 @@
 @ stub CreateIMAPTransport2
-@ stub CreateIMAPTransport
+@ stdcall CreateIMAPTransport(ptr)
 @ stub CreateNNTPTransport
-@ stub CreatePOP3Transport
+@ stdcall CreatePOP3Transport(ptr)
 @ stub CreateRASTransport
 @ stub CreateRangeList
-@ stub CreateSMTPTransport
+@ stdcall CreateSMTPTransport(ptr)
 @ stdcall -private DllCanUnloadNow()
 @ stdcall -private DllGetClassObject(ptr ptr ptr)
 @ stdcall -private DllRegisterServer()
@@ -59,7 +59,7 @@
 @ stub MimeOleDecodeHeader
 @ stub MimeOleEncodeHeader
 @ stub MimeOleFileTimeToInetDate
-@ stub MimeOleFindCharset
+@ stdcall MimeOleFindCharset(str ptr)
 @ stub MimeOleGenerateCID
 @ stub MimeOleGenerateFileName
 @ stub MimeOleGenerateMID
@@ -71,12 +71,12 @@
 @ stub MimeOleGetCodePageCharset
 @ stub MimeOleGetCodePageInfo
 @ stub MimeOleGetContentTypeExt
-@ stub MimeOleGetDefaultCharset
+@ stdcall MimeOleGetDefaultCharset(ptr)
 @ stub MimeOleGetExtContentType
 @ stub MimeOleGetFileExtension
 @ stub MimeOleGetFileInfo
 @ stub MimeOleGetFileInfoW
-@ stub MimeOleGetInternat
+@ stdcall MimeOleGetInternat(ptr)
 @ stub MimeOleGetPropA
 @ stub MimeOleGetPropW
 @ stub MimeOleGetPropertySchema

@@ -3,11 +3,10 @@
 <group>
 <module name="avifil32" type="win32dll" baseaddress="${BASEADDRESS_AVIFIL32}" installbase="system32" installname="avifil32.dll" allowwarnings="true">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
-	<importlibrary definition="avifil32.spec.def" />
+	<importlibrary definition="avifil32.spec" />
 	<include base="avifil32">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
-	<define name="WINVER">0x600</define>
 	<define name="_WIN32_WINNT">0x600</define>
 	<file>acmstream.c</file>
 	<file>api.c</file>
@@ -21,7 +20,6 @@
 	<file>tmpfile.c</file>
 	<file>wavfile.c</file>
 	<file>rsrc.rc</file>
-	<file>avifil32.spec</file>
 	<library>wine</library>
 	<library>uuid</library>
 	<library>msacm32</library>

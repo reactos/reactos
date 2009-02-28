@@ -170,7 +170,7 @@ BasepCheckForReadOnlyResource(IN PVOID Ptr)
            use SEH here because we don't know if it's actually a
            resource mapping */
 
-        _SEH_TRY
+        _SEH2_TRY
         {
             Data = RtlImageDirectoryEntryToData(mbi.AllocationBase,
                                                 TRUE,
@@ -195,10 +195,10 @@ BasepCheckForReadOnlyResource(IN PVOID Ptr)
                 }
             }
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
         }
-        _SEH_END;
+        _SEH2_END;
     }
 
     return Ret;
@@ -207,7 +207,7 @@ BasepCheckForReadOnlyResource(IN PVOID Ptr)
 /*
  * @unimplemented
  */
-LONG STDCALL
+LONG WINAPI
 UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
 {
    LONG RetValue;
@@ -216,7 +216,7 @@ UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
    ULONG ErrorParameters[4];
    ULONG ErrorResponse;
 
-   if (ExceptionInfo->ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION &&
+   if ((NTSTATUS)ExceptionInfo->ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION &&
        ExceptionInfo->ExceptionRecord->NumberParameters >= 2)
    {
       switch(ExceptionInfo->ExceptionRecord->ExceptionInformation[0])
@@ -269,7 +269,7 @@ UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
       /* Print a stack trace. */
       DbgPrint("Unhandled exception\n");
       DbgPrint("ExceptionCode:    %8x\n", ExceptionInfo->ExceptionRecord->ExceptionCode);
-      if (ExceptionInfo->ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION &&
+      if ((NTSTATUS)ExceptionInfo->ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION &&
           ExceptionInfo->ExceptionRecord->NumberParameters == 2)
       {
          DbgPrint("Faulting Address: %8x\n", ExceptionInfo->ExceptionRecord->ExceptionInformation[1]);
@@ -280,7 +280,7 @@ UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
       _dump_context ( ExceptionInfo->ContextRecord );
 #ifdef _X86_
       DbgPrint("Frames:\n");
-      _SEH_TRY
+      _SEH2_TRY
       {
          Frame = (PULONG)ExceptionInfo->ContextRecord->Ebp;
          while (Frame[1] != 0 && Frame[1] != 0xdeadbeef)
@@ -300,11 +300,11 @@ UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
             Frame = (PULONG)Frame[0];
          }
       }
-      _SEH_HANDLE
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
-         DbgPrint("<error dumping stack trace: 0x%x>\n", _SEH_GetExceptionCode());
+         DbgPrint("<error dumping stack trace: 0x%x>\n", _SEH2_GetExceptionCode());
       }
-      _SEH_END;
+      _SEH2_END;
 #endif
    }
 
@@ -312,7 +312,7 @@ UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
    ErrorParameters[0] = (ULONG)ExceptionInfo->ExceptionRecord->ExceptionCode;
    ErrorParameters[1] = (ULONG)ExceptionInfo->ExceptionRecord->ExceptionAddress;
 
-   if (ExceptionInfo->ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION)
+   if ((NTSTATUS)ExceptionInfo->ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION)
    {
        /* get the type of operation that caused the access violation */
        ErrorParameters[2] = ExceptionInfo->ExceptionRecord->ExceptionInformation[0];

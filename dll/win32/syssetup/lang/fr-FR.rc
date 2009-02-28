@@ -207,6 +207,8 @@ BEGIN
     IDS_CMT_DEVMGMT     "Lancer le gestionnaire de périphériques"
     IDS_CMT_SERVMAN     "Lancer le gestionnaire de services"
     IDS_CMT_RDESKTOP    "Lancer le bureau distant"
+    IDS_CMT_EVENTVIEW   "Launch Event Viewer"
+    IDS_CMT_MSCONFIG    "Launch System Configuration program"
 END
 
 STRINGTABLE
@@ -260,6 +262,8 @@ BEGIN
     IDS_SHORT_MAGNIFY    "Loupe.lnk"
     IDS_SHORT_RDESKTOP   "Bureau Distant.lnk"
     IDS_SHORT_KBSWITCH   "Sélecteur de configuration clavier.lnk"
+    IDS_SHORT_EVENTVIEW  "Event Viewer.lnk"
+    IDS_SHORT_MSCONFIG   "System Configuration.lnk"
 END
 
 STRINGTABLE

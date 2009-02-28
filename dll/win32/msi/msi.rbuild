@@ -1,13 +1,12 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
-<module name="msi" type="win32dll" baseaddress="${BASEADDRESS_MSI}" installbase="system32" installname="msi.dll" allowwarnings="true">
+<module name="msi" type="win32dll" baseaddress="${BASEADDRESS_MSI}" installbase="system32" installname="msi.dll" allowwarnings="true" crt="msvcrt">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
-	<importlibrary definition="msi.spec.def" />
+	<importlibrary definition="msi.spec" />
 	<include base="msi">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
-	<define name="WINVER">0x600</define>
 	<define name="_WIN32_WINNT">0x600</define>
 	<file>action.c</file>
 	<file>alter.c</file>
@@ -21,6 +20,7 @@
 	<file>delete.c</file>
 	<file>dialog.c</file>
 	<file>distinct.c</file>
+	<file>drop.c</file>
 	<file>events.c</file>
 	<file>files.c</file>
 	<file>font.c</file>
@@ -30,6 +30,7 @@
 	<file>insert.c</file>
 	<file>install.c</file>
 	<file>join.c</file>
+	<file>media.c</file>
 	<file>msi.c</file>
 	<file>msi_main.c</file>
 	<file>msiquery.c</file>
@@ -42,6 +43,7 @@
 	<file>select.c</file>
 	<file>source.c</file>
 	<file>sql.tab.c</file>
+	<file>storages.c</file>
 	<file>streams.c</file>
 	<file>string.c</file>
 	<file>suminfo.c</file>
@@ -52,7 +54,6 @@
 	<file>where.c</file>
 	<file>msi.rc</file>
 	<include base="msi" root="intermediate">.</include>
-	<file>msi.spec</file>
 	<library>wine</library>
 	<library>uuid</library>
 	<library>urlmon</library>
@@ -70,6 +71,8 @@
 	<library>kernel32</library>
 	<library>odbccp32</library>
 	<library>ntdll</library>
+	<library>pseh</library>
+	<library>msiserver_interface</library>
 	<dependency>msiserver</dependency>
 	<dependency>msiheader</dependency>
 </module>
@@ -77,6 +80,9 @@
 	<file>msiserver.idl</file>
 </module>
 <module name="msiheader" type="idlheader">
+	<file>msiserver.idl</file>
+</module>
+<module name="msiserver_interface" type="idlinterface">
 	<file>msiserver.idl</file>
 </module>
 </group>

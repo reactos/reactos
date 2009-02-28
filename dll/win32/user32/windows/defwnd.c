@@ -58,10 +58,10 @@ InitStockObjects(void)
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD WINAPI
 GetSysColor(int nIndex)
 {
-  if(nIndex >= 0 && nIndex <= NUM_SYSCOLORS)
+  if(nIndex >= 0 && nIndex < NUM_SYSCOLORS)
   {
     return g_psi->SysColors[nIndex];
   }
@@ -73,10 +73,10 @@ GetSysColor(int nIndex)
 /*
  * @implemented
  */
-HPEN STDCALL
+HPEN WINAPI
 GetSysColorPen(int nIndex)
 {
-  if(nIndex >= 0 && nIndex <= NUM_SYSCOLORS)
+  if(nIndex >= 0 && nIndex < NUM_SYSCOLORS)
   {
     return g_psi->SysColorPens[nIndex];
   }
@@ -88,10 +88,10 @@ GetSysColorPen(int nIndex)
 /*
  * @implemented
  */
-HBRUSH STDCALL
+HBRUSH WINAPI
 GetSysColorBrush(int nIndex)
 {
-  if(nIndex >= 0 && nIndex <= NUM_SYSCOLORS)
+  if(nIndex >= 0 && nIndex < NUM_SYSCOLORS)
   {
     return g_psi->SysColorBrushes[nIndex];
   }
@@ -104,13 +104,29 @@ GetSysColorBrush(int nIndex)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 SetSysColors(
   int cElements,
   CONST INT *lpaElements,
   CONST COLORREF *lpaRgbValues)
 {
   return NtUserSetSysColors(cElements, lpaElements, lpaRgbValues, 0);
+}
+
+BOOL
+FASTCALL
+DefSetText(HWND hWnd, PCWSTR String, BOOL Ansi)
+{
+  LARGE_STRING lsString;
+
+  if ( String )
+  {
+     if ( Ansi )
+        RtlInitLargeAnsiString((PLARGE_ANSI_STRING)&lsString, (PCSZ)String, 0);
+     else
+        RtlInitLargeUnicodeString((PLARGE_UNICODE_STRING)&lsString, String, 0);
+  }
+  return NtUserDefSetText(hWnd, (String ? &lsString : NULL));
 }
 
 void
@@ -1013,7 +1029,7 @@ DefWndScreenshot(HWND hWnd)
 
 
 
-LRESULT STDCALL
+LRESULT WINAPI
 User32DefWindowProc(HWND hWnd,
 		    UINT Msg,
 		    WPARAM wParam,
@@ -1030,6 +1046,18 @@ User32DefWindowProc(HWND hWnd,
         case WM_NCCALCSIZE:
         {
             return DefWndNCCalcSize(hWnd, (BOOL)wParam, (RECT*)lParam);
+        }
+
+        case WM_POPUPSYSTEMMENU:
+        {
+            /* This is an undocumented message used by the windows taskbar to
+               display the system menu of windows that belong to other processes. */
+            HMENU menu = GetSystemMenu(hWnd, FALSE);
+
+            if (menu)
+                TrackPopupMenu(menu, TPM_LEFTBUTTON|TPM_RIGHTBUTTON,
+                               LOWORD(lParam), HIWORD(lParam), 0, hWnd, NULL);
+            return 0;
         }
 
         case WM_NCACTIVATE:
@@ -1174,6 +1202,18 @@ User32DefWindowProc(HWND hWnd,
             return (0);
         }
 
+        case WM_SYSCOLORCHANGE:
+        {
+            /* force to redraw non-client area */
+            DefWndNCPaint(hWnd, (HRGN)1, -1);
+            /* Use InvalidateRect to redraw client area, enable
+             * erase to redraw all subcontrols otherwise send the
+             * WM_SYSCOLORCHANGE to child windows/controls is required
+             */
+            InvalidateRect(hWnd,NULL,TRUE);
+            return (0);
+        }
+
         case WM_PAINTICON:
         case WM_PAINT:
         {
@@ -1182,6 +1222,7 @@ User32DefWindowProc(HWND hWnd,
             if (hDC)
             {
                 HICON hIcon;
+
                 if (GetWindowLongW(hWnd, GWL_STYLE) & WS_MINIMIZE &&
                     (hIcon = (HICON)GetClassLongW(hWnd, GCL_HICON)) != NULL)
                 {
@@ -1561,13 +1602,16 @@ User32DefWindowProc(HWND hWnd,
 
         case WM_INPUTLANGCHANGE:
         {
-            //FIXME: What to do?
-            return TRUE;
-        }
+            int count = 0;
+            HWND *win_array = WIN_ListChildren( hWnd );
 
-        case WM_ENDSESSION:
-            if (wParam) PostQuitMessage(0);
-            return 0;
+            if (!win_array)
+                break;
+            while (win_array[count])
+                SendMessageW( win_array[count++], WM_INPUTLANGCHANGE, wParam, lParam);
+            HeapFree(GetProcessHeap(),0,win_array);
+            break;
+        }
 
         case WM_QUERYUISTATE:
         {
@@ -1608,7 +1652,7 @@ User32DefWindowProc(HWND hWnd,
 
             if (Action == UIS_INITIALIZE)
             {
-                PDESKTOP Desk = GetThreadDesktopInfo();
+                PDESKTOPINFO Desk = GetThreadDesktopInfo();
                 if (Desk == NULL)
                     break;
 
@@ -1690,7 +1734,7 @@ User32DefWindowProc(HWND hWnd,
 
             if (Action == UIS_INITIALIZE)
             {
-                PDESKTOP Desk = GetThreadDesktopInfo();
+                PDESKTOPINFO Desk = GetThreadDesktopInfo();
                 if (Desk == NULL)
                     break;
 
@@ -1750,7 +1794,76 @@ User32DefWindowProc(HWND hWnd,
 }
 
 
-LRESULT STDCALL
+/*
+ * helpers for calling IMM32 (from Wine 10/22/2008)
+ *
+ * WM_IME_* messages are generated only by IMM32,
+ * so I assume imm32 is already LoadLibrary-ed.
+ */
+static HWND
+DefWndImmGetDefaultIMEWnd(HWND hwnd)
+{
+    HINSTANCE hInstIMM = GetModuleHandleW(L"imm32\0");
+    HWND (WINAPI *pFunc)(HWND);
+    HWND hwndRet = 0;
+
+    if (!hInstIMM)
+    {
+        ERR("cannot get IMM32 handle\n");
+        return 0;
+    }
+
+    pFunc = (void*) GetProcAddress(hInstIMM, "ImmGetDefaultIMEWnd");
+    if (pFunc != NULL)
+        hwndRet = (*pFunc)(hwnd);
+
+    return hwndRet;
+}
+
+
+static BOOL
+DefWndImmIsUIMessageA(HWND hwndIME, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    HINSTANCE hInstIMM = GetModuleHandleW(L"imm32\0");
+    BOOL (WINAPI *pFunc)(HWND,UINT,WPARAM,LPARAM);
+    BOOL fRet = FALSE;
+
+    if (!hInstIMM)
+    {
+        ERR("cannot get IMM32 handle\n");
+        return FALSE;
+    }
+
+    pFunc = (void*) GetProcAddress(hInstIMM, "ImmIsUIMessageA");
+    if (pFunc != NULL)
+        fRet = (*pFunc)(hwndIME, msg, wParam, lParam);
+
+    return fRet;
+}
+
+
+static BOOL
+DefWndImmIsUIMessageW(HWND hwndIME, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    HINSTANCE hInstIMM = GetModuleHandleW(L"imm32\0");
+    BOOL (WINAPI *pFunc)(HWND,UINT,WPARAM,LPARAM);
+    BOOL fRet = FALSE;
+
+    if (!hInstIMM)
+    {
+        ERR("cannot get IMM32 handle\n");
+        return FALSE;
+    }
+
+    pFunc = (void*) GetProcAddress(hInstIMM, "ImmIsUIMessageW");
+    if (pFunc != NULL)
+        fRet = (*pFunc)(hwndIME, msg, wParam, lParam);
+
+    return fRet;
+}
+
+
+LRESULT WINAPI
 DefWindowProcA(HWND hWnd,
 	       UINT Msg,
 	       WPARAM wParam,
@@ -1764,21 +1877,11 @@ DefWindowProcA(HWND hWnd,
     {
         case WM_NCCREATE:
         {
-            ANSI_STRING AnsiString;
-            UNICODE_STRING UnicodeString;
             LPCREATESTRUCTA cs = (LPCREATESTRUCTA)lParam;
             /* check for string, as static icons, bitmaps (SS_ICON, SS_BITMAP)
              * may have child window IDs instead of window name */
 
-            if(cs->lpszName)
-            {
-              RtlInitAnsiString(&AnsiString, (LPSTR)cs->lpszName);
-              RtlAnsiStringToUnicodeString(&UnicodeString, &AnsiString, TRUE);
-              NtUserDefSetText(hWnd, &UnicodeString);
-              RtlFreeUnicodeString(&UnicodeString);
-            }
-            else
-              NtUserDefSetText(hWnd, NULL);
+             DefSetText(hWnd, (PCWSTR)cs->lpszName, TRUE);
 
             Result = 1;
             break;
@@ -1798,9 +1901,11 @@ DefWindowProcA(HWND hWnd,
                                                          buf,
                                                          Wnd->WindowName.Length)))
                 {
-                    Result = (LRESULT)len;
+                    Result = (LRESULT) len;
                 }
             }
+            else Result = 0L;
+
             break;
         }
 
@@ -1842,18 +1947,7 @@ DefWindowProcA(HWND hWnd,
 
         case WM_SETTEXT:
         {
-            ANSI_STRING AnsiString;
-            UNICODE_STRING UnicodeString;
-
-            if(lParam)
-            {
-              RtlInitAnsiString(&AnsiString, (LPSTR)lParam);
-              RtlAnsiStringToUnicodeString(&UnicodeString, &AnsiString, TRUE);
-              NtUserDefSetText(hWnd, &UnicodeString);
-              RtlFreeUnicodeString(&UnicodeString);
-            }
-            else
-              NtUserDefSetText(hWnd, NULL);
+            DefSetText(hWnd, (PCWSTR)lParam, TRUE);
 
             if ((GetWindowLongW(hWnd, GWL_STYLE) & WS_CAPTION) == WS_CAPTION)
             {
@@ -1864,16 +1958,50 @@ DefWindowProcA(HWND hWnd,
             break;
         }
 
-/*      FIXME: Implement these. */
-        case WM_IME_CHAR:
         case WM_IME_KEYDOWN:
+        {
+            Result = PostMessageA(hWnd, WM_KEYDOWN, wParam, lParam);
+            break;
+        }
+
         case WM_IME_KEYUP:
+        {
+            Result = PostMessageA(hWnd, WM_KEYUP, wParam, lParam);
+            break;
+        }
+
+        case WM_IME_CHAR:
+        {
+            if (HIBYTE(wParam))
+                PostMessageA(hWnd, WM_CHAR, HIBYTE(wParam), lParam);
+            PostMessageA(hWnd, WM_CHAR, LOBYTE(wParam), lParam);
+            break;
+        }
+
         case WM_IME_STARTCOMPOSITION:
         case WM_IME_COMPOSITION:
         case WM_IME_ENDCOMPOSITION:
         case WM_IME_SELECT:
+        case WM_IME_NOTIFY:
+        {
+            HWND hwndIME;
+
+            hwndIME = DefWndImmGetDefaultIMEWnd(hWnd);
+            if (hwndIME)
+                Result = SendMessageA(hwndIME, Msg, wParam, lParam);
+            break;
+        }
+
         case WM_IME_SETCONTEXT:
-            FIXME("FIXME: WM_IME_* conversion isn't implemented yet!");
+        {
+            HWND hwndIME;
+
+            hwndIME = DefWndImmGetDefaultIMEWnd(hWnd);
+            if (hwndIME)
+                Result = DefWndImmIsUIMessageA(hwndIME, Msg, wParam, lParam);
+            break;
+        }
+
         /* fall through */
         default:
             Result = User32DefWindowProc(hWnd, Msg, wParam, lParam, FALSE);
@@ -1884,7 +2012,7 @@ DefWindowProcA(HWND hWnd,
 }
 
 
-LRESULT STDCALL
+LRESULT WINAPI
 DefWindowProcW(HWND hWnd,
 	       UINT Msg,
 	       WPARAM wParam,
@@ -1898,15 +2026,11 @@ DefWindowProcW(HWND hWnd,
     {
         case WM_NCCREATE:
         {
-            UNICODE_STRING UnicodeString;
             LPCREATESTRUCTW cs = (LPCREATESTRUCTW)lParam;
             /* check for string, as static icons, bitmaps (SS_ICON, SS_BITMAP)
              * may have child window IDs instead of window name */
 
-            if(cs->lpszName)
-              RtlInitUnicodeString(&UnicodeString, (LPWSTR)cs->lpszName);
-
-            NtUserDefSetText( hWnd, (cs->lpszName ? &UnicodeString : NULL));
+            DefSetText(hWnd, cs->lpszName, FALSE);
             Result = 1;
             break;
         }
@@ -1925,9 +2049,11 @@ DefWindowProcW(HWND hWnd,
                                                          buf,
                                                          Wnd->WindowName.Length)))
                 {
-                    Result = (LRESULT)len;
+                    Result = (LRESULT) (Wnd->WindowName.Length / sizeof(WCHAR));
                 }
             }
+            else Result = 0L;
+
             break;
         }
 
@@ -1963,12 +2089,7 @@ DefWindowProcW(HWND hWnd,
 
         case WM_SETTEXT:
         {
-            UNICODE_STRING UnicodeString;
-
-            if(lParam)
-              RtlInitUnicodeString(&UnicodeString, (LPWSTR)lParam);
-
-            NtUserDefSetText(hWnd, (lParam ? &UnicodeString : NULL));
+            DefSetText(hWnd, (PCWSTR)lParam, FALSE);
 
             if ((GetWindowLongW(hWnd, GWL_STYLE) & WS_CAPTION) == WS_CAPTION)
             {
@@ -1980,16 +2101,44 @@ DefWindowProcW(HWND hWnd,
 
         case WM_IME_CHAR:
         {
-            SendMessageW(hWnd, WM_CHAR, wParam, lParam);
+            PostMessageW(hWnd, WM_CHAR, wParam, lParam);
             Result = 0;
+            break;
+        }
+
+        case WM_IME_KEYDOWN:
+        {
+            Result = PostMessageW(hWnd, WM_KEYDOWN, wParam, lParam);
+            break;
+        }
+
+        case WM_IME_KEYUP:
+        {
+            Result = PostMessageW(hWnd, WM_KEYUP, wParam, lParam);
+            break;
+        }
+
+        case WM_IME_STARTCOMPOSITION:
+        case WM_IME_COMPOSITION:
+        case WM_IME_ENDCOMPOSITION:
+        case WM_IME_SELECT:
+        case WM_IME_NOTIFY:
+        {
+            HWND hwndIME;
+
+            hwndIME = DefWndImmGetDefaultIMEWnd(hWnd);
+            if (hwndIME)
+                Result = SendMessageW(hwndIME, Msg, wParam, lParam);
             break;
         }
 
         case WM_IME_SETCONTEXT:
         {
-            /* FIXME */
-            FIXME("FIXME: WM_IME_SETCONTEXT is not implemented!");
-            Result = 0;
+            HWND hwndIME;
+
+            hwndIME = DefWndImmGetDefaultIMEWnd(hWnd);
+            if (hwndIME)
+                Result = DefWndImmIsUIMessageW(hwndIME, Msg, wParam, lParam);
             break;
         }
 

@@ -61,11 +61,11 @@ HRESULT UMCreateStreamOnCacheFile(LPCWSTR pszURL,
     if(!CreateUrlCacheEntryW(url, dwSize, ext, pszFileName, 0))
        hr = HRESULT_FROM_WIN32(GetLastError());
     else
-       hr = 0;
+       hr = S_OK;
 
     heap_free(url);
 
-    if (hr)
+    if (hr != S_OK)
        return hr;
 
     TRACE("Opening %s\n", debugstr_w(pszFileName) );

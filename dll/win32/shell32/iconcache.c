@@ -498,13 +498,13 @@ static int SIC_LoadOverlayIcon(int icon_idx)
 }
 
 /*************************************************************************
- * Shell_GetImageList			[SHELL32.71]
+ * Shell_GetImageLists			[SHELL32.71]
  *
  * PARAMETERS
  *  imglist[1|2] [OUT] pointer which receives imagelist handles
  *
  */
-BOOL WINAPI Shell_GetImageList(HIMAGELIST * lpBigList, HIMAGELIST * lpSmallList)
+BOOL WINAPI Shell_GetImageLists(HIMAGELIST * lpBigList, HIMAGELIST * lpSmallList)
 {	TRACE("(%p,%p)\n",lpBigList,lpSmallList);
 	if (lpBigList)
 	{ *lpBigList = ShellBigIconList;
@@ -842,4 +842,28 @@ HRESULT WINAPI SHDefExtractIconA(LPCSTR pszIconFile, int iIndex, UINT uFlags,
   ret = SHDefExtractIconW(lpwstrFile, iIndex, uFlags, phiconLarge, phiconSmall, nIconSize);
   HeapFree(GetProcessHeap(), 0, lpwstrFile);
   return ret;
+}
+
+/****************************************************************************
+ * SHGetIconOverlayIndexA    [SHELL32.@]
+ *
+ * Returns the index of the overlay icon in the system image list.
+ */
+INT WINAPI SHGetIconOverlayIndexA(LPCSTR pszIconPath, INT iIconIndex)
+{
+  FIXME("%s, %d\n", debugstr_a(pszIconPath), iIconIndex);
+
+  return -1;
+}
+
+/****************************************************************************
+ * SHGetIconOverlayIndexW    [SHELL32.@]
+ *
+ * Returns the index of the overlay icon in the system image list.
+ */
+INT WINAPI SHGetIconOverlayIndexW(LPCWSTR pszIconPath, INT iIconIndex)
+{
+  FIXME("%s, %d\n", debugstr_w(pszIconPath), iIconIndex);
+
+  return -1;
 }

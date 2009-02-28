@@ -6,13 +6,15 @@
 /*
  * Return the full scan size for a bitmap.
  *
- * Based on Wine, Utils.c and Windows Graphics Prog pg 595
+ * Based on Wine, Utils.c and Windows Graphics Prog pg 595, SDK amvideo.h.
  */
 UINT
 FASTCALL
 DIB_BitmapMaxBitsSize( PBITMAPINFO Info, UINT ScanLines )
 {
     UINT MaxBits = 0;
+
+    if (!Info) return 0;
 
     if (Info->bmiHeader.biSize == sizeof(BITMAPCOREHEADER))
     {
@@ -30,20 +32,47 @@ DIB_BitmapMaxBitsSize( PBITMAPINFO Info, UINT ScanLines )
     return (MaxBits * ScanLines);  // ret the full Size.
 }
 
+UINT
+FASTCALL
+DIB_BitmapBitsSize( PBITMAPINFO Info )
+{
+  UINT Ret;
+
+  if (!Info) return 0;
+
+  if ( Info->bmiHeader.biSize == sizeof(BITMAPCOREHEADER))
+  {
+     PBITMAPCOREHEADER Core = (PBITMAPCOREHEADER)Info;
+     Ret = Core->bcHeight * 
+          ((Core->bcWidth * Core->bcPlanes * Core->bcBitCount  + 31) & ~31 ) / 8;
+  }
+  else /* assume BITMAPINFOHEADER */
+  {
+     if ((Info->bmiHeader.biCompression) && 
+         (Info->bmiHeader.biCompression != BI_BITFIELDS))
+         return Info->bmiHeader.biSizeImage;
+        // Make Height positive always....
+     Ret = abs(Info->bmiHeader.biHeight) * 
+          ((Info->bmiHeader.biWidth * Info->bmiHeader.biPlanes * Info->bmiHeader.biBitCount + 31) & ~31 ) / 8;
+  }
+  return Ret;
+}
+
+
 /*
  * DIB_GetBitmapInfo is complete copy of wine cvs 2/9-2006
  * from file dib.c from gdi32.dll or orginal version
  * did not calc the info right for some headers.
  */
 INT
-STDCALL
+WINAPI
 DIB_GetBitmapInfo(const BITMAPINFOHEADER *header,
-				  PLONG width,
-				  PLONG height,
-				  PWORD planes,
-				  PWORD bpp,
-				  PLONG compr,
-				  PLONG size )
+                  PLONG width,
+                  PLONG height,
+                  PWORD planes,
+                  PWORD bpp,
+                  PLONG compr,
+                  PLONG size )
 {
 
   if (header->biSize == sizeof(BITMAPCOREHEADER))
@@ -99,7 +128,49 @@ DIB_GetBitmapInfo(const BITMAPINFOHEADER *header,
 /*
  * @implemented
  */
-HBITMAP STDCALL
+int
+WINAPI
+GdiGetBitmapBitsSize(BITMAPINFO *lpbmi)
+{
+    int retSize;
+    
+    if (lpbmi->bmiHeader.biSize == FIELD_OFFSET(BITMAPINFOHEADER, biPlanes))
+    {
+        /* Calc the bits Size and align it*/
+        retSize = HIWORD(lpbmi->bmiHeader.biWidth) * ((LOWORD(lpbmi->bmiHeader.biWidth) * 
+                  LOWORD(lpbmi->bmiHeader.biHeight) * HIWORD(lpbmi->bmiHeader.biHeight) + 31) 
+                  & -32) / 8;
+    }
+    else
+    {
+        if ( (lpbmi->bmiHeader.biCompression == BI_BITFIELDS) ||
+             (lpbmi->bmiHeader.biCompression == BI_RGB))
+        {
+            if (lpbmi->bmiHeader.biHeight >=0 )
+            {
+                /* Calc the bits Size and align it*/
+                retSize = lpbmi->bmiHeader.biHeight * ((lpbmi->bmiHeader.biWidth * 
+                          lpbmi->bmiHeader.biPlanes * lpbmi->bmiHeader.biBitCount + 31) & -32) / 8;
+            }
+            else
+            {
+                /* Make height postiive if it negitve then calc the bits Size and align it*/
+                retSize = (-lpbmi->bmiHeader.biHeight) * ((lpbmi->bmiHeader.biWidth * 
+                          lpbmi->bmiHeader.biPlanes * lpbmi->bmiHeader.biBitCount + 31) & -32) / 8;
+            }
+        }
+        else
+        {
+            retSize = lpbmi->bmiHeader.biSizeImage;
+        }
+    }
+    return retSize;
+}
+
+/*
+ * @implemented
+ */
+HBITMAP WINAPI
 CreateDIBSection(
    HDC hDC,
    CONST BITMAPINFO *BitmapInfo,
@@ -111,27 +182,51 @@ CreateDIBSection(
    PBITMAPINFO pConvertedInfo;
    UINT ConvertedInfoSize;
    HBITMAP hBitmap = NULL;
+   PVOID  bmBits = NULL;
 
    pConvertedInfo = ConvertBitmapInfo(BitmapInfo, Usage,
                                       &ConvertedInfoSize, FALSE);
    if (pConvertedInfo)
-   {
-      hBitmap = NtGdiCreateDIBSection(hDC, hSection, dwOffset, pConvertedInfo, Usage, 0, 0, 0, Bits);
+   {  // Verify header due to converted may == info.
+      if ( pConvertedInfo->bmiHeader.biSize >= sizeof(BITMAPINFOHEADER) )
+      {
+         if ( pConvertedInfo->bmiHeader.biCompression == BI_JPEG || 
+              pConvertedInfo->bmiHeader.biCompression  == BI_PNG )
+         {
+            SetLastError(ERROR_INVALID_PARAMETER);
+            return NULL;
+         }
+      }
+      bmBits = Bits;
+      hBitmap = NtGdiCreateDIBSection( hDC,
+                                       hSection,
+                                       dwOffset,
+                                       pConvertedInfo,
+                                       Usage,
+                                       0,
+                                       0,
+                                       0,
+                                       &bmBits);
       if (BitmapInfo != pConvertedInfo)
          RtlFreeHeap(RtlGetProcessHeap(), 0, pConvertedInfo);
+
+      if (!hBitmap)
+      {
+         bmBits = NULL;
+      }
    }
+
+   if (Bits) *Bits = bmBits;
 
    return hBitmap;
 }
-
-
 
 
 /*
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 BitBlt(HDC hdcDest,      /* handle to destination DC */
        int nXOriginDest, /* x-coord of destination upper-left corner */
        int nYOriginDest, /* y-coord of destination upper-left corner */
@@ -164,7 +259,7 @@ BitBlt(HDC hdcDest,      /* handle to destination DC */
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 StretchBlt(
    HDC hdcDest,      /* handle to destination DC */
    int nXOriginDest, /* x-coord of destination upper-left corner */
@@ -188,6 +283,28 @@ StretchBlt(
 
    return NtGdiBitBlt(hdcDest, nXOriginDest, nYOriginDest, nWidthDest,
                       nHeightDest, hdcSrc, nXOriginSrc, nYOriginSrc, dwRop, 0, 0);
+}
+
+/*
+ * @unimplemented
+ */
+HBITMAP WINAPI
+CreateBitmap(INT  Width,
+             INT  Height,
+             UINT  Planes,
+             UINT  BitsPixel,
+             PCVOID pUnsafeBits)
+{
+    /* FIXME some part should be done in user mode */
+    if (Width && Height)
+    {
+        return NtGdiCreateBitmap(Width, Height, Planes, BitsPixel, (LPBYTE) pUnsafeBits);
+    }
+    else
+    {
+        /* Return 1x1 bitmap */
+        return GetStockObject(DEFAULT_BITMAP);
+    }
 }
 
 /*
@@ -234,14 +351,38 @@ CreateCompatibleBitmap(
    INT  Width,
    INT  Height)
 {
-    /* FIXME some part shall be done in user mode */
-   return  NtGdiCreateCompatibleBitmap(hDC, Width, Height);
+  PDC_ATTR pDc_Attr;
+  HBITMAP hBmp = NULL;
+  DIBSECTION dibs;
+
+  if (!GdiGetHandleUserData(hDC, GDI_OBJECT_TYPE_DC, (PVOID)&pDc_Attr))
+     return NULL;
+
+  if ( !Width || !Height )
+     return GetStockObject(DEFAULT_BITMAP);
+
+  if (!(pDc_Attr->ulDirty_ & DC_DIBSECTION))
+  {
+     return  NtGdiCreateCompatibleBitmap(hDC, Width, Height);
+  }
+
+  hBmp = NtGdiGetDCObject(hDC, GDI_OBJECT_TYPE_BITMAP);
+
+  if ( GetObjectA(hBmp, sizeof(DIBSECTION), &dibs) != sizeof(DIBSECTION) )
+     return NULL;
+
+  if ( dibs.dsBm.bmBitsPixel <= 8 )
+     GetDIBColorTable(hDC, 0, 256, (RGBQUAD *)&dibs.dsBitfields);
+
+  dibs.dsBmih.biWidth = Width;
+  dibs.dsBmih.biHeight = Height;
+
+  return CreateDIBSection(hDC, (CONST BITMAPINFO *)&dibs.dsBmih, 0, NULL, NULL, 0);
 }
 
 
-
 INT
-STDCALL
+WINAPI
 GetDIBits(
     HDC hDC,
     HBITMAP hbmp,
@@ -251,41 +392,57 @@ GetDIBits(
     LPBITMAPINFO lpbmi,
     UINT uUsage)
 {
-    INT ret = 0;
+  INT Ret = 0;
+  UINT cjBmpScanSize;
+  PVOID pvSafeBits = lpvBits;
 
-    if (hDC == NULL || !GdiIsHandleValid((HGDIOBJ)hDC))
-    {
-        GdiSetLastError(ERROR_INVALID_PARAMETER);
-    }
-    else if (lpbmi == NULL)
-    {
-        // XP doesn't run this check and results in a
-        // crash in DIB_BitmapMaxBitsSize, we'll be more forgiving
-        GdiSetLastError(ERROR_INVALID_PARAMETER);
-    }
-    else
-    {
-        UINT cjBmpScanSize = DIB_BitmapMaxBitsSize(lpbmi, cScanLines);
+  if (!hDC || !GdiIsHandleValid((HGDIOBJ)hDC))
+  {
+     GdiSetLastError(ERROR_INVALID_PARAMETER);
+     return Ret;
+  }
 
-        ret = NtGdiGetDIBitsInternal(hDC,
-                                     hbmp,
-                                     uStartScan,
-                                     cScanLines,
-                                     lpvBits,
-                                     lpbmi,
-                                     uUsage,
-                                     cjBmpScanSize,
-                                     0);
-    }
+  cjBmpScanSize = DIB_BitmapMaxBitsSize(lpbmi, cScanLines);
 
-    return ret;
+  if ( lpvBits )
+  {
+     if ( lpbmi )
+     {
+        if ( lpbmi->bmiHeader.biSize >= sizeof(BITMAPINFOHEADER) )
+        {
+           if ( lpbmi->bmiHeader.biCompression == BI_JPEG || 
+                lpbmi->bmiHeader.biCompression == BI_PNG )
+           {
+              SetLastError(ERROR_INVALID_PARAMETER);
+              return Ret;
+           }
+        }
+     }
+     pvSafeBits = RtlAllocateHeap(GetProcessHeap(), 0, cjBmpScanSize);
+  }
+
+  Ret = NtGdiGetDIBitsInternal(hDC,
+                               hbmp,
+                               uStartScan,
+                               cScanLines,
+                               pvSafeBits,
+                               lpbmi,
+                               uUsage,
+                               cjBmpScanSize,
+                               0);
+  if ( lpvBits != pvSafeBits)
+  {
+     RtlCopyMemory( lpvBits, pvSafeBits, cjBmpScanSize);
+     RtlFreeHeap(RtlGetProcessHeap(), 0, pvSafeBits);
+  }
+  return Ret;
 }
 
 /*
  * @implemented
  */
 HBITMAP
-STDCALL
+WINAPI
 CreateDIBitmap( HDC hDC,
                 const BITMAPINFOHEADER *Header,
                 DWORD Init,
@@ -293,34 +450,81 @@ CreateDIBitmap( HDC hDC,
                 const BITMAPINFO *Data,
                 UINT ColorUse)
 {
- LONG width, height, compr, dibsize;
- WORD planes, bpp;
+  LONG width, height, compr, dibsize;
+  WORD planes, bpp;
+//  PDC_ATTR pDc_Attr;
+  PBITMAPINFO pConvertedInfo;
+  UINT ConvertedInfoSize;
+  UINT cjBmpScanSize;
+  PVOID pvSafeBits = NULL;
+  HBITMAP hBmp;
 
- if (DIB_GetBitmapInfo(Header, &width, &height, &planes, &bpp, &compr, &dibsize) == -1)
- {
-    GdiSetLastError(ERROR_INVALID_PARAMETER);
-    return NULL;
- }
+  pConvertedInfo = ConvertBitmapInfo(Data, ColorUse,
+                                          &ConvertedInfoSize, FALSE);
 
- return NtGdiCreateDIBitmapInternal(hDC,
-                                    width,
-                                    height,
-                                    Init,
-                                    (LPBYTE)Bits,
-                                    (PBITMAPINFO)Data,
-                                    ColorUse,
-                                    bpp,
-                                    dibsize,
-                                    0,
-                                    0);
+  if (DIB_GetBitmapInfo(Header, &width, &height, &planes, &bpp, &compr, &dibsize) == -1)
+  {
+     GdiSetLastError(ERROR_INVALID_PARAMETER);
+     return NULL;
+  }
+
+  if ( pConvertedInfo )
+  {
+     if ( pConvertedInfo->bmiHeader.biSize >= sizeof(BITMAPINFOHEADER) )
+     {
+        if ( pConvertedInfo->bmiHeader.biCompression == BI_JPEG || 
+             pConvertedInfo->bmiHeader.biCompression == BI_PNG )
+        {
+           hBmp = NULL;
+           goto Exit;
+        }
+     }
+  }
+  
+// For Icm support.
+// GdiGetHandleUserData(hdc, GDI_OBJECT_TYPE_DC, (PVOID)&pDc_Attr))
+
+  cjBmpScanSize = DIB_BitmapBitsSize((LPBITMAPINFO)pConvertedInfo);
+  DPRINT("pBMI %x, Size bpp %d, dibsize %d, Conv %d, BSS %d\n", pConvertedInfo,bpp,dibsize,ConvertedInfoSize,cjBmpScanSize);
+
+  if ( !width || !height )
+     hBmp = GetStockObject(DEFAULT_BITMAP);
+  else
+  {
+     if ( Bits )
+     {
+        pvSafeBits = RtlAllocateHeap(GetProcessHeap(), 0, cjBmpScanSize);
+        if ( pvSafeBits )
+           RtlCopyMemory( pvSafeBits, Bits, cjBmpScanSize);
+     }
+
+     hBmp = NtGdiCreateDIBitmapInternal(hDC,
+                                        width,
+                                        height,
+                                        Init,
+                                        (LPBYTE)pvSafeBits,
+                                        (PBITMAPINFO)pConvertedInfo,
+                                        ColorUse,
+                                        ConvertedInfoSize,
+                                        cjBmpScanSize,
+                                        0,
+                                        0);
+
+     if ( Bits )
+        RtlFreeHeap(RtlGetProcessHeap(), 0, pvSafeBits);
+  }
+Exit:
+  if (Data != pConvertedInfo)
+     RtlFreeHeap(RtlGetProcessHeap(), 0, pConvertedInfo);
+  return hBmp;
 }
 
-#if 0
+#if 0 // FIXME!!! This is a victim of the Win32k Initialization BUG!!!!!
 /*
  * @implemented
  */
 INT
-STDCALL
+WINAPI
 SetDIBits(HDC hDC,
           HBITMAP hBitmap,
           UINT uStartScan,
@@ -410,7 +614,7 @@ SetDIBits(HDC hDC,
 #endif
 
 INT
-STDCALL
+WINAPI
 SetDIBits(HDC hdc,
           HBITMAP hbmp,
           UINT uStartScan,
@@ -419,7 +623,47 @@ SetDIBits(HDC hdc,
           CONST BITMAPINFO *lpbmi,
           UINT fuColorUse)
 {
-   return NtGdiSetDIBits(hdc, hbmp, uStartScan, cScanLines, lpvBits, lpbmi, fuColorUse);
+  PBITMAPINFO pConvertedInfo;
+  UINT ConvertedInfoSize;
+  INT LinesCopied = 0;
+  UINT cjBmpScanSize = 0;
+  PVOID pvSafeBits = (PVOID)lpvBits;
+
+// This needs to be almost the sames as SetDIBitsToDevice
+
+  if ( !cScanLines || !lpbmi || !lpvBits || (GDI_HANDLE_GET_TYPE(hbmp) != GDI_OBJECT_TYPE_BITMAP))
+     return 0;
+
+  if ( fuColorUse && fuColorUse != DIB_PAL_COLORS && fuColorUse != DIB_PAL_COLORS+1 )
+     return 0;
+
+  pConvertedInfo = ConvertBitmapInfo(lpbmi, fuColorUse,
+                                      &ConvertedInfoSize, FALSE);
+  if (!pConvertedInfo)
+     return 0;
+
+  cjBmpScanSize = DIB_BitmapMaxBitsSize((LPBITMAPINFO)lpbmi, cScanLines);
+
+  if ( lpvBits )
+  {
+     pvSafeBits = RtlAllocateHeap(GetProcessHeap(), 0, cjBmpScanSize);
+     if (pvSafeBits)
+        RtlCopyMemory( pvSafeBits, lpvBits, cjBmpScanSize);
+  }
+
+  LinesCopied = NtGdiSetDIBits( hdc,
+                               hbmp,
+                         uStartScan,
+                         cScanLines,
+                         pvSafeBits,
+                     pConvertedInfo,
+                         fuColorUse);
+
+  if ( lpvBits != pvSafeBits)
+     RtlFreeHeap(RtlGetProcessHeap(), 0, pvSafeBits);
+  if (lpbmi != pConvertedInfo)
+     RtlFreeHeap(RtlGetProcessHeap(), 0, pConvertedInfo);
+  return LinesCopied;
 }
 
 /*
@@ -427,9 +671,9 @@ SetDIBits(HDC hdc,
  *
  */
 INT
-STDCALL
+WINAPI
 SetDIBitsToDevice(
-    HDC hDC,
+    HDC hdc,
     int XDest,
     int YDest,
     DWORD Width,
@@ -442,23 +686,261 @@ SetDIBitsToDevice(
     CONST BITMAPINFO *lpbmi,
     UINT ColorUse)
 {
-    return NtGdiSetDIBitsToDeviceInternal(hDC,
-                                          XDest,
-                                          YDest,
-                                          Width,
-                                          Height,
-                                          XSrc,
-                                          YSrc,
-                                          StartScan,
-                                          ScanLines,
-                                          (LPBYTE)Bits,
-                                          (LPBITMAPINFO)lpbmi,
-                                          ColorUse,
-                                          lpbmi->bmiHeader.biSizeImage,
-                                          lpbmi->bmiHeader.biSize,
-                                          TRUE,
-                                          NULL);
+  PDC_ATTR pDc_Attr;
+  PBITMAPINFO pConvertedInfo;
+  UINT ConvertedInfoSize;
+  INT LinesCopied = 0;
+  UINT cjBmpScanSize = 0;
+  PVOID pvSafeBits = (PVOID)Bits;
+
+  if ( !ScanLines || !lpbmi || !Bits )
+     return 0;
+
+  if ( ColorUse && ColorUse != DIB_PAL_COLORS && ColorUse != DIB_PAL_COLORS+1 )
+     return 0;
+
+  pConvertedInfo = ConvertBitmapInfo(lpbmi, ColorUse,
+                                      &ConvertedInfoSize, FALSE);
+  if (!pConvertedInfo)
+     return 0;
+
+#if 0
+// Handle something other than a normal dc object.
+  if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
+  {
+     if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
+      return MFDRV_SetDIBitsToDevice( hdc,
+                                      XDest,
+                                      YDest,
+                                      Width,
+                                      Height,
+                                      XSrc,
+                                      YSrc,
+                                      StartScan,
+                                      ScanLines,
+                                      Bits,
+                                      lpbmi,
+                                      ColorUse);
+     else
+     {
+      PLDC pLDC = GdiGetLDC(hdc);
+      if ( !pLDC )
+      {
+         SetLastError(ERROR_INVALID_HANDLE);
+         return 0;
+      }
+      if (pLDC->iType == LDC_EMFLDC)
+      {
+        return EMFDRV_SetDIBitsToDevice(hdc,
+                                       XDest,
+                                       YDest,
+                                       Width,
+                                       Height,
+                                       XSrc,
+                                       YSrc,
+                                       StartScan,
+                                       ScanLines,
+                                       Bits,
+                                       lpbmi,
+                                       ColorUse);
+      }
+      return 0;
+     }
+  }
+#endif
+  cjBmpScanSize = DIB_BitmapMaxBitsSize((LPBITMAPINFO)lpbmi, ScanLines);
+
+  if ( Bits )
+  {
+     pvSafeBits = RtlAllocateHeap(GetProcessHeap(), 0, cjBmpScanSize);
+     if (pvSafeBits)
+        RtlCopyMemory( pvSafeBits, Bits, cjBmpScanSize);
+  }
+
+  if (!GdiGetHandleUserData(hdc, GDI_OBJECT_TYPE_DC, (PVOID)&pDc_Attr))
+  {
+     SetLastError(ERROR_INVALID_PARAMETER);
+     return 0;
+  }
+/*
+  if ( !pDc_Attr ||
+       ((pConvertedInfo->bmiHeader.biSize >= sizeof(BITMAPINFOHEADER)) &&
+       (pConvertedInfo->bmiHeader.biCompression == BI_JPEG || 
+        pConvertedInfo->bmiHeader.biCompression  == BI_PNG )) )*/
+  {
+    LinesCopied = NtGdiSetDIBitsToDeviceInternal( hdc,
+                                                XDest,
+                                                YDest,
+                                                Width,
+                                               Height,
+                                                 XSrc,
+                                                 YSrc,
+                                            StartScan,
+                                            ScanLines,
+                                   (LPBYTE)pvSafeBits,
+                         (LPBITMAPINFO)pConvertedInfo,
+                                             ColorUse,
+                                        cjBmpScanSize,
+                                    ConvertedInfoSize,
+                                                 TRUE,
+                                                 NULL);
+  }
+  if ( Bits != pvSafeBits)
+     RtlFreeHeap(RtlGetProcessHeap(), 0, pvSafeBits);
+  if (lpbmi != pConvertedInfo)
+     RtlFreeHeap(RtlGetProcessHeap(), 0, pConvertedInfo);
+         
+  return LinesCopied;
 }
 
 
+/*
+ * @unimplemented
+ */
+int
+WINAPI
+StretchDIBits(HDC hdc,
+              int XDest,
+              int YDest,
+              int nDestWidth,
+              int nDestHeight,
+              int XSrc,
+              int YSrc,
+              int nSrcWidth,
+              int nSrcHeight,
+              CONST VOID *lpBits,
+              CONST BITMAPINFO *lpBitsInfo,
+              UINT iUsage,
+              DWORD dwRop)
+
+{
+  PDC_ATTR pDc_Attr;
+  PBITMAPINFO pConvertedInfo = NULL;
+  UINT ConvertedInfoSize = 0;
+  INT LinesCopied = 0;
+  UINT cjBmpScanSize = 0;
+  PVOID pvSafeBits = NULL;
+  BOOL Hit = FALSE;
+
+  DPRINT("StretchDIBits %x : %x : %d\n", lpBits, lpBitsInfo, iUsage);
+#if 0
+// Handle something other than a normal dc object.
+  if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
+  {
+    if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
+      return MFDRV_StretchBlt( hdc,
+                               XDest,
+                               YDest,
+                               nDestWidth,
+                               nDestHeight,
+                               XSrc,
+                               YSrc,
+                               nSrcWidth,
+                               nSrcHeight,
+                               lpBits,
+                               lpBitsInfo,
+                               iUsage,
+                               dwRop);
+    else
+    {
+      PLDC pLDC = GdiGetLDC(hdc);
+      if ( !pLDC )
+      {
+         SetLastError(ERROR_INVALID_HANDLE);
+         return 0;
+      }
+      if (pLDC->iType == LDC_EMFLDC)
+      {
+        return EMFDRV_StretchBlt(hdc,
+                                 XDest,
+                                 YDest,
+                                 nDestWidth,
+                                 nDestHeight,
+                                 XSrc,
+                                 YSrc,
+                                 nSrcWidth,
+                                 nSrcHeight,
+                                 lpBits,
+                                 lpBitsInfo,
+                                 iUsage,
+                                 dwRop);
+      }
+      return 0;
+    }
+  }
+#endif
+  if ( iUsage ) // Save time, we only look at non RGB.
+  {
+     pConvertedInfo = ConvertBitmapInfo(lpBitsInfo, iUsage,
+                                      &ConvertedInfoSize, FALSE);
+     if (!pConvertedInfo)
+     {
+        return 0;
+     }
+  }
+  else
+     pConvertedInfo = (PBITMAPINFO)lpBitsInfo;
+
+  cjBmpScanSize = DIB_BitmapBitsSize((LPBITMAPINFO)pConvertedInfo);
+
+  if ( lpBits )
+  {
+     pvSafeBits = RtlAllocateHeap(GetProcessHeap(), 0, cjBmpScanSize);
+     if (pvSafeBits)
+     {
+        _SEH2_TRY
+        {
+           RtlCopyMemory( pvSafeBits, lpBits, cjBmpScanSize );
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Hit = TRUE;
+        }
+        _SEH2_END
+
+        if (Hit)
+        {
+        // We don't die, we continue on with a allocated safe pointer to kernel
+        // space.....
+           DPRINT1("StretchDIBits fail to read BitMapInfo: %x or Bits: %x & Size: %d\n",pConvertedInfo,lpBits,cjBmpScanSize);
+        }
+        DPRINT("StretchDIBits Allocate Bits %d!!!\n", cjBmpScanSize);
+     }
+  }
+
+  if (!GdiGetHandleUserData(hdc, GDI_OBJECT_TYPE_DC, (PVOID)&pDc_Attr))
+  {
+     SetLastError(ERROR_INVALID_PARAMETER);
+     return 0;
+  }
+/*
+  if ( !pDc_Attr ||
+       ((pConvertedInfo->bmiHeader.biSize >= sizeof(BITMAPINFOHEADER)) &&
+       (pConvertedInfo->bmiHeader.biCompression == BI_JPEG || 
+        pConvertedInfo->bmiHeader.biCompression  == BI_PNG )) )*/
+  {
+     LinesCopied = NtGdiStretchDIBitsInternal( hdc,
+                                             XDest,
+                                             YDest,
+                                        nDestWidth,
+                                       nDestHeight,
+                                              XSrc,
+                                              YSrc,
+                                         nSrcWidth,
+                                        nSrcHeight,
+                                        pvSafeBits,
+                                    pConvertedInfo,
+                                     (DWORD)iUsage,
+                                             dwRop,
+                                 ConvertedInfoSize,
+                                     cjBmpScanSize,
+                                              NULL);
+  }
+  if ( pvSafeBits )
+     RtlFreeHeap(RtlGetProcessHeap(), 0, pvSafeBits);
+  if (lpBitsInfo != pConvertedInfo)
+     RtlFreeHeap(RtlGetProcessHeap(), 0, pConvertedInfo);
+
+  return LinesCopied;
+}
 

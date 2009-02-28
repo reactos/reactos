@@ -417,7 +417,7 @@ LocalReAlloc(HLOCAL hMem,
  * @implemented
  */
 SIZE_T
-STDCALL
+WINAPI
 LocalShrink(HLOCAL hMem,
             UINT cbNewSize)
 {

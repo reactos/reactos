@@ -2,11 +2,10 @@
 #define WIN32_NO_STATUS
 #define NTOS_MODE_USER
 #include <windows.h>
+#include <windns.h>
 #include <ndk/ntndk.h>
 
 #include <debug.h>
-
-typedef ULONG DNS_STATUS;
 
 DNS_STATUS WINAPI
 DnsAddRecordSet_A()
@@ -198,14 +197,18 @@ DnsEnableDynamicRegistration()
 }
 
 DNS_STATUS WINAPI
-DnsExtractRecordsFromMessage_UTF8()
+DnsExtractRecordsFromMessage_UTF8(PDNS_MESSAGE_BUFFER pDnsBuffer,
+                                  WORD wMessageLength,
+                                  PDNS_RECORD* ppRecord)
 {
     UNIMPLEMENTED;
     return ERROR_OUTOFMEMORY;
 }
 
 DNS_STATUS WINAPI
-DnsExtractRecordsFromMessage_W()
+DnsExtractRecordsFromMessage_W(PDNS_MESSAGE_BUFFER pDnsBuffer,
+                               WORD wMessageLength,
+                               PDNS_RECORD* ppRecord)
 {
     UNIMPLEMENTED;
     return ERROR_OUTOFMEMORY;
@@ -457,21 +460,36 @@ DnsModifyRecordSet_W()
 }
 
 DNS_STATUS WINAPI
-DnsModifyRecordsInSet_A()
+DnsModifyRecordsInSet_A(PDNS_RECORD pAddRecords,
+                        PDNS_RECORD pDeleteRecords,
+                        DWORD Options,
+                        HANDLE hContext,
+                        PIP4_ARRAY pExtraList,
+                        PVOID pReserved)
 {
     UNIMPLEMENTED;
     return ERROR_OUTOFMEMORY;
 }
 
 DNS_STATUS WINAPI
-DnsModifyRecordsInSet_UTF8()
+DnsModifyRecordsInSet_UTF8(PDNS_RECORD pAddRecords,
+                           PDNS_RECORD pDeleteRecords,
+                           DWORD Options,
+                           HANDLE hContext,
+                           PIP4_ARRAY pExtraList,
+                           PVOID pReserved)
 {
     UNIMPLEMENTED;
     return ERROR_OUTOFMEMORY;
 }
 
 DNS_STATUS WINAPI
-DnsModifyRecordsInSet_W()
+DnsModifyRecordsInSet_W(PDNS_RECORD pAddRecords,
+                        PDNS_RECORD pDeleteRecords,
+                        DWORD Options,
+                        HANDLE hContext,
+                        PIP4_ARRAY pExtraList,
+                        PVOID pReserved)
 {
     UNIMPLEMENTED;
     return ERROR_OUTOFMEMORY;
@@ -513,7 +531,12 @@ DnsNameCopyAllocate()
 }
 
 DNS_STATUS WINAPI
-DnsQueryConfig()
+DnsQueryConfig(DNS_CONFIG_TYPE Config,
+               DWORD Flag,
+               PWSTR pwsAdapterName,
+               PVOID pReserved,
+               PVOID pBuffer,
+               PDWORD pBufferLength)
 {
     UNIMPLEMENTED;
     return ERROR_OUTOFMEMORY;
@@ -540,39 +563,47 @@ DnsRecordBuild_W()
     return ERROR_OUTOFMEMORY;
 }
 
-DNS_STATUS WINAPI
-DnsRecordCompare()
+BOOL WINAPI
+DnsRecordCompare(PDNS_RECORD pRecord1,
+                 PDNS_RECORD pRecord2)
 {
     UNIMPLEMENTED;
     return ERROR_OUTOFMEMORY;
 }
 
-DNS_STATUS WINAPI
-DnsRecordCopyEx()
+PDNS_RECORD WINAPI
+DnsRecordCopyEx(PDNS_RECORD pRecord,
+                DNS_CHARSET CharSetIn,
+                DNS_CHARSET CharSetOut)
 {
     UNIMPLEMENTED;
-    return ERROR_OUTOFMEMORY;
+    return NULL;
 }
 
-DNS_STATUS WINAPI
-DnsRecordSetCompare()
+BOOL WINAPI
+DnsRecordSetCompare(PDNS_RECORD pRR1,
+                    PDNS_RECORD pRR2,
+                    PDNS_RECORD* ppDiff1,
+                    PDNS_RECORD* ppDiff2)
 {
     UNIMPLEMENTED;
-    return ERROR_OUTOFMEMORY;
+    return FALSE;
 }
 
-DNS_STATUS WINAPI
-DnsRecordSetCopyEx()
+PDNS_RECORD WINAPI
+DnsRecordSetCopyEx(PDNS_RECORD pRecordSet,
+                   DNS_CHARSET CharSetIn,
+                   DNS_CHARSET CharSetOut)
 {
     UNIMPLEMENTED;
-    return ERROR_OUTOFMEMORY;
+    return NULL;
 }
 
-DNS_STATUS WINAPI
-DnsRecordSetDetach()
+PDNS_RECORD WINAPI
+DnsRecordSetDetach(PDNS_RECORD pRR)
 {
     UNIMPLEMENTED;
-    return ERROR_OUTOFMEMORY;
+    return NULL;
 }
 
 DNS_STATUS WINAPI
@@ -618,21 +649,33 @@ DnsRemoveRegistrations()
 }
 
 DNS_STATUS WINAPI
-DnsReplaceRecordSetA()
+DnsReplaceRecordSetA(PDNS_RECORD pNewSet,
+                     DWORD Options,
+                     HANDLE hContext,
+                     PIP4_ARRAY pExtraInfo,
+                     PVOID pReserved)
 {
     UNIMPLEMENTED;
     return ERROR_OUTOFMEMORY;
 }
 
 DNS_STATUS WINAPI
-DnsReplaceRecordSetUTF8()
+DnsReplaceRecordSetUTF8(PDNS_RECORD pNewSet,
+                        DWORD Options,
+                        HANDLE hContext,
+                        PIP4_ARRAY pExtraInfo,
+                        PVOID pReserved)
 {
     UNIMPLEMENTED;
     return ERROR_OUTOFMEMORY;
 }
 
 DNS_STATUS WINAPI
-DnsReplaceRecordSetW()
+DnsReplaceRecordSetW(PDNS_RECORD pNewSet,
+                     DWORD Options,
+                     HANDLE hContext,
+                     PIP4_ARRAY pExtraInfo,
+                     PVOID pReserved)
 {
     UNIMPLEMENTED;
     return ERROR_OUTOFMEMORY;
@@ -785,15 +828,25 @@ DnsWinsRecordFlagString()
     return ERROR_OUTOFMEMORY;
 }
 
-DNS_STATUS WINAPI
-DnsWriteQuestionToBuffer_UTF8()
+BOOL WINAPI
+DnsWriteQuestionToBuffer_UTF8(PDNS_MESSAGE_BUFFER pDnsBuffer,
+                              LPDWORD pdwBufferSize,
+                              LPSTR pszName,
+                              WORD wType,
+                              WORD Xid,
+                              BOOL fRecursionDesired)
 {
     UNIMPLEMENTED;
-    return ERROR_OUTOFMEMORY;
+    return FALSE;
 }
 
-DNS_STATUS WINAPI
-DnsWriteQuestionToBuffer_W()
+BOOL WINAPI
+DnsWriteQuestionToBuffer_W(PDNS_MESSAGE_BUFFER pDnsBuffer,
+                           LPDWORD pdwBufferSize,
+                           LPWSTR pszName,
+                           WORD wType,
+                           WORD Xid,
+                           BOOL fRecursionDesired)
 {
     UNIMPLEMENTED;
     return ERROR_OUTOFMEMORY;

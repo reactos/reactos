@@ -35,10 +35,11 @@
 @ stdcall CertEnumCTLsInStore(ptr ptr)
 @ stdcall CertEnumCertificateContextProperties(ptr long)
 @ stdcall CertEnumCertificatesInStore(long ptr)
+@ stdcall CertEnumPhysicalStore(ptr long ptr ptr)
 @ stdcall CertEnumSystemStore(long ptr ptr ptr)
 @ stdcall CertFindAttribute(str long ptr)
 @ stdcall CertFindCRLInStore(long long long long ptr ptr)
-@ stub CertFindCTLInStore
+@ stdcall CertFindCTLInStore(long long long long ptr ptr)
 @ stdcall CertFindCertificateInStore(long long long long ptr ptr)
 @ stdcall CertFindCertificateInCRL(ptr ptr long ptr ptr)
 @ stdcall CertFindExtension(str long ptr)
@@ -98,7 +99,7 @@
 @ stdcall CryptBinaryToStringA(ptr long long ptr ptr)
 @ stub CryptBinaryToStringW # (ptr long long ptr ptr)
 @ stdcall CryptStringToBinaryA(str long long ptr ptr ptr ptr)
-@ stub CryptStringToBinaryW # (wstr long long ptr ptr ptr ptr)
+@ stdcall CryptStringToBinaryW (wstr long long ptr ptr ptr ptr)
 @ stdcall CryptAcquireContextU(ptr wstr wstr long long) advapi32.CryptAcquireContextW
 @ stdcall CryptAcquireCertificatePrivateKey(ptr long ptr ptr ptr ptr)
 @ stub CryptCloseAsyncHandle
@@ -117,6 +118,7 @@
 @ stub CryptExportPKCS8
 @ stdcall CryptExportPublicKeyInfo(long long long ptr ptr)
 @ stdcall CryptExportPublicKeyInfoEx(long long long str long ptr ptr ptr)
+@ stdcall CryptFindCertificateKeyProvInfo(ptr long ptr)
 @ stdcall CryptFindLocalizedName(wstr)
 @ stdcall CryptFindOIDInfo(long ptr long)
 @ stdcall CryptFormatObject(long long long ptr str ptr long ptr ptr)
@@ -129,9 +131,9 @@
 @ stdcall CryptGetOIDFunctionAddress(long long str long ptr ptr)
 @ stdcall CryptGetOIDFunctionValue(long str str wstr ptr ptr ptr)
 @ stdcall CryptHashCertificate(long long long ptr long ptr ptr)
-@ stub CryptHashMessage
+@ stdcall CryptHashMessage(ptr long long ptr ptr ptr ptr ptr ptr)
 @ stdcall CryptHashPublicKeyInfo(long long long long ptr ptr ptr)
-@ stub CryptHashToBeSigned
+@ stdcall CryptHashToBeSigned(ptr long ptr long ptr ptr)
 @ stub CryptImportPKCS8
 @ stdcall CryptImportPublicKeyInfo(long long ptr ptr)
 @ stdcall CryptImportPublicKeyInfoEx(long long ptr long long ptr ptr)
@@ -147,14 +149,15 @@
 @ stub CryptMsgCountersign
 @ stub CryptMsgCountersignEncoded
 @ stdcall CryptMsgDuplicate(ptr)
-@ stub CryptMsgEncodeAndSignCTL
-@ stub CryptMsgGetAndVerifySigner
+@ stdcall CryptMsgEncodeAndSignCTL(long ptr ptr long ptr ptr)
+@ stdcall CryptMsgGetAndVerifySigner(ptr long ptr long ptr ptr)
 @ stdcall CryptMsgGetParam(ptr long long ptr ptr)
 @ stdcall CryptMsgOpenToDecode(long long long long ptr ptr)
 @ stdcall CryptMsgOpenToEncode(long long long ptr str ptr)
-@ stub CryptMsgSignCTL
+@ stdcall CryptMsgSignCTL(long ptr long ptr long ptr ptr)
 @ stdcall CryptMsgUpdate(ptr ptr long long)
 @ stub CryptMsgVerifyCountersignatureEncoded
+@ stdcall CryptMsgVerifyCountersignatureEncodedEx(ptr long ptr long ptr long long ptr long ptr)
 @ stdcall CryptProtectData(ptr wstr ptr ptr ptr long ptr)
 @ stdcall CryptQueryObject(long ptr long long long ptr ptr ptr ptr ptr ptr)
 @ stdcall CryptRegisterDefaultOIDFunction(long str long wstr)
@@ -184,9 +187,9 @@
 @ stub CryptUnregisterOIDInfo
 @ stdcall CryptVerifyCertificateSignature(long long ptr long ptr)
 @ stdcall CryptVerifyCertificateSignatureEx(long long long ptr long ptr long ptr)
-@ stub CryptVerifyDetachedMessageHash
-@ stub CryptVerifyDetachedMessageSignature
-@ stub CryptVerifyMessageHash
+@ stdcall CryptVerifyDetachedMessageHash(ptr ptr long long ptr ptr ptr ptr)
+@ stdcall CryptVerifyDetachedMessageSignature(ptr long ptr long long ptr ptr ptr)
+@ stdcall CryptVerifyMessageHash(ptr ptr long ptr ptr ptr ptr)
 @ stdcall CryptVerifyMessageSignature(ptr long ptr long ptr ptr ptr)
 @ stub CryptVerifyMessageSignatureWithKey
 @ stub CryptVerifySignatureU
@@ -214,8 +217,10 @@
 @ stdcall I_CryptSetTls(long ptr)
 @ stdcall I_CryptUninstallAsn1Module(long)
 @ stub I_CryptUninstallOssGlobal
-@ stub PFXExportCertStore
-@ stub PFXImportCertStore
+@ stdcall PFXExportCertStore(ptr ptr ptr long)
+@ stdcall PFXExportCertStoreEx(ptr ptr ptr ptr long)
+@ stdcall PFXImportCertStore(ptr ptr long)
+@ stdcall PFXIsPFXBlob(ptr)
 @ stub RegCreateHKCUKeyExU
 @ stub RegCreateKeyExU
 @ stub RegDeleteValueU

@@ -44,7 +44,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 DragDetect(
   HWND hWnd,
   POINT pt)
@@ -106,17 +106,7 @@ DragDetect(
 /*
  * @implemented
  */
-BOOL STDCALL
-BlockInput(BOOL fBlockIt)
-{
-  return NtUserBlockInput(fBlockIt);
-}
-
-
-/*
- * @implemented
- */
-BOOL STDCALL
+BOOL WINAPI
 EnableWindow(HWND hWnd,
 	     BOOL bEnable)
 {
@@ -150,9 +140,11 @@ EnableWindow(HWND hWnd,
 /*
  * @implemented
  */
-SHORT STDCALL
+SHORT WINAPI
 GetAsyncKeyState(int vKey)
 {
+ if (vKey < 0 || vKey > 256)
+    return 0;
  return (SHORT) NtUserGetAsyncKeyState((DWORD) vKey);
 }
 
@@ -160,18 +152,7 @@ GetAsyncKeyState(int vKey)
 /*
  * @implemented
  */
-UINT
-STDCALL
-GetDoubleClickTime(VOID)
-{
-  return NtUserGetDoubleClickTime();
-}
-
-
-/*
- * @implemented
- */
-HKL STDCALL
+HKL WINAPI
 GetKeyboardLayout(DWORD idThread)
 {
   return (HKL)NtUserCallOneParam((DWORD) idThread,  ONEPARAM_ROUTINE_GETKEYBOARDLAYOUT);
@@ -181,7 +162,7 @@ GetKeyboardLayout(DWORD idThread)
 /*
  * @implemented
  */
-UINT STDCALL
+UINT WINAPI
 GetKBCodePage(VOID)
 {
   return GetOEMCP();
@@ -191,7 +172,7 @@ GetKBCodePage(VOID)
 /*
  * @implemented
  */
-int STDCALL
+int WINAPI
 GetKeyNameTextA(LONG lParam,
 		LPSTR lpString,
 		int nSize)
@@ -219,7 +200,7 @@ GetKeyNameTextA(LONG lParam,
 /*
  * @implemented
  */
-int STDCALL
+int WINAPI
 GetKeyNameTextW(LONG lParam,
 		LPWSTR lpString,
 		int nSize)
@@ -231,7 +212,7 @@ GetKeyNameTextW(LONG lParam,
 /*
  * @implemented
  */
-SHORT STDCALL
+SHORT WINAPI
 GetKeyState(int nVirtKey)
 {
  return (SHORT) NtUserGetKeyState((DWORD) nVirtKey);
@@ -241,7 +222,7 @@ GetKeyState(int nVirtKey)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetKeyboardLayoutNameA(LPSTR pwszKLID)
 {
   WCHAR buf[KL_NAMELENGTH];
@@ -255,7 +236,7 @@ GetKeyboardLayoutNameA(LPSTR pwszKLID)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetKeyboardLayoutNameW(LPWSTR pwszKLID)
 {
   return NtUserGetKeyboardLayoutName( pwszKLID );
@@ -265,18 +246,7 @@ GetKeyboardLayoutNameW(LPWSTR pwszKLID)
 /*
  * @implemented
  */
-BOOL STDCALL
-GetKeyboardState(PBYTE lpKeyState)
-{
-
-  return (BOOL) NtUserGetKeyboardState((LPBYTE) lpKeyState);
-}
-
-
-/*
- * @implemented
- */
-int STDCALL
+int WINAPI
 GetKeyboardType(int nTypeFlag)
 {
 return (int)NtUserCallOneParam((DWORD) nTypeFlag,  ONEPARAM_ROUTINE_GETKEYBOARDTYPE);
@@ -286,7 +256,7 @@ return (int)NtUserCallOneParam((DWORD) nTypeFlag,  ONEPARAM_ROUTINE_GETKEYBOARDT
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetLastInputInfo(PLASTINPUTINFO plii)
 {
   return NtUserGetLastInputInfo(plii);
@@ -296,7 +266,7 @@ GetLastInputInfo(PLASTINPUTINFO plii)
 /*
  * @implemented
  */
-HKL STDCALL
+HKL WINAPI
 LoadKeyboardLayoutA(LPCSTR pwszKLID,
 		    UINT Flags)
 {
@@ -309,7 +279,7 @@ LoadKeyboardLayoutA(LPCSTR pwszKLID,
 /*
  * @implemented
  */
-HKL STDCALL
+HKL WINAPI
 LoadKeyboardLayoutW(LPCWSTR pwszKLID,
 		    UINT Flags)
 {
@@ -324,7 +294,7 @@ LoadKeyboardLayoutW(LPCWSTR pwszKLID,
 /*
  * @implemented
  */
-UINT STDCALL
+UINT WINAPI
 MapVirtualKeyA(UINT uCode,
 	       UINT uMapType)
 {
@@ -335,7 +305,7 @@ MapVirtualKeyA(UINT uCode,
 /*
  * @implemented
  */
-UINT STDCALL
+UINT WINAPI
 MapVirtualKeyExA(UINT uCode,
 		 UINT uMapType,
 		 HKL dwhkl)
@@ -347,7 +317,7 @@ MapVirtualKeyExA(UINT uCode,
 /*
  * @implemented
  */
-UINT STDCALL
+UINT WINAPI
 MapVirtualKeyExW(UINT uCode,
 		 UINT uMapType,
 		 HKL dwhkl)
@@ -359,7 +329,7 @@ MapVirtualKeyExW(UINT uCode,
 /*
  * @implemented
  */
-UINT STDCALL
+UINT WINAPI
 MapVirtualKeyW(UINT uCode,
 	       UINT uMapType)
 {
@@ -370,7 +340,7 @@ MapVirtualKeyW(UINT uCode,
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD WINAPI
 OemKeyScan(WORD wOemChar)
 {
   WCHAR p;
@@ -392,23 +362,7 @@ OemKeyScan(WORD wOemChar)
 /*
  * @implemented
  */
-BOOL STDCALL
-RegisterHotKey(HWND hWnd,
-	       int id,
-	       UINT fsModifiers,
-	       UINT vk)
-{
-  return (BOOL)NtUserRegisterHotKey(hWnd,
-                                       id,
-                                       fsModifiers,
-                                       vk);
-}
-
-
-/*
- * @implemented
- */
-BOOL STDCALL
+BOOL WINAPI
 SetDoubleClickTime(UINT uInterval)
 {
   return (BOOL)NtUserSystemParametersInfo(SPI_SETDOUBLECLICKTIME,
@@ -421,28 +375,8 @@ SetDoubleClickTime(UINT uInterval)
 /*
  * @implemented
  */
-HWND STDCALL
-SetFocus(HWND hWnd)
-{
-  return NtUserSetFocus(hWnd);
-}
-
-
-/*
- * @implemented
- */
-BOOL STDCALL
-SetKeyboardState(LPBYTE lpKeyState)
-{
- return (BOOL) NtUserSetKeyboardState((LPBYTE)lpKeyState);
-}
-
-
-/*
- * @implemented
- */
 BOOL
-STDCALL
+WINAPI
 SwapMouseButton(
   BOOL fSwap)
 {
@@ -453,7 +387,7 @@ SwapMouseButton(
 /*
  * @implemented
  */
-int STDCALL
+int WINAPI
 ToAscii(UINT uVirtKey,
 	UINT uScanCode,
 	CONST PBYTE lpKeyState,
@@ -467,7 +401,7 @@ ToAscii(UINT uVirtKey,
 /*
  * @implemented
  */
-int STDCALL
+int WINAPI
 ToAsciiEx(UINT uVirtKey,
 	  UINT uScanCode,
 	  CONST PBYTE lpKeyState,
@@ -489,7 +423,7 @@ ToAsciiEx(UINT uVirtKey,
 /*
  * @implemented
  */
-int STDCALL
+int WINAPI
 ToUnicode(UINT wVirtKey,
 	  UINT wScanCode,
 	  CONST PBYTE lpKeyState,
@@ -505,7 +439,7 @@ ToUnicode(UINT wVirtKey,
 /*
  * @implemented
  */
-int STDCALL
+int WINAPI
 ToUnicodeEx(UINT wVirtKey,
 	    UINT wScanCode,
 	    CONST PBYTE lpKeyState,
@@ -523,7 +457,7 @@ ToUnicodeEx(UINT wVirtKey,
 /*
  * @implemented
  */
-SHORT STDCALL
+SHORT WINAPI
 VkKeyScanA(CHAR ch)
 {
   WCHAR wChar;
@@ -538,7 +472,7 @@ VkKeyScanA(CHAR ch)
 /*
  * @implemented
  */
-SHORT STDCALL
+SHORT WINAPI
 VkKeyScanExA(CHAR ch,
 	     HKL dwhkl)
 {
@@ -554,7 +488,7 @@ VkKeyScanExA(CHAR ch,
 /*
  * @implemented
  */
-SHORT STDCALL
+SHORT WINAPI
 VkKeyScanExW(WCHAR ch,
 	     HKL dwhkl)
 {
@@ -565,7 +499,7 @@ VkKeyScanExW(WCHAR ch,
 /*
  * @implemented
  */
-SHORT STDCALL
+SHORT WINAPI
 VkKeyScanW(WCHAR ch)
 {
   return VkKeyScanExW(ch, GetKeyboardLayout(0));
@@ -575,22 +509,8 @@ VkKeyScanW(WCHAR ch)
 /*
  * @implemented
  */
-UINT
-STDCALL
-SendInput(
-  UINT nInputs,
-  LPINPUT pInputs,
-  int cbSize)
-{
-  return NtUserSendInput(nInputs, pInputs, cbSize);
-}
-
-
-/*
- * @implemented
- */
 VOID
-STDCALL
+WINAPI
 keybd_event(
 	    BYTE bVk,
 	    BYTE bScan,
@@ -616,7 +536,7 @@ keybd_event(
  * @implemented
  */
 VOID
-STDCALL
+WINAPI
 mouse_event(
 	    DWORD dwFlags,
 	    DWORD dx,
@@ -791,7 +711,7 @@ static void CALLBACK TrackMouseEventProc(HWND hwndUnused, UINT uMsg, UINT_PTR id
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 TrackMouseEvent(
   LPTRACKMOUSEEVENT ptme)
 {

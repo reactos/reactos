@@ -47,6 +47,60 @@ DWORD WINAPI GetNodeClusterState(LPCWSTR lpszNodeName, LPDWORD pdwClusterState)
     return ERROR_SUCCESS;
 }
 
+/***********************************************************************
+ *             OpenCluster   (CLUSAPI.@)
+ *
+ */
+HCLUSTER WINAPI OpenCluster(LPCWSTR lpszClusterName)
+{
+    FIXME("(%s) stub!\n", debugstr_w(lpszClusterName));
+
+    return (HCLUSTER)0xdeadbeef;
+}
+
+/***********************************************************************
+ *             CloseCluster   (CLUSAPI.@)
+ *
+ */
+BOOL WINAPI CloseCluster(HCLUSTER hCluster)
+{
+    FIXME("(%p) stub!\n", hCluster);
+
+    return TRUE;
+}
+
+/***********************************************************************
+ *             ClusterOpenEnum   (CLUSAPI.@)
+ *
+ */
+HCLUSENUM WINAPI ClusterOpenEnum(HCLUSTER hCluster, DWORD dwType)
+{
+    FIXME("(%p, %u) stub!\n", hCluster,dwType);
+
+    return (HCLUSENUM)0xdeadbeef;
+}
+
+/***********************************************************************
+ *             ClusterCloseEnum   (CLUSAPI.@)
+ *
+ */
+DWORD WINAPI ClusterCloseEnum(HCLUSENUM hEnum)
+{
+    FIXME("(%p) stub!\n", hEnum);
+
+    return ERROR_SUCCESS;
+}
+
+/***********************************************************************
+ *             ClusterEnum   (CLUSAPI.@)
+ *
+ */
+DWORD WINAPI ClusterEnum(HCLUSENUM hEnum, DWORD dwIndex, LPDWORD lpdwType, LPWSTR lpszName, LPDWORD lpcchName)
+{
+    FIXME("(%p, %u, %u, %s, %u) stub!\n", hEnum, dwIndex, *lpdwType, debugstr_w(lpszName), *lpcchName);
+
+    return ERROR_NO_MORE_ITEMS;
+}
 
 /***********************************************************************
  *             DllMain   (CLUSAPI.@)

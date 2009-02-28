@@ -303,7 +303,8 @@ enum module_type
     DMT_UNKNOWN,        /* for lookup, not actually used for a module */
     DMT_ELF,            /* a real ELF shared module */
     DMT_PE,             /* a native or builtin PE module */
-    DMT_PDB,            /* PDB file */
+    DMT_PDB,            /* .PDB file */
+    DMT_DBG,            /* .DBG file */
 };
 
 struct process;
@@ -472,6 +473,11 @@ extern BOOL         pe_load_debug_directory(const struct process* pcs,
                                             const IMAGE_SECTION_HEADER* sectp, DWORD nsect,
                                             const IMAGE_DEBUG_DIRECTORY* dbg, int nDbg);
 extern BOOL         pdb_fetch_file_info(struct pdb_lookup* pdb_lookup);
+
+/* path.c */
+extern BOOL         path_find_symbol_file(const struct process* pcs, PCSTR full_path,
+                                          const GUID* guid, DWORD dw1, DWORD dw2, PSTR buffer,
+                                          BOOL* is_unmatched);
 
 /* pe_module.c */
 extern BOOL         pe_load_nt_header(HANDLE hProc, DWORD base, IMAGE_NT_HEADERS* nth);

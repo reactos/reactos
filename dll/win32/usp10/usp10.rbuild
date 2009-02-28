@@ -2,14 +2,11 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
 <module name="usp10" type="win32dll" baseaddress="${BASEADDRESS_USP10}" installbase="system32" installname="usp10.dll" allowwarnings="true">
-	<importlibrary definition="usp10.spec.def" />
+	<importlibrary definition="usp10.spec" />
 	<include base="usp10">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
-	<define name="WINVER">0x600</define>
-	<define name="_WIN32_WINNT">0x600</define>
 	<file>usp10.c</file>
-	<file>usp10.spec</file>
 	<library>wine</library>
 	<library>gdi32</library>
 	<library>kernel32</library>

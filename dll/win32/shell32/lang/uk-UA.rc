@@ -1,6 +1,6 @@
 /*
  * Copyright 2004 Ilya Korniyko
- *           2007 Artem Reznikov
+ *           2007-2008 Artem Reznikov
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -381,18 +381,18 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	GROUPBOX "Завдання", -1, 7, 10, 249, 45
 	ICON "", 30109, 14, 25, 21, 20, SS_REALSIZECONTROL
-	AUTORADIOBUTTON "&Показувати список типових завдань у папках", 14001, 40, 25, 120, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Використовувати зви&чайні папки ReactOS", 14002, 40, 37, 120, 10, WS_TABSTOP
+	AUTORADIOBUTTON "&Показувати список типових завдань у папках", 14001, 40, 25, 120, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Використовувати зви&чайні папки ReactOS", 14002, 40, 37, 120, 10, WS_TABSTOP | WS_GROUP
 	GROUPBOX "Огляд папок", -1, 7, 60, 249, 45, WS_TABSTOP
 	ICON "", 30110, 14, 70, 21, 20, SS_REALSIZECONTROL
-	AUTORADIOBUTTON "Відкривати папки в то&му самому вікні", 14004, 40, 70, 140, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Відкрива&ти кожну папку в окремому вікні", 14005, 40, 82, 140, 10, WS_TABSTOP
+	AUTORADIOBUTTON "Відкривати папки в то&му самому вікні", 14004, 40, 70, 140, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Відкрива&ти кожну папку в окремому вікні", 14005, 40, 82, 140, 10, WS_TABSTOP | WS_GROUP
 	GROUPBOX "Клацання мишею", -1, 7, 110, 249, 60
 	ICON "", 30111, 14, 120, 21, 20, SS_REALSIZECONTROL
-	AUTORADIOBUTTON "Від&кривати одиночним, виділяти вказівником", 14007, 40, 120, 170, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Підкресл&ювати підписи значків", 14008, 50, 132, 170, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Підкр&еслювати лише при наведенні", 14009, 50, 144, 170, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Відкрив&ати подвійним, виділяти одиночним", 14010, 40, 156, 170, 10, WS_TABSTOP
+	AUTORADIOBUTTON "Від&кривати одиночним, виділяти вказівником", 14007, 40, 120, 170, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Підкресл&ювати підписи значків", 14008, 50, 132, 170, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Підкр&еслювати лише при наведенні", 14009, 50, 144, 170, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Відкрив&ати подвійним, виділяти одиночним", 14010, 40, 156, 170, 10, WS_TABSTOP | WS_GROUP
 	PUSHBUTTON "&Відновити", 14011, 180, 180, 60, 14, WS_TABSTOP
 END
 
@@ -606,17 +606,17 @@ BEGIN
 	IDS_SHV_COLUMN9             "Примітка"
 	IDS_SHV_COLUMN10            "Власник"
 	IDS_SHV_COLUMN11            "Група"
-	IDS_SHV_COLUMN12            "Filename"
-	IDS_SHV_COLUMN13            "Category"
+	IDS_SHV_COLUMN12            "Ім'я файла"
+	IDS_SHV_COLUMN13            "Категорія"
 	IDS_SHV_COLUMN_DELFROM      "Вихідне розташування"
 	IDS_SHV_COLUMN_DELDATE      "Дата видалення"
-	IDS_SHV_COLUMN_FONTTYPE     "Fonttype"
-	IDS_SHV_COLUMN_WORKGROUP    "Workgroup"
-	IDS_SHV_NETWORKLOCATION     "Network Location"
-	IDS_SHV_COLUMN_DOCUMENTS    "Documents"
-	IDS_SHV_COLUMN_STATUS       "Status"
-	IDS_SHV_COLUMN_COMMENTS     "Comments"
-	IDS_SHV_COLUMN_LOCATION     "Location"
+	IDS_SHV_COLUMN_FONTTYPE     "Тип шрифту"
+	IDS_SHV_COLUMN_WORKGROUP    "Робоча група"
+	IDS_SHV_NETWORKLOCATION     "Мережне розташування"
+	IDS_SHV_COLUMN_DOCUMENTS    "Документи"
+	IDS_SHV_COLUMN_STATUS       "Стан"
+	IDS_SHV_COLUMN_COMMENTS     "Примітки"
+	IDS_SHV_COLUMN_LOCATION     "Розташування"
 	IDS_SHV_COLUMN_MODEL        "Model"
 
 	/* special folders */
@@ -624,7 +624,7 @@ BEGIN
 	IDS_MYCOMPUTER              "Мій Комп'ютер"
 	IDS_RECYCLEBIN_FOLDER_NAME  "Кошик"
 	IDS_CONTROLPANEL            "Панель керування"
-	IDS_ADMINISTRATIVETOOLS     "Administrative Tools"
+	IDS_ADMINISTRATIVETOOLS     "Адміністрування"
 
 	/* context menus */
 	IDS_VIEW_LARGE              "&Великі значки"
@@ -638,10 +638,10 @@ BEGIN
 	IDS_DELETE                  "В&идалити"
 	IDS_PROPERTIES              "В&ластивості"
 	IDS_CUT                     "&Вирізати"
-	IDS_RESTORE                 "Restore"
-	IDS_FORMATDRIVE             "Format..."
-	IDS_RENAME                  "Rename"
-	IDS_INSERT                  "Insert"
+	IDS_RESTORE                 "Відновити"
+	IDS_FORMATDRIVE             "Форматувати..."
+	IDS_RENAME                  "Перейменувати"
+	IDS_INSERT                  "Вставити"
 
 	IDS_CREATEFOLDER_DENIED     "Не вдалося створити нову папку: Відмова у доступі."
 	IDS_CREATEFOLDER_CAPTION    "Помилка при створенні нової папки"
@@ -735,18 +735,18 @@ BEGIN
 	IDS_LNK_FILE                "Ярлик"
 	IDS_SYS_FILE                "Системний файл"
 
-	IDS_OPEN_VERB               "Open"
-	IDS_RUNAS_VERB              "Run as "
-	IDS_EDIT_VERB               "Edit"
-	IDS_FIND_VERB               "Find"
-	IDS_PRINT_VERB              "Print"
-	IDS_PLAY_VERB               "Play"
-	IDS_PREVIEW_VERB            "Preview"
+	IDS_OPEN_VERB               "Відкрити"
+	IDS_RUNAS_VERB              "Запустити як "
+	IDS_EDIT_VERB               "Змінити"
+	IDS_FIND_VERB               "Пошук"
+	IDS_PRINT_VERB              "Друк"
+	IDS_PLAY_VERB               "Відтворити"
+	IDS_PREVIEW_VERB            "Перегляд"
 
-	IDS_FILE_FOLDER             "%u Files, %u Folders"
-	IDS_PRINTERS                "Printers"
-	IDS_FONTS                   "Fonts"
-	IDS_INSTALLNEWFONT          "Install New Font..."
+	IDS_FILE_FOLDER             "%u файлів, %u папок"
+	IDS_PRINTERS                "Принтери"
+	IDS_FONTS                   "Шрифти"
+	IDS_INSTALLNEWFONT          "Інсталювати новий шрифт..."
 
-	IDS_DEFAULT_CLUSTER_SIZE    "Default allocation size"
+	IDS_DEFAULT_CLUSTER_SIZE    "Розмір кластера за промовчанням"
 END

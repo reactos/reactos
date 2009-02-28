@@ -34,8 +34,8 @@
 
 #include "ole2.h"
 #include "oleauto.h"
-#include "rpcproxy.h"
 #include "typelib.h"
+#include "ocidl.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
@@ -44,23 +44,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(ole);
 #define ALIGNED_POINTER(_Ptr, _Align) ((LPVOID)ALIGNED_LENGTH((ULONG_PTR)(_Ptr), _Align))
 #define ALIGN_LENGTH(_Len, _Align) _Len = ALIGNED_LENGTH(_Len, _Align)
 #define ALIGN_POINTER(_Ptr, _Align) _Ptr = ALIGNED_POINTER(_Ptr, _Align)
-
-static CStdPSFactoryBuffer PSFactoryBuffer;
-
-CSTDSTUBBUFFERRELEASE(&PSFactoryBuffer)
-
-extern const ExtendedProxyFileInfo oleaut32_oaidl_ProxyFileInfo;
-
-static const ProxyFileInfo *OLEAUT32_ProxyFileList[] = {
-  &oleaut32_oaidl_ProxyFileInfo,
-  NULL
-};
-
-HRESULT OLEAUTPS_DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
-{
-  return NdrDllGetClassObject(rclsid, riid, ppv, OLEAUT32_ProxyFileList,
-                              &CLSID_PSDispatch, &PSFactoryBuffer);
-}
 
 static void dump_user_flags(const ULONG *pFlags)
 {
@@ -183,12 +166,9 @@ unsigned char * WINAPI BSTR_UserUnmarshal(ULONG *pFlags, unsigned char *Buffer, 
     header = (bstr_wire_t*)Buffer;
     if(header->len != header->len2)
         FIXME("len %08x != len2 %08x\n", header->len, header->len2);
-    
-    if(*pstr)
-    {
-        SysFreeString(*pstr);
-        *pstr = NULL;
-    }
+
+    SysFreeString(*pstr);
+    *pstr = NULL;
 
     if(header->byte_len != 0xffffffff)
         *pstr = SysAllocStringByteLen((char*)(header + 1), header->byte_len);
@@ -200,11 +180,8 @@ unsigned char * WINAPI BSTR_UserUnmarshal(ULONG *pFlags, unsigned char *Buffer, 
 void WINAPI BSTR_UserFree(ULONG *pFlags, BSTR *pstr)
 {
     TRACE("(%x,%p) => %p\n", *pFlags, pstr, *pstr);
-    if (*pstr)
-    {
-        SysFreeString(*pstr);
-        *pstr = NULL;
-    }
+    SysFreeString(*pstr);
+    *pstr = NULL;
 }
 
 /* VARIANT */
@@ -1128,6 +1105,32 @@ void WINAPI LPSAFEARRAY_UserFree(ULONG *pFlags, LPSAFEARRAY *ppsa)
     SafeArrayDestroy(*ppsa);
 }
 
+
+ULONG WINAPI HFONT_UserSize(ULONG *pFlags, ULONG Start, HFONT *phfont)
+{
+    FIXME(":stub\n");
+    return 0;
+}
+
+unsigned char * WINAPI HFONT_UserMarshal(ULONG *pFlags, unsigned char *Buffer, HFONT *phfont)
+{
+    FIXME(":stub\n");
+    return NULL;
+}
+
+unsigned char * WINAPI HFONT_UserUnmarshal(ULONG *pFlags, unsigned char *Buffer, HFONT *phfont)
+{
+    FIXME(":stub\n");
+    return NULL;
+}
+
+void WINAPI HFONT_UserFree(ULONG *pFlags, HFONT *phfont)
+{
+    FIXME(":stub\n");
+    return;
+}
+
+
 /* IDispatch */
 /* exactly how Invoke is marshalled is not very clear to me yet,
  * but the way I've done it seems to work for me */
@@ -2014,8 +2017,35 @@ HRESULT CALLBACK IPropertyBag_Read_Proxy(
     VARIANT *pVar,
     IErrorLog *pErrorLog)
 {
-  FIXME("not implemented\n");
-  return E_FAIL;
+  IUnknown *pUnk = NULL;
+  TRACE("(%p, %s, %p, %p)\n", This, debugstr_w(pszPropName), pVar, pErrorLog);
+
+  if(!pVar)
+    return E_POINTER;
+
+  if(V_VT(pVar) & (VT_BYREF | VT_ARRAY | VT_VECTOR))
+  {
+    FIXME("Variant type %x is byref, array or vector. Not implemented.\n", V_VT(pVar));
+    return E_NOTIMPL;
+  }
+
+  switch(V_VT(pVar))
+  {
+    case VT_DISPATCH:
+      pUnk = (IUnknown*)V_DISPATCH(pVar);
+      break;
+    case VT_UNKNOWN:
+      pUnk = V_UNKNOWN(pVar);
+      break;
+    case VT_SAFEARRAY:
+      FIXME("Safearray support not yet implemented.\n");
+      return E_NOTIMPL;
+    default:
+      break;
+  }
+
+  return IPropertyBag_RemoteRead_Proxy(This, pszPropName, pVar, pErrorLog,
+                                       V_VT(pVar), pUnk);
 }
 
 HRESULT __RPC_STUB IPropertyBag_Read_Stub(
@@ -2026,6 +2056,198 @@ HRESULT __RPC_STUB IPropertyBag_Read_Stub(
     DWORD varType,
     IUnknown *pUnkObj)
 {
-  FIXME("not implemented\n");
-  return E_FAIL;
+  static const WCHAR emptyWstr[1] = {0};
+  IDispatch *disp;
+  HRESULT hr;
+  TRACE("(%p, %s, %p, %p, %x, %p)\n", This, debugstr_w(pszPropName), pVar,
+                                     pErrorLog, varType, pUnkObj);
+
+  if(varType & (VT_BYREF | VT_ARRAY | VT_VECTOR))
+  {
+    FIXME("Variant type %x is byref, array or vector. Not implemented.\n", V_VT(pVar));
+    return E_NOTIMPL;
+  }
+
+  V_VT(pVar) = varType;
+  switch(varType)
+  {
+    case VT_DISPATCH:
+      hr = IUnknown_QueryInterface(pUnkObj, &IID_IDispatch, (LPVOID*)&disp);
+      if(FAILED(hr))
+        return hr;
+      IUnknown_Release(pUnkObj);
+      V_DISPATCH(pVar) = disp;
+      break;
+    case VT_UNKNOWN:
+      V_UNKNOWN(pVar) = pUnkObj;
+      break;
+    case VT_BSTR:
+      V_BSTR(pVar) = SysAllocString(emptyWstr);
+      break;
+    case VT_SAFEARRAY:
+      FIXME("Safearray support not yet implemented.\n");
+      return E_NOTIMPL;
+    default:
+      break;
+  }
+  hr = IPropertyBag_Read(This, pszPropName, pVar, pErrorLog);
+  if(FAILED(hr))
+    VariantClear(pVar);
+
+  return hr;
+}
+
+/* call_as/local stubs for ocidl.idl */
+
+HRESULT CALLBACK IClassFactory2_CreateInstanceLic_Proxy(
+    IClassFactory2* This,
+    IUnknown *pUnkOuter,
+    IUnknown *pUnkReserved,
+    REFIID riid,
+    BSTR bstrKey,
+    PVOID *ppvObj)
+{
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+HRESULT __RPC_STUB IClassFactory2_CreateInstanceLic_Stub(
+    IClassFactory2* This,
+    REFIID riid,
+    BSTR bstrKey,
+    IUnknown **ppvObj)
+{
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+HRESULT CALLBACK IEnumConnections_Next_Proxy(
+    IEnumConnections* This,
+    ULONG cConnections,
+    LPCONNECTDATA rgcd,
+    ULONG *pcFetched)
+{
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+HRESULT __RPC_STUB IEnumConnections_Next_Stub(
+    IEnumConnections* This,
+    ULONG cConnections,
+    LPCONNECTDATA rgcd,
+    ULONG *pcFetched)
+{
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+HRESULT CALLBACK IEnumConnectionPoints_Next_Proxy(
+    IEnumConnectionPoints* This,
+    ULONG cConnections,
+    LPCONNECTIONPOINT *ppCP,
+    ULONG *pcFetched)
+{
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+HRESULT __RPC_STUB IEnumConnectionPoints_Next_Stub(
+    IEnumConnectionPoints* This,
+    ULONG cConnections,
+    LPCONNECTIONPOINT *ppCP,
+    ULONG *pcFetched)
+{
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+HRESULT CALLBACK IPersistMemory_Load_Proxy(
+    IPersistMemory* This,
+    LPVOID pMem,
+    ULONG cbSize)
+{
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+HRESULT __RPC_STUB IPersistMemory_Load_Stub(
+    IPersistMemory* This,
+    BYTE *pMem,
+    ULONG cbSize)
+{
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+HRESULT CALLBACK IPersistMemory_Save_Proxy(
+    IPersistMemory* This,
+    LPVOID pMem,
+    BOOL fClearDirty,
+    ULONG cbSize)
+{
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+HRESULT __RPC_STUB IPersistMemory_Save_Stub(
+    IPersistMemory* This,
+    BYTE *pMem,
+    BOOL fClearDirty,
+    ULONG cbSize)
+{
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+void CALLBACK IAdviseSinkEx_OnViewStatusChange_Proxy(
+    IAdviseSinkEx* This,
+    DWORD dwViewStatus)
+{
+    FIXME("not implemented\n");
+}
+
+HRESULT __RPC_STUB IAdviseSinkEx_OnViewStatusChange_Stub(
+    IAdviseSinkEx* This,
+    DWORD dwViewStatus)
+{
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+HRESULT CALLBACK IEnumOleUndoUnits_Next_Proxy(
+    IEnumOleUndoUnits* This,
+    ULONG cElt,
+    IOleUndoUnit **rgElt,
+    ULONG *pcEltFetched)
+{
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+HRESULT __RPC_STUB IEnumOleUndoUnits_Next_Stub(
+    IEnumOleUndoUnits* This,
+    ULONG cElt,
+    IOleUndoUnit **rgElt,
+    ULONG *pcEltFetched)
+{
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+HRESULT CALLBACK IQuickActivate_QuickActivate_Proxy(
+    IQuickActivate* This,
+    QACONTAINER *pQaContainer,
+    QACONTROL *pQaControl)
+{
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+HRESULT __RPC_STUB IQuickActivate_QuickActivate_Stub(
+    IQuickActivate* This,
+    QACONTAINER *pQaContainer,
+    QACONTROL *pQaControl)
+{
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
 }

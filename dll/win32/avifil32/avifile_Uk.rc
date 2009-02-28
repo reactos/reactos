@@ -1,10 +1,21 @@
 /*
- * PROJECT:         AVI File support library
- * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            dll/win32/avifil32/avifile_Uk.rc
- * PURPOSE:         Ukraianian resource file for avifil32
- * TRANSLATOR:      Artem Reznikov
+ * Copyright 2007 Artem Reznikov
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
+
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
@@ -14,7 +25,7 @@ CAPTION "Параметри стиснення"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "&Оберіть потік:",-1,2,5,114,10
-    COMBOBOX        IDC_STREAM,2,18,134,61,CBS_DROPDOWNLIST | WS_VSCROLL | 
+    COMBOBOX        IDC_STREAM,2,18,134,61,CBS_DROPDOWNLIST | WS_VSCROLL |
                     WS_TABSTOP
     PUSHBUTTON      "П&араметри...",IDC_OPTIONS,145,17,45,14
     AUTOCHECKBOX    "&Інтервал чергування",IDC_INTERLEAVE,3,42,60,11,WS_TABSTOP

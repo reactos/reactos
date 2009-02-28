@@ -37,7 +37,7 @@ typedef struct _WINE_FILESTOREINFO
 
 static void WINAPI CRYPT_FileCloseStore(HCERTSTORE hCertStore, DWORD dwFlags)
 {
-    PWINE_FILESTOREINFO store = (PWINE_FILESTOREINFO)hCertStore;
+    PWINE_FILESTOREINFO store = hCertStore;
 
     TRACE("(%p, %08x)\n", store, dwFlags);
     if (store->dirty)
@@ -51,7 +51,7 @@ static void WINAPI CRYPT_FileCloseStore(HCERTSTORE hCertStore, DWORD dwFlags)
 static BOOL WINAPI CRYPT_FileWriteCert(HCERTSTORE hCertStore,
  PCCERT_CONTEXT cert, DWORD dwFlags)
 {
-    PWINE_FILESTOREINFO store = (PWINE_FILESTOREINFO)hCertStore;
+    PWINE_FILESTOREINFO store = hCertStore;
 
     TRACE("(%p, %p, %d)\n", hCertStore, cert, dwFlags);
     store->dirty = TRUE;
@@ -61,7 +61,7 @@ static BOOL WINAPI CRYPT_FileWriteCert(HCERTSTORE hCertStore,
 static BOOL WINAPI CRYPT_FileDeleteCert(HCERTSTORE hCertStore,
  PCCERT_CONTEXT pCertContext, DWORD dwFlags)
 {
-    PWINE_FILESTOREINFO store = (PWINE_FILESTOREINFO)hCertStore;
+    PWINE_FILESTOREINFO store = hCertStore;
 
     TRACE("(%p, %p, %08x)\n", hCertStore, pCertContext, dwFlags);
     store->dirty = TRUE;
@@ -71,7 +71,7 @@ static BOOL WINAPI CRYPT_FileDeleteCert(HCERTSTORE hCertStore,
 static BOOL WINAPI CRYPT_FileWriteCRL(HCERTSTORE hCertStore,
  PCCRL_CONTEXT crl, DWORD dwFlags)
 {
-    PWINE_FILESTOREINFO store = (PWINE_FILESTOREINFO)hCertStore;
+    PWINE_FILESTOREINFO store = hCertStore;
 
     TRACE("(%p, %p, %d)\n", hCertStore, crl, dwFlags);
     store->dirty = TRUE;
@@ -81,9 +81,29 @@ static BOOL WINAPI CRYPT_FileWriteCRL(HCERTSTORE hCertStore,
 static BOOL WINAPI CRYPT_FileDeleteCRL(HCERTSTORE hCertStore,
  PCCRL_CONTEXT pCrlContext, DWORD dwFlags)
 {
-    PWINE_FILESTOREINFO store = (PWINE_FILESTOREINFO)hCertStore;
+    PWINE_FILESTOREINFO store = hCertStore;
 
     TRACE("(%p, %p, %08x)\n", hCertStore, pCrlContext, dwFlags);
+    store->dirty = TRUE;
+    return TRUE;
+}
+
+static BOOL WINAPI CRYPT_FileWriteCTL(HCERTSTORE hCertStore,
+ PCCTL_CONTEXT ctl, DWORD dwFlags)
+{
+    PWINE_FILESTOREINFO store = hCertStore;
+
+    TRACE("(%p, %p, %d)\n", hCertStore, ctl, dwFlags);
+    store->dirty = TRUE;
+    return TRUE;
+}
+
+static BOOL WINAPI CRYPT_FileDeleteCTL(HCERTSTORE hCertStore,
+ PCCTL_CONTEXT pCtlContext, DWORD dwFlags)
+{
+    PWINE_FILESTOREINFO store = hCertStore;
+
+    TRACE("(%p, %p, %08x)\n", hCertStore, pCtlContext, dwFlags);
     store->dirty = TRUE;
     return TRUE;
 }
@@ -109,7 +129,7 @@ static BOOL CRYPT_ReadBlobFromFile(HANDLE file, PCERT_BLOB blob)
 static BOOL WINAPI CRYPT_FileControl(HCERTSTORE hCertStore, DWORD dwFlags,
  DWORD dwCtrlType, void const *pvCtrlPara)
 {
-    PWINE_FILESTOREINFO store = (PWINE_FILESTOREINFO)hCertStore;
+    PWINE_FILESTOREINFO store = hCertStore;
     BOOL ret;
 
     TRACE("(%p, %08x, %d, %p)\n", hCertStore, dwFlags, dwCtrlType,
@@ -187,8 +207,8 @@ static void *fileProvFuncs[] = {
     CRYPT_FileDeleteCRL,
     NULL, /* CERT_STORE_PROV_SET_CRL_PROPERTY_FUNC */
     NULL, /* CERT_STORE_PROV_READ_CTL_FUNC */
-    NULL, /* CERT_STORE_PROV_WRITE_CTL_FUNC */
-    NULL, /* CERT_STORE_PROV_DELETE_CTL_FUNC */
+    CRYPT_FileWriteCTL,
+    CRYPT_FileDeleteCTL,
     NULL, /* CERT_STORE_PROV_SET_CTL_PROPERTY_FUNC */
     CRYPT_FileControl,
 };
@@ -272,7 +292,7 @@ PWINECRYPT_CERTSTORE CRYPT_FileNameOpenStoreW(HCRYPTPROV hCryptProv,
  DWORD dwFlags, const void *pvPara)
 {
     HCERTSTORE store = 0;
-    LPCWSTR fileName = (LPCWSTR)pvPara;
+    LPCWSTR fileName = pvPara;
     DWORD access, create;
     HANDLE file;
 
@@ -318,7 +338,7 @@ PWINECRYPT_CERTSTORE CRYPT_FileNameOpenStoreW(HCRYPTPROV hCryptProv,
              CERT_QUERY_CONTENT_FLAG_CERT |
              CERT_QUERY_CONTENT_FLAG_SERIALIZED_STORE |
              CERT_QUERY_CONTENT_FLAG_PKCS7_SIGNED,
-             CERT_QUERY_FORMAT_FLAG_BINARY, 0, NULL, &contentType, NULL,
+             CERT_QUERY_FORMAT_FLAG_ALL, 0, NULL, &contentType, NULL,
              &memStore, NULL, NULL);
             if (ret)
             {
@@ -356,7 +376,7 @@ PWINECRYPT_CERTSTORE CRYPT_FileNameOpenStoreW(HCRYPTPROV hCryptProv,
                 CryptReleaseContext(hCryptProv, 0);
         }
     }
-    return (PWINECRYPT_CERTSTORE)store;
+    return store;
 }
 
 PWINECRYPT_CERTSTORE CRYPT_FileNameOpenStoreA(HCRYPTPROV hCryptProv,
@@ -366,21 +386,21 @@ PWINECRYPT_CERTSTORE CRYPT_FileNameOpenStoreA(HCRYPTPROV hCryptProv,
     PWINECRYPT_CERTSTORE ret = NULL;
 
     TRACE("(%ld, %08x, %s)\n", hCryptProv, dwFlags,
-     debugstr_a((LPCSTR)pvPara));
+     debugstr_a(pvPara));
 
     if (!pvPara)
     {
         SetLastError(ERROR_FILE_NOT_FOUND);
         return NULL;
     }
-    len = MultiByteToWideChar(CP_ACP, 0, (LPCSTR)pvPara, -1, NULL, 0);
+    len = MultiByteToWideChar(CP_ACP, 0, pvPara, -1, NULL, 0);
     if (len)
     {
         LPWSTR storeName = CryptMemAlloc(len * sizeof(WCHAR));
 
         if (storeName)
         {
-            MultiByteToWideChar(CP_ACP, 0, (LPCSTR)pvPara, -1, storeName, len);
+            MultiByteToWideChar(CP_ACP, 0, pvPara, -1, storeName, len);
             ret = CRYPT_FileNameOpenStoreW(hCryptProv, dwFlags, storeName);
             CryptMemFree(storeName);
         }

@@ -1,6 +1,6 @@
 @ stub AccessibleChildren
 @ stub AccessibleObjectFromEvent
-@ stub AccessibleObjectFromPoint
+@ stdcall AccessibleObjectFromPoint(double ptr ptr)
 @ stdcall AccessibleObjectFromWindow(ptr long ptr ptr)
 @ stdcall CreateStdAccessibleObject(ptr long ptr ptr)
 @ stub CreateStdAccessibleProxyA
@@ -8,8 +8,8 @@
 @ stdcall -private DllRegisterServer()
 @ stdcall -private DllUnregisterServer()
 @ stdcall GetOleaccVersionInfo(ptr ptr)
-@ stub GetRoleTextA
-@ stub GetRoleTextW
+@ stdcall GetRoleTextA(long ptr long)
+@ stdcall GetRoleTextW(long ptr long)
 @ stub GetStateTextA
 @ stub GetStateTextW
 @ stub IID_IAccessible

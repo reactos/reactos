@@ -111,7 +111,7 @@ int WINAPI NdrFullPointerQueryPointer(PFULL_PTR_XLAT_TABLES pXlatTables,
                                       ULONG *pRefId )
 {
     ULONG Hash = 0;
-    int i;
+    unsigned int i;
     PFULL_PTR_TO_REFID_ELEMENT XlatTableEntry;
 
     TRACE("(%p, %p, %d, %p)\n", pXlatTables, pPointer, QueryType, pRefId);
@@ -186,7 +186,7 @@ void WINAPI NdrFullPointerInsertRefId(PFULL_PTR_XLAT_TABLES pXlatTables,
                                       ULONG RefId, void *pPointer)
 {
     ULONG Hash = 0;
-    int i;
+    unsigned int i;
     PFULL_PTR_TO_REFID_ELEMENT XlatTableEntry;
 
     TRACE("(%p, 0x%x, %p)\n", pXlatTables, RefId, pPointer);
@@ -211,7 +211,7 @@ void WINAPI NdrFullPointerInsertRefId(PFULL_PTR_XLAT_TABLES pXlatTables,
 int WINAPI NdrFullPointerFree(PFULL_PTR_XLAT_TABLES pXlatTables, void *Pointer)
 {
     ULONG Hash = 0;
-    int i;
+    unsigned int i;
     PFULL_PTR_TO_REFID_ELEMENT XlatTableEntry;
     ULONG RefId = 0;
 

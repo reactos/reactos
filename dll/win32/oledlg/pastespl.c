@@ -648,7 +648,7 @@ UINT WINAPI OleUIPasteSpecialA(LPOLEUIPASTESPECIALA psA)
     if(psA->cPasteEntries > 0)
     {
         DWORD size = psA->cPasteEntries * sizeof(ps.arrPasteEntries[0]);
-        UINT i;
+        INT i;
 
         ps.arrPasteEntries = HeapAlloc(GetProcessHeap(), 0, size);
         memcpy(ps.arrPasteEntries, psA->arrPasteEntries, size);
@@ -665,7 +665,7 @@ UINT WINAPI OleUIPasteSpecialA(LPOLEUIPASTESPECIALA psA)
 
     if(psA->cPasteEntries > 0)
     {
-        UINT i;
+        INT i;
         for(i = 0; i < psA->cPasteEntries; i++)
         {
             HeapFree(GetProcessHeap(), 0, (WCHAR*)ps.arrPasteEntries[i].lpstrFormatName);

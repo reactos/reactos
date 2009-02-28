@@ -1,5 +1,5 @@
-<module name="mmdrv" type="win32dll" baseaddress="${BASEADDRESS_MMDRV}" installbase="system32" installname="mmdrv.dll" unicode="yes">
-	<importlibrary definition="mmdrv.spec.def" />
+<module name="mmdrv" type="win32dll" entrypoint="0" baseaddress="${BASEADDRESS_MMDRV}" installbase="system32" installname="mmdrv.dll" unicode="yes">
+	<importlibrary definition="mmdrv.spec" />
 	<include base="mmdrv">.</include>
 	<define name="NDEBUG" />
 	<library>ntdll</library>
@@ -13,5 +13,4 @@
 	<file>common.c</file>
 	<file>wave.c</file>
 	<file>wave_io.c</file>
-	<file>mmdrv.spec</file>
 </module>
