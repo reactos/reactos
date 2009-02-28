@@ -33,7 +33,7 @@ static HRESULT WINAPI IDirect3DCubeTexture9Impl_QueryInterface(LPDIRECT3DCUBETEX
         || IsEqualGUID(riid, &IID_IDirect3DResource9)
         || IsEqualGUID(riid, &IID_IDirect3DBaseTexture9)
         || IsEqualGUID(riid, &IID_IDirect3DCubeTexture9)) {
-        IUnknown_AddRef(iface);
+        IDirect3DCubeTexture9_AddRef(iface);
         *ppobj = This;
         return S_OK;
     }
@@ -63,7 +63,7 @@ static ULONG WINAPI IDirect3DCubeTexture9Impl_Release(LPDIRECT3DCUBETEXTURE9 ifa
 
         EnterCriticalSection(&d3d9_cs);
         IWineD3DCubeTexture_Destroy(This->wineD3DCubeTexture, D3D9CB_DestroySurface);
-        IUnknown_Release(This->parentDevice);
+        IDirect3DDevice9Ex_Release(This->parentDevice);
         LeaveCriticalSection(&d3d9_cs);
 
         HeapFree(GetProcessHeap(), 0, This);
@@ -333,7 +333,7 @@ static const IDirect3DCubeTexture9Vtbl Direct3DCubeTexture9_Vtbl =
 
 
 /* IDirect3DDevice9 IDirect3DCubeTexture9 Methods follow: */
-HRESULT  WINAPI  IDirect3DDevice9Impl_CreateCubeTexture(LPDIRECT3DDEVICE9 iface,
+HRESULT  WINAPI  IDirect3DDevice9Impl_CreateCubeTexture(LPDIRECT3DDEVICE9EX iface,
                                                         UINT EdgeLength, UINT Levels, DWORD Usage,
                                                         D3DFORMAT Format, D3DPOOL Pool,
                                                         IDirect3DCubeTexture9** ppCubeTexture, HANDLE* pSharedHandle) {
@@ -348,24 +348,23 @@ HRESULT  WINAPI  IDirect3DDevice9Impl_CreateCubeTexture(LPDIRECT3DDEVICE9 iface,
     object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object));
 
     if (NULL == object) {
-        FIXME("(%p) allocation of CubeTexture failed\n", This);
+        ERR("(%p) allocation of CubeTexture failed\n", This);
         return D3DERR_OUTOFVIDEOMEMORY;
     }
     object->lpVtbl = &Direct3DCubeTexture9_Vtbl;
     object->ref = 1;
     EnterCriticalSection(&d3d9_cs);
     hr = IWineD3DDevice_CreateCubeTexture(This->WineD3DDevice, EdgeLength, Levels, Usage,
-                                 (WINED3DFORMAT)Format, (WINED3DPOOL) Pool, &object->wineD3DCubeTexture, pSharedHandle, (IUnknown*)object,
-                                 D3D9CB_CreateSurface);
+            Format, Pool, &object->wineD3DCubeTexture, pSharedHandle, (IUnknown*)object);
     LeaveCriticalSection(&d3d9_cs);
 
     if (hr != D3D_OK){
 
         /* free up object */
-        FIXME("(%p) call to IWineD3DDevice_CreateCubeTexture failed\n", This);
+        WARN("(%p) call to IWineD3DDevice_CreateCubeTexture failed\n", This);
         HeapFree(GetProcessHeap(), 0, object);
     } else {
-        IUnknown_AddRef(iface);
+        IDirect3DDevice9Ex_AddRef(iface);
         object->parentDevice = iface;
         *ppCubeTexture = (LPDIRECT3DCUBETEXTURE9) object;
         TRACE("(%p) : Created cube texture %p\n", This, object);

@@ -31,7 +31,7 @@ static HRESULT WINAPI IDirect3DIndexBuffer9Impl_QueryInterface(LPDIRECT3DINDEXBU
     if (IsEqualGUID(riid, &IID_IUnknown)
         || IsEqualGUID(riid, &IID_IDirect3DResource9)
         || IsEqualGUID(riid, &IID_IDirect3DIndexBuffer9)) {
-        IUnknown_AddRef(iface);
+        IDirect3DIndexBuffer9_AddRef(iface);
         *ppobj = This;
         return S_OK;
     }
@@ -60,7 +60,7 @@ static ULONG WINAPI IDirect3DIndexBuffer9Impl_Release(LPDIRECT3DINDEXBUFFER9 ifa
         EnterCriticalSection(&d3d9_cs);
         IWineD3DIndexBuffer_Release(This->wineD3DIndexBuffer);
         LeaveCriticalSection(&d3d9_cs);
-        IUnknown_Release(This->parentDevice);
+        IDirect3DDevice9Ex_Release(This->parentDevice);
         HeapFree(GetProcessHeap(), 0, This);
     }
     return ref;
@@ -211,7 +211,7 @@ static const IDirect3DIndexBuffer9Vtbl Direct3DIndexBuffer9_Vtbl =
 
 
 /* IDirect3DDevice9 IDirect3DIndexBuffer9 Methods follow: */
-HRESULT WINAPI IDirect3DDevice9Impl_CreateIndexBuffer(LPDIRECT3DDEVICE9 iface, 
+HRESULT WINAPI IDirect3DDevice9Impl_CreateIndexBuffer(LPDIRECT3DDEVICE9EX iface,
                               UINT Length, DWORD Usage, D3DFORMAT Format, D3DPOOL Pool,
                               IDirect3DIndexBuffer9** ppIndexBuffer, HANDLE* pSharedHandle) {
     
@@ -237,7 +237,7 @@ HRESULT WINAPI IDirect3DDevice9Impl_CreateIndexBuffer(LPDIRECT3DDEVICE9 iface,
         FIXME("(%p) call to IWineD3DDevice_CreateIndexBuffer failed\n", This);
         HeapFree(GetProcessHeap(), 0, object);
     } else {
-        IUnknown_AddRef(iface);
+        IDirect3DDevice9Ex_AddRef(iface);
         object->parentDevice = iface;
         *ppIndexBuffer = (LPDIRECT3DINDEXBUFFER9) object;
         TRACE("(%p) : Created index buffer %p\n", This, object);

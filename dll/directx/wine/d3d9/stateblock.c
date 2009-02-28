@@ -31,7 +31,7 @@ static HRESULT WINAPI IDirect3DStateBlock9Impl_QueryInterface(LPDIRECT3DSTATEBLO
 
     if (IsEqualGUID(riid, &IID_IUnknown)
         || IsEqualGUID(riid, &IID_IDirect3DStateBlock9)) {
-        IUnknown_AddRef(iface);
+        IDirect3DStateBlock9_AddRef(iface);
         *ppobj = This;
         return S_OK;
     }
@@ -58,9 +58,9 @@ static ULONG WINAPI IDirect3DStateBlock9Impl_Release(LPDIRECT3DSTATEBLOCK9 iface
 
     if (ref == 0) {
         EnterCriticalSection(&d3d9_cs);
-        IWineD3DStateBlock_Release(This->wineD3DStateBlock);    
+        IWineD3DStateBlock_Release(This->wineD3DStateBlock);
         LeaveCriticalSection(&d3d9_cs);
-        IUnknown_Release(This->parentDevice);
+        IDirect3DDevice9Ex_Release(This->parentDevice);
         HeapFree(GetProcessHeap(), 0, This);
     }
     return ref;
@@ -115,7 +115,7 @@ static const IDirect3DStateBlock9Vtbl Direct3DStateBlock9_Vtbl =
 
 
 /* IDirect3DDevice9 IDirect3DStateBlock9 Methods follow: */
-HRESULT WINAPI IDirect3DDevice9Impl_CreateStateBlock(LPDIRECT3DDEVICE9 iface, D3DSTATEBLOCKTYPE Type, IDirect3DStateBlock9** ppStateBlock) {
+HRESULT WINAPI IDirect3DDevice9Impl_CreateStateBlock(LPDIRECT3DDEVICE9EX iface, D3DSTATEBLOCKTYPE Type, IDirect3DStateBlock9** ppStateBlock) {
    IDirect3DDevice9Impl *This = (IDirect3DDevice9Impl *)iface;
    IDirect3DStateBlock9Impl* object;
    HRESULT hrc = D3D_OK;
@@ -140,7 +140,7 @@ HRESULT WINAPI IDirect3DDevice9Impl_CreateStateBlock(LPDIRECT3DDEVICE9 iface, D3
        FIXME("(%p) Call to IWineD3DDevice_CreateStateBlock failed.\n", This);
        HeapFree(GetProcessHeap(), 0, object);
    } else {
-        IUnknown_AddRef(iface);
+        IDirect3DDevice9Ex_AddRef(iface);
         object->parentDevice = iface;
         *ppStateBlock = (IDirect3DStateBlock9*)object;
         TRACE("(%p) : Created stateblock %p\n", This, object);
@@ -149,7 +149,7 @@ HRESULT WINAPI IDirect3DDevice9Impl_CreateStateBlock(LPDIRECT3DDEVICE9 iface, D3
    return hrc;
 }
 
-HRESULT  WINAPI  IDirect3DDevice9Impl_BeginStateBlock(LPDIRECT3DDEVICE9 iface) {
+HRESULT  WINAPI  IDirect3DDevice9Impl_BeginStateBlock(LPDIRECT3DDEVICE9EX iface) {
     IDirect3DDevice9Impl *This = (IDirect3DDevice9Impl *)iface;    
     HRESULT hr;
     TRACE("(%p) Relay\n", This);
@@ -160,7 +160,7 @@ HRESULT  WINAPI  IDirect3DDevice9Impl_BeginStateBlock(LPDIRECT3DDEVICE9 iface) {
     return hr;
 }
 
-HRESULT  WINAPI  IDirect3DDevice9Impl_EndStateBlock(LPDIRECT3DDEVICE9 iface, IDirect3DStateBlock9** ppSB) {
+HRESULT  WINAPI  IDirect3DDevice9Impl_EndStateBlock(LPDIRECT3DDEVICE9EX iface, IDirect3DStateBlock9** ppSB) {
     IDirect3DDevice9Impl *This = (IDirect3DDevice9Impl *)iface;   
     HRESULT hr;
     IWineD3DStateBlock* wineD3DStateBlock;    
@@ -168,14 +168,14 @@ HRESULT  WINAPI  IDirect3DDevice9Impl_EndStateBlock(LPDIRECT3DDEVICE9 iface, IDi
 
     TRACE("(%p) Relay\n", This); 
     
-    /* Tell wineD3D to endstatablock before anything else (in case we run out
+    /* Tell wineD3D to endstateblock before anything else (in case we run out
      * of memory later and cause locking problems)
      */
     EnterCriticalSection(&d3d9_cs);
     hr=IWineD3DDevice_EndStateBlock(This->WineD3DDevice,&wineD3DStateBlock);
     LeaveCriticalSection(&d3d9_cs);
     if(hr!= D3D_OK){
-       FIXME("IWineD3DDevice_EndStateBlock returned an error\n");
+       WARN("IWineD3DDevice_EndStateBlock returned an error\n");
        return hr;
     }    
     /* allocate a new IDirectD3DStateBlock */
@@ -185,9 +185,9 @@ HRESULT  WINAPI  IDirect3DDevice9Impl_EndStateBlock(LPDIRECT3DDEVICE9 iface, IDi
     object->lpVtbl = &Direct3DStateBlock9_Vtbl;
     object->wineD3DStateBlock = wineD3DStateBlock;
 
-    IUnknown_AddRef(iface);
+    IDirect3DDevice9Ex_AddRef(iface);
     object->parentDevice = iface;
     *ppSB=(IDirect3DStateBlock9*)object;
-    TRACE("(%p)Returning %p %p\n", This, *ppSB, wineD3DStateBlock);
+    TRACE("(%p) Returning *ppSB %p, wineD3DStateBlock %p\n", This, *ppSB, wineD3DStateBlock);
     return D3D_OK;
 }

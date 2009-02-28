@@ -14,13 +14,11 @@
 #include "d3d9_device.h"
 #include "d3d9_cursor.h"
 
-#define LOCK_D3DDEVICE9()   if (This->BaseObject.pUnknown && ((LPDIRECT3DDEVICE9_INT)This->BaseObject.pUnknown)->bLockDevice) \
-                                EnterCriticalSection(&((LPDIRECT3DDEVICE9_INT)This->BaseObject.pUnknown)->CriticalSection);
-#define UNLOCK_D3DDEVICE9() if (This->BaseObject.pUnknown && ((LPDIRECT3DDEVICE9_INT)This->BaseObject.pUnknown)->bLockDevice) \
-                                LeaveCriticalSection(&((LPDIRECT3DDEVICE9_INT)This->BaseObject.pUnknown)->CriticalSection);
+#define LOCK_D3DDEVICE9()   D3D9BaseObject_LockDevice(&This->BaseObject)
+#define UNLOCK_D3DDEVICE9() D3D9BaseObject_UnlockDevice(&This->BaseObject)
 
 /* Convert a IDirect3DSwapChain9 pointer safely to the internal implementation struct */
-static LPDIRECT3DSWAPCHAIN9_INT IDirect3DSwapChain9ToImpl(LPDIRECT3DSWAPCHAIN9 iface)
+LPDIRECT3DSWAPCHAIN9_INT IDirect3DSwapChain9ToImpl(LPDIRECT3DSWAPCHAIN9 iface)
 {
     if (NULL == iface)
         return NULL;
@@ -245,4 +243,14 @@ HRESULT Direct3DSwapChain9_Reset(Direct3DSwapChain9_INT* pThisSwapChain, D3DPRES
 {
     // TODO: Do all the dirty work...
     return D3D_OK;
+}
+
+VOID Direct3DSwapChain9_GetGammaRamp(Direct3DSwapChain9_INT* pThisSwapChain, D3DGAMMARAMP* pRamp)
+{
+    memcpy(pRamp, &pThisSwapChain->GammaRamp, sizeof(D3DGAMMARAMP));
+}
+
+VOID Direct3DSwapChain9_SetGammaRamp(Direct3DSwapChain9_INT* pThisSwapChain, DWORD Flags, CONST D3DGAMMARAMP* pRamp)
+{
+    UNIMPLEMENTED
 }

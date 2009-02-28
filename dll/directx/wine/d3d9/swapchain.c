@@ -32,7 +32,7 @@ static HRESULT WINAPI IDirect3DSwapChain9Impl_QueryInterface(LPDIRECT3DSWAPCHAIN
 
     if (IsEqualGUID(riid, &IID_IUnknown)
         || IsEqualGUID(riid, &IID_IDirect3DSwapChain9)) {
-        IUnknown_AddRef(iface);
+        IDirect3DSwapChain9_AddRef(iface);
         *ppobj = This;
         return S_OK;
     }
@@ -48,7 +48,7 @@ static ULONG WINAPI IDirect3DSwapChain9Impl_AddRef(LPDIRECT3DSWAPCHAIN9 iface) {
 
     TRACE("(%p) : AddRef from %d\n", This, ref - 1);
 
-    if(ref == 1 && This->parentDevice) IUnknown_AddRef(This->parentDevice);
+    if(ref == 1 && This->parentDevice) IDirect3DDevice9Ex_AddRef(This->parentDevice);
 
     return ref;
 }
@@ -60,7 +60,7 @@ static ULONG WINAPI IDirect3DSwapChain9Impl_Release(LPDIRECT3DSWAPCHAIN9 iface) 
     TRACE("(%p) : ReleaseRef to %d\n", This, ref);
 
     if (ref == 0) {
-        if (This->parentDevice) IUnknown_Release(This->parentDevice);
+        if (This->parentDevice) IDirect3DDevice9Ex_Release(This->parentDevice);
         if (!This->isImplicit) {
             EnterCriticalSection(&d3d9_cs);
             IWineD3DSwapChain_Destroy(This->wineD3DSwapChain, D3D9CB_DestroyRenderTarget);
@@ -191,7 +191,7 @@ static const IDirect3DSwapChain9Vtbl Direct3DSwapChain9_Vtbl =
 
 
 /* IDirect3DDevice9 IDirect3DSwapChain9 Methods follow: */
-HRESULT  WINAPI  IDirect3DDevice9Impl_CreateAdditionalSwapChain(LPDIRECT3DDEVICE9 iface, D3DPRESENT_PARAMETERS* pPresentationParameters, IDirect3DSwapChain9** pSwapChain) {
+HRESULT  WINAPI  IDirect3DDevice9Impl_CreateAdditionalSwapChain(LPDIRECT3DDEVICE9EX iface, D3DPRESENT_PARAMETERS* pPresentationParameters, IDirect3DSwapChain9** pSwapChain) {
     IDirect3DDevice9Impl *This = (IDirect3DDevice9Impl *)iface;
     IDirect3DSwapChain9Impl* object;
     HRESULT hrc = D3D_OK;
@@ -227,9 +227,11 @@ HRESULT  WINAPI  IDirect3DDevice9Impl_CreateAdditionalSwapChain(LPDIRECT3DDEVICE
     localParameters.Flags                               = pPresentationParameters->Flags;
     localParameters.FullScreen_RefreshRateInHz          = pPresentationParameters->FullScreen_RefreshRateInHz;
     localParameters.PresentationInterval                = pPresentationParameters->PresentationInterval;
+    localParameters.AutoRestoreDisplayMode              = TRUE;
 
     EnterCriticalSection(&d3d9_cs);
-    hrc = IWineD3DDevice_CreateAdditionalSwapChain(This->WineD3DDevice, &localParameters, &object->wineD3DSwapChain, (IUnknown*)object, D3D9CB_CreateRenderTarget, D3D9CB_CreateDepthStencilSurface);
+    hrc = IWineD3DDevice_CreateSwapChain(This->WineD3DDevice, &localParameters,
+            &object->wineD3DSwapChain, (IUnknown*)object, SURFACE_OPENGL);
     LeaveCriticalSection(&d3d9_cs);
 
     pPresentationParameters->BackBufferWidth            = localParameters.BackBufferWidth;
@@ -248,10 +250,10 @@ HRESULT  WINAPI  IDirect3DDevice9Impl_CreateAdditionalSwapChain(LPDIRECT3DDEVICE
     pPresentationParameters->PresentationInterval       = localParameters.PresentationInterval;
 
     if (hrc != D3D_OK) {
-        FIXME("(%p) call to IWineD3DDevice_CreateAdditionalSwapChain failed\n", This);
+        FIXME("(%p) call to IWineD3DDevice_CreateSwapChain failed\n", This);
         HeapFree(GetProcessHeap(), 0 , object);
     } else {
-        IUnknown_AddRef(iface);
+        IDirect3DDevice9Ex_AddRef(iface);
         object->parentDevice = iface;
         *pSwapChain = (IDirect3DSwapChain9 *)object;
         TRACE("(%p) : Created swapchain %p\n", This, *pSwapChain);
@@ -260,7 +262,7 @@ HRESULT  WINAPI  IDirect3DDevice9Impl_CreateAdditionalSwapChain(LPDIRECT3DDEVICE
     return hrc;
 }
 
-HRESULT  WINAPI  IDirect3DDevice9Impl_GetSwapChain(LPDIRECT3DDEVICE9 iface, UINT iSwapChain, IDirect3DSwapChain9** pSwapChain) {
+HRESULT  WINAPI  IDirect3DDevice9Impl_GetSwapChain(LPDIRECT3DDEVICE9EX iface, UINT iSwapChain, IDirect3DSwapChain9** pSwapChain) {
     IDirect3DDevice9Impl *This = (IDirect3DDevice9Impl *)iface;
     HRESULT hrc = D3D_OK;
     IWineD3DSwapChain *swapchain = NULL;
@@ -279,7 +281,7 @@ HRESULT  WINAPI  IDirect3DDevice9Impl_GetSwapChain(LPDIRECT3DDEVICE9 iface, UINT
     return hrc;
 }
 
-UINT     WINAPI  IDirect3DDevice9Impl_GetNumberOfSwapChains(LPDIRECT3DDEVICE9 iface) {
+UINT     WINAPI  IDirect3DDevice9Impl_GetNumberOfSwapChains(LPDIRECT3DDEVICE9EX iface) {
     IDirect3DDevice9Impl *This = (IDirect3DDevice9Impl *)iface;
     UINT ret;
     TRACE("(%p) Relay\n", This);

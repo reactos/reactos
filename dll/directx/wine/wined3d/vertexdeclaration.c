@@ -26,6 +26,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d_decl);
 
+#define GLINFO_LOCATION This->wineD3DDevice->adapter->gl_info
+
 static void dump_wined3dvertexelement(const WINED3DVERTEXELEMENT *element) {
     TRACE("     Stream: %d\n", element->Stream);
     TRACE("     Offset: %d\n", element->Offset);
@@ -72,6 +74,7 @@ static ULONG WINAPI IWineD3DVertexDeclarationImpl_Release(IWineD3DVertexDeclarat
         }
 
         HeapFree(GetProcessHeap(), 0, This->pDeclarationWine);
+        HeapFree(GetProcessHeap(), 0, This->ffp_valid);
         HeapFree(GetProcessHeap(), 0, This);
     }
     return ref;
@@ -101,7 +104,7 @@ static HRESULT WINAPI IWineD3DVertexDeclarationImpl_GetDevice(IWineD3DVertexDecl
 }
 
 static HRESULT WINAPI IWineD3DVertexDeclarationImpl_GetDeclaration(IWineD3DVertexDeclaration *iface,
-        WINED3DVERTEXELEMENT *elements, size_t *element_count) {
+        WINED3DVERTEXELEMENT *elements, UINT *element_count) {
     IWineD3DVertexDeclarationImpl *This = (IWineD3DVertexDeclarationImpl *)iface;
     HRESULT hr = WINED3D_OK;
 
@@ -116,11 +119,95 @@ static HRESULT WINAPI IWineD3DVertexDeclarationImpl_GetDeclaration(IWineD3DVerte
     return hr;
 }
 
+static BOOL declaration_element_valid_ffp(const WINED3DVERTEXELEMENT *element)
+{
+    switch(element->Usage)
+    {
+        case WINED3DDECLUSAGE_POSITION:
+        case WINED3DDECLUSAGE_POSITIONT:
+            switch(element->Type)
+            {
+                case WINED3DDECLTYPE_FLOAT2:
+                case WINED3DDECLTYPE_FLOAT3:
+                case WINED3DDECLTYPE_FLOAT4:
+                case WINED3DDECLTYPE_SHORT2:
+                case WINED3DDECLTYPE_SHORT4:
+                case WINED3DDECLTYPE_FLOAT16_2:
+                case WINED3DDECLTYPE_FLOAT16_4:
+                    return TRUE;
+                default:
+                    return FALSE;
+            }
+
+        case WINED3DDECLUSAGE_BLENDWEIGHT:
+            switch(element->Type)
+            {
+                case WINED3DDECLTYPE_D3DCOLOR:
+                case WINED3DDECLTYPE_UBYTE4:
+                case WINED3DDECLTYPE_SHORT2:
+                case WINED3DDECLTYPE_SHORT4:
+                case WINED3DDECLTYPE_FLOAT16_2:
+                case WINED3DDECLTYPE_FLOAT16_4:
+                    return TRUE;
+                default:
+                    return FALSE;
+            }
+
+        case WINED3DDECLUSAGE_NORMAL:
+            switch(element->Type)
+            {
+                case WINED3DDECLTYPE_FLOAT3:
+                case WINED3DDECLTYPE_FLOAT4:
+                case WINED3DDECLTYPE_SHORT4:
+                case WINED3DDECLTYPE_FLOAT16_4:
+                    return TRUE;
+                default:
+                    return FALSE;
+            }
+
+        case WINED3DDECLUSAGE_TEXCOORD:
+            switch(element->Type)
+            {
+                case WINED3DDECLTYPE_FLOAT1:
+                case WINED3DDECLTYPE_FLOAT2:
+                case WINED3DDECLTYPE_FLOAT3:
+                case WINED3DDECLTYPE_FLOAT4:
+                case WINED3DDECLTYPE_SHORT2:
+                case WINED3DDECLTYPE_SHORT4:
+                case WINED3DDECLTYPE_FLOAT16_2:
+                case WINED3DDECLTYPE_FLOAT16_4:
+                    return TRUE;
+                default:
+                    return FALSE;
+            }
+
+        case WINED3DDECLUSAGE_COLOR:
+            switch(element->Type)
+            {
+                case WINED3DDECLTYPE_FLOAT3:
+                case WINED3DDECLTYPE_FLOAT4:
+                case WINED3DDECLTYPE_D3DCOLOR:
+                case WINED3DDECLTYPE_UBYTE4:
+                case WINED3DDECLTYPE_SHORT4:
+                case WINED3DDECLTYPE_UBYTE4N:
+                case WINED3DDECLTYPE_SHORT4N:
+                case WINED3DDECLTYPE_USHORT4N:
+                case WINED3DDECLTYPE_FLOAT16_4:
+                    return TRUE;
+                default:
+                    return FALSE;
+            }
+
+        default:
+            return FALSE;
+    }
+}
+
 static HRESULT WINAPI IWineD3DVertexDeclarationImpl_SetDeclaration(IWineD3DVertexDeclaration *iface,
-        const WINED3DVERTEXELEMENT *elements, size_t element_count) {
+        const WINED3DVERTEXELEMENT *elements, UINT element_count) {
     IWineD3DVertexDeclarationImpl *This = (IWineD3DVertexDeclarationImpl *)iface;
     HRESULT hr = WINED3D_OK;
-    int i, j;
+    int i;
     char isPreLoaded[MAX_STREAMS];
 
     TRACE("(%p) : d3d version %d\n", This, ((IWineD3DImpl *)This->wineD3DDevice->wineD3D)->dxVersion);
@@ -134,7 +221,8 @@ static HRESULT WINAPI IWineD3DVertexDeclarationImpl_SetDeclaration(IWineD3DVerte
 
     This->declarationWNumElements = element_count;
     This->pDeclarationWine = HeapAlloc(GetProcessHeap(), 0, sizeof(WINED3DVERTEXELEMENT) * element_count);
-    if (!This->pDeclarationWine) {
+    This->ffp_valid = HeapAlloc(GetProcessHeap(), 0, sizeof(*This->ffp_valid) * element_count);
+    if (!This->pDeclarationWine || !This->ffp_valid) {
         ERR("Memory allocation failed\n");
         return WINED3DERR_OUTOFVIDEOMEMORY;
     } else {
@@ -147,6 +235,7 @@ static HRESULT WINAPI IWineD3DVertexDeclarationImpl_SetDeclaration(IWineD3DVerte
     This->num_streams = 0;
     This->position_transformed = FALSE;
     for (i = 0; i < element_count; ++i) {
+        This->ffp_valid[i] = declaration_element_valid_ffp(&This->pDeclarationWine[i]);
 
         if(This->pDeclarationWine[i].Usage == WINED3DDECLUSAGE_POSITIONT) {
             This->position_transformed = TRUE;
@@ -157,40 +246,30 @@ static HRESULT WINAPI IWineD3DVertexDeclarationImpl_SetDeclaration(IWineD3DVerte
          */
         if(This->pDeclarationWine[i].Stream >= MAX_STREAMS) continue;
 
+        if(This->pDeclarationWine[i].Type == WINED3DDECLTYPE_UNUSED) {
+            WARN("The application tries to use WINED3DDECLTYPE_UNUSED, returning E_FAIL\n");
+            /* The caller will release the vdecl, which will free This->pDeclarationWine */
+            return E_FAIL;
+        }
+
+        if(This->pDeclarationWine[i].Offset & 0x3) {
+            WARN("Declaration element %d is not 4 byte aligned(%d), returning E_FAIL\n", i, This->pDeclarationWine[i].Offset);
+            return E_FAIL;
+        }
+
         if(!isPreLoaded[This->pDeclarationWine[i].Stream]) {
             This->streams[This->num_streams] = This->pDeclarationWine[i].Stream;
             This->num_streams++;
             isPreLoaded[This->pDeclarationWine[i].Stream] = 1;
         }
 
-        /* Create a sorted array containing the attribute declarations that are of type
-         * D3DCOLOR. D3DCOLOR requires swizzling of the r and b component, and if the
-         * declaration of one attribute changes the vertex shader needs recompilation.
-         * Having a sorted array of the attributes allows efficient comparison of the
-         * declaration against a shader
-         */
-        if(This->pDeclarationWine[i].Type == WINED3DDECLTYPE_D3DCOLOR) {
-            for(j = 0; j < This->num_swizzled_attribs; j++) {
-                if(This->swizzled_attribs[j].usage >  This->pDeclarationWine[i].Usage ||
-                  (This->swizzled_attribs[j].usage == This->pDeclarationWine[i].Usage &&
-                   This->swizzled_attribs[j].idx   >   This->pDeclarationWine[i].UsageIndex)) {
-                    memmove(&This->swizzled_attribs[j + 1], &This->swizzled_attribs[j],
-                             sizeof(This->swizzled_attribs) - (sizeof(This->swizzled_attribs[0]) * (j - 1)));
-                    break;
-                }
-            }
-
-            This->swizzled_attribs[j].usage = This->pDeclarationWine[i].Usage;
-            This->swizzled_attribs[j].idx = This->pDeclarationWine[i].UsageIndex;
-            This->num_swizzled_attribs++;
+        if (This->pDeclarationWine[i].Type == WINED3DDECLTYPE_FLOAT16_2
+                || This->pDeclarationWine[i].Type == WINED3DDECLTYPE_FLOAT16_4)
+        {
+            if (!GL_SUPPORT(NV_HALF_FLOAT)) This->half_float_conv_needed = TRUE;
         }
     }
 
-    TRACE("Swizzled attributes found:\n");
-    for(i = 0; i < This->num_swizzled_attribs; i++) {
-        TRACE("%u: %s%d\n", i,
-              debug_d3ddeclusage(This->swizzled_attribs[i].usage), This->swizzled_attribs[i].idx);
-    }
     TRACE("Returning\n");
     return hr;
 }

@@ -33,7 +33,7 @@ static HRESULT WINAPI IDirect3DTexture9Impl_QueryInterface(LPDIRECT3DTEXTURE9 if
         || IsEqualGUID(riid, &IID_IDirect3DResource9)
         || IsEqualGUID(riid, &IID_IDirect3DBaseTexture9)
         || IsEqualGUID(riid, &IID_IDirect3DTexture9)) {
-        IUnknown_AddRef(iface);
+        IDirect3DTexture9_AddRef(iface);
         *ppobj = This;
         return S_OK;
     }
@@ -62,7 +62,7 @@ static ULONG WINAPI IDirect3DTexture9Impl_Release(LPDIRECT3DTEXTURE9 iface) {
         EnterCriticalSection(&d3d9_cs);
         IWineD3DTexture_Destroy(This->wineD3DTexture, D3D9CB_DestroySurface);
         LeaveCriticalSection(&d3d9_cs);
-        IUnknown_Release(This->parentDevice);
+        IDirect3DDevice9Ex_Release(This->parentDevice);
         HeapFree(GetProcessHeap(), 0, This);
     }
     return ref;
@@ -327,7 +327,7 @@ static const IDirect3DTexture9Vtbl Direct3DTexture9_Vtbl =
 
 
 /* IDirect3DDevice9 IDirect3DTexture9 Methods follow: */
-HRESULT  WINAPI  IDirect3DDevice9Impl_CreateTexture(LPDIRECT3DDEVICE9 iface, UINT Width, UINT Height, UINT Levels, DWORD Usage,
+HRESULT  WINAPI  IDirect3DDevice9Impl_CreateTexture(LPDIRECT3DDEVICE9EX iface, UINT Width, UINT Height, UINT Levels, DWORD Usage,
                                                     D3DFORMAT Format, D3DPOOL Pool, IDirect3DTexture9** ppTexture, HANDLE* pSharedHandle) {
     IDirect3DTexture9Impl *object;
     IDirect3DDevice9Impl *This = (IDirect3DDevice9Impl *)iface;
@@ -339,7 +339,7 @@ HRESULT  WINAPI  IDirect3DDevice9Impl_CreateTexture(LPDIRECT3DDEVICE9 iface, UIN
     object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IDirect3DTexture9Impl));
 
     if (NULL == object) {
-        FIXME("Allocation of memory failed, returning D3DERR_OUTOFVIDEOMEMORY\n");
+        ERR("Allocation of memory failed, returning D3DERR_OUTOFVIDEOMEMORY\n");
         return D3DERR_OUTOFVIDEOMEMORY;
     }
 
@@ -347,16 +347,15 @@ HRESULT  WINAPI  IDirect3DDevice9Impl_CreateTexture(LPDIRECT3DDEVICE9 iface, UIN
     object->ref = 1;
     EnterCriticalSection(&d3d9_cs);
     hrc = IWineD3DDevice_CreateTexture(This->WineD3DDevice, Width, Height, Levels, Usage & WINED3DUSAGE_MASK,
-                                 (WINED3DFORMAT)Format, (WINED3DPOOL) Pool, &object->wineD3DTexture, pSharedHandle, (IUnknown *)object, D3D9CB_CreateSurface);
+            Format, Pool, &object->wineD3DTexture, pSharedHandle, (IUnknown *)object);
     LeaveCriticalSection(&d3d9_cs);
-
     if (FAILED(hrc)) {
 
         /* free up object */
-        FIXME("(%p) call to IWineD3DDevice_CreateTexture failed\n", This);
+        WARN("(%p) call to IWineD3DDevice_CreateTexture failed\n", This);
         HeapFree(GetProcessHeap(), 0, object);
    } else {
-        IUnknown_AddRef(iface);
+        IDirect3DDevice9Ex_AddRef(iface);
         object->parentDevice = iface;
         *ppTexture= (LPDIRECT3DTEXTURE9) object;
         TRACE("(%p) Created Texture %p, %p\n", This, object, object->wineD3DTexture);

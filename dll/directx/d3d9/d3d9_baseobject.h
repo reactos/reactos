@@ -44,5 +44,7 @@ ULONG D3D9BaseObject_AddRef(D3D9BaseObject* pBaseObject);
 ULONG D3D9BaseObject_Release(D3D9BaseObject* pBaseObject);
 HRESULT D3D9BaseObject_GetDevice(D3D9BaseObject* pBaseObject, IDirect3DDevice9** ppDevice);
 HRESULT D3D9BaseObject_GetDeviceInt(D3D9BaseObject* pBaseObject, struct _Direct3DDevice9_INT** ppDevice);
+VOID D3D9BaseObject_LockDevice(D3D9BaseObject* pBaseObject);
+VOID D3D9BaseObject_UnlockDevice(D3D9BaseObject* pBaseObject);
 
 #endif // _D3D9_BASEOBJECT_H_

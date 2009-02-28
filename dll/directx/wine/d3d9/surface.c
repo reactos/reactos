@@ -31,7 +31,7 @@ static HRESULT WINAPI IDirect3DSurface9Impl_QueryInterface(LPDIRECT3DSURFACE9 if
     if (IsEqualGUID(riid, &IID_IUnknown)
         || IsEqualGUID(riid, &IID_IDirect3DResource9)
         || IsEqualGUID(riid, &IID_IDirect3DSurface9)) {
-        IUnknown_AddRef(iface);
+        IDirect3DSurface9_AddRef(iface);
         *ppobj = This;
         return S_OK;
     }
@@ -53,7 +53,7 @@ static ULONG WINAPI IDirect3DSurface9Impl_AddRef(LPDIRECT3DSURFACE9 iface) {
     } else {
         /* No container, handle our own refcounting */
         ULONG ref = InterlockedIncrement(&This->ref);
-        if(ref == 1 && This->parentDevice) IUnknown_AddRef(This->parentDevice);
+        if(ref == 1 && This->parentDevice) IDirect3DDevice9Ex_AddRef(This->parentDevice);
         TRACE("(%p) : AddRef from %d\n", This, ref - 1);
 
         return ref;
@@ -76,7 +76,7 @@ static ULONG WINAPI IDirect3DSurface9Impl_Release(LPDIRECT3DSURFACE9 iface) {
         TRACE("(%p) : ReleaseRef to %d\n", This, ref);
 
         if (ref == 0) {
-            if (This->parentDevice) IUnknown_Release(This->parentDevice);
+            if (This->parentDevice) IDirect3DDevice9Ex_Release(This->parentDevice);
             if (!This->isImplicit) {
                 EnterCriticalSection(&d3d9_cs);
                 IWineD3DSurface_Release(This->wineD3DSurface);
@@ -241,7 +241,11 @@ static HRESULT WINAPI IDirect3DSurface9Impl_UnlockRect(LPDIRECT3DSURFACE9 iface)
     EnterCriticalSection(&d3d9_cs);
     hr = IWineD3DSurface_UnlockRect(This->wineD3DSurface);
     LeaveCriticalSection(&d3d9_cs);
-    return hr;
+    switch(hr)
+    {
+        case WINEDDERR_NOTLOCKED:       return D3DERR_INVALIDCALL;
+        default:                        return hr;
+    }
 }
 
 static HRESULT WINAPI IDirect3DSurface9Impl_GetDC(LPDIRECT3DSURFACE9 iface, HDC* phdc) {
@@ -263,7 +267,10 @@ static HRESULT WINAPI IDirect3DSurface9Impl_ReleaseDC(LPDIRECT3DSURFACE9 iface, 
     EnterCriticalSection(&d3d9_cs);
     hr = IWineD3DSurface_ReleaseDC(This->wineD3DSurface, hdc);
     LeaveCriticalSection(&d3d9_cs);
-    return hr;
+    switch(hr) {
+        case WINEDDERR_NODC:    return WINED3DERR_INVALIDCALL;
+        default:                return hr;
+    }
 }
 
 

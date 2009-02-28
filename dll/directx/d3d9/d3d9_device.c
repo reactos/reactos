@@ -10,17 +10,25 @@
 #include "adapter.h"
 #include <debug.h>
 #include "d3d9_create.h"
+#include "d3d9_mipmap.h"
 
 #define LOCK_D3DDEVICE9()     if (This->bLockDevice) EnterCriticalSection(&This->CriticalSection);
 #define UNLOCK_D3DDEVICE9()   if (This->bLockDevice) LeaveCriticalSection(&This->CriticalSection);
 
-/* Convert a IDirect3D9 pointer safely to the internal implementation struct */
+/* Convert a IDirect3DDevice9 pointer safely to the internal implementation struct */
 LPDIRECT3DDEVICE9_INT IDirect3DDevice9ToImpl(LPDIRECT3DDEVICE9 iface)
 {
     if (NULL == iface)
         return NULL;
 
     return (LPDIRECT3DDEVICE9_INT)((ULONG_PTR)iface - FIELD_OFFSET(DIRECT3DDEVICE9_INT, lpVtbl));
+}
+
+static HRESULT InvalidCall(LPDIRECT3DDEVICE9_INT This, LPSTR ErrorMsg)
+{
+    DPRINT1(ErrorMsg);
+    UNLOCK_D3DDEVICE9();
+    return D3DERR_INVALIDCALL;
 }
 
 /* IDirect3DDevice9: IUnknown implementation */
@@ -308,10 +316,64 @@ BOOL WINAPI IDirect3DDevice9Base_ShowCursor(LPDIRECT3DDEVICE9 iface, BOOL bShow)
     return TRUE;
 }
 
+/*++
+* @name IDirect3DDevice9::CreateAdditionalSwapChain
+* @implemented
+*
+* The function IDirect3DDevice9Base_CreateAdditionalSwapChain creates a swap chain object,
+* useful when rendering multiple views.
+*
+* @param LPDIRECT3D iface
+* Pointer to the IDirect3DDevice9 object returned from IDirect3D9::CreateDevice()
+*
+* @param D3DPRESENT_PARAMETERS* pPresentationParameters
+* Pointer to a D3DPRESENT_PARAMETERS structure describing the parameters for the swap chain
+* to be created.
+*
+* @param IDirect3DSwapChain9** ppSwapChain
+* Pointer to a IDirect3DSwapChain9* to receive the swap chain object pointer.
+*
+* @return HRESULT
+* If the method successfully fills the ppSwapChain structure, the return value is D3D_OK.
+* If iSwapChain is out of range or ppSwapChain is a bad pointer, the return value
+* will be D3DERR_INVALIDCALL. Also D3DERR_OUTOFVIDEOMEMORY can be returned if allocation
+* of the new swap chain object failed.
+*
+*/
 HRESULT WINAPI IDirect3DDevice9Base_CreateAdditionalSwapChain(LPDIRECT3DDEVICE9 iface, D3DPRESENT_PARAMETERS* pPresentationParameters, IDirect3DSwapChain9** ppSwapChain)
 {
-    UNIMPLEMENTED
+    UINT iSwapChain;
+    IDirect3DSwapChain9* pSwapChain;
+    Direct3DSwapChain9_INT* pSwapChain_INT;
+    LPDIRECT3DDEVICE9_INT This = IDirect3DDevice9ToImpl(iface);
+    LOCK_D3DDEVICE9();
 
+    if (NULL == ppSwapChain)
+    {
+        DPRINT1("Invalid ppSwapChain parameter specified");
+        UNLOCK_D3DDEVICE9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    *ppSwapChain = NULL;
+    iSwapChain = IDirect3DDevice9_GetNumberOfSwapChains(iface) + 1;
+
+    pSwapChain_INT = CreateDirect3DSwapChain9(RT_EXTERNAL, This, iSwapChain);
+    if (NULL == pSwapChain_INT)
+    {
+        DPRINT1("Out of memory");
+        UNLOCK_D3DDEVICE9();
+        return D3DERR_OUTOFVIDEOMEMORY;
+    }
+
+    Direct3DSwapChain9_Init(pSwapChain_INT, pPresentationParameters);
+
+    This->pSwapChains[iSwapChain] = pSwapChain_INT;
+    pSwapChain = (IDirect3DSwapChain9*)&pSwapChain_INT->lpVtbl;
+    IDirect3DSwapChain9_AddRef(pSwapChain);
+    *ppSwapChain = pSwapChain;
+
+    UNLOCK_D3DDEVICE9();
     return D3D_OK;
 }
 
@@ -410,25 +472,175 @@ HRESULT WINAPI IDirect3DDevice9Base_Reset(LPDIRECT3DDEVICE9 iface, D3DPRESENT_PA
     return D3D_OK;
 }
 
+/*++
+* @name IDirect3DDevice9::Present
+* @implemented
+*
+* The function IDirect3DDevice9Base_Present displays the content of the next
+* back buffer in sequence for the device.
+*
+* @param LPDIRECT3D iface
+* Pointer to the IDirect3DDevice9 object returned from IDirect3D9::CreateDevice().
+*
+* @param CONST RECT* pSourceRect
+* A pointer to a RECT structure representing an area of the back buffer to display where
+* NULL means the whole back buffer. This parameter MUST be NULL unless the back buffer
+* was created with the D3DSWAPEFFECT_COPY flag.
+*
+* @param CONST RECT* pDestRect
+* A pointer to a RECT structure representing an area of the back buffer where the content
+* will be displayed where NULL means the whole back buffer starting at (0,0).
+* This parameter MUST be NULL unless the back buffer was created with the D3DSWAPEFFECT_COPY flag.
+*
+* @param HWND hDestWindowOverride
+* A destination window where NULL means the window specified in the hWndDeviceWindow of the
+* D3DPRESENT_PARAMETERS structure.
+*
+* @param CONST RGNDATA* pDirtyRegion
+* A pointer to a RGNDATA structure representing an area of the back buffer to display where
+* NULL means the whole back buffer. This parameter MUST be NULL unless the back buffer
+* was created with the D3DSWAPEFFECT_COPY flag. This is an opimization region only.
+*
+* @return HRESULT
+* If the method successfully displays the back buffer content, the return value is D3D_OK.
+* If no swap chains are available, the return value will be D3DERR_INVALIDCALL.
+*/
 HRESULT WINAPI IDirect3DDevice9Base_Present(LPDIRECT3DDEVICE9 iface, CONST RECT* pSourceRect, CONST RECT* pDestRect, HWND hDestWindowOverride, CONST RGNDATA* pDirtyRegion)
 {
-    UNIMPLEMENTED
+    UINT i;
+    UINT iNumSwapChains;
+    LPDIRECT3DDEVICE9_INT This = IDirect3DDevice9ToImpl(iface);
+    LOCK_D3DDEVICE9();
 
+    iNumSwapChains = IDirect3DDevice9Base_GetNumberOfSwapChains(iface);
+    if (0 == iNumSwapChains)
+    {
+        DPRINT1("Not enough swap chains, Present() fails");
+        UNLOCK_D3DDEVICE9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    for (i = 0; i < iNumSwapChains; i++)
+    {
+        HRESULT hResult;
+        IDirect3DSwapChain9* pSwapChain;
+        
+        IDirect3DDevice9Base_GetSwapChain(iface, i, &pSwapChain);
+        hResult = IDirect3DSwapChain9_Present(pSwapChain, pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion, 0);
+
+        if (FAILED(hResult))
+        {
+            UNLOCK_D3DDEVICE9();
+            return hResult;
+        }
+    }
+
+    UNLOCK_D3DDEVICE9();
     return D3D_OK;
 }
 
+/*++
+* @name IDirect3DDevice9::GetBackBuffer
+* @implemented
+*
+* The function IDirect3DDevice9Base_GetBackBuffer retrieves the back buffer
+* for the specified swap chain.
+*
+* @param LPDIRECT3D iface
+* Pointer to the IDirect3DDevice9 object returned from IDirect3D9::CreateDevice().
+*
+* @param UINT iSwapChain
+* Swap chain index to get object for.
+* The maximum value for this is the value returned by IDirect3DDevice9::GetNumberOfSwapChains() - 1.
+*
+* @param UINT iBackBuffer
+* Back buffer index to get object for.
+* The maximum value for this is the the total number of back buffers - 1, as indexing starts at 0.
+*
+* @param IDirect3DSurface9** ppBackBuffer
+* Pointer to a IDirect3DSurface9* to receive the back buffer object
+*
+* @return HRESULT
+* If the method successfully sets the ppBackBuffer pointer, the return value is D3D_OK.
+* If iSwapChain or iBackBuffer is out of range, Type is invalid or ppBackBuffer is a bad pointer,
+* the return value will be D3DERR_INVALIDCALL.
+*/
 HRESULT WINAPI IDirect3DDevice9Base_GetBackBuffer(LPDIRECT3DDEVICE9 iface, UINT iSwapChain, UINT iBackBuffer, D3DBACKBUFFER_TYPE Type, IDirect3DSurface9** ppBackBuffer)
 {
-    UNIMPLEMENTED
+    HRESULT hResult;
+    IDirect3DSwapChain9* pSwapChain = NULL;
+    LPDIRECT3DDEVICE9_INT This = IDirect3DDevice9ToImpl(iface);
+    LOCK_D3DDEVICE9();
 
-    return D3D_OK;
+    IDirect3DDevice9Base_GetSwapChain(iface, iSwapChain, &pSwapChain);
+    if (NULL == pSwapChain)
+    {
+        DPRINT1("Invalid iSwapChain parameter specified");
+        UNLOCK_D3DDEVICE9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    if (NULL == ppBackBuffer)
+    {
+        DPRINT1("Invalid ppBackBuffer parameter specified");
+        UNLOCK_D3DDEVICE9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    hResult = IDirect3DSwapChain9_GetBackBuffer(pSwapChain, iBackBuffer, Type, ppBackBuffer);
+
+    UNLOCK_D3DDEVICE9();
+    return hResult;
 }
 
+/*++
+* @name IDirect3DDevice9::GetRasterStatus
+* @implemented
+*
+* The function IDirect3DDevice9Base_GetRasterStatus retrieves raster information
+* of the monitor for the specified swap chain.
+*
+* @param LPDIRECT3D iface
+* Pointer to the IDirect3DDevice9 object returned from IDirect3D9::CreateDevice().
+*
+* @param UINT iSwapChain
+* Swap chain index to get object for.
+* The maximum value for this is the value returned by IDirect3DDevice9::GetNumberOfSwapChains() - 1.
+*
+* @param D3DRASTER_STATUS* pRasterStatus
+* Pointer to a D3DRASTER_STATUS to receive the raster information
+*
+* @return HRESULT
+* If the method successfully fills the pRasterStatus structure, the return value is D3D_OK.
+* If iSwapChain is out of range or pRasterStatus is a bad pointer, the return value
+* will be D3DERR_INVALIDCALL.
+*/
 HRESULT WINAPI IDirect3DDevice9Base_GetRasterStatus(LPDIRECT3DDEVICE9 iface, UINT iSwapChain, D3DRASTER_STATUS* pRasterStatus)
 {
-    UNIMPLEMENTED
+    HRESULT hResult;
+    IDirect3DSwapChain9* pSwapChain = NULL;
+    LPDIRECT3DDEVICE9_INT This = IDirect3DDevice9ToImpl(iface);
+    LOCK_D3DDEVICE9();
 
-    return D3D_OK;
+    IDirect3DDevice9Base_GetSwapChain(iface, iSwapChain, &pSwapChain);
+    if (NULL == pSwapChain)
+    {
+        DPRINT1("Invalid iSwapChain parameter specified");
+        UNLOCK_D3DDEVICE9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    if (NULL == pRasterStatus)
+    {
+        DPRINT1("Invalid pRasterStatus parameter specified");
+        UNLOCK_D3DDEVICE9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    hResult = IDirect3DSwapChain9_GetRasterStatus(pSwapChain, pRasterStatus);
+
+    UNLOCK_D3DDEVICE9();
+    return hResult;
 }
 
 HRESULT WINAPI IDirect3DDevice9Base_SetDialogBoxMode(LPDIRECT3DDEVICE9 iface, BOOL bEnableDialogs)
@@ -438,21 +650,171 @@ HRESULT WINAPI IDirect3DDevice9Base_SetDialogBoxMode(LPDIRECT3DDEVICE9 iface, BO
     return D3D_OK;
 }
 
+/*++
+* @name IDirect3DDevice9::SetGammaRamp
+* @implemented
+*
+* The function IDirect3DDevice9Base_SetGammaRamp sets the gamma correction ramp values
+* for the specified swap chain.
+*
+* @param LPDIRECT3D iface
+* Pointer to the IDirect3DDevice9 object returned from IDirect3D9::CreateDevice().
+*
+* @param UINT iSwapChain
+* Swap chain index to get object for.
+* The maximum value for this is the value returned by IDirect3DDevice9::GetNumberOfSwapChains() - 1.
+*
+* @param UINT Flags
+* Can be on of the following:
+* D3DSGR_CALIBRATE - Detects if a gamma calibrator is installed and if so modifies the values to correspond to
+*                    the monitor and system settings before sending them to the display device.
+* D3DSGR_NO_CALIBRATION - The gamma calibrations values are sent directly to the display device without
+*                         any modification.
+*
+* @param CONST D3DGAMMARAMP* pRamp
+* Pointer to a D3DGAMMARAMP representing the gamma correction ramp values to be set.
+*
+*/
 VOID WINAPI IDirect3DDevice9Base_SetGammaRamp(LPDIRECT3DDEVICE9 iface, UINT iSwapChain, DWORD Flags, CONST D3DGAMMARAMP* pRamp)
 {
-    UNIMPLEMENTED
+    IDirect3DSwapChain9* pSwapChain = NULL;
+    Direct3DSwapChain9_INT* pSwapChain_INT;
+    LPDIRECT3DDEVICE9_INT This = IDirect3DDevice9ToImpl(iface);
+    LOCK_D3DDEVICE9();
+
+    IDirect3DDevice9Base_GetSwapChain(iface, iSwapChain, &pSwapChain);
+    if (NULL == pSwapChain)
+    {
+        DPRINT1("Invalid iSwapChain parameter specified");
+        UNLOCK_D3DDEVICE9();
+        return;
+    }
+
+    if (NULL == pRamp)
+    {
+        DPRINT1("Invalid pRamp parameter specified");
+        UNLOCK_D3DDEVICE9();
+        return;
+    }
+
+    pSwapChain_INT = IDirect3DSwapChain9ToImpl(pSwapChain);
+    Direct3DSwapChain9_SetGammaRamp(pSwapChain_INT, Flags, pRamp);
+
+    UNLOCK_D3DDEVICE9();
 }
 
+/*++
+* @name IDirect3DDevice9::GetGammaRamp
+* @implemented
+*
+* The function IDirect3DDevice9Base_GetGammaRamp retrieves the gamma correction ramp values
+* for the specified swap chain.
+*
+* @param LPDIRECT3D iface
+* Pointer to the IDirect3DDevice9 object returned from IDirect3D9::CreateDevice().
+*
+* @param UINT iSwapChain
+* Swap chain index to get object for.
+* The maximum value for this is the value returned by IDirect3DDevice9::GetNumberOfSwapChains() - 1.
+*
+* @param D3DGAMMARAMP* pRamp
+* Pointer to a D3DGAMMARAMP to receive the gamma correction ramp values.
+*
+*/
 VOID WINAPI IDirect3DDevice9Base_GetGammaRamp(LPDIRECT3DDEVICE9 iface, UINT iSwapChain, D3DGAMMARAMP* pRamp)
 {
-    UNIMPLEMENTED
+    IDirect3DSwapChain9* pSwapChain = NULL;
+    Direct3DSwapChain9_INT* pSwapChain_INT;
+    LPDIRECT3DDEVICE9_INT This = IDirect3DDevice9ToImpl(iface);
+    LOCK_D3DDEVICE9();
+
+    IDirect3DDevice9Base_GetSwapChain(iface, iSwapChain, &pSwapChain);
+    if (NULL == pSwapChain)
+    {
+        DPRINT1("Invalid iSwapChain parameter specified");
+        UNLOCK_D3DDEVICE9();
+        return;
+    }
+
+    if (NULL == pRamp)
+    {
+        DPRINT1("Invalid pRamp parameter specified");
+        UNLOCK_D3DDEVICE9();
+        return;
+    }
+
+    pSwapChain_INT = IDirect3DSwapChain9ToImpl(pSwapChain);
+    Direct3DSwapChain9_GetGammaRamp(pSwapChain_INT, pRamp);
+
+    UNLOCK_D3DDEVICE9();
 }
 
+/*++
+* @name IDirect3DDevice9::CreateTexture
+* @implemented
+*
+* The function IDirect3DDevice9Base_CreateTexture creates a D3D9 texture.
+*
+* @param LPDIRECT3D iface
+* Pointer to the IDirect3DDevice9 object returned from IDirect3D9::CreateDevice()
+*
+* @param UINT Width
+* Desired width of the texture
+*
+* @param UINT Height
+* Desired height of the texture
+*
+* @param UINT Levels
+* Number of mip-maps. If Levels are zero, mip-maps down to size 1x1 will be generated.
+*
+* @param DWORD Usage
+* Valid combinations of the D3DUSAGE constants.
+*
+* @param D3DFORMAT Format
+* One of the D3DFORMAT enum members for the surface format.
+*
+* @param D3DPOOL Pool
+* One of the D3DPOOL enum members for where the texture should be placed.
+*
+* @param IDirect3DTexture9** ppTexture
+* Return parameter for the created texture
+*
+* @param HANDLE* pSharedHandle
+* Set to NULL, shared resources are not implemented yet
+*
+* @return HRESULT
+* Returns D3D_OK if everything went well.
+*
+*/
 HRESULT WINAPI IDirect3DDevice9Base_CreateTexture(LPDIRECT3DDEVICE9 iface, UINT Width, UINT Height, UINT Levels, DWORD Usage, D3DFORMAT Format, D3DPOOL Pool, IDirect3DTexture9** ppTexture, HANDLE* pSharedHandle)
 {
-    UNIMPLEMENTED
+    HRESULT hResult;
+    LPDIRECT3DDEVICE9_INT This = IDirect3DDevice9ToImpl(iface);
+    LOCK_D3DDEVICE9();
 
-    return D3D_OK;
+    if (NULL == This)
+        return InvalidCall(This, "Invalid 'this' parameter specified");
+
+    if (NULL == ppTexture)
+        return InvalidCall(This, "Invalid ppTexture parameter specified");
+
+    *ppTexture = NULL;
+
+    if (D3DFMT_UNKNOWN == Format)
+        return InvalidCall(This, "Invalid Format parameter specified, D3DFMT_UNKNOWN is not a valid Format");
+
+    if (NULL != pSharedHandle)
+    {
+        UNIMPLEMENTED;
+        return InvalidCall(This, "Invalid pSharedHandle parameter specified, only NULL is supported at the moment");
+    }
+
+    hResult = CreateD3D9MipMap(This, Width, Height, Levels, Usage, Format, Pool, ppTexture);
+    if (FAILED(hResult))
+        DPRINT1("Failed to create texture");
+
+    UNLOCK_D3DDEVICE9();
+    return hResult;
 }
 
 HRESULT WINAPI IDirect3DDevice9Base_CreateVolumeTexture(LPDIRECT3DDEVICE9 iface, UINT Width, UINT Height, UINT Depth, UINT Levels, DWORD Usage, D3DFORMAT Format, D3DPOOL Pool, IDirect3DVolumeTexture9** ppVolumeTexture, HANDLE* pSharedHandle)
@@ -518,11 +880,54 @@ HRESULT WINAPI IDirect3DDevice9Base_GetRenderTargetData(LPDIRECT3DDEVICE9 iface,
     return D3D_OK;
 }
 
+/*++
+* @name IDirect3DDevice9::GetFrontBufferData
+* @implemented
+*
+* The function IDirect3DDevice9Base_GetFrontBufferData copies the content of
+* the display device's front buffer in a system memory surface buffer.
+*
+* @param LPDIRECT3D iface
+* Pointer to the IDirect3DDevice9 object returned from IDirect3D9::CreateDevice().
+*
+* @param UINT iSwapChain
+* Swap chain index to get object for.
+* The maximum value for this is the value returned by IDirect3DDevice9::GetNumberOfSwapChains() - 1.
+*
+* @param IDirect3DSurface9* pDestSurface
+* Pointer to a IDirect3DSurface9 to receive front buffer content
+*
+* @return HRESULT
+* If the method successfully fills the pDestSurface buffer, the return value is D3D_OK.
+* If iSwapChain is out of range or pDestSurface is a bad pointer, the return value
+* will be D3DERR_INVALIDCALL.
+*/
 HRESULT WINAPI IDirect3DDevice9Base_GetFrontBufferData(LPDIRECT3DDEVICE9 iface, UINT iSwapChain, IDirect3DSurface9* pDestSurface)
 {
-    UNIMPLEMENTED
+    HRESULT hResult;
+    IDirect3DSwapChain9* pSwapChain = NULL;
+    LPDIRECT3DDEVICE9_INT This = IDirect3DDevice9ToImpl(iface);
+    LOCK_D3DDEVICE9();
 
-    return D3D_OK;
+    IDirect3DDevice9Base_GetSwapChain(iface, iSwapChain, &pSwapChain);
+    if (NULL == pSwapChain)
+    {
+        DPRINT1("Invalid iSwapChain parameter specified");
+        UNLOCK_D3DDEVICE9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    if (NULL == pDestSurface)
+    {
+        DPRINT1("Invalid pDestSurface parameter specified");
+        UNLOCK_D3DDEVICE9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    hResult = IDirect3DSwapChain9_GetFrontBufferData(pSwapChain, pDestSurface);
+
+    UNLOCK_D3DDEVICE9();
+    return hResult;
 }
 
 HRESULT WINAPI IDirect3DDevice9Base_StretchRect(LPDIRECT3DDEVICE9 iface, IDirect3DSurface9* pSourceSurface, CONST RECT* pSourceRect, IDirect3DSurface9* pDestSurface, CONST RECT* pDestRect, D3DTEXTUREFILTERTYPE Filter)

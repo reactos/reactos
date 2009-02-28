@@ -2,7 +2,7 @@
  *
  * Copyright 2000 (c) Marcus Meissner
  * Copyright 2000 (c) TransGaming Technologies Inc.
- * Copyright 2006 (c) Stefan Dösinger
+ * Copyright 2006 (c) Stefan DÃ¶singer
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -96,7 +96,8 @@ static HRESULT WINAPI IWineD3DClipperImpl_SetHwnd(IWineD3DClipper *iface, DWORD 
     return WINED3D_OK;
 }
 
-static HRESULT WINAPI IWineD3DClipperImpl_GetClipList(IWineD3DClipper *iface, RECT *Rect, RGNDATA *ClipList, DWORD *Size)
+static HRESULT WINAPI IWineD3DClipperImpl_GetClipList(IWineD3DClipper *iface, const RECT *Rect,
+        RGNDATA *ClipList, DWORD *Size)
 {
     IWineD3DClipperImpl *This = (IWineD3DClipperImpl *)iface;
     TRACE("(%p,%p,%p,%p)\n", This, Rect, ClipList, Size);
@@ -140,7 +141,7 @@ static HRESULT WINAPI IWineD3DClipperImpl_GetClipList(IWineD3DClipper *iface, RE
     }
 }
 
-static HRESULT WINAPI IWineD3DClipperImpl_SetClipList(IWineD3DClipper *iface, RGNDATA *rgn, DWORD Flags)
+static HRESULT WINAPI IWineD3DClipperImpl_SetClipList(IWineD3DClipper *iface, const RGNDATA *rgn, DWORD Flags)
 {
     IWineD3DClipperImpl *This = (IWineD3DClipperImpl *)iface;
     static int warned = 0;

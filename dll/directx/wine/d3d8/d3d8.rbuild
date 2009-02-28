@@ -1,12 +1,9 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
-<module name="d3d8" type="win32dll" installbase="system32" installname="d3d8.dll" allowwarnings ="true" unicode="yes">
-	<importlibrary definition="d3d8.spec.def" />
+<module name="d3d8" type="win32dll" installbase="system32" installname="d3d8.dll" unicode="yes">
+	<importlibrary definition="d3d8.spec" />
 	<include base="d3d8">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
-	<define name="_WIN32_IE">0x600</define>
-	<define name="_WIN32_WINNT">0x501</define>
-	<define name="WINVER">0x501</define>
 	<define name="__WINESRC__" />
 	<define name="USE_WIN32_OPENGL" />
 
@@ -37,5 +34,6 @@
 	<file>volume.c</file>
 	<file>volumetexture.c</file>
 	<file>version.rc</file>
-	<file>d3d8.spec</file>
+
+	<dependency>wineheaders</dependency>
 </module>
