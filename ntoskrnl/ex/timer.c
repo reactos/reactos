@@ -260,15 +260,15 @@ NtCancelTimer(IN HANDLE TimerHandle,
     /* Check Parameter Validity */
     if ((CurrentState) && (PreviousMode != KernelMode))
     {
-        _SEH_TRY
+        _SEH2_TRY
         {
             ProbeForWriteBoolean(CurrentState);
         }
-        _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+        _SEH2_EXCEPT(ExSystemExceptionFilter())
         {
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
         if(!NT_SUCCESS(Status)) return Status;
     }
 
@@ -344,15 +344,15 @@ NtCancelTimer(IN HANDLE TimerHandle,
         /* Make sure it's safe to write to the handle */
         if (CurrentState)
         {
-            _SEH_TRY
+            _SEH2_TRY
             {
                 *CurrentState = State;
             }
-            _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+            _SEH2_EXCEPT(ExSystemExceptionFilter())
             {
 
             }
-            _SEH_END;
+            _SEH2_END;
         }
     }
 
@@ -384,15 +384,15 @@ NtCreateTimer(OUT PHANDLE TimerHandle,
     /* Check Parameter Validity */
     if (PreviousMode != KernelMode)
     {
-        _SEH_TRY
+        _SEH2_TRY
         {
             ProbeForWriteHandle(TimerHandle);
         }
-        _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+        _SEH2_EXCEPT(ExSystemExceptionFilter())
         {
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
         if(!NT_SUCCESS(Status)) return Status;
     }
 
@@ -432,15 +432,15 @@ NtCreateTimer(OUT PHANDLE TimerHandle,
         if (NT_SUCCESS(Status))
         {
             /* Make sure it's safe to write to the handle */
-            _SEH_TRY
+            _SEH2_TRY
             {
                 *TimerHandle = hTimer;
             }
-            _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+            _SEH2_EXCEPT(ExSystemExceptionFilter())
             {
 
             }
-            _SEH_END;
+            _SEH2_END;
         }
     }
 
@@ -462,15 +462,15 @@ NtOpenTimer(OUT PHANDLE TimerHandle,
     /* Check Parameter Validity */
     if (PreviousMode != KernelMode)
     {
-        _SEH_TRY
+        _SEH2_TRY
         {
             ProbeForWriteHandle(TimerHandle);
         }
-        _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+        _SEH2_EXCEPT(ExSystemExceptionFilter())
         {
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
         if(!NT_SUCCESS(Status)) return Status;
     }
 
@@ -485,15 +485,15 @@ NtOpenTimer(OUT PHANDLE TimerHandle,
     if (NT_SUCCESS(Status))
     {
         /* Make sure it's safe to write to the handle */
-        _SEH_TRY
+        _SEH2_TRY
         {
             *TimerHandle = hTimer;
         }
-        _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+        _SEH2_EXCEPT(ExSystemExceptionFilter())
         {
 
         }
-        _SEH_END;
+        _SEH2_END;
     }
 
     /* Return to Caller */
@@ -535,7 +535,7 @@ NtQueryTimer(IN HANDLE TimerHandle,
     if(NT_SUCCESS(Status))
     {
         /* Return the Basic Information */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Return the remaining time, corrected */
             BasicInfo->TimeRemaining.QuadPart = Timer->
@@ -548,11 +548,11 @@ NtQueryTimer(IN HANDLE TimerHandle,
             /* Return the buffer length if requested */
             if (ReturnLength) *ReturnLength = sizeof(TIMER_BASIC_INFORMATION);
         }
-        _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+        _SEH2_EXCEPT(ExSystemExceptionFilter())
         {
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
 
         /* Dereference Object */
         ObDereferenceObject(Timer);
@@ -589,16 +589,16 @@ NtSetTimer(IN HANDLE TimerHandle,
     /* Check Parameter Validity */
     if (PreviousMode != KernelMode)
     {
-        _SEH_TRY
+        _SEH2_TRY
         {
             TimerDueTime = ProbeForReadLargeInteger(DueTime);
             if (PreviousState) ProbeForWriteBoolean(PreviousState);
         }
-        _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+        _SEH2_EXCEPT(ExSystemExceptionFilter())
         {
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
         if(!NT_SUCCESS(Status)) return Status;
     }
     else
@@ -718,14 +718,14 @@ NtSetTimer(IN HANDLE TimerHandle,
         /* Make sure it's safe to write to the handle */
         if (PreviousState)
         {
-            _SEH_TRY
+            _SEH2_TRY
             {
                 *PreviousState = State;
             }
-            _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+            _SEH2_EXCEPT(ExSystemExceptionFilter())
             {
             }
-            _SEH_END;
+            _SEH2_END;
         }
     }
 

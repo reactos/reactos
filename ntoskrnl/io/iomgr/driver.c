@@ -35,7 +35,7 @@ extern BOOLEAN ExpInTextModeSetup;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 IopInvalidDeviceRequest(
    PDEVICE_OBJECT DeviceObject,
    PIRP Irp)
@@ -493,7 +493,7 @@ IopInitializeDriverModule(
  * Internal routine used by IopAttachFilterDrivers.
  */
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 IopAttachFilterDriversCallback(
    PWSTR ValueName,
    ULONG ValueType,
@@ -569,7 +569,7 @@ IopAttachFilterDrivers(
    PDEVICE_NODE DeviceNode,
    BOOLEAN Lower)
 {
-   RTL_QUERY_REGISTRY_TABLE QueryTable[2] = {{0}};
+   RTL_QUERY_REGISTRY_TABLE QueryTable[2] = { { NULL, 0, NULL, NULL, 0, NULL, 0 }, };
    UNICODE_STRING Class;
    WCHAR ClassBuffer[40];
    UNICODE_STRING EnumRoot = RTL_CONSTANT_STRING(ENUM_ROOT);
@@ -968,7 +968,7 @@ IopInitializeBootDrivers(VOID)
  *    Guard the whole function by SEH.
  */
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
 {
    RTL_QUERY_REGISTRY_TABLE QueryTable[2];
@@ -1010,21 +1010,25 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
    /*
     * Find the driver object
     */
+   Status = ObReferenceObjectByName(&ObjectName,
+                                    0,
+                                    0,
+                                    0,
+                                    IoDriverObjectType,
+                                    KernelMode,
+                                    0,
+                                    (PVOID*)&DriverObject);
 
-   Status = ObReferenceObjectByName(&ObjectName, 0, 0, 0, IoDriverObjectType,
-      KernelMode, 0, (PVOID*)&DriverObject);
+   /*
+    * Free the buffer for driver object name
+    */
+   ExFreePool(ObjectName.Buffer);
 
    if (!NT_SUCCESS(Status))
    {
       DPRINT1("Can't locate driver object for %wZ\n", &ObjectName);
       return Status;
    }
-
-   /*
-    * Free the buffer for driver object name
-    */
-
-   ExFreePool(ObjectName.Buffer);
 
    /*
     * Get path of service...
@@ -1097,9 +1101,14 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
              FALSE, NULL);
       }
 
+      /* Mark the driver object temporary, so it could be deleted later */
+      ObMakeTemporaryObject(DriverObject);
+
+      /* Dereference it 2 times */
+      ObDereferenceObject(DriverObject);
+      ObDereferenceObject(DriverObject);
+
       /* Unload the driver */
-      ObDereferenceObject(DriverObject);
-      ObDereferenceObject(DriverObject);
       MmUnloadSystemImage(DriverObject->DriverSection);
 
       return STATUS_SUCCESS;
@@ -1737,10 +1746,10 @@ IopLoadUnloadDriver(PLOAD_UNLOAD_PARAMS LoadParams)
  * Status
  *    implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
 {
-    UNICODE_STRING CapturedDriverServiceName = {0};
+    UNICODE_STRING CapturedDriverServiceName = { 0, 0, NULL };
     KPROCESSOR_MODE PreviousMode;
     LOAD_UNLOAD_PARAMS LoadParams;
     NTSTATUS Status;
@@ -1819,7 +1828,7 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
  *    implemented
  */
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtUnloadDriver(IN PUNICODE_STRING DriverServiceName)
 {
    return IopUnloadDriver(DriverServiceName, FALSE);

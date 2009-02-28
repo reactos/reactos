@@ -175,15 +175,16 @@ CmpGetNameControlBlock(IN PUNICODE_STRING NodeName)
     Length = NodeName->Length / sizeof(WCHAR);
     for (i = 0; i < (NodeName->Length / sizeof(WCHAR)); i++)
     {
-        /* Check if this is a valid character */
-        if (*NodeName->Buffer > (UCHAR)-1)
+        /* Check if this is a 16-bit character */
+        if (NodeName->Buffer[i] > (UCHAR)-1)
         {
             /* This is the actual size, and we know we're not compressed */
             Length = NodeName->Length;
             IsCompressed = FALSE;
+            break;
         }
     }
-    
+
     /* Lock the NCB entry */
     CmpAcquireNcbLockExclusiveByKey(ConvKey);
 
@@ -195,7 +196,7 @@ CmpGetNameControlBlock(IN PUNICODE_STRING NodeName)
         Ncb = CONTAINING_RECORD(HashEntry, CM_NAME_CONTROL_BLOCK, NameHash);
 
         /* Check if the hash matches */
-        if ((ConvKey = HashEntry->ConvKey) && (Length = Ncb->NameLength))
+        if ((ConvKey == HashEntry->ConvKey) && (Length == Ncb->NameLength))
         {
             /* Assume success */
             Found = TRUE;
@@ -242,7 +243,7 @@ CmpGetNameControlBlock(IN PUNICODE_STRING NodeName)
         /* Go to the next hash */
         HashEntry = HashEntry->NextHash;
     }
-    
+
     /* Check if we didn't find it */
     if (!Found)
     {
@@ -255,16 +256,15 @@ CmpGetNameControlBlock(IN PUNICODE_STRING NodeName)
             CmpReleaseNcbLockByKey(ConvKey);
             return NULL;
         }
-        
+
         /* Clear it out */
         RtlZeroMemory(Ncb, NcbSize);
-        
+
         /* Check if the name was compressed */
         if (IsCompressed)
         {
             /* Copy the compressed name */
-            Ncb->Compressed = TRUE;
-            for (i = 0; i < Length; i++)
+            for (i = 0; i < NodeName->Length / sizeof(WCHAR); i++)
             {
                 /* Copy Unicode to ANSI */
                 ((PCHAR)Ncb->Name)[i] = (CHAR)RtlUpcaseUnicodeChar(NodeName->Buffer[i]);
@@ -273,25 +273,25 @@ CmpGetNameControlBlock(IN PUNICODE_STRING NodeName)
         else
         {
             /* Copy the name directly */
-            Ncb->Compressed = FALSE;
-            for (i = 0; i < Length; i++)
+            for (i = 0; i < NodeName->Length / sizeof(WCHAR); i++)
             {
                 /* Copy each unicode character */
                 Ncb->Name[i] = RtlUpcaseUnicodeChar(NodeName->Buffer[i]);
             }
         }
-            
+
         /* Setup the rest of the NCB */
+        Ncb->Compressed = IsCompressed;
         Ncb->ConvKey = ConvKey;
         Ncb->RefCount++;
         Ncb->NameLength = Length;
-        
+
         /* Insert the name in the hash table */
         HashEntry = &Ncb->NameHash;
         HashEntry->NextHash = GET_HASH_ENTRY(CmpNameCacheTable, ConvKey).Entry;
         GET_HASH_ENTRY(CmpNameCacheTable, ConvKey).Entry = HashEntry;
     }
-    
+
     /* Release NCB lock */
     CmpReleaseNcbLockByKey(ConvKey);
 
@@ -354,6 +354,9 @@ BOOLEAN
 NTAPI
 CmpReferenceKeyControlBlock(IN PCM_KEY_CONTROL_BLOCK Kcb)
 {
+    CMTRACE(CM_REFERENCE_DEBUG,
+            "%s - Referencing KCB: %p\n", __FUNCTION__, Kcb);
+
     /* Check if this is the KCB's first reference */
     if (Kcb->RefCount == 0)
     {
@@ -534,18 +537,18 @@ CmpCleanUpSubKeyInfo(IN PCM_KEY_CONTROL_BLOCK Kcb)
     }
 
     /* Check if there's no linked cell */
-	if (Kcb->KeyCell == HCELL_NIL)
+    if (Kcb->KeyCell == HCELL_NIL)
     {
         /* Make sure it's a delete */
-		ASSERT(Kcb->Delete);
-		KeyNode = NULL;
-	}
+        ASSERT(Kcb->Delete);
+        KeyNode = NULL;
+    }
     else
     {
         /* Get the key node */
-	    KeyNode = (PCM_KEY_NODE)HvGetCell(Kcb->KeyHive, Kcb->KeyCell);
-	}
-    
+        KeyNode = (PCM_KEY_NODE)HvGetCell(Kcb->KeyHive, Kcb->KeyCell);
+    }
+
     /* Check if we got the node */
     if (!KeyNode)
     {
@@ -558,7 +561,7 @@ CmpCleanUpSubKeyInfo(IN PCM_KEY_CONTROL_BLOCK Kcb)
         Kcb->ExtFlags &= ~CM_KCB_INVALID_CACHED_INFO;
         Kcb->SubKeyCount = KeyNode->SubKeyCounts[Stable] +
                            KeyNode->SubKeyCounts[Volatile];
-        
+
         /* Release the cell */
         HvReleaseCell(Kcb->KeyHive, Kcb->KeyCell);
     }
@@ -570,6 +573,8 @@ CmpDereferenceKeyControlBlock(IN PCM_KEY_CONTROL_BLOCK Kcb)
 {
     LONG OldRefCount, NewRefCount;
     ULONG ConvKey;
+    CMTRACE(CM_REFERENCE_DEBUG,
+            "%s - Dereferencing KCB: %p\n", __FUNCTION__, Kcb);
 
     /* Get the ref count and update it */
     OldRefCount = *(PLONG)&Kcb->RefCount;
@@ -602,6 +607,9 @@ NTAPI
 CmpDereferenceKeyControlBlockWithLock(IN PCM_KEY_CONTROL_BLOCK Kcb,
                                       IN BOOLEAN LockHeldExclusively)
 {
+    CMTRACE(CM_REFERENCE_DEBUG,
+            "%s - Dereferencing KCB: %p\n", __FUNCTION__, Kcb);
+
     /* Sanity check */
     ASSERT_KCB_VALID(Kcb);
 
@@ -857,12 +865,12 @@ CmpCreateKeyControlBlock(IN PHHIVE Hive,
     }
 
     /* Check if this is a KCB inside a frozen hive */
-	if ((Kcb) && (((PCMHIVE)Hive)->Frozen) && (!(Kcb->Flags & KEY_SYM_LINK)))
+    if ((Kcb) && (((PCMHIVE)Hive)->Frozen) && (!(Kcb->Flags & KEY_SYM_LINK)))
     {
         /* Don't add these to the delay close */
-		Kcb->ExtFlags |= CM_KCB_NO_DELAY_CLOSE;
+        Kcb->ExtFlags |= CM_KCB_NO_DELAY_CLOSE;
     }
-        
+
     /* Sanity check */
     ASSERT((!Kcb) || (Kcb->Delete == FALSE));
 

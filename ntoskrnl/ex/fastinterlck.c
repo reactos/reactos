@@ -105,12 +105,12 @@ LONGLONG
 FASTCALL
 ExfInterlockedCompareExchange64(IN OUT LONGLONG volatile *Destination,
                                 IN PLONGLONG Exchange,
-                                IN PLONGLONG Comperand)
+                                IN PLONGLONG Comparand)
 {
     LONGLONG Result;
     
     Result = *Destination;
-    if (*Destination == Result) *Destination = *Exchange;
+    if (*Destination == *Comparand) *Destination = *Exchange;
     return Result;
 }
 
@@ -306,7 +306,7 @@ ExInterlockedCompareExchange64(IN OUT PLONGLONG Destination,
     
     KeAcquireSpinLock(Lock, &OldIrql);
     Result = *Destination;
-    if (*Destination == Result) *Destination = *Exchange;
+    if (*Destination == *Comparand) *Destination = *Exchange;
     KeReleaseSpinLock(Lock, OldIrql);
     return Result;
 }

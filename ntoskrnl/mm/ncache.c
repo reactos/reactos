@@ -40,7 +40,7 @@
  *
  * @implemented
  */
-PVOID STDCALL
+PVOID NTAPI
 MmAllocateNonCachedMemory(IN ULONG NumberOfBytes)
 {
    PVOID Result;
@@ -76,7 +76,7 @@ MmAllocateNonCachedMemory(IN ULONG NumberOfBytes)
    return ((PVOID)Result);
 }
 
-VOID static
+static VOID
 MmFreeNonCachedPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
                     PFN_TYPE Page, SWAPENTRY SwapEntry,
                     BOOLEAN Dirty)
@@ -114,7 +114,7 @@ MmFreeNonCachedPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
  *
  * @implemented
  */
-VOID STDCALL MmFreeNonCachedMemory (IN PVOID BaseAddress,
+VOID NTAPI MmFreeNonCachedMemory (IN PVOID BaseAddress,
                                     IN ULONG NumberOfBytes)
 {
    MmLockAddressSpace(MmGetKernelAddressSpace());

@@ -197,7 +197,7 @@ ExpInitNls(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     HANDLE NlsSection;
     PVOID SectionBase = NULL;
     ULONG ViewSize = 0;
-    LARGE_INTEGER SectionOffset = {{0}};
+    LARGE_INTEGER SectionOffset = {{0, 0}};
     PLIST_ENTRY ListHead, NextEntry;
     PMEMORY_ALLOCATION_DESCRIPTOR MdBlock;
     ULONG NlsTablesEncountered = 0;
@@ -466,7 +466,7 @@ ExpLoadInitialProcess(IN PINIT_BUFFER InitBuffer,
 
     /* Make sure the buffer is a valid string which within the given length */
     if ((NtInitialUserProcessBufferType != REG_SZ) ||
-        ((NtInitialUserProcessBufferLength != -1) &&
+        ((NtInitialUserProcessBufferLength != -1U) &&
          ((NtInitialUserProcessBufferLength < sizeof(WCHAR)) ||
           (NtInitialUserProcessBufferLength >
            sizeof(NtInitialUserProcessBuffer) - sizeof(WCHAR)))))
@@ -1429,7 +1429,7 @@ Phase1InitializationDiscard(IN PVOID Context)
         if (!ExpRealTimeIsUniversal)
         {
             /* Check if we don't have a valid bias */
-            if (ExpLastTimeZoneBias == -1)
+            if (ExpLastTimeZoneBias == -1U)
             {
                 /* Reset */
                 ResetBias = TRUE;

@@ -270,7 +270,7 @@ MmInitializePageList(VOID)
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("Unable to create virtual mapping\n");
-                ASSERT(FALSE);
+                KeBugCheck(MEMORY_MANAGEMENT);
             }
         }
         else
@@ -416,7 +416,7 @@ MmMarkPageMapped(PFN_TYPE Pfn)
       if (Page->Flags.Type == MM_PHYSICAL_PAGE_FREE)
       {
          DPRINT1("Mapping non-used page\n");
-         ASSERT(FALSE);
+         KeBugCheck(MEMORY_MANAGEMENT);
       }
       Page->MapCount++;
       Page->ReferenceCount++;
@@ -438,12 +438,12 @@ MmMarkPageUnmapped(PFN_TYPE Pfn)
       if (Page->Flags.Type == MM_PHYSICAL_PAGE_FREE)
       {
          DPRINT1("Unmapping non-used page\n");
-         ASSERT(FALSE);
+         KeBugCheck(MEMORY_MANAGEMENT);
       }
       if (Page->MapCount == 0)
       {
          DPRINT1("Unmapping not mapped page\n");
-         ASSERT(FALSE);
+         KeBugCheck(MEMORY_MANAGEMENT);
       }
       Page->MapCount--;
       Page->ReferenceCount--;
@@ -511,7 +511,7 @@ MmReferencePageUnsafe(PFN_TYPE Pfn)
    if (Page->Flags.Type != MM_PHYSICAL_PAGE_USED)
    {
       DPRINT1("Referencing non-used page\n");
-      ASSERT(FALSE);
+      KeBugCheck(MEMORY_MANAGEMENT);
    }
 
    Page->ReferenceCount++;
@@ -542,7 +542,7 @@ MmGetReferenceCountPage(PFN_TYPE Pfn)
    if (Page->Flags.Type != MM_PHYSICAL_PAGE_USED)
    {
       DPRINT1("Getting reference count for free page\n");
-      ASSERT(FALSE);
+      KeBugCheck(MEMORY_MANAGEMENT);
    }
 
    RCount = Page->ReferenceCount;
@@ -577,12 +577,12 @@ MmDereferencePage(PFN_TYPE Pfn)
    if (Page->Flags.Type != MM_PHYSICAL_PAGE_USED)
    {
       DPRINT1("Dereferencing free page\n");
-      ASSERT(FALSE);
+      KeBugCheck(MEMORY_MANAGEMENT);
    }
    if (Page->ReferenceCount == 0)
    {
       DPRINT1("Derefrencing page with reference count 0\n");
-      ASSERT(FALSE);
+      KeBugCheck(MEMORY_MANAGEMENT);
    }
 
    Page->ReferenceCount--;
@@ -594,29 +594,29 @@ MmDereferencePage(PFN_TYPE Pfn)
       if (Page->RmapListHead != NULL)
       {
          DPRINT1("Freeing page with rmap entries.\n");
-         ASSERT(FALSE);
+         KeBugCheck(MEMORY_MANAGEMENT);
       }
       if (Page->MapCount != 0)
       {
          DPRINT1("Freeing mapped page (0x%x count %d)\n",
                   Pfn << PAGE_SHIFT, Page->MapCount);
-         ASSERT(FALSE);
+         KeBugCheck(MEMORY_MANAGEMENT);
       }
       if (Page->LockCount > 0)
       {
          DPRINT1("Freeing locked page\n");
-         ASSERT(FALSE);
+         KeBugCheck(MEMORY_MANAGEMENT);
       }
       if (Page->SavedSwapEntry != 0)
       {
          DPRINT1("Freeing page with swap entry.\n");
-         ASSERT(FALSE);
+         KeBugCheck(MEMORY_MANAGEMENT);
       }
       if (Page->Flags.Type != MM_PHYSICAL_PAGE_USED)
       {
          DPRINT1("Freeing page with flags %x\n",
                   Page->Flags.Type);
-         ASSERT(FALSE);
+         KeBugCheck(MEMORY_MANAGEMENT);
       }
       Page->Flags.Type = MM_PHYSICAL_PAGE_FREE;
       Page->Flags.Consumer = MC_MAXIMUM;
@@ -647,7 +647,7 @@ MmGetLockCountPage(PFN_TYPE Pfn)
    if (Page->Flags.Type != MM_PHYSICAL_PAGE_USED)
    {
       DPRINT1("Getting lock count for free page\n");
-      ASSERT(FALSE);
+      KeBugCheck(MEMORY_MANAGEMENT);
    }
 
    LockCount = Page->LockCount;
@@ -671,7 +671,7 @@ MmLockPageUnsafe(PFN_TYPE Pfn)
    if (Page->Flags.Type != MM_PHYSICAL_PAGE_USED)
    {
       DPRINT1("Locking free page\n");
-      ASSERT(FALSE);
+      KeBugCheck(MEMORY_MANAGEMENT);
    }
 
    Page->LockCount++;
@@ -702,7 +702,7 @@ MmUnlockPage(PFN_TYPE Pfn)
    if (Page->Flags.Type != MM_PHYSICAL_PAGE_USED)
    {
       DPRINT1("Unlocking free page\n");
-      ASSERT(FALSE);
+      KeBugCheck(MEMORY_MANAGEMENT);
    }
 
    Page->LockCount--;
@@ -757,17 +757,17 @@ MmAllocPage(ULONG Consumer, SWAPENTRY SavedSwapEntry)
    if (PageDescriptor->Flags.Type != MM_PHYSICAL_PAGE_FREE)
    {
       DPRINT1("Got non-free page from freelist\n");
-      ASSERT(FALSE);
+      KeBugCheck(MEMORY_MANAGEMENT);
    }
    if (PageDescriptor->MapCount != 0)
    {
       DPRINT1("Got mapped page from freelist\n");
-      ASSERT(FALSE);
+      KeBugCheck(MEMORY_MANAGEMENT);
    }
    if (PageDescriptor->ReferenceCount != 0)
    {
       DPRINT1("%d\n", PageDescriptor->ReferenceCount);
-      ASSERT(FALSE);
+      KeBugCheck(MEMORY_MANAGEMENT);
    }
    PageDescriptor->Flags.Type = MM_PHYSICAL_PAGE_USED;
    PageDescriptor->Flags.Consumer = Consumer;
@@ -789,7 +789,7 @@ MmAllocPage(ULONG Consumer, SWAPENTRY SavedSwapEntry)
    if (PageDescriptor->MapCount != 0)
    {
       DPRINT1("Returning mapped page.\n");
-      ASSERT(FALSE);
+      KeBugCheck(MEMORY_MANAGEMENT);
    }
    return PfnOffset;
 }
@@ -970,7 +970,7 @@ MmZeroPageThreadMain(PVOID Ignored)
       if (!NT_SUCCESS(Status))
       {
          DPRINT1("ZeroPageThread: Wait failed\n");
-         ASSERT(FALSE);
+         KeBugCheck(MEMORY_MANAGEMENT);
       }
 
       if (ZeroPageThreadShouldTerminate)
@@ -980,6 +980,7 @@ MmZeroPageThreadMain(PVOID Ignored)
       }
       Count = 0;
       oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+	  DPRINT("Zeroing pages...\n");
       while (!IsListEmpty(&FreeUnzeroedPageListHead))
       {
          ListEntry = RemoveTailList(&FreeUnzeroedPageListHead);
@@ -989,13 +990,14 @@ MmZeroPageThreadMain(PVOID Ignored)
          PageDescriptor->Flags.Type = MM_PHYSICAL_PAGE_USED;
          KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
          Pfn = PageDescriptor - MmPageArray;
+		 DPRINT("Zeroing page %x\n", Pfn);
          Status = MiZeroPage(Pfn);
 
          oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
          if (PageDescriptor->MapCount != 0)
          {
             DPRINT1("Mapped page on freelist.\n");
-            ASSERT(FALSE);
+            KeBugCheck(MEMORY_MANAGEMENT);
          }
 	 PageDescriptor->Flags.Zero = 1;
          PageDescriptor->Flags.Type = MM_PHYSICAL_PAGE_FREE;

@@ -75,7 +75,7 @@ MmGetSessionLocaleId(VOID)
 }
 
 PVOID
-STDCALL
+NTAPI
 MiCreatePebOrTeb(PEPROCESS Process,
                  PVOID BaseAddress)
 {
@@ -139,16 +139,18 @@ MiFreeStackPage(PVOID Context,
 }
 
 VOID
-STDCALL
-MmDeleteKernelStack(PVOID Stack,
+NTAPI
+MmDeleteKernelStack(PVOID StackBase,
                     BOOLEAN GuiStack)
 {
+    ULONG StackSize = GuiStack ? KERNEL_LARGE_STACK_SIZE : KERNEL_STACK_SIZE;
+
     /* Lock the Address Space */
     MmLockAddressSpace(MmGetKernelAddressSpace());
 
     /* Delete the Stack */
     MmFreeMemoryAreaByPtr(MmGetKernelAddressSpace(),
-                          Stack,
+                          (PVOID)((ULONG_PTR)StackBase - StackSize),
                           MiFreeStackPage,
                           NULL);
 
@@ -157,7 +159,7 @@ MmDeleteKernelStack(PVOID Stack,
 }
 
 VOID
-STDCALL
+NTAPI
 MmDeleteTeb(PEPROCESS Process,
             PTEB Teb)
 {
@@ -179,7 +181,7 @@ MmDeleteTeb(PEPROCESS Process,
 }
 
 PVOID
-STDCALL
+NTAPI
 MmCreateKernelStack(BOOLEAN GuiStack,
                     UCHAR Node)
 {
@@ -215,7 +217,7 @@ MmCreateKernelStack(BOOLEAN GuiStack,
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to create thread stack\n");
-        ASSERT(FALSE);
+        KeBugCheck(MEMORY_MANAGEMENT);
     }
 
     /*
@@ -239,7 +241,7 @@ MmCreateKernelStack(BOOLEAN GuiStack,
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Could not create Virtual Mapping for Kernel Stack\n");
-        ASSERT(FALSE);
+        KeBugCheck(MEMORY_MANAGEMENT);
     }
 
     /* Return the stack base */
@@ -251,7 +253,7 @@ MmCreateKernelStack(BOOLEAN GuiStack,
  * @implemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 MmGrowKernelStack(PVOID StackPointer)
 {
     PETHREAD Thread = PsGetCurrentThread();
@@ -272,7 +274,7 @@ MmGrowKernelStack(PVOID StackPointer)
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 MmCreatePeb(PEPROCESS Process)
 {
     PPEB Peb = NULL;
@@ -378,7 +380,7 @@ MmCreatePeb(PEPROCESS Process)
             Peb->ImageProcessAffinityMask = ProcessAffinityMask;
         }
 
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Get the Image Config Data too */
             ImageConfigData = RtlImageDirectoryEntryToData(Peb->ImageBaseAddress,
@@ -403,11 +405,11 @@ MmCreatePeb(PEPROCESS Process)
                 }
             }
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
     }
 
     /* Misc data */
@@ -422,7 +424,7 @@ MmCreatePeb(PEPROCESS Process)
 }
 
 PTEB
-STDCALL
+NTAPI
 MmCreateTeb(PEPROCESS Process,
             PCLIENT_ID ClientId,
             PINITIAL_TEB InitialTeb)
@@ -713,7 +715,7 @@ MmDeleteProcessAddressSpace(PEPROCESS Process)
             break;
 
          default:
-            ASSERT(FALSE);
+            KeBugCheck(MEMORY_MANAGEMENT);
       }
    }
 

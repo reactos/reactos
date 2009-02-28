@@ -1,15 +1,12 @@
 #ifndef __NTOSKRNL_INCLUDE_INTERNAL_I386_KE_H
 #define __NTOSKRNL_INCLUDE_INTERNAL_I386_KE_H
 
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
-
 #define FRAME_EDITED        0xFFF8
 
 #ifndef __ASM__
 
 #include "intrin_i.h"
+#include "v86m.h"
 
 #define KeArchFnInit() Ke386FnInit()
 #define KeArchHaltProcessor() Ke386HaltProcessor()
@@ -68,16 +65,9 @@ KiGetFeatureBits(VOID);
 ULONG KeAllocateGdtSelector(ULONG Desc[2]);
 VOID KeFreeGdtSelector(ULONG Entry);
 VOID
-NtEarlyInitVdm(VOID);
-VOID
 KeApplicationProcessorInitDispatcher(VOID);
 VOID
 KeCreateApplicationProcessorIdleThread(ULONG Id);
-
-typedef
-VOID
-(NTAPI*PKSYSTEM_ROUTINE)(PKSTART_ROUTINE StartRoutine,
-                    PVOID StartContext);
 
 VOID
 NTAPI

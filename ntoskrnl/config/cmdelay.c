@@ -284,6 +284,8 @@ CmpDelayDerefKeyControlBlock(IN PCM_KEY_CONTROL_BLOCK Kcb)
     LARGE_INTEGER Timeout;
     PCM_DELAY_DEREF_KCB_ITEM Entry;
     PAGED_CODE();
+    CMTRACE(CM_REFERENCE_DEBUG,
+            "%s - Dereferencing KCB: %p\n", __FUNCTION__, Kcb);
 
     /* Get the previous reference count */
     OldRefCount = *(PLONG)&Kcb->RefCount;

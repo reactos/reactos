@@ -117,9 +117,9 @@ ULONG MmCoreDumpType = MM_CORE_DUMP_TYPE_NONE;
 /*
  * Translate between a swap entry and a file and offset pair.
  */
-#define FILE_FROM_ENTRY(i) ((i) >> 24)
-#define OFFSET_FROM_ENTRY(i) (((i) & 0xffffff) - 1)
-#define ENTRY_FROM_FILE_OFFSET(i, j) (((i) << 24) | ((j) + 1))
+#define FILE_FROM_ENTRY(i) ((i) & 0x0f)
+#define OFFSET_FROM_ENTRY(i) ((i) >> 11)
+#define ENTRY_FROM_FILE_OFFSET(i, j) ((i) | (j) << 11 | 0x400)
 
 static BOOLEAN MmSwapSpaceMessage = FALSE;
 
@@ -137,7 +137,7 @@ MmBuildMdlFromPages(PMDL Mdl, PPFN_TYPE Pages)
 
 
 BOOLEAN
-STDCALL
+NTAPI
 MmIsFileAPagingFile(PFILE_OBJECT FileObject)
 {
     ULONG i;
@@ -164,7 +164,7 @@ MmShowOutOfSpaceMessagePagingFile(VOID)
    }
 }
 
-LARGE_INTEGER static
+static LARGE_INTEGER
 MmGetOffsetPageFile(PRETRIEVAL_POINTERS_BUFFER RetrievalPointers, LARGE_INTEGER Offset)
 {
    /* Simple binary search */
@@ -205,7 +205,7 @@ MmGetOffsetPageFile(PRETRIEVAL_POINTERS_BUFFER RetrievalPointers, LARGE_INTEGER 
          first = mid + 1;
       }
    }
-   ASSERT(FALSE);
+   KeBugCheck(MEMORY_MANAGEMENT);
 #if defined(__GNUC__)
 
    return (LARGE_INTEGER)0LL;
@@ -237,7 +237,7 @@ MmWriteToSwapPage(SWAPENTRY SwapEntry, PFN_TYPE Page)
 
    if (SwapEntry == 0)
    {
-      ASSERT(FALSE);
+      KeBugCheck(MEMORY_MANAGEMENT);
       return(STATUS_UNSUCCESSFUL);
    }
 
@@ -247,13 +247,13 @@ MmWriteToSwapPage(SWAPENTRY SwapEntry, PFN_TYPE Page)
    if (i >= MAX_PAGING_FILES)
    {
       DPRINT1("Bad swap entry 0x%.8X\n", SwapEntry);
-      ASSERT(FALSE);
+      KeBugCheck(MEMORY_MANAGEMENT);
    }
    if (PagingFileList[i]->FileObject == NULL ||
          PagingFileList[i]->FileObject->DeviceObject == NULL)
    {
       DPRINT1("Bad paging file 0x%.8X\n", SwapEntry);
-      ASSERT(FALSE);
+      KeBugCheck(MEMORY_MANAGEMENT);
    }
 
    MmInitializeMdl(Mdl, NULL, PAGE_SIZE);
@@ -298,7 +298,7 @@ MmReadFromSwapPage(SWAPENTRY SwapEntry, PFN_TYPE Page)
 
    if (SwapEntry == 0)
    {
-      ASSERT(FALSE);
+      KeBugCheck(MEMORY_MANAGEMENT);
       return(STATUS_UNSUCCESSFUL);
    }
 
@@ -308,13 +308,13 @@ MmReadFromSwapPage(SWAPENTRY SwapEntry, PFN_TYPE Page)
    if (i >= MAX_PAGING_FILES)
    {
       DPRINT1("Bad swap entry 0x%.8X\n", SwapEntry);
-      ASSERT(FALSE);
+      KeBugCheck(MEMORY_MANAGEMENT);
    }
    if (PagingFileList[i]->FileObject == NULL ||
          PagingFileList[i]->FileObject->DeviceObject == NULL)
    {
       DPRINT1("Bad paging file 0x%.8X\n", SwapEntry);
-      ASSERT(FALSE);
+      KeBugCheck(MEMORY_MANAGEMENT);
    }
 
    MmInitializeMdl(Mdl, NULL, PAGE_SIZE);
@@ -450,13 +450,13 @@ MmFreeSwapPage(SWAPENTRY Entry)
    if (i >= MAX_PAGING_FILES)
    {
 	DPRINT1("Bad swap entry 0x%.8X\n", Entry);
-	ASSERT(FALSE);
+	KeBugCheck(MEMORY_MANAGEMENT);
    }
 
    KeAcquireSpinLock(&PagingFileListLock, &oldIrql);
    if (PagingFileList[i] == NULL)
    {
-      ASSERT(FALSE);
+      KeBugCheck(MEMORY_MANAGEMENT);
    }
    KeAcquireSpinLockAtDpcLevel(&PagingFileList[i]->AllocMapLock);
 
@@ -504,7 +504,7 @@ MmAllocSwapPage(VOID)
          off = MiAllocPageFromPagingFile(PagingFileList[i]);
          if (off == 0xFFFFFFFF)
          {
-            ASSERT(FALSE);
+            KeBugCheck(MEMORY_MANAGEMENT);
             KeReleaseSpinLock(&PagingFileListLock, oldIrql);
             return(STATUS_UNSUCCESSFUL);
          }
@@ -518,7 +518,7 @@ MmAllocSwapPage(VOID)
    }
 
    KeReleaseSpinLock(&PagingFileListLock, oldIrql);
-   ASSERT(FALSE);
+   KeBugCheck(MEMORY_MANAGEMENT);
    return(0);
 }
 
@@ -538,7 +538,7 @@ MmAllocRetrievelDescriptorList(ULONG Pairs)
    return RetDescList;
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 MmDumpToPagingFile(ULONG BugCode,
                    ULONG BugCodeParameter1,
                    ULONG BugCodeParameter2,
@@ -681,7 +681,7 @@ MmDumpToPagingFile(ULONG BugCode,
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 MmInitializeCrashDump(HANDLE PageFileHandle, ULONG PageFileNum)
 {
    PFILE_OBJECT PageFile;
@@ -795,7 +795,7 @@ MmInitializeCrashDump(HANDLE PageFileHandle, ULONG PageFileNum)
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtCreatePagingFile(IN PUNICODE_STRING FileName,
                    IN PLARGE_INTEGER InitialSize,
                    IN PLARGE_INTEGER MaximumSize,
@@ -835,16 +835,16 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
 
    if (PreviousMode != KernelMode)
    {
-      _SEH_TRY
+      _SEH2_TRY
       {
          SafeInitialSize = ProbeForReadLargeInteger(InitialSize);
          SafeMaximumSize = ProbeForReadLargeInteger(MaximumSize);
       }
-      _SEH_HANDLE
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
-         Status = _SEH_GetExceptionCode();
+         Status = _SEH2_GetExceptionCode();
       }
-      _SEH_END;
+      _SEH2_END;
 
       if (!NT_SUCCESS(Status))
       {

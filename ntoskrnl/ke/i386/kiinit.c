@@ -18,10 +18,6 @@
 KSPIN_LOCK KiFreezeExecutionLock;
 KSPIN_LOCK Ki486CompatibilityLock;
 
-/* BIOS Memory Map. Not NTLDR-compliant yet */
-extern ULONG KeMemoryMapRangeCount;
-extern ADDRESS_RANGE KeMemoryMap[64];
-
 /* FUNCTIONS *****************************************************************/
 
 VOID
@@ -611,7 +607,7 @@ KiGetMachineBootPointers(IN PKGDTENTRY *Gdt,
                          IN PKIPCR *Pcr,
                          IN PKTSS *Tss)
 {
-    KDESCRIPTOR GdtDescriptor = {0}, IdtDescriptor = {0};
+    KDESCRIPTOR GdtDescriptor = { 0, 0, 0 }, IdtDescriptor = { 0, 0, 0 };
     KGDTENTRY TssSelector, PcrSelector;
     USHORT Tr = 0, Fs;
 

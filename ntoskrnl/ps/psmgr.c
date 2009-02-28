@@ -9,7 +9,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 extern ULONG ExpInitializationPhase;
@@ -223,7 +223,7 @@ PspMapSystemDll(IN PEPROCESS Process,
                 IN BOOLEAN UseLargePages)
 {
     NTSTATUS Status;
-    LARGE_INTEGER Offset = {{0}};
+    LARGE_INTEGER Offset = {{0, 0}};
     SIZE_T ViewSize = 0;
     PVOID ImageBase = 0;
     
@@ -261,6 +261,7 @@ PsLocateSystemDll(VOID)
     ULONG HardErrorResponse;
 
     /* Locate and open NTDLL to determine ImageBase and LdrStartup */
+	DPRINT1("PsLocateSystemDll\n");
     InitializeObjectAttributes(&ObjectAttributes,
                                &PsNtDllPathName,
                                0,
@@ -305,6 +306,7 @@ PsLocateSystemDll(VOID)
     if (!NT_SUCCESS(Status))
     {
         /* Failed, bugcheck */
+		DPRINT1("Status %x\n", Status);
         KeBugCheckEx(PROCESS1_INITIALIZATION_FAILED, Status, 3, 0, 0);
     }
 
@@ -331,6 +333,7 @@ PsLocateSystemDll(VOID)
     }
 
     /* Return status */
+	DPRINT1("PsLocateSystemDll %x\n", Status);
     return Status;
 }
 
@@ -443,7 +446,7 @@ PspInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Now multiply limits by 1MB */
     PspDefaultPagedLimit <<= 20;
     PspDefaultNonPagedLimit <<= 20;
-    if (PspDefaultPagefileLimit != -1) PspDefaultPagefileLimit <<= 20;
+    if (PspDefaultPagefileLimit != -1U) PspDefaultPagefileLimit <<= 20;
 
     /* Initialize the Active Process List */
     InitializeListHead(&PsActiveProcessHead);

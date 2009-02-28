@@ -2,7 +2,7 @@
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Kernel
  * FILE:            ntoskrnl/kd/kdinit.c
- * PURPOSE:         Kernel Debugger Initializtion
+ * PURPOSE:         Kernel Debugger Initialization
  *
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  */
@@ -20,7 +20,7 @@ BOOLEAN KiEnableTimerWatchdog = FALSE;
 BOOLEAN KdBreakAfterSymbolLoad = FALSE;
 BOOLEAN KdpBreakPending;
 BOOLEAN KdPitchDebugger = TRUE;
-VOID STDCALL PspDumpThreads(BOOLEAN SystemThreads);
+VOID NTAPI PspDumpThreads(BOOLEAN SystemThreads);
 
 typedef struct
 {
@@ -36,7 +36,7 @@ ULONG Kd_DEFAULT_MASK = 1 << DPFLTR_ERROR_LEVEL;
 /* PRIVATE FUNCTIONS *********************************************************/
 
 ULONG
-STDCALL
+NTAPI
 KdpServiceDispatcher(ULONG Service,
                      PVOID Buffer1,
                      ULONG Buffer1Length)
@@ -89,6 +89,14 @@ KdpServiceDispatcher(ULONG Service,
                 default:
                     break;
             }
+            break;
+        }
+
+        /* Special  case for stack frame dumps */
+        case TAG('R', 'o', 's', 'D'):
+        {
+            KeRosDumpStackFrames((PULONG)Buffer1, Buffer1Length);
+            break;
         }
 #endif
         default:
@@ -224,7 +232,7 @@ KdRefreshDebuggerNotPresent(VOID)
  * @implemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 KdDisableDebugger(VOID)
 {
     KIRQL OldIrql;
@@ -248,7 +256,7 @@ KdDisableDebugger(VOID)
  * @implemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 KdEnableDebugger(VOID)
 {
     KIRQL OldIrql;
@@ -272,7 +280,7 @@ KdEnableDebugger(VOID)
  * @implemented
  */
 BOOLEAN
-STDCALL
+NTAPI
 KdPollBreakIn(VOID)
 {
     return KdpBreakPending;
@@ -282,7 +290,7 @@ KdPollBreakIn(VOID)
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 KdPowerTransition(ULONG PowerState)
 {
     UNIMPLEMENTED;

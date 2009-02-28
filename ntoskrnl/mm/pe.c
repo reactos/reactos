@@ -182,7 +182,6 @@ NTSTATUS NTAPI PeFmtCreateSection(IN CONST VOID * FileHeader,
     ASSERT(((UINT_PTR)FileHeader % TYPE_ALIGNMENT(IMAGE_DOS_HEADER)) == 0);
 
 #define DIE(ARGS_) { DPRINT ARGS_; goto l_Return; }
-#define GASP(CODE,ARGS_) { nStatus = CODE; DPRINT ARGS_; goto l_Return; }
 
     pBuffer = NULL;
     pidhDosHeader = FileHeader;
@@ -200,7 +199,7 @@ NTSTATUS NTAPI PeFmtCreateSection(IN CONST VOID * FileHeader,
 
     /* not a Windows executable */
     if(pidhDosHeader->e_lfanew <= 0)
-	GASP(STATUS_INVALID_IMAGE_NE_FORMAT,("Not a Windows executable, e_lfanew is %d\n", pidhDosHeader->e_lfanew));
+	DIE(("Not a Windows executable, e_lfanew is %d\n", pidhDosHeader->e_lfanew));
 
     /* NT HEADER */
     nStatus = STATUS_INVALID_IMAGE_FORMAT;
@@ -363,6 +362,9 @@ l_ReadHeaderFromFile:
 	    if(RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, ImageBase))
 		ImageSectionObject->ImageBase = piohOptHeader->ImageBase;
 
+	    if(RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, SizeOfImage))
+		ImageSectionObject->ImageSize = piohOptHeader->SizeOfImage;
+
 	    if(RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, SizeOfStackReserve))
 		ImageSectionObject->StackReserve = piohOptHeader->SizeOfStackReserve;
 
@@ -385,6 +387,14 @@ l_ReadHeaderFromFile:
 		    DIE(("ImageBase exceeds the address space\n"));
 
 		ImageSectionObject->ImageBase = pioh64OptHeader->ImageBase;
+	    }
+
+	    if(RTL_CONTAINS_FIELD(pioh64OptHeader, cbOptHeaderSize, SizeOfImage))
+	    {
+		if(pioh64OptHeader->SizeOfImage > MAXULONG_PTR)
+		    DIE(("SizeOfImage exceeds the address space\n"));
+
+		ImageSectionObject->ImageSize = pioh64OptHeader->SizeOfImage;
 	    }
 
 	    if(RTL_CONTAINS_FIELD(pioh64OptHeader, cbOptHeaderSize, SizeOfStackReserve))
@@ -569,6 +579,7 @@ l_ReadHeaderFromFile:
 	DIE(("Cannot align the size of the section headers\n"));
 
     pssSegments[0].FileOffset.QuadPart = 0;
+	pssSegments[0].FileObject = File;
     pssSegments[0].Protection = PAGE_READONLY;
     pssSegments[0].Length = nPrevVirtualEndOfSegment;
     pssSegments[0].RawLength = nFileSizeOfHeaders;
@@ -637,6 +648,7 @@ l_ReadHeaderFromFile:
 	}
 
 	/* see table above */
+	pssSegments[i].FileObject = File;
 	pssSegments[i].Protection = SectionCharacteristicsToProtect[nCharacteristics >> 28];
 	pssSegments[i].WriteCopy = !(nCharacteristics & IMAGE_SCN_MEM_SHARED);
 

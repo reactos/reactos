@@ -16,22 +16,6 @@ extern PGDI_BATCHFLUSH_ROUTINE KeGdiFlushUserBatch;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
-_SEH_DEFINE_LOCALS(KiCopyInfo)
-{
-    volatile EXCEPTION_RECORD SehExceptRecord;
-};
-
-_SEH_FILTER(KiCopyInformation2)
-{
-    _SEH_ACCESS_LOCALS(KiCopyInfo);
-
-    /* Copy the exception records and return to the handler */
-    RtlCopyMemory((PVOID)&_SEH_VAR(SehExceptRecord),
-                  _SEH_GetExceptionPointers()->ExceptionRecord,
-                  sizeof(EXCEPTION_RECORD));
-    return EXCEPTION_EXECUTE_HANDLER;
-}
-
 /*++
  * @name KiInitializeUserApc
  *
@@ -70,7 +54,6 @@ KiInitializeUserApc(IN PKEXCEPTION_FRAME ExceptionFrame,
     ULONG_PTR Stack, AlignedEsp;
     ULONG ContextLength;
     EXCEPTION_RECORD SehExceptRecord;
-    _SEH_DECLARE_LOCALS(KiCopyInfo);
 
     /* Don't deliver APCs in V86 mode */
     if (TrapFrame->EFlags & EFLAGS_V86_MASK) return;
@@ -80,7 +63,7 @@ KiInitializeUserApc(IN PKEXCEPTION_FRAME ExceptionFrame,
     KeTrapFrameToContext(TrapFrame, ExceptionFrame, &Context);
 
     /* Protect with SEH */
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Sanity check */
         ASSERT((TrapFrame->SegCs & MODE_MASK) != KernelMode);
@@ -124,17 +107,17 @@ KiInitializeUserApc(IN PKEXCEPTION_FRAME ExceptionFrame,
         *(PULONG_PTR)(Stack + 2 * sizeof(ULONG_PTR)) = (ULONG_PTR)SystemArgument1;
         *(PULONG_PTR)(Stack + 3 * sizeof(ULONG_PTR)) = (ULONG_PTR)SystemArgument2;
     }
-    _SEH_EXCEPT(KiCopyInformation2)
+    _SEH2_EXCEPT((RtlCopyMemory(&SehExceptRecord, _SEH2_GetExceptionInformation()->ExceptionRecord, sizeof(EXCEPTION_RECORD)), EXCEPTION_EXECUTE_HANDLER))
     {
         /* Dispatch the exception */
-        _SEH_VAR(SehExceptRecord).ExceptionAddress = (PVOID)TrapFrame->Eip;
+        SehExceptRecord.ExceptionAddress = (PVOID)TrapFrame->Eip;
         KiDispatchException(&SehExceptRecord,
                             ExceptionFrame,
                             TrapFrame,
                             UserMode,
                             TRUE);
     }
-    _SEH_END;
+    _SEH2_END;
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/
@@ -164,7 +147,7 @@ KeUserModeCallback(IN ULONG RoutineIndex,
     OldStack = *UserEsp;
 
     /* Enter a SEH Block */
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Calculate and align the stack size */
         NewStack = (OldStack - ArgumentLength) & ~3;
@@ -206,12 +189,12 @@ KeUserModeCallback(IN ULONG RoutineIndex,
         /* Read the GDI Batch count */
         GdiBatchCount = Teb->GdiBatchCount;
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* Get the SEH exception */
-        CallbackStatus = _SEH_GetExceptionCode();
+        CallbackStatus = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
     if (!NT_SUCCESS(CallbackStatus)) return CallbackStatus;
 
     /* Check if we have GDI Batch operations */

@@ -98,6 +98,10 @@ IoBuildPartialMdl(IN PMDL SourceMdl,
     PPFN_NUMBER TargetPages = (PPFN_NUMBER)(TargetMdl + 1);
     PPFN_NUMBER SourcePages = (PPFN_NUMBER)(SourceMdl + 1);
     ULONG Offset;
+    ULONG FlagsMask = (MDL_IO_PAGE_READ |
+                       MDL_SOURCE_IS_NONPAGED_POOL |
+                       MDL_MAPPED_TO_SYSTEM_VA |
+                       MDL_IO_SPACE);
 
     /* Calculate the offset */
     Offset = (ULONG)((ULONG_PTR)VirtualAddress -
@@ -117,11 +121,8 @@ IoBuildPartialMdl(IN PMDL SourceMdl,
     Length = ADDRESS_AND_SIZE_TO_SPAN_PAGES(VirtualAddress, Length);
 
     /* Set the MDL Flags */
-    TargetMdl->MdlFlags = (MDL_ALLOCATED_FIXED_SIZE | MDL_ALLOCATED_MUST_SUCCEED);
-    TargetMdl->MdlFlags |= (MDL_IO_PAGE_READ |
-                            MDL_SOURCE_IS_NONPAGED_POOL |
-                            MDL_MAPPED_TO_SYSTEM_VA |
-                            MDL_IO_SPACE);
+    TargetMdl->MdlFlags &= (MDL_ALLOCATED_FIXED_SIZE | MDL_ALLOCATED_MUST_SUCCEED);
+    TargetMdl->MdlFlags |= SourceMdl->MdlFlags & FlagsMask;
     TargetMdl->MdlFlags |= MDL_PARTIAL;
 
     /* Set the mapped VA */

@@ -309,7 +309,7 @@ SepSidInToken(PACCESS_TOKEN _Token,
 }
 
 
-VOID STDCALL
+VOID NTAPI
 SeQuerySecurityAccessMask(IN SECURITY_INFORMATION SecurityInformation,
                           OUT PACCESS_MASK DesiredAccess)
 {
@@ -326,7 +326,7 @@ SeQuerySecurityAccessMask(IN SECURITY_INFORMATION SecurityInformation,
     }
 }
 
-VOID STDCALL
+VOID NTAPI
 SeSetSecurityAccessMask(IN SECURITY_INFORMATION SecurityInformation,
                         OUT PACCESS_MASK DesiredAccess)
 {
@@ -351,7 +351,7 @@ SeSetSecurityAccessMask(IN SECURITY_INFORMATION SecurityInformation,
 /*
  * @implemented
  */
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
               IN PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext,
               IN BOOLEAN SubjectContextLocked,
@@ -619,33 +619,48 @@ SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 
 /* SYSTEM CALLS ***************************************************************/
 
-NTSTATUS STDCALL
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
 NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
               IN HANDLE TokenHandle,
               IN ACCESS_MASK DesiredAccess,
               IN PGENERIC_MAPPING GenericMapping,
-              OUT PPRIVILEGE_SET PrivilegeSet,
-              OUT PULONG ReturnLength,
+              OUT PPRIVILEGE_SET PrivilegeSet OPTIONAL,
+              IN OUT PULONG PrivilegeSetLength,
               OUT PACCESS_MASK GrantedAccess,
               OUT PNTSTATUS AccessStatus)
 {
-    SECURITY_SUBJECT_CONTEXT SubjectSecurityContext = {0};
-    KPROCESSOR_MODE PreviousMode;
+    SECURITY_SUBJECT_CONTEXT SubjectSecurityContext;
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     PTOKEN Token;
     NTSTATUS Status;
-    
     PAGED_CODE();
     
-    DPRINT("NtAccessCheck() called\n");
-    
-    PreviousMode = KeGetPreviousMode();
+    /* Check if this is kernel mode */
     if (PreviousMode == KernelMode)
     {
-        *GrantedAccess = DesiredAccess;
+        /* Check if kernel wants everything */
+        if (DesiredAccess & MAXIMUM_ALLOWED)
+        {
+            /* Give it */
+            *GrantedAccess = GenericMapping->GenericAll;
+            *GrantedAccess |= (DesiredAccess &~ MAXIMUM_ALLOWED);
+        }
+        else
+        {
+            /* Just give the desired access */
+            *GrantedAccess = DesiredAccess;
+        }
+        
+        /* Success */
         *AccessStatus = STATUS_SUCCESS;
         return STATUS_SUCCESS;
     }
-    
+
+    /* Reference the token */
     Status = ObReferenceObjectByHandle(TokenHandle,
                                        TOKEN_QUERY,
                                        SepTokenObjectType,
@@ -657,56 +672,42 @@ NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
         DPRINT1("Failed to reference token (Status %lx)\n", Status);
         return Status;
     }
-    
+
     /* Check token type */
     if (Token->TokenType != TokenImpersonation)
     {
         DPRINT1("No impersonation token\n");
         ObDereferenceObject(Token);
-        return STATUS_ACCESS_VIOLATION;
+        return STATUS_ACCESS_DENIED;
     }
-    
-    /* Check impersonation level */
-    if (Token->ImpersonationLevel < SecurityAnonymous)
-    {
-        DPRINT1("Invalid impersonation level\n");
-        ObDereferenceObject(Token);
-        return STATUS_ACCESS_VIOLATION;
-    }
-    
+
+    /* Set up the subject context, and lock it */
     SubjectSecurityContext.ClientToken = Token;
     SubjectSecurityContext.ImpersonationLevel = Token->ImpersonationLevel;
-    
-    /* Lock subject context */
+    SubjectSecurityContext.PrimaryToken = NULL;
+    SubjectSecurityContext.ProcessAuditId = NULL;
     SeLockSubjectContext(&SubjectSecurityContext);
-    
-    if (SeAccessCheck(SecurityDescriptor,
-                      &SubjectSecurityContext,
-                      TRUE,
-                      DesiredAccess,
-                      0,
-                      &PrivilegeSet,
-                      GenericMapping,
-                      PreviousMode,
-                      GrantedAccess,
-                      AccessStatus))
-    {
-        Status = *AccessStatus;
-    }
-    else
-    {
-        Status = STATUS_ACCESS_DENIED;
-    }
-    
-    /* Unlock subject context */
+
+    /* Now perform the access check */
+    SeAccessCheck(SecurityDescriptor,
+                  &SubjectSecurityContext,
+                  TRUE,
+                  DesiredAccess,
+                  0,
+                  &PrivilegeSet, //FIXME
+                  GenericMapping,
+                  PreviousMode,
+                  GrantedAccess,
+                  AccessStatus);
+
+    /* Unlock subject context and dereference the token */
     SeUnlockSubjectContext(&SubjectSecurityContext);
-    
     ObDereferenceObject(Token);
-    
-    DPRINT("NtAccessCheck() done\n");
-    
-    return Status;
+
+    /* Check succeeded */
+    return STATUS_SUCCESS;
 }
+
 
 NTSTATUS
 NTAPI

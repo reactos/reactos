@@ -34,6 +34,7 @@ MiSyncForProcessAttach(IN PKTHREAD Thread,
     PETHREAD Ethread = CONTAINING_RECORD(Thread, ETHREAD, Tcb);
 
     /* Hack Sync because Mm is broken */
+    MmUpdatePageDir(Process, Ethread, sizeof(ETHREAD));
     MmUpdatePageDir(Process, Ethread->ThreadsProcess, sizeof(EPROCESS));
     MmUpdatePageDir(Process,
                     (PVOID)Thread->StackLimit,
@@ -139,7 +140,6 @@ MmpAccessFault(KPROCESSOR_MODE Mode,
       if (Mode != KernelMode)
       {
          DPRINT1("MmAccessFault(Mode %d, Address %x)\n", Mode, Address);
-         DbgPrint("%s:%d\n",__FILE__,__LINE__);
          return(STATUS_ACCESS_VIOLATION);
       }
       AddressSpace = MmGetKernelAddressSpace();
@@ -301,6 +301,10 @@ MmNotPresentFault(KPROCESSOR_MODE Mode,
                                       &Pfn,
                                       1);
             break;
+
+	  case MEMORY_AREA_CACHE_SEGMENT:
+		    Status = CcReplaceCachePage(MemoryArea, (PVOID)PAGE_ROUND_DOWN(Address));
+		    break;
 
          default:
             Status = STATUS_ACCESS_VIOLATION;

@@ -6,8 +6,9 @@
 * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
 */
 
+static
+__inline
 VOID
-static __inline
 IopLockFileObject(IN PFILE_OBJECT FileObject)
 {
 	/* Lock the FO and check for contention */
@@ -19,8 +20,9 @@ IopLockFileObject(IN PFILE_OBJECT FileObject)
     InterlockedDecrement((PLONG)&FileObject->Waiters);
 }
 
+static
+__inline
 VOID
-static __inline
 IopUnlockFileObject(IN PFILE_OBJECT FileObject)
 {
     /* Unlock the FO and wake any waiters up */
@@ -28,8 +30,8 @@ IopUnlockFileObject(IN PFILE_OBJECT FileObject)
     if (FileObject->Waiters) KeSetEvent(&FileObject->Lock, 0, FALSE);
 }
 
-VOID
 FORCEINLINE
+VOID
 IopQueueIrpToThread(IN PIRP Irp)
 {
     KIRQL OldIrql;
@@ -44,8 +46,8 @@ IopQueueIrpToThread(IN PIRP Irp)
     KeLowerIrql(OldIrql);
 }
 
-VOID
 FORCEINLINE
+VOID
 IopUnQueueIrpFromThread(IN PIRP Irp)
 {
     /* Remove it from the list and reset it */
@@ -53,8 +55,9 @@ IopUnQueueIrpFromThread(IN PIRP Irp)
     InitializeListHead(&Irp->ThreadListEntry);
 }
 
+static
+__inline
 VOID
-static __inline
 IopUpdateOperationCount(IN IOP_TRANSFER_TYPE Type)
 {
     PLARGE_INTEGER CountToChange;
@@ -72,13 +75,13 @@ IopUpdateOperationCount(IN IOP_TRANSFER_TYPE Type)
         {
             /* Increase write count */
             IoWriteOperationCount++;
-            CountToChange = &PsGetCurrentProcess()->ReadOperationCount;
+            CountToChange = &PsGetCurrentProcess()->WriteOperationCount;
         }
         else
         {
             /* Increase other count */
             IoOtherOperationCount++;
-            CountToChange = &PsGetCurrentProcess()->ReadOperationCount;
+            CountToChange = &PsGetCurrentProcess()->OtherOperationCount;
         }
 
         /* Increase the process-wide count */
@@ -86,8 +89,9 @@ IopUpdateOperationCount(IN IOP_TRANSFER_TYPE Type)
     }
 }
 
+static
+__inline
 BOOLEAN
-static __inline
 IopValidateOpenPacket(IN POPEN_PACKET OpenPacket)
 {
     /* Validate the packet */

@@ -19,7 +19,7 @@
  * @implemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 ExExtendZone(PZONE_HEADER Zone,
              PVOID Segment,
              ULONG SegmentSize)
@@ -69,7 +69,7 @@ ExExtendZone(PZONE_HEADER Zone,
  * @implemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 ExInterlockedExtendZone(PZONE_HEADER Zone,
                         PVOID Segment,
                         ULONG SegmentSize,
@@ -101,7 +101,7 @@ ExInterlockedExtendZone(PZONE_HEADER Zone,
  * @implemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 ExInitializeZone(PZONE_HEADER Zone,
                  ULONG BlockSize,
                  PVOID InitialSegment,

@@ -16,7 +16,7 @@
 /* GLOBALS *******************************************************************/
 
 static CONFIGURATION_INFORMATION
-_SystemConfigurationInformation = {0, 0, 0, 0, 0, 0, 0, FALSE, FALSE};
+_SystemConfigurationInformation = { 0, 0, 0, 0, 0, 0, 0, FALSE, FALSE, 0, 0 };
 
 /* API Parameters to Pass in IopQueryBusDescription */
 typedef struct IO_QUERY {
@@ -95,7 +95,7 @@ PWSTR ArcTypes[42] = {
  *      Status
  */
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 IopQueryDeviceDescription(
    PIO_QUERY Query,
    UNICODE_STRING RootKey,
@@ -449,7 +449,7 @@ EndLoop:
  *      Status
  */
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 IopQueryBusDescription(
    PIO_QUERY Query,
    UNICODE_STRING RootKey,
@@ -655,7 +655,7 @@ IopQueryBusDescription(
 /*
  * @implemented
  */
-PCONFIGURATION_INFORMATION STDCALL
+PCONFIGURATION_INFORMATION NTAPI
 IoGetConfigurationInformation(VOID)
 {
   return(&_SystemConfigurationInformation);
@@ -664,7 +664,7 @@ IoGetConfigurationInformation(VOID)
 /*
  * @unimplemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 IoReportResourceUsage(PUNICODE_STRING DriverClassName,
 		      PDRIVER_OBJECT DriverObject,
 		      PCM_RESOURCE_LIST DriverList,
@@ -705,7 +705,7 @@ IoReportResourceUsage(PUNICODE_STRING DriverClassName,
 /*
  * @unimplemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 IoAssignResources(PUNICODE_STRING RegistryPath,
 		  PUNICODE_STRING DriverClassName,
 		  PDRIVER_OBJECT DriverObject,
@@ -796,7 +796,7 @@ IoQueryDeviceDescription(PINTERFACE_TYPE BusType OPTIONAL,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 IoReportHalResourceUsage(PUNICODE_STRING HalDescription,
 			 PCM_RESOURCE_LIST RawList,
 			 PCM_RESOURCE_LIST TranslatedList,

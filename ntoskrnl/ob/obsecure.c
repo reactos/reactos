@@ -772,18 +772,18 @@ NtQuerySecurityObject(IN HANDLE Handle,
     if (PreviousMode != KernelMode)
     {
         /* Enter SEH */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Probe the SD and the length pointer */
             ProbeForWrite(SecurityDescriptor, Length, sizeof(ULONG));
             ProbeForWriteUlong(ResultLength);
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Get the exception code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
 
         /* Fail if we got an access violation */
         if (!NT_SUCCESS(Status)) return Status;
@@ -819,17 +819,17 @@ NtQuerySecurityObject(IN HANDLE Handle,
     ObDereferenceObject(Object);
 
     /* Protect write with SEH */
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Return the needed length */
         *ResultLength = Length;
     }
-    _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+    _SEH2_EXCEPT(ExSystemExceptionFilter())
     {
         /* Get the exception code */
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
 
     /* Return status */
     return Status;

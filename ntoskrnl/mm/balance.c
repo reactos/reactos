@@ -68,7 +68,18 @@ MmInitializeBalancer(ULONG NrAvailablePages, ULONG NrSystemPages)
 
    /* Set up targets. */
    MiMinimumAvailablePages = 64;
-   MiMemoryConsumers[MC_CACHE].PagesTarget = NrAvailablePages / 2;
+    if ((NrAvailablePages + NrSystemPages) >= 8192)
+    {
+        MiMemoryConsumers[MC_CACHE].PagesTarget = NrAvailablePages / 4 * 3;   
+    }
+    else if ((NrAvailablePages + NrSystemPages) >= 4096)
+    {
+        MiMemoryConsumers[MC_CACHE].PagesTarget = NrAvailablePages / 3 * 2;
+    }
+    else
+    {
+        MiMemoryConsumers[MC_CACHE].PagesTarget = NrAvailablePages / 8;        
+    }
    MiMemoryConsumers[MC_USER].PagesTarget =
       NrAvailablePages - MiMinimumAvailablePages;
    MiMemoryConsumers[MC_PPOOL].PagesTarget = NrAvailablePages / 2;
@@ -97,7 +108,7 @@ MmReleasePageMemoryConsumer(ULONG Consumer, PFN_TYPE Page)
    if (Page == 0)
    {
       DPRINT1("Tried to release page zero.\n");
-      ASSERT(FALSE);
+      KeBugCheck(MEMORY_MANAGEMENT);
    }
 
    KeAcquireSpinLock(&AllocationListLock, &oldIrql);
@@ -169,7 +180,7 @@ MmRebalanceMemoryConsumers(VOID)
          Status = MiMemoryConsumers[i].Trim(Target, 0, &NrFreedPages);
          if (!NT_SUCCESS(Status))
          {
-            ASSERT(FALSE);
+            KeBugCheck(MEMORY_MANAGEMENT);
          }
          Target = Target - NrFreedPages;
       }
@@ -287,7 +298,7 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
    return(STATUS_SUCCESS);
 }
 
-VOID STDCALL
+VOID NTAPI
 MiBalancerThread(PVOID Unused)
 {
    PVOID WaitObjects[2];
@@ -326,7 +337,7 @@ MiBalancerThread(PVOID Unused)
                   Status = MiMemoryConsumers[i].Trim(MiMinimumPagesPerRun, 0, &NrFreedPages);
                   if (!NT_SUCCESS(Status))
                   {
-                     ASSERT(FALSE);
+                     KeBugCheck(MEMORY_MANAGEMENT);
                   }
                }
             }
@@ -357,7 +368,7 @@ MiBalancerThread(PVOID Unused)
                   Status = MiMemoryConsumers[i].Trim(Target, 0, &NrFreedPages);
                   if (!NT_SUCCESS(Status))
                   {
-                     ASSERT(FALSE);
+                     KeBugCheck(MEMORY_MANAGEMENT);
                   }
                }
             }
@@ -366,7 +377,7 @@ MiBalancerThread(PVOID Unused)
       else
       {
          DPRINT1("KeWaitForMultipleObjects failed, status = %x\n", Status);
-         ASSERT(FALSE);
+         KeBugCheck(MEMORY_MANAGEMENT);
       }
    }
 }
@@ -406,7 +417,7 @@ MiInitBalancerThread(VOID)
                                  NULL);
    if (!NT_SUCCESS(Status))
    {
-      ASSERT(FALSE);
+      KeBugCheck(MEMORY_MANAGEMENT);
    }
 
    Priority = LOW_REALTIME_PRIORITY + 1;

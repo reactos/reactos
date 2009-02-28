@@ -118,8 +118,6 @@ MmInitVirtualMemory()
 
    BoundaryAddressMultiple.QuadPart = 0;
 
-   MmInitMemoryAreas();
-
    DPRINT("NonPagedPool %x - %x, PagedPool %x - %x\n", MiNonPagedPoolStart, (ULONG_PTR)MiNonPagedPoolStart + MiNonPagedPoolLength - 1,
            MmPagedPoolBase, (ULONG_PTR)MmPagedPoolBase + MmPagedPoolSize - 1);
 
@@ -134,13 +132,14 @@ MmInitVirtualMemory()
    MmCreateMemoryArea(MmGetKernelAddressSpace(),
                       MEMORY_AREA_SYSTEM,
                       &BaseAddress,
-                      PAGE_SIZE * MAXIMUM_PROCESSORS,
+                      PAGE_SIZE * KeNumberProcessors,
                       PAGE_READWRITE,
                       &MArea,
                       TRUE,
                       0,
                       BoundaryAddressMultiple);
 
+#if defined(_M_IX86)
    /* Local APIC base */
    BaseAddress = (PVOID)0xFEE00000;
    MmCreateMemoryArea(MmGetKernelAddressSpace(),
@@ -164,17 +163,7 @@ MmInitVirtualMemory()
                       TRUE,
                       0,
                       BoundaryAddressMultiple);
-
-   BaseAddress = (PVOID)0xFF3A0000;
-   MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                      MEMORY_AREA_SYSTEM,
-                      &BaseAddress,
-                      0x20000,
-                      PAGE_READWRITE,
-                      &MArea,
-                      TRUE,
-                      0,
-                      BoundaryAddressMultiple);
+#endif
 
    BaseAddress = MiNonPagedPoolStart;
    MmCreateMemoryArea(MmGetKernelAddressSpace(),

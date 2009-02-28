@@ -185,7 +185,7 @@ static VOID MmVerifyMemoryAreas(PMM_AVL_TABLE AddressSpace)
 #define MmVerifyMemoryAreas(x)
 #endif
 
-VOID STDCALL
+VOID NTAPI
 MmDumpMemoryAreas(PMM_AVL_TABLE AddressSpace)
 {
    PMEMORY_AREA Node;
@@ -209,7 +209,7 @@ MmDumpMemoryAreas(PMM_AVL_TABLE AddressSpace)
    DbgPrint("Finished MmDumpMemoryAreas()\n");
 }
 
-PMEMORY_AREA STDCALL
+PMEMORY_AREA NTAPI
 MmLocateMemoryAreaByAddress(
    PMM_AVL_TABLE AddressSpace,
    PVOID Address)
@@ -239,7 +239,7 @@ MmLocateMemoryAreaByAddress(
    return NULL;
 }
 
-PMEMORY_AREA STDCALL
+PMEMORY_AREA NTAPI
 MmLocateMemoryAreaByRegion(
    PMM_AVL_TABLE AddressSpace,
    PVOID Address,
@@ -628,7 +628,7 @@ MmFindGapTopDown(
 }
 
 
-PVOID STDCALL
+PVOID NTAPI
 MmFindGap(
    PMM_AVL_TABLE AddressSpace,
    ULONG_PTR Length,
@@ -641,7 +641,7 @@ MmFindGap(
    return MmFindGapBottomUp(AddressSpace, Length, Granularity);
 }
 
-ULONG_PTR STDCALL
+ULONG_PTR NTAPI
 MmFindGapAtAddress(
    PMM_AVL_TABLE AddressSpace,
    PVOID Address)
@@ -703,21 +703,6 @@ MmFindGapAtAddress(
    }
 }
 
-/**
- * @name MmInitMemoryAreas
- *
- * Initialize the memory area list implementation.
- */
-
-NTSTATUS
-INIT_FUNCTION
-NTAPI
-MmInitMemoryAreas(VOID)
-{
-   DPRINT("MmInitMemoryAreas()\n");
-   return(STATUS_SUCCESS);
-}
-
 
 /**
  * @name MmFreeMemoryArea
@@ -738,7 +723,7 @@ MmInitMemoryAreas(VOID)
  * @remarks Lock the address space before calling this function.
  */
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 MmFreeMemoryArea(
    PMM_AVL_TABLE AddressSpace,
    PMEMORY_AREA MemoryArea,
@@ -880,7 +865,7 @@ MmFreeMemoryArea(
  * @remarks Lock the address space before calling this function.
  */
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 MmFreeMemoryAreaByPtr(
    PMM_AVL_TABLE AddressSpace,
    PVOID BaseAddress,
@@ -899,7 +884,7 @@ MmFreeMemoryAreaByPtr(
                                             BaseAddress);
    if (MemoryArea == NULL)
    {
-      ASSERT(FALSE);
+      KeBugCheck(MEMORY_MANAGEMENT);
       return(STATUS_UNSUCCESSFUL);
    }
 
@@ -932,7 +917,7 @@ MmFreeMemoryAreaByPtr(
  * @remarks Lock the address space before calling this function.
  */
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 MmCreateMemoryArea(PMM_AVL_TABLE AddressSpace,
                    ULONG Type,
                    PVOID *BaseAddress,
@@ -957,6 +942,7 @@ MmCreateMemoryArea(PMM_AVL_TABLE AddressSpace,
    MmVerifyMemoryAreas(AddressSpace);
 
    Granularity = (MEMORY_AREA_VIRTUAL_MEMORY == Type ? MM_VIRTMEM_GRANULARITY : PAGE_SIZE);
+
    if ((*BaseAddress) == 0 && !FixedAddress)
    {
       tmpLength = PAGE_ROUND_UP(Length);
@@ -990,6 +976,10 @@ MmCreateMemoryArea(PMM_AVL_TABLE AddressSpace,
       if (BoundaryAddressMultiple.QuadPart != 0)
       {
          EndAddress = ((char*)(*BaseAddress)) + tmpLength-1;
+		 DPRINT1("BoundaryAddressMultiple %x BaseAddress %x EndAddress %x\n",
+				 BoundaryAddressMultiple.u.LowPart, 
+				 *BaseAddress,
+				 EndAddress);
          ASSERT(((ULONG_PTR)*BaseAddress/BoundaryAddressMultiple.QuadPart) == ((DWORD_PTR)EndAddress/BoundaryAddressMultiple.QuadPart));
       }
 
@@ -1039,7 +1029,7 @@ MmMapMemoryArea(PVOID BaseAddress,
       if (!NT_SUCCESS(Status))
       {
          DPRINT1("Unable to allocate page\n");
-         ASSERT(FALSE);
+         KeBugCheck(MEMORY_MANAGEMENT);
       }
       Status = MmCreateVirtualMapping (NULL,
                                        (PVOID)((ULONG_PTR)BaseAddress + (i * PAGE_SIZE)),
@@ -1049,13 +1039,13 @@ MmMapMemoryArea(PVOID BaseAddress,
       if (!NT_SUCCESS(Status))
       {
          DPRINT1("Unable to create virtual mapping\n");
-         ASSERT(FALSE);
+         KeBugCheck(MEMORY_MANAGEMENT);
       }
    }
 }
 
 
-VOID STDCALL
+VOID NTAPI
 MmReleaseMemoryAreaIfDecommitted(PEPROCESS Process,
                                  PMM_AVL_TABLE AddressSpace,
                                  PVOID BaseAddress)

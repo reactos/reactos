@@ -368,14 +368,13 @@ ObpCaptureObjectName(IN OUT PUNICODE_STRING CapturedName,
     RtlInitEmptyUnicodeString(CapturedName, NULL, 0);
 
     /* Protect everything */
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Check if we came from user mode */
         if (AccessMode != KernelMode)
         {
             /* First Probe the String */
-            ProbeForReadUnicodeString(ObjectName);
-            LocalName = *ObjectName;
+            LocalName = ProbeForReadUnicodeString(ObjectName);
             ProbeForRead(LocalName.Buffer, LocalName.Length, sizeof(WCHAR));
         }
         else
@@ -415,16 +414,16 @@ ObpCaptureObjectName(IN OUT PUNICODE_STRING CapturedName,
             }
         }
     }
-    _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+    _SEH2_EXCEPT(ExSystemExceptionFilter())
     {
         /* Handle exception and free the string buffer */
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
         if (StringBuffer)
         {
             ObpFreeObjectNameBuffer(CapturedName);
         }
     }
-    _SEH_END;
+    _SEH2_END;
 
     /* Return */
     return Status;
@@ -448,7 +447,7 @@ ObpCaptureObjectCreateInformation(IN POBJECT_ATTRIBUTES ObjectAttributes,
     RtlZeroMemory(ObjectCreateInfo, sizeof(OBJECT_CREATE_INFORMATION));
 
     /* SEH everything here for protection */
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Check if we got attributes */
         if (ObjectAttributes)
@@ -468,7 +467,7 @@ ObpCaptureObjectCreateInformation(IN POBJECT_ATTRIBUTES ObjectAttributes,
             {
                 /* Invalid combination, fail */
                 Status = STATUS_INVALID_PARAMETER;
-                _SEH_LEAVE;
+                _SEH2_LEAVE;
             }
 
             /* Set some Create Info */
@@ -492,7 +491,7 @@ ObpCaptureObjectCreateInformation(IN POBJECT_ATTRIBUTES ObjectAttributes,
                 {
                     /* Capture failed, quit */
                     ObjectCreateInfo->SecurityDescriptor = NULL;
-                    _SEH_LEAVE;
+                    _SEH2_LEAVE;
                 }
 
                 /* Save the probe mode and security descriptor size */
@@ -524,12 +523,12 @@ ObpCaptureObjectCreateInformation(IN POBJECT_ATTRIBUTES ObjectAttributes,
             LocalObjectName = NULL;
         }
     }
-    _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+    _SEH2_EXCEPT(ExSystemExceptionFilter())
     {
         /* Get the exception */
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
 
     if (NT_SUCCESS(Status))
     {
@@ -849,7 +848,7 @@ ObQueryTypeInfo(IN POBJECT_TYPE ObjectType,
     PWSTR InfoBuffer;
 
     /* Enter SEH */
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Set return length aligned to 4-byte boundary */
         *ReturnLength += sizeof(*ObjectTypeInfo) +
@@ -858,7 +857,7 @@ ObQueryTypeInfo(IN POBJECT_TYPE ObjectType,
         /* Check if thats too much though. */
         if (Length < *ReturnLength)
         {
-            _SEH_YIELD(return STATUS_INFO_LENGTH_MISMATCH);
+            _SEH2_YIELD(return STATUS_INFO_LENGTH_MISMATCH);
         }
 
         /* Build the data */
@@ -901,12 +900,12 @@ ObQueryTypeInfo(IN POBJECT_TYPE ObjectType,
         /* Null-terminate it */
         (InfoBuffer)[ObjectType->Name.Length / sizeof(WCHAR)] = UNICODE_NULL;
     }
-    _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+    _SEH2_EXCEPT(ExSystemExceptionFilter())
     {
         /* Otherwise, get the exception code */
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
 
     /* Return status to caller */
     return Status;
@@ -1423,7 +1422,7 @@ NtQueryObject(IN HANDLE ObjectHandle,
     if (PreviousMode != KernelMode)
     {
         /* Protect validation with SEH */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Probe the input structure */
             ProbeForWrite(ObjectInformation, Length, sizeof(UCHAR));
@@ -1431,12 +1430,12 @@ NtQueryObject(IN HANDLE ObjectHandle,
             /* If we have a result length, probe it too */
             if (ResultLength) ProbeForWriteUlong(ResultLength);
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Get the exception code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
 
         /* Fail if we raised an exception */
         if (!NT_SUCCESS(Status)) return Status;
@@ -1461,7 +1460,7 @@ NtQueryObject(IN HANDLE ObjectHandle,
         ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
     }
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Check the information class */
         switch (ObjectInformationClass)
@@ -1592,12 +1591,12 @@ NtQueryObject(IN HANDLE ObjectHandle,
             *ResultLength = Length;
         }
     }
-    _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+    _SEH2_EXCEPT(ExSystemExceptionFilter())
     {
         /* Otherwise, get the exception code */
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
 
     /* Dereference the object if we had referenced it */
     if (Object) ObDereferenceObject (Object);
@@ -1662,7 +1661,7 @@ NtSetInformationObject(IN HANDLE ObjectHandle,
 
     if (Context.PreviousMode != KernelMode)
     {
-        _SEH_TRY
+        _SEH2_TRY
         {
             ProbeForRead(ObjectInformation,
                          sizeof(OBJECT_HANDLE_ATTRIBUTE_INFORMATION),
@@ -1670,11 +1669,11 @@ NtSetInformationObject(IN HANDLE ObjectHandle,
             Context.Information = *(POBJECT_HANDLE_ATTRIBUTE_INFORMATION)
                                     ObjectInformation;
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
 
         if (!NT_SUCCESS(Status)) return Status;
     }

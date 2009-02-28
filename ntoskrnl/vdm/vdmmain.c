@@ -4,6 +4,7 @@
  * FILE:            ntoskrnl/vdm/vdmmain.c
  * PURPOSE:         VDM Support Services
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ *                  Aleksey Bragin (aleksey@reactos.org)
  */
 
 /* INCLUDES ******************************************************************/
@@ -14,20 +15,8 @@
 
 /* GLOBALS *******************************************************************/
 
-static UCHAR OrigIVT[1024];
-static UCHAR OrigBDA[256];
 
 /* PRIVATE FUNCTIONS *********************************************************/
-
-VOID
-INIT_FUNCTION
-NtEarlyInitVdm(VOID)
-{
-    PCHAR start = MmCreateHyperspaceMapping(0);
-    memcpy(OrigIVT, start, 1024);
-    memcpy(OrigBDA, start+0x400, 256);
-    MmDeleteHyperspaceMapping(start);
-}
 
 VOID
 NTAPI
@@ -82,6 +71,90 @@ KeI386VdmInitialize(VOID)
     ZwClose(RegHandle);
 }
 
+NTSTATUS
+NTAPI
+VdmpInitialize(PVOID ControlData)
+{
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING PhysMemName = RTL_CONSTANT_STRING(L"\\Device\\PhysicalMemory");
+    NTSTATUS Status;
+    HANDLE PhysMemHandle;
+    PVOID BaseAddress;
+    PVOID NullAddress = NULL;
+    LARGE_INTEGER Offset;
+    ULONG ViewSize;
+
+    /* Open the physical memory section */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &PhysMemName,
+                               0,
+                               NULL,
+                               NULL);
+    Status = ZwOpenSection(&PhysMemHandle,
+                           SECTION_ALL_ACCESS,
+                           &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Couldn't open \\Device\\PhysicalMemory\n");
+        return Status;
+    }
+
+    /* Map the BIOS and device registers into the address space */
+    Offset.QuadPart = 0;
+    ViewSize = PAGE_SIZE;
+    BaseAddress = 0;
+    Status = ZwMapViewOfSection(PhysMemHandle,
+                                NtCurrentProcess(),
+                                &BaseAddress,
+                                0,
+                                ViewSize,
+                                &Offset,
+                                &ViewSize,
+                                ViewUnmap,
+                                0,
+                                PAGE_READWRITE);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Couldn't map physical memory (%x)\n", Status);
+        ZwClose(PhysMemHandle);
+        return Status;
+    }
+
+    /* Now, copy the first physical page into the first virtual page */
+    _SEH2_TRY
+    {
+        RtlMoveMemory(NullAddress, BaseAddress, ViewSize);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        /* Get the status */
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Couldn't copy first page (%x)\n", Status);
+        ZwClose(PhysMemHandle);
+        ZwUnmapViewOfSection(NtCurrentProcess(), BaseAddress);
+        return Status;
+    }
+
+    /* Close physical memory section handle */
+    ZwClose(PhysMemHandle);
+
+    /* Unmap the section */
+    Status = ZwUnmapViewOfSection(NtCurrentProcess(), BaseAddress);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Couldn't unmap the section (%x)\n", Status);
+        return Status;
+    }
+
+    return STATUS_SUCCESS;
+}
+
 /* PUBLIC FUNCTIONS **********************************************************/
 
 /*
@@ -107,10 +180,8 @@ NtVdmControl(IN ULONG ControlCode,
 
         case VdmInitialize:
 
-            /* Pretty much a hack, since a lot more needs to happen */
-            memcpy(ControlData, OrigIVT, 1024);
-            memcpy((PVOID)((ULONG_PTR)ControlData + 1024), OrigBDA, 256);
-            Status = STATUS_SUCCESS;
+            /* Call the init sub-function */
+            Status = VdmpInitialize(ControlData);
             break;
 
         default:

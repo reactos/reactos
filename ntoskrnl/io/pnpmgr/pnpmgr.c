@@ -13,7 +13,7 @@
 #define NDEBUG
 #include <debug.h>
 
-//#define ENABLE_ACPI
+#define ENABLE_ACPI
 
 /* GLOBALS *******************************************************************/
 
@@ -1267,7 +1267,7 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
    LCID LocaleId;
    HANDLE InstanceKey = NULL;
    UNICODE_STRING ValueName;
-   UNICODE_STRING ParentIdPrefix = { 0 };
+   UNICODE_STRING ParentIdPrefix = { 0, 0, NULL };
    DEVICE_CAPABILITIES DeviceCapabilities;
 
    DPRINT("IopActionInterrogateDeviceStack(%p, %p)\n", DeviceNode, Context);
@@ -3488,4 +3488,19 @@ IoSynchronousInvalidateDeviceRelations(
             /* Ejection relations are not supported */
             return STATUS_NOT_SUPPORTED;
     }
+}
+
+/*
+ * @unimplemented
+ */
+BOOLEAN
+NTAPI
+IoTranslateBusAddress(IN INTERFACE_TYPE InterfaceType,
+                      IN ULONG BusNumber,
+                      IN PHYSICAL_ADDRESS BusAddress,
+                      IN OUT PULONG AddressSpace,
+                      OUT PPHYSICAL_ADDRESS TranslatedAddress)
+{
+    UNIMPLEMENTED;
+    return FALSE;
 }

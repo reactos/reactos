@@ -171,14 +171,14 @@ IopCaptureUnicodeString(PUNICODE_STRING DstName, PUNICODE_STRING SrcName)
     UNICODE_STRING Name;
 
     Name.Buffer = NULL;
-    _SEH_TRY
+    _SEH2_TRY
     {
 	Name.Length = SrcName->Length;
 	Name.MaximumLength = SrcName->MaximumLength;
 	if (Name.Length > Name.MaximumLength)
 	{
 	    Status = STATUS_INVALID_PARAMETER;
-	    _SEH_LEAVE;
+	    _SEH2_LEAVE;
 	}
 	if (Name.MaximumLength)
 	{
@@ -189,17 +189,17 @@ IopCaptureUnicodeString(PUNICODE_STRING DstName, PUNICODE_STRING SrcName)
 	    if (Name.Buffer == NULL)
 	    {
 		Status = STATUS_INSUFFICIENT_RESOURCES;
-		_SEH_LEAVE;
+		_SEH2_LEAVE;
 	    }
 	    memcpy(Name.Buffer, SrcName->Buffer, Name.MaximumLength);
 	}
 	*DstName = Name;
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
     
     if (!NT_SUCCESS(Status) && Name.Buffer)
     {   
@@ -227,7 +227,7 @@ IopGetDeviceProperty(PPLUGPLAY_CONTROL_PROPERTY_DATA PropertyData)
 	return Status;
     }
 
-    _SEH_TRY
+    _SEH2_TRY
     {
 	Property = PropertyData->Property;
         BufferSize = PropertyData->BufferSize;
@@ -235,11 +235,11 @@ IopGetDeviceProperty(PPLUGPLAY_CONTROL_PROPERTY_DATA PropertyData)
                       BufferSize,
                       sizeof(UCHAR));
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
     
     if (!NT_SUCCESS(Status))
     {
@@ -272,16 +272,16 @@ IopGetDeviceProperty(PPLUGPLAY_CONTROL_PROPERTY_DATA PropertyData)
 
     if (NT_SUCCESS(Status))
     {
-	_SEH_TRY
+	_SEH2_TRY
 	{
 	    memcpy(Buffer, PropertyData->Buffer, BufferSize);
 	    PropertyData->BufferSize = BufferSize;
 	}
-	_SEH_HANDLE
+	_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
 	{
-	    Status = _SEH_GetExceptionCode();
+	    Status = _SEH2_GetExceptionCode();
 	}
-	_SEH_END;
+	_SEH2_END;
     }
     ExFreePool(Buffer);
     return Status;
@@ -309,7 +309,7 @@ IopGetRelatedDevice(PPLUGPLAY_CONTROL_RELATED_DEVICE_DATA RelatedDeviceData)
 	return Status;
     }
 
-    _SEH_TRY
+    _SEH2_TRY
     {
 	Relation = RelatedDeviceData->Relation;
 	MaximumLength = RelatedDeviceData->RelatedDeviceInstanceLength;
@@ -317,11 +317,11 @@ IopGetRelatedDevice(PPLUGPLAY_CONTROL_RELATED_DEVICE_DATA RelatedDeviceData)
 	              MaximumLength,
 		      sizeof(WCHAR));
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
 
     if (!NT_SUCCESS(Status))
     {
@@ -393,18 +393,18 @@ IopGetRelatedDevice(PPLUGPLAY_CONTROL_RELATED_DEVICE_DATA RelatedDeviceData)
     }
 
     /* Copy related device instance name */
-    _SEH_TRY
+    _SEH2_TRY
     {
         RtlCopyMemory(RelatedDeviceData->RelatedDeviceInstance,
                       RelatedDeviceNode->InstancePath.Buffer,
                       RelatedDeviceNode->InstancePath.Length);
         RelatedDeviceData->RelatedDeviceInstanceLength = RelatedDeviceNode->InstancePath.Length;
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
 
     if (DeviceObject != NULL)
     {
@@ -435,7 +435,7 @@ IopDeviceStatus(PPLUGPLAY_CONTROL_STATUS_DATA StatusData)
         return Status;
     DPRINT("Device name: '%wZ'\n", &DeviceInstance);
 
-    _SEH_TRY
+    _SEH2_TRY
     {
 	Operation = StatusData->Operation;
 	if (Operation == PNP_SET_DEVICE_STATUS)
@@ -444,11 +444,11 @@ IopDeviceStatus(PPLUGPLAY_CONTROL_STATUS_DATA StatusData)
 	    DeviceProblem = StatusData->DeviceProblem;
 	}
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
 
     if (!NT_SUCCESS(Status))
     {
@@ -488,16 +488,16 @@ IopDeviceStatus(PPLUGPLAY_CONTROL_STATUS_DATA StatusData)
 
     if (Operation == PNP_GET_DEVICE_STATUS)
     {
-	_SEH_TRY
+	_SEH2_TRY
 	{
 	    StatusData->DeviceStatus = DeviceStatus;
 	    StatusData->DeviceProblem = DeviceProblem;
 	}
-	_SEH_HANDLE
+	_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
 	{
-	    Status = _SEH_GetExceptionCode();
+	    Status = _SEH2_GetExceptionCode();
 	}
-	_SEH_END;
+	_SEH2_END;
     }
 
     return Status;
@@ -529,19 +529,17 @@ IopGetDeviceDepth(PPLUGPLAY_CONTROL_DEPTH_DATA DepthData)
 
     DeviceNode = IopGetDeviceNode(DeviceObject);
 
-    DepthData->Depth = DeviceNode->Level;
-
-    ObDereferenceObject(DeviceObject);
-
-    _SEH_TRY
+    _SEH2_TRY
     {
 	DepthData->Depth = DeviceNode->Level;
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
+
+    ObDereferenceObject(DeviceObject);
 
     return Status;
 }
@@ -789,17 +787,17 @@ NtPlugPlayControl(IN PLUGPLAY_CONTROL_CLASS PlugPlayControlClass,
     }
 
     /* Probe the buffer */
-    _SEH_TRY
+    _SEH2_TRY
     {
         ProbeForWrite(Buffer,
                       BufferLength,
                       sizeof(ULONG));
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
 
     if (!NT_SUCCESS(Status))
     {

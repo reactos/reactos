@@ -14,7 +14,8 @@
 
 /* DATA **********************************************************************/
 
-ULONG ExPushLockSpinCount;
+ULONG ExPushLockSpinCount = 0;
+
 #undef EX_PUSH_LOCK
 #undef PEX_PUSH_LOCK
 
@@ -36,8 +37,11 @@ VOID
 NTAPI
 ExpInitializePushLocks(VOID)
 {
+#ifdef CONFIG_SMP
     /* Initialize an internal 1024-iteration spin for MP CPUs */
-    ExPushLockSpinCount = (KeNumberProcessors == 1) ? 0 : 1024;
+    if (KeNumberProcessors > 1)
+        ExPushLockSpinCount = 1024;
+#endif
 }
 
 /*++
@@ -309,7 +313,6 @@ ExTimedWaitForUnblockPushLock(IN PEX_PUSH_LOCK PushLock,
                               IN PVOID WaitBlock,
                               IN PLARGE_INTEGER Timeout)
 {
-    ULONG i;
     NTSTATUS Status;
 
     /* Initialize the wait event */
@@ -317,23 +320,22 @@ ExTimedWaitForUnblockPushLock(IN PEX_PUSH_LOCK PushLock,
                       SynchronizationEvent,
                       FALSE);
 
+#ifdef CONFIG_SMP
     /* Spin on the push lock if necessary */
-    i = ExPushLockSpinCount;
-    if (i)
+    if (ExPushLockSpinCount)
     {
-        /* Spin */
-        while (--i)
+        ULONG i = ExPushLockSpinCount;
+
+        do
         {
             /* Check if we got lucky and can leave early */
-            if (!(((PEX_PUSH_LOCK_WAIT_BLOCK)WaitBlock)->Flags &
-                    EX_PUSH_LOCK_WAITING))
-            {
-                /* This wait block isn't waiting anymore, we can leave */
+            if (!(*(volatile LONG *)&((PEX_PUSH_LOCK_WAIT_BLOCK)WaitBlock)->Flags & EX_PUSH_LOCK_WAITING))
                 return STATUS_SUCCESS;
-            }
+
             YieldProcessor();
-        }
+        } while (--i);
     }
+#endif
 
     /* Now try to remove the wait bit */
     if (InterlockedBitTestAndReset(&((PEX_PUSH_LOCK_WAIT_BLOCK)WaitBlock)->Flags,
@@ -463,7 +465,6 @@ ExfAcquirePushLockExclusive(PEX_PUSH_LOCK PushLock)
 {
     EX_PUSH_LOCK OldValue = *PushLock, NewValue, TempValue;
     BOOLEAN NeedWake;
-    ULONG i;
     DEFINE_WAIT_BLOCK(WaitBlock);
 
     /* Start main loop */
@@ -583,13 +584,21 @@ ExfAcquirePushLockExclusive(PEX_PUSH_LOCK PushLock)
             /* Set up the Wait Gate */
             KeInitializeGate(&WaitBlock->WakeGate);
 
+#ifdef CONFIG_SMP
             /* Now spin on the push lock if necessary */
-            i = ExPushLockSpinCount;
-            if ((i) && (WaitBlock->Flags & EX_PUSH_LOCK_WAITING))
+            if (ExPushLockSpinCount)
             {
-                /* Spin */
-                while (--i) YieldProcessor();
+                ULONG i = ExPushLockSpinCount;
+
+                do
+                {
+                    if (!(*(volatile LONG *)&WaitBlock->Flags & EX_PUSH_LOCK_WAITING))
+                        break;
+
+                    YieldProcessor();
+                } while (--i);
             }
+#endif
 
             /* Now try to remove the wait bit */
             if (InterlockedBitTestAndReset(&WaitBlock->Flags, 1))
@@ -629,7 +638,6 @@ ExfAcquirePushLockShared(PEX_PUSH_LOCK PushLock)
 {
     EX_PUSH_LOCK OldValue = *PushLock, NewValue;
     BOOLEAN NeedWake;
-    ULONG i;
     DEFINE_WAIT_BLOCK(WaitBlock);
 
     /* Start main loop */
@@ -742,13 +750,21 @@ ExfAcquirePushLockShared(PEX_PUSH_LOCK PushLock)
             /* Set up the Wait Gate */
             KeInitializeGate(&WaitBlock->WakeGate);
 
+#ifdef CONFIG_SMP
             /* Now spin on the push lock if necessary */
-            i = ExPushLockSpinCount;
-            if ((i) && (WaitBlock->Flags & EX_PUSH_LOCK_WAITING))
+            if (ExPushLockSpinCount)
             {
-                /* Spin */
-                while (--i) YieldProcessor();
+                ULONG i = ExPushLockSpinCount;
+
+                do
+                {
+                    if (!(*(volatile LONG *)&WaitBlock->Flags & EX_PUSH_LOCK_WAITING))
+                        break;
+
+                    YieldProcessor();
+                } while (--i);
             }
+#endif
 
             /* Now try to remove the wait bit */
             if (InterlockedBitTestAndReset(&WaitBlock->Flags, 1))

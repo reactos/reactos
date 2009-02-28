@@ -1,4 +1,4 @@
-#include "include/reactos/msvctarget.h"
+#include <msvctarget.h>
 
 @ stdcall CcCanIWrite(ptr long long long)
 @ stdcall CcCopyRead(ptr ptr long long ptr ptr)
@@ -80,8 +80,8 @@
 @ stdcall ExDisableResourceBoostLite(ptr)
 @ fastcall ExEnterCriticalRegionAndAcquireFastMutexUnsafe(ptr)
 @ stdcall ExEnterCriticalRegionAndAcquireResourceExclusive(ptr)
-;ExEnterCriticalRegionAndAcquireResourceShared
-;ExEnterCriticalRegionAndAcquireSharedWaitForExclusive
+@ stdcall ExEnterCriticalRegionAndAcquireResourceShared(ptr)
+@ stdcall ExEnterCriticalRegionAndAcquireSharedWaitForExclusive(ptr)
 @ stdcall ExEnumHandleTable(ptr ptr ptr ptr)
 @ extern ExEventObjectType _ExEventObjectType
 @ stdcall ExExtendZone(ptr ptr long)
@@ -415,7 +415,7 @@
 @ stdcall IoGetFileObjectGenericMapping()
 @ stdcall IoGetInitialStack()
 @ stdcall IoGetLowerDeviceObject(ptr)
-@ stdcall IoGetPagingIoPriority(ptr)
+@ fastcall IoGetPagingIoPriority(ptr)
 @ stdcall IoGetRelatedDeviceObject(ptr)
 @ stdcall IoGetRequestorProcess(ptr)
 @ stdcall IoGetRequestorProcessId(ptr)
@@ -494,7 +494,7 @@
 @ stdcall IoSynchronousInvalidateDeviceRelations(ptr long)
 @ stdcall IoSynchronousPageWrite(ptr ptr ptr ptr ptr)
 @ stdcall IoThreadToProcess(ptr)
-;IoTranslateBusAddress
+@ stdcall IoTranslateBusAddress(long long long long ptr ptr)
 @ stdcall IoUnregisterFileSystem(ptr)
 @ stdcall IoUnregisterFsRegistrationChange(ptr ptr)
 @ stdcall IoUnregisterPlugPlayNotification(ptr)
@@ -538,9 +538,9 @@
 @ stdcall KdSystemDebugControl(long ptr long ptr long ptr long)
 #ifdef _M_IX86
 @ stdcall Ke386CallBios(long ptr)
-;Ke386IoSetAccessProcess
-;Ke386QueryIoAccessMap
-;Ke386SetIoAccessMap
+@ stdcall Ke386IoSetAccessProcess(ptr long)
+@ stdcall Ke386QueryIoAccessMap(long ptr)
+@ stdcall Ke386SetIoAccessMap(long ptr)
 #endif
 @ fastcall KeAcquireGuardedMutex(ptr)
 @ fastcall KeAcquireGuardedMutexUnsafe(ptr)
@@ -705,6 +705,7 @@
 @ fastcall KiAcquireSpinLock(ptr)
 @ extern KiBugCheckData
 @ stdcall KiCheckForKernelApcDelivery()
+;KiCheckForSListAddress
 #ifdef _M_IX86
 @ stdcall KiCoprocessorError()
 #endif
@@ -915,17 +916,17 @@
 ;PfxInsertPrefix
 ;PfxRemovePrefix
 @ stdcall PoCallDriver(ptr ptr)
-;PoCancelDeviceNotify
+@ stdcall PoCancelDeviceNotify(ptr)
 @ stdcall PoQueueShutdownWorkItem(ptr)
 @ stdcall PoRegisterDeviceForIdleDetection(ptr long long long)
-;PoRegisterDeviceNotify
+@ stdcall PoRegisterDeviceNotify(ptr long long long ptr ptr)
 @ stdcall PoRegisterSystemState(ptr long)
 @ stdcall PoRequestPowerIrp(ptr long long ptr ptr ptr)
-;PoRequestShutdownEvent
-;PoSetHiberRange
+@ stdcall PoRequestShutdownEvent(ptr)
+@ stdcall PoSetHiberRange(ptr long ptr long long)
 @ stdcall PoSetPowerState(ptr long long)
 @ stdcall PoSetSystemState(long)
-;PoShutdownBugCheck
+@ stdcall PoShutdownBugCheck(long long ptr ptr ptr ptr)
 @ stdcall PoStartNextPowerIrp(ptr)
 @ stdcall PoUnregisterSystemState(ptr)
 @ stdcall ProbeForRead(ptr long long)
@@ -988,7 +989,7 @@
 @ stdcall PsImpersonateClient(ptr ptr long long long)
 @ extern PsInitialSystemProcess
 @ stdcall PsIsProcessBeingDebugged(ptr)
-;PsIsSystemProcess
+@ stdcall PsIsSystemProcess(ptr)
 @ stdcall PsIsSystemThread(ptr)
 @ stdcall PsIsThreadImpersonating(ptr)
 @ stdcall PsIsThreadTerminating(ptr)
@@ -1029,7 +1030,6 @@
 @ stdcall READ_REGISTER_UCHAR(ptr)
 @ stdcall READ_REGISTER_ULONG(ptr)
 @ stdcall READ_REGISTER_USHORT(ptr)
-@ stdcall KeRosDumpStackFrames(ptr long)
 @ stdcall RtlAbsoluteToSelfRelativeSD(ptr ptr ptr)
 @ stdcall RtlAddAccessAllowedAce(ptr long long ptr)
 @ stdcall RtlAddAccessAllowedAceEx(ptr long long long ptr)
@@ -1380,12 +1380,12 @@
 ;WmiFlushTrace
 ;WmiGetClock
 ;WmiQueryTrace
-;WmiQueryTraceInformation
+@ stdcall WmiQueryTraceInformation(long ptr long ptr ptr)
 ;WmiStartTrace
 ;WmiStopTrace
 ;WmiTraceFastEvent
-;WmiTraceMessage
-;WmiTraceMessageVa
+@ cdecl WmiTraceMessage()
+@ stdcall WmiTraceMessageVa(ptr long ptr long long)
 ;WmiUpdateTrace
 ;XIPDispatch
 @ stdcall ZwAccessCheckAndAuditAlarm(ptr ptr ptr ptr ptr long ptr long ptr ptr ptr)
@@ -1510,7 +1510,7 @@
 @ stdcall ZwUnmapViewOfSection(ptr ptr)
 @ stdcall ZwWaitForMultipleObjects(long ptr long long ptr)
 @ stdcall ZwWaitForSingleObject(ptr long ptr)
-@ stdcall ZwWriteFile(ptr ptr ptr ptr ptr ptr long ptr ptr);
+@ stdcall ZwWriteFile(ptr ptr ptr ptr ptr ptr long ptr ptr)
 @ stdcall ZwYieldExecution()
 ;_CIcos
 ;_CIsin

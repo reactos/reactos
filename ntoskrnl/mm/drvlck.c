@@ -37,7 +37,7 @@ MmUnlockPagableImageSection(IN PVOID ImageSectionHandle)
 /*
  * @unimplemented
  */
-VOID STDCALL
+VOID NTAPI
 MmLockPagableSectionByHandle(IN PVOID ImageSectionHandle)
 {
     UNIMPLEMENTED;
@@ -59,7 +59,7 @@ MmLockPagableCodeSection(IN PVOID AddressWithinSection)
 /*
  * @implemented
  */
-PVOID STDCALL
+PVOID NTAPI
 MmLockPagableDataSection(IN PVOID AddressWithinSection)
 {
    PVOID Handle;
@@ -73,7 +73,7 @@ MmLockPagableDataSection(IN PVOID AddressWithinSection)
 /*
  * @unimplemented
  */
-VOID STDCALL
+VOID NTAPI
 MmUnlockPagableImageSection(IN PVOID ImageSectionHandle)
 {
     UNIMPLEMENTED;
@@ -82,7 +82,7 @@ MmUnlockPagableImageSection(IN PVOID ImageSectionHandle)
 /*
  * @unimplemented
  */
-PVOID STDCALL
+PVOID NTAPI
 MmPageEntireDriver(IN PVOID AddressWithinSection)
 {
     UNIMPLEMENTED;
@@ -93,7 +93,7 @@ MmPageEntireDriver(IN PVOID AddressWithinSection)
 /*
  * @unimplemented
  */
-VOID STDCALL
+VOID NTAPI
 MmResetDriverPaging(IN PVOID AddressWithinSection)
 {
     UNIMPLEMENTED;

@@ -57,7 +57,7 @@ MmInitializeMdlImplementation(VOID)
     if (!NT_SUCCESS(Status))
     {
         MmUnlockAddressSpace(MmGetKernelAddressSpace());
-        ASSERT(FALSE);
+        KeBugCheck(MEMORY_MANAGEMENT);
     }
     MmUnlockAddressSpace(MmGetKernelAddressSpace());
     
@@ -261,7 +261,7 @@ MmUnlockPages(IN PMDL Mdl)
         if (Process)
         {
             /* Handle the accounting of locked pages */
-            ASSERT(Process->NumberOfLockedPages >= 0);
+            /* ASSERT(Process->NumberOfLockedPages >= 0); */ // always true
             InterlockedExchangeAddSizeT(&Process->NumberOfLockedPages,
                                         -PageCount);
         }
@@ -276,7 +276,7 @@ MmUnlockPages(IN PMDL Mdl)
     if (Process)
     {
         /* Handle the accounting of locked pages */
-        ASSERT(Process->NumberOfLockedPages >= 0);
+        /* ASSERT(Process->NumberOfLockedPages >= 0); */ // always true
         InterlockedExchangeAddSizeT(&Process->NumberOfLockedPages,
                                     -PageCount);
     }
@@ -599,7 +599,7 @@ MmAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
     }
     
     /* If nothing was allocated, fail */
-    if (NumberOfPagesAllocated)
+    if (NumberOfPagesWanted)
     {
         /* Free our MDL */
         ExFreePool(Mdl);
@@ -692,7 +692,7 @@ MmMapLockedPagesSpecifyCache(IN PMDL Mdl,
             {
                 return NULL;
             }
-            ASSERT(FALSE);
+            KeBugCheck(MEMORY_MANAGEMENT);
         }
         Base = (PVOID)((ULONG_PTR)MiMdlMappingRegionBase + StartingOffset * PAGE_SIZE);
         if (MiMdlMappingRegionHint == StartingOffset) MiMdlMappingRegionHint += PageCount;
@@ -882,7 +882,7 @@ MmProtectMdlSystemAddress(IN PMDL MemoryDescriptorList,
  * @unimplemented
  */
 VOID
-STDCALL
+NTAPI
 MmProbeAndLockProcessPages(IN OUT PMDL MemoryDescriptorList,
                            IN PEPROCESS Process,
                            IN KPROCESSOR_MODE AccessMode,
@@ -896,7 +896,7 @@ MmProbeAndLockProcessPages(IN OUT PMDL MemoryDescriptorList,
  * @unimplemented
  */
 VOID
-STDCALL
+NTAPI
 MmProbeAndLockSelectedPages(IN OUT PMDL MemoryDescriptorList,
                             IN LARGE_INTEGER PageList[],
                             IN KPROCESSOR_MODE AccessMode,

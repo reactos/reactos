@@ -220,7 +220,7 @@ NTAPI
 ExpInitLuid(VOID)
 {
     LUID DummyLuidValue = SYSTEM_LUID;
-    
+
     LuidValue.u.HighPart = DummyLuidValue.HighPart;
     LuidValue.u.LowPart = DummyLuidValue.LowPart;
     LuidIncrement.QuadPart = 1;
@@ -232,7 +232,7 @@ NTAPI
 ExpAllocateLocallyUniqueId(OUT LUID *LocallyUniqueId)
 {
     LARGE_INTEGER NewLuid, PrevLuid;
-    
+
     /* atomically increment the luid */
     do
     {
@@ -242,10 +242,10 @@ ExpAllocateLocallyUniqueId(OUT LUID *LocallyUniqueId)
     } while(ExfInterlockedCompareExchange64(&LuidValue.QuadPart,
                                             &NewLuid.QuadPart,
                                             &PrevLuid.QuadPart) != PrevLuid.QuadPart);
-    
+
     LocallyUniqueId->LowPart = NewLuid.u.LowPart;
     LocallyUniqueId->HighPart = NewLuid.u.HighPart;
-    
+
     return STATUS_SUCCESS;
 }
 
@@ -253,49 +253,49 @@ ExpAllocateLocallyUniqueId(OUT LUID *LocallyUniqueId)
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtAllocateLocallyUniqueId(OUT LUID *LocallyUniqueId)
 {
     LUID NewLuid;
     KPROCESSOR_MODE PreviousMode;
     NTSTATUS Status = STATUS_SUCCESS;
-    
+
     PAGED_CODE();
-    
+
     PreviousMode = ExGetPreviousMode();
-    
+
     if(PreviousMode != KernelMode)
     {
-        _SEH_TRY
+        _SEH2_TRY
         {
             ProbeForWrite(LocallyUniqueId,
                           sizeof(LUID),
                           sizeof(ULONG));
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
-        
+        _SEH2_END;
+
         if(!NT_SUCCESS(Status))
         {
             return Status;
         }
     }
-    
+
     Status = ExpAllocateLocallyUniqueId(&NewLuid);
-    
-    _SEH_TRY
+
+    _SEH2_TRY
     {
         *LocallyUniqueId = NewLuid;
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
-    
+    _SEH2_END;
+
     return Status;
 }
 

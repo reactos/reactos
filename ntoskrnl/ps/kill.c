@@ -16,7 +16,7 @@
 
 /* GLOBALS *******************************************************************/
 
-LIST_ENTRY PspReaperListHead = {0};
+LIST_ENTRY PspReaperListHead = { NULL, NULL };
 WORK_QUEUE_ITEM PspReaperWorkItem;
 LARGE_INTEGER ShortTime = {{-10 * 100 * 1000, -1}};
 
@@ -188,7 +188,7 @@ PspReapRoutine(IN PVOID Context)
             Thread = CONTAINING_RECORD(NextEntry, ETHREAD, ReaperLink);
 
             /* Delete this entry's kernel stack */
-            MmDeleteKernelStack((PVOID)Thread->Tcb.StackLimit,
+            MmDeleteKernelStack((PVOID)Thread->Tcb.StackBase,
                                 Thread->Tcb.LargeStack);
             Thread->Tcb.InitialStack = NULL;
 
@@ -349,7 +349,7 @@ PspDeleteThread(IN PVOID ObjectBody)
     if (Thread->Tcb.InitialStack)
     {
         /* Release it */
-        MmDeleteKernelStack((PVOID)Thread->Tcb.StackLimit,
+        MmDeleteKernelStack((PVOID)Thread->Tcb.StackBase,
                             Thread->Tcb.LargeStack);
     }
 
@@ -778,7 +778,7 @@ PspExitThread(IN NTSTATUS ExitStatus)
         ObFastDereferenceObject(&CurrentProcess->Token, PrimaryToken);
 
         /* Check if this is a VDM Process and rundown the VDM DPCs if so */
-        if (CurrentProcess->VdmObjects);// VdmRundownDpcs(CurrentProcess);
+        if (CurrentProcess->VdmObjects) { /* VdmRundownDpcs(CurrentProcess); */ }
 
         /* Kill the process in the Object Manager */
         ObKillProcess(CurrentProcess);
@@ -991,7 +991,6 @@ PspTerminateThreadByPointer(IN PETHREAD Thread,
         if (!KeInsertQueueApc(Apc, Apc, NULL, 2))
         {
             /* The APC was already in the queue, fail */
-            ExFreePool(Apc);
             Status = STATUS_UNSUCCESSFUL;
         }
         else

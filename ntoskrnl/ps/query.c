@@ -89,19 +89,8 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
     if (!NT_SUCCESS(Status)) return Status;
 #endif
 
-    /* Check if this isn't the cookie class */
-    if(ProcessInformationClass != ProcessCookie)
-    {
-        /* Reference the process */
-        Status = ObReferenceObjectByHandle(ProcessHandle,
-                                           PROCESS_QUERY_INFORMATION,
-                                           PsProcessType,
-                                           PreviousMode,
-                                           (PVOID*)&Process,
-                                           NULL);
-        if (!NT_SUCCESS(Status)) return Status;
-    }
-    else if(ProcessHandle != NtCurrentProcess())
+    if((ProcessInformationClass == ProcessCookie) &&
+        (ProcessHandle != NtCurrentProcess()))
     {
         /*
          * Retreiving the process cookie is only allowed for the calling process
@@ -120,13 +109,23 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
             /* Set return length */
             Length = sizeof(PROCESS_BASIC_INFORMATION);
 
-            if ( ProcessInformationLength != Length )
+            if (ProcessInformationLength != Length)
             {
                 Status = STATUS_INFO_LENGTH_MISMATCH;
                 break;
             }
+
+            /* Reference the process */
+            Status = ObReferenceObjectByHandle(ProcessHandle,
+                                               PROCESS_QUERY_INFORMATION,
+                                               PsProcessType,
+                                               PreviousMode,
+                                               (PVOID*)&Process,
+                                               NULL);
+            if (!NT_SUCCESS(Status)) break;
+
             /* Protect writes with SEH */
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* Write all the information from the EPROCESS/KPROCESS */
                 ProcessBasicInfo->ExitStatus = Process->ExitStatus;
@@ -139,12 +138,15 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
                 ProcessBasicInfo->BasePriority = Process->Pcb.BasePriority;
 
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Get exception code */
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
+
+            /* Dereference the process */
+            ObDereferenceObject(Process);
             break;
 
         /* Quote limits and I/O Counters: not implemented */
@@ -152,13 +154,24 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
         case ProcessIoCounters:
 
             Length = sizeof(IO_COUNTERS);
-            if ( ProcessInformationLength != Length )
+            if (ProcessInformationLength != Length)
             {
                 Status = STATUS_INFO_LENGTH_MISMATCH;
                 break;
             }
 
+            /* Reference the process */
+            Status = ObReferenceObjectByHandle(ProcessHandle,
+                                               PROCESS_QUERY_INFORMATION,
+                                               PsProcessType,
+                                               PreviousMode,
+                                               (PVOID*)&Process,
+                                               NULL);
+            if (!NT_SUCCESS(Status)) break;
+
             Status = STATUS_NOT_IMPLEMENTED;
+            /* Dereference the process */
+            ObDereferenceObject(Process);
             break;
 
         /* Timing */
@@ -167,14 +180,23 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
             /* Set the return length */
             Length = sizeof(KERNEL_USER_TIMES);
 
-            if ( ProcessInformationLength != Length )
+            if (ProcessInformationLength != Length)
             {
                 Status = STATUS_INFO_LENGTH_MISMATCH;
                 break;
             }
 
+            /* Reference the process */
+            Status = ObReferenceObjectByHandle(ProcessHandle,
+                                               PROCESS_QUERY_INFORMATION,
+                                               PsProcessType,
+                                               PreviousMode,
+                                               (PVOID*)&Process,
+                                               NULL);
+            if (!NT_SUCCESS(Status)) break;
+
             /* Protect writes with SEH */
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* Copy time information from EPROCESS/KPROCESS */
                 ProcessTime->CreateTime = Process->CreateTime;
@@ -184,33 +206,54 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
                                                    100000LL;
                 ProcessTime->ExitTime = Process->ExitTime;
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Get exception code */
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
+
+            /* Dereference the process */
+            ObDereferenceObject(Process);
             break;
 
         /* Process Debug Port */
         case ProcessDebugPort:
 
+            /* Set return length */
+            Length = sizeof(HANDLE);
+
+            if (ProcessInformationLength != Length)
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
+            /* Reference the process */
+            Status = ObReferenceObjectByHandle(ProcessHandle,
+                                               PROCESS_QUERY_INFORMATION,
+                                               PsProcessType,
+                                               PreviousMode,
+                                               (PVOID*)&Process,
+                                               NULL);
+            if (!NT_SUCCESS(Status)) break;
+
             /* Protect write with SEH */
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* Return whether or not we have a debug port */
                 *(PHANDLE)ProcessInformation = (Process->DebugPort ?
                                                 (HANDLE)-1 : NULL);
-
-                /* Set the return length*/
-                Length = sizeof(HANDLE);
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Get exception code */
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
+
+            /* Dereference the process */
+            ObDereferenceObject(Process);
             break;
 
         /* LDT, WS and VDM Information: not implemented */
@@ -225,47 +268,77 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
             /* Set the return length*/
             Length = sizeof(ULONG);
 
-            if ( ProcessInformationLength != Length )
+            if (ProcessInformationLength != Length)
             {
                 Status = STATUS_INFO_LENGTH_MISMATCH;
                 break;
             }
 
+            /* Reference the process */
+            Status = ObReferenceObjectByHandle(ProcessHandle,
+                                               PROCESS_QUERY_INFORMATION,
+                                               PsProcessType,
+                                               PreviousMode,
+                                               (PVOID*)&Process,
+                                               NULL);
+            if (!NT_SUCCESS(Status)) break;
+
             /* Count the number of handles this process has */
-            HandleCount = ObpGetHandleCountByHandleTable(Process->ObjectTable);
+            HandleCount = ObGetProcessHandleCount(Process);
 
             /* Protect write in SEH */
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* Return the count of handles */
                 *(PULONG)ProcessInformation = HandleCount;
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Get the exception code */
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
+
+            /* Dereference the process */
+            ObDereferenceObject(Process);
             break;
 
         /* Session ID for the process */
         case ProcessSessionInformation:
 
+            /* Set the return length*/
+            Length = sizeof(PROCESS_SESSION_INFORMATION);
+
+            if (ProcessInformationLength != Length)
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
+            /* Reference the process */
+            Status = ObReferenceObjectByHandle(ProcessHandle,
+                                               PROCESS_QUERY_INFORMATION,
+                                               PsProcessType,
+                                               PreviousMode,
+                                               (PVOID*)&Process,
+                                               NULL);
+            if (!NT_SUCCESS(Status)) break;
+
             /* Enter SEH for write safety */
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* Write back the Session ID */
                 SessionInfo->SessionId = Process->Session;
-
-                /* Set the return length */
-                Length = sizeof(PROCESS_SESSION_INFORMATION);
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Get the exception code */
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
+
+            /* Dereference the process */
+            ObDereferenceObject(Process);
             break;
 
         /* WOW64: Not implemented */
@@ -279,14 +352,23 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
             /* Set the return length */
             Length = sizeof(VM_COUNTERS);
 
-            if ( ProcessInformationLength != Length )
+            if (ProcessInformationLength != Length)
             {
                 Status = STATUS_INFO_LENGTH_MISMATCH;
                 break;
             }
 
+            /* Reference the process */
+            Status = ObReferenceObjectByHandle(ProcessHandle,
+                                               PROCESS_QUERY_INFORMATION,
+                                               PsProcessType,
+                                               PreviousMode,
+                                               (PVOID*)&Process,
+                                               NULL);
+            if (!NT_SUCCESS(Status)) break;
+
             /* Enter SEH for write safety */
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* Return data from EPROCESS */
                 VmCounters->PeakVirtualSize = Process->PeakVirtualSize;
@@ -302,99 +384,183 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
                 VmCounters->PeakPagefileUsage = Process->QuotaPeak[2];
 
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Get the exception code */
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
+
+            /* Dereference the process */
+            ObDereferenceObject(Process);
             break;
 
         /* Hard Error Processing Mode */
         case ProcessDefaultHardErrorMode:
 
+            /* Set the return length*/
+            Length = sizeof(ULONG);
+
+            if (ProcessInformationLength != Length)
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
+            /* Reference the process */
+            Status = ObReferenceObjectByHandle(ProcessHandle,
+                                               PROCESS_QUERY_INFORMATION,
+                                               PsProcessType,
+                                               PreviousMode,
+                                               (PVOID*)&Process,
+                                               NULL);
+            if (!NT_SUCCESS(Status)) break;
+
             /* Enter SEH for writing back data */
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* Write the current processing mode */
                 *(PULONG)ProcessInformation = Process->
                                               DefaultHardErrorProcessing;
-
-                /* Set the return length */
-                Length = sizeof(ULONG);
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Get the exception code */
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
+
+            /* Dereference the process */
+            ObDereferenceObject(Process);
             break;
 
         /* Priority Boosting status */
         case ProcessPriorityBoost:
 
+            /* Set the return length*/
+            Length = sizeof(ULONG);
+
+            if (ProcessInformationLength != Length)
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
+            /* Reference the process */
+            Status = ObReferenceObjectByHandle(ProcessHandle,
+                                               PROCESS_QUERY_INFORMATION,
+                                               PsProcessType,
+                                               PreviousMode,
+                                               (PVOID*)&Process,
+                                               NULL);
+            if (!NT_SUCCESS(Status)) break;
+
             /* Enter SEH for writing back data */
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* Return boost status */
                 *(PULONG)ProcessInformation = Process->Pcb.DisableBoost ?
-                                              FALSE : TRUE;
-
-                /* Set the return length */
-                Length = sizeof(ULONG);
+                                              TRUE : FALSE;
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Get the exception code */
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
+
+            /* Dereference the process */
+            ObDereferenceObject(Process);
             break;
 
         /* DOS Device Map */
         case ProcessDeviceMap:
 
+            /* Set the return length*/
+            Length = sizeof(PROCESS_DEVICEMAP_INFORMATION);
+
+            if (ProcessInformationLength != Length)
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
+            /* Reference the process */
+            Status = ObReferenceObjectByHandle(ProcessHandle,
+                                               PROCESS_QUERY_INFORMATION,
+                                               PsProcessType,
+                                               PreviousMode,
+                                               (PVOID*)&Process,
+                                               NULL);
+            if (!NT_SUCCESS(Status)) break;
+
             /* Query the device map information */
             ObQueryDeviceMapInformation(Process, &DeviceMap);
 
             /* Enter SEH for writing back data */
-            _SEH_TRY
+            _SEH2_TRY
             {
                 *(PPROCESS_DEVICEMAP_INFORMATION)ProcessInformation = DeviceMap;
-
-                /* Set the return length */
-                Length = sizeof(PROCESS_DEVICEMAP_INFORMATION);
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Get the exception code */
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
+
+            /* Dereference the process */
+            ObDereferenceObject(Process);
             break;
 
         /* Priority class */
         case ProcessPriorityClass:
 
+            /* Set the return length*/
+            Length = sizeof(USHORT);
+
+            if (ProcessInformationLength != Length)
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
+            /* Reference the process */
+            Status = ObReferenceObjectByHandle(ProcessHandle,
+                                               PROCESS_QUERY_INFORMATION,
+                                               PsProcessType,
+                                               PreviousMode,
+                                               (PVOID*)&Process,
+                                               NULL);
+            if (!NT_SUCCESS(Status)) break;
+
             /* Enter SEH for writing back data */
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* Return current priority class */
                 *(PUSHORT)ProcessInformation = Process->PriorityClass;
-
-                /* Set the return length */
-                Length = sizeof(USHORT);
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Get the exception code */
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
+
+            /* Dereference the process */
+            ObDereferenceObject(Process);
             break;
 
         case ProcessImageFileName:
+
+            /* Reference the process */
+            Status = ObReferenceObjectByHandle(ProcessHandle,
+                                               PROCESS_QUERY_INFORMATION,
+                                               PsProcessType,
+                                               PreviousMode,
+                                               (PVOID*)&Process,
+                                               NULL);
+            if (!NT_SUCCESS(Status)) break;
 
             /* Get the image path */
             Status = SeLocateProcessImageName(Process, &ImageName);
@@ -408,7 +574,7 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
                 if (Length <= ProcessInformationLength)
                 {
                     /* Enter SEH to protect write */
-                    _SEH_TRY
+                    _SEH2_TRY
                     {
                         /* Copy it */
                         RtlCopyMemory(ProcessInformation,
@@ -419,14 +585,24 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
                         ((PUNICODE_STRING)ProcessInformation)->Buffer =
                             (PWSTR)((PUNICODE_STRING)ProcessInformation + 1);
                    }
-                    _SEH_HANDLE
+                    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                     {
                         /* Get the exception code */
-                        Status = _SEH_GetExceptionCode();
+                        Status = _SEH2_GetExceptionCode();
                     }
-                    _SEH_END;
+                    _SEH2_END;
                 }
+                else
+                {
+                    /* Buffer too small */
+                    Status = STATUS_INFO_LENGTH_MISMATCH;
+                }
+
+                /* Free the image path */
+                ExFreePool(ImageName);
             }
+            /* Dereference the process */
+            ObDereferenceObject(Process);
             break;
 
         /* Per-process security cookie */
@@ -458,17 +634,17 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
             }
 
             /* Enter SEH to protect write */
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* Write back the cookie */
                 *(PULONG)ProcessInformation = Cookie;
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Get the exception code */
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
             break;
 
         /* Not yet implemented, or unknown */
@@ -487,20 +663,18 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
     }
 
     /* Protect write with SEH */
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Check if caller wanted return length */
         if (ReturnLength) *ReturnLength = Length;
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* Get exception code */
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
 
-    /* If we referenced the process, dereference it */
-    if(ProcessInformationClass != ProcessCookie) ObDereferenceObject(Process);
     return Status;
 }
 
@@ -571,17 +745,17 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
         case ProcessExceptionPort:
 
             /* Use SEH for capture */
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* Capture the handle */
                 PortHandle = *(PHANDLE)ProcessInformation;
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Get the exception code */
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
             if (!NT_SUCCESS(Status)) break;
 
             /* Get the LPC Port */
@@ -608,18 +782,18 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
         case ProcessAccessToken:
 
             /* Use SEH for capture */
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* Save the token handle */
                 TokenHandle = ((PPROCESS_ACCESS_TOKEN)ProcessInformation)->
                                Token;
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Get the exception code */
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
             if (!NT_SUCCESS(Status)) break;
 
             /* Assign the actual token */
@@ -630,35 +804,35 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
         case ProcessDefaultHardErrorMode:
 
             /* Enter SEH for direct buffer read */
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* Update the current mode abd return the previous one */
                 InterlockedExchange((LONG*)&Process->DefaultHardErrorProcessing,
                                     *(PLONG)ProcessInformation);
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Get exception code */
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
             break;
 
         /* Session ID */
         case ProcessSessionInformation:
 
             /* Enter SEH for capture */
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* Capture the caller's buffer */
                 SessionInfo = *(PPROCESS_SESSION_INFORMATION)ProcessInformation;
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Get the exception code */
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
             if (!NT_SUCCESS(Status)) break;
 
             /* Setting the session id requires the SeTcbPrivilege */
@@ -686,17 +860,17 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
                 KeAttachProcess(&Process->Pcb);
 
                 /* Enter SEH for write to user-mode PEB */
-                _SEH_TRY
+                _SEH2_TRY
                 {
                     /* Write the session ID */
                     Process->Peb->SessionId = SessionInfo.SessionId;
                 }
-                _SEH_HANDLE
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                 {
                     /* Get exception code */
-                    Status = _SEH_GetExceptionCode();
+                    Status = _SEH2_GetExceptionCode();
                 }
-                _SEH_END;
+                _SEH2_END;
 
                 /* Detach from the process */
                 KeDetachProcess();
@@ -801,17 +975,17 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
         case ThreadPriority:
 
             /* Use SEH for capture */
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* Get the priority */
                 Priority = *(PLONG)ThreadInformation;
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Get the exception code */
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
             if (!NT_SUCCESS(Status)) break;
 
             /* Validate it */
@@ -830,17 +1004,17 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
         case ThreadBasePriority:
 
             /* Use SEH for capture */
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* Get the priority */
                 Priority = *(PLONG)ThreadInformation;
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Get the exception code */
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
             if (!NT_SUCCESS(Status)) break;
 
             /* Validate it */
@@ -869,17 +1043,17 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
         case ThreadAffinityMask:
 
             /* Use SEH for capture */
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* Get the priority */
                 Affinity = *(PULONG_PTR)ThreadInformation;
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Get the exception code */
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
             if (!NT_SUCCESS(Status)) break;
 
             /* Validate it */
@@ -930,17 +1104,17 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
         case ThreadImpersonationToken:
 
             /* Use SEH for capture */
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* Save the token handle */
                 TokenHandle = *(PHANDLE)ThreadInformation;
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Get the exception code */
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
             if (!NT_SUCCESS(Status)) break;
 
             /* Assign the actual token */
@@ -950,17 +1124,17 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
         case ThreadQuerySetWin32StartAddress:
 
             /* Use SEH for capture */
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* Get the priority */
                 Address = *(PVOID*)ThreadInformation;
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Get the exception code */
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
             if (!NT_SUCCESS(Status)) break;
 
             /* Set the address */
@@ -970,17 +1144,17 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
         case ThreadIdealProcessor:
 
             /* Use SEH for capture */
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* Get the priority */
                 IdealProcessor = *(PULONG_PTR)ThreadInformation;
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Get the exception code */
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
             if (!NT_SUCCESS(Status)) break;
 
             /* Validate it */
@@ -1011,17 +1185,17 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
         case ThreadPriorityBoost:
 
             /* Use SEH for capture */
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* Get the priority */
                 DisableBoost = *(PULONG_PTR)ThreadInformation;
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Get the exception code */
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
             if (!NT_SUCCESS(Status)) break;
 
             /* Call the kernel */
@@ -1031,17 +1205,17 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
         case ThreadZeroTlsCell:
 
             /* Use SEH for capture */
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* Get the priority */
                 TlsIndex = *(PULONG_PTR)ThreadInformation;
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Get the exception code */
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
             if (!NT_SUCCESS(Status)) break;
 
             /* This is only valid for the current thread */
@@ -1162,8 +1336,16 @@ NtQueryInformationThread(IN HANDLE ThreadHandle,
         /* Basic thread information */
         case ThreadBasicInformation:
 
+            /* Set return length */
+            Length = sizeof(THREAD_BASIC_INFORMATION);
+
+            if (ThreadInformationLength != Length)
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
             /* Protect writes with SEH */
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* Write all the information from the ETHREAD/KTHREAD */
                 ThreadBasicInfo->ExitStatus = Thread->ExitStatus;
@@ -1172,23 +1354,28 @@ NtQueryInformationThread(IN HANDLE ThreadHandle,
                 ThreadBasicInfo->AffinityMask = Thread->Tcb.Affinity;
                 ThreadBasicInfo->Priority = Thread->Tcb.Priority;
                 ThreadBasicInfo->BasePriority = KeQueryBasePriorityThread(&Thread->Tcb);
-
-                /* Set return length */
-                Length = sizeof(THREAD_BASIC_INFORMATION);
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Get exception code */
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
             break;
 
         /* Thread time information */
         case ThreadTimes:
 
+            /* Set the return length */
+            Length = sizeof(KERNEL_USER_TIMES);
+
+            if (ThreadInformationLength != Length)
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
             /* Protect writes with SEH */
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* Copy time information from ETHREAD/KTHREAD */
                 ThreadTime->KernelTime.QuadPart = Thread->Tcb.KernelTime *
@@ -1197,60 +1384,75 @@ NtQueryInformationThread(IN HANDLE ThreadHandle,
                                                  100000LL;
                 ThreadTime->CreateTime = Thread->CreateTime;
                 ThreadTime->ExitTime = Thread->ExitTime;
-
-                /* Set the return length */
-                Length = sizeof(KERNEL_USER_TIMES);
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Get exception code */
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
             break;
 
         case ThreadQuerySetWin32StartAddress:
 
+            /* Set the return length*/
+            Length = sizeof(PVOID);
+
+            if (ThreadInformationLength != Length)
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
             /* Protect write with SEH */
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* Return the Win32 Start Address */
                 *(PVOID*)ThreadInformation = Thread->Win32StartAddress;
-
-                /* Set the return length*/
-                Length = sizeof(PVOID);
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Get exception code */
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
             break;
 
         case ThreadPerformanceCount:
 
+            /* Set the return length*/
+            Length = sizeof(LARGE_INTEGER);
+
+            if (ThreadInformationLength != Length)
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
             /* Protect write with SEH */
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* FIXME */
                 (*(PLARGE_INTEGER)ThreadInformation).QuadPart = 0;
-
-                /* Set the return length*/
-                Length = sizeof(LARGE_INTEGER);
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Get exception code */
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
             break;
 
         case ThreadAmILastThread:
 
+            /* Set the return length*/
+            Length = sizeof(ULONG);
+
+            if (ThreadInformationLength != Length)
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
             /* Protect write with SEH */
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* Return whether or not we are the last thread */
                 *(PULONG)ThreadInformation = ((Thread->ThreadsProcess->
@@ -1258,38 +1460,40 @@ NtQueryInformationThread(IN HANDLE ThreadHandle,
                                                &Thread->ThreadsProcess->
                                                ThreadListHead) ?
                                               TRUE : FALSE);
-
-                /* Set the return length*/
-                Length = sizeof(ULONG);
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Get exception code */
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
             break;
 
         case ThreadIsIoPending:
 
+            /* Set the return length*/
+            Length = sizeof(ULONG);
+
+            if (ThreadInformationLength != Length)
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
             /* Raise the IRQL to protect the IRP list */
             KeRaiseIrql(APC_LEVEL, &OldIrql);
 
             /* Protect write with SEH */
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* Check if the IRP list is empty or not */
                 *(PULONG)ThreadInformation = !IsListEmpty(&Thread->IrpList);
-
-                /* Set the return length*/
-                Length = sizeof(ULONG);
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Get exception code */
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
 
             /* Lower IRQL back */
             KeLowerIrql(OldIrql);
@@ -1304,17 +1508,17 @@ NtQueryInformationThread(IN HANDLE ThreadHandle,
     }
 
     /* Protect write with SEH */
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Check if caller wanted return length */
         if (ReturnLength) *ReturnLength = Length;
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* Get exception code */
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
 
     /* Dereference the thread, and return */
     ObDereferenceObject(Thread);

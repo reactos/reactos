@@ -14,7 +14,7 @@
 
 /* FUNCTIONS *****************************************************************/
 
-VOID STDCALL
+VOID NTAPI
 KiHaltProcessorDpcRoutine(IN PKDPC Dpc,
 			  IN PVOID DeferredContext,
 			  IN PVOID SystemArgument1,
@@ -36,7 +36,7 @@ KiHaltProcessorDpcRoutine(IN PKDPC Dpc,
      }
 }
 
-VOID STDCALL
+VOID NTAPI
 ShutdownThreadMain(PVOID Context)
 {
    SHUTDOWN_ACTION Action = (SHUTDOWN_ACTION)Context;
@@ -87,7 +87,7 @@ ShutdownThreadMain(PVOID Context)
        "Until then, there must be no regrets, no fears, no anxieties.\n"
        "Just go forward in all your beliefs, and prove to me that I am not mistaken in\n"
        "mine.\n",
-       "Lowest possible energy state reached! Switch off now to achive a Bose-Einstein\n"
+       "Lowest possible energy state reached! Switch off now to achieve a Bose-Einstein\n"
        "condensate.\n",
        "Hasta la vista, BABY!\n",
        "They live, we sleep!\n",
@@ -190,7 +190,7 @@ ShutdownThreadMain(PVOID Context)
 		KeInitializeDpc(Dpc, KiHaltProcessorDpcRoutine, (PVOID)Dpc);
 		KeSetTargetProcessorDpc(Dpc, i);
 		KeInsertQueueDpc(Dpc, NULL, NULL);
-		KiIpiSendRequest(1 << i, IPI_DPC);
+		KiIpiSend(1 << i, IPI_DPC);
 	      }
 	  }
         KeLowerIrql(OldIrql);
@@ -215,7 +215,7 @@ ShutdownThreadMain(PVOID Context)
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtSetSystemPowerState(IN POWER_ACTION SystemAction,
 		      IN SYSTEM_POWER_STATE MinSystemState,
 		      IN ULONG Flags)
@@ -227,7 +227,7 @@ NtSetSystemPowerState(IN POWER_ACTION SystemAction,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtShutdownSystem(IN SHUTDOWN_ACTION Action)
 {
    NTSTATUS Status;

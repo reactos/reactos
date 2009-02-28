@@ -49,7 +49,7 @@ KiContinue(IN PCONTEXT Context,
     if (KeGetCurrentIrql() < APC_LEVEL) KeRaiseIrql(APC_LEVEL, &OldIrql);
 
     /* Set up SEH to validate the context */
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Check the previous mode */
         if (PreviousMode != KernelMode)
@@ -69,12 +69,12 @@ KiContinue(IN PCONTEXT Context,
                                  KernelMode);
         }
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* Save the exception code */
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
 
     /* Lower the IRQL if needed */
     if (OldIrql < APC_LEVEL) KeLowerIrql(OldIrql);
@@ -98,7 +98,7 @@ KiRaiseException(IN PEXCEPTION_RECORD ExceptionRecord,
     NTSTATUS Status = STATUS_SUCCESS;
 
     /* Set up SEH */
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Check the previous mode */
         if (PreviousMode != KernelMode)
@@ -119,7 +119,7 @@ KiRaiseException(IN PEXCEPTION_RECORD ExceptionRecord,
             {
                 /* Too large */
                 Status = STATUS_INVALID_PARAMETER;
-                _SEH_LEAVE;
+                _SEH2_LEAVE;
             }
 
             /* Probe the entire parameters now*/
@@ -137,12 +137,12 @@ KiRaiseException(IN PEXCEPTION_RECORD ExceptionRecord,
             ExceptionRecord->NumberParameters = ParameterCount;
         }
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* Get the exception code */
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Convert the context record */

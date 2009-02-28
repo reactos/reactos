@@ -71,12 +71,6 @@
     (HANDLE)((ULONG_PTR)(Handle) | KERNEL_HANDLE_FLAG)
 
 //
-// Returns the number of handles in a handle table
-//
-#define ObpGetHandleCountByHandleTable(HandleTable)     \
-    ((PHANDLE_TABLE)HandleTable)->HandleCount
-
-//
 // Converts from an EXHANDLE object to a POBJECT_HEADER
 //
 #define ObpGetHandleObject(x)                           \
@@ -124,7 +118,7 @@ typedef struct _SECURITY_DESCRIPTOR_HEADER
     LIST_ENTRY Link;
     ULONG RefCount;
     ULONG FullHash;
-    QUAD SecurityDescriptor;    
+    QUAD SecurityDescriptor;
 } SECURITY_DESCRIPTOR_HEADER, *PSECURITY_DESCRIPTOR_HEADER;
 
 //
@@ -568,6 +562,15 @@ ObpCaptureObjectCreateInformation(
     IN BOOLEAN AllocateFromLookaside,
     IN POBJECT_CREATE_INFORMATION ObjectCreateInfo,
     OUT PUNICODE_STRING ObjectName
+);
+
+//
+// Miscellanea
+//
+ULONG
+NTAPI
+ObGetProcessHandleCount(
+    IN PEPROCESS Process
 );
 
 //

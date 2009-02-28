@@ -54,13 +54,6 @@
 #pragma alloc_text(INIT, MmInitSectionImplementation)
 #endif
 
-/* Backport hack */
-#ifndef _SEH2_TRY
-#define _SEH2_TRY _SEH_TRY
-#define _SEH2_EXCEPT(x) _SEH_HANDLE
-#define _SEH2_GetExceptionCode _SEH_GetExceptionCode
-#define _SEH2_END _SEH_END
-#endif
 
 /* TYPES *********************************************************************/
 

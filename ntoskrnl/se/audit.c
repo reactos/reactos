@@ -62,7 +62,8 @@ SeInitializeProcessAuditName(IN PFILE_OBJECT FileObject,
                                sizeof(LocalNameInfo),
                                &ReturnLength);
     if (((Status == STATUS_BUFFER_OVERFLOW) ||
-         (Status == STATUS_BUFFER_TOO_SMALL)) &&
+         (Status == STATUS_BUFFER_TOO_SMALL) ||
+         (Status == STATUS_INFO_LENGTH_MISMATCH)) &&
         (ReturnLength != sizeof(LocalNameInfo)))
     {
         /* Allocate required size */
@@ -138,7 +139,7 @@ SeLocateProcessImageName(IN PEPROCESS Process,
         {
             /* Set it */
             if (InterlockedCompareExchangePointer(&Process->
-                                                  SeAuditProcessCreationInfo,
+                                                  SeAuditProcessCreationInfo.ImageFileName,
                                                   AuditName,
                                                   NULL))
             {
@@ -152,29 +153,26 @@ SeLocateProcessImageName(IN PEPROCESS Process,
         if (!NT_SUCCESS(Status)) return Status;
     }
 
+    /* Get audit info again, now we have it for sure */
+    AuditName = Process->SeAuditProcessCreationInfo.ImageFileName;
+
     /* Allocate the output string */
     ImageName = ExAllocatePoolWithTag(NonPagedPool,
                                       AuditName->Name.MaximumLength +
                                       sizeof(UNICODE_STRING),
                                       TAG_SEPA);
-    if (ImageName)
-    {
-        /* Make a copy of it */
-        RtlCopyMemory(ImageName,
-                      &AuditName->Name,
-                      AuditName->Name.MaximumLength + sizeof(UNICODE_STRING));
+    if (!ImageName) return STATUS_NO_MEMORY;
 
-        /* Fix up the buffer */
-        ImageName->Buffer = (PWSTR)(ImageName + 1);
+    /* Make a copy of it */
+    RtlCopyMemory(ImageName,
+                  &AuditName->Name,
+                  AuditName->Name.MaximumLength + sizeof(UNICODE_STRING));
 
-        /* Return it */
-        *ProcessImageName = ImageName;
-    }
-    else
-    {
-        /* Otherwise, fail */
-        Status = STATUS_NO_MEMORY;
-    }
+    /* Fix up the buffer */
+    ImageName->Buffer = (PWSTR)(ImageName + 1);
+
+    /* Return it */
+    *ProcessImageName = ImageName;
 
     /* Return status */
     return Status;
@@ -186,7 +184,7 @@ SeLocateProcessImageName(IN PEPROCESS Process,
  * @unimplemented
  */
 VOID
-STDCALL
+NTAPI
 SeAuditHardLinkCreation(IN PUNICODE_STRING FileName,
                         IN PUNICODE_STRING LinkName,
                         IN BOOLEAN bSuccess)
@@ -198,7 +196,7 @@ SeAuditHardLinkCreation(IN PUNICODE_STRING FileName,
  * @unimplemented
  */
 BOOLEAN
-STDCALL
+NTAPI
 SeAuditingFileEvents(IN BOOLEAN AccessGranted,
                      IN PSECURITY_DESCRIPTOR SecurityDescriptor)
 {
@@ -210,7 +208,7 @@ SeAuditingFileEvents(IN BOOLEAN AccessGranted,
  * @unimplemented
  */
 BOOLEAN
-STDCALL
+NTAPI
 SeAuditingFileEventsWithContext(IN BOOLEAN AccessGranted,
                                 IN PSECURITY_DESCRIPTOR SecurityDescriptor,
                                 IN PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext OPTIONAL)
@@ -223,7 +221,7 @@ SeAuditingFileEventsWithContext(IN BOOLEAN AccessGranted,
  * @unimplemented
  */
 BOOLEAN
-STDCALL
+NTAPI
 SeAuditingHardLinkEvents(IN BOOLEAN AccessGranted,
                          IN PSECURITY_DESCRIPTOR SecurityDescriptor)
 {
@@ -235,7 +233,7 @@ SeAuditingHardLinkEvents(IN BOOLEAN AccessGranted,
  * @unimplemented
  */
 BOOLEAN
-STDCALL
+NTAPI
 SeAuditingHardLinkEventsWithContext(IN BOOLEAN AccessGranted,
                                     IN PSECURITY_DESCRIPTOR SecurityDescriptor,
                                     IN PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext OPTIONAL)
@@ -248,7 +246,7 @@ SeAuditingHardLinkEventsWithContext(IN BOOLEAN AccessGranted,
  * @unimplemented
  */
 BOOLEAN
-STDCALL
+NTAPI
 SeAuditingFileOrGlobalEvents(IN BOOLEAN AccessGranted,
                              IN PSECURITY_DESCRIPTOR SecurityDescriptor,
                              IN PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext)
@@ -261,7 +259,7 @@ SeAuditingFileOrGlobalEvents(IN BOOLEAN AccessGranted,
  * @unimplemented
  */
 VOID
-STDCALL
+NTAPI
 SeCloseObjectAuditAlarm(
                         IN PVOID Object,
                         IN HANDLE Handle,
@@ -274,7 +272,7 @@ SeCloseObjectAuditAlarm(
 /*
  * @unimplemented
  */
-VOID STDCALL
+VOID NTAPI
 SeDeleteObjectAuditAlarm(IN PVOID Object,
                          IN HANDLE Handle)
 {
@@ -309,7 +307,7 @@ SeOpenObjectAuditAlarm(IN PUNICODE_STRING ObjectTypeName,
 /*
  * @unimplemented
  */
-VOID STDCALL
+VOID NTAPI
 SeOpenObjectForDeleteAuditAlarm(IN PUNICODE_STRING ObjectTypeName,
                                 IN PVOID Object OPTIONAL,
                                 IN PUNICODE_STRING AbsoluteObjectName OPTIONAL,
@@ -327,7 +325,7 @@ SeOpenObjectForDeleteAuditAlarm(IN PUNICODE_STRING ObjectTypeName,
  * @unimplemented
  */
 VOID
-STDCALL
+NTAPI
 SePrivilegeObjectAuditAlarm(IN HANDLE Handle,
                             IN PSECURITY_SUBJECT_CONTEXT SubjectContext,
                             IN ACCESS_MASK DesiredAccess,
@@ -359,7 +357,7 @@ NtAccessCheckAndAuditAlarm(IN PUNICODE_STRING SubsystemName,
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtCloseObjectAuditAlarm(IN PUNICODE_STRING SubsystemName,
                         IN PVOID HandleId,
                         IN BOOLEAN GenerateOnClose)
@@ -369,7 +367,7 @@ NtCloseObjectAuditAlarm(IN PUNICODE_STRING SubsystemName,
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtDeleteObjectAuditAlarm(IN PUNICODE_STRING SubsystemName,
                          IN PVOID HandleId,
                          IN BOOLEAN GenerateOnClose)
@@ -379,7 +377,7 @@ NtDeleteObjectAuditAlarm(IN PUNICODE_STRING SubsystemName,
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtOpenObjectAuditAlarm(IN PUNICODE_STRING SubsystemName,
                        IN PVOID HandleId,
                        IN PUNICODE_STRING ObjectTypeName,
@@ -398,7 +396,7 @@ NtOpenObjectAuditAlarm(IN PUNICODE_STRING SubsystemName,
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtPrivilegedServiceAuditAlarm(IN PUNICODE_STRING SubsystemName,
                               IN PUNICODE_STRING ServiceName,
                               IN HANDLE ClientToken,
@@ -410,7 +408,7 @@ NtPrivilegedServiceAuditAlarm(IN PUNICODE_STRING SubsystemName,
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtPrivilegeObjectAuditAlarm(IN PUNICODE_STRING SubsystemName,
                             IN PVOID HandleId,
                             IN HANDLE ClientToken,

@@ -1283,6 +1283,7 @@ IopQueryNameFile(IN PVOID ObjectBody,
     PFILE_NAME_INFORMATION LocalFileInfo;
     PFILE_OBJECT FileObject = (PFILE_OBJECT)ObjectBody;
     ULONG LocalReturnLength, FileLength;
+    BOOLEAN LengthMismatch = FALSE;
     NTSTATUS Status;
     PWCHAR p;
     IOTRACE(IO_FILE_DEBUG, "ObjectBody: %p\n", ObjectBody);
@@ -1303,7 +1304,7 @@ IopQueryNameFile(IN PVOID ObjectBody,
                                LocalInfo,
                                Length,
                                &LocalReturnLength);
-    if (!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status) && (Status != STATUS_INFO_LENGTH_MISMATCH))
     {
         /* Free the buffer and fail */
         ExFreePool(LocalInfo);
@@ -1326,9 +1327,13 @@ IopQueryNameFile(IN PVOID ObjectBody,
     /* Check if this already filled our buffer */
     if (LocalReturnLength > Length)
     {
-        /* Free the buffer and fail */
-        ExFreePool(LocalInfo);
-        return STATUS_BUFFER_OVERFLOW;
+        /* Set the length mismatch to true, so that we can return
+         * the proper buffer size to the caller later
+         */
+        LengthMismatch = TRUE;
+
+        /* Save the initial buffer length value */
+        *ReturnLength = LocalReturnLength;
     }
 
     /* Now get the file name buffer and check the length needed */
@@ -1340,7 +1345,7 @@ IopQueryNameFile(IN PVOID ObjectBody,
     /* Query the File name */
     Status = IoQueryFileInformation(FileObject,
                                     FileNameInformation,
-                                    FileLength,
+                                    LengthMismatch ? Length : FileLength,
                                     LocalFileInfo,
                                     &LocalReturnLength);
     if (NT_ERROR(Status))
@@ -1350,8 +1355,16 @@ IopQueryNameFile(IN PVOID ObjectBody,
         return Status;
     }
 
-    /* ROS HACK. VFAT SUCKS */
-    if (NT_WARNING(Status)) LocalReturnLength = FileLength;
+    /* If the provided buffer is too small, return the required size */
+    if (LengthMismatch)
+    {
+        /* Add the required length */
+        *ReturnLength += LocalFileInfo->FileNameLength;
+
+        /* Free the allocated buffer and return failure */
+        ExFreePool(LocalInfo);
+        return STATUS_BUFFER_OVERFLOW;
+    }
 
     /* Now calculate the new lengths left */
     FileLength = LocalReturnLength -
@@ -1497,17 +1510,17 @@ IopQueryAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
     if (AccessMode != KernelMode)
     {
         /* Protect probe in SEH */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Probe the buffer */
             ProbeForWrite(FileInformation, FileInformationSize, sizeof(ULONG));
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Get the exception code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
 
         /* Fail on exception */
         if (!NT_SUCCESS(Status))return Status;
@@ -1564,19 +1577,19 @@ IopQueryAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
     if ((NT_SUCCESS(Status)) && (AccessMode != KernelMode) && !(IsBasic))
     {
         /* Enter SEH for copy */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Copy the buffer back */
             RtlCopyMemory(FileInformation,
                           &NetworkOpenInfo,
                           FileInformationSize);
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Get exception code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
     }
 
     /* Return status */
@@ -1657,7 +1670,7 @@ IoCreateFile(OUT PHANDLE FileHandle,
     /* Check if the call came from user mode */
     if (AccessMode != KernelMode)
     {
-        _SEH_TRY
+        _SEH2_TRY
         {
             ProbeForWriteHandle(FileHandle);
             ProbeForWriteIoStatusBlock(IoStatusBlock);
@@ -1683,19 +1696,36 @@ IoCreateFile(OUT PHANDLE FileHandle,
                 if(!SystemEaBuffer)
                 {
                     Status = STATUS_INSUFFICIENT_RESOURCES;
-                    _SEH_LEAVE;
+                    _SEH2_LEAVE;
                 }
 
                 RtlCopyMemory(SystemEaBuffer, EaBuffer, EaLength);
+
+                /* Validate the buffer */
+                Status = IoCheckEaBufferValidity(SystemEaBuffer,
+                                                 EaLength,
+                                                 &EaErrorOffset);
+                if (!NT_SUCCESS(Status))
+                {
+                    DPRINT1("FIXME: IoCheckEaBufferValidity() failed with "
+                        "Status: %lx\n",Status);
+                }
             }
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
 
-        if(!NT_SUCCESS(Status)) return Status;
+        if(!NT_SUCCESS(Status))
+        {
+            /* Free SystemEaBuffer if needed */
+            if (SystemEaBuffer) ExFreePoolWithTag(SystemEaBuffer, TAG_EA);
+
+            /* Return failure status */
+            return Status;
+        }
     }
     else
     {
@@ -1805,18 +1835,18 @@ IoCreateFile(OUT PHANDLE FileHandle,
             if (NT_WARNING(Status))
             {
                 /* Protect write with SEH */
-                _SEH_TRY
+                _SEH2_TRY
                 {
                     /* In this case, we copy the I/O Status back */
                     IoStatusBlock->Information = OpenPacket.Information;
                     IoStatusBlock->Status = OpenPacket.FinalStatus;
                 }
-                _SEH_HANDLE
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                 {
                     /* Get exception code */
-                    Status = _SEH_GetExceptionCode();
+                    Status = _SEH2_GetExceptionCode();
                 }
-                _SEH_END;
+                _SEH2_END;
             }
         }
         else if ((OpenPacket.FileObject) && (OpenPacket.ParseCheck != 1))
@@ -1843,7 +1873,7 @@ IoCreateFile(OUT PHANDLE FileHandle,
         OpenPacket.FileObject->Flags |= FO_HANDLE_CREATED;
 
         /* Enter SEH for write back */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Write back the handle and I/O Status */
             *FileHandle = LocalHandle;
@@ -1853,12 +1883,12 @@ IoCreateFile(OUT PHANDLE FileHandle,
             /* Get the Io status */
             Status = OpenPacket.FinalStatus;
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Get the exception status */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
     }
 
     /* Check if we were 100% successful */
@@ -2079,7 +2109,7 @@ IoGetFileObjectGenericMapping(VOID)
  * @implemented
  */
 BOOLEAN
-STDCALL
+NTAPI
 IoIsFileOriginRemote(IN PFILE_OBJECT FileObject)
 {
     /* Return the flag status */
@@ -2418,15 +2448,38 @@ IoQueryFileDosDeviceName(IN PFILE_OBJECT FileObject,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI
 IoSetFileOrigin(IN PFILE_OBJECT FileObject,
                 IN BOOLEAN Remote)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status = STATUS_SUCCESS;
+    BOOLEAN FlagSet;
+
+    /* Get the flag status */
+    FlagSet = FileObject->Flags & FO_REMOTE_ORIGIN ? TRUE : FALSE;
+
+    /* Don't set the flag if it was set already, and don't remove it if it wasn't set */
+    if (Remote && !FlagSet)
+    {
+        /* Set the flag */
+        FileObject->Flags |= FO_REMOTE_ORIGIN;
+    }
+    else if (!Remote && FlagSet)
+    {
+        /* Remove the flag */
+        FileObject->Flags &= ~FO_REMOTE_ORIGIN;
+    }
+    else
+    {
+        /* Fail */
+        Status = STATUS_INVALID_PARAMETER_MIX;
+    }
+
+    /* Return status */
+    return Status;
 }
 
 /*
@@ -2485,17 +2538,17 @@ NtCreateMailslotFile(OUT PHANDLE FileHandle,
         if (KeGetPreviousMode() != KernelMode)
         {
             /* Enter SEH for Probe */
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* Probe the timeout */
                 Buffer.ReadTimeout = ProbeForReadLargeInteger(TimeOut);
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Get exception code */
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
 
             /* Return the exception */
             if (!NT_SUCCESS(Status)) return Status;
@@ -2564,18 +2617,18 @@ NtCreateNamedPipeFile(OUT PHANDLE FileHandle,
         if (KeGetPreviousMode() != KernelMode)
         {
             /* Enter SEH for Probe */
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* Probe the timeout */
                 Buffer.DefaultTimeout =
                     ProbeForReadLargeInteger(DefaultTimeout);
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Get exception code */
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
 
             /* Return the exception */
             if (!NT_SUCCESS(Status)) return Status;
@@ -2722,17 +2775,17 @@ NtCancelIoFile(IN HANDLE FileHandle,
     if (PreviousMode != KernelMode)
     {
         /* Enter SEH for probing */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Probe the I/O Status Block */
             ProbeForWriteIoStatusBlock(IoStatusBlock);
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Get the exception code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
 
         /* Return exception code on failure */
         if (!NT_SUCCESS(Status)) return Status;
@@ -2816,17 +2869,17 @@ NtCancelIoFile(IN HANDLE FileHandle,
     }
 
     /* Enter SEH for writing back the I/O Status */
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Write success */
         IoStatusBlock->Status = STATUS_SUCCESS;
         IoStatusBlock->Information = 0;
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
 
     }
-    _SEH_END;
+    _SEH2_END;
 
     /* Dereference the file object and return success */
     ObDereferenceObject(FileObject);

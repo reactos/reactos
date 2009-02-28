@@ -81,7 +81,7 @@ MmWritePagePhysicalAddress(PFN_TYPE Page)
    Address = entry->Address;
    if ((((ULONG_PTR)Address) & 0xFFF) != 0)
    {
-      ASSERT(FALSE);
+      KeBugCheck(MEMORY_MANAGEMENT);
    }
    if (Address < MmSystemRangeStart)
    {
@@ -177,7 +177,7 @@ MmWritePagePhysicalAddress(PFN_TYPE Page)
    }
    else
    {
-      ASSERT(FALSE);
+      KeBugCheck(MEMORY_MANAGEMENT);
    }
    if (Address < MmSystemRangeStart)
    {
@@ -211,7 +211,7 @@ MmPageOutPhysicalAddress(PFN_TYPE Page)
    Address = entry->Address;
    if ((((ULONG_PTR)Address) & 0xFFF) != 0)
    {
-      ASSERT(FALSE);
+      KeBugCheck(MEMORY_MANAGEMENT);
    }
 
    if (Address < MmSystemRangeStart)
@@ -245,7 +245,7 @@ MmPageOutPhysicalAddress(PFN_TYPE Page)
    if (Type == MEMORY_AREA_SECTION_VIEW)
    {
       Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress
-             + MemoryArea->Data.SectionData.ViewOffset;;
+             + MemoryArea->Data.SectionData.ViewOffset;
 
       /*
        * Get or create a pageop
@@ -301,7 +301,7 @@ MmPageOutPhysicalAddress(PFN_TYPE Page)
    }
    else
    {
-      ASSERT(FALSE);
+      KeBugCheck(MEMORY_MANAGEMENT);
    }
    if (Address < MmSystemRangeStart)
    {
@@ -321,7 +321,7 @@ MmSetCleanAllRmaps(PFN_TYPE Page)
    if (current_entry == NULL)
    {
       DPRINT1("MmIsDirtyRmap: No rmaps.\n");
-      ASSERT(FALSE);
+      KeBugCheck(MEMORY_MANAGEMENT);
    }
    while (current_entry != NULL)
    {
@@ -342,7 +342,7 @@ MmSetDirtyAllRmaps(PFN_TYPE Page)
    if (current_entry == NULL)
    {
       DPRINT1("MmIsDirtyRmap: No rmaps.\n");
-      ASSERT(FALSE);
+      KeBugCheck(MEMORY_MANAGEMENT);
    }
    while (current_entry != NULL)
    {
@@ -392,7 +392,7 @@ MmInsertRmap(PFN_TYPE Page, PEPROCESS Process,
    new_entry = ExAllocateFromNPagedLookasideList(&RmapLookasideList);
    if (new_entry == NULL)
    {
-      ASSERT(FALSE);
+      KeBugCheck(MEMORY_MANAGEMENT);
    }
    new_entry->Address = Address;
    new_entry->Process = (PEPROCESS)Process;
@@ -410,7 +410,7 @@ MmInsertRmap(PFN_TYPE Page, PEPROCESS Process,
               "address 0x%.8X\n", Process->UniqueProcessId, Address,
               MmGetPfnForProcess(Process, Address) << PAGE_SHIFT,
               Page << PAGE_SHIFT);
-      ASSERT(FALSE);
+      KeBugCheck(MEMORY_MANAGEMENT);
    }
 
    ExAcquireFastMutex(&RmapListLock);
@@ -427,7 +427,7 @@ MmInsertRmap(PFN_TYPE Page, PEPROCESS Process,
           DbgPrint("\n    previous caller ");
           DbgPrint("%p", current_entry->Caller);
           DbgPrint("\n");
-          ASSERT(FALSE);
+          KeBugCheck(MEMORY_MANAGEMENT);
       }
       current_entry = current_entry->Next;
    }
@@ -463,7 +463,7 @@ MmDeleteAllRmaps(PFN_TYPE Page, PVOID Context,
    if (current_entry == NULL)
    {
       DPRINT1("MmDeleteAllRmaps: No rmaps.\n");
-      ASSERT(FALSE);
+      KeBugCheck(MEMORY_MANAGEMENT);
    }
    MmSetRmapListHeadPage(Page, NULL);
    ExReleaseFastMutex(&RmapListLock);
@@ -527,5 +527,5 @@ MmDeleteRmap(PFN_TYPE Page, PEPROCESS Process,
       previous_entry = current_entry;
       current_entry = current_entry->Next;
    }
-   ASSERT(FALSE);
+   KeBugCheck(MEMORY_MANAGEMENT);
 }

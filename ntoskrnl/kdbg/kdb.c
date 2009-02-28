@@ -51,6 +51,7 @@ PKDB_KTRAP_FRAME KdbCurrentTrapFrame = NULL; /* Pointer to the current trapframe
 STATIC KDB_KTRAP_FRAME KdbTrapFrame = { { 0 } };  /* The trapframe which was passed to KdbEnterDebuggerException */
 STATIC KDB_KTRAP_FRAME KdbThreadTrapFrame = { { 0 } }; /* The trapframe of the current thread (KdbCurrentThread) */
 STATIC KAPC_STATE KdbApcState;
+extern BOOLEAN KdbpBugCheckRequested;
 
 /* Array of conditions when to enter KDB */
 STATIC KDB_ENTER_CONDITION KdbEnterConditions[][2] =
@@ -1081,6 +1082,7 @@ KdbpAttachToThread(
    if (KeIsExecutingDpc() && Process != KdbCurrentProcess)
    {
       KdbpPrint("Cannot attach to thread within another process while executing a DPC.\n");
+      ObDereferenceObject(Thread);
       return FALSE;
    }
 
@@ -1129,6 +1131,7 @@ KdbpAttachToThread(
       KdbCurrentProcess = Process;
    }
 
+   ObDereferenceObject(Thread);
    return TRUE;
 }
 
@@ -1157,6 +1160,7 @@ KdbpAttachToProcess(
    }
 
    Entry = Process->ThreadListHead.Flink;
+   ObDereferenceObject(Process);
    if (Entry == &KdbCurrentProcess->ThreadListHead)
    {
       KdbpPrint("No threads in process 0x%08x, cannot attach to process!\n", (ULONG)ProcessId);
@@ -1601,6 +1605,14 @@ KdbEnterDebuggerException(
    /* Leave critical section */
    Ke386RestoreFlags(OldEflags);
 
+   /* Check if user requested a bugcheck */
+   if (KdbpBugCheckRequested)
+   {
+       /* Clear the flag and bugcheck the system */
+       KdbpBugCheckRequested = FALSE;
+       KeBugCheck(MANUALLY_INITIATED_CRASH);
+   }
+
 continue_execution:
    /* Clear debug status */
    if (ExceptionCode == STATUS_BREAKPOINT) /* FIXME: Why clear DR6 on INT3? */
@@ -1630,7 +1642,7 @@ KdbDeleteProcessHook(IN PEPROCESS Process)
 }
 
 VOID
-STDCALL
+NTAPI
 KdbpGetCommandLineSettings(PCHAR p1)
 {
     PCHAR p2;
@@ -1692,7 +1704,7 @@ KdbpSafeWriteMemory(OUT PVOID Dest,
                     IN PVOID Src,
                     IN ULONG Bytes)
 {
-    BOOLEAN Result;
+    BOOLEAN Result = TRUE;
     ULONG_PTR Start, End, Write;
 
     for (Start = (ULONG_PTR)Src, 
@@ -1700,7 +1712,7 @@ KdbpSafeWriteMemory(OUT PVOID Dest,
              Write = (ULONG_PTR)Dest; 
          Result && (Start < End); 
          Start++, Write++)
-        if (!KdpSafeReadMemory(Start, 1, (PVOID)Write))
+        if (!KdpSafeWriteMemory(Write, 1, *((PCHAR)Start)))
             Result = FALSE;
 
     return Result ? STATUS_SUCCESS : STATUS_ACCESS_VIOLATION;

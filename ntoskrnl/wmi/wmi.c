@@ -232,6 +232,51 @@ IoWMIDeviceObjectToInstanceName(IN PVOID DataBlockObject,
  */
 NTSTATUS
 NTAPI
+WmiQueryTraceInformation(IN TRACE_INFORMATION_CLASS TraceInformationClass,
+                         OUT PVOID TraceInformation,
+                         IN ULONG TraceInformationLength,
+                         OUT PULONG RequiredLength OPTIONAL,
+                         IN PVOID Buffer OPTIONAL)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+__cdecl
+WmiTraceMessage(IN TRACEHANDLE LoggerHandle,
+                IN ULONG MessageFlags,
+                IN LPGUID MessageGuid,
+                IN USHORT MessageNumber,
+                IN ...)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+NTAPI
+WmiTraceMessageVa(IN TRACEHANDLE LoggerHandle,
+                  IN ULONG MessageFlags,
+                  IN LPGUID MessageGuid,
+                  IN USHORT MessageNumber,
+                  IN va_list MessageArgList)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+NTAPI
 NtTraceEvent(IN ULONG TraceHandle,
              IN ULONG Flags,
              IN ULONG TraceHeaderLength,

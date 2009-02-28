@@ -148,7 +148,7 @@ KiSystemService(IN PKTHREAD Thread,
     // Check how many arguments this system call takes
     //
     ArgumentCount = DescriptorTable->Number[Number] / 4;
-    ASSERT(ArgumentCount <= 20);
+    ASSERT(ArgumentCount <= 17);
     
     //
     // Copy the register-arguments first

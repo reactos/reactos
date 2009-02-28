@@ -23,7 +23,7 @@ ULONG KiProfileTimeInterval = 78125; /* Default resolution 7.8ms (sysinternals) 
 /* FUNCTIONS *****************************************************************/
 
 VOID
-STDCALL
+NTAPI
 KeInitializeProfile(PKPROFILE Profile,
                     PKPROCESS Process,
                     PVOID ImageBase,
@@ -47,14 +47,14 @@ KeInitializeProfile(PKPROFILE Profile,
 }
 
 VOID
-STDCALL
+NTAPI
 KeStartProfile(PKPROFILE Profile,
                PVOID Buffer)
 {
     KIRQL OldIrql;
     PKPROFILE_SOURCE_OBJECT SourceBuffer;
     PKPROFILE_SOURCE_OBJECT CurrentSource;
-    BOOLEAN FreeBuffer = TRUE, SourceFound = FALSE;;
+    BOOLEAN FreeBuffer = TRUE, SourceFound = FALSE;
     PKPROCESS ProfileProcess;
     PLIST_ENTRY NextEntry;
 
@@ -136,7 +136,7 @@ KeStartProfile(PKPROFILE Profile,
 }
 
 BOOLEAN
-STDCALL
+NTAPI
 KeStopProfile(PKPROFILE Profile)
 {
     KIRQL OldIrql;
@@ -194,7 +194,7 @@ KeStopProfile(PKPROFILE Profile)
 }
 
 ULONG
-STDCALL
+NTAPI
 KeQueryIntervalProfile(KPROFILE_SOURCE ProfileSource)
 {
     /* Check if this is the timer profile */
@@ -216,7 +216,7 @@ KeQueryIntervalProfile(KPROFILE_SOURCE ProfileSource)
 }
 
 VOID
-STDCALL
+NTAPI
 KeSetIntervalProfile(KPROFILE_SOURCE ProfileSource,
                      ULONG Interval)
 {
@@ -239,7 +239,7 @@ KeSetIntervalProfile(KPROFILE_SOURCE ProfileSource,
  * @implemented
  */
 VOID
-STDCALL
+NTAPI
 KeProfileInterrupt(PKTRAP_FRAME TrapFrame)
 {
     /* Called from HAL for Timer Profiling */
@@ -247,7 +247,7 @@ KeProfileInterrupt(PKTRAP_FRAME TrapFrame)
 }
 
 VOID
-STDCALL
+NTAPI
 KiParseProfileList(IN PKTRAP_FRAME TrapFrame,
                    IN KPROFILE_SOURCE Source,
                    IN PLIST_ENTRY ListHead)
@@ -297,7 +297,7 @@ KiParseProfileList(IN PKTRAP_FRAME TrapFrame,
  *         shifting like we specified. -- Alex
  */
 VOID
-STDCALL
+NTAPI
 KeProfileInterruptWithSource(IN PKTRAP_FRAME TrapFrame,
                              IN KPROFILE_SOURCE Source)
 {
@@ -312,7 +312,7 @@ KeProfileInterruptWithSource(IN PKTRAP_FRAME TrapFrame,
  * @implemented
  */
 VOID
-STDCALL
+NTAPI
 KeSetProfileIrql(IN KIRQL ProfileIrql)
 {
     /* Set the IRQL at which Profiling will run */

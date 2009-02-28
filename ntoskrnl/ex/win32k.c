@@ -42,7 +42,7 @@ PKWIN32_DELETEMETHOD_CALLOUT ExpDesktopObjectDelete = NULL;
 /* FUNCTIONS ****************************************************************/
 
 VOID
-STDCALL
+NTAPI
 ExpWinStaObjectDelete(PVOID DeletedObject)
 {
     WIN32_DELETEMETHOD_PARAMETERS Parameters;
@@ -55,7 +55,7 @@ ExpWinStaObjectDelete(PVOID DeletedObject)
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 ExpWinStaObjectParse(IN PVOID ParseObject,
                      IN PVOID ObjectType,
                      IN OUT PACCESS_STATE AccessState,
@@ -85,7 +85,7 @@ ExpWinStaObjectParse(IN PVOID ParseObject,
     return ExpWindowStationObjectParse(&Parameters);
 }
 VOID
-STDCALL
+NTAPI
 ExpDesktopDelete(PVOID DeletedObject)
 {
     WIN32_DELETEMETHOD_PARAMETERS Parameters;
@@ -99,7 +99,7 @@ ExpDesktopDelete(PVOID DeletedObject)
 
 VOID
 INIT_FUNCTION
-STDCALL
+NTAPI
 ExpWin32kInit(VOID)
 {
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
