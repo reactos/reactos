@@ -40,8 +40,14 @@ Author:
 //
 // CPU Types
 //
+#define CPU_NONE                                0x0
 #define CPU_INTEL                               0x1
 #define CPU_AMD                                 0x2
+#define CPU_CYRIX                               0x3
+#define CPU_TRANSMETA                           0x4
+#define CPU_CENTAUR                             0x5
+#define CPU_RISE                                0x6
+#define CPU_UNKNOWN                             0x7
 
 //
 // Selector Names
@@ -214,18 +220,20 @@ Author:
 #define KPCR_PRCB_DPC_LAST_COUNT                0xA80
 #define KPCR_PRCB_TIMER_REQUEST                 0xA88
 #define KPCR_PRCB_QUANTUM_END                   0xAA1
+#define KPCR_PRCB_IDLE_SCHEDULE                 0xAA3
 #define KPCR_PRCB_DEFERRED_READY_LIST_HEAD      0xC10
 #define KPCR_PRCB_POWER_STATE_IDLE_FUNCTION     0xEC0
 
 //
 // KINTERRUPT Offsets
 //
+#define KINTERRUPT_INTERRUPT_LIST_HEAD          0x04
 #define KINTERRUPT_SERVICE_ROUTINE              0x0C
 #define KINTERRUPT_SERVICE_CONTEXT              0x10
 #define KINTERRUPT_TICK_COUNT                   0x18
 #define KINTERRUPT_ACTUAL_LOCK                  0x1C
-#define KINTERRUPT_IRQL                         0x20
 #define KINTERRUPT_VECTOR                       0x24
+#define KINTERRUPT_IRQL                         0x28
 #define KINTERRUPT_SYNCHRONIZE_IRQL             0x29
 #define KINTERRUPT_DISPATCH_COUNT               0x38
 
@@ -405,6 +413,7 @@ Author:
 #define TEB_STACK_BASE                          0x4
 #define TEB_STACK_LIMIT                         0x8
 #define TEB_FIBER_DATA                          0x10
+#define TEB_SELF                                0x18
 #define TEB_PEB                                 0x30
 #define TEB_EXCEPTION_CODE                      0x1A4
 #define TEB_ACTIVATION_CONTEXT_STACK_POINTER    0x1A8

@@ -1,7 +1,10 @@
 #ifndef _WINDEF_H
 #define _WINDEF_H
-#if __GNUC__ >=3
-#pragma GCC system_header
+
+#if !defined(__ROS_LONG64__)
+#ifdef __WINESRC__
+#define __ROS_LONG64__
+#endif
 #endif
 
 #ifdef __cplusplus
@@ -125,10 +128,8 @@ extern "C" {
 #define __pascal __stdcall
 
 #define CDECL _cdecl
-#define PASCAL _pascal
 
 #if !defined(__x86_64__) //defined(_STDCALL_SUPPORTED)
-#define STDCALL __stdcall
 #define CALLBACK    __stdcall
 #define WINAPI      __stdcall
 #define WINAPIV     __cdecl
@@ -136,7 +137,6 @@ extern "C" {
 #define APIPRIVATE  __stdcall
 #define PASCAL      __stdcall
 #else
-#define STDCALL
 #define CALLBACK
 #define WINAPI
 #define WINAPIV
@@ -147,6 +147,15 @@ extern "C" {
 
 #define DECLSPEC_IMPORT __declspec(dllimport)
 #define DECLSPEC_EXPORT __declspec(dllexport)
+#ifndef DECLSPEC_NOINLINE
+#if (_MSC_VER >= 1300)
+#define DECLSPEC_NOINLINE  __declspec(noinline)
+#elif defined(__GNUC__)
+#define DECLSPEC_NOINLINE __attribute__((noinline))
+#else
+#define DECLSPEC_NOINLINE
+#endif
+#endif
 #ifdef __GNUC__
 #define DECLSPEC_NORETURN __declspec(noreturn)
 #define DECLARE_STDCALL_P( type ) __stdcall type
@@ -253,22 +262,13 @@ extern "C" {
 #endif
 #endif
 
-/* FIXME: This will make some code compile. The programs will most
-   likely crash when an exception is raised, but at least they will
-   compile. */
-#if defined (__GNUC__) && defined (__SEH_NOOP)
-#define __try
-#define __except(x) if (0) /* don't execute handler */
-#define __finally
-
-#define _try __try
-#define _except __except
-#define _finally __finally
-#endif
-
 #ifndef DWORD_DEFINED
 #define DWORD_DEFINED
+#ifndef __ROS_LONG64__
     typedef unsigned long DWORD;
+#else
+    typedef unsigned int DWORD;
+#endif
 #endif//DWORD_DEFINED
 
 typedef int WINBOOL,*PWINBOOL,*LPWINBOOL;
@@ -288,16 +288,51 @@ typedef FLOAT *PFLOAT;
 typedef BYTE *PBYTE,*LPBYTE;
 typedef int *PINT,*LPINT;
 typedef WORD *PWORD,*LPWORD;
+#ifndef __ROS_LONG64__
 typedef long *LPLONG;
+#else
+typedef int *LPLONG;
+#endif
 typedef DWORD *PDWORD,*LPDWORD;
 typedef CONST void *PCVOID,*LPCVOID;
-typedef int INT;
+
 typedef unsigned int UINT,*PUINT,*LPUINT;
+
+typedef void *LPVOID;
+
+#ifndef __ms_va_list
+# if defined(__x86_64__) && defined (__GNUC__)
+#  define __ms_va_list __builtin_ms_va_list
+#  define __ms_va_start(list,arg) __builtin_ms_va_start(list,arg)
+#  define __ms_va_end(list) __builtin_ms_va_end(list)
+# else
+#  define __ms_va_list va_list
+#  define __ms_va_start(list,arg) va_start(list,arg)
+#  define __ms_va_end(list) va_end(list)
+# endif
+#endif
+
+//
+// Check if ntdef.h already defined these for us
+//
+#ifndef BASETYPES
+#define BASETYPES
+#ifndef __ROS_LONG64__
+typedef unsigned long ULONG, *PULONG;
+#else
+typedef unsigned int ULONG, *PULONG;
+#endif
+typedef unsigned short USHORT, *PUSHORT;
+typedef unsigned char UCHAR, *PUCHAR;
+typedef char *PSZ;
+typedef int INT;
+#endif  /* BASETYPES */
 
 #ifndef NT_INCLUDED
 #include <winnt.h>
 #endif
 
+typedef HANDLE *LPHANDLE;
 typedef UINT_PTR WPARAM;
 typedef LONG_PTR LPARAM;
 typedef LONG_PTR LRESULT;
@@ -349,9 +384,15 @@ DECLARE_HANDLE(HKL);
 typedef int HFILE;
 typedef HICON HCURSOR;
 typedef DWORD COLORREF;
-typedef int (WINAPI *FARPROC)();
-typedef int (WINAPI *NEARPROC)();
+#ifdef _WIN64
+typedef INT_PTR (FAR WINAPI *FARPROC)();
+typedef INT_PTR (NEAR WINAPI *NEARPROC)();
+typedef INT_PTR (WINAPI *PROC)();
+#else
+typedef int (FAR WINAPI *FARPROC)();
+typedef int (NEAR WINAPI *NEARPROC)();
 typedef int (WINAPI *PROC)();
+#endif
 typedef struct tagRECT {
 	LONG left;
 	LONG top;

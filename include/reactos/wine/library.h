@@ -42,9 +42,9 @@ extern void wine_exec_wine_binary( const char *name, char **argv, char **envp, i
 
 typedef void (*load_dll_callback_t)( void *, const char * );
 
-extern void *wine_dlopen( const char *filename, int flag, char *error, int errorsize );
-extern void *wine_dlsym( void *handle, const char *symbol, char *error, int errorsize );
-extern int wine_dlclose( void *handle, char *error, int errorsize );
+extern void *wine_dlopen( const char *filename, int flag, char *error, size_t errorsize );
+extern void *wine_dlsym( void *handle, const char *symbol, char *error, size_t errorsize );
+extern int wine_dlclose( void *handle, char *error, size_t errorsize );
 extern void wine_dll_set_callback( load_dll_callback_t load );
 extern void *wine_dll_load( const char *filename, char *error, int errorsize, int *file_exists );
 extern void *wine_dll_load_main_exe( const char *name, char *error, int errorsize,
@@ -180,10 +180,10 @@ inline static int wine_ldt_is_empty( const LDT_ENTRY *ent )
 #ifdef __i386__
 # ifdef __GNUC__
 #  define __DEFINE_GET_SEG(seg) \
-    extern inline unsigned short wine_get_##seg(void) \
+    static inline unsigned short wine_get_##seg(void) \
     { unsigned short res; __asm__("movw %%" #seg ",%w0" : "=r"(res)); return res; }
 #  define __DEFINE_SET_SEG(seg) \
-    extern inline void wine_set_##seg(int val) { __asm__("movw %w0,%%" #seg : : "r" (val)); }
+    static inline void wine_set_##seg(int val) { __asm__("movw %w0,%%" #seg : : "r" (val)); }
 # elif defined(_MSC_VER)
 #  define __DEFINE_GET_SEG(seg) \
     extern inline unsigned short wine_get_##seg(void) \

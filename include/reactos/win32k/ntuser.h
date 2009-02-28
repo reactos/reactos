@@ -5,6 +5,36 @@ struct _W32PROCESSINFO;
 struct _W32THREADINFO;
 struct _WINDOW;
 
+typedef struct _LARGE_UNICODE_STRING
+{
+  ULONG Length;
+  ULONG MaximumLength:31;
+  ULONG bAnsi:1;
+  PWSTR Buffer;
+} LARGE_UNICODE_STRING, *PLARGE_UNICODE_STRING;
+
+typedef struct _LARGE_STRING
+{
+  ULONG Length;
+  ULONG MaximumLength:31;
+  ULONG bAnsi:1;
+  PVOID Buffer;
+} LARGE_STRING, *PLARGE_STRING;
+//
+// Based on ANSI_STRING
+//
+typedef struct _LARGE_ANSI_STRING
+{
+  ULONG Length;
+  ULONG MaximumLength:31;
+  ULONG bAnsi:1;
+  PCHAR Buffer;
+} LARGE_ANSI_STRING, *PLARGE_ANSI_STRING;
+
+VOID NTAPI RtlInitLargeAnsiString(IN OUT PLARGE_ANSI_STRING,IN PCSZ,IN INT);
+VOID NTAPI RtlInitLargeUnicodeString(IN OUT PLARGE_UNICODE_STRING,IN PCWSTR,IN INT);
+BOOL NTAPI RtlLargeStringToUnicodeString( PUNICODE_STRING, PLARGE_STRING);
+
 /* FIXME: UserHMGetHandle needs to be updated once the new handle manager is implemented */
 #define UserHMGetHandle(obj) ((obj)->hdr.Handle)
 
@@ -35,8 +65,11 @@ typedef struct _USER_OBJHDR
     HANDLE Handle;
 } USER_OBJHDR, PUSER_OBJHDR;
 
-typedef struct _DESKTOP
+typedef struct _DESKTOPINFO
 {
+    PVOID pvDesktopBase;
+    PVOID pvDesktopLimit;
+
     HANDLE hKernelHeap;
     ULONG_PTR HeapLimit;
     HWND hTaskManWindow;
@@ -54,7 +87,7 @@ typedef struct _DESKTOP
     };
 
     WCHAR szDesktopName[1];
-} DESKTOP, *PDESKTOP;
+} DESKTOPINFO, *PDESKTOPINFO;
 
 typedef struct _CALLPROC
 {
@@ -70,7 +103,7 @@ typedef struct _WINDOWCLASS
     struct _WINDOWCLASS *Next;
     struct _WINDOWCLASS *Clone;
     struct _WINDOWCLASS *Base;
-    PDESKTOP Desktop;
+    struct _DESKTOP *rpdeskParent;
     RTL_ATOM Atom;
     ULONG Windows;
 
@@ -103,6 +136,10 @@ typedef struct _WINDOWCLASS
     UINT NotUsed : 27;
 } WINDOWCLASS, *PWINDOWCLASS;
 
+
+// Flags !Not Implemented!
+#define WNDF_CALLPROC 0x0004 // Call proc inside win32k.
+
 typedef struct _WINDOW
 {
     USER_OBJHDR hdr; /* FIXME: Move out of the structure once new handle manager is implemented */
@@ -113,6 +150,7 @@ typedef struct _WINDOW
              is moved to this structure */
     struct _W32PROCESSINFO *pi; /* FIXME: Move to object header some day */
     struct _W32THREADINFO *ti;
+    struct _DESKTOP *pdesktop;
     RECT WindowRect;
     RECT ClientRect;
 
@@ -273,6 +311,27 @@ typedef struct _SERVERINFO
   COLORREF SysColors[COLOR_MENUBAR+1];       // GetSysColor
   HBRUSH   SysColorBrushes[COLOR_MENUBAR+1]; // GetSysColorBrush
   HPEN     SysColorPens[COLOR_MENUBAR+1];    // ReactOS exclusive
+  HBRUSH   hbrGray;
+  POINTL   ptCursor;
+  //
+  DWORD    cxSysFontChar;
+  DWORD    cySysFontChar;
+  DWORD    cxMsgFontChar;
+  DWORD    cyMsgFontChar;
+  TEXTMETRICW tmSysFont;
+  //
+  RECTL    rcScreen;
+  WORD     BitCount;
+  WORD     dmLogPixels;
+  BYTE     BitsPixel;
+  BYTE     Planes;
+  WORD     reserved;
+  DWORD    PUSIFlags; // PERUSERSERVERINFO Flags.
+  ULONG    uCaretWidth;
+  LANGID   UILangID;
+  UINT     LastRITWasKeyboard : 1;
+  UINT     bKeyboardPref : 1;
+  DWORD    TimeTick;
   DWORD    SrvEventActivity;
 } SERVERINFO, *PSERVERINFO;
 
@@ -297,6 +356,11 @@ typedef struct _W32PROCESSINFO
 typedef struct _CLIENTTHREADINFO
 {
     DWORD CTI_flags;
+    WORD  fsChangeBits;
+    WORD  fsWakeBits;
+    WORD  fsWakeBitsJournal;
+    WORD  fsWakeMask;
+    LONG  timeLastRead;
     DWORD dwcPumpHook;
 } CLIENTTHREADINFO, *PCLIENTTHREADINFO;
 
@@ -304,15 +368,11 @@ typedef struct _W32THREADINFO
 {
     PW32PROCESSINFO pi; /* [USER] */
     PW32PROCESSINFO kpi; /* [KERNEL] */
-    PDESKTOP Desktop;
-    PVOID DesktopHeapBase;
-    ULONG_PTR DesktopHeapLimit;
-    ULONG_PTR DesktopHeapDelta;
+    PDESKTOPINFO Desktop;
+//    PVOID DesktopHeapBase;
+//    ULONG_PTR DesktopHeapLimit;
     /* A mask of what hooks are currently active */
     ULONG Hooks;
-    /* Application compatibility flags */
-    DWORD AppCompatFlags;
-    DWORD AppCompatFlags2;
     CLIENTTHREADINFO ClientThreadInfo;
 } W32THREADINFO, *PW32THREADINFO;
 
@@ -340,34 +400,39 @@ typedef struct _CALLBACKWND
 
 #define CI_CURTHPRHOOK    0x00000010
 
-typedef struct _W32CLIENTINFO
+typedef struct _CLIENTINFO
 {
     ULONG CI_flags;
     ULONG cSpins;
-    ULONG ulWindowsVersion;
-    ULONG ulAppCompatFlags;
-    ULONG ulAppCompatFlags2;
+    DWORD dwExpWinVer;
+    DWORD dwCompatFlags;
+    DWORD dwCompatFlags2;
     DWORD dwTIFlags;
-    PVOID pDeskInfo;
+    PDESKTOPINFO pDeskInfo;
     ULONG_PTR ulClientDelta;
     PHOOK phkCurrent;
     ULONG fsHooks;
-    HWND  hWND;  // Will be replaced with CALLBACKWND.
-    PVOID pvWND; // " "
+    CALLBACKWND CallbackWnd;
     ULONG Win32ClientInfo;
     DWORD dwHookCurrent;
-    ULONG Win32ClientInfo1;
+    INT cInDDEMLCallback;
     PCLIENTTHREADINFO pClientThreadInfo;
-    DWORD dwHookData;
+    ULONG_PTR dwHookData;
     DWORD dwKeyCache;
-    ULONG Win32ClientInfo2[7];
+    DWORD afKeyState[2];
+    DWORD dwAsyncKeyCache;
+    DWORD afAsyncKeyState[2];
+    DWORD afAsyncKeyStateRecentDow[2];
+    HKL hKL;
     USHORT CodePage;
-    USHORT csCF;
-    HANDLE hKL;
+    USHORT achDbcsCF;
     ULONG Win32ClientInfo3[35];
-} W32CLIENTINFO, *PW32CLIENTINFO;
+} CLIENTINFO, *PCLIENTINFO;
 
-#define GetWin32ClientInfo() (PW32CLIENTINFO)(NtCurrentTeb()->Win32ClientInfo)
+/* Make sure it fits exactly into the TEB */
+C_ASSERT(sizeof(CLIENTINFO) == FIELD_OFFSET(TEB, glDispatchTable) - FIELD_OFFSET(TEB, Win32ClientInfo));
+
+#define GetWin32ClientInfo() ((PCLIENTINFO)(NtCurrentTeb()->Win32ClientInfo))
 
 // Server event activity bits.
 #define SRV_EVENT_MENU            0x0001
@@ -404,6 +469,42 @@ typedef struct _BROADCASTPARM
 PW32THREADINFO GetW32ThreadInfo(VOID);
 PW32PROCESSINFO GetW32ProcessInfo(VOID);
 
+typedef struct _WNDMSG
+{
+  DWORD maxMsgs;
+  DWORD abMsgs;
+} WNDMSG, *PWNDMSG;
+
+typedef struct _SHAREDINFO
+{
+  PSERVERINFO psi;           // global Server Info
+  PVOID       aheList;       // Handle Entry List
+  PVOID       pDispInfo;     // global PDISPLAYINFO pointer
+  ULONG_PTR   ulSharedDelta; // Heap delta
+  WNDMSG      awmControl[31];
+  WNDMSG      DefWindowMsgs;
+  WNDMSG      DefWindowSpecMsgs;
+} SHAREDINFO, *PSHAREDINFO;
+
+typedef struct _USERCONNECT
+{
+  ULONG ulVersion;
+  ULONG ulCurrentVersion;
+  DWORD dwDispatchCount;
+  SHAREDINFO siClient;
+} USERCONNECT, *PUSERCONNECT;
+
+//
+// Non SDK Window Message types.
+//
+#define WM_SYSTIMER 280
+#define WM_POPUPSYSTEMMENU 787
+
+//
+// Non SDK DCE types.
+//
+#define DCX_USESTYLE     0x00010000
+#define DCX_KEEPCLIPRGN  0x00040000
 
 DWORD
 NTAPI
@@ -910,7 +1011,7 @@ NtUserChangeDisplaySettings(
   LPVOID lParam);
 
 DWORD
-STDCALL
+NTAPI
 NtUserCheckImeHotKey(
   DWORD dwUnknown1,
   DWORD dwUnknown2);
@@ -1019,6 +1120,26 @@ NtUserCreateWindowEx(
   DWORD dwShowMode,
   BOOL bUnicodeWindow,
   DWORD dwUnknown);
+#if 0
+HWND
+NTAPI
+NtUserCreateWindowEx(
+  DWORD dwExStyle,
+  PLARGE_STRING plstrClassName,
+  PLARGE_STRING plstrClsVesrion,
+  PLARGE_STRING plstrWindowName,
+  DWORD dwStyle,
+  int x,
+  int y,
+  int nWidth,
+  int nHeight,
+  HWND hWndParent,
+  HMENU hMenu,
+  HINSTANCE hInstance,
+  LPVOID lpParam,
+  DWORD dwFlags,
+  PVOID acbiBuffer);
+#endif
 
 HWINSTA
 NTAPI
@@ -1064,7 +1185,7 @@ NtUserDeferWindowPos(HDWP WinPosInfo,
          int cy,
 		     UINT Flags);
 BOOL NTAPI
-NtUserDefSetText(HWND WindowHandle, PUNICODE_STRING WindowText);
+NtUserDefSetText(HWND WindowHandle, PLARGE_STRING WindowText);
 
 BOOLEAN
 NTAPI
@@ -1090,17 +1211,9 @@ NTAPI
 NtUserDisableThreadIme(
     DWORD dwUnknown1);
 
-typedef struct tagNTUSERDISPATCHMESSAGEINFO
-{
-  BOOL HandledByKernel;
-  BOOL Ansi;
-  WNDPROC Proc;
-  MSG Msg;
-} NTUSERDISPATCHMESSAGEINFO, *PNTUSERDISPATCHMESSAGEINFO;
-
 LRESULT
 NTAPI
-NtUserDispatchMessage(PNTUSERDISPATCHMESSAGEINFO MsgInfo);
+NtUserDispatchMessage(PMSG pMsg);
 
 BOOL
 NTAPI
@@ -1134,7 +1247,7 @@ NtUserDrawCaption(
    UINT uFlags);
 
 BOOL
-STDCALL
+NTAPI
 NtUserDrawCaptionTemp(
   HWND hWnd,
   HDC hDC,
@@ -1261,7 +1374,7 @@ NtUserGetAltTabInfo(
    HWND hwnd,
    INT  iItem,
    PALTTABINFO pati,
-   LPTSTR pszItemText,
+   LPWSTR pszItemText,
    UINT   cchItemText,
    BOOL   Ansi);
 
@@ -1663,12 +1776,12 @@ NtUserImpersonateDdeClientWindow(
   HWND hWndClient,
   HWND hWndServer);
 
-DWORD
+NTSTATUS
 NTAPI
 NtUserInitialize(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3);
+  DWORD   dwWinVersion,
+  HANDLE  hPowerRequestEvent,
+  HANDLE  hMediaRequestEvent);
 
 NTSTATUS
 NTAPI
@@ -1729,7 +1842,7 @@ NtUserKillTimer
 );
 
 HKL
-STDCALL
+NTAPI
 NtUserLoadKeyboardLayoutEx(
    IN HANDLE Handle,
    IN DWORD offTable,
@@ -1744,10 +1857,10 @@ NTAPI
 NtUserLockWindowStation(
   HWINSTA hWindowStation);
 
-DWORD
+BOOL
 NTAPI
 NtUserLockWindowUpdate(
-  DWORD Unknown0);
+  HWND hWnd);
 
 BOOL
 NTAPI
@@ -1900,12 +2013,12 @@ NtUserPrintWindow(
     HDC  hdcBlt,
     UINT nFlags);
 
-DWORD
+NTSTATUS
 NTAPI
 NtUserProcessConnect(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3);
+    IN  HANDLE Process,
+    OUT PUSERCONNECT pUserConnect,
+    IN  DWORD dwSize); // sizeof(USERCONNECT)
 
 DWORD
 NTAPI
@@ -2127,7 +2240,7 @@ NtUserSetClipboardViewer(
   HWND hWndNewViewer);
 
 HPALETTE
-STDCALL
+NTAPI
 NtUserSelectPalette(
     HDC hDC,
     HPALETTE  hpal,
@@ -2570,12 +2683,12 @@ NtUserValidateRect(
     HWND hWnd,
     CONST RECT *lpRect);
 
-DWORD
-NTAPI
+BOOL
+APIENTRY
 NtUserValidateTimerCallback(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3);
+    HWND hWnd,
+    WPARAM wParam,
+    LPARAM lParam);
 
 DWORD
 NTAPI

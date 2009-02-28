@@ -18,9 +18,13 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef DO_NO_IMPORTS
 import "objidl.idl";
+#endif
 
 interface IOleInPlaceActiveObject;
+
+cpp_quote("#include <winuser.h>")
 
 /*****************************************************************************
  * IOleTypes interface
@@ -331,7 +335,7 @@ interface IOleItemContainer : IOleContainer
 	OLECONTF_EMBEDDINGS = 1,
 	OLECONTF_LINKS = 2,
 	OLECONTF_OTHERS = 4,
-	OLECONTF_OLNYUSER = 8,
+	OLECONTF_ONLYUSER = 8,
 	OLECONTF_ONLYIFRUNNING = 16
     } OLECONTF;
 

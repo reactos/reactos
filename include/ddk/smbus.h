@@ -23,10 +23,6 @@
 #ifndef __SMBUS_H
 #define __SMBUS_H
 
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -86,7 +82,7 @@ typedef struct _SMB_REQUEST {
   UCHAR  Data[SMB_MAX_DATA_SIZE];
 } SMB_REQUEST, *PSMB_REQUEST;
 
-typedef VOID STDCALL
+typedef VOID NTAPI
 (*SMB_ALARM_NOTIFY)(
   PVOID  Context,
   UCHAR  Address,

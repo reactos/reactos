@@ -190,6 +190,7 @@ typedef DWORD LFTYPE;
 #define GCABCW_INDICES 0x0002
 
 /* CAPS1 support */
+#define CAPS1             94
 //#define C1_TRANSPARENT    0x0001
 #define TC_TT_ABLE        0x0002
 #define C1_TT_CR_ANY      0x0004
@@ -203,6 +204,7 @@ typedef DWORD LFTYPE;
 #define C1_COLORCURSOR    0x0800
 #define C1_CMYK_ABLE      0x1000
 #define C1_SLOW_CARD      0x2000
+#define C1_MIRRORING      0X4000
 
 // NtGdiGetRandomRgn iCodes
 #define CLIPRGN 1 // GetClipRgn
@@ -212,14 +214,17 @@ typedef DWORD LFTYPE;
 /* TYPES *********************************************************************/
 
 typedef PVOID KERNEL_PVOID;
+typedef PVOID PUMDHPDEV;
 typedef D3DNTHAL_CONTEXTCREATEDATA D3DNTHAL_CONTEXTCREATEI;
+#if !defined(__WINDDI_H)
 typedef LONG FIX;
+#endif
 
-typedef struct _CHWIDTHINFO
+typedef struct _CHWIDTHINFO // Based on FD_DEVICEMETRICS
 {
-   LONG    lMaxNegA;
-   LONG    lMaxNegC;
-   LONG    lMinWidthD;
+   LONG    lMinA;
+   LONG    lMinC;
+   LONG    lMinD;
 } CHWIDTHINFO, *PCHWIDTHINFO;
 
 typedef struct _UNIVERSAL_FONT_ID
@@ -228,10 +233,15 @@ typedef struct _UNIVERSAL_FONT_ID
     ULONG Index;
 } UNIVERSAL_FONT_ID, *PUNIVERSAL_FONT_ID;
 
-typedef struct _REALIZATION_INFO // Based on LOCALESIGNATURE
+#define RI_TECH_BITMAP   1
+#define RI_TECH_FIXED    2
+#define RI_TECH_SCALABLE 3
+
+typedef struct _REALIZATION_INFO
 {
-    DWORD  dwCsbDefault[2];
-    DWORD  dwCsbSupported0;
+    DWORD  iTechnology;
+    DWORD  iUniq;
+    DWORD  dwUnknown;
 } REALIZATION_INFO, *PREALIZATION_INFO;
 
 typedef struct _WIDTHDATA
@@ -280,7 +290,10 @@ typedef struct _DEVCAPS // Very similar to GDIINFO
     ULONG ulDesktopHorzRes;
     ULONG ulDesktopVertRes;
     ULONG ulBltAlignment;
-    ULONG ulReserved[4];
+    ULONG ulPanningHorzRes;
+    ULONG ulPanningVertRes;
+    ULONG xPanningAlignment;
+    ULONG yPanningAlignment;
     ULONG ulShadeBlend;
     ULONG ulColorMgmtCaps;
 } DEVCAPS, *PDEVCAPS;
@@ -379,6 +392,8 @@ typedef union
   ULONG l;
 } gxf_long;
 
+#define CFONT_REALIZATION 0x0080
+
 typedef struct _CFONT
 {
     struct _CFONT   *pcfNext;
@@ -396,7 +411,10 @@ typedef struct _CFONT
     USHORT          sWidth[256];        // Widths in pels.
     ULONG           ulAveWidth;         // bogus average used by USER
     TMW_INTERNAL    tmw;                // cached metrics
-    LOCALESIGNATURE lsLocSig;           // font signature information
+    DWORD           iTechnology;
+    DWORD           iUniq;
+    DWORD           dwUnknown;
+    DWORD           dwCFCount;
 } CFONT, *PCFONT;
 
 //

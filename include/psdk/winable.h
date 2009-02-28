@@ -1,8 +1,5 @@
 #ifndef _WINABLE_H
 #define _WINABLE_H
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -68,7 +65,7 @@ typedef struct tagINPUT {
 } INPUT,*PINPUT,*LPINPUT;
 #endif /* (_WIN32_WINNT < 0x0403) */
 #if (WINVER < 0x0500)
-typedef VOID (*WINEVENTPROC)(HWINEVENTHOOK,DWORD,HWND,LONG,LONG,DWORD,DWORD);
+typedef VOID (CALLBACK* WINEVENTPROC)(HWINEVENTHOOK,DWORD,HWND,LONG,LONG,DWORD,DWORD);
 typedef struct tagGUITHREADINFO {
 	DWORD cbSize;
 	DWORD flags;

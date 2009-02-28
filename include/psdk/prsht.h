@@ -1,8 +1,5 @@
 #ifndef _PRSHT_H
 #define _PRSHT_H
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -100,20 +97,22 @@ extern "C" {
 #define PSM_SETHEADERSUBTITLEA	1151
 #define PSM_SETHEADERSUBTITLEW	1152
 #endif
-#define PSN_FIRST	(-200)
-#define PSN_LAST	(-299)
-#define PSN_APPLY	(-202)
-#define PSN_HELP	(-205)
-#define PSN_KILLACTIVE	(-201)
-#define PSN_QUERYCANCEL	(-209)
-#define PSN_GETOBJECT   (PSN_FIRST-10)
-#define PSN_TRANSLATEACCELERATOR (PSN_FIRST-12)
-#define PSN_QUERYINITIALFOCUS    (PSN_FIRST-13)
-#define PSN_RESET	(-203)
-#define PSN_SETACTIVE	(-200)
-#define PSN_WIZBACK	(-206)
-#define PSN_WIZFINISH	(-208)
-#define PSN_WIZNEXT	(-207)
+
+#define PSN_FIRST                (0U - 200U)
+#define PSN_SETACTIVE            (PSN_FIRST - 0)
+#define PSN_KILLACTIVE           (PSN_FIRST - 1)
+#define PSN_APPLY                (PSN_FIRST - 2)
+#define PSN_RESET                (PSN_FIRST - 3)
+#define PSN_HELP                 (PSN_FIRST - 5)
+#define PSN_WIZBACK              (PSN_FIRST - 6)
+#define PSN_WIZNEXT              (PSN_FIRST - 7)
+#define PSN_WIZFINISH            (PSN_FIRST - 8)
+#define PSN_QUERYCANCEL          (PSN_FIRST - 9)
+#define PSN_GETOBJECT            (PSN_FIRST - 10)
+#define PSN_TRANSLATEACCELERATOR (PSN_FIRST - 12)
+#define PSN_QUERYINITIALFOCUS    (PSN_FIRST - 13)
+#define PSN_LAST                 (PSN_FIRST - 99)
+
 #define PSNRET_NOERROR	0
 #define PSNRET_INVALID	1
 #define PSNRET_INVALID_NOCHANGEPAGE	2
@@ -290,8 +289,8 @@ typedef struct _PSHNOTIFY {
 HPROPSHEETPAGE WINAPI CreatePropertySheetPageA(LPCPROPSHEETPAGEA);
 HPROPSHEETPAGE WINAPI CreatePropertySheetPageW(LPCPROPSHEETPAGEW);
 BOOL WINAPI DestroyPropertySheetPage(HPROPSHEETPAGE);
-int WINAPI PropertySheetA(LPCPROPSHEETHEADERA);
-int WINAPI PropertySheetW(LPCPROPSHEETHEADERW);
+INT_PTR WINAPI PropertySheetA(LPCPROPSHEETHEADERA);
+INT_PTR WINAPI PropertySheetW(LPCPROPSHEETHEADERW);
 #define PropSheet_AddPage(d,p) SendMessage(d,PSM_ADDPAGE,0,(LPARAM)p)
 #define PropSheet_Apply(d) SendMessage(d,PSM_APPLY,0,0)
 #define PropSheet_CancelToClose(d) SendMessage(d,PSM_CANCELTOCLOSE,0,0)

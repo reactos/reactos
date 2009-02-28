@@ -1,74 +1,82 @@
-/*
- * timeb.h
+/**
  * This file has no copyright assigned and is placed in the Public Domain.
- * This file is a part of the mingw-runtime package.
- * No warranty is given; refer to the file DISCLAIMER within the package.
- *
- * Support for the UNIX System V ftime system call.
- *
+ * This file is part of the w64 mingw-runtime package.
+ * No warranty is given; refer to the file DISCLAIMER within this package.
  */
+#ifndef _INC_TIMEB
+#define _INC_TIMEB
 
-#ifndef	_TIMEB_H_
-#define	_TIMEB_H_
+#include <crtdefs.h>
 
-/* All the headers include this file. */
-#include <_mingw.h>
-#include <sys/types.h>
-
-#ifndef	RC_INVOKED
-
-/*
- * TODO: Structure not tested.
- */
-struct _timeb
-{
-	long	time;
-	short	millitm;
-	short	timezone;
-	short	dstflag;
-};
-
-#ifndef	_NO_OLDNAMES
-/*
- * TODO: Structure not tested.
- */
-struct timeb
-{
-	long	time;
-	short	millitm;
-	short	timezone;
-	short	dstflag;
-};
+#ifndef _WIN32
+#error Only Win32 target is supported!
 #endif
 
-struct __timeb64
-{
-	__time64_t time;
-	short millitm;
-	short timezone;
-	short dstflag;
-};
+#pragma pack(push,_CRT_PACKING)
 
-#ifdef	__cplusplus
+#ifdef __cplusplus
 extern "C" {
 #endif
 
-/* TODO: Not tested. */
-_CRTIMP void __cdecl __MINGW_NOTHROW	_ftime (struct _timeb*);
+#ifndef _TIMEB_DEFINED
+#define _TIMEB_DEFINED
 
-#ifndef	_NO_OLDNAMES
-_CRTIMP void __cdecl __MINGW_NOTHROW	ftime (struct timeb*);
-#endif	/* Not _NO_OLDNAMES */
+  struct _timeb {
+    time_t time;
+    unsigned short millitm;
+    short timezone;
+    short dstflag;
+  };
 
-/* This requires newer versions of msvcrt.dll (6.10 or higher).  */
-#if __MSVCRT_VERSION__ >= 0x0601
-_CRTIMP void __cdecl __MINGW_NOTHROW	_ftime64 (struct __timeb64*);
-#endif /* __MSVCRT_VERSION__ >= 0x0601 */
+  struct __timeb32 {
+    __time32_t time;
+    unsigned short millitm;
+    short timezone;
+    short dstflag;
+  };
 
-#ifdef	__cplusplus
+#ifndef	NO_OLDNAMES
+  struct timeb {
+    time_t time;
+    unsigned short millitm;
+    short timezone;
+    short dstflag;
+  };
+#endif
+
+#if _INTEGRAL_MAX_BITS >= 64
+  struct __timeb64 {
+    __time64_t time;
+    unsigned short millitm;
+    short timezone;
+    short dstflag;
+  };
+#endif
+
+#endif /* !_TIMEB_DEFINED */
+
+  _CRTIMP void __cdecl _ftime(struct _timeb *_Time);
+  _CRT_INSECURE_DEPRECATE(_ftime32_s) _CRTIMP void __cdecl _ftime32(struct __timeb32 *_Time);
+  _CRTIMP errno_t __cdecl _ftime32_s(struct __timeb32 *_Time);
+#if _INTEGRAL_MAX_BITS >= 64
+  _CRT_INSECURE_DEPRECATE(_ftime64_s) _CRTIMP void __cdecl _ftime64(struct __timeb64 *_Time);
+  _CRTIMP errno_t __cdecl _ftime64_s(struct __timeb64 *_Time);
+#endif
+
+#ifndef NO_OLDNAMES
+#if !defined (RC_INVOKED)
+__CRT_INLINE void __cdecl ftime(struct timeb *_Tmb) {
+  _ftime((struct _timeb *)_Tmb);
+}
+#endif
+#endif
+
+#ifdef __cplusplus
 }
 #endif
 
-#endif	/* Not RC_INVOKED */
+#pragma pack(pop)
 
-#endif	/* Not _TIMEB_H_ */
+#include <sec_api/sys/timeb_s.h>
+
+#endif /* !_INC_TIMEB */

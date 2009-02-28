@@ -1,8 +1,5 @@
 #ifndef _WINSPOOL_H
 #define _WINSPOOL_H
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -374,6 +371,162 @@ typedef	struct	_DRIVER_INFO_3W	{
 	LPWSTR pMonitorName;
 	LPWSTR pDefaultDataType;
 } DRIVER_INFO_3W,*PDRIVER_INFO_3W,*LPDRIVER_INFO_3W;
+typedef struct _DRIVER_INFO_4A {
+        DWORD cVersion;          // SDK examples:
+        LPSTR pName;             // QMS 810
+        LPSTR pEnvironment;      // Win32 x86
+        LPSTR pDriverPath;       // c:\drivers\pscript.dll
+        LPSTR pDataFile;         // c:\drivers\QMS810.PPD
+        LPSTR pConfigFile;       // c:\drivers\PSCRPTUI.DLL
+        LPSTR pHelpFile;         // c:\drivers\PSCRPTUI.HLP
+        LPSTR pDependentFiles;   // PSCRIPT.DLL\0QMS810.PPD\0PSCRIPTUI.DLL\0PSCRIPTUI.HLP\0PSTEST.TXT\0\0
+        LPSTR pMonitorName;      // "PJL monitor"
+        LPSTR pDefaultDataType;  // "EMF"
+        LPSTR pszzPreviousNames; // "OldName1\0OldName2\0\0
+} DRIVER_INFO_4A, *PDRIVER_INFO_4A, *LPDRIVER_INFO_4A;
+typedef struct _DRIVER_INFO_4W {
+        DWORD  cVersion;
+        LPWSTR pName;
+        LPWSTR pEnvironment;
+        LPWSTR pDriverPath;
+        LPWSTR pDataFile;
+        LPWSTR pConfigFile;
+        LPWSTR pHelpFile;
+        LPWSTR pDependentFiles;
+        LPWSTR pMonitorName;
+        LPWSTR pDefaultDataType;
+        LPWSTR pszzPreviousNames;
+} DRIVER_INFO_4W, *PDRIVER_INFO_4W, *LPDRIVER_INFO_4W;
+typedef struct _DRIVER_INFO_5A {
+        DWORD cVersion;           // SDK examples:
+        LPSTR pName;              // QMS 810
+        LPSTR pEnvironment;       // Win32 x86
+        LPSTR pDriverPath;        // c:\drivers\pscript.dll
+        LPSTR pDataFile;          // c:\drivers\QMS810.PPD
+        LPSTR pConfigFile;        // c:\drivers\PSCRPTUI.DLL
+        DWORD dwDriverAttributes; // driver attributes (like UMPD/KMPD)
+        DWORD dwConfigVersion;    // version number of the config file since reboot
+        DWORD dwDriverVersion;    // version number of the driver file since reboot
+} DRIVER_INFO_5A, *PDRIVER_INFO_5A, *LPDRIVER_INFO_5A;
+typedef struct _DRIVER_INFO_5W {
+        DWORD  cVersion;
+        LPWSTR pName;
+        LPWSTR pEnvironment;
+        LPWSTR pDriverPath;
+        LPWSTR pDataFile;
+        LPWSTR pConfigFile;
+        DWORD  dwDriverAttributes;
+        DWORD  dwConfigVersion;
+        DWORD  dwDriverVersion;
+} DRIVER_INFO_5W, *PDRIVER_INFO_5W, *LPDRIVER_INFO_5W;
+typedef struct _DRIVER_INFO_6A {
+        DWORD     cVersion;
+        LPSTR     pName;
+        LPSTR     pEnvironment;
+        LPSTR     pDriverPath;
+        LPSTR     pDataFile;
+        LPSTR     pConfigFile;
+        LPSTR     pHelpFile;
+        LPSTR     pDependentFiles;
+        LPSTR     pMonitorName;
+        LPSTR     pDefaultDataType;
+        LPSTR     pszzPreviousNames;
+        FILETIME  ftDriverDate;
+        DWORDLONG dwlDriverVersion;
+        LPSTR     pszMfgName;
+        LPSTR     pszOEMUrl;
+        LPSTR     pszHardwareID;
+        LPSTR     pszProvider;
+} DRIVER_INFO_6A, *PDRIVER_INFO_6A, *LPDRIVER_INFO_6A;
+typedef struct _DRIVER_INFO_6W {
+        DWORD     cVersion;
+        LPWSTR    pName;
+        LPWSTR    pEnvironment;
+        LPWSTR    pDriverPath;
+        LPWSTR    pDataFile;
+        LPWSTR    pConfigFile;
+        LPWSTR    pHelpFile;
+        LPWSTR    pDependentFiles;
+        LPWSTR    pMonitorName;
+        LPWSTR    pDefaultDataType;
+        LPWSTR    pszzPreviousNames;
+        FILETIME  ftDriverDate;
+        DWORDLONG dwlDriverVersion;
+        LPWSTR    pszMfgName;
+        LPWSTR    pszOEMUrl;
+        LPWSTR    pszHardwareID;
+        LPWSTR    pszProvider;
+} DRIVER_INFO_6W, *PDRIVER_INFO_6W, *LPDRIVER_INFO_6W;
+#define PRINTER_DRIVER_PACKAGE_AWARE    0x00000001
+typedef struct _DRIVER_INFO_8A {
+        DWORD      cVersion;
+        LPSTR      pName;
+        LPSTR      pEnvironment;
+        LPSTR      pDriverPath;
+        LPSTR      pDataFile;
+        LPSTR      pConfigFile;
+        LPSTR      pHelpFile;
+        LPSTR      pDependentFiles;
+        LPSTR      pMonitorName;
+        LPSTR      pDefaultDataType;
+        LPSTR      pszzPreviousNames;
+        FILETIME   ftDriverDate;
+        DWORDLONG  dwlDriverVersion;
+        LPSTR      pszMfgName;
+        LPSTR      pszOEMUrl;
+        LPSTR      pszHardwareID;
+        LPSTR      pszProvider;
+        LPSTR      pszPrintProcessor;
+        LPSTR      pszVendorSetup;
+        LPSTR      pszzColorProfiles;
+        LPSTR      pszInfPath;
+        DWORD      dwPrinterDriverAttributes;
+        LPSTR      pszzCoreDriverDependencies;
+        FILETIME   ftMinInboxDriverVerDate;
+        DWORDLONG  dwlMinInboxDriverVerVersion;
+} DRIVER_INFO_8A, *PDRIVER_INFO_8A, *LPDRIVER_INFO_8A;
+typedef struct _DRIVER_INFO_8W {
+        DWORD      cVersion;
+        LPWSTR     pName;
+        LPWSTR     pEnvironment;
+        LPWSTR     pDriverPath;
+        LPWSTR     pDataFile;
+        LPWSTR     pConfigFile;
+        LPWSTR     pHelpFile;
+        LPWSTR     pDependentFiles;
+        LPWSTR     pMonitorName;
+        LPWSTR     pDefaultDataType;
+        LPWSTR     pszzPreviousNames;
+        FILETIME   ftDriverDate;
+        DWORDLONG  dwlDriverVersion;
+        LPWSTR     pszMfgName;
+        LPWSTR     pszOEMUrl;
+        LPWSTR     pszHardwareID;
+        LPWSTR     pszProvider;
+        LPWSTR     pszPrintProcessor;
+        LPWSTR     pszVendorSetup;
+        LPWSTR     pszzColorProfiles;
+        LPWSTR     pszInfPath;
+        DWORD      dwPrinterDriverAttributes;
+        LPWSTR     pszzCoreDriverDependencies;
+        FILETIME   ftMinInboxDriverVerDate;
+        DWORDLONG  dwlMinInboxDriverVerVersion;
+} DRIVER_INFO_8W, *PDRIVER_INFO_8W, *LPDRIVER_INFO_8W;
+// FLAGS for dwDriverAttributes
+#define DRIVER_KERNELMODE                0x00000001
+#define DRIVER_USERMODE                  0x00000002
+// FLAGS for DeletePrinterDriverEx.
+#define DPD_DELETE_UNUSED_FILES          0x00000001
+#define DPD_DELETE_SPECIFIC_VERSION      0x00000002
+#define DPD_DELETE_ALL_FILES             0x00000004
+// FLAGS for AddPrinterDriverEx.
+#define APD_STRICT_UPGRADE               0x00000001
+#define APD_STRICT_DOWNGRADE             0x00000002
+#define APD_COPY_ALL_FILES               0x00000004
+#define APD_COPY_NEW_FILES               0x00000008
+#if(_WIN32_WINNT >= 0x0501)
+    #define APD_COPY_FROM_DIRECTORY      0x00000010
+#endif
 typedef struct _MONITOR_INFO_1A{LPSTR pName;} MONITOR_INFO_1A,*PMONITOR_INFO_1A,*LPMONITOR_INFO_1A;
 typedef struct _MONITOR_INFO_1W{LPWSTR pName;} MONITOR_INFO_1W,*PMONITOR_INFO_1W,*LPMONITOR_INFO_1W;
 typedef struct _PORT_INFO_1A {LPSTR pName;} PORT_INFO_1A,*PPORT_INFO_1A,*LPPORT_INFO_1A;
@@ -544,6 +697,68 @@ typedef	struct _PRINTER_DEFAULTSW {
 	ACCESS_MASK DesiredAccess;
 } PRINTER_DEFAULTSW,*PPRINTER_DEFAULTSW,*LPPRINTER_DEFAULTSW;
 
+typedef struct _PROVIDOR_INFO_1A{
+	LPSTR pName;
+	LPSTR pEnvironment;
+	LPSTR pDLLName;
+} PROVIDOR_INFO_1A, *PPROVIDOR_INFO_1A, *LPPROVIDOR_INFO_1A;
+typedef struct _PROVIDOR_INFO_1W{
+	LPWSTR pName;
+	LPWSTR pEnvironment;
+	LPWSTR pDLLName;
+} PROVIDOR_INFO_1W, *LPPROVIDOR_INFO_1W;
+
+typedef struct _PROVIDOR_INFO_2A{
+	LPSTR pOrder;
+} PROVIDOR_INFO_2A, *PPROVIDOR_INFO_2A, *LPPROVIDOR_INFO_2A;
+typedef struct _PROVIDOR_INFO_2W{
+	LPWSTR pOrder;
+} PROVIDOR_INFO_2W, *LPPROVIDOR_INFO_2W;
+
+typedef struct _BINARY_CONTAINER {
+ DWORD  cbBuf;
+ LPBYTE pData;
+} BINARY_CONTAINER, *PBINARY_CONTAINER;
+
+typedef struct _BIDI_DATA {
+ DWORD  dwBidiType;
+ union
+ {
+   BOOL             bData;
+   INT              iData;
+   LPWSTR           sData;
+   FLOAT            fData;
+   BINARY_CONTAINER biData;
+ } u;
+} BIDI_DATA, *LPBIDI_DATA, *PBIDI_DATA;
+
+typedef struct _BIDI_REQUEST_DATA {
+ DWORD      dwReqNumber;
+ LPWSTR     pSchema;
+ BIDI_DATA  data;
+} BIDI_REQUEST_DATA, *LPBIDI_REQUEST_DATA, *PBIDI_REQUEST_DATA;
+
+typedef struct _BIDI_REQUEST_CONTAINER {
+ DWORD              Version;
+ DWORD              Flags;
+ DWORD              Count;
+ BIDI_REQUEST_DATA  aData[1];
+} BIDI_REQUEST_CONTAINER, *LPBIDI_REQUEST_CONTAINER, *PBIDI_REQUEST_CONTAINER;
+
+typedef struct _BIDI_RESPONSE_DATA {
+ DWORD      dwResult;
+ DWORD      dwReqNumber;
+ LPWSTR     pSchema;
+ BIDI_DATA  data;
+} BIDI_RESPONSE_DATA, *LPBIDI_RESPONSE_DATA, *PBIDI_RESPONSE_DATA;
+
+typedef struct _BIDI_RESPONSE_CONTAINER {
+ DWORD              Version;
+ DWORD              Flags;
+ DWORD              Count;
+ BIDI_RESPONSE_DATA aData[1];
+} BIDI_RESPONSE_CONTAINER, *LPBIDI_RESPONSE_CONTAINER, *PBIDI_RESPONSE_CONTAINER;
+
 BOOL WINAPI AbortPrinter(HANDLE);
 BOOL WINAPI AddFormA(HANDLE,DWORD,PBYTE);
 BOOL WINAPI AddFormW(HANDLE,DWORD,PBYTE);
@@ -652,6 +867,7 @@ DWORD WINAPI StartDocPrinterW(HANDLE,DWORD,PBYTE);
 BOOL WINAPI StartPagePrinter(HANDLE);
 DWORD WINAPI WaitForPrinterChange(HANDLE,DWORD);
 BOOL WINAPI WritePrinter(HANDLE,PVOID,DWORD,PDWORD);
+BOOL WINAPI XcvDataW(HANDLE, LPCWSTR, PBYTE, DWORD, PBYTE, DWORD, PDWORD, PDWORD);
 
 #ifdef UNICODE
 typedef JOB_INFO_1W JOB_INFO_1,*PJOB_INFO_1,*LPJOB_INFO_1;
@@ -666,6 +882,10 @@ typedef PORT_INFO_1W PORT_INFO_1,*PPORT_INFO_1,*LPPORT_INFO_1;
 typedef PORT_INFO_2W PORT_INFO_2,*PPORT_INFO_2,*LPPORT_INFO_2;
 typedef PORT_INFO_3W PORT_INFO_3,*PPORT_INFO_3,*LPPORT_INFO_3;
 typedef DRIVER_INFO_2W DRIVER_INFO_2,*PDRIVER_INFO_2,*LPDRIVER_INFO_2;
+typedef DRIVER_INFO_4W DRIVER_INFO_4,*PDRIVER_INFO_4,*LPDRIVER_INFO_4;
+typedef DRIVER_INFO_5W DRIVER_INFO_5,*PDRIVER_INFO_5,*LPDRIVER_INFO_5;
+typedef DRIVER_INFO_6W DRIVER_INFO_6,*PDRIVER_INFO_6,*LPDRIVER_INFO_6;
+typedef DRIVER_INFO_8W DRIVER_INFO_8,*PDRIVER_INFO_8,*LPDRIVER_INFO_8;
 typedef PRINTER_INFO_1W PRINTER_INFO_1,*PPRINTER_INFO_1,*LPPRINTER_INFO_1;
 typedef PRINTER_INFO_2W PRINTER_INFO_2,*PPRINTER_INFO_2,*LPPRINTER_INFO_2;
 typedef PRINTER_INFO_4W PRINTER_INFO_4,*PPRINTER_INFO_4,*LPPRINTER_INFO_4;
@@ -673,6 +893,10 @@ typedef PRINTER_INFO_5W PRINTER_INFO_5,*PPRINTER_INFO_5,*LPPRINTER_INFO_5;
 typedef PRINTPROCESSOR_INFO_1W PRINTPROCESSOR_INFO_1,*PPRINTPROCESSOR_INFO_1,*LPPRINTPROCESSOR_INFO_1;
 typedef FORM_INFO_1W FORM_INFO_1,*PFORM_INFO_1,*LPFORM_INFO_1;
 typedef PRINTER_DEFAULTSW PRINTER_DEFAULTS,*PPRINTER_DEFAULTS,*LPPRINTER_DEFAULTS;
+typedef PROVIDOR_INFO_1W PROVIDOR_INFO_1;
+typedef LPPROVIDOR_INFO_1W LPPROVIDOR_INFO_1;
+typedef PROVIDOR_INFO_2W PROVIDOR_INFO_2;
+typedef LPPROVIDOR_INFO_2W LPPROVIDOR_INFO_2;
 #define AddForm AddFormW
 #define AddJob AddJobW
 #define AddMonitor AddMonitorW
@@ -731,6 +955,10 @@ typedef PORT_INFO_1A PORT_INFO_1,*PPORT_INFO_1,*LPPORT_INFO_1;
 typedef PORT_INFO_2A PORT_INFO_2,*PPORT_INFO_2,*LPPORT_INFO_2;
 typedef PORT_INFO_3A PORT_INFO_3,*PPORT_INFO_3,*LPPORT_INFO_3;
 typedef DRIVER_INFO_2A DRIVER_INFO_2,*PDRIVER_INFO_2,*LPDRIVER_INFO_2;
+typedef DRIVER_INFO_4A DRIVER_INFO_4,*PDRIVER_INFO_4,*LPDRIVER_INFO_4;
+typedef DRIVER_INFO_5A DRIVER_INFO_5,*PDRIVER_INFO_5,*LPDRIVER_INFO_5;
+typedef DRIVER_INFO_6A DRIVER_INFO_6,*PDRIVER_INFO_6,*LPDRIVER_INFO_6;
+typedef DRIVER_INFO_8A DRIVER_INFO_8,*PDRIVER_INFO_8,*LPDRIVER_INFO_8;
 typedef PRINTER_INFO_1A PRINTER_INFO_1,*PPRINTER_INFO_1,*LPPRINTER_INFO_1;
 typedef PRINTER_INFO_2A PRINTER_INFO_2,*PPRINTER_INFO_2,*LPPRINTER_INFO_2;
 typedef PRINTER_INFO_4A PRINTER_INFO_4,*PPRINTER_INFO_4,*LPPRINTER_INFO_4;

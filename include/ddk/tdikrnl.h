@@ -23,10 +23,6 @@
 #ifndef __TDIKRNL_H
 #define __TDIKRNL_H
 
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
-
 #include "tdi.h"
 
 #ifdef __cplusplus

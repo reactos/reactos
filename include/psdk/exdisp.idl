@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2001 John R. Sheets (for CodeWeavers)
  * Copyright (C) 2003 Alexandre Julliard
- * Copuright (C) 2004 Jacek Caban
+ * Copyright (C) 2004 Jacek Caban
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -25,6 +25,10 @@ import "docobj.idl";
 
 #include <olectl.h>
 #include <exdispid.h>
+
+cpp_quote("#ifdef WINE_NO_UNICODE_MACROS")
+cpp_quote("#undef FindText")
+cpp_quote("#endif")
 
 /*****************************************************************************
  * SHDocVw library

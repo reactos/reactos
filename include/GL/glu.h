@@ -30,9 +30,6 @@
 #ifndef __glu_h__
 #define __glu_h__
 #define _GLU_H
-#if __GNUC__ >= 3
-#pragma GCC system_header
-#endif
 
 #include <stddef.h> /* for wchar_t */
 #include <GL/gl.h>

@@ -268,7 +268,7 @@ object,
 uuid(BB1A2AE2-A4F9-11cf-8F20-00805F2CD064),
 pointer_default(unique)
 ]
-interface IActiveScriptParse : IUnknown
+interface IActiveScriptParse32 : IUnknown
 {
     HRESULT InitNew(void);
 
@@ -299,6 +299,50 @@ interface IActiveScriptParse : IUnknown
     );
 }
 
+[
+   object,
+   uuid(c7ef7658-e1ee-480e-97ea-d52cb4d76d17),
+   pointer_default(unique)
+]
+interface IActiveScriptParse64 : IUnknown
+{
+    HRESULT InitNew(void);
+
+    HRESULT AddScriptlet(
+            [in] LPCOLESTR pstrDefaultName,
+            [in] LPCOLESTR pstrCode,
+            [in] LPCOLESTR pstrItemName,
+            [in] LPCOLESTR pstrSubItemName,
+            [in] LPCOLESTR pstrEventName,
+            [in] LPCOLESTR pstrDelimiter,
+            [in] DWORDLONG dwSourceContextCookie,
+            [in] ULONG ulStartingLineNumber,
+            [in] DWORD dwFlags,
+            [out] BSTR *pbstrName,
+            [out] EXCEPINFO *pexcepinfo
+    );
+
+    HRESULT ParseScriptText(
+            [in] LPCOLESTR pstrCode,
+            [in] LPCOLESTR pstrItemName,
+            [in] IUnknown *punkContext,
+            [in] LPCOLESTR pstrDelimiter,
+            [in] DWORDLONG dwSourceContextCookie,
+            [in] ULONG ulStartingLineNumber,
+            [in] DWORD dwFlags,
+            [out] VARIANT *pvarResult,
+            [out] EXCEPINFO *pexcepinfo
+    );
+}
+
+cpp_quote("#ifdef _WIN64")
+cpp_quote("#define IActiveScriptParse IActiveScriptParse64")
+cpp_quote("#define IID_IActiveScriptParse IID_IActiveScriptParse64")
+cpp_quote("#else")
+cpp_quote("#define IActiveScriptParse IActiveScriptParse32")
+cpp_quote("#define IID_IActiveScriptParse IID_IActiveScriptParse32")
+cpp_quote("#endif")
+
 cpp_quote("typedef IActiveScriptParse *PIActiveScriptParse;")
 
 [
@@ -306,7 +350,7 @@ object,
 uuid(1CFF0050-6FDD-11d0-9328-00A0C90DCAA9),
 pointer_default(unique)
 ]
-interface IActiveScriptParseProcedureOld : IUnknown
+interface IActiveScriptParseProcedureOld32 : IUnknown
 {
     HRESULT ParseProcedureText(
             [in] LPCOLESTR pstrCode,
@@ -322,11 +366,39 @@ interface IActiveScriptParseProcedureOld : IUnknown
 }
 
 [
+    object,
+    uuid(21f57128-08c9-4638-ba12-22d15d88dc5c),
+    pointer_default(unique)
+]
+interface IActiveScriptParseProcedureOld64 : IUnknown
+{
+    HRESULT ParseProcedureText(
+            [in] LPCOLESTR pstrCode,
+            [in] LPCOLESTR pstrFormalParams,
+            [in] LPCOLESTR pstrItemName,
+            [in] IUnknown *punkContext,
+            [in] LPCOLESTR pstrDelimiter,
+            [in] DWORDLONG dwSourceContextCookie,
+            [in] ULONG ulStartingLineNumber,
+            [in] DWORD dwFlags,
+            [out] IDispatch **ppdisp
+    );
+}
+
+cpp_quote("#ifdef _WIN64")
+cpp_quote("#define IActiveScriptParseProcedureOld IActiveScriptParseProcedureOld64")
+cpp_quote("#define IID_IActiveScriptParseProcedureOld IID_IActiveScriptParseProcedureOld64")
+cpp_quote("#else")
+cpp_quote("#define IActiveScriptParseProcedureOld IActiveScriptParseProcedureOld32")
+cpp_quote("#define IID_IActiveScriptParseProcedureOld IID_IActiveScriptParseProcedureOld32")
+cpp_quote("#endif")
+
+[
 object,
 uuid(AA5B6A80-B834-11d0-932F-00A0C90DCAA9),
 pointer_default(unique)
 ]
-interface IActiveScriptParseProcedure : IUnknown
+interface IActiveScriptParseProcedure32 : IUnknown
 {
     HRESULT ParseProcedureText(
             [in] LPCOLESTR pstrCode,
@@ -344,12 +416,58 @@ interface IActiveScriptParseProcedure : IUnknown
 
 [
     object,
+    uuid(c64713b6-e029-4cc5-9200-438b72890b6a),
+    pointer_default(unique)
+]
+interface IActiveScriptParseProcedure64 : IUnknown
+{
+    HRESULT ParseProcedureText(
+            [in] LPCOLESTR pstrCode,
+            [in] LPCOLESTR pstrFormalParams,
+            [in] LPCOLESTR pstrProcedureName,
+            [in] LPCOLESTR pstrItemName,
+            [in] IUnknown *punkContext,
+            [in] LPCOLESTR pstrDelimiter,
+            [in] DWORDLONG dwSourceContextCookie,
+            [in] ULONG ulStartingLineNumber,
+            [in] DWORD dwFlags,
+            [out] IDispatch **ppdisp
+    );
+}
+
+cpp_quote("#ifdef _WIN64")
+cpp_quote("#define IActiveScriptParseProcedure IActiveScriptParseProcedure64")
+cpp_quote("#define IID_IActiveScriptParseProcedure IID_IActiveScriptParseProcedure64")
+cpp_quote("#else")
+cpp_quote("#define IActiveScriptParseProcedure IActiveScriptParseProcedure32")
+cpp_quote("#define IID_IActiveScriptParseProcedure IID_IActiveScriptParseProcedure32")
+cpp_quote("#endif")
+
+[
+    object,
     uuid(71ee5b20-fb04-11d1-b3a8-00a0c911e8b2),
     pointer_default(unique)
 ]
-interface IActiveScriptParseProcedure2 : IActiveScriptParseProcedure
+interface IActiveScriptParseProcedure2_32 : IActiveScriptParseProcedure32
 {
 }
+
+[
+    object,
+    uuid(fe7c4271-210c-448d-9f54-76dab7047b28),
+    pointer_default(unique)
+]
+interface IActiveScriptParseProcedure2_64 : IActiveScriptParseProcedure64
+{
+}
+
+cpp_quote("#ifdef _WIN64")
+cpp_quote("#define IActiveScriptParseProcedure2 IActiveScriptParseProcedure2_64")
+cpp_quote("#define IID_IActiveScriptParseProcedure2 IID_IActiveScriptParseProcedure2_64")
+cpp_quote("#else")
+cpp_quote("#define IActiveScriptParseProcedure2 IActiveScriptParseProcedure2_32")
+cpp_quote("#define IID_IActiveScriptParseProcedure2 IID_IActiveScriptParseProcedure2_32")
+cpp_quote("#endif")
 
 [
 object,

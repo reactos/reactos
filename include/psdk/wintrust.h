@@ -136,6 +136,7 @@ typedef struct _WINTRUST_DATA
 #define WTD_HASH_ONLY_FLAG                      0x00000200
 #define WTD_USE_DEFAULT_OSVER_CHECK             0x00000400
 #define WTD_LIFETIME_SIGNING_FLAG               0x00000800
+#define WTD_CACHE_ONLY_URL_RETRIEVAL            0x00001000
 
 #define WTD_UICONTEXT_EXECUTE 0
 #define WTD_UICONTEXT_INSTALL 1
@@ -199,6 +200,13 @@ typedef struct _CRYPT_PROVIDER_CERT {
     PCERT_CHAIN_ELEMENT pChainElement;
 } CRYPT_PROVIDER_CERT, *PCRYPT_PROVIDER_CERT;
 
+#define CERT_CONFIDENCE_SIG       0x10000000
+#define CERT_CONFIDENCE_TIME      0x01000000
+#define CERT_CONFIDENCE_TIMENEST  0x00100000
+#define CERT_CONFIDENCE_AUTHIDEXT 0x00010000
+#define CERT_CONFIDENCE_HYGIENE   0x00001000
+#define CERT_CONFIDENCE_HIGHEST   0x11111000
+
 typedef struct _CRYPT_PROVIDER_SGNR {
     DWORD                cbStruct;
     FILETIME             sftVerifyAsOf;
@@ -212,6 +220,8 @@ typedef struct _CRYPT_PROVIDER_SGNR {
     PCCERT_CHAIN_CONTEXT pChainContext;
 } CRYPT_PROVIDER_SGNR, *PCRYPT_PROVIDER_SGNR;
 
+#define SGNR_TYPE_TIMESTAMP 0x00000010
+
 typedef struct _CRYPT_PROVIDER_PRIVDATA {
     DWORD cbStruct;
     GUID  gProviderID;
@@ -221,32 +231,61 @@ typedef struct _CRYPT_PROVIDER_PRIVDATA {
 
 struct _CRYPT_PROVIDER_DATA;
 
-typedef void * (*PFN_CPD_MEM_ALLOC)(DWORD cbSize);
-typedef void (*PFN_CPD_MEM_FREE)(void *pvMem2Free);
-typedef BOOL (*PFN_CPD_ADD_STORE)(struct _CRYPT_PROVIDER_DATA *pProvData,
+#define TRUSTERROR_STEP_WVTPARAMS               0
+#define TRUSTERROR_STEP_FILEIO                  2
+#define TRUSTERROR_STEP_SIP                     3
+#define TRUSTERROR_STEP_SIPSUBJINFO             5
+#define TRUSTERROR_STEP_CATALOGFILE             6
+#define TRUSTERROR_STEP_CERTSTORE               7
+#define TRUSTERROR_STEP_MESSAGE                 8
+#define TRUSTERROR_STEP_MSG_SIGNERCOUNT         9
+#define TRUSTERROR_STEP_MSG_INNERCNTTYPE       10
+#define TRUSTERROR_STEP_MSG_INNERCNT           11
+#define TRUSTERROR_STEP_MSG_STORE              12
+#define TRUSTERROR_STEP_MSG_SIGNERINFO         13
+#define TRUSTERROR_STEP_MSG_SIGNERCERT         14
+#define TRUSTERROR_STEP_MSG_CERTCHAIN          15
+#define TRUSTERROR_STEP_MSG_COUNTERSIGINFO     16
+#define TRUSTERROR_STEP_MSG_COUNTERSIGCERT     17
+#define TRUSTERROR_STEP_VERIFY_MSGHASH         18
+#define TRUSTERROR_STEP_VERIFY_MSGINDIRECTDATA 19
+#define TRUSTERROR_STEP_FINAL_WVTINIT          30
+#define TRUSTERROR_STEP_FINAL_INITPROV         31
+#define TRUSTERROR_STEP_FINAL_OBJPROV          32
+#define TRUSTERROR_STEP_FINAL_SIGPROV          33
+#define TRUSTERROR_STEP_FINAL_CERTPROV         34
+#define TRUSTERROR_STEP_FINAL_CERTCHKPROV      35
+#define TRUSTERROR_STEP_FINAL_POLICYPROV       36
+#define TRUSTERROR_STEP_FINAL_UIPROV           37
+
+#define TRUSTERROR_MAX_STEPS                   38
+
+typedef void * (__WINE_ALLOC_SIZE(1) WINAPI *PFN_CPD_MEM_ALLOC)(DWORD cbSize);
+typedef void (WINAPI *PFN_CPD_MEM_FREE)(void *pvMem2Free);
+typedef BOOL (WINAPI *PFN_CPD_ADD_STORE)(struct _CRYPT_PROVIDER_DATA *pProvData,
  HCERTSTORE hStore2Add);
-typedef BOOL (*PFN_CPD_ADD_SGNR)(struct _CRYPT_PROVIDER_DATA *pProvData,
+typedef BOOL (WINAPI *PFN_CPD_ADD_SGNR)(struct _CRYPT_PROVIDER_DATA *pProvData,
  BOOL fCounterSigner, DWORD idxSigner, struct _CRYPT_PROVIDER_SGNR *pSgnr2Add);
-typedef BOOL (*PFN_CPD_ADD_CERT)(struct _CRYPT_PROVIDER_DATA *pProvData,
+typedef BOOL (WINAPI *PFN_CPD_ADD_CERT)(struct _CRYPT_PROVIDER_DATA *pProvData,
  DWORD idxSigner, BOOL fCounterSigner, DWORD idxCounterSigner,
  PCCERT_CONTEXT pCert2Add);
-typedef BOOL (*PFN_CPD_ADD_PRIVDATA)(struct _CRYPT_PROVIDER_DATA *pProvData,
+typedef BOOL (WINAPI *PFN_CPD_ADD_PRIVDATA)(struct _CRYPT_PROVIDER_DATA *pProvData,
  struct _CRYPT_PROVIDER_PRIVDATA *pPrivData2Add);
-typedef HRESULT (*PFN_PROVIDER_INIT_CALL)(
+typedef HRESULT (WINAPI *PFN_PROVIDER_INIT_CALL)(
  struct _CRYPT_PROVIDER_DATA *pProvData);
-typedef HRESULT (*PFN_PROVIDER_OBJTRUST_CALL)(
+typedef HRESULT (WINAPI *PFN_PROVIDER_OBJTRUST_CALL)(
  struct _CRYPT_PROVIDER_DATA *pProvData);
-typedef HRESULT (*PFN_PROVIDER_SIGTRUST_CALL)(
+typedef HRESULT (WINAPI *PFN_PROVIDER_SIGTRUST_CALL)(
  struct _CRYPT_PROVIDER_DATA *pProvData);
-typedef HRESULT (*PFN_PROVIDER_CERTTTRUST_CALL)(
+typedef HRESULT (WINAPI *PFN_PROVIDER_CERTTRUST_CALL)(
  struct _CRYPT_PROVIDER_DATA *pProvData);
-typedef HRESULT (*PFN_PROVIDER_FINALPOLICY_CALL)(
+typedef HRESULT (WINAPI *PFN_PROVIDER_FINALPOLICY_CALL)(
  struct _CRYPT_PROVIDER_DATA *pProvData);
-typedef HRESULT (*PFN_PROVIDER_TESTFINALPOLICY_CALL)(
+typedef HRESULT (WINAPI *PFN_PROVIDER_TESTFINALPOLICY_CALL)(
  struct _CRYPT_PROVIDER_DATA *pProvData);
-typedef HRESULT (*PFN_PROVIDER_CLEANUP_CALL)(
+typedef HRESULT (WINAPI *PFN_PROVIDER_CLEANUP_CALL)(
  struct _CRYPT_PROVIDER_DATA *pProvData);
-typedef BOOL (*PFN_PROVIDER_CERTCHKPOLICY_CALL)(
+typedef BOOL (WINAPI *PFN_PROVIDER_CERTCHKPOLICY_CALL)(
  struct _CRYPT_PROVIDER_DATA *pProvData, DWORD idxSigner,
  BOOL fCounterSignerChain, DWORD idxCounterSigner);
 
@@ -261,7 +300,7 @@ typedef struct _CRYPT_PROVIDER_FUNCTIONS {
     PFN_PROVIDER_INIT_CALL            pfnInitialize;
     PFN_PROVIDER_OBJTRUST_CALL        pfnObjectTrust;
     PFN_PROVIDER_SIGTRUST_CALL        pfnSignatureTrust;
-    PFN_PROVIDER_CERTTTRUST_CALL      pfnCertificateTrust;
+    PFN_PROVIDER_CERTTRUST_CALL       pfnCertificateTrust;
     PFN_PROVIDER_FINALPOLICY_CALL     pfnFinalPolicy;
     PFN_PROVIDER_CERTCHKPOLICY_CALL   pfnCertCheckPolicy;
     PFN_PROVIDER_TESTFINALPOLICY_CALL pfnTestFinalPolicy;
@@ -302,6 +341,8 @@ typedef struct _CRYPT_PROVIDER_DATA {
     HCRYPTMSG                 hMsg;
     DWORD                     csSigners;
     CRYPT_PROVIDER_SGNR      *pasSigners;
+    DWORD                     csProvPrivData;
+    CRYPT_PROVIDER_PRIVDATA  *pasProvPrivData;
     DWORD                     dwSubjectChoice;
     union {
         struct _PROVDATA_SIP        *pPDSip;
@@ -317,6 +358,19 @@ typedef struct _CRYPT_PROVIDER_DATA {
     DWORD                     dwUIStateFlags;
 } CRYPT_PROVIDER_DATA, *PCRYPT_PROVIDER_DATA;
 
+#define CPD_CHOICE_SIP 1
+
+#define CPD_USE_NT5_CHAIN_FLAG                  0x80000000
+#define CPD_REVOCATION_CHECK_NONE               0x00010000
+#define CPD_REVOCATION_CHECK_END_CERT           0x00020000
+#define CPD_REVOCATION_CHECK_CHAIN              0x00040000
+#define CPD_REVOCATION_CHECK_CHAIN_EXCLUDE_ROOT 0x00080000
+
+#define CPD_UISTATE_MODE_PROMPT 0x00000000
+#define CPD_UISTATE_MODE_BLOCK  0x00000001
+#define CPD_UISTATE_MODE_ALLOW  0x00000002
+#define CPD_UISTATE_MODE_MASK   0x00000003
+
 typedef BOOL (*PFN_PROVUI_CALL)(HWND hWndSecurityDialog,
  struct _CRYPT_PROVIDER_DATA *pProvData);
 
@@ -330,6 +384,10 @@ typedef struct _CRYPT_PROVUI_FUNCS {
 } CRYPT_PROVUI_FUNCS, *PCRYPT_PROVUI_FUNCS;
 
 #include <poppack.h>
+
+#define WVT_OFFSETOF(t,f)     ((ULONG)((ULONG_PTR)(&((t*)0)->f)))
+#define WVT_ISINSTRUCT(t,s,f) (WVT_OFFSETOF(t,f) + sizeof(((t*)0)->f) <= (s))
+#define WVT_IS_CBSTRUCT_GT_MEMBEROFFSET(t,s,f) WVT_ISINSTRUCT(t,s,f)
 
 #define WTPF_TRUSTTEST            0x00000020
 #define WTPF_TESTCANBEVALID       0x00000080
@@ -364,21 +422,31 @@ BOOL      WINAPI WintrustRemoveActionID(GUID*);
 BOOL      WINAPI WintrustLoadFunctionPointers(GUID*,CRYPT_PROVIDER_FUNCTIONS*);
 BOOL      WINAPI WintrustAddDefaultForUsage(const char*,CRYPT_PROVIDER_REGDEFUSAGE*);
 void      WINAPI WintrustGetRegPolicyFlags(DWORD*);
+BOOL      WINAPI WintrustSetRegPolicyFlags(DWORD);
 LONG      WINAPI WinVerifyTrust(HWND,GUID*,LPVOID);
 HRESULT   WINAPI WinVerifyTrustEx(HWND,GUID*,WINTRUST_DATA*);
 
+CRYPT_PROVIDER_CERT * WINAPI WTHelperGetProvCertFromChain(
+ CRYPT_PROVIDER_SGNR *pSgnr, DWORD idxCert);
 CRYPT_PROVIDER_SGNR * WINAPI WTHelperGetProvSignerFromChain(
  CRYPT_PROVIDER_DATA *pProvData, DWORD idxSigner, BOOL fCounterSigner,
  DWORD idxCounterSigner);
 CRYPT_PROVIDER_DATA * WINAPI WTHelperProvDataFromStateData(HANDLE hStateData);
+CRYPT_PROVIDER_PRIVDATA * WINAPI WTHelperGetProvPrivateDataFromChain(CRYPT_PROVIDER_DATA *,GUID *);
 
 #define SPC_INDIRECT_DATA_OBJID      "1.3.6.1.4.1.311.2.1.4"
 #define SPC_SP_AGENCY_INFO_OBJID     "1.3.6.1.4.1.311.2.1.10"
 #define SPC_STATEMENT_TYPE_OBJID     "1.3.6.1.4.1.311.2.1.11"
 #define SPC_SP_OPUS_INFO_OBJID       "1.3.6.1.4.1.311.2.1.12"
+#define SPC_CERT_EXTENSIONS_OBJID    "1.3.6.1.4.1.311.2.1.14"
 #define SPC_PE_IMAGE_DATA_OBJID      "1.3.6.1.4.1.311.2.1.15"
+#define SPC_RAW_FILE_DATA_OBJID      "1.3.6.1.4.1.311.2.1.18"
+#define SPC_STRUCTURED_STORAGE_DATA_OBJID "1.3.6.1.4.1.311.2.1.19"
 #define SPC_JAVA_CLASS_DATA_OBJID    "1.3.6.1.4.1.311.2.1.20"
+#define SPC_INDIVIDUAL_SP_KEY_PURPOSE_OBJID "1.3.6.1.4.1.311.2.1.21"
+#define SPC_COMMERCIAL_SP_KEY_PURPOSE_OBJID "1.3.6.1.4.1.311.2.1.22"
 #define SPC_CAB_DATA_OBJID           "1.3.6.1.4.1.311.2.1.25"
+#define SPC_GLUE_RDN_OBJID           "1.3.6.1.4.1.311.2.1.25"
 #define SPC_MINIMAL_CRITERIA_OBJID   "1.3.6.1.4.1.311.2.1.26"
 #define SPC_FINANCIAL_CRITERIA_OBJID "1.3.6.1.4.1.311.2.1.27"
 #define SPC_LINK_OBJID               "1.3.6.1.4.1.311.2.1.28"
@@ -399,6 +467,152 @@ CRYPT_PROVIDER_DATA * WINAPI WTHelperProvDataFromStateData(HANDLE hStateData);
 #define SPC_SIGINFO_STRUCT               ((LPCSTR) 2130)
 #define CAT_NAMEVALUE_STRUCT             ((LPCSTR) 2221)
 #define CAT_MEMBERINFO_STRUCT            ((LPCSTR) 2222)
+
+#define SPC_UUID_LENGTH 16
+typedef BYTE SPC_UUID[SPC_UUID_LENGTH];
+
+typedef struct _SPC_SERIALIZED_OBJECT
+{
+    SPC_UUID        ClassId;
+    CRYPT_DATA_BLOB SerializedData;
+} SPC_SERIALIZED_OBJECT, *PSPC_SERIALIZED_OBJECT;
+
+typedef struct SPC_SIGINFO_
+{
+    DWORD dwSipVersion;
+    GUID  gSIPGuid;
+    DWORD dwReserved1;
+    DWORD dwReserved2;
+    DWORD dwReserved3;
+    DWORD dwReserved4;
+    DWORD dwReserved5;
+} SPC_SIGINFO, *PSPC_SIGINFO;
+
+#define SPC_URL_LINK_CHOICE     1
+#define SPC_MONIKER_LINK_CHOICE 2
+#define SPC_FILE_LINK_CHOICE    3
+
+typedef struct SPC_LINK_
+{
+    DWORD dwLinkChoice;
+    union
+    {
+        LPWSTR                pwszUrl;
+        SPC_SERIALIZED_OBJECT Moniker;
+        LPWSTR                pwszFile;
+    } DUMMYUNIONNAME;
+} SPC_LINK, *PSPC_LINK;
+
+typedef struct _SPC_PE_IMAGE_DATA
+{
+    CRYPT_BIT_BLOB Flags;
+    PSPC_LINK      pFile;
+} SPC_PE_IMAGE_DATA, *PSPC_PE_IMAGE_DATA;
+
+typedef struct _SPC_INDIRECT_DATA_CONTENT
+{
+    CRYPT_ATTRIBUTE_TYPE_VALUE Data;
+    CRYPT_ALGORITHM_IDENTIFIER DigestAlgorithm;
+    CRYPT_HASH_BLOB            Digest;
+} SPC_INDIRECT_DATA_CONTENT, *PSPC_INDIRECT_DATA_CONTENT;
+
+typedef struct _SPC_FINANCIAL_CRITERIA
+{
+    BOOL fFinancialInfoAvailable;
+    BOOL fMeetsCriteria;
+} SPC_FINANCIAL_CRITERIA, *PSPC_FINANCIAL_CRITERIA;
+
+typedef struct _SPC_IMAGE
+{
+    struct SPC_LINK_ *pImageLink;
+    CRYPT_DATA_BLOB   Bitmap;
+    CRYPT_DATA_BLOB   Metafile;
+    CRYPT_DATA_BLOB   EnhancedMetafile;
+    CRYPT_DATA_BLOB   GifFile;
+} SPC_IMAGE, *PSPC_IMAGE;
+
+typedef struct _SPC_SP_AGENCY_INFO
+{
+    struct SPC_LINK_ *pPolicyInformation;
+    LPWSTR            pwszPolicyDisplayText;
+    PSPC_IMAGE        pLogoImage;
+    struct SPC_LINK_ *pLogoLink;
+} SPC_SP_AGENCY_INFO, *PSPC_SP_AGENCY_INFO;
+
+typedef struct _SPC_STATEMENT_TYPE
+{
+    DWORD  cKeyPurposeId;
+    LPSTR *rgpszKeyPurposeId;
+} SPC_STATEMENT_TYPE, *PSPC_STATEMENT_TYPE;
+
+typedef struct _SPC_SP_OPUS_INFO
+{
+    LPCWSTR           pwszProgramName;
+    struct SPC_LINK_ *pMoreInfo;
+    struct SPC_LINK_ *pPublisherInfo;
+} SPC_SP_OPUS_INFO, *PSPC_SP_OPUS_INFO;
+
+typedef struct _CAT_NAMEVALUE
+{
+    LPWSTR          pwszTag;
+    DWORD           fdwFlags;
+    CRYPT_DATA_BLOB Value;
+} CAT_NAMEVALUE, *PCAT_NAMEVALUE;
+
+typedef struct _CAT_MEMBERINFO
+{
+    LPWSTR pwszSubjGuid;
+    DWORD  dwCertVersion;
+} CAT_MEMBERINFO, *PCAT_MEMBERINFO;
+
+/* PSDK protects the remaining defines with WT_DEFINE_ALL_APIS, but it's
+ * defined by default.  No need to protect against bad headers from old PSDKs.
+ */
+
+typedef struct _WIN_CERTIFICATE {
+  DWORD dwLength;
+  WORD  wRevision;                   /*  WIN_CERT_REVISION_xxx */
+  WORD  wCertificateType;            /*  WIN_CERT_TYPE_xxx */
+  BYTE  bCertificate[ANYSIZE_ARRAY];
+} WIN_CERTIFICATE, *LPWIN_CERTIFICATE;
+
+#define WIN_CERT_REVISION_1_0 0x0100
+#define WIN_CERT_REVISION_2_0 0x0200
+
+#define WIN_CERT_TYPE_X509             0x0001 /* X.509 Certificate */
+#define WIN_CERT_TYPE_PKCS_SIGNED_DATA 0x0002 /* PKCS SignedData */
+#define WIN_CERT_TYPE_RESERVED_1       0x0003 /* Reserved */
+#define WIN_CERT_TYPE_TS_STACK_SIGNED  0x0004
+
+typedef LPVOID WIN_TRUST_SUBJECT;
+
+typedef struct _WIN_TRUST_ACTDATA_CONTEXT_WITH_SUBJECT
+{
+    HANDLE            hClientToken;
+    GUID             *SubjectType;
+    WIN_TRUST_SUBJECT Subject;
+} WIN_TRUST_ACTDATA_CONTEXT_WITH_SUBJECT,
+ *LPWIN_TRUST_ACTDATA_CONTEXT_WITH_SUBJECT;
+
+typedef struct _WIN_TRUST_ACTDATA_CONTEXT_SUBJECT_ONLY
+{
+    GUID             *SubjectType;
+    WIN_TRUST_SUBJECT Subject;
+} WIN_TRUST_ACTDATA_CONTEXT_SUBJECT_ONLY,
+ *LPWIN_TRUST_ACTDATA_CONTEXT_SUBJECT_ONLY;
+
+typedef struct _WIN_TRUST_SUBJECT_FILE
+{
+    HANDLE  hFile;
+    LPCWSTR lpPath;
+} WIN_TRUST_SUBJECT_FILE, *LPWIN_TRUST_SUBJECT_FILE;
+
+typedef struct _WIN_TRUST_SUBJECT_FILE_AND_DISPLAY
+{
+    HANDLE  hFile;
+    LPCWSTR lpPath;
+    LPCWSTR lpDisplayName;
+} WIN_TRUST_SUBJECT_FILE_AND_DISPLAY, *LPWIN_TRUST_SUBJECT_FILE_AND_DISPLAY;
 
 #define WIN_SPUB_ACTION_PUBLISHED_SOFTWARE \
      { 0x64b9d180, 0x8da2, 0x11cf, { 0x87,0x36,0x00,0xaa,0x00,0xa4,0x85,0xeb }}

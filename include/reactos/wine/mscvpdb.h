@@ -1522,6 +1522,28 @@ union codeview_symbol
         unsigned int            offset;
         unsigned short          segment;
     } ssearch_v1;
+
+    struct
+    {
+        short int               len;
+        short int               id;
+        unsigned int            offset;
+        unsigned int            unknown;
+    } security_cookie_v3;
+
+    struct
+    {
+        short int               len;
+        short int               id;
+        unsigned int            unknown1;       /* maybe size (of what ?) */
+        unsigned int            unknown2;
+        unsigned int            unknown3;
+        unsigned int            unknown4;       /* maybe size (of what ?) */
+        unsigned int            unknown5;       /* maybe address <offset and segment> (of what ?) */
+        unsigned short          unknown6;
+        unsigned short          flags;
+        unsigned int            unknown7;
+    } func_info_v2;
 };
 
 #define S_COMPILAND_V1  0x0001
@@ -1575,9 +1597,7 @@ union codeview_symbol
 #define S_REGREL_V2     0x100d
 #define S_LTHREAD_V2    0x100e
 #define S_GTHREAD_V2    0x100f
-#if 0
-#define S_XXXXXXXXX_32  0x1012  /* seems linked to a function, content unknown */
-#endif
+#define S_FUNCINFO_V2   0x1012
 #define S_COMPILAND_V2  0x1013
 
 #define S_COMPILAND_V3  0x1101
@@ -1597,18 +1617,23 @@ union codeview_symbol
 #define S_MSTOOL_V3     0x1116  /* compiler command line options and build information */
 #define S_PUB_FUNC1_V3  0x1125  /* didn't get the difference between the two */
 #define S_PUB_FUNC2_V3  0x1127
+#define S_SECTINFO_V3   0x1136
+#define S_SUBSECTINFO_V3 0x1137
+#define S_ENTRYPOINT_V3 0x1138
+#define S_SECUCOOKIE_V3 0x113A
+#define S_MSTOOLINFO_V3 0x113C
+#define S_MSTOOLENV_V3  0x113D
 
 /* ======================================== *
  *          Line number information
  * ======================================== */
 
-union any_size
+struct codeview_linetab_block
 {
-    const char*                 c;
-    const unsigned char*        uc;
-    const short*                s;
-    const int*                  i;
-    const unsigned int*         ui;
+    unsigned short              seg;
+    unsigned short              num_lines;
+    unsigned int                offsets[1];     /* in fact num_lines */
+/*  unsigned short              linenos[]; */
 };
 
 struct startend
@@ -1617,17 +1642,37 @@ struct startend
     unsigned int	        end;
 };
 
-struct codeview_linetab
+/* there's a new line tab structure from MS Studio 2005 and after
+ * it's made of:
+ * DWORD        000000f4
+ * DWORD        lineblk_offset (counting bytes after this field)
+ * an array of codeview_linetab2_file structures
+ * an array (starting at <lineblk_offset>) of codeview_linetab2_block structures
+ */
+
+struct codeview_linetab2_file
 {
-    unsigned int		nline;
-    unsigned int		segno;
-    unsigned int		start;
-    unsigned int		end;
-    unsigned int                source;
-    const unsigned short*       linetab;
-    const unsigned int*         offtab;
+    DWORD       offset;         /* offset in string table for filename */
+    WORD        unk;            /* always 0x0110... type of following information ??? */
+    BYTE        md5[16];        /* MD5 signature of file (signature on file's content or name ???) */
+    WORD        pad0;           /* always 0 */
 };
 
+struct codeview_linetab2_block
+{
+    DWORD       header;         /* 0x000000f2 */
+    DWORD       size_of_block;  /* next block is at # bytes after this field */
+    DWORD       start;          /* start address of function with line numbers */
+    DWORD       seg;            /* segment of function with line numbers */
+    DWORD       size;           /* size of function with line numbers */
+    DWORD       file_offset;    /* offset for accessing corresponding codeview_linetab2_file */
+    DWORD       nlines;         /* number of lines in this block */
+    DWORD       size_lines;     /* number of bytes following for line number information */
+    struct {
+        DWORD   offset;         /* offset (from <seg>:<start>) for line number */
+        DWORD   lineno;         /* the line number (OR:ed with 0x80000000 why ???) */
+    } l[1];                     /* actually array of <nlines> */
+};
 
 /* ======================================== *
  *            PDB file information
@@ -1879,7 +1924,7 @@ typedef struct OMFSignatureRSDS
 {
     char        Signature[4];
     GUID        guid;
-    DWORD       unknown;
+    DWORD       age;
     CHAR        name[1];
 } OMFSignatureRSDS;
 
@@ -1888,7 +1933,7 @@ typedef struct _CODEVIEW_PDB_DATA
     char        Signature[4];
     long        filepos;
     DWORD       timestamp;
-    DWORD       unknown;
+    DWORD       age;
     CHAR        name[1];
 } CODEVIEW_PDB_DATA, *PCODEVIEW_PDB_DATA;
 

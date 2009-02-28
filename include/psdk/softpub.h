@@ -52,6 +52,49 @@ static const WCHAR GENERIC_CHAIN_CERTTRUST_FUNCTION[] =
     {'G','e','n','e','r','i','c','C','h','a','i','n','C','e','r','t','i','f','i','c','a','t','e','T','r','u','s','t', 0};
 #endif
 
+typedef struct _WTD_GENERIC_CHAIN_POLICY_SIGNER_INFO
+{
+    union {
+        DWORD cbStruct;
+        DWORD cbSize;
+    } DUMMYUNIONNAME;
+    PCCERT_CHAIN_CONTEXT pChainContext;
+    DWORD                dwSignerType;
+    PCMSG_SIGNER_INFO    pMsgSignerInfo;
+    DWORD                dwError;
+    DWORD                cCounterSigner;
+    struct _WTD_GENERIC_CHAIN_POLICY_SIGNER_INFO *rgpCounterSigner;
+} WTD_GENERIC_CHAIN_POLICY_SIGNER_INFO, *PWTD_GENERIC_CHAIN_POLICY_SIGNER_INFO;
+
+typedef HRESULT (WINAPI *PFN_WTD_GENERIC_CHAIN_POLICY_CALLBACK)(
+ PCRYPT_PROVIDER_DATA pProvData, DWORD dwStepError, DWORD dwRegPolicySettings,
+ DWORD cSigner, PWTD_GENERIC_CHAIN_POLICY_SIGNER_INFO rgpSigner,
+ void *pvPolicyArg);
+
+typedef struct _WTD_GENERIC_CHAIN_POLICY_CREATE_INFO
+{
+    union {
+        DWORD cbStruct;
+        DWORD cbSize;
+    } DUMMYUNIONNAME;
+    HCERTCHAINENGINE hChainEngine;
+    PCERT_CHAIN_PARA pChainPara;
+    DWORD            dwFlags;
+    void            *pvReserved;
+} WTD_GENERIC_CHAIN_POLICY_CREATE_INFO, *PWTD_GENERIC_CHAIN_POLICY_CREATE_INFO;
+
+typedef struct _WTD_GENERIC_CHAIN_POLICY_DATA
+{
+    union {
+        DWORD cbStruct;
+        DWORD cbSize;
+    } DUMMYUNIONNAME;
+    PWTD_GENERIC_CHAIN_POLICY_CREATE_INFO pSignerChainInfo;
+    PWTD_GENERIC_CHAIN_POLICY_CREATE_INFO pCounterSignerChainInfo;
+    PFN_WTD_GENERIC_CHAIN_POLICY_CALLBACK pfnPolicyCallback;
+    void                                 *pvPolicyArg;
+} WTD_GENERIC_CHAIN_POLICY_DATA, *PWTD_GENERIC_CHAIN_POLICY_DATA;
+
 #if defined(__GNUC__)
 #define SP_POLICY_PROVIDER_DLL_NAME (const WCHAR []) \
     {'W','I','N','T','R','U','S','T','.','D','L','L' ,0}
@@ -176,5 +219,27 @@ static const WCHAR DRIVER_FINALPOLPROV_FUNCTION[] =
 static const WCHAR DRIVER_CLEANUPPOLICY_FUNCTION[] =
     {'D','r','i','v','e','r','C','l','e','a','n','u','p','P','o','l','i','c','y', 0};
 #endif
+
+typedef struct DRIVER_VER_MAJORMINOR_
+{
+    DWORD dwMajor;
+    DWORD dwMinor;
+} DRIVER_VER_MAJORMINOR;
+
+typedef struct DRIVER_VER_INFO_
+{
+    DWORD                 cbStruct;
+    ULONG_PTR             dwReserved1;
+    ULONG_PTR             dwReserved2;
+    DWORD                 dwPlatform;
+    DWORD                 dwVersion;
+    WCHAR                 wszVersion[MAX_PATH];
+    WCHAR                 wszSignedBy[MAX_PATH];
+    PCCERT_CONTEXT        pcSignerCertContext;
+    DRIVER_VER_MAJORMINOR sOSVersionLow;
+    DRIVER_VER_MAJORMINOR sOSVersionHigh;
+    DWORD                 dwBuildNumberLow;
+    DWORD                 dwBuildNumberHigh;
+} DRIVER_VER_INFO, *PDRIVER_VER_INFO;
 
 #endif /* __WINE_SOFTPUB_H */

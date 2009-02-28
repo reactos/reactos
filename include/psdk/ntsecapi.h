@@ -1,8 +1,5 @@
 #ifndef _NTSECAPI_H
 #define _NTSECAPI_H
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -668,6 +665,11 @@ typedef struct _TRUSTED_DOMAIN_FULL_INFORMATION {
   TRUSTED_POSIX_OFFSET_INFO PosixOffset;
   TRUSTED_DOMAIN_AUTH_INFORMATION AuthInformation;
 } TRUSTED_DOMAIN_FULL_INFORMATION, *PTRUSTED_DOMAIN_FULL_INFORMATION;
+
+#define RtlGenRandom                    SystemFunction036
+
+BOOLEAN WINAPI RtlGenRandom(PVOID,ULONG);
+
 NTSTATUS NTAPI LsaAddAccountRights(LSA_HANDLE,PSID,PLSA_UNICODE_STRING,ULONG);
 NTSTATUS NTAPI LsaCallAuthenticationPackage(HANDLE,ULONG,PVOID,ULONG,PVOID*,
                             PULONG,PNTSTATUS);

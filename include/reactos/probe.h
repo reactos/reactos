@@ -5,10 +5,14 @@
 #error Header intended for use by NTOSKRNL/WIN32K only!
 #endif
 
-static const UNICODE_STRING __emptyUnicodeString = {0};
+static const UNICODE_STRING __emptyUnicodeString = {0, 0, NULL};
 static const LARGE_INTEGER __emptyLargeInteger = {{0, 0}};
 static const ULARGE_INTEGER __emptyULargeInteger = {{0, 0}};
 static const IO_STATUS_BLOCK __emptyIoStatusBlock = {{0}, 0};
+
+#if defined(_WIN32K_)
+static const LARGE_STRING __emptyLargeString = {0, 0, 0, NULL};
+#endif
 
 #if defined(_WIN32K_)
 /*
@@ -48,6 +52,9 @@ VOID NTAPI W32kRaiseStatus(NTSTATUS Status);
 #define ProbeForWriteLargeInteger(Ptr) ProbeForWriteGenericType(&((PLARGE_INTEGER)Ptr)->QuadPart, LONGLONG)
 #define ProbeForWriteUlargeInteger(Ptr) ProbeForWriteGenericType(&((PULARGE_INTEGER)Ptr)->QuadPart, ULONGLONG)
 #define ProbeForWriteUnicodeString(Ptr) ProbeForWriteGenericType((PUNICODE_STRING)Ptr, UNICODE_STRING)
+#if defined(_WIN32K_)
+#define ProbeForWriteLargeString(Ptr) ProbeForWriteGenericType((PLARGE_STRING)Ptr, LARGE_STRING)
+#endif
 #define ProbeForWriteIoStatusBlock(Ptr) ProbeForWriteGenericType((PIO_STATUS_BLOCK)Ptr, IO_STATUS_BLOCK)
 
 #define ProbeForReadGenericType(Ptr, Type, Default)                            \
@@ -74,6 +81,9 @@ VOID NTAPI W32kRaiseStatus(NTSTATUS Status);
 #define ProbeForReadLargeInteger(Ptr) ProbeForReadGenericType((const LARGE_INTEGER *)(Ptr), LARGE_INTEGER, __emptyLargeInteger)
 #define ProbeForReadUlargeInteger(Ptr) ProbeForReadGenericType((const ULARGE_INTEGER *)(Ptr), ULARGE_INTEGER, __emptyULargeInteger)
 #define ProbeForReadUnicodeString(Ptr) ProbeForReadGenericType((const UNICODE_STRING *)(Ptr), UNICODE_STRING, __emptyUnicodeString)
+#if defined(_WIN32K_)
+#define ProbeForReadLargeString(Ptr) ProbeForReadGenericType((const LARGE_STRING *)(Ptr), LARGE_STRING, __emptyLargeString)
+#endif
 #define ProbeForReadIoStatusBlock(Ptr) ProbeForReadGenericType((const IO_STATUS_BLOCK *)(Ptr), IO_STATUS_BLOCK, __emptyIoStatusBlock)
 
 #define ProbeAndZeroHandle(Ptr) \
@@ -92,7 +102,6 @@ VOID NTAPI W32kRaiseStatus(NTSTATUS Status);
 #if defined(_WIN32K_)
 static __inline
 VOID
-NTAPI
 ProbeArrayForRead(IN const VOID *ArrayPtr,
                   IN ULONG ItemSize,
                   IN ULONG ItemCount,
@@ -115,7 +124,6 @@ ProbeArrayForRead(IN const VOID *ArrayPtr,
 
 static __inline
 VOID
-NTAPI
 ProbeArrayForWrite(IN OUT PVOID ArrayPtr,
                    IN ULONG ItemSize,
                    IN ULONG ItemCount,
@@ -139,7 +147,6 @@ ProbeArrayForWrite(IN OUT PVOID ArrayPtr,
 
 static __inline
 NTSTATUS
-NTAPI
 ProbeAndCaptureUnicodeString(OUT PUNICODE_STRING Dest,
                              IN KPROCESSOR_MODE CurrentMode,
                              IN const UNICODE_STRING *UnsafeSrc)
@@ -151,7 +158,7 @@ ProbeAndCaptureUnicodeString(OUT PUNICODE_STRING Dest,
     /* Probe the structure and buffer*/
     if(CurrentMode != KernelMode)
     {
-        _SEH_TRY
+        _SEH2_TRY
         {
             *Dest = ProbeForReadUnicodeString(UnsafeSrc);
             if(Dest->Buffer != NULL)
@@ -169,7 +176,7 @@ ProbeAndCaptureUnicodeString(OUT PUNICODE_STRING Dest,
                     if (Buffer == NULL)
                     {
                         Status = STATUS_INSUFFICIENT_RESOURCES;
-                        _SEH_LEAVE;
+                        _SEH2_LEAVE;
                     }
 
                     /* Copy it */
@@ -194,7 +201,7 @@ ProbeAndCaptureUnicodeString(OUT PUNICODE_STRING Dest,
                 Dest->MaximumLength = 0;
             }
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Free allocated resources and zero the destination string */
             if (Buffer != NULL)
@@ -206,9 +213,9 @@ ProbeAndCaptureUnicodeString(OUT PUNICODE_STRING Dest,
             Dest->Buffer = NULL;
 
             /* Return the error code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
     }
     else
     {
@@ -223,7 +230,6 @@ ProbeAndCaptureUnicodeString(OUT PUNICODE_STRING Dest,
 
 static __inline
 VOID
-NTAPI
 ReleaseCapturedUnicodeString(IN PUNICODE_STRING CapturedString,
                              IN KPROCESSOR_MODE CurrentMode)
 {

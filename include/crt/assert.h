@@ -1,51 +1,41 @@
-/*
- * assert.h
+/**
  * This file has no copyright assigned and is placed in the Public Domain.
- * This file is a part of the mingw-runtime package.
- * No warranty is given; refer to the file DISCLAIMER within the package.
- *
- * Define the assert macro for debug output.
- *
+ * This file is part of the w64 mingw-runtime package.
+ * No warranty is given; refer to the file DISCLAIMER within this package.
  */
+#ifndef __ASSERT_H_
+#define __ASSERT_H_
 
-/* We should be able to include this file multiple times to allow the assert
-   macro to be enabled/disabled for different parts of code.  So don't add a
-   header guard.  */
+#include <crtdefs.h>
 
-#ifndef RC_INVOKED
+#ifdef NDEBUG
 
-/* All the headers include this file. */
-#include <_mingw.h>
+#ifndef assert
+#define assert(_Expression) ((void)0)
+#endif
 
-#undef assert
+#else /* !NDEBUG */
 
-#ifdef	__cplusplus
+#ifdef __cplusplus
 extern "C" {
 #endif
 
-#ifdef NDEBUG
-/*
- * If not debugging, assert does nothing.
- */
-#define assert(x)	((void)0)
+  _CRTIMP void __cdecl _assert(const char *_Message,const char *_File,unsigned _Line);
+  _CRTIMP void __cdecl _wassert(const wchar_t *_Message,const wchar_t *_File,unsigned _Line);
 
-#else /* debugging enabled */
-
-/*
- * CRTDLL nicely supplies a function which does the actual output and
- * call to abort.
- */
-_CRTIMP void __cdecl __MINGW_NOTHROW _assert (const char*, const char*, int) __MINGW_ATTRIB_NORETURN;
-
-/*
- * Definition of the assert macro.
- */
-#define assert(e)       ((e) ? (void)0 : _assert(#e, __FILE__, __LINE__))
-
-#endif	/* NDEBUG */
-
-#ifdef	__cplusplus
+#ifdef __cplusplus
 }
 #endif
 
-#endif /* Not RC_INVOKED */
+#ifndef assert
+//#define assert(_Expression) (void)((!!(_Expression)) || (_assert(#_Expression,__FILE__,__LINE__),0))
+#define assert(_Expression) (void)((!!(_Expression)))// || (_wassert(_CRT_WIDE(#_Expression),_CRT_WIDE(__FILE__),__LINE__),0))
+#endif
+
+#ifndef wassert
+#define wassert(_Expression) (void)((!!(_Expression)) || (_wassert(_CRT_WIDE(#_Expression),_CRT_WIDE(__FILE__),__LINE__),0))
+#endif
+
+#endif
+
+#endif

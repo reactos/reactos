@@ -1213,10 +1213,10 @@ static const WCHAR TOOLBARCLASSNAMEW[] = { 'T','o','o','l','b','a','r',
 
 /* undocumented messages in Toolbar */
 #define TB_UNKWN45D              (WM_USER+93)
-#define TB_UNKWN45E              (WM_USER+94)
-#define TB_UNKWN460              (WM_USER+96)
-#define TB_UNKWN462              (WM_USER+98)
-#define TB_UNKWN463              (WM_USER+99)
+#define TB_SETHOTITEM2           (WM_USER+94)
+#define TB_SETLISTGAP            (WM_USER+96)
+#define TB_GETIMAGELISTCOUNT     (WM_USER+98)
+#define TB_GETIDEALSIZE          (WM_USER+99)
 #define TB_UNKWN464              (WM_USER+100)
 
 #define TB_GETMETRICS            (WM_USER+101)
@@ -1596,7 +1596,7 @@ CreateToolbar(HWND, DWORD, UINT, INT, HINSTANCE,
 
 HWND WINAPI
 CreateToolbarEx(HWND, DWORD, UINT, INT,
-                HINSTANCE, UINT, LPCTBBUTTON,
+                HINSTANCE, UINT_PTR, LPCTBBUTTON,
                 INT, INT, INT, INT, INT, UINT);
 
 HBITMAP WINAPI
@@ -2412,10 +2412,10 @@ static const WCHAR WC_TREEVIEWW[] = { 'S','y','s',
 #define TVIF_INTEGRAL         0x0080
 #define TVIF_DI_SETITEM	      0x1000
 
-#define TVI_ROOT              ((HTREEITEM)0xffff0000)     /* -65536 */
-#define TVI_FIRST             ((HTREEITEM)0xffff0001)     /* -65535 */
-#define TVI_LAST              ((HTREEITEM)0xffff0002)     /* -65534 */
-#define TVI_SORT              ((HTREEITEM)0xffff0003)     /* -65533 */
+#define TVI_ROOT              ((HTREEITEM)(ULONG_PTR)-0x10000)     /* -65536 */
+#define TVI_FIRST             ((HTREEITEM)(ULONG_PTR)-0x0FFFF)     /* -65535 */
+#define TVI_LAST              ((HTREEITEM)(ULONG_PTR)-0x0FFFE)     /* -65534 */
+#define TVI_SORT              ((HTREEITEM)(ULONG_PTR)-0x0FFFD)     /* -65533 */
 
 #define TVIS_FOCUSED          0x0001
 #define TVIS_SELECTED         0x0002
@@ -4270,7 +4270,7 @@ static const WCHAR WC_COMBOBOXEXW[] = { 'C','o','m','b','o',
 typedef struct tagCOMBOBOXEXITEMA
 {
     UINT mask;
-    int iItem;
+    INT_PTR iItem;
     LPSTR pszText;
     int cchTextMax;
     int iImage;
@@ -4284,7 +4284,7 @@ typedef COMBOBOXEXITEMA const *PCCOMBOEXITEMA; /* Yes, there's a BOX missing */
 typedef struct tagCOMBOBOXEXITEMW
 {
     UINT mask;
-    int iItem;
+    INT_PTR iItem;
     LPWSTR pszText;
     int cchTextMax;
     int iImage;
@@ -4485,7 +4485,7 @@ typedef struct tagNMIPADDRESS
 #define MAKEIPRANGE(low,high) \
     ((LPARAM)(WORD)(((BYTE)(high)<<8)+(BYTE)(low)))
 #define MAKEIPADDRESS(b1,b2,b3,b4) \
-    ((LPARAM)(((DWORD)(b1)<<24)+((DWORD)(b2)<16)+((DWORD)(b3)<<8)+((DWORD)(b4))))
+    ((LPARAM)(((DWORD)(b1)<<24)+((DWORD)(b2)<<16)+((DWORD)(b3)<<8)+((DWORD)(b4))))
 
 #define FIRST_IPADDRESS(x)	(((x)>>24)&0xff)
 #define SECOND_IPADDRESS(x)	(((x)>>16)&0xff)

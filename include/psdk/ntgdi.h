@@ -36,7 +36,7 @@
 #define GS_HANDOBJ_ALLOC            3
 #define GS_LOOKASIDE_INFO           4
 
-/* NtGdiQueryFonts */
+/* NtGdiEnumFontOpen */
 #define TYPE_ENUMFONTS              1
 #define TYPE_ENUMFONTFAMILIES       2
 #define TYPE_ENUMFONTFAMILIESEX     3

@@ -1,13 +1,13 @@
 #ifndef _COMMDLG_H
 #define _COMMDLG_H
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#ifndef _WIN64
 #pragma pack(push,1)
+#endif
 
 #define SAVE_DIALOG  1
 #define OPEN_DIALOG  2
@@ -216,7 +216,7 @@ extern "C" {
 #define CommDlg_OpenSave_HideControl(d,i) ((void)SNDMSG((d),CDM_HIDECONTROL,(i),0))
 #define CommDlg_OpenSave_SetDefExt(d,e) ((void)SNDMSG((d),CDM_SETDEFEXT,0,(LPARAM)(e)))
 
-typedef UINT (APIENTRY *__CDHOOKPROC)(HWND,UINT,WPARAM,LPARAM);
+typedef UINT_PTR (APIENTRY *__CDHOOKPROC)(HWND,UINT,WPARAM,LPARAM);
 typedef __CDHOOKPROC LPCCHOOKPROC;
 typedef __CDHOOKPROC LPCFHOOKPROC;
 typedef __CDHOOKPROC LPFRHOOKPROC;
@@ -578,7 +578,9 @@ typedef PRINTDLGEXA PRINTDLGEX, *LPPRINTDLGEX;
 #define PrintDlgEx PrintDlgExA
 #endif /* WINVER >= 0x0500 */
 #endif /* UNICODE */
+#ifndef _WIN64
 #pragma pack(pop)
+#endif
 #ifdef __cplusplus
 }
 #endif

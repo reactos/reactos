@@ -36,7 +36,6 @@ typedef xmlRMutex *xmlRMutexPtr;
 #ifdef __cplusplus
 extern "C" {
 #endif
-
 XMLPUBFUN xmlMutexPtr XMLCALL
 			xmlNewMutex	(void);
 XMLPUBFUN void XMLCALL
@@ -72,6 +71,10 @@ XMLPUBFUN void XMLCALL
 			xmlCleanupThreads(void);
 XMLPUBFUN xmlGlobalStatePtr XMLCALL
 			xmlGetGlobalState(void);
+
+#if defined(HAVE_WIN32_THREADS) && !defined(HAVE_COMPILER_TLS) && defined(LIBXML_STATIC_FOR_DLL)
+int XMLCALL xmlDllMain(void *hinstDLL, unsigned long fdwReason, void *lpvReserved);
+#endif
 
 #ifdef __cplusplus
 }

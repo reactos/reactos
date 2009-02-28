@@ -16,7 +16,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef DO_NO_IMPORTS
 import "objidl.idl";
+#endif
 
 interface IDispatch;
 interface ITypeInfo;
@@ -284,7 +286,7 @@ struct _wireVARIANT {
   [case(VT_DISPATCH|VT_BYREF)] IDispatch **ppdispVal;
   [case(VT_ARRAY|VT_BYREF)]    wireSAFEARRAY *pparray;
   [case(VT_RECORD, VT_RECORD|VT_BYREF)] wireBRECORD brecVal;
-  };
+  } DUMMYUNIONNAME;
 };
 
 /* Dispatch */
@@ -311,7 +313,7 @@ typedef struct tagTYPEDESC {
   [case(VT_CARRAY)]            struct tagARRAYDESC *lpadesc;
   [case(VT_USERDEFINED)]       HREFTYPE hreftype;
   [default]                    ;
-  };
+  } DUMMYUNIONNAME;
   VARTYPE vt;
 } TYPEDESC;
 
@@ -482,7 +484,7 @@ typedef struct tagVARDESC {
   [switch_is(varkind)] union {
   [case(VAR_PERINSTANCE, VAR_DISPATCH, VAR_STATIC)] ULONG oInst;
   [case(VAR_CONST)] VARIANT *lpvarValue;
-  };
+  } DUMMYUNIONNAME;
   ELEMDESC elemdescVar;
   WORD wVarFlags;
   VARKIND varkind;
@@ -1162,7 +1164,7 @@ interface ITypeChangeEvents : IUnknown
     [in] ITypeInfo *pTInfoBefore,
     [in] LPOLESTR pStrName,
     [out] INT *pfCancel);
-
+  
   HRESULT AfterTypeChange(
     [in] CHANGEKIND changeKind,
     [in] ITypeInfo *pTInfoAfter,
@@ -1472,25 +1474,25 @@ interface ICreateTypeInfo2 : ICreateTypeInfo
     [in] REFGUID guid,
     [in] VARIANT *pVarVal);
 
-  HRESULT SetFuncCustData(
-    [in] UINT index,
-    [in] REFGUID guid,
+  HRESULT SetFuncCustData( 
+    [in] UINT index, 
+    [in] REFGUID guid, 
+    [in] VARIANT *pVarVal);
+  
+  HRESULT SetParamCustData( 
+    [in] UINT indexFunc, 
+    [in] UINT indexParam, 
+    [in] REFGUID guid, 
     [in] VARIANT *pVarVal);
 
-  HRESULT SetParamCustData(
-    [in] UINT indexFunc,
-    [in] UINT indexParam,
-    [in] REFGUID guid,
+  HRESULT SetVarCustData( 
+    [in] UINT index, 
+    [in] REFGUID guid, 
     [in] VARIANT *pVarVal);
 
-  HRESULT SetVarCustData(
-    [in] UINT index,
-    [in] REFGUID guid,
-    [in] VARIANT *pVarVal);
-
-  HRESULT SetImplTypeCustData(
-    [in] UINT index,
-    [in] REFGUID guid,
+  HRESULT SetImplTypeCustData( 
+    [in] UINT index, 
+    [in] REFGUID guid, 
     [in] VARIANT *pVarVal);
 
   HRESULT SetHelpStringContext(

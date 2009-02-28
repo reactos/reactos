@@ -49,14 +49,14 @@ typedef struct _D3DHAL_GLOBALDRIVERDATA FAR *LPD3DHAL_GLOBALDRIVERDATA;
 #endif
 
 BOOL
-STDCALL
+WINAPI
 DdCreateDirectDrawObject(
     LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
     HDC hdc
 );
 
 BOOL
-STDCALL
+WINAPI
 DdQueryDirectDrawObject(
     LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
     LPDDHALINFO pHalInfo,
@@ -72,46 +72,46 @@ DdQueryDirectDrawObject(
 );
 
 BOOL
-STDCALL
+WINAPI
 DdDeleteDirectDrawObject(
     LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal
 );
 
 BOOL
-STDCALL
+WINAPI
 DdCreateSurfaceObject(
     LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal,
     BOOL bPrimarySurface
 );
 
 BOOL
-STDCALL
+WINAPI
 DdDeleteSurfaceObject(
     LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal
 );
 
 BOOL
-STDCALL
+WINAPI
 DdResetVisrgn(
     LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal,
     HWND hWnd
 );
 
 HDC
-STDCALL
+WINAPI
 DdGetDC(
     LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal,
     LPPALETTEENTRY pColorTable
 );
 
 BOOL
-STDCALL
+WINAPI
 DdReleaseDC(
     LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal
 );
 
 HBITMAP
-STDCALL
+WINAPI
 DdCreateDIBSection(
     HDC hdc,
     CONST BITMAPINFO *pbmi,
@@ -122,32 +122,32 @@ DdCreateDIBSection(
 );
 
 BOOL
-STDCALL
+WINAPI
 DdReenableDirectDrawObject(
     LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
     BOOL *pbNewMode
 );
 
 BOOL
-STDCALL
+WINAPI
 DdAttachSurface(
     LPDDRAWI_DDRAWSURFACE_LCL pSurfaceFrom,
     LPDDRAWI_DDRAWSURFACE_LCL pSurfaceTo
 );
 
 VOID
-STDCALL
+WINAPI
 DdUnattachSurface(
     LPDDRAWI_DDRAWSURFACE_LCL pSurface,
     LPDDRAWI_DDRAWSURFACE_LCL pSurfaceAttached
 );
 
 ULONG
-STDCALL
+WINAPI
 DdQueryDisplaySettingsUniqueness(VOID);
 
 HANDLE
-STDCALL
+WINAPI
 DdGetDxHandle(
     LPDDRAWI_DIRECTDRAW_LCL pDDraw,
     LPDDRAWI_DDRAWSURFACE_LCL pSurface,
@@ -155,7 +155,7 @@ DdGetDxHandle(
 );
 
 BOOL
-STDCALL
+WINAPI
 DdSetGammaRamp(
     LPDDRAWI_DIRECTDRAW_LCL pDDraw,
     HDC hdc,
@@ -163,7 +163,7 @@ DdSetGammaRamp(
 );
 
 DWORD
-STDCALL
+WINAPI
 DdSwapTextureHandles(
     LPDDRAWI_DIRECTDRAW_LCL pDDraw,
     LPDDRAWI_DDRAWSURFACE_LCL pDDSLcl1,

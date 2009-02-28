@@ -8,9 +8,6 @@
 
 #ifndef _WS2TCPIP_H
 #define _WS2TCPIP_H
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
 
 #if (defined _WINSOCK_H && !defined _WINSOCK2_H)
 #error "ws2tcpip.h is not compatable with winsock.h. Include winsock2.h instead."

@@ -1,8 +1,5 @@
 #ifndef _IDISPIDS_H
 #define _IDISPIDS_H
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
 
 #define DISPID_READYSTATE (-525)
 #define DISPID_READYSTATECHANGE (-609)

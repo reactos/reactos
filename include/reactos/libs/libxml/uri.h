@@ -23,6 +23,10 @@ extern "C" {
  *
  * A parsed URI reference. This is a struct containing the various fields
  * as described in RFC 2396 but separated for further processing.
+ *
+ * Note: query is a deprecated field which is incorrectly unescaped.
+ * query_raw takes precedence over query if the former is set.
+ * See: http://mail.gnome.org/archives/xml/2007-April/thread.html#00127
  */
 typedef struct _xmlURI xmlURI;
 typedef xmlURI *xmlURIPtr;
@@ -34,9 +38,10 @@ struct _xmlURI {
     char *user;		/* the user part */
     int port;		/* the port number */
     char *path;		/* the path string */
-    char *query;	/* the query string */
+    char *query;	/* the query string (deprecated - use with caution) */
     char *fragment;	/* the fragment identifier */
     int  cleanup;	/* parsing potentially unclean URI */
+    char *query_raw;	/* the query string (as it appears in the URI) */
 };
 
 /*
@@ -47,13 +52,16 @@ struct _xmlURI {
 XMLPUBFUN xmlURIPtr XMLCALL
 		xmlCreateURI		(void);
 XMLPUBFUN xmlChar * XMLCALL
-		xmlBuildURI			(const xmlChar *URI,
-	                         const xmlChar *base);
+		xmlBuildURI		(const xmlChar *URI,
+					 const xmlChar *base);
 XMLPUBFUN xmlChar * XMLCALL
 		xmlBuildRelativeURI	(const xmlChar *URI,
-	                         const xmlChar *base);
+					 const xmlChar *base);
 XMLPUBFUN xmlURIPtr XMLCALL
 		xmlParseURI		(const char *str);
+XMLPUBFUN xmlURIPtr XMLCALL
+		xmlParseURIRaw		(const char *str,
+					 int raw);
 XMLPUBFUN int XMLCALL
 		xmlParseURIReference	(xmlURIPtr uri,
 					 const char *str);
@@ -64,7 +72,7 @@ XMLPUBFUN void XMLCALL
 					 xmlURIPtr uri);
 XMLPUBFUN xmlChar * XMLCALL
 		xmlURIEscapeStr         (const xmlChar *str,
- 					 const xmlChar *list);
+					 const xmlChar *list);
 XMLPUBFUN char * XMLCALL
 		xmlURIUnescapeString	(const char *str,
 					 int len,
@@ -77,6 +85,8 @@ XMLPUBFUN void XMLCALL
 		xmlFreeURI		(xmlURIPtr uri);
 XMLPUBFUN xmlChar* XMLCALL
 		xmlCanonicPath		(const xmlChar *path);
+XMLPUBFUN xmlChar* XMLCALL
+		xmlPathToURI		(const xmlChar *path);
 
 #ifdef __cplusplus
 }

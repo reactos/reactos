@@ -291,7 +291,7 @@ typedef struct _TEB
     ULONG           GdiClientTID;               /* 6f8 */
     PVOID           GdiThreadLocaleInfo;        /* 6fc */
     PVOID           UserReserved[5];            /* 700 */
-    PVOID           glDispachTable[280];        /* 714 */
+    PVOID           glDispatchTable[280];        /* 714 */
     ULONG           glReserved1[26];            /* b74 */
     PVOID           glReserved2;                /* bdc */
     PVOID           glSectionInfo;              /* be0 */
@@ -1662,9 +1662,6 @@ typedef enum _SYSDBG_COMMAND {
  * Function declarations
  */
 
-extern LPSTR _strlwr(LPSTR str); /* FIXME: Doesn't belong here */
-extern LPSTR _strupr(LPSTR str); /* FIXME: Doesn't belong here */
-
 #if defined(__i386__) && defined(__GNUC__)
 static inline void WINAPI DbgBreakPoint(void) { __asm__ __volatile__("int3"); }
 static inline void WINAPI DbgUserBreakPoint(void) { __asm__ __volatile__("int3"); }
@@ -1990,7 +1987,7 @@ BOOL      WINAPI RtlEqualPrefixSid(PSID,PSID);
 BOOL      WINAPI RtlEqualSid(PSID,PSID);
 BOOLEAN   WINAPI RtlEqualString(const STRING*,const STRING*,BOOLEAN);
 BOOLEAN   WINAPI RtlEqualUnicodeString(const UNICODE_STRING*,const UNICODE_STRING*,BOOLEAN);
-void      WINAPI RtlExitUserThread(ULONG) DECLSPEC_NORETURN;
+DECLSPEC_NORETURN void      WINAPI RtlExitUserThread(ULONG);
 NTSTATUS  WINAPI RtlExpandEnvironmentStrings_U(PWSTR, const UNICODE_STRING*, UNICODE_STRING*, ULONG*);
 LONGLONG  WINAPI RtlExtendedMagicDivide(LONGLONG,LONGLONG,INT);
 LONGLONG  WINAPI RtlExtendedIntegerMultiply(LONGLONG,INT);

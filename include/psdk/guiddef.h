@@ -31,6 +31,10 @@ typedef struct _GUID
 } GUID;
 #endif
 
+#ifndef DECLSPEC_SELECTANY
+#define DECLSPEC_SELECTANY __declspec(selectany)
+#endif
+
 #undef DEFINE_GUID
 
 #ifdef INITGUID
@@ -114,7 +118,5 @@ inline bool operator!=(const GUID& guidOne, const GUID& guidOther)
     return !(guidOne == guidOther);
 }
 #endif
-
-extern const IID GUID_NULL;
 
 #endif /* _GUIDDEF_H_ */

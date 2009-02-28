@@ -16,7 +16,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef DO_NO_IMPORTS
 import "unknwn.idl";
+#endif
 
 interface IStream;
 interface IEnumString;
@@ -1376,7 +1378,6 @@ interface IAdviseSink : IUnknown
     [size_is(cbData)] byte data[];
   } RemSTGMEDIUM;
 
-  /* FIXME: C/C++ nameless union version */
   typedef struct tagSTGMEDIUM {
     DWORD tymed;
     [switch_is(tymed)] union {
@@ -1388,7 +1389,7 @@ interface IAdviseSink : IUnknown
     [case(TYMED_ISTREAM)]  IStream *pstm;
     [case(TYMED_ISTORAGE)] IStorage *pstg;
     [default]              ;
-    };
+    } DUMMYUNIONNAME;
     [unique] IUnknown *pUnkForRelease;
   } uSTGMEDIUM;
 
@@ -1423,7 +1424,7 @@ interface IAdviseSink : IUnknown
     case TYMED_FILE:     LPOLESTR lpszFileName;
     case TYMED_ISTREAM:  BYTE_BLOB *pstm;
     case TYMED_ISTORAGE: BYTE_BLOB *pstg;
-    };
+    } DUMMYUNIONNAME;
     IUnknown *pUnkForRelease;
   } userSTGMEDIUM;
 
@@ -2192,7 +2193,7 @@ interface IRpcOptions : IUnknown
 enum {
    COMBND_RPCTIMEOUT = 1,
    COMBND_SERVER_LOCALITY = 2
-};
+};  
 
 enum {
    SERVER_LOCALITY_PROCESS_LOCAL = 0,

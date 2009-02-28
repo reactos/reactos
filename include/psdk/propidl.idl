@@ -201,7 +201,7 @@ interface IPropertyStorage : IUnknown
     [case(VT_BYREF|VT_DISPATCH)]          IDispatch **ppdispVal;
     [case(VT_BYREF|VT_ARRAY)]             LPSAFEARRAY *pparray;
     [case(VT_BYREF|VT_VARIANT)]           PROPVARIANT *pvarVal;
-    };
+    } DUMMYUNIONNAME;
   };
 
   typedef struct tagPROPVARIANT *LPPROPVARIANT;
@@ -255,7 +255,7 @@ interface IPropertyStorage : IUnknown
     [case(PRSPEC_PROPID)] PROPID propid;
     [case(PRSPEC_LPWSTR)] LPOLESTR lpwstr;
     [default]             ;
-    };
+    } DUMMYUNIONNAME;
   } PROPSPEC;
 
   typedef struct tagSTATPROPSTG {

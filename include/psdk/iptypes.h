@@ -1,8 +1,5 @@
 #ifndef _IPTYPES_H
 #define _IPTYPES_H
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
 
 #include <sys/types.h>
 #ifdef __cplusplus

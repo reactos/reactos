@@ -1,3 +1,4 @@
+#ifndef _MSC_VER
 #ifndef __GNUC__
 #error Unsupported compiler
 #endif
@@ -14,4 +15,5 @@
 #undef __i486__
 #elif defined(__i386__) && !defined(_M_IX86)
 #define _M_IX86 300
+#endif
 #endif

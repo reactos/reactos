@@ -23,10 +23,6 @@
 #ifndef __USBUSER_H
 #define __USBUSER_H
 
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
-
 #include "usb.h"
 #include "usbiodef.h"
 
