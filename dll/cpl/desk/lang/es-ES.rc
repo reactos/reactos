@@ -227,3 +227,10 @@ BEGIN
     IDS_ELEMENT_21 "Barra de estado"
     IDS_ELEMENT_22 "Icono"
 END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_DISPLAY_SETTINGS "Configuración del monitor"
+    IDS_APPLY_FAILED "Error al aplicar la nueva configuración..."
+    IDS_APPLY_NEEDS_RESTART "Necesita reiniciar el equipo para aplicar los cambios."
+END

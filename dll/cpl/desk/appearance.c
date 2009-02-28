@@ -220,8 +220,6 @@ ApplyTheme(GLOBALS* g)
 	if (!g->Theme.bHasChanged)
 		return;
 
-	g->Theme.bHasChanged = FALSE;
-
 	/* Update some globals */
 	g->crCOLOR_BTNFACE = g->Theme.crColor[COLOR_BTNFACE];
 	g->crCOLOR_BTNTEXT = g->Theme.crColor[COLOR_BTNTEXT];

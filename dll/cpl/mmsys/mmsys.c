@@ -18,6 +18,7 @@
 #include <cpl.h>
 #include <tchar.h>
 #include <debug.h>
+#include <shlwapi.h>
 
 #include "mmsys.h"
 #include "resource.h"
@@ -158,7 +159,92 @@ ShowFullControlPanel(HWND hwnd,
 DWORD
 MMSYS_InstallDevice(HDEVINFO hDevInfo, PSP_DEVINFO_DATA pspDevInfoData)
 {
+    UINT Length;
+    LPWSTR pBuffer;
+    WCHAR szBuffer[MAX_PATH];
+    HINF hInf;
+    PVOID Context;
+    BOOL Result;
+    SC_HANDLE hSCManager, hService;
+
+    if (!IsEqualIID(&pspDevInfoData->ClassGuid, &GUID_DEVCLASS_SOUND) &&
+        !IsEqualIID(&pspDevInfoData->ClassGuid, &GUID_DEVCLASS_MEDIA))
+        return ERROR_DI_DO_DEFAULT;
+
+    Length = GetWindowsDirectoryW(szBuffer, MAX_PATH);
+    if (!Length || Length >= MAX_PATH - 14)
+    {
+        return ERROR_GEN_FAILURE;
+    }
+
+    pBuffer = PathAddBackslashW(szBuffer);
+    if (!pBuffer)
+    {
+        return ERROR_GEN_FAILURE;
+    }
+
+    wcscpy(pBuffer, L"inf\\audio.inf");
+
+    hInf = SetupOpenInfFileW(szBuffer,
+                             NULL,
+                            INF_STYLE_WIN4,
+                            NULL);
+
+    if (hInf == INVALID_HANDLE_VALUE)
+    {
+        return ERROR_GEN_FAILURE;
+    }
+
+    Context = SetupInitDefaultQueueCallback(NULL);
+    if (Context == NULL)
+    {
+        SetupCloseInfFile(hInf);
+        return ERROR_GEN_FAILURE;
+    }
+
+    Result = SetupInstallFromInfSectionW(NULL,
+                                         hInf,
+                                         L"AUDIO_Inst.NT",
+                                         SPINST_ALL,
+                                         NULL,
+                                         NULL,
+                                         SP_COPY_NEWER,
+                                         SetupDefaultQueueCallbackW,
+                                         Context,
+                                         NULL,
+                                         NULL);
+
+    if (Result)
+    {
+        Result = SetupInstallServicesFromInfSectionW(hInf,
+                                                     L"Audio_Inst.NT.Services",
+                                                     0);
+    }
+
+    SetupTermDefaultQueueCallback(Context);
+    SetupCloseInfFile(hInf);
+
+
+
+    hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_CONNECT);
+    if (!hSCManager)
+    {
+        return ERROR_DI_DO_DEFAULT;
+    }
+
+    hService = OpenService(hSCManager, L"RosAudioSrv", SERVICE_ALL_ACCESS);
+    if (hService)
+    {
+        /* make RosAudioSrv start automatically */
+        ChangeServiceConfig(hService, SERVICE_NO_CHANGE, SERVICE_AUTO_START, SERVICE_NO_CHANGE, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+
+        StartService(hService, 0, NULL);
+        CloseServiceHandle(hService);
+    }
+    CloseServiceHandle(hSCManager);
+
     return ERROR_DI_DO_DEFAULT;
+
 }
 
 DWORD
@@ -340,7 +426,7 @@ CPlApplet(HWND hwndCpl,
 }
 
 
-BOOL STDCALL
+BOOL WINAPI
 DllMain(HINSTANCE hinstDLL,
         DWORD dwReason,
         LPVOID lpReserved)

@@ -28,8 +28,6 @@
 //TODO:
 //  add missing icons
 
-#define WINVER 0x0501
-
 #include <windows.h>
 #include <winuser.h>
 #include <devguid.h>
@@ -335,7 +333,6 @@ ButtonProc(IN HWND hwndDlg,
                         SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
                         SendDlgItemMessage(hwndDlg, IDC_IMAGE_SWAP_MOUSE, STM_SETIMAGE, IMAGE_ICON, (LPARAM)pButtonData->hButtonRight);
                     }
-                    SystemParametersInfo(SPI_SETMOUSEBUTTONSWAP, pButtonData->g_SwapMouseButtons, NULL, 0);
                     PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     break;
 
@@ -971,7 +968,7 @@ OnDrawItem(UINT idCtl,
                    GetSysColor(COLOR_WINDOWTEXT));
     }
 
-    if (lpdis->itemID != -1)
+    if (lpdis->itemID != -1U)
     {
         CopyRect(&rc, &lpdis->rcItem);
         rc.left += 5;

@@ -226,3 +226,10 @@ BEGIN
     IDS_ELEMENT_21 "Popis tlaèítek"
     IDS_ELEMENT_22 "Ikona"
 END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_DISPLAY_SETTINGS "Nastavení zobrazení"
+    IDS_APPLY_FAILED "Nepodaøilo se aplikovat nová nastavení..."
+    IDS_APPLY_NEEDS_RESTART "Aby se zmìny projevily, je tøeba restartovat poèítaè."
+END

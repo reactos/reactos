@@ -69,9 +69,9 @@ typedef struct _VIRTMEM
 typedef struct _BOOTRECORD
 {
   DWORD BootType;
-  TCHAR szSectionName[128];
-  TCHAR szBootPath[MAX_PATH];
-  TCHAR szOptions[512];
+  WCHAR szSectionName[128];
+  WCHAR szBootPath[MAX_PATH];
+  WCHAR szOptions[512];
 
 }BOOTRECORD, *PBOOTRECORD;
 

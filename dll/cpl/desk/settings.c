@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Display Control Panel
- * FILE:            lib/cpl/desk/settings.c
+ * FILE:            dll/cpl/desk/settings.c
  * PURPOSE:         Settings property page
  *
  * PROGRAMMERS:     Trevor McCort (lycan359@gmail.com)
@@ -151,8 +151,7 @@ AddDisplayDevice(IN PGLOBAL_DATA pGlobalData, IN const DISPLAY_DEVICE *DisplayDe
 	DWORD ResolutionsCount = 1;
 	DWORD i;
 
-	newEntry = HeapAlloc(GetProcessHeap(), 0, sizeof(DISPLAY_DEVICE_ENTRY));
-	memset(newEntry, 0, sizeof(DISPLAY_DEVICE_ENTRY));
+	newEntry = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(DISPLAY_DEVICE_ENTRY));
 	if (!newEntry) goto ByeBye;
 
 	newEntry->Settings = GetPossibleSettings(DisplayDevice->DeviceName, &newEntry->SettingsCount, &newEntry->CurrentSettings);
@@ -243,8 +242,6 @@ ByeBye:
 		HeapFree(GetProcessHeap(), 0, name);
 	if (key != NULL)
 		HeapFree(GetProcessHeap(), 0, key);
-	if (devid != NULL)
-		HeapFree(GetProcessHeap(), 0, devid);
 	return FALSE;
 }
 
@@ -285,17 +282,18 @@ OnInitDialog(IN HWND hwndDlg)
 	BITMAP bitmap;
 	DWORD Result = 0;
 	DWORD iDevNum = 0;
-	INT i;
+	DWORD i;
 	DISPLAY_DEVICE displayDevice;
 	PGLOBAL_DATA pGlobalData;
 
-	pGlobalData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(GLOBAL_DATA));
+	pGlobalData = HeapAlloc(GetProcessHeap(), 0, sizeof(GLOBAL_DATA));
 	if (pGlobalData == NULL)
 		return;
 
 	SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pGlobalData);
 
 	/* Get video cards list */
+	pGlobalData->DisplayDeviceList = NULL;
 	displayDevice.cb = (DWORD)sizeof(DISPLAY_DEVICE);
 	while (EnumDisplayDevices(NULL, iDevNum, &displayDevice, 0x1))
 	{
@@ -306,6 +304,7 @@ OnInitDialog(IN HWND hwndDlg)
 		}
 		iDevNum++;
 	}
+
 	if (Result == 0)
 	{
 		/* No adapter found */
@@ -313,6 +312,11 @@ OnInitDialog(IN HWND hwndDlg)
 		EnableWindow(GetDlgItem(hwndDlg, IDC_SETTINGS_RESOLUTION), FALSE);
 		EnableWindow(GetDlgItem(hwndDlg, IDC_SETTINGS_RESOLUTION_TEXT), FALSE);
 		EnableWindow(GetDlgItem(hwndDlg, IDC_SETTINGS_ADVANCED), FALSE);
+		ShowWindow(GetDlgItem(hwndDlg, IDC_SETTINGS_SPECTRUM), SW_HIDE);
+
+		/* Do not initialize the color spectrum bitmaps */
+		memset(pGlobalData->hSpectrumBitmaps, 0, sizeof(pGlobalData->hSpectrumBitmaps));
+		return;
 	}
 	else if (Result == 1)
 	{
@@ -327,15 +331,15 @@ OnInitDialog(IN HWND hwndDlg)
 		monitors.Size.cy = pGlobalData->CurrentDisplayDevice->CurrentSettings->dmPelsHeight;
 		monitors.Flags = 0;
 		SendDlgItemMessage(hwndDlg,
-						   IDC_SETTINGS_MONSEL,
-						   MSLM_SETMONITORSINFO,
-						   1,
-						   (LPARAM)&monitors);
+				   IDC_SETTINGS_MONSEL,
+				   MSLM_SETMONITORSINFO,
+				   1,
+				   (LPARAM)&monitors);
 	}
 	else /* FIXME: incomplete! */
 	{
 		PMONSL_MONINFO pMonitors;
-		INT i;
+		DWORD i;
 
 		SendDlgItemMessage(hwndDlg, IDC_SETTINGS_DEVICE, WM_SETTEXT, 0, (LPARAM)pGlobalData->DisplayDeviceList->DeviceDescription);
 		OnDisplayDeviceChanged(hwndDlg, pGlobalData, pGlobalData->DisplayDeviceList);
@@ -343,7 +347,7 @@ OnInitDialog(IN HWND hwndDlg)
 		pMonitors = (PMONSL_MONINFO)HeapAlloc(GetProcessHeap(), 0, sizeof(MONSL_MONINFO) * Result);
 		if (pMonitors)
 		{
-			INT hack = 1280;
+			DWORD hack = 1280;
 			for (i = 0; i < Result; i++)
 			{
 				pMonitors[i].Position.x = hack * i;
@@ -354,10 +358,10 @@ OnInitDialog(IN HWND hwndDlg)
 			}
 
 			SendDlgItemMessage(hwndDlg,
-							   IDC_SETTINGS_MONSEL,
-							   MSLM_SETMONITORSINFO,
-							   Result,
-							   (LPARAM)pMonitors);
+					   IDC_SETTINGS_MONSEL,
+					   MSLM_SETMONITORSINFO,
+					   Result,
+					   (LPARAM)pMonitors);
 
 			HeapFree(GetProcessHeap(), 0, pMonitors);
 		}
@@ -403,12 +407,17 @@ ShowColorSpectrum(IN HDC hDC, IN LPRECT client, IN DWORD BitsPerPel, IN PGLOBAL_
 		default: iBitmap = 2;
 	}
 
-	SelectObject(hdcMem, pGlobalData->hSpectrumBitmaps[iBitmap]);
-	StretchBlt(hDC,
-	           client->left, client->top, client->right - client->left, client->bottom - client->top,
-	           hdcMem, 0, 0,
-	           pGlobalData->cxSource[iBitmap],
-	           pGlobalData->cySource[iBitmap], SRCCOPY);
+	if (SelectObject(hdcMem, pGlobalData->hSpectrumBitmaps[iBitmap]))
+	{
+		StretchBlt(hDC,
+			   client->left, client->top,
+			   client->right - client->left,
+			   client->bottom - client->top,
+			   hdcMem, 0, 0,
+			   pGlobalData->cxSource[iBitmap],
+			   pGlobalData->cySource[iBitmap], SRCCOPY);
+	}
+
 	DeleteDC(hdcMem);
 }
 
@@ -619,6 +628,8 @@ SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lPar
 
 	pGlobalData = (PGLOBAL_DATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
+	TCHAR Message[1024], Title[256];
+
 	switch(uMsg)
 	{
 		case WM_INITDIALOG:
@@ -633,7 +644,6 @@ SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lPar
 
 			if (lpDrawItem->CtlID == IDC_SETTINGS_SPECTRUM)
 				ShowColorSpectrum(lpDrawItem->hDC, &lpDrawItem->rcItem, pGlobalData->CurrentDisplayDevice->CurrentSettings->dmBitsPerPel, pGlobalData);
-
 			break;
 		}
 		case WM_COMMAND:
@@ -702,14 +712,16 @@ SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lPar
 							pGlobalData->CurrentDisplayDevice->InitialSettings.dmPelsHeight = pGlobalData->CurrentDisplayDevice->CurrentSettings->dmPelsHeight;
 							pGlobalData->CurrentDisplayDevice->InitialSettings.dmBitsPerPel = pGlobalData->CurrentDisplayDevice->CurrentSettings->dmBitsPerPel;
 							break;
-						case DISP_CHANGE_FAILED:
-							MessageBox(NULL, TEXT("Failed to apply new settings..."), TEXT("Display settings"), MB_OK | MB_ICONSTOP);
-							break;
 						case DISP_CHANGE_RESTART:
-							MessageBox(NULL, TEXT("You need to restart your computer to apply changes."), TEXT("Display settings"), MB_OK | MB_ICONINFORMATION);
+							LoadString(hApplet, IDS_DISPLAY_SETTINGS, Title, sizeof(Title) / sizeof(TCHAR));
+							LoadString(hApplet, IDS_APPLY_NEEDS_RESTART, Message, sizeof(Message) / sizeof (TCHAR));
+							MessageBox(hwndDlg, Message, Title, MB_OK | MB_ICONINFORMATION);
 							break;
+						case DISP_CHANGE_FAILED:
 						default:
-							MessageBox(NULL, TEXT("Unknown error when applying new settings..."), TEXT("Display settings"), MB_OK | MB_ICONSTOP);
+							LoadString(hApplet, IDS_DISPLAY_SETTINGS, Title, sizeof(Title) / sizeof(TCHAR));
+							LoadString(hApplet, IDS_APPLY_FAILED, Message, sizeof(Message) / sizeof (TCHAR));
+							MessageBox(hwndDlg, Message, Title, MB_OK | MB_ICONSTOP);
 							break;
 					}
 				}
@@ -819,7 +831,7 @@ SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lPar
 
 		case WM_DESTROY:
 		{
-			INT i;
+			DWORD i;
 			PDISPLAY_DEVICE_ENTRY Current = pGlobalData->DisplayDeviceList;
 
 			while (Current != NULL)
@@ -836,13 +848,13 @@ SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lPar
 				Current = Next;
 			}
 
-			HeapFree(GetProcessHeap(), 0, pGlobalData);
-
 			for (i = 0; i < NUM_SPECTRUM_BITMAPS; i++)
 			{
 				if (pGlobalData->hSpectrumBitmaps[i])
 					DeleteObject(pGlobalData->hSpectrumBitmaps[i]);
 			}
+
+			HeapFree(GetProcessHeap(), 0, pGlobalData);
 		}
 	}
 	return FALSE;

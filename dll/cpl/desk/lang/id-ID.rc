@@ -219,3 +219,10 @@ BEGIN
     IDS_ELEMENT_21 "InfoCepat"
     IDS_ELEMENT_22 "Simbol"
 END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_DISPLAY_SETTINGS "Display settings"
+    IDS_APPLY_FAILED "Failed to apply new settings..."
+    IDS_APPLY_NEEDS_RESTART "You need to restart your computer to apply changes."
+END
