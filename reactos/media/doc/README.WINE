@@ -63,6 +63,11 @@ reactos/dll/win32/localspl        # Autosync
 reactos/dll/win32/localui         # Autosync
 reactos/dll/win32/lz32            # Autosync
 reactos/dll/win32/mapi32          # Autosync
+reactos/dll/win32/mciavi32        # Autosync
+reactos/dll/win32/mcicda          # Autosync
+reactos/dll/win32/mciqtz32        # Autosync
+reactos/dll/win32/mciseq          # Autosync
+reactos/dll/win32/mciwave         # Autosync
 reactos/dll/win32/mlang           # Autosync
 reactos/dll/win32/mpr             # Autosync
 reactos/dll/win32/msacm32         # Out of sync

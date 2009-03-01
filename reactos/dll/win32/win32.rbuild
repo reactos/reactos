@@ -175,6 +175,21 @@
 <directory name="mapi32">
 	<xi:include href="mapi32/mapi32.rbuild" />
 </directory>
+<directory name="mciavi32">
+	<xi:include href="mciavi32/mciavi32.rbuild" />
+</directory>
+<directory name="mcicda">
+	<xi:include href="mcicda/mcicda.rbuild" />
+</directory>
+<directory name="mciqtz32">
+	<xi:include href="mciqtz32/mciqtz32.rbuild" />
+</directory>
+<directory name="mciseq">
+	<xi:include href="mciseq/mciseq.rbuild" />
+</directory>
+<directory name="mciwave">
+	<xi:include href="mciwave/mciwave.rbuild" />
+</directory>
 <directory name="modemui">
 	<xi:include href="modemui/modemui.rbuild" />
 </directory>

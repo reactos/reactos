@@ -292,6 +292,11 @@ dll\win32\localui\localui.dll                       1
 dll\win32\lsasrv\lsasrv.dll                         1
 dll\win32\lz32\lz32.dll                             1
 dll\win32\mapi32\mapi32.dll                         1
+dll\win32\mciavi32\mciavi32.dll                     1
+dll\win32\mcicda\mcicda.dll                         1
+dll\win32\mciqtz32\mciqtz32.dll                     1
+dll\win32\mciseq\mciseq.dll                         1
+dll\win32\mciwave\mciwave.dll                       1
 dll\win32\mlang\mlang.dll                           1
 dll\win32\mmdrv\mmdrv.dll                           1
 dll\win32\modemui\modemui.dll                       1

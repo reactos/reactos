@@ -43,6 +43,10 @@
   <property name="BASEADDRESS_QEDIT" value="0x611c0000" />
   <property name="BASEADDRESS_MODEMUI" value="0x61650000" />
   <property name="BASEADDRESS_MAPI32" value="0x62250000" />
+  <property name="BASEADDRESS_MCIWAVE" value="0x622a0000" />
+  <property name="BASEADDRESS_MCISEQ" value="0x622b0000" />
+  <property name="BASEADDRESS_MCIQTZ32" value="0x622c0000" />
+  <property name="BASEADDRESS_MCICDA" value="0x622e0000" />
   <property name="BASEADDRESS_LOCALUI" value="0x62f70000" />
   <property name="BASEADDRESS_HDWWIZ" value="0x64d40000" />
   <property name="BASEADDRESS_TIMEDATE" value="0x64da0000" />
@@ -119,6 +123,7 @@
   <property name="BASEADDRESS_WINSPOOL" value="0x72f50000" />
   <property name="BASEADDRESS_MSCAT32" value="0x732b0000" />
   <property name="BASEADDRESS_MSTASK" value="0x73520000" />
+  <property name="BASEADDRESS_MCIAVI32" value="0x73610000" />
   <property name="BASEADDRESS_MSRLE32" value="0x73660000" />
   <property name="BASEADDRESS_MSDMO" value="0x73670000" />
   <property name="BASEADDRESS_AVIFIL32" value="0x73ac0000" />
