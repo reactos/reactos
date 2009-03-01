@@ -35,18 +35,18 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 NTSTATUS CreateMiniportTopologyCMI(PUNKNOWN* Unknown, REFCLSID, PUNKNOWN UnknownOuter, POOL_TYPE PoolType)
 {
-	PAGED_CODE();
-	ASSERT(Unknown);
+	//PAGED_CODE();
+	//ASSERT(Unknown);
 	STD_CREATE_BODY_(CCMITopology,Unknown,UnknownOuter,PoolType,PMINIPORTTOPOLOGY);
 }
 
 STDMETHODIMP CCMITopology::NonDelegatingQueryInterface(REFIID Interface, PVOID* Object)
 {
-	PAGED_CODE();
-	ASSERT(Object);
+	//PAGED_CODE();
+	//ASSERT(Object);
 	DBGPRINT(("CCMITopology::NonDelegatingQueryInterface"));
 
-	if (IsEqualGUIDAligned(Interface,IID_IUnknown)) {
+	if (IsEqualGUIDAligned(Interface, IID_IUnknown)) {
 		*Object = PVOID(PUNKNOWN(PMINIPORTTOPOLOGY(this)));
 	} else if (IsEqualGUIDAligned(Interface,IID_IMiniport)) {
 		*Object = PVOID(PMINIPORT(this));
@@ -68,7 +68,7 @@ STDMETHODIMP CCMITopology::NonDelegatingQueryInterface(REFIID Interface, PVOID* 
 
 CCMITopology::~CCMITopology()
 {
-	PAGED_CODE();
+	//PAGED_CODE();
 
 	DBGPRINT(("CCMITopology::~CCMITopology"));
 
@@ -82,9 +82,9 @@ CCMITopology::~CCMITopology()
 
 STDMETHODIMP CCMITopology::Init(PUNKNOWN UnknownAdapter, PRESOURCELIST ResourceList, PPORTTOPOLOGY Port)
 {
-	PAGED_CODE();
-	ASSERT(UnknownAdapter);
-	ASSERT(Port);
+	//PAGED_CODE();
+	//ASSERT(UnknownAdapter);
+	//ASSERT(Port);
 	DBGPRINT(("CCMITopology::Init"));
 
 	NTSTATUS ntStatus = UnknownAdapter->QueryInterface(IID_ICMIAdapter, (PVOID *)&CMIAdapter);
@@ -111,8 +111,8 @@ STDMETHODIMP CCMITopology::Init(PUNKNOWN UnknownAdapter, PRESOURCELIST ResourceL
 
 STDMETHODIMP CCMITopology::GetDescription(PPCFILTER_DESCRIPTOR*  OutFilterDescriptor)
 {
-    PAGED_CODE();
-    ASSERT(OutFilterDescriptor);
+    //PAGED_CODE();
+    //ASSERT(OutFilterDescriptor);
     DBGPRINT(("CCMITopology::GetDescription"));
 
     *OutFilterDescriptor = &MiniportFilterDescriptor;
@@ -122,7 +122,7 @@ STDMETHODIMP CCMITopology::GetDescription(PPCFILTER_DESCRIPTOR*  OutFilterDescri
 
 STDMETHODIMP CCMITopology::loadMixerSettingsFromRegistry()
 {
-	PAGED_CODE();
+	//PAGED_CODE();
 	DBGPRINT(("CCMITopology::loadMixerSettingsFromRegistry"));
 
 	PREGISTRYKEY       DriverKey;
@@ -269,7 +269,7 @@ STDMETHODIMP CCMITopology::loadMixerSettingsFromRegistry()
 
 STDMETHODIMP CCMITopology::storeMixerSettingsToRegistry()
 {
-	PAGED_CODE();
+	//PAGED_CODE();
 	DBGPRINT(("CCMITopology::storeMixerSettingsToRegistry"));
 
 	PREGISTRYKEY       DriverKey;
@@ -429,7 +429,7 @@ STDMETHODIMP CCMITopology::storeMixerSettingsToRegistry()
 
 STDMETHODIMP CCMITopology::loadMixerSettingsFromMemory()
 {
-	PAGED_CODE();
+	//PAGED_CODE();
 	DBGPRINT(("CCMITopology::loadMixerSettingsFromMemory"));
 
 	CMIAdapter->resetMixer();
@@ -449,7 +449,7 @@ STDMETHODIMP CCMITopology::loadMixerSettingsFromMemory()
 
 STDMETHODIMP CCMITopology::storeMixerSettingsToMemory()
 {
-	PAGED_CODE();
+	//PAGED_CODE();
 	DBGPRINT(("CCMITopology::storeMixerSettingsToMemory"));
 
 	mixer1Register   = CMIAdapter->readUInt8(REG_MIXER1);
@@ -462,10 +462,10 @@ STDMETHODIMP CCMITopology::storeMixerSettingsToMemory()
     return STATUS_SUCCESS;
 }
 
-static NTSTATUS PropertyHandler_OnOff(PPCPROPERTY_REQUEST PropertyRequest)
+NTSTATUS NTAPI PropertyHandler_OnOff(PPCPROPERTY_REQUEST PropertyRequest)
 {
-	PAGED_CODE();
-	ASSERT(PropertyRequest);
+	//PAGED_CODE();
+	//ASSERT(PropertyRequest);
 	DBGPRINT(("[PropertyHandler_OnOff]"));
 
 	CCMITopology *that = (CCMITopology *) ((PMINIPORTTOPOLOGY) PropertyRequest->MajorTarget);
@@ -1013,8 +1013,8 @@ static NTSTATUS PropertyHandler_OnOff(PPCPROPERTY_REQUEST PropertyRequest)
 
 static NTSTATUS BasicSupportHandler(PPCPROPERTY_REQUEST PropertyRequest)
 {
-	PAGED_CODE();
-	ASSERT(PropertyRequest);
+	//PAGED_CODE();
+	//ASSERT(PropertyRequest);
 	DBGPRINT(("[BasicSupportHandler]"));
 
 	NTSTATUS ntStatus = STATUS_INVALID_DEVICE_REQUEST;
@@ -1081,10 +1081,10 @@ static NTSTATUS BasicSupportHandler(PPCPROPERTY_REQUEST PropertyRequest)
 	return ntStatus;
 }
 
-static NTSTATUS PropertyHandler_Level(PPCPROPERTY_REQUEST PropertyRequest)
+NTSTATUS NTAPI PropertyHandler_Level(PPCPROPERTY_REQUEST PropertyRequest)
 {
-	PAGED_CODE();
-	ASSERT(PropertyRequest);
+	//PAGED_CODE();
+	//ASSERT(PropertyRequest);
 	DBGPRINT(("[PropertyHandler_Level]"));
 
 	CCMITopology *that = (CCMITopology *) ((PMINIPORTTOPOLOGY) PropertyRequest->MajorTarget);
@@ -1218,11 +1218,10 @@ static NTSTATUS PropertyHandler_Level(PPCPROPERTY_REQUEST PropertyRequest)
 
 	return ntStatus;
 }
-
-static NTSTATUS PropertyHandler_CpuResources(PPCPROPERTY_REQUEST   PropertyRequest)
+NTSTATUS NTAPI PropertyHandler_CpuResources(PPCPROPERTY_REQUEST PropertyRequest)
 {
-	PAGED_CODE();
-	ASSERT(PropertyRequest);
+	//PAGED_CODE();
+	//ASSERT(PropertyRequest);
 	DBGPRINT(("[PropertyHandler_CpuResources]"));
 
 	NTSTATUS ntStatus = STATUS_INVALID_DEVICE_REQUEST;
@@ -1271,10 +1270,10 @@ static NTSTATUS PropertyHandler_CpuResources(PPCPROPERTY_REQUEST   PropertyReque
 	return ntStatus;
 }
 
-NTSTATUS PropertyHandler_ComponentId(PPCPROPERTY_REQUEST PropertyRequest)
+NTSTATUS NTAPI PropertyHandler_ComponentId(PPCPROPERTY_REQUEST PropertyRequest)
 {
-	PAGED_CODE();
-	ASSERT(PropertyRequest);
+	//PAGED_CODE();
+	//ASSERT(PropertyRequest);
 	DBGPRINT(("[PropertyHandler_ComponentId]"));
 
 	NTSTATUS ntStatus = STATUS_INVALID_DEVICE_REQUEST;
@@ -1317,10 +1316,10 @@ NTSTATUS PropertyHandler_ComponentId(PPCPROPERTY_REQUEST PropertyRequest)
 	return ntStatus;
 }
 
-NTSTATUS PropertyHandler_Private(PPCPROPERTY_REQUEST PropertyRequest)
+NTSTATUS NTAPI PropertyHandler_Private(PPCPROPERTY_REQUEST PropertyRequest)
 {
-	PAGED_CODE();
-	ASSERT(PropertyRequest);
+	//PAGED_CODE();
+	//ASSERT(PropertyRequest);
 	DBGPRINT(("[PropertyHandler_Private]"));
 
 	NTSTATUS     ntStatus = STATUS_INVALID_DEVICE_REQUEST;
@@ -1347,8 +1346,8 @@ NTSTATUS PropertyHandler_Private(PPCPROPERTY_REQUEST PropertyRequest)
 #endif
 		cmiData->hardwareRevision    = that->cm->chipVersion;
 		cmiData->maxChannels         = that->cm->maxChannels;
-		cmiData->IOBase              = (USHORT)that->cm->IOBase;
-		cmiData->MPUBase             = (USHORT)that->cm->MPUBase;
+		cmiData->IOBase              = (USHORT)(ULONG_PTR)that->cm->IOBase;
+		cmiData->MPUBase             = (USHORT)(ULONG_PTR)that->cm->MPUBase;
 		cmiData->enableSPDO          = that->cm->enableSPDIFOut;
 		cmiData->enableSPDI          = that->cm->enableSPDIFIn;
 		cmiData->formatMask          = that->cm->formatMask;

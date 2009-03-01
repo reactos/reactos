@@ -28,8 +28,10 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef _INTERFACES_HPP_
 #define _INTERFACES_HPP_
 
+#include <ntddk.h>
 #include <portcls.h>
 #include <stdunk.h>
+#include <debug.h>
 
 #define MAXLEN_DMA_BUFFER		0x18000
 #define MAX_OUTPUT_STREAMS		1
