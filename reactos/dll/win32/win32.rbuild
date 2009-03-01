@@ -124,8 +124,14 @@
 <directory name="hlink">
 	<xi:include href="hlink/hlink.rbuild" />
 </directory>
+<directory name="iccvid">
+	<xi:include href="iccvid/iccvid.rbuild" />
+</directory>
 <directory name="icmp">
 	<xi:include href="icmp/icmp.rbuild" />
+</directory>
+<directory name="imaadp32.acm">
+	<xi:include href="imaadp32.acm/imaadp32.acm.rbuild" />
 </directory>
 <directory name="imagehlp">
 	<xi:include href="imagehlp/imagehlp.rbuild" />
@@ -208,6 +214,9 @@
 <directory name="msacm32">
 	<xi:include href="msacm32/msacm32.rbuild" />
 </directory>
+<directory name="msadp32.acm">
+	<xi:include href="msadp32.acm/msadp32.acm.rbuild" />
+</directory>
 <directory name="msafd">
 	<xi:include href="msafd/msafd.rbuild" />
 </directory>
@@ -225,6 +234,9 @@
 </directory>
 <directory name="msftedit">
 	<xi:include href="msftedit/msftedit.rbuild" />
+</directory>
+<directory name="msg711.acm">
+	<xi:include href="msg711.acm/msg711.acm.rbuild" />
 </directory>
 <directory name="msgina">
 	<xi:include href="msgina/msgina.rbuild" />
@@ -261,6 +273,9 @@
 </directory>
 <directory name="msvfw32">
 	<xi:include href="msvfw32/msvfw32.rbuild" />
+</directory>
+<directory name="msvidc32">
+	<xi:include href="msvidc32/msvidc32.rbuild" />
 </directory>
 <directory name="mswsock">
 	<xi:include href="mswsock/mswsock.rbuild" />

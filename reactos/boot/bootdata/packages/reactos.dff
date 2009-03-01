@@ -276,7 +276,9 @@ dll\win32\glu32\glu32.dll                           1
 dll\win32\hhctrl.ocx\hhctrl.ocx                     1
 dll\win32\hid\hid.dll                               1
 dll\win32\hlink\hlink.dll                           1
+dll\win32\iccvid\iccvid.dll                         1
 dll\win32\icmp\icmp.dll                             1
+dll\win32\imaadp32.acm\imaadp32.acm                 1
 dll\win32\imagehlp\imagehlp.dll                     1
 dll\win32\imm32\imm32.dll                           1
 dll\win32\inetcomm\inetcomm.dll                     1
@@ -303,12 +305,14 @@ dll\win32\modemui\modemui.dll                       1
 dll\win32\mpr\mpr.dll                               1
 dll\win32\mprapi\mprapi.dll                         1
 dll\win32\msacm32\msacm32.dll                       1
+dll\win32\msadp32.acm\msadp32.acm                   1
 dll\win32\msafd\msafd.dll                           1
 dll\win32\mscat32\mscat32.dll                       1
 dll\win32\mscms\mscms.dll                           1
 dll\win32\mscoree\mscoree.dll                       1
 dll\win32\msctf\msctf.dll                           1
 dll\win32\msftedit\msftedit.dll                     1
+dll\win32\msg711.acm\msg711.acm                     1
 dll\win32\msgina\msgina.dll                         1
 dll\win32\mshtml\mshtml.dll                         1
 dll\win32\mshtml.tlb\mshtml.tlb                     1
@@ -321,6 +325,7 @@ dll\win32\msvcrt\msvcrt.dll                         1
 dll\win32\msvcrt20\msvcrt20.dll                     1
 dll\win32\msvcrt40\msvcrt40.dll                     1
 dll\win32\msvfw32\msvfw32.dll                       1
+dll\win32\msvidc32\msvidc32.dll                     1
 dll\win32\mswsock\mswsock.dll                       1
 dll\win32\msxml3\msxml3.dll                         1
 dll\win32\nddeapi\nddeapi.dll                       1

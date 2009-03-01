@@ -1,0 +1,36 @@
+/*
+ * Copyright 2005 Dmitry Timoshkov
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "windef.h"
+#include "iccvid_private.h"
+
+#include "iccvid_Da.rc"
+#include "iccvid_De.rc"
+#include "iccvid_En.rc"
+#include "iccvid_Fr.rc"
+#include "iccvid_Hu.rc"
+#include "iccvid_Ko.rc"
+#include "iccvid_Nl.rc"
+#include "iccvid_No.rc"
+#include "iccvid_Pl.rc"
+#include "iccvid_Pt.rc"
+#include "iccvid_Ro.rc"
+#include "iccvid_Ru.rc"
+#include "iccvid_Si.rc"
+#include "iccvid_Sv.rc"
+#include "iccvid_Tr.rc"

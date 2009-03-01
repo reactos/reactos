@@ -50,7 +50,9 @@ reactos/dll/win32/dciman32        # Synced to Wine-1_0-rc2
 reactos/dll/win32/gdiplus         # Autosync
 reactos/dll/win32/hhctrl.ocx      # Autosync
 reactos/dll/win32/hlink           # Autosync
+reactos/dll/win32/iccvid          # Autosync
 reactos/dll/win32/icmp            # Synced to Wine-0_9_10
+reactos/dll/win32/imaadp32.acm    # Autosync
 reactos/dll/win32/imm32           # Autosync
 reactos/dll/win32/imagehlp        # Patches for BindImage need review and submission to winehq.
 reactos/dll/win32/inetcomm        # Autosync
@@ -71,11 +73,13 @@ reactos/dll/win32/mciwave         # Autosync
 reactos/dll/win32/mlang           # Autosync
 reactos/dll/win32/mpr             # Autosync
 reactos/dll/win32/msacm32         # Out of sync
+reactos/dll/win32/msadp32.acm     # Autosync
 reactos/dll/win32/mscat32         # Autosync
 reactos/dll/win32/mscms           # Autosync
 reactos/dll/win32/mscoree         # Autosync
 reactos/dll/win32/msctf           # Autosync
 reactos/dll/win32/msftedit        # Autosync
+reactos/dll/win32/msg711.acm      # Autosync
 reactos/dll/win32/mshtml          # Autosync
 reactos/dll/win32/msimg32         # Autosync
 reactos/dll/win32/msi             # Autosync
@@ -84,6 +88,7 @@ reactos/dll/win32/msrle32         # Autosync
 reactos/dll/win32/mstask          # Autosync
 reactos/dll/win32/msvcrt20        # Autosync
 reactos/dll/win32/msvfw32         # Autosync
+reactos/dll/win32/msvidc32        # Autosync
 reactos/dll/win32/msxml3          # Synced to Wine-20071230
 reactos/dll/win32/nddeapi         # Autosync
 reactos/dll/win32/netapi32        # Autosync
