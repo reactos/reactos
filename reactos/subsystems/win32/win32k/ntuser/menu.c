@@ -1026,6 +1026,7 @@ IntBuildMenuItemList(PMENU_OBJECT MenuObject, PVOID Buffer, ULONG nMax)
          }
          mii.fState = CurItem->fState;
          mii.fType = CurItem->fType;
+         mii.wID = CurItem->wID;
          mii.hbmpChecked = CurItem->hbmpChecked;
          mii.hbmpItem = CurItem->hbmpItem;
          mii.hbmpUnchecked = CurItem->hbmpUnchecked;
