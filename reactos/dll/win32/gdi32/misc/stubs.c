@@ -1148,15 +1148,25 @@ GdiIsMetaPrintDC(HDC hDC)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
-GdiIsPlayMetafileDC(HDC hdc)
+GdiIsPlayMetafileDC(HDC hDC)
 {
-    UNIMPLEMENTED;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+  PDC_ATTR Dc_Attr;
+  PLDC pLDC;
+  
+  GdiGetHandleUserData((HGDIOBJ) hDC, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr);
+  if ( Dc_Attr )
+  {
+     pLDC = Dc_Attr->pvLDC;
+     if ( pLDC )
+     {
+        if ( pLDC->Flags & LDC_PLAY_MFDC ) return TRUE;
+     }
+  }
+  return FALSE;
 }
 
 /*
