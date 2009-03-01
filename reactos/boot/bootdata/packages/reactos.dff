@@ -597,6 +597,9 @@ media\inf\usb.inf                                   6
 media\inf\usbstor.inf                               6
 media\inf\xboxdisp.inf                              6
 
+; Ini Files
+media\ini\system.ini                                4
+
 ; Subsystems
 subsystems\win32\csrss\csrss.exe                    1
 subsystems\win32\csrss\win32csr\win32csr.dll        1

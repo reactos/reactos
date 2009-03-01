@@ -72,10 +72,10 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","vidc.cvid",0x0000
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","vidc.mrle",0x00000000,"c:\reactos\system32\msrle32.dll"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","vidc.msvc",0x00000000,"c:\reactos\system32\msvidc32.dll"
 
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\MCI32","AVIVideo",0x00000002,"c:\reactos\system32\mciavi32.dll"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\MCI32","CDAudio",0x00000002,"c:\reactos\system32\mcicda.dll"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\MCI32","Sequencer",0x00000002,"c:\reactos\system32\mciseq.dll"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\MCI32","WaveAudio",0x00000002,"c:\reactos\system32\mciwave.dll"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\MCI32","AVIVideo",0x00000002,"mciavi32.dll"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\MCI32","CDAudio",0x00000002,"mcicda.dll"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\MCI32","Sequencer",0x00000002,"mciseq.dll"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\MCI32","WaveAudio",0x00000002,"mciwave.dll"
 
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\MCI Extensions","avi",0x00000002,"avivideo"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\MCI Extensions","cda",0x00000002,"CDAudio"
