@@ -27,14 +27,14 @@ BEGIN
     BEGIN
         MENUITEM "Quitter\tAlt-F4",               ID_EDIT_EXIT
     END
-    POPUP "&Ã‰dition"
+    POPUP "&Édition"
     BEGIN
         MENUITEM "&Copier\tCtrl+C",               ID_EDIT_COPY, GRAYED
-        MENUITEM "&RafraÃ®chir\tF5",                ID_EDIT_REFRESH
+        MENUITEM "&Rafraîchir\tF5",                ID_EDIT_REFRESH
     END
     POPUP "&Options"
     BEGIN
-        MENUITEM "Taux de &rafraÃ®chissement...",            ID_OPTIONS_REFRESH_RATE, GRAYED
+        MENUITEM "Taux de &rafraîchissement...",            ID_OPTIONS_REFRESH_RATE, GRAYED
     END
     POPUP "Aide"
     BEGIN
