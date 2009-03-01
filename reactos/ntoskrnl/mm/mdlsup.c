@@ -261,7 +261,7 @@ MmUnlockPages(IN PMDL Mdl)
         if (Process)
         {
             /* Handle the accounting of locked pages */
-            /* ASSERT(Process->NumberOfLockedPages >= 0); */ // always true
+            ASSERT(Process->NumberOfLockedPages > 0);
             InterlockedExchangeAddSizeT(&Process->NumberOfLockedPages,
                                         -PageCount);
         }
@@ -276,7 +276,7 @@ MmUnlockPages(IN PMDL Mdl)
     if (Process)
     {
         /* Handle the accounting of locked pages */
-        /* ASSERT(Process->NumberOfLockedPages >= 0); */ // always true
+        ASSERT(Process->NumberOfLockedPages > 0);
         InterlockedExchangeAddSizeT(&Process->NumberOfLockedPages,
                                     -PageCount);
     }
