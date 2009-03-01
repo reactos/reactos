@@ -144,25 +144,25 @@ HKCR,"icofile\DefaultIcon","",0x00000000,"%1"
 HKCR,".jpg","",0x00000000,"jpegfile"
 HKCR,".jpeg","",0x00000000,"jpegfile"
 HKCR,"jpegfile","",0x00000000,"JPEG Image"
-HKCR,"jpegfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shimgvw.dll,-1"
+HKCR,"jpegfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shimgvw.dll,0"
 HKCR,"jpegfile\shell\open\command","",0x00020000,"rundll32.exe %SystemRoot%\system32\shimgvw.dll,ImageView_Fullscreen %1"
 
 ; Bitmap Images
 HKCR,".bmp","",0x00000000,"bmpfile"
 HKCR,"bmpfile","",0x00000000,"Bitmap Image"
-HKCR,"bmpfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shimgvw.dll,-1"
+HKCR,"bmpfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shimgvw.dll,0"
 HKCR,"bmpfile\shell\open\command","",0x00020000,"rundll32.exe %SystemRoot%\system32\shimgvw.dll,ImageView_Fullscreen %1"
 
 ; PNG Images
 HKCR,".png","",0x00000000,"pngfile"
 HKCR,"pngfile","",0x00000000,"PNG Image"
-HKCR,"pngfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shimgvw.dll,-1"
+HKCR,"pngfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shimgvw.dll,0"
 HKCR,"pngfile\shell\open\command","",0x00020000,"rundll32.exe %SystemRoot%\system32\shimgvw.dll,ImageView_Fullscreen %1"
 
 ; GIF Images
 HKCR,".gif","",0x00000000,"giffile"
 HKCR,"giffile","",0x00000000,"GIF Image"
-HKCR,"giffile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shimgvw.dll,-1"
+HKCR,"giffile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shimgvw.dll,0"
 HKCR,"giffile\shell\open\command","",0x00020000,"rundll32.exe %SystemRoot%\system32\shimgvw.dll,ImageView_Fullscreen %1"
 
 ; Configuration Files
@@ -266,6 +266,11 @@ HKCR,".url","",0x00000000,"InternetShortcut"
 HKCR,".wav","",0x00000000,"SoundRec"
 HKCR,"SoundRec","",0x00000000,"Wave Sound"
 HKCR,"SoundRec\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-225"
+
+; Avi Files
+HKCR,".avi","",0x00000000,"AVIFile"
+HKCR,"AVIFile","",0x00000000,"Video Clip"
+HKCR,"AVIFile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-224"
 
 HKCR,"CLSID",,0x00000012
 
