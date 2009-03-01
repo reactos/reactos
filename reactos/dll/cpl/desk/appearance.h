@@ -35,6 +35,7 @@ typedef struct
 	COLORREF crColor[NUM_COLORS];
 	LOGFONT lfFont[NUM_FONTS];
 	UINT64 Size[NUM_SIZES];
+	INT Id;
 	BOOL bFlatMenus;
 	BOOL bHasChanged;
 	BOOL bIsCustom;
