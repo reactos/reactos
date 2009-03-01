@@ -43,11 +43,11 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Impostazione dei dispositivi", IDC_STATIC, "Button", BS_GROUPBOX, 10,0,297,172
     LTEXT "Computer:", IDC_STATIC, 20,15, 80, 10
-    CONTROL "", IDC_COMPUTER, "ComboBox", WS_TABSTOP | CBS_DROPDOWNLIST , 100, 15, 150, 80
+    CONTROL "", IDC_COMPUTER, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST , 100, 15, 150, 80
     LTEXT "Display:", IDC_STATIC, 20,35, 80, 10
-    CONTROL "", IDC_DISPLAY, "ComboBox", WS_TABSTOP | CBS_DROPDOWNLIST , 100, 35, 150, 80
+    CONTROL "", IDC_DISPLAY, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST , 100, 35, 150, 80
     LTEXT "Tastiera:", IDC_STATIC, 20,55, 80, 10
-    CONTROL "", IDC_KEYBOARD, "ComboBox", WS_TABSTOP | CBS_DROPDOWNLIST , 100, 55, 150, 80
+    CONTROL "", IDC_KEYBOARD, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST , 100, 55, 150, 80
     LTEXT "Cliccare Avanti per scegliere dove effettuare l'installazione.", IDC_STATIC, 10, 180 ,277, 20
 END
 
@@ -70,19 +70,19 @@ STYLE WS_VISIBLE|WS_CAPTION|WS_THICKFRAME
 CAPTION "Creazione Partizioni"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  CONTROL "",IDC_UPDOWN1,"msctls_updown32", WS_VISIBLE,104,22,9,13
-  CONTROL "Crea e formatta la partizione",IDC_STATIC,"Button",BS_GROUPBOX,7,5,129,57
-  LTEXT "Dimensione:",IDC_STATIC, 13,24,27,9
-  EDITTEXT IDC_PARTSIZE,52,23,53,13, WS_VISIBLE|WS_TABSTOP
-  LTEXT "GB",IDC_UNIT, 117,24,14,9
-  LTEXT "Filesystem:",IDC_STATIC,13,46,35,9
-  CONTROL "",IDC_FSTYPE,"ComboBox",WS_VISIBLE|WS_TABSTOP|CBS_DROPDOWNLIST,52,42,79,50
-  PUSHBUTTON "&OK",IDOK,35,68,47,15, WS_VISIBLE|WS_TABSTOP
-  PUSHBUTTON "&Annulla",IDCANCEL,87,68,47,15, WS_VISIBLE|WS_TABSTOP
+    CONTROL "",IDC_UPDOWN1,"msctls_updown32", WS_VISIBLE,104,22,9,13
+    CONTROL "Crea e formatta la partizione",IDC_STATIC,"Button",BS_GROUPBOX,7,5,129,57
+    LTEXT "Dimensione:",IDC_STATIC, 13,24,27,9
+    EDITTEXT IDC_PARTSIZE,52,23,53,13, WS_VISIBLE|WS_TABSTOP
+    LTEXT "GB",IDC_UNIT, 117,24,14,9
+    LTEXT "Filesystem:",IDC_STATIC,13,46,35,9
+    CONTROL "",IDC_FSTYPE,"ComboBox",WS_VISIBLE|WS_TABSTOP|CBS_DROPDOWNLIST,52,42,79,50
+    PUSHBUTTON "&OK",IDOK,35,68,47,15, WS_VISIBLE|WS_TABSTOP
+    PUSHBUTTON "&Annulla",IDCANCEL,87,68,47,15, WS_VISIBLE|WS_TABSTOP
 END
 
 IDD_BOOTOPTIONS DIALOGEX DISCARDABLE  0, 0, 305, 105
-STYLE WS_VISIBLE|WS_CAPTION|WS_SYSMENU|WS_THICKFRAME
+STYLE WS_VISIBLE|WS_CAPTION|WS_THICKFRAME
 CAPTION "Impostazioni avanzate delle partizioni"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -118,7 +118,6 @@ BEGIN
             PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
 END
 
-
 IDD_RESTARTPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Completamento della installazione di ReactOS"
@@ -133,23 +132,23 @@ BEGIN
           "il computer cliccare Fine.", IDC_STATIC, 10, 180, 297, 20
 END
 
-
 STRINGTABLE
 BEGIN
-	IDS_LANGTITLE		"Selezione della lingua"
-	IDS_LANGSUBTITLE	"Scegliere la lingua per la installazione e per il sistema finale."
-	IDS_TYPETITLE		"Benvenuti alla installazione di ReactOS"
-	IDS_TYPESUBTITLE	"Scegliere il tipo di installazione."
-	IDS_DEVICETITLE		"Impostazione dei dispositivi di base"
-	IDS_DEVICESUBTITLE	"Impostazione di monitor e tastiera."
-	IDS_DRIVETITLE		"Impostazione della partizione e della cartella per la installazione"
-	IDS_DRIVESUBTITLE	"Preparazione di partizione, cartella di sistema e Boot loader."
-	IDS_PROCESSTITLE	"Preparazione della partizione, copia dei file e configurazione del sistema"
-	IDS_PROCESSSUBTITLE	"Creazione e formattazione della partizione, copia dei file, installazione del Boot loader"
-	IDS_RESTARTTITLE	"Prima fase della installazione completata"
-	IDS_RESTARTSUBTITLE	"La prima fase della installazione è stata completata, riavviare il computer per procedere alla seconda fase"
-	IDS_ABORTSETUP		"ReactOS non è installato completamente sul computer. Se interropete l'installazione ora sarà necessario eseguire l'installazione di nuovo. Volete procedere?"
-	IDS_ABORTSETUP2		"Volete interrompere l'installazione?"
-END 
-
+    IDS_LANGTITLE       "Selezione della lingua"
+    IDS_LANGSUBTITLE    "Scegliere la lingua per la installazione e per il sistema finale."
+    IDS_TYPETITLE       "Benvenuti alla installazione di ReactOS"
+    IDS_TYPESUBTITLE    "Scegliere il tipo di installazione."
+    IDS_DEVICETITLE     "Impostazione dei dispositivi di base"
+    IDS_DEVICESUBTITLE  "Impostazione di monitor e tastiera."
+    IDS_DRIVETITLE      "Impostazione della partizione e della cartella per la installazione"
+    IDS_DRIVESUBTITLE   "Preparazione di partizione, cartella di sistema e Boot loader."
+    IDS_PROCESSTITLE    "Preparazione della partizione, copia dei file e configurazione del sistema"
+    IDS_PROCESSSUBTITLE "Creazione e formattazione della partizione, copia dei file, installazione del Boot loader"
+    IDS_RESTARTTITLE    "Prima fase della installazione completata"
+    IDS_RESTARTSUBTITLE "La prima fase della installazione è stata completata, riavviare il computer per procedere alla seconda fase"
+    IDS_SUMMARYTITLE    "Installation Summary"
+    IDS_SUMMARYSUBTITLE "List installation properties to check before apply to the installation device"
+    IDS_ABORTSETUP      "ReactOS non è installato completamente sul computer. Se interropete l'installazione ora sarà necessario eseguire l'installazione di nuovo. Volete procedere?"
+    IDS_ABORTSETUP2     "Volete interrompere l'installazione?"
+END
 /* EOF */
