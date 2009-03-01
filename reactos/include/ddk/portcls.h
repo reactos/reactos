@@ -265,7 +265,7 @@ typedef struct
 PCPROPERTY_ITEM, *PPCPROPERTY_ITEM;
 
 
-typedef struct _PCPROPERTY_REQUEST
+struct _PCPROPERTY_REQUEST
 {
     PUNKNOWN                MajorTarget;
     PUNKNOWN                MinorTarget;
@@ -277,7 +277,7 @@ typedef struct _PCPROPERTY_REQUEST
     ULONG                   ValueSize;
     PVOID                   Value;
     PIRP                    Irp;
-}PCPROPERTY_REQUEST, *PPCPROPERTY_REQUEST;
+};
 
 struct _PCEVENT_REQUEST;
 
@@ -1458,7 +1458,7 @@ DECLARE_INTERFACE_(IMiniportWaveCyclic, IMiniport)
         IN PUNKNOWN  OuterUnknown  OPTIONAL,
         IN POOL_TYPE  PoolType,
         IN ULONG  Pin,
-        IN BOOL  Capture,
+        IN BOOLEAN  Capture,
         IN PKSDATAFORMAT  DataFormat,
         OUT PDMACHANNEL  *DmaChannel,
         OUT PSERVICEGROUP  *ServiceGroup) PURE;
