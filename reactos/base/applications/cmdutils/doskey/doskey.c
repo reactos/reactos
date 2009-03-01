@@ -3,17 +3,6 @@
 #include <tchar.h>
 
 static VOID
-partstrlwr (LPTSTR str)
-{
-    LPTSTR c = str;
-    while (*c && !_istspace (*c) && *c != _T('='))
-    {
-        *c = _totlower (*c);
-        c++;
-    }
-}
-
-static VOID
 PrintAlias (VOID)
 {
     LPTSTR Aliases;
@@ -47,7 +36,7 @@ PrintAlias (VOID)
 
 INT SetMacro (LPTSTR param)
 {
-    LPTSTR ptr;
+    LPTSTR ptr, text;
 
     while (*param == _T(' '))
         param++;
@@ -56,23 +45,25 @@ INT SetMacro (LPTSTR param)
     if ((ptr = _tcschr (param, _T('='))) == 0)
         return 1;
 
-    while (*param == _T(' '))
-        param++;
+    text = ptr + 1;
+    while (*text == _T(' '))
+        text++;
 
-    while (*ptr == _T(' '))
+    while (ptr > param && ptr[-1] == _T(' '))
         ptr--;
 
     /* Split rest into name and substitute */
     *ptr++ = _T('\0');
 
-    partstrlwr (param);
+    if (*param == _T('\0') || _tcschr(param, _T(' ')))
+        return 1;
 
-    _tprintf(_T("%s, %s\n"), ptr, param);
+    _tprintf(_T("%s, %s\n"), text, param);
 
     if (ptr[0] == _T('\0'))
         AddConsoleAlias(param, NULL, _T("cmd.exe"));
     else
-        AddConsoleAlias(param, ptr, _T("cmd.exe"));
+        AddConsoleAlias(param, text, _T("cmd.exe"));
 
     return 0;
 }
@@ -88,7 +79,14 @@ static VOID ReadFromFile(LPTSTR param)
     fp = _tfopen(param, _T("r"));
 
     while ( _fgetts(line, MAX_PATH, fp) != NULL) 
+    {
+        /* Remove newline character */
+        TCHAR *end = &line[_tcslen(line) - 1];
+        if (*end == _T('\n'))
+            *end = _T('\0');
+
         SetMacro(line);
+    }
 
     fclose(fp);
     return;
@@ -121,6 +119,7 @@ _tmain (int argc, LPTSTR argv[])
                 szCommandLine++;
             }
             while(*szCommandLine != '\"');
+            szCommandLine++;
         }
         else
         {
@@ -131,8 +130,8 @@ _tmain (int argc, LPTSTR argv[])
             while(*szCommandLine != ' ');
         }
 
-        /* Skip the trailing quotation mark/whitespace and pass the command line to SetMacro */
-        SetMacro(++szCommandLine);
+        /* Skip the leading whitespace and pass the command line to SetMacro */
+        SetMacro(szCommandLine + _tcsspn(szCommandLine, _T(" \t")));
     }
 
     return 0;
