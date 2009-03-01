@@ -7,5 +7,5 @@
 #define DMO_E_NOTACCEPTING          0x80040204
 #define DMO_E_TYPE_NOT_ACCEPTED     0x80040205
 #define DMO_E_NO_MORE_ITEMS         0x80040206
-#endif _MEDIAERR_H_
+#endif /* _MEDIAERR_H_ */
 
