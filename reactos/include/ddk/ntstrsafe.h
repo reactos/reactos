@@ -394,6 +394,19 @@ RtlStringCbCopyExA(OUT PCHAR Destination,
     return Status;
 }
 
+
+NTSTATUS
+NTAPI
+RtlStringCbPrintfW(
+    LPWSTR pszDest,
+    IN size_t cbDest,
+    IN LPCWSTR pszFormat,
+    ...)
+{
+    UNIMPLEMENTED
+    return STATUS_NOT_IMPLEMENTED;
+}
+
 FORCEINLINE
 NTSTATUS
 NTAPI

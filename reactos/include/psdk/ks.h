@@ -56,6 +56,11 @@ extern "C" {
 #if defined(_NTDDK_)
 typedef PVOID PKSWORKER;
 #endif
+
+#ifndef SIZEOF_ARRAY
+    #define SIZEOF_ARRAY(a)        (sizeof(a)/sizeof((a)[0]))
+#endif
+
 /* ===============================================================
     GUID definition helpers
 */
@@ -600,7 +605,11 @@ typedef enum
     Property Sets for audio drivers - TODO
 */
 
-#define KSPROPSETID_AC3
+#define STATIC_KSPROPTYPESETID_General \
+    0x97E99BA0L, 0xBDEA, 0x11CF, 0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00
+DEFINE_GUIDSTRUCT("97E99BA0-BDEA-11CF-A5D6-28DB04C10000", KSPROPTYPESETID_General);
+#define KSPROPTYPESETID_General DEFINE_GUIDNAMED(KSPROPTYPESETID_General)
+
 /*
     KSPROPERTY_AC3_ALTERNATE_AUDIO
     KSPROPERTY_AC3_BIT_STREAM_MODE
@@ -618,7 +627,6 @@ typedef enum
     KSPROPERTY_AEC_STATUS
 */
 
-#define KSPROPSETID_Audio
 /*
     KSPROPERTY_AUDIO_3D_INTERFACE
     KSPROPERTY_AUDIO_AGC
@@ -943,6 +951,12 @@ typedef PVOID   KSDEVICE_HEADER,
     TODO ...
 */
 
+#define STATIC_KSDATAFORMAT_SPECIFIER_NONE\
+    0x0F6417D6L, 0xC318, 0x11D0, 0xA4, 0x3F, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96
+DEFINE_GUIDSTRUCT("0F6417D6-C318-11D0-A43F-00A0C9223196", KSDATAFORMAT_SPECIFIER_NONE);
+#define KSDATAFORMAT_SPECIFIER_NONE DEFINE_GUIDNAMED(KSDATAFORMAT_SPECIFIER_NONE)
+
+
 /* ===============================================================
     KSMEMORY_TYPE_xxx
 
@@ -1090,6 +1104,67 @@ typedef NTSTATUS (*PFNKSCONTEXT_DISPATCH)(
     IN PIRP Irp);
 #endif
 
+#if defined(_NTDDK_) && !defined(__wtypes_h__)
+enum VARENUM {
+    VT_EMPTY = 0,
+    VT_NULL = 1,
+    VT_I2 = 2,
+    VT_I4 = 3,
+    VT_R4 = 4,
+    VT_R8 = 5,
+    VT_CY = 6,
+    VT_DATE = 7,
+    VT_BSTR = 8,
+    VT_DISPATCH = 9,
+    VT_ERROR = 10,
+    VT_BOOL = 11,
+    VT_VARIANT = 12,
+    VT_UNKNOWN = 13,
+    VT_DECIMAL = 14,
+    VT_I1 = 16,
+    VT_UI1 = 17,
+    VT_UI2 = 18,
+    VT_UI4 = 19,
+    VT_I8 = 20,
+    VT_UI8 = 21,
+    VT_INT = 22,
+    VT_UINT = 23,
+    VT_VOID = 24,
+    VT_HRESULT  = 25,
+    VT_PTR = 26,
+    VT_SAFEARRAY = 27,
+    VT_CARRAY = 28,
+    VT_USERDEFINED = 29,
+    VT_LPSTR = 30,
+    VT_LPWSTR = 31,
+    VT_FILETIME = 64,
+    VT_BLOB = 65,
+    VT_STREAM = 66,
+    VT_STORAGE = 67,
+    VT_STREAMED_OBJECT = 68,
+    VT_STORED_OBJECT = 69,
+    VT_BLOB_OBJECT = 70,
+    VT_CF = 71,
+    VT_CLSID = 72,
+    VT_VECTOR = 0x1000,
+    VT_ARRAY = 0x2000,
+    VT_BYREF = 0x4000,
+    VT_RESERVED = 0x8000,
+    VT_ILLEGAL = 0xffff,
+    VT_ILLEGALMASKED = 0xfff,
+    VT_TYPEMASK = 0xfff
+};
+#endif
+
+#define STATIC_KSDATAFORMAT_TYPE_WILDCARD       STATIC_GUID_NULL
+#define KSDATAFORMAT_TYPE_WILDCARD              GUID_NULL
+
+#define STATIC_KSDATAFORMAT_SUBTYPE_WILDCARD    STATIC_GUID_NULL
+#define KSDATAFORMAT_SUBTYPE_WILDCARD           GUID_NULL
+
+#define STATIC_KSDATAFORMAT_SPECIFIER_WILDCARD  STATIC_GUID_NULL
+#define KSDATAFORMAT_SPECIFIER_WILDCARD         GUID_NULL
+
 /* ===============================================================
     Framing
 */
@@ -1204,6 +1279,22 @@ typedef struct
 
 typedef struct
 {
+#if defined( _KS_NO_ANONYMOUS_STRUCTURES_ )
+    struct _SIGNED {
+#else
+    struct {
+#endif    
+        LONG    SignedMinimum;
+        LONG    SignedMaximum;
+    };
+#if defined( _KS_NO_ANONYMOUS_STRUCTURES_ )
+    struct _UNSIGNED {
+#else
+    struct {
+#endif    
+        ULONG   UnsignedMinimum;
+        ULONG   UnsignedMaximum;
+    };
 } KSPROPERTY_BOUNDS_LONG, *PKSPROPERTY_BOUNDS_LONG;
 
 typedef struct
@@ -1212,6 +1303,11 @@ typedef struct
 
 typedef struct
 {
+    ULONG           AccessFlags;
+    ULONG           DescriptionSize;
+    KSIDENTIFIER    PropTypeSet;
+    ULONG           MembersListCount;
+    ULONG           Reserved;
 } KSPROPERTY_DESCRIPTION, *PKSPROPERTY_DESCRIPTION;
 
 typedef struct
@@ -1303,6 +1399,9 @@ typedef struct
 
 typedef struct
 {
+    ULONG                       SteppingDelta;
+    ULONG                       Reserved;
+    KSPROPERTY_BOUNDS_LONG      Bounds;
 } KSPROPERTY_STEPPING_LONG, *PKSPROPERTY_STEPPING_LONG;
 
 typedef struct
@@ -3061,6 +3160,14 @@ KsDeviceGetFirstChildFilterFactory(
     IN  PKSDEVICE Device);
 
 #if defined(_UNKNOWN_H_) || defined(__IUnknown_INTERFACE_DEFINED__)
+
+KSDDKAPI
+PUNKNOWN
+NTAPI
+KsGetOuterUnknown(
+    IN PVOID Object
+    );
+
 
 PUNKNOWN
 NTAPI
