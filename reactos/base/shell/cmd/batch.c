@@ -130,28 +130,25 @@ LPTSTR BatchParams (LPTSTR s1, LPTSTR s2)
 
 	while (*s2)
 	{
-		if (_istspace (*s2) || _tcschr (_T(",;"), *s2))
-		{
-			*s1++ = _T('\0');
+		BOOL inquotes = FALSE;
+
+		/* Find next parameter */
+		while (_istspace(*s2) || (*s2 && _tcschr(_T(",;="), *s2)))
 			s2++;
-			while (*s2 && _tcschr (_T(" ,;"), *s2))
-				s2++;
-			continue;
-		}
+		if (!*s2)
+			break;
 
-		if ((*s2 == _T('"')) || (*s2 == _T('\'')))
+		/* Copy it */
+		do
 		{
-			TCHAR st = *s2;
-
-			do
-				*s1++ = *s2++;
-			while (*s2 && (*s2 != st));
-		}
-
-		*s1++ = *s2++;
+			if (!inquotes && (_istspace(*s2) || _tcschr(_T(",;="), *s2)))
+				break;
+			inquotes ^= (*s2 == _T('"'));
+			*s1++ = *s2++;
+		} while (*s2);
+		*s1++ = _T('\0');
 	}
 
-	*s1++ = _T('\0');
 	*s1 = _T('\0');
 
 	return dp;
