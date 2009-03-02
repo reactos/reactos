@@ -503,7 +503,6 @@ BOOL IsExistingDirectory (LPCTSTR pszPath)
 BOOL FileGetString (HANDLE hFile, LPTSTR lpBuffer, INT nBufferLength)
 {
 	LPSTR lpString;
-	CHAR ch;
 	DWORD  dwRead;
 	INT len = 0;
 #ifdef _UNICODE
@@ -511,18 +510,20 @@ BOOL FileGetString (HANDLE hFile, LPTSTR lpBuffer, INT nBufferLength)
 #else
 	lpString = lpBuffer;
 #endif
-	while ((--nBufferLength >  0) &&
-		   ReadFile(hFile, &ch, 1, &dwRead, NULL) && dwRead)
+
+	if (ReadFile(hFile, lpString, nBufferLength - 1, &dwRead, NULL))
 	{
-        lpString[len++] = ch;
-        if (ch == '\n')
+		/* break at new line*/
+		CHAR *end = memchr(lpString, '\n', dwRead);
+		len = dwRead;
+		if (end)
 		{
-			/* break at new line*/
-			break;
+			len = (end - lpString) + 1;
+			SetFilePointer(hFile, len - dwRead, NULL, FILE_CURRENT);
 		}
 	}
 
-	if (!dwRead && !len)
+	if (!len)
 	{
 #ifdef _UNICODE
 		cmd_free(lpString);
