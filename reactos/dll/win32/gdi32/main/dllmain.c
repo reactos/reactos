@@ -13,6 +13,7 @@ extern HGDIOBJ stock_objects[];
 BOOL SetStockObjects = FALSE;
 PDEVCAPS GdiDevCaps = NULL;
 PGDIHANDLECACHE GdiHandleCache = NULL;
+BOOL gbLpk = FALSE;
 
 /*
  * GDI32.DLL does have an entry point for disable threadlibrarycall,. The initialization is done by a call

@@ -914,7 +914,19 @@ GetFontLanguageInfo(
 	HDC 	hDc
 	)
 {
-  return GetDCDWord(hDc, GdiGetFontLanguageInfo, GCP_ERROR); 
+  DWORD Gcp = 0, Ret = 0;
+  if (gbLpk)
+  {
+     Ret = NtGdiGetTextCharsetInfo(hDc, NULL, 0);
+     if ((Ret == ARABIC_CHARSET) || (Ret == HEBREW_CHARSET))
+        Ret = (GCP_KASHIDA|GCP_DIACRITIC|GCP_LIGATE|GCP_GLYPHSHAPE|GCP_REORDER);
+  }
+  Gcp = GetDCDWord(hDc, GdiGetFontLanguageInfo, GCP_ERROR); 
+  if ( Gcp == GCP_ERROR)
+     return Gcp;
+  else
+     Ret = Gcp | Ret;
+  return Ret;
 }
 
 /*
