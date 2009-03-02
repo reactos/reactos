@@ -66,7 +66,9 @@ GetSystemColorDepth(VOID)
 
     pDevMode.dmSize = sizeof(DEVMODE);
     pDevMode.dmDriverExtra = 0;
-    EnumDisplaySettings(NULL, ENUM_CURRENT_SETTINGS, &pDevMode);
+
+    if (!EnumDisplaySettings(NULL, ENUM_CURRENT_SETTINGS, &pDevMode))
+        return ILC_COLOR;
 
     switch (pDevMode.dmBitsPerPel)
     {
