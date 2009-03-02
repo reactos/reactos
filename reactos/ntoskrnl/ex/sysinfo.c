@@ -1426,7 +1426,7 @@ QSI_DEF(SystemTimeAdjustmentInformation)
     /* Check if enough storage was provided */
     if (sizeof(SYSTEM_QUERY_TIME_ADJUST_INFORMATION) > Size)
     {
-        * ReqSize = sizeof(SYSTEM_SET_TIME_ADJUST_INFORMATION);
+        * ReqSize = sizeof(SYSTEM_QUERY_TIME_ADJUST_INFORMATION);
         return STATUS_INFO_LENGTH_MISMATCH;
     }
 
