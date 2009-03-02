@@ -1440,6 +1440,7 @@ QSI_DEF(SystemTimeAdjustmentInformation)
 
 SSI_DEF(SystemTimeAdjustmentInformation)
 {
+    KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
     /*PSYSTEM_SET_TIME_ADJUST_INFORMATION TimeInfo =
         (PSYSTEM_SET_TIME_ADJUST_INFORMATION)Buffer;*/
 
@@ -1447,7 +1448,15 @@ SSI_DEF(SystemTimeAdjustmentInformation)
     if (sizeof(SYSTEM_SET_TIME_ADJUST_INFORMATION) != Size)
         return STATUS_INFO_LENGTH_MISMATCH;
 
-    /* TODO: Check privileges */
+    /* Check who is calling */
+    if (PreviousMode != KernelMode)
+    {
+        /* Check access rights */
+        if (!SeSinglePrivilegeCheck(SeSystemtimePrivilege, PreviousMode))
+        {
+            return STATUS_PRIVILEGE_NOT_HELD;
+        }
+    }
 
     /* TODO: Set time adjustment information */
     DPRINT1("Setting of SystemTimeAdjustmentInformation is not implemented yet!\n");
