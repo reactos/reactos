@@ -83,8 +83,6 @@ INT cmd_call (LPTSTR param)
 	bc->hBatchFile = INVALID_HANDLE_VALUE;
 	bc->params = NULL;
 	bc->shiftlevel = 0;
-	bc->forvar = 0;        /* HBP004 */
-	bc->forvarcount = 0;
 	bc->RedirList = NULL;
 	ParseCommandLine (param);
 

@@ -17,16 +17,23 @@ typedef struct tagBATCHCONTEXT
 	INT    shiftlevel;
 	BOOL   bEcho;        /* Preserve echo flag across batch calls */
 	REDIRECTION *RedirList;
-	TCHAR forvar;
-	UINT   forvarcount;
-	LPTSTR *forvalues;
 } BATCH_CONTEXT, *LPBATCH_CONTEXT;
+
+typedef struct tagFORCONTEXT
+{
+	struct tagFORCONTEXT *prev;
+	TCHAR firstvar;
+	UINT   varcount;
+	LPTSTR *values;
+} FOR_CONTEXT, *LPFOR_CONTEXT;
 
 
 /*  The stack of current batch contexts.
  * NULL when no batch is active
  */
 extern LPBATCH_CONTEXT bc;
+
+extern LPFOR_CONTEXT fc;
 
 extern BOOL bEcho;       /* The echo flag */
 

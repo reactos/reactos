@@ -225,8 +225,7 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param, BOOL forcenew)
 	}
 
 	/* Kill any and all FOR contexts */
-	while (bc && bc->forvar)
-		ExitBatch (NULL);
+	fc = NULL;
 
 	if (bc == NULL || forcenew)
 	{
@@ -261,8 +260,6 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param, BOOL forcenew)
 	bc->bEcho = bEcho; /* Preserve echo across batch calls */
 	bc->shiftlevel = 0;
 	
-	bc->forvar = _T('\0');
-	bc->forvarcount = 0;
 	bc->params = BatchParams (firstword, param);
     //
     // Allocate enough memory to hold the params and copy them over without modifications
@@ -310,9 +307,6 @@ VOID AddBatchRedirection(REDIRECTION **RedirList)
  *
  * If no batch file is current or no further executable lines are found
  * return NULL.
- *
- * Here we also look out for FOR bcontext structures which trigger the
- * FOR expansion code.
  *
  * Set eflag to 0 if line is not to be echoed else 1
  */

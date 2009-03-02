@@ -1273,13 +1273,13 @@ SubstituteForVars(TCHAR *Src, TCHAR *Dest)
 		if (Src[0] == _T('%') && Src[1] != _T('\0'))
 		{
 			/* This might be a variable. Search the list of contexts for it */
-			BATCH_CONTEXT *Ctx = bc;
-			while (Ctx && (UINT)(Src[1] - Ctx->forvar) >= Ctx->forvarcount)
+			FOR_CONTEXT *Ctx = fc;
+			while (Ctx && (UINT)(Src[1] - Ctx->firstvar) >= Ctx->varcount)
 				Ctx = Ctx->prev;
 			if (Ctx)
 			{
 				/* Found it */
-				LPTSTR Value = Ctx->forvalues[Src[1] - Ctx->forvar];
+				LPTSTR Value = Ctx->values[Src[1] - Ctx->firstvar];
 				if (Dest + _tcslen(Value) > DestEnd)
 					return FALSE;
 				Dest = _stpcpy(Dest, Value);

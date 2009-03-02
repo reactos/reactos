@@ -374,7 +374,7 @@ typedef struct _PARSED_COMMAND
 			TCHAR Variable;
 			LPTSTR Params;
 			LPTSTR List;
-			struct tagBATCHCONTEXT *Context;
+			struct tagFORCONTEXT *Context;
 		} For;
 	};
 } PARSED_COMMAND;

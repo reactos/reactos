@@ -48,6 +48,10 @@ INT cmd_for (LPTSTR param)
 	return 1;
 }
 
+/* The stack of current FOR contexts.
+ * NULL when no FOR command is active */
+LPFOR_CONTEXT fc = NULL;
+
 /* Get the next element of the FOR's list */
 static BOOL GetNextElement(TCHAR **pStart, TCHAR **pEnd)
 {
@@ -81,8 +85,8 @@ static void RunInstance(PARSED_COMMAND *Cmd)
 /* Check if this FOR should be terminated early */
 static BOOL Exiting(PARSED_COMMAND *Cmd)
 {
-	/* Someone might have removed our context by calling ExitBatch */
-	return bCtrlBreak || bc != Cmd->For.Context;
+	/* Someone might have removed our context */
+	return bCtrlBreak || fc != Cmd->For.Context;
 }
 
 /* Read the contents of a text file into memory,
@@ -230,10 +234,10 @@ static BOOL ForF(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer)
 
 	/* Count how many variables will be set: one for each token,
 	 * plus maybe one for the remainder */
-	bc->forvarcount = RemainderVar;
+	fc->varcount = RemainderVar;
 	for (i = 1; i < 32; i++)
-		bc->forvarcount += (Tokens >> i & 1);
-	bc->forvalues = Variables;
+		fc->varcount += (Tokens >> i & 1);
+	fc->values = Variables;
 
 	if (*List == StringQuote || *List == CommandQuote)
 	{
@@ -443,34 +447,27 @@ ExecuteFor(PARSED_COMMAND *Cmd)
 {
 	TCHAR Buffer[CMDLINE_LENGTH]; /* Buffer to hold the variable value */
 	LPTSTR BufferPtr = Buffer;
-	LPBATCH_CONTEXT lpNew;
+	LPFOR_CONTEXT lpNew;
 	BOOL Success = TRUE;
 	LPTSTR List = DoDelayedExpansion(Cmd->For.List);
 
 	if (!List)
 		return FALSE;
 
-	/* Create our pseudo-batch-context */
-	lpNew = cmd_alloc(sizeof(BATCH_CONTEXT));
+	/* Create our FOR context */
+	lpNew = cmd_alloc(sizeof(FOR_CONTEXT));
 	if (!lpNew)
+	{
+		cmd_free(List);
 		return FALSE;
+	}
+	lpNew->prev = fc;
+	lpNew->firstvar = Cmd->For.Variable;
+	lpNew->varcount = 1;
+	lpNew->values = &BufferPtr;
+
 	Cmd->For.Context = lpNew;
-
-	lpNew->prev = bc;
-	bc = lpNew;
-
-	bc->hBatchFile = INVALID_HANDLE_VALUE;
-	bc->raw_params = NULL;
-	bc->params = NULL;
-	bc->shiftlevel = 0;
-	bc->forvar = Cmd->For.Variable;
-	bc->forvarcount = 1;
-	bc->forvalues = &BufferPtr;
-	if (bc->prev)
-		bc->bEcho = bc->prev->bEcho;
-	else
-		bc->bEcho = bEcho;
-	bc->RedirList = NULL;
+	fc = lpNew;
 
 	if (Cmd->For.Switches & FOR_F)
 	{
@@ -492,9 +489,10 @@ ExecuteFor(PARSED_COMMAND *Cmd)
 	}
 
 	/* Remove our context, unless someone already did that */
-	if (bc == lpNew)
-		ExitBatch(NULL);
+	if (fc == lpNew)
+		fc = lpNew->prev;
 
+	cmd_free(lpNew);
 	cmd_free(List);
 	return Success;
 }
