@@ -58,6 +58,29 @@ BOOL bRestore /* Restore the window if it is minimized */
 );
 #endif
 
+static INT
+GetSystemColorDepth(VOID)
+{
+    DEVMODE pDevMode;
+    INT ColorDepth;
+
+    pDevMode.dmSize = sizeof(DEVMODE);
+    pDevMode.dmDriverExtra = 0;
+    EnumDisplaySettings(NULL, ENUM_CURRENT_SETTINGS, &pDevMode);
+
+    switch (pDevMode.dmBitsPerPel)
+    {
+        case 32: ColorDepth = ILC_COLOR32; break;
+        case 24: ColorDepth = ILC_COLOR24; break;
+        case 16: ColorDepth = ILC_COLOR16; break;
+        case  8: ColorDepth = ILC_COLOR8;  break;
+        case  4: ColorDepth = ILC_COLOR4;  break;
+        default: ColorDepth = ILC_COLOR;   break;
+    }
+
+    return ColorDepth;
+}
+
 INT_PTR CALLBACK
 ApplicationPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -101,8 +124,8 @@ ApplicationPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         column.cx = 95;
         (void)ListView_InsertColumn(hApplicationPageListCtrl, 1, &column);    /* Add the "Status" column */
 
-        (void)ListView_SetImageList(hApplicationPageListCtrl, ImageList_Create(16, 16, ILC_COLOR8|ILC_MASK, 0, 1), LVSIL_SMALL);
-        (void)ListView_SetImageList(hApplicationPageListCtrl, ImageList_Create(32, 32, ILC_COLOR8|ILC_MASK, 0, 1), LVSIL_NORMAL);
+        (void)ListView_SetImageList(hApplicationPageListCtrl, ImageList_Create(16, 16, GetSystemColorDepth()|ILC_MASK, 0, 1), LVSIL_SMALL);
+        (void)ListView_SetImageList(hApplicationPageListCtrl, ImageList_Create(32, 32, GetSystemColorDepth()|ILC_MASK, 0, 1), LVSIL_NORMAL);
 
         UpdateApplicationListControlViewSetting();
 
