@@ -350,7 +350,7 @@ DGifGetImageDesc(GifFileType * GifFile) {
 
     int i, BitsPerPixel;
     GifByteType Buf[3];
-    GifFilePrivateType *Private = (GifFilePrivateType *)GifFile->Private;
+    GifFilePrivateType *Private = GifFile->Private;
     SavedImage *sp;
 
     if (DGifGetWord(GifFile, &GifFile->Image.Left) == GIF_ERROR ||
@@ -436,7 +436,7 @@ DGifGetLine(GifFileType * GifFile,
             int LineLen) {
 
     GifByteType *Dummy;
-    GifFilePrivateType *Private = (GifFilePrivateType *) GifFile->Private;
+    GifFilePrivateType *Private = GifFile->Private;
 
     if (!LineLen)
         LineLen = GifFile->Image.Width;
@@ -492,7 +492,7 @@ DGifGetExtensionNext(GifFileType * GifFile,
                      GifByteType ** Extension) {
 
     GifByteType Buf;
-    GifFilePrivateType *Private = (GifFilePrivateType *)GifFile->Private;
+    GifFilePrivateType *Private = GifFile->Private;
 
     if (READ(GifFile, &Buf, 1) != 1) {
         return GIF_ERROR;
@@ -536,7 +536,7 @@ DGifGetCodeNext(GifFileType * GifFile,
                 GifByteType ** CodeBlock) {
 
     GifByteType Buf;
-    GifFilePrivateType *Private = (GifFilePrivateType *)GifFile->Private;
+    GifFilePrivateType *Private = GifFile->Private;
 
     if (READ(GifFile, &Buf, 1) != 1) {
         return GIF_ERROR;
@@ -566,7 +566,7 @@ DGifSetupDecompress(GifFileType * GifFile) {
     int i, BitsPerPixel;
     GifByteType CodeSize;
     GifPrefixType *Prefix;
-    GifFilePrivateType *Private = (GifFilePrivateType *)GifFile->Private;
+    GifFilePrivateType *Private = GifFile->Private;
 
     READ(GifFile, &CodeSize, 1);    /* Read Code size from file. */
     BitsPerPixel = CodeSize;
@@ -605,7 +605,7 @@ DGifDecompressLine(GifFileType * GifFile,
     int j, CrntCode, EOFCode, ClearCode, CrntPrefix, LastCode, StackPtr;
     GifByteType *Stack, *Suffix;
     GifPrefixType *Prefix;
-    GifFilePrivateType *Private = (GifFilePrivateType *) GifFile->Private;
+    GifFilePrivateType *Private = GifFile->Private;
 
     StackPtr = Private->StackPtr;
     Prefix = Private->Prefix;
@@ -744,7 +744,7 @@ static int
 DGifDecompressInput(GifFileType * GifFile,
                     int *Code) {
 
-    GifFilePrivateType *Private = (GifFilePrivateType *)GifFile->Private;
+    GifFilePrivateType *Private = GifFile->Private;
 
     GifByteType NextByte;
     static const unsigned short CodeMasks[] = {
@@ -973,7 +973,7 @@ DGifCloseFile(GifFileType * GifFile) {
     if (GifFile == NULL)
         return GIF_ERROR;
 
-    Private = (GifFilePrivateType *) GifFile->Private;
+    Private = GifFile->Private;
 
     if (GifFile->Image.ColorMap) {
         FreeMapObject(GifFile->Image.ColorMap);

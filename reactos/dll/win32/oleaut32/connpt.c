@@ -161,9 +161,9 @@ static HRESULT WINAPI ConnectionPointImpl_QueryInterface(
    * Compare the riid with the interface IDs implemented by this object.
    */
   if (IsEqualIID(&IID_IUnknown, riid))
-    *ppvObject = (IConnectionPoint*)This;
+    *ppvObject = This;
   else if (IsEqualIID(&IID_IConnectionPoint, riid))
-    *ppvObject = (IConnectionPoint*)This;
+    *ppvObject = This;
 
   /*
    * Check that we obtained an interface.
@@ -430,9 +430,9 @@ static HRESULT WINAPI EnumConnectionsImpl_QueryInterface(
    * Compare the riid with the interface IDs implemented by this object.
    */
   if (IsEqualIID(&IID_IUnknown, riid))
-    *ppvObject = (IEnumConnections*)This;
+    *ppvObject = This;
   else if (IsEqualIID(&IID_IEnumConnections, riid))
-    *ppvObject = (IEnumConnections*)This;
+    *ppvObject = This;
 
   /*
    * Check that we obtained an interface.

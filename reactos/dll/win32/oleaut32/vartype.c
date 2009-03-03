@@ -82,7 +82,7 @@ static inline void VARIANT_CopyData(const VARIANT *srcVar, VARTYPE vt, void *pOu
   else if (fract == -0.5) { typ is_odd = (typ)whole & 1; res = whole - is_odd; } \
   else if (fract > -0.5) res = (typ)whole; \
   else res = (typ)whole - (typ)1; \
-} while(0);
+} while(0)
 
 
 /* Coerce VT_BSTR to a numeric type */
@@ -3265,7 +3265,7 @@ HRESULT WINAPI VarR8FromUI4(ULONG ulIn, double *pDblOut)
  *  Success: S_OK.
  *  Failure: E_INVALIDARG, if the source value is invalid.
  */
-HRESULT WINAPI VarR8FromDec(DECIMAL* pDecIn, double *pDblOut)
+HRESULT WINAPI VarR8FromDec(const DECIMAL* pDecIn, double *pDblOut)
 {
   BYTE scale = DEC_SCALE(pDecIn);
   double divisor = 1.0, highPart;
@@ -3980,9 +3980,9 @@ HRESULT WINAPI VarCyRound(const CY cyIn, int cDecimals, CY* pCyOut)
 
     _VarR8FromCy(cyIn, &d);
     d = d * div;
-    VARIANT_DutchRound(LONGLONG, d, pCyOut->int64)
+    VARIANT_DutchRound(LONGLONG, d, pCyOut->int64);
     d = (double)pCyOut->int64 / div * CY_MULTIPLIER_F;
-    VARIANT_DutchRound(LONGLONG, d, pCyOut->int64)
+    VARIANT_DutchRound(LONGLONG, d, pCyOut->int64);
     return S_OK;
   }
 }
@@ -5662,6 +5662,9 @@ HRESULT WINAPI VarDecAbs(const DECIMAL* pDecIn, DECIMAL* pDecOut)
  */
 HRESULT WINAPI VarDecFix(const DECIMAL* pDecIn, DECIMAL* pDecOut)
 {
+  double dbl;
+  HRESULT hr;
+
   if (DEC_SIGN(pDecIn) & ~DECIMAL_NEG)
     return E_INVALIDARG;
 
@@ -5671,8 +5674,13 @@ HRESULT WINAPI VarDecFix(const DECIMAL* pDecIn, DECIMAL* pDecOut)
     return S_OK;
   }
 
-  FIXME("semi-stub!\n");
-  return DISP_E_OVERFLOW;
+  hr = VarR8FromDec(pDecIn, &dbl);
+  if (SUCCEEDED(hr)) {
+    LONGLONG rounded = dbl;
+
+    hr = VarDecFromI8(rounded, pDecOut);
+  }
+  return hr;
 }
 
 /************************************************************************
@@ -5694,14 +5702,22 @@ HRESULT WINAPI VarDecFix(const DECIMAL* pDecIn, DECIMAL* pDecOut)
  */
 HRESULT WINAPI VarDecInt(const DECIMAL* pDecIn, DECIMAL* pDecOut)
 {
+  double dbl;
+  HRESULT hr;
+
   if (DEC_SIGN(pDecIn) & ~DECIMAL_NEG)
     return E_INVALIDARG;
 
   if (!(DEC_SIGN(pDecIn) & DECIMAL_NEG) || !DEC_SCALE(pDecIn))
     return VarDecFix(pDecIn, pDecOut); /* The same, if +ve or no fractionals */
 
-  FIXME("semi-stub!\n");
-  return DISP_E_OVERFLOW;
+  hr = VarR8FromDec(pDecIn, &dbl);
+  if (SUCCEEDED(hr)) {
+    LONGLONG rounded = dbl >= 0.0 ? dbl + 0.5 : dbl - 0.5;
+
+    hr = VarDecFromI8(rounded, pDecOut);
+  }
+  return hr;
 }
 
 /************************************************************************

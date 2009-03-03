@@ -80,7 +80,7 @@ static HRESULT WINAPI ClassMoniker_QueryInterface(IMoniker* iface,REFIID riid,vo
         *ppvObject = iface;
     }
     else if (IsEqualIID(&IID_IROTData, riid))
-        *ppvObject = (IROTData*)&(This->lpVtblRotData);
+        *ppvObject = &This->lpVtblRotData;
     else if (IsEqualIID(&IID_IMarshal, riid))
     {
         HRESULT hr = S_OK;

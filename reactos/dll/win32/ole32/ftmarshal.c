@@ -46,8 +46,8 @@ typedef struct _FTMarshalImpl {
 	IUnknown *pUnkOuter;
 } FTMarshalImpl;
 
-#define _IFTMUnknown_(This)(IUnknown*)&(This->lpVtbl)
-#define _IFTMarshal_(This) (IMarshal*)&(This->lpvtblFTM)
+#define _IFTMUnknown_(This) ((IUnknown*)&(This)->lpVtbl)
+#define _IFTMarshal_(This)  (&(This)->lpvtblFTM)
 
 static inline FTMarshalImpl *impl_from_IMarshal( IMarshal *iface )
 {

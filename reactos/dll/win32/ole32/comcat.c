@@ -226,12 +226,6 @@ static HRESULT COMCAT_IsClassOfCategories(
     HKEY key,
     struct class_categories const* categories)
 {
-    static const WCHAR impl_keyname[] = { 'I', 'm', 'p', 'l', 'e', 'm', 'e', 'n',
-                                          't', 'e', 'd', ' ', 'C', 'a', 't', 'e',
-                                          'g', 'o', 'r', 'i', 'e', 's', 0 };
-    static const WCHAR req_keyname[]  = { 'R', 'e', 'q', 'u', 'i', 'r', 'e', 'd',
-                                          ' ', 'C', 'a', 't', 'e', 'g', 'o', 'r',
-                                          'i', 'e', 's', 0 };
     HKEY subkey;
     HRESULT res;
     DWORD index;
@@ -732,7 +726,7 @@ static HRESULT WINAPI COMCAT_IClassFactory_QueryInterface(
     if (IsEqualGUID(riid, &IID_IUnknown) ||
 	IsEqualGUID(riid, &IID_IClassFactory))
     {
-	*ppvObj = (LPVOID)iface;
+        *ppvObj = iface;
         IUnknown_AddRef(iface);
 	return S_OK;
     }
@@ -847,7 +841,7 @@ static HRESULT WINAPI COMCAT_IEnumCATEGORYINFO_QueryInterface(
     if (IsEqualGUID(riid, &IID_IUnknown) ||
 	IsEqualGUID(riid, &IID_IEnumCATEGORYINFO))
     {
-	*ppvObj = (LPVOID)iface;
+        *ppvObj = iface;
 	COMCAT_IEnumCATEGORYINFO_AddRef(iface);
 	return S_OK;
     }
@@ -1030,7 +1024,7 @@ static HRESULT WINAPI COMCAT_CLSID_IEnumGUID_QueryInterface(
     if (IsEqualGUID(riid, &IID_IUnknown) ||
 	IsEqualGUID(riid, &IID_IEnumGUID))
     {
-	*ppvObj = (LPVOID)iface;
+        *ppvObj = iface;
 	COMCAT_CLSID_IEnumGUID_AddRef(iface);
 	return S_OK;
     }
@@ -1048,7 +1042,7 @@ static ULONG WINAPI COMCAT_CLSID_IEnumGUID_Release(LPENUMGUID iface)
     ref = InterlockedDecrement(&This->ref);
     if (ref == 0) {
 	if (This->key) RegCloseKey(This->key);
-	HeapFree(GetProcessHeap(), 0, (LPVOID)This->categories);
+        HeapFree(GetProcessHeap(), 0, This->categories);
 	HeapFree(GetProcessHeap(), 0, This);
 	return 0;
     }
@@ -1139,14 +1133,14 @@ static HRESULT WINAPI COMCAT_CLSID_IEnumGUID_Clone(
 
     new_this->lpVtbl = This->lpVtbl;
     new_this->ref = 1;
-    size = HeapSize(GetProcessHeap(), 0, (LPVOID)This->categories);
+    size = HeapSize(GetProcessHeap(), 0, This->categories);
     new_this->categories =
 	HeapAlloc(GetProcessHeap(), 0, size);
     if (new_this->categories == NULL) {
 	HeapFree(GetProcessHeap(), 0, new_this);
 	return E_OUTOFMEMORY;
     }
-    memcpy((LPVOID)new_this->categories, This->categories, size);
+    memcpy(new_this->categories, This->categories, size);
     /* FIXME: could we more efficiently use DuplicateHandle? */
     RegOpenKeyExW(HKEY_CLASSES_ROOT, keyname, 0, KEY_READ, &new_this->key);
     new_this->next_index = This->next_index;
@@ -1216,7 +1210,7 @@ static HRESULT WINAPI COMCAT_CATID_IEnumGUID_QueryInterface(
     if (IsEqualGUID(riid, &IID_IUnknown) ||
 	IsEqualGUID(riid, &IID_IEnumGUID))
     {
-	*ppvObj = (LPVOID)iface;
+        *ppvObj = iface;
 	COMCAT_CATID_IEnumGUID_AddRef(iface);
 	return S_OK;
     }

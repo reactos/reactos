@@ -500,15 +500,10 @@ HRESULT WINAPI DoDragDrop (
   trackerInfo.curTargetHWND     = 0;
   trackerInfo.curDragTarget     = 0;
 
-  hwndTrackWindow = CreateWindowA(OLEDD_DRAGTRACKERCLASS,
-				    "TrackerWindow",
-				    WS_POPUP,
-				    CW_USEDEFAULT, CW_USEDEFAULT,
-				    CW_USEDEFAULT, CW_USEDEFAULT,
-				    0,
-				    0,
-				    0,
-				    (LPVOID)&trackerInfo);
+  hwndTrackWindow = CreateWindowA(OLEDD_DRAGTRACKERCLASS, "TrackerWindow",
+                                  WS_POPUP, CW_USEDEFAULT, CW_USEDEFAULT,
+                                  CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, 0,
+                                  &trackerInfo);
 
   if (hwndTrackWindow!=0)
   {
@@ -1963,7 +1958,7 @@ static LRESULT WINAPI OLEDD_DragTrackerWindowProc(
     {
       LPCREATESTRUCTA createStruct = (LPCREATESTRUCTA)lParam;
 
-      SetWindowLongA(hwnd, 0, (LONG)createStruct->lpCreateParams);
+      SetWindowLongPtrA(hwnd, 0, (LONG_PTR)createStruct->lpCreateParams);
       SetTimer(hwnd, DRAG_TIMER_ID, 50, NULL);
 
       break;
@@ -1971,7 +1966,7 @@ static LRESULT WINAPI OLEDD_DragTrackerWindowProc(
     case WM_TIMER:
     case WM_MOUSEMOVE:
     {
-      OLEDD_TrackMouseMove((TrackerWindowInfo*)GetWindowLongA(hwnd, 0));
+      OLEDD_TrackMouseMove((TrackerWindowInfo*)GetWindowLongPtrA(hwnd, 0));
       break;
     }
     case WM_LBUTTONUP:
@@ -1981,7 +1976,7 @@ static LRESULT WINAPI OLEDD_DragTrackerWindowProc(
     case WM_MBUTTONDOWN:
     case WM_RBUTTONDOWN:
     {
-      OLEDD_TrackStateChange((TrackerWindowInfo*)GetWindowLongA(hwnd, 0));
+      OLEDD_TrackStateChange((TrackerWindowInfo*)GetWindowLongPtrA(hwnd, 0));
       break;
     }
     case WM_DESTROY:
@@ -2599,7 +2594,7 @@ BSTR WINAPI PropSysAllocString(LPCOLESTR str)
     stringBuffer = (WCHAR*)newBuffer;
     stringBuffer[len] = '\0';
 
-    return (LPWSTR)stringBuffer;
+    return stringBuffer;
 }
 
 /***********************************************************************
@@ -2901,9 +2896,9 @@ HRESULT WINAPI PropVariantCopy(PROPVARIANT *pvarDest,      /* [out] */
             case VT_FILETIME: elemSize = sizeof(pvarSrc->u.filetime); break;
             case VT_CLSID:    elemSize = sizeof(*pvarSrc->u.puuid); break;
             case VT_CF:       elemSize = sizeof(*pvarSrc->u.pclipdata); break;
-            case VT_BSTR:     elemSize = sizeof(*pvarSrc->u.bstrVal); break;
-            case VT_LPSTR:    elemSize = sizeof(*pvarSrc->u.pszVal); break;
-            case VT_LPWSTR:   elemSize = sizeof(*pvarSrc->u.pwszVal); break;
+            case VT_BSTR:     elemSize = sizeof(pvarSrc->u.bstrVal); break;
+            case VT_LPSTR:    elemSize = sizeof(pvarSrc->u.pszVal); break;
+            case VT_LPWSTR:   elemSize = sizeof(pvarSrc->u.pwszVal); break;
             case VT_VARIANT:  elemSize = sizeof(*pvarSrc->u.pvarVal); break;
 
             default:

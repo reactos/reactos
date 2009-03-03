@@ -233,7 +233,7 @@ static HRESULT WINAPI StdDispatch_QueryInterface(
     if (IsEqualIID(riid, &IID_IDispatch) ||
         IsEqualIID(riid, &IID_IUnknown))
     {
-        *ppvObject = (LPVOID)This;
+        *ppvObject = This;
 	IUnknown_AddRef((LPUNKNOWN)*ppvObject);
 	return S_OK;
     }

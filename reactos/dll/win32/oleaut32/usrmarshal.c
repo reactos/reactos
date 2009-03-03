@@ -784,7 +784,7 @@ ULONG WINAPI LPSAFEARRAY_UserSize(ULONG *pFlags, ULONG StartingSize, LPSAFEARRAY
             {
                 BSTR* lpBstr;
 
-                for (lpBstr = (BSTR*)psa->pvData; ulCellCount; ulCellCount--, lpBstr++)
+                for (lpBstr = psa->pvData; ulCellCount; ulCellCount--, lpBstr++)
                     size = BSTR_UserSize(pFlags, size, lpBstr);
 
                 break;
@@ -798,7 +798,7 @@ ULONG WINAPI LPSAFEARRAY_UserSize(ULONG *pFlags, ULONG StartingSize, LPSAFEARRAY
             {
                 VARIANT* lpVariant;
 
-                for (lpVariant = (VARIANT*)psa->pvData; ulCellCount; ulCellCount--, lpVariant++)
+                for (lpVariant = psa->pvData; ulCellCount; ulCellCount--, lpVariant++)
                     size = VARIANT_UserSize(pFlags, size, lpVariant);
 
                 break;
@@ -897,7 +897,7 @@ unsigned char * WINAPI LPSAFEARRAY_UserMarshal(ULONG *pFlags, unsigned char *Buf
                 {
                     BSTR* lpBstr;
 
-                    for (lpBstr = (BSTR*)psa->pvData; ulCellCount; ulCellCount--, lpBstr++)
+                    for (lpBstr = psa->pvData; ulCellCount; ulCellCount--, lpBstr++)
                         Buffer = BSTR_UserMarshal(pFlags, Buffer, lpBstr);
 
                     break;
@@ -911,7 +911,7 @@ unsigned char * WINAPI LPSAFEARRAY_UserMarshal(ULONG *pFlags, unsigned char *Buf
                 {
                     VARIANT* lpVariant;
 
-                    for (lpVariant = (VARIANT*)psa->pvData; ulCellCount; ulCellCount--, lpVariant++)
+                    for (lpVariant = psa->pvData; ulCellCount; ulCellCount--, lpVariant++)
                         Buffer = VARIANT_UserMarshal(pFlags, Buffer, lpVariant);
 
                     break;
@@ -1052,7 +1052,7 @@ unsigned char * WINAPI LPSAFEARRAY_UserUnmarshal(ULONG *pFlags, unsigned char *B
             {
                 BSTR* lpBstr;
 
-                for (lpBstr = (BSTR*)(*ppsa)->pvData; cell_count; cell_count--, lpBstr++)
+                for (lpBstr = (*ppsa)->pvData; cell_count; cell_count--, lpBstr++)
                     Buffer = BSTR_UserUnmarshal(pFlags, Buffer, lpBstr);
 
                 break;
@@ -1066,7 +1066,7 @@ unsigned char * WINAPI LPSAFEARRAY_UserUnmarshal(ULONG *pFlags, unsigned char *B
             {
                 VARIANT* lpVariant;
 
-                for (lpVariant = (VARIANT*)(*ppsa)->pvData; cell_count; cell_count--, lpVariant++)
+                for (lpVariant = (*ppsa)->pvData; cell_count; cell_count--, lpVariant++)
                     Buffer = VARIANT_UserUnmarshal(pFlags, Buffer, lpVariant);
 
                 break;

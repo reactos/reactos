@@ -606,7 +606,7 @@ static HRESULT WINAPI RemUnknown_QueryInterface(IRemUnknown *iface, REFIID riid,
     if (IsEqualIID(riid, &IID_IUnknown) ||
         IsEqualIID(riid, &IID_IRemUnknown))
     {
-        *ppv = (LPVOID)iface;
+        *ppv = iface;
         IRemUnknown_AddRef(iface);
         return S_OK;
     }

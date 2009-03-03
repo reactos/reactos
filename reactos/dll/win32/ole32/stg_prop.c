@@ -927,23 +927,23 @@ static HRESULT WINAPI IPropertyStorage_fnStat(
 static int PropertyStorage_PropNameCompare(const void *a, const void *b,
  void *extra)
 {
-    PropertyStorage_impl *This = (PropertyStorage_impl *)extra;
+    PropertyStorage_impl *This = extra;
 
     if (This->codePage == CP_UNICODE)
     {
         TRACE("(%s, %s)\n", debugstr_w(a), debugstr_w(b));
         if (This->grfFlags & PROPSETFLAG_CASE_SENSITIVE)
-            return lstrcmpW((LPCWSTR)a, (LPCWSTR)b);
+            return lstrcmpW(a, b);
         else
-            return lstrcmpiW((LPCWSTR)a, (LPCWSTR)b);
+            return lstrcmpiW(a, b);
     }
     else
     {
         TRACE("(%s, %s)\n", debugstr_a(a), debugstr_a(b));
         if (This->grfFlags & PROPSETFLAG_CASE_SENSITIVE)
-            return lstrcmpA((LPCSTR)a, (LPCSTR)b);
+            return lstrcmpA(a, b);
         else
-            return lstrcmpiA((LPCSTR)a, (LPCSTR)b);
+            return lstrcmpiA(a, b);
     }
 }
 
@@ -961,7 +961,7 @@ static int PropertyStorage_PropCompare(const void *a, const void *b,
 
 static void PropertyStorage_PropertyDestroy(void *k, void *d, void *extra)
 {
-    PropVariantClear((PROPVARIANT *)d);
+    PropVariantClear(d);
     HeapFree(GetProcessHeap(), 0, d);
 }
 
@@ -1486,8 +1486,8 @@ struct DictionaryClosure
 static BOOL PropertyStorage_DictionaryWriter(const void *key,
  const void *value, void *extra, void *closure)
 {
-    PropertyStorage_impl *This = (PropertyStorage_impl *)extra;
-    struct DictionaryClosure *c = (struct DictionaryClosure *)closure;
+    PropertyStorage_impl *This = extra;
+    struct DictionaryClosure *c = closure;
     DWORD propid;
     ULONG count;
 
@@ -1756,8 +1756,8 @@ struct PropertyClosure
 static BOOL PropertyStorage_PropertiesWriter(const void *key, const void *value,
  void *extra, void *closure)
 {
-    PropertyStorage_impl *This = (PropertyStorage_impl *)extra;
-    struct PropertyClosure *c = (struct PropertyClosure *)closure;
+    PropertyStorage_impl *This = extra;
+    struct PropertyClosure *c = closure;
 
     assert(key);
     assert(value);

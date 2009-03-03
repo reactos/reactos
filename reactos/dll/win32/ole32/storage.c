@@ -1287,7 +1287,7 @@ HRESULT CDECL IStream16_fnWrite(
 	BYTE	block[BIGSIZE];
 	ULONG	*byteswritten=pcbWrite,xxwritten;
 	int	oldsize,newsize,i,curoffset=0,lastblocknr,blocknr,cc;
-	const BYTE*     pbv = (const BYTE*)pv;
+	const BYTE* pbv = pv;
 
 	if (!pcbWrite) byteswritten=&xxwritten;
 	*byteswritten = 0;
