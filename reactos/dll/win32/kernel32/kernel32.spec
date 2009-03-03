@@ -1,13 +1,13 @@
 @ stdcall AcquireSRWLockExclusive(ptr) ntdll.RtlAcquireSRWLockExclusive
 @ stdcall AcquireSRWLockShare(ptr) ntdll.RtlAcquireSRWLockShared
-@ stdcall ActivateActCtx(ptr ptr)
+#@ stdcall ActivateActCtx(ptr ptr)
 @ stdcall AddAtomA(str)
 @ stdcall AddAtomW(wstr)
 @ stdcall AddConsoleAliasA(str str str) #check
 @ stdcall AddConsoleAliasW(wstr wstr wstr) #check
 @ stdcall AddLocalAlternateComputerNameA(str ptr)
 @ stdcall AddLocalAlternateComputerNameW(wstr ptr)
-@ stdcall AddRefActCtx(ptr)
+#@ stdcall AddRefActCtx(ptr)
 @ stdcall AddVectoredExceptionHandler(long ptr) ntdll.RtlAddVectoredExceptionHandler
 @ stdcall AllocConsole()
 @ stub AllocLSCallback # missed in XP SP3
@@ -75,8 +75,8 @@
 @ stdcall CopyFileExW (wstr wstr ptr ptr ptr long)
 @ stdcall CopyFileW(wstr wstr long)
 @ stdcall CopyLZFile(long long) LZCopy
-@ stdcall CreateActCtxA(ptr)
-@ stdcall CreateActCtxW(ptr)
+#@ stdcall CreateActCtxA(ptr)
+#@ stdcall CreateActCtxW(ptr)
 @ stdcall CreateConsoleScreenBuffer(long long ptr long ptr)
 @ stdcall CreateDirectoryA(str ptr)
 @ stdcall CreateDirectoryExA(str str ptr)
@@ -129,7 +129,7 @@
 @ stdcall CreateWaitableTimerW(ptr long wstr)
 @ stdcall CreateWaitableTimerExA (ptr str long long)
 @ stdcall CreateWaitableTimerExW (ptr wstr long long)
-@ stdcall DeactivateActCtx(long ptr)
+#@ stdcall DeactivateActCtx(long ptr)
 @ stdcall DebugActiveProcess(long)
 @ stdcall DebugActiveProcessStop(long)
 @ stdcall DebugBreak() ntdll.DbgBreakPoint
@@ -213,9 +213,9 @@
 @ stdcall FillConsoleOutputAttribute(long long long long ptr)
 @ stdcall FillConsoleOutputCharacterA(long long long long ptr)
 @ stdcall FillConsoleOutputCharacterW(long long long long ptr)
-@ stdcall FindActCtxSectionGuid(long ptr long ptr ptr)
-@ stdcall FindActCtxSectionStringA(long ptr long str ptr)
-@ stdcall FindActCtxSectionStringW(long ptr long wstr ptr)
+#@ stdcall FindActCtxSectionGuid(long ptr long ptr ptr)
+#@ stdcall FindActCtxSectionStringA(long ptr long str ptr)
+#@ stdcall FindActCtxSectionStringW(long ptr long wstr ptr)
 @ stdcall FindAtomA(str)
 @ stdcall FindAtomW(wstr)
 @ stdcall FindClose(long)
@@ -330,7 +330,7 @@
 @ stdcall GetConsoleWindow()
 @ stdcall GetCurrencyFormatA(long long str ptr str long)
 @ stdcall GetCurrencyFormatW(long long str ptr str long)
-@ stdcall GetCurrentActCtx(ptr)
+#@ stdcall GetCurrentActCtx(ptr)
 @ stdcall GetCurrentConsoleFont(long long ptr)
 @ stdcall GetCurrentDirectoryA(long ptr)
 @ stdcall GetCurrentDirectoryW(long ptr)
@@ -692,7 +692,7 @@
 @ stdcall ProcessIdToSessionId(long ptr)
 @ stdcall PulseEvent(long)
 @ stdcall PurgeComm(long long)
-@ stdcall QueryActCtxW(long ptr ptr long ptr long ptr)
+#@ stdcall QueryActCtxW(long ptr ptr long ptr long ptr)
 @ stdcall QueryDepthSList(ptr) ntdll.RtlQueryDepthSList
 @ stdcall QueryDosDeviceA(str ptr long)
 @ stdcall QueryDosDeviceW(wstr ptr long)
@@ -733,7 +733,7 @@
 @ stdcall RegisterWaitForSingleObjectEx(long ptr ptr long long)
 @ stdcall RegisterWowBaseHandlers(long)
 @ stdcall RegisterWowExec(long)
-@ stdcall ReleaseActCtx(ptr)
+#@ stdcall ReleaseActCtx(ptr)
 @ stdcall ReleaseMutex(long)
 @ stdcall ReleaseSemaphore(long long ptr)
 @ stdcall ReleaseSRWLockExclusive(ptr) ntdll.RtlReleaseSRWLockExclusive
@@ -980,7 +980,7 @@
 @ stdcall WriteProfileStringW(wstr wstr wstr)
 @ stdcall WriteTapemark(ptr long long long)
 @ stdcall WTSGetActiveConsoleSessionId()
-@ stdcall ZombifyActCtx(ptr)
+#@ stdcall ZombifyActCtx(ptr)
 @ stub _DebugOut # missed in XP SP3
 @ stub _DebugPrintf # missed in XP SP3
 @ stdcall _hread(long ptr long)
