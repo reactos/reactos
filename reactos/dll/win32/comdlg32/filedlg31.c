@@ -822,7 +822,7 @@ LONG FD31_WMInitDialog(HWND hWnd, WPARAM wParam, LPARAM lParam)
   PFD31_DATA lfs = (PFD31_DATA) lParam;
 
   if (!lfs) return FALSE;
-  SetPropA(hWnd, FD31_OFN_PROP, (HANDLE)lfs);
+  SetPropA(hWnd, FD31_OFN_PROP, lfs);
   lfs->hwnd = hWnd;
   ofn = lfs->ofnW;
 

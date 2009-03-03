@@ -315,13 +315,13 @@ BEGIN
   AUTORADIOBUTTON "P&ozioma", rad2, 16, 190, 52, 12, BS_AUTORADIOBUTTON
   GROUPBOX "Marginesy", grp4, 80, 156, 152, 56, BS_GROUPBOX
   LTEXT "&Lewy:", stc15, 88, 172, 21, 8
-  EDITTEXT edt4, 111, 170, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER|ES_NUMBER
+  EDITTEXT edt4, 111, 170, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
   LTEXT "&Prawy:", stc16, 159, 172, 27, 8
-  EDITTEXT edt6, 187, 170, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER|ES_NUMBER
+  EDITTEXT edt6, 187, 170, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
   LTEXT "&Górny:", stc17, 88, 192, 21, 8
-  EDITTEXT edt5, 111, 190, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER|ES_NUMBER
+  EDITTEXT edt5, 111, 190, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
   LTEXT "&Dolny:", stc18, 159, 192, 23, 8
-  EDITTEXT edt7, 187, 190, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER|ES_NUMBER
+  EDITTEXT edt7, 187, 190, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
   DEFPUSHBUTTON "OK", IDOK, 71, 220, 50, 14, BS_PUSHBUTTON
   PUSHBUTTON "Anuluj", IDCANCEL, 126, 220, 50, 14
   PUSHBUTTON "Dr&ukarka...", psh3, 184, 220, 48, 14
@@ -409,8 +409,8 @@ Po zainstalowaniu spróbuj ponownie."
     PD32_DEFAULT_PRINTER                  "Domyœlna drukarka; "
     PD32_NR_OF_DOCUMENTS_IN_QUEUE         "W kolejce znajduj¹ siê %d dokumenty"
     PD32_MARGINS_IN_INCHES                "Marginesy [cale]"
-    PD32_MARGINS_IN_MILIMETERS            "Marginesy [mm]"
-    PD32_MILIMETERS                       "mm"
+    PD32_MARGINS_IN_MILLIMETERS           "Marginesy [mm]"
+    PD32_MILLIMETERS                      "mm"
     PD32_PRINTER_STATUS_READY             "Gotowy"
     PD32_PRINTER_STATUS_PAUSED            "Przerwany; "
     PD32_PRINTER_STATUS_ERROR             "B³¹d; "

@@ -336,13 +336,13 @@ BEGIN
   AUTORADIOBUTTON "&Liggend", rad2, 16, 190, 52, 12, BS_AUTORADIOBUTTON
   GROUPBOX "Borders", grp4, 80, 156, 152, 56, BS_GROUPBOX
   LTEXT "L&inks:", stc15, 88, 172, 21, 8
-  EDITTEXT edt4, 111, 170, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER|ES_NUMBER
+  EDITTEXT edt4, 111, 170, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
   LTEXT "&Rechts:", stc16, 159, 172, 27, 8
-  EDITTEXT edt6, 187, 170, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER|ES_NUMBER
+  EDITTEXT edt6, 187, 170, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
   LTEXT "B&oven:", stc17, 88, 192, 21, 8
-  EDITTEXT edt5, 111, 190, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER|ES_NUMBER
+  EDITTEXT edt5, 111, 190, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
   LTEXT "&Onder:", stc18, 159, 192, 23, 8
-  EDITTEXT edt7, 187, 190, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER|ES_NUMBER
+  EDITTEXT edt7, 187, 190, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
   DEFPUSHBUTTON "OK", IDOK, 71, 220, 50, 14, BS_PUSHBUTTON
   PUSHBUTTON "Annuleren", IDCANCEL, 126, 220, 50, 14
   PUSHBUTTON "P&rinter...", psh3, 184, 220, 48, 14
@@ -415,8 +415,8 @@ printer installeren. Installeer een printer en probeer het opnieuw."
     PD32_NR_OF_DOCUMENTS_IN_QUEUE         "Er staan %d documenten in de \
 wachtrij"
     PD32_MARGINS_IN_INCHES                "Marges [inch]"
-    PD32_MARGINS_IN_MILIMETERS            "Marges [mm]"
-    PD32_MILIMETERS                       "mm"
+    PD32_MARGINS_IN_MILLIMETERS           "Marges [mm]"
+    PD32_MILLIMETERS                      "mm"
 
     PD32_PRINTER_STATUS_READY             "Klaar"
     PD32_PRINTER_STATUS_PAUSED            "Gepauseerd, "

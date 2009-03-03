@@ -320,13 +320,13 @@ BEGIN
   AUTORADIOBUTTON "横向(&L)", rad2, 16, 190, 52, 12, BS_AUTORADIOBUTTON
   GROUPBOX "边距", grp4, 80, 156, 152, 56, BS_GROUPBOX
   LTEXT "左(&e):", stc15, 88, 172, 21, 8
-  EDITTEXT edt4, 111, 170, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER|ES_NUMBER
+  EDITTEXT edt4, 111, 170, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
   LTEXT "右(&R):", stc16, 159, 172, 27, 8
-  EDITTEXT edt6, 187, 170, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER|ES_NUMBER
+  EDITTEXT edt6, 187, 170, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
   LTEXT "上(&o):", stc17, 88, 192, 21, 8
-  EDITTEXT edt5, 111, 190, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER|ES_NUMBER
+  EDITTEXT edt5, 111, 190, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
   LTEXT "下(&B):", stc18, 159, 192, 23, 8
-  EDITTEXT edt7, 187, 190, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER|ES_NUMBER
+  EDITTEXT edt7, 187, 190, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
   DEFPUSHBUTTON "确定", IDOK, 71, 220, 50, 14, BS_PUSHBUTTON
   PUSHBUTTON "取消", IDCANCEL, 126, 220, 50, 14
   PUSHBUTTON "打印机(&P)...", psh3, 184, 220, 48, 14
@@ -415,8 +415,8 @@ STRINGTABLE DISCARDABLE
     PD32_DEFAULT_PRINTER                  "默认打印机; "
     PD32_NR_OF_DOCUMENTS_IN_QUEUE         "有 %d 个文档正在等待打印"
     PD32_MARGINS_IN_INCHES                "页边距 [英寸]"
-    PD32_MARGINS_IN_MILIMETERS            "页边距 [毫米]"
-    PD32_MILIMETERS                       "毫米"
+    PD32_MARGINS_IN_MILLIMETERS           "页边距 [毫米]"
+    PD32_MILLIMETERS                      "毫米"
 
     PD32_PRINTER_STATUS_READY             "待命"
     PD32_PRINTER_STATUS_PAUSED            "暂停; "
@@ -679,8 +679,8 @@ STRINGTABLE DISCARDABLE
     PD32_DEFAULT_PRINTER                  "默認印表機; "
     PD32_NR_OF_DOCUMENTS_IN_QUEUE         "有 %d 個文檔正在等待列印"
     PD32_MARGINS_IN_INCHES                "邊緣空白 [英寸]"
-    PD32_MARGINS_IN_MILIMETERS            "邊緣空白 [毫米]"
-    PD32_MILIMETERS                       "毫米"
+    PD32_MARGINS_IN_MILLIMETERS           "邊緣空白 [毫米]"
+    PD32_MILLIMETERS                      "毫米"
 
     PD32_PRINTER_STATUS_READY             "待命"
     PD32_PRINTER_STATUS_PAUSED            "暫停; "

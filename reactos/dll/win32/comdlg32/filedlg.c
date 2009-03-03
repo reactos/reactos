@@ -292,7 +292,7 @@ static BOOL GetFileName95(FileOpenDlgInfos *fodInfos)
                                      (LPARAM) fodInfos);
     else
       lRes = DialogBoxIndirectParamA(COMDLG32_hInstance,
-                                     (LPCDLGTEMPLATEA) template,
+                                     template,
                                      fodInfos->ofnInfos->hwndOwner,
                                      FileOpenDlgProc95,
                                      (LPARAM) fodInfos);
@@ -998,7 +998,7 @@ INT_PTR CALLBACK FileOpenDlgProc95(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 
 	 /* Adds the FileOpenDlgInfos in the property list of the dialog
             so it will be easily accessible through a GetPropA(...) */
-      	 SetPropA(hwnd, FileOpenDlgInfosStr, (HANDLE) fodInfos);
+         SetPropA(hwnd, FileOpenDlgInfosStr, fodInfos);
 
          FILEDLG95_InitControls(hwnd);
 
@@ -1971,7 +1971,7 @@ BOOL FILEDLG95_OnOpen(HWND hwnd)
         DWORD len;
 
         /* replace the current filter */
-        MemFree((LPVOID)fodInfos->ShellInfos.lpstrCurrentFilter);
+        MemFree(fodInfos->ShellInfos.lpstrCurrentFilter);
         len = lstrlenW(lpszTemp)+1;
         fodInfos->ShellInfos.lpstrCurrentFilter = MemAlloc(len * sizeof(WCHAR));
         lstrcpyW( fodInfos->ShellInfos.lpstrCurrentFilter, lpszTemp);
@@ -2205,7 +2205,6 @@ BOOL FILEDLG95_OnOpen(HWND hwnd)
           ret = EndDialog(hwnd, FALSE);
           COMDLG32_SetCommDlgExtendedError(FNERR_BUFFERTOOSMALL);
         }
-        goto ret;
       }
       break;
   }
@@ -2485,7 +2484,7 @@ static BOOL FILEDLG95_FILETYPE_OnCommand(HWND hwnd, WORD wNotifyCode)
         (fodInfos->customfilter == NULL ? 1 : 0);
 
       /* Set the current filter with the current selection */
-      MemFree((LPVOID)fodInfos->ShellInfos.lpstrCurrentFilter);
+      MemFree(fodInfos->ShellInfos.lpstrCurrentFilter);
 
       lpstrFilter = (LPWSTR) CBGetItemDataPtr(fodInfos->DlgInfos.hwndFileTypeCB,
                                              iItem);
@@ -2593,7 +2592,7 @@ static void FILEDLG95_LOOKIN_Init(HWND hwndCombo)
 
   liInfos->iMaxIndentation = 0;
 
-  SetPropA(hwndCombo, LookInInfosStr, (HANDLE) liInfos);
+  SetPropA(hwndCombo, LookInInfosStr, liInfos);
 
   /* set item height for both text field and listbox */
   CBSetItemHeight(hwndCombo,-1,GetSystemMetrics(SM_CYSMICON));
@@ -2902,7 +2901,7 @@ static int FILEDLG95_LOOKIN_InsertItemAfterParent(HWND hwnd,LPITEMIDLIST pidl)
   }
 
   /* Free pidlParent memory */
-  COMDLG32_SHFree((LPVOID)pidlParent);
+  COMDLG32_SHFree(pidlParent);
 
   return FILEDLG95_LOOKIN_AddItem(hwnd,pidl,iParentPos + 1);
 }
@@ -3115,7 +3114,7 @@ void FILEDLG95_FILENAME_FillFromSelection (HWND hwnd)
               lstrcpyW( lpstrAllFile, lpstrTemp );
 	    }
           }
-          COMDLG32_SHFree( (LPVOID) pidl );
+          COMDLG32_SHFree( pidl );
 	}
       }
       SetWindowTextW( fodInfos->DlgInfos.hwndFileName, lpstrAllFile );

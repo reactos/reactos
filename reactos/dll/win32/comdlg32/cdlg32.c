@@ -83,12 +83,6 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD Reason, LPVOID Reserved)
 
 		SHELL32_hInstance = GetModuleHandleA("SHELL32.DLL");
 
-		if (!SHELL32_hInstance)
-		{
-			ERR("loading of shell32 failed\n");
-			return FALSE;
-		}
-
 		/* ITEMIDLIST */
 		GPA(COMDLG32_PIDL_ILIsEqual, SHELL32_hInstance, (LPCSTR)21L);
 		GPA(COMDLG32_PIDL_ILCombine, SHELL32_hInstance, (LPCSTR)25L);

@@ -95,8 +95,8 @@ typedef struct {
 #define PD32_NR_OF_DOCUMENTS_IN_QUEUE         1583
 
 #define PD32_MARGINS_IN_INCHES                1585
-#define PD32_MARGINS_IN_MILIMETERS            1586
-#define PD32_MILIMETERS                       1587
+#define PD32_MARGINS_IN_MILLIMETERS           1586
+#define PD32_MILLIMETERS                      1587
 
 /* Charset names string IDs */
 
@@ -193,8 +193,6 @@ BOOL CC_HookCallChk( const CHOOSECOLORW *lpcc );
 int CC_MouseCheckResultWindow( HWND hDlg, LPARAM lParam );
 LRESULT CC_WMLButtonDown( HWND hDlg, WPARAM wParam, LPARAM lParam );
 LRESULT CC_WMLButtonUp( HWND hDlg, WPARAM wParam, LPARAM lParam );
-LRESULT CC_WMCommand( HWND hDlg, WPARAM wParam, LPARAM lParam, WORD 
-						notifyCode, HWND hwndCtl );
 LRESULT CC_WMMouseMove( HWND hDlg, LPARAM lParam );
 LRESULT CC_WMPaint( HWND hDlg, WPARAM wParam, LPARAM lParam );
 void CC_SwitchToFullSize( HWND hDlg, COLORREF result, LPCRECT lprect );
