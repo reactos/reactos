@@ -104,7 +104,7 @@ VOID AddBreakHandler (VOID);
 VOID RemoveBreakHandler (VOID);
 BOOL SubstituteForVars(TCHAR *Src, TCHAR *Dest);
 LPTSTR DoDelayedExpansion(LPTSTR Line);
-BOOL DoCommand (LPTSTR line);
+BOOL DoCommand (LPTSTR line, struct _PARSED_COMMAND *Cmd);
 BOOL ReadLine(TCHAR *commandline, BOOL bMore);
 int cmd_main (int argc, const TCHAR *argv[]);
 

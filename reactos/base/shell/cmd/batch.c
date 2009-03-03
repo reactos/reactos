@@ -171,8 +171,6 @@ VOID ExitBatch (LPTSTR msg)
 
 	if (bc != NULL)
 	{
-		LPBATCH_CONTEXT t = bc;
-
 		if (bc->hBatchFile)
 		{
 			CloseHandle (bc->hBatchFile);
@@ -192,7 +190,6 @@ VOID ExitBatch (LPTSTR msg)
 		bEcho = bc->bEcho;
 
 		bc = bc->prev;
-		cmd_free(t);
 	}
 
 	if (msg && *msg)
@@ -207,8 +204,10 @@ VOID ExitBatch (LPTSTR msg)
  *
  */
 
-BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param, BOOL forcenew)
+BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param, PARSED_COMMAND *Cmd)
 {
+	BATCH_CONTEXT new;
+
 	HANDLE hFile;
 	SetLastError(0);
 	hFile = CreateFile (fullname, GENERIC_READ, FILE_SHARE_WRITE | FILE_SHARE_READ | FILE_SHARE_DELETE, NULL,
@@ -227,22 +226,7 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param, BOOL forcenew)
 	/* Kill any and all FOR contexts */
 	fc = NULL;
 
-	if (bc == NULL || forcenew)
-	{
-		/* No curent batch file, create a new context */
-		LPBATCH_CONTEXT n = (LPBATCH_CONTEXT)cmd_alloc (sizeof(BATCH_CONTEXT));
-
-		if (n == NULL)
-		{
-			error_out_of_memory ();
-			return FALSE;
-		}
-
-		n->prev = bc;
-		bc = n;
-		bc->RedirList = NULL;
-	}
-	else if (bc->hBatchFile != INVALID_HANDLE_VALUE)
+	if (bc != NULL && Cmd == bc->current)
 	{
 		/* Then we are transferring to another batch */
 		CloseHandle (bc->hBatchFile);
@@ -251,6 +235,20 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param, BOOL forcenew)
 			cmd_free (bc->params);
 		if (bc->raw_params)
 			cmd_free (bc->raw_params);
+		AddBatchRedirection(&Cmd->Redirections);
+	}
+	else
+	{
+		/* If a batch file runs another batch file as part of a compound command
+		 * (e.g. "x.bat & somethingelse") then the first file gets terminated. */
+		if (Cmd != NULL)
+			ExitBatch(NULL);
+
+		/* Create a new context. This function will not
+		 * return until this context has been exited */
+		new.prev = bc;
+		bc = &new;
+		bc->RedirList = NULL;
 	}
 
 	GetFullPathName(fullname, sizeof(bc->BatchFilePath) / sizeof(TCHAR), bc->BatchFilePath, NULL);
@@ -264,16 +262,41 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param, BOOL forcenew)
     //
     // Allocate enough memory to hold the params and copy them over without modifications
     //
-    bc->raw_params = (TCHAR*) cmd_alloc((_tcslen(param)+1) * sizeof(TCHAR));
-    if (bc->raw_params != NULL)
-    {
-        _tcscpy(bc->raw_params,param);
-    }
-    else
+    bc->raw_params = cmd_dup(param);
+    if (bc->raw_params == NULL)
     {
         error_out_of_memory();
         return FALSE;
     }
+
+	/* Check if this is a "CALL :label" */
+	if (*firstword == _T(':'))
+		cmd_goto(firstword);
+
+	/* If we have created a new context, don't return
+	 * until this batch file has completed. */
+	while (bc == &new && !bExit)
+	{
+		Cmd = ParseCommand(NULL);
+		if (!Cmd)
+			continue;
+
+		/* JPP 19980807 */
+		/* Echo batch file line */
+		if (bEcho && Cmd->Type != C_QUIET)
+		{
+			PrintPrompt();
+			EchoCommand(Cmd);
+			ConOutChar(_T('\n'));
+		}
+
+		bc->current = Cmd;
+		ExecuteCommand(Cmd);
+		if (bEcho && !bIgnoreEcho && Cmd->Type != C_QUIET)
+			ConOutChar(_T('\n'));
+		FreeCommand(Cmd);
+		bIgnoreEcho = FALSE;
+	}
 
     /* Don't print a newline for this command */
     bIgnoreEcho = TRUE;
@@ -313,50 +336,34 @@ VOID AddBatchRedirection(REDIRECTION **RedirList)
 
 LPTSTR ReadBatchLine ()
 {
-	LPTSTR first;
-
 	/* No batch */
 	if (bc == NULL)
 		return NULL;
 
 	TRACE ("ReadBatchLine ()\n");
 
-	while (1)
+	/* User halt */
+	if (CheckCtrlBreak (BREAK_BATCHFILE))
 	{
-		/* User halt */
-		if (CheckCtrlBreak (BREAK_BATCHFILE))
-		{
-			while (bc)
-				ExitBatch (NULL);
-			return NULL;
-		}
-
-		/* No batch */
-		if (bc == NULL)
-			return NULL;
-
-		if (!FileGetString (bc->hBatchFile, textline, sizeof (textline) / sizeof (textline[0]) - 1))
-		{
-			TRACE ("ReadBatchLine(): Reached EOF!\n");
-			/* End of file.... */
+		while (bc)
 			ExitBatch (NULL);
-
-			if (bc == NULL)
-				return NULL;
-
-			continue;
-		}
-		TRACE ("ReadBatchLine(): textline: \'%s\'\n", debugstr_aw(textline));
-
-		if (textline[_tcslen(textline) - 1] != _T('\n'))
-			_tcscat(textline, _T("\n"));
-
-		first = textline;
-
-		break;
+		return NULL;
 	}
 
-	return first;
+	if (!FileGetString (bc->hBatchFile, textline, sizeof (textline) / sizeof (textline[0]) - 1))
+	{
+		TRACE ("ReadBatchLine(): Reached EOF!\n");
+		/* End of file.... */
+		ExitBatch (NULL);
+		return NULL;
+	}
+
+	TRACE ("ReadBatchLine(): textline: \'%s\'\n", debugstr_aw(textline));
+
+	if (textline[_tcslen(textline) - 1] != _T('\n'))
+		_tcscat(textline, _T("\n"));
+
+	return textline;
 }
 
 /* EOF */

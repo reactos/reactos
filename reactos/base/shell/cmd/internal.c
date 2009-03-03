@@ -707,7 +707,7 @@ INT CommandShowCommandsDetail (LPTSTR param)
 		LPTSTR NewCommand = cmd_alloc((_tcslen(param)+4)*sizeof(TCHAR));
 		_tcscpy(NewCommand, param);
 		_tcscat(NewCommand, _T(" /?"));
-		DoCommand(NewCommand);
+		DoCommand(NewCommand, NULL);
 		cmd_free(NewCommand);
 	}
 	/* Else, display detailed commands list */

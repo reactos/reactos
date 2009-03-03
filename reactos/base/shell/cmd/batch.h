@@ -17,6 +17,7 @@ typedef struct tagBATCHCONTEXT
 	INT    shiftlevel;
 	BOOL   bEcho;        /* Preserve echo flag across batch calls */
 	REDIRECTION *RedirList;
+	PARSED_COMMAND *current; 
 } BATCH_CONTEXT, *LPBATCH_CONTEXT;
 
 typedef struct tagFORCONTEXT
@@ -45,7 +46,7 @@ extern TCHAR textline[BATCH_BUFFSIZE]; /* Buffer for reading Batch file lines */
 LPTSTR FindArg (INT);
 LPTSTR BatchParams (LPTSTR, LPTSTR);
 VOID   ExitBatch (LPTSTR);
-BOOL   Batch (LPTSTR, LPTSTR, LPTSTR, BOOL);
+BOOL   Batch (LPTSTR, LPTSTR, LPTSTR, PARSED_COMMAND *);
 LPTSTR ReadBatchLine();
 VOID AddBatchRedirection(REDIRECTION **);
 

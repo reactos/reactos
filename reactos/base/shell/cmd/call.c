@@ -42,8 +42,6 @@
 
 INT cmd_call (LPTSTR param)
 {
-	LPBATCH_CONTEXT n = NULL;
-
 	TRACE ("cmd_call: (\'%s\')\n", debugstr_aw(param));
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
@@ -62,39 +60,10 @@ INT cmd_call (LPTSTR param)
 			while (_istspace(*param))
 				param++;
 		}
-		if (!Batch(bc->BatchFilePath, first, param, TRUE))
-			return 1;
-		return cmd_goto(first);
+		return !Batch(bc->BatchFilePath, first, param, NULL);
 	}
 
-    nErrorLevel = 0;
-
-	n = (LPBATCH_CONTEXT)cmd_alloc (sizeof (BATCH_CONTEXT));
-
-	if (n == NULL)
-	{
-		error_out_of_memory ();
-		return 1;
-	}
-
-	n->prev = bc;
-	bc = n;
-
-	bc->hBatchFile = INVALID_HANDLE_VALUE;
-	bc->params = NULL;
-	bc->shiftlevel = 0;
-	bc->RedirList = NULL;
-	ParseCommandLine (param);
-
-
-	/* Wasn't a batch file so remove conext */
-	if (bc->hBatchFile == INVALID_HANDLE_VALUE)
-	{
-		bc = bc->prev;
-		cmd_free (n);
-	}
-
-	return 0;
+	return !DoCommand(param, NULL);
 }
 
 /* EOF */

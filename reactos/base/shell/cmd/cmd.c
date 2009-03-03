@@ -324,7 +324,7 @@ static BOOL RunFile(LPTSTR filename)
  */
 
 static BOOL
-Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
+Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
 {
 	TCHAR *szFullName=NULL;
 	TCHAR *first = NULL;
@@ -470,7 +470,7 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 	if (dot && (!_tcsicmp (dot, _T(".bat")) || !_tcsicmp (dot, _T(".cmd"))))
 	{
 		TRACE ("[BATCH: %s %s]\n", debugstr_aw(szFullName), debugstr_aw(rest));
-		Batch (szFullName, first, rest, FALSE);
+		Batch (szFullName, first, rest, Cmd);
 	}
 	else
 	{
@@ -568,7 +568,7 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
  */
 
 BOOL
-DoCommand (LPTSTR line)
+DoCommand (LPTSTR line, PARSED_COMMAND *Cmd)
 {
 	TCHAR *com = NULL;  /* the first word in the command */
 	TCHAR *cp = NULL;
@@ -642,7 +642,7 @@ DoCommand (LPTSTR line)
 			/* If end of table execute ext cmd */
 			if (cmdptr->name == NULL)
 			{
-				ret = Execute (line, com, rest);
+				ret = Execute (line, com, rest, Cmd);
 				break;
 			}
 
@@ -866,7 +866,6 @@ ExecutePipeline(PARSED_COMMAND *Cmd)
 BOOL
 ExecuteCommand(PARSED_COMMAND *Cmd)
 {
-	BOOL bNewBatch = TRUE;
 	PARSED_COMMAND *Sub;
 	LPTSTR ExpandedLine;
 	BOOL Success = TRUE;
@@ -877,20 +876,14 @@ ExecuteCommand(PARSED_COMMAND *Cmd)
 	switch (Cmd->Type)
 	{
 	case C_COMMAND:
-		if(bc)
-			bNewBatch = FALSE;
-
 		ExpandedLine = DoDelayedExpansion(Cmd->Command.CommandLine);
 		if (!ExpandedLine)
 		{
 			Success = FALSE;
 			break;
 		}
-		Success = DoCommand(ExpandedLine);
+		Success = DoCommand(ExpandedLine, Cmd);
 		cmd_free(ExpandedLine);
-
-		if(bNewBatch && bc)
-			AddBatchRedirection(&Cmd->Redirections);
 		break;
 	case C_QUIET:
 	case C_BLOCK:
@@ -1330,7 +1323,7 @@ ReadLine (TCHAR *commandline, BOOL bMore)
 	LPTSTR ip;
 
 	/* if no batch input then... */
-	if (!(ip = ReadBatchLine()))
+	if (bc == NULL)
 	{
 		if (bNoInteractive)
 		{
@@ -1360,6 +1353,9 @@ ReadLine (TCHAR *commandline, BOOL bMore)
 	}
 	else
 	{
+		ip = ReadBatchLine();
+		if (!ip)
+			return FALSE;
 		bIsBatch = TRUE;
 	}
 
@@ -1378,17 +1374,8 @@ ProcessInput (BOOL bFlag)
 		if (!Cmd)
 			continue;
 
-		/* JPP 19980807 */
-		/* Echo batch file line */
-		if (bIsBatch && bEcho && Cmd->Type != C_QUIET)
-		{
-			PrintPrompt ();
-			EchoCommand(Cmd);
-			ConOutChar(_T('\n'));
-		}
-
 		ExecuteCommand(Cmd);
-		if (bEcho && !bIgnoreEcho && (!bIsBatch || Cmd->Type != C_QUIET))
+		if (bEcho && !bIgnoreEcho)
 			ConOutChar ('\n');
 		FreeCommand(Cmd);
 		bIgnoreEcho = FALSE;
