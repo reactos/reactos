@@ -524,8 +524,8 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     IopInitializePnpServices(IopRootDeviceNode);
 
     /* Load system start drivers */
-    PnpSystemInit = TRUE;
     IopInitializeSystemDrivers();
+    PnpSystemInit = TRUE;
 
     /* Destroy the group driver list */
     IoDestroyDriverList();

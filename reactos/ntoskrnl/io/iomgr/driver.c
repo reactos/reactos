@@ -32,6 +32,7 @@ POBJECT_TYPE IoDriverObjectType = NULL;
 #define TAG_RTLREGISTRY TAG('R', 'q', 'r', 'v')
 
 extern BOOLEAN ExpInTextModeSetup;
+extern BOOLEAN PnpSystemInit;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -482,7 +483,7 @@ IopInitializeDriverModule(
        DeviceObject = DeviceObject->NextDevice;
    }
 
-   IopReinitializeDrivers();
+   if (PnpSystemInit) IopReinitializeDrivers();
 
    return STATUS_SUCCESS;
 }
