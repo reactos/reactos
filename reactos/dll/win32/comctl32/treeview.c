@@ -1112,7 +1112,7 @@ TREEVIEW_DoSetItemT(const TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *wineItem,
     if (tvItem->mask & TVIF_TEXT)
     {
         wineItem->textWidth = 0; /* force width recalculation */
-	if (tvItem->pszText != LPSTR_TEXTCALLBACKW) /* covers != TEXTCALLBACKA too */
+	if (tvItem->pszText != LPSTR_TEXTCALLBACKW && tvItem->pszText != NULL) /* covers != TEXTCALLBACKA too, and undocumented: pszText of NULL also means TEXTCALLBACK */
 	{
             int len;
             LPWSTR newText;

@@ -405,7 +405,7 @@ HEADER_DrawItem (HWND hwnd, HDC hdc, INT iItem, BOOL bHotTrack, LRESULT lCDFlags
 	}
 
 	if ((phdi->fmt & HDF_BITMAP) && (phdi->hbm)) {
-	    GetObjectW (phdi->hbm, sizeof(BITMAP), (LPVOID)&bmp);
+            GetObjectW (phdi->hbm, sizeof(BITMAP), &bmp);
 	    bw = bmp.bmWidth + 2 * infoPtr->iMargin;
 	    if (!iw) {
 		x = &bx;
@@ -903,7 +903,7 @@ HEADER_PrepareCallbackItems(HWND hwnd, INT iItem, INT reqMask)
         if (mask & HDI_TEXT)
             pvBuffer = Alloc(MAX_HEADER_TEXT_LEN * sizeof(CHAR));
     }
-    dispInfo.pszText      = (LPWSTR)pvBuffer;
+    dispInfo.pszText      = pvBuffer;
     dispInfo.cchTextMax   = (pvBuffer!=NULL?MAX_HEADER_TEXT_LEN:0);
     dispInfo.iItem        = iItem;
     dispInfo.mask         = mask;
@@ -923,7 +923,7 @@ HEADER_PrepareCallbackItems(HWND hwnd, INT iItem, INT reqMask)
     {
         if (infoPtr->nNotifyFormat == NFR_UNICODE)
         {
-            lpItem->pszText = (LPWSTR)pvBuffer;
+            lpItem->pszText = pvBuffer;
 
             /* the user might have used his own buffer */
             if (dispInfo.pszText != lpItem->pszText)

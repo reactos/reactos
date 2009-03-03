@@ -243,7 +243,7 @@ ImageList_Add (HIMAGELIST himl,	HBITMAP hbmImage, HBITMAP hbmMask)
     if (!is_valid(himl))
         return -1;
 
-    if (!GetObjectW(hbmImage, sizeof(BITMAP), (LPVOID)&bmp))
+    if (!GetObjectW(hbmImage, sizeof(BITMAP), &bmp))
         return -1;
 
     nImageCount = bmp.bmWidth / himl->cx;
@@ -1730,14 +1730,14 @@ ImageList_LoadImageW (HINSTANCE hi, LPCWSTR lpbmp, INT cx, INT cGrow,
             DeleteObject (handle);
             return NULL;
         }
-        ImageList_AddMasked (himl, (HBITMAP)handle, clrMask);
+        ImageList_AddMasked (himl, handle, clrMask);
     }
     else if ((uType == IMAGE_ICON) || (uType == IMAGE_CURSOR)) {
         ICONINFO ii;
         BITMAP bmp;
 
         GetIconInfo (handle, &ii);
-        GetObjectW (ii.hbmColor, sizeof(BITMAP), (LPVOID)&bmp);
+        GetObjectW (ii.hbmColor, sizeof(BITMAP), &bmp);
         himl = ImageList_Create (bmp.bmWidth, bmp.bmHeight,
                                  ILC_MASK | ILC_COLOR, 1, cGrow);
         if (!himl) {
@@ -2196,7 +2196,7 @@ ImageList_Replace (HIMAGELIST himl, INT i, HBITMAP hbmImage,
         return FALSE;
     }
 
-    if (!GetObjectW(hbmImage, sizeof(BITMAP), (LPVOID)&bmp))
+    if (!GetObjectW(hbmImage, sizeof(BITMAP), &bmp))
         return FALSE;
 
     hdcImage = CreateCompatibleDC (0);
@@ -2291,7 +2291,7 @@ ImageList_ReplaceIcon (HIMAGELIST himl, INT nIndex, HICON hIcon)
         return -1;
     }
 
-    ret = GetObjectW (ii.hbmMask, sizeof(BITMAP), (LPVOID)&bmp);
+    ret = GetObjectW (ii.hbmMask, sizeof(BITMAP), &bmp);
     if (!ret) {
         ERR("couldn't get mask bitmap info\n");
         if (ii.hbmColor)
@@ -2686,7 +2686,7 @@ _write_bitmap(HBITMAP hBitmap, LPSTREAM pstm)
     HDC xdc;
     BOOL result = FALSE;
 
-    if (!GetObjectW(hBitmap, sizeof(BITMAP), (LPVOID)&bm))
+    if (!GetObjectW(hBitmap, sizeof(BITMAP), &bm))
         return FALSE;
 
     bitCount = bm.bmBitsPixel == 1 ? 1 : 24;

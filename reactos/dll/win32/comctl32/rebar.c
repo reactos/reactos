@@ -3469,19 +3469,19 @@ REBAR_Size (REBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 
 
 static LRESULT
-REBAR_StyleChanged (REBAR_INFO *infoPtr, LPARAM lParam)
+REBAR_StyleChanged (REBAR_INFO *infoPtr, INT nType, const STYLESTRUCT *lpStyle)
 {
-    STYLESTRUCT *ss = (STYLESTRUCT *)lParam;
-
     TRACE("current style=%08x, styleOld=%08x, style being set to=%08x\n",
-	  infoPtr->dwStyle, ss->styleOld, ss->styleNew);
-    infoPtr->orgStyle = infoPtr->dwStyle = ss->styleNew;
-    if (GetWindowTheme (infoPtr->hwndSelf))
-        infoPtr->dwStyle &= ~WS_BORDER;
-    /* maybe it should be COMMON_STYLES like in toolbar */
-    if ((ss->styleNew ^ ss->styleOld) & CCS_VERT)
-        REBAR_Layout(infoPtr);
-
+	  infoPtr->dwStyle, lpStyle->styleOld, lpStyle->styleNew);
+    if (nType == GWL_STYLE)
+    {
+        infoPtr->orgStyle = infoPtr->dwStyle = lpStyle->styleNew;
+        if (GetWindowTheme (infoPtr->hwndSelf))
+            infoPtr->dwStyle &= ~WS_BORDER;
+        /* maybe it should be COMMON_STYLES like in toolbar */
+        if ((lpStyle->styleNew ^ lpStyle->styleOld) & CCS_VERT)
+            REBAR_Layout(infoPtr);
+    }
     return FALSE;
 }
 
@@ -3715,7 +3715,7 @@ REBAR_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	    return REBAR_Size (infoPtr, wParam, lParam);
 
         case WM_STYLECHANGED:
-	    return REBAR_StyleChanged (infoPtr, lParam);
+	    return REBAR_StyleChanged (infoPtr, wParam, (LPSTYLESTRUCT)lParam);
 
         case WM_THEMECHANGED:
             return theme_changed (infoPtr);

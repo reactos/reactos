@@ -570,7 +570,7 @@ static HWND UPDOWN_SetBuddy (UPDOWN_INFO* infoPtr, HWND bud)
                good to break the window proc chain. */
             if (!GetPropW(bud, BUDDY_SUPERCLASS_WNDPROC)) {
                 baseWndProc = (WNDPROC)SetWindowLongPtrW(bud, GWLP_WNDPROC, (LPARAM)UPDOWN_Buddy_SubclassProc);
-                SetPropW(bud, BUDDY_SUPERCLASS_WNDPROC, (HANDLE)baseWndProc);
+                SetPropW(bud, BUDDY_SUPERCLASS_WNDPROC, baseWndProc);
             }
         }
 
