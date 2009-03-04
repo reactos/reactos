@@ -313,6 +313,122 @@ static backend_t * backend_first(LPWSTR name)
 }
 
 /******************************************************************
+ * AddMonitorW (spoolss.@)
+ *
+ * Install a Printmonitor
+ *
+ * PARAMS
+ *  pName       [I] Servername or NULL (local Computer)
+ *  Level       [I] Structure-Level (Must be 2)
+ *  pMonitors   [I] PTR to MONITOR_INFO_2
+ *
+ * RETURNS
+ *  Success: TRUE
+ *  Failure: FALSE
+ *
+ * NOTES
+ *  All Files for the Monitor must already be copied to %winsysdir% ("%SystemRoot%\system32")
+ *
+ */
+BOOL WINAPI AddMonitorW(LPWSTR pName, DWORD Level, LPBYTE pMonitors)
+{
+    backend_t * pb;
+    DWORD res = ROUTER_UNKNOWN;
+
+    TRACE("(%s, %d, %p)\n", debugstr_w(pName), Level, pMonitors);
+
+    if (Level != 2) {
+        SetLastError(ERROR_INVALID_LEVEL);
+        return FALSE;
+    }
+
+    pb = backend_first(pName);
+    if (pb && pb->fpAddMonitor)
+        res = pb->fpAddMonitor(pName, Level, pMonitors);
+    else
+    {
+        SetLastError(ERROR_PROC_NOT_FOUND);
+    }
+
+    TRACE("got %u with %u\n", res, GetLastError());
+    return (res == ROUTER_SUCCESS);
+}
+
+/******************************************************************
+ * AddPrinterDriverExW (spoolss.@)
+ *
+ * Install a Printer Driver with the Option to upgrade / downgrade the Files
+ *
+ * PARAMS
+ *  pName           [I] Servername or NULL (local Computer)
+ *  level           [I] Level for the supplied DRIVER_INFO_*W struct
+ *  pDriverInfo     [I] PTR to DRIVER_INFO_*W struct with the Driver Parameter
+ *  dwFileCopyFlags [I] How to Copy / Upgrade / Downgrade the needed Files
+ *
+ * RESULTS
+ *  Success: TRUE
+ *  Failure: FALSE
+ *
+ */
+BOOL WINAPI AddPrinterDriverExW(LPWSTR pName, DWORD level, LPBYTE pDriverInfo, DWORD dwFileCopyFlags)
+{
+    backend_t * pb;
+    DWORD res = ROUTER_UNKNOWN;
+
+    TRACE("(%s, %d, %p, 0x%x)\n", debugstr_w(pName), level, pDriverInfo, dwFileCopyFlags);
+
+    if (!pDriverInfo) {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    pb = backend_first(pName);
+    if (pb && pb->fpAddPrinterDriverEx)
+        res = pb->fpAddPrinterDriverEx(pName, level, pDriverInfo, dwFileCopyFlags);
+    else
+    {
+        SetLastError(ERROR_PROC_NOT_FOUND);
+    }
+
+    TRACE("got %u with %u\n", res, GetLastError());
+    return (res == ROUTER_SUCCESS);
+}
+
+/******************************************************************
+ * DeleteMonitorW (spoolss.@)
+ *
+ * Delete a specific Printmonitor from a Printing-Environment
+ *
+ * PARAMS
+ *  pName        [I] Servername or NULL (local Computer)
+ *  pEnvironment [I] Printing-Environment of the Monitor or NULL (Default)
+ *  pMonitorName [I] Name of the Monitor, that should be deleted
+ *
+ * RETURNS
+ *  Success: TRUE
+ *  Failure: FALSE
+ *
+ */
+BOOL WINAPI DeleteMonitorW(LPWSTR pName, LPWSTR pEnvironment, LPWSTR pMonitorName)
+{
+    backend_t * pb;
+    DWORD res = ROUTER_UNKNOWN;
+
+    TRACE("(%s, %s, %s)\n", debugstr_w(pName), debugstr_w(pEnvironment), debugstr_w(pMonitorName));
+
+    pb = backend_first(pName);
+    if (pb && pb->fpDeleteMonitor)
+        res = pb->fpDeleteMonitor(pName, pEnvironment, pMonitorName);
+    else
+    {
+        SetLastError(ERROR_PROC_NOT_FOUND);
+    }
+
+    TRACE("got %u with %u\n", res, GetLastError());
+    return (res == ROUTER_SUCCESS);
+}
+
+/******************************************************************
  * EnumMonitorsW (spoolss.@)
  *
  * Enumerate available Port-Monitors
@@ -398,4 +514,59 @@ BOOL WINAPI EnumPortsW(LPWSTR pName, DWORD Level, LPBYTE pPorts, DWORD cbBuf,
             pcbNeeded ? *pcbNeeded : 0, pcReturned ? *pcReturned : 0);
 
     return (res == ROUTER_SUCCESS);
+}
+
+/******************************************************************
+ * GetPrinterDriverDirectoryW (spoolss.@)
+ *
+ * Return the PATH for the Printer-Drivers
+ *
+ * PARAMS
+ *   pName            [I] Servername or NULL (local Computer)
+ *   pEnvironment     [I] Printing-Environment or NULL (Default)
+ *   Level            [I] Structure-Level (must be 1)
+ *   pDriverDirectory [O] PTR to Buffer that receives the Result
+ *   cbBuf            [I] Size of Buffer at pDriverDirectory
+ *   pcbNeeded        [O] PTR to DWORD that receives the size in Bytes used /
+ *                        required for pDriverDirectory
+ *
+ * RETURNS
+ *   Success: TRUE  and in pcbNeeded the Bytes used in pDriverDirectory
+ *   Failure: FALSE and in pcbNeeded the Bytes required for pDriverDirectory,
+ *   if cbBuf is too small
+ *
+ *   Native Values returned in pDriverDirectory on Success:
+ *|  NT(Windows NT x86): "%winsysdir%\\spool\\DRIVERS\\w32x86"
+ *|  NT(Windows x64):    "%winsysdir%\\spool\\DRIVERS\\x64"
+ *|  NT(Windows 4.0):    "%winsysdir%\\spool\\DRIVERS\\win40"
+ *|  win9x(Windows 4.0): "%winsysdir%"
+ *
+ *   "%winsysdir%" is the Value from GetSystemDirectoryW()
+ *
+ */
+BOOL WINAPI GetPrinterDriverDirectoryW(LPWSTR pName, LPWSTR pEnvironment,
+            DWORD Level, LPBYTE pDriverDirectory, DWORD cbBuf, LPDWORD pcbNeeded)
+{
+    backend_t * pb;
+    DWORD res = ROUTER_UNKNOWN;
+
+    TRACE("(%s, %s, %d, %p, %d, %p)\n", debugstr_w(pName),
+          debugstr_w(pEnvironment), Level, pDriverDirectory, cbBuf, pcbNeeded);
+
+    if (pcbNeeded) *pcbNeeded = 0;
+
+    pb = backend_first(pName);
+    if (pb && pb->fpGetPrinterDriverDirectory)
+        res = pb->fpGetPrinterDriverDirectory(pName, pEnvironment, Level,
+                                              pDriverDirectory, cbBuf, pcbNeeded);
+    else
+    {
+        SetLastError(ERROR_PROC_NOT_FOUND);
+    }
+
+    TRACE("got %u with %u (%u byte)\n",
+            res, GetLastError(), pcbNeeded ? *pcbNeeded : 0);
+
+    return (res == ROUTER_SUCCESS);
+
 }
