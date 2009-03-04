@@ -1243,7 +1243,6 @@ static BOOL UITOOLS95_DrawFrameMenu(HDC dc, LPRECT r, UINT uFlags)
     int i;
     HBRUSH hbsave;
     HPEN hpsave;
-    int xe, ye;
     int xc, yc;
     BOOL retval = TRUE;
 
@@ -1270,8 +1269,6 @@ static BOOL UITOOLS95_DrawFrameMenu(HDC dc, LPRECT r, UINT uFlags)
             break;
 
         case DFCS_MENUBULLET:
-            xe = myr.left;
-            ye = myr.top  + SmallDiam - SmallDiam/2;
             xc = myr.left + SmallDiam - SmallDiam/2;
             yc = myr.top  + SmallDiam - SmallDiam/2;
             i = 234*SmallDiam/750;
@@ -1280,8 +1277,7 @@ static BOOL UITOOLS95_DrawFrameMenu(HDC dc, LPRECT r, UINT uFlags)
             myr.right  = xc + i/2;
             myr.top    = yc - i/2;
             myr.bottom = yc + i/2;
-            // if the start and the end point are equal, Pie() only draws a single line, so start one pixel lower
-            Pie(dc, myr.left, myr.top, myr.right, myr.bottom, xe, ye+1, xe, ye);
+            Ellipse(dc, myr.left, myr.top, myr.right, myr.bottom);
             break;
 
         case DFCS_MENUCHECK:
