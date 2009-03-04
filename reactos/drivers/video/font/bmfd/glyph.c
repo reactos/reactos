@@ -13,6 +13,8 @@ FillFDDM(
     PFD_DEVICEMETRICS pfddm,
     PFONTINFO16 pFontInfo)
 {
+    ULONG cjMaxWidth, cjMaxBitmapSize;
+
     /* Fill FD_DEVICEMETRICS */
     pfddm->flRealizedType = FDM_MASK;
     pfddm->pteBase.x = FLOATL_1;
@@ -30,12 +32,20 @@ FillFDDM(
     pfddm->lD = GETVAL(pFontInfo->dfPixWidth);
     pfddm->cxMax = GETVAL(pFontInfo->dfMaxWidth);
     pfddm->cyMax = GETVAL(pFontInfo->dfPixHeight);
-    pfddm->cjGlyphMax = pfddm->cyMax * ((pfddm->cxMax + 7) / 8);
     pfddm->fxMaxAscender = GETVAL(pFontInfo->dfAscent) << 4;
     pfddm->fxMaxDescender = (pfddm->cyMax << 4) - pfddm->fxMaxAscender;
     pfddm->lMinA = 0;
     pfddm->lMinC = 0;
     pfddm->lMinD = 0;
+
+    /* Calculate Width in bytes */
+    cjMaxWidth = ((pfddm->cxMax + 7) >> 3);
+
+    /* Calculate size of the bitmap, rounded to DWORDs */
+    cjMaxBitmapSize = ((cjMaxWidth * pfddm->cyMax) + 3) & ~3;
+
+    /* cjGlyphMax is the full size of the GLYPHBITS structure */
+    pfddm->cjGlyphMax = FIELD_OFFSET(GLYPHBITS, aj) + cjMaxBitmapSize;
 
     /* NOTE: fdxQuantized and NonLinear... stay unchanged */
 }
@@ -130,7 +140,7 @@ BmfdQueryFontData(
 //                DbgBreakPoint();
 
                 /* Verify that the buffer is big enough */
-                if (cjSize < ulPixHeight * cjRow)
+                if (cjSize < FIELD_OFFSET(GLYPHBITS, aj) + ulPixHeight * cjRow)
                 {
                     DbgPrint("Buffer too small (%ld), %ld,%ld\n", 
                              cjSize, ulPixWidth, ulPixHeight);
@@ -157,11 +167,11 @@ BmfdQueryFontData(
                 
                 DbgPrint("iFace=%ld, ulGlyphOffset=%lx, ulPixHeight=%ld, cjRow=%ld\n", 
                          pfo->iFace, ulGlyphOffset, ulPixHeight, cjRow);
-                DbgBreakPoint();
+//                DbgBreakPoint();
             }
 
-            /* Return the size of the bitmap buffer */
-            return ulPixHeight * cjRow;
+            /* Return the size of the GLYPHBITS structure */
+            return FIELD_OFFSET(GLYPHBITS, aj) + ulPixHeight * cjRow;
         }
 
         case QFD_MAXEXTENTS: /* 3 */

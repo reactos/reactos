@@ -397,7 +397,7 @@ BmfdQueryFontTree(
     HGLYPH * phglyphs;
 
     DbgPrint("DrvQueryFontTree(iMode=%ld)\n", iMode);
-    DbgBreakPoint();
+//    DbgBreakPoint();
 
     /* Check parameters, we only support QFT_GLYPHSET */
     if (!iFace || iFace > pfont->cNumFaces || iMode != QFT_GLYPHSET)
@@ -482,7 +482,7 @@ BmfdQueryFontTree(
     {
         /* Use pointer to glyph entry as hglyph */
         cjOffset = (ach[i] - chFirst) * pface->cjEntrySize;
-        phglyphs[i] = (HGLYPH)pface->pCharTable + cjOffset;
+        phglyphs[i] = (HGLYPH)(pface->pCharTable + cjOffset);
 
         /* Check whether we can append the wchar to a run */
         if (awc[i] == awc[i - 1] + 1)

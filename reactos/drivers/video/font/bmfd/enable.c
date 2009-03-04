@@ -30,7 +30,7 @@ DbgPrint(IN PCHAR Format, IN ...)
     va_list args;
 
     va_start(args, Format);
-    EngDebugPrint("Bmfd: ", (PCHAR)Format, args);
+    EngDebugPrint("Bmfd: ", Format, args);
     va_end(args);
     return 0;
 }
