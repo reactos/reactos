@@ -72,6 +72,7 @@ typedef struct tagEnumTfLanguageProfiles {
     DWORD   lang_index;
 
     LANGID  langid;
+    ITfCategoryMgr *catmgr;
 } EnumTfLanguageProfiles;
 
 static HRESULT ProfilesEnumGuid_Constructor(IEnumGUID **ppOut);
@@ -670,6 +671,7 @@ static void EnumTfLanguageProfiles_Destructor(EnumTfLanguageProfiles *This)
     RegCloseKey(This->tipkey);
     if (This->langkey)
         RegCloseKey(This->langkey);
+    ITfCategoryMgr_Release(This->catmgr);
     HeapFree(GetProcessHeap(),0,This);
 }
 
@@ -746,6 +748,9 @@ static INT next_LanguageProfile(EnumTfLanguageProfiles *This, CLSID clsid, TF_LA
 
     if (tflp)
     {
+        static const GUID * tipcats[3] = { &GUID_TFCAT_TIP_KEYBOARD,
+                                           &GUID_TFCAT_TIP_SPEECH,
+                                           &GUID_TFCAT_TIP_HANDWRITING };
         res = CLSIDFromString(profileid, &profile);
         if (FAILED(res)) return 0;
 
@@ -754,7 +759,10 @@ static INT next_LanguageProfile(EnumTfLanguageProfiles *This, CLSID clsid, TF_LA
         /* FIXME */
         tflp->fActive = FALSE;
         tflp->guidProfile = profile;
-        /* FIXME set catid */
+        if (ITfCategoryMgr_FindClosestCategory(This->catmgr, &clsid,
+                &tflp->catid, tipcats, 3) != S_OK)
+            ITfCategoryMgr_FindClosestCategory(This->catmgr, &clsid,
+                    &tflp->catid, NULL, 0);
     }
 
     return 1;
@@ -865,6 +873,7 @@ static const IEnumTfLanguageProfilesVtbl IEnumTfLanguageProfiles_Vtbl ={
 
 static HRESULT EnumTfLanguageProfiles_Constructor(LANGID langid, IEnumTfLanguageProfiles **ppOut)
 {
+    HRESULT hr;
     EnumTfLanguageProfiles *This;
 
     This = HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,sizeof(EnumTfLanguageProfiles));
@@ -874,6 +883,13 @@ static HRESULT EnumTfLanguageProfiles_Constructor(LANGID langid, IEnumTfLanguage
     This->Vtbl= &IEnumTfLanguageProfiles_Vtbl;
     This->refCount = 1;
     This->langid = langid;
+
+    hr = CategoryMgr_Constructor(NULL,(IUnknown**)&This->catmgr);
+    if (FAILED(hr))
+    {
+        HeapFree(GetProcessHeap(),0,This);
+        return hr;
+    }
 
     if (RegCreateKeyExW(HKEY_LOCAL_MACHINE, szwSystemTIPKey, 0, NULL, 0,
                     KEY_READ | KEY_WRITE, NULL, &This->tipkey, NULL) != ERROR_SUCCESS)

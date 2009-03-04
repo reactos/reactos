@@ -27,6 +27,7 @@
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(jscript);
+WINE_DECLARE_DEBUG_CHANNEL(heap);
 
 const char *debugstr_variant(const VARIANT *v)
 {
@@ -51,6 +52,7 @@ const char *debugstr_variant(const VARIANT *v)
 }
 
 #define MIN_BLOCK_SIZE  128
+#define ARENA_FREE_FILLER  0xaa
 
 static inline DWORD block_size(DWORD block)
 {
@@ -83,25 +85,25 @@ void *jsheap_alloc(jsheap_t *heap, DWORD size)
         heap->block_cnt = 1;
     }
 
-    if(heap->offset + size < block_size(heap->last_block)) {
+    if(heap->offset + size <= block_size(heap->last_block)) {
         tmp = ((BYTE*)heap->blocks[heap->last_block])+heap->offset;
         heap->offset += size;
         return tmp;
     }
 
-    if(size < block_size(heap->last_block+1)) {
+    if(size <= block_size(heap->last_block+1)) {
         if(heap->last_block+1 == heap->block_cnt) {
             tmp = heap_realloc(heap->blocks, (heap->block_cnt+1)*sizeof(void*));
             if(!tmp)
                 return NULL;
+
             heap->blocks = tmp;
+            heap->blocks[heap->block_cnt] = heap_alloc(block_size(heap->block_cnt));
+            if(!heap->blocks[heap->block_cnt])
+                return NULL;
+
+            heap->block_cnt++;
         }
-
-        tmp = heap_alloc(block_size(heap->block_cnt+1));
-        if(!tmp)
-            return NULL;
-
-        heap->blocks[heap->block_cnt++] = tmp;
 
         heap->last_block++;
         heap->offset = size;
@@ -139,7 +141,15 @@ void jsheap_clear(jsheap_t *heap)
         heap_free(tmp);
     }
 
+    if(WARN_ON(heap)) {
+        DWORD i;
+
+        for(i=0; i < heap->block_cnt; i++)
+            memset(heap->blocks[i], ARENA_FREE_FILLER, block_size(i));
+    }
+
     heap->last_block = heap->offset = 0;
+    heap->mark = FALSE;
 }
 
 void jsheap_free(jsheap_t *heap)

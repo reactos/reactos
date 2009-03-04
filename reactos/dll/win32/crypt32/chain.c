@@ -306,7 +306,13 @@ static BOOL CRYPT_AddCertToSimpleChain(PCertificateChainEngine engine,
                  = subjectInfoStatus;
             /* FIXME: initialize the rest of element */
             if (!(chain->cElement % engine->CycleDetectionModulus))
+            {
                 CRYPT_CheckSimpleChainForCycles(chain);
+                /* Reinitialize the element pointer in case the chain is
+                 * cyclic, in which case the chain is truncated.
+                 */
+                element = chain->rgpElement[chain->cElement - 1];
+            }
             CRYPT_CombineTrustStatus(&chain->TrustStatus,
              &element->TrustStatus);
             ret = TRUE;

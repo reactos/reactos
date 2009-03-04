@@ -168,9 +168,67 @@ static HRESULT WINAPI CategoryMgr_EnumItemsInCategory ( ITfCategoryMgr *iface,
 static HRESULT WINAPI CategoryMgr_FindClosestCategory ( ITfCategoryMgr *iface,
         REFGUID rguid, GUID *pcatid, const GUID **ppcatidList, ULONG ulCount)
 {
+    static const WCHAR fmt[] = { '%','s','\\','%','s','\\','C','a','t','e','g','o','r','y','\\','I','t','e','m','\\','%','s',0};
+
+    WCHAR fullkey[110];
+    WCHAR buf[39];
+    HKEY key;
+    HRESULT hr = S_FALSE;
+    INT index = 0;
     CategoryMgr *This = (CategoryMgr*)iface;
-    FIXME("STUB:(%p)\n",This);
-    return E_NOTIMPL;
+
+    TRACE("(%p)\n",This);
+
+    if (!pcatid || (ulCount && ppcatidList == NULL))
+        return E_INVALIDARG;
+
+    StringFromGUID2(rguid, buf, 39);
+    sprintfW(fullkey,fmt,szwSystemTIPKey,buf,buf);
+    *pcatid = GUID_NULL;
+
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,fullkey, 0, KEY_READ, &key ) !=
+            ERROR_SUCCESS)
+        return S_FALSE;
+
+    while (1)
+    {
+        HRESULT hr2;
+        ULONG res;
+        GUID guid;
+        WCHAR catid[39];
+        DWORD cName;
+
+        cName = 39;
+        res = RegEnumKeyExW(key, index, catid, &cName, NULL, NULL, NULL, NULL);
+        if (res != ERROR_SUCCESS && res != ERROR_MORE_DATA) break;
+        index ++;
+
+        hr2 = CLSIDFromString(catid, &guid);
+        if (FAILED(hr2)) continue;
+
+        if (ulCount)
+        {
+            int j;
+            BOOL found = FALSE;
+            for (j = 0; j < ulCount; j++)
+                if (IsEqualGUID(&guid, ppcatidList[j]))
+                {
+                    found = TRUE;
+                    *pcatid = guid;
+                    hr = S_OK;
+                    break;
+                }
+            if (found) break;
+        }
+        else
+        {
+            *pcatid = guid;
+            hr = S_OK;
+            break;
+        }
+    }
+
+    return hr;
 }
 
 static HRESULT WINAPI CategoryMgr_RegisterGUIDDescription (

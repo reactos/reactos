@@ -1912,9 +1912,34 @@ static HRESULT WINAPI fnIMLangFontLink_GetStrCodePages(
         DWORD* pdwCodePages,
         long* pcchCodePages)
 {
-    FIXME("(pszSrc=%s, cchSrc=%ld, dwPriorityCodePages=%d) stub\n", debugstr_w(pszSrc), cchSrc, dwPriorityCodePages);
-    *pdwCodePages = 0;
-    *pcchCodePages = 1;
+    long i;
+    DWORD cps = 0;
+
+    TRACE("(%p)->%s %ld %x %p %p\n", iface, debugstr_wn(pszSrc,cchSrc),cchSrc,dwPriorityCodePages,pdwCodePages,pcchCodePages);
+
+    if (pdwCodePages) *pdwCodePages = 0;
+    if (pcchCodePages) *pcchCodePages = 0;
+
+    if (!pszSrc || !cchSrc || cchSrc < 0)
+        return E_INVALIDARG;
+
+    for (i = 0; i < cchSrc; i++)
+    {
+        DWORD cp;
+        HRESULT ret;
+
+        ret = fnIMLangFontLink_GetCharCodePages(iface, pszSrc[i], &cp);
+        if (ret != S_OK) return E_FAIL;
+
+        if (!cps) cps = cp;
+        else cps &= cp;
+
+        /* FIXME: not tested */
+        if (dwPriorityCodePages & cps) break;
+    }
+
+    if (pdwCodePages) *pdwCodePages = cps;
+    if (pcchCodePages) *pcchCodePages = i;
     return S_OK;
 }
 
@@ -3179,10 +3204,8 @@ static HRESULT WINAPI fnIMLangFontLink2_GetStrCodePages( IMLangFontLink2* This,
         const WCHAR *pszSrc, long cchSrc, DWORD dwPriorityCodePages,
         DWORD *pdwCodePages, long *pcchCodePages)
 {
-    FIXME("(%p)->%s %li %x %p %p\n",This, debugstr_wn(pszSrc,cchSrc),cchSrc,dwPriorityCodePages,pdwCodePages,pcchCodePages);
-    *pdwCodePages = 0;
-    *pcchCodePages = 1;
-    return S_OK;
+    return fnIMLangFontLink_GetStrCodePages((IMLangFontLink *)This,
+            pszSrc, cchSrc, dwPriorityCodePages, pdwCodePages, pcchCodePages);
 }
 
 static HRESULT WINAPI fnIMLangFontLink2_CodePageToCodePages(IMLangFontLink2* This,

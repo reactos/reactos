@@ -532,8 +532,6 @@ static HRESULT URLMonikerImpl_BindToStorage_hack(LPCWSTR URLName, IBindCtx* pbc,
             if(SUCCEEDED(hres)) {
                 URL_COMPONENTSW url;
                 WCHAR *host, *path, *user, *pass;
-                DWORD dwService = 0;
-                BOOL bSuccess;
 
                 TRACE("got bindinfo. bindf = %08x extrainfo = %s bindinfof = %08x bindverb = %08x iid %s\n",
                       bindf, debugstr_w(bi.szExtraInfo), bi.grfBindInfoF, bi.dwBindVerb, debugstr_guid(&bi.iid));
@@ -583,23 +581,10 @@ static HRESULT URLMonikerImpl_BindToStorage_hack(LPCWSTR URLName, IBindCtx* pbc,
                             break;
                     }
 
-                    switch ((DWORD) url.nScheme)
-                    {
-                    case INTERNET_SCHEME_FTP:
-                        if (!url.nPort)
-                            url.nPort = INTERNET_DEFAULT_FTP_PORT;
-                        dwService = INTERNET_SERVICE_FTP;
-                        break;
-    
-                    case INTERNET_SCHEME_GOPHER:
-                        if (!url.nPort)
-                            url.nPort = INTERNET_DEFAULT_GOPHER_PORT;
-                        dwService = INTERNET_SERVICE_GOPHER;
-                        break;
-                    }
-
+                    if (!url.nPort)
+                        url.nPort = INTERNET_DEFAULT_GOPHER_PORT;
                     bind->hconnect = InternetConnectW(bind->hinternet, host, url.nPort, user, pass,
-                                                      dwService, 0, (DWORD_PTR)bind);
+                                                      INTERNET_SERVICE_GOPHER, 0, (DWORD_PTR)bind);
                     if (!bind->hconnect)
                     {
                             hres = HRESULT_FROM_WIN32(GetLastError());
@@ -612,37 +597,12 @@ static HRESULT URLMonikerImpl_BindToStorage_hack(LPCWSTR URLName, IBindCtx* pbc,
                     hres = IBindStatusCallback_OnProgress(bind->pbscb, 0, 0, BINDSTATUS_CONNECTING, NULL);
                     hres = IBindStatusCallback_OnProgress(bind->pbscb, 0, 0, BINDSTATUS_SENDINGREQUEST, NULL);
 
-                    bSuccess = FALSE;
-
-                    switch (dwService)
-                    {
-                    case INTERNET_SERVICE_GOPHER:
-                        bind->hrequest = GopherOpenFileW(bind->hconnect,
-                                                         path,
-                                                         0,
-                                                         INTERNET_FLAG_RELOAD,
-                                                         0);
-                        if (bind->hrequest)
-                                bSuccess = TRUE;
-                        else
-                                hres = HRESULT_FROM_WIN32(GetLastError());
-                        break;
-
-                    case INTERNET_SERVICE_FTP:
-                        bind->hrequest = FtpOpenFileW(bind->hconnect,
-                                                      path,
-                                                      GENERIC_READ,
-                                                      FTP_TRANSFER_TYPE_BINARY |
-                                                       INTERNET_FLAG_TRANSFER_BINARY |
-                                                       INTERNET_FLAG_RELOAD,
-                                                      0);
-                        if (bind->hrequest)
-                                bSuccess = TRUE;
-                        else
-                                hres = HRESULT_FROM_WIN32(GetLastError());
-                        break;
-                    }
-                    if(bSuccess)
+                    bind->hrequest = GopherOpenFileW(bind->hconnect,
+                                                     path,
+                                                     0,
+                                                     INTERNET_FLAG_RELOAD,
+                                                     0);
+                    if (bind->hrequest)
                     {
                         TRACE("res = %d gle = %u url len = %d\n", hres, GetLastError(), bind->expected_size);
 
@@ -660,7 +620,10 @@ static HRESULT URLMonikerImpl_BindToStorage_hack(LPCWSTR URLName, IBindCtx* pbc,
                         }
                         InternetCloseHandle(bind->hrequest);
                             hres = S_OK;
+                    }else {
+                        hres = HRESULT_FROM_WIN32(GetLastError());
                     }
+
             
                     InternetCloseHandle(bind->hconnect);
                     InternetCloseHandle(bind->hinternet);
@@ -704,9 +667,7 @@ static HRESULT WINAPI URLMonikerImpl_BindToStorage(IMoniker* iface,
         return E_FAIL;
     }
 
-    if(IsEqualGUID(&IID_IStream, riid) &&
-       (  url.nScheme == INTERNET_SCHEME_FTP
-       || url.nScheme == INTERNET_SCHEME_GOPHER))
+    if(IsEqualGUID(&IID_IStream, riid) && url.nScheme == INTERNET_SCHEME_GOPHER)
         return URLMonikerImpl_BindToStorage_hack(This->URLName, pbc, ppvObject);
 
     TRACE("(%p)->(%p %p %s %p)\n", This, pbc, pmkToLeft, debugstr_guid(riid), ppvObject);
