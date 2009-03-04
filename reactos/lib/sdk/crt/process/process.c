@@ -296,7 +296,7 @@ do_spawnT(int mode, const _TCHAR* cmdname, const _TCHAR* args, const _TCHAR* env
    {
       dwError = GetLastError();
       ERR("%x\n", dwError);
-      __set_errno(dwError);
+      _dosmaperr(dwError);
       return(-1);
    }
    CloseHandle(ProcessInformation.hThread);

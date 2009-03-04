@@ -34,7 +34,7 @@ int CDECL _tstat64(const _TCHAR *path, struct __stat64 *buf)
   if (!GetFileAttributesEx(path, GetFileExInfoStandard, &hfi))
   {
       TRACE("failed (%d)\n",GetLastError());
-      __set_errno(ERROR_FILE_NOT_FOUND);
+      _dosmaperr(ERROR_FILE_NOT_FOUND);
       return -1;
   }
 
@@ -101,7 +101,7 @@ int CDECL _fstat64(int fd, struct __stat64* buf)
   if (!buf)
   {
     WARN(":failed-NULL buf\n");
-    __set_errno(ERROR_INVALID_PARAMETER);
+    _dosmaperr(ERROR_INVALID_PARAMETER);
     return -1;
   }
 
@@ -125,7 +125,7 @@ int CDECL _fstat64(int fd, struct __stat64* buf)
     if (!GetFileInformationByHandle(hand, &hfi))
     {
       WARN(":failed-last error (%d)\n",GetLastError());
-      __set_errno(ERROR_INVALID_PARAMETER);
+      _dosmaperr(ERROR_INVALID_PARAMETER);
       return -1;
     }
     buf->st_mode = _S_IFREG | _S_IREAD;
