@@ -151,6 +151,7 @@ IntEngEnter(PINTENG_ENTER_LEAVE EnterLeave,
         }
     }
   }
+  else return FALSE;
 
   EnterLeave->DestObj = psoDest;
   EnterLeave->OutputObj = *ppsoOutput;
