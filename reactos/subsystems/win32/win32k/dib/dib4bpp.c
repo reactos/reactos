@@ -271,7 +271,8 @@ DIB_4BPP_BitBlt(PBLTINFO BltInfo)
       }
       else
       {
-         Pattern = ExpandSolidColor[BltInfo->Brush->iSolidColor];
+         if (BltInfo->Brush)
+           Pattern = ExpandSolidColor[BltInfo->Brush->iSolidColor];
       }
    }
 

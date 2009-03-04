@@ -106,7 +106,7 @@ BltMask(SURFOBJ* Dest,
     dx = DestRect->right  - DestRect->left;
     dy = DestRect->bottom - DestRect->top;
 
-    if (Brush->iSolidColor == 0xFFFFFFFF)
+    if (Brush && Brush->iSolidColor == 0xFFFFFFFF)
     {
         GdiBrush = CONTAINING_RECORD(
                        Brush,
@@ -140,13 +140,13 @@ BltMask(SURFOBJ* Dest,
                 if (psurfPattern == NULL)
                 {
                     DibFunctionsForBitmapFormat[Dest->iBitmapFormat].DIB_PutPixel(
-                        Dest, DestRect->left + i, DestRect->top + j, Brush->iSolidColor);
+                        Dest, DestRect->left + i, DestRect->top + j, Brush ? Brush->iSolidColor : 0);
                 }
                 else
                 {
                     DibFunctionsForBitmapFormat[Dest->iBitmapFormat].DIB_PutPixel(
                         Dest, DestRect->left + i, DestRect->top + j,
-                        DIB_GetSource(psoPattern, (DestRect->left + i) % PatternWidth, PatternY, GdiBrush->XlateObject));
+                        DIB_GetSource(psoPattern, (DestRect->left + i) % PatternWidth, PatternY, GdiBrush ? GdiBrush->XlateObject : NULL));
                 }
             }
             c8++;
@@ -180,7 +180,7 @@ BltPatCopy(SURFOBJ* Dest,
     // These functions are assigned if we're working with a DIB
     // The assigned functions depend on the bitsPerPixel of the DIB
 
-    DibFunctionsForBitmapFormat[Dest->iBitmapFormat].DIB_ColorFill(Dest, DestRect, Brush->iSolidColor);
+    DibFunctionsForBitmapFormat[Dest->iBitmapFormat].DIB_ColorFill(Dest, DestRect, Brush ? Brush->iSolidColor : 0);
 
     return TRUE;
 }
@@ -218,7 +218,7 @@ CallDibBitBlt(SURFOBJ* OutputObj,
     BltInfo.Rop4 = Rop4;
 
     /* Pattern brush */
-    if (ROP4_USES_PATTERN(Rop4) && Brush->iSolidColor == 0xFFFFFFFF)
+    if (ROP4_USES_PATTERN(Rop4) && Brush && Brush->iSolidColor == 0xFFFFFFFF)
     {
         GdiBrush = CONTAINING_RECORD(Brush, GDIBRUSHINST, BrushObject);
         if ((psurfPattern = SURFACE_LockSurface(GdiBrush->GdiBrushObject->hbmPattern)))
@@ -488,7 +488,7 @@ EngBitBlt(SURFOBJ *DestObj,
     }
     else if (ROP3_TO_ROP4(PATCOPY) == Rop4)
     {
-        if (Brush->iSolidColor == 0xFFFFFFFF)
+        if (Brush && Brush->iSolidColor == 0xFFFFFFFF)
             BltRectFunc = CallDibBitBlt;
         else
             BltRectFunc = BltPatCopy;
@@ -1547,7 +1547,7 @@ AlphaBltMask(SURFOBJ* psoDest,
 
     if (Mask != NULL)
     {
-        BrushColor = XLATEOBJ_iXlate(SrcColorTranslation, Brush->iSolidColor);
+        BrushColor = XLATEOBJ_iXlate(SrcColorTranslation, Brush ? Brush->iSolidColor : 0);
         r = (int)GetRValue(BrushColor);
         g = (int)GetGValue(BrushColor);
         b = (int)GetBValue(BrushColor);
@@ -1563,7 +1563,7 @@ AlphaBltMask(SURFOBJ* psoDest,
                     if (*lMask == 0xff)
                     {
                         DibFunctionsForBitmapFormat[psoDest->iBitmapFormat].DIB_PutPixel(
-                            psoDest, DestRect->left + i, DestRect->top + j, Brush->iSolidColor);
+                            psoDest, DestRect->left + i, DestRect->top + j, Brush ? Brush->iSolidColor : 0);
                     }
                     else
                     {
