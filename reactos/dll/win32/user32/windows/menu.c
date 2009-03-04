@@ -16,6 +16,8 @@
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
+LRESULT DefWndNCPaint(HWND hWnd, HRGN hRgn, BOOL Active);
+
 /* internal popup menu window messages */
 #define MM_SETMENUHANDLE (WM_USER + 0)
 #define MM_GETMENUHANDLE (WM_USER + 1)
@@ -4048,7 +4050,8 @@ DrawMenuBar(HWND hWnd)
                   SWP_NOZORDER | SWP_FRAMECHANGED );
   return TRUE;*/
   // FIXME: hackfix
-  return SendMessage(hWnd,WM_NCPAINT,(WPARAM)1,(LPARAM)0L);
+  DefWndNCPaint(hWnd,(HRGN)-1,-1);
+  return TRUE;
 }
 
 
