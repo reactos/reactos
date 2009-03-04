@@ -163,7 +163,6 @@ HANDLE hIn;
 HANDLE hOut;
 HANDLE hConsole;
 HANDLE CMD_ModuleHandle;
-HMODULE NtDllModule;
 
 static NtQueryInformationProcessProc NtQueryInformationProcessPtr = NULL;
 static NtReadVirtualMemoryProc       NtReadVirtualMemoryPtr = NULL;
@@ -1101,9 +1100,6 @@ GetBatchVar ( LPCTSTR varName, UINT* varNameLen )
 	return NULL;
 }
 
-BOOL bNoInteractive;
-BOOL bIsBatch;
-
 BOOL
 SubstituteVars(TCHAR *Src, TCHAR *Dest, TCHAR Delim)
 {
@@ -1131,7 +1127,7 @@ SubstituteVars(TCHAR *Src, TCHAR *Dest, TCHAR Delim)
 		}
 
 		Src++;
-		if (bIsBatch && Delim == _T('%'))
+		if (bc && Delim == _T('%'))
 		{
 			UINT NameLen;
 			Var = GetBatchVar(Src, &NameLen);
@@ -1162,7 +1158,7 @@ SubstituteVars(TCHAR *Src, TCHAR *Dest, TCHAR Delim)
 		if (Var == NULL)
 		{
 			/* In a batch file, %NONEXISTENT% "expands" to an empty string */
-			if (bIsBatch)
+			if (bc)
 				continue;
 			goto bad_subst;
 		}
@@ -1244,7 +1240,7 @@ SubstituteVars(TCHAR *Src, TCHAR *Dest, TCHAR Delim)
 
 	bad_subst:
 		Src = SubstStart;
-		if (!bIsBatch)
+		if (!bc)
 			APPEND1(Delim)
 	}
 	*Dest = _T('\0');
@@ -1325,12 +1321,6 @@ ReadLine (TCHAR *commandline, BOOL bMore)
 	/* if no batch input then... */
 	if (bc == NULL)
 	{
-		if (bNoInteractive)
-		{
-			bExit = TRUE;
-			return FALSE;
-		}
-
 		if (bMore)
 		{
 			ConOutPrintf(_T("More? "));
@@ -1349,25 +1339,22 @@ ReadLine (TCHAR *commandline, BOOL bMore)
 			return FALSE;
 		}
 		ip = readline;
-		bIsBatch = FALSE;
 	}
 	else
 	{
 		ip = ReadBatchLine();
 		if (!ip)
 			return FALSE;
-		bIsBatch = TRUE;
 	}
 
 	return SubstituteVars(ip, commandline, _T('%'));
 }
 
 static INT
-ProcessInput (BOOL bFlag)
+ProcessInput()
 {
 	PARSED_COMMAND *Cmd;
 
-	bNoInteractive = bFlag;
 	do
 	{
 		Cmd = ParseCommand(NULL);
@@ -1575,6 +1562,7 @@ GetCmdLineCommand(TCHAR *commandline, TCHAR *ptr, BOOL AlwaysStrip)
 static VOID
 Initialize()
 {
+	HMODULE NtDllModule;
 	TCHAR commandline[CMDLINE_LENGTH];
 	TCHAR ModuleName[_MAX_PATH + 1];
 	TCHAR lpBuffer[2];
@@ -1591,18 +1579,7 @@ Initialize()
 	/* Some people like to run ReactOS cmd.exe on Win98, it helps in the
 	 * build process. So don't link implicitly against ntdll.dll, load it
 	 * dynamically instead */
-
-	if (osvi.dwPlatformId == VER_PLATFORM_WIN32_NT)
-	{
-		/* ntdll is always present on NT */
-		NtDllModule = GetModuleHandle(TEXT("ntdll.dll"));
-	}
-	else
-	{
-		/* not all 9x versions have a ntdll.dll, try to load it */
-		NtDllModule = LoadLibrary(TEXT("ntdll.dll"));
-	}
-
+	NtDllModule = GetModuleHandle(TEXT("ntdll.dll"));
 	if (NtDllModule != NULL)
 	{
 		NtQueryInformationProcessPtr = (NtQueryInformationProcessProc)GetProcAddress(NtDllModule, "NtQueryInformationProcess");
@@ -1663,7 +1640,7 @@ Initialize()
 				/* This just runs a program and exits */
 				GetCmdLineCommand(commandline, &ptr[2], AlwaysStrip);
 				ParseCommandLine(commandline);
-				cmd_exit (ProcessInput (TRUE));
+				cmd_exit(nErrorLevel);
 			}
 			else if (_totlower(ptr[1]) == _T('k'))
 			{
@@ -1757,11 +1734,6 @@ static VOID Cleanup()
 	RemoveBreakHandler ();
 	SetConsoleMode( GetStdHandle( STD_INPUT_HANDLE ),
 			ENABLE_LINE_INPUT | ENABLE_PROCESSED_INPUT | ENABLE_ECHO_INPUT );
-
-	if (NtDllModule != NULL)
-	{
-		FreeLibrary(NtDllModule);
-	}
 }
 
 /*
@@ -1799,7 +1771,7 @@ int cmd_main (int argc, const TCHAR *argv[])
 	Initialize();
 
 	/* call prompt routine */
-	nExitCode = ProcessInput(FALSE);
+	nExitCode = ProcessInput();
 
 	/* do the cleanup */
 	Cleanup();
