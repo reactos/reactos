@@ -1276,11 +1276,12 @@ static BOOL UITOOLS95_DrawFrameMenu(HDC dc, LPRECT r, UINT uFlags)
             yc = myr.top  + SmallDiam - SmallDiam/2;
             i = 234*SmallDiam/750;
             i = i < 1 ? 1 : i;
-            myr.left   = xc - i+i/2;
+            myr.left   = xc - i/2;
             myr.right  = xc + i/2;
-            myr.top    = yc - i+i/2;
+            myr.top    = yc - i/2;
             myr.bottom = yc + i/2;
-            Pie(dc, myr.left, myr.top, myr.right, myr.bottom, xe, ye, xe, ye);
+            // if the start and the end point are equal, Pie() only draws a single line, so start one pixel lower
+            Pie(dc, myr.left, myr.top, myr.right, myr.bottom, xe, ye+1, xe, ye);
             break;
 
         case DFCS_MENUCHECK:
