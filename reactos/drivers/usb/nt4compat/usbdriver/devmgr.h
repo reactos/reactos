@@ -50,7 +50,6 @@ typedef struct _USB_DRIVER_DESCRIPTION
 
 } USB_DRIVER_DESCRIPTION,*PUSB_DRIVER_DESCRIPTION;
 
-#define DEVMGR_MAX_DRIVERS 	7//8
 #define RH_DRIVER_IDX  		0
 #define HUB_DRIVER_IDX		1
 #define UMSS_DRIVER_IDX		2
@@ -58,7 +57,8 @@ typedef struct _USB_DRIVER_DESCRIPTION
 #define GEN_DRIVER_IDX		4
 #define GEN_IF_DRIVER_IDX	5
 #define MOUSE_DRIVER_IDX	6
-#define KEYBOARD_DRIVER_IDX	7//temp disabled
+#define KEYBOARD_DRIVER_IDX	7
+#define DEVMGR_MAX_DRIVERS 	8
 
 typedef struct _USB_DRIVER
 {

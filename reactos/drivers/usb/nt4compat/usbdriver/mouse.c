@@ -7,17 +7,9 @@
  */
 
 #include "usbdriver.h"
-#include "ntddmou.h"
 #include "kbdmou.h"
 
-//FIXME: is it needed at all?
-typedef struct _USBMP_DEVICE_EXTENSION
-{
-    BOOLEAN IsFDO;
-} USBMP_DEVICE_EXTENSION, *PUSBMP_DEVICE_EXTENSION;
-
 /* Data for embedded drivers */
-//CONNECT_DATA KbdClassInformation;
 CONNECT_DATA MouseClassInformation;
 
 PDEVICE_OBJECT MouseFdo = NULL;
@@ -351,149 +343,7 @@ MouseDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     usb_dbg_print(DBGLVL_MAXIMUM, ("MouseDispatch(DO %p, code 0x%lx) called\n",
         DeviceObject,
         IoGetCurrentIrpStackLocation(Irp)->Parameters.DeviceIoControl.IoControlCode));
-#if 0
-    if (DeviceObject == KeyboardFdo)
-    {
-        // it's keyboard's IOCTL
-        PIO_STACK_LOCATION Stk;
 
-        Irp->IoStatus.Information = 0;
-        Stk = IoGetCurrentIrpStackLocation(Irp);
-
-        switch (Stk->Parameters.DeviceIoControl.IoControlCode)
-        {
-        case IOCTL_INTERNAL_KEYBOARD_CONNECT:
-            DPRINT("IOCTL_INTERNAL_KEYBOARD_CONNECT\n");
-            if (Stk->Parameters.DeviceIoControl.InputBufferLength <	sizeof(DEV_CONNECT_DATA)) {
-                DPRINT1("Keyboard IOCTL_INTERNAL_KEYBOARD_CONNECT "
-                    "invalid buffer size\n");
-                Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
-                goto intcontfailure;
-            }
-
-            RtlCopyMemory(&KbdClassInformation,
-                Stk->Parameters.DeviceIoControl.Type3InputBuffer,
-                sizeof(DEV_CONNECT_DATA));
-
-            Irp->IoStatus.Status = STATUS_SUCCESS;
-            break;
-
-        case IOCTL_INTERNAL_I8042_KEYBOARD_WRITE_BUFFER:
-            DPRINT("IOCTL_INTERNAL_I8042_KEYBOARD_WRITE_BUFFER\n");
-            if (Stk->Parameters.DeviceIoControl.InputBufferLength <	1) {
-                Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
-                goto intcontfailure;
-            }
-            /*			if (!DevExt->KeyboardInterruptObject) {
-            Irp->IoStatus.Status = STATUS_DEVICE_NOT_READY;
-            goto intcontfailure;
-            }*/
-
-            Irp->IoStatus.Status = STATUS_SUCCESS;
-            break;
-        case IOCTL_KEYBOARD_QUERY_ATTRIBUTES:
-            DPRINT("IOCTL_KEYBOARD_QUERY_ATTRIBUTES\n");
-            if (Stk->Parameters.DeviceIoControl.OutputBufferLength <
-                sizeof(KEYBOARD_ATTRIBUTES)) {
-                    DPRINT("Keyboard IOCTL_KEYBOARD_QUERY_ATTRIBUTES: "
-                        "invalid buffer size\n");
-                    Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
-                    goto intcontfailure;
-            }
-            /*RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
-            &DevExt->KeyboardAttributes,
-            sizeof(KEYBOARD_ATTRIBUTES));*/
-
-            Irp->IoStatus.Status = STATUS_SUCCESS;
-            break;
-        case IOCTL_KEYBOARD_QUERY_INDICATORS:
-            DPRINT("IOCTL_KEYBOARD_QUERY_INDICATORS\n");
-            if (Stk->Parameters.DeviceIoControl.OutputBufferLength <
-                sizeof(KEYBOARD_INDICATOR_PARAMETERS)) {
-                    DPRINT("Keyboard IOCTL_KEYBOARD_QUERY_INDICATORS: "
-                        "invalid buffer size\n");
-                    Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
-                    goto intcontfailure;
-            }
-            /*RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
-            &DevExt->KeyboardIndicators,
-            sizeof(KEYBOARD_INDICATOR_PARAMETERS));*/
-
-            Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
-            break;
-        case IOCTL_KEYBOARD_QUERY_TYPEMATIC:
-            DPRINT("IOCTL_KEYBOARD_QUERY_TYPEMATIC\n");
-            if (Stk->Parameters.DeviceIoControl.OutputBufferLength <
-                sizeof(KEYBOARD_TYPEMATIC_PARAMETERS)) {
-                    DPRINT("Keyboard IOCTL_KEYBOARD_QUERY_TYPEMATIC: "
-                        "invalid buffer size\n");
-                    Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
-                    goto intcontfailure;
-            }
-            /*RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
-            &DevExt->KeyboardTypematic,
-            sizeof(KEYBOARD_TYPEMATIC_PARAMETERS));*/
-
-            Irp->IoStatus.Status = STATUS_SUCCESS;
-            break;
-        case IOCTL_KEYBOARD_SET_INDICATORS:
-            DPRINT("IOCTL_KEYBOARD_SET_INDICATORS\n");
-            if (Stk->Parameters.DeviceIoControl.InputBufferLength <
-                sizeof(KEYBOARD_INDICATOR_PARAMETERS)) {
-                    DPRINT("Keyboard IOCTL_KEYBOARD_SET_INDICTATORS: "
-                        "invalid buffer size\n");
-                    Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
-                    goto intcontfailure;
-            }
-
-            /*RtlCopyMemory(&DevExt->KeyboardIndicators,
-            Irp->AssociatedIrp.SystemBuffer,
-            sizeof(KEYBOARD_INDICATOR_PARAMETERS));*/
-
-            //DPRINT("%x\n", DevExt->KeyboardIndicators.LedFlags);
-
-            Irp->IoStatus.Status = STATUS_SUCCESS;
-            break;
-        case IOCTL_KEYBOARD_SET_TYPEMATIC:
-            DPRINT("IOCTL_KEYBOARD_SET_TYPEMATIC\n");
-            if (Stk->Parameters.DeviceIoControl.InputBufferLength <
-                sizeof(KEYBOARD_TYPEMATIC_PARAMETERS)) {
-                    DPRINT("Keyboard IOCTL_KEYBOARD_SET_TYPEMATIC "
-                        "invalid buffer size\n");
-                    Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
-                    goto intcontfailure;
-            }
-
-            /*RtlCopyMemory(&DevExt->KeyboardTypematic,
-            Irp->AssociatedIrp.SystemBuffer,
-            sizeof(KEYBOARD_TYPEMATIC_PARAMETERS));*/
-
-            Irp->IoStatus.Status = STATUS_SUCCESS;
-            break;
-        case IOCTL_KEYBOARD_QUERY_INDICATOR_TRANSLATION:
-            /* We should check the UnitID, but it's	kind of	pointless as
-            * all keyboards are supposed to have the same one
-            */
-            /*RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
-            &IndicatorTranslation,
-            sizeof(LOCAL_KEYBOARD_INDICATOR_TRANSLATION));*/
-
-            Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
-            break;
-        case IOCTL_INTERNAL_I8042_HOOK_KEYBOARD:
-            /* Nothing to do here */
-            Irp->IoStatus.Status = STATUS_SUCCESS;
-            break;
-        default:
-            Irp->IoStatus.Status = STATUS_INVALID_DEVICE_REQUEST;
-            break;
-        }
-
-intcontfailure:
-        Status = Irp->IoStatus.Status;
-    }
-    else 
-#endif
     if (DeviceObject == MouseFdo)
     {
         // it's mouse's IOCTL
