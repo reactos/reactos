@@ -8,6 +8,7 @@
  */
 
 #include "precomp.h"
+#include <dinput.h>
 
 typedef struct
 {
