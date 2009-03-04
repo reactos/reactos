@@ -428,6 +428,7 @@ class Backend_ViewEntryTable extends Backend
             break;
         } // end switch
       }
+
       // multiple filters 'AND (foo OR bar)'
       else {
 

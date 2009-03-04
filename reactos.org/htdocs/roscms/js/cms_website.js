@@ -175,7 +175,7 @@ function selectInverse( )
       document.getElementById("cbtr"+i).checked = false;
     }
     else {
-      setRowColor(i,"#ffcc99");
+      setRowColor('tr'+i,"#ffcc99");
       document.getElementById("cbtr"+i).checked = true;
      }
   }
@@ -193,8 +193,8 @@ function selectStars( status )
   // deselect all
   selectAll(false);
 
-  var sstar = status?'cStarOn':'cStartOff';
-
+  var sstar = status?'cStarOn':'cStarOff';
+alert(sstar);
   // select choosen ones
   for (var i=1; i<=nres; i++) {
     if (document.getElementById("tr"+i).getElementsByTagName('td')[1].getElementsByTagName('div')[0].className == sstar) {
