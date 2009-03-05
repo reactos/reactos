@@ -814,6 +814,7 @@ static BOOL UITOOLS95_DFC_ButtonRadio(HDC dc, LPRECT r, UINT uFlags)
 
     SetTextColor(dc, GetSysColor(COLOR_WINDOWTEXT));
     SelectObject(dc, hOldFont);
+    DeleteObject(hFont);
 
     return TRUE;
 }
@@ -1286,6 +1287,7 @@ static BOOL UITOOLS95_DrawFrameMenu(HDC dc, LPRECT r, UINT uFlags)
 
     SetTextColor(dc, clrsave);
     SelectObject(dc, hOldFont);
+    DeleteObject(hFont);
 
     return retval;
 }
