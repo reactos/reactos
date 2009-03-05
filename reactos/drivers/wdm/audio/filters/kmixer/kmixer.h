@@ -23,5 +23,9 @@ NTAPI
 KMixAllocateDeviceHeader(
     IN PKMIXER_DEVICE_EXT DeviceExtension);
 
+NTSTATUS
+CreatePin(
+    IN PIRP Irp);
+
 
 #endif

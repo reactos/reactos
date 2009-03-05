@@ -8,137 +8,207 @@
 
 #include "kmixer.h"
 
+NTSTATUS
+NTAPI
+Pin_fnDeviceIoControl(
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp)
+{
+    DPRINT1("Pin_fnDeviceIoControl called DeviceObject %p Irp %p\n", DeviceObject);
 
+    //TODO
+    // silverblade
+    // Perform Sample Rate Conversion
+    // Stream Mixing
+    // Up/down sampling
+
+    Irp->IoStatus.Information = 0;
+    Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return STATUS_UNSUCCESSFUL;
+}
 
 NTSTATUS
-PerformSampleRateConversion(
-    PUCHAR Buffer,
-    ULONG BufferLength,
-    ULONG OldRate,
-    ULONG NewRate,
-    ULONG BytesPerSample,
-    ULONG NumChannels,
-    PVOID * Result,
-    PULONG ResultLength)
+NTAPI
+Pin_fnRead(
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp)
 {
-    KFLOATING_SAVE FloatSave;
-    NTSTATUS Status;
-    ULONG Index;
-    SRC_STATE * State;
-    SRC_DATA Data;
-    PUCHAR ResultOut;
-    int error;
-    PFLOAT FloatIn, FloatOut;
-    ULONG NumSamples;
-    ULONG NewSamples;
+    DPRINT1("Pin_fnRead called DeviceObject %p Irp %p\n", DeviceObject);
 
-    /* first acquire float save context */
-    Status = KeSaveFloatingPointState(&FloatSave);
+    Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+    Irp->IoStatus.Information = 0;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return STATUS_UNSUCCESSFUL;
+}
 
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("KeSaveFloatingPointState failed with %x\n", Status);
-        return Status;
-    }
+NTSTATUS
+NTAPI
+PinWriteCompletionRoutine(
+    IN PDEVICE_OBJECT  DeviceObject,
+    IN PIRP  Irp,
+    IN PVOID  Context)
+{
+    PIRP CIrp = (PIRP)Context;
 
-    NumSamples = BufferLength / BytesPerSample;
-
-    FloatIn = ExAllocatePool(NonPagedPool, NumSamples * sizeof(FLOAT));
-    if (!FloatIn)
-    {
-        KeRestoreFloatingPointState(&FloatSave);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    NewSamples = lrintf(((FLOAT)NumSamples * ((FLOAT)OldRate / (FLOAT)NewRate))) + 1;
-
-    FloatOut = ExAllocatePool(NonPagedPool, NewSamples * sizeof(FLOAT));
-    if (!FloatOut)
-    {
-        ExFreePool(FloatIn);
-        KeRestoreFloatingPointState(&FloatSave);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    ResultOut = ExAllocatePool(NonPagedPool, NewRate * BytesPerSample * NumChannels);
-    if (!FloatOut)
-    {
-        ExFreePool(FloatIn);
-        ExFreePool(FloatOut);
-        KeRestoreFloatingPointState(&FloatSave);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    State = src_new(SRC_LINEAR, NumChannels, &error);
-    if (!State)
-    {
-        DPRINT1("KeSaveFloatingPointState failed with %x\n", Status);
-        KeRestoreFloatingPointState(&FloatSave);
-        ExFreePool(FloatIn);
-        ExFreePool(FloatOut);
-        ExFreePool(ResultOut);
-        return STATUS_UNSUCCESSFUL;
-    }
-
-    /* fixme use asm */
-    if (BytesPerSample == 1)
-    {
-        for(Index = 0; Index < NumSamples; Index++)
-            FloatIn[Index] = (float)Buffer[Index];
-    }
-    else if (BytesPerSample == 2)
-    {
-        PUSHORT Res = (PUSHORT)ResultOut;
-        for(Index = 0; Index < NumSamples; Index++)
-            FloatIn[Index] = (float)Res[Index];
-    }
-    else
-    {
-        UNIMPLEMENTED
-        KeRestoreFloatingPointState(&FloatSave);
-        ExFreePool(FloatIn);
-        ExFreePool(FloatOut);
-        ExFreePool(ResultOut);
-        return STATUS_UNSUCCESSFUL;
-    }
-
-    Data.data_in = FloatIn;
-    Data.data_out = FloatOut;
-    Data.input_frames = NumSamples;
-    Data.output_frames = NewSamples;
-    Data.src_ratio = (double)NewRate / (double)OldRate;
-
-    error = src_process(State, &Data);
-    if (error)
-    {
-        DPRINT1("src_process failed with %x\n", error);
-        KeRestoreFloatingPointState(&FloatSave);
-        ExFreePool(FloatIn);
-        ExFreePool(FloatOut);
-        ExFreePool(ResultOut);
-        return STATUS_UNSUCCESSFUL;
-    }
-
-    if (BytesPerSample == 1)
-    {
-        for(Index = 0; Index < Data.output_frames_gen; Index++)
-            ResultOut[Index] = lrintf(FloatOut[Index]);
-    }
-    else if (BytesPerSample == 2)
-    {
-        PUSHORT Res = (PUSHORT)ResultOut;
-        for(Index = 0; Index < Data.output_frames_gen; Index++)
-            Res[Index] = lrintf(FloatOut[Index]);
-    }
-
-    *Result = ResultOut;
-    *ResultLength = NewRate * BytesPerSample * NumChannels;
-    ExFreePool(FloatIn);
-    ExFreePool(FloatOut);
-    KeRestoreFloatingPointState(&FloatSave);
+    CIrp->IoStatus.Status = STATUS_SUCCESS;
+    CIrp->IoStatus.Information = 0;
+    IoCompleteRequest(CIrp, IO_NO_INCREMENT);
     return STATUS_SUCCESS;
 }
 
+NTSTATUS
+NTAPI
+Pin_fnWrite(
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp)
+{
+    DPRINT1("Pin_fnWrite called DeviceObject %p Irp %p\n", DeviceObject);
+
+
+    Irp->IoStatus.Information = 0;
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+Pin_fnFlush(
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp)
+{
+    DPRINT1("Pin_fnFlush called DeviceObject %p Irp %p\n", DeviceObject);
+
+    Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+    Irp->IoStatus.Information = 0;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return STATUS_UNSUCCESSFUL;
+}
+
+NTSTATUS
+NTAPI
+Pin_fnClose(
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp)
+{
+    DPRINT1("Pin_fnClose called DeviceObject %p Irp %p\n", DeviceObject);
+
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+    Irp->IoStatus.Information = 0;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+Pin_fnQuerySecurity(
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp)
+{
+    DPRINT1("Pin_fnQuerySecurity called DeviceObject %p Irp %p\n", DeviceObject);
+
+    Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+    Irp->IoStatus.Information = 0;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return STATUS_UNSUCCESSFUL;
+}
+
+NTSTATUS
+NTAPI
+Pin_fnSetSecurity(
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp)
+{
+
+    DPRINT1("Pin_fnSetSecurity called DeviceObject %p Irp %p\n", DeviceObject);
+
+    Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+    Irp->IoStatus.Information = 0;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return STATUS_UNSUCCESSFUL;
+}
+
+BOOLEAN
+NTAPI
+Pin_fnFastDeviceIoControl(
+    PFILE_OBJECT FileObject,
+    BOOLEAN Wait,
+    PVOID InputBuffer,
+    ULONG InputBufferLength,
+    PVOID OutputBuffer,
+    ULONG OutputBufferLength,
+    ULONG IoControlCode,
+    PIO_STATUS_BLOCK IoStatus,
+    PDEVICE_OBJECT DeviceObject)
+{
+    DPRINT1("Pin_fnFastDeviceIoControl called DeviceObject %p Irp %p\n", DeviceObject);
+
+
+    return FALSE;
+}
+
+
+BOOLEAN
+NTAPI
+Pin_fnFastRead(
+    PFILE_OBJECT FileObject,
+    PLARGE_INTEGER FileOffset,
+    ULONG Length,
+    BOOLEAN Wait,
+    ULONG LockKey,
+    PVOID Buffer,
+    PIO_STATUS_BLOCK IoStatus,
+    PDEVICE_OBJECT DeviceObject)
+{
+    DPRINT1("Pin_fnFastRead called DeviceObject %p Irp %p\n", DeviceObject);
+
+    return FALSE;
+
+}
+
+BOOLEAN
+NTAPI
+Pin_fnFastWrite(
+    PFILE_OBJECT FileObject,
+    PLARGE_INTEGER FileOffset,
+    ULONG Length,
+    BOOLEAN Wait,
+    ULONG LockKey,
+    PVOID Buffer,
+    PIO_STATUS_BLOCK IoStatus,
+    PDEVICE_OBJECT DeviceObject)
+{
+    DPRINT1("Pin_fnFastWrite called DeviceObject %p Irp %p\n", DeviceObject);
+
+    return FALSE;
+}
+
+static KSDISPATCH_TABLE PinTable =
+{
+    Pin_fnDeviceIoControl,
+    Pin_fnRead,
+    Pin_fnWrite,
+    Pin_fnFlush,
+    Pin_fnClose,
+    Pin_fnQuerySecurity,
+    Pin_fnSetSecurity,
+    Pin_fnFastDeviceIoControl,
+    Pin_fnFastRead,
+    Pin_fnFastWrite,
+};
+
+NTSTATUS
+CreatePin(
+    IN PIRP Irp)
+{
+    NTSTATUS Status;
+    KSOBJECT_HEADER ObjectHeader;
+
+    /* allocate object header */
+    Status = KsAllocateObjectHeader(&ObjectHeader, 0, NULL, Irp, &PinTable);
+    return Status;
+}
 
 void * calloc(size_t Elements, size_t ElementSize)
 {

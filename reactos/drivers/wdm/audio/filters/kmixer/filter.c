@@ -207,8 +207,7 @@ DispatchCreateKMix(
         /* is the request for a new pin */
         if (!wcsncmp(KS_NAME_PIN, Buffer, wcslen(KS_NAME_PIN)))
         {
-            UNIMPLEMENTED
-            Status = STATUS_UNSUCCESSFUL;
+            Status = CreatePin(Irp);
 
             Irp->IoStatus.Information = 0;
             Irp->IoStatus.Status = Status;
