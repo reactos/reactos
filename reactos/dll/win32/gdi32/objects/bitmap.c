@@ -418,7 +418,13 @@ GetDIBits(
            }
         }
      }
-     pvSafeBits = RtlAllocateHeap(GetProcessHeap(), 0, cjBmpScanSize);
+
+     if ((ULONG)lpvBits & (sizeof(DWORD) - 1))
+     {
+         pvSafeBits = RtlAllocateHeap(RtlGetProcessHeap(), 0, cjBmpScanSize);
+         if (!pvSafeBits)
+            return Ret;
+     }
   }
 
   Ret = NtGdiGetDIBitsInternal(hDC,
@@ -430,9 +436,12 @@ GetDIBits(
                                uUsage,
                                cjBmpScanSize,
                                0);
-  if ( lpvBits != pvSafeBits)
+  if (lpvBits != pvSafeBits)
   {
-     RtlCopyMemory( lpvBits, pvSafeBits, cjBmpScanSize);
+     if (Ret)
+     {
+        RtlCopyMemory(lpvBits, pvSafeBits, cjBmpScanSize);
+     }
      RtlFreeHeap(RtlGetProcessHeap(), 0, pvSafeBits);
   }
   return Ret;
