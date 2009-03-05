@@ -166,6 +166,10 @@ MMSYS_InstallDevice(HDEVINFO hDevInfo, PSP_DEVINFO_DATA pspDevInfoData)
     PVOID Context;
     BOOL Result;
     SC_HANDLE hSCManager, hService;
+    WCHAR WaveName[20];
+    HKEY hKey;
+    DWORD BufferSize;
+    ULONG Index;
 
     if (!IsEqualIID(&pspDevInfoData->ClassGuid, &GUID_DEVCLASS_SOUND) &&
         !IsEqualIID(&pspDevInfoData->ClassGuid, &GUID_DEVCLASS_MEDIA))
@@ -242,6 +246,23 @@ MMSYS_InstallDevice(HDEVINFO hDevInfo, PSP_DEVINFO_DATA pspDevInfoData)
         CloseServiceHandle(hService);
     }
     CloseServiceHandle(hSCManager);
+
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Drivers32", 0, GENERIC_READ | GENERIC_WRITE, &hKey) == ERROR_SUCCESS)
+    {
+        szBuffer[Length] = '\0';
+        pBuffer = PathAddBackslashW(szBuffer);
+        wcscpy(pBuffer, L"system32\\wdmaud.drv");
+
+        for(Index = 1; Index <= 4; Index++)
+        {
+            swprintf(WaveName, L"wave%u", Index);
+            if (RegQueryValueExW(hKey, WaveName, 0, NULL, NULL, &BufferSize) != ERROR_MORE_DATA)
+            {
+                RegSetValueExW(hKey, WaveName, 0, REG_SZ, (LPBYTE)szBuffer, (wcslen(szBuffer)+1) * sizeof(WCHAR));
+            }
+        }
+        RegCloseKey(hKey);
+    }
 
     return ERROR_DI_DO_DEFAULT;
 
