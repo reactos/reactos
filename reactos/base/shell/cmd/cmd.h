@@ -102,6 +102,7 @@ BOOL ExecuteCommand(struct _PARSED_COMMAND *Cmd);
 LPCTSTR GetEnvVarOrSpecial ( LPCTSTR varName );
 VOID AddBreakHandler (VOID);
 VOID RemoveBreakHandler (VOID);
+BOOL SubstituteVars(TCHAR *Src, TCHAR *Dest, TCHAR Delim);
 BOOL SubstituteForVars(TCHAR *Src, TCHAR *Dest);
 LPTSTR DoDelayedExpansion(LPTSTR Line);
 BOOL DoCommand (LPTSTR line, struct _PARSED_COMMAND *Cmd);

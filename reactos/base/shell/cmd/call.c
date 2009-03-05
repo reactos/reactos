@@ -33,15 +33,12 @@
 
 /*
  * Perform CALL command.
- *
- * Allocate a new batch context and add it to the current chain.
- * Call parsecommandline passing in our param string
- * If No batch file was opened then remove our newly allocted
- * context block.
  */
 
 INT cmd_call (LPTSTR param)
 {
+	TCHAR line[CMDLINE_LENGTH];
+
 	TRACE ("cmd_call: (\'%s\')\n", debugstr_aw(param));
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
@@ -49,13 +46,22 @@ INT cmd_call (LPTSTR param)
 		return 0;
 	}
 
+	/* Do a second round of %-variable substitutions */
+	if (!SubstituteVars(param, line, _T('%')))
+		return nErrorLevel = 1;
+
+	param = line;
+	while (_istspace(*param))
+		param++;
 	if (*param == _T(':') && (bc))
 	{
+		/* CALL :label - call a subroutine of the current batch file */
 		TCHAR *first = param;
 		while (*param && !_istspace(*param))
 			param++;
 		if (*param)
 		{
+			/* Separate label and arguments */
 			*param++ = _T('\0');
 			while (_istspace(*param))
 				param++;
