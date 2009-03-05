@@ -422,6 +422,7 @@ dll\win32\wtsapi32\wtsapi32.dll                     1
 dll\win32\wuapi\wuapi.dll                           1
 dll\win32\winmm\midimap\midimap.dll                 1
 dll\win32\winmm\wavemap\msacm32.drv                 1   optional
+dll\win32\wdmaud.drv\wdmaud.drv                     1
 
 ; Shell Extensions
 dll\shellext\deskadp\deskadp.dll                    1
