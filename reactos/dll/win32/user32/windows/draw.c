@@ -1237,63 +1237,43 @@ static BOOL UITOOLS95_DrawFrameScroll(HDC dc, LPRECT r, UINT uFlags)
 /* Draw a menu control coming from DrawFrameControl() */
 static BOOL UITOOLS95_DrawFrameMenu(HDC dc, LPRECT r, UINT uFlags)
 {
-    POINT Points[6];
     RECT myr;
     int SmallDiam = UITOOLS_MakeSquareRect(r, &myr);
-    int i;
-    HBRUSH hbsave;
-    HPEN hpsave;
-    int xc, yc;
     BOOL retval = TRUE;
+    /* Start using Marlett-font instead of basic drawing */
+    LOGFONT lf;
+    HFONT hFont, hOldFont;
+    COLORREF clrsave;
 
-    /* Using black and white seems to be utterly wrong, but win95 doesn't */
-    /* use anything else. I think I tried all sys-colors to change things */
-    /* without luck. It seems as if this behavior is inherited from the */
-    /* win31 DFC() implementation... (you remember, B/W menus). */
+    ZeroMemory(&lf, sizeof(LOGFONT));
+    lf.lfHeight = SmallDiam;
+    lf.lfWidth = 0;
+    lf.lfWeight = FW_NORMAL;
+    lf.lfCharSet = DEFAULT_CHARSET;
+    lstrcpy(lf.lfFaceName, TEXT("Marlett"));
+    hFont = CreateFontIndirect(&lf);
+    hOldFont = SelectObject(dc, hFont);
+    SetBkMode(dc, TRANSPARENT);
+    clrsave = GetTextColor(dc);
+    SetTextColor(dc, GetSysColor(COLOR_WINDOWTEXT));
 
     FillRect(dc, r, (HBRUSH)GetStockObject(WHITE_BRUSH));
-
-    hbsave = (HBRUSH)SelectObject(dc, GetStockObject(BLACK_BRUSH));
-    hpsave = (HPEN)SelectObject(dc, GetStockObject(BLACK_PEN));
 
     switch(uFlags & 0xff)
     {
         case DFCS_MENUARROW:
-            i = 187*SmallDiam/750;
-            Points[2].x = myr.left + 468*SmallDiam/750;
-            Points[2].y = myr.top  + 352*SmallDiam/750+1;
-            Points[0].y = Points[2].y - i;
-            Points[1].y = Points[2].y + i;
-            Points[0].x = Points[1].x = Points[2].x - i;
-            Polygon(dc, Points, 3);
+            // FIXME: is "8" the correct symbol?
+            TextOut(dc, myr.left, myr.top, TEXT("8"), 1);
             break;
 
         case DFCS_MENUBULLET:
-            xc = myr.left + SmallDiam - SmallDiam/2;
-            yc = myr.top  + SmallDiam - SmallDiam/2;
-            i = 234*SmallDiam/750;
-            i = i < 1 ? 1 : i;
-            myr.left   = xc - i/2;
-            myr.right  = xc + i/2;
-            myr.top    = yc - i/2;
-            myr.bottom = yc + i/2;
-            Ellipse(dc, myr.left, myr.top, myr.right, myr.bottom);
+            // FIXME: is "h" the correct symbol?
+            TextOut(dc, myr.left, myr.top, TEXT("h"), 1);
             break;
 
         case DFCS_MENUCHECK:
-            Points[0].x = myr.left + 253*SmallDiam/1000;
-            Points[0].y = myr.top  + 445*SmallDiam/1000;
-            Points[1].x = myr.left + 409*SmallDiam/1000;
-            Points[1].y = Points[0].y + (Points[1].x-Points[0].x);
-            Points[2].x = myr.left + 690*SmallDiam/1000;
-            Points[2].y = Points[1].y - (Points[2].x-Points[1].x);
-            Points[3].x = Points[2].x;
-            Points[3].y = Points[2].y + 3*SmallDiam/16;
-            Points[4].x = Points[1].x;
-            Points[4].y = Points[1].y + 3*SmallDiam/16;
-            Points[5].x = Points[0].x;
-            Points[5].y = Points[0].y + 3*SmallDiam/16;
-            Polygon(dc, Points, 6);
+            // FIXME: is "a" the correct symbol?
+            TextOut(dc, myr.left, myr.top, TEXT("a"), 1);
             break;
 
         default:
@@ -1304,8 +1284,9 @@ static BOOL UITOOLS95_DrawFrameMenu(HDC dc, LPRECT r, UINT uFlags)
             break;
     }
 
-    SelectObject(dc, hpsave);
-    SelectObject(dc, hbsave);
+    SetTextColor(dc, clrsave);
+    SelectObject(dc, hOldFont);
+
     return retval;
 }
 
