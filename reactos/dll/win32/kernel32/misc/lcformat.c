@@ -1803,9 +1803,69 @@ BOOL WINAPI EnumTimeFormatsA( TIMEFMT_ENUMPROCA lpTimeFmtEnumProc, LCID Locale, 
  */
 BOOL WINAPI EnumTimeFormatsW( TIMEFMT_ENUMPROCW lpTimeFmtEnumProc, LCID Locale, DWORD dwFlags )
 {
-  FIXME("(%p,%ld,%ld): stub\n", lpTimeFmtEnumProc, Locale, dwFlags);
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return FALSE;
+  LCID Loc = GetUserDefaultLCID();
+  if(!lpTimeFmtEnumProc)
+    {
+      SetLastError(ERROR_INVALID_PARAMETER);
+      return FALSE;
+    }
+  if(dwFlags)
+    {
+      FIXME("Unknown time format (%ld)\n", dwFlags);
+    }
+
+  switch( Loc )
+ {
+   case 0x00000407:  /* (Loc,"de_DE") */
+   {
+    if(!(*lpTimeFmtEnumProc)(L"HH.mm")) return TRUE;
+    if(!(*lpTimeFmtEnumProc)(L"HH:mm:ss")) return TRUE;
+    if(!(*lpTimeFmtEnumProc)(L"H:mm:ss")) return TRUE;
+    if(!(*lpTimeFmtEnumProc)(L"H.mm")) return TRUE;
+    if(!(*lpTimeFmtEnumProc)(L"H.mm'Uhr'")) return TRUE;
+    return TRUE;
+   }
+
+   case 0x0000040c:  /* (Loc,"fr_FR") */
+   case 0x00000c0c:  /* (Loc,"fr_CA") */
+   {
+    if(!(*lpTimeFmtEnumProc)(L"H:mm")) return TRUE;
+    if(!(*lpTimeFmtEnumProc)(L"HH:mm:ss")) return TRUE;
+    if(!(*lpTimeFmtEnumProc)(L"H:mm:ss")) return TRUE;
+    if(!(*lpTimeFmtEnumProc)(L"HH.mm")) return TRUE;
+    if(!(*lpTimeFmtEnumProc)(L"HH'h'mm")) return TRUE;
+    return TRUE;
+   }
+
+   case 0x00000809:  /* (Loc,"en_UK") */
+   case 0x00000c09:  /* (Loc,"en_AU") */
+   case 0x00001409:  /* (Loc,"en_NZ") */
+   case 0x00001809:  /* (Loc,"en_IE") */
+   {
+    if(!(*lpTimeFmtEnumProc)(L"h:mm:ss tt")) return TRUE;
+    if(!(*lpTimeFmtEnumProc)(L"HH:mm:ss")) return TRUE;
+    if(!(*lpTimeFmtEnumProc)(L"H:mm:ss")) return TRUE;
+    return TRUE;
+   }
+
+   case 0x00001c09:  /* (Loc,"en_ZA") */
+   case 0x00002809:  /* (Loc,"en_BZ") */
+   case 0x00002c09:  /* (Loc,"en_TT") */
+   {
+    if(!(*lpTimeFmtEnumProc)(L"h:mm:ss tt")) return TRUE;
+    if(!(*lpTimeFmtEnumProc)(L"hh:mm:ss tt")) return TRUE;
+    return TRUE;
+   }
+
+   default:  /* default to US style "en_US" */
+   {
+    if(!(*lpTimeFmtEnumProc)(L"h:mm:ss tt")) return TRUE;
+    if(!(*lpTimeFmtEnumProc)(L"hh:mm:ss tt")) return TRUE;
+    if(!(*lpTimeFmtEnumProc)(L"H:mm:ss")) return TRUE;
+    if(!(*lpTimeFmtEnumProc)(L"HH:mm:ss")) return TRUE;
+    return TRUE;
+   }
+ }
 }
 
 /******************************************************************************
