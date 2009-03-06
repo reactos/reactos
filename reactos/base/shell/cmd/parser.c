@@ -522,12 +522,22 @@ error:
 	return NULL;
 }
 
+/* Parse a REM command */
+static PARSED_COMMAND *ParseRem(void)
+{
+	/* Just ignore the rest of the line */
+	while (CurChar && CurChar != _T('\n'))
+		ParseChar();
+	return NULL;
+}
+
 static PARSED_COMMAND *ParseCommandPart(void)
 {
 	TCHAR ParsedLine[CMDLINE_LENGTH];
 	TCHAR *Pos;
 	DWORD TailOffset;
 	PARSED_COMMAND *Cmd;
+	PARSED_COMMAND *(*Func)(void);
 	REDIRECTION *RedirList = NULL;
 	int Type;
 
@@ -595,8 +605,9 @@ static PARSED_COMMAND *ParseCommandPart(void)
 	TailOffset = Pos - ParsedLine;
 
 	/* Check for special forms */
-	if (_tcsicmp(ParsedLine, _T("for")) == 0 ||
-	    _tcsicmp(ParsedLine, _T("if")) == 0)
+	if ((Func = ParseFor, _tcsicmp(ParsedLine, _T("for")) == 0) ||
+	    (Func = ParseIf,  _tcsicmp(ParsedLine, _T("if")) == 0)  ||
+	    (Func = ParseRem, _tcsicmp(ParsedLine, _T("rem")) == 0))
 	{
 		ParseToken(0, STANDARD_SEPS);
 		/* Do special parsing only if it's not followed by /? */
@@ -608,7 +619,7 @@ static PARSED_COMMAND *ParseCommandPart(void)
 				FreeRedirection(RedirList);
 				return NULL;
 			}
-			return _totlower(*ParsedLine) == _T('f') ? ParseFor() : ParseIf();
+			return Func();
 		}
 		Pos = _stpcpy(Pos, _T(" /?"));
 	}

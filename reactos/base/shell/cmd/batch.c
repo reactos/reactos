@@ -285,6 +285,7 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param, PARSED_COMMAND *Cmd
 		/* Echo batch file line */
 		if (bEcho && Cmd->Type != C_QUIET)
 		{
+			ConOutChar(_T('\n'));
 			PrintPrompt();
 			EchoCommand(Cmd);
 			ConOutChar(_T('\n'));
@@ -292,14 +293,8 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param, PARSED_COMMAND *Cmd
 
 		bc->current = Cmd;
 		ExecuteCommand(Cmd);
-		if (bEcho && !bIgnoreEcho && Cmd->Type != C_QUIET)
-			ConOutChar(_T('\n'));
 		FreeCommand(Cmd);
-		bIgnoreEcho = FALSE;
 	}
-
-    /* Don't print a newline for this command */
-    bIgnoreEcho = TRUE;
 
 	TRACE ("Batch: returns TRUE\n");
 
