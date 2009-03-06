@@ -43,7 +43,7 @@ KsRegisterWorker(
     KsWorker->Counter = 0;
     KsWorker->WorkItemActive = 0;
     KsWorker->WorkItem = NULL;
-    KsWorker->DeleteInProgress = TRUE;
+    KsWorker->DeleteInProgress = FALSE;
     KeInitializeSpinLock(&KsWorker->Lock);
     KeInitializeEvent(&KsWorker->Event, NotificationEvent, FALSE);
 
@@ -181,6 +181,9 @@ KsQueueWorkItem(
     if (!KsWorker->DeleteInProgress)
     {
         ExQueueWorkItem(WorkItem, KsWorker->Type);
+    }
+    else
+    {
         Status = STATUS_UNSUCCESSFUL;
     }
 

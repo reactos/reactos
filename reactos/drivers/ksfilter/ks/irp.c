@@ -1077,6 +1077,8 @@ KsStreamIo(
     ULONG Code;
     NTSTATUS Status;
     LARGE_INTEGER Offset;
+    PKSIOBJECT_HEADER ObjectHeader;
+
 
     if (Flags == KSSTREAM_READ)
         Code = IRP_MJ_READ;
@@ -1092,6 +1094,30 @@ KsStreamIo(
     if (Event)
     {
         KeResetEvent(Event);
+    }
+
+    //ASSERT(DeviceObject->DeviceType == FILE_DEVICE_KS);
+    ObjectHeader = (PKSIOBJECT_HEADER)FileObject->FsContext;
+    ASSERT(ObjectHeader);
+    if (Code == IRP_MJ_READ)
+    {
+        if (ObjectHeader->DispatchTable.FastRead)
+        {
+            if (ObjectHeader->DispatchTable.FastRead(FileObject, NULL, Length, FALSE, 0, StreamHeaders, IoStatusBlock, DeviceObject))
+            {
+                return STATUS_SUCCESS;
+            }
+        }
+    }
+    else
+    {
+        if (ObjectHeader->DispatchTable.FastWrite)
+        {
+            if (ObjectHeader->DispatchTable.FastWrite(FileObject, NULL, Length, FALSE, 0, StreamHeaders, IoStatusBlock, DeviceObject))
+            {
+                return STATUS_SUCCESS;
+            }
+        }
     }
 
     Offset.QuadPart = 0LL;

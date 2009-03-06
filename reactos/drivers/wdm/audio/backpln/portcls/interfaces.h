@@ -180,6 +180,44 @@ DECLARE_INTERFACE_(ISubdevice, IUnknown)
 };
 
 /*****************************************************************************
+ * IIrpQueue
+ *****************************************************************************
+ */
+
+#undef INTERFACE
+#define INTERFACE IIrpQueue
+
+DECLARE_INTERFACE_(IIrpQueue, IUnknown)
+{
+    DEFINE_ABSTRACT_UNKNOWN()
+
+    STDMETHOD_(NTSTATUS, Init)(THIS_
+        IN KSPIN_CONNECT *ConnectDetails,
+        IN PDEVICE_OBJECT DeviceObject);
+
+    STDMETHOD_(NTSTATUS, AddMapping)(THIS_
+        IN PUCHAR Buffer,
+        IN ULONG BufferSize,
+        IN PIRP Irp);
+
+    STDMETHOD_(NTSTATUS, GetMapping)(THIS_
+        OUT PUCHAR * Buffer,
+        OUT PULONG BufferSize);
+
+    STDMETHOD_(VOID, UpdateMapping)(THIS_
+        IN ULONG BytesWritten);
+
+    STDMETHOD_(ULONG, NumMappings)(THIS);
+
+    STDMETHOD_(ULONG, MinMappings)(THIS);
+
+    STDMETHOD_(ULONG, MaxMappings)(THIS);
+
+};
+
+
+
+/*****************************************************************************
  * IKsWorkSink
  *****************************************************************************
  */

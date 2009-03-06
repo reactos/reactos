@@ -97,10 +97,10 @@ Pin_fnWrite(
     ASSERT(Context);
 
     Status = KsSynchronousIoControlDevice(Context->FileObject, KernelMode, IOCTL_KS_WRITE_STREAM,
-                                          IoStack->Parameters.DeviceIoControl.Type3InputBuffer,
-                                          IoStack->Parameters.DeviceIoControl.InputBufferLength,
-                                          Irp->UserBuffer,
-                                          IoStack->Parameters.DeviceIoControl.OutputBufferLength,
+                                          MmGetMdlVirtualAddress(Irp->MdlAddress),
+                                          IoStack->Parameters.Write.Length,
+                                          NULL,
+                                          0,
                                           &BytesReturned);
 
     Irp->IoStatus.Information = BytesReturned;
@@ -216,9 +216,16 @@ Pin_fnFastWrite(
     PIO_STATUS_BLOCK IoStatus,
     PDEVICE_OBJECT DeviceObject)
 {
+    PDISPATCH_CONTEXT Context;
+    NTSTATUS Status;
     DPRINT1("Pin_fnFastWrite called DeviceObject %p Irp %p\n", DeviceObject);
 
-    return FALSE;
+    Context = (PDISPATCH_CONTEXT)FileObject->FsContext2;
+    Status = KsStreamIo(Context->FileObject, NULL, NULL, NULL, NULL, 0, IoStatus, Buffer, Length, KSSTREAM_WRITE, KernelMode);
+    if (Status == STATUS_SUCCESS)
+        return TRUE;
+    else
+        return FALSE;
 }
 
 static KSDISPATCH_TABLE PinTable =

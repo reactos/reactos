@@ -20,6 +20,7 @@
 	<file>filter_wavecyclic.c</file>
 	<file>guids.c</file>
 	<file>irp.c</file>
+	<file>irpstream.c</file>
 	<file>interrupt.c</file>
 	<file>drm.c</file>
 	<file>stubs.c</file>

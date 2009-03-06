@@ -718,6 +718,14 @@ GetWaveCyclicMiniport(
     return This->pMiniport;
 }
 
+PDEVICE_OBJECT
+GetDeviceObject(
+    PPORTWAVECYCLIC iface)
+{
+    IPortWaveCyclicImpl * This = (IPortWaveCyclicImpl *)iface;
+    return This->pDeviceObject;
+}
+
 //---------------------------------------------------------------
 // IPortWaveCyclic constructor
 //

@@ -43,6 +43,13 @@ typedef struct
 
 typedef struct
 {
+    KSSTREAM_HEADER Header;
+    PIRP Irp;
+}CONTEXT_WRITE, *PCONTEXT_WRITE;
+
+
+typedef struct
+{
     PIRP Irp;
     IO_STATUS_BLOCK StatusBlock;
     ULONG Length;
@@ -69,5 +76,12 @@ NTAPI
 WdmAudDeviceControl(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp);
+
+NTSTATUS
+NTAPI
+WdmAudWrite(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp);
+
 
 #endif

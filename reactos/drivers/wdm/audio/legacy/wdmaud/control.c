@@ -330,8 +330,8 @@ WdmAudControlDeviceType(
                 }
             }
         }
-		else
-			DPRINT1("KSPROPERTY_PIN_CTYPES index %u failed with %x\n", Index, Status);
+        else
+            DPRINT1("KSPROPERTY_PIN_CTYPES index %u failed with %x\n", Index, Status);
     }
 
 
@@ -356,6 +356,8 @@ WdmAudControlDeviceState(
     NTSTATUS Status;
     ULONG BytesReturned;
     PFILE_OBJECT FileObject;
+
+    DPRINT1("WdmAudControlDeviceState\n");
 
     Status = ObReferenceObjectByHandle(DeviceInfo->hDevice, GENERIC_READ | GENERIC_WRITE, IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
     if (!NT_SUCCESS(Status))
@@ -393,90 +395,6 @@ WdmAudWriteCompleted(
 
     ExFreePool(Context);
     return STATUS_SUCCESS;
-}
-
-NTSTATUS
-WdmAudControlWriteData(
-    IN  PDEVICE_OBJECT DeviceObject,
-    IN  PIRP Irp,
-    IN  PWDMAUD_DEVICE_INFO DeviceInfo,
-    IN  PWDMAUD_CLIENT ClientInfo)
-{
-    PKSSTREAM_HEADER Packet;
-    NTSTATUS Status = STATUS_SUCCESS;
-    PFILE_OBJECT FileObject;
-    PWRITE_CONTEXT Context;
-    ULONG BytesReturned;
-    PUCHAR Buffer;
-
-    Status = ObReferenceObjectByHandle(DeviceInfo->hDevice, GENERIC_WRITE, IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Invalid buffer handle %x\n", DeviceInfo->hDevice);
-        return SetIrpIoStatus(Irp, Status, 0);
-    }
-
-    if (DeviceInfo->DeviceType != WAVE_OUT_DEVICE_TYPE)
-    {
-        DPRINT1("FIXME: only waveout devices are supported\n");
-        return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, 0);
-    }
-
-    _SEH2_TRY
-    {
-        ProbeForRead(DeviceInfo->Buffer, DeviceInfo->BufferSize, TYPE_ALIGNMENT(char));
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        /* Exception, get the error code */
-        Status = _SEH2_GetExceptionCode();
-    }
-    _SEH2_END;
-
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Invalid buffer supplied\n");
-        return SetIrpIoStatus(Irp, Status, 0);
-    }
-
-    Buffer = ExAllocatePool(NonPagedPool, DeviceInfo->BufferSize);
-    if (!Buffer)
-    {
-        /* no memory */
-        return SetIrpIoStatus(Irp, STATUS_NO_MEMORY, 0);
-    }
-
-    RtlMoveMemory(Buffer, DeviceInfo->Buffer, DeviceInfo->BufferSize);
-
-
-    Context = ExAllocatePool(NonPagedPool, sizeof(WRITE_CONTEXT));
-    if (!Context)
-    {
-        /* no memory */
-        return SetIrpIoStatus(Irp, STATUS_NO_MEMORY, 0);
-    }
-
-    /* setup completion context */
-    Context->Irp = Irp;
-    Context->Length = DeviceInfo->BufferSize;
-
-    /* setup stream context */
-    Packet = (PKSSTREAM_HEADER)ExAllocatePool(NonPagedPool, sizeof(KSSTREAM_HEADER));
-    Packet->Data = Buffer;
-    Packet->FrameExtent = DeviceInfo->BufferSize;
-    Packet->DataUsed = DeviceInfo->BufferSize;
-    Packet->Size = sizeof(KSSTREAM_HEADER);
-    Packet->PresentationTime.Numerator = 1;
-    Packet->PresentationTime.Denominator = 1;
-    ASSERT(FileObject->FsContext != NULL);
-
-
-    Status = KsSynchronousIoControlDevice(FileObject, KernelMode, IOCTL_KS_WRITE_STREAM, (PVOID)Packet, sizeof(KSSTREAM_HEADER), NULL, 0, &BytesReturned);
-
-    DPRINT1("KsSynchronousIoControlDevice result %x\n", Status);
-    ExFreePool(Buffer);
-
-    return SetIrpIoStatus(Irp, Status, sizeof(WDMAUD_DEVICE_INFO));
 }
 
 ULONG
@@ -700,8 +618,6 @@ WdmAudDeviceControl(
             return WdmAudControlDeviceType(DeviceObject, Irp, DeviceInfo, ClientInfo);
         case IOCTL_SETDEVICE_STATE:
             return WdmAudControlDeviceState(DeviceObject, Irp, DeviceInfo, ClientInfo);
-        case IOCTL_WRITEDATA:
-            return WdmAudControlWriteData(DeviceObject, Irp, DeviceInfo, ClientInfo);
         case IOCTL_GETCAPABILITIES:
             return WdmAudCapabilities(DeviceObject, Irp, DeviceInfo, ClientInfo);
         case IOCTL_CLOSE_WDMAUD:
@@ -716,3 +632,112 @@ WdmAudDeviceControl(
 
     return SetIrpIoStatus(Irp, STATUS_NOT_IMPLEMENTED, 0);
 }
+
+NTSTATUS
+NTAPI
+WdmAudWrite(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp)
+{
+    PIO_STACK_LOCATION IoStack;
+    PWDMAUD_DEVICE_INFO DeviceInfo;
+    PWDMAUD_CLIENT ClientInfo;
+    NTSTATUS Status = STATUS_SUCCESS;
+    PUCHAR Buffer;
+    PCONTEXT_WRITE Packet;
+    PFILE_OBJECT FileObject;
+    IO_STATUS_BLOCK IoStatusBlock;
+
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    DPRINT1("WdmAudWrite entered\n");
+
+    if (IoStack->Parameters.Write.Length < sizeof(WDMAUD_DEVICE_INFO))
+    {
+        /* invalid parameter */
+        DPRINT1("Input buffer too small size %u expected %u\n", IoStack->Parameters.Write.Length, sizeof(WDMAUD_DEVICE_INFO));
+        return SetIrpIoStatus(Irp, STATUS_INVALID_PARAMETER, 0);
+    }
+
+    DeviceInfo = (PWDMAUD_DEVICE_INFO)MmGetMdlVirtualAddress(Irp->MdlAddress);
+
+
+    Status = ObReferenceObjectByHandle(DeviceInfo->hDevice, GENERIC_WRITE, IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Invalid buffer handle %x\n", DeviceInfo->hDevice);
+        return SetIrpIoStatus(Irp, Status, 0);
+    }
+
+
+    DPRINT1("DeviceInfo %p %p %p\n", DeviceInfo, Irp->MdlAddress->StartVa, Irp->MdlAddress->MappedSystemVa);
+    if (DeviceInfo->DeviceType < MIN_SOUND_DEVICE_TYPE || DeviceInfo->DeviceType > MAX_SOUND_DEVICE_TYPE)
+    {
+        /* invalid parameter */
+        DPRINT1("Error: device type not set\n");
+        return SetIrpIoStatus(Irp, STATUS_INVALID_PARAMETER, 0);
+    }
+
+    if (!IoStack->FileObject)
+    {
+        /* file object parameter */
+        DPRINT1("Error: file object is not attached\n");
+        return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, 0);
+    }
+    ClientInfo = (PWDMAUD_CLIENT)IoStack->FileObject->FsContext;
+
+
+    /* setup stream context */
+    Packet = (PCONTEXT_WRITE)ExAllocatePool(NonPagedPool, sizeof(CONTEXT_WRITE));
+    if (!Packet)
+    {
+        /* no memory */
+        return SetIrpIoStatus(Irp, STATUS_NO_MEMORY, 0);
+    }
+
+    Packet->Header.FrameExtent = DeviceInfo->BufferSize;
+    Packet->Header.DataUsed = DeviceInfo->BufferSize;
+    Packet->Header.Size = sizeof(KSSTREAM_HEADER);
+    Packet->Header.PresentationTime.Numerator = 1;
+    Packet->Header.PresentationTime.Denominator = 1;
+    Packet->Irp = Irp;
+
+    Buffer = ExAllocatePool(NonPagedPool, DeviceInfo->BufferSize);
+    if (!Buffer)
+    {
+        /* no memory */
+        ExFreePool(Packet);
+        return SetIrpIoStatus(Irp, STATUS_NO_MEMORY, 0);
+    }
+    Packet->Header.Data = Buffer;
+
+    _SEH2_TRY
+    {
+        ProbeForRead(DeviceInfo->Buffer, DeviceInfo->BufferSize, TYPE_ALIGNMENT(char));
+        RtlMoveMemory(Buffer, DeviceInfo->Buffer, DeviceInfo->BufferSize);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        /* Exception, get the error code */
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Invalid buffer supplied\n");
+        ExFreePool(Buffer);
+        ExFreePool(Packet);
+        return SetIrpIoStatus(Irp, Status, 0);
+    }
+
+    KsStreamIo(FileObject, NULL, NULL, NULL, NULL, 0, &IoStatusBlock, Packet, sizeof(CONTEXT_WRITE), KSSTREAM_WRITE, KernelMode);
+
+    Irp->IoStatus.Status = STATUS_PENDING;
+    Irp->IoStatus.Information = 0;
+    IoMarkIrpPending(Irp);
+    return STATUS_PENDING;
+
+    //return SetIrpIoStatus(Irp, STATUS_SUCCESS, 0);
+}
+

@@ -16,19 +16,17 @@ typedef struct
     KSSTATE State;
     PKSDATAFORMAT Format;
 
-    LIST_ENTRY QueueHead;
-    KSPIN_LOCK QueueLock;
-
     PVOID CommonBuffer;
     ULONG CommonBufferSize;
     ULONG CommonBufferOffset;
 
-    PIRP ActiveIrp;
+    IIrpQueue * IrpQueue;
+
     PUCHAR ActiveIrpBuffer;
     ULONG ActiveIrpBufferSize;
     ULONG ActiveIrpOffset;
     ULONG DelayedRequestInProgress;
-
+    ULONG RetryCount;
 
 }IPortPinWaveCyclicImpl;
 
@@ -101,88 +99,72 @@ IServiceSink_fnRequestService(
     IServiceSink* iface)
 {
     ULONG Position;
-    ULONG BufferLength, IrpLength, BytesToCopy;
+    ULONG BufferLength, BytesToCopy;
     NTSTATUS Status;
+    PUCHAR Buffer;
+    ULONG BufferSize;
 
     IPortPinWaveCyclicImpl * This = (IPortPinWaveCyclicImpl*)CONTAINING_RECORD(iface, IPortPinWaveCyclicImpl, lpVtblServiceSink);
 
-    if (This->ActiveIrp && This->ActiveIrpOffset >= This->ActiveIrpBufferSize)
+
+    Status = This->IrpQueue->lpVtbl->GetMapping(This->IrpQueue, &Buffer, &BufferSize);
+    if (!NT_SUCCESS(Status))
     {
-        This->Stream->lpVtbl->SetState(This->Stream, KSSTATE_PAUSE);
-        if (KeGetCurrentIrql() > DISPATCH_LEVEL)
+        This->RetryCount++;
+        if (This->RetryCount > 30)
         {
-            This->DelayedRequestInProgress = TRUE;
-            This->ServiceGroup->lpVtbl->RequestDelayedService(This->ServiceGroup, -10000000L);
+            DPRINT1("Stopping\n");
+            This->Stream->lpVtbl->SetState(This->Stream, KSSTATE_STOP);
+            This->RetryCount = 0;
             return;
         }
-        else
-        {
-            if (This->ActiveIrp)
-            {
-                This->ActiveIrp->IoStatus.Status = STATUS_SUCCESS;
-                This->ActiveIrp->IoStatus.Information = This->ActiveIrpBufferSize;
-                IoCompleteRequest(This->ActiveIrp, IO_SOUND_INCREMENT);
-                This->ActiveIrp = NULL;
-            }
-
-            Status = IPortWaveCyclic_fnProcessNewIrp(This);
-            if (Status == STATUS_SUCCESS)
-                This->Stream->lpVtbl->SetState(This->Stream, KSSTATE_RUN);
-            else
-                This->ServiceGroup->lpVtbl->RequestDelayedService(This->ServiceGroup, -10000000L);
-            return;
-        }
-    }
-
-    if (!This->ActiveIrp)
-    {
-        if (KeGetCurrentIrql() > DISPATCH_LEVEL)
-        {
-            This->ServiceGroup->lpVtbl->RequestDelayedService(This->ServiceGroup, -10000000L);
-            return;
-        }
-
-        Status = IPortWaveCyclic_fnProcessNewIrp(This);
-        if (Status == STATUS_SUCCESS)
-            This->Stream->lpVtbl->SetState(This->Stream, KSSTATE_RUN);
-        else
-            This->ServiceGroup->lpVtbl->RequestDelayedService(This->ServiceGroup, -10000000L);
+        DPRINT("IServiceSink_fnRequestService> Waiting for mapping\n");
+        This->ServiceGroup->lpVtbl->RequestDelayedService(This->ServiceGroup, -10000000L);
         return;
     }
+    This->RetryCount = 0;
+
+    if (KeGetCurrentIrql() == DISPATCH_LEVEL)
+        return;
+
 
     Status = This->Stream->lpVtbl->GetPosition(This->Stream, &Position);
-    DPRINT("Position %u BufferSize %u ActiveIrpOffset %u\n", Position, This->CommonBufferSize, This->ActiveIrpOffset);
+    DPRINT("Position %u BufferSize %u ActiveIrpOffset %u\n", Position, This->CommonBufferSize, BufferSize);
+
 
     if (Position < This->CommonBufferOffset)
     {
         BufferLength = This->CommonBufferSize - This->CommonBufferOffset;
-        IrpLength = This->ActiveIrpBufferSize - This->ActiveIrpOffset;
 
-        BytesToCopy = min(BufferLength, IrpLength);
+        BytesToCopy = min(BufferLength, BufferSize);
 
-        DPRINT("Copying %u Remaining %u\n", BytesToCopy, IrpLength);
+        DPRINT("Copying %u\n", BytesToCopy);
 
         if (BytesToCopy)
         {
-            This->DmaChannel->lpVtbl->CopyTo(This->DmaChannel, (PUCHAR)This->CommonBuffer + This->CommonBufferOffset, (PUCHAR)This->ActiveIrpBuffer + This->ActiveIrpOffset, BytesToCopy);
-            This->ActiveIrpOffset += BytesToCopy;
+            This->DmaChannel->lpVtbl->CopyTo(This->DmaChannel, (PUCHAR)This->CommonBuffer + This->CommonBufferOffset, Buffer, BytesToCopy);
+            This->IrpQueue->lpVtbl->UpdateMapping(This->IrpQueue, BytesToCopy);
             This->CommonBufferOffset = 0;
         }
-        else
+
+
+        Status = This->IrpQueue->lpVtbl->GetMapping(This->IrpQueue, &Buffer, &BufferSize);
+        if (!NT_SUCCESS(Status))
         {
-            This->Stream->lpVtbl->SetState(This->Stream, KSSTATE_PAUSE);
+            DPRINT("IServiceSink_fnRequestService> Waiting for mapping\n");
+            This->ServiceGroup->lpVtbl->RequestDelayedService(This->ServiceGroup, -10000000L);
+            This->RetryCount++;
             return;
         }
-        BufferLength = Position;
-        IrpLength = This->ActiveIrpBufferSize - This->ActiveIrpOffset;
-        BytesToCopy = min(BufferLength, IrpLength);
 
-        DPRINT("Copying %u Remaining %u\n", BytesToCopy, IrpLength);
+        BytesToCopy = min(Position, BufferSize);
+
+        DPRINT("Copying %u\n", BytesToCopy);
 
         if (BytesToCopy)
         {
-            This->DmaChannel->lpVtbl->CopyTo(This->DmaChannel, (PUCHAR)(PUCHAR)This->CommonBuffer, (PUCHAR)This->ActiveIrpBuffer + This->ActiveIrpOffset, BytesToCopy);
-            This->ActiveIrpOffset += Position;
+            This->DmaChannel->lpVtbl->CopyTo(This->DmaChannel, (PUCHAR)(PUCHAR)This->CommonBuffer, Buffer, BytesToCopy);
+            This->IrpQueue->lpVtbl->UpdateMapping(This->IrpQueue, BytesToCopy);
             This->CommonBufferOffset = Position;
         }
 
@@ -190,23 +172,16 @@ IServiceSink_fnRequestService(
     else if (Position >= This->CommonBufferOffset)
     {
         BufferLength = Position - This->CommonBufferOffset;
-        IrpLength = This->ActiveIrpBufferSize - This->ActiveIrpOffset;
 
-        BytesToCopy = min(BufferLength, IrpLength);
-        DPRINT("Copying %u Remaining %u\n", BytesToCopy, IrpLength);
+        BytesToCopy = min(BufferLength, BufferSize);
+        DPRINT("Copying %u\n", BytesToCopy);
 
-        if (!BytesToCopy)
-        {
-            This->ServiceGroup->lpVtbl->RequestDelayedService(This->ServiceGroup, -10000000L);
-            return;
-        }
-
-            This->DmaChannel->lpVtbl->CopyTo(This->DmaChannel,
+         This->DmaChannel->lpVtbl->CopyTo(This->DmaChannel,
                                          (PUCHAR)This->CommonBuffer + This->CommonBufferOffset,
-                                         (PUCHAR)This->ActiveIrpBuffer + This->ActiveIrpOffset,
+                                          Buffer,
                                          BytesToCopy);
 
-        This->ActiveIrpOffset += BytesToCopy;
+        This->IrpQueue->lpVtbl->UpdateMapping(This->IrpQueue, BytesToCopy);
         This->CommonBufferOffset = Position;
     }
 
@@ -299,44 +274,6 @@ IPortPinWaveCyclic_fnNewIrpTarget(
 
 NTSTATUS
 NTAPI
-IPortWaveCyclic_fnProcessNewIrp(
-    IPortPinWaveCyclicImpl * This)
-{
-    PIO_STACK_LOCATION IoStack;
-    PKSSTREAM_HEADER Header;
-
-    This->ActiveIrp = KsRemoveIrpFromCancelableQueue(&This->QueueHead, &This->QueueLock, KsListEntryTail, KsAcquireAndRemove);
-    if (!This->ActiveIrp)
-    {
-        This->ServiceGroup->lpVtbl->RequestDelayedService(This->ServiceGroup, -10000000L);
-        return STATUS_PENDING;
-    }
-
-    DPRINT("ActiveIrp %p\n", This->ActiveIrp);
-
-    IoStack = IoGetCurrentIrpStackLocation(This->ActiveIrp);
-
-    if (IoStack->Parameters.DeviceIoControl.InputBufferLength != sizeof(KSSTREAM_HEADER))
-    {
-        DPRINT1("Irp has unexpected header\n");
-        IoCompleteRequest(This->ActiveIrp, IO_NO_INCREMENT);
-        This->ActiveIrp = NULL;
-        return STATUS_INVALID_PARAMETER;
-    }
-
-    Header = (PKSSTREAM_HEADER)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
-    DPRINT("Header %p Size %u\n", Header, Header->Size);
-
-
-    This->ActiveIrpOffset = 0;
-    This->ActiveIrpBuffer = Header->Data;
-    This->ActiveIrpBufferSize = Header->DataUsed;
-
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-NTAPI
 IPortPinWaveCyclic_HandleKsProperty(
     IN IPortPinWaveCyclic * iface,
     IN PIRP Irp)
@@ -381,28 +318,9 @@ IPortPinWaveCyclic_HandleKsProperty(
                 Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
                 if (This->Stream)
                 {
-                    This->CommonBufferOffset = 0;
-                    This->CommonBufferSize = This->DmaChannel->lpVtbl->AllocatedBufferSize(This->DmaChannel);
-                    This->CommonBuffer = This->DmaChannel->lpVtbl->SystemAddress(This->DmaChannel);
-
-                    This->ActiveIrp = KsRemoveIrpFromCancelableQueue(&This->QueueHead, &This->QueueLock, KsListEntryHead, KsAcquireAndRemove);
-                    if (This->ActiveIrp)
-                    {
-                        Status = IPortWaveCyclic_fnProcessNewIrp(This);
-                        DPRINT1("IPortWaveCyclic_fnProcessNewIrp result %x\n", Status);
-                        if (NT_SUCCESS(Status))
-                        {
-                            //FIXME
-                            // verify offset - resume stream
-                            This->DmaChannel->lpVtbl->CopyTo(This->DmaChannel, This->CommonBuffer, This->ActiveIrpBuffer, This->CommonBufferSize);
-                            This->ActiveIrpOffset += This->CommonBufferSize;
-                        }
-                    }
-
-
                     Status = This->Stream->lpVtbl->SetState(This->Stream, *State);
 
-                    DPRINT1("Setting state %x\n", Status);
+                    DPRINT1("Setting state %u %x\n", *State, Status);
                     if (NT_SUCCESS(Status))
                     {
                         This->State = *State;
@@ -502,25 +420,10 @@ IPortPinWaveCyclic_HandleKsStream(
     IN IPortPinWaveCyclic * iface,
     IN PIRP Irp)
 {
-    PIO_STACK_LOCATION IoStack;
     IPortPinWaveCyclicImpl * This = (IPortPinWaveCyclicImpl*)iface;
 
-    IoStack = IoGetCurrentIrpStackLocation(Irp);
-
-    DPRINT1("IPortPinWaveCyclic_HandleKsStream entered\n");
-
-    if (!This->Stream)
-    {
-        Irp->IoStatus.Information = 0;
-        Irp->IoStatus.Status = STATUS_SUCCESS;
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
-        return STATUS_SUCCESS;
-    }
-
-    KsAddIrpToCancelableQueue(&This->QueueHead, &This->QueueLock, Irp, KsListEntryTail, NULL);
-    IoMarkIrpPending(Irp);
-    Irp->IoStatus.Information = 0;
-    Irp->IoStatus.Status = STATUS_PENDING;
+    DPRINT1("IPortPinWaveCyclic_HandleKsStream entered State %u Stream %p\n", This->State, This->Stream);
+    DbgBreakPoint();
 
     return STATUS_PENDING;
 }
@@ -720,7 +623,30 @@ IPortPinWaveCyclic_fnFastWrite(
     OUT PIO_STATUS_BLOCK StatusBlock,
     IN PDEVICE_OBJECT DeviceObject)
 {
-    return STATUS_SUCCESS;
+    NTSTATUS Status;
+    PCONTEXT_WRITE Packet;
+    IPortPinWaveCyclicImpl * This = (IPortPinWaveCyclicImpl*)iface;
+
+    DPRINT1("IPortPinWaveCyclic_fnFastWrite entered\n");
+
+    Packet = (PCONTEXT_WRITE)Buffer;
+
+
+    Status = This->IrpQueue->lpVtbl->AddMapping(This->IrpQueue, Buffer, Length, Packet->Irp);
+
+    if (!NT_SUCCESS(Status))
+        return FALSE;
+
+    if ((This->IrpQueue->lpVtbl->NumMappings(This->IrpQueue) >  This->IrpQueue->lpVtbl->MinMappings(This->IrpQueue)) && 
+        This->State != KSSTATE_RUN)
+    {
+        /* some should initiate a state request but didnt do it */
+        DPRINT1("Starting stream with %lu mappings\n", This->IrpQueue->lpVtbl->NumMappings(This->IrpQueue));
+        This->Stream->lpVtbl->SetState(This->Stream, KSSTATE_RUN);
+        This->State = KSSTATE_RUN;
+    }
+
+    return TRUE;
 }
 
 /*
@@ -737,6 +663,7 @@ IPortPinWaveCyclic_fnInit(
 {
     NTSTATUS Status;
     PKSDATAFORMAT DataFormat;
+    PDEVICE_OBJECT DeviceObject;
     IPortPinWaveCyclicImpl * This = (IPortPinWaveCyclicImpl*)iface;
 
     Port->lpVtbl->AddRef(Port);
@@ -746,8 +673,15 @@ IPortPinWaveCyclic_fnInit(
     This->Filter = Filter;
     This->KsPinDescriptor = KsPinDescriptor;
     This->Miniport = GetWaveCyclicMiniport(Port);
-    KeInitializeSpinLock(&This->QueueLock);
-    InitializeListHead(&This->QueueHead);
+
+    DeviceObject = GetDeviceObject(Port);
+
+
+    Status = NewIrpQueue(&This->IrpQueue);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    Status = This->IrpQueue->lpVtbl->Init(This->IrpQueue, ConnectDetails, DeviceObject);
 
     DataFormat = (PKSDATAFORMAT)(ConnectDetails + 1);
 
@@ -784,6 +718,10 @@ IPortPinWaveCyclic_fnInit(
     This->ServiceGroup->lpVtbl->SupportDelayedService(This->ServiceGroup);
 
     This->State = KSSTATE_STOP;
+    This->CommonBufferOffset = 0;
+    This->CommonBufferSize = This->DmaChannel->lpVtbl->AllocatedBufferSize(This->DmaChannel);
+    This->CommonBuffer = This->DmaChannel->lpVtbl->SystemAddress(This->DmaChannel);
+
 
     return STATUS_SUCCESS;
 }

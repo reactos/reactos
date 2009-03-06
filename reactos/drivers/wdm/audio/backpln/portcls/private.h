@@ -113,6 +113,11 @@ NTSTATUS StringFromCLSID(
     const CLSID *id,
     LPWSTR idstr);
 
+NTSTATUS
+NTAPI
+NewIrpQueue(
+    IN IIrpQueue **Queue);
+
 
 typedef struct
 {
@@ -162,6 +167,12 @@ typedef struct
 
 } PCLASS_DEVICE_EXTENSION, *PPCLASS_DEVICE_EXTENSION;
 
+
+typedef struct
+{
+    KSSTREAM_HEADER Header;
+    PIRP Irp;
+}CONTEXT_WRITE, *PCONTEXT_WRITE;
 
 NTSTATUS
 NTAPI
@@ -226,5 +237,8 @@ PcPropertyHandler(
     IN PIRP Irp,
     IN PSUBDEVICE_DESCRIPTOR Descriptor);
 
+PDEVICE_OBJECT
+GetDeviceObject(
+    IPortWaveCyclic* iface);
 
 #endif

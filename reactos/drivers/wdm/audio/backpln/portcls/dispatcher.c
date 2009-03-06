@@ -215,9 +215,12 @@ Dispatch_fnFastWrite(
     PIO_STATUS_BLOCK IoStatus,
     PDEVICE_OBJECT DeviceObject)
 {
+    IIrpTarget * IrpTarget;
     DPRINT1("Dispatch_fnFastWrite called DeviceObject %p Irp %p\n", DeviceObject);
 
-    return FALSE;
+    IrpTarget = (IIrpTarget *)FileObject->FsContext2;
+
+    return IrpTarget->lpVtbl->FastWrite(IrpTarget, FileObject, FileOffset, Length, Wait, LockKey, Buffer, IoStatus, DeviceObject);
 }
 
 static KSDISPATCH_TABLE DispatchTable =
@@ -244,12 +247,18 @@ NewDispatchObject(
     NTSTATUS Status;
     KSOBJECT_HEADER ObjectHeader;
     PKSOBJECT_CREATE_ITEM CreateItem;
+    PIO_STACK_LOCATION IoStack;
 
     CreateItem = AllocateItem(NonPagedPool, sizeof(KSOBJECT_CREATE_ITEM), TAG_PORTCLASS);
     if (!CreateItem)
         return STATUS_INSUFFICIENT_RESOURCES;
 
     CreateItem->Context = (PVOID)Target;
+
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+    ASSERT(IoStack->FileObject);
+
+    IoStack->FileObject->FsContext2 = (PVOID)Target;
 
     Status = KsAllocateObjectHeader(&ObjectHeader, 1, CreateItem, Irp, &DispatchTable);
     DPRINT1("KsAllocateObjectHeader result %x\n", Status);

@@ -247,6 +247,7 @@ DriverEntry(
     Driver->MajorFunction[IRP_MJ_SYSTEM_CONTROL] = KsDefaultForwardIrp; 
     Driver->MajorFunction[IRP_MJ_CLEANUP] = WdmAudCleanup;
     Driver->MajorFunction[IRP_MJ_DEVICE_CONTROL] = WdmAudDeviceControl;
+    Driver->MajorFunction[IRP_MJ_WRITE] = WdmAudWrite;
     Driver->MajorFunction[IRP_MJ_POWER] = KsDefaultDispatchPower;
 
     return WdmAudInstallDevice(Driver);

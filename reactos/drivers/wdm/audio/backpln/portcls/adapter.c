@@ -200,7 +200,8 @@ PcAddAdapterDevice(
     return status;
 }
 
-NTSTATUS NTAPI
+NTSTATUS
+NTAPI
 PcRegisterSubdevice(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PWCHAR Name,
@@ -215,16 +216,24 @@ PcRegisterSubdevice(
 
     DPRINT1("PcRegisterSubdevice DeviceObject %p Name %S Unknown %p\n", DeviceObject, Name, Unknown);
 
+    /* check if all parameters are valid */
     if (!DeviceObject || !Name || !Unknown)
     {
         DPRINT("PcRegisterSubdevice invalid parameter\n");
         return STATUS_INVALID_PARAMETER;
     }
 
+    /* get device extension */
     DeviceExt = (PPCLASS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    if (!DeviceExt)
-        return STATUS_UNSUCCESSFUL;
 
+    if (!DeviceExt)
+    {
+        /* should not happen */
+        KeBugCheck(0);
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    /* look up our undocumented interface */
     Status = Unknown->lpVtbl->QueryInterface(Unknown, &IID_ISubdevice, (LPVOID)&SubDevice);
     if (!NT_SUCCESS(Status))
     {
