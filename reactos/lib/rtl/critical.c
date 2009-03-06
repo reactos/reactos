@@ -358,14 +358,21 @@ RtlDeleteCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
     /* Protect List */
     RtlEnterCriticalSection(&RtlCriticalSectionLock);
 
-    /* Remove it from the list */
-    RemoveEntryList(&CriticalSection->DebugInfo->ProcessLocksList);
+    if (CriticalSection->DebugInfo)
+    {
+        /* Remove it from the list */
+        RemoveEntryList(&CriticalSection->DebugInfo->ProcessLocksList);
+        RtlZeroMemory(CriticalSection->DebugInfo, sizeof(RTL_CRITICAL_SECTION_DEBUG));
+    }
 
     /* Unprotect */
     RtlLeaveCriticalSection(&RtlCriticalSectionLock);
 
-    /* Free it */
-    RtlpFreeDebugInfo(CriticalSection->DebugInfo);
+    if (CriticalSection->DebugInfo)
+    {
+        /* Free it */
+        RtlpFreeDebugInfo(CriticalSection->DebugInfo);
+    }
 
     /* Wipe it out */
     RtlZeroMemory(CriticalSection, sizeof(RTL_CRITICAL_SECTION));
