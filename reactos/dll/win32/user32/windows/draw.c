@@ -1234,64 +1234,58 @@ static BOOL UITOOLS95_DrawFrameScroll(HDC dc, LPRECT r, UINT uFlags)
     return TRUE;
 }
 
-/* Ported from WINE20020904 */
-/* Draw a menu control coming from DrawFrameControl() */
 static BOOL UITOOLS95_DrawFrameMenu(HDC dc, LPRECT r, UINT uFlags)
 {
-    RECT myr;
-    int SmallDiam = UITOOLS_MakeSquareRect(r, &myr);
-    BOOL retval = TRUE;
-    /* Start using Marlett-font instead of basic drawing */
     LOGFONT lf;
     HFONT hFont, hOldFont;
     COLORREF clrsave;
-
-    ZeroMemory(&lf, sizeof(LOGFONT));
-    lf.lfHeight = SmallDiam;
-    lf.lfWidth = 0;
-    lf.lfWeight = FW_NORMAL;
-    lf.lfCharSet = DEFAULT_CHARSET;
-    lstrcpy(lf.lfFaceName, TEXT("Marlett"));
-    hFont = CreateFontIndirect(&lf);
-    hOldFont = SelectObject(dc, hFont);
-    SetBkMode(dc, TRANSPARENT);
-    clrsave = GetTextColor(dc);
-    SetTextColor(dc, GetSysColor(COLOR_WINDOWTEXT));
-
-    FillRect(dc, r, (HBRUSH)GetStockObject(WHITE_BRUSH));
-
+    INT bkmode;
+    TCHAR Symbol;
     switch(uFlags & 0xff)
     {
         case DFCS_MENUARROW:
-            // FIXME: is "8" the correct symbol?
-            TextOut(dc, myr.left, myr.top, TEXT("8"), 1);
+            Symbol = '8';
             break;
 
         case DFCS_MENUBULLET:
-            // FIXME: is "h" the correct symbol?
-            TextOut(dc, myr.left, myr.top, TEXT("h"), 1);
+            Symbol = 'h';
             break;
 
         case DFCS_MENUCHECK:
-            // FIXME: is "a" the correct symbol?
-            TextOut(dc, myr.left, myr.top, TEXT("a"), 1);
+            Symbol = 'a';
             break;
 
         default:
 /*
             DbgPrint("Invalid menu; flags=0x%04x\n", uFlags);
 */
-            retval = FALSE;
-            break;
+            return FALSE;
     }
-
+    /* acquire ressources only if valid menu */
+    ZeroMemory(&lf, sizeof(LOGFONT));
+    lf.lfHeight = r->bottom - r->top;
+    lf.lfWidth = 0;
+    lf.lfWeight = FW_NORMAL;
+    lf.lfCharSet = DEFAULT_CHARSET;
+    lstrcpy(lf.lfFaceName, TEXT("Marlett"));
+    hFont = CreateFontIndirect(&lf);
+    /* save font and text color */
+    hOldFont = SelectObject(dc, hFont);
+    clrsave = GetTextColor(dc);
+    bkmode = GetBkMode(dc);
+    /* set color and drawing mode */
+    SetBkMode(dc, TRANSPARENT);
+    SetTextColor(dc, GetSysColor(COLOR_WINDOWTEXT));
+    FillRect(dc, r, (HBRUSH)GetStockObject(WHITE_BRUSH));
+    /* draw selected symbol */
+    TextOut(dc, r->left, r->top, &Symbol, 1);
+    /* restore previous settings */
     SetTextColor(dc, clrsave);
     SelectObject(dc, hOldFont);
+    SetBkMode(dc, bkmode);
     DeleteObject(hFont);
-
-    return retval;
+    return TRUE;
 }
-
 
 BOOL
 WINAPI
