@@ -189,6 +189,9 @@ VOID ExitBatch (LPTSTR msg)
 		/* Preserve echo state across batch calls */
 		bEcho = bc->bEcho;
 
+		while (bc->setlocal)
+			cmd_endlocal(_T(""));
+
 		bc = bc->prev;
 	}
 
@@ -239,16 +242,23 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param, PARSED_COMMAND *Cmd
 	}
 	else
 	{
+		struct _SETLOCAL *setlocal = NULL;
 		/* If a batch file runs another batch file as part of a compound command
 		 * (e.g. "x.bat & somethingelse") then the first file gets terminated. */
-		if (Cmd != NULL)
+		if (bc && Cmd != NULL)
+		{
+			/* Get its SETLOCAL stack so it can be migrated to the new context */
+			setlocal = bc->setlocal;
+			bc->setlocal = NULL;
 			ExitBatch(NULL);
+		}
 
 		/* Create a new context. This function will not
 		 * return until this context has been exited */
 		new.prev = bc;
 		bc = &new;
 		bc->RedirList = NULL;
+		bc->setlocal = setlocal;
 	}
 
 	GetFullPathName(fullname, sizeof(bc->BatchFilePath) / sizeof(TCHAR), bc->BatchFilePath, NULL);

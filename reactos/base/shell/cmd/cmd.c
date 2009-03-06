@@ -157,6 +157,7 @@ BOOL bCtrlBreak = FALSE;  /* Ctrl-Break or Ctrl-C hit */
 BOOL bIgnoreEcho = FALSE; /* Set this to TRUE to prevent a newline, when executing a command */
 INT  nErrorLevel = 0;     /* Errorlevel of last launched external program */
 BOOL bChildProcessRunning = FALSE;
+BOOL bDelayedExpansion = FALSE;
 DWORD dwChildProcessId = 0;
 OSVERSIONINFO osvi;
 HANDLE hIn;
@@ -1295,7 +1296,7 @@ DoDelayedExpansion(LPTSTR Line)
 	if (!SubstituteForVars(Line, Buf1))
 		return NULL;
 
-	if (!_tcschr(Buf1, _T('!')))
+	if (!bDelayedExpansion || !_tcschr(Buf1, _T('!')))
 		return cmd_dup(Buf1);
 
 	/* FIXME: Delayed substitutions actually aren't quite the same as
@@ -1663,6 +1664,10 @@ Initialize()
 				SetScreenColor (wColor, TRUE);
 			}
 #endif
+			else if (_totlower(ptr[1]) == _T('v'))
+			{
+				bDelayedExpansion = _tcsnicmp(&ptr[2], _T(":off"), 4);
+			}
 		}
 	}
 

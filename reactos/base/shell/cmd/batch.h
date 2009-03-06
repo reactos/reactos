@@ -18,6 +18,7 @@ typedef struct tagBATCHCONTEXT
 	BOOL   bEcho;        /* Preserve echo flag across batch calls */
 	REDIRECTION *RedirList;
 	PARSED_COMMAND *current; 
+	struct _SETLOCAL *setlocal;
 } BATCH_CONTEXT, *LPBATCH_CONTEXT;
 
 typedef struct tagFORCONTEXT
