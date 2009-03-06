@@ -4,10 +4,6 @@
 	<directory name="mpu401">
 		<xi:include href="mpu401/mpu401.rbuild" />
 	</directory>
-	<directory name="CMIDriver">
-		<xi:include href="CMIDriver/cmidriver.rbuild" />
-	</directory>
-
 	<!--directory name="sb16">
 		<xi:include href="sb16/sb16.rbuild" />
 	</directory-->
