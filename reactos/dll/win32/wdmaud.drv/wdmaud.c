@@ -79,6 +79,7 @@ GetWdmDeviceCapabilities(
 
     MMRESULT Result;
     MMDEVICE_TYPE DeviceType;
+    WDMAUD_DEVICE_INFO DeviceInfo;
 
     SND_ASSERT( SoundDevice );
     SND_ASSERT( Capabilities );
@@ -91,21 +92,40 @@ GetWdmDeviceCapabilities(
     if ( ! MMSUCCESS(Result) )
         return Result;
 
+
+    ZeroMemory(&DeviceInfo, sizeof(WDMAUD_DEVICE_INFO));
+    DeviceInfo.DeviceType = DeviceType;
+    DeviceInfo.DeviceIndex = 0; //FIXME
+
+    Result = SyncOverlappedDeviceIoControl(KernelHandle,
+                                           IOCTL_GETCAPABILITIES,
+                                           (LPVOID) &DeviceInfo,
+                                           sizeof(WDMAUD_DEVICE_INFO),
+                                           (LPVOID) &DeviceInfo,
+                                           sizeof(WDMAUD_DEVICE_INFO),
+                                           NULL);
+
+    if ( ! MMSUCCESS(Result) )
+    {
+        return TranslateInternalMmResult(Result);
+    }
+
+
     /* This is pretty much a big hack right now */
     switch ( DeviceType )
     {
         case WAVE_OUT_DEVICE_TYPE :
         {
             LPWAVEOUTCAPS WaveOutCaps = (LPWAVEOUTCAPS) Capabilities;
-            WaveOutCaps->wMid = 0;
-            WaveOutCaps->wPid = 0;
+            WaveOutCaps->wMid = DeviceInfo.u.WaveOutCaps.wMid;
+            WaveOutCaps->wPid = DeviceInfo.u.WaveOutCaps.wPid;
+
             WaveOutCaps->vDriverVersion = 0x0001;
             CopyWideString(WaveOutCaps->szPname, UnknownWaveOut);
 
-            /* HACK: We may not really support all formats! */
-            WaveOutCaps->dwFormats = 0xffffffff;
-            WaveOutCaps->wChannels = 2;
-            WaveOutCaps->dwSupport = 0;
+            WaveOutCaps->dwFormats = DeviceInfo.u.WaveOutCaps.dwFormats;
+            WaveOutCaps->wChannels = DeviceInfo.u.WaveOutCaps.wChannels;
+            WaveOutCaps->dwSupport = DeviceInfo.u.WaveOutCaps.dwSupport;
             break;
         }
         case WAVE_IN_DEVICE_TYPE :
@@ -130,7 +150,7 @@ OpenWdmSoundDevice(
     if ( KernelHandle == INVALID_HANDLE_VALUE )
     {
         SND_TRACE(L"Opening wdmaud device\n");
-        KernelHandle = CreateFile(KERNEL_DEVICE_NAME,
+        KernelHandle = CreateFileW(KERNEL_DEVICE_NAME,
                                   GENERIC_READ | GENERIC_WRITE,
                                   0,
                                   NULL,
@@ -152,7 +172,7 @@ OpenWdmSoundDevice(
 
 MMRESULT
 CloseWdmSoundDevice(
-    IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance, /* NOT USED */
+    IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance,
     IN  PVOID Handle)
 {
     if ( OpenCount == 0 )
@@ -162,7 +182,12 @@ CloseWdmSoundDevice(
 
     SND_ASSERT( KernelHandle != INVALID_HANDLE_VALUE );
 
-    -- OpenCount;
+    if (SoundDeviceInstance->Handle != (PVOID)KernelHandle)
+    {
+        CloseHandle((HANDLE)SoundDeviceInstance->Handle);
+    }
+
+    --OpenCount;
 
     if ( OpenCount < 1 )
     {
@@ -194,6 +219,7 @@ SetWdmWaveDeviceFormat(
     PSOUND_DEVICE SoundDevice;
     PVOID Identifier;
     WDMAUD_DEVICE_INFO DeviceInfo;
+    MMDEVICE_TYPE DeviceType;
 
     Result = GetSoundDeviceFromInstance(Instance, &SoundDevice);
 
@@ -209,7 +235,19 @@ SetWdmWaveDeviceFormat(
         return TranslateInternalMmResult(Result);
     }
 
+    if (Instance->Handle != KernelHandle)
+    {
+        /* device is already open */
+        return MMSYSERR_NOERROR;
+    }
+
+
+    Result = GetSoundDeviceType(SoundDevice, &DeviceType);
+    SND_ASSERT( Result == MMSYSERR_NOERROR );
+
     ZeroMemory(&DeviceInfo, sizeof(WDMAUD_DEVICE_INFO));
+    DeviceInfo.DeviceType = DeviceType;
+    DeviceInfo.DeviceIndex = 0; //FIXME
     DeviceInfo.u.WaveFormatEx.cbSize = WaveFormat->cbSize;
     DeviceInfo.u.WaveFormatEx.wFormatTag = WaveFormat->wFormatTag;
     DeviceInfo.u.WaveFormatEx.nChannels = WaveFormat->nChannels;
@@ -230,6 +268,48 @@ SetWdmWaveDeviceFormat(
     {
         return TranslateInternalMmResult(Result);
     }
+
+    Instance->Handle = (PVOID)DeviceInfo.hDevice;
+
+    return MMSYSERR_NOERROR;
+}
+
+MMRESULT
+WriteFileEx_Committer2(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    IN  PVOID OffsetPtr,
+    IN  DWORD Length,
+    IN  PSOUND_OVERLAPPED Overlap,
+    IN  LPOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine)
+{
+    HANDLE Handle;
+    WDMAUD_DEVICE_INFO DeviceInfo;
+
+
+    VALIDATE_MMSYS_PARAMETER( SoundDeviceInstance );
+    VALIDATE_MMSYS_PARAMETER( OffsetPtr );
+    VALIDATE_MMSYS_PARAMETER( Overlap );
+    VALIDATE_MMSYS_PARAMETER( CompletionRoutine );
+
+    GetSoundDeviceInstanceHandle(SoundDeviceInstance, &Handle);
+
+    SND_ASSERT(Handle);
+
+    ZeroMemory(&DeviceInfo, sizeof(WDMAUD_DEVICE_INFO));
+    DeviceInfo.hDevice = Handle;
+    DeviceInfo.DeviceType = WAVE_OUT_DEVICE_TYPE; //FIXME
+    DeviceInfo.Buffer = OffsetPtr;
+    DeviceInfo.BufferSize = Length;
+
+    Overlap->Standard.hEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
+
+    if ( ! WriteFileEx(KernelHandle, &DeviceInfo, sizeof(WDMAUD_DEVICE_INFO), (LPOVERLAPPED)Overlap, CompletionRoutine))
+    {
+        // TODO
+       SND_TRACE(L"WriteFileEx failed with %x\n", GetLastError());
+    }
+    CompletionRoutine(0, Length, (LPOVERLAPPED)Overlap);
+
 
     return MMSYSERR_NOERROR;
 }
@@ -277,7 +357,7 @@ PopulateWdmDeviceList(
         FuncTable.SetWaveFormat = SetWdmWaveDeviceFormat;
         FuncTable.Open = OpenWdmSoundDevice;
         FuncTable.Close = CloseWdmSoundDevice;
-        //FuncTable.CommitWaveBuffer = WriteFileEx_Committer;
+        FuncTable.CommitWaveBuffer = WriteFileEx_Committer2;
 
         SetSoundDeviceFunctionTable(SoundDevice, &FuncTable);
     }
@@ -329,8 +409,6 @@ DriverProc(
             PopulateWdmDeviceList(KernelHandle, MIDI_IN_DEVICE_TYPE);
             PopulateWdmDeviceList(KernelHandle, AUX_DEVICE_TYPE);
             PopulateWdmDeviceList(KernelHandle, MIXER_DEVICE_TYPE);
-
-            CloseWdmSoundDevice(NULL, Handle);
 
             SND_TRACE(L"Initialisation complete\n");
 
