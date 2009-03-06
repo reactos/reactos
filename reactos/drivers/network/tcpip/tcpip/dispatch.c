@@ -106,7 +106,7 @@ VOID DispDataRequestComplete(
 			    Irp->IoStatus.Information));
     TI_DbgPrint(DEBUG_IRP, ("Completing IRP at (0x%X).\n", Irp));
 
-    IRPFinish(Irp, Irp->IoStatus.Status);
+    IRPFinish(Irp, Status);
 
     TI_DbgPrint(DEBUG_IRP, ("Done Completing IRP\n"));
 }
@@ -181,11 +181,11 @@ VOID NTAPI DispCancelRequest(
 
 	TCPRemoveIRP( TranContext->Handle.ConnectionContext, Irp );
 
+	IoReleaseCancelSpinLock(Irp->CancelIrql);
+
 	if( !ChewCreate( &WorkItem, sizeof(DISCONNECT_TYPE),
 			 DispDoDisconnect, &DisType ) )
 	    ASSERT(0);
-
-	IoReleaseCancelSpinLock(Irp->CancelIrql);
         return;
 
     case TDI_SEND_DATAGRAM:
@@ -212,7 +212,7 @@ VOID NTAPI DispCancelRequest(
     }
 
     IoReleaseCancelSpinLock(Irp->CancelIrql);
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    IRPFinish(Irp, STATUS_CANCELLED);
 
     TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 }
@@ -256,7 +256,8 @@ VOID NTAPI DispCancelListenRequest(
 
     IoReleaseCancelSpinLock(Irp->CancelIrql);
 
-    DispDataRequestComplete(Irp, STATUS_CANCELLED, 0);
+    Irp->IoStatus.Information = 0;
+    IRPFinish(Irp, STATUS_CANCELLED);
 
     TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 }

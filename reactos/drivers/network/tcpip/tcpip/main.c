@@ -406,7 +406,7 @@ TiDispatchOpenClose(
   NTSTATUS Status;
   PTRANSPORT_CONTEXT Context;
 
-  RIRP(Irp);
+  IRPRemember(Irp, __FILE__, __LINE__);
 
 //  DbgPrint("Called. DeviceObject is at (0x%X), IRP is at (0x%X).\n", DeviceObject, Irp);
 
@@ -457,7 +457,7 @@ TiDispatchInternal(
   BOOLEAN Complete = TRUE;
   PIO_STACK_LOCATION IrpSp;
 
-  RIRP(Irp);
+  IRPRemember(Irp, __FILE__, __LINE__);
 
   IrpSp = IoGetCurrentIrpStackLocation(Irp);
 
@@ -540,8 +540,6 @@ TiDispatchInternal(
 
   if( Complete )
       IRPFinish( Irp, Status );
-  else
-      Irp->IoStatus.Status = Status;
 
   return Status;
 }
@@ -563,7 +561,7 @@ TiDispatch(
   NTSTATUS Status;
   PIO_STACK_LOCATION IrpSp;
 
-  RIRP(Irp);
+  IRPRemember(Irp, __FILE__, __LINE__);
 
   IrpSp  = IoGetCurrentIrpStackLocation(Irp);
 

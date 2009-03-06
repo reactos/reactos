@@ -82,17 +82,14 @@ VOID TrackWithTag( ULONG Tag, PVOID Thing, PCHAR FileName, ULONG LineNo ) {
 	if( ThingInList->Thing == Thing ) {
 	    RemoveEntryList(Entry);
 
-	    TcpipReleaseSpinLock( &AllocatedObjectsLock, OldIrql );
-	    ShowTrackedThing( "Alloc", ThingInList, FALSE );
-
-	    TrackDumpFL( FileName, LineNo );
-	    DbgPrint("TRACK: SPECIFIED ALREADY ALLOCATED ITEM %x\n", Thing);
-            ShowTrackedThing( "Double Alloc (Item in list)", ThingInList, TRUE );
-            ShowTrackedThing( "Double Alloc (Item not in list)", TrackedThing, TRUE );
-	    TcpipBugCheck( 0 );
+            TI_DbgPrint(MAX_TRACE,("TRACK: SPECIFIED ALREADY ALLOCATED ITEM %x\n", Thing));
+            ShowTrackedThing( "Double Alloc (Item in list)", ThingInList, FALSE );
+            ShowTrackedThing( "Double Alloc (Item not in list)", TrackedThing, FALSE );
 
             ExFreeToNPagedLookasideList( &AllocatedObjectsLookasideList,
 	                                 ThingInList );
+
+            break;
 	}
 	Entry = Entry->Flink;
     }
@@ -100,8 +97,6 @@ VOID TrackWithTag( ULONG Tag, PVOID Thing, PCHAR FileName, ULONG LineNo ) {
     InsertHeadList( &AllocatedObjectsList, &TrackedThing->Entry );
 
     TcpipReleaseSpinLock( &AllocatedObjectsLock, OldIrql );
-
-    /*TrackDumpFL( FileName, LineNo );*/
 }
 
 BOOLEAN ShowTag( ULONG Tag ) {
