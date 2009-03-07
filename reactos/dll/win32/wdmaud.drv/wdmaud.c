@@ -305,11 +305,15 @@ WriteFileEx_Committer2(
 
     if ( ! WriteFileEx(KernelHandle, &DeviceInfo, sizeof(WDMAUD_DEVICE_INFO), (LPOVERLAPPED)Overlap, CompletionRoutine))
     {
-        // TODO
-       SND_TRACE(L"WriteFileEx failed with %x\n", GetLastError());
+        SND_TRACE(L"WriteFileEx failed with %x\n", GetLastError());
     }
-    CompletionRoutine(0, Length, (LPOVERLAPPED)Overlap);
-
+    else
+    {
+        /* HACK
+         * The CompletionRoutine should be called by the system 
+         */
+        CompletionRoutine(0, Length, (LPOVERLAPPED)Overlap);
+    }
 
     return MMSYSERR_NOERROR;
 }
