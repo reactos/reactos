@@ -15,7 +15,6 @@ typedef struct _IRP_MAPPING_
 {
     KSSTREAM_HEADER *Header;
     PIRP Irp;
-    LIST_ENTRY Entry;
     struct _IRP_MAPPING_ * Next;
 }IRP_MAPPING, *PIRP_MAPPING;
 
@@ -32,8 +31,16 @@ typedef struct
     LONG NumMappings;
     IN KSPIN_CONNECT *ConnectDetails;
 
+    KDPC Dpc;
     PIRP_MAPPING FirstMap;
     PIRP_MAPPING LastMap;
+
+    ULONG DpcActive;
+    PIRP_MAPPING FreeMapHead;
+    PIRP_MAPPING FreeMapTail;
+
+    LONG FreeCount;
+
 }IIrpQueueImpl;
 
 VOID
@@ -42,7 +49,35 @@ DpcRoutine(
     IN struct _KDPC  *Dpc,
     IN PVOID  DeferredContext,
     IN PVOID  SystemArgument1,
-    IN PVOID  SystemArgument2);
+    IN PVOID  SystemArgument2)
+{
+    PIRP_MAPPING CurMapping, NextMapping = NULL;
+    ULONG Count;
+    IIrpQueueImpl * This = (IIrpQueueImpl*)DeferredContext;
+
+    CurMapping = (PIRP_MAPPING)SystemArgument1;
+    ASSERT(CurMapping);
+
+    Count = 0;
+    while(CurMapping)
+    {
+        NextMapping = CurMapping->Next;
+
+        CurMapping->Irp->IoStatus.Information = CurMapping->Header->DataUsed;
+        CurMapping->Irp->IoStatus.Status = STATUS_SUCCESS;
+        IoCompleteRequest(CurMapping->Irp, IO_SOUND_INCREMENT);
+
+        ExFreePool(CurMapping->Header->Data);
+        ExFreePool(CurMapping->Header);
+        ExFreePool(CurMapping);
+
+        CurMapping = NextMapping;
+        InterlockedDecrement(&This->FreeCount);
+        Count++;
+    }
+    This->DpcActive = FALSE;
+    DPRINT1("Freed %u Buffers / IRP\n", Count);
+}
 
 
 NTSTATUS
@@ -102,6 +137,7 @@ IIrpQueue_fnInit(
     IIrpQueueImpl * This = (IIrpQueueImpl*)iface;
 
     This->ConnectDetails = ConnectDetails;
+    KeInitializeDpc(&This->Dpc, DpcRoutine, (PVOID)This);
 
     return STATUS_SUCCESS;
 }
@@ -123,6 +159,7 @@ IIrpQueue_fnAddMapping(
 
     Mapping->Header = (KSSTREAM_HEADER*)Buffer;
     Mapping->Irp = Irp;
+    Mapping->Next = NULL;
 
     if (!This->FirstMap)
         This->FirstMap = Mapping;
@@ -175,10 +212,24 @@ IIrpQueue_fnUpdateMapping(
         Mapping = This->FirstMap;
         This->FirstMap = This->FirstMap->Next;
 
-        //ExFreePool(Mapping->Header->Data);
-        //ExFreePool(Mapping->Header);
-        //IoCompleteRequest(Mapping->Irp, IO_NO_INCREMENT);
-        //ExFreePool(Mapping);
+        This->FreeCount++;
+
+        if (!This->FreeMapHead)
+           This->FreeMapHead = Mapping;
+        else
+           This->FreeMapTail->Next = Mapping;
+
+        This->FreeMapTail = Mapping;
+        Mapping->Next = NULL;
+
+        if (This->FreeCount > iface->lpVtbl->MinMappings(iface) && This->DpcActive == FALSE)
+        {
+            Mapping = This->FreeMapHead;
+            This->FreeMapHead = NULL;
+            This->FreeMapTail = NULL;
+            This->DpcActive = TRUE;
+            KeInsertQueueDpc(&This->Dpc, (PVOID)Mapping, NULL);
+        }
     }
 }
 
