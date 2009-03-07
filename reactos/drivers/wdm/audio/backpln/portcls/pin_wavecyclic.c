@@ -94,12 +94,78 @@ IServiceSink_fnRelease(
 
 static
 VOID
+UpdateCommonBuffer(
+    IPortPinWaveCyclicImpl * This,
+    ULONG Position)
+{
+    ULONG BufferLength;
+    ULONG BytesToCopy;
+    ULONG BufferSize;
+    PUCHAR Buffer;
+    NTSTATUS Status;
+
+    BufferLength = Position - This->CommonBufferOffset;
+    while(BufferLength)
+    {
+        Status = This->IrpQueue->lpVtbl->GetMapping(This->IrpQueue, &Buffer, &BufferSize);
+        if (!NT_SUCCESS(Status))
+            return;
+
+        BytesToCopy = min(BufferLength, BufferSize);
+        This->DmaChannel->lpVtbl->CopyTo(This->DmaChannel,
+                                        (PUCHAR)This->CommonBuffer + This->CommonBufferOffset,
+                                        Buffer,
+                                        BytesToCopy);
+
+        This->IrpQueue->lpVtbl->UpdateMapping(This->IrpQueue, BytesToCopy);
+        This->CommonBufferOffset += BytesToCopy;
+
+        BufferLength = Position - This->CommonBufferOffset;
+    }
+}
+
+static
+VOID
+UpdateCommonBufferOverlap(
+    IPortPinWaveCyclicImpl * This,
+    ULONG Position)
+{
+    ULONG BufferLength;
+    ULONG BytesToCopy;
+    ULONG BufferSize;
+    PUCHAR Buffer;
+    NTSTATUS Status;
+
+    BufferLength = This->CommonBufferSize - This->CommonBufferOffset;
+    while(BufferLength)
+    {
+        Status = This->IrpQueue->lpVtbl->GetMapping(This->IrpQueue, &Buffer, &BufferSize);
+        if (!NT_SUCCESS(Status))
+            return;
+
+        BytesToCopy = min(BufferLength, BufferSize);
+        This->DmaChannel->lpVtbl->CopyTo(This->DmaChannel,
+                                        (PUCHAR)This->CommonBuffer + This->CommonBufferOffset,
+                                        Buffer,
+                                        BytesToCopy);
+
+        This->IrpQueue->lpVtbl->UpdateMapping(This->IrpQueue, BytesToCopy);
+        This->CommonBufferOffset += BytesToCopy;
+
+        BufferLength = This->CommonBufferSize - This->CommonBufferOffset;
+    }
+    This->CommonBufferOffset = 0;
+    UpdateCommonBuffer(This, Position);
+}
+
+
+static
+VOID
 NTAPI
 IServiceSink_fnRequestService(
     IServiceSink* iface)
 {
     ULONG Position;
-    ULONG BufferLength, BytesToCopy;
     NTSTATUS Status;
     PUCHAR Buffer;
     ULONG BufferSize;
@@ -134,57 +200,12 @@ IServiceSink_fnRequestService(
 
     if (Position < This->CommonBufferOffset)
     {
-        BufferLength = This->CommonBufferSize - This->CommonBufferOffset;
-
-        BytesToCopy = min(BufferLength, BufferSize);
-
-        DPRINT("Copying %u\n", BytesToCopy);
-
-        if (BytesToCopy)
-        {
-            This->DmaChannel->lpVtbl->CopyTo(This->DmaChannel, (PUCHAR)This->CommonBuffer + This->CommonBufferOffset, Buffer, BytesToCopy);
-            This->IrpQueue->lpVtbl->UpdateMapping(This->IrpQueue, BytesToCopy);
-            This->CommonBufferOffset = 0;
-        }
-
-
-        Status = This->IrpQueue->lpVtbl->GetMapping(This->IrpQueue, &Buffer, &BufferSize);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT("IServiceSink_fnRequestService> Waiting for mapping\n");
-            This->ServiceGroup->lpVtbl->RequestDelayedService(This->ServiceGroup, -10000000L);
-            This->RetryCount++;
-            return;
-        }
-
-        BytesToCopy = min(Position, BufferSize);
-
-        DPRINT("Copying %u\n", BytesToCopy);
-
-        if (BytesToCopy)
-        {
-            This->DmaChannel->lpVtbl->CopyTo(This->DmaChannel, (PUCHAR)(PUCHAR)This->CommonBuffer, Buffer, BytesToCopy);
-            This->IrpQueue->lpVtbl->UpdateMapping(This->IrpQueue, BytesToCopy);
-            This->CommonBufferOffset = Position;
-        }
-
+        UpdateCommonBufferOverlap(This, Position);
     }
     else if (Position >= This->CommonBufferOffset)
     {
-        BufferLength = Position - This->CommonBufferOffset;
-
-        BytesToCopy = min(BufferLength, BufferSize);
-        DPRINT("Copying %u\n", BytesToCopy);
-
-         This->DmaChannel->lpVtbl->CopyTo(This->DmaChannel,
-                                         (PUCHAR)This->CommonBuffer + This->CommonBufferOffset,
-                                          Buffer,
-                                         BytesToCopy);
-
-        This->IrpQueue->lpVtbl->UpdateMapping(This->IrpQueue, BytesToCopy);
-        This->CommonBufferOffset = Position;
+        UpdateCommonBuffer(This, Position);
     }
-
 }
 
 static IServiceSinkVtbl vt_IServiceSink = 
