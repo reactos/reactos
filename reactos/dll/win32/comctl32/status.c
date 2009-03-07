@@ -762,6 +762,7 @@ STATUSBAR_SetTextT (STATUS_INFO *infoPtr, INT nPart, WORD style,
         part->text = (LPWSTR)text;
     } else {
 	LPWSTR ntext;
+	WCHAR  *idx;
 
 	if (text && !isW) {
 	    LPCSTR atxt = (LPCSTR)text;
@@ -774,6 +775,16 @@ STATUSBAR_SetTextT (STATUS_INFO *infoPtr, INT nPart, WORD style,
 	    if (!ntext) return FALSE;
 	    strcpyW (ntext, text);
 	} else ntext = 0;
+
+	/* replace nonprintable characters with spaces */
+	if (ntext) {
+	    idx = ntext;
+	    while (*idx) {
+	        if(!isprintW(*idx))
+	            *idx = ' ';
+	        idx++;
+	    }
+	}
 
 	/* check if text is unchanged -> no need to redraw */
 	if (text) {

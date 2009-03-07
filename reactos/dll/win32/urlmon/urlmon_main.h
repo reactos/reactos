@@ -42,6 +42,7 @@ extern HRESULT FileProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj);
 extern HRESULT HttpProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj);
 extern HRESULT HttpSProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj);
 extern HRESULT FtpProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj);
+extern HRESULT GopherProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj);
 extern HRESULT MkProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj);
 
 /**********************************************************************
@@ -54,19 +55,6 @@ static inline void URLMON_UnlockModule(void) { InterlockedDecrement( &URLMON_ref
 #define ICOM_THIS_MULTI(impl,field,iface) impl* const This=(impl*)((char*)(iface) - offsetof(impl,field))
 #define DEFINE_THIS2(cls,ifc,iface) ((cls*)((BYTE*)(iface)-offsetof(cls,ifc)))
 #define DEFINE_THIS(cls,ifc,iface) DEFINE_THIS2(cls,lp ## ifc ## Vtbl,iface)
-
-typedef struct
-{	
-	const IStreamVtbl	*lpVtbl;
-	LONG		ref;
-	HANDLE		handle;
-	BOOL		closed;
-	WCHAR		*pszFileName;
-	WCHAR		*pszURL;
-} IUMCacheStream;
-
-HRESULT	UMCreateStreamOnCacheFile(LPCWSTR pszURL, DWORD dwSize, LPWSTR pszFileName, HANDLE *phfile, IUMCacheStream **ppstr);
-void	UMCloseCacheFileStream(IUMCacheStream *pstr);
 
 IInternetProtocolInfo *get_protocol_info(LPCWSTR url);
 HRESULT get_protocol_handler(LPCWSTR url, CLSID *clsid, IClassFactory **ret);

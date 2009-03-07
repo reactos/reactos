@@ -173,6 +173,8 @@ static const ClassFactory FileProtocolCF =
     { &ClassFactoryVtbl, FileProtocol_Construct};
 static const ClassFactory FtpProtocolCF =
     { &ClassFactoryVtbl, FtpProtocol_Construct};
+static const ClassFactory GopherProtocolCF =
+    { &ClassFactoryVtbl, GopherProtocol_Construct};
 static const ClassFactory HttpProtocolCF =
     { &ClassFactoryVtbl, HttpProtocol_Construct};
 static const ClassFactory HttpSProtocolCF =
@@ -193,6 +195,7 @@ struct object_creation_info
 
 static const WCHAR wszFile[] = {'f','i','l','e',0};
 static const WCHAR wszFtp[]  = {'f','t','p',0};
+static const WCHAR wszGopher[]  = {'g','o','p','h','e','r',0};
 static const WCHAR wszHttp[] = {'h','t','t','p',0};
 static const WCHAR wszHttps[] = {'h','t','t','p','s',0};
 static const WCHAR wszMk[]   = {'m','k',0};
@@ -201,6 +204,7 @@ static const struct object_creation_info object_creation[] =
 {
     { &CLSID_FileProtocol,            CLASSFACTORY(&FileProtocolCF),    wszFile },
     { &CLSID_FtpProtocol,             CLASSFACTORY(&FtpProtocolCF),     wszFtp  },
+    { &CLSID_GopherProtocol,          CLASSFACTORY(&GopherProtocolCF),  wszGopher },
     { &CLSID_HttpProtocol,            CLASSFACTORY(&HttpProtocolCF),    wszHttp },
     { &CLSID_HttpSProtocol,           CLASSFACTORY(&HttpSProtocolCF),   wszHttps },
     { &CLSID_MkProtocol,              CLASSFACTORY(&MkProtocolCF),      wszMk },

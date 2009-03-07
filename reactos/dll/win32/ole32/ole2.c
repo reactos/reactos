@@ -2642,6 +2642,7 @@ static inline HRESULT PROPVARIANT_ValidateType(VARTYPE vt)
     case VT_BSTR:
     case VT_ERROR:
     case VT_BOOL:
+    case VT_DECIMAL:
     case VT_UI1:
     case VT_UI2:
     case VT_UI4:
@@ -2712,6 +2713,7 @@ HRESULT WINAPI PropVariantClear(PROPVARIANT * pvar) /* [in/out] */
     case VT_DATE:
     case VT_ERROR:
     case VT_BOOL:
+    case VT_DECIMAL:
     case VT_UI1:
     case VT_UI2:
     case VT_UI4:
@@ -2799,7 +2801,7 @@ HRESULT WINAPI PropVariantCopy(PROPVARIANT *pvarDest,      /* [out] */
     ULONG len;
     HRESULT hr;
 
-    TRACE("(%p, %p)\n", pvarDest, pvarSrc);
+    TRACE("(%p, %p vt %04x)\n", pvarDest, pvarSrc, pvarSrc->vt);
 
     hr = PROPVARIANT_ValidateType(pvarSrc->vt);
     if (FAILED(hr))
@@ -2817,6 +2819,7 @@ HRESULT WINAPI PropVariantCopy(PROPVARIANT *pvarDest,      /* [out] */
     case VT_I2:
     case VT_UI2:
     case VT_BOOL:
+    case VT_DECIMAL:
     case VT_I4:
     case VT_UI4:
     case VT_R4:

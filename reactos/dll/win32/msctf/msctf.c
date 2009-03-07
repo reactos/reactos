@@ -148,7 +148,7 @@ static HRESULT ClassFactory_Constructor(LPFNCONSTRUCTOR ctor, LPVOID *ppvOut)
     This->vtbl = &ClassFactoryVtbl;
     This->ref = 1;
     This->ctor = ctor;
-    *ppvOut = (LPVOID)This;
+    *ppvOut = This;
     TRACE("Created class factory %p\n", This);
     MSCTF_refCount++;
     return S_OK;
@@ -217,7 +217,7 @@ HRESULT WINAPI TF_CreateThreadMgr(ITfThreadMgr **pptim)
 HRESULT WINAPI TF_GetThreadMgr(ITfThreadMgr **pptim)
 {
     TRACE("\n");
-    *pptim = (ITfThreadMgr*)TlsGetValue(tlsIndex);
+    *pptim = TlsGetValue(tlsIndex);
 
     if (*pptim)
         ITfThreadMgr_AddRef(*pptim);

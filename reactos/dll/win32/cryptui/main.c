@@ -3236,8 +3236,7 @@ static WCHAR *get_cert_property_as_string(PCCERT_CONTEXT cert, DWORD prop)
         name = HeapAlloc(GetProcessHeap(), 0, cb);
         if (name)
         {
-            if (!CertGetCertificateContextProperty(cert, prop, (LPBYTE)name,
-             &cb))
+            if (!CertGetCertificateContextProperty(cert, prop, name, &cb))
             {
                 HeapFree(GetProcessHeap(), 0, name);
                 name = NULL;
@@ -4460,7 +4459,7 @@ static BOOL is_ca_cert(PCCERT_CONTEXT cert, BOOL defaultIfNotSpecified)
 
         if (CryptDecodeObjectEx(X509_ASN_ENCODING, szOID_BASIC_CONSTRAINTS,
          ext->Value.pbData, ext->Value.cbData, CRYPT_DECODE_ALLOC_FLAG,
-         NULL, (LPBYTE)&info, &size))
+         NULL, &info, &size))
         {
             if (info->SubjectType.cbData == 1)
                 isCA = info->SubjectType.pbData[0] & CERT_CA_SUBJECT_FLAG;
