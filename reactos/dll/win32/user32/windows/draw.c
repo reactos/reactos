@@ -690,52 +690,69 @@ static BOOL UITOOLS95_DFC_ButtonPush(HDC dc, LPRECT r, UINT uFlags)
     return TRUE;
 }
 
-/* Ported from WINE20020904 */
-/* Draw a check/3state button coming from DrawFrameControl()
- *
- * Does a pretty good job in emulating MS behavior. Some quirks are
- * however there because MS uses a TrueType font (Marlett) to draw
- * the buttons.
- */
 static BOOL UITOOLS95_DFC_ButtonCheck(HDC dc, LPRECT r, UINT uFlags)
 {
-    RECT myr, bar;
-    UINT flags = BF_RECT | BF_ADJUST;
-    UITOOLS_MakeSquareRect(r, &myr);
+    RECT rc;
+    LOGFONT lf;
+    HFONT hFont, hOldFont;
+    int SmallDiam, i;
 
-    if(uFlags & DFCS_FLAT)
-        flags |= BF_FLAT;
-    else if(uFlags & DFCS_MONO)
-        flags |= BF_MONO;
+    LPCTSTR OutRight = TEXT("c"); // Outer right
+    LPCTSTR OutLeft  = TEXT("d"); // Outer left
+    LPCTSTR InRight  = TEXT("e"); // inner left
+    LPCTSTR InLeft   = TEXT("f"); // inner right
+    LPCTSTR Center   = TEXT("g"); // center
 
-    IntDrawRectEdge( dc, &myr, EDGE_SUNKEN, flags );
+    SmallDiam = UITOOLS_MakeSquareRect(r, &rc);
 
-    if(uFlags & (DFCS_INACTIVE|DFCS_PUSHED))
-        FillRect(dc, &myr, GetSysColorBrush(COLOR_BTNFACE));
-    else if( (uFlags & DFCS_BUTTON3STATE) && (uFlags & DFCS_CHECKED) )
-        UITOOLS_DrawCheckedRect( dc, &myr );
+    ZeroMemory(&lf, sizeof(LOGFONT));
+    lf.lfHeight = SmallDiam;
+    lf.lfWidth = 0;
+    lf.lfWeight = FW_NORMAL;
+    lf.lfCharSet = DEFAULT_CHARSET;
+    lstrcpy(lf.lfFaceName, TEXT("Marlett"));
+    hFont = CreateFontIndirect(&lf);
+    hOldFont = SelectObject(dc, hFont);
+
+    SetBkMode(dc, TRANSPARENT);
+
+    /* Center section, white for active, grey for inactive */
+    i= !(uFlags & (DFCS_INACTIVE|DFCS_PUSHED)) ? COLOR_WINDOW : COLOR_BTNFACE;
+    SetTextColor(dc, GetSysColor(i));
+    TextOut(dc, rc.left, rc.top, Center, 1);
+
+    if(uFlags & (DFCS_FLAT | DFCS_MONO))
+    {
+        SetTextColor(dc, GetSysColor(COLOR_WINDOWFRAME));
+        TextOut(dc, rc.left, rc.top, OutRight, 1);
+        TextOut(dc, rc.left, rc.top, OutLeft, 1);
+        TextOut(dc, rc.left, rc.top, InRight, 1);
+        TextOut(dc, rc.left, rc.top, InLeft, 1);
+    }
     else
     {
-        FillRect(dc, &myr, GetSysColorBrush(COLOR_WINDOW));
+        SetTextColor(dc, GetSysColor(COLOR_BTNSHADOW));
+        TextOut(dc, rc.left, rc.top, OutRight, 1);
+        SetTextColor(dc, GetSysColor(COLOR_BTNHIGHLIGHT));
+        TextOut(dc, rc.left, rc.top, OutLeft, 1);
+        SetTextColor(dc, GetSysColor(COLOR_3DDKSHADOW));
+        TextOut(dc, rc.left, rc.top, InRight, 1);
+        SetTextColor(dc, GetSysColor(COLOR_3DLIGHT));
+        TextOut(dc, rc.left, rc.top, InLeft, 1);
     }
 
     if(uFlags & DFCS_CHECKED)
     {
-        int i, k;
-        i = (uFlags & DFCS_INACTIVE) || (uFlags & 0xff) == DFCS_BUTTON3STATE ?
-            COLOR_BTNSHADOW : COLOR_WINDOWTEXT;
+        LPCTSTR Check = TEXT("b");
 
-        /* draw 7 bars, with h=3w to form the check */
-        bar.left = myr.left;
-        bar.top = myr.top + 2;
-        for (k = 0; k < 7; k++) {
-            bar.left = bar.left + 1;
-            bar.top = (k < 3) ? bar.top + 1 : bar.top - 1;
-            bar.bottom = bar.top + 3;
-            bar.right = bar.left + 1;
-            FillRect(dc, &bar, GetSysColorBrush(i));
-        }
+        SetTextColor(dc, GetSysColor(COLOR_WINDOWTEXT));
+        TextOut(dc, rc.left, rc.top, Check, 1);
     }
+
+    SetTextColor(dc, GetSysColor(COLOR_WINDOWTEXT));
+    SelectObject(dc, hOldFont);
+    DeleteObject(hFont);
+
     return TRUE;
 }
 
