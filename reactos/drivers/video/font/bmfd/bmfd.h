@@ -225,7 +225,7 @@ typedef struct
     WORD wAscent;
     WORD wDescent;
     FLONG flInfo;
-} DRVFACE, *PDRVFACE;
+} BMFD_FACE, *PBMFD_FACE;
 
 typedef struct
 {
@@ -234,8 +234,17 @@ typedef struct
     PFONTGROUPHDR pFontDir;
     FONTTYPE ulFontType;
     ULONG cNumFaces;
-    DRVFACE aface[1];
-} DRVFONT, *PDRVFONT;
+    BMFD_FACE aface[1];
+} BMFD_FILE, *PBMFD_FILE;
+
+typedef struct
+{
+    FONTOBJ *pfo;
+    PBMFD_FACE pface;
+    ULONG xScale;
+    ULONG yScale;
+    ULONG ulAngle;
+} BMFD_FONT, *PBMFD_FONT;
 
 //"Bold Italic Underline Strikeout"
 #define MAX_STYLESIZE 35
@@ -246,7 +255,7 @@ typedef struct
     WCHAR wszFamilyName[LF_FACESIZE];
     WCHAR wszFaceName[LF_FACESIZE];
     WCHAR wszStyleName[MAX_STYLESIZE];
-} DRVIFIMETRICS, *PDRVIFIMETRICS;
+} BMFD_IFIMETRICS, *PBMFD_IFIMETRICS;
 
 
 /** Function prototypes *******************************************************/
@@ -356,4 +365,9 @@ BmfdQueryFontData(
 	OUT GLYPHDATA *pgd,
 	PVOID pv,
 	ULONG cjSize);
+
+VOID
+APIENTRY
+BmfdDestroyFont(
+    IN FONTOBJ *pfo);
 

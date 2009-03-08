@@ -21,6 +21,7 @@ static DRVFN gadrvfn[] =
     {INDEX_DrvFree,				(PFN)BmfdFree},
     {INDEX_DrvQueryGlyphAttrs,	(PFN)BmfdQueryGlyphAttrs},
     {INDEX_DrvQueryFontData,	(PFN)BmfdQueryFontData},
+    {INDEX_DrvDestroyFont,	    (PFN)BmfdDestroyFont},
 };
 
 

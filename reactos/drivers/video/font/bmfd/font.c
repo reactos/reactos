@@ -28,7 +28,7 @@ IsValidPtr(
 static
 BOOL
 FillFaceInfo(
-    PDRVFACE pface,
+    PBMFD_FACE pface,
     PFONTINFO16 pFontInfo)
 {
     CHAR ansi[4];
@@ -124,7 +124,7 @@ ParseFonFile(
     PNE_TYPEINFO pTInfo;
     PFONTINFO16 pFontInfo;
     PCHAR pStart, pEnd;
-    PDRVFONT pfont = NULL;
+    PBMFD_FILE pfile = NULL;
     WORD wShift;
     ULONG i, cjOffset, cjLength;
     ULONG type_id, count;
@@ -173,15 +173,15 @@ ParseFonFile(
             DbgPrint("Found NE_RSCTYPE_FONT\n");
 
             /* Allocate an info structure for this font and all faces */
-            cjLength = sizeof(DRVFONT) + (count-1) * sizeof(DRVFACE);
-            pfont = EngAllocMem(0, cjLength, TAG_FONTINFO);
-            if (!pfont)
+            cjLength = sizeof(BMFD_FILE) + (count-1) * sizeof(BMFD_FACE);
+            pfile = EngAllocMem(0, cjLength, TAG_FONTINFO);
+            if (!pfile)
             {
                 DbgPrint("Not enough memory: %ld\n", cjLength);
                 return NULL;
             }
 
-            pfont->cNumFaces = count;
+            pfile->cNumFaces = count;
 
             /* Fill all face info structures */
             for (i = 0; i < count; i++)
@@ -193,15 +193,15 @@ ParseFonFile(
                 if (!IsValidPtr(pFontInfo, cjLength, pStart, pEnd, 1))
                 {
                     DbgPrint("pFontInfo is invalid: 0x%p\n", pFontInfo);
-                    EngFreeMem(pfont);
+                    EngFreeMem(pfile);
                     return NULL;
                 }
 
                 /* Validate FONTINFO and fill face info */
-                if (!FillFaceInfo(&pfont->aface[i], pFontInfo))
+                if (!FillFaceInfo(&pfile->aface[i], pFontInfo))
                 {
                     DbgPrint("pFontInfo is invalid: 0x%p\n", pFontInfo);
-                    EngFreeMem(pfont);
+                    EngFreeMem(pfile);
                     return NULL;
                 }
             }
@@ -226,7 +226,7 @@ ParseFonFile(
         type_id = GETVAL(pTInfo->type_id);
     }
 
-    return pfont;
+    return pfile;
 }
 
 /** Public Interface **********************************************************/
@@ -242,7 +242,7 @@ BmfdLoadFontFile(
     ULONG ulLangID,
     ULONG ulFastCheckSum)
 {
-    PDRVFONT pfont = NULL;
+    PBMFD_FILE pfile = NULL;
     PVOID pvView;
     ULONG cjView;
 
@@ -266,16 +266,16 @@ BmfdLoadFontFile(
     DbgPrint("mapped font file to %p, site if %ld\n", pvView, cjView);
 
     /* Try to parse a .fon file */
-    pfont = ParseFonFile(pvView, cjView);
+    pfile = ParseFonFile(pvView, cjView);
 
-    if (!pfont)
+    if (!pfile)
     {
         /* Could be a .fnt file */
-        pfont = ParseFntFile(pvView, cjView);
+        pfile = ParseFntFile(pvView, cjView);
     }
 
     /* Check whether we succeeded finding a font */
-    if (!pfont)
+    if (!pfile)
     {
         DbgPrint("No font data found\n");
 
@@ -286,11 +286,11 @@ BmfdLoadFontFile(
         return HFF_INVALID;
     }
 
-    pfont->iFile = *piFile;
-    pfont->pvView = pvView;
+    pfile->iFile = *piFile;
+    pfile->pvView = pvView;
 
     /* Success, return the pointer to font info structure */
-    return (ULONG_PTR)pfont;
+    return (ULONG_PTR)pfile;
 }
 
 BOOL
@@ -298,15 +298,15 @@ APIENTRY
 BmfdUnloadFontFile(
     IN ULONG_PTR iFile)
 {
-    PDRVFONT pfont = (PDRVFONT)iFile;
+    PBMFD_FILE pfile = (PBMFD_FILE)iFile;
 
     DbgPrint("BmfdUnloadFontFile()\n");
 
     /* Free the memory that was allocated for the font */
-    EngFreeMem(pfont);
+    EngFreeMem(pfile);
 
     /* Unmap the font file */
-    EngUnmapFontFileFD(pfont->iFile);
+    EngUnmapFontFileFD(pfile->iFile);
 
     return TRUE;
 }
@@ -320,7 +320,7 @@ BmfdQueryFontFile(
     ULONG cjBuf,
     ULONG *pulBuf)
 {
-    PDRVFONT pfont = (PDRVFONT)iFile;
+    PBMFD_FILE pfile = (PBMFD_FILE)iFile;
 
     DbgPrint("BmfdQueryFontFile()\n");
 //    DbgBreakPoint();
@@ -330,7 +330,7 @@ BmfdQueryFontFile(
         case QFF_DESCRIPTION:
         {
             /* We copy the face name of the 1st face */
-            PCHAR pDesc = pfont->aface[0].pszFaceName;
+            PCHAR pDesc = pfile->aface[0].pszFaceName;
             ULONG cOutSize;
             if (pulBuf)
             {
@@ -349,7 +349,7 @@ BmfdQueryFontFile(
 
         case QFF_NUMFACES:
             /* return the number of faces in the file */
-            return pfont->cNumFaces;
+            return pfile->cNumFaces;
 
         default:
             return FD_ERROR;
@@ -387,8 +387,8 @@ BmfdQueryFontTree(
     ULONG iMode,
     ULONG_PTR *pid)
 {
-    PDRVFONT pfont = (PDRVFONT)iFile;
-    PDRVFACE pface;
+    PBMFD_FILE pfile = (PBMFD_FILE)iFile;
+    PBMFD_FACE pface;
     ULONG i, j, cjOffset, cjSize, cGlyphs, cRuns;
     CHAR ch, chFirst, ach[256];
     WCHAR wc, awc[256];
@@ -400,14 +400,14 @@ BmfdQueryFontTree(
 //    DbgBreakPoint();
 
     /* Check parameters, we only support QFT_GLYPHSET */
-    if (!iFace || iFace > pfont->cNumFaces || iMode != QFT_GLYPHSET)
+    if (!iFace || iFace > pfile->cNumFaces || iMode != QFT_GLYPHSET)
     {
-        DbgPrint("iFace = %ld, cNumFaces = %ld\n", iFace, pfont->cNumFaces);
+        DbgPrint("iFace = %ld, cNumFaces = %ld\n", iFace, pfile->cNumFaces);
         return NULL;
     }
 
     /* Get a pointer to the face data */
-    pface = &pfont->aface[iFace - 1];
+    pface = &pfile->aface[iFace - 1];
 
     /* Get the number of characters in the face */
     cGlyphs = pface->cGlyphs;
@@ -514,43 +514,43 @@ BmfdQueryFont(
     IN ULONG iFace,
     IN ULONG_PTR *pid)
 {
-    PDRVFONT pfont = (PDRVFONT)iFile;
-    PDRVFACE pface;
+    PBMFD_FILE pfile = (PBMFD_FILE)iFile;
+    PBMFD_FACE pface;
     PFONTINFO16 pFontInfo;
     PIFIMETRICS pifi;
-    PDRVIFIMETRICS pDrvIM;
+    PBMFD_IFIMETRICS pifiX;
     PANOSE panose = {0};
 
     DbgPrint("BmfdQueryFont()\n");
 //    DbgBreakPoint();
 
     /* Validate parameters */
-    if (iFace > pfont->cNumFaces || !pid)
+    if (iFace > pfile->cNumFaces || !pid)
     {
         return NULL;
     }
 
-    pface = &pfont->aface[iFace - 1];
+    pface = &pfile->aface[iFace - 1];
     pFontInfo = pface->pFontInfo;
 
     /* Allocate the structure */
-    pDrvIM = EngAllocMem(FL_ZERO_MEMORY, sizeof(DRVIFIMETRICS), TAG_IFIMETRICS);
-    if (!pDrvIM)
+    pifiX = EngAllocMem(FL_ZERO_MEMORY, sizeof(BMFD_IFIMETRICS), TAG_IFIMETRICS);
+    if (!pifiX)
     {
         return NULL;
     }
 
     /* Return a pointer to free it later */
-    *pid = (ULONG_PTR)pDrvIM;
+    *pid = (ULONG_PTR)pifiX;
 
     /* Fill IFIMETRICS */
-    pifi = &pDrvIM->ifim;
-    pifi->cjThis = sizeof(DRVIFIMETRICS);
+    pifi = &pifiX->ifim;
+    pifi->cjThis = sizeof(BMFD_IFIMETRICS);
     pifi->cjIfiExtra = 0;
-    pifi->dpwszFamilyName = FIELD_OFFSET(DRVIFIMETRICS, wszFamilyName);
-    pifi->dpwszStyleName = FIELD_OFFSET(DRVIFIMETRICS, wszFamilyName);
-    pifi->dpwszFaceName = FIELD_OFFSET(DRVIFIMETRICS, wszFaceName);
-    pifi->dpwszUniqueName = FIELD_OFFSET(DRVIFIMETRICS, wszFaceName);
+    pifi->dpwszFamilyName = FIELD_OFFSET(BMFD_IFIMETRICS, wszFamilyName);
+    pifi->dpwszStyleName = FIELD_OFFSET(BMFD_IFIMETRICS, wszFamilyName);
+    pifi->dpwszFaceName = FIELD_OFFSET(BMFD_IFIMETRICS, wszFaceName);
+    pifi->dpwszUniqueName = FIELD_OFFSET(BMFD_IFIMETRICS, wszFaceName);
     pifi->dpFontSim = 0;
     pifi->lEmbedId = 0;
     pifi->lItalicAngle = 0;
@@ -612,21 +612,21 @@ BmfdQueryFont(
     pifi->panose = panose;
 
     /* Set char sets */
-    pDrvIM->ajCharSet[0] = pifi->jWinCharSet;
-    pDrvIM->ajCharSet[1] = DEFAULT_CHARSET;
+    pifiX->ajCharSet[0] = pifi->jWinCharSet;
+    pifiX->ajCharSet[1] = DEFAULT_CHARSET;
 
     if (pface->flInfo & FM_INFO_CONSTANT_WIDTH)
         pifi->jWinPitchAndFamily |= FIXED_PITCH;
 
 #if 0
-    EngMultiByteToUnicodeN(pDrvIM->wszFaceName,
+    EngMultiByteToUnicodeN(pifiX->wszFaceName,
                            LF_FACESIZE * sizeof(WCHAR),
                            NULL,
                            pFontInfo->,
                            strnlen(pDesc, LF_FACESIZE));
 #endif
-    wcscpy(pDrvIM->wszFaceName, L"Courier-X");
-    wcscpy(pDrvIM->wszFamilyName, L"Courier-X");
+    wcscpy(pifiX->wszFaceName, L"Courier-X");
+    wcscpy(pifiX->wszFamilyName, L"Courier-X");
 
     /* Initialize font weight style flags and string */
     if (pifi->usWinWeight == FW_REGULAR)
@@ -636,29 +636,29 @@ BmfdQueryFont(
     else if (pifi->usWinWeight > FW_SEMIBOLD)
     {
         pifi->fsSelection |= FM_SEL_BOLD;
-        wcscat(pDrvIM->wszStyleName, L"Bold ");
+        wcscat(pifiX->wszStyleName, L"Bold ");
     }
     else if (pifi->usWinWeight <= FW_LIGHT)
     {
-        wcscat(pDrvIM->wszStyleName, L"Light ");
+        wcscat(pifiX->wszStyleName, L"Light ");
     }
 
     if (pFontInfo->dfItalic)
     {
         pifi->fsSelection |= FM_SEL_ITALIC;
-        wcscat(pDrvIM->wszStyleName, L"Italic ");
+        wcscat(pifiX->wszStyleName, L"Italic ");
     }
 
     if (pFontInfo->dfUnderline)
     {
         pifi->fsSelection |= FM_SEL_UNDERSCORE;
-        wcscat(pDrvIM->wszStyleName, L"Underscore ");
+        wcscat(pifiX->wszStyleName, L"Underscore ");
     }
 
     if (pFontInfo->dfStrikeOut)
     {
         pifi->fsSelection |= FM_SEL_STRIKEOUT;
-        wcscat(pDrvIM->wszStyleName, L"Strikeout ");
+        wcscat(pifiX->wszStyleName, L"Strikeout ");
     }
 
     return pifi;
@@ -679,4 +679,12 @@ BmfdFree(
 }
 
 
-
+VOID
+APIENTRY
+BmfdDestroyFont(
+    IN FONTOBJ *pfo)
+{
+    /* Free the font realization info */
+    EngFreeMem(pfo->pvProducer);
+    pfo->pvProducer = NULL;
+}
