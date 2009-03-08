@@ -733,10 +733,8 @@ WdmAudWrite(
 
     KsStreamIo(FileObject, NULL, NULL, NULL, NULL, 0, &IoStatusBlock, Packet, sizeof(CONTEXT_WRITE), KSSTREAM_WRITE, KernelMode);
 
-    Irp->IoStatus.Status = STATUS_PENDING;
-    Irp->IoStatus.Information = 0;
-    IoMarkIrpPending(Irp);
-    return STATUS_PENDING;
+
+    return IoStatusBlock.Status;
 
     //return SetIrpIoStatus(Irp, STATUS_SUCCESS, 0);
 }

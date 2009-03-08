@@ -18,8 +18,6 @@ typedef struct _IRP_MAPPING_
     struct _IRP_MAPPING_ * Next;
 }IRP_MAPPING, *PIRP_MAPPING;
 
-#define MAX_MAPPING (100)
-
 typedef struct
 {
     IIrpQueueVtbl *lpVtbl;
@@ -27,9 +25,10 @@ typedef struct
     LONG ref;
 
     ULONG CurrentOffset;
-    ULONG NextMapping;
     LONG NumMappings;
-    IN KSPIN_CONNECT *ConnectDetails;
+    ULONG NumDataAvailable;
+    KSPIN_CONNECT *ConnectDetails;
+    PKSDATAFORMAT_WAVEFORMATEX DataFormat;
 
     KDPC Dpc;
     PIRP_MAPPING FirstMap;
@@ -38,7 +37,7 @@ typedef struct
     ULONG DpcActive;
     PIRP_MAPPING FreeMapHead;
     PIRP_MAPPING FreeMapTail;
-
+    ULONG FreeDataSize;
     LONG FreeCount;
 
 }IIrpQueueImpl;
@@ -63,20 +62,27 @@ DpcRoutine(
     {
         NextMapping = CurMapping->Next;
 
-        CurMapping->Irp->IoStatus.Information = CurMapping->Header->DataUsed;
-        CurMapping->Irp->IoStatus.Status = STATUS_SUCCESS;
-        IoCompleteRequest(CurMapping->Irp, IO_SOUND_INCREMENT);
+        This->FreeDataSize -= CurMapping->Header->DataUsed;
+
+        if (CurMapping->Irp)
+        {
+            CurMapping->Irp->IoStatus.Information = CurMapping->Header->DataUsed;
+            CurMapping->Irp->IoStatus.Status = STATUS_SUCCESS;
+            IoCompleteRequest(CurMapping->Irp, IO_SOUND_INCREMENT);
+        }
 
         ExFreePool(CurMapping->Header->Data);
         ExFreePool(CurMapping->Header);
+
         ExFreePool(CurMapping);
 
         CurMapping = NextMapping;
         InterlockedDecrement(&This->FreeCount);
+
         Count++;
     }
     This->DpcActive = FALSE;
-    DPRINT1("Freed %u Buffers / IRP\n", Count);
+    DPRINT1("Freed %u Buffers / IRP Available Mappings %u\n", Count, This->NumMappings);
 }
 
 
@@ -132,11 +138,14 @@ NTAPI
 IIrpQueue_fnInit(
     IN IIrpQueue *iface,
     IN KSPIN_CONNECT *ConnectDetails,
+    IN PKSDATAFORMAT DataFormat,
     IN PDEVICE_OBJECT DeviceObject)
 {
     IIrpQueueImpl * This = (IIrpQueueImpl*)iface;
 
     This->ConnectDetails = ConnectDetails;
+    This->DataFormat = (PKSDATAFORMAT_WAVEFORMATEX)DataFormat;
+
     KeInitializeDpc(&This->Dpc, DpcRoutine, (PVOID)This);
 
     return STATUS_SUCCESS;
@@ -161,6 +170,8 @@ IIrpQueue_fnAddMapping(
     Mapping->Irp = Irp;
     Mapping->Next = NULL;
 
+    DPRINT1("FirstMap %p LastMap %p NumMappings %u\n", This->FirstMap, This->LastMap, This->NumMappings);
+
     if (!This->FirstMap)
         This->FirstMap = Mapping;
     else
@@ -170,8 +181,16 @@ IIrpQueue_fnAddMapping(
 
     InterlockedIncrement(&This->NumMappings);
 
-    DPRINT1("IIrpQueue_fnAddMapping NumMappings %u SizeOfMapping %lu\n", This->NumMappings, Mapping->Header->DataUsed);
+    if (Irp)
+    {
+        Irp->IoStatus.Status = STATUS_PENDING;
+        Irp->IoStatus.Information = 0;
+        IoMarkIrpPending(Irp);
+    }
 
+    This->NumDataAvailable += Mapping->Header->DataUsed;
+
+    DPRINT1("IIrpQueue_fnAddMapping NumMappings %u SizeOfMapping %lu NumDataAvailable %lu\n", This->NumMappings, Mapping->Header->DataUsed, This->NumDataAvailable);
     return STATUS_SUCCESS;
 }
 
@@ -221,8 +240,13 @@ IIrpQueue_fnUpdateMapping(
 
         This->FreeMapTail = Mapping;
         Mapping->Next = NULL;
+        This->FreeDataSize += Mapping->Header->DataUsed;
+        InterlockedDecrement(&This->NumMappings);
+        This->NumDataAvailable -= Mapping->Header->DataUsed;
 
-        if (This->FreeCount > iface->lpVtbl->MinMappings(iface) && This->DpcActive == FALSE)
+
+        if ((This->FreeDataSize > This->DataFormat->WaveFormatEx.nAvgBytesPerSec || This->FreeCount > 25) &&
+            This->DpcActive == FALSE)
         {
             Mapping = This->FreeMapHead;
             This->FreeMapHead = NULL;
@@ -245,19 +269,30 @@ IIrpQueue_fnNumMappings(
 
 ULONG
 NTAPI
-IIrpQueue_fnMaxMappings(
-    IN IIrpQueue *iface)
-{
-    return MAX_MAPPING;
-}
-
-ULONG
-NTAPI
 IIrpQueue_fnMinMappings(
     IN IIrpQueue *iface)
 {
-    return MAX_MAPPING / 4;
+    return 25;
 }
+
+
+BOOL
+NTAPI
+IIrpQueue_fnMinimumDataAvailable(
+    IN IIrpQueue *iface)
+{
+    BOOL Result;
+    IIrpQueueImpl * This = (IIrpQueueImpl*)iface;
+
+    if (This->DataFormat->WaveFormatEx.nAvgBytesPerSec < This->NumDataAvailable)
+        Result = TRUE;
+    else
+        Result = FALSE;
+
+    return Result;
+}
+
+
 
 static IIrpQueueVtbl vt_IIrpQueue =
 {
@@ -270,7 +305,7 @@ static IIrpQueueVtbl vt_IIrpQueue =
     IIrpQueue_fnUpdateMapping,
     IIrpQueue_fnNumMappings,
     IIrpQueue_fnMinMappings,
-    IIrpQueue_fnMaxMappings
+    IIrpQueue_fnMinimumDataAvailable
 };
 
 

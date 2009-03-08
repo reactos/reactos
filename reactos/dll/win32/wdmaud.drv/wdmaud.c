@@ -309,10 +309,8 @@ WriteFileEx_Committer2(
     }
     else
     {
-        /* HACK
-         * The CompletionRoutine should be called by the system 
-         */
-        CompletionRoutine(0, Length, (LPOVERLAPPED)Overlap);
+        WaitForSingleObjectEx (KernelHandle, INFINITE, TRUE);
+
     }
 
     return MMSYSERR_NOERROR;

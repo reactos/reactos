@@ -299,7 +299,7 @@ CreatePinWorkerRoutine(
         else
         {
             AudioClient->Devs[AudioClient->NumDevices -1].ClientHandles[NumHandels].bHandle = FALSE;
-            AudioClient->Devs[AudioClient->NumDevices -1].ClientHandles[NumHandels].hPin = NULL;
+            AudioClient->Devs[AudioClient->NumDevices -1].ClientHandles[NumHandels].hPin = VirtualPinHandle;
             AudioClient->Devs[AudioClient->NumDevices -1].ClientHandles[NumHandels].PinId = WorkerContext->PinConnect->PinId;
         }
 
@@ -412,6 +412,43 @@ HandleSysAudioFilterPinProperties(
 }
 
 NTSTATUS
+SetPinFormat(
+    PKSAUDIO_DEVICE_ENTRY Entry,
+    KSPIN_CONNECT * PinConnect,
+    ULONG Length)
+{
+    KSP_PIN PinRequest;
+    PFILE_OBJECT FileObject;
+    ULONG BytesReturned;
+    NTSTATUS Status;
+
+    /* re-using pin */
+    PinRequest.Property.Set = KSPROPSETID_Connection;
+    PinRequest.Property.Flags = KSPROPERTY_TYPE_SET;
+    PinRequest.Property.Id = KSPROPERTY_CONNECTION_DATAFORMAT;
+    PinRequest.PinId = PinConnect->PinId;
+
+    /* get pin file object */
+    Status = ObReferenceObjectByHandle(Entry->Pins[PinConnect->PinId].PinHandle,
+                                       GENERIC_READ | GENERIC_WRITE, 
+                                       IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
+
+   if (!NT_SUCCESS(Status))
+   {
+       DPRINT1("Failed to get pin file object with %x\n", Status);
+       return Status;
+   }
+
+   Length -= sizeof(KSPIN_CONNECT) + sizeof(SYSAUDIO_INSTANCE_INFO);
+   Status = KsSynchronousIoControlDevice(FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PinRequest, sizeof(KSPROPERTY),
+                                         (PVOID)(PinConnect + 1), Length, &BytesReturned);
+   ObDereferenceObject(FileObject);
+
+   return Status;
+}
+
+
+NTSTATUS
 HandleSysAudioFilterPinCreation(
     PIRP Irp,
     PKSPROPERTY Property,
@@ -429,9 +466,9 @@ HandleSysAudioFilterPinCreation(
     NTSTATUS Status;
     KSPIN_CINSTANCES PinInstances;
     PIO_WORKITEM WorkItem;
-    PFILE_OBJECT FileObject;
     PPIN_WORKER_CONTEXT WorkerContext;
     PDISPATCH_CONTEXT DispatchContext;
+    ULONG Index, SubIndex;
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
@@ -456,8 +493,7 @@ HandleSysAudioFilterPinCreation(
 
     /* get client context */
     ClientInfo = (PSYSAUDIO_CLIENT)CreateItem->Context;
-    if (!ClientInfo || !ClientInfo->NumDevices || !ClientInfo->Devs ||
-        ClientInfo->Devs[ClientInfo->NumDevices-1].DeviceId != InstanceInfo->DeviceNumber)
+    if (!ClientInfo || !ClientInfo->NumDevices || !ClientInfo->Devs)
     {
         /* we have a problem */
         KeBugCheckEx(0, 0, 0, 0, 0);
@@ -506,6 +542,30 @@ HandleSysAudioFilterPinCreation(
 
     if (PinInstances.CurrentCount == PinInstances.PossibleCount)
     {
+        for (Index = 0; Index < ClientInfo->NumDevices; Index++)
+        {
+            if (ClientInfo->Devs[Index].DeviceId == InstanceInfo->DeviceNumber)
+            {
+                if (ClientInfo->Devs[Index].ClientHandlesCount)
+                {
+                    for(SubIndex = 0; SubIndex < ClientInfo->Devs[Index].ClientHandlesCount; SubIndex++)
+                    {
+                        if (ClientInfo->Devs[Index].ClientHandles[SubIndex].PinId == PinConnect->PinId)
+                        {
+                            /* reuse opened pin */
+                            Length = IoStack->Parameters.DeviceIoControl.InputBufferLength - sizeof(KSPIN_CONNECT) + sizeof(SYSAUDIO_INSTANCE_INFO);
+                            Status = SetPinFormat(Entry, PinConnect, Length);
+                            DPRINT1("Reusing instance handle Status %x\n", Status);
+                            ASSERT(ClientInfo->Devs[Index].ClientHandles[SubIndex].bHandle == FALSE);
+                            *((PHANDLE)Irp->UserBuffer) = ClientInfo->Devs[Index].ClientHandles[SubIndex].hPin;
+                            return SetIrpIoStatus(Irp, Status, sizeof(HANDLE));
+                        }
+                    }
+                }
+
+            }
+        }
+
         /* pin already exists */
         ASSERT(Entry->Pins[PinConnect->PinId].PinHandle != NULL);
         if (Entry->Pins[PinConnect->PinId].References > 1)
@@ -550,39 +610,14 @@ HandleSysAudioFilterPinCreation(
     if (PinInstances.CurrentCount == PinInstances.PossibleCount)
     {
         /* re-using pin */
-        PinRequest.Property.Set = KSPROPSETID_Connection;
-        PinRequest.Property.Flags = KSPROPERTY_TYPE_SET;
-        PinRequest.Property.Id = KSPROPERTY_CONNECTION_DATAFORMAT;
-
-        /* get pin file object */
-        Status = ObReferenceObjectByHandle(Entry->Pins[PinConnect->PinId].PinHandle,
-                                           GENERIC_READ | GENERIC_WRITE, 
-                                           IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
-
+        Status = SetPinFormat(Entry, PinConnect, Length);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("Failed to get pin file object with %x\n", Status);
             IoFreeWorkItem(WorkItem);
             ExFreePool(WorkerContext);
             ExFreePool(DispatchContext);
             return SetIrpIoStatus(Irp, Status, 0);
         }
-
-        Length -= sizeof(KSPIN_CONNECT) + sizeof(SYSAUDIO_INSTANCE_INFO);
-        Status = KsSynchronousIoControlDevice(FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PinRequest, sizeof(KSPROPERTY),
-                                              (PVOID)(PinConnect + 1), Length, &BytesReturned);
-
-        ObDereferenceObject(FileObject);
-
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("Failed to set format with Status %x\n", Status);
-            IoFreeWorkItem(WorkItem);
-            ExFreePool(WorkerContext);
-            ExFreePool(DispatchContext);
-            return SetIrpIoStatus(Irp, Status, 0);
-        }
-
     }
     else
     {

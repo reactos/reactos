@@ -27,6 +27,7 @@ typedef struct
     ULONG ActiveIrpOffset;
     ULONG DelayedRequestInProgress;
     ULONG RetryCount;
+    ULONG FrameSize;
 
 }IPortPinWaveCyclicImpl;
 
@@ -172,16 +173,16 @@ IServiceSink_fnRequestService(
 
     IPortPinWaveCyclicImpl * This = (IPortPinWaveCyclicImpl*)CONTAINING_RECORD(iface, IPortPinWaveCyclicImpl, lpVtblServiceSink);
 
-
     Status = This->IrpQueue->lpVtbl->GetMapping(This->IrpQueue, &Buffer, &BufferSize);
     if (!NT_SUCCESS(Status))
     {
         This->RetryCount++;
         if (This->RetryCount > 30)
         {
-            DPRINT1("Stopping\n");
+            DPRINT1("Stopping %u\n", This->IrpQueue->lpVtbl->NumMappings(This->IrpQueue));
             This->Stream->lpVtbl->SetState(This->Stream, KSSTATE_STOP);
             This->RetryCount = 0;
+            This->State = KSSTATE_STOP;
             return;
         }
         DPRINT("IServiceSink_fnRequestService> Waiting for mapping\n");
@@ -380,7 +381,10 @@ IPortPinWaveCyclic_HandleKsProperty(
 
                 if (This->Stream)
                 {
-                    Status = This->Stream->lpVtbl->SetFormat(This->Stream, DataFormat);
+                    This->Stream->lpVtbl->SetState(This->Stream, KSSTATE_STOP);
+                    This->State = KSSTATE_STOP;
+
+                    Status = This->Stream->lpVtbl->SetFormat(This->Stream, NewDataFormat);
                     if (NT_SUCCESS(Status))
                     {
                         if (This->Format)
@@ -646,25 +650,44 @@ IPortPinWaveCyclic_fnFastWrite(
 {
     NTSTATUS Status;
     PCONTEXT_WRITE Packet;
+    PIRP Irp;
     IPortPinWaveCyclicImpl * This = (IPortPinWaveCyclicImpl*)iface;
 
     DPRINT1("IPortPinWaveCyclic_fnFastWrite entered\n");
 
     Packet = (PCONTEXT_WRITE)Buffer;
 
+    //if (This->IrpQueue->lpVtbl->MinimumDataAvailable(This->IrpQueue))
+    //    Irp = Packet->Irp;
+    //else
+        Irp = NULL;
 
-    Status = This->IrpQueue->lpVtbl->AddMapping(This->IrpQueue, Buffer, Length, Packet->Irp);
+    Status = This->IrpQueue->lpVtbl->AddMapping(This->IrpQueue, Buffer, Length, Irp);
 
     if (!NT_SUCCESS(Status))
         return FALSE;
 
-    if ((This->IrpQueue->lpVtbl->NumMappings(This->IrpQueue) >  This->IrpQueue->lpVtbl->MinMappings(This->IrpQueue)) && 
-        This->State != KSSTATE_RUN)
+    if (This->IrpQueue->lpVtbl->MinimumDataAvailable(This->IrpQueue) == TRUE && This->State != KSSTATE_RUN)
     {
         /* some should initiate a state request but didnt do it */
         DPRINT1("Starting stream with %lu mappings\n", This->IrpQueue->lpVtbl->NumMappings(This->IrpQueue));
+
         This->Stream->lpVtbl->SetState(This->Stream, KSSTATE_RUN);
         This->State = KSSTATE_RUN;
+    }
+
+    if (!Irp)
+    {
+        DPRINT1("Completing Irp %p\n", Packet->Irp);
+
+        Packet->Irp->IoStatus.Status = STATUS_SUCCESS;
+        Packet->Irp->IoStatus.Information = Packet->Header.DataUsed;
+        IoCompleteRequest(Packet->Irp, IO_SOUND_INCREMENT);
+        StatusBlock->Status = STATUS_SUCCESS;
+    }
+    else
+    {
+        StatusBlock->Status = STATUS_PENDING;
     }
 
     return TRUE;
@@ -697,13 +720,6 @@ IPortPinWaveCyclic_fnInit(
 
     DeviceObject = GetDeviceObject(Port);
 
-
-    Status = NewIrpQueue(&This->IrpQueue);
-    if (!NT_SUCCESS(Status))
-        return Status;
-
-    Status = This->IrpQueue->lpVtbl->Init(This->IrpQueue, ConnectDetails, DeviceObject);
-
     DataFormat = (PKSDATAFORMAT)(ConnectDetails + 1);
 
     DPRINT("IPortPinWaveCyclic_fnInit entered\n");
@@ -713,6 +729,12 @@ IPortPinWaveCyclic_fnInit(
         return STATUS_INSUFFICIENT_RESOURCES;
 
     RtlMoveMemory(This->Format, DataFormat, DataFormat->FormatSize);
+
+    Status = NewIrpQueue(&This->IrpQueue);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    Status = This->IrpQueue->lpVtbl->Init(This->IrpQueue, ConnectDetails, DataFormat, DeviceObject);
 
     Status = This->Miniport->lpVtbl->NewStream(This->Miniport,
                                                &This->Stream,
@@ -729,7 +751,7 @@ IPortPinWaveCyclic_fnInit(
     if (!NT_SUCCESS(Status))
         return Status;
 
-    Status = This->ServiceGroup->lpVtbl->AddMember(This->ServiceGroup,
+    Status = This->ServiceGroup->lpVtbl->AddMember(This->ServiceGroup, 
                                                    (PSERVICESINK)&This->lpVtblServiceSink);
     if (!NT_SUCCESS(Status))
     {
@@ -742,6 +764,8 @@ IPortPinWaveCyclic_fnInit(
     This->CommonBufferOffset = 0;
     This->CommonBufferSize = This->DmaChannel->lpVtbl->AllocatedBufferSize(This->DmaChannel);
     This->CommonBuffer = This->DmaChannel->lpVtbl->SystemAddress(This->DmaChannel);
+
+    //Status = This->Stream->lpVtbl->SetNotificationFreq(This->Stream, 10, &This->FrameSize);
 
 
     return STATUS_SUCCESS;

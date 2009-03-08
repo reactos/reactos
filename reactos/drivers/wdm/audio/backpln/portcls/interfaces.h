@@ -193,6 +193,7 @@ DECLARE_INTERFACE_(IIrpQueue, IUnknown)
 
     STDMETHOD_(NTSTATUS, Init)(THIS_
         IN KSPIN_CONNECT *ConnectDetails,
+        IN PKSDATAFORMAT DataFormat,
         IN PDEVICE_OBJECT DeviceObject);
 
     STDMETHOD_(NTSTATUS, AddMapping)(THIS_
@@ -211,7 +212,7 @@ DECLARE_INTERFACE_(IIrpQueue, IUnknown)
 
     STDMETHOD_(ULONG, MinMappings)(THIS);
 
-    STDMETHOD_(ULONG, MaxMappings)(THIS);
+    STDMETHOD_(BOOL, MinimumDataAvailable)(THIS);
 
 };
 
