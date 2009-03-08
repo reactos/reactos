@@ -431,7 +431,7 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_STRING_LICENSE      "Калькулятор ReactOS - свободное программное обеспецение, распространяющееся по лицензии GNU GPL.\r\n\r\nВы можете получить копию лицензии GNU GPL здесь:\r\nhttp://www.gnu.org/licenses/gpl.html\r\n\r\nОзнакомиться c переводом лицензии GNU GPL можно здесь:\r\nhttp://www.gnu.org/licenses/translations.html"
+    IDS_STRING_LICENSE      "Калькулятор ReactOS - свободное программное обеспечение, распространяющееся по лицензии GNU GPL.\r\n\r\nВы можете получить копию лицензии GNU GPL здесь:\r\nhttp://www.gnu.org/licenses/gpl.html\r\n\r\nОзнакомиться c переводом лицензии GNU GPL можно здесь:\r\nhttp://www.gnu.org/licenses/translations.html"
     IDS_MATH_ERROR          "Ошибка"
     IDS_QUICKHELP           "Быстрая справка"
 END
