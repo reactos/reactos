@@ -845,226 +845,74 @@ static BOOL UITOOLS95_DrawFrameButton(HDC hdc, LPRECT rc, UINT uState)
     return FALSE;
 }
 
-/* Ported from WINE20020904 */
-/* Draw caption buttons (win95), coming from DrawFrameControl() */
 static BOOL UITOOLS95_DrawFrameCaption(HDC dc, LPRECT r, UINT uFlags)
 {
-    POINT Line1[10];
-    POINT Line2[10];
-    int Line1N;
-    int Line2N;
-    RECT myr;
-    int SmallDiam = UITOOLS_MakeSquareRect(r, &myr)-2;
-    int i;
-    HBRUSH hbsave;
-    HPEN hpsave;
-    HFONT hfsave, hf;
     int colorIdx = uFlags & DFCS_INACTIVE ? COLOR_BTNSHADOW : COLOR_BTNTEXT;
-    int xc = (myr.left+myr.right)/2;
-    int yc = (myr.top+myr.bottom)/2;
-    int edge, move;
-    char str[2] = "?";
-    UINT alignsave;
-    int bksave;
+    LOGFONT lf;
+    HFONT hFont, hOldFont;
     COLORREF clrsave;
-    SIZE size;
-
+    RECT myr;
+    INT bkmode;
+    TCHAR Symbol;
+    switch(uFlags & 0xff)
+    {
+        case DFCS_CAPTIONCLOSE:
+		Symbol = 'r';
+		break;
+        case DFCS_CAPTIONHELP:
+		Symbol = 's';
+		break;
+        case DFCS_CAPTIONMIN:
+		Symbol = '0';
+		break;
+        case DFCS_CAPTIONMAX:
+		Symbol = '1';
+		break;
+        case DFCS_CAPTIONRESTORE:
+		Symbol = '2';
+		break;
+        default:
+             return FALSE;
+    }
     if(uFlags & DFCS_PUSHED)
         IntDrawRectEdge(dc,r,EDGE_SUNKEN, BF_RECT | BF_MIDDLE | BF_SOFT);
     else
         IntDrawRectEdge(dc,r,BDR_RAISEDINNER | BDR_RAISEDOUTER, BF_RECT |
                         BF_SOFT | BF_MIDDLE);
-
-    switch(uFlags & 0xff)
-    {
-        case DFCS_CAPTIONCLOSE:
-        {
-            /* The "X" is made by drawing a series of lines.
-            * The number of lines drawn depends on the size
-            * of the bounding rect.  e.g. For a 6x5 inside rect,
-            * two lines are drawn from top-left to bottom-right,
-            * and two lines from top-right to bottom-left.
-            *
-            * 0 1 2 3 4 5       0 1 2 3 4 5
-            * 1 * *                     * *
-            * 2   * *                 * *
-            * 3     * *             * *
-            * 4       * *         * *
-            *
-            * Drawing one line for every 6 pixels in width
-            * seems to provide the best proportions.
-            */
-
-            POINT start, oldPos;
-            INT width = myr.right - (++myr.left) - 5;
-            INT height = (--myr.bottom) - myr.top - 6;
-            INT numLines = (width / 6) + 1;
-
-            hpsave = (HPEN)SelectObject(dc, GetSysColorPen(colorIdx));
-
-            start.x = myr.left + 2;
-            start.y = myr.top + 2;
-
-            if (width < 6)
-                height = width;
-            else
-                start.y++;
-
-            if (uFlags & DFCS_PUSHED)
-            {
-                start.x++;
-                start.y++;
-            }
-
-            /* now use the width of each line */
-            width -= numLines - 1;
-
-            for (i = 0; i < numLines; i++)
-            {
-                MoveToEx(dc, start.x + i, start.y, &oldPos);
-                LineTo(dc, start.x + i + width, start.y + height);
-
-                MoveToEx(dc, start.x + i, start.y + height - 1, &oldPos);
-                LineTo(dc, start.x + i + width, start.y - 1);
-            }
-
-            SelectObject(dc, hpsave);
-            return TRUE;
-        }
-
-        case DFCS_CAPTIONHELP:
-            /* This one breaks the flow */
-            /* FIXME: We need the Marlett font in order to get this right. */
-
-            hf = CreateFontA(-SmallDiam, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
-                             ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-                             DEFAULT_QUALITY, FIXED_PITCH|FF_DONTCARE, "System");
-            alignsave = SetTextAlign(dc, TA_TOP|TA_LEFT);
-            bksave = SetBkMode(dc, TRANSPARENT);
-            clrsave = GetTextColor(dc);
-            hfsave = (HFONT)SelectObject(dc, hf);
-            GetTextExtentPoint32A(dc, str, 1, &size);
-
-            if(uFlags & DFCS_INACTIVE)
-            {
-                SetTextColor(dc, GetSysColor(COLOR_BTNHIGHLIGHT));
-                TextOutA(dc, xc-size.cx/2+1, yc-size.cy/2+1, str, 1);
-            }
-            SetTextColor(dc, GetSysColor(colorIdx));
-            TextOutA(dc, xc-size.cx/2, yc-size.cy/2, str, 1);
-
-            SelectObject(dc, hfsave);
-            SetTextColor(dc, clrsave);
-            SetBkMode(dc, bksave);
-            SetTextAlign(dc, alignsave);
-            DeleteObject(hf);
-            return TRUE;
-
-        case DFCS_CAPTIONMIN:
-            /*
-            * If the button goes from x 0 -- w-1, the leftmost point of the
-            * minimize line always starts at x>=4.
-            */
-        {
-            const int width = myr.right - myr.left;
-            const int xInsetPixels = (width>=9 ? width - 9 : 0) / 8 + 4;
-            Line1[0].x = Line1[3].x = myr.left   + xInsetPixels;
-            Line1[1].x = Line1[2].x = Line1[0].x + 372*SmallDiam/750;
-            Line1[0].y = Line1[1].y = myr.top    + 563*SmallDiam/750+1;
-            Line1[2].y = Line1[3].y = Line1[0].y +  92*SmallDiam/750;
-            Line1N = 4;
-            Line2N = 0;
-        }
-        break;
-
-        case DFCS_CAPTIONMAX:
-            edge = 47*SmallDiam/750;
-            Line1[0].x = Line1[5].x = myr.left +  57*SmallDiam/750+3;
-            Line1[0].y = Line1[1].y = myr.top  + 143*SmallDiam/750+1;
-            Line1[1].x = Line1[2].x = Line1[0].x + 562*SmallDiam/750;
-            Line1[5].y = Line1[4].y = Line1[0].y +  93*SmallDiam/750;
-            Line1[2].y = Line1[3].y = Line1[0].y + 513*SmallDiam/750;
-            Line1[3].x = Line1[4].x = Line1[1].x -  edge;
-
-            Line2[0].x = Line2[5].x = Line1[0].x;
-            Line2[3].x = Line2[4].x = Line1[1].x;
-            Line2[1].x = Line2[2].x = Line1[0].x + edge;
-            Line2[0].y = Line2[1].y = Line1[0].y;
-            Line2[4].y = Line2[5].y = Line1[2].y;
-            Line2[2].y = Line2[3].y = Line1[2].y - edge;
-            Line1N = 6;
-            Line2N = 6;
-            break;
-
-        case DFCS_CAPTIONRESTORE:
-            /* FIXME: this one looks bad at small sizes < 15x15 :( */
-            edge = 47*SmallDiam/750;
-            move = 420*SmallDiam/750;
-            Line1[0].x = Line1[9].x = myr.left + 198*SmallDiam/750+2;
-            Line1[0].y = Line1[1].y = myr.top  + 169*SmallDiam/750+1;
-            Line1[6].y = Line1[7].y = Line1[0].y + 93*SmallDiam/750;
-            Line1[7].x = Line1[8].x = Line1[0].x + edge;
-            Line1[1].x = Line1[2].x = Line1[0].x + move;
-            Line1[5].x = Line1[6].x = Line1[1].x - edge;
-            Line1[9].y = Line1[8].y = Line1[0].y + 187*SmallDiam/750;
-            Line1[2].y = Line1[3].y = Line1[0].y + 327*SmallDiam/750;
-            Line1[4].y = Line1[5].y = Line1[2].y - edge;
-            Line1[3].x = Line1[4].x = Line1[2].x - 140*SmallDiam/750;
-
-            Line2[1].x = Line2[2].x = Line1[3].x;
-            Line2[7].x = Line2[8].x = Line2[1].x - edge;
-            Line2[0].x = Line2[9].x = Line2[3].x = Line2[4].x = Line2[1].x - move;
-            Line2[5].x = Line2[6].x = Line2[0].x + edge;
-            Line2[0].y = Line2[1].y = Line1[9].y + 93*SmallDiam/750;
-            Line2[4].y = Line2[5].y = Line2[8].y = Line2[9].y = Line2[0].y + 93*SmallDiam/750;
-            Line2[2].y = Line2[3].y = Line2[0].y + 327*SmallDiam/750;
-            Line2[6].y = Line2[7].y = Line2[2].y - edge;
-            Line1N = 10;
-            Line2N = 10;
-            break;
-
-        default:
-            return FALSE;
-    }
-
-    /* Here the drawing takes place */
+    ZeroMemory(&lf, sizeof(LOGFONT));
+    UITOOLS_MakeSquareRect(r, &myr);
+    myr.left += 1;
+    myr.top += 1;
+    myr.right -= 1;
+    myr.bottom -= 1;
+    if(uFlags & DFCS_PUSHED)
+       OffsetRect(&myr,1,1);
+    lf.lfHeight = myr.bottom - myr.top;
+    lf.lfWidth = 0;
+    lf.lfWeight = FW_NORMAL;
+    lf.lfCharSet = DEFAULT_CHARSET;
+    lstrcpy(lf.lfFaceName, TEXT("Marlett"));
+    hFont = CreateFontIndirect(&lf);
+    /* save font and text color */
+    hOldFont = SelectObject(dc, hFont);
+    clrsave = GetTextColor(dc);
+    bkmode = GetBkMode(dc);
+    /* set color and drawing mode */
+    SetBkMode(dc, TRANSPARENT);
     if(uFlags & DFCS_INACTIVE)
     {
-        /* If we have an inactive button, then you see a shadow */
-        hbsave = (HBRUSH)SelectObject(dc, GetSysColorBrush(COLOR_BTNHIGHLIGHT));
-        hpsave = (HPEN)SelectObject(dc, GetSysColorPen(COLOR_BTNHIGHLIGHT));
-        Polygon(dc, Line1, Line1N);
-        if(Line2N > 0)
-            Polygon(dc, Line2, Line2N);
-        SelectObject(dc, hpsave);
-        SelectObject(dc, hbsave);
+        /* draw shadow */
+        SetTextColor(dc, GetSysColor(COLOR_BTNHIGHLIGHT));
+        TextOut(dc, myr.left + 1, myr.top + 1, &Symbol, 1);
     }
-
-    /* Correct for the shadow shift */
-    if (!(uFlags & DFCS_PUSHED))
-    {
-        for(i = 0; i < Line1N; i++)
-        {
-            Line1[i].x--;
-            Line1[i].y--;
-        }
-        for(i = 0; i < Line2N; i++)
-        {
-            Line2[i].x--;
-            Line2[i].y--;
-        }
-    }
-
-    /* Make the final picture */
-    hbsave = (HBRUSH)SelectObject(dc, GetSysColorBrush(colorIdx));
-    hpsave = (HPEN)SelectObject(dc, GetSysColorPen(colorIdx));
-
-    Polygon(dc, Line1, Line1N);
-    if(Line2N > 0)
-        Polygon(dc, Line2, Line2N);
-    SelectObject(dc, hpsave);
-    SelectObject(dc, hbsave);
-
+    SetTextColor(dc, GetSysColor(colorIdx));
+    /* draw selected symbol */
+    TextOut(dc, myr.left, myr.top, &Symbol, 1);
+    /* restore previous settings */
+    SetTextColor(dc, clrsave);
+    SelectObject(dc, hOldFont);
+    SetBkMode(dc, bkmode);
+    DeleteObject(hFont);
     return TRUE;
 }
 
