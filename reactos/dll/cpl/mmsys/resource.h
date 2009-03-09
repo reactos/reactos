@@ -66,6 +66,11 @@
 #define IDC_SPEAKIMG               4625
 #define IDC_MUTE_ICON              4626
 
+#define IDS_REACTOS_LOGON          5853
+#define IDS_REACTOS_LOGOFF         5852
+#define IDS_REACTOS_DEFAULT_SCHEME 5856
+
+
 /* Strings */
 #define IDS_CPLNAME                1000
 #define IDS_CPLDESCRIPTION         1001
