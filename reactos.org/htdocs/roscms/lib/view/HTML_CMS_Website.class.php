@@ -95,7 +95,7 @@ class HTML_CMS_Website extends HTML_CMS
         var roscms_standard_language = '".Language::getStandardId()."';
         var roscms_intern_login_check_username = '".$thisuser->name()."';
         var roscms_intern_webserver_roscms = '".RosCMS::getInstance()->pathRosCMS()."';
-        var roscms_intern_page_link = '".RosCMS::getInstance()->pathInstance()."?page=';
+        var roscms_intern_link = '".RosCMS::getInstance()->pathInstance()."';
         var roscms_get_edit = '".(isset($_GET['edit']) ? $_GET['edit'] : '')."';
         
         // access restrictions

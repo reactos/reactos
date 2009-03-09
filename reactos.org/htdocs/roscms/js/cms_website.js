@@ -1510,7 +1510,7 @@ function makeRequest( url, action, objid, format, kind, parameters )
   }; // internal function end
 
   if (kind === 'POST') {
-    http_request.open('POST', roscms_intern_webserver_roscms+url, true);
+    http_request.open('POST', roscms_intern_link+url, true);
     http_request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
     http_request.setRequestHeader("Content-length", parameters.length);
     http_request.setRequestHeader("If-Modified-Since", "Sat, 1 Jan 2000 00:00:00 GMT");	// Bypass the IE Cache
@@ -1518,7 +1518,7 @@ function makeRequest( url, action, objid, format, kind, parameters )
     http_request.send(parameters);
   }
   else {
-    http_request.open('GET', roscms_intern_webserver_roscms+url, true);
+    http_request.open('GET', roscms_intern_link+url, true);
     http_request.setRequestHeader("If-Modified-Since", "Sat, 1 Jan 2000 00:00:00 GMT");	// Bypass the IE Cache
     http_request.send(null);
   }

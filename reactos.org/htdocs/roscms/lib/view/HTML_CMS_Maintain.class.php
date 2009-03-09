@@ -69,6 +69,7 @@ class HTML_CMS_Maintain extends HTML_CMS
       <script type="text/javascript">
       <!--'."
         var roscms_intern_webserver_roscms = '".RosCMS::getInstance()->pathRosCMS()."';
+        var roscms_intern_link = '".RosCMS::getInstance()->pathInstance()."';
 
         // access restrictions
         var roscms_access = new Object();

@@ -40,7 +40,8 @@ $config = &RosCMS::getInstance();
 
 ///////////////////////////////////////////////////////
 // Config start ///////////////////////////////////////
-  
+
+// use this settings to force that the user has to login seperatly from original roscms
 $config->setCookieUserKey('roscmsusrkey'); // session key
 $config->setCookieUserName('roscmsusrname'); // user_name
 $config->setCookiePassword('rospassword');  // user_password (used for keep login function)
@@ -55,11 +56,14 @@ $config->setPathGenerated('../'); // path to generated files (relative to roscms
 
 
 // RosCMS Table Names
-$config->setTable('ROSCMST_ENTRIES'    , 'roscms_entries');
-$config->setTable('ROSCMST_REVISIONS'  , 'roscms_entries_revisions');
-$config->setTable('ROSCMST_STEXT'      , 'roscms_entries_stext');
-$config->setTable('ROSCMST_TAGS'       , 'roscms_entries_tags');
-$config->setTable('ROSCMST_TEXT'       , 'roscms_entries_text');
+$config->setTable('ROSCMST_ENTRIES'      , 'other_entries');
+$config->setTable('ROSCMST_DEPENDENCIES' , 'other_rel_revisions_dependencies');
+$config->setTable('ROSCMST_REVISIONS'    , 'other_entries_revisions');
+$config->setTable('ROSCMST_STEXT'        , 'other_entries_stext');
+$config->setTable('ROSCMST_TAGS'         , 'other_entries_tags');
+$config->setTable('ROSCMST_TEXT'         , 'other_entries_text');
+
+// see config.php in original RosCMS for more possible settings
 
 // Config end /////////////////////////////////////////
 ///////////////////////////////////////////////////////

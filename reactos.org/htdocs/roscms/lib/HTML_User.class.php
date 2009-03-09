@@ -133,7 +133,7 @@ abstract class HTML_User extends HTML
 
     // print current language
     $stmt=&DBConnection::getInstance()->prepare("SELECT id, name FROM ".ROSCMST_LANGUAGES." WHERE id = :lang_id");
-    $stmt->bindParam('lang_id',$_GET['lang'],PDO::PARAM_INT);
+    $stmt->bindParam('lang_id',$thisuser->language(),PDO::PARAM_INT);
     $stmt->execute();
     $current_lang = $stmt->fetchOnce(PDO::FETCH_ASSOC);
 

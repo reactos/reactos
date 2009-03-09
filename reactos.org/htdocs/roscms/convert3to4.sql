@@ -323,7 +323,7 @@ AND (g.name_short = 'ros_sadmin' OR g.name_short = 'ros_admin'));
 -- --------------------------------------------------------
 CREATE TABLE roscms_entries (
   id bigint(20) unsigned NOT NULL auto_increment,
-  type enum('page','content','dynamic','script','system') collate utf8_unicode_ci NOT NULL,
+  type enum('page','content','dynamic','script','system', 'template') collate utf8_unicode_ci NOT NULL,
   name varchar(64) collate utf8_unicode_ci NOT NULL,
   access_id bigint(20) unsigned COMMENT '->access(id)',
   old_id int(11) NOT NULL,
@@ -343,16 +343,7 @@ SELECT
   s.id,
   d.data_id,
   TRUE
-FROM data_a d JOIN roscms_entries_access s ON d.data_acl=s.name_short WHERE data_type != 'template'
-UNION
-SELECT
-  NULL,
-  'content',
-  d.data_name,
-  s.id,
-  d.data_id,
-  TRUE
-FROM data_a d JOIN roscms_entries_access s ON d.data_acl=s.name_short WHERE data_type = 'template'
+FROM data_a d JOIN roscms_entries_access s ON d.data_acl=s.name_short
 UNION
 SELECT
   NULL,
@@ -361,16 +352,7 @@ SELECT
   s.id,
   d.data_id,
   FALSE
-FROM data_ d JOIN roscms_entries_access s ON d.data_acl=s.name_short WHERE data_type != 'template'
-UNION
-SELECT
-  NULL,
-  'template',
-  d.data_name,
-  s.id,
-  d.data_id,
-  FALSE
-FROM data_ d JOIN roscms_entries_access s ON d.data_acl=s.name_short WHERE data_type = 'template';
+FROM data_ d JOIN roscms_entries_access s ON d.data_acl=s.name_short;
 
 
 
@@ -725,12 +707,37 @@ INSERT INTO roscms_accounts_sessions SELECT * FROM user_sessions;
 
 
 -- --------------------------------------------------------
+-- convert templates
+-- --------------------------------------------------------
+INSERT INTO roscms_entries_tags
+SELECT
+  NULL,
+  r.id,
+  -1,
+  'kind',
+  'template'
+FROM roscms_entries d
+JOIN roscms_entries_revisions r ON r.data_id=d.id
+WHERE d.type = 'template';
+
+-- remove from texts
+UPDATE roscms_entries_text
+SET content = REPLACE(content, '[#templ_', '[#cont_');
+
+-- update entries
+UPDATE roscms_entries
+SET type = 'content' WHERE type ='template';
+
+
+
+-- --------------------------------------------------------
 -- remove converter specific fields
 -- --------------------------------------------------------
 ALTER TABLE roscms_entries
   DROP old_id,
   DROP old_archive,
-  ADD UNIQUE KEY type_name ( type , name );
+  ADD UNIQUE KEY type_name ( type , name ),
+  CHANGE `type` `type` ENUM( 'page', 'content', 'dynamic', 'script', 'system' ) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL;
 ALTER TABLE roscms_entries_revisions DROP old_id;
 ALTER TABLE roscms_entries_access DROP name_short;
 
