@@ -86,7 +86,7 @@
     X(glDrawElements, void, (GLenum mode, GLsizei count, GLenum type, const GLvoid *indices), (mode,count,type,indices),  311,  149,  16) \
     X(glDrawPixels, void, (GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid *pixels), (width,height,format,type,pixels),  257,  -1,  20) \
     X(glEdgeFlag, void, (GLboolean flag), (flag),  41,  35,  4) \
-    X(glEdgeFlagPointer, void, (GLsizei stride, const GLboolean *pointer), (stride,pointer),  312,  150,  8) \
+    X(glEdgeFlagPointer, void, (GLsizei stride, const GLvoid *pointer), (stride,pointer),  312,  150,  8) \
     X(glEdgeFlagv, void, (const GLboolean *flag), (flag),  42,  36,  4) \
     X(glEnable, void, (GLenum cap), (cap),  215,  117,  4) \
     X(glEnableClientState, void, (GLenum array), (array),  313,  151,  4) \
