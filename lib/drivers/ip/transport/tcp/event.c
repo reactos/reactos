@@ -77,8 +77,6 @@ int TCPPacketSend(void *ClientData, OSK_PCHAR data, OSK_UINT len ) {
 	return OSK_EINVAL;
     }
 
-    RemoteAddress.Type = LocalAddress.Type = IP_ADDRESS_V4;
-
     if(!(NCE = RouteGetRouteToDestination( &RemoteAddress ))) {
 	TI_DbgPrint(MIN_TRACE,("No route to %s\n", A2S(&RemoteAddress)));
 	return OSK_EADDRNOTAVAIL;
