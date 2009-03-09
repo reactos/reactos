@@ -7,7 +7,6 @@
  */
 
 #include "usbdriver.h"
-#include "kbdmou.h"
 
 NTSTATUS
 AddRegistryEntry(IN PCWSTR PortTypeName,
