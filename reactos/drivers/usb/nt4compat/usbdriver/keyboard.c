@@ -18,7 +18,6 @@ BOOLEAN kbd_connect(PDEV_CONNECT_DATA dev_mgr, DEV_HANDLE dev_handle);
 BOOLEAN kbd_disconnect(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle);
 BOOLEAN kbd_stop(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle);
 VOID kbd_irq(PURB purb, PVOID pcontext);
-VOID kbd_led(PURB purb, PVOID pcontext);
 static NTSTATUS
 KeyboardCreateDevice(IN PDRIVER_OBJECT DriverObject, IN PKEYBOARD_DRVR_EXTENSION DriverExtension);
 void * memscan(void * addr, int c, size_t size);
@@ -130,7 +129,6 @@ kbd_connect(PDEV_CONNECT_DATA param, DEV_HANDLE dev_handle)
     PKEYBOARD_DRVR_EXTENSION pdev_ext;
     PUSB_ENDPOINT_DESC pendp_desc = NULL;
     ULONG MaxPacketSize;
-    PUSB_CTRL_SETUP_PACKET psetup;
 
     usb_dbg_print(DBGLVL_MAXIMUM, ("kbd_connect(): entering...\n"));
 
@@ -182,41 +180,6 @@ kbd_connect(PDEV_CONNECT_DATA param, DEV_HANDLE dev_handle)
         usb_free_mem(purb);
         purb = NULL;
     }
-
-    // Set LEDs request
-    purb = usb_alloc_mem(NonPagedPool, sizeof(URB));
-    if (purb == NULL) return FALSE;
-    RtlZeroMemory(purb, sizeof(URB));
-
-    pdev_ext->leds_old = 0;
-    pdev_ext->leds = 7;
-
-    // Build a URB for setting LEDs
-    psetup = (PUSB_CTRL_SETUP_PACKET) (purb)->setup_packet;
-    urb_init((purb));
-
-    purb->endp_handle = usb_make_handle((dev_handle >> 16), 0, 0) | 0xffff;
-    purb->data_buffer = &pdev_ext->leds;
-    purb->data_length = 1;
-    purb->completion = NULL;
-    purb->context = NULL;
-    purb->reference = (LONG)pdrvr;
-    psetup->bmRequestType = USB_DT_HID;
-    psetup->bRequest = USB_REQ_SET_CONFIGURATION;
-    psetup->wValue = USB_DT_CONFIG << 8;
-    psetup->wIndex = param->if_desc->bInterfaceNumber;
-    psetup->wLength = 1;
-
-    // Call USB driver stack
-    status = usb_submit_urb(pdev_ext->dev_mgr, purb);
-    if (status != STATUS_PENDING)
-    {
-        usb_free_mem(purb);
-        purb = NULL;
-    }
-
-    usb_dbg_print(DBGLVL_MAXIMUM, ("kbd_connect(): leds urb status 0x%x, Interface number %d\n",
-        status, param->if_desc->bInterfaceNumber));
 
     return TRUE;
 }
@@ -362,7 +325,43 @@ kbd_disconnect(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle)
 VOID
 kbd_setleds(PKEYBOARD_DEVICE_EXTENSION DeviceExtension)
 {
-    //DPRINT("%x\n", DevExt->KeyboardIndicators.LedFlags);
+    PURB Urb;
+    PUSB_CTRL_SETUP_PACKET Setup;
+    NTSTATUS Status;
+
+    // Set LEDs request
+    Urb = usb_alloc_mem(NonPagedPool, sizeof(URB));
+    if (!Urb) return;
+    RtlZeroMemory(Urb, sizeof(URB));
+
+    DeviceExtension->DriverExtension->leds_old = 0;
+    DeviceExtension->DriverExtension->leds = 7;
+
+    // Convert from LedFlags to USB format
+    //DeviceExtension->KeyboardIndicators.LedFlags
+
+    // Build a URB for setting LEDs
+    Setup = (PUSB_CTRL_SETUP_PACKET)Urb->setup_packet;
+    urb_init((Urb));
+
+    Urb->endp_handle = usb_make_handle((DeviceExtension->DriverExtension->dev_handle >> 16), 0, 0) | 0xffff;
+    Urb->data_buffer = &DeviceExtension->DriverExtension->leds;
+    Urb->data_length = 1;
+    Urb->completion = NULL;
+    Urb->context = NULL;
+    Urb->reference = 0;
+    Setup->bmRequestType = USB_DT_HID;
+    Setup->bRequest = USB_REQ_SET_CONFIGURATION;
+    Setup->wValue = USB_DT_CONFIG << 8;
+    Setup->wIndex = 0;
+    Setup->wLength = 1;
+
+    // Call USB driver stack
+    Status = usb_submit_urb(DeviceExtension->DriverExtension->dev_mgr, Urb);
+    if (Status != STATUS_PENDING)
+    {
+        usb_free_mem(Urb);
+    }
 }
 
 // Dispatch routine for our IRPs
