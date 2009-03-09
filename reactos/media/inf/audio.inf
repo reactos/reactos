@@ -6,7 +6,7 @@
 Signature  = "$Windows NT$"
 ;Signature  = "$ReactOS$"
 LayoutFile = layout.inf
-Class      = AUDIO
+Class      = MEDIA
 ClassGUID  = {4d36e96c-e325-11ce-bfc1-08002be10318}
 Provider   = %ReactOS%
 DriverVer  = 10/19/1999,5.00.2157.1
