@@ -9,11 +9,6 @@
 #include "usbdriver.h"
 #include "kbdmou.h"
 
-/* Data for embedded drivers */
-CONNECT_DATA KbdClassInformation;
-
-PDEVICE_OBJECT KeyboardFdo = NULL;
-
 NTSTATUS
 AddRegistryEntry(IN PCWSTR PortTypeName,
                  IN PUNICODE_STRING DeviceName,
@@ -23,8 +18,9 @@ BOOLEAN kbd_connect(PDEV_CONNECT_DATA dev_mgr, DEV_HANDLE dev_handle);
 BOOLEAN kbd_disconnect(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle);
 BOOLEAN kbd_stop(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle);
 VOID kbd_irq(PURB purb, PVOID pcontext);
+VOID kbd_led(PURB purb, PVOID pcontext);
 static NTSTATUS
-KeyboardCreateDevice(IN PDRIVER_OBJECT DriverObject);
+KeyboardCreateDevice(IN PDRIVER_OBJECT DriverObject, IN PKEYBOARD_DRVR_EXTENSION DriverExtension);
 void * memscan(void * addr, int c, size_t size);
 
 static UCHAR usb_kbd_keycode[256] =
@@ -47,6 +43,18 @@ static UCHAR usb_kbd_keycode[256] =
     150,158,159,128,136,177,178,176,142,152,173,140
 };
 
+/* This structure starts with the same layout as KEYBOARD_INDICATOR_TRANSLATION */
+typedef struct _LOCAL_KEYBOARD_INDICATOR_TRANSLATION {
+    USHORT NumberOfIndicatorKeys;
+    INDICATOR_LIST IndicatorList[3];
+} LOCAL_KEYBOARD_INDICATOR_TRANSLATION, *PLOCAL_KEYBOARD_INDICATOR_TRANSLATION;
+
+static LOCAL_KEYBOARD_INDICATOR_TRANSLATION IndicatorTranslation = { 3, {
+    {0x3A, KEYBOARD_CAPS_LOCK_ON},
+    {0x45, KEYBOARD_NUM_LOCK_ON},
+    {0x46, KEYBOARD_SCROLL_LOCK_ON}}};
+
+
 BOOLEAN
 kbd_driver_init(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver)
 {
@@ -61,8 +69,8 @@ kbd_driver_init(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver)
     pdriver->driver_desc.product_id = 0xffff;   // USB Product ID.
     pdriver->driver_desc.release_num = 0x100;   // Release Number of Device
 
-    pdriver->driver_desc.config_val = 1;            // Configuration Value
-    pdriver->driver_desc.if_num = 1;                // Interface Number
+    pdriver->driver_desc.config_val = 0;            // Configuration Value
+    pdriver->driver_desc.if_num = 0;                // Interface Number
     pdriver->driver_desc.if_class = USB_CLASS_HID;  // Interface Class
     pdriver->driver_desc.if_sub_class = 1;          // Interface SubClass
     pdriver->driver_desc.if_protocol = 1;           // Interface Protocol
@@ -85,11 +93,8 @@ kbd_driver_init(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver)
     pdriver->disp_tbl.dev_stop = kbd_stop;
     pdriver->disp_tbl.dev_reserved = NULL;
 
-    // Zero out the class information structure
-    RtlZeroMemory(&KbdClassInformation, sizeof(CONNECT_DATA));
-
     // Create the device
-    KeyboardCreateDevice(dev_mgr->usb_driver_obj);
+    KeyboardCreateDevice(dev_mgr->usb_driver_obj, pdrvr_ext);
 
     usb_dbg_print(DBGLVL_MAXIMUM, ("kbd_driver_init(): keyboard driver is initialized\n"));
     return TRUE;
@@ -123,102 +128,41 @@ kbd_connect(PDEV_CONNECT_DATA param, DEV_HANDLE dev_handle)
     PUSB_DRIVER pdrvr;
     PUSB_DEV pdev;
     PKEYBOARD_DRVR_EXTENSION pdev_ext;
-//    LONG i;
     PUSB_ENDPOINT_DESC pendp_desc = NULL;
     ULONG MaxPacketSize;
+    PUSB_CTRL_SETUP_PACKET psetup;
 
     usb_dbg_print(DBGLVL_MAXIMUM, ("kbd_connect(): entering...\n"));
 
     dev_mgr = param->dev_mgr;
     pdrvr = param->pdriver;
     pdev_ext = (PKEYBOARD_DRVR_EXTENSION)pdrvr->driver_ext;
+    pdev_ext->dev_handle = dev_handle;
 
     // Lock USB Device
     status = usb_query_and_lock_dev(dev_mgr, dev_handle, &pdev);
     if (status != STATUS_SUCCESS)
     {
-        //usb_free_mem(desc_buf);
         usb_dbg_print(DBGLVL_MEDIUM, ("kbd_connect(): unable to query&lock device, status=0x%x\n", status));
         return FALSE;
     }
 
-    // Endpoint-finding code
-    if (param->if_desc)
-    {
-        // Get a pointer to the config packet from compdev
-        PUCHAR Buffer = (PUCHAR)param->if_desc;
-        ULONG Offset = 0;
-        BOOLEAN FoundEndpoint = FALSE;
+    // Get pointer to the endpoint descriptor
+    pendp_desc = pdev->usb_config->interf[0].endp[0].pusb_endp_desc;
 
-        // Find our the only needed endpoint descriptor
-        while (Offset < 512)
-        {
-            pendp_desc = (PUSB_ENDPOINT_DESC)&Buffer[Offset];
-            usb_dbg_print(DBGLVL_MAXIMUM, ("kbd_connect(): DescType=0x%x, Attrs=0x%x, Len=%d\n",
-                pendp_desc->bDescriptorType, pendp_desc->bmAttributes, pendp_desc->bLength));
-
-            if (pendp_desc->bDescriptorType == USB_DT_ENDPOINT &&
-                pendp_desc->bLength == sizeof(USB_ENDPOINT_DESC))
-            {
-                // Found it
-                FoundEndpoint = TRUE;
-                break;
-            }
-
-            Offset += pendp_desc->bLength;
-        }
-
-        if (!FoundEndpoint)
-            return FALSE;
-
-        // FIXME: Check if it's INT endpoint
-        // (pendp_desc->bmAttributes & USB_ENDPOINT_XFERTYPE_MASK) == USB_ENDPOINT_XFER_INT)
-
-        // endpoint must be IN
-        if ((pendp_desc->bEndpointAddress & USB_DIR_IN) == 0)
-            return FALSE;
-
-        usb_dbg_print(DBGLVL_MAXIMUM, ("kbd_connect(): FoundEndpoint=%d\n", FoundEndpoint));
-    }
-
-    // Endpoint descriptor substitution code
-    {
-        ULONG if_idx, endp_idx;
-        PUSB_ENDPOINT pendp;
-
-            //FoundEndpoint = FALSE;
-            for(if_idx = 0; if_idx < MAX_INTERFACES_PER_CONFIG /*pdev->usb_config->if_count*/; if_idx++)
-            {
-                for(endp_idx = 0; endp_idx < MAX_ENDPS_PER_IF /*pdev->usb_config->interf[if_idx].endp_count*/; endp_idx++)
-                {
-                    pendp = &pdev->usb_config->interf[if_idx].endp[endp_idx];
-
-                    if (pendp->pusb_endp_desc != NULL)
-                    {
-                        //HACKHACK: for some reason this usb driver chooses different and completely wrong
-                        //          endpoint. Since I don't have time to research this, I just find the
-                        //          endpoint descriptor myself and copy it
-                        memcpy(pendp->pusb_endp_desc, pendp_desc, pendp_desc->bLength);
-
-                        usb_dbg_print(DBGLVL_MAXIMUM, ("kbd_connect(): [%i][%i] DescType=0x%x, Attrs=0x%x, Len=%d\n",if_idx, endp_idx,
-                            pendp->pusb_endp_desc->bDescriptorType, pendp->pusb_endp_desc->bmAttributes, pendp->pusb_endp_desc->bLength));
-                    }
-                }
-            }
-    }
+    // Store max packet size
+    MaxPacketSize = pendp_desc->wMaxPacketSize;
+    if (MaxPacketSize > 8)
+        MaxPacketSize = 8;
 
     // Unlock USB Device
     usb_unlock_dev(pdev);
 
-    // Send URB
+    // Send interrupt URB
     purb = usb_alloc_mem(NonPagedPool, sizeof(URB));
     if (purb == NULL)
         return FALSE;
     RtlZeroMemory(purb, sizeof(URB));
-
-    MaxPacketSize = pendp_desc->wMaxPacketSize;
-    if (MaxPacketSize > 8)
-        MaxPacketSize = 8;
 
     RtlZeroMemory(pdev_ext->kbd_old, 8);
 
@@ -228,7 +172,7 @@ kbd_connect(PDEV_CONNECT_DATA param, DEV_HANDLE dev_handle)
                                            (PUCHAR)&pdev_ext->kbd_data,
                                            MaxPacketSize, //use max packet size
                                            kbd_irq,
-                                           pdev_ext,
+                                           pdev_ext->device_ext,
                                            0);
 
     // Call USB driver stack
@@ -239,19 +183,54 @@ kbd_connect(PDEV_CONNECT_DATA param, DEV_HANDLE dev_handle)
         purb = NULL;
     }
 
+    // Set LEDs request
+    purb = usb_alloc_mem(NonPagedPool, sizeof(URB));
+    if (purb == NULL) return FALSE;
+    RtlZeroMemory(purb, sizeof(URB));
+
+    pdev_ext->leds_old = 0;
+    pdev_ext->leds = 7;
+
+    // Build a URB for setting LEDs
+    psetup = (PUSB_CTRL_SETUP_PACKET) (purb)->setup_packet;
+    urb_init((purb));
+
+    purb->endp_handle = usb_make_handle((dev_handle >> 16), 0, 0) | 0xffff;
+    purb->data_buffer = &pdev_ext->leds;
+    purb->data_length = 1;
+    purb->completion = NULL;
+    purb->context = NULL;
+    purb->reference = (LONG)pdrvr;
+    psetup->bmRequestType = USB_DT_HID;
+    psetup->bRequest = USB_REQ_SET_CONFIGURATION;
+    psetup->wValue = USB_DT_CONFIG << 8;
+    psetup->wIndex = param->if_desc->bInterfaceNumber;
+    psetup->wLength = 1;
+
+    // Call USB driver stack
+    status = usb_submit_urb(pdev_ext->dev_mgr, purb);
+    if (status != STATUS_PENDING)
+    {
+        usb_free_mem(purb);
+        purb = NULL;
+    }
+
+    usb_dbg_print(DBGLVL_MAXIMUM, ("kbd_connect(): leds urb status 0x%x, Interface number %d\n",
+        status, param->if_desc->bInterfaceNumber));
+
     return TRUE;
 }
 
 VOID
 kbd_irq(PURB purb, PVOID pcontext)
 {
-    KEYBOARD_INPUT_DATA KeyboardInputData[10];
+    KEYBOARD_INPUT_DATA KeyboardInputData[20];
     ULONG DataPrepared=0, DataConsumed, i;
     UCHAR ScanCode;
     NTSTATUS status;
-    PKEYBOARD_DRVR_EXTENSION pdev_ext = (PKEYBOARD_DRVR_EXTENSION)pcontext;
-    PUCHAR data = pdev_ext->kbd_data;
-    PUCHAR data_old = pdev_ext->kbd_old;
+    PKEYBOARD_DRVR_EXTENSION pdev_ext;
+    PKEYBOARD_DEVICE_EXTENSION DeviceExtension = (PKEYBOARD_DEVICE_EXTENSION)pcontext;
+    PUCHAR data, data_old;
     usb_dbg_print(DBGLVL_MAXIMUM, ("kbd_irq(): called\n"));
 
     ASSERT(purb);
@@ -259,8 +238,12 @@ kbd_irq(PURB purb, PVOID pcontext)
     if (purb->status != STATUS_SUCCESS)
     {
         usb_dbg_print(DBGLVL_MAXIMUM, ("kbd_irq(): purb->status 0x%08X\n", purb->status));
-        //return;
+        return;
     }
+
+    pdev_ext = DeviceExtension->DriverExtension;
+    data = pdev_ext->kbd_data;
+    data_old = pdev_ext->kbd_old;
 
     usb_dbg_print(DBGLVL_MAXIMUM, ("Kbd input: %d %d %d %d %d %d %d %d\n", data[0], data[1], data[2], data[3],
         data[4], data[5], data[6], data[7]));
@@ -317,13 +300,13 @@ kbd_irq(PURB purb, PVOID pcontext)
     }
 
     // Commit the input data somewhere...
-    if (KbdClassInformation.ClassService && DataPrepared > 0)
+    if (DeviceExtension->ConnectData.ClassService && DataPrepared > 0)
     {
         KIRQL OldIrql;
 
         KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
-        (*(PSERVICE_CALLBACK_ROUTINE)KbdClassInformation.ClassService)(
-            KbdClassInformation.ClassDeviceObject,
+        (*(PSERVICE_CALLBACK_ROUTINE)DeviceExtension->ConnectData.ClassService)(
+            DeviceExtension->ConnectData.ClassDeviceObject,
             &KeyboardInputData[0],
             (&KeyboardInputData[0])+DataPrepared,
             &DataConsumed);
@@ -376,59 +359,53 @@ kbd_disconnect(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle)
     return TRUE;//umss_delete_device(dev_mgr, pdrvr, dev_obj, FALSE);
 }
 
+VOID
+kbd_setleds(PKEYBOARD_DEVICE_EXTENSION DeviceExtension)
+{
+    //DPRINT("%x\n", DevExt->KeyboardIndicators.LedFlags);
+}
+
 // Dispatch routine for our IRPs
 NTSTATUS
 KbdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
     NTSTATUS Status = STATUS_INVALID_DEVICE_REQUEST;
+    PKEYBOARD_DEVICE_EXTENSION DeviceExtension;
+
+    DeviceExtension = DeviceObject->DeviceExtension;
 
     usb_dbg_print(DBGLVL_MAXIMUM, ("KbdDispatch(DO %p, code 0x%lx) called\n",
         DeviceObject,
         IoGetCurrentIrpStackLocation(Irp)->Parameters.DeviceIoControl.IoControlCode));
 
-    if (DeviceObject == KeyboardFdo)
+    if (DeviceObject == DeviceExtension->Fdo)
     {
         // it's keyboard's IOCTL
-        PIO_STACK_LOCATION Stk;
+        PIO_STACK_LOCATION Stack;
 
         Irp->IoStatus.Information = 0;
-        Stk = IoGetCurrentIrpStackLocation(Irp);
+        Stack = IoGetCurrentIrpStackLocation(Irp);
 
-        switch (Stk->Parameters.DeviceIoControl.IoControlCode)
+        switch (Stack->Parameters.DeviceIoControl.IoControlCode)
         {
         case IOCTL_INTERNAL_KEYBOARD_CONNECT:
             usb_dbg_print(DBGLVL_MAXIMUM, ("IOCTL_INTERNAL_KEYBOARD_CONNECT\n"));
-            if (Stk->Parameters.DeviceIoControl.InputBufferLength <	sizeof(CONNECT_DATA)) {
+            if (Stack->Parameters.DeviceIoControl.InputBufferLength <	sizeof(CONNECT_DATA)) {
                 usb_dbg_print(DBGLVL_MAXIMUM, ("Keyboard IOCTL_INTERNAL_KEYBOARD_CONNECT "
                     "invalid buffer size\n"));
                 Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
                 goto intcontfailure;
             }
 
-            RtlCopyMemory(&KbdClassInformation,
-                Stk->Parameters.DeviceIoControl.Type3InputBuffer,
+            RtlCopyMemory(&DeviceExtension->ConnectData,
+                Stack->Parameters.DeviceIoControl.Type3InputBuffer,
                 sizeof(CONNECT_DATA));
 
-            Irp->IoStatus.Status = STATUS_SUCCESS;
+            Status = STATUS_SUCCESS;
             break;
-#if 0
-        case IOCTL_INTERNAL_I8042_KEYBOARD_WRITE_BUFFER:
-            usb_dbg_print(DBGLVL_MAXIMUM, ("IOCTL_INTERNAL_I8042_KEYBOARD_WRITE_BUFFER\n"));
-            if (Stk->Parameters.DeviceIoControl.InputBufferLength <	1) {
-                Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
-                goto intcontfailure;
-            }
-            /*			if (!DevExt->KeyboardInterruptObject) {
-            Irp->IoStatus.Status = STATUS_DEVICE_NOT_READY;
-            goto intcontfailure;
-            }*/
-
-            Irp->IoStatus.Status = STATUS_SUCCESS;
-            break;
-#endif
         case IOCTL_KEYBOARD_QUERY_ATTRIBUTES:
             usb_dbg_print(DBGLVL_MAXIMUM, ("IOCTL_KEYBOARD_QUERY_ATTRIBUTES\n"));
-            if (Stk->Parameters.DeviceIoControl.OutputBufferLength <
+            if (Stack->Parameters.DeviceIoControl.OutputBufferLength <
                 sizeof(KEYBOARD_ATTRIBUTES)) {
                     usb_dbg_print(DBGLVL_MAXIMUM, ("Keyboard IOCTL_KEYBOARD_QUERY_ATTRIBUTES: "
                         "invalid buffer size\n"));
@@ -443,22 +420,23 @@ KbdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
             break;
         case IOCTL_KEYBOARD_QUERY_INDICATORS:
             usb_dbg_print(DBGLVL_MAXIMUM, ("IOCTL_KEYBOARD_QUERY_INDICATORS\n"));
-            if (Stk->Parameters.DeviceIoControl.OutputBufferLength <
-                sizeof(KEYBOARD_INDICATOR_PARAMETERS)) {
-                    usb_dbg_print(DBGLVL_MAXIMUM, ("Keyboard IOCTL_KEYBOARD_QUERY_INDICATORS: "
-                        "invalid buffer size\n"));
-                    Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
-                    goto intcontfailure;
+            if (Stack->Parameters.DeviceIoControl.InputBufferLength < sizeof(KEYBOARD_INDICATOR_PARAMETERS))
+            {
+                Status = STATUS_BUFFER_TOO_SMALL;
             }
-            /*RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
-            &DevExt->KeyboardIndicators,
-            sizeof(KEYBOARD_INDICATOR_PARAMETERS));*/
-
-            Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
+            else
+            {
+                RtlCopyMemory(
+                    Irp->AssociatedIrp.SystemBuffer,
+                    &DeviceExtension->KeyboardIndicators,
+                    sizeof(KEYBOARD_INDICATOR_PARAMETERS));
+                Irp->IoStatus.Information = sizeof(KEYBOARD_INDICATOR_PARAMETERS);
+                Status = STATUS_SUCCESS;
+            }
             break;
         case IOCTL_KEYBOARD_QUERY_TYPEMATIC:
             usb_dbg_print(DBGLVL_MAXIMUM, ("IOCTL_KEYBOARD_QUERY_TYPEMATIC\n"));
-            if (Stk->Parameters.DeviceIoControl.OutputBufferLength <
+            if (Stack->Parameters.DeviceIoControl.OutputBufferLength <
                 sizeof(KEYBOARD_TYPEMATIC_PARAMETERS)) {
                     usb_dbg_print(DBGLVL_MAXIMUM, ("Keyboard IOCTL_KEYBOARD_QUERY_TYPEMATIC: "
                         "invalid buffer size\n"));
@@ -469,11 +447,11 @@ KbdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
             &DevExt->KeyboardTypematic,
             sizeof(KEYBOARD_TYPEMATIC_PARAMETERS));*/
 
-            Irp->IoStatus.Status = STATUS_SUCCESS;
+            Status = STATUS_SUCCESS;
             break;
         case IOCTL_KEYBOARD_SET_INDICATORS:
             usb_dbg_print(DBGLVL_MAXIMUM, ("IOCTL_KEYBOARD_SET_INDICATORS\n"));
-            if (Stk->Parameters.DeviceIoControl.InputBufferLength <
+            if (Stack->Parameters.DeviceIoControl.InputBufferLength <
                 sizeof(KEYBOARD_INDICATOR_PARAMETERS)) {
                     usb_dbg_print(DBGLVL_MAXIMUM, ("Keyboard IOCTL_KEYBOARD_SET_INDICTATORS: "
                         "invalid buffer size\n"));
@@ -481,17 +459,17 @@ KbdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
                     goto intcontfailure;
             }
 
-            /*RtlCopyMemory(&DevExt->KeyboardIndicators,
-            Irp->AssociatedIrp.SystemBuffer,
-            sizeof(KEYBOARD_INDICATOR_PARAMETERS));*/
+            RtlCopyMemory(&DeviceExtension->KeyboardIndicators,
+                          Irp->AssociatedIrp.SystemBuffer,
+                          sizeof(KEYBOARD_INDICATOR_PARAMETERS));
 
             //DPRINT("%x\n", DevExt->KeyboardIndicators.LedFlags);
-
-            Irp->IoStatus.Status = STATUS_SUCCESS;
+            kbd_setleds(DeviceExtension);
+            Status = STATUS_SUCCESS;
             break;
         case IOCTL_KEYBOARD_SET_TYPEMATIC:
             usb_dbg_print(DBGLVL_MAXIMUM, ("IOCTL_KEYBOARD_SET_TYPEMATIC\n"));
-            if (Stk->Parameters.DeviceIoControl.InputBufferLength <
+            if (Stack->Parameters.DeviceIoControl.InputBufferLength <
                 sizeof(KEYBOARD_TYPEMATIC_PARAMETERS)) {
                     usb_dbg_print(DBGLVL_MAXIMUM, ("Keyboard IOCTL_KEYBOARD_SET_TYPEMATIC "
                         "invalid buffer size\n"));
@@ -503,20 +481,25 @@ KbdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
             Irp->AssociatedIrp.SystemBuffer,
             sizeof(KEYBOARD_TYPEMATIC_PARAMETERS));*/
 
-            Irp->IoStatus.Status = STATUS_SUCCESS;
+            Status = STATUS_SUCCESS;
             break;
         case IOCTL_KEYBOARD_QUERY_INDICATOR_TRANSLATION:
-            /* We should check the UnitID, but it's	kind of	pointless as
-            * all keyboards are supposed to have the same one
-            */
-            /*RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
-            &IndicatorTranslation,
-            sizeof(LOCAL_KEYBOARD_INDICATOR_TRANSLATION));*/
-
-            Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
+            if (Stack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(LOCAL_KEYBOARD_INDICATOR_TRANSLATION))
+            {
+                Status = STATUS_BUFFER_TOO_SMALL;
+            }
+            else
+            {
+                RtlCopyMemory(
+                    Irp->AssociatedIrp.SystemBuffer,
+                    &IndicatorTranslation,
+                    sizeof(LOCAL_KEYBOARD_INDICATOR_TRANSLATION));
+                Irp->IoStatus.Information = sizeof(LOCAL_KEYBOARD_INDICATOR_TRANSLATION);
+                Status = STATUS_SUCCESS;
+            }
             break;
         default:
-            Irp->IoStatus.Status = STATUS_SUCCESS;//STATUS_INVALID_DEVICE_REQUEST;
+            Status = STATUS_SUCCESS;//STATUS_INVALID_DEVICE_REQUEST;
             break;
         }
 intcontfailure:
@@ -529,6 +512,7 @@ intcontfailure:
         usb_dbg_print(DBGLVL_MINIMUM, ("Invalid internal device request!\n"));
     }
 
+    Irp->IoStatus.Status = Status;
     if (Status != STATUS_PENDING)
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
@@ -536,10 +520,10 @@ intcontfailure:
 }
 
 static NTSTATUS
-KeyboardCreateDevice(IN PDRIVER_OBJECT DriverObject)
+KeyboardCreateDevice(IN PDRIVER_OBJECT DriverObject, IN PKEYBOARD_DRVR_EXTENSION DriverExtension)
 {
     UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Device\\KeyboardPortUSB");
-    PDEVEXT_HEADER DeviceExtension;
+    PKEYBOARD_DEVICE_EXTENSION DeviceExtension;
     PDEVICE_OBJECT Fdo;
     NTSTATUS Status;
 
@@ -551,7 +535,7 @@ KeyboardCreateDevice(IN PDRIVER_OBJECT DriverObject)
     }
 
     Status = IoCreateDevice(DriverObject,
-        sizeof(DEVEXT_HEADER),
+        sizeof(KEYBOARD_DEVICE_EXTENSION),
         &DeviceName,
         FILE_DEVICE_KEYBOARD,
         FILE_DEVICE_SECURE_OPEN,
@@ -563,12 +547,14 @@ KeyboardCreateDevice(IN PDRIVER_OBJECT DriverObject)
         usb_dbg_print(DBGLVL_MINIMUM, ("IoCreateDevice() for usb keyboard driver failed with status 0x%08lx\n", Status));
         return Status;
     }
-    DeviceExtension = (PDEVEXT_HEADER)Fdo->DeviceExtension;
-    RtlZeroMemory(DeviceExtension, sizeof(DEVEXT_HEADER));
+    DeviceExtension = (PKEYBOARD_DEVICE_EXTENSION)Fdo->DeviceExtension;
+    RtlZeroMemory(DeviceExtension, sizeof(KEYBOARD_DEVICE_EXTENSION));
 
-    DeviceExtension->dispatch = KbdDispatch;
+    DeviceExtension->hdr.dispatch = KbdDispatch;
+    DeviceExtension->DriverExtension = DriverExtension;
+    DriverExtension->device_ext = DeviceExtension;
 
-    KeyboardFdo = Fdo;
+    DeviceExtension->Fdo = Fdo;
     Fdo->Flags &= ~DO_DEVICE_INITIALIZING;
     usb_dbg_print(DBGLVL_MEDIUM, ("Created keyboard Fdo: %p\n", Fdo));
 
