@@ -124,7 +124,7 @@ VOID UntrackFL( PCHAR File, DWORD Line, PVOID Thing, DWORD Tag ) {
             if ( ThingInList->Tag != Tag ) {
                  DbgPrint("UNTRACK: TAG DOES NOT MATCH (%x)\n", Thing);
                  ShowTrackedThing("Tag Mismatch (Item in list)", ThingInList, TRUE);
-                 TcpipBugCheck( 0 );
+                 ASSERT( FALSE );
             }
 
 	    ExFreeToNPagedLookasideList( &AllocatedObjectsLookasideList,
@@ -139,7 +139,7 @@ VOID UntrackFL( PCHAR File, DWORD Line, PVOID Thing, DWORD Tag ) {
     }
     TcpipReleaseSpinLock( &AllocatedObjectsLock, OldIrql );
     DbgPrint("UNTRACK: SPECIFIED ALREADY FREE ITEM %x\n", Thing);
-    TcpipBugCheck( 0 );
+    ASSERT( FALSE );
 }
 
 VOID TrackDumpFL( PCHAR File, DWORD Line ) {
