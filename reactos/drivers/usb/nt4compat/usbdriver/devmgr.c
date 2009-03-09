@@ -1200,6 +1200,7 @@ dev_mgr_build_usb_if(PUSB_CONFIGURATION pcfg, PUSB_INTERFACE pif, PUSB_INTERFACE
 {
     LONG i;
     PUSB_ENDPOINT_DESC pendp_desc;
+    PBYTE pbuf;
 
     if (pcfg == NULL || pif == NULL || pif_desc == NULL)
         return FALSE;
@@ -1218,11 +1219,23 @@ dev_mgr_build_usb_if(PUSB_CONFIGURATION pcfg, PUSB_INTERFACE pif, PUSB_INTERFACE
         InitializeListHead(&pif->altif_list);
         pif->altif_count = 0;
 
-        pendp_desc = (PUSB_ENDPOINT_DESC) (&((PBYTE) pif_desc)[sizeof(USB_INTERFACE_DESC)]);
+        pbuf = &((PBYTE) pif_desc)[sizeof(USB_INTERFACE_DESC)];
 
-        for(i = 0; i < pif->endp_count; i++, pendp_desc++)
+        i = 0;
+        while (i < pif->endp_count)
         {
-            dev_mgr_build_usb_endp(pif, &pif->endp[i], pendp_desc);
+            pendp_desc = (PUSB_ENDPOINT_DESC)pbuf;
+
+            // check if it's an endpoint descriptor
+            if (pendp_desc->bDescriptorType == USB_DT_ENDPOINT)
+            {
+                // add it
+                dev_mgr_build_usb_endp(pif, &pif->endp[i], pendp_desc);
+                i++;
+            }
+
+            // skip to the next one
+            pbuf += pendp_desc->bLength;
         }
     }
     else
@@ -1299,8 +1312,7 @@ dev_mgr_build_usb_config(PUSB_DEV pdev, PBYTE pbuf, ULONG config_val, LONG confi
         }
         else
         {
-            i--;
-            pif = &pcfg->interf[i];
+            pif = &pcfg->interf[i-1];
             dev_mgr_build_usb_if(pcfg, pif, pif_desc, TRUE);
         }
     }
