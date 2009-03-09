@@ -85,7 +85,6 @@ DpcRoutine(
     DPRINT1("Freed %u Buffers / IRP Available Mappings %u\n", Count, This->NumMappings);
 }
 
-
 NTSTATUS
 NTAPI
 IIrpQueue_fnQueryInterface(
@@ -170,7 +169,7 @@ IIrpQueue_fnAddMapping(
     Mapping->Irp = Irp;
     Mapping->Next = NULL;
 
-    DPRINT1("FirstMap %p LastMap %p NumMappings %u\n", This->FirstMap, This->LastMap, This->NumMappings);
+    //DPRINT1("FirstMap %p LastMap %p NumMappings %u\n", This->FirstMap, This->LastMap, This->NumMappings);
 
     if (!This->FirstMap)
         This->FirstMap = Mapping;
@@ -190,7 +189,7 @@ IIrpQueue_fnAddMapping(
 
     This->NumDataAvailable += Mapping->Header->DataUsed;
 
-    DPRINT1("IIrpQueue_fnAddMapping NumMappings %u SizeOfMapping %lu NumDataAvailable %lu\n", This->NumMappings, Mapping->Header->DataUsed, This->NumDataAvailable);
+    DPRINT1("IIrpQueue_fnAddMapping NumMappings %u SizeOfMapping %lu NumDataAvailable %lu Irp %p\n", This->NumMappings, Mapping->Header->DataUsed, This->NumDataAvailable, Irp);
     return STATUS_SUCCESS;
 }
 
@@ -231,6 +230,9 @@ IIrpQueue_fnUpdateMapping(
         Mapping = This->FirstMap;
         This->FirstMap = This->FirstMap->Next;
 
+        if (!This->FirstMap)
+            This->LastMap = NULL;
+
         This->FreeCount++;
 
         if (!This->FreeMapHead)
@@ -245,8 +247,7 @@ IIrpQueue_fnUpdateMapping(
         This->NumDataAvailable -= Mapping->Header->DataUsed;
 
 
-        if ((This->FreeDataSize > This->DataFormat->WaveFormatEx.nAvgBytesPerSec || This->FreeCount > 25) &&
-            This->DpcActive == FALSE)
+        if (This->FreeCount > 5 && This->DpcActive == FALSE)
         {
             Mapping = This->FreeMapHead;
             This->FreeMapHead = NULL;
@@ -292,7 +293,34 @@ IIrpQueue_fnMinimumDataAvailable(
     return Result;
 }
 
+BOOL
+NTAPI
+IIrpQueue_fnCancelBuffers(
+    IN IIrpQueue *iface)
+{
+    PIRP_MAPPING Mapping;
+    IIrpQueueImpl * This = (IIrpQueueImpl*)iface;
 
+    if (This->DpcActive)
+        return FALSE;
+
+    ASSERT(This->FirstMap == NULL);
+    ASSERT(This->LastMap == NULL);
+
+    if (This->FreeMapHead == NULL)
+    {
+        ASSERT(This->FreeMapTail == NULL);
+        This->FreeMapTail = NULL;
+        return TRUE;
+    }
+
+    Mapping = This->FreeMapHead;
+    This->FreeMapHead = NULL;
+    This->FreeMapTail = NULL;
+    This->DpcActive = TRUE;
+    KeInsertQueueDpc(&This->Dpc, (PVOID)Mapping, NULL);
+    return FALSE;
+}
 
 static IIrpQueueVtbl vt_IIrpQueue =
 {
@@ -305,7 +333,8 @@ static IIrpQueueVtbl vt_IIrpQueue =
     IIrpQueue_fnUpdateMapping,
     IIrpQueue_fnNumMappings,
     IIrpQueue_fnMinMappings,
-    IIrpQueue_fnMinimumDataAvailable
+    IIrpQueue_fnMinimumDataAvailable,
+    IIrpQueue_fnCancelBuffers
 };
 
 

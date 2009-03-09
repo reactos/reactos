@@ -214,6 +214,8 @@ DECLARE_INTERFACE_(IIrpQueue, IUnknown)
 
     STDMETHOD_(BOOL, MinimumDataAvailable)(THIS);
 
+    STDMETHOD_(BOOL, CancelBuffers)(THIS);
+
 };
 
 

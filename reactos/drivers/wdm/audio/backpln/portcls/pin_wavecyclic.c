@@ -26,7 +26,6 @@ typedef struct
     ULONG ActiveIrpBufferSize;
     ULONG ActiveIrpOffset;
     ULONG DelayedRequestInProgress;
-    ULONG RetryCount;
     ULONG FrameSize;
 
 }IPortPinWaveCyclicImpl;
@@ -176,20 +175,19 @@ IServiceSink_fnRequestService(
     Status = This->IrpQueue->lpVtbl->GetMapping(This->IrpQueue, &Buffer, &BufferSize);
     if (!NT_SUCCESS(Status))
     {
-        This->RetryCount++;
-        if (This->RetryCount > 30)
+        if (!This->IrpQueue->lpVtbl->CancelBuffers(This->IrpQueue))
         {
-            DPRINT1("Stopping %u\n", This->IrpQueue->lpVtbl->NumMappings(This->IrpQueue));
-            This->Stream->lpVtbl->SetState(This->Stream, KSSTATE_STOP);
-            This->RetryCount = 0;
-            This->State = KSSTATE_STOP;
+            /* there is an active dpc pending
+             * wait untill this dpc is done, in order to complete the remaining irps
+             */
             return;
         }
-        DPRINT("IServiceSink_fnRequestService> Waiting for mapping\n");
-        This->ServiceGroup->lpVtbl->RequestDelayedService(This->ServiceGroup, -10000000L);
+        DPRINT1("Stopping %u\n", This->IrpQueue->lpVtbl->NumMappings(This->IrpQueue));
+
+        This->Stream->lpVtbl->SetState(This->Stream, KSSTATE_PAUSE);
+        This->State = KSSTATE_PAUSE;
         return;
     }
-    This->RetryCount = 0;
 
     if (KeGetCurrentIrql() == DISPATCH_LEVEL)
         return;
@@ -381,6 +379,7 @@ IPortPinWaveCyclic_HandleKsProperty(
 
                 if (This->Stream)
                 {
+                    This->IrpQueue->lpVtbl->CancelBuffers(This->IrpQueue);
                     This->Stream->lpVtbl->SetState(This->Stream, KSSTATE_STOP);
                     This->State = KSSTATE_STOP;
 
@@ -653,13 +652,13 @@ IPortPinWaveCyclic_fnFastWrite(
     PIRP Irp;
     IPortPinWaveCyclicImpl * This = (IPortPinWaveCyclicImpl*)iface;
 
-    DPRINT1("IPortPinWaveCyclic_fnFastWrite entered\n");
+    //DPRINT1("IPortPinWaveCyclic_fnFastWrite entered\n");
 
     Packet = (PCONTEXT_WRITE)Buffer;
 
-    //if (This->IrpQueue->lpVtbl->MinimumDataAvailable(This->IrpQueue))
-    //    Irp = Packet->Irp;
-    //else
+    if (This->IrpQueue->lpVtbl->MinimumDataAvailable(This->IrpQueue))
+        Irp = Packet->Irp;
+    else
         Irp = NULL;
 
     Status = This->IrpQueue->lpVtbl->AddMapping(This->IrpQueue, Buffer, Length, Irp);
@@ -678,7 +677,7 @@ IPortPinWaveCyclic_fnFastWrite(
 
     if (!Irp)
     {
-        DPRINT1("Completing Irp %p\n", Packet->Irp);
+        //DPRINT1("Completing Irp %p\n", Packet->Irp);
 
         Packet->Irp->IoStatus.Status = STATUS_SUCCESS;
         Packet->Irp->IoStatus.Information = Packet->Header.DataUsed;

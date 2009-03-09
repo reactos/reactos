@@ -650,7 +650,7 @@ WdmAudWrite(
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    DPRINT1("WdmAudWrite entered\n");
+    //DPRINT("WdmAudWrite entered\n");
 
     if (IoStack->Parameters.Write.Length < sizeof(WDMAUD_DEVICE_INFO))
     {
@@ -670,7 +670,7 @@ WdmAudWrite(
     }
 
 
-    DPRINT1("DeviceInfo %p %p %p\n", DeviceInfo, Irp->MdlAddress->StartVa, Irp->MdlAddress->MappedSystemVa);
+    //DPRINT("DeviceInfo %p %p %p\n", DeviceInfo, Irp->MdlAddress->StartVa, Irp->MdlAddress->MappedSystemVa);
     if (DeviceInfo->DeviceType < MIN_SOUND_DEVICE_TYPE || DeviceInfo->DeviceType > MAX_SOUND_DEVICE_TYPE)
     {
         /* invalid parameter */
@@ -735,7 +735,5 @@ WdmAudWrite(
 
 
     return IoStatusBlock.Status;
-
-    //return SetIrpIoStatus(Irp, STATUS_SUCCESS, 0);
 }
 

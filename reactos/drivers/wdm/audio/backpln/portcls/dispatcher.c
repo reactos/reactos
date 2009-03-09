@@ -216,7 +216,7 @@ Dispatch_fnFastWrite(
     PDEVICE_OBJECT DeviceObject)
 {
     IIrpTarget * IrpTarget;
-    DPRINT1("Dispatch_fnFastWrite called DeviceObject %p Irp %p\n", DeviceObject);
+    //DPRINT1("Dispatch_fnFastWrite called DeviceObject %p Irp %p\n", DeviceObject);
 
     IrpTarget = (IIrpTarget *)FileObject->FsContext2;
 

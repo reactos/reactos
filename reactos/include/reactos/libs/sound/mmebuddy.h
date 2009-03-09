@@ -56,7 +56,7 @@
         { \
             if ( ! ( condition ) ) \
             { \
-                SND_ERR(L"ASSERT FAILED: %hS\n", #condition); \
+                SND_ERR(L"ASSERT FAILED: %hS File %hS Line %u\n", #condition, __FILE__, __LINE__); \
                 POPUP(L"ASSERT FAILED: %hS\n", #condition); \
                 ExitProcess(1); \
             } \
@@ -80,6 +80,7 @@
     #define SND_WARN(...) do {} while ( 0 )
     #define SND_TRACE(...) do {} while ( 0 )
     #define SND_ASSERT(condition) do {} while ( 0 )
+    #define DUMP_WAVEHDR_QUEUE(condition) do {} while ( 0 )
 #endif
 
 /*

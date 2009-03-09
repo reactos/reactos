@@ -218,7 +218,8 @@ Pin_fnFastWrite(
 {
     PDISPATCH_CONTEXT Context;
     NTSTATUS Status;
-    DPRINT1("Pin_fnFastWrite called DeviceObject %p Irp %p\n", DeviceObject);
+
+    //DPRINT1("Pin_fnFastWrite called DeviceObject %p Irp %p\n", DeviceObject);
 
     Context = (PDISPATCH_CONTEXT)FileObject->FsContext2;
     Status = KsStreamIo(Context->FileObject, NULL, NULL, NULL, NULL, 0, IoStatus, Buffer, Length, KSSTREAM_WRITE, KernelMode);
