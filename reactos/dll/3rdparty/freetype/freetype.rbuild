@@ -13,7 +13,8 @@
 	<if property="NSWPAT" value="1">
 		<define name="TT_CONFIG_OPTION_BYTECODE_INTERPRETER" />
 	</if>
-	<library>ntoskrnl</library>
+	<library>win32k</library>
+	<library>libcntpr</library>
 	<if property="ARCH" value="i386">
 		<directory name="i386">
 			<file>setjmplongjmp.s</file>

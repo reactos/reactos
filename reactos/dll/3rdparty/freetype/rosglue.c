@@ -8,13 +8,11 @@
  * NOTES:
  */
 
-#include <ntddk.h>
-#include <ctype.h>
-#include <errno.h>
-#include <setjmp.h>
+#include <windef.h>
+#include <wingdi.h>
+#include <winddi.h>
+#include <stdarg.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -26,7 +24,16 @@
  * First some generic routines
  */
 
+ULONG
+DbgPrint(IN PCCH Format, IN ...)
+{
+    va_list args;
 
+    va_start(args, Format);
+    EngDebugPrint("ft2: ", (PCHAR)Format, args);
+    va_end(args);
+    return 0;
+}
 
 /*
  * Memory allocation
@@ -42,7 +49,7 @@ malloc(size_t Size)
 {
   void *Object;
 
-  Object = ExAllocatePoolWithTag(PagedPool, sizeof(size_t) + Size, TAG_FREETYPE);
+  Object = EngAllocMem(0, sizeof(size_t) + Size, TAG_FREETYPE);
   if (NULL != Object)
     {
     *((size_t *) Object) = Size;
@@ -58,7 +65,7 @@ realloc(void *Object, size_t Size)
   void *NewObject;
   size_t CopySize;
 
-  NewObject = ExAllocatePoolWithTag(PagedPool, sizeof(size_t) + Size, TAG_FREETYPE);
+  NewObject = EngAllocMem(0, sizeof(size_t) + Size, TAG_FREETYPE);
   if (NULL != NewObject)
     {
     *((size_t *) NewObject) = Size;
@@ -69,7 +76,7 @@ realloc(void *Object, size_t Size)
       CopySize = Size;
       }
     memcpy(NewObject, Object, CopySize);
-    ExFreePool((size_t *) Object - 1);
+    EngFreeMem((size_t *) Object - 1);
     }
 
   return NewObject;
@@ -78,7 +85,7 @@ realloc(void *Object, size_t Size)
 void
 free(void *Object)
 {
-  ExFreePool((size_t *) Object - 1);
+  EngFreeMem((size_t *) Object - 1);
 }
 
 /*
