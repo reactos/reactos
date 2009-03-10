@@ -690,18 +690,29 @@ static BOOL UITOOLS95_DFC_ButtonPush(HDC dc, LPRECT r, UINT uFlags)
     return TRUE;
 }
 
-static BOOL UITOOLS95_DFC_ButtonCheck(HDC dc, LPRECT r, UINT uFlags)
+static BOOL UITOOLS95_DFC_ButtonCheckRadio(HDC dc, LPRECT r, UINT uFlags, BOOL Radio)
 {
     RECT rc;
     LOGFONT lf;
     HFONT hFont, hOldFont;
     int SmallDiam, i;
+    TCHAR OutRight, OutLeft, InRight, InLeft, Center;
 
-    LPCTSTR OutRight = TEXT("c"); // Outer right
-    LPCTSTR OutLeft  = TEXT("d"); // Outer left
-    LPCTSTR InRight  = TEXT("e"); // inner left
-    LPCTSTR InLeft   = TEXT("f"); // inner right
-    LPCTSTR Center   = TEXT("g"); // center
+    if (Radio)
+    {
+        OutRight = 'j'; // Outer right
+        OutLeft  = 'k'; // Outer left
+        InRight  = 'l'; // inner left
+        InLeft   = 'm'; // inner right
+        Center   = 'n'; // center
+    } else
+    {
+        OutRight = 'c'; // Outer right
+        OutLeft  = 'd'; // Outer left
+        InRight  = 'e'; // inner left
+        InLeft   = 'f'; // inner right
+        Center   = 'g'; // center
+    }
 
     SmallDiam = UITOOLS_MakeSquareRect(r, &rc);
 
@@ -714,82 +725,16 @@ static BOOL UITOOLS95_DFC_ButtonCheck(HDC dc, LPRECT r, UINT uFlags)
     hFont = CreateFontIndirect(&lf);
     hOldFont = SelectObject(dc, hFont);
 
-    SetBkMode(dc, TRANSPARENT);
-
-    /* Center section, white for active, grey for inactive */
-    i= !(uFlags & (DFCS_INACTIVE|DFCS_PUSHED)) ? COLOR_WINDOW : COLOR_BTNFACE;
-    SetTextColor(dc, GetSysColor(i));
-    TextOut(dc, rc.left, rc.top, Center, 1);
-
-    if(uFlags & (DFCS_FLAT | DFCS_MONO))
-    {
-        SetTextColor(dc, GetSysColor(COLOR_WINDOWFRAME));
-        TextOut(dc, rc.left, rc.top, OutRight, 1);
-        TextOut(dc, rc.left, rc.top, OutLeft, 1);
-        TextOut(dc, rc.left, rc.top, InRight, 1);
-        TextOut(dc, rc.left, rc.top, InLeft, 1);
-    }
-    else
-    {
-        SetTextColor(dc, GetSysColor(COLOR_BTNSHADOW));
-        TextOut(dc, rc.left, rc.top, OutRight, 1);
-        SetTextColor(dc, GetSysColor(COLOR_BTNHIGHLIGHT));
-        TextOut(dc, rc.left, rc.top, OutLeft, 1);
-        SetTextColor(dc, GetSysColor(COLOR_3DDKSHADOW));
-        TextOut(dc, rc.left, rc.top, InRight, 1);
-        SetTextColor(dc, GetSysColor(COLOR_3DLIGHT));
-        TextOut(dc, rc.left, rc.top, InLeft, 1);
-    }
-
-    if(uFlags & DFCS_CHECKED)
-    {
-        LPCTSTR Check = TEXT("b");
-
-        SetTextColor(dc, GetSysColor(COLOR_WINDOWTEXT));
-        TextOut(dc, rc.left, rc.top, Check, 1);
-    }
-
-    SetTextColor(dc, GetSysColor(COLOR_WINDOWTEXT));
-    SelectObject(dc, hOldFont);
-    DeleteObject(hFont);
-
-    return TRUE;
-}
-
-static BOOL UITOOLS95_DFC_ButtonRadio(HDC dc, LPRECT r, UINT uFlags)
-{
-    RECT rc;
-    LOGFONT lf;
-    HFONT hFont, hOldFont;
-    int SmallDiam, i;
-
-    LPCTSTR OutRight = TEXT("j"); // Outer right
-    LPCTSTR OutLeft  = TEXT("k"); // Outer left
-    LPCTSTR InRight  = TEXT("l"); // inner left
-    LPCTSTR InLeft   = TEXT("m"); // inner right
-    LPCTSTR Center   = TEXT("n"); // center
-
-    SmallDiam = UITOOLS_MakeSquareRect(r, &rc);
-
-    ZeroMemory(&lf, sizeof(LOGFONT));
-    lf.lfHeight = SmallDiam;
-    lf.lfWidth = 0;
-    lf.lfWeight = FW_NORMAL;
-    lf.lfCharSet = DEFAULT_CHARSET;
-    lstrcpy(lf.lfFaceName, TEXT("Marlett"));
-    hFont = CreateFontIndirect(&lf);
-    hOldFont = SelectObject(dc, hFont);
-
-    if((uFlags & 0xff) == DFCS_BUTTONRADIOMASK)
+    if(Radio && ((uFlags & 0xff) == DFCS_BUTTONRADIOMASK))
     {
         SetBkMode(dc, OPAQUE);
         SetTextColor(dc, GetSysColor(COLOR_WINDOWFRAME));
-        TextOut(dc, rc.left, rc.top, Center, 1);
+        TextOut(dc, rc.left, rc.top, &Center, 1);
         SetBkMode(dc, TRANSPARENT);
         SetTextColor(dc, GetSysColor(COLOR_WINDOWFRAME));
-        TextOut(dc, rc.left, rc.top, OutRight, 1);
+        TextOut(dc, rc.left, rc.top, &OutRight, 1);
         SetTextColor(dc, GetSysColor(COLOR_WINDOWFRAME));
-        TextOut(dc, rc.left, rc.top, OutLeft, 1);
+        TextOut(dc, rc.left, rc.top, &OutLeft, 1);
     }
     else
     {
@@ -798,35 +743,35 @@ static BOOL UITOOLS95_DFC_ButtonRadio(HDC dc, LPRECT r, UINT uFlags)
         /* Center section, white for active, grey for inactive */
         i= !(uFlags & (DFCS_INACTIVE|DFCS_PUSHED)) ? COLOR_WINDOW : COLOR_BTNFACE;
         SetTextColor(dc, GetSysColor(i));
-        TextOut(dc, rc.left, rc.top, Center, 1);
+        TextOut(dc, rc.left, rc.top, &Center, 1);
 
         if(uFlags & (DFCS_FLAT | DFCS_MONO))
         {
             SetTextColor(dc, GetSysColor(COLOR_WINDOWFRAME));
-            TextOut(dc, rc.left, rc.top, OutRight, 1);
-            TextOut(dc, rc.left, rc.top, OutLeft, 1);
-            TextOut(dc, rc.left, rc.top, InRight, 1);
-            TextOut(dc, rc.left, rc.top, InLeft, 1);
+            TextOut(dc, rc.left, rc.top, &OutRight, 1);
+            TextOut(dc, rc.left, rc.top, &OutLeft, 1);
+            TextOut(dc, rc.left, rc.top, &InRight, 1);
+            TextOut(dc, rc.left, rc.top, &InLeft, 1);
         }
         else
         {
             SetTextColor(dc, GetSysColor(COLOR_BTNSHADOW));
-            TextOut(dc, rc.left, rc.top, OutRight, 1);
+            TextOut(dc, rc.left, rc.top, &OutRight, 1);
             SetTextColor(dc, GetSysColor(COLOR_BTNHIGHLIGHT));
-            TextOut(dc, rc.left, rc.top, OutLeft, 1);
+            TextOut(dc, rc.left, rc.top, &OutLeft, 1);
             SetTextColor(dc, GetSysColor(COLOR_3DDKSHADOW));
-            TextOut(dc, rc.left, rc.top, InRight, 1);
+            TextOut(dc, rc.left, rc.top, &InRight, 1);
             SetTextColor(dc, GetSysColor(COLOR_3DLIGHT));
-            TextOut(dc, rc.left, rc.top, InLeft, 1);
+            TextOut(dc, rc.left, rc.top, &InLeft, 1);
         }
     }
 
     if(uFlags & DFCS_CHECKED)
     {
-        LPCTSTR Check = TEXT("i");
+        TCHAR Check = (Radio) ? 'i' : 'b';
 
         SetTextColor(dc, GetSysColor(COLOR_WINDOWTEXT));
-        TextOut(dc, rc.left, rc.top, Check, 1);
+        TextOut(dc, rc.left, rc.top, &Check, 1);
     }
 
     SetTextColor(dc, GetSysColor(COLOR_WINDOWTEXT));
@@ -846,12 +791,12 @@ static BOOL UITOOLS95_DrawFrameButton(HDC hdc, LPRECT rc, UINT uState)
 
         case DFCS_BUTTONCHECK:
         case DFCS_BUTTON3STATE:
-            return UITOOLS95_DFC_ButtonCheck(hdc, rc, uState);
+            return UITOOLS95_DFC_ButtonCheckRadio(hdc, rc, uState, FALSE);
 
         case DFCS_BUTTONRADIOIMAGE:
         case DFCS_BUTTONRADIOMASK:
         case DFCS_BUTTONRADIO:
-            return UITOOLS95_DFC_ButtonRadio(hdc, rc, uState);
+            return UITOOLS95_DFC_ButtonCheckRadio(hdc, rc, uState, TRUE);
 
 /*
         default:
