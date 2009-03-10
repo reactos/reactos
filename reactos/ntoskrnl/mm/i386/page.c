@@ -1086,7 +1086,7 @@ MmUpdatePageDir(PEPROCESS Process, PVOID Address, ULONG Size)
     
     if (Process != NULL && Process != PsGetCurrentProcess())
     {
-        Pde = MmCreateHyperspaceMapping(PTE_TO_PFN(Process->Pcb.DirectoryTableBase[0]));
+        Pde = MiMapPagesToZeroInHyperSpace(PTE_TO_PFN(Process->Pcb.DirectoryTableBase[0]));
     }
     else
     {
@@ -1101,7 +1101,7 @@ MmUpdatePageDir(PEPROCESS Process, PVOID Address, ULONG Size)
     }
     if (Pde != (PULONG)PAGEDIRECTORY_MAP)
     {
-        MmDeleteHyperspaceMapping(Pde);
+        MiUnmapPagesInZeroSpace(Pde);
     }
 }
 

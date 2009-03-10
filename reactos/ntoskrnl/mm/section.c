@@ -691,7 +691,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
             return Status;
          }
       }
-      PageAddr = MmCreateHyperspaceMapping(*Page);
+      PageAddr = MiMapPagesToZeroInHyperSpace(*Page);
       CacheSegOffset = BaseOffset + CacheSeg->Bcb->CacheSegmentSize - FileOffset;
       Length = RawLength - SegOffset;
       if (Length <= CacheSegOffset && Length <= PAGE_SIZE)
@@ -714,7 +714,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
                                        &CacheSeg);
          if (!NT_SUCCESS(Status))
          {
-            MmDeleteHyperspaceMapping(PageAddr);
+            MiUnmapPagesInZeroSpace(PageAddr);
             return(Status);
          }
          if (!UptoDate)
@@ -727,7 +727,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
             if (!NT_SUCCESS(Status))
             {
                CcRosReleaseCacheSegment(Bcb, CacheSeg, FALSE, FALSE, FALSE);
-               MmDeleteHyperspaceMapping(PageAddr);
+               MiUnmapPagesInZeroSpace(PageAddr);
                return Status;
             }
          }
@@ -741,7 +741,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
          }
       }
       CcRosReleaseCacheSegment(Bcb, CacheSeg, TRUE, FALSE, FALSE);
-      MmDeleteHyperspaceMapping(PageAddr);
+      MiUnmapPagesInZeroSpace(PageAddr);
    }
    return(STATUS_SUCCESS);
 }
