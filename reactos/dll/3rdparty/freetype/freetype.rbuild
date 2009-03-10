@@ -105,5 +105,6 @@
 		</directory>
 	</directory>
 	<file>rosglue.c</file>
+	<file>sprintf.c</file>
 	<file>freetype.rc</file>
 </module>
