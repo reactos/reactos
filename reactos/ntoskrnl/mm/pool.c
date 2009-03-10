@@ -14,6 +14,7 @@
 #define NDEBUG
 #include <debug.h>
 
+extern PVOID MiNonPagedPoolStart;
 extern ULONG MiNonPagedPoolLength;
 extern ULONG MmTotalPagedPoolQuota;
 extern ULONG MmTotalNonPagedPoolQuota;
@@ -234,18 +235,7 @@ ExAllocatePoolWithQuotaTag (IN POOL_TYPE PoolType,
 VOID NTAPI
 ExFreePool(IN PVOID Block)
 {
-    if (Block >= MmPagedPoolBase && (char*)Block < ((char*)MmPagedPoolBase + MmPagedPoolSize))
-    {
-        if (KeGetCurrentIrql() > APC_LEVEL)
-            KeBugCheckEx(BAD_POOL_CALLER, 0x09, KeGetCurrentIrql(), PagedPool, (ULONG_PTR)Block);
-        ExFreePagedPool(Block);
-    }
-    else
-    {
-        if (KeGetCurrentIrql() > DISPATCH_LEVEL)
-            KeBugCheckEx(BAD_POOL_CALLER, 0x09, KeGetCurrentIrql(), NonPagedPool, (ULONG_PTR)Block);
-        ExFreeNonPagedPool(Block);
-    }
+    ExFreePoolWithTag(Block, 0);
 }
 
 /*
@@ -253,23 +243,62 @@ ExFreePool(IN PVOID Block)
  */
 VOID
 NTAPI
-ExFreePoolWithTag(IN PVOID Block,
-                  IN ULONG Tag)
+ExFreePoolWithTag(
+    IN PVOID Block,
+    IN ULONG Tag)
 {
-    ULONG BlockTag;
-
-    if (Tag != 0)
+    /* Check for paged pool */
+    if (Block >= MmPagedPoolBase && 
+        (char*)Block < ((char*)MmPagedPoolBase + MmPagedPoolSize))
     {
-        if (Block >= MmPagedPoolBase && (char*)Block < ((char*)MmPagedPoolBase + MmPagedPoolSize))
-            BlockTag = EiGetPagedPoolTag(Block);
-        else
-            BlockTag = EiGetNonPagedPoolTag(Block);
+        /* Validate tag */
+        if (Tag != 0 && Tag != EiGetPagedPoolTag(Block))
+            KeBugCheckEx(BAD_POOL_CALLER,
+                         0x0a,
+                         (ULONG_PTR)Block,
+                         EiGetPagedPoolTag(Block),
+                         Tag);
 
-        if (BlockTag != Tag)
-            KeBugCheckEx(BAD_POOL_CALLER, 0x0a, (ULONG_PTR)Block, BlockTag, Tag);
+        /* Validate IRQL */
+        if (KeGetCurrentIrql() > APC_LEVEL)
+            KeBugCheckEx(BAD_POOL_CALLER,
+                         0x09,
+                         KeGetCurrentIrql(),
+                         PagedPool,
+                         (ULONG_PTR)Block);
+
+        /* Free from paged pool */
+        ExFreePagedPool(Block);
     }
 
-    ExFreePool(Block);
+    /* Check for non-paged pool */
+    else if (Block >= MiNonPagedPoolStart &&
+             (char*)Block < ((char*)MiNonPagedPoolStart + MiNonPagedPoolLength))
+    {
+        /* Validate tag */
+        if (Tag != 0 && Tag != EiGetNonPagedPoolTag(Block))
+            KeBugCheckEx(BAD_POOL_CALLER,
+                         0x0a,
+                         (ULONG_PTR)Block,
+                         EiGetNonPagedPoolTag(Block),
+                         Tag);
+
+        /* Validate IRQL */
+        if (KeGetCurrentIrql() > DISPATCH_LEVEL)
+            KeBugCheckEx(BAD_POOL_CALLER,
+                         0x09,
+                         KeGetCurrentIrql(),
+                         NonPagedPool,
+                         (ULONG_PTR)Block);
+
+        /* Free from non-paged pool */
+        ExFreeNonPagedPool(Block);
+    }
+    else
+    {
+        /* Block was not inside any pool! */
+        KeBugCheckEx(BAD_POOL_CALLER, 0x42, (ULONG_PTR)Block, 0, 0);
+    }
 }
 
 /*
