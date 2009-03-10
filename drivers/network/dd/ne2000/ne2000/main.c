@@ -238,6 +238,9 @@ static NDIS_STATUS STDCALL MiniportInitialize(
     UINT i;
     NDIS_STATUS Status;
     PNIC_ADAPTER Adapter;
+    NDIS_HANDLE ConfigurationHandle;
+    UINT *RegNetworkAddress = 0;
+    UINT RegNetworkAddressLength = 0;
 
     ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
@@ -284,10 +287,7 @@ static NDIS_STATUS STDCALL MiniportInitialize(
     if (Status != NDIS_STATUS_SUCCESS)
     {
         PNDIS_CONFIGURATION_PARAMETER ConfigurationParameter;
-        NDIS_HANDLE ConfigurationHandle;
         UNICODE_STRING Keyword;
-        UINT *RegNetworkAddress = 0;
-        UINT RegNetworkAddressLength = 0;
 
         NdisOpenConfiguration(&Status, &ConfigurationHandle, WrapperConfigurationContext);
         if (Status == NDIS_STATUS_SUCCESS)
@@ -328,6 +328,23 @@ static NDIS_STATUS STDCALL MiniportInitialize(
         else
         {
             NDIS_DbgPrint(MIN_TRACE,("NdisOpenConfiguration returned error 0x%x\n", Status));
+        }
+    } else {
+        NdisOpenConfiguration(&Status, &ConfigurationHandle, WrapperConfigurationContext);
+        if (Status == NDIS_STATUS_SUCCESS)
+        {
+            NdisReadNetworkAddress(&Status, (PVOID *)&RegNetworkAddress, &RegNetworkAddressLength, ConfigurationHandle);
+            if(Status == NDIS_STATUS_SUCCESS && RegNetworkAddressLength == DRIVER_LENGTH_OF_ADDRESS)
+            {
+                int i;
+                NDIS_DbgPrint(MID_TRACE,("NdisReadNetworkAddress returned successfully, address %x:%x:%x:%x:%x:%x\n",
+                        RegNetworkAddress[0], RegNetworkAddress[1], RegNetworkAddress[2], RegNetworkAddress[3],
+                        RegNetworkAddress[4], RegNetworkAddress[5]));
+                for(i = 0; i < DRIVER_LENGTH_OF_ADDRESS; i++)
+                    Adapter->StationAddress[i] = RegNetworkAddress[i];
+            }
+
+            NdisCloseConfiguration(ConfigurationHandle);
         }
     }
 
