@@ -114,6 +114,8 @@ UnlistSoundDeviceInstance(
 
     Result = GetSoundDeviceFromInstance(SoundDeviceInstance, &SoundDevice);
     SND_ASSERT( MMSUCCESS(Result) );
+    if ( ! MMSUCCESS(Result) )
+        return TranslateInternalMmResult(Result);
 
     PreviousInstance = NULL;
     CurrentInstance = SoundDevice->HeadInstance;
