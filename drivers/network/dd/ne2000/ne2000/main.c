@@ -662,11 +662,19 @@ static NDIS_STATUS STDCALL MiniportReset(
  *     Status of operation
  */
 {
+    NDIS_STATUS NdisStatus = NDIS_STATUS_SUCCESS;
+
     ASSERT_IRQL_EQUAL(DISPATCH_LEVEL);
 
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
-    return NDIS_STATUS_FAILURE;
+#ifndef NOCARD
+    NdisStatus = NICReset((PNIC_ADAPTER)MiniportAdapterContext);
+#endif
+
+    *AddressingReset = TRUE;
+
+    return NdisStatus;
 }
 
 
