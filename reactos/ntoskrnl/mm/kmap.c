@@ -22,13 +22,12 @@ MiZeroPage(PFN_TYPE Page)
 {
    PVOID TempAddress;
 
-   TempAddress = MiMapPagesToZeroInHyperSpace(Page);
+   TempAddress = MiMapPageToZeroInHyperSpace(Page);
    if (TempAddress == NULL)
    {
       return(STATUS_NO_MEMORY);
    }
    memset(TempAddress, 0, PAGE_SIZE);
-   MiUnmapPagesInZeroSpace(TempAddress);
    return(STATUS_SUCCESS);
 }
 

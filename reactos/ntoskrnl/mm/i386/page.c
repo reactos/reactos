@@ -783,6 +783,7 @@ MmCreatePageFileMapping(PEPROCESS Process,
         DPRINT1("Setting kernel address with process context\n");
         KeBugCheck(MEMORY_MANAGEMENT);
     }
+
     if (SwapEntry & (1 << 31))
     {
         KeBugCheck(MEMORY_MANAGEMENT);
@@ -1086,7 +1087,7 @@ MmUpdatePageDir(PEPROCESS Process, PVOID Address, ULONG Size)
     
     if (Process != NULL && Process != PsGetCurrentProcess())
     {
-        Pde = MiMapPagesToZeroInHyperSpace(PTE_TO_PFN(Process->Pcb.DirectoryTableBase[0]));
+        Pde = MiMapPageToZeroInHyperSpace(PTE_TO_PFN(Process->Pcb.DirectoryTableBase[0]));
     }
     else
     {
@@ -1098,10 +1099,6 @@ MmUpdatePageDir(PEPROCESS Process, PVOID Address, ULONG Size)
         {
             InterlockedCompareExchangePte(&Pde[Offset], MmGlobalKernelPageDirectory[Offset], 0);
         }
-    }
-    if (Pde != (PULONG)PAGEDIRECTORY_MAP)
-    {
-        MiUnmapPagesInZeroSpace(Pde);
     }
 }
 

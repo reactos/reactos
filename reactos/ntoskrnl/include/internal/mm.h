@@ -65,6 +65,8 @@ typedef ULONG PFN_TYPE, *PPFN_TYPE;
 #define MI_MAPPING_RANGE_START              (ULONG)HYPER_SPACE
 #define MI_MAPPING_RANGE_END                (MI_MAPPING_RANGE_START + \
                                              MI_HYPERSPACE_PTES * PAGE_SIZE)
+#define MI_ZERO_PTE                         (PMMPTE)(MI_MAPPING_RANGE_END + \
+                                             PAGE_SIZE)
 
 /* Signature of free pool blocks */
 #define MM_FREE_POOL_TAG    TAG('F', 'r', 'p', 'l')
@@ -1086,11 +1088,7 @@ MiUnmapPageInHyperSpace(IN PEPROCESS Process,
 
 PVOID
 NTAPI
-MiMapPagesToZeroInHyperSpace(IN PFN_NUMBER Page);
-
-VOID
-NTAPI
-MiUnmapPagesInZeroSpace(IN PVOID Address);
+MiMapPageToZeroInHyperSpace(IN PFN_NUMBER Page);
 
 //
 // ReactOS Compatibility Layer
