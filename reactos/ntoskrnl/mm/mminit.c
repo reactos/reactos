@@ -433,15 +433,15 @@ MmInit1(VOID)
     
     /* Dump kernel memory layout */
     MiDbgKernelLayout();
-    
-    /* Initialize the page list */
-    MmInitializePageList();
-    
-    /* Unmap low memory */
-    MmDeletePageTable(NULL, 0);
-    
+
     /* Initialize hyperspace */
     MiInitHyperSpace();
+
+    /* Initialize the page list */
+    MmInitializePageList();
+
+    /* Unmap low memory */
+    MmDeletePageTable(NULL, 0);
 
     /* Intialize memory areas */
     MmInitVirtualMemory();
