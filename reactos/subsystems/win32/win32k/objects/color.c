@@ -631,7 +631,8 @@ IntSetPaletteEntries(HPALETTE  hpal,
     }
     memcpy(palGDI->IndexedColors + Start, pe, Entries * sizeof(PALETTEENTRY));
     PALETTE_ValidateFlags(palGDI->IndexedColors, palGDI->NumColors);
-    ExFreePool(palGDI->logicalToSystem);
+    if (palGDI->logicalToSystem)
+        ExFreePool(palGDI->logicalToSystem);
     palGDI->logicalToSystem = NULL;
     PALETTE_UnlockPalette(palGDI);
 
