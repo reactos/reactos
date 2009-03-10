@@ -1048,8 +1048,6 @@ static BOOL UITOOLS95_DrawFrameMenu(HDC dc, LPRECT r, UINT uFlags)
 {
     LOGFONT lf;
     HFONT hFont, hOldFont;
-    COLORREF clrsave;
-    INT bkmode;
     TCHAR Symbol;
     switch(uFlags & 0xff)
     {
@@ -1079,20 +1077,12 @@ static BOOL UITOOLS95_DrawFrameMenu(HDC dc, LPRECT r, UINT uFlags)
     lf.lfCharSet = DEFAULT_CHARSET;
     lstrcpy(lf.lfFaceName, TEXT("Marlett"));
     hFont = CreateFontIndirect(&lf);
-    /* save font and text color */
+    /* save font */
     hOldFont = SelectObject(dc, hFont);
-    clrsave = GetTextColor(dc);
-    bkmode = GetBkMode(dc);
-    /* set color and drawing mode */
-    SetBkMode(dc, TRANSPARENT);
-    SetTextColor(dc, GetSysColor(COLOR_WINDOWTEXT));
-    FillRect(dc, r, (HBRUSH)GetStockObject(WHITE_BRUSH));
     /* draw selected symbol */
     TextOut(dc, r->left, r->top, &Symbol, 1);
     /* restore previous settings */
-    SetTextColor(dc, clrsave);
     SelectObject(dc, hOldFont);
-    SetBkMode(dc, bkmode);
     DeleteObject(hFont);
     return TRUE;
 }

@@ -605,22 +605,10 @@ MenuDrawMenuItem(HWND hWnd, PROSMENUINFO MenuInfo, HWND WndOwner, HDC Dc,
       /* Draw the popup-menu arrow */
       if (0 != (Item->fType & MF_POPUP))
       {
-           INT y = Rect.top + Rect.bottom;
-           UINT CheckBitmapWidth = GetSystemMetrics(SM_CXMENUCHECK);
-           UINT CheckBitmapHeight = GetSystemMetrics(SM_CYMENUCHECK);
-           RECT r;
-           HBITMAP bm = CreateBitmap(CheckBitmapWidth, CheckBitmapHeight, 1, 1, NULL);
-           HDC DcMem = CreateCompatibleDC(Dc);
-           SelectObject(DcMem, bm);
-           SetRect( &r, 0, 0, CheckBitmapWidth, CheckBitmapHeight);
-           DrawFrameControl(DcMem, &r, DFC_MENU, DFCS_MENUARROW);
-           BitBlt(Dc, Rect.right - CheckBitmapWidth, (y - r.bottom) / 2, r.right, r.bottom, DcMem, 0, 0, SRCCOPY );
-           DeleteDC(DcMem);
-           DeleteObject(bm);
-           /*
-           SetRect(&r,Rect.right - CheckBitmapWidth, (y - CheckBitmapHeight) / 2, Rect.right, Rect.bottom);
-           DrawFrameControl(Dc, &r, DFC_MENU, DFCS_MENUARROW);
-           */
+           RECT rectTemp;
+           CopyRect(&rectTemp, &Rect);
+           rectTemp.left = rectTemp.right - GetSystemMetrics(SM_CXMENUCHECK);
+           DrawFrameControl(Dc, &rectTemp, DFC_MENU, DFCS_MENUARROW);
       }
       return;
     }
@@ -736,18 +724,12 @@ MenuDrawMenuItem(HWND hWnd, PROSMENUINFO MenuInfo, HWND WndOwner, HDC Dc,
         }
         else if (0 != (Item->fState & MF_CHECKED))  /* standard bitmaps */
         {
-           RECT r;
-           HBITMAP bm = CreateBitmap(CheckBitmapWidth, CheckBitmapHeight, 1, 1, NULL);
-           HDC DcMem = CreateCompatibleDC(Dc);
-           SelectObject(DcMem, bm);
-           SetRect( &r, 0, 0, CheckBitmapWidth, CheckBitmapHeight);
-           DrawFrameControl(DcMem, &r, DFC_MENU,
+           RECT rectTemp;
+           CopyRect(&rectTemp, &Rect);
+           rectTemp.right = rectTemp.left + GetSystemMetrics(SM_CXMENUCHECK);
+           DrawFrameControl(Dc, &rectTemp, DFC_MENU,
                             0 != (Item->fType & MFT_RADIOCHECK) ?
                                  DFCS_MENUBULLET : DFCS_MENUCHECK);
-           BitBlt(Dc, Rc.left, (y - r.bottom) / 2, r.right, r.bottom,
-                  DcMem, 0, 0, SRCCOPY );
-           DeleteDC(DcMem);
-           DeleteObject(bm);
            checked = TRUE;
         }
      }
@@ -758,19 +740,10 @@ MenuDrawMenuItem(HWND hWnd, PROSMENUINFO MenuInfo, HWND WndOwner, HDC Dc,
      /* Draw the popup-menu arrow */
      if (0 != (Item->fType & MF_POPUP))
      {
-         RECT r;
-         HBITMAP bm = CreateBitmap(CheckBitmapWidth, CheckBitmapHeight, 1, 1, NULL);
-         HDC DcMem = CreateCompatibleDC(Dc);
-         SelectObject(DcMem, bm);
-         SetRect( &r, 0, 0, CheckBitmapWidth, CheckBitmapHeight);
-         DrawFrameControl(DcMem, &r, DFC_MENU, DFCS_MENUARROW);
-         BitBlt(Dc, Rect.right - CheckBitmapWidth, (y - r.bottom) / 2, r.right, r.bottom, DcMem, 0, 0, SRCCOPY );
-         DeleteDC(DcMem);
-         DeleteObject(bm);
-         /*
-         SetRect(&r,Rect.right - CheckBitmapWidth, (y - CheckBitmapHeight) / 2, Rect.right, Rect.bottom);
-         DrawFrameControl(Dc, &r, DFC_MENU, DFCS_MENUARROW);
-	 */
+           RECT rectTemp;
+           CopyRect(&rectTemp, &Rect);
+           rectTemp.left = rectTemp.right - GetSystemMetrics(SM_CXMENUCHECK);
+           DrawFrameControl(Dc, &rectTemp, DFC_MENU, DFCS_MENUARROW);
      }
      Rect.left += 4;
      if( !(MenuInfo->dwStyle & MNS_NOCHECK))
