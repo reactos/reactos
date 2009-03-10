@@ -296,6 +296,13 @@ ExFreePoolWithTag(
     }
     else
     {
+        /* Warn only for NULL pointers */
+        if (Block == NULL)
+        {
+            DPRINT1("Warning: Trying to free a NULL pointer!\n");
+            return;
+        }
+
         /* Block was not inside any pool! */
         KeBugCheckEx(BAD_POOL_CALLER, 0x42, (ULONG_PTR)Block, 0, 0);
     }
