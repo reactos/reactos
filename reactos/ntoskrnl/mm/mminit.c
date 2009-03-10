@@ -351,6 +351,11 @@ MiGetLastKernelAddress(VOID)
     return LastKrnlPhysAddr << PAGE_SHIFT;
 }
 
+
+VOID
+NTAPI
+MiInitHyperSpace(VOID);
+
 VOID
 INIT_FUNCTION
 NTAPI
@@ -434,6 +439,9 @@ MmInit1(VOID)
     
     /* Unmap low memory */
     MmDeletePageTable(NULL, 0);
+    
+    /* Initialize hyperspace */
+    MiInitHyperSpace();
 
     /* Intialize memory areas */
     MmInitVirtualMemory();

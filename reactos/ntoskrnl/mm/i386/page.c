@@ -1069,88 +1069,6 @@ MmGetPhysicalAddress(PVOID vaddr)
     return p;
 }
 
-PVOID
-NTAPI
-MmCreateHyperspaceMapping(PFN_TYPE Page)
-{
-    PVOID Address;
-    ULONG i;
-    
-    ULONG Entry;
-    PULONG Pte;
-    Entry = PFN_TO_PTE(Page) | PA_PRESENT | PA_READWRITE;
-    Pte = (PULONG)MiAddressToPte(HYPERSPACE) + Page % 1024;
-    if (Page & 1024)
-    {
-        for (i = Page % 1024; i < 1024; i++, Pte++)
-        {
-            if (0 == InterlockedCompareExchange((PLONG)Pte, (LONG)Entry, 0))
-            {
-                break;
-            }
-        }
-        if (i >= 1024)
-        {
-            Pte = (PULONG)MiAddressToPte(HYPERSPACE);
-            for (i = 0; i < Page % 1024; i++, Pte++)
-            {
-                if (0 == InterlockedCompareExchange((PLONG)Pte, (LONG)Entry, 0))
-                {
-                    break;
-                }
-            }
-            if (i >= Page % 1024)
-            {
-                KeBugCheck(MEMORY_MANAGEMENT);
-            }
-        }
-    }
-    else
-    {
-        for (i = Page % 1024; (LONG)i >= 0; i--, Pte--)
-        {
-            if (0 == InterlockedCompareExchange((PLONG)Pte, (LONG)Entry, 0))
-            {
-                break;
-            }
-        }
-        if ((LONG)i < 0)
-        {
-            Pte = (PULONG)MiAddressToPte(HYPERSPACE) + 1023;
-            for (i = 1023; i > Page % 1024; i--, Pte--)
-            {
-                if (0 == InterlockedCompareExchange((PLONG)Pte, (LONG)Entry, 0))
-                {
-                    break;
-                }
-            }
-            if (i <= Page % 1024)
-            {
-                KeBugCheck(MEMORY_MANAGEMENT);
-            }
-        }
-    }
-    Address = (PVOID)((ULONG_PTR)HYPERSPACE + i * PAGE_SIZE);
-    __invlpg(Address);
-    return Address;
-}
-
-PFN_TYPE
-NTAPI
-MmDeleteHyperspaceMapping(PVOID Address)
-{
-    PFN_TYPE Pfn;
-    ULONG Entry;
-    
-    ASSERT (IS_HYPERSPACE(Address));
-    
-    Entry = InterlockedExchangePte(MiAddressToPte(Address), 0);
-    Pfn = PTE_TO_PFN(Entry);
-    
-    __invlpg(Address);
-    return Pfn;
-}
-
 VOID
 NTAPI
 MmUpdatePageDir(PEPROCESS Process, PVOID Address, ULONG Size)
@@ -1187,6 +1105,8 @@ MmUpdatePageDir(PEPROCESS Process, PVOID Address, ULONG Size)
     }
 }
 
+extern MMPTE HyperTemplatePte;
+
 VOID
 INIT_FUNCTION
 NTAPI
@@ -1196,6 +1116,12 @@ MmInitGlobalKernelPageDirectory(VOID)
     PULONG CurrentPageDirectory = (PULONG)PAGEDIRECTORY_MAP;
     
     DPRINT("MmInitGlobalKernelPageDirectory()\n");
+    
+    //
+    // Setup template
+    //
+    HyperTemplatePte.u.Long = (PA_PRESENT | PA_READWRITE | PA_DIRTY | PA_ACCESSED);
+    if (Ke386GlobalPagesEnabled) HyperTemplatePte.u.Long |= PA_BIT_GLOBAL;
     
     for (i = ADDR_TO_PDE_OFFSET(MmSystemRangeStart); i < 1024; i++)
     {

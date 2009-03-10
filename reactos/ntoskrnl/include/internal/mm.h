@@ -59,6 +59,13 @@ typedef ULONG PFN_TYPE, *PPFN_TYPE;
 /* Number of list heads to use */
 #define MI_FREE_POOL_LISTS 4
 
+#define HYPER_SPACE		                    (0xC0400000)
+
+#define MI_HYPERSPACE_PTES                  (256 - 1)
+#define MI_MAPPING_RANGE_START              (ULONG)HYPER_SPACE
+#define MI_MAPPING_RANGE_END                (MI_MAPPING_RANGE_START + \
+                                             MI_HYPERSPACE_PTES * PAGE_SIZE)
+
 /* Signature of free pool blocks */
 #define MM_FREE_POOL_TAG    TAG('F', 'r', 'p', 'l')
 
@@ -1060,15 +1067,45 @@ MmZeroPageThreadMain(
     PVOID Context
 );
 
-/* i386/page.c *********************************************************/
+/* hypermap.c *****************************************************************/
+
+extern PEPROCESS HyperProcess;
+extern KIRQL HyperIrql;
 
 PVOID
 NTAPI
-MmCreateHyperspaceMapping(PFN_TYPE Page);
+MiMapPageInHyperSpace(IN PEPROCESS Process,
+                      IN PFN_NUMBER Page,
+                      IN PKIRQL OldIrql);
 
-PFN_TYPE
+VOID
 NTAPI
-MmDeleteHyperspaceMapping(PVOID Address);
+MiUnmapPageInHyperSpace(IN PEPROCESS Process,
+                        IN PVOID Address,
+                        IN KIRQL OldIrql);
+
+PVOID
+NTAPI
+MiMapPagesToZeroInHyperSpace(IN PFN_NUMBER Page);
+
+VOID
+NTAPI
+MiUnmapPagesInZeroSpace(IN PVOID Address);
+
+//
+// ReactOS Compatibility Layer
+//
+PVOID
+FORCEINLINE
+MmCreateHyperspaceMapping(IN PFN_NUMBER Page)
+{
+    HyperProcess = (PEPROCESS)KeGetCurrentThread()->ApcState.Process;
+    return MiMapPageInHyperSpace(HyperProcess, Page, &HyperIrql);
+}
+
+#define MmDeleteHyperspaceMapping(x) MiUnmapPageInHyperSpace(HyperProcess, x, HyperIrql);
+
+/* i386/page.c *********************************************************/
 
 NTSTATUS
 NTAPI

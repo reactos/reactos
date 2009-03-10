@@ -20,6 +20,8 @@ PULONG MmGetPageDirectory(VOID);
     ((PMMPTE)(((((ULONG)(x)) >> 22) << 2) + PAGEDIRECTORY_MAP))
 #define MiAddressToPte(x) \
     ((PMMPTE)(((((ULONG)(x)) >> 12) << 2) + PAGETABLE_MAP))
+#define MiAddressToPteOffset(x) \
+    ((((ULONG)(x)) << 10) >> 22)
 
 #define ADDR_TO_PAGE_TABLE(v) (((ULONG)(v)) / (1024 * PAGE_SIZE))
 #define ADDR_TO_PDE_OFFSET(v) ((((ULONG)(v)) / (1024 * PAGE_SIZE)))
