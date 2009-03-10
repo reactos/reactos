@@ -81,6 +81,7 @@ PinPropertyHandler(
         case KSPROPERTY_PIN_COMMUNICATION:
         case KSPROPERTY_PIN_CATEGORY:
         case KSPROPERTY_PIN_NAME:
+        case KSPROPERTY_PIN_PROPOSEDATAFORMAT:
             Status = KsPinPropertyHandler(Irp, Request, Data, Descriptor->Factory.PinDescriptorCount, Descriptor->Factory.KsPinDescriptor);
             break;
         case KSPROPERTY_PIN_GLOBALCINSTANCES:
@@ -102,7 +103,6 @@ PinPropertyHandler(
         default:
             Status = STATUS_NOT_FOUND;
     }
-
 
     return Status;
 }

@@ -41,7 +41,7 @@ static GUID InterfaceGuids[3] =
 };
 
 DEFINE_KSPROPERTY_TOPOLOGYSET(PortFilterWaveCyclicTopologySet, TopologyPropertyHandler);
-DEFINE_KSPROPERTY_PINSETCONSTRAINED(PortFilterWaveCyclicPinSet, PinPropertyHandler, PinPropertyHandler, PinPropertyHandler);
+DEFINE_KSPROPERTY_PINPROPOSEDATAFORMAT(PortFilterWaveCyclicPinSet, PinPropertyHandler, PinPropertyHandler, PinPropertyHandler);
 
 KSPROPERTY_SET WaveCyclicPropertySet[] =
 {

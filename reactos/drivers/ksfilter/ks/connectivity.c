@@ -114,16 +114,11 @@ KsPinPropertyHandler(
     PIO_STACK_LOCATION IoStack;
     ULONG Size, Index;
     PVOID Buffer;
+    PKSDATARANGE_AUDIO *WaveFormatOut;
+    PKSDATAFORMAT_WAVEFORMATEX WaveFormatIn;
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     Buffer = Irp->UserBuffer;
-
-    if (Property->Flags != KSPROPERTY_TYPE_GET)
-    {
-        Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
-        Irp->IoStatus.Information = 0;
-        return STATUS_NOT_IMPLEMENTED;
-    }
 
     switch(Property->Id)
     {
@@ -306,6 +301,65 @@ KsPinPropertyHandler(
             Irp->IoStatus.Status = STATUS_SUCCESS;
             Irp->IoStatus.Information = Size;
             break;
+        case KSPROPERTY_PIN_PROPOSEDATAFORMAT:
+            Pin = (KSP_PIN*)Property;
+            if (Pin->PinId >= DescriptorsCount)
+            {
+                Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+                Irp->IoStatus.Information = 0;
+                break;
+            }
+            Size = sizeof(KSDATAFORMAT);
+            if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < Size)
+            {
+                Irp->IoStatus.Information = Size;
+                Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
+                break;
+            }
+            if (IoStack->Parameters.DeviceIoControl.OutputBufferLength != sizeof(KSDATAFORMAT_WAVEFORMATEX))
+            {
+                UNIMPLEMENTED
+                Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+                Irp->IoStatus.Information = 0;
+                return STATUS_NOT_IMPLEMENTED;
+            }
+
+            WaveFormatIn = (PKSDATAFORMAT_WAVEFORMATEX)Buffer;
+            if (!Descriptor[Pin->PinId].DataRanges || !Descriptor[Pin->PinId].DataRangesCount)
+            {
+                Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+                Irp->IoStatus.Information = 0;
+                return STATUS_UNSUCCESSFUL;
+            }
+            WaveFormatOut = (PKSDATARANGE_AUDIO*)Descriptor[Pin->PinId].DataRanges;
+            for(Index = 0; Index < Descriptor[Pin->PinId].DataRangesCount; Index++)
+            {
+                if (WaveFormatOut[Index]->DataRange.FormatSize != sizeof(KSDATARANGE_AUDIO))
+                {
+                    UNIMPLEMENTED
+                    continue;
+                }
+
+                if (WaveFormatOut[Index]->MinimumSampleFrequency > WaveFormatIn->WaveFormatEx.nSamplesPerSec ||
+                    WaveFormatOut[Index]->MaximumSampleFrequency < WaveFormatIn->WaveFormatEx.nSamplesPerSec ||
+                    WaveFormatOut[Index]->MinimumBitsPerSample > WaveFormatIn->WaveFormatEx.wBitsPerSample ||
+                    WaveFormatOut[Index]->MaximumBitsPerSample < WaveFormatIn->WaveFormatEx.wBitsPerSample ||
+                    WaveFormatOut[Index]->MaximumChannels < WaveFormatIn->WaveFormatEx.nChannels)
+                {
+                    Irp->IoStatus.Status = STATUS_NO_MATCH;
+                    Irp->IoStatus.Information = 0;
+                    return STATUS_NO_MATCH;
+                }
+                else
+                {
+                    Irp->IoStatus.Status = STATUS_SUCCESS;
+                    Irp->IoStatus.Information = 0;
+                    return STATUS_SUCCESS;
+                }
+            }
+            Irp->IoStatus.Status = STATUS_NO_MATCH;
+            Irp->IoStatus.Information = 0;
+            return STATUS_NO_MATCH;
         default:
             DPRINT1("Unhandled property request %x\n", Property->Id);
             Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
