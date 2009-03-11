@@ -34,6 +34,9 @@
 	<directory name="logoff">
 		<xi:include href="logoff/logoff.rbuild" />
 	</directory>
+	<directory name="mplay32">
+		<xi:include href="mplay32/mplay32.rbuild" />
+	</directory>
 	<directory name="msconfig">
 		<xi:include href="msconfig/msconfig.rbuild" />
 	</directory>
