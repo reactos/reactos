@@ -273,7 +273,7 @@
 	<category name="Drivers" icon="8">
 		<application name="AC97 Driver for VirtualBox">
 			<version>5.10.00.3610</version>
-			<description>Unzip in the "ReactOS" folder then restart ReactOS.</description>
+			<description>Unzip in the "ReactOS" folder then restart ReactOS twice.</description>
 			<location>http://svn.reactos.org/packages/ac97_vbox.exe</location>
 		</application>
 	</category>
