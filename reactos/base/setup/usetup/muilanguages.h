@@ -216,7 +216,7 @@ const MUI_LANGUAGE LanguageList[] =
   {L"00000421", L"1252", L"850", L"10079", L"Indonesian",                   L"62",  enUSPages, enUSErrorEntries, enUSStrings, LatinFonts,    idIDLayouts },
   {L"00000410", L"1252", L"850", L"10000", L"Italian (Italy)",              L"39",  itITPages, itITErrorEntries, itITStrings, LatinFonts,    itITLayouts },
   {L"00000810", L"1252", L"850", L"10000", L"Italian (Switzerland)",        L"41",  itITPages, itITErrorEntries, itITStrings, LatinFonts,    itCHLayouts },
-  {L"00000411", L"932",  L"932", L"10001", L"Japanese",                     L"81",  enUSPages, enUSErrorEntries, enUSStrings, UnicodeFonts,  jaJPLayouts },
+  {L"00000411", L"932",  L"932", L"10001", L"Japanese",                     L"81",  enUSPages, enUSErrorEntries, enUSStrings, JapaneseFonts, jaJPLayouts },
   {L"0000044B", L"1252", L"437", L"10079", L"Kannada (India)",              L"91",  enUSPages, enUSErrorEntries, enUSStrings, LatinFonts,    knINLayouts },
   {L"0000043F", L"1251", L"866", L"10007", L"Kazakh",                       L"705", enUSPages, enUSErrorEntries, enUSStrings, CyrillicFonts, kkKZLayouts },
   {L"00000457", L"0",    L"437", L"2",     L"Konkani",                      L"1",   enUSPages, enUSErrorEntries, enUSStrings, UnicodeFonts,  kokINLayouts},
