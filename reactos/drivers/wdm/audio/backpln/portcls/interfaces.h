@@ -216,6 +216,10 @@ DECLARE_INTERFACE_(IIrpQueue, IUnknown)
 
     STDMETHOD_(BOOL, CancelBuffers)(THIS);
 
+    STDMETHOD_(VOID, UpdateFormat)(THIS_
+        IN PKSDATAFORMAT DataFormat);
+
+
 };
 
 

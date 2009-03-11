@@ -334,8 +334,9 @@ IPortPinWaveCyclic_HandleKsProperty(
 
             if (Property->Flags & KSPROPERTY_TYPE_SET)
             {
+                Status = STATUS_UNSUCCESSFUL;
                 Irp->IoStatus.Information = 0;
-                Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+
                 if (This->Stream)
                 {
                     Status = This->Stream->lpVtbl->SetState(This->Stream, *State);
@@ -344,14 +345,11 @@ IPortPinWaveCyclic_HandleKsProperty(
                     if (NT_SUCCESS(Status))
                     {
                         This->State = *State;
-                        Irp->IoStatus.Information = sizeof(KSSTATE);
-                        Irp->IoStatus.Status = Status;
-                        IoCompleteRequest(Irp, IO_NO_INCREMENT);
-                        return Status;
                     }
-                    Irp->IoStatus.Status = Status;
                 }
-                return Irp->IoStatus.Status;
+                Irp->IoStatus.Status = Status;
+                IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                return Status;
             }
             else if (Property->Flags & KSPROPERTY_TYPE_GET)
             {
@@ -379,24 +377,29 @@ IPortPinWaveCyclic_HandleKsProperty(
 
                 if (This->Stream)
                 {
-                    while(!This->IrpQueue->lpVtbl->CancelBuffers(This->IrpQueue))
-                        KeStallExecutionProcessor(10);
-
-                    This->Stream->lpVtbl->SetState(This->Stream, KSSTATE_STOP);
+                    Status = This->Stream->lpVtbl->SetState(This->Stream, KSSTATE_STOP);
                     This->State = KSSTATE_STOP;
+                    DPRINT1("NewDataFormat: Channels %u Bits %u Samples %u\n", ((PKSDATAFORMAT_WAVEFORMATEX)DataFormat)->WaveFormatEx.nChannels,
+                                                                                 ((PKSDATAFORMAT_WAVEFORMATEX)DataFormat)->WaveFormatEx.wBitsPerSample,
+                                                                                 ((PKSDATAFORMAT_WAVEFORMATEX)DataFormat)->WaveFormatEx.nSamplesPerSec);
 
                     Status = This->Stream->lpVtbl->SetFormat(This->Stream, NewDataFormat);
                     if (NT_SUCCESS(Status))
                     {
                         if (This->Format)
                             ExFreePoolWithTag(This->Format, TAG_PORTCLASS);
+
+                        This->IrpQueue->lpVtbl->UpdateFormat(This->IrpQueue, (PKSDATAFORMAT)NewDataFormat);
                         This->Format = NewDataFormat;
                         Irp->IoStatus.Information = DataFormat->FormatSize;
                         Irp->IoStatus.Status = STATUS_SUCCESS;
                         IoCompleteRequest(Irp, IO_NO_INCREMENT);
                         return STATUS_SUCCESS;
                     }
+
                 }
+                DPRINT1("Failed to set format\n");
+DbgBreakPoint();
                 Irp->IoStatus.Information = 0;
                 Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
                 IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -658,10 +661,20 @@ IPortPinWaveCyclic_fnFastWrite(
 
     Packet = (PCONTEXT_WRITE)Buffer;
 
+
     if (This->IrpQueue->lpVtbl->MinimumDataAvailable(This->IrpQueue))
+    {
         Irp = Packet->Irp;
+        StatusBlock->Status = STATUS_PENDING;
+    }
     else
+    {
         Irp = NULL;
+        Packet->Irp->IoStatus.Status = STATUS_SUCCESS;
+        Packet->Irp->IoStatus.Information = Packet->Header.FrameExtent;
+        IoCompleteRequest(Packet->Irp, IO_SOUND_INCREMENT);
+        StatusBlock->Status = STATUS_SUCCESS;
+    }
 
     Status = This->IrpQueue->lpVtbl->AddMapping(This->IrpQueue, Buffer, Length, Irp);
 
@@ -675,20 +688,6 @@ IPortPinWaveCyclic_fnFastWrite(
 
         This->Stream->lpVtbl->SetState(This->Stream, KSSTATE_RUN);
         This->State = KSSTATE_RUN;
-    }
-
-    if (!Irp)
-    {
-        //DPRINT1("Completing Irp %p\n", Packet->Irp);
-
-        Packet->Irp->IoStatus.Status = STATUS_SUCCESS;
-        Packet->Irp->IoStatus.Information = Packet->Header.FrameExtent;
-        IoCompleteRequest(Packet->Irp, IO_SOUND_INCREMENT);
-        StatusBlock->Status = STATUS_SUCCESS;
-    }
-    else
-    {
-        StatusBlock->Status = STATUS_PENDING;
     }
 
     return TRUE;

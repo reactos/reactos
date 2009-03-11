@@ -13,9 +13,11 @@
 
 typedef struct _IRP_MAPPING_
 {
+    LIST_ENTRY Entry;
     KSSTREAM_HEADER *Header;
     PIRP Irp;
-    struct _IRP_MAPPING_ * Next;
+    KDPC Dpc;
+
 }IRP_MAPPING, *PIRP_MAPPING;
 
 typedef struct
@@ -30,15 +32,11 @@ typedef struct
     KSPIN_CONNECT *ConnectDetails;
     PKSDATAFORMAT_WAVEFORMATEX DataFormat;
 
-    KDPC Dpc;
     PIRP_MAPPING FirstMap;
     PIRP_MAPPING LastMap;
 
-    ULONG DpcActive;
-    PIRP_MAPPING FreeMapHead;
-    PIRP_MAPPING FreeMapTail;
-    ULONG FreeDataSize;
-    LONG FreeCount;
+    KSPIN_LOCK Lock;
+    LIST_ENTRY ListHead;
 
 }IIrpQueueImpl;
 
@@ -50,39 +48,22 @@ DpcRoutine(
     IN PVOID  SystemArgument1,
     IN PVOID  SystemArgument2)
 {
-    PIRP_MAPPING CurMapping, NextMapping = NULL;
-    ULONG Count;
-    IIrpQueueImpl * This = (IIrpQueueImpl*)DeferredContext;
+    PIRP_MAPPING CurMapping;
 
     CurMapping = (PIRP_MAPPING)SystemArgument1;
     ASSERT(CurMapping);
 
-    Count = 0;
-    while(CurMapping)
+    if (CurMapping->Irp)
     {
-        NextMapping = CurMapping->Next;
-
-        This->FreeDataSize -= CurMapping->Header->DataUsed;
-
-        if (CurMapping->Irp)
-        {
-            CurMapping->Irp->IoStatus.Information = CurMapping->Header->FrameExtent;
-            CurMapping->Irp->IoStatus.Status = STATUS_SUCCESS;
-            IoCompleteRequest(CurMapping->Irp, IO_SOUND_INCREMENT);
-        }
-
-        ExFreePool(CurMapping->Header->Data);
-        ExFreePool(CurMapping->Header);
-
-        ExFreePool(CurMapping);
-
-        CurMapping = NextMapping;
-        InterlockedDecrement(&This->FreeCount);
-
-        Count++;
+        CurMapping->Irp->IoStatus.Information = CurMapping->Header->FrameExtent;
+        CurMapping->Irp->IoStatus.Status = STATUS_SUCCESS;
+        IoCompleteRequest(CurMapping->Irp, IO_SOUND_INCREMENT);
     }
-    This->DpcActive = FALSE;
-    DPRINT1("Freed %u Buffers / IRP Available Mappings %u\n", Count, This->NumMappings);
+
+    ExFreePool(CurMapping->Header->Data);
+    ExFreePool(CurMapping->Header);
+
+    ExFreePool(CurMapping);
 }
 
 NTSTATUS
@@ -144,8 +125,8 @@ IIrpQueue_fnInit(
 
     This->ConnectDetails = ConnectDetails;
     This->DataFormat = (PKSDATAFORMAT_WAVEFORMATEX)DataFormat;
-
-    KeInitializeDpc(&This->Dpc, DpcRoutine, (PVOID)This);
+    InitializeListHead(&This->ListHead);
+    KeInitializeSpinLock(&This->Lock);
 
     return STATUS_SUCCESS;
 }
@@ -167,18 +148,17 @@ IIrpQueue_fnAddMapping(
 
     Mapping->Header = (KSSTREAM_HEADER*)Buffer;
     Mapping->Irp = Irp;
-    Mapping->Next = NULL;
+    KeInitializeDpc(&Mapping->Dpc, DpcRoutine, (PVOID)Mapping);
 
-    //DPRINT1("FirstMap %p LastMap %p NumMappings %u\n", This->FirstMap, This->LastMap, This->NumMappings);
+    This->NumDataAvailable += Mapping->Header->DataUsed;
 
-    if (!This->FirstMap)
-        This->FirstMap = Mapping;
-    else
-        This->LastMap->Next = Mapping;
+    DPRINT1("IIrpQueue_fnAddMapping NumMappings %u SizeOfMapping %lu NumDataAvailable %lu Irp %p\n", This->NumMappings, Mapping->Header->DataUsed, This->NumDataAvailable, Irp);
 
-    This->LastMap = Mapping;
+    /* FIXME use InterlockedCompareExchangePointer */
+    if (InterlockedCompareExchange((volatile long *)&This->FirstMap, (LONG)Mapping, (LONG)0) != 0)
+        ExInterlockedInsertTailList(&This->ListHead, &Mapping->Entry, &This->Lock);
 
-    InterlockedIncrement(&This->NumMappings);
+    (void)InterlockedIncrement((volatile long*)&This->NumMappings);
 
     if (Irp)
     {
@@ -187,9 +167,6 @@ IIrpQueue_fnAddMapping(
         IoMarkIrpPending(Irp);
     }
 
-    This->NumDataAvailable += Mapping->Header->DataUsed;
-
-    DPRINT1("IIrpQueue_fnAddMapping NumMappings %u SizeOfMapping %lu NumDataAvailable %lu Irp %p\n", This->NumMappings, Mapping->Header->DataUsed, This->NumDataAvailable, Irp);
     return STATUS_SUCCESS;
 }
 
@@ -227,35 +204,16 @@ IIrpQueue_fnUpdateMapping(
     if (This->FirstMap->Header->DataUsed <=This->CurrentOffset)
     {
         This->CurrentOffset = 0;
-        Mapping = This->FirstMap;
-        This->FirstMap = This->FirstMap->Next;
+        Mapping = (PIRP_MAPPING)ExInterlockedRemoveHeadList(&This->ListHead, &This->Lock);
 
-        if (!This->FirstMap)
-            This->LastMap = NULL;
-
-        This->FreeCount++;
-
-        if (!This->FreeMapHead)
-           This->FreeMapHead = Mapping;
-        else
-           This->FreeMapTail->Next = Mapping;
-
-        This->FreeMapTail = Mapping;
-        Mapping->Next = NULL;
-        This->FreeDataSize += Mapping->Header->DataUsed;
         InterlockedDecrement(&This->NumMappings);
-        This->NumDataAvailable -= Mapping->Header->DataUsed;
+        This->NumDataAvailable -= This->FirstMap->Header->DataUsed;
 
+        KeInsertQueueDpc(&This->FirstMap->Dpc, (PVOID)This->FirstMap, NULL);
+        (void)InterlockedExchangePointer((PVOID volatile*)&This->FirstMap, (PVOID)Mapping);
 
-        if (This->FreeCount > 5 && This->DpcActive == FALSE)
-        {
-            Mapping = This->FreeMapHead;
-            This->FreeMapHead = NULL;
-            This->FreeMapTail = NULL;
-            This->DpcActive = TRUE;
-            KeInsertQueueDpc(&This->Dpc, (PVOID)Mapping, NULL);
-        }
     }
+
 }
 
 ULONG
@@ -298,29 +256,20 @@ NTAPI
 IIrpQueue_fnCancelBuffers(
     IN IIrpQueue *iface)
 {
-    PIRP_MAPPING Mapping;
-    IIrpQueueImpl * This = (IIrpQueueImpl*)iface;
-
-    if (This->DpcActive)
-        return FALSE;
-
-    ASSERT(This->FirstMap == NULL);
-    ASSERT(This->LastMap == NULL);
-
-    if (This->FreeMapHead == NULL)
-    {
-        ASSERT(This->FreeMapTail == NULL);
-        This->FreeMapTail = NULL;
-        return TRUE;
-    }
-
-    Mapping = This->FreeMapHead;
-    This->FreeMapHead = NULL;
-    This->FreeMapTail = NULL;
-    This->DpcActive = TRUE;
-    KeInsertQueueDpc(&This->Dpc, (PVOID)Mapping, NULL);
-    return FALSE;
+    return TRUE;
 }
+
+VOID
+NTAPI
+IIrpQueue_fnUpdateFormat(
+    IN IIrpQueue *iface,
+    PKSDATAFORMAT DataFormat)
+{
+    IIrpQueueImpl * This = (IIrpQueueImpl*)iface;
+    This->DataFormat = (PKSDATAFORMAT_WAVEFORMATEX)DataFormat;
+
+}
+
 
 static IIrpQueueVtbl vt_IIrpQueue =
 {
@@ -334,7 +283,8 @@ static IIrpQueueVtbl vt_IIrpQueue =
     IIrpQueue_fnNumMappings,
     IIrpQueue_fnMinMappings,
     IIrpQueue_fnMinimumDataAvailable,
-    IIrpQueue_fnCancelBuffers
+    IIrpQueue_fnCancelBuffers,
+    IIrpQueue_fnUpdateFormat
 };
 
 
