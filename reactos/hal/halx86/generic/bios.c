@@ -107,6 +107,17 @@ NTAPI
 HalpSwitchToRealModeTrapHandlers(VOID)
 {
     ULONG Handler;
+    PHARDWARE_PTE IdtPte;
+
+    /* On i586, the first 7 entries of IDT are write-protected, unprotect them. */
+    if (KeGetCurrentPrcb()->CpuType == 5)
+    {
+        IdtPte = GetPteAddress(((PKIPCR)KeGetPcr())->IDT);
+        IdtPte->Write = 1;
+
+        /* Flush the TLB by resetting CR3 */
+        __writecr3(__readcr3());
+    }
 
     /* Save the current Invalid Opcode and General Protection Fault Handlers */
     HalpGpfHandler = ((((PKIPCR)KeGetPcr())->IDT[13].ExtendedOffset << 16) &
