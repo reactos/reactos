@@ -270,6 +270,13 @@
 			<location>http://www.audiograbber.de/files/4898276276/agsetup183se.exe</location>
 		</application>
 	</category>
+	<category name="Drivers" icon="8">
+		<application name="AC97 Driver for VirtualBox">
+			<version>5.10.00.3610</version>
+			<description>Unzip in the "ReactOS" folder then restart ReactOS.</description>
+			<location>http://svn.reactos.org/packages/ac97_vbox.exe</location>
+		</application>
+	</category>
 	<category name="Others" icon="8">
 		<application name="Simple Direct Media Layer (SDL) Runtime">
 			<version>1.2.13</version>
