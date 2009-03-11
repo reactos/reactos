@@ -10,27 +10,6 @@
 
 const GUID KSPROPSETID_Connection              = {0x1D58C920L, 0xAC9B, 0x11CF, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
 
-#ifdef _X86_
-#define htons(w) \
-     ((((w) & 0xFF00) >> 8) | \
-      (((w) & 0x00FF) << 8))
-
-#define htonl(n) (((((unsigned long)(n) & 0xFF)) << 24) | \
-                  ((((unsigned long)(n) & 0xFF00)) << 8) | \
-                  ((((unsigned long)(n) & 0xFF0000)) >> 8) | \
-                  ((((unsigned long)(n) & 0xFF000000)) >> 24))
-
-#define ntohs(n) (((((unsigned short)(n) & 0xFF)) << 8) | (((unsigned short)(n) & 0xFF00) >> 8))
-
-
-#define ntohl(n) (((((unsigned long)(n) & 0xFF)) << 24) | \
-                  ((((unsigned long)(n) & 0xFF00)) << 8) | \
-                  ((((unsigned long)(n) & 0xFF0000)) >> 8) | \
-                  ((((unsigned long)(n) & 0xFF000000)) >> 24))
-
-#endif
-
-
 NTSTATUS
 PerformQualityConversion(
     PUCHAR Buffer,
@@ -59,7 +38,10 @@ PerformQualityConversion(
           {
               Sample = Buffer[Index];
               Sample *= 2;
-              BufferOut[Index] = htons(Sample);
+#ifdef _X86_
+              Sample = _byteswap_ushort(Sample);
+#endif
+              BufferOut[Index] = Sample;
           }
           *Result = BufferOut;
           *ResultLength = Samples * sizeof(USHORT);
@@ -75,7 +57,10 @@ PerformQualityConversion(
           {
               Sample = Buffer[Index];
               Sample *= 16777216;
-              BufferOut[Index] = htonl(Sample);
+#ifdef _X86_
+              Sample = _byteswap_ulong(Sample);
+#endif
+              BufferOut[Index] = Sample;
           }
           *Result = BufferOut;
           *ResultLength = Samples * sizeof(ULONG);
@@ -92,7 +77,10 @@ PerformQualityConversion(
           {
               Sample = BufferIn[Index];
               Sample *= 65536;
-              BufferOut[Index] = htonl(Sample);
+#ifdef _X86_
+              Sample = _byteswap_ulong(Sample);
+#endif
+              BufferOut[Index] = Sample;
           }
           *Result = BufferOut;
           *ResultLength = Samples * sizeof(ULONG);
@@ -109,9 +97,11 @@ PerformQualityConversion(
           for(Index = 0; Index < Samples; Index++)
           {
               Sample = BufferIn[Index];
-              Sample = ntohs(Sample);
+#ifdef _X86_
+              Sample = _byteswap_ushort(Sample);
+#endif
               Sample /= 256;
-              BufferOut[Index] = (Sample / 0xFF);
+              BufferOut[Index] = (Sample & 0xFF);
           }
           *Result = BufferOut;
           *ResultLength = Samples * sizeof(UCHAR);
@@ -127,9 +117,11 @@ PerformQualityConversion(
           for(Index = 0; Index < Samples; Index++)
           {
               Sample = BufferIn[Index];
-              Sample = ntohl(Sample);
+#ifdef _X86_
+              Sample = _byteswap_ulong(Sample);
+#endif
               Sample /= 16777216;
-              BufferOut[Index] = Sample & 0xFF;
+              BufferOut[Index] = (Sample & 0xFF);
           }
           *Result = BufferOut;
           *ResultLength = Samples * sizeof(UCHAR);
@@ -145,9 +137,11 @@ PerformQualityConversion(
           for(Index = 0; Index < Samples; Index++)
           {
               Sample = BufferIn[Index];
-              Sample = ntohl(Sample);
+#ifdef _X86_
+              Sample = _byteswap_ulong(Sample);
+#endif
               Sample /= 65536;
-              BufferOut[Index] = Sample & 0xFFFF;
+              BufferOut[Index] = (Sample & 0xFFFF);
           }
           *Result = BufferOut;
           *ResultLength = Samples * sizeof(USHORT);
@@ -380,7 +374,7 @@ Pin_fnFastWrite(
 
     PKSDATAFORMAT_WAVEFORMATEX BaseFormat, TransformedFormat;
 
-    DPRINT1("Pin_fnFastWrite called DeviceObject %p Irp %p\n", DeviceObject);
+    //DPRINT1("Pin_fnFastWrite called DeviceObject %p Irp %p\n", DeviceObject);
 
 
     BaseFormat = (PKSDATAFORMAT_WAVEFORMATEX)FileObject->FsContext2;
@@ -406,10 +400,12 @@ Pin_fnFastWrite(
     TransformedFormat = (PKSDATAFORMAT_WAVEFORMATEX)(ConnectDetails + 1);
     StreamHeader = (PKSSTREAM_HEADER)Buffer;
 
+#if 0
     DPRINT1("Num Channels %u Old Channels %u\n SampleRate %u Old SampleRate %u\n BitsPerSample %u Old BitsPerSample %u\n",
                BaseFormat->WaveFormatEx.nChannels, TransformedFormat->WaveFormatEx.nChannels,
                BaseFormat->WaveFormatEx.nSamplesPerSec, TransformedFormat->WaveFormatEx.nSamplesPerSec,
                BaseFormat->WaveFormatEx.wBitsPerSample, TransformedFormat->WaveFormatEx.wBitsPerSample);
+#endif
 
     if (BaseFormat->WaveFormatEx.wBitsPerSample != TransformedFormat->WaveFormatEx.wBitsPerSample)
     {
@@ -421,7 +417,7 @@ Pin_fnFastWrite(
                                           &BufferLength);
         if (NT_SUCCESS(Status))
         {
-            DPRINT1("Old BufferSize %u NewBufferSize %u\n", StreamHeader->DataUsed, BufferLength);
+            //DPRINT1("Old BufferSize %u NewBufferSize %u\n", StreamHeader->DataUsed, BufferLength);
             ExFreePool(StreamHeader->Data);
             StreamHeader->Data = BufferOut;
             StreamHeader->DataUsed = BufferLength;
@@ -431,6 +427,7 @@ Pin_fnFastWrite(
     if (BaseFormat->WaveFormatEx.nSamplesPerSec != TransformedFormat->WaveFormatEx.nSamplesPerSec)
     {
         /* sample format conversion must be done in a deferred routine */
+        DPRINT1("SampleRate conversion not available yet\n");
         return FALSE;
     }
 
