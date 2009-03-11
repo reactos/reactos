@@ -106,7 +106,7 @@ InitControls(HWND hwnd)
                                0,
                                0,
                                340,
-                               30,
+                               20,
                                hwnd,
                                NULL,
                                hInstance,
@@ -142,7 +142,7 @@ InitControls(HWND hwnd)
 }
 
 static UINT
-IsSupportedFileExtension(LPWSTR lpFileName)
+IsSupportedFileExtension(LPTSTR lpFileName)
 {
     TCHAR szExt[MAX_PATH];
     INT DotPos = 0, i, j;
@@ -197,10 +197,11 @@ CloseMciDevice(VOID)
 }
 
 static DWORD
-OpenMciDevice(LPTSTR lpType, LPTSTR lpFileName)
+OpenMciDevice(HWND hwnd, LPTSTR lpType, LPTSTR lpFileName)
 {
     MCI_STATUS_PARMS mciStatus;
     MCI_OPEN_PARMS mciOpen;
+    TCHAR szNewTitle[MAX_PATH];
     DWORD dwError;
 
     if (bIsOpened)
@@ -252,10 +253,13 @@ OpenMciDevice(LPTSTR lpType, LPTSTR lpFileName)
         SendMessage(hTrackBar, TBM_SETTICFREQ, (WPARAM) 100000, (LPARAM) 0);
     }
 
+    _stprintf(szNewTitle, _T("%s - %s"), szAppTitle, lpFileName);
+    SetWindowText(hwnd, szNewTitle);
+
     MaxFilePos = mciStatus.dwReturn;
     wDeviceId = mciOpen.wDeviceID;
     bIsOpened = TRUE;
-    lstrcpy(szPrevFile, lpFileName);
+    _tcscpy(szPrevFile, lpFileName);
     return TRUE;
 }
 
@@ -398,7 +402,7 @@ PlayTimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
 }
 
 static VOID
-PlayFile(HWND hwnd, LPWSTR lpFileName)
+PlayFile(HWND hwnd, LPTSTR lpFileName)
 {
     MCI_PLAY_PARMS mciPlay;
     TCHAR szLocalFileName[MAX_PATH];
@@ -410,11 +414,11 @@ PlayFile(HWND hwnd, LPWSTR lpFileName)
         if (szPrevFile[0] == _T('\0'))
             return;
 
-        lstrcpy(szLocalFileName, szPrevFile);
+        _tcscpy(szLocalFileName, szPrevFile);
     }
     else
     {
-        lstrcpy(szLocalFileName, lpFileName);
+        _tcscpy(szLocalFileName, lpFileName);
     }
 
     if (GetFileAttributes(szLocalFileName) == INVALID_FILE_ATTRIBUTES)
@@ -430,16 +434,16 @@ PlayFile(HWND hwnd, LPWSTR lpFileName)
             MessageBox(hwnd, _T("Unsupported format!"), NULL, MB_OK);
             return;
         case WAVE_FILE:
-            OpenMciDevice(_T("waveaudio"), szLocalFileName);
+            OpenMciDevice(hwnd, _T("waveaudio"), szLocalFileName);
             break;
         case MIDI_FILE:
-            OpenMciDevice(_T("sequencer"), szLocalFileName);
+            OpenMciDevice(hwnd, _T("sequencer"), szLocalFileName);
             break;
         case AUDIOCD_FILE:
-            OpenMciDevice(_T("cdaudio"), szLocalFileName);
+            OpenMciDevice(hwnd, _T("cdaudio"), szLocalFileName);
             break;
         case AVI_FILE:
-            OpenMciDevice(_T("avivideo"), szLocalFileName);
+            OpenMciDevice(hwnd, _T("avivideo"), szLocalFileName);
             break;
     }
 
@@ -471,7 +475,7 @@ OpenFileDialog(HWND hwnd)
 
     if (!GetCurrentDirectory(sizeof(szCurrentDir) / sizeof(TCHAR), szCurrentDir))
     {
-        lstrcpy(szCurrentDir, _T("c:\\"));
+        _tcscpy(szCurrentDir, _T("c:\\"));
     }
 
     OpenFileName.lStructSize     = sizeof(OpenFileName);
@@ -633,7 +637,7 @@ MainWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
                 case IDM_CLOSE_FILE:
                     StopPlayback(hwnd);
-                    lstrcpy(szPrevFile, _T("\0"));
+                    _tcscpy(szPrevFile, _T("\0"));
                     break;
 
                 case IDM_ABOUT:
