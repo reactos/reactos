@@ -311,40 +311,11 @@ static NDIS_STATUS STDCALL MiniportInitialize(
                 Adapter->IoBaseAddress = ConfigurationParameter->ParameterData.IntegerData;
             }
 
-            /* the returned copy of the data is owned by NDIS and will be released on NdisCloseConfiguration */
-            NdisReadNetworkAddress(&Status, (PVOID *)&RegNetworkAddress, &RegNetworkAddressLength, ConfigurationHandle);
-            if(Status == NDIS_STATUS_SUCCESS && RegNetworkAddressLength == DRIVER_LENGTH_OF_ADDRESS)
-            {
-                int i;
-                NDIS_DbgPrint(MID_TRACE,("NdisReadNetworkAddress returned successfully, address %x:%x:%x:%x:%x:%x\n",
-                        RegNetworkAddress[0], RegNetworkAddress[1], RegNetworkAddress[2], RegNetworkAddress[3],
-                        RegNetworkAddress[4], RegNetworkAddress[5]));
-                for(i = 0; i < DRIVER_LENGTH_OF_ADDRESS; i++)
-                    Adapter->StationAddress[i] = RegNetworkAddress[i];
-            }
-
             NdisCloseConfiguration(ConfigurationHandle);
         }
         else
         {
             NDIS_DbgPrint(MIN_TRACE,("NdisOpenConfiguration returned error 0x%x\n", Status));
-        }
-    } else {
-        NdisOpenConfiguration(&Status, &ConfigurationHandle, WrapperConfigurationContext);
-        if (Status == NDIS_STATUS_SUCCESS)
-        {
-            NdisReadNetworkAddress(&Status, (PVOID *)&RegNetworkAddress, &RegNetworkAddressLength, ConfigurationHandle);
-            if(Status == NDIS_STATUS_SUCCESS && RegNetworkAddressLength == DRIVER_LENGTH_OF_ADDRESS)
-            {
-                int i;
-                NDIS_DbgPrint(MID_TRACE,("NdisReadNetworkAddress returned successfully, address %x:%x:%x:%x:%x:%x\n",
-                        RegNetworkAddress[0], RegNetworkAddress[1], RegNetworkAddress[2], RegNetworkAddress[3],
-                        RegNetworkAddress[4], RegNetworkAddress[5]));
-                for(i = 0; i < DRIVER_LENGTH_OF_ADDRESS; i++)
-                    Adapter->StationAddress[i] = RegNetworkAddress[i];
-            }
-
-            NdisCloseConfiguration(ConfigurationHandle);
         }
     }
 
@@ -386,6 +357,30 @@ static NDIS_STATUS STDCALL MiniportInitialize(
         NDIS_DbgPrint(MID_TRACE, ("Status (0x%X).\n", Status));
         MiniportHalt((NDIS_HANDLE)Adapter);
         return Status;
+    }
+
+    NdisOpenConfiguration(&Status, &ConfigurationHandle, WrapperConfigurationContext);
+    if (Status == NDIS_STATUS_SUCCESS)
+    {
+         NdisReadNetworkAddress(&Status, (PVOID *)&RegNetworkAddress, &RegNetworkAddressLength, ConfigurationHandle);
+         if(Status == NDIS_STATUS_SUCCESS && RegNetworkAddressLength == DRIVER_LENGTH_OF_ADDRESS)
+         {
+             int i;
+             NDIS_DbgPrint(MID_TRACE,("NdisReadNetworkAddress returned successfully, address %x:%x:%x:%x:%x:%x\n",
+                     RegNetworkAddress[0], RegNetworkAddress[1], RegNetworkAddress[2], RegNetworkAddress[3],
+                     RegNetworkAddress[4], RegNetworkAddress[5]));
+             for(i = 0; i < DRIVER_LENGTH_OF_ADDRESS; i++)
+                 Adapter->StationAddress[i] = RegNetworkAddress[i];
+         }
+
+         NdisCloseConfiguration(ConfigurationHandle);
+    }
+
+    if (Status != NDIS_STATUS_SUCCESS)
+    {
+        int i;
+        for (i = 0; i < DRIVER_LENGTH_OF_ADDRESS; i++)
+             Adapter->StationAddress[i] = Adapter->PermanentAddress[i];
     }
 
     NDIS_DbgPrint(MID_TRACE, ("BOARDDATA:\n"));
