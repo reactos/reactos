@@ -137,7 +137,7 @@ WdmAudControlOpen(
     ACCESS_MASK DesiredAccess = 0;
     HANDLE PinHandle;
     KSPIN_CONNECT * PinConnect;
-    ULONG Length;
+    ULONG Length, Index;
     KSDATAFORMAT_WAVEFORMATEX * DataFormat;
     ULONG FilterId;
     ULONG PinId;
@@ -235,7 +235,20 @@ WdmAudControlOpen(
     Status = KsSynchronousIoControlDevice(ClientInfo->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)InstanceInfo, Length, &PinHandle, sizeof(HANDLE), &BytesReturned);
     if (NT_SUCCESS(Status))
     {
-        PHANDLE Handels = ExAllocatePool(NonPagedPool, sizeof(HANDLE) * (ClientInfo->NumPins+1));
+        PHANDLE Handels;
+
+        for(Index = 0; Index < ClientInfo->NumPins; Index++)
+        {
+            if (ClientInfo->hPins[Index] == PinHandle)
+            {
+                /* the pin handle has been re-used */
+                DeviceInfo->hDevice = PinHandle;
+                return SetIrpIoStatus(Irp, Status, sizeof(WDMAUD_DEVICE_INFO));
+            }
+
+        }
+
+        Handels = ExAllocatePool(NonPagedPool, sizeof(HANDLE) * (ClientInfo->NumPins+1));
 
         if (Handels)
         {
