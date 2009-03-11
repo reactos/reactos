@@ -50,6 +50,7 @@ base\applications\hh\hh.exe                             4
 base\applications\kbswitch\kbswitch.exe                 1
 base\applications\kbswitch\kbsdll\kbsdll.dll            1
 base\applications\logoff\logoff.exe                     1
+base\applications\mplay32\mplay32.exe                   1
 base\applications\msconfig\msconfig.exe                 1
 base\applications\mstsc\mstsc.exe                       1
 base\applications\network\arp\arp.exe                   1

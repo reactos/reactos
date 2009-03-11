@@ -419,7 +419,6 @@ PlayFile(HWND hwnd, LPWSTR lpFileName)
 
     if (GetFileAttributes(szLocalFileName) == INVALID_FILE_ATTRIBUTES)
     {
-        MessageBox(hwnd, _T("Wrong path to a file!"), NULL, MB_OK);
         return;
     }
 
@@ -688,6 +687,8 @@ _tWinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdShow)
     /* Show it */
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
+
+    PlayFile(hwnd, lpCmdLine);
 
     /* Message Loop */
     while (GetMessage(&msg, NULL, 0, 0))

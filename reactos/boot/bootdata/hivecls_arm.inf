@@ -270,11 +270,26 @@ HKCR,"InternetShortcut\DefaultIcon","",0x00020000,"%SystemRoot%\system32\url.dll
 HKCR,".wav","",0x00000000,"SoundRec"
 HKCR,"SoundRec","",0x00000000,"Wave Sound"
 HKCR,"SoundRec\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-225"
+HKCR,"SoundRec\shell\open\command","",0x00020000,"%SystemRoot%\system32\mplay32.exe %1"
+
+; Midi Sounds
+HKCR,".mid","",0x00000000,"MIDFile"
+HKCR,".midi","",0x00000000,"MIDFile"
+HKCR,"MIDFile","",0x00000000,"MIDI Sequence"
+HKCR,"MIDFile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-225"
+HKCR,"MIDFile\shell\open\command","",0x00020000,"%SystemRoot%\system32\mplay32.exe %1"
+
+; Audio CD
+HKCR,".cda","",0x00000000,"CDAFile"
+HKCR,"CDAFile","",0x00000000,"CD Audio Track"
+HKCR,"CDAFile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-225"
+HKCR,"CDAFile\shell\open\command","",0x00020000,"%SystemRoot%\system32\mplay32.exe %1"
 
 ; Avi Files
 HKCR,".avi","",0x00000000,"AVIFile"
 HKCR,"AVIFile","",0x00000000,"Video Clip"
 HKCR,"AVIFile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-224"
+HKCR,"AVIFile\shell\open\command","",0x00020000,"%SystemRoot%\system32\mplay32.exe %1"
 
 HKCR,"CLSID",,0x00000012
 
