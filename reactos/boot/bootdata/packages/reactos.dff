@@ -474,6 +474,7 @@ drivers\video\miniport\vga\vgamp.sys                2
 drivers\video\miniport\vbe\vbemp.sys                2
 drivers\video\videoprt\videoprt.sys                 2
 
+drivers\wdm\audio\filters\kmixer\kmixer.sys         2
 drivers\wdm\audio\sysaudio\sysaudio.sys             2
 drivers\wdm\audio\legacy\wdmaud\wdmaud.sys          2
 drivers\wdm\audio\backpln\portcls\portcls.sys       2

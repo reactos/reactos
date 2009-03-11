@@ -334,3 +334,27 @@ SysAudioAllocateDeviceHeader(
     return Status;
 }
 
+NTSTATUS
+SysAudioOpenKMixer(
+    IN SYSAUDIODEVEXT *DeviceExtension)
+{
+    NTSTATUS Status;
+    
+    UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Device\\kmixer");
+    UNICODE_STRING DevicePath = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\kmixer");
+
+    Status = ZwLoadDriver(&DevicePath);
+
+    if (NT_SUCCESS(Status))
+    {
+        Status = OpenDevice(&DeviceName, &DeviceExtension->KMixerHandle, &DeviceExtension->KMixerFileObject);
+        if (!NT_SUCCESS(Status))
+        {
+            DeviceExtension->KMixerHandle = NULL;
+            DeviceExtension->KMixerFileObject = NULL;
+        }
+    }
+
+    DPRINT("Status %lx KMixerHandle %p KMixerFileObject %p\n", Status, DeviceExtension->KMixerHandle, DeviceExtension->KMixerFileObject);
+    return STATUS_SUCCESS;
+}

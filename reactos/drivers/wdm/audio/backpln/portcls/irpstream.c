@@ -66,7 +66,7 @@ DpcRoutine(
 
         if (CurMapping->Irp)
         {
-            CurMapping->Irp->IoStatus.Information = CurMapping->Header->DataUsed;
+            CurMapping->Irp->IoStatus.Information = CurMapping->Header->FrameExtent;
             CurMapping->Irp->IoStatus.Status = STATUS_SUCCESS;
             IoCompleteRequest(CurMapping->Irp, IO_SOUND_INCREMENT);
         }

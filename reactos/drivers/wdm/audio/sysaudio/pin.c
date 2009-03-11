@@ -222,6 +222,18 @@ Pin_fnFastWrite(
     //DPRINT1("Pin_fnFastWrite called DeviceObject %p Irp %p\n", DeviceObject);
 
     Context = (PDISPATCH_CONTEXT)FileObject->FsContext2;
+
+#if 1
+    if (Context->hMixerPin && Context->MixerFileObject)
+    {
+        Status = KsStreamIo(Context->MixerFileObject, NULL, NULL, NULL, NULL, 0, IoStatus, Buffer, Length, KSSTREAM_WRITE, KernelMode);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Mixing stream failed with %lx\n", Status);
+            return FALSE;
+        }
+    }
+#endif
     Status = KsStreamIo(Context->FileObject, NULL, NULL, NULL, NULL, 0, IoStatus, Buffer, Length, KSSTREAM_WRITE, KernelMode);
     if (Status == STATUS_SUCCESS)
         return TRUE;

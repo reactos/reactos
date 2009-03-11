@@ -8,19 +8,172 @@
 
 #include "kmixer.h"
 
+const GUID KSPROPSETID_Connection              = {0x1D58C920L, 0xAC9B, 0x11CF, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
+
+NTSTATUS
+PerformQualityConversion(
+    PUCHAR Buffer,
+    ULONG BufferLength,
+    ULONG OldWidth,
+    ULONG NewWidth,
+    PVOID * Result,
+    PULONG ResultLength)
+{
+    ULONG Samples;
+    ULONG Index;
+
+    ASSERT(OldWidth != NewWidth);
+
+    /* FIXME
+     * This code does not work at all
+     */
+
+    Samples = BufferLength / (OldWidth / 8);
+    DPRINT1("Samples %u BufferLength %u\n", Samples, BufferLength);
+
+    if (OldWidth == 8 && NewWidth == 16)
+    {
+         USHORT Sample;
+         PUSHORT BufferOut = ExAllocatePool(NonPagedPool, Samples * sizeof(USHORT));
+         if (!BufferOut)
+             return STATUS_INSUFFICIENT_RESOURCES;
+
+          for(Index = 0; Index < Samples; Index++)
+          {
+              Sample = Buffer[Index];
+              BufferOut[Index] = Sample * 256;
+          }
+          *Result = BufferOut;
+          *ResultLength = Samples * sizeof(USHORT);
+          DPRINT1("done\n");
+    }
+    else if (OldWidth == 8 && NewWidth == 32)
+    {
+         PULONG BufferOut = ExAllocatePool(NonPagedPool, Samples * sizeof(ULONG));
+         if (!BufferOut)
+             return STATUS_INSUFFICIENT_RESOURCES;
+
+          for(Index = 0; Index < Samples; Index++)
+          {
+              BufferOut[Index] = Buffer[Index] * 16777216;
+          }
+          *Result = BufferOut;
+          *ResultLength = Samples * sizeof(ULONG);
+    }
+    else if (OldWidth == 16 && NewWidth == 32)
+    {
+         PULONG BufferOut = ExAllocatePool(NonPagedPool, Samples * sizeof(ULONG));
+         if (!BufferOut)
+             return STATUS_INSUFFICIENT_RESOURCES;
+
+          for(Index = 0; Index < Samples; Index++)
+          {
+              BufferOut[Index] = Buffer[Index] * 65536;
+          }
+          *Result = BufferOut;
+          *ResultLength = Samples * sizeof(ULONG);
+    }
+
+    else if (OldWidth == 16 && NewWidth == 8)
+    {
+         PUCHAR BufferOut = ExAllocatePool(NonPagedPool, Samples * sizeof(UCHAR));
+         if (!BufferOut)
+             return STATUS_INSUFFICIENT_RESOURCES;
+
+          for(Index = 0; Index < Samples; Index++)
+          {
+              BufferOut[Index] = (Buffer[Index] / 256) & 0xFF;
+          }
+          *Result = BufferOut;
+          *ResultLength = Samples * sizeof(UCHAR);
+    }
+    else if (OldWidth == 32 && NewWidth == 8)
+    {
+         PUCHAR BufferOut = ExAllocatePool(NonPagedPool, Samples * sizeof(UCHAR));
+         if (!BufferOut)
+             return STATUS_INSUFFICIENT_RESOURCES;
+
+          for(Index = 0; Index < Samples; Index++)
+          {
+              BufferOut[Index] = (Buffer[Index] / 16777216) & 0xFF;
+          }
+          *Result = BufferOut;
+          *ResultLength = Samples * sizeof(UCHAR);
+    }
+    else if (OldWidth == 32 && NewWidth == 16)
+    {
+         PUSHORT BufferOut = ExAllocatePool(NonPagedPool, Samples * sizeof(USHORT));
+         if (!BufferOut)
+             return STATUS_INSUFFICIENT_RESOURCES;
+
+          for(Index = 0; Index < Samples; Index++)
+          {
+              BufferOut[Index] = (Buffer[Index] / 65536) & 0xFFFF;
+          }
+          *Result = BufferOut;
+          *ResultLength = Samples * sizeof(USHORT);
+    }
+    else
+    {
+        DPRINT1("Not implemented conversion OldWidth %u NewWidth %u\n", OldWidth, NewWidth);
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+    return STATUS_SUCCESS;
+}
+
+
 NTSTATUS
 NTAPI
 Pin_fnDeviceIoControl(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
+    PIO_STACK_LOCATION IoStack;
+    PKSPROPERTY Property;
     DPRINT1("Pin_fnDeviceIoControl called DeviceObject %p Irp %p\n", DeviceObject);
 
-    //TODO
-    // silverblade
-    // Perform Sample Rate Conversion
-    // Stream Mixing
-    // Up/down sampling
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    if (IoStack->Parameters.DeviceIoControl.InputBufferLength == sizeof(KSPROPERTY) && IoStack->Parameters.DeviceIoControl.OutputBufferLength == sizeof(KSDATAFORMAT_WAVEFORMATEX))
+    {
+        Property = (PKSPROPERTY)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
+
+        if (IsEqualGUIDAligned(&Property->Set, &KSPROPSETID_Connection))
+        {
+            if (Property->Id == KSPROPERTY_CONNECTION_DATAFORMAT && Property->Flags == KSPROPERTY_TYPE_SET)
+            {
+                PKSDATAFORMAT_WAVEFORMATEX WaveFormat2;
+                PKSDATAFORMAT_WAVEFORMATEX WaveFormat = ExAllocatePool(NonPagedPool, sizeof(KSDATAFORMAT_WAVEFORMATEX));
+
+                if (!WaveFormat)
+                {
+                    Irp->IoStatus.Information = 0;
+                    Irp->IoStatus.Status = STATUS_NO_MEMORY;
+                    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                    return STATUS_NO_MEMORY;
+                }
+
+                if (IoStack->FileObject->FsContext2)
+                {
+                    ExFreePool(IoStack->FileObject->FsContext2);
+                }
+
+                WaveFormat2 = (PKSDATAFORMAT_WAVEFORMATEX)Irp->UserBuffer;
+                WaveFormat->WaveFormatEx.nChannels = WaveFormat2->WaveFormatEx.nChannels;
+                WaveFormat->WaveFormatEx.nSamplesPerSec = WaveFormat2->WaveFormatEx.nSamplesPerSec;
+                WaveFormat->WaveFormatEx.wBitsPerSample = WaveFormat2->WaveFormatEx.wBitsPerSample;
+
+                IoStack->FileObject->FsContext2 = (PVOID)WaveFormat;
+
+
+                Irp->IoStatus.Information = 0;
+                Irp->IoStatus.Status = STATUS_SUCCESS;
+                IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                return STATUS_SUCCESS;
+            }
+        }
+    }
 
     Irp->IoStatus.Information = 0;
     Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
@@ -179,9 +332,73 @@ Pin_fnFastWrite(
     PIO_STATUS_BLOCK IoStatus,
     PDEVICE_OBJECT DeviceObject)
 {
+    PKSPIN_CONNECT ConnectDetails;
+    PKSSTREAM_HEADER StreamHeader;
+    PVOID BufferOut;
+    ULONG BufferLength;
+    NTSTATUS Status = STATUS_SUCCESS;
+    LPWSTR PinName = L"{146F1A80-4791-11D0-A5D6-28DB04C10000}\\";
+
+    PKSDATAFORMAT_WAVEFORMATEX BaseFormat, TransformedFormat;
+
     DPRINT1("Pin_fnFastWrite called DeviceObject %p Irp %p\n", DeviceObject);
 
-    return FALSE;
+
+    BaseFormat = (PKSDATAFORMAT_WAVEFORMATEX)FileObject->FsContext2;
+    if (!BaseFormat)
+    {
+        DPRINT1("Expected DataFormat\n");
+        DbgBreakPoint();
+        IoStatus->Status = STATUS_UNSUCCESSFUL;
+        IoStatus->Information = 0;
+        return FALSE;
+    }
+
+    if (FileObject->FileName.Length < wcslen(PinName) + sizeof(KSPIN_CONNECT) + sizeof(KSDATAFORMAT))
+    {
+        DPRINT1("Expected DataFormat\n");
+        DbgBreakPoint();
+        IoStatus->Status = STATUS_INVALID_PARAMETER;
+        IoStatus->Information = 0;
+        return FALSE;
+    }
+
+    ConnectDetails = (PKSPIN_CONNECT)(FileObject->FileName.Buffer + wcslen(PinName));
+    TransformedFormat = (PKSDATAFORMAT_WAVEFORMATEX)(ConnectDetails + 1);
+    StreamHeader = (PKSSTREAM_HEADER)Buffer;
+
+    DPRINT1("Num Channels %u Old Channels %u\n SampleRate %u Old SampleRate %u\n BitsPerSample %u Old BitsPerSample %u\n",
+               BaseFormat->WaveFormatEx.nChannels, TransformedFormat->WaveFormatEx.nChannels,
+               BaseFormat->WaveFormatEx.nSamplesPerSec, TransformedFormat->WaveFormatEx.nSamplesPerSec,
+               BaseFormat->WaveFormatEx.wBitsPerSample, TransformedFormat->WaveFormatEx.wBitsPerSample);
+
+    if (BaseFormat->WaveFormatEx.wBitsPerSample != TransformedFormat->WaveFormatEx.wBitsPerSample)
+    {
+        Status = PerformQualityConversion(StreamHeader->Data,
+                                          StreamHeader->DataUsed,
+                                          BaseFormat->WaveFormatEx.wBitsPerSample,
+                                          TransformedFormat->WaveFormatEx.wBitsPerSample,
+                                          &BufferOut,
+                                          &BufferLength);
+        if (NT_SUCCESS(Status))
+        {
+            DPRINT1("Old BufferSize %u NewBufferSize %u\n", StreamHeader->DataUsed, BufferLength);
+            ExFreePool(StreamHeader->Data);
+            StreamHeader->Data = BufferOut;
+            StreamHeader->DataUsed = BufferLength;
+        }
+    }
+
+    if (BaseFormat->WaveFormatEx.nSamplesPerSec != TransformedFormat->WaveFormatEx.nSamplesPerSec)
+    {
+        /* sample format conversion must be done in a deferred routine */
+        return FALSE;
+    }
+
+    if (NT_SUCCESS(Status))
+        return TRUE;
+    else
+        return TRUE;
 }
 
 static KSDISPATCH_TABLE PinTable =

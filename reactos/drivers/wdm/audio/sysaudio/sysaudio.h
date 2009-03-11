@@ -6,6 +6,7 @@ typedef struct
     BOOL bHandle;
     ULONG PinId;
     HANDLE hPin;
+    HANDLE hMixer;
 }SYSAUDIO_PIN_HANDLE, *PSYSAUDIO_PIN_HANDLE;
 
 
@@ -62,6 +63,10 @@ typedef struct
     PVOID KsAudioNotificationEntry;
     PVOID EchoCancelNotificationEntry;
     KMUTEX Mutex;
+
+    PFILE_OBJECT KMixerFileObject;
+    HANDLE KMixerHandle;
+
 }SYSAUDIODEVEXT, *PSYSAUDIODEVEXT;
 
 typedef struct
@@ -71,16 +76,21 @@ typedef struct
     ULONG PinId;
     PKSAUDIO_DEVICE_ENTRY AudioEntry;
 
+    HANDLE hMixerPin;
+    PFILE_OBJECT MixerFileObject;
 }DISPATCH_CONTEXT, *PDISPATCH_CONTEXT;
 
 typedef struct
 {
     PIRP Irp;
     BOOL CreateRealPin;
+    BOOL CreateMixerPin;
     PKSAUDIO_DEVICE_ENTRY Entry;
     KSPIN_CONNECT * PinConnect;
     PDISPATCH_CONTEXT DispatchContext;
     PSYSAUDIO_CLIENT AudioClient;
+    PSYSAUDIODEVEXT DeviceExtension;
+    PKSDATAFORMAT_WAVEFORMATEX MixerFormat;
 }PIN_WORKER_CONTEXT, *PPIN_WORKER_CONTEXT;
 
 NTSTATUS
@@ -100,6 +110,16 @@ NTSTATUS
 SysAudioHandleProperty(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp);
+
+NTSTATUS
+SysAudioOpenKMixer(
+    IN SYSAUDIODEVEXT *DeviceExtension);
+
+NTSTATUS
+OpenDevice(
+    IN PUNICODE_STRING DeviceName,
+    IN PHANDLE HandleOut,
+    IN PFILE_OBJECT * FileObjectOut);
 
 PKSAUDIO_DEVICE_ENTRY
 GetListEntry(

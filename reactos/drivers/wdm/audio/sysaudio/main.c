@@ -140,6 +140,13 @@ SysAudio_InstallDevice(
         goto cleanup;
     }
 
+    Status = SysAudioOpenKMixer(DeviceExtension);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SysAudioOpenKMixer failed with %x\n", Status);
+        goto cleanup;
+    }
+
      /* set io flags */
      DeviceObject->Flags |= DO_DIRECT_IO | DO_POWER_PAGABLE;
      /* clear initializing flag */

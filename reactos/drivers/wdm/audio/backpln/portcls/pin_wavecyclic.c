@@ -379,7 +379,9 @@ IPortPinWaveCyclic_HandleKsProperty(
 
                 if (This->Stream)
                 {
-                    This->IrpQueue->lpVtbl->CancelBuffers(This->IrpQueue);
+                    while(!This->IrpQueue->lpVtbl->CancelBuffers(This->IrpQueue))
+                        KeStallExecutionProcessor(10);
+
                     This->Stream->lpVtbl->SetState(This->Stream, KSSTATE_STOP);
                     This->State = KSSTATE_STOP;
 
@@ -680,7 +682,7 @@ IPortPinWaveCyclic_fnFastWrite(
         //DPRINT1("Completing Irp %p\n", Packet->Irp);
 
         Packet->Irp->IoStatus.Status = STATUS_SUCCESS;
-        Packet->Irp->IoStatus.Information = Packet->Header.DataUsed;
+        Packet->Irp->IoStatus.Information = Packet->Header.FrameExtent;
         IoCompleteRequest(Packet->Irp, IO_SOUND_INCREMENT);
         StatusBlock->Status = STATUS_SUCCESS;
     }

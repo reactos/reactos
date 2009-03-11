@@ -34,20 +34,28 @@ sysaudio.sys
 wdmaud.sys
 portcls.sys
 drmk.sys
+kmixer.sys
 
 [Audio.CopyFiles.UserMode]
 wdmaud.drv
 ksuser.dll
 
 [Audio_Inst.NT.Services]
-AddService = wdmaud, , wdmaud_Service_Inst
-AddService = sysaudio, , sysaudio_Service_Inst
+AddService = wdmaud,,wdmaud_Service_Inst
+AddService = sysaudio,,sysaudio_Service_Inst
+AddService = kmixer,,kmixer_Service_Inst
 
 [wdmaud_Service_Inst]
 ServiceType   = 1
 StartType     = 3
 ErrorControl  = 0
 ServiceBinary = %12%\wdmaud.sys
+
+[kmixer_Service_Inst]
+ServiceType   = 1
+StartType     = 3
+ErrorControl  = 0
+ServiceBinary = %12%\kmixer.sys
 
 [sysaudio_Service_Inst]
 ServiceType   = 1

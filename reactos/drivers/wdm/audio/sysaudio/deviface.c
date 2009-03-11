@@ -106,8 +106,51 @@ FilterPinWorkerRoutine(
     DPRINT1("Num Pins %u Num WaveIn Pins %u Name WaveOut Pins %u\n", DeviceEntry->NumberOfPins, DeviceEntry->NumWaveInPin, DeviceEntry->NumWaveOutPin);
 }
 
+NTSTATUS
+OpenDevice(
+    IN PUNICODE_STRING DeviceName,
+    IN PHANDLE HandleOut,
+    IN PFILE_OBJECT * FileObjectOut)
+{
+    NTSTATUS Status;
+    HANDLE NodeHandle;
+    PFILE_OBJECT FileObject;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK IoStatusBlock;
+
+    InitializeObjectAttributes(&ObjectAttributes, DeviceName, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, NULL, NULL);
+
+    Status = ZwCreateFile(&NodeHandle,
+                          GENERIC_READ | GENERIC_WRITE,
+                          &ObjectAttributes,
+                          &IoStatusBlock,
+                          NULL,
+                          0,
+                          0,
+                          FILE_OPEN,
+                          FILE_SYNCHRONOUS_IO_NONALERT,
+                          NULL,
+                          0);
 
 
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ZwCreateFile failed with %x\n", Status);
+        return Status;
+    }
+
+    Status = ObReferenceObjectByHandle(NodeHandle, GENERIC_READ | GENERIC_WRITE, IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        ZwClose(NodeHandle);
+        DPRINT1("ObReferenceObjectByHandle failed with %x\n", Status);
+        return Status;
+    }
+
+    *HandleOut = NodeHandle;
+    *FileObjectOut = FileObject;
+    return Status;
+}
 
 NTSTATUS
 NTAPI
@@ -129,11 +172,7 @@ DeviceInterfaceChangeCallback(
     {
         /* a new device has arrived */
 
-        PFILE_OBJECT FileObject = NULL;
         PKSAUDIO_DEVICE_ENTRY DeviceEntry;
-        HANDLE NodeHandle;
-        IO_STATUS_BLOCK IoStatusBlock;
-        OBJECT_ATTRIBUTES ObjectAttributes;
         PIO_WORKITEM WorkItem;
 
         DeviceEntry = ExAllocatePool(NonPagedPool, sizeof(KSAUDIO_DEVICE_ENTRY));
@@ -172,21 +211,7 @@ DeviceInterfaceChangeCallback(
 
         DPRINT1("Sym %wZ\n", &DeviceEntry->DeviceName);
 
-        InitializeObjectAttributes(&ObjectAttributes, &DeviceEntry->DeviceName, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, NULL, NULL);
-
-        Status = ZwCreateFile(&NodeHandle,
-                              GENERIC_READ | GENERIC_WRITE,
-                              &ObjectAttributes,
-                              &IoStatusBlock,
-                              NULL,
-                              0,
-                              0,
-                              FILE_OPEN,
-                              FILE_SYNCHRONOUS_IO_NONALERT,
-                              NULL,
-                              0);
-
-
+        Status = OpenDevice(&DeviceEntry->DeviceName, &DeviceEntry->Handle, &DeviceEntry->FileObject);
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("ZwCreateFile failed with %x\n", Status);
@@ -194,19 +219,7 @@ DeviceInterfaceChangeCallback(
             return Status;
         }
 
-        Status = ObReferenceObjectByHandle(NodeHandle, GENERIC_READ | GENERIC_WRITE, IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
-        if (!NT_SUCCESS(Status))
-        {
-            ZwClose(NodeHandle);
-            ExFreePool(DeviceEntry);
-            DPRINT1("ObReferenceObjectByHandle failed with %x\n", Status);
-            return Status;
-        }
-
-        DeviceEntry->Handle = NodeHandle;
-        DeviceEntry->FileObject = FileObject;
-
-        DPRINT1("Successfully opened audio device %u handle %p file object %p device object %p\n", DeviceExtension->KsAudioDeviceList, NodeHandle, FileObject, FileObject->DeviceObject);
+        DPRINT1("Successfully opened audio device %u handle %p file object %p device object %p\n", DeviceExtension->KsAudioDeviceList, DeviceEntry->Handle, DeviceEntry->FileObject, DeviceEntry->FileObject->DeviceObject);
         DeviceExtension->NumberOfKsAudioDevices++;
 
         WorkItem = IoAllocateWorkItem(DeviceObject);
