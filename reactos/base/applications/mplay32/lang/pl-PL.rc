@@ -1,0 +1,31 @@
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+//By Maciej Bialas
+
+IDR_MAINMENU MENU
+BEGIN
+	POPUP "&Plik"
+	BEGIN
+		MENUITEM "&Otwórz...", IDM_OPEN_FILE
+		MENUITEM "&Zamknij", IDM_CLOSE_FILE
+		MENUITEM SEPARATOR
+		MENUITEM "&WyjdŸ", IDM_EXIT
+	END
+	POPUP "&Pomoc"
+	BEGIN
+		MENUITEM "&O programie...", IDM_ABOUT
+	END
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_ALL_TYPES_FILTER "Wszystkie formaty (*.wav, *.cda, *.midi, *.mid, *.avi)\0*.wav;*.cda;*.midi;*.mid;*.avi\0"
+	IDS_TOOLTIP_PLAY "Odtwarzaj"
+	IDS_TOOLTIP_STOP "Zatrzymaj"
+	IDS_TOOLTIP_EJECT "Wysuñ"
+	IDS_TOOLTIP_BACKWARD "Przeskocz do ty³u"
+	IDS_TOOLTIP_SEEKBACK "Przewiñ do ty³u"
+	IDS_TOOLTIP_SEEKFORW "Przewiñ do przodu"
+	IDS_TOOLTIP_FORWARD "Przeskocz do przodu"
+    IDS_APPTITLE "ReactOS Multimedia Player"
+END

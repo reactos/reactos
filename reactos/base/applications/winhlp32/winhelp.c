@@ -274,9 +274,7 @@ HLPFILE_WINDOWINFO*     WINHELP_GetWindowInfo(HLPFILE* hlpfile, LPCSTR name)
     {
         strcpy(mwi.type, "primary");
         strcpy(mwi.name, "main");
-        if (hlpfile && !LoadString(Globals.hInstance, STID_WINE_HELP,
-                        mwi.caption, sizeof(mwi.caption)))
-            strcpy(mwi.caption, hlpfile->lpszTitle);
+        LoadString(Globals.hInstance, STID_WINE_HELP, mwi.caption, sizeof(mwi.caption));
         mwi.origin.x = mwi.origin.y = mwi.size.cx = mwi.size.cy = CW_USEDEFAULT;
         mwi.style = SW_SHOW;
         mwi.win_style = WS_OVERLAPPEDWINDOW;
@@ -1265,8 +1263,7 @@ static LRESULT CALLBACK WINHELP_MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, 
 {
     WINHELP_WINDOW *win;
     WINHELP_BUTTON *button;
-    RECT rect;
-    INT  curPos, min, max, dy, keyDelta;
+    INT  keyDelta;
     HWND hTextWnd;
     LRESULT ret;
 
@@ -1381,42 +1378,23 @@ static LRESULT CALLBACK WINHELP_MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, 
 
     case WM_KEYDOWN:
         keyDelta = 0;
+        win = (WINHELP_WINDOW*) GetWindowLongPtr(hWnd, 0);
+        hTextWnd = GetDlgItem(win->hMainWnd, CTL_ID_TEXT);
 
         switch (wParam)
         {
         case VK_UP:
-        case VK_DOWN:
-            keyDelta = GetSystemMetrics(SM_CXVSCROLL);
-            if (wParam == VK_UP)
-                keyDelta = -keyDelta;
-
-        case VK_PRIOR:
-        case VK_NEXT:
-            win = (WINHELP_WINDOW*) GetWindowLongPtr(hWnd, 0);
-            hTextWnd = GetDlgItem(win->hMainWnd, CTL_ID_TEXT);
-            curPos = GetScrollPos(hTextWnd, SB_VERT);
-            GetScrollRange(hTextWnd, SB_VERT, &min, &max);
-
-            if (keyDelta == 0)
-            {
-                GetClientRect(hTextWnd, &rect);
-                keyDelta = (rect.bottom - rect.top) / 2;
-                if (wParam == VK_PRIOR)
-                    keyDelta = -keyDelta;
-            }
-
-            curPos += keyDelta;
-            if (curPos > max)
-                 curPos = max;
-            else if (curPos < min)
-                 curPos = min;
-
-            dy = GetScrollPos(hTextWnd, SB_VERT) - curPos;
-            SetScrollPos(hTextWnd, SB_VERT, curPos, TRUE);
-            ScrollWindow(hTextWnd, 0, dy, NULL, NULL);
-            UpdateWindow(hTextWnd);
+            SendMessage(hTextWnd, EM_SCROLL, SB_LINEUP, 0);
             return 0;
-
+        case VK_DOWN:
+            SendMessage(hTextWnd, EM_SCROLL, SB_LINEDOWN, 0);
+            return 0;
+        case VK_PRIOR:
+            SendMessage(hTextWnd, EM_SCROLL, SB_PAGEUP, 0);
+            return 0;
+        case VK_NEXT:
+            SendMessage(hTextWnd, EM_SCROLL, SB_PAGEDOWN, 0);
+            return 0;
         case VK_ESCAPE:
             MACRO_Exit();
             return 0;

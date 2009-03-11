@@ -152,7 +152,7 @@ Caption "탭"
 FONT 9, "MS Shell Dlg"
 BEGIN
     GROUPBOX "탭 정지", -1, 10, 10, 120, 90
-    COMBOBOX IDC_TABSTOPS, 20, 20, 100, 60, CBS_SIMPLE | CBS_SORT
+    COMBOBOX IDC_TABSTOPS, 20, 20, 100, 60, CBS_SIMPLE
     DEFPUSHBUTTON "더하기(&A)", ID_TAB_ADD, 20, 80, 45, 15
     PUSHBUTTON "지우기(&R)", ID_TAB_DEL, 72, 80, 45, 15
     PUSHBUTTON "확인(&O)", IDOK, 137, 15, 50, 15
@@ -242,4 +242,5 @@ BEGIN
     STRING_OPEN_FAILED,               "파일을 열 수 없습니다."
     STRING_OPEN_ACCESS_DENIED,        "파일을 열 권한이 없습니다."
     STRING_PRINTING_NOT_IMPLEMENTED, "인쇄는 지원되지 않습니다"
+    STRING_MAX_TAB_STOPS,             " 탭중지는 32개 이상 추가 할 수 없습니다."
 END
