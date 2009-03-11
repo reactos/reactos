@@ -573,8 +573,15 @@ MainWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
         {
             if (hTrackBar == (HWND) lParam)
             {
-                DWORD dwNewPos = (DWORD) SendMessage(hTrackBar, TBM_GETPOS, 0, 0);
-                SeekPlayback(hwnd, dwNewPos);
+                if (bIsOpened)
+                {
+                    DWORD dwNewPos = (DWORD) SendMessage(hTrackBar, TBM_GETPOS, 0, 0);
+                    SeekPlayback(hwnd, dwNewPos);
+                }
+                else
+                {
+                    SendMessage(hTrackBar, TBM_SETPOS, TRUE, 0);
+                }
             }
         }
         break;
