@@ -10,6 +10,27 @@
 
 const GUID KSPROPSETID_Connection              = {0x1D58C920L, 0xAC9B, 0x11CF, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
 
+#ifdef _X86_
+#define htons(w) \
+     ((((w) & 0xFF00) >> 8) | \
+      (((w) & 0x00FF) << 8))
+
+#define htonl(n) (((((unsigned long)(n) & 0xFF)) << 24) | \
+                  ((((unsigned long)(n) & 0xFF00)) << 8) | \
+                  ((((unsigned long)(n) & 0xFF0000)) >> 8) | \
+                  ((((unsigned long)(n) & 0xFF000000)) >> 24))
+
+#define ntohs(n) (((((unsigned short)(n) & 0xFF)) << 8) | (((unsigned short)(n) & 0xFF00) >> 8))
+
+
+#define ntohl(n) (((((unsigned long)(n) & 0xFF)) << 24) | \
+                  ((((unsigned long)(n) & 0xFF00)) << 8) | \
+                  ((((unsigned long)(n) & 0xFF0000)) >> 8) | \
+                  ((((unsigned long)(n) & 0xFF000000)) >> 24))
+
+#endif
+
+
 NTSTATUS
 PerformQualityConversion(
     PUCHAR Buffer,
@@ -24,12 +45,8 @@ PerformQualityConversion(
 
     ASSERT(OldWidth != NewWidth);
 
-    /* FIXME
-     * This code does not work at all
-     */
-
     Samples = BufferLength / (OldWidth / 8);
-    DPRINT1("Samples %u BufferLength %u\n", Samples, BufferLength);
+    //DPRINT("Samples %u BufferLength %u\n", Samples, BufferLength);
 
     if (OldWidth == 8 && NewWidth == 16)
     {
@@ -41,34 +58,41 @@ PerformQualityConversion(
           for(Index = 0; Index < Samples; Index++)
           {
               Sample = Buffer[Index];
-              BufferOut[Index] = Sample * 256;
+              Sample *= 2;
+              BufferOut[Index] = htons(Sample);
           }
           *Result = BufferOut;
           *ResultLength = Samples * sizeof(USHORT);
-          DPRINT1("done\n");
     }
     else if (OldWidth == 8 && NewWidth == 32)
     {
+         ULONG Sample;
          PULONG BufferOut = ExAllocatePool(NonPagedPool, Samples * sizeof(ULONG));
          if (!BufferOut)
              return STATUS_INSUFFICIENT_RESOURCES;
 
           for(Index = 0; Index < Samples; Index++)
           {
-              BufferOut[Index] = Buffer[Index] * 16777216;
+              Sample = Buffer[Index];
+              Sample *= 16777216;
+              BufferOut[Index] = htonl(Sample);
           }
           *Result = BufferOut;
           *ResultLength = Samples * sizeof(ULONG);
     }
     else if (OldWidth == 16 && NewWidth == 32)
     {
+         ULONG Sample;
+         PUSHORT BufferIn = (PUSHORT)Buffer;
          PULONG BufferOut = ExAllocatePool(NonPagedPool, Samples * sizeof(ULONG));
          if (!BufferOut)
              return STATUS_INSUFFICIENT_RESOURCES;
 
           for(Index = 0; Index < Samples; Index++)
           {
-              BufferOut[Index] = Buffer[Index] * 65536;
+              Sample = BufferIn[Index];
+              Sample *= 65536;
+              BufferOut[Index] = htonl(Sample);
           }
           *Result = BufferOut;
           *ResultLength = Samples * sizeof(ULONG);
@@ -76,39 +100,54 @@ PerformQualityConversion(
 
     else if (OldWidth == 16 && NewWidth == 8)
     {
+         USHORT Sample;
+         PUSHORT BufferIn = (PUSHORT)Buffer;
          PUCHAR BufferOut = ExAllocatePool(NonPagedPool, Samples * sizeof(UCHAR));
          if (!BufferOut)
              return STATUS_INSUFFICIENT_RESOURCES;
 
           for(Index = 0; Index < Samples; Index++)
           {
-              BufferOut[Index] = (Buffer[Index] / 256) & 0xFF;
+              Sample = BufferIn[Index];
+              Sample = ntohs(Sample);
+              Sample /= 256;
+              BufferOut[Index] = (Sample / 0xFF);
           }
           *Result = BufferOut;
           *ResultLength = Samples * sizeof(UCHAR);
     }
     else if (OldWidth == 32 && NewWidth == 8)
     {
+         ULONG Sample;
+         PULONG BufferIn = (PULONG)Buffer;
          PUCHAR BufferOut = ExAllocatePool(NonPagedPool, Samples * sizeof(UCHAR));
          if (!BufferOut)
              return STATUS_INSUFFICIENT_RESOURCES;
 
           for(Index = 0; Index < Samples; Index++)
           {
-              BufferOut[Index] = (Buffer[Index] / 16777216) & 0xFF;
+              Sample = BufferIn[Index];
+              Sample = ntohl(Sample);
+              Sample /= 16777216;
+              BufferOut[Index] = Sample & 0xFF;
           }
           *Result = BufferOut;
           *ResultLength = Samples * sizeof(UCHAR);
     }
     else if (OldWidth == 32 && NewWidth == 16)
     {
+         USHORT Sample;
+         PULONG BufferIn = (PULONG)Buffer;
          PUSHORT BufferOut = ExAllocatePool(NonPagedPool, Samples * sizeof(USHORT));
          if (!BufferOut)
              return STATUS_INSUFFICIENT_RESOURCES;
 
           for(Index = 0; Index < Samples; Index++)
           {
-              BufferOut[Index] = (Buffer[Index] / 65536) & 0xFFFF;
+              Sample = BufferIn[Index];
+              Sample = ntohl(Sample);
+              Sample /= 65536;
+              BufferOut[Index] = Sample & 0xFFFF;
           }
           *Result = BufferOut;
           *ResultLength = Samples * sizeof(USHORT);
