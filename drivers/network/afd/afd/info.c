@@ -123,7 +123,7 @@ AfdGetPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
 
-    if (FCB->RemoteAddress == NULL) {
+    if (FCB->RemoteAddress == NULL || FCB->Connection.Object == NULL) {
         return UnlockAndMaybeComplete( FCB, STATUS_INVALID_PARAMETER, Irp, 0, NULL );
     }
 
