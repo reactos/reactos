@@ -271,8 +271,17 @@ IntSetDIBits(
       return 0;
   }
 
-  // Destination palette obtained from the hDC
-  hDCPalette = PALETTE_LockPalette(((GDIDEVICE *)DC->pPDev)->DevInfo.hpalDefault);
+  // Use hDIBPalette if it exists
+  if (bitmap->hDIBPalette)
+  {
+    DDB_Palette = bitmap->hDIBPalette;
+  }
+  else
+  {
+    // Destination palette obtained from the hDC
+    DDB_Palette = ((GDIDEVICE *)DC->pPDev)->DevInfo.hpalDefault;
+  }
+  hDCPalette = PALETTE_LockPalette(DDB_Palette);
   if (NULL == hDCPalette)
     {
       EngUnlockSurface(SourceSurf);
@@ -282,7 +291,6 @@ IntSetDIBits(
       return 0;
     }
   DDB_Palette_Type = hDCPalette->Mode;
-  DDB_Palette = ((GDIDEVICE *)DC->pPDev)->DevInfo.hpalDefault;
   PALETTE_UnlockPalette(hDCPalette);
 
   // Source palette obtained from the BITMAPINFO
