@@ -13,7 +13,7 @@
 #include "debug.h"
 #include "pseh/pseh.h"
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	    PIO_STACK_LOCATION IrpSp ) {
     NTSTATUS Status = STATUS_SUCCESS;
@@ -69,19 +69,20 @@ AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL );
 }
 
-NTSTATUS STDCALL
-AfdGetSockOrPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
-                      PIO_STACK_LOCATION IrpSp, BOOLEAN Local ) {
+NTSTATUS NTAPI
+AfdGetSockName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
+                      PIO_STACK_LOCATION IrpSp ) {
     NTSTATUS Status = STATUS_SUCCESS;
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
-    PMDL Mdl = NULL, SysMdl = NULL;
-    PTDI_CONNECTION_INFORMATION ConnInfo = NULL;
-    PTRANSPORT_ADDRESS TransAddr = NULL;
-
-    AFD_DbgPrint(MID_TRACE,("Called on %x\n", FCB));
+    PMDL Mdl = NULL;
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
+
+    if( FCB->AddressFile.Object == NULL && FCB->Connection.Object == NULL ) {
+	 return UnlockAndMaybeComplete( FCB, STATUS_INVALID_PARAMETER, Irp, 0,
+	                                NULL );
+    }
 
     Mdl = IoAllocateMdl
 	( Irp->UserBuffer,
@@ -99,75 +100,69 @@ AfdGetSockOrPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	} _SEH_END;
 
 	if( NT_SUCCESS(Status) ) {
-            if( Local ) {
-                if( FCB->AddressFile.Object == NULL ) {
-	            return UnlockAndMaybeComplete( FCB, STATUS_INVALID_PARAMETER, Irp, 0,
-	                                           NULL );
-                }
-
                 Status = TdiQueryInformation
-                    ( FCB->AddressFile.Object,
+                    ( FCB->Connection.Object ? FCB->Connection.Object : FCB->AddressFile.Object,
                       TDI_QUERY_ADDRESS_INFO,
                       Mdl );
-            } else {
-                if( FCB->Connection.Object == NULL || (FCB->State != SOCKET_STATE_BOUND && FCB->State != SOCKET_STATE_CONNECTED) ) {
-	            return UnlockAndMaybeComplete( FCB, STATUS_INVALID_PARAMETER, Irp, 0,
-	                                           NULL );
-                }
+        }
+    } else
+        Status = STATUS_INSUFFICIENT_RESOURCES;
 
-                if( NT_SUCCESS
-                    ( Status = TdiBuildNullConnectionInfo
-                      ( &ConnInfo,
-                        FCB->LocalAddress->Address[0].AddressType ) ) ) {
-                    SysMdl = IoAllocateMdl
-                        ( ConnInfo,
-                          sizeof( TDI_CONNECTION_INFORMATION ) +
-                          TaLengthOfTransportAddress
-                          ( ConnInfo->RemoteAddress ),
-                          FALSE,
-                          FALSE,
-                          NULL );
-                }
+    return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL );
+}
 
-                if( SysMdl ) {
-                    _SEH_TRY {
-                        MmProbeAndLockPages( SysMdl, Irp->RequestorMode, IoModifyAccess );
-                    } _SEH_HANDLE {
-	                AFD_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
-	                Status = _SEH_GetExceptionCode();
-                    } _SEH_END;
-                } else Status = STATUS_NO_MEMORY;
+NTSTATUS NTAPI
+AfdGetPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
+                      PIO_STACK_LOCATION IrpSp ) {
+    NTSTATUS Status = STATUS_SUCCESS;
+    PFILE_OBJECT FileObject = IrpSp->FileObject;
+    PAFD_FCB FCB = FileObject->FsContext;
+    PMDL Mdl = NULL;
+    PTDI_CONNECTION_INFORMATION ConnInfo = NULL;
 
-                if( NT_SUCCESS(Status) ) {
-                    Status = TdiQueryInformation
-                        ( FCB->Connection.Object,
-                          TDI_QUERY_CONNECTION_INFO,
-                          SysMdl );
-                }
 
-                if( NT_SUCCESS(Status) ) {
-                    TransAddr =
-                        (PTRANSPORT_ADDRESS)MmGetSystemAddressForMdlSafe( Mdl, NormalPagePriority );
+    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
 
-                    if( TransAddr )
-                        RtlCopyMemory( TransAddr, ConnInfo->RemoteAddress,
-                                       TaLengthOfTransportAddress
-                                       ( ConnInfo->RemoteAddress ) );
-                    else Status = STATUS_INSUFFICIENT_RESOURCES;
-		}
-
-                if( ConnInfo ) ExFreePool( ConnInfo );
-                if( SysMdl ) IoFreeMdl( SysMdl );
-                if( TransAddr ) MmUnmapLockedPages( TransAddr, Mdl );
-                MmUnlockPages( Mdl );
-                IoFreeMdl( Mdl );
-            }
-	}
-    } else {
-    	Status = STATUS_INSUFFICIENT_RESOURCES;
+    if (FCB->RemoteAddress == NULL) {
+        return UnlockAndMaybeComplete( FCB, STATUS_INVALID_PARAMETER, Irp, 0, NULL );
     }
 
-    AFD_DbgPrint(MID_TRACE,("Returning %x\n", Status));
+    if(NT_SUCCESS(Status = TdiBuildNullConnectionInfo
+                      (&ConnInfo,
+                       FCB->RemoteAddress->Address[0].AddressType)))
+    {
+        Mdl = IoAllocateMdl(ConnInfo, 
+                            sizeof(TDI_CONNECTION_INFORMATION) + 
+                                   TaLengthOfTransportAddress(ConnInfo->RemoteAddress),
+                            FALSE,
+                            FALSE,
+                            NULL);
+
+        if (Mdl)
+        {
+            _SEH_TRY {
+               MmProbeAndLockPages(Mdl, Irp->RequestorMode, IoModifyAccess);
+            } _SEH_HANDLE {
+	       AFD_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
+	       Status = _SEH_GetExceptionCode();
+	    } _SEH_END;
+
+            if (NT_SUCCESS(Status))
+            {
+                Status = TdiQueryInformation(FCB->Connection.Object,
+                          TDI_QUERY_CONNECTION_INFO,
+                          Mdl);
+
+                if (NT_SUCCESS(Status))
+                {
+                    RtlCopyMemory(Irp->UserBuffer, ConnInfo->RemoteAddress, TaLengthOfTransportAddress
+                                                                                  (ConnInfo->RemoteAddress));
+                }
+            }
+         }
+
+         ExFreePool(ConnInfo);
+    }
 
     return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL );
 }

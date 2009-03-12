@@ -232,8 +232,12 @@ AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	    PIO_STACK_LOCATION IrpSp );
 
 NTSTATUS STDCALL
-AfdGetSockOrPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
-                      PIO_STACK_LOCATION IrpSp, BOOLEAN Local );
+AfdGetSockName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
+                PIO_STACK_LOCATION IrpSp );
+
+NTSTATUS STDCALL
+AfdGetPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
+                PIO_STACK_LOCATION IrpSp );
 
 /* listen.c */
 NTSTATUS AfdWaitForListen( PDEVICE_OBJECT DeviceObject, PIRP Irp,

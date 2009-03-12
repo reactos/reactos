@@ -402,10 +402,10 @@ AfdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	    return AfdDisconnect( DeviceObject, Irp, IrpSp );
 
 	case IOCTL_AFD_GET_SOCK_NAME:
-	    return AfdGetSockOrPeerName( DeviceObject, Irp, IrpSp, TRUE );
+	    return AfdGetSockName( DeviceObject, Irp, IrpSp );
 
         case IOCTL_AFD_GET_PEER_NAME:
-            return AfdGetSockOrPeerName( DeviceObject, Irp, IrpSp, FALSE );
+            return AfdGetPeerName( DeviceObject, Irp, IrpSp );
 
 	case IOCTL_AFD_GET_TDI_HANDLES:
 	    AFD_DbgPrint(MIN_TRACE, ("IOCTL_AFD_GET_TDI_HANDLES\n"));
