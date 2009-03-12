@@ -10,7 +10,7 @@ Dispatch_fnDeviceIoControl(
     IIrpTarget * IrpTarget;
     PKSOBJECT_CREATE_ITEM CreateItem;
 
-    DPRINT1("Dispatch_fnDeviceIoControl called DeviceObject %p Irp %p\n", DeviceObject);
+    //DPRINT1("Dispatch_fnDeviceIoControl called DeviceObject %p Irp %p\n", DeviceObject);
 
     /* access the create item */
     CreateItem = KSCREATE_ITEM_IRP_STORAGE(Irp);
@@ -114,7 +114,7 @@ Dispatch_fnClose(
 
     IrpTarget = (IIrpTarget*)CreateItem->Context;
 
-    DPRINT1("IrpTarget %p\n", IrpTarget);
+    //DPRINT1("IrpTarget %p\n", IrpTarget);
 
     return IrpTarget->lpVtbl->Close(IrpTarget, DeviceObject, Irp);
 }

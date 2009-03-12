@@ -163,42 +163,32 @@ Pin_fnDeviceIoControl(
     PIRP Irp)
 {
     PIO_STACK_LOCATION IoStack;
-    PKSPROPERTY Property;
-    DPRINT1("Pin_fnDeviceIoControl called DeviceObject %p Irp %p\n", DeviceObject);
+    PKSP_PIN Property;
+    //DPRINT1("Pin_fnDeviceIoControl called DeviceObject %p Irp %p\n", DeviceObject);
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    if (IoStack->Parameters.DeviceIoControl.InputBufferLength == sizeof(KSPROPERTY) && IoStack->Parameters.DeviceIoControl.OutputBufferLength == sizeof(KSDATAFORMAT_WAVEFORMATEX))
+    if (IoStack->Parameters.DeviceIoControl.InputBufferLength == sizeof(KSP_PIN) && IoStack->Parameters.DeviceIoControl.OutputBufferLength == sizeof(KSDATAFORMAT_WAVEFORMATEX))
     {
-        Property = (PKSPROPERTY)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
+        Property = (PKSP_PIN)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
 
-        if (IsEqualGUIDAligned(&Property->Set, &KSPROPSETID_Connection))
+        if (IsEqualGUIDAligned(&Property->Property.Set, &KSPROPSETID_Connection))
         {
-            if (Property->Id == KSPROPERTY_CONNECTION_DATAFORMAT && Property->Flags == KSPROPERTY_TYPE_SET)
+            if (Property->Property.Id == KSPROPERTY_CONNECTION_DATAFORMAT && Property->Property.Flags == KSPROPERTY_TYPE_SET)
             {
-                PKSDATAFORMAT_WAVEFORMATEX WaveFormat2;
-                PKSDATAFORMAT_WAVEFORMATEX WaveFormat = ExAllocatePool(NonPagedPool, sizeof(KSDATAFORMAT_WAVEFORMATEX));
+                PKSDATAFORMAT_WAVEFORMATEX Formats;
+                PKSDATAFORMAT_WAVEFORMATEX WaveFormat;
 
-                if (!WaveFormat)
-                {
-                    Irp->IoStatus.Information = 0;
-                    Irp->IoStatus.Status = STATUS_NO_MEMORY;
-                    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-                    return STATUS_NO_MEMORY;
-                }
+                Formats = (PKSDATAFORMAT_WAVEFORMATEX)IoStack->FileObject->FsContext2;
+                WaveFormat = (PKSDATAFORMAT_WAVEFORMATEX)Irp->UserBuffer;
 
-                if (IoStack->FileObject->FsContext2)
-                {
-                    ExFreePool(IoStack->FileObject->FsContext2);
-                }
+                ASSERT(Property->PinId == 0 || Property->PinId == 1);
+                ASSERT(Formats);
+                ASSERT(WaveFormat);
 
-                WaveFormat2 = (PKSDATAFORMAT_WAVEFORMATEX)Irp->UserBuffer;
-                WaveFormat->WaveFormatEx.nChannels = WaveFormat2->WaveFormatEx.nChannels;
-                WaveFormat->WaveFormatEx.nSamplesPerSec = WaveFormat2->WaveFormatEx.nSamplesPerSec;
-                WaveFormat->WaveFormatEx.wBitsPerSample = WaveFormat2->WaveFormatEx.wBitsPerSample;
-
-                IoStack->FileObject->FsContext2 = (PVOID)WaveFormat;
-
+                Formats[Property->PinId].WaveFormatEx.nChannels = WaveFormat->WaveFormatEx.nChannels;
+                Formats[Property->PinId].WaveFormatEx.wBitsPerSample = WaveFormat->WaveFormatEx.wBitsPerSample;
+                Formats[Property->PinId].WaveFormatEx.nSamplesPerSec = WaveFormat->WaveFormatEx.nSamplesPerSec;
 
                 Irp->IoStatus.Information = 0;
                 Irp->IoStatus.Status = STATUS_SUCCESS;
@@ -207,7 +197,7 @@ Pin_fnDeviceIoControl(
             }
         }
     }
-
+    DPRINT1("Size %u Expected %u\n",IoStack->Parameters.DeviceIoControl.OutputBufferLength,  sizeof(KSDATAFORMAT_WAVEFORMATEX));
     Irp->IoStatus.Information = 0;
     Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -365,54 +355,34 @@ Pin_fnFastWrite(
     PIO_STATUS_BLOCK IoStatus,
     PDEVICE_OBJECT DeviceObject)
 {
-    PKSPIN_CONNECT ConnectDetails;
     PKSSTREAM_HEADER StreamHeader;
     PVOID BufferOut;
     ULONG BufferLength;
     NTSTATUS Status = STATUS_SUCCESS;
-    LPWSTR PinName = L"{146F1A80-4791-11D0-A5D6-28DB04C10000}\\";
-
-    PKSDATAFORMAT_WAVEFORMATEX BaseFormat, TransformedFormat;
+    PKSDATAFORMAT_WAVEFORMATEX Formats;
+    PKSDATAFORMAT_WAVEFORMATEX InputFormat, OutputFormat;
 
     //DPRINT1("Pin_fnFastWrite called DeviceObject %p Irp %p\n", DeviceObject);
 
+    Formats = (PKSDATAFORMAT_WAVEFORMATEX)FileObject->FsContext2;
 
-    BaseFormat = (PKSDATAFORMAT_WAVEFORMATEX)FileObject->FsContext2;
-    if (!BaseFormat)
-    {
-        DPRINT1("Expected DataFormat\n");
-        DbgBreakPoint();
-        IoStatus->Status = STATUS_UNSUCCESSFUL;
-        IoStatus->Information = 0;
-        return FALSE;
-    }
-
-    if (FileObject->FileName.Length < wcslen(PinName) + sizeof(KSPIN_CONNECT) + sizeof(KSDATAFORMAT))
-    {
-        DPRINT1("Expected DataFormat\n");
-        DbgBreakPoint();
-        IoStatus->Status = STATUS_INVALID_PARAMETER;
-        IoStatus->Information = 0;
-        return FALSE;
-    }
-
-    ConnectDetails = (PKSPIN_CONNECT)(FileObject->FileName.Buffer + wcslen(PinName));
-    TransformedFormat = (PKSDATAFORMAT_WAVEFORMATEX)(ConnectDetails + 1);
+    InputFormat = Formats;
+    OutputFormat = (Formats + 1);
     StreamHeader = (PKSSTREAM_HEADER)Buffer;
 
 #if 0
     DPRINT1("Num Channels %u Old Channels %u\n SampleRate %u Old SampleRate %u\n BitsPerSample %u Old BitsPerSample %u\n",
-               BaseFormat->WaveFormatEx.nChannels, TransformedFormat->WaveFormatEx.nChannels,
-               BaseFormat->WaveFormatEx.nSamplesPerSec, TransformedFormat->WaveFormatEx.nSamplesPerSec,
-               BaseFormat->WaveFormatEx.wBitsPerSample, TransformedFormat->WaveFormatEx.wBitsPerSample);
+               InputFormat->WaveFormatEx.nChannels, OutputFormat->WaveFormatEx.nChannels,
+               InputFormat->WaveFormatEx.nSamplesPerSec, OutputFormat->WaveFormatEx.nSamplesPerSec,
+               InputFormat->WaveFormatEx.wBitsPerSample, OutputFormat->WaveFormatEx.wBitsPerSample);
 #endif
 
-    if (BaseFormat->WaveFormatEx.wBitsPerSample != TransformedFormat->WaveFormatEx.wBitsPerSample)
+    if (InputFormat->WaveFormatEx.wBitsPerSample != OutputFormat->WaveFormatEx.wBitsPerSample)
     {
         Status = PerformQualityConversion(StreamHeader->Data,
                                           StreamHeader->DataUsed,
-                                          BaseFormat->WaveFormatEx.wBitsPerSample,
-                                          TransformedFormat->WaveFormatEx.wBitsPerSample,
+                                          InputFormat->WaveFormatEx.wBitsPerSample,
+                                          OutputFormat->WaveFormatEx.wBitsPerSample,
                                           &BufferOut,
                                           &BufferLength);
         if (NT_SUCCESS(Status))
@@ -424,10 +394,10 @@ Pin_fnFastWrite(
         }
     }
 
-    if (BaseFormat->WaveFormatEx.nSamplesPerSec != TransformedFormat->WaveFormatEx.nSamplesPerSec)
+    if (InputFormat->WaveFormatEx.nSamplesPerSec != OutputFormat->WaveFormatEx.nSamplesPerSec)
     {
         /* sample format conversion must be done in a deferred routine */
-        DPRINT1("SampleRate conversion not available yet\n");
+        DPRINT1("SampleRate conversion not available yet %u %u\n", InputFormat->WaveFormatEx.nSamplesPerSec, OutputFormat->WaveFormatEx.nSamplesPerSec);
         return FALSE;
     }
 
@@ -457,6 +427,18 @@ CreatePin(
 {
     NTSTATUS Status;
     KSOBJECT_HEADER ObjectHeader;
+    PKSDATAFORMAT DataFormat;
+    PIO_STACK_LOCATION IoStack;
+
+
+    DataFormat = ExAllocatePool(NonPagedPool, sizeof(KSDATAFORMAT_WAVEFORMATEX) * 2);
+    if (!DataFormat)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    RtlZeroMemory(DataFormat, sizeof(KSDATAFORMAT_WAVEFORMATEX) * 2);
+
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+    IoStack->FileObject->FsContext2 = (PVOID)DataFormat;
 
     /* allocate object header */
     Status = KsAllocateObjectHeader(&ObjectHeader, 0, NULL, Irp, &PinTable);

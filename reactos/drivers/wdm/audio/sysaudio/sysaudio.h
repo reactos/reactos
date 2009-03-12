@@ -7,6 +7,7 @@ typedef struct
     ULONG PinId;
     HANDLE hPin;
     HANDLE hMixer;
+    PVOID DispatchContext;
 }SYSAUDIO_PIN_HANDLE, *PSYSAUDIO_PIN_HANDLE;
 
 

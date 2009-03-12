@@ -144,7 +144,7 @@ WdmAudControlOpen(
 
     if (DeviceInfo->DeviceType != WAVE_OUT_DEVICE_TYPE && DeviceInfo->DeviceType != WAVE_IN_DEVICE_TYPE)
     {
-        DPRINT1("FIXME: only waveout devices are supported\n");
+        DPRINT1("FIXME: only waveout / wavein devices are supported\n");
         return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, 0);
     }
 
@@ -154,7 +154,6 @@ WdmAudControlOpen(
         DPRINT1("Invalid device index %u\n", DeviceInfo->DeviceIndex);
         return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, 0);
     }
-
 
     Length = sizeof(KSDATAFORMAT_WAVEFORMATEX) + sizeof(KSPIN_CONNECT) + sizeof(SYSAUDIO_INSTANCE_INFO);
     InstanceInfo = ExAllocatePool(NonPagedPool, Length);
@@ -343,8 +342,6 @@ WdmAudControlDeviceType(
                 }
             }
         }
-        else
-            DPRINT1("KSPROPERTY_PIN_CTYPES index %u failed with %x\n", Index, Status);
     }
 
 
@@ -370,7 +367,7 @@ WdmAudControlDeviceState(
     ULONG BytesReturned;
     PFILE_OBJECT FileObject;
 
-    DPRINT1("WdmAudControlDeviceState\n");
+    //DPRINT1("WdmAudControlDeviceState\n");
 
     Status = ObReferenceObjectByHandle(DeviceInfo->hDevice, GENERIC_READ | GENERIC_WRITE, IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
     if (!NT_SUCCESS(Status))
@@ -389,7 +386,7 @@ WdmAudControlDeviceState(
 
     ObDereferenceObject(FileObject);
 
-    DPRINT1("WdmAudControlDeviceState Status %x\n", Status);
+    //DPRINT1("WdmAudControlDeviceState Status %x\n", Status);
     return SetIrpIoStatus(Irp, Status, sizeof(WDMAUD_DEVICE_INFO));
 }
 
@@ -467,7 +464,6 @@ WdmAudCapabilities(
     ULONG PinId;
 
     DPRINT("WdmAudCapabilities entered\n");
-
 
     Status = GetFilterIdAndPinId(DeviceObject, DeviceInfo, ClientInfo, &FilterId, &PinId);
     if (!NT_SUCCESS(Status))
@@ -595,7 +591,7 @@ WdmAudDeviceControl(
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    DPRINT1("WdmAudDeviceControl entered\n");
+    DPRINT("WdmAudDeviceControl entered\n");
 
     if (IoStack->Parameters.DeviceIoControl.InputBufferLength < sizeof(WDMAUD_DEVICE_INFO))
     {
@@ -621,7 +617,7 @@ WdmAudDeviceControl(
     }
     ClientInfo = (PWDMAUD_CLIENT)IoStack->FileObject->FsContext;
 
-    DPRINT1("WdmAudDeviceControl entered\n");
+    DPRINT("WdmAudDeviceControl entered\n");
 
     switch(IoStack->Parameters.DeviceIoControl.IoControlCode)
     {

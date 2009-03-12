@@ -33,7 +33,14 @@ SetIrpIoStatus(
 {
     Irp->IoStatus.Information = Length;
     Irp->IoStatus.Status = Status;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    if (Status != STATUS_PENDING)
+    {
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    }
+    else
+    {
+        IoMarkIrpPending(Irp);
+    }
     return Status;
 
 }
@@ -139,6 +146,90 @@ SysAudioOpenVirtualDevice(
     return SetIrpIoStatus(Irp, STATUS_SUCCESS, 0);
 }
 
+NTSTATUS
+SetMixerInputOutputFormat(
+    IN PFILE_OBJECT FileObject,
+    IN PKSDATAFORMAT InputFormat,
+    IN PKSDATAFORMAT OutputFormat)
+{
+    KSP_PIN PinRequest;
+    ULONG BytesReturned;
+    NTSTATUS Status;
+
+    /* re-using pin */
+    PinRequest.Property.Set = KSPROPSETID_Connection;
+    PinRequest.Property.Flags = KSPROPERTY_TYPE_SET;
+    PinRequest.Property.Id = KSPROPERTY_CONNECTION_DATAFORMAT;
+
+    /* set the input format */
+    PinRequest.PinId = 0;
+    //DPRINT1("InputFormat %p Size %u WaveFormatSize %u DataFormat %u WaveEx %u\n", InputFormat, InputFormat->FormatSize, sizeof(KSDATAFORMAT_WAVEFORMATEX), sizeof(KSDATAFORMAT), sizeof(WAVEFORMATEX));
+    Status = KsSynchronousIoControlDevice(FileObject, KernelMode, IOCTL_KS_PROPERTY,
+                                          (PVOID)&PinRequest,
+                                           sizeof(KSP_PIN),
+                                          (PVOID)InputFormat,
+                                           InputFormat->FormatSize,
+                                          &BytesReturned);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    /* set the the output format */
+    PinRequest.PinId = 1;
+    //DPRINT1("OutputFormat %p Size %u WaveFormatSize %u DataFormat %u WaveEx %u\n", OutputFormat, OutputFormat->FormatSize, sizeof(KSDATAFORMAT_WAVEFORMATEX), sizeof(KSDATAFORMAT), sizeof(WAVEFORMATEX));
+    Status = KsSynchronousIoControlDevice(FileObject, KernelMode, IOCTL_KS_PROPERTY,
+                                          (PVOID)&PinRequest,
+                                           sizeof(KSP_PIN),
+                                          (PVOID)OutputFormat,
+                                           OutputFormat->FormatSize,
+                                          &BytesReturned);
+    return Status;
+}
+
+
+NTSTATUS
+CreateMixerPinAndSetFormat(
+    IN HANDLE KMixerHandle,
+    IN KSPIN_CONNECT *PinConnect,
+    IN PKSDATAFORMAT InputFormat,
+    IN PKSDATAFORMAT OutputFormat,
+    OUT PHANDLE MixerPinHandle,
+    OUT PFILE_OBJECT *MixerFileObject)
+{
+    NTSTATUS Status;
+    HANDLE PinHandle;
+    PFILE_OBJECT FileObject;
+
+    Status = KsCreatePin(KMixerHandle, PinConnect, GENERIC_READ | GENERIC_WRITE, &PinHandle);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to create Mixer Pin with %x\n", Status);
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    Status = ObReferenceObjectByHandle(PinHandle,
+                                       GENERIC_READ | GENERIC_WRITE, 
+                                       IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to get file object with %x\n", Status);
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    Status = SetMixerInputOutputFormat(FileObject, InputFormat, OutputFormat);
+    if (!NT_SUCCESS(Status))
+    {
+        ObDereferenceObject(FileObject);
+        ZwClose(PinHandle);
+    }
+
+    *MixerPinHandle = PinHandle;
+    *MixerFileObject = FileObject;
+     return Status;
+}
+
+
 VOID
 NTAPI
 CreatePinWorkerRoutine(
@@ -147,22 +238,22 @@ CreatePinWorkerRoutine(
 {
     NTSTATUS Status;
     PSYSAUDIO_CLIENT AudioClient;
-    HANDLE RealPinHandle, VirtualPinHandle, MixerPinHandle = NULL;
+    HANDLE RealPinHandle, VirtualPinHandle;
     HANDLE Filter;
-    ULONG NumHandels, BytesReturned;
-    PFILE_OBJECT FileObject, MixerFileObject = NULL;
+    ULONG NumHandels;
+    PFILE_OBJECT FileObject;
     PSYSAUDIO_PIN_HANDLE ClientPinHandle;
     PPIN_WORKER_CONTEXT WorkerContext = (PPIN_WORKER_CONTEXT)Context;
     PKSPIN_CONNECT PinConnect = NULL;
-    KSPROPERTY PinRequest;
-    PKSDATAFORMAT_WAVEFORMATEX ClientFormat;
+    PKSDATAFORMAT ClientFormat;
+    KSP_PIN PinRequest;
+    ULONG BytesReturned;
 
     Filter = WorkerContext->PinConnect->PinToHandle;
 
-
     WorkerContext->PinConnect->PinToHandle = NULL;
 
-    DPRINT1("CreatePinWorkerRoutine entered\n");
+    DPRINT("CreatePinWorkerRoutine entered\n");
 
     ASSERT(WorkerContext->Entry);
     ASSERT(WorkerContext->PinConnect);
@@ -170,7 +261,7 @@ CreatePinWorkerRoutine(
     ASSERT(WorkerContext->Entry->NumberOfPins > WorkerContext->PinConnect->PinId);
 
     PinConnect = WorkerContext->PinConnect;
-    ClientFormat = (PKSDATAFORMAT_WAVEFORMATEX)(PinConnect + 1);
+    ClientFormat = (PKSDATAFORMAT)(PinConnect + 1);
 
     if (WorkerContext->CreateMixerPin)
     {
@@ -188,8 +279,14 @@ CreatePinWorkerRoutine(
         RtlMoveMemory(PinConnect, WorkerContext->PinConnect, sizeof(KSPIN_CONNECT));
         RtlMoveMemory((PinConnect + 1), WorkerContext->MixerFormat, WorkerContext->MixerFormat->DataFormat.FormatSize);
 
+        Status = CreateMixerPinAndSetFormat(WorkerContext->DeviceExtension->KMixerHandle, 
+                                            PinConnect,
+                                            (PKSDATAFORMAT)(WorkerContext->PinConnect + 1),
+                                            (PKSDATAFORMAT)WorkerContext->MixerFormat,
+                                            &WorkerContext->DispatchContext->hMixerPin,
+                                            &WorkerContext->DispatchContext->MixerFileObject);
 
-        Status = KsCreatePin(WorkerContext->DeviceExtension->KMixerHandle, PinConnect, GENERIC_READ | GENERIC_WRITE, &MixerPinHandle);
+        ExFreePool(WorkerContext->MixerFormat);
 
         if (!NT_SUCCESS(Status))
         {
@@ -199,36 +296,23 @@ CreatePinWorkerRoutine(
             ExFreePool(WorkerContext);
             return;
         }
-
-        Status = ObReferenceObjectByHandle(MixerPinHandle,
-                                           GENERIC_READ | GENERIC_WRITE, 
-                                           IoFileObjectType, KernelMode, (PVOID*)&MixerFileObject, NULL);
-
+    }
+    else
+    {
+        Status = CreateMixerPinAndSetFormat(WorkerContext->DeviceExtension->KMixerHandle, 
+                                            WorkerContext->PinConnect,
+                                            (PKSDATAFORMAT)(WorkerContext->PinConnect + 1),
+                                            (PKSDATAFORMAT)(WorkerContext->PinConnect + 1),
+                                            &WorkerContext->DispatchContext->hMixerPin,
+                                            &WorkerContext->DispatchContext->MixerFileObject);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("Failed to get file object with %x\n", Status);
+            DPRINT1("Failed to create Mixer Pin with %x\n", Status);
             SetIrpIoStatus(WorkerContext->Irp, STATUS_UNSUCCESSFUL, 0);
             ExFreePool(WorkerContext->DispatchContext);
             ExFreePool(WorkerContext);
             return;
         }
-
-        WorkerContext->DispatchContext->hMixerPin = MixerPinHandle;
-        WorkerContext->DispatchContext->MixerFileObject = MixerFileObject;
-
-        PinRequest.Set = KSPROPSETID_Connection;
-        PinRequest.Flags = KSPROPERTY_TYPE_SET;
-        PinRequest.Id = KSPROPERTY_CONNECTION_DATAFORMAT;
-
-        DPRINT1("ClientFormat %p Channels %u Samples %u Bits %u\n", ClientFormat, ClientFormat->WaveFormatEx.nChannels, ClientFormat->WaveFormatEx.nSamplesPerSec, ClientFormat->WaveFormatEx.wBitsPerSample);
-
-        Status = KsSynchronousIoControlDevice(MixerFileObject, KernelMode, IOCTL_KS_PROPERTY,
-                                             (PVOID)&PinRequest,
-                                             sizeof(KSPROPERTY),
-                                             (PVOID)ClientFormat,
-                                             sizeof(KSDATAFORMAT_WAVEFORMATEX),
-                                             &BytesReturned);
-
     }
 
     if (WorkerContext->CreateRealPin)
@@ -244,7 +328,18 @@ CreatePinWorkerRoutine(
         DPRINT1("Status %x\n", Status);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("Failed to create Pin with %x\n", Status);
+            PKSDATAFORMAT_WAVEFORMATEX RequestedFormat = (PKSDATAFORMAT_WAVEFORMATEX)(WorkerContext->PinConnect + 1);
+            DPRINT1("Failed to create Pin with %x\nNumChannels: %u BitsPerSample %u SampleRate %u\n", Status,
+            RequestedFormat->WaveFormatEx.nChannels, RequestedFormat->WaveFormatEx.wBitsPerSample, RequestedFormat->WaveFormatEx.nSamplesPerSec);
+
+            if (WorkerContext->CreateMixerPin)
+            {
+                /* The mixer pin format should have been accepted */
+                ObDereferenceObject(WorkerContext->DispatchContext->MixerFileObject);
+                ZwClose(WorkerContext->DispatchContext->hMixerPin);
+                ASSERT(0);
+            }
+
             SetIrpIoStatus(WorkerContext->Irp, STATUS_UNSUCCESSFUL, 0);
             ExFreePool(WorkerContext->DispatchContext);
             ExFreePool(WorkerContext);
@@ -256,7 +351,6 @@ CreatePinWorkerRoutine(
                                            GENERIC_READ | GENERIC_WRITE, 
                                            IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
 
-        DPRINT1("Status %x\n", Status);
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Failed to get file object with %x\n", Status);
@@ -272,7 +366,7 @@ CreatePinWorkerRoutine(
             WorkerContext->Entry->Pins[WorkerContext->PinConnect->PinId].PinHandle = RealPinHandle;
         }
 
-        WorkerContext->Entry->Pins[WorkerContext->PinConnect->PinId].References = 1;
+        WorkerContext->Entry->Pins[WorkerContext->PinConnect->PinId].References = 0;
         WorkerContext->DispatchContext->Handle = RealPinHandle;
         WorkerContext->DispatchContext->PinId = WorkerContext->PinConnect->PinId;
         WorkerContext->DispatchContext->AudioEntry = WorkerContext->Entry;
@@ -291,16 +385,33 @@ CreatePinWorkerRoutine(
 
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("Failed to get file object with %x\n", Status);
+            DPRINT1("Failed to get file object with %x %p\n", Status, WorkerContext->Entry->Pins[WorkerContext->PinConnect->PinId].PinHandle);
             SetIrpIoStatus(WorkerContext->Irp, STATUS_UNSUCCESSFUL, 0);
             ExFreePool(WorkerContext->DispatchContext);
             ExFreePool(WorkerContext);
             return;
         }
         WorkerContext->DispatchContext->FileObject = FileObject;
+
+
+        /* re-using pin */
+        PinRequest.Property.Set = KSPROPSETID_Connection;
+        PinRequest.Property.Flags = KSPROPERTY_TYPE_SET;
+        PinRequest.Property.Id = KSPROPERTY_CONNECTION_DATAFORMAT;
+        PinRequest.PinId = PinConnect->PinId;
+
+        if (WorkerContext->MixerFormat)
+            ClientFormat = (PKSDATAFORMAT)WorkerContext->MixerFormat;
+        else
+            ClientFormat = (PKSDATAFORMAT)(WorkerContext->PinConnect + 1);
+
+        /* set the format on the real pin */
+        Status = KsSynchronousIoControlDevice(FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PinRequest, sizeof(KSPROPERTY),
+                                             (PVOID)ClientFormat, ClientFormat->FormatSize, &BytesReturned);
+
     }
 
-    DPRINT1("creating virtual pin\n");
+    DPRINT("creating virtual pin\n");
     /* now create the virtual audio pin which is exposed to wdmaud */
     Status = KsCreatePin(Filter, WorkerContext->PinConnect, GENERIC_READ | GENERIC_WRITE, &VirtualPinHandle);
 
@@ -369,27 +480,28 @@ CreatePinWorkerRoutine(
             AudioClient->Devs[AudioClient->NumDevices -1].ClientHandles[NumHandels].bHandle = TRUE;
             AudioClient->Devs[AudioClient->NumDevices -1].ClientHandles[NumHandels].hPin = RealPinHandle;
             AudioClient->Devs[AudioClient->NumDevices -1].ClientHandles[NumHandels].PinId = WorkerContext->PinConnect->PinId;
-            AudioClient->Devs[AudioClient->NumDevices -1].ClientHandles[NumHandels].hMixer = MixerPinHandle;
-
+            AudioClient->Devs[AudioClient->NumDevices -1].ClientHandles[NumHandels].hMixer = WorkerContext->DispatchContext->hMixerPin;
+            AudioClient->Devs[AudioClient->NumDevices -1].ClientHandles[NumHandels].DispatchContext = WorkerContext->DispatchContext;
         }
         else
         {
             AudioClient->Devs[AudioClient->NumDevices -1].ClientHandles[NumHandels].bHandle = FALSE;
             AudioClient->Devs[AudioClient->NumDevices -1].ClientHandles[NumHandels].hPin = VirtualPinHandle;
             AudioClient->Devs[AudioClient->NumDevices -1].ClientHandles[NumHandels].PinId = WorkerContext->PinConnect->PinId;
-            AudioClient->Devs[AudioClient->NumDevices -1].ClientHandles[NumHandels].hMixer = MixerPinHandle;
+            AudioClient->Devs[AudioClient->NumDevices -1].ClientHandles[NumHandels].hMixer = WorkerContext->DispatchContext->hMixerPin;
+            AudioClient->Devs[AudioClient->NumDevices -1].ClientHandles[NumHandels].DispatchContext = WorkerContext->DispatchContext;
         }
 
         /// increase reference count
-        WorkerContext->Entry->Pins[WorkerContext->PinConnect->PinId].References++;
         AudioClient->Devs[AudioClient->NumDevices -1].ClientHandlesCount++;
+        WorkerContext->Entry->Pins[WorkerContext->PinConnect->PinId].References++;
     }
 
 
     /* store pin context */
     FileObject->FsContext2 = (PVOID)WorkerContext->DispatchContext;
 
-    DPRINT1("Successfully created virtual pin %p\n", VirtualPinHandle);
+    DPRINT("Successfully created virtual pin %p\n", VirtualPinHandle);
     *((PHANDLE)WorkerContext->Irp->UserBuffer) = VirtualPinHandle;
 
     SetIrpIoStatus(WorkerContext->Irp, STATUS_SUCCESS, sizeof(HANDLE));
@@ -488,48 +600,97 @@ HandleSysAudioFilterPinProperties(
     }
 }
 
-NTSTATUS
-SetPinFormat(
-    PKSAUDIO_DEVICE_ENTRY Entry,
-    KSPIN_CONNECT * PinConnect,
-    ULONG Length)
+BOOL
+ComputeCompatibleFormat(
+    IN PKSAUDIO_DEVICE_ENTRY Entry,
+    IN ULONG PinId,
+    IN PSYSAUDIODEVEXT DeviceExtension,
+    IN PKSDATAFORMAT_WAVEFORMATEX ClientFormat,
+    OUT PKSDATAFORMAT_WAVEFORMATEX MixerFormat)
 {
-    KSP_PIN PinRequest;
-    PFILE_OBJECT FileObject;
+    BOOL bFound;
     ULONG BytesReturned;
+    KSP_PIN PinRequest;
+    PKSDATARANGE_AUDIO AudioRange;
     NTSTATUS Status;
+    ULONG Index;
+    PKSMULTIPLE_ITEM MultipleItem;
 
-    /* re-using pin */
-    PinRequest.Property.Set = KSPROPSETID_Connection;
-    PinRequest.Property.Flags = KSPROPERTY_TYPE_SET;
-    PinRequest.Property.Id = KSPROPERTY_CONNECTION_DATAFORMAT;
-    PinRequest.PinId = PinConnect->PinId;
+    if (!DeviceExtension->KMixerHandle || !DeviceExtension->KMixerFileObject)
+    {
+        DPRINT1("KMixer is not available\n");
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    PinRequest.PinId = PinId;
+    PinRequest.Property.Set = KSPROPSETID_Pin;
+    PinRequest.Property.Flags = KSPROPERTY_TYPE_GET;
+    PinRequest.Property.Id = KSPROPERTY_PIN_DATARANGES;
+
+    Status = KsSynchronousIoControlDevice(Entry->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PinRequest, sizeof(KSP_PIN), NULL, 0, &BytesReturned);
+    if (Status != STATUS_BUFFER_TOO_SMALL)
+    {
+        DPRINT1("Property Request KSPROPERTY_PIN_DATARANGES failed with %x\n", Status);
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    MultipleItem = ExAllocatePool(NonPagedPool, BytesReturned);
+    if (!MultipleItem)
+    {
+        return STATUS_NO_MEMORY;
+    }
+
+    Status = KsSynchronousIoControlDevice(Entry->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PinRequest, sizeof(KSP_PIN), (PVOID)MultipleItem, BytesReturned, &BytesReturned);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("Property Request KSPROPERTY_PIN_DATARANGES failed with %x\n", Status);
+        ExFreePool(MultipleItem);
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    AudioRange = (PKSDATARANGE_AUDIO)(MultipleItem + 1);
+    bFound = FALSE;
+    for(Index = 0; Index < MultipleItem->Count; Index++)
+    {
+        if (AudioRange->DataRange.FormatSize != sizeof(KSDATARANGE_AUDIO))
+        {
+            UNIMPLEMENTED
+            AudioRange = (PKSDATARANGE_AUDIO)((PUCHAR)AudioRange + AudioRange->DataRange.FormatSize);
+        }
+        MixerFormat->DataFormat.FormatSize = sizeof(KSDATAFORMAT) + sizeof(WAVEFORMATEX);
+        MixerFormat->DataFormat.Flags = 0;
+        MixerFormat->DataFormat.Reserved = 0;
+        MixerFormat->DataFormat.MajorFormat = KSDATAFORMAT_TYPE_AUDIO;
+        MixerFormat->DataFormat.SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
+        MixerFormat->DataFormat.Specifier = KSDATAFORMAT_SPECIFIER_WAVEFORMATEX;
+        MixerFormat->DataFormat.SampleSize = 4;
+        MixerFormat->WaveFormatEx.wFormatTag = ClientFormat->WaveFormatEx.wFormatTag;
+        MixerFormat->WaveFormatEx.nChannels = min(AudioRange->MaximumChannels, ClientFormat->WaveFormatEx.nChannels);
+        MixerFormat->WaveFormatEx.nSamplesPerSec = max(AudioRange->MinimumSampleFrequency, min(AudioRange->MaximumSampleFrequency, ClientFormat->WaveFormatEx.nSamplesPerSec));
+        MixerFormat->WaveFormatEx.wBitsPerSample = max(AudioRange->MinimumBitsPerSample, min(AudioRange->MaximumBitsPerSample, ClientFormat->WaveFormatEx.wBitsPerSample));
+        MixerFormat->WaveFormatEx.cbSize = 0;
+        MixerFormat->WaveFormatEx.nBlockAlign = (MixerFormat->WaveFormatEx.nChannels * MixerFormat->WaveFormatEx.wBitsPerSample) / 8;
+        MixerFormat->WaveFormatEx.nAvgBytesPerSec = MixerFormat->WaveFormatEx.nChannels * MixerFormat->WaveFormatEx.nSamplesPerSec * (MixerFormat->WaveFormatEx.wBitsPerSample / 8);
+
+        bFound = TRUE;
+        break;
+
+        AudioRange = (PKSDATARANGE_AUDIO)((PUCHAR)AudioRange + AudioRange->DataRange.FormatSize);
+    }
+    ExFreePool(MultipleItem);
 
 
-    /* get pin file object */
-    Status = ObReferenceObjectByHandle(Entry->Pins[PinConnect->PinId].PinHandle,
-                                       GENERIC_READ | GENERIC_WRITE, 
-                                       IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
+#if 0
+    DPRINT1("\nNum Channels %u Old Channels %u\n SampleRate %u Old SampleRate %u\n BitsPerSample %u Old BitsPerSample %u\n ClientFormat %p",
+           MixerFormat->WaveFormatEx.nChannels, ClientFormat->WaveFormatEx.nChannels,
+           MixerFormat->WaveFormatEx.nSamplesPerSec, ClientFormat->WaveFormatEx.nSamplesPerSec,
+           MixerFormat->WaveFormatEx.wBitsPerSample, ClientFormat->WaveFormatEx.wBitsPerSample, ClientFormat);
+#endif
 
-   if (!NT_SUCCESS(Status))
-   {
-       DPRINT1("Failed to get pin file object with %x\n", Status);
-       return Status;
-   }
-
-   Length -= sizeof(KSPIN_CONNECT) + sizeof(SYSAUDIO_INSTANCE_INFO);
-   Status = KsSynchronousIoControlDevice(FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PinRequest, sizeof(KSPROPERTY),
-                                         (PVOID)(PinConnect + 1), Length, &BytesReturned);
-   ObDereferenceObject(FileObject);
-
-   if (!NT_SUCCESS(Status))
-   {
-       /* set the format on the mixer pin */
-       UNIMPLEMENTED
-       return STATUS_SUCCESS;
-   }
-
-   return Status;
+    if (bFound)
+        return STATUS_SUCCESS;
+    else
+        return STATUS_NOT_IMPLEMENTED;
 }
 
 
@@ -555,10 +716,9 @@ HandleSysAudioFilterPinCreation(
     PDISPATCH_CONTEXT DispatchContext;
     ULONG Index, SubIndex;
     BOOL CreateMixerPin;
-    PKSDATARANGE_AUDIO AudioRange;
+    ULONG DeviceId;
     PKSDATAFORMAT_WAVEFORMATEX MixerFormat = NULL, ClientFormat;
 
-    PKSMULTIPLE_ITEM MultipleItem;
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
@@ -612,6 +772,27 @@ HandleSysAudioFilterPinCreation(
         return SetIrpIoStatus(Irp, STATUS_INVALID_PARAMETER, 0);
     }
 
+Retry:
+    /* get the instances count */
+    PinRequest.PinId = PinConnect->PinId;
+    PinRequest.Property.Set = KSPROPSETID_Pin;
+    PinRequest.Property.Flags = KSPROPERTY_TYPE_GET;
+    PinRequest.Property.Id = KSPROPERTY_PIN_CINSTANCES;
+
+    Status = KsSynchronousIoControlDevice(Entry->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PinRequest, sizeof(KSP_PIN), (PVOID)&PinInstances, sizeof(KSPIN_CINSTANCES), &BytesReturned);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("Property Request KSPROPERTY_PIN_GLOBALCINSTANCES failed with %x\n", Status);
+        return SetIrpIoStatus(Irp, Status, 0);
+    }
+
+    if (PinInstances.PossibleCount == 0)
+    {
+        /* caller wanted to open an instance-less pin */
+        return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, 0);
+    }
+
+
     /* check the format */
     PinRequest.PinId = PinConnect->PinId;
     PinRequest.Property.Set = KSPROPSETID_Pin;
@@ -620,12 +801,6 @@ HandleSysAudioFilterPinCreation(
 
     CreateMixerPin = FALSE;
     BytesReturned = IoStack->Parameters.DeviceIoControl.InputBufferLength - sizeof(KSPIN_CONNECT) - sizeof(SYSAUDIO_INSTANCE_INFO);
-    if (BytesReturned != sizeof(KSDATAFORMAT_WAVEFORMATEX))
-    {
-        UNIMPLEMENTED
-        return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, 0);
-    }
-
     ClientFormat = (PKSDATAFORMAT_WAVEFORMATEX)(PinConnect + 1);
 
     Status = KsSynchronousIoControlDevice(Entry->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PinRequest, sizeof(KSP_PIN), (PVOID)ClientFormat, BytesReturned, &BytesReturned);
@@ -640,136 +815,58 @@ HandleSysAudioFilterPinCreation(
             return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, 0);
         }
 
-        PinRequest.PinId = PinConnect->PinId;
-        PinRequest.Property.Set = KSPROPSETID_Pin;
-        PinRequest.Property.Flags = KSPROPERTY_TYPE_GET;
-        PinRequest.Property.Id = KSPROPERTY_PIN_DATARANGES;
-
-        Status = KsSynchronousIoControlDevice(Entry->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PinRequest, sizeof(KSP_PIN), NULL, 0, &BytesReturned);
-        if (Status != STATUS_BUFFER_TOO_SMALL)
-        {
-            DPRINT1("Property Request KSPROPERTY_PIN_DATARANGES failed with %x\n", Status);
-            return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, 0);
-        }
-
-        MultipleItem = ExAllocatePool(NonPagedPool, BytesReturned);
-        if (!MultipleItem)
-        {
-            return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, 0);
-        }
-
         MixerFormat = ExAllocatePool(NonPagedPool, sizeof(KSDATAFORMAT_WAVEFORMATEX));
         if (!MixerFormat)
         {
-            ExFreePool(MultipleItem);
-            return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, 0);
+            return SetIrpIoStatus(Irp, STATUS_NO_MEMORY, 0);
         }
 
-        Status = KsSynchronousIoControlDevice(Entry->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PinRequest, sizeof(KSP_PIN), (PVOID)MultipleItem, BytesReturned, &BytesReturned);
+        Status = ComputeCompatibleFormat(Entry, PinConnect->PinId, DeviceExtension, ClientFormat, MixerFormat);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT("Property Request KSPROPERTY_PIN_DATARANGES failed with %x\n", Status);
             ExFreePool(MixerFormat);
-            ExFreePool(MultipleItem);
-            return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, 0);
+            return SetIrpIoStatus(Irp, Status, 0);
         }
+        CreateMixerPin = TRUE;
+    }
 
-        CreateMixerPin = FALSE;
-        AudioRange = (PKSDATARANGE_AUDIO)(MultipleItem + 1);
-        for(Index = 0; Index < MultipleItem->Count; Index++)
+    DeviceId = (ULONG)-1;
+
+    /* scan the clientinfo if the client has already opened device with the specified pin */
+    for (Index = 0; Index < ClientInfo->NumDevices; Index++)
+    {
+        if (ClientInfo->Devs[Index].DeviceId == InstanceInfo->DeviceNumber)
         {
-            if (AudioRange->DataRange.FormatSize != sizeof(KSDATARANGE_AUDIO))
+            DeviceId = Index;
+            if (ClientInfo->Devs[Index].ClientHandlesCount)
             {
-                UNIMPLEMENTED
-                AudioRange = (PKSDATARANGE_AUDIO)((PUCHAR)AudioRange + AudioRange->DataRange.FormatSize);
+                for(SubIndex = 0; SubIndex < ClientInfo->Devs[Index].ClientHandlesCount; SubIndex++)
+                {
+                    if (ClientInfo->Devs[Index].ClientHandles[SubIndex].PinId == PinConnect->PinId)
+                    {
+                        /* the pin has been already opened by the client, re-use it */
+                        ASSERT(ClientInfo->Devs[Index].ClientHandles[SubIndex].bHandle == FALSE);
+
+                        DispatchContext = ClientInfo->Devs[Index].ClientHandles[SubIndex].DispatchContext;
+                        ObDereferenceObject(DispatchContext->MixerFileObject);
+                        ObDereferenceObject(DispatchContext->FileObject);
+                        ZwClose(DispatchContext->hMixerPin);
+                        ZwClose(DispatchContext->Handle);
+                        ClientInfo->Devs[Index].ClientHandles[SubIndex].PinId = (ULONG)-1;
+                        goto Retry;
+                    }
+                }
             }
-            MixerFormat->DataFormat.FormatSize = sizeof(KSDATAFORMAT) + sizeof(WAVEFORMATEX);
-            MixerFormat->DataFormat.Flags = 0;
-            MixerFormat->DataFormat.Reserved = 0;
-            MixerFormat->DataFormat.MajorFormat = KSDATAFORMAT_TYPE_AUDIO;
-            MixerFormat->DataFormat.SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
-            MixerFormat->DataFormat.Specifier = KSDATAFORMAT_SPECIFIER_WAVEFORMATEX;
-            MixerFormat->DataFormat.SampleSize = 4;
-            MixerFormat->WaveFormatEx.wFormatTag = ClientFormat->WaveFormatEx.wFormatTag;
-            MixerFormat->WaveFormatEx.nChannels = min(AudioRange->MaximumChannels, ClientFormat->WaveFormatEx.nChannels);
-            MixerFormat->WaveFormatEx.nSamplesPerSec = max(AudioRange->MinimumSampleFrequency, min(AudioRange->MaximumSampleFrequency, ClientFormat->WaveFormatEx.nSamplesPerSec));
-            MixerFormat->WaveFormatEx.wBitsPerSample = max(AudioRange->MinimumBitsPerSample, min(AudioRange->MaximumBitsPerSample, ClientFormat->WaveFormatEx.wBitsPerSample));
-            MixerFormat->WaveFormatEx.cbSize = 0;
-            MixerFormat->WaveFormatEx.nBlockAlign = (MixerFormat->WaveFormatEx.nChannels * MixerFormat->WaveFormatEx.wBitsPerSample) / 8;
-            MixerFormat->WaveFormatEx.nAvgBytesPerSec = MixerFormat->WaveFormatEx.nChannels * MixerFormat->WaveFormatEx.nSamplesPerSec * (MixerFormat->WaveFormatEx.wBitsPerSample / 8);
-
-            CreateMixerPin = TRUE;
-            break;
-
-            AudioRange = (PKSDATARANGE_AUDIO)((PUCHAR)AudioRange + AudioRange->DataRange.FormatSize);
         }
-        ExFreePool(MultipleItem);
-        if (!CreateMixerPin)
-        {
-            ExFreePool(MixerFormat);
-            DPRINT1("No Format found :(\n");
-            return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, 0);
-        }
-#if 0
-        DPRINT1("\nNum Channels %u Old Channels %u\n SampleRate %u Old SampleRate %u\n BitsPerSample %u Old BitsPerSample %u\n ClientFormat %p",
-               MixerFormat->WaveFormatEx.nChannels, ClientFormat->WaveFormatEx.nChannels,
-               MixerFormat->WaveFormatEx.nSamplesPerSec, ClientFormat->WaveFormatEx.nSamplesPerSec,
-               MixerFormat->WaveFormatEx.wBitsPerSample, ClientFormat->WaveFormatEx.wBitsPerSample, ClientFormat);
-#endif
     }
 
-    /* get the instances count */
-    PinRequest.PinId = PinConnect->PinId;
-    PinRequest.Property.Set = KSPROPSETID_Pin;
-    PinRequest.Property.Flags = KSPROPERTY_TYPE_GET;
-    PinRequest.Property.Id = KSPROPERTY_PIN_CINSTANCES;
-
-    Status = KsSynchronousIoControlDevice(Entry->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PinRequest, sizeof(KSP_PIN), (PVOID)&PinInstances, sizeof(KSPIN_CINSTANCES), &BytesReturned);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT("Property Request KSPROPERTY_PIN_GLOBALCINSTANCES failed with %x\n", Status);
-        if (MixerFormat)
-            ExFreePool(MixerFormat);
-        return SetIrpIoStatus(Irp, Status, 0);
-    }
-
-    if (PinInstances.PossibleCount == 0)
-    {
-        /* caller wanted to open an instance-less pin */
-        if (MixerFormat)
-            ExFreePool(MixerFormat);
-        return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, 0);
-    }
+    ASSERT(DeviceId != (ULONG)-1);
 
     if (PinInstances.CurrentCount == PinInstances.PossibleCount)
     {
-        for (Index = 0; Index < ClientInfo->NumDevices; Index++)
-        {
-            if (ClientInfo->Devs[Index].DeviceId == InstanceInfo->DeviceNumber)
-            {
-                if (ClientInfo->Devs[Index].ClientHandlesCount)
-                {
-                    for(SubIndex = 0; SubIndex < ClientInfo->Devs[Index].ClientHandlesCount; SubIndex++)
-                    {
-                        if (ClientInfo->Devs[Index].ClientHandles[SubIndex].PinId == PinConnect->PinId)
-                        {
-                            /* reuse opened pin */
-                            Length = IoStack->Parameters.DeviceIoControl.InputBufferLength - sizeof(KSPIN_CONNECT) + sizeof(SYSAUDIO_INSTANCE_INFO);
-                            Status = SetPinFormat(Entry, PinConnect, Length);
-                            DPRINT1("Reusing instance handle Status %x\n", Status);
-                            ASSERT(ClientInfo->Devs[Index].ClientHandles[SubIndex].bHandle == FALSE);
-                            *((PHANDLE)Irp->UserBuffer) = ClientInfo->Devs[Index].ClientHandles[SubIndex].hPin;
-                            return SetIrpIoStatus(Irp, Status, sizeof(HANDLE));
-                        }
-                    }
-                }
-
-            }
-        }
-
         /* pin already exists */
         ASSERT(Entry->Pins[PinConnect->PinId].PinHandle != NULL);
-        if (Entry->Pins[PinConnect->PinId].References > 1)
+        if (Entry->Pins[PinConnect->PinId].References)
         {
             /* FIXME need ksmixer */
             DPRINT1("Device %u Pin %u References %u is already occupied, try later\n", InstanceInfo->DeviceNumber, PinConnect->PinId, Entry->Pins[PinConnect->PinId].References);
@@ -816,28 +913,14 @@ HandleSysAudioFilterPinCreation(
     RtlZeroMemory(WorkerContext, sizeof(PIN_WORKER_CONTEXT));
     RtlZeroMemory(DispatchContext, sizeof(DISPATCH_CONTEXT));
 
-    if (PinInstances.CurrentCount == PinInstances.PossibleCount)
+    DPRINT1("PinInstances.CurrentCount %u\n", PinInstances.CurrentCount);
+
+    if (PinInstances.CurrentCount < PinInstances.PossibleCount)
     {
-        /* re-using pin */
-        Status = SetPinFormat(Entry, PinConnect, Length);
-        if (!NT_SUCCESS(Status))
-        {
-            if (MixerFormat)
-                ExFreePool(MixerFormat);
-            IoFreeWorkItem(WorkItem);
-            ExFreePool(WorkerContext);
-            ExFreePool(DispatchContext);
-            return SetIrpIoStatus(Irp, Status, 0);
-        }
-    }
-    else
-    {
-        /* create the real pin */
         WorkerContext->CreateRealPin = TRUE;
     }
 
     /* set up context */
-
     WorkerContext->DispatchContext = DispatchContext;
     WorkerContext->Entry = Entry;
     WorkerContext->Irp = Irp;

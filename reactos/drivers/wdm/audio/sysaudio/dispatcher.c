@@ -24,7 +24,7 @@ Dispatch_fnDeviceIoControl(
 {
     PIO_STACK_LOCATION IoStack;
 
-    DPRINT("Dispatch_fnDeviceIoControl called DeviceObject %p Irp %p\n", DeviceObject);
+    //DPRINT("Dispatch_fnDeviceIoControl called DeviceObject %p Irp %p\n", DeviceObject);
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_PROPERTY)
@@ -95,6 +95,8 @@ Dispatch_fnClose(
     PIO_STACK_LOCATION IoStatus;
     ULONG Index, SubIndex;
     PSYSAUDIODEVEXT DeviceExtension;
+    PDISPATCH_CONTEXT DispatchContext;
+
 
     IoStatus = IoGetCurrentIrpStackLocation(Irp);
 
@@ -105,6 +107,7 @@ Dispatch_fnClose(
     DPRINT1("Client %p NumDevices %u\n", Client, Client->NumDevices);
     for(Index = 0; Index < Client->NumDevices; Index++)
     {
+        DPRINT1("Index %u Device %u Handels Count %u\n", Index, Client->Devs[Index].DeviceId, Client->Devs[Index].ClientHandlesCount);
         if (Client->Devs[Index].ClientHandlesCount)
         {
             Entry = GetListEntry(&DeviceExtension->KsAudioDeviceList, Client->Devs[Index].DeviceId);
@@ -112,7 +115,9 @@ Dispatch_fnClose(
 
             for(SubIndex = 0; SubIndex < Client->Devs[Index].ClientHandlesCount; SubIndex++)
             {
-                ASSERT(Entry->NumberOfPins > Client->Devs[Index].ClientHandles[SubIndex].PinId);
+                if (Client->Devs[Index].ClientHandles[SubIndex].PinId == (ULONG)-1)
+                    continue;
+
                 if (Client->Devs[Index].ClientHandles[SubIndex].bHandle)
                 {
                     DPRINT1("Closing handle %p\n", Client->Devs[Index].ClientHandles[SubIndex].hPin);
@@ -125,6 +130,21 @@ Dispatch_fnClose(
                     /* this is pin which can only be instantiated once
                      * so we just need to release the reference count on that pin */
                     Entry->Pins[Client->Devs[Index].ClientHandles[SubIndex].PinId].References--;
+
+                    DispatchContext = (PDISPATCH_CONTEXT)Client->Devs[Index].ClientHandles[SubIndex].DispatchContext;
+                    ObDereferenceObject(DispatchContext->MixerFileObject);
+                    ObDereferenceObject(DispatchContext->FileObject);
+                    ZwClose(DispatchContext->hMixerPin);
+                    ExFreePool(DispatchContext);
+
+                    //DPRINT1("Index %u DeviceIndex %u Pin %u References %u\n", Index, Client->Devs[Index].DeviceId, SubIndex, Entry->Pins[Client->Devs[Index].ClientHandles[SubIndex].PinId].References);
+                    if (!Entry->Pins[Client->Devs[Index].ClientHandles[SubIndex].PinId].References)
+                    {
+                        DPRINT1("Closing pin %p\n", Entry->Pins[Client->Devs[Index].ClientHandles[SubIndex].PinId].PinHandle);
+
+                        ZwClose(Entry->Pins[Client->Devs[Index].ClientHandles[SubIndex].PinId].PinHandle);
+                        Entry->Pins[Client->Devs[Index].ClientHandles[SubIndex].PinId].PinHandle = NULL;
+                    }
                 }
             }
             ExFreePool(Client->Devs[Index].ClientHandles);
