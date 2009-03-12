@@ -1,71 +1,95 @@
 #include <windows.h>
 #include <stdio.h>
 #include <tchar.h>
+#include "doskey.h"
 
-static VOID
-PrintAlias (VOID)
+#define MAX_STRING 2000
+TCHAR szStringBuf[MAX_STRING];
+LPTSTR pszExeName = _T("cmd.exe");
+
+static VOID SetInsert(DWORD dwFlag)
 {
-    LPTSTR Aliases;
-    LPTSTR ptr;
-    DWORD len;
-
-    len = GetConsoleAliasesLength(_T("cmd.exe"));
-    if (len <= 0)
-        return;
-
-    /* allocate memory for an extra \0 char to make parsing easier */
-    ptr = HeapAlloc(GetProcessHeap(), 0, (len + sizeof(TCHAR)));
-    if (!ptr)
-        return;
-
-    Aliases = ptr;
-
-    ZeroMemory(Aliases, len + sizeof(TCHAR));
-
-    if (GetConsoleAliases(Aliases, len, _T("cmd.exe")) != 0)
-    {
-        while (*Aliases != '\0')
-        {
-            _tprintf(_T("%s\n"), Aliases);
-            Aliases = Aliases + lstrlen(Aliases);
-            Aliases++;
-        }
-    }
-    HeapFree(GetProcessHeap(), 0 , ptr);
+    DWORD dwMode;
+    HANDLE hConsole = GetStdHandle(STD_INPUT_HANDLE);
+    GetConsoleMode(hConsole, &dwMode);
+    dwMode |= ENABLE_EXTENDED_FLAGS;
+    SetConsoleMode(hConsole, (dwMode & ~ENABLE_INSERT_MODE) | dwFlag);
 }
 
-INT SetMacro (LPTSTR param)
+static VOID PrintHistory(VOID)
 {
-    LPTSTR ptr, text;
+    DWORD Length = GetConsoleCommandHistoryLength(pszExeName);
+    /* On Windows, the ANSI version of GetConsoleCommandHistory requires
+     * a buffer twice as large as the actual history length. */
+    BYTE HistBuf[Length * (sizeof(WCHAR) / sizeof(TCHAR))];
+    TCHAR *Hist    = (TCHAR *)HistBuf;
+    TCHAR *HistEnd = (TCHAR *)&HistBuf[Length];
 
-    while (*param == _T(' '))
-        param++;
+    if (GetConsoleCommandHistory(Hist, sizeof HistBuf, pszExeName))
+        for (; Hist < HistEnd; Hist += _tcslen(Hist) + 1)
+            _tprintf(_T("%s\n"), Hist);
+}
+
+static INT SetMacro(LPTSTR definition)
+{
+    TCHAR *name, *nameend, *text, temp;
+
+    name = definition;
+    while (*name == _T(' '))
+        name++;
 
     /* error if no '=' found */
-    if ((ptr = _tcschr (param, _T('='))) == 0)
-        return 1;
+    if ((nameend = _tcschr(name, _T('='))) != NULL)
+    {
+        text = nameend + 1;
+        while (*text == _T(' '))
+            text++;
 
-    text = ptr + 1;
-    while (*text == _T(' '))
-        text++;
+        while (nameend > name && nameend[-1] == _T(' '))
+            nameend--;
 
-    while (ptr > param && ptr[-1] == _T(' '))
-        ptr--;
+        /* Split rest into name and substitute */
+        temp = *nameend;
+        *nameend = _T('\0');
+        /* Don't allow spaces in the name, since such a macro would be unusable */
+        if (!_tcschr(name, _T(' ')) && AddConsoleAlias(name, text, pszExeName))
+            return 0;
+        *nameend = temp;
+    }
 
-    /* Split rest into name and substitute */
-    *ptr++ = _T('\0');
+    LoadString(GetModuleHandle(NULL), IDS_INVALID_MACRO_DEF, szStringBuf, MAX_STRING);
+    _tprintf(szStringBuf, definition);
+    return 1;
+}
 
-    if (*param == _T('\0') || _tcschr(param, _T(' ')))
-        return 1;
+static VOID PrintMacros(LPTSTR pszExeName, LPTSTR Indent)
+{
+    DWORD Length = GetConsoleAliasesLength(pszExeName);
+    BYTE AliasBuf[Length];
+    TCHAR *Alias    = (TCHAR *)AliasBuf;
+    TCHAR *AliasEnd = (TCHAR *)&AliasBuf[Length];
 
-    _tprintf(_T("%s, %s\n"), text, param);
+    if (GetConsoleAliases(Alias, sizeof AliasBuf, pszExeName))
+        for (; Alias < AliasEnd; Alias += _tcslen(Alias) + 1)
+            _tprintf(_T("%s%s\n"), Indent, Alias);
+}
 
-    if (ptr[0] == _T('\0'))
-        AddConsoleAlias(param, NULL, _T("cmd.exe"));
-    else
-        AddConsoleAlias(param, text, _T("cmd.exe"));
+static VOID PrintAllMacros(VOID)
+{
+    DWORD Length = GetConsoleAliasExesLength();
+    BYTE ExeNameBuf[Length];
+    TCHAR *ExeName    = (TCHAR *)ExeNameBuf;
+    TCHAR *ExeNameEnd = (TCHAR *)&ExeNameBuf[Length];
 
-    return 0;
+    if (GetConsoleAliasExes(ExeName, sizeof ExeNameBuf))
+    {
+        for (; ExeName < ExeNameEnd; ExeName += _tcslen(ExeName) + 1)
+        {
+            _tprintf(_T("[%s]\n"), ExeName);
+            PrintMacros(ExeName, _T("    "));
+            _tprintf(_T("\n"));
+        }
+    }
 }
 
 static VOID ReadFromFile(LPTSTR param)
@@ -73,10 +97,16 @@ static VOID ReadFromFile(LPTSTR param)
     FILE* fp;
     TCHAR line[MAX_PATH];
 
-    /* Skip the "/macrofile=" prefix */
-    param += 11;
-
     fp = _tfopen(param, _T("r"));
+    if (!fp)
+    {
+#ifdef UNICODE
+        _wperror(param);
+#else
+        perror(param);
+#endif
+        return;
+    }
 
     while ( _fgetts(line, MAX_PATH, fp) != NULL) 
     {
@@ -85,53 +115,122 @@ static VOID ReadFromFile(LPTSTR param)
         if (*end == _T('\n'))
             *end = _T('\0');
 
-        SetMacro(line);
+        if (*line)
+            SetMacro(line);
     }
 
     fclose(fp);
     return;
 }
 
-int
-_tmain (int argc, LPTSTR argv[])
+/* Get the start and end of the next command-line argument. */
+static BOOL GetArg(TCHAR **pStart, TCHAR **pEnd)
 {
-    if (argc < 2)
-        return 0;
-
-    if (argv[1][0] == '/')
+    BOOL bInQuotes = FALSE;
+    TCHAR *p = *pEnd;
+    p += _tcsspn(p, _T(" \t"));
+    if (!*p)
+        return FALSE;
+    *pStart = p;
+    do
     {
-        if (_tcsnicmp(argv[1], _T("/macrofile"), 10) == 0)
-            ReadFromFile(argv[1]);
-        if (_tcscmp(argv[1], _T("/macros")) == 0)
-            PrintAlias();
+        if (!bInQuotes && (*p == _T(' ') || *p == _T('\t')))
+            break;
+        bInQuotes ^= (*p++ == _T('"'));
+    } while (*p);
+    *pEnd = p;
+    return TRUE;
+}
+
+/* Remove starting and ending quotes from a string, if present */
+static LPTSTR RemoveQuotes(LPTSTR str)
+{
+    TCHAR *end;
+    if (*str == _T('"') && *(end = str + _tcslen(str) - 1) == _T('"'))
+    {
+        str++;
+        *end = _T('\0');
     }
-    else
-    {
-        /* Get the full command line using GetCommandLine().
-           We can't just pass argv[1] here, because then a parameter like "gotoroot=cd \" wouldn't be passed completely. */
-        TCHAR* szCommandLine = GetCommandLine();
+    return str;
+}
 
-        /* Skip the application name */
-        if(*szCommandLine == '\"')
+int
+_tmain(VOID)
+{
+    /* Get the full command line using GetCommandLine(). We can't just use argv,
+     * because then a parameter like "gotoroot=cd \" wouldn't be passed completely. */
+    TCHAR *pArgStart;
+    TCHAR *pArgEnd = GetCommandLine();
+
+    /* Skip the application name */
+    GetArg(&pArgStart, &pArgEnd);
+
+    while (GetArg(&pArgStart, &pArgEnd))
+    {
+        /* NUL-terminate this argument to make processing easier */
+        TCHAR tmp = *pArgEnd;
+        *pArgEnd = _T('\0');
+
+        if (!_tcscmp(pArgStart, _T("/?")))
         {
-            do
-            {
-                szCommandLine++;
-            }
-            while(*szCommandLine != '\"');
-            szCommandLine++;
+            LoadString(GetModuleHandle(NULL), IDS_HELP, szStringBuf, MAX_STRING);
+            _tprintf(szStringBuf);
+            break;
+        }
+        else if (!_tcsnicmp(pArgStart, _T("/EXENAME="), 9))
+        {
+            pszExeName = RemoveQuotes(pArgStart + 9);
+        }
+        else if (!_tcsicmp(pArgStart, _T("/H")) ||
+                 !_tcsicmp(pArgStart, _T("/HISTORY")))
+        {
+            PrintHistory();
+        }
+        else if (!_tcsnicmp(pArgStart, _T("/LISTSIZE="), 10))
+        {
+            SetConsoleNumberOfCommands(_ttoi(pArgStart + 10), pszExeName);
+        }
+        else if (!_tcsicmp(pArgStart, _T("/REINSTALL")))
+        {
+            ExpungeConsoleCommandHistory(pszExeName);
+        }
+        else if (!_tcsicmp(pArgStart, _T("/INSERT")))
+        {
+            SetInsert(ENABLE_INSERT_MODE);
+        }
+        else if (!_tcsicmp(pArgStart, _T("/OVERSTRIKE")))
+        {
+            SetInsert(0);
+        }
+        else if (!_tcsicmp(pArgStart, _T("/M")) ||
+                 !_tcsicmp(pArgStart, _T("/MACROS")))
+        {
+            PrintMacros(pszExeName, _T(""));
+        }
+        else if (!_tcsnicmp(pArgStart, _T("/M:"),      3) ||
+                 !_tcsnicmp(pArgStart, _T("/MACROS:"), 8))
+        {
+            LPTSTR exe = RemoveQuotes(_tcschr(pArgStart, _T(':')) + 1);
+            if (!_tcsicmp(exe, _T("ALL")))
+                PrintAllMacros();
+            else
+                PrintMacros(exe, _T(""));
+        }
+        else if (!_tcsnicmp(pArgStart, _T("/MACROFILE="), 11))
+        {
+            ReadFromFile(RemoveQuotes(pArgStart + 11));
         }
         else
         {
-            do
-            {
-                szCommandLine++;
-            }
-            while(*szCommandLine != ' ');
+            /* This is the beginning of a macro definition. It includes
+             * the entire remainder of the line, so first put back the
+             * character that we replaced with NUL. */
+            *pArgEnd = tmp;
+            return SetMacro(pArgStart);
         }
 
-        /* Skip the leading whitespace and pass the command line to SetMacro */
-        SetMacro(szCommandLine + _tcsspn(szCommandLine, _T(" \t")));
+        if (!tmp) break;
+        pArgEnd++;
     }
 
     return 0;
