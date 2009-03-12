@@ -111,7 +111,6 @@ base\system\smss\smss.exe                           1
 
 
 ; Dynamic Link Libraries
-dll\3rdparty\freetype\freetype.dll                  1
 dll\3rdparty\mesa32\mesa32.dll                      1
 dll\3rdparty\libjpeg\libjpeg.dll                    1
 dll\3rdparty\libxslt\libxslt.dll                    1
@@ -474,6 +473,7 @@ drivers\video\displays\framebuf\framebuf.dll        1
 drivers\video\miniport\vga\vgamp.sys                2
 drivers\video\miniport\vbe\vbemp.sys                2
 drivers\video\videoprt\videoprt.sys                 2
+drivers\video\font\ftfd\ftfd.dll                   1
 
 drivers\wdm\audio\filters\kmixer\kmixer.sys         2
 drivers\wdm\audio\sysaudio\sysaudio.sys             2

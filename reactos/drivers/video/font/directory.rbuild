@@ -4,5 +4,8 @@
 	<directory name="bmfd">
 		<xi:include href="bmfd/bmfd.rbuild" />
 	</directory>
+	<directory name="ftfd">
+		<xi:include href="ftfd/ftfd.rbuild" />
+	</directory>
 </group>
 
