@@ -1,0 +1,17 @@
+LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
+
+STRINGTABLE DISCARDABLE
+BEGIN
+
+IDS_USAGE, "FIND: Skriver ut alla rader i en fil som innehåller en sträng.\n\n\
+  FIND [ /C ] [ /I ] [ /N ] [ /V ] \"sträng\" [ fil... ]\n\
+    /C  Räkna nummren av linjer som innehåller en strängen\n\
+    /I  Ignorera skiftläge\n\
+    /N  Antal visade rader, börjar på 1\n\
+    /V  Skriver ut rader som inte innehåller strängen"
+
+IDS_NO_SUCH_FILE, "FIND: %s: Ingen sorts fil\n"
+
+IDS_CANNOT_OPEN, "FIND: %s: Kan inte öppna filen\n"
+
+END
