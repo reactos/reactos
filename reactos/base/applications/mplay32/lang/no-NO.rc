@@ -1,0 +1,29 @@
+LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
+
+IDR_MAINMENU MENU
+BEGIN
+	POPUP "&Fil"
+	BEGIN
+		MENUITEM "&Åpne...", IDM_OPEN_FILE
+		MENUITEM "&Lukk", IDM_CLOSE_FILE
+		MENUITEM SEPARATOR
+		MENUITEM "&Avslutt", IDM_EXIT
+	END
+	POPUP "&Hjelp"
+	BEGIN
+		MENUITEM "&Om...", IDM_ABOUT
+	END
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_ALL_TYPES_FILTER "Alle kompaktible filer  (*.wav, *.cda, *.midi, *.mid, *.avi)\0*.wav;*.cda;*.midi;*.mid;*.avi\0"
+	IDS_TOOLTIP_PLAY "Spill av"
+	IDS_TOOLTIP_STOP "Stopp"
+	IDS_TOOLTIP_EJECT "Løs ut"
+	IDS_TOOLTIP_BACKWARD "Spole tilbake"
+	IDS_TOOLTIP_SEEKBACK "Søke tilbake"
+	IDS_TOOLTIP_SEEKFORW "Søke fremover"
+	IDS_TOOLTIP_FORWARD "Spole fremover"
+    IDS_APPTITLE "ReactOS Multimedia avspiller"
+END
