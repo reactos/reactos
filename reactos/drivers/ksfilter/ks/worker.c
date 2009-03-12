@@ -35,7 +35,7 @@ KsRegisterWorker(
         return STATUS_INVALID_PARAMETER;
     }
 
-    KsWorker = ExAllocatePoolWithTag(NonPagedPool, sizeof(KS_WORKER), 0);
+    KsWorker = ExAllocatePool(NonPagedPool, sizeof(KS_WORKER));
     if (!KsWorker)
         return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -80,7 +80,7 @@ KsUnregisterWorker(
         KeReleaseSpinLock(&KsWorker->Lock, OldIrql);
     }
 
-    ExFreePoolWithTag(KsWorker, 0);
+    ExFreePool(KsWorker);
 }
 
 /*
