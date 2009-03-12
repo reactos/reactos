@@ -695,172 +695,130 @@ VOID ParseCommandLine (LPTSTR cmd)
 	}
 }
 
+/* Execute a command without waiting for it to finish. If it's an internal
+ * command or batch file, we must create a new cmd.exe process to handle it.
+ * TODO: For now, this just always creates a cmd.exe process.
+ *       This works, but is inefficient for running external programs,
+ *       which could just be run directly. */
+static HANDLE
+ExecuteAsync(PARSED_COMMAND *Cmd)
+{
+	TCHAR CmdPath[MAX_PATH];
+	TCHAR CmdParams[CMDLINE_LENGTH], *ParamsEnd;
+	STARTUPINFO stui;
+	PROCESS_INFORMATION prci;
+
+	/* Get the path to cmd.exe */
+	GetModuleFileName(NULL, CmdPath, MAX_PATH);
+
+	/* Build the parameter string to pass to cmd.exe */
+	ParamsEnd = _stpcpy(CmdParams, _T("/S/D/C\""));
+	ParamsEnd = Unparse(Cmd, ParamsEnd, &CmdParams[CMDLINE_LENGTH - 2]);
+	if (!ParamsEnd)
+	{
+		error_out_of_memory();
+		return NULL;
+	}
+	_tcscpy(ParamsEnd, _T("\""));
+
+	memset(&stui, 0, sizeof stui);
+	stui.cb = sizeof(STARTUPINFO);
+	if (!CreateProcess(CmdPath, CmdParams, NULL, NULL, TRUE, 0,
+	                   NULL, NULL, &stui, &prci))
+	{
+		ErrorMessage(GetLastError(), NULL);
+		return NULL;
+	}
+
+	CloseHandle(prci.hThread);
+	return prci.hProcess;
+}
+
 static VOID
 ExecutePipeline(PARSED_COMMAND *Cmd)
 {
 #ifdef FEATURE_REDIRECTION
-	TCHAR szTempPath[MAX_PATH] = _T(".\\");
-	TCHAR szFileName[2][MAX_PATH] = {_T(""), _T("")};
-	HANDLE hFile[2] = {INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE};
-	INT  Length;
-	UINT Attributes;
-	HANDLE hOldConIn;
-	HANDLE hOldConOut;
-#endif /* FEATURE_REDIRECTION */
+	HANDLE hInput = NULL;
+	HANDLE hOldConIn = GetStdHandle(STD_INPUT_HANDLE);
+	HANDLE hOldConOut = GetStdHandle(STD_OUTPUT_HANDLE);
+	HANDLE hProcess[MAXIMUM_WAIT_OBJECTS];
+	INT nProcesses = 0;
+	DWORD dwExitCode;
 
-	//TRACE ("ParseCommandLine: (\'%s\')\n", debugstr_aw(s));
-
-#ifdef FEATURE_REDIRECTION
-	/* find the temp path to store temporary files */
-	Length = GetTempPath (MAX_PATH, szTempPath);
-	if (Length > 0 && Length < MAX_PATH)
+	/* Do all but the last pipe command */
+	do
 	{
-		Attributes = GetFileAttributes(szTempPath);
-		if (Attributes == 0xffffffff ||
-		    !(Attributes & FILE_ATTRIBUTE_DIRECTORY))
+		HANDLE hPipeRead, hPipeWrite;
+		if (nProcesses > (MAXIMUM_WAIT_OBJECTS - 2))
 		{
-			Length = 0;
-		}
-	}
-	if (Length == 0 || Length >= MAX_PATH)
-	{
-		_tcscpy(szTempPath, _T(".\\"));
-	}
-	if (szTempPath[_tcslen (szTempPath) - 1] != _T('\\'))
-		_tcscat (szTempPath, _T("\\"));
-
-	/* Set up the initial conditions ... */
-	/* preserve STDIN and STDOUT handles */
-	hOldConIn  = GetStdHandle (STD_INPUT_HANDLE);
-	hOldConOut = GetStdHandle (STD_OUTPUT_HANDLE);
-
-	/* Now do all but the last pipe command */
-	*szFileName[0] = _T('\0');
-	hFile[0] = INVALID_HANDLE_VALUE;
-
-	while (Cmd->Type == C_PIPE)
-	{
-		SECURITY_ATTRIBUTES sa = {sizeof(SECURITY_ATTRIBUTES), NULL, TRUE};
-
-		/* Create unique temporary file name */
-		GetTempFileName (szTempPath, _T("CMD"), 0, szFileName[1]);
-
-		/* we need make sure the LastError msg is zero before calling CreateFile */
-		SetLastError(0);
-
-		/* Set current stdout to temporary file */
-		hFile[1] = CreateFile (szFileName[1], GENERIC_WRITE, 0, &sa,
-				       TRUNCATE_EXISTING, FILE_ATTRIBUTE_TEMPORARY, NULL);
-
-		if (hFile[1] == INVALID_HANDLE_VALUE)
-		{
-			ConErrResPrintf(STRING_CMD_ERROR2);
-			return;
+			error_too_many_parameters(_T("|"));
+			goto failed;
 		}
 
-		SetStdHandle (STD_OUTPUT_HANDLE, hFile[1]);
-
-		ExecuteCommand(Cmd->Subcommands);
-
-		/* close stdout file */
-		SetStdHandle (STD_OUTPUT_HANDLE, hOldConOut);
-		if ((hFile[1] != INVALID_HANDLE_VALUE) && (hFile[1] != hOldConOut))
+		/* Create the pipe that this process will write into.
+		 * Make the handles non-inheritable initially, because this
+		 * process shouldn't inherit the reading handle. */
+		if (!CreatePipe(&hPipeRead, &hPipeWrite, NULL, 0))
 		{
-			CloseHandle (hFile[1]);
-			hFile[1] = INVALID_HANDLE_VALUE;
+			error_no_pipe();
+			goto failed;
 		}
 
-		/* close old stdin file */
-		SetStdHandle (STD_INPUT_HANDLE, hOldConIn);
-		if ((hFile[0] != INVALID_HANDLE_VALUE) && (hFile[0] != hOldConIn))
-		{
-			/* delete old stdin file, if it is a real file */
-			CloseHandle (hFile[0]);
-			hFile[0] = INVALID_HANDLE_VALUE;
-			DeleteFile (szFileName[0]);
-			*szFileName[0] = _T('\0');
-		}
+		/* The writing side of the pipe is STDOUT for this process */
+		SetHandleInformation(hPipeWrite, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
+		SetStdHandle(STD_OUTPUT_HANDLE, hPipeWrite);
 
-		/* copy stdout file name to stdin file name */
-		_tcscpy (szFileName[0], szFileName[1]);
-		*szFileName[1] = _T('\0');
+		/* Execute it (error check is done later for easier cleanup) */
+		hProcess[nProcesses] = ExecuteAsync(Cmd->Subcommands);
+		CloseHandle(hPipeWrite);
+		if (hInput)
+			CloseHandle(hInput);
 
-		/* we need make sure the LastError msg is zero before calling CreateFile */
-		SetLastError(0);
+		/* The reading side of the pipe will be STDIN for the next process */
+		SetHandleInformation(hPipeRead, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
+		SetStdHandle(STD_INPUT_HANDLE, hPipeRead);
+		hInput = hPipeRead;
 
-		/* open new stdin file */
-		hFile[0] = CreateFile (szFileName[0], GENERIC_READ, 0, &sa,
-		                       OPEN_EXISTING, FILE_ATTRIBUTE_TEMPORARY, NULL);
-		SetStdHandle (STD_INPUT_HANDLE, hFile[0]);
+		if (!hProcess[nProcesses])
+			goto failed;
+		nProcesses++;
 
 		Cmd = Cmd->Subcommands->Next;
-	}
+	} while (Cmd->Type == C_PIPE);
 
-	/* Now set up the end conditions... */
+	/* The last process uses the original STDOUT */
 	SetStdHandle(STD_OUTPUT_HANDLE, hOldConOut);
+	hProcess[nProcesses] = ExecuteAsync(Cmd);
+	if (!hProcess[nProcesses])
+		goto failed;
+	nProcesses++;
+	CloseHandle(hInput);
+	SetStdHandle(STD_INPUT_HANDLE, hOldConIn);
 
+	/* Wait for all processes to complete */
+	bChildProcessRunning = TRUE;
+	WaitForMultipleObjects(nProcesses, hProcess, TRUE, INFINITE);
+	bChildProcessRunning = FALSE;
+
+	/* Use the exit code of the last process in the pipeline */
+	GetExitCodeProcess(hProcess[nProcesses - 1], &dwExitCode);
+	nErrorLevel = (INT)dwExitCode;
+
+	while (--nProcesses >= 0)
+		CloseHandle(hProcess[nProcesses]);
+	return;
+
+failed:
+	if (hInput)
+		CloseHandle(hInput);
+	while (--nProcesses >= 0)
+	{
+		TerminateProcess(hProcess[nProcesses], 0);
+		CloseHandle(hProcess[nProcesses]);
+	}
+	SetStdHandle(STD_INPUT_HANDLE, hOldConIn);
+	SetStdHandle(STD_OUTPUT_HANDLE, hOldConOut);
 #endif
-
-	/* process final command */
-	ExecuteCommand(Cmd);
-
-#ifdef FEATURE_REDIRECTION
-	/* close old stdin file */
-#if 0  /* buggy implementation */
-	SetStdHandle (STD_INPUT_HANDLE, hOldConIn);
-	if ((hFile[0] != INVALID_HANDLE_VALUE) &&
-		(hFile[0] != hOldConIn))
-	{
-		/* delete old stdin file, if it is a real file */
-		CloseHandle (hFile[0]);
-		hFile[0] = INVALID_HANDLE_VALUE;
-		DeleteFile (szFileName[0]);
-		*szFileName[0] = _T('\0');
-	}
-
-	/* Restore original STDIN */
-	if (hOldConIn != INVALID_HANDLE_VALUE)
-	{
-		HANDLE hIn = GetStdHandle (STD_INPUT_HANDLE);
-		SetStdHandle (STD_INPUT_HANDLE, hOldConIn);
-		if (hOldConIn != hIn)
-			CloseHandle (hIn);
-		hOldConIn = INVALID_HANDLE_VALUE;
-	}
-	else
-	{
-		WARN ("Can't restore STDIN! Is invalid!!\n", out);
-	}
-#endif  /* buggy implementation */
-
-
-	if (hOldConIn != INVALID_HANDLE_VALUE)
-	{
-		HANDLE hIn = GetStdHandle (STD_INPUT_HANDLE);
-		SetStdHandle (STD_INPUT_HANDLE, hOldConIn);
-		if (hIn == INVALID_HANDLE_VALUE)
-		{
-			WARN ("Previous STDIN is invalid!!\n");
-		}
-		else
-		{
-			if (GetFileType (hIn) == FILE_TYPE_DISK)
-			{
-				if (hFile[0] == hIn)
-				{
-					CloseHandle (hFile[0]);
-					hFile[0] = INVALID_HANDLE_VALUE;
-					DeleteFile (szFileName[0]);
-					*szFileName[0] = _T('\0');
-				}
-				else
-				{
-					WARN ("hFile[0] and hIn dont match!!!\n");
-				}
-			}
-		}
-	}
-#endif /* FEATURE_REDIRECTION */
 }
 
 BOOL

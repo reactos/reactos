@@ -384,6 +384,7 @@ typedef struct _PARSED_COMMAND
 } PARSED_COMMAND;
 PARSED_COMMAND *ParseCommand(LPTSTR Line);
 VOID EchoCommand(PARSED_COMMAND *Cmd);
+TCHAR *Unparse(PARSED_COMMAND *Cmd, TCHAR *Out, TCHAR *OutEnd);
 VOID FreeCommand(PARSED_COMMAND *Cmd);
 
 

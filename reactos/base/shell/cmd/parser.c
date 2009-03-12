@@ -807,6 +807,106 @@ EchoCommand(PARSED_COMMAND *Cmd)
 	}
 }
 
+/* "Unparse" a command into a text form suitable for passing to CMD /C.
+ * Used for pipes. This is basically the same thing as EchoCommand, but
+ * writing into a string instead of to standard output. */
+TCHAR *
+Unparse(PARSED_COMMAND *Cmd, TCHAR *Out, TCHAR *OutEnd)
+{
+	TCHAR Buf[CMDLINE_LENGTH];
+	PARSED_COMMAND *Sub;
+	REDIRECTION *Redir;
+
+/* Since this function has the annoying requirement that it must avoid
+ * overflowing the supplied buffer, define some helper macros to make
+ * this less painful */
+#define CHAR(Char) { \
+	if (Out == OutEnd) return NULL; \
+	*Out++ = Char; }
+#define STRING(String) { \
+	if (Out + _tcslen(String) > OutEnd) return NULL; \
+	Out = _stpcpy(Out, String); }
+#define PRINTF(Format, ...) { \
+	UINT Len = _sntprintf(Out, OutEnd - Out, Format, __VA_ARGS__); \
+	if (Len > (UINT)(OutEnd - Out)) return NULL; \
+	Out += Len; }
+#define RECURSE(Subcommand) { \
+	Out = Unparse(Subcommand, Out, OutEnd); \
+	if (!Out) return NULL; }
+
+	switch (Cmd->Type)
+	{
+	case C_COMMAND:
+		if (!SubstituteForVars(Cmd->Command.CommandLine, Buf)) return NULL;
+		/* This is fragile since there could be special characters, but
+		 * Windows doesn't bother escaping them, so for compatibility
+		 * we probably shouldn't do it either */
+		STRING(Buf)
+		break;
+	case C_QUIET:
+		CHAR(_T('@'))
+		RECURSE(Cmd->Subcommands)
+		break;
+	case C_BLOCK:
+		CHAR(_T('('))
+		for (Sub = Cmd->Subcommands; Sub; Sub = Sub->Next)
+		{
+			RECURSE(Sub)
+			if (Sub->Next)
+				CHAR(_T('&'))
+		}
+		CHAR(_T(')'))
+		break;
+	case C_MULTI:
+	case C_IFFAILURE:
+	case C_IFSUCCESS:
+	case C_PIPE:
+		Sub = Cmd->Subcommands;
+		RECURSE(Sub)
+		PRINTF(_T(" %s "), OpString[Cmd->Type - C_OP_LOWEST])
+		RECURSE(Sub->Next)
+		break;
+	case C_IF:
+		STRING(_T("if"))
+		if (Cmd->If.Flags & IFFLAG_IGNORECASE)
+			STRING(_T(" /I"))
+		if (Cmd->If.Flags & IFFLAG_NEGATE)
+			STRING(_T(" not"))
+		if (Cmd->If.LeftArg && SubstituteForVars(Cmd->If.LeftArg, Buf))
+			PRINTF(_T(" %s"), Buf)
+		PRINTF(_T(" %s"), IfOperatorString[Cmd->If.Operator]);
+		if (!SubstituteForVars(Cmd->If.RightArg, Buf)) return NULL;
+		PRINTF(_T(" %s "), Buf)
+		Sub = Cmd->Subcommands;
+		RECURSE(Sub)
+		if (Sub->Next)
+		{
+			STRING(_T(" else "))
+			RECURSE(Sub->Next)
+		}
+		break;
+	case C_FOR:
+		STRING(_T("for"))
+		if (Cmd->For.Switches & FOR_DIRS)      STRING(_T(" /D"))
+		if (Cmd->For.Switches & FOR_F)         STRING(_T(" /F"))
+		if (Cmd->For.Switches & FOR_LOOP)      STRING(_T(" /L"))
+		if (Cmd->For.Switches & FOR_RECURSIVE) STRING(_T(" /R"))
+		if (Cmd->For.Params)
+			PRINTF(_T(" %s"), Cmd->For.Params)
+		PRINTF(_T(" %%%c in (%s) do "), Cmd->For.Variable, Cmd->For.List)
+		RECURSE(Cmd->Subcommands)
+		break;
+	}
+
+	for (Redir = Cmd->Redirections; Redir; Redir = Redir->Next)
+	{
+		if (!SubstituteForVars(Redir->Filename, Buf)) return NULL;
+		PRINTF(_T(" %c%s%s"), _T('0') + Redir->Number,
+			RedirString[Redir->Type], Buf)
+	}
+	return Out;
+}
+
 VOID
 FreeCommand(PARSED_COMMAND *Cmd)
 {
