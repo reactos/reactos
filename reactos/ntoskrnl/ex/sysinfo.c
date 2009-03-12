@@ -1587,18 +1587,10 @@ SSI_DEF(SystemExtendServiceTableInformation)
             /* FIXME: We can't, fail */
             //return STATUS_PRIVILEGE_NOT_HELD;
         }
-
-        /* Probe and capture the driver name */
-        ProbeAndCaptureUnicodeString(&ImageName, UserMode, Buffer);
-
-        /* Force kernel as previous mode */
-        return ZwSetSystemInformation(SystemExtendServiceTableInformation,
-                                      &ImageName,
-                                      sizeof(ImageName));
     }
 
-    /* Just copy the string */
-    ImageName = *(PUNICODE_STRING)Buffer;
+    /* Probe and capture the driver name */
+    ProbeAndCaptureUnicodeString(&ImageName, PreviousMode, Buffer);
 
     /* Load the image */
     Status = MmLoadSystemImage(&ImageName,
@@ -1607,6 +1599,10 @@ SSI_DEF(SystemExtendServiceTableInformation)
                                0,
                                (PVOID)&ModuleObject,
                                &ImageBase);
+
+    /* Release String */
+    ReleaseCapturedUnicodeString(&ImageName, PreviousMode);
+
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Get the headers */
