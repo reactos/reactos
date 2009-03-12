@@ -1665,7 +1665,7 @@ NtSetInformationObject(IN HANDLE ObjectHandle,
         {
             ProbeForRead(ObjectInformation,
                          sizeof(OBJECT_HANDLE_ATTRIBUTE_INFORMATION),
-                         sizeof(ULONG));
+                         sizeof(BOOLEAN));
             Context.Information = *(POBJECT_HANDLE_ATTRIBUTE_INFORMATION)
                                     ObjectInformation;
         }
