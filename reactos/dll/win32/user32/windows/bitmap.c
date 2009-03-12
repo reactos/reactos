@@ -449,18 +449,26 @@ LoadBitmapImage(HINSTANCE hInstance, LPCWSTR lpszName, UINT fuLoad)
       BitmapInfo = (LPBITMAPINFO)((ULONG_PTR)BitmapInfo + sizeof(BITMAPFILEHEADER));
    }
 
-   if (BitmapInfo->bmiHeader.biSize == sizeof(BITMAPCOREHEADER))
+   HeaderSize = BitmapInfo->bmiHeader.biSize;
+   if (HeaderSize == sizeof(BITMAPCOREHEADER))
    {
       BITMAPCOREHEADER* Core = (BITMAPCOREHEADER*)BitmapInfo;
       ColorCount = (Core->bcBitCount <= 8) ? (1 << Core->bcBitCount) : 0;
-      HeaderSize = sizeof(BITMAPCOREHEADER) + ColorCount * sizeof(RGBTRIPLE);
+      HeaderSize += ColorCount * sizeof(RGBTRIPLE);
    }
    else
    {
-      ColorCount = BitmapInfo->bmiHeader.biClrUsed;
-      if (ColorCount == 0 && BitmapInfo->bmiHeader.biBitCount <= 8)
-         ColorCount = 1 << BitmapInfo->bmiHeader.biBitCount;
-      HeaderSize = sizeof(BITMAPINFOHEADER) + ColorCount * sizeof(RGBQUAD);
+      if (BitmapInfo->bmiHeader.biCompression == BI_BITFIELDS)
+      {
+         HeaderSize += 3 * sizeof(RGBQUAD);
+      }
+      else
+      {
+         ColorCount = BitmapInfo->bmiHeader.biClrUsed;
+         if (ColorCount == 0 && BitmapInfo->bmiHeader.biBitCount <= 8)
+            ColorCount = 1 << BitmapInfo->bmiHeader.biBitCount;
+         HeaderSize += ColorCount * sizeof(RGBQUAD);
+      }
    }
    Data = (PVOID)((ULONG_PTR)BitmapInfo + HeaderSize);
 
