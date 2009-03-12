@@ -7,21 +7,12 @@
  */
 
 #include "usbdriver.h"
-#include "kbdmou.h"
-
-/* Data for embedded drivers */
-CONNECT_DATA MouseClassInformation;
-
-PDEVICE_OBJECT MouseFdo = NULL;
-
 
 BOOLEAN mouse_connect(PDEV_CONNECT_DATA dev_mgr, DEV_HANDLE dev_handle);
 BOOLEAN mouse_disconnect(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle);
 BOOLEAN mouse_stop(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle);
 VOID mouse_irq(PURB purb, PVOID pcontext);
-static NTSTATUS
-MouseCreateDevice(IN PDRIVER_OBJECT DriverObject);
-
+static NTSTATUS MouseCreateDevice(IN PDRIVER_OBJECT DriverObject, IN PMOUSE_DRVR_EXTENSION DriverExtension);
 
 BOOLEAN
 mouse_driver_init(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver)
@@ -61,11 +52,8 @@ mouse_driver_init(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver)
     pdriver->disp_tbl.dev_stop = mouse_stop;
     pdriver->disp_tbl.dev_reserved = NULL;
 
-    // Zero out the class information structure
-    RtlZeroMemory(&MouseClassInformation, sizeof(CONNECT_DATA));
-
     // Create the device
-    MouseCreateDevice(dev_mgr->usb_driver_obj);
+    MouseCreateDevice(dev_mgr->usb_driver_obj, pdrvr_ext);
 
     usb_dbg_print(DBGLVL_MAXIMUM, ("mouse_driver_init(): mouse driver is initialized\n"));
     return TRUE;
@@ -118,69 +106,13 @@ mouse_connect(PDEV_CONNECT_DATA param, DEV_HANDLE dev_handle)
         return FALSE;
     }
 
-    // Endpoint-finding code
-    if (param->if_desc)
-    {
-        // Get a pointer to the config packet from compdev
-        PUCHAR Buffer = (PUCHAR)param->if_desc;
-        ULONG Offset = 0;
-        BOOLEAN FoundEndpoint = FALSE;
+    // Get pointer to the endpoint descriptor
+    pendp_desc = pdev->usb_config->interf[0].endp[0].pusb_endp_desc;
 
-        // Find our the only needed endpoint descriptor
-        while (Offset < 512)
-        {
-            pendp_desc = (PUSB_ENDPOINT_DESC)&Buffer[Offset];
-            usb_dbg_print(DBGLVL_MAXIMUM, ("mouse_connect(): DescType=0x%x, Attrs=0x%x, Len=%d\n",
-                pendp_desc->bDescriptorType, pendp_desc->bmAttributes, pendp_desc->bLength));
-
-            if (pendp_desc->bDescriptorType == USB_DT_ENDPOINT &&
-                pendp_desc->bLength == sizeof(USB_ENDPOINT_DESC))
-            {
-                // Found it
-                FoundEndpoint = TRUE;
-                break;
-            }
-
-            Offset += pendp_desc->bLength;
-        }
-
-        if (!FoundEndpoint)
-            return FALSE;
-
-        // FIXME: Check if it's INT endpoint
-        // (pendp_desc->bmAttributes & USB_ENDPOINT_XFERTYPE_MASK) == USB_ENDPOINT_XFER_INT)
-
-        // endpoint must be IN
-        if ((pendp_desc->bEndpointAddress & USB_DIR_IN) == 0)
-            return FALSE;
-    }
-
-
-    // Endpoint descriptor substitution code
-    {
-        ULONG if_idx, endp_idx;
-        PUSB_ENDPOINT pendp;
-
-            //FoundEndpoint = FALSE;
-            for(if_idx = 0; if_idx < MAX_INTERFACES_PER_CONFIG /*pdev->usb_config->if_count*/; if_idx++)
-            {
-                for(endp_idx = 0; endp_idx < MAX_ENDPS_PER_IF /*pdev->usb_config->interf[if_idx].endp_count*/; endp_idx++)
-                {
-                    pendp = &pdev->usb_config->interf[if_idx].endp[endp_idx];
-
-                    if (pendp->pusb_endp_desc != NULL)
-                    {
-                        //HACKHACK: for some reason this usb driver chooses different and completely wrong
-                        //          endpoint. Since I don't have time to research this, I just find the
-                        //          endpoint descriptor myself and copy it
-                        memcpy(pendp->pusb_endp_desc, pendp_desc, pendp_desc->bLength);
-
-                        usb_dbg_print(DBGLVL_MAXIMUM, ("mouse_connect(): [%i][%i] DescType=0x%x, Attrs=0x%x, Len=%d\n",if_idx, endp_idx,
-                            pendp->pusb_endp_desc->bDescriptorType, pendp->pusb_endp_desc->bmAttributes, pendp->pusb_endp_desc->bLength));
-                    }
-                }
-            }
-    }
+    // Store max packet size
+    MaxPacketSize = pendp_desc->wMaxPacketSize;
+    if (MaxPacketSize > 8)
+        MaxPacketSize = 8;
 
     // Unlock USB Device
     usb_unlock_dev(pdev);
@@ -191,17 +123,13 @@ mouse_connect(PDEV_CONNECT_DATA param, DEV_HANDLE dev_handle)
         return FALSE;
     RtlZeroMemory(purb, sizeof(URB));
 
-    MaxPacketSize = pendp_desc->wMaxPacketSize;
-    if (MaxPacketSize > 8)
-        MaxPacketSize = 8;
-
     // Build a URB for our interrupt transfer
     UsbBuildInterruptOrBulkTransferRequest(purb,
                                            usb_make_handle((dev_handle >> 16), 0, 0),
                                            (PUCHAR)&pdev_ext->mouse_data,
                                            MaxPacketSize, //use max packet size
                                            mouse_irq,
-                                           pdev_ext,
+                                           pdev_ext->device_ext,
                                            0);
 
     // Call USB driver stack
@@ -221,8 +149,9 @@ mouse_irq(PURB purb, PVOID pcontext)
     MOUSE_INPUT_DATA MouseInputData;
     ULONG InputDataConsumed;
     NTSTATUS status;
-    PMOUSE_DRVR_EXTENSION pdev_ext = (PMOUSE_DRVR_EXTENSION)pcontext;
-    signed char *data = pdev_ext->mouse_data;
+    PMOUSE_DRVR_EXTENSION pdev_ext;
+    PMOUSE_DEVICE_EXTENSION DeviceExtension = (PMOUSE_DEVICE_EXTENSION)pcontext;
+    signed char *data;
     usb_dbg_print(DBGLVL_MAXIMUM, ("mouse_irq(): called\n"));
 
     ASSERT(purb);
@@ -230,8 +159,11 @@ mouse_irq(PURB purb, PVOID pcontext)
     if (purb->status != STATUS_SUCCESS)
     {
         usb_dbg_print(DBGLVL_MAXIMUM, ("mouse_irq(): purb->status 0x%08X\n", purb->status));
-        //return;
+        return;
     }
+
+    pdev_ext = DeviceExtension->DriverExtension;
+    data = pdev_ext->mouse_data;
 
     usb_dbg_print(DBGLVL_MAXIMUM, ("Mouse input: x %d, y %d, w %d, btn: 0x%02x\n", data[1], data[2], data[3], data[0]));
 
@@ -275,13 +207,13 @@ mouse_irq(PURB purb, PVOID pcontext)
     }
 
     // Commit the input data somewhere...
-    if (MouseClassInformation.ClassService)
+    if (DeviceExtension->ConnectData.ClassService)
     {
         KIRQL OldIrql;
 
         KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
-        (*(PSERVICE_CALLBACK_ROUTINE)MouseClassInformation.ClassService)(
-            MouseClassInformation.ClassDeviceObject,
+        (*(PSERVICE_CALLBACK_ROUTINE)DeviceExtension->ConnectData.ClassService)(
+            DeviceExtension->ConnectData.ClassDeviceObject,
             &MouseInputData,
             (&MouseInputData)+1,
             &InputDataConsumed);
@@ -339,12 +271,15 @@ NTSTATUS
 MouseDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
     NTSTATUS Status = STATUS_INVALID_DEVICE_REQUEST;
+    PMOUSE_DEVICE_EXTENSION DeviceExtension;
+
+    DeviceExtension = DeviceObject->DeviceExtension;
 
     usb_dbg_print(DBGLVL_MAXIMUM, ("MouseDispatch(DO %p, code 0x%lx) called\n",
         DeviceObject,
         IoGetCurrentIrpStackLocation(Irp)->Parameters.DeviceIoControl.IoControlCode));
 
-    if (DeviceObject == MouseFdo)
+    if (DeviceObject == DeviceExtension->Fdo)
     {
         // it's mouse's IOCTL
         PIO_STACK_LOCATION Stk;
@@ -363,7 +298,7 @@ MouseDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
                 goto intcontfailure2;
             }
 
-            RtlCopyMemory(&MouseClassInformation,
+            RtlCopyMemory(&DeviceExtension->ConnectData,
                 Stk->Parameters.DeviceIoControl.Type3InputBuffer,
                 sizeof(CONNECT_DATA));
 
@@ -437,10 +372,10 @@ cleanup:
 }
 
 static NTSTATUS
-MouseCreateDevice(IN PDRIVER_OBJECT DriverObject)
+MouseCreateDevice(IN PDRIVER_OBJECT DriverObject, IN PMOUSE_DRVR_EXTENSION DriverExtension)
 {
     UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Device\\PointerPortUSB");
-    PDEVEXT_HEADER DeviceExtension;
+    PMOUSE_DEVICE_EXTENSION DeviceExtension;
     PDEVICE_OBJECT Fdo;
     NTSTATUS Status;
 
@@ -452,7 +387,7 @@ MouseCreateDevice(IN PDRIVER_OBJECT DriverObject)
     }
 
     Status = IoCreateDevice(DriverObject,
-        sizeof(DEVEXT_HEADER),
+        sizeof(MOUSE_DEVICE_EXTENSION),
         &DeviceName,
         FILE_DEVICE_MOUSE,
         FILE_DEVICE_SECURE_OPEN,
@@ -464,12 +399,14 @@ MouseCreateDevice(IN PDRIVER_OBJECT DriverObject)
         usb_dbg_print(DBGLVL_MINIMUM, ("IoCreateDevice() for usb mouse driver failed with status 0x%08lx\n", Status));
         return Status;
     }
-    DeviceExtension = (PDEVEXT_HEADER)Fdo->DeviceExtension;
-    RtlZeroMemory(DeviceExtension, sizeof(DEVEXT_HEADER));
+    DeviceExtension = (PMOUSE_DEVICE_EXTENSION)Fdo->DeviceExtension;
+    RtlZeroMemory(DeviceExtension, sizeof(MOUSE_DEVICE_EXTENSION));
 
-    DeviceExtension->dispatch = MouseDispatch;
+    DeviceExtension->hdr.dispatch = MouseDispatch;
+    DeviceExtension->DriverExtension = DriverExtension;
+    DriverExtension->device_ext = DeviceExtension;
 
-    MouseFdo = Fdo;
+    DeviceExtension->Fdo = Fdo;
     Fdo->Flags &= ~DO_DEVICE_INITIALIZING;
     usb_dbg_print(DBGLVL_MEDIUM, ("Created mouse Fdo: %p\n", Fdo));
 
