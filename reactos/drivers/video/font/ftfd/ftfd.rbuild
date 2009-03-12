@@ -2,9 +2,9 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="ftfd" type="kernelmodedll" entrypoint="FtfdEnableDriver@12" baseaddress="${BASEADDRESS_FREETYPE}" installbase="system32" installname="ftfd.dll" crt="libcntpr">
 	<importlibrary definition="freetype.def" />
-	<include base="freetype2">include</include>
+	<include base="freetype">include</include>
 	<library>win32k</library>
-	<library>freetype2</library>
+	<library>freetype</library>
 	<file>enable.c</file>
 	<file>font.c</file>
 	<file>glyph.c</file>
