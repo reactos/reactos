@@ -83,7 +83,7 @@ BEGIN
     CONTROL         "&Symbol in der Taskleiste anzeigen",IDC_SYSTRAYBATTERYMETER,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,15,45,200,10
     CONTROL         "&Kennwort beim Reaktivieren aus dem Standbymodus anfordern",IDC_PASSWORDLOGON,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,15,55,210,10
+                    WS_TABSTOP,15,55,220,10
     CONTROL         "&Helligkeit der Anzeige beim Batteriebetrieb verringern",IDC_VIDEODIMDISPLAY,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,15,65,200,10
     GROUPBOX        "Netzschaltervorgänge",-1,5,100,240,105
