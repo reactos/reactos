@@ -692,6 +692,14 @@ KdbInitialize(PKD_DISPATCH_TABLE DispatchTable,
 
     DPRINT("KdbSymInit() BootPhase=%d\n", BootPhase);
 
+    LoadSymbols = FALSE;
+
+#ifdef DBG
+    /* Load symbols only if we have 96Mb of RAM or more */
+    if (MmNumberOfPhysicalPages >= 0x6000)
+        LoadSymbols = TRUE;
+#endif
+
     if (BootPhase == 0)
     {
         /* Write out the functions that we support for now */
