@@ -35,6 +35,7 @@ IServiceGroup_fnQueryInterface(
     IN  REFIID refiid,
     OUT PVOID* Output)
 {
+    WCHAR Buffer[100];
     IServiceGroupImpl * This = (IServiceGroupImpl*)iface;
     if (IsEqualGUIDAligned(refiid, &IID_IServiceGroup) ||
         IsEqualGUIDAligned(refiid, &IID_IServiceSink) ||
@@ -44,6 +45,10 @@ IServiceGroup_fnQueryInterface(
         InterlockedIncrement(&This->ref);
         return STATUS_SUCCESS;
     }
+
+    StringFromCLSID(refiid, Buffer);
+    DPRINT1("IPortWaveCyclic_fnQueryInterface no interface!!! iface %S\n", Buffer);
+
     return STATUS_UNSUCCESSFUL;
 }
 

@@ -135,12 +135,8 @@ PortClsPnp(
             return STATUS_SUCCESS;
 
         case IRP_MN_QUERY_INTERFACE:
-            DPRINT1("FIXME: IRP_MN_QUERY_INTERFACE: call next lower device object\n");
-            /* FIXME
-             * call next lower device object */
-            Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
-            IoCompleteRequest(Irp, IO_NO_INCREMENT);
-            return STATUS_UNSUCCESSFUL;
+            DPRINT("IRP_MN_QUERY_INTERFACE\n");
+            return PcForwardIrpSynchronous(DeviceObject, Irp);
 
         case IRP_MN_QUERY_DEVICE_RELATIONS:
             Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
@@ -264,6 +260,21 @@ PcCompleteIrp(
     return STATUS_UNSUCCESSFUL;
 }
 
+NTSTATUS
+NTAPI
+CompletionRoutine(
+    IN PDEVICE_OBJECT  DeviceObject,
+    IN PIRP  Irp,
+    IN PVOID  Context)
+{
+    if (Irp->PendingReturned == TRUE)
+    {
+        KeSetEvent ((PKEVENT) Context, IO_NO_INCREMENT, FALSE);
+    }
+    return STATUS_MORE_PROCESSING_REQUIRED;
+}
+
+
 /*
  * @implemented
  */
@@ -279,14 +290,15 @@ PcForwardIrpSynchronous(
     DPRINT1("PcForwardIrpSynchronous\n");
 
     DeviceExt = (PPCLASS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-return STATUS_SUCCESS;
+
     /* initialize the notification event */
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
-    /* copy the current stack location */
     IoCopyCurrentIrpStackLocationToNext(Irp);
 
     DPRINT1("PcForwardIrpSynchronous %p Irp %p\n", DeviceExt->PrevDeviceObject, Irp);
+
+    IoSetCompletionRoutine(Irp, CompletionRoutine, (PVOID)&Event, TRUE, TRUE, TRUE);
 
     /* now call the driver */
     Status = IoCallDriver(DeviceExt->PrevDeviceObject, Irp);
