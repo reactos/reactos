@@ -268,7 +268,7 @@ static BOOL ForF(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer)
 			InputFile = _tpopen(Start + 1, _T("r"));
 			if (!InputFile)
 			{
-				error_bad_command();
+				error_bad_command(Start + 1);
 				return FALSE;
 			}
 			FullInput = ReadFileContents(InputFile, Buffer);

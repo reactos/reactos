@@ -214,7 +214,7 @@ INT  CommandEchoserr (LPTSTR);
 VOID ErrorMessage (DWORD, LPTSTR, ...);
 
 VOID error_no_pipe (VOID);
-VOID error_bad_command (VOID);
+VOID error_bad_command (LPTSTR);
 VOID error_invalid_drive (VOID);
 VOID error_req_param_missing (VOID);
 VOID error_sfile_not_found (LPTSTR);

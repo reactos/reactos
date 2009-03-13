@@ -453,7 +453,7 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
 	/* search the PATH environment variable for the binary */
 	if (!SearchForExecutable (first, szFullName))
 	{
-			error_bad_command ();
+			error_bad_command (first);
 			cmd_free (first);
 			cmd_free (rest);
 			cmd_free (full);
@@ -531,7 +531,7 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
 			if (!RunFile(full))
 			{
 				TRACE ("[ShellExecute failed!: %s]\n", debugstr_aw(full));
-				error_bad_command ();
+				error_bad_command (first);
                                 nErrorLevel = 1;
 			}
                         else
