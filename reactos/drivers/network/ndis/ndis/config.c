@@ -713,6 +713,13 @@ NdisReadNetworkAddress(
 
     *NetworkAddressLength = (UINT)((j/2)+0.5);
 
+    if (j == 0)
+    {
+        NDIS_DbgPrint(MIN_TRACE,("Empty NetworkAddress registry entry.\n"));
+        *Status = NDIS_STATUS_FAILURE;
+        return;
+    }
+
     IntArray = ExAllocatePool(PagedPool, (*NetworkAddressLength)*sizeof(UINT));
     if(!IntArray)
     {
