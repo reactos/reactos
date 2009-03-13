@@ -486,7 +486,6 @@ static const unsigned char Lookup_224[128 * 3] = {
 
 /***********************************************************************
  *		LHashValOfNameSysA (OLEAUT32.166)
- *              LHashValOfNameSys  (TYPELIB.4)
  *
  * Produce a string hash value.
  *

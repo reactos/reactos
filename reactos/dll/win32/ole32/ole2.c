@@ -161,7 +161,6 @@ static DWORD OLEDD_GetButtonState(void);
 
 
 /******************************************************************************
- *		OleBuildVersion	[OLE2.1]
  *		OleBuildVersion [OLE32.@]
  */
 DWORD WINAPI OleBuildVersion(void)
@@ -171,7 +170,6 @@ DWORD WINAPI OleBuildVersion(void)
 }
 
 /***********************************************************************
- *           OleInitialize       (OLE2.2)
  *           OleInitialize       (OLE32.@)
  */
 HRESULT WINAPI OleInitialize(LPVOID reserved)
@@ -228,7 +226,6 @@ HRESULT WINAPI OleInitialize(LPVOID reserved)
 }
 
 /******************************************************************************
- *		OleUninitialize	[OLE2.3]
  *		OleUninitialize	[OLE32.@]
  */
 void WINAPI OleUninitialize(void)
