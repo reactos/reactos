@@ -1389,6 +1389,7 @@ NtUserSetSystemCursor(
 }
 
 
+/* FIXME: ReactOS specific hack */
 BOOL
 UserDrawIconEx(
    HDC hDc,
