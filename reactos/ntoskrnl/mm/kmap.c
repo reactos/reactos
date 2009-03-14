@@ -16,18 +16,23 @@
 /* GLOBALS *****************************************************************/
 
 /* FUNCTIONS ***************************************************************/
+
 NTSTATUS
 NTAPI
 MiZeroPage(PFN_TYPE Page)
 {
+   PEPROCESS Process;
+   KIRQL Irql;
    PVOID TempAddress;
 
-   TempAddress = MiMapPageToZeroInHyperSpace(Page);
+   Process = (PEPROCESS)KeGetCurrentThread()->ApcState.Process;
+   TempAddress = MiMapPageInHyperSpace(Process, Page, &Irql);
    if (TempAddress == NULL)
    {
       return(STATUS_NO_MEMORY);
    }
    memset(TempAddress, 0, PAGE_SIZE);
+   MiUnmapPageInHyperSpace(Process, TempAddress, Irql);
    return(STATUS_SUCCESS);
 }
 
