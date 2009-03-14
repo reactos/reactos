@@ -37,6 +37,7 @@
 	<file>port_topology.c</file>
 	<file>port_wavepci.c</file>
 	<file>port_wavecyclic.c</file>
+	<file>port_wavepcistream.c</file>
 	<file>propertyhandler.c</file>
 	<file>miniport.c</file>
 	<file>miniport_dmus.c</file>

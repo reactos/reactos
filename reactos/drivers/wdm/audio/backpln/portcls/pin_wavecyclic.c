@@ -28,6 +28,7 @@ typedef struct
     ULONG ActiveIrpOffset;
     ULONG DelayedRequestInProgress;
     ULONG FrameSize;
+    BOOL Capture;
 
 }IPortPinWaveCyclicImpl;
 
@@ -113,10 +114,22 @@ UpdateCommonBuffer(
             return;
 
         BytesToCopy = min(BufferLength, BufferSize);
-        This->DmaChannel->lpVtbl->CopyTo(This->DmaChannel,
-                                        (PUCHAR)This->CommonBuffer + This->CommonBufferOffset,
-                                        Buffer,
-                                        BytesToCopy);
+
+
+        if (This->Capture)
+        {
+            This->DmaChannel->lpVtbl->CopyTo(This->DmaChannel,
+                                             Buffer,
+                                             (PUCHAR)This->CommonBuffer + This->CommonBufferOffset,
+                                             BytesToCopy);
+        }
+        else
+        {
+            This->DmaChannel->lpVtbl->CopyTo(This->DmaChannel,
+                                             (PUCHAR)This->CommonBuffer + This->CommonBufferOffset,
+                                             Buffer,
+                                             BytesToCopy);
+        }
 
         This->IrpQueue->lpVtbl->UpdateMapping(This->IrpQueue, BytesToCopy);
         This->CommonBufferOffset += BytesToCopy;
@@ -145,10 +158,21 @@ UpdateCommonBufferOverlap(
             return;
 
         BytesToCopy = min(BufferLength, BufferSize);
-        This->DmaChannel->lpVtbl->CopyTo(This->DmaChannel,
-                                        (PUCHAR)This->CommonBuffer + This->CommonBufferOffset,
-                                        Buffer,
-                                        BytesToCopy);
+
+        if (This->Capture)
+        {
+            This->DmaChannel->lpVtbl->CopyTo(This->DmaChannel,
+                                             Buffer,
+                                             (PUCHAR)This->CommonBuffer + This->CommonBufferOffset,
+                                             BytesToCopy);
+        }
+        else
+        {
+            This->DmaChannel->lpVtbl->CopyTo(This->DmaChannel,
+                                             (PUCHAR)This->CommonBuffer + This->CommonBufferOffset,
+                                             Buffer,
+                                             BytesToCopy);
+        }
 
         This->IrpQueue->lpVtbl->UpdateMapping(This->IrpQueue, BytesToCopy);
         This->CommonBufferOffset += BytesToCopy;
@@ -197,7 +221,6 @@ IServiceSink_fnRequestService(
     Status = This->Stream->lpVtbl->GetPosition(This->Stream, &Position);
     DPRINT("Position %u BufferSize %u ActiveIrpOffset %u\n", Position, This->CommonBufferSize, BufferSize);
 
-
     if (Position < This->CommonBufferOffset)
     {
         UpdateCommonBufferOverlap(This, Position);
@@ -230,7 +253,6 @@ IPortPinWaveCyclic_fnQueryInterface(
     IPortPinWaveCyclicImpl * This = (IPortPinWaveCyclicImpl*)iface;
 
     if (IsEqualGUIDAligned(refiid, &IID_IIrpTarget) || 
-        //IsEqualGUIDAligned(refiid, &IID_IPortPinWaveCyclic) ||
         IsEqualGUIDAligned(refiid, &IID_IUnknown))
     {
         *Output = &This->lpVtbl;
@@ -702,7 +724,32 @@ IPortPinWaveCyclic_fnFastRead(
     OUT PIO_STATUS_BLOCK StatusBlock,
     IN PDEVICE_OBJECT DeviceObject)
 {
-    return STATUS_SUCCESS;
+    NTSTATUS Status;
+    PCONTEXT_WRITE Packet;
+    PIRP Irp;
+    IPortPinWaveCyclicImpl * This = (IPortPinWaveCyclicImpl*)iface;
+
+    DPRINT1("IPortPinWaveCyclic_fnFastRead entered\n");
+
+    Packet = (PCONTEXT_WRITE)Buffer;
+
+    Irp = Packet->Irp;
+    StatusBlock->Status = STATUS_PENDING;
+
+    Status = This->IrpQueue->lpVtbl->AddMapping(This->IrpQueue, Buffer, Length, Irp);
+
+    if (!NT_SUCCESS(Status))
+        return FALSE;
+
+    if (This->IrpQueue->lpVtbl->MinimumDataAvailable(This->IrpQueue) == TRUE && This->State != KSSTATE_RUN)
+    {
+        /* some should initiate a state request but didnt do it */
+        DPRINT1("Starting stream with %lu mappings Offset %u\n", This->IrpQueue->lpVtbl->NumMappings(This->IrpQueue), This->ActiveIrpOffset);
+
+        This->Stream->lpVtbl->SetState(This->Stream, KSSTATE_RUN);
+        This->State = KSSTATE_RUN;
+    }
+    return TRUE;
 }
 
 /*
@@ -753,7 +800,7 @@ IPortPinWaveCyclic_fnFastWrite(
     if (This->IrpQueue->lpVtbl->MinimumDataAvailable(This->IrpQueue) == TRUE && This->State != KSSTATE_RUN)
     {
         /* some should initiate a state request but didnt do it */
-        DPRINT1("Starting stream with %lu mappings\n", This->IrpQueue->lpVtbl->NumMappings(This->IrpQueue));
+        DPRINT1("Starting stream with %lu mappings Offset %u\n", This->IrpQueue->lpVtbl->NumMappings(This->IrpQueue), This->ActiveIrpOffset);
 
         This->Stream->lpVtbl->SetState(This->Stream, KSSTATE_RUN);
         This->State = KSSTATE_RUN;
@@ -777,6 +824,8 @@ IPortPinWaveCyclic_fnInit(
     NTSTATUS Status;
     PKSDATAFORMAT DataFormat;
     PDEVICE_OBJECT DeviceObject;
+    BOOL Capture;
+
     IPortPinWaveCyclicImpl * This = (IPortPinWaveCyclicImpl*)iface;
 
     Port->lpVtbl->AddRef(Port);
@@ -804,13 +853,32 @@ IPortPinWaveCyclic_fnInit(
     if (!NT_SUCCESS(Status))
         return Status;
 
-    Status = This->IrpQueue->lpVtbl->Init(This->IrpQueue, ConnectDetails, DataFormat, DeviceObject);
+    Status = This->IrpQueue->lpVtbl->Init(This->IrpQueue, ConnectDetails, DataFormat, DeviceObject, 0);
+    if (!NT_SUCCESS(Status))
+    {
+       This->IrpQueue->lpVtbl->Release(This->IrpQueue);
+       return Status;
+    }
+
+    if (KsPinDescriptor->Communication == KSPIN_COMMUNICATION_SINK && KsPinDescriptor->DataFlow == KSPIN_DATAFLOW_IN)
+    {
+        Capture = FALSE;
+    }
+    else if (KsPinDescriptor->Communication == KSPIN_COMMUNICATION_SINK && KsPinDescriptor->DataFlow == KSPIN_DATAFLOW_OUT)
+    {
+        Capture = TRUE;
+    }
+    else
+    {
+        DPRINT1("Unexpected Communication %u DataFlow %u\n", KsPinDescriptor->Communication, KsPinDescriptor->DataFlow);
+        KeBugCheck(0);
+    }
 
     Status = This->Miniport->lpVtbl->NewStream(This->Miniport,
                                                &This->Stream,
                                                NULL,
                                                NonPagedPool,
-                                               FALSE, //FIXME
+                                               Capture,
                                                ConnectDetails->PinId,
                                                This->Format,
                                                &This->DmaChannel,
@@ -834,9 +902,9 @@ IPortPinWaveCyclic_fnInit(
     This->CommonBufferOffset = 0;
     This->CommonBufferSize = This->DmaChannel->lpVtbl->AllocatedBufferSize(This->DmaChannel);
     This->CommonBuffer = This->DmaChannel->lpVtbl->SystemAddress(This->DmaChannel);
+    This->Capture = Capture;
 
     //Status = This->Stream->lpVtbl->SetNotificationFreq(This->Stream, 10, &This->FrameSize);
-
 
     return STATUS_SUCCESS;
 }
@@ -879,15 +947,16 @@ IPortPinWaveCyclic_fnGetDeviceBufferSize(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 PVOID
 NTAPI
 IPortPinWaveCyclic_fnGetIrpStream(
     IN IPortPinWaveCyclic* iface)
 {
-    UNIMPLEMENTED;
-    return NULL;
+    IPortPinWaveCyclicImpl * This = (IPortPinWaveCyclicImpl*)iface;
+
+    return (PVOID)This->IrpQueue;
 }
 
 

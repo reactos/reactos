@@ -241,6 +241,22 @@ PDEVICE_OBJECT
 GetDeviceObject(
     IPortWaveCyclic* iface);
 
+NTSTATUS
+NTAPI
+IPortWavePciStream_AddMapping(
+    IN IPortWavePciStream *iface,
+    IN PUCHAR Buffer,
+    IN ULONG BufferSize,
+    IN PIRP Irp);
+
+NTSTATUS
+NTAPI
+NewIPortWavePciStream(
+    OUT PPORTWAVEPCISTREAM *Stream,
+    IN KSPIN_CONNECT *ConnectDetails,
+    IN PKSDATAFORMAT DataFormat,
+    IN PDEVICE_OBJECT DeviceObject,
+    IN ULONG FrameSize);
 
 #define DEFINE_KSPROPERTY_PINPROPOSEDATAFORMAT(PinSet,\
     PropGeneral, PropInstances, PropIntersection)\

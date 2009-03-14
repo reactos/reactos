@@ -194,7 +194,8 @@ DECLARE_INTERFACE_(IIrpQueue, IUnknown)
     STDMETHOD_(NTSTATUS, Init)(THIS_
         IN KSPIN_CONNECT *ConnectDetails,
         IN PKSDATAFORMAT DataFormat,
-        IN PDEVICE_OBJECT DeviceObject);
+        IN PDEVICE_OBJECT DeviceObject,
+        IN ULONG FrameSize);
 
     STDMETHOD_(NTSTATUS, AddMapping)(THIS_
         IN PUCHAR Buffer,
@@ -219,9 +220,17 @@ DECLARE_INTERFACE_(IIrpQueue, IUnknown)
     STDMETHOD_(VOID, UpdateFormat)(THIS_
         IN PKSDATAFORMAT DataFormat);
 
+    STDMETHOD_(NTSTATUS, GetMappingWithTag)(THIS_
+        IN PVOID Tag,
+        OUT PPHYSICAL_ADDRESS  PhysicalAddress,
+        OUT PVOID  *VirtualAddress,
+        OUT PULONG  ByteCount,
+        OUT PULONG  Flags);
+
+    STDMETHOD_(VOID, ReleaseMappingWithTag)(THIS_
+        IN PVOID Tag);
 
 };
-
 
 
 /*****************************************************************************

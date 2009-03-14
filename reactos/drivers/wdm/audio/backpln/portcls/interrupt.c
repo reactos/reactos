@@ -106,7 +106,7 @@ IInterruptSynchronizedRoutine(
     IN PVOID  ServiceContext)
 {
     IInterruptSyncImpl * This = (IInterruptSyncImpl*)ServiceContext;
-    DPRINT1("IInterruptSynchronizedRoutine This %p SyncRoutine %p Context %p\n", This, This->SyncRoutine, This->DynamicContext);
+    //DPRINT1("IInterruptSynchronizedRoutine This %p SyncRoutine %p Context %p\n", This, This->SyncRoutine, This->DynamicContext);
     return This->SyncRoutine((IInterruptSync*)&This->lpVtbl, This->DynamicContext);
 }
 
@@ -120,7 +120,7 @@ IInterruptSync_fnCallSynchronizedRoutine(
     KIRQL OldIrql;
     IInterruptSyncImpl * This = (IInterruptSyncImpl*)iface;
 
-    DPRINT1("IInterruptSync_fnCallSynchronizedRoutine This %p Routine %p DynamicContext %p Irql %x Interrupt %p\n", This, Routine, DynamicContext, KeGetCurrentIrql(), This->Interrupt);
+    //DPRINT1("IInterruptSync_fnCallSynchronizedRoutine This %p Routine %p DynamicContext %p Irql %x Interrupt %p\n", This, Routine, DynamicContext, KeGetCurrentIrql(), This->Interrupt);
 
     if (!This->Interrupt)
     {
@@ -169,7 +169,7 @@ IInterruptServiceRoutine(
     BOOL Success;
     IInterruptSyncImpl * This = (IInterruptSyncImpl*)ServiceContext;
 
-    DPRINT("IInterruptServiceRoutine\n");
+    DPRINT("IInterruptServiceRoutine Mode %u\n", This->Mode);
 
     if (This->Mode == InterruptSyncModeNormal)
     {
@@ -249,7 +249,7 @@ IInterruptSync_fnConnect(
                                 Descriptor->u.Interrupt.Vector, 
                                 Descriptor->u.Interrupt.Level,
                                 Descriptor->u.Interrupt.Level, //FIXME
-                                LevelSensitive, //FIXME
+                                Descriptor->Flags,
                                 TRUE,
                                 Descriptor->u.Interrupt.Affinity, 
                                 FALSE);

@@ -150,9 +150,7 @@ IPortFilterWaveCyclic_fnDeviceIoControl(
     ISubdevice *SubDevice = NULL;
     SUBDEVICE_DESCRIPTOR * Descriptor;
     NTSTATUS Status;
-#if defined(DBG)
     IPortFilterWaveCyclicImpl * This = (IPortFilterWaveCyclicImpl *)iface;
-#endif
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     ASSERT(IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_PROPERTY);

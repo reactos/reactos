@@ -18,6 +18,10 @@ typedef struct _IRP_MAPPING_
     PIRP Irp;
     KDPC Dpc;
 
+    ULONG NumTags;
+    PVOID * Tag;
+    LONG ReferenceCount;
+
 }IRP_MAPPING, *PIRP_MAPPING;
 
 typedef struct
@@ -37,6 +41,10 @@ typedef struct
 
     KSPIN_LOCK Lock;
     LIST_ENTRY ListHead;
+
+    PVOID LastTag;
+    BOOL OutOfMapping;
+    ULONG MaxFrameSize;
 
 }IIrpQueueImpl;
 
@@ -119,12 +127,16 @@ IIrpQueue_fnInit(
     IN IIrpQueue *iface,
     IN KSPIN_CONNECT *ConnectDetails,
     IN PKSDATAFORMAT DataFormat,
-    IN PDEVICE_OBJECT DeviceObject)
+    IN PDEVICE_OBJECT DeviceObject,
+    IN ULONG FrameSize)
 {
     IIrpQueueImpl * This = (IIrpQueueImpl*)iface;
 
     This->ConnectDetails = ConnectDetails;
     This->DataFormat = (PKSDATAFORMAT_WAVEFORMATEX)DataFormat;
+    This->MaxFrameSize = FrameSize;
+    This->LastTag = (PVOID)0x12345678;
+
     InitializeListHead(&This->ListHead);
     KeInitializeSpinLock(&This->Lock);
 
@@ -142,7 +154,8 @@ IIrpQueue_fnAddMapping(
     PIRP_MAPPING Mapping;
     IIrpQueueImpl * This = (IIrpQueueImpl*)iface;
 
-    Mapping = ExAllocatePool(NonPagedPool, sizeof(IRP_MAPPING));
+
+    Mapping = AllocateItem(NonPagedPool, sizeof(IRP_MAPPING), TAG_PORTCLASS);
     if (!Mapping)
         return STATUS_UNSUCCESSFUL;
 
@@ -150,15 +163,23 @@ IIrpQueue_fnAddMapping(
     Mapping->Irp = Irp;
     KeInitializeDpc(&Mapping->Dpc, DpcRoutine, (PVOID)Mapping);
 
+    if (This->MaxFrameSize)
+    {
+        Mapping->NumTags = max((Mapping->Header->DataUsed / This->MaxFrameSize) + 1, 1);
+        Mapping->Tag = AllocateItem(NonPagedPool, sizeof(PVOID) * This->NumMappings, TAG_PORTCLASS);
+    }
+
     This->NumDataAvailable += Mapping->Header->DataUsed;
 
-    DPRINT1("IIrpQueue_fnAddMapping NumMappings %u SizeOfMapping %lu NumDataAvailable %lu Irp %p\n", This->NumMappings, Mapping->Header->DataUsed, This->NumDataAvailable, Irp);
+    DPRINT("IIrpQueue_fnAddMapping NumMappings %u SizeOfMapping %lu NumDataAvailable %lu Irp %p\n", This->NumMappings, Mapping->Header->DataUsed, This->NumDataAvailable, Irp);
 
     /* FIXME use InterlockedCompareExchangePointer */
     if (InterlockedCompareExchange((volatile long *)&This->FirstMap, (LONG)Mapping, (LONG)0) != 0)
         ExInterlockedInsertTailList(&This->ListHead, &Mapping->Entry, &This->Lock);
 
     (void)InterlockedIncrement((volatile long*)&This->NumMappings);
+
+
 
     if (Irp)
     {
@@ -200,6 +221,7 @@ IIrpQueue_fnUpdateMapping(
     PIRP_MAPPING Mapping;
 
     This->CurrentOffset += BytesWritten;
+    This->NumDataAvailable -= BytesWritten;
 
     if (This->FirstMap->Header->DataUsed <=This->CurrentOffset)
     {
@@ -207,11 +229,9 @@ IIrpQueue_fnUpdateMapping(
         Mapping = (PIRP_MAPPING)ExInterlockedRemoveHeadList(&This->ListHead, &This->Lock);
 
         InterlockedDecrement(&This->NumMappings);
-        This->NumDataAvailable -= This->FirstMap->Header->DataUsed;
 
         KeInsertQueueDpc(&This->FirstMap->Dpc, (PVOID)This->FirstMap, NULL);
         (void)InterlockedExchangePointer((PVOID volatile*)&This->FirstMap, (PVOID)Mapping);
-
     }
 
 }
@@ -270,6 +290,137 @@ IIrpQueue_fnUpdateFormat(
 
 }
 
+NTSTATUS
+NTAPI
+IIrpQueue_fnGetMappingWithTag(
+    IN IIrpQueue *iface,
+    IN PVOID Tag,
+    OUT PPHYSICAL_ADDRESS  PhysicalAddress,
+    OUT PVOID  *VirtualAddress,
+    OUT PULONG  ByteCount,
+    OUT PULONG  Flags)
+{
+    KIRQL OldIrql;
+    PIRP_MAPPING CurMapping;
+    PIRP_MAPPING Result;
+    PLIST_ENTRY CurEntry;
+    ULONG Index;
+    IIrpQueueImpl * This = (IIrpQueueImpl*)iface;
+
+    *Flags = 0;
+    Result = NULL;
+
+    KeAcquireSpinLock(&This->Lock, &OldIrql);
+
+    CurEntry = This->ListHead.Flink;
+
+    while (CurEntry != &This->ListHead)
+    {
+        CurMapping = CONTAINING_RECORD(CurEntry, IRP_MAPPING, Entry);
+        for(Index = 0; Index < CurMapping->NumTags; Index++)
+        {
+            if (This->LastTag == (PVOID)0x12345678)
+            {
+                CurMapping->Tag[Index] = Tag;
+                CurMapping->ReferenceCount++;
+                Result = CurMapping;
+                if (Index + 1 == CurMapping->NumTags - 1)
+                {
+                    /* indicate end of packet */
+                    *Flags = 1;
+                }
+                break;
+            }
+
+
+            if (CurMapping->Tag[Index] == This->LastTag)
+            {
+                if (Index + 1 < CurMapping->NumTags)
+                {
+                    CurMapping->Tag[Index+1] = Tag;
+                    CurMapping->ReferenceCount++;
+                    Result = CurMapping;
+
+                    if (Index + 1 == CurMapping->NumTags - 1)
+                    {
+                        /* indicate end of packet */
+                        *Flags = 1;
+                    }
+                    break;
+                }
+
+                CurEntry = CurEntry->Flink;
+                if (&This->ListHead == CurEntry)
+                {
+                    This->OutOfMapping = TRUE;
+                    break;
+                }
+                Result = CONTAINING_RECORD(CurEntry, IRP_MAPPING, Entry);
+                Result->Tag[0] = Tag;
+                Result->ReferenceCount++;
+                break;
+            }
+        }
+        CurEntry = CurEntry->Flink;
+    }
+
+    KeReleaseSpinLock(&This->Lock, OldIrql);
+    if (!Result)
+        return STATUS_UNSUCCESSFUL;
+
+    Result->Tag = Tag;
+    *PhysicalAddress = MmGetPhysicalAddress(Result->Header->Data);
+    *VirtualAddress = Result->Header->Data;
+    *ByteCount = Result->Header->DataUsed;
+    This->LastTag = Tag;
+    return STATUS_SUCCESS;
+}
+
+VOID
+NTAPI
+IIrpQueue_fnReleaseMappingWithTag(
+    IN IIrpQueue *iface,
+    IN PVOID Tag)
+{
+    KIRQL OldIrql;
+    PIRP_MAPPING CurMapping;
+    PLIST_ENTRY CurEntry;
+    ULONG Index;
+    IIrpQueueImpl * This = (IIrpQueueImpl*)iface;
+
+    KeAcquireSpinLock(&This->Lock, &OldIrql);
+    CurEntry = This->ListHead.Flink;
+
+    while (CurEntry != &This->ListHead)
+    {
+        CurMapping = CONTAINING_RECORD(CurEntry, IRP_MAPPING, Entry);
+        for(Index = 0; Index < CurMapping->NumTags; Index++)
+        {
+            if (CurMapping->Tag[Index] == Tag)
+            {
+                CurMapping->ReferenceCount--;
+                if (!CurMapping->ReferenceCount)
+                {
+                    RemoveEntryList(&CurMapping->Entry);
+                    if (CurMapping->Irp)
+                    {
+                        CurMapping->Irp->IoStatus.Information = CurMapping->Header->FrameExtent;
+                        CurMapping->Irp->IoStatus.Status = STATUS_SUCCESS;
+                        IoCompleteRequest(CurMapping->Irp, IO_SOUND_INCREMENT);
+                    }
+                    ExFreePool(CurMapping->Header->Data);
+                    ExFreePool(CurMapping->Header);
+                    ExFreePool(CurMapping->Tag);
+                    ExFreePool(CurMapping);
+                }
+                break;
+            }
+        }
+        CurEntry = CurEntry->Flink;
+    }
+
+    KeReleaseSpinLock(&This->Lock, OldIrql);
+}
 
 static IIrpQueueVtbl vt_IIrpQueue =
 {
@@ -284,7 +435,9 @@ static IIrpQueueVtbl vt_IIrpQueue =
     IIrpQueue_fnMinMappings,
     IIrpQueue_fnMinimumDataAvailable,
     IIrpQueue_fnCancelBuffers,
-    IIrpQueue_fnUpdateFormat
+    IIrpQueue_fnUpdateFormat,
+    IIrpQueue_fnGetMappingWithTag,
+    IIrpQueue_fnReleaseMappingWithTag
 };
 
 
