@@ -154,7 +154,8 @@ IPortFilterWaveCyclic_fnDeviceIoControl(
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     ASSERT(IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_PROPERTY);
-    ASSERT(This->Port->lpVtbl->QueryInterface(This->Port, &IID_ISubdevice, (PVOID*)&SubDevice) == STATUS_SUCCESS);
+    Status = This->Port->lpVtbl->QueryInterface(This->Port, &IID_ISubdevice, (PVOID*)&SubDevice);
+    ASSERT(Status == STATUS_SUCCESS);
     ASSERT(SubDevice != NULL);
 
     Status = SubDevice->lpVtbl->GetDescriptor(SubDevice, &Descriptor);
