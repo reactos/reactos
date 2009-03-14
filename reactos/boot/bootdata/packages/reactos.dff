@@ -410,6 +410,7 @@ dll\win32\wininet\wininet.dll                       1
 dll\win32\winmm\winmm.dll                           1
 dll\win32\winspool\winspool.drv                     1
 dll\win32\winsta\winsta.dll                         1
+dll\win32\wlanapi\wlanapi.dll                       1
 dll\win32\wintrust\wintrust.dll                     1
 dll\win32\wldap32\wldap32.dll                       1
 dll\win32\wmi\wmi.dll                               1

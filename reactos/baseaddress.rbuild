@@ -10,6 +10,7 @@
   <property name="BASEADDRESS_RSABASE" value="0x35700000" />
   <property name="BASEADDRESS_RSAENH" value="0x35780000" />
   <property name="BASEADDRESS_URL" value="0x42ea0000" />
+  <property name="BASEADDRESS_WLANAPI" value="0x470F0000" />
   <property name="BASEADDRESS_DWMAPI" value="0x4A3F0000" />
   <property name="BASEADDRESS_LOADPERF" value="0x4B920000" />
   <property name="BASEADDRESS_MPRAPI" value="0x4C400000" />

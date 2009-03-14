@@ -1,0 +1,36 @@
+@ stdcall WlanAllocateMemory (long)
+@ stub WlanCloseHandle
+@ stub WlanConnect
+@ stub WlanDeleteProfile
+@ stub WlanDisconnect
+@ stub WlanEnumInterfaces
+@ stub WlanExtractPsdIEDataList
+@ stdcall WlanFreeMemory (ptr)
+@ stub WlanGetAvailableNetworkList
+@ stub WlanGetFilterList
+@ stub WlanGetInterfaceCapability
+@ stub WlanGetNetworkBssList
+@ stub WlanGetProfile
+@ stub WlanGetProfileCustomUserData
+@ stub WlanGetProfileList
+@ stub WlanGetSecuritySettings
+@ stub WlanIhvControl
+@ stub WlanOpenHandle
+@ stub WlanQueryAutoConfigParameter
+@ stub WlanQueryInterface
+@ stub WlanReasonCodeToString
+@ stub WlanRegisterNotification
+@ stub WlanRenameProfile
+@ stub WlanSaveTemporaryProfile
+@ stub WlanScan
+@ stub WlanSetAutoConfigParameter
+@ stub WlanSetFilterList
+@ stub WlanSetInterface
+@ stub WlanSetProfile
+@ stub WlanSetProfileCustomUserData
+@ stub WlanSetProfileEapUserData
+@ stub WlanSetProfileEapXmlUserData
+@ stub WlanSetProfileList
+@ stub WlanSetProfilePosition
+@ stub WlanSetPsdIEDataList
+@ stub WlanSetSecuritySettings
