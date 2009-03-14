@@ -39,7 +39,6 @@ END
 
 SYSMENU MENU LOADONCALL MOVEABLE DISCARDABLE
 BEGIN
-BEGIN
   MENUITEM "&Възстановяване",   SC_RESTORE
   MENUITEM "&Преместване",      SC_MOVE
   MENUITEM "&Размер",           SC_SIZE

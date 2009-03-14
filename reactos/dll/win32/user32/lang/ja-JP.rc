@@ -39,7 +39,6 @@ END
 
 SYSMENU MENU LOADONCALL MOVEABLE DISCARDABLE
 BEGIN
-BEGIN
   MENUITEM "元のサイズに戻す(&R)",      SC_RESTORE
   MENUITEM "移動(&M)",                  SC_MOVE
   MENUITEM "サイズ変更(&S)",            SC_SIZE
