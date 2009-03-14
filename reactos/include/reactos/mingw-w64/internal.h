@@ -166,8 +166,6 @@ extern char **_imp___wcmdln;
   PIMAGE_SECTION_HEADER __cdecl _FindPESection (PBYTE pImageBase, DWORD_PTR rva);
   BOOL __cdecl _IsNonwritableInCurrentImage (PBYTE pTarget);
 
-  extern int __globallocalestatus;
-
 #ifdef __cplusplus
 }
 #endif
