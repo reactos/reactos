@@ -1,0 +1,29 @@
+LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
+
+IDR_MAINMENU MENU
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&Apri...",    IDM_OPEN_FILE
+        MENUITEM "&Chiudi",     IDM_CLOSE_FILE
+        MENUITEM SEPARATOR
+        MENUITEM "&Esci",       IDM_EXIT
+    END
+    POPUP "&Aiuto"
+    BEGIN
+        MENUITEM "&Informazioni...", IDM_ABOUT
+    END
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ALL_TYPES_FILTER "Tutti i tipi supportati (*.wav, *.cda, *.midi, *.mid, *.avi)\0*.wav;*.cda;*.midi;*.mid;*.avi\0"
+    IDS_TOOLTIP_PLAY     "Riproduci"
+    IDS_TOOLTIP_STOP     "Interrompi"
+    IDS_TOOLTIP_EJECT    "Espelli"
+    IDS_TOOLTIP_BACKWARD "Precedente"
+    IDS_TOOLTIP_SEEKBACK "Riavvolgimento rapido"
+    IDS_TOOLTIP_SEEKFORW "Avanzamento rapido"
+    IDS_TOOLTIP_FORWARD  "Successivo"
+    IDS_APPTITLE         "Riproduttore multimediale ReactOS"
+END
