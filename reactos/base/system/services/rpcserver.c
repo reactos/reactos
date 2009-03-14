@@ -2772,11 +2772,11 @@ DWORD RGetServiceDisplayNameW(
     {
         DPRINT1("Could not find a service!\n");
 
-        /* If the service could not be found and lpcchBuffer is 0, windows
-           puts null in lpDisplayName and puts 1 in lpcchBuffer */
-        if (*lpcchBuffer == 0)
+        /* If the service could not be found and lpcchBuffer is less than 2, windows
+           puts null in lpDisplayName and puts 2 in lpcchBuffer */
+        if (*lpcchBuffer < 2)
         {
-            *lpcchBuffer = 1;
+            *lpcchBuffer = 2;
             if (lpDisplayName != NULL)
             {
                 *lpDisplayName = '\0';
@@ -2846,9 +2846,9 @@ DWORD RGetServiceKeyNameW(
     {
         DPRINT1("Could not find a service!\n");
 
-        /* If the service could not be found and lpcchBuffer is 0, windows
+        /* If the service could not be found and lpcchBuffer is less than 2, windows
            puts null in lpDisplayName and puts 2 in lpcchBuffer */
-        if (*lpcchBuffer == 0)
+        if (*lpcchBuffer < 2)
         {
             *lpcchBuffer = 2;
             if (lpServiceName != NULL)
