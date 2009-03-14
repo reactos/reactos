@@ -1,8 +1,13 @@
+/**
+ * This file has no copyright assigned and is placed in the Public Domain.
+ * This file is part of the w64 mingw-runtime package.
+ * No warranty is given; refer to the file DISCLAIMER within this package.
+ */
+
 #ifndef _INC_INTERNAL
 #define _INC_INTERNAL
 
-#include <_mingw.h>
-#include <stdint.h>
+#include <crtdefs.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -10,8 +15,6 @@ extern "C" {
 
 #include <limits.h>
 #include <windows.h>
-
-#define _CRTALLOC(x) __attribute__ ((section (x) ))
 
 #pragma pack(push,_CRT_PACKING)
 

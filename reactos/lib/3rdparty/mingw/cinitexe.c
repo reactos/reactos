@@ -1,5 +1,6 @@
 #include <stdio.h>
-#include "internal.h"
+#include <internal.h>
+#include <sect_attribs.h>
 
 _CRTALLOC(".CRT$XIA") _PVFV __xi_a[] = { NULL };
 _CRTALLOC(".CRT$XIZ") _PVFV __xi_z[] = { NULL };

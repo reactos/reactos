@@ -1,3 +1,9 @@
+/**
+ * This file has no copyright assigned and is placed in the Public Domain.
+ * This file is part of the w64 mingw-runtime package.
+ * No warranty is given; refer to the file DISCLAIMER within this package.
+ */
+
 #include <windows.h>
 #ifdef _WIN64
 #include <intrin.h>
@@ -13,11 +19,12 @@
 #ifdef _WIN64
 PRUNTIME_FUNCTION RtlLookupFunctionEntry (ULONG64, PULONG64, PVOID);
 PVOID RtlVirtualUnwind (ULONG HandlerType, ULONG64, ULONG64, PRUNTIME_FUNCTION,
-			PCONTEXT, PVOID *, PULONG64, PKNONVOLATILE_CONTEXT_POINTERS);
+			PCONTEXT, PVOID *, PULONG64, PVOID);
 #endif
 
 typedef LONG NTSTATUS;
 
+#define UNW_FLAG_NHANDLER 0x00
 #define STATUS_STACK_BUFFER_OVERRUN ((NTSTATUS)0xC0000409L)
 
 typedef union
@@ -33,8 +40,8 @@ static const EXCEPTION_POINTERS GS_ExceptionPointers = {
   &GS_ExceptionRecord,&GS_ContextRecord
 };
 
-__declspec(selectany) UINT_PTR __security_cookie = DEFAULT_SECURITY_COOKIE;
-__declspec(selectany) UINT_PTR __security_cookie_complement = ~(DEFAULT_SECURITY_COOKIE);
+DECLSPEC_SELECTANY UINT_PTR __security_cookie = DEFAULT_SECURITY_COOKIE;
+DECLSPEC_SELECTANY UINT_PTR __security_cookie_complement = ~(DEFAULT_SECURITY_COOKIE);
 
 void __cdecl
 __security_init_cookie (void)
@@ -88,7 +95,6 @@ __report_gsfailure (ULONGLONG StackCookie)
   PRUNTIME_FUNCTION fctEntry;
   PVOID hndData;
 #endif
-
 
 #ifdef _WIN64
   RtlCaptureContext (&GS_ContextRecord);

@@ -1,7 +1,17 @@
+/**
+ * This file has no copyright assigned and is placed in the Public Domain.
+ * This file is part of the w64 mingw-runtime package.
+ * No warranty is given; refer to the file DISCLAIMER within this package.
+ */
+
 #ifndef _INC_OSCALLS
 #define _INC_OSCALLS
 
-#include <_mingw.h>
+#ifndef _CRTBLD
+#error ERROR: Use of C runtime library internal header file.
+#endif
+
+#include <crtdefs.h>
 
 #ifdef NULL
 #undef NULL
