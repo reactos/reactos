@@ -1076,18 +1076,18 @@ MmUpdatePageDir(PEPROCESS Process, PVOID Address, ULONG Size)
 {
     ULONG StartOffset, EndOffset, Offset;
     PULONG Pde;
-    
+
     if (Address < MmSystemRangeStart)
     {
         KeBugCheck(MEMORY_MANAGEMENT);
     }
-    
+
     StartOffset = ADDR_TO_PDE_OFFSET(Address);
     EndOffset = ADDR_TO_PDE_OFFSET((PVOID)((ULONG_PTR)Address + Size));
-    
+
     if (Process != NULL && Process != PsGetCurrentProcess())
     {
-        Pde = MiMapPageToZeroInHyperSpace(PTE_TO_PFN(Process->Pcb.DirectoryTableBase[0]));
+        Pde = MmCreateHyperspaceMapping(PTE_TO_PFN(Process->Pcb.DirectoryTableBase[0]));
     }
     else
     {
@@ -1099,6 +1099,10 @@ MmUpdatePageDir(PEPROCESS Process, PVOID Address, ULONG Size)
         {
             InterlockedCompareExchangePte(&Pde[Offset], MmGlobalKernelPageDirectory[Offset], 0);
         }
+    }
+    if (Pde != (PULONG)PAGEDIRECTORY_MAP)
+    {
+        MmDeleteHyperspaceMapping(Pde);
     }
 }
 
