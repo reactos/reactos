@@ -25,27 +25,28 @@ EDITMENU MENU LOADONCALL MOVEABLE DISCARDABLE
 BEGIN
   POPUP "DUMMY"
   BEGIN
-    MENUITEM "元に戻す(&U)", EM_UNDO
+    MENUITEM "元に戻す(&U)",            EM_UNDO
     MENUITEM SEPARATOR
-    MENUITEM "切り取り(&T)", WM_CUT
-    MENUITEM "コピー(&C)", WM_COPY
-    MENUITEM "貼\り付け(&P)", WM_PASTE
-    MENUITEM "削除(&D)", WM_CLEAR
+    MENUITEM "切り取り(&T)",            WM_CUT
+    MENUITEM "コピー(&C)",              WM_COPY
+    MENUITEM "貼\り付け(&P)",           WM_PASTE
+    MENUITEM "削除(&D)",                WM_CLEAR
     MENUITEM SEPARATOR
-    MENUITEM "すべて選択(&A)", EM_SETSEL
+    MENUITEM "すべて選択(&A)",          EM_SETSEL
   END
 END
 
 
 SYSMENU MENU LOADONCALL MOVEABLE DISCARDABLE
 BEGIN
-  MENUITEM "元のサイズに戻す(&R)", 61728
-  MENUITEM "移動(&M)", 61456
-  MENUITEM "サイズ変更(&S)", 61440
-  MENUITEM "最小化(&N)", 61472
-  MENUITEM "最大化(&X)", 61488
+BEGIN
+  MENUITEM "元のサイズに戻す(&R)",      SC_RESTORE
+  MENUITEM "移動(&M)",                  SC_MOVE
+  MENUITEM "サイズ変更(&S)",            SC_SIZE
+  MENUITEM "最小化(&N)",                SC_MINIMIZE
+  MENUITEM "最大化(&X)",                SC_MAXIMIZE
   MENUITEM SEPARATOR
-  MENUITEM "閉じる(&C)\tAlt-F4", 61536
+  MENUITEM "閉じる(&C)\tAlt-F4",        SC_CLOSE
 END
 
 /////////////////////////////////////////////////////////////////////////////
