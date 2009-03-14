@@ -14,8 +14,11 @@
 
 /* GLOBALS ********************************************************************/
 
+#define MI_ZEROING_PTES  255
+
 PMMPTE MmFirstReservedMappingPte;
 PMMPTE MmLastReservedMappingPte;
+PMMPTE MmFirstReservedZeroingPte;
 MMPTE HyperTemplatePte;
 PEPROCESS HyperProcess;
 KIRQL HyperIrql;
@@ -40,6 +43,8 @@ MiInitHyperSpace(VOID)
     MmFirstReservedMappingPte = MiAddressToPte(MI_MAPPING_RANGE_START);
     MmLastReservedMappingPte =  MiAddressToPte(MI_MAPPING_RANGE_END);
     MmFirstReservedMappingPte->u.Hard.PageFrameNumber = MI_HYPERSPACE_PTES;
+    MmFirstReservedZeroingPte = MiAddressToPte(MI_ZERO_PTE);
+    MmFirstReservedZeroingPte->u.Hard.PageFrameNumber = MI_ZEROING_PTES;
 }
 
 PVOID
@@ -134,38 +139,62 @@ MiMapPageToZeroInHyperSpace(IN PFN_NUMBER Page)
 {
     MMPTE TempPte;
     PMMPTE PointerPte;
+    PFN_NUMBER Offset;
     PVOID Address; 
-    
+
     //
     // Never accept page 0
     //
     ASSERT(Page != 0);
-    
+
     //
     // Build the PTE
     //
     TempPte = HyperTemplatePte;
     TempPte.u.Hard.PageFrameNumber = Page;
-    
+
     //
-    // Get the Zero PTE and its address
+    // Pick the first zeroing PTE
     //
-    PointerPte = MiAddressToPte(MI_ZERO_PTE);
-    Address = (PVOID)((ULONG_PTR)PointerPte << 10);
-    
+    PointerPte = MmFirstReservedZeroingPte;
+
     //
-    // Invalidate the old address
+    // Now get the first free PTE
     //
-    __invlpg(Address);
-    
+    Offset = PFN_FROM_PTE(PointerPte);
+    if (!Offset)
+    {
+        //
+        // Reset the PTEs
+        //
+        Offset = MI_ZEROING_PTES;
+        KeFlushProcessTb();
+    }
+
+    //
+    // Prepare the next PTE
+    //
+    PointerPte->u.Hard.PageFrameNumber = Offset - 1;
+
     //
     // Write the current PTE
     //
-    TempPte.u.Hard.PageFrameNumber = Page;
+    PointerPte += Offset;
     *PointerPte = TempPte;
-    
+
     //
     // Return the address
     //
+    Address = (PVOID)((ULONG_PTR)PointerPte << 10);
     return Address;
+}
+
+VOID
+NTAPI
+MiUnmapPageInZeroSpace(IN PVOID Address)
+{
+    //
+    // Blow away the mapping
+    //
+    MiAddressToPte(Address)->u.Long = 0;
 }
