@@ -4,26 +4,26 @@ IDR_MAINMENU MENU
 BEGIN
 	POPUP "&Archivo"
 	BEGIN
-		MENUITEM "A&brir...", IDM_OPEN_FILE
+		MENUITEM "&Abrir...", IDM_OPEN_FILE
 		MENUITEM "&Cerrar", IDM_CLOSE_FILE
 		MENUITEM SEPARATOR
 		MENUITEM "&Salir", IDM_EXIT
 	END
-	POPUP "&Help"
+	POPUP "Ay&uda"
 	BEGIN
-		MENUITEM "Ac&erca de...", IDM_ABOUT
+		MENUITEM "&Acerca de...", IDM_ABOUT
 	END
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
 	IDS_ALL_TYPES_FILTER "Todos los ficheros soportados (*.wav, *.cda, *.midi, *.mid, *.avi)\0*.wav;*.cda;*.midi;*.mid;*.avi\0"
-	IDS_TOOLTIP_PLAY "Play"
-	IDS_TOOLTIP_STOP "Stop"
+	IDS_TOOLTIP_PLAY "Reproducir"
+	IDS_TOOLTIP_STOP "Detener"
 	IDS_TOOLTIP_EJECT "Expulsar"
-	IDS_TOOLTIP_BACKWARD "Saltar atrás"
-	IDS_TOOLTIP_SEEKBACK "Retroceso rápido"
-	IDS_TOOLTIP_SEEKFORW "Avance rápido"
-	IDS_TOOLTIP_FORWARD "Saltar adelante"
+	IDS_TOOLTIP_BACKWARD "Marca anterior"
+	IDS_TOOLTIP_SEEKBACK "Rebobinar"
+	IDS_TOOLTIP_SEEKFORW "Avance r�pido"
+	IDS_TOOLTIP_FORWARD "Marca siguiente"
     IDS_APPTITLE "Reproductor Multimedia de ReactOS"
 END
