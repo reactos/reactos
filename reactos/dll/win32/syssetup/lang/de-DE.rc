@@ -196,6 +196,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_ACCESSORIES     "Zubehör"
+    IDS_CMT_MPLAY32     "Launch Multimedia Player"
     IDS_CMT_CALC        "Starte Taschenrechner"
     IDS_CMT_CMD         "Öffne Kommandozeilenfenster"
     IDS_CMT_EXPLORER    "Starte Explorer"
@@ -251,6 +252,7 @@ BEGIN
     IDS_SHORT_DOWNLOADER "Download !.lnk"
     IDS_SHORT_SERVICE    "Dienste-Manager.lnk"
     IDS_SHORT_DEVICE     "Geräte-Manager.lnk"
+    IDS_SHORT_MPLAY32    "Multimedia Player.lnk"
     IDS_SHORT_CALC       "Rechner.lnk"
     IDS_SHORT_REGEDIT    "Registrierungseditor.lnk"
     IDS_SHORT_NOTEPAD    "Editor.lnk"

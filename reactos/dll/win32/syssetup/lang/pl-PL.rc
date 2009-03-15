@@ -205,6 +205,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_ACCESSORIES     "Akcesoria"
+    IDS_CMT_MPLAY32     "Launch Multimedia Player"
     IDS_CMT_CALC        "Uruchom Kalkulator"
     IDS_CMT_CMD         "Uruchom konsolê"
     IDS_CMT_EXPLORER    "Uruchom Eksplorator"
@@ -260,6 +261,7 @@ BEGIN
     IDS_SHORT_DOWNLOADER "Download!.lnk"
     IDS_SHORT_SERVICE    "Mened¿er us³ug.lnk"
     IDS_SHORT_DEVICE     "Mened¿er urz¹dzeñ.lnk"
+    IDS_SHORT_MPLAY32    "Multimedia Player.lnk"
     IDS_SHORT_CALC       "Kalkulator.lnk"
     IDS_SHORT_REGEDIT    "Edytor rejestru.lnk"
     IDS_SHORT_NOTEPAD    "Notatnik.lnk"

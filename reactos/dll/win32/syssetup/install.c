@@ -772,10 +772,11 @@ CreateShortcuts(VOID)
     {
         CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_CALC, _T("%SystemRoot%\\system32\\calc.exe"), IDS_CMT_CALC, TRUE);
         CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_CMD, _T("%SystemRoot%\\system32\\cmd.exe"), IDS_CMT_CMD, TRUE);
+        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_MPLAY32, _T("%SystemRoot%\\system32\\mplay32.exe"), IDS_CMT_MPLAY32, TRUE);
         CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_NOTEPAD, _T("%SystemRoot%\\system32\\notepad.exe"), IDS_CMT_NOTEPAD, TRUE);
-        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_WORDPAD, _T("%SystemRoot%\\system32\\wordpad.exe"), IDS_CMT_WORDPAD, TRUE);
-        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_SNAP, _T("%SystemRoot%\\system32\\screenshot.exe"), IDS_CMT_SCREENSHOT, TRUE);
         CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_RDESKTOP, _T("%SystemRoot%\\system32\\mstsc.exe"), IDS_CMT_RDESKTOP, TRUE);
+        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_SNAP, _T("%SystemRoot%\\system32\\screenshot.exe"), IDS_CMT_SCREENSHOT, TRUE);
+        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_WORDPAD, _T("%SystemRoot%\\system32\\wordpad.exe"), IDS_CMT_WORDPAD, TRUE);
     }
 
     /* Create System Tools subfolder and fill if the exe is available */

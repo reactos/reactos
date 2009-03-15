@@ -200,6 +200,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_ACCESSORIES     "Принадлежности"
+    IDS_CMT_MPLAY32     "Launch Multimedia Player"
     IDS_CMT_CALC        "Пускане на изчислителя"
     IDS_CMT_CMD         "Отваряне на командния прозорец"
     IDS_CMT_EXPLORER    "Пускане на изследователя"
@@ -255,6 +256,7 @@ BEGIN
     IDS_SHORT_DOWNLOADER "Свали!.lnk"
     IDS_SHORT_SERVICE    "Управител на услугите.lnk"
     IDS_SHORT_DEVICE     "Управител на устройствата.lnk"
+    IDS_SHORT_MPLAY32    "Multimedia Player.lnk"
     IDS_SHORT_CALC       "Изчислител.lnk"
     IDS_SHORT_REGEDIT    "Обработка на регистъра.lnk"
     IDS_SHORT_NOTEPAD    "Бележник.lnk"

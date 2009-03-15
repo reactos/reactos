@@ -178,6 +178,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_ACCESSORIES     "Стандартные"
+    IDS_CMT_MPLAY32     "Launch Multimedia Player"
     IDS_CMT_CALC        "Запустить калькулятор"
     IDS_CMT_CMD         "Открыть командную строку"
     IDS_CMT_EXPLORER    "Запустить Проводник"
@@ -233,6 +234,7 @@ BEGIN
     IDS_SHORT_DOWNLOADER "Скачать !.lnk"
     IDS_SHORT_SERVICE    "Диспетчер служб.lnk"
     IDS_SHORT_DEVICE     "Диспетчер устройств.lnk"
+    IDS_SHORT_MPLAY32    "Multimedia Player.lnk"
     IDS_SHORT_CALC       "Калькулятор.lnk"
     IDS_SHORT_REGEDIT    "Редактор реестра.lnk"
     IDS_SHORT_NOTEPAD    "Блокнот.lnk"

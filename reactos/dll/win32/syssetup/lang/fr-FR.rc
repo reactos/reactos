@@ -197,6 +197,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_ACCESSORIES     "Accessoires"
+    IDS_CMT_MPLAY32     "Launch Multimedia Player"
     IDS_CMT_CALC        "Lancer la Calculatrice"
     IDS_CMT_CMD         "Ouvrir l'invite de commandes"
     IDS_CMT_EXPLORER    "Lancer Explorer"
@@ -251,6 +252,7 @@ BEGIN
     IDS_SHORT_DOWNLOADER "Télécharger !.lnk"
     IDS_SHORT_SERVICE    "Gestionnaire de services.lnk"
     IDS_SHORT_DEVICE     "Gestionnaire de périphériques.lnk"
+    IDS_SHORT_MPLAY32    "Multimedia Player.lnk"
     IDS_SHORT_CALC       "Calculatrice.lnk"
     IDS_SHORT_REGEDIT    "Regedit.lnk"
     IDS_SHORT_NOTEPAD    "Notepad.lnk"

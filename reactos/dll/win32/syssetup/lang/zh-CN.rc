@@ -185,6 +185,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_ACCESSORIES     "附件"
+    IDS_CMT_MPLAY32     "Launch Multimedia Player"
     IDS_CMT_CALC        "计算器"
     IDS_CMT_CMD         "命令提示符"
     IDS_CMT_EXPLORER    "ReactOS 资源管理器"
@@ -239,6 +240,7 @@ BEGIN
     IDS_SHORT_DOWNLOADER "Download !.lnk"
     IDS_SHORT_SERVICE    "服务.lnk"
     IDS_SHORT_DEVICE     "设备管理.lnk"
+    IDS_SHORT_MPLAY32    "Multimedia Player.lnk"
     IDS_SHORT_CALC       "计算器.lnk"
     IDS_SHORT_REGEDIT    "注册表编辑器.lnk"
     IDS_SHORT_NOTEPAD    "记事本.lnk"

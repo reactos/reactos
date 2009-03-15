@@ -1,6 +1,6 @@
 /* TRANSLATOR :  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR.:  09-02-2008
- * LAST CHANGE:  16-06-2008
+ * LAST CHANGE:  14-03-2009
  * THANKS TO  :  Filip Navara and Kamil Hornicek and all good people ;-)
  */
 
@@ -182,6 +182,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_ACCESSORIES     "PrÌsluöenstvo"
+    IDS_CMT_MPLAY32     "Spustiù Multimedi·lny prehr·vaË"
     IDS_CMT_CALC        "Spustiù KalkulaËku"
     IDS_CMT_CMD         "Otvoriù PrÌkazov˝ riadok"
     IDS_CMT_EXPLORER    "Spustiù PrieskumnÌka"
@@ -237,6 +238,7 @@ BEGIN
     IDS_SHORT_DOWNLOADER "çahaj!.lnk"
     IDS_SHORT_SERVICE    "Spr·vca sluûieb.lnk"
     IDS_SHORT_DEVICE     "Spr·vca zariadenÌ.lnk"
+    IDS_SHORT_MPLAY32    "Multimedi·lny prehr·vaË.lnk"
     IDS_SHORT_CALC       "KalkulaËka.lnk"
     IDS_SHORT_REGEDIT    "Editor registrov.lnk"
     IDS_SHORT_NOTEPAD    "Pozn·mkov˝ blok.lnk"

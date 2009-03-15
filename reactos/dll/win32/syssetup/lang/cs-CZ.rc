@@ -196,6 +196,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_ACCESSORIES     "Pøíslušenství"
+    IDS_CMT_MPLAY32     "Launch Multimedia Player"
     IDS_CMT_CALC        "Spustit Kalkulaèku"
     IDS_CMT_CMD         "Otevøít Pøíkazový øádek"
     IDS_CMT_EXPLORER    "Spustit Explorer"
@@ -251,6 +252,7 @@ BEGIN
     IDS_SHORT_DOWNLOADER "Download !.lnk"
     IDS_SHORT_SERVICE    "Správce služeb.lnk"
     IDS_SHORT_DEVICE     "Správce zaøízení.lnk"
+    IDS_SHORT_MPLAY32    "Multimedia Player.lnk"
     IDS_SHORT_CALC       "Kalkulaèka.lnk"
     IDS_SHORT_REGEDIT    "Regedit.lnk"
     IDS_SHORT_NOTEPAD    "Poznámkový blok.lnk"

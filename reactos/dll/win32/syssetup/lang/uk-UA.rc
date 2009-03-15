@@ -186,6 +186,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_ACCESSORIES     "Допоміжні програми"
+    IDS_CMT_MPLAY32     "Launch Multimedia Player"
     IDS_CMT_CALC        "Запустити Калькулятор"
     IDS_CMT_CMD         "Відкрити командний рядок"
     IDS_CMT_EXPLORER    "Запустити Провідник"
@@ -241,6 +242,7 @@ BEGIN
     IDS_SHORT_DOWNLOADER "Download !.lnk"
     IDS_SHORT_SERVICE    "Service Manager.lnk"
     IDS_SHORT_DEVICE     "Device Manager.lnk"
+    IDS_SHORT_MPLAY32    "Multimedia Player.lnk"
     IDS_SHORT_CALC       "Calculator.lnk"
     IDS_SHORT_REGEDIT    "Regedit.lnk"
     IDS_SHORT_NOTEPAD    "Notepad.lnk"
