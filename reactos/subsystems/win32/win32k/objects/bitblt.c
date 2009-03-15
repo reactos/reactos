@@ -879,6 +879,10 @@ NtGdiStretchBlt(
         IntGdiInitBrushInstance(&BrushInst, BrushObj, DCDest->XlateBrush);
     }
 
+    /* Offset the brush */
+    BrushOrigin.x += DCDest->ptlDCOrig.x;
+    BrushOrigin.y += DCDest->ptlDCOrig.y;
+
     /* Perform the bitblt operation */
     Status = IntEngStretchBlt(&BitmapDest->SurfObj, &BitmapSrc->SurfObj,
         NULL, DCDest->CombinedClip, XlateObj,
