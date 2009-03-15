@@ -14,11 +14,8 @@
 
 /* GLOBALS ********************************************************************/
 
-#define MI_ZEROING_PTES  255
-
 PMMPTE MmFirstReservedMappingPte;
 PMMPTE MmLastReservedMappingPte;
-PMMPTE MmFirstReservedZeroingPte;
 MMPTE HyperTemplatePte;
 PEPROCESS HyperProcess;
 KIRQL HyperIrql;
@@ -30,21 +27,19 @@ NTAPI
 MiInitHyperSpace(VOID)
 {
     PMMPTE PointerPte;
-    
+
     //
     // Get the hyperspace PTE and zero out the page table
     //
     PointerPte = MiAddressToPte(HYPER_SPACE);
     RtlZeroMemory(PointerPte, PAGE_SIZE);
-    
+
     //
     // Setup mapping PTEs
     //
     MmFirstReservedMappingPte = MiAddressToPte(MI_MAPPING_RANGE_START);
     MmLastReservedMappingPte =  MiAddressToPte(MI_MAPPING_RANGE_END);
     MmFirstReservedMappingPte->u.Hard.PageFrameNumber = MI_HYPERSPACE_PTES;
-    MmFirstReservedZeroingPte = MiAddressToPte(MI_ZERO_PTE);
-    MmFirstReservedZeroingPte->u.Hard.PageFrameNumber = MI_ZEROING_PTES;
 }
 
 PVOID
@@ -78,7 +73,7 @@ MiMapPageInHyperSpace(IN PEPROCESS Process,
     // Acquire the hyperlock
     //
     ASSERT(Process == PsGetCurrentProcess());
-    //KeAcquireSpinLock(&Process->HyperSpaceLock, OldIrql);
+    KeAcquireSpinLock(&Process->HyperSpaceLock, OldIrql);
     
     //
     // Now get the first free PTE
@@ -129,8 +124,8 @@ MiUnmapPageInHyperSpace(IN PEPROCESS Process,
     //
     // Release the hyperlock
     //    
-    //ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
-    //KeReleaseSpinLock(&Process->HyperSpaceLock, OldIrql);
+    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+    KeReleaseSpinLock(&Process->HyperSpaceLock, OldIrql);
 }
 
 PVOID
