@@ -55,6 +55,7 @@ reactos/dll/win32/dciman32        # Synced to Wine-1_0-rc2
 reactos/dll/win32/gdiplus         # Autosync
 reactos/dll/win32/hhctrl.ocx      # Autosync
 reactos/dll/win32/hlink           # Autosync
+reactos/dll/win32/httpapi         # Autosync
 reactos/dll/win32/iccvid          # Autosync
 reactos/dll/win32/icmp            # Synced to Wine-0_9_10
 reactos/dll/win32/imaadp32.acm    # Autosync
@@ -62,8 +63,10 @@ reactos/dll/win32/imm32           # Autosync
 reactos/dll/win32/imagehlp        # Patches for BindImage need review and submission to winehq.
 reactos/dll/win32/inetcomm        # Autosync
 reactos/dll/win32/inetmib1        # Autosync
+reactos/dll/win32/initpki         # Autosync
 reactos/dll/win32/inseng          # Autosync
 reactos/dll/win32/iphlpapi        # Out of sync
+reactos/dll/win32/itircl          # Autosync
 reactos/dll/win32/itss            # Autosync
 reactos/dll/win32/jscript         # Autosync
 reactos/dll/win32/localspl        # Autosync
@@ -90,6 +93,8 @@ reactos/dll/win32/msimg32         # Autosync
 reactos/dll/win32/msi             # Autosync
 reactos/dll/win32/msimtf          # Autosync
 reactos/dll/win32/msisip          # Autosync
+reactos/dll/win32/msisys.ocx      # Autosync
+reactos/dll/win32/msnet32         # Autosync
 reactos/dll/win32/msrle32         # Autosync
 reactos/dll/win32/mssign32        # Autosync
 reactos/dll/win32/mssip32         # Autosync
@@ -114,16 +119,19 @@ reactos/dll/win32/olepro32        # Autosync
 reactos/dll/win32/olesvr32        # Autosync
 reactos/dll/win32/olethk32        # Autosync
 reactos/dll/win32/pdh             # Autosync
+reactos/dll/win32/pidgen          # Autosync
 reactos/dll/win32/powrprof        # Forked at Wine-1.0rc5
 reactos/dll/win32/printui         # Autosync
 reactos/dll/win32/pstorec         # Autosync
 reactos/dll/win32/query           # Autosync
 reactos/dll/win32/rasapi32        # Autosync
+reactos/dll/win32/resutils        # Autosync
 reactos/dll/win32/riched20        # Autosync
 reactos/dll/win32/riched32        # Autosync
 reactos/dll/win32/rpcrt4          # Synced to Wine-0_9_55
 reactos/dll/win32/rsabase         # Autosync
 reactos/dll/win32/rsaenh          # Autosync
+reactos/dll/win32/sccbase         # Autosync
 reactos/dll/win32/schannel        # Autosync
 reactos/dll/win32/sensapi         # Autosync
 reactos/dll/win32/setupapi        # Forked at Wine-20050524
@@ -131,11 +139,14 @@ reactos/dll/win32/shell32         # Forked at Wine-20071011
 reactos/dll/win32/shdocvw         # Synced to Wine-0_9_5
 reactos/dll/win32/shfolder        # Autosync
 reactos/dll/win32/shlwapi         # Autosync
+reactos/dll/win32/slbcsp          # Autosync
+reactos/dll/win32/softpub         # Autosync
 reactos/dll/win32/spoolss         # Autosync
 reactos/dll/win32/stdole2.tlb     # Autosync
 reactos/dll/win32/sti             # Autosync
 reactos/dll/win32/sxs             # Autosync
 reactos/dll/win32/tapi32          # Autosync
+reactos/dll/win32/traffic         # Autosync
 reactos/dll/win32/twain_32        # Out of sync
 reactos/dll/win32/updspapi        # Autosync
 reactos/dll/win32/url             # Autosync

@@ -276,6 +276,7 @@ dll\win32\glu32\glu32.dll                           1
 dll\win32\hhctrl.ocx\hhctrl.ocx                     1
 dll\win32\hid\hid.dll                               1
 dll\win32\hlink\hlink.dll                           1
+dll\win32\httpapi\httpapi.dll                       1
 dll\win32\iccvid\iccvid.dll                         1
 dll\win32\icmp\icmp.dll                             1
 dll\win32\imaadp32.acm\imaadp32.acm                 1
@@ -283,8 +284,10 @@ dll\win32\imagehlp\imagehlp.dll                     1
 dll\win32\imm32\imm32.dll                           1
 dll\win32\inetcomm\inetcomm.dll                     1
 dll\win32\inetmib1\inetmib1.dll                     1
+dll\win32\initpki\initpki.dll                       1
 dll\win32\inseng\inseng.dll                         1
 dll\win32\iphlpapi\iphlpapi.dll                     1
+dll\win32\itircl\itircl.dll                         1
 dll\win32\itss\itss.dll                             1
 dll\win32\jscript\jscript.dll                       1
 dll\win32\kernel32\kernel32.dll                     1
@@ -320,6 +323,8 @@ dll\win32\msi\msi.dll                               1
 dll\win32\msimg32\msimg32.dll                       1
 dll\win32\msimtf\msimtf.dll                         1
 dll\win32\msisip\msisip.dll                         1
+dll\win32\msisys.ocx\msisys.ocx                     1
+dll\win32\msnet32\msnet32.dll                       1
 dll\win32\msrle32\msrle32.dll                       1
 dll\win32\mssign32\mssign32.dll                     1
 dll\win32\mssip32\mssip32.dll                       1
@@ -353,6 +358,7 @@ dll\win32\olesvr32\olesvr32.dll                     1
 dll\win32\olethk32\olethk32.dll                     1
 dll\win32\opengl32\opengl32.dll                     1
 dll\win32\pdh\pdh.dll                               1
+dll\win32\pidgen\pidgen.dll                         1
 dll\win32\powrprof\powrprof.dll                     1
 dll\win32\printui\printui.dll                       1
 dll\win32\psapi\psapi.dll                           1
@@ -362,6 +368,7 @@ dll\win32\qmgrprxy\qmgrprxy.dll                     1
 dll\win32\query\query.dll                           1
 dll\win32\rasapi32\rasapi32.dll                     1
 dll\win32\rasdlg\rasdlg.dll                         1
+dll\win32\resutils\resutils.dll                     1
 dll\win32\rasman\rasman.dll                         1
 dll\win32\riched20\riched20.dll                     1
 dll\win32\riched32\riched32.dll                     1
@@ -370,6 +377,7 @@ dll\win32\rsabase\rsabase.dll                       1
 dll\win32\rsaenh\rsaenh.dll                         1
 dll\win32\samlib\samlib.dll                         1
 dll\win32\samsrv\samsrv.dll                         1
+dll\win32\sccbase\sccbase.dll                       1
 dll\win32\schannel\schannel.dll                     1
 dll\win32\secur32\secur32.dll                       1
 dll\win32\security\security.dll                     1
@@ -384,8 +392,10 @@ dll\win32\shell32\shell32.dll                       1
 dll\win32\shfolder\shfolder.dll                     1
 dll\win32\shimgvw\shimgvw.dll                       1
 dll\win32\shlwapi\shlwapi.dll                       1
+dll\win32\slbcsp\slbcsp.dll                         1
 dll\win32\smdll\smdll.dll                           1
 dll\win32\snmpapi\snmpapi.dll                       1
+dll\win32\softpub\softpub.dll                       1
 dll\win32\spoolss\spoolss.dll                       1
 dll\win32\srclient\srclient.dll                     1
 dll\win32\stdole2.tlb\stdole2.tlb                   1
@@ -395,6 +405,7 @@ dll\win32\sxs\sxs.dll                               1
 dll\win32\syssetup\syssetup.dll                     1
 dll\win32\tapi32\tapi32.dll                         1
 dll\win32\tapiui\tapiui.dll                         1
+dll\win32\traffic\traffic.dll                       1
 dll\win32\twain_32\twain_32.dll                     1
 dll\win32\uext2\uext2.dll                           1
 dll\win32\ufat\ufat.dll                             1

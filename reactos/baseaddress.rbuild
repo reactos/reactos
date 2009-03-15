@@ -11,6 +11,7 @@
   <property name="BASEADDRESS_RSAENH" value="0x35780000" />
   <property name="BASEADDRESS_URL" value="0x42ea0000" />
   <property name="BASEADDRESS_WLANAPI" value="0x470F0000" />
+  <property name="BASEADDRESS_PIDGEN" value="0x473e0000" />
   <property name="BASEADDRESS_DWMAPI" value="0x4A3F0000" />
   <property name="BASEADDRESS_LOADPERF" value="0x4B920000" />
   <property name="BASEADDRESS_MPRAPI" value="0x4C400000" />
@@ -65,9 +66,12 @@
   <property name="BASEADDRESS_MLANG" value="0x65140000" />
   <property name="BASEADDRESS_ACCESS" value="0x65180000" />
   <property name="BASEADDRESS_ITSS" value="0x66370000" />
+  <property name="BASEADDRESS_ITIRCL" value="0x663a0000" />
   <property name="BASEADDRESS_INETMIB1" value="0x666f0000" />
+  <property name="BASEADDRESS_INITPKI" value="0x66b00000" />
   <property name="BASEADDRESS_WSHTCPIP" value="0x677b0000" />
   <property name="BASEADDRESS_CRYPT32" value="0x67ab0000" />
+  <property name="BASEADDRESS_HTTPAPI" value="0x67ae0000" />
   <property name="BASEADDRESS_HID" value="0x688f0000" />
   <property name="BASEADDRESS_PSXDLL" value="0x68eb0000" />
   <property name="BASEADDRESS_PSAPI" value="0x68f70000" />
@@ -128,8 +132,10 @@
   <property name="BASEADDRESS_MSADP32ACM" value="0x72cb0000" />
   <property name="BASEADDRESS_WDMAUD" value="0x72d20000" />
   <property name="BASEADDRESS_WINSPOOL" value="0x72f50000" />
+  <property name="BASEADDRESS_SOFTPUB" value="0x73290000" />
   <property name="BASEADDRESS_MSCAT32" value="0x732b0000" />
   <property name="BASEADDRESS_MSTASK" value="0x73520000" />
+  <property name="BASEADDRESS_TRAFFIC" value="0x73550000" />
   <property name="BASEADDRESS_MCIAVI32" value="0x73610000" />
   <property name="BASEADDRESS_MSVIDC32" value="0x73650000" />
   <property name="BASEADDRESS_MSRLE32" value="0x73660000" />
@@ -157,6 +163,7 @@
   <property name="BASEADDRESS_PDH" value="0x74c70000" />
   <property name="BASEADDRESS_OLEDLG" value="0x74d00000" />
   <property name="BASEADDRESS_SAMSRV" value="0x74f30000" />
+  <property name="BASEADDRESS_RESUTILS" value="0x75070000" />
   <property name="BASEADDRESS_SAMLIB" value="0x750C0000" />
   <property name="BASEADDRESS_CABINET" value="0x75120000" />
   <property name="BASEADDRESS_NETCFGX" value="0x755F0000" />
