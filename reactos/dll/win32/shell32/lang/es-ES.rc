@@ -360,7 +360,7 @@ BEGIN
 	AUTOCHECKBOX "&Mostrar cuadro de diálogo para confirmar la eliminación", 14004, 20, 155, 200, 10, WS_TABSTOP
 END
 
-OPEN_WITH_PROGRAMM_DLG DIALOGEX 0, 0, 264, 256
+OPEN_WITH_PROGRAMM_DLG DIALOGEX 0, 0, 284, 256
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Abrir con"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
@@ -368,67 +368,67 @@ BEGIN
 	ICON IDI_SHELL_OPEN_WITH, -1, 8, 12, 21, 20
 	LTEXT "Elija el programa que desea usar para abrir el siguiente archivo:", -1, 44, 12, 211, 10
 	LTEXT "Archivo:    ", 14001, 44, 25, 188, 10
-	GROUPBOX "&Programas ", -1, 7, 42, 249, 187
-        LISTBOX 14002, 16 ,57, 230, 130, LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP, WS_EX_STATICEDGE
-	AUTOCHECKBOX "Utilizar &siempre el programa seleccionado para abrir este tipo de archivos", 14003, 20, 193, 225, 10
-	PUSHBUTTON "&Examinar...", 14004, 198, 207, 50, 14
-	PUSHBUTTON "Aceptar", 14005, 150, 236, 50, 14
-	PUSHBUTTON "Cancelar", 14006, 206, 236, 50, 14
+	GROUPBOX "&Programas ", -1, 7, 42, 269, 187
+        LISTBOX 14002, 16 ,57, 250, 130, LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP, WS_EX_STATICEDGE
+	AUTOCHECKBOX "Utilizar &siempre el programa seleccionado para abrir este tipo de archivos", 14003, 15, 193, 250, 10
+	PUSHBUTTON "&Examinar...", 14004, 218, 207, 50, 14
+	PUSHBUTTON "Aceptar", 14005, 170, 236, 50, 14
+	PUSHBUTTON "Cancelar", 14006, 226, 236, 50, 14
 END
 
-FOLDER_OPTIONS_GENERAL_DLG DIALOGEX 0, 0, 264, 256
+FOLDER_OPTIONS_GENERAL_DLG DIALOGEX 0, 0, 294, 240
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "General"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-	GROUPBOX "Tareas", -1, 7, 10, 249, 45
+	GROUPBOX "Tareas", -1, 7, 10, 279, 45
 	ICON "", 30109, 14, 25, 21, 20, SS_REALSIZECONTROL
-	AUTORADIOBUTTON "M&ostrar tareas comunes en las carpetas", 14001, 40, 25, 120, 10, WS_TABSTOP | WS_GROUP
-	AUTORADIOBUTTON "Utilizar las carpetas clá&sicas de ReactOS", 14002, 40, 37, 120, 10, WS_TABSTOP | WS_GROUP
-	GROUPBOX "Examinar carpetas ", -1, 7, 60, 249, 45, WS_TABSTOP
+	AUTORADIOBUTTON "M&ostrar tareas comunes en las carpetas", 14001, 40, 25, 160, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Utilizar las carpetas clá&sicas de ReactOS", 14002, 40, 37, 160, 10, WS_TABSTOP | WS_GROUP
+	GROUPBOX "Examinar carpetas ", -1, 7, 60, 279, 45, WS_TABSTOP
 	ICON "", 30110, 14, 70, 21, 20, SS_REALSIZECONTROL
-	AUTORADIOBUTTON "Abrir todas las carpetas en la &misma ventana", 14004, 40, 70, 140, 10, WS_TABSTOP | WS_GROUP
-	AUTORADIOBUTTON "Abrir cada carpeta ventanas di&ferentes", 14005, 40, 82, 140, 10, WS_TABSTOP | WS_GROUP
-	GROUPBOX "Hacer clic en los elementos como se indica ", -1, 7, 110, 249, 60
+	AUTORADIOBUTTON "Abrir todas las carpetas en la &misma ventana", 14004, 40, 75, 160, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Abrir cada carpeta ventanas di&ferentes", 14005, 40, 87, 140, 10, WS_TABSTOP | WS_GROUP
+	GROUPBOX "Hacer clic en los elementos como se indica ", -1, 7, 110, 279, 60
 	ICON "", 30111, 14, 120, 21, 20, SS_REALSIZECONTROL
-	AUTORADIOBUTTON "&Un solo clic para abrir elemento (seleccionar al señalar)", 14007, 40, 120, 170, 10, WS_TABSTOP | WS_GROUP
-	AUTORADIOBUTTON "Subrayar los títulos de iconos que coincidan con el e&xplorador", 14008, 50, 132, 170, 10, WS_TABSTOP | WS_GROUP
-	AUTORADIOBUTTON "Subrayar &los títulos de iconos cuando yo los señale", 14009, 50, 144, 170, 10, WS_TABSTOP | WS_GROUP
-	AUTORADIOBUTTON "&Doble clic para abrir elemento (seleccionar con un clic)", 14010, 40, 156, 170, 10, WS_TABSTOP | WS_GROUP
-	PUSHBUTTON "&Restaurar valores predeterminados", 14011, 180, 180, 60, 14, WS_TABSTOP
+	AUTORADIOBUTTON "&Un solo clic para abrir elemento (seleccionar al señalar)", 14007, 40, 120, 190, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Subrayar los títulos de iconos que coincidan con el e&xplorador", 14008, 50, 132, 220, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Subrayar &los títulos de iconos cuando yo los señale", 14009, 50, 144, 190, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "&Doble clic para abrir elemento (seleccionar con un clic)", 14010, 40, 156, 190, 10, WS_TABSTOP | WS_GROUP
+	PUSHBUTTON "&Restaurar valores predeterminados", 14011, 146, 180, 140, 14, WS_TABSTOP
 END
 
-FOLDER_OPTIONS_VIEW_DLG DIALOGEX 0, 0, 264, 256
+FOLDER_OPTIONS_VIEW_DLG DIALOGEX 0, 0, 294, 240
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Ver"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-GROUPBOX "Vistas de carpeta", -1, 7, 10, 249, 60
+GROUPBOX "Vistas de carpeta", -1, 7, 10, 279, 60
 //ICON
-LTEXT "Puede aplicar la vista que está usando con esta carpeta para\nel resto (como Detalles o Mosaicos).", -1, 60, 20, 180, 20
-PUSHBUTTON "A&plicar a todas las carpetas", 14001, 60, 50, 80, 14, WS_TABSTOP
-PUSHBUTTON "R&estaurar todas las carpetas", 14002, 150, 50, 80, 14, WS_TABSTOP
+LTEXT "Puede aplicar la vista que está usando con esta carpeta para el resto (como Detalles o Mosaicos).", -1, 60, 20, 200, 20
+PUSHBUTTON "A&plicar a todas las carpetas", 14001, 60, 50, 100, 14, WS_TABSTOP
+PUSHBUTTON "R&estaurar todas las carpetas", 14002, 165, 50, 100, 14, WS_TABSTOP
 LTEXT "Configuración avanzada:", -1, 7, 80, 100, 10
-CONTROL "", 14003, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 90, 249, 120
-PUSHBUTTON "&Restaurar valores predeterminados", 14004, 180, 210, 80, 14, WS_TABSTOP
+CONTROL "", 14003, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 90, 279, 120
+PUSHBUTTON "&Restaurar valores predeterminados", 14004, 156, 220, 130, 14, WS_TABSTOP
 END
 
-FOLDER_OPTIONS_FILETYPES_DLG DIALOGEX 0, 0, 264, 256
+FOLDER_OPTIONS_FILETYPES_DLG DIALOGEX 0, 0, 294, 240
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Tipos de Archivo"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-LTEXT "&Tipos de archivo registrados:", -1, 7, 10, 70, 10
-CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 80
-PUSHBUTTON "&Nueva", 14001, 120, 110, 50, 14, WS_TABSTOP
-PUSHBUTTON "Eli&minar", 14002, 180, 110, 50, 14, WS_TABSTOP
-GROUPBOX "Detalles para extensión '%s'", 14003, 7, 130, 249, 70
-LTEXT "Se abre con:", -1, 12, 140, 40, 10
+LTEXT "&Tipos de archivo registrados:", -1, 7, 10, 120, 10
+CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 20, 279, 80
+PUSHBUTTON "&Nueva", 14001, 170, 110, 50, 14, WS_TABSTOP
+PUSHBUTTON "Eli&minar", 14002, 230, 110, 50, 14, WS_TABSTOP
+GROUPBOX "Detalles para el tipo de archivo '%s'", 14003, 7, 130, 279, 100
+LTEXT "Se abre con:", -1, 12, 140, 50, 10
 //ICON
 LTEXT "Aplicación", 14005, 100, 140, 40, 10
-PUSHBUTTON "Cam&biar...", 14006, 180, 140, 50, 14, WS_TABSTOP
-LTEXT "Archivos con extensión '%s' son del tipo '%s'. Para\ncambiar la configuración de los archivos '%s', haga clic\nen Avanzadas.", 14007, 12, 155, 160, 30
-PUSHBUTTON "A&vanzadas", 14008, 180, 175, 50, 14, WS_TABSTOP
+PUSHBUTTON "Cam&biar...", 14006, 230, 140, 50, 14, WS_TABSTOP
+LTEXT "Archivos con extensión '%s' son del tipo '%s'. Para cambiar la configuración de los archivos '%s', haga clic en Opciones avanzadas.", 14007, 12, 165, 220, 30
+PUSHBUTTON "Opciones avanza&das", 14008, 190, 213, 90, 14, WS_TABSTOP
 END
 
 CONFIRM_FILE_REPLACE_DLG DIALOGEX 0, 0, 282, 143
