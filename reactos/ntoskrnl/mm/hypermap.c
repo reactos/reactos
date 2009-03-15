@@ -139,7 +139,6 @@ MiMapPageToZeroInHyperSpace(IN PFN_NUMBER Page)
 {
     MMPTE TempPte;
     PMMPTE PointerPte;
-    PFN_NUMBER Offset;
     PVOID Address; 
 
     //
@@ -154,47 +153,24 @@ MiMapPageToZeroInHyperSpace(IN PFN_NUMBER Page)
     TempPte.u.Hard.PageFrameNumber = Page;
 
     //
-    // Pick the first zeroing PTE
+    // Get the Zero PTE and its address
     //
-    PointerPte = MmFirstReservedZeroingPte;
+    PointerPte = MiAddressToPte(MI_ZERO_PTE);
+    Address = (PVOID)((ULONG_PTR)PointerPte << 10);
 
     //
-    // Now get the first free PTE
+    // Invalidate the old address
     //
-    Offset = PFN_FROM_PTE(PointerPte);
-    if (!Offset)
-    {
-        //
-        // Reset the PTEs
-        //
-        Offset = MI_ZEROING_PTES;
-        KeFlushProcessTb();
-    }
-
-    //
-    // Prepare the next PTE
-    //
-    PointerPte->u.Hard.PageFrameNumber = Offset - 1;
+    __invlpg(Address);
 
     //
     // Write the current PTE
     //
-    PointerPte += Offset;
+    TempPte.u.Hard.PageFrameNumber = Page;
     *PointerPte = TempPte;
 
     //
     // Return the address
     //
-    Address = (PVOID)((ULONG_PTR)PointerPte << 10);
     return Address;
-}
-
-VOID
-NTAPI
-MiUnmapPageInZeroSpace(IN PVOID Address)
-{
-    //
-    // Blow away the mapping
-    //
-    MiAddressToPte(Address)->u.Long = 0;
 }
