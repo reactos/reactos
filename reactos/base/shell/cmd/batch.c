@@ -88,7 +88,7 @@ LPTSTR FindArg(TCHAR Char, BOOL *IsParam0)
 
 	TRACE ("FindArg: (%d)\n", n);
 
-	if (bc == NULL || n < 0 || n > 9)
+	if (n < 0 || n > 9)
 		return NULL;
 
 	n += bc->shiftlevel;
@@ -167,38 +167,32 @@ LPTSTR BatchParams (LPTSTR s1, LPTSTR s2)
  * message
  */
 
-VOID ExitBatch (LPTSTR msg)
+VOID ExitBatch()
 {
-	TRACE ("ExitBatch: (\'%s\')\n", debugstr_aw(msg));
+	TRACE ("ExitBatch\n");
 
-	if (bc != NULL)
+	if (bc->hBatchFile)
 	{
-		if (bc->hBatchFile)
-		{
-			CloseHandle (bc->hBatchFile);
-			bc->hBatchFile = INVALID_HANDLE_VALUE;
-		}
-
-		if (bc->raw_params)
-			cmd_free(bc->raw_params);
-
-		if (bc->params)
-			cmd_free(bc->params);
-
-		UndoRedirection(bc->RedirList, NULL);
-		FreeRedirection(bc->RedirList);
-
-		/* Preserve echo state across batch calls */
-		bEcho = bc->bEcho;
-
-		while (bc->setlocal)
-			cmd_endlocal(_T(""));
-
-		bc = bc->prev;
+		CloseHandle (bc->hBatchFile);
+		bc->hBatchFile = INVALID_HANDLE_VALUE;
 	}
 
-	if (msg && *msg)
-		ConOutPrintf (_T("%s\n"), msg);
+	if (bc->raw_params)
+		cmd_free(bc->raw_params);
+
+	if (bc->params)
+		cmd_free(bc->params);
+
+	UndoRedirection(bc->RedirList, NULL);
+	FreeRedirection(bc->RedirList);
+
+	/* Preserve echo state across batch calls */
+	bEcho = bc->bEcho;
+
+	while (bc->setlocal)
+		cmd_endlocal(_T(""));
+
+	bc = bc->prev;
 }
 
 
@@ -212,6 +206,7 @@ VOID ExitBatch (LPTSTR msg)
 BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param, PARSED_COMMAND *Cmd)
 {
 	BATCH_CONTEXT new;
+	LPFOR_CONTEXT saved_fc;
 
 	HANDLE hFile;
 	SetLastError(0);
@@ -227,9 +222,6 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param, PARSED_COMMAND *Cmd
 		ConErrResPuts(STRING_BATCH_ERROR);
 		return FALSE;
 	}
-
-	/* Kill any and all FOR contexts */
-	fc = NULL;
 
 	if (bc != NULL && Cmd == bc->current)
 	{
@@ -252,7 +244,7 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param, PARSED_COMMAND *Cmd
 			/* Get its SETLOCAL stack so it can be migrated to the new context */
 			setlocal = bc->setlocal;
 			bc->setlocal = NULL;
-			ExitBatch(NULL);
+			ExitBatch();
 		}
 
 		/* Create a new context. This function will not
@@ -285,6 +277,10 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param, PARSED_COMMAND *Cmd
 	if (*firstword == _T(':'))
 		cmd_goto(firstword);
 
+	/* If we are calling from inside a FOR, hide the FOR variables */
+	saved_fc = fc;
+	fc = NULL;
+
 	/* If we have created a new context, don't return
 	 * until this batch file has completed. */
 	while (bc == &new && !bExit)
@@ -310,15 +306,13 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param, PARSED_COMMAND *Cmd
 
 	TRACE ("Batch: returns TRUE\n");
 
+	fc = saved_fc;
 	return TRUE;
 }
 
 VOID AddBatchRedirection(REDIRECTION **RedirList)
 {
 	REDIRECTION **ListEnd;
-
-	if(!bc)
-		return;
 
 	/* Prepend the list to the batch context's list */
 	ListEnd = RedirList;
@@ -343,17 +337,13 @@ VOID AddBatchRedirection(REDIRECTION **RedirList)
 
 LPTSTR ReadBatchLine ()
 {
-	/* No batch */
-	if (bc == NULL)
-		return NULL;
-
 	TRACE ("ReadBatchLine ()\n");
 
 	/* User halt */
 	if (CheckCtrlBreak (BREAK_BATCHFILE))
 	{
 		while (bc)
-			ExitBatch (NULL);
+			ExitBatch();
 		return NULL;
 	}
 
@@ -361,7 +351,7 @@ LPTSTR ReadBatchLine ()
 	{
 		TRACE ("ReadBatchLine(): Reached EOF!\n");
 		/* End of file.... */
-		ExitBatch (NULL);
+		ExitBatch();
 		return NULL;
 	}
 

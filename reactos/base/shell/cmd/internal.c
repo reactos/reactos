@@ -665,7 +665,7 @@ INT CommandExit (LPTSTR param)
 			param++;
 		if (_istdigit(*param))
 			nErrorLevel = _ttoi(param);
-		ExitBatch (NULL);
+		ExitBatch();
 	}
 
 	else
