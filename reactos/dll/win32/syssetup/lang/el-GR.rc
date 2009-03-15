@@ -223,6 +223,7 @@ BEGIN
 	IDS_SYS_TOOLS        "Εργαλεία Συστήματος"
 	IDS_CMT_CHARMAP      "Πίνακας Χαρακτήρων"
 	IDS_CMT_KBSWITCH     "Αλλαγή Διάταξης Πληκτρολογίου"
+    IDS_CMT_DXDIAG       "Launch ReactX-Diagnostic program"
 END
 
 
@@ -274,6 +275,7 @@ BEGIN
     IDS_SHORT_EVENTVIEW  "Προβολή Συμβάντων.lnk"
     IDS_SHORT_MSCONFIG   "Βοηθητικό πρόγραμμα ρύθμισης παραμέτρων.lnk"
     IDS_SHORT_SNDVOL32   "Volume Control.lnk"
+    IDS_SHORT_DXDIAG     "ReactX Diagnostic.lnk"
 END
 
 STRINGTABLE

@@ -211,6 +211,7 @@ BEGIN
 	IDS_SYS_TOOLS        "系统工具"
 	IDS_CMT_CHARMAP      "字符映射表"
 	IDS_CMT_KBSWITCH     "Keyboard Layout Switcher"
+    IDS_CMT_DXDIAG       "Launch ReactX-Diagnostic program"
 END
 
 
@@ -262,6 +263,7 @@ BEGIN
     IDS_SHORT_EVENTVIEW  "Event Viewer.lnk"
     IDS_SHORT_MSCONFIG   "System Configuration.lnk"
     IDS_SHORT_SNDVOL32   "Volume Control.lnk"
+    IDS_SHORT_DXDIAG     "ReactX Diagnostic.lnk"
 END
 
 STRINGTABLE

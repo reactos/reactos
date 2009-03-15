@@ -222,6 +222,7 @@ BEGIN
 	IDS_SYS_TOOLS        "Systemprogramme"
 	IDS_CMT_CHARMAP      "Zeichentabelle"
 	IDS_CMT_KBSWITCH     "Tastaturlayout-Umschalter"
+    IDS_CMT_DXDIAG       "Launch ReactX-Diagnostic program"
 END
 
 
@@ -273,6 +274,7 @@ BEGIN
     IDS_SHORT_EVENTVIEW  "Ereignisanzeige.lnk"
     IDS_SHORT_MSCONFIG   "Systemkonfiguration.lnk"
     IDS_SHORT_SNDVOL32   "Volume Control.lnk"
+    IDS_SHORT_DXDIAG     "ReactX Diagnostic.lnk"
 END
 
 STRINGTABLE

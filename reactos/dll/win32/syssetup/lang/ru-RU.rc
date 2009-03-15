@@ -204,6 +204,7 @@ BEGIN
 	IDS_SYS_TOOLS        "Служебные"
 	IDS_CMT_CHARMAP      "Таблица символов"
 	IDS_CMT_KBSWITCH     "Переключатель раскладки клавиатуры"
+    IDS_CMT_DXDIAG       "Запустить программу диагностики ReactX"
 END
 
 
@@ -255,6 +256,7 @@ BEGIN
     IDS_SHORT_EVENTVIEW  "Просмотр событий.lnk"
     IDS_SHORT_MSCONFIG   "Параметры системы.lnk"
     IDS_SHORT_SNDVOL32   "Громкость.lnk"
+    IDS_SHORT_DXDIAG     "Средство диагностики ReactX.lnk"
 END
 
 STRINGTABLE

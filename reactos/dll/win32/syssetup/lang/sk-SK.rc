@@ -208,6 +208,7 @@ BEGIN
 	IDS_SYS_TOOLS        "Systémové nástroje"
 	IDS_CMT_CHARMAP      "Mapa znakov"
 	IDS_CMT_KBSWITCH     "Prepínaè rozloženia klávesnice"
+    IDS_CMT_DXDIAG       "Launch ReactX-Diagnostic program"
 END
 
 
@@ -259,6 +260,7 @@ BEGIN
     IDS_SHORT_EVENTVIEW  "Zobrazovaè udalostí.lnk"
     IDS_SHORT_MSCONFIG   "Program na konfiguráciu systému.lnk"
     IDS_SHORT_SNDVOL32   "Volume Control.lnk"
+    IDS_SHORT_DXDIAG     "ReactX Diagnostic.lnk"
 END
 
 STRINGTABLE
