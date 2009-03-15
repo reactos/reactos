@@ -23,42 +23,33 @@
 #include <debug.h>
 
 BOOLEAN DIB_XXBPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
+                            SURFOBJ *PatternSurface,
                             RECTL *DestRect, RECTL *SourceRect,
                             POINTL *MaskOrigin, BRUSHOBJ *Brush,
-                            POINTL *BrushOrigin, CLIPOBJ *ClipRegion, 
-                            XLATEOBJ *ColorTranslation, ROP4 ROP)
+                            POINTL *BrushOrigin, XLATEOBJ *ColorTranslation,
+                            XLATEOBJ *XlatePatternToDest, ROP4 ROP)
 {
-    LONG SrcSizeY;
-    LONG SrcSizeX;
-    LONG DesSizeY;
-    LONG DesSizeX;
     LONG sx = 0;
     LONG sy = 0;
     LONG DesX;
     LONG DesY;
 
-    LONG SrcZoomXHight;
-    LONG SrcZoomXLow;
-    LONG SrcZoomYHight;
-    LONG SrcZoomYLow;
+    LONG DstHeight;
+    LONG DstWidth;
+    LONG SrcHeight;
+    LONG SrcWidth;
 
-    LONG sy_dec = 0;
-    LONG sy_max;
-
-    LONG sx_dec = 0;
-    LONG sx_max;
-    ULONG color;
+    ULONG Color;
     ULONG Dest, Source = 0, Pattern = 0;
     ULONG xxBPPMask;
+    BOOLEAN CanDraw;
 
     PFN_DIB_GetPixel fnSource_GetPixel = NULL;
     PFN_DIB_GetPixel fnDest_GetPixel = NULL;
     PFN_DIB_PutPixel fnDest_PutPixel = NULL;
+    PFN_DIB_GetPixel fnPattern_GetPixel = NULL;
 
-    RECT_ENUM RectEnum;
-    BOOL EnumMore;
-    unsigned i;
-    RECTL OutputRect;
+    ULONG PatternX = 0, PatternY = 0;
 
     BOOL UsesSource = ROP4_USES_SOURCE(ROP);
     BOOL UsesPattern = ROP4_USES_PATTERN(ROP);
@@ -76,30 +67,12 @@ BOOLEAN DIB_XXBPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
             BitsPerFormat(SourceSurf->iBitmapFormat), SourceRect->left, SourceRect->top, SourceRect->right, SourceRect->bottom);
     }
 
-    /* Calc the Zoom height of Source */
-    SrcSizeY = SourceRect->bottom - SourceRect->top;
+    DstHeight = DestRect->bottom - DestRect->top;
+    DstWidth = DestRect->right - DestRect->left;
+    SrcHeight = SourceRect->bottom - SourceRect->top;
+    SrcWidth = SourceRect->right - SourceRect->left;
 
-    /* Calc the Zoom Width of Source */
-    SrcSizeX = SourceRect->right - SourceRect->left;
-
-    /* Calc the Zoom height of Destinations */
-    DesSizeY = DestRect->bottom - DestRect->top;
-
-    /* Calc the Zoom width of Destinations */
-    DesSizeX = DestRect->right - DestRect->left;
-
-    /* Calc the zoom factor of source height */
-    SrcZoomYHight = SrcSizeY / DesSizeY;
-    SrcZoomYLow = SrcSizeY - (SrcZoomYHight * DesSizeY);
-
-    /* Calc the zoom factor of source width */
-    SrcZoomXHight = SrcSizeX / DesSizeX;
-    SrcZoomXLow = SrcSizeX - (SrcZoomXHight * DesSizeX);
-
-    sx_max = DesSizeX;
-    sy_max = DesSizeY;
-
-    /* FIXME :  MaskOrigin, BrushOrigin? */
+    /* FIXME :  MaskOrigin? */
 
     switch(DestSurf->iBitmapFormat)
     {
@@ -114,73 +87,76 @@ BOOLEAN DIB_XXBPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
     if (UsesPattern)
     {
-        DPRINT1("StretchBlt does not support pattern ROPs yet\n");
-        return TRUE;
-    }
-    
-    CLIPOBJ_cEnumStart(ClipRegion, FALSE, CT_RECTANGLES, CD_ANY, 0);
-    do
-    {
-        EnumMore = CLIPOBJ_bEnum(ClipRegion,(ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
-
-        for (i = 0; i < RectEnum.c; i++)
+        if (PatternSurface)
         {
-            OutputRect.left = RectEnum.arcl[i].left;
-            OutputRect.right = RectEnum.arcl[i].right;
-            OutputRect.top = RectEnum.arcl[i].top;
-            OutputRect.bottom = RectEnum.arcl[i].bottom;
-                
-            sy = SourceRect->top;
-            sy_dec = 0;
-            for (DesY=DestRect->top; DesY<DestRect->bottom; DesY++)
+            PatternY = (DestRect->top - BrushOrigin->y) % PatternSurface->sizlBitmap.cy;
+            if (PatternY < 0)
             {
-                sx = SourceRect->left;
-                sx_dec = 0;
-
-                for (DesX=DestRect->left; DesX<DestRect->right; DesX++)
-                {
-                    /* Check if inside clip region */
-                    if (DesX >= OutputRect.left &&
-                        DesX < OutputRect.right &&
-                        DesY >= OutputRect.top &&
-                        DesY < OutputRect.bottom)
-                    {
-                        if (UsesSource) 
-                        {
-                            Source = XLATEOBJ_iXlate(ColorTranslation, fnSource_GetPixel(SourceSurf, sx, sy));
-                        }
-
-                        if (UsesPattern)
-                        {
-                            /* TBD as soon as BRUSHOBJ is available */
-                        }
-
-                        Dest = fnDest_GetPixel(DestSurf, DesX, DesY);
-                        color = DIB_DoRop(ROP, Dest, Source, Pattern) & xxBPPMask;
-
-                        fnDest_PutPixel(DestSurf, DesX, DesY, color);
-
-                    }
-                    sx += SrcZoomXHight;
-                    sx_dec += SrcZoomXLow;
-                    if (sx_dec >= sx_max)
-                    {
-                        sx++;
-                        sx_dec -= sx_max;
-                    }
-                }
-
-                sy += SrcZoomYHight;
-                sy_dec += SrcZoomYLow;
-                if (sy_dec >= sy_max)
-                {
-                    sy++;
-                    sy_dec -= sy_max;
-                }
+                PatternY += PatternSurface->sizlBitmap.cy;
             }
+            fnPattern_GetPixel = DibFunctionsForBitmapFormat[PatternSurface->iBitmapFormat].DIB_GetPixel;
+        }
+        else
+        {
+            if (Brush)
+                Pattern = Brush->iSolidColor;
         }
     }
-    while (EnumMore);
+
+
+    for (DesY = DestRect->top; DesY < DestRect->bottom; DesY++)
+    {
+        if (PatternSurface)
+        {
+            PatternX = (DestRect->left - BrushOrigin->x) % PatternSurface->sizlBitmap.cx;
+            if (PatternX < 0)
+            {
+                PatternX += PatternSurface->sizlBitmap.cx;
+            }
+        }
+        if (UsesSource)
+          sy = SourceRect->top+(DesY - DestRect->top) * SrcHeight / DstHeight;
+
+        for (DesX = DestRect->left; DesX < DestRect->right; DesX++)
+        {
+            CanDraw = TRUE;
+            if (UsesSource)
+            {
+                sx = SourceRect->left+(DesX - DestRect->left) * SrcWidth / DstWidth;
+                if (sx >= 0 && sy >= 0 &&
+                    SourceSurf->sizlBitmap.cx > sx && SourceSurf->sizlBitmap.cy > sy)
+                {
+                     Source = XLATEOBJ_iXlate(ColorTranslation, fnSource_GetPixel(SourceSurf, sx, sy));
+                }
+                else 
+                {
+                     Source = 0;
+                     CanDraw = (ROP3_TO_ROP4(SRCCOPY) != ROP);
+                }
+            }
+
+            if (CanDraw)
+            {
+                if (PatternSurface)
+                {
+                    Pattern = XLATEOBJ_iXlate(XlatePatternToDest, fnPattern_GetPixel(PatternSurface, PatternX, PatternY));
+                    PatternX++;
+                    PatternX %= PatternSurface->sizlBitmap.cx;
+                }
+
+                Dest = fnDest_GetPixel(DestSurf, DesX, DesY);
+                Color = DIB_DoRop(ROP, Dest, Source, Pattern) & xxBPPMask;
+
+                fnDest_PutPixel(DestSurf, DesX, DesY, Color);
+            }
+        }
+
+        if (PatternSurface)
+        {
+            PatternY++;
+            PatternY %= PatternSurface->sizlBitmap.cy;
+        }
+    }
 
     return TRUE;
 }

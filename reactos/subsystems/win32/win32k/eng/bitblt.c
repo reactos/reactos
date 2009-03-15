@@ -45,7 +45,6 @@ typedef BOOLEAN (APIENTRY *PBLTRECTFUNC)(SURFOBJ* OutputObj,
 typedef BOOLEAN (APIENTRY *PSTRETCHRECTFUNC)(SURFOBJ* OutputObj,
                                             SURFOBJ* InputObj,
                                             SURFOBJ* Mask,
-                                            CLIPOBJ* ClipRegion,
                                             XLATEOBJ* ColorTranslation,
                                             RECTL* OutputRect,
                                             RECTL* InputRect,
@@ -737,7 +736,6 @@ static BOOLEAN APIENTRY
 CallDibStretchBlt(SURFOBJ* psoDest,
                   SURFOBJ* psoSource,
                   SURFOBJ* Mask,
-                  CLIPOBJ* ClipRegion,
                   XLATEOBJ* ColorTranslation,
                   RECTL* OutputRect,
                   RECTL* InputRect,
@@ -747,6 +745,11 @@ CallDibStretchBlt(SURFOBJ* psoDest,
                   ROP4 Rop4)
 {
     POINTL RealBrushOrigin;
+    SURFACE* psurfPattern;
+    PGDIBRUSHINST GdiBrush = NULL;
+    SURFOBJ* PatternSurface = NULL;
+    XLATEOBJ* XlatePatternToDest = NULL;
+
     if (BrushOrigin == NULL)
     {
         RealBrushOrigin.x = RealBrushOrigin.y = 0;
@@ -755,8 +758,37 @@ CallDibStretchBlt(SURFOBJ* psoDest,
     {
         RealBrushOrigin = *BrushOrigin;
     }
+
+    /* Pattern brush */
+    if (ROP4_USES_PATTERN(Rop4) && Brush && Brush->iSolidColor == 0xFFFFFFFF)
+    {
+        GdiBrush = CONTAINING_RECORD(Brush, GDIBRUSHINST, BrushObject);
+        psurfPattern = SURFACE_LockSurface(GdiBrush->GdiBrushObject->hbmPattern);
+        if (psurfPattern)
+        {
+            PatternSurface = &psurfPattern->SurfObj;
+        }
+        else
+        {
+            /* FIXME - What to do here? */
+        }
+        XlatePatternToDest = GdiBrush->XlateObject;
+    }
+    else
+    {
+        psurfPattern = NULL;
+    }
+
     return DibFunctionsForBitmapFormat[psoDest->iBitmapFormat].DIB_StretchBlt(
-               psoDest, psoSource, OutputRect, InputRect, MaskOrigin, Brush, &RealBrushOrigin, ClipRegion, ColorTranslation, Rop4);
+               psoDest, psoSource, PatternSurface, 
+               OutputRect, InputRect, MaskOrigin, Brush, &RealBrushOrigin, 
+               ColorTranslation, XlatePatternToDest, Rop4);
+
+    /* Pattern brush */
+    if (psurfPattern)
+    {
+        SURFACE_UnlockSurface(psurfPattern);
+    }
 }
 
 
@@ -836,9 +868,33 @@ EngStretchBltROP(
     SURFOBJ*           psoInput;
     SURFOBJ*           psoOutput;
     PSTRETCHRECTFUNC   BltRectFunc;
-    BOOLEAN            Ret;
+    BOOLEAN            Ret = TRUE;
     POINTL             AdjustedBrushOrigin;
     BOOL               UsesSource = ROP4_USES_SOURCE(ROP4);
+
+    BYTE               clippingType;
+    RECTL              ClipRect;
+    RECT_ENUM          RectEnum;
+    BOOL               EnumMore;
+    ULONG              Direction;
+    RECTL              CombinedRect;
+    RECTL              InputToCombinedRect;
+    unsigned           i;
+
+    LONG DstHeight;
+    LONG DstWidth;
+    LONG SrcHeight;
+    LONG SrcWidth;
+
+    /* Determine clipping type */
+    if (ClipRegion == (CLIPOBJ *) NULL)
+    {
+        clippingType = DC_TRIVIAL;
+    }
+    else
+    {
+        clippingType = ClipRegion->iDComplexity;
+    }
 
     if (ROP4 == R4_NOOP)
     {
@@ -864,18 +920,6 @@ EngStretchBltROP(
         if (NULL == prclSrc)
         {
             return FALSE;
-        }
-
-        /* Make sure we don't try to copy anything outside the valid source region */
-        if (InputRect.left < 0)
-        {
-            OutputRect.left -= InputRect.left;
-            InputRect.left = 0;
-        }
-        if (InputRect.top < 0)
-        {
-            OutputRect.top -= InputRect.top;
-            InputRect.top = 0;
         }
 
         if (! IntEngEnter(&EnterLeaveSource, psoSource, &InputRect, TRUE,
@@ -965,9 +1009,88 @@ EngStretchBltROP(
         BltRectFunc = CallDibStretchBlt;
     }
 
-    Ret = (*BltRectFunc)(psoOutput, psoInput, Mask, ClipRegion,
+    DstHeight = OutputRect.bottom - OutputRect.top;
+    DstWidth = OutputRect.right - OutputRect.left;
+    SrcHeight = InputRect.bottom - InputRect.top;
+    SrcWidth = InputRect.right - InputRect.left;
+    switch (clippingType)
+    {
+        case DC_TRIVIAL:
+            Ret = (*BltRectFunc)(psoOutput, psoInput, Mask, 
                          ColorTranslation, &OutputRect, &InputRect, MaskOrigin,
                          Brush, &AdjustedBrushOrigin, ROP4);
+            break;
+        case DC_RECT:
+            // Clip the blt to the clip rectangle 
+            ClipRect.left = ClipRegion->rclBounds.left + Translate.x;
+            ClipRect.right = ClipRegion->rclBounds.right + Translate.x;
+            ClipRect.top = ClipRegion->rclBounds.top + Translate.y;
+            ClipRect.bottom = ClipRegion->rclBounds.bottom + Translate.y;
+            if (EngIntersectRect(&CombinedRect, &OutputRect, &ClipRect))
+            {
+                InputToCombinedRect.top = InputRect.top + (CombinedRect.top - OutputRect.top) * SrcHeight / DstHeight;
+                InputToCombinedRect.bottom = InputRect.top + (CombinedRect.bottom - OutputRect.top) * SrcHeight / DstHeight;
+                InputToCombinedRect.left = InputRect.left + (CombinedRect.left - OutputRect.left) * SrcWidth / DstWidth;
+                InputToCombinedRect.right = InputRect.left + (CombinedRect.right - OutputRect.left) * SrcWidth / DstWidth;
+                Ret = (*BltRectFunc)(psoOutput, psoInput, Mask, 
+                           ColorTranslation, 
+                           &CombinedRect,
+                           &InputToCombinedRect,
+                           MaskOrigin,
+                           Brush, 
+                           &AdjustedBrushOrigin, 
+                           ROP4);
+            }
+            break;
+        case DC_COMPLEX:
+            if (psoOutput == psoInput)
+            {
+                if (OutputRect.top < InputRect.top)
+                {
+                    Direction = OutputRect.left < InputRect.left ?
+                                CD_RIGHTDOWN : CD_LEFTDOWN;
+                }
+                else
+                {
+                    Direction = OutputRect.left < InputRect.left ?
+                                CD_RIGHTUP : CD_LEFTUP;
+                }
+            }
+            else
+            {
+                Direction = CD_ANY;
+            }
+            CLIPOBJ_cEnumStart(ClipRegion, FALSE, CT_RECTANGLES, Direction, 0);
+            do
+            {
+                EnumMore = CLIPOBJ_bEnum(ClipRegion,(ULONG) sizeof(RectEnum),
+                                         (PVOID) &RectEnum);
+                for (i = 0; i < RectEnum.c; i++)
+                {
+                    ClipRect.left = RectEnum.arcl[i].left + Translate.x;
+                    ClipRect.right = RectEnum.arcl[i].right + Translate.x;
+                    ClipRect.top = RectEnum.arcl[i].top + Translate.y;
+                    ClipRect.bottom = RectEnum.arcl[i].bottom + Translate.y;
+                    if (EngIntersectRect(&CombinedRect, &OutputRect, &ClipRect))
+                    {
+                        InputToCombinedRect.top = InputRect.top + (CombinedRect.top - OutputRect.top) * SrcHeight / DstHeight;
+                        InputToCombinedRect.bottom = InputRect.top + (CombinedRect.bottom - OutputRect.top) * SrcHeight / DstHeight;
+                        InputToCombinedRect.left = InputRect.left + (CombinedRect.left - OutputRect.left) * SrcWidth / DstWidth;
+                        InputToCombinedRect.right = InputRect.left + (CombinedRect.right - OutputRect.left) * SrcWidth / DstWidth;
+                        Ret = (*BltRectFunc)(psoOutput, psoInput, Mask, 
+                           ColorTranslation, 
+                           &CombinedRect,
+                           &InputToCombinedRect,
+                           MaskOrigin,
+                           Brush, 
+                           &AdjustedBrushOrigin, 
+                           ROP4);
+                    }
+                }
+            }
+            while (EnumMore);
+            break;
+    }
 
     IntEngLeave(&EnterLeaveDest);
     if (UsesSource)
@@ -1061,18 +1184,6 @@ IntEngStretchBlt(SURFOBJ *psoDest,
         }
         InputRect = *SourceRect;
  
-        /* Make sure we don't try to copy anything outside the valid source region */
-        if (InputRect.left < 0)
-        {
-            InputClippedRect.left -= InputRect.left;
-            InputRect.left = 0;
-        }
-        if (InputRect.top < 0)
-        {
-            InputClippedRect.top -= InputRect.top;
-            InputRect.top = 0;
-        }
-
         if (InputClippedRect.right < InputClippedRect.left ||
                 InputClippedRect.bottom < InputClippedRect.top)
         {
@@ -1129,19 +1240,18 @@ IntEngStretchBlt(SURFOBJ *psoDest,
     /* Prepare color adjustment */
 
     /* Call the driver's DrvStretchBlt if available */
-    if (psurfDest->flHooks & HOOK_STRETCHBLT)
+    if (psurfDest->flHooks & HOOK_STRETCHBLTROP)
     {
-        /* Drv->StretchBlt (look at http://www.osr.com/ddk/graphics/ddifncs_3ew7.htm ) */
+        /* Drv->StretchBltROP (look at http://www.osronline.com/ddkx/graphics/ddifncs_0z3b.htm ) */
         // FIXME: MaskOrigin is always NULL !
-        ret = GDIDEVFUNCS(psoDest).StretchBlt(
-                  psoDest, (UsesSource) ? psoSource : NULL, MaskSurf, ClipRegion, ColorTranslation,
-                  &ca, BrushOrigin, &OutputRect, &InputRect, NULL, ROP);
+        ret = GDIDEVFUNCS(psoDest).StretchBltROP(psoDest, (UsesSource) ? psoSource : NULL, MaskSurf, ClipRegion, ColorTranslation,
+                  &ca, BrushOrigin, &OutputRect, &InputRect, NULL, COLORONCOLOR, Brush, ROP);
     }
 
     if (! ret)
     {
         // FIXME: see previous fixme
-        ret = EngStretchBltROP(psoDest, psoSource, MaskSurf, ClipRegion, ColorTranslation,
+        ret = EngStretchBltROP(psoDest, (UsesSource) ? psoSource : NULL, MaskSurf, ClipRegion, ColorTranslation,
                             &ca, BrushOrigin, &OutputRect, &InputRect, NULL, COLORONCOLOR, Brush, ROP);
     }
 
