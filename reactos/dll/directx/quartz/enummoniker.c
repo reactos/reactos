@@ -84,7 +84,7 @@ static HRESULT WINAPI EnumMonikerImpl_QueryInterface(
     if (IsEqualGUID(riid, &IID_IUnknown) ||
         IsEqualGUID(riid, &IID_IEnumMoniker))
     {
-        *ppvObj = (LPVOID)iface;
+        *ppvObj = iface;
         EnumMonikerImpl_AddRef(iface);
         return S_OK;
     }

@@ -74,9 +74,9 @@ static HRESULT WINAPI IEnumFiltersImpl_QueryInterface(IEnumFilters * iface, REFI
     *ppv = NULL;
 
     if (IsEqualIID(riid, &IID_IUnknown))
-        *ppv = (LPVOID)iface;
+        *ppv = iface;
     else if (IsEqualIID(riid, &IID_IEnumFilters))
-        *ppv = (LPVOID)iface;
+        *ppv = iface;
 
     if (*ppv)
     {

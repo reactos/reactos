@@ -103,7 +103,7 @@ static const IUnknownVtbl IInner_VTable =
 };
 
 /* Generic functions for aggregation */
-static HRESULT WINAPI SeekOuter_QueryInterface(PassThruImpl *This, REFIID riid, LPVOID *ppv)
+static HRESULT SeekOuter_QueryInterface(PassThruImpl *This, REFIID riid, LPVOID *ppv)
 {
     if (This->bAggregatable)
         This->bUnkOuterValid = TRUE;
@@ -131,14 +131,14 @@ static HRESULT WINAPI SeekOuter_QueryInterface(PassThruImpl *This, REFIID riid, 
     return IUnknown_QueryInterface((IUnknown *)&(This->IInner_vtbl), riid, ppv);
 }
 
-static ULONG WINAPI SeekOuter_AddRef(PassThruImpl *This)
+static ULONG SeekOuter_AddRef(PassThruImpl *This)
 {
     if (This->pUnkOuter && This->bUnkOuterValid)
         return IUnknown_AddRef(This->pUnkOuter);
     return IUnknown_AddRef((IUnknown *)&(This->IInner_vtbl));
 }
 
-static ULONG WINAPI SeekOuter_Release(PassThruImpl *This)
+static ULONG SeekOuter_Release(PassThruImpl *This)
 {
     if (This->pUnkOuter && This->bUnkOuterValid)
         return IUnknown_Release(This->pUnkOuter);
@@ -591,9 +591,9 @@ HRESULT WINAPI MediaSeekingImpl_SetPositions(IMediaSeeking * iface, LONGLONG * p
     This->llCurrent = llNewCurrent;
     This->llStop = llNewStop;
 
-    if (dwCurrentFlags & AM_SEEKING_ReturnTime)
+    if (pCurrent && (dwCurrentFlags & AM_SEEKING_ReturnTime))
         *pCurrent = llNewCurrent;
-    if (dwStopFlags & AM_SEEKING_ReturnTime)
+    if (pStop && (dwStopFlags & AM_SEEKING_ReturnTime))
         *pStop = llNewStop;
 
     ForwardCmdSeek(This->crst, This->pUserData, fwd_setposition, &args);

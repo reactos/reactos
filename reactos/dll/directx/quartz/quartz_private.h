@@ -76,7 +76,6 @@ HRESULT IEnumRegFiltersImpl_Construct(REGFILTER * pInRegFilters, const ULONG siz
 HRESULT IEnumFiltersImpl_Construct(IBaseFilter ** ppFilters, ULONG nFilters, IEnumFilters ** ppEnum);
 
 extern const char * qzdebugstr_guid(const GUID * id);
-extern const char * qzdebugstr_State(FILTER_STATE state);
 
 HRESULT CopyMediaType(AM_MEDIA_TYPE * pDest, const AM_MEDIA_TYPE *pSrc);
 void FreeMediaType(AM_MEDIA_TYPE * pmt);
@@ -96,38 +95,5 @@ typedef struct StdMediaSample2
     LONGLONG tMediaStart;
     LONGLONG tMediaEnd;
 } StdMediaSample2;
-
-typedef struct BaseMemAllocator
-{
-    const IMemAllocatorVtbl * lpVtbl;
-
-    LONG ref;
-    ALLOCATOR_PROPERTIES props;
-    HRESULT (* fnAlloc) (IMemAllocator *);
-    HRESULT (* fnFree)(IMemAllocator *);
-    HRESULT (* fnVerify)(IMemAllocator *, ALLOCATOR_PROPERTIES *);
-    HRESULT (* fnBufferPrepare)(IMemAllocator *, StdMediaSample2 *, DWORD flags);
-    HRESULT (* fnBufferReleased)(IMemAllocator *, StdMediaSample2 *);
-    void (* fnDestroyed)(IMemAllocator *);
-    HANDLE hSemWaiting;
-    BOOL bDecommitQueued;
-    BOOL bCommitted;
-    LONG lWaiting;
-    struct list free_list;
-    struct list used_list;
-    CRITICAL_SECTION *pCritSect;
-} BaseMemAllocator;
-
-HRESULT BaseMemAllocator_Init(HRESULT (* fnAlloc)(IMemAllocator *),
-                              HRESULT (* fnFree)(IMemAllocator *),
-                              HRESULT (* fnVerify)(IMemAllocator *, ALLOCATOR_PROPERTIES *),
-                              HRESULT (* fnBufferPrepare)(IMemAllocator *, StdMediaSample2 *, DWORD),
-                              HRESULT (* fnBufferReleased)(IMemAllocator *, StdMediaSample2 *),
-                              void (* fnDestroyed)(IMemAllocator *),
-                              CRITICAL_SECTION *pCritSect,
-                              BaseMemAllocator * pMemAlloc);
-
-HRESULT StdMediaSample2_Construct(BYTE * pbBuffer, LONG cbBuffer, IMemAllocator * pParent, StdMediaSample2 ** ppSample);
-void StdMediaSample2_Delete(StdMediaSample2 * This);
 
 #endif /* __QUARTZ_PRIVATE_INCLUDED__ */

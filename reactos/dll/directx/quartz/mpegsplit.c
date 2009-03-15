@@ -243,7 +243,7 @@ static HRESULT FillBuffer(MPEGSplitterImpl *This, IMediaSample *pCurrentSample)
 
 static HRESULT MPEGSplitter_process_sample(LPVOID iface, IMediaSample * pSample, DWORD_PTR cookie)
 {
-    MPEGSplitterImpl *This = (MPEGSplitterImpl*)iface;
+    MPEGSplitterImpl *This = iface;
     BYTE *pbSrcStream;
     DWORD cbSrcStream = 0;
     REFERENCE_TIME tStart, tStop, tAviStart = This->position;
@@ -286,7 +286,7 @@ static HRESULT MPEGSplitter_process_sample(LPVOID iface, IMediaSample * pSample,
 
     if (BYTES_FROM_MEDIATIME(tStop) >= This->EndOfFile || This->position >= This->Parser.mediaSeeking.llStop)
     {
-        int i;
+        unsigned int i;
 
         TRACE("End of file reached\n");
 
@@ -301,7 +301,7 @@ static HRESULT MPEGSplitter_process_sample(LPVOID iface, IMediaSample * pSample,
                 IPin_Release(ppin);
             }
             if (FAILED(hr))
-                WARN("Error sending EndOfStream to pin %d (%x)\n", i, hr);
+                WARN("Error sending EndOfStream to pin %u (%x)\n", i, hr);
         }
 
         /* Force the pullpin thread to stop */
@@ -615,7 +615,7 @@ static HRESULT MPEGSplitter_pre_connect(IPin *iface, IPin *pConnectPin, ALLOCATO
 
 static HRESULT MPEGSplitter_cleanup(LPVOID iface)
 {
-    MPEGSplitterImpl *This = (MPEGSplitterImpl*)iface;
+    MPEGSplitterImpl *This = iface;
 
     TRACE("(%p)\n", This);
 
@@ -709,7 +709,7 @@ static HRESULT MPEGSplitter_disconnect(LPVOID iface)
 
 static HRESULT MPEGSplitter_first_request(LPVOID iface)
 {
-    MPEGSplitterImpl *This = (MPEGSplitterImpl*)iface;
+    MPEGSplitterImpl *This = iface;
     PullPin *pin = This->Parser.pInputPin;
     HRESULT hr;
     LONGLONG length;
@@ -808,7 +808,7 @@ HRESULT MPEGSplitter_create(IUnknown * pUnkOuter, LPVOID * ppv)
     This->seek = 1;
 
     /* Note: This memory is managed by the parser filter once created */
-    *ppv = (LPVOID)This;
+    *ppv = This;
 
     return hr;
 }

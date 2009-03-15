@@ -24,6 +24,7 @@
 #include "wine/debug.h"
 
 #include "quartz_private.h"
+#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(quartz);
 
@@ -35,9 +36,9 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
     switch(fdwReason) {
         case DLL_PROCESS_ATTACH:
             DisableThreadLibraryCalls(hInstDLL);
-        break;
-    case DLL_PROCESS_DETACH:
-        break;
+	    break;
+	case DLL_PROCESS_DETACH:
+	    break;
     }
     return TRUE;
 }
@@ -86,11 +87,11 @@ DSCF_QueryInterface(LPCLASSFACTORY iface,REFIID riid,LPVOID *ppobj)
     IClassFactoryImpl *This = (IClassFactoryImpl *)iface;
 
     if (IsEqualGUID(riid, &IID_IUnknown)
-    || IsEqualGUID(riid, &IID_IClassFactory))
+	|| IsEqualGUID(riid, &IID_IClassFactory))
     {
-    IClassFactory_AddRef(iface);
-    *ppobj = This;
-    return S_OK;
+	IClassFactory_AddRef(iface);
+	*ppobj = This;
+	return S_OK;
     }
 
     *ppobj = NULL;
@@ -111,14 +112,14 @@ static ULONG WINAPI DSCF_Release(LPCLASSFACTORY iface)
     ULONG ref = InterlockedDecrement(&This->ref);
 
     if (ref == 0)
-    CoTaskMemFree(This);
+	CoTaskMemFree(This);
 
     return ref;
 }
 
 
 static HRESULT WINAPI DSCF_CreateInstance(LPCLASSFACTORY iface, LPUNKNOWN pOuter,
-                      REFIID riid, LPVOID *ppobj)
+					  REFIID riid, LPVOID *ppobj)
 {
     IClassFactoryImpl *This = (IClassFactoryImpl *)iface;
     HRESULT hres;
@@ -176,19 +177,19 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
     TRACE("(%s,%s,%p)\n", debugstr_guid(rclsid), debugstr_guid(riid), ppv);
     
     if ( !IsEqualGUID( &IID_IClassFactory, riid )
-     && ! IsEqualGUID( &IID_IUnknown, riid) )
-    return E_NOINTERFACE;
+	 && ! IsEqualGUID( &IID_IUnknown, riid) )
+	return E_NOINTERFACE;
 
     for (i=0; i < sizeof(object_creation)/sizeof(object_creation[0]); i++)
     {
-    if (IsEqualGUID(object_creation[i].clsid, rclsid))
-        break;
+	if (IsEqualGUID(object_creation[i].clsid, rclsid))
+	    break;
     }
 
     if (i == sizeof(object_creation)/sizeof(object_creation[0]))
     {
-    FIXME("%s: no class found.\n", debugstr_guid(rclsid));
-    return CLASS_E_CLASSNOTAVAILABLE;
+	FIXME("%s: no class found.\n", debugstr_guid(rclsid));
+	return CLASS_E_CLASSNOTAVAILABLE;
     }
 
     factory = CoTaskMemAlloc(sizeof(*factory));
@@ -216,8 +217,8 @@ HRESULT WINAPI DllCanUnloadNow(void)
     { { l, w1, w2, { b1, b2,  b3,  b4,  b5,  b6,  b7,  b8 } } , #name },
 
 static const struct {
-    const GUID	riid;
-    const char 	*name;
+	const GUID	riid;
+	const char 	*name;
 } InterfaceDesc[] =
 {
 #include "uuids.h"
@@ -240,26 +241,6 @@ const char * qzdebugstr_guid( const GUID * id )
     return debugstr_guid(id);
 }
 
-/***********************************************************************
- *              qzdebugstr_State (internal)
- *
- * Gives a text version of the FILTER_STATE enumeration
- */
-const char * qzdebugstr_State(FILTER_STATE state)
-{
-    switch (state)
-    {
-    case State_Stopped:
-        return "State_Stopped";
-    case State_Running:
-        return "State_Running";
-    case State_Paused:
-        return "State_Paused";
-    default:
-        return "State_Unknown";
-    }
-}
-
 LONG WINAPI AmpFactorToDB(LONG ampfactor)
 {
     FIXME("(%d) Stub!\n", ampfactor);
@@ -271,7 +252,7 @@ LONG WINAPI DBToAmpFactor(LONG db)
     FIXME("(%d) Stub!\n", db);
     /* Avoid divide by zero (probably during range computation) in Windows Media Player 6.4 */
     if (db < -1000)
-    return 0;
+	return 0;
     return 100;
 }
 
@@ -280,7 +261,7 @@ LONG WINAPI DBToAmpFactor(LONG db)
  */
 DWORD WINAPI AMGetErrorTextA(HRESULT hr, LPSTR buffer, DWORD maxlen)
 {
-    int len;
+    unsigned int len;
     static const char format[] = "Error: 0x%x";
     char error[MAX_ERROR_TEXT_LEN];
 
@@ -288,7 +269,7 @@ DWORD WINAPI AMGetErrorTextA(HRESULT hr, LPSTR buffer, DWORD maxlen)
 
     if (!buffer) return 0;
     wsprintfA(error, format, hr);
-    if ((len = lstrlenA(error)) >= maxlen) return 0; 
+    if ((len = strlen(error)) >= maxlen) return 0;
     lstrcpyA(buffer, error);
     return len;
 }
@@ -298,7 +279,7 @@ DWORD WINAPI AMGetErrorTextA(HRESULT hr, LPSTR buffer, DWORD maxlen)
  */
 DWORD WINAPI AMGetErrorTextW(HRESULT hr, LPWSTR buffer, DWORD maxlen)
 {
-    int len;
+    unsigned int len;
     static const WCHAR format[] = {'E','r','r','o','r',':',' ','0','x','%','l','x',0};
     WCHAR error[MAX_ERROR_TEXT_LEN];
 
@@ -306,7 +287,7 @@ DWORD WINAPI AMGetErrorTextW(HRESULT hr, LPWSTR buffer, DWORD maxlen)
 
     if (!buffer) return 0;
     wsprintfW(error, format, hr);
-    if ((len = lstrlenW(error)) >= maxlen) return 0; 
+    if ((len = strlenW(error)) >= maxlen) return 0;
     lstrcpyW(buffer, error);
     return len;
 }
