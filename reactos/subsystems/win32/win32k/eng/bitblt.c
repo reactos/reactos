@@ -1009,7 +1009,7 @@ EngStretchBlt(
         MaskOrigin,
         Mode,
         NULL,
-        SRCCOPY);
+        ROP3_TO_ROP4(SRCCOPY));
 }
 
 BOOL APIENTRY
