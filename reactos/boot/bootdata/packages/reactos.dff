@@ -420,6 +420,7 @@ dll\win32\usp10\usp10.dll                           1
 dll\win32\uxtheme\uxtheme.dll                       1
 dll\win32\vdmdbg\vdmdbg.dll                         1
 dll\win32\version\version.dll                       1
+dll\win32\winemp3.acm\winemp3.acm                   1
 dll\win32\winfax\winfax.dll                         1
 dll\win32\winhttp\winhttp.dll                       1
 dll\win32\wininet\wininet.dll                       1

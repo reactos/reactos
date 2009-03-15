@@ -63,6 +63,7 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","midi",0x00000000,
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","msacm.msadpcm",0x00000000,"c:\reactos\system32\msadp32.acm"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","msacm.msg711",0x00000000,"c:\reactos\system32\msg711.acm"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","msacm.imaadpcm",0x00000000,"c:\reactos\system32\imaadp32.acm"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","msacm.winemp3",0x00000000,"c:\reactos\system32\winemp3.acm"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","vidc.cvid",0x00000000,"c:\reactos\system32\iccvid.dll"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","vidc.mrle",0x00000000,"c:\reactos\system32\msrle32.dll"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","vidc.msvc",0x00000000,"c:\reactos\system32\msvidc32.dll"

@@ -565,6 +565,9 @@
 <directory name="wdmaud.drv">
 	<xi:include href="wdmaud.drv/wdmaud.rbuild" />
 </directory>
+<directory name="winemp3.acm">
+	<xi:include href="winemp3.acm/winemp3.acm.rbuild" />
+</directory>
 <directory name="winfax">
 	<xi:include href="winfax/winfax.rbuild" />
 </directory>

@@ -154,6 +154,7 @@ reactos/dll/win32/urlmon          # Autosync
 reactos/dll/win32/usp10           # Autosync
 reactos/dll/win32/uxtheme         # Autosync
 reactos/dll/win32/version         # Autosync
+reactos/dll/win32/winemp3.acm     # Autosync
 reactos/dll/win32/wininet         # Autosync
 reactos/dll/win32/winhttp         # Autosync
 reactos/dll/win32/winmm           # Forked at Wine-20050628
