@@ -124,6 +124,9 @@
 <directory name="hlink">
 	<xi:include href="hlink/hlink.rbuild" />
 </directory>
+<directory name="httpapi">
+	<xi:include href="httpapi/httpapi.rbuild" />
+</directory>
 <directory name="iccvid">
 	<xi:include href="iccvid/iccvid.rbuild" />
 </directory>
@@ -145,11 +148,17 @@
 <directory name="inetmib1">
 	<xi:include href="inetmib1/inetmib1.rbuild" />
 </directory>
+<directory name="initpki">
+	<xi:include href="initpki/initpki.rbuild" />
+</directory>
 <directory name="inseng">
 	<xi:include href="inseng/inseng.rbuild" />
 </directory>
 <directory name="iphlpapi">
 	<xi:include href="iphlpapi/iphlpapi.rbuild" />
+</directory>
+<directory name="itircl">
+	<xi:include href="itircl/itircl.rbuild" />
 </directory>
 <directory name="itss">
 	<xi:include href="itss/itss.rbuild" />
@@ -259,6 +268,12 @@
 <directory name="msisip">
 	<xi:include href="msisip/msisip.rbuild" />
 </directory>
+<directory name="msisys.ocx">
+	<xi:include href="msisys.ocx/msisys.ocx.rbuild" />
+</directory>
+<directory name="msnet32">
+	<xi:include href="msnet32/msnet32.rbuild" />
+</directory>
 <directory name="msrle32">
 	<xi:include href="msrle32/msrle32.rbuild" />
 </directory>
@@ -358,6 +373,9 @@
 <directory name="pdh">
 	<xi:include href="pdh/pdh.rbuild" />
 </directory>
+<directory name="pidgen">
+	<xi:include href="pidgen/pidgen.rbuild" />
+</directory>
 <directory name="powrprof">
 	<xi:include href="powrprof/powrprof.rbuild" />
 </directory>
@@ -388,6 +406,9 @@
 <directory name="rasman">
 	<xi:include href="rasman/rasman.rbuild" />
 </directory>
+<directory name="resutils">
+	<xi:include href="resutils/resutils.rbuild" />
+</directory>
 <directory name="riched20">
 	<xi:include href="riched20/riched20.rbuild" />
 </directory>
@@ -408,6 +429,9 @@
 </directory>
 <directory name="samsrv">
 	<xi:include href="samsrv/samsrv.rbuild" />
+</directory>
+<directory name="sccbase">
+	<xi:include href="sccbase/sccbase.rbuild" />
 </directory>
 <directory name="schannel">
 	<xi:include href="schannel/schannel.rbuild" />
@@ -451,6 +475,9 @@
 <directory name="shlwapi">
 	<xi:include href="shlwapi/shlwapi.rbuild" />
 </directory>
+<directory name="slbcsp">
+	<xi:include href="slbcsp/slbcsp.rbuild" />
+</directory>
 <directory name="smdll">
 	<xi:include href="smdll/smdll.rbuild" />
 </directory>
@@ -459,6 +486,9 @@
 </directory>
 <directory name="snmpapi">
 	<xi:include href="snmpapi/snmpapi.rbuild" />
+</directory>
+<directory name="softpub">
+	<xi:include href="softpub/softpub.rbuild" />
 </directory>
 <directory name="spoolss">
 	<xi:include href="spoolss/spoolss.rbuild" />
@@ -486,6 +516,9 @@
 </directory>
 <directory name="tapiui">
 	<xi:include href="tapiui/tapiui.rbuild" />
+</directory>
+<directory name="traffic">
+	<xi:include href="traffic/traffic.rbuild" />
 </directory>
 <directory name="twain_32">
 	<xi:include href="twain_32/twain_32.rbuild" />
