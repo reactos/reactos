@@ -36,6 +36,12 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
                        PCHAR SystemPath,
                        PCHAR BootPath,
                        USHORT VersionToBoot);
+BOOLEAN
+WinLdrLoadNLSData(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
+                  IN LPCSTR DirectoryPath,
+                  IN LPCSTR AnsiFileName,
+                  IN LPCSTR OemFileName,
+                  IN LPCSTR LanguageFileName);
 
 
 
@@ -46,6 +52,53 @@ extern char reactos_arc_strings[32][256];
 
 extern BOOLEAN UseRealHeap;
 extern ULONG LoaderPagesSpanned;
+
+
+VOID
+SetupLdrLoadNlsData(PLOADER_PARAMETER_BLOCK LoaderBlock, HINF InfHandle, LPCSTR SearchPath)
+{
+    INFCONTEXT InfContext;
+    BOOLEAN Status;
+    LPCSTR AnsiName, OemName, LangName;
+
+    /* Get ANSI codepage file */
+    if (!InfFindFirstLine(InfHandle, "NLS", "AnsiCodepage", &InfContext))
+    {
+        printf("Failed to find 'NLS/AnsiCodepage'\n");
+        return;
+    }
+    if (!InfGetDataField(&InfContext, 1, &AnsiName))
+    {
+        printf("Failed to get load options\n");
+        return;
+    }
+
+    /* Get OEM codepage file */
+    if (!InfFindFirstLine(InfHandle, "NLS", "OemCodepage", &InfContext))
+    {
+        printf("Failed to find 'NLS/AnsiCodepage'\n");
+        return;
+    }
+    if (!InfGetDataField(&InfContext, 1, &OemName))
+    {
+        printf("Failed to get load options\n");
+        return;
+    }
+
+    if (!InfFindFirstLine(InfHandle, "NLS", "UnicodeCasetable", &InfContext))
+    {
+        printf("Failed to find 'NLS/AnsiCodepage'\n");
+        return;
+    }
+    if (!InfGetDataField(&InfContext, 1, &LangName))
+    {
+        printf("Failed to get load options\n");
+        return;
+    }
+
+    Status = WinLdrLoadNLSData(LoaderBlock, SearchPath, AnsiName, OemName, LangName);
+    DPRINTM(DPRINT_WINDOWS, "NLS data loaded with status %d\n", Status);
+}
 
 VOID LoadReactOSSetup2(VOID)
 {
@@ -183,9 +236,8 @@ VOID LoadReactOSSetup2(VOID)
     if (KdComDTE)
         WinLdrScanImportDescriptorTable(LoaderBlock, SearchPath, KdComDTE);
 
-    /* Load Hive, and then NLS data, OEM font, and prepare boot drivers list */
-    //Status = WinLdrLoadAndScanSystemHive(LoaderBlock, BootPath);
-    DPRINTM(DPRINT_WINDOWS, "SYSTEM hive loaded and scanned with status %d\n", Status);
+    /* Load NLS data */
+    SetupLdrLoadNlsData(LoaderBlock, InfHandle, BootPath);
 
     /* Load boot drivers */
     //Status = WinLdrLoadBootDrivers(LoaderBlock, BootPath);
