@@ -319,7 +319,10 @@ dll\win32\mshtml.tlb\mshtml.tlb                     1
 dll\win32\msi\msi.dll                               1
 dll\win32\msimg32\msimg32.dll                       1
 dll\win32\msimtf\msimtf.dll                         1
+dll\win32\msisip\msisip.dll                         1
 dll\win32\msrle32\msrle32.dll                       1
+dll\win32\mssign32\mssign32.dll                     1
+dll\win32\mssip32\mssip32.dll                       1
 dll\win32\mstask\mstask.dll                         1
 dll\win32\msvcrt\msvcrt.dll                         1
 dll\win32\msvcrt20\msvcrt20.dll                     1
@@ -356,6 +359,7 @@ dll\win32\psapi\psapi.dll                           1
 dll\win32\pstorec\pstorec.dll                       1
 dll\win32\qmgr\qmgr.dll                             1
 dll\win32\qmgrprxy\qmgrprxy.dll                     1
+dll\win32\query\query.dll                           1
 dll\win32\rasapi32\rasapi32.dll                     1
 dll\win32\rasdlg\rasdlg.dll                         1
 dll\win32\rasman\rasman.dll                         1
@@ -396,6 +400,7 @@ dll\win32\uext2\uext2.dll                           1
 dll\win32\ufat\ufat.dll                             1
 dll\win32\ufatx\ufatx.dll                           1   optional
 dll\win32\untfs\untfs.dll                           1
+dll\win32\updspapi\updspapi.dll                     1
 dll\win32\url\url.dll                               1
 dll\win32\urlmon\urlmon.dll                         1
 dll\win32\user32\user32.dll                         1
@@ -410,6 +415,7 @@ dll\win32\wininet\wininet.dll                       1
 dll\win32\winmm\winmm.dll                           1
 dll\win32\winspool\winspool.drv                     1
 dll\win32\winsta\winsta.dll                         1
+dll\win32\wintab32\wintab32.dll                     1
 dll\win32\wlanapi\wlanapi.dll                       1
 dll\win32\wintrust\wintrust.dll                     1
 dll\win32\wldap32\wldap32.dll                       1

@@ -42,6 +42,8 @@
   <property name="BASEADDRESS_DINPUT" value="0x5f580000" />
   <property name="BASEADDRESS_NETID" value="0x5f660000" />
   <property name="BASEADDRESS_NTPRINT" value="0x5f6a0000" />
+  <property name="BASEADDRESS_MSSIP32" value="0x60430000" />
+  <property name="BASEADDRESS_MSISIP" value="0x60b10000" />
   <property name="BASEADDRESS_INSENG" value="0x61000000" />
   <property name="BASEADDRESS_QEDIT" value="0x611c0000" />
   <property name="BASEADDRESS_MODEMUI" value="0x61650000" />
@@ -118,6 +120,7 @@
   <property name="BASEADDRESS_OLETHK32" value="0x71e10000" />
   <property name="BASEADDRESS_DPLAY" value="0x71e80000" />
   <property name="BASEADDRESS_SECURITY" value="0x71f10000" />
+  <property name="BASEADDRESS_MSSIGN32" value="0x720c0000" />
   <property name="BASEADDRESS_CRYPTUI" value="0x720D0000" />
   <property name="BASEADDRESS_WINFAX" value="0x722C0000" />
   <property name="BASEADDRESS_WINSCARD" value="0x723d0000" />
@@ -232,6 +235,7 @@
   <property name="BASEADDRESS_FUSION" value="0x79040000" />
   <property name="BASEADDRESS_KERNEL32" value="0x7c700000" />
   <property name="BASEADDRESS_NTDLL" value="0x7c900000" />
+  <property name="BASEADDRESS_QUERY" value="0x7d9a0000" />
   <property name="BASEADDRESS_HHCTRL" value="0x7e410000" />
   <property name="BASEADDRESS_SXS" value="0x7e690000" />
   <property name="BASEADDRESS_BEEPMIDI" value="0x7ef0000" />

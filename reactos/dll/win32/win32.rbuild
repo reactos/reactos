@@ -256,8 +256,17 @@
 <directory name="msimtf">
 	<xi:include href="msimtf/msimtf.rbuild" />
 </directory>
+<directory name="msisip">
+	<xi:include href="msisip/msisip.rbuild" />
+</directory>
 <directory name="msrle32">
 	<xi:include href="msrle32/msrle32.rbuild" />
+</directory>
+<directory name="mssign32">
+	<xi:include href="mssign32/mssign32.rbuild" />
+</directory>
+<directory name="mssip32">
+	<xi:include href="mssip32/mssip32.rbuild" />
 </directory>
 <directory name="mstask">
 	<xi:include href="mstask/mstask.rbuild" />
@@ -366,6 +375,9 @@
 </directory>
 <directory name="qmgrprxy">
 	<xi:include href="qmgrprxy/qmgrprxy.rbuild" />
+</directory>
+<directory name="query">
+	<xi:include href="query/query.rbuild" />
 </directory>
 <directory name="rasapi32">
 	<xi:include href="rasapi32/rasapi32.rbuild" />
@@ -490,6 +502,9 @@
 <directory name="untfs">
 	<xi:include href="untfs/untfs.rbuild" />
 </directory>
+<directory name="updspapi">
+	<xi:include href="updspapi/updspapi.rbuild" />
+</directory>
 <directory name="url">
 	<xi:include href="url/url.rbuild" />
 </directory>
@@ -534,6 +549,9 @@
 </directory>
 <directory name="winsta">
 	<xi:include href="winsta/winsta.rbuild" />
+</directory>
+<directory name="wintab32">
+	<xi:include href="wintab32/wintab32.rbuild" />
 </directory>
 <directory name="wintrust">
 	<xi:include href="wintrust/wintrust.rbuild" />
