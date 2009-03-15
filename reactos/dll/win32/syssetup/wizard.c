@@ -752,7 +752,7 @@ SetKeyboardLayoutName(HWND hwnd)
     }
 
   _tcscpy(szLayoutPath,
-	  _T("SYSTEM\\CurrentControlSet\\Control\\KeyboardLayouts\\"));
+	  _T("SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\"));
   _tcscat(szLayoutPath,
 	  szLocaleName);
 
