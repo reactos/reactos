@@ -78,7 +78,7 @@ MiMapPageInHyperSpace(IN PEPROCESS Process,
     // Acquire the hyperlock
     //
     ASSERT(Process == PsGetCurrentProcess());
-    KeAcquireSpinLock(&Process->HyperSpaceLock, OldIrql);
+    //KeAcquireSpinLock(&Process->HyperSpaceLock, OldIrql);
     
     //
     // Now get the first free PTE
@@ -129,8 +129,8 @@ MiUnmapPageInHyperSpace(IN PEPROCESS Process,
     //
     // Release the hyperlock
     //    
-    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
-    KeReleaseSpinLock(&Process->HyperSpaceLock, OldIrql);
+    //ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+    //KeReleaseSpinLock(&Process->HyperSpaceLock, OldIrql);
 }
 
 PVOID
