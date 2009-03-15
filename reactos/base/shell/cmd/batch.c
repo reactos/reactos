@@ -81,16 +81,18 @@ TCHAR textline[BATCH_BUFFSIZE];
  *
  */
 
-LPTSTR FindArg (INT n)
+LPTSTR FindArg(TCHAR Char, BOOL *IsParam0)
 {
 	LPTSTR pp;
+	INT n = Char - _T('0');
 
 	TRACE ("FindArg: (%d)\n", n);
 
-	if (bc == NULL)
+	if (bc == NULL || n < 0 || n > 9)
 		return NULL;
 
 	n += bc->shiftlevel;
+	*IsParam0 = (n == 0);
 	pp = bc->params;
 
 	/* Step up the strings till we reach the end */

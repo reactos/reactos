@@ -989,52 +989,242 @@ GetEnvVarOrSpecial ( LPCTSTR varName )
 	return NULL;
 }
 
+/* Handle the %~var syntax */
+static LPTSTR
+GetEnhancedVar(TCHAR **pFormat, LPTSTR (*GetVar)(TCHAR, BOOL *))
+{
+	static const TCHAR ModifierTable[] = _T("dpnxfsatz");
+	enum {
+		M_DRIVE = 1,   /* D: drive letter */
+		M_PATH  = 2,   /* P: path */
+		M_NAME  = 4,   /* N: filename */
+		M_EXT   = 8,   /* X: extension */
+		M_FULL  = 16,  /* F: full path (drive+path+name+ext) */
+		M_SHORT = 32,  /* S: full path (drive+path+name+ext), use short names */
+		M_ATTR  = 64,  /* A: attributes */
+		M_TIME  = 128, /* T: modification time */
+		M_SIZE  = 256, /* Z: file size */
+	} Modifiers = 0;
 
+	TCHAR *Format, *FormatEnd;
+	LPTSTR Variable;
+	TCHAR *VarEnd;
+	BOOL VariableIsParam0;
+	TCHAR FullPath[MAX_PATH];
+	TCHAR FixedPath[MAX_PATH], *Filename, *Extension;
+	HANDLE hFind;
+	WIN32_FIND_DATA w32fd;
+	TCHAR *In, *Out;
+
+	static TCHAR Result[CMDLINE_LENGTH];
+
+	/* There is ambiguity between modifier characters and FOR variables;
+	 * the rule that cmd uses is to pick the longest possible match.
+	 * For example, if there is a %n variable, then out of %~anxnd,
+	 * %~anxn will be substituted rather than just %~an. */
+
+	/* First, go through as many modifier characters as possible */
+	FormatEnd = Format = *pFormat;
+	while (*FormatEnd && _tcschr(ModifierTable, _totlower(*FormatEnd)))
+		FormatEnd++;
+
+	/* TODO: check for $PATH: syntax */
+
+	/* Now backtrack if necessary to get a variable name match */
+	while (!(Variable = GetVar(*FormatEnd, &VariableIsParam0)))
+	{
+		if (FormatEnd == Format)
+			return NULL;
+		FormatEnd--;
+	}
+
+	for (; Format < FormatEnd; Format++)
+		Modifiers |= 1 << (_tcschr(ModifierTable, _totlower(*Format)) - ModifierTable);
+
+	*pFormat = FormatEnd + 1;
+
+	/* Exclude the leading and trailing quotes */
+	VarEnd = &Variable[_tcslen(Variable)];
+	if (*Variable == _T('"'))
+	{
+		Variable++;
+		if (VarEnd > Variable && VarEnd[-1] == _T('"'))
+			VarEnd--;
+	}
+
+	if ((char *)VarEnd - (char *)Variable >= sizeof Result)
+		return _T("");
+	memcpy(Result, Variable, (char *)VarEnd - (char *)Variable);
+	Result[VarEnd - Variable] = _T('\0');
+
+	/* For plain %~var with no modifiers, just return the variable without quotes */
+	if (Modifiers == 0)
+		return Result;
+
+	if (VariableIsParam0)
+	{
+		/* Special case: If the variable is %0 and modifier characters are present,
+		 * use the batch file's path (which includes the .bat/.cmd extension)
+		 * rather than the actual %0 variable (which might not). */
+		_tcscpy(FullPath, bc->BatchFilePath);
+	}
+	else
+	{
+		/* Convert the variable, now without quotes, to a full path */
+		if (!GetFullPathName(Result, MAX_PATH, FullPath, NULL))
+			return _T("");
+	}
+
+	/* Next step is to change the path to fix letter case (e.g.
+	 * C:\ReAcToS -> C:\ReactOS) and, if requested with the S modifier,
+	 * replace long filenames with short. */
+
+	In = FullPath;
+	Out = FixedPath;
+
+	/* Copy drive letter */
+	*Out++ = *In++;
+	*Out++ = *In++;
+	*Out++ = *In++;
+	/* Loop over each \-separated component in the path */
+	do {
+		TCHAR *Next = _tcschr(In, _T('\\'));
+		if (Next)
+			*Next++ = _T('\0');
+		/* Use FindFirstFile to get the correct name */
+		if (Out + _tcslen(In) + 1 >= &FixedPath[MAX_PATH])
+			return _T("");
+		_tcscpy(Out, In);
+		hFind = FindFirstFile(FixedPath, &w32fd);
+		/* If it doesn't exist, just leave the name as it was given */
+		if (hFind != INVALID_HANDLE_VALUE)
+		{
+			LPTSTR FixedComponent = w32fd.cFileName;
+			if (*w32fd.cAlternateFileName &&
+			    ((Modifiers & M_SHORT) || !_tcsicmp(In, w32fd.cAlternateFileName)))
+			{
+				FixedComponent = w32fd.cAlternateFileName;
+			}
+			FindClose(hFind);
+
+			if (Out + _tcslen(FixedComponent) + 1 >= &FixedPath[MAX_PATH])
+				return _T("");
+			_tcscpy(Out, FixedComponent);
+		}
+		Filename = Out;
+		Out += _tcslen(Out);
+		*Out++ = _T('\\');
+
+		In = Next;
+	} while (In != NULL);
+	Out[-1] = _T('\0');
+
+	/* Build the result string. Start with attributes, modification time, and
+	 * file size. If the file didn't exist, these fields will all be empty. */
+	Out = Result;
+	if (hFind != INVALID_HANDLE_VALUE)
+	{
+		if (Modifiers & M_ATTR)
+		{
+			static const struct {
+				TCHAR Character;
+				WORD  Value;
+			} *Attrib, Table[] = {
+				{ _T('d'), FILE_ATTRIBUTE_DIRECTORY },
+				{ _T('r'), FILE_ATTRIBUTE_READONLY },
+				{ _T('a'), FILE_ATTRIBUTE_ARCHIVE },
+				{ _T('h'), FILE_ATTRIBUTE_HIDDEN },
+				{ _T('s'), FILE_ATTRIBUTE_SYSTEM },
+				{ _T('c'), FILE_ATTRIBUTE_COMPRESSED },
+				{ _T('o'), FILE_ATTRIBUTE_OFFLINE },
+				{ _T('t'), FILE_ATTRIBUTE_TEMPORARY },
+				{ _T('l'), FILE_ATTRIBUTE_REPARSE_POINT },
+			};
+			for (Attrib = Table; Attrib != &Table[9]; Attrib++)
+			{
+				*Out++ = w32fd.dwFileAttributes & Attrib->Value
+				         ? Attrib->Character
+				         : _T('-');
+			}
+			*Out++ = _T(' ');
+		}
+		if (Modifiers & M_TIME)
+		{
+			FILETIME ft;
+			SYSTEMTIME st;
+			FileTimeToLocalFileTime(&w32fd.ftLastWriteTime, &ft);
+			FileTimeToSystemTime(&ft, &st);
+
+			/* TODO: This probably should be locale-dependent */
+			Out += _stprintf(Out,
+				_T("%02d/%02d/%04d %02d:%02d %cM "),
+				st.wMonth, st.wDay, st.wYear,
+				(st.wHour + 11) % 12 + 1, st.wMinute,
+				(st.wHour >= 12) ? _T('P') : _T('A'));
+		}
+		if (Modifiers & M_SIZE)
+		{
+			ULARGE_INTEGER Size;
+			Size.LowPart = w32fd.nFileSizeLow;
+			Size.HighPart = w32fd.nFileSizeHigh;
+			Out += _stprintf(Out, _T("%I64u "), Size.QuadPart);
+		}
+	}
+
+	/* Now add the requested parts of the name.
+	 * With the F or S modifiers, add all parts to form the full path. */
+	Extension = _tcsrchr(Filename, _T('.'));
+	if (Modifiers & (M_DRIVE | M_FULL | M_SHORT))
+	{
+		*Out++ = FixedPath[0];
+		*Out++ = FixedPath[1];
+	}
+	if (Modifiers & (M_PATH | M_FULL | M_SHORT))
+	{
+		memcpy(Out, &FixedPath[2], (char *)Filename - (char *)&FixedPath[2]);
+		Out += Filename - &FixedPath[2];
+	}
+	if (Modifiers & (M_NAME | M_FULL | M_SHORT))
+	{
+		while (*Filename && Filename != Extension)
+			*Out++ = *Filename++;
+	}
+	if (Modifiers & (M_EXT | M_FULL | M_SHORT))
+	{
+		if (Extension)
+			Out = _stpcpy(Out, Extension);
+	}
+
+	/* Trim trailing space which otherwise would appear as a
+	 * result of using the A/T/Z modifiers but no others. */
+	while (Out != &Result[0] && Out[-1] == _T(' '))
+		Out--;
+	*Out = _T('\0');
+
+	return Result;
+}
 
 LPCTSTR
-GetBatchVar ( LPCTSTR varName, UINT* varNameLen )
+GetBatchVar(TCHAR *varName, UINT *varNameLen)
 {
-	static LPTSTR ret = NULL;
-	static UINT retlen = 0;
-	DWORD len;
+	LPCTSTR ret;
+	TCHAR *varNameEnd;
+	BOOL dummy;
 
 	*varNameLen = 1;
 
 	switch ( *varName )
 	{
 	case _T('~'):
-		varName++;
-		if (_tcsncicmp(varName, _T("dp0"), 3) == 0)
+		varNameEnd = varName + 1;
+		ret = GetEnhancedVar(&varNameEnd, FindArg);
+		if (!ret)
 		{
-			*varNameLen = 4;
-			len = _tcsrchr(bc->BatchFilePath, _T('\\')) + 1 - bc->BatchFilePath;
-			if (!GrowIfNecessary(len + 1, &ret, &retlen))
-				return NULL;
-			memcpy(ret, bc->BatchFilePath, len * sizeof(TCHAR));
-			ret[len] = _T('\0');
-			return ret;
+			error_syntax(varName);
+			return NULL;
 		}
-
-		*varNameLen = 2;
-		if (*varName >= _T('0') && *varName <= _T('9')) {
-			LPTSTR arg = FindArg(*varName - _T('0'));
-
-			if (*arg != _T('"'))
-				return arg;
-
-			/* Exclude the leading and trailing quotes */
-			arg++;
-			len = _tcslen(arg);
-			if (arg[len - 1] == _T('"'))
-				len--;
-
-			if (!GrowIfNecessary(len + 1, &ret, &retlen))
-				return NULL;
-			memcpy(ret, arg, len * sizeof(TCHAR));
-			ret[len] = _T('\0');
-			return ret;
-		}
-		break;
+		*varNameLen = varNameEnd - varName;
+		return ret;
 	case _T('0'):
 	case _T('1'):
 	case _T('2'):
@@ -1045,7 +1235,7 @@ GetBatchVar ( LPCTSTR varName, UINT* varNameLen )
 	case _T('7'):
 	case _T('8'):
 	case _T('9'):
-		return FindArg(*varName - _T('0'));
+		return FindArg(*varName, &dummy);
 
     case _T('*'):
         //
@@ -1212,26 +1402,41 @@ too_long:
 #undef APPEND1
 }
 
+/* Search the list of FOR contexts for a variable */
+static LPTSTR FindForVar(TCHAR Var, BOOL *IsParam0)
+{
+	FOR_CONTEXT *Ctx;
+	*IsParam0 = FALSE;
+	for (Ctx = fc; Ctx != NULL; Ctx = Ctx->prev)
+		if ((UINT)(Var - Ctx->firstvar) < Ctx->varcount)
+			return Ctx->values[Var - Ctx->firstvar];
+	return NULL;
+}
+
 BOOL
 SubstituteForVars(TCHAR *Src, TCHAR *Dest)
 {
 	TCHAR *DestEnd = &Dest[CMDLINE_LENGTH - 1];
 	while (*Src)
 	{
-		if (Src[0] == _T('%') && Src[1] != _T('\0'))
+		if (Src[0] == _T('%'))
 		{
-			/* This might be a variable. Search the list of contexts for it */
-			FOR_CONTEXT *Ctx = fc;
-			while (Ctx && (UINT)(Src[1] - Ctx->firstvar) >= Ctx->varcount)
-				Ctx = Ctx->prev;
-			if (Ctx)
+			BOOL Dummy;
+			LPTSTR End = &Src[2];
+			LPTSTR Value = NULL;
+
+			if (Src[1] == _T('~'))
+				Value = GetEnhancedVar(&End, FindForVar);
+
+			if (!Value)
+				Value = FindForVar(Src[1], &Dummy);
+
+			if (Value)
 			{
-				/* Found it */
-				LPTSTR Value = Ctx->values[Src[1] - Ctx->firstvar];
 				if (Dest + _tcslen(Value) > DestEnd)
 					return FALSE;
 				Dest = _stpcpy(Dest, Value);
-				Src += 2;
+				Src = End;
 				continue;
 			}
 		}
