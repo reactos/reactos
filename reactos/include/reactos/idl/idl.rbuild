@@ -27,4 +27,10 @@
 <module name="lsa_client" type="rpcclient">
 	<file>lsa.idl</file>
 </module>
+<module name="wlansvc_server" type="rpcserver">
+	<file>wlansvc.idl</file>
+</module>
+<module name="wlansvc_client" type="rpcclient">
+	<file>wlansvc.idl</file>
+</module>
 </group>

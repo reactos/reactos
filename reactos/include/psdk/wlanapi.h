@@ -1,7 +1,9 @@
 #ifndef _WLANAPI_H
 #define _WLANAPI_H
 
+#include <l2cmn.h>
 #include <windot11.h>
+#include <eaptypes.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -12,6 +14,34 @@ extern "C" {
 #define WLAN_MAX_NAME_LENGTH 256
 
 /* Enumerations */
+
+#if defined(__midl) || defined(__WIDL__)
+typedef [v1_enum] enum _WLAN_OPCODE_VALUE_TYPE {
+#else
+typedef enum _WLAN_OPCODE_VALUE_TYPE {
+#endif
+    wlan_opcode_value_type_query_only = 0,
+    wlan_opcode_value_type_set_by_group_policy,
+    wlan_opcode_value_type_set_by_user,
+    wlan_opcode_value_type_invalid
+} WLAN_OPCODE_VALUE_TYPE;
+
+typedef enum _WLAN_SECURABLE_OBJECT {
+    wlan_secure_permit_list = 0,
+    wlan_secure_deny_list,
+    wlan_secure_ac_enabled,
+    wlan_secure_bc_scan_enabled,
+    wlan_secure_bss_type,
+    wlan_secure_show_denied,
+    wlan_secure_interface_properties,
+    wlan_secure_ihv_control,
+    wlan_secure_all_user_profiles_order,
+    wlan_secure_add_new_all_user_profiles,
+    wlan_secure_add_new_per_user_profiles,
+    wlan_secure_media_streaming_mode_enabled,
+    wlan_secure_current_operation_mode,
+    WLAN_SECURABLE_OBJECT_COUNT
+} WLAN_SECURABLE_OBJECT, *PWLAN_SECURABLE_OBJECT;
 
 typedef enum _WLAN_CONNECTION_MODE {
     wlan_connection_mode_profile = 0,
@@ -133,7 +163,7 @@ typedef struct _WLAN_AVAILABLE_NETWORK_LIST {
     DWORD dwNumberOfItems;
     DWORD dwIndex;
 #if defined(__midl) || defined(__WIDL__)
-    [size_is(dwNumberOfItems)] WLAN_AVAILABLE_NETWORK Network[];
+    [size_is(dwNumberOfItems)] WLAN_AVAILABLE_NETWORK Network[*];
 #else
     WLAN_AVAILABLE_NETWORK Network[1];
 #endif
@@ -141,34 +171,20 @@ typedef struct _WLAN_AVAILABLE_NETWORK_LIST {
 
 typedef struct _WLAN_CONNECTION_PARAMETERS {
     WLAN_CONNECTION_MODE wlanConnectionMode;
-    [string] wchar_t * strProfile;
+#if defined(__midl) || defined(__WIDL__)
+    [string] LPCWSTR strProfile;
+#else
+    LPCWSTR strProfile;
+#endif
     PDOT11_SSID pDot11Ssid;
     PDOT11_BSSID_LIST pDesiredBssidList;
     DOT11_BSS_TYPE dot11BssType;
     DWORD dwFlags;
 } WLAN_CONNECTION_PARAMETERS, *PWLAN_CONNECTION_PARAMETERS;
 
+typedef L2_NOTIFICATION_DATA WLAN_NOTIFICATION_DATA, *PWLAN_NOTIFICATION_DATA;
 
 /* FIXME */
-
-typedef struct _struct_8 {
-    DWORD elem_1;
-    DWORD elem_2;
-    GUID elem_3;
-    DWORD elem_4;
-    [size_is(elem_4)] LPBYTE elem_5;
-} struct_8 ;
-
-typedef struct struct_12 {
-    BYTE elem_1;
-    DWORD elem_2;
-    DWORD elem_3;
-} struct_12 ;
-
-typedef struct _struct_9 {
-    struct_12 elem_1;
-    DWORD elem_2;
-} struct_9 ;
 
 typedef struct struct_C {
     ULONGLONG elem_1;
