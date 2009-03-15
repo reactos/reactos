@@ -1,21 +1,19 @@
+#ifndef __WINDOT11_H__
+#define __WINDOT11_H__
 
 #ifndef _NTDDNDIS_
 #include <ntddndis.h>
 #endif
 
+#include <wlantypes.h>
+
 /* Enumerations */
 
 #if defined(__midl) || defined(__WIDL__)
-typedef [v1_enum] enum _DOT11_BSS_TYPE {
+typedef [v1_enum] enum _DOT11_PHY_TYPE {
 #else
-typedef enum _DOT11_BSS_TYPE {
-#endif
-    dot11_BSS_type_infrastructure = 1,
-    dot11_BSS_type_independent,
-    dot11_BSS_type_any
-} DOT11_BSS_TYPE;
-
 typedef enum _DOT11_PHY_TYPE {
+#endif
     dot11_phy_type_unknown,
     dot11_phy_type_any,
     dot11_phy_type_fhss,
@@ -56,37 +54,31 @@ typedef enum _DOT11_CIPHER_ALGORITHM {
 
 /* Types */
 
+#if defined(__midl) || defined(__WIDL__)
+typedef struct _DOT11_MAC_ADDRESS {
+    UCHAR ucDot11MacAddress[6];
+} DOT11_MAC_ADDRESS, *PDOT11_MAC_ADDRESS;
+#else
 typedef UCHAR DOT11_MAC_ADDRESS[6];
 typedef DOT11_MAC_ADDRESS* PDOT11_MAC_ADDRESS;
+#endif
 
 typedef struct _DOT11_SSID {
     ULONG uSSIDLength;
     UCHAR ucSSID[32];
 } DOT11_SSID, *PDOT11_SSID;
 
-typedef struct _DOT11_NETWORK {
-    DOT11_SSID dot11Ssid;
-    DOT11_BSS_TYPE dot11BssType;
-} DOT11_NETWORK, *PDOT11_NETWORK;
-
-typedef struct _DOT11_NETWORK_LIST {
-    DWORD dwNumberOfItems;
-    DWORD dwIndex;
-#if defined(__midl) || defined(__WIDL__)
-    [size_is(dwNumberOfItems)] DOT11_NETWORK Network[];
-#else
-    DOT11_NETWORK Network[1];
-#endif
-} DOT11_NETWORK_LIST, *PDOT11_NETWORK_LIST;
-
 typedef struct _DOT11_BSSID_LIST {
     NDIS_OBJECT_HEADER Header;
     ULONG uNumOfEntries;
     ULONG uTotalNumOfEntries;
 #if defined(__midl) || defined(__WIDL__)
-    [size_is(uTotalNumOfEntries)] DOT11_MAC_ADDRESS BSSIDs[];
+    [size_is(uTotalNumOfEntries)] DOT11_MAC_ADDRESS BSSIDs[*];
 #else
     DOT11_MAC_ADDRESS BSSIDs[1];
 #endif
 } DOT11_BSSID_LIST, *PDOT11_BSSID_LIST;
+
+
+#endif
 
