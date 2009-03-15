@@ -91,6 +91,7 @@
 #define IDS_GAMES                       3201
 #define IDS_SYS_TOOLS                   3202
 #define IDS_SYS_ACCESSIBILITY           3203
+#define IDS_SYS_ENTERTAINMENT           3204
 
 #define IDS_CMT_CALC                    3210
 #define IDS_CMT_CHARMAP                 3211
@@ -111,6 +112,7 @@
 #define IDS_CMT_SOLITAIRE               3226
 #define IDS_CMT_WINEMINE                3227
 #define IDS_CMT_WORDPAD                 3228
+#define IDS_CMT_SNDVOL32                3229
 
 #define IDS_REACTOS_SETUP               3300
 #define IDS_UNKNOWN_ERROR               3301
@@ -141,6 +143,7 @@
 #define IDS_SHORT_SOLITAIRE     3416
 #define IDS_SHORT_WINEMINE      3417
 #define IDS_SHORT_WORDPAD       3418
+#define IDS_SHORT_SNDVOL32      3419
 
 #define IDS_WZD_NAME            3450
 #define IDS_WZD_SETCOMPUTERNAME 3451

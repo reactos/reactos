@@ -202,7 +202,6 @@ BEGIN
     IDS_CMT_DEVMGMT     "Launch Device Manager"
     IDS_CMT_EVENTVIEW   "Launch Event Viewer"
     IDS_CMT_EXPLORER    "Launch Explorer"
-    IDS_CMT_MPLAY32     "Launch Multimedia Player"
     IDS_CMT_MSCONFIG    "Launch System Configuration program"
     IDS_CMT_NOTEPAD     "Launch Text Editor"
     IDS_CMT_RDESKTOP    "Launch Remote Desktop"
@@ -230,6 +229,13 @@ STRINGTABLE
 BEGIN
     IDS_SYS_ACCESSIBILITY       "Accessibility"
     IDS_CMT_MAGNIFY             "Magnify"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SYS_ENTERTAINMENT       "Entertainment"
+    IDS_CMT_MPLAY32             "Launch Multimedia Player"
+    IDS_CMT_SNDVOL32            "Launch Volume Control"
 END
 
 STRINGTABLE
@@ -266,6 +272,7 @@ BEGIN
     IDS_SHORT_SOLITAIRE  "Solitaire.lnk"
     IDS_SHORT_WINEMINE   "WineMine.lnk"
     IDS_SHORT_WORDPAD    "WordPad.lnk"
+    IDS_SHORT_SNDVOL32   "Volume Control.lnk"
 END
 
 STRINGTABLE

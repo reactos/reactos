@@ -195,7 +195,6 @@ END
 STRINGTABLE
 BEGIN
     IDS_ACCESSORIES     "Aksesoris"
-    IDS_CMT_MPLAY32     "Launch Multimedia Player"
     IDS_CMT_CALC        "Jalankan Kalkulator"
     IDS_CMT_CMD         "Buka prompt perintah"
     IDS_CMT_EXPLORER    "Jalankan Explorer"
@@ -232,6 +231,13 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_SYS_ENTERTAINMENT       "Entertainment"
+    IDS_CMT_MPLAY32             "Launch Multimedia Player"
+    IDS_CMT_SNDVOL32            "Launch Volume Control"
+END
+
+STRINGTABLE
+BEGIN
     IDS_REACTOS_SETUP		"Setup ReactOS"
     IDS_UNKNOWN_ERROR           "Kesalahan tidak dikenal"
     IDS_REGISTERING_COMPONENTS  "Meregister komponen..."
@@ -264,6 +270,7 @@ BEGIN
     IDS_SHORT_KBSWITCH   "Keyboard Layout Switcher.lnk"
     IDS_SHORT_EVENTVIEW  "Event Viewer.lnk"
     IDS_SHORT_MSCONFIG   "System Configuration.lnk"
+    IDS_SHORT_SNDVOL32   "Volume Control.lnk"
 END
 
 STRINGTABLE

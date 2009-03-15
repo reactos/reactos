@@ -205,7 +205,6 @@ END
 STRINGTABLE
 BEGIN
     IDS_ACCESSORIES     "Akcesoria"
-    IDS_CMT_MPLAY32     "Launch Multimedia Player"
     IDS_CMT_CALC        "Uruchom Kalkulator"
     IDS_CMT_CMD         "Uruchom konsolê"
     IDS_CMT_EXPLORER    "Uruchom Eksplorator"
@@ -225,6 +224,13 @@ STRINGTABLE
 BEGIN
 	IDS_SYS_ACCESSIBILITY        "U³atwienia Dostêpu"
 	IDS_CMT_MAGNIFY      	     "Lupa"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SYS_ENTERTAINMENT       "Entertainment"
+    IDS_CMT_MPLAY32             "Launch Multimedia Player"
+    IDS_CMT_SNDVOL32            "Launch Volume Control"
 END
 
 STRINGTABLE
@@ -274,6 +280,7 @@ BEGIN
     IDS_SHORT_KBSWITCH   "Keyboard Layout Switcher.lnk"
     IDS_SHORT_EVENTVIEW  "Event Viewer.lnk"
     IDS_SHORT_MSCONFIG   "System Configuration.lnk"
+    IDS_SHORT_SNDVOL32   "Volume Control.lnk"
 END
 
 STRINGTABLE

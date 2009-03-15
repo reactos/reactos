@@ -178,7 +178,6 @@ END
 STRINGTABLE
 BEGIN
     IDS_ACCESSORIES     "Стандартные"
-    IDS_CMT_MPLAY32     "Launch Multimedia Player"
     IDS_CMT_CALC        "Запустить калькулятор"
     IDS_CMT_CMD         "Открыть командную строку"
     IDS_CMT_EXPLORER    "Запустить Проводник"
@@ -216,6 +215,13 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_SYS_ENTERTAINMENT       "Развлечения"
+    IDS_CMT_MPLAY32             "Запустить проигрыватель"
+    IDS_CMT_SNDVOL32            "Запустить регулятор громкости"
+END
+
+STRINGTABLE
+BEGIN
     IDS_REACTOS_SETUP			"Установка ReactOS"
     IDS_UNKNOWN_ERROR           "Неизвестная ошибка"
     IDS_REGISTERING_COMPONENTS  "Регистрация компонентов..."
@@ -234,7 +240,7 @@ BEGIN
     IDS_SHORT_DOWNLOADER "Скачать !.lnk"
     IDS_SHORT_SERVICE    "Диспетчер служб.lnk"
     IDS_SHORT_DEVICE     "Диспетчер устройств.lnk"
-    IDS_SHORT_MPLAY32    "Multimedia Player.lnk"
+    IDS_SHORT_MPLAY32    "Проигрыватель.lnk"
     IDS_SHORT_CALC       "Калькулятор.lnk"
     IDS_SHORT_REGEDIT    "Редактор реестра.lnk"
     IDS_SHORT_NOTEPAD    "Блокнот.lnk"
@@ -248,6 +254,7 @@ BEGIN
     IDS_SHORT_KBSWITCH   "Переключатель раскладки клавиатуры.lnk"
     IDS_SHORT_EVENTVIEW  "Просмотр событий.lnk"
     IDS_SHORT_MSCONFIG   "Параметры системы.lnk"
+    IDS_SHORT_SNDVOL32   "Громкость.lnk"
 END
 
 STRINGTABLE

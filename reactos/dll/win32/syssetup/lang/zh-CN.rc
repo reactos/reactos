@@ -185,7 +185,6 @@ END
 STRINGTABLE
 BEGIN
     IDS_ACCESSORIES     "附件"
-    IDS_CMT_MPLAY32     "Launch Multimedia Player"
     IDS_CMT_CALC        "计算器"
     IDS_CMT_CMD         "命令提示符"
     IDS_CMT_EXPLORER    "ReactOS 资源管理器"
@@ -220,6 +219,14 @@ BEGIN
 	IDS_SYS_ACCESSIBILITY        "Accessibility"
 	IDS_CMT_MAGNIFY      	     "放大镜"
 END
+
+STRINGTABLE
+BEGIN
+    IDS_SYS_ENTERTAINMENT       "Entertainment"
+    IDS_CMT_MPLAY32             "Launch Multimedia Player"
+    IDS_CMT_SNDVOL32            "Launch Volume Control"
+END
+
 STRINGTABLE
 BEGIN
     IDS_REACTOS_SETUP		    "ReactOS 安装程序"
@@ -254,6 +261,7 @@ BEGIN
     IDS_SHORT_KBSWITCH   "Keyboard Layout Switcher.lnk"
     IDS_SHORT_EVENTVIEW  "Event Viewer.lnk"
     IDS_SHORT_MSCONFIG   "System Configuration.lnk"
+    IDS_SHORT_SNDVOL32   "Volume Control.lnk"
 END
 
 STRINGTABLE

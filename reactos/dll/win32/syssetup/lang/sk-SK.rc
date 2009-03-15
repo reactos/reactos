@@ -182,7 +182,6 @@ END
 STRINGTABLE
 BEGIN
     IDS_ACCESSORIES     "PrÌsluöenstvo"
-    IDS_CMT_MPLAY32     "Spustiù Multimedi·lny prehr·vaË"
     IDS_CMT_CALC        "Spustiù KalkulaËku"
     IDS_CMT_CMD         "Otvoriù PrÌkazov˝ riadok"
     IDS_CMT_EXPLORER    "Spustiù PrieskumnÌka"
@@ -220,6 +219,13 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_SYS_ENTERTAINMENT       "Entertainment"
+    IDS_CMT_MPLAY32             "Launch Multimedia Player"
+    IDS_CMT_SNDVOL32            "Launch Volume Control"
+END
+
+STRINGTABLE
+BEGIN
     IDS_REACTOS_SETUP	        "Inötal·tor systÈmu ReactOS"
     IDS_UNKNOWN_ERROR           "Nezn·ma chyba"
     IDS_REGISTERING_COMPONENTS  "Registrujem s˙Ëasti..."
@@ -252,6 +258,7 @@ BEGIN
     IDS_SHORT_KBSWITCH   "PrepÌnaË rozloûenia kl·vesnice.lnk"
     IDS_SHORT_EVENTVIEW  "ZobrazovaË udalostÌ.lnk"
     IDS_SHORT_MSCONFIG   "Program na konfigur·ciu systÈmu.lnk"
+    IDS_SHORT_SNDVOL32   "Volume Control.lnk"
 END
 
 STRINGTABLE

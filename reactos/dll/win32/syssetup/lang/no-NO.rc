@@ -200,7 +200,6 @@ END
 STRINGTABLE
 BEGIN
     IDS_ACCESSORIES     "Tilbehør"
-    IDS_CMT_MPLAY32     "Launch Multimedia Player"
     IDS_CMT_CALC        "Start Kalkulator"
     IDS_CMT_CMD         "Åpne command prompt"
     IDS_CMT_EXPLORER    "Start Explorer"
@@ -237,6 +236,13 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_SYS_ENTERTAINMENT       "Entertainment"
+    IDS_CMT_MPLAY32             "Launch Multimedia Player"
+    IDS_CMT_SNDVOL32            "Launch Volume Control"
+END
+
+STRINGTABLE
+BEGIN
     IDS_REACTOS_SETUP		    "ReactOS installasjon"
     IDS_UNKNOWN_ERROR           "Ukjent feil"
     IDS_REGISTERING_COMPONENTS  "Registrerer komponenter..."
@@ -269,6 +275,7 @@ BEGIN
     IDS_SHORT_KBSWITCH   "Keyboard Layout Switcher.lnk"
     IDS_SHORT_EVENTVIEW  "Event Viewer.lnk"
     IDS_SHORT_MSCONFIG   "System Configuration.lnk"
+    IDS_SHORT_SNDVOL32   "Volume Control.lnk"
 END
 
 STRINGTABLE

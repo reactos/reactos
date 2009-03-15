@@ -186,7 +186,6 @@ END
 STRINGTABLE
 BEGIN
     IDS_ACCESSORIES     "Допоміжні програми"
-    IDS_CMT_MPLAY32     "Launch Multimedia Player"
     IDS_CMT_CALC        "Запустити Калькулятор"
     IDS_CMT_CMD         "Відкрити командний рядок"
     IDS_CMT_EXPLORER    "Запустити Провідник"
@@ -224,6 +223,13 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_SYS_ENTERTAINMENT       "Entertainment"
+    IDS_CMT_MPLAY32             "Launch Multimedia Player"
+    IDS_CMT_SNDVOL32            "Launch Volume Control"
+END
+
+STRINGTABLE
+BEGIN
     IDS_REACTOS_SETUP		    "Установка ReactOS"
     IDS_UNKNOWN_ERROR           "Невідома помилка"
     IDS_REGISTERING_COMPONENTS  "Реєстрація компонентів..."
@@ -256,6 +262,7 @@ BEGIN
     IDS_SHORT_KBSWITCH   "Keyboard Layout Switcher.lnk"
     IDS_SHORT_EVENTVIEW  "Event Viewer.lnk"
     IDS_SHORT_MSCONFIG   "System Configuration.lnk"
+    IDS_SHORT_SNDVOL32   "Volume Control.lnk"
 END
 
 STRINGTABLE

@@ -200,7 +200,6 @@ END
 STRINGTABLE
 BEGIN
     IDS_ACCESSORIES     "Принадлежности"
-    IDS_CMT_MPLAY32     "Launch Multimedia Player"
     IDS_CMT_CALC        "Пускане на изчислителя"
     IDS_CMT_CMD         "Отваряне на командния прозорец"
     IDS_CMT_EXPLORER    "Пускане на изследователя"
@@ -238,6 +237,13 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_SYS_ENTERTAINMENT       "Entertainment"
+    IDS_CMT_MPLAY32             "Launch Multimedia Player"
+    IDS_CMT_SNDVOL32            "Launch Volume Control"
+END
+
+STRINGTABLE
+BEGIN
     IDS_REACTOS_SETUP		"Настройка на РеактОС"
     IDS_UNKNOWN_ERROR           "Неизвестна грешка"
     IDS_REGISTERING_COMPONENTS  "Вписване на съставните..."
@@ -270,6 +276,7 @@ BEGIN
     IDS_SHORT_KBSWITCH   "Превключвател на клавиатурните подредби.lnk"
     IDS_SHORT_EVENTVIEW  "Event Viewer.lnk"
     IDS_SHORT_MSCONFIG   "System Configuration.lnk"
+    IDS_SHORT_SNDVOL32   "Volume Control.lnk"
 END
 
 
