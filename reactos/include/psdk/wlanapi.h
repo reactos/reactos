@@ -186,6 +186,7 @@ typedef L2_NOTIFICATION_DATA WLAN_NOTIFICATION_DATA, *PWLAN_NOTIFICATION_DATA;
 
 /* FIXME */
 
+#if 0
 typedef struct struct_C {
     ULONGLONG elem_1;
     ULONGLONG elem_2;
@@ -213,6 +214,7 @@ typedef struct struct_E {
     WCHAR elem_3[256];
     WCHAR elem_4[1024];
 } struct_E ;
+#endif
 
 /* Functions */
 #if !defined(__midl) && !defined(__WIDL__)
