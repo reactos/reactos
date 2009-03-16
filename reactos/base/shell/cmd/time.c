@@ -134,7 +134,6 @@ INT cmd_time (LPTSTR param)
 	LPTSTR *arg;
 	INT    argc;
 	INT    i;
-	BOOL   bPrompt = TRUE;
 	INT    nTimeString = -1;
 
 	if (!_tcsncmp (param, _T("/?"), 2))
@@ -152,19 +151,25 @@ INT cmd_time (LPTSTR param)
 	for (i = 0; i < argc; i++)
 	{
 		if (_tcsicmp (arg[i], _T("/t")) == 0)
-			bPrompt = FALSE;
+		{
+			/* Display current time in short format */
+			SYSTEMTIME st;
+			TCHAR szTime[20];
+			GetLocalTime(&st);
+			FormatTime(szTime, &st);
+			ConOutPuts(szTime);
+			freep(arg);
+			return 0;
+		}
 
 		if ((*arg[i] != _T('/')) && (nTimeString == -1))
 			nTimeString = i;
 	}
 
 	if (nTimeString == -1)
-		PrintTime ();
-
-	if (!bPrompt)
 	{
-		freep (arg);
-		return 0;
+		ConOutResPrintf(STRING_LOCALE_HELP1);
+		ConOutPrintf(_T(": %s\n"), GetTimeString());
 	}
 
 	while (1)

@@ -644,7 +644,6 @@ DirPrintFileDateTime(TCHAR *lpDate,
 {
 	FILETIME ft;
 	SYSTEMTIME dt;
-	WORD wYear;
 
 	/* Select the right time field */
 	switch (lpFlags->stTimeField.eTimeField)
@@ -668,44 +667,56 @@ DirPrintFileDateTime(TCHAR *lpDate,
 			break;
 	}
 
+	FormatDate(lpDate, &dt, lpFlags->b4Digit);
+	FormatTime(lpTime, &dt);
+}
+
+INT
+FormatDate(TCHAR *lpDate, LPSYSTEMTIME dt, BOOL b4Digit)
+{
 	/* Format date */
-	wYear = (lpFlags->b4Digit) ? dt.wYear : dt.wYear%100;
+	WORD wYear = b4Digit ? dt->wYear : dt->wYear%100;
 	switch (nDateFormat)
 	{
 		case 0: /* mmddyy */
 		default:
-			_stprintf(lpDate, _T("%02d%c%02d%c%0*d"),
-					dt.wMonth, cDateSeparator,
-					dt.wDay, cDateSeparator,
-					lpFlags->b4Digit?4:2, wYear);
+			return _stprintf(lpDate, _T("%02d%c%02d%c%0*d"),
+					dt->wMonth, cDateSeparator,
+					dt->wDay, cDateSeparator,
+					b4Digit?4:2, wYear);
 			break;
 
 		case 1: /* ddmmyy */
-			_stprintf(lpDate, _T("%02d%c%02d%c%0*d"),
-					dt.wDay, cDateSeparator, dt.wMonth,
-					cDateSeparator,lpFlags->b4Digit?4:2, wYear);
+			return _stprintf(lpDate, _T("%02d%c%02d%c%0*d"),
+					dt->wDay, cDateSeparator, dt->wMonth,
+					cDateSeparator, b4Digit?4:2, wYear);
 			break;
 
 		case 2: /* yymmdd */
-			_stprintf(lpDate, _T("%0*d%c%02d%c%02d"),
-					lpFlags->b4Digit?4:2, wYear, cDateSeparator,
-					dt.wMonth, cDateSeparator, dt.wDay);
+			return _stprintf(lpDate, _T("%0*d%c%02d%c%02d"),
+					b4Digit?4:2, wYear, cDateSeparator,
+					dt->wMonth, cDateSeparator, dt->wDay);
 			break;
 	}
+}
+
+INT
+FormatTime(TCHAR *lpTime, LPSYSTEMTIME dt)
+{
 	/* Format Time */
 	switch (nTimeFormat)
 	{
 		case 0: /* 12 hour format */
 		default:
-			_stprintf(lpTime,_T("%02d%c%02u%c"),
-					(dt.wHour == 0 ? 12 : (dt.wHour <= 12 ? dt.wHour : dt.wHour - 12)),
+			return _stprintf(lpTime,_T("%02d%c%02u%c"),
+					(dt->wHour == 0 ? 12 : (dt->wHour <= 12 ? dt->wHour : dt->wHour - 12)),
 					cTimeSeparator,
-					 dt.wMinute, (dt.wHour <= 11 ? _T('a') : _T('p')));
+					 dt->wMinute, (dt->wHour <= 11 ? _T('a') : _T('p')));
 			break;
 
 		case 1: /* 24 hour format */
-			_stprintf(lpTime, _T("%02d%c%02u"),
-					dt.wHour, cTimeSeparator, dt.wMinute);
+			return _stprintf(lpTime, _T("%02d%c%02u"),
+					dt->wHour, cTimeSeparator, dt->wMinute);
 			break;
 	}
 }

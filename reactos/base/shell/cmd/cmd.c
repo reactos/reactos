@@ -928,27 +928,12 @@ GetEnvVarOrSpecial ( LPCTSTR varName )
 	/* %TIME% */
 	else if (_tcsicmp(varName,_T("time")) ==0)
 	{
-		SYSTEMTIME t;
-		if ( !GrowIfNecessary ( MAX_PATH, &ret, &retlen ) )
-			return NULL;
-		GetSystemTime(&t);
-		_sntprintf ( ret, retlen, _T("%02d%c%02d%c%02d%c%02d"),
-			t.wHour, cTimeSeparator, t.wMinute, cTimeSeparator,
-			t.wSecond, cDecimalSeparator, t.wMilliseconds / 10);
-		return ret;
+		return GetTimeString();
 	}
 	/* %DATE% */
 	else if (_tcsicmp(varName,_T("date")) ==0)
 	{
-
-		if ( !GrowIfNecessary ( GetDateFormat(LOCALE_USER_DEFAULT, DATE_SHORTDATE, NULL, NULL, NULL, 0), &ret, &retlen ) )
-			return NULL;
-
-		size = GetDateFormat(LOCALE_USER_DEFAULT, DATE_SHORTDATE, NULL, NULL, ret, retlen);
-
-		if ( !size )
-			return NULL;
-		return ret;
+		return GetDateString();
 	}
 
 	/* %RANDOM% */
@@ -1155,12 +1140,9 @@ GetEnhancedVar(TCHAR **pFormat, LPTSTR (*GetVar)(TCHAR, BOOL *))
 			FileTimeToLocalFileTime(&w32fd.ftLastWriteTime, &ft);
 			FileTimeToSystemTime(&ft, &st);
 
-			/* TODO: This probably should be locale-dependent */
-			Out += _stprintf(Out,
-				_T("%02d/%02d/%04d %02d:%02d %cM "),
-				st.wMonth, st.wDay, st.wYear,
-				(st.wHour + 11) % 12 + 1, st.wMinute,
-				(st.wHour >= 12) ? _T('P') : _T('A'));
+			Out += FormatDate(Out, &st, TRUE);
+			*Out++ = _T(' ');
+			Out += FormatTime(Out, &st);
 		}
 		if (Modifiers & M_SIZE)
 		{

@@ -191,6 +191,8 @@ INT CommandDelay (LPTSTR);
 
 
 /* Prototypes for DIR.C */
+INT FormatDate (TCHAR *, LPSYSTEMTIME, BOOL);
+INT FormatTime (TCHAR *, LPSYSTEMTIME);
 INT CommandDir (LPTSTR);
 
 
@@ -304,8 +306,8 @@ extern INT nNumberGroups;
 
 
 VOID InitLocale (VOID);
-VOID PrintDate (VOID);
-VOID PrintTime (VOID);
+LPTSTR GetDateString (VOID);
+LPTSTR GetTimeString (VOID);
 
 /* cache codepage */
 extern UINT InputCodePage;
