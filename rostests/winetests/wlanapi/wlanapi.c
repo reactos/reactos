@@ -46,15 +46,15 @@ static void WlanOpenHandle_test(void)
 
     /* invalid pdwNegotiatedVersion */
     ret = WlanOpenHandle(1, NULL, NULL, &hClientHandle);
-    ok(ret == ERROR_INVALID_PARAMETER, "expected failure\n");
+    ok(ret == ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
 
     /* invalid hClientHandle */
     ret = WlanOpenHandle(1, NULL, &dwNegotiatedVersion, NULL);
-    ok(ret == ERROR_INVALID_PARAMETER, "expected failure\n");
+    ok(ret == ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
 
     /* invalid pReserved */
     ret = WlanOpenHandle(1, (PVOID) 1, &dwNegotiatedVersion, &hClientHandle);
-    ok(ret == ERROR_INVALID_PARAMETER, "expected failure\n");
+    ok(ret == ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
 }
 
 static void WlanCloseHandle_test(void)
