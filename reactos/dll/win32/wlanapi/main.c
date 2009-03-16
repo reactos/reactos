@@ -18,9 +18,13 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <windows.h>
-#include <wlanapi.h>
 
+/* INCLUDES ****************************************************************/
+#include <windows.h>
+#include "wlansvc_c.h"
+
+#define NDEBUG
+#include <debug.h>
 
 PVOID
 WINAPI
@@ -34,5 +38,38 @@ WINAPI
 WlanFreeMemory(IN PVOID pMem)
 {
     HeapFree(GetProcessHeap(), 0, pMem);
+}
+
+DWORD
+WINAPI
+WlanCloseHandle(IN HANDLE hClientHandle,
+                PVOID pReserved)
+{
+    DWORD dwError = ERROR_SUCCESS;
+
+    RpcTryExcept
+    {
+        _RpcCloseHandle(hClientHandle);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        dwError = RpcExceptionCode();
+    }
+    RpcEndExcept;
+
+    return dwError;
+}
+
+void __RPC_FAR * __RPC_USER
+midl_user_allocate(size_t len)
+{
+    return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len);
+}
+
+
+void __RPC_USER
+midl_user_free(void __RPC_FAR * ptr)
+{
+    HeapFree(GetProcessHeap(), 0, ptr);
 }
 

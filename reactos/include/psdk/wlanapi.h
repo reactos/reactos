@@ -188,6 +188,8 @@ typedef L2_NOTIFICATION_DATA WLAN_NOTIFICATION_DATA, *PWLAN_NOTIFICATION_DATA;
 #if !defined(__midl) && !defined(__WIDL__)
 PVOID WINAPI WlanAllocateMemory(DWORD dwSize);
 VOID WINAPI WlanFreeMemory(PVOID pMemory);
+DWORD WINAPI WlanOpenHandle(IN DWORD dwClientVersion, PVOID pReserved, OUT DWORD *pdwNegotiatedVersion, OUT HANDLE *phClientHandle);
+DWORD WINAPI WlanCloseHandle(IN HANDLE hClientHandle, PVOID pReserved);
 #endif
 
 #ifdef __cplusplus
