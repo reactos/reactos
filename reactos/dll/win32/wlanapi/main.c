@@ -23,8 +23,62 @@
 #include <windows.h>
 #include "wlansvc_c.h"
 
-#define NDEBUG
-#include <debug.h>
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(wlanapi);
+
+handle_t __RPC_USER
+WLANSVC_HANDLE_bind(WLANSVC_HANDLE szMachineName)
+{
+    handle_t hBinding = NULL;
+    LPWSTR pszStringBinding;
+    RPC_STATUS Status;
+
+    TRACE("RPC_SERVICE_STATUS_HANDLE_bind() called\n");
+
+    Status = RpcStringBindingComposeW(NULL,
+                                      L"ncacn_np",
+                                      szMachineName,
+                                      L"\\pipe\\trkwks",
+                                      NULL,
+                                      &pszStringBinding);
+    if (Status != RPC_S_OK)
+    {
+        ERR("RpcStringBindingCompose returned 0x%x\n", Status);
+        return NULL;
+    }
+
+    /* Set the binding handle that will be used to bind to the server. */
+    Status = RpcBindingFromStringBindingW(pszStringBinding,
+                                          &hBinding);
+    if (Status != RPC_S_OK)
+    {
+        ERR("RpcBindingFromStringBinding returned 0x%x\n", Status);
+    }
+
+    Status = RpcStringFreeW(&pszStringBinding);
+    if (Status != RPC_S_OK)
+    {
+        ERR("RpcStringFree returned 0x%x\n", Status);
+    }
+
+    return hBinding;
+}
+
+void __RPC_USER
+WLANSVC_HANDLE_unbind(WLANSVC_HANDLE szMachineName,
+                                 handle_t hBinding)
+{
+    RPC_STATUS Status;
+
+    TRACE("WLANSVC_HANDLE_unbind() called\n");
+
+    Status = RpcBindingFree(&hBinding);
+    if (Status != RPC_S_OK)
+    {
+        ERR("RpcBindingFree returned 0x%x\n", Status);
+    }
+}
 
 PVOID
 WINAPI
@@ -42,10 +96,41 @@ WlanFreeMemory(IN PVOID pMem)
 
 DWORD
 WINAPI
+WlanOpenHandle(IN DWORD dwClientVersion,
+               PVOID pReserved,
+               OUT DWORD *pdwNegotiatedVersion,
+               OUT HANDLE *phClientHandle)
+{
+    DWORD dwError = ERROR_SUCCESS;
+
+    if ((pReserved != NULL) || (pdwNegotiatedVersion == NULL) || (phClientHandle == NULL))
+        return ERROR_INVALID_PARAMETER;
+
+    RpcTryExcept
+    {
+        dwError = _RpcOpenHandle(NULL,
+                                dwClientVersion,
+                                pdwNegotiatedVersion,
+                                (WLANSVC_RPC_HANDLE) phClientHandle);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        dwError = RpcExceptionCode();
+    }
+    RpcEndExcept;
+
+    return dwError;
+}
+
+DWORD
+WINAPI
 WlanCloseHandle(IN HANDLE hClientHandle,
                 PVOID pReserved)
 {
     DWORD dwError = ERROR_SUCCESS;
+
+    if ((pReserved != NULL) || (hClientHandle == NULL))
+        return ERROR_INVALID_PARAMETER;
 
     RpcTryExcept
     {

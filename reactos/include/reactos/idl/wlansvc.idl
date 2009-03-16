@@ -7,6 +7,7 @@
 
 typedef [context_handle] PVOID WLANSVC_RPC_HANDLE;
 typedef WLANSVC_RPC_HANDLE* LPWLANSVC_RPC_HANDLE;
+typedef [handle] LPWSTR WLANSVC_HANDLE;
 
 /* FIXME */
 typedef struct struct_C {
@@ -46,7 +47,7 @@ interface wlansvc_interface
 {
     /* Function: 0x00 */
     DWORD _RpcOpenHandle(
-        [in] wchar_t * arg_1,
+        [in] WLANSVC_HANDLE szMachineName,
         [in] DWORD dwClientVersion,
         [in, out] DWORD* pdwNegotiatedVersion,
         [in, out] LPWLANSVC_RPC_HANDLE phClientHandle);

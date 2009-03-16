@@ -3,6 +3,7 @@
 	<include base="wlanapi">.</include>
 	<include base="wlansvc_client">.</include>
 	<library>wlansvc_client</library>
+	<library>wine</library>
 	<library>kernel32</library>
 	<library>rpcrt4</library>
 	<library>pseh</library>

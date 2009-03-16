@@ -86,6 +86,7 @@ base\services\spoolsv\spoolsv.exe                   1
 base\services\tcpsvcs\tcpsvcs.exe                   1
 base\services\tcpsvcs\quotes                        5
 base\services\umpnpmgr\umpnpmgr.exe                 1
+base\services\wlansvc\wlansvc.exe                   1
 
 base\setup\setup\setup.exe                          1
 base\setup\vmwinst\vmwinst.exe                      1
@@ -746,6 +747,7 @@ modules\rostests\winetests\version\version_winetest.exe                    7   o
 modules\rostests\winetests\winhttp\winhttp_winetest.exe                    7   optional
 modules\rostests\winetests\wininet\wininet_winetest.exe                    7   optional
 modules\rostests\winetests\wintrust\wintrust_winetest.exe                  7   optional
+modules\rostests\winetests\wlanapi\wlanapi_winetest.exe                    7   optional
 modules\rostests\winetests\ws2_32\ws2_32_winetest.exe                      7   optional
 
 modules\wallpaper\Angelus_02_ROSWP.bmp                                     4   optional

@@ -15,7 +15,7 @@
 @ stub WlanGetProfileList
 @ stub WlanGetSecuritySettings
 @ stub WlanIhvControl
-@ stub WlanOpenHandle
+@ stdcall WlanOpenHandle (long ptr ptr ptr)
 @ stub WlanQueryAutoConfigParameter
 @ stub WlanQueryInterface
 @ stub WlanReasonCodeToString
