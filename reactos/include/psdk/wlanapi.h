@@ -184,38 +184,6 @@ typedef struct _WLAN_CONNECTION_PARAMETERS {
 
 typedef L2_NOTIFICATION_DATA WLAN_NOTIFICATION_DATA, *PWLAN_NOTIFICATION_DATA;
 
-/* FIXME */
-
-#if 0
-typedef struct struct_C {
-    ULONGLONG elem_1;
-    ULONGLONG elem_2;
-    GUID elem_3;
-    GUID elem_4;
-    DWORD elem_5;
-    GUID elem_6;
-    DWORD elem_7;
-    DWORD elem_8;
-    ULONGLONG elem_9;
-    [size_is(elem_7)] BYTE elem_10[];
-} struct_C ;
-
-typedef struct struct_D {
-    GUID elem_1;
-    GUID elem_2;
-    DWORD elem_3;
-    ULONGLONG elem_4;
-    [size_is(elem_3)] BYTE elem_5[];
-} struct_D ;
-
-typedef struct struct_E {
-    /* enum16 */ short elem_1;
-    DWORD elem_2;
-    WCHAR elem_3[256];
-    WCHAR elem_4[1024];
-} struct_E ;
-#endif
-
 /* Functions */
 #if !defined(__midl) && !defined(__WIDL__)
 PVOID WINAPI WlanAllocateMemory(DWORD dwSize);

@@ -8,6 +8,35 @@
 typedef [context_handle] PVOID WLANSVC_RPC_HANDLE;
 typedef WLANSVC_RPC_HANDLE* LPWLANSVC_RPC_HANDLE;
 
+/* FIXME */
+typedef struct struct_C {
+    ULONGLONG elem_1;
+    ULONGLONG elem_2;
+    GUID elem_3;
+    GUID elem_4;
+    DWORD elem_5;
+    GUID elem_6;
+    DWORD elem_7;
+    DWORD elem_8;
+    ULONGLONG elem_9;
+    [size_is(elem_7)] BYTE elem_10[];
+} struct_C ;
+
+typedef struct struct_D {
+    GUID elem_1;
+    GUID elem_2;
+    DWORD elem_3;
+    ULONGLONG elem_4;
+    [size_is(elem_3)] BYTE elem_5[];
+} struct_D ;
+
+typedef struct struct_E {
+    /* enum16 */ short elem_1;
+    DWORD elem_2;
+    WCHAR elem_3[256];
+    WCHAR elem_4[1024];
+} struct_E ;
+
 [
    uuid(266f33b4-c7c1-4bd1-8f52-ddb8f2214ea9),
    version(1.0)
