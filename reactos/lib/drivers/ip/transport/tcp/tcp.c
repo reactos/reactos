@@ -850,7 +850,6 @@ NTSTATUS TCPGetSockAddress
     AddressIP->Address[0].AddressType = TDI_ADDRESS_TYPE_IP;
     AddressIP->Address[0].Address[0].sin_port = GetRemote ? RemotePort : LocalPort;
     AddressIP->Address[0].Address[0].in_addr = GetRemote ? RemoteAddress : LocalAddress;
-	AddressIP->Address[1].AddressLength = TDI_ADDRESS_LENGTH_IP;
 
     TcpipRecursiveMutexLeave( &TCPLock );
 
