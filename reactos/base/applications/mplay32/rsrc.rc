@@ -9,6 +9,6 @@
 #include "lang/nl-NL.rc"
 #include "lang/no-NO.rc"
 #include "lang/pl-PL.rc"
-#include "lang/sk-SK.rc"
 #include "lang/ru-RU.rc"
+#include "lang/sk-SK.rc"
 #include "lang/uk-UA.rc"

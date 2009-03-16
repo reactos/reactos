@@ -206,8 +206,8 @@ BEGIN
     IDS_CMT_NOTEPAD     "Launch Text Editor"
     IDS_CMT_RDESKTOP    "Launch Remote Desktop"
     IDS_CMT_REGEDIT     "Launch Registry Editor"
-    IDS_CMT_SERVMAN     "Launch Service Manager"
     IDS_CMT_SCREENSHOT  "Take screenshot"
+    IDS_CMT_SERVMAN     "Launch Service Manager"
     IDS_CMT_WORDPAD     "Launch Document Editor"
 END
 
@@ -222,8 +222,8 @@ STRINGTABLE
 BEGIN
     IDS_SYS_TOOLS       "System Tools"
     IDS_CMT_CHARMAP     "Character Map"
-    IDS_CMT_KBSWITCH    "Keyboard Layout Switcher"
     IDS_CMT_DXDIAG      "Launch ReactX-Diagnostic program"
+    IDS_CMT_KBSWITCH    "Keyboard Layout Switcher"
 END
 
 STRINGTABLE
@@ -259,6 +259,7 @@ BEGIN
     IDS_SHORT_CMD        "Command Prompt.lnk"
     IDS_SHORT_DEVICE     "Device Manager.lnk"
     IDS_SHORT_DOWNLOADER "Download !.lnk"
+    IDS_SHORT_DXDIAG     "ReactX Diagnostic.lnk"
     IDS_SHORT_EVENTVIEW  "Event Viewer.lnk"
     IDS_SHORT_EXPLORER   "ReactOS Explorer.lnk"
     IDS_SHORT_KBSWITCH   "Keyboard Layout Switcher.lnk"
@@ -270,11 +271,10 @@ BEGIN
     IDS_SHORT_REGEDIT    "Regedit.lnk"
     IDS_SHORT_SERVICE    "Service Manager.lnk"
     IDS_SHORT_SNAP       "SnapShot.lnk"
+    IDS_SHORT_SNDVOL32   "Volume Control.lnk"
     IDS_SHORT_SOLITAIRE  "Solitaire.lnk"
     IDS_SHORT_WINEMINE   "WineMine.lnk"
     IDS_SHORT_WORDPAD    "WordPad.lnk"
-    IDS_SHORT_SNDVOL32   "Volume Control.lnk"
-    IDS_SHORT_DXDIAG     "ReactX Diagnostic.lnk"
 END
 
 STRINGTABLE
