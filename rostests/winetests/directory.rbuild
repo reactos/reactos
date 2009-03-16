@@ -232,6 +232,9 @@
 	<directory name="wintrust">
 		<xi:include href="wintrust/wintrust.rbuild" />
 	</directory>
+	<directory name="wlanapi">
+		<xi:include href="wlanapi/wlanapi.rbuild" />
+	</directory>
 	<directory name="wldap32">
 		<xi:include href="wldap32/wldap32.rbuild" />
 	</directory>
