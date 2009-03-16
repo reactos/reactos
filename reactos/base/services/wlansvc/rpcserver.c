@@ -112,6 +112,21 @@ DWORD _RpcScan(
     PDOT11_SSID pDot11Ssid,
     PWLAN_RAW_DATA pIeData)
 {
+    /*
+    DWORD dwBytesReturned;
+    HANDLE hDevice;
+    ULONG OidCode = OID_802_11_BSSID_LIST_SCAN;
+    PNDIS_802_11_BSSID_LIST pBssIDList;
+
+    DeviceIoControl(hDevice,
+                    IOCTL_NDIS_QUERY_GLOBAL_STATS,
+                    &OidCode,
+                    sizeof(ULONG),
+                    NULL,
+                    0,
+                    &dwBytesReturned,
+                    NULL);
+*/
     UNIMPLEMENTED;
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
@@ -172,7 +187,6 @@ DWORD _RpcAsyncGetNotification(
     UNIMPLEMENTED;
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
-
 
 DWORD _RpcSetProfileEapUserData(
     WLANSVC_RPC_HANDLE hClientHandle,

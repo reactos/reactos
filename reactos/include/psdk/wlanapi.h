@@ -190,6 +190,8 @@ PVOID WINAPI WlanAllocateMemory(DWORD dwSize);
 VOID WINAPI WlanFreeMemory(PVOID pMemory);
 DWORD WINAPI WlanOpenHandle(IN DWORD dwClientVersion, PVOID pReserved, OUT DWORD *pdwNegotiatedVersion, OUT HANDLE *phClientHandle);
 DWORD WINAPI WlanCloseHandle(IN HANDLE hClientHandle, PVOID pReserved);
+DWORD WINAPI WlanEnumInterfaces(IN HANDLE hClientHandle, PVOID pReserved, OUT PWLAN_INTERFACE_INFO_LIST *ppInterfaceList);
+DWORD WINAPI WlanScan(IN HANDLE hClientHandle, IN GUID *pInterfaceGuid, IN PDOT11_SSID pDot11Ssid, IN PWLAN_RAW_DATA pIeData, PVOID pReserved);
 #endif
 
 #ifdef __cplusplus

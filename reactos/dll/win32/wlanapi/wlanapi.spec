@@ -1,9 +1,9 @@
 @ stdcall WlanAllocateMemory (long)
-@ stub WlanCloseHandle
+@ stdcall WlanCloseHandle (ptr ptr)
 @ stub WlanConnect
 @ stub WlanDeleteProfile
 @ stub WlanDisconnect
-@ stub WlanEnumInterfaces
+@ stdcall WlanEnumInterfaces (ptr ptr ptr)
 @ stub WlanExtractPsdIEDataList
 @ stdcall WlanFreeMemory (ptr)
 @ stub WlanGetAvailableNetworkList
@@ -22,7 +22,7 @@
 @ stub WlanRegisterNotification
 @ stub WlanRenameProfile
 @ stub WlanSaveTemporaryProfile
-@ stub WlanScan
+@ stdcall WlanScan (ptr ptr ptr ptr ptr)
 @ stub WlanSetAutoConfigParameter
 @ stub WlanSetFilterList
 @ stub WlanSetInterface

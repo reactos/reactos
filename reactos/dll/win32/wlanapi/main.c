@@ -60,12 +60,61 @@ WlanCloseHandle(IN HANDLE hClientHandle,
     return dwError;
 }
 
+DWORD
+WINAPI
+WlanEnumInterfaces(IN HANDLE hClientHandle,
+                   PVOID pReserved,
+                   OUT PWLAN_INTERFACE_INFO_LIST *ppInterfaceList)
+{
+    DWORD dwError = ERROR_SUCCESS;
+
+    if ((pReserved != NULL) || (ppInterfaceList == NULL) || (hClientHandle == NULL))
+        return ERROR_INVALID_PARAMETER;
+
+    RpcTryExcept
+    {
+        _RpcEnumInterfaces(hClientHandle, ppInterfaceList);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        dwError = RpcExceptionCode();
+    }
+    RpcEndExcept;
+
+    return dwError;
+}
+
+DWORD
+WINAPI
+WlanScan(IN HANDLE hClientHandle,
+         IN GUID *pInterfaceGuid,
+         IN PDOT11_SSID pDot11Ssid,
+         IN PWLAN_RAW_DATA pIeData,
+         PVOID pReserved)
+{
+    DWORD dwError = ERROR_SUCCESS;
+
+    if ((pReserved != NULL) || (pInterfaceGuid == NULL) || (hClientHandle == NULL))
+        return ERROR_INVALID_PARAMETER;
+
+    RpcTryExcept
+    {
+        _RpcScan(hClientHandle, pInterfaceGuid, pDot11Ssid, pIeData);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        dwError = RpcExceptionCode();
+    }
+    RpcEndExcept;
+
+    return dwError;
+}
+
 void __RPC_FAR * __RPC_USER
 midl_user_allocate(size_t len)
 {
     return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len);
 }
-
 
 void __RPC_USER
 midl_user_free(void __RPC_FAR * ptr)

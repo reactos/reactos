@@ -2,6 +2,9 @@
 #define _NTDDNDIS_
 #endif
 
+#define OID_802_11_BSSID_LIST      0x0D010217
+#define OID_802_11_BSSID_LIST_SCAN 0x0D01011A
+
 typedef struct _NDIS_OBJECT_HEADER
 {
     UCHAR  Type;
@@ -9,4 +12,9 @@ typedef struct _NDIS_OBJECT_HEADER
     USHORT Size;
 } NDIS_OBJECT_HEADER, *PNDIS_OBJECT_HEADER;
 
+typedef struct _NDIS_802_11_BSSID_LIST
+{
+    ULONG NumberOfItems;
+    NDIS_WLAN_BSSID Bssid[1];
+} NDIS_802_11_BSSID_LIST, *PNDIS_802_11_BSSID_LIST;
 
