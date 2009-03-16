@@ -9,13 +9,13 @@ LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 STRINGTABLE DISCARDABLE
 BEGIN
 
-STRING_ASSOC_HELP,    "Modify file extension associations.\n\n\
-assoc [.ext[=[FileType]]]\n\
+STRING_ASSOC_HELP,    "Modifiziert Dateierweiterungs-Zuordnungen.\n\n\
+assoc [.erw[=[Dateityp]]]\n\
 \n\
-assoc (print all associations)\n\
-assoc .ext (print specific association)\n\
-assoc .ext= (remove specific association)\n\
-assoc .ext=FileType (add new association)\n"
+assoc (Gibt alle Zuordnungen aus)\n\
+assoc .erw (Gibt die spezifische Zuordnung aus)\n\
+assoc .erw= (Löscht die spezifische Zuordnung)\n\
+assoc .erw=Dateityp (Fügt neue Zuordnung hinzu)\n"
 
 STRING_ATTRIB_HELP,    "Zeigt Dateiattribute an oder ändert sie.\n\n\
 ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] Dateiname ...\n\
@@ -608,7 +608,7 @@ STRING_CHOICE_OPTION,         "JN"
 STRING_COPY_OPTION,           "JNA"
 
 STRING_ALIAS_ERROR,          "Die Befehlszeile ist zu lange nach der Alias-Erweiterung!\n"
-STRING_ASSOC_ERROR,          "File association not found for extension %s\n"
+STRING_ASSOC_ERROR,          "Dateizuordnung für Erweiterung %s nicht gefunden\n"
 STRING_BATCH_ERROR,          "Es trat ein Fehler auf, während die Batch-Datei geöffnet wurde.\n"
 STRING_CHCP_ERROR1,          "Aktive Code-Page: %u\n"
 STRING_CHCP_ERROR4,          "Ungültige Code-Page\n"
