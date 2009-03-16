@@ -468,10 +468,11 @@ CreatePinWorkerRoutine(
         DPRINT("Pin %p\n", Pin);
     }
 
-    DPRINT1("CreatePinWorkerRoutine completing irp\n");
+    DPRINT1("CreatePinWorkerRoutine completing irp %p\n", WorkerContext->Irp);
     WorkerContext->Irp->IoStatus.Status = Status;
     WorkerContext->Irp->IoStatus.Information = 0;
     IoCompleteRequest(WorkerContext->Irp, IO_SOUND_INCREMENT);
+    ExFreePool(WorkerContext);
 }
 
 

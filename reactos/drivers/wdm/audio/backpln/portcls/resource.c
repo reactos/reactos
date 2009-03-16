@@ -215,10 +215,24 @@ IResourceList_fnAddEntry(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    RtlCopyMemory(NewTranslatedResources, This->TranslatedResourceList, sizeof(CM_RESOURCE_LIST) + (This->TranslatedResourceList[0].List->PartialResourceList.Count-1) * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
+    RtlCopyMemory(NewTranslatedResources, This->TranslatedResourceList, sizeof(CM_RESOURCE_LIST));
+    if (This->TranslatedResourceList[0].List->PartialResourceList.Count > 1)
+    {
+        RtlCopyMemory(&NewTranslatedResources->List[0].PartialResourceList.PartialDescriptors[0],
+                      &This->TranslatedResourceList->List[0].PartialResourceList.PartialDescriptors[0], 
+                      sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) * This->TranslatedResourceList->List[0].PartialResourceList.Count);
+    }
+
     RtlCopyMemory(&NewTranslatedResources->List[0].PartialResourceList.PartialDescriptors[This->TranslatedResourceList[0].List->PartialResourceList.Count], Translated, sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
 
-    RtlCopyMemory(NewUntranslatedResources, This->UntranslatedResourceList, sizeof(CM_RESOURCE_LIST) + (This->UntranslatedResourceList[0].List->PartialResourceList.Count-1) * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
+    RtlCopyMemory(NewUntranslatedResources, This->UntranslatedResourceList, sizeof(CM_RESOURCE_LIST));
+    if (This->UntranslatedResourceList[0].List->PartialResourceList.Count > 1)
+    {
+        RtlCopyMemory(&NewUntranslatedResources->List[0].PartialResourceList.PartialDescriptors[0],
+                      &This->UntranslatedResourceList->List[0].PartialResourceList.PartialDescriptors[0], 
+                      sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) * This->UntranslatedResourceList->List[0].PartialResourceList.Count);
+    }
+
     RtlCopyMemory(&NewUntranslatedResources->List[0].PartialResourceList.PartialDescriptors[This->UntranslatedResourceList[0].List->PartialResourceList.Count], Untranslated, sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
 
     FreeItem(This->TranslatedResourceList, TAG_PORTCLASS);
@@ -255,7 +269,14 @@ IResourceList_fnAddEntryFromParent(
     if (!NewTranslatedResources)
         return STATUS_INSUFFICIENT_RESOURCES;
 
-    RtlCopyMemory(NewTranslatedResources, This->TranslatedResourceList, sizeof(CM_RESOURCE_LIST) + (This->TranslatedResourceList[0].List->PartialResourceList.Count-1) * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
+    RtlCopyMemory(NewTranslatedResources, This->TranslatedResourceList, sizeof(CM_RESOURCE_LIST));
+    if (This->TranslatedResourceList[0].List->PartialResourceList.Count > 1)
+    {
+        RtlCopyMemory(&NewTranslatedResources->List[0].PartialResourceList.PartialDescriptors[0],
+                      &This->TranslatedResourceList->List[0].PartialResourceList.PartialDescriptors[0], 
+                      sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) * This->TranslatedResourceList->List[0].PartialResourceList.Count);
+    }
+
     RtlCopyMemory(&NewTranslatedResources->List[0].PartialResourceList.PartialDescriptors[This->TranslatedResourceList[0].List->PartialResourceList.Count], Translated, sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
 
     FreeItem(This->TranslatedResourceList, TAG_PORTCLASS);
@@ -336,7 +357,10 @@ PcNewResourceList(
 
     /* Initialize */
 
-    NewTranslatedSize = sizeof(CM_RESOURCE_LIST) + (TranslatedResourceList[0].List->PartialResourceList.Count-1) * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
+    NewTranslatedSize = sizeof(CM_RESOURCE_LIST);
+    if (TranslatedResourceList[0].List->PartialResourceList.Count > 1)
+        NewTranslatedSize += (TranslatedResourceList[0].List->PartialResourceList.Count-1) * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
+
     NewTranslatedResources = AllocateItem(PoolType, NewTranslatedSize, TAG_PORTCLASS);
     if (!NewTranslatedResources)
     {
@@ -344,7 +368,10 @@ PcNewResourceList(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    NewUntranslatedSize = sizeof(CM_RESOURCE_LIST) + (UntranslatedResourceList[0].List->PartialResourceList.Count-1) * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
+    NewUntranslatedSize = sizeof(CM_RESOURCE_LIST);
+    if (UntranslatedResourceList[0].List->PartialResourceList.Count > 1)
+        NewUntranslatedSize += (UntranslatedResourceList[0].List->PartialResourceList.Count-1) * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
+
     NewUntranslatedResources = AllocateItem(PoolType, NewUntranslatedSize, TAG_PORTCLASS);
     if (!NewUntranslatedResources)
     {
@@ -353,8 +380,8 @@ PcNewResourceList(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    RtlCopyMemory(NewTranslatedResources, TranslatedResourceList, sizeof(CM_RESOURCE_LIST) + (TranslatedResourceList[0].List->PartialResourceList.Count-1) * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
-    RtlCopyMemory(NewUntranslatedResources, UntranslatedResourceList, sizeof(CM_RESOURCE_LIST) + (UntranslatedResourceList[0].List->PartialResourceList.Count-1) * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
+    RtlCopyMemory(NewTranslatedResources, TranslatedResourceList, NewTranslatedSize);
+    RtlCopyMemory(NewUntranslatedResources, UntranslatedResourceList, NewUntranslatedSize);
 
     NewList->lpVtbl = (IResourceListVtbl*)&vt_ResourceListVtbl;
     NewList->ref = 1;
