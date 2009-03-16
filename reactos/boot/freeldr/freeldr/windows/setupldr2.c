@@ -42,7 +42,11 @@ WinLdrLoadNLSData(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
                   IN LPCSTR AnsiFileName,
                   IN LPCSTR OemFileName,
                   IN LPCSTR LanguageFileName);
-
+BOOLEAN
+WinLdrAddDriverToList(LIST_ENTRY *BootDriverListHead,
+                      LPWSTR RegistryPath,
+                      LPWSTR ImagePath,
+                      LPWSTR ServiceName);
 
 
 //FIXME: Do a better way to retrieve Arc disk information
@@ -98,6 +102,52 @@ SetupLdrLoadNlsData(PLOADER_PARAMETER_BLOCK LoaderBlock, HINF InfHandle, LPCSTR 
 
     Status = WinLdrLoadNLSData(LoaderBlock, SearchPath, AnsiName, OemName, LangName);
     DPRINTM(DPRINT_WINDOWS, "NLS data loaded with status %d\n", Status);
+}
+
+VOID
+SetupLdrScanBootDrivers(PLOADER_PARAMETER_BLOCK LoaderBlock, HINF InfHandle, LPCSTR SearchPath)
+{
+    INFCONTEXT InfContext;
+    BOOLEAN Status;
+    LPCSTR Media, DriverName;
+    WCHAR ServiceName[256];
+    WCHAR ImagePath[256];
+
+    /* Open inf section */
+    if (!InfFindFirstLine(InfHandle, "SourceDisksFiles", NULL, &InfContext))
+        return;
+
+    /* Load all listed boot drivers */
+    do
+    {
+        if (InfGetDataField(&InfContext, 7, &Media) &&
+            InfGetDataField(&InfContext, 0, &DriverName))
+        {
+            if (strcmp(Media, "x") == 0)
+            {
+                /* Convert name to widechar */
+                swprintf(ServiceName, L"%S", DriverName);
+
+                /* Remove .sys extension */
+                ServiceName[wcslen(ServiceName) - 4] = 0;
+
+                /* Prepare image path */
+                swprintf(ImagePath, L"%S", DriverName);
+
+                /* Add it to the list */
+                Status = WinLdrAddDriverToList(&LoaderBlock->BootDriverListHead,
+                    L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\",
+                    ImagePath,
+                    ServiceName);
+
+                if (!Status)
+                {
+                    DPRINTM(DPRINT_WINDOWS, "could not add boot driver %s, %s\n", SearchPath, DriverName);
+                    return;
+                }
+            }
+        }
+    } while (InfFindNextLine(&InfContext, &InfContext));
 }
 
 VOID LoadReactOSSetup2(VOID)
@@ -239,8 +289,11 @@ VOID LoadReactOSSetup2(VOID)
     /* Load NLS data */
     SetupLdrLoadNlsData(LoaderBlock, InfHandle, BootPath);
 
+    /* Get a list of boot drivers */
+    SetupLdrScanBootDrivers(LoaderBlock, InfHandle, BootPath);
+
     /* Load boot drivers */
-    //Status = WinLdrLoadBootDrivers(LoaderBlock, BootPath);
+    Status = WinLdrLoadBootDrivers(LoaderBlock, BootPath);
     DPRINTM(DPRINT_WINDOWS, "Boot drivers loaded with status %d\n", Status);
 
     /* Alloc PCR, TSS, do magic things with the GDT/IDT */
