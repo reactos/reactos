@@ -13,6 +13,14 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
 
+STRING_ASSOC_HELP,    "Modify file extension associations.\n\n\
+assoc [.ext[=[FileType]]]\n\
+\n\
+assoc (print all associations)\n\
+assoc .ext (print specific association)\n\
+assoc .ext= (remove specific association)\n\
+assoc .ext=FileType (add new association)\n"
+
 STRING_ATTRIB_HELP,    "Вывод и изменение атрибутов файлов.\n\n\
 ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] файл ...\n\
        [/S [/D]]\n\n\
@@ -572,6 +580,7 @@ STRING_COPY_OPTION,           "YNA"
 
 
 STRING_ALIAS_ERROR,          "Командная строка слишком длинная после развертывания псевдонимов!\n"
+STRING_ASSOC_ERROR,          "File association not found for extension %s\n"
 STRING_BATCH_ERROR,          "Ошибка открытия командного файла\n"
 STRING_CHCP_ERROR1,          "Текущая кодовая страница: %u\n"
 STRING_CHCP_ERROR4,          "Ошибочная кодовая страница\n"

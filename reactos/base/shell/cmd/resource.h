@@ -70,6 +70,7 @@
 #define STRING_REPLACE_ERROR5              355
 #define STRING_REPLACE_ERROR6              356
 #define STRING_REPLACE_ERROR7              357
+#define STRING_ASSOC_ERROR                 358
 
 #define STRING_ATTRIB_HELP                 600
 #define STRING_ALIAS_HELP                  601
@@ -87,6 +88,7 @@
 #define STRING_CMD_HELP6                   613
 #define STRING_CMD_HELP7                   614
 #define STRING_CMD_HELP8                   615
+#define STRING_ASSOC_HELP                  616
 
 #define STRING_CMD_SHELLINFO               624
 

@@ -37,6 +37,10 @@ COMMAND cmds[] =
 	{_T("alias"), 0, CommandAlias},
 #endif
 
+#ifdef INCLUDE_CMD_ASSOC
+	{_T("assoc"), 0, CommandAssoc},
+#endif
+
 #ifdef INCLUDE_CMD_ATTRIB
 	{_T("attrib"), 0, CommandAttrib},
 #endif

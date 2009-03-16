@@ -10,6 +10,14 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
 
+STRING_ASSOC_HELP,    "Modify file extension associations.\n\n\
+assoc [.ext[=[FileType]]]\n\
+\n\
+assoc (print all associations)\n\
+assoc .ext (print specific association)\n\
+assoc .ext= (remove specific association)\n\
+assoc .ext=FileType (add new association)\n"
+
 STRING_ATTRIB_HELP,    "Wyœwietla lub zmienia atrybuty plików.\n\n\
 ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] nazwa_pliku ...\n\
        [/S [/D]]\n\n\
@@ -565,6 +573,7 @@ STRING_COPY_OPTION,           "TNZ"
 
 
 STRING_ALIAS_ERROR,          "Linia poleceñ zbyt d³uga po rozszerzeniu aliasa!\n"
+STRING_ASSOC_ERROR,          "File association not found for extension %s\n"
 STRING_BATCH_ERROR,          "B³¹d podczas otwierania pliku wsadowego\n"
 STRING_CHCP_ERROR1,          "Aktywna strona kodowa nr: %u\n"
 STRING_CHCP_ERROR4,          "Niew³aœciwy numer strony kodowej\n"

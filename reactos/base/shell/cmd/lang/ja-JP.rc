@@ -9,6 +9,14 @@ LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
 
+STRING_ASSOC_HELP,    "Modify file extension associations.\n\n\
+assoc [.ext[=[FileType]]]\n\
+\n\
+assoc (print all associations)\n\
+assoc .ext (print specific association)\n\
+assoc .ext= (remove specific association)\n\
+assoc .ext=FileType (add new association)\n"
+
 STRING_ATTRIB_HELP,    "ファイル属性を表\示または変更します。\n\n\
 ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] [ファイル] ...\n\
        [/S [/D]]\n\n\
@@ -574,6 +582,7 @@ STRING_COPY_OPTION,           "YNA"
 
 
 STRING_ALIAS_ERROR,          "エイリアス展開後のコマンド ラインが長すぎます!\n"
+STRING_ASSOC_ERROR,          "File association not found for extension %s\n"
 STRING_BATCH_ERROR,          "バッチ ファイルを開くときにエラーが発生しました。\n"
 STRING_CHCP_ERROR1,          "現在のコード ページ: %u\n"
 STRING_CHCP_ERROR4,          "無効なコード ページです\n"

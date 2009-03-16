@@ -9,6 +9,14 @@ LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 STRINGTABLE DISCARDABLE
 BEGIN
 
+STRING_ASSOC_HELP,    "Modify file extension associations.\n\n\
+assoc [.ext[=[FileType]]]\n\
+\n\
+assoc (print all associations)\n\
+assoc .ext (print specific association)\n\
+assoc .ext= (remove specific association)\n\
+assoc .ext=FileType (add new association)\n"
+
 STRING_ATTRIB_HELP,    "Zeigt Dateiattribute an oder ändert sie.\n\n\
 ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] Dateiname ...\n\
        [/S [/D]]\n\n\
@@ -600,6 +608,7 @@ STRING_CHOICE_OPTION,         "JN"
 STRING_COPY_OPTION,           "JNA"
 
 STRING_ALIAS_ERROR,          "Die Befehlszeile ist zu lange nach der Alias-Erweiterung!\n"
+STRING_ASSOC_ERROR,          "File association not found for extension %s\n"
 STRING_BATCH_ERROR,          "Es trat ein Fehler auf, während die Batch-Datei geöffnet wurde.\n"
 STRING_CHCP_ERROR1,          "Aktive Code-Page: %u\n"
 STRING_CHCP_ERROR4,          "Ungültige Code-Page\n"

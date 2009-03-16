@@ -16,6 +16,7 @@
 		<pch>precomp.h</pch>
 		<compilationunit name="unit.c">
 			<file>alias.c</file>
+			<file>assoc.c</file>
 			<file>attrib.c</file>
 			<file>batch.c</file>
 			<file>beep.c</file>

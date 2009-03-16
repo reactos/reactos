@@ -71,6 +71,9 @@ extern OSVERSIONINFO osvi;
 VOID ExpandAlias (LPTSTR, INT);
 INT CommandAlias (LPTSTR);
 
+/* Prototypes for ASSOC.C */
+INT CommandAssoc (LPTSTR);
+
 /* Prototypes for ATTRIB.C */
 INT CommandAttrib (LPTSTR);
 

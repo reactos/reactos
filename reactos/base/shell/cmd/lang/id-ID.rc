@@ -10,6 +10,14 @@ LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
 
+STRING_ASSOC_HELP,    "Modify file extension associations.\n\n\
+assoc [.ext[=[FileType]]]\n\
+\n\
+assoc (print all associations)\n\
+assoc .ext (print specific association)\n\
+assoc .ext= (remove specific association)\n\
+assoc .ext=FileType (add new association)\n"
+
 STRING_ATTRIB_HELP,    "Menampilkan atau mengubah atribut file.\n\n\
 ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] file ...\n\
        [/S [/D]]\n\n\
@@ -567,6 +575,7 @@ STRING_COPY_OPTION,           "YTS"
 
 
 STRING_ALIAS_ERROR,          "Baris perintah terlalu panjang setelah ekspansi alias!\n"
+STRING_ASSOC_ERROR,          "File association not found for extension %s\n"
 STRING_BATCH_ERROR,          "Kesalaham membuka file batch\n"
 STRING_CHCP_ERROR1,          "Halaman kode aktif: %u\n"
 STRING_CHCP_ERROR4,          "Halaman kode tidak benar\n"
