@@ -42,9 +42,10 @@
 #define GDI_ENTRY_UPPER_SHIFT 16
 
 /* GDI Entry Flags */
-#define GDI_ENTRY_UNDELETABLE  1
-#define GDI_ENTRY_DELETING     2
-#define GDI_ENTRY_VALIDATE_VIS 4
+#define GDI_ENTRY_UNDELETABLE  1    // Mark Object as nonremovable
+#define GDI_ENTRY_DELETING     2    // Used when deleting Font Objects
+#define GDI_ENTRY_VALIDATE_VIS 4    // Validating Visible region data
+#define GDI_ENTRY_ALOC_LAL     0x80 // Object Allocated with Look aside List
 
 /*! \defgroup GDI object types
  *
