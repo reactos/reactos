@@ -128,6 +128,7 @@ EngUnlockDriverObj(
     IN HDRVOBJ hdo)
 {
     PEDRIVEROBJ pedo;
+    ULONG cLocks;
 
     /* First lock to get a pointer to the object */
     pedo = DRIVEROBJ_LockObject(hdo);
@@ -138,10 +139,10 @@ EngUnlockDriverObj(
     }
 
     /* Unlock object */
-    DRIVEROBJ_UnlockObject(pedo);
+    cLocks = DRIVEROBJ_UnlockObject(pedo);
 
     /* Check if we still hold a lock */
-    if (pedo->baseobj.cExclusiveLock < 1)
+    if (cLocks < 1)
     {
         /* Object wasn't locked before, fail. */
         return FALSE;

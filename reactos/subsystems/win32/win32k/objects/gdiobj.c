@@ -1014,21 +1014,6 @@ GDIOBJ_ShareLockObj(HGDIOBJ hObj, DWORD ExpectedType)
 }
 
 
-/*!
- * Release GDI object. Every object locked by GDIOBJ_LockObj() must be unlocked. You should unlock the object
- * as soon as you don't need to have access to it's data.
-
- * \param Object 	Object pointer (as returned by GDIOBJ_LockObj).
- */
-VOID INTERNAL_CALL
-GDIOBJ_UnlockObjByPtr(POBJ Object)
-{
-    if (InterlockedDecrement((PLONG)&Object->cExclusiveLock) < 0)
-    {
-        DPRINT1("Trying to unlock non-existant object\n");
-    }
-}
-
 VOID INTERNAL_CALL
 GDIOBJ_ShareUnlockObjByPtr(POBJ Object)
 {
