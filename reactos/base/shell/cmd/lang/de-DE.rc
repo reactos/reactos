@@ -294,6 +294,13 @@ STRING_LOCALE_HELP1, "Aktuelle Zeit: "
 STRING_MKDIR_HELP,   "Erzeugt ein Verzeichnis.\n\n\
 MKDIR [Laufwerk:]Pfad\nMD [Laufwerk:]Pfad"
 
+STRING_MKLINK_HELP, "Creates a filesystem link object.\n\n\
+MKLINK [/D | /H | /J] linkname target\n\n\
+  /D  Indicates that the symbolic link target is a directory.\n\
+  /H  Create a hard link.\n\
+  /J  Create a directory junction.\n\n\
+If neither /H or /J is specified, a symbolic link is created."
+
 STRING_MEMMORY_HELP1, "Zeigt die Größe des Systemspeicher an.\n\nMEMORY"
 
 STRING_MEMMORY_HELP2, "\n  %12s%% Speicher geladen.\n\n\
@@ -576,6 +583,7 @@ IF       Verarbeitet Ausdrücke in einer Batchdatei abhängig von Bedingungen.\n\
 LABEL    Erstellt, ändert oder löscht die Bezeichnung eines Volumes.\n\
 MD       Erstellt ein Verzeichnis.\n\
 MKDIR    Erstellt ein Verzeichnis.\n\
+MKLINK   Creates a filesystem link object.\n\
 MOVE     Verschiebt eine oder mehrere Dateien von einem Verzeichnis in\n\
          ein anderes.\n\
 PATH     Legt den Suchpfad für ausführbare Dateien fest oder zeigt diesen an.\n\
@@ -680,6 +688,9 @@ STRING_FOR_ERROR,                  "ungültige Variablenangabe."
 STRING_SCREEN_COL,                 "ungültige Spalten-Angabe"
 STRING_SCREEN_ROW,                 "ungültige Zeilen-Angabe"
 STRING_TIMER_TIME                  "Timer %d ist %s: "
+STRING_MKLINK_CREATED_SYMBOLIC,    "Symbolic link created for %s <<===>> %s\n"
+STRING_MKLINK_CREATED_HARD,        "Hard link created for %s <<===>> %s\n"
+STRING_MKLINK_CREATED_JUNCTION,    "Junction created for %s <<===>> %s\n"
 STRING_INVALID_OPERAND,            "Ungültiger Operand."
 STRING_EXPECTED_CLOSE_PAREN,       "Erwartet ')'."
 STRING_EXPECTED_NUMBER_OR_VARIABLE,"Erwartet Nummer oder Variablennamen."

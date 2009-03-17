@@ -139,6 +139,10 @@ COMMAND cmds[] =
 	{_T("mkdir"), CMD_SPECIAL, cmd_mkdir},
 #endif
 
+#ifdef INCLUDE_CMD_MKLINK
+	{_T("mklink"), 0, cmd_mklink},
+#endif
+
 #ifdef INCLUDE_CMD_MOVE
 	{_T("move"), 0, cmd_move},
 #endif

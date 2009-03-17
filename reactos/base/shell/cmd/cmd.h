@@ -320,6 +320,10 @@ extern UINT OutputCodePage;
 INT CommandMemory (LPTSTR);
 
 
+/* Prototypes for MKLINK.C */
+INT cmd_mklink(LPTSTR);
+
+
 /* Prototypes for MISC.C */
 INT GetRootPath(TCHAR *InPath,TCHAR *OutPath,INT size);
 BOOL SetRootPath(TCHAR *InPath);

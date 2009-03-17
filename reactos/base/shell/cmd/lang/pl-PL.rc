@@ -300,6 +300,13 @@ STRING_LOCALE_HELP1, "Czas bie¿¹cy"
 STRING_MKDIR_HELP,   "Tworzy katalog.\n\n\
 MKDIR [napêd:]œcie¿ka\nMD [napêd:]œcie¿ka"
 
+STRING_MKLINK_HELP, "Creates a filesystem link object.\n\n\
+MKLINK [/D | /H | /J] linkname target\n\n\
+  /D  Indicates that the symbolic link target is a directory.\n\
+  /H  Create a hard link.\n\
+  /J  Create a directory junction.\n\n\
+If neither /H or /J is specified, a symbolic link is created."
+
 STRING_MEMMORY_HELP1, "Wyœwietla iloœæ pamiêci systemowej.\n\nMEMORY"
 
 STRING_MEMMORY_HELP2, "\n  %12s%% pamiêci zajêtej.\n\n\
@@ -541,6 +548,7 @@ IF       Przetwarzanie warunkowe w programach wsadowych.\n\
 LABEL    Tworzy, zmienia lub kasuje etykietê woluminu w danym napêdzie.\n\
 MD       Tworzy katalog.\n\
 MKDIR    Tworzy katalog.\n\
+MKLINK   Creates a filesystem link object.\n\
 MOVE     Przenosi jeden lub wiêcej plików z jednego katalogu do drugiego.\n\
 PATH     Wyœwietla lub ustawia œcie¿ki dostêpu dla programów.\n\
 PAUSE    Zawiesza przetwarzanie programu wsadowego i wyœwietla komunikat.\n\
@@ -649,6 +657,9 @@ STRING_FOR_ERROR,                  "z³e okreœlenie zmiennej."
 STRING_SCREEN_COL,                 "nieprawid³owy numer kolumny"
 STRING_SCREEN_ROW,                 "nieprawid³owy numer rzêdu"
 STRING_TIMER_TIME                  "Stoper %d czas - %s: "
+STRING_MKLINK_CREATED_SYMBOLIC,    "Symbolic link created for %s <<===>> %s\n"
+STRING_MKLINK_CREATED_HARD,        "Hard link created for %s <<===>> %s\n"
+STRING_MKLINK_CREATED_JUNCTION,    "Junction created for %s <<===>> %s\n"
 
 STRING_INVALID_OPERAND,            "Nieprawid³owy argument operatora."
 STRING_EXPECTED_CLOSE_PAREN,       "Oczekiwano ')'."

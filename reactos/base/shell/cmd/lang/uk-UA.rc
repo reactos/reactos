@@ -306,6 +306,13 @@ STRING_LOCALE_HELP1, "Current time is"
 STRING_MKDIR_HELP,   "Creates a directory.\n\n\
 MKDIR [drive:]path\nMD [drive:]path"
 
+STRING_MKLINK_HELP, "Creates a filesystem link object.\n\n\
+MKLINK [/D | /H | /J] linkname target\n\n\
+  /D  Indicates that the symbolic link target is a directory.\n\
+  /H  Create a hard link.\n\
+  /J  Create a directory junction.\n\n\
+If neither /H or /J is specified, a symbolic link is created."
+
 STRING_MEMMORY_HELP1, "Displays the amount of system memory.\n\nMEMORY"
 
 STRING_MEMMORY_HELP2, "\n  %12s%% memory load.\n\n\
@@ -587,6 +594,7 @@ IF       Оператор обробки умов у пакетних програмах.\n\
 LABEL    Створення, зміна, або видалення міток тому диска.\n\
 MD       Створення папки.\n\
 MKDIR    Створення папки.\n\
+MKLINK   Creates a filesystem link object.\n\
 MOVE     Переміщення одного або більше файлів з однієї папки до іншої\n\
          папки.\n\
 PATH     Відображення або встановлення шляху пошуку виконуваних файлів.\n\
@@ -705,6 +713,9 @@ STRING_FOR_ERROR,                  "bad variable specification."
 STRING_SCREEN_COL,                 "неправильне значення col"
 STRING_SCREEN_ROW,                 "неправильне значення row"
 STRING_TIMER_TIME                  "Таймер %d - %s: "
+STRING_MKLINK_CREATED_SYMBOLIC,    "Symbolic link created for %s <<===>> %s\n"
+STRING_MKLINK_CREATED_HARD,        "Hard link created for %s <<===>> %s\n"
+STRING_MKLINK_CREATED_JUNCTION,    "Junction created for %s <<===>> %s\n"
 
 STRING_INVALID_OPERAND,            "Невірний операнд."
 STRING_EXPECTED_CLOSE_PAREN,       "Очікується ')'."

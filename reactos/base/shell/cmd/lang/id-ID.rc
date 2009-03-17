@@ -302,6 +302,13 @@ STRING_LOCALE_HELP1, "Waktu saat ini"
 STRING_MKDIR_HELP,   "Membuat direktori.\n\n\
 MKDIR [drive:]path\nMD [drive:]path"
 
+STRING_MKLINK_HELP, "Creates a filesystem link object.\n\n\
+MKLINK [/D | /H | /J] linkname target\n\n\
+  /D  Indicates that the symbolic link target is a directory.\n\
+  /H  Create a hard link.\n\
+  /J  Create a directory junction.\n\n\
+If neither /H or /J is specified, a symbolic link is created."
+
 STRING_MEMMORY_HELP1, "Menampilkan jumlah memori sistem.\n\nMEMORY"
 
 STRING_MEMMORY_HELP2, "\n  %12s%% beban memori.\n\n\
@@ -542,6 +549,7 @@ IF       Melakukan pemrosesan kondisional dalam program batch.\n\
 LABEL    Membuat, mengubah, atau menghapus label volume disk.\n\
 MD       Membuat sebuah direktori.\n\
 MKDIR    Membuat sebuah direktori.\n\
+MKLINK   Creates a filesystem link object.\n\
 MOVE     Memindahkan satu atau lebih file dari satu direktori ke yang lainnya\n\
          directory.\n\
 PATH     Menampilkan atau menyetel path pencarian untuk file executable.\n\
@@ -651,6 +659,9 @@ STRING_FOR_ERROR,                  "spesifikasi variabel tidak baik."
 STRING_SCREEN_COL,                 "Nilai untuk kolom tidak benar"
 STRING_SCREEN_ROW,                 "Nilai untuk baris tidak benar"
 STRING_TIMER_TIME                  "Timer %d adalah %s: "
+STRING_MKLINK_CREATED_SYMBOLIC,    "Symbolic link created for %s <<===>> %s\n"
+STRING_MKLINK_CREATED_HARD,        "Hard link created for %s <<===>> %s\n"
+STRING_MKLINK_CREATED_JUNCTION,    "Junction created for %s <<===>> %s\n"
 
 STRING_INVALID_OPERAND,            "Operand tidak benar."
 STRING_EXPECTED_CLOSE_PAREN,       "Diharapkan ')'."

@@ -310,6 +310,13 @@ STRING_MKDIR_HELP,   "ディレクトリを作成します。\n\n\
 MKDIR [ドライブ:]パス\n\
 MD [ドライブ:]パス"
 
+STRING_MKLINK_HELP, "Creates a filesystem link object.\n\n\
+MKLINK [/D | /H | /J] linkname target\n\n\
+  /D  Indicates that the symbolic link target is a directory.\n\
+  /H  Create a hard link.\n\
+  /J  Create a directory junction.\n\n\
+If neither /H or /J is specified, a symbolic link is created."
+
 STRING_MEMMORY_HELP1, "システム メモリの量を表\示します。\n\nMEMORY"
 
 STRING_MEMMORY_HELP2, "\n  %12s%% のメモリが使用されています。\n\n\
@@ -551,6 +558,7 @@ IF       バッチ プログラム中で条件処理を実行します。\n\
 LABEL    ディスクのボリューム ラベルを表\示または変更します。\n\
 MD       ディレクトリを作成します。\n\
 MKDIR    ディレクトリを作成します。\n\
+MKLINK   Creates a filesystem link object.\n\
 MOVE     ファイルを移動およびファイルとディレクトリ名を変更します。\n\
 PATH     実行可能\ファイルの検索パスを表\示または設定します。\n\
 PAUSE    バッチ プログラムの処理を一時停止し、メッセージを表\示します。\n\
@@ -658,6 +666,9 @@ STRING_FOR_ERROR,                  "無効な変数が指定されました。"
 STRING_SCREEN_COL,                 "行の値が無効です。"
 STRING_SCREEN_ROW,                 "列の値が無効です。"
 STRING_TIMER_TIME                  "タイマー %d は %s です。: "
+STRING_MKLINK_CREATED_SYMBOLIC,    "Symbolic link created for %s <<===>> %s\n"
+STRING_MKLINK_CREATED_HARD,        "Hard link created for %s <<===>> %s\n"
+STRING_MKLINK_CREATED_JUNCTION,    "Junction created for %s <<===>> %s\n"
 
 STRING_INVALID_OPERAND,            "無効なオペランドです。"
 STRING_EXPECTED_CLOSE_PAREN,       "Expected ')'"

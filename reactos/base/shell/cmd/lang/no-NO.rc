@@ -294,6 +294,13 @@ STRING_LOCALE_HELP1, "gjeldende tid er"
 STRING_MKDIR_HELP,   "Oppretter en mappe.\n\n\
 MKDIR [stasjon:]mappe\nMD [stasjon:]mappe"
 
+STRING_MKLINK_HELP, "Creates a filesystem link object.\n\n\
+MKLINK [/D | /H | /J] linkname target\n\n\
+  /D  Indicates that the symbolic link target is a directory.\n\
+  /H  Create a hard link.\n\
+  /J  Create a directory junction.\n\n\
+If neither /H or /J is specified, a symbolic link is created."
+
 STRING_MEMMORY_HELP1, "Vis mengde av system minne.\n\nMEMORY"
 
 STRING_MEMMORY_HELP2, "\n  %12s%% benyttet minne.\n\n\
@@ -534,6 +541,7 @@ IF       Utføre betinget behandling i satsvise programmer.\n\
 LABEL    Oppretter, endrer, eller sletter volumnavnet på en disk.\n\
 MD       Oppretter en mappe.\n\
 MKDIR    Oppretter en mappe.\n\
+MKLINK   Creates a filesystem link object.\n\
 MOVE     Flytter en eller flere filer fra en mappe til en annen.\n\
 PATH     Vis eller sett en søkesti for kjørbare filer.\n\
 PAUSE    Avbryter behandling av en satsvis fil, og viser en melding.\n\
@@ -643,6 +651,9 @@ STRING_FOR_ERROR,                  "ugyldig variabel spesifikasjon."
 STRING_SCREEN_COL,                 "ugyldig verdi for kolonne"
 STRING_SCREEN_ROW,                 "ugyldig verdi for rad"
 STRING_TIMER_TIME                  "Stoppeklokke %d er %s: "
+STRING_MKLINK_CREATED_SYMBOLIC,    "Symbolic link created for %s <<===>> %s\n"
+STRING_MKLINK_CREATED_HARD,        "Hard link created for %s <<===>> %s\n"
+STRING_MKLINK_CREATED_JUNCTION,    "Junction created for %s <<===>> %s\n"
 
 STRING_INVALID_OPERAND,            "Ugyldig operand."
 STRING_EXPECTED_CLOSE_PAREN,       "Forventet ')'."

@@ -289,6 +289,13 @@ STRING_LOCALE_HELP1, "Az aktuális idõ:"
 STRING_MKDIR_HELP,   "Létrehoz egy új mappát.\n\n\
 MKDIR [meghajtó:]path\nMD [meghajtó:]path"
 
+STRING_MKLINK_HELP, "Creates a filesystem link object.\n\n\
+MKLINK [/D | /H | /J] linkname target\n\n\
+  /D  Indicates that the symbolic link target is a directory.\n\
+  /H  Create a hard link.\n\
+  /J  Create a directory junction.\n\n\
+If neither /H or /J is specified, a symbolic link is created."
+
 STRING_MEMMORY_HELP1, "Megjeleníti a memória statisztikát.\n\nMEMORY"
 
 STRING_MEMMORY_HELP2, "\n A memória %12s%%-a foglalt.\n\n\
@@ -526,6 +533,7 @@ IF       Feltételes végrehajtás batch állományokban.\n\
 LABEL    Beállítja egy kötet címkéjét.\n\
 MD       Létrehoz egy új mappát.\n\
 MKDIR    Létrehoz egy új mappát.\n\
+MKLINK   Creates a filesystem link object.\n\
 MOVE     Áthelyez egy vagy több állományt az egyik mappából a másikba.\n\
 PATH     Megjeleníti vagy beállítja a keresési útvonalakat.\n\
 PAUSE    Felfüggeszti a futást, és vár a felhasználóra.\n\
@@ -629,4 +637,7 @@ STRING_FOR_ERROR,                  "Hibás változó."
 STRING_SCREEN_COL,                 "Érvénytelen érték oszlopnak"
 STRING_SCREEN_ROW,                 "Érvénytelen érték sornak"
 STRING_TIMER_TIME                  "Idõzítõ %d értéke %s: "
+STRING_MKLINK_CREATED_SYMBOLIC,    "Symbolic link created for %s <<===>> %s\n"
+STRING_MKLINK_CREATED_HARD,        "Hard link created for %s <<===>> %s\n"
+STRING_MKLINK_CREATED_JUNCTION,    "Junction created for %s <<===>> %s\n"
 END

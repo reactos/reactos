@@ -89,6 +89,7 @@
 #define STRING_CMD_HELP7                   614
 #define STRING_CMD_HELP8                   615
 #define STRING_ASSOC_HELP                  616
+#define STRING_MKLINK_HELP                 617
 
 #define STRING_CMD_SHELLINFO               624
 
@@ -242,6 +243,9 @@
 #define STRING_REPLACE_HELP10              736
 #define STRING_REPLACE_HELP11              737
 
+#define STRING_MKLINK_CREATED_SYMBOLIC     738
+#define STRING_MKLINK_CREATED_HARD         739
+#define STRING_MKLINK_CREATED_JUNCTION     740
 
 /* These strings are language independent (cmd.rc) */
 #define STRING_FREEDOS_DEV                 800
