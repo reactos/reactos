@@ -1,180 +1,156 @@
 /*
- *  ReactOS W32 Subsystem
- *  Copyright (C) 2005 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
-/*
- * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS kernel
+ * COPYRIGHT:         GPL, see COPYING in the top level directory
+ * PROJECT:           ReactOS win32 kernel mode sunsystem
  * PURPOSE:           GDI DRIVEROBJ Functions
- * FILE:              subsys/win32k/eng/driverobj.c
- * PROGRAMER:         Gregor Anich
- * REVISION HISTORY:
- *                 04/01/2005: Created
+ * FILE:              subsystems/win32k/eng/driverobj.c
+ * PROGRAMER:         Timo Kreuzer
  */
+
+/** Includes ******************************************************************/
 
 #include <w32k.h>
 
 #define NDEBUG
 #include <debug.h>
 
-/*!\brief Called when the process is terminated.
- *
- * Calls the free-proc for each existing DRIVEROBJ.
- *
- * \param Process  Pointer to the EPROCESS struct for the process beeing terminated.
- * \param Win32Process  Pointer to the W32PROCESS
- */
-VOID FASTCALL
-IntEngCleanupDriverObjs(struct _EPROCESS *Process,
-                        PW32PROCESS Win32Process)
-{
-  PDRIVERGDI DrvObjInt;
-  PW32PROCESS CurrentWin32Process;
 
-  CurrentWin32Process = PsGetCurrentProcessWin32Process();
-  IntEngLockProcessDriverObjs(CurrentWin32Process);
-  while (!IsListEmpty(&Win32Process->DriverObjListHead))
+/** Internal interface ********************************************************/
+
+/*!
+ * \brief DRIVEROBJ cleanup function
+ */
+BOOL INTERNAL_CALL
+DRIVEROBJ_Cleanup(PVOID pObject)
+{
+    PEDRIVEROBJ pedo = pObject;
+    FREEOBJPROC pFreeProc;
+
+    pFreeProc = pedo->drvobj.pFreeProc;
+    if (pFreeProc)
     {
-      DrvObjInt = CONTAINING_RECORD(Win32Process->DriverObjListHead.Flink,
-                                    DRIVERGDI, ListEntry);
-      IntEngUnLockProcessDriverObjs(CurrentWin32Process);
-      EngDeleteDriverObj((HDRVOBJ)(&DrvObjInt->DriverObj), TRUE, FALSE);
-      IntEngLockProcessDriverObjs(CurrentWin32Process);
+        return pFreeProc(pedo->drvobj.pvObj);
     }
-  IntEngUnLockProcessDriverObjs(CurrentWin32Process);
+
+    return TRUE;
 }
 
+/** Public interface **********************************************************/
 
-/*
- * @implemented
- */
 HDRVOBJ
 APIENTRY
 EngCreateDriverObj(
-	IN PVOID        pvObj,
-	IN FREEOBJPROC  pFreeObjProc,
-	IN HDEV         hdev
-	)
+	IN PVOID       pvObj,
+	IN FREEOBJPROC pFreeObjProc,
+	IN HDEV        hdev)
 {
-  PDRIVERGDI DrvObjInt;
-  PDRIVEROBJ DrvObjUser;
-  PW32PROCESS CurrentWin32Process;
+    PEDRIVEROBJ pedo;
+    HDRVOBJ hdo;
+    GDIDEVICE *ppdev = (GDIDEVICE*)hdev;
 
-  /* Create DRIVEROBJ */
-  DrvObjInt = EngAllocMem(0, sizeof (DRIVERGDI), TAG_DRIVEROBJ);
-  if (DrvObjInt == NULL)
+    /* Allocate a new DRIVEROBJ */
+    pedo = DRIVEROBJ_AllocObjectWithHandle();
+    if (!pedo)
     {
-      DPRINT1("Failed to allocate memory for a DRIVERGDI structure!\n");
-      return NULL;
+        return NULL;
     }
+    hdo = pedo->baseobj.hHmgr;
 
-  /* fill user object */
-  DrvObjUser = GDIToObj(DrvObjInt, DRIVER);
-  DrvObjUser->pvObj = pvObj;
-  DrvObjUser->pFreeProc = pFreeObjProc;
-  DrvObjUser->hdev = hdev;
-  DrvObjUser->dhpdev = ((GDIDEVICE*)hdev)->hPDev;
+    /* Fill in fields */
+    pedo->drvobj.pvObj = pvObj;
+    pedo->drvobj.pFreeProc = pFreeObjProc;
+    pedo->drvobj.hdev = hdev;
+    pedo->drvobj.dhpdev = ppdev->hPDev;
 
-  /* fill internal object */
-  ExInitializeFastMutex(&DrvObjInt->Lock);
-  CurrentWin32Process = PsGetCurrentProcessWin32Process();
-  IntEngLockProcessDriverObjs(CurrentWin32Process);
-  InsertTailList(&CurrentWin32Process->DriverObjListHead, &DrvObjInt->ListEntry);
-  IntEngUnLockProcessDriverObjs(CurrentWin32Process);
+    /* Unlock the object */
+    DRIVEROBJ_UnlockObject(pedo);
 
-  return (HDRVOBJ)DrvObjUser;
+    /* Return the handle */
+    return hdo;
 }
 
 
-/*
- * @implemented
- */
 BOOL
 APIENTRY
 EngDeleteDriverObj(
-	IN HDRVOBJ  hdo,
-	IN BOOL  bCallBack,
-	IN BOOL  bLocked
-	)
+	IN HDRVOBJ hdo,
+	IN BOOL    bCallBack,
+	IN BOOL    bLocked)
 {
-  PDRIVEROBJ DrvObjUser = (PDRIVEROBJ)hdo;
-  PDRIVERGDI DrvObjInt = ObjToGDI(DrvObjUser, DRIVER);
-  PW32PROCESS CurrentWin32Process;
+    PEDRIVEROBJ pedo;
 
-  /* Make sure the obj is locked */
-  if (!bLocked)
+    /* Lock the object */
+    pedo = DRIVEROBJ_LockObject(hdo);
+    if (!pedo)
     {
-      if (!ExTryToAcquireFastMutex(&DrvObjInt->Lock))
+        return FALSE;
+    }
+
+    /* Manually call cleanup callback */
+    if (bCallBack)
+    {
+        if (!pedo->drvobj.pFreeProc(pedo->drvobj.pvObj))
         {
-          return FALSE;
+            /* Callback failed */
+            DRIVEROBJ_UnlockObject(pedo);
+            return FALSE;
         }
     }
 
-  /* Call the free-proc */
-  if (bCallBack)
-    {
-      if (!DrvObjUser->pFreeProc(DrvObjUser))
-        {
-          return FALSE;
-        }
-    }
+    /* Prevent cleanup callback from being called again */
+    pedo->drvobj.pFreeProc = NULL;
 
-  /* Free the DRIVEROBJ */
-  CurrentWin32Process = PsGetCurrentProcessWin32Process();
-  IntEngLockProcessDriverObjs(CurrentWin32Process);
-  RemoveEntryList(&DrvObjInt->ListEntry);
-  IntEngUnLockProcessDriverObjs(CurrentWin32Process);
-  EngFreeMem(DrvObjInt);
+    /* NOTE: We don't care about the bLocked param, as our handle manager
+       allows freeing the object, while we hold any number of locks. */
 
-  return TRUE;
+    /* Free the object */
+    return DRIVEROBJ_FreeObjectByHandle(hdo);
 }
 
 
-/*
- * @implemented
- */
 PDRIVEROBJ
 APIENTRY
-EngLockDriverObj( IN HDRVOBJ hdo )
+EngLockDriverObj(
+    IN HDRVOBJ hdo)
 {
-  PDRIVEROBJ DrvObjUser = (PDRIVEROBJ)hdo;
-  PDRIVERGDI DrvObjInt = ObjToGDI(DrvObjUser, DRIVER);
+    PEDRIVEROBJ pedo;
 
-  if (!ExTryToAcquireFastMutex(&DrvObjInt->Lock))
-    {
-      return NULL;
-    }
+    /* Lock the object */
+    pedo = DRIVEROBJ_LockObject(hdo);
 
-  return DrvObjUser;
+    /* Return pointer to the DRIVEROBJ structure */
+    return &pedo->drvobj;
 }
 
 
-/*
- * @implemented
- */
 BOOL
 APIENTRY
-EngUnlockDriverObj ( IN HDRVOBJ hdo )
+EngUnlockDriverObj(
+    IN HDRVOBJ hdo)
 {
-  PDRIVERGDI DrvObjInt = ObjToGDI((PDRIVEROBJ)hdo, DRIVER);
+    PEDRIVEROBJ pedo;
 
-  ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&DrvObjInt->Lock);
-  return TRUE;
+    /* First lock to get a pointer to the object */
+    pedo = DRIVEROBJ_LockObject(hdo);
+    if(!pedo)
+    {
+        /* Object could not be locked, fail. */
+        return FALSE;
+    }
+
+    /* Unlock object */
+    DRIVEROBJ_UnlockObject(pedo);
+
+    /* Check if we still hold a lock */
+    if (pedo->baseobj.cExclusiveLock < 1)
+    {
+        /* Object wasn't locked before, fail. */
+        return FALSE;
+    }
+
+    /* Unlock again */
+    DRIVEROBJ_UnlockObject(pedo);
+
+    /* Success */
+    return TRUE;
 }
-
-/* EOF */
 

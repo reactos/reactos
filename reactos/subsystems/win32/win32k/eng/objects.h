@@ -51,12 +51,6 @@ typedef struct _CLIPGDI {
   ENUMRECTS EnumRects;
 } CLIPGDI, *PCLIPGDI;
 
-typedef struct _DRIVERGDI {
-  DRIVEROBJ    DriverObj;
-  LIST_ENTRY   ListEntry;
-  FAST_MUTEX   Lock;
-} DRIVERGDI, *PDRIVERGDI;
-
 /*ei What is this for? */
 typedef struct _DRVFUNCTIONSGDI {
   HDEV  hdev;

@@ -70,7 +70,7 @@ OBJ_TYPE_INFO ObjTypeInfo[BASE_OBJTYPE_COUNT] =
   {0, 0,                     TAG_TTFD,         NULL},             /* 19 TTFD, unused */
   {0, 0,                     TAG_RC,           NULL},             /* 1a RC, unused */
   {0, 0,                     TAG_TEMP,         NULL},             /* 1b TEMP, unused */
-  {0, 0,                     TAG_DRVOBJ,       NULL},             /* 1c DRVOBJ, unused */
+  {0, sizeof(EDRIVEROBJ),    TAG_DRVOBJ,       DRIVEROBJ_Cleanup},/* 1c DRVOBJ */
   {0, 0,                     TAG_DCIOBJ,       NULL},             /* 1d DCIOBJ, unused */
   {0, 0,                     TAG_SPOOL,        NULL},             /* 1e SPOOL, unused */
   {0, 0,                     0,                NULL},             /* 1f reserved entry */
@@ -537,7 +537,8 @@ LockHandle:
 
             Object = Entry->KernelData;
 
-            if (Object->cExclusiveLock == 0)
+            if (Object->cExclusiveLock == 0 ||
+                Object->Tid == (PW32THREAD)PsGetCurrentThreadWin32Thread())
             {
                 BOOL Ret;
                 PW32PROCESS W32Process = PsGetCurrentProcessWin32Process();
@@ -571,14 +572,16 @@ LockHandle:
             else
             {
                 /*
-                 * The object is currently locked, so freeing is forbidden!
+                 * The object is currently locked by another thread, so freeing is forbidden!
                  */
                 DPRINT1("Object->cExclusiveLock = %d\n", Object->cExclusiveLock);
                 GDIDBG_TRACECALLER();
                 GDIDBG_TRACELOCKER(GDI_HANDLE_GET_INDEX(hObj));
                 (void)InterlockedExchangePointer((PVOID*)&Entry->ProcessId, PrevProcId);
                 /* do not assert here for it will call again from dxg.sys it being call twice */
-                //ASSERT(FALSE);
+
+                DelayExecution();
+                goto LockHandle;
             }
         }
         else
