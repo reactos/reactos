@@ -45,7 +45,7 @@
 #define GDI_ENTRY_UNDELETABLE  1    /* Mark Object as nonremovable */
 #define GDI_ENTRY_DELETING     2    /* Used when deleting Font Objects */
 #define GDI_ENTRY_VALIDATE_VIS 4    /* Validating Visible region data */
-#define GDI_ENTRY_ALOC_LAL     0x80 /* Object Allocated with Look aside List */
+#define GDI_ENTRY_ALLOCATE_LAL 0x80 /* Object Allocated with Look aside List */
 
 /*! \defgroup GDI object types
  *
