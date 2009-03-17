@@ -304,7 +304,7 @@ MKDIR [drive:]path\nMD [drive:]path"
 
 STRING_MKLINK_HELP, "Creates a filesystem link object.\n\n\
 MKLINK [/D | /H | /J] linkname target\n\n\
-  /D  Indicates that symbolic link target is a directory.\n\
+  /D  Indicates that the symbolic link target is a directory.\n\
   /H  Create a hard link.\n\
   /J  Create a directory junction.\n\n\
 If neither /H or /J is specified, a symbolic link is created."
