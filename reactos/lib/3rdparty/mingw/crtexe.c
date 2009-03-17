@@ -5,7 +5,9 @@
  */
 
 #undef CRTDLL
-//#define _DLL
+#ifndef _DLL
+#define _DLL
+#endif
 
 #define SPECIAL_CRTEXE
 
@@ -69,6 +71,7 @@ extern int mingw_app_type;
 
 static int argc;
 #ifdef WPRFLAG
+extern void __main(void);
 static wchar_t **argv;
 static wchar_t **envp;
 #else
@@ -144,22 +147,14 @@ pre_cpp_init (void)
 
 static int __tmainCRTStartup (void);
 
-#ifdef WPRFLAG
-int wWinMainCRTStartup (void)
-#else
 int WinMainCRTStartup (void)
-#endif
 {
   mingw_app_type = 1;
   __security_init_cookie ();
   return __tmainCRTStartup ();
 }
 
-#ifdef WPRFLAG
-int wmainCRTStartup (void)
-#else
 int mainCRTStartup (void)
-#endif
 {
   mingw_app_type = 0;
   __security_init_cookie ();
@@ -236,8 +231,6 @@ __tmainCRTStartup (void)
     if (mingw_app_type)
       {
 #ifdef WPRFLAG
-    if (_wcmdln == NULL)
-      return 255;
     lpszCommandLine = (_TCHAR *) _wcmdln;
 #else
     lpszCommandLine = (char *) _acmdln;
@@ -259,6 +252,9 @@ __tmainCRTStartup (void)
       lpszCommandLine++;
 
 #ifdef WPRFLAG
+    /* C++ initialization.
+       gcc inserts this call automatically for a function called main, but not for wmain.  */
+    __main ();
     mainret = wmain (
     	(int) (StartupInfo.dwFlags & STARTF_USESHOWWINDOW ? StartupInfo.wShowWindow : SW_SHOWDEFAULT),
     	(wchar_t **) lpszCommandLine, (wchar_t **) (HINSTANCE) &__ImageBase);
@@ -273,6 +269,9 @@ __tmainCRTStartup (void)
     duplicate_ppstrings (argc, &argv);
 #ifdef WPRFLAG
     __winitenv = envp;
+    /* C++ initialization.
+       gcc inserts this call automatically for a function called main, but not for wmain.  */
+    __main ();
     mainret = wmain (argc, argv, envp);
 #else
     __initenv = envp;

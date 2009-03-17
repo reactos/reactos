@@ -1090,16 +1090,10 @@ Module::GetDefaultModuleEntrypoint () const
 			return "DllMain@12";
 		case Win32CUI:
 		case Test:
-			if ( isUnicode )
-				return "wmainCRTStartup";
-			else
-				return "mainCRTStartup";
+			return "mainCRTStartup";
 		case Win32SCR:
 		case Win32GUI:
-			if ( isUnicode )
-				return "wWinMainCRTStartup";
-			else
-				return "WinMainCRTStartup";
+			return "WinMainCRTStartup";
 		case BuildTool:
 		case StaticLibrary:
 		case HostStaticLibrary:

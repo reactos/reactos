@@ -6,7 +6,9 @@
 
 #ifdef CRTDLL
 #undef CRTDLL
+#ifndef _DLL
 #define _DLL
+#endif
 
 #include <oscalls.h>
 #include <internal.h>
