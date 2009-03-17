@@ -73,8 +73,7 @@
 #include <include/mmcopy.h>
 #include <include/misc.h>
 #include <include/gdifloat.h>
-#include <eng/objects.h>
-#include <eng/misc.h>
+#include <include/engobjects.h>
 #include <dib/dib.h>
 
 #endif /* __WIN32K_H */
