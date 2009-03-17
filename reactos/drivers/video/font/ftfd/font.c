@@ -126,11 +126,11 @@ FtfdUnloadFontFile(
         FT_Done_Face(pfile->aftface[i]);
     }
 
-    /* Free the memory that was allocated for the font */
-    EngFreeMem(pfile);
-
     /* Unmap the font file */
     EngUnmapFontFileFD(pfile->iFile);
+
+    /* Free the memory that was allocated for the font */
+    EngFreeMem(pfile);
 
     return TRUE;
 }
