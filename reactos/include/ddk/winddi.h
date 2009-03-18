@@ -429,6 +429,7 @@ typedef struct _DRVFN {
 #define DDI_DRIVER_VERSION_SP3            0x00020003
 #define DDI_DRIVER_VERSION_NT5            0x00030000
 #define DDI_DRIVER_VERSION_NT5_01         0x00030100
+#define DDI_DRIVER_VERSION_NT5_01_SP1     0x00030101
 
 typedef struct _DRVENABLEDATA {
   ULONG  iDriverVersion;
