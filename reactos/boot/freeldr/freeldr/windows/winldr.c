@@ -277,6 +277,12 @@ WinLdrLoadDeviceDriver(PLOADER_PARAMETER_BLOCK LoaderBlock,
 		// Cut out the name from the path
 		*(DriverNamePos+1) = 0;
 	}
+	else
+	{
+		// There is no directory in the path
+		strcpy(DllName, DriverPath);
+		DriverPath[0] = 0;
+	}
 
 	DPRINTM(DPRINT_WINDOWS, "DriverPath: %s, DllName: %s, LPB %p\n", DriverPath, DllName, LoaderBlock);
 

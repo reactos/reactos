@@ -385,6 +385,9 @@ CdfsMountVolume(PDEVICE_OBJECT DeviceObject,
     RtlZeroMemory(Ccb,
         sizeof(CCB));
 
+    DeviceExt->StreamFileObject->ReadAccess = TRUE;
+    DeviceExt->StreamFileObject->WriteAccess = FALSE;
+    DeviceExt->StreamFileObject->DeleteAccess = FALSE;
     DeviceExt->StreamFileObject->FsContext = Fcb;
     DeviceExt->StreamFileObject->FsContext2 = Ccb;
     DeviceExt->StreamFileObject->SectionObjectPointer = &Fcb->SectionObjectPointers;

@@ -635,7 +635,7 @@ acpi_os_wait_semaphore(
 
   DPRINT("Waiting for semaphore[%p|%d|%d]\n", handle, units, timeout);
 
-  //ExAcquireFastMutex(Mutex);
+  ExAcquireFastMutex(Mutex);
 
   return AE_OK;
 }
@@ -654,7 +654,7 @@ acpi_os_signal_semaphore(
 
   DPRINT("Signaling semaphore[%p|%d]\n", handle, units);
 
-  //ExReleaseFastMutex(Mutex);
+  ExReleaseFastMutex(Mutex);
 
   return AE_OK;
 }

@@ -374,6 +374,29 @@ GpStatus WINGDIPAPI GdipGetFontUnit(GpFont *font, Unit *unit)
 }
 
 /*******************************************************************************
+ * GdipGetLogFontA [GDIPLUS.@]
+ */
+GpStatus WINGDIPAPI GdipGetLogFontA(GpFont *font, GpGraphics *graphics,
+    LOGFONTA *lfa)
+{
+    GpStatus status;
+    LOGFONTW lfw;
+
+    TRACE("(%p, %p, %p)\n", font, graphics, lfa);
+
+    status = GdipGetLogFontW(font, graphics, &lfw);
+    if(status != Ok)
+        return status;
+
+    memcpy(lfa, &lfw, FIELD_OFFSET(LOGFONTA,lfFaceName) );
+
+    if(!MultiByteToWideChar(CP_ACP, 0, lfa->lfFaceName, -1, lfw.lfFaceName, LF_FACESIZE))
+        return GenericError;
+
+    return Ok;
+}
+
+/*******************************************************************************
  * GdipGetLogFontW [GDIPLUS.@]
  */
 GpStatus WINGDIPAPI GdipGetLogFontW(GpFont *font, GpGraphics *graphics,

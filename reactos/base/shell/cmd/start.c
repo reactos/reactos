@@ -214,7 +214,7 @@ INT cmd_start (LPTSTR Rest)
 	/* search the PATH environment variable for the binary */
 	if (!SearchForExecutable (rest, szFullName))
 	{
-		error_bad_command ();
+		error_bad_command(rest);
 
 		cmd_free(comspec);
 		return 1;

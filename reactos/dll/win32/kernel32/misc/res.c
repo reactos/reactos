@@ -1197,21 +1197,30 @@ FindResourceExW (
 	if ( hModule == NULL )
 		hModule = (HINSTANCE)GetModuleHandleW(NULL);
 
-	if ( !IS_INTRESOURCE(lpName) && lpName[0] == L'#' ) {
-		lpName = MAKEINTRESOURCEW(wcstoul(lpName + 1, NULL, 10));
-	}
-	if ( !IS_INTRESOURCE(lpType) && lpType[0] == L'#' ) {
-		lpType = MAKEINTRESOURCEW(wcstoul(lpType + 1, NULL, 10));
-	}
+	_SEH2_TRY
+	{
+		if ( !IS_INTRESOURCE(lpName) && lpName[0] == L'#' ) {
+			lpName = MAKEINTRESOURCEW(wcstoul(lpName + 1, NULL, 10));
+		}
+		if ( !IS_INTRESOURCE(lpType) && lpType[0] == L'#' ) {
+			lpType = MAKEINTRESOURCEW(wcstoul(lpType + 1, NULL, 10));
+		}
 
-	ResourceInfo.Type = (ULONG)lpType;
-	ResourceInfo.Name = (ULONG)lpName;
-	ResourceInfo.Language = (ULONG)wLanguage;
+		ResourceInfo.Type = (ULONG)lpType;
+		ResourceInfo.Name = (ULONG)lpName;
+		ResourceInfo.Language = (ULONG)wLanguage;
 
-	Status = LdrFindResource_U (hModule,
-				    &ResourceInfo,
-				    RESOURCE_DATA_LEVEL,
-				    &ResourceDataEntry);
+		Status = LdrFindResource_U (hModule,
+						&ResourceInfo,
+						RESOURCE_DATA_LEVEL,
+						&ResourceDataEntry);
+	}
+	_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+	{
+		Status = _SEH2_GetExceptionCode();
+	}
+	_SEH2_END;
+
 	if (!NT_SUCCESS(Status))
 	{
 		SetLastErrorByStatus (Status);

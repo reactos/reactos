@@ -116,25 +116,22 @@ VOID RunLoader(VOID)
 			LoadAndBootReactOS(OperatingSystemSectionNames[SelectedOperatingSystem]);
 		}
 #ifdef FREELDR_REACTOS_SETUP
-        else if (_stricmp(SettingValue, "ReactOSSetup") == 0)
-        {
-            // In future we could pass the selected OS details through this
-            // to have different install methods, etc.
-            LoadReactOSSetup();
-        }
+		else if (_stricmp(SettingValue, "ReactOSSetup") == 0)
+		{
+			// In future we could pass the selected OS details through this
+			// to have different install methods, etc.
+			LoadReactOSSetup();
+		}
+		else if (_stricmp(SettingValue, "ReactOSSetup2") == 0)
+		{
+			// WinLdr-style boot
+			LoadReactOSSetup2();
+		}
 #endif
 #ifdef __i386__
 		else if (_stricmp(SettingValue, "WindowsNT40") == 0)
 		{
 			LoadAndBootWindows(OperatingSystemSectionNames[SelectedOperatingSystem], _WIN32_WINNT_NT4);
-		}
-		else if (_stricmp(SettingValue, "Windows2000") == 0)
-		{
-			LoadAndBootWindows(OperatingSystemSectionNames[SelectedOperatingSystem], _WIN32_WINNT_WIN2K);
-		}
-		else if (_stricmp(SettingValue, "WindowsXP") == 0)
-		{
-			LoadAndBootWindows(OperatingSystemSectionNames[SelectedOperatingSystem], _WIN32_WINNT_WINXP);
 		}
 		else if (_stricmp(SettingValue, "Windows2003") == 0)
 		{

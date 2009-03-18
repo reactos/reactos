@@ -495,9 +495,7 @@ co_IntCallHookProc(INT HookId,
 
    _SEH2_TRY
    {
-      ProbeForRead((PVOID)*(LRESULT*)ResultPointer,
-                                   sizeof(LRESULT),
-                                                 1);
+      ProbeForRead(ResultPointer, sizeof(LRESULT), 1);
       /* Simulate old behaviour: copy into our local buffer */
       Result = *(LRESULT*)ResultPointer;
    }

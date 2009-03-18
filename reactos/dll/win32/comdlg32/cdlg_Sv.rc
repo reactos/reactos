@@ -1,5 +1,6 @@
 /*
  * Copyright 1998 Karl Backström
+ * Copyright 2009 Anders Jonsson
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -97,18 +98,18 @@ FONT 8, "MS Shell Dlg"
  GROUPBOX "Skrivare", 1072, 6, 10, 180, 65, BS_GROUPBOX
  RADIOBUTTON "&Standardskrivare", 1056, 16, 20, 80, 12
  LTEXT "[ingen]", 1088, 35, 35, 120, 9
- RADIOBUTTON "Specifierad &skrivare", 1057, 16, 50, 80, 12
+ RADIOBUTTON "S&pecificerad skrivare", 1057, 16, 50, 80, 12
  COMBOBOX 1136, 35, 65, 149, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
  DEFPUSHBUTTON "Ok", IDOK, 206, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "Avbryt", IDCANCEL, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "&Inställningar", 1024, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
  GROUPBOX "Orientering", 1073, 6, 85, 100, 50, BS_GROUPBOX
- RADIOBUTTON "&Porträtt", 1058, 50, 100, 40, 12
- RADIOBUTTON "&Landskap", 1059, 50, 115, 40, 12
+ RADIOBUTTON "S&tående", 1058, 50, 100, 40, 12
+ RADIOBUTTON "&Liggande", 1059, 50, 115, 40, 12
  ICON "LANDSCAP", 1097, 10, 95, 32, 32
  ICON "PORTRAIT", 1098, 10, 95, 32, 32
  GROUPBOX "Paper", 1074, 120, 85, 180, 50, BS_GROUPBOX
- LTEXT "&Storlek", 1089, 130, 95, 30, 9
+ LTEXT "St&orlek", 1089, 130, 95, 30, 9
  LTEXT "&Källa", 1090, 130, 110, 30, 9
  COMBOBOX 1137, 155, 95, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
  COMBOBOX 1138, 155, 110, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
@@ -139,7 +140,7 @@ FONT 8, "MS Shell Dlg"
 		    CBS_AUTOHSCROLL |  WS_BORDER | WS_VSCROLL | WS_TABSTOP
     GROUPBOX        "Test",grp2,98,72,120,36,WS_GROUP
     CTEXT           "AaBbYyZz",stc5,103,80,109,24,SS_NOPREFIX | NOT WS_VISIBLE
-    LTEXT           "Scr&ipt (translate):",stc7 ,98,114,80,9
+    LTEXT           "Scr&ipt:",stc7 ,98,114,80,9
     COMBOBOX        cmb5,98,124,120,90,CBS_DROPDOWNLIST | CBS_HASSTRINGS |
 		    CBS_AUTOHSCROLL |   WS_VSCROLL | WS_TABSTOP
 }
@@ -151,7 +152,7 @@ CAPTION "Färg"
 FONT 8, "MS Shell Dlg"
 {
  LTEXT "&Grundläggande färger:",   1088, 4,    4,  140, 10
- LTEXT "&Egendefinerade färger:",  1089, 4,   106, 140, 10
+ LTEXT "&Egendefinierade färger:",  1089, 4,   106, 140, 10
  LTEXT "Enfärgat",  1090, 150, 151,  48, 10
  LTEXT   "&Röd:", 726 /*1094*/,249,126,24,10
  EDITTEXT 706, 275,124,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
@@ -173,8 +174,8 @@ FONT 8, "MS Shell Dlg"
  DEFPUSHBUTTON "Ok",  IDOK,  4, 166, 44, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "Avbryt", IDCANCEL, 52, 166, 44, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "Hjälp", 1038,100,166, 44, 14
- PUSHBUTTON "&Lägg till egendefinerad färg",    712/*1024*/, 152, 166, 142, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&Defingnera egen färg >>", 719/*1025*/,   4, 150, 142, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Lägg till egendefinierad färg",    712/*1024*/, 152, 166, 142, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Definiera egen färg >>", 719/*1025*/,   4, 150, 142, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON  "&i",713,300,200,4,14   /* just a dummy:  'i' is  like  &i  in "sol&id"  */
 }
 
@@ -231,13 +232,13 @@ FONT 8, "MS Shell Dlg"
  LTEXT           "&Namn:",         stc6,  16, 20,  36,8
  COMBOBOX                          cmb4,  52, 18,  152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
  LTEXT           "Status:",        stc8,  16, 36,  36,10, SS_NOPREFIX
- LTEXT           "Dum status",     stc12, 52, 36, 224,10, SS_NOPREFIX |SS_LEFTNOWORDWRAP
+ LTEXT           "Dummy-status",     stc12, 52, 36, 224,10, SS_NOPREFIX |SS_LEFTNOWORDWRAP
  LTEXT           "Typ:",           stc7,  16, 48,  36,10, SS_NOPREFIX
- LTEXT           "Dum typ",        stc11, 52, 48, 224,10, SS_NOPREFIX| SS_LEFTNOWORDWRAP
+ LTEXT           "Dummy-typ",        stc11, 52, 48, 224,10, SS_NOPREFIX| SS_LEFTNOWORDWRAP
  LTEXT           "Plats:",         stc10, 16, 60,  36,10, SS_NOPREFIX
- LTEXT           "Dum plats",      stc14, 52, 60, 224,10, SS_NOPREFIX| SS_LEFTNOWORDWRAP
+ LTEXT           "Dummy-plats",      stc14, 52, 60, 224,10, SS_NOPREFIX| SS_LEFTNOWORDWRAP
  LTEXT           "Kommentar:",     stc9,  16, 72,  36,10, SS_NOPREFIX
- LTEXT           "Dum kommentar",  stc13, 52, 72, 152,10, SS_NOPREFIX| SS_LEFTNOWORDWRAP
+ LTEXT           "Dummy-kommentar",  stc13, 52, 72, 152,10, SS_NOPREFIX| SS_LEFTNOWORDWRAP
 
  GROUPBOX        "Kopior",         grp2, 160, 92, 120,64, WS_GROUP
  LTEXT           "Antal k&opior:", stc5,168,108,68,8
@@ -270,13 +271,13 @@ BEGIN
  LTEXT           "&Namn:",         stc6,  16, 20,  36,8
  COMBOBOX                          cmb1,  52, 18,152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
  LTEXT           "Status:",        stc8,  16, 36,  36,10, SS_NOPREFIX
- LTEXT           "Dum State",      stc12, 52, 36, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+ LTEXT           "Dummy-status",      stc12, 52, 36, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
  LTEXT           "Typ:",           stc7,  16, 48,  36,10, SS_NOPREFIX
- LTEXT           "Dum typ",        stc11, 52, 48, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+ LTEXT           "Dummy-typ",        stc11, 52, 48, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
  LTEXT           "Plats:",         stc10, 16, 60,  36,10, SS_NOPREFIX
- LTEXT           "Dum plats",      stc14, 52, 60, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+ LTEXT           "Dummy-plats",      stc14, 52, 60, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
  LTEXT           "Kommentar:",     stc9,  16, 72,  36,10, SS_NOPREFIX
- LTEXT           "Dum kommnetar",  stc13, 52, 72, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+ LTEXT           "Dummy-kommentar",  stc13, 52, 72, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
  GROUPBOX        "Papper",         grp2,   8, 92, 164,56, WS_GROUP
  LTEXT           "St&orlek:",      stc2,  16,108,  36, 8
  COMBOBOX                          cmb2,  52,106, 112,112,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
@@ -306,13 +307,13 @@ BEGIN
   AUTORADIOBUTTON "&Liggande", rad2, 16, 190, 52, 12, BS_AUTORADIOBUTTON
   GROUPBOX "Marginaler", grp4, 80, 156, 152, 56, BS_GROUPBOX
   LTEXT "&Vänster:", stc15, 88, 172, 21, 8
-  EDITTEXT edt4, 111, 170, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER|ES_NUMBER
+  EDITTEXT edt4, 111, 170, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
   LTEXT "&Höger:", stc16, 159, 172, 27, 8
-  EDITTEXT edt6, 187, 170, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER|ES_NUMBER
+  EDITTEXT edt6, 187, 170, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
   LTEXT "&Överkant:", stc17, 88, 192, 21, 8
-  EDITTEXT edt5, 111, 190, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER|ES_NUMBER
+  EDITTEXT edt5, 111, 190, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
   LTEXT "&Nederkant:", stc18, 159, 192, 23, 8
-  EDITTEXT edt7, 187, 190, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER|ES_NUMBER
+  EDITTEXT edt7, 187, 190, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
   DEFPUSHBUTTON "Ok", IDOK, 71, 220, 50, 14, BS_PUSHBUTTON
   PUSHBUTTON "Avbryt", IDCANCEL, 126, 220, 50, 14
   PUSHBUTTON "&Skrivare...", psh3, 184, 220, 48, 14
@@ -344,10 +345,10 @@ FONT 8, "MS Shell Dlg"
 
 STRINGTABLE DISCARDABLE
 {
- IDS_ABOUTBOX            "&Om FolderPicker Test"
+ IDS_ABOUTBOX            "&Om FolderPicker-test"
  IDS_DOCUMENTFOLDERS     "Dokumentmappar"
- IDS_PERSONAL            "Mina Documents"
- IDS_FAVORITES           "Mina Favorites"
+ IDS_PERSONAL            "Mina Dokument"
+ IDS_FAVORITES           "Mina Favoriter"
  IDS_PATH                "Systemsökväg"
  IDS_DESKTOP             "Skrivbord"
  IDS_FONTS               "Typsnitt"
@@ -360,7 +361,7 @@ STRINGTABLE DISCARDABLE
  IDS_LOCALHARDRIVES      "Lokala hårddiskar"
  IDS_FILENOTFOUND        "Kunde inte hitta filen"
  IDS_VERIFYFILE          "Vad god verifiera så korrekt filnamn är angivet"
- IDS_CREATEFILE          "Filen finns inte\nVill du skapa fil"
+ IDS_CREATEFILE          "Filen finns inte\nVill du skapa fil?"
  IDS_OVERWRITEFILE       "Filen finns redan.\nVill du ersätta den?"
  IDS_INVALID_FILENAME_TITLE "Illegalt tecken i sökväg"
  IDS_INVALID_FILENAME    "Ett filnamn kan inte innehålla någon av följande tecken:\n                                               / : < > |"
@@ -386,7 +387,7 @@ STRINGTABLE DISCARDABLE
 Var god skriv in ett värde mellan %d och %d."
  PD32_FROM_NOT_ABOVE_TO                "'från'-fältet kan inte överskrida 'till'-fältet"
  PD32_MARGINS_OVERLAP                  "Marginalerna överlappar eller är utanför \
-pappersgränserna.\nVar god skriv in marginallerna igen."
+pappersgränserna.\nVar god skriv in marginalerna igen."
  PD32_NR_OF_COPIES_EMPTY               "Fältet 'Antal kopior' kan inte vara tomt."
  PD32_TOO_LARGE_COPIES                 "Din skrivare saknar stöd för så många kopior som du angav. Vad god skriv in ett värde mellan 1 och %d."
  PD32_PRINT_ERROR                      "Ett skrivarfel inträffade."
@@ -395,15 +396,15 @@ pappersgränserna.\nVar god skriv in marginallerna igen."
  PD32_OUT_OF_MEMORY                    "Slut på minne."
  PD32_GENERIC_ERROR                    "Ett fel uppstod."
  PD32_DRIVER_UNKNOWN                   "Okänd skrivardrivrutin."
- PD32_NO_DEVICES                       "Before you can perform printer-related tasks \
-such as page setup or printing a document, you need to install a printer. \
-Please install one and retry."
+ PD32_NO_DEVICES                       "En skrivare måste installeras innan \
+aktiviteter som utskrift eller sidinställningar kan utföras. \
+Installera en skrivare och försök på nytt."
 
  PD32_DEFAULT_PRINTER                  "Standardskrivare; "
  PD32_NR_OF_DOCUMENTS_IN_QUEUE         "Det finns %d dokument i kön"
  PD32_MARGINS_IN_INCHES                "Marginaler [tum]"
- PD32_MARGINS_IN_MILIMETERS            "Marginaler [millimeter]"
- PD32_MILIMETERS                       "millimeter"
+ PD32_MARGINS_IN_MILLIMETERS           "Marginaler [millimeter]"
+ PD32_MILLIMETERS                      "millimeter"
 
  PD32_PRINTER_STATUS_READY             "Redo"
  PD32_PRINTER_STATUS_PAUSED            "Stannad; "
@@ -411,9 +412,9 @@ Please install one and retry."
  PD32_PRINTER_STATUS_PENDING_DELETION  "Väntande borttagning; "
  PD32_PRINTER_STATUS_PAPER_JAM         "Papperskrångel; "
  PD32_PRINTER_STATUS_PAPER_OUT         "Slut på papper; "
- PD32_PRINTER_STATUS_MANUAL_FEED       "Fyll på papper manuellet; "
+ PD32_PRINTER_STATUS_MANUAL_FEED       "Fyll på papper manuellt; "
  PD32_PRINTER_STATUS_PAPER_PROBLEM     "Pappersproblem; "
- PD32_PRINTER_STATUS_OFFLINE           "Skriverare än avstängd; "
+ PD32_PRINTER_STATUS_OFFLINE           "Skrivaren är avstängd; "
  PD32_PRINTER_STATUS_IO_ACTIVE         "I/O Aktiv; "
  PD32_PRINTER_STATUS_BUSY              "Upptagen; "
  PD32_PRINTER_STATUS_PRINTING          "Skriver ut; "
@@ -424,11 +425,49 @@ Please install one and retry."
  PD32_PRINTER_STATUS_INITIALIZING      "Initierar; "
  PD32_PRINTER_STATUS_WARMING_UP        "Värmer upp; "
  PD32_PRINTER_STATUS_TONER_LOW         "Toner snart slut; "
- PD32_PRINTER_STATUS_NO_TONER          "Inga toner; "
- PD32_PRINTER_STATUS_PAGE_PUNT         "Sidopunt; "
+ PD32_PRINTER_STATUS_NO_TONER          "Ingen toner; "
+ PD32_PRINTER_STATUS_PAGE_PUNT         "Page punt; "
  PD32_PRINTER_STATUS_USER_INTERVENTION "Avbruten av användaren; "
  PD32_PRINTER_STATUS_OUT_OF_MEMORY     "Slut på minne; "
  PD32_PRINTER_STATUS_DOOR_OPEN         "Skrivardörren är öppen; "
  PD32_PRINTER_STATUS_SERVER_UNKNOWN    "Skrivarserver okänd; "
  PD32_PRINTER_STATUS_POWER_SAVE        "Felsäkert läge; "
+}
+
+STRINGTABLE DISCARDABLE /* Font styles */
+{
+    IDS_FONT_REGULAR       "Standard"
+    IDS_FONT_BOLD          "Fet"
+    IDS_FONT_ITALIC        "Kursiv"
+    IDS_FONT_BOLD_ITALIC   "Fet kursiv"
+}
+
+STRINGTABLE DISCARDABLE /* Color names */
+{
+    IDS_COLOR_BLACK     "Svart"
+    IDS_COLOR_MAROON    "Rödbrun"
+    IDS_COLOR_GREEN     "Grön"
+    IDS_COLOR_OLIVE     "Oliv"
+    IDS_COLOR_NAVY      "Navy"
+    IDS_COLOR_PURPLE    "Lila"
+    IDS_COLOR_TEAL      "Teal"
+    IDS_COLOR_GRAY      "Grå"
+    IDS_COLOR_SILVER    "Silver"
+    IDS_COLOR_RED       "Röd"
+    IDS_COLOR_LIME      "Lime"
+    IDS_COLOR_YELLOW    "Gul"
+    IDS_COLOR_BLUE      "Blå"
+    IDS_COLOR_FUCHSIA   "Fuchsia"
+    IDS_COLOR_AQUA      "Aqua"
+    IDS_COLOR_WHITE     "Vit"
+}
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_FONT_SIZE   "Välj en teckenstorlek mellan %d och %d punkter."
+    IDS_SAVE_BUTTON "&Spara"
+    IDS_SAVE_IN     "Spara &i:"
+    IDS_SAVE        "Spara"
+    IDS_SAVE_AS     "Spara som"
+    IDS_OPEN_FILE   "Öppna fil"
 }

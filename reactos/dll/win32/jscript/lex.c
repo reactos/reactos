@@ -101,7 +101,7 @@ static int lex_error(parser_ctx_t *ctx, HRESULT hres)
     return -1;
 }
 
-static int check_keyword(parser_ctx_t *ctx, const WCHAR *word)
+static int check_keyword(parser_ctx_t *ctx, const WCHAR *word, const WCHAR **lval)
 {
     const WCHAR *p1 = ctx->ptr;
     const WCHAR *p2 = word;
@@ -116,6 +116,7 @@ static int check_keyword(parser_ctx_t *ctx, const WCHAR *word)
     if(*p2 || (p1 < ctx->end && isalnumW(*p1)))
         return 1;
 
+    *lval = ctx->ptr;
     ctx->ptr = p1;
     return 0;
 }
@@ -145,14 +146,14 @@ static int hex_to_int(WCHAR c)
     return -1;
 }
 
-static int check_keywords(parser_ctx_t *ctx)
+static int check_keywords(parser_ctx_t *ctx, const WCHAR **lval)
 {
     int min = 0, max = sizeof(keywords)/sizeof(keywords[0])-1, r, i;
 
     while(min <= max) {
         i = (min+max)/2;
 
-        r = check_keyword(ctx, keywords[i].word);
+        r = check_keyword(ctx, keywords[i].word, lval);
         if(!r)
             return keywords[i].token;
 
@@ -242,13 +243,11 @@ static BOOL unescape(WCHAR *str)
         case 'r':
             c = '\r';
             break;
-        case '0':
-            break;
         case 'x':
             i = hex_to_int(*++p);
             if(i == -1)
                 return FALSE;
-            c = i << 16;
+            c = i << 4;
 
             i = hex_to_int(*++p);
             if(i == -1)
@@ -259,17 +258,17 @@ static BOOL unescape(WCHAR *str)
             i = hex_to_int(*++p);
             if(i == -1)
                 return FALSE;
-            c = i << 24;
+            c = i << 12;
 
             i = hex_to_int(*++p);
             if(i == -1)
                 return FALSE;
-            c += i << 16;
+            c += i << 8;
 
             i = hex_to_int(*++p);
             if(i == -1)
                 return FALSE;
-            c += 1 << 8;
+            c += 1 << 4;
 
             i = hex_to_int(*++p);
             if(i == -1)
@@ -277,6 +276,14 @@ static BOOL unescape(WCHAR *str)
             c += i;
             break;
         default:
+            if(isdigitW(*p)) {
+                c = *p++ - '0';
+                while(isdigitW(*p))
+                    c = c*10 + (*p++ - '0');
+                *pd++ = c;
+                continue;
+            }
+
             c = *p;
         }
 
@@ -387,7 +394,7 @@ static int parse_double_literal(parser_ctx_t *ctx, LONG int_part, literal_t **li
             e = e*10 + *ctx->ptr++ - '0';
         e *= sign;
 
-        d = pow(d, e);
+        d *= pow(10, e);
     }
 
     *literal = parser_alloc(ctx, sizeof(literal_t));
@@ -468,11 +475,11 @@ int parser_lex(void *lval, parser_ctx_t *ctx)
     }while(skip_comment(ctx));
 
     if(isalphaW(*ctx->ptr)) {
-        ret = check_keywords(ctx);
+        ret = check_keywords(ctx, lval);
         if(ret)
             return ret;
 
-        return parse_identifier(ctx, (const WCHAR**)lval);
+        return parse_identifier(ctx, lval);
     }
 
     if(isdigitW(*ctx->ptr))
@@ -480,7 +487,6 @@ int parser_lex(void *lval, parser_ctx_t *ctx)
 
     switch(*ctx->ptr) {
     case '{':
-    case '}':
     case '(':
     case ')':
     case '[':
@@ -491,6 +497,10 @@ int parser_lex(void *lval, parser_ctx_t *ctx)
     case '?':
     case ':':
         return *ctx->ptr++;
+
+    case '}':
+        *(const WCHAR**)lval = ctx->ptr++;
+        return '}';
 
     case '.':
         if(++ctx->ptr < ctx->end && isdigitW(*ctx->ptr))
@@ -674,7 +684,7 @@ int parser_lex(void *lval, parser_ctx_t *ctx)
 
     case '\"':
     case '\'':
-        return parse_string_literal(ctx, (const WCHAR**)lval, *ctx->ptr);
+        return parse_string_literal(ctx, lval, *ctx->ptr);
 
     case '_':
     case '$':
@@ -705,8 +715,10 @@ literal_t *parse_regexp(parser_ctx_t *ctx)
     TRACE("\n");
 
     re = ctx->ptr;
-    while(ctx->ptr < ctx->end && (*ctx->ptr != '/' || *(ctx->ptr-1) == '\\'))
-        ctx->ptr++;
+    while(ctx->ptr < ctx->end && *ctx->ptr != '/') {
+        if(*ctx->ptr++ == '\\' && ctx->ptr < ctx->end)
+            ctx->ptr++;
+    }
 
     if(ctx->ptr == ctx->end) {
         WARN("unexpected end of file\n");

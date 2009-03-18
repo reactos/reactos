@@ -1,0 +1,483 @@
+/*
+ * shdoclc (Simplified and Traditional Chinese Resources)
+ *
+ * Copyright 2008 Hongbo Ni <hongbo.at.njstar.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+
+/* Chinese text is encoded in UTF-8 */
+#pragma code_page(65001)
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_MESSAGE_BOX_TITLE, "Wine Internet Explorer"
+}
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_PRINT_HEADER_TEMPLATE "&w&bPage &p" /* FIXME: should be "&w&bPage &p of &P" */
+    IDS_PRINT_FOOTER_TEMPLATE "&u&b&d"
+}
+
+IDR_BROWSE_CONTEXT_MENU MENU
+{
+    POPUP "默认"
+    {
+        MENUITEM "向后(&B)", IDM_GOBACKWARD
+        MENUITEM "向前(&O)", IDM_GOFORWARD
+        MENUITEM SEPARATOR
+        MENUITEM "将背景存为(&S)...", IDM_SAVEBACKGROUND
+        MENUITEM "设为背景(&G)", IDM_SETWALLPAPER
+        MENUITEM "复制背景(&C)", IDM_COPYBACKGROUND
+        MENUITEM "设置到桌面(&D)", IDM_SETDESKTOPITEM
+        MENUITEM SEPARATOR
+        MENUITEM "全选(&A)", IDM_SELECTALL
+        MENUITEM "粘贴(&P)", IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "创建捷径(&T)", IDM_CREATESHORTCUT
+        MENUITEM "添加到我的最爱(&F)", IDM_ADDFAVORITES
+        MENUITEM "查看源代码(&V)", IDM_VIEWSOURCE
+        MENUITEM SEPARATOR
+        MENUITEM "语言编码(&E)", IDM_LANGUAGE
+        MENUITEM SEPARATOR
+        MENUITEM "打印(&I)", IDM_PRINT
+        MENUITEM "刷新(&R)", _IDM_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM SEPARATOR
+        MENUITEM "属性(&P)", IDM_PROPERTIES
+    }
+
+    POPUP "图片"
+    {
+        MENUITEM "打开链接(&O)", IDM_FOLLOWLINKC
+        MENUITEM "在新视窗打开链接(&N)", IDM_FOLLOWLINKN
+        MENUITEM "将目标存为(&A)", IDM_SAVETARGET
+        MENUITEM "打印目标(&P)", IDM_PRINTTARGET
+        MENUITEM SEPARATOR
+        MENUITEM "显示图片(&S)", IDM_SHOWPICTURE
+        MENUITEM "将图片存为(&A)", IDM_SAVEPICTURE
+        MENUITEM "电邮图片(&E)", IDM_MP_EMAILPICTURE
+        MENUITEM "打印图片(&I)...", IDM_MP_PRINTPICTURE
+        MENUITEM "到我的图片(&G)", IDM_MP_MYPICS
+        MENUITEM "设为背景(&G)", IDM_SETWALLPAPER
+        MENUITEM "设为桌面项目(&D)...", IDM_SETDESKTOPITEM
+        MENUITEM SEPARATOR
+        MENUITEM "剪切(&T)", IDM_CUT
+        MENUITEM "复制(&C)", IDM_COPY
+        MENUITEM "复制捷径(&T)", IDM_COPYSHORTCUT
+        MENUITEM "粘贴(&P)", IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "添加到我的最爱(&F)", IDM_ADDFAVORITES
+        MENUITEM SEPARATOR
+        MENUITEM SEPARATOR
+        MENUITEM "属性(&R)", IDM_PROPERTIES
+    }
+
+    POPUP "控制"
+    {
+        MENUITEM "撤销(&U)", IDM_UNDO
+        MENUITEM SEPARATOR
+        MENUITEM "剪切(&T)", IDM_CUT
+        MENUITEM "复制(&C)", IDM_COPY
+        MENUITEM "粘贴(&P)", IDM_PASTE
+        MENUITEM "删除(&D", IDM_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM SEPARATOR
+        MENUITEM "全选(&A)", IDM_SELECTALL
+    }
+
+    POPUP "表格"
+    {
+        POPUP "选择(&S)"
+        {
+            MENUITEM "格(&C)", IDM_CELLSELECT
+            MENUITEM "行(&R)", IDM_ROWSELECT
+            MENUITEM "列(&O)", IDM_COLUMNSELECT
+            MENUITEM "表格(&T)", IDM_TABLESELECT
+        }
+        MENUITEM SEPARATOR
+        MENUITEM SEPARATOR
+        MENUITEM "格属性(&C)", IDM_CELLPROPERTIES
+        MENUITEM "表格属性(&T)", IDM_TABLEPROPERTIES
+    }
+
+    POPUP "1DSite Select"
+    {
+        MENUITEM "剪切(&T)", IDM_CUT
+        MENUITEM "复制(&C)", IDM_COPY
+        MENUITEM "粘贴", IDM_PASTE
+        MENUITEM "全选(&A)", IDM_SELECTALL
+        MENUITEM "打印(&P)", IDM_PRINT
+        MENUITEM SEPARATOR
+    }
+
+    POPUP "Anchor"
+    {
+        MENUITEM "打开(&O)", IDM_FOLLOWLINKC
+        MENUITEM "打开新窗口(&N)", IDM_FOLLOWLINKN
+        MENUITEM "将目标存为(&A)...", IDM_SAVETARGET
+        MENUITEM "打印目标(&P)", IDM_PRINTTARGET
+        MENUITEM SEPARATOR
+        MENUITEM "剪下", IDM_CUT
+        MENUITEM "复制(&C)", IDM_COPY
+        MENUITEM "复制捷径(&T)", IDM_COPYSHORTCUT
+        MENUITEM "粘贴(&P)", IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "添加到我的最爱(&F)", IDM_ADDFAVORITES
+        MENUITEM SEPARATOR
+        MENUITEM SEPARATOR
+        MENUITEM "属性(&R)", IDM_PROPERTIES
+    }
+
+    POPUP "Context Unknown"
+    {
+        MENUITEM SEPARATOR
+    }
+
+    POPUP "DYNSRC 图片"
+    {
+        MENUITEM "打开链接(&O)", IDM_FOLLOWLINKC
+        MENUITEM "在新窗口打开链接(&N)", IDM_FOLLOWLINKN
+        MENUITEM "将目标存为(&A)...", IDM_SAVETARGET
+        MENUITEM "打印目标(&P)", IDM_PRINTTARGET
+        MENUITEM SEPARATOR
+        MENUITEM "显示图片(&S)", IDM_SHOWPICTURE
+        MENUITEM "将视频存为(&V)...", IDM_SAVEPICTURE
+        MENUITEM "设为背景(&G)", IDM_SETWALLPAPER
+        MENUITEM "设为桌面项目(&D)...", IDM_SETDESKTOPITEM
+        MENUITEM SEPARATOR
+        MENUITEM "剪切(&T)", IDM_CUT
+        MENUITEM "复制(&C)", IDM_COPY
+        MENUITEM "复制捷径(&T)", IDM_COPYSHORTCUT
+        MENUITEM "粘贴(&P)", IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "添加到我的最爱(&F)", IDM_ADDFAVORITES
+        MENUITEM SEPARATOR
+        MENUITEM SEPARATOR
+        MENUITEM "播放", IDM_DYNSRCPLAY
+        MENUITEM "停止", IDM_DYNSRCSTOP
+        MENUITEM "属性(&R)", IDM_PROPERTIES
+    }
+
+    POPUP "ART 图片"
+    {
+        MENUITEM "打开链接(&O)", IDM_FOLLOWLINKC
+        MENUITEM "在新窗口打开链接(&N)", IDM_FOLLOWLINKN
+        MENUITEM "将目标存为(&A)", IDM_SAVETARGET
+        MENUITEM "打印目标(&P)", IDM_PRINTTARGET
+        MENUITEM SEPARATOR
+        MENUITEM "显示图片(&S)", IDM_SHOWPICTURE
+        MENUITEM "将图片存为(&A)", IDM_SAVEPICTURE
+        MENUITEM "设为背景(&G)", IDM_SETWALLPAPER
+        MENUITEM "设为桌面项目(&D)...", IDM_SETDESKTOPITEM
+        MENUITEM SEPARATOR
+        MENUITEM "剪切(&T)", IDM_CUT
+        MENUITEM "复制(&C)", IDM_COPY
+        MENUITEM "复制捷径(&T)", IDM_COPYSHORTCUT
+        MENUITEM "粘贴(&P)", IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "添加到我的最爱(&F)", IDM_ADDFAVORITES
+        MENUITEM SEPARATOR
+        MENUITEM "播放", IDM_IMGARTPLAY
+        MENUITEM "停止", IDM_IMGARTSTOP
+        MENUITEM "倒回", IDM_IMGARTREWIND
+        MENUITEM SEPARATOR
+        MENUITEM SEPARATOR
+        MENUITEM "属性(&R)", IDM_PROPERTIES
+    }
+
+    POPUP "调试"
+    {
+        MENUITEM "跟踪标记", IDM_TRACETAGS
+        MENUITEM "资源失败", IDM_RESOURCEFAILURES
+        MENUITEM "输出跟踪信息", IDM_DUMPTRACKINGINFO
+        MENUITEM "调试停点", IDM_DEBUGBREAK
+        MENUITEM "调试视图", IDM_DEBUGVIEW
+        MENUITEM "输出 Tree", IDM_DUMPTREE
+        MENUITEM "输出 Lines", IDM_DUMPLINES
+        MENUITEM "输出 DisplayTree", IDM_DUMPDISPLAYTREE
+        MENUITEM "输出 FormatCaches", IDM_DUMPFORMATCACHES
+        MENUITEM "输出 LayoutRects", IDM_DUMPLAYOUTRECTS
+        MENUITEM "内存监视器", IDM_MEMORYMONITOR
+        MENUITEM "性能表", IDM_PERFORMANCEMETERS
+        MENUITEM "保存 HTML", IDM_SAVEHTML
+        MENUITEM SEPARATOR
+        MENUITEM "浏览(&B)", IDM_BROWSEMODE
+        MENUITEM "编辑(&E)", IDM_EDITMODE
+    }
+
+    POPUP "垂直滚动条"
+    {
+        MENUITEM "滚动这里", IDM_SCROLL_HERE
+        MENUITEM SEPARATOR
+        MENUITEM "顶", IDM_SCROLL_TOP
+        MENUITEM "低", IDM_SCROLL_BOTTOM
+        MENUITEM SEPARATOR
+        MENUITEM "向上翻页", IDM_SCROLL_PAGEUP
+        MENUITEM "向下翻页", IDM_SCROLL_PAGEDOWN
+        MENUITEM SEPARATOR
+        MENUITEM "向上滚动", IDM_SCROLL_UP
+        MENUITEM "向下滚动", IDM_SCROLL_DOWN
+    }
+
+    POPUP "水平滚动条"
+    {
+        MENUITEM "滚动这里", IDM_SCROLL_HERE
+        MENUITEM SEPARATOR
+        MENUITEM "左边缘", IDM_SCROLL_LEFTEDGE
+        MENUITEM "右边缘", IDM_SCROLL_RIGHTEDGE
+        MENUITEM SEPARATOR
+        MENUITEM "向左翻页", IDM_SCROLL_PAGELEFT
+        MENUITEM "向右翻页", IDM_SCROLL_PAGERIGHT
+        MENUITEM SEPARATOR
+        MENUITEM "向左滚动", IDM_SCROLL_LEFT
+        MENUITEM "向右滚动", IDM_SCROLL_RIGHT
+    }
+}
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_MESSAGE_BOX_TITLE, "Wine Internet Explorer"
+}
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_PRINT_HEADER_TEMPLATE "&w&bPage &p" /* FIXME: should be "&w&bPage &p of &P" */
+    IDS_PRINT_FOOTER_TEMPLATE "&u&b&d"
+}
+
+IDR_BROWSE_CONTEXT_MENU MENU
+{
+    POPUP "默認"
+    {
+        MENUITEM "向後(&B)", IDM_GOBACKWARD
+        MENUITEM "向前(&O)", IDM_GOFORWARD
+        MENUITEM SEPARATOR
+        MENUITEM "將背景存為(&S)...", IDM_SAVEBACKGROUND
+        MENUITEM "設為背景(&G)", IDM_SETWALLPAPER
+        MENUITEM "複製背景(&C)", IDM_COPYBACKGROUND
+        MENUITEM "設定到桌面(&D)", IDM_SETDESKTOPITEM
+        MENUITEM SEPARATOR
+        MENUITEM "全選(&A)", IDM_SELECTALL
+        MENUITEM "貼上(&P)", IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "創建捷徑(&T)", IDM_CREATESHORTCUT
+        MENUITEM "添加到我的最愛(&F)", IDM_ADDFAVORITES
+        MENUITEM "查看源代碼(&V)", IDM_VIEWSOURCE
+        MENUITEM SEPARATOR
+        MENUITEM "語言編碼(&E)", IDM_LANGUAGE
+        MENUITEM SEPARATOR
+        MENUITEM "列印(&I)", IDM_PRINT
+        MENUITEM "刷新(&R)", _IDM_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM SEPARATOR
+        MENUITEM "屬性(&P)", IDM_PROPERTIES
+    }
+
+    POPUP "圖片"
+    {
+        MENUITEM "開啟鏈接(&O)", IDM_FOLLOWLINKC
+        MENUITEM "在新視窗開啟鏈接(&N)", IDM_FOLLOWLINKN
+        MENUITEM "將目標存為(&A)", IDM_SAVETARGET
+        MENUITEM "列印目標(&P)", IDM_PRINTTARGET
+        MENUITEM SEPARATOR
+        MENUITEM "顯示圖片(&S)", IDM_SHOWPICTURE
+        MENUITEM "將圖片存為(&A)", IDM_SAVEPICTURE
+        MENUITEM "電郵圖片(&E)", IDM_MP_EMAILPICTURE
+        MENUITEM "列印圖片(&I)...", IDM_MP_PRINTPICTURE
+        MENUITEM "到我的圖片(&G)", IDM_MP_MYPICS
+        MENUITEM "設為背景(&G)", IDM_SETWALLPAPER
+        MENUITEM "設為桌面項目(&D)...", IDM_SETDESKTOPITEM
+        MENUITEM SEPARATOR
+        MENUITEM "剪下(&T)", IDM_CUT
+        MENUITEM "複製(&C)", IDM_COPY
+        MENUITEM "複製捷徑(&T)", IDM_COPYSHORTCUT
+        MENUITEM "貼上(&P)", IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "添加到我的最愛(&F)", IDM_ADDFAVORITES
+        MENUITEM SEPARATOR
+        MENUITEM SEPARATOR
+        MENUITEM "屬性(&R)", IDM_PROPERTIES
+    }
+
+    POPUP "控制"
+    {
+        MENUITEM "復原(&U)", IDM_UNDO
+        MENUITEM SEPARATOR
+        MENUITEM "剪下(&T)", IDM_CUT
+        MENUITEM "複製(&C)", IDM_COPY
+        MENUITEM "貼上(&P)", IDM_PASTE
+        MENUITEM "刪除(&D", IDM_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM SEPARATOR
+        MENUITEM "全選(&A)", IDM_SELECTALL
+    }
+
+    POPUP "表格"
+    {
+        POPUP "選擇(&S)"
+        {
+            MENUITEM "格(&C)", IDM_CELLSELECT
+            MENUITEM "行(&R)", IDM_ROWSELECT
+            MENUITEM "列(&O)", IDM_COLUMNSELECT
+            MENUITEM "表格(&T)", IDM_TABLESELECT
+        }
+        MENUITEM SEPARATOR
+        MENUITEM SEPARATOR
+        MENUITEM "格屬性(&C)", IDM_CELLPROPERTIES
+        MENUITEM "表格屬性(&T)", IDM_TABLEPROPERTIES
+    }
+
+    POPUP "1DSite Select"
+    {
+        MENUITEM "剪下(&T)", IDM_CUT
+        MENUITEM "複製(&C)", IDM_COPY
+        MENUITEM "貼上", IDM_PASTE
+        MENUITEM "全選(&A)", IDM_SELECTALL
+        MENUITEM "列印(&P)", IDM_PRINT
+        MENUITEM SEPARATOR
+    }
+
+    POPUP "Anchor"
+    {
+        MENUITEM "開啟(&O)", IDM_FOLLOWLINKC
+        MENUITEM "開啟新窗口(&N)", IDM_FOLLOWLINKN
+        MENUITEM "將目標存為(&A)...", IDM_SAVETARGET
+        MENUITEM "列印目標(&P)", IDM_PRINTTARGET
+        MENUITEM SEPARATOR
+        MENUITEM "剪下", IDM_CUT
+        MENUITEM "複製(&C)", IDM_COPY
+        MENUITEM "複製捷徑(&T)", IDM_COPYSHORTCUT
+        MENUITEM "貼上(&P)", IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "添加到我的最愛(&F)", IDM_ADDFAVORITES
+        MENUITEM SEPARATOR
+        MENUITEM SEPARATOR
+        MENUITEM "屬性(&R)", IDM_PROPERTIES
+    }
+
+    POPUP "Context Unknown"
+    {
+        MENUITEM SEPARATOR
+    }
+
+    POPUP "DYNSRC 圖片"
+    {
+        MENUITEM "開啟鏈接(&O)", IDM_FOLLOWLINKC
+        MENUITEM "在新窗口開啟鏈接(&N)", IDM_FOLLOWLINKN
+        MENUITEM "將目標存為(&A)...", IDM_SAVETARGET
+        MENUITEM "列印目標(&P)", IDM_PRINTTARGET
+        MENUITEM SEPARATOR
+        MENUITEM "顯示圖片(&S)", IDM_SHOWPICTURE
+        MENUITEM "將視頻存為(&V)...", IDM_SAVEPICTURE
+        MENUITEM "設為背景(&G)", IDM_SETWALLPAPER
+        MENUITEM "設為桌面項目(&D)...", IDM_SETDESKTOPITEM
+        MENUITEM SEPARATOR
+        MENUITEM "剪下(&T)", IDM_CUT
+        MENUITEM "複製(&C)", IDM_COPY
+        MENUITEM "複製捷徑(&T)", IDM_COPYSHORTCUT
+        MENUITEM "貼上(&P)", IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "添加到我的最愛(&F)", IDM_ADDFAVORITES
+        MENUITEM SEPARATOR
+        MENUITEM SEPARATOR
+        MENUITEM "播放", IDM_DYNSRCPLAY
+        MENUITEM "停止", IDM_DYNSRCSTOP
+        MENUITEM "屬性(&R)", IDM_PROPERTIES
+    }
+
+    POPUP "ART 圖片"
+    {
+        MENUITEM "開啟鏈接(&O)", IDM_FOLLOWLINKC
+        MENUITEM "在新窗口開啟鏈接(&N)", IDM_FOLLOWLINKN
+        MENUITEM "將目標存為(&A)", IDM_SAVETARGET
+        MENUITEM "列印目標(&P)", IDM_PRINTTARGET
+        MENUITEM SEPARATOR
+        MENUITEM "顯示圖片(&S)", IDM_SHOWPICTURE
+        MENUITEM "將圖片存為(&A)", IDM_SAVEPICTURE
+        MENUITEM "設為背景(&G)", IDM_SETWALLPAPER
+        MENUITEM "設為桌面項目(&D)...", IDM_SETDESKTOPITEM
+        MENUITEM SEPARATOR
+        MENUITEM "剪下(&T)", IDM_CUT
+        MENUITEM "複製(&C)", IDM_COPY
+        MENUITEM "複製捷徑(&T)", IDM_COPYSHORTCUT
+        MENUITEM "貼上(&P)", IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "添加到我的最愛(&F)", IDM_ADDFAVORITES
+        MENUITEM SEPARATOR
+        MENUITEM "播放", IDM_IMGARTPLAY
+        MENUITEM "停止", IDM_IMGARTSTOP
+        MENUITEM "倒回", IDM_IMGARTREWIND
+        MENUITEM SEPARATOR
+        MENUITEM SEPARATOR
+        MENUITEM "屬性(&R)", IDM_PROPERTIES
+    }
+
+    POPUP "調試"
+    {
+        MENUITEM "跟蹤標記", IDM_TRACETAGS
+        MENUITEM "資源失敗", IDM_RESOURCEFAILURES
+        MENUITEM "輸出跟蹤資訊", IDM_DUMPTRACKINGINFO
+        MENUITEM "調試停點", IDM_DEBUGBREAK
+        MENUITEM "調試檢視", IDM_DEBUGVIEW
+        MENUITEM "輸出 Tree", IDM_DUMPTREE
+        MENUITEM "輸出 Lines", IDM_DUMPLINES
+        MENUITEM "輸出 DisplayTree", IDM_DUMPDISPLAYTREE
+        MENUITEM "輸出 FormatCaches", IDM_DUMPFORMATCACHES
+        MENUITEM "輸出 LayoutRects", IDM_DUMPLAYOUTRECTS
+        MENUITEM "內存監視器", IDM_MEMORYMONITOR
+        MENUITEM "性能表", IDM_PERFORMANCEMETERS
+        MENUITEM "儲存 HTML", IDM_SAVEHTML
+        MENUITEM SEPARATOR
+        MENUITEM "瀏覽(&B)", IDM_BROWSEMODE
+        MENUITEM "編輯(&E)", IDM_EDITMODE
+    }
+
+    POPUP "垂直滾動條"
+    {
+        MENUITEM "滾動這裡", IDM_SCROLL_HERE
+        MENUITEM SEPARATOR
+        MENUITEM "頂", IDM_SCROLL_TOP
+        MENUITEM "低", IDM_SCROLL_BOTTOM
+        MENUITEM SEPARATOR
+        MENUITEM "向上翻頁", IDM_SCROLL_PAGEUP
+        MENUITEM "向下翻頁", IDM_SCROLL_PAGEDOWN
+        MENUITEM SEPARATOR
+        MENUITEM "向上滾動", IDM_SCROLL_UP
+        MENUITEM "向下滾動", IDM_SCROLL_DOWN
+    }
+
+    POPUP "水平滾動條"
+    {
+        MENUITEM "滾動這裡", IDM_SCROLL_HERE
+        MENUITEM SEPARATOR
+        MENUITEM "左邊緣", IDM_SCROLL_LEFTEDGE
+        MENUITEM "右邊緣", IDM_SCROLL_RIGHTEDGE
+        MENUITEM SEPARATOR
+        MENUITEM "向左翻頁", IDM_SCROLL_PAGELEFT
+        MENUITEM "向右翻頁", IDM_SCROLL_PAGERIGHT
+        MENUITEM SEPARATOR
+        MENUITEM "向左滾動", IDM_SCROLL_LEFT
+        MENUITEM "向右滾動", IDM_SCROLL_RIGHT
+    }
+}
+
+#pragma code_page(default)

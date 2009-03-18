@@ -17,7 +17,7 @@ DEFINE_GUID(IID_IIrpTargetFactory, 0xB4C90A62, 0x5791, 0x11D0, 0xF9, 0x86, 0x00,
         IN WCHAR * Name,                                   \
         IN PUNKNOWN Unknown,                               \
         IN POOL_TYPE PoolType,                             \
-        IN PDEVICE_OBJECT * DeviceObject,                  \
+        IN PDEVICE_OBJECT DeviceObject,                    \
         IN PIRP Irp,                                       \
         IN KSOBJECT_CREATE *CreateObject) PURE;            \
                                                            \
@@ -99,8 +99,37 @@ struct IIrpTargetFactory;
 
 typedef struct
 {
+    ULONG MaxGlobalInstanceCount;
+    ULONG MaxFilterInstanceCount;
+    ULONG MinFilterInstanceCount;
+    ULONG CurrentPinInstanceCount;
+
+}PIN_INSTANCE_INFO, *PPIN_INSTANCE_INFO;
+
+
+typedef struct
+{
+    ULONG PinDescriptorCount;
+    ULONG PinDescriptorSize;
+    KSPIN_DESCRIPTOR * KsPinDescriptor;
+    PIN_INSTANCE_INFO * Instances;
+}KSPIN_FACTORY;
+
+typedef struct
+{
+    ULONG MaxKsPropertySetCount;
+    ULONG FreeKsPropertySetOffset;
+    PKSPROPERTY_SET Properties;
+}KSPROPERTY_SET_LIST;
+
+typedef struct
+{
     ULONG InterfaceCount;
     GUID *Interfaces;
+    KSPIN_FACTORY Factory;
+    KSPROPERTY_SET_LIST FilterPropertySet;
+
+    PPCFILTER_DESCRIPTOR DeviceDescriptor;
 }SUBDEVICE_DESCRIPTOR, *PSUBDEVICE_DESCRIPTOR;
 
 #undef INTERFACE
@@ -120,7 +149,7 @@ DECLARE_INTERFACE_(ISubdevice, IUnknown)
         IN WCHAR * Name,
         IN PUNKNOWN Unknown,
         IN POOL_TYPE PoolType,
-        IN PDEVICE_OBJECT * DeviceObject,
+        IN PDEVICE_OBJECT DeviceObject,
         IN PIRP Irp, 
         IN KSOBJECT_CREATE *CreateObject) PURE;
 
@@ -149,6 +178,60 @@ DECLARE_INTERFACE_(ISubdevice, IUnknown)
         IN OUT PULONG  GlobalPossible)PURE;
 
 };
+
+/*****************************************************************************
+ * IIrpQueue
+ *****************************************************************************
+ */
+
+#undef INTERFACE
+#define INTERFACE IIrpQueue
+
+DECLARE_INTERFACE_(IIrpQueue, IUnknown)
+{
+    DEFINE_ABSTRACT_UNKNOWN()
+
+    STDMETHOD_(NTSTATUS, Init)(THIS_
+        IN KSPIN_CONNECT *ConnectDetails,
+        IN PKSDATAFORMAT DataFormat,
+        IN PDEVICE_OBJECT DeviceObject,
+        IN ULONG FrameSize);
+
+    STDMETHOD_(NTSTATUS, AddMapping)(THIS_
+        IN PUCHAR Buffer,
+        IN ULONG BufferSize,
+        IN PIRP Irp);
+
+    STDMETHOD_(NTSTATUS, GetMapping)(THIS_
+        OUT PUCHAR * Buffer,
+        OUT PULONG BufferSize);
+
+    STDMETHOD_(VOID, UpdateMapping)(THIS_
+        IN ULONG BytesWritten);
+
+    STDMETHOD_(ULONG, NumMappings)(THIS);
+
+    STDMETHOD_(ULONG, MinMappings)(THIS);
+
+    STDMETHOD_(BOOL, MinimumDataAvailable)(THIS);
+
+    STDMETHOD_(BOOL, CancelBuffers)(THIS);
+
+    STDMETHOD_(VOID, UpdateFormat)(THIS_
+        IN PKSDATAFORMAT DataFormat);
+
+    STDMETHOD_(NTSTATUS, GetMappingWithTag)(THIS_
+        IN PVOID Tag,
+        OUT PPHYSICAL_ADDRESS  PhysicalAddress,
+        OUT PVOID  *VirtualAddress,
+        OUT PULONG  ByteCount,
+        OUT PULONG  Flags);
+
+    STDMETHOD_(VOID, ReleaseMappingWithTag)(THIS_
+        IN PVOID Tag);
+
+};
+
 
 /*****************************************************************************
  * IKsWorkSink

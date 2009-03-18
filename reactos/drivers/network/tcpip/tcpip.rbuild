@@ -26,7 +26,6 @@
 	</directory>
 	<directory name="tcpip">
 		<file>buffer.c</file>
-		<file>bug.c</file>
 		<file>dispatch.c</file>
 		<file>fileobjs.c</file>
 		<file>iinfo.c</file>

@@ -815,7 +815,7 @@ GetObjectA(HGDIOBJ hGdiObj, int cbSize, LPVOID lpBuffer)
   DWORD dwType;
   INT Result = 0;
 
-  dwType = GDI_HANDLE_GET_TYPE(hGdiObj);;
+  dwType = GDI_HANDLE_GET_TYPE(hGdiObj);
 
   if(dwType == GDI_OBJECT_TYPE_COLORSPACE) //Stays here, processes struct A
   {

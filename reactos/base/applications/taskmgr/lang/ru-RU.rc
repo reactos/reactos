@@ -219,7 +219,7 @@ BEGIN
     GROUPBOX        "Выделение памяти (K)",IDC_COMMIT_CHARGE_FRAME,5,166,111,39,0,WS_EX_TRANSPARENT
     GROUPBOX        "Физическая память (K)",IDC_PHYSICAL_MEMORY_FRAME,131,122,111,39,0,WS_EX_TRANSPARENT
     GROUPBOX        "Память ядра (K)",IDC_KERNEL_MEMORY_FRAME,131,166,111,39,0,WS_EX_TRANSPARENT
-    LTEXT           "Дискрипторов",IDS_TOTALS_HANDLE_COUNT,12,131,57,8
+    LTEXT           "Дескрипторов",IDS_TOTALS_HANDLE_COUNT,12,131,57,8
     LTEXT           "Потоков",IDS_TOTALS_THREAD_COUNT,12,140,30,8
     LTEXT           "Процессов",IDS_TOTALS_PROCESS_COUNT,12,149,34,8
     EDITTEXT        IDC_TOTALS_HANDLE_COUNT,65,131,45,8,ES_RIGHT |
@@ -398,7 +398,7 @@ BEGIN
                     BS_AUTOCHECKBOX | WS_TABSTOP,107,61,90,10
     CONTROL         "&Базовый приоритет",IDC_BASEPRIORITY,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,107,72,90,10
-    CONTROL         "Счетчик &дискрипторов",IDC_HANDLECOUNT,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "Счетчик &дескрипторов",IDC_HANDLECOUNT,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,107,83,90,10
     CONTROL         "С&четчик потоков",IDC_THREADCOUNT,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,107,94,69,10
@@ -627,7 +627,7 @@ BEGIN
     IDS_TAB_PAGEDPOOL             "Пул страниц"
     IDS_TAB_NPPOOL                "NP пул"
     IDS_TAB_BASEPRI               "Базовый приоритет"
-    IDS_TAB_HANDLES               "Дискрипторы"
+    IDS_TAB_HANDLES               "Дескрипторы"
     IDS_TAB_THREADS               "Потоки"
     IDS_TAB_USERPBJECTS           "Объекты USER"
     IDS_TAB_GDIOBJECTS            "GDI объекты"

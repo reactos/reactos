@@ -10,24 +10,32 @@
 typedef struct tagBATCHCONTEXT
 {
 	struct tagBATCHCONTEXT *prev;
-	LPWIN32_FIND_DATA ffind;
 	HANDLE hBatchFile;
 	TCHAR BatchFilePath[MAX_PATH];
-	LPTSTR forproto;
 	LPTSTR params;
 	LPTSTR raw_params;   /* Holds the raw params given by the input */
-	INT    shiftlevel;
+	INT    shiftlevel[10];
 	BOOL   bEcho;        /* Preserve echo flag across batch calls */
-	HANDLE hFind;        /* Preserve find handle when doing a for */
 	REDIRECTION *RedirList;
-	TCHAR forvar;
+	PARSED_COMMAND *current; 
+	struct _SETLOCAL *setlocal;
 } BATCH_CONTEXT, *LPBATCH_CONTEXT;
+
+typedef struct tagFORCONTEXT
+{
+	struct tagFORCONTEXT *prev;
+	TCHAR firstvar;
+	UINT   varcount;
+	LPTSTR *values;
+} FOR_CONTEXT, *LPFOR_CONTEXT;
 
 
 /*  The stack of current batch contexts.
  * NULL when no batch is active
  */
 extern LPBATCH_CONTEXT bc;
+
+extern LPFOR_CONTEXT fc;
 
 extern BOOL bEcho;       /* The echo flag */
 
@@ -36,10 +44,10 @@ extern BOOL bEcho;       /* The echo flag */
 extern TCHAR textline[BATCH_BUFFSIZE]; /* Buffer for reading Batch file lines */
 
 
-LPTSTR FindArg (INT);
+LPTSTR FindArg (TCHAR, BOOL *);
 LPTSTR BatchParams (LPTSTR, LPTSTR);
-VOID   ExitBatch (LPTSTR);
-BOOL   Batch (LPTSTR, LPTSTR, LPTSTR, BOOL);
+VOID   ExitBatch ();
+BOOL   Batch (LPTSTR, LPTSTR, LPTSTR, PARSED_COMMAND *);
 LPTSTR ReadBatchLine();
 VOID AddBatchRedirection(REDIRECTION **);
 

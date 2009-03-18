@@ -131,7 +131,7 @@ LoadCurrentTheme(GLOBALS* g)
 
 
 static BOOL
-LoadThemeFromReg(GLOBALS* g, INT iPreset)
+LoadThemeFromReg(GLOBALS* g)
 {
 	INT i;
 	TCHAR strSizeName[20] = {TEXT("Sizes\\0")};
@@ -139,6 +139,7 @@ LoadThemeFromReg(GLOBALS* g, INT iPreset)
 	HKEY hkNewSchemes, hkScheme, hkSize;
 	DWORD dwType, dwLength;
 	BOOL Ret = FALSE;
+	INT iPreset = g->Theme.Id;
 
 	if(RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Control Panel\\Appearance\\New Schemes"),
 		0, KEY_READ, &hkNewSchemes) == ERROR_SUCCESS)
@@ -219,8 +220,6 @@ ApplyTheme(GLOBALS* g)
 
 	if (!g->Theme.bHasChanged)
 		return;
-
-	g->Theme.bHasChanged = FALSE;
 
 	/* Update some globals */
 	g->crCOLOR_BTNFACE = g->Theme.crColor[COLOR_BTNFACE];
@@ -334,6 +333,14 @@ ApplyTheme(GLOBALS* g)
 
 		RegCloseKey(hKey);
 	}
+	/* Save ThemeId */
+	Result = RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Control Panel\\Appearance\\New Schemes"), 0, KEY_ALL_ACCESS, &hKey);
+	if (Result == ERROR_SUCCESS)
+	{
+		lstrcpy(clText, g->ThemeTemplates[g->Theme.Id].strKeyName);
+		RegSetValueEx(hKey, TEXT("SelectedStyle"), 0, REG_SZ, (BYTE *)clText, (lstrlen(clText)+1) * sizeof (TCHAR));
+		RegCloseKey(hKey);
+	}
 }
 
 
@@ -438,7 +445,7 @@ AppearancePage_OnDestroy(HWND hwndDlg, GLOBALS *g)
 INT_PTR CALLBACK
 AppearancePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	INT i, index;
+	INT i;
 	GLOBALS *g;
 	LPNMHDR lpnm;
 
@@ -474,8 +481,8 @@ AppearancePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 						PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
 						g->Theme.bHasChanged = TRUE;
 						i = SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_COLORSCHEME, CB_GETCURSEL, 0, 0);
-						index = SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_COLORSCHEME, CB_GETITEMDATA, (WPARAM)i, 0);
-						LoadThemeFromReg(g, index);
+						g->Theme.Id = SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_COLORSCHEME, CB_GETITEMDATA, (WPARAM)i, 0);
+						LoadThemeFromReg(g);
 					}
 					break;
 

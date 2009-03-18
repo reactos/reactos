@@ -9,13 +9,13 @@
 		<library>wine</library>
 		<library>kernel32</library>
 		<library>advapi32</library>
-		<library>shell32</library>
 		<library>user32</library>
 		<file>cmd.rc</file>
 		<file>main.c</file>
 		<pch>precomp.h</pch>
 		<compilationunit name="unit.c">
 			<file>alias.c</file>
+			<file>assoc.c</file>
 			<file>attrib.c</file>
 			<file>batch.c</file>
 			<file>beep.c</file>
@@ -48,6 +48,7 @@
 			<file>locale.c</file>
 			<file>memory.c</file>
 			<file>misc.c</file>
+			<file>mklink.c</file>
 			<file>move.c</file>
 			<file>msgbox.c</file>
 			<file>parser.c</file>

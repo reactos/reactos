@@ -81,7 +81,7 @@ InstallDriver(
     RtlCopyMemory(FullImagePath, PathPrefix.Buffer, PathPrefix.MaximumLength);
     wcscat(FullImagePath, ImagePath);
 
-    DPRINT1("Using driver '%S' for device '%S'\n", ImagePath, DeviceId);;
+    DPRINT1("Using driver '%S' for device '%S'\n", ImagePath, DeviceId);
 
     /* Create service key */
     RtlInitUnicodeString(&StringU, Driver);

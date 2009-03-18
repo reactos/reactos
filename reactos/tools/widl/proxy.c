@@ -329,12 +329,7 @@ static void gen_proxy(type_t *iface, const var_t *func, int idx,
   if (has_ret) {
     print_proxy( "" );
     write_type_decl_left(proxy, type_function_get_rettype(func->type));
-
-    /* Initialize _RetVal properly in order to avoid compiler warnings */
-    if (is_ptr(type_function_get_rettype(func->type)) || is_array(type_function_get_rettype(func->type)))
-      print_proxy(" _RetVal = NULL;\n");
-    else
-      print_proxy(" _RetVal = 0;\n");
+    print_proxy(" _RetVal;\n");
   }
   print_proxy( "RPC_MESSAGE _RpcMessage;\n" );
   if (has_ret) {

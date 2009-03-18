@@ -61,7 +61,6 @@ BOOL    INTERNAL_CALL GDIOBJ_OwnedByCurrentProcess(HGDIOBJ ObjectHandle);
 BOOL    INTERNAL_CALL GDIOBJ_SetOwnership(HGDIOBJ ObjectHandle, PEPROCESS Owner);
 BOOL    INTERNAL_CALL GDIOBJ_CopyOwnership(HGDIOBJ CopyFrom, HGDIOBJ CopyTo);
 BOOL    INTERNAL_CALL GDIOBJ_ConvertToStockObj(HGDIOBJ *hObj);
-VOID    INTERNAL_CALL GDIOBJ_UnlockObjByPtr(POBJ Object);
 VOID    INTERNAL_CALL GDIOBJ_ShareUnlockObjByPtr(POBJ Object);
 BOOL    INTERNAL_CALL GDIOBJ_ValidateHandle(HGDIOBJ hObj, ULONG ObjectType);
 POBJ    INTERNAL_CALL GDIOBJ_AllocObj(UCHAR ObjectType);
@@ -83,5 +82,21 @@ PVOID   INTERNAL_CALL GDI_MapHandleTable(PSECTION_OBJECT SectionObject, PEPROCES
 BOOL FASTCALL  NtGdiDeleteObject(HGDIOBJ hObject);
 BOOL FASTCALL  IsObjectDead(HGDIOBJ);
 BOOL FASTCALL  IntGdiSetDCOwnerEx( HDC, DWORD, BOOL);
+
+/*!
+ * Release GDI object. Every object locked by GDIOBJ_LockObj() must be unlocked. 
+ * You should unlock the object
+ * as soon as you don't need to have access to it's data.
+
+ * \param Object 	Object pointer (as returned by GDIOBJ_LockObj).
+ */
+ULONG
+FORCEINLINE
+GDIOBJ_UnlockObjByPtr(POBJ Object)
+{
+    INT cLocks = InterlockedDecrement((PLONG)&Object->cExclusiveLock);
+    ASSERT(cLocks >= 0);
+    return cLocks;
+}
 
 #endif

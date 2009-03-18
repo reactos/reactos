@@ -1559,56 +1559,67 @@ RtlLargeIntegerToChar(
    IN ULONG  Length,
    IN OUT PCHAR  String)
 {
-   NTSTATUS Status = STATUS_SUCCESS;
-   ULONG Radix;
-   CHAR  temp[65];
-   ULONGLONG v = Value->QuadPart;
-   ULONG i;
-   PCHAR tp;
-   PCHAR sp;
+    ULONGLONG Val = Value->QuadPart;
+    NTSTATUS Status = STATUS_SUCCESS;
+    CHAR Buffer[65];
+    CHAR Digit;
+    ULONG Len;
+    PCHAR Pos;
 
-   Radix = Base;
-   if (Radix == 0)
-      Radix = 10;
+    if (Base == 0) Base = 10;
 
-   if ((Radix != 2) && (Radix != 8) &&
-         (Radix != 10) && (Radix != 16))
-      return STATUS_INVALID_PARAMETER;
+    if ((Base != 2) && (Base != 8) &&
+        (Base != 10) && (Base != 16))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
 
-   tp = temp;
-   while (v || tp == temp)
-   {
-      i = v % Radix;
-      v = v / Radix;
-      if (i < 10)
-         *tp = i + '0';
-      else
-         *tp = i + 'A' - 10;
-      tp++;
-   }
+    Pos = &Buffer[64];
+    *Pos = '\0';
 
-   if ((ULONG)((ULONG_PTR)tp - (ULONG_PTR)temp) > Length)
-      return STATUS_BUFFER_OVERFLOW;
+    do
+    {
+        Pos--;
+        Digit = Val % Base;
+        Val = Val / Base;
+        if (Digit < 10)
+            *Pos = '0' + Digit;
+        else
+            *Pos = 'A' + Digit - 10;
+    }
+    while (Val != 0L);
 
-   //_SEH2_TRY
-   {
-      sp = String;
-      while (tp > temp)
-         *sp++ = *--tp;
+    Len = &Buffer[64] - Pos;
 
-      if((ULONG)((ULONG_PTR)sp - (ULONG_PTR)String) < Length)
-         *sp = 0;
-   }
-#if 0
-   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-   {
-      /* Get the error code */
-      Status = _SEH2_GetExceptionCode();
-   }
-   _SEH2_END;
+    if (Len > Length)
+        return STATUS_BUFFER_OVERFLOW;
+
+#if 1 /* It needs to be removed, when will probably use SEH in rtl */
+    if (String == NULL)
+    {
+        return STATUS_ACCESS_VIOLATION;
+    }
 #endif
 
-   return Status;
+#if 0
+    _SEH2_TRY
+    {
+#endif
+        if (Len == Length)
+            RtlCopyMemory(String, Pos, Len);
+        else
+            RtlCopyMemory(String, Pos, Len + 1);
+#if 0
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        /* Get the error code */
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+#endif
+
+    return Status;
 }
 
 /*

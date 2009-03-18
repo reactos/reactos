@@ -204,7 +204,7 @@ static HRESULT unregister_interfaces(struct regsvr_interface const *list)
 	WCHAR buf[39];
 
 	StringFromGUID2(list->iid, buf, 39);
-	//res = RegDeleteTreeW(interface_key, buf);
+	res = RegDeleteTreeW(interface_key, buf);
 	if (res == ERROR_FILE_NOT_FOUND) res = ERROR_SUCCESS;
     }
 
@@ -312,18 +312,18 @@ static HRESULT unregister_coclasses(struct regsvr_coclass const *list)
 	WCHAR buf[39];
 
 	StringFromGUID2(list->clsid, buf, 39);
-	//res = RegDeleteTreeW(coclass_key, buf);
+	res = RegDeleteTreeW(coclass_key, buf);
 	if (res == ERROR_FILE_NOT_FOUND) res = ERROR_SUCCESS;
 	if (res != ERROR_SUCCESS) goto error_close_coclass_key;
 
 	if (list->progid) {
-	   // res = RegDeleteTreeA(HKEY_CLASSES_ROOT, list->progid);
+	    res = RegDeleteTreeA(HKEY_CLASSES_ROOT, list->progid);
 	    if (res == ERROR_FILE_NOT_FOUND) res = ERROR_SUCCESS;
 	    if (res != ERROR_SUCCESS) goto error_close_coclass_key;
 	}
 
 	if (list->viprogid) {
-	    //res = RegDeleteTreeA(HKEY_CLASSES_ROOT, list->viprogid);
+	    res = RegDeleteTreeA(HKEY_CLASSES_ROOT, list->viprogid);
 	    if (res == ERROR_FILE_NOT_FOUND) res = ERROR_SUCCESS;
 	    if (res != ERROR_SUCCESS) goto error_close_coclass_key;
 	}

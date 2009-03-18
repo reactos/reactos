@@ -775,7 +775,9 @@ FdoStartDevice(
   KeInitializeSpinLock(&DeviceExtension->DeviceListLock);
   DeviceExtension->DeviceListCount = 0;
 
+#if 0
   ACPIEnumerateDevices(DeviceExtension);
+#endif
 
   ACPIInitializeInternalDrivers(DeviceExtension);
 

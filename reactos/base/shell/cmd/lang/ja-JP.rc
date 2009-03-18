@@ -9,6 +9,14 @@ LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
 
+STRING_ASSOC_HELP,    "Modify file extension associations.\n\n\
+assoc [.ext[=[FileType]]]\n\
+\n\
+assoc (print all associations)\n\
+assoc .ext (print specific association)\n\
+assoc .ext= (remove specific association)\n\
+assoc .ext=FileType (add new association)\n"
+
 STRING_ATTRIB_HELP,    "ファイル属性を表\示または変更します。\n\n\
 ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] [ファイル] ...\n\
        [/S [/D]]\n\n\
@@ -302,6 +310,13 @@ STRING_MKDIR_HELP,   "ディレクトリを作成します。\n\n\
 MKDIR [ドライブ:]パス\n\
 MD [ドライブ:]パス"
 
+STRING_MKLINK_HELP, "Creates a filesystem link object.\n\n\
+MKLINK [/D | /H | /J] linkname target\n\n\
+  /D  Indicates that the symbolic link target is a directory.\n\
+  /H  Create a hard link.\n\
+  /J  Create a directory junction.\n\n\
+If neither /H or /J is specified, a symbolic link is created."
+
 STRING_MEMMORY_HELP1, "システム メモリの量を表\示します。\n\nMEMORY"
 
 STRING_MEMMORY_HELP2, "\n  %12s%% のメモリが使用されています。\n\n\
@@ -543,6 +558,7 @@ IF       バッチ プログラム中で条件処理を実行します。\n\
 LABEL    ディスクのボリューム ラベルを表\示または変更します。\n\
 MD       ディレクトリを作成します。\n\
 MKDIR    ディレクトリを作成します。\n\
+MKLINK   Creates a filesystem link object.\n\
 MOVE     ファイルを移動およびファイルとディレクトリ名を変更します。\n\
 PATH     実行可能\ファイルの検索パスを表\示または設定します。\n\
 PAUSE    バッチ プログラムの処理を一時停止し、メッセージを表\示します。\n\
@@ -574,6 +590,7 @@ STRING_COPY_OPTION,           "YNA"
 
 
 STRING_ALIAS_ERROR,          "エイリアス展開後のコマンド ラインが長すぎます!\n"
+STRING_ASSOC_ERROR,          "File association not found for extension %s\n"
 STRING_BATCH_ERROR,          "バッチ ファイルを開くときにエラーが発生しました。\n"
 STRING_CHCP_ERROR1,          "現在のコード ページ: %u\n"
 STRING_CHCP_ERROR4,          "無効なコード ページです\n"
@@ -633,7 +650,7 @@ STRING_ERROR_FILE_NOT_FOUND,       "ファイルが見つかりません。\n"
 STRING_ERROR_REQ_PARAM_MISSING,    "必要なパラメータが不足しています。\n"
 STRING_ERROR_INVALID_DRIVE,        "無効なドライブ指定です。\n"
 STRING_ERROR_INVALID_PARAM_FORMAT, "無効なパラメータの書式です。 - %s\n"
-STRING_ERROR_BADCOMMAND,           "コマンドまたはファイル名が間違っています。\n"
+STRING_ERROR_BADCOMMAND,           "コマンドまたはファイル名が間違っています。 - %s\n"
 STRING_ERROR_OUT_OF_MEMORY,        "メモリ不足エラー。\n"
 STRING_ERROR_CANNOTPIPE,           "エラー!  パイプできません!  一時ファイルを開けません!\n"
 STRING_ERROR_D_PAUSEMSG,           "続行するには何かキーを押してください . . ."
@@ -649,6 +666,9 @@ STRING_FOR_ERROR,                  "無効な変数が指定されました。"
 STRING_SCREEN_COL,                 "行の値が無効です。"
 STRING_SCREEN_ROW,                 "列の値が無効です。"
 STRING_TIMER_TIME                  "タイマー %d は %s です。: "
+STRING_MKLINK_CREATED_SYMBOLIC,    "Symbolic link created for %s <<===>> %s\n"
+STRING_MKLINK_CREATED_HARD,        "Hard link created for %s <<===>> %s\n"
+STRING_MKLINK_CREATED_JUNCTION,    "Junction created for %s <<===>> %s\n"
 
 STRING_INVALID_OPERAND,            "無効なオペランドです。"
 STRING_EXPECTED_CLOSE_PAREN,       "Expected ')'"

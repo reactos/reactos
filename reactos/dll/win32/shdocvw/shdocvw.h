@@ -2,6 +2,7 @@
  * Header includes for shdocvw.dll
  *
  * Copyright 2001 John R. Sheets (for CodeWeavers)
+ * Copyright 2005-2006 Jacek Caban for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -15,13 +16,12 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #ifndef __WINE_SHDOCVW_H
 #define __WINE_SHDOCVW_H
 
-#define COM_NO_WINDOWS_H
 #define COBJMACROS
 
 #include <stdarg.h>
@@ -36,23 +36,14 @@
 #include "shlobj.h"
 #include "exdisp.h"
 #include "mshtmhst.h"
+#include "hlink.h"
 
-/**********************************************************************
- * IClassFactory declaration for SHDOCVW.DLL
- */
-typedef struct
-{
-    /* IUnknown fields */
-    const IClassFactoryVtbl *lpVtbl;
-    LONG ref;
-} IClassFactoryImpl;
-
-extern IClassFactoryImpl SHDOCVW_ClassFactory;
+#include "wine/unicode.h"
 
 /**********************************************************************
  * Shell Instance Objects
  */
-extern HRESULT SHDOCVW_GetShellInstanceObjectClassObject(REFCLSID rclsid,
+extern HRESULT SHDOCVW_GetShellInstanceObjectClassObject(REFCLSID rclsid, 
     REFIID riid, LPVOID *ppvClassObj);
 
 /**********************************************************************
@@ -60,6 +51,58 @@ extern HRESULT SHDOCVW_GetShellInstanceObjectClassObject(REFCLSID rclsid,
  */
 
 typedef struct ConnectionPoint ConnectionPoint;
+typedef struct DocHost DocHost;
+
+typedef struct {
+    const IConnectionPointContainerVtbl *lpConnectionPointContainerVtbl;
+
+    ConnectionPoint *wbe2;
+    ConnectionPoint *wbe;
+    ConnectionPoint *pns;
+
+    IUnknown *impl;
+} ConnectionPointContainer;
+
+struct _task_header_t;
+
+typedef void (*task_proc_t)(DocHost*, struct _task_header_t*);
+
+typedef struct _task_header_t {
+    task_proc_t proc;
+} task_header_t;
+
+struct DocHost {
+    const IOleClientSiteVtbl      *lpOleClientSiteVtbl;
+    const IOleInPlaceSiteVtbl     *lpOleInPlaceSiteVtbl;
+    const IDocHostUIHandler2Vtbl  *lpDocHostUIHandlerVtbl;
+    const IOleDocumentSiteVtbl    *lpOleDocumentSiteVtbl;
+    const IOleCommandTargetVtbl   *lpOleCommandTargetVtbl;
+    const IDispatchVtbl           *lpDispatchVtbl;
+    const IServiceProviderVtbl    *lpServiceProviderVtbl;
+
+    /* Interfaces of InPlaceFrame object */
+    const IOleInPlaceFrameVtbl          *lpOleInPlaceFrameVtbl;
+
+    IDispatch *disp;
+
+    IDispatch *client_disp;
+    IDocHostUIHandler *hostui;
+    IOleInPlaceFrame *frame;
+
+    IUnknown *document;
+    IOleDocumentView *view;
+
+    HWND hwnd;
+    HWND frame_hwnd;
+
+    LPOLESTR url;
+
+    VARIANT_BOOL silent;
+    VARIANT_BOOL offline;
+    VARIANT_BOOL busy;
+
+    ConnectionPointContainer cps;
+};
 
 struct WebBrowser {
     /* Interfaces available via WebBrowser object */
@@ -69,52 +112,54 @@ struct WebBrowser {
     const IOleInPlaceObjectVtbl         *lpOleInPlaceObjectVtbl;
     const IOleControlVtbl               *lpOleControlVtbl;
     const IPersistStorageVtbl           *lpPersistStorageVtbl;
+    const IPersistMemoryVtbl            *lpPersistMemoryVtbl;
     const IPersistStreamInitVtbl        *lpPersistStreamInitVtbl;
     const IProvideClassInfo2Vtbl        *lpProvideClassInfoVtbl;
-    const IQuickActivateVtbl            *lpQuickActivateVtbl;
-    const IConnectionPointContainerVtbl *lpConnectionPointContainerVtbl;
     const IViewObject2Vtbl              *lpViewObjectVtbl;
     const IOleInPlaceActiveObjectVtbl   *lpOleInPlaceActiveObjectVtbl;
-
-    /* Interfaces available for embeded document */
-
-    const IOleClientSiteVtbl            *lpOleClientSiteVtbl;
-    const IOleInPlaceSiteVtbl           *lpOleInPlaceSiteVtbl;
-    const IDocHostUIHandler2Vtbl        *lpDocHostUIHandlerVtbl;
-    const IOleDocumentSiteVtbl          *lpOleDocumentSiteVtbl;
-
-    /* Interfaces of InPlaceFrame object */
-
-    const IOleInPlaceFrameVtbl          *lpOleInPlaceFrameVtbl;
+    const IOleCommandTargetVtbl         *lpOleCommandTargetVtbl;
+    const IHlinkFrameVtbl               *lpHlinkFrameVtbl;
+    const IServiceProviderVtbl          *lpServiceProviderVtbl;
 
     LONG ref;
 
-    IUnknown *document;
+    INT version;
 
     IOleClientSite *client;
     IOleContainer *container;
-    IOleDocumentView *view;
-
-    LPOLESTR url;
+    IOleInPlaceSite *inplace;
 
     /* window context */
 
-    HWND iphwnd;
     HWND frame_hwnd;
-    IOleInPlaceFrame *frame;
     IOleInPlaceUIWindow *uiwindow;
     RECT pos_rect;
     RECT clip_rect;
     OLEINPLACEFRAMEINFO frameinfo;
+    SIZEL extent;
 
-    HWND doc_view_hwnd;
     HWND shell_embedding_hwnd;
 
-    /* Connection points */
+    VARIANT_BOOL register_browser;
+    VARIANT_BOOL visible;
+    VARIANT_BOOL menu_bar;
+    VARIANT_BOOL address_bar;
+    VARIANT_BOOL status_bar;
+    VARIANT_BOOL tool_bar;
+    VARIANT_BOOL full_screen;
+    VARIANT_BOOL theater_mode;
 
-    ConnectionPoint *cp_wbe2;
-    ConnectionPoint *cp_wbe;
-    ConnectionPoint *cp_pns;
+    DocHost doc_host;
+};
+
+struct InternetExplorer {
+    const IWebBrowser2Vtbl *lpWebBrowser2Vtbl;
+
+    LONG ref;
+
+    HWND frame_hwnd;
+
+    DocHost doc_host;
 };
 
 #define WEBBROWSER(x)   ((IWebBrowser*)                 &(x)->lpWebBrowser2Vtbl)
@@ -123,19 +168,23 @@ struct WebBrowser {
 #define INPLACEOBJ(x)   ((IOleInPlaceObject*)           &(x)->lpOleInPlaceObjectVtbl)
 #define CONTROL(x)      ((IOleControl*)                 &(x)->lpOleControlVtbl)
 #define PERSTORAGE(x)   ((IPersistStorage*)             &(x)->lpPersistStorageVtbl)
+#define PERMEMORY(x)    ((IPersistMemory*)              &(x)->lpPersistMemoryVtbl)
 #define PERSTRINIT(x)   ((IPersistStreamInit*)          &(x)->lpPersistStreamInitVtbl)
 #define CLASSINFO(x)    ((IProvideClassInfo2*)          &(x)->lpProvideClassInfoVtbl)
-#define QUICKACT(x)     ((IQuickActivate*)              &(x)->lpQuickActivateVtbl)
 #define CONPTCONT(x)    ((IConnectionPointContainer*)   &(x)->lpConnectionPointContainerVtbl)
 #define VIEWOBJ(x)      ((IViewObject*)                 &(x)->lpViewObjectVtbl);
 #define VIEWOBJ2(x)     ((IViewObject2*)                &(x)->lpViewObjectVtbl);
 #define ACTIVEOBJ(x)    ((IOleInPlaceActiveObject*)     &(x)->lpOleInPlaceActiveObjectVtbl)
+#define OLECMD(x)       ((IOleCommandTarget*)           &(x)->lpOleCommandTargetVtbl)
+#define HLINKFRAME(x)   ((IHlinkFrame*)                 &(x)->lpHlinkFrameVtbl)
 
 #define CLIENTSITE(x)   ((IOleClientSite*)              &(x)->lpOleClientSiteVtbl)
 #define INPLACESITE(x)  ((IOleInPlaceSite*)             &(x)->lpOleInPlaceSiteVtbl)
 #define DOCHOSTUI(x)    ((IDocHostUIHandler*)           &(x)->lpDocHostUIHandlerVtbl)
 #define DOCHOSTUI2(x)   ((IDocHostUIHandler2*)          &(x)->lpDocHostUIHandlerVtbl)
 #define DOCSITE(x)      ((IOleDocumentSite*)            &(x)->lpOleDocumentSiteVtbl)
+#define CLDISP(x)       ((IDispatch*)                   &(x)->lpDispatchVtbl)
+#define SERVPROV(x)     ((IServiceProvider*)            &(x)->lpServiceProviderVtbl)
 
 #define INPLACEFRAME(x) ((IOleInPlaceFrame*)            &(x)->lpOleInPlaceFrameVtbl)
 
@@ -143,24 +192,40 @@ void WebBrowser_OleObject_Init(WebBrowser*);
 void WebBrowser_ViewObject_Init(WebBrowser*);
 void WebBrowser_Persist_Init(WebBrowser*);
 void WebBrowser_ClassInfo_Init(WebBrowser*);
-void WebBrowser_Misc_Init(WebBrowser*);
-void WebBrowser_Events_Init(WebBrowser*);
-
-void WebBrowser_ClientSite_Init(WebBrowser*);
-void WebBrowser_DocHost_Init(WebBrowser*);
-
-void WebBrowser_Frame_Init(WebBrowser*);
+void WebBrowser_HlinkFrame_Init(WebBrowser*);
 
 void WebBrowser_OleObject_Destroy(WebBrowser*);
-void WebBrowser_Events_Destroy(WebBrowser*);
-void WebBrowser_ClientSite_Destroy(WebBrowser*);
 
-HRESULT WebBrowser_Create(IUnknown*,REFIID,void**);
+void DocHost_Init(DocHost*,IDispatch*);
+void DocHost_ClientSite_Init(DocHost*);
+void DocHost_Frame_Init(DocHost*);
 
-void create_doc_view_hwnd(WebBrowser *This);
+void DocHost_Release(DocHost*);
+void DocHost_ClientSite_Release(DocHost*);
+
+void ConnectionPointContainer_Init(ConnectionPointContainer*,IUnknown*);
+void ConnectionPointContainer_Destroy(ConnectionPointContainer*);
+
+HRESULT WebBrowserV1_Create(IUnknown*,REFIID,void**);
+HRESULT WebBrowserV2_Create(IUnknown*,REFIID,void**);
+
+void create_doc_view_hwnd(DocHost*);
+void deactivate_document(DocHost*);
+void object_available(DocHost*);
 void call_sink(ConnectionPoint*,DISPID,DISPPARAMS*);
+HRESULT navigate_url(DocHost*,LPCWSTR,const VARIANT*,const VARIANT*,VARIANT*,VARIANT*);
+HRESULT go_home(DocHost*);
 
-#define WB_WM_NAVIGATE2 (WM_USER+100)
+#define WM_DOCHOSTTASK (WM_USER+0x300)
+void push_dochost_task(DocHost*,task_header_t*,task_proc_t,BOOL);
+LRESULT  process_dochost_task(DocHost*,LPARAM);
+
+HRESULT InternetExplorer_Create(IUnknown*,REFIID,void**);
+void InternetExplorer_WebBrowser_Init(InternetExplorer*);
+
+HRESULT CUrlHistory_Create(IUnknown*,REFIID,void**);
+
+HRESULT InternetShortcut_Create(IUnknown*,REFIID,void**);
 
 #define DEFINE_THIS(cls,ifc,iface) ((cls*)((BYTE*)(iface)-offsetof(cls,lp ## ifc ## Vtbl)))
 
@@ -172,5 +237,73 @@ static inline void SHDOCVW_LockModule(void) { InterlockedIncrement( &SHDOCVW_ref
 static inline void SHDOCVW_UnlockModule(void) { InterlockedDecrement( &SHDOCVW_refCount ); }
 
 extern HINSTANCE shdocvw_hinstance;
+extern void register_iewindow_class(void);
+extern void unregister_iewindow_class(void);
+
+HRESULT register_class_object(BOOL);
+HRESULT get_typeinfo(ITypeInfo**);
+DWORD register_iexplore(BOOL);
+
+/* memory allocation functions */
+
+static inline void *heap_alloc(size_t len)
+{
+    return HeapAlloc(GetProcessHeap(), 0, len);
+}
+
+static inline void *heap_realloc(void *mem, size_t len)
+{
+    return HeapReAlloc(GetProcessHeap(), 0, mem, len);
+}
+
+static inline BOOL heap_free(void *mem)
+{
+    return HeapFree(GetProcessHeap(), 0, mem);
+}
+
+static inline LPWSTR heap_strdupW(LPCWSTR str)
+{
+    LPWSTR ret = NULL;
+
+    if(str) {
+        DWORD size;
+
+        size = (strlenW(str)+1)*sizeof(WCHAR);
+        ret = heap_alloc(size);
+        memcpy(ret, str, size);
+    }
+
+    return ret;
+}
+
+static inline LPWSTR co_strdupW(LPCWSTR str)
+{
+    WCHAR *ret = CoTaskMemAlloc((strlenW(str) + 1)*sizeof(WCHAR));
+    if (ret)
+        lstrcpyW(ret, str);
+    return ret;
+}
+
+static inline LPWSTR co_strdupAtoW(LPCSTR str)
+{
+    INT len;
+    WCHAR *ret;
+    len = MultiByteToWideChar(CP_ACP, 0, str, -1, NULL, 0);
+    ret = CoTaskMemAlloc(len*sizeof(WCHAR));
+    if (ret)
+        MultiByteToWideChar(CP_ACP, 0, str, -1, ret, len);
+    return ret;
+}
+
+static inline LPSTR co_strdupWtoA(LPCWSTR str)
+{
+    INT len;
+    CHAR *ret;
+    len = WideCharToMultiByte(CP_ACP, 0, str, -1, NULL, 0, 0, 0);
+    ret = CoTaskMemAlloc(len);
+    if (ret)
+        WideCharToMultiByte(CP_ACP, 0, str, -1, ret, len, 0, 0);
+    return ret;
+}
 
 #endif /* __WINE_SHDOCVW_H */

@@ -3053,18 +3053,9 @@ SetupUpdateMemoryInfo(IN PCOPYCONTEXT CopyContext,
     }
 
     /* Set current values */
-    ProgressSetStep(CopyContext->MemoryBars[0], PerfInfo.PagedPoolPages);
-    ProgressSetStep(CopyContext->MemoryBars[1], PerfInfo.NonPagedPoolPages);
+    ProgressSetStep(CopyContext->MemoryBars[0], PerfInfo.PagedPoolPages + PerfInfo.NonPagedPoolPages);
+    ProgressSetStep(CopyContext->MemoryBars[1], PerfInfo.ResidentSystemCachePage);
     ProgressSetStep(CopyContext->MemoryBars[2], PerfInfo.AvailablePages);
-
-    /* Check if memory dropped below 40%! */
-    if (CopyContext->MemoryBars[2]->Percent <= 40)
-    {
-        /* Wait a while until Mm does its thing */
-        LARGE_INTEGER Interval;
-        Interval.QuadPart = -1 * 15 * 1000 * 100;
-        NtDelayExecution(FALSE, &Interval);
-    }
 }
 
 static UINT CALLBACK
@@ -3138,7 +3129,7 @@ FileCopyPage(PINPUT_RECORD Ir)
 						  13,
                                                   44,
                                                   FALSE,
-                                                  "Paged Memory");
+                                                  "Kernel Pool");
 
     /* Create the non paged pool progress bar */
     CopyContext.MemoryBars[1] = CreateProgressBar((xScreen / 2)- (mem_bar_width / 2),
@@ -3148,7 +3139,7 @@ FileCopyPage(PINPUT_RECORD Ir)
                                                   (xScreen / 2)- (mem_bar_width / 2),
                                                   44,
                                                   FALSE,
-                                                  "Nonpaged Memory");
+                                                  "Kernel Cache");
 
     /* Create the global memory progress bar */
     CopyContext.MemoryBars[2] = CreateProgressBar(xScreen - 13 - mem_bar_width,
@@ -3277,6 +3268,14 @@ RegistryPage(PINPUT_RECORD Ir)
     if (!AddKeyboardLayouts())
     {
         MUIDisplayError(ERROR_ADDING_KBLAYOUTS, Ir, POPUP_WAIT_ENTER);
+        return QUIT_PAGE;
+    }
+
+    /* Set GeoID */
+
+    if (!SetGeoID(MUIGetGeoID()))
+    {
+        MUIDisplayError(ERROR_UPDATE_GEOID, Ir, POPUP_WAIT_ENTER);
         return QUIT_PAGE;
     }
 
@@ -3428,7 +3427,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
             }
             else if (Line == 14)
             {
-                return SUCCESS_PAGE;;
+                return SUCCESS_PAGE;
             }
 
             return BOOT_LOADER_PAGE;

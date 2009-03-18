@@ -125,7 +125,7 @@ IDmaChannelSlave_fnAllocateBuffer(
 
     This->BufferSize = BufferSize;
     This->AllocatedBufferSize = BufferSize;
-    DPRINT1("IDmaChannelSlave_fnAllocateBuffer Success Buffer %u Address %x %p\n", BufferSize, This->Address, PhysicalAddressConstraint);
+    DPRINT1("IDmaChannelSlave_fnAllocateBuffer Success Buffer %p BufferSize %u Address %x\n", This->Buffer, BufferSize, This->Address);
 
     return STATUS_SUCCESS;
 }
@@ -227,17 +227,11 @@ IDmaChannelSlave_fnPhysicalAdress(
     IN IDmaChannelSlave * iface)
 {
     PHYSICAL_ADDRESS Address;
+
     IDmaChannelSlaveImpl * This = (IDmaChannelSlaveImpl*)iface;
     DPRINT("IDmaChannelSlave_PhysicalAdress: This %p Virtuell %p Physical High %x Low %x%\n", This, This->Buffer, This->Address.HighPart, This->Address.LowPart);
 
-#if 1
-
-    /// HACK
-    /// Prevent ES1371 driver from crashing by returning the vaddr instead of physical address
-    Address.QuadPart = (ULONG_PTR)This->Buffer;
-#else
-    Address.QuadPart = This->Address.QuadPart;
-#endif
+    Address = This->Address;
     return Address;
 }
 
@@ -351,7 +345,7 @@ IDmaChannelSlave_fnStart(
 
     if (!This->Mdl)
     {
-        This->Mdl = IoAllocateMdl(&This->Buffer, This->MaximumBufferSize, FALSE, FALSE, NULL);
+        This->Mdl = IoAllocateMdl(This->Buffer, This->MaximumBufferSize, FALSE, FALSE, NULL);
         if (!This->Mdl)
         {
             return STATUS_INSUFFICIENT_RESOURCES;

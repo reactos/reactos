@@ -101,6 +101,7 @@ WSPSocket(int AddressFamily,
     RtlZeroMemory(Socket, sizeof(*Socket));
     Socket->RefCount = 2;
     Socket->Handle = -1;
+    Socket->SharedData.Listening = FALSE;
     Socket->SharedData.State = SocketOpen;
     Socket->SharedData.AddressFamily = AddressFamily;
     Socket->SharedData.SocketType = SocketType;
@@ -350,6 +351,10 @@ DWORD MsafdReturnWithErrno(NTSTATUS Status,
             DbgPrint("MSAFD: STATUS_INVALID_PARAMETER\n");
             *Errno = WSAEINVAL;
             break;
+		case STATUS_CANCELLED:
+			DbgPrint("MSAFD: STATUS_CANCELLED\n");
+			*Errno = WSAENOTSOCK;
+			break;
         default:
             DbgPrint("MSAFD: Error %x is unknown\n", Status);
             *Errno = WSAEINVAL;
@@ -615,6 +620,12 @@ WSPListen(SOCKET Handle,
     HANDLE                  SockEvent;
     NTSTATUS                Status;
 
+    /* Get the Socket Structure associate to this Socket*/
+    Socket = GetSocketStructure(Handle);
+
+    if (Socket->SharedData.Listening)
+        return 0;
+
     Status = NtCreateEvent(&SockEvent,
                            GENERIC_READ | GENERIC_WRITE,
                            NULL,
@@ -623,9 +634,6 @@ WSPListen(SOCKET Handle,
 
     if( !NT_SUCCESS(Status) )
         return -1;
-
-    /* Get the Socket Structure associate to this Socket*/
-    Socket = GetSocketStructure(Handle);
 
     /* Set Up Listen Structure */
     ListenData.UseSAN = FALSE;
@@ -1480,7 +1488,7 @@ WSPGetSockName(IN SOCKET Handle,
 {
     IO_STATUS_BLOCK         IOSB;
     ULONG                   TdiAddressSize;
-    PTDI_ADDRESS_INFO       TdiAddress;
+	PTDI_ADDRESS_INFO       TdiAddress;
     PTRANSPORT_ADDRESS      SocketAddress;
     PSOCKET_INFORMATION     Socket = NULL;
     NTSTATUS                Status;
@@ -1499,9 +1507,8 @@ WSPGetSockName(IN SOCKET Handle,
     Socket = GetSocketStructure(Handle);
 
     /* Allocate a buffer for the address */
-    TdiAddressSize = FIELD_OFFSET(TDI_ADDRESS_INFO, Address.Address[0].Address) +
-                     Socket->SharedData.SizeOfLocalAddress;
-
+    TdiAddressSize = 
+		sizeof(TRANSPORT_ADDRESS) + Socket->SharedData.SizeOfLocalAddress;
     TdiAddress = HeapAlloc(GlobalHeap, 0, TdiAddressSize);
 
     if ( TdiAddress == NULL )
@@ -1570,7 +1577,6 @@ WSPGetPeerName(IN SOCKET s,
 {
     IO_STATUS_BLOCK         IOSB;
     ULONG                   TdiAddressSize;
-    PTDI_ADDRESS_INFO       TdiAddress;
     PTRANSPORT_ADDRESS      SocketAddress;
     PSOCKET_INFORMATION     Socket = NULL;
     NTSTATUS                Status;
@@ -1589,18 +1595,15 @@ WSPGetPeerName(IN SOCKET s,
     Socket = GetSocketStructure(s);
 
     /* Allocate a buffer for the address */
-    TdiAddressSize = FIELD_OFFSET(TDI_ADDRESS_INFO, Address.Address[0].Address) +
-                     Socket->SharedData.SizeOfLocalAddress;
-    TdiAddress = HeapAlloc(GlobalHeap, 0, TdiAddressSize);
+    TdiAddressSize = sizeof(TRANSPORT_ADDRESS) + *NameLength;
+    SocketAddress = HeapAlloc(GlobalHeap, 0, TdiAddressSize);
 
-    if ( TdiAddress == NULL )
+    if ( SocketAddress == NULL )
     {
         NtClose( SockEvent );
         *lpErrno = WSAENOBUFS;
         return SOCKET_ERROR;
     }
-
-    SocketAddress = &TdiAddress->Address;
 
     /* Send IOCTL */
     Status = NtDeviceIoControlFile((HANDLE)Socket->Handle,
@@ -1611,7 +1614,7 @@ WSPGetPeerName(IN SOCKET s,
                                    IOCTL_AFD_GET_PEER_NAME,
                                    NULL,
                                    0,
-                                   TdiAddress,
+                                   SocketAddress,
                                    TdiAddressSize);
 
     /* Wait for return */
@@ -1635,12 +1638,12 @@ WSPGetPeerName(IN SOCKET s,
             AFD_DbgPrint (MID_TRACE, ("NameLength %d Address: %s Port %x\n",
                           *NameLength, ((struct sockaddr_in *)Name)->sin_addr.s_addr,
                           ((struct sockaddr_in *)Name)->sin_port));
-            HeapFree(GlobalHeap, 0, TdiAddress);
+            HeapFree(GlobalHeap, 0, SocketAddress);
             return 0;
         }
         else
         {
-            HeapFree(GlobalHeap, 0, TdiAddress);
+            HeapFree(GlobalHeap, 0, SocketAddress);
             *lpErrno = WSAEFAULT;
             return SOCKET_ERROR;
         }

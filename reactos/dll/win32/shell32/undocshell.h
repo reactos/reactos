@@ -119,7 +119,7 @@ int  WINAPI SHOutOfMemoryMessageBox(
 
 DWORD WINAPI SHNetConnectionDialog(
 	HWND hwndOwner,
-	LPCSTR lpstrRemoteName,
+	LPCWSTR lpstrRemoteName,
 	DWORD dwType);
 
 /****************************************************************************

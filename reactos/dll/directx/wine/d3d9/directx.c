@@ -37,7 +37,7 @@ static HRESULT WINAPI IDirect3D9Impl_QueryInterface(LPDIRECT3D9EX iface, REFIID 
         return S_OK;
     } else if(IsEqualGUID(riid, &IID_IDirect3D9Ex)) {
         if(This->extended) {
-            *ppobj = (IDirect3D9Ex *) This;
+            *ppobj = This;
             TRACE("Returning IDirect3D9Ex interface at %p\n", *ppobj);
             IDirect3D9Ex_AddRef((IDirect3D9Ex *)*ppobj);
         } else {

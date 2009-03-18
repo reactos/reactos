@@ -248,7 +248,7 @@ typedef struct _DIR_ENTRY
 //  sizeof = 0x020
 
 typedef struct _LONG_FILE_NAME_ENTRY {
-    UCHAR Index;
+    UCHAR SeqNum;
     UCHAR NameA[10];
     UCHAR Attributes;
     UCHAR Type;
@@ -259,7 +259,13 @@ typedef struct _LONG_FILE_NAME_ENTRY {
 } LONG_FILE_NAME_ENTRY, *PLONG_FILE_NAME_ENTRY;
 //  sizeof = 0x020
 
-#define FAT_FN_DIR_ENTRY_TERM_INDEX 0x40
+#define FAT_LFN_NAME_LENGTH \
+    (RTL_FIELD_SIZE(LONG_FILE_NAME_ENTRY, NameA) \
+        + RTL_FIELD_SIZE(LONG_FILE_NAME_ENTRY, NameB) \
+        + RTL_FIELD_SIZE(LONG_FILE_NAME_ENTRY, NameC))
+
+#define FAT_FN_DIR_ENTRY_LAST       0x40
+#define FAT_FN_MAX_DIR_ENTIES       0x14
 
 #define FAT_BYTES_PER_DIRENT        0x20
 #define FAT_BYTES_PER_DIRENT_LOG    0x05

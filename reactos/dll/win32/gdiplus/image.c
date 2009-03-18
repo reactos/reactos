@@ -18,6 +18,8 @@
 
 #include <stdarg.h>
 
+#define NONAMELESSUNION
+
 #include "windef.h"
 #include "winbase.h"
 #include "winuser.h"
@@ -429,6 +431,50 @@ GpStatus WINGDIPAPI GdipCreateBitmapFromGraphics(INT width, INT height,
     return ret;
 }
 
+GpStatus WINGDIPAPI GdipCreateBitmapFromHICON(HICON hicon, GpBitmap** bitmap)
+{
+    HICON icon_copy;
+    ICONINFO iinfo;
+    PICTDESC desc;
+
+    TRACE("%p, %p\n", hicon, bitmap);
+
+    if(!bitmap || !GetIconInfo(hicon, &iinfo))
+        return InvalidParameter;
+
+    *bitmap = GdipAlloc(sizeof(GpBitmap));
+    if(!*bitmap)    return OutOfMemory;
+
+    icon_copy = CreateIconIndirect(&iinfo);
+
+    if(!icon_copy){
+        GdipFree(*bitmap);
+        return InvalidParameter;
+    }
+
+    desc.cbSizeofstruct = sizeof(PICTDESC);
+    desc.picType = PICTYPE_ICON;
+    desc.u.icon.hicon = icon_copy;
+
+    if(OleCreatePictureIndirect(&desc, &IID_IPicture, TRUE,
+                                (LPVOID*) &((*bitmap)->image.picture)) != S_OK){
+        DestroyIcon(icon_copy);
+        GdipFree(*bitmap);
+        return GenericError;
+    }
+
+    (*bitmap)->format = PixelFormat32bppARGB;
+    (*bitmap)->image.type  = ImageTypeBitmap;
+    (*bitmap)->image.flags = ImageFlagsNone;
+    (*bitmap)->width  = ipicture_pixel_width((*bitmap)->image.picture);
+    (*bitmap)->height = ipicture_pixel_height((*bitmap)->image.picture);
+
+    DeleteObject(iinfo.hbmColor);
+    DeleteObject(iinfo.hbmMask);
+
+    return Ok;
+}
+
 GpStatus WINGDIPAPI GdipCreateBitmapFromScan0(INT width, INT height, INT stride,
     PixelFormat format, BYTE* scan0, GpBitmap** bitmap)
 {
@@ -449,12 +495,6 @@ GpStatus WINGDIPAPI GdipCreateBitmapFromScan0(INT width, INT height, INT stride,
 
     if(scan0 && !stride)
         return InvalidParameter;
-
-    /* FIXME: windows allows negative stride (reads backwards from scan0) */
-    if(stride < 0){
-        FIXME("negative stride\n");
-        return InvalidParameter;
-    }
 
     *bitmap = GdipAlloc(sizeof(GpBitmap));
     if(!*bitmap)    return OutOfMemory;
@@ -481,16 +521,29 @@ GpStatus WINGDIPAPI GdipCreateBitmapFromScan0(INT width, INT height, INT stride,
 
     bmih->biSize            = sizeof(BITMAPINFOHEADER);
     bmih->biWidth           = width;
-    bmih->biHeight          = -height;
     /* FIXME: use the rest of the data from format */
     bmih->biBitCount        = PIXELFORMATBPP(format);
     bmih->biCompression     = BI_RGB;
     bmih->biSizeImage       = datalen;
 
-    if(scan0)
-        memcpy(bmih + 1, scan0, datalen);
+    if (scan0)
+    {
+        if (stride > 0)
+        {
+            bmih->biHeight = -height;
+            memcpy(bmih + 1, scan0, datalen);
+        }
+        else
+        {
+            bmih->biHeight = height;
+            memcpy(bmih + 1, scan0 + stride * (height - 1), datalen);
+        }
+    }
     else
+    {
+        bmih->biHeight = height;
         memset(bmih + 1, 0, datalen);
+    }
 
     if(CreateStreamOnHGlobal(buff, TRUE, &stream) != S_OK){
         ERR("could not make stream\n");
@@ -1446,6 +1499,7 @@ GpStatus WINGDIPAPI GdipCreateBitmapFromHBITMAP(HBITMAP hbm, HPALETTE hpal, GpBi
     BITMAP bm;
     GpStatus retval;
     PixelFormat format;
+    BYTE* bits;
 
     TRACE("%p %p %p\n", hbm, hpal, bitmap);
 
@@ -1486,8 +1540,16 @@ GpStatus WINGDIPAPI GdipCreateBitmapFromHBITMAP(HBITMAP hbm, HPALETTE hpal, GpBi
             return InvalidParameter;
     }
 
-    retval = GdipCreateBitmapFromScan0(bm.bmWidth, bm.bmHeight, bm.bmWidthBytes,
-        format, bm.bmBits, bitmap);
+    if (bm.bmBits)
+        bits = (BYTE*)bm.bmBits + (bm.bmHeight - 1) * bm.bmWidthBytes;
+    else
+    {
+        FIXME("can only get image data from DIB sections\n");
+        bits = NULL;
+    }
+
+    retval = GdipCreateBitmapFromScan0(bm.bmWidth, bm.bmHeight, -bm.bmWidthBytes,
+        format, bits, bitmap);
 
     return retval;
 }

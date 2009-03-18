@@ -1,9 +1,16 @@
-#include "oscalls.h"
-#include "internal.h"
+/**
+ * This file has no copyright assigned and is placed in the Public Domain.
+ * This file is part of the w64 mingw-runtime package.
+ * No warranty is given; refer to the file DISCLAIMER within this package.
+ */
+
+#include <oscalls.h>
+#include <internal.h>
 #include <process.h>
 #include <math.h>
 #include <stdlib.h>
 #include <tchar.h>
+#include <sect_attribs.h>
 #include <locale.h>
 
 const PIMAGE_TLS_CALLBACK __dyn_tls_init_callback;
@@ -22,4 +29,3 @@ _encode_pointer (void *ptr)
 
 /* 0:console, 1:windows.  */
 int mingw_app_type = 0;
-

@@ -46,8 +46,6 @@ typedef struct
     DWORD dwDummy;  /* just to keep the compiler happy ;-) */
 } FLATSB_INFO, *LPFLATSB_INFO;
 
-#define FlatSB_GetInfoPtr(hwnd) ((FLATSB_INFO*)GetWindowLongPtrW (hwnd, 0))
-
 
 /***********************************************************************
  *		InitializeFlatSB (COMCTL32.@)
@@ -245,7 +243,7 @@ FlatSB_Destroy (HWND hwnd, WPARAM wParam, LPARAM lParam)
 static LRESULT WINAPI
 FlatSB_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    if (!FlatSB_GetInfoPtr(hwnd) && (uMsg != WM_CREATE))
+    if (!GetWindowLongPtrW(hwnd, 0) && (uMsg != WM_CREATE))
 	return DefWindowProcW( hwnd, uMsg, wParam, lParam );
 
     switch (uMsg)

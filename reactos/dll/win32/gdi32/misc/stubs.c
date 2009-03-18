@@ -1097,39 +1097,76 @@ GdiDrawStream(HDC dc, ULONG l, VOID *v)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
-GdiIsMetaFileDC(HDC hdc)
+GdiIsMetaFileDC(HDC hDC)
 {
-    UNIMPLEMENTED;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+  if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
+  {
+     if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_METADC)
+        return TRUE;
+     else
+     {
+        PLDC pLDC = GdiGetLDC(hDC);
+        if ( !pLDC )
+        {
+           SetLastError(ERROR_INVALID_HANDLE);
+           return FALSE;
+        }
+        if ( pLDC->iType == LDC_EMFLDC) return TRUE;
+     }
+  }
+  return FALSE;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
-GdiIsMetaPrintDC(HDC hdc)
+GdiIsMetaPrintDC(HDC hDC)
 {
-    UNIMPLEMENTED;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+
+  if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
+  {
+     if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_METADC)
+        return FALSE;
+     else
+     {
+        PLDC pLDC = GdiGetLDC(hDC);
+        if ( !pLDC )
+        {
+           SetLastError(ERROR_INVALID_HANDLE);
+           return FALSE;
+        }
+        if ( pLDC->Flags & LDC_META_PRINT) return TRUE;
+     }
+  }
+  return FALSE;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
-GdiIsPlayMetafileDC(HDC hdc)
+GdiIsPlayMetafileDC(HDC hDC)
 {
-    UNIMPLEMENTED;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+  PDC_ATTR Dc_Attr;
+  PLDC pLDC;
+  
+  GdiGetHandleUserData((HGDIOBJ) hDC, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr);
+  if ( Dc_Attr )
+  {
+     pLDC = Dc_Attr->pvLDC;
+     if ( pLDC )
+     {
+        if ( pLDC->Flags & LDC_PLAY_MFDC ) return TRUE;
+     }
+  }
+  return FALSE;
 }
 
 /*

@@ -11,73 +11,69 @@
 */
 
 #define MAX_MINIPORTS 1
-
 #define PUT_GUIDS_HERE
-
 #define INITGUID
+
 #include <ntddk.h>
+#include <portcls.h>
 #include <debug.h>
 
-#include <portcls.h>
-
-extern "C"
 NTSTATUS
+NTAPI
 StartDevice(
     IN  PDEVICE_OBJECT pDeviceObject,
     IN  PIRP pIrp,
     IN  PRESOURCELIST ResourceList)
 {
-    DPRINT1("MPU401_KS StartDevice called\n");
-
-    if ( ! ResourceList )
-        return STATUS_INVALID_PARAMETER;
-
-    if ( ResourceList->NumberOfEntries() == 0 )
-    {
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    DPRINT1("Sufficient resources available :)\n");
-
     PPORT port;
     PMINIPORT miniport;
+    NTSTATUS Status;
 
-    NTSTATUS status;
+    DPRINT1("MPU401_KS StartDevice called\n");
+
+    if (!ResourceList)
+        return STATUS_INVALID_PARAMETER_3;
+
+    if (ResourceList->NumberOfEntries() == 0 )
+    {
+        return STATUS_INVALID_PARAMETER_3;
+    }
+
 
     DPRINT1("Calling PcNewPort with CLSID_PortMidi\n");
-    status = PcNewPort(&port, CLSID_PortMidi);
+    Status = PcNewPort(&port, CLSID_PortMidi);
 
-    if ( ! NT_SUCCESS(status) )
+    if (!NT_SUCCESS(Status))
     {
-        DPRINT("PcNewPort FAILED with status 0x%08x\n", status);
-        return status;
+        DPRINT("PcNewPort FAILED with status 0x%08x\n", Status);
+        return Status;
     }
 
     DPRINT1("Calling PcNewMiniport with CLSID_MiniportDriverUart\n");
-    status = PcNewMiniport(&miniport, CLSID_MiniportDriverUart);
+    Status = PcNewMiniport(&miniport, CLSID_MiniportDriverUart);
 
-    if ( ! NT_SUCCESS(status) )
+    if (!NT_SUCCESS(Status))
     {
-        DPRINT1("PcNewMiniport FAILED with status 0x%08x\n", status);
-        return status;
+        DPRINT1("PcNewMiniport FAILED with status 0x%08x\n", Status);
+        return Status;
     }
 
     DPRINT1("Calling Init of port object\n");
-    status = port->Init(pDeviceObject, pIrp, miniport, NULL, ResourceList);
+    Status = port->Init(pDeviceObject, pIrp, miniport, NULL, ResourceList);
 
-    if ( ! NT_SUCCESS(status) )
+    if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Init FAILED with status 0x%08x\n", status);
-        return status;
+        DPRINT1("Init FAILED with status 0x%08x\n", Status);
+        return Status;
     }
 
     DPRINT1("Registering subdevice via PcRegisterSubdevice\n");
-    status = PcRegisterSubdevice(pDeviceObject, L"Uart", port);
+    Status = PcRegisterSubdevice(pDeviceObject, L"Uart", port);
 
-    if ( ! NT_SUCCESS(status) )
+    if (!NT_SUCCESS(Status))
     {
         /* just print an error here */
-        DPRINT1("PcRegisterSubdevice FAILED with status 0x%08x\n", status);
+        DPRINT1("PcRegisterSubdevice FAILED with status 0x%08x\n", Status);
     }
 
     miniport->Release();
@@ -85,59 +81,41 @@ StartDevice(
 
     DPRINT1("Device started\n");
 
-    return status;
+    return Status;
 }
 
 
-extern "C"
 NTSTATUS
+NTAPI
 AddDevice(
-    IN  PVOID Context1,
-    IN  PVOID Context2)
+    IN PDRIVER_OBJECT DriverObject,
+    IN PDEVICE_OBJECT PhysicalDeviceObject)
 {
-    DPRINT1("MPU401_KS AddDevice called, redirecting to PcAddAdapterDevice\n");
-    return PcAddAdapterDevice((PDRIVER_OBJECT) Context1,
-                              (PDEVICE_OBJECT) Context2,
-                              StartDevice,
+    DPRINT1("MPU401_KS AddDevice called\n");
+    return PcAddAdapterDevice(DriverObject,
+                              PhysicalDeviceObject,
+                              (PCPFNSTARTDEVICE)StartDevice,
                               MAX_MINIPORTS,
                               0);
 }
-
 extern "C"
 {
-
-NTSTATUS NTAPI
+NTSTATUS
+NTAPI
 DriverEntry(
-    IN  PDRIVER_OBJECT Context1,
-    IN  PUNICODE_STRING Context2)
+    IN  PDRIVER_OBJECT DriverObject,
+    IN  PUNICODE_STRING RegistryPath)
 {
-    //PDEVICE_OBJECT DeviceObject;
-    //UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Device\\MPU401Static");
+    NTSTATUS Status;
+    DPRINT1("MPU401_KS DriverEntry\n");
 
-//    KeBugCheck(0x0000007F);
-    DPRINT1("MPU401_KS DriverEntry called, redirecting to PcInitializeAdapterDriver\n");
+    Status = PcInitializeAdapterDriver(DriverObject,
+                                       RegistryPath,
+                                       AddDevice);
 
-    NTSTATUS status = PcInitializeAdapterDriver((PDRIVER_OBJECT) Context1,
-                                     (PUNICODE_STRING) Context2,
-                                     (PDRIVER_ADD_DEVICE) AddDevice);
-    DPRINT1("Result was 0x%08x\n", status);
+    DPRINT1("PcInitializeAdapterDriver result 0x%08x\n", Status);
 
-    /* Create a device (this will be handled by PnP manager really but we fake for now */
-
-/*
-    DPRINT1("Creating device\n");
-    status = IoCreateDevice(Context1,
-                            0,
-                            &DeviceName,
-                            FILE_DEVICE_SOUND,
-                            0,
-                            FALSE,
-                            &DeviceObject);
-
-    DPRINT1("Result was 0x%08x\n", status);
-*/
-
-    return status;
+    return Status;
 };
-
 }
+

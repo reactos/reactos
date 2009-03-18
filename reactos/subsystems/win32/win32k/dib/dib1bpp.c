@@ -369,7 +369,8 @@ DIB_1BPP_BitBlt(PBLTINFO BltInfo)
       else
       {
          /* FIXME: Shouldn't it be expanded? */
-         Pattern = BltInfo->Brush->iSolidColor;
+         if (BltInfo->Brush)
+            Pattern = BltInfo->Brush->iSolidColor;
       }
    }
 

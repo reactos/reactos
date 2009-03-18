@@ -189,16 +189,16 @@ free_pending_endp(PUHCI_PENDING_ENDP_POOL pool, PUHCI_PENDING_ENDP pending_endp)
 PUHCI_PENDING_ENDP
 alloc_pending_endp(PUHCI_PENDING_ENDP_POOL pool, LONG count)
 {
-    PUHCI_PENDING_ENDP new;
+    PUHCI_PENDING_ENDP new_endp;
     if (pool == NULL || count != 1)
         return NULL;
 
     if (pool->free_count <= 0)
         return NULL;
 
-    new = (PUHCI_PENDING_ENDP) RemoveHeadList(&pool->free_que);
+    new_endp = (PUHCI_PENDING_ENDP) RemoveHeadList(&pool->free_que);
     pool->free_count--;
-    return new;
+    return new_endp;
 }
 
 BOOLEAN
@@ -627,7 +627,7 @@ uhci_probe(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, PUSB_DEV_MANAGER d
     pdev = NULL;
 
     //scan the bus to find uhci controller
-    for(bus = 0; bus < 2; bus++)        /*enum only bus0 and bus1 */
+    for(bus = 0; bus < 3; bus++)        /* enum bus0-bus2 */
     {
         for(i = 0; i < PCI_MAX_DEVICES; i++)
         {
@@ -3752,7 +3752,6 @@ uhci_init_hcd_interface(PUHCI_DEV uhci)
     uhci->hcd_interf.flags = HCD_TYPE_UHCI;     //hcd types | hcd id
 }
 
-
 NTSTATUS NTAPI
 generic_dispatch_irp(IN PDEVICE_OBJECT dev_obj, IN PIRP irp)
 {
@@ -3804,11 +3803,12 @@ generic_start_io(IN PDEVICE_OBJECT dev_obj, IN PIRP irp)
 }
 
 NTSTATUS
+NTAPI
 DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRING RegistryPath)
 {
-#if DBG
     NTSTATUS ntStatus = STATUS_SUCCESS;
 
+#if DBG
     // should be done before any debug output is done.
     // read our debug verbosity level from the registry
     //NetacOD_GetRegistryDword( NetacOD_REGISTRY_PARAMETERS_PATH, //absolute registry path
@@ -3865,6 +3865,9 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRING RegistryPath)
     }
 
     dev_mgr_start_hcd(&g_dev_mgr);
+
+    /* Wait till all drivers are initialized */
+    ntStatus = KeWaitForSingleObject(&g_dev_mgr.drivers_inited, Executive, KernelMode, TRUE, NULL);
 
     uhci_dbg_print_cond(DBGLVL_DEFAULT, DEBUG_UHCI, ("DriverEntry(): exiting... (%x)\n", ntStatus));
     return STATUS_SUCCESS;

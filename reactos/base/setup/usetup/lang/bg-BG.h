@@ -1485,6 +1485,11 @@ MUI_ERROR bgBGErrorEntries[] =
         "ENTER = Презапускане на компютъра"
     },
     {
+        //ERROR_UPDATE_GEOID,
+        "Setup could not set the geo id.\n"
+        "ENTER = Reboot computer"
+    },
+    {
         NULL,
         NULL
     }

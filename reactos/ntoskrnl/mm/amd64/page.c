@@ -269,25 +269,9 @@ MmGetPhysicalAddress(PVOID vaddr)
     return ret;
 }
 
-PVOID
-NTAPI
-MmCreateHyperspaceMapping(PFN_TYPE Page)
-{
-    UNIMPLEMENTED;
-    return NULL;
-}
-
 PFN_TYPE
 NTAPI
 MmChangeHyperspaceMapping(PVOID Address, PFN_TYPE NewPage)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
-PFN_TYPE
-NTAPI
-MmDeleteHyperspaceMapping(PVOID Address)
 {
     UNIMPLEMENTED;
     return 0;

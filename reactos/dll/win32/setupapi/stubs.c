@@ -184,3 +184,23 @@ SetupDiUnremoveDevice(
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
+
+
+/***********************************************************************
+ *		CMP_RegisterNotification(SETUPAPI.@)
+ */
+CONFIGRET
+WINAPI
+CMP_RegisterNotification(
+  IN HANDLE hRecipient,
+  IN LPVOID lpvNotificationFilter,
+  IN DWORD  dwFlags,
+  OUT PULONG pluhDevNotify)
+{
+    FIXME ("Stub %p %p %lu %p\n", hRecipient, lpvNotificationFilter, dwFlags, pluhDevNotify);
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return CR_FAILURE;
+}
+
+
+

@@ -17,6 +17,12 @@ typedef struct
     PSUBDEVICE_DESCRIPTOR SubDeviceDescriptor;
 }IPortTopologyImpl;
 
+typedef struct
+{
+    PIRP Irp;
+    IIrpTarget *Filter;
+
+}PIN_WORKER_CONTEXT, *PPIN_WORKER_CONTEXT;
 
 static GUID InterfaceGuids[2] = 
 {
@@ -316,7 +322,7 @@ ISubDevice_fnNewIrpTarget(
     IN WCHAR * Name,
     IN PUNKNOWN Unknown,
     IN POOL_TYPE PoolType,
-    IN PDEVICE_OBJECT * DeviceObject,
+    IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp, 
     IN KSOBJECT_CREATE *CreateObject)
 {
@@ -431,6 +437,182 @@ static ISubdeviceVtbl vt_ISubdeviceVtbl =
     ISubDevice_fnPowerChangeNotify,
     ISubDevice_fnPinCount
 };
+
+VOID
+NTAPI
+CreatePinWorkerRoutine(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PVOID  Context)
+{
+    NTSTATUS Status;
+    IIrpTarget *Pin;
+    PPIN_WORKER_CONTEXT WorkerContext = (PPIN_WORKER_CONTEXT)Context;
+
+    DPRINT("CreatePinWorkerRoutine called\n");
+
+    Status = WorkerContext->Filter->lpVtbl->NewIrpTarget(WorkerContext->Filter,
+                                                         &Pin,
+                                                         NULL,
+                                                         NULL,
+                                                         NonPagedPool,
+                                                         DeviceObject,
+                                                         WorkerContext->Irp,
+                                                         NULL);
+
+    DPRINT("CreatePinWorkerRoutine Status %x\n", Status);
+
+    if (NT_SUCCESS(Status))
+    {
+        /* create the dispatch object */
+        Status = NewDispatchObject(WorkerContext->Irp, Pin);
+        DPRINT("Pin %p\n", Pin);
+    }
+
+    DPRINT1("CreatePinWorkerRoutine completing irp %p\n", WorkerContext->Irp);
+    WorkerContext->Irp->IoStatus.Status = Status;
+    WorkerContext->Irp->IoStatus.Information = 0;
+    IoCompleteRequest(WorkerContext->Irp, IO_SOUND_INCREMENT);
+    ExFreePool(WorkerContext);
+}
+
+
+NTSTATUS
+NTAPI
+PcCreateItemDispatch(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+    PIO_STACK_LOCATION IoStack;
+    ISubdevice * SubDevice;
+    PPCLASS_DEVICE_EXTENSION DeviceExt;
+    SUBDEVICE_ENTRY * Entry;
+    IIrpTarget *Filter;
+    PKSOBJECT_CREATE_ITEM CreateItem;
+    PPIN_WORKER_CONTEXT Context;
+    PIO_WORKITEM WorkItem;
+
+    DPRINT1("PcCreateItemDispatch called DeviceObject %p\n", DeviceObject);
+
+    /* access the create item */
+    CreateItem = KSCREATE_ITEM_IRP_STORAGE(Irp);
+    if (!CreateItem)
+    {
+        DPRINT1("PcCreateItemDispatch no CreateItem\n");
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    SubDevice = (ISubdevice*)CreateItem->Context;
+    DeviceExt = (PPCLASS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    if (!SubDevice || !DeviceExt)
+    {
+        DPRINT1("PcCreateItemDispatch SubDevice %p DeviceExt %p\n", SubDevice, DeviceExt);
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    Entry = AllocateItem(NonPagedPool, sizeof(SUBDEVICE_ENTRY), TAG_PORTCLASS);
+    if (!Entry)
+    {
+        DPRINT1("PcCreateItemDispatch no memory\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+#if KS_IMPLEMENTED
+    Status = KsReferenceSoftwareBusObject(DeviceExt->KsDeviceHeader);
+    if (!NT_SUCCESS(Status) && Status != STATUS_NOT_IMPLEMENTED)
+    {
+        DPRINT1("PciCreateItemDispatch failed to reference device header\n");
+
+        FreeItem(Entry, TAG_PORTCLASS);
+        goto cleanup;
+    }
+#endif
+
+
+    /* get current io stack location */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+    /* sanity check */
+    ASSERT(IoStack->FileObject != NULL);
+
+    if (IoStack->FileObject->FsContext != NULL)
+    {
+        /* nothing to do */
+        DPRINT1("FsContext already exists\n");
+        return STATUS_SUCCESS;
+    }
+
+
+    /* get filter object 
+     * is implemented as a singleton
+     */
+    Status = SubDevice->lpVtbl->NewIrpTarget(SubDevice,
+                                             &Filter,
+                                             NULL,
+                                             NULL,
+                                             NonPagedPool,
+                                             DeviceObject,
+                                             Irp,
+                                             NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to get filter object\n");
+        return Status;
+    }
+
+    /* is just the filter requested */
+    if (IoStack->FileObject->FileName.Buffer == NULL)
+    {
+        /* create the dispatch object */
+        Status = NewDispatchObject(Irp, Filter);
+
+        DPRINT1("Filter %p\n", Filter);
+    }
+    else
+    {
+        LPWSTR Buffer = IoStack->FileObject->FileName.Buffer;
+
+        static LPWSTR KS_NAME_PIN = L"{146F1A80-4791-11D0-A5D6-28DB04C10000}";
+
+        /* is the request for a new pin */
+        if (!wcsncmp(KS_NAME_PIN, Buffer, wcslen(KS_NAME_PIN)))
+        {
+            /* try to create new pin */
+            Context = AllocateItem(NonPagedPool, sizeof(PIN_WORKER_CONTEXT), TAG_PORTCLASS);
+            if (!Context)
+            {
+                Irp->IoStatus.Information = 0;
+                Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
+                IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                return STATUS_INSUFFICIENT_RESOURCES;
+            }
+            Context->Filter = Filter;
+            Context->Irp = Irp;
+
+            WorkItem = IoAllocateWorkItem(DeviceObject);
+            if (!WorkItem)
+            {
+                Irp->IoStatus.Information = 0;
+                Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
+                FreeItem(Context, TAG_PORTCLASS);
+                IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                return STATUS_INSUFFICIENT_RESOURCES;
+            }
+            DPRINT1("Queueing IRP %p\n", Irp);
+            Irp->IoStatus.Information = 0;
+            Irp->IoStatus.Status = STATUS_PENDING;
+            IoMarkIrpPending(Irp);
+            IoQueueWorkItem(WorkItem, CreatePinWorkerRoutine, DelayedWorkQueue, (PVOID)Context);
+
+            return STATUS_PENDING;
+        }
+    }
+    Irp->IoStatus.Information = 0;
+    Irp->IoStatus.Status = Status;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return Status;
+}
+
 
 
 NTSTATUS

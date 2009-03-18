@@ -916,7 +916,7 @@ static LRESULT TAB_AdjustRect(const TAB_INFO *infoPtr, WPARAM fLarger, LPRECT pr
  * This method will handle the notification from the scroll control and
  * perform the scrolling operation on the tab control.
  */
-static LRESULT TAB_OnHScroll(TAB_INFO *infoPtr, int nScrollCode, int nPos, HWND hwndScroll)
+static LRESULT TAB_OnHScroll(TAB_INFO *infoPtr, int nScrollCode, int nPos)
 {
   if(nScrollCode == SB_THUMBPOSITION && nPos != infoPtr->leftmostVisible)
   {
@@ -2936,7 +2936,7 @@ static inline LRESULT TAB_Size (TAB_INFO *infoPtr)
 }
 
 
-static LRESULT TAB_Create (HWND hwnd, WPARAM wParam, LPARAM lParam)
+static LRESULT TAB_Create (HWND hwnd, LPARAM lParam)
 {
   TAB_INFO *infoPtr;
   TEXTMETRICW fontMetrics;
@@ -3076,7 +3076,7 @@ static LRESULT theme_changed(const TAB_INFO *infoPtr)
     return 0;
 }
 
-static LRESULT TAB_NCCalcSize(HWND hwnd, WPARAM wParam, LPARAM lParam)
+static LRESULT TAB_NCCalcSize(WPARAM wParam)
 {
   if (!wParam)
     return 0;
@@ -3211,7 +3211,7 @@ TAB_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       return TAB_SetFont (infoPtr, (HFONT)wParam);
 
     case WM_CREATE:
-      return TAB_Create (hwnd, wParam, lParam);
+      return TAB_Create (hwnd, lParam);
 
     case WM_NCDESTROY:
       return TAB_Destroy (infoPtr);
@@ -3245,7 +3245,7 @@ TAB_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       return TAB_SetRedraw (infoPtr, (BOOL)wParam);
 
     case WM_HSCROLL:
-      return TAB_OnHScroll(infoPtr, (int)LOWORD(wParam), (int)HIWORD(wParam), (HWND)lParam);
+      return TAB_OnHScroll(infoPtr, (int)LOWORD(wParam), (int)HIWORD(wParam));
 
     case WM_STYLECHANGED:
       TAB_SetItemBounds (infoPtr);
@@ -3270,7 +3270,7 @@ TAB_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       return TAB_NCHitTest(infoPtr, lParam);
 
     case WM_NCCALCSIZE:
-      return TAB_NCCalcSize(hwnd, wParam, lParam);
+      return TAB_NCCalcSize(wParam);
 
     default:
       if (uMsg >= WM_USER && uMsg < WM_APP && !COMCTL32_IsReflectedMessage(uMsg))

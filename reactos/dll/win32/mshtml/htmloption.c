@@ -39,7 +39,7 @@ typedef struct {
     nsIDOMHTMLOptionElement *nsoption;
 } HTMLOptionElement;
 
-#define HTMLOPTION(x)  ((IHTMLOptionElement*)  &(x)->lpHTMLOptionElementVtbl)
+#define HTMLOPTION(x)  (&(x)->lpHTMLOptionElementVtbl)
 
 #define HTMLOPTION_THIS(iface) DEFINE_THIS(HTMLOptionElement, HTMLOptionElement, iface)
 
@@ -68,16 +68,14 @@ static ULONG WINAPI HTMLOptionElement_Release(IHTMLOptionElement *iface)
 static HRESULT WINAPI HTMLOptionElement_GetTypeInfoCount(IHTMLOptionElement *iface, UINT *pctinfo)
 {
     HTMLOptionElement *This = HTMLOPTION_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, pctinfo);
-    return E_NOTIMPL;
+    return IDispatchEx_GetTypeInfoCount(DISPATCHEX(&This->element.node.dispex), pctinfo);
 }
 
 static HRESULT WINAPI HTMLOptionElement_GetTypeInfo(IHTMLOptionElement *iface, UINT iTInfo,
                                               LCID lcid, ITypeInfo **ppTInfo)
 {
     HTMLOptionElement *This = HTMLOPTION_THIS(iface);
-    FIXME("(%p)->(%u %u %p)\n", This, iTInfo, lcid, ppTInfo);
-    return E_NOTIMPL;
+    return IDispatchEx_GetTypeInfo(DISPATCHEX(&This->element.node.dispex), iTInfo, lcid, ppTInfo);
 }
 
 static HRESULT WINAPI HTMLOptionElement_GetIDsOfNames(IHTMLOptionElement *iface, REFIID riid,
@@ -85,9 +83,7 @@ static HRESULT WINAPI HTMLOptionElement_GetIDsOfNames(IHTMLOptionElement *iface,
                                                 LCID lcid, DISPID *rgDispId)
 {
     HTMLOptionElement *This = HTMLOPTION_THIS(iface);
-    FIXME("(%p)->(%s %p %u %u %p)\n", This, debugstr_guid(riid), rgszNames, cNames,
-                                        lcid, rgDispId);
-    return E_NOTIMPL;
+    return IDispatchEx_GetIDsOfNames(DISPATCHEX(&This->element.node.dispex), riid, rgszNames, cNames, lcid, rgDispId);
 }
 
 static HRESULT WINAPI HTMLOptionElement_Invoke(IHTMLOptionElement *iface, DISPID dispIdMember,
@@ -95,9 +91,8 @@ static HRESULT WINAPI HTMLOptionElement_Invoke(IHTMLOptionElement *iface, DISPID
                             VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
 {
     HTMLOptionElement *This = HTMLOPTION_THIS(iface);
-    FIXME("(%p)->(%d %s %d %d %p %p %p %p)\n", This, dispIdMember, debugstr_guid(riid),
-            lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
-    return E_NOTIMPL;
+    return IDispatchEx_Invoke(DISPATCHEX(&This->element.node.dispex), dispIdMember, riid, lcid, wFlags, pDispParams,
+            pVarResult, pExcepInfo, puArgErr);
 }
 
 static HRESULT WINAPI HTMLOptionElement_put_selected(IHTMLOptionElement *iface, VARIANT_BOOL v)
@@ -185,13 +180,17 @@ static HRESULT WINAPI HTMLOptionElement_get_index(IHTMLOptionElement *iface, LON
 static HRESULT WINAPI HTMLOptionElement_put_text(IHTMLOptionElement *iface, BSTR v)
 {
     HTMLOptionElement *This = HTMLOPTION_THIS(iface);
-    nsIDOMDocument *nsdoc;
     nsIDOMText *text_node;
     nsAString text_str;
     nsIDOMNode *tmp;
     nsresult nsres;
 
     TRACE("(%p)->(%s)\n", This, debugstr_w(v));
+
+    if(!This->element.node.doc->nsdoc) {
+        WARN("NULL nsdoc\n");
+        return E_UNEXPECTED;
+    }
 
     while(1) {
         nsIDOMNode *child;
@@ -210,19 +209,12 @@ static HRESULT WINAPI HTMLOptionElement_put_text(IHTMLOptionElement *iface, BSTR
         }
     }
 
-    nsres = nsIWebNavigation_GetDocument(This->element.node.doc->nscontainer->navigation, &nsdoc);
-    if(NS_FAILED(nsres)) {
-        ERR("GetDocument failed: %08x\n", nsres);
-        return S_OK;
-    }
-
     nsAString_Init(&text_str, v);
-    nsres = nsIDOMDocument_CreateTextNode(nsdoc, &text_str, &text_node);
-    nsIDOMDocument_Release(nsdoc);
+    nsres = nsIDOMHTMLDocument_CreateTextNode(This->element.node.doc->nsdoc, &text_str, &text_node);
     nsAString_Finish(&text_str);
     if(NS_FAILED(nsres)) {
         ERR("CreateTextNode failed: %08x\n", nsres);
-        return S_OK;
+        return E_FAIL;
     }
 
     nsres = nsIDOMHTMLOptionElement_AppendChild(This->nsoption, (nsIDOMNode*)text_node, &tmp);
@@ -336,6 +328,7 @@ static const tid_t HTMLOptionElement_iface_tids[] = {
     IHTMLDOMNode2_tid,
     IHTMLElement_tid,
     IHTMLElement2_tid,
+    IHTMLElement3_tid,
     IHTMLOptionElement_tid,
     0
 };
@@ -456,7 +449,6 @@ static HRESULT WINAPI HTMLOptionElementFactory_create(IHTMLOptionElementFactory 
         IHTMLOptionElement **optelem)
 {
     HTMLOptionElementFactory *This = HTMLOPTFACTORY_THIS(iface);
-    nsIDOMDocument *nsdoc;
     nsIDOMElement *nselem;
     nsAString option_str;
     nsresult nsres;
@@ -464,21 +456,18 @@ static HRESULT WINAPI HTMLOptionElementFactory_create(IHTMLOptionElementFactory 
 
     static const PRUnichar optionW[] = {'O','P','T','I','O','N',0};
 
-    TRACE("(%p)->(v v v v %p)\n", This, optelem);
+    TRACE("(%p)->(%s %s %s %s %p)\n", This, debugstr_variant(&text), debugstr_variant(&value),
+          debugstr_variant(&defaultselected), debugstr_variant(&selected), optelem);
 
-    *optelem = NULL;
-    if(!This->doc->nscontainer)
-        return E_FAIL;
-
-    nsres = nsIWebNavigation_GetDocument(This->doc->nscontainer->navigation, &nsdoc);
-    if(NS_FAILED(nsres)) {
-        ERR("GetDocument failed: %08x\n", nsres);
-        return E_FAIL;
+    if(!This->doc->nsdoc) {
+        WARN("NULL nsdoc\n");
+        return E_UNEXPECTED;
     }
 
+    *optelem = NULL;
+
     nsAString_Init(&option_str, optionW);
-    nsres = nsIDOMDocument_CreateElement(nsdoc, &option_str, &nselem);
-    nsIDOMDocument_Release(nsdoc);
+    nsres = nsIDOMHTMLDocument_CreateElement(This->doc->nsdoc, &option_str, &nselem);
     nsAString_Finish(&option_str);
     if(NS_FAILED(nsres)) {
         ERR("CreateElement failed: %08x\n", nsres);

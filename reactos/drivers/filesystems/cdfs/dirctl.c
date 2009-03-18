@@ -176,9 +176,7 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
     PVOID Context = NULL;
     ULONG DirSize;
     PDIR_RECORD Record;
-    LARGE_INTEGER StreamOffset;
-    BOOLEAN HasSpaces;
-    GENERATE_NAME_CONTEXT NameContext;
+    LARGE_INTEGER StreamOffset, OffsetOfEntry;
 
     DPRINT("FindFile(Parent %x, FileToFind '%wZ', DirIndex: %d)\n",
         Parent, FileToFind, pDirIndex ? *pDirIndex : 0);
@@ -276,7 +274,8 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
         DPRINT("RecordLength %u  ExtAttrRecordLength %u  NameLength %u\n",
             Record->RecordLength, Record->ExtAttrRecordLength, Record->FileIdLength);
 
-        Status = CdfsGetEntryName(DeviceExt, &Context, &Block, &StreamOffset,
+        Status = CdfsGetEntryName
+            (DeviceExt, &Context, &Block, &StreamOffset,
             DirSize, (PVOID*)&Record, name, &DirIndex, &Offset);
 
         if (Status == STATUS_NO_MORE_ENTRIES)
@@ -286,6 +285,7 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
         else if (Status == STATUS_UNSUCCESSFUL)
         {
             /* Note: the directory cache has already been unpinned */
+            RtlFreeUnicodeString(&FileToFindUpcase);
             return Status;
         }
 
@@ -296,27 +296,8 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
         ShortName.MaximumLength = 26;
         ShortName.Buffer = ShortNameBuffer;
 
-        if ((RtlIsNameLegalDOS8Dot3(&LongName, NULL, &HasSpaces) == FALSE) ||
-            (HasSpaces == TRUE))
-        {
-            RtlZeroMemory(&NameContext, sizeof(GENERATE_NAME_CONTEXT));
-
-            /* FIXME: check if the generated filename already exists
-            *  and generate a new one if this is the case */
-
-            /* Build short name */
-            RtlGenerate8dot3Name(&LongName,
-                FALSE,
-                &NameContext,
-                &ShortName);
-        }
-        else
-        {
-            /* copy short name */
-            RtlUpcaseUnicodeString(&ShortName,
-                &LongName,
-                FALSE);
-        }
+        OffsetOfEntry.QuadPart = StreamOffset.QuadPart + Offset;
+        CdfsShortNameCacheGet(Parent, &OffsetOfEntry, &LongName, &ShortName);
 
         DPRINT("ShortName '%wZ'\n", &ShortName);
 
@@ -610,7 +591,7 @@ CdfsQueryDirectory(PDEVICE_OBJECT DeviceObject,
         {
             First = TRUE;
             Ccb->DirectorySearchPattern.Buffer =
-                ExAllocatePool(NonPagedPool, SearchPattern->Length + sizeof(WCHAR));
+                ExAllocatePoolWithTag(NonPagedPool, SearchPattern->Length + sizeof(WCHAR), TAG_CCB);
             if (Ccb->DirectorySearchPattern.Buffer == NULL)
             {
                 return STATUS_INSUFFICIENT_RESOURCES;
@@ -628,7 +609,7 @@ CdfsQueryDirectory(PDEVICE_OBJECT DeviceObject,
     else if (Ccb->DirectorySearchPattern.Buffer == NULL)
     {
         First = TRUE;
-        Ccb->DirectorySearchPattern.Buffer = ExAllocatePool(NonPagedPool, 2 * sizeof(WCHAR));
+        Ccb->DirectorySearchPattern.Buffer = ExAllocatePoolWithTag(NonPagedPool, 2 * sizeof(WCHAR), TAG_CCB);
         if (Ccb->DirectorySearchPattern.Buffer == NULL)
         {
             return STATUS_INSUFFICIENT_RESOURCES;
@@ -773,6 +754,7 @@ CdfsDirectoryControl(PDEVICE_OBJECT DeviceObject,
     NTSTATUS Status;
 
     DPRINT("CdfsDirectoryControl() called\n");
+    FsRtlEnterFileSystem();
 
     Stack = IoGetCurrentIrpStackLocation(Irp);
 
@@ -798,6 +780,7 @@ CdfsDirectoryControl(PDEVICE_OBJECT DeviceObject,
     Irp->IoStatus.Information = 0;
 
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    FsRtlExitFileSystem();
 
     return(Status);
 }

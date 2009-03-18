@@ -684,13 +684,21 @@ KdbInitialize(PKD_DISPATCH_TABLE DispatchTable,
               ULONG BootPhase)
 {
     PCHAR p1, p2;
-    SHORT Found;
+    SHORT Found = FALSE;
     CHAR YesNo;
     LIST_ENTRY *ModuleEntry;
     PLDR_DATA_TABLE_ENTRY DataTableEntry;
     KD_SYMBOLS_INFO SymbolsInfo;
 
     DPRINT("KdbSymInit() BootPhase=%d\n", BootPhase);
+
+    LoadSymbols = FALSE;
+
+#ifdef DBG
+    /* Load symbols only if we have 96Mb of RAM or more */
+    if (MmNumberOfPhysicalPages >= 0x6000)
+        LoadSymbols = TRUE;
+#endif
 
     if (BootPhase == 0)
     {
@@ -707,12 +715,6 @@ KdbInitialize(PKD_DISPATCH_TABLE DispatchTable,
 
         InitializeListHead(&SymbolFileListHead);
         KeInitializeSpinLock(&SymbolFileListLock);
-
-#ifdef DBG
-        LoadSymbols = TRUE;
-#else
-        LoadSymbols = FALSE;
-#endif
 
         /* Check the command line for /LOADSYMBOLS, /NOLOADSYMBOLS,
         * /LOADSYMBOLS={YES|NO}, /NOLOADSYMBOLS={YES|NO} */

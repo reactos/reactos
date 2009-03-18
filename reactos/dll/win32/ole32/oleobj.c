@@ -256,7 +256,7 @@ static HRESULT WINAPI OleAdviseHolderImpl_QueryInterface(
   else if(IsEqualIID(riid, &IID_IOleAdviseHolder))
   {
     /* IOleAdviseHolder */
-    *ppvObj = (IOleAdviseHolder*) This;
+    *ppvObj = This;
   }
 
   if(*ppvObj == NULL)

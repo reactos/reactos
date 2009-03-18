@@ -503,20 +503,6 @@ EngCreateDeviceSurface(IN DHSURF dhsurf,
     return hsurf;
 }
 
-PFN FASTCALL DriverFunction(DRVENABLEDATA *DED, ULONG DriverFunc)
-{
-    ULONG i;
-
-    for (i=0; i<DED->c; i++)
-    {
-        if (DED->pdrvfn[i].iFunc == DriverFunc)
-        {
-            return DED->pdrvfn[i].pfn;
-        }
-    }
-    return NULL;
-}
-
 /*
  * @implemented
  */
@@ -608,10 +594,6 @@ EngEraseSurface(SURFOBJ *pso,
     ASSERT(Rect);
     return FillSolid(pso, Rect, iColor);
 }
-
-#define GDIBdyToHdr(body)                                                      \
-  ((PGDIOBJHDR)(body) - 1)
-
 
 /*
  * @implemented

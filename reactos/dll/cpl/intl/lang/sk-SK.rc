@@ -35,10 +35,10 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Jazyk"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Text input languages and services", IDC_GROUPBOX, 5, 5, 234, 52
+    GROUPBOX "Text input languages and services", -1, 5, 5, 234, 52
     LTEXT "To view or change language or text input methods press ""Details...""", -1, 12, 15, 220, 18
     PUSHBUTTON "De&tails...", IDC_DETAIL_BUTTON, 177, 34, 54, 14
-    GROUPBOX "Additional language support", IDC_GROUPBOX, 5, 62, 234, 82
+    GROUPBOX "Additional language support", -1, 5, 62, 234, 82
     LTEXT "Most languages are installed by default. To install additional languages, select the appropriate check box below.", -1, 12, 72, 220, 18
     CHECKBOX "I&nstall files for complex script and right-to-left languages", IDC_INST_FILES_FOR_RTOL_LANG, 12, 92, 215, 22, BS_MULTILINE
     CHECKBOX "In&stall files for East Asian languages", IDC_INST_FILES_FOR_ASIAN, 12, 114, 180, 22, BS_MULTILINE
@@ -49,7 +49,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Advanced"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Language for non-Unicode programs", IDC_GROUPBOX, 5, 5, 234, 90
+    GROUPBOX "Language for non-Unicode programs", -1, 5, 5, 234, 90
     COMBOBOX IDC_LANGUAGE_COMBO, 14, 75, 217, 160, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
     LTEXT "This system setting enables non-Unicode programs to display menus and dialogs in their native language. It does not affect Unicode programs, but it does apply to all users of this computer.", -1, 14, 18, 223, 33
     LTEXT "Select a language to match the language version of the non-Unicode programs you want to use:", -1, 14, 55, 223, 18
@@ -61,7 +61,7 @@ END
 
 IDD_NUMBERSPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Numbers"
+CAPTION "»Ìsla"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Appearance sample", -1, 7, 7, 230, 53, WS_CHILD | WS_VISIBLE
@@ -92,7 +92,7 @@ END
 
 IDD_CURRENCYPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Currency"
+CAPTION "Mena"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Appearance sample", -1, 7, 7, 230, 33, WS_CHILD | WS_VISIBLE
@@ -147,7 +147,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "D·tum"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Kalend·r", IDC_GROUPBOX, 7, 7, 230, 74
+    GROUPBOX "Kalend·r", -1, 7, 7, 230, 74
     LTEXT "If year is typed as two digits, then assume it is a year between:", -1, 13, 18, 215, 8
     EDITTEXT IDC_FIRSTYEAR_EDIT, 13, 30, 36, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_DISABLED
     LTEXT "and", -1, 55, 32, 17, 8
@@ -157,7 +157,7 @@ BEGIN
     COMBOBOX IDC_CALTYPE_COMBO, 77, 46, 153, 100, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
     LTEXT "Muslim Calendar:", -1, 13, 65, 60, 12
     COMBOBOX IDC_HIJCHRON_COMBO, 77, 64, 153, 100, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
-    GROUPBOX "Short date format", IDC_GROUPBOX, 7, 83, 230, 81
+    GROUPBOX "Short date format", -1, 7, 83, 230, 81
     LTEXT "Sample:", -1, 13, 95, 63, 10
     EDITTEXT IDC_SHRTDATESAMPLE_EDIT, 77, 93, 153, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
     LTEXT "Sample - right to left read:", -1, 13, 109, 60, 16
@@ -166,7 +166,7 @@ BEGIN
     COMBOBOX IDC_SHRTDATEFMT_COMBO, 77, 129, 153, 100, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_VISIBLE
     LTEXT "Date components separator:", -1, 13, 148, 113, 10
     COMBOBOX IDC_SHRTDATESEP_COMBO, 180, 146, 51, 100, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_VISIBLE
-    GROUPBOX "Long date format", IDC_GROUPBOX, 7, 167, 230, 64
+    GROUPBOX "Long date format", -1, 7, 167, 230, 64
     LTEXT "Sample:", -1, 13, 179, 61, 10
     EDITTEXT IDC_LONGDATESAMPLE_EDIT, 77, 177, 153, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
     LTEXT "Sample - right to left read:", -1, 13, 193, 61, 16

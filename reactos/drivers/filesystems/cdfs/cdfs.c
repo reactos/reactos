@@ -104,6 +104,8 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
     CdfsGlobalData->CacheMgrCallbacks.AcquireForReadAhead = CdfsAcquireForLazyWrite;
     CdfsGlobalData->CacheMgrCallbacks.ReleaseFromReadAhead = CdfsReleaseFromLazyWrite;
 
+    DeviceObject->Flags |= DO_LOW_PRIORITY_FILESYSTEM;
+
     IoRegisterFileSystem(DeviceObject);
     DeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
 

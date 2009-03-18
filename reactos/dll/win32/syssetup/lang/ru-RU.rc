@@ -204,6 +204,7 @@ BEGIN
 	IDS_SYS_TOOLS        "Служебные"
 	IDS_CMT_CHARMAP      "Таблица символов"
 	IDS_CMT_KBSWITCH     "Переключатель раскладки клавиатуры"
+    IDS_CMT_DXDIAG       "Запустить программу диагностики ReactX"
 END
 
 
@@ -211,6 +212,13 @@ STRINGTABLE
 BEGIN
 	IDS_SYS_ACCESSIBILITY        "Специальные возможности"
 	IDS_CMT_MAGNIFY      	     "Экранная лупа"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SYS_ENTERTAINMENT       "Развлечения"
+    IDS_CMT_MPLAY32             "Запустить проигрыватель"
+    IDS_CMT_SNDVOL32            "Запустить регулятор громкости"
 END
 
 STRINGTABLE
@@ -233,6 +241,7 @@ BEGIN
     IDS_SHORT_DOWNLOADER "Скачать !.lnk"
     IDS_SHORT_SERVICE    "Диспетчер служб.lnk"
     IDS_SHORT_DEVICE     "Диспетчер устройств.lnk"
+    IDS_SHORT_MPLAY32    "Проигрыватель.lnk"
     IDS_SHORT_CALC       "Калькулятор.lnk"
     IDS_SHORT_REGEDIT    "Редактор реестра.lnk"
     IDS_SHORT_NOTEPAD    "Блокнот.lnk"
@@ -246,6 +255,8 @@ BEGIN
     IDS_SHORT_KBSWITCH   "Переключатель раскладки клавиатуры.lnk"
     IDS_SHORT_EVENTVIEW  "Просмотр событий.lnk"
     IDS_SHORT_MSCONFIG   "Параметры системы.lnk"
+    IDS_SHORT_SNDVOL32   "Громкость.lnk"
+    IDS_SHORT_DXDIAG     "Средство диагностики ReactX.lnk"
 END
 
 STRINGTABLE

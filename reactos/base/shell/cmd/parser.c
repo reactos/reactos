@@ -413,12 +413,131 @@ condition_done:
 	return Cmd;
 }
 
+/* Parse a FOR command. 
+ * Syntax is: FOR [options] %var IN (list) DO command */
+static PARSED_COMMAND *ParseFor(void)
+{
+	PARSED_COMMAND *Cmd = cmd_alloc(sizeof(PARSED_COMMAND));
+	TCHAR List[CMDLINE_LENGTH];
+	TCHAR *Pos = List;
+
+	memset(Cmd, 0, sizeof(PARSED_COMMAND));
+	Cmd->Type = C_FOR;
+
+	while (1)
+	{
+		if (_tcsicmp(CurrentToken, _T("/D")) == 0)
+			Cmd->For.Switches |= FOR_DIRS;
+		else if (_tcsicmp(CurrentToken, _T("/F")) == 0)
+		{
+			Cmd->For.Switches |= FOR_F;
+			if (!Cmd->For.Params)
+			{
+				ParseToken(0, STANDARD_SEPS);
+				if (CurrentToken[0] == _T('/') || CurrentToken[0] == _T('%'))
+					break;
+				Cmd->For.Params = cmd_dup(CurrentToken);
+			}
+		}
+		else if (_tcsicmp(CurrentToken, _T("/L")) == 0)
+			Cmd->For.Switches |= FOR_LOOP;
+		else if (_tcsicmp(CurrentToken, _T("/R")) == 0)
+		{
+			Cmd->For.Switches |= FOR_RECURSIVE;
+			if (!Cmd->For.Params)
+			{
+				ParseToken(0, STANDARD_SEPS);
+				if (CurrentToken[0] == _T('/') || CurrentToken[0] == _T('%'))
+					break;
+				StripQuotes(CurrentToken);
+				Cmd->For.Params = cmd_dup(CurrentToken);
+			}
+		}
+		else
+			break;
+		ParseToken(0, STANDARD_SEPS);
+	}
+
+	/* Make sure there aren't two different switches specified
+	 * at the same time, unless they're /D and /R */
+	if ((Cmd->For.Switches & (Cmd->For.Switches - 1)) != 0
+	    && Cmd->For.Switches != (FOR_DIRS | FOR_RECURSIVE))
+	{
+		goto error;
+	}
+
+	/* Variable name should be % and just one other character */
+	if (CurrentToken[0] != _T('%') || _tcslen(CurrentToken) != 2)
+		goto error;
+	Cmd->For.Variable = CurrentToken[1];
+
+	ParseToken(0, STANDARD_SEPS);
+	if (_tcsicmp(CurrentToken, _T("in")) != 0)
+		goto error;
+
+	if (ParseToken(_T('('), STANDARD_SEPS) != TOK_BEGIN_BLOCK)
+		goto error;
+
+	while (1)
+	{
+		int Type;
+
+		/* Pretend we're inside a block so the tokenizer will stop on ')' */
+		InsideBlock++;
+		Type = ParseToken(0, STANDARD_SEPS);
+		InsideBlock--;
+
+		if (Type == TOK_END_BLOCK)
+			break;
+
+		if (Type != TOK_NORMAL)
+			goto error;
+
+		if (Pos != List)
+			*Pos++ = _T(' ');
+
+		if (Pos + _tcslen(CurrentToken) >= &List[CMDLINE_LENGTH])
+			goto error;
+		Pos = _stpcpy(Pos, CurrentToken);
+	}
+	*Pos = _T('\0');
+	Cmd->For.List = cmd_dup(List);
+
+	ParseToken(0, STANDARD_SEPS);
+	if (_tcsicmp(CurrentToken, _T("do")) != 0)
+		goto error;
+
+	Cmd->Subcommands = ParseCommandOp(C_OP_LOWEST);
+	if (Cmd->Subcommands == NULL)
+	{
+		FreeCommand(Cmd);
+		return NULL;
+	}
+
+	return Cmd;
+
+error:
+	FreeCommand(Cmd);
+	ParseError();
+	return NULL;
+}
+
+/* Parse a REM command */
+static PARSED_COMMAND *ParseRem(void)
+{
+	/* Just ignore the rest of the line */
+	while (CurChar && CurChar != _T('\n'))
+		ParseChar();
+	return NULL;
+}
+
 static PARSED_COMMAND *ParseCommandPart(void)
 {
 	TCHAR ParsedLine[CMDLINE_LENGTH];
 	TCHAR *Pos;
 	DWORD TailOffset;
 	PARSED_COMMAND *Cmd;
+	PARSED_COMMAND *(*Func)(void);
 	REDIRECTION *RedirList = NULL;
 	int Type;
 
@@ -486,7 +605,9 @@ static PARSED_COMMAND *ParseCommandPart(void)
 	TailOffset = Pos - ParsedLine;
 
 	/* Check for special forms */
-	if (_tcsicmp(ParsedLine, _T("if")) == 0)
+	if ((Func = ParseFor, _tcsicmp(ParsedLine, _T("for")) == 0) ||
+	    (Func = ParseIf,  _tcsicmp(ParsedLine, _T("if")) == 0)  ||
+	    (Func = ParseRem, _tcsicmp(ParsedLine, _T("rem")) == 0))
 	{
 		ParseToken(0, STANDARD_SEPS);
 		/* Do special parsing only if it's not followed by /? */
@@ -498,7 +619,7 @@ static PARSED_COMMAND *ParseCommandPart(void)
 				FreeRedirection(RedirList);
 				return NULL;
 			}
-			return ParseIf();
+			return Func();
 		}
 		Pos = _stpcpy(Pos, _T(" /?"));
 	}
@@ -610,18 +731,21 @@ ParseCommand(LPTSTR Line)
 	return Cmd;
 }
 
-/* Reconstruct a parse tree into text form;
- * used for echoing batch file commands */
+
+/* Reconstruct a parse tree into text form; used for echoing
+ * batch file commands and FOR instances. */
 VOID
 EchoCommand(PARSED_COMMAND *Cmd)
 {
+	TCHAR Buf[CMDLINE_LENGTH];
 	PARSED_COMMAND *Sub;
 	REDIRECTION *Redir;
 
 	switch (Cmd->Type)
 	{
 	case C_COMMAND:
-		ConOutPrintf(_T("%s"), Cmd->Command.CommandLine);
+		if (SubstituteForVars(Cmd->Command.CommandLine, Buf))
+			ConOutPrintf(_T("%s"), Buf);
 		break;
 	case C_QUIET:
 		return;
@@ -649,9 +773,11 @@ EchoCommand(PARSED_COMMAND *Cmd)
 			ConOutPrintf(_T(" /I"));
 		if (Cmd->If.Flags & IFFLAG_NEGATE)
 			ConOutPrintf(_T(" not"));
-		if (Cmd->If.LeftArg)
-			ConOutPrintf(_T(" %s"), Cmd->If.LeftArg);
-		ConOutPrintf(_T(" %s %s "), IfOperatorString[Cmd->If.Operator], Cmd->If.RightArg);
+		if (Cmd->If.LeftArg && SubstituteForVars(Cmd->If.LeftArg, Buf))
+			ConOutPrintf(_T(" %s"), Buf);
+		ConOutPrintf(_T(" %s"), IfOperatorString[Cmd->If.Operator]);
+		if (SubstituteForVars(Cmd->If.RightArg, Buf))
+			ConOutPrintf(_T(" %s "), Buf);
 		Sub = Cmd->Subcommands;
 		EchoCommand(Sub);
 		if (Sub->Next)
@@ -660,13 +786,125 @@ EchoCommand(PARSED_COMMAND *Cmd)
 			EchoCommand(Sub->Next);
 		}
 		break;
+	case C_FOR:
+		ConOutPrintf(_T("for"));
+		if (Cmd->For.Switches & FOR_DIRS)      ConOutPrintf(_T(" /D"));
+		if (Cmd->For.Switches & FOR_F)         ConOutPrintf(_T(" /F"));
+		if (Cmd->For.Switches & FOR_LOOP)      ConOutPrintf(_T(" /L"));
+		if (Cmd->For.Switches & FOR_RECURSIVE) ConOutPrintf(_T(" /R"));
+		if (Cmd->For.Params)
+			ConOutPrintf(_T(" %s"), Cmd->For.Params);
+		ConOutPrintf(_T(" %%%c in (%s) do "), Cmd->For.Variable, Cmd->For.List);
+		EchoCommand(Cmd->Subcommands);
+		break;
 	}
 
 	for (Redir = Cmd->Redirections; Redir; Redir = Redir->Next)
 	{
-		ConOutPrintf(_T(" %c%s%s"), _T('0') + Redir->Number,
-			RedirString[Redir->Type], Redir->Filename);
+		if (SubstituteForVars(Redir->Filename, Buf))
+			ConOutPrintf(_T(" %c%s%s"), _T('0') + Redir->Number,
+				RedirString[Redir->Type], Buf);
 	}
+}
+
+/* "Unparse" a command into a text form suitable for passing to CMD /C.
+ * Used for pipes. This is basically the same thing as EchoCommand, but
+ * writing into a string instead of to standard output. */
+TCHAR *
+Unparse(PARSED_COMMAND *Cmd, TCHAR *Out, TCHAR *OutEnd)
+{
+	TCHAR Buf[CMDLINE_LENGTH];
+	PARSED_COMMAND *Sub;
+	REDIRECTION *Redir;
+
+/* Since this function has the annoying requirement that it must avoid
+ * overflowing the supplied buffer, define some helper macros to make
+ * this less painful */
+#define CHAR(Char) { \
+	if (Out == OutEnd) return NULL; \
+	*Out++ = Char; }
+#define STRING(String) { \
+	if (Out + _tcslen(String) > OutEnd) return NULL; \
+	Out = _stpcpy(Out, String); }
+#define PRINTF(Format, ...) { \
+	UINT Len = _sntprintf(Out, OutEnd - Out, Format, __VA_ARGS__); \
+	if (Len > (UINT)(OutEnd - Out)) return NULL; \
+	Out += Len; }
+#define RECURSE(Subcommand) { \
+	Out = Unparse(Subcommand, Out, OutEnd); \
+	if (!Out) return NULL; }
+
+	switch (Cmd->Type)
+	{
+	case C_COMMAND:
+		if (!SubstituteForVars(Cmd->Command.CommandLine, Buf)) return NULL;
+		/* This is fragile since there could be special characters, but
+		 * Windows doesn't bother escaping them, so for compatibility
+		 * we probably shouldn't do it either */
+		STRING(Buf)
+		break;
+	case C_QUIET:
+		CHAR(_T('@'))
+		RECURSE(Cmd->Subcommands)
+		break;
+	case C_BLOCK:
+		CHAR(_T('('))
+		for (Sub = Cmd->Subcommands; Sub; Sub = Sub->Next)
+		{
+			RECURSE(Sub)
+			if (Sub->Next)
+				CHAR(_T('&'))
+		}
+		CHAR(_T(')'))
+		break;
+	case C_MULTI:
+	case C_IFFAILURE:
+	case C_IFSUCCESS:
+	case C_PIPE:
+		Sub = Cmd->Subcommands;
+		RECURSE(Sub)
+		PRINTF(_T(" %s "), OpString[Cmd->Type - C_OP_LOWEST])
+		RECURSE(Sub->Next)
+		break;
+	case C_IF:
+		STRING(_T("if"))
+		if (Cmd->If.Flags & IFFLAG_IGNORECASE)
+			STRING(_T(" /I"))
+		if (Cmd->If.Flags & IFFLAG_NEGATE)
+			STRING(_T(" not"))
+		if (Cmd->If.LeftArg && SubstituteForVars(Cmd->If.LeftArg, Buf))
+			PRINTF(_T(" %s"), Buf)
+		PRINTF(_T(" %s"), IfOperatorString[Cmd->If.Operator]);
+		if (!SubstituteForVars(Cmd->If.RightArg, Buf)) return NULL;
+		PRINTF(_T(" %s "), Buf)
+		Sub = Cmd->Subcommands;
+		RECURSE(Sub)
+		if (Sub->Next)
+		{
+			STRING(_T(" else "))
+			RECURSE(Sub->Next)
+		}
+		break;
+	case C_FOR:
+		STRING(_T("for"))
+		if (Cmd->For.Switches & FOR_DIRS)      STRING(_T(" /D"))
+		if (Cmd->For.Switches & FOR_F)         STRING(_T(" /F"))
+		if (Cmd->For.Switches & FOR_LOOP)      STRING(_T(" /L"))
+		if (Cmd->For.Switches & FOR_RECURSIVE) STRING(_T(" /R"))
+		if (Cmd->For.Params)
+			PRINTF(_T(" %s"), Cmd->For.Params)
+		PRINTF(_T(" %%%c in (%s) do "), Cmd->For.Variable, Cmd->For.List)
+		RECURSE(Cmd->Subcommands)
+		break;
+	}
+
+	for (Redir = Cmd->Redirections; Redir; Redir = Redir->Next)
+	{
+		if (!SubstituteForVars(Redir->Filename, Buf)) return NULL;
+		PRINTF(_T(" %c%s%s"), _T('0') + Redir->Number,
+			RedirString[Redir->Type], Buf)
+	}
+	return Out;
 }
 
 VOID
@@ -681,6 +919,11 @@ FreeCommand(PARSED_COMMAND *Cmd)
 	{
 		cmd_free(Cmd->If.LeftArg);
 		cmd_free(Cmd->If.RightArg);
+	}
+	else if (Cmd->Type == C_FOR)
+	{
+		cmd_free(Cmd->For.Params);
+		cmd_free(Cmd->For.List);
 	}
 	cmd_free(Cmd);
 }

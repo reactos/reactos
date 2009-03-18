@@ -112,7 +112,7 @@ FatMountVolume(PFAT_IRP_CONTEXT IrpContext,
 
     if (!NT_SUCCESS(Status)) goto FatMountVolumeCleanup;
 
-    VolumeDevice->DeviceObject.SectorSize = DiskGeometry.BytesPerSector;
+    VolumeDevice->DeviceObject.SectorSize = (USHORT) DiskGeometry.BytesPerSector;
 
     /* Signal we're done with initializing */
     VolumeDevice->DeviceObject.Flags &= ~DO_DEVICE_INITIALIZING;
@@ -128,7 +128,7 @@ FatMountVolume(PFAT_IRP_CONTEXT IrpContext,
     VolumeDevice->Vcb.MediaChangeCount = MediaChangeCount;
 
     /* Notify about volume mount */
-    FsRtlNotifyVolumeEvent(VolumeDevice->Vcb.VolumeFileObject, FSRTL_VOLUME_MOUNT);
+    FsRtlNotifyVolumeEvent(VolumeDevice->Vcb.StreamFileObject, FSRTL_VOLUME_MOUNT);
 
     /* Return success */
     return STATUS_SUCCESS;

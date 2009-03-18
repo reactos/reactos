@@ -1,5 +1,6 @@
 /*
  * Copyright 2002 Huw D M Davies for CodeWeavers
+ * Copyright 2009 Jacek Caban for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -30,6 +31,7 @@
 #include "winuser.h"
 #include "ole2.h"
 #include "urlmon.h"
+#include "wininet.h"
 
 #include "wine/unicode.h"
 
@@ -40,6 +42,7 @@ extern HRESULT FileProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj);
 extern HRESULT HttpProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj);
 extern HRESULT HttpSProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj);
 extern HRESULT FtpProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj);
+extern HRESULT GopherProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj);
 extern HRESULT MkProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj);
 
 /**********************************************************************
@@ -50,20 +53,8 @@ static inline void URLMON_LockModule(void) { InterlockedIncrement( &URLMON_refCo
 static inline void URLMON_UnlockModule(void) { InterlockedDecrement( &URLMON_refCount ); }
 
 #define ICOM_THIS_MULTI(impl,field,iface) impl* const This=(impl*)((char*)(iface) - offsetof(impl,field))
-#define DEFINE_THIS(cls,ifc,iface) ((cls*)((BYTE*)(iface)-offsetof(cls,lp ## ifc ## Vtbl)))
-
-typedef struct
-{	
-	const IStreamVtbl	*lpVtbl;
-	LONG		ref;
-	HANDLE		handle;
-	BOOL		closed;
-	WCHAR		*pszFileName;
-	WCHAR		*pszURL;
-} IUMCacheStream;
-
-HRESULT	UMCreateStreamOnCacheFile(LPCWSTR pszURL, DWORD dwSize, LPWSTR pszFileName, HANDLE *phfile, IUMCacheStream **ppstr);
-void	UMCloseCacheFileStream(IUMCacheStream *pstr);
+#define DEFINE_THIS2(cls,ifc,iface) ((cls*)((BYTE*)(iface)-offsetof(cls,ifc)))
+#define DEFINE_THIS(cls,ifc,iface) DEFINE_THIS2(cls,lp ## ifc ## Vtbl,iface)
 
 IInternetProtocolInfo *get_protocol_info(LPCWSTR url);
 HRESULT get_protocol_handler(LPCWSTR url, CLSID *clsid, IClassFactory **ret);
@@ -75,6 +66,43 @@ HRESULT bind_to_object(IMoniker *mon, LPCWSTR url, IBindCtx *pbc, REFIID riid, v
 
 HRESULT create_binding_protocol(LPCWSTR url, BOOL from_urlmon, IInternetProtocol **protocol);
 void set_binding_sink(IInternetProtocol *bind_protocol, IInternetProtocolSink *sink);
+
+typedef struct ProtocolVtbl ProtocolVtbl;
+
+typedef struct {
+    const ProtocolVtbl *vtbl;
+
+    IInternetProtocol *protocol;
+    IInternetProtocolSink *protocol_sink;
+
+    DWORD bindf;
+    BINDINFO bind_info;
+
+    HINTERNET internet;
+    HINTERNET request;
+    HINTERNET connection;
+    DWORD flags;
+    HANDLE lock;
+
+    ULONG current_position;
+    ULONG content_length;
+    ULONG available_bytes;
+
+    LONG priority;
+} Protocol;
+
+struct ProtocolVtbl {
+    HRESULT (*open_request)(Protocol*,LPCWSTR,DWORD,IInternetBindInfo*);
+    HRESULT (*start_downloading)(Protocol*);
+    void (*close_connection)(Protocol*);
+};
+
+HRESULT protocol_start(Protocol*,IInternetProtocol*,LPCWSTR,IInternetProtocolSink*,IInternetBindInfo*);
+HRESULT protocol_continue(Protocol*,PROTOCOLDATA*);
+HRESULT protocol_read(Protocol*,void*,ULONG,ULONG*);
+HRESULT protocol_lock_request(Protocol*);
+HRESULT protocol_unlock_request(Protocol*);
+void protocol_close_connection(Protocol*);
 
 static inline void *heap_alloc(size_t len)
 {
@@ -106,6 +134,21 @@ static inline LPWSTR heap_strdupW(LPCWSTR str)
         size = (strlenW(str)+1)*sizeof(WCHAR);
         ret = heap_alloc(size);
         memcpy(ret, str, size);
+    }
+
+    return ret;
+}
+
+static inline LPWSTR heap_strndupW(LPCWSTR str, int len)
+{
+    LPWSTR ret = NULL;
+
+    if(str) {
+        ret = heap_alloc((len+1)*sizeof(WCHAR));
+        if(ret) {
+            memcpy(ret, str, len*sizeof(WCHAR));
+            ret[len] = 0;
+        }
     }
 
     return ret;

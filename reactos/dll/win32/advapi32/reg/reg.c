@@ -4694,6 +4694,63 @@ Cleanup:
 
 
 /************************************************************************
+ *  RegSaveKeyExA
+ *
+ * @implemented
+ */
+LONG
+WINAPI
+RegSaveKeyExA(HKEY hKey,
+              LPCSTR lpFile,
+              LPSECURITY_ATTRIBUTES lpSecurityAttributes,
+              DWORD Flags)
+{
+    UNICODE_STRING FileName;
+    LONG ErrorCode;
+
+    RtlCreateUnicodeStringFromAsciiz(&FileName,
+                                     (LPSTR)lpFile);
+    ErrorCode = RegSaveKeyExW(hKey,
+                              FileName.Buffer,
+                              lpSecurityAttributes,
+                              Flags);
+    RtlFreeUnicodeString(&FileName);
+
+    return ErrorCode;
+}
+
+
+/************************************************************************
+ *  RegSaveKeyExW
+ *
+ * @unimplemented
+ */
+LONG
+WINAPI
+RegSaveKeyExW(HKEY hKey,
+              LPCWSTR lpFile,
+              LPSECURITY_ATTRIBUTES lpSecurityAttributes,
+              DWORD Flags)
+{
+    switch (Flags)
+    {
+        case REG_STANDARD_FORMAT:
+        case REG_LATEST_FORMAT:
+        case REG_NO_COMPRESSION:
+            break;
+        default:
+            return ERROR_INVALID_PARAMETER;
+    }
+
+    FIXME("RegSaveKeyExW(): Flags ignored!\n");
+
+    return RegSaveKeyW(hKey,
+                       lpFile,
+                       lpSecurityAttributes);
+}
+
+
+/************************************************************************
  *  RegSetKeySecurity
  *
  * @implemented

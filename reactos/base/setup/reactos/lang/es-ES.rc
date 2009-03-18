@@ -1,9 +1,8 @@
 /*
  *  Spanish language file by Javier Remacha <2008>
  */
+
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
-
-
 
 IDD_STARTPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
@@ -46,11 +45,11 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Ajustes de dispositivos", IDC_STATIC, "Button", BS_GROUPBOX, 10,0,297,172
     LTEXT "Equipo:", IDC_STATIC, 20,15, 80, 10
-    CONTROL "", IDC_COMPUTER, "ComboBox", WS_TABSTOP | CBS_DROPDOWNLIST , 100, 15, 150, 80
+    CONTROL "", IDC_COMPUTER, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST , 100, 15, 150, 80
     LTEXT "Pantalla:", IDC_STATIC, 20,35, 80, 10
-    CONTROL "", IDC_DISPLAY, "ComboBox", WS_TABSTOP | CBS_DROPDOWNLIST , 100, 35, 150, 80
+    CONTROL "", IDC_DISPLAY, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST , 100, 35, 150, 80
     LTEXT "Teclado:", IDC_STATIC, 20,55, 80, 10
-    CONTROL "", IDC_KEYBOARD, "ComboBox", WS_TABSTOP | CBS_DROPDOWNLIST , 100, 55, 150, 80
+    CONTROL "", IDC_KEYBOARD, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST , 100, 55, 150, 80
     LTEXT "Presione Siguiente para configurar la instalación de dispositivos.", IDC_STATIC, 10, 180 ,277, 20
 END
 
@@ -63,12 +62,29 @@ BEGIN
     LISTBOX IDC_PARTITION, 20,12,278,142,LBS_HASSTRINGS | WS_VSCROLL
     PUSHBUTTON "&Crear", IDC_PARTCREATE, 20,155,50,15
     PUSHBUTTON "&Borrar", IDC_PARTDELETE, 76,155,50,15
+    PUSHBUTTON "D&river", IDC_DEVICEDRIVER, 162,155,50,15, WS_DISABLED
     PUSHBUTTON "&Opciones avanzadas...", IDC_PARTMOREOPTS, 218,155,80,15
-    LTEXT "Presione Siguiente para comenzar el proceso de instalación.", IDC_STATIC, 10, 180 ,277, 20
+    LTEXT "Click Next to check the summary.", IDC_STATIC, 10, 180 ,277, 20
+END
+
+IDD_PARTITION DIALOGEX DISCARDABLE  0, 0, 145, 90
+STYLE WS_VISIBLE|WS_CAPTION|WS_THICKFRAME
+CAPTION "Crear Partición"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "",IDC_UPDOWN1,"msctls_updown32", WS_VISIBLE,104,22,9,13
+    CONTROL "Crear y formatear una partición",IDC_STATIC,"Button",BS_GROUPBOX,7,5,129,57
+    LTEXT "Tamaño:",IDC_STATIC, 13,24,27,9
+    EDITTEXT IDC_PARTSIZE,52,23,53,13, WS_VISIBLE|WS_TABSTOP
+    LTEXT "GB",IDC_UNIT, 117,24,14,9
+    LTEXT "Sistema de archivos:",IDC_STATIC,13,46,35,9
+    CONTROL "",IDC_FSTYPE,"ComboBox",WS_VISIBLE|WS_TABSTOP|CBS_DROPDOWNLIST,52,42,79,50
+    PUSHBUTTON "&Aceptar",IDOK,35,68,47,15, WS_VISIBLE|WS_TABSTOP
+    PUSHBUTTON "&Cancelar",IDCANCEL,87,68,47,15, WS_VISIBLE|WS_TABSTOP
 END
 
 IDD_BOOTOPTIONS DIALOGEX DISCARDABLE  0, 0, 305, 105
-STYLE WS_VISIBLE|WS_CAPTION|WS_SYSMENU|WS_THICKFRAME
+STYLE WS_VISIBLE|WS_CAPTION|WS_THICKFRAME
 CAPTION "Ajustes avanzados de la partición"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -79,8 +95,17 @@ BEGIN
 
     CONTROL "Instalar el cargador de arranque en el disco duro (MBR)", IDC_INSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10,46,278,11
     CONTROL "No instalar el cargador de arranque", IDC_NOINSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_DISABLED , 10,57,278,11
-    PUSHBUTTON "&OK", IDOK, 180,83,50,15, WS_TABSTOP | WS_VISIBLE
-    PUSHBUTTON "&Cancel", IDCANCEL, 240,83,50,15, WS_TABSTOP | WS_VISIBLE
+    PUSHBUTTON "&Aceptar", IDOK, 180,83,50,15, WS_TABSTOP | WS_VISIBLE
+    PUSHBUTTON "&Cancelar", IDCANCEL, 240,83,50,15, WS_TABSTOP | WS_VISIBLE
+END
+
+IDD_SUMMARYPAGE DIALOGEX 0, 0, 317, 193
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Instalación de ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "Resumen de la instalación", IDC_ACTION, "Button", BS_GROUPBOX, 10,0,297,172
+    LTEXT "Presione Siguiente para comenzar con el proceso de instalación.", IDC_STATIC, 10, 180 ,277, 20
 END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 193
@@ -95,7 +120,6 @@ BEGIN
             PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
 END
 
-
 IDD_RESTARTPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Completando la instalación de ReactOS"
@@ -109,23 +133,23 @@ BEGIN
     LTEXT "Si hay un CD en alguna unidad, retírelo. Luego, para reiniciar su equipo, presione Finalizar.", IDC_STATIC, 10, 180, 297, 20
 END
 
-
 STRINGTABLE
 BEGIN
-	IDS_LANGTITLE		"Selección del idioma"
-	IDS_LANGSUBTITLE	"Seleccione el idioma para la instalación y para el sistema."
-	IDS_TYPETITLE		"Bienvenido a la instalación de ReactOS"
-	IDS_TYPESUBTITLE	"Seleccione el tipo de instalación."
-	IDS_DEVICETITLE		"Instalación de los dispositivos básicos"
-	IDS_DEVICESUBTITLE	"Seleccione los ajustes de la pantalla y el teclado."
-	IDS_DRIVETITLE		"Crear la partición para la instalación y la carpeta del sistema"
-	IDS_DRIVESUBTITLE	"Preparar la partición para la instalación, la carpeta del sistema y el cargador de arranque."
-	IDS_PROCESSTITLE	"Preparar partición, copiar archivos e instalar sistema"
-	IDS_PROCESSSUBTITLE	"Crear y formatear partición, copiar archivos, instalar e instalar el cargador de arranque"
-	IDS_RESTARTTITLE	"Primera parte de la instalación finalizada"
-	IDS_RESTARTSUBTITLE	"La primera parte de la instalación ha sido completada, reinicie para continuar con la segunda parte"
-	IDS_ABORTSETUP		"ReactOS no está completamente instalado en su equipo. Si sale de la instalación ahora, tendrá que ejecutar el instalador otra vez para instalar Reactos. ¿Realmente quiere salir?"
-	IDS_ABORTSETUP2		"¿Abortar instalación?"
+    IDS_LANGTITLE       "Selección del idioma"
+    IDS_LANGSUBTITLE    "Seleccione el idioma para la instalación y para el sistema."
+    IDS_TYPETITLE       "Bienvenido a la instalación de ReactOS"
+    IDS_TYPESUBTITLE    "Seleccione el tipo de instalación."
+    IDS_DEVICETITLE     "Instalación de los dispositivos básicos"
+    IDS_DEVICESUBTITLE  "Seleccione los ajustes de la pantalla y el teclado."
+    IDS_DRIVETITLE      "Crear la partición para la instalación y la carpeta del sistema"
+    IDS_DRIVESUBTITLE   "Preparar la partición para la instalación, la carpeta del sistema y el cargador de arranque."
+    IDS_PROCESSTITLE    "Preparar partición, copiar archivos e instalar sistema"
+    IDS_PROCESSSUBTITLE "Crear y formatear partición, copiar archivos, instalar e instalar el cargador de arranque"
+    IDS_RESTARTTITLE    "Primera parte de la instalación finalizada"
+    IDS_RESTARTSUBTITLE "La primera parte de la instalación ha sido completada, reinicie para continuar con la segunda parte"
+    IDS_SUMMARYTITLE    "Installation Summary"
+    IDS_SUMMARYSUBTITLE "List installation properties to check before apply to the installation device"
+    IDS_ABORTSETUP      "ReactOS no está completamente instalado en su equipo. Si sale de la instalación ahora, tendrá que ejecutar el instalador otra vez para instalar Reactos. ¿Realmente quiere salir?"
+    IDS_ABORTSETUP2     "¿Abortar instalación?"
 END
-
 /* EOF */

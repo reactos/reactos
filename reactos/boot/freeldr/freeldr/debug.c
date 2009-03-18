@@ -292,6 +292,11 @@ VOID DbgPrintMask(ULONG Mask, char *format, ...)
 {
 }
 
+ULONG DbgPrint(PCCH Format, ...)
+{
+    return 0;
+}
+
 #endif // defined DBG
 
 ULONG

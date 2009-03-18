@@ -92,7 +92,7 @@ InitColorButtons(HWND hwndDlg, GLOBALS* g)
 		rect.top = 0;
 		rect.right = 36;
 		rect.bottom = 15;
-		hbrush = CreateSolidBrush(g->crCOLOR_BTNFACE);
+		hbrush = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
 		FillRect(hdcCompat, &rect, hbrush);
 		DeleteObject(hbrush);
 
@@ -101,12 +101,12 @@ InitColorButtons(HWND hwndDlg, GLOBALS* g)
 		rect.top = 1;
 		rect.right = 23;
 		rect.bottom = 14;
-		hbrush = CreateSolidBrush(g->crCOLOR_BTNTEXT);
+		hbrush = CreateSolidBrush(GetSysColor(COLOR_BTNTEXT));
 		FillRect(hdcCompat, &rect, hbrush);
 		DeleteObject(hbrush);
 
 		/* Draw left side of line */
-		hPen = CreatePen(PS_SOLID, 1, g->crCOLOR_BTNSHADOW);
+		hPen = CreatePen(PS_SOLID, 1, GetSysColor(COLOR_BTNSHADOW));
 		SelectObject(hdcCompat, hPen);
 		MoveToEx(hdcCompat, 26, 1, NULL);
 		LineTo(hdcCompat, 26, 14);
@@ -114,7 +114,7 @@ InitColorButtons(HWND hwndDlg, GLOBALS* g)
 		DeleteObject(hPen);
 
 		/* Draw right side of line */
-		hPen = CreatePen(PS_SOLID, 1, g->crCOLOR_BTNHIGHLIGHT);
+		hPen = CreatePen(PS_SOLID, 1, GetSysColor(COLOR_BTNHIGHLIGHT));
 		SelectObject(hdcCompat,hPen);
 		MoveToEx(hdcCompat, 27, 1, NULL);
 		LineTo(hdcCompat, 27, 14);
@@ -122,8 +122,8 @@ InitColorButtons(HWND hwndDlg, GLOBALS* g)
 		DeleteObject(hPen);
 
 		/* Draw triangle */
-		hPen = CreatePen(PS_SOLID, 1, g->crCOLOR_BTNTEXT);
-		hbrush = CreateSolidBrush(g->crCOLOR_BTNTEXT);
+		hPen = CreatePen(PS_SOLID, 1, GetSysColor(COLOR_BTNTEXT));
+		hbrush = CreateSolidBrush(GetSysColor(COLOR_BTNTEXT));
 		SelectObject(hdcCompat, hPen);
 		SelectObject(hdcCompat, hbrush);
 		SetPolyFillMode(hdcCompat, WINDING);

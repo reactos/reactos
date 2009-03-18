@@ -4,6 +4,9 @@
 <directory name="displays">
 	<xi:include href="displays/directory.rbuild" />
 </directory>
+<directory name="font">
+	<xi:include href="font/directory.rbuild" />
+</directory>
 <directory name="miniport">
 	<xi:include href="miniport/directory.rbuild" />
 </directory>

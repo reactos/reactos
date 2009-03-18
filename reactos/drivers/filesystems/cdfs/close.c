@@ -68,9 +68,9 @@ CdfsCloseFile(PDEVICE_EXTENSION DeviceExt,
 
     if (Ccb->DirectorySearchPattern.Buffer)
     {
-        ExFreePool(Ccb->DirectorySearchPattern.Buffer);
+        ExFreePoolWithTag(Ccb->DirectorySearchPattern.Buffer, TAG_CCB);
     }
-    ExFreePool(Ccb);
+    ExFreePoolWithTag(Ccb, TAG_CCB);
 
     return(STATUS_SUCCESS);
 }

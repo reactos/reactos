@@ -35,14 +35,20 @@ IServiceGroup_fnQueryInterface(
     IN  REFIID refiid,
     OUT PVOID* Output)
 {
+    WCHAR Buffer[100];
     IServiceGroupImpl * This = (IServiceGroupImpl*)iface;
     if (IsEqualGUIDAligned(refiid, &IID_IServiceGroup) ||
-        IsEqualGUIDAligned(refiid, &IID_IServiceSink))
+        IsEqualGUIDAligned(refiid, &IID_IServiceSink) ||
+        IsEqualGUIDAligned(refiid, &IID_IUnknown))
     {
         *Output = &This->lpVtbl;
         InterlockedIncrement(&This->ref);
         return STATUS_SUCCESS;
     }
+
+    StringFromCLSID(refiid, Buffer);
+    DPRINT1("IPortWaveCyclic_fnQueryInterface no interface!!! iface %S\n", Buffer);
+
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -210,7 +216,11 @@ IServiceGroup_fnRequestDelayedService(
 
     if (This->Initialized)
     {
-        KeSetTimer(&This->Timer, DueTime, &This->Dpc);
+        if (KeGetCurrentIrql() <= DISPATCH_LEVEL)
+            KeSetTimer(&This->Timer, DueTime, &This->Dpc);
+        else
+            KeInsertQueueDpc(&This->Dpc, NULL, NULL);
+
         KeClearEvent(&This->DpcEvent);
     }
 }

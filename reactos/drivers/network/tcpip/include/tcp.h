@@ -170,9 +170,10 @@ UINT TCPAllocatePort( UINT HintPort );
 
 VOID TCPFreePort( UINT Port );
 
-NTSTATUS TCPGetPeerAddress
+NTSTATUS TCPGetSockAddress
 ( PCONNECTION_ENDPOINT Connection,
-  PTRANSPORT_ADDRESS TransportAddress );
+  PTRANSPORT_ADDRESS TransportAddress,
+  BOOLEAN RemoteAddress );
 
 NTSTATUS TCPStartup(
   VOID);

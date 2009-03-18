@@ -205,7 +205,7 @@ INT cmd_date (LPTSTR param)
 	}
 
 	if (nDateString == -1)
-		PrintDate ();
+		ConOutPrintf(_T("%s"), GetDateString());
 
 	if (!bPrompt)
 	{

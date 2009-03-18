@@ -12,7 +12,7 @@ BEGIN
 
 
 
-STRING_HELP,  "Syntax: %S Datenträger: [-FS:Dateisystem] [-V:Label] [-Q] [-A:Größe] [-C]\n\n\
+STRING_HELP,  "Syntax: %s Datenträger: [-FS:Dateisystem] [-V:Label] [-Q] [-A:Größe] [-C]\n\n\
   [Datenträger:]   Legt das zu formatierende Laufwerk fest.\n\
   -FS:Dateisystem  Legt das Dateisystem fest (%s).\n\
   -V:Label         Legt den Datenträgernamen fest.\n\
@@ -34,7 +34,7 @@ STRING_NO_SUPPORT  "Operation nicht unterstützt"
 
 STRING_FMIFS_FAIL  "Kann FMIFS-Eingangspunkte nicht lokalisieren.\n\n"
 
-STRING_UNKNOW_ARG  "Unbekanntes Argument: %S\n"
+STRING_UNKNOW_ARG  "Unbekanntes Argument: %s\n"
 
 STRING_DRIVE_PARM  "Benötigter Laufwerksparameter fehlt.\n\n"
 
@@ -46,7 +46,7 @@ STRING_NO_VOLUME         "Kann Medium nicht abfragen"
 
 STRING_NO_VOLUME_SIZE    "Kann Mediumsgröße nicht abfragen"
 
-STRING_FILESYSTEM        "Der Typ des Dateisystems ist %S.\n"
+STRING_FILESYSTEM        "Der Typ des Dateisystems ist %s.\n"
 
 STRING_LABEL_NAME_EDIT  "Geben Sie die aktuelle Datenträgerbezeichnung für Datenträger %C: ein"
 

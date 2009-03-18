@@ -1,10 +1,8 @@
-@ stub AcquireSCMLock
-@ stub AddMiniIconToList
-@ stub AddTagToGroupOrderListEntry
-@ stub AppendStringToMultiSz
-@ stdcall AssertFail(str long str)
+# Functions exported by Win2003 SP1
+@ stub CMP_GetBlockedDriverInfo
+@ stub CMP_GetServerSideDeviceInstallFlags
 @ stdcall CMP_Init_Detection(long)
-@ stub CMP_RegisterNotification
+@ stdcall CMP_RegisterNotification( ptr ptr long ptr)
 @ stdcall CMP_Report_LogOn(long long)
 @ stub CMP_UnregisterNotification
 @ stdcall CMP_WaitNoPendingInstallEvents(long)
@@ -53,6 +51,7 @@
 @ stub CM_Free_Res_Des
 @ stub CM_Free_Res_Des_Ex
 @ stub CM_Free_Res_Des_Handle
+@ stub CM_Free_Resource_Conflict_Handle
 @ stdcall CM_Get_Child(ptr long long)
 @ stdcall CM_Get_Child_Ex(ptr long long long)
 @ stdcall CM_Get_Class_Key_NameA(ptr str ptr long)
@@ -63,8 +62,14 @@
 @ stdcall CM_Get_Class_NameW(ptr wstr ptr long)
 @ stdcall CM_Get_Class_Name_ExA(ptr str ptr long long)
 @ stdcall CM_Get_Class_Name_ExW(ptr wstr ptr long long)
+@ stub CM_Get_Class_Registry_PropertyA
+@ stub CM_Get_Class_Registry_PropertyW
 @ stdcall CM_Get_Depth(ptr long long)
 @ stdcall CM_Get_Depth_Ex(ptr long long long)
+@ stub CM_Get_DevNode_Custom_PropertyA
+@ stub CM_Get_DevNode_Custom_PropertyW
+@ stub CM_Get_DevNode_Custom_Property_ExA
+@ stub CM_Get_DevNode_Custom_Property_ExW
 @ stdcall CM_Get_DevNode_Registry_PropertyA(long long ptr ptr ptr long)
 @ stdcall CM_Get_DevNode_Registry_PropertyW(long long ptr ptr ptr long)
 @ stdcall CM_Get_DevNode_Registry_Property_ExA(long long ptr ptr ptr long long)
@@ -121,6 +126,9 @@
 @ stub CM_Get_Res_Des_Data_Ex
 @ stub CM_Get_Res_Des_Data_Size
 @ stub CM_Get_Res_Des_Data_Size_Ex
+@ stub CM_Get_Resource_Conflict_Count
+@ stub CM_Get_Resource_Conflict_DetailsA
+@ stub CM_Get_Resource_Conflict_DetailsW
 @ stdcall CM_Get_Sibling(ptr long long)
 @ stdcall CM_Get_Sibling_Ex(ptr long long long)
 @ stdcall CM_Get_Version()
@@ -129,6 +137,8 @@
 @ stub CM_Invert_Range_List
 @ stdcall CM_Is_Dock_Station_Present(ptr)
 @ stdcall CM_Is_Dock_Station_Present_Ex(ptr long)
+@ stub CM_Is_Version_Available
+@ stub CM_Is_Version_Available_Ex
 @ stdcall CM_Locate_DevNodeA(ptr str long)
 @ stdcall CM_Locate_DevNodeW(ptr wstr long)
 @ stdcall CM_Locate_DevNode_ExA(ptr str long long)
@@ -145,12 +155,17 @@
 @ stdcall CM_Open_Class_Key_ExW(ptr wstr long long ptr long long)
 @ stdcall CM_Open_DevNode_Key(ptr long long long ptr long)
 @ stdcall CM_Open_DevNode_Key_Ex(ptr long long long ptr long long)
+@ stub CM_Query_And_Remove_SubTreeA
+@ stub CM_Query_And_Remove_SubTreeW
+@ stub CM_Query_And_Remove_SubTree_ExA
+@ stub CM_Query_And_Remove_SubTree_ExW
 @ stub CM_Query_Arbitrator_Free_Data
 @ stub CM_Query_Arbitrator_Free_Data_Ex
 @ stub CM_Query_Arbitrator_Free_Size
 @ stub CM_Query_Arbitrator_Free_Size_Ex
 @ stub CM_Query_Remove_SubTree
 @ stub CM_Query_Remove_SubTree_Ex
+@ stub CM_Query_Resource_Conflict_List
 @ stdcall CM_Reenumerate_DevNode(long long)
 @ stdcall CM_Reenumerate_DevNode_Ex(long long long)
 @ stub CM_Register_Device_Driver
@@ -161,16 +176,16 @@
 @ stub CM_Register_Device_Interface_ExW
 @ stub CM_Remove_SubTree
 @ stub CM_Remove_SubTree_Ex
-@ stub CM_Remove_Unmarked_Children
-@ stub CM_Remove_Unmarked_Children_Ex
 @ stub CM_Request_Device_EjectA
 @ stub CM_Request_Device_EjectW
+@ stub CM_Request_Device_Eject_ExA
+@ stub CM_Request_Device_Eject_ExW
 @ stdcall CM_Request_Eject_PC()
 @ stdcall CM_Request_Eject_PC_Ex(long)
-@ stub CM_Reset_Children_Marks
-@ stub CM_Reset_Children_Marks_Ex
 @ stdcall CM_Run_Detection(long)
 @ stdcall CM_Run_Detection_Ex(long long)
+@ stub CM_Set_Class_Registry_PropertyA
+@ stub CM_Set_Class_Registry_PropertyW
 @ stdcall CM_Set_DevNode_Problem(long long long)
 @ stdcall CM_Set_DevNode_Problem_Ex(long long long long)
 @ stdcall CM_Set_DevNode_Registry_PropertyA(long long ptr long long)
@@ -192,50 +207,16 @@
 @ stub CM_Unregister_Device_InterfaceW
 @ stub CM_Unregister_Device_Interface_ExA
 @ stub CM_Unregister_Device_Interface_ExW
-@ stdcall CaptureAndConvertAnsiArg(str ptr)
-@ stdcall CaptureStringArg(wstr ptr)
-@ stdcall CenterWindowRelativeToParent(long)
-@ stdcall ConcatenatePaths(wstr wstr long ptr)
-@ stdcall DelayedMove(wstr wstr)
-@ stub DelimStringToMultiSz
-@ stub DestroyTextFileReadBuffer
 @ stdcall DoesUserHavePrivilege(wstr)
-@ stdcall DuplicateString(wstr)
-@ stdcall EnablePrivilege(wstr long)
 @ stub ExtensionPropSheetPageProc
-@ stdcall FileExists(wstr ptr)
-@ stub FreeStringArray
-@ stub GetCurrentDriverSigningPolicy
-@ stub GetNewInfName
-@ stdcall GetSetFileTimestamp(wstr ptr ptr ptr long)
-@ stdcall GetVersionInfoFromImage(wstr ptr ptr)
-@ stub InfIsFromOemLocation
 @ stdcall InstallCatalog(str str ptr)
 @ stdcall InstallHinfSection(long long str long) InstallHinfSectionA
 @ stdcall InstallHinfSectionA(long long str long)
 @ stdcall InstallHinfSectionW(long long wstr long)
-@ stub InstallStop
-@ stub InstallStopEx
-@ stdcall IsUserAdmin() shell32.IsUserAnAdmin
-@ stub LookUpStringInTable
-@ stub MemoryInitialize
-@ stdcall MultiByteToUnicode(str long)
-@ stub MultiSzFromSearchControl
+@ stdcall IsUserAdmin()
 @ stdcall MyFree(ptr)
-@ stdcall MyGetFileTitle(wstr)
 @ stdcall MyMalloc(long)
 @ stdcall MyRealloc(ptr long)
-@ stdcall OpenAndMapFileForRead(wstr ptr ptr ptr ptr)
-@ stub OutOfMemory
-@ stub QueryMultiSzValueToArray
-@ stdcall QueryRegistryValue(long wstr ptr ptr ptr)
-@ stub ReadAsciiOrUnicodeTextFile
-@ stdcall RegistryDelnode(long long)
-# Yes, Microsoft really misspelled this one!
-@ stdcall RetreiveFileSecurity(wstr ptr)
-@ stub RetrieveServiceConfig
-@ stub SearchForInfFile
-@ stub SetArrayToMultiSzValue
 @ stdcall SetupAddInstallSectionToDiskSpaceListA(long long long str ptr long)
 @ stub SetupAddInstallSectionToDiskSpaceListW
 @ stub SetupAddSectionToDiskSpaceListA
@@ -246,12 +227,17 @@
 @ stub SetupAddToSourceListW
 @ stub SetupAdjustDiskSpaceListA
 @ stub SetupAdjustDiskSpaceListW
+@ stub SetupBackupErrorA
+@ stub SetupBackupErrorW
 @ stub SetupCancelTemporarySourceList
 @ stdcall SetupCloseFileQueue(ptr)
 @ stdcall SetupCloseInfFile(long)
 @ stdcall SetupCloseLog()
+@ stdcall SetupCommitFileQueue(long long ptr ptr) SetupCommitFileQueueA
 @ stdcall SetupCommitFileQueueA(long long ptr ptr)
 @ stdcall SetupCommitFileQueueW(long long ptr ptr)
+@ stub SetupConfigureWmiFromInfSectionA
+@ stub SetupConfigureWmiFromInfSectionW
 @ stdcall SetupCopyErrorA(long str str str str str long long str long ptr)
 @ stdcall SetupCopyErrorW(long wstr wstr wstr wstr wstr long long wstr long ptr)
 @ stdcall SetupCopyOEMInfA(str str long long ptr long ptr ptr)
@@ -260,7 +246,7 @@
 @ stdcall SetupCreateDiskSpaceListW(ptr long long)
 @ stdcall SetupDecompressOrCopyFileA(str str ptr)
 @ stdcall SetupDecompressOrCopyFileW(wstr wstr ptr)
-@ stub SetupDefaultQueueCallback
+@ stdcall SetupDefaultQueueCallback(ptr long long long) SetupDefaultQueueCallbackA
 @ stdcall SetupDefaultQueueCallbackA(ptr long long long)
 @ stdcall SetupDefaultQueueCallbackW(ptr long long long)
 @ stdcall SetupDeleteErrorA(long str str long long)
@@ -290,9 +276,9 @@
 @ stdcall SetupDiCreateDeviceInfoListExW(ptr long wstr ptr)
 @ stdcall SetupDiCreateDeviceInfoW(ptr wstr ptr wstr ptr long ptr)
 @ stdcall SetupDiCreateDeviceInterfaceA(ptr ptr ptr str long ptr)
-@ stdcall SetupDiCreateDeviceInterfaceW(ptr ptr ptr wstr long ptr)
 @ stdcall SetupDiCreateDeviceInterfaceRegKeyA(ptr ptr long long ptr ptr)
 @ stdcall SetupDiCreateDeviceInterfaceRegKeyW(ptr ptr long long ptr ptr)
+@ stdcall SetupDiCreateDeviceInterfaceW(ptr ptr ptr wstr long ptr)
 @ stdcall SetupDiDeleteDevRegKey(ptr ptr long long long)
 @ stdcall SetupDiDeleteDeviceInfo(long ptr)
 @ stub SetupDiDeleteDeviceInterfaceData
@@ -305,6 +291,8 @@
 @ stdcall SetupDiEnumDeviceInterfaces(long ptr ptr long ptr)
 @ stdcall SetupDiEnumDriverInfoA(long ptr long long ptr)
 @ stdcall SetupDiEnumDriverInfoW(long ptr long long ptr)
+@ stub SetupDiGetActualModelsSectionA
+@ stub SetupDiGetActualModelsSectionW
 @ stdcall SetupDiGetActualSectionToInstallA(long str str long ptr ptr)
 @ stdcall SetupDiGetActualSectionToInstallExA(long str ptr str long ptr ptr ptr)
 @ stdcall SetupDiGetActualSectionToInstallExW(long wstr ptr wstr long ptr ptr ptr)
@@ -326,6 +314,10 @@
 @ stdcall SetupDiGetClassImageListExW(ptr wstr ptr)
 @ stdcall SetupDiGetClassInstallParamsA(ptr ptr ptr long ptr)
 @ stdcall SetupDiGetClassInstallParamsW(ptr ptr ptr long ptr)
+@ stub SetupDiGetClassRegistryPropertyA
+@ stub SetupDiGetClassRegistryPropertyW
+@ stub SetupDiGetCustomDevicePropertyA
+@ stub SetupDiGetCustomDevicePropertyW
 @ stdcall SetupDiGetDeviceInfoListClass(ptr ptr)
 @ stdcall SetupDiGetDeviceInfoListDetailA(ptr ptr)
 @ stdcall SetupDiGetDeviceInfoListDetailW(ptr ptr)
@@ -377,13 +369,17 @@
 @ stdcall SetupDiRegisterDeviceInfo(ptr ptr long ptr ptr ptr)
 @ stdcall SetupDiRemoveDevice(ptr ptr)
 @ stub SetupDiRemoveDeviceInterface
+@ stub SetupDiRestartDevices
 @ stdcall SetupDiSelectBestCompatDrv(ptr ptr)
 @ stdcall SetupDiSelectDevice(ptr ptr)
 @ stub SetupDiSelectOEMDrv
 @ stdcall SetupDiSetClassInstallParamsA(ptr ptr ptr long)
 @ stdcall SetupDiSetClassInstallParamsW(ptr ptr ptr long)
+@ stub SetupDiSetClassRegistryPropertyA
+@ stub SetupDiSetClassRegistryPropertyW
 @ stdcall SetupDiSetDeviceInstallParamsA(ptr ptr ptr)
 @ stdcall SetupDiSetDeviceInstallParamsW(ptr ptr ptr)
+@ stub SetupDiSetDeviceInterfaceDefault
 @ stdcall SetupDiSetDeviceRegistryPropertyA(ptr ptr long ptr long)
 @ stdcall SetupDiSetDeviceRegistryPropertyW(ptr ptr long ptr long)
 @ stub SetupDiSetDriverInstallParamsA
@@ -394,6 +390,8 @@
 @ stdcall SetupDiUnremoveDevice(ptr ptr)
 @ stub SetupDuplicateDiskSpaceListA
 @ stub SetupDuplicateDiskSpaceListW
+@ stub SetupEnumInfSectionsA
+@ stub SetupEnumInfSectionsW
 @ stdcall SetupFindFirstLineA(long str str ptr)
 @ stdcall SetupFindFirstLineW(long wstr wstr ptr)
 @ stdcall SetupFindNextLine(ptr ptr)
@@ -425,6 +423,7 @@
 @ stdcall SetupGetLineTextW(ptr long wstr wstr ptr long ptr)
 @ stdcall SetupGetMultiSzFieldA(ptr long ptr long ptr)
 @ stdcall SetupGetMultiSzFieldW(ptr long ptr long ptr)
+@ stub SetupGetNonInteractiveMode
 @ stdcall SetupGetSourceFileLocationA(ptr ptr str ptr ptr long ptr)
 @ stdcall SetupGetSourceFileLocationW(ptr ptr wstr ptr ptr long ptr)
 @ stub SetupGetSourceFileSizeA
@@ -464,6 +463,8 @@
 @ stdcall SetupOpenInfFileW(wstr wstr long ptr)
 @ stdcall SetupOpenLog(long)
 @ stdcall SetupOpenMasterInf()
+@ stub SetupPrepareQueueForRestoreA
+@ stub SetupPrepareQueueForRestoreW
 @ stdcall SetupPromptForDiskA(ptr str str str str str long ptr long ptr)
 @ stdcall SetupPromptForDiskW(ptr wstr wstr wstr wstr wstr long ptr long ptr)
 @ stdcall SetupPromptReboot(ptr ptr long)
@@ -509,7 +510,7 @@
 @ stub SetupRemoveSectionFromDiskSpaceListW
 @ stdcall SetupRenameErrorA(long str str str long long)
 @ stdcall SetupRenameErrorW(long wstr wstr wstr long long)
-@ stub SetupScanFileQueue
+@ stdcall SetupScanFileQueue(long long long ptr ptr ptr) SetupScanFileQueueA
 @ stdcall SetupScanFileQueueA(long long long ptr ptr ptr)
 @ stdcall SetupScanFileQueueW(long long long ptr ptr ptr)
 @ stdcall SetupSetDirectoryIdA(long long str)
@@ -519,49 +520,116 @@
 @ stdcall SetupSetFileQueueAlternatePlatformA(ptr ptr str)
 @ stdcall SetupSetFileQueueAlternatePlatformW(ptr ptr wstr)
 @ stdcall SetupSetFileQueueFlags(long long long)
+@ stub SetupSetNonInteractiveMode
 @ stub SetupSetPlatformPathOverrideA
 @ stub SetupSetPlatformPathOverrideW
 @ stdcall SetupSetSourceListA(long ptr long)
 @ stdcall SetupSetSourceListW(long ptr long)
 @ stdcall SetupTermDefaultQueueCallback(ptr)
 @ stdcall SetupTerminateFileLog(long)
-@ stub ShouldDeviceBeExcluded
-@ stdcall StampFileSecurity(wstr ptr)
-@ stdcall StringTableAddString(ptr wstr long)
-@ stdcall StringTableAddStringEx(ptr wstr long ptr long)
-@ stdcall StringTableDestroy(ptr)
-@ stdcall StringTableDuplicate(ptr)
-@ stub StringTableEnum
-@ stdcall StringTableGetExtraData(ptr long ptr long)
-@ stdcall StringTableInitialize()
-@ stdcall StringTableInitializeEx(long long)
-@ stdcall StringTableLookUpString(ptr wstr long)
-@ stdcall StringTableLookUpStringEx(ptr wstr long ptr ptr)
-@ stdcall StringTableSetExtraData(ptr long ptr long)
-@ stdcall StringTableStringFromId(ptr long)
-@ stdcall StringTableStringFromIdEx(ptr long ptr ptr)
-@ stdcall StringTableTrim(ptr)
-@ stdcall TakeOwnershipOfFile(wstr)
+@ stub SetupUninstallNewlyCopiedInfs
+@ stub SetupUninstallOEMInfA
+@ stub SetupUninstallOEMInfW
+@ stub SetupVerifyInfFileA
+@ stub SetupVerifyInfFileW
 @ stdcall UnicodeToMultiByte(wstr long)
-@ stdcall UnmapAndCloseFile(long long ptr)
 @ stub VerifyCatalogFile
-@ stub VerifyFile
 @ stub pSetupAccessRunOnceNodeList
+@ stub pSetupAcquireSCMLock
 @ stub pSetupAddMiniIconToList
 @ stub pSetupAddTagToGroupOrderListEntry
 @ stub pSetupAppendStringToMultiSz
+@ stdcall pSetupCaptureAndConvertAnsiArg(str ptr) CaptureAndConvertAnsiArg
+@ stdcall pSetupCenterWindowRelativeToParent(long) CenterWindowRelativeToParent
+@ stdcall pSetupConcatenatePaths(wstr wstr long ptr) ConcatenatePaths
 @ stub pSetupDestroyRunOnceNodeList
-@ stub pSetupDirectoryIdToPath
+@ stub pSetupDiGetDeviceInfoContext
+@ stub pSetupDiSetDeviceInfoContext
+@ stub pSetupDoesUserHavePrivilege
+@ stdcall pSetupDuplicateString(wstr) DuplicateString
+@ stdcall pSetupEnablePrivilege(wstr long) EnablePrivilege
+@ stub pSetupFree
+@ stub pSetupFreeStringArray
+@ stub pSetupGetCurrentDriverSigningPolicy
 @ stdcall pSetupGetField(ptr long)
+@ stdcall pSetupGetFileTitle(wstr) MyGetFileTitle
 @ stdcall pSetupGetGlobalFlags()
-@ stub pSetupGetOsLoaderDriveAndPath
+@ stub pSetupGetInfSections
 @ stdcall pSetupGetQueueFlags(ptr)
-@ stub pSetupGetVersionDatum
+@ stub pSetupGetRealSystemTime
+@ stdcall pSetupGetVersionInfoFromImage(wstr ptr ptr) GetVersionInfoFromImage
 @ stdcall pSetupGuidFromString(wstr ptr)
+@ stub pSetupHandleFailedVerification
+@ stub pSetupInfCacheBuild
+@ stub pSetupInfIsFromOemLocation
+@ stub pSetupInstallCatalog
+@ stub pSetupInstallStopEx
 @ stdcall pSetupIsGuidNull(ptr)
+@ stub pSetupIsLocalSystem
+@ stdcall pSetupIsUserAdmin() IsUserAdmin
 @ stub pSetupMakeSurePathExists
+@ stub pSetupMalloc
+@ stub pSetupModifyGlobalFlags
+@ stdcall pSetupMultiByteToUnicode(str long) MultiByteToUnicode
+@ stdcall pSetupOpenAndMapFileForRead(wstr ptr ptr ptr ptr) OpenAndMapFileForRead
+@ stub pSetupOutOfMemory
+@ stub pSetupQueryMultiSzValueToArray
+@ stub pSetupRealloc
+@ stdcall pSetupRegistryDelnode(long long) RegistryDelnode
+@ stub pSetupRetrieveServiceConfig
+@ stub pSetupSetArrayToMultiSzValue
 @ stdcall pSetupSetGlobalFlags(long)
+@ stub pSetupSetNoDriverPrompts
 @ stdcall pSetupSetQueueFlags(ptr long)
-@ stub pSetupSetSystemSourceFlags
+@ stub pSetupSetSystemSourcePath
+@ stub pSetupShouldDeviceBeExcluded
 @ stdcall pSetupStringFromGuid(ptr wstr long)
+@ stdcall pSetupStringTableAddString(ptr wstr long) StringTableAddString
+@ stdcall pSetupStringTableAddStringEx(ptr wstr long ptr long) StringTableAddStringEx
+@ stdcall pSetupStringTableDestroy(ptr) StringTableDestroy
+@ stdcall pSetupStringTableDuplicate(ptr) StringTableDuplicate
+@ stub pSetupStringTableEnum
+@ stdcall pSetupStringTableGetExtraData(ptr long ptr long) StringTableGetExtraData
+@ stdcall pSetupStringTableInitialize() StringTableInitialize
+@ stdcall pSetupStringTableInitializeEx(long long) StringTableInitializeEx
+@ stdcall pSetupStringTableLookUpString(ptr wstr long) StringTableLookUpString
+@ stdcall pSetupStringTableLookUpStringEx(ptr wstr long ptr ptr) StringTableLookUpStringEx
+@ stdcall pSetupStringTableSetExtraData(ptr long ptr long) StringTableSetExtraData
+@ stdcall pSetupStringTableStringFromId(ptr long) StringTableStringFromId
+@ stdcall pSetupStringTableStringFromIdEx(ptr long ptr ptr) StringTableStringFromIdEx
+@ stdcall pSetupUnicodeToMultiByte(wstr long) UnicodeToMultiByte
+@ stdcall pSetupUnmapAndCloseFile(long long ptr) UnmapAndCloseFile
+@ stub pSetupVerifyCatalogFile
+@ stub pSetupVerifyFile
 @ stub pSetupVerifyQueuedCatalogs
+@ stub pSetupWriteLogEntry
+@ stub pSetupWriteLogError
+
+# Unknown functions, they are not present in Win2003 SP1
+@ stdcall AssertFail(str long str)
+@ stub CM_Remove_Unmarked_Children
+@ stub CM_Remove_Unmarked_Children_Ex
+@ stub CM_Reset_Children_Marks
+@ stub CM_Reset_Children_Marks_Ex
+@ stdcall CaptureStringArg(wstr ptr)
+@ stdcall DelayedMove(wstr wstr)
+@ stub DelimStringToMultiSz
+@ stub DestroyTextFileReadBuffer
+@ stdcall FileExists(wstr ptr)
+@ stub GetNewInfName
+@ stdcall GetSetFileTimestamp(wstr ptr ptr ptr long)
+@ stub LookUpStringInTable
+@ stub MemoryInitialize
+@ stub MultiSzFromSearchControl
+@ stdcall QueryRegistryValue(long wstr ptr ptr ptr)
+@ stub ReadAsciiOrUnicodeTextFile
+# Yes, Microsoft really misspelled this one!
+@ stdcall RetreiveFileSecurity(wstr ptr)
+@ stub SearchForInfFile
+@ stdcall StampFileSecurity(wstr ptr)
+@ stdcall StringTableTrim(ptr)
+@ stdcall TakeOwnershipOfFile(wstr)
+@ stub pSetupDirectoryIdToPath
+@ stub pSetupGetOsLoaderDriveAndPath
+@ stub pSetupGetVersionDatum
+@ stub pSetupSetSystemSourceFlags

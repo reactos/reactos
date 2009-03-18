@@ -117,9 +117,9 @@ ULONG MmCoreDumpType = MM_CORE_DUMP_TYPE_NONE;
 /*
  * Translate between a swap entry and a file and offset pair.
  */
-#define FILE_FROM_ENTRY(i) ((i) >> 24)
-#define OFFSET_FROM_ENTRY(i) (((i) & 0xffffff) - 1)
-#define ENTRY_FROM_FILE_OFFSET(i, j) (((i) << 24) | ((j) + 1))
+#define FILE_FROM_ENTRY(i) ((i) & 0x0f)
+#define OFFSET_FROM_ENTRY(i) ((i) >> 11)
+#define ENTRY_FROM_FILE_OFFSET(i, j) ((i) | (j) << 11 | 0x400)
 
 static BOOLEAN MmSwapSpaceMessage = FALSE;
 

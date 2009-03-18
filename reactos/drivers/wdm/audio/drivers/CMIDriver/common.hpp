@@ -28,11 +28,13 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef _COMMON_HPP_
 #define _COMMON_HPP_
 
+#include "ntddk.h"
 #include "stdunk.h"
 #include "portcls.h"
 #include "dmusicks.h"
 #include "ksdebug.h"
 #include "kcom.h"
+#include "ksmedia.h"
 
 #include "interfaces.hpp"
 #include "debug.hpp"

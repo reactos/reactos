@@ -877,6 +877,12 @@ CreatePrimitive(FILE *Out, unsigned Bpp, PROPINFO RopInfo)
             {
               if (0 == Partial)
                 {
+                  Output(Out, "if (!BltInfo->Brush)\n");
+                  Output(Out, "{\n");
+                  Output(Out, "Pattern = 0;\n");
+                  Output(Out, "}\n");
+                  Output(Out, "else\n");
+                  Output(Out, "{\n");
                   Output(Out, "Pattern = BltInfo->Brush->iSolidColor");
                 }
               else
@@ -887,6 +893,7 @@ CreatePrimitive(FILE *Out, unsigned Bpp, PROPINFO RopInfo)
               if (32 / Bpp <= Partial + 1)
                 {
                   Output(Out, ";\n");
+                  Output(Out, "}\n");
                 }
               else
                 {

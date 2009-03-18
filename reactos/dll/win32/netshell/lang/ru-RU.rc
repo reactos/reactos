@@ -21,7 +21,7 @@ END
 
 IDD_STATUS DIALOGEX DISCARDABLE  0, 0, 200, 280
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Properties"
+CAPTION "Свойства"
 FONT 8, "MS Shell Dlg"
 BEGIN
 END
@@ -60,37 +60,37 @@ BEGIN
  LTEXT "Маска подсети:", -1, 22, 48, 80, 8
  LTEXT "Шлюз по умолчанию:", -1, 22, 62, 80, 8
 
- RTEXT "N/A", IDC_DETAILSTYPE, 122, 20, 80, 8
+ RTEXT "н/а", IDC_DETAILSTYPE, 122, 20, 80, 8
  RTEXT "000.000.000.000", IDC_DETAILSIP, 122, 34, 80, 8
  RTEXT "000.000.000.000", IDC_DETAILSSUBNET, 122, 48, 80, 8
  RTEXT "", IDC_DETAILSGATEWAY, 122, 62, 80, 8
 
- PUSHBUTTON "&Дополнительно...", IDC_DETAILS, 22, 76, 62, 14
+ PUSHBUTTON "&Подробности...", IDC_DETAILS, 22, 76, 62, 14
 END
 
-IDD_LAN_NETSTATUSDETAILS DIALOGEX DISCARDABLE  0, 0, 200,200
+IDD_LAN_NETSTATUSDETAILS DIALOGEX DISCARDABLE  0, 0, 200, 172
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
-CAPTION "Network Connection Details"
+CAPTION "Детали сетевого подключения"
 FONT 8, "MS Shell Dlg"
 BEGIN
- LTEXT "Network Connection &Details:", -1, 15, 9, 170, 12
- CONTROL "", IDC_DETAILS, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 15, 25, 170, 130
- PUSHBUTTON "&Close", IDC_CLOSE, 125, 165, 62, 14
+ LTEXT "&Дополнительные сведения о сети:", -1, 5, 4, 170, 12
+ CONTROL "", IDC_DETAILS, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 5, 17, 190, 130
+ PUSHBUTTON "&Закрыть", IDC_CLOSE, 132, 153, 62, 14
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-	IDS_PHYSICAL_ADDRESS        "Physical Address"
-	IDS_IP_ADDRESS              "IP Address"
-	IDS_SUBNET_MASK             "Subnet Mask"
-	IDS_DEF_GATEWAY             "Default Gateway"
-	IDS_DHCP_SERVER             "DHCP Server"
-	IDS_LEASE_OBTAINED          "Lease Obtained"
-	IDS_LEASE_EXPIRES           "Lease Expires"
-	IDS_DNS_SERVERS             "DNS Servers"
-	IDS_WINS_SERVERS            "WINS Servers"
-	IDS_PROPERTY                "Property"
-	IDS_VALUE                   "Value"
+	IDS_PHYSICAL_ADDRESS        "Физический адрес"
+	IDS_IP_ADDRESS              "IP-адрес"
+	IDS_SUBNET_MASK             "Маска подсети"
+	IDS_DEF_GATEWAY             "Основной шлюз"
+	IDS_DHCP_SERVER             "DHCP-сервер"
+	IDS_LEASE_OBTAINED          "Аренда получена"
+	IDS_LEASE_EXPIRES           "Аренда истекает"
+	IDS_DNS_SERVERS             "DNS-серверы"
+	IDS_WINS_SERVERS            "WINS-сервер"
+	IDS_PROPERTY                "Свойство"
+	IDS_VALUE                   "Значение"
 	IDS_NETWORKCONNECTION       "Сетевые подключения"
 	IDS_SHV_COLUMN_NAME         "Имя"
 	IDS_SHV_COLUMN_TYPE         "Тип"
@@ -118,8 +118,8 @@ BEGIN
 	IDS_FORMAT_KBIT             "%u КБайт/s"
 	IDS_FORMAT_MBIT             "%u МБайт/s"
 	IDS_FORMAT_GBIT             "%u ГБайт/s"
-	IDS_DURATION_DAY            "%d День %s"
-	IDS_DURATION_DAYS           "%d Дней %s"
+	IDS_DURATION_DAY            "%d день %s"
+	IDS_DURATION_DAYS           "%d дней %s"
 	IDS_ASSIGNED_DHCP           "Присвоен DHCP"
 	IDS_ASSIGNED_MANUAL         "Настроен вручную"
 END

@@ -181,7 +181,7 @@ MainFrameBase::MainFrameBase(HWND hwnd)
 #endif
 		WS_CHILD|TBSTYLE_FLAT|WS_VISIBLE, IDW_TOOLBAR, 2, g_Globals._hInstance, IDB_TOOLBAR,
 		toolbarBtns, sizeof(toolbarBtns)/sizeof(TBBUTTON),
-		16, 15, 16, 15, sizeof(TBBUTTON));
+		16, 16, 16, 16, sizeof(TBBUTTON));
 
 	CheckMenuItem(_menu_info._hMenuView, ID_VIEW_TOOL_BAR, MF_BYCOMMAND|MF_CHECKED);
 
@@ -694,7 +694,7 @@ MDIMainFrame::MDIMainFrame(HWND hwnd)
 				CCS_NOPARENTALIGN|CCS_NORESIZE|CCS_NODIVIDER|
 				WS_CHILD|TBSTYLE_FLAT|WS_VISIBLE|CCS_NOMOVEY|TBSTYLE_LIST,
 				IDW_EXTRABAR, 2, g_Globals._hInstance, IDB_DRIVEBAR, NULL, 0,
-				16, 15, 16, 15, sizeof(TBBUTTON));
+				16, 16, 16, 16, sizeof(TBBUTTON));
 #else
 	_hextrabar = CreateToolbarEx(hwnd,
 				WS_CHILD|WS_VISIBLE|CCS_NOMOVEY|TBSTYLE_LIST,CCS_NODIVIDER|
@@ -764,7 +764,7 @@ MDIMainFrame::MDIMainFrame(HWND hwnd)
 				CCS_NOPARENTALIGN|CCS_NORESIZE|CCS_NODIVIDER|
 				WS_CHILD|WS_VISIBLE|TBSTYLE_FLAT|CCS_NOMOVEY|TBSTYLE_LIST,
 				IDW_DRIVEBAR, 2, g_Globals._hInstance, IDB_DRIVEBAR, NULL, 0,
-				16, 15, 16, 15, sizeof(TBBUTTON));
+				16, 16, 16, 16, sizeof(TBBUTTON));
 #else
 	_hdrivebar = CreateToolbarEx(hwnd,
 				WS_CHILD|WS_VISIBLE|CCS_NOMOVEY|TBSTYLE_LIST|CCS_NODIVIDER,

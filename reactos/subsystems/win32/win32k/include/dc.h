@@ -6,25 +6,25 @@
 
 /* Constants ******************************************************************/
 
-// Get/SetBounds/Rect support.
-#define DCB_WINDOWMGR 0x8000 // Queries the Windows bounding rectangle instead of the application's
+/* Get/SetBounds/Rect support. */
+#define DCB_WINDOWMGR 0x8000 /* Queries the Windows bounding rectangle instead of the application's */
 
-// GDIDEVICE flags
-#define PDEV_DISPLAY             0x00000001 // Display device
-#define PDEV_HARDWARE_POINTER    0x00000002 // Supports hardware cursor
+/* GDIDEVICE flags */
+#define PDEV_DISPLAY             0x00000001 /* Display device */
+#define PDEV_HARDWARE_POINTER    0x00000002 /* Supports hardware cursor */
 #define PDEV_SOFTWARE_POINTER    0x00000004
-#define PDEV_GOTFONTS            0x00000040 // Has font driver
+#define PDEV_GOTFONTS            0x00000040 /* Has font driver */
 #define PDEV_PRINTER             0x00000080
 #define PDEV_ALLOCATEDBRUSHES    0x00000100
 #define PDEV_HTPAL_IS_DEVPAL     0x00000200
 #define PDEV_DISABLED            0x00000400
 #define PDEV_SYNCHRONIZE_ENABLED 0x00000800
-#define PDEV_FONTDRIVER          0x00002000 // Font device
+#define PDEV_FONTDRIVER          0x00002000 /* Font device */
 #define PDEV_GAMMARAMP_TABLE     0x00004000
 #define PDEV_UMPD                0x00008000
 #define PDEV_SHARED_DEVLOCK      0x00010000
 #define PDEV_META_DEVICE         0x00020000
-#define PDEV_DRIVER_PUNTED_CALL  0x00040000 // Driver calls back to GDI engine
+#define PDEV_DRIVER_PUNTED_CALL  0x00040000 /* Driver calls back to GDI engine */
 #define PDEV_CLONE_DEVICE        0x00080000
 
 /* Type definitions ***********************************************************/
@@ -39,22 +39,22 @@ typedef struct _WIN_DC_INFO
   BYTE   bitsPerPixel;
 } WIN_DC_INFO;
 
-// EXtended CLip and Window Region Object
+/* EXtended CLip and Window Region Object */
 typedef struct _XCLIPOBJ
 {
   WNDOBJ  eClipWnd;
-  PVOID   pClipRgn;    // prgnRao_ or (prgnVis_ if (prgnRao_ == z))
+  PVOID   pClipRgn;    /* prgnRao_ or (prgnVis_ if (prgnRao_ == z)) */
   DWORD   Unknown1[16];
-  DWORD   nComplexity; // count/mode based on # of rect in regions scan.
-  PVOID   pUnknown;    // UnK pointer to a large drawing structure.
-                       // We will use it for CombinedClip ptr.
+  DWORD   nComplexity; /* count/mode based on # of rect in regions scan. */
+  PVOID   pUnknown;    /* UnK pointer to a large drawing structure. */
+                       /* We will use it for CombinedClip ptr. */
 } XCLIPOBJ, *PXCLIPOBJ;
 
 typedef struct _DCLEVEL
 {
   HPALETTE          hpal;
   struct _PALGDI  * ppal;
-  PVOID             pColorSpace; // COLORSPACE*
+  PVOID             pColorSpace; /* COLORSPACE* */
   LONG              lIcmMode;
   LONG              lSaveDepth;
   DWORD             unk1_00000000;
@@ -62,16 +62,16 @@ typedef struct _DCLEVEL
   POINTL            ptlBrushOrigin;
   PGDIBRUSHOBJ      pbrFill;
   PGDIBRUSHOBJ      pbrLine;
-  PVOID             plfnt; // LFONTOBJ* (TEXTOBJ*)
-  HGDIOBJ           hPath; // HPATH
+  PVOID             plfnt; /* LFONTOBJ* (TEXTOBJ*) */
+  HGDIOBJ           hPath; /* HPATH */
   FLONG             flPath;
-  LINEATTRS         laPath; // 0x20 bytes
-  PVOID             prgnClip; // PROSRGNDATA
+  LINEATTRS         laPath; /* 0x20 bytes */
+  PVOID             prgnClip; /* PROSRGNDATA */
   PVOID             prgnMeta;
   COLORADJUSTMENT   ca;
   FLONG             flFontState;
   UNIVERSAL_FONT_ID ufi;
-  UNIVERSAL_FONT_ID ufiLoc[4]; // Local List.
+  UNIVERSAL_FONT_ID ufiLoc[4]; /* Local List. */
   UNIVERSAL_FONT_ID *pUFI;
   ULONG             uNumUFIs;
   BOOL              ufiSet;
@@ -99,11 +99,11 @@ typedef struct _DC
      Do not (re)move this. */
   BASEOBJECT  BaseObject;
 
-  DHPDEV      PDev;   // <- GDIDEVICE.hPDev DHPDEV for device.
+  DHPDEV      PDev;   /* <- GDIDEVICE.hPDev DHPDEV for device. */
   INT         DC_Type;
   INT         DC_Flags;
-  PVOID       pPDev;  // PGDIDEVICE aka PDEVOBJ
-  PVOID       hSem;   // PERESOURCE aka HSEMAPHORE
+  PVOID       pPDev;  /* PGDIDEVICE aka PDEVOBJ */
+  PVOID       hSem;   /* PERESOURCE aka HSEMAPHORE */
   FLONG       flGraphics;
   FLONG       flGraphics2;
   PDC_ATTR    pDc_Attr;
@@ -116,20 +116,20 @@ typedef struct _DC
   RECTL       erclWindow;
   RECTL       erclBounds;
   RECTL       erclBoundsApp;
-  PVOID       prgnAPI; // PROSRGNDATA
+  PVOID       prgnAPI; /* PROSRGNDATA */
   PVOID       prgnVis;
   PVOID       prgnRao;
   POINTL      ptlFillOrigin;
-  unsigned    eboFill_[23]; // EBRUSHOBJ
+  unsigned    eboFill_[23]; /* EBRUSHOBJ */
   unsigned    eboLine_[23];
   unsigned    eboText_[23];
   unsigned    eboBackground_[23];
   HFONT       hlfntCur;
   FLONG       flSimulationFlags;
   LONG        lEscapement;
-  PVOID       prfnt;    // RFONT*
-  XCLIPOBJ    co;       // CLIPOBJ
-  PVOID       pPFFList; // PPFF*
+  PVOID       prfnt;    /* RFONT* */
+  XCLIPOBJ    co;       /* CLIPOBJ */
+  PVOID       pPFFList; /* PPFF* */
   PVOID       ClrxFormLnk;
   INT         ipfdDevMax;
   ULONG       ulCopyCount;
@@ -147,10 +147,10 @@ typedef struct _DC
 
 typedef struct _GRAPHICS_DEVICE
 {
-  CHAR szNtDeviceName[CCHDEVICENAME];           // Yes char AscII
-  CHAR szWinDeviceName[CCHDEVICENAME];          // <- chk GetMonitorInfoW MxIxEX.szDevice
+  CHAR szNtDeviceName[CCHDEVICENAME];           /* Yes char AscII */
+  CHAR szWinDeviceName[CCHDEVICENAME];          /* <- chk GetMonitorInfoW MxIxEX.szDevice */
   struct _GRAPHICS_DEVICE * pNextGraphicsDevice;
-  DWORD StateFlags;                             // See DISPLAY_DEVICE_*
+  DWORD StateFlags;                             /* See DISPLAY_DEVICE_* */
 } GRAPHICS_DEVICE, *PGRAPHICS_DEVICE;
 
 typedef struct _GDIPOINTER /* should stay private to ENG? No, part of GDIDEVICE aka HDEV aka PDEV. */
@@ -180,27 +180,27 @@ typedef struct _GDIDEVICE
   INT           cPdevOpenRefs;
   struct _GDIDEVICE *ppdevParent;
   FLONG         flFlags;
-  PERESOURCE    hsemDevLock;    // Device lock.
+  PERESOURCE    hsemDevLock;    /* Device lock. */
 
-  PVOID         pvGammaRamp;    // Gamma ramp pointer.
+  PVOID         pvGammaRamp;    /* Gamma ramp pointer. */
 
   HSURF         FillPatterns[HS_DDI_MAX];
 
   ULONG         DxDd_nCount;
 
-  DHPDEV        hPDev;          // DHPDEV for device.
-  PVOID         ppalSurf;       // PEPALOBJ/PPALGDI for this device.
+  DHPDEV        hPDev;          /* DHPDEV for device. */
+  PVOID         ppalSurf;       /* PEPALOBJ/PPALGDI for this device. */
   DEVINFO       DevInfo;
   GDIINFO       GDIInfo;
-  HSURF         pSurface;       // SURFACE for this device.
-  HANDLE        hSpooler;       // Handle to spooler, if spooler dev driver.
+  HSURF         pSurface;       /* SURFACE for this device. */
+  HANDLE        hSpooler;       /* Handle to spooler, if spooler dev driver. */
   ULONG         DisplayNumber;
-  PVOID         pGraphicsDev;   // PGRAPHICS_DEVICE
+  PVOID         pGraphicsDev;   /* PGRAPHICS_DEVICE */
 
   DEVMODEW      DMW;
-  PVOID         pdmwDev;        // Ptr->DEVMODEW.dmSize + dmDriverExtra == alloc size.
+  PVOID         pdmwDev;        /* Ptr->DEVMODEW.dmSize + dmDriverExtra == alloc size. */
 
-  FLONG         DxDd_Flags;     // DxDD active status flags.
+  FLONG         DxDd_Flags;     /* DxDD active status flags. */
 
   PFILE_OBJECT  VideoFileObject;
   BOOLEAN       PreparedDriver;

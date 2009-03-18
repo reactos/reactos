@@ -46,4 +46,5 @@
 #include "shlwapi_Sk.rc"
 #include "shlwapi_Sv.rc"
 #include "shlwapi_Tr.rc"
-#include "shlwapi_Uk.rc"#include "shlwapi_Zh.rc"
+#include "shlwapi_Uk.rc"
+#include "shlwapi_Zh.rc"

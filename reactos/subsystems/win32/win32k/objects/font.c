@@ -816,6 +816,18 @@ NtGdiHfontCreate(
   }
   TEXTOBJ_UnlockText(TextObj);
 
+  if (pvCliData && hNewFont)
+  {
+    // FIXME: use GDIOBJ_InsertUserData
+    KeEnterCriticalRegion();
+    {
+       INT Index = GDI_HANDLE_GET_INDEX((HGDIOBJ)hNewFont);
+       PGDI_TABLE_ENTRY Entry = &GdiHandleTable->Entries[Index];
+       Entry->UserData = pvCliData;
+    }
+    KeLeaveCriticalRegion();
+  }
+
   return hNewFont;
 }
 

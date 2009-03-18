@@ -79,6 +79,51 @@ PcCaptureFormat(
     return STATUS_NOT_IMPLEMENTED;
 }
 
+NTSTATUS
+AddToPropertyTable(
+    IN OUT SUBDEVICE_DESCRIPTOR * Descriptor,
+    IN KSPROPERTY_SET * FilterProperty)
+{
+    if (Descriptor->FilterPropertySet.FreeKsPropertySetOffset >= Descriptor->FilterPropertySet.MaxKsPropertySetCount)
+    {
+        DPRINT1("FIXME\n");
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    RtlMoveMemory(&Descriptor->FilterPropertySet.Properties[Descriptor->FilterPropertySet.FreeKsPropertySetOffset],
+                  FilterProperty,
+                  sizeof(KSPROPERTY_SET));
+
+    if (FilterProperty->PropertiesCount)
+    {
+        Descriptor->FilterPropertySet.Properties[Descriptor->FilterPropertySet.FreeKsPropertySetOffset].PropertyItem = AllocateItem(NonPagedPool,
+                                                                                                                                    sizeof(KSPROPERTY_ITEM) * FilterProperty->PropertiesCount,
+                                                                                                                                   TAG_PORTCLASS);
+
+        if (!Descriptor->FilterPropertySet.Properties[Descriptor->FilterPropertySet.FreeKsPropertySetOffset].PropertyItem)
+        {
+            Descriptor->FilterPropertySet.Properties[Descriptor->FilterPropertySet.FreeKsPropertySetOffset].PropertiesCount = 0;
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+        RtlMoveMemory((PVOID)Descriptor->FilterPropertySet.Properties[Descriptor->FilterPropertySet.FreeKsPropertySetOffset].PropertyItem,
+                      FilterProperty->PropertyItem,
+                      sizeof(KSPROPERTY_ITEM) * FilterProperty->PropertiesCount);
+
+    }
+    Descriptor->FilterPropertySet.Properties[Descriptor->FilterPropertySet.FreeKsPropertySetOffset].Set = AllocateItem(NonPagedPool, sizeof(GUID), TAG_PORTCLASS);
+    if (!Descriptor->FilterPropertySet.Properties[Descriptor->FilterPropertySet.FreeKsPropertySetOffset].Set)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    RtlCopyMemory((PVOID)Descriptor->FilterPropertySet.Properties[Descriptor->FilterPropertySet.FreeKsPropertySetOffset].Set, FilterProperty->Set, sizeof(GUID));
+
+    /* ignore fast io table for now */
+    Descriptor->FilterPropertySet.Properties[Descriptor->FilterPropertySet.FreeKsPropertySetOffset].FastIoCount = 0;
+    Descriptor->FilterPropertySet.Properties[Descriptor->FilterPropertySet.FreeKsPropertySetOffset].FastIoTable = NULL;
+
+    Descriptor->FilterPropertySet.FreeKsPropertySetOffset++;
+
+    return STATUS_SUCCESS;
+}
 
 /*
  * @unimplemented
@@ -102,6 +147,8 @@ PcCreateSubdeviceDescriptor(
     IN PPCFILTER_DESCRIPTOR FilterDescription)
 {
     SUBDEVICE_DESCRIPTOR * Descriptor;
+    ULONG Index, SubIndex;
+    PKSDATARANGE DataRange;
     NTSTATUS Status = STATUS_INSUFFICIENT_RESOURCES;
 
     Descriptor = AllocateItem(NonPagedPool, sizeof(SUBDEVICE_DESCRIPTOR), TAG_PORTCLASS);
@@ -116,6 +163,72 @@ PcCreateSubdeviceDescriptor(
     RtlCopyMemory(Descriptor->Interfaces, InterfaceGuids, sizeof(GUID) * InterfaceCount);
     Descriptor->InterfaceCount = InterfaceCount;
 
+    if (FilterPropertiesCount)
+    {
+       /// FIXME
+       /// handle driver properties
+       Descriptor->FilterPropertySet.Properties = AllocateItem(NonPagedPool, sizeof(KSPROPERTY_SET) * FilterPropertiesCount, TAG_PORTCLASS);
+       if (! Descriptor->FilterPropertySet.Properties)
+           goto cleanup;
+
+       Descriptor->FilterPropertySet.MaxKsPropertySetCount = FilterPropertiesCount;
+       for(Index = 0; Index < FilterPropertiesCount; Index++)
+       {
+           Status = AddToPropertyTable(Descriptor, &FilterProperties[Index]);
+           if (!NT_SUCCESS(Status))
+               goto cleanup;
+       }
+    }
+
+
+    if (FilterDescription->PinCount)
+    {
+        Descriptor->Factory.KsPinDescriptor = AllocateItem(NonPagedPool, FilterDescription->PinSize * FilterDescription->PinCount, TAG_PORTCLASS);
+        if (!Descriptor->Factory.KsPinDescriptor)
+            goto cleanup;
+
+        Descriptor->Factory.Instances = AllocateItem(NonPagedPool, FilterDescription->PinCount * sizeof(PIN_INSTANCE_INFO), TAG_PORTCLASS);
+        if (!Descriptor->Factory.Instances)
+            goto cleanup;
+
+        Descriptor->Factory.PinDescriptorCount = FilterDescription->PinCount;
+        Descriptor->Factory.PinDescriptorSize = FilterDescription->PinSize;
+
+        /* copy pin factories */
+        for(Index = 0; Index < FilterDescription->PinCount; Index++)
+        {
+            RtlMoveMemory(&Descriptor->Factory.KsPinDescriptor[Index], &FilterDescription->Pins[Index].KsPinDescriptor, FilterDescription->PinSize);
+
+            if (FilterDescription->Pins[Index].KsPinDescriptor.DataRangesCount)
+            {
+                Descriptor->Factory.KsPinDescriptor[Index].DataRanges = AllocateItem(NonPagedPool, FilterDescription->Pins[Index].KsPinDescriptor.DataRangesCount * sizeof(PKSDATARANGE), TAG_PORTCLASS);
+                if(!Descriptor->Factory.KsPinDescriptor[Index].DataRanges)
+                    goto cleanup;
+
+                for (SubIndex = 0; SubIndex < FilterDescription->Pins[Index].KsPinDescriptor.DataRangesCount; SubIndex++)
+                {
+                    DataRange = AllocateItem(NonPagedPool, FilterDescription->Pins[Index].KsPinDescriptor.DataRanges[SubIndex]->FormatSize, TAG_PORTCLASS);
+                    if (!DataRange)
+                        goto cleanup;
+
+                    RtlMoveMemory(DataRange,
+                                  FilterDescription->Pins[Index].KsPinDescriptor.DataRanges[SubIndex],
+                                  FilterDescription->Pins[Index].KsPinDescriptor.DataRanges[SubIndex]->FormatSize);
+
+                    ((PKSDATAFORMAT*)Descriptor->Factory.KsPinDescriptor[Index].DataRanges)[SubIndex] = DataRange;
+
+                }
+
+                Descriptor->Factory.KsPinDescriptor[Index].DataRangesCount = FilterDescription->Pins[Index].KsPinDescriptor.DataRangesCount;
+            }
+
+            Descriptor->Factory.Instances[Index].CurrentPinInstanceCount = 0;
+            Descriptor->Factory.Instances[Index].MaxFilterInstanceCount = FilterDescription->Pins[Index].MaxFilterInstanceCount;
+            Descriptor->Factory.Instances[Index].MaxGlobalInstanceCount = FilterDescription->Pins[Index].MaxGlobalInstanceCount;
+            Descriptor->Factory.Instances[Index].MinFilterInstanceCount = FilterDescription->Pins[Index].MinFilterInstanceCount;
+        }
+    }
+    Descriptor->DeviceDescriptor = FilterDescription;
     *OutSubdeviceDescriptor = Descriptor;
     return STATUS_SUCCESS;
 
@@ -125,10 +238,28 @@ cleanup:
         if (Descriptor->Interfaces)
             FreeItem(Descriptor->Interfaces, TAG_PORTCLASS);
 
+        if (Descriptor->Factory.KsPinDescriptor)
+            FreeItem(Descriptor->Factory.KsPinDescriptor, TAG_PORTCLASS);
+
         FreeItem(Descriptor, TAG_PORTCLASS);
     }
     return Status;
 }
+
+/*
+ * @implemented
+ */
+
+NTSTATUS
+NTAPI
+PcValidateConnectRequest(
+    IN PIRP Irp,
+    IN KSPIN_FACTORY * Factory,
+    OUT PKSPIN_CONNECT * Connect)
+{
+    return KsValidateConnectRequest(Irp, Factory->PinDescriptorCount, Factory->KsPinDescriptor, Connect);
+}
+
 
 /* PcDeleteSubdeviceDescriptor */
 

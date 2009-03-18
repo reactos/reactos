@@ -28,6 +28,7 @@
 #include <include/dce.h>
 #include <include/dib.h>
 #include <include/driver.h>
+#include <include/driverobj.h>
 #include <include/error.h>
 #include <include/floatobj.h>
 #include <include/gdiobj.h>
@@ -72,8 +73,7 @@
 #include <include/mmcopy.h>
 #include <include/misc.h>
 #include <include/gdifloat.h>
-#include <eng/objects.h>
-#include <eng/misc.h>
+#include <include/engobjects.h>
 #include <dib/dib.h>
 
 #endif /* __WIN32K_H */

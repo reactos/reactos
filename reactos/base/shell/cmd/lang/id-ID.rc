@@ -10,6 +10,14 @@ LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
 
+STRING_ASSOC_HELP,    "Modify file extension associations.\n\n\
+assoc [.ext[=[FileType]]]\n\
+\n\
+assoc (print all associations)\n\
+assoc .ext (print specific association)\n\
+assoc .ext= (remove specific association)\n\
+assoc .ext=FileType (add new association)\n"
+
 STRING_ATTRIB_HELP,    "Menampilkan atau mengubah atribut file.\n\n\
 ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] file ...\n\
        [/S [/D]]\n\n\
@@ -294,6 +302,13 @@ STRING_LOCALE_HELP1, "Waktu saat ini"
 STRING_MKDIR_HELP,   "Membuat direktori.\n\n\
 MKDIR [drive:]path\nMD [drive:]path"
 
+STRING_MKLINK_HELP, "Creates a filesystem link object.\n\n\
+MKLINK [/D | /H | /J] linkname target\n\n\
+  /D  Indicates that the symbolic link target is a directory.\n\
+  /H  Create a hard link.\n\
+  /J  Create a directory junction.\n\n\
+If neither /H or /J is specified, a symbolic link is created."
+
 STRING_MEMMORY_HELP1, "Menampilkan jumlah memori sistem.\n\nMEMORY"
 
 STRING_MEMMORY_HELP2, "\n  %12s%% beban memori.\n\n\
@@ -534,6 +549,7 @@ IF       Melakukan pemrosesan kondisional dalam program batch.\n\
 LABEL    Membuat, mengubah, atau menghapus label volume disk.\n\
 MD       Membuat sebuah direktori.\n\
 MKDIR    Membuat sebuah direktori.\n\
+MKLINK   Creates a filesystem link object.\n\
 MOVE     Memindahkan satu atau lebih file dari satu direktori ke yang lainnya\n\
          directory.\n\
 PATH     Menampilkan atau menyetel path pencarian untuk file executable.\n\
@@ -567,6 +583,7 @@ STRING_COPY_OPTION,           "YTS"
 
 
 STRING_ALIAS_ERROR,          "Baris perintah terlalu panjang setelah ekspansi alias!\n"
+STRING_ASSOC_ERROR,          "File association not found for extension %s\n"
 STRING_BATCH_ERROR,          "Kesalaham membuka file batch\n"
 STRING_CHCP_ERROR1,          "Halaman kode aktif: %u\n"
 STRING_CHCP_ERROR4,          "Halaman kode tidak benar\n"
@@ -626,7 +643,7 @@ STRING_ERROR_FILE_NOT_FOUND,       "File tidak ditemukan\n"
 STRING_ERROR_REQ_PARAM_MISSING,    "Parameter yang diperlukan kurang\n"
 STRING_ERROR_INVALID_DRIVE,        "Spesifikasi drive tidak benar\n"
 STRING_ERROR_INVALID_PARAM_FORMAT, "Format parameter tidak benar - %s\n"
-STRING_ERROR_BADCOMMAND,           "Perintah atau nama file salah\n"
+STRING_ERROR_BADCOMMAND,           "Perintah atau nama file salah - %s\n"
 STRING_ERROR_OUT_OF_MEMORY,        "Kesalahan kekurangan memori.\n"
 STRING_ERROR_CANNOTPIPE,           "Salah!  Tidak bisa melakukan pipe!  Tidak bisa membuka file temporal!\n"
 STRING_ERROR_D_PAUSEMSG,           "Tekan tombol untuk melanjutkan . . ."
@@ -642,6 +659,9 @@ STRING_FOR_ERROR,                  "spesifikasi variabel tidak baik."
 STRING_SCREEN_COL,                 "Nilai untuk kolom tidak benar"
 STRING_SCREEN_ROW,                 "Nilai untuk baris tidak benar"
 STRING_TIMER_TIME                  "Timer %d adalah %s: "
+STRING_MKLINK_CREATED_SYMBOLIC,    "Symbolic link created for %s <<===>> %s\n"
+STRING_MKLINK_CREATED_HARD,        "Hard link created for %s <<===>> %s\n"
+STRING_MKLINK_CREATED_JUNCTION,    "Junction created for %s <<===>> %s\n"
 
 STRING_INVALID_OPERAND,            "Operand tidak benar."
 STRING_EXPECTED_CLOSE_PAREN,       "Diharapkan ')'."

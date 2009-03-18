@@ -228,9 +228,17 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_SYS_ENTERTAINMENT       "Entertainment"
+    IDS_CMT_MPLAY32             "Launch Multimedia Player"
+    IDS_CMT_SNDVOL32            "Launch Volume Control"
+END
+
+STRINGTABLE
+BEGIN
 	IDS_SYS_TOOLS        "System Tools"
 	IDS_CMT_CHARMAP      "Character Map"
 	IDS_CMT_KBSWITCH     "Keyboard Layout Switcher"
+    IDS_CMT_DXDIAG       "Launch ReactX-Diagnostic program"
 END
 
 STRINGTABLE
@@ -260,6 +268,7 @@ BEGIN
     IDS_SHORT_DOWNLOADER "Download!.lnk"
     IDS_SHORT_SERVICE    "Mened¿er us³ug.lnk"
     IDS_SHORT_DEVICE     "Mened¿er urz¹dzeñ.lnk"
+    IDS_SHORT_MPLAY32    "Multimedia Player.lnk"
     IDS_SHORT_CALC       "Kalkulator.lnk"
     IDS_SHORT_REGEDIT    "Edytor rejestru.lnk"
     IDS_SHORT_NOTEPAD    "Notatnik.lnk"
@@ -272,6 +281,8 @@ BEGIN
     IDS_SHORT_KBSWITCH   "Keyboard Layout Switcher.lnk"
     IDS_SHORT_EVENTVIEW  "Event Viewer.lnk"
     IDS_SHORT_MSCONFIG   "System Configuration.lnk"
+    IDS_SHORT_SNDVOL32   "Volume Control.lnk"
+    IDS_SHORT_DXDIAG     "ReactX Diagnostic.lnk"
 END
 
 STRINGTABLE

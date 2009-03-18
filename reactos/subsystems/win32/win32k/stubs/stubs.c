@@ -938,26 +938,6 @@ EngReadStateEvent(
    UNIMPLEMENTED;
    return 0;
 }
-BOOL APIENTRY
-EngStretchBltROP(
-   IN SURFOBJ *Dest,
-   IN SURFOBJ *Source,
-   IN SURFOBJ *Mask,
-   IN CLIPOBJ *Clip,
-   IN XLATEOBJ *Xlate,
-   IN COLORADJUSTMENT *ColorAdjustment,
-   IN POINTL *BrushOrigin,
-   IN RECTL *DestRect,
-   IN RECTL *SourceRect,
-   IN POINTL *MaskPoint,
-   IN ULONG Mode,
-   IN BRUSHOBJ *BrushObj,
-   IN DWORD ROP4)
-{
-   UNIMPLEMENTED;
-   return FALSE;
-}
-
 
 /*
  * @unimplemented

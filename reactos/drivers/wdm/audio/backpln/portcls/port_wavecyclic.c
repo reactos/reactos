@@ -19,7 +19,10 @@ typedef struct
     PPOWERNOTIFY pPowerNotify;
     PPCFILTER_DESCRIPTOR pDescriptor;
     PSUBDEVICE_DESCRIPTOR SubDeviceDescriptor;
+    IPortFilterWaveCyclic * Filter;
 }IPortWaveCyclicImpl;
+
+GUID KSPROPERTY_SETID_Topology                = {0x720D4AC0L, 0x7533, 0x11D0, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
 
 static GUID InterfaceGuids[3] = 
 {
@@ -36,6 +39,32 @@ static GUID InterfaceGuids[3] =
         0x6994AD04, 0x93EF, 0x11D0, {0xA3, 0xCC, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}
     }
 };
+
+DEFINE_KSPROPERTY_TOPOLOGYSET(PortFilterWaveCyclicTopologySet, TopologyPropertyHandler);
+DEFINE_KSPROPERTY_PINPROPOSEDATAFORMAT(PortFilterWaveCyclicPinSet, PinPropertyHandler, PinPropertyHandler, PinPropertyHandler);
+
+KSPROPERTY_SET WaveCyclicPropertySet[] =
+{
+    {
+        &KSPROPSETID_Topology,
+        sizeof(PortFilterWaveCyclicTopologySet) / sizeof(KSPROPERTY_ITEM),
+        (const KSPROPERTY_ITEM*)&PortFilterWaveCyclicTopologySet,
+        0,
+        NULL
+    },
+    {
+        &KSPROPSETID_Pin,
+        sizeof(PortFilterWaveCyclicPinSet) / sizeof(KSPROPERTY_ITEM),
+        (const KSPROPERTY_ITEM*)&PortFilterWaveCyclicPinSet,
+        0,
+        NULL
+    }
+};
+
+//KSEVENTSETID_LoopedStreaming, Type = KSEVENT_LOOPEDSTREAMING_POSITION
+//KSEVENTSETID_Connection, Type = KSEVENT_CONNECTION_ENDOFSTREAM,
+
+
 
 #if 0
 static const KSIDENTIFIER Identifiers[] = 
@@ -97,7 +126,7 @@ IPortEvents_fnRelease(
     IPortEvents* iface)
 {
     IPortWaveCyclicImpl * This = (IPortWaveCyclicImpl*)CONTAINING_RECORD(iface, IPortWaveCyclicImpl, lpVtblPortEvents);
-    DPRINT1("IPortEvents_fnQueryInterface entered\n");
+    DPRINT1("IPortEvents_fnRelease entered\n");
     InterlockedDecrement(&This->ref);
 
     if (This->ref == 0)
@@ -272,7 +301,7 @@ IPortWaveCyclic_fnInit(
     PPOWERNOTIFY PowerNotify;
     IPortWaveCyclicImpl * This = (IPortWaveCyclicImpl*)iface;
 
-    DPRINT1("IPortWaveCyclic_Init entered\n");
+    DPRINT1("IPortWaveCyclic_Init entered %p\n", This);
 
     if (This->bInitialized)
     {
@@ -319,11 +348,11 @@ IPortWaveCyclic_fnInit(
     /* create the subdevice descriptor */
     Status = PcCreateSubdeviceDescriptor(&This->SubDeviceDescriptor, 
                                          3,
-                                         InterfaceGuids, 
+                                         InterfaceGuids,
                                          0, 
                                          NULL,
-                                         0, 
-                                         NULL,
+                                         2, 
+                                         WaveCyclicPropertySet,
                                          0,
                                          0,
                                          0,
@@ -536,14 +565,38 @@ ISubDevice_fnNewIrpTarget(
     IN WCHAR * Name,
     IN PUNKNOWN Unknown,
     IN POOL_TYPE PoolType,
-    IN PDEVICE_OBJECT * DeviceObject,
-    IN PIRP Irp, 
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp,
     IN KSOBJECT_CREATE *CreateObject)
 {
+    NTSTATUS Status;
+    IPortFilterWaveCyclic * Filter;
     IPortWaveCyclicImpl * This = (IPortWaveCyclicImpl*)CONTAINING_RECORD(iface, IPortWaveCyclicImpl, lpVtblSubDevice);
 
     DPRINT1("ISubDevice_NewIrpTarget this %p\n", This);
-    return STATUS_UNSUCCESSFUL;
+
+    if (This->Filter)
+    {
+        *OutTarget = (IIrpTarget*)This->Filter;
+        return STATUS_SUCCESS;
+    }
+
+
+    Status = NewPortFilterWaveCyclic(&Filter);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    Status = Filter->lpVtbl->Init(Filter, (IPortWaveCyclic*)This);
+    if (!NT_SUCCESS(Status))
+    {
+        Filter->lpVtbl->Release(Filter);
+        return Status;
+    }
+
+    *OutTarget = (IIrpTarget*)Filter;
+    return Status;
 }
 
 static
@@ -567,9 +620,11 @@ ISubDevice_fnGetDescriptor(
 {
     IPortWaveCyclicImpl * This = (IPortWaveCyclicImpl*)CONTAINING_RECORD(iface, IPortWaveCyclicImpl, lpVtblSubDevice);
 
+    ASSERT(This->SubDeviceDescriptor != NULL);
+
     *Descriptor = This->SubDeviceDescriptor;
 
-    DPRINT1("ISubDevice_GetDescriptor this %p\n", This);
+    DPRINT("ISubDevice_GetDescriptor this %p desc %p\n", This, This->SubDeviceDescriptor);
     return STATUS_SUCCESS;
 }
 
@@ -654,6 +709,22 @@ static ISubdeviceVtbl vt_ISubdeviceVtbl =
 };
 
 
+///--------------------------------------------------------------
+PMINIPORTWAVECYCLIC
+GetWaveCyclicMiniport(
+    IN IPortWaveCyclic* iface)
+{
+    IPortWaveCyclicImpl * This = (IPortWaveCyclicImpl *)iface;
+    return This->pMiniport;
+}
+
+PDEVICE_OBJECT
+GetDeviceObject(
+    PPORTWAVECYCLIC iface)
+{
+    IPortWaveCyclicImpl * This = (IPortWaveCyclicImpl *)iface;
+    return This->pDeviceObject;
+}
 
 //---------------------------------------------------------------
 // IPortWaveCyclic constructor

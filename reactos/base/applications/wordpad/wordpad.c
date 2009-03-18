@@ -301,7 +301,7 @@ static void on_sizelist_modified(HWND hwndSizeList, LPWSTR wszNewFontSize)
     if(lstrcmpW(sizeBuffer, wszNewFontSize))
     {
         float size = 0;
-        if(number_from_string((LPCWSTR) wszNewFontSize, &size, FALSE)
+        if(number_from_string(wszNewFontSize, &size, FALSE)
            && size > 0)
         {
             set_size(size);
@@ -322,7 +322,7 @@ static void add_size(HWND hSizeListWnd, unsigned size)
     cbItem.iItem = -1;
 
     wsprintfW(buffer, stringFormat, size);
-    cbItem.pszText = (LPWSTR)buffer;
+    cbItem.pszText = buffer;
     SendMessageW(hSizeListWnd, CBEM_INSERTITEMW, 0, (LPARAM)&cbItem);
 }
 
@@ -494,7 +494,7 @@ static void on_fontlist_modified(LPWSTR wszNewFaceName)
     SendMessageW(hEditorWnd, EM_GETCHARFORMAT, SCF_SELECTION, (LPARAM)&format);
 
     if(lstrcmpW(format.szFaceName, wszNewFaceName))
-        set_font((LPCWSTR) wszNewFaceName);
+        set_font(wszNewFaceName);
 }
 
 static void add_font(LPCWSTR fontName, DWORD fontType, HWND hListWnd, const NEWTEXTMETRICEXW *ntmc)
@@ -1412,11 +1412,11 @@ static INT_PTR CALLBACK newfile_proc(HWND hWnd, UINT message, WPARAM wParam, LPA
                 WCHAR buffer[MAX_STRING_LEN];
                 HWND hListWnd = GetDlgItem(hWnd, IDC_NEWFILE);
 
-                LoadStringW(hInstance, STRING_NEWFILE_RICHTEXT, (LPWSTR)buffer, MAX_STRING_LEN);
+                LoadStringW(hInstance, STRING_NEWFILE_RICHTEXT, buffer, MAX_STRING_LEN);
                 SendMessageW(hListWnd, LB_ADDSTRING, 0, (LPARAM)&buffer);
-                LoadStringW(hInstance, STRING_NEWFILE_TXT, (LPWSTR)buffer, MAX_STRING_LEN);
+                LoadStringW(hInstance, STRING_NEWFILE_TXT, buffer, MAX_STRING_LEN);
                 SendMessageW(hListWnd, LB_ADDSTRING, 0, (LPARAM)&buffer);
-                LoadStringW(hInstance, STRING_NEWFILE_TXT_UNICODE, (LPWSTR)buffer, MAX_STRING_LEN);
+                LoadStringW(hInstance, STRING_NEWFILE_TXT_UNICODE, buffer, MAX_STRING_LEN);
                 SendMessageW(hListWnd, LB_ADDSTRING, 0, (LPARAM)&buffer);
 
                 SendMessageW(hListWnd, LB_SETSEL, TRUE, 0);
@@ -1636,15 +1636,36 @@ static INT_PTR CALLBACK tabstops_proc(HWND hWnd, UINT message, WPARAM wParam, LP
                         if(SendMessageW(hTabWnd, CB_FINDSTRINGEXACT, -1, (LPARAM)&buffer) == CB_ERR)
                         {
                             float number = 0;
+                            int item_count = SendMessage(hTabWnd, CB_GETCOUNT, 0, 0);
 
                             if(!number_from_string(buffer, &number, TRUE))
                             {
                                 MessageBoxWithResStringW(hWnd, MAKEINTRESOURCEW(STRING_INVALID_NUMBER),
                                              wszAppTitle, MB_OK | MB_ICONINFORMATION);
-                            } else
-                            {
-                                SendMessageW(hTabWnd, CB_ADDSTRING, 0, (LPARAM)&buffer);
-                                SetWindowTextW(hTabWnd, 0);
+                            } else if (item_count >= MAX_TAB_STOPS) {
+                                MessageBoxWithResStringW(hWnd, MAKEINTRESOURCEW(STRING_MAX_TAB_STOPS),
+                                             wszAppTitle, MB_OK | MB_ICONINFORMATION);
+                            } else {
+                                int i;
+                                float next_number = -1;
+                                int next_number_in_twips = -1;
+                                int insert_number = current_units_to_twips(number);
+
+                                /* linear search for position to insert the string */
+                                for(i = 0; i < item_count; i++)
+                                {
+                                    SendMessageW(hTabWnd, CB_GETLBTEXT, i, (LPARAM)&buffer);
+                                    number_from_string(buffer, &next_number, TRUE);
+                                    next_number_in_twips = current_units_to_twips(next_number);
+                                    if (insert_number <= next_number_in_twips)
+                                        break;
+                                }
+                                if (insert_number != next_number_in_twips)
+                                {
+                                    number_with_units(buffer, insert_number);
+                                    SendMessageW(hTabWnd, CB_INSERTSTRING, i, (LPARAM)&buffer);
+                                    SetWindowTextW(hTabWnd, 0);
+                                }
                             }
                         }
                         SetFocus(hTabWnd);

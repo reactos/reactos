@@ -49,7 +49,7 @@ BEGIN
         MENUITEM "&Lagre\tCtrl+S",             CMD_SAVE
         MENUITEM "Lagre &som...",              CMD_SAVE_AS
         MENUITEM SEPARATOR
-        MENUITEM "Side &Innstillinger...",     CMD_PAGE_SETUP
+        MENUITEM "Side &innstillinger...",     CMD_PAGE_SETUP
         MENUITEM "&Utskrift\tCtrl+P",          CMD_PRINT
         MENUITEM "U&tskrift innstillinger...", CMD_PRINTER_SETUP
         MENUITEM SEPARATOR
@@ -99,7 +99,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Side innstillinger"
 BEGIN
-LTEXT    "&Header:",  0x140,   10, 07, 40, 15
+LTEXT    "&Topptekst:",  0x140,   10, 07, 40, 15
 EDITTEXT                         0x141,       60, 05,110, 12, WS_BORDER | WS_TABSTOP
 LTEXT    "&Bunntekst:",  0x142,   10, 24, 40, 15
 EDITTEXT                         0x143,       60, 22,110, 12, WS_BORDER | WS_TABSTOP
@@ -203,5 +203,5 @@ STRING_UTF8,                                    "UTF-8"
 STRING_CRLF,                                    "Windows"
 STRING_LF,                                      "Unix"
 STRING_CR,                                      "Mac"
-STRING_LINE_COLUMN,                             "Line %d, column %d"
+STRING_LINE_COLUMN,                             "Linje %d, kolonne %d"
 END

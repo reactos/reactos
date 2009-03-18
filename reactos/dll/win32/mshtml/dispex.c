@@ -65,24 +65,29 @@ static struct list dispex_data_list = LIST_INIT(dispex_data_list);
 
 static REFIID tid_ids[] = {
     &IID_NULL,
+    &DIID_DispCEventObj,
     &DIID_DispDOMChildrenCollection,
     &DIID_DispHTMLBody,
     &DIID_DispHTMLCommentElement,
+    &DIID_DispHTMLCurrentStyle,
     &DIID_DispHTMLDocument,
     &DIID_DispHTMLDOMTextNode,
     &DIID_DispHTMLElementCollection,
     &DIID_DispHTMLGenericElement,
+    &DIID_DispHTMLIFrame,
     &DIID_DispHTMLImg,
     &DIID_DispHTMLInputElement,
     &DIID_DispHTMLOptionElement,
     &DIID_DispHTMLSelectElement,
     &DIID_DispHTMLStyle,
+    &DIID_DispHTMLTable,
+    &DIID_DispHTMLTableRow,
     &DIID_DispHTMLUnknownElement,
     &DIID_DispHTMLWindow2,
     &IID_IHTMLBodyElement,
     &IID_IHTMLBodyElement2,
     &IID_IHTMLCommentElement,
-    &IID_IHTMLControlElement,
+    &IID_IHTMLCurrentStyle,
     &IID_IHTMLDocument2,
     &IID_IHTMLDocument3,
     &IID_IHTMLDocument4,
@@ -96,12 +101,18 @@ static REFIID tid_ids[] = {
     &IID_IHTMLElement3,
     &IID_IHTMLElement4,
     &IID_IHTMLElementCollection,
+    &IID_IHTMLEventObj,
+    &IID_IHTMLFrameBase2,
     &IID_IHTMLGenericElement,
     &IID_IHTMLImgElement,
     &IID_IHTMLInputElement,
+    &IID_IHTMLLocation,
     &IID_IHTMLOptionElement,
     &IID_IHTMLSelectElement,
     &IID_IHTMLStyle,
+    &IID_IHTMLStyle2,
+    &IID_IHTMLTable,
+    &IID_IHTMLTableRow,
     &IID_IHTMLTextContainer,
     &IID_IHTMLUniqueName,
     &IID_IHTMLWindow2,
@@ -109,7 +120,7 @@ static REFIID tid_ids[] = {
     &IID_IOmNavigator
 };
 
-HRESULT get_typeinfo(tid_t tid, ITypeInfo **typeinfo)
+static HRESULT get_typeinfo(tid_t tid, ITypeInfo **typeinfo)
 {
     HRESULT hres;
 
@@ -286,7 +297,7 @@ static dispex_data_t *get_dispex_data(DispatchEx *This)
     return This->data->data;
 }
 
-void call_disp_func(HTMLDocument *doc, IDispatch *disp)
+void call_disp_func(HTMLDocument *doc, IDispatch *disp, IDispatch *this_obj)
 {
     DISPID named_arg = DISPID_THIS;
     VARIANTARG arg;
@@ -303,7 +314,7 @@ void call_disp_func(HTMLDocument *doc, IDispatch *disp)
     }
 
     V_VT(&arg) = VT_DISPATCH;
-    V_DISPATCH(&arg) = (IDispatch*)HTMLWINDOW2(doc->window);
+    V_DISPATCH(&arg) = this_obj;
     VariantInit(&res);
     memset(&ei, 0, sizeof(ei));
 
@@ -323,6 +334,70 @@ static inline BOOL is_custom_dispid(DISPID id)
 static inline BOOL is_dynamic_dispid(DISPID id)
 {
     return DISPID_DYNPROP_0 <= id && id <= DISPID_DYNPROP_MAX;
+}
+
+static HRESULT get_dynamic_prop(DispatchEx *This, const WCHAR *name, BOOL alloc, dynamic_prop_t **ret)
+{
+    dispex_dynamic_data_t *data = This->dynamic_data;
+
+    if(data) {
+        unsigned i;
+
+        for(i=0; i < data->prop_cnt; i++) {
+            if(!strcmpW(data->props[i].name, name)) {
+                *ret = data->props+i;
+                return S_OK;
+            }
+        }
+    }
+
+    if(alloc) {
+        TRACE("creating dynamic prop %s\n", debugstr_w(name));
+
+        if(!data) {
+            data = This->dynamic_data = heap_alloc_zero(sizeof(dispex_dynamic_data_t));
+            if(!data)
+                return E_OUTOFMEMORY;
+        }
+
+        if(!data->buf_size) {
+            data->props = heap_alloc(sizeof(dynamic_prop_t)*4);
+            if(!data->props)
+                return E_OUTOFMEMORY;
+            data->buf_size = 4;
+        }else if(data->buf_size == data->prop_cnt) {
+            dynamic_prop_t *new_props;
+
+            new_props = heap_realloc(data->props, sizeof(dynamic_prop_t)*(data->buf_size<<1));
+            if(!new_props)
+                return E_OUTOFMEMORY;
+
+            data->props = new_props;
+            data->buf_size <<= 1;
+        }
+
+        data->props[data->prop_cnt].name = heap_strdupW(name);
+        VariantInit(&data->props[data->prop_cnt].var);
+        *ret = data->props + data->prop_cnt++;
+
+        return S_OK;
+    }
+
+    TRACE("not found %s\n", debugstr_w(name));
+    return DISP_E_UNKNOWNNAME;
+}
+
+HRESULT dispex_get_dprop_ref(DispatchEx *This, const WCHAR *name, BOOL alloc, VARIANT **ret)
+{
+    dynamic_prop_t *prop;
+    HRESULT hres;
+
+    hres = get_dynamic_prop(This, name, alloc, &prop);
+    if(FAILED(hres))
+        return hres;
+
+    *ret = &prop->var;
+    return S_OK;
 }
 
 #define DISPATCHEX_THIS(iface) DEFINE_THIS(DispatchEx, IDispatchEx, iface)
@@ -410,8 +485,10 @@ static HRESULT WINAPI DispatchEx_Invoke(IDispatchEx *iface, DISPID dispIdMember,
 static HRESULT WINAPI DispatchEx_GetDispID(IDispatchEx *iface, BSTR bstrName, DWORD grfdex, DISPID *pid)
 {
     DispatchEx *This = DISPATCHEX_THIS(iface);
+    dynamic_prop_t *dprop;
     dispex_data_t *data;
     int min, max, n, c;
+    HRESULT hres;
 
     TRACE("(%p)->(%s %x %p)\n", This, debugstr_w(bstrName), grfdex, pid);
 
@@ -443,17 +520,6 @@ static HRESULT WINAPI DispatchEx_GetDispID(IDispatchEx *iface, BSTR bstrName, DW
             min = n+1;
     }
 
-    if(This->dynamic_data) {
-        unsigned i;
-
-        for(i=0; i < This->dynamic_data->prop_cnt; i++) {
-            if(!strcmpW(This->dynamic_data->props[i].name, bstrName)) {
-                *pid = DISPID_DYNPROP_0 + i;
-                return S_OK;
-            }
-        }
-    }
-
     if(This->data->vtbl && This->data->vtbl->get_dispid) {
         HRESULT hres;
 
@@ -462,25 +528,12 @@ static HRESULT WINAPI DispatchEx_GetDispID(IDispatchEx *iface, BSTR bstrName, DW
             return hres;
     }
 
-    if(grfdex & fdexNameEnsure) {
-        TRACE("creating dynamic prop %s\n", debugstr_w(bstrName));
+    hres = get_dynamic_prop(This, bstrName, grfdex&fdexNameEnsure, &dprop);
+    if(FAILED(hres))
+        return hres;
 
-        if(!This->dynamic_data) {
-            This->dynamic_data = heap_alloc_zero(sizeof(dispex_dynamic_data_t));
-            This->dynamic_data->props = heap_alloc(This->dynamic_data->buf_size = 4);
-        }else if(This->dynamic_data->buf_size == This->dynamic_data->prop_cnt) {
-            This->dynamic_data->props = heap_realloc(This->dynamic_data->props, This->dynamic_data->buf_size<<=1);
-        }
-
-        This->dynamic_data->props[This->dynamic_data->prop_cnt].name = heap_strdupW(bstrName);
-        VariantInit(&This->dynamic_data->props[This->dynamic_data->prop_cnt].var);
-        *pid = DISPID_DYNPROP_0 + This->dynamic_data->prop_cnt++;
-
-        return S_OK;
-    }
-
-    TRACE("not found %s\n", debugstr_w(bstrName));
-    return DISP_E_UNKNOWNNAME;
+    *pid = DISPID_DYNPROP_0 + (dprop - This->dynamic_data->props);
+    return S_OK;
 }
 
 static HRESULT WINAPI DispatchEx_InvokeEx(IDispatchEx *iface, DISPID id, LCID lcid, WORD wFlags, DISPPARAMS *pdp,
@@ -514,6 +567,45 @@ static HRESULT WINAPI DispatchEx_InvokeEx(IDispatchEx *iface, DISPID id, LCID lc
         var = &This->dynamic_data->props[idx].var;
 
         switch(wFlags) {
+        case INVOKE_FUNC: {
+            DISPID named_arg = DISPID_THIS;
+            DISPPARAMS dp = {NULL, &named_arg, 0, 1};
+            IDispatchEx *dispex;
+
+            if(V_VT(var) != VT_DISPATCH) {
+                FIXME("invoke vt %d\n", V_VT(var));
+                return E_NOTIMPL;
+            }
+
+            if(pdp->cNamedArgs) {
+                FIXME("named args not supported\n");
+                return E_NOTIMPL;
+            }
+
+            dp.rgvarg = heap_alloc((pdp->cArgs+1)*sizeof(VARIANTARG));
+            if(!dp.rgvarg)
+                return E_OUTOFMEMORY;
+
+            dp.cArgs = pdp->cArgs+1;
+            memcpy(dp.rgvarg+1, pdp->rgvarg, pdp->cArgs*sizeof(VARIANTARG));
+
+            V_VT(dp.rgvarg) = VT_DISPATCH;
+            V_DISPATCH(dp.rgvarg) = (IDispatch*)DISPATCHEX(This);
+
+            hres = IDispatch_QueryInterface(V_DISPATCH(var), &IID_IDispatchEx, (void**)&dispex);
+            TRACE("%s call\n", debugstr_w(This->dynamic_data->props[idx].name));
+            if(SUCCEEDED(hres)) {
+                hres = IDispatchEx_InvokeEx(dispex, DISPID_VALUE, lcid, wFlags, &dp, pvarRes, pei, pspCaller);
+                IDispatchEx_Release(dispex);
+            }else {
+                ULONG err = 0;
+                hres = IDispatch_Invoke(V_DISPATCH(var), DISPID_VALUE, &IID_NULL, lcid, wFlags, pdp, pvarRes, pei, &err);
+            }
+            TRACE("%s ret %08x\n", debugstr_w(This->dynamic_data->props[idx].name), hres);
+
+            heap_free(dp.rgvarg);
+            return hres;
+        }
         case INVOKE_PROPERTYGET:
             return VariantCopy(pvarRes, var);
         case INVOKE_PROPERTYPUT:
@@ -557,7 +649,7 @@ static HRESULT WINAPI DispatchEx_InvokeEx(IDispatchEx *iface, DISPID id, LCID lc
 
     hres = IUnknown_QueryInterface(This->outer, tid_ids[data->funcs[n].tid], (void**)&unk);
     if(FAILED(hres)) {
-        ERR("Could not get iface: %08x\n", hres);
+        ERR("Could not get iface %s: %08x\n", debugstr_guid(tid_ids[data->funcs[n].tid]), hres);
         return E_FAIL;
     }
 
@@ -633,6 +725,8 @@ BOOL dispex_query_interface(DispatchEx *This, REFIID riid, void **ppv)
 {
     static const IID IID_UndocumentedScriptIface =
         {0x719c3050,0xf9d3,0x11cf,{0xa4,0x93,0x00,0x40,0x05,0x23,0xa8,0xa0}};
+    static const IID IID_IDispatchJS =
+        {0x719c3050,0xf9d3,0x11cf,{0xa4,0x93,0x00,0x40,0x05,0x23,0xa8,0xa6}};
 
     if(IsEqualGUID(&IID_IDispatch, riid)) {
         TRACE("(%p)->(IID_IDispatch %p)\n", This, ppv);
@@ -640,6 +734,9 @@ BOOL dispex_query_interface(DispatchEx *This, REFIID riid, void **ppv)
     }else if(IsEqualGUID(&IID_IDispatchEx, riid)) {
         TRACE("(%p)->(IID_IDispatchEx %p)\n", This, ppv);
         *ppv = DISPATCHEX(This);
+    }else if(IsEqualGUID(&IID_IDispatchJS, riid)) {
+        TRACE("(%p)->(IID_IDispatchJS %p) returning NULL\n", This, ppv);
+        *ppv = NULL;
     }else if(IsEqualGUID(&IID_UndocumentedScriptIface, riid)) {
         TRACE("(%p)->(IID_UndocumentedScriptIface %p) returning NULL\n", This, ppv);
         *ppv = NULL;

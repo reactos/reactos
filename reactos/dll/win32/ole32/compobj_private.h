@@ -196,9 +196,6 @@ extern void* StdGlobalInterfaceTable_Construct(void);
 extern HRESULT StdGlobalInterfaceTable_GetFactory(LPVOID *ppv);
 extern void* StdGlobalInterfaceTableInstance;
 
-/* FIXME: these shouldn't be needed, except for 16-bit functions */
-extern HRESULT WINE_StringFromCLSID(const CLSID *id,LPSTR idstr);
-
 HRESULT COM_OpenKeyForCLSID(REFCLSID clsid, LPCWSTR keyname, REGSAM access, HKEY *key);
 HRESULT COM_OpenKeyForAppIdFromCLSID(REFCLSID clsid, REGSAM access, HKEY *subkey);
 HRESULT MARSHAL_GetStandardMarshalCF(LPVOID *ppv);

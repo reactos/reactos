@@ -279,10 +279,27 @@ extern "C" {
 #define isfinite(x) ((fpclassify(x) & FP_NAN) == 0)
 
   /* 7.12.3.3 */
-#define isinf(x) (fpclassify(x) == FP_INFINITE)
+/* #define isinf(x) (fpclassify(x) == FP_INFINITE) */
+
+  /* we don't have fpclassify */
+__CRT_INLINE int isinf (double d) {
+  int expon = 0;
+  double val = frexp (d, &expon);
+  if (expon == 1025) {
+    if (val == 0.5) {
+        return 1;
+    } else if (val == -0.5) {
+        return -1;
+    } else {
+        return 0;
+    }
+  } else {
+    return 0;
+  }
+}
 
   /* 7.12.3.4 */
-  /* We don't need to worry about trucation here:
+  /* We don't need to worry about truncation here:
   A NaN stays a NaN. */
 
   __CRT_INLINE int __cdecl __isnan (double _x)

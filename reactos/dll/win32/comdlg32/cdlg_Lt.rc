@@ -1,0 +1,486 @@
+/*
+ * Copyright 2009 Aurimas Fišeras <aurimas@gmail.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+/*
+ * WARNING: DO NOT CHANGE THE SIZE OF THE STANDARD DIALOG TEMPLATES.
+ */
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+LANGUAGE LANG_LITHUANIAN, SUBLANG_NEUTRAL
+
+OPEN_FILE DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 275, 134
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Atverti"
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "Failo &vardas:", 1090, 6, 6, 76, 9
+ EDITTEXT edt1, 6, 16, 90, 12, ES_AUTOHSCROLL | ES_OEMCONVERT | WS_BORDER | WS_TABSTOP
+ LISTBOX 1120, 6, 32, 90, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
+ LTEXT "&Aplankai:", -1, 110, 6, 92, 9
+ LTEXT "", 1088, 110, 18, 92, 9, SS_NOPREFIX | WS_GROUP
+ LISTBOX 1121, 110, 32, 92, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
+ LTEXT "Rodyti šių &tipų failus:", 1089, 6, 104, 90, 9
+ COMBOBOX cmb1, 6, 114, 90, 36, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+ LTEXT "&Diskai:", 1091, 110, 104, 92, 9
+ COMBOBOX cmb2, 110, 114, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+ DEFPUSHBUTTON "Atverti", 1, 208, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Atsisakyti", 2, 208, 24, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Žinynas", pshHelp, 208, 46, 56, 14, WS_GROUP | WS_TABSTOP
+ CHECKBOX "Tik &skaitymui", chx1, 208, 68, 56, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+}
+
+
+SAVE_FILE DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 275, 134
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Išsaugoti kaip..."
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "Failo &vardas:", 1090, 6, 6, 76, 9
+ EDITTEXT edt1, 6, 16, 90, 12, ES_AUTOHSCROLL | ES_OEMCONVERT | WS_BORDER | WS_TABSTOP
+ LISTBOX 1120, 6, 32, 90, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
+ LTEXT "&Aplankai:", -1, 110, 6, 92, 9
+ LTEXT "", 1088, 110, 18, 92, 9, SS_NOPREFIX | WS_GROUP
+ LISTBOX 1121, 110, 32, 92, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
+ LTEXT "Rodyti šių &tipų failus:", 1089, 6, 104, 90, 9
+ COMBOBOX cmb1, 6, 114, 90, 36, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+ LTEXT "&Diskai:", 1091, 110, 104, 92, 9
+ COMBOBOX cmb2, 110, 114, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+ DEFPUSHBUTTON "Išsaugoti kaip", 1, 208, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Atsisakyti", 2, 208, 24, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Žinynas", pshHelp, 208, 46, 56, 14, WS_GROUP | WS_TABSTOP
+ CHECKBOX "Tik &skaitymui", chx1, 208, 68, 56, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+}
+
+
+PRINT DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 264, 134
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Spausdinti"
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "Spausdintuvas:", 1088, 6, 6, 50, 9
+ LTEXT "", 1089, 60, 6, 150, 9
+ GROUPBOX "Spausdinimo intervalas", grp1, 6, 30, 160, 65, BS_GROUPBOX
+ RADIOBUTTON "&Viskas", rad1, 16, 45, 60, 12
+ RADIOBUTTON "Pažymėtas &tekstas", rad2, 16, 60, 76, 12
+ RADIOBUTTON "&Puslapiai", rad3, 16, 75, 60, 12
+ DEFPUSHBUTTON "Spausdinti", 1, 206, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Atsisakyti", 2, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Nuostatos", psh1, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
+ LTEXT "&nuo:", 1090, 60, 80, 30, 9
+ LTEXT "&iki:", 1091, 120, 80, 30, 9
+ LTEXT "Spausdinimo &kokybė:", 1092, 6, 100, 76, 9
+ COMBOBOX cmb1, 80, 100, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+ CHECKBOX "Spausdinti į fai&lą", chx1, 20, 100, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "Suspaustas", chx2, 160, 100, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+}
+
+
+PRINT_SETUP DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 264, 134
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Spausdintuvo nuostatos"
+FONT 8, "MS Shell Dlg"
+{
+ GROUPBOX "Spausdintuvas", grp1, 6, 10, 180, 65, BS_GROUPBOX
+ RADIOBUTTON "&Pagrindinis spausdintuvas", rad1, 16, 20, 100, 12
+ LTEXT "[nėra]", 1088, 35, 35, 120, 9
+ RADIOBUTTON "Spe&cifinis spausdintuvas", rad2, 16, 50, 100, 12
+ COMBOBOX cmb1, 35, 65, 149, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+ DEFPUSHBUTTON "Gerai", IDOK, 206, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Atsisakyti", IDCANCEL, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Nuostatos", psh1, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
+ GROUPBOX "Padėtis", grp2, 6, 85, 100, 50, BS_GROUPBOX
+ RADIOBUTTON "&Stačias", rad3, 50, 100, 50, 12
+ RADIOBUTTON "&Gulsčias", rad4, 50, 115, 50, 12
+ ICON "LANDSCAP", stc10, 10, 95, 32, 32
+ ICON "PORTRAIT", stc11, 10, 95, 32, 32
+ GROUPBOX "Popierius", grp3, 120, 85, 180, 50, BS_GROUPBOX
+ LTEXT "&Dydis", 1089, 130, 95, 30, 9
+ LTEXT "&Šaltinis", 1090, 130, 110, 30, 9
+ COMBOBOX cmb2, 155, 95, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+ COMBOBOX cmb3, 155, 110, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+}
+
+
+CHOOSE_FONT DIALOG DISCARDABLE  13, 54, 264, 147
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Šriftas"
+FONT 8, "MS Shell Dlg"
+{
+    LTEXT           "&Šriftas:",stc1 ,6,3,40,9
+    COMBOBOX        cmb1, 6,13,94,54,  CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
+                    CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE
+    LTEXT           "Šrifto &stilius:",stc2 ,108,3,44,9
+    COMBOBOX        cmb2,108,13,64,54, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
+                    WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE
+    LTEXT           "&Dydis:",stc3,179,3,30,9
+    COMBOBOX        cmb3,179,13,32,54, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
+                    WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE | CBS_SORT
+    DEFPUSHBUTTON   "Gerai",IDOK,218,6,40,14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+    PUSHBUTTON      "Atsisakyti",IDCANCEL,218,23,40,14,WS_GROUP | WS_TABSTOP
+    PUSHBUTTON      "&Vykdyti", psh3,218,40,40,14,WS_GROUP | WS_TABSTOP
+    PUSHBUTTON      "&Žinynas" , pshHelp,218,57,40,14,WS_GROUP | WS_TABSTOP
+    GROUPBOX        "Savybės",grp1,6,72,84,34,WS_GROUP
+    CHECKBOX	    "Per&braukimas", chx1, 10,82,60,10, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX 	    "&Pabraukimas", chx2, 10,94,60,10, BS_AUTOCHECKBOX
+    LTEXT           "Spa&lva:", stc4 ,6,110,30,9
+    COMBOBOX        cmb4,6,120,84,100,CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_HASSTRINGS |
+		    CBS_AUTOHSCROLL |  WS_BORDER | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "Pavyzdys",grp2,98,72,120,36,WS_GROUP
+    CTEXT           "AaĄąZzŽž",stc5,103,80,109,24,SS_NOPREFIX | NOT WS_VISIBLE
+    LTEXT           "Sim&bolių rinkinys:",stc7 ,98,114,60,9
+    COMBOBOX        cmb5,98,124,120,90,CBS_DROPDOWNLIST | CBS_HASSTRINGS |
+		    CBS_AUTOHSCROLL |   WS_VSCROLL | WS_TABSTOP
+}
+
+
+CHOOSE_COLOR DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 300, 185
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Spalva"
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "&Pagrindinės spalvos:",   1088, 4,    4,  140, 10
+ LTEXT "&Individualios spalvos:",  1089, 4,   106, 140, 10
+ LTEXT "Spal. | Vient.",  1090, 150, 151,  48, 10
+ LTEXT   "&Raudona:", 726 /*1094*/,243,126,32,10
+ EDITTEXT 706, 275,124,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ LTEXT   "&Žalia:",727/*1095*/,243,140,24,10
+ EDITTEXT 707, 275,138,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ LTEXT   "&Mėlyna:",728 /*1096*/,243,154,24,10
+ EDITTEXT 708, 275,152,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ LTEXT  "&Atsp.:" ,723 /*1091*/,194,126,22,10
+ EDITTEXT 703, 220,124,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ LTEXT  "&Sodr.:" ,724 /*1092*/,194,140,22,10
+ EDITTEXT 704, 220,138,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ LTEXT  "&Švies.:" ,725 /*1093*/,194,154,22,10
+ EDITTEXT 705, 220,152,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ CONTROL "" ,720,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP,4,14,140,86
+ CONTROL "" ,721,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP,4,116,140,28
+ CONTROL "" ,710,"STATIC",WS_BORDER|SS_SIMPLE|WS_TABSTOP|WS_GROUP, 152,4,118,116
+ CONTROL "" ,702,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP, 278,4,8,116
+ CONTROL "" ,709,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP, 152,124,40,26
+ DEFPUSHBUTTON "Gerai",  1,  4, 166, 44, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Atsisakyti", 2, 52, 166, 44, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Žinynas", pshHelp,100,166, 44, 14
+ PUSHBUTTON "&Įdėti prie individualių spalvų",    712/*1024*/, 152, 166, 142, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "A&pibrėžti individualias spalvas >>", 719/*1025*/,   4, 150, 142, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON  "&i",713,300,200,4,14   /* just a dummy:  'i' is  like  &i  in "sol&id"  */
+}
+
+
+FINDDLGORD DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 236, 62
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Rasti"
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "&Ieškoti ko:", -1, 4, 8, 42, 8
+ EDITTEXT edt1, 47, 7, 128, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
+ CHECKBOX "Tenkina tik &visas žodis", chx1, 4, 26, 82, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "Skirti raidžių &dydį", chx2, 4, 42, 70, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+ GROUPBOX "Kryptis", grp1, 89, 26, 86, 28
+ CONTROL "&Aukštyn", rad1, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 93, 38, 40, 12
+ CONTROL "&Žemyn", rad2, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 134, 38, 36, 12
+
+ DEFPUSHBUTTON "&Rasti kitą", IDOK, 182,  5, 50, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ PUSHBUTTON "Atsisakyti", IDCANCEL	 , 182, 23, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Žinynas", pshHelp	 , 182, 45, 50, 14, WS_GROUP | WS_TABSTOP
+}
+
+
+REPLACEDLGORD DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 230, 94
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Pakeisti"
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "&Ieškoti ko:", -1, 4, 9, 48, 8
+ EDITTEXT edt1, 54, 7, 114, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
+ LTEXT "Pa&keisti kuo:", -1, 4, 26, 48, 8
+ EDITTEXT edt2, 54, 24, 114, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
+ CHECKBOX "Tenkina tik &visas žodis", chx1, 5, 46, 104, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "Skirti raidžių &dydį", chx2, 5, 62, 70, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+
+ DEFPUSHBUTTON "&Rasti kitą", IDOK, 174,  4, 50, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ PUSHBUTTON "&Pakeisti", psh1	 , 174, 21, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "P&akeisti visus", psh2 , 174, 38, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Atsisakyti", IDCANCEL	 , 174, 55, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Žinynas", pshHelp	 , 174, 75, 50, 14, WS_GROUP | WS_TABSTOP
+}
+
+
+PRINT32 DIALOG LOADONCALL MOVEABLE DISCARDABLE  32, 32, 288, 186
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU |
+      DS_CONTEXTHELP | DS_3DLOOK
+CAPTION "Spausdinti"
+FONT 8, "MS Shell Dlg"
+{
+    DEFPUSHBUTTON   "Gerai",     IDOK,     180,164, 48,14, WS_GROUP | BS_DEFPUSHBUTTON
+    PUSHBUTTON      "Atsisakyti", IDCANCEL, 232,164, 48,14, WS_GROUP
+    PUSHBUTTON      "&Žinynas",  pshHelp,  50, 161, 48,14, WS_GROUP
+
+    GROUPBOX        "Spausdintuvas",        grp4,   8,  4, 272,84, WS_GROUP
+    CONTROL         "Spausdinti į fai&lą", chx1, "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,212,70,65,12
+    PUSHBUTTON      "&Nuostatos",    psh2, 212, 17,  60,14, WS_GROUP
+    LTEXT           "&Vardas:",         stc6,  16, 20,  36,8
+    COMBOBOX                          cmb4,  58, 18, 146,146,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
+    LTEXT           "Būsena:",        stc8,  16, 36,  36,10, SS_NOPREFIX
+    LTEXT           "Netikra būsena",    stc12, 58, 36, 218,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Tipas:",          stc7,  16, 48,  36,10, SS_NOPREFIX
+    LTEXT           "Netikras tipas",     stc11, 58, 48, 218,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Vieta:",         stc10, 16, 60,  36,10, SS_NOPREFIX
+    LTEXT           "Netikra vieta", stc14, 58, 60, 218,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Komentaras:",       stc9,  16, 72,  42,10, SS_NOPREFIX
+    LTEXT           "Netikras komentaras",   stc13, 58, 72, 146,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+
+    GROUPBOX        "Kopijos",         grp2, 160, 92, 120,64, WS_GROUP
+    LTEXT           "&Kopijų skaičius:",stc5,168,108,68,8
+    ICON            "",               ico3, 162,124,  76,24, WS_GROUP | SS_CENTERIMAGE
+    CONTROL         "Su&dėst.",       chx2,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,240,130,36,12
+    EDITTEXT                          edt3, 240,106,  32,12, WS_GROUP | ES_NUMBER
+
+    GROUPBOX        "Intervalas",    grp1,   8,92,  144,64, WS_GROUP
+    CONTROL         "V&isi puslapiai",           rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,16,106,64,12
+    CONTROL         "Pu&slapiai",         rad3,"Button",BS_AUTORADIOBUTTON,16,122,40,12
+    CONTROL         "Pažymėtas &tekstas",     rad2,"Button",BS_AUTORADIOBUTTON,16,138,72,12
+    EDITTEXT                          edt1,  74,122,  26,12, WS_GROUP | ES_NUMBER
+    EDITTEXT                          edt2, 118,122,  26,12, WS_GROUP | ES_NUMBER
+    RTEXT           "nuo:",         stc2,  56,124,  16,8
+    RTEXT           "iki:",           stc3, 100,124,  16,8
+}
+
+PRINT32_SETUP DIALOG LOADONCALL MOVEABLE DISCARDABLE  32, 32, 288, 178
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU |
+      DS_CONTEXTHELP | DS_3DLOOK
+CAPTION "Spausdintuvo nuostatos"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "Gerai",IDOK,180,156,48,14,WS_GROUP
+    PUSHBUTTON      "Atsisakyti",IDCANCEL,232,156,48,14
+/*    PUSHBUTTON      "Network...", psh5, 284,156,48,14 */
+
+    GROUPBOX        "Spausdintuvas",        grp4,   8,  4, 272,84, WS_GROUP
+    PUSHBUTTON      "&Nuostatos",    psh2, 212, 17,  60,14, WS_GROUP
+    LTEXT           "&Vardas:",         stc6,  16, 20,  36,8
+    COMBOBOX                          cmb1,  58, 18, 146,146,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
+    LTEXT           "Būsena:",        stc8,  16, 36,  36,10, SS_NOPREFIX
+    LTEXT           "Netikra būsena",    stc12, 58, 36, 218,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Tipas:",          stc7,  16, 48,  36,10, SS_NOPREFIX
+    LTEXT           "Netikras tipas",     stc11, 58, 48, 218,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Vieta:",         stc10, 16, 60,  36,10, SS_NOPREFIX
+    LTEXT           "Netikra vieta", stc14, 58, 60, 218,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Komentaras:",       stc9,  16, 72,  42,10, SS_NOPREFIX
+    LTEXT           "Netikras komentaras",   stc13, 58, 72, 218,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+
+    GROUPBOX        "Popierius",          grp2,   8, 92, 164,56, WS_GROUP
+    LTEXT           "&Dydis:",         stc2,  16,108,  36, 8
+    COMBOBOX                          cmb2,  52,106, 112,112,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
+    LTEXT           "&Šaltinis:",       stc3,  16,128,  36, 8
+    COMBOBOX                          cmb3,  52,126, 112,112,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
+
+    GROUPBOX        "Padėtis",    grp1, 180, 92, 100,56, WS_GROUP
+    ICON            "",               ico1, 195,112,  18,20, WS_GROUP
+    CONTROL         "&Stačias",      rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP |WS_TABSTOP,224,106,52,12
+    CONTROL         "&Gulsčias",     rad2,"Button",BS_AUTORADIOBUTTON,224,126,52,12
+END
+
+PAGESETUPDLGORD DIALOG LOADONCALL MOVEABLE DISCARDABLE 32, 32, 240, 240
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Puslapio nuostatos"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  CONTROL "", rct1, "Static", SS_WHITERECT, 80, 8, 80, 80
+  CONTROL "", rct2, "Static", SS_GRAYRECT, 160, 12, 4, 80
+  CONTROL "", rct3, "Static", SS_GRAYRECT,  84, 88, 80, 4
+  GROUPBOX "Popierius", grp2, 8, 96, 224, 56, BS_GROUPBOX
+  LTEXT "&Dydis:", stc2, 16, 112, 36, 8
+  COMBOBOX cmb2, 64, 110, 160, 160, CBS_SIMPLE|CBS_DROPDOWN|CBS_SORT|WS_GROUP|WS_TABSTOP|WS_VSCROLL
+  LTEXT "Dė&klas:", stc3, 16, 132, 36, 8
+  COMBOBOX cmb3, 64, 130, 160, 160, CBS_SIMPLE|CBS_DROPDOWN|CBS_SORT|WS_GROUP|WS_TABSTOP|WS_VSCROLL
+  GROUPBOX "Padėtis", grp1, 8, 156, 64, 56, BS_GROUPBOX
+  AUTORADIOBUTTON "&Stačias", rad1, 16, 170, 52, 12, BS_AUTORADIOBUTTON
+  AUTORADIOBUTTON "&Gulsčias", rad2, 16, 190, 52, 12, BS_AUTORADIOBUTTON
+  GROUPBOX "Paraštės", grp4, 80, 156, 152, 56, BS_GROUPBOX
+  LTEXT "&Kairėje:", stc15, 88, 172, 30, 8
+  EDITTEXT edt4, 119, 170, 36, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
+  LTEXT "D&ešinėje:", stc16, 159, 172, 32, 8
+  EDITTEXT edt6, 192, 170, 36, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
+  LTEXT "&Viršutinė:", stc17, 88, 192, 30, 8
+  EDITTEXT edt5, 119, 190, 36, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
+  LTEXT "&Apatinė:", stc18, 159, 192, 32, 8
+  EDITTEXT edt7, 192, 190, 36, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
+  DEFPUSHBUTTON "Gerai", IDOK, 61, 220, 50, 14, BS_PUSHBUTTON
+  PUSHBUTTON "Atsisakyti", IDCANCEL, 116, 220, 50, 14
+  PUSHBUTTON "S&pausdintuvas...", psh3, 171, 220, 61, 14
+END
+
+NEWFILEOPENORD DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 280, 164
+STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_VISIBLE | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN
+CAPTION "Atverti"
+FONT 8, "MS Shell Dlg"
+{
+    LTEXT	"&Vieta:",IDC_LOOKINSTATIC,4,6,43,8, SS_NOTIFY
+    COMBOBOX	IDC_LOOKIN,49,3,132,100,CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
+
+    LTEXT	"" , IDC_TOOLBARSTATIC, 181, 2, 102, 17, NOT WS_GROUP | NOT WS_VISIBLE
+    LISTBOX	IDC_SHELLSTATIC,4,20,272,85, LBS_SORT | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_HSCROLL | NOT WS_VISIBLE
+
+    LTEXT	"Failo &vardas:",IDC_FILENAMESTATIC,5,112,46,8, SS_NOTIFY
+    EDITTEXT	IDC_FILENAME,54,110,155,12,ES_AUTOHSCROLL
+
+    LTEXT	"Failų &tipai:",IDC_FILETYPESTATIC,5,128,42,8, SS_NOTIFY
+    COMBOBOX	IDC_FILETYPE,54,126,155,53,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+
+    CONTROL	"Atverti tik &skaitymui",IDC_OPENREADONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,54,145,100,10
+
+    DEFPUSHBUTTON	"&Atverti",		 IDOK,222,110,50,14
+    PUSHBUTTON		"Atsisakyti",		 IDCANCEL,222,128,50,14
+    PUSHBUTTON		"&Žinynas",		 pshHelp,222,145,50,14
+}
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_ABOUTBOX            "&Apie FolderPicker testą"
+    IDS_DOCUMENTFOLDERS     "Dokumentų aplankai"
+    IDS_PERSONAL            "Dokumentai"
+    IDS_FAVORITES           "Adresynas"
+    IDS_PATH                "Sistemos kelias"
+    IDS_DESKTOP             "Darbalaukis"
+    IDS_FONTS               "Šriftai"
+    IDS_MYCOMPUTER          "Kompiuteris"
+}
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_SYSTEMFOLDERS       "Sistemos aplankai"
+    IDS_LOCALHARDRIVES      "Vietiniai standieji diskai"
+    IDS_FILENOTFOUND        "Failas nerastas"
+    IDS_VERIFYFILE          "Prašome patikrinti ar buvo pateiktas korektiškas failo vardas"
+    IDS_CREATEFILE          "Failas neegzistuoja.\nAr norite sukurti failą?"
+    IDS_OVERWRITEFILE       "Failas jau egzistuoja.\nAr norite jį pakeisti?"
+    IDS_INVALID_FILENAME_TITLE "Kelyje yra netinkamų simbolių"
+    IDS_INVALID_FILENAME    "Failo vardas negali turėti šių simbolių:\n                          / : < > |"
+    IDS_PATHNOTEXISTING     "Kelias neegzistuoja"
+    IDS_FILENOTEXISTING     "Failas neegzistuoja"
+}
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_UPFOLDER         "Aukštyn vienu lygiu"
+    IDS_NEWFOLDER        "Sukurti naują aplanką"
+    IDS_LISTVIEW         "Sąrašas"
+    IDS_REPORTVIEW       "Išsamiai"
+    IDS_TODESKTOP        "Pereiti į darbalaukį"
+}
+
+STRINGTABLE DISCARDABLE
+{
+    PD32_PRINT_TITLE       "Spausdinti"
+
+    PD32_VALUE_UREADABLE                  "Neperskaitomas įrašas"
+    PD32_INVALID_PAGE_RANGE "Ši reikšmė nepatenka į puslapių intervalą.\n\
+Prašome įvesti reikšmę tarp %d ir %d."
+    PD32_FROM_NOT_ABOVE_TO                "'Nuo' reikšmė negali viršyti \
+'iki' reikšmės."
+    PD32_MARGINS_OVERLAP                  "Paraštės persidengia arba išeina už \
+popieriaus ribų.\nPrašome įvesti paraštes iš naujo."
+    PD32_NR_OF_COPIES_EMPTY               "Skaitinė 'Kopijų skaičius' \
+reikšmė negali būti tuščia."
+    PD32_TOO_LARGE_COPIES                 "Toks didelis kopijų skaičius yra \
+nepalaikomas jūsų spausdintuvo.\nPrašome įvesti reikšmę tarp 1 ir %d."
+    PD32_PRINT_ERROR                      "Įvyko spausdintuvo klaida."
+    PD32_NO_DEFAULT_PRINTER               "Nenurodytas pagrindinis spausdintuvas."
+    PD32_CANT_FIND_PRINTER                "Nepavyko rasti spausdintuvo."
+    PD32_OUT_OF_MEMORY                    "Baigėsi atmintis."
+    PD32_GENERIC_ERROR                    "Įvyko klaida."
+    PD32_DRIVER_UNKNOWN                   "Nežinoma spausdintuvo tvarkyklė."
+    PD32_NO_DEVICES                       "Prieš atlikdami su spausdintuvu susijusius veiksmus, \
+tokius kaip puslapio nuostatų keitimas ar dokumento spausdinimas, turite įdiegti spausdintuvą. \
+Prašome įdeigti spausdintuvą ir pakartoti."
+
+    PD32_DEFAULT_PRINTER                  "Pagrindinis spausdintuvas; "
+    PD32_NR_OF_DOCUMENTS_IN_QUEUE         "Eilėje yra %d dokumentų"
+    PD32_MARGINS_IN_INCHES                "Paraštės [coliai]"
+    PD32_MARGINS_IN_MILLIMETERS           "Paraštės [mm]"
+    PD32_MILLIMETERS                      "mm"
+
+    PD32_PRINTER_STATUS_READY             "Parengtas"
+    PD32_PRINTER_STATUS_PAUSED            "Pristabdytas; "
+    PD32_PRINTER_STATUS_ERROR             "Klaida; "
+    PD32_PRINTER_STATUS_PENDING_DELETION  "Laukia pašalinimo; "
+    PD32_PRINTER_STATUS_PAPER_JAM         "Užstrigęs popierius; "
+    PD32_PRINTER_STATUS_PAPER_OUT         "Pasibaigęs popierius; "
+    PD32_PRINTER_STATUS_MANUAL_FEED       "Rankinis popieriaus padavimas; "
+    PD32_PRINTER_STATUS_PAPER_PROBLEM     "Problema su popieriumi; "
+    PD32_PRINTER_STATUS_OFFLINE           "Spausdintuvas atjungtas; "
+    PD32_PRINTER_STATUS_IO_ACTIVE         "Aktyvus Į/I; "
+    PD32_PRINTER_STATUS_BUSY              "Spausdintuvas užimtas; "
+    PD32_PRINTER_STATUS_PRINTING          "Spausdina; "
+    PD32_PRINTER_STATUS_OUTPUT_BIN_FULL   "Išvedimo dėklas pilnas; "
+    PD32_PRINTER_STATUS_NOT_AVAILABLE     "Nepasiekiama; "
+    PD32_PRINTER_STATUS_WAITING           "Laukia; "
+    PD32_PRINTER_STATUS_PROCESSING        "Apdorojimas; "
+    PD32_PRINTER_STATUS_INITIALIZING      "Inicijuojama; "
+    PD32_PRINTER_STATUS_WARMING_UP        "Kaista; "
+    PD32_PRINTER_STATUS_TONER_LOW         "Baigiasi dažai; "
+    PD32_PRINTER_STATUS_NO_TONER          "Nėra dažų; "
+    PD32_PRINTER_STATUS_PAGE_PUNT         "Puslapis perkrautas; "
+    PD32_PRINTER_STATUS_USER_INTERVENTION "Pertraukta naudotojo; "
+    PD32_PRINTER_STATUS_OUT_OF_MEMORY     "Baigėsi atmintis; "
+    PD32_PRINTER_STATUS_DOOR_OPEN         "Spausdintuvo durelės atidarytos; "
+    PD32_PRINTER_STATUS_SERVER_UNKNOWN    "Spausdinimo serveris nežinomas; "
+    PD32_PRINTER_STATUS_POWER_SAVE        "Energijos taupymo režimas; "
+}
+
+STRINGTABLE DISCARDABLE /* Font styles */
+{
+    IDS_FONT_REGULAR       "Normalus"
+    IDS_FONT_BOLD          "Pusjuodis"
+    IDS_FONT_ITALIC        "Kursyvas"
+    IDS_FONT_BOLD_ITALIC   "Pusjuodis kursyvas"
+}
+
+STRINGTABLE DISCARDABLE /* Color names */
+{
+    IDS_COLOR_BLACK     "Juoda"
+    IDS_COLOR_MAROON    "Kaštoninė"
+    IDS_COLOR_GREEN     "Žalia"
+    IDS_COLOR_OLIVE     "Alyvinė"
+    IDS_COLOR_NAVY      "Ultramarinas"
+    IDS_COLOR_PURPLE    "Purpurinė"
+    IDS_COLOR_TEAL      "Neutrali ciano"
+    IDS_COLOR_GRAY      "Pilka"
+    IDS_COLOR_SILVER    "Sidabrinė"
+    IDS_COLOR_RED       "Raudona"
+    IDS_COLOR_LIME      "Gelsvai žalsva"
+    IDS_COLOR_YELLOW    "Geltona"
+    IDS_COLOR_BLUE      "Mėlyna"
+    IDS_COLOR_FUCHSIA   "Fuksija"
+    IDS_COLOR_AQUA      "Akvarelinis cianas"
+    IDS_COLOR_WHITE     "Balta"
+}
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_FONT_SIZE   "Pasirinkite šrifto dydį tarp %d ir %d taškų."
+    IDS_SAVE_BUTTON "&Išsaugoti"
+    IDS_SAVE_IN     "&Kur išsaugoti:"
+    IDS_SAVE        "Išsaugoti"
+    IDS_SAVE_AS     "Išsaugoti kaip"
+    IDS_OPEN_FILE   "Atverti failą"
+}
+#pragma code_page(default)

@@ -13,6 +13,7 @@
 #include <psdk/ntverp.h>
 
 /* DDK/IFS/NDK Headers */
+#define _REALLY_GET_CALLERS_CALLER
 #ifdef _MSC_VER
 #include <excpt.h>
 #include <ntdef.h>

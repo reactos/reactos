@@ -18,6 +18,7 @@ IDB_STARTMENU BITMAP DISCARDABLE res/logov.bmp
 #include "lang/es-ES.rc"
 #include "lang/fr-FR.rc"
 #include "lang/it-IT.rc"
+#include "lang/ja-JP.rc"
 #include "lang/ko-KR.rc"
 #include "lang/lt-LT.rc"
 #include "lang/nl-NL.rc"

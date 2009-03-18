@@ -1,10 +1,8 @@
+#include "priv.h"
+
 /* ===============================================================
     Method Functions
 */
-
-#include <ntddk.h>
-#include <debug.h>
-#include <ks.h>
 
 /*
     @unimplemented

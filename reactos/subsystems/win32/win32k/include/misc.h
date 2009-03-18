@@ -30,6 +30,26 @@
 #define W32PF_MANUALGUICHECK         (0x02000000)
 #define W32PF_CREATEDWINORDC         (0x04000000)
 
+typedef struct INTENG_ENTER_LEAVE_TAG
+  {
+  /* Contents is private to EngEnter/EngLeave */
+  SURFOBJ *DestObj;
+  SURFOBJ *OutputObj;
+  HBITMAP OutputBitmap;
+  CLIPOBJ *TrivialClipObj;
+  RECTL DestRect;
+  BOOL ReadOnly;
+  } INTENG_ENTER_LEAVE, *PINTENG_ENTER_LEAVE;
+
+extern BOOL APIENTRY IntEngEnter(PINTENG_ENTER_LEAVE EnterLeave,
+                                SURFOBJ *DestObj,
+                                RECTL *DestRect,
+                                BOOL ReadOnly,
+                                POINTL *Translate,
+                                SURFOBJ **OutputObj);
+
+extern BOOL APIENTRY IntEngLeave(PINTENG_ENTER_LEAVE EnterLeave);
+
 extern HGDIOBJ StockObjects[];
 extern SHORT gusLanguageID;
 

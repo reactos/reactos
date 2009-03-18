@@ -14,6 +14,7 @@
 #include <mmddk.h>
 
 #include <ntddsnd.h>
+#include <sndtypes.h>
 
 #include <mmebuddy.h>
 
@@ -48,6 +49,41 @@ mxdMessage(
                                                    DeviceId,
                                                    (PVOID) Parameter1,
                                                    Parameter2);
+            break;
+        }
+
+        case MXDM_INIT :
+        {
+            break;
+        }
+
+        case MXDM_OPEN :
+        {
+            break;
+        }
+
+        case MXDM_CLOSE :
+        {
+            break;
+        }
+
+        case MXDM_GETCONTROLDETAILS :
+        {
+            break;
+        }
+
+        case MXDM_SETCONTROLDETAILS :
+        {
+            break;
+        }
+
+        case MXDM_GETLINECONTROLS :
+        {
+            break;
+        }
+
+        case MXDM_GETLINEINFO :
+        {
             break;
         }
     }

@@ -19,7 +19,8 @@ MouseClassInstaller@12
 ;ReportError
 ;ScsiClassInstaller
 SetupChangeFontSize@8
-;SetupChangeLocale
+SetupChangeLocale@8
+SetupChangeLocaleEx@24
 ;SetupCreateOptionalComponentsPage
 ;SetupInfObjectInstallActionW
 ;SetupSetLargeDialogFont

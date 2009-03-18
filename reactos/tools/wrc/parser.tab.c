@@ -2782,7 +2782,7 @@ yyreduce:
 
   case 81:
 #line 876 "parser.y"
-    { (yyval.ctl)=ins_ctrl(CT_BUTTON, BS_GROUPBOX, (yyvsp[0].ctl), (yyvsp[-2].ctl));;}
+    { (yyval.ctl)=ins_ctrl(CT_BUTTON, BS_GROUPBOX, (yyvsp[0].ctl), (yyvsp[-2].ctl));}
     break;
 
   case 82:
@@ -2982,7 +2982,7 @@ yyreduce:
 
   case 104:
 #line 1008 "parser.y"
-    { (yyval.style) = new_style((yyvsp[-2].style)->or_mask | (yyvsp[0].style)->or_mask, (yyvsp[-2].style)->and_mask | (yyvsp[0].style)->and_mask); free((yyvsp[-2].style)); free((yyvsp[0].style));;}
+    { (yyval.style) = new_style((yyvsp[-2].style)->or_mask | (yyvsp[0].style)->or_mask, (yyvsp[-2].style)->and_mask | (yyvsp[0].style)->and_mask); free((yyvsp[-2].style)); free((yyvsp[0].style));}
     break;
 
   case 105:
@@ -3159,7 +3159,7 @@ yyreduce:
 
   case 130:
 #line 1093 "parser.y"
-    { (yyval.ctl)=ins_ctrl(CT_BUTTON, BS_GROUPBOX, (yyvsp[0].ctl), (yyvsp[-2].ctl));;}
+    { (yyval.ctl)=ins_ctrl(CT_BUTTON, BS_GROUPBOX, (yyvsp[0].ctl), (yyvsp[-2].ctl));}
     break;
 
   case 131:
@@ -3381,7 +3381,7 @@ yyreduce:
 
   case 154:
 #line 1253 "parser.y"
-    {(yyval.menitm) = NULL;;}
+    {(yyval.menitm) = NULL;}
     break;
 
   case 155:

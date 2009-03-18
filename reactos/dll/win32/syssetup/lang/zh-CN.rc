@@ -211,6 +211,7 @@ BEGIN
 	IDS_SYS_TOOLS        "系统工具"
 	IDS_CMT_CHARMAP      "字符映射表"
 	IDS_CMT_KBSWITCH     "Keyboard Layout Switcher"
+    IDS_CMT_DXDIAG       "Launch ReactX-Diagnostic program"
 END
 
 
@@ -219,6 +220,14 @@ BEGIN
 	IDS_SYS_ACCESSIBILITY        "Accessibility"
 	IDS_CMT_MAGNIFY      	     "放大镜"
 END
+
+STRINGTABLE
+BEGIN
+    IDS_SYS_ENTERTAINMENT       "Entertainment"
+    IDS_CMT_MPLAY32             "Launch Multimedia Player"
+    IDS_CMT_SNDVOL32            "Launch Volume Control"
+END
+
 STRINGTABLE
 BEGIN
     IDS_REACTOS_SETUP		    "ReactOS 安装程序"
@@ -239,6 +248,7 @@ BEGIN
     IDS_SHORT_DOWNLOADER "Download !.lnk"
     IDS_SHORT_SERVICE    "服务.lnk"
     IDS_SHORT_DEVICE     "设备管理.lnk"
+    IDS_SHORT_MPLAY32    "Multimedia Player.lnk"
     IDS_SHORT_CALC       "计算器.lnk"
     IDS_SHORT_REGEDIT    "注册表编辑器.lnk"
     IDS_SHORT_NOTEPAD    "记事本.lnk"
@@ -252,6 +262,8 @@ BEGIN
     IDS_SHORT_KBSWITCH   "Keyboard Layout Switcher.lnk"
     IDS_SHORT_EVENTVIEW  "Event Viewer.lnk"
     IDS_SHORT_MSCONFIG   "System Configuration.lnk"
+    IDS_SHORT_SNDVOL32   "Volume Control.lnk"
+    IDS_SHORT_DXDIAG     "ReactX Diagnostic.lnk"
 END
 
 STRINGTABLE

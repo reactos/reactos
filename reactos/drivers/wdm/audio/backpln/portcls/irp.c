@@ -49,13 +49,7 @@ PortClsCreate(
 {
     DPRINT1("PortClsCreate called\n");
 
-    /* TODO */
-
-	Irp->IoStatus.Status = STATUS_SUCCESS;
-    Irp->IoStatus.Information = 0;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
-    return STATUS_SUCCESS;
+    return KsDispatchIrp(DeviceObject, Irp);
 }
 
 
@@ -137,22 +131,28 @@ PortClsPnp(
 
             /* Do not complete? */
             Irp->IoStatus.Status = STATUS_SUCCESS;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
             return STATUS_SUCCESS;
 
         case IRP_MN_QUERY_INTERFACE:
-            DPRINT1("FIXME: IRP_MN_QUERY_INTERFACE: call next lower device object\n");
-            /* FIXME
-             * call next lower device object */
-            Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
-            return Irp->IoStatus.Status;
+            DPRINT("IRP_MN_QUERY_INTERFACE\n");
+            return PcForwardIrpSynchronous(DeviceObject, Irp);
 
         case IRP_MN_QUERY_DEVICE_RELATIONS:
             Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
-            return Irp->IoStatus.Status;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            return STATUS_UNSUCCESSFUL;
+        case IRP_MN_FILTER_RESOURCE_REQUIREMENTS:
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            return STATUS_SUCCESS;
     }
 
     DPRINT1("unhandled function %u\n", IoStack->MinorFunction);
-    return STATUS_SUCCESS;
+
+    Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return STATUS_UNSUCCESSFUL;
 }
 
 /*
@@ -234,19 +234,8 @@ PcDispatchIrp(
         case IRP_MJ_SYSTEM_CONTROL :
             return PortClsSysControl(DeviceObject, Irp);
 
-        /* KS - TODO */
-
-#if 0
-    KsSetMajorFunctionHandler(DriverObject, IRP_MJ_CLOSE);
-    KsSetMajorFunctionHandler(DriverObject, IRP_MJ_DEVICE_CONTROL);
-    KsSetMajorFunctionHandler(DriverObject, IRP_MJ_FLUSH_BUFFERS);
-    KsSetMajorFunctionHandler(DriverObject, IRP_MJ_QUERY_SECURITY);
-    KsSetMajorFunctionHandler(DriverObject, IRP_MJ_READ);
-    KsSetMajorFunctionHandler(DriverObject, IRP_MJ_SET_SECURITY);
-    KsSetMajorFunctionHandler(DriverObject, IRP_MJ_WRITE);
-#endif
-
-        default :
+        default:
+            DPRINT1("Unhandled function %x\n", IoStack->MajorFunction);
             break;
     };
 
@@ -271,16 +260,18 @@ PcCompleteIrp(
     return STATUS_UNSUCCESSFUL;
 }
 
-static
 NTSTATUS
 NTAPI
-IrpCompletionRoutine(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp,
-    IN PVOID Context)
+CompletionRoutine(
+    IN PDEVICE_OBJECT  DeviceObject,
+    IN PIRP  Irp,
+    IN PVOID  Context)
 {
-    KeSetEvent((PRKEVENT)Context, IO_NO_INCREMENT, FALSE);
-    return STATUS_SUCCESS;
+    if (Irp->PendingReturned == TRUE)
+    {
+        KeSetEvent ((PKEVENT) Context, IO_NO_INCREMENT, FALSE);
+    }
+    return STATUS_MORE_PROCESSING_REQUIRED;
 }
 
 
@@ -299,17 +290,15 @@ PcForwardIrpSynchronous(
     DPRINT1("PcForwardIrpSynchronous\n");
 
     DeviceExt = (PPCLASS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-return STATUS_SUCCESS;
+
     /* initialize the notification event */
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
-    /* setup a completion routine */
-    IoSetCompletionRoutine(Irp, IrpCompletionRoutine, (PVOID)&Event, TRUE, FALSE, FALSE);
-
-    /* copy the current stack location */
     IoCopyCurrentIrpStackLocationToNext(Irp);
 
     DPRINT1("PcForwardIrpSynchronous %p Irp %p\n", DeviceExt->PrevDeviceObject, Irp);
+
+    IoSetCompletionRoutine(Irp, CompletionRoutine, (PVOID)&Event, TRUE, TRUE, TRUE);
 
     /* now call the driver */
     Status = IoCallDriver(DeviceExt->PrevDeviceObject, Irp);

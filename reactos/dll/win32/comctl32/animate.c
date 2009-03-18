@@ -121,7 +121,7 @@ static BOOL ANIMATE_LoadResW(ANIMATE_INFO *infoPtr, HINSTANCE hInst, LPCWSTR lpN
 
     memset(&mminfo, 0, sizeof(mminfo));
     mminfo.fccIOProc = FOURCC_MEM;
-    mminfo.pchBuffer = (LPSTR)lpAvi;
+    mminfo.pchBuffer = lpAvi;
     mminfo.cchBuffer = SizeofResource(hInst, hrsrc);
     infoPtr->hMMio = mmioOpenW(NULL, &mminfo, MMIO_READ);
     if (!infoPtr->hMMio) 
@@ -391,7 +391,7 @@ static LRESULT ANIMATE_Timer(ANIMATE_INFO *infoPtr)
 
 static DWORD CALLBACK ANIMATE_AnimationThread(LPVOID ptr_)
 {
-    ANIMATE_INFO *infoPtr = (ANIMATE_INFO *)ptr_;
+    ANIMATE_INFO *infoPtr = ptr_;
     HANDLE event;
     DWORD timeout;
 
@@ -472,7 +472,7 @@ static LRESULT ANIMATE_Play(ANIMATE_INFO *infoPtr, UINT cRepeat, WORD wFrom, WOR
 	TRACE("Using an animation thread\n");
         infoPtr->hStopEvent = CreateEventW( NULL, TRUE, FALSE, NULL );
         infoPtr->hThread = CreateThread(0, 0, ANIMATE_AnimationThread,
-                                        (LPVOID)infoPtr, 0, &infoPtr->threadId);
+                                        infoPtr, 0, &infoPtr->threadId);
         if(!infoPtr->hThread) return FALSE;
 
     }

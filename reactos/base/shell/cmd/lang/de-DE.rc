@@ -9,6 +9,14 @@ LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 STRINGTABLE DISCARDABLE
 BEGIN
 
+STRING_ASSOC_HELP,    "Modifiziert Dateierweiterungs-Zuordnungen.\n\n\
+assoc [.erw[=[Dateityp]]]\n\
+\n\
+assoc (Gibt alle Zuordnungen aus)\n\
+assoc .erw (Gibt die spezifische Zuordnung aus)\n\
+assoc .erw= (Löscht die spezifische Zuordnung)\n\
+assoc .erw=Dateityp (Fügt neue Zuordnung hinzu)\n"
+
 STRING_ATTRIB_HELP,    "Zeigt Dateiattribute an oder ändert sie.\n\n\
 ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] Dateiname ...\n\
        [/S [/D]]\n\n\
@@ -285,6 +293,13 @@ STRING_LOCALE_HELP1, "Aktuelle Zeit: "
 
 STRING_MKDIR_HELP,   "Erzeugt ein Verzeichnis.\n\n\
 MKDIR [Laufwerk:]Pfad\nMD [Laufwerk:]Pfad"
+
+STRING_MKLINK_HELP, "Creates a filesystem link object.\n\n\
+MKLINK [/D | /H | /J] linkname target\n\n\
+  /D  Indicates that the symbolic link target is a directory.\n\
+  /H  Create a hard link.\n\
+  /J  Create a directory junction.\n\n\
+If neither /H or /J is specified, a symbolic link is created."
 
 STRING_MEMMORY_HELP1, "Zeigt die Größe des Systemspeicher an.\n\nMEMORY"
 
@@ -568,6 +583,7 @@ IF       Verarbeitet Ausdrücke in einer Batchdatei abhängig von Bedingungen.\n\
 LABEL    Erstellt, ändert oder löscht die Bezeichnung eines Volumes.\n\
 MD       Erstellt ein Verzeichnis.\n\
 MKDIR    Erstellt ein Verzeichnis.\n\
+MKLINK   Creates a filesystem link object.\n\
 MOVE     Verschiebt eine oder mehrere Dateien von einem Verzeichnis in\n\
          ein anderes.\n\
 PATH     Legt den Suchpfad für ausführbare Dateien fest oder zeigt diesen an.\n\
@@ -600,6 +616,7 @@ STRING_CHOICE_OPTION,         "JN"
 STRING_COPY_OPTION,           "JNA"
 
 STRING_ALIAS_ERROR,          "Die Befehlszeile ist zu lange nach der Alias-Erweiterung!\n"
+STRING_ASSOC_ERROR,          "Dateizuordnung für Erweiterung %s nicht gefunden\n"
 STRING_BATCH_ERROR,          "Es trat ein Fehler auf, während die Batch-Datei geöffnet wurde.\n"
 STRING_CHCP_ERROR1,          "Aktive Code-Page: %u\n"
 STRING_CHCP_ERROR4,          "Ungültige Code-Page\n"
@@ -650,7 +667,7 @@ STRING_ERROR_FILE_NOT_FOUND,       "Datei wurde nicht gefunden\n"
 STRING_ERROR_REQ_PARAM_MISSING,    "Benötigter Parameter fehlt\n"
 STRING_ERROR_INVALID_DRIVE,        "Ungültige Laufwerksangaben\n"
 STRING_ERROR_INVALID_PARAM_FORMAT, "Ungültiges Parameterformat - %s\n"
-STRING_ERROR_BADCOMMAND,           "Ungültiger Befehl oder Dateiname\n"
+STRING_ERROR_BADCOMMAND,           "Ungültiger Befehl oder Dateiname - %s\n"
 STRING_ERROR_OUT_OF_MEMORY,        "Fehler: Zu wenig Speicher verfügbar.\n"
 STRING_ERROR_CANNOTPIPE,           "Fehler: Cannot pipe! Temporäre Datei kann nicht geöffnet werden!\n"
 STRING_ERROR_D_PAUSEMSG,           "Drücken Sie eine beliebige Taste . . ."
@@ -671,6 +688,9 @@ STRING_FOR_ERROR,                  "ungültige Variablenangabe."
 STRING_SCREEN_COL,                 "ungültige Spalten-Angabe"
 STRING_SCREEN_ROW,                 "ungültige Zeilen-Angabe"
 STRING_TIMER_TIME                  "Timer %d ist %s: "
+STRING_MKLINK_CREATED_SYMBOLIC,    "Symbolic link created for %s <<===>> %s\n"
+STRING_MKLINK_CREATED_HARD,        "Hard link created for %s <<===>> %s\n"
+STRING_MKLINK_CREATED_JUNCTION,    "Junction created for %s <<===>> %s\n"
 STRING_INVALID_OPERAND,            "Ungültiger Operand."
 STRING_EXPECTED_CLOSE_PAREN,       "Erwartet ')'."
 STRING_EXPECTED_NUMBER_OR_VARIABLE,"Erwartet Nummer oder Variablennamen."

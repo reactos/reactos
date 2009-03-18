@@ -112,6 +112,13 @@ MUIDefaultKeyboardLayout(VOID)
     return LanguageList[lngIndex].MuiLayouts[0].LayoutID;
 }
 
+PWCHAR
+MUIGetGeoID(VOID)
+{
+    ULONG lngIndex = max(FindLanguageIndex(), 0);
+    return LanguageList[lngIndex].GeoID;
+}
+
 const MUI_LAYOUTS *
 MUIGetLayoutsList(VOID)
 {

@@ -109,21 +109,9 @@ ObInitializeFastReference(IN PEX_FAST_REF FastRef,
 {
     /* Check if we were given an object and reference it 7 times */
     if (Object) ObReferenceObjectEx(Object, MAX_FAST_REFS);
-
-    /* Sanity check */
-    ASSERT(!(((ULONG_PTR)Object) & MAX_FAST_REFS));
-
-    /* Check if the caller gave us an object */
-    if (Object)
-    {
-        /* He did, so write the biased pointer */
-        FastRef->Object = (PVOID)((ULONG_PTR)Object | MAX_FAST_REFS);
-    }
-    else
-    {
-        /* Otherwise, clear the current object */
-        FastRef->Object = NULL;
-    }
+    
+    /* Setup the fast reference */
+    ExInitializeFastReference(FastRef, Object);
 }
 
 PVOID
@@ -131,9 +119,10 @@ FASTCALL
 ObFastReferenceObjectLocked(IN PEX_FAST_REF FastRef)
 {
     PVOID Object;
+    EX_FAST_REF OldValue = *FastRef;
 
     /* Get the object and reference it slowly */
-    Object = (PVOID)((ULONG_PTR)FastRef->Object & MAX_FAST_REFS);
+    Object = ExGetObjectFastReference(OldValue);
     if (Object) ObReferenceObject(Object);
     return Object;
 }
@@ -142,25 +131,16 @@ PVOID
 FASTCALL
 ObFastReferenceObject(IN PEX_FAST_REF FastRef)
 {
-    ULONG_PTR Value, NewValue;
+    EX_FAST_REF OldValue;
     ULONG_PTR Count;
     PVOID Object;
 
-    /* Start reference loop */
-    for (;;)
-    {
-        /* Get the current count */
-        Value = FastRef->Value;
-        if (!(Value & MAX_FAST_REFS)) break;
+    /* Reference the object and get it pointer */
+    OldValue = ExAcquireFastReference(FastRef);
+    Object = ExGetObjectFastReference(OldValue);
 
-        /* Increase the reference count */
-        NewValue = Value - 1;
-        if (ExpChangeRundown(FastRef, NewValue, Value) == Value) break;
-    }
-
-    /* Get the object and count */
-    Object = (PVOID)(Value &~ MAX_FAST_REFS);
-    Count = Value & MAX_FAST_REFS;
+    /* Check how many references are left */
+    Count = ExGetCountFastReference(OldValue);
 
     /* Check if the reference count is over 1 */
     if (Count > 1) return Object;
@@ -170,25 +150,12 @@ ObFastReferenceObject(IN PEX_FAST_REF FastRef)
 
     /* Otherwise, reference the object 7 times */
     ObReferenceObjectEx(Object, MAX_FAST_REFS);
-    ASSERT(!(((ULONG_PTR)Object) & MAX_FAST_REFS));
-
-    for (;;)
+    
+    /* Now update the reference count */
+    if (!ExInsertFastReference(FastRef, Object))
     {
-        /* Check if the current count is too high */
-        Value = FastRef->Value;
-        if (((FastRef->RefCnt + MAX_FAST_REFS) > MAX_FAST_REFS) ||
-            ((PVOID)((ULONG_PTR)FastRef->Object &~ MAX_FAST_REFS) != Object))
-        {
-            /* Completely dereference the object */
-            ObDereferenceObjectEx(Object, MAX_FAST_REFS);
-            break;
-        }
-        else
-        {
-            /* Increase the reference count */
-            NewValue = Value + MAX_FAST_REFS;
-            if (ExpChangeRundown(FastRef, NewValue, Value) == Value) break;
-        }
+        /* We failed: completely dereference the object */
+        ObDereferenceObjectEx(Object, MAX_FAST_REFS);
     }
 
     /* Return the Object */
@@ -200,30 +167,8 @@ FASTCALL
 ObFastDereferenceObject(IN PEX_FAST_REF FastRef,
                         IN PVOID Object)
 {
-    ULONG_PTR Value, NewValue;
-
-    /* Sanity checks */
-    ASSERT(Object);
-    ASSERT(!(((ULONG_PTR)Object) & MAX_FAST_REFS));
-
-    /* Start dereference loop */
-    for (;;)
-    {
-        /* Get the current count */
-        Value = FastRef->Value;
-        if ((Value ^ (ULONG_PTR)Object) < MAX_FAST_REFS)
-        {
-            /* Decrease the reference count */
-            NewValue = Value + 1;
-            if (ExpChangeRundown(FastRef, NewValue, Value) == Value) return;
-        }
-        else
-        {
-            /* Do a normal Dereference */
-            ObDereferenceObject(Object);
-            return;
-        }
-    }
+    /* Release a fast reference. If this failed, use the slow path */
+    if (!ExReleaseFastReference(FastRef, Object)) ObDereferenceObject(Object);
 }
 
 PVOID
@@ -231,36 +176,20 @@ FASTCALL
 ObFastReplaceObject(IN PEX_FAST_REF FastRef,
                     PVOID Object)
 {
-    ULONG_PTR NewValue;
-    EX_FAST_REF OldRef;
+    EX_FAST_REF OldValue;
     PVOID OldObject;
+    ULONG_PTR Count;
 
     /* Check if we were given an object and reference it 7 times */
     if (Object) ObReferenceObjectEx(Object, MAX_FAST_REFS);
-
-    /* Sanity check */
-    ASSERT(!(((ULONG_PTR)Object) & MAX_FAST_REFS));
-
-    /* Check if the caller gave us an object */
-    if (Object)
-    {
-        /* He did, so bias the pointer */
-        NewValue = (ULONG_PTR)Object | MAX_FAST_REFS;
-    }
-    else
-    {
-        /* No object, we're clearing */
-        NewValue = 0;
-    }
-
-    /* Switch objects */
-    OldRef.Value = InterlockedExchange((PLONG)&FastRef->Value, NewValue);
-    OldObject = (PVOID)((ULONG_PTR)OldRef.Object &~ MAX_FAST_REFS);
-    if ((OldObject) && (OldRef.RefCnt))
-    {
-        /* Dereference the old object */
-        ObDereferenceObjectEx(OldObject, OldRef.RefCnt);
-    }
+    
+    /* Do the swap */
+    OldValue = ExSwapFastReference(FastRef, Object);
+    OldObject = ExGetObjectFastReference(OldValue);
+    
+    /* Check if we had an active object and dereference it */
+    Count = ExGetCountFastReference(OldValue);
+    if ((OldObject) && (Count)) ObDereferenceObjectEx(OldObject, Count);
 
     /* Return the old object */
     return OldObject;

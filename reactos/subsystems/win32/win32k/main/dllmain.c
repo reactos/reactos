@@ -136,7 +136,6 @@ Win32kProcessCallback(struct _EPROCESS *Process,
       DPRINT("Destroying W32 process PID:%d at IRQ level: %lu\n", Process->UniqueProcessId, KeGetCurrentIrql());
       IntCleanupMenus(Process, Win32Process);
       IntCleanupCurIcons(Process, Win32Process);
-      IntEngCleanupDriverObjs(Process, Win32Process);
       CleanupMonitorImpl();
 
       /* no process windows should exist at this point, or the function will assert! */

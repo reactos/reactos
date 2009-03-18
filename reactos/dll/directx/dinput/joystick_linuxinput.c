@@ -194,6 +194,7 @@ struct JoystickImpl
         struct list                     ff_effects;
 	int				ff_state;
 	int				ff_autocenter;
+	int				ff_gain;
 };
 
 static void fake_current_js_state(JoystickImpl *ji);
@@ -461,6 +462,7 @@ static JoystickImpl *alloc_device(REFGUID rguid, const void *jvt, IDirectInputIm
        Instead, track it with ff_autocenter, and assume it's initialy
        enabled. */
     newDevice->ff_autocenter = 1;
+    newDevice->ff_gain = 0xFFFF;
     InitializeCriticalSection(&newDevice->base.crit);
     newDevice->base.crit.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": JoystickImpl*->base.crit");
 
@@ -670,12 +672,16 @@ static HRESULT WINAPI JoystickAImpl_Acquire(LPDIRECTINPUTDEVICE8A iface)
     }
     else
     {
+        struct input_event event;
+
+        event.type = EV_FF;
+        event.code = FF_GAIN;
+        event.value = This->ff_gain;
+        if (write(This->joyfd, &event, sizeof(event)) == -1)
+            ERR("Failed to set gain (%i): %d %s\n", This->ff_gain, errno, strerror(errno));
         if (!This->ff_autocenter)
         {
-            struct input_event event;
-
             /* Disable autocenter. */
-            event.type = EV_FF;
             event.code = FF_AUTOCENTER;
             event.value = 0;
             if (write(This->joyfd, &event, sizeof(event)) == -1)
@@ -974,6 +980,23 @@ static HRESULT WINAPI JoystickAImpl_SetProperty(LPDIRECTINPUTDEVICE8A iface,
       fake_current_js_state(This);
       break;
     }
+    case (DWORD_PTR)DIPROP_FFGAIN: {
+      LPCDIPROPDWORD pd = (LPCDIPROPDWORD)ph;
+
+      TRACE("DIPROP_FFGAIN(%d)\n", pd->dwData);
+      This->ff_gain = MulDiv(pd->dwData, 0xFFFF, 10000);
+      if (This->base.acquired) {
+        /* Update immediately. */
+        struct input_event event;
+
+        event.type = EV_FF;
+        event.code = FF_GAIN;
+        event.value = This->ff_gain;
+        if (write(This->joyfd, &event, sizeof(event)) == -1)
+          ERR("Failed to set gain (%i): %d %s\n", This->ff_gain, errno, strerror(errno));
+      }
+      break;
+    }
     default:
       return IDirectInputDevice2AImpl_SetProperty(iface, rguid, ph);
     }
@@ -1083,6 +1106,14 @@ static HRESULT WINAPI JoystickAImpl_GetProperty(LPDIRECTINPUTDEVICE8A iface,
 
         pd->dwData = This->ff_autocenter ? DIPROPAUTOCENTER_ON : DIPROPAUTOCENTER_OFF;
         TRACE("autocenter(%d)\n", pd->dwData);
+        break;
+    }
+    case (DWORD_PTR) DIPROP_FFGAIN:
+    {
+        LPDIPROPDWORD pd = (LPDIPROPDWORD)pdiph;
+
+        pd->dwData = MulDiv(This->ff_gain, 10000, 0xFFFF);
+        TRACE("DIPROP_FFGAIN(%d)\n", pd->dwData);
         break;
     }
 

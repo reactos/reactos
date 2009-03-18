@@ -95,6 +95,7 @@ PcDmaMasterDescription(
     RtlZeroMemory(DeviceDescription, sizeof(DEVICE_DESCRIPTION));
 
     DeviceDescription->Master = TRUE;
+    DeviceDescription->Version = DEVICE_DESCRIPTION_VERSION1;
     DeviceDescription->ScatterGather= ScatterGather;
     DeviceDescription->Dma32BitAddresses = Dma32BitAddresses;
     DeviceDescription->IgnoreCount = IgnoreCount;
@@ -124,6 +125,7 @@ PcDmaSlaveDescription(
 
     RtlZeroMemory(DeviceDescription, sizeof(DEVICE_DESCRIPTION));
 
+    DeviceDescription->Version = DEVICE_DESCRIPTION_VERSION1;
     DeviceDescription->DemandMode = DemandMode;
     DeviceDescription->AutoInitialize = AutoInitialize;
     DeviceDescription->DmaSpeed = DmaSpeed;
@@ -132,3 +134,4 @@ PcDmaSlaveDescription(
 
     return STATUS_SUCCESS;
 }
+

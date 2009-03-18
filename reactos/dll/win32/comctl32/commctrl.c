@@ -870,7 +870,7 @@ CreateMappedBitmap (HINSTANCE hInstance, INT_PTR idBitmap, UINT wFlags,
 	internalColorMap[2].to = GetSysColor (COLOR_BTNFACE);
 	internalColorMap[3].to = GetSysColor (COLOR_BTNHIGHLIGHT);
 	iMaps = 4;
-	sysColorMap = (LPCOLORMAP)internalColorMap;
+	sysColorMap = internalColorMap;
     }
 
     hRsrc = FindResourceW (hInstance, (LPWSTR)idBitmap, (LPWSTR)RT_BITMAP);
@@ -1126,7 +1126,7 @@ BOOL WINAPI SetWindowSubclass (HWND hWnd, SUBCLASSPROC pfnSubclass,
          ERR ("Failed to allocate our Subclassing stack\n");
          return FALSE;
       }
-      SetPropW (hWnd, COMCTL32_wSubclass, (HANDLE)stack);
+      SetPropW (hWnd, COMCTL32_wSubclass, stack);
 
       /* set window procedure to our own and save the current one */
       if (IsWindowUnicode (hWnd))

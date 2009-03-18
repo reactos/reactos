@@ -32,49 +32,57 @@ VOID NTAPI LoopReceiveWorker( PVOID Context ) {
     UINT BytesTransferred;
     PNDIS_BUFFER NdisBuffer;
     IP_PACKET IPPacket;
+	KIRQL OldIrql;
 
     TI_DbgPrint(DEBUG_DATALINK, ("Called.\n"));
 
-    while( (ListEntry =
-	    ExInterlockedRemoveHeadList( &LoopWorkList, &LoopWorkLock )) ) {
-	WorkItem = CONTAINING_RECORD(ListEntry, LAN_WQ_ITEM, ListEntry);
+	TcpipAcquireSpinLock( &LoopWorkLock, &OldIrql );
+    while( !IsListEmpty(&LoopWorkList) )
+    {
+		ListEntry = RemoveHeadList( &LoopWorkList );
+		TcpipReleaseSpinLock( &LoopWorkLock, OldIrql );
 
-	TI_DbgPrint(DEBUG_DATALINK, ("WorkItem: %x\n", WorkItem));
-
-	Packet = WorkItem->Packet;
-	Adapter = WorkItem->Adapter;
-	BytesTransferred = WorkItem->BytesTransferred;
-
-	exFreePool( WorkItem );
-
+		WorkItem = CONTAINING_RECORD(ListEntry, LAN_WQ_ITEM, ListEntry);
+		
+		TI_DbgPrint(DEBUG_DATALINK, ("WorkItem: %x\n", WorkItem));
+		
+		Packet = WorkItem->Packet;
+		Adapter = WorkItem->Adapter;
+		BytesTransferred = WorkItem->BytesTransferred;
+		
+		exFreePool( WorkItem );
+		
         IPPacket.NdisPacket = Packet;
-
+		
         TI_DbgPrint(DEBUG_DATALINK, ("Packet %x Adapter %x Trans %x\n",
                                      Packet, Adapter, BytesTransferred));
-
+		
         NdisGetFirstBufferFromPacket(Packet,
                                      &NdisBuffer,
                                      &IPPacket.Header,
                                      &IPPacket.ContigSize,
                                      &IPPacket.TotalSize);
 
-	IPPacket.ContigSize = IPPacket.TotalSize = BytesTransferred;
+		IPPacket.ContigSize = IPPacket.TotalSize = BytesTransferred;
         /* Determine which upper layer protocol that should receive
            this packet and pass it to the correct receive handler */
-
-	TI_DbgPrint(MID_TRACE,
-		    ("ContigSize: %d, TotalSize: %d, BytesTransferred: %d\n",
-		     IPPacket.ContigSize, IPPacket.TotalSize,
-		     BytesTransferred));
-
-	IPPacket.Position = 0;
-
+		
+		TI_DbgPrint
+			(MID_TRACE,
+			 ("ContigSize: %d, TotalSize: %d, BytesTransferred: %d\n",
+			  IPPacket.ContigSize, IPPacket.TotalSize,
+			  BytesTransferred));
+		
+		IPPacket.Position = 0;
+		
         IPReceive(Loopback, &IPPacket);
-
-	FreeNdisPacket( Packet );
+		
+		FreeNdisPacket( Packet );
+		TcpipAcquireSpinLock( &LoopWorkLock, &OldIrql );
     }
     TI_DbgPrint(DEBUG_DATALINK, ("Leaving\n"));
     LoopReceiveWorkerBusy = FALSE;
+	TcpipReleaseSpinLock( &LoopWorkLock, OldIrql );
 }
 
 VOID LoopSubmitReceiveWork(

@@ -13,7 +13,7 @@
 #define NDEBUG
 #include <debug.h>
 
-//#define ENABLE_ACPI
+#define ENABLE_ACPI
 
 /* GLOBALS *******************************************************************/
 
@@ -29,6 +29,7 @@ extern BOOLEAN PnpSystemInit;
 /* DATA **********************************************************************/
 
 PDRIVER_OBJECT IopRootDriverObject;
+FAST_MUTEX IopBusTypeGuidListLock;
 PIO_BUS_TYPE_GUID_LIST IopBusTypeGuidList = NULL;
 
 #if defined (ALLOC_PRAGMA)
@@ -279,7 +280,7 @@ IopGetBusTypeGuidIndex(LPGUID BusTypeGuid)
    PVOID NewList;
 
    /* Acquire the lock */
-   ExAcquireFastMutex(&IopBusTypeGuidList->Lock);
+   ExAcquireFastMutex(&IopBusTypeGuidListLock);
 
    /* Loop all entries */
    while (i < IopBusTypeGuidList->GuidCount)
@@ -333,7 +334,7 @@ IopGetBusTypeGuidIndex(LPGUID BusTypeGuid)
    IopBusTypeGuidList->GuidCount++;
 
 Quickie:
-   ExReleaseFastMutex(&IopBusTypeGuidList->Lock);
+   ExReleaseFastMutex(&IopBusTypeGuidListLock);
    return FoundIndex;
 }
 
@@ -2843,7 +2844,8 @@ PnpInit(VOID)
     DPRINT("PnpInit()\n");
 
     KeInitializeSpinLock(&IopDeviceTreeLock);
-
+	ExInitializeFastMutex(&IopBusTypeGuidListLock);
+	
     /* Initialize the Bus Type GUID List */
     IopBusTypeGuidList = ExAllocatePool(PagedPool, sizeof(IO_BUS_TYPE_GUID_LIST));
     if (!IopBusTypeGuidList) {

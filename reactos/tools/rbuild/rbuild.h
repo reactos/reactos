@@ -298,6 +298,7 @@ enum ModuleType
 	BootProgram,
 	Win32SCR,
 	IdlHeader,
+	IdlInterface,
 	IsoRegTest,
 	LiveIsoRegTest,
 	EmbeddedTypeLib,

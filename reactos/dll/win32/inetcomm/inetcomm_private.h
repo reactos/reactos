@@ -61,8 +61,6 @@ HRESULT InternetTransport_DropConnection(InternetTransport *This);
 HRESULT InternetTransport_GetStatus(InternetTransport *This,
     IXPSTATUS *pCurrentStatus);
 HRESULT InternetTransport_ChangeStatus(InternetTransport *This, IXPSTATUS Status);
-HRESULT InternetTransport_Read(InternetTransport *This, int cbBuffer,
-    INETXPORT_COMPLETION_FUNCTION fnCompletion);
 HRESULT InternetTransport_ReadLine(InternetTransport *This,
     INETXPORT_COMPLETION_FUNCTION fnCompletion);
 HRESULT InternetTransport_Write(InternetTransport *This, const char *pvData,

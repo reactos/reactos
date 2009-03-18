@@ -204,28 +204,6 @@ VOID DeleteAddress(PADDRESS_FILE AddrFile)
 
 
 /*
- * FUNCTION: Deletes a connection endpoint file object
- * ARGUMENTS:
- *     Connection = Pointer to connection endpoint to delete
- */
-VOID DeleteConnectionEndpoint(
-  PCONNECTION_ENDPOINT Connection)
-{
-  KIRQL OldIrql;
-
-  TI_DbgPrint(MID_TRACE, ("Called.\n"));
-
-  /* Remove connection endpoint from the global list */
-  TcpipAcquireSpinLock(&ConnectionEndpointListLock, &OldIrql);
-  RemoveEntryList(&Connection->ListEntry);
-  TcpipReleaseSpinLock(&ConnectionEndpointListLock, OldIrql);
-
-  TCPFreeConnectionEndpoint(Connection);
-
-  TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
-}
-
-/*
  * FUNCTION: Open an address file object
  * ARGUMENTS:
  *     Request  = Pointer to TDI request structure for this request
@@ -242,7 +220,6 @@ NTSTATUS FileOpenAddress(
   PVOID Options)
 {
   IPv4_RAW_ADDRESS IPv4Address;
-  BOOLEAN Matched;
   PADDRESS_FILE AddrFile;
 
   TI_DbgPrint(MID_TRACE, ("Called (Proto %d).\n", Protocol));
@@ -260,21 +237,19 @@ NTSTATUS FileOpenAddress(
   AddrFile->Free = AddrFileFree;
 
   /* Make sure address is a local unicast address or 0 */
-
-  /* Locate address entry. If specified address is 0, a random address is chosen */
-
   /* FIXME: IPv4 only */
   AddrFile->Family = Address->Address[0].AddressType;
   IPv4Address = Address->Address[0].Address[0].in_addr;
-  if (IPv4Address == 0)
-      Matched = IPGetDefaultAddress(&AddrFile->Address);
+  if (IPv4Address != 0 &&
+      !AddrLocateADEv4(IPv4Address, &AddrFile->Address)) {
+	  exFreePool(AddrFile);
+	  TI_DbgPrint(MIN_TRACE, ("Non-local address given (0x%X).\n", DN2H(IPv4Address)));
+	  return STATUS_INVALID_PARAMETER;
+  }
   else
-      Matched = AddrLocateADEv4(IPv4Address, &AddrFile->Address);
-
-  if (!Matched) {
-    exFreePool(AddrFile);
-    TI_DbgPrint(MIN_TRACE, ("Non-local address given (0x%X).\n", DN2H(IPv4Address)));
-    return STATUS_INVALID_PARAMETER;
+  {
+	  /* Bound to the default address ... Copy the address type */
+	  AddrFile->Address.Type = IP_ADDRESS_V4;
   }
 
   TI_DbgPrint(MID_TRACE, ("Opening address %s for communication (P=%d U=%d).\n",
@@ -398,6 +373,29 @@ NTSTATUS FileCloseAddress(
     break;
   }
 
+  TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
+
+  return Status;
+}
+
+
+/*
+ * FUNCTION: Closes an address file object
+ * ARGUMENTS:
+ *     Request = Pointer to TDI request structure for this request
+ * RETURNS:
+ *     Status of operation
+ */
+NTSTATUS FileFreeAddress(
+  PTDI_REQUEST Request)
+{
+  PADDRESS_FILE AddrFile;
+  NTSTATUS Status = STATUS_SUCCESS;
+
+  AddrFile = Request->Handle.AddressHandle;
+
+  TI_DbgPrint(MID_TRACE, ("Called.\n"));
+
   DeleteAddress(AddrFile);
 
   TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
@@ -496,8 +494,37 @@ NTSTATUS FileCloseConnection(
   Connection = Request->Handle.ConnectionContext;
 
   TcpipRecursiveMutexEnter( &TCPLock, TRUE );
-  DeleteConnectionEndpoint(Connection);
+  TCPClose( Connection );
   TcpipRecursiveMutexLeave( &TCPLock );
+
+  TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
+
+  return STATUS_SUCCESS;
+}
+
+
+/*
+ * FUNCTION: Frees an connection file object
+ * ARGUMENTS:
+ *     Request = Pointer to TDI request structure for this request
+ * RETURNS:
+ *     Status of operation
+ */
+NTSTATUS FileFreeConnection(
+  PTDI_REQUEST Request)
+{
+  KIRQL OldIrql;
+  PCONNECTION_ENDPOINT Connection;
+
+  TI_DbgPrint(MID_TRACE, ("Called.\n"));
+
+  Connection = Request->Handle.ConnectionContext;
+
+  TcpipAcquireSpinLock(&ConnectionEndpointListLock, &OldIrql);
+  RemoveEntryList(&Connection->ListEntry);
+  TcpipReleaseSpinLock(&ConnectionEndpointListLock, OldIrql);
+
+  TCPFreeConnectionEndpoint(Connection);
 
   TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 
@@ -552,7 +579,7 @@ NTSTATUS FileOpenControlChannel(
  * RETURNS:
  *     Status of operation
  */
-NTSTATUS FileCloseControlChannel(
+NTSTATUS FileFreeControlChannel(
   PTDI_REQUEST Request)
 {
   PCONTROL_CHANNEL ControlChannel = Request->Handle.ControlChannel;

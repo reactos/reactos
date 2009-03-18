@@ -224,11 +224,16 @@ VOID DestroySocket( PAFD_FCB FCB ) {
     if( FCB->TdiDeviceName.Buffer )
 	ExFreePool(FCB->TdiDeviceName.Buffer);
 
-    /* HACK HACK HACK */
-    TdiCloseDevice( FCB->Connection.Handle,
-		    FCB->Connection.Object );
-    TdiCloseDevice( FCB->AddressFile.Handle,
-		    FCB->AddressFile.Object );
+	if (FCB->Connection.Object)
+	{
+		NtClose(FCB->Connection.Handle);
+		ObDereferenceObject(FCB->Connection.Object);
+	}
+	if (FCB->AddressFile.Object)
+	{
+		NtClose(FCB->AddressFile.Handle);
+		ObDereferenceObject(FCB->AddressFile.Object);
+	}
 
     ExFreePool(FCB);
     AFD_DbgPrint(MIN_TRACE,("Deleted (%x)\n", FCB));
@@ -408,10 +413,10 @@ AfdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	    return AfdDisconnect( DeviceObject, Irp, IrpSp );
 
 	case IOCTL_AFD_GET_SOCK_NAME:
-	    return AfdGetSockOrPeerName( DeviceObject, Irp, IrpSp, TRUE );
+	    return AfdGetSockName( DeviceObject, Irp, IrpSp );
 
         case IOCTL_AFD_GET_PEER_NAME:
-            return AfdGetSockOrPeerName( DeviceObject, Irp, IrpSp, FALSE );
+            return AfdGetPeerName( DeviceObject, Irp, IrpSp );
 
 	case IOCTL_AFD_GET_TDI_HANDLES:
 	    AFD_DbgPrint(MIN_TRACE, ("IOCTL_AFD_GET_TDI_HANDLES\n"));

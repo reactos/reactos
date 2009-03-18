@@ -1317,6 +1317,11 @@ static __inline__ __attribute__((always_inline)) void __sidt(void *Destination)
 	__asm__ __volatile__("sidt %0" : : "m"(*(short*)Destination) : "memory");
 }
 
+static __inline__ __attribute__((always_inline)) void _mm_pause(void)
+{
+	__asm__ __volatile__("pause");
+}
+
 #ifdef __cplusplus
 }
 #endif

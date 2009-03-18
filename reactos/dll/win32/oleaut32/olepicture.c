@@ -459,15 +459,15 @@ static HRESULT WINAPI OLEPictureImpl_QueryInterface(
    * Compare the riid with the interface IDs implemented by this object.
    */
   if (IsEqualIID(&IID_IUnknown, riid) || IsEqualIID(&IID_IPicture, riid))
-    *ppvObject = (IPicture*)This;
+    *ppvObject = This;
   else if (IsEqualIID(&IID_IDispatch, riid))
-    *ppvObject = (IDispatch*)&(This->lpvtblIDispatch);
+    *ppvObject = &This->lpvtblIDispatch;
   else if (IsEqualIID(&IID_IPictureDisp, riid))
-    *ppvObject = (IDispatch*)&(This->lpvtblIDispatch);
+    *ppvObject = &This->lpvtblIDispatch;
   else if (IsEqualIID(&IID_IPersist, riid) || IsEqualIID(&IID_IPersistStream, riid))
-    *ppvObject = (IPersistStream*)&(This->lpvtblIPersistStream);
+    *ppvObject = &This->lpvtblIPersistStream;
   else if (IsEqualIID(&IID_IConnectionPointContainer, riid))
-    *ppvObject = (IConnectionPointContainer*)&(This->lpvtblIConnectionPointContainer);
+    *ppvObject = &This->lpvtblIConnectionPointContainer;
 
   /*
    * Check that we obtained an interface.
@@ -710,17 +710,27 @@ static HRESULT WINAPI OLEPictureImpl_Render(IPicture *iface, HDC hdc,
 
   case PICTYPE_METAFILE:
   {
-    POINT prevOrg;
-    SIZE prevExt;
+    POINT prevOrg, prevWndOrg;
+    SIZE prevExt, prevWndExt;
     int oldmode;
 
+    /* Render the WMF to the appropriate location by setting the
+       appropriate ratio between "device units" and "logical units" */
     oldmode = SetMapMode(hdc, MM_ANISOTROPIC);
+    /* For the "source rectangle" the y-axis must be inverted */
+    SetWindowOrgEx(hdc, xSrc, This->himetricHeight-ySrc, &prevWndOrg);
+    SetWindowExtEx(hdc, cxSrc, -cySrc, &prevWndExt);
+    /* For the "destination rectangle" no inversion is necessary */
     SetViewportOrgEx(hdc, x, y, &prevOrg);
     SetViewportExtEx(hdc, cx, cy, &prevExt);
 
     if (!PlayMetaFile(hdc, This->desc.u.wmf.hmeta))
         ERR("PlayMetaFile failed!\n");
 
+    /* We're done, restore the DC to the previous settings for converting
+       logical units to device units */
+    SetWindowExtEx(hdc, prevWndExt.cx, prevWndExt.cy, NULL);
+    SetWindowOrgEx(hdc, prevWndOrg.x, prevWndOrg.y, NULL);
     SetViewportExtEx(hdc, prevExt.cx, prevExt.cy, NULL);
     SetViewportOrgEx(hdc, prevOrg.x, prevOrg.y, NULL);
     SetMapMode(hdc, oldmode);
@@ -1054,7 +1064,7 @@ struct gifdata {
 };
 
 static int _gif_inputfunc(GifFileType *gif, GifByteType *data, int len) {
-    struct gifdata *gd = (struct gifdata*)gif->UserData;
+    struct gifdata *gd = gif->UserData;
 
     if (len+gd->curoff > gd->len) {
         ERR("Trying to read %d bytes, but only %d available.\n",len, gd->len-gd->curoff);
@@ -2001,7 +2011,7 @@ static int serializeBMP(HBITMAP hBitmap, void ** ppBuffer, unsigned int * pLengt
     *ppBuffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, *pLength);
 
     /* Fill the BITMAPFILEHEADER */
-    pFileHeader = (BITMAPFILEHEADER *)(*ppBuffer);
+    pFileHeader = *ppBuffer;
     pFileHeader->bfType = BITMAP_FORMAT_BMP;
     pFileHeader->bfSize = *pLength;
     pFileHeader->bfOffBits =
@@ -2876,4 +2886,4 @@ static const IClassFactoryVtbl SPCF_Vtbl = {
 };
 static IClassFactoryImpl STDPIC_CF = {&SPCF_Vtbl, 1 };
 
-void _get_STDPIC_CF(LPVOID *ppv) { *ppv = (LPVOID)&STDPIC_CF; }
+void _get_STDPIC_CF(LPVOID *ppv) { *ppv = &STDPIC_CF; }

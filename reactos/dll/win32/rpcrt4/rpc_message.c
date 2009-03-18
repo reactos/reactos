@@ -321,7 +321,7 @@ NCA_STATUS RPC2NCA_STATUS(RPC_STATUS status)
     }
 }
 
-RPC_STATUS NCA2RPC_STATUS(NCA_STATUS status)
+static RPC_STATUS NCA2RPC_STATUS(NCA_STATUS status)
 {
     switch (status)
     {
@@ -687,7 +687,7 @@ RPC_STATUS RPCRT4_Send(RpcConnection *Connection, RpcPktHdr *Header,
 }
 
 /* validates version and frag_len fields */
-RPC_STATUS RPCRT4_ValidateCommonHeader(const RpcPktCommonHdr *hdr)
+static RPC_STATUS RPCRT4_ValidateCommonHeader(const RpcPktCommonHdr *hdr)
 {
   DWORD hdr_length;
 
@@ -720,7 +720,7 @@ RPC_STATUS RPCRT4_ValidateCommonHeader(const RpcPktCommonHdr *hdr)
  * 
  * Receive a fragment from a connection.
  */
-RPC_STATUS RPCRT4_receive_fragment(RpcConnection *Connection, RpcPktHdr **Header, void **Payload)
+static RPC_STATUS RPCRT4_receive_fragment(RpcConnection *Connection, RpcPktHdr **Header, void **Payload)
 {
   RPC_STATUS status;
   DWORD hdr_length;

@@ -151,6 +151,10 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000040d","Layout File",
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000040d","Layout Text",0x00000000,"Hebrew"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000040d","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5083"
 
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000040e","Layout File",0x00000000,"kbdhu.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000040e","Layout Text",0x00000000,"Hungarian"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000040e","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5033"
+
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000040f","Layout File",0x00000000,"kbdic.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000040f","Layout Text",0x00000000,"Icelandic"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000040f","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5013"
@@ -503,6 +507,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","0814",0x00000000,"l_intl.n
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","0415",0x00000000,"l_intl.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","0416",0x00000000,"l_intl.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","0816",0x00000000,"l_intl.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","0417",0x00000000,"l_intl.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","0418",0x00000000,"l_intl.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","0419",0x00000000,"l_intl.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","041a",0x00000000,"l_intl.nls"
@@ -540,8 +545,11 @@ HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","083e",0x00000000,"l_intl.n
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","0441",0x00000000,"l_intl.nls"
 ;HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","0443",0x00000000,"l_intl.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","0843",0x00000000,"l_intl.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","0445",0x00000000,"l_intl.nls"
 ;HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","0455",0x00000000,"l_intl.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","0456",0x00000000,"l_intl.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","048f",0x00000000,"l_intl.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","0490",0x00000000,"l_intl.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","Default",0x00000000,"0409"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","InstallLanguage",0x00000000,"0409"
 
@@ -611,6 +619,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Locale","00000814",0x00000000,"1"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Locale","00000415",0x00000000,"2"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Locale","00000416",0x00000000,"1"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Locale","00000816",0x00000000,"1"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Locale","00000417",0x00000000,"1"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Locale","00000418",0x00000000,"2"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Locale","00000419",0x00000000,"5"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Locale","0000041a",0x00000000,"2"
@@ -648,8 +657,11 @@ HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Locale","0000083e",0x00000000,"1"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Locale","00000441",0x00000000,"1"
 ;HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Locale","00000443",0x00000000,"6"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Locale","00000843",0x00000000,"5"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Locale","00000445",0x00000000,"f"
 ;HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Locale","00000455",0x00000000,""
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Locale","00000456",0x00000000,"1"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Locale","0000048f",0x00000000,"1"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Locale","00000490",0x00000000,"1"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language Groups","1",0x00000000,"1"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language Groups","2",0x00000000,"1"
@@ -740,7 +752,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\DOS Devices","UNC",0x0000
 ; System environment settings
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","ComSpec",0x00020000,"%SystemRoot%\system32\cmd.exe"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","OS",0x00020000,"ReactOS"
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","Path",0x00020000,"%SystemRoot%\bin;%SystemRoot%\system32;%SystemRoot%"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","Path",0x00020000,"%SystemRoot%\bin;%SystemRoot%\system32;%SystemRoot%;%SystemRoot%\system32\wbem"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","windir",0x00020000,"%SystemRoot%"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","TEMP",0x00020000,"%SystemDrive%\TEMP"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","TMP",0x00020000,"%SystemDrive%\TEMP"
@@ -751,7 +763,24 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","PROCESSOR_A
 ; Known DLLs
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\KnownDlls","DllDirectory",0x00020000,"%SystemRoot%\system32"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\KnownDlls","advapi32",0x00000000,"advapi32.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\KnownDlls","comdlg32",0x00000000,"comdlg32.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\KnownDlls","gdi32",0x00000000,"gdi32.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\KnownDlls","imagehlp",0x00000000,"imagehlp.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\KnownDlls","kernel32",0x00000000,"kernel32.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\KnownDlls","lz32",0x00000000,"lz32.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\KnownDlls","ole32",0x00000000,"ole32.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\KnownDlls","oleaut32",0x00000000,"oleaut32.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\KnownDlls","olecli32",0x00000000,"olecli32.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\KnownDlls","olesvr32",0x00000000,"olesvr32.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\KnownDlls","olethk32",0x00000000,"olethk32.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\KnownDlls","rpcrt4",0x00000000,"rpcrt4.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\KnownDlls","shell32",0x00000000,"shell32.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\KnownDlls","url",0x00000000,"url.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\KnownDlls","urlmon",0x00000000,"urlmon.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\KnownDlls","user32",0x00000000,"user32.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\KnownDlls","version",0x00000000,"version.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\KnownDlls","wininet",0x00000000,"wininet.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\KnownDlls","wldap32",0x00000000,"wldap32.dll"
 
 ; Pagefile settings
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management","PagingFiles",0x00010000, \
@@ -910,21 +939,6 @@ HKLM,"SYSTEM\CurrentControlSet\Services\kbdclass","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\kbdclass\Parameters","ConnectMultiplePorts",0x00010001,1
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E96B-E325-11CE-BFC1-08002BE10318}","UpperFilters",0x00010000,"kbdclass"
 
-; SB16 driver
-HKLM,"SYSTEM\CurrentControlSet\Services\sndblst","Group",0x00000000,"Base"
-HKLM,"SYSTEM\CurrentControlSet\Services\sndblst","ServiceType",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\sndblst","Type",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\sndblst","Start",0x00010001,0x00000004
-HKLM,"SYSTEM\CurrentControlSet\Services\sndblst","ErrorControl",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\sndblst","ImagePath",0x00020000,"system32\drivers\sndblst.sys"
-;HKLM,"SYSTEM\CurrentControlSet\Services\sndblst\Parameters\Device0","DmaChannel",0x00010001,0x00000001
-;HKLM,"SYSTEM\CurrentControlSet\Services\sndblst\Parameters\Device0","DmaChannel16",0x00010001,0x00000005
-;HKLM,"SYSTEM\CurrentControlSet\Services\sndblst\Parameters\Device0","Port",0x00010001,0x00000220
-;HKLM,"SYSTEM\CurrentControlSet\Services\sndblst\Parameters\Device0","Interrupt",0x00010001,0x00000005
-;HKLM,"SYSTEM\CurrentControlSet\Services\sndblst\Parameters\Device0","DSP Version",0x00010001,0x00000401
-HKLM,"SYSTEM\CurrentControlSet\Services\sndblst\Parameters\Device0\Devices","SBWaveIn0",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\sndblst\Parameters\Device0\Devices","SBWaveOut0",0x00010001,0x00000002
-
 ; MPU-401 MIDI driver
 HKLM,"SYSTEM\CurrentControlSet\Services\mpu401","Group",0x00000000,"Base"
 HKLM,"SYSTEM\CurrentControlSet\Services\mpu401","ServiceType",0x00010001,0x00000001
@@ -1027,6 +1041,17 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Spooler","ObjectName",0x00000000,"LocalS
 HKLM,"SYSTEM\CurrentControlSet\Services\Spooler","Start",0x00010001,0x00000002
 HKLM,"SYSTEM\CurrentControlSet\Services\Spooler","Type",0x00010001,0x00000110
 
+; WLAN service
+HKLM,"SYSTEM\CurrentControlSet\Services\WlanSvc","DependOnService",0x00010000,"RPCSS"
+HKLM,"SYSTEM\CurrentControlSet\Services\WlanSvc","DisplayName",0x00000000,"WLAN Service"
+HKLM,"SYSTEM\CurrentControlSet\Services\WlanSvc","Description",0x00000000,"WLAN Service"
+HKLM,"SYSTEM\CurrentControlSet\Services\WlanSvc","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\WlanSvc","Group",0x00000000,"TDI"
+HKLM,"SYSTEM\CurrentControlSet\Services\WlanSvc","ImagePath",0x00020000,"%SystemRoot%\system32\wlansvc.exe"
+HKLM,"SYSTEM\CurrentControlSet\Services\WlanSvc","ObjectName",0x00000000,"LocalSystem"
+HKLM,"SYSTEM\CurrentControlSet\Services\WlanSvc","Start",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Services\WlanSvc","Type",0x00010001,0x00000110
+
 ; Simple TCP services
 HKLM,"SYSTEM\CurrentControlSet\Services\tcpsvcs","Description",0x00000000,"Supports the following TCP/IP services: Chargen, Daytime, Discard, Echo, QOTD"
 HKLM,"SYSTEM\CurrentControlSet\Services\tcpsvcs","DisplayName",0x00000000,"Simple TCP/IP Services"
@@ -1035,6 +1060,14 @@ HKLM,"SYSTEM\CurrentControlSet\Services\tcpsvcs","Group",0x00000000,"Network"
 HKLM,"SYSTEM\CurrentControlSet\Services\tcpsvcs","ImagePath",0x00020000,"%SystemRoot%\system32\tcpsvcs.exe"
 HKLM,"SYSTEM\CurrentControlSet\Services\tcpsvcs","Start",0x00010001,0x00000003
 HKLM,"SYSTEM\CurrentControlSet\Services\tcpsvcs","Type",0x00010001,0x00000020
+
+; Sound Blaster (NT4)
+;HKLM,"SYSTEM\CurrentControlSet\Services\sndblst","Description",0x00000000,"Sound Blaster (NT4)"
+;HKLM,"SYSTEM\CurrentControlSet\Services\sndblst","ErrorControl",0x00010001,0x00000001
+;HKLM,"SYSTEM\CurrentControlSet\Services\sndblst","Group",0x00000000,"Base"
+;HKLM,"SYSTEM\CurrentControlSet\Services\sndblst","ImagePath",0x00020000,"system32\drivers\sndblst.sys"
+;HKLM,"SYSTEM\CurrentControlSet\Services\sndblst","Start",0x00010001,0x00000003
+;HKLM,"SYSTEM\CurrentControlSet\Services\sndblst","Type",0x00010001,0x00000001
 
 ; Virtual FAT filesystem driver
 HKLM,"SYSTEM\CurrentControlSet\Services\fastfat","ErrorControl",0x00010001,0x00000000

@@ -871,13 +871,6 @@ void reduce_to_longfilename(WCHAR* filename)
         memmove(filename, p+1, (strlenW(p+1)+1)*sizeof(WCHAR));
 }
 
-void reduce_to_shortfilename(WCHAR* filename)
-{
-    LPWSTR p = strchrW(filename,'|');
-    if (p)
-        *p = 0;
-}
-
 LPWSTR create_component_advertise_string(MSIPACKAGE* package, 
                 MSICOMPONENT* component, LPCWSTR feature)
 {
@@ -1070,19 +1063,4 @@ WCHAR* generate_error_string(MSIPACKAGE *package, UINT error, DWORD count, ... )
         data[0] = 0;
     msiobj_release( &rec->hdr );
     return data;
-}
-
-void msi_ui_error( DWORD msg_id, DWORD type )
-{
-    WCHAR text[2048];
-
-    static const WCHAR title[] = {
-        'W','i','n','d','o','w','s',' ','I','n','s','t','a','l','l','e','r',0
-    };
-
-    if (!MsiLoadStringW( -1, msg_id, text, sizeof(text) / sizeof(text[0]),
-                         MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL) ))
-        return;
-
-    MessageBoxW( NULL, text, title, type );
 }

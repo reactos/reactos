@@ -46,123 +46,6 @@ IsFirstStageSetup(
 	return ret;
 }
 
-static VOID NTAPI
-SendStartDevice(
-	IN PDRIVER_OBJECT DriverObject,
-	IN PVOID Context,
-	IN ULONG Count)
-{
-	PDEVICE_OBJECT Pdo;
-	PCM_RESOURCE_LIST AllocatedResources = NULL;
-	PCM_RESOURCE_LIST AllocatedResourcesTranslated = NULL;
-	PDEVICE_OBJECT TopDeviceObject = NULL;
-	KEVENT Event;
-	IO_STATUS_BLOCK IoStatusBlock;
-	PIRP Irp;
-	PIO_STACK_LOCATION Stack;
-	ULONG ResourceListSize;
-	NTSTATUS Status;
-
-	Pdo = (PDEVICE_OBJECT)Context;
-	TRACE_(I8042PRT, "SendStartDevice(%p)\n", Pdo);
-
-	/* Create default resource list */
-	ResourceListSize = sizeof(CM_RESOURCE_LIST) + 3 * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
-	AllocatedResources = ExAllocatePoolWithTag(PagedPool, ResourceListSize, I8042PRT_TAG);
-	if (!AllocatedResources)
-	{
-		WARN_(I8042PRT, "ExAllocatePoolWithTag() failed\n");
-		Status = STATUS_NO_MEMORY;
-		goto cleanup;
-	}
-	AllocatedResources->Count = 1;
-	AllocatedResources->List[0].PartialResourceList.Version = 1;
-	AllocatedResources->List[0].PartialResourceList.Revision = 1;
-	AllocatedResources->List[0].PartialResourceList.Count = 3;
-	/* Data port */
-	AllocatedResources->List[0].PartialResourceList.PartialDescriptors[0].Type = CmResourceTypePort;
-	AllocatedResources->List[0].PartialResourceList.PartialDescriptors[0].ShareDisposition = CmResourceShareDeviceExclusive;
-	AllocatedResources->List[0].PartialResourceList.PartialDescriptors[0].Flags = 0; /* FIXME */
-	AllocatedResources->List[0].PartialResourceList.PartialDescriptors[0].u.Port.Start.u.HighPart = 0;
-	AllocatedResources->List[0].PartialResourceList.PartialDescriptors[0].u.Port.Start.u.LowPart = KEYBOARD_DATA_PORT;
-	AllocatedResources->List[0].PartialResourceList.PartialDescriptors[0].u.Port.Length = 1;
-	/* Control port */
-	AllocatedResources->List[0].PartialResourceList.PartialDescriptors[1].Type = CmResourceTypePort;
-	AllocatedResources->List[0].PartialResourceList.PartialDescriptors[1].ShareDisposition = CmResourceShareDeviceExclusive;
-	AllocatedResources->List[0].PartialResourceList.PartialDescriptors[1].Flags = 0; /* FIXME */
-	AllocatedResources->List[0].PartialResourceList.PartialDescriptors[1].u.Port.Start.u.HighPart = 0;
-	AllocatedResources->List[0].PartialResourceList.PartialDescriptors[1].u.Port.Start.u.LowPart = KEYBOARD_CONTROL_PORT;
-	AllocatedResources->List[0].PartialResourceList.PartialDescriptors[1].u.Port.Length = 1;
-	/* Interrupt */
-	AllocatedResources->List[0].PartialResourceList.PartialDescriptors[2].Type = CmResourceTypeInterrupt;
-	AllocatedResources->List[0].PartialResourceList.PartialDescriptors[2].ShareDisposition = CmResourceShareDeviceExclusive;
-	AllocatedResources->List[0].PartialResourceList.PartialDescriptors[2].Flags = CM_RESOURCE_INTERRUPT_LATCHED;
-	AllocatedResources->List[0].PartialResourceList.PartialDescriptors[2].u.Interrupt.Level = KEYBOARD_IRQ;
-	AllocatedResources->List[0].PartialResourceList.PartialDescriptors[2].u.Interrupt.Vector = 0;
-	AllocatedResources->List[0].PartialResourceList.PartialDescriptors[2].u.Interrupt.Affinity = (LONG_PTR)(KAFFINITY)-1;
-
-	/* Create default resource list translated */
-	AllocatedResourcesTranslated = ExAllocatePoolWithTag(PagedPool, ResourceListSize, I8042PRT_TAG);
-	if (!AllocatedResourcesTranslated)
-	{
-		WARN_(I8042PRT, "ExAllocatePoolWithTag() failed\n");
-		Status = STATUS_NO_MEMORY;
-		goto cleanup;
-	}
-	RtlCopyMemory(AllocatedResourcesTranslated, AllocatedResources, ResourceListSize);
-	AllocatedResourcesTranslated->List[0].PartialResourceList.PartialDescriptors[2].u.Interrupt.Vector = HalGetInterruptVector(
-			Internal, 0,
-			AllocatedResources->List[0].PartialResourceList.PartialDescriptors[2].u.Interrupt.Level,
-			AllocatedResources->List[0].PartialResourceList.PartialDescriptors[2].u.Interrupt.Vector,
-			(PKIRQL)&AllocatedResourcesTranslated->List[0].PartialResourceList.PartialDescriptors[2].u.Interrupt.Level,
-			(PVOID)&AllocatedResourcesTranslated->List[0].PartialResourceList.PartialDescriptors[2].u.Interrupt.Affinity);
-
-	/* Send IRP_MN_START_DEVICE */
-	TopDeviceObject = IoGetAttachedDeviceReference(Pdo);
-	KeInitializeEvent(
-		&Event,
-		NotificationEvent,
-		FALSE);
-	Irp = IoBuildSynchronousFsdRequest(
-		IRP_MJ_PNP,
-		TopDeviceObject,
-		NULL,
-		0,
-		NULL,
-		&Event,
-		&IoStatusBlock);
-	Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
-	Irp->IoStatus.Information = 0;
-	Stack = IoGetNextIrpStackLocation(Irp);
-	Stack->MinorFunction = IRP_MN_START_DEVICE;
-	Stack->Parameters.StartDevice.AllocatedResources = AllocatedResources;
-	Stack->Parameters.StartDevice.AllocatedResourcesTranslated = AllocatedResourcesTranslated;
-	Status = IoCallDriver(TopDeviceObject, Irp);
-	if (Status == STATUS_PENDING)
-	{
-		KeWaitForSingleObject(
-			&Event,
-			Executive,
-			KernelMode,
-			FALSE,
-			NULL);
-		Status = IoStatusBlock.Status;
-	}
-	if (!NT_SUCCESS(Status))
-	{
-		WARN_(I8042PRT, "IoCallDriver() failed with status 0x%08lx\n", Status);
-		goto cleanup;
-	}
-
-cleanup:
-	if (TopDeviceObject)
-		ObDereferenceObject(TopDeviceObject);
-	if (AllocatedResources)
-		ExFreePoolWithTag(AllocatedResources, I8042PRT_TAG);
-	if (AllocatedResourcesTranslated)
-		ExFreePoolWithTag(AllocatedResourcesTranslated, I8042PRT_TAG);
-}
-
 static NTSTATUS
 AddRegistryEntry(
 	IN PCWSTR PortTypeName,
@@ -251,12 +134,8 @@ i8042AddLegacyKeyboard(
 		goto cleanup;
 	}
 
-	/* We will send the IRP_MN_START_DEVICE later, once kbdclass is loaded */
+	/* We will send the IRP_MN_START_DEVICE later when kbdclass looks for legacy drivers */
 	AddRegistryEntry(L"KeyboardPort", &KeyboardName, RegistryPath->Buffer);
-	IoRegisterBootDriverReinitialization(
-		DriverObject,
-		SendStartDevice,
-		Pdo);
 
 	Status = STATUS_SUCCESS;
 	/* Yes, completly forget the Pdo pointer, as we will never

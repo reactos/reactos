@@ -284,9 +284,12 @@ GpStatus WINGDIPAPI GdipSetStringFormatTrimming(GpStringFormat *format,
     return Ok;
 }
 
-GpStatus WINGDIPAPI GdipSetStringFormatFlags(GDIPCONST GpStringFormat *format, INT flags)
+GpStatus WINGDIPAPI GdipSetStringFormatFlags(GpStringFormat *format, INT flags)
 {
-    FIXME("format (%p) flags (%d)\n", format, flags);
+    if(!format)
+        return InvalidParameter;
+
+    format->attr = flags;
 
     return Ok;
 }

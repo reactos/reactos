@@ -67,15 +67,30 @@ BOOL ExecuteIf(PARSED_COMMAND *Cmd)
 {
 	INT result = FALSE; /* when set cause 'then' clause to be executed */
 	LPTSTR param;
+	LPTSTR Left = NULL, Right;
+
+	if (Cmd->If.LeftArg)
+	{
+		Left = DoDelayedExpansion(Cmd->If.LeftArg);
+		if (!Left)
+			return FALSE;
+	}
+	Right = DoDelayedExpansion(Cmd->If.RightArg);
+	if (!Right)
+	{
+		cmd_free(Left);
+		return FALSE;
+	}
 
 	if (Cmd->If.Operator == IF_CMDEXTVERSION)
 	{
 		/* IF CMDEXTVERSION n: check if Command Extensions version
 		 * is greater or equal to n */
-		DWORD n = _tcstoul(Cmd->If.RightArg, &param, 10);
+		DWORD n = _tcstoul(Right, &param, 10);
 		if (*param != _T('\0'))
 		{
-			error_syntax(Cmd->If.RightArg);
+			error_syntax(Right);
+			cmd_free(Right);
 			return FALSE;
 		}
 		result = (2 >= n);
@@ -83,15 +98,16 @@ BOOL ExecuteIf(PARSED_COMMAND *Cmd)
 	else if (Cmd->If.Operator == IF_DEFINED)
 	{
 		/* IF DEFINED var: check if environment variable exists */
-		result = (GetEnvVarOrSpecial(Cmd->If.RightArg) != NULL);
+		result = (GetEnvVarOrSpecial(Right) != NULL);
 	}
 	else if (Cmd->If.Operator == IF_ERRORLEVEL)
 	{
 		/* IF ERRORLEVEL n: check if last exit code is greater or equal to n */
-		INT n = _tcstol(Cmd->If.RightArg, &param, 10);
+		INT n = _tcstol(Right, &param, 10);
 		if (*param != _T('\0'))
 		{
-			error_syntax(Cmd->If.RightArg);
+			error_syntax(Right);
+			cmd_free(Right);
 			return FALSE;
 		}
 		result = (nErrorLevel >= n);
@@ -102,9 +118,9 @@ BOOL ExecuteIf(PARSED_COMMAND *Cmd)
 		WIN32_FIND_DATA f;
 		HANDLE hFind;
 
-		StripQuotes(Cmd->If.RightArg);
+		StripQuotes(Right);
 
-		hFind = FindFirstFile(Cmd->If.RightArg, &f);
+		hFind = FindFirstFile(Right, &f);
 		if (hFind != INVALID_HANDLE_VALUE)
 		{
 			result = TRUE;
@@ -120,11 +136,11 @@ BOOL ExecuteIf(PARSED_COMMAND *Cmd)
 		if (Cmd->If.Operator == IF_STRINGEQ)
 		{
 			/* IF str1 == str2 */
-			result = StringCmp(Cmd->If.LeftArg, Cmd->If.RightArg) == 0;
+			result = StringCmp(Left, Right) == 0;
 		}
 		else
 		{
-			result = GenericCmp(StringCmp, Cmd->If.LeftArg, Cmd->If.RightArg);
+			result = GenericCmp(StringCmp, Left, Right);
 			switch (Cmd->If.Operator)
 			{
 			case IF_EQU: result = (result == 0); break;
@@ -136,6 +152,9 @@ BOOL ExecuteIf(PARSED_COMMAND *Cmd)
 			}
 		}
 	}
+
+	cmd_free(Left);
+	cmd_free(Right);
 
 	if (result ^ ((Cmd->If.Flags & IFFLAG_NEGATE) != 0))
 	{

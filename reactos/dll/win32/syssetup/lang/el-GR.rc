@@ -223,6 +223,7 @@ BEGIN
 	IDS_SYS_TOOLS        "Εργαλεία Συστήματος"
 	IDS_CMT_CHARMAP      "Πίνακας Χαρακτήρων"
 	IDS_CMT_KBSWITCH     "Αλλαγή Διάταξης Πληκτρολογίου"
+    IDS_CMT_DXDIAG       "Launch ReactX-Diagnostic program"
 END
 
 
@@ -230,6 +231,13 @@ STRINGTABLE
 BEGIN
 	IDS_SYS_ACCESSIBILITY        "Για άτομα με ειδικές ανάγκες"
 	IDS_CMT_MAGNIFY      	     "Μεγεθυντικός φακός"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SYS_ENTERTAINMENT       "Entertainment"
+    IDS_CMT_MPLAY32             "Launch Multimedia Player"
+    IDS_CMT_SNDVOL32            "Launch Volume Control"
 END
 
 STRINGTABLE
@@ -252,6 +260,7 @@ BEGIN
     IDS_SHORT_DOWNLOADER "Download !.lnk"
     IDS_SHORT_SERVICE    "Υπηρεσίες.lnk"
     IDS_SHORT_DEVICE     "Διαχείριση συσκευών.lnk"
+    IDS_SHORT_MPLAY32    "Multimedia Player.lnk"
     IDS_SHORT_CALC       "Αριθμομηχανή.lnk"
     IDS_SHORT_REGEDIT    "Επεξεργαστής μητρώου.lnk"
     IDS_SHORT_NOTEPAD    "Σημειωματάριο.lnk"
@@ -265,6 +274,8 @@ BEGIN
     IDS_SHORT_KBSWITCH   "Αλλαγή Διάταξης Πληκτρολογίου.lnk"
     IDS_SHORT_EVENTVIEW  "Προβολή Συμβάντων.lnk"
     IDS_SHORT_MSCONFIG   "Βοηθητικό πρόγραμμα ρύθμισης παραμέτρων.lnk"
+    IDS_SHORT_SNDVOL32   "Volume Control.lnk"
+    IDS_SHORT_DXDIAG     "ReactX Diagnostic.lnk"
 END
 
 STRINGTABLE

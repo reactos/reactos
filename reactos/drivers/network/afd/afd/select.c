@@ -181,7 +181,7 @@ AfdSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	Irp->IoStatus.Status = STATUS_NO_MEMORY;
 	Irp->IoStatus.Information = 0;
 	IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
-	return Irp->IoStatus.Status;
+	return STATUS_NO_MEMORY;
     }
 
     if( Exclusive ) {
@@ -262,8 +262,6 @@ AfdSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	KeReleaseSpinLock( &DeviceExt->Lock, OldIrql );
 
     AFD_DbgPrint(MID_TRACE,("Returning %x\n", Status));
-
-    Irp->IoStatus.Status = Status;
 
     return Status;
 }

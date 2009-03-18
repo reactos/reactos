@@ -58,6 +58,7 @@ const struct ModuleHandlerInformations ModuleHandlerInformations[] = {
 	{ HostFalse, "", "", "-nostartfiles -nostdlib" }, // BootProgram
 	{ HostFalse, "", "", "" }, // Win32SCR
 	{ HostFalse, "", "", "" }, // IdlHeader
+	{ HostFalse, "", "", "" }, // IdlInterface
 	{ HostFalse, "", "", "" }, // IsoRegTest
 	{ HostFalse, "", "", "" }, // LiveIsoRegTest
 	{ HostFalse, "", "", "" }, // EmbeddedTypeLib
@@ -544,6 +545,11 @@ MingwBackend::GenerateGlobalVariables () const
 	fprintf ( fMakefile, "PROJECT_WIDLFLAGS := $(PROJECT_CINCLUDES) $(PROJECT_CDEFINES)\n" );
 	fprintf ( fMakefile, "PROJECT_LFLAGS := '$(shell ${TARGET_CC} -print-libgcc-file-name)' %s\n", GenerateProjectLFLAGS ().c_str () );
 	fprintf ( fMakefile, "PROJECT_LPPFLAGS := '$(shell ${TARGET_CPP} -print-file-name=libstdc++.a)' '$(shell ${TARGET_CPP} -print-file-name=libgcc.a)' '$(shell ${TARGET_CPP} -print-file-name=libmingw32.a)' '$(shell ${TARGET_CPP} -print-file-name=libmingwex.a)'\n" );
+	/* hack to get libgcc_eh.a, should check mingw version or something */
+	if (Environment::GetArch() == "amd64")
+	{
+	    fprintf ( fMakefile, "PROJECT_LPPFLAGS += '$(shell ${TARGET_CPP} -print-file-name=libgcc_eh.a)'\n" );
+	}
 	/* hack to get libgcc_eh.a, should check mingw version or something */
 	if (Environment::GetArch() == "amd64")
 	{

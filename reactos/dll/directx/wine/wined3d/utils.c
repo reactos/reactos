@@ -1365,8 +1365,6 @@ void set_texture_matrix(const float *smat, DWORD flags, BOOL calculatedCoords, B
 }
 #undef GLINFO_LOCATION
 
-#define GLINFO_LOCATION ((IWineD3DImpl *)(This->wineD3D))->gl_info
-
 /* This small helper function is used to convert a bitmask into the number of masked bits */
 unsigned int count_bits(unsigned int mask)
 {
@@ -1456,8 +1454,6 @@ BOOL getDepthStencilBits(WINED3DFORMAT fmt, short *depthSize, short *stencilSize
     TRACE("Returning depthSize: %d and stencilSize: %d for fmt=%s\n", *depthSize, *stencilSize, debug_d3dformat(fmt));
     return TRUE;
 }
-
-#undef GLINFO_LOCATION
 
 /* DirectDraw stuff */
 WINED3DFORMAT pixelformat_for_depth(DWORD depth) {
@@ -2096,17 +2092,21 @@ void gen_ffp_frag_op(IWineD3DStateBlockImpl *stateblock, struct ffp_frag_setting
     if(stateblock->renderState[WINED3DRS_FOGENABLE] == FALSE) {
         settings->fog = FOG_OFF;
     } else if(stateblock->renderState[WINED3DRS_FOGTABLEMODE] == WINED3DFOG_NONE) {
-        switch(stateblock->renderState[WINED3DRS_FOGVERTEXMODE]) {
-            case WINED3DFOG_NONE:
-            case WINED3DFOG_LINEAR:
-                settings->fog = FOG_LINEAR;
-                break;
-            case WINED3DFOG_EXP:
-                settings->fog = FOG_EXP;
-                break;
-            case WINED3DFOG_EXP2:
-                settings->fog = FOG_EXP2;
-                break;
+        if(use_vs(stateblock) || ((IWineD3DVertexDeclarationImpl *) stateblock->vertexDecl)->position_transformed) {
+            settings->fog = FOG_LINEAR;
+        } else {
+            switch(stateblock->renderState[WINED3DRS_FOGVERTEXMODE]) {
+                case WINED3DFOG_NONE:
+                case WINED3DFOG_LINEAR:
+                    settings->fog = FOG_LINEAR;
+                    break;
+                case WINED3DFOG_EXP:
+                    settings->fog = FOG_EXP;
+                    break;
+                case WINED3DFOG_EXP2:
+                    settings->fog = FOG_EXP2;
+                    break;
+            }
         }
     } else {
         switch(stateblock->renderState[WINED3DRS_FOGTABLEMODE]) {
@@ -2132,7 +2132,7 @@ void gen_ffp_frag_op(IWineD3DStateBlockImpl *stateblock, struct ffp_frag_setting
 const struct ffp_frag_desc *find_ffp_frag_shader(const struct hash_table_t *fragment_shaders,
         const struct ffp_frag_settings *settings)
 {
-    return (const struct ffp_frag_desc *)hash_table_get(fragment_shaders, settings);
+    return hash_table_get(fragment_shaders, settings);
 }
 
 void add_ffp_frag_shader(struct hash_table_t *shaders, struct ffp_frag_desc *desc) {
@@ -2241,7 +2241,7 @@ void sampler_texdim(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3DCont
 
 unsigned int ffp_frag_program_key_hash(const void *key)
 {
-    const struct ffp_frag_settings *k = (const struct ffp_frag_settings *)key;
+    const struct ffp_frag_settings *k = key;
     unsigned int hash = 0, i;
     const DWORD *blob;
 
@@ -2268,8 +2268,8 @@ unsigned int ffp_frag_program_key_hash(const void *key)
 
 BOOL ffp_frag_program_key_compare(const void *keya, const void *keyb)
 {
-    const struct ffp_frag_settings *ka = (const struct ffp_frag_settings *)keya;
-    const struct ffp_frag_settings *kb = (const struct ffp_frag_settings *)keyb;
+    const struct ffp_frag_settings *ka = keya;
+    const struct ffp_frag_settings *kb = keyb;
 
     return memcmp(ka, kb, sizeof(*ka)) == 0;
 }

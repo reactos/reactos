@@ -376,6 +376,7 @@ EnumFontFamiliesW(HDC hdc, LPCWSTR lpszFamily, FONTENUMPROCW lpEnumFontFamProc,
   LogFont.lfCharSet = DEFAULT_CHARSET;
   if (NULL != lpszFamily)
     {
+      if (!*lpszFamily) return 1;
       lstrcpynW(LogFont.lfFaceName, lpszFamily, LF_FACESIZE);
     }
 
@@ -417,6 +418,7 @@ EnumFontFamiliesA(HDC hdc, LPCSTR lpszFamily, FONTENUMPROCA lpEnumFontFamProc,
   LogFont.lfCharSet = DEFAULT_CHARSET;
   if (NULL != lpszFamily)
     {
+      if (!*lpszFamily) return 1;
       MultiByteToWideChar(CP_THREAD_ACP, 0, lpszFamily, -1, LogFont.lfFaceName, LF_FACESIZE);
     }
 
@@ -912,7 +914,19 @@ GetFontLanguageInfo(
 	HDC 	hDc
 	)
 {
-  return GetDCDWord(hDc, GdiGetFontLanguageInfo, GCP_ERROR); 
+  DWORD Gcp = 0, Ret = 0;
+  if (gbLpk)
+  {
+     Ret = NtGdiGetTextCharsetInfo(hDc, NULL, 0);
+     if ((Ret == ARABIC_CHARSET) || (Ret == HEBREW_CHARSET))
+        Ret = (GCP_KASHIDA|GCP_DIACRITIC|GCP_LIGATE|GCP_GLYPHSHAPE|GCP_REORDER);
+  }
+  Gcp = GetDCDWord(hDc, GdiGetFontLanguageInfo, GCP_ERROR); 
+  if ( Gcp == GCP_ERROR)
+     return Gcp;
+  else
+     Ret = Gcp | Ret;
+  return Ret;
 }
 
 /*

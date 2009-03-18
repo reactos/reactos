@@ -45,7 +45,6 @@ static const WCHAR wcsOutputPinName[] = {'o','u','t','p','u','t',' ','p','i','n'
 
 static const IBaseFilterVtbl TransformFilter_Vtbl;
 static const IPinVtbl TransformFilter_InputPin_Vtbl;
-static const IMemInputPinVtbl MemInputPin_Vtbl; 
 static const IPinVtbl TransformFilter_OutputPin_Vtbl;
 
 static HRESULT TransformFilter_Input_QueryAccept(LPVOID iface, const AM_MEDIA_TYPE * pmt)
@@ -64,7 +63,7 @@ static HRESULT TransformFilter_Input_QueryAccept(LPVOID iface, const AM_MEDIA_TY
 
 static HRESULT TransformFilter_Output_QueryAccept(LPVOID iface, const AM_MEDIA_TYPE * pmt)
 {
-    TransformFilterImpl* pTransformFilter = (TransformFilterImpl*)iface;
+    TransformFilterImpl* pTransformFilter = iface;
     AM_MEDIA_TYPE* outpmt = &pTransformFilter->pmt;
     TRACE("%p\n", iface);
 
@@ -226,13 +225,13 @@ static HRESULT WINAPI TransformFilter_QueryInterface(IBaseFilter * iface, REFIID
     *ppv = NULL;
 
     if (IsEqualIID(riid, &IID_IUnknown))
-        *ppv = (LPVOID)This;
+        *ppv = This;
     else if (IsEqualIID(riid, &IID_IPersist))
-        *ppv = (LPVOID)This;
+        *ppv = This;
     else if (IsEqualIID(riid, &IID_IMediaFilter))
-        *ppv = (LPVOID)This;
+        *ppv = This;
     else if (IsEqualIID(riid, &IID_IBaseFilter))
-        *ppv = (LPVOID)This;
+        *ppv = This;
     else if (IsEqualIID(riid, &IID_IMediaSeeking))
         *ppv = &This->mediaSeeking;
 
@@ -649,17 +648,4 @@ static const IPinVtbl TransformFilter_OutputPin_Vtbl =
     OutputPin_BeginFlush,
     OutputPin_EndFlush,
     OutputPin_NewSegment
-};
-
-static const IMemInputPinVtbl MemInputPin_Vtbl = 
-{
-    MemInputPin_QueryInterface,
-    MemInputPin_AddRef,
-    MemInputPin_Release,
-    MemInputPin_GetAllocator,
-    MemInputPin_NotifyAllocator,
-    MemInputPin_GetAllocatorRequirements,
-    MemInputPin_Receive,
-    MemInputPin_ReceiveMultiple,
-    MemInputPin_ReceiveCanBlock
 };

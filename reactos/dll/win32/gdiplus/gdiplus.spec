@@ -76,7 +76,7 @@
 @ stdcall GdipCreateBitmapFromGdiDib(ptr ptr ptr)
 @ stdcall GdipCreateBitmapFromGraphics(long long ptr ptr)
 @ stdcall GdipCreateBitmapFromHBITMAP(long long ptr)
-@ stub GdipCreateBitmapFromHICON
+@ stdcall GdipCreateBitmapFromHICON(long ptr)
 @ stdcall GdipCreateBitmapFromResource(long wstr ptr)
 @ stdcall GdipCreateBitmapFromScan0(long long long long ptr ptr)
 @ stdcall GdipCreateBitmapFromStream(ptr ptr)
@@ -245,8 +245,8 @@
 @ stdcall GdipGetCellAscent(ptr long ptr)
 @ stdcall GdipGetCellDescent(ptr long ptr)
 @ stdcall GdipGetClip(ptr ptr)
-@ stub GdipGetClipBounds
-@ stub GdipGetClipBoundsI
+@ stdcall GdipGetClipBounds(ptr ptr)
+@ stdcall GdipGetClipBoundsI(ptr ptr)
 @ stdcall GdipGetCompositingMode(ptr ptr)
 @ stdcall GdipGetCompositingQuality(ptr ptr)
 @ stdcall GdipGetCustomLineCapBaseCap(ptr ptr)
@@ -311,7 +311,7 @@
 @ stdcall GdipGetLineSpacing(ptr long ptr)
 @ stub GdipGetLineTransform
 @ stdcall GdipGetLineWrapMode(ptr ptr)
-@ stub GdipGetLogFontA
+@ stdcall GdipGetLogFontA(ptr ptr ptr)
 @ stdcall GdipGetLogFontW(ptr ptr ptr)
 @ stdcall GdipGetMatrixElements(ptr ptr)
 @ stub GdipGetMetafileDownLevelRasterizationLimit
@@ -507,7 +507,7 @@
 @ stdcall GdipSetAdjustableArrowCapMiddleInset(ptr long)
 @ stdcall GdipSetAdjustableArrowCapWidth(ptr long)
 @ stdcall GdipSetClipGraphics(ptr ptr long)
-@ stub GdipSetClipHrgn
+@ stdcall GdipSetClipHrgn(ptr long long)
 @ stdcall GdipSetClipPath(ptr ptr long)
 @ stdcall GdipSetClipRect(ptr long long long long long)
 @ stdcall GdipSetClipRectI(ptr long long long long long)
@@ -609,8 +609,8 @@
 @ stdcall GdipTransformPoints(ptr long long ptr long)
 @ stdcall GdipTransformPointsI(ptr long long ptr long)
 @ stdcall GdipTransformRegion(ptr ptr)
-@ stub GdipTranslateClip
-@ stub GdipTranslateClipI
+@ stdcall GdipTranslateClip(ptr long long)
+@ stdcall GdipTranslateClipI(ptr long long)
 @ stdcall GdipTranslateLineTransform(ptr long long long)
 @ stdcall GdipTranslateMatrix(ptr long long long)
 @ stub GdipTranslatePathGradientTransform

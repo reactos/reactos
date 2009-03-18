@@ -984,7 +984,8 @@ int XCOPY_wprintf(const WCHAR *format, ...) {
 #define MAX_WRITECONSOLE_SIZE 65535
 
     va_list parms;
-    DWORD   len, nOut;
+    DWORD   nOut;
+    int len;
     DWORD   res = 0;
 
     /*
@@ -1003,6 +1004,10 @@ int XCOPY_wprintf(const WCHAR *format, ...) {
     va_start(parms, format);
     len = vsnprintfW(output_bufW, MAX_WRITECONSOLE_SIZE/sizeof(WCHAR), format, parms);
     va_end(parms);
+    if (len < 0) {
+      WINE_FIXME("String too long.\n");
+      return 0;
+    }
 
     /* Try to write as unicode all the time we think its a console */
     if (toConsole) {

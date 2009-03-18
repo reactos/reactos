@@ -17,31 +17,6 @@
 
 PSLIST_ENTRY
 NTAPI
-RtlInterlockedPopEntrySList(IN PSLIST_HEADER ListHead)
-{
-    UNIMPLEMENTED;
-    return NULL;
-}
-
-PSLIST_ENTRY
-NTAPI
-RtlInterlockedPushEntrySList(IN PSLIST_HEADER ListHead,
-                             IN PSLIST_ENTRY ListEntry)
-{
-    UNIMPLEMENTED;
-    return NULL;
-}
-
-PSLIST_ENTRY
-NTAPI
-RtlInterlockedFlushSList(IN PSLIST_HEADER ListHead)
-{
-    UNIMPLEMENTED;
-    return NULL;
-}
-
-PSLIST_ENTRY
-NTAPI
 RtlInterlockedPushListSList(IN PSLIST_HEADER ListHead,
                             IN PSLIST_ENTRY List,
                             IN PSLIST_ENTRY ListEnd,

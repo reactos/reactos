@@ -118,9 +118,9 @@ VOID error_invalid_drive (VOID)
 }
 
 
-VOID error_bad_command (VOID)
+VOID error_bad_command (LPTSTR s)
 {
-	ConErrResPuts(STRING_ERROR_BADCOMMAND);
+	ConErrResPrintf(STRING_ERROR_BADCOMMAND, s);
 	nErrorLevel = 9009;
 }
 

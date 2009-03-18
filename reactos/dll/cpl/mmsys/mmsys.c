@@ -18,6 +18,7 @@
 #include <cpl.h>
 #include <tchar.h>
 #include <debug.h>
+#include <shlwapi.h>
 
 #include "mmsys.h"
 #include "resource.h"
@@ -28,6 +29,62 @@ typedef enum
     HWPD_LARGELIST,
     HWPD_MAX = HWPD_LARGELIST
 } HWPAGE_DISPLAYMODE, *PHWPAGE_DISPLAYMODE;
+
+typedef struct
+{
+    LPWSTR LabelName;
+    LPWSTR DefaultName;
+    UINT LocalizedResId;
+    LPWSTR FileName;
+}EVENT_LABEL_ITEM;
+
+typedef struct
+{
+    LPWSTR LabelName;
+    LPWSTR DefaultName;
+    UINT IconId;
+}SYSTEM_SCHEME_ITEM;
+
+static EVENT_LABEL_ITEM EventLabels[] =
+{
+    {
+        L"WindowsLogon",
+        L"ReactOS Logon",
+        IDS_REACTOS_LOGON,
+        L"ReactOS_Logon.wav"
+    },
+    {
+        L"WindowsLogoff",
+        L"ReactOS Logoff",
+        IDS_REACTOS_LOGOFF,
+        L"ReactOS_Logoff.wav"
+    },
+    {
+        NULL,
+        NULL,
+        0,
+        NULL
+    }
+};
+
+static SYSTEM_SCHEME_ITEM SystemSchemes[] =
+{
+    {
+        L".Default",
+        L"ReactOS Standard",
+        IDS_REACTOS_DEFAULT_SCHEME
+    },
+    {
+        L".None",
+        L"No Sounds",
+        -1
+    },
+    {
+        NULL,
+        NULL
+    }
+};
+
 
 HWND WINAPI
 DeviceCreateHardwarePageEx(HWND hWndParent,
@@ -155,10 +212,238 @@ ShowFullControlPanel(HWND hwnd,
     DPRINT1("ShowFullControlPanel() stubs\n");
 }
 
+VOID
+InstallSystemSoundLabels(HKEY hKey)
+{
+    UINT i = 0;
+    HKEY hSubKey;
+    WCHAR Buffer[40];
+
+    do
+    {
+        if (RegCreateKeyExW(hKey, EventLabels[i].LabelName,  0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hSubKey, NULL) == ERROR_SUCCESS)
+        {
+            RegSetValueExW(hSubKey, NULL, 0, REG_SZ, (LPBYTE)EventLabels[i].DefaultName, (wcslen(EventLabels[i].DefaultName)+1) * sizeof(WCHAR));
+            swprintf(Buffer, L"@mmsys.cpl,-%u", EventLabels[i].LocalizedResId);
+            RegSetValueExW(hSubKey, L"DispFileName", 0, REG_SZ, (LPBYTE)Buffer, (wcslen(Buffer)+1) * sizeof(WCHAR));
+
+            RegCloseKey(hSubKey);
+        }
+        i++;
+    }while(EventLabels[i].LabelName);
+}
+
+VOID
+InstallSystemSoundSchemeNames(HKEY hKey)
+{
+    UINT i = 0;
+    HKEY hSubKey;
+
+    do
+    {
+        if (RegCreateKeyExW(hKey, SystemSchemes[i].LabelName,  0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hSubKey, NULL) == ERROR_SUCCESS)
+        {
+            RegSetValueExW(hSubKey, NULL, 0, REG_SZ, (LPBYTE)SystemSchemes[i].DefaultName, (wcslen(SystemSchemes[i].DefaultName)+1) * sizeof(WCHAR));
+            RegCloseKey(hSubKey);
+        }
+        i++;
+    }while(SystemSchemes[i].LabelName);
+}
+
+VOID
+InstallDefaultSystemSoundScheme(HKEY hRootKey)
+{
+    HKEY hKey, hSubKey;
+    WCHAR Path[MAX_PATH];
+    UINT i = 0;
+
+    if (RegCreateKeyExW(hRootKey, L".Default", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hKey, NULL) != ERROR_SUCCESS)
+        return;
+
+    RegSetValueExW(hKey, NULL, 0, REG_SZ, (LPBYTE)SystemSchemes[0].DefaultName, (wcslen(SystemSchemes[0].DefaultName)+1) * sizeof(WCHAR));
+    swprintf(Path, L"@mmsys.cpl,-%u", SystemSchemes[0].IconId);
+    RegSetValueExW(hKey, L"DispFileName", 0, REG_SZ, (LPBYTE)Path, (wcslen(Path)+1) * sizeof(WCHAR));
+
+    do
+    {
+        if (RegCreateKeyExW(hKey, EventLabels[i].LabelName,  0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hSubKey, NULL) == ERROR_SUCCESS)
+        {
+            HKEY hScheme;
+
+            swprintf(Path, L"%%SystemRoot%%\\media\\%s", EventLabels[i].FileName);
+            if (RegCreateKeyExW(hSubKey, L".Current",  0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hScheme, NULL) == ERROR_SUCCESS)
+            {
+                RegSetValueExW(hScheme, NULL, 0, REG_SZ, (LPBYTE)Path, (wcslen(Path)+1) * sizeof(WCHAR));
+                RegCloseKey(hScheme);
+            }
+
+            if (RegCreateKeyExW(hSubKey, L".Default",  0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hScheme, NULL) == ERROR_SUCCESS)
+            {
+                RegSetValueExW(hScheme, NULL, 0, REG_SZ, (LPBYTE)Path, (wcslen(Path)+1) * sizeof(WCHAR));
+                RegCloseKey(hScheme);
+            }
+            RegCloseKey(hSubKey);
+        }
+        i++;
+    }while(EventLabels[i].LabelName);
+
+    RegCloseKey(hKey);
+}
+
+
+VOID
+InstallSystemSoundScheme()
+{
+    HKEY hKey, hSubKey;
+    DWORD dwDisposition;
+
+    if (RegCreateKeyExW(HKEY_CURRENT_USER, L"AppEvents", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hKey, NULL) != ERROR_SUCCESS)
+        return;
+
+    if (RegCreateKeyExW(hKey, L"EventLabels", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hSubKey, NULL) == ERROR_SUCCESS)
+    {
+        InstallSystemSoundLabels(hSubKey);
+        RegCloseKey(hSubKey);
+    }
+
+    if (RegCreateKeyExW(hKey, L"Schemes", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hSubKey, &dwDisposition) == ERROR_SUCCESS)
+    {
+        HKEY hNames;
+
+        if (RegCreateKeyExW(hSubKey, L"Names", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hNames, NULL) == ERROR_SUCCESS)
+        {
+            InstallSystemSoundSchemeNames(hNames);
+            RegCloseKey(hNames);
+        }
+
+        if (RegCreateKeyExW(hSubKey, L"Apps", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hNames, NULL) == ERROR_SUCCESS)
+        {
+            InstallDefaultSystemSoundScheme(hNames);
+            RegCloseKey(hNames);
+            if (dwDisposition & REG_CREATED_NEW_KEY)
+            {
+                RegSetValueExW(hSubKey, NULL, 0, REG_SZ, (LPBYTE)L".Default", (wcslen(L".Default")+1) * sizeof(WCHAR)); //FIXME
+            }
+        }
+
+        RegCloseKey(hSubKey);
+    }
+
+    RegCloseKey(hKey);
+}
+
+
 DWORD
 MMSYS_InstallDevice(HDEVINFO hDevInfo, PSP_DEVINFO_DATA pspDevInfoData)
 {
+    UINT Length;
+    LPWSTR pBuffer;
+    WCHAR szBuffer[MAX_PATH];
+    HINF hInf;
+    PVOID Context;
+    BOOL Result;
+    SC_HANDLE hSCManager, hService;
+    WCHAR WaveName[20];
+    HKEY hKey;
+    DWORD BufferSize;
+    ULONG Index;
+
+    if (!IsEqualIID(&pspDevInfoData->ClassGuid, &GUID_DEVCLASS_SOUND) &&
+        !IsEqualIID(&pspDevInfoData->ClassGuid, &GUID_DEVCLASS_MEDIA))
+        return ERROR_DI_DO_DEFAULT;
+
+    Length = GetWindowsDirectoryW(szBuffer, MAX_PATH);
+    if (!Length || Length >= MAX_PATH - 14)
+    {
+        return ERROR_GEN_FAILURE;
+    }
+
+    pBuffer = PathAddBackslashW(szBuffer);
+    if (!pBuffer)
+    {
+        return ERROR_GEN_FAILURE;
+    }
+
+    wcscpy(pBuffer, L"inf\\audio.inf");
+
+    hInf = SetupOpenInfFileW(szBuffer,
+                             NULL,
+                            INF_STYLE_WIN4,
+                            NULL);
+
+    if (hInf == INVALID_HANDLE_VALUE)
+    {
+        return ERROR_GEN_FAILURE;
+    }
+
+    Context = SetupInitDefaultQueueCallback(NULL);
+    if (Context == NULL)
+    {
+        SetupCloseInfFile(hInf);
+        return ERROR_GEN_FAILURE;
+    }
+
+    Result = SetupInstallFromInfSectionW(NULL,
+                                         hInf,
+                                         L"AUDIO_Inst.NT",
+                                         SPINST_ALL,
+                                         NULL,
+                                         NULL,
+                                         SP_COPY_NEWER,
+                                         SetupDefaultQueueCallbackW,
+                                         Context,
+                                         NULL,
+                                         NULL);
+
+    if (Result)
+    {
+        Result = SetupInstallServicesFromInfSectionW(hInf,
+                                                     L"Audio_Inst.NT.Services",
+                                                     0);
+    }
+
+    SetupTermDefaultQueueCallback(Context);
+    SetupCloseInfFile(hInf);
+
+
+
+    hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_CONNECT);
+    if (!hSCManager)
+    {
+        return ERROR_DI_DO_DEFAULT;
+    }
+
+    hService = OpenService(hSCManager, L"RosAudioSrv", SERVICE_ALL_ACCESS);
+    if (hService)
+    {
+        /* make RosAudioSrv start automatically */
+        ChangeServiceConfig(hService, SERVICE_NO_CHANGE, SERVICE_AUTO_START, SERVICE_NO_CHANGE, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+
+        StartService(hService, 0, NULL);
+        CloseServiceHandle(hService);
+    }
+    CloseServiceHandle(hSCManager);
+
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Drivers32", 0, GENERIC_READ | GENERIC_WRITE, &hKey) == ERROR_SUCCESS)
+    {
+        szBuffer[Length] = '\0';
+        pBuffer = PathAddBackslashW(szBuffer);
+        wcscpy(pBuffer, L"system32\\wdmaud.drv");
+
+        for(Index = 1; Index <= 4; Index++)
+        {
+            swprintf(WaveName, L"wave%u", Index);
+            if (RegQueryValueExW(hKey, WaveName, 0, NULL, NULL, &BufferSize) != ERROR_MORE_DATA)
+            {
+                RegSetValueExW(hKey, WaveName, 0, REG_SZ, (LPBYTE)szBuffer, (wcslen(szBuffer)+1) * sizeof(WCHAR));
+            }
+        }
+        RegCloseKey(hKey);
+    }
+    InstallSystemSoundScheme();
+
     return ERROR_DI_DO_DEFAULT;
+
 }
 
 DWORD

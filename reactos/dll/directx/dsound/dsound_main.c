@@ -16,14 +16,10 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- */
-/*
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ *
  * Most thread locking is complete. There may be a few race
  * conditions still lurking.
- *
- * Tested with a Soundblaster clone, a Gravis UltraSound Classic,
- * and a Turtle Beach Tropez+.
  *
  * TODO:
  *	Implement SetCooperativeLevel properly (need to address focus issues)
@@ -32,8 +28,8 @@
  *      Add critical section locking inside Release and AddRef methods
  *      Handle static buffers - put those in hardware, non-static not in hardware
  *      Hardware DuplicateSoundBuffer
- *      Proper volume calculation, and setting volume in HEL primary buffer
- *      Optimize WINMM and negotiate fragment size, decrease DS_HEL_MARGIN
+ *      Proper volume calculation for 3d buffers
+ *      Remove DS_HEL_FRAGS and use mixer fragment length for it
  */
 
 #include <stdarg.h>
@@ -43,6 +39,7 @@
 #define NONAMELESSUNION
 #include "windef.h"
 #include "winbase.h"
+#include "winuser.h"
 #include "winnls.h"
 #include "winreg.h"
 #include "mmsystem.h"
@@ -50,23 +47,15 @@
 #include "mmddk.h"
 #include "wine/debug.h"
 #include "dsound.h"
-#include "dsdriver.h"
-#include "dsound_private.h"
 #include "dsconf.h"
+#include "ks.h"
+#include "initguid.h"
+#include "ksmedia.h"
+#include "dsdriver.h"
+
+#include "dsound_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(dsound);
-
-/* these are eligible for tuning... they must be high on slow machines... */
-/* some stuff may get more responsive with lower values though... */
-#define DS_EMULDRIVER 0 /* some games (Quake 2, UT) refuse to accept
-				emulated dsound devices. set to 0 ! */
-#define DS_HEL_MARGIN 5 /* HEL only: number of waveOut fragments ahead to mix in new buffers
-			 * (keep this close or equal to DS_HEL_QUEUE for best results) */
-#define DS_HEL_QUEUE  5 /* HEL only: number of waveOut fragments ahead to queue to driver
-			 * (this will affect HEL sound reliability and latency) */
-
-#define DS_SND_QUEUE_MAX 28 /* max number of fragments to prebuffer */
-#define DS_SND_QUEUE_MIN 12 /* min number of fragments to prebuffer */
 
 DirectSoundDevice*	DSOUND_renderer[MAXWAVEDRIVERS];
 GUID                    DSOUND_renderer_guids[MAXWAVEDRIVERS];
@@ -99,20 +88,23 @@ HRESULT mmErr(UINT err)
 	}
 }
 
-int ds_emuldriver = DS_EMULDRIVER;
-int ds_hel_margin = DS_HEL_MARGIN;
-int ds_hel_queue = DS_HEL_QUEUE;
-int ds_snd_queue_max = DS_SND_QUEUE_MAX;
-int ds_snd_queue_min = DS_SND_QUEUE_MIN;
+/* All default settings, you most likely don't want to touch these, see wiki on UsefulRegistryKeys */
+int ds_emuldriver = 0;
+int ds_hel_buflen = 32768 * 2;
+int ds_snd_queue_max = 10;
+int ds_snd_queue_min = 6;
+int ds_snd_shadow_maxsize = 2;
 int ds_hw_accel = DS_HW_ACCEL_FULL;
-int ds_default_playback = 0;
-int ds_default_capture = 0;
+int ds_default_sample_rate = 44100;
+int ds_default_bits_per_sample = 16;
+static int ds_default_playback;
+static int ds_default_capture;
 
 /*
  * Get a config key from either the app-specific or the default config
  */
 
-inline static DWORD get_config_key( HKEY defkey, HKEY appkey, const char *name,
+static inline DWORD get_config_key( HKEY defkey, HKEY appkey, const char *name,
                                     char *buffer, DWORD size )
 {
     if (appkey && !RegQueryValueExA( appkey, name, 0, NULL, (LPBYTE)buffer, &size )) return 0;
@@ -147,7 +139,7 @@ void setup_dsound_options(void)
             if ((p = strrchr( appname, '/' ))) appname = p + 1;
             if ((p = strrchr( appname, '\\' ))) appname = p + 1;
             strcat( appname, "\\DirectSound" );
-            TRACE("appname = [%s] \n",appname);
+            TRACE("appname = [%s]\n", appname);
             if (RegOpenKeyA( tmpkey, appname, &appkey )) appkey = 0;
             RegCloseKey( tmpkey );
         }
@@ -158,11 +150,8 @@ void setup_dsound_options(void)
     if (!get_config_key( hkey, appkey, "EmulDriver", buffer, MAX_PATH ))
         ds_emuldriver = strcmp(buffer, "N");
 
-    if (!get_config_key( hkey, appkey, "HELmargin", buffer, MAX_PATH ))
-        ds_hel_margin = atoi(buffer);
-
-    if (!get_config_key( hkey, appkey, "HELqueue", buffer, MAX_PATH ))
-        ds_hel_queue = atoi(buffer);
+    if (!get_config_key( hkey, appkey, "HelBuflen", buffer, MAX_PATH ))
+        ds_hel_buflen = atoi(buffer);
 
     if (!get_config_key( hkey, appkey, "SndQueueMax", buffer, MAX_PATH ))
         ds_snd_queue_max = atoi(buffer);
@@ -180,42 +169,43 @@ void setup_dsound_options(void)
 	else if (strcmp(buffer, "Emulation") == 0)
 	    ds_hw_accel = DS_HW_ACCEL_EMULATION;
     }
-	FIXME("dsound is hardcoded to software emulation until we fix it in ros\n");
-    ds_hw_accel = DS_HW_ACCEL_EMULATION;
 
     if (!get_config_key( hkey, appkey, "DefaultPlayback", buffer, MAX_PATH ))
-	    ds_default_playback = atoi(buffer);
+        ds_default_playback = atoi(buffer);
+
+    if (!get_config_key( hkey, appkey, "MaxShadowSize", buffer, MAX_PATH ))
+        ds_snd_shadow_maxsize = atoi(buffer);
 
     if (!get_config_key( hkey, appkey, "DefaultCapture", buffer, MAX_PATH ))
-	    ds_default_capture = atoi(buffer);
+        ds_default_capture = atoi(buffer);
+
+    if (!get_config_key( hkey, appkey, "DefaultSampleRate", buffer, MAX_PATH ))
+        ds_default_sample_rate = atoi(buffer);
+
+    if (!get_config_key( hkey, appkey, "DefaultBitsPerSample", buffer, MAX_PATH ))
+        ds_default_bits_per_sample = atoi(buffer);
 
     if (appkey) RegCloseKey( appkey );
     if (hkey) RegCloseKey( hkey );
 
-    if (ds_emuldriver != DS_EMULDRIVER )
-       WARN("ds_emuldriver = %d (default=%d)\n",ds_emuldriver, DS_EMULDRIVER);
-    if (ds_hel_margin != DS_HEL_MARGIN )
-       WARN("ds_hel_margin = %d (default=%d)\n",ds_hel_margin, DS_HEL_MARGIN );
-    if (ds_hel_queue != DS_HEL_QUEUE )
-       WARN("ds_hel_queue = %d (default=%d)\n",ds_hel_queue, DS_HEL_QUEUE );
-    if (ds_snd_queue_max != DS_SND_QUEUE_MAX)
-       WARN("ds_snd_queue_max = %d (default=%d)\n",ds_snd_queue_max ,DS_SND_QUEUE_MAX);
-    if (ds_snd_queue_min != DS_SND_QUEUE_MIN)
-       WARN("ds_snd_queue_min = %d (default=%d)\n",ds_snd_queue_min ,DS_SND_QUEUE_MIN);
-    if (ds_hw_accel != DS_HW_ACCEL_FULL)
-	WARN("ds_hw_accel = %s (default=Full)\n",
-	    ds_hw_accel==DS_HW_ACCEL_FULL ? "Full" :
-	    ds_hw_accel==DS_HW_ACCEL_STANDARD ? "Standard" :
-	    ds_hw_accel==DS_HW_ACCEL_BASIC ? "Basic" :
-	    ds_hw_accel==DS_HW_ACCEL_EMULATION ? "Emulation" :
-	    "Unknown");
-    if (ds_default_playback != 0)
-	WARN("ds_default_playback = %d (default=0)\n",ds_default_playback);
-    if (ds_default_capture != 0)
-	WARN("ds_default_capture = %d (default=0)\n",ds_default_playback);
+    TRACE("ds_emuldriver = %d\n", ds_emuldriver);
+    TRACE("ds_hel_buflen = %d\n", ds_hel_buflen);
+    TRACE("ds_snd_queue_max = %d\n", ds_snd_queue_max);
+    TRACE("ds_snd_queue_min = %d\n", ds_snd_queue_min);
+    TRACE("ds_hw_accel = %s\n",
+        ds_hw_accel==DS_HW_ACCEL_FULL ? "Full" :
+        ds_hw_accel==DS_HW_ACCEL_STANDARD ? "Standard" :
+        ds_hw_accel==DS_HW_ACCEL_BASIC ? "Basic" :
+        ds_hw_accel==DS_HW_ACCEL_EMULATION ? "Emulation" :
+        "Unknown");
+    TRACE("ds_default_playback = %d\n", ds_default_playback);
+    TRACE("ds_default_capture = %d\n", ds_default_playback);
+    TRACE("ds_default_sample_rate = %d\n", ds_default_sample_rate);
+    TRACE("ds_default_bits_per_sample = %d\n", ds_default_bits_per_sample);
+    TRACE("ds_snd_shadow_maxsize = %d\n", ds_snd_shadow_maxsize);
 }
 
-const char * get_device_id(LPCGUID pGuid)
+static const char * get_device_id(LPCGUID pGuid)
 {
     if (IsEqualGUID(&DSDEVID_DefaultPlayback, pGuid))
         return "DSDEVID_DefaultPlayback";
@@ -264,19 +254,19 @@ HRESULT WINAPI GetDeviceID(LPCGUID pGuidSrc, LPGUID pGuidDest)
 
     if ( IsEqualGUID( &DSDEVID_DefaultPlayback, pGuidSrc ) ||
     	 IsEqualGUID( &DSDEVID_DefaultVoicePlayback, pGuidSrc ) ) {
-	CopyMemory(pGuidDest, &DSOUND_renderer_guids[ds_default_playback], sizeof(GUID));
+	*pGuidDest = DSOUND_renderer_guids[ds_default_playback];
         TRACE("returns %s\n", get_device_id(pGuidDest));
 	return DS_OK;
     }
 
     if ( IsEqualGUID( &DSDEVID_DefaultCapture, pGuidSrc ) ||
     	 IsEqualGUID( &DSDEVID_DefaultVoiceCapture, pGuidSrc ) ) {
-	CopyMemory(pGuidDest, &DSOUND_capture_guids[ds_default_capture], sizeof(GUID));
+	*pGuidDest = DSOUND_capture_guids[ds_default_capture];
         TRACE("returns %s\n", get_device_id(pGuidDest));
 	return DS_OK;
     }
 
-    CopyMemory(pGuidDest, pGuidSrc, sizeof(GUID));
+    *pGuidDest = *pGuidSrc;
     TRACE("returns %s\n", get_device_id(pGuidDest));
 
     return DS_OK;
@@ -318,11 +308,11 @@ HRESULT WINAPI DirectSoundEnumerateA(
 	if (GetDeviceID(&DSDEVID_DefaultPlayback, &guid) == DS_OK) {
 	    for (wod = 0; wod < devs; ++wod) {
                 if (IsEqualGUID( &guid, &DSOUND_renderer_guids[wod]) ) {
-                    err = mmErr(WineWaveOutMessage((HWAVEOUT)wod,DRV_QUERYDSOUNDDESC,(DWORD_PTR)&desc,0));
+                    err = mmErr(waveOutMessage(UlongToHandle(wod),DRV_QUERYDSOUNDDESC,(DWORD_PTR)&desc,0));
                     if (err == DS_OK) {
                         TRACE("calling lpDSEnumCallback(NULL,\"%s\",\"%s\",%p)\n",
-                              "Primary Sound Driver",desc.szDrvname,lpContext);
-                        if (lpDSEnumCallback(NULL, "Primary Sound Driver", desc.szDrvname, lpContext) == FALSE)
+                              "Primary Sound Driver","",lpContext);
+                        if (lpDSEnumCallback(NULL, "Primary Sound Driver", "", lpContext) == FALSE)
                             return DS_OK;
 		    }
 		}
@@ -331,7 +321,7 @@ HRESULT WINAPI DirectSoundEnumerateA(
     }
 
     for (wod = 0; wod < devs; ++wod) {
-	err = mmErr(WineWaveOutMessage((HWAVEOUT)wod,DRV_QUERYDSOUNDDESC,(DWORD_PTR)&desc,0));
+        err = mmErr(waveOutMessage(UlongToHandle(wod),DRV_QUERYDSOUNDDESC,(DWORD_PTR)&desc,0));
 	if (err == DS_OK) {
             TRACE("calling lpDSEnumCallback(%s,\"%s\",\"%s\",%p)\n",
                   debugstr_guid(&DSOUND_renderer_guids[wod]),desc.szDesc,desc.szDrvname,lpContext);
@@ -377,17 +367,16 @@ HRESULT WINAPI DirectSoundEnumerateW(
     devs = waveOutGetNumDevs();
     if (devs > 0) {
 	if (GetDeviceID(&DSDEVID_DefaultPlayback, &guid) == DS_OK) {
+            static const WCHAR empty[] = { 0 };
 	    for (wod = 0; wod < devs; ++wod) {
                 if (IsEqualGUID( &guid, &DSOUND_renderer_guids[wod] ) ) {
-                    err = mmErr(WineWaveOutMessage((HWAVEOUT)wod,DRV_QUERYDSOUNDDESC,(DWORD_PTR)&desc,0));
+                    err = mmErr(waveOutMessage(UlongToHandle(wod),DRV_QUERYDSOUNDDESC,(DWORD_PTR)&desc,0));
                     if (err == DS_OK) {
                         TRACE("calling lpDSEnumCallback(NULL,\"%s\",\"%s\",%p)\n",
                               "Primary Sound Driver",desc.szDrvname,lpContext);
                         MultiByteToWideChar( CP_ACP, 0, "Primary Sound Driver", -1,
                                              wDesc, sizeof(wDesc)/sizeof(WCHAR) );
-                        MultiByteToWideChar( CP_ACP, 0, desc.szDrvname, -1,
-                                             wName, sizeof(wName)/sizeof(WCHAR) );
-                        if (lpDSEnumCallback(NULL, wDesc, wName, lpContext) == FALSE)
+                        if (lpDSEnumCallback(NULL, wDesc, empty, lpContext) == FALSE)
                             return DS_OK;
 		    }
 		}
@@ -396,7 +385,7 @@ HRESULT WINAPI DirectSoundEnumerateW(
     }
 
     for (wod = 0; wod < devs; ++wod) {
-	err = mmErr(WineWaveOutMessage((HWAVEOUT)wod,DRV_QUERYDSOUNDDESC,(DWORD_PTR)&desc,0));
+        err = mmErr(waveOutMessage(UlongToHandle(wod),DRV_QUERYDSOUNDDESC,(DWORD_PTR)&desc,0));
 	if (err == DS_OK) {
             TRACE("calling lpDSEnumCallback(%s,\"%s\",\"%s\",%p)\n",
                   debugstr_guid(&DSOUND_renderer_guids[wod]),desc.szDesc,desc.szDrvname,lpContext);
@@ -415,19 +404,38 @@ HRESULT WINAPI DirectSoundEnumerateW(
  * DirectSound ClassFactory
  */
 
-static HRESULT WINAPI
-DSCF_QueryInterface(LPCLASSFACTORY iface,REFIID riid,LPVOID *ppobj) {
-	IClassFactoryImpl *This = (IClassFactoryImpl *)iface;
+typedef  HRESULT (*FnCreateInstance)(REFIID riid, LPVOID *ppobj);
+ 
+typedef struct {
+    const IClassFactoryVtbl *lpVtbl;
+    LONG ref;
+    REFCLSID rclsid;
+    FnCreateInstance pfnCreateInstance;
+} IClassFactoryImpl;
 
-	FIXME("(%p)->(%s,%p),stub!\n",This,debugstr_guid(riid),ppobj);
-	return E_NOINTERFACE;
+static HRESULT WINAPI
+DSCF_QueryInterface(LPCLASSFACTORY iface, REFIID riid, LPVOID *ppobj)
+{
+    IClassFactoryImpl *This = (IClassFactoryImpl *)iface;
+    TRACE("(%p, %s, %p)\n", This, debugstr_guid(riid), ppobj);
+    if (ppobj == NULL)
+        return E_POINTER;
+    if (IsEqualIID(riid, &IID_IUnknown) ||
+        IsEqualIID(riid, &IID_IClassFactory))
+    {
+        *ppobj = iface;
+        IUnknown_AddRef(iface);
+        return S_OK;
+    }
+    *ppobj = NULL;
+    return E_NOINTERFACE;
 }
 
 static ULONG WINAPI DSCF_AddRef(LPCLASSFACTORY iface)
 {
     IClassFactoryImpl *This = (IClassFactoryImpl *)iface;
     ULONG ref = InterlockedIncrement(&(This->ref));
-    TRACE("(%p) ref was %ld\n", This, ref - 1);
+    TRACE("(%p) ref was %d\n", This, ref - 1);
     return ref;
 }
 
@@ -435,120 +443,55 @@ static ULONG WINAPI DSCF_Release(LPCLASSFACTORY iface)
 {
     IClassFactoryImpl *This = (IClassFactoryImpl *)iface;
     ULONG ref = InterlockedDecrement(&(This->ref));
-    TRACE("(%p) ref was %ld\n", This, ref + 1);
+    TRACE("(%p) ref was %d\n", This, ref + 1);
     /* static class, won't be freed */
     return ref;
 }
 
 static HRESULT WINAPI DSCF_CreateInstance(
-	LPCLASSFACTORY iface,LPUNKNOWN pOuter,REFIID riid,LPVOID *ppobj
-) {
-	IClassFactoryImpl *This = (IClassFactoryImpl *)iface;
-	TRACE("(%p)->(%p,%s,%p)\n",This,pOuter,debugstr_guid(riid),ppobj);
+    LPCLASSFACTORY iface,
+    LPUNKNOWN pOuter,
+    REFIID riid,
+    LPVOID *ppobj)
+{
+    IClassFactoryImpl *This = (IClassFactoryImpl *)iface;
+    TRACE("(%p, %p, %s, %p)\n", This, pOuter, debugstr_guid(riid), ppobj);
 
-	if (pOuter)
-		return CLASS_E_NOAGGREGATION;
+    if (pOuter)
+        return CLASS_E_NOAGGREGATION;
 
-	if (ppobj == NULL) {
-		WARN("invalid parameter\n");
-		return DSERR_INVALIDPARAM;
-	}
-
-	*ppobj = NULL;
-
-	if ( IsEqualIID( &IID_IDirectSound, riid ) )
-		return DSOUND_Create((LPDIRECTSOUND*)ppobj,pOuter);
-
-	if ( IsEqualIID( &IID_IDirectSound8, riid ) )
-		return DSOUND_Create8((LPDIRECTSOUND8*)ppobj,pOuter);
-
-	WARN("(%p,%p,%s,%p) Interface not found!\n",This,pOuter,debugstr_guid(riid),ppobj);
-	return E_NOINTERFACE;
+    if (ppobj == NULL) {
+        WARN("invalid parameter\n");
+        return DSERR_INVALIDPARAM;
+    }
+    *ppobj = NULL;
+    return This->pfnCreateInstance(riid, ppobj);
 }
-
-static HRESULT WINAPI DSCF_LockServer(LPCLASSFACTORY iface,BOOL dolock) {
-	IClassFactoryImpl *This = (IClassFactoryImpl *)iface;
-	FIXME("(%p)->(%d),stub!\n",This,dolock);
-	return S_OK;
+ 
+static HRESULT WINAPI DSCF_LockServer(LPCLASSFACTORY iface, BOOL dolock)
+{
+    IClassFactoryImpl *This = (IClassFactoryImpl *)iface;
+    FIXME("(%p, %d) stub!\n", This, dolock);
+    return S_OK;
 }
 
 static const IClassFactoryVtbl DSCF_Vtbl = {
-	DSCF_QueryInterface,
-	DSCF_AddRef,
-	DSCF_Release,
-	DSCF_CreateInstance,
-	DSCF_LockServer
+    DSCF_QueryInterface,
+    DSCF_AddRef,
+    DSCF_Release,
+    DSCF_CreateInstance,
+    DSCF_LockServer
 };
 
-static IClassFactoryImpl DSOUND_CF = { &DSCF_Vtbl, 1 };
-
-/*******************************************************************************
- * DirectSoundPrivate ClassFactory
- */
-
-static HRESULT WINAPI
-DSPCF_QueryInterface(LPCLASSFACTORY iface,REFIID riid,LPVOID *ppobj) {
-	IClassFactoryImpl *This = (IClassFactoryImpl *)iface;
-
-	FIXME("(%p)->(%s,%p),stub!\n",This,debugstr_guid(riid),ppobj);
-	return E_NOINTERFACE;
-}
-
-static ULONG WINAPI DSPCF_AddRef(LPCLASSFACTORY iface)
-{
-    IClassFactoryImpl *This = (IClassFactoryImpl *)iface;
-    ULONG ref = InterlockedIncrement(&(This->ref));
-    TRACE("(%p) ref was %ld\n", This, ref - 1);
-    return ref;
-}
-
-static ULONG WINAPI DSPCF_Release(LPCLASSFACTORY iface)
-{
-    IClassFactoryImpl *This = (IClassFactoryImpl *)iface;
-    ULONG ref = InterlockedDecrement(&(This->ref));
-    TRACE("(%p) ref was %ld\n", This, ref + 1);
-    /* static class, won't be freed */
-    return ref;
-}
-
-static HRESULT WINAPI
-DSPCF_CreateInstance(
-	LPCLASSFACTORY iface,LPUNKNOWN pOuter,REFIID riid,LPVOID *ppobj
-) {
-	IClassFactoryImpl *This = (IClassFactoryImpl *)iface;
-	TRACE("(%p)->(%p,%s,%p)\n",This,pOuter,debugstr_guid(riid),ppobj);
-
-	if (ppobj == NULL) {
-		WARN("invalid parameter\n");
-		return DSERR_INVALIDPARAM;
-	}
-
-	*ppobj = NULL;
-
-	if ( IsEqualGUID( &IID_IKsPropertySet, riid ) ) {
-		return IKsPrivatePropertySetImpl_Create((IKsPrivatePropertySetImpl**)ppobj);
-	}
-
-	WARN("(%p,%p,%s,%p) Interface not found!\n",This,pOuter,debugstr_guid(riid),ppobj);
-	return E_NOINTERFACE;
-}
-
-static HRESULT WINAPI
-DSPCF_LockServer(LPCLASSFACTORY iface,BOOL dolock) {
-	IClassFactoryImpl *This = (IClassFactoryImpl *)iface;
-	FIXME("(%p)->(%d),stub!\n",This,dolock);
-	return S_OK;
-}
-
-static const IClassFactoryVtbl DSPCF_Vtbl = {
-	DSPCF_QueryInterface,
-	DSPCF_AddRef,
-	DSPCF_Release,
-	DSPCF_CreateInstance,
-	DSPCF_LockServer
+static IClassFactoryImpl DSOUND_CF[] = {
+    { &DSCF_Vtbl, 1, &CLSID_DirectSound, (FnCreateInstance)DSOUND_Create },
+    { &DSCF_Vtbl, 1, &CLSID_DirectSound8, (FnCreateInstance)DSOUND_Create8 },
+    { &DSCF_Vtbl, 1, &CLSID_DirectSoundCapture, (FnCreateInstance)DSOUND_CaptureCreate },
+    { &DSCF_Vtbl, 1, &CLSID_DirectSoundCapture8, (FnCreateInstance)DSOUND_CaptureCreate8 },
+    { &DSCF_Vtbl, 1, &CLSID_DirectSoundFullDuplex, (FnCreateInstance)DSOUND_FullDuplexCreate },
+    { &DSCF_Vtbl, 1, &CLSID_DirectSoundPrivate, (FnCreateInstance)IKsPrivatePropertySetImpl_Create },
+    { NULL, 0, NULL, NULL }
 };
-
-static IClassFactoryImpl DSOUND_PRIVATE_CF = { &DSPCF_Vtbl, 1 };
 
 /*******************************************************************************
  * DllGetClassObject [DSOUND.@]
@@ -569,62 +512,33 @@ static IClassFactoryImpl DSOUND_PRIVATE_CF = { &DSPCF_Vtbl, 1 };
  */
 HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 {
-    TRACE("(%s,%s,%p)\n", debugstr_guid(rclsid), debugstr_guid(riid), ppv);
+    int i = 0;
+    TRACE("(%s, %s, %p)\n", debugstr_guid(rclsid), debugstr_guid(riid), ppv);
 
     if (ppv == NULL) {
-	WARN("invalid parameter\n");
-	return E_INVALIDARG;
+        WARN("invalid parameter\n");
+        return E_INVALIDARG;
     }
 
     *ppv = NULL;
 
-    if ( IsEqualCLSID( &CLSID_DirectSound, rclsid ) ||
-	 IsEqualCLSID( &CLSID_DirectSound8, rclsid ) ) {
-	if ( IsEqualCLSID( &IID_IClassFactory, riid ) ) {
-	    *ppv = (LPVOID)&DSOUND_CF;
-	    IClassFactory_AddRef((IClassFactory*)*ppv);
-	    return S_OK;
-	}
-    	WARN("(%s,%s,%p): no interface found.\n",
-	    debugstr_guid(rclsid), debugstr_guid(riid), ppv);
-	return S_FALSE;
+    if (!IsEqualIID(riid, &IID_IClassFactory) &&
+        !IsEqualIID(riid, &IID_IUnknown)) {
+        WARN("no interface for %s\n", debugstr_guid(riid));
+        return E_NOINTERFACE;
     }
 
-    if ( IsEqualCLSID( &CLSID_DirectSoundCapture, rclsid ) ||
-	 IsEqualCLSID( &CLSID_DirectSoundCapture8, rclsid ) ) {
-	if ( IsEqualCLSID( &IID_IClassFactory, riid ) ) {
-	    *ppv = (LPVOID)&DSOUND_CAPTURE_CF;
-	    IClassFactory_AddRef((IClassFactory*)*ppv);
-	    return S_OK;
-	}
-    	WARN("(%s,%s,%p): no interface found.\n",
-	    debugstr_guid(rclsid), debugstr_guid(riid), ppv);
-	return S_FALSE;
+    while (NULL != DSOUND_CF[i].rclsid) {
+        if (IsEqualGUID(rclsid, DSOUND_CF[i].rclsid)) {
+            DSCF_AddRef((IClassFactory*) &DSOUND_CF[i]);
+            *ppv = &DSOUND_CF[i];
+            return S_OK;
+        }
+        i++;
     }
 
-    if ( IsEqualCLSID( &CLSID_DirectSoundFullDuplex, rclsid ) ) {
-	if ( IsEqualCLSID( &IID_IClassFactory, riid ) ) {
-	    *ppv = (LPVOID)&DSOUND_FULLDUPLEX_CF;
-	    IClassFactory_AddRef((IClassFactory*)*ppv);
-	    return S_OK;
-	}
-    	WARN("(%s,%s,%p): no interface found.\n",
-	    debugstr_guid(rclsid), debugstr_guid(riid), ppv);
-	return S_FALSE;
-    }
-
-    if ( IsEqualCLSID( &CLSID_DirectSoundPrivate, rclsid ) ) {
-	if ( IsEqualCLSID( &IID_IClassFactory, riid ) ) {
-	    *ppv = (LPVOID)&DSOUND_PRIVATE_CF;
-	    IClassFactory_AddRef((IClassFactory*)*ppv);
-	    return S_OK;
-	}
-    	WARN("(%s,%s,%p): no interface found.\n",
-	    debugstr_guid(rclsid), debugstr_guid(riid), ppv);
-	return S_FALSE;
-    }
-
-    WARN("(%s,%s,%p): no class found.\n", debugstr_guid(rclsid), debugstr_guid(riid), ppv);
+    WARN("(%s, %s, %p): no class found.\n", debugstr_guid(rclsid),
+         debugstr_guid(riid), ppv);
     return CLASS_E_CLASSNOTAVAILABLE;
 }
 
@@ -655,7 +569,7 @@ HRESULT WINAPI DllCanUnloadNow(void)
 BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
     int i;
-    TRACE("(%p %ld %p)\n", hInstDLL, fdwReason, lpvReserved);
+    TRACE("(%p %d %p)\n", hInstDLL, fdwReason, lpvReserved);
 
     switch (fdwReason) {
     case DLL_PROCESS_ATTACH:
@@ -666,15 +580,12 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpvReserved)
             INIT_GUID(DSOUND_renderer_guids[i], 0xbd6dd71a, 0x3deb, 0x11d1, 0xb1, 0x71, 0x00, 0xc0, 0x4f, 0xc2, 0x00, 0x00 + i);
             INIT_GUID(DSOUND_capture_guids[i],  0xbd6dd71b, 0x3deb, 0x11d1, 0xb1, 0x71, 0x00, 0xc0, 0x4f, 0xc2, 0x00, 0x00 + i);
         }
+        DisableThreadLibraryCalls(hInstDLL);
+        /* Increase refcount on dsound by 1 */
+        GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPCWSTR)hInstDLL, &hInstDLL);
         break;
     case DLL_PROCESS_DETACH:
         TRACE("DLL_PROCESS_DETACH\n");
-        break;
-    case DLL_THREAD_ATTACH:
-        TRACE("DLL_THREAD_ATTACH\n");
-        break;
-    case DLL_THREAD_DETACH:
-        TRACE("DLL_THREAD_DETACH\n");
         break;
     default:
         TRACE("UNKNOWN REASON\n");

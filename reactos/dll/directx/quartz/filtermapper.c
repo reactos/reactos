@@ -81,7 +81,7 @@ struct IAMFilterData
 {
     const IAMFilterDataVtbl *lpVtbl;
 };
-const GUID IID_IAMFilterData = {
+static const GUID IID_IAMFilterData = {
  0x97f7c4d4, 0x547b, 0x4a5f, { 0x83,0x32, 0x53,0x64,0x30,0xad,0x2e,0x4d }
 };
 
@@ -560,20 +560,20 @@ static HRESULT FM2_WriteFilterData(const REGFILTER2 * prf2, BYTE **ppData, ULONG
         for (j = 0; j < rgPin2.nMediaTypes; j++)
         {
             struct REG_TYPE rt;
+            const CLSID * clsMinorType = rgPin2.lpMediaType[j].clsMinorType ? rgPin2.lpMediaType[j].clsMinorType : &MEDIASUBTYPE_NULL;
             rt.signature[0] = '0';
             rt.signature[1] = 't';
             rt.signature[2] = 'y';
             rt.signature[3] = '3';
             rt.signature[0] += j;
-
             rt.dwUnused = 0;
             rt.dwOffsetMajor = find_data(&clsidStore, (const BYTE*)rgPin2.lpMediaType[j].clsMajorType, sizeof(CLSID));
             if (rt.dwOffsetMajor == -1)
                 rt.dwOffsetMajor = add_data(&clsidStore, (const BYTE*)rgPin2.lpMediaType[j].clsMajorType, sizeof(CLSID));
             rt.dwOffsetMajor += size;
-            rt.dwOffsetMinor = find_data(&clsidStore, (const BYTE*)rgPin2.lpMediaType[j].clsMinorType, sizeof(CLSID));
+            rt.dwOffsetMinor = find_data(&clsidStore, (const BYTE*)clsMinorType, sizeof(CLSID));
             if (rt.dwOffsetMinor == -1)
-                rt.dwOffsetMinor = add_data(&clsidStore, (const BYTE*)rgPin2.lpMediaType[j].clsMinorType, sizeof(CLSID));
+                rt.dwOffsetMinor = add_data(&clsidStore, (const BYTE*)clsMinorType, sizeof(CLSID));
             rt.dwOffsetMinor += size;
 
             add_data(&mainStore, (LPBYTE)&rt, sizeof(rt));
@@ -970,8 +970,8 @@ static BOOL MatchTypes(
 /* internal helper function for qsort of MONIKER_MERIT array */
 static int mm_compare(const void * left, const void * right)
 {
-    const struct MONIKER_MERIT * mmLeft = (const struct MONIKER_MERIT *)left;
-    const struct MONIKER_MERIT * mmRight = (const struct MONIKER_MERIT *)right;
+    const struct MONIKER_MERIT * mmLeft = left;
+    const struct MONIKER_MERIT * mmRight = right;
 
     if (mmLeft->dwMerit == mmRight->dwMerit)
         return 0;
@@ -1297,7 +1297,7 @@ static HRESULT WINAPI FilterMapper_EnumMatchingFilters(
                                        NULL,
                                        &GUID_NULL);
 
-    if (!SUCCEEDED(hr))
+    if (FAILED(hr))
         return hr;
     
     while(IEnumMoniker_Next(ppEnumMoniker, 1, &IMon, &nb) == S_OK)
@@ -1346,7 +1346,7 @@ static HRESULT WINAPI FilterMapper_EnumMatchingFilters(
 
         if (SUCCEEDED(hrSub))
         {
-            len = (strlenW((WCHAR*)V_UNION(&var, bstrVal))+1) * sizeof(WCHAR);
+            len = (strlenW(V_UNION(&var, bstrVal))+1) * sizeof(WCHAR);
             if (!(regfilters[idx].Name = CoTaskMemAlloc(len*2)))
                 hr = E_OUTOFMEMORY;
         }
@@ -1384,7 +1384,7 @@ static HRESULT WINAPI FilterMapper_RegisterFilter(IFilterMapper * iface, CLSID c
     LPWSTR wszClsid = NULL;
     HKEY hKey;
     LONG lRet;
-    WCHAR wszKeyName[strlenW(wszFilterSlash) + (CHARS_IN_GUID-1) + 1];
+    WCHAR wszKeyName[ARRAYSIZE(wszFilterSlash)-1 + (CHARS_IN_GUID-1) + 1];
 
     TRACE("(%p)->(%s, %s, %x)\n", iface, debugstr_guid(&clsid), debugstr_w(szName), dwMerit);
 
@@ -1453,7 +1453,7 @@ static HRESULT WINAPI FilterMapper_RegisterPin(
     HKEY hKey = NULL;
     HKEY hPinsKey = NULL;
     WCHAR * wszPinsKeyName;
-    WCHAR wszKeyName[strlenW(wszClsidSlash) + (CHARS_IN_GUID-1) + 1];
+    WCHAR wszKeyName[ARRAYSIZE(wszClsidSlash)-1 + (CHARS_IN_GUID-1) + 1];
 
     TRACE("(%p)->(%s, %s, %d, %d, %d, %d, %s, %s)\n", iface, debugstr_guid(&Filter), debugstr_w(szName), bRendered,
                 bOutput, bZero, bMany, debugstr_guid(&ConnectsToFilter), debugstr_w(ConnectsToPin));
@@ -1614,7 +1614,7 @@ static HRESULT WINAPI FilterMapper_UnregisterFilter(IFilterMapper * iface, CLSID
     LONG lRet;
     LPWSTR wszClsid = NULL;
     HKEY hKey;
-    WCHAR wszKeyName[strlenW(wszClsidSlash) + (CHARS_IN_GUID-1) + 1];
+    WCHAR wszKeyName[ARRAYSIZE(wszClsidSlash)-1 + (CHARS_IN_GUID-1) + 1];
 
     TRACE("(%p)->(%s)\n", iface, debugstr_guid(&Filter));
 
@@ -1676,7 +1676,7 @@ static HRESULT WINAPI FilterMapper_UnregisterPin(IFilterMapper * iface, CLSID Fi
     LPWSTR wszClsid = NULL;
     HKEY hKey = NULL;
     WCHAR * wszPinNameKey;
-    WCHAR wszKeyName[strlenW(wszClsidSlash) + (CHARS_IN_GUID-1) + 1];
+    WCHAR wszKeyName[ARRAYSIZE(wszClsidSlash)-1 + (CHARS_IN_GUID-1) + 1];
 
     TRACE("(%p)->(%s, %s)\n", iface, debugstr_guid(&Filter), debugstr_w(Name));
 

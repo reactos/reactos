@@ -20087,7 +20087,7 @@ xmlSchemaResolveAttrUseReferences(xmlSchemaAttributeUsePtr ause,
 		WXS_BASIC_CAST ause, ause->node,
 		"ref", ref->name, ref->targetNamespace,
 		XML_SCHEMA_TYPE_ATTRIBUTE, NULL);
-            return(ctxt->err);;
+            return(ctxt->err);
         }
     }
     return(0);
@@ -28596,7 +28596,7 @@ xmlSchemaValidateStream(xmlSchemaValidCtxtPtr ctxt,
 #endif
     pctxt->linenumbers = 1;
 
-    inputStream = xmlNewIOInputStream(pctxt, input, enc);;
+    inputStream = xmlNewIOInputStream(pctxt, input, enc);
     if (inputStream == NULL) {
         ret = -1;
 	goto done;

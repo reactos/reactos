@@ -1685,3 +1685,31 @@ pSetupIsGuidNull(LPGUID lpGUID)
 {
     return IsEqualGUID(lpGUID, &GUID_NULL);
 }
+
+/*
+ * implemented
+ */
+BOOL
+WINAPI
+IsUserAdmin(VOID)
+{
+    SID_IDENTIFIER_AUTHORITY Authority = {SECURITY_NT_AUTHORITY};
+    BOOL bResult = FALSE;
+    PSID lpSid;
+
+    if (!AllocateAndInitializeSid(&Authority, 2, SECURITY_BUILTIN_DOMAIN_RID,
+                                  DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0,
+                                  &lpSid))
+    {
+        return FALSE;
+    }
+
+    if (!CheckTokenMembership(NULL, lpSid, &bResult))
+    {
+        bResult = FALSE;
+    }
+
+    FreeSid(lpSid);
+
+    return bResult;
+}

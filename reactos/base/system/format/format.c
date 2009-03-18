@@ -64,7 +64,7 @@ static VOID PrintWin32Error( LPTSTR Message, DWORD ErrorCode )
 					MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
 					(LPTSTR)&lpMsgBuf, 0, NULL );
 
-	_tprintf(_T("%S: %S\n"), (LPWSTR)Message, (LPWSTR)lpMsgBuf );
+	_tprintf(_T("%s: %s\n"), Message, lpMsgBuf );
 	LocalFree( lpMsgBuf );
 }
 
@@ -264,7 +264,7 @@ static VOID Usage( LPTSTR ProgramName )
 	LoadString( GetModuleHandle(NULL), STRING_HELP, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
 	if (!LoadFMIFSEntryPoints())
 	{
-		_tprintf(szMsg, ProgramName, "");
+		_tprintf(szMsg, ProgramName, _T(""));
 		return;
 	}
 

@@ -70,9 +70,9 @@ static HRESULT WINAPI IEnumPinsImpl_QueryInterface(IEnumPins * iface, REFIID rii
     *ppv = NULL;
 
     if (IsEqualIID(riid, &IID_IUnknown))
-        *ppv = (LPVOID)iface;
+        *ppv = iface;
     else if (IsEqualIID(riid, &IID_IEnumPins))
-        *ppv = (LPVOID)iface;
+        *ppv = iface;
 
     if (*ppv)
     {

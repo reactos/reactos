@@ -85,7 +85,7 @@ public:
     STDMETHODIMP_(void) powerUp();
     STDMETHODIMP_(void) powerDown();
 
-    friend NTSTATUS     PropertyHandler_ChannelConfig(PPCPROPERTY_REQUEST PropertyRequest);
+    friend NTSTATUS NTAPI PropertyHandler_ChannelConfig(PPCPROPERTY_REQUEST PropertyRequest);
     friend class CMiniportWaveStreamCMI;
 };
 

@@ -164,6 +164,7 @@ extern "C"
 /* HACK */
 /* typedef PVOID CM_RESOURCE_TYPE; */
 
+#define _100NS_UNITS_PER_SECOND 10000000L
 #define PORT_CLASS_DEVICE_EXTENSION_SIZE ( 64 * sizeof(ULONG_PTR) )
 
 
@@ -236,42 +237,47 @@ enum
 
 struct _PCPROPERTY_REQUEST;
 
+typedef struct _PCPROPERTY_REQUEST PCPROPERTY_REQUEST, *PPCPROPERTY_REQUEST;
+
 typedef NTSTATUS (*PCPFNPROPERTY_HANDLER)(
-    IN  struct _PCPROPERTY_REQUEST* PropertyRequest);
+    IN  PPCPROPERTY_REQUEST PropertyRequest);
 
-typedef struct _PCPROPERTY_ITEM
+typedef struct
 {
-    const GUID* Set;
-    ULONG Id;
-    ULONG Flags;
-    PCPFNPROPERTY_HANDLER Handler;
-} PCPROPERTY_ITEM, *PPCPROPERTY_ITEM;
-
-typedef struct _PCPROPERTY_REQUEST
-{
-    PUNKNOWN MajorTarget;
-    PUNKNOWN MinorTarget;
-    ULONG Node;
-    const PCPROPERTY_ITEM* PropertyItem;
-    ULONG Verb;
-    ULONG InstanceSize;
-    PVOID Instance;
-    ULONG ValueSize;
-    PVOID Value;
-    PIRP Irp;
-} PCPROPERTY_REQUEST, *PPCPROPERTY_REQUEST;
-
-#define PCPROPERTY_ITEM_FLAG_DEFAULTVALUES KSPROPERTY_TYPE_DEFAULTVALUES
+    const GUID *            Set;
+    ULONG                   Id;
+    ULONG                   Flags;
 #define PCPROPERTY_ITEM_FLAG_GET            KSPROPERTY_TYPE_GET
 #define PCPROPERTY_ITEM_FLAG_SET            KSPROPERTY_TYPE_SET
 #define PCPROPERTY_ITEM_FLAG_BASICSUPPORT   KSPROPERTY_TYPE_BASICSUPPORT
-#define PCPROPERTY_ITEM_FLAG_SERIALIZESIZE  KSPROPERTY_TYPE_SERIALIZESIZE
+//not supported #define PCPROPERTY_ITEM_FLAG_RELATIONS      KSPROPERTY_TYPE_RELATIONS
 #define PCPROPERTY_ITEM_FLAG_SERIALIZERAW   KSPROPERTY_TYPE_SERIALIZERAW
 #define PCPROPERTY_ITEM_FLAG_UNSERIALIZERAW KSPROPERTY_TYPE_UNSERIALIZERAW
-#define PCPROPERTY_ITEM_FLAG_SERIALIZE      ( PCPROPERTY_ITEM_FLAG_SERIALIZERAW \
-                                            | PCPROPERTY_ITEM_FLAG_UNSERIALIZERAW \
-                                            | PCPROPERTY_ITEM_FLAG_SERIALIZESIZE)
+#define PCPROPERTY_ITEM_FLAG_SERIALIZESIZE  KSPROPERTY_TYPE_SERIALIZESIZE
+#define PCPROPERTY_ITEM_FLAG_SERIALIZE\
+        (PCPROPERTY_ITEM_FLAG_SERIALIZERAW\
+        |PCPROPERTY_ITEM_FLAG_UNSERIALIZERAW\
+        |PCPROPERTY_ITEM_FLAG_SERIALIZESIZE\
+        )
+#define PCPROPERTY_ITEM_FLAG_DEFAULTVALUES  KSPROPERTY_TYPE_DEFAULTVALUES
+    PCPFNPROPERTY_HANDLER   Handler;
+}
+PCPROPERTY_ITEM, *PPCPROPERTY_ITEM;
 
+
+struct _PCPROPERTY_REQUEST
+{
+    PUNKNOWN                MajorTarget;
+    PUNKNOWN                MinorTarget;
+    ULONG                   Node;
+    const PCPROPERTY_ITEM * PropertyItem;
+    ULONG                   Verb;
+    ULONG                   InstanceSize;
+    PVOID                   Instance;
+    ULONG                   ValueSize;
+    PVOID                   Value;
+    PIRP                    Irp;
+};
 
 struct _PCEVENT_REQUEST;
 
@@ -381,6 +387,16 @@ typedef struct
     const GUID* Categories;
 } PCFILTER_DESCRIPTOR, *PPCFILTER_DESCRIPTOR;
 
+#define DEFINE_PCAUTOMATION_TABLE_PROP(AutomationTable,PropertyTable)\
+const PCAUTOMATION_TABLE AutomationTable =\
+{\
+    sizeof(PropertyTable[0]),\
+    SIZEOF_ARRAY(PropertyTable),\
+    (const PCPROPERTY_ITEM *) PropertyTable,\
+    0,0,NULL,\
+    0,0,NULL,\
+    0\
+}
 
 /* ===============================================================
     IResourceList Interface
@@ -1011,6 +1027,10 @@ typedef IMusicTechnology *PMUSICTECHNOLOGY;
 DEFINE_GUIDSTRUCT("0xB4C90A25-5791-11d0-86f9-00a0c911b544", IID_IPort);
 #define IID_IPort DEFINE_GUIDNAMED(IID_IPort)
 #endif
+
+DEFINE_GUID(IID_IMiniport,
+    0xb4c90a24L, 0x5791, 0x11d0, 0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44);
+
 DEFINE_GUID(IID_IPort,
     0xb4c90a25L, 0x5791, 0x11d0, 0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44);
 
@@ -1360,6 +1380,9 @@ typedef IMiniportTopology *PMINIPORTTOPOLOGY;
 #undef INTERFACE
 #define INTERFACE IMiniportWaveCyclicStream
 
+DEFINE_GUID(IID_IMiniportWaveCyclicStream,
+0xb4c90a28L, 0x5791, 0x11d0, 0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44);
+
 DECLARE_INTERFACE_(IMiniportWaveCyclicStream,IUnknown)
 {
     DEFINE_ABSTRACT_UNKNOWN()
@@ -1387,6 +1410,29 @@ DECLARE_INTERFACE_(IMiniportWaveCyclicStream,IUnknown)
 
 typedef IMiniportWaveCyclicStream *PMINIPORTWAVECYCLICSTREAM;
 
+#define IMP_IMiniportWaveCyclicStream\
+    STDMETHODIMP_(NTSTATUS) SetFormat\
+    (   IN      PKSDATAFORMAT   DataFormat\
+    );\
+    STDMETHODIMP_(ULONG) SetNotificationFreq\
+    (   IN      ULONG           Interval,\
+        OUT     PULONG          FrameSize\
+    );\
+    STDMETHODIMP_(NTSTATUS) SetState\
+    (   IN      KSSTATE         State\
+    );\
+    STDMETHODIMP_(NTSTATUS) GetPosition\
+    (   OUT     PULONG          Position\
+    );\
+    STDMETHODIMP_(NTSTATUS) NormalizePhysicalPosition\
+    (   IN OUT PLONGLONG        PhysicalPosition\
+    );\
+    STDMETHODIMP_(void) Silence\
+    (   IN      PVOID           Buffer,\
+        IN      ULONG           ByteCount\
+    )
+
+
 /* ===============================================================
     IMiniportWaveCyclic Interface
 */
@@ -1412,7 +1458,7 @@ DECLARE_INTERFACE_(IMiniportWaveCyclic, IMiniport)
         IN PUNKNOWN  OuterUnknown  OPTIONAL,
         IN POOL_TYPE  PoolType,
         IN ULONG  Pin,
-        IN BOOL  Capture,
+        IN BOOLEAN  Capture,
         IN PKSDATAFORMAT  DataFormat,
         OUT PDMACHANNEL  *DmaChannel,
         OUT PSERVICEGROUP  *ServiceGroup) PURE;
@@ -1420,6 +1466,24 @@ DECLARE_INTERFACE_(IMiniportWaveCyclic, IMiniport)
 
 typedef IMiniportWaveCyclic *PMINIPORTWAVECYCLIC;
 #undef INTERFACE
+
+#define IMP_IMiniportWaveCyclic\
+    IMP_IMiniport;\
+    STDMETHODIMP_(NTSTATUS) Init\
+    (   IN      PUNKNOWN        UnknownAdapter,\
+        IN      PRESOURCELIST   ResourceList,\
+        IN      PPORTWAVECYCLIC Port\
+    );\
+    STDMETHODIMP_(NTSTATUS) NewStream\
+    (   OUT     PMINIPORTWAVECYCLICSTREAM * Stream,\
+        IN      PUNKNOWN                    OuterUnknown    OPTIONAL,\
+        IN      POOL_TYPE                   PoolType,\
+        IN      ULONG                       Pin,\
+        IN      BOOLEAN                     Capture,\
+        IN      PKSDATAFORMAT               DataFormat,\
+        OUT     PDMACHANNEL *               DmaChannel,\
+        OUT     PSERVICEGROUP *             ServiceGroup\
+    )
 
 
 /* ===============================================================
@@ -1547,7 +1611,19 @@ DECLARE_INTERFACE_(IAdapterPowerManagement, IUnknown)
         IN PDEVICE_CAPABILITIES PowerDeviceCaps) PURE;
 };
 
-#define IMP_IAdapterPowerManagement
+#define IMP_IAdapterPowerManagement                       \
+    STDMETHODIMP_(void) PowerChangeState                  \
+    (   IN      POWER_STATE     NewState                  \
+    );                                                    \
+    STDMETHODIMP_(NTSTATUS) QueryPowerChangeState         \
+    (   IN      POWER_STATE     NewStateQuery             \
+    );                                                    \
+    STDMETHODIMP_(NTSTATUS) QueryDeviceCapabilities       \
+    (   IN      PDEVICE_CAPABILITIES    PowerDeviceCaps   \
+    )
+
+typedef IAdapterPowerManagement *PADAPTERPOWERMANAGEMENT;
+
 
 /* ===============================================================
     IPowerNotify Interface

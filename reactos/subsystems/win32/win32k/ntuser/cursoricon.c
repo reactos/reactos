@@ -1389,82 +1389,7 @@ NtUserSetSystemCursor(
 }
 
 
-#define STRETCH_CAN_SRCCOPY_ONLY
-
-#ifdef STRETCH_CAN_SRCCOPY_ONLY
-void
-FASTCALL
-DoStretchBlt(HDC DcDest, int XDest, int YDest, int WidthDest, int HeightDest,
-             HDC DcSrc, int XSrc, int YSrc, int WidthSrc, int HeightSrc,
-             DWORD Rop3, BOOL Color)
-{
-   HDC DcStretched;
-   HBITMAP BitmapStretched;
-   HBITMAP OldBitmap;
-
-   if (WidthDest == WidthSrc && HeightDest == HeightSrc)
-   {
-      NtGdiBitBlt(DcDest, XDest, YDest, WidthDest, HeightDest,
-                  DcSrc, XSrc, YSrc, Rop3, 0, 0);
-   }
-   else if (SRCCOPY == Rop3)
-   {
-      NtGdiStretchBlt(DcDest, XDest, YDest, WidthDest, HeightDest,
-                      DcSrc, XSrc, YSrc, WidthSrc, HeightSrc,
-                      Rop3, 0);
-   }
-   else
-   {
-      DcStretched = NtGdiCreateCompatibleDC(DcSrc);
-      if (NULL == DcStretched)
-      {
-         DPRINT1("Failed to create compatible DC\n");
-         return;
-      }
-      if (Color)
-      {
-         BitmapStretched = NtGdiCreateCompatibleBitmap(DcDest, WidthDest,
-                                                       HeightDest);
-      }
-      else
-      {
-         BitmapStretched = IntGdiCreateBitmap(WidthDest, HeightDest, 1, 1, NULL);
-      }
-      if (NULL == BitmapStretched)
-      {
-         NtGdiDeleteObjectApp(DcStretched);
-         DPRINT1("Failed to create temporary bitmap\n");
-         return;
-      }
-      OldBitmap = NtGdiSelectBitmap(DcStretched, BitmapStretched);
-      if (NULL == OldBitmap)
-      {
-         NtGdiDeleteObject(BitmapStretched);
-         NtGdiDeleteObjectApp(DcStretched);
-         DPRINT1("Failed to create temporary bitmap\n");
-         return;
-      }
-      if (! NtGdiStretchBlt(DcStretched, 0, 0, WidthDest, HeightDest,
-                            DcSrc, XSrc, YSrc, WidthSrc, HeightSrc,
-                            SRCCOPY, 0) ||
-          ! NtGdiBitBlt(DcDest, XDest, YDest, WidthDest, HeightDest,
-                        DcStretched, 0, 0, Rop3, 0, 0))
-      {
-         DPRINT1("Failed to blt\n");
-      }
-      NtGdiSelectBitmap(DcStretched, OldBitmap);
-      NtGdiDeleteObject(BitmapStretched);
-      NtGdiDeleteObjectApp(DcStretched);
-   }
-}
-#else
-#define DoStretchBlt(DcDest, XDest, YDest, WidthDest, HeightDest, \
-                     DcSrc, XSrc, YSrc, WidthSrc, HeightSrc, Rop3, Color) \
-        NtGdiStretchBlt((DcDest), (XDest), (YDest), (WidthDest), (HeightDest), \
-                        (DcSrc), (XSrc), (YSrc), (WidthSrc), (HeightSrc), \
-                        (Rop3), 0)
-#endif /* STRETCH_CAN_SRCCOPY_ONLY */
-
+/* FIXME: ReactOS specific hack */
 BOOL
 UserDrawIconEx(
    HDC hDc,
@@ -1482,7 +1407,6 @@ UserDrawIconEx(
    BITMAP bmpMask, bmpColor;
    COLORREF oldFg, oldBg;
    BOOL DoFlickerFree;
-   INT nStretchMode;
    SIZE IconSize;
 
    HDC hdcOff;
@@ -1524,7 +1448,31 @@ UserDrawIconEx(
       when cxWidth or cyHeight is 0 */
    if ((bmpColor.bmBitsPixel == 32) && (cxWidth != 0) && (cyHeight != 0))
    {
-      bAlpha = TRUE;
+      SURFACE *psurfOff = NULL;
+      PFN_DIB_GetPixel fnSource_GetPixel = NULL;
+      INT x, y;
+
+      //Find alpha into icon
+      psurfOff = SURFACE_LockSurface(hbmColor ? hbmColor : hbmMask);
+      if (psurfOff)
+      {
+         fnSource_GetPixel = DibFunctionsForBitmapFormat[psurfOff->SurfObj.iBitmapFormat].DIB_GetPixel;
+         if (fnSource_GetPixel)
+         {
+            for (x = 0; x < psurfOff->SurfObj.sizlBitmap.cx; x++)
+            {
+               for (y = 0; y < psurfOff->SurfObj.sizlBitmap.cy; y++)
+               {
+                  bAlpha = ((BYTE)(fnSource_GetPixel(&psurfOff->SurfObj, x, y) >> 24) & 0xff);
+                  if (bAlpha) 
+                     break;
+               }
+               if (bAlpha) 
+                  break;
+            }
+         }
+         SURFACE_UnlockSurface(psurfOff);
+      }
    }
 
    if (!diFlags)
@@ -1608,8 +1556,6 @@ UserDrawIconEx(
       goto cleanup;
    }
 
-   nStretchMode = IntGdiSetStretchBltMode(hdcOff, STRETCH_DELETESCANS);
-
    oldFg = IntGdiSetTextColor(hdcOff, RGB(0, 0, 0));
    oldBg = IntGdiSetBkColor(hdcOff, RGB(255, 255, 255));
 
@@ -1622,7 +1568,7 @@ UserDrawIconEx(
          goto cleanup;
       }
 
-      DoStretchBlt(hdcOff,
+      NtGdiStretchBlt(hdcOff,
                    (DoFlickerFree || bAlpha ? 0 : xLeft),
                    (DoFlickerFree || bAlpha ? 0 : yTop), 
                    cxWidth,
@@ -1633,7 +1579,7 @@ UserDrawIconEx(
                    IconSize.cx,
                    IconSize.cy,
                    ((diFlags & DI_IMAGE) ? SRCAND : SRCCOPY),
-                   FALSE);
+                   0);
 
       NtGdiSelectBitmap(hdcMem, hOldMem);
    }
@@ -1642,7 +1588,7 @@ UserDrawIconEx(
    {
       hOldMem = NtGdiSelectBitmap(hdcMem, (hbmColor ? hbmColor : hbmMask));
 
-      DoStretchBlt(hdcOff, 
+      NtGdiStretchBlt(hdcOff, 
                    (DoFlickerFree || bAlpha ? 0 : xLeft),
                    (DoFlickerFree || bAlpha ? 0 : yTop),
                    cxWidth,
@@ -1653,7 +1599,7 @@ UserDrawIconEx(
                    IconSize.cx,
                    IconSize.cy,
                    ((diFlags & DI_MASK) ? SRCINVERT : SRCCOPY),
-                   NULL != hbmColor);
+                   0);
 
       NtGdiSelectBitmap(hdcMem, hOldMem);
    }
@@ -1729,7 +1675,6 @@ UserDrawIconEx(
 
    IntGdiSetTextColor(hdcOff, oldFg);
    IntGdiSetBkColor(hdcOff, oldBg);
-   IntGdiSetStretchBltMode(hdcOff, nStretchMode);
 
    Ret = TRUE;
 

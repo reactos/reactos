@@ -216,13 +216,13 @@ BEGIN
     IDS_CMT_DEVMGMT     "Ejecutar Administrador de dispositivos"
     IDS_CMT_SERVMAN     "Ejecutar Administrador de servicios"
     IDS_CMT_RDESKTOP    "Ejecutar Escritorio remoto"
-    IDS_CMT_EVENTVIEW   "Launch Event Viewer"
-    IDS_CMT_MSCONFIG    "Launch System Configuration program"
+    IDS_CMT_EVENTVIEW   "Ejecutar Visor de sucesos"
+    IDS_CMT_MSCONFIG    "Ejecutar Utilidad de configuración del sistema"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_GAMES		    "Juegos"
+    IDS_GAMES			"Juegos"
     IDS_CMT_SOLITAIRE	"Solitario"
     IDS_CMT_WINEMINE	"Buscaminas"
 END
@@ -232,6 +232,7 @@ BEGIN
 	IDS_SYS_TOOLS        "Herramientas del sistema"
 	IDS_CMT_CHARMAP      "Mapa de caracteres"
 	IDS_CMT_KBSWITCH     "Keyboard Layout Switcher"
+    IDS_CMT_DXDIAG       "Launch ReactX-Diagnostic program"
 END
 
 
@@ -243,14 +244,21 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_REACTOS_SETUP		    "Instalación de ReactOS"
+    IDS_SYS_ENTERTAINMENT       "Entretenimiento"
+    IDS_CMT_MPLAY32             "Ejecutar Reproductor multimedia"
+    IDS_CMT_SNDVOL32            "Ejecutar Control de volumen"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_REACTOS_SETUP			"Instalación de ReactOS"
     IDS_UNKNOWN_ERROR           "Error desconocido"
     IDS_REGISTERING_COMPONENTS  "Registrando componentes..."
-    IDS_LOADLIBRARY_FAILED	    "LoadLibrary falló: "
-    IDS_GETPROCADDR_FAILED	    "GetProcAddr falló: "
+    IDS_LOADLIBRARY_FAILED		"LoadLibrary falló: "
+    IDS_GETPROCADDR_FAILED		"GetProcAddr falló: "
     IDS_REGSVR_FAILED           "DllRegisterServer falló: "
-    IDS_DLLINSTALL_FAILED	    "DllInstall falló: "
-    IDS_TIMEOUT			        "Tiempo agotado durante la instalación"
+    IDS_DLLINSTALL_FAILED		"DllInstall falló: "
+    IDS_TIMEOUT					"Tiempo agotado durante la instalación"
     IDS_REASON_UNKNOWN          ""
 END
 
@@ -261,6 +269,7 @@ BEGIN
     IDS_SHORT_DOWNLOADER "Download !.lnk"
     IDS_SHORT_SERVICE    "Administrador de Servicios.lnk"
     IDS_SHORT_DEVICE     "Administrador de Dispositivos.lnk"
+    IDS_SHORT_MPLAY32    "Multimedia Player.lnk"
     IDS_SHORT_CALC       "Calculadora.lnk"
     IDS_SHORT_REGEDIT    "Editor de registro.lnk"
     IDS_SHORT_NOTEPAD    "Bloc de notas.lnk"
@@ -274,6 +283,8 @@ BEGIN
     IDS_SHORT_KBSWITCH   "Keyboard Layout Switcher.lnk"
     IDS_SHORT_EVENTVIEW  "Event Viewer.lnk"
     IDS_SHORT_MSCONFIG   "System Configuration.lnk"
+    IDS_SHORT_SNDVOL32   "Volume Control.lnk"
+    IDS_SHORT_DXDIAG     "ReactX Diagnostic.lnk"
 END
 
 STRINGTABLE

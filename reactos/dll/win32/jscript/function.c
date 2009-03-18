@@ -31,6 +31,8 @@ typedef struct {
     parameter_t *parameters;
     scope_chain_t *scope_chain;
     parser_ctx_t *parser;
+    const WCHAR *src_str;
+    DWORD src_len;
     DWORD length;
 } FunctionInstance;
 
@@ -189,7 +191,6 @@ static HRESULT invoke_constructor(FunctionInstance *function, LCID lcid, DISPPAR
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *caller)
 {
     DispatchEx *this_obj;
-    VARIANT var;
     HRESULT hres;
 
     hres = create_object(function->dispex.ctx, &function->dispex, &this_obj);
@@ -201,7 +202,6 @@ static HRESULT invoke_constructor(FunctionInstance *function, LCID lcid, DISPPAR
     if(FAILED(hres))
         return hres;
 
-    VariantClear(&var);
     V_VT(retv) = VT_DISPATCH;
     V_DISPATCH(retv) = (IDispatch*)_IDispatchEx_(this_obj);
     return S_OK;
@@ -224,6 +224,23 @@ static HRESULT invoke_value_proc(FunctionInstance *function, LCID lcid, WORD fla
     if(this_obj)
         jsdisp_release(this_obj);
     return hres;
+}
+
+static HRESULT function_to_string(FunctionInstance *function, BSTR *ret)
+{
+    BSTR str;
+
+    if(function->value_proc) {
+        FIXME("Builtin functions not implemented\n");
+        return E_NOTIMPL;
+    }
+
+    str = SysAllocStringLen(function->src_str, function->src_len);
+    if(!str)
+        return E_OUTOFMEMORY;
+
+    *ret = str;
+    return S_OK;
 }
 
 static HRESULT Function_length(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
@@ -249,8 +266,30 @@ static HRESULT Function_length(DispatchEx *dispex, LCID lcid, WORD flags, DISPPA
 static HRESULT Function_toString(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    FunctionInstance *function;
+    BSTR str;
+    HRESULT hres;
+
+    TRACE("\n");
+
+    if(!is_class(dispex, JSCLASS_FUNCTION)) {
+        FIXME("throw TypeError\n");
+        return E_FAIL;
+    }
+
+    function = (FunctionInstance*)dispex;
+
+    hres = function_to_string(function, &str);
+    if(FAILED(hres))
+        return hres;
+
+    if(retv) {
+        V_VT(retv) = VT_BSTR;
+        V_BSTR(retv) = str;
+    }else {
+        SysFreeString(str);
+    }
+    return S_OK;
 }
 
 static HRESULT Function_toLocaleString(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
@@ -322,6 +361,19 @@ static HRESULT Function_value(DispatchEx *dispex, LCID lcid, WORD flags, DISPPAR
             return invoke_value_proc(function, lcid, flags, dp, retv, ei, caller);
 
         return invoke_function(function, lcid, dp, retv, ei, caller);
+
+    case DISPATCH_PROPERTYGET: {
+        HRESULT hres;
+        BSTR str;
+
+        hres = function_to_string(function, &str);
+        if(FAILED(hres))
+            return hres;
+
+        V_VT(retv) = VT_BSTR;
+        V_BSTR(retv) = str;
+        break;
+    }
 
     case DISPATCH_CONSTRUCT:
         if(function->value_proc)
@@ -438,7 +490,7 @@ HRESULT create_builtin_function(script_ctx_t *ctx, builtin_invoke_t value_proc, 
 }
 
 HRESULT create_source_function(parser_ctx_t *ctx, parameter_t *parameters, source_elements_t *source,
-        scope_chain_t *scope_chain, DispatchEx **ret)
+        scope_chain_t *scope_chain, const WCHAR *src_str, DWORD src_len, DispatchEx **ret)
 {
     FunctionInstance *function;
     DispatchEx *prototype;
@@ -469,6 +521,9 @@ HRESULT create_source_function(parser_ctx_t *ctx, parameter_t *parameters, sourc
     for(iter = parameters; iter; iter = iter->next)
         length++;
     function->length = length;
+
+    function->src_str = src_str;
+    function->src_len = src_len;
 
     *ret = &function->dispex;
     return S_OK;

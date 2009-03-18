@@ -23,6 +23,7 @@ typedef struct
     BOOL DigitalOutputDisable;
 } DRMRIGHTS, *PDRMRIGHTS;
 
+typedef const DRMRIGHTS *PCDRMRIGHTS;
 
 /* ===============================================================
     Digital Rights Management Functions
@@ -75,5 +76,32 @@ DrmGetContentRights(
 #ifdef __cplusplus
 }
 #endif
+
+
+
+DEFINE_GUID(IID_IDrmAudioStream,
+    0x1915c967, 0x3299, 0x48cb, 0xa3, 0xe4, 0x69, 0xfd, 0x1d, 0x1b, 0x30, 0x6e);
+
+DECLARE_INTERFACE_(IDrmAudioStream, IUnknown)
+{
+    STDMETHOD_(NTSTATUS, QueryInterface)(THIS_
+        REFIID InterfaceId,
+        PVOID* Interface
+        ) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    STDMETHOD_(NTSTATUS,SetContentId)(THIS_
+        IN ULONG ContentId,
+        IN PCDRMRIGHTS DrmRights) PURE;
+};
+
+typedef IDrmAudioStream *PDRMAUDIOSTREAM;
+
+#define IMP_IDrmAudioStream                 \
+    STDMETHODIMP_(NTSTATUS) SetContentId    \
+    (   IN      ULONG	    ContentId,      \
+        IN      PCDRMRIGHTS DrmRights       \
+    );
+
 
 #endif

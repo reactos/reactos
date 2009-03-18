@@ -172,7 +172,6 @@ IPortMidi_fnInit(
     /* increment reference on miniport adapter */
     Miniport->lpVtbl->AddRef(Miniport);
 
-    DbgBreakPoint();
     Status = Miniport->lpVtbl->Init(Miniport, UnknownAdapter, ResourceList, iface, &ServiceGroup);
     if (!NT_SUCCESS(Status))
     {
@@ -181,8 +180,6 @@ IPortMidi_fnInit(
         Miniport->lpVtbl->Release(Miniport);
         return Status;
     }
-
-	DPRINT1("IMiniportMidi sucessfully init\n");
 
     /* get the miniport device descriptor */
     Status = Miniport->lpVtbl->GetDescription(Miniport, &This->pDescriptor);
@@ -330,7 +327,7 @@ ISubDevice_fnNewIrpTarget(
     IN WCHAR * Name,
     IN PUNKNOWN Unknown,
     IN POOL_TYPE PoolType,
-    IN PDEVICE_OBJECT * DeviceObject,
+    IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp, 
     IN KSOBJECT_CREATE *CreateObject)
 {

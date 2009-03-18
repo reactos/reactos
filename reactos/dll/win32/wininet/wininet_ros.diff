@@ -101,11 +101,3 @@
  	    {
  		if (recv(connection->socketFD, &lpszBuffer[nRecv], 1, 0) <= 0)
  		{
---- D:/Wine-CVS/wine/dlls/wininet/rsrc.rc	Thu May 08 21:26:20 2008
-+++ D:/ReactOS-Trunk/reactos/dll/win32/wininet/rsrc.rc	Thu May 29 18:57:29 2008
-@@ -60,4 +60,5 @@
- #include "wininet_Ru.rc"
- #include "wininet_Si.rc"
- #include "wininet_Sv.rc"
-+#include "wininet_Uk.rc"
- #include "wininet_Tr.rc"

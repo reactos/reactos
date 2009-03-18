@@ -44,7 +44,8 @@
                              RTL_SRWLOCK_SHARED | RTL_SRWLOCK_CONTENTION_LOCK)
 #define RTL_SRWLOCK_BITS    4
 
-#if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__ < 40300) && !defined(_M_AMD64)
+#if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__ < 40300) || \
+    (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__ == 40303)
 /* This macro will cause the code to assert if compiled with a buggy
    version of GCC that doesn't align the wait blocks properly on the stack! */
 #define ASSERT_SRW_WAITBLOCK(ptr) \

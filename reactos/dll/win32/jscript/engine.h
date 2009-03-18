@@ -17,11 +17,33 @@
  */
 
 typedef struct _source_elements_t source_elements_t;
+typedef struct _function_expression_t function_expression_t;
 
 typedef struct _obj_literal_t {
     DispatchEx *obj;
     struct _obj_literal_t *next;
 } obj_literal_t;
+
+typedef struct _function_declaration_t {
+    function_expression_t *expr;
+
+    struct _function_declaration_t *next;
+} function_declaration_t;
+
+typedef struct _var_list_t {
+    const WCHAR *identifier;
+
+    struct _var_list_t *next;
+} var_list_t;
+
+typedef struct _func_stack {
+    function_declaration_t *func_head;
+    function_declaration_t *func_tail;
+    var_list_t *var_head;
+    var_list_t *var_tail;
+
+    struct _func_stack *next;
+} func_stack_t;
 
 typedef struct _parser_ctx_t {
     LONG ref;
@@ -38,6 +60,7 @@ typedef struct _parser_ctx_t {
     jsheap_t heap;
 
     obj_literal_t *obj_literals;
+    func_stack_t *func_stack;
 
     struct _parser_ctx_t *next;
 } parser_ctx_t;
@@ -98,7 +121,8 @@ typedef struct _statement_t statement_t;
 typedef struct _expression_t expression_t;
 typedef struct _parameter_t parameter_t;
 
-HRESULT create_source_function(parser_ctx_t*,parameter_t*,source_elements_t*,scope_chain_t*,DispatchEx**);
+HRESULT create_source_function(parser_ctx_t*,parameter_t*,source_elements_t*,scope_chain_t*,
+        const WCHAR*,DWORD,DispatchEx**);
 
 typedef struct {
     VARTYPE vt;
@@ -273,27 +297,21 @@ struct _parameter_t {
     struct _parameter_t *next;
 };
 
-typedef struct _function_declaration_t {
-    const WCHAR *identifier;
-    parameter_t *parameter_list;
-    source_elements_t *source_elements;
-
-    struct _function_declaration_t *next;
-} function_declaration_t;
-
 struct _source_elements_t {
     statement_t *statement;
     statement_t *statement_tail;
     function_declaration_t *functions;
-    function_declaration_t *functions_tail;
+    var_list_t *variables;
 };
 
-typedef struct {
+struct _function_expression_t {
     expression_t expr;
     const WCHAR *identifier;
     parameter_t *parameter_list;
     source_elements_t *source_elements;
-} function_expression_t;
+    const WCHAR *src_str;
+    DWORD src_len;
+};
 
 typedef struct {
     expression_t expr;

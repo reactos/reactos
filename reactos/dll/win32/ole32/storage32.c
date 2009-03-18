@@ -314,11 +314,11 @@ static HRESULT WINAPI StorageBaseImpl_QueryInterface(
   if (IsEqualGUID(&IID_IUnknown, riid) ||
       IsEqualGUID(&IID_IStorage, riid))
   {
-    *ppvObject = (IStorage*)This;
+    *ppvObject = This;
   }
   else if (IsEqualGUID(&IID_IPropertySetStorage, riid))
   {
-    *ppvObject = (IStorage*)&This->pssVtbl;
+    *ppvObject = &This->pssVtbl;
   }
 
   /*
@@ -2041,13 +2041,8 @@ static HRESULT deleteStreamProperty(
   size.u.HighPart = 0;
   size.u.LowPart = 0;
 
-  hr = StorageBaseImpl_OpenStream(
-         (IStorage*)parentStorage,
-         (OLECHAR*)propertyToDelete.name,
-         NULL,
-         STGM_WRITE | STGM_SHARE_EXCLUSIVE,
-         0,
-         &pis);
+  hr = StorageBaseImpl_OpenStream((IStorage*)parentStorage,
+        propertyToDelete.name, NULL, STGM_WRITE | STGM_SHARE_EXCLUSIVE, 0, &pis);
 
   if (hr!=S_OK)
   {
@@ -3693,7 +3688,7 @@ static HRESULT WINAPI IEnumSTATSTGImpl_QueryInterface(
   if (IsEqualGUID(&IID_IUnknown, riid) ||
       IsEqualGUID(&IID_IEnumSTATSTG, riid))
   {
-    *ppvObject = (IEnumSTATSTG*)This;
+    *ppvObject = This;
     IEnumSTATSTG_AddRef((IEnumSTATSTG*)This);
     return S_OK;
   }
@@ -4031,8 +4026,7 @@ static ULONG IEnumSTATSTGImpl_FindProperty(
       currentSearchNode,
       currentProperty);
 
-    if ( propertyNameCmp(
-          (const OLECHAR*)currentProperty->name, lpszPropName) == 0)
+    if (propertyNameCmp(currentProperty->name, lpszPropName) == 0)
       return currentSearchNode;
 
     /*
@@ -4344,7 +4338,7 @@ void StorageUtl_CopyPropertyToSTATSTG(
     destination->pwcsName =
       CoTaskMemAlloc((lstrlenW(source->name)+1)*sizeof(WCHAR));
 
-    strcpyW((LPWSTR)destination->pwcsName, source->name);
+    strcpyW(destination->pwcsName, source->name);
   }
 
   switch (source->propertyType)
@@ -4633,7 +4627,7 @@ HRESULT BlockChainStream_WriteAt(BlockChainStream* This,
   }
 
   *bytesWritten   = 0;
-  bufferWalker = (const BYTE*)buffer;
+  bufferWalker = buffer;
 
   while ( (size > 0) && (blockIndex != BLOCK_END_OF_CHAIN) )
   {
@@ -5368,7 +5362,7 @@ HRESULT SmallBlockChainStream_WriteAt(
    * This is OK since we don't intend to modify that buffer.
    */
   *bytesWritten   = 0;
-  bufferWalker = (const BYTE*)buffer;
+  bufferWalker = buffer;
   while ( (size > 0) && (blockIndex != BLOCK_END_OF_CHAIN) )
   {
     /*
@@ -6632,7 +6626,7 @@ static HRESULT OLECONVERT_LoadOLE10(LPOLESTREAM pOleStream, OLECONVERT_OLESTREAM
 				if(pData->dwOleTypeNameLength > 0)
 				{
 					/* Get the OleTypeName */
-					dwSize = pOleStream->lpstbl->Get(pOleStream, (void *)pData->strOleTypeName, pData->dwOleTypeNameLength);
+					dwSize = pOleStream->lpstbl->Get(pOleStream, pData->strOleTypeName, pData->dwOleTypeNameLength);
 					if(dwSize != pData->dwOleTypeNameLength)
 					{
 						hRes = CONVERT10_E_OLESTREAM_GET;
@@ -6653,7 +6647,7 @@ static HRESULT OLECONVERT_LoadOLE10(LPOLESTREAM pOleStream, OLECONVERT_OLESTREAM
 					pData->pstrOleObjFileName = HeapAlloc(GetProcessHeap(), 0, pData->dwOleObjFileNameLength);
 					if(pData->pstrOleObjFileName)
 					{
-						dwSize = pOleStream->lpstbl->Get(pOleStream, (void *)(pData->pstrOleObjFileName),pData->dwOleObjFileNameLength);
+						dwSize = pOleStream->lpstbl->Get(pOleStream, pData->pstrOleObjFileName, pData->dwOleObjFileNameLength);
 						if(dwSize != pData->dwOleObjFileNameLength)
 						{
 							hRes = CONVERT10_E_OLESTREAM_GET;
@@ -6696,7 +6690,7 @@ static HRESULT OLECONVERT_LoadOLE10(LPOLESTREAM pOleStream, OLECONVERT_OLESTREAM
 				if(!bStrem1) /* if it is a second OLE stream data */
 				{
 					pData->dwDataLength -= 8;
-					dwSize = pOleStream->lpstbl->Get(pOleStream, (void *)(pData->strUnknown), sizeof(pData->strUnknown));
+					dwSize = pOleStream->lpstbl->Get(pOleStream, pData->strUnknown, sizeof(pData->strUnknown));
 					if(dwSize != sizeof(pData->strUnknown))
 					{
 						hRes = CONVERT10_E_OLESTREAM_GET;
@@ -6783,7 +6777,7 @@ static HRESULT OLECONVERT_SaveOLE10(OLECONVERT_OLESTREAM_DATA *pData, LPOLESTREA
             if(pData->dwOleTypeNameLength > 0)
             {
                 /* Set the OleTypeName */
-                dwSize = pOleStream->lpstbl->Put(pOleStream, (void *)  pData->strOleTypeName, pData->dwOleTypeNameLength);
+                dwSize = pOleStream->lpstbl->Put(pOleStream, pData->strOleTypeName, pData->dwOleTypeNameLength);
                 if(dwSize != pData->dwOleTypeNameLength)
                 {
                     hRes = CONVERT10_E_OLESTREAM_PUT;

@@ -418,6 +418,7 @@
 		<file>cont.c</file>
 		<file>drvlck.c</file>
 		<file>freelist.c</file>
+		<file>hypermap.c</file>
 		<file>iospace.c</file>
 		<file>kmap.c</file>
 		<file>marea.c</file>

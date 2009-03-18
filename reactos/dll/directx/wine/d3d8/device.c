@@ -2265,19 +2265,19 @@ static inline struct IDirect3DDevice8Impl *device_from_device_parent(IWineD3DDev
             - FIELD_OFFSET(struct IDirect3DDevice8Impl, device_parent_vtbl));
 }
 
-HRESULT STDMETHODCALLTYPE device_parent_QueryInterface(IWineD3DDeviceParent *iface, REFIID riid, void **object)
+static HRESULT STDMETHODCALLTYPE device_parent_QueryInterface(IWineD3DDeviceParent *iface, REFIID riid, void **object)
 {
     struct IDirect3DDevice8Impl *This = device_from_device_parent(iface);
     return IDirect3DDevice8Impl_QueryInterface((IDirect3DDevice8 *)This, riid, object);
 }
 
-ULONG STDMETHODCALLTYPE device_parent_AddRef(IWineD3DDeviceParent *iface)
+static ULONG STDMETHODCALLTYPE device_parent_AddRef(IWineD3DDeviceParent *iface)
 {
     struct IDirect3DDevice8Impl *This = device_from_device_parent(iface);
     return IDirect3DDevice8Impl_AddRef((IDirect3DDevice8 *)This);
 }
 
-ULONG STDMETHODCALLTYPE device_parent_Release(IWineD3DDeviceParent *iface)
+static ULONG STDMETHODCALLTYPE device_parent_Release(IWineD3DDeviceParent *iface)
 {
     struct IDirect3DDevice8Impl *This = device_from_device_parent(iface);
     return IDirect3DDevice8Impl_Release((IDirect3DDevice8 *)This);

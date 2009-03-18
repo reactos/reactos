@@ -2551,7 +2551,7 @@ UINT WINAPI waveInGetDevCapsA(UINT_PTR uDeviceID, LPWAVEINCAPSA lpCaps, UINT uSi
 /**************************************************************************
  * 				waveInOpen			[WINMM.@]
  */
-MMRESULT WINAPI waveInOpen(HWAVEIN* lphWaveIn, UINT uDeviceID,
+MMRESULT WINAPI waveInOpen(LPHWAVEIN lphWaveIn, UINT uDeviceID,
 		       LPCWAVEFORMATEX lpFormat, DWORD_PTR dwCallback,
 		       DWORD_PTR dwInstance, DWORD dwFlags)
 {

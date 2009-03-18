@@ -9,6 +9,14 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 STRINGTABLE DISCARDABLE
 BEGIN
 
+STRING_ASSOC_HELP,    "Modify file extension associations.\n\n\
+assoc [.ext[=[FileType]]]\n\
+\n\
+assoc (print all associations)\n\
+assoc .ext (print specific association)\n\
+assoc .ext= (remove specific association)\n\
+assoc .ext=FileType (add new association)\n"
+
 STRING_ATTRIB_HELP,    "Displays or changes file attributes.\n\n\
 ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] file ...\n\
        [/S [/D]]\n\n\
@@ -294,6 +302,13 @@ STRING_LOCALE_HELP1, "Current time is"
 STRING_MKDIR_HELP,   "Creates a directory.\n\n\
 MKDIR [drive:]path\nMD [drive:]path"
 
+STRING_MKLINK_HELP, "Creates a filesystem link object.\n\n\
+MKLINK [/D | /H | /J] linkname target\n\n\
+  /D  Indicates that the symbolic link target is a directory.\n\
+  /H  Create a hard link.\n\
+  /J  Create a directory junction.\n\n\
+If neither /H or /J is specified, a symbolic link is created."
+
 STRING_MEMMORY_HELP1, "Displays the amount of system memory.\n\nMEMORY"
 
 STRING_MEMMORY_HELP2, "\n  %12s%% memory load.\n\n\
@@ -576,6 +591,7 @@ IF       Performs conditional processing in batch programs.\n\
 LABEL    Creates, changes, or deletes the volume label of a disk.\n\
 MD       Creates a directory.\n\
 MKDIR    Creates a directory.\n\
+MKLINK   Creates a filesystem link object.\n\
 MOVE     Moves one or more files from one directory to another\n\
          directory.\n\
 PATH     Displays or sets a search path for executable files.\n\
@@ -608,7 +624,7 @@ VOL      Displays a disk volume label and serial number.\n"
 STRING_CHOICE_OPTION,         "YN"
 STRING_COPY_OPTION,           "YNA"
 
-
+STRING_ASSOC_ERROR,          "File association not found for extension %s\n"
 STRING_ALIAS_ERROR,          "Command line too long after alias expansion!\n"
 STRING_BATCH_ERROR,          "Error opening batch file\n"
 STRING_CHCP_ERROR1,          "Active code page: %u\n"
@@ -669,7 +685,7 @@ STRING_ERROR_FILE_NOT_FOUND,       "File not found\n"
 STRING_ERROR_REQ_PARAM_MISSING,    "Required parameter missing\n"
 STRING_ERROR_INVALID_DRIVE,        "Invalid drive specification\n"
 STRING_ERROR_INVALID_PARAM_FORMAT, "Invalid parameter format - %s\n"
-STRING_ERROR_BADCOMMAND,           "Bad command or filename\n"
+STRING_ERROR_BADCOMMAND,           "Bad command or filename - %s\n"
 STRING_ERROR_OUT_OF_MEMORY,        "Out of memory error.\n"
 STRING_ERROR_CANNOTPIPE,           "Error!  Cannot pipe!  Cannot open temporary file!\n"
 STRING_ERROR_D_PAUSEMSG,           "Press any key to continue . . ."
@@ -693,6 +709,9 @@ STRING_FOR_ERROR,                  "bad variable specification."
 STRING_SCREEN_COL,                 "invalid value for col"
 STRING_SCREEN_ROW,                 "invalid value for row"
 STRING_TIMER_TIME                  "Timer %d is %s: "
+STRING_MKLINK_CREATED_SYMBOLIC,    "Symbolic link created for %s <<===>> %s\n"
+STRING_MKLINK_CREATED_HARD,        "Hard link created for %s <<===>> %s\n"
+STRING_MKLINK_CREATED_JUNCTION,    "Junction created for %s <<===>> %s\n"
 
 STRING_INVALID_OPERAND,            "Invalid operand."
 STRING_EXPECTED_CLOSE_PAREN,       "Expected ')'."

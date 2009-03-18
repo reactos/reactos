@@ -14,12 +14,15 @@
 	<file>task.c</file>
 	<file>task_scheduler.c</file>
 	<file>task_trigger.c</file>
-	<file>mstask_local.idl</file>
 	<file>rsrc.rc</file>
+	<library>mstask_local_interface</library>
 	<library>wine</library>
 	<library>uuid</library>
 	<library>ole32</library>
 	<library>kernel32</library>
 	<library>ntdll</library>
+</module>
+<module name="mstask_local_interface" type="idlinterface">
+	<file>mstask_local.idl</file>
 </module>
 </group>

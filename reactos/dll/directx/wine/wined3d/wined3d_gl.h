@@ -3257,6 +3257,7 @@ typedef enum _GL_Cards {
   CARD_ATI_RADEON_7200            = 0x5144,
   CARD_ATI_RADEON_8500            = 0x514c,
   CARD_ATI_RADEON_9500            = 0x4144,
+  CARD_ATI_RADEON_XPRESS_200M     = 0x5955,
   CARD_ATI_RADEON_X700            = 0x5e4c,
   CARD_ATI_RADEON_X1600           = 0x71c2,
   CARD_ATI_RADEON_HD2300          = 0x7210,

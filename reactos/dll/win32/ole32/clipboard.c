@@ -1138,7 +1138,7 @@ static HRESULT WINAPI OLEClipbrd_IDataObject_QueryInterface(
   }
   else if (memcmp(&IID_IDataObject, riid, sizeof(IID_IDataObject)) == 0)
   {
-    *ppvObject = (IDataObject*)&(This->lpvtbl1);
+    *ppvObject = &This->lpvtbl1;
   }
   else  /* We only support IUnknown and IDataObject */
   {
@@ -1569,7 +1569,7 @@ static LPENUMFORMATETC OLEClipbrd_IEnumFORMATETC_Construct(UINT cfmt, const FORM
     HeapFree(GetProcessHeap(), 0, ef);
     return NULL;
   }
-  ef->pFmt = (LPFORMATETC)IMalloc_Alloc(pIMalloc, size);
+  ef->pFmt = IMalloc_Alloc(pIMalloc, size);
   IMalloc_Release(pIMalloc);
 
   if (ef->pFmt)
@@ -1605,7 +1605,7 @@ static HRESULT WINAPI OLEClipbrd_IEnumFORMATETC_QueryInterface
   }
   else if(IsEqualIID(riid, &IID_IEnumFORMATETC))
   {
-    *ppvObj = (IDataObject*)This;
+    *ppvObj = This;
   }
 
   if(*ppvObj)

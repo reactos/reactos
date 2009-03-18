@@ -328,45 +328,6 @@ const WCHAR *msi_string_lookup_id( const string_table *st, UINT id )
 }
 
 /*
- *  msi_id2stringW
- *
- *  [in] st         - pointer to the string table
- *  [in] id  - id of the string to retrieve
- *  [out] buffer    - destination of the string
- *  [in/out] sz     - number of bytes available in the buffer on input
- *                    number of bytes used on output
- *
- *   The size includes the terminating nul character.  Short buffers
- *  will be filled, but not nul terminated.
- */
-UINT msi_id2stringW( const string_table *st, UINT id, LPWSTR buffer, UINT *sz )
-{
-    UINT len;
-    const WCHAR *str;
-
-    TRACE("Finding string %d of %d\n", id, st->maxcount);
-
-    str = msi_string_lookup_id( st, id );
-    if( !str )
-        return ERROR_FUNCTION_FAILED;
-
-    len = strlenW( str ) + 1;
-
-    if( !buffer )
-    {
-        *sz = len;
-        return ERROR_SUCCESS;
-    }
-
-    if( *sz < len )
-        *sz = len;
-    memcpy( buffer, str, (*sz)*sizeof(WCHAR) ); 
-    *sz = len;
-
-    return ERROR_SUCCESS;
-}
-
-/*
  *  msi_id2stringA
  *
  *  [in] st         - pointer to the string table
@@ -435,24 +396,6 @@ UINT msi_string2idW( const string_table *st, LPCWSTR str, UINT *id )
     }
 
     return ERROR_INVALID_PARAMETER;
-}
-
-UINT msi_strcmp( const string_table *st, UINT lval, UINT rval, UINT *res )
-{
-    const WCHAR *l_str, *r_str;
-
-    l_str = msi_string_lookup_id( st, lval );
-    if( !l_str )
-        return ERROR_INVALID_PARAMETER;
-    
-    r_str = msi_string_lookup_id( st, rval );
-    if( !r_str )
-        return ERROR_INVALID_PARAMETER;
-
-    /* does this do the right thing for all UTF-8 strings? */
-    *res = strcmpW( l_str, r_str );
-
-    return ERROR_SUCCESS;
 }
 
 static void string_totalsize( const string_table *st, UINT *datasize, UINT *poolsize )

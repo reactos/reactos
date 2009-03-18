@@ -1410,6 +1410,7 @@ extern "C" {
     #define SPI_SETSHOWIMEUI 0x006F
     /* Correct ? */
     #define SPI_GETWHEELSCROLLCHARS 0x006C
+    #define SPI_SETWHEELSCROLLCHARS 0x006D
 #endif
 
 #if(WINVER >= 0x0500)
@@ -1582,6 +1583,9 @@ extern "C" {
 #define WM_GETHOTKEY 51
 #define WM_QUERYDRAGICON 55
 #define WM_COMPAREITEM 57
+#if (WINVER >= 0x0500)
+#define WM_GETOBJECT 61
+#endif /* (WINVER >= 0x0500) */
 #define WM_COMPACTING 65
 #define WM_COMMNOTIFY 68		/* obsolete */
 #define WM_WINDOWPOSCHANGING 70
@@ -2501,11 +2505,11 @@ extern "C" {
 #endif /* (WINVER >= 0x0500) */
 #define CURSOR_SHOWING 0x00000001
 #define WS_ACTIVECAPTION 0x00000001
-#if (_WIN32_WINNT >= 0x0403)
-#define INPUT_MOUSE 0x00000000
-#define INPUT_KEYBOARD 0x00000001
-#define INPUT_HARDWARE 0x00000002
-#endif /* (_WIN32_WINNT >= 0x0403) */
+#if (_WIN32_WINNT >= 0x0400)
+#define INPUT_MOUSE 0
+#define INPUT_KEYBOARD 1
+#define INPUT_HARDWARE 2
+#endif /* (_WIN32_WINNT >= 0x0400) */
 #if (WINVER >= 0x0400)
 #define ENDSESSION_LOGOFF 0x80000000
 #endif
@@ -3116,6 +3120,11 @@ typedef struct tagICONMETRICSW {
 	int iTitleWrap;
 	LOGFONTW lfFont;
 } ICONMETRICSW, *PICONMETRICSW, *LPICONMETRICSW;
+#ifdef UNICODE
+typedef ICONMETRICSW ICONMETRICS,*LPICONMETRICS;
+#else /* UNICODE */
+typedef ICONMETRICSA ICONMETRICS,*LPICONMETRICS;
+#endif /* UNICODE */
 #endif /*  NOGDI */
 typedef struct tagMINIMIZEDMETRICS {
 	UINT cbSize;
@@ -3168,6 +3177,11 @@ typedef struct tagNONCLIENTMETRICSW {
 	LOGFONTW lfStatusFont;
 	LOGFONTW lfMessageFont;
 } NONCLIENTMETRICSW,*LPNONCLIENTMETRICSW;
+#ifdef UNICODE
+typedef NONCLIENTMETRICSW NONCLIENTMETRICS,*LPNONCLIENTMETRICS;
+#else /* UNICODE */
+typedef NONCLIENTMETRICSA NONCLIENTMETRICS,*LPNONCLIENTMETRICS;
+#endif /* UNICODE */
 #endif
 typedef struct tagSERIALKEYSA {
 	UINT cbSize;
@@ -3485,7 +3499,7 @@ typedef struct tagMOUSEMOVEPOINT {
   ULONG_PTR dwExtraInfo;
 } MOUSEMOVEPOINT,*PMOUSEMOVEPOINT,*LPMOUSEMOVEPOINT;
 #endif
-#if (_WIN32_WINNT >= 0x0403)
+#if (_WIN32_WINNT >= 0x0400)
 typedef struct tagMOUSEINPUT {
   LONG dx;
   LONG dy;
@@ -3514,7 +3528,7 @@ typedef struct tagINPUT {
 		HARDWAREINPUT hi;
   } DUMMYUNIONNAME;
 } INPUT,*PINPUT,*LPINPUT;
-#endif /* (_WIN32_WINNT >= 0x0403) */
+#endif /* (_WIN32_WINNT >= 0x0400) */
 #if (WINVER >= 0x0500)
 typedef struct tagGUITHREADINFO {
 	DWORD cbSize;
@@ -4484,16 +4498,15 @@ typedef MONITORINFOEXW MONITORINFOEX, *LPMONITORINFOEX;
 #define WinHelp WinHelpW
 #define wsprintf wsprintfW
 #define wvsprintf wvsprintfW
+
 #if defined(_WINGDI_) && !defined(NOGDI)
-typedef ICONMETRICSW ICONMETRICS;
-typedef NONCLIENTMETRICSW NONCLIENTMETRICS,*LPNONCLIENTMETRICS;
 #define ChangeDisplaySettings ChangeDisplaySettingsW
 #define ChangeDisplaySettingsEx ChangeDisplaySettingsExW
 #define CreateDesktop CreateDesktopW
 #define EnumDisplaySettings EnumDisplaySettingsW
 #define EnumDisplaySettingsEx EnumDisplaySettingsExW
 #define EnumDisplayDevices EnumDisplayDevicesW
-#endif /* NOGDI */
+#endif /* _WINGDI_ && !NOGDI */
 #else /* UNICODE */
 #define EDITWORDBREAKPROC EDITWORDBREAKPROCA
 #define PROPENUMPROC PROPENUMPROCA
@@ -4653,8 +4666,6 @@ typedef MONITORINFOEXA MONITORINFOEX, *LPMONITORINFOEX;
 #define wsprintf wsprintfA
 #define wvsprintf wvsprintfA
 #if defined(_WINGDI_) && !defined(NOGDI)
-typedef ICONMETRICSA ICONMETRICS;
-typedef NONCLIENTMETRICSA NONCLIENTMETRICS,*LPNONCLIENTMETRICS;
 #define ChangeDisplaySettings ChangeDisplaySettingsA
 #define ChangeDisplaySettingsEx ChangeDisplaySettingsExA
 #define CreateDesktop CreateDesktopA

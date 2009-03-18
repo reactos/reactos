@@ -5,6 +5,14 @@ LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 STRINGTABLE DISCARDABLE
 BEGIN
 
+STRING_ASSOC_HELP,    "Modify file extension associations.\n\n\
+assoc [.ext[=[FileType]]]\n\
+\n\
+assoc (print all associations)\n\
+assoc .ext (print specific association)\n\
+assoc .ext= (remove specific association)\n\
+assoc .ext=FileType (add new association)\n"
+
 STRING_ATTRIB_HELP,    "Visualizza o modifica gli attributi dei file.\n\n\
 ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] file ...\n\
        [/S [/D]]\n\n\
@@ -292,6 +300,13 @@ STRING_LOCALE_HELP1, "L'ora attuale è"
 
 STRING_MKDIR_HELP,   "Crea una cartella.\n\n\
 MKDIR [disco:]percorso\nMD    [disco:]percorso"
+
+STRING_MKLINK_HELP, "Creates a filesystem link object.\n\n\
+MKLINK [/D | /H | /J] linkname target\n\n\
+  /D  Indicates that the symbolic link target is a directory.\n\
+  /H  Create a hard link.\n\
+  /J  Create a directory junction.\n\n\
+If neither /H or /J is specified, a symbolic link is created."
 
 STRING_MEMMORY_HELP1, "Visualizza la quantità della memoria di sistema.\n\n\
 MEMORY"
@@ -582,6 +597,7 @@ IF       Esegue elaborazioni condizionali in un batch.\n\
 LABEL    Crea, modifica, o cancella l'etichetta di un disco.\n\
 MD       Crea una cartella.\n\
 MKDIR    Crea una cartella.\n\
+MKLINK   Creates a filesystem link object.\n\
 MOVE     Muove uno o più file da una cartella a un'altra\n\
 PATH     Visualizza o imposta i percorsi di ricerca per gli eseguibili.\n\
 PAUSE    Ferma l'esecuzione di un batch e visualizza un messaggio.\n\
@@ -613,6 +629,7 @@ STRING_COPY_OPTION,           "SNT"
 
 
 STRING_ALIAS_ERROR,          "Linea di comando troppo lunga dopo l'espansione degli alias!\n"
+STRING_ASSOC_ERROR,          "File association not found for extension %s\n"
 STRING_BATCH_ERROR,          "Errore durante l'apertura di un batch\n"
 STRING_CHCP_ERROR1,          "Tabella dei codici attiva: %u\n"
 STRING_CHCP_ERROR4,          "Tabella dei codici non valida\n"
@@ -672,7 +689,7 @@ STRING_ERROR_FILE_NOT_FOUND,       "File non trovato\n"
 STRING_ERROR_REQ_PARAM_MISSING,    "Parametro obbligatorio mancante\n"
 STRING_ERROR_INVALID_DRIVE,        "Disco non valido\n"
 STRING_ERROR_INVALID_PARAM_FORMAT, "Formato dei parametri non valido - %s\n"
-STRING_ERROR_BADCOMMAND,           "Comando o nome di file errato\n"
+STRING_ERROR_BADCOMMAND,           "Comando o nome di file errato - %s\n"
 STRING_ERROR_OUT_OF_MEMORY,        "Errore di memoria esaurita.\n"
 STRING_ERROR_CANNOTPIPE,           "Errore!  Impossibile ridirigere!  Impossibile aprire un file temporaneo!\n"
 STRING_ERROR_D_PAUSEMSG,           "Premi un tasto per continuare . . ."
@@ -696,6 +713,9 @@ STRING_FOR_ERROR,                  "variabile non valida."
 STRING_SCREEN_COL,                 "valore non valido per colonna"
 STRING_SCREEN_ROW,                 "valore non valido per riga"
 STRING_TIMER_TIME                  "Timer %d è %s: "
+STRING_MKLINK_CREATED_SYMBOLIC,    "Symbolic link created for %s <<===>> %s\n"
+STRING_MKLINK_CREATED_HARD,        "Hard link created for %s <<===>> %s\n"
+STRING_MKLINK_CREATED_JUNCTION,    "Junction created for %s <<===>> %s\n"
 
 STRING_INVALID_OPERAND,            "Operando non valido."
 STRING_EXPECTED_CLOSE_PAREN,       "Attesa una ')'."

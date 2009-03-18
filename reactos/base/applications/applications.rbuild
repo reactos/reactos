@@ -25,16 +25,17 @@
 	<directory name="hh">
 		<xi:include href="hh/hh.rbuild" />
 	</directory>
-<!--
 	<directory name="iexplore">
 		<xi:include href="iexplore/iexplore.rbuild" />
 	</directory>
--->
 	<directory name="kbswitch">
 		<xi:include href="kbswitch/kbswitch.rbuild" />
 	</directory>
 	<directory name="logoff">
 		<xi:include href="logoff/logoff.rbuild" />
+	</directory>
+	<directory name="mplay32">
+		<xi:include href="mplay32/mplay32.rbuild" />
 	</directory>
 	<directory name="msconfig">
 		<xi:include href="msconfig/msconfig.rbuild" />

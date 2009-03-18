@@ -39,4 +39,5 @@
  @ stdcall RefreshPolicyEx(long long)
  @ stdcall WaitForUserPolicyForegroundProcessing()
  @ stdcall WaitForMachinePolicyForegroundProcessing()
-
+ @ stdcall DeleteProfileW(wstr wstr wstr)
+ @ stdcall DeleteProfileA(str str str)

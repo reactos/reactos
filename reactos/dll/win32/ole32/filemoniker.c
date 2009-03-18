@@ -92,7 +92,7 @@ FileMonikerImpl_QueryInterface(IMoniker* iface,REFIID riid,void** ppvObject)
         *ppvObject = iface;
 
     else if (IsEqualIID(&IID_IROTData, riid))
-        *ppvObject = (IROTData*)&(This->lpvtbl2);
+        *ppvObject = &This->lpvtbl2;
     else if (IsEqualIID(&IID_IMarshal, riid))
     {
         HRESULT hr = S_OK;
@@ -560,7 +560,7 @@ FileMonikerImpl_BindToObject(IMoniker* iface, IBindCtx* pbc, IMoniker* pmkToLeft
         /* get the requested interface from the loaded class */
         res= IUnknown_QueryInterface(pObj,riid,ppvResult);
 
-        IBindCtx_RegisterObjectBound(pbc,(IUnknown*)*ppvResult);
+        IBindCtx_RegisterObjectBound(pbc,*ppvResult);
 
         IUnknown_Release(pObj);
     }

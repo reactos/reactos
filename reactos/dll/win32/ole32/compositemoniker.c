@@ -115,9 +115,9 @@ CompositeMonikerImpl_QueryInterface(IMoniker* iface,REFIID riid,void** ppvObject
        )
         *ppvObject = iface;
     else if (IsEqualIID(&IID_IROTData, riid))
-        *ppvObject = (IROTData*)&(This->lpvtbl2);
+        *ppvObject = &This->lpvtbl2;
     else if (IsEqualIID(&IID_IMarshal, riid))
-        *ppvObject = (IROTData*)&(This->lpvtblMarshal);
+        *ppvObject = &This->lpvtblMarshal;
 
     /* Check that we obtained an interface.*/
     if ((*ppvObject)==0)

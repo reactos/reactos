@@ -4,7 +4,15 @@
 #include <ntddk.h>
 #include <ks.h>
 
+#if !defined(DEFINE_ABSTRACT_UNKNOWN)
 
+#define DEFINE_ABSTRACT_UNKNOWN()                               \
+    STDMETHOD_(NTSTATUS, QueryInterface)(THIS_                  \
+        REFIID InterfaceId,                                     \
+        PVOID* Interface)PURE;                                  \
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;                        \
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+#endif
 
 /*****************************************************************************
  * IKsFilterFactory
@@ -14,16 +22,13 @@
 #undef INTERFACE
 #define INTERFACE IKsFilterFactory
 
-struct KSFILTERFACTORY;
-
 DECLARE_INTERFACE_(IKsFilterFactory, IUnknown)
 {
-    //DEFINE_ABSTRACT_UNKNOWN()
+    DEFINE_ABSTRACT_UNKNOWN()
 
-    STDMETHOD_(struct KSFILTERFACTORY*,GetStruct)(THIS) PURE;
+    STDMETHOD_(KSFILTERFACTORY*,GetStruct)(THIS) PURE;
 
     STDMETHOD_(NTSTATUS,SetDeviceClassesState)(THIS_
-        IN ULONG Unknown1,
         IN BOOLEAN Enable)PURE;
 };
 
@@ -38,12 +43,12 @@ DECLARE_INTERFACE_(IKsFilterFactory, IUnknown)
 
 DECLARE_INTERFACE_(IKsPowerNotify, IUnknown)
 {
-    //DEFINE_ABSTRACT_UNKNOWN()
+    DEFINE_ABSTRACT_UNKNOWN()
 
-    STDMETHOD_(ULONG,Sleep)(THIS_
+    STDMETHOD_(VOID,Sleep)(THIS_
         IN DEVICE_POWER_STATE State) PURE;
 
-    STDMETHOD_(ULONG,Wake)(THIS) PURE;
+    STDMETHOD_(VOID,Wake)(THIS) PURE;
 };
 
 
@@ -60,27 +65,27 @@ struct KSPOWER_ENTRY;
 
 DECLARE_INTERFACE_(IKsDevice, IUnknown)
 {
-    //DEFINE_ABSTRACT_UNKNOWN()
+    DEFINE_ABSTRACT_UNKNOWN()
 
-    STDMETHOD_(struct KSDEVICE*,GetStruct)(THIS) PURE;
+    STDMETHOD_(KSDEVICE*,GetStruct)(THIS) PURE;
 
     STDMETHOD_(NTSTATUS, InitializeObjectBag)(THIS_
         IN struct KSIOBJECTBAG *Bag,
         IN KMUTANT * Mutant) PURE;
 
-    STDMETHOD_(ULONG,AcquireDevice)(THIS) PURE;
-    STDMETHOD_(ULONG,ReleaseDevice)(THIS) PURE;
+    STDMETHOD_(NTSTATUS,AcquireDevice)(THIS) PURE;
+    STDMETHOD_(NTSTATUS,ReleaseDevice)(THIS) PURE;
 
-    STDMETHOD_(VOID, GetAdapterObject)(THIS_
+    STDMETHOD_(NTSTATUS, GetAdapterObject)(THIS_
         IN PADAPTER_OBJECT Object,
         IN PULONG Unknown1,
         IN PULONG Unknown2) PURE;
 
-    STDMETHOD_(VOID, AddPowerEntry)(THIS_
+    STDMETHOD_(NTSTATUS, AddPowerEntry)(THIS_
         IN struct KSPOWER_ENTRY * Entry,
-        IN struct IKsPowerNotify* Notify)PURE;
+        IN IKsPowerNotify* Notify)PURE;
 
-    STDMETHOD_(VOID, RemovePowerEntry)(THIS_
+    STDMETHOD_(NTSTATUS, RemovePowerEntry)(THIS_
         IN struct KSPOWER_ENTRY * Entry)PURE;
 
     STDMETHOD_(NTSTATUS, PinStateChange)(THIS_

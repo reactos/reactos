@@ -278,27 +278,6 @@ VOID ControlEvent_SubscribeToEvent( MSIPACKAGE *package, msi_dialog *dialog,
     list_add_tail( &package->subscriptions, &sub->entry );
 }
 
-VOID ControlEvent_UnSubscribeToEvent( MSIPACKAGE *package, LPCWSTR event,
-                                      LPCWSTR control, LPCWSTR attribute )
-{
-    struct list *i, *t;
-    struct subscriber *sub;
-
-    LIST_FOR_EACH_SAFE( i, t, &package->subscriptions )
-    {
-        sub = LIST_ENTRY( i, struct subscriber, entry );
-
-        if( lstrcmpiW(sub->control,control) )
-            continue;
-        if( lstrcmpiW(sub->attribute,attribute) )
-            continue;
-        if( lstrcmpiW(sub->event,event) )
-            continue;
-        list_remove( &sub->entry );
-        free_subscriber( sub );
-    }
-}
-
 VOID ControlEvent_FireSubscribedEvent( MSIPACKAGE *package, LPCWSTR event, 
                                        MSIRECORD *rec )
 {

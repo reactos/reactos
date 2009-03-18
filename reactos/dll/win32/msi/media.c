@@ -145,7 +145,7 @@ end:
     return rc;
 }
 
-static void CDECL *cabinet_alloc(ULONG cb)
+static void * CDECL cabinet_alloc(ULONG cb)
 {
     return msi_alloc(cb);
 }

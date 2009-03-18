@@ -1503,6 +1503,11 @@ MUI_ERROR elGRErrorEntries[] =
         "ENTER = „§˜¤œ¡¡å¤ž©ž ¬§¦¢¦š ©«ã"
     },
     {
+        //ERROR_UPDATE_GEOID,
+        "Setup could not set the geo id.\n"
+        "ENTER = Reboot computer"
+    },
+    {
         NULL,
         NULL
     }

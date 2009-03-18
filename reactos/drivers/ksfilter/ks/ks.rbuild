@@ -8,7 +8,6 @@
 	<library>ntoskrnl</library>
 	<library>hal</library>
 	<define name="BUILDING_KS" />
-	<define name="_NTDDK_" />
 	<define name="_COMDDK_" />
 	<file>ks.rc</file>
 	<file>allocators.c</file>

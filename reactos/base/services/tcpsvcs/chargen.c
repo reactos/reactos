@@ -44,7 +44,7 @@ SendLine(SOCKET sock, LPSTR lpLine)
         LogEvent(L"Chargen: unknown error\n", WSAGetLastError(), 0, LOG_ERROR);
     }
 
-    return bRet;;
+    return bRet;
 }
 
 static BOOL

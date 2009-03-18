@@ -759,6 +759,10 @@ struct chmFile *chm_openW(const WCHAR *filename)
     if (newHandle->index_root == -1)
         newHandle->index_root = newHandle->index_head;
 
+    /* initialize cache */
+    chm_set_param(newHandle, CHM_PARAM_MAX_BLOCKS_CACHED,
+                  CHM_MAX_BLOCKS_CACHED);
+
     /* By default, compression is enabled. */
     newHandle->compression_enabled = 1;
 
@@ -821,10 +825,6 @@ struct chmFile *chm_openW(const WCHAR *filename)
                                     ctlData.windowsPerReset;
 #endif
     }
-
-    /* initialize cache */
-    chm_set_param(newHandle, CHM_PARAM_MAX_BLOCKS_CACHED,
-                  CHM_MAX_BLOCKS_CACHED);
 
     return newHandle;
 }
@@ -1371,115 +1371,6 @@ LONGINT64 chm_retrieve_object(struct chmFile *h,
 
         return total;
     }
-}
-
-/* enumerate the objects in the .chm archive */
-int chm_enumerate(struct chmFile *h,
-                  int what,
-                  CHM_ENUMERATOR e,
-                  void *context)
-{
-    Int32 curPage;
-
-    /* buffer to hold whatever page we're looking at */
-    UChar *page_buf = HeapAlloc(GetProcessHeap(), 0, h->block_len);
-    struct chmPmglHeader header;
-    UChar *end;
-    UChar *cur;
-    unsigned int lenRemain;
-    UInt64 ui_path_len;
-
-    /* the current ui */
-    struct chmUnitInfo ui;
-    int flag;
-
-    /* starting page */
-    curPage = h->index_head;
-
-    /* until we have either returned or given up */
-    while (curPage != -1)
-    {
-
-        /* try to fetch the index page */
-        if (_chm_fetch_bytes(h,
-                             page_buf,
-                             h->dir_offset + (UInt64)curPage*h->block_len,
-                             h->block_len) != h->block_len)
-        {
-            HeapFree(GetProcessHeap(), 0, page_buf);
-            return 0;
-        }
-
-        /* figure out start and end for this page */
-        cur = page_buf;
-        lenRemain = _CHM_PMGL_LEN;
-        if (! _unmarshal_pmgl_header(&cur, &lenRemain, &header))
-        {
-            HeapFree(GetProcessHeap(), 0, page_buf);
-            return 0;
-        }
-        end = page_buf + h->block_len - (header.free_space);
-
-        /* loop over this page */
-        while (cur < end)
-        {
-            if (! _chm_parse_PMGL_entry(&cur, &ui))
-            {
-                HeapFree(GetProcessHeap(), 0, page_buf);
-                return 0;
-            }
-
-            /* get the length of the path */
-            ui_path_len = strlenW(ui.path)-1;
-
-            /* check for DIRS */
-            if (ui.path[ui_path_len] == '/'  &&  !(what & CHM_ENUMERATE_DIRS))
-                continue;
-
-            /* check for FILES */
-            if (ui.path[ui_path_len] != '/'  &&  !(what & CHM_ENUMERATE_FILES))
-                continue;
-
-            /* check for NORMAL vs. META */
-            if (ui.path[0] == '/')
-            {
-
-                /* check for NORMAL vs. SPECIAL */
-                if (ui.path[1] == '#'  ||  ui.path[1] == '$')
-                    flag = CHM_ENUMERATE_SPECIAL;
-                else
-                    flag = CHM_ENUMERATE_NORMAL;
-            }
-            else
-                flag = CHM_ENUMERATE_META;
-            if (! (what & flag))
-                continue;
-
-            /* call the enumerator */
-            {
-                int status = (*e)(h, &ui, context);
-                switch (status)
-                {
-                    case CHM_ENUMERATOR_FAILURE:
-                        HeapFree(GetProcessHeap(), 0, page_buf);
-                        return 0;
-                    case CHM_ENUMERATOR_CONTINUE:
-                        break;
-                    case CHM_ENUMERATOR_SUCCESS:
-                        HeapFree(GetProcessHeap(), 0, page_buf);
-                        return 1;
-                    default:
-                        break;
-                }
-            }
-        }
-
-        /* advance to next page */
-        curPage = header.block_next;
-    }
-
-    HeapFree(GetProcessHeap(), 0, page_buf);
-    return 1;
 }
 
 int chm_enumerate_dir(struct chmFile *h,

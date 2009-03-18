@@ -68,15 +68,6 @@ BOOL NBNameCacheAddEntry(struct NBNameCache *cache, NBNameCacheEntry *entry);
 const NBNameCacheEntry *NBNameCacheFindEntry(struct NBNameCache *cache,
  const UCHAR name[NCBNAMSZ]);
 
-/* If the entry with name name is in the cache, updates its nbname member to
- * nbname.  The entry's expire time is implicitly updated to entryExpireTimeMS
- * + the current time in MS, since getting the NetBIOS name meant validating
- * the name and address anyway.
- * Returns TRUE on success or FALSE on failure.
- */
-BOOL NBNameCacheUpdateNBName(struct NBNameCache *cache,
- const UCHAR name[NCBNAMSZ], const UCHAR nbname[NCBNAMSZ]);
-
 void NBNameCacheDestroy(struct NBNameCache *cache);
 
 #endif /* ndef __WINE_NBNAMECACHE_H */

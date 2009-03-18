@@ -17,99 +17,99 @@
 
 static NTSTATUS
 NpfsQueryFsDeviceInformation(PFILE_FS_DEVICE_INFORMATION FsDeviceInfo,
-							 PULONG BufferLength)
+                             PULONG BufferLength)
 {
-	DPRINT("NpfsQueryFsDeviceInformation()\n");
-	DPRINT("FsDeviceInfo = %p\n", FsDeviceInfo);
+    DPRINT("NpfsQueryFsDeviceInformation()\n");
+    DPRINT("FsDeviceInfo = %p\n", FsDeviceInfo);
 
-	if (*BufferLength < sizeof(FILE_FS_DEVICE_INFORMATION))
-		return STATUS_BUFFER_OVERFLOW;
+    if (*BufferLength < sizeof(FILE_FS_DEVICE_INFORMATION))
+        return STATUS_BUFFER_OVERFLOW;
 
-	FsDeviceInfo->DeviceType = FILE_DEVICE_NAMED_PIPE;
-	FsDeviceInfo->Characteristics = 0;
+    FsDeviceInfo->DeviceType = FILE_DEVICE_NAMED_PIPE;
+    FsDeviceInfo->Characteristics = 0;
 
-	*BufferLength -= sizeof(FILE_FS_DEVICE_INFORMATION);
+    *BufferLength -= sizeof(FILE_FS_DEVICE_INFORMATION);
 
-	DPRINT("NpfsQueryFsDeviceInformation() finished.\n");
+    DPRINT("NpfsQueryFsDeviceInformation() finished.\n");
 
-	return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
 
 static NTSTATUS
 NpfsQueryFsAttributeInformation(PFILE_FS_ATTRIBUTE_INFORMATION FsAttributeInfo,
-								PULONG BufferLength)
+                                PULONG BufferLength)
 {
-	DPRINT("NpfsQueryFsAttributeInformation() called.\n");
-	DPRINT("FsAttributeInfo = %p\n", FsAttributeInfo);
+    DPRINT("NpfsQueryFsAttributeInformation() called.\n");
+    DPRINT("FsAttributeInfo = %p\n", FsAttributeInfo);
 
-	if (*BufferLength < sizeof(FILE_FS_ATTRIBUTE_INFORMATION) + 8)
-		return STATUS_BUFFER_OVERFLOW;
+    if (*BufferLength < sizeof(FILE_FS_ATTRIBUTE_INFORMATION) + 8)
+        return STATUS_BUFFER_OVERFLOW;
 
-	FsAttributeInfo->FileSystemAttributes = FILE_CASE_PRESERVED_NAMES;
-	FsAttributeInfo->MaximumComponentNameLength = 255;
-	FsAttributeInfo->FileSystemNameLength = 8;
-	wcscpy(FsAttributeInfo->FileSystemName,
-		L"NPFS");
+    FsAttributeInfo->FileSystemAttributes = FILE_CASE_PRESERVED_NAMES;
+    FsAttributeInfo->MaximumComponentNameLength = 255;
+    FsAttributeInfo->FileSystemNameLength = 8;
+    wcscpy(FsAttributeInfo->FileSystemName,
+        L"NPFS");
 
-	DPRINT("NpfsQueryFsAttributeInformation() finished.\n");
-	*BufferLength -= (sizeof(FILE_FS_ATTRIBUTE_INFORMATION) + 8);
+    DPRINT("NpfsQueryFsAttributeInformation() finished.\n");
+    *BufferLength -= (sizeof(FILE_FS_ATTRIBUTE_INFORMATION) + 8);
 
-	return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
 
 NTSTATUS NTAPI
 NpfsQueryVolumeInformation(PDEVICE_OBJECT DeviceObject,
-						   PIRP Irp)
+                           PIRP Irp)
 {
-	PIO_STACK_LOCATION Stack;
-	FS_INFORMATION_CLASS FsInformationClass;
-	NTSTATUS Status = STATUS_SUCCESS;
-	PVOID SystemBuffer;
-	ULONG BufferLength;
+    PIO_STACK_LOCATION Stack;
+    FS_INFORMATION_CLASS FsInformationClass;
+    NTSTATUS Status = STATUS_SUCCESS;
+    PVOID SystemBuffer;
+    ULONG BufferLength;
 
-	/* PRECONDITION */
-	ASSERT(DeviceObject != NULL);
-	ASSERT(Irp != NULL);
+    /* PRECONDITION */
+    ASSERT(DeviceObject != NULL);
+    ASSERT(Irp != NULL);
 
-	DPRINT("NpfsQueryVolumeInformation(DeviceObject %p, Irp %p)\n",
-		DeviceObject,
-		Irp);
+    DPRINT("NpfsQueryVolumeInformation(DeviceObject %p, Irp %p)\n",
+        DeviceObject,
+        Irp);
 
-	Stack = IoGetCurrentIrpStackLocation(Irp);
-	FsInformationClass = Stack->Parameters.QueryVolume.FsInformationClass;
-	BufferLength = Stack->Parameters.QueryVolume.Length;
-	SystemBuffer = Irp->AssociatedIrp.SystemBuffer;
+    Stack = IoGetCurrentIrpStackLocation(Irp);
+    FsInformationClass = Stack->Parameters.QueryVolume.FsInformationClass;
+    BufferLength = Stack->Parameters.QueryVolume.Length;
+    SystemBuffer = Irp->AssociatedIrp.SystemBuffer;
 
-	DPRINT("FsInformationClass %d\n", FsInformationClass);
-	DPRINT("SystemBuffer %p\n", SystemBuffer);
+    DPRINT("FsInformationClass %d\n", FsInformationClass);
+    DPRINT("SystemBuffer %p\n", SystemBuffer);
 
-	switch (FsInformationClass)
-	{
-	case FileFsDeviceInformation:
-		Status = NpfsQueryFsDeviceInformation(SystemBuffer,
-			&BufferLength);
-		break;
+    switch (FsInformationClass)
+    {
+    case FileFsDeviceInformation:
+        Status = NpfsQueryFsDeviceInformation(SystemBuffer,
+            &BufferLength);
+        break;
 
-	case FileFsAttributeInformation:
-		Status = NpfsQueryFsAttributeInformation(SystemBuffer,
-			&BufferLength);
-		break;
+    case FileFsAttributeInformation:
+        Status = NpfsQueryFsAttributeInformation(SystemBuffer,
+            &BufferLength);
+        break;
 
-	default:
-		Status = STATUS_NOT_SUPPORTED;
-	}
+    default:
+        Status = STATUS_NOT_SUPPORTED;
+    }
 
-	Irp->IoStatus.Status = Status;
-	if (NT_SUCCESS(Status))
-		Irp->IoStatus.Information = Stack->Parameters.QueryVolume.Length - BufferLength;
-	else
-		Irp->IoStatus.Information = 0;
-	IoCompleteRequest(Irp,
-		IO_NO_INCREMENT);
+    Irp->IoStatus.Status = Status;
+    if (NT_SUCCESS(Status))
+        Irp->IoStatus.Information = Stack->Parameters.QueryVolume.Length - BufferLength;
+    else
+        Irp->IoStatus.Information = 0;
+    IoCompleteRequest(Irp,
+        IO_NO_INCREMENT);
 
-	return Status;
+    return Status;
 }
 
 /* EOF */

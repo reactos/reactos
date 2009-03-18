@@ -281,13 +281,17 @@ KeConnectInterrupt(IN PKINTERRUPT Interrupt)
                 (Dispatch.Interrupt->Mode == Interrupt->Mode))
         {
             /* The vector is shared and the interrupts are compatible */
-            ASSERT(FALSE); // FIXME: NOT YET SUPPORTED/TESTED
             Interrupt->Connected = Connected = TRUE;
-            ASSERT(Irql <= SYNCH_LEVEL);
+
+            /* FIXME */
+            // ASSERT(Irql <= SYNCH_LEVEL);
 
             /* Check if this is the first chain */
             if (Dispatch.Type != ChainConnect)
             {
+                /* This is not supported */
+                ASSERT(Dispatch.Interrupt->Mode != Latched);
+
                 /* Setup the chainned handler */
                 KiConnectVectorToInterrupt(Dispatch.Interrupt, ChainConnect);
             }

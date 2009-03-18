@@ -34,6 +34,7 @@
 #define DPRINT_LINUX        0x00000200  // OR this with DebugPrintMask to enable Linux messages
 #define DPRINT_HWDETECT     0x00000400  // OR this with DebugPrintMask to enable hardware detection messages
 #define DPRINT_WINDOWS      0x00000800  // OR this with DebugPrintMask to enable messages from Windows loader
+#define DPRINT_PELOADER     0x00001000  // OR this with DebugPrintMask to enable messages from PE images loader
 
 extern char* g_file;
 extern int g_line;
@@ -80,7 +81,7 @@ void	MEMORY_WRITE_BREAKPOINT4(unsigned long addr);
 #else
 
 	#define DebugInit()
-	#define DPRINTM(_x_)
+	#define DPRINTM(_x_, ...)
 	#define BugCheck(_x_)
 	#define DbgDumpBuffer(_x_, _y_, _z_)
 

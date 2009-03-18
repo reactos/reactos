@@ -80,6 +80,7 @@ i8042BasicDetect(
 	UCHAR Value = 0;
 
 	/* Don't enable keyboard and mouse interrupts, disable keyboard/mouse */
+	i8042Flush(DeviceExtension);
 	if (!i8042ChangeMode(DeviceExtension, CCB_KBD_INT_ENAB | CCB_MOUSE_INT_ENAB, CCB_KBD_DISAB | CCB_MOUSE_DISAB))
 		return STATUS_IO_DEVICE_ERROR;
 

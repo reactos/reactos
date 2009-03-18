@@ -444,7 +444,7 @@ static HRESULT resource_register(Registrar *This, LPCOLESTR resFileName,
             if(regstra) {
                 len = MultiByteToWideChar(CP_ACP, 0, regstra, reslen, NULL, 0)+1;
                 regstrw = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len*sizeof(WCHAR));
-                MultiByteToWideChar(CP_ACP, 0, regstra, reslen, regstrw, -1);
+                MultiByteToWideChar(CP_ACP, 0, regstra, reslen, regstrw, len);
                 regstrw[len-1] = '\0';
 
                 hres = string_register(This, regstrw, do_register);
@@ -484,7 +484,7 @@ static HRESULT file_register(Registrar *This, LPCOLESTR fileName, BOOL do_regist
         if(lres == ERROR_SUCCESS) {
             len = MultiByteToWideChar(CP_ACP, 0, regstra, filelen, NULL, 0)+1;
             regstrw = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len*sizeof(WCHAR));
-            MultiByteToWideChar(CP_ACP, 0, regstra, filelen, regstrw, -1);
+            MultiByteToWideChar(CP_ACP, 0, regstra, filelen, regstrw, len);
             regstrw[len-1] = '\0';
             
             hres = string_register(This, regstrw, do_register);

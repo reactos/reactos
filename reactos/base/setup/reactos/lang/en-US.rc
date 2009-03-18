@@ -70,15 +70,15 @@ STYLE WS_VISIBLE|WS_CAPTION|WS_THICKFRAME
 CAPTION "Create Partition"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  CONTROL "",IDC_UPDOWN1,"msctls_updown32", WS_VISIBLE,104,22,9,13
-  CONTROL "Create and format partition",IDC_STATIC,"Button",BS_GROUPBOX,7,5,129,57
-  LTEXT "Size:",IDC_STATIC, 13,24,27,9
-  EDITTEXT IDC_PARTSIZE,52,23,53,13, WS_VISIBLE|WS_TABSTOP
-  LTEXT "GB",IDC_UNIT, 117,24,14,9
-  LTEXT "Filesystem:",IDC_STATIC,13,46,35,9
-  CONTROL "",IDC_FSTYPE,"ComboBox",WS_VISIBLE|WS_TABSTOP|CBS_DROPDOWNLIST,52,42,79,50
-  PUSHBUTTON "&OK",IDOK,35,68,47,15, WS_VISIBLE|WS_TABSTOP
-  PUSHBUTTON "&Cancel",IDCANCEL,87,68,47,15, WS_VISIBLE|WS_TABSTOP
+    CONTROL "",IDC_UPDOWN1,"msctls_updown32", WS_VISIBLE,104,22,9,13
+    CONTROL "Create and format partition",IDC_STATIC,"Button",BS_GROUPBOX,7,5,129,57
+    LTEXT "Size:",IDC_STATIC, 13,24,27,9
+    EDITTEXT IDC_PARTSIZE,52,23,53,13, WS_VISIBLE|WS_TABSTOP
+    LTEXT "GB",IDC_UNIT, 117,24,14,9
+    LTEXT "Filesystem:",IDC_STATIC,13,46,35,9
+    CONTROL "",IDC_FSTYPE,"ComboBox",WS_VISIBLE|WS_TABSTOP|CBS_DROPDOWNLIST,52,42,79,50
+    PUSHBUTTON "&OK",IDOK,35,68,47,15, WS_VISIBLE|WS_TABSTOP
+    PUSHBUTTON "&Cancel",IDCANCEL,87,68,47,15, WS_VISIBLE|WS_TABSTOP
 END
 
 IDD_BOOTOPTIONS DIALOGEX DISCARDABLE  0, 0, 305, 105
@@ -118,7 +118,6 @@ BEGIN
             PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
 END
 
-
 IDD_RESTARTPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Completing ReactOS Setup"
@@ -132,24 +131,23 @@ BEGIN
     LTEXT "If there is a CD in a drive, remove it. Then, to restart your computer, click Finish.", IDC_STATIC, 10, 180, 297, 20
 END
 
-
 STRINGTABLE
 BEGIN
-	IDS_LANGTITLE		"Language Selection"
-	IDS_LANGSUBTITLE	"Choose language for setup and final system."
-	IDS_TYPETITLE		"Welcome to ReactOS Setup"
-	IDS_TYPESUBTITLE	"Choose setup type."
-	IDS_DEVICETITLE		"Setup the basic devices"
-	IDS_DEVICESUBTITLE	"Set the settings of display and keyboard."
-	IDS_DRIVETITLE		"Setup the installation partition and system folder"
-	IDS_DRIVESUBTITLE	"Prepare installation partition, system folder and boot loader."
-	IDS_PROCESSTITLE	"Prepare partition, copy files and setup system"
-	IDS_PROCESSSUBTITLE	"Create and format partition, copy files, install and setup boot loader"
-	IDS_RESTARTTITLE	"First stage of setup finished"
-	IDS_RESTARTSUBTITLE	"The first stage of setup has been completed, restart to continue with second stage"
-	IDS_SUMMARYTITLE	"Installation Summary"
-	IDS_SUMMARYSUBTITLE	"List installation properties to check before apply to the installation device"
-	IDS_ABORTSETUP		"ReactOS is not completely installed on your computer. If you quit Setup now, you will need to run Setup again to install Reactos. Really quit?"
-	IDS_ABORTSETUP2		"Abort installation?"
+    IDS_LANGTITLE       "Language Selection"
+    IDS_LANGSUBTITLE    "Choose language for setup and final system."
+    IDS_TYPETITLE       "Welcome to ReactOS Setup"
+    IDS_TYPESUBTITLE    "Choose setup type."
+    IDS_DEVICETITLE     "Setup the basic devices"
+    IDS_DEVICESUBTITLE  "Set the settings of display and keyboard."
+    IDS_DRIVETITLE      "Setup the installation partition and system folder"
+    IDS_DRIVESUBTITLE   "Prepare installation partition, system folder and boot loader."
+    IDS_PROCESSTITLE    "Prepare partition, copy files and setup system"
+    IDS_PROCESSSUBTITLE "Create and format partition, copy files, install and setup boot loader"
+    IDS_RESTARTTITLE    "First stage of setup finished"
+    IDS_RESTARTSUBTITLE "The first stage of setup has been completed, restart to continue with second stage"
+    IDS_SUMMARYTITLE    "Installation Summary"
+    IDS_SUMMARYSUBTITLE "List installation properties to check before apply to the installation device"
+    IDS_ABORTSETUP      "ReactOS is not completely installed on your computer. If you quit Setup now, you will need to run Setup again to install Reactos. Really quit?"
+    IDS_ABORTSETUP2     "Abort installation?"
 END
 /* EOF */

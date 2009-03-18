@@ -1,6 +1,6 @@
 /* TRANSLATOR :  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR.:  09-02-2008
- * LAST CHANGE:  16-06-2008
+ * LAST CHANGE:  16-03-2009
  * THANKS TO  :  Filip Navara and Kamil Hornicek and all good people ;-)
  */
 
@@ -198,35 +198,43 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_GAMES		"Hry"
-    IDS_CMT_SOLITAIRE	"SolitÈr"
-    IDS_CMT_WINEMINE	"MÌny"
+    IDS_GAMES           "Hry"
+    IDS_CMT_SOLITAIRE   "SolitÈr"
+    IDS_CMT_WINEMINE    "MÌny"
 END
 
 STRINGTABLE
 BEGIN
-	IDS_SYS_TOOLS        "SystÈmovÈ n·stroje"
-	IDS_CMT_CHARMAP      "Mapa znakov"
-	IDS_CMT_KBSWITCH     "PrepÌnaË rozloûenia kl·vesnice"
+    IDS_SYS_TOOLS       "SystÈmovÈ n·stroje"
+    IDS_CMT_CHARMAP     "Mapa znakov"
+    IDS_CMT_KBSWITCH    "PrepÌnaË rozloûenia kl·vesnice"
+    IDS_CMT_DXDIAG      "Spustiù ReactX - diagnostick˝ program"
 END
 
 
 STRINGTABLE
 BEGIN
-	IDS_SYS_ACCESSIBILITY        "Zjednoduöenie ovl·dania" //Accessibility
-	IDS_CMT_MAGNIFY      	     "Lupa"
+    IDS_SYS_ACCESSIBILITY       "Zjednoduöenie ovl·dania" //Accessibility
+    IDS_CMT_MAGNIFY             "Lupa"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_REACTOS_SETUP	        "Inötal·tor systÈmu ReactOS"
+    IDS_SYS_ENTERTAINMENT       "Z·bava" //Entertainment
+    IDS_CMT_MPLAY32             "Spustiù Multimedi·lny prehr·vaË"
+    IDS_CMT_SNDVOL32            "Stustiù Ovl·danie hlasitosti"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_REACTOS_SETUP           "Inötal·tor systÈmu ReactOS"
     IDS_UNKNOWN_ERROR           "Nezn·ma chyba"
     IDS_REGISTERING_COMPONENTS  "Registrujem s˙Ëasti..."
     IDS_LOADLIBRARY_FAILED      "LoadLibrary zlyhal: "
     IDS_GETPROCADDR_FAILED      "GetProcAddr zlyhal: "
     IDS_REGSVR_FAILED           "DllRegisterServer zlyhal: "
     IDS_DLLINSTALL_FAILED       "DllInstall zlyhal: "
-    IDS_TIMEOUT		        "Vypröal Ëasov˝ limit registr·cie"
+    IDS_TIMEOUT                 "Vypröal Ëasov˝ limit registr·cie"
     IDS_REASON_UNKNOWN          ""
 END
 
@@ -237,6 +245,7 @@ BEGIN
     IDS_SHORT_DOWNLOADER "çahaj!.lnk"
     IDS_SHORT_SERVICE    "Spr·vca sluûieb.lnk"
     IDS_SHORT_DEVICE     "Spr·vca zariadenÌ.lnk"
+    IDS_SHORT_MPLAY32    "Multimedi·lny prehr·vaË.lnk"
     IDS_SHORT_CALC       "KalkulaËka.lnk"
     IDS_SHORT_REGEDIT    "Editor registrov.lnk"
     IDS_SHORT_NOTEPAD    "Pozn·mkov˝ blok.lnk"
@@ -250,22 +259,24 @@ BEGIN
     IDS_SHORT_KBSWITCH   "PrepÌnaË rozloûenia kl·vesnice.lnk"
     IDS_SHORT_EVENTVIEW  "ZobrazovaË udalostÌ.lnk"
     IDS_SHORT_MSCONFIG   "Program na konfigur·ciu systÈmu.lnk"
+    IDS_SHORT_SNDVOL32   "Ovl·danie hlasitosti.lnk" //Volume Control
+    IDS_SHORT_DXDIAG     "Diagnostika ReactX.lnk"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_WZD_NAME             "Inötal·cia nemÙûe pokraËovaù, k˝m nezad·te svoje meno."
-    IDS_WZD_SETCOMPUTERNAME  "Inötal·tor nedok·zal nastaviù n·zov poËÌtaËa."
-    IDS_WZD_COMPUTERNAME     "Inötal·cia nemÙûe pokraËovaù, k˝m nezad·te n·zov poËÌtaËa."
-    IDS_WZD_PASSWORDEMPTY    "MusÌte zadaù heslo!"
-    IDS_WZD_PASSWORDMATCH    "ZadanÈ hesl· nes˙hlasia. Zadajte poûadovanÈ heslo znovu."
-    IDS_WZD_PASSWORDCHAR     "ZadanÈ heslo obsahuje nepovolenÈ znaky. Zadajte upravenÈ heslo."
-    IDS_WZD_LOCALTIME        "Inötal·tor nedok·zal nastaviù Ëas."
+    IDS_WZD_NAME            "Inötal·cia nemÙûe pokraËovaù, k˝m nezad·te svoje meno."
+    IDS_WZD_SETCOMPUTERNAME "Inötal·tor nedok·zal nastaviù n·zov poËÌtaËa."
+    IDS_WZD_COMPUTERNAME    "Inötal·cia nemÙûe pokraËovaù, k˝m nezad·te n·zov poËÌtaËa."
+    IDS_WZD_PASSWORDEMPTY   "MusÌte zadaù heslo!"
+    IDS_WZD_PASSWORDMATCH   "ZadanÈ hesl· nes˙hlasia. Zadajte poûadovanÈ heslo znovu."
+    IDS_WZD_PASSWORDCHAR    "ZadanÈ heslo obsahuje nepovolenÈ znaky. Zadajte upravenÈ heslo."
+    IDS_WZD_LOCALTIME       "Inötal·tor nedok·zal nastaviù Ëas."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_STATUS_INSTALL_DEV   "Inötalujem zariadenia..."
+    IDS_STATUS_INSTALL_DEV  "Inötalujem zariadenia..."
 END
 
 /* EOF */

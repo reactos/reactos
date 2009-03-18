@@ -58,25 +58,21 @@ static ULONG WINAPI HTMLDocument5_Release(IHTMLDocument5 *iface)
 static HRESULT WINAPI HTMLDocument5_GetTypeInfoCount(IHTMLDocument5 *iface, UINT *pctinfo)
 {
     HTMLDocument *This = HTMLDOC5_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, pctinfo);
-    return E_NOTIMPL;
+    return IDispatchEx_GetTypeInfoCount(DISPATCHEX(This), pctinfo);
 }
 
 static HRESULT WINAPI HTMLDocument5_GetTypeInfo(IHTMLDocument5 *iface, UINT iTInfo,
         LCID lcid, ITypeInfo **ppTInfo)
 {
     HTMLDocument *This = HTMLDOC5_THIS(iface);
-    FIXME("(%p)->(%u %u %p)\n", This, iTInfo, lcid, ppTInfo);
-    return E_NOTIMPL;
+    return IDispatchEx_GetTypeInfo(DISPATCHEX(This), iTInfo, lcid, ppTInfo);
 }
 
 static HRESULT WINAPI HTMLDocument5_GetIDsOfNames(IHTMLDocument5 *iface, REFIID riid,
         LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId)
 {
     HTMLDocument *This = HTMLDOC5_THIS(iface);
-    FIXME("(%p)->(%s %p %u %u %p)\n", This, debugstr_guid(riid), rgszNames, cNames,
-                                        lcid, rgDispId);
-    return E_NOTIMPL;
+    return IDispatchEx_GetIDsOfNames(DISPATCHEX(This), riid, rgszNames, cNames, lcid, rgDispId);
 }
 
 static HRESULT WINAPI HTMLDocument5_Invoke(IHTMLDocument5 *iface, DISPID dispIdMember,
@@ -84,9 +80,8 @@ static HRESULT WINAPI HTMLDocument5_Invoke(IHTMLDocument5 *iface, DISPID dispIdM
                             VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
 {
     HTMLDocument *This = HTMLDOC5_THIS(iface);
-    FIXME("(%p)->(%d %s %d %d %p %p %p %p)\n", This, dispIdMember, debugstr_guid(riid),
-            lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
-    return E_NOTIMPL;
+    return IDispatchEx_Invoke(DISPATCHEX(This), dispIdMember, riid, lcid, wFlags, pDispParams,
+            pVarResult, pExcepInfo, puArgErr);
 }
 
 static HRESULT WINAPI HTMLDocument5_put_onmousewheel(IHTMLDocument5 *iface, VARIANT v)
@@ -129,8 +124,32 @@ static HRESULT WINAPI HTMLDocument5_createComment(IHTMLDocument5 *iface, BSTR bs
         IHTMLDOMNode **ppRetNode)
 {
     HTMLDocument *This = HTMLDOC5_THIS(iface);
-    FIXME("(%p)->(%s %p)\n", This, debugstr_w(bstrdata), ppRetNode);
-    return E_NOTIMPL;
+    nsIDOMComment *nscomment;
+    HTMLDOMNode *node;
+    nsAString str;
+    nsresult nsres;
+
+    TRACE("(%p)->(%s %p)\n", This, debugstr_w(bstrdata), ppRetNode);
+
+    if(!This->nsdoc) {
+        WARN("NULL nsdoc\n");
+        return E_UNEXPECTED;
+    }
+
+    nsAString_Init(&str, bstrdata);
+    nsres = nsIDOMHTMLDocument_CreateComment(This->nsdoc, &str, &nscomment);
+    nsAString_Finish(&str);
+    if(NS_FAILED(nsres)) {
+        ERR("CreateTextNode failed: %08x\n", nsres);
+        return E_FAIL;
+    }
+
+    node = &HTMLCommentElement_Create(This, (nsIDOMNode*)nscomment)->node;
+    nsIDOMElement_Release(nscomment);
+
+    *ppRetNode = HTMLDOMNODE(node);
+    IHTMLDOMNode_AddRef(HTMLDOMNODE(node));
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLDocument5_put_onfocusin(IHTMLDocument5 *iface, VARIANT v)
@@ -220,7 +239,6 @@ static HRESULT WINAPI HTMLDocument5_get_onbeforedeactivate(IHTMLDocument5 *iface
 static HRESULT WINAPI HTMLDocument5_get_compatMode(IHTMLDocument5 *iface, BSTR *p)
 {
     HTMLDocument *This = HTMLDOC5_THIS(iface);
-    nsIDOMDocument *nsdoc;
     nsIDOMNSHTMLDocument *nshtmldoc;
     nsAString mode_str;
     const PRUnichar *mode;
@@ -228,12 +246,12 @@ static HRESULT WINAPI HTMLDocument5_get_compatMode(IHTMLDocument5 *iface, BSTR *
 
     TRACE("(%p)->(%p)\n", This, p);
 
-    nsres = nsIWebNavigation_GetDocument(This->nscontainer->navigation, &nsdoc);
-    if(NS_FAILED(nsres))
-        ERR("GetDocument failed: %08x\n", nsres);
+    if(!This->nsdoc) {
+        WARN("NULL nsdoc\n");
+        return E_UNEXPECTED;
+    }
 
-    nsres = nsIDOMDocument_QueryInterface(nsdoc, &IID_nsIDOMNSHTMLDocument, (void**)&nshtmldoc);
-    nsIDOMDocument_Release(nsdoc);
+    nsres = nsIDOMHTMLDocument_QueryInterface(This->nsdoc, &IID_nsIDOMNSHTMLDocument, (void**)&nshtmldoc);
     if(NS_FAILED(nsres)) {
         ERR("Could not get nsIDOMNSHTMLDocument: %08x\n", nsres);
         return S_OK;

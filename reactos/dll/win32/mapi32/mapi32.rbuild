@@ -11,6 +11,7 @@
 	<file>prop.c</file>
 	<file>sendmail.c</file>
 	<file>util.c</file>
+	<file>version.rc</file>
 	<library>wine</library>
 	<library>shlwapi</library>
 	<library>shell32</library>

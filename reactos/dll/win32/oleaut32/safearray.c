@@ -299,7 +299,7 @@ static HRESULT SAFEARRAY_DestroyData(SAFEARRAY *psa, ULONG ulStartCell)
 
       if (SUCCEEDED(SafeArrayGetRecordInfo(psa, &lpRecInfo)))
       {
-        PBYTE pRecordData = (PBYTE)psa->pvData;
+        PBYTE pRecordData = psa->pvData;
         while(ulCellCount--)
         {
           IRecordInfo_RecordClear(lpRecInfo, pRecordData);
@@ -350,8 +350,8 @@ static HRESULT SAFEARRAY_CopyData(SAFEARRAY *psa, SAFEARRAY *dest)
 
     if (psa->fFeatures & FADF_VARIANT)
     {
-      VARIANT* lpVariant = (VARIANT*)psa->pvData;
-      VARIANT* lpDest = (VARIANT*)dest->pvData;
+      VARIANT* lpVariant = psa->pvData;
+      VARIANT* lpDest = dest->pvData;
 
       while(ulCellCount--)
       {
@@ -365,8 +365,8 @@ static HRESULT SAFEARRAY_CopyData(SAFEARRAY *psa, SAFEARRAY *dest)
     }
     else if (psa->fFeatures & FADF_BSTR)
     {
-      BSTR* lpBstr = (BSTR*)psa->pvData;
-      BSTR* lpDest = (BSTR*)dest->pvData;
+      BSTR* lpBstr = psa->pvData;
+      BSTR* lpDest = dest->pvData;
 
       while(ulCellCount--)
       {
@@ -389,7 +389,7 @@ static HRESULT SAFEARRAY_CopyData(SAFEARRAY *psa, SAFEARRAY *dest)
 
       if (psa->fFeatures & (FADF_UNKNOWN|FADF_DISPATCH))
       {
-        LPUNKNOWN *lpUnknown = (LPUNKNOWN *)dest->pvData;
+        LPUNKNOWN *lpUnknown = dest->pvData;
 
         while(ulCellCount--)
         {
@@ -596,7 +596,7 @@ SAFEARRAY* WINAPI SafeArrayCreate(VARTYPE vt, UINT cDims, SAFEARRAYBOUND *rgsabo
 SAFEARRAY* WINAPI SafeArrayCreateEx(VARTYPE vt, UINT cDims, SAFEARRAYBOUND *rgsabound, LPVOID pvExtra)
 {
   ULONG ulSize = 0;
-  IRecordInfo* iRecInfo = (IRecordInfo*)pvExtra;
+  IRecordInfo* iRecInfo = pvExtra;
   SAFEARRAY* psa;
  
   TRACE("(%d->%s,%d,%p,%p)\n", vt, debugstr_vt(vt), cDims, rgsabound, pvExtra);
@@ -673,7 +673,7 @@ SAFEARRAY* WINAPI SafeArrayCreateVector(VARTYPE vt, LONG lLbound, ULONG cElement
 SAFEARRAY* WINAPI SafeArrayCreateVectorEx(VARTYPE vt, LONG lLbound, ULONG cElements, LPVOID pvExtra)
 {
   ULONG ulSize;
-  IRecordInfo* iRecInfo = (IRecordInfo*)pvExtra;
+  IRecordInfo* iRecInfo = pvExtra;
   SAFEARRAY* psa;
 
  TRACE("(%d->%s,%d,%d,%p\n", vt, debugstr_vt(vt), lLbound, cElements, pvExtra);
@@ -851,8 +851,8 @@ HRESULT WINAPI SafeArrayPutElement(SAFEARRAY *psa, LONG *rgIndices, void *pvData
     {
       if (psa->fFeatures & FADF_VARIANT)
       {
-        VARIANT* lpVariant = (VARIANT*)pvData;
-        VARIANT* lpDest = (VARIANT*)lpvDest;
+        VARIANT* lpVariant = pvData;
+        VARIANT* lpDest = lpvDest;
 
         hRet = VariantClear(lpDest);
         if (FAILED(hRet)) FIXME("VariantClear failed with 0x%x\n", hRet);
@@ -862,7 +862,7 @@ HRESULT WINAPI SafeArrayPutElement(SAFEARRAY *psa, LONG *rgIndices, void *pvData
       else if (psa->fFeatures & FADF_BSTR)
       {
         BSTR  lpBstr = (BSTR)pvData;
-        BSTR* lpDest = (BSTR*)lpvDest;
+        BSTR* lpDest = lpvDest;
 
         SysFreeString(*lpDest);
 
@@ -874,8 +874,8 @@ HRESULT WINAPI SafeArrayPutElement(SAFEARRAY *psa, LONG *rgIndices, void *pvData
       {
         if (psa->fFeatures & (FADF_UNKNOWN|FADF_DISPATCH))
         {
-          LPUNKNOWN  lpUnknown = (LPUNKNOWN)pvData;
-          LPUNKNOWN *lpDest = (LPUNKNOWN *)lpvDest;
+          LPUNKNOWN  lpUnknown = pvData;
+          LPUNKNOWN *lpDest = lpvDest;
 
           if (lpUnknown)
             IUnknown_AddRef(lpUnknown);
@@ -932,8 +932,8 @@ HRESULT WINAPI SafeArrayGetElement(SAFEARRAY *psa, LONG *rgIndices, void *pvData
     {
       if (psa->fFeatures & FADF_VARIANT)
       {
-        VARIANT* lpVariant = (VARIANT*)lpvSrc;
-        VARIANT* lpDest = (VARIANT*)pvData;
+        VARIANT* lpVariant = lpvSrc;
+        VARIANT* lpDest = pvData;
 
         /* The original content of pvData is ignored. */
         V_VT(lpDest) = VT_EMPTY;
@@ -942,8 +942,8 @@ HRESULT WINAPI SafeArrayGetElement(SAFEARRAY *psa, LONG *rgIndices, void *pvData
       }
       else if (psa->fFeatures & FADF_BSTR)
       {
-        BSTR* lpBstr = (BSTR*)lpvSrc;
-        BSTR* lpDest = (BSTR*)pvData;
+        BSTR* lpBstr = lpvSrc;
+        BSTR* lpDest = pvData;
 
         if (*lpBstr)
         {
@@ -958,7 +958,7 @@ HRESULT WINAPI SafeArrayGetElement(SAFEARRAY *psa, LONG *rgIndices, void *pvData
       {
         if (psa->fFeatures & (FADF_UNKNOWN|FADF_DISPATCH))
         {
-          LPUNKNOWN *lpUnknown = (LPUNKNOWN *)lpvSrc;
+          LPUNKNOWN *lpUnknown = lpvSrc;
 
           if (*lpUnknown)
             IUnknown_AddRef(*lpUnknown);

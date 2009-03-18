@@ -745,6 +745,9 @@ DWORD RQueryServiceObjectSecurity(
     DWORD dwBytesNeeded;
     DWORD dwError;
 
+
+    SECURITY_DESCRIPTOR ObjectDescriptor;
+
     DPRINT("RQueryServiceObjectSecurity() called\n");
 
     hSvc = (PSERVICE_HANDLE)hService;
@@ -778,7 +781,10 @@ DWORD RQueryServiceObjectSecurity(
 
     /* FIXME: Lock the service list */
 
-    Status = RtlQuerySecurityObject(lpService->lpSecurityDescriptor,
+    /* hack */
+    Status = RtlCreateSecurityDescriptor(&ObjectDescriptor, SECURITY_DESCRIPTOR_REVISION);
+
+    Status = RtlQuerySecurityObject(&ObjectDescriptor  /* lpService->lpSecurityDescriptor */,
                                     dwSecurityInformation,
                                     (PSECURITY_DESCRIPTOR)lpSecurityDescriptor,
                                     cbBufSize,
@@ -819,9 +825,9 @@ DWORD RSetServiceObjectSecurity(
     PSERVICE_HANDLE hSvc;
     PSERVICE lpService;
     ULONG DesiredAccess = 0;
-    HANDLE hToken = NULL;
+    /* HANDLE hToken = NULL; */
     HKEY hServiceKey;
-    NTSTATUS Status;
+    /* NTSTATUS Status; */
     DWORD dwError;
 
     DPRINT1("RSetServiceObjectSecurity() called\n");
@@ -875,6 +881,7 @@ DWORD RSetServiceObjectSecurity(
     if (lpService->bDeleted)
         return ERROR_SERVICE_MARKED_FOR_DELETE;
 
+#if 0
     RpcImpersonateClient(NULL);
 
     Status = NtOpenThreadToken(NtCurrentThread(),
@@ -882,13 +889,12 @@ DWORD RSetServiceObjectSecurity(
                                TRUE,
                                &hToken);
     if (!NT_SUCCESS(Status))
-        return RtlNtStatusToDosError(Status);
+        return RtlNtStatusToDosError(Status); 
 
     RpcRevertToSelf();
 
     /* FIXME: Lock service database */
 
-#if 0
     Status = RtlSetSecurityObject(dwSecurityInformation,
                                   (PSECURITY_DESCRIPTOR)lpSecurityDescriptor,
                                   &lpService->lpSecurityDescriptor,
@@ -917,8 +923,10 @@ DWORD RSetServiceObjectSecurity(
 
 Done:
 
+#if 0
     if (hToken != NULL)
         NtClose(hToken);
+#endif
 
     /* FIXME: Unlock service database */
 
@@ -2437,18 +2445,18 @@ DWORD ROpenServiceW(
     if (ScmShutdown)
         return ERROR_SHUTDOWN_IN_PROGRESS;
 
-    if (!lpServiceHandle)
-        return ERROR_INVALID_PARAMETER;
-
-    if (!lpServiceName)
-        return ERROR_INVALID_ADDRESS;
-
     hManager = (PMANAGER_HANDLE)hSCManager;
     if (!hManager || hManager->Handle.Tag != MANAGER_TAG)
     {
         DPRINT1("Invalid manager handle!\n");
         return ERROR_INVALID_HANDLE;
     }
+
+    if (!lpServiceHandle)
+        return ERROR_INVALID_PARAMETER;
+
+    if (!lpServiceName)
+        return ERROR_INVALID_ADDRESS;
 
     /* FIXME: Lock the service list */
 
@@ -2764,11 +2772,11 @@ DWORD RGetServiceDisplayNameW(
     {
         DPRINT1("Could not find a service!\n");
 
-        /* If the service could not be found and lpcchBuffer is 0, windows
-           puts null in lpDisplayName and puts 1 in lpcchBuffer */
-        if (*lpcchBuffer == 0)
+        /* If the service could not be found and lpcchBuffer is less than 2, windows
+           puts null in lpDisplayName and puts 2 in lpcchBuffer */
+        if (*lpcchBuffer < 2)
         {
-            *lpcchBuffer = 1;
+            *lpcchBuffer = 2;
             if (lpDisplayName != NULL)
             {
                 *lpDisplayName = '\0';
@@ -2838,9 +2846,9 @@ DWORD RGetServiceKeyNameW(
     {
         DPRINT1("Could not find a service!\n");
 
-        /* If the service could not be found and lpcchBuffer is 0, windows
+        /* If the service could not be found and lpcchBuffer is less than 2, windows
            puts null in lpDisplayName and puts 2 in lpcchBuffer */
-        if (*lpcchBuffer == 0)
+        if (*lpcchBuffer < 2)
         {
             *lpcchBuffer = 2;
             if (lpServiceName != NULL)
@@ -2864,7 +2872,7 @@ DWORD RGetServiceKeyNameW(
 
     dwError = (*lpcchBuffer > dwLength) ? ERROR_SUCCESS : ERROR_INSUFFICIENT_BUFFER;
 
-    *lpcchBuffer = dwLength * 2;
+    *lpcchBuffer = dwLength;
 
     return dwError;
 }
@@ -2976,7 +2984,7 @@ DWORD RChangeServiceConfigA(
                             lpDisplayName,
                             -1,
                             lpDisplayNameW,
-                            wcslen(lpDisplayNameW) + 1);
+                            strlen(lpDisplayName) + 1);
 
         RegSetValueExW(hServiceKey,
                        L"DisplayName",
@@ -3570,7 +3578,7 @@ DWORD RQueryServiceConfigA(
     else
         dwRequiredSize += 2;
 
-    if (lpService->lpGroup != NULL)
+    if ((lpService->lpGroup != NULL) && (lpService->lpGroup->lpGroupName != NULL))
         dwRequiredSize += wcslen(lpService->lpGroup->lpGroupName) + 1;
     else
         dwRequiredSize += 2;
@@ -3612,7 +3620,7 @@ DWORD RQueryServiceConfigA(
                                 lpImagePath,
                                 -1,
                                 lpStr,
-                                wcslen(lpImagePath),
+                                wcslen(lpImagePath)+1,
                                 0,
                                 0);
         }
@@ -3624,14 +3632,14 @@ DWORD RQueryServiceConfigA(
         lpConfig->lpBinaryPathName = (LPSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpConfig);
         lpStr += (strlen((LPSTR)lpStr) + 1);
 
-        if (lpService->lpGroup)
+        if (lpService->lpGroup && lpService->lpGroup->lpGroupName)
         {
             WideCharToMultiByte(CP_ACP,
                                 0,
                                 lpService->lpGroup->lpGroupName,
                                 -1,
                                 lpStr,
-                                wcslen(lpService->lpGroup->lpGroupName),
+                                wcslen(lpService->lpGroup->lpGroupName)+1,
                                 0,
                                 0);
         }
@@ -3656,7 +3664,7 @@ DWORD RQueryServiceConfigA(
                                 lpServiceStartName,
                                 -1,
                                 lpStr,
-                                wcslen(lpServiceStartName),
+                                wcslen(lpServiceStartName)+1,
                                 0,
                                 0);
         }
@@ -3675,7 +3683,7 @@ DWORD RQueryServiceConfigA(
                                 lpService->lpDisplayName,
                                 -1,
                                 lpStr,
-                                wcslen(lpService->lpDisplayName),
+                                wcslen(lpService->lpDisplayName)+1,
                                 0,
                                 0);
         }
@@ -3942,8 +3950,8 @@ DWORD RGetServiceKeyNameA(
                             0,
                             lpService->lpServiceName,
                             wcslen(lpService->lpServiceName),
-                            lpServiceName + 1,
-                            dwLength,
+                            lpServiceName,
+                            dwLength + 1,
                             NULL,
                             NULL);
         return ERROR_SUCCESS;
@@ -3985,13 +3993,118 @@ DWORD REnumServiceGroupW(
 }
 
 
+//
+// WARNING: This function is untested
+//
 /* Function 36 */
 DWORD RChangeServiceConfig2A(
     SC_RPC_HANDLE hService,
     SC_RPC_CONFIG_INFOA Info)
 {
-    UNIMPLEMENTED;
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    SC_RPC_CONFIG_INFOW InfoW;
+    DWORD dwRet, dwLength;
+    PVOID ptr = NULL;
+
+    DPRINT("RChangeServiceConfig2A() called\n");
+    DPRINT("dwInfoLevel = %lu\n", Info.dwInfoLevel);
+
+    InfoW.dwInfoLevel = Info.dwInfoLevel;
+
+    if (InfoW.dwInfoLevel == SERVICE_CONFIG_DESCRIPTION)
+    {
+        LPSERVICE_DESCRIPTIONW lpServiceDescriptonW;
+        LPSERVICE_DESCRIPTIONA lpServiceDescriptonA;
+
+        lpServiceDescriptonA = Info.psd;
+
+        ///if (lpServiceDescriptonA &&
+        ///lpServiceDescriptonA->lpDescription)
+        ///{
+            dwLength = (strlen(Info.lpDescription) + 1) * sizeof(WCHAR);
+
+            lpServiceDescriptonW = HeapAlloc(GetProcessHeap(),
+                                            0,
+                                            dwLength + sizeof(SERVICE_DESCRIPTIONW));
+            if (!lpServiceDescriptonW)
+            {
+                return ERROR_NOT_ENOUGH_MEMORY;
+            }
+
+            lpServiceDescriptonW->lpDescription = (LPWSTR)(lpServiceDescriptonW + 1);
+
+            MultiByteToWideChar(CP_ACP,
+                                0,
+                                Info.lpDescription,
+                                -1,
+                                lpServiceDescriptonW->lpDescription,
+                                dwLength);
+
+            ptr = lpServiceDescriptonW;
+            InfoW.psd = lpServiceDescriptonW;
+        ///}
+    }
+    else if (Info.dwInfoLevel == SERVICE_CONFIG_FAILURE_ACTIONS)
+    {
+        LPSERVICE_FAILURE_ACTIONSW lpServiceFailureActionsW;
+        LPSERVICE_FAILURE_ACTIONSA lpServiceFailureActionsA;
+        DWORD dwRebootLen = 0;
+        DWORD dwCommandLen = 0;
+
+        lpServiceFailureActionsA = Info.psfa;
+
+        if (lpServiceFailureActionsA)
+        {
+            if (lpServiceFailureActionsA->lpRebootMsg)
+            {
+                dwRebootLen = (strlen(lpServiceFailureActionsA->lpRebootMsg) + 1) * sizeof(WCHAR);
+            }
+            if (lpServiceFailureActionsA->lpCommand)
+            {
+                dwCommandLen = (strlen(lpServiceFailureActionsA->lpCommand) + 1) * sizeof(WCHAR);
+            }
+            dwLength = dwRebootLen + dwCommandLen + sizeof(SERVICE_FAILURE_ACTIONSW);
+
+            lpServiceFailureActionsW = HeapAlloc(GetProcessHeap(),
+                                                 0,
+                                                 dwLength);
+            if (!lpServiceFailureActionsW)
+            {
+                return ERROR_NOT_ENOUGH_MEMORY;
+            }
+
+            lpServiceFailureActionsW->cActions = lpServiceFailureActionsA->cActions;
+            lpServiceFailureActionsW->dwResetPeriod = lpServiceFailureActionsA->dwResetPeriod;
+            CopyMemory(lpServiceFailureActionsW->lpsaActions, lpServiceFailureActionsA->lpsaActions, sizeof(SC_ACTION));
+
+            if (lpServiceFailureActionsA->lpRebootMsg)
+            {
+                MultiByteToWideChar(CP_ACP,
+                                    0,
+                                    lpServiceFailureActionsA->lpRebootMsg,
+                                    -1,
+                                    lpServiceFailureActionsW->lpRebootMsg,
+                                    dwRebootLen);
+            }
+
+            if (lpServiceFailureActionsA->lpCommand)
+            {
+                MultiByteToWideChar(CP_ACP,
+                                    0,
+                                    lpServiceFailureActionsA->lpCommand,
+                                    -1,
+                                    lpServiceFailureActionsW->lpCommand,
+                                    dwCommandLen);
+            }
+
+            ptr = lpServiceFailureActionsW;
+        }
+    }
+
+    dwRet = RChangeServiceConfig2W(hService, InfoW);
+
+    HeapFree(GetProcessHeap(), 0, ptr);
+
+    return dwRet;
 }
 
 
@@ -4048,16 +4161,17 @@ DWORD RChangeServiceConfig2W(
     if (dwError != ERROR_SUCCESS)
         goto done;
 
-    if (Info.dwInfoLevel & SERVICE_CONFIG_DESCRIPTION)
+    if (Info.dwInfoLevel == SERVICE_CONFIG_DESCRIPTION)
     {
         LPSERVICE_DESCRIPTIONW lpServiceDescription;
 
-        lpServiceDescription = (LPSERVICE_DESCRIPTIONW)&Info;
-        lpServiceDescription->lpDescription = (LPWSTR)(&Info + sizeof(LPSERVICE_DESCRIPTIONW));
+        lpServiceDescription = (LPSERVICE_DESCRIPTIONW)Info.psd;
+        lpServiceDescription->lpDescription = (LPWSTR)((ULONG_PTR)lpServiceDescription + sizeof(LPSERVICE_DESCRIPTIONW));
 
         if (lpServiceDescription != NULL &&
             lpServiceDescription->lpDescription != NULL)
         {
+            DPRINT1("Setting value %S\n", lpServiceDescription->lpDescription);
             RegSetValueExW(hServiceKey,
                            L"Description",
                            0,
@@ -4069,7 +4183,7 @@ DWORD RChangeServiceConfig2W(
                 goto done;
         }
     }
-    else if (Info.dwInfoLevel & SERVICE_CONFIG_FAILURE_ACTIONS)
+    else if (Info.dwInfoLevel == SERVICE_CONFIG_FAILURE_ACTIONS)
     {
         UNIMPLEMENTED;
         dwError = ERROR_CALL_NOT_IMPLEMENTED;
@@ -4099,11 +4213,10 @@ DWORD RQueryServiceConfig2A(
     PSERVICE_HANDLE hSvc;
     PSERVICE lpService = NULL;
     HKEY hServiceKey = NULL;
-    DWORD dwRequiredSize;
     LPWSTR lpDescriptionW = NULL;
     LPSTR lpDescription = NULL;
 
-    DPRINT("RQueryServiceConfig2W() called\n");
+    DPRINT1("RQueryServiceConfig2A() called hService %p dwInfoLevel %u, lpBuffer %p cbBufSize %u pcbBytesNeeded %p\n",hService, dwInfoLevel, lpBuffer, cbBufSize, pcbBytesNeeded);
 
     if (!lpBuffer)
         return ERROR_INVALID_ADDRESS;
@@ -4145,32 +4258,44 @@ DWORD RQueryServiceConfig2A(
         LPSERVICE_DESCRIPTIONA lpServiceDescription = (LPSERVICE_DESCRIPTIONA)lpBuffer;
         LPSTR lpStr;
 
+        *pcbBytesNeeded = sizeof(SERVICE_DESCRIPTIONA);
+
         dwError = ScmReadString(hServiceKey,
                                 L"Description",
                                 &lpDescriptionW);
-        if (dwError != ERROR_SUCCESS)
-            goto done;
-
-        dwRequiredSize = sizeof(SERVICE_DESCRIPTIONA) + ((wcslen(lpDescriptionW) + 1));
-
-        if (cbBufSize < dwRequiredSize)
+        if (dwError == ERROR_SUCCESS)
         {
-            *pcbBytesNeeded = dwRequiredSize;
+            *pcbBytesNeeded += ((wcslen(lpDescriptionW) + 1) * sizeof(WCHAR));
+        }
+
+        if (cbBufSize >= *pcbBytesNeeded)
+        {
+
+            if (dwError == ERROR_SUCCESS)
+            {
+                lpStr = (LPSTR)(lpServiceDescription + 1);
+
+                WideCharToMultiByte(CP_ACP,
+                                    0,
+                                    lpDescriptionW,
+                                    -1,
+                                    lpStr,
+                                    wcslen(lpDescriptionW),
+                                    NULL,
+                                    NULL);
+                lpServiceDescription->lpDescription = (LPSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpServiceDescription);
+            }
+            else
+            {
+                lpServiceDescription->lpDescription = NULL;
+                goto done;
+            }
+        }
+        else
+        {
             dwError = ERROR_INSUFFICIENT_BUFFER;
             goto done;
         }
-
-        lpStr = (LPSTR)(lpServiceDescription + 1);
-
-        WideCharToMultiByte(CP_ACP,
-                            0,
-                            lpDescriptionW,
-                            -1,
-                            lpStr,
-                            wcslen(lpDescriptionW),
-                            NULL,
-                            NULL);
-        lpServiceDescription->lpDescription = (LPSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpServiceDescription);
     }
     else if (dwInfoLevel & SERVICE_CONFIG_FAILURE_ACTIONS)
     {

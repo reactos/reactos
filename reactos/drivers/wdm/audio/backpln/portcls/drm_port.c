@@ -1,8 +1,5 @@
 #include "private.h"
 
-
-
-
 typedef struct
 {
     IDrmPort2Vtbl *lpVtbl;
@@ -46,6 +43,7 @@ IDrmPort2_fnQueryInterface(
     IN  REFIID refiid,
     OUT PVOID* Output)
 {
+    WCHAR Buffer[100];
     IDrmPort2Impl * This = (IDrmPort2Impl*)iface;
 
     if (IsEqualGUIDAligned(refiid, &IID_IDrmPort) ||
@@ -57,7 +55,9 @@ IDrmPort2_fnQueryInterface(
         return STATUS_SUCCESS;
     }
 
-    DPRINT("IDrmPort2_QueryInterface: This %p unknown iid\n", This, This->ref);
+    StringFromCLSID(refiid, Buffer);
+    DPRINT1("IDrmPort2_QueryInterface no interface!!! iface %S\n", Buffer);
+    KeBugCheckEx(0, 0, 0, 0, 0);
     return STATUS_UNSUCCESSFUL;
 }
 

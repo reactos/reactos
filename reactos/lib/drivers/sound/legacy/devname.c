@@ -11,6 +11,8 @@
 
 #include <ntddk.h>
 #include <ntddsnd.h>
+#include <sndnames.h>
+#include <sndtypes.h>
 #include <debug.h>
 
 
@@ -167,7 +169,7 @@ GetDefaultSoundDeviceNameBodies(
     OUT PCWSTR* DeviceNameBody,
     OUT PCWSTR* DosDeviceNameBody)
 {
-    if ( ! VALID_SOUND_DEVICE_TYPE(DeviceType) )
+    if ( ! IS_VALID_SOUND_DEVICE_TYPE(DeviceType) )
     {
         DPRINT("Invalid device type");
         return STATUS_INVALID_PARAMETER;

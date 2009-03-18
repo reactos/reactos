@@ -327,7 +327,7 @@ ULONG CDECL ldap_set_optionA( WLDAP32_LDAP *ld, int option, void *value )
     {
         LDAPControlW **ctrlsW;
 
-        ctrlsW = controlarrayAtoW( (LDAPControlA **)value );
+        ctrlsW = controlarrayAtoW( value );
         if (!ctrlsW) return WLDAP32_LDAP_NO_MEMORY;
 
         ret = ldap_set_optionW( ld, option, ctrlsW );
@@ -430,7 +430,7 @@ ULONG CDECL ldap_set_optionW( WLDAP32_LDAP *ld, int option, void *value )
     {
         LDAPControl **ctrlsU;
 
-        ctrlsU = controlarrayWtoU( (LDAPControlW **)value );
+        ctrlsU = controlarrayWtoU( value );
         if (!ctrlsU) return WLDAP32_LDAP_NO_MEMORY;
 
         ret = map_error( ldap_set_option( ld, option, ctrlsU ));

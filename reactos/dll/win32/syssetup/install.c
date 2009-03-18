@@ -773,9 +773,9 @@ CreateShortcuts(VOID)
         CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_CALC, _T("%SystemRoot%\\system32\\calc.exe"), IDS_CMT_CALC, TRUE);
         CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_CMD, _T("%SystemRoot%\\system32\\cmd.exe"), IDS_CMT_CMD, TRUE);
         CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_NOTEPAD, _T("%SystemRoot%\\system32\\notepad.exe"), IDS_CMT_NOTEPAD, TRUE);
-        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_WORDPAD, _T("%SystemRoot%\\system32\\wordpad.exe"), IDS_CMT_WORDPAD, TRUE);
-        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_SNAP, _T("%SystemRoot%\\system32\\screenshot.exe"), IDS_CMT_SCREENSHOT, TRUE);
         CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_RDESKTOP, _T("%SystemRoot%\\system32\\mstsc.exe"), IDS_CMT_RDESKTOP, TRUE);
+        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_SNAP, _T("%SystemRoot%\\system32\\screenshot.exe"), IDS_CMT_SCREENSHOT, TRUE);
+        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_WORDPAD, _T("%SystemRoot%\\system32\\wordpad.exe"), IDS_CMT_WORDPAD, TRUE);
     }
 
     /* Create System Tools subfolder and fill if the exe is available */
@@ -784,12 +784,20 @@ CreateShortcuts(VOID)
         CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_CHARMAP, _T("%SystemRoot%\\system32\\charmap.exe"), IDS_CMT_CHARMAP, TRUE);
         CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_KBSWITCH, _T("%SystemRoot%\\system32\\kbswitch.exe"), IDS_CMT_KBSWITCH, TRUE);
         CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_REGEDIT, _T("%SystemRoot%\\regedit.exe"), IDS_CMT_REGEDIT, TRUE);
+        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_DXDIAG, _T("%SystemRoot%\\system32\\dxdiag.exe"), IDS_CMT_DXDIAG, TRUE);
     }
 
     /* Create Accessibility subfolder and fill if the exe is available */
     if (CreateShortcutFolder(CSIDL_PROGRAMS, IDS_SYS_ACCESSIBILITY, szFolder, sizeof(szFolder)/sizeof(szFolder[0])))
     {
         CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_MAGNIFY, _T("%SystemRoot%\\system32\\magnify.exe"), IDS_CMT_MAGNIFY, TRUE);
+    }
+
+    /* Create Entertainment subfolder and fill if the exe is available */
+    if (CreateShortcutFolder(CSIDL_PROGRAMS, IDS_SYS_ENTERTAINMENT, szFolder, sizeof(szFolder)/sizeof(szFolder[0])))
+    {
+        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_MPLAY32, _T("%SystemRoot%\\system32\\mplay32.exe"), IDS_CMT_MPLAY32, TRUE);
+        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_SNDVOL32, _T("%SystemRoot%\\system32\\sndvol32.exe"), IDS_CMT_SNDVOL32, TRUE);
     }
 
     /* Create Games subfolder and fill if the exe is available */
@@ -881,6 +889,21 @@ InstallReactOS(HINSTANCE hInstance)
     /* Append the Admin-RID */
     AppendRidToSid(&AdminSid, DomainSid, DOMAIN_USER_RID_ADMIN);
 
+    CreateTempDir(L"TEMP");
+    CreateTempDir(L"TMP");
+
+    if (GetWindowsDirectory(szBuffer, sizeof(szBuffer) / sizeof(TCHAR)))
+    {
+        PathAddBackslash(szBuffer);
+        _tcscat(szBuffer, _T("system"));
+        CreateDirectory(szBuffer, NULL);
+    }
+
+    if (!CommonInstall())
+        return 0;
+
+    InstallWizard();
+
     /* Create the Administrator account */
     if (!SamCreateUser(L"Administrator", L"", AdminSid))
     {
@@ -932,21 +955,6 @@ InstallReactOS(HINSTANCE hInstance)
     }
     /* END OF ROS HACK */
 
-    CreateTempDir(L"TEMP");
-    CreateTempDir(L"TMP");
-
-    if (GetWindowsDirectory(szBuffer, sizeof(szBuffer) / sizeof(TCHAR)))
-    {
-        PathAddBackslash(szBuffer);
-        _tcscat(szBuffer, _T("system"));
-        CreateDirectory(szBuffer, NULL);
-    }
-
-    if (!CommonInstall())
-        return 0;
-
-    InstallWizard();
-
     SetupCloseInfFile(hSysSetupInf);
     SetSetupType(0);
 
@@ -996,4 +1004,28 @@ SetupChangeFontSize(
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD WINAPI
+SetupChangeLocaleEx(HWND hWnd,
+                    LCID Lcid,
+                    LPCWSTR lpSrcRootPath,
+                    char Unknown,
+                    DWORD dwUnused1,
+                    DWORD dwUnused2)
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+/*
+ * @implemented
+ */
+DWORD WINAPI
+SetupChangeLocale(HWND hWnd, LCID Lcid)
+{
+    return SetupChangeLocaleEx(hWnd, Lcid, NULL, 0, 0, 0);
 }

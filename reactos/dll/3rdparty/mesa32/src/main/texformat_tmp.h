@@ -1131,7 +1131,7 @@ static void FETCH(ci8)( const struct gl_texture_image *texImage,
          texelUB[GCOMP] =
          texelUB[BCOMP] = 0;
          texelUB[ACOMP] = table[index];
-         break;;
+         break;
       case GL_LUMINANCE:
          texelUB[RCOMP] =
          texelUB[GCOMP] =
@@ -1143,25 +1143,25 @@ static void FETCH(ci8)( const struct gl_texture_image *texImage,
          texelUB[GCOMP] =
          texelUB[BCOMP] =
          texelUB[ACOMP] = table[index];
-         break;;
+         break;
       case GL_LUMINANCE_ALPHA:
          texelUB[RCOMP] =
          texelUB[GCOMP] =
          texelUB[BCOMP] = table[index * 2 + 0];
          texelUB[ACOMP] = table[index * 2 + 1];
-         break;;
+         break;
       case GL_RGB:
          texelUB[RCOMP] = table[index * 3 + 0];
          texelUB[GCOMP] = table[index * 3 + 1];
          texelUB[BCOMP] = table[index * 3 + 2];
          texelUB[ACOMP] = 255;
-         break;;
+         break;
       case GL_RGBA:
          texelUB[RCOMP] = table[index * 4 + 0];
          texelUB[GCOMP] = table[index * 4 + 1];
          texelUB[BCOMP] = table[index * 4 + 2];
          texelUB[ACOMP] = table[index * 4 + 3];
-         break;;
+         break;
       default:
          _mesa_problem(ctx, "Bad palette format in fetch_texel_ci8");
          return;

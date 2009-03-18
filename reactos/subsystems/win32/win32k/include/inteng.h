@@ -34,16 +34,6 @@ typedef struct tagSPAN
 
 /* Definitions of IntEngXxx functions */
 
-#define IntEngLockProcessDriverObjs(W32Process) \
-  ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&(W32Process)->DriverObjListLock)
-
-#define IntEngUnLockProcessDriverObjs(W32Process) \
-  ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&(W32Process)->DriverObjListLock)
-
-VOID FASTCALL
-IntEngCleanupDriverObjs(struct _EPROCESS *Process,
-                        PW32PROCESS Win32Process);
-
 BOOL APIENTRY
 IntEngLineTo(SURFOBJ *Surface,
              CLIPOBJ *Clip,

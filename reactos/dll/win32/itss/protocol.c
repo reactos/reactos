@@ -47,7 +47,7 @@ typedef struct {
 } ITSProtocol;
 
 #define PROTOCOL(x)  ((IInternetProtocol*)  &(x)->lpInternetProtocolVtbl)
-#define PROTINFO(x)  ((IInternetProtocolInfo*) &(x)->lpInternetProtocolInfoVtbl)
+#define PROTINFO(x)  (&(x)->lpInternetProtocolInfoVtbl)
 
 static void release_chm(ITSProtocol *This)
 {

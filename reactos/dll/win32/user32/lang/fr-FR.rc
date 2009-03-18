@@ -43,13 +43,13 @@ END
 
 SYSMENU MENU LOADONCALL MOVEABLE DISCARDABLE
 BEGIN
-  MENUITEM "&Restaurer", 61728
-  MENUITEM "&Déplacer", 61456
-  MENUITEM "&Taille", 61440
-  MENUITEM "Ré&duire", 61472
-  MENUITEM "A&grandir", 61488
+  MENUITEM "&Restaurer", SC_RESTORE
+  MENUITEM "&Déplacer", SC_MOVE
+  MENUITEM "&Taille", SC_SIZE
+  MENUITEM "Ré&duire", SC_MINIMIZE
+  MENUITEM "A&grandir", SC_MAXIMIZE
   MENUITEM SEPARATOR
-  MENUITEM "&Fermer\tAlt-F4", 61536
+  MENUITEM "&Fermer\tAlt-F4", SC_CLOSE
 END
 
 /////////////////////////////////////////////////////////////////////////////

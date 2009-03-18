@@ -8,7 +8,7 @@
 LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
-STRING_HELP,  "Használat: %S kötet: [-FS:állományrendszer] [-V:címke] [-Q] [-A:méret] [-C]\n\n\
+STRING_HELP,  "Használat: %s kötet: [-FS:állományrendszer] [-V:címke] [-Q] [-A:méret] [-C]\n\n\
   [kötet:]         A meghajtóbetûjelet adja meg (kettõsponttal a végén).\n\
   -FS:állományrendszer Az állományrendszer típusát adja meg (%s).\n\
   -V:címke         A Kötetcímke neve.\n\
@@ -33,7 +33,7 @@ STRING_NO_SUPPORT  "A Mûvelet Nem Támogatott"
 
 STRING_FMIFS_FAIL  "Nem találtam meg az FMIFS kezdõpontját.\n\n"
 
-STRING_UNKNOW_ARG  "Érvénytelen paraméter: %S\n"
+STRING_UNKNOW_ARG  "Érvénytelen paraméter: %s\n"
 
 STRING_DRIVE_PARM  "Hiányzik a meghajtó meghatározás.\n\n"
 
@@ -45,7 +45,7 @@ STRING_NO_VOLUME         "Nem sikerült megállapítani címkét"
 
 STRING_NO_VOLUME_SIZE    "Nem sikerült megállapítani a kötet méretét"
 
-STRING_FILESYSTEM        "A állományrendszer típusa %S.\n"
+STRING_FILESYSTEM        "A állományrendszer típusa %s.\n"
 
 STRING_LABEL_NAME_EDIT  "Adja meg a címkét az alábbi meghajtóhoz: %C: "
 

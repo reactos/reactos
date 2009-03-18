@@ -469,6 +469,27 @@ typedef struct _DnsRRSet {
 	PDNS_RECORD pLastRR;
 } DNS_RRSET, *PDNS_RRSET;
 
+#define DNS_RRSET_INIT( rrset )                          \
+{                                                        \
+    PDNS_RRSET  _prrset = &(rrset);                      \
+    _prrset->pFirstRR = NULL;                            \
+    _prrset->pLastRR = (PDNS_RECORD) &_prrset->pFirstRR; \
+}
+
+#define DNS_RRSET_ADD( rrset, pnewRR ) \
+{                                      \
+    PDNS_RRSET  _prrset = &(rrset);    \
+    PDNS_RECORD _prrnew = (pnewRR);    \
+    _prrset->pLastRR->pNext = _prrnew; \
+    _prrset->pLastRR = _prrnew;        \
+}
+
+#define DNS_RRSET_TERMINATE( rrset ) \
+{                                    \
+    PDNS_RRSET  _prrset = &(rrset);  \
+    _prrset->pLastRR->pNext = NULL;  \
+}
+
 DNS_STATUS WINAPI DnsAcquireContextHandle_A(DWORD,PVOID,HANDLE*);
 DNS_STATUS WINAPI DnsAcquireContextHandle_W(DWORD,PVOID,HANDLE*);
 DNS_STATUS WINAPI DnsExtractRecordsFromMessage_W(PDNS_MESSAGE_BUFFER,WORD,PDNS_RECORD*);

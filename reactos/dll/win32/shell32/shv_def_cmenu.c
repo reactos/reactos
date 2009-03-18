@@ -168,6 +168,16 @@ SH_AddStaticEntry(IDefaultContextMenuImpl * This, WCHAR *szVerb, WCHAR * szClass
             wcscpy(curEntry->szClass, szClass);
     }
 
+    if (!wcsicmp(szVerb, L"open"))
+    {
+        /* open verb is always inserted in front */
+        curEntry->Next = This->shead;
+        This->shead = curEntry;
+        return;
+    }
+
+
+
     if (lastEntry)
     {
         lastEntry->Next = curEntry;
@@ -621,7 +631,7 @@ AddStaticContextMenusToMenu(
     mii.cbSize = sizeof(mii);
     mii.fMask = MIIM_ID | MIIM_TYPE | MIIM_STATE | MIIM_DATA;
     mii.fType = MFT_STRING;
-    mii.fState = MFS_ENABLED | MFS_DEFAULT;
+    mii.fState = MFS_ENABLED;
     mii.wID = 0x4000;
     This->iIdSCMFirst = mii.wID;
 
@@ -684,8 +694,9 @@ AddStaticContextMenusToMenu(
         }
 
         mii.cch = wcslen(mii.dwTypeData);
-        InsertMenuItemW(hMenu, indexMenu++, TRUE, &mii);
         mii.fState = fState;
+        InsertMenuItemW(hMenu, indexMenu++, TRUE, &mii);
+
         mii.wID++;
         curEntry = curEntry->Next;
      }

@@ -33,685 +33,683 @@
 
 typedef struct _FOLDERDATA
 {
-  LPWSTR lpValueName;
-  LPWSTR lpPath;
-  UINT uId;
-  BOOL bHidden;
-  BOOL bShellFolder;
-  BOOL bUserShellFolder;
+    LPWSTR lpValueName;
+    LPWSTR lpPath;
+    UINT uId;
+    BOOL bHidden;
+    BOOL bShellFolder;
+    BOOL bUserShellFolder;
 } FOLDERDATA, *PFOLDERDATA;
 
 
 static FOLDERDATA
 UserShellFolders[] =
 {
-  {L"AppData", L"Application Data", IDS_APPDATA, TRUE, TRUE, TRUE},
-  {L"Desktop", L"Desktop", IDS_DESKTOP, FALSE, TRUE, TRUE},
-  {L"Favorites", L"Favorites", IDS_FAVORITES, FALSE, TRUE, TRUE},
-  {L"Personal", L"My Documents", IDS_MYDOCUMENTS, FALSE, TRUE, TRUE},
-  {L"My Pictures", L"My Documents\\My Pictures", IDS_MYPICTURES, FALSE, TRUE, TRUE},
-  {L"My Music", L"My Documents\\My Music", IDS_MYMUSIC, FALSE, TRUE, TRUE},
-  {L"My Video", L"My Documents\\My Videos", IDS_MYVIDEOS, FALSE, TRUE, TRUE},
-  {L"NetHood", L"NetHood", IDS_NETHOOD, TRUE, TRUE, TRUE},
-  {L"PrintHood", L"PrintHood", IDS_PRINTHOOD, TRUE, TRUE, TRUE},
-  {L"Recent", L"Recent", IDS_RECENT, TRUE, TRUE, TRUE},
-  {L"SendTo", L"SendTo", IDS_SENDTO, FALSE, TRUE, TRUE},
-  {L"Templates", L"Templates", IDS_TEMPLATES, FALSE, TRUE, TRUE},
-  {L"Start Menu", L"Start Menu", IDS_STARTMENU, FALSE, TRUE, TRUE},
-  {L"Programs", L"Start Menu\\Programs", IDS_PROGRAMS, FALSE, TRUE, TRUE},
-  {L"Startup", L"Start Menu\\Programs\\Startup", IDS_STARTUP, FALSE, TRUE, TRUE},
-  {L"Local Settings", L"Local Settings", IDS_LOCALSETTINGS, TRUE, TRUE, TRUE},
-  {L"Local AppData", L"Local Settings\\Application Data", IDS_LOCALAPPDATA, TRUE, TRUE, TRUE},
-  {L"Temp", L"Local Settings\\Temp", IDS_TEMP, FALSE, FALSE, FALSE},
-  {L"Cache", L"Local Settings\\Temporary Internet Files", IDS_CACHE, FALSE, TRUE, TRUE},
-  {L"History", L"Local Settings\\History", IDS_HISTORY, FALSE, TRUE, TRUE},
-  {L"Cookies", L"Cookies", IDS_COOKIES, FALSE, TRUE, TRUE},
-  {NULL, NULL, -1, FALSE, FALSE, FALSE}
+    {L"AppData", L"Application Data", IDS_APPDATA, TRUE, TRUE, TRUE},
+    {L"Desktop", L"Desktop", IDS_DESKTOP, FALSE, TRUE, TRUE},
+    {L"Favorites", L"Favorites", IDS_FAVORITES, FALSE, TRUE, TRUE},
+    {L"Personal", L"My Documents", IDS_MYDOCUMENTS, FALSE, TRUE, TRUE},
+    {L"My Pictures", L"My Documents\\My Pictures", IDS_MYPICTURES, FALSE, TRUE, TRUE},
+    {L"My Music", L"My Documents\\My Music", IDS_MYMUSIC, FALSE, TRUE, TRUE},
+    {L"My Video", L"My Documents\\My Videos", IDS_MYVIDEOS, FALSE, TRUE, TRUE},
+    {L"NetHood", L"NetHood", IDS_NETHOOD, TRUE, TRUE, TRUE},
+    {L"PrintHood", L"PrintHood", IDS_PRINTHOOD, TRUE, TRUE, TRUE},
+    {L"Recent", L"Recent", IDS_RECENT, TRUE, TRUE, TRUE},
+    {L"SendTo", L"SendTo", IDS_SENDTO, FALSE, TRUE, TRUE},
+    {L"Templates", L"Templates", IDS_TEMPLATES, FALSE, TRUE, TRUE},
+    {L"Start Menu", L"Start Menu", IDS_STARTMENU, FALSE, TRUE, TRUE},
+    {L"Programs", L"Start Menu\\Programs", IDS_PROGRAMS, FALSE, TRUE, TRUE},
+    {L"Startup", L"Start Menu\\Programs\\Startup", IDS_STARTUP, FALSE, TRUE, TRUE},
+    {L"Local Settings", L"Local Settings", IDS_LOCALSETTINGS, TRUE, TRUE, TRUE},
+    {L"Local AppData", L"Local Settings\\Application Data", IDS_LOCALAPPDATA, TRUE, TRUE, TRUE},
+    {L"Temp", L"Local Settings\\Temp", IDS_TEMP, FALSE, FALSE, FALSE},
+    {L"Cache", L"Local Settings\\Temporary Internet Files", IDS_CACHE, FALSE, TRUE, TRUE},
+    {L"History", L"Local Settings\\History", IDS_HISTORY, FALSE, TRUE, TRUE},
+    {L"Cookies", L"Cookies", IDS_COOKIES, FALSE, TRUE, TRUE},
+    {NULL, NULL, -1, FALSE, FALSE, FALSE}
 };
 
 
 static FOLDERDATA
 CommonShellFolders[] =
 {
-  {L"Common AppData", L"Application Data", IDS_APPDATA, TRUE, TRUE, TRUE},
-  {L"Common Desktop", L"Desktop", IDS_DESKTOP, FALSE, TRUE, TRUE},
-  {L"Common Favorites", L"Favorites", IDS_FAVORITES, FALSE, TRUE, TRUE},
-  {L"Common Start Menu", L"Start Menu", IDS_STARTMENU, FALSE, TRUE, TRUE},
-  {L"Common Programs", L"Start Menu\\Programs", IDS_PROGRAMS, FALSE, TRUE, TRUE},
-  {L"Common Administrative Tools", L"Start Menu\\Programs\\Administrative Tools", IDS_ADMINTOOLS, FALSE, TRUE, FALSE},
-  {L"Common Startup", L"Start Menu\\Programs\\Startup", IDS_STARTUP, FALSE, TRUE, TRUE},
-  {L"Common Templates", L"Templates", IDS_TEMPLATES, TRUE, TRUE, TRUE},
-  {L"Common Documents", L"My Documents", IDS_MYDOCUMENTS, FALSE, TRUE, TRUE},
-  {L"CommonPictures", L"My Documents\\My Pictures", IDS_MYPICTURES, FALSE, TRUE, TRUE},
-  {L"CommonMusic", L"My Documents\\My Music", IDS_MYMUSIC, FALSE, TRUE, TRUE},
-  {L"CommonVideo", L"My Documents\\My Videos", IDS_MYVIDEOS, FALSE, TRUE, TRUE},
-  {NULL, NULL, -1, FALSE, FALSE, FALSE}
+    {L"Common AppData", L"Application Data", IDS_APPDATA, TRUE, TRUE, TRUE},
+    {L"Common Desktop", L"Desktop", IDS_DESKTOP, FALSE, TRUE, TRUE},
+    {L"Common Favorites", L"Favorites", IDS_FAVORITES, FALSE, TRUE, TRUE},
+    {L"Common Start Menu", L"Start Menu", IDS_STARTMENU, FALSE, TRUE, TRUE},
+    {L"Common Programs", L"Start Menu\\Programs", IDS_PROGRAMS, FALSE, TRUE, TRUE},
+    {L"Common Administrative Tools", L"Start Menu\\Programs\\Administrative Tools", IDS_ADMINTOOLS, FALSE, TRUE, FALSE},
+    {L"Common Startup", L"Start Menu\\Programs\\Startup", IDS_STARTUP, FALSE, TRUE, TRUE},
+    {L"Common Templates", L"Templates", IDS_TEMPLATES, TRUE, TRUE, TRUE},
+    {L"Common Documents", L"My Documents", IDS_MYDOCUMENTS, FALSE, TRUE, TRUE},
+    {L"CommonPictures", L"My Documents\\My Pictures", IDS_MYPICTURES, FALSE, TRUE, TRUE},
+    {L"CommonMusic", L"My Documents\\My Music", IDS_MYMUSIC, FALSE, TRUE, TRUE},
+    {L"CommonVideo", L"My Documents\\My Videos", IDS_MYVIDEOS, FALSE, TRUE, TRUE},
+    {NULL, NULL, -1, FALSE, FALSE, FALSE}
 };
 
 
 void
 DebugPrint(char* fmt,...)
 {
-  char buffer[512];
-  va_list ap;
+    char buffer[512];
+    va_list ap;
 
-  va_start(ap, fmt);
-  vsprintf(buffer, fmt, ap);
-  va_end(ap);
+    va_start(ap, fmt);
+    vsprintf(buffer, fmt, ap);
+    va_end(ap);
 
-  OutputDebugStringA(buffer);
+    OutputDebugStringA(buffer);
 }
 
 
-BOOL WINAPI
-InitializeProfiles (VOID)
+BOOL
+WINAPI
+InitializeProfiles(VOID)
 {
-  WCHAR szProfilesPath[MAX_PATH];
-  WCHAR szProfilePath[MAX_PATH];
-  WCHAR szBuffer[MAX_PATH];
-  DWORD dwLength;
-  PFOLDERDATA lpFolderData;
-  HKEY hKey;
-  LONG Error;
+    WCHAR szProfilesPath[MAX_PATH];
+    WCHAR szProfilePath[MAX_PATH];
+    WCHAR szBuffer[MAX_PATH];
+    DWORD dwLength;
+    PFOLDERDATA lpFolderData;
+    HKEY hKey;
+    LONG Error;
 
-  DPRINT("InitializeProfiles()\n");
+    DPRINT("InitializeProfiles()\n");
 
-  /* Load profiles directory path */
-  if (!LoadStringW(hInstance,
-		  IDS_PROFILEPATH,
-		  szBuffer,
-		  MAX_PATH))
+    /* Load profiles directory path */
+    if (!LoadStringW(hInstance,
+                     IDS_PROFILEPATH,
+                     szBuffer,
+                     MAX_PATH))
     {
-      DPRINT1("Error: %lu\n", GetLastError());
-      return FALSE;
+        DPRINT1("Error: %lu\n", GetLastError());
+        return FALSE;
     }
 
-  Error = RegOpenKeyExW (HKEY_LOCAL_MACHINE,
-		         L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList",
-		         0,
-		         KEY_SET_VALUE,
-		         &hKey);
-  if (Error != ERROR_SUCCESS)
+    Error = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                          L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList",
+                          0,
+                          KEY_SET_VALUE,
+                          &hKey);
+    if (Error != ERROR_SUCCESS)
     {
-      DPRINT1("Error: %lu\n", Error);
-      SetLastError((DWORD)Error);
-      return FALSE;
+        DPRINT1("Error: %lu\n", Error);
+        SetLastError((DWORD)Error);
+        return FALSE;
     }
 
-  /* Store profiles directory path */
-  dwLength = (wcslen (szBuffer) + 1) * sizeof(WCHAR);
-  Error = RegSetValueExW (hKey,
-		          L"ProfilesDirectory",
-		          0,
-		          REG_EXPAND_SZ,
-		          (LPBYTE)szBuffer,
-		          dwLength);
-  if (Error != ERROR_SUCCESS)
+    /* Store profiles directory path */
+    dwLength = (wcslen (szBuffer) + 1) * sizeof(WCHAR);
+    Error = RegSetValueExW(hKey,
+                           L"ProfilesDirectory",
+                           0,
+                           REG_EXPAND_SZ,
+                           (LPBYTE)szBuffer,
+                           dwLength);
+    if (Error != ERROR_SUCCESS)
     {
-      DPRINT1("Error: %lu\n", Error);
-      RegCloseKey (hKey);
-      SetLastError((DWORD)Error);
-      return FALSE;
+        DPRINT1("Error: %lu\n", Error);
+        RegCloseKey(hKey);
+        SetLastError((DWORD)Error);
+        return FALSE;
     }
 
-  /* Expand it */
-  if (!ExpandEnvironmentStringsW (szBuffer,
-				  szProfilesPath,
-				  MAX_PATH))
+    /* Expand it */
+    if (!ExpandEnvironmentStringsW(szBuffer,
+                                   szProfilesPath,
+                                   MAX_PATH))
     {
-      DPRINT1("Error: %lu\n", GetLastError());
-      RegCloseKey (hKey);
-      return FALSE;
+        DPRINT1("Error: %lu\n", GetLastError());
+        RegCloseKey(hKey);
+        return FALSE;
     }
 
-  /* Create profiles directory */
-  if (!CreateDirectoryW (szProfilesPath, NULL))
+    /* Create profiles directory */
+    if (!CreateDirectoryW(szProfilesPath, NULL))
     {
-      if (GetLastError () != ERROR_ALREADY_EXISTS)
-	{
-	  DPRINT1("Error: %lu\n", GetLastError());
-	  RegCloseKey (hKey);
-	  return FALSE;
-	}
+        if (GetLastError() != ERROR_ALREADY_EXISTS)
+        {
+            DPRINT1("Error: %lu\n", GetLastError());
+            RegCloseKey(hKey);
+            return FALSE;
+        }
     }
 
-  /* Set 'DefaultUserProfile' value */
-  wcscpy (szBuffer, L"Default User");
-  if (!AppendSystemPostfix (szBuffer, MAX_PATH))
+    /* Set 'DefaultUserProfile' value */
+    wcscpy(szBuffer, L"Default User");
+    if (!AppendSystemPostfix(szBuffer, MAX_PATH))
     {
-      DPRINT1("AppendSystemPostfix() failed\n", GetLastError());
-      RegCloseKey (hKey);
-      return FALSE;
+        DPRINT1("AppendSystemPostfix() failed\n", GetLastError());
+        RegCloseKey(hKey);
+        return FALSE;
     }
 
-  dwLength = (wcslen (szBuffer) + 1) * sizeof(WCHAR);
-  Error = RegSetValueExW (hKey,
-		          L"DefaultUserProfile",
-		          0,
-		          REG_SZ,
-		          (LPBYTE)szBuffer,
-		          dwLength);
-  if (Error != ERROR_SUCCESS)
+    dwLength = (wcslen (szBuffer) + 1) * sizeof(WCHAR);
+    Error = RegSetValueExW(hKey,
+                           L"DefaultUserProfile",
+                           0,
+                           REG_SZ,
+                           (LPBYTE)szBuffer,
+                           dwLength);
+    if (Error != ERROR_SUCCESS)
     {
-      DPRINT1("Error: %lu\n", Error);
-      RegCloseKey (hKey);
-      SetLastError((DWORD)Error);
-      return FALSE;
+        DPRINT1("Error: %lu\n", Error);
+        RegCloseKey(hKey);
+        SetLastError((DWORD)Error);
+        return FALSE;
     }
 
-  RegCloseKey (hKey);
+    RegCloseKey(hKey);
 
-  /* Create 'Default User' profile directory */
-  wcscpy (szProfilePath, szProfilesPath);
-  wcscat (szProfilePath, L"\\");
-  wcscat (szProfilePath, szBuffer);
-  if (!CreateDirectoryW (szProfilePath, NULL))
+    /* Create 'Default User' profile directory */
+    wcscpy(szProfilePath, szProfilesPath);
+    wcscat(szProfilePath, L"\\");
+    wcscat(szProfilePath, szBuffer);
+    if (!CreateDirectoryW (szProfilePath, NULL))
     {
-      if (GetLastError () != ERROR_ALREADY_EXISTS)
-	{
-	  DPRINT1("Error: %lu\n", GetLastError());
-	  return FALSE;
-	}
+        if (GetLastError() != ERROR_ALREADY_EXISTS)
+        {
+            DPRINT1("Error: %lu\n", GetLastError());
+            return FALSE;
+        }
     }
 
-  /* Set current user profile */
-  SetEnvironmentVariableW(L"USERPROFILE", szProfilePath);
+    /* Set current user profile */
+    SetEnvironmentVariableW(L"USERPROFILE", szProfilePath);
 
-  /* Create 'Default User' subdirectories */
-  /* FIXME: Get these paths from the registry */
-  lpFolderData = &UserShellFolders[0];
-  while (lpFolderData->lpValueName != NULL)
+    /* Create 'Default User' subdirectories */
+    /* FIXME: Get these paths from the registry */
+    lpFolderData = &UserShellFolders[0];
+    while (lpFolderData->lpValueName != NULL)
     {
-      wcscpy(szBuffer, szProfilePath);
-      wcscat(szBuffer, L"\\");
+        wcscpy(szBuffer, szProfilePath);
+        wcscat(szBuffer, L"\\");
 
-      /* Append the folder name */
-      dwLength = wcslen(szBuffer);
-      if (!LoadStringW(hInstance,
-		       lpFolderData->uId,
-		       &szBuffer[dwLength],
-		       MAX_PATH - dwLength))
-	{
-	  /* Use the default name instead */
-	  wcscat(szBuffer, lpFolderData->lpPath);
-	}
+        /* Append the folder name */
+        dwLength = wcslen(szBuffer);
+        if (!LoadStringW(hInstance,
+                         lpFolderData->uId,
+                         &szBuffer[dwLength],
+                         MAX_PATH - dwLength))
+        {
+            /* Use the default name instead */
+            wcscat(szBuffer, lpFolderData->lpPath);
+        }
 
-      if (!CreateDirectoryW(szBuffer, NULL))
-	{
-	  if (GetLastError() != ERROR_ALREADY_EXISTS)
-	    {
-	      DPRINT1("Error: %lu\n", GetLastError());
-	      return FALSE;
-	    }
-	}
+        if (!CreateDirectoryW(szBuffer, NULL))
+        {
+            if (GetLastError() != ERROR_ALREADY_EXISTS)
+            {
+                DPRINT1("Error: %lu\n", GetLastError());
+                return FALSE;
+            }
+        }
 
-      if (lpFolderData->bHidden == TRUE)
-	{
-	  SetFileAttributesW(szBuffer,
-			     FILE_ATTRIBUTE_HIDDEN);
-	}
+        if (lpFolderData->bHidden == TRUE)
+        {
+            SetFileAttributesW(szBuffer,
+                               FILE_ATTRIBUTE_HIDDEN);
+        }
 
-      lpFolderData++;
+        lpFolderData++;
     }
 
-  /* Set default 'Shell Folders' values */
-  Error = RegOpenKeyExW(HKEY_USERS,
-		        L".Default\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders",
-		        0,
-		        KEY_SET_VALUE,
-		        &hKey);
-  if (Error != ERROR_SUCCESS)
+    /* Set default 'Shell Folders' values */
+    Error = RegOpenKeyExW(HKEY_USERS,
+                          L".Default\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders",
+                          0,
+                          KEY_SET_VALUE,
+                          &hKey);
+    if (Error != ERROR_SUCCESS)
     {
-      DPRINT1("Error: %lu\n", Error);
-      SetLastError((DWORD)Error);
-      return FALSE;
+        DPRINT1("Error: %lu\n", Error);
+        SetLastError((DWORD)Error);
+        return FALSE;
     }
 
-  lpFolderData = &UserShellFolders[0];
-  while (lpFolderData->lpValueName != NULL)
+    lpFolderData = &UserShellFolders[0];
+    while (lpFolderData->lpValueName != NULL)
     {
-      if (lpFolderData->bShellFolder)
-	{
-	  wcscpy(szBuffer, szProfilePath);
-	  wcscat(szBuffer, L"\\");
+        if (lpFolderData->bShellFolder)
+        {
+            wcscpy(szBuffer, szProfilePath);
+            wcscat(szBuffer, L"\\");
 
-	  /* Append the folder name */
-	  dwLength = wcslen(szBuffer);
-	  if (!LoadStringW(hInstance,
-			   lpFolderData->uId,
-			   &szBuffer[dwLength],
-			   MAX_PATH - dwLength))
-	    {
-	      /* Use the default name instead */
-	      wcscat(szBuffer, lpFolderData->lpPath);
-	    }
+            /* Append the folder name */
+            dwLength = wcslen(szBuffer);
+            if (!LoadStringW(hInstance,
+                             lpFolderData->uId,
+                             &szBuffer[dwLength],
+                             MAX_PATH - dwLength))
+            {
+                /* Use the default name instead */
+                wcscat(szBuffer, lpFolderData->lpPath);
+            }
 
-	  dwLength = (wcslen(szBuffer) + 1) * sizeof(WCHAR);
-	  Error = RegSetValueExW(hKey,
-			         lpFolderData->lpValueName,
-			         0,
-			         REG_SZ,
-			         (LPBYTE)szBuffer,
-			         dwLength);
-          if (Error != ERROR_SUCCESS)
-	    {
-	      DPRINT1("Error: %lu\n", Error);
-	      RegCloseKey(hKey);
-              SetLastError((DWORD)Error);
-	      return FALSE;
-	    }
-	}
+            dwLength = (wcslen(szBuffer) + 1) * sizeof(WCHAR);
+            Error = RegSetValueExW(hKey,
+                                   lpFolderData->lpValueName,
+                                   0,
+                                   REG_SZ,
+                                   (LPBYTE)szBuffer,
+                                   dwLength);
+            if (Error != ERROR_SUCCESS)
+            {
+                DPRINT1("Error: %lu\n", Error);
+                RegCloseKey(hKey);
+                SetLastError((DWORD)Error);
+                return FALSE;
+            }
+        }
 
-      lpFolderData++;
+        lpFolderData++;
     }
 
-  /* Set 'Fonts' folder path */
-  GetWindowsDirectoryW(szBuffer, MAX_PATH);
-  wcscat(szBuffer, L"\\fonts");
+    /* Set 'Fonts' folder path */
+    GetWindowsDirectoryW(szBuffer, MAX_PATH);
+    wcscat(szBuffer, L"\\fonts");
 
-  dwLength = (wcslen(szBuffer) + 1) * sizeof(WCHAR);
-  Error = RegSetValueExW(hKey,
-		         L"Fonts",
-		         0,
-		         REG_SZ,
-		         (LPBYTE)szBuffer,
-		         dwLength);
-  if (Error != ERROR_SUCCESS)
+    dwLength = (wcslen(szBuffer) + 1) * sizeof(WCHAR);
+    Error = RegSetValueExW(hKey,
+                           L"Fonts",
+                           0,
+                           REG_SZ,
+                           (LPBYTE)szBuffer,
+                           dwLength);
+    if (Error != ERROR_SUCCESS)
     {
-      DPRINT1("Error: %lu\n", Error);
-      RegCloseKey(hKey);
-      SetLastError((DWORD)Error);
-      return FALSE;
+        DPRINT1("Error: %lu\n", Error);
+        RegCloseKey(hKey);
+        SetLastError((DWORD)Error);
+        return FALSE;
     }
 
-  RegCloseKey(hKey);
+    RegCloseKey(hKey);
 
-  /* Set default 'User Shell Folders' values */
-  Error = RegOpenKeyExW(HKEY_USERS,
-		        L".Default\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders",
-		        0,
-		        KEY_SET_VALUE,
-		        &hKey);
-  if (Error != ERROR_SUCCESS)
+    /* Set default 'User Shell Folders' values */
+    Error = RegOpenKeyExW(HKEY_USERS,
+                          L".Default\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders",
+                          0,
+                          KEY_SET_VALUE,
+                          &hKey);
+    if (Error != ERROR_SUCCESS)
     {
-      DPRINT1("Error: %lu\n", Error);
-      SetLastError((DWORD)Error);
-      return FALSE;
+        DPRINT1("Error: %lu\n", Error);
+        SetLastError((DWORD)Error);
+        return FALSE;
     }
 
-  lpFolderData = &UserShellFolders[0];
-  while (lpFolderData->lpValueName != NULL)
+    lpFolderData = &UserShellFolders[0];
+    while (lpFolderData->lpValueName != NULL)
     {
-      if (lpFolderData->bUserShellFolder)
-	{
-	  wcscpy(szBuffer, L"%USERPROFILE%\\");
+        if (lpFolderData->bUserShellFolder)
+        {
+            wcscpy(szBuffer, L"%USERPROFILE%\\");
 
-	  /* Append the folder name */
-	  dwLength = wcslen(szBuffer);
-	  if (!LoadStringW(hInstance,
-			   lpFolderData->uId,
-			   &szBuffer[dwLength],
-			   MAX_PATH - dwLength))
-	    {
-	      /* Use the default name instead */
-	      wcscat(szBuffer, lpFolderData->lpPath);
-	    }
+            /* Append the folder name */
+            dwLength = wcslen(szBuffer);
+            if (!LoadStringW(hInstance,
+                             lpFolderData->uId,
+                             &szBuffer[dwLength],
+                             MAX_PATH - dwLength))
+            {
+                /* Use the default name instead */
+                wcscat(szBuffer, lpFolderData->lpPath);
+            }
 
-	  dwLength = (wcslen(szBuffer) + 1) * sizeof(WCHAR);
-	  Error = RegSetValueExW(hKey,
-			         lpFolderData->lpValueName,
-			         0,
-			         REG_EXPAND_SZ,
-			         (LPBYTE)szBuffer,
-			         dwLength);
-          if (Error != ERROR_SUCCESS)
-	    {
-	      DPRINT1("Error: %lu\n", Error);
-	      RegCloseKey(hKey);
-              SetLastError((DWORD)Error);
-	      return FALSE;
-	    }
-	}
+            dwLength = (wcslen(szBuffer) + 1) * sizeof(WCHAR);
+            Error = RegSetValueExW(hKey,
+                                   lpFolderData->lpValueName,
+                                   0,
+                                   REG_EXPAND_SZ,
+                                   (LPBYTE)szBuffer,
+                                   dwLength);
+            if (Error != ERROR_SUCCESS)
+            {
+                DPRINT1("Error: %lu\n", Error);
+                RegCloseKey(hKey);
+                SetLastError((DWORD)Error);
+                return FALSE;
+            }
+        }
 
-      lpFolderData++;
+        lpFolderData++;
     }
 
-  RegCloseKey(hKey);
+    RegCloseKey(hKey);
 
-
-  /* Set 'AllUsersProfile' value */
-  wcscpy(szBuffer, L"All Users");
-  if (!AppendSystemPostfix(szBuffer, MAX_PATH))
+    /* Set 'AllUsersProfile' value */
+    wcscpy(szBuffer, L"All Users");
+    if (!AppendSystemPostfix(szBuffer, MAX_PATH))
     {
-      DPRINT1("AppendSystemPostfix() failed\n", GetLastError());
-      return FALSE;
+        DPRINT1("AppendSystemPostfix() failed\n", GetLastError());
+        return FALSE;
     }
 
-  Error = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-		        L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList",
-		        0,
-		        KEY_SET_VALUE,
-		        &hKey);
-  if (Error != ERROR_SUCCESS)
+    Error = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                          L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList",
+                          0,
+                          KEY_SET_VALUE,
+                          &hKey);
+    if (Error != ERROR_SUCCESS)
     {
-      DPRINT1("Error: %lu\n", Error);
-      SetLastError((DWORD)Error);
-      return FALSE;
+        DPRINT1("Error: %lu\n", Error);
+        SetLastError((DWORD)Error);
+        return FALSE;
     }
 
-  dwLength = (wcslen(szBuffer) + 1) * sizeof(WCHAR);
-  Error = RegSetValueExW(hKey,
-		         L"AllUsersProfile",
-		         0,
-		         REG_SZ,
-		         (LPBYTE)szBuffer,
-		         dwLength);
-  if (Error != ERROR_SUCCESS)
+    dwLength = (wcslen(szBuffer) + 1) * sizeof(WCHAR);
+    Error = RegSetValueExW(hKey,
+                           L"AllUsersProfile",
+                           0,
+                           REG_SZ,
+                           (LPBYTE)szBuffer,
+                           dwLength);
+    if (Error != ERROR_SUCCESS)
     {
-      DPRINT1("Error: %lu\n", Error);
-      RegCloseKey (hKey);
-      SetLastError((DWORD)Error);
-      return FALSE;
+        DPRINT1("Error: %lu\n", Error);
+        RegCloseKey(hKey);
+        SetLastError((DWORD)Error);
+        return FALSE;
     }
 
-  RegCloseKey(hKey);
+    RegCloseKey(hKey);
 
-
-  /* Create 'All Users' profile directory */
-  wcscpy(szProfilePath, szProfilesPath);
-  wcscat(szProfilePath, L"\\");
-  wcscat(szProfilePath, szBuffer);
-  if (!CreateDirectoryW(szProfilePath, NULL))
+    /* Create 'All Users' profile directory */
+    wcscpy(szProfilePath, szProfilesPath);
+    wcscat(szProfilePath, L"\\");
+    wcscat(szProfilePath, szBuffer);
+    if (!CreateDirectoryW(szProfilePath, NULL))
     {
-      if (GetLastError() != ERROR_ALREADY_EXISTS)
-	{
-	  DPRINT1("Error: %lu\n", GetLastError());
-	  return FALSE;
-	}
+        if (GetLastError() != ERROR_ALREADY_EXISTS)
+        {
+            DPRINT1("Error: %lu\n", GetLastError());
+            return FALSE;
+        }
     }
 
-  /* Set 'All Users' profile */
-  SetEnvironmentVariableW(L"ALLUSERSPROFILE", szProfilePath);
+    /* Set 'All Users' profile */
+    SetEnvironmentVariableW(L"ALLUSERSPROFILE", szProfilePath);
 
-  /* Create 'All Users' subdirectories */
-  /* FIXME: Take these paths from the registry */
-  lpFolderData = &CommonShellFolders[0];
-  while (lpFolderData->lpValueName != NULL)
+    /* Create 'All Users' subdirectories */
+    /* FIXME: Take these paths from the registry */
+    lpFolderData = &CommonShellFolders[0];
+    while (lpFolderData->lpValueName != NULL)
     {
-      wcscpy(szBuffer, szProfilePath);
-      wcscat(szBuffer, L"\\");
+        wcscpy(szBuffer, szProfilePath);
+        wcscat(szBuffer, L"\\");
 
-      /* Append the folder name */
-      dwLength = wcslen(szBuffer);
-      if (!LoadStringW(hInstance,
-		       lpFolderData->uId,
-		       &szBuffer[dwLength],
-		       MAX_PATH - dwLength))
-	{
-	  /* Use the default name instead */
-	  wcscat(szBuffer, lpFolderData->lpPath);
-	}
+        /* Append the folder name */
+        dwLength = wcslen(szBuffer);
+        if (!LoadStringW(hInstance,
+                         lpFolderData->uId,
+                         &szBuffer[dwLength],
+                         MAX_PATH - dwLength))
+        {
+            /* Use the default name instead */
+            wcscat(szBuffer, lpFolderData->lpPath);
+        }
 
-      if (!CreateDirectoryW(szBuffer, NULL))
-	{
-	  if (GetLastError() != ERROR_ALREADY_EXISTS)
-	    {
-	      DPRINT1("Error: %lu\n", GetLastError());
-	      return FALSE;
-	    }
-	}
+        if (!CreateDirectoryW(szBuffer, NULL))
+        {
+            if (GetLastError() != ERROR_ALREADY_EXISTS)
+            {
+                DPRINT1("Error: %lu\n", GetLastError());
+                return FALSE;
+            }
+        }
 
-      if (lpFolderData->bHidden)
-	{
-	  SetFileAttributesW(szBuffer,
-			     FILE_ATTRIBUTE_HIDDEN);
-	}
+        if (lpFolderData->bHidden)
+        {
+            SetFileAttributesW(szBuffer,
+                               FILE_ATTRIBUTE_HIDDEN);
+        }
 
-      lpFolderData++;
+        lpFolderData++;
     }
 
-  /* Set common 'Shell Folders' values */
-  Error = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-		        L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders",
-		        0,
-		        KEY_SET_VALUE,
-		        &hKey);
-  if (Error != ERROR_SUCCESS)
+    /* Set common 'Shell Folders' values */
+    Error = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                          L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders",
+                          0,
+                          KEY_SET_VALUE,
+                          &hKey);
+    if (Error != ERROR_SUCCESS)
     {
-      DPRINT1("Error: %lu\n", Error);
-      SetLastError((DWORD)Error);
-      return FALSE;
+        DPRINT1("Error: %lu\n", Error);
+        SetLastError((DWORD)Error);
+        return FALSE;
     }
 
-  lpFolderData = &CommonShellFolders[0];
-  while (lpFolderData->lpValueName != NULL)
+    lpFolderData = &CommonShellFolders[0];
+    while (lpFolderData->lpValueName != NULL)
     {
-      if (lpFolderData->bShellFolder)
-	{
-	  wcscpy(szBuffer, szProfilePath);
-	  wcscat(szBuffer, L"\\");
+        if (lpFolderData->bShellFolder)
+        {
+            wcscpy(szBuffer, szProfilePath);
+            wcscat(szBuffer, L"\\");
 
-	  /* Append the folder name */
-	  dwLength = wcslen(szBuffer);
-	  if (!LoadStringW(hInstance,
-			   lpFolderData->uId,
-			   &szBuffer[dwLength],
-			   MAX_PATH - dwLength))
-	    {
-	      /* Use the default name instead */
-	      wcscat(szBuffer, lpFolderData->lpPath);
-	    }
+            /* Append the folder name */
+            dwLength = wcslen(szBuffer);
+            if (!LoadStringW(hInstance,
+                             lpFolderData->uId,
+                             &szBuffer[dwLength],
+                             MAX_PATH - dwLength))
+            {
+                /* Use the default name instead */
+                wcscat(szBuffer, lpFolderData->lpPath);
+            }
 
-	  dwLength = (wcslen(szBuffer) + 1) * sizeof(WCHAR);
-	  Error = RegSetValueExW(hKey,
-			         lpFolderData->lpValueName,
-			         0,
-			         REG_SZ,
-			         (LPBYTE)szBuffer,
-			         dwLength);
-          if (Error != ERROR_SUCCESS)
-	    {
-	      DPRINT1("Error: %lu\n", Error);
-	      RegCloseKey(hKey);
-              SetLastError((DWORD)Error);
-	      return FALSE;
-	    }
-	}
+            dwLength = (wcslen(szBuffer) + 1) * sizeof(WCHAR);
+            Error = RegSetValueExW(hKey,
+                                   lpFolderData->lpValueName,
+                                   0,
+                                   REG_SZ,
+                                   (LPBYTE)szBuffer,
+                                   dwLength);
+            if (Error != ERROR_SUCCESS)
+            {
+                DPRINT1("Error: %lu\n", Error);
+                RegCloseKey(hKey);
+                SetLastError((DWORD)Error);
+                return FALSE;
+            }
+        }
 
-      lpFolderData++;
+        lpFolderData++;
     }
 
-  RegCloseKey(hKey);
+    RegCloseKey(hKey);
 
-  /* Set common 'User Shell Folders' values */
-  Error = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-		        L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders",
-		        0,
-		        KEY_SET_VALUE,
-		        &hKey);
-  if (Error != ERROR_SUCCESS)
+    /* Set common 'User Shell Folders' values */
+    Error = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                          L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders",
+                          0,
+                          KEY_SET_VALUE,
+                          &hKey);
+    if (Error != ERROR_SUCCESS)
     {
-      DPRINT1("Error: %lu\n", Error);
-      SetLastError((DWORD)Error);
-      return FALSE;
+        DPRINT1("Error: %lu\n", Error);
+        SetLastError((DWORD)Error);
+        return FALSE;
     }
 
-  lpFolderData = &CommonShellFolders[0];
-  while (lpFolderData->lpValueName != NULL)
+    lpFolderData = &CommonShellFolders[0];
+    while (lpFolderData->lpValueName != NULL)
     {
-      if (lpFolderData->bUserShellFolder)
-	{
-	  wcscpy(szBuffer, L"%ALLUSERSPROFILE%\\");
+        if (lpFolderData->bUserShellFolder)
+        {
+            wcscpy(szBuffer, L"%ALLUSERSPROFILE%\\");
 
-	  /* Append the folder name */
-	  dwLength = wcslen(szBuffer);
-	  if (!LoadStringW(hInstance,
-			   lpFolderData->uId,
-			   &szBuffer[dwLength],
-			   MAX_PATH - dwLength))
-	    {
-	      /* Use the default name instead */
-	      wcscat(szBuffer, lpFolderData->lpPath);
-	    }
+            /* Append the folder name */
+            dwLength = wcslen(szBuffer);
+            if (!LoadStringW(hInstance,
+                             lpFolderData->uId,
+                             &szBuffer[dwLength],
+                             MAX_PATH - dwLength))
+            {
+                /* Use the default name instead */
+                wcscat(szBuffer, lpFolderData->lpPath);
+            }
 
-	  dwLength = (wcslen(szBuffer) + 1) * sizeof(WCHAR);
-	  Error = RegSetValueExW(hKey,
-			         lpFolderData->lpValueName,
-			         0,
-			         REG_EXPAND_SZ,
-			         (LPBYTE)szBuffer,
-			         dwLength);
-          if (Error != ERROR_SUCCESS)
-	    {
-	      DPRINT1("Error: %lu\n", Error);
-	      RegCloseKey(hKey);
-              SetLastError((DWORD)Error);
-	      return FALSE;
-	    }
-	}
+            dwLength = (wcslen(szBuffer) + 1) * sizeof(WCHAR);
+            Error = RegSetValueExW(hKey,
+                                   lpFolderData->lpValueName,
+                                   0,
+                                   REG_EXPAND_SZ,
+                                   (LPBYTE)szBuffer,
+                                   dwLength);
+            if (Error != ERROR_SUCCESS)
+            {
+                DPRINT1("Error: %lu\n", Error);
+                RegCloseKey(hKey);
+                SetLastError((DWORD)Error);
+                return FALSE;
+            }
+        }
 
-      lpFolderData++;
+        lpFolderData++;
     }
 
-  RegCloseKey(hKey);
+    RegCloseKey(hKey);
 
-  /* Load 'Program Files' location */
-  if (!LoadStringW(hInstance,
-		  IDS_PROGRAMFILES,
-		  szBuffer,
-		  MAX_PATH))
+    /* Load 'Program Files' location */
+    if (!LoadStringW(hInstance,
+                     IDS_PROGRAMFILES,
+                     szBuffer,
+                     MAX_PATH))
     {
-      DPRINT1("Error: %lu\n", GetLastError());
-      return FALSE;
+        DPRINT1("Error: %lu\n", GetLastError());
+        return FALSE;
     }
 
-  /* Expand it */
-  if (!ExpandEnvironmentStringsW (szBuffer,
-				  szProfilesPath,
-				  MAX_PATH))
+    /* Expand it */
+    if (!ExpandEnvironmentStringsW(szBuffer,
+                                   szProfilesPath,
+                                   MAX_PATH))
     {
-      DPRINT1("Error: %lu\n", GetLastError());
-      return FALSE;
+        DPRINT1("Error: %lu\n", GetLastError());
+        return FALSE;
     }
 
-  /* Store it */
-  Error = RegOpenKeyExW (HKEY_LOCAL_MACHINE,
-		         L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion",
-		         0,
-		         KEY_SET_VALUE,
-		         &hKey);
-  if (Error != ERROR_SUCCESS)
+    /* Store it */
+    Error = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                          L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion",
+                          0,
+                          KEY_SET_VALUE,
+                          &hKey);
+    if (Error != ERROR_SUCCESS)
     {
-      DPRINT1("Error: %lu\n", Error);
-      SetLastError((DWORD)Error);
-      return FALSE;
+        DPRINT1("Error: %lu\n", Error);
+        SetLastError((DWORD)Error);
+        return FALSE;
     }
 
-  dwLength = (wcslen (szProfilesPath) + 1) * sizeof(WCHAR);
-  Error = RegSetValueExW (hKey,
-		          L"ProgramFilesDir",
-		          0,
-		          REG_SZ,
-		          (LPBYTE)szProfilesPath,
-		          dwLength);
-  if (Error != ERROR_SUCCESS)
+    dwLength = (wcslen (szProfilesPath) + 1) * sizeof(WCHAR);
+    Error = RegSetValueExW(hKey,
+                           L"ProgramFilesDir",
+                           0,
+                           REG_SZ,
+                           (LPBYTE)szProfilesPath,
+                           dwLength);
+    if (Error != ERROR_SUCCESS)
     {
-      DPRINT1("Error: %lu\n", Error);
-      RegCloseKey (hKey);
-      SetLastError((DWORD)Error);
-      return FALSE;
+        DPRINT1("Error: %lu\n", Error);
+        RegCloseKey(hKey);
+        SetLastError((DWORD)Error);
+        return FALSE;
     }
 
-  RegCloseKey (hKey);
+    RegCloseKey (hKey);
 
-  /* Create directory */
-  if (!CreateDirectoryW (szProfilesPath, NULL))
+    /* Create directory */
+    if (!CreateDirectoryW(szProfilesPath, NULL))
     {
-      if (GetLastError () != ERROR_ALREADY_EXISTS)
-	{
-	  DPRINT1("Error: %lu\n", GetLastError());
-	  return FALSE;
-	}
+        if (GetLastError () != ERROR_ALREADY_EXISTS)
+        {
+            DPRINT1("Error: %lu\n", GetLastError());
+            return FALSE;
+        }
     }
 
+    DPRINT("Success\n");
 
-  DPRINT("Success\n");
-
-  return TRUE;
+    return TRUE;
 }
 
 
 BOOL
 UpdateUsersShellFolderSettings(LPCWSTR lpUserProfilePath,
-			       HKEY hUserKey)
+                               HKEY hUserKey)
 {
-  WCHAR szBuffer[MAX_PATH];
-  DWORD dwLength;
-  PFOLDERDATA lpFolderData;
-  HKEY hFoldersKey;
-  LONG Error;
+    WCHAR szBuffer[MAX_PATH];
+    DWORD dwLength;
+    PFOLDERDATA lpFolderData;
+    HKEY hFoldersKey;
+    LONG Error;
 
-  DPRINT("UpdateUsersShellFolderSettings() called\n");
+    DPRINT("UpdateUsersShellFolderSettings() called\n");
 
-  DPRINT("User profile path: %S\n", lpUserProfilePath);
+    DPRINT("User profile path: %S\n", lpUserProfilePath);
 
-  Error = RegOpenKeyExW(hUserKey,
-		        L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders",
-		        0,
-		        KEY_SET_VALUE,
-		        &hFoldersKey);
-  if (Error != ERROR_SUCCESS)
+    Error = RegOpenKeyExW(hUserKey,
+                          L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders",
+                          0,
+                          KEY_SET_VALUE,
+                          &hFoldersKey);
+    if (Error != ERROR_SUCCESS)
     {
-      DPRINT1("Error: %lu\n", Error);
-      SetLastError((DWORD)Error);
-      return FALSE;
+        DPRINT1("Error: %lu\n", Error);
+        SetLastError((DWORD)Error);
+        return FALSE;
     }
 
-  lpFolderData = &UserShellFolders[0];
-  while (lpFolderData->lpValueName != NULL)
+    lpFolderData = &UserShellFolders[0];
+    while (lpFolderData->lpValueName != NULL)
     {
-      if (lpFolderData->bShellFolder)
-	{
-	  wcscpy(szBuffer, lpUserProfilePath);
-	  wcscat(szBuffer, L"\\");
+        if (lpFolderData->bShellFolder)
+        {
+            wcscpy(szBuffer, lpUserProfilePath);
+            wcscat(szBuffer, L"\\");
 
-	  /* Append the folder name */
-	  dwLength = wcslen(szBuffer);
-	  if (!LoadStringW(hInstance,
-			   lpFolderData->uId,
-			   &szBuffer[dwLength],
-			   MAX_PATH - dwLength))
-	    {
-	      /* Use the default name instead */
-	      wcscat(szBuffer, lpFolderData->lpPath);
-	    }
+            /* Append the folder name */
+            dwLength = wcslen(szBuffer);
+            if (!LoadStringW(hInstance,
+                             lpFolderData->uId,
+                             &szBuffer[dwLength],
+                             MAX_PATH - dwLength))
+            {
+                /* Use the default name instead */
+                wcscat(szBuffer, lpFolderData->lpPath);
+            }
 
-	  DPRINT("%S: %S\n", lpFolderData->lpValueName, szBuffer);
+            DPRINT("%S: %S\n", lpFolderData->lpValueName, szBuffer);
 
-	  dwLength = (wcslen(szBuffer) + 1) * sizeof(WCHAR);
-	  Error = RegSetValueExW(hFoldersKey,
-			         lpFolderData->lpValueName,
-			         0,
-			         REG_SZ,
-			         (LPBYTE)szBuffer,
-			         dwLength);
-          if (Error != ERROR_SUCCESS)
-	    {
-	      DPRINT1("Error: %lu\n", Error);
-	      RegCloseKey(hFoldersKey);
-              SetLastError((DWORD)Error);
-	      return FALSE;
-	    }
-	}
+            dwLength = (wcslen(szBuffer) + 1) * sizeof(WCHAR);
+            Error = RegSetValueExW(hFoldersKey,
+                                   lpFolderData->lpValueName,
+                                   0,
+                                   REG_SZ,
+                                   (LPBYTE)szBuffer,
+                                   dwLength);
+            if (Error != ERROR_SUCCESS)
+            {
+                DPRINT1("Error: %lu\n", Error);
+                RegCloseKey(hFoldersKey);
+                SetLastError((DWORD)Error);
+                return FALSE;
+            }
+        }
 
-      lpFolderData++;
+        lpFolderData++;
     }
 
-  RegCloseKey(hFoldersKey);
+    RegCloseKey(hFoldersKey);
 
-  DPRINT("UpdateUsersShellFolderSettings() done\n");
+    DPRINT("UpdateUsersShellFolderSettings() done\n");
 
-  return TRUE;
+    return TRUE;
 }
 
 /* EOF */

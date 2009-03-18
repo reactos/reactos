@@ -1,11 +1,8 @@
+#include "priv.h"
+
 /* ===============================================================
     Worker Management Functions
 */
-
-#include <ntddk.h>
-#include <debug.h>
-#include <ks.h>
-
 
 typedef struct
 {
@@ -38,7 +35,7 @@ KsRegisterWorker(
         return STATUS_INVALID_PARAMETER;
     }
 
-    KsWorker = ExAllocatePoolWithTag(NonPagedPool, sizeof(KS_WORKER), 0);
+    KsWorker = ExAllocatePool(NonPagedPool, sizeof(KS_WORKER));
     if (!KsWorker)
         return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -46,7 +43,7 @@ KsRegisterWorker(
     KsWorker->Counter = 0;
     KsWorker->WorkItemActive = 0;
     KsWorker->WorkItem = NULL;
-    KsWorker->DeleteInProgress = TRUE;
+    KsWorker->DeleteInProgress = FALSE;
     KeInitializeSpinLock(&KsWorker->Lock);
     KeInitializeEvent(&KsWorker->Event, NotificationEvent, FALSE);
 
@@ -83,7 +80,7 @@ KsUnregisterWorker(
         KeReleaseSpinLock(&KsWorker->Lock, OldIrql);
     }
 
-    ExFreePoolWithTag(KsWorker, 0);
+    ExFreePool(KsWorker);
 }
 
 /*
@@ -184,6 +181,9 @@ KsQueueWorkItem(
     if (!KsWorker->DeleteInProgress)
     {
         ExQueueWorkItem(WorkItem, KsWorker->Type);
+    }
+    else
+    {
         Status = STATUS_UNSUCCESSFUL;
     }
 

@@ -39,13 +39,13 @@ END
 
 SYSMENU MENU LOADONCALL MOVEABLE DISCARDABLE
 BEGIN
-  MENUITEM "&Restaurar", 61728
-  MENUITEM "&Mover", 61456
-  MENUITEM "Tamaño", 61440
-  MENUITEM "Mi&nimizar", 61472
-  MENUITEM "Ma&ximizar", 61488
+  MENUITEM "&Restaurar", SC_RESTORE
+  MENUITEM "&Mover", SC_MOVE
+  MENUITEM "Tamaño", SC_SIZE
+  MENUITEM "Mi&nimizar", SC_MINIMIZE
+  MENUITEM "Ma&ximizar", SC_MAXIMIZE
   MENUITEM SEPARATOR
-  MENUITEM "&Cerrar\tAlt-F4", 61536
+  MENUITEM "&Cerrar\tAlt-F4", SC_CLOSE
 END
 
 /////////////////////////////////////////////////////////////////////////////

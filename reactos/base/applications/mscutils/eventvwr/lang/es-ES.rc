@@ -43,7 +43,7 @@ CAPTION "Acerca de"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	ICON            IDI_EVENTVWR,IDC_MYICON,14,9,21,20
-	LTEXT           "ReactOS Visor de sucesos Versión 1.0",IDC_STATIC,49,10,119,8,SS_NOPREFIX
+	LTEXT           "ReactOS Visor de sucesos Versión 1.0",IDC_STATIC,49,10,124,8,SS_NOPREFIX
 	LTEXT           "Copyright (C) 2007 Marc Piulachs (marc.piulachs@codexchange.net)",IDC_STATIC,49,20,119,22
 	DEFPUSHBUTTON   "Aceptar",IDOK,90,48,42,16,WS_GROUP
 END

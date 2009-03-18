@@ -148,7 +148,7 @@ static HRESULT WINAPI IMalloc_fnQueryInterface(LPMALLOC iface,REFIID refiid,LPVO
 	TRACE("(%s,%p)\n",debugstr_guid(refiid),obj);
 
 	if (IsEqualIID(&IID_IUnknown,refiid) || IsEqualIID(&IID_IMalloc,refiid)) {
-		*obj = (LPMALLOC)&Malloc32;
+		*obj = &Malloc32;
 		return S_OK;
 	}
 	return E_NOINTERFACE;
@@ -383,7 +383,7 @@ static HRESULT WINAPI IMallocSpy_fnQueryInterface(LPMALLOCSPY iface,REFIID refii
 	TRACE("(%s,%p)\n",debugstr_guid(refiid),obj);
 
 	if (IsEqualIID(&IID_IUnknown,refiid) || IsEqualIID(&IID_IMallocSpy,refiid)) {
-		*obj = (LPMALLOC)&MallocSpy;
+		*obj = &MallocSpy;
 		return S_OK;
 	}
 	return E_NOINTERFACE;

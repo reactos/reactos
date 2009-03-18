@@ -193,7 +193,7 @@ static inline void wstrbuf_finish(wstrbuf_t *buf)
 static void wstrbuf_append_len(wstrbuf_t *buf, LPCWSTR str, int len)
 {
     if(buf->len+len >= buf->size) {
-        buf->size = 2*buf->len+len;
+        buf->size = 2*buf->size+len;
         buf->buf = heap_realloc(buf->buf, buf->size * sizeof(WCHAR));
     }
 
@@ -210,7 +210,7 @@ static void wstrbuf_append_nodetxt(wstrbuf_t *buf, LPCWSTR str, int len)
     TRACE("%s\n", debugstr_wn(str, len));
 
     if(buf->len+len >= buf->size) {
-        buf->size = 2*buf->len+len;
+        buf->size = 2*buf->size+len;
         buf->buf = heap_realloc(buf->buf, buf->size * sizeof(WCHAR));
     }
 
@@ -252,7 +252,7 @@ static void wstrbuf_append_node(wstrbuf_t *buf, nsIDOMNode *node)
         wstrbuf_append_nodetxt(buf, data, strlenW(data));
         nsAString_Finish(&data_str);
 
-       nsIDOMText_Release(nstext);
+        nsIDOMText_Release(nstext);
 
         break;
     }
@@ -264,6 +264,21 @@ static void wstrbuf_append_node(wstrbuf_t *buf, nsIDOMNode *node)
             static const WCHAR endl2W[] = {'\r','\n','\r','\n'};
             wstrbuf_append_len(buf, endl2W, 4);
         }
+    }
+}
+
+static void wstrbuf_append_node_rec(wstrbuf_t *buf, nsIDOMNode *node)
+{
+    nsIDOMNode *iter, *tmp;
+
+    wstrbuf_append_node(buf, node);
+
+    nsIDOMNode_GetFirstChild(node, &iter);
+    while(iter) {
+        wstrbuf_append_node_rec(buf, iter);
+        nsIDOMNode_GetNextSibling(iter, &tmp);
+        nsIDOMNode_Release(iter);
+        iter = tmp;
     }
 }
 
@@ -325,16 +340,9 @@ static nsIDOMNode *prev_node(HTMLTxtRange *This, nsIDOMNode *iter)
     nsresult nsres;
 
     if(!iter) {
-        nsIDOMHTMLDocument *nshtmldoc;
         nsIDOMHTMLElement *nselem;
-        nsIDOMDocument *nsdoc;
 
-        nsIWebNavigation_GetDocument(This->doc->nscontainer->navigation, &nsdoc);
-        nsIDOMDocument_QueryInterface(nsdoc, &IID_nsIDOMHTMLDocument, (void**)&nshtmldoc);
-        nsIDOMDocument_Release(nsdoc);
-        nsIDOMHTMLDocument_GetBody(nshtmldoc, &nselem);
-        nsIDOMHTMLDocument_Release(nshtmldoc);
-
+        nsIDOMHTMLDocument_GetBody(This->doc->nsdoc, &nselem);
         nsIDOMElement_GetLastChild(nselem, &tmp);
         if(!tmp)
             return (nsIDOMNode*)nselem;
@@ -534,6 +542,27 @@ static void range_to_string(HTMLTxtRange *This, wstrbuf_t *buf)
         if(p)
             *p = 0;
     }
+}
+
+HRESULT get_node_text(HTMLDOMNode *node, BSTR *ret)
+{
+    wstrbuf_t buf;
+    HRESULT hres = S_OK;
+
+    wstrbuf_init(&buf);
+    wstrbuf_append_node_rec(&buf, node->nsnode);
+    if(buf.buf) {
+        *ret = SysAllocString(buf.buf);
+        if(!*ret)
+            hres = E_OUTOFMEMORY;
+    }else {
+        *ret = NULL;
+    }
+    wstrbuf_finish(&buf);
+
+    if(SUCCEEDED(hres))
+        TRACE("ret %s\n", debugstr_w(*ret));
+    return hres;
 }
 
 static WCHAR get_pos_char(const dompos_t *pos)
@@ -1100,7 +1129,6 @@ static HRESULT WINAPI HTMLTxtRange_get_htmlText(IHTMLTxtRange *iface, BSTR *p)
 static HRESULT WINAPI HTMLTxtRange_put_text(IHTMLTxtRange *iface, BSTR v)
 {
     HTMLTxtRange *This = HTMLTXTRANGE_THIS(iface);
-    nsIDOMDocument *nsdoc;
     nsIDOMText *text_node;
     nsAString text_str;
     nsresult nsres;
@@ -1110,15 +1138,8 @@ static HRESULT WINAPI HTMLTxtRange_put_text(IHTMLTxtRange *iface, BSTR v)
     if(!This->doc)
         return MSHTML_E_NODOC;
 
-    nsres = nsIWebNavigation_GetDocument(This->doc->nscontainer->navigation, &nsdoc);
-    if(NS_FAILED(nsres)) {
-        ERR("GetDocument failed: %08x\n", nsres);
-        return S_OK;
-    }
-
     nsAString_Init(&text_str, v);
-    nsres = nsIDOMDocument_CreateTextNode(nsdoc, &text_str, &text_node);
-    nsIDOMDocument_Release(nsdoc);
+    nsres = nsIDOMHTMLDocument_CreateTextNode(This->doc->nsdoc, &text_str, &text_node);
     nsAString_Finish(&text_str);
     if(NS_FAILED(nsres)) {
         ERR("CreateTextNode failed: %08x\n", nsres);
@@ -1323,22 +1344,10 @@ static HRESULT WINAPI HTMLTxtRange_expand(IHTMLTxtRange *iface, BSTR Unit, VARIA
     }
 
     case RU_TEXTEDIT: {
-        nsIDOMDocument *nsdoc;
-        nsIDOMHTMLDocument *nshtmldoc;
         nsIDOMHTMLElement *nsbody = NULL;
         nsresult nsres;
 
-        nsres = nsIWebNavigation_GetDocument(This->doc->nscontainer->navigation, &nsdoc);
-        if(NS_FAILED(nsres) || !nsdoc) {
-            ERR("GetDocument failed: %08x\n", nsres);
-            break;
-        }
-
-        nsIDOMDocument_QueryInterface(nsdoc, &IID_nsIDOMHTMLDocument, (void**)&nshtmldoc);
-        nsIDOMDocument_Release(nsdoc);
-
-        nsres = nsIDOMHTMLDocument_GetBody(nshtmldoc, &nsbody);
-        nsIDOMHTMLDocument_Release(nshtmldoc);
+        nsres = nsIDOMHTMLDocument_GetBody(This->doc->nsdoc, &nsbody);
         if(NS_FAILED(nsres) || !nsbody) {
             ERR("Could not get body: %08x\n", nsres);
             break;
@@ -1773,7 +1782,6 @@ static HRESULT exec_indent(HTMLTxtRange *This, VARIANT *in, VARIANT *out)
 {
     nsIDOMDocumentFragment *fragment;
     nsIDOMElement *blockquote_elem, *p_elem;
-    nsIDOMDocument *nsdoc;
     nsIDOMNode *tmp;
     nsAString tag_str;
 
@@ -1782,17 +1790,18 @@ static HRESULT exec_indent(HTMLTxtRange *This, VARIANT *in, VARIANT *out)
 
     TRACE("(%p)->(%p %p)\n", This, in, out);
 
-    nsIWebNavigation_GetDocument(This->doc->nscontainer->navigation, &nsdoc);
+    if(!This->doc->nsdoc) {
+        WARN("NULL nsdoc\n");
+        return E_NOTIMPL;
+    }
 
     nsAString_Init(&tag_str, blockquoteW);
-    nsIDOMDocument_CreateElement(nsdoc, &tag_str, &blockquote_elem);
+    nsIDOMHTMLDocument_CreateElement(This->doc->nsdoc, &tag_str, &blockquote_elem);
     nsAString_Finish(&tag_str);
 
     nsAString_Init(&tag_str, pW);
-    nsIDOMDocument_CreateElement(nsdoc, &tag_str, &p_elem);
+    nsIDOMDocument_CreateElement(This->doc->nsdoc, &tag_str, &p_elem);
     nsAString_Finish(&tag_str);
-
-    nsIDOMDocument_Release(nsdoc);
 
     nsIDOMRange_ExtractContents(This->nsrange, &fragment);
     nsIDOMElement_AppendChild(p_elem, (nsIDOMNode*)fragment, &tmp);

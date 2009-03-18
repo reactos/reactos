@@ -1287,6 +1287,12 @@ static BOOL IWineD3DImpl_FillGLCaps(WineD3D_GL_Info *gl_info) {
                     gl_info->gl_card = CARD_ATI_RADEON_X700;
                     vidmem = 128; /* x700/x8*0 use 128-256MB, >=x1300 128-512MB */
                 }
+                /* Radeon Xpress Series - onboard, DX9b, Shader 2.0, 300-400MHz */
+                else if(strstr(gl_info->gl_renderer, "Radeon Xpress"))
+                {
+                    gl_info->gl_card = CARD_ATI_RADEON_XPRESS_200M;
+                    vidmem = 64; /* Shared RAM, BIOS configurable, 64-256M */
+                }
                 /* Radeon R3xx */ 
                 else {
                     gl_info->gl_card = CARD_ATI_RADEON_9500; /* Radeon 9500/9550/9600/9700/9800/X300/X550/X600 */

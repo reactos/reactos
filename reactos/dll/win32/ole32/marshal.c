@@ -216,7 +216,7 @@ static HRESULT WINAPI ClientIdentity_QueryInterface(IMultiQI * iface, REFIID rii
 
     mqi.pIID = riid;
     hr = IMultiQI_QueryMultipleInterfaces(iface, 1, &mqi);
-    *ppv = (void *)mqi.pItf;
+    *ppv = mqi.pItf;
 
     return hr;
 }
@@ -837,19 +837,19 @@ static HRESULT proxy_manager_query_local_interface(struct proxy_manager * This, 
     if (IsEqualIID(riid, &IID_IUnknown) ||
         IsEqualIID(riid, &IID_IMultiQI))
     {
-        *ppv = (void *)&This->lpVtbl;
+        *ppv = &This->lpVtbl;
         IUnknown_AddRef((IUnknown *)*ppv);
         return S_OK;
     }
     if (IsEqualIID(riid, &IID_IMarshal))
     {
-        *ppv = (void *)&This->lpVtblMarshal;
+        *ppv = &This->lpVtblMarshal;
         IUnknown_AddRef((IUnknown *)*ppv);
         return S_OK;
     }
     if (IsEqualIID(riid, &IID_IClientSecurity))
     {
-        *ppv = (void *)&This->lpVtblCliSec;
+        *ppv = &This->lpVtblCliSec;
         IUnknown_AddRef((IUnknown *)*ppv);
         return S_OK;
     }
@@ -890,7 +890,7 @@ static HRESULT proxy_manager_create_ifproxy(
      * proxy associated with the ifproxy as we handle IUnknown ourselves */
     if (IsEqualIID(riid, &IID_IUnknown))
     {
-        ifproxy->iface = (void *)&This->lpVtbl;
+        ifproxy->iface = &This->lpVtbl;
         IMultiQI_AddRef((IMultiQI *)&This->lpVtbl);
         hr = S_OK;
     }
@@ -1213,7 +1213,7 @@ StdMarshalImpl_MarshalInterface(
     /* make sure this apartment can be reached from other threads / processes */
     RPC_StartRemoting(apt);
 
-    hres = marshal_object(apt, &stdobjref, riid, (IUnknown *)pv, mshlflags);
+    hres = marshal_object(apt, &stdobjref, riid, pv, mshlflags);
     if (hres)
     {
         ERR("Failed to create ifstub, hres=0x%x\n", hres);
@@ -1973,7 +1973,7 @@ static HRESULT WINAPI StdMarshalCF_QueryInterface(LPCLASSFACTORY iface,
     *ppv = NULL;
     if (IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, &IID_IClassFactory))
     {
-        *ppv = (LPVOID)iface;
+        *ppv = iface;
         return S_OK;
     }
     return E_NOINTERFACE;

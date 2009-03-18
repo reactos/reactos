@@ -462,7 +462,7 @@ static inline const BYTE *VARIANT_GetNamedFormat(LPCWSTR lpszFormat)
   LPCNAMED_FORMAT fmt;
 
   key.name = lpszFormat;
-  fmt = (LPCNAMED_FORMAT)bsearch(&key, VARIANT_NamedFormats,
+  fmt = bsearch(&key, VARIANT_NamedFormats,
                                  sizeof(VARIANT_NamedFormats)/sizeof(NAMED_FORMAT),
                                  sizeof(NAMED_FORMAT), FormatCompareFn);
   return fmt ? fmt->format : NULL;

@@ -1202,6 +1202,18 @@ User32DefWindowProc(HWND hWnd,
             return (0);
         }
 
+        case WM_SYSCOLORCHANGE:
+        {
+            /* force to redraw non-client area */
+            DefWndNCPaint(hWnd, (HRGN)1, -1);
+            /* Use InvalidateRect to redraw client area, enable
+             * erase to redraw all subcontrols otherwise send the
+             * WM_SYSCOLORCHANGE to child windows/controls is required
+             */
+            InvalidateRect(hWnd,NULL,TRUE);
+            return (0);
+        }
+
         case WM_PAINTICON:
         case WM_PAINT:
         {
@@ -1600,10 +1612,6 @@ User32DefWindowProc(HWND hWnd,
             HeapFree(GetProcessHeap(),0,win_array);
             break;
         }
-
-        case WM_ENDSESSION:
-            if (wParam) PostQuitMessage(0);
-            return 0;
 
         case WM_QUERYUISTATE:
         {

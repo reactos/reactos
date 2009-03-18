@@ -400,6 +400,7 @@ IoGetDeviceInterfaces(IN CONST GUID *InterfaceClassGuid,
                 /* We have to check if the interface is enabled, by
                 * reading the Linked value in the Control subkey
                 */
+#if 0
                 InitializeObjectAttributes(
                     &ObjectAttributes,
                     &Control,
@@ -422,6 +423,7 @@ IoGetDeviceInterfaces(IN CONST GUID *InterfaceClassGuid,
                     DPRINT("ZwOpenKey() failed with status 0x%08lx\n", Status);
                     goto cleanup;
                 }
+#endif
                 /* FIXME: Read the Linked value
                 * If it doesn't exist => ERROR
                 * If it is not a REG_DWORD or Size != sizeof(ULONG) => ERROR
@@ -887,7 +889,7 @@ IoRegisterDeviceInterface(IN PDEVICE_OBJECT PhysicalDeviceObject,
     SymbolicLinkName->Buffer[SymbolicLinkName->Length/sizeof(WCHAR)] = L'\0';
 
     /* Create symbolic link */
-    DPRINT("IoRegisterDeviceInterface(): creating symbolic link %wZ -> %wZ\n", SymbolicLinkName, &PdoNameInfo->Name);
+    DPRINT1("IoRegisterDeviceInterface(): creating symbolic link %wZ -> %wZ\n", SymbolicLinkName, &PdoNameInfo->Name);
     Status = IoCreateSymbolicLink(SymbolicLinkName, &PdoNameInfo->Name);
     if (!NT_SUCCESS(Status))
     {

@@ -31,10 +31,10 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Språk"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Teksttjenester og inndataspråk", IDC_GROUPBOX, 5, 5, 234, 52
+    GROUPBOX "Teksttjenester og inndataspråk", -1, 5, 5, 234, 52
     LTEXT "Klikk ""Detaljer...""  for å vise eller endre språkene og metodene du kan bruke for å skrive inn tekst.", -1, 12, 15, 220, 18
     PUSHBUTTON "De&taljer...", IDC_DETAIL_BUTTON, 177, 34, 54, 14
-    GROUPBOX "Ytterligere språkstøtte", IDC_GROUPBOX, 5, 62, 234, 82
+    GROUPBOX "Ytterligere språkstøtte", -1, 5, 62, 234, 82
     LTEXT "De fleste språk er innstallert som standard. Merk av i de relevante boksene nedenfor hvis du vil innstallere flere språk.", -1, 12, 72, 220, 18
     CHECKBOX "I&nnstaller filer for for omfattende skript og høyre-mot-venstre språk", IDC_INST_FILES_FOR_RTOL_LANG, 12, 92, 215, 22, BS_MULTILINE
     CHECKBOX "Inn&staller filer for østasiatiske språk", IDC_INST_FILES_FOR_ASIAN, 12, 114, 180, 22, BS_MULTILINE
@@ -45,7 +45,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Avansert"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Språk for ikke-Unicode programmer", IDC_GROUPBOX, 5, 5, 234, 90
+    GROUPBOX "Språk for ikke-Unicode programmer", -1, 5, 5, 234, 90
     COMBOBOX IDC_LANGUAGE_COMBO, 14, 75, 217, 160, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
     LTEXT "Denne systeminnstillingen gjør at programmet som ikke støtter Unicode, viser menyer og dialogbokser på det opprinnlige språket. Det påvirker ikke Unicode-programmer, men det gjelder for alle brukere på denne datamaskinen.", -1, 14, 18, 223, 33
     LTEXT "Velg et språk som tilsvarer språkversjonen av programmet du vil bruke, som ikke er Unicode-programmer:", -1, 14, 55, 223, 18
@@ -143,7 +143,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Dato"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Kalender", IDC_GROUPBOX, 7, 7, 230, 74
+    GROUPBOX "Kalender", -1, 7, 7, 230, 74
     LTEXT "Når et tosifret årstall er angitt, tolk som et år mellom:", -1, 13, 18, 215, 8
     EDITTEXT IDC_FIRSTYEAR_EDIT, 13, 30, 36, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_DISABLED
     LTEXT "og", -1, 55, 32, 17, 8
@@ -153,7 +153,7 @@ BEGIN
     COMBOBOX IDC_CALTYPE_COMBO, 77, 46, 153, 100, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
     LTEXT "Muslim kalender:", -1, 13, 65, 60, 12
     COMBOBOX IDC_HIJCHRON_COMBO, 77, 64, 153, 100, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
-    GROUPBOX "Kort datoformat", IDC_GROUPBOX, 7, 83, 230, 81
+    GROUPBOX "Kort datoformat", -1, 7, 83, 230, 81
     LTEXT "Eksempel på kort dato:", -1, 13, 95, 63, 10
     EDITTEXT IDC_SHRTDATESAMPLE_EDIT, 77, 93, 153, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
     LTEXT "Eksempel - høyre til venstre:", -1, 13, 109, 60, 16
@@ -162,7 +162,7 @@ BEGIN
     COMBOBOX IDC_SHRTDATEFMT_COMBO, 77, 129, 153, 100, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_VISIBLE
     LTEXT "Datoskilletegn:", -1, 13, 148, 113, 10
     COMBOBOX IDC_SHRTDATESEP_COMBO, 180, 146, 51, 100, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_VISIBLE
-    GROUPBOX "Lang datoformat", IDC_GROUPBOX, 7, 167, 230, 64
+    GROUPBOX "Lang datoformat", -1, 7, 167, 230, 64
     LTEXT "Eksempel på lang dato:", -1, 13, 179, 61, 10
     EDITTEXT IDC_LONGDATESAMPLE_EDIT, 77, 177, 153, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
     LTEXT "Eksempel - høyre til venstre:", -1, 13, 193, 61, 16

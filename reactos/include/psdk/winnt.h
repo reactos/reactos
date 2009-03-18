@@ -278,6 +278,10 @@ typedef DWORD FLONG;
 #define SPECIFIC_RIGHTS_ALL	0xFFFF
 #define ACCESS_SYSTEM_SECURITY	0x1000000
 
+#define REG_STANDARD_FORMAT 1
+#define REG_LATEST_FORMAT   2
+#define REG_NO_COMPRESSION  4
+
 #ifndef WIN32_NO_STATUS
 
 #define STATUS_WAIT_0                    ((DWORD)0x00000000)
@@ -462,7 +466,7 @@ typedef DWORD FLONG;
 #define FILE_NAMED_STREAMS              0x00040000
 
 /* FIXME: Oh how I wish, I wish the w32api DDK wouldn't include winnt.h... */
-#ifndef __NTDDK_H
+#ifndef _NTDDK_
 #define IO_COMPLETION_QUERY_STATE       0x0001
 #define IO_COMPLETION_MODIFY_STATE      0x0002
 #define IO_COMPLETION_ALL_ACCESS        (STANDARD_RIGHTS_REQUIRED|SYNCHRONIZE|0x3)
@@ -477,7 +481,7 @@ typedef DWORD FLONG;
 #define MAILSLOT_NO_MESSAGE	((DWORD)-1)
 #define MAILSLOT_WAIT_FOREVER	((DWORD)-1)
 /* FIXME: Oh how I wish, I wish the w32api DDK wouldn't include winnt.h... */
-#ifndef __NTDDK_H
+#ifndef _NTDDK_
 #define PROCESS_TERMINATE	1
 #define PROCESS_CREATE_THREAD	2
 #define PROCESS_SET_SESSIONID	4
@@ -499,7 +503,7 @@ typedef DWORD FLONG;
 #define THREAD_SET_CONTEXT	16
 #define THREAD_SET_INFORMATION	32
 /* FIXME: Oh how I wish, I wish the w32api DDK wouldn't include winnt.h... */
-#ifndef __NTDDK_H
+#ifndef _NTDDK_
 #define THREAD_QUERY_INFORMATION	64
 #define THREAD_SET_THREAD_TOKEN	128
 #define THREAD_IMPERSONATE	256
@@ -507,7 +511,7 @@ typedef DWORD FLONG;
 #endif
 #define THREAD_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED|SYNCHRONIZE|0x3FF)
 /* FIXME: Oh how I wish, I wish the w32api DDK wouldn't include winnt.h... */
-#ifndef __NTDDK_H
+#ifndef _NTDDK_
 #define MUTANT_QUERY_STATE	0x0001
 #define MUTANT_ALL_ACCESS	(STANDARD_RIGHTS_REQUIRED|SYNCHRONIZE|MUTANT_QUERY_STATE)
 #define TIMER_QUERY_STATE	0x0001
@@ -597,6 +601,14 @@ typedef DWORD FLONG;
 #define DOMAIN_GROUP_RID_ENTERPRISE_ADMINS      0x00000207L
 #define DOMAIN_GROUP_RID_POLICY_ADMINS          0x00000208L
 
+#define SECURITY_MANDATORY_LABEL_AUTHORITY {0,0,0,0,0,16}
+#define SECURITY_MANDATORY_UNTRUSTED_RID        0x00000000L
+#define SECURITY_MANDATORY_LOW_RID              0x00001000L
+#define SECURITY_MANDATORY_MEDIUM_RID           0x00002000L
+#define SECURITY_MANDATORY_HIGH_RID             0x00003000L
+#define SECURITY_MANDATORY_SYSTEM_RID           0x00004000L
+#define SECURITY_MANDATORY_PROTECTED_PROCESS_RID 0x00005000L
+
 #define DOMAIN_ALIAS_RID_ADMINS                 0x00000220L
 #define DOMAIN_ALIAS_RID_USERS                  0x00000221L
 #define DOMAIN_ALIAS_RID_GUESTS                 0x00000222L
@@ -622,70 +634,84 @@ typedef DWORD FLONG;
 
 #define SECURITY_MANDATORY_LABEL_AUTHORITY  {0,0,0,0,0,16}
 
-typedef enum
-{
-    WinNullSid = 0,
-    WinWorldSid,
-    WinLocalSid,
-    WinCreatorOwnerSid,
-    WinCreatorGroupSid,
-    WinCreatorOwnerServerSid,
-    WinCreatorGroupServerSid,
-    WinNtAuthoritySid,
-    WinDialupSid,
-    WinNetworkSid,
-    WinBatchSid,
-    WinInteractiveSid,
-    WinServiceSid,
-    WinAnonymousSid,
-    WinProxySid,
-    WinEnterpriseControllersSid,
-    WinSelfSid,
-    WinAuthenticatedUserSid,
-    WinRestrictedCodeSid,
-    WinTerminalServerSid,
-    WinRemoteLogonIdSid,
-    WinLogonIdsSid,
-    WinLocalSystemSid,
-    WinLocalServiceSid,
-    WinNetworkServiceSid,
-    WinBuiltinDomainSid,
-    WinBuiltinAdministratorsSid,
-    WinBuiltinUsersSid,
-    WinBuiltinGuestsSid,
-    WinBuiltinPowerUsersSid,
-    WinBuiltinAccountOperatorsSid,
-    WinBuiltinSystemOperatorsSid,
-    WinBuiltinPrintOperatorsSid,
-    WinBuiltinBackupOperatorsSid,
-    WinBuiltinReplicatorSid,
-    WinBuiltinPreWindows2000CompatibleAccessSid,
-    WinBuiltinRemoteDesktopUsersSid,
-    WinBuiltinNetworkConfigurationOperatorsSid,
-    WinAccountAdministratorSid,
-    WinAccountGuestSid,
-    WinAccountKrbtgtSid,
-    WinAccountDomainAdminsSid,
-    WinAccountDomainUsersSid,
-    WinAccountDomainGuestsSid,
-    WinAccountComputersSid,
-    WinAccountControllersSid,
-    WinAccountCertAdminsSid,
-    WinAccountSchemaAdminsSid,
-    WinAccountEnterpriseAdminsSid,
-    WinAccountPolicyAdminsSid,
-    WinAccountRasAndIasServersSid,
-    WinNTLMAuthenticationSid,
-    WinDigestAuthenticationSid,
-    WinSChannelAuthenticationSid,
-    WinThisOrganizationSid,
-    WinOtherOrganizationSid,
-    WinBuiltinIncomingForestTrustBuildersSid,
-    WinBuiltinPerfMonitoringUsersSid,
-    WinBuiltinPerfLoggingUsersSid,
-    WinBuiltinAuthorizationAccessSid,
-    WinBuiltinTerminalServerLicenseServersSid,
-    WinBuiltinDCOMUsersSid
+typedef enum {
+    WinNullSid                                  = 0,
+    WinWorldSid                                 = 1,
+    WinLocalSid                                 = 2,
+    WinCreatorOwnerSid                          = 3,
+    WinCreatorGroupSid                          = 4,
+    WinCreatorOwnerServerSid                    = 5,
+    WinCreatorGroupServerSid                    = 6,
+    WinNtAuthoritySid                           = 7,
+    WinDialupSid                                = 8,
+    WinNetworkSid                               = 9,
+    WinBatchSid                                 = 10,
+    WinInteractiveSid                           = 11,
+    WinServiceSid                               = 12,
+    WinAnonymousSid                             = 13,
+    WinProxySid                                 = 14,
+    WinEnterpriseControllersSid                 = 15,
+    WinSelfSid                                  = 16,
+    WinAuthenticatedUserSid                     = 17,
+    WinRestrictedCodeSid                        = 18,
+    WinTerminalServerSid                        = 19,
+    WinRemoteLogonIdSid                         = 20,
+    WinLogonIdsSid                              = 21,
+    WinLocalSystemSid                           = 22,
+    WinLocalServiceSid                          = 23,
+    WinNetworkServiceSid                        = 24,
+    WinBuiltinDomainSid                         = 25,
+    WinBuiltinAdministratorsSid                 = 26,
+    WinBuiltinUsersSid                          = 27,
+    WinBuiltinGuestsSid                         = 28,
+    WinBuiltinPowerUsersSid                     = 29,
+    WinBuiltinAccountOperatorsSid               = 30,
+    WinBuiltinSystemOperatorsSid                = 31,
+    WinBuiltinPrintOperatorsSid                 = 32,
+    WinBuiltinBackupOperatorsSid                = 33,
+    WinBuiltinReplicatorSid                     = 34,
+    WinBuiltinPreWindows2000CompatibleAccessSid = 35,
+    WinBuiltinRemoteDesktopUsersSid             = 36,
+    WinBuiltinNetworkConfigurationOperatorsSid  = 37,
+    WinAccountAdministratorSid                  = 38,
+    WinAccountGuestSid                          = 39,
+    WinAccountKrbtgtSid                         = 40,
+    WinAccountDomainAdminsSid                   = 41,
+    WinAccountDomainUsersSid                    = 42,
+    WinAccountDomainGuestsSid                   = 43,
+    WinAccountComputersSid                      = 44,
+    WinAccountControllersSid                    = 45,
+    WinAccountCertAdminsSid                     = 46,
+    WinAccountSchemaAdminsSid                   = 47,
+    WinAccountEnterpriseAdminsSid               = 48,
+    WinAccountPolicyAdminsSid                   = 49,
+    WinAccountRasAndIasServersSid               = 50,
+    WinNTLMAuthenticationSid                    = 51,
+    WinDigestAuthenticationSid                  = 52,
+    WinSChannelAuthenticationSid                = 53,
+    WinThisOrganizationSid                      = 54,
+    WinOtherOrganizationSid                     = 55,
+    WinBuiltinIncomingForestTrustBuildersSid    = 56,
+    WinBuiltinPerfMonitoringUsersSid            = 57,
+    WinBuiltinPerfLoggingUsersSid               = 58,
+    WinBuiltinAuthorizationAccessSid            = 59,
+    WinBuiltinTerminalServerLicenseServersSid   = 60,
+    WinBuiltinDCOMUsersSid                      = 61,
+    WinBuiltinIUsersSid                         = 62,
+    WinIUserSid                                 = 63,
+    WinBuiltinCryptoOperatorsSid                = 64,
+    WinUntrustedLabelSid                        = 65,
+    WinLowLabelSid                              = 66,
+    WinMediumLabelSid                           = 67,
+    WinHighLabelSid                             = 68,
+    WinSystemLabelSid                           = 69,
+    WinWriteRestrictedCodeSid                   = 70,
+    WinCreatorOwnerRightsSid                    = 71,
+    WinCacheablePrincipalsGroupSid              = 72,
+    WinNonCacheablePrincipalsGroupSid           = 73,
+    WinEnterpriseReadonlyControllersSid         = 74,
+    WinAccountReadonlyControllersSid            = 75,
+    WinBuiltinEventLogReadersGroup              = 76
 } WELL_KNOWN_SID_TYPE;
 
 #define SE_CREATE_TOKEN_NAME	TEXT("SeCreateTokenPrivilege")
@@ -714,7 +740,7 @@ typedef enum
 #define SE_REMOTE_SHUTDOWN_NAME	TEXT("SeRemoteShutdownPrivilege")
 #define SE_CREATE_GLOBAL_NAME TEXT("SeCreateGlobalPrivilege")
 /* FIXME: Oh how I wish, I wish the w32api DDK wouldn't include winnt.h... */
-#ifndef __NTDDK_H
+#ifndef _NTDDK_
 #define SE_GROUP_MANDATORY 1
 #define SE_GROUP_ENABLED_BY_DEFAULT 2
 #define SE_GROUP_ENABLED 4
@@ -1232,7 +1258,7 @@ typedef enum
 #define MEM_PHYSICAL	   0x400000
 #define MEM_4MB_PAGES    0x80000000
 /* FIXME: Oh how I wish, I wish the w32api DDK wouldn't include winnt.h... */
-#ifndef __NTDDK_H
+#ifndef _NTDDK_
 #define MEM_IMAGE        SEC_IMAGE
 #define SEC_NO_CHANGE	0x00400000
 #define SEC_FILE	0x00800000
@@ -1249,7 +1275,7 @@ typedef enum
 #define SECTION_MAP_EXECUTE 8
 #define SECTION_ALL_ACCESS 0xf001f
 #define WRITE_WATCH_FLAG_RESET 0x01
-#ifndef __NTDDK_H
+#ifndef _NTDDK_
 #define MESSAGE_RESOURCE_UNICODE 1
 #endif
 #define RTL_CRITSECT_TYPE 0
@@ -1878,7 +1904,7 @@ typedef struct _GENERIC_MAPPING {
 	ACCESS_MASK GenericAll;
 } GENERIC_MAPPING, *PGENERIC_MAPPING;
 /* Sigh..when will they learn... */
-#ifndef __NTDDK_H
+#ifndef _NTDDK_
 typedef struct _ACE_HEADER {
 	BYTE AceType;
 	BYTE AceFlags;
@@ -2293,11 +2319,6 @@ typedef struct _KNONVOLATILE_CONTEXT_POINTERS {
         };
     };
 } KNONVOLATILE_CONTEXT_POINTERS, *PKNONVOLATILE_CONTEXT_POINTERS;
-
-#define UNW_FLAG_NHANDLER 0x0 /* No handler. */
-#define UNW_FLAG_EHANDLER 0x1 /* Exception handler should be called */
-#define UNW_FLAG_UHANDLER 0x2 /* Termination handler that should be called when unwinding an exception */
-#define UNW_FLAG_CHAININFO 0x4 /* FunctionEntry member is the contents of a previous function table entry */
 
 #define RUNTIME_FUNCTION_INDIRECT 0x1
 
@@ -2953,7 +2974,7 @@ typedef struct _SE_IMPERSONATION_STATE {
 	SECURITY_IMPERSONATION_LEVEL Level;
 } SE_IMPERSONATION_STATE,*PSE_IMPERSONATION_STATE;
 /* Steven you are my hero when you fix the w32api ddk! */
-#if !defined(__NTDDK_H)
+#if !defined(_NTDDK_)
 typedef struct _SID_IDENTIFIER_AUTHORITY {
 	BYTE Value[6];
 } SID_IDENTIFIER_AUTHORITY,*PSID_IDENTIFIER_AUTHORITY,*LPSID_IDENTIFIER_AUTHORITY;
@@ -3153,7 +3174,7 @@ typedef struct _TAPE_CREATE_PARTITION {
 	DWORD Size;
 } TAPE_CREATE_PARTITION,*PTAPE_CREATE_PARTITION;
 /* Sigh..when will they learn... */
-#ifndef __NTDDK_H
+#ifndef _NTDDK_
 typedef struct _MEMORY_BASIC_INFORMATION {
 	PVOID BaseAddress;
 	PVOID AllocationBase;
@@ -3245,7 +3266,7 @@ RtlQueryDepthSList (
     );
 
 /* FIXME: Please oh please stop including winnt.h from the DDK... */
-#ifndef __NTDDK_H
+#ifndef _NTDDK_
 typedef struct _RTL_CRITICAL_SECTION_DEBUG {
 	WORD Type;
 	WORD CreatorBackTraceIndex;
@@ -4102,7 +4123,7 @@ typedef union _FILE_SEGMENT_ELEMENT {
 #define JOB_OBJECT_MSG_JOB_MEMORY_LIMIT       10
 
 /* FIXME: Oh how I wish, I wish the w32api DDK wouldn't include winnt.h... */
-#ifndef __NTDDK_H
+#ifndef _NTDDK_
 #define JOB_OBJECT_ASSIGN_PROCESS           1
 #define JOB_OBJECT_SET_ATTRIBUTES           2
 #define JOB_OBJECT_QUERY                    4
@@ -4162,7 +4183,7 @@ typedef struct _JOBOBJECT_BASIC_UI_RESTRICTIONS {
 	DWORD UIRestrictionsClass;
 } JOBOBJECT_BASIC_UI_RESTRICTIONS,*PJOBOBJECT_BASIC_UI_RESTRICTIONS;
 /* Steven you are my hero when you fix the w32api ddk! */
-#ifndef __NTDDK_H
+#ifndef _NTDDK_
 typedef struct _JOBOBJECT_SECURITY_LIMIT_INFORMATION {
 	DWORD SecurityLimitFlags;
 	HANDLE JobToken;
@@ -4361,7 +4382,7 @@ typedef struct _SYSTEM_BATTERY_STATE {
 	ULONG  DefaultAlert2;
 } SYSTEM_BATTERY_STATE, *PSYSTEM_BATTERY_STATE;
 
-#ifndef __NTDDK_H /* HACK!!! ntddk.h shouldn't include winnt.h! */
+#ifndef _NTDDK_ /* HACK!!! ntddk.h shouldn't include winnt.h! */
 typedef struct _PROCESSOR_POWER_INFORMATION {
 	ULONG Number;
 	ULONG MaxMhz;
@@ -4705,7 +4726,7 @@ static __inline__ PVOID GetCurrentFiber(void)
 #endif
 
 /* FIXME: Oh how I wish, I wish the w32api DDK wouldn't include winnt.h... */
-#ifndef __NTDDK_H
+#ifndef _NTDDK_
 #ifdef _M_IX86
 static __inline__ struct _TEB * NtCurrentTeb(void)
 {

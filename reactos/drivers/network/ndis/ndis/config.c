@@ -699,16 +699,7 @@ NdisReadNetworkAddress(
     PNDIS_CONFIGURATION_PARAMETER ParameterValue = NULL;
     NDIS_STRING Keyword;
     UINT *IntArray = 0;
-    int i;
-
-    /* FIXME - We don't quite support this yet due to buggy code below */
-      {
-        *Status = NDIS_STATUS_FAILURE;
-        return;
-      }
-
-    *NetworkAddress = NULL;
-    *NetworkAddressLength = 6;/* XXX magic constant */
+    UINT i,j = 0;
 
     NdisInitUnicodeString(&Keyword, L"NetworkAddress");
     NdisReadConfiguration(Status, &ParameterValue, ConfigurationHandle, &Keyword, NdisParameterString);
@@ -718,8 +709,18 @@ NdisReadNetworkAddress(
         return;
     }
 
-    /* 6 bytes for ethernet, tokenring, fddi, everything else? */
-    IntArray = ExAllocatePool(PagedPool, 6*sizeof(UINT));
+    while (ParameterValue->ParameterData.StringData.Buffer[j] != '\0') j++;
+
+    *NetworkAddressLength = (UINT)((j/2)+0.5);
+
+    if (j == 0)
+    {
+        NDIS_DbgPrint(MIN_TRACE,("Empty NetworkAddress registry entry.\n"));
+        *Status = NDIS_STATUS_FAILURE;
+        return;
+    }
+
+    IntArray = ExAllocatePool(PagedPool, (*NetworkAddressLength)*sizeof(UINT));
     if(!IntArray)
     {
         NDIS_DbgPrint(MIN_TRACE,("Insufficient resources.\n"));
@@ -742,7 +743,7 @@ NdisReadNetworkAddress(
     ExInterlockedInsertTailList(&ConfigurationContext->ResourceListHead, &MiniportResource->ListEntry, &ConfigurationContext->ResourceLock);
 
     /* convert from string to bytes */
-    for(i=0; i<6; i++)
+    for(i=0; i<(*NetworkAddressLength); i++)
     {
         IntArray[i] = (UnicodeToHexByte((ParameterValue->ParameterData.StringData.Buffer)[2*i]) << 4) +
                 UnicodeToHexByte((ParameterValue->ParameterData.StringData.Buffer)[2*i+1]);

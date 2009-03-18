@@ -28,6 +28,7 @@
 #include "wingdi.h"
 #include "winspool.h"
 #include "ddk/winsplp.h"
+#include "spoolss.h"
 
 #include "wine/debug.h"
 
@@ -35,90 +36,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(spoolss);
 
 /* ################################ */
 
-static CRITICAL_SECTION backend_cs;
-static CRITICAL_SECTION_DEBUG backend_cs_debug =
-{
-    0, 0, &backend_cs,
-    { &backend_cs_debug.ProcessLocksList, &backend_cs_debug.ProcessLocksList },
-      0, 0, { (DWORD_PTR)(__FILE__ ": backend_cs") }
-};
-static CRITICAL_SECTION backend_cs = { &backend_cs_debug, -1, 0, 0, 0, 0 };
-
-/* ################################ */
-
 static HMODULE hwinspool;
-static HMODULE hlocalspl;
-static BOOL (WINAPI *pInitializePrintProvidor)(LPPRINTPROVIDOR, DWORD, LPWSTR);
 
-static PRINTPROVIDOR * backend;
-
-/* ################################ */
-
-static const WCHAR localspldllW[] = {'l','o','c','a','l','s','p','l','.','d','l','l',0};
 static const WCHAR winspooldrvW[] = {'w','i','n','s','p','o','o','l','.','d','r','v',0};
-
-/******************************************************************************
- * backend_load [internal]
- *
- * load and init our backend (the local printprovider: "localspl.dll")
- *
- * PARAMS
- *
- * RETURNS
- *  Success: TRUE
- *  Failure: FALSE and RPC_S_SERVER_UNAVAILABLE
- *
- * NOTES
- *  In windows, the spooler router (spoolss.dll) support multiple
- *  printprovider (localspl.dll for the local system)
- *
- */
-static BOOL backend_load(void)
-{
-    static PRINTPROVIDOR mybackend;
-    DWORD res;
-
-    if (backend) return TRUE;
-
-    EnterCriticalSection(&backend_cs);
-    hlocalspl = LoadLibraryW(localspldllW);
-    if (hlocalspl) {
-        pInitializePrintProvidor = (void *) GetProcAddress(hlocalspl, "InitializePrintProvidor");
-        if (pInitializePrintProvidor) {
-
-            /* native localspl does not clear unused entries */
-            memset(&mybackend, 0, sizeof(mybackend));
-            res = pInitializePrintProvidor(&mybackend, sizeof(mybackend), NULL);
-            if (res) {
-                backend = &mybackend;
-                LeaveCriticalSection(&backend_cs);
-                TRACE("backend: %p (%p)\n", backend, hlocalspl);
-                return TRUE;
-            }
-        }
-        FreeLibrary(hlocalspl);
-    }
-
-    LeaveCriticalSection(&backend_cs);
-
-    WARN("failed to load the backend: %u\n", GetLastError());
-    SetLastError(RPC_S_SERVER_UNAVAILABLE);
-    return FALSE;
-}
-
-/******************************************************************
- * unload_backend [internal]
- *
- */
-static void backend_unload(void)
-{
-    EnterCriticalSection(&backend_cs);
-    if (backend) {
-        backend = NULL;
-        FreeLibrary(hlocalspl);
-    }
-    LeaveCriticalSection(&backend_cs);
-}
 
 /******************************************************************************
  *
@@ -135,7 +55,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
             break;
 
         case DLL_PROCESS_DETACH:
-            backend_unload();
+            backend_unload_all();
             break;
         }
     }
@@ -267,7 +187,7 @@ BOOL WINAPI ImpersonatePrinterClient(HANDLE hToken)
 BOOL WINAPI InitializeRouter(void)
 {
     TRACE("()\n");
-    return backend_load();
+    return backend_load_all();
 }
 
 /******************************************************************

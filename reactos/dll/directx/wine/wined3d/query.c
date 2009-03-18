@@ -133,7 +133,7 @@ static HRESULT  WINAPI IWineD3DQueryImpl_GetData(IWineD3DQuery* iface, void* pDa
     case WINED3DQUERYTYPE_VCACHE:
     {
 
-        WINED3DDEVINFO_VCACHE *data = (WINED3DDEVINFO_VCACHE *)pData;
+        WINED3DDEVINFO_VCACHE *data = pData;
         FIXME("(%p): Unimplemented query WINED3DQUERYTYPE_VCACHE\n", This);
         if(pData == NULL || dwSize == 0) break;
         data->Pattern     = WINEMAKEFOURCC('C','A','C','H');
@@ -145,7 +145,7 @@ static HRESULT  WINAPI IWineD3DQueryImpl_GetData(IWineD3DQuery* iface, void* pDa
     break;
     case WINED3DQUERYTYPE_RESOURCEMANAGER:
     {
-        WINED3DDEVINFO_RESOURCEMANAGER *data = (WINED3DDEVINFO_RESOURCEMANAGER *)pData;
+        WINED3DDEVINFO_RESOURCEMANAGER *data = pData;
         int i;
         FIXME("(%p): Unimplemented query WINED3DQUERYTYPE_RESOURCEMANAGER\n", This);
         if(pData == NULL || dwSize == 0) break;
@@ -169,7 +169,7 @@ static HRESULT  WINAPI IWineD3DQueryImpl_GetData(IWineD3DQuery* iface, void* pDa
     break;
     case WINED3DQUERYTYPE_VERTEXSTATS:
     {
-        WINED3DDEVINFO_VERTEXSTATS *data = (WINED3DDEVINFO_VERTEXSTATS *)pData;
+        WINED3DDEVINFO_VERTEXSTATS *data = pData;
         FIXME("(%p): Unimplemented query WINED3DQUERYTYPE_VERTEXSTATS\n", This);
         if(pData == NULL || dwSize == 0) break;
         data->NumRenderedTriangles      = 1;
@@ -203,7 +203,7 @@ static HRESULT  WINAPI IWineD3DQueryImpl_GetData(IWineD3DQuery* iface, void* pDa
     break;
     case WINED3DQUERYTYPE_PIPELINETIMINGS:
     {
-        WINED3DDEVINFO_PIPELINETIMINGS *data = (WINED3DDEVINFO_PIPELINETIMINGS *)pData;
+        WINED3DDEVINFO_PIPELINETIMINGS *data = pData;
         FIXME("(%p): Unimplemented query WINED3DQUERYTYPE_PIPELINETIMINGS\n", This);
         if(pData == NULL || dwSize == 0) break;
 
@@ -215,7 +215,7 @@ static HRESULT  WINAPI IWineD3DQueryImpl_GetData(IWineD3DQuery* iface, void* pDa
     break;
     case WINED3DQUERYTYPE_INTERFACETIMINGS:
     {
-        WINED3DDEVINFO_INTERFACETIMINGS *data = (WINED3DDEVINFO_INTERFACETIMINGS *)pData;
+        WINED3DDEVINFO_INTERFACETIMINGS *data = pData;
         FIXME("(%p): Unimplemented query WINED3DQUERYTYPE_INTERFACETIMINGS\n", This);
 
         if(pData == NULL || dwSize == 0) break;
@@ -229,7 +229,7 @@ static HRESULT  WINAPI IWineD3DQueryImpl_GetData(IWineD3DQuery* iface, void* pDa
     break;
     case WINED3DQUERYTYPE_VERTEXTIMINGS:
     {
-        WINED3DDEVINFO_STAGETIMINGS *data = (WINED3DDEVINFO_STAGETIMINGS *)pData;
+        WINED3DDEVINFO_STAGETIMINGS *data = pData;
         FIXME("(%p): Unimplemented query WINED3DQUERYTYPE_VERTEXTIMINGS\n", This);
 
         if(pData == NULL || dwSize == 0) break;
@@ -240,7 +240,7 @@ static HRESULT  WINAPI IWineD3DQueryImpl_GetData(IWineD3DQuery* iface, void* pDa
     break;
     case WINED3DQUERYTYPE_PIXELTIMINGS:
     {
-        WINED3DDEVINFO_STAGETIMINGS *data = (WINED3DDEVINFO_STAGETIMINGS *)pData;
+        WINED3DDEVINFO_STAGETIMINGS *data = pData;
         FIXME("(%p): Unimplemented query WINED3DQUERYTYPE_PIXELTIMINGS\n", This);
 
         if(pData == NULL || dwSize == 0) break;
@@ -250,7 +250,7 @@ static HRESULT  WINAPI IWineD3DQueryImpl_GetData(IWineD3DQuery* iface, void* pDa
     break;
     case WINED3DQUERYTYPE_BANDWIDTHTIMINGS:
     {
-        WINED3DDEVINFO_BANDWIDTHTIMINGS *data = (WINED3DDEVINFO_BANDWIDTHTIMINGS *)pData;
+        WINED3DDEVINFO_BANDWIDTHTIMINGS *data = pData;
         FIXME("(%p): Unimplemented query WINED3DQUERYTYPE_BANDWIDTHTIMINGS\n", This);
 
         if(pData == NULL || dwSize == 0) break;
@@ -263,7 +263,7 @@ static HRESULT  WINAPI IWineD3DQueryImpl_GetData(IWineD3DQuery* iface, void* pDa
     break;
     case WINED3DQUERYTYPE_CACHEUTILIZATION:
     {
-        WINED3DDEVINFO_CACHEUTILIZATION *data = (WINED3DDEVINFO_CACHEUTILIZATION *)pData;
+        WINED3DDEVINFO_CACHEUTILIZATION *data = pData;
         FIXME("(%p): Unimplemented query WINED3DQUERYTYPE_CACHEUTILIZATION\n", This);
 
         if(pData == NULL || dwSize == 0) break;

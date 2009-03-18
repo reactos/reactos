@@ -26,20 +26,30 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #define PUT_GUIDS_HERE
-
+#include <initguid.h>
 #include "adapter.hpp"
 
-#pragma code_seg("PAGE")
+//#pragma code_seg("PAGE")
 
 
-NTSTATUS InstallSubdevice(PDEVICE_OBJECT DeviceObject, PIRP Irp, PWCHAR Name, REFGUID PortClassId, REFGUID MiniportClassId, PFNCREATEINSTANCE MiniportCreate, PUNKNOWN UnknownAdapter, PRESOURCELIST ResourceList, REFGUID PortInterfaceId, PUNKNOWN* OutPortUnknown)
+NTSTATUS InstallSubdevice(
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp,
+    PWCHAR Name,
+    REFGUID PortClassId,
+    REFGUID MiniportClassId,
+    PFNCREATEINSTANCE MiniportCreate,
+    PUNKNOWN UnknownAdapter,
+    PRESOURCELIST ResourceList,
+    REFGUID PortInterfaceId,
+    PUNKNOWN* OutPortUnknown)
 {
-	PAGED_CODE();
-	DBGPRINT(("InstallSubdevice()"));
-
 	NTSTATUS	ntStatus;
 	PPORT	   	Port;
 	PMINIPORT   MiniPort;
+
+    ////PAGED_CODE();
+    DBGPRINT(("InstallSubdevice()"));
 
 	ntStatus = PcNewPort(&Port, PortClassId);
 	if (NT_SUCCESS(ntStatus)) {
@@ -76,19 +86,24 @@ NTSTATUS InstallSubdevice(PDEVICE_OBJECT DeviceObject, PIRP Irp, PWCHAR Name, RE
 }
 
 
-NTSTATUS ProcessResources(PRESOURCELIST ResourceList, PRESOURCELIST* UartResourceList)
+NTSTATUS
+ProcessResources(
+    PRESOURCELIST ResourceList,
+    PRESOURCELIST* UartResourceList)
 {
-	PAGED_CODE();
-	ASSERT(ResourceList);
-	ASSERT(UartResourceList);
-	DBGPRINT(("ProcessResources()"));
-	DBGPRINT(("NumberOfPorts: %d, NumberOfInterrupts: %d, NumberOfDmas: %d", ResourceList->NumberOfPorts(), ResourceList->NumberOfInterrupts(), ResourceList->NumberOfDmas()));
+	NTSTATUS ntStatus;
+
+	////PAGED_CODE();
+	////ASSERT(ResourceList);
+	////ASSERT(UartResourceList);
+	//DBGPRINT(("ProcessResources()"));
+	//DBGPRINT(("NumberOfPorts: %d, NumberOfInterrupts: %d, NumberOfDmas: %d", ResourceList->NumberOfPorts(), ResourceList->NumberOfInterrupts(), ResourceList->NumberOfDmas()));
 
 #ifdef UART
 	(*UartResourceList) = NULL;
 #endif
 
-	NTSTATUS ntStatus;
+
 	if ((ResourceList->NumberOfPorts() == 0) || (ResourceList->NumberOfPorts() > 2) || (ResourceList->NumberOfInterrupts() != 1) || (ResourceList->NumberOfDmas() != 0)) {
 		DBGPRINT(("Unexpected configuration"));
 		return STATUS_DEVICE_CONFIGURATION_ERROR;
@@ -108,15 +123,16 @@ NTSTATUS ProcessResources(PRESOURCELIST ResourceList, PRESOURCELIST* UartResourc
 
 NTSTATUS StartDevice(PDEVICE_OBJECT DeviceObject, PIRP Irp, PRESOURCELIST ResourceList)
 {
-	PAGED_CODE();
-	ASSERT(DeviceObject);
-	ASSERT(Irp);
-	ASSERT(ResourceList);
-	DBGPRINT(("StartDevice()"));
-
 	NTSTATUS ntStatus;
 	PPORT    pPort = 0;
 	ULONG*   MPUBase;
+#if 0
+	//PAGED_CODE();
+	//ASSERT(DeviceObject);
+	//ASSERT(Irp);
+	//ASSERT(ResourceList);
+	DBGPRINT(("StartDevice()"));
+#endif
 
 	ntStatus = PcNewPort(&pPort,CLSID_PortWaveCyclic);
 	if (NT_SUCCESS(ntStatus)) {
@@ -248,22 +264,29 @@ NTSTATUS StartDevice(PDEVICE_OBJECT DeviceObject, PIRP Irp, PRESOURCELIST Resour
 	return ntStatus;
 }
 
-extern "C" NTSTATUS AddDevice(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT PhysicalDeviceObject)
+extern 
+"C"
+NTSTATUS
+NTAPI
+AddDevice(
+    PDRIVER_OBJECT DriverObject,
+    PDEVICE_OBJECT PhysicalDeviceObject)
 {
-	PAGED_CODE();
-	DBGPRINT(("AddDevice()"));
+#if 0
+    //PAGED_CODE();
+    DBGPRINT(("AddDevice()"));
+#endif
 
-	return PcAddAdapterDevice(DriverObject, PhysicalDeviceObject, (PCPFNSTARTDEVICE)StartDevice, MAX_MINIPORTS, 0);
+    return PcAddAdapterDevice(DriverObject, PhysicalDeviceObject, (PCPFNSTARTDEVICE)StartDevice, MAX_MINIPORTS, 0);
 }
 
 bool CopyResourceDescriptor(PIO_RESOURCE_DESCRIPTOR pInResDescriptor, PIO_RESOURCE_DESCRIPTOR pOutResDescriptor)
 {
-	PAGED_CODE();
-	ASSERT(pInResDescriptor);
-	ASSERT(pOutResDescriptor);
-	DBGPRINT(("CopyResourceDescriptor()"));
-
 #if 0
+	//PAGED_CODE();
+	//ASSERT(pInResDescriptor);
+	//ASSERT(pOutResDescriptor);
+	DBGPRINT(("CopyResourceDescriptor()"));
 	RtlCopyMemory(pOutResDescriptor, pInResDescriptor, sizeof(IO_RESOURCE_DESCRIPTOR));
 #else
 	pOutResDescriptor->Type             = pInResDescriptor->Type;
@@ -283,14 +306,18 @@ bool CopyResourceDescriptor(PIO_RESOURCE_DESCRIPTOR pInResDescriptor, PIO_RESOUR
 			pOutResDescriptor->u.Port.MaximumAddress = pInResDescriptor->u.Port.MaximumAddress;
 			pOutResDescriptor->u.Port.Length         = pInResDescriptor->u.Port.Length;
 			pOutResDescriptor->u.Port.Alignment	     = pInResDescriptor->u.Port.Alignment;
+#if 0
 			DBGPRINT((" Port: min %08x.%08x max %08x.%08x, Length: %x, Option: %x", pOutResDescriptor->u.Port.MinimumAddress.HighPart, pOutResDescriptor->u.Port.MinimumAddress.LowPart,
 			                                                            pOutResDescriptor->u.Port.MaximumAddress.HighPart, pOutResDescriptor->u.Port.MaximumAddress.LowPart,
 			                                                            pOutResDescriptor->u.Port.Length, pOutResDescriptor->Option));
+#endif
 			break;
 		case CmResourceTypeInterrupt:
 			pOutResDescriptor->u.Interrupt.MinimumVector = pInResDescriptor->u.Interrupt.MinimumVector;
 			pOutResDescriptor->u.Interrupt.MaximumVector = pInResDescriptor->u.Interrupt.MaximumVector;
+#if 0
 			DBGPRINT((" IRQ:  min %x max %x, Option: %d", pOutResDescriptor->u.Interrupt.MinimumVector, pOutResDescriptor->u.Interrupt.MaximumVector, pOutResDescriptor->Option));
+#endif
 			break;
 		default:
 			return FALSE;
@@ -299,18 +326,24 @@ bool CopyResourceDescriptor(PIO_RESOURCE_DESCRIPTOR pInResDescriptor, PIO_RESOUR
 #endif
 }
 
-extern "C" NTSTATUS AdapterDispatchPnp(PDEVICE_OBJECT pDeviceObject, PIRP pIrp)
+extern
+"C"
+NTSTATUS
+NTAPI
+AdapterDispatchPnp(
+    PDEVICE_OBJECT pDeviceObject,
+    PIRP pIrp)
 {
-	PAGED_CODE();
-	ASSERT(pDeviceObject);
-	ASSERT(pIrp);
-	DBGPRINT(("AdapterDispatchPnp()"));
-
 	NTSTATUS                       ntStatus = STATUS_SUCCESS;
 	ULONG                          resourceListSize;
 	PIO_RESOURCE_REQUIREMENTS_LIST resourceList, list;
 	PIO_RESOURCE_DESCRIPTOR        descriptor;
 	PIO_STACK_LOCATION             pIrpStack = IoGetCurrentIrpStackLocation(pIrp);
+
+	////PAGED_CODE();
+	////ASSERT(pDeviceObject);
+	////ASSERT(pIrp);
+	DBGPRINT(("AdapterDispatchPnp()"));
 
 	if (pIrpStack->MinorFunction == IRP_MN_FILTER_RESOURCE_REQUIREMENTS) {
 		DBGPRINT(("[AdapterDispatchPnp] - IRP_MN_FILTER_RESOURCE_REQUIREMENTS"));
@@ -373,7 +406,7 @@ extern "C" NTSTATUS AdapterDispatchPnp(PDEVICE_OBJECT pDeviceObject, PIRP pIrp)
 		descriptor->u.Port.Length         = 1;
 		descriptor->u.Port.Alignment      = 0x10;
 
-		DBGPRINT(("number of resource list descriptors: %d", resourceList->List[0].Count));
+//		DBGPRINT(("number of resource list descriptors: %d", resourceList->List[0].Count));
 
 		pIrp->IoStatus.Information = (ULONG_PTR)resourceList;
 
@@ -387,27 +420,35 @@ extern "C" NTSTATUS AdapterDispatchPnp(PDEVICE_OBJECT pDeviceObject, PIRP pIrp)
 	return ntStatus;
 }
 
-extern "C" NTSTATUS DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPathName)
+extern 
+"C"
+NTSTATUS
+NTAPI
+DriverEntry(
+    PDRIVER_OBJECT DriverObject,
+     PUNICODE_STRING RegistryPathName)
 {
-	PAGED_CODE();
-	DBGPRINT(("DriverEntry()"));
+    NTSTATUS ntStatus;
 
-	NTSTATUS ntStatus;
+    DBGPRINT(("DriverEntry()"));
 
-	//bind the adapter driver to the portclass driver
-	ntStatus = PcInitializeAdapterDriver(DriverObject, RegistryPathName, AddDevice);
+
+    //bind the adapter driver to the portclass driver
+    ntStatus = PcInitializeAdapterDriver(DriverObject, RegistryPathName, AddDevice);
+
+
 #ifdef UART
-	if(NT_SUCCESS(ntStatus)) {
-		DriverObject->MajorFunction[IRP_MJ_PNP] = AdapterDispatchPnp;
-	}
+    if(NT_SUCCESS(ntStatus)) {
+    DriverObject->MajorFunction[IRP_MJ_PNP] = AdapterDispatchPnp;
+    }
 #endif
 #ifdef WAVERT
-	if (!IoIsWdmVersionAvailable(6,0)) {
-		ntStatus = STATUS_UNSUCCESSFUL;
-	}
+    if (!IoIsWdmVersionAvailable(6,0)) {
+    ntStatus = STATUS_UNSUCCESSFUL;
+    }
 #endif
 
-	return ntStatus;
+    return ntStatus;
 }
 
 #pragma code_seg()

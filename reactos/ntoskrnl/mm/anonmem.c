@@ -287,10 +287,19 @@ MmNotPresentFaultVirtualMemory(PMM_AVL_TABLE AddressSpace,
    Region = MmFindRegion(MemoryArea->StartingAddress,
                          &MemoryArea->Data.VirtualMemoryData.RegionListHead,
                          Address, NULL);
+
    if (Region->Type == MEM_RESERVE || Region->Protect == PAGE_NOACCESS)
    {
       return(STATUS_ACCESS_VIOLATION);
    }
+
+   /*
+    * FIXME
+    */
+    if (Region->Protect & PAGE_GUARD)
+    {
+        return(STATUS_GUARD_PAGE_VIOLATION);
+    }
 
    /*
     * Get or create a page operation

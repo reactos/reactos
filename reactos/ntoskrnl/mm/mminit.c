@@ -351,6 +351,11 @@ MiGetLastKernelAddress(VOID)
     return LastKrnlPhysAddr << PAGE_SHIFT;
 }
 
+
+VOID
+NTAPI
+MiInitHyperSpace(VOID);
+
 VOID
 INIT_FUNCTION
 NTAPI
@@ -428,10 +433,13 @@ MmInit1(VOID)
     
     /* Dump kernel memory layout */
     MiDbgKernelLayout();
-    
+
+    /* Initialize hyperspace */
+    MiInitHyperSpace();
+
     /* Initialize the page list */
     MmInitializePageList();
-    
+
     /* Unmap low memory */
     MmDeletePageTable(NULL, 0);
 

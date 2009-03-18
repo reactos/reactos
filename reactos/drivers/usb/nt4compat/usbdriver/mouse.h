@@ -1,18 +1,26 @@
 #ifndef __MOUSE_H__
 #define __MOUSE_H__
 
+#include "kbdmou.h"
+
 typedef struct _MOUSE_DRVR_EXTENSION
 {
-    //INTERRUPT_DATA_BLOCK    idb;
     PUSB_INTERFACE_DESC pif_desc;
-    UCHAR               if_idx, out_endp_idx, in_endp_idx, int_endp_idx;
-    PUSB_ENDPOINT_DESC  pout_endp_desc, pin_endp_desc, pint_endp_desc;
 
     PUSB_DEV_MANAGER dev_mgr;
     signed char mouse_data[8];
     UCHAR btn_old;
+
+    struct _MOUSE_DEVICE_EXTENSION *device_ext; // back pointer
 } MOUSE_DRVR_EXTENSION, *PMOUSE_DRVR_EXTENSION;
 
+typedef struct _MOUSE_DEVICE_EXTENSION
+{
+    DEVEXT_HEADER           hdr; // mandatory header
+    PMOUSE_DRVR_EXTENSION   DriverExtension;
+    CONNECT_DATA            ConnectData;
+    PDEVICE_OBJECT          Fdo;
+} MOUSE_DEVICE_EXTENSION, *PMOUSE_DEVICE_EXTENSION;
 
 BOOLEAN
 mouse_driver_init(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver);

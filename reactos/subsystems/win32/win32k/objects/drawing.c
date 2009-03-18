@@ -1337,26 +1337,10 @@ IntFillEllipse( PDC dc,
                 INT XLeft,
                 INT YLeft,
                 INT Width,
-                INT Height)
+                INT Height, 
+                PGDIBRUSHOBJ FillBrushObj)
 {
-  BOOL ret;
-  PDC_ATTR Dc_Attr;
-  PGDIBRUSHOBJ FillBrushObj;
-
-  Dc_Attr = dc->pDc_Attr;
-  if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
-
-  FillBrushObj = BRUSHOBJ_LockBrush(Dc_Attr->hbrush);
-  if (NULL == FillBrushObj)   
-  {
-      DPRINT1("FillEllipse Fail\n");
-      SetLastWin32Error(ERROR_INTERNAL_ERROR);
-      return FALSE;
-  }
-  ret = (BOOL)app_fill_ellipse(dc, rect( XLeft, YLeft, Width, Height), FillBrushObj);
-
-  BRUSHOBJ_UnlockBrush(FillBrushObj);    
-  return ret;
+  return (BOOL)app_fill_ellipse(dc, rect( XLeft, YLeft, Width, Height), FillBrushObj);
 }
 
 BOOL
@@ -1367,23 +1351,12 @@ IntFillRoundRect( PDC dc,
                   INT Right,
                   INT Bottom,
                   INT Wellipse,
-                  INT Hellipse)
+                  INT Hellipse, 
+                  PGDIBRUSHOBJ FillBrushObj)
 {
-  PDC_ATTR Dc_Attr;
-  PGDIBRUSHOBJ FillBrushObj;
   Rect r;
   int rx, ry; /* radius in x and y directions */
 
-  Dc_Attr = dc->pDc_Attr;
-  if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
-
-  FillBrushObj = BRUSHOBJ_LockBrush(Dc_Attr->hbrush);
-  if (NULL == FillBrushObj)   
-  {
-      DPRINT1("FillEllipse Fail\n");
-      SetLastWin32Error(ERROR_INTERNAL_ERROR);
-      return FALSE;
-  }
   //           x    y          Width          Height
   r = rect( Left, Top, abs(Right-Left), abs(Bottom-Top));
   rx = Wellipse/2;
@@ -1432,7 +1405,6 @@ IntFillRoundRect( PDC dc,
      app_fill_rect(dc, rect(r.x, r.y+ry+1, r.width, r.height-ry-ry), FillBrushObj, FALSE);
   }
 
-  BRUSHOBJ_UnlockBrush(FillBrushObj);    
   return TRUE;
 }
 

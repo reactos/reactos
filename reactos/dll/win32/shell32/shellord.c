@@ -521,7 +521,8 @@ WORD WINAPI ArrangeWindows(
 	WORD cKids,
 	CONST HWND * lpKids)
 {
-    FIXME("(%p 0x%08x %p 0x%04x %p):stub.\n",
+    /* Unimplemented in WinXP SP3 */
+    TRACE("(%p 0x%08x %p 0x%04x %p):stub.\n",
 	   hwndParent, dwReserved, lpRect, cKids, lpKids);
     return 0;
 }

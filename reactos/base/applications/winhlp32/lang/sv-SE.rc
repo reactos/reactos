@@ -5,6 +5,7 @@
  * Swedish language by Karl Backström <karl_b@geocities.com>
  * Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
  * Copyright 2007, 2008 Daniel Nylander <po@danielnylander.se>
+ * Copyright 2009 Anders Jonsson
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -51,9 +52,9 @@ MAIN_MENU MENU LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
   MENUITEM "Historik",		MNID_OPTS_HISTORY
   POPUP    "Typsnitt"
   BEGIN
-    MENUITEM "Liten",		MNID_OPTS_FONTS_SMALL
-    MENUITEM "Normal",    	MNID_OPTS_FONTS_NORMAL
-    MENUITEM "Stor",     	MNID_OPTS_FONTS_LARGE
+    MENUITEM "Litet",		MNID_OPTS_FONTS_SMALL
+    MENUITEM "Normalt",    	MNID_OPTS_FONTS_NORMAL
+    MENUITEM "Stort",     	MNID_OPTS_FONTS_LARGE
   END
   MENUITEM "Använd systemfärger",	MNID_OPTS_SYSTEM_COLORS
  }
@@ -68,10 +69,26 @@ MAIN_MENU MENU LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
  }
 }
 
+IDD_INDEX DIALOG DISCARDABLE 0, 0, 200, 190 LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Index"
+{
+    LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
+}
+
+IDD_SEARCH DIALOG DISCARDABLE 0, 0, 200, 190 LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Sök"
+{
+    LTEXT  "Inte implementerat ännu", -1, 10, 10, 180, 150
+}
+
 /* Strings */
 STRINGTABLE DISCARDABLE LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 {
-STID_WINE_HELP, 	"WINE Hjälp"
+STID_WINE_HELP, 	"Wine Hjälp"
 STID_WHERROR, 		"FEL"
 STID_WARNING,  		"VARNING"
 STID_INFO,  		"Information"
@@ -86,3 +103,26 @@ STID_FILE_NOT_FOUND_s	"Kan inte hitta '%s'. Vill du söka efter denna fil?"
 STID_NO_RICHEDIT	"Kan inte hitta en implementation av richedit... Avslutar"
 STID_PSH_INDEX,		"Hjälprubriker: "
 }
+
+CONTEXT_MENU MENU LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Kommentar...",        MNID_CTXT_ANNOTATE
+        MENUITEM "Kopiera",              MNID_CTXT_COPY
+        MENUITEM "Skriv ut...",         MNID_CTXT_PRINT
+        POPUP    "Typsnitt"
+        BEGIN
+            MENUITEM "Litet",       MNID_CTXT_FONTS_SMALL
+            MENUITEM "Normalt",      MNID_CTXT_FONTS_NORMAL
+            MENUITEM "Stort",        MNID_CTXT_FONTS_LARGE
+        END
+        POPUP   "Hjälp alltid synlig"
+        BEGIN
+            MENUITEM "Standard",     MNID_CTXT_HELP_DEFAULT
+            MENUITEM "Synlig",       MNID_CTXT_HELP_VISIBLE
+            MENUITEM "Ej synlig",  MNID_CTXT_HELP_NONVISIBLE
+        END
+        MENUITEM "Använd systemfärger",   MNID_CTXT_SYSTEM_COLORS
+    END
+END

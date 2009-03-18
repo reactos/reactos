@@ -42,9 +42,10 @@
 #define GDI_ENTRY_UPPER_SHIFT 16
 
 /* GDI Entry Flags */
-#define GDI_ENTRY_UNDELETABLE  1
-#define GDI_ENTRY_DELETING     2
-#define GDI_ENTRY_VALIDATE_VIS 4
+#define GDI_ENTRY_UNDELETABLE  1    /* Mark Object as nonremovable */
+#define GDI_ENTRY_DELETING     2    /* Used when deleting Font Objects */
+#define GDI_ENTRY_VALIDATE_VIS 4    /* Validating Visible region data */
+#define GDI_ENTRY_ALLOCATE_LAL 0x80 /* Object Allocated with Look aside List */
 
 /*! \defgroup GDI object types
  *
@@ -66,6 +67,7 @@
 #define GDI_OBJECT_TYPE_DD_VIDEOPORT  0x00120000 /* Should be moved away from gdi objects */
 #define GDI_OBJECT_TYPE_DD_MOTIONCOMP 0x00140000 /* Should be moved away from gdi objects */
 #define GDI_OBJECT_TYPE_ENUMFONT      0x00160000
+#define GDI_OBJECT_TYPE_DRIVEROBJ     0x001C0000
 
 /* Confrim on XP value is taken from NtGdiCreateDirectDrawObject */
 #define GDI_OBJECT_TYPE_DIRECTDRAW  0x00200000
@@ -121,16 +123,16 @@
 
 /* Gdi Object Handle Managment Pid lock masking sets. */
 /* Ref: used with DxEngSetDCOwner */
-#define GDI_OBJ_HMGR_PUBLIC     0          // Public owner, Open access?
-#define GDI_OBJ_HMGR_POWNED     0x80000002 // Set to current owner.
-#define GDI_OBJ_HMGR_NONE       0x80000012 // No owner, Open access?
-#define GDI_OBJ_HMGR_RESTRICTED 0x80000022 // Restricted?
+#define GDI_OBJ_HMGR_PUBLIC     0          /* Public owner, Open access? */
+#define GDI_OBJ_HMGR_POWNED     0x80000002 /* Set to current owner. */
+#define GDI_OBJ_HMGR_NONE       0x80000012 /* No owner, Open access? */
+#define GDI_OBJ_HMGR_RESTRICTED 0x80000022 /* Restricted? */
 
 
 /* DC OBJ Types */
-#define DC_TYPE_DIRECT 0  // normal device context
-#define DC_TYPE_MEMORY 1  // memory device context
-#define DC_TYPE_INFO   2  // information context
+#define DC_TYPE_DIRECT 0  /* normal device context */
+#define DC_TYPE_MEMORY 1  /* memory device context */
+#define DC_TYPE_INFO   2  /* information context */
 
 /* DC OBJ Flags */
 #define DC_FLAG_DISPLAY            0x0001
@@ -171,13 +173,15 @@
 #define DC_FONTTEXT_DIRTY                   0x00400000
 
 /* DC_ATTR LCD Flags */
-#define LDC_LDC           0x00000001 // (init) local DC other than a normal DC
-#define LDC_EMFLDC        0x00000002 // Enhance Meta File local DC
+#define LDC_LDC           0x00000001 /* (init) local DC other than a normal DC */
+#define LDC_EMFLDC        0x00000002 /* Enhance Meta File local DC */
 #define LDC_SAPCALLBACK   0x00000020
 #define LDC_INIT_DOCUMENT 0x00000040
 #define LDC_INIT_PAGE     0x00000080
+#define LDC_PLAY_MFDC     0x00000800
 #define LDC_CLOCKWISE     0x00002000
 #define LDC_KILL_DOCUMENT 0x00010000
+#define LDC_META_PRINT    0x00020000
 #define LDC_DEVCAPS       0x02000000
 
 /* DC_ATTR Xform Flags */
@@ -212,37 +216,37 @@ typedef struct _GDI_TABLE_ENTRY
 {
     PVOID KernelData; /* Points to the kernel mode structure */
     DWORD ProcessId;  /* process id that created the object, 0 for stock objects */
-    union{            // temp union structure.
+    union{            /* temp union structure. */
     LONG  Type;       /* the first 16 bit is the object type including the stock obj flag, the last 16 bits is just the object type */
     struct{
-    SHORT FullUnique; // unique
-    CHAR  ObjectType; // objt
-    CHAR  Flags;      // Flags
+    SHORT FullUnique; /* unique */
+    CHAR  ObjectType; /* objt */
+    CHAR  Flags;      /* Flags */
     };};
     PVOID UserData;   /* pUser Points to the user mode structure, usually NULL though */
 } GDI_TABLE_ENTRY, *PGDI_TABLE_ENTRY;
 
-//
-// User space only structure!
-//
-typedef struct __GDI_SHARED_HANDLE_TABLE // Must match win32k/include/gdiobj.h
+/*
+ * User space only structure!
+ */
+typedef struct __GDI_SHARED_HANDLE_TABLE /* Must match win32k/include/gdiobj.h */
 {
-    GDI_TABLE_ENTRY Entries[GDI_HANDLE_COUNT]; // Handle table.
-    DEVCAPS         DevCaps;                   // Shared device capabilities.
-    FLONG           flDeviceUniq;              // Device settings uniqueness.
-    PVOID           pvLangPack;                // Lanuage Pack.
-    CFONT           cfPublic[GDI_CFONT_MAX];   // Public Fonts.
+    GDI_TABLE_ENTRY Entries[GDI_HANDLE_COUNT]; /* Handle table. */
+    DEVCAPS         DevCaps;                   /* Shared device capabilities. */
+    FLONG           flDeviceUniq;              /* Device settings uniqueness. */
+    PVOID           pvLangPack;                /* Lanuage Pack. */
+    CFONT           cfPublic[GDI_CFONT_MAX];   /* Public Fonts. */
     DWORD           dwCFCount;
 } GDI_SHARED_HANDLE_TABLE, *PGDI_SHARED_HANDLE_TABLE;
 
 typedef struct _RGN_ATTR
 {
     ULONG AttrFlags;
-    ULONG Flags;     // Clipping region's complexity. NULL, SIMPLE & COMPLEXREGION
+    ULONG Flags;     /* Clipping region's complexity. NULL, SIMPLE & COMPLEXREGION */
     RECTL Rect;
 } RGN_ATTR,*PRGN_ATTR;
 
-// Local DC structure (_DC_ATTR) PVOID pvLDC;
+/* Local DC structure (_DC_ATTR) PVOID pvLDC; */
 typedef struct _LDC
 {
     HDC hDC;
@@ -322,7 +326,7 @@ typedef struct _DC_ATTR
     RGN_ATTR VisRectRegion;
 } DC_ATTR, *PDC_ATTR;
 
-typedef struct _BRUSH_ATTR // Used with pen too.
+typedef struct _BRUSH_ATTR /* Used with pen too. */
 {
     FLONG    AttrFlags;
     COLORREF lbColor;

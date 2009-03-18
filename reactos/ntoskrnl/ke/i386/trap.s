@@ -1924,10 +1924,6 @@ _KiTrap14:
 NoFixUp:
     mov edi, cr2
 
-    /* ROS HACK: Sometimes we get called with INTS DISABLED! WTF? */
-    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_INTERRUPT_MASK
-    je HandlePf
-
     /* Enable interrupts and check if we got here with interrupts disabled */
     sti
     test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_INTERRUPT_MASK
@@ -2533,8 +2529,81 @@ TRAP_FIXUPS kit_a, kit_t, DoFixupV86, DoFixupAbios
 .func KiChainedDispatch2ndLvl@0
 _KiChainedDispatch2ndLvl@0:
 
-    /* Not yet supported */
-    UNHANDLED_PATH
+NextSharedInt:
+    /* Raise IRQL if necessary */
+    mov cl, [edi+KINTERRUPT_SYNCHRONIZE_IRQL]
+    cmp cl, [edi+KINTERRUPT_IRQL]
+    je 1f
+    call @KfRaiseIrql@4
+
+1:
+    /* Acquire the lock */
+    mov esi, [edi+KINTERRUPT_ACTUAL_LOCK]
+GetIntLock2:
+    ACQUIRE_SPINLOCK(esi, IntSpin2)
+
+    /* Make sure that this interrupt isn't storming */
+    VERIFY_INT kid2
+
+    /* Save the tick count */
+    mov esi, _KeTickCount
+
+    /* Call the ISR */
+    mov eax, [edi+KINTERRUPT_SERVICE_CONTEXT]
+    push eax
+    push edi
+    call [edi+KINTERRUPT_SERVICE_ROUTINE]
+
+    /* Save the ISR result */
+    mov bl, al
+
+    /* Check if the ISR timed out */
+    add esi, _KiISRTimeout
+    cmp _KeTickCount, esi
+    jnc ChainedIsrTimeout
+
+ReleaseLock2:
+    /* Release the lock */
+    mov esi, [edi+KINTERRUPT_ACTUAL_LOCK]
+    RELEASE_SPINLOCK(esi)
+
+    /* Lower IRQL if necessary */
+    mov cl, [edi+KINTERRUPT_IRQL]
+    cmp cl, [edi+KINTERRUPT_SYNCHRONIZE_IRQL]
+    je 1f
+    call @KfLowerIrql@4
+
+1:
+    /* Check if the interrupt is handled */
+    or bl, bl
+    jnz 1f
+
+    /* Try the next shared interrupt handler */
+    mov eax, [edi+KINTERRUPT_INTERRUPT_LIST_HEAD]
+    lea edi, [eax-KINTERRUPT_INTERRUPT_LIST_HEAD]
+    jmp NextSharedInt
+
+1:
+    ret
+
+#ifdef CONFIG_SMP
+IntSpin2:
+    SPIN_ON_LOCK(esi, GetIntLock2)
+#endif
+
+ChainedIsrTimeout:
+    /* Print warning message */
+    push [edi+KINTERRUPT_SERVICE_ROUTINE]
+    push offset _IsrTimeoutMsg
+    call _DbgPrint
+    add esp,8
+
+    /* Break into debugger, then continue */
+    int 3
+    jmp ReleaseLock2
+
+    /* Cleanup verification */
+    VERIFY_INT_END kid2, 0
 .endfunc
 
 .func KiChainedDispatch@0
@@ -2599,8 +2668,8 @@ _KiInterruptDispatch@0:
     jz SpuriousInt
 
     /* Acquire the lock */
-GetIntLock:
     mov esi, [edi+KINTERRUPT_ACTUAL_LOCK]
+GetIntLock:
     ACQUIRE_SPINLOCK(esi, IntSpin)
 
     /* Make sure that this interrupt isn't storming */

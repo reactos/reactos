@@ -1112,7 +1112,7 @@ TREEVIEW_DoSetItemT(const TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *wineItem,
     if (tvItem->mask & TVIF_TEXT)
     {
         wineItem->textWidth = 0; /* force width recalculation */
-	if (tvItem->pszText != LPSTR_TEXTCALLBACKW) /* covers != TEXTCALLBACKA too */
+	if (tvItem->pszText != LPSTR_TEXTCALLBACKW && tvItem->pszText != NULL) /* covers != TEXTCALLBACKA too, and undocumented: pszText of NULL also means TEXTCALLBACK */
 	{
             int len;
             LPWSTR newText;
@@ -2306,11 +2306,13 @@ TREEVIEW_DrawItemLines(const TREEVIEW_INFO *infoPtr, HDC hdc, const TREEVIEW_ITE
 		 & (TVS_LINESATROOT|TVS_HASLINES|TVS_HASBUTTONS))
 		> TVS_LINESATROOT);
     HBRUSH hbr, hbrOld;
+    COLORREF clrBk = infoPtr->clrBk == -1 ? GetSysColor(COLOR_WINDOW):
+                                            infoPtr->clrBk;
 
     if (!lar && item->iLevel == 0)
 	return;
 
-    hbr    = CreateSolidBrush(infoPtr->clrBk);
+    hbr    = CreateSolidBrush(clrBk);
     hbrOld = SelectObject(hdc, hbr);
     
     centerx = (item->linesOffset + item->stateOffset) / 2;
@@ -2423,8 +2425,8 @@ TREEVIEW_DrawItemLines(const TREEVIEW_INFO *infoPtr, HDC hdc, const TREEVIEW_ITE
                     {
                         Rectangle(hdc, centerx - 1, centery - plussize + 1,
                         centerx + 2, centery + plussize);
-                        SetPixel(hdc, centerx - 1, centery, infoPtr->clrBk);
-                        SetPixel(hdc, centerx + 1, centery, infoPtr->clrBk);
+                        SetPixel(hdc, centerx - 1, centery, clrBk);
+                        SetPixel(hdc, centerx + 1, centery, clrBk);
                     }
                 }
             }
@@ -2472,7 +2474,8 @@ TREEVIEW_DrawItem(const TREEVIEW_INFO *infoPtr, HDC hdc, TREEVIEW_ITEM *wineItem
     }
     else
     {
-	nmcdhdr.clrTextBk = infoPtr->clrBk;
+	nmcdhdr.clrTextBk = infoPtr->clrBk == -1 ? GetSysColor(COLOR_WINDOW):
+                                                   infoPtr->clrBk;
 	if ((infoPtr->dwStyle & TVS_TRACKSELECT) && (wineItem == infoPtr->hotItem))
 	    nmcdhdr.clrText = comctl32_color.clrHighlight;
 	else if (infoPtr->clrText == -1)
@@ -2782,9 +2785,12 @@ TREEVIEW_UpdateScrollBars(TREEVIEW_INFO *infoPtr)
 static LRESULT
 TREEVIEW_EraseBackground(const TREEVIEW_INFO *infoPtr, HDC hDC)
 {
-    HBRUSH hBrush = CreateSolidBrush(infoPtr->clrBk);
+    HBRUSH hBrush;
+    COLORREF clrBk = infoPtr->clrBk == -1 ? GetSysColor(COLOR_WINDOW):
+                                            infoPtr->clrBk;
     RECT rect;
 
+    hBrush =  CreateSolidBrush(clrBk);
     GetClientRect(infoPtr->hwnd, &rect);
     FillRect(hDC, &rect, hBrush);
     DeleteObject(hBrush);
@@ -4942,7 +4948,7 @@ TREEVIEW_Create(HWND hwnd, const CREATESTRUCTW *lpcs)
 
     infoPtr->scrollX = 0;
 
-    infoPtr->clrBk = GetSysColor(COLOR_WINDOW);
+    infoPtr->clrBk   = -1; /* use system color */
     infoPtr->clrText = -1;	/* use system color */
     infoPtr->clrLine = RGB(128, 128, 128);
     infoPtr->clrInsertMark = GetSysColor(COLOR_BTNTEXT);

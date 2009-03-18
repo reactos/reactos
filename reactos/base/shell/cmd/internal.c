@@ -665,7 +665,7 @@ INT CommandExit (LPTSTR param)
 			param++;
 		if (_istdigit(*param))
 			nErrorLevel = _ttoi(param);
-		ExitBatch (NULL);
+		ExitBatch();
 	}
 
 	else
@@ -707,7 +707,7 @@ INT CommandShowCommandsDetail (LPTSTR param)
 		LPTSTR NewCommand = cmd_alloc((_tcslen(param)+4)*sizeof(TCHAR));
 		_tcscpy(NewCommand, param);
 		_tcscat(NewCommand, _T(" /?"));
-		DoCommand(NewCommand);
+		DoCommand(NewCommand, NULL);
 		cmd_free(NewCommand);
 	}
 	/* Else, display detailed commands list */

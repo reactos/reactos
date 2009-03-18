@@ -1334,7 +1334,7 @@ VfOvr_&Label:
     mov [edi+KINTERRUPT_TICK_COUNT], eax
     jmp VfRstDef_&Label
 
-.1:
+1:
     /* Check if the debugger is enabled */
     cmp byte ptr __KdDebuggerEnabled, 0
     jnz 1f

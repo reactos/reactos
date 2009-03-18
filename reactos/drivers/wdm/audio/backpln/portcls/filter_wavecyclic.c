@@ -6,6 +6,9 @@ typedef struct
 
     LONG ref;
 
+    IPortWaveCyclic* Port;
+    IPortPinWaveCyclic * Pin;
+
 }IPortFilterWaveCyclicImpl;
 
 /*
@@ -76,16 +79,65 @@ IPortFilterWaveCyclic_fnNewIrpTarget(
     IN WCHAR * Name,
     IN PUNKNOWN Unknown,
     IN POOL_TYPE PoolType,
-    IN PDEVICE_OBJECT * DeviceObject,
+    IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
     IN KSOBJECT_CREATE *CreateObject)
 {
+    ISubdevice * ISubDevice;
+    NTSTATUS Status;
+    IPortPinWaveCyclic * Pin;
+    SUBDEVICE_DESCRIPTOR * Descriptor;
+    PKSPIN_CONNECT ConnectDetails;
+    IPortFilterWaveCyclicImpl * This = (IPortFilterWaveCyclicImpl *)iface;
 
-    return STATUS_UNSUCCESSFUL;
+    ASSERT(This->Port);
+
+    DPRINT("IPortFilterWaveCyclic_fnNewIrpTarget entered\n");
+
+    Status = This->Port->lpVtbl->QueryInterface(This->Port, &IID_ISubdevice, (PVOID*)&ISubDevice);
+    if (!NT_SUCCESS(Status))
+        return STATUS_UNSUCCESSFUL;
+
+    Status = ISubDevice->lpVtbl->GetDescriptor(ISubDevice, &Descriptor);
+    if (!NT_SUCCESS(Status))
+        return STATUS_UNSUCCESSFUL;
+
+    Status = PcValidateConnectRequest(Irp, &Descriptor->Factory, &ConnectDetails);
+    if (!NT_SUCCESS(Status))
+    {
+        ISubDevice->lpVtbl->Release(ISubDevice);
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    ISubDevice->lpVtbl->Release(ISubDevice);
+
+    Status = NewPortPinWaveCyclic(&Pin);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    Status = Pin->lpVtbl->Init(Pin, This->Port, iface, ConnectDetails, &Descriptor->Factory.KsPinDescriptor[ConnectDetails->PinId]);
+    if (!NT_SUCCESS(Status))
+    {
+        Pin->lpVtbl->Release(Pin);
+        return Status;
+    }
+
+    /* store pin handle */
+    This->Pin = Pin;
+
+    /* store result */
+    *OutTarget = (IIrpTarget*)Pin;
+
+    /* increment current instance count */
+    Descriptor->Factory.Instances[ConnectDetails->PinId].CurrentPinInstanceCount++;
+
+    return Status;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI
@@ -94,8 +146,25 @@ IPortFilterWaveCyclic_fnDeviceIoControl(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
+    PIO_STACK_LOCATION IoStack;
+    ISubdevice *SubDevice = NULL;
+    SUBDEVICE_DESCRIPTOR * Descriptor;
+    NTSTATUS Status;
+    IPortFilterWaveCyclicImpl * This = (IPortFilterWaveCyclicImpl *)iface;
 
-    return STATUS_UNSUCCESSFUL;
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+    ASSERT(IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_PROPERTY);
+    Status = This->Port->lpVtbl->QueryInterface(This->Port, &IID_ISubdevice, (PVOID*)&SubDevice);
+    ASSERT(Status == STATUS_SUCCESS);
+    ASSERT(SubDevice != NULL);
+
+    Status = SubDevice->lpVtbl->GetDescriptor(SubDevice, &Descriptor);
+    ASSERT(Status == STATUS_SUCCESS);
+    ASSERT(Descriptor != NULL);
+
+    SubDevice->lpVtbl->Release(SubDevice);
+
+    return PcPropertyHandler(Irp, Descriptor);
 }
 
 /*
@@ -147,6 +216,14 @@ IPortFilterWaveCyclic_fnClose(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
+    DPRINT1("IPortFilterWaveCyclic_fnClose entered\n");
+
+    //FIXME
+    //close all pin instances
+
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+    Irp->IoStatus.Information = 0;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
     return STATUS_UNSUCCESSFUL;
 }
@@ -236,6 +313,26 @@ IPortFilterWaveCyclic_fnFastWrite(
     return STATUS_SUCCESS;
 }
 
+/*
+ * @implemented
+ */
+static
+NTSTATUS
+NTAPI
+IPortFilterWaveCyclic_fnInit(
+    IN IPortFilterWaveCyclic* iface,
+    IN IPortWaveCyclic* Port)
+{
+    IPortFilterWaveCyclicImpl * This = (IPortFilterWaveCyclicImpl*)iface;
+
+    This->Port = Port;
+
+    /* increment reference count */
+    iface->lpVtbl->AddRef(iface);
+
+    return STATUS_SUCCESS;
+}
+
 static IPortFilterWaveCyclicVtbl vt_IPortFilterWaveCyclic =
 {
     IPortFilterWaveCyclic_fnQueryInterface,
@@ -251,11 +348,12 @@ static IPortFilterWaveCyclicVtbl vt_IPortFilterWaveCyclic =
     IPortFilterWaveCyclic_fnSetSecurity,
     IPortFilterWaveCyclic_fnFastDeviceIoControl,
     IPortFilterWaveCyclic_fnFastRead,
-    IPortFilterWaveCyclic_fnFastWrite
+    IPortFilterWaveCyclic_fnFastWrite,
+    IPortFilterWaveCyclic_fnInit
 };
 
-
-NTSTATUS NewPortFilterWaveCyclic(
+NTSTATUS 
+NewPortFilterWaveCyclic(
     OUT IPortFilterWaveCyclic ** OutFilter)
 {
     IPortFilterWaveCyclicImpl * This;

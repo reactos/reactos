@@ -1,0 +1,74 @@
+; AUDIO.INF
+
+; Installation of Audio / Video Adapters
+
+[Version]
+Signature  = "$Windows NT$"
+;Signature  = "$ReactOS$"
+LayoutFile = layout.inf
+Class      = MEDIA
+ClassGUID  = {4d36e96c-e325-11ce-bfc1-08002be10318}
+Provider   = %ReactOS%
+DriverVer  = 10/19/1999,5.00.2157.1
+
+[DestinationDirs]
+Audio.CopyFiles.UserMode = 12
+Audio.CopyFiles.KernelMode = 11
+
+[ClassInstall32.NT]
+AddReg = AUDIOClass.NT.AddReg
+
+[AUDIOClass.NT.AddReg]
+HKR, , ,               0, %AUDIOClassName%
+HKR, , EnumPropPages32,0, "MmSys.Cpl,MediaPropPageProvider"
+HKR, , Icon,           0, "-51"
+HKR, , Installer32,     0, "MmSys.Cpl,MediaClassInstaller"
+
+;-------------------------------- Audio installation ----------------------------------------
+
+[AUDIO_Inst.NT]
+CopyFiles = Audio.CopyFiles.KernelMode, Audio.CopyFiles.UserMode
+
+[Audio.CopyFiles.KernelMode]
+sysaudio.sys
+wdmaud.sys
+portcls.sys
+drmk.sys
+kmixer.sys
+
+[Audio.CopyFiles.UserMode]
+wdmaud.drv
+ksuser.dll
+
+[Audio_Inst.NT.Services]
+AddService = wdmaud,,wdmaud_Service_Inst
+AddService = sysaudio,,sysaudio_Service_Inst
+AddService = kmixer,,kmixer_Service_Inst
+
+[wdmaud_Service_Inst]
+ServiceType   = 1
+StartType     = 3
+ErrorControl  = 0
+ServiceBinary = %12%\wdmaud.sys
+
+[kmixer_Service_Inst]
+ServiceType   = 1
+StartType     = 3
+ErrorControl  = 0
+ServiceBinary = %12%\kmixer.sys
+
+[sysaudio_Service_Inst]
+ServiceType   = 1
+StartType     = 3
+ErrorControl  = 0
+ServiceBinary = %12%\sysaudio.sys
+
+;-------------------------------- STRINGS -------------------------------
+
+[Strings]
+ReactOS = "ReactOS Team"
+AUDIOClassName = "Audio & Videocontroller"
+
+
+[Strings.0407]
+AUDIOClassName = "Audio-, Video- und Gamecontroller"

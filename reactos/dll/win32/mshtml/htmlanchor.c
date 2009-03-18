@@ -38,7 +38,7 @@ typedef struct {
     const IHTMLAnchorElementVtbl *lpHTMLAnchorElementVtbl;
 } HTMLAnchorElement;
 
-#define HTMLANCHOR(x)  ((IHTMLAnchorElement*)  &(x)->lpHTMLAnchorElementVtbl)
+#define HTMLANCHOR(x)  (&(x)->lpHTMLAnchorElementVtbl)
 
 #define HTMLANCHOR_THIS(iface) DEFINE_THIS(HTMLAnchorElement, HTMLAnchorElement, iface)
 

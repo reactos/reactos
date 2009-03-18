@@ -336,7 +336,7 @@ HRESULT AVIDec_create(IUnknown * pUnkOuter, LPVOID * ppv)
     if (FAILED(hr))
         return hr;
 
-    *ppv = (LPVOID)This;
+    *ppv = This;
 
     return hr;
 }

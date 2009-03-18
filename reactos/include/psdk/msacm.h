@@ -25,6 +25,8 @@
 extern "C" {
 #endif /* defined(__cplusplus) */
 
+#include <pshpack1.h>
+
 #define ACMAPI              WINAPI
 
 /***********************************************************************
@@ -772,6 +774,8 @@ MMRESULT WINAPI acmStreamSize(
 MMRESULT WINAPI acmStreamUnprepareHeader(
   HACMSTREAM has, PACMSTREAMHEADER pash, DWORD fdwUnprepare
 );
+
+#include <poppack.h>
 
 #ifdef __cplusplus
 } /* extern "C" */

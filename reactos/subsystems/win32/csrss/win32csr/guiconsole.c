@@ -627,7 +627,7 @@ GuiConsoleUseDefaults(PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA GuiData, PCSRSS_
       Buffer->MaxX = 80;
       Buffer->MaxY = 25;
       Buffer->CursorInfo.bVisible = TRUE;
-      Buffer->CursorInfo.dwSize = 5;
+      Buffer->CursorInfo.dwSize = CSR_DEFAULT_CURSOR_SIZE;
     }
 }
 

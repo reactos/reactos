@@ -1,6 +1,8 @@
 #ifndef _WIN32K_TEXT_H
 #define _WIN32K_TEXT_H
 
+#include <include/engobjects.h>
+
 #define TAG_FINF        TAG('F', 'I', 'N', 'F')
 //
 // EXSTROBJ flags.

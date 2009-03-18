@@ -254,7 +254,7 @@ fail:
 static HRESULT WINAPI
 PSFacBuf_QueryInterface(LPPSFACTORYBUFFER iface, REFIID iid, LPVOID *ppv) {
     if (IsEqualIID(iid,&IID_IPSFactoryBuffer)||IsEqualIID(iid,&IID_IUnknown)) {
-	*ppv = (LPVOID)iface;
+        *ppv = iface;
 	/* No ref counting, static class */
 	return S_OK;
     }
@@ -410,7 +410,7 @@ TMProxyImpl_QueryInterface(LPRPCPROXYBUFFER iface, REFIID riid, LPVOID *ppv)
 {
     TRACE("()\n");
     if (IsEqualIID(riid,&IID_IUnknown)||IsEqualIID(riid,&IID_IRpcProxyBuffer)) {
-        *ppv = (LPVOID)iface;
+        *ppv = iface;
         IRpcProxyBuffer_AddRef(iface);
         return S_OK;
     }
@@ -606,10 +606,15 @@ serialize_param(
     marshal_state	*buf)
 {
     HRESULT hres = S_OK;
+    VARTYPE vartype;
 
     TRACE("(tdesc.vt %s)\n",debugstr_vt(tdesc->vt));
 
-    switch (tdesc->vt) {
+    vartype = tdesc->vt;
+    if ((vartype & 0xf000) == VT_ARRAY)
+        vartype = VT_SAFEARRAY;
+
+    switch (vartype) {
     case VT_EMPTY: /* nothing. empty variant for instance */
 	return S_OK;
     case VT_I8:
@@ -919,11 +924,16 @@ deserialize_param(
     marshal_state	*buf)
 {
     HRESULT hres = S_OK;
+    VARTYPE vartype;
 
     TRACE("vt %s at %p\n",debugstr_vt(tdesc->vt),arg);
 
+    vartype = tdesc->vt;
+    if ((vartype & 0xf000) == VT_ARRAY)
+        vartype = VT_SAFEARRAY;
+
     while (1) {
-	switch (tdesc->vt) {
+	switch (vartype) {
 	case VT_EMPTY:
 	    if (debugout) TRACE_(olerelay)("<empty>\n");
 	    return S_OK;
@@ -1636,7 +1646,7 @@ static HRESULT WINAPI TMarshalDispatchChannel_QueryInterface(LPRPCCHANNELBUFFER 
     *ppv = NULL;
     if (IsEqualIID(riid,&IID_IRpcChannelBuffer) || IsEqualIID(riid,&IID_IUnknown))
     {
-        *ppv = (LPVOID)iface;
+        *ppv = iface;
         IUnknown_AddRef(iface);
         return S_OK;
     }
@@ -1927,8 +1937,8 @@ PSFacBuf_CreateProxy(
 
     if (hres == S_OK)
     {
-        *ppv		= (LPVOID)proxy;
-        *ppProxy		= (IRpcProxyBuffer *)&(proxy->lpvtbl2);
+        *ppv = proxy;
+        *ppProxy = (IRpcProxyBuffer *)&(proxy->lpvtbl2);
         IUnknown_AddRef((IUnknown *)*ppv);
         return S_OK;
     }
@@ -1952,7 +1962,7 @@ static HRESULT WINAPI
 TMStubImpl_QueryInterface(LPRPCSTUBBUFFER iface, REFIID riid, LPVOID *ppv)
 {
     if (IsEqualIID(riid,&IID_IRpcStubBuffer)||IsEqualIID(riid,&IID_IUnknown)){
-	*ppv = (LPVOID)iface;
+        *ppv = iface;
 	IRpcStubBuffer_AddRef(iface);
 	return S_OK;
     }

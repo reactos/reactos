@@ -126,7 +126,7 @@ static DWORD query_reg_path (HKEY hKey, LPCWSTR lpszValue,
       RegQueryValueExW (hKey, lpszValue, 0, NULL, (LPBYTE)szData, &nBytesToAlloc);
       dwExpDataLen = ExpandEnvironmentStringsW(szData, &cNull, 1);
       dwUnExpDataLen = max(nBytesToAlloc, dwExpDataLen);
-      LocalFree((HLOCAL) szData);
+      LocalFree(szData);
     }
     else
     {
@@ -136,7 +136,7 @@ static DWORD query_reg_path (HKEY hKey, LPCWSTR lpszValue,
       dwExpDataLen = ExpandEnvironmentStringsW(szData, pvData, MAX_PATH );
       if (dwExpDataLen > MAX_PATH) dwRet = ERROR_MORE_DATA;
       dwUnExpDataLen = max(nBytesToAlloc, dwExpDataLen);
-      LocalFree((HLOCAL) szData);
+      LocalFree(szData);
     }
   }
 
@@ -411,7 +411,7 @@ static void UXTHEME_RestoreSystemMetrics(void)
 		&type, (LPBYTE)&ncm, &count) == ERROR_SUCCESS)
 	    {
 		SystemParametersInfoW (SPI_SETNONCLIENTMETRICS, 
-		    count, (LPVOID)&ncm, SPIF_UPDATEINIFILE);
+                    count, &ncm, SPIF_UPDATEINIFILE);
 	    }
 	    
             count = sizeof(iconTitleFont);
@@ -420,7 +420,7 @@ static void UXTHEME_RestoreSystemMetrics(void)
 		&type, (LPBYTE)&iconTitleFont, &count) == ERROR_SUCCESS)
 	    {
 		SystemParametersInfoW (SPI_SETICONTITLELOGFONT, 
-		    count, (LPVOID)&iconTitleFont, SPIF_UPDATEINIFILE);
+                    count, &iconTitleFont, SPIF_UPDATEINIFILE);
 	    }
 	}
       
@@ -453,17 +453,15 @@ static void UXTHEME_SaveSystemMetrics(void)
     
     memset (&ncm, 0, sizeof (ncm));
     ncm.cbSize = sizeof (ncm);
-    SystemParametersInfoW (SPI_GETNONCLIENTMETRICS, 
-	sizeof (ncm), (LPVOID)&ncm, 0);
-    SystemParametersInfoW (SPI_SETNONCLIENTMETRICS, 
-	sizeof (ncm), (LPVOID)&ncm, SPIF_UPDATEINIFILE);
+    SystemParametersInfoW (SPI_GETNONCLIENTMETRICS, sizeof (ncm), &ncm, 0);
+    SystemParametersInfoW (SPI_SETNONCLIENTMETRICS, sizeof (ncm), &ncm,
+        SPIF_UPDATEINIFILE);
 
     memset (&iconTitleFont, 0, sizeof (iconTitleFont));
-    SystemParametersInfoW (SPI_GETICONTITLELOGFONT, 
-	sizeof (iconTitleFont), (LPVOID)&iconTitleFont, 0);
-    SystemParametersInfoW (SPI_SETICONTITLELOGFONT, 
-	sizeof (iconTitleFont), (LPVOID)&iconTitleFont, 
-	SPIF_UPDATEINIFILE | SPIF_SENDCHANGE);
+    SystemParametersInfoW (SPI_GETICONTITLELOGFONT, sizeof (iconTitleFont),
+        &iconTitleFont, 0);
+    SystemParametersInfoW (SPI_SETICONTITLELOGFONT, sizeof (iconTitleFont),
+        &iconTitleFont, SPIF_UPDATEINIFILE | SPIF_SENDCHANGE);
 }
 
 /***********************************************************************

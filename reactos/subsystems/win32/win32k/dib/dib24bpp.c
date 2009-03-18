@@ -263,7 +263,8 @@ DIB_24BPP_BitBlt(PBLTINFO BltInfo)
       }
       else
       {
-         Pattern = BltInfo->Brush->iSolidColor;
+         if (BltInfo->Brush)
+            Pattern = BltInfo->Brush->iSolidColor;
       }
    }
 

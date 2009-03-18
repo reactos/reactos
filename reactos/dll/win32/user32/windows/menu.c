@@ -16,6 +16,8 @@
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
+LRESULT DefWndNCPaint(HWND hWnd, HRGN hRgn, BOOL Active);
+
 /* internal popup menu window messages */
 #define MM_SETMENUHANDLE (WM_USER + 0)
 #define MM_GETMENUHANDLE (WM_USER + 1)
@@ -113,9 +115,6 @@ static BOOL fEndMenu = FALSE;
 static HWND TopPopup;
 
 /* Dimension of the menu bitmaps */
-static WORD ArrowBitmapWidth = 0, ArrowBitmapHeight = 0;
-
-static HBITMAP StdMnArrow = NULL;
 static HBITMAP BmpSysMenu = NULL;
 
 static SIZE MenuCharSize;
@@ -287,20 +286,6 @@ MenuCleanupAllRosMenuItemInfo(PROSMENUITEMINFO ItemInfo)
 static void FASTCALL
 MenuLoadBitmaps(VOID)
 {
-  /* Load menu bitmaps */
-  if (NULL == StdMnArrow)
-    {
-      StdMnArrow = LoadBitmapW(0, MAKEINTRESOURCEW(OBM_MNARROW));
-
-      if (NULL != StdMnArrow)
-        {
-          BITMAP bm;
-          GetObjectW(StdMnArrow, sizeof(BITMAP), &bm);
-          ArrowBitmapWidth = bm.bmWidth;
-          ArrowBitmapHeight = bm.bmHeight;
-        }
-    }
-
   /* Load system buttons bitmaps */
   if (NULL == BmpSysMenu)
     {
@@ -619,18 +604,12 @@ MenuDrawMenuItem(HWND hWnd, PROSMENUINFO MenuInfo, HWND WndOwner, HDC Dc,
       SendMessageW(WndOwner, WM_DRAWITEM, 0, (LPARAM) &dis);
       /* Draw the popup-menu arrow */
       if (0 != (Item->fType & MF_POPUP))
-        {
-          HDC DcMem = CreateCompatibleDC(Dc);
-          HBITMAP OrigBitmap;
-
-          OrigBitmap = SelectObject(DcMem, StdMnArrow);
-          BitBlt(Dc, Rect.right - ArrowBitmapWidth - 1,
-                 ((Rect.top + Rect.bottom) - ArrowBitmapHeight) / 2,
-                 ArrowBitmapWidth, ArrowBitmapHeight,
-                 DcMem, 0, 0, SRCCOPY);
-          SelectObject(DcMem, OrigBitmap);
-          DeleteDC(DcMem);
-        }
+      {
+           RECT rectTemp;
+           CopyRect(&rectTemp, &Rect);
+           rectTemp.left = rectTemp.right - GetSystemMetrics(SM_CXMENUCHECK);
+           DrawFrameControl(Dc, &rectTemp, DFC_MENU, DFCS_MENUARROW);
+      }
       return;
     }
 
@@ -745,18 +724,12 @@ MenuDrawMenuItem(HWND hWnd, PROSMENUINFO MenuInfo, HWND WndOwner, HDC Dc,
         }
         else if (0 != (Item->fState & MF_CHECKED))  /* standard bitmaps */
         {
-           RECT r;
-           HBITMAP bm = CreateBitmap(CheckBitmapWidth, CheckBitmapHeight, 1, 1, NULL);
-           HDC DcMem = CreateCompatibleDC(Dc);
-           SelectObject(DcMem, bm);
-           SetRect( &r, 0, 0, CheckBitmapWidth, CheckBitmapHeight);
-           DrawFrameControl(DcMem, &r, DFC_MENU,
+           RECT rectTemp;
+           CopyRect(&rectTemp, &Rect);
+           rectTemp.right = rectTemp.left + GetSystemMetrics(SM_CXMENUCHECK);
+           DrawFrameControl(Dc, &rectTemp, DFC_MENU,
                             0 != (Item->fType & MFT_RADIOCHECK) ?
                                  DFCS_MENUBULLET : DFCS_MENUCHECK);
-           BitBlt(Dc, Rc.left, (y - r.bottom) / 2, r.right, r.bottom,
-                  DcMem, 0, 0, SRCCOPY );
-           DeleteDC(DcMem);
-           DeleteObject(bm);
            checked = TRUE;
         }
      }
@@ -767,21 +740,15 @@ MenuDrawMenuItem(HWND hWnd, PROSMENUINFO MenuInfo, HWND WndOwner, HDC Dc,
      /* Draw the popup-menu arrow */
      if (0 != (Item->fType & MF_POPUP))
      {
-        HDC DcMem = CreateCompatibleDC(Dc);
-        HBITMAP OrigBitmap;
-
-        OrigBitmap = SelectObject(DcMem, StdMnArrow);
-        BitBlt(Dc, Rect.right - ArrowBitmapWidth - 1,
-              (y - ArrowBitmapHeight) / 2,
-               ArrowBitmapWidth, ArrowBitmapHeight,
-               DcMem, 0, 0, SRCCOPY);
-        SelectObject(DcMem, OrigBitmap);
-        DeleteDC(DcMem);
+           RECT rectTemp;
+           CopyRect(&rectTemp, &Rect);
+           rectTemp.left = rectTemp.right - GetSystemMetrics(SM_CXMENUCHECK);
+           DrawFrameControl(Dc, &rectTemp, DFC_MENU, DFCS_MENUARROW);
      }
      Rect.left += 4;
      if( !(MenuInfo->dwStyle & MNS_NOCHECK))
         Rect.left += CheckBitmapWidth;
-     Rect.right -= ArrowBitmapWidth;
+     Rect.right -= CheckBitmapWidth;
   }
   else if (Item->hbmpItem) /* Draw the bitmap */
   {
@@ -1254,7 +1221,7 @@ MenuCalcItemSize(HDC Dc, PROSMENUITEMINFO ItemInfo, PROSMENUINFO MenuInfo, HWND 
     {
       ItemInfo->Rect.bottom += SEPARATOR_HEIGHT;
       if( !MenuBar)
-            ItemInfo->Rect.right += ArrowBitmapWidth +  MenuCharSize.cx;
+            ItemInfo->Rect.right += CheckBitmapWidth +  MenuCharSize.cx;
       return;
     }
 
@@ -1284,7 +1251,7 @@ MenuCalcItemSize(HDC Dc, PROSMENUITEMINFO ItemInfo, PROSMENUINFO MenuInfo, HWND 
            ItemInfo->Rect.right += 2 * CheckBitmapWidth;
          ItemInfo->Rect.right += 4 + MenuCharSize.cx;
          ItemInfo->XTab = ItemInfo->Rect.right;
-         ItemInfo->Rect.right += ArrowBitmapWidth;
+         ItemInfo->Rect.right += CheckBitmapWidth;
       }
       else /* hbmpItem & MenuBar */
       {
@@ -1305,7 +1272,7 @@ MenuCalcItemSize(HDC Dc, PROSMENUITEMINFO ItemInfo, PROSMENUINFO MenuInfo, HWND 
            ItemInfo->Rect.right += CheckBitmapWidth;
       ItemInfo->Rect.right += 4 + MenuCharSize.cx;
       ItemInfo->XTab = ItemInfo->Rect.right;
-      ItemInfo->Rect.right += ArrowBitmapWidth;
+      ItemInfo->Rect.right += CheckBitmapWidth;
   }
 
   /* it must be a text item - unless it's the system menu */
@@ -4033,7 +4000,23 @@ CreatePopupMenu(VOID)
 BOOL WINAPI
 DrawMenuBar(HWND hWnd)
 {
-  return (BOOL)NtUserCallHwndLock(hWnd, HWNDLOCK_ROUTINE_DRAWMENUBAR);
+//  return (BOOL)NtUserCallHwndLock(hWnd, HWNDLOCK_ROUTINE_DRAWMENUBAR);
+  ROSMENUINFO MenuInfo;
+  HMENU hMenu;
+  hMenu = GetMenu(hWnd);
+  if (!hMenu)
+     return FALSE;
+  MenuGetRosMenuInfo(&MenuInfo, hMenu);
+  MenuInfo.Height = 0; // make sure to recalc size
+  MenuSetRosMenuInfo(&MenuInfo);
+  /* The wine method doesn't work and I suspect it's more effort
+     then hackfix solution 
+  SetWindowPos( hWnd, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE |
+                  SWP_NOZORDER | SWP_FRAMECHANGED );
+  return TRUE;*/
+  // FIXME: hackfix
+  DefWndNCPaint(hWnd,(HRGN)-1,-1);
+  return TRUE;
 }
 
 

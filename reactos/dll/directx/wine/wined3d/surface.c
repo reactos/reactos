@@ -2228,7 +2228,7 @@ static void d3dfmt_p8_upload_palette(IWineD3DSurface *iface, CONVERT_TYPES conve
             glEnable(GL_FRAGMENT_PROGRAM_ARB);
             GL_EXTCALL(glGenProgramsARB(1, &device->paletteConversionShader));
             GL_EXTCALL(glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, device->paletteConversionShader));
-            GL_EXTCALL(glProgramStringARB(GL_FRAGMENT_PROGRAM_ARB, GL_PROGRAM_FORMAT_ASCII_ARB, strlen(fragment_palette_conversion), (const GLbyte *)fragment_palette_conversion));
+            GL_EXTCALL(glProgramStringARB(GL_FRAGMENT_PROGRAM_ARB, GL_PROGRAM_FORMAT_ASCII_ARB, strlen(fragment_palette_conversion), fragment_palette_conversion));
             glDisable(GL_FRAGMENT_PROGRAM_ARB);
         }
 

@@ -15,9 +15,11 @@
 	<file>file.c</file>
 	<file>format.c</file>
 	<file>ftp.c</file>
+	<file>gopher.c</file>
 	<file>http.c</file>
 	<file>internet.c</file>
 	<file>mk.c</file>
+	<file>protocol.c</file>
 	<file>regsvr.c</file>
 	<file>sec_mgr.c</file>
 	<file>session.c</file>

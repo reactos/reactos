@@ -2,11 +2,9 @@
     Kernel-mode COM
 */
 
-#include <ntddk.h>
-#include <portcls.h>
-#include <kcom.h>
-#include <debug.h>
+#include "priv.h"
 
+const GUID IID_IUnknown = {0x00000000, 0x0000, 0x0000, {0x00, 0x00, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x46}};
 
 /* http://msdn2.microsoft.com/en-us/library/ms809781.aspx */
 COMDDKAPI NTSTATUS NTAPI
@@ -24,9 +22,16 @@ KoCreateInstance(
 
     if ( ClsContext != CLSCTX_KERNEL_SERVER )
     {
-        DPRINT("FAILED: ClsContext must be CLSCTX_KERNEL_SERVER\n");
+        DPRINT("KoCreateInstance: ClsContext must be CLSCTX_KERNEL_SERVER\n");
         return STATUS_INVALID_PARAMETER_3;
     }
+
+    if (IsEqualGUIDAligned(InterfaceId, &IID_IUnknown))
+    {
+        DPRINT("KoCreateInstance: InterfaceId cannot be IID_IUnknown\n");
+        return STATUS_INVALID_PARAMETER_4;
+    }
+
 
     /*
         Find the desired interface and create an instance.

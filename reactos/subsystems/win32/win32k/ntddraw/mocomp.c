@@ -2,8 +2,8 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Native DirectDraw implementation
- * FILE:             subsys/win32k/ntddraw/mocomp.c
- * PROGRAMER:        Magnus olsen (magnus@greatlord.com)
+ * FILE:             subsystems/win32/win32k/ntddraw/mocomp.c
+ * PROGRAMER:        Magnus Olsen (magnus@greatlord.com)
  * REVISION HISTORY:
  *       19/1-2006   Magnus Olsen
  */
