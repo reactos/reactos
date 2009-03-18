@@ -1,4 +1,5 @@
 #include <msvctarget.h>
+#undef i386
 
 @ stdcall CcCanIWrite(ptr long long long)
 @ stdcall CcCopyRead(ptr ptr long long ptr ptr)
