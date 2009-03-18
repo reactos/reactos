@@ -63,8 +63,8 @@ buf_close(int sock, struct buf *buf)
 	} while (n == -1 && (errno == EAGAIN || errno == EINTR));
 
 	if (buf->rpos < buf->size)
-		error("short write: wanted %lu got %ld bytes",
-		    (unsigned long)buf->size, (long)buf->rpos);
+		error("short %s write: wanted %lu got %ld bytes",
+		    strerror(errno), (unsigned long)buf->size, (long)buf->rpos);
 
 	free(buf->buf);
 	free(buf);
@@ -89,7 +89,7 @@ buf_read(int sock, void *buf, size_t nbytes)
 	} while (n == -1 && (errno == EINTR || errno == EAGAIN));
 
 	if (n == -1)
-		error("buf_read: %m");
+		error("buf_read: %s", strerror(errno));
 
 	if (r < nbytes)
 		error("short read: wanted %lu got %ld bytes",
@@ -122,7 +122,7 @@ dispatch_imsg(int fd)
 			error("corrupted message received");
 		if (medium_len > 0) {
 			if ((medium = calloc(1, medium_len + 1)) == NULL)
-				error("%m");
+				error("%s", strerror(errno));
 			buf_read(fd, medium, medium_len);
 		} else
 			medium = NULL;
@@ -133,7 +133,7 @@ dispatch_imsg(int fd)
 			error("corrupted message received");
 		if (reason_len > 0) {
 			if ((reason = calloc(1, reason_len + 1)) == NULL)
-				error("%m");
+				error("%s", strerror(errno));
 			buf_read(fd, reason, reason_len);
 		} else
 			reason = NULL;
@@ -156,7 +156,7 @@ dispatch_imsg(int fd)
 			error("corrupted message received");
 		if (filename_len > 0) {
 			if ((filename = calloc(1, filename_len + 1)) == NULL)
-				error("%m");
+				error("%s", strerror(errno));
 			buf_read(fd, filename, filename_len);
 		} else
 			filename = NULL;
@@ -168,7 +168,7 @@ dispatch_imsg(int fd)
 		if (servername_len > 0) {
 			if ((servername =
 			    calloc(1, servername_len + 1)) == NULL)
-				error("%m");
+				error("%s", strerror(errno));
 			buf_read(fd, servername, servername_len);
 		} else
 			servername = NULL;
@@ -179,7 +179,7 @@ dispatch_imsg(int fd)
 			error("corrupted message received");
 		if (prefix_len > 0) {
 			if ((prefix = calloc(1, prefix_len + 1)) == NULL)
-				error("%m");
+				error("%s", strerror(errno));
 			buf_read(fd, prefix, prefix_len);
 		} else
 			prefix = NULL;
@@ -198,7 +198,7 @@ dispatch_imsg(int fd)
 				lease.options[i].data =
 				    calloc(1, optlen + 1);
 				if (lease.options[i].data == NULL)
-				    error("%m");
+				    error("%s", strerror(errno));
 				buf_read(fd, lease.options[i].data, optlen);
 			}
 		}
@@ -223,13 +223,13 @@ dispatch_imsg(int fd)
 		hdr.code = IMSG_SCRIPT_GO_RET;
 		hdr.len = sizeof(struct imsg_hdr) + sizeof(int);
 		if ((buf = buf_open(hdr.len)) == NULL)
-			error("buf_open: %m");
+			error("buf_open: %s", strerror(errno));
 		if (buf_add(buf, &hdr, sizeof(hdr)))
-			error("buf_add: %m");
+			error("buf_add: %s", strerror(errno));
 		if (buf_add(buf, &ret, sizeof(ret)))
-			error("buf_add: %m");
+			error("buf_add: %s", strerror(errno));
 		if (buf_close(fd, buf) == -1)
-			error("buf_close: %m");
+			error("buf_close: %s", strerror(errno));
 		break;
 	default:
 		error("received unknown message, code %d", hdr.code);
