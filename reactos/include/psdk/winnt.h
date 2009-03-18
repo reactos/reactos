@@ -2319,11 +2319,6 @@ typedef struct _KNONVOLATILE_CONTEXT_POINTERS {
     };
 } KNONVOLATILE_CONTEXT_POINTERS, *PKNONVOLATILE_CONTEXT_POINTERS;
 
-#define UNW_FLAG_NHANDLER 0x0 /* No handler. */
-#define UNW_FLAG_EHANDLER 0x1 /* Exception handler should be called */
-#define UNW_FLAG_UHANDLER 0x2 /* Termination handler that should be called when unwinding an exception */
-#define UNW_FLAG_CHAININFO 0x4 /* FunctionEntry member is the contents of a previous function table entry */
-
 #define RUNTIME_FUNCTION_INDIRECT 0x1
 
 typedef struct _RUNTIME_FUNCTION {
