@@ -103,7 +103,7 @@ BOOL ExecuteIf(PARSED_COMMAND *Cmd)
 	else if (Cmd->If.Operator == IF_ERRORLEVEL)
 	{
 		/* IF ERRORLEVEL n: check if last exit code is greater or equal to n */
-		INT n = _tcstol(Cmd->If.RightArg, &param, 10);
+		INT n = _tcstol(Right, &param, 10);
 		if (*param != _T('\0'))
 		{
 			error_syntax(Right);

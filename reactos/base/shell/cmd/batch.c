@@ -91,7 +91,7 @@ LPTSTR FindArg(TCHAR Char, BOOL *IsParam0)
 	if (n < 0 || n > 9)
 		return NULL;
 
-	n += bc->shiftlevel;
+	n = bc->shiftlevel[n];
 	*IsParam0 = (n == 0);
 	pp = bc->params;
 
@@ -207,6 +207,7 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param, PARSED_COMMAND *Cmd
 {
 	BATCH_CONTEXT new;
 	LPFOR_CONTEXT saved_fc;
+	INT i;
 
 	HANDLE hFile;
 	SetLastError(0);
@@ -260,7 +261,8 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param, PARSED_COMMAND *Cmd
 	bc->hBatchFile = hFile;
 	SetFilePointer (bc->hBatchFile, 0, NULL, FILE_BEGIN);
 	bc->bEcho = bEcho; /* Preserve echo across batch calls */
-	bc->shiftlevel = 0;
+	for (i = 0; i < 10; i++)
+		bc->shiftlevel[i] = i;
 	
 	bc->params = BatchParams (firstword, param);
     //

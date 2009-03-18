@@ -14,7 +14,7 @@ typedef struct tagBATCHCONTEXT
 	TCHAR BatchFilePath[MAX_PATH];
 	LPTSTR params;
 	LPTSTR raw_params;   /* Holds the raw params given by the input */
-	INT    shiftlevel;
+	INT    shiftlevel[10];
 	BOOL   bEcho;        /* Preserve echo flag across batch calls */
 	REDIRECTION *RedirList;
 	PARSED_COMMAND *current; 

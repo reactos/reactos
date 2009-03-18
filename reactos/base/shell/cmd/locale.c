@@ -76,7 +76,7 @@ GetTimeString(VOID)
 	static TCHAR szTime[12];
 	SYSTEMTIME t;
 	GetLocalTime(&t);
-	_stprintf(szTime, _T("%02d%c%02d%c%02d%c%02d"),
+	_stprintf(szTime, _T("%2d%c%02d%c%02d%c%02d"),
 		t.wHour, cTimeSeparator, t.wMinute, cTimeSeparator,
 		t.wSecond, cDecimalSeparator, t.wMilliseconds / 10);
 	return szTime;
