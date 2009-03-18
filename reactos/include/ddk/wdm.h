@@ -1864,6 +1864,10 @@ RtlExtendedLargeIntegerDivide(
 #endif
 
 #if defined(_AMD64_)
+
+#define MultiplyHigh __mulh
+#define UnsignedMultiplyHigh __umulh
+
 //DECLSPEC_DEPRECATED_DDK
 static __inline
 LARGE_INTEGER
@@ -1871,13 +1875,13 @@ NTAPI_INLINE
 RtlExtendedMagicDivide(
     IN LARGE_INTEGER Dividend,
     IN LARGE_INTEGER MagicDivisor,
-    IN CCHAR ShiftCount);
+    IN CCHAR ShiftCount)
 {
     LARGE_INTEGER ret;
     ULONG64 ret64;
     BOOLEAN Pos;
     Pos = (Dividend.QuadPart >= 0);
-    ret64 = UnsignedMultiplyHigh(Pos ? Dividend.QuadPart : -Dividend.QuadPart
+    ret64 = UnsignedMultiplyHigh(Pos ? Dividend.QuadPart : -Dividend.QuadPart,
                                  MagicDivisor.QuadPart);
     ret64 >>= ShiftCount;
     ret.QuadPart = Pos ? ret64 : -ret64;
