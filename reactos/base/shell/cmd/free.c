@@ -27,7 +27,7 @@ PrintDiskInfo (LPTSTR szDisk)
 	TCHAR szUsed[40];
 	TCHAR szFree[40];
 	DWORD dwSerial;
-	ULARGE_INTEGER uliSize;
+	ULONGLONG uliSize;
 	DWORD dwSecPerCl;
 	DWORD dwBytPerSec;
 	DWORD dwFreeCl;
@@ -70,14 +70,14 @@ PrintDiskInfo (LPTSTR szDisk)
 		return;
 	}
 
-	uliSize.QuadPart = dwSecPerCl * dwBytPerSec * dwTotCl;
-	ConvertULargeInteger (uliSize, szTotal, 40, TRUE);
+	uliSize = dwSecPerCl * dwBytPerSec * (ULONGLONG)dwTotCl;
+	ConvertULargeInteger(uliSize, szTotal, 40, TRUE);
 
-	uliSize.QuadPart = dwSecPerCl * dwBytPerSec * (dwTotCl - dwFreeCl);
-	ConvertULargeInteger (uliSize, szUsed, 40, TRUE);
+	uliSize = dwSecPerCl * dwBytPerSec * (ULONGLONG)(dwTotCl - dwFreeCl);
+	ConvertULargeInteger(uliSize, szUsed, 40, TRUE);
 
-	uliSize.QuadPart = dwSecPerCl * dwBytPerSec * dwFreeCl;
-	ConvertULargeInteger (uliSize, szFree, 40, TRUE);
+	uliSize = dwSecPerCl * dwBytPerSec * (ULONGLONG)dwFreeCl;
+	ConvertULargeInteger(uliSize, szFree, 40, TRUE);
 
 
 	ConOutResPrintf(STRING_FREE_HELP1, szDrive, szVolume, szSerial, szTotal, szUsed, szFree);

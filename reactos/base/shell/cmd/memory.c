@@ -15,33 +15,16 @@
 
 #ifdef INCLUDE_CMD_MEMORY
 
-
-/*
- * convert
- *
- * insert commas into a number
- */
-static INT
-ConvertDWord (DWORD num, LPTSTR des, INT len, BOOL bSeparator)
-{
-	ULARGE_INTEGER ui;
-
-	ui.u.LowPart = num;
-	ui.u.HighPart = 0;
-	return ConvertULargeInteger(ui, des, len, bSeparator);
-}
-
-
 INT CommandMemory (LPTSTR param)
 {
-	MEMORYSTATUS ms;
+	MEMORYSTATUSEX msex;
 	TCHAR szMemoryLoad[20];
-	TCHAR szTotalPhys[20];
-	TCHAR szAvailPhys[20];
-	TCHAR szTotalPageFile[20];
-	TCHAR szAvailPageFile[20];
-	TCHAR szTotalVirtual[20];
-	TCHAR szAvailVirtual[20];
+	TCHAR szTotalPhys[40];
+	TCHAR szAvailPhys[40];
+	TCHAR szTotalPageFile[40];
+	TCHAR szAvailPageFile[40];
+	TCHAR szTotalVirtual[40];
+	TCHAR szAvailVirtual[40];
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
@@ -49,17 +32,34 @@ INT CommandMemory (LPTSTR param)
 		return 0;
 	}
 
-	ms.dwLength = sizeof(MEMORYSTATUS);
+	BOOL (WINAPI *GlobalMemoryStatusEx)(LPMEMORYSTATUSEX)
+		= GetProcAddress(GetModuleHandle(_T("KERNEL32")), "GlobalMemoryStatusEx");
+	if (GlobalMemoryStatusEx)
+	{
+		msex.dwLength = sizeof(MEMORYSTATUSEX);
+		GlobalMemoryStatusEx(&msex);
+	}
+	else
+	{
+		MEMORYSTATUS ms;
+		ms.dwLength = sizeof(MEMORYSTATUS);
+		GlobalMemoryStatus(&ms);
+		msex.dwMemoryLoad = ms.dwMemoryLoad;
+		msex.ullTotalPhys = ms.dwTotalPhys;
+		msex.ullAvailPhys = ms.dwAvailPhys;
+		msex.ullTotalPageFile = ms.dwTotalPageFile;
+		msex.ullAvailPageFile = ms.dwAvailPageFile;
+		msex.ullTotalVirtual = ms.dwTotalVirtual;
+		msex.ullAvailVirtual = ms.dwAvailVirtual;
+	}
 
-	GlobalMemoryStatus (&ms);
-
-	ConvertDWord (ms.dwMemoryLoad, szMemoryLoad, 20, FALSE);
-	ConvertDWord (ms.dwTotalPhys, szTotalPhys, 20, TRUE);
-	ConvertDWord (ms.dwAvailPhys, szAvailPhys, 20, TRUE);
-	ConvertDWord (ms.dwTotalPageFile, szTotalPageFile, 20, TRUE);
-	ConvertDWord (ms.dwAvailPageFile, szAvailPageFile, 20, TRUE);
-	ConvertDWord (ms.dwTotalVirtual, szTotalVirtual, 20, TRUE);
-	ConvertDWord (ms.dwAvailVirtual, szAvailVirtual, 20, TRUE);
+	ConvertULargeInteger(msex.dwMemoryLoad, szMemoryLoad, 20, FALSE);
+	ConvertULargeInteger(msex.ullTotalPhys, szTotalPhys, 40, TRUE);
+	ConvertULargeInteger(msex.ullAvailPhys, szAvailPhys, 40, TRUE);
+	ConvertULargeInteger(msex.ullTotalPageFile, szTotalPageFile, 40, TRUE);
+	ConvertULargeInteger(msex.ullAvailPageFile, szAvailPageFile, 40, TRUE);
+	ConvertULargeInteger(msex.ullTotalVirtual, szTotalVirtual, 40, TRUE);
+	ConvertULargeInteger(msex.ullAvailVirtual, szAvailVirtual, 40, TRUE);
 
 	ConOutResPrintf(STRING_MEMMORY_HELP2,
 	                szMemoryLoad, szTotalPhys, szAvailPhys, szTotalPageFile,
