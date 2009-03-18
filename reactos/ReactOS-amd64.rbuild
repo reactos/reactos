@@ -11,9 +11,11 @@
 	<define name="_AMD64_" />
 	<define name="_M_AXP64" />
 	<define name="__x86_64__" />
-	<define name="_X86AMD64_" />
+	<!-- define name="_X86AMD64_" / FIXME: what is this used for? -->
 	<define name="_WIN64" />
 	<define name="TARGET_amd64" host="true" />
+
+	<define name="USE_COMPILER_EXCEPTIONS" />
 
 	<property name="PLATFORM" value="PC"/>
 	<property name="usewrc" value="false"/>
