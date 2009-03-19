@@ -57,12 +57,12 @@
  * the top. Return TRUE if the scrollbar is vertical, FALSE if horizontal.
  */
 BOOL FASTCALL
-IntGetScrollBarRect (PWINDOW_OBJECT Window, INT nBar, PRECT lprect)
+IntGetScrollBarRect (PWINDOW_OBJECT Window, INT nBar, RECTL *lprect)
 {
    BOOL vertical;
    PWINDOW Wnd = Window->Wnd;
-   RECT ClientRect = Window->Wnd->ClientRect;
-   RECT WindowRect = Window->Wnd->WindowRect;
+   RECTL ClientRect = Window->Wnd->ClientRect;
+   RECTL WindowRect = Window->Wnd->WindowRect;
 
    switch (nBar)
    {
@@ -107,7 +107,7 @@ IntCalculateThumb(PWINDOW_OBJECT Window, LONG idObject, PSCROLLBARINFO psbi, LPS
 {
    PWINDOW Wnd = Window->Wnd;
    INT Thumb, ThumbBox, ThumbPos, cxy, mx;
-   RECT ClientRect;
+   RECTL ClientRect;
 
    switch(idObject)
    {
@@ -120,7 +120,7 @@ IntCalculateThumb(PWINDOW_OBJECT Window, LONG idObject, PSCROLLBARINFO psbi, LPS
          cxy = psbi->rcScrollBar.bottom - psbi->rcScrollBar.top;
          break;
       case SB_CTL:
-         IntGetClientRect (Window, &ClientRect);
+         IntGetClientRect(Window, &ClientRect);
          if(Wnd->Style & SBS_VERT)
          {
             Thumb = UserGetSystemMetrics(SM_CYVSCROLL);
@@ -391,7 +391,7 @@ co_IntSetScrollInfo(PWINDOW_OBJECT Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bR
 
    if (bRedraw)
    {
-      RECT UpdateRect = psbi->rcScrollBar;
+      RECTL UpdateRect = psbi->rcScrollBar;
       UpdateRect.left -= Window->Wnd->ClientRect.left - Window->Wnd->WindowRect.left;
       UpdateRect.right -= Window->Wnd->ClientRect.left - Window->Wnd->WindowRect.left;
       UpdateRect.top -= Window->Wnd->ClientRect.top - Window->Wnd->WindowRect.top;

@@ -2025,7 +2025,7 @@ PATH_add_outline(PDC dc, INT x, INT y, TTPOLYGONHEADER *header, DWORD size)
  */
 BOOL
 FASTCALL 
-PATH_ExtTextOut(PDC dc, INT x, INT y, UINT flags, const RECT *lprc,
+PATH_ExtTextOut(PDC dc, INT x, INT y, UINT flags, const RECTL *lprc,
                      LPCWSTR str, UINT count, const INT *dx)
 {
     unsigned int idx;

@@ -439,9 +439,9 @@ IntValidateDesktopHandle(
 }
 
 VOID FASTCALL
-IntGetDesktopWorkArea(PDESKTOP Desktop, PRECT Rect)
+IntGetDesktopWorkArea(PDESKTOP Desktop, RECTL *Rect)
 {
-   PRECT Ret;
+   RECTL *Ret;
 
    ASSERT(Desktop);
 
@@ -1358,7 +1358,7 @@ CLEANUP:
 BOOL APIENTRY
 NtUserPaintDesktop(HDC hDC)
 {
-   RECT Rect;
+   RECTL Rect;
    HBRUSH DesktopBrush, PreviousBrush;
    HWND hWndDesktop;
    BOOL doPatBlt = TRUE;
@@ -1513,7 +1513,7 @@ NtUserPaintDesktop(HDC hDC)
    if (g_PaintDesktopVersion)
    {
       static WCHAR s_wszVersion[256] = {0};
-      RECT rect;
+      RECTL rect;
 
       if (*s_wszVersion)
       {

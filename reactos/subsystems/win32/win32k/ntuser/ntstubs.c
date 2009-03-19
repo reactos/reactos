@@ -1092,7 +1092,7 @@ BOOL
 APIENTRY
 NtUserValidateRect(
     HWND hWnd,
-    CONST RECT *lpRect)
+    const RECT *lpRect)
 {
     UNIMPLEMENTED;
     return 0;

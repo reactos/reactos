@@ -27,6 +27,13 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 #define STARTF_USEPOSITION 4
 #include <stdarg.h>
 #include <windef.h>
+
+/* Avoid type casting, by defining RECT to RECTL */
+#define RECT RECTL
+#define PRECT PRECTL
+#define LPRECT LPRECTL
+#define LPCRECT LPCRECTL
+
 #include <winerror.h>
 #include <wingdi.h>
 #include <winddi.h>

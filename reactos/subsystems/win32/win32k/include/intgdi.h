@@ -155,26 +155,6 @@ IntGdiCombineTransform(LPXFORM XFormResult,
                        LPXFORM xform1,
                        LPXFORM xform2);
 
-/* RECT functions */
-
-VOID FASTCALL
-IntGdiSetRect(PRECT Rect, INT left, INT top, INT right, INT bottom);
-
-VOID FASTCALL
-IntGdiSetEmptyRect(PRECT Rect);
-
-BOOL FASTCALL
-IntGdiIsEmptyRect(const RECT* Rect);
-
-VOID FASTCALL
-IntGdiOffsetRect(LPRECT Rect, INT x, INT y);
-
-BOOL FASTCALL
-IntGdiUnionRect(PRECT Dest, const RECT* Src1, const RECT* Src2);
-
-BOOL FASTCALL
-IntGdiIntersectRect(PRECT Dest, const RECT* Src1, const RECT* Src2);
-
 /* Stock objects */
 
 BOOL FASTCALL

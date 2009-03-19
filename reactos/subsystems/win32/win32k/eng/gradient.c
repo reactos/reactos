@@ -43,11 +43,6 @@ const LONG LINC[2] = {-1, 1};
 #define VCMPCLRS(a,b,c) \
   !(!VCMPCLR(a,b,c,Red) || !VCMPCLR(a,b,c,Green) || !VCMPCLR(a,b,c,Blue))
 
-#define MOVERECT(r,x,y) \
-  r.left += x; r.right += x; \
-  r.top += y; r.bottom += y
-
-
 /* Horizontal/Vertical gradients */
 #define HVINITCOL(Col, id) \
   c[id] = v1->Col >> 8; \
@@ -94,7 +89,7 @@ IntEngGradientFillRect(
   rcGradient.top = min(v1->y, v2->y);
   rcGradient.bottom = max(v1->y, v2->y);
   rcSG = rcGradient;
-  MOVERECT(rcSG, pptlDitherOrg->x, pptlDitherOrg->y);
+  RECTL_vOffsetRect(&rcSG, pptlDitherOrg->x, pptlDitherOrg->y);
 
   if(Horizontal)
   {
@@ -115,7 +110,7 @@ IntEngGradientFillRect(
     CLIPOBJ_cEnumStart(pco, FALSE, CT_RECTANGLES, CD_RIGHTDOWN, 0);
     do
     {
-      RECT FillRect;
+      RECTL FillRect;
       ULONG Color;
 
       if(Horizontal)
@@ -123,7 +118,7 @@ IntEngGradientFillRect(
         EnumMore = CLIPOBJ_bEnum(pco, (ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
         for (i = 0; i < RectEnum.c && RectEnum.arcl[i].top <= rcSG.bottom; i++)
         {
-          if(IntGdiIntersectRect(&FillRect, (PRECT)&RectEnum.arcl[i], (PRECT)&rcSG))
+          if(RECTL_bIntersectRect(&FillRect, &RectEnum.arcl[i], &rcSG))
           {
             HVINITCOL(Red, 0);
             HVINITCOL(Green, 1);
@@ -151,7 +146,7 @@ IntEngGradientFillRect(
       EnumMore = CLIPOBJ_bEnum(pco, (ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
       for (i = 0; i < RectEnum.c && RectEnum.arcl[i].top <= rcSG.bottom; i++)
       {
-        if(IntGdiIntersectRect(&FillRect, (PRECT)&RectEnum.arcl[i], (PRECT)&rcSG))
+        if(RECTL_bIntersectRect(&FillRect, &RectEnum.arcl[i], &rcSG))
         {
           HVINITCOL(Red, 0);
           HVINITCOL(Green, 1);
@@ -181,13 +176,13 @@ IntEngGradientFillRect(
   CLIPOBJ_cEnumStart(pco, FALSE, CT_RECTANGLES, CD_RIGHTDOWN, 0);
   do
   {
-    RECT FillRect;
+    RECTL FillRect;
     ULONG Color = XLATEOBJ_iXlate(pxlo, RGB(v1->Red, v1->Green, v1->Blue));
 
     EnumMore = CLIPOBJ_bEnum(pco, (ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
     for (i = 0; i < RectEnum.c && RectEnum.arcl[i].top <= rcSG.bottom; i++)
     {
-      if(IntGdiIntersectRect(&FillRect, (PRECT)&RectEnum.arcl[i], (PRECT)&rcSG))
+      if(RECTL_bIntersectRect(&FillRect, &RectEnum.arcl[i], &rcSG))
       {
         for(; FillRect.top < FillRect.bottom; FillRect.top++)
         {
@@ -369,7 +364,7 @@ IntEngGradientFillTriangle(
   //    EnumMore = CLIPOBJ_bEnum(pco, (ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
   //    for (i = 0; i < RectEnum.c && RectEnum.arcl[i].top <= prclExtents->bottom; i++)
   //    {
-  //      if(IntGdiIntersectRect((PRECT)&FillRect, (PRECT)&RectEnum.arcl[i], (PRECT)prclExtents))
+  //      if(RECTL_bIntersectRect(&FillRect, &RectEnum.arcl[i], prclExtents))
   //      {
   //        BOOL InY;
 
@@ -417,7 +412,7 @@ IntEngGradientFillTriangle(
   //  EnumMore = CLIPOBJ_bEnum(pco, (ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
   //  for (i = 0; i < RectEnum.c && RectEnum.arcl[i].top <= prclExtents->bottom; i++)
   //  {
-  //    if(IntGdiIntersectRect((PRECT)&FillRect, (PRECT)&RectEnum.arcl[i], (PRECT)prclExtents))
+  //    if(RECTL_bIntersectRect(&FillRect, &RectEnum.arcl[i], prclExtents))
   //    {
   //      S_INITLINE(v1, v3, 0);
   //      S_INITLINE(v1, v2, 1);

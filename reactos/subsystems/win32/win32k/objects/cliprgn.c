@@ -43,8 +43,8 @@ CLIPPING_UpdateGCRegion(DC* Dc)
 
      Dc->CombinedClip = IntEngCreateClipRegion(
         CombinedRegion->rdh.nCount,
-        (PRECTL)CombinedRegion->Buffer,
-        (PRECTL)&CombinedRegion->rdh.rcBound);
+        CombinedRegion->Buffer,
+        &CombinedRegion->rdh.rcBound);
 
      REGION_UnlockRgn(CombinedRegion);
    }
@@ -124,7 +124,7 @@ int FASTCALL GdiExtSelectClipRgn(PDC dc,
     if (!dc->w.hClipRgn)
     {
       PROSRGNDATA Rgn;
-      RECT rect;
+      RECTL rect;
       if((Rgn = REGION_LockRgn(dc->w.hVisRgn)))
       {
         REGION_GetRgnBox(Rgn, &rect);
@@ -169,7 +169,7 @@ int APIENTRY NtGdiExtSelectClipRgn(HDC  hDC,
 }
 
 INT FASTCALL
-GdiGetClipBox(HDC hDC, LPRECT rc)
+GdiGetClipBox(HDC hDC, PRECTL rc)
 {
    PROSRGNDATA Rgn;
    INT retval;
@@ -194,11 +194,11 @@ GdiGetClipBox(HDC hDC, LPRECT rc)
 }
 
 INT APIENTRY
-NtGdiGetAppClipBox(HDC hDC, LPRECT rc)
+NtGdiGetAppClipBox(HDC hDC, PRECTL rc)
 {
   INT Ret;
   NTSTATUS Status = STATUS_SUCCESS;
-  RECT Saferect;
+  RECTL Saferect;
 
   Ret = GdiGetClipBox(hDC, &Saferect);
 
@@ -231,7 +231,7 @@ int APIENTRY NtGdiExcludeClipRect(HDC  hDC,
                          int  BottomRect)
 {
    INT Result;
-   RECT Rect;
+   RECTL Rect;
    HRGN NewRgn;
    PDC dc = DC_LockDc(hDC);
 
@@ -282,7 +282,7 @@ int APIENTRY NtGdiIntersectClipRect(HDC  hDC,
                            int  BottomRect)
 {
    INT Result;
-   RECT Rect;
+   RECTL Rect;
    HRGN NewRgn;
    PDC dc = DC_LockDc(hDC);
 
@@ -374,13 +374,13 @@ BOOL APIENTRY NtGdiPtVisible(HDC  hDC,
 }
 
 BOOL APIENTRY NtGdiRectVisible(HDC  hDC,
-                      CONST PRECT  UnsafeRect)
+                      LPRECT UnsafeRect)
 {
    NTSTATUS Status = STATUS_SUCCESS;
    PROSRGNDATA Rgn;
    PDC dc = DC_LockDc(hDC);
    BOOL Result = FALSE;
-   RECT Rect;
+   RECTL Rect;
 
    if (!dc)
    {
@@ -545,8 +545,8 @@ NEW_CLIPPING_UpdateGCRegion(PDC pDC)
 //  if (Dc->CombinedClip != NULL) IntEngDeleteClipRegion(Dc->CombinedClip);
   
   co = IntEngCreateClipRegion( ((PROSRGNDATA)pDC->prgnRao)->rdh.nCount,
-                           (PRECTL)((PROSRGNDATA)pDC->prgnRao)->Buffer,
-                                 (PRECTL)&pDC->erclClip);
+                           ((PROSRGNDATA)pDC->prgnRao)->Buffer,
+                                 &pDC->erclClip);
 
   return REGION_Complexity(pDC->prgnRao);
 }

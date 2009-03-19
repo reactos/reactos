@@ -6,7 +6,7 @@
 #include <include/window.h>
 
 BOOL FASTCALL
-co_UserRedrawWindow(PWINDOW_OBJECT Wnd, const RECT* UpdateRect, HRGN UpdateRgn, ULONG Flags);
+co_UserRedrawWindow(PWINDOW_OBJECT Wnd, const RECTL* UpdateRect, HRGN UpdateRgn, ULONG Flags);
 VOID FASTCALL
 IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags);
 BOOL FASTCALL

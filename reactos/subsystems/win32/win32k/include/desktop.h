@@ -17,7 +17,7 @@ typedef struct _DESKTOP
     /* Pointer to the active queue. */
     PVOID ActiveMessageQueue;
     /* Rectangle of the work area */
-    RECT WorkArea;
+    RECTL WorkArea;
     /* Handle of the desktop window. */
     HANDLE DesktopWindow;
     /* Thread blocking input */
@@ -65,7 +65,7 @@ VOID APIENTRY
 IntDesktopObjectDelete(PWIN32_DELETEMETHOD_PARAMETERS Parameters);
 
 VOID FASTCALL
-IntGetDesktopWorkArea(PDESKTOP Desktop, PRECT Rect);
+IntGetDesktopWorkArea(PDESKTOP Desktop, RECTL *Rect);
 
 LRESULT CALLBACK
 IntDesktopWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);

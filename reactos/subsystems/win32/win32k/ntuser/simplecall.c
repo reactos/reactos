@@ -453,7 +453,7 @@ NtUserCallTwoParam(
       case TWOPARAM_ROUTINE_GETWINDOWRGNBOX:
          {
             DWORD Ret;
-            RECT rcRect;
+            RECTL rcRect;
             Window = UserGetWindowObject((HWND)Param1);
             if (!Window) RETURN(ERROR);
 

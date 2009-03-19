@@ -1265,14 +1265,14 @@ co_IntExitTracking(PWINDOW_OBJECT Window, PMENU_OBJECT Menu, BOOL Popup,
 
 INT FASTCALL
 IntTrackMenu(PMENU_OBJECT Menu, PWINDOW_OBJECT Window, INT x, INT y,
-             RECT lprect)
+             RECTL lprect)
 {
    return 0;
 }
 
 BOOL FASTCALL
 co_IntTrackPopupMenu(PMENU_OBJECT Menu, PWINDOW_OBJECT Window,
-                     UINT Flags, POINT *Pos, UINT MenuPos, RECT *ExcludeRect)
+                     UINT Flags, POINT *Pos, UINT MenuPos, RECTL *ExcludeRect)
 {
    co_IntInitTracking(Window, Menu, TRUE, Flags);
 
@@ -1281,7 +1281,7 @@ co_IntTrackPopupMenu(PMENU_OBJECT Menu, PWINDOW_OBJECT Window,
 }
 
 BOOL FASTCALL
-IntSetMenuItemRect(PMENU_OBJECT Menu, UINT Item, BOOL fByPos, RECT *rcRect)
+IntSetMenuItemRect(PMENU_OBJECT Menu, UINT Item, BOOL fByPos, RECTL *rcRect)
 {
    PMENU_ITEM mi;
    if(IntGetMenuItemByFlag(Menu, Item, (fByPos ? MF_BYPOSITION : MF_BYCOMMAND),
@@ -1327,7 +1327,7 @@ IntCleanupMenus(struct _EPROCESS *Process, PW32PROCESS Win32Process)
 }
 
 VOID APIENTRY
-co_InflateRect(LPRECT rect, int dx, int dy)
+co_InflateRect(RECTL *rect, int dx, int dy)
 {
     rect->left -= dx;
     rect->top -= dy;
@@ -1876,7 +1876,7 @@ NtUserGetMenuBarInfo(
    PWINDOW_OBJECT WindowObject;
    HMENU hMenu;
    POINT Offset;
-   RECT Rect;
+   RECTL Rect;
    MENUBARINFO kmbi;
    DECLARE_RETURN(BOOL);
 
@@ -2098,12 +2098,12 @@ NtUserGetMenuItemRect(
    HWND hWnd,
    HMENU hMenu,
    UINT uItem,
-   LPRECT lprcItem)
+   PRECTL lprcItem)
 {
    ROSMENUINFO mi;
    PWINDOW_OBJECT ReferenceWnd;
    LONG XMove, YMove;
-   RECT Rect;
+   RECTL Rect;
    NTSTATUS Status;
    PMENU_OBJECT Menu;
    PMENU_ITEM MenuItem;

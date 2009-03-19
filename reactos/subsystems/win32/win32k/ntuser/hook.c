@@ -734,7 +734,7 @@ UserCallNextHookEx(
 
             case HCBT_MOVESIZE:
             {
-               RECT rt;
+               RECTL rt;
                DPRINT1("HOOK HCBT_MOVESIZE\n");
                if (lParam)
                {

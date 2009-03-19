@@ -840,13 +840,13 @@ CLEANUP:
 BOOL
 APIENTRY
 NtUserClipCursor(
-   RECT *UnsafeRect)
+   RECTL *UnsafeRect)
 {
    /* FIXME - check if process has WINSTA_WRITEATTRIBUTES */
 
    PWINSTATION_OBJECT WinSta;
    PSYSTEM_CURSORINFO CurInfo;
-   RECT Rect;
+   RECTL Rect;
    PWINDOW_OBJECT DesktopWindow = NULL;
    POINT MousePos = {0};
    DECLARE_RETURN(BOOL);
@@ -1001,12 +1001,12 @@ CLEANUP:
 BOOL
 APIENTRY
 NtUserGetClipCursor(
-   RECT *lpRect)
+   RECTL *lpRect)
 {
    /* FIXME - check if process has WINSTA_READATTRIBUTES */
    PSYSTEM_CURSORINFO CurInfo;
    PWINSTATION_OBJECT WinSta;
-   RECT Rect;
+   RECTL Rect;
    NTSTATUS Status;
    DECLARE_RETURN(BOOL);
 
@@ -1038,7 +1038,7 @@ NtUserGetClipCursor(
       Rect.bottom = UserGetSystemMetrics(SM_CYSCREEN);
    }
 
-   Status = MmCopyToCaller((PRECT)lpRect, &Rect, sizeof(RECT));
+   Status = MmCopyToCaller(lpRect, &Rect, sizeof(RECT));
    if(!NT_SUCCESS(Status))
    {
       ObDereferenceObject(WinSta);
@@ -1491,7 +1491,7 @@ UserDrawIconEx(
 
    if (DoFlickerFree || bAlpha)
    {
-      RECT r;
+      RECTL r;
       BITMAP bm;
       SURFACE *psurfOff = NULL;
 

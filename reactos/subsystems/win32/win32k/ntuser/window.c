@@ -739,7 +739,7 @@ co_DestroyThreadWindows(struct _ETHREAD *Thread)
  * \note Does not check the validity of the parameters
 */
 VOID FASTCALL
-IntGetClientRect(PWINDOW_OBJECT Window, PRECT Rect)
+IntGetClientRect(PWINDOW_OBJECT Window, RECTL *Rect)
 {
    ASSERT( Window );
    ASSERT( Rect );
@@ -1484,14 +1484,14 @@ NtUserChildWindowFromPointEx(HWND hwndParent,
  * calculates the default position of a window
  */
 BOOL FASTCALL
-IntCalcDefPosSize(PWINDOW_OBJECT Parent, PWINDOW_OBJECT Window, RECT *rc, BOOL IncPos)
+IntCalcDefPosSize(PWINDOW_OBJECT Parent, PWINDOW_OBJECT Window, RECTL *rc, BOOL IncPos)
 {
    SIZE Sz;
    POINT Pos = {0, 0};
 
    if(Parent != NULL)
    {
-      IntGdiIntersectRect(rc, rc, &Parent->Wnd->ClientRect);
+      RECTL_bIntersectRect(rc, rc, &Parent->Wnd->ClientRect);
 
       if(IncPos)
       {
@@ -1899,7 +1899,7 @@ AllocErr:
    /* default positioning for overlapped windows */
    if(!(Wnd->Style & (WS_POPUP | WS_CHILD)))
    {
-      RECT rc, WorkArea;
+      RECTL rc, WorkArea;
       PRTL_USER_PROCESS_PARAMETERS ProcessParams;
       BOOL CalculatedDefPosSize = FALSE;
 
@@ -1997,7 +1997,7 @@ AllocErr:
    Wnd->WindowRect.bottom = Pos.y + Size.cy;
    if (0 != (Wnd->Style & WS_CHILD) && ParentWindow)
    {
-      IntGdiOffsetRect(&(Wnd->WindowRect), ParentWindow->Wnd->ClientRect.left,
+      RECTL_vOffsetRect(&(Wnd->WindowRect), ParentWindow->Wnd->ClientRect.left,
                        ParentWindow->Wnd->ClientRect.top);
    }
    Wnd->ClientRect = Wnd->WindowRect;
@@ -2032,7 +2032,7 @@ AllocErr:
    Wnd->WindowRect.bottom = Pos.y + Size.cy;
    if (0 != (Wnd->Style & WS_CHILD) && ParentWindow)
    {
-      IntGdiOffsetRect(&(Wnd->WindowRect), ParentWindow->Wnd->ClientRect.left,
+      RECTL_vOffsetRect(&(Wnd->WindowRect), ParentWindow->Wnd->ClientRect.left,
                        ParentWindow->Wnd->ClientRect.top);
    }
    Wnd->ClientRect = Wnd->WindowRect;
@@ -2067,7 +2067,7 @@ AllocErr:
                                       &Window->Wnd->WindowRect,
                                       &Window->Wnd->ClientRect);
 
-   IntGdiOffsetRect(&Window->Wnd->WindowRect,
+   RECTL_vOffsetRect(&Window->Wnd->WindowRect,
                     MaxPos.x - Window->Wnd->WindowRect.left,
                     MaxPos.y - Window->Wnd->WindowRect.top);
 
@@ -2172,7 +2172,7 @@ AllocErr:
    /* Show or maybe minimize or maximize the window. */
    if (Wnd->Style & (WS_MINIMIZE | WS_MAXIMIZE))
    {
-      RECT NewPos;
+      RECTL NewPos;
       UINT16 SwFlag;
 
       SwFlag = (Wnd->Style & WS_MINIMIZE) ? SW_MINIMIZE :
@@ -4484,7 +4484,7 @@ IntGetWindowRgn(PWINDOW_OBJECT Window, HRGN hRgn)
 }
 
 INT FASTCALL
-IntGetWindowRgnBox(PWINDOW_OBJECT Window, RECT *Rect)
+IntGetWindowRgnBox(PWINDOW_OBJECT Window, RECTL *Rect)
 {
    INT Ret;
    HRGN VisRgn;

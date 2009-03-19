@@ -3105,7 +3105,7 @@ GreExtTextOutW(
     IN INT XStart,
     IN INT YStart,
     IN UINT fuOptions,
-    IN OPTIONAL LPRECT lprc,
+    IN OPTIONAL PRECTL lprc,
     IN LPWSTR String,
     IN INT Count,
     IN OPTIONAL LPINT Dx,
@@ -3188,7 +3188,7 @@ GreExtTextOutW(
                               XStart,
                               YStart,
                               fuOptions,
-                              (const RECT *)lprc,
+                              (const RECTL *)lprc,
                               String,
                               Count,
                               (const INT *)Dx)) goto fail;
@@ -3694,7 +3694,7 @@ NtGdiExtTextOutW(
 {
     BOOL Result = FALSE;
     NTSTATUS Status = STATUS_SUCCESS;
-    RECT SafeRect;
+    RECTL SafeRect;
     BYTE LocalBuffer[STACK_TEXT_BUFFER_SIZE];
     PVOID Buffer = LocalBuffer;
     LPWSTR SafeString = NULL;

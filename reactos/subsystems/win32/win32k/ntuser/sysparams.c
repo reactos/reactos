@@ -506,7 +506,7 @@ IntSystemParametersInfo(
          }
       case SPI_SETWORKAREA:
          {
-            RECT *rc;
+            RECTL *rc;
             PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
             PDESKTOP Desktop = pti->Desktop;
 
@@ -517,7 +517,7 @@ IntSystemParametersInfo(
             }
 
             ASSERT(pvParam);
-            rc = (RECT*)pvParam;
+            rc = pvParam;
             Desktop->WorkArea = *rc;
             bChanged = TRUE;
 
@@ -535,7 +535,7 @@ IntSystemParametersInfo(
             }
 
             ASSERT(pvParam);
-            IntGetDesktopWorkArea(Desktop, (PRECT)pvParam);
+            IntGetDesktopWorkArea(Desktop, pvParam);
 
             break;
          }

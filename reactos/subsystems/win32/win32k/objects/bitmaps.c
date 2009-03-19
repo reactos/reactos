@@ -23,14 +23,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#define IN_RECT(r,x,y) \
-( \
- (x) >= (r).left && \
- (y) >= (r).top && \
- (x) < (r).right && \
- (y) < (r).bottom \
-)
-
 HBITMAP APIENTRY
 IntGdiCreateBitmap(
     INT Width,
@@ -366,7 +358,7 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
 
     XPos += dc->ptlDCOrig.x;
     YPos += dc->ptlDCOrig.y;
-    if (IN_RECT(dc->CombinedClip->rclBounds,XPos,YPos))
+    if (RECTL_bPointInRect(&dc->CombinedClip->rclBounds, XPos, YPos))
     {
         bInRect = TRUE;
         psurf = SURFACE_LockSurface(dc->w.hBitmap);
