@@ -132,11 +132,7 @@ NtGdiCreateCompatibleDC(HDC hDC)
   NewDC->DcLevel.hpal    = OrigDC->DcLevel.hpal;
 
   nDc_Attr->lTextAlign      = oDc_Attr->lTextAlign;
-  nDc_Attr->ulForegroundClr = oDc_Attr->ulForegroundClr;
-  nDc_Attr->ulBackgroundClr = oDc_Attr->ulBackgroundClr;
   nDc_Attr->lBkMode         = oDc_Attr->lBkMode;
-  nDc_Attr->crForegroundClr = oDc_Attr->crForegroundClr;
-  nDc_Attr->crBackgroundClr = oDc_Attr->crBackgroundClr;
   nDc_Attr->jBkMode         = oDc_Attr->jBkMode;
   nDc_Attr->jROP2           = oDc_Attr->jROP2;
   nDc_Attr->dwLayout        = oDc_Attr->dwLayout;
