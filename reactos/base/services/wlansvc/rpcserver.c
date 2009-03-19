@@ -8,6 +8,8 @@
 
 /* INCLUDES ****************************************************************/
 #include <windows.h>
+#include <iphlpapi.h>
+
 #include "wlansvc_s.h"
 
 #define NDEBUG
@@ -35,8 +37,68 @@ DWORD _RpcEnumInterfaces(
     WLANSVC_RPC_HANDLE hClientHandle,
     PWLAN_INTERFACE_INFO_LIST *ppInterfaceList)
 {
+#if GET_IF_ENTRY2_IMPLEMENTED
+    DWORD dwNumInterfaces;
+    DWORD dwResult, dwSize;
+    DWORD dwIndex;
+    MIB_IF_ROW2 IfRow;
+    PWLAN_INTERFACE_INFO_LIST InterfaceList;
+
+    if (!hClientHandle || !ppInterfaceList)
+        return ERROR_INVALID_PARAMETER;
+
+    dwResult = GetNumberOfInterfaces(&dwNumInterfaces);
+    dwSize = sizeof(WLAN_INTERFACE_INFO_LIST);
+    if (dwResult != NO_ERROR)
+    {
+        /* set num interfaces to zero when an error occurs */
+        dwNumInterfaces = 0;
+    }
+    else
+    {
+        if (dwNumInterfaces > 1)
+        {
+            /* add extra size for interface */
+            dwSize += (dwNumInterfaces-1) * sizeof(WLAN_INTERFACE_INFO);
+        }
+    }
+
+    /* allocate interface list */
+    InterfaceList = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwSize);
+    if (!InterfaceList)
+    {
+        return ERROR_NOT_ENOUGH_MEMORY;
+    }
+
+    *ppInterfaceList = InterfaceList;
+    if (!dwNumInterfaces)
+    {
+        return ERROR_SUCCESS;
+    }
+
+    for(dwIndex = 0; dwIndex < dwNumInterfaces; dwIndex++)
+    {
+        ZeroMemory(&IfRow, sizeof(MIB_IF_ROW2));
+        IfRow.InterfaceIndex = dwIndex;
+
+        dwResult = GetIfEntry2(&IfRow);
+        if (dwResult == NO_ERROR)
+        {
+            if (IfRow.Type == IF_TYPE_IEEE80211 && IfRow.InterfaceAndOperStatusFlags.HardwareInterface)
+            {
+                RtlMoveMemory(&InterfaceList->InterfaceInfo[InterfaceList->dwNumberOfItems].InterfaceGuid, &IfRow.InterfaceGuid, sizeof(GUID));
+                wcscpy(InterfaceList->InterfaceInfo[InterfaceList->dwNumberOfItems].strInterfaceDescription, IfRow.Description);
+                //FIXME set state
+                InterfaceList->dwNumberOfItems++;
+            }
+        }
+    }
+
+    return ERROR_SUCCESS;
+#else
     UNIMPLEMENTED;
     return ERROR_CALL_NOT_IMPLEMENTED;
+#endif
 }
 
 DWORD _RpcSetAutoConfigParameter(
