@@ -525,14 +525,19 @@ NdisMCompleteBufferPhysicalMapping(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 EXPORT
 NdisMDeregisterDmaChannel(
     IN  PNDIS_HANDLE    MiniportDmaHandle)
 {
-    UNIMPLEMENTED
+    PNDIS_MINIPORT_BLOCK NdisMiniportBlock = (PNDIS_MINIPORT_BLOCK)MiniportDmaHandle;
+    PDMA_ADAPTER AdapterObject = NdisMiniportBlock->SystemAdapterObject;
+
+    AdapterObject->DmaOperations->PutDmaAdapter(AdapterObject);
+
+    NdisMiniportBlock->SystemAdapterObject = NULL;
 }
 
 
