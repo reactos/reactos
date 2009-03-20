@@ -82,20 +82,6 @@ NdisInterlockedRemoveHeadList(
   return ExInterlockedRemoveHeadList ( ListHead, (PKSPIN_LOCK)SpinLock );
 }
 
-
-/*
- * @unimplemented
- */
-VOID
-EXPORT
-NdisMapFile(
-    OUT PNDIS_STATUS    Status,
-    OUT PVOID           * MappedBuffer,
-    IN  NDIS_HANDLE     FileHandle)
-{
-    UNIMPLEMENTED
-}
-
 typedef struct _NDIS_HANDLE_OBJECT
 {
   HANDLE FileHandle;
@@ -119,6 +105,34 @@ NDIS_POBJECT_TO_HANDLE ( PNDIS_HANDLE_OBJECT obj )
 }
 
 const WCHAR* NDIS_FILE_FOLDER = L"\\SystemRoot\\System32\\Drivers\\";
+
+/*
+ * @implemented
+ */
+VOID
+EXPORT
+NdisMapFile(
+    OUT PNDIS_STATUS    Status,
+    OUT PVOID           *MappedBuffer,
+    IN  NDIS_HANDLE     FileHandle)
+{
+  PNDIS_HANDLE_OBJECT HandleObject = (PNDIS_HANDLE_OBJECT) FileHandle;
+
+  NDIS_DbgPrint(MAX_TRACE, ("called: FileHandle 0x%x\n", FileHandle));
+
+  if (HandleObject->Mapped)
+  {
+      /* If a file already mapped we will return an error code */
+      *Status = NDIS_STATUS_ALREADY_MAPPED;
+      return;
+  }
+
+  HandleObject->Mapped = TRUE;
+  *MappedBuffer = HandleObject->MapBuffer;
+
+  /* Set returned status */
+  *Status = STATUS_SUCCESS;
+}
 
 /*
  * @implemented
@@ -389,14 +403,16 @@ NdisSystemProcessorCount(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 EXPORT
 NdisUnmapFile(
     IN  NDIS_HANDLE FileHandle)
 {
-    UNIMPLEMENTED
+  PNDIS_HANDLE_OBJECT HandleObject = (PNDIS_HANDLE_OBJECT) FileHandle;
+
+  HandleObject->Mapped = FALSE;
 }
 
 
