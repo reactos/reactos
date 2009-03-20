@@ -104,7 +104,7 @@ NdisAllocateDmaChannel(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 EXPORT
@@ -115,7 +115,11 @@ NdisAllocateSharedMemory(
     OUT PVOID                   *VirtualAddress,
     OUT PNDIS_PHYSICAL_ADDRESS  PhysicalAddress)
 {
-    UNIMPLEMENTED
+    NdisMAllocateSharedMemory(NdisAdapterHandle,
+                              Length,
+                              Cached,
+                              VirtualAddress,
+                              PhysicalAddress);
 }
 
 
