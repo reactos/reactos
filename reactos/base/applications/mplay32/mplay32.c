@@ -5,6 +5,7 @@
  */
 
 #include "mplay32.h"
+#include <stdio.h>
 
 #define MAIN_WINDOW_HEIGHT    125
 #define MAIN_WINDOW_MIN_WIDTH 250
@@ -188,7 +189,7 @@ CloseMciDevice(VOID)
 
     if (bIsOpened)
     {
-        dwError = mciSendCommand(wDeviceId, MCI_CLOSE, MCI_WAIT, (DWORD)(LPMCI_GENERIC_PARMS)&mciGeneric);
+        dwError = mciSendCommand(wDeviceId, MCI_CLOSE, MCI_WAIT, (DWORD_PTR)&mciGeneric);
         if (dwError) return dwError;
         bIsOpened = FALSE;
     }
@@ -203,6 +204,7 @@ OpenMciDevice(HWND hwnd, LPTSTR lpType, LPTSTR lpFileName)
     MCI_OPEN_PARMS mciOpen;
     TCHAR szNewTitle[MAX_PATH];
     DWORD dwError;
+	WCHAR doom[260];
 
     if (bIsOpened)
     {
@@ -215,19 +217,21 @@ OpenMciDevice(HWND hwnd, LPTSTR lpType, LPTSTR lpFileName)
     mciOpen.wDeviceID = 0;
     mciOpen.lpstrAlias = NULL;
 
-    dwError = mciSendCommand(0, MCI_OPEN, MCI_OPEN_TYPE | MCI_OPEN_ELEMENT | MCI_WAIT, (DWORD)(LPVOID)&mciOpen);
+    dwError = mciSendCommand(0, MCI_OPEN, MCI_OPEN_TYPE | MCI_OPEN_ELEMENT | MCI_WAIT, (DWORD_PTR)&mciOpen);
     if (dwError != 0)
     {
-        MessageBox(0, _T("Can't open device! (1)"), NULL, MB_OK);
-        return dwError;
+		mciGetErrorString(dwError,doom,260);
+        MessageBox(0, doom, NULL, MB_OK);
+		return dwError;
     }
 
     mciStatus.dwItem = MCI_STATUS_LENGTH;
 
-    dwError = mciSendCommand(mciOpen.wDeviceID, MCI_STATUS, MCI_STATUS_ITEM | MCI_WAIT, (DWORD)(LPVOID)&mciStatus);
+    dwError = mciSendCommand(mciOpen.wDeviceID, MCI_STATUS, MCI_STATUS_ITEM | MCI_WAIT, (DWORD_PTR)&mciStatus);
     if (dwError != 0)
     {
-        MessageBox(0, _T("Can't open device! (2)"), NULL, MB_OK);
+		mciGetErrorString(dwError,doom,260);
+        MessageBox(0, doom, NULL, MB_OK);
         return dwError;
     }
 
@@ -283,15 +287,15 @@ SeekPlayback(HWND hwnd, DWORD dwNewPos)
 
     if (bIsOpened)
     {
-        mciSeek.dwTo = dwNewPos;
-        dwError = mciSendCommand(wDeviceId, MCI_SEEK, MCI_WAIT | MCI_TO, (DWORD)(LPVOID)&mciSeek);
+        mciSeek.dwTo = (DWORD_PTR)dwNewPos;
+        dwError = mciSendCommand(wDeviceId, MCI_SEEK, MCI_WAIT | MCI_TO, (DWORD_PTR)&mciSeek);
         if (dwError != 0)
         {
             MessageBox(hwnd, _T("SeekPlayback: Can't seek!"), NULL, MB_OK);
         }
 
-        mciPlay.dwCallback = (DWORD)hwnd;
-        dwError = mciSendCommand(wDeviceId, MCI_PLAY, MCI_NOTIFY, (DWORD)(LPVOID)&mciPlay);
+        mciPlay.dwCallback = (DWORD_PTR)hwnd;
+        dwError = mciSendCommand(wDeviceId, MCI_PLAY, MCI_NOTIFY, (DWORD_PTR)&mciPlay);
         if (dwError != 0)
         {
             MessageBox(hwnd, _T("SeekPlayback: Can't play!"), NULL, MB_OK);
@@ -308,7 +312,7 @@ SeekBackPlayback(HWND hwnd)
     if (!bIsOpened) return;
 
     mciStatus.dwItem = MCI_STATUS_POSITION;
-    mciSendCommand(wDeviceId, MCI_STATUS, MCI_STATUS_ITEM, (DWORD)(LPVOID)&mciStatus);
+    mciSendCommand(wDeviceId, MCI_STATUS, MCI_STATUS_ITEM, (DWORD_PTR)&mciStatus);
 
     dwNewPos = mciStatus.dwReturn - 1;
 
@@ -331,7 +335,7 @@ SeekForwPlayback(HWND hwnd)
     if (!bIsOpened) return;
 
     mciStatus.dwItem = MCI_STATUS_POSITION;
-    mciSendCommand(wDeviceId, MCI_STATUS, MCI_STATUS_ITEM, (DWORD)(LPVOID)&mciStatus);
+    mciSendCommand(wDeviceId, MCI_STATUS, MCI_STATUS_ITEM, (DWORD_PTR)&mciStatus);
 
     dwNewPos = mciStatus.dwReturn + 1;
 
@@ -353,7 +357,7 @@ PausePlayback(HWND hwnd)
 
     if (bIsOpened)
     {
-        dwError = mciSendCommand(wDeviceId, MCI_PAUSE, MCI_WAIT, (DWORD)(LPMCI_GENERIC_PARMS)&mciGeneric);
+        dwError = mciSendCommand(wDeviceId, MCI_PAUSE, MCI_WAIT, (DWORD_PTR)&mciGeneric);
         if (dwError != 0)
         {
             MessageBox(hwnd, _T("Can't pause!"), NULL, MB_OK);
@@ -370,7 +374,7 @@ ResumePlayback(HWND hwnd)
 
     if (bIsPaused)
     {
-        dwError = mciSendCommand(wDeviceId, MCI_RESUME, MCI_WAIT, (DWORD)(LPMCI_GENERIC_PARMS)&mciGeneric);
+        dwError = mciSendCommand(wDeviceId, MCI_RESUME, MCI_WAIT, (DWORD_PTR)&mciGeneric);
         if (dwError != 0)
         {
             MessageBox(hwnd, _T("Can't resume!"), NULL, MB_OK);
@@ -388,7 +392,7 @@ PlayTimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
     if (!bIsOpened) KillTimer(hwnd, IDT_PLAYTIMER);
 
     mciStatus.dwItem = MCI_STATUS_POSITION;
-    mciSendCommand(wDeviceId, MCI_STATUS, MCI_STATUS_ITEM, (DWORD)(LPVOID)&mciStatus);
+    mciSendCommand(wDeviceId, MCI_STATUS, MCI_STATUS_ITEM, (DWORD_PTR)&mciStatus);
     dwPos = mciStatus.dwReturn;
 
     if((UINT)dwPos >= MaxFilePos)
@@ -451,11 +455,11 @@ PlayFile(HWND hwnd, LPTSTR lpFileName)
 
     dwError = mciSendCommand(wDeviceId, MCI_SEEK, MCI_WAIT | MCI_SEEK_TO_START, 0);
 
-    mciPlay.dwCallback = (DWORD)hwnd;
+    mciPlay.dwCallback = (DWORD_PTR)hwnd;
     mciPlay.dwFrom = 0;
     mciPlay.dwTo = MaxFilePos;
 
-    dwError = mciSendCommand(wDeviceId, MCI_PLAY, MCI_NOTIFY | MCI_FROM | MCI_TO, (DWORD)(LPVOID)&mciPlay);
+    dwError = mciSendCommand(wDeviceId, MCI_PLAY, MCI_NOTIFY | MCI_FROM | MCI_TO, (DWORD_PTR)&mciPlay);
     if (dwError != 0)
     {
         MessageBox(hwnd, _T("Can't play!"), NULL, MB_OK);
