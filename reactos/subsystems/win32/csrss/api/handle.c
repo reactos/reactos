@@ -77,12 +77,8 @@ CsrGetObject(
     Object_t **Object,
     DWORD Access )
 {
-<<<<<<< .working
   ULONG_PTR h = (ULONG_PTR)Handle >> 2;
   DPRINT("CsrGetObject, Object: %x, %x, %x\n", Object, Handle, ProcessData ? ProcessData->HandleTableSize : 0);
-=======
-    ULONG h = (ULONG)Handle >> 2;
->>>>>>> .merge-rechts.r40086
 
     DPRINT("CsrGetObject, Object: %x, %x, %x\n", 
            Object, Handle, ProcessData ? ProcessData->HandleTableSize : 0);
@@ -135,13 +131,8 @@ CsrReleaseObject(
     PCSRSS_PROCESS_DATA ProcessData,
     HANDLE Handle)
 {
-<<<<<<< .working
   ULONG_PTR h = (ULONG_PTR)Handle >> 2;
   Object_t *Object;
-=======
-    ULONG h = (ULONG)Handle >> 2;
-    Object_t *Object;
->>>>>>> .merge-rechts.r40086
 
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
     if (h >= ProcessData->HandleTableSize
@@ -175,7 +166,6 @@ CsrInsertObject(
         if (ProcessData->HandleTable[i].Object == NULL)
         {
             break;
-<<<<<<< .working
 	  }
      }
    if (i >= ProcessData->HandleTableSize)
@@ -202,34 +192,6 @@ CsrInsertObject(
    _InterlockedIncrement( &Object->ReferenceCount );
    RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
    return(STATUS_SUCCESS);
-=======
-        }
-    }
-    if (i >= ProcessData->HandleTableSize)
-    {
-        Block = RtlAllocateHeap(CsrssApiHeap,
-                                HEAP_ZERO_MEMORY,
-                                (ProcessData->HandleTableSize + 64) * sizeof(CSRSS_HANDLE));
-        if (Block == NULL)
-        {
-            RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
-            return(STATUS_UNSUCCESSFUL);
-        }
-        RtlCopyMemory(Block,
-                      ProcessData->HandleTable,
-                      ProcessData->HandleTableSize * sizeof(CSRSS_HANDLE));
-        Block = _InterlockedExchangePointer((volatile void*)&ProcessData->HandleTable, Block);
-        RtlFreeHeap( CsrssApiHeap, 0, Block );
-        ProcessData->HandleTableSize += 64;
-    }
-    ProcessData->HandleTable[i].Object = Object;
-    ProcessData->HandleTable[i].Access = Access;
-    ProcessData->HandleTable[i].Inheritable = Inheritable;
-    *Handle = (HANDLE)((i << 2) | 0x3);
-    _InterlockedIncrement( &Object->ReferenceCount );
-    RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
-    return(STATUS_SUCCESS);
->>>>>>> .merge-rechts.r40086
 }
 
 NTSTATUS
@@ -278,11 +240,7 @@ CsrVerifyObject(
     PCSRSS_PROCESS_DATA ProcessData,
     HANDLE Handle)
 {
-<<<<<<< .working
   ULONG_PTR h = (ULONG_PTR)Handle >> 2;
-=======
-    ULONG h = (ULONG)Handle >> 2;
->>>>>>> .merge-rechts.r40086
 
     if (h >= ProcessData->HandleTableSize ||
         ProcessData->HandleTable[h].Object == NULL)
