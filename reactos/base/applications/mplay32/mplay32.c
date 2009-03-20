@@ -5,7 +5,6 @@
  */
 
 #include "mplay32.h"
-#include <stdio.h>
 
 #define MAIN_WINDOW_HEIGHT    125
 #define MAIN_WINDOW_MIN_WIDTH 250
@@ -204,7 +203,6 @@ OpenMciDevice(HWND hwnd, LPTSTR lpType, LPTSTR lpFileName)
     MCI_OPEN_PARMS mciOpen;
     TCHAR szNewTitle[MAX_PATH];
     DWORD dwError;
-	WCHAR doom[260];
 
     if (bIsOpened)
     {
@@ -220,9 +218,8 @@ OpenMciDevice(HWND hwnd, LPTSTR lpType, LPTSTR lpFileName)
     dwError = mciSendCommand(0, MCI_OPEN, MCI_OPEN_TYPE | MCI_OPEN_ELEMENT | MCI_WAIT, (DWORD_PTR)&mciOpen);
     if (dwError != 0)
     {
-		mciGetErrorString(dwError,doom,260);
-        MessageBox(0, doom, NULL, MB_OK);
-		return dwError;
+        MessageBox(0, _T("Can't open device! (1)"), NULL, MB_OK);
+        return dwError;
     }
 
     mciStatus.dwItem = MCI_STATUS_LENGTH;
@@ -230,8 +227,7 @@ OpenMciDevice(HWND hwnd, LPTSTR lpType, LPTSTR lpFileName)
     dwError = mciSendCommand(mciOpen.wDeviceID, MCI_STATUS, MCI_STATUS_ITEM | MCI_WAIT, (DWORD_PTR)&mciStatus);
     if (dwError != 0)
     {
-		mciGetErrorString(dwError,doom,260);
-        MessageBox(0, doom, NULL, MB_OK);
+        MessageBox(0, _T("Can't open device! (2)"), NULL, MB_OK);
         return dwError;
     }
 
