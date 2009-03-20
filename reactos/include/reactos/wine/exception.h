@@ -54,22 +54,33 @@ struct _EXCEPTION_REGISTRATION_RECORD
 #define EXCEPTION_VM86_STI        0x80000111
 #define EXCEPTION_VM86_PICRETURN  0x80000112
 
-#ifdef _M_X86
 static inline EXCEPTION_REGISTRATION_RECORD *__wine_push_frame( EXCEPTION_REGISTRATION_RECORD *frame )
 {
+#if defined(__i386__)
     frame->Prev = (struct _EXCEPTION_REGISTRATION_RECORD *)__readfsdword(0);
 	__writefsdword(0, (unsigned long)frame);
     return frame->Prev;
+#else
+	NT_TIB *teb = (NT_TIB *)NtCurrentTeb();
+	frame->Prev = teb->ExceptionList;
+	teb->ExceptionList = frame;
+	return frame->Prev;
+#endif
 }
 
 static inline EXCEPTION_REGISTRATION_RECORD *__wine_pop_frame( EXCEPTION_REGISTRATION_RECORD *frame )
 {
+#if defined(__i386__)
 	__writefsdword(0, (unsigned long)frame->Prev);
     return frame->Prev;
+#else
+	NT_TIB *teb = (NT_TIB *)NtCurrentTeb();
+	teb->ExceptionList = frame->Prev;
+	return frame->Prev;
+#endif
 }
 
 extern void __wine_enter_vm86( CONTEXT *context );
-#endif
 
 #ifdef __cplusplus
 }
