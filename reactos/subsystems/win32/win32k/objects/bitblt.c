@@ -292,7 +292,7 @@ NtGdiBitBlt(
             goto cleanup;
         }
         BrushOrigin = *((PPOINTL)&pbrush->ptOrigin);
-        IntGdiInitBrushInstance(&BrushInst, pbrush, DCDest->rosdc.XlateBrush);
+        EBRUSHOBJ_vInit(&BrushInst, pbrush, DCDest->rosdc.XlateBrush);
     }
 
     /* Create the XLATEOBJ. */
@@ -874,7 +874,7 @@ NtGdiStretchBlt(
             goto failed;
         }
         BrushOrigin = *((PPOINTL)&pbrush->ptOrigin);
-        IntGdiInitBrushInstance(&BrushInst, pbrush, DCDest->rosdc.XlateBrush);
+        EBRUSHOBJ_vInit(&BrushInst, pbrush, DCDest->rosdc.XlateBrush);
     }
 
     /* Offset the brush */
@@ -968,7 +968,7 @@ IntPatBlt(
         BrushOrigin.x = BrushObj->ptOrigin.x + dc->ptlDCOrig.x;
         BrushOrigin.y = BrushObj->ptOrigin.y + dc->ptlDCOrig.y;
 
-        IntGdiInitBrushInstance(&eboFill, BrushObj, dc->rosdc.XlateBrush);
+        EBRUSHOBJ_vInit(&eboFill, BrushObj, dc->rosdc.XlateBrush);
 
         ret = IntEngBitBlt(
             &psurf->SurfObj,

@@ -1237,9 +1237,9 @@ IntFillRect( DC *dc,
         ROP = PATCOPY;
 
      if (Pen)
-        IntGdiInitBrushInstance(&eboFill, pbrush, dc->rosdc.XlatePen);
+        EBRUSHOBJ_vInit(&eboFill, pbrush, dc->rosdc.XlatePen);
      else
-        IntGdiInitBrushInstance(&eboFill, pbrush, dc->rosdc.XlateBrush);
+        EBRUSHOBJ_vInit(&eboFill, pbrush, dc->rosdc.XlateBrush);
 
      Ret = IntEngBitBlt(
          &psurf->SurfObj,

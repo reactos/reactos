@@ -154,7 +154,7 @@ IntGdiLineTo(DC  *dc,
 
         if (!(pbrushLine->flAttrs & GDIBRUSH_IS_NULL))
         {
-            IntGdiInitBrushInstance(&eboLine, pbrushLine, dc->rosdc.XlatePen);
+            EBRUSHOBJ_vInit(&eboLine, pbrushLine, dc->rosdc.XlatePen);
             Ret = IntEngLineTo(&psurf->SurfObj,
                                dc->rosdc.CombinedClip,
                                &eboLine.BrushObject,
@@ -292,7 +292,7 @@ IntGdiPolyline(DC      *dc,
                 Points[i].y += dc->ptlDCOrig.y;
             }
 
-            IntGdiInitBrushInstance(&eboLine, pbrushLine, dc->rosdc.XlatePen);
+            EBRUSHOBJ_vInit(&eboLine, pbrushLine, dc->rosdc.XlatePen);
             Ret = IntEngPolyline(&psurf->SurfObj,
                                  dc->rosdc.CombinedClip,
                                  &eboLine.BrushObject,

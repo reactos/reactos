@@ -3237,7 +3237,7 @@ GreExtTextOutW(
     {
         goto fail;
     }
-    IntGdiInitBrushInstance(&eboText, pbrushText, NULL);
+    EBRUSHOBJ_vInit(&eboText, pbrushText, NULL);
     if ((fuOptions & ETO_OPAQUE) || pdcattr->jBkMode == OPAQUE)
     {
         hbrushBackGnd = NtGdiCreateSolidBrush(XLATEOBJ_iXlate(XlateObj, pdcattr->crBackgroundClr), 0);
@@ -3250,7 +3250,7 @@ GreExtTextOutW(
         {
             goto fail;
         }
-        IntGdiInitBrushInstance(&eboBackGnd, pbrushBackGnd, NULL);
+        EBRUSHOBJ_vInit(&eboBackGnd, pbrushBackGnd, NULL);
     }
     XlateObj2 = (XLATEOBJ*)IntEngCreateXlate(PAL_RGB, Mode, NULL, hDestPalette);
     if ( !XlateObj2 )

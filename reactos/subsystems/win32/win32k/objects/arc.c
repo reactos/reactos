@@ -166,7 +166,7 @@ IntArc( DC *dc,
         return FALSE;
     }
 
-    IntGdiInitBrushInstance(&eboPen, pbrushPen, dc->rosdc.XlatePen);
+    EBRUSHOBJ_vInit(&eboPen, pbrushPen, dc->rosdc.XlatePen);
 
     if (arctype == GdiTypePie)
     {

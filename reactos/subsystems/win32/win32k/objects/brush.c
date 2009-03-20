@@ -166,30 +166,6 @@ IntGdiCreateBrushXlate(PDC Dc, BRUSH *pbrush, BOOLEAN *Failed)
    return Result;
 }
 
-VOID FASTCALL
-IntGdiInitBrushInstance(EBRUSHOBJ *BrushInst, PBRUSH pbrush, XLATEOBJ *XlateObj)
-{
-   ASSERT(BrushInst);
-   ASSERT(pbrush);
-   if (pbrush->flAttrs & GDIBRUSH_IS_NULL)
-   {
-      BrushInst->BrushObject.iSolidColor = 0;
-   }
-   else if (pbrush->flAttrs & GDIBRUSH_IS_SOLID)
-   {
-         BrushInst->BrushObject.iSolidColor = XLATEOBJ_iXlate(XlateObj, pbrush->BrushAttr.lbColor);
-   }
-   else
-   {
-      BrushInst->BrushObject.iSolidColor = 0xFFFFFFFF;
-   }
-
-   BrushInst->BrushObject.pvRbrush = pbrush->ulRealization;
-   BrushInst->BrushObject.flColorType = 0;
-   BrushInst->GdiBrushObject = pbrush;
-   BrushInst->XlateObject = XlateObj;
-}
-
 /**
  * @name CalculateColorTableSize
  *

@@ -107,7 +107,7 @@ IntGdiPolygon(PDC    dc,
             BrushOrigin = *((PPOINTL)&pbrushFill->ptOrigin);
             BrushOrigin.x += dc->ptlDCOrig.x;
             BrushOrigin.y += dc->ptlDCOrig.y;
-            IntGdiInitBrushInstance(&eboFill, pbrushFill, dc->rosdc.XlateBrush);
+            EBRUSHOBJ_vInit(&eboFill, pbrushFill, dc->rosdc.XlateBrush);
             ret = IntFillPolygon (dc, psurf, &eboFill.BrushObject, Points, Count, 
                   DestRect, &BrushOrigin);
         }
@@ -119,7 +119,7 @@ IntGdiPolygon(PDC    dc,
         {
             int i;
 
-            IntGdiInitBrushInstance(&eboLine, pbrushLine, dc->rosdc.XlatePen);
+            EBRUSHOBJ_vInit(&eboLine, pbrushLine, dc->rosdc.XlatePen);
 
             for (i = 0; i < Count-1; i++)
             {
@@ -600,7 +600,7 @@ IntRectangle(PDC dc,
             BrushOrigin = *((PPOINTL)&pbrushFill->ptOrigin);
             BrushOrigin.x += dc->ptlDCOrig.x;
             BrushOrigin.y += dc->ptlDCOrig.y;
-            IntGdiInitBrushInstance(&eboFill, pbrushFill, dc->rosdc.XlateBrush);
+            EBRUSHOBJ_vInit(&eboFill, pbrushFill, dc->rosdc.XlateBrush);
             ret = IntEngBitBlt(&psurf->SurfObj,
                                NULL,
                                NULL,
@@ -615,7 +615,7 @@ IntRectangle(PDC dc,
         }
     }
 
-    IntGdiInitBrushInstance(&eboLine, pbrushLine, dc->rosdc.XlatePen);
+    EBRUSHOBJ_vInit(&eboLine, pbrushLine, dc->rosdc.XlatePen);
 
     // Draw the rectangle with the current pen
 
@@ -1147,7 +1147,7 @@ NtGdiExtFloodFill(
             BrushOrigin = *((PPOINTL)&pbrushFill->ptOrigin);
             BrushOrigin.x += dc->ptlDCOrig.x;
             BrushOrigin.y += dc->ptlDCOrig.y;
-            IntGdiInitBrushInstance(&eboFill, pbrushFill, dc->rosdc.XlateBrush);
+            EBRUSHOBJ_vInit(&eboFill, pbrushFill, dc->rosdc.XlateBrush);
             Ret = IntEngBitBlt(&psurf->SurfObj, NULL, NULL,
                                dc->rosdc.CombinedClip, NULL,
                                &DestRect, NULL, NULL,

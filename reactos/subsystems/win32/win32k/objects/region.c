@@ -2937,7 +2937,7 @@ IntGdiPaintRgn(
     ASSERT(ClipRegion);
     pbrush = BRUSH_LockBrush(pdcattr->hbrush);
     ASSERT(pbrush);
-    IntGdiInitBrushInstance(&eboFill, pbrush, dc->rosdc.XlateBrush);
+    EBRUSHOBJ_vInit(&eboFill, pbrush, dc->rosdc.XlateBrush);
 
     BrushOrigin.x = pdcattr->ptlBrushOrigin.x;
     BrushOrigin.y = pdcattr->ptlBrushOrigin.y;

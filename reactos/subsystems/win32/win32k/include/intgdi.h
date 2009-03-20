@@ -15,9 +15,6 @@ XLATEOBJ*
 FASTCALL
 IntCreateXlateForBlt(PDC pDCDest, PDC pDCSrc, SURFACE* pDestSurf, SURFACE* pSrcSurf);
 
-VOID FASTCALL
-IntGdiInitBrushInstance(EBRUSHOBJ *BrushInst, PBRUSH BrushObj, XLATEOBJ *XlateObj);
-
 HBRUSH APIENTRY
 IntGdiCreateDIBBrush(
    CONST BITMAPINFO *BitmapInfo,
