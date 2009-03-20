@@ -22,8 +22,8 @@ BOOL
 NotifyClient(
     SessionInfo* session_info,
     DWORD message,
-    DWORD parameter1,
-    DWORD parameter2)
+    DWORD_PTR parameter1,
+    DWORD_PTR parameter2)
 {
     return DriverCallback(session_info->callback,
                           HIWORD(session_info->flags),
@@ -43,11 +43,11 @@ NotifyClient(
 
 APIENTRY DWORD
 wodMessage(
-    DWORD device_id,
-    DWORD message,
-    DWORD private_handle,
-    DWORD parameter1,
-    DWORD parameter2)
+    UINT device_id,
+    UINT message,
+    DWORD_PTR private_handle,
+    DWORD_PTR parameter1,
+    DWORD_PTR parameter2)
 {
     switch ( message )
     {
@@ -61,7 +61,7 @@ wodMessage(
             DPRINT("WODM_GETDEVCAPS\n");
             return GetDeviceCapabilities(WaveOutDevice,
                                          device_id,
-                                         (PVOID) parameter1,
+                                         parameter1,
                                          parameter2);
 
         /* http://www.osronline.com/ddkx/w98ddk/mmedia_4p85.htm */

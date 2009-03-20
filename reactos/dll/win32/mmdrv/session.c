@@ -26,7 +26,7 @@ CRITICAL_SECTION session_lock;
 SessionInfo*
 GetSession(
     DeviceType device_type,
-    DWORD device_id)
+    UINT device_id)
 {
     SessionInfo* session_info;
 
@@ -59,7 +59,7 @@ GetSession(
 MMRESULT
 CreateSession(
     DeviceType device_type,
-    DWORD device_id,
+    UINT device_id,
     SessionInfo** session_info)
 {
     HANDLE heap = GetProcessHeap();
@@ -186,7 +186,7 @@ StartSessionThread(SessionInfo* session_info)
 
     result = mmTaskCreate(task,
                           &session_info->thread.handle,
-                          (DWORD) session_info);
+                          (DWORD_PTR)session_info);
 
     if ( result != MMSYSERR_NOERROR )
     {
@@ -235,9 +235,9 @@ CallSessionThread(
 
 DWORD
 HandleBySessionThread(
-    DWORD private_handle,
-    DWORD message,
-    DWORD parameter)
+    DWORD_PTR private_handle,
+    DWORD_PTR message,
+    DWORD_PTR parameter)
 {
     return CallSessionThread((SessionInfo*) private_handle,
                              message,

@@ -56,7 +56,7 @@ QueueWaveBuffer(
     wave_header->dwFlags |= WHDR_INQUEUE;
 
     /* Save our handle in the header */
-    wave_header->reserved = (DWORD) session_info;
+    wave_header->reserved = (DWORD_PTR) session_info;
 
     /* Locate the end of the queue */
     previous_node = NULL;
@@ -112,10 +112,10 @@ ReturnCompletedBuffers(SessionInfo* session_info)
             message = (session_info->device_type == WaveOutDevice) ? WOM_DONE :
                                                                      WIM_DATA;
 
-            DPRINT("Notifying client that buffer 0x%x is done\n", (int) header);
+            DPRINT("Notifying client that buffer 0x%x is done\n", header);
 
             /* Notify the client */
-            NotifyClient(session_info, message, (DWORD) header, 0);
+            NotifyClient(session_info, message, (DWORD_PTR) header, 0);
         }
     }
 
@@ -369,7 +369,7 @@ SetWaveFormat(
 
 DWORD
 WriteWaveBuffer(
-    DWORD private_handle,
+    DWORD_PTR private_handle,
     PWAVEHDR wave_header,
     DWORD wave_header_size)
 {

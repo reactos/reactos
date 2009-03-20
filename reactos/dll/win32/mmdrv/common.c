@@ -80,8 +80,8 @@ GetDeviceCount(DeviceType device_type)
 DWORD
 GetDeviceCapabilities(
     DeviceType device_type,
-    DWORD device_id,
-    PVOID capabilities,
+    UINT device_id,
+    DWORD_PTR capabilities,
     DWORD capabilities_size)
 {
     MMRESULT result;
@@ -149,10 +149,10 @@ GetDeviceCapabilities(
 DWORD
 OpenDevice(
     DeviceType device_type,
-    DWORD device_id,
+    UINT device_id,
     PVOID open_descriptor,
     DWORD flags,
-    DWORD private_handle)
+    DWORD_PTR private_handle)
 {
     SessionInfo* session_info;
     MMRESULT result;
@@ -234,7 +234,7 @@ OpenDevice(
 
 DWORD
 CloseDevice(
-    DWORD private_handle)
+    DWORD_PTR private_handle)
 {
     MMRESULT result;
     SessionInfo* session_info = (SessionInfo*) private_handle;
