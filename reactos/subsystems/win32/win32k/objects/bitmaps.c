@@ -904,7 +904,7 @@ NtGdiSelectBitmap(
     IN HBITMAP hBmp)
 {
     PDC pDC;
-    PDC_ATTR pDc_Attr;
+    PDC_ATTR pdcattr;
     HBITMAP hOrgBmp;
     PSURFACE psurfBmp;
     HRGN hVisRgn;
@@ -919,8 +919,7 @@ NtGdiSelectBitmap(
         return NULL;
     }
 
-    pDc_Attr = pDC->pDc_Attr;
-    if (!pDc_Attr) pDc_Attr = &pDC->Dc_Attr;
+    pdcattr = pDC->pdcattr;
 
     /* must be memory dc to select bitmap */
     if (pDC->dctype != DC_TYPE_MEMORY)
@@ -963,7 +962,7 @@ NtGdiSelectBitmap(
     SURFACE_UnlockSurface(psurfBmp);
 
     /* Regenerate the XLATEOBJs. */
-    pBrush = BRUSHOBJ_LockBrush(pDc_Attr->hbrush);
+    pBrush = BRUSHOBJ_LockBrush(pdcattr->hbrush);
     if (pBrush)
     {
         if (pDC->rosdc.XlateBrush)
@@ -974,7 +973,7 @@ NtGdiSelectBitmap(
         BRUSHOBJ_UnlockBrush(pBrush);
     }
 
-    pBrush = PENOBJ_LockPen(pDc_Attr->hpen);
+    pBrush = PENOBJ_LockPen(pdcattr->hpen);
     if (pBrush)
     {
         if (pDC->rosdc.XlatePen)

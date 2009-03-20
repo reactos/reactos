@@ -149,11 +149,10 @@ IntGdiCreateBrushXlate(PDC Dc, GDIBRUSHOBJ *BrushObj, BOOLEAN *Failed)
       /* Special case: 1bpp pattern */
       if (Pattern->SurfObj.iBitmapFormat == BMF_1BPP)
       {
-         PDC_ATTR Dc_Attr = Dc->pDc_Attr;
-         if (!Dc_Attr) Dc_Attr = &Dc->Dc_Attr;
+         PDC_ATTR pdcattr = Dc->pdcattr;
 
          if (Dc->rosdc.bitsPerPixel != 1)
-            Result = IntEngCreateSrcMonoXlate(hPalette, Dc_Attr->crBackgroundClr, BrushObj->BrushAttr.lbColor);
+            Result = IntEngCreateSrcMonoXlate(hPalette, pdcattr->crBackgroundClr, BrushObj->BrushAttr.lbColor);
       }
       else if (BrushObj->flAttrs & GDIBRUSH_IS_DIB)
       {
@@ -515,7 +514,7 @@ IntGdiSelectBrush(
     PDC pDC,
     HBRUSH hBrush)
 {
-    PDC_ATTR pDc_Attr;
+    PDC_ATTR pdcattr;
     HBRUSH hOrgBrush;
     PGDIBRUSHOBJ pBrush;
     XLATEOBJ *XlateObj;
@@ -523,8 +522,7 @@ IntGdiSelectBrush(
 
     if (pDC == NULL || hBrush == NULL) return NULL;
 
-    pDc_Attr = pDC->pDc_Attr;
-    if(!pDc_Attr) pDc_Attr = &pDC->Dc_Attr;
+    pdcattr = pDC->pdcattr;
 
     pBrush = BRUSHOBJ_LockBrush(hBrush);
     if (pBrush == NULL)
@@ -540,8 +538,8 @@ IntGdiSelectBrush(
         return NULL;
     }
 
-    hOrgBrush = pDc_Attr->hbrush;
-    pDc_Attr->hbrush = hBrush;
+    hOrgBrush = pdcattr->hbrush;
+    pdcattr->hbrush = hBrush;
 
     if (pDC->rosdc.XlateBrush != NULL)
     {
@@ -549,7 +547,7 @@ IntGdiSelectBrush(
     }
     pDC->rosdc.XlateBrush = XlateObj;
 
-    pDc_Attr->ulDirty_ &= ~DC_BRUSH_DIRTY;
+    pdcattr->ulDirty_ &= ~DC_BRUSH_DIRTY;
 
     return hOrgBrush;
 }
@@ -646,7 +644,7 @@ BOOL APIENTRY
 NtGdiSetBrushOrg(HDC hDC, INT XOrg, INT YOrg, LPPOINT Point)
 {
    PDC dc;
-   PDC_ATTR Dc_Attr;
+   PDC_ATTR pdcattr;
 
    dc = DC_LockDc(hDC);
    if (dc == NULL)
@@ -654,15 +652,14 @@ NtGdiSetBrushOrg(HDC hDC, INT XOrg, INT YOrg, LPPOINT Point)
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return FALSE;
    }
-   Dc_Attr = dc->pDc_Attr;
-   if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+   pdcattr = dc->pdcattr;
 
    if (Point != NULL)
    {
       NTSTATUS Status = STATUS_SUCCESS;
       POINT SafePoint;
-      SafePoint.x = Dc_Attr->ptlBrushOrigin.x;
-      SafePoint.y = Dc_Attr->ptlBrushOrigin.y;
+      SafePoint.x = pdcattr->ptlBrushOrigin.x;
+      SafePoint.y = pdcattr->ptlBrushOrigin.y;
       _SEH2_TRY
       {
          ProbeForWrite(Point,
@@ -683,8 +680,8 @@ NtGdiSetBrushOrg(HDC hDC, INT XOrg, INT YOrg, LPPOINT Point)
         return FALSE;
       }
    }
-   Dc_Attr->ptlBrushOrigin.x = XOrg;
-   Dc_Attr->ptlBrushOrigin.y = YOrg;
+   pdcattr->ptlBrushOrigin.x = XOrg;
+   pdcattr->ptlBrushOrigin.y = YOrg;
    DC_UnlockDc(dc);
    return TRUE;
 }

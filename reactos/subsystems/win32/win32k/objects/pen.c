@@ -272,7 +272,7 @@ IntGdiSelectPen(
     PDC pDC,
     HPEN hPen)
 {
-    PDC_ATTR pDc_Attr;
+    PDC_ATTR pdcattr;
     HPEN hOrgPen = NULL;
     PGDIBRUSHOBJ pPen;
     XLATEOBJ *XlateObj;
@@ -280,8 +280,7 @@ IntGdiSelectPen(
 
     if (pDC == NULL || hPen == NULL) return NULL;
 
-    pDc_Attr = pDC->pDc_Attr;
-    if(!pDc_Attr) pDc_Attr = &pDC->Dc_Attr;
+    pdcattr = pDC->pdcattr;
 
     pPen = PENOBJ_LockPen(hPen);
     if (pPen == NULL)
@@ -297,14 +296,14 @@ IntGdiSelectPen(
         return NULL;
     }
 
-    hOrgPen = pDc_Attr->hpen;
-    pDc_Attr->hpen = hPen;
+    hOrgPen = pdcattr->hpen;
+    pdcattr->hpen = hPen;
 
     if (pDC->rosdc.XlatePen != NULL)
     {
         EngDeleteXlate(pDC->rosdc.XlatePen);
     }
-    pDc_Attr->ulDirty_ &= ~DC_PEN_DIRTY;
+    pdcattr->ulDirty_ &= ~DC_PEN_DIRTY;
 
     pDC->rosdc.XlatePen = XlateObj;
 

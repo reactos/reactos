@@ -1320,7 +1320,7 @@ DIB_CreateDIBSection(
   HBITMAP res = 0;
   SURFACE *bmp = NULL;
   void *mapBits = NULL;
-  PDC_ATTR pDc_Attr;
+  PDC_ATTR pdcattr;
 
   // Fill BITMAP32 structure with DIB data
   BITMAPINFOHEADER *bi = &bmi->bmiHeader;
@@ -1342,8 +1342,7 @@ DIB_CreateDIBSection(
     return (HBITMAP)NULL;
   }
 
-  pDc_Attr = dc->pDc_Attr;
-  if ( !pDc_Attr ) pDc_Attr = &dc->Dc_Attr;
+  pdcattr = dc->pdcattr;
 
   effHeight = bi->biHeight >= 0 ? bi->biHeight : -bi->biHeight;
   bm.bmType = 0;
@@ -1543,7 +1542,7 @@ DIB_CreateDIBSection(
       *bits = bm.bmBits;
   }
 
-//  if (res) pDc_Attr->ulDirty_ |= DC_DIBSECTION;
+//  if (res) pdcattr->ulDirty_ |= DC_DIBSECTION;
 
   return res;
 }

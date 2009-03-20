@@ -20,7 +20,7 @@ APIENTRY
 NtGdiGetCharSet(HDC hDC)
 {
   PDC Dc;
-  PDC_ATTR Dc_Attr;
+  PDC_ATTR pdcattr;
   DWORD cscp;
   // If here, update everything!
   Dc = DC_LockDc(hDC);
@@ -30,10 +30,9 @@ NtGdiGetCharSet(HDC hDC)
      return 0;
   }
   cscp = ftGdiGetTextCharsetInfo(Dc,NULL,0);
-  Dc_Attr = Dc->pDc_Attr;
-  if (!Dc_Attr) Dc_Attr = &Dc->Dc_Attr;
-  Dc_Attr->iCS_CP = cscp;
-  Dc_Attr->ulDirty_ &= ~DIRTY_CHARSET;
+  pdcattr = Dc->pdcattr;
+  pdcattr->iCS_CP = cscp;
+  pdcattr->ulDirty_ &= ~DIRTY_CHARSET;
   DC_UnlockDc( Dc );
   return cscp;
 }
@@ -142,7 +141,7 @@ NtGdiGetTextExtentExW(
 )
 {
   PDC dc;
-  PDC_ATTR Dc_Attr;
+  PDC_ATTR pdcattr;
   LPWSTR String;
   SIZE Size;
   NTSTATUS Status;
@@ -211,9 +210,8 @@ NtGdiGetTextExtentExW(
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return FALSE;
     }
-  Dc_Attr = dc->pDc_Attr;
-  if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
-  TextObj = RealizeFontInit(Dc_Attr->hlfntNew);
+  pdcattr = dc->pdcattr;
+  TextObj = RealizeFontInit(pdcattr->hlfntNew);
   if ( TextObj )
   {
     Result = TextIntGetTextExtentPoint(dc, TextObj, String, Count, MaxExtent,
@@ -294,7 +292,7 @@ NtGdiSetTextJustification(HDC  hDC,
                           int  BreakCount)
 {
   PDC pDc;
-  PDC_ATTR pDc_Attr;
+  PDC_ATTR pdcattr;
 
   pDc = DC_LockDc(hDC);
   if (!pDc)
@@ -303,11 +301,10 @@ NtGdiSetTextJustification(HDC  hDC,
      return FALSE;
   }
 
-  pDc_Attr = pDc->pDc_Attr;
-  if(!pDc_Attr) pDc_Attr = &pDc->Dc_Attr;
+  pdcattr = pDc->pdcattr;
 
-  pDc_Attr->lBreakExtra = BreakExtra;
-  pDc_Attr->cBreak = BreakCount;
+  pdcattr->lBreakExtra = BreakExtra;
+  pdcattr->cBreak = BreakCount;
 
   DC_UnlockDc(pDc);
   return TRUE;
@@ -325,7 +322,7 @@ NtGdiGetTextFaceW(
 )
 {
    PDC Dc;
-   PDC_ATTR Dc_Attr;
+   PDC_ATTR pdcattr;
    HFONT hFont;
    PTEXTOBJ TextObj;
    NTSTATUS Status;
@@ -338,9 +335,8 @@ NtGdiGetTextFaceW(
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return FALSE;
    }
-   Dc_Attr = Dc->pDc_Attr;
-   if(!Dc_Attr) Dc_Attr = &Dc->Dc_Attr;
-   hFont = Dc_Attr->hlfntNew;
+   pdcattr = Dc->pdcattr;
+   hFont = pdcattr->hlfntNew;
    DC_UnlockDc(Dc);
 
    TextObj = RealizeFontInit(hFont);

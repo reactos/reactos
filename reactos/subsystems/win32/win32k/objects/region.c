@@ -1969,20 +1969,19 @@ REGION_LPTODP(
 
     RECTL tmpRect;
     BOOL ret = FALSE;
-    PDC_ATTR Dc_Attr;
+    PDC_ATTR pdcattr;
 
     if (!dc)
         return ret;
-    Dc_Attr = dc->pDc_Attr;
-    if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+    pdcattr = dc->pdcattr;
 
-    if (Dc_Attr->iMapMode == MM_TEXT) // Requires only a translation
+    if (pdcattr->iMapMode == MM_TEXT) // Requires only a translation
     {
         if (NtGdiCombineRgn(hDest, hSrc, 0, RGN_COPY) == ERROR)
             goto done;
 
-        NtGdiOffsetRgn(hDest, Dc_Attr->ptlViewportOrg.x - Dc_Attr->ptlWindowOrg.x,
-                       Dc_Attr->ptlViewportOrg.y - Dc_Attr->ptlWindowOrg.y);
+        NtGdiOffsetRgn(hDest, pdcattr->ptlViewportOrg.x - pdcattr->ptlWindowOrg.x,
+                       pdcattr->ptlViewportOrg.y - pdcattr->ptlWindowOrg.y);
         ret = TRUE;
         goto done;
     }
@@ -2000,10 +1999,10 @@ REGION_LPTODP(
     for (pCurRect = srcObj->Buffer; pCurRect < pEndRect; pCurRect++)
     {
         tmpRect = *pCurRect;
-        tmpRect.left = XLPTODP(Dc_Attr, tmpRect.left);
-        tmpRect.top = YLPTODP(Dc_Attr, tmpRect.top);
-        tmpRect.right = XLPTODP(Dc_Attr, tmpRect.right);
-        tmpRect.bottom = YLPTODP(Dc_Attr, tmpRect.bottom);
+        tmpRect.left = XLPTODP(pdcattr, tmpRect.left);
+        tmpRect.top = YLPTODP(pdcattr, tmpRect.top);
+        tmpRect.right = XLPTODP(pdcattr, tmpRect.right);
+        tmpRect.bottom = YLPTODP(pdcattr, tmpRect.bottom);
 
         if (tmpRect.left > tmpRect.right)
         {
@@ -2114,17 +2113,16 @@ IntUpdateVisRectRgn(PDC pDC, PROSRGNDATA pRgn)
 {
   INT Index = GDI_HANDLE_GET_INDEX(pDC->BaseObject.hHmgr);
   PGDI_TABLE_ENTRY Entry = &GdiHandleTable->Entries[Index];
-  PDC_ATTR pDc_Attr;
+  PDC_ATTR pdcattr;
   RECTL rcl;
 
   if (Entry->Flags & GDI_ENTRY_VALIDATE_VIS)
   {
-     pDc_Attr = pDC->pDc_Attr;
-     if ( !pDc_Attr ) pDc_Attr = &pDC->Dc_Attr; 
+     pdcattr = pDC->pdcattr;
 
-     pDc_Attr->VisRectRegion.Flags = REGION_Complexity(pRgn);
+     pdcattr->VisRectRegion.Flags = REGION_Complexity(pRgn);
 
-     if (pRgn && pDc_Attr->VisRectRegion.Flags != NULLREGION)
+     if (pRgn && pdcattr->VisRectRegion.Flags != NULLREGION)
      {
         rcl.left   = pRgn->rdh.rcBound.left;
         rcl.top    = pRgn->rdh.rcBound.top;
@@ -2139,7 +2137,7 @@ IntUpdateVisRectRgn(PDC pDC, PROSRGNDATA pRgn)
      else
         RECTL_vSetEmptyRect(&rcl);
 
-     pDc_Attr->VisRectRegion.Rect = rcl;
+     pdcattr->VisRectRegion.Rect = rcl;
 
      Entry->Flags &= ~GDI_ENTRY_VALIDATE_VIS;
   }
@@ -2909,11 +2907,10 @@ IntGdiPaintRgn(
     GDIBRUSHINST BrushInst;
     POINTL BrushOrigin;
     SURFACE *psurf;
-    PDC_ATTR Dc_Attr;
+    PDC_ATTR pdcattr;
 
     if (!dc) return FALSE;
-    Dc_Attr = dc->pDc_Attr;
-    if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+    pdcattr = dc->pdcattr;
 
     if (!(tmpVisRgn = NtGdiCreateRectRgn(0, 0, 0, 0))) return FALSE;
 
@@ -2938,12 +2935,12 @@ IntGdiPaintRgn(
                                         visrgn->Buffer,
                                         &visrgn->rdh.rcBound );
     ASSERT(ClipRegion);
-    pBrush = BRUSHOBJ_LockBrush(Dc_Attr->hbrush);
+    pBrush = BRUSHOBJ_LockBrush(pdcattr->hbrush);
     ASSERT(pBrush);
     IntGdiInitBrushInstance(&BrushInst, pBrush, dc->rosdc.XlateBrush);
 
-    BrushOrigin.x = Dc_Attr->ptlBrushOrigin.x;
-    BrushOrigin.y = Dc_Attr->ptlBrushOrigin.y;
+    BrushOrigin.x = pdcattr->ptlBrushOrigin.x;
+    BrushOrigin.y = pdcattr->ptlBrushOrigin.y;
     psurf = SURFACE_LockSurface(dc->rosdc.hBitmap);
     /* FIXME - Handle psurf == NULL !!!! */
 

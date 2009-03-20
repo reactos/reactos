@@ -33,27 +33,26 @@ IntGdiMoveToEx(DC      *dc,
                LPPOINT Point)
 {
     BOOL  PathIsOpen;
-    PDC_ATTR Dc_Attr = dc->pDc_Attr;
-    if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+    PDC_ATTR pdcattr = dc->pdcattr;
     if ( Point )
     {
-        if ( Dc_Attr->ulDirty_ & DIRTY_PTLCURRENT ) // Double hit!
+        if ( pdcattr->ulDirty_ & DIRTY_PTLCURRENT ) // Double hit!
         {
-            Point->x = Dc_Attr->ptfxCurrent.x; // ret prev before change.
-            Point->y = Dc_Attr->ptfxCurrent.y;
+            Point->x = pdcattr->ptfxCurrent.x; // ret prev before change.
+            Point->y = pdcattr->ptfxCurrent.y;
             IntDPtoLP ( dc, Point, 1);         // reconvert back.
         }
         else
         {
-            Point->x = Dc_Attr->ptlCurrent.x;
-            Point->y = Dc_Attr->ptlCurrent.y;
+            Point->x = pdcattr->ptlCurrent.x;
+            Point->y = pdcattr->ptlCurrent.y;
         }
     }
-    Dc_Attr->ptlCurrent.x = X;
-    Dc_Attr->ptlCurrent.y = Y;
-    Dc_Attr->ptfxCurrent = Dc_Attr->ptlCurrent;
-    CoordLPtoDP(dc, &Dc_Attr->ptfxCurrent); // Update fx
-    Dc_Attr->ulDirty_ &= ~(DIRTY_PTLCURRENT|DIRTY_PTFXCURRENT|DIRTY_STYLESTATE);
+    pdcattr->ptlCurrent.x = X;
+    pdcattr->ptlCurrent.y = Y;
+    pdcattr->ptfxCurrent = pdcattr->ptlCurrent;
+    CoordLPtoDP(dc, &pdcattr->ptfxCurrent); // Update fx
+    pdcattr->ulDirty_ &= ~(DIRTY_PTLCURRENT|DIRTY_PTFXCURRENT|DIRTY_STYLESTATE);
 
     PathIsOpen = PATH_IsPathOpen(dc->DcLevel);
 
@@ -68,19 +67,18 @@ IntGdiMoveToEx(DC      *dc,
 VOID FASTCALL
 IntGetCurrentPositionEx(PDC dc, LPPOINT pt)
 {
-    PDC_ATTR Dc_Attr = dc->pDc_Attr;
-    if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+    PDC_ATTR pdcattr = dc->pdcattr;
 
     if ( pt )
     {
-        if (Dc_Attr->ulDirty_ & DIRTY_PTFXCURRENT)
+        if (pdcattr->ulDirty_ & DIRTY_PTFXCURRENT)
         {
-            Dc_Attr->ptfxCurrent = Dc_Attr->ptlCurrent;
-            CoordLPtoDP(dc, &Dc_Attr->ptfxCurrent); // Update fx
-            Dc_Attr->ulDirty_ &= ~(DIRTY_PTFXCURRENT|DIRTY_STYLESTATE);
+            pdcattr->ptfxCurrent = pdcattr->ptlCurrent;
+            CoordLPtoDP(dc, &pdcattr->ptfxCurrent); // Update fx
+            pdcattr->ulDirty_ &= ~(DIRTY_PTFXCURRENT|DIRTY_STYLESTATE);
         }
-        pt->x = Dc_Attr->ptlCurrent.x;
-        pt->y = Dc_Attr->ptlCurrent.y;
+        pt->x = pdcattr->ptlCurrent.x;
+        pt->y = pdcattr->ptlCurrent.y;
     }
 }
 
@@ -95,9 +93,8 @@ IntGdiLineTo(DC  *dc,
     GDIBRUSHINST PenBrushInst;
     RECTL     Bounds;
     POINT     Points[2];
-    PDC_ATTR Dc_Attr = dc->pDc_Attr;
+    PDC_ATTR pdcattr = dc->pdcattr;
 
-    if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
 
     if (PATH_IsPathOpen(dc->DcLevel))
     {
@@ -105,21 +102,21 @@ IntGdiLineTo(DC  *dc,
         if (Ret)
         {
             // FIXME - PATH_LineTo should maybe do this? No
-            Dc_Attr->ptlCurrent.x = XEnd;
-            Dc_Attr->ptlCurrent.y = YEnd;
-            Dc_Attr->ptfxCurrent = Dc_Attr->ptlCurrent;
-            CoordLPtoDP(dc, &Dc_Attr->ptfxCurrent); // Update fx
-            Dc_Attr->ulDirty_ &= ~(DIRTY_PTLCURRENT|DIRTY_PTFXCURRENT|DIRTY_STYLESTATE);
+            pdcattr->ptlCurrent.x = XEnd;
+            pdcattr->ptlCurrent.y = YEnd;
+            pdcattr->ptfxCurrent = pdcattr->ptlCurrent;
+            CoordLPtoDP(dc, &pdcattr->ptfxCurrent); // Update fx
+            pdcattr->ulDirty_ &= ~(DIRTY_PTLCURRENT|DIRTY_PTFXCURRENT|DIRTY_STYLESTATE);
         }
         return Ret;
     }
     else
     {
-       if (Dc_Attr->ulDirty_ & DC_BRUSH_DIRTY)
-          IntGdiSelectBrush(dc,Dc_Attr->hbrush);
+       if (pdcattr->ulDirty_ & DC_BRUSH_DIRTY)
+          IntGdiSelectBrush(dc,pdcattr->hbrush);
 
-       if (Dc_Attr->ulDirty_ & DC_PEN_DIRTY)
-          IntGdiSelectPen(dc,Dc_Attr->hpen);
+       if (pdcattr->ulDirty_ & DC_PEN_DIRTY)
+          IntGdiSelectPen(dc,pdcattr->hpen);
 
         psurf = SURFACE_LockSurface( dc->rosdc.hBitmap );
         if (NULL == psurf)
@@ -128,8 +125,8 @@ IntGdiLineTo(DC  *dc,
             return FALSE;
         }
 
-        Points[0].x = Dc_Attr->ptlCurrent.x;
-        Points[0].y = Dc_Attr->ptlCurrent.y;
+        Points[0].x = pdcattr->ptlCurrent.x;
+        Points[0].y = pdcattr->ptlCurrent.y;
         Points[1].x = XEnd;
         Points[1].y = YEnd;
 
@@ -147,7 +144,7 @@ IntGdiLineTo(DC  *dc,
         Bounds.bottom = max(Points[0].y, Points[1].y);
 
         /* get BRUSHOBJ from current pen. */
-        PenBrushObj = PENOBJ_LockPen( Dc_Attr->hpen );
+        PenBrushObj = PENOBJ_LockPen( pdcattr->hpen );
         if (!PenBrushObj)
         {
             /* default to BLACK_PEN */
@@ -164,7 +161,7 @@ IntGdiLineTo(DC  *dc,
                                Points[0].x, Points[0].y,
                                Points[1].x, Points[1].y,
                                &Bounds,
-                               ROP2_TO_MIX(Dc_Attr->jROP2));
+                               ROP2_TO_MIX(pdcattr->jROP2));
         }
 
         SURFACE_UnlockSurface(psurf);
@@ -173,11 +170,11 @@ IntGdiLineTo(DC  *dc,
 
     if (Ret)
     {
-        Dc_Attr->ptlCurrent.x = XEnd;
-        Dc_Attr->ptlCurrent.y = YEnd;
-        Dc_Attr->ptfxCurrent = Dc_Attr->ptlCurrent;
-        CoordLPtoDP(dc, &Dc_Attr->ptfxCurrent); // Update fx
-        Dc_Attr->ulDirty_ &= ~(DIRTY_PTLCURRENT|DIRTY_PTFXCURRENT|DIRTY_STYLESTATE);
+        pdcattr->ptlCurrent.x = XEnd;
+        pdcattr->ptlCurrent.y = YEnd;
+        pdcattr->ptfxCurrent = pdcattr->ptlCurrent;
+        CoordLPtoDP(dc, &pdcattr->ptfxCurrent); // Update fx
+        pdcattr->ulDirty_ &= ~(DIRTY_PTLCURRENT|DIRTY_PTFXCURRENT|DIRTY_STYLESTATE);
     }
 
     return Ret;
@@ -217,9 +214,8 @@ IntGdiPolyBezierTo(DC      *dc,
                    DWORD  Count)
 {
     BOOL ret = FALSE; // default to failure
-    PDC_ATTR Dc_Attr = dc->pDc_Attr;
+    PDC_ATTR pdcattr = dc->pdcattr;
 
-    if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
     if ( PATH_IsPathOpen(dc->DcLevel) )
         ret = PATH_PolyBezierTo ( dc, pt, Count );
     else /* We'll do it using PolyBezier */
@@ -230,8 +226,8 @@ IntGdiPolyBezierTo(DC      *dc,
                                     TAG_BEZIER);
         if ( npt )
         {
-            npt[0].x = Dc_Attr->ptlCurrent.x;
-            npt[0].y = Dc_Attr->ptlCurrent.y;
+            npt[0].x = pdcattr->ptlCurrent.x;
+            npt[0].y = pdcattr->ptlCurrent.y;
             memcpy(npt + 1, pt, sizeof(POINT) * Count);
             ret = IntGdiPolyBezier(dc, npt, Count+1);
             ExFreePoolWithTag(npt, TAG_BEZIER);
@@ -239,11 +235,11 @@ IntGdiPolyBezierTo(DC      *dc,
     }
     if ( ret )
     {
-        Dc_Attr->ptlCurrent.x = pt[Count-1].x;
-        Dc_Attr->ptlCurrent.y = pt[Count-1].y;
-        Dc_Attr->ptfxCurrent = Dc_Attr->ptlCurrent;
-        CoordLPtoDP(dc, &Dc_Attr->ptfxCurrent); // Update fx
-        Dc_Attr->ulDirty_ &= ~(DIRTY_PTLCURRENT|DIRTY_PTFXCURRENT|DIRTY_STYLESTATE);
+        pdcattr->ptlCurrent.x = pt[Count-1].x;
+        pdcattr->ptlCurrent.y = pt[Count-1].y;
+        pdcattr->ptfxCurrent = pdcattr->ptlCurrent;
+        CoordLPtoDP(dc, &pdcattr->ptfxCurrent); // Update fx
+        pdcattr->ulDirty_ &= ~(DIRTY_PTLCURRENT|DIRTY_PTFXCURRENT|DIRTY_STYLESTATE);
     }
 
     return ret;
@@ -260,21 +256,19 @@ IntGdiPolyline(DC      *dc,
     LPPOINT Points;
     BOOL Ret = TRUE;
     LONG i;
-    PDC_ATTR Dc_Attr = dc->pDc_Attr;
-
-    if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+    PDC_ATTR pdcattr = dc->pdcattr;
 
     if (PATH_IsPathOpen(dc->DcLevel))
         return PATH_Polyline(dc, pt, Count);
 
-    if (Dc_Attr->ulDirty_ & DC_BRUSH_DIRTY)
-       IntGdiSelectBrush(dc,Dc_Attr->hbrush);
+    if (pdcattr->ulDirty_ & DC_BRUSH_DIRTY)
+       IntGdiSelectBrush(dc,pdcattr->hbrush);
 
-    if (Dc_Attr->ulDirty_ & DC_PEN_DIRTY)
-       IntGdiSelectPen(dc,Dc_Attr->hpen);
+    if (pdcattr->ulDirty_ & DC_PEN_DIRTY)
+       IntGdiSelectPen(dc,pdcattr->hpen);
 
     /* Get BRUSHOBJ from current pen. */
-    PenBrushObj = PENOBJ_LockPen(Dc_Attr->hpen);
+    PenBrushObj = PENOBJ_LockPen(pdcattr->hpen);
     /* FIXME - PenBrushObj can be NULL! Don't assert here! */
     ASSERT(PenBrushObj);
 
@@ -304,7 +298,7 @@ IntGdiPolyline(DC      *dc,
                                  &PenBrushInst.BrushObject,
                                  Points,
                                  Count,
-                                 ROP2_TO_MIX(Dc_Attr->jROP2));
+                                 ROP2_TO_MIX(pdcattr->jROP2));
 
             SURFACE_UnlockSurface(psurf);
             EngFreeMem(Points);
@@ -326,9 +320,8 @@ IntGdiPolylineTo(DC      *dc,
                  DWORD   Count)
 {
     BOOL ret = FALSE; // default to failure
-    PDC_ATTR Dc_Attr = dc->pDc_Attr;
+    PDC_ATTR pdcattr = dc->pdcattr;
 
-    if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
     if (PATH_IsPathOpen(dc->DcLevel))
     {
         ret = PATH_PolylineTo(dc, pt, Count);
@@ -340,8 +333,8 @@ IntGdiPolylineTo(DC      *dc,
                                            TAG_SHAPE);
         if ( pts )
         {
-            pts[0].x = Dc_Attr->ptlCurrent.x;
-            pts[0].y = Dc_Attr->ptlCurrent.y;
+            pts[0].x = pdcattr->ptlCurrent.x;
+            pts[0].y = pdcattr->ptlCurrent.y;
             memcpy( pts + 1, pt, sizeof(POINT) * Count);
             ret = IntGdiPolyline(dc, pts, Count + 1);
             ExFreePoolWithTag(pts, TAG_SHAPE);
@@ -349,11 +342,11 @@ IntGdiPolylineTo(DC      *dc,
     }
     if ( ret )
     {
-        Dc_Attr->ptlCurrent.x = pt[Count-1].x;
-        Dc_Attr->ptlCurrent.y = pt[Count-1].y;
-        Dc_Attr->ptfxCurrent = Dc_Attr->ptlCurrent;
-        CoordLPtoDP(dc, &Dc_Attr->ptfxCurrent); // Update fx
-        Dc_Attr->ulDirty_ &= ~(DIRTY_PTLCURRENT|DIRTY_PTFXCURRENT|DIRTY_STYLESTATE);
+        pdcattr->ptlCurrent.x = pt[Count-1].x;
+        pdcattr->ptlCurrent.y = pt[Count-1].y;
+        pdcattr->ptfxCurrent = pdcattr->ptlCurrent;
+        CoordLPtoDP(dc, &pdcattr->ptfxCurrent); // Update fx
+        pdcattr->ulDirty_ &= ~(DIRTY_PTLCURRENT|DIRTY_PTFXCURRENT|DIRTY_STYLESTATE);
     }
 
     return ret;
@@ -432,12 +425,11 @@ NtGdiPolyDraw(
     BOOL result = FALSE;
     POINT lastmove;
     unsigned int i;
-    PDC_ATTR Dc_Attr = NULL;
+    PDC_ATTR pdcattr;
 
     dc = DC_LockDc(hdc);
     if (!dc) return FALSE;
-    Dc_Attr = dc->pDc_Attr;
-    if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+    pdcattr = dc->pdcattr;
 
     _SEH2_TRY
     {
@@ -456,8 +448,8 @@ NtGdiPolyDraw(
         }
 
         /* if no moveto occurs, we will close the figure here */
-        lastmove.x = Dc_Attr->ptlCurrent.x;
-        lastmove.y = Dc_Attr->ptlCurrent.y;
+        lastmove.x = pdcattr->ptlCurrent.x;
+        lastmove.y = pdcattr->ptlCurrent.y;
 
         /* now let's draw */
         for ( i = 0; i < cCount; i++ )
@@ -465,16 +457,16 @@ NtGdiPolyDraw(
             if ( lpbTypes[i] == PT_MOVETO )
             {
                 IntGdiMoveToEx( dc, lppt[i].x, lppt[i].y, NULL );
-                lastmove.x = Dc_Attr->ptlCurrent.x;
-                lastmove.y = Dc_Attr->ptlCurrent.y;
+                lastmove.x = pdcattr->ptlCurrent.x;
+                lastmove.y = pdcattr->ptlCurrent.y;
             }
             else if ( lpbTypes[i] & PT_LINETO )
                 IntGdiLineTo( dc, lppt[i].x, lppt[i].y );
             else if ( lpbTypes[i] & PT_BEZIERTO )
             {
                 POINT pts[4];
-                pts[0].x = Dc_Attr->ptlCurrent.x;
-                pts[0].y = Dc_Attr->ptlCurrent.y;
+                pts[0].x = pdcattr->ptlCurrent.x;
+                pts[0].y = pdcattr->ptlCurrent.y;
                 RtlCopyMemory(pts + 1, &lppt[i], sizeof(POINT) * 3);
                 IntGdiPolyBezier(dc, pts, 4);
                 i += 2;

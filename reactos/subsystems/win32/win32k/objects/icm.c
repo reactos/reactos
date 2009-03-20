@@ -190,7 +190,7 @@ NtGdiSetColorSpace(IN HDC hdc,
                    IN HCOLORSPACE hColorSpace)
 {
   PDC pDC;
-  PDC_ATTR pDc_Attr;
+  PDC_ATTR pdcattr;
   PCOLORSPACE pCS;
 
   pDC = DC_LockDc(hdc);
@@ -199,10 +199,9 @@ NtGdiSetColorSpace(IN HDC hdc,
      SetLastWin32Error(ERROR_INVALID_HANDLE);
      return FALSE;
   }
-  pDc_Attr = pDC->pDc_Attr;
-  if(!pDc_Attr) pDc_Attr = &pDC->Dc_Attr;
+  pdcattr = pDC->pdcattr;
 
-  if (pDc_Attr->hColorSpace == hColorSpace)
+  if (pdcattr->hColorSpace == hColorSpace)
   {
      DC_UnlockDc(pDC);
      return TRUE; 
@@ -221,7 +220,7 @@ NtGdiSetColorSpace(IN HDC hdc,
   }
 
   pDC->DcLevel.pColorSpace = pCS;
-  pDc_Attr->hColorSpace = hColorSpace;
+  pdcattr->hColorSpace = hColorSpace;
 
   COLORSPACEOBJ_UnlockCS(pCS);
   DC_UnlockDc(pDC);

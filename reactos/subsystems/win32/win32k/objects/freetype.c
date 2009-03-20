@@ -1470,7 +1470,7 @@ ftGdiGetGlyphOutline(
     BOOL bIgnoreRotation)
 {
     static const FT_Matrix identityMat = {(1 << 16), 0, 0, (1 << 16)};
-    PDC_ATTR Dc_Attr;
+    PDC_ATTR pdcattr;
     PTEXTOBJ TextObj;
     PFONTGDI FontGDI;
     HFONT hFont = 0;
@@ -1498,13 +1498,12 @@ ftGdiGetGlyphOutline(
     DPRINT("%d, %08x, %p, %08lx, %p, %p\n", wch, iFormat, pgm,
            cjBuf, pvBuf, pmat2);
 
-    Dc_Attr = dc->pDc_Attr;
-    if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+    pdcattr = dc->pdcattr;
 
     MatrixS2XForm(&xForm, &dc->DcLevel.mxWorldToDevice);
     eM11 = xForm.eM11;
 
-    hFont = Dc_Attr->hlfntNew;
+    hFont = pdcattr->hlfntNew;
     TextObj = RealizeFontInit(hFont);
 
     if (!TextObj)
@@ -2228,7 +2227,7 @@ ftGdiGetTextCharsetInfo(
     LPFONTSIGNATURE lpSig,
     DWORD dwFlags)
 {
-    PDC_ATTR Dc_Attr;
+    PDC_ATTR pdcattr;
     UINT Ret = DEFAULT_CHARSET, i;
     HFONT hFont;
     PTEXTOBJ TextObj;
@@ -2240,9 +2239,8 @@ ftGdiGetTextCharsetInfo(
     DWORD cp, fs0;
     USHORT usACP, usOEM;
 
-    Dc_Attr = Dc->pDc_Attr;
-    if (!Dc_Attr) Dc_Attr = &Dc->Dc_Attr;
-    hFont = Dc_Attr->hlfntNew;
+    pdcattr = Dc->pdcattr;
+    hFont = pdcattr->hlfntNew;
     TextObj = RealizeFontInit(hFont);
 
     if (!TextObj)
@@ -2407,7 +2405,7 @@ ftGdiGetTextMetricsW(
     PTMW_INTERNAL ptmwi)
 {
     PDC dc;
-    PDC_ATTR Dc_Attr;
+    PDC_ATTR pdcattr;
     PTEXTOBJ TextObj;
     PFONTGDI FontGDI;
     FT_Face Face;
@@ -2428,9 +2426,8 @@ ftGdiGetTextMetricsW(
         SetLastWin32Error(ERROR_INVALID_HANDLE);
         return FALSE;
     }
-    Dc_Attr = dc->pDc_Attr;
-    if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
-    TextObj = RealizeFontInit(Dc_Attr->hlfntNew);
+    pdcattr = dc->pdcattr;
+    TextObj = RealizeFontInit(pdcattr->hlfntNew);
     if (NULL != TextObj)
     {
         FontGDI = ObjToGDI(TextObj->Font, FONT);
@@ -3118,7 +3115,7 @@ GreExtTextOutW(
      */
 
     DC *dc;
-    PDC_ATTR Dc_Attr;
+    PDC_ATTR pdcattr;
     SURFOBJ *SurfObj;
     SURFACE *psurf = NULL;
     int error, glyph_index, n, i;
@@ -3170,8 +3167,7 @@ GreExtTextOutW(
         return TRUE;
     }
 
-    Dc_Attr = dc->pDc_Attr;
-    if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+    pdcattr = dc->pdcattr;
 
     /* Check if String is valid */
     if ((Count > 0xFFFF) || (Count > 0 && String == NULL))
@@ -3231,7 +3227,7 @@ GreExtTextOutW(
     {
         goto fail;
     }
-    hBrushFg = NtGdiCreateSolidBrush(XLATEOBJ_iXlate(XlateObj, Dc_Attr->crForegroundClr), 0);
+    hBrushFg = NtGdiCreateSolidBrush(XLATEOBJ_iXlate(XlateObj, pdcattr->crForegroundClr), 0);
     if ( !hBrushFg )
     {
         goto fail;
@@ -3242,9 +3238,9 @@ GreExtTextOutW(
         goto fail;
     }
     IntGdiInitBrushInstance(&BrushFgInst, BrushFg, NULL);
-    if ((fuOptions & ETO_OPAQUE) || Dc_Attr->jBkMode == OPAQUE)
+    if ((fuOptions & ETO_OPAQUE) || pdcattr->jBkMode == OPAQUE)
     {
-        hBrushBg = NtGdiCreateSolidBrush(XLATEOBJ_iXlate(XlateObj, Dc_Attr->crBackgroundClr), 0);
+        hBrushBg = NtGdiCreateSolidBrush(XLATEOBJ_iXlate(XlateObj, pdcattr->crBackgroundClr), 0);
         if ( !hBrushBg )
         {
             goto fail;
@@ -3292,13 +3288,13 @@ GreExtTextOutW(
     }
     else
     {
-        if (Dc_Attr->jBkMode == OPAQUE)
+        if (pdcattr->jBkMode == OPAQUE)
         {
             fuOptions |= ETO_OPAQUE;
         }
     }
 
-    TextObj = RealizeFontInit(Dc_Attr->hlfntNew);
+    TextObj = RealizeFontInit(pdcattr->hlfntNew);
     if (TextObj == NULL)
     {
         goto fail;
@@ -3361,9 +3357,9 @@ GreExtTextOutW(
      * Process the vertical alignment and determine the yoff.
      */
 
-    if (Dc_Attr->lTextAlign & TA_BASELINE)
+    if (pdcattr->lTextAlign & TA_BASELINE)
         yoff = 0;
-    else if (Dc_Attr->lTextAlign & TA_BOTTOM)
+    else if (pdcattr->lTextAlign & TA_BOTTOM)
         yoff = -face->size->metrics.descender >> 6;
     else /* TA_TOP */
         yoff = face->size->metrics.ascender >> 6;
@@ -3375,7 +3371,7 @@ GreExtTextOutW(
      * Process the horizontal alignment and modify XStart accordingly.
      */
 
-    if (Dc_Attr->lTextAlign & (TA_RIGHT | TA_CENTER))
+    if (pdcattr->lTextAlign & (TA_RIGHT | TA_CENTER))
     {
         ULONGLONG TextWidth = 0;
         LPCWSTR TempText = String;
@@ -3439,7 +3435,7 @@ GreExtTextOutW(
 
         previous = 0;
 
-        if (Dc_Attr->lTextAlign & TA_RIGHT)
+        if (pdcattr->lTextAlign & TA_RIGHT)
         {
             RealXStart -= TextWidth;
         }
@@ -3817,7 +3813,7 @@ NtGdiGetCharABCWidthsW(
     LPABC SafeBuff;
     LPABCFLOAT SafeBuffF = NULL;
     PDC dc;
-    PDC_ATTR Dc_Attr;
+    PDC_ATTR pdcattr;
     PTEXTOBJ TextObj;
     PFONTGDI FontGDI;
     FT_Face face;
@@ -3862,9 +3858,8 @@ NtGdiGetCharABCWidthsW(
         SetLastWin32Error(ERROR_INVALID_HANDLE);
         return FALSE;
     }
-    Dc_Attr = dc->pDc_Attr;
-    if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
-    hFont = Dc_Attr->hlfntNew;
+    pdcattr = dc->pdcattr;
+    hFont = pdcattr->hlfntNew;
     TextObj = RealizeFontInit(hFont);
     DC_UnlockDc(dc);
 
@@ -3986,7 +3981,7 @@ NtGdiGetCharWidthW(
     LPINT SafeBuff;
     PFLOAT SafeBuffF = NULL;
     PDC dc;
-    PDC_ATTR Dc_Attr;
+    PDC_ATTR pdcattr;
     PTEXTOBJ TextObj;
     PFONTGDI FontGDI;
     FT_Face face;
@@ -4030,9 +4025,8 @@ NtGdiGetCharWidthW(
         SetLastWin32Error(ERROR_INVALID_HANDLE);
         return FALSE;
     }
-    Dc_Attr = dc->pDc_Attr;
-    if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
-    hFont = Dc_Attr->hlfntNew;
+    pdcattr = dc->pdcattr;
+    hFont = pdcattr->hlfntNew;
     TextObj = RealizeFontInit(hFont);
     DC_UnlockDc(dc);
 
@@ -4122,7 +4116,7 @@ NtGdiGetGlyphIndicesW(
     IN DWORD iMode)
 {
     PDC dc;
-    PDC_ATTR Dc_Attr;
+    PDC_ATTR pdcattr;
     PTEXTOBJ TextObj;
     PFONTGDI FontGDI;
     HFONT hFont = 0;
@@ -4142,9 +4136,8 @@ NtGdiGetGlyphIndicesW(
         SetLastWin32Error(ERROR_INVALID_HANDLE);
         return GDI_ERROR;
     }
-    Dc_Attr = dc->pDc_Attr;
-    if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
-    hFont = Dc_Attr->hlfntNew;
+    pdcattr = dc->pdcattr;
+    hFont = pdcattr->hlfntNew;
     TextObj = RealizeFontInit(hFont);
     DC_UnlockDc(dc);
     if (!TextObj)

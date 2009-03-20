@@ -44,6 +44,7 @@ DceCreateDisplayDC(VOID)
       PDC dc = DC_LockDc ( hDC );
       defaultDCstate = ExAllocatePoolWithTag(PagedPool, sizeof(DC), TAG_DC);
       RtlZeroMemory(defaultDCstate, sizeof(DC));
+      defaultDCstate->pdcattr = &defaultDCstate->Dc_Attr;
       IntGdiCopyToSaveState(dc, defaultDCstate);
       DC_UnlockDc( dc );
   }

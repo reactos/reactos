@@ -450,7 +450,7 @@ IntCreateXlateForBlt(PDC pDCDest, PDC pDCSrc, SURFACE* psurfDest, SURFACE* psurf
 {
 	XLATEOBJ *XlateObj;
 	HPALETTE DestPalette, SourcePalette;
-	PDC_ATTR pDc_Attr;
+	PDC_ATTR pdcattr;
 
 	DPRINT("Enter IntCreateXlateFromDCs\n");
 
@@ -476,9 +476,8 @@ IntCreateXlateForBlt(PDC pDCDest, PDC pDCSrc, SURFACE* psurfDest, SURFACE* psurf
 		}
 		else
 		{
-			pDc_Attr = pDCSrc->pDc_Attr;
-			if (!pDc_Attr) pDc_Attr = &pDCSrc->Dc_Attr;
-			XlateObj = IntEngCreateMonoXlate(0, DestPalette, SourcePalette, pDc_Attr->crBackgroundClr);
+			pdcattr = pDCSrc->pdcattr;
+			XlateObj = IntEngCreateMonoXlate(0, DestPalette, SourcePalette, pdcattr->crBackgroundClr);
 		}
 	}
 	else
@@ -499,9 +498,8 @@ IntCreateXlateForBlt(PDC pDCDest, PDC pDCSrc, SURFACE* psurfDest, SURFACE* psurf
 			}
 			else
 			{
-				pDc_Attr = pDCDest->pDc_Attr;
-				if (!pDc_Attr) pDc_Attr = &pDCDest->Dc_Attr;
-				XlateObj = IntEngCreateSrcMonoXlate(DestPalette, pDc_Attr->crForegroundClr, pDc_Attr->crBackgroundClr);
+				pdcattr = pDCDest->pdcattr;
+				XlateObj = IntEngCreateSrcMonoXlate(DestPalette, pdcattr->crForegroundClr, pdcattr->crBackgroundClr);
 			}
 		}
 		else

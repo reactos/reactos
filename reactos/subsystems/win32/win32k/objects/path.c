@@ -102,9 +102,7 @@ PATH_FillPath( PDC dc, PPATH pPath )
   POINTL ptViewportOrg, ptWindowOrg;
   XFORM xform;
   HRGN  hrgn;
-  PDC_ATTR Dc_Attr = dc->pDc_Attr;
-
-  if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+  PDC_ATTR pdcattr = dc->pdcattr;
 
   if( pPath->state != PATH_Closed )
   {
@@ -112,7 +110,7 @@ PATH_FillPath( PDC dc, PPATH pPath )
     return FALSE;
   }
 
-  if( PATH_PathToRegion( pPath, Dc_Attr->jFillMode, &hrgn ))
+  if( PATH_PathToRegion( pPath, pdcattr->jFillMode, &hrgn ))
   {
     /* Since PaintRgn interprets the region as being in logical coordinates
      * but the points we store for the path are already in device
@@ -123,11 +121,11 @@ PATH_FillPath( PDC dc, PPATH pPath )
      */
 
     /* Save the information about the old mapping mode */
-    mapMode = Dc_Attr->iMapMode;
-    ptViewportExt = Dc_Attr->szlViewportExt;
-    ptViewportOrg = Dc_Attr->ptlViewportOrg;
-    ptWindowExt   = Dc_Attr->szlWindowExt;
-    ptWindowOrg   = Dc_Attr->ptlWindowOrg;
+    mapMode = pdcattr->iMapMode;
+    ptViewportExt = pdcattr->szlViewportExt;
+    ptViewportOrg = pdcattr->ptlViewportOrg;
+    ptWindowExt   = pdcattr->szlWindowExt;
+    ptWindowOrg   = pdcattr->ptlWindowOrg;
 
     /* Save world transform
      * NB: The Windows documentation on world transforms would lead one to
@@ -139,31 +137,31 @@ PATH_FillPath( PDC dc, PPATH pPath )
 
     /* Set MM_TEXT */
 //    IntGdiSetMapMode( dc, MM_TEXT );
-//    Dc_Attr->ptlViewportOrg.x = 0;
-//    Dc_Attr->ptlViewportOrg.y = 0;
-//    Dc_Attr->ptlWindowOrg.x = 0;
-//    Dc_Attr->ptlWindowOrg.y = 0;
+//    pdcattr->ptlViewportOrg.x = 0;
+//    pdcattr->ptlViewportOrg.y = 0;
+//    pdcattr->ptlWindowOrg.x = 0;
+//    pdcattr->ptlWindowOrg.y = 0;
 
-    graphicsMode = Dc_Attr->iGraphicsMode;
-//    Dc_Attr->iGraphicsMode = GM_ADVANCED;
+    graphicsMode = pdcattr->iGraphicsMode;
+//    pdcattr->iGraphicsMode = GM_ADVANCED;
 //    IntGdiModifyWorldTransform( dc, &xform, MWT_IDENTITY );
-//    Dc_Attr->iGraphicsMode =  graphicsMode;
+//    pdcattr->iGraphicsMode =  graphicsMode;
 
     /* Paint the region */
     IntGdiPaintRgn( dc, hrgn );
     NtGdiDeleteObject( hrgn );
     /* Restore the old mapping mode */
 //    IntGdiSetMapMode( dc, mapMode );
-//    Dc_Attr->szlViewportExt = ptViewportExt;
-//    Dc_Attr->ptlViewportOrg = ptViewportOrg;
-//    Dc_Attr->szlWindowExt   = ptWindowExt;
-//    Dc_Attr->ptlWindowOrg   = ptWindowOrg;
+//    pdcattr->szlViewportExt = ptViewportExt;
+//    pdcattr->ptlViewportOrg = ptViewportOrg;
+//    pdcattr->szlWindowExt   = ptWindowExt;
+//    pdcattr->ptlWindowOrg   = ptWindowOrg;
 
     /* Go to GM_ADVANCED temporarily to restore the world transform */
-    graphicsMode = Dc_Attr->iGraphicsMode;
-//    Dc_Attr->iGraphicsMode = GM_ADVANCED;
+    graphicsMode = pdcattr->iGraphicsMode;
+//    pdcattr->iGraphicsMode = GM_ADVANCED;
 //    IntGdiModifyWorldTransform( dc, &xform, MWT_MAX+1 );
-//    Dc_Attr->iGraphicsMode = graphicsMode;
+//    pdcattr->iGraphicsMode = graphicsMode;
     return TRUE;
   }
   return FALSE;
@@ -954,8 +952,7 @@ PATH_PolyPolyline ( PDC dc, const POINT* pts, const DWORD* counts, DWORD polylin
 BOOL PATH_CheckCorners(DC *dc, POINT corners[], INT x1, INT y1, INT x2, INT y2)
 {
    INT temp;
-   PDC_ATTR Dc_Attr = dc->pDc_Attr;
-   if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+   PDC_ATTR pdcattr = dc->pdcattr;
 
    /* Convert points to device coordinates */
    corners[0].x=x1;
@@ -980,7 +977,7 @@ BOOL PATH_CheckCorners(DC *dc, POINT corners[], INT x1, INT y1, INT x2, INT y2)
    }
 
    /* In GM_COMPATIBLE, don't include bottom and right edges */
-   if(Dc_Attr->iGraphicsMode==GM_COMPATIBLE)
+   if(pdcattr->iGraphicsMode==GM_COMPATIBLE)
    {
       corners[1].x--;
       corners[1].y--;
@@ -1337,18 +1334,15 @@ BOOL FASTCALL PATH_StrokePath(DC *dc, PPATH pPath)
     SIZE szViewportExt, szWindowExt;
     DWORD mapMode, graphicsMode;
     XFORM xform;
-    PDC_ATTR Dc_Attr = dc->pDc_Attr;
+    PDC_ATTR pdcattr = dc->pdcattr;
 
     DPRINT("Enter %s\n", __FUNCTION__);
 
     if (pPath->state != PATH_Closed)
         return FALSE;
 
-    if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
-
-
     /* Save the mapping mode info */
-    mapMode = Dc_Attr->iMapMode;
+    mapMode = pdcattr->iMapMode;
     IntGetViewportExtEx(dc, &szViewportExt);
     IntGetViewportOrgEx(dc, &ptViewportOrg);
     IntGetWindowExtEx(dc, &szWindowExt);
@@ -1357,15 +1351,15 @@ BOOL FASTCALL PATH_StrokePath(DC *dc, PPATH pPath)
     MatrixS2XForm(&xform, &dc->DcLevel.mxWorldToPage);
 
     /* Set MM_TEXT */
-    Dc_Attr->iMapMode = MM_TEXT;
-    Dc_Attr->ptlViewportOrg.x = 0;
-    Dc_Attr->ptlViewportOrg.y = 0;
-    Dc_Attr->ptlWindowOrg.x = 0;
-    Dc_Attr->ptlWindowOrg.y = 0;
-    graphicsMode = Dc_Attr->iGraphicsMode;
-    Dc_Attr->iGraphicsMode = GM_ADVANCED;
+    pdcattr->iMapMode = MM_TEXT;
+    pdcattr->ptlViewportOrg.x = 0;
+    pdcattr->ptlViewportOrg.y = 0;
+    pdcattr->ptlWindowOrg.x = 0;
+    pdcattr->ptlWindowOrg.y = 0;
+    graphicsMode = pdcattr->iGraphicsMode;
+    pdcattr->iGraphicsMode = GM_ADVANCED;
     IntGdiModifyWorldTransform(dc, &xform, MWT_IDENTITY);
-    Dc_Attr->iGraphicsMode = graphicsMode;
+    pdcattr->iGraphicsMode = graphicsMode;
 
     /* Allocate enough memory for the worst case without beziers (one PT_MOVETO
      * and the rest PT_LINETO with PT_CLOSEFIGURE at the end) plus some buffer
@@ -1469,16 +1463,16 @@ end:
     if(pLinePts) ExFreePoolWithTag(pLinePts, TAG_PATH);
 
     /* Restore the old mapping mode */
-    Dc_Attr->iMapMode =  mapMode;
-    Dc_Attr->szlWindowExt.cx = szWindowExt.cx;
-    Dc_Attr->szlWindowExt.cy = szWindowExt.cy;
-    Dc_Attr->ptlWindowOrg.x = ptWindowOrg.x;
-    Dc_Attr->ptlWindowOrg.y = ptWindowOrg.y;
+    pdcattr->iMapMode =  mapMode;
+    pdcattr->szlWindowExt.cx = szWindowExt.cx;
+    pdcattr->szlWindowExt.cy = szWindowExt.cy;
+    pdcattr->ptlWindowOrg.x = ptWindowOrg.x;
+    pdcattr->ptlWindowOrg.y = ptWindowOrg.y;
 
-    Dc_Attr->szlViewportExt.cx = szViewportExt.cx;
-    Dc_Attr->szlViewportExt.cy = szViewportExt.cy;
-    Dc_Attr->ptlViewportOrg.x = ptViewportOrg.x;
-    Dc_Attr->ptlViewportOrg.y = ptViewportOrg.y;
+    pdcattr->szlViewportExt.cx = szViewportExt.cx;
+    pdcattr->szlViewportExt.cy = szViewportExt.cy;
+    pdcattr->ptlViewportOrg.x = ptViewportOrg.x;
+    pdcattr->ptlViewportOrg.y = ptViewportOrg.y;
 
     /* Restore the world transform */
     XForm2MatrixS(&dc->DcLevel.mxWorldToPage, &xform);
@@ -1512,7 +1506,7 @@ PATH_WidenPath(DC *dc)
     PPATH pPath, pNewPath, *pStrokes, *pOldStrokes, pUpPath, pDownPath;
     EXTLOGPEN *elp;
     DWORD obj_type, joint, endcap, penType;
-    PDC_ATTR Dc_Attr = dc->pDc_Attr;
+    PDC_ATTR pdcattr = dc->pdcattr;
 
     pPath = PATH_LockPath( dc->DcLevel.hPath );
     if (!pPath) return FALSE;
@@ -1524,11 +1518,9 @@ PATH_WidenPath(DC *dc)
        return FALSE;
     }
 
-    if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
-
     PATH_FlattenPath(pPath);
 
-    size = IntGdiGetObject( Dc_Attr->hpen, 0, NULL);
+    size = IntGdiGetObject( pdcattr->hpen, 0, NULL);
     if (!size)
     {
         PATH_UnlockPath( pPath );
@@ -1537,9 +1529,9 @@ PATH_WidenPath(DC *dc)
     }
 
     elp = ExAllocatePoolWithTag(PagedPool, size, TAG_PATH);
-    (VOID) IntGdiGetObject( Dc_Attr->hpen, size, elp);
+    (VOID) IntGdiGetObject( pdcattr->hpen, size, elp);
 
-    obj_type = GDIOBJ_GetObjectType(Dc_Attr->hpen);
+    obj_type = GDIOBJ_GetObjectType(pdcattr->hpen);
     if(obj_type == GDI_OBJECT_TYPE_PEN)
     {
         penStyle = ((LOGPEN*)elp)->lopnStyle;
@@ -2030,7 +2022,7 @@ PATH_ExtTextOut(PDC dc, INT x, INT y, UINT flags, const RECTL *lprc,
 {
     unsigned int idx;
     double cosEsc, sinEsc;
-    PDC_ATTR Dc_Attr;
+    PDC_ATTR pdcattr;
     PTEXTOBJ TextObj;
     LOGFONTW lf;
     POINTL org;
@@ -2038,10 +2030,9 @@ PATH_ExtTextOut(PDC dc, INT x, INT y, UINT flags, const RECTL *lprc,
 
     if (!count) return TRUE;
 
-    Dc_Attr = dc->pDc_Attr;
-    if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+    pdcattr = dc->pdcattr;
 
-    TextObj = RealizeFontInit( Dc_Attr->hlfntNew);
+    TextObj = RealizeFontInit( pdcattr->hlfntNew);
     if ( !TextObj ) return FALSE;
 
     FontGetObject( TextObj, sizeof(lf), &lf);
@@ -2284,7 +2275,7 @@ NtGdiFillPath(HDC  hDC)
 {
   BOOL ret = FALSE;
   PPATH pPath;
-  PDC_ATTR pDc_Attr;
+  PDC_ATTR pdcattr;
   PDC dc = DC_LockDc ( hDC );
  
   if ( !dc )
@@ -2299,11 +2290,10 @@ NtGdiFillPath(HDC  hDC)
      return FALSE;
   }
 
-  pDc_Attr = dc->pDc_Attr;
-  if (!pDc_Attr) pDc_Attr = &dc->Dc_Attr;
+  pdcattr = dc->pdcattr;
 
-  if (pDc_Attr->ulDirty_ & DC_BRUSH_DIRTY)
-     IntGdiSelectBrush(dc,pDc_Attr->hbrush);
+  if (pdcattr->ulDirty_ & DC_BRUSH_DIRTY)
+     IntGdiSelectBrush(dc,pdcattr->hbrush);
 
   ret = PATH_FillPath( dc, pPath );
   if ( ret )
@@ -2468,7 +2458,7 @@ NtGdiPathToRegion(HDC  hDC)
   PPATH pPath;
   HRGN  hrgnRval = 0;
   DC *pDc;
-  PDC_ATTR Dc_Attr;
+  PDC_ATTR pdcattr;
 
   DPRINT("Enter %s\n", __FUNCTION__);
 
@@ -2479,8 +2469,7 @@ NtGdiPathToRegion(HDC  hDC)
      return NULL;
   }
 
-  Dc_Attr = pDc->pDc_Attr;
-  if(!Dc_Attr) Dc_Attr = &pDc->Dc_Attr;
+  pdcattr = pDc->pdcattr;
 
   pPath = PATH_LockPath( pDc->DcLevel.hPath );
   if (!pPath)
@@ -2497,7 +2486,7 @@ NtGdiPathToRegion(HDC  hDC)
   else
   {
      /* FIXME: Should we empty the path even if conversion failed? */
-     if(PATH_PathToRegion(pPath, Dc_Attr->jFillMode, &hrgnRval))
+     if(PATH_PathToRegion(pPath, pdcattr->jFillMode, &hrgnRval))
           PATH_EmptyPath(pPath);
   }
 
@@ -2558,7 +2547,7 @@ APIENTRY
 NtGdiStrokeAndFillPath(HDC hDC)
 {
   DC *pDc;
-  PDC_ATTR pDc_Attr;
+  PDC_ATTR pdcattr;
   PPATH pPath;
   BOOL bRet = FALSE;
 
@@ -2576,13 +2565,12 @@ NtGdiStrokeAndFillPath(HDC hDC)
      return FALSE;
   }
 
-  pDc_Attr = pDc->pDc_Attr;
-  if (!pDc_Attr) pDc_Attr = &pDc->Dc_Attr;
+  pdcattr = pDc->pdcattr;
 
-  if (pDc_Attr->ulDirty_ & DC_BRUSH_DIRTY)
-     IntGdiSelectBrush(pDc,pDc_Attr->hbrush);
-  if (pDc_Attr->ulDirty_ & DC_PEN_DIRTY)
-     IntGdiSelectPen(pDc,pDc_Attr->hpen);
+  if (pdcattr->ulDirty_ & DC_BRUSH_DIRTY)
+     IntGdiSelectBrush(pDc,pdcattr->hbrush);
+  if (pdcattr->ulDirty_ & DC_PEN_DIRTY)
+     IntGdiSelectPen(pDc,pdcattr->hpen);
 
   bRet = PATH_FillPath(pDc, pPath);
   if (bRet) bRet = PATH_StrokePath(pDc, pPath);
@@ -2598,7 +2586,7 @@ APIENTRY
 NtGdiStrokePath(HDC hDC)
 {
   DC *pDc;
-  PDC_ATTR pDc_Attr;
+  PDC_ATTR pdcattr;
   PPATH pPath;
   BOOL bRet = FALSE;
 
@@ -2616,11 +2604,10 @@ NtGdiStrokePath(HDC hDC)
      return FALSE;
   }
 
-  pDc_Attr = pDc->pDc_Attr;
-  if (!pDc_Attr) pDc_Attr = &pDc->Dc_Attr;
+  pdcattr = pDc->pdcattr;
 
-  if (pDc_Attr->ulDirty_ & DC_PEN_DIRTY)
-     IntGdiSelectPen(pDc,pDc_Attr->hpen);
+  if (pdcattr->ulDirty_ & DC_PEN_DIRTY)
+     IntGdiSelectPen(pDc,pdcattr->hpen);
 
   bRet = PATH_StrokePath(pDc, pPath);
   PATH_EmptyPath(pPath);
@@ -2654,7 +2641,7 @@ NtGdiSelectClipPath(HDC  hDC,
  HRGN  hrgnPath;
  PPATH pPath;
  BOOL  success = FALSE;
- PDC_ATTR Dc_Attr;
+ PDC_ATTR pdcattr;
  PDC dc = DC_LockDc ( hDC );
  
  if ( !dc )
@@ -2663,8 +2650,7 @@ NtGdiSelectClipPath(HDC  hDC,
     return FALSE;
  }
 
- Dc_Attr = dc->pDc_Attr;
- if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+ pdcattr = dc->pdcattr;
 
  pPath = PATH_LockPath( dc->DcLevel.hPath );
  if (!pPath)
@@ -2679,7 +2665,7 @@ NtGdiSelectClipPath(HDC  hDC,
    return FALSE;
  }
  /* Construct a region from the path */
- else if( PATH_PathToRegion( pPath, Dc_Attr->jFillMode, &hrgnPath ) )
+ else if( PATH_PathToRegion( pPath, pdcattr->jFillMode, &hrgnPath ) )
  {
    success = GdiExtSelectClipRgn( dc, hrgnPath, Mode ) != ERROR;
    NtGdiDeleteObject( hrgnPath );

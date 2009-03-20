@@ -1195,7 +1195,7 @@ IntFillRect( DC *dc,
   GDIBRUSHINST BrushInst;
   POINTL BrushOrigin;
   BOOL Ret = TRUE;
-  PDC_ATTR Dc_Attr = NULL;
+  PDC_ATTR pdcattr;
 
   ASSERT(BrushObj);
 
@@ -1208,8 +1208,7 @@ IntFillRect( DC *dc,
 
   if (!(BrushObj->flAttrs & GDIBRUSH_IS_NULL))
   {
-     Dc_Attr = dc->pDc_Attr;
-     if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+     pdcattr = dc->pdcattr;
 
      /* fix negative spaces */
      if (Width < 0)
@@ -1232,7 +1231,7 @@ IntFillRect( DC *dc,
      BrushOrigin.x = BrushObj->ptOrigin.x;
      BrushOrigin.y = BrushObj->ptOrigin.y;
 
-     if (Dc_Attr->jROP2 == R2_XORPEN)
+     if (pdcattr->jROP2 == R2_XORPEN)
         ROP = PATINVERT;
      else
         ROP = PATCOPY;
@@ -1271,16 +1270,15 @@ IntFillArc( PDC dc,
             double EndArc,
             ARCTYPE arctype)
 {
-  PDC_ATTR Dc_Attr;
+  PDC_ATTR pdcattr;
   PGDIBRUSHOBJ FillBrushObj;
   int Start = ceill(StartArc);
   int End   = ceill(EndArc);
   BOOL Chord = (arctype == GdiTypeChord), ret;
 
-  Dc_Attr = dc->pDc_Attr;
-  if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+  pdcattr = dc->pdcattr;
 
-  FillBrushObj = BRUSHOBJ_LockBrush(Dc_Attr->hbrush);
+  FillBrushObj = BRUSHOBJ_LockBrush(pdcattr->hbrush);
   if (NULL == FillBrushObj)   
   {
       DPRINT1("FillArc Fail\n");

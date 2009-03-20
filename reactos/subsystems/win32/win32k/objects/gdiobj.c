@@ -1562,7 +1562,7 @@ IntGdiSetDCOwnerEx( HDC hDC, DWORD OwnerMask, BOOL NoSetBrush)
   if ((OwnerMask == GDI_OBJ_HMGR_PUBLIC) || OwnerMask == GDI_OBJ_HMGR_NONE)
   {
      pDC = DC_LockDc ( hDC );
-     MmCopyFromCaller(&pDC->Dc_Attr, pDC->pDc_Attr, sizeof(DC_ATTR));
+     MmCopyFromCaller(&pDC->Dc_Attr, pDC->pdcattr, sizeof(DC_ATTR));
      DC_UnlockDc( pDC );
 
      DC_FreeDcAttr( hDC );         // Free the dcattr!
@@ -1574,9 +1574,8 @@ IntGdiSetDCOwnerEx( HDC hDC, DWORD OwnerMask, BOOL NoSetBrush)
   if (OwnerMask == GDI_OBJ_HMGR_POWNED)
   {
      pDC = DC_LockDc ( hDC );
-     if ( !pDC->pDc_Attr ) Ret = TRUE; // Must be zero.
+     ASSERT(pDC->pdcattr == &pDC->Dc_Attr);
      DC_UnlockDc( pDC );
-     if (!Ret) return Ret;
 
      if (!DC_SetOwnership( hDC, PsGetCurrentProcess() )) return Ret;
 

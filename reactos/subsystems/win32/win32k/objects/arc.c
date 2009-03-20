@@ -12,7 +12,7 @@
        &BrushInst.BrushObject,                   \
        x, y, (x)+1, y,                           \
        &RectBounds,                              \
-       ROP2_TO_MIX(Dc_Attr->jROP2));
+       ROP2_TO_MIX(pdcattr->jROP2));
 
 #define PUTLINE(x1,y1,x2,y2,BrushInst) \
   ret = ret && IntEngLineTo(&psurf->SurfObj, \
@@ -20,7 +20,7 @@
        &BrushInst.BrushObject,                   \
        x1, y1, x2, y2,                           \
        &RectBounds,                              \
-       ROP2_TO_MIX(Dc_Attr->jROP2));
+       ROP2_TO_MIX(pdcattr->jROP2));
 
 #define Rsin(d) ((d) == 0.0 ? 0.0 : ((d) == 90.0 ? 1.0 : sin(d*M_PI/180.0)))
 #define Rcos(d) ((d) == 0.0 ? 1.0 : ((d) == 90.0 ? 0.0 : cos(d*M_PI/180.0)))
@@ -42,7 +42,7 @@ IntArc( DC *dc,
         int  YRadialEnd,
         ARCTYPE arctype)
 {
-    PDC_ATTR Dc_Attr;
+    PDC_ATTR pdcattr;
     RECTL RectBounds, RectSEpts;
     PGDIBRUSHOBJ PenBrushObj;
     GDIBRUSHINST PenBrushInst;
@@ -68,10 +68,9 @@ IntArc( DC *dc,
         (Bottom - Top == 1))))
        return TRUE;
 
-    Dc_Attr = dc->pDc_Attr;
-    if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+    pdcattr = dc->pdcattr;
 
-    PenBrushObj = PENOBJ_LockPen(Dc_Attr->hpen);
+    PenBrushObj = PENOBJ_LockPen(pdcattr->hpen);
     if (NULL == PenBrushObj)
     {
         DPRINT1("Arc Fail 1\n");
@@ -199,7 +198,7 @@ IntGdiArcInternal(
           int YEndArc)
 {
   BOOL Ret;
-  PDC_ATTR pDc_Attr;
+  PDC_ATTR pdcattr;
 
   DPRINT("StartX: %d, StartY: %d, EndX: %d, EndY: %d\n",
            XStartArc,YStartArc,XEndArc,YEndArc);
@@ -222,14 +221,13 @@ IntGdiArcInternal(
                  arctype);
   }
 
-  pDc_Attr = dc->pDc_Attr;
-  if (!pDc_Attr) pDc_Attr = &dc->Dc_Attr;
+  pdcattr = dc->pdcattr;
 
-  if (pDc_Attr->ulDirty_ & DC_BRUSH_DIRTY)
-     IntGdiSelectBrush(dc,pDc_Attr->hbrush);
+  if (pdcattr->ulDirty_ & DC_BRUSH_DIRTY)
+     IntGdiSelectBrush(dc,pdcattr->hbrush);
 
-  if (pDc_Attr->ulDirty_ & DC_PEN_DIRTY)
-     IntGdiSelectPen(dc,pDc_Attr->hpen);
+  if (pdcattr->ulDirty_ & DC_PEN_DIRTY)
+     IntGdiSelectPen(dc,pdcattr->hpen);
 
   if (arctype == GdiTypeArcTo)
   {

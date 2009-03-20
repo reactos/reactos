@@ -186,7 +186,7 @@ NtGdiBitBlt(
 {
     PDC DCDest;
     PDC DCSrc = NULL;
-    PDC_ATTR Dc_Attr = NULL;
+    PDC_ATTR pdcattr = NULL;
     SURFACE *BitmapDest, *BitmapSrc = NULL;
     RECTL DestRect;
     POINTL SourcePoint, BrushOrigin;
@@ -235,11 +235,10 @@ NtGdiBitBlt(
         }
     }
 
-    Dc_Attr = DCDest->pDc_Attr;
-    if (!Dc_Attr) Dc_Attr = &DCDest->Dc_Attr;
+    pdcattr = DCDest->pdcattr;
 
-    if (Dc_Attr->ulDirty_ & DC_BRUSH_DIRTY)
-        IntGdiSelectBrush(DCDest,Dc_Attr->hbrush);
+    if (pdcattr->ulDirty_ & DC_BRUSH_DIRTY)
+        IntGdiSelectBrush(DCDest,pdcattr->hbrush);
 
     /* Offset the destination and source by the origin of their DCs. */
     XDest += DCDest->ptlDCOrig.x;
@@ -286,7 +285,7 @@ NtGdiBitBlt(
 
     if (UsesPattern)
     {
-        BrushObj = BRUSHOBJ_LockBrush(Dc_Attr->hbrush);
+        BrushObj = BRUSHOBJ_LockBrush(pdcattr->hbrush);
         if (NULL == BrushObj)
         {
             SetLastWin32Error(ERROR_INVALID_HANDLE);
@@ -750,7 +749,7 @@ NtGdiStretchBlt(
 {
     PDC DCDest;
     PDC DCSrc  = NULL;
-    PDC_ATTR Dc_Attr;
+    PDC_ATTR pdcattr;
     SURFACE *BitmapDest, *BitmapSrc = NULL;
     RECTL DestRect;
     RECTL SourceRect;
@@ -807,11 +806,10 @@ NtGdiStretchBlt(
         }
     }
 
-    Dc_Attr = DCDest->pDc_Attr;
-    if (!Dc_Attr) Dc_Attr = &DCDest->Dc_Attr;
+    pdcattr = DCDest->pdcattr;
 
-    if (Dc_Attr->ulDirty_ & DC_BRUSH_DIRTY)
-        IntGdiSelectBrush(DCDest,Dc_Attr->hbrush);
+    if (pdcattr->ulDirty_ & DC_BRUSH_DIRTY)
+        IntGdiSelectBrush(DCDest,pdcattr->hbrush);
 
     /* Offset the destination and source by the origin of their DCs. */
     XOriginDest += DCDest->ptlDCOrig.x;
@@ -869,7 +867,7 @@ NtGdiStretchBlt(
 
     if (UsesPattern)
     {
-        BrushObj = BRUSHOBJ_LockBrush(Dc_Attr->hbrush);
+        BrushObj = BRUSHOBJ_LockBrush(pdcattr->hbrush);
         if (NULL == BrushObj)
         {
             SetLastWin32Error(ERROR_INVALID_HANDLE);
@@ -1002,7 +1000,7 @@ IntGdiPolyPatBlt(
     int i;
     PPATRECT r;
     PGDIBRUSHOBJ BrushObj;
-    PDC_ATTR Dc_Attr;
+    PDC_ATTR pdcattr;
     DC *dc;
 
     dc = DC_LockDc(hDC);
@@ -1018,11 +1016,10 @@ IntGdiPolyPatBlt(
         return TRUE;
     }
 
-    Dc_Attr = dc->pDc_Attr;
-    if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+    pdcattr = dc->pdcattr;
 
-    if (Dc_Attr->ulDirty_ & DC_BRUSH_DIRTY)
-        IntGdiSelectBrush(dc,Dc_Attr->hbrush);
+    if (pdcattr->ulDirty_ & DC_BRUSH_DIRTY)
+        IntGdiSelectBrush(dc,pdcattr->hbrush);
 
     for (r = pRects, i = 0; i < cRects; i++)
     {
@@ -1059,7 +1056,7 @@ NtGdiPatBlt(
 {
     PGDIBRUSHOBJ BrushObj;
     DC *dc;
-    PDC_ATTR Dc_Attr;
+    PDC_ATTR pdcattr;
     BOOL ret;
 
     BOOL UsesSource = ROP3_USES_SOURCE(ROP);
@@ -1082,13 +1079,12 @@ NtGdiPatBlt(
         return TRUE;
     }
 
-    Dc_Attr = dc->pDc_Attr;
-    if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+    pdcattr = dc->pdcattr;
 
-    if (Dc_Attr->ulDirty_ & DC_BRUSH_DIRTY)
-        IntGdiSelectBrush(dc,Dc_Attr->hbrush);
+    if (pdcattr->ulDirty_ & DC_BRUSH_DIRTY)
+        IntGdiSelectBrush(dc,pdcattr->hbrush);
 
-    BrushObj = BRUSHOBJ_LockBrush(Dc_Attr->hbrush);
+    BrushObj = BRUSHOBJ_LockBrush(pdcattr->hbrush);
     if (BrushObj == NULL)
     {
         SetLastWin32Error(ERROR_INVALID_HANDLE);

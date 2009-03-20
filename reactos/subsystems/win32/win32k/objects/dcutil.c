@@ -14,15 +14,14 @@ func_type APIENTRY  func_name( HDC hdc ) \
 {                                   \
   func_type  ft;                    \
   PDC  dc = DC_LockDc( hdc );       \
-  PDC_ATTR Dc_Attr;                 \
+  PDC_ATTR pdcattr;                 \
   if (!dc)                          \
   {                                 \
     SetLastWin32Error(ERROR_INVALID_HANDLE); \
     return 0;                       \
   }                                 \
-  Dc_Attr = dc->pDc_Attr;           \
-  if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr; \
-  ft = Dc_Attr->dc_field;           \
+  pdcattr = dc->pdcattr;           \
+  ft = pdcattr->dc_field;           \
   DC_UnlockDc(dc);                  \
   return ft;                        \
 }
@@ -34,13 +33,12 @@ func_type APIENTRY  func_name( HDC hdc ) \
 #define DC_GET_VAL_EX( FuncName, ret_x, ret_y, type, ax, ay ) \
 VOID FASTCALL Int##FuncName ( PDC dc, LP##type pt) \
 { \
-  PDC_ATTR Dc_Attr; \
+  PDC_ATTR pdcattr; \
   ASSERT(dc); \
   ASSERT(pt); \
-  Dc_Attr = dc->pDc_Attr; \
-  if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr; \
-  pt->ax = Dc_Attr->ret_x; \
-  pt->ay = Dc_Attr->ret_y; \
+  pdcattr = dc->pdcattr; \
+  pt->ax = pdcattr->ret_x; \
+  pt->ay = pdcattr->ret_y; \
 }
 
 #if 0
@@ -87,7 +85,7 @@ INT APIENTRY  func_name( HDC hdc, INT mode ) \
 {                                           \
   INT  prevMode;                            \
   PDC  dc;                                  \
-  PDC_ATTR Dc_Attr;                         \
+  PDC_ATTR pdcattr;                         \
   if ((mode < min_val) || (mode > max_val)) \
   { \
     SetLastWin32Error(ERROR_INVALID_PARAMETER); \
@@ -99,10 +97,9 @@ INT APIENTRY  func_name( HDC hdc, INT mode ) \
     SetLastWin32Error(ERROR_INVALID_HANDLE); \
     return 0;                               \
   } \
-  Dc_Attr = dc->pDc_Attr;           \
-  if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr; \
-  prevMode = Dc_Attr->dc_field;             \
-  Dc_Attr->dc_field = mode;                 \
+  pdcattr = dc->pdcattr;           \
+  prevMode = pdcattr->dc_field;             \
+  pdcattr->dc_field = mode;                 \
   DC_UnlockDc ( dc );                    \
   return prevMode;                          \
 }
@@ -110,7 +107,7 @@ INT APIENTRY  func_name( HDC hdc, INT mode ) \
 
 static
 VOID
-CopytoUserDcAttr(PDC dc, PDC_ATTR Dc_Attr)
+CopytoUserDcAttr(PDC dc, PDC_ATTR pdcattr)
 {
   NTSTATUS Status = STATUS_SUCCESS;
   dc->Dc_Attr.mxWorldToDevice = dc->DcLevel.mxWorldToDevice;
@@ -119,16 +116,17 @@ CopytoUserDcAttr(PDC dc, PDC_ATTR Dc_Attr)
 
   _SEH2_TRY
   {
-      ProbeForWrite( Dc_Attr,
+      ProbeForWrite( pdcattr,
              sizeof(DC_ATTR),
                            1);
-      RtlCopyMemory( Dc_Attr,
+      RtlCopyMemory( pdcattr,
                 &dc->Dc_Attr,
              sizeof(DC_ATTR));
   }
   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
   {
      Status = _SEH2_GetExceptionCode();
+     ASSERT(FALSE);
   }
   _SEH2_END;
 }
@@ -138,13 +136,11 @@ BOOL
 FASTCALL
 DCU_SyncDcAttrtoUser(PDC dc)
 {
-  PDC_ATTR Dc_Attr = dc->pDc_Attr;
+  PDC_ATTR pdcattr = dc->pdcattr;
 
-  if (Dc_Attr == ((PDC_ATTR)&dc->Dc_Attr)) return TRUE; // No need to copy self.
-
-  if (!Dc_Attr) return FALSE;
-  else
-    CopytoUserDcAttr( dc, Dc_Attr);
+  if (pdcattr == &dc->Dc_Attr) return TRUE; // No need to copy self.
+  ASSERT(pdcattr);
+  CopytoUserDcAttr( dc, pdcattr);
   return TRUE;
 }
 
@@ -185,7 +181,7 @@ IntGdiSetBkColor(HDC hDC, COLORREF color)
 {
   COLORREF oldColor;
   PDC dc;
-  PDC_ATTR Dc_Attr;
+  PDC_ATTR pdcattr;
   HBRUSH hBrush;
 
   if (!(dc = DC_LockDc(hDC)))
@@ -193,13 +189,12 @@ IntGdiSetBkColor(HDC hDC, COLORREF color)
     SetLastWin32Error(ERROR_INVALID_HANDLE);
     return CLR_INVALID;
   }
-  Dc_Attr = dc->pDc_Attr;
-  if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
-  oldColor = Dc_Attr->crBackgroundClr;
-  Dc_Attr->crBackgroundClr = color;
-  Dc_Attr->ulBackgroundClr = (ULONG)color;
-  Dc_Attr->ulDirty_ &= ~(DIRTY_BACKGROUND|DIRTY_LINE|DIRTY_FILL); // Clear Flag if set.
-  hBrush = Dc_Attr->hbrush;
+  pdcattr = dc->pdcattr;
+  oldColor = pdcattr->crBackgroundClr;
+  pdcattr->crBackgroundClr = color;
+  pdcattr->ulBackgroundClr = (ULONG)color;
+  pdcattr->ulDirty_ &= ~(DIRTY_BACKGROUND|DIRTY_LINE|DIRTY_FILL); // Clear Flag if set.
+  hBrush = pdcattr->hbrush;
   DC_UnlockDc(dc);
   NtGdiSelectBrush(hDC, hBrush);
   return oldColor;
@@ -210,18 +205,17 @@ IntGdiSetBkMode(HDC hDC, INT Mode)
 {
   COLORREF oldMode;
   PDC dc;
-  PDC_ATTR Dc_Attr;
+  PDC_ATTR pdcattr;
 
   if (!(dc = DC_LockDc(hDC)))
   {
     SetLastWin32Error(ERROR_INVALID_HANDLE);
     return CLR_INVALID;
   }
-  Dc_Attr = dc->pDc_Attr;
-  if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
-  oldMode = Dc_Attr->lBkMode;
-  Dc_Attr->jBkMode = Mode;
-  Dc_Attr->lBkMode = Mode;
+  pdcattr = dc->pdcattr;
+  oldMode = pdcattr->lBkMode;
+  pdcattr->jBkMode = Mode;
+  pdcattr->lBkMode = Mode;
   DC_UnlockDc(dc);
   return oldMode;
 }
@@ -233,7 +227,7 @@ IntGdiSetTextAlign(HDC  hDC,
 {
   UINT prevAlign;
   DC *dc;
-  PDC_ATTR Dc_Attr;
+  PDC_ATTR pdcattr;
 
   dc = DC_LockDc(hDC);
   if (!dc)
@@ -241,10 +235,9 @@ IntGdiSetTextAlign(HDC  hDC,
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return GDI_ERROR;
     }
-  Dc_Attr = dc->pDc_Attr;
-  if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
-  prevAlign = Dc_Attr->lTextAlign;
-  Dc_Attr->lTextAlign = Mode;
+  pdcattr = dc->pdcattr;
+  prevAlign = pdcattr->lTextAlign;
+  pdcattr->lTextAlign = Mode;
   DC_UnlockDc( dc );
   return  prevAlign;
 }
@@ -256,7 +249,7 @@ IntGdiSetTextColor(HDC hDC,
 {
   COLORREF  oldColor;
   PDC  dc = DC_LockDc(hDC);
-  PDC_ATTR Dc_Attr;
+  PDC_ATTR pdcattr;
   HBRUSH hBrush;
 
   if (!dc)
@@ -264,13 +257,12 @@ IntGdiSetTextColor(HDC hDC,
     SetLastWin32Error(ERROR_INVALID_HANDLE);
     return CLR_INVALID;
   }
-  Dc_Attr = dc->pDc_Attr;
-  if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+  pdcattr = dc->pdcattr;
 
-  oldColor = Dc_Attr->crForegroundClr;
-  Dc_Attr->crForegroundClr = color;
-  hBrush = Dc_Attr->hbrush;
-  Dc_Attr->ulDirty_ &= ~(DIRTY_TEXT|DIRTY_LINE|DIRTY_FILL);
+  oldColor = pdcattr->crForegroundClr;
+  pdcattr->crForegroundClr = color;
+  hBrush = pdcattr->hbrush;
+  pdcattr->ulDirty_ &= ~(DIRTY_TEXT|DIRTY_LINE|DIRTY_FILL);
   DC_UnlockDc( dc );
   NtGdiSelectBrush(hDC, hBrush);
   return  oldColor;

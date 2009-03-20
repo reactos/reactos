@@ -113,7 +113,7 @@ typedef struct _DC
   PVOID       hsem;   /* PERESOURCE aka HSEMAPHORE */
   FLONG       flGraphicsCaps;
   FLONG       flGraphicsCaps2;
-  PDC_ATTR    pDc_Attr;
+  PDC_ATTR    pdcattr;
   DCLEVEL     DcLevel;
   DC_ATTR     Dc_Attr;
   HDC         hdcNext;
