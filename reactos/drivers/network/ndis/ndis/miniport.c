@@ -2402,5 +2402,39 @@ NdisTerminateWrapper(
   ExFreePool(Miniport);
 }
 
+
+/*
+ * @implemented
+ */
+NDIS_STATUS
+EXPORT
+NdisMQueryAdapterInstanceName(
+    OUT PNDIS_STRING    AdapterInstanceName,
+    IN  NDIS_HANDLE     MiniportAdapterHandle)
+/*
+ * FUNCTION:
+ * ARGUMENTS:
+ * NOTES:
+ *    NDIS 5.0
+ */
+{
+    PLOGICAL_ADAPTER Adapter = (PLOGICAL_ADAPTER)MiniportAdapterHandle;
+    UNICODE_STRING AdapterName;
+
+    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
+    AdapterName.Length = 0;
+    AdapterName.MaximumLength = Adapter->NdisMiniportBlock.MiniportName.MaximumLength;
+    AdapterName.Buffer = ExAllocatePool(PagedPool, AdapterName.MaximumLength);
+    if (!AdapterName.Buffer)
+        return NDIS_STATUS_RESOURCES;
+
+    RtlCopyUnicodeString(&AdapterName, &Adapter->NdisMiniportBlock.MiniportName);
+
+    *AdapterInstanceName = AdapterName;
+
+    return NDIS_STATUS_SUCCESS;
+}
+
 /* EOF */
 

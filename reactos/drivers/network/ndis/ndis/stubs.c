@@ -717,27 +717,6 @@ NdisMPromoteMiniport(
  */
 NDIS_STATUS
 EXPORT
-NdisMQueryAdapterInstanceName(
-    OUT PNDIS_STRING    AdapterInstanceName,
-    IN  NDIS_HANDLE     MiniportAdapterHandle)
-/*
- * FUNCTION:
- * ARGUMENTS:
- * NOTES:
- *    NDIS 5.0
- */
-{
-    UNIMPLEMENTED
-
-    return NDIS_STATUS_FAILURE;
-}
-
-
-/*
- * @unimplemented
- */
-NDIS_STATUS
-EXPORT
 NdisMRegisterDevice(
     IN  NDIS_HANDLE         NdisWrapperHandle,
     IN  PNDIS_STRING        DeviceName,
