@@ -238,11 +238,11 @@ IO_ALLOCATION_ACTION NTAPI NdisMapRegisterCallback (
 NDIS_STATUS
 EXPORT
 NdisMAllocateMapRegisters(
-    IN  NDIS_HANDLE MiniportAdapterHandle,
-    IN  UINT        DmaChannel,
-    IN  BOOLEAN     DmaSize,
-    IN  ULONG       BaseMapRegistersNeeded,
-    IN  ULONG       MaximumBufferSize)
+    IN  NDIS_HANDLE   MiniportAdapterHandle,
+    IN  UINT          DmaChannel,
+    IN  NDIS_DMA_SIZE DmaSize,
+    IN  ULONG         BaseMapRegistersNeeded,
+    IN  ULONG         MaximumBufferSize)
 /*
  * FUNCTION: Allocate map registers for use in DMA transfers
  * ARGUMENTS:
@@ -293,9 +293,8 @@ NdisMAllocateMapRegisters(
   ASSERT(Adapter);
 
   /* only bus masters may call this routine */
-  ASSERT(Adapter->NdisMiniportBlock.Flags & NDIS_ATTRIBUTE_BUS_MASTER);
   if(!(Adapter->NdisMiniportBlock.Flags & NDIS_ATTRIBUTE_BUS_MASTER))
-    return NDIS_STATUS_SUCCESS;
+    return NDIS_STATUS_NOT_SUPPORTED;
 
   DeviceObject = Adapter->NdisMiniportBlock.DeviceObject;
 
@@ -319,34 +318,15 @@ NdisMAllocateMapRegisters(
   Description.Version = DEVICE_DESCRIPTION_VERSION;
   Description.Master = TRUE;                         /* implied by calling this function */
   Description.ScatterGather = TRUE;                  /* XXX UNTRUE: All BM DMA are S/G (ms seems to do this) */
-  Description.Dma32BitAddresses = DmaSize;
   Description.BusNumber = Adapter->NdisMiniportBlock.BusNumber;
   Description.InterfaceType = Adapter->NdisMiniportBlock.BusType;
   Description.DmaChannel = DmaChannel;
   Description.MaximumLength = MaximumBufferSize;
-
-  if(Adapter->NdisMiniportBlock.AdapterType == Isa)
-    {
-      /* system dma */
-      if(DmaChannel < 4)
-        Description.DmaWidth = Width8Bits;
-      else
-        Description.DmaWidth = Width16Bits;
-
-      Description.DmaSpeed = Compatible;
-    }
-  else if(Adapter->NdisMiniportBlock.AdapterType == PCIBus)
-    {
-      if(DmaSize == NDIS_DMA_64BITS)
-        Description.Dma64BitAddresses = TRUE;
-      else
-        Description.Dma32BitAddresses = TRUE;
-    }
+  
+  if(DmaSize == NDIS_DMA_64BITS)
+    Description.Dma64BitAddresses = TRUE;
   else
-    {
-      NDIS_DbgPrint(MIN_TRACE, ("Unsupported bus type\n"));
-      ASSERT(0);
-    }
+    Description.Dma32BitAddresses = TRUE;
 
   AdapterObject = IoGetDmaAdapter(
     Adapter->NdisMiniportBlock.PhysicalDeviceObject, &Description, &AvailableMapRegisters);
