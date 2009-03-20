@@ -126,7 +126,7 @@ NdisFreeDmaChannel(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 EXPORT
@@ -143,7 +143,11 @@ NdisFreeSharedMemory(
  *    NDIS 4.0
  */
 {
-    UNIMPLEMENTED
+    NdisMFreeSharedMemory(NdisAdapterHandle,
+                          Length,
+                          Cached,
+                          VirtualAddress,
+                          PhysicalAddress);
 }
 
 
