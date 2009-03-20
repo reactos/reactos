@@ -25,19 +25,6 @@ NdisCompleteQueryStatistics(
 
 
 /*
- * @unimplemented
- */
-VOID
-EXPORT
-NdisCompleteUnbindAdapter(
-    IN  NDIS_HANDLE UnbindAdapterContext,
-    IN  NDIS_STATUS Status)
-{
-    UNIMPLEMENTED
-}
-
-
-/*
  * @implemented
  */
 #undef NdisInterlockedAddUlong

@@ -51,6 +51,26 @@ NdisCompleteBindAdapter(
   ExInterlockedInsertTailList(&ProtocolListHead, &Protocol->ListEntry, &ProtocolListLock);
 }
 
+/*
+ * @implemented
+ */
+VOID
+EXPORT
+NdisCompleteUnbindAdapter(
+    IN  NDIS_HANDLE UnbindAdapterContext,
+    IN  NDIS_STATUS Status)
+{
+  /* We probably need to do more here but for now we just do
+   * the opposite of what NdisCompleteBindAdapter does
+   */
+
+  PROTOCOL_BINDING *Protocol = (PROTOCOL_BINDING *)UnbindAdapterContext;
+
+  if (!NT_SUCCESS(Status)) return;
+
+  ExInterlockedRemoveEntryList(&Protocol->ListEntry, &ProtocolListLock);
+}
+
 
 NDIS_STATUS
 ProIndicatePacket(
