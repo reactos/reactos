@@ -238,11 +238,11 @@ GetDeviceCapabilities(
 BOOL
 CallClient(
     DeviceInfo* device_info,
-    DWORD message,
-    DWORD parameter1,
-    DWORD parameter2)
+    DWORD_PTR message,
+    DWORD_PTR parameter1,
+    DWORD_PTR parameter2)
 {
-    DPRINT("Calling client - callback 0x%x mmhandle 0x%x\n", (int) device_info->callback, (int) device_info->mme_handle);
+    DPRINT("Calling client - callback 0x%x mmhandle 0x%x\n", device_info->callback, device_info->mme_handle);
     return DriverCallback(device_info->callback,
                           HIWORD(device_info->flags),
                           device_info->mme_handle,
@@ -747,7 +747,7 @@ ProcessLongMidiMessage(
     header->dwFlags |= MHDR_DONE;
     header->dwFlags &= ~ MHDR_INQUEUE;
 
-    DPRINT("Success? %d\n", (int) CallClient(the_device, MOM_DONE, (DWORD) header, 0));
+    DPRINT("Success? %d\n", CallClient(the_device, MOM_DONE, (DWORD_PTR)header, 0));
 
     return MMSYSERR_NOERROR;
 }
@@ -762,9 +762,9 @@ MMRESULT
 modMessage(
     UINT device_id,
     UINT message,
-    DWORD private_data,
-    DWORD parameter1,
-    DWORD parameter2)
+    DWORD_PTR private_data,
+    DWORD_PTR parameter1,
+    DWORD_PTR parameter2)
 {
     switch ( message )
     {
