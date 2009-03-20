@@ -649,7 +649,8 @@ STRING_ERROR_DRIVER_NOT_READY,     "La unidad no está lista"
 
 STRING_PATH_ERROR,                 "CMD: No está en el entorno '%s'\n"
 
-STRING_CMD_SHELLINFO,              "\nIntérprete de comandos de ReactOS"
+STRING_REACTOS_VERSION,            "ReactOS Operating System [Version %s-%s]\n"
+STRING_CMD_SHELLINFO,              "\nIntérprete de comandos de ReactOS\nVersion %s %s"
 STRING_VERSION_RUNVER,             " corriendo en %s"
 STRING_COPY_FILE ,                 "        %d archivo(s) copado(s)\n"
 STRING_DELETE_WIPE,                "Limpiado"
@@ -660,6 +661,8 @@ STRING_TIMER_TIME                  "El temporizador %d es %s: "
 STRING_MKLINK_CREATED_SYMBOLIC,    "Symbolic link created for %s <<===>> %s\n"
 STRING_MKLINK_CREATED_HARD,        "Hard link created for %s <<===>> %s\n"
 STRING_MKLINK_CREATED_JUNCTION,    "Junction created for %s <<===>> %s\n"
+STRING_MORE,                       "More? "
+STRING_CANCEL_BATCH_FILE,          "\r\nCtrl-Break pressed.  Cancel batch file? (Si/No/Todos) "
 
 STRING_INVALID_OPERAND,            "Operador erróneo.\n"
 STRING_EXPECTED_CLOSE_PAREN,       "Se esperaba ')'.\n"

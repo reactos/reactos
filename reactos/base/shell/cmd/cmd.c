@@ -1462,7 +1462,7 @@ ReadLine (TCHAR *commandline, BOOL bMore)
 	{
 		if (bMore)
 		{
-			ConOutPrintf(_T("More? "));
+			ConOutResPrintf(STRING_MORE);
 		}
 		else
 		{
@@ -1812,7 +1812,7 @@ Initialize()
 	if (ShowVersion)
     {
         /* Display a simple version string */
-        ConOutPrintf(_T("ReactOS Operating System [Version %s-%s]\n"), 
+		ConOutResPrintf(STRING_REACTOS_VERSION, 
             _T(KERNEL_RELEASE_STR),
             _T(KERNEL_VERSION_BUILD_STR));
 

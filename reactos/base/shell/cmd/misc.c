@@ -153,6 +153,7 @@ VOID GetPathCase( TCHAR * Path, TCHAR * OutPath)
 BOOL CheckCtrlBreak (INT mode)
 {
 	static BOOL bLeaveAll = FALSE; /* leave all batch files */
+	TCHAR options[4]; /* Yes, No, All */
 	TCHAR c;
 
 	switch (mode)
@@ -168,18 +169,22 @@ BOOL CheckCtrlBreak (INT mode)
 			if (!bCtrlBreak)
 				return FALSE;
 
+			LoadString(CMD_ModuleHandle, STRING_COPY_OPTION, options, 4);
+
 			/* we need to be sure the string arrives on the screen! */
 			do
-				ConOutPuts (_T("\r\nCtrl-Break pressed.  Cancel batch file? (Yes/No/All) "));
-			while (!_tcschr (_T("YNA\3"), c = _totupper (cgetchar())) || !c);
+			{
+				ConOutResPuts(STRING_CANCEL_BATCH_FILE);
+				c = _totupper(cgetchar());
+			} while (!(_tcschr(options, c) || c == _T('\3')) || !c);
 
 			ConOutPuts (_T("\r\n"));
 
-			if (c == _T('N'))
+			if (c == options[1])
 				return bCtrlBreak = FALSE; /* ignore */
 
 			/* leave all batch files */
-			bLeaveAll = ((c == _T('A')) || (c == _T('\3')));
+			bLeaveAll = ((c == options[2]) || (c == _T('\3')));
 			break;
 
 		case BREAK_INPUT:

@@ -84,10 +84,7 @@ restart:
 
 static void ParseError()
 {
-	if (CurrentTokenType == TOK_END)
-		ConOutResPuts(STRING_SYNTAX_COMMAND_INCORRECT);
-	else
-		ConOutPrintf(_T("%s was unexpected at this time.\n"), CurrentToken);
+	error_syntax(CurrentTokenType != TOK_END ? CurrentToken : NULL);
 	bParseError = TRUE;
 }
 

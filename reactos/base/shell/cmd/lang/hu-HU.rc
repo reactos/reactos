@@ -629,7 +629,8 @@ STRING_ERROR_DRIVER_NOT_READY,     "A meghajtó nem áll készen"
 
 STRING_PATH_ERROR,                 "CMD: Not in environment '%s'\n"
 
-STRING_CMD_SHELLINFO,              "\nReactOS Parancssor értelmezõ"
+STRING_REACTOS_VERSION,            "ReactOS Operating System [Version %s-%s]\n"
+STRING_CMD_SHELLINFO,              "\nReactOS Parancssor értelmezõ\nVersion %s %s"
 STRING_VERSION_RUNVER,             " running on %s"
 STRING_COPY_FILE ,                 "        %d állomány másolva\n"
 STRING_DELETE_WIPE,                "wiped"
@@ -640,4 +641,7 @@ STRING_TIMER_TIME                  "Idõzítõ %d értéke %s: "
 STRING_MKLINK_CREATED_SYMBOLIC,    "Symbolic link created for %s <<===>> %s\n"
 STRING_MKLINK_CREATED_HARD,        "Hard link created for %s <<===>> %s\n"
 STRING_MKLINK_CREATED_JUNCTION,    "Junction created for %s <<===>> %s\n"
+STRING_MORE,                       "More? "
+STRING_CANCEL_BATCH_FILE,          "\r\nCtrl-Break pressed.  Cancel batch file? (Igen/Nem/Mind) "
+
 END
