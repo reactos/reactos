@@ -1452,7 +1452,7 @@ typedef struct _MMIOINFO {
 	HPSTR pchEndWrite;
 	LONG lBufOffset;
 	LONG lDiskOffset;
-	DWORD adwInfo[3];
+	DWORD adwInfo[4];
 	DWORD dwReserved1;
 	DWORD dwReserved2;
 	HMMIO hmmio;
@@ -1502,32 +1502,32 @@ typedef struct tagMCI_SEEK_PARMS {
 } MCI_SEEK_PARMS, *PMCI_SEEK_PARMS,*LPMCI_SEEK_PARMS;
 
 typedef struct tagMCI_STATUS_PARMS {
-	DWORD dwCallback;
-	DWORD dwReturn;
+	DWORD_PTR dwCallback;
+	DWORD_PTR dwReturn;
 	DWORD dwItem;
 	DWORD dwTrack;
 } MCI_STATUS_PARMS,*PMCI_STATUS_PARMS,*LPMCI_STATUS_PARMS;
 
 typedef struct tagMCI_INFO_PARMSA {
-	DWORD dwCallback;
+	DWORD_PTR dwCallback;
 	LPSTR lpstrReturn;
 	DWORD dwRetSize;
 } MCI_INFO_PARMSA,*LPMCI_INFO_PARMSA;
 
 typedef struct tagMCI_INFO_PARMSW {
-	DWORD dwCallback;
+	DWORD_PTR dwCallback;
 	LPWSTR lpstrReturn;
 	DWORD dwRetSize;
 } MCI_INFO_PARMSW,*LPMCI_INFO_PARMSW;
 
 typedef struct tagMCI_GETDEVCAPS_PARMS {
-	DWORD dwCallback;
+	DWORD_PTR dwCallback;
 	DWORD dwReturn;
 	DWORD dwItem;
 } MCI_GETDEVCAPS_PARMS,*PMCI_GETDEVCAPS_PARMS,*LPMCI_GETDEVCAPS_PARMS;
 
 typedef struct tagMCI_SYSINFO_PARMSA {
-	DWORD dwCallback;
+	DWORD_PTR dwCallback;
 	LPSTR lpstrReturn;
 	DWORD dwRetSize;
 	DWORD dwNumber;
@@ -1535,7 +1535,7 @@ typedef struct tagMCI_SYSINFO_PARMSA {
 } MCI_SYSINFO_PARMSA,*PMCI_SYSINFO_PARMSA,*LPMCI_SYSINFO_PARMSA;
 
 typedef struct tagMCI_SYSINFO_PARMSW {
-	DWORD dwCallback;
+	DWORD_PTR dwCallback;
 	LPWSTR lpstrReturn;
 	DWORD dwRetSize;
 	DWORD dwNumber;
@@ -1543,67 +1543,67 @@ typedef struct tagMCI_SYSINFO_PARMSW {
 } MCI_SYSINFO_PARMSW,*PMCI_SYSINFO_PARMSW,*LPMCI_SYSINFO_PARMSW;
 
 typedef struct tagMCI_SET_PARMS {
-	DWORD dwCallback;
+	DWORD_PTR dwCallback;
 	DWORD dwTimeFormat;
 	DWORD dwAudio;
 } MCI_SET_PARMS,*PMCI_SET_PARMS,*LPMCI_SET_PARMS;
 
 typedef struct tagMCI_BREAK_PARMS {
-	DWORD dwCallback;
+	DWORD_PTR dwCallback;
 	int nVirtKey;
 	HWND hwndBreak;
 } MCI_BREAK_PARMS,*PMCI_BREAK_PARMS,*LPMCI_BREAK_PARMS;
 
 typedef struct tagMCI_SAVE_PARMSA {
-	DWORD dwCallback;
+	DWORD_PTR dwCallback;
 	LPCSTR lpfilename;
 } MCI_SAVE_PARMSA,*PMCI_SAVE_PARMSA,*LPMCI_SAVE_PARMSA;
 
 typedef struct tagMCI_SAVE_PARMSW {
-	DWORD dwCallback;
+	DWORD_PTR dwCallback;
 	LPCWSTR lpfilename;
 } MCI_SAVE_PARMSW,*PMCI_SAVE_PARMSW,*LPMCI_SAVE_PARMSW;
 
 typedef struct tagMCI_LOAD_PARMSA {
-	DWORD dwCallback;
+	DWORD_PTR dwCallback;
 	LPCSTR lpfilename;
 } MCI_LOAD_PARMSA,*PMCI_LOAD_PARMSA,*LPMCI_LOAD_PARMSA;
 
 typedef struct tagMCI_LOAD_PARMSW {
-	DWORD dwCallback;
+	DWORD_PTR dwCallback;
 	LPCWSTR lpfilename;
 } MCI_LOAD_PARMSW,*PMCI_LOAD_PARMSW,*LPMCI_LOAD_PARMSW;
 
 typedef struct tagMCI_RECORD_PARMS {
-	DWORD dwCallback;
+	DWORD_PTR dwCallback;
 	DWORD dwFrom;
 	DWORD dwTo;
 } MCI_RECORD_PARMS,*LPMCI_RECORD_PARMS;
 
 typedef struct tagMCI_VD_PLAY_PARMS {
-	DWORD dwCallback;
+	DWORD_PTR dwCallback;
 	DWORD dwFrom;
 	DWORD dwTo;
 	DWORD dwSpeed;
 } MCI_VD_PLAY_PARMS,*PMCI_VD_PLAY_PARMS,*LPMCI_VD_PLAY_PARMS;
 
 typedef struct tagMCI_VD_STEP_PARMS {
-	DWORD dwCallback;
+	DWORD_PTR dwCallback;
 	DWORD dwFrames;
 } MCI_VD_STEP_PARMS,*PMCI_VD_STEP_PARMS,*LPMCI_VD_STEP_PARMS;
 
 typedef struct tagMCI_VD_ESCAPE_PARMSA {
-	DWORD dwCallback;
+	DWORD_PTR dwCallback;
 	LPCSTR lpstrCommand;
 } MCI_VD_ESCAPE_PARMSA,*PMCI_VD_ESCAPE_PARMSA,*LPMCI_VD_ESCAPE_PARMSA;
 
 typedef struct tagMCI_VD_ESCAPE_PARMSW {
-	DWORD dwCallback;
+	DWORD_PTR dwCallback;
 	LPCWSTR lpstrCommand;
 } MCI_VD_ESCAPE_PARMSW,*PMCI_VD_ESCAPE_PARMSW,*LPMCI_VD_ESCAPE_PARMSW;
 
 typedef struct tagMCI_WAVE_OPEN_PARMSA {
-	DWORD dwCallback;
+	DWORD_PTR dwCallback;
 	MCIDEVICEID wDeviceID;
 	LPCSTR lpstrDeviceType;
 	LPCSTR lpstrElementName;
@@ -1612,7 +1612,7 @@ typedef struct tagMCI_WAVE_OPEN_PARMSA {
 } MCI_WAVE_OPEN_PARMSA,*PMCI_WAVE_OPEN_PARMSA,*LPMCI_WAVE_OPEN_PARMSA;
 
 typedef struct tagMCI_WAVE_OPEN_PARMSW {
-	DWORD dwCallback;
+	DWORD_PTR dwCallback;
 	MCIDEVICEID wDeviceID;
 	LPCWSTR lpstrDeviceType;
 	LPCWSTR lpstrElementName;
@@ -1621,13 +1621,13 @@ typedef struct tagMCI_WAVE_OPEN_PARMSW {
 } MCI_WAVE_OPEN_PARMSW,*PMCI_WAVE_OPEN_PARMSW,*LPMCI_WAVE_OPEN_PARMSW;
 
 typedef struct tagMCI_WAVE_DELETE_PARMS {
-	DWORD dwCallback;
+	DWORD_PTR dwCallback;
 	DWORD dwFrom;
 	DWORD dwTo;
 } MCI_WAVE_DELETE_PARMS, *PMCI_WAVE_DELETE_PARMS,*LPMCI_WAVE_DELETE_PARMS;
 
 typedef struct tagMCI_WAVE_SET_PARMS {
-	DWORD dwCallback;
+	DWORD_PTR dwCallback;
 	DWORD dwTimeFormat;
 	DWORD dwAudio;
 	UINT wInput;
@@ -1819,8 +1819,8 @@ LRESULT WINAPI mmioSendMessage(HMMIO,UINT,LPARAM,LPARAM);
 MMRESULT WINAPI mmioDescend(HMMIO,LPMMCKINFO,const MMCKINFO*,UINT);
 MMRESULT WINAPI mmioAscend(HMMIO,LPMMCKINFO,UINT);
 MMRESULT WINAPI mmioCreateChunk(HMMIO,LPMMCKINFO,UINT);
-MCIERROR WINAPI mciSendCommandA(MCIDEVICEID,UINT,DWORD,DWORD_PTR);
-MCIERROR WINAPI mciSendCommandW(MCIDEVICEID,UINT,DWORD,DWORD_PTR);
+MCIERROR WINAPI mciSendCommandA(MCIDEVICEID,UINT,DWORD_PTR,DWORD_PTR);
+MCIERROR WINAPI mciSendCommandW(MCIDEVICEID,UINT,DWORD_PTR,DWORD_PTR);
 MCIERROR WINAPI mciSendStringA(LPCSTR,LPSTR,UINT,HWND);
 MCIERROR WINAPI mciSendStringW(LPCWSTR,LPWSTR,UINT,HWND);
 MCIDEVICEID WINAPI mciGetDeviceIDA(LPCSTR);
@@ -1834,7 +1834,7 @@ HTASK WINAPI mciGetCreatorTask(MCIDEVICEID);
 YIELDPROC WINAPI mciGetYieldProc(MCIDEVICEID,PDWORD);
 
 typedef struct tagMCI_SEQ_SET_PARMS {
-	DWORD dwCallback;
+	DWORD_PTR dwCallback;
 	DWORD dwTimeFormat;
 	DWORD dwAudio;
 	DWORD dwTempo;
@@ -1844,7 +1844,7 @@ typedef struct tagMCI_SEQ_SET_PARMS {
 	DWORD dwOffset;
 } MCI_SEQ_SET_PARMS,*PMCI_SEQ_SET_PARMS,*LPMCI_SEQ_SET_PARMS;
 typedef struct tagMCI_ANIM_OPEN_PARMSA {
-	DWORD dwCallback;
+	DWORD_PTR dwCallback;
 	MCIDEVICEID wDeviceID;
 	LPCSTR lpstrDeviceType;
 	LPCSTR lpstrElementName;
@@ -1853,7 +1853,7 @@ typedef struct tagMCI_ANIM_OPEN_PARMSA {
 	HWND hWndParent;
 } MCI_ANIM_OPEN_PARMSA,*PMCI_ANIM_OPEN_PARMSA,*LPMCI_ANIM_OPEN_PARMSA;
 typedef struct tagMCI_ANIM_OPEN_PARMSW {
-	DWORD dwCallback;
+	DWORD_PTR dwCallback;
 	MCIDEVICEID wDeviceID;
 	LPCWSTR lpstrDeviceType;
 	LPCWSTR lpstrElementName;
@@ -1862,29 +1862,29 @@ typedef struct tagMCI_ANIM_OPEN_PARMSW {
 	HWND hWndParent;
 } MCI_ANIM_OPEN_PARMSW,*PMCI_ANIM_OPEN_PARMSW,*LPMCI_ANIM_OPEN_PARMSW;
 typedef struct tagMCI_ANIM_PLAY_PARMS {
-	DWORD dwCallback;
+	DWORD_PTR dwCallback;
 	DWORD dwFrom;
 	DWORD dwTo;
 	DWORD dwSpeed;
 } MCI_ANIM_PLAY_PARMS,*PMCI_ANIM_PLAY_PARMS,*LPMCI_ANIM_PLAY_PARMS;
 typedef struct tagMCI_ANIM_STEP_PARMS {
-	DWORD dwCallback;
+	DWORD_PTR dwCallback;
 	DWORD dwFrames;
 } MCI_ANIM_STEP_PARMS,*PMCI_ANIM_STEP_PARMS,*LPMCI_ANIM_STEP_PARMS;
 typedef struct tagMCI_ANIM_WINDOW_PARMSA {
-	DWORD dwCallback;
+	DWORD_PTR dwCallback;
 	HWND hWnd;
 	UINT nCmdShow;
 	LPCSTR lpstrText;
 } MCI_ANIM_WINDOW_PARMSA,*PMCI_ANIM_WINDOW_PARMSA,*LPMCI_ANIM_WINDOW_PARMSA;
 typedef struct tagMCI_ANIM_WINDOW_PARMSW {
-	DWORD dwCallback;
+	DWORD_PTR dwCallback;
 	HWND hWnd;
 	UINT nCmdShow;
 	LPCWSTR lpstrText;
 } MCI_ANIM_WINDOW_PARMSW,*PMCI_ANIM_WINDOW_PARMSW,*LPMCI_ANIM_WINDOW_PARMSW;
 typedef struct tagMCI_ANIM_RECT_PARMS {
-	DWORD dwCallback;
+	DWORD_PTR dwCallback;
 #ifdef MCI_USE_OFFEXT
 	POINT ptOffset;
 	POINT ptExtent;
@@ -1893,12 +1893,12 @@ typedef struct tagMCI_ANIM_RECT_PARMS {
 #endif
 } MCI_ANIM_RECT_PARMS,*PMCI_ANIM_RECT_PARMS,*LPMCI_ANIM_RECT_PARMS;
 typedef struct tagMCI_ANIM_UPDATE_PARMS {
-	DWORD dwCallback;
+	DWORD_PTR dwCallback;
 	RECT rc;
 	HDC hDC;
 } MCI_ANIM_UPDATE_PARMS,*PMCI_ANIM_UPDATE_PARMS,*LPMCI_ANIM_UPDATE_PARMS;
 typedef struct tagMCI_OVLY_OPEN_PARMSA {
-	DWORD dwCallback;
+	DWORD_PTR dwCallback;
 	MCIDEVICEID wDeviceID;
 	LPCSTR lpstrDeviceType;
 	LPCSTR lpstrElementName;
@@ -1907,7 +1907,7 @@ typedef struct tagMCI_OVLY_OPEN_PARMSA {
 	HWND hWndParent;
 } MCI_OVLY_OPEN_PARMSA,*PMCI_OVLY_OPEN_PARMSA,*LPMCI_OVLY_OPEN_PARMSA;
 typedef struct tagMCI_OVLY_OPEN_PARMSW {
-	DWORD dwCallback;
+	DWORD_PTR dwCallback;
 	MCIDEVICEID wDeviceID;
 	LPCWSTR lpstrDeviceType;
 	LPCWSTR lpstrElementName;
@@ -1916,19 +1916,19 @@ typedef struct tagMCI_OVLY_OPEN_PARMSW {
 	HWND hWndParent;
 } MCI_OVLY_OPEN_PARMSW,*PMCI_OVLY_OPEN_PARMSW,*LPMCI_OVLY_OPEN_PARMSW;
 typedef struct tagMCI_OVLY_WINDOW_PARMSA {
-	DWORD dwCallback;
+	DWORD_PTR dwCallback;
 	HWND hWnd;
 	UINT nCmdShow;
 	LPCSTR lpstrText;
 } MCI_OVLY_WINDOW_PARMSA,*PMCI_OVLY_WINDOW_PARMSA,*LPMCI_OVLY_WINDOW_PARMSA;
 typedef struct tagMCI_OVLY_WINDOW_PARMSW {
-	DWORD dwCallback;
+	DWORD_PTR dwCallback;
 	HWND hWnd;
 	UINT nCmdShow;
 	LPCWSTR lpstrText;
 } MCI_OVLY_WINDOW_PARMSW,*PMCI_OVLY_WINDOW_PARMSW,*LPMCI_OVLY_WINDOW_PARMSW;
 typedef struct tagMCI_OVLY_RECT_PARMS {
-	DWORD dwCallback;
+	DWORD_PTR dwCallback;
 #ifdef MCI_USE_OFFEXT
 	POINT ptOffset;
 	POINT ptExtent;
@@ -1937,22 +1937,22 @@ typedef struct tagMCI_OVLY_RECT_PARMS {
 #endif
 } MCI_OVLY_RECT_PARMS,*PMCI_OVLY_RECT_PARMS,*LPMCI_OVLY_RECT_PARMS;
 typedef struct tagMCI_OVLY_SAVE_PARMSA {
-	DWORD dwCallback;
+	DWORD_PTR dwCallback;
 	LPCSTR lpfilename;
 	RECT rc;
 } MCI_OVLY_SAVE_PARMSA,*PMCI_OVLY_SAVE_PARMSA,*LPMCI_OVLY_SAVE_PARMSA;
 typedef struct tagMCI_OVLY_SAVE_PARMSW {
-	DWORD dwCallback;
+	DWORD_PTR dwCallback;
 	LPCWSTR lpfilename;
 	RECT rc;
 } MCI_OVLY_SAVE_PARMSW,*PMCI_OVLY_SAVE_PARMSW,*LPMCI_OVLY_SAVE_PARMSW;
 typedef struct tagMCI_OVLY_LOAD_PARMSA {
-	DWORD dwCallback;
+	DWORD_PTR dwCallback;
 	LPCSTR lpfilename;
 	RECT rc;
 } MCI_OVLY_LOAD_PARMSA,*PMCI_OVLY_LOAD_PARMSA,*LPMCI_OVLY_LOAD_PARMSA;
 typedef struct tagMCI_OVLY_LOAD_PARMSW {
-	DWORD dwCallback;
+	DWORD_PTR dwCallback;
 	LPCWSTR lpfilename;
 	RECT rc;
 } MCI_OVLY_LOAD_PARMSW,*PMCI_OVLY_LOAD_PARMSW,*LPMCI_OVLY_LOAD_PARMSW;
