@@ -1164,19 +1164,28 @@ MiniStatusComplete(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 EXPORT
 NdisMCloseLog(
     IN  NDIS_HANDLE LogHandle)
 {
-    UNIMPLEMENTED
+    PNDIS_LOG Log = (PNDIS_LOG)LogHandle;
+    PNDIS_MINIPORT_BLOCK Miniport = Log->Miniport;
+    KIRQL OldIrql;
+
+    NDIS_DbgPrint(MAX_TRACE, ("called: LogHandle 0x%x\n", LogHandle));
+
+    KeAcquireSpinLock(&(Miniport)->Lock, &OldIrql);
+    Miniport->Log = NULL;
+    KeReleaseSpinLock(&(Miniport)->Lock, OldIrql);
+
+    ExFreePool(Log);
 }
 
-
 /*
- * @unimplemented
+ * @implemented
  */
 NDIS_STATUS
 EXPORT
@@ -1185,12 +1194,45 @@ NdisMCreateLog(
     IN  UINT            Size,
     OUT PNDIS_HANDLE    LogHandle)
 {
-    UNIMPLEMENTED
+    PLOGICAL_ADAPTER Adapter = MiniportAdapterHandle;
+    PNDIS_LOG Log;
+    KIRQL OldIrql;
 
-  return NDIS_STATUS_FAILURE;
+    NDIS_DbgPrint(MAX_TRACE, ("called: MiniportAdapterHandle 0x%x, Size %ld\n", MiniportAdapterHandle, Size));
+
+    KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &OldIrql);
+
+    if (Adapter->NdisMiniportBlock.Log)
+    {
+        *LogHandle = NULL;
+        return NDIS_STATUS_FAILURE;
+    }
+
+    Log = ExAllocatePool(NonPagedPool, Size + sizeof(NDIS_LOG));
+    if (!Log)
+    {
+        *LogHandle = NULL;
+        return NDIS_STATUS_RESOURCES;
+    }
+
+    Adapter->NdisMiniportBlock.Log = Log;
+
+    KeInitializeSpinLock(&Log->LogLock);
+
+    Log->Miniport = &Adapter->NdisMiniportBlock;
+    Log->TotalSize = Size;
+    Log->CurrentSize = 0;
+    Log->OutPtr = 0;
+    Log->InPtr = 0;
+    Log->Irp = NULL;
+
+    *LogHandle = Log;
+
+    KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
+
+    return NDIS_STATUS_SUCCESS;
 }
 
-
 /*
  * @implemented
  */
@@ -1213,16 +1255,29 @@ NdisMDeregisterAdapterShutdownHandler(
   }
 }
 
-
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 EXPORT
 NdisMFlushLog(
     IN  NDIS_HANDLE LogHandle)
 {
-    UNIMPLEMENTED
+    PNDIS_LOG Log = (PNDIS_LOG) LogHandle;
+    KIRQL OldIrql;
+
+    NDIS_DbgPrint(MAX_TRACE, ("called: LogHandle 0x%x\n", LogHandle));
+
+    /* Lock object */
+    KeAcquireSpinLock(&Log->LogLock, &OldIrql);
+
+    /* Set buffers size */
+    Log->CurrentSize = 0;
+    Log->OutPtr = 0;
+    Log->InPtr = 0;
+
+    /* Unlock object */
+    KeReleaseSpinLock(&Log->LogLock, OldIrql);
 }
 
 /*
