@@ -287,7 +287,7 @@ DCU_SetDcUndeletable(HDC  hDC)
       return;
     }
 
-  dc->DC_Flags |= DC_FLAG_PERMANENT;
+  dc->fs |= DC_FLAG_PERMANENT;
   DC_UnlockDc( dc );
   return;
 }

@@ -3163,7 +3163,7 @@ GreExtTextOutW(
         SetLastWin32Error(ERROR_INVALID_HANDLE);
         return FALSE;
     }
-    if (dc->DC_Type == DC_TYPE_INFO)
+    if (dc->dctype == DC_TYPE_INFO)
     {
         DC_UnlockDc(dc);
         /* Yes, Windows really returns TRUE in this case */
@@ -3200,7 +3200,7 @@ GreExtTextOutW(
         IntLPtoDP(dc, (POINT *)lprc, 2);
     }
 
-    psurf = SURFACE_LockSurface(dc->w.hBitmap);
+    psurf = SURFACE_LockSurface(dc->rosdc.hBitmap);
     if (!psurf)
     {
         goto fail;
@@ -3280,7 +3280,7 @@ GreExtTextOutW(
             &psurf->SurfObj,
             NULL,
             NULL,
-            dc->CombinedClip,
+            dc->rosdc.CombinedClip,
             NULL,
             &DestRect,
             &SourcePoint,
@@ -3526,7 +3526,7 @@ GreExtTextOutW(
                 &psurf->SurfObj,
                 NULL,
                 NULL,
-                dc->CombinedClip,
+                dc->rosdc.CombinedClip,
                 NULL,
                 &DestRect,
                 &SourcePoint,
@@ -3597,7 +3597,7 @@ GreExtTextOutW(
         IntEngMaskBlt(
             SurfObj,
             SourceGlyphSurf,
-            dc->CombinedClip,
+            dc->rosdc.CombinedClip,
             XlateObj,
             XlateObj2,
             &DestRect,

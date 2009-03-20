@@ -119,8 +119,8 @@ IntSetCursor(PWINSTATION_OBJECT WinSta, PCURICON_OBJECT NewCursor,
    {
       return Ret;
    }
-   dcbmp = dc->w.hBitmap;
-   DevInfo = (PDEVINFO)&((GDIDEVICE *)dc->pPDev)->DevInfo;
+   dcbmp = dc->rosdc.hBitmap;
+   DevInfo = (PDEVINFO)&((GDIDEVICE *)dc->ppdev)->DevInfo;
    DC_UnlockDc(dc);
 
    psurf = SURFACE_LockSurface(dcbmp);
@@ -1769,7 +1769,7 @@ UserShowCursor(BOOL bShow)
         return showpointer; /* No mouse */
     }
 
-    hbmpDc = dc->w.hBitmap;
+    hbmpDc = dc->rosdc.hBitmap;
     DC_UnlockDc(dc);
 
     psurfDc = SURFACE_LockSurface(hbmpDc);

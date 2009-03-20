@@ -121,7 +121,7 @@ IntGdiLineTo(DC  *dc,
        if (Dc_Attr->ulDirty_ & DC_PEN_DIRTY)
           IntGdiSelectPen(dc,Dc_Attr->hpen);
 
-        psurf = SURFACE_LockSurface( dc->w.hBitmap );
+        psurf = SURFACE_LockSurface( dc->rosdc.hBitmap );
         if (NULL == psurf)
         {
             SetLastWin32Error(ERROR_INVALID_HANDLE);
@@ -157,9 +157,9 @@ IntGdiLineTo(DC  *dc,
 
         if (!(PenBrushObj->flAttrs & GDIBRUSH_IS_NULL))
         {
-            IntGdiInitBrushInstance(&PenBrushInst, PenBrushObj, dc->XlatePen);
+            IntGdiInitBrushInstance(&PenBrushInst, PenBrushObj, dc->rosdc.XlatePen);
             Ret = IntEngLineTo(&psurf->SurfObj,
-                               dc->CombinedClip,
+                               dc->rosdc.CombinedClip,
                                &PenBrushInst.BrushObject,
                                Points[0].x, Points[0].y,
                                Points[1].x, Points[1].y,
@@ -283,7 +283,7 @@ IntGdiPolyline(DC      *dc,
         Points = EngAllocMem(0, Count * sizeof(POINT), TAG_COORD);
         if (Points != NULL)
         {
-            psurf = SURFACE_LockSurface(dc->w.hBitmap);
+            psurf = SURFACE_LockSurface(dc->rosdc.hBitmap);
             /* FIXME - psurf can be NULL!!!!
                Don't assert but handle this case gracefully! */
             ASSERT(psurf);
@@ -291,16 +291,16 @@ IntGdiPolyline(DC      *dc,
             RtlCopyMemory(Points, pt, Count * sizeof(POINT));
             IntLPtoDP(dc, Points, Count);
 
-            /* Offset the array of point by the dc->w.DCOrg */
+            /* Offset the array of point by the dc->rosdc.DCOrg */
             for (i = 0; i < Count; i++)
             {
                 Points[i].x += dc->ptlDCOrig.x;
                 Points[i].y += dc->ptlDCOrig.y;
             }
 
-            IntGdiInitBrushInstance(&PenBrushInst, PenBrushObj, dc->XlatePen);
+            IntGdiInitBrushInstance(&PenBrushInst, PenBrushObj, dc->rosdc.XlatePen);
             Ret = IntEngPolyline(&psurf->SurfObj,
-                                 dc->CombinedClip,
+                                 dc->rosdc.CombinedClip,
                                  &PenBrushInst.BrushObject,
                                  Points,
                                  Count,
@@ -406,7 +406,7 @@ NtGdiLineTo(HDC  hDC,
         SetLastWin32Error(ERROR_INVALID_HANDLE);
         return FALSE;
     }
-    if (dc->DC_Type == DC_TYPE_INFO)
+    if (dc->dctype == DC_TYPE_INFO)
     {
         DC_UnlockDc(dc);
         /* Yes, Windows really returns TRUE in this case */

@@ -79,13 +79,13 @@ IntSetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, CONST RGBQUAD *Color
    ULONG biBitCount;
 
    if (!(dc = DC_LockDc(hDC))) return 0;
-   if (dc->DC_Type == DC_TYPE_INFO)
+   if (dc->dctype == DC_TYPE_INFO)
    {
       DC_UnlockDc(dc);
       return 0;
    }
 
-   psurf = SURFACE_LockSurface(dc->w.hBitmap);
+   psurf = SURFACE_LockSurface(dc->rosdc.hBitmap);
    if (psurf == NULL)
    {
       DC_UnlockDc(dc);
@@ -145,13 +145,13 @@ IntGetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, RGBQUAD *Colors)
    ULONG biBitCount;
 
    if (!(dc = DC_LockDc(hDC))) return 0;
-   if (dc->DC_Type == DC_TYPE_INFO)
+   if (dc->dctype == DC_TYPE_INFO)
    {
       DC_UnlockDc(dc);
       return 0;
    }
 
-   psurf = SURFACE_LockSurface(dc->w.hBitmap);
+   psurf = SURFACE_LockSurface(dc->rosdc.hBitmap);
    if (psurf == NULL)
    {
       DC_UnlockDc(dc);
@@ -279,7 +279,7 @@ IntSetDIBits(
   else
   {
     // Destination palette obtained from the hDC
-    DDB_Palette = ((GDIDEVICE *)DC->pPDev)->DevInfo.hpalDefault;
+    DDB_Palette = ((GDIDEVICE *)DC->ppdev)->DevInfo.hpalDefault;
   }
   hDCPalette = PALETTE_LockPalette(DDB_Palette);
   if (NULL == hDCPalette)
@@ -395,7 +395,7 @@ NtGdiSetDIBits(
      SetLastWin32Error(ERROR_INVALID_HANDLE);
      return 0;
   }
-  if (Dc->DC_Type == DC_TYPE_INFO)
+  if (Dc->dctype == DC_TYPE_INFO)
   {
      DC_UnlockDc(Dc);
      return 0;
@@ -470,13 +470,13 @@ NtGdiSetDIBitsToDeviceInternal(
         SetLastWin32Error(ERROR_INVALID_HANDLE);
         return 0;
     }
-    if (pDC->DC_Type == DC_TYPE_INFO)
+    if (pDC->dctype == DC_TYPE_INFO)
     {
         DC_UnlockDc(pDC);
         return 0;
     }
 
-    pDestSurf = EngLockSurface((HSURF)pDC->w.hBitmap);
+    pDestSurf = EngLockSurface((HSURF)pDC->rosdc.hBitmap);
     if (!pDestSurf)
     {
         /* FIXME: SetLastError ? */
@@ -522,7 +522,7 @@ NtGdiSetDIBitsToDeviceInternal(
     }
 
     /* Obtain destination palette from the DC */
-    pDCPalette = PALETTE_LockPalette(((GDIDEVICE *)pDC->pPDev)->DevInfo.hpalDefault);
+    pDCPalette = PALETTE_LockPalette(((GDIDEVICE *)pDC->ppdev)->DevInfo.hpalDefault);
     if (!pDCPalette)
     {
        SetLastWin32Error(ERROR_INVALID_HANDLE);
@@ -531,7 +531,7 @@ NtGdiSetDIBitsToDeviceInternal(
     }
 
     DDBPaletteType = pDCPalette->Mode;
-    DDBPalette = ((GDIDEVICE *)pDC->pPDev)->DevInfo.hpalDefault;
+    DDBPalette = ((GDIDEVICE *)pDC->ppdev)->DevInfo.hpalDefault;
     PALETTE_UnlockPalette(pDCPalette);
 
     DIBPalette = BuildDIBPalette(bmi, (PINT)&DIBPaletteType);
@@ -555,7 +555,7 @@ NtGdiSetDIBitsToDeviceInternal(
     Status = IntEngBitBlt(pDestSurf,
                           pSourceSurf,
                           NULL,
-                          pDC->CombinedClip,
+                          pDC->rosdc.CombinedClip,
                           XlateObj,
                           &rcDest,
                           &ptSource,
@@ -635,7 +635,7 @@ NtGdiGetDIBitsInternal(HDC hDC,
 
     Dc = DC_LockDc(hDC);
     if (Dc == NULL) return 0;
-    if (Dc->DC_Type == DC_TYPE_INFO)
+    if (Dc->dctype == DC_TYPE_INFO)
     {
         DC_UnlockDc(Dc);
         return 0;
@@ -1238,13 +1238,13 @@ NtGdiCreateDIBitmapInternal(IN HDC hDc,
         bpp = pbmi->bmiHeader.biBitCount;
      else
      {
-        if (Dc->DC_Type != DC_TYPE_MEMORY )
+        if (Dc->dctype != DC_TYPE_MEMORY )
            bpp = IntGdiGetDeviceCaps(Dc, BITSPIXEL);
         else
         {
            DIBSECTION dibs;
            INT Count;           
-           SURFACE *psurf = SURFACE_LockSurface(Dc->w.hBitmap);
+           SURFACE *psurf = SURFACE_LockSurface(Dc->rosdc.hBitmap);
            Count = BITMAP_GetObject(psurf, sizeof(dibs), &dibs);
            if (!Count)
               bpp = 1;

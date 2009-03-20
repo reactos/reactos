@@ -154,7 +154,7 @@ NtGdiGetDeviceGammaRamp(HDC  hDC,
       return FALSE;
   }
 
-  Ret = IntGetDeviceGammaRamp((HDEV)dc->pPDev, SafeRamp);
+  Ret = IntGetDeviceGammaRamp((HDEV)dc->ppdev, SafeRamp);
 
   if (!Ret) return Ret;
 
@@ -408,7 +408,7 @@ NtGdiSetDeviceGammaRamp(HDC  hDC,
      return FALSE;
   }
 
-  Ret = IntSetDeviceGammaRamp((HDEV)dc->pPDev, SafeRamp, TRUE);
+  Ret = IntSetDeviceGammaRamp((HDEV)dc->ppdev, SafeRamp, TRUE);
   DC_UnlockDc(dc);
   ExFreePool(SafeRamp);
   return Ret;

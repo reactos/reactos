@@ -29,7 +29,7 @@
 
 /* Type definitions ***********************************************************/
 
-typedef struct _WIN_DC_INFO
+typedef struct _ROS_DC_INFO
 {
   HRGN     hClipRgn;     /* Clip region (may be 0) */
   HRGN     hVisRgn;      /* Should me to DC. Visible region (must never be 0) */
@@ -37,7 +37,14 @@ typedef struct _WIN_DC_INFO
   HBITMAP  hBitmap;
 
   BYTE   bitsPerPixel;
-} WIN_DC_INFO;
+
+  CLIPOBJ     *CombinedClip;
+  XLATEOBJ    *XlateBrush;
+  XLATEOBJ    *XlatePen;
+
+  UNICODE_STRING    DriverName;
+
+} ROS_DC_INFO;
 
 /* EXtended CLip and Window Region Object */
 typedef struct _XCLIPOBJ
@@ -99,18 +106,18 @@ typedef struct _DC
      Do not (re)move this. */
   BASEOBJECT  BaseObject;
 
-  DHPDEV      PDev;   /* <- GDIDEVICE.hPDev DHPDEV for device. */
-  INT         DC_Type;
-  INT         DC_Flags;
-  PVOID       pPDev;  /* PGDIDEVICE aka PDEVOBJ */
-  PVOID       hSem;   /* PERESOURCE aka HSEMAPHORE */
-  FLONG       flGraphics;
-  FLONG       flGraphics2;
+  DHPDEV      dhpdev;   /* <- GDIDEVICE.hPDev DHPDEV for device. */
+  INT         dctype;
+  INT         fs;
+  PVOID       ppdev;  /* PGDIDEVICE aka PDEVOBJ */
+  PVOID       hsem;   /* PERESOURCE aka HSEMAPHORE */
+  FLONG       flGraphicsCaps;
+  FLONG       flGraphicsCaps2;
   PDC_ATTR    pDc_Attr;
   DCLEVEL     DcLevel;
   DC_ATTR     Dc_Attr;
-  HDC         hNext;
-  HDC         hPrev;
+  HDC         hdcNext;
+  HDC         hdcPrev;
   RECTL       erclClip;
   POINTL      ptlDCOrig;
   RECTL       erclWindow;
@@ -130,19 +137,14 @@ typedef struct _DC
   PVOID       prfnt;    /* RFONT* */
   XCLIPOBJ    co;       /* CLIPOBJ */
   PVOID       pPFFList; /* PPFF* */
-  PVOID       ClrxFormLnk;
+  PVOID       pClrxFormLnk;
   INT         ipfdDevMax;
   ULONG       ulCopyCount;
   PVOID       pSurfInfo;
   POINTL      ptlDoBanding;
 
   /* Reactos specific members */
-  WIN_DC_INFO w;
-  CLIPOBJ     *CombinedClip;
-  XLATEOBJ    *XlateBrush;
-  XLATEOBJ    *XlatePen;
-
-  UNICODE_STRING    DriverName;
+  ROS_DC_INFO rosdc;
 } DC, *PDC;
 
 typedef struct _GRAPHICS_DEVICE

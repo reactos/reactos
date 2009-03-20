@@ -1199,7 +1199,7 @@ IntFillRect( DC *dc,
 
   ASSERT(BrushObj);
 
-  psurf = SURFACE_LockSurface(dc->w.hBitmap);
+  psurf = SURFACE_LockSurface(dc->rosdc.hBitmap);
   if (psurf == NULL)
   {
       SetLastWin32Error(ERROR_INVALID_HANDLE);
@@ -1238,15 +1238,15 @@ IntFillRect( DC *dc,
         ROP = PATCOPY;
 
      if (Pen)
-        IntGdiInitBrushInstance(&BrushInst, BrushObj, dc->XlatePen);
+        IntGdiInitBrushInstance(&BrushInst, BrushObj, dc->rosdc.XlatePen);
      else
-        IntGdiInitBrushInstance(&BrushInst, BrushObj, dc->XlateBrush);
+        IntGdiInitBrushInstance(&BrushInst, BrushObj, dc->rosdc.XlateBrush);
 
      Ret = IntEngBitBlt(
          &psurf->SurfObj,
          NULL,
          NULL,
-         dc->CombinedClip,
+         dc->rosdc.CombinedClip,
          NULL,
          &DestRect,
          NULL,

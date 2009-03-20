@@ -430,7 +430,7 @@ DxEngSetHdevData(HDEV hDev,
 * DC states depending on what value is passed in its second parameter:
 * 1. If the DC is full screen
 * 2. Get Complexity of visible region
-* 3. Get Driver hdev, which is pPDev
+* 3. Get Driver hdev, which is ppdev
 *
 * @param HDC hdc
 * The DC handle
@@ -438,7 +438,7 @@ DxEngSetHdevData(HDEV hDev,
 * @param DWORD type
 * value 1 = Is DC fullscreen
 * value 2 = Get Complexity of visible region.
-* value 3 = Get Driver hdev, which is a pPDev.
+* value 3 = Get Driver hdev, which is a ppdev.
 *
 * @return
 * Return one of the type values
@@ -462,7 +462,7 @@ DxEngGetDCState(HDC hDC,
         switch (type)
         {
             case 1:
-                retVal = (DWORD_PTR) pDC->DC_Flags & DC_FLAG_FULLSCREEN;
+                retVal = (DWORD_PTR) pDC->fs & DC_FLAG_FULLSCREEN;
                 break;
             case 2:
                 UNIMPLEMENTED;
@@ -470,7 +470,7 @@ DxEngGetDCState(HDC hDC,
             case 3:
             {
                 /* Return the HDEV of this DC. */
-                retVal = (DWORD_PTR) pDC->pPDev;
+                retVal = (DWORD_PTR) pDC->ppdev;
                 break;
             }
             default:
@@ -527,14 +527,14 @@ BOOLEAN
 APIENTRY
 DxEngLockHdev(HDEV hDev)
 {
-    PGDIDEVICE pPDev = (PGDIDEVICE)hDev;
+    PGDIDEVICE ppdev = (PGDIDEVICE)hDev;
     PERESOURCE Resource;
 
     DPRINT1("ReactX Calling : DxEngLockHdev \n");
 
     DPRINT1("hDev                   : 0x%08lx\n",hDev);
 
-    Resource = pPDev->hsemDevLock;
+    Resource = ppdev->hsemDevLock;
 
     if (Resource)
     {
@@ -564,8 +564,8 @@ BOOLEAN
 APIENTRY
 DxEngUnlockHdev(HDEV hDev)
 {
-    PGDIDEVICE pPDev = (PGDIDEVICE)hDev;
-    PERESOURCE Resource = pPDev->hsemDevLock;
+    PGDIDEVICE ppdev = (PGDIDEVICE)hDev;
+    PERESOURCE Resource = ppdev->hsemDevLock;
 
     DPRINT1("ReactX Calling : DxEngUnlockHdev \n");
 
@@ -759,9 +759,9 @@ DxEngSetDCState(HDC hDC, DWORD SetType, DWORD Set)
       if (SetType == 1)
       {   
         if ( Set )
-            pDC->DC_Flags |= DC_FLAG_FULLSCREEN;
+            pDC->fs |= DC_FLAG_FULLSCREEN;
         else
-            pDC->DC_Flags &= ~DC_FLAG_FULLSCREEN;
+            pDC->fs &= ~DC_FLAG_FULLSCREEN;
         Ret = TRUE;
       }
       DC_UnlockDc(pDC);

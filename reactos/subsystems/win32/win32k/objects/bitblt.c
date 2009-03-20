@@ -56,7 +56,7 @@ NtGdiAlphaBlend(
         SetLastWin32Error(ERROR_INVALID_HANDLE);
         return FALSE;
     }
-    if (DCDest->DC_Type == DC_TYPE_INFO)
+    if (DCDest->dctype == DC_TYPE_INFO)
     {
         DC_UnlockDc(DCDest);
         /* Yes, Windows really returns TRUE in this case */
@@ -73,7 +73,7 @@ NtGdiAlphaBlend(
             SetLastWin32Error(ERROR_INVALID_HANDLE);
             return FALSE;
         }
-        if (DCSrc->DC_Type == DC_TYPE_INFO)
+        if (DCSrc->dctype == DC_TYPE_INFO)
         {
             DC_UnlockDc(DCSrc);
             DC_UnlockDc(DCDest);
@@ -116,7 +116,7 @@ NtGdiAlphaBlend(
     }
 
     /* Determine surfaces to be used in the bitblt */
-    BitmapDest = SURFACE_LockSurface(DCDest->w.hBitmap);
+    BitmapDest = SURFACE_LockSurface(DCDest->rosdc.hBitmap);
     if (!BitmapDest)
     {
         if (hDCSrc != hDCDest)
@@ -124,11 +124,11 @@ NtGdiAlphaBlend(
         DC_UnlockDc(DCDest);
         return FALSE;
     }
-    if (DCSrc->w.hBitmap == DCDest->w.hBitmap)
+    if (DCSrc->rosdc.hBitmap == DCDest->rosdc.hBitmap)
         BitmapSrc = BitmapDest;
     else
     {
-        BitmapSrc = SURFACE_LockSurface(DCSrc->w.hBitmap);
+        BitmapSrc = SURFACE_LockSurface(DCSrc->rosdc.hBitmap);
         if (!BitmapSrc)
         {
             SURFACE_UnlockSurface(BitmapDest);
@@ -153,7 +153,7 @@ NtGdiAlphaBlend(
     {
         /* Perform the alpha blend operation */
         Status = IntEngAlphaBlend(&BitmapDest->SurfObj, &BitmapSrc->SurfObj,
-            DCDest->CombinedClip, XlateObj,
+            DCDest->rosdc.CombinedClip, XlateObj,
             &DestRect, &SourceRect, &BlendObj);
     }
 
@@ -203,7 +203,7 @@ NtGdiBitBlt(
         DPRINT("Invalid destination dc handle (0x%08x) passed to NtGdiBitBlt\n", hDCDest);
         return FALSE;
     }
-    if (DCDest->DC_Type == DC_TYPE_INFO)
+    if (DCDest->dctype == DC_TYPE_INFO)
     {
         DC_UnlockDc(DCDest);
         /* Yes, Windows really returns TRUE in this case */
@@ -221,7 +221,7 @@ NtGdiBitBlt(
                 DPRINT("Invalid source dc handle (0x%08x) passed to NtGdiBitBlt\n", hDCSrc);
                 return FALSE;
             }
-            if (DCSrc->DC_Type == DC_TYPE_INFO)
+            if (DCSrc->dctype == DC_TYPE_INFO)
             {
                 DC_UnlockDc(DCSrc);
                 DC_UnlockDc(DCDest);
@@ -268,17 +268,17 @@ NtGdiBitBlt(
     BrushOrigin.y = 0;
 
     /* Determine surfaces to be used in the bitblt */
-    BitmapDest = SURFACE_LockSurface(DCDest->w.hBitmap);
+    BitmapDest = SURFACE_LockSurface(DCDest->rosdc.hBitmap);
     if (!BitmapDest)
         goto cleanup;
 
     if (UsesSource)
     {
-        if (DCSrc->w.hBitmap == DCDest->w.hBitmap)
+        if (DCSrc->rosdc.hBitmap == DCDest->rosdc.hBitmap)
             BitmapSrc = BitmapDest;
         else
         {
-            BitmapSrc = SURFACE_LockSurface(DCSrc->w.hBitmap);
+            BitmapSrc = SURFACE_LockSurface(DCSrc->rosdc.hBitmap);
             if (!BitmapSrc)
                 goto cleanup;
         }
@@ -293,7 +293,7 @@ NtGdiBitBlt(
             goto cleanup;
         }
         BrushOrigin = *((PPOINTL)&BrushObj->ptOrigin);
-        IntGdiInitBrushInstance(&BrushInst, BrushObj, DCDest->XlateBrush);
+        IntGdiInitBrushInstance(&BrushInst, BrushObj, DCDest->rosdc.XlateBrush);
     }
 
     /* Create the XLATEOBJ. */
@@ -312,7 +312,7 @@ NtGdiBitBlt(
 
     /* Perform the bitblt operation */
     Status = IntEngBitBlt(&BitmapDest->SurfObj, BitmapSrc ? &BitmapSrc->SurfObj : NULL, NULL,
-        DCDest->CombinedClip, XlateObj, &DestRect,
+        DCDest->rosdc.CombinedClip, XlateObj, &DestRect,
         &SourcePoint, NULL,
         BrushObj ? &BrushInst.BrushObject : NULL,
         &BrushOrigin, ROP3_TO_ROP4(ROP));
@@ -372,7 +372,7 @@ NtGdiTransparentBlt(
         SetLastWin32Error(ERROR_INVALID_HANDLE);
         return FALSE;
     }
-    if (DCDest->DC_Type == DC_TYPE_INFO)
+    if (DCDest->dctype == DC_TYPE_INFO)
     {
         DC_UnlockDc(DCDest);
         /* Yes, Windows really returns TRUE in this case */
@@ -390,7 +390,7 @@ NtGdiTransparentBlt(
     {
         DCSrc = DCDest;
     }
-    if (DCSrc->DC_Type == DC_TYPE_INFO)
+    if (DCSrc->dctype == DC_TYPE_INFO)
     {
         DC_UnlockDc(DCSrc);
         if(hdcDst != hdcSrc)
@@ -407,13 +407,13 @@ NtGdiTransparentBlt(
     xSrc += DCSrc->ptlDCOrig.x;
     ySrc += DCSrc->ptlDCOrig.y;
 
-    BitmapDest = SURFACE_LockSurface(DCDest->w.hBitmap);
+    BitmapDest = SURFACE_LockSurface(DCDest->rosdc.hBitmap);
     if (!BitmapDest)
     {
         goto done;
     }
 
-    BitmapSrc = SURFACE_LockSurface(DCSrc->w.hBitmap);
+    BitmapSrc = SURFACE_LockSurface(DCSrc->rosdc.hBitmap);
     if (!BitmapSrc)
     {
         goto done;
@@ -477,7 +477,7 @@ NtGdiTransparentBlt(
     }
 
     Ret = IntEngTransparentBlt(&BitmapDest->SurfObj, &BitmapSrc->SurfObj,
-        DCDest->CombinedClip, XlateObj, &rcDest, &rcSrc,
+        DCDest->rosdc.CombinedClip, XlateObj, &rcDest, &rcSrc,
         TransparentColor, 0);
 
 done:
@@ -774,7 +774,7 @@ NtGdiStretchBlt(
         SetLastWin32Error(ERROR_INVALID_HANDLE);
         return FALSE;
     }
-    if (DCDest->DC_Type == DC_TYPE_INFO)
+    if (DCDest->dctype == DC_TYPE_INFO)
     {
         DC_UnlockDc(DCDest);
         /* Yes, Windows really returns TRUE in this case */
@@ -793,7 +793,7 @@ NtGdiStretchBlt(
                 SetLastWin32Error(ERROR_INVALID_HANDLE);
                 return FALSE;
             }
-            if (DCSrc->DC_Type == DC_TYPE_INFO)
+            if (DCSrc->dctype == DC_TYPE_INFO)
             {
                 DC_UnlockDc(DCSrc);
                 DC_UnlockDc(DCDest);
@@ -841,18 +841,18 @@ NtGdiStretchBlt(
     BrushOrigin.y = 0;
 
     /* Determine surfaces to be used in the bitblt */
-    BitmapDest = SURFACE_LockSurface(DCDest->w.hBitmap);
+    BitmapDest = SURFACE_LockSurface(DCDest->rosdc.hBitmap);
     if (BitmapDest == NULL)
         goto failed;
     if (UsesSource)
     {
-        if (DCSrc->w.hBitmap == DCDest->w.hBitmap)
+        if (DCSrc->rosdc.hBitmap == DCDest->rosdc.hBitmap)
         {
             BitmapSrc = BitmapDest;
         }
         else
         {
-            BitmapSrc = SURFACE_LockSurface(DCSrc->w.hBitmap);
+            BitmapSrc = SURFACE_LockSurface(DCSrc->rosdc.hBitmap);
             if (BitmapSrc == NULL)
                 goto failed;
         }
@@ -876,7 +876,7 @@ NtGdiStretchBlt(
             goto failed;
         }
         BrushOrigin = *((PPOINTL)&BrushObj->ptOrigin);
-        IntGdiInitBrushInstance(&BrushInst, BrushObj, DCDest->XlateBrush);
+        IntGdiInitBrushInstance(&BrushInst, BrushObj, DCDest->rosdc.XlateBrush);
     }
 
     /* Offset the brush */
@@ -885,7 +885,7 @@ NtGdiStretchBlt(
 
     /* Perform the bitblt operation */
     Status = IntEngStretchBlt(&BitmapDest->SurfObj, &BitmapSrc->SurfObj,
-        NULL, DCDest->CombinedClip, XlateObj,
+        NULL, DCDest->rosdc.CombinedClip, XlateObj,
         &DestRect, &SourceRect, NULL, 
         BrushObj ? &BrushInst.BrushObject : NULL,
         &BrushOrigin, ROP3_TO_ROP4(ROP));
@@ -899,7 +899,7 @@ failed:
     {
         BRUSHOBJ_UnlockBrush(BrushObj);
     }
-    if (BitmapSrc && DCSrc->w.hBitmap != DCDest->w.hBitmap)
+    if (BitmapSrc && DCSrc->rosdc.hBitmap != DCDest->rosdc.hBitmap)
     {
         SURFACE_UnlockSurface(BitmapSrc);
     }
@@ -934,7 +934,7 @@ IntPatBlt(
 
     ASSERT(BrushObj);
 
-    psurf = SURFACE_LockSurface(dc->w.hBitmap);
+    psurf = SURFACE_LockSurface(dc->rosdc.hBitmap);
     if (psurf == NULL)
     {
         SetLastWin32Error(ERROR_INVALID_HANDLE);
@@ -970,13 +970,13 @@ IntPatBlt(
         BrushOrigin.x = BrushObj->ptOrigin.x + dc->ptlDCOrig.x;
         BrushOrigin.y = BrushObj->ptOrigin.y + dc->ptlDCOrig.y;
 
-        IntGdiInitBrushInstance(&BrushInst, BrushObj, dc->XlateBrush);
+        IntGdiInitBrushInstance(&BrushInst, BrushObj, dc->rosdc.XlateBrush);
 
         ret = IntEngBitBlt(
             &psurf->SurfObj,
             NULL,
             NULL,
-            dc->CombinedClip,
+            dc->rosdc.CombinedClip,
             NULL,
             &DestRect,
             NULL,
@@ -1011,7 +1011,7 @@ IntGdiPolyPatBlt(
         SetLastWin32Error(ERROR_INVALID_HANDLE);
         return FALSE;
     }
-    if (dc->DC_Type == DC_TYPE_INFO)
+    if (dc->dctype == DC_TYPE_INFO)
     {
         DC_UnlockDc(dc);
         /* Yes, Windows really returns TRUE in this case */
@@ -1075,7 +1075,7 @@ NtGdiPatBlt(
         SetLastWin32Error(ERROR_INVALID_HANDLE);
         return FALSE;
     }
-    if (dc->DC_Type == DC_TYPE_INFO)
+    if (dc->dctype == DC_TYPE_INFO)
     {
         DC_UnlockDc(dc);
         /* Yes, Windows really returns TRUE in this case */

@@ -300,13 +300,13 @@ IntGdiSelectPen(
     hOrgPen = pDc_Attr->hpen;
     pDc_Attr->hpen = hPen;
 
-    if (pDC->XlatePen != NULL)
+    if (pDC->rosdc.XlatePen != NULL)
     {
-        EngDeleteXlate(pDC->XlatePen);
+        EngDeleteXlate(pDC->rosdc.XlatePen);
     }
     pDc_Attr->ulDirty_ &= ~DC_PEN_DIRTY;
 
-    pDC->XlatePen = XlateObj;
+    pDC->rosdc.XlatePen = XlateObj;
 
     return hOrgPen;
 }

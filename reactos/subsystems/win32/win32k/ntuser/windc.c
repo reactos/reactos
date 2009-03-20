@@ -782,10 +782,10 @@ DceResetActiveDCEs(PWINDOW_OBJECT Window)
                dc->ptlDCOrig.x = CurrentWindow->Wnd->ClientRect.left;
                dc->ptlDCOrig.y = CurrentWindow->Wnd->ClientRect.top;
             }
-            if (NULL != dc->w.hClipRgn)
+            if (NULL != dc->rosdc.hClipRgn)
             {
                int FASTCALL CLIPPING_UpdateGCRegion(DC* Dc);
-               NtGdiOffsetRgn(dc->w.hClipRgn, DeltaX, DeltaY);
+               NtGdiOffsetRgn(dc->rosdc.hClipRgn, DeltaX, DeltaY);
                CLIPPING_UpdateGCRegion(dc);
             }
             if (NULL != pDCE->hClipRgn)

@@ -59,7 +59,7 @@ intEnableReactXDriver(HDC hdc)
         return FALSE;
     }
 
-    pDev = (PGDIDEVICE)pDC->pPDev;
+    pDev = (PGDIDEVICE)pDC->ppdev;
 
     /* test see if drv got a dx interface or not */
     if  ( ( pDev->DriverFunctions.DisableDirectDraw == NULL) ||
@@ -86,7 +86,7 @@ intEnableReactXDriver(HDC hdc)
             {
                 DPRINT1(" call to pfnDdEnableDirectDraw \n ");
                 /* Note it is the hdev struct it want, not the drv hPDev aka pdc->PDev */
-                success = pfnDdEnableDirectDraw(pDC->pPDev, TRUE);
+                success = pfnDdEnableDirectDraw(pDC->ppdev, TRUE);
 
                 dump_edd_directdraw_global(pDev->pEDDgpl);
                 dump_halinfo(&pDev->pEDDgpl->ddHalInfo);

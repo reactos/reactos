@@ -1169,7 +1169,7 @@ IntMouseInput(MOUSEINPUT *mi)
       dc = DC_LockDc(hDC);
       if (dc)
       {
-         hBitmap = dc->w.hBitmap;
+         hBitmap = dc->rosdc.hBitmap;
          DC_UnlockDc(dc);
 
          psurf = SURFACE_LockSurface(hBitmap);

@@ -88,7 +88,7 @@ NtGdiCreateCompatibleDC(HDC hDC)
       DPRINT1("Failed to lock hDC\n");
       return NULL;
     }
-  hNewDC = DC_AllocDC(&OrigDC->DriverName);
+  hNewDC = DC_AllocDC(&OrigDC->rosdc.DriverName);
   if (NULL == hNewDC)
     {
       DPRINT1("Failed to create hNewDC\n");
@@ -116,9 +116,9 @@ NtGdiCreateCompatibleDC(HDC hDC)
   /* Copy information from original DC to new DC  */
   NewDC->DcLevel.hdcSave = hNewDC;
 
-  NewDC->PDev = OrigDC->PDev;
+  NewDC->dhpdev = OrigDC->dhpdev;
 
-  NewDC->w.bitsPerPixel = OrigDC->w.bitsPerPixel;
+  NewDC->rosdc.bitsPerPixel = OrigDC->rosdc.bitsPerPixel;
 
   /* DriverName is copied in the AllocDC routine  */
   nDc_Attr->ptlWindowOrg   = oDc_Attr->ptlWindowOrg;
@@ -126,9 +126,9 @@ NtGdiCreateCompatibleDC(HDC hDC)
   nDc_Attr->ptlViewportOrg = oDc_Attr->ptlViewportOrg;
   nDc_Attr->szlViewportExt = oDc_Attr->szlViewportExt;
 
-  NewDC->DC_Type        = DC_TYPE_MEMORY; // Always!
-  NewDC->w.hBitmap      = NtGdiGetStockObject(DEFAULT_BITMAP);
-  NewDC->pPDev          = OrigDC->pPDev;
+  NewDC->dctype        = DC_TYPE_MEMORY; // Always!
+  NewDC->rosdc.hBitmap      = NtGdiGetStockObject(DEFAULT_BITMAP);
+  NewDC->ppdev          = OrigDC->ppdev;
   NewDC->DcLevel.hpal    = OrigDC->DcLevel.hpal;
 
   nDc_Attr->lTextAlign      = oDc_Attr->lTextAlign;
@@ -819,35 +819,35 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
   nDc_Attr = NewDC->pDc_Attr;
   if(!nDc_Attr) nDc_Attr = &NewDC->Dc_Attr;
 
-  NewDC->DC_Type = DC_TYPE_DIRECT;
+  NewDC->dctype = DC_TYPE_DIRECT;
 
-  NewDC->PDev = PrimarySurface.hPDev;
-  if(pUMdhpdev) pUMdhpdev = NewDC->PDev; // set DHPDEV for device.
-  NewDC->pPDev = (PVOID)&PrimarySurface;
-  NewDC->w.hBitmap = (HBITMAP)PrimarySurface.pSurface;
+  NewDC->dhpdev = PrimarySurface.hPDev;
+  if(pUMdhpdev) pUMdhpdev = NewDC->dhpdev; // set DHPDEV for device.
+  NewDC->ppdev = (PVOID)&PrimarySurface;
+  NewDC->rosdc.hBitmap = (HBITMAP)PrimarySurface.pSurface;
   // ATM we only have one display.
   nDc_Attr->ulDirty_ |= DC_PRIMARY_DISPLAY;
 
-  NewDC->w.bitsPerPixel = ((PGDIDEVICE)NewDC->pPDev)->GDIInfo.cBitsPixel *
-                                     ((PGDIDEVICE)NewDC->pPDev)->GDIInfo.cPlanes;
-  DPRINT("Bits per pel: %u\n", NewDC->w.bitsPerPixel);
+  NewDC->rosdc.bitsPerPixel = ((PGDIDEVICE)NewDC->ppdev)->GDIInfo.cBitsPixel *
+                                     ((PGDIDEVICE)NewDC->ppdev)->GDIInfo.cPlanes;
+  DPRINT("Bits per pel: %u\n", NewDC->rosdc.bitsPerPixel);
 
-  NewDC->flGraphics  = PrimarySurface.DevInfo.flGraphicsCaps;
-  NewDC->flGraphics2 = PrimarySurface.DevInfo.flGraphicsCaps2;
+  NewDC->flGraphicsCaps  = PrimarySurface.DevInfo.flGraphicsCaps;
+  NewDC->flGraphicsCaps2 = PrimarySurface.DevInfo.flGraphicsCaps2;
 
   NewDC->DcLevel.hpal = NtGdiGetStockObject(DEFAULT_PALETTE);
 
   nDc_Attr->jROP2 = R2_COPYPEN;
 
   NewDC->erclWindow.top = NewDC->erclWindow.left = 0;
-  NewDC->erclWindow.right  = ((PGDIDEVICE)NewDC->pPDev)->GDIInfo.ulHorzRes;
-  NewDC->erclWindow.bottom = ((PGDIDEVICE)NewDC->pPDev)->GDIInfo.ulVertRes;
+  NewDC->erclWindow.right  = ((PGDIDEVICE)NewDC->ppdev)->GDIInfo.ulHorzRes;
+  NewDC->erclWindow.bottom = ((PGDIDEVICE)NewDC->ppdev)->GDIInfo.ulVertRes;
   NewDC->DcLevel.flPath &= ~DCPATH_CLOCKWISE; // Default is CCW.
 
   nDc_Attr->iCS_CP = ftGdiGetTextCharsetInfo(NewDC,NULL,0);
 
-  hVisRgn = NtGdiCreateRectRgn(0, 0, ((PGDIDEVICE)NewDC->pPDev)->GDIInfo.ulHorzRes,
-                                     ((PGDIDEVICE)NewDC->pPDev)->GDIInfo.ulVertRes);
+  hVisRgn = NtGdiCreateRectRgn(0, 0, ((PGDIDEVICE)NewDC->ppdev)->GDIInfo.ulHorzRes,
+                                     ((PGDIDEVICE)NewDC->ppdev)->GDIInfo.ulVertRes);
 
   if (!CreateAsIC)
   {
@@ -868,7 +868,7 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
        device without creating a device context (DC). However, GDI drawing functions
        cannot accept a handle to an information context.
      */
-    NewDC->DC_Type = DC_TYPE_INFO;
+    NewDC->dctype = DC_TYPE_INFO;
 //    NewDC->pSurfInfo = 
     NewDC->DcLevel.pSurface = NULL;
     nDc_Attr->crBackgroundClr = nDc_Attr->ulBackgroundClr = RGB(255, 255, 255);
@@ -1019,7 +1019,7 @@ IntGdiDeleteDC(HDC hDC, BOOL Force)
 
   if(!Force)
   {
-    if (DCToDelete->DC_Flags & DC_FLAG_PERMANENT)
+    if (DCToDelete->fs & DC_FLAG_PERMANENT)
     {
          DPRINT1("No! You Naughty Application!\n");
          DC_UnlockDc( DCToDelete );
@@ -1053,26 +1053,26 @@ IntGdiDeleteDC(HDC hDC, BOOL Force)
     NtGdiSelectBrush (DCHandle, STOCK_WHITE_BRUSH);
     NtGdiSelectFont (DCHandle, STOCK_SYSTEM_FONT);
     DC_LockDC (DCHandle); NtGdiSelectXxx does not recognize stock objects yet  */
-    if (DCToDelete->XlateBrush != NULL)
-      EngDeleteXlate(DCToDelete->XlateBrush);
-    if (DCToDelete->XlatePen != NULL)
-      EngDeleteXlate(DCToDelete->XlatePen);
+    if (DCToDelete->rosdc.XlateBrush != NULL)
+      EngDeleteXlate(DCToDelete->rosdc.XlateBrush);
+    if (DCToDelete->rosdc.XlatePen != NULL)
+      EngDeleteXlate(DCToDelete->rosdc.XlatePen);
   }
-  if (DCToDelete->w.hClipRgn)
+  if (DCToDelete->rosdc.hClipRgn)
   {
-    NtGdiDeleteObject (DCToDelete->w.hClipRgn);
+    NtGdiDeleteObject (DCToDelete->rosdc.hClipRgn);
   }
-  if (DCToDelete->w.hVisRgn)
+  if (DCToDelete->rosdc.hVisRgn)
   {
-    NtGdiDeleteObject (DCToDelete->w.hVisRgn);
+    NtGdiDeleteObject (DCToDelete->rosdc.hVisRgn);
   }
-  if (NULL != DCToDelete->CombinedClip)
+  if (NULL != DCToDelete->rosdc.CombinedClip)
   {
-    IntEngDeleteClipRegion(DCToDelete->CombinedClip);
+    IntEngDeleteClipRegion(DCToDelete->rosdc.CombinedClip);
   }
-  if (DCToDelete->w.hGCClipRgn)
+  if (DCToDelete->rosdc.hGCClipRgn)
   {
-    NtGdiDeleteObject (DCToDelete->w.hGCClipRgn);
+    NtGdiDeleteObject (DCToDelete->rosdc.hGCClipRgn);
   }
   PATH_Delete(DCToDelete->DcLevel.hPath);
 
@@ -1169,7 +1169,7 @@ NtGdiGetDCObject(HDC  hDC, INT  ObjectType)
       SelObject = Dc_Attr->hlfntNew;
       break;
     case GDI_OBJECT_TYPE_BITMAP:
-      SelObject = dc->w.hBitmap;
+      SelObject = dc->rosdc.hBitmap;
       break;
     case GDI_OBJECT_TYPE_COLORSPACE:
       DPRINT1("FIXME: NtGdiGetCurrentObject() ObjectType OBJ_COLORSPACE not supported yet!\n");
@@ -1250,8 +1250,8 @@ IntGetAspectRatioFilter(PDC pDC,
   {
    // "This specifies that Windows should only match fonts that have the
    // same aspect ratio as the display.", Programming Windows, Fifth Ed.
-     AspectRatio->cx = ((PGDIDEVICE)pDC->pPDev)->GDIInfo.ulLogPixelsX;
-     AspectRatio->cy = ((PGDIDEVICE)pDC->pPDev)->GDIInfo.ulLogPixelsY;
+     AspectRatio->cx = ((PGDIDEVICE)pDC->ppdev)->GDIInfo.ulLogPixelsX;
+     AspectRatio->cy = ((PGDIDEVICE)pDC->ppdev)->GDIInfo.ulLogPixelsY;
   }
   else
   {
@@ -1388,9 +1388,9 @@ IntGdiCopyToSaveState(PDC dc, PDC newdc)
   nDc_Attr->hpen            = Dc_Attr->hpen;
   nDc_Attr->hbrush          = Dc_Attr->hbrush;
   nDc_Attr->hlfntNew        = Dc_Attr->hlfntNew;
-  newdc->w.hBitmap          = dc->w.hBitmap;
+  newdc->rosdc.hBitmap          = dc->rosdc.hBitmap;
   newdc->DcLevel.hpal       = dc->DcLevel.hpal;
-  newdc->w.bitsPerPixel     = dc->w.bitsPerPixel;
+  newdc->rosdc.bitsPerPixel     = dc->rosdc.bitsPerPixel;
   nDc_Attr->jROP2           = Dc_Attr->jROP2;
   nDc_Attr->jFillMode       = Dc_Attr->jFillMode;
   nDc_Attr->jStretchBltMode = Dc_Attr->jStretchBltMode;
@@ -1425,7 +1425,7 @@ IntGdiCopyToSaveState(PDC dc, PDC newdc)
   nDc_Attr->szlViewportExt  = Dc_Attr->szlViewportExt;
 
   newdc->DcLevel.lSaveDepth = 0;
-  newdc->DC_Type = dc->DC_Type;
+  newdc->dctype = dc->dctype;
 
 #if 0
   PATH_InitGdiPath( &newdc->DcLevel.hPath );
@@ -1433,11 +1433,11 @@ IntGdiCopyToSaveState(PDC dc, PDC newdc)
 
   /* Get/SetDCState() don't change hVisRgn field ("Undoc. Windows" p.559). */
 
-  newdc->w.hGCClipRgn = newdc->w.hVisRgn = 0;
-  if (dc->w.hClipRgn)
+  newdc->rosdc.hGCClipRgn = newdc->rosdc.hVisRgn = 0;
+  if (dc->rosdc.hClipRgn)
   {
-    newdc->w.hClipRgn = NtGdiCreateRectRgn( 0, 0, 0, 0 );
-    NtGdiCombineRgn( newdc->w.hClipRgn, dc->w.hClipRgn, 0, RGN_COPY );
+    newdc->rosdc.hClipRgn = NtGdiCreateRectRgn( 0, 0, 0, 0 );
+    NtGdiCombineRgn( newdc->rosdc.hClipRgn, dc->rosdc.hClipRgn, 0, RGN_COPY );
   }
 }
 
@@ -1490,27 +1490,27 @@ IntGdiCopyFromSaveState(PDC dc, PDC dcs, HDC hDC)
   Dc_Attr->ptlViewportOrg  = sDc_Attr->ptlViewportOrg;
   Dc_Attr->szlViewportExt  = sDc_Attr->szlViewportExt;
 
-  if (dc->DC_Type != DC_TYPE_MEMORY)
+  if (dc->dctype != DC_TYPE_MEMORY)
   {
-     dc->w.bitsPerPixel = dcs->w.bitsPerPixel;
+     dc->rosdc.bitsPerPixel = dcs->rosdc.bitsPerPixel;
   }
 
 #if 0
-  if (dcs->w.hClipRgn)
+  if (dcs->rosdc.hClipRgn)
   {
-    if (!dc->w.hClipRgn)
+    if (!dc->rosdc.hClipRgn)
     {
-       dc->w.hClipRgn = NtGdiCreateRectRgn( 0, 0, 0, 0 );
+       dc->rosdc.hClipRgn = NtGdiCreateRectRgn( 0, 0, 0, 0 );
     }
-    NtGdiCombineRgn( dc->w.hClipRgn, dcs->w.hClipRgn, 0, RGN_COPY );
+    NtGdiCombineRgn( dc->rosdc.hClipRgn, dcs->rosdc.hClipRgn, 0, RGN_COPY );
   }
   else
   {
-    if (dc->w.hClipRgn)
+    if (dc->rosdc.hClipRgn)
     {
-       NtGdiDeleteObject( dc->w.hClipRgn );
+       NtGdiDeleteObject( dc->rosdc.hClipRgn );
     }
-    dc->w.hClipRgn = 0;
+    dc->rosdc.hClipRgn = 0;
   }
   {
     int res;
@@ -1519,12 +1519,12 @@ IntGdiCopyFromSaveState(PDC dc, PDC dcs, HDC hDC)
   }
   DC_UnlockDc ( dc );
 #else
-  GdiExtSelectClipRgn(dc, dcs->w.hClipRgn, RGN_COPY);
+  GdiExtSelectClipRgn(dc, dcs->rosdc.hClipRgn, RGN_COPY);
   DC_UnlockDc ( dc );
 #endif
   if(!hDC) return; // Not a MemoryDC or SaveLevel DC, return.
 
-  NtGdiSelectBitmap( hDC, dcs->w.hBitmap );
+  NtGdiSelectBitmap( hDC, dcs->rosdc.hBitmap );
   NtGdiSelectBrush( hDC, sDc_Attr->hbrush );
   NtGdiSelectFont( hDC, sDc_Attr->hlfntNew );
   NtGdiSelectPen( hDC, sDc_Attr->hpen );
@@ -1645,55 +1645,55 @@ INT FASTCALL
 IntGdiGetDeviceCaps(PDC dc, INT Index)
 {
   INT ret = 0;
-  PGDIDEVICE pPDev = dc->pPDev;
+  PGDIDEVICE ppdev = dc->ppdev;
   /* Retrieve capability */
   switch (Index)
   {
     case DRIVERVERSION:
-      ret = pPDev->GDIInfo.ulVersion;
+      ret = ppdev->GDIInfo.ulVersion;
       break;
 
     case TECHNOLOGY:
-      ret = pPDev->GDIInfo.ulTechnology;
+      ret = ppdev->GDIInfo.ulTechnology;
       break;
 
     case HORZSIZE:
-      ret = pPDev->GDIInfo.ulHorzSize;
+      ret = ppdev->GDIInfo.ulHorzSize;
       break;
 
     case VERTSIZE:
-      ret = pPDev->GDIInfo.ulVertSize;
+      ret = ppdev->GDIInfo.ulVertSize;
       break;
 
     case HORZRES:
-      ret = pPDev->GDIInfo.ulHorzRes;
+      ret = ppdev->GDIInfo.ulHorzRes;
       break;
 
     case VERTRES:
-      ret = pPDev->GDIInfo.ulVertRes;
+      ret = ppdev->GDIInfo.ulVertRes;
       break;
 
     case LOGPIXELSX:
-      ret = pPDev->GDIInfo.ulLogPixelsX;
+      ret = ppdev->GDIInfo.ulLogPixelsX;
       break;
 
     case LOGPIXELSY:
-      ret = pPDev->GDIInfo.ulLogPixelsY;
+      ret = ppdev->GDIInfo.ulLogPixelsY;
       break;
 
     case CAPS1:
-      if ( pPDev->pGraphicsDev &&
-           (((PGRAPHICS_DEVICE)pPDev->pGraphicsDev)->StateFlags & 
+      if ( ppdev->pGraphicsDev &&
+           (((PGRAPHICS_DEVICE)ppdev->pGraphicsDev)->StateFlags & 
                                       DISPLAY_DEVICE_MIRRORING_DRIVER))
          ret = C1_MIRRORING;
       break;
 
     case BITSPIXEL:
-      ret = pPDev->GDIInfo.cBitsPixel;
+      ret = ppdev->GDIInfo.cBitsPixel;
       break;
 
     case PLANES:
-      ret = pPDev->GDIInfo.cPlanes;
+      ret = ppdev->GDIInfo.cPlanes;
       break;
 
     case NUMBRUSHES:
@@ -1701,28 +1701,28 @@ IntGdiGetDeviceCaps(PDC dc, INT Index)
       break;
 
     case NUMPENS:
-      ret = pPDev->GDIInfo.ulNumColors;
+      ret = ppdev->GDIInfo.ulNumColors;
       if ( ret != -1 ) ret *= 5;
       break;
 
     case NUMFONTS:
-      ret = IntcFonts(pPDev);
+      ret = IntcFonts(ppdev);
       break;
 
     case NUMCOLORS:
-      ret = pPDev->GDIInfo.ulNumColors;
+      ret = ppdev->GDIInfo.ulNumColors;
       break;
 
     case ASPECTX:
-      ret = pPDev->GDIInfo.ulAspectX;
+      ret = ppdev->GDIInfo.ulAspectX;
       break;
 
     case ASPECTY:
-      ret = pPDev->GDIInfo.ulAspectY;
+      ret = ppdev->GDIInfo.ulAspectY;
       break;
 
     case ASPECTXY:
-      ret = pPDev->GDIInfo.ulAspectXY;
+      ret = ppdev->GDIInfo.ulAspectXY;
       break;
 
     case CLIPCAPS:
@@ -1730,7 +1730,7 @@ IntGdiGetDeviceCaps(PDC dc, INT Index)
       break;
 
     case SIZEPALETTE:
-      ret = pPDev->GDIInfo.ulNumPalReg;
+      ret = ppdev->GDIInfo.ulNumPalReg;
       break;
 
     case NUMRESERVED:
@@ -1738,53 +1738,53 @@ IntGdiGetDeviceCaps(PDC dc, INT Index)
       break;
 
     case COLORRES:
-      ret = pPDev->GDIInfo.ulDACRed +
-            pPDev->GDIInfo.ulDACGreen +
-            pPDev->GDIInfo.ulDACBlue;
+      ret = ppdev->GDIInfo.ulDACRed +
+            ppdev->GDIInfo.ulDACGreen +
+            ppdev->GDIInfo.ulDACBlue;
       break;
 
     case DESKTOPVERTRES:
-      ret = pPDev->GDIInfo.ulVertRes;
+      ret = ppdev->GDIInfo.ulVertRes;
       break;
 
     case DESKTOPHORZRES:
-      ret = pPDev->GDIInfo.ulHorzRes;
+      ret = ppdev->GDIInfo.ulHorzRes;
       break;
 
     case BLTALIGNMENT:
-      ret = pPDev->GDIInfo.ulBltAlignment;
+      ret = ppdev->GDIInfo.ulBltAlignment;
       break;
 
     case SHADEBLENDCAPS:
-      ret = pPDev->GDIInfo.flShadeBlend;
+      ret = ppdev->GDIInfo.flShadeBlend;
       break;
 
     case COLORMGMTCAPS:
-      ret = IntGetColorManagementCaps(pPDev);
+      ret = IntGetColorManagementCaps(ppdev);
       break;
 
     case PHYSICALWIDTH:
-      ret = pPDev->GDIInfo.szlPhysSize.cx;
+      ret = ppdev->GDIInfo.szlPhysSize.cx;
       break;
 
     case PHYSICALHEIGHT:
-      ret = pPDev->GDIInfo.szlPhysSize.cy;
+      ret = ppdev->GDIInfo.szlPhysSize.cy;
       break;
 
     case PHYSICALOFFSETX:
-      ret = pPDev->GDIInfo.ptlPhysOffset.x;
+      ret = ppdev->GDIInfo.ptlPhysOffset.x;
       break;
 
     case PHYSICALOFFSETY:
-      ret = pPDev->GDIInfo.ptlPhysOffset.y;
+      ret = ppdev->GDIInfo.ptlPhysOffset.y;
       break;
 
     case VREFRESH:
-      ret = pPDev->GDIInfo.ulVRefresh;
+      ret = ppdev->GDIInfo.ulVRefresh;
       break;
 
     case RASTERCAPS:
-      ret = pPDev->GDIInfo.flRaster;
+      ret = ppdev->GDIInfo.flRaster;
       break;
 
     case CURVECAPS:
@@ -1803,8 +1803,8 @@ IntGdiGetDeviceCaps(PDC dc, INT Index)
       break;
 
     case TEXTCAPS:
-      ret = pPDev->GDIInfo.flTextCaps;
-      if (pPDev->GDIInfo.ulTechnology) ret |= TC_VA_ABLE;
+      ret = ppdev->GDIInfo.flTextCaps;
+      if (ppdev->GDIInfo.ulTechnology) ret |= TC_VA_ABLE;
       ret |= (TC_SO_ABLE|TC_UA_ABLE);
       break;
 
@@ -1933,7 +1933,7 @@ NtGdiGetDeviceCapsAll (
      return FALSE;    
   }
 
-  IntvGetDeviceCaps(dc->pPDev, pSafeDevCaps);
+  IntvGetDeviceCaps(dc->ppdev, pSafeDevCaps);
 
   _SEH2_TRY
   {
@@ -2011,7 +2011,7 @@ NtGdiRestoreDC(HDC  hDC, INT  SaveLevel)
      }
 
      DC_SetNextDC (dc, DC_GetNextDC (dcs));
-     dcs->hNext = 0;
+     dcs->hdcNext = 0;
 
      if (--dc->DcLevel.lSaveDepth < SaveLevel)
      {
@@ -2115,13 +2115,13 @@ GdiSelectPalette(HDC  hDC,
     }
 
     /* Is this a valid palette for this depth? */
-    if ((dc->w.bitsPerPixel <= 8 && PalGDI->Mode == PAL_INDEXED) ||
-        (dc->w.bitsPerPixel > 8  && PalGDI->Mode != PAL_INDEXED))
+    if ((dc->rosdc.bitsPerPixel <= 8 && PalGDI->Mode == PAL_INDEXED) ||
+        (dc->rosdc.bitsPerPixel > 8  && PalGDI->Mode != PAL_INDEXED))
     {
         oldPal = dc->DcLevel.hpal;
         dc->DcLevel.hpal = hpal;
     }
-    else if (8 < dc->w.bitsPerPixel && PAL_INDEXED == PalGDI->Mode)
+    else if (8 < dc->rosdc.bitsPerPixel && PAL_INDEXED == PalGDI->Mode)
     {
         oldPal = dc->DcLevel.hpal;
         dc->DcLevel.hpal = hpal;
@@ -2145,7 +2145,7 @@ IntGdiSetHookFlags(HDC hDC, WORD Flags)
       return 0;
     }
 
-  wRet = dc->DC_Flags & DC_FLAG_DIRTY_RAO; // Fixme wrong flag!
+  wRet = dc->fs & DC_FLAG_DIRTY_RAO; // Fixme wrong flag!
 
   /* "Undocumented Windows" info is slightly confusing.
    */
@@ -2154,11 +2154,11 @@ IntGdiSetHookFlags(HDC hDC, WORD Flags)
 
   if (Flags & DCHF_INVALIDATEVISRGN)
     { /* hVisRgn has to be updated */
-      dc->DC_Flags |= DC_FLAG_DIRTY_RAO;
+      dc->fs |= DC_FLAG_DIRTY_RAO;
     }
   else if (Flags & DCHF_VALIDATEVISRGN || 0 == Flags)
     {
-      dc->DC_Flags &= ~DC_FLAG_DIRTY_RAO;
+      dc->fs &= ~DC_FLAG_DIRTY_RAO;
     }
 
   DC_UnlockDc(dc);
@@ -2222,7 +2222,7 @@ NtGdiGetDCDword(
           SafeResult = IntGetFontLanguageInfo(dc);
       break;
     case GdiGetIsMemDc:
-          SafeResult = dc->DC_Type;
+          SafeResult = dc->dctype;
       break;
     case GdiGetMapMode:
       SafeResult = Dc_Attr->iMapMode;
@@ -2428,8 +2428,8 @@ DC_AllocDC(PUNICODE_STRING Driver)
 
   if (Driver != NULL)
   {
-    RtlCopyMemory(&NewDC->DriverName, Driver, sizeof(UNICODE_STRING));
-    NewDC->DriverName.Buffer = Buf;
+    RtlCopyMemory(&NewDC->rosdc.DriverName, Driver, sizeof(UNICODE_STRING));
+    NewDC->rosdc.DriverName.Buffer = Buf;
   }
   Dc_Attr = NewDC->pDc_Attr;
   if(!Dc_Attr) Dc_Attr = &NewDC->Dc_Attr;
@@ -2608,21 +2608,21 @@ BOOL INTERNAL_CALL
 DC_Cleanup(PVOID ObjectBody)
 {
   PDC pDC = (PDC)ObjectBody;
-  if (pDC->DriverName.Buffer)
-    ExFreePoolWithTag(pDC->DriverName.Buffer, TAG_DC);
+  if (pDC->rosdc.DriverName.Buffer)
+    ExFreePoolWithTag(pDC->rosdc.DriverName.Buffer, TAG_DC);
   return TRUE;
 }
 
 HDC FASTCALL
 DC_GetNextDC (PDC pDC)
 {
-  return pDC->hNext;
+  return pDC->hdcNext;
 }
 
 VOID FASTCALL
 DC_SetNextDC (PDC pDC, HDC hNextDC)
 {
-  pDC->hNext = hNextDC;
+  pDC->hdcNext = hNextDC;
 }
 
 VOID FASTCALL
@@ -2696,17 +2696,17 @@ DC_SetOwnership(HDC hDC, PEPROCESS Owner)
     pDC = DC_LockDc(hDC);
     if (pDC)
     {
-        if (pDC->w.hClipRgn)
+        if (pDC->rosdc.hClipRgn)
         {
-            if(!GDIOBJ_SetOwnership(pDC->w.hClipRgn, Owner)) return FALSE;
+            if(!GDIOBJ_SetOwnership(pDC->rosdc.hClipRgn, Owner)) return FALSE;
         }
-        if (pDC->w.hVisRgn)
+        if (pDC->rosdc.hVisRgn)
         {
-           if(!GDIOBJ_SetOwnership(pDC->w.hVisRgn, Owner)) return FALSE;
+           if(!GDIOBJ_SetOwnership(pDC->rosdc.hVisRgn, Owner)) return FALSE;
         }
-        if (pDC->w.hGCClipRgn)
+        if (pDC->rosdc.hGCClipRgn)
         {
-            if(!GDIOBJ_SetOwnership(pDC->w.hGCClipRgn, Owner)) return FALSE;
+            if(!GDIOBJ_SetOwnership(pDC->rosdc.hGCClipRgn, Owner)) return FALSE;
         }
         if (pDC->DcLevel.hPath)
         {
@@ -2727,7 +2727,7 @@ DC_LockDisplay(HDC hDC)
   PERESOURCE Resource;
   PDC dc = DC_LockDc(hDC);
   if (!dc) return;
-  Resource = ((PGDIDEVICE)dc->pPDev)->hsemDevLock;
+  Resource = ((PGDIDEVICE)dc->ppdev)->hsemDevLock;
   DC_UnlockDc(dc);
   if (!Resource) return;
   KeEnterCriticalRegion();
@@ -2741,7 +2741,7 @@ DC_UnlockDisplay(HDC hDC)
   PERESOURCE Resource;
   PDC dc = DC_LockDc(hDC);
   if (!dc) return;
-  Resource = ((PGDIDEVICE)dc->pPDev)->hsemDevLock;
+  Resource = ((PGDIDEVICE)dc->ppdev)->hsemDevLock;
   DC_UnlockDc(dc);
   if (!Resource) return;
   ExReleaseResourceLite( Resource );
@@ -2771,22 +2771,22 @@ IntEnumHDev(VOID)
 
 
 VOID FASTCALL
-IntGdiReferencePdev(PGDIDEVICE pPDev)
+IntGdiReferencePdev(PGDIDEVICE ppdev)
 {
   if(!hsemDriverMgmt) hsemDriverMgmt = EngCreateSemaphore(); // Hax, should be in dllmain.c
   IntGdiAcquireSemaphore(hsemDriverMgmt);
-  pPDev->cPdevRefs++;
+  ppdev->cPdevRefs++;
   IntGdiReleaseSemaphore(hsemDriverMgmt);
 }
 
 VOID FASTCALL
-IntGdiUnreferencePdev(PGDIDEVICE pPDev, DWORD CleanUpType)
+IntGdiUnreferencePdev(PGDIDEVICE ppdev, DWORD CleanUpType)
 {
   IntGdiAcquireSemaphore(hsemDriverMgmt);
-  pPDev->cPdevRefs--;
-  if (!pPDev->cPdevRefs)
+  ppdev->cPdevRefs--;
+  if (!ppdev->cPdevRefs)
   {
-     // Handle the destruction of pPDev or GDIDEVICE or PDEVOBJ or PDEV etc.
+     // Handle the destruction of ppdev or GDIDEVICE or PDEVOBJ or PDEV etc.
   }
   IntGdiReleaseSemaphore(hsemDriverMgmt);
 }
@@ -2825,7 +2825,7 @@ GetDisplayNumberFromDeviceName(
     DesktopHDC = UserGetWindowDC(DesktopObject);
     pDC = DC_LockDc(DesktopHDC);
 
-    *DisplayNumber = ((GDIDEVICE *)pDC->pPDev)->DisplayNumber;
+    *DisplayNumber = ((GDIDEVICE *)pDC->ppdev)->DisplayNumber;
 
     DC_UnlockDc(pDC);
     UserReleaseDC(DesktopObject, DesktopHDC, FALSE);
@@ -3350,7 +3350,7 @@ IntChangeDisplaySettings(
       {
          return FALSE;
       }
-      swprintf (szBuffer, L"\\\\.\\DISPLAY%lu", ((GDIDEVICE *)DC->pPDev)->DisplayNumber);
+      swprintf (szBuffer, L"\\\\.\\DISPLAY%lu", ((GDIDEVICE *)DC->ppdev)->DisplayNumber);
       DC_UnlockDc(DC);
 
       RtlInitUnicodeString(&InDeviceName, szBuffer);
@@ -3449,19 +3449,19 @@ APIENTRY
 NtGdiGetDhpdev(
     IN HDEV hdev)
 {
-  PGDIDEVICE pPDev, pGdiDevice = (PGDIDEVICE) hdev;
+  PGDIDEVICE ppdev, pGdiDevice = (PGDIDEVICE) hdev;
   if (!pGdiDevice) return NULL;
   if ( pGdiDevice < (PGDIDEVICE)MmSystemRangeStart) return NULL;
-  pPDev = pPrimarySurface;
+  ppdev = pPrimarySurface;
   IntGdiAcquireSemaphore(hsemDriverMgmt);
   do
   {
-    if (pGdiDevice == pPDev) break;
+    if (pGdiDevice == ppdev) break;
     else
-      pPDev = pPDev->ppdevNext;
-  } while (pPDev != NULL);
+      ppdev = ppdev->ppdevNext;
+  } while (ppdev != NULL);
   IntGdiReleaseSemaphore(hsemDriverMgmt);
-  if (!pPDev) return NULL;
+  if (!ppdev) return NULL;
   return pGdiDevice->hPDev;
 }
 

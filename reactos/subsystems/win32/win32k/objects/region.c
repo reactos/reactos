@@ -2091,7 +2091,7 @@ IntGdiReleaseRaoRgn(PDC pDC)
 {
   INT Index = GDI_HANDLE_GET_INDEX(pDC->BaseObject.hHmgr);
   PGDI_TABLE_ENTRY Entry = &GdiHandleTable->Entries[Index];
-  pDC->DC_Flags |= DC_FLAG_DIRTY_RAO;
+  pDC->fs |= DC_FLAG_DIRTY_RAO;
   Entry->Flags |= GDI_ENTRY_VALIDATE_VIS;
   RECTL_vSetEmptyRect(&pDC->erclClip);
 }
@@ -2102,7 +2102,7 @@ IntGdiReleaseVisRgn(PDC pDC)
 {
   INT Index = GDI_HANDLE_GET_INDEX(pDC->BaseObject.hHmgr);
   PGDI_TABLE_ENTRY Entry = &GdiHandleTable->Entries[Index];
-  pDC->DC_Flags |= DC_FLAG_DIRTY_RAO;
+  pDC->fs |= DC_FLAG_DIRTY_RAO;
   Entry->Flags |= GDI_ENTRY_VALIDATE_VIS;
   RECTL_vSetEmptyRect(&pDC->erclClip);
   REGION_Delete(pDC->prgnVis);
@@ -2707,7 +2707,7 @@ NtGdiGetRandomRgn(
     switch (iCode)
     {
     case CLIPRGN:
-        hSrc = pDC->w.hClipRgn;
+        hSrc = pDC->rosdc.hClipRgn;
 //        if (pDC->DcLevel.prgnClip) hSrc = ((PROSRGNDATA)pDC->DcLevel.prgnClip)->BaseObject.hHmgr;
         break;
     case METARGN:
@@ -2716,14 +2716,14 @@ NtGdiGetRandomRgn(
     case APIRGN:
         DPRINT1("hMetaRgn not implemented\n");
         //hSrc = dc->hMetaClipRgn;
-        if (!hSrc) hSrc = pDC->w.hClipRgn;
+        if (!hSrc) hSrc = pDC->rosdc.hClipRgn;
         //if (!hSrc) rgn = dc->hMetaRgn;
 //        if (pDC->prgnAPI) hSrc = ((PROSRGNDATA)pDC->prgnAPI)->BaseObject.hHmgr;
 //        else if (pDC->DcLevel.prgnClip) hSrc = ((PROSRGNDATA)pDC->DcLevel.prgnClip)->BaseObject.hHmgr;
 //        else if (pDC->DcLevel.prgnMeta) hSrc = ((PROSRGNDATA)pDC->DcLevel.prgnMeta)->BaseObject.hHmgr;
         break;
     case SYSRGN:
-        hSrc = pDC->w.hVisRgn;
+        hSrc = pDC->rosdc.hVisRgn;
 //        if (pDC->prgnVis) hSrc = ((PROSRGNDATA)pDC->prgnVis)->BaseObject.hHmgr;
         break;
     default:
@@ -2925,7 +2925,7 @@ IntGdiPaintRgn(
         return FALSE;
     }
 
-    NtGdiCombineRgn(tmpVisRgn, tmpVisRgn, dc->w.hGCClipRgn, RGN_AND);
+    NtGdiCombineRgn(tmpVisRgn, tmpVisRgn, dc->rosdc.hGCClipRgn, RGN_AND);
 
     visrgn = REGION_LockRgn(tmpVisRgn);
     if (visrgn == NULL)
@@ -2940,11 +2940,11 @@ IntGdiPaintRgn(
     ASSERT(ClipRegion);
     pBrush = BRUSHOBJ_LockBrush(Dc_Attr->hbrush);
     ASSERT(pBrush);
-    IntGdiInitBrushInstance(&BrushInst, pBrush, dc->XlateBrush);
+    IntGdiInitBrushInstance(&BrushInst, pBrush, dc->rosdc.XlateBrush);
 
     BrushOrigin.x = Dc_Attr->ptlBrushOrigin.x;
     BrushOrigin.y = Dc_Attr->ptlBrushOrigin.y;
-    psurf = SURFACE_LockSurface(dc->w.hBitmap);
+    psurf = SURFACE_LockSurface(dc->rosdc.hBitmap);
     /* FIXME - Handle psurf == NULL !!!! */
 
     bRet = IntEngPaint(&psurf->SurfObj,

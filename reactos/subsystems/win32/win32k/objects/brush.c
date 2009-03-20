@@ -122,7 +122,7 @@ IntGdiCreateBrushXlate(PDC Dc, GDIBRUSHOBJ *BrushObj, BOOLEAN *Failed)
    SURFACE * psurf;
    HPALETTE hPalette = NULL;
 
-   psurf = SURFACE_LockSurface(Dc->w.hBitmap);
+   psurf = SURFACE_LockSurface(Dc->rosdc.hBitmap);
    if (psurf)
    {
       hPalette = psurf->hDIBPalette;
@@ -152,7 +152,7 @@ IntGdiCreateBrushXlate(PDC Dc, GDIBRUSHOBJ *BrushObj, BOOLEAN *Failed)
          PDC_ATTR Dc_Attr = Dc->pDc_Attr;
          if (!Dc_Attr) Dc_Attr = &Dc->Dc_Attr;
 
-         if (Dc->w.bitsPerPixel != 1)
+         if (Dc->rosdc.bitsPerPixel != 1)
             Result = IntEngCreateSrcMonoXlate(hPalette, Dc_Attr->crBackgroundClr, BrushObj->BrushAttr.lbColor);
       }
       else if (BrushObj->flAttrs & GDIBRUSH_IS_DIB)
@@ -543,11 +543,11 @@ IntGdiSelectBrush(
     hOrgBrush = pDc_Attr->hbrush;
     pDc_Attr->hbrush = hBrush;
 
-    if (pDC->XlateBrush != NULL)
+    if (pDC->rosdc.XlateBrush != NULL)
     {
-        EngDeleteXlate(pDC->XlateBrush);
+        EngDeleteXlate(pDC->rosdc.XlateBrush);
     }
-    pDC->XlateBrush = XlateObj;
+    pDC->rosdc.XlateBrush = XlateObj;
 
     pDc_Attr->ulDirty_ &= ~DC_BRUSH_DIRTY;
 

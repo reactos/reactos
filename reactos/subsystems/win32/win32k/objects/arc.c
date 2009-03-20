@@ -8,7 +8,7 @@
  */
 #define PUTPIXEL(x,y,BrushInst)        \
   ret = ret && IntEngLineTo(&psurf->SurfObj, \
-       dc->CombinedClip,                         \
+       dc->rosdc.CombinedClip,                         \
        &BrushInst.BrushObject,                   \
        x, y, (x)+1, y,                           \
        &RectBounds,                              \
@@ -16,7 +16,7 @@
 
 #define PUTLINE(x1,y1,x2,y2,BrushInst) \
   ret = ret && IntEngLineTo(&psurf->SurfObj, \
-       dc->CombinedClip,                         \
+       dc->rosdc.CombinedClip,                         \
        &BrushInst.BrushObject,                   \
        x1, y1, x2, y2,                           \
        &RectBounds,                              \
@@ -158,7 +158,7 @@ IntArc( DC *dc,
               arctype,
              PenBrushObj);
 
-    psurf = SURFACE_LockSurface(dc->w.hBitmap);
+    psurf = SURFACE_LockSurface(dc->rosdc.hBitmap);
     if (NULL == psurf)
     {
         DPRINT1("Arc Fail 2\n");
@@ -167,7 +167,7 @@ IntArc( DC *dc,
         return FALSE;
     }
 
-    IntGdiInitBrushInstance(&PenBrushInst, PenBrushObj, dc->XlatePen);
+    IntGdiInitBrushInstance(&PenBrushInst, PenBrushObj, dc->rosdc.XlatePen);
 
     if (arctype == GdiTypePie)
     {
@@ -327,7 +327,7 @@ NtGdiAngleArc(
     SetLastWin32Error(ERROR_INVALID_HANDLE);
     return FALSE;
   }
-  if (pDC->DC_Type == DC_TYPE_INFO)
+  if (pDC->dctype == DC_TYPE_INFO)
   {
     DC_UnlockDc(pDC);
     /* Yes, Windows really returns TRUE in this case */
@@ -363,7 +363,7 @@ NtGdiArcInternal(
     SetLastWin32Error(ERROR_INVALID_HANDLE);
     return FALSE;
   }
-  if (dc->DC_Type == DC_TYPE_INFO)
+  if (dc->dctype == DC_TYPE_INFO)
   {
     DC_UnlockDc(dc);
     /* Yes, Windows really returns TRUE in this case */

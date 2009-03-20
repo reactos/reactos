@@ -1180,7 +1180,7 @@ UserScrollDC(HDC hDC, INT dx, INT dy, const RECTL *prcScroll,
       {
          return FALSE;
       }
-      hrgnVisible = pDC->w.hVisRgn;  // pDC->w.hGCClipRgn?
+      hrgnVisible = pDC->rosdc.hVisRgn;  // pDC->w.hGCClipRgn?
       DC_UnlockDc(pDC);
 
       /* Begin with the shifted and then clipped scroll rect */
