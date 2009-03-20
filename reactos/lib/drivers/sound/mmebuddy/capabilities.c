@@ -28,7 +28,7 @@
 MMRESULT
 GetSoundDeviceCapabilities(
     IN  PSOUND_DEVICE SoundDevice,
-    OUT PVOID Capabilities,
+    OUT DWORD_PTR Capabilities,
     IN  DWORD CapabilitiesSize)
 {
     MMDEVICE_TYPE DeviceType;

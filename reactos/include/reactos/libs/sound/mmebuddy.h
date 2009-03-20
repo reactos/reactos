@@ -160,7 +160,7 @@ struct _SOUND_DEVICE_INSTANCE;
         IN  DWORD CapabilitiesSize);
 
 /* This one is for those of us who don't care */
-DEFINE_GETCAPS_FUNCTYPE(MMGETCAPS_FUNC, PVOID);
+DEFINE_GETCAPS_FUNCTYPE(MMGETCAPS_FUNC, DWORD_PTR);
 
 /* These are for those of us that do */
 DEFINE_GETCAPS_FUNCTYPE(MMGETWAVEOUTCAPS_FUNC, LPWAVEOUTCAPS);
@@ -355,27 +355,27 @@ ReleaseEntrypointMutex(
 VOID
 NotifyMmeClient(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
-    IN  DWORD Message,
-    IN  DWORD Parameter);
+    IN  UINT Message,
+    IN  DWORD_PTR Parameter);
 
 MMRESULT
 MmeGetSoundDeviceCapabilities(
     IN  MMDEVICE_TYPE DeviceType,
     IN  DWORD DeviceId,
-    IN  PVOID Capabilities,
+    IN  DWORD_PTR Capabilities,
     IN  DWORD CapabilitiesSize);
 
 MMRESULT
 MmeOpenWaveDevice(
     IN  MMDEVICE_TYPE DeviceType,
-    IN  DWORD DeviceId,
+    IN  UINT DeviceId,
     IN  LPWAVEOPENDESC OpenParameters,
     IN  DWORD Flags,
-    OUT DWORD* PrivateHandle);
+    OUT SIZE_T* PrivateHandle);
 
 MMRESULT
 MmeCloseDevice(
-    IN  DWORD PrivateHandle);
+    IN  DWORD_PTR PrivateHandle);
 
 #define MmePrepareWaveHeader(private_handle, header) \
     PrepareWaveHeader((PSOUND_DEVICE_INSTANCE)private_handle, (PWAVEHDR)header)
@@ -388,7 +388,7 @@ MmeCloseDevice(
 
 MMRESULT
 MmeResetWavePlayback(
-    IN  DWORD PrivateHandle);
+    IN  SIZE_T PrivateHandle);
 
 
 /*
@@ -398,7 +398,7 @@ MmeResetWavePlayback(
 MMRESULT
 GetSoundDeviceCapabilities(
     IN  PSOUND_DEVICE SoundDevice,
-    OUT PVOID Capabilities,
+    OUT DWORD_PTR Capabilities,
     IN  DWORD CapabilitiesSize);
 
 

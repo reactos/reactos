@@ -351,5 +351,5 @@ CompleteWaveHeader(
     /* Safe to do this without thread protection, as we're done with the header */
     NotifyMmeClient(SoundDeviceInstance,
                     DeviceType == WAVE_OUT_DEVICE_TYPE ? WOM_DONE : WIM_DATA,
-                    (DWORD) Header);
+                    (DWORD_PTR)Header);
 }

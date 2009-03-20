@@ -23,11 +23,11 @@
 */
 APIENTRY DWORD
 modMessage(
-    DWORD DeviceId,
-    DWORD Message,
-    DWORD PrivateHandle,
-    DWORD Parameter1,
-    DWORD Parameter2)
+    UINT DeviceId,
+    UINT Message,
+    DWORD_PTR PrivateHandle,
+    DWORD_PTR Parameter1,
+    DWORD_PTR Parameter2)
 {
     MMRESULT Result = MMSYSERR_NOTSUPPORTED;
 
@@ -47,7 +47,7 @@ modMessage(
         {
             Result = MmeGetSoundDeviceCapabilities(MIDI_OUT_DEVICE_TYPE,
                                                    DeviceId,
-                                                   (PVOID) Parameter1,
+                                                   Parameter1,
                                                    Parameter2);
             break;
         }
