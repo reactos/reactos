@@ -9,7 +9,7 @@
 /* Get/SetBounds/Rect support. */
 #define DCB_WINDOWMGR 0x8000 /* Queries the Windows bounding rectangle instead of the application's */
 
-/* GDIDEVICE flags */
+/* PDEVOBJ flags */
 #define PDEV_DISPLAY             0x00000001 /* Display device */
 #define PDEV_HARDWARE_POINTER    0x00000002 /* Supports hardware cursor */
 #define PDEV_SOFTWARE_POINTER    0x00000004
@@ -28,6 +28,69 @@
 #define PDEV_CLONE_DEVICE        0x00080000
 
 /* Type definitions ***********************************************************/
+
+// FIXME: move me to an appropriate header
+typedef struct _GDIPOINTER /* should stay private to ENG? No, part of PDEVOBJ aka HDEV aka PDEV. */
+{
+  /* private GDI pointer handling information, required for software emulation */
+  BOOL     Enabled;
+  SIZEL    Size;
+  POINTL   HotSpot;
+  XLATEOBJ *XlateObject;
+  HSURF    ColorSurface;
+  HSURF    MaskSurface;
+  HSURF    SaveSurface;
+  int      ShowPointer; /* counter negtive  do not show the mouse postive show the mouse */
+
+  /* public pointer information */
+  RECTL    Exclude; /* required publicly for SPS_ACCEPT_EXCLUDE */
+  PGD_MOVEPOINTER MovePointer;
+  ULONG    Status;
+} GDIPOINTER, *PGDIPOINTER;
+
+typedef struct _PDEVOBJ
+{
+  BASEOBJECT  BaseObject;
+
+  struct _PDEVOBJ *ppdevNext;
+  INT           cPdevRefs;
+  INT           cPdevOpenRefs;
+  struct _PDEVOBJ *ppdevParent;
+  FLONG         flFlags;
+  PERESOURCE    hsemDevLock;    /* Device lock. */
+
+  PVOID         pvGammaRamp;    /* Gamma ramp pointer. */
+
+  HSURF         FillPatterns[HS_DDI_MAX];
+
+  ULONG         DxDd_nCount;
+
+  DHPDEV        hPDev;          /* DHPDEV for device. */
+  PVOID         ppalSurf;       /* PEPALOBJ/PPALGDI for this device. */
+  DEVINFO       DevInfo;
+  GDIINFO       GDIInfo;
+  HSURF         pSurface;       /* SURFACE for this device. */
+  HANDLE        hSpooler;       /* Handle to spooler, if spooler dev driver. */
+  ULONG         DisplayNumber;
+  PVOID         pGraphicsDev;   /* PGRAPHICS_DEVICE */
+
+  DEVMODEW      DMW;
+  PVOID         pdmwDev;        /* Ptr->DEVMODEW.dmSize + dmDriverExtra == alloc size. */
+
+  FLONG         DxDd_Flags;     /* DxDD active status flags. */
+
+  PFILE_OBJECT  VideoFileObject;
+  BOOLEAN       PreparedDriver;
+  GDIPOINTER    Pointer;
+  /* Stuff to keep track of software cursors; win32k gdi part */
+  UINT SafetyRemoveLevel; /* at what level was the cursor removed?
+			     0 for not removed */
+  UINT SafetyRemoveCount;
+
+  DRIVER_FUNCTIONS DriverFunctions;
+  struct _EDD_DIRECTDRAW_GLOBAL * pEDDgpl;
+} PDEVOBJ, *PPDEVOBJ;
+
 
 typedef struct _ROS_DC_INFO
 {
@@ -106,10 +169,10 @@ typedef struct _DC
      Do not (re)move this. */
   BASEOBJECT  BaseObject;
 
-  DHPDEV      dhpdev;   /* <- GDIDEVICE.hPDev DHPDEV for device. */
+  DHPDEV      dhpdev;   /* <- PDEVOBJ.hPDev DHPDEV for device. */
   INT         dctype;
   INT         fs;
-  PVOID       ppdev;  /* PGDIDEVICE aka PDEVOBJ */
+  PPDEVOBJ    ppdev;
   PVOID       hsem;   /* PERESOURCE aka HSEMAPHORE */
   FLONG       flGraphicsCaps;
   FLONG       flGraphicsCaps2;
@@ -155,66 +218,6 @@ typedef struct _GRAPHICS_DEVICE
   DWORD StateFlags;                             /* See DISPLAY_DEVICE_* */
 } GRAPHICS_DEVICE, *PGRAPHICS_DEVICE;
 
-typedef struct _GDIPOINTER /* should stay private to ENG? No, part of GDIDEVICE aka HDEV aka PDEV. */
-{
-  /* private GDI pointer handling information, required for software emulation */
-  BOOL     Enabled;
-  SIZEL    Size;
-  POINTL   HotSpot;
-  XLATEOBJ *XlateObject;
-  HSURF    ColorSurface;
-  HSURF    MaskSurface;
-  HSURF    SaveSurface;
-  int      ShowPointer; /* counter negtive  do not show the mouse postive show the mouse */
-
-  /* public pointer information */
-  RECTL    Exclude; /* required publicly for SPS_ACCEPT_EXCLUDE */
-  PGD_MOVEPOINTER MovePointer;
-  ULONG    Status;
-} GDIPOINTER, *PGDIPOINTER;
-
-typedef struct _GDIDEVICE
-{
-  BASEOBJECT  BaseObject;
-
-  struct _GDIDEVICE *ppdevNext;
-  INT           cPdevRefs;
-  INT           cPdevOpenRefs;
-  struct _GDIDEVICE *ppdevParent;
-  FLONG         flFlags;
-  PERESOURCE    hsemDevLock;    /* Device lock. */
-
-  PVOID         pvGammaRamp;    /* Gamma ramp pointer. */
-
-  HSURF         FillPatterns[HS_DDI_MAX];
-
-  ULONG         DxDd_nCount;
-
-  DHPDEV        hPDev;          /* DHPDEV for device. */
-  PVOID         ppalSurf;       /* PEPALOBJ/PPALGDI for this device. */
-  DEVINFO       DevInfo;
-  GDIINFO       GDIInfo;
-  HSURF         pSurface;       /* SURFACE for this device. */
-  HANDLE        hSpooler;       /* Handle to spooler, if spooler dev driver. */
-  ULONG         DisplayNumber;
-  PVOID         pGraphicsDev;   /* PGRAPHICS_DEVICE */
-
-  DEVMODEW      DMW;
-  PVOID         pdmwDev;        /* Ptr->DEVMODEW.dmSize + dmDriverExtra == alloc size. */
-
-  FLONG         DxDd_Flags;     /* DxDD active status flags. */
-
-  PFILE_OBJECT  VideoFileObject;
-  BOOLEAN       PreparedDriver;
-  GDIPOINTER    Pointer;
-  /* Stuff to keep track of software cursors; win32k gdi part */
-  UINT SafetyRemoveLevel; /* at what level was the cursor removed?
-			     0 for not removed */
-  UINT SafetyRemoveCount;
-
-  DRIVER_FUNCTIONS DriverFunctions;
-  struct _EDD_DIRECTDRAW_GLOBAL * pEDDgpl;
-} GDIDEVICE, *PGDIDEVICE;
 
 /* Internal functions *********************************************************/
 
@@ -226,7 +229,7 @@ typedef struct _GDIDEVICE
 extern PDC defaultDCstate;
 
 NTSTATUS FASTCALL InitDcImpl(VOID);
-PGDIDEVICE FASTCALL IntEnumHDev(VOID);
+PPDEVOBJ FASTCALL IntEnumHDev(VOID);
 HDC  FASTCALL DC_AllocDC(PUNICODE_STRING  Driver);
 VOID FASTCALL DC_InitDC(HDC  DCToInit);
 HDC  FASTCALL DC_FindOpenDC(PUNICODE_STRING  Driver);
@@ -264,15 +267,15 @@ UINT FASTCALL IntGdiSetTextAlign(HDC  hDC, UINT  Mode);
 UINT APIENTRY  IntGdiGetTextAlign(HDC  hDC);
 COLORREF APIENTRY  IntGdiGetTextColor(HDC  hDC);
 INT APIENTRY  IntGdiSetStretchBltMode(HDC  hDC, INT  stretchBltMode);
-VOID FASTCALL IntGdiReferencePdev(PGDIDEVICE pPDev);
-VOID FASTCALL IntGdiUnreferencePdev(PGDIDEVICE pPDev, DWORD CleanUpType);
+VOID FASTCALL IntGdiReferencePdev(PPDEVOBJ pPDev);
+VOID FASTCALL IntGdiUnreferencePdev(PPDEVOBJ pPDev, DWORD CleanUpType);
 HDC FASTCALL IntGdiCreateDisplayDC(HDEV hDev, ULONG DcType, BOOL EmptyDC);
 BOOL FASTCALL IntGdiCleanDC(HDC hDC);
-VOID FASTCALL IntvGetDeviceCaps(PGDIDEVICE, PDEVCAPS);
+VOID FASTCALL IntvGetDeviceCaps(PPDEVOBJ, PDEVCAPS);
 HPEN FASTCALL IntGdiSelectPen(PDC,HPEN);
 HBRUSH FASTCALL IntGdiSelectBrush(PDC,HBRUSH);
 INT FASTCALL IntGdiGetDeviceCaps(PDC,INT);
 
-extern PGDIDEVICE pPrimarySurface;
+extern PPDEVOBJ pPrimarySurface;
 
 #endif /* not __WIN32K_DC_H */

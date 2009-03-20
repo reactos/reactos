@@ -45,7 +45,7 @@ EngCreateDriverObj(
 {
     PEDRIVEROBJ pedo;
     HDRVOBJ hdo;
-    GDIDEVICE *ppdev = (GDIDEVICE*)hdev;
+    PDEVOBJ *ppdev = (PDEVOBJ*)hdev;
 
     /* Allocate a new DRIVEROBJ */
     pedo = DRIVEROBJ_AllocObjectWithHandle();

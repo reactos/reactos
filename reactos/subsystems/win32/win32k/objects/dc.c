@@ -29,8 +29,8 @@
 
 //  ---------------------------------------------------------  File Statics
 
-static GDIDEVICE PrimarySurface;
-PGDIDEVICE pPrimarySurface = &PrimarySurface;
+static PDEVOBJ PrimarySurface;
+PPDEVOBJ pPrimarySurface = &PrimarySurface;
 static KEVENT VideoDriverNeedsPreparation;
 static KEVENT VideoDriverPrepared;
 PDC defaultDCstate = NULL;
@@ -358,7 +358,7 @@ IntPrepareDriver()
 
       RtlZeroMemory(&PrimarySurface, sizeof(PrimarySurface));
 
-//      if (!pPrimarySurface) pPrimarySurface = ExAllocatePoolWithTag(PagedPool, sizeof(GDIDEVICE), TAG_GDIPDEV);
+//      if (!pPrimarySurface) pPrimarySurface = ExAllocatePoolWithTag(PagedPool, sizeof(PDEVOBJ), TAG_GDIPDEV);
 
       PrimarySurface.VideoFileObject = DRIVER_FindMPDriver(DisplayNumber);
 
@@ -824,8 +824,8 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
   // ATM we only have one display.
   pdcattr->ulDirty_ |= DC_PRIMARY_DISPLAY;
 
-  pdc->rosdc.bitsPerPixel = ((PGDIDEVICE)pdc->ppdev)->GDIInfo.cBitsPixel *
-                                     ((PGDIDEVICE)pdc->ppdev)->GDIInfo.cPlanes;
+  pdc->rosdc.bitsPerPixel = pdc->ppdev->GDIInfo.cBitsPixel *
+                                     pdc->ppdev->GDIInfo.cPlanes;
   DPRINT("Bits per pel: %u\n", pdc->rosdc.bitsPerPixel);
 
   pdc->flGraphicsCaps  = PrimarySurface.DevInfo.flGraphicsCaps;
@@ -836,14 +836,14 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
   pdcattr->jROP2 = R2_COPYPEN;
 
   pdc->erclWindow.top = pdc->erclWindow.left = 0;
-  pdc->erclWindow.right  = ((PGDIDEVICE)pdc->ppdev)->GDIInfo.ulHorzRes;
-  pdc->erclWindow.bottom = ((PGDIDEVICE)pdc->ppdev)->GDIInfo.ulVertRes;
+  pdc->erclWindow.right  = pdc->ppdev->GDIInfo.ulHorzRes;
+  pdc->erclWindow.bottom = pdc->ppdev->GDIInfo.ulVertRes;
   pdc->dclevel.flPath &= ~DCPATH_CLOCKWISE; // Default is CCW.
 
   pdcattr->iCS_CP = ftGdiGetTextCharsetInfo(pdc,NULL,0);
 
-  hVisRgn = NtGdiCreateRectRgn(0, 0, ((PGDIDEVICE)pdc->ppdev)->GDIInfo.ulHorzRes,
-                                     ((PGDIDEVICE)pdc->ppdev)->GDIInfo.ulVertRes);
+  hVisRgn = NtGdiCreateRectRgn(0, 0, pdc->ppdev->GDIInfo.ulHorzRes,
+                                     pdc->ppdev->GDIInfo.ulVertRes);
 
   if (!CreateAsIC)
   {
@@ -1245,8 +1245,8 @@ IntGetAspectRatioFilter(PDC pDC,
   {
    // "This specifies that Windows should only match fonts that have the
    // same aspect ratio as the display.", Programming Windows, Fifth Ed.
-     AspectRatio->cx = ((PGDIDEVICE)pDC->ppdev)->GDIInfo.ulLogPixelsX;
-     AspectRatio->cy = ((PGDIDEVICE)pDC->ppdev)->GDIInfo.ulLogPixelsY;
+     AspectRatio->cx = pDC->ppdev->GDIInfo.ulLogPixelsX;
+     AspectRatio->cy = pDC->ppdev->GDIInfo.ulLogPixelsY;
   }
   else
   {
@@ -1595,7 +1595,7 @@ IntGdiSetDCState ( HDC hDC, HDC hDCSave )
 
 INT
 FASTCALL
-IntcFonts(PGDIDEVICE pDevObj)
+IntcFonts(PPDEVOBJ pDevObj)
 {
   ULONG_PTR Junk;
 // Msdn DrvQueryFont:
@@ -1614,7 +1614,7 @@ IntcFonts(PGDIDEVICE pDevObj)
 
 INT
 FASTCALL
-IntGetColorManagementCaps(PGDIDEVICE pDevObj)
+IntGetColorManagementCaps(PPDEVOBJ pDevObj)
 {
   INT ret = CM_NONE;
 
@@ -1635,7 +1635,7 @@ INT FASTCALL
 IntGdiGetDeviceCaps(PDC dc, INT Index)
 {
   INT ret = 0;
-  PGDIDEVICE ppdev = dc->ppdev;
+  PPDEVOBJ ppdev = dc->ppdev;
   /* Retrieve capability */
   switch (Index)
   {
@@ -1834,7 +1834,7 @@ NtGdiGetDeviceCaps(HDC  hDC,
 VOID
 FASTCALL
 IntvGetDeviceCaps(
-    PGDIDEVICE pDevObj,
+    PPDEVOBJ pDevObj,
     PDEVCAPS pDevCaps)
 {
   ULONG Tmp = 0;
@@ -2715,7 +2715,7 @@ DC_LockDisplay(HDC hDC)
   PERESOURCE Resource;
   PDC dc = DC_LockDc(hDC);
   if (!dc) return;
-  Resource = ((PGDIDEVICE)dc->ppdev)->hsemDevLock;
+  Resource = dc->ppdev->hsemDevLock;
   DC_UnlockDc(dc);
   if (!Resource) return;
   KeEnterCriticalRegion();
@@ -2729,7 +2729,7 @@ DC_UnlockDisplay(HDC hDC)
   PERESOURCE Resource;
   PDC dc = DC_LockDc(hDC);
   if (!dc) return;
-  Resource = ((PGDIDEVICE)dc->ppdev)->hsemDevLock;
+  Resource = dc->ppdev->hsemDevLock;
   DC_UnlockDc(dc);
   if (!Resource) return;
   ExReleaseResourceLite( Resource );
@@ -2749,7 +2749,7 @@ IntIsPrimarySurface(SURFOBJ *SurfObj)
 //
 // Enumerate HDev
 //
-PGDIDEVICE FASTCALL
+PPDEVOBJ FASTCALL
 IntEnumHDev(VOID)
 {
 // I guess we will soon have more than one primary surface.
@@ -2759,7 +2759,7 @@ IntEnumHDev(VOID)
 
 
 VOID FASTCALL
-IntGdiReferencePdev(PGDIDEVICE ppdev)
+IntGdiReferencePdev(PPDEVOBJ ppdev)
 {
   if(!hsemDriverMgmt) hsemDriverMgmt = EngCreateSemaphore(); // Hax, should be in dllmain.c
   IntGdiAcquireSemaphore(hsemDriverMgmt);
@@ -2768,13 +2768,13 @@ IntGdiReferencePdev(PGDIDEVICE ppdev)
 }
 
 VOID FASTCALL
-IntGdiUnreferencePdev(PGDIDEVICE ppdev, DWORD CleanUpType)
+IntGdiUnreferencePdev(PPDEVOBJ ppdev, DWORD CleanUpType)
 {
   IntGdiAcquireSemaphore(hsemDriverMgmt);
   ppdev->cPdevRefs--;
   if (!ppdev->cPdevRefs)
   {
-     // Handle the destruction of ppdev or GDIDEVICE or PDEVOBJ or PDEV etc.
+     // Handle the destruction of ppdev or PDEVOBJ or PDEVOBJ or PDEV etc.
   }
   IntGdiReleaseSemaphore(hsemDriverMgmt);
 }
@@ -2813,7 +2813,7 @@ GetDisplayNumberFromDeviceName(
     DesktopHDC = UserGetWindowDC(DesktopObject);
     pDC = DC_LockDc(DesktopHDC);
 
-    *DisplayNumber = ((GDIDEVICE *)pDC->ppdev)->DisplayNumber;
+    *DisplayNumber = pDC->ppdev->DisplayNumber;
 
     DC_UnlockDc(pDC);
     UserReleaseDC(DesktopObject, DesktopHDC, FALSE);
@@ -3338,7 +3338,7 @@ IntChangeDisplaySettings(
       {
          return FALSE;
       }
-      swprintf (szBuffer, L"\\\\.\\DISPLAY%lu", ((GDIDEVICE *)DC->ppdev)->DisplayNumber);
+      swprintf (szBuffer, L"\\\\.\\DISPLAY%lu", DC->ppdev->DisplayNumber);
       DC_UnlockDc(DC);
 
       RtlInitUnicodeString(&InDeviceName, szBuffer);
@@ -3437,9 +3437,9 @@ APIENTRY
 NtGdiGetDhpdev(
     IN HDEV hdev)
 {
-  PGDIDEVICE ppdev, pGdiDevice = (PGDIDEVICE) hdev;
+  PPDEVOBJ ppdev, pGdiDevice = (PPDEVOBJ) hdev;
   if (!pGdiDevice) return NULL;
-  if ( pGdiDevice < (PGDIDEVICE)MmSystemRangeStart) return NULL;
+  if ( pGdiDevice < (PPDEVOBJ)MmSystemRangeStart) return NULL;
   ppdev = pPrimarySurface;
   IntGdiAcquireSemaphore(hsemDriverMgmt);
   do

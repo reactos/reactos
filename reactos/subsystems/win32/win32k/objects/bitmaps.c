@@ -281,7 +281,7 @@ NtGdiCreateCompatibleBitmap(
     Dc = DC_LockDc(hDC);
 
     DPRINT("NtGdiCreateCompatibleBitmap(%04x,%d,%d, bpp:%d) = \n",
-           hDC, Width, Height, ((PGDIDEVICE)Dc->ppdev)->GDIInfo.cBitsPixel);
+           hDC, Width, Height, Dc->ppdev->GDIInfo.cBitsPixel);
 
     if (NULL == Dc)
     {

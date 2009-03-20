@@ -35,7 +35,7 @@ intEnableReactXDriver(HDC hdc)
     NTSTATUS Status;
     PEPROCESS Proc = NULL;
     PDC pDC = NULL;
-    PGDIDEVICE pDev = NULL;
+    PPDEVOBJ pDev = NULL;
     PGD_DXDDENABLEDIRECTDRAW pfnDdEnableDirectDraw = NULL;
     BOOL success = FALSE;
 
@@ -59,7 +59,7 @@ intEnableReactXDriver(HDC hdc)
         return FALSE;
     }
 
-    pDev = (PGDIDEVICE)pDC->ppdev;
+    pDev = pDC->ppdev;
 
     /* test see if drv got a dx interface or not */
     if  ( ( pDev->DriverFunctions.DisableDirectDraw == NULL) ||

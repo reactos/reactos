@@ -119,7 +119,7 @@ IntGdiExtEscape(
 
    /* FIXME - Handle psurf == NULL !!!!!! */
 
-   if ( NULL == ((GDIDEVICE *)dc->ppdev)->DriverFunctions.Escape )
+   if ( NULL == dc->ppdev->DriverFunctions.Escape )
    {
       Result = IntEngExtEscape(
          &psurf->SurfObj,
@@ -131,7 +131,7 @@ IntGdiExtEscape(
    }
    else
    {
-      Result = ((GDIDEVICE *)dc->ppdev)->DriverFunctions.Escape(
+      Result = dc->ppdev->DriverFunctions.Escape(
          &psurf->SurfObj,
          Escape,
          InSize,

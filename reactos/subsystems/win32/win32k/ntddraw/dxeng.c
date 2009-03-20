@@ -281,7 +281,7 @@ DxEngGetHdevData(HDEV hDev,
                  DXEGSHDEVDATA Type)
 {
     DWORD_PTR retVal = 0;
-    PGDIDEVICE PDev = (PGDIDEVICE)hDev;
+    PPDEVOBJ PDev = (PPDEVOBJ)hDev;
 
     DPRINT1("ReactX Calling : DxEngGetHdevData DXEGSHDEVDATA : %ld\n", Type);
 
@@ -416,7 +416,7 @@ DxEngSetHdevData(HDEV hDev,
 
     if ( Type == DxEGShDevData_dd_nCount )
     {
-        ((PGDIDEVICE)hDev)->DxDd_nCount = Data;
+        ((PPDEVOBJ)hDev)->DxDd_nCount = Data;
         retVal = TRUE; // Set
     }
     return retVal;
@@ -514,7 +514,7 @@ DxEngIncDispUniq()
 * The function DxEngLockHdev lock the internal PDEV
 *
 * @param HDEV type
-* it is a pointer to win32k internal pdev struct known as PGDIDEVICE
+* it is a pointer to win32k internal pdev struct known as PPDEVOBJ
 
 * @return
 * This function returns TRUE no matter what.
@@ -527,7 +527,7 @@ BOOLEAN
 APIENTRY
 DxEngLockHdev(HDEV hDev)
 {
-    PGDIDEVICE ppdev = (PGDIDEVICE)hDev;
+    PPDEVOBJ ppdev = (PPDEVOBJ)hDev;
     PERESOURCE Resource;
 
     DPRINT1("ReactX Calling : DxEngLockHdev \n");
@@ -551,7 +551,7 @@ DxEngLockHdev(HDEV hDev)
 * The function DxEngUnlockHdev unlock the internal PDEV
 *
 * @param HDEV type
-* it is a pointer to win32k internal pdev struct known as PGDIDEVICE
+* it is a pointer to win32k internal pdev struct known as PPDEVOBJ
 
 * @return
 * This function returns TRUE no matter what.
@@ -564,7 +564,7 @@ BOOLEAN
 APIENTRY
 DxEngUnlockHdev(HDEV hDev)
 {
-    PGDIDEVICE ppdev = (PGDIDEVICE)hDev;
+    PPDEVOBJ ppdev = (PPDEVOBJ)hDev;
     PERESOURCE Resource = ppdev->hsemDevLock;
 
     DPRINT1("ReactX Calling : DxEngUnlockHdev \n");
@@ -585,7 +585,7 @@ BOOLEAN
 APIENTRY
 DxEngReferenceHdev(HDEV hDev)
 {
-    IntGdiReferencePdev((PGDIDEVICE) hDev);
+    IntGdiReferencePdev((PPDEVOBJ) hDev);
     /* ALWAYS return true */
     return TRUE;
 }
@@ -675,7 +675,7 @@ BOOLEAN
 APIENTRY
 DxEngIsHdevLockedByCurrentThread(HDEV hDev)
 {   // base on EngIsSemaphoreOwnedByCurrentThread w/o the Ex call.
-    PERESOURCE pSem = ((PGDIDEVICE)hDev)->hsemDevLock;
+    PERESOURCE pSem = ((PPDEVOBJ)hDev)->hsemDevLock;
     return pSem->OwnerEntry.OwnerThread == (ERESOURCE_THREAD)PsGetCurrentThread();
 }
 
@@ -687,7 +687,7 @@ BOOLEAN
 APIENTRY
 DxEngUnreferenceHdev(HDEV hDev)
 {
-    IntGdiUnreferencePdev((PGDIDEVICE) hDev, 0);
+    IntGdiUnreferencePdev((PPDEVOBJ) hDev, 0);
     return TRUE; // Always true.
 }
 

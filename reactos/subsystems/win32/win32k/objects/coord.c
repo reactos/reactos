@@ -668,36 +668,36 @@ IntGdiSetMapMode(PDC  dc,
         case MM_LOMETRIC:
             pdcattr->szlWindowExt.cx = 3600;
             pdcattr->szlWindowExt.cy = 2700;
-            pdcattr->szlViewportExt.cx = ((PGDIDEVICE)dc->ppdev)->GDIInfo.ulHorzRes;
-            pdcattr->szlViewportExt.cy = -((PGDIDEVICE)dc->ppdev)->GDIInfo.ulVertRes;
+            pdcattr->szlViewportExt.cx = dc->ppdev->GDIInfo.ulHorzRes;
+            pdcattr->szlViewportExt.cy = -dc->ppdev->GDIInfo.ulVertRes;
             break;
 
         case MM_HIMETRIC:
             pdcattr->szlWindowExt.cx = 36000;
             pdcattr->szlWindowExt.cy = 27000;
-            pdcattr->szlViewportExt.cx = ((PGDIDEVICE)dc->ppdev)->GDIInfo.ulHorzRes;
-            pdcattr->szlViewportExt.cy = -((PGDIDEVICE)dc->ppdev)->GDIInfo.ulVertRes;
+            pdcattr->szlViewportExt.cx = dc->ppdev->GDIInfo.ulHorzRes;
+            pdcattr->szlViewportExt.cy = -dc->ppdev->GDIInfo.ulVertRes;
             break;
 
         case MM_LOENGLISH:
             pdcattr->szlWindowExt.cx = 1417;
             pdcattr->szlWindowExt.cy = 1063;
-            pdcattr->szlViewportExt.cx = ((PGDIDEVICE)dc->ppdev)->GDIInfo.ulHorzRes;
-            pdcattr->szlViewportExt.cy = -((PGDIDEVICE)dc->ppdev)->GDIInfo.ulVertRes;
+            pdcattr->szlViewportExt.cx = dc->ppdev->GDIInfo.ulHorzRes;
+            pdcattr->szlViewportExt.cy = -dc->ppdev->GDIInfo.ulVertRes;
             break;
 
         case MM_HIENGLISH:
             pdcattr->szlWindowExt.cx = 14173;
             pdcattr->szlWindowExt.cy = 10630;
-            pdcattr->szlViewportExt.cx = ((PGDIDEVICE)dc->ppdev)->GDIInfo.ulHorzRes;
-            pdcattr->szlViewportExt.cy = -((PGDIDEVICE)dc->ppdev)->GDIInfo.ulVertRes;
+            pdcattr->szlViewportExt.cx = dc->ppdev->GDIInfo.ulHorzRes;
+            pdcattr->szlViewportExt.cy = -dc->ppdev->GDIInfo.ulVertRes;
             break;
 
         case MM_TWIPS:
             pdcattr->szlWindowExt.cx = 20409;
             pdcattr->szlWindowExt.cy = 15307;
-            pdcattr->szlViewportExt.cx = ((PGDIDEVICE)dc->ppdev)->GDIInfo.ulHorzRes;
-            pdcattr->szlViewportExt.cy = -((PGDIDEVICE)dc->ppdev)->GDIInfo.ulVertRes;
+            pdcattr->szlViewportExt.cx = dc->ppdev->GDIInfo.ulHorzRes;
+            pdcattr->szlViewportExt.cy = -dc->ppdev->GDIInfo.ulVertRes;
             break;
 
         case MM_ANISOTROPIC:

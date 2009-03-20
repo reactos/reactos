@@ -151,14 +151,14 @@ UserGetMonitorObject(IN HMONITOR hMonitor)
  *
  * Arguments
  *
- *   pGdiDevice     Pointer to the GDIDEVICE onto which the monitor was attached
+ *   pGdiDevice     Pointer to the PDEVOBJ onto which the monitor was attached
  *   DisplayNumber  Display Number (starting with 0)
  *
  * Return value
  *   Returns a NTSTATUS
  */
 NTSTATUS
-IntAttachMonitor(IN GDIDEVICE *pGdiDevice,
+IntAttachMonitor(IN PDEVOBJ *pGdiDevice,
                  IN ULONG DisplayNumber)
 {
    PMONITOR_OBJECT Monitor;
@@ -211,13 +211,13 @@ IntAttachMonitor(IN GDIDEVICE *pGdiDevice,
  *
  * Arguments
  *
- *   pGdiDevice  Pointer to the GDIDEVICE from which the monitor was detached
+ *   pGdiDevice  Pointer to the PDEVOBJ from which the monitor was detached
  *
  * Return value
  *   Returns a NTSTATUS
  */
 NTSTATUS
-IntDetachMonitor(IN GDIDEVICE *pGdiDevice)
+IntDetachMonitor(IN PDEVOBJ *pGdiDevice)
 {
    PMONITOR_OBJECT Monitor;
 

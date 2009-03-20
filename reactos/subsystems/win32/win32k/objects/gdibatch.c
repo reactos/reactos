@@ -19,7 +19,7 @@ VOID
 FASTCALL
 DoDeviceSync( SURFOBJ *Surface, PRECTL Rect, FLONG fl)
 {
-  PGDIDEVICE Device = (GDIDEVICE*)Surface->hdev;
+  PPDEVOBJ Device = (PDEVOBJ*)Surface->hdev;
 // No punting and "Handle to a surface, provided that the surface is device-managed. 
 // Otherwise, dhsurf is zero".
   if (!(Device->flFlags & PDEV_DRIVER_PUNTED_CALL) && (Surface->dhsurf))
@@ -40,7 +40,7 @@ FASTCALL
 SynchonizeDriver(FLONG Flags)
 {
   SURFOBJ *SurfObj; 
-  PGDIDEVICE Device;
+  PPDEVOBJ Device;
   
   if (Flags & GCAPS2_SYNCFLUSH)
       Flags = DSS_FLUSH_EVENT;

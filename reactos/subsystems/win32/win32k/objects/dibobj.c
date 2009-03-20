@@ -279,7 +279,7 @@ IntSetDIBits(
   else
   {
     // Destination palette obtained from the hDC
-    DDB_Palette = ((GDIDEVICE *)DC->ppdev)->DevInfo.hpalDefault;
+    DDB_Palette = DC->ppdev->DevInfo.hpalDefault;
   }
   hDCPalette = PALETTE_LockPalette(DDB_Palette);
   if (NULL == hDCPalette)
@@ -522,7 +522,7 @@ NtGdiSetDIBitsToDeviceInternal(
     }
 
     /* Obtain destination palette from the DC */
-    pDCPalette = PALETTE_LockPalette(((GDIDEVICE *)pDC->ppdev)->DevInfo.hpalDefault);
+    pDCPalette = PALETTE_LockPalette(pDC->ppdev->DevInfo.hpalDefault);
     if (!pDCPalette)
     {
        SetLastWin32Error(ERROR_INVALID_HANDLE);
@@ -531,7 +531,7 @@ NtGdiSetDIBitsToDeviceInternal(
     }
 
     DDBPaletteType = pDCPalette->Mode;
-    DDBPalette = ((GDIDEVICE *)pDC->ppdev)->DevInfo.hpalDefault;
+    DDBPalette = pDC->ppdev->DevInfo.hpalDefault;
     PALETTE_UnlockPalette(pDCPalette);
 
     DIBPalette = BuildDIBPalette(bmi, (PINT)&DIBPaletteType);

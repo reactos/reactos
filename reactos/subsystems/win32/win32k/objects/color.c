@@ -449,7 +449,7 @@ IntGetSystemPaletteEntries(HDC  hDC,
         }
         else
         {
-            Ret = ((PGDIDEVICE)dc->ppdev)->GDIInfo.ulNumPalReg;
+            Ret = dc->ppdev->GDIInfo.ulNumPalReg;
         }
     }
 

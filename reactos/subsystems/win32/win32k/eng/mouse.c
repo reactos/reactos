@@ -43,7 +43,7 @@ MouseSafetyOnDrawStart(SURFOBJ *SurfObj, LONG HazardX1,
  */
 {
   LONG tmp;
-  GDIDEVICE *ppdev;
+  PDEVOBJ *ppdev;
   GDIPOINTER *pgp;
 
   ASSERT(SurfObj != NULL);
@@ -101,7 +101,7 @@ MouseSafetyOnDrawEnd(SURFOBJ *SurfObj)
  * FUNCTION: Notify the mouse driver that drawing has finished on a surface.
  */
 {
-  GDIDEVICE *ppdev;
+  PDEVOBJ *ppdev;
   GDIPOINTER *pgp;
 
   ASSERT(SurfObj != NULL);
@@ -138,7 +138,7 @@ MouseSafetyOnDrawEnd(SURFOBJ *SurfObj)
 /* SOFTWARE MOUSE POINTER IMPLEMENTATION **************************************/
 
 VOID INTERNAL_CALL
-IntHideMousePointer(GDIDEVICE *ppdev, SURFOBJ *psoDest)
+IntHideMousePointer(PDEVOBJ *ppdev, SURFOBJ *psoDest)
 {
    GDIPOINTER *pgp;
    POINTL pt;
@@ -207,7 +207,7 @@ IntHideMousePointer(GDIDEVICE *ppdev, SURFOBJ *psoDest)
 }
 
 VOID INTERNAL_CALL
-IntShowMousePointer(GDIDEVICE *ppdev, SURFOBJ *psoDest)
+IntShowMousePointer(PDEVOBJ *ppdev, SURFOBJ *psoDest)
 {
    GDIPOINTER *pgp;
    SURFOBJ *SaveSurface;
@@ -335,7 +335,7 @@ EngSetPointerShape(
    IN RECTL *prcl,
    IN FLONG fl)
 {
-   GDIDEVICE *ppdev;
+   PDEVOBJ *ppdev;
    SURFOBJ *psoTemp;
    GDIPOINTER *pgp;
 
@@ -536,7 +536,7 @@ EngMovePointer(
    IN LONG y,
    IN RECTL *prcl)
 {
-   GDIDEVICE *ppdev;
+   PDEVOBJ *ppdev;
    GDIPOINTER *pgp;
 
    ASSERT(pso);

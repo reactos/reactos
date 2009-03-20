@@ -1181,7 +1181,7 @@ IntMouseInput(MOUSEINPUT *mi)
             {
                IntEngMovePointer(pso, MousePos.x, MousePos.y, &(GDIDEV(pso)->Pointer.Exclude));
             }
-            /* Only now, update the info in the GDIDEVICE, so EngMovePointer can
+            /* Only now, update the info in the PDEVOBJ, so EngMovePointer can
             * use the old values to move the pointer image */
             gpsi->ptCursor.x = MousePos.x;
             gpsi->ptCursor.y = MousePos.y;

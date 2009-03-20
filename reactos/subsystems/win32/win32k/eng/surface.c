@@ -508,21 +508,21 @@ EngCreateDeviceSurface(IN DHSURF dhsurf,
  */
 BOOL APIENTRY
 EngAssociateSurface(IN HSURF hsurf,
-                    IN HDEV Dev,
+                    IN HDEV hdev,
                     IN ULONG Hooks)
 {
     SURFOBJ *pso;
     PSURFACE psurf;
-    GDIDEVICE* Device;
+    PDEVOBJ* Device;
 
-    Device = (GDIDEVICE*)Dev;
+    Device = (PDEVOBJ*)hdev;
 
     psurf = SURFACE_LockSurface(hsurf);
     ASSERT(psurf);
     pso = &psurf->SurfObj;
 
     /* Associate the hdev */
-    pso->hdev = Dev;
+    pso->hdev = hdev;
     pso->dhpdev = Device->hPDev;
 
     /* Hook up specified functions */
