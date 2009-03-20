@@ -488,7 +488,7 @@ NdisGetCurrentProcessorCounts(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 EXPORT
@@ -502,7 +502,15 @@ NdisGetDriverHandle(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    PADAPTER_BINDING Binding = (PADAPTER_BINDING)NdisBindingHandle;
+
+    if (!Binding)
+    {
+        *NdisDriverHandle = NULL;
+        return;
+    }
+
+    *NdisDriverHandle = Binding->Adapter->NdisMiniportBlock.DriverHandle;
 }
 
 
