@@ -94,23 +94,6 @@ BOOLEAN NTAPI ServiceRoutine(
 
 
 /*
- * @unimplemented
- */
-VOID
-EXPORT
-NdisCompleteDmaTransfer(
-    OUT PNDIS_STATUS    Status,
-    IN  PNDIS_HANDLE    NdisDmaHandle,
-    IN  PNDIS_BUFFER    Buffer,
-    IN  ULONG           Offset,
-    IN  ULONG           Length,
-    IN  BOOLEAN         WriteToDevice)
-{
-    UNIMPLEMENTED
-}
-
-
-/*
  * @implemented
  */
 VOID

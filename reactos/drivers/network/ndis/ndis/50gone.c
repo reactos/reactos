@@ -71,7 +71,7 @@ NdisDeregisterAdapter(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 EXPORT
@@ -84,7 +84,7 @@ NdisDeregisterAdapterShutdownHandler(
  *    NDIS 4.0
  */
 {
-    UNIMPLEMENTED
+    NdisMDeregisterAdapterShutdownHandler(NdisAdapterHandle);
 }
 
 
@@ -210,7 +210,7 @@ NdisIMSwitchToMiniport(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 EXPORT
@@ -227,7 +227,10 @@ NdisMapIoSpace(
  *    NDIS 4.0
  */
 {
-    UNIMPLEMENTED
+    *Status = NdisMMapIoSpace(VirtualAddress,
+                              NdisAdapterHandle,
+                              PhysicalAddress,
+                              Length);
 }
 
 
@@ -324,7 +327,7 @@ NdisRegisterAdapter(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 EXPORT
@@ -339,7 +342,9 @@ NdisRegisterAdapterShutdownHandler(
  *    NDIS 4.0
  */
 {
-    UNIMPLEMENTED
+    NdisMRegisterAdapterShutdownHandler(NdisAdapterHandle,
+                                        ShutdownContext,
+                                        ShutdownHandler);
 }
 
 
