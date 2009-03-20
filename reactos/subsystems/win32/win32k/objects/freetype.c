@@ -3128,12 +3128,12 @@ GreExtTextOutW(
     FT_Bool use_kerning;
     RECTL DestRect, MaskRect;
     POINTL SourcePoint, BrushOrigin;
-    HBRUSH hBrushFg = NULL;
-    PGDIBRUSHOBJ BrushFg = NULL;
-    GDIBRUSHINST BrushFgInst;
-    HBRUSH hBrushBg = NULL;
-    PGDIBRUSHOBJ BrushBg = NULL;
-    GDIBRUSHINST BrushBgInst;
+    HBRUSH hbrushText = NULL;
+    PBRUSH pbrushText = NULL;
+    EBRUSHOBJ eboText;
+    HBRUSH hbrushBackGnd = NULL;
+    PBRUSH pbrushBackGnd = NULL;
+    EBRUSHOBJ eboBackGnd;
     HBITMAP HSourceGlyph;
     SURFOBJ *SourceGlyphSurf;
     SIZEL bitSize;
@@ -3227,30 +3227,30 @@ GreExtTextOutW(
     {
         goto fail;
     }
-    hBrushFg = NtGdiCreateSolidBrush(XLATEOBJ_iXlate(XlateObj, pdcattr->crForegroundClr), 0);
-    if ( !hBrushFg )
+    hbrushText = NtGdiCreateSolidBrush(XLATEOBJ_iXlate(XlateObj, pdcattr->crForegroundClr), 0);
+    if ( !hbrushText )
     {
         goto fail;
     }
-    BrushFg = BRUSHOBJ_LockBrush(hBrushFg);
-    if ( !BrushFg )
+    pbrushText = BRUSH_LockBrush(hbrushText);
+    if ( !pbrushText )
     {
         goto fail;
     }
-    IntGdiInitBrushInstance(&BrushFgInst, BrushFg, NULL);
+    IntGdiInitBrushInstance(&eboText, pbrushText, NULL);
     if ((fuOptions & ETO_OPAQUE) || pdcattr->jBkMode == OPAQUE)
     {
-        hBrushBg = NtGdiCreateSolidBrush(XLATEOBJ_iXlate(XlateObj, pdcattr->crBackgroundClr), 0);
-        if ( !hBrushBg )
+        hbrushBackGnd = NtGdiCreateSolidBrush(XLATEOBJ_iXlate(XlateObj, pdcattr->crBackgroundClr), 0);
+        if ( !hbrushBackGnd )
         {
             goto fail;
         }
-        BrushBg = BRUSHOBJ_LockBrush(hBrushBg);
-        if ( !BrushBg )
+        pbrushBackGnd = BRUSH_LockBrush(hbrushBackGnd);
+        if ( !pbrushBackGnd )
         {
             goto fail;
         }
-        IntGdiInitBrushInstance(&BrushBgInst, BrushBg, NULL);
+        IntGdiInitBrushInstance(&eboBackGnd, pbrushBackGnd, NULL);
     }
     XlateObj2 = (XLATEOBJ*)IntEngCreateXlate(PAL_RGB, Mode, NULL, hDestPalette);
     if ( !XlateObj2 )
@@ -3281,7 +3281,7 @@ GreExtTextOutW(
             &DestRect,
             &SourcePoint,
             &SourcePoint,
-            &BrushBgInst.BrushObject,
+            &eboBackGnd.BrushObject,
             &BrushOrigin,
             ROP3_TO_ROP4(PATCOPY));
         fuOptions &= ~ETO_OPAQUE;
@@ -3527,7 +3527,7 @@ GreExtTextOutW(
                 &DestRect,
                 &SourcePoint,
                 &SourcePoint,
-                &BrushBgInst.BrushObject,
+                &eboBackGnd.BrushObject,
                 &BrushOrigin,
                 ROP3_TO_ROP4(PATCOPY));
             BackgroundLeft = DestRect.right;
@@ -3599,7 +3599,7 @@ GreExtTextOutW(
             &DestRect,
             &SourcePoint,
             (PPOINTL)&MaskRect,
-            &BrushFgInst.BrushObject,
+            &eboText.BrushObject,
             &BrushOrigin);
 
         EngUnlockSurface(SourceGlyphSurf);
@@ -3638,13 +3638,13 @@ GreExtTextOutW(
     SURFACE_UnlockSurface(psurf);
     if (TextObj != NULL)
         TEXTOBJ_UnlockText(TextObj);
-    if (hBrushBg != NULL)
+    if (hbrushBackGnd != NULL)
     {
-        BRUSHOBJ_UnlockBrush(BrushBg);
-        NtGdiDeleteObject(hBrushBg);
+        BRUSH_UnlockBrush(pbrushBackGnd);
+        NtGdiDeleteObject(hbrushBackGnd);
     }
-    BRUSHOBJ_UnlockBrush(BrushFg);
-    NtGdiDeleteObject(hBrushFg);
+    BRUSH_UnlockBrush(pbrushText);
+    NtGdiDeleteObject(hbrushText);
 good:
     DC_UnlockDc( dc );
 
@@ -3659,15 +3659,15 @@ fail:
         TEXTOBJ_UnlockText(TextObj);
     if (psurf != NULL)
         SURFACE_UnlockSurface(psurf);
-    if (hBrushBg != NULL)
+    if (hbrushBackGnd != NULL)
     {
-        BRUSHOBJ_UnlockBrush(BrushBg);
-        NtGdiDeleteObject(hBrushBg);
+        BRUSH_UnlockBrush(pbrushBackGnd);
+        NtGdiDeleteObject(hbrushBackGnd);
     }
-    if (hBrushFg != NULL)
+    if (hbrushText != NULL)
     {
-        BRUSHOBJ_UnlockBrush(BrushFg);
-        NtGdiDeleteObject(hBrushFg);
+        BRUSH_UnlockBrush(pbrushText);
+        NtGdiDeleteObject(hbrushText);
     }
     DC_UnlockDc(dc);
 

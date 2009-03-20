@@ -192,8 +192,8 @@ NtGdiBitBlt(
     POINTL SourcePoint, BrushOrigin;
     BOOL Status = FALSE;
     XLATEOBJ *XlateObj = NULL;
-    PGDIBRUSHOBJ BrushObj = NULL;
-    GDIBRUSHINST BrushInst;
+    PBRUSH pbrush = NULL;
+    EBRUSHOBJ BrushInst;
     BOOL UsesSource = ROP3_USES_SOURCE(ROP);
     BOOL UsesPattern = ROP3_USES_PATTERN(ROP);
 
@@ -285,14 +285,14 @@ NtGdiBitBlt(
 
     if (UsesPattern)
     {
-        BrushObj = BRUSHOBJ_LockBrush(pdcattr->hbrush);
-        if (NULL == BrushObj)
+        pbrush = BRUSH_LockBrush(pdcattr->hbrush);
+        if (NULL == pbrush)
         {
             SetLastWin32Error(ERROR_INVALID_HANDLE);
             goto cleanup;
         }
-        BrushOrigin = *((PPOINTL)&BrushObj->ptOrigin);
-        IntGdiInitBrushInstance(&BrushInst, BrushObj, DCDest->rosdc.XlateBrush);
+        BrushOrigin = *((PPOINTL)&pbrush->ptOrigin);
+        IntGdiInitBrushInstance(&BrushInst, pbrush, DCDest->rosdc.XlateBrush);
     }
 
     /* Create the XLATEOBJ. */
@@ -313,7 +313,7 @@ NtGdiBitBlt(
     Status = IntEngBitBlt(&BitmapDest->SurfObj, BitmapSrc ? &BitmapSrc->SurfObj : NULL, NULL,
         DCDest->rosdc.CombinedClip, XlateObj, &DestRect,
         &SourcePoint, NULL,
-        BrushObj ? &BrushInst.BrushObject : NULL,
+        pbrush ? &BrushInst.BrushObject : NULL,
         &BrushOrigin, ROP3_TO_ROP4(ROP));
 
 cleanup:
@@ -328,9 +328,9 @@ cleanup:
     {
         SURFACE_UnlockSurface(BitmapSrc);
     }
-    if (BrushObj != NULL)
+    if (pbrush != NULL)
     {
-        BRUSHOBJ_UnlockBrush(BrushObj);
+        BRUSH_UnlockBrush(pbrush);
     }
     if (UsesSource && hDCSrc != hDCDest)
     {
@@ -756,8 +756,8 @@ NtGdiStretchBlt(
     BOOL Status = FALSE;
     XLATEOBJ *XlateObj = NULL;
     POINTL BrushOrigin;
-    PGDIBRUSHOBJ BrushObj = NULL;
-    GDIBRUSHINST BrushInst;
+    PBRUSH pbrush = NULL;
+    EBRUSHOBJ BrushInst;
     BOOL UsesSource = ROP3_USES_SOURCE(ROP);
     BOOL UsesPattern = ROP3_USES_PATTERN(ROP);
 
@@ -867,14 +867,14 @@ NtGdiStretchBlt(
 
     if (UsesPattern)
     {
-        BrushObj = BRUSHOBJ_LockBrush(pdcattr->hbrush);
-        if (NULL == BrushObj)
+        pbrush = BRUSH_LockBrush(pdcattr->hbrush);
+        if (NULL == pbrush)
         {
             SetLastWin32Error(ERROR_INVALID_HANDLE);
             goto failed;
         }
-        BrushOrigin = *((PPOINTL)&BrushObj->ptOrigin);
-        IntGdiInitBrushInstance(&BrushInst, BrushObj, DCDest->rosdc.XlateBrush);
+        BrushOrigin = *((PPOINTL)&pbrush->ptOrigin);
+        IntGdiInitBrushInstance(&BrushInst, pbrush, DCDest->rosdc.XlateBrush);
     }
 
     /* Offset the brush */
@@ -885,7 +885,7 @@ NtGdiStretchBlt(
     Status = IntEngStretchBlt(&BitmapDest->SurfObj, &BitmapSrc->SurfObj,
         NULL, DCDest->rosdc.CombinedClip, XlateObj,
         &DestRect, &SourceRect, NULL, 
-        BrushObj ? &BrushInst.BrushObject : NULL,
+        pbrush ? &BrushInst.BrushObject : NULL,
         &BrushOrigin, ROP3_TO_ROP4(ROP));
 
 failed:
@@ -893,9 +893,9 @@ failed:
     {
         EngDeleteXlate(XlateObj);
     }
-    if (BrushObj)
+    if (pbrush)
     {
-        BRUSHOBJ_UnlockBrush(BrushObj);
+        BRUSH_UnlockBrush(pbrush);
     }
     if (BitmapSrc && DCSrc->rosdc.hBitmap != DCDest->rosdc.hBitmap)
     {
@@ -922,11 +922,11 @@ IntPatBlt(
           INT  Width,
           INT  Height,
           DWORD  ROP,
-          PGDIBRUSHOBJ  BrushObj)
+          PBRUSH  BrushObj)
 {
     RECTL DestRect;
     SURFACE *psurf;
-    GDIBRUSHINST BrushInst;
+    EBRUSHOBJ eboFill;
     POINTL BrushOrigin;
     BOOL ret = TRUE;
 
@@ -968,7 +968,7 @@ IntPatBlt(
         BrushOrigin.x = BrushObj->ptOrigin.x + dc->ptlDCOrig.x;
         BrushOrigin.y = BrushObj->ptOrigin.y + dc->ptlDCOrig.y;
 
-        IntGdiInitBrushInstance(&BrushInst, BrushObj, dc->rosdc.XlateBrush);
+        IntGdiInitBrushInstance(&eboFill, BrushObj, dc->rosdc.XlateBrush);
 
         ret = IntEngBitBlt(
             &psurf->SurfObj,
@@ -979,7 +979,7 @@ IntPatBlt(
             &DestRect,
             NULL,
             NULL,
-            &BrushInst.BrushObject, // use pDC->eboFill
+            &eboFill.BrushObject, // use pDC->eboFill
             &BrushOrigin,
             ROP3_TO_ROP4(ROP));
     }
@@ -999,7 +999,7 @@ IntGdiPolyPatBlt(
 {
     int i;
     PPATRECT r;
-    PGDIBRUSHOBJ BrushObj;
+    PBRUSH pbrush;
     PDC_ATTR pdcattr;
     DC *dc;
 
@@ -1023,8 +1023,8 @@ IntGdiPolyPatBlt(
 
     for (r = pRects, i = 0; i < cRects; i++)
     {
-        BrushObj = BRUSHOBJ_LockBrush(r->hBrush);
-        if(BrushObj != NULL)
+        pbrush = BRUSH_LockBrush(r->hBrush);
+        if(pbrush != NULL)
         {
             IntPatBlt(
                 dc,
@@ -1033,8 +1033,8 @@ IntGdiPolyPatBlt(
                 r->r.right,
                 r->r.bottom,
                 dwRop,
-                BrushObj);
-            BRUSHOBJ_UnlockBrush(BrushObj);
+                pbrush);
+            BRUSH_UnlockBrush(pbrush);
         }
         r++;
     }
@@ -1054,7 +1054,7 @@ NtGdiPatBlt(
             INT  Height,
             DWORD  ROP)
 {
-    PGDIBRUSHOBJ BrushObj;
+    PBRUSH pbrush;
     DC *dc;
     PDC_ATTR pdcattr;
     BOOL ret;
@@ -1084,8 +1084,8 @@ NtGdiPatBlt(
     if (pdcattr->ulDirty_ & DC_BRUSH_DIRTY)
         IntGdiSelectBrush(dc,pdcattr->hbrush);
 
-    BrushObj = BRUSHOBJ_LockBrush(pdcattr->hbrush);
-    if (BrushObj == NULL)
+    pbrush = BRUSH_LockBrush(pdcattr->hbrush);
+    if (pbrush == NULL)
     {
         SetLastWin32Error(ERROR_INVALID_HANDLE);
         DC_UnlockDc(dc);
@@ -1099,9 +1099,9 @@ NtGdiPatBlt(
         Width,
         Height,
         ROP,
-        BrushObj);
+        pbrush);
 
-    BRUSHOBJ_UnlockBrush(BrushObj);
+    BRUSH_UnlockBrush(pbrush);
     DC_UnlockDc(dc);
 
     return ret;

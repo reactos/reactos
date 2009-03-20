@@ -46,7 +46,7 @@ TranslateRects(RECT_ENUM *RectEnum, POINTL* Translate)
  */
 void FASTCALL
 NWtoSE(SURFOBJ* OutputObj, CLIPOBJ* Clip,
-       BRUSHOBJ* Brush, LONG x, LONG y, LONG deltax, LONG deltay,
+       BRUSHOBJ* pbo, LONG x, LONG y, LONG deltax, LONG deltay,
        POINTL* Translate)
 {
     int i;
@@ -54,7 +54,7 @@ NWtoSE(SURFOBJ* OutputObj, CLIPOBJ* Clip,
     BOOLEAN EnumMore;
     RECTL* ClipRect;
     RECT_ENUM RectEnum;
-    ULONG Pixel = Brush->iSolidColor;
+    ULONG Pixel = pbo->iSolidColor;
     LONG delta;
 
     CLIPOBJ_cEnumStart(Clip, FALSE, CT_RECTANGLES, CD_RIGHTDOWN, 0);
@@ -117,7 +117,7 @@ NWtoSE(SURFOBJ* OutputObj, CLIPOBJ* Clip,
 
 void FASTCALL
 SWtoNE(SURFOBJ* OutputObj, CLIPOBJ* Clip,
-       BRUSHOBJ* Brush, LONG x, LONG y, LONG deltax, LONG deltay,
+       BRUSHOBJ* pbo, LONG x, LONG y, LONG deltax, LONG deltay,
        POINTL* Translate)
 {
     int i;
@@ -125,7 +125,7 @@ SWtoNE(SURFOBJ* OutputObj, CLIPOBJ* Clip,
     BOOLEAN EnumMore;
     RECTL* ClipRect;
     RECT_ENUM RectEnum;
-    ULONG Pixel = Brush->iSolidColor;
+    ULONG Pixel = pbo->iSolidColor;
     LONG delta;
 
     CLIPOBJ_cEnumStart(Clip, FALSE, CT_RECTANGLES, CD_RIGHTUP, 0);
@@ -187,7 +187,7 @@ SWtoNE(SURFOBJ* OutputObj, CLIPOBJ* Clip,
 
 void FASTCALL
 NEtoSW(SURFOBJ* OutputObj, CLIPOBJ* Clip,
-       BRUSHOBJ* Brush, LONG x, LONG y, LONG deltax, LONG deltay,
+       BRUSHOBJ* pbo, LONG x, LONG y, LONG deltax, LONG deltay,
        POINTL* Translate)
 {
     int i;
@@ -195,7 +195,7 @@ NEtoSW(SURFOBJ* OutputObj, CLIPOBJ* Clip,
     BOOLEAN EnumMore;
     RECTL* ClipRect;
     RECT_ENUM RectEnum;
-    ULONG Pixel = Brush->iSolidColor;
+    ULONG Pixel = pbo->iSolidColor;
     LONG delta;
 
     CLIPOBJ_cEnumStart(Clip, FALSE, CT_RECTANGLES, CD_LEFTDOWN, 0);
@@ -257,7 +257,7 @@ NEtoSW(SURFOBJ* OutputObj, CLIPOBJ* Clip,
 
 void FASTCALL
 SEtoNW(SURFOBJ* OutputObj, CLIPOBJ* Clip,
-       BRUSHOBJ* Brush, LONG x, LONG y, LONG deltax, LONG deltay,
+       BRUSHOBJ* pbo, LONG x, LONG y, LONG deltax, LONG deltay,
        POINTL* Translate)
 {
     int i;
@@ -265,7 +265,7 @@ SEtoNW(SURFOBJ* OutputObj, CLIPOBJ* Clip,
     BOOLEAN EnumMore;
     RECTL* ClipRect;
     RECT_ENUM RectEnum;
-    ULONG Pixel = Brush->iSolidColor;
+    ULONG Pixel = pbo->iSolidColor;
     LONG delta;
 
     CLIPOBJ_cEnumStart(Clip, FALSE, CT_RECTANGLES, CD_LEFTUP, 0);
@@ -331,7 +331,7 @@ SEtoNW(SURFOBJ* OutputObj, CLIPOBJ* Clip,
 BOOL APIENTRY
 EngLineTo(SURFOBJ *DestObj,
           CLIPOBJ *Clip,
-          BRUSHOBJ *Brush,
+          BRUSHOBJ *pbo,
           LONG x1,
           LONG y1,
           LONG x2,
@@ -341,7 +341,7 @@ EngLineTo(SURFOBJ *DestObj,
 {
     LONG x, y, deltax, deltay, xchange, ychange, hx, vy;
     ULONG i;
-    ULONG Pixel = Brush->iSolidColor;
+    ULONG Pixel = pbo->iSolidColor;
     SURFOBJ *OutputObj;
     RECTL DestRect;
     POINTL Translate;
@@ -477,22 +477,22 @@ EngLineTo(SURFOBJ *DestObj,
         {
             if (0 < ychange)
             {
-                NWtoSE(OutputObj, Clip, Brush, x, y, deltax, deltay, &Translate);
+                NWtoSE(OutputObj, Clip, pbo, x, y, deltax, deltay, &Translate);
             }
             else
             {
-                SWtoNE(OutputObj, Clip, Brush, x, y, deltax, deltay, &Translate);
+                SWtoNE(OutputObj, Clip, pbo, x, y, deltax, deltay, &Translate);
             }
         }
         else
         {
             if (0 < ychange)
             {
-                NEtoSW(OutputObj, Clip, Brush, x, y, deltax, deltay, &Translate);
+                NEtoSW(OutputObj, Clip, pbo, x, y, deltax, deltay, &Translate);
             }
             else
             {
-                SEtoNW(OutputObj, Clip, Brush, x, y, deltax, deltay, &Translate);
+                SEtoNW(OutputObj, Clip, pbo, x, y, deltax, deltay, &Translate);
             }
         }
     }
@@ -508,7 +508,7 @@ EngLineTo(SURFOBJ *DestObj,
 BOOL APIENTRY
 IntEngLineTo(SURFOBJ *psoDest,
              CLIPOBJ *ClipObj,
-             BRUSHOBJ *Brush,
+             BRUSHOBJ *pbo,
              LONG x1,
              LONG y1,
              LONG x2,
@@ -518,7 +518,7 @@ IntEngLineTo(SURFOBJ *psoDest,
 {
     BOOLEAN ret;
     SURFACE *psurfDest;
-    PGDIBRUSHINST GdiBrush;
+    PEBRUSHOBJ GdiBrush;
     RECTL b;
 
     ASSERT(psoDest);
@@ -526,8 +526,8 @@ IntEngLineTo(SURFOBJ *psoDest,
     ASSERT(psurfDest);
 
     GdiBrush = CONTAINING_RECORD(
-                   Brush,
-                   GDIBRUSHINST,
+                   pbo,
+                   EBRUSHOBJ,
                    BrushObject);
     ASSERT(GdiBrush);
     ASSERT(GdiBrush->GdiBrushObject);
@@ -572,7 +572,7 @@ IntEngLineTo(SURFOBJ *psoDest,
     {
         /* Call the driver's DrvLineTo */
         ret = GDIDEVFUNCS(psoDest).LineTo(
-                  psoDest, ClipObj, Brush, x1, y1, x2, y2, &b, Mix);
+                  psoDest, ClipObj, pbo, x1, y1, x2, y2, &b, Mix);
     }
 
 #if 0
@@ -584,7 +584,7 @@ IntEngLineTo(SURFOBJ *psoDest,
 
     if (! ret)
     {
-        ret = EngLineTo(psoDest, ClipObj, Brush, x1, y1, x2, y2, RectBounds, Mix);
+        ret = EngLineTo(psoDest, ClipObj, pbo, x1, y1, x2, y2, RectBounds, Mix);
     }
 
     MouseSafetyOnDrawEnd(psoDest);
@@ -596,7 +596,7 @@ IntEngLineTo(SURFOBJ *psoDest,
 BOOL APIENTRY
 IntEngPolyline(SURFOBJ *psoDest,
                CLIPOBJ *Clip,
-               BRUSHOBJ *Brush,
+               BRUSHOBJ *pbo,
                CONST LPPOINT  pt,
                LONG dCount,
                MIX Mix)
@@ -614,7 +614,7 @@ IntEngPolyline(SURFOBJ *psoDest,
         rect.bottom = max(pt[i-1].y, pt[i].y);
         ret = IntEngLineTo(psoDest,
                            Clip,
-                           Brush,
+                           pbo,
                            pt[i-1].x,
                            pt[i-1].y,
                            pt[i].x,

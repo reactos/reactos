@@ -58,7 +58,7 @@ OBJ_TYPE_INFO ObjTypeInfo[BASE_OBJTYPE_COUNT] =
   {0, 0,                     TAG_PFT,          NULL},             /* 0d PFT, unused */
   {0, sizeof(GDICLRXFORM),   TAG_ICMCXF,       GDI_CleanupDummy}, /* 0e ICMCXF, */
   {0, 0,                     TAG_SPRITE,       NULL},             /* 0f SPRITE, unused */
-  {1, sizeof(GDIBRUSHOBJ),   TAG_BRUSH,        BRUSH_Cleanup},    /* 10 BRUSH, PEN, EXTPEN */
+  {1, sizeof(BRUSH),         TAG_BRUSH,        BRUSH_Cleanup},    /* 10 BRUSH, PEN, EXTPEN */
   {0, 0,                     TAG_UMPD,         NULL},             /* 11 UMPD, unused */
   {0, 0,                     0,                NULL},             /* 12 UNUSED4 */
   {0, 0,                     TAG_SPACE,        NULL},             /* 13 SPACE, unused */
@@ -1455,7 +1455,7 @@ GDI_MapHandleTable(PSECTION_OBJECT SectionObject, PEPROCESS Process)
    Example Allocating:
 
     // Save Kernel Space Pointer
-    (PGDIBRUSHOBJ)->pBrushAttr = IntGdiAllocObjAttr(GDIObjType_BRUSH_TYPE);
+    (PBRUSH)->pBrushAttr = IntGdiAllocObjAttr(GDIObjType_BRUSH_TYPE);
 
     // Kernel Space to User Space Pointer
     (PGDI_TABLE_ENTRY)->UserData = pBrushAttr;
@@ -1464,8 +1464,8 @@ GDI_MapHandleTable(PSECTION_OBJECT SectionObject, PEPROCESS Process)
    Example Freeing:
 
     (PGDI_TABLE_ENTRY)->UserData = NULL;      // Zero the user ptr.
-    UserHeapFree((PGDIBRUSHOBJ)->pBrushAttr); // Free from kernel ptr.
-    (PGDIBRUSHOBJ)->pBrushAttr = NULL;
+    UserHeapFree((PBRUSH)->pBrushAttr); // Free from kernel ptr.
+    (PBRUSH)->pBrushAttr = NULL;
 
    Notes:
     Testing with DC_ATTR works but has drawing difficulties.
@@ -1502,7 +1502,7 @@ IntGdiAllocObjAttr(GDIOBJTYPE Type)
 
 BOOL
 FASTCALL
-IntGdiSetBrushOwner(PGDIBRUSHOBJ pbr, DWORD OwnerMask)
+IntGdiSetBrushOwner(PBRUSH pbr, DWORD OwnerMask)
 {
   HBRUSH hBR;
   PEPROCESS Owner = NULL;
@@ -1587,8 +1587,8 @@ IntGdiSetDCOwnerEx( HDC hDC, DWORD OwnerMask, BOOL NoSetBrush)
   if ((OwnerMask != GDI_OBJ_HMGR_NONE) && !NoSetBrush)
   {
      pDC = DC_LockDc ( hDC );
-     if (IntGdiSetBrushOwner((PGDIBRUSHOBJ)pDC->dclevel.pbrFill, OwnerMask))
-         IntGdiSetBrushOwner((PGDIBRUSHOBJ)pDC->dclevel.pbrLine, OwnerMask);
+     if (IntGdiSetBrushOwner((PBRUSH)pDC->dclevel.pbrFill, OwnerMask))
+         IntGdiSetBrushOwner((PBRUSH)pDC->dclevel.pbrLine, OwnerMask);
      DC_UnlockDc( pDC );
   }
   return TRUE;
@@ -1664,11 +1664,11 @@ IntGdiGetObject(IN HANDLE Handle,
     {
       case GDI_OBJECT_TYPE_PEN:
       case GDI_OBJECT_TYPE_EXTPEN:
-        Result = PEN_GetObject((PGDIBRUSHOBJ) pGdiObject, cbCount, (PLOGPEN) lpBuffer); // IntGdiCreatePenIndirect
+        Result = PEN_GetObject((PBRUSH) pGdiObject, cbCount, (PLOGPEN) lpBuffer); // IntGdiCreatePenIndirect
         break;
 
       case GDI_OBJECT_TYPE_BRUSH:
-        Result = BRUSH_GetObject((PGDIBRUSHOBJ ) pGdiObject, cbCount, (LPLOGBRUSH)lpBuffer);
+        Result = BRUSH_GetObject((PBRUSH ) pGdiObject, cbCount, (LPLOGBRUSH)lpBuffer);
         break;
 
       case GDI_OBJECT_TYPE_BITMAP:

@@ -26,7 +26,7 @@
 #define Rcos(d) ((d) == 0.0 ? 1.0 : ((d) == 90.0 ? 0.0 : cos(d*M_PI/180.0)))
 
 BOOL FASTCALL IntFillArc( PDC dc, INT XLeft, INT YLeft, INT Width, INT Height, double StartArc, double EndArc, ARCTYPE arctype);
-BOOL FASTCALL IntDrawArc( PDC dc, INT XLeft, INT YLeft, INT Width, INT Height, double StartArc, double EndArc, ARCTYPE arctype, PGDIBRUSHOBJ PenBrushObj);
+BOOL FASTCALL IntDrawArc( PDC dc, INT XLeft, INT YLeft, INT Width, INT Height, double StartArc, double EndArc, ARCTYPE arctype, PBRUSH pbrush);
 
 static
 BOOL
@@ -44,8 +44,8 @@ IntArc( DC *dc,
 {
     PDC_ATTR pdcattr;
     RECTL RectBounds, RectSEpts;
-    PGDIBRUSHOBJ PenBrushObj;
-    GDIBRUSHINST PenBrushInst;
+    PBRUSH pbrushPen;
+    EBRUSHOBJ eboPen;
     SURFACE *psurf;
     BOOL ret = TRUE;
     LONG PenWidth, PenOrigWidth;
@@ -70,18 +70,18 @@ IntArc( DC *dc,
 
     pdcattr = dc->pdcattr;
 
-    PenBrushObj = PENOBJ_LockPen(pdcattr->hpen);
-    if (NULL == PenBrushObj)
+    pbrushPen = PENOBJ_LockPen(pdcattr->hpen);
+    if (!pbrushPen)
     {
         DPRINT1("Arc Fail 1\n");
         SetLastWin32Error(ERROR_INTERNAL_ERROR);
         return FALSE;
     }
 
-    PenOrigWidth = PenWidth = PenBrushObj->ptPenWidth.x;
-    if (PenBrushObj->ulPenStyle == PS_NULL) PenWidth = 0;
+    PenOrigWidth = PenWidth = pbrushPen->ptPenWidth.x;
+    if (pbrushPen->ulPenStyle == PS_NULL) PenWidth = 0;
 
-    if (PenBrushObj->ulPenStyle == PS_INSIDEFRAME)
+    if (pbrushPen->ulPenStyle == PS_INSIDEFRAME)
     {
        if (2*PenWidth > (Right - Left)) PenWidth = (Right -Left + 1)/2;
        if (2*PenWidth > (Bottom - Top)) PenWidth = (Bottom -Top + 1)/2;
@@ -92,7 +92,7 @@ IntArc( DC *dc,
     }
 
     if (!PenWidth) PenWidth = 1;
-    PenBrushObj->ptPenWidth.x = PenWidth;  
+    pbrushPen->ptPenWidth.x = PenWidth;  
 
     RectBounds.left   = Left;
     RectBounds.right  = Right;
@@ -155,30 +155,30 @@ IntArc( DC *dc,
               AngleStart,
               AngleEnd,
               arctype,
-             PenBrushObj);
+              pbrushPen);
 
     psurf = SURFACE_LockSurface(dc->rosdc.hBitmap);
     if (NULL == psurf)
     {
         DPRINT1("Arc Fail 2\n");
-        PENOBJ_UnlockPen(PenBrushObj);
+        PENOBJ_UnlockPen(pbrushPen);
         SetLastWin32Error(ERROR_INTERNAL_ERROR);
         return FALSE;
     }
 
-    IntGdiInitBrushInstance(&PenBrushInst, PenBrushObj, dc->rosdc.XlatePen);
+    IntGdiInitBrushInstance(&eboPen, pbrushPen, dc->rosdc.XlatePen);
 
     if (arctype == GdiTypePie)
     {
-       PUTLINE(CenterX, CenterY, SfCx + CenterX, SfCy + CenterY, PenBrushInst);
-       PUTLINE(EfCx + CenterX, EfCy + CenterY, CenterX, CenterY, PenBrushInst);
+       PUTLINE(CenterX, CenterY, SfCx + CenterX, SfCy + CenterY, eboPen);
+       PUTLINE(EfCx + CenterX, EfCy + CenterY, CenterX, CenterY, eboPen);
     }
     if (arctype == GdiTypeChord)
-        PUTLINE(EfCx + CenterX, EfCy + CenterY, SfCx + CenterX, SfCy + CenterY, PenBrushInst);
+        PUTLINE(EfCx + CenterX, EfCy + CenterY, SfCx + CenterX, SfCy + CenterY, eboPen);
            
-    PenBrushObj->ptPenWidth.x = PenOrigWidth;
+    pbrushPen->ptPenWidth.x = PenOrigWidth;
     SURFACE_UnlockSurface(psurf);
-    PENOBJ_UnlockPen(PenBrushObj);
+    PENOBJ_UnlockPen(pbrushPen);
     DPRINT("IntArc Exit.\n");
     return ret;
 }

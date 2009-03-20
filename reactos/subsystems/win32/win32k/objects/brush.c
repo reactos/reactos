@@ -38,37 +38,37 @@ static const USHORT HatchBrushes[NB_HATCH_STYLES][8] =
 BOOL INTERNAL_CALL
 BRUSH_Cleanup(PVOID ObjectBody)
 {
-  PGDIBRUSHOBJ pBrush = (PGDIBRUSHOBJ)ObjectBody;
-  if(pBrush->flAttrs & (GDIBRUSH_IS_HATCH | GDIBRUSH_IS_BITMAP))
+  PBRUSH pbrush = (PBRUSH)ObjectBody;
+  if(pbrush->flAttrs & (GDIBRUSH_IS_HATCH | GDIBRUSH_IS_BITMAP))
   {
-    ASSERT(pBrush->hbmPattern);
-    GDIOBJ_SetOwnership(pBrush->hbmPattern, PsGetCurrentProcess());
-    NtGdiDeleteObject(pBrush->hbmPattern);
+    ASSERT(pbrush->hbmPattern);
+    GDIOBJ_SetOwnership(pbrush->hbmPattern, PsGetCurrentProcess());
+    NtGdiDeleteObject(pbrush->hbmPattern);
   }
 
   /* Free the kmode styles array of EXTPENS */
-  if (pBrush->pStyle)
+  if (pbrush->pStyle)
   {
-    ExFreePool(pBrush->pStyle);
+    ExFreePool(pbrush->pStyle);
   }
 
   return TRUE;
 }
 
 INT FASTCALL
-BRUSH_GetObject (PGDIBRUSHOBJ BrushObject, INT Count, LPLOGBRUSH Buffer)
+BRUSH_GetObject (PBRUSH pbrush, INT Count, LPLOGBRUSH Buffer)
 {
    if( Buffer == NULL ) return sizeof(LOGBRUSH);
    if (Count == 0) return 0;
 
    /* Set colour */
-    Buffer->lbColor = BrushObject->BrushAttr.lbColor;
+    Buffer->lbColor = pbrush->BrushAttr.lbColor;
 
     /* set Hatch */
-    if ((BrushObject->flAttrs & GDIBRUSH_IS_HATCH)!=0)
+    if ((pbrush->flAttrs & GDIBRUSH_IS_HATCH)!=0)
     {
         /* FIXME : this is not the right value */
-        Buffer->lbHatch = (LONG)BrushObject->hbmPattern;
+        Buffer->lbHatch = (LONG)pbrush->hbmPattern;
     }
     else
     {
@@ -78,33 +78,33 @@ BRUSH_GetObject (PGDIBRUSHOBJ BrushObject, INT Count, LPLOGBRUSH Buffer)
     Buffer->lbStyle = 0;
 
     /* Get the type of style */
-    if ((BrushObject->flAttrs & GDIBRUSH_IS_SOLID)!=0)
+    if ((pbrush->flAttrs & GDIBRUSH_IS_SOLID)!=0)
     {
         Buffer->lbStyle = BS_SOLID;
     }
-    else if ((BrushObject->flAttrs & GDIBRUSH_IS_NULL)!=0)
+    else if ((pbrush->flAttrs & GDIBRUSH_IS_NULL)!=0)
     {
         Buffer->lbStyle = BS_NULL; // BS_HOLLOW
     }
-    else if ((BrushObject->flAttrs & GDIBRUSH_IS_HATCH)!=0)
+    else if ((pbrush->flAttrs & GDIBRUSH_IS_HATCH)!=0)
     {
         Buffer->lbStyle = BS_HATCHED;
     }
-    else if ((BrushObject->flAttrs & GDIBRUSH_IS_BITMAP)!=0)
+    else if ((pbrush->flAttrs & GDIBRUSH_IS_BITMAP)!=0)
     {
         Buffer->lbStyle = BS_PATTERN;
     }
-    else if ((BrushObject->flAttrs & GDIBRUSH_IS_DIB)!=0)
+    else if ((pbrush->flAttrs & GDIBRUSH_IS_DIB)!=0)
     {
         Buffer->lbStyle = BS_DIBPATTERN;
     }
 
     /* FIXME
-    else if ((BrushObject->flAttrs & )!=0)
+    else if ((pbrush->flAttrs & )!=0)
     {
         Buffer->lbStyle = BS_INDEXED;
     }
-    else if ((BrushObject->flAttrs & )!=0)
+    else if ((pbrush->flAttrs & )!=0)
     {
         Buffer->lbStyle = BS_DIBPATTERNPT;
     }
@@ -116,7 +116,7 @@ BRUSH_GetObject (PGDIBRUSHOBJ BrushObject, INT Count, LPLOGBRUSH Buffer)
 
 
 XLATEOBJ* FASTCALL
-IntGdiCreateBrushXlate(PDC Dc, GDIBRUSHOBJ *BrushObj, BOOLEAN *Failed)
+IntGdiCreateBrushXlate(PDC Dc, BRUSH *pbrush, BOOLEAN *Failed)
 {
    XLATEOBJ *Result = NULL;
    SURFACE * psurf;
@@ -130,19 +130,19 @@ IntGdiCreateBrushXlate(PDC Dc, GDIBRUSHOBJ *BrushObj, BOOLEAN *Failed)
    }
    if (!hPalette) hPalette = pPrimarySurface->DevInfo.hpalDefault;
 
-   if (BrushObj->flAttrs & GDIBRUSH_IS_NULL)
+   if (pbrush->flAttrs & GDIBRUSH_IS_NULL)
    {
       Result = NULL;
       *Failed = FALSE;
    }
-   else if (BrushObj->flAttrs & GDIBRUSH_IS_SOLID)
+   else if (pbrush->flAttrs & GDIBRUSH_IS_SOLID)
    {
       Result = IntEngCreateXlate(0, PAL_RGB, hPalette, NULL);
       *Failed = FALSE;
    }
    else
    {
-      SURFACE *Pattern = SURFACE_LockSurface(BrushObj->hbmPattern);
+      SURFACE *Pattern = SURFACE_LockSurface(pbrush->hbmPattern);
       if (Pattern == NULL)
          return NULL;
 
@@ -152,9 +152,9 @@ IntGdiCreateBrushXlate(PDC Dc, GDIBRUSHOBJ *BrushObj, BOOLEAN *Failed)
          PDC_ATTR pdcattr = Dc->pdcattr;
 
          if (Dc->rosdc.bitsPerPixel != 1)
-            Result = IntEngCreateSrcMonoXlate(hPalette, pdcattr->crBackgroundClr, BrushObj->BrushAttr.lbColor);
+            Result = IntEngCreateSrcMonoXlate(hPalette, pdcattr->crBackgroundClr, pbrush->BrushAttr.lbColor);
       }
-      else if (BrushObj->flAttrs & GDIBRUSH_IS_DIB)
+      else if (pbrush->flAttrs & GDIBRUSH_IS_DIB)
       {
          Result = IntEngCreateXlate(0, 0, hPalette, Pattern->hDIBPalette);
       }
@@ -167,26 +167,26 @@ IntGdiCreateBrushXlate(PDC Dc, GDIBRUSHOBJ *BrushObj, BOOLEAN *Failed)
 }
 
 VOID FASTCALL
-IntGdiInitBrushInstance(GDIBRUSHINST *BrushInst, PGDIBRUSHOBJ BrushObj, XLATEOBJ *XlateObj)
+IntGdiInitBrushInstance(EBRUSHOBJ *BrushInst, PBRUSH pbrush, XLATEOBJ *XlateObj)
 {
    ASSERT(BrushInst);
-   ASSERT(BrushObj);
-   if (BrushObj->flAttrs & GDIBRUSH_IS_NULL)
+   ASSERT(pbrush);
+   if (pbrush->flAttrs & GDIBRUSH_IS_NULL)
    {
       BrushInst->BrushObject.iSolidColor = 0;
    }
-   else if (BrushObj->flAttrs & GDIBRUSH_IS_SOLID)
+   else if (pbrush->flAttrs & GDIBRUSH_IS_SOLID)
    {
-         BrushInst->BrushObject.iSolidColor = XLATEOBJ_iXlate(XlateObj, BrushObj->BrushAttr.lbColor);
+         BrushInst->BrushObject.iSolidColor = XLATEOBJ_iXlate(XlateObj, pbrush->BrushAttr.lbColor);
    }
    else
    {
       BrushInst->BrushObject.iSolidColor = 0xFFFFFFFF;
    }
 
-   BrushInst->BrushObject.pvRbrush = BrushObj->ulRealization;
+   BrushInst->BrushObject.pvRbrush = pbrush->ulRealization;
    BrushInst->BrushObject.flColorType = 0;
-   BrushInst->GdiBrushObject = BrushObj;
+   BrushInst->GdiBrushObject = pbrush;
    BrushInst->XlateObject = XlateObj;
 }
 
@@ -325,7 +325,7 @@ IntGdiCreateDIBBrush(
    CONST VOID *PackedDIB)
 {
    HBRUSH hBrush;
-   PGDIBRUSHOBJ BrushObject;
+   PBRUSH pbrush;
    HBITMAP hPattern;
    ULONG_PTR DataPtr;
    UINT PaletteEntryCount;
@@ -367,22 +367,22 @@ IntGdiCreateDIBBrush(
    psurfPattern->hDIBPalette = BuildDIBPalette(BitmapInfo, &PaletteType);
    SURFACE_UnlockSurface(psurfPattern);
 
-   BrushObject = BRUSHOBJ_AllocBrushWithHandle();
-   if (BrushObject == NULL)
+   pbrush = BRUSH_AllocBrushWithHandle();
+   if (pbrush == NULL)
    {
       NtGdiDeleteObject(hPattern);
       SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
       return NULL;
    }
-   hBrush = BrushObject->BaseObject.hHmgr;
+   hBrush = pbrush->BaseObject.hHmgr;
 
-   BrushObject->flAttrs |= GDIBRUSH_IS_BITMAP | GDIBRUSH_IS_DIB;
-   BrushObject->hbmPattern = hPattern;
+   pbrush->flAttrs |= GDIBRUSH_IS_BITMAP | GDIBRUSH_IS_DIB;
+   pbrush->hbmPattern = hPattern;
    /* FIXME: Fill in the rest of fields!!! */
 
    GDIOBJ_SetOwnership(hPattern, NULL);
 
-   BRUSHOBJ_UnlockBrush(BrushObject);
+   BRUSH_UnlockBrush(pbrush);
 
    return hBrush;
 }
@@ -393,7 +393,7 @@ IntGdiCreateHatchBrush(
    COLORREF Color)
 {
    HBRUSH hBrush;
-   PGDIBRUSHOBJ BrushObject;
+   PBRUSH pbrush;
    HBITMAP hPattern;
 
    if (Style < 0 || Style >= NB_HATCH_STYLES)
@@ -408,22 +408,22 @@ IntGdiCreateHatchBrush(
       return NULL;
    }
 
-   BrushObject = BRUSHOBJ_AllocBrushWithHandle();
-   if (BrushObject == NULL)
+   pbrush = BRUSH_AllocBrushWithHandle();
+   if (pbrush == NULL)
    {
       NtGdiDeleteObject(hPattern);
       SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
       return NULL;
    }
-   hBrush = BrushObject->BaseObject.hHmgr;
+   hBrush = pbrush->BaseObject.hHmgr;
 
-   BrushObject->flAttrs |= GDIBRUSH_IS_HATCH;
-   BrushObject->hbmPattern = hPattern;
-   BrushObject->BrushAttr.lbColor = Color & 0xFFFFFF;
+   pbrush->flAttrs |= GDIBRUSH_IS_HATCH;
+   pbrush->hbmPattern = hPattern;
+   pbrush->BrushAttr.lbColor = Color & 0xFFFFFF;
 
    GDIOBJ_SetOwnership(hPattern, NULL);
 
-   BRUSHOBJ_UnlockBrush(BrushObject);
+   BRUSH_UnlockBrush(pbrush);
 
    return hBrush;
 }
@@ -433,7 +433,7 @@ IntGdiCreatePatternBrush(
    HBITMAP hBitmap)
 {
    HBRUSH hBrush;
-   PGDIBRUSHOBJ BrushObject;
+   PBRUSH pbrush;
    HBITMAP hPattern;
 
    hPattern = BITMAP_CopyBitmap(hBitmap);
@@ -443,22 +443,22 @@ IntGdiCreatePatternBrush(
       return NULL;
    }
 
-   BrushObject = BRUSHOBJ_AllocBrushWithHandle();
-   if (BrushObject == NULL)
+   pbrush = BRUSH_AllocBrushWithHandle();
+   if (pbrush == NULL)
    {
       NtGdiDeleteObject(hPattern);
       SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
       return NULL;
    }
-   hBrush = BrushObject->BaseObject.hHmgr;
+   hBrush = pbrush->BaseObject.hHmgr;
 
-   BrushObject->flAttrs |= GDIBRUSH_IS_BITMAP;
-   BrushObject->hbmPattern = hPattern;
+   pbrush->flAttrs |= GDIBRUSH_IS_BITMAP;
+   pbrush->hbmPattern = hPattern;
    /* FIXME: Fill in the rest of fields!!! */
 
    GDIOBJ_SetOwnership(hPattern, NULL);
 
-   BRUSHOBJ_UnlockBrush(BrushObject);
+   BRUSH_UnlockBrush(pbrush);
 
    return hBrush;
 }
@@ -468,22 +468,22 @@ IntGdiCreateSolidBrush(
    COLORREF Color)
 {
    HBRUSH hBrush;
-   PGDIBRUSHOBJ BrushObject;
+   PBRUSH pbrush;
 
-   BrushObject = BRUSHOBJ_AllocBrushWithHandle();
-   if (BrushObject == NULL)
+   pbrush = BRUSH_AllocBrushWithHandle();
+   if (pbrush == NULL)
    {
       SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
       return NULL;
    }
-   hBrush = BrushObject->BaseObject.hHmgr;
+   hBrush = pbrush->BaseObject.hHmgr;
 
-   BrushObject->flAttrs |= GDIBRUSH_IS_SOLID;
+   pbrush->flAttrs |= GDIBRUSH_IS_SOLID;
 
-   BrushObject->BrushAttr.lbColor = Color;
+   pbrush->BrushAttr.lbColor = Color;
    /* FIXME: Fill in the rest of fields!!! */
 
-   BRUSHOBJ_UnlockBrush(BrushObject);
+   BRUSH_UnlockBrush(pbrush);
 
    return hBrush;
 }
@@ -492,18 +492,18 @@ HBRUSH APIENTRY
 IntGdiCreateNullBrush(VOID)
 {
    HBRUSH hBrush;
-   PGDIBRUSHOBJ BrushObject;
+   PBRUSH pbrush;
 
-   BrushObject = BRUSHOBJ_AllocBrushWithHandle();
-   if (BrushObject == NULL)
+   pbrush = BRUSH_AllocBrushWithHandle();
+   if (pbrush == NULL)
    {
       SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
       return NULL;
    }
-   hBrush = BrushObject->BaseObject.hHmgr;
+   hBrush = pbrush->BaseObject.hHmgr;
 
-   BrushObject->flAttrs |= GDIBRUSH_IS_NULL;
-   BRUSHOBJ_UnlockBrush(BrushObject);
+   pbrush->flAttrs |= GDIBRUSH_IS_NULL;
+   BRUSH_UnlockBrush(pbrush);
 
    return hBrush;
 }
@@ -516,7 +516,7 @@ IntGdiSelectBrush(
 {
     PDC_ATTR pdcattr;
     HBRUSH hOrgBrush;
-    PGDIBRUSHOBJ pBrush;
+    PBRUSH pbrush;
     XLATEOBJ *XlateObj;
     BOOLEAN bFailed;
 
@@ -524,15 +524,15 @@ IntGdiSelectBrush(
 
     pdcattr = pDC->pdcattr;
 
-    pBrush = BRUSHOBJ_LockBrush(hBrush);
-    if (pBrush == NULL)
+    pbrush = BRUSH_LockBrush(hBrush);
+    if (pbrush == NULL)
     {
         SetLastWin32Error(ERROR_INVALID_HANDLE);
         return NULL;
     }
 
-    XlateObj = IntGdiCreateBrushXlate(pDC, pBrush, &bFailed);
-    BRUSHOBJ_UnlockBrush(pBrush);
+    XlateObj = IntGdiCreateBrushXlate(pDC, pbrush, &bFailed);
+    BRUSH_UnlockBrush(pbrush);
     if(bFailed)
     {
         return NULL;
@@ -689,14 +689,14 @@ NtGdiSetBrushOrg(HDC hDC, INT XOrg, INT YOrg, LPPOINT Point)
 VOID FASTCALL
 IntGdiSetSolidBrushColor(HBRUSH hBrush, COLORREF Color)
 {
-  PGDIBRUSHOBJ BrushObject;
+  PBRUSH pbrush;
 
-  BrushObject = BRUSHOBJ_LockBrush(hBrush);
-  if (BrushObject->flAttrs & GDIBRUSH_IS_SOLID)
+  pbrush = BRUSH_LockBrush(hBrush);
+  if (pbrush->flAttrs & GDIBRUSH_IS_SOLID)
   {
-      BrushObject->BrushAttr.lbColor = Color & 0xFFFFFF;
+      pbrush->BrushAttr.lbColor = Color & 0xFFFFFF;
   }
-  BRUSHOBJ_UnlockBrush(BrushObject);
+  BRUSH_UnlockBrush(pbrush);
 }
 
  /*

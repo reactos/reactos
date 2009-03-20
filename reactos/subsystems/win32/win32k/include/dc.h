@@ -130,8 +130,8 @@ typedef struct _DCLEVEL
   DWORD             unk1_00000000;
   HGDIOBJ           hdcSave;
   POINTL            ptlBrushOrigin;
-  PGDIBRUSHOBJ      pbrFill;
-  PGDIBRUSHOBJ      pbrLine;
+  PBRUSH      pbrFill;
+  PBRUSH      pbrLine;
   PVOID             plfnt; /* LFONTOBJ* (TEXTOBJ*) */
   HGDIOBJ           hPath; /* HPATH */
   FLONG             flPath;

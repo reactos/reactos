@@ -89,8 +89,8 @@ IntGdiLineTo(DC  *dc,
 {
     SURFACE *psurf;
     BOOL      Ret = TRUE;
-    PGDIBRUSHOBJ PenBrushObj;
-    GDIBRUSHINST PenBrushInst;
+    PBRUSH pbrushLine;
+    EBRUSHOBJ eboLine;
     RECTL     Bounds;
     POINT     Points[2];
     PDC_ATTR pdcattr = dc->pdcattr;
@@ -143,21 +143,21 @@ IntGdiLineTo(DC  *dc,
         Bounds.right = max(Points[0].x, Points[1].x);
         Bounds.bottom = max(Points[0].y, Points[1].y);
 
-        /* get BRUSHOBJ from current pen. */
-        PenBrushObj = PENOBJ_LockPen( pdcattr->hpen );
-        if (!PenBrushObj)
+        /* get BRUSH from current pen. */
+        pbrushLine = PENOBJ_LockPen( pdcattr->hpen );
+        if (!pbrushLine)
         {
             /* default to BLACK_PEN */
-            PenBrushObj = PENOBJ_LockPen(NtGdiGetStockObject(BLACK_PEN));
-            ASSERT(PenBrushObj);
+            pbrushLine = PENOBJ_LockPen(NtGdiGetStockObject(BLACK_PEN));
+            ASSERT(pbrushLine);
         }
 
-        if (!(PenBrushObj->flAttrs & GDIBRUSH_IS_NULL))
+        if (!(pbrushLine->flAttrs & GDIBRUSH_IS_NULL))
         {
-            IntGdiInitBrushInstance(&PenBrushInst, PenBrushObj, dc->rosdc.XlatePen);
+            IntGdiInitBrushInstance(&eboLine, pbrushLine, dc->rosdc.XlatePen);
             Ret = IntEngLineTo(&psurf->SurfObj,
                                dc->rosdc.CombinedClip,
-                               &PenBrushInst.BrushObject,
+                               &eboLine.BrushObject,
                                Points[0].x, Points[0].y,
                                Points[1].x, Points[1].y,
                                &Bounds,
@@ -165,7 +165,7 @@ IntGdiLineTo(DC  *dc,
         }
 
         SURFACE_UnlockSurface(psurf);
-        PENOBJ_UnlockPen( PenBrushObj );
+        PENOBJ_UnlockPen( pbrushLine );
     }
 
     if (Ret)
@@ -251,8 +251,8 @@ IntGdiPolyline(DC      *dc,
                int     Count)
 {
     SURFACE *psurf;
-    GDIBRUSHOBJ *PenBrushObj;
-    GDIBRUSHINST PenBrushInst;
+    BRUSH *pbrushLine;
+    EBRUSHOBJ eboLine;
     LPPOINT Points;
     BOOL Ret = TRUE;
     LONG i;
@@ -268,11 +268,11 @@ IntGdiPolyline(DC      *dc,
        IntGdiSelectPen(dc,pdcattr->hpen);
 
     /* Get BRUSHOBJ from current pen. */
-    PenBrushObj = PENOBJ_LockPen(pdcattr->hpen);
-    /* FIXME - PenBrushObj can be NULL! Don't assert here! */
-    ASSERT(PenBrushObj);
+    pbrushLine = PENOBJ_LockPen(pdcattr->hpen);
+    /* FIXME - pbrushLine can be NULL! Don't assert here! */
+    ASSERT(pbrushLine);
 
-    if (!(PenBrushObj->flAttrs & GDIBRUSH_IS_NULL))
+    if (!(pbrushLine->flAttrs & GDIBRUSH_IS_NULL))
     {
         Points = EngAllocMem(0, Count * sizeof(POINT), TAG_COORD);
         if (Points != NULL)
@@ -292,10 +292,10 @@ IntGdiPolyline(DC      *dc,
                 Points[i].y += dc->ptlDCOrig.y;
             }
 
-            IntGdiInitBrushInstance(&PenBrushInst, PenBrushObj, dc->rosdc.XlatePen);
+            IntGdiInitBrushInstance(&eboLine, pbrushLine, dc->rosdc.XlatePen);
             Ret = IntEngPolyline(&psurf->SurfObj,
                                  dc->rosdc.CombinedClip,
-                                 &PenBrushInst.BrushObject,
+                                 &eboLine.BrushObject,
                                  Points,
                                  Count,
                                  ROP2_TO_MIX(pdcattr->jROP2));
@@ -309,7 +309,7 @@ IntGdiPolyline(DC      *dc,
         }
     }
 
-    PENOBJ_UnlockPen(PenBrushObj);
+    PENOBJ_UnlockPen(pbrushLine);
 
     return Ret;
 }

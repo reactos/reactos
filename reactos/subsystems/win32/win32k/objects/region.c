@@ -2903,8 +2903,8 @@ IntGdiPaintRgn(
     PROSRGNDATA visrgn;
     CLIPOBJ* ClipRegion;
     BOOL bRet = FALSE;
-    PGDIBRUSHOBJ pBrush;
-    GDIBRUSHINST BrushInst;
+    PBRUSH pbrush;
+    EBRUSHOBJ eboFill;
     POINTL BrushOrigin;
     SURFACE *psurf;
     PDC_ATTR pdcattr;
@@ -2935,9 +2935,9 @@ IntGdiPaintRgn(
                                         visrgn->Buffer,
                                         &visrgn->rdh.rcBound );
     ASSERT(ClipRegion);
-    pBrush = BRUSHOBJ_LockBrush(pdcattr->hbrush);
-    ASSERT(pBrush);
-    IntGdiInitBrushInstance(&BrushInst, pBrush, dc->rosdc.XlateBrush);
+    pbrush = BRUSH_LockBrush(pdcattr->hbrush);
+    ASSERT(pbrush);
+    IntGdiInitBrushInstance(&eboFill, pbrush, dc->rosdc.XlateBrush);
 
     BrushOrigin.x = pdcattr->ptlBrushOrigin.x;
     BrushOrigin.y = pdcattr->ptlBrushOrigin.y;
@@ -2946,12 +2946,12 @@ IntGdiPaintRgn(
 
     bRet = IntEngPaint(&psurf->SurfObj,
                        ClipRegion,
-                       &BrushInst.BrushObject,
+                       &eboFill.BrushObject,
                        &BrushOrigin,
                        0xFFFF);//FIXME:don't know what to put here
 
     SURFACE_UnlockSurface(psurf);
-    BRUSHOBJ_UnlockBrush(pBrush);
+    BRUSH_UnlockBrush(pbrush);
     REGION_UnlockRgn(visrgn);
     NtGdiDeleteObject(tmpVisRgn);
 

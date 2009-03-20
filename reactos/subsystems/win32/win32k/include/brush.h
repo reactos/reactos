@@ -42,14 +42,14 @@ typedef struct
    DWORD *pStyle;
    ULONG dwStyleCount;
    ULONG Unknown6C;
-} GDIBRUSHOBJ, *PGDIBRUSHOBJ;
+} BRUSH, *PBRUSH;
 
 typedef struct
 {
    BRUSHOBJ BrushObject;
-   PGDIBRUSHOBJ GdiBrushObject;
+   PBRUSH GdiBrushObject;
    XLATEOBJ *XlateObject;
-} GDIBRUSHINST, *PGDIBRUSHINST;
+} EBRUSHOBJ, *PEBRUSHOBJ;
 
 /* GDI Brush Attributes */
 #define GDIBRUSH_NEED_FG_CLR            0x0001
@@ -71,14 +71,14 @@ typedef struct
 #define GDIBRUSH_CACHED_ENGINE          0x00040000
 #define GDIBRUSH_CACHED_IS_SOLID	0x80000000
 
-#define  BRUSHOBJ_AllocBrush() ((PGDIBRUSHOBJ) GDIOBJ_AllocObj(GDIObjType_BRUSH_TYPE))
-#define  BRUSHOBJ_AllocBrushWithHandle() ((PGDIBRUSHOBJ) GDIOBJ_AllocObjWithHandle (GDI_OBJECT_TYPE_BRUSH))
-#define  BRUSHOBJ_FreeBrush(pBrush) GDIOBJ_FreeObj((POBJ)pBrush, GDIObjType_BRUSH_TYPE)
-#define  BRUSHOBJ_FreeBrushByHandle(hBrush) GDIOBJ_FreeObjByHandle((HGDIOBJ)hBrush, GDI_OBJECT_TYPE_BRUSH)
-#define  BRUSHOBJ_LockBrush(hBrush) ((PGDIBRUSHOBJ)GDIOBJ_LockObj((HGDIOBJ)hBrush, GDI_OBJECT_TYPE_BRUSH))
-#define  BRUSHOBJ_UnlockBrush(pBrush) GDIOBJ_UnlockObjByPtr((POBJ)pBrush)
+#define  BRUSH_AllocBrush() ((PBRUSH) GDIOBJ_AllocObj(GDIObjType_BRUSH_TYPE))
+#define  BRUSH_AllocBrushWithHandle() ((PBRUSH) GDIOBJ_AllocObjWithHandle (GDI_OBJECT_TYPE_BRUSH))
+#define  BRUSH_FreeBrush(pBrush) GDIOBJ_FreeObj((POBJ)pBrush, GDIObjType_BRUSH_TYPE)
+#define  BRUSH_FreeBrushByHandle(hBrush) GDIOBJ_FreeObjByHandle((HGDIOBJ)hBrush, GDI_OBJECT_TYPE_BRUSH)
+#define  BRUSH_LockBrush(hBrush) ((PBRUSH)GDIOBJ_LockObj((HGDIOBJ)hBrush, GDI_OBJECT_TYPE_BRUSH))
+#define  BRUSH_UnlockBrush(pBrush) GDIOBJ_UnlockObjByPtr((POBJ)pBrush)
 
-INT FASTCALL BRUSH_GetObject (PGDIBRUSHOBJ GdiObject, INT Count, LPLOGBRUSH Buffer);
+INT FASTCALL BRUSH_GetObject (PBRUSH GdiObject, INT Count, LPLOGBRUSH Buffer);
 BOOL INTERNAL_CALL BRUSH_Cleanup(PVOID ObjectBody);
 
 #endif

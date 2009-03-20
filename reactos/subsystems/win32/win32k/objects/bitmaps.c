@@ -655,22 +655,22 @@ GdiSetPixelV(
     INT Y,
     COLORREF Color)
 {
-    HBRUSH NewBrush = NtGdiCreateSolidBrush(Color, NULL);
+    HBRUSH hbrush = NtGdiCreateSolidBrush(Color, NULL);
     HGDIOBJ OldBrush;
 
-    if (NewBrush == NULL)
+    if (hbrush == NULL)
         return(FALSE);
 
-    OldBrush = NtGdiSelectBrush(hDC, NewBrush);
+    OldBrush = NtGdiSelectBrush(hDC, hbrush);
     if (OldBrush == NULL)
     {
-        NtGdiDeleteObject(NewBrush);
+        NtGdiDeleteObject(hbrush);
         return(FALSE);
     }
 
     NtGdiPatBlt(hDC, X, Y, 1, 1, PATCOPY);
     NtGdiSelectBrush(hDC, OldBrush);
-    NtGdiDeleteObject(NewBrush);
+    NtGdiDeleteObject(hbrush);
 
     return TRUE;
 }
@@ -909,7 +909,7 @@ NtGdiSelectBitmap(
     PSURFACE psurfBmp;
     HRGN hVisRgn;
     BOOLEAN bFailed;
-    PGDIBRUSHOBJ pBrush;
+    PBRUSH pbrush;
 
     if (hDC == NULL || hBmp == NULL) return NULL;
 
@@ -962,26 +962,26 @@ NtGdiSelectBitmap(
     SURFACE_UnlockSurface(psurfBmp);
 
     /* Regenerate the XLATEOBJs. */
-    pBrush = BRUSHOBJ_LockBrush(pdcattr->hbrush);
-    if (pBrush)
+    pbrush = BRUSH_LockBrush(pdcattr->hbrush);
+    if (pbrush)
     {
         if (pDC->rosdc.XlateBrush)
         {
             EngDeleteXlate(pDC->rosdc.XlateBrush);
         }
-        pDC->rosdc.XlateBrush = IntGdiCreateBrushXlate(pDC, pBrush, &bFailed);
-        BRUSHOBJ_UnlockBrush(pBrush);
+        pDC->rosdc.XlateBrush = IntGdiCreateBrushXlate(pDC, pbrush, &bFailed);
+        BRUSH_UnlockBrush(pbrush);
     }
 
-    pBrush = PENOBJ_LockPen(pdcattr->hpen);
-    if (pBrush)
+    pbrush = PENOBJ_LockPen(pdcattr->hpen);
+    if (pbrush)
     {
         if (pDC->rosdc.XlatePen)
         {
             EngDeleteXlate(pDC->rosdc.XlatePen);
         }
-        pDC->rosdc.XlatePen = IntGdiCreateBrushXlate(pDC, pBrush, &bFailed);
-        PENOBJ_UnlockPen(pBrush);
+        pDC->rosdc.XlatePen = IntGdiCreateBrushXlate(pDC, pbrush, &bFailed);
+        PENOBJ_UnlockPen(pbrush);
     }
 
     DC_UnlockDc(pDC);

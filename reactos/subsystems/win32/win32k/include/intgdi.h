@@ -9,14 +9,14 @@ extern HDC hSystemBM;
 extern HSEMAPHORE hsemDriverMgmt;
 
 XLATEOBJ* FASTCALL
-IntGdiCreateBrushXlate(PDC Dc, GDIBRUSHOBJ *BrushObj, BOOLEAN *Failed);
+IntGdiCreateBrushXlate(PDC Dc, BRUSH *BrushObj, BOOLEAN *Failed);
 
 XLATEOBJ*
 FASTCALL
 IntCreateXlateForBlt(PDC pDCDest, PDC pDCSrc, SURFACE* pDestSurf, SURFACE* pSrcSurf);
 
 VOID FASTCALL
-IntGdiInitBrushInstance(GDIBRUSHINST *BrushInst, PGDIBRUSHOBJ BrushObj, XLATEOBJ *XlateObj);
+IntGdiInitBrushInstance(EBRUSHOBJ *BrushInst, PBRUSH BrushObj, XLATEOBJ *XlateObj);
 
 HBRUSH APIENTRY
 IntGdiCreateDIBBrush(
@@ -49,7 +49,7 @@ IntPatBlt(
    INT Width,
    INT Height,
    DWORD ROP,
-   PGDIBRUSHOBJ BrushObj);
+   PBRUSH BrushObj);
 
 VOID FASTCALL
 IntGdiSetSolidBrushColor(HBRUSH hBrush, COLORREF Color);
