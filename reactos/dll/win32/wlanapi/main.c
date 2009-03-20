@@ -20,6 +20,7 @@
 
 
 /* INCLUDES ****************************************************************/
+#define WIN32_NO_STATUS
 #include <windows.h>
 #include "wlansvc_c.h"
 
@@ -37,9 +38,9 @@ WLANSVC_HANDLE_bind(WLANSVC_HANDLE szMachineName)
     TRACE("RPC_SERVICE_STATUS_HANDLE_bind() called\n");
 
     Status = RpcStringBindingComposeW(NULL,
-                                      L"ncacn_np",
+                                      L"ncalrpc",
                                       szMachineName,
-                                      L"\\pipe\\trkwks",
+                                      L"wlansvc",
                                       NULL,
                                       &pszStringBinding);
     if (Status != RPC_S_OK)
@@ -102,13 +103,14 @@ WlanOpenHandle(IN DWORD dwClientVersion,
                OUT HANDLE *phClientHandle)
 {
     DWORD dwError = ERROR_SUCCESS;
+    WCHAR szDummy[] = L"localhost";
 
     if ((pReserved != NULL) || (pdwNegotiatedVersion == NULL) || (phClientHandle == NULL))
         return ERROR_INVALID_PARAMETER;
 
     RpcTryExcept
     {
-        dwError = _RpcOpenHandle(NULL,
+        dwError = _RpcOpenHandle(szDummy,
                                 dwClientVersion,
                                 pdwNegotiatedVersion,
                                 (WLANSVC_RPC_HANDLE) phClientHandle);
