@@ -22,25 +22,6 @@
 #define NDEBUG
 #include <debug.h>
 
-/*
- * a couple macros to fill a single pixel or a line
- */
-#define PUTPIXEL(x,y,BrushInst)        \
-  ret = ret && IntEngLineTo(&psurf->SurfObj, \
-       dc->CombinedClip,                         \
-       &BrushInst.BrushObject,                   \
-       x, y, (x)+1, y,                           \
-       &RectBounds,                              \
-       ROP2_TO_MIX(Dc_Attr->jROP2));
-
-#define PUTLINE(x1,y1,x2,y2,BrushInst) \
-  ret = ret && IntEngLineTo(&psurf->SurfObj, \
-       dc->CombinedClip,                         \
-       &BrushInst.BrushObject,                   \
-       x1, y1, x2, y2,                           \
-       &RectBounds,                              \
-       ROP2_TO_MIX(Dc_Attr->jROP2));
-
 #define Rsin(d) ((d) == 0.0 ? 0.0 : ((d) == 90.0 ? 1.0 : sin(d*M_PI/180.0)))
 #define Rcos(d) ((d) == 0.0 ? 1.0 : ((d) == 90.0 ? 0.0 : cos(d*M_PI/180.0)))
 
@@ -186,7 +167,7 @@ IntGdiPolyPolygon(DC      *dc,
                   PULONG  PolyCounts,
                   int     Count)
 {
-    if (PATH_IsPathOpen(dc->DcLevel))
+    if (PATH_IsPathOpen(dc->dclevel))
         return PATH_PolyPolygon ( dc, Points, (PINT)PolyCounts, Count);
 
     while (--Count >=0)
@@ -247,7 +228,7 @@ NtGdiEllipse(
        return TRUE;
     }
 
-    if (PATH_IsPathOpen(dc->DcLevel))
+    if (PATH_IsPathOpen(dc->dclevel))
     {
         ret = PATH_Ellipse(dc, Left, Top, Right, Bottom);
         DC_UnlockDc(dc);
@@ -554,7 +535,7 @@ IntRectangle(PDC dc,
     pdcattr = dc->pdcattr;
 
     /* Do we rotate or shear? */
-    if (!(dc->DcLevel.mxWorldToDevice.flAccel & MX_SCALE))
+    if (!(dc->dclevel.mxWorldToDevice.flAccel & MX_SCALE))
     {
 
         POINTL DestCoords[4];
@@ -567,7 +548,7 @@ IntRectangle(PDC dc,
         return IntGdiPolyPolygon(dc, DestCoords, &PolyCounts, 1);
     }
     // Rectangle Path only.
-    if ( PATH_IsPathOpen(dc->DcLevel) )
+    if ( PATH_IsPathOpen(dc->dclevel) )
     {
         return PATH_Rectangle ( dc, LeftRect, TopRect, RightRect, BottomRect );
     }
@@ -740,7 +721,7 @@ IntRoundRect(
 
     ASSERT ( dc ); // caller's responsibility to set this up
 
-    if ( PATH_IsPathOpen(dc->DcLevel) )
+    if ( PATH_IsPathOpen(dc->dclevel) )
         return PATH_RoundRect ( dc, Left, Top, Right, Bottom,
                                 xCurveDiameter, yCurveDiameter );
 

@@ -114,8 +114,8 @@ typedef struct _DC
   FLONG       flGraphicsCaps;
   FLONG       flGraphicsCaps2;
   PDC_ATTR    pdcattr;
-  DCLEVEL     DcLevel;
-  DC_ATTR     Dc_Attr;
+  DCLEVEL     dclevel;
+  DC_ATTR     dcattr;
   HDC         hdcNext;
   HDC         hdcPrev;
   RECTL       erclClip;

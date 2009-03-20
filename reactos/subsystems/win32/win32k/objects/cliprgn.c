@@ -429,30 +429,30 @@ IntGdiSetMetaRgn(PDC pDC)
   INT Ret = ERROR;
   PROSRGNDATA TempRgn;
 
-  if ( pDC->DcLevel.prgnMeta )
+  if ( pDC->dclevel.prgnMeta )
   {
-     if ( pDC->DcLevel.prgnClip )
+     if ( pDC->dclevel.prgnClip )
      {
         TempRgn = IntGdiCreateRectRgn(0,0,0,0);
         if (TempRgn)
         {        
            Ret = IntGdiCombineRgn( TempRgn,
-                     pDC->DcLevel.prgnMeta,
-                     pDC->DcLevel.prgnClip,
+                     pDC->dclevel.prgnMeta,
+                     pDC->dclevel.prgnClip,
                                    RGN_AND);
            if ( Ret )
            {
-              GDIOBJ_ShareUnlockObjByPtr(pDC->DcLevel.prgnMeta);
-              if (!((PROSRGNDATA)pDC->DcLevel.prgnMeta)->BaseObject.ulShareCount)
-                 REGION_Delete(pDC->DcLevel.prgnMeta);
+              GDIOBJ_ShareUnlockObjByPtr(pDC->dclevel.prgnMeta);
+              if (!((PROSRGNDATA)pDC->dclevel.prgnMeta)->BaseObject.ulShareCount)
+                 REGION_Delete(pDC->dclevel.prgnMeta);
 
-              pDC->DcLevel.prgnMeta = TempRgn;
+              pDC->dclevel.prgnMeta = TempRgn;
 
-              GDIOBJ_ShareUnlockObjByPtr(pDC->DcLevel.prgnClip);
-              if (!((PROSRGNDATA)pDC->DcLevel.prgnClip)->BaseObject.ulShareCount)
-                 REGION_Delete(pDC->DcLevel.prgnClip);
+              GDIOBJ_ShareUnlockObjByPtr(pDC->dclevel.prgnClip);
+              if (!((PROSRGNDATA)pDC->dclevel.prgnClip)->BaseObject.ulShareCount)
+                 REGION_Delete(pDC->dclevel.prgnClip);
 
-              pDC->DcLevel.prgnClip = NULL;
+              pDC->dclevel.prgnClip = NULL;
 
               IntGdiReleaseRaoRgn(pDC);
            }
@@ -461,15 +461,15 @@ IntGdiSetMetaRgn(PDC pDC)
         }
      }
      else
-        Ret = REGION_Complexity(pDC->DcLevel.prgnMeta);
+        Ret = REGION_Complexity(pDC->dclevel.prgnMeta);
   }
   else
   {
-     if ( pDC->DcLevel.prgnClip )
+     if ( pDC->dclevel.prgnClip )
      {
-        Ret = REGION_Complexity(pDC->DcLevel.prgnClip);
-        pDC->DcLevel.prgnMeta = pDC->DcLevel.prgnClip;
-        pDC->DcLevel.prgnClip = NULL;
+        Ret = REGION_Complexity(pDC->dclevel.prgnClip);
+        pDC->dclevel.prgnMeta = pDC->dclevel.prgnClip;
+        pDC->dclevel.prgnClip = NULL;
      }
      else 
        Ret = SIMPLEREGION;
@@ -513,23 +513,23 @@ NEW_CLIPPING_UpdateGCRegion(PDC pDC)
      pDC->prgnRao = IntGdiCreateRectRgn(0,0,0,0);
   }
   
-  if (pDC->DcLevel.prgnMeta && pDC->DcLevel.prgnClip)
+  if (pDC->dclevel.prgnMeta && pDC->dclevel.prgnClip)
   {
      IntGdiCombineRgn( pDC->prgnAPI,
-              pDC->DcLevel.prgnClip,
-              pDC->DcLevel.prgnMeta,
+              pDC->dclevel.prgnClip,
+              pDC->dclevel.prgnMeta,
                             RGN_AND);
   }
   else
   {
-     if (pDC->DcLevel.prgnClip)
+     if (pDC->dclevel.prgnClip)
         IntGdiCombineRgn( pDC->prgnAPI,
-                 pDC->DcLevel.prgnClip,
+                 pDC->dclevel.prgnClip,
                                   NULL,
                               RGN_COPY);
-     else if (pDC->DcLevel.prgnMeta)
+     else if (pDC->dclevel.prgnMeta)
         IntGdiCombineRgn( pDC->prgnAPI,
-                 pDC->DcLevel.prgnMeta,
+                 pDC->dclevel.prgnMeta,
                                   NULL,
                               RGN_COPY);
   }

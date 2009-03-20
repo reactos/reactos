@@ -122,7 +122,7 @@ IntAnimatePalette(HPALETTE hPal,
         dc = DC_LockDc(hDC);
         if (NULL != dc)
         {
-            if (dc->DcLevel.hpal == hPal)
+            if (dc->dclevel.hpal == hPal)
             {
                 DC_UnlockDc(dc);
                 IntGdiRealizePalette(hDC);
@@ -301,7 +301,7 @@ COLORREF APIENTRY NtGdiGetNearestColor(HDC hDC, COLORREF Color)
    dc = DC_LockDc(hDC);
    if (NULL != dc)
    {
-      HPALETTE hpal = dc->DcLevel.hpal;
+      HPALETTE hpal = dc->dclevel.hpal;
       palGDI = (PPALGDI) PALETTE_LockPalette(hpal);
       if (!palGDI)
       {
@@ -431,7 +431,7 @@ IntGetSystemPaletteEntries(HDC  hDC,
         return 0;
     }
 
-    palGDI = PALETTE_LockPalette(dc->DcLevel.hpal);
+    palGDI = PALETTE_LockPalette(dc->dclevel.hpal);
     if (palGDI != NULL)
     {
         if (pe != NULL)
@@ -499,7 +499,7 @@ UINT FASTCALL IntGdiRealizePalette(HDC hDC)
   if (!dc) return 0;
 
   systemPalette = NtGdiGetStockObject(DEFAULT_PALETTE);
-  palGDI = PALETTE_LockPalette(dc->DcLevel.hpal);
+  palGDI = PALETTE_LockPalette(dc->dclevel.hpal);
 
   if (palGDI == NULL)
   {
@@ -543,7 +543,7 @@ UINT FASTCALL IntGdiRealizePalette(HDC hDC)
     {
         EngDeleteXlate(palGDI->logicalToSystem);
     }
-    palGDI->logicalToSystem = IntEngCreateXlate(sysMode, palMode, systemPalette, dc->DcLevel.hpal);
+    palGDI->logicalToSystem = IntEngCreateXlate(sysMode, palMode, systemPalette, dc->dclevel.hpal);
   }
 
   DC_UnlockDc(dc);

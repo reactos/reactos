@@ -214,12 +214,12 @@ NtGdiSetColorSpace(IN HDC hdc,
      return FALSE;
   }
   
-  if (pDC->DcLevel.pColorSpace)
+  if (pDC->dclevel.pColorSpace)
   {
-     GDIOBJ_ShareUnlockObjByPtr((POBJ) pDC->DcLevel.pColorSpace);
+     GDIOBJ_ShareUnlockObjByPtr((POBJ) pDC->dclevel.pColorSpace);
   }
 
-  pDC->DcLevel.pColorSpace = pCS;
+  pDC->dclevel.pColorSpace = pCS;
   pdcattr->hColorSpace = hColorSpace;
 
   COLORSPACEOBJ_UnlockCS(pCS);

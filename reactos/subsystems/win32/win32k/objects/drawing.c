@@ -1287,8 +1287,8 @@ IntFillArc( PDC dc,
   }
   // Sort out alignment here.
   ret = app_fill_arc(dc, rect( XLeft, YLeft, Width, Height),
-                    (dc->DcLevel.flPath & DCPATH_CLOCKWISE) ? -End : -Start,
-                    (dc->DcLevel.flPath & DCPATH_CLOCKWISE) ? -Start : -End,
+                    (dc->dclevel.flPath & DCPATH_CLOCKWISE) ? -End : -Start,
+                    (dc->dclevel.flPath & DCPATH_CLOCKWISE) ? -Start : -End,
                      FillBrushObj, Chord);
 
   BRUSHOBJ_UnlockBrush(FillBrushObj);    
@@ -1312,8 +1312,8 @@ IntDrawArc( PDC dc,
   BOOL Chord = (arctype == GdiTypeChord);
   // Sort out alignment here.
   return app_draw_arc(dc, rect( XLeft, YLeft, Width, Height),
-                     (dc->DcLevel.flPath & DCPATH_CLOCKWISE) ? -End : -Start,
-                     (dc->DcLevel.flPath & DCPATH_CLOCKWISE) ? -Start : -End,
+                     (dc->dclevel.flPath & DCPATH_CLOCKWISE) ? -End : -Start,
+                     (dc->dclevel.flPath & DCPATH_CLOCKWISE) ? -Start : -End,
                       PenBrushObj, Chord);
 }
 

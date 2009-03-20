@@ -54,7 +54,7 @@ IntGdiMoveToEx(DC      *dc,
     CoordLPtoDP(dc, &pdcattr->ptfxCurrent); // Update fx
     pdcattr->ulDirty_ &= ~(DIRTY_PTLCURRENT|DIRTY_PTFXCURRENT|DIRTY_STYLESTATE);
 
-    PathIsOpen = PATH_IsPathOpen(dc->DcLevel);
+    PathIsOpen = PATH_IsPathOpen(dc->dclevel);
 
     if ( PathIsOpen )
         return PATH_MoveTo ( dc );
@@ -96,7 +96,7 @@ IntGdiLineTo(DC  *dc,
     PDC_ATTR pdcattr = dc->pdcattr;
 
 
-    if (PATH_IsPathOpen(dc->DcLevel))
+    if (PATH_IsPathOpen(dc->dclevel))
     {
         Ret = PATH_LineTo(dc, XEnd, YEnd);
         if (Ret)
@@ -187,7 +187,7 @@ IntGdiPolyBezier(DC      *dc,
 {
     BOOL ret = FALSE; // default to FAILURE
 
-    if ( PATH_IsPathOpen(dc->DcLevel) )
+    if ( PATH_IsPathOpen(dc->dclevel) )
     {
         return PATH_PolyBezier ( dc, pt, Count );
     }
@@ -216,7 +216,7 @@ IntGdiPolyBezierTo(DC      *dc,
     BOOL ret = FALSE; // default to failure
     PDC_ATTR pdcattr = dc->pdcattr;
 
-    if ( PATH_IsPathOpen(dc->DcLevel) )
+    if ( PATH_IsPathOpen(dc->dclevel) )
         ret = PATH_PolyBezierTo ( dc, pt, Count );
     else /* We'll do it using PolyBezier */
     {
@@ -258,7 +258,7 @@ IntGdiPolyline(DC      *dc,
     LONG i;
     PDC_ATTR pdcattr = dc->pdcattr;
 
-    if (PATH_IsPathOpen(dc->DcLevel))
+    if (PATH_IsPathOpen(dc->dclevel))
         return PATH_Polyline(dc, pt, Count);
 
     if (pdcattr->ulDirty_ & DC_BRUSH_DIRTY)
@@ -322,7 +322,7 @@ IntGdiPolylineTo(DC      *dc,
     BOOL ret = FALSE; // default to failure
     PDC_ATTR pdcattr = dc->pdcattr;
 
-    if (PATH_IsPathOpen(dc->DcLevel))
+    if (PATH_IsPathOpen(dc->dclevel))
     {
         ret = PATH_PolylineTo(dc, pt, Count);
     }
@@ -366,7 +366,7 @@ IntGdiPolyPolyline(DC      *dc,
     pts = pt;
     pc = PolyPoints;
 
-    if (PATH_IsPathOpen(dc->DcLevel))
+    if (PATH_IsPathOpen(dc->dclevel))
         return PATH_PolyPolyline( dc, pt, PolyPoints, Count );
 
     for (i = 0; i < Count; i++)
@@ -475,9 +475,9 @@ NtGdiPolyDraw(
 
             if ( lpbTypes[i] & PT_CLOSEFIGURE )
             {
-                if ( PATH_IsPathOpen(dc->DcLevel) )
+                if ( PATH_IsPathOpen(dc->dclevel) )
                 {
-                    pPath = PATH_LockPath( dc->DcLevel.hPath );
+                    pPath = PATH_LockPath( dc->dclevel.hPath );
                     if (pPath)
                     {
                        IntGdiCloseFigure( pPath );

@@ -1500,7 +1500,7 @@ ftGdiGetGlyphOutline(
 
     pdcattr = dc->pdcattr;
 
-    MatrixS2XForm(&xForm, &dc->DcLevel.mxWorldToDevice);
+    MatrixS2XForm(&xForm, &dc->dclevel.mxWorldToDevice);
     eM11 = xForm.eM11;
 
     hFont = pdcattr->hlfntNew;
@@ -3178,7 +3178,7 @@ GreExtTextOutW(
 
     DxShift = fuOptions & ETO_PDY ? 1 : 0;
 
-    if (PATH_IsPathOpen(dc->DcLevel))
+    if (PATH_IsPathOpen(dc->dclevel))
     {
         if (!PATH_ExtTextOut( dc,
                               XStart,

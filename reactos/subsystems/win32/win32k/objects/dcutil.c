@@ -110,9 +110,9 @@ VOID
 CopytoUserDcAttr(PDC dc, PDC_ATTR pdcattr)
 {
   NTSTATUS Status = STATUS_SUCCESS;
-  dc->Dc_Attr.mxWorldToDevice = dc->DcLevel.mxWorldToDevice;
-  dc->Dc_Attr.mxDeviceToWorld = dc->DcLevel.mxDeviceToWorld;
-  dc->Dc_Attr.mxWorldToPage = dc->DcLevel.mxWorldToPage;
+  dc->dcattr.mxWorldToDevice = dc->dclevel.mxWorldToDevice;
+  dc->dcattr.mxDeviceToWorld = dc->dclevel.mxDeviceToWorld;
+  dc->dcattr.mxWorldToPage = dc->dclevel.mxWorldToPage;
 
   _SEH2_TRY
   {
@@ -120,7 +120,7 @@ CopytoUserDcAttr(PDC dc, PDC_ATTR pdcattr)
              sizeof(DC_ATTR),
                            1);
       RtlCopyMemory( pdcattr,
-                &dc->Dc_Attr,
+                &dc->dcattr,
              sizeof(DC_ATTR));
   }
   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -138,7 +138,7 @@ DCU_SyncDcAttrtoUser(PDC dc)
 {
   PDC_ATTR pdcattr = dc->pdcattr;
 
-  if (pdcattr == &dc->Dc_Attr) return TRUE; // No need to copy self.
+  if (pdcattr == &dc->dcattr) return TRUE; // No need to copy self.
   ASSERT(pdcattr);
   CopytoUserDcAttr( dc, pdcattr);
   return TRUE;

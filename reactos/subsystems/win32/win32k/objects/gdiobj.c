@@ -1562,7 +1562,7 @@ IntGdiSetDCOwnerEx( HDC hDC, DWORD OwnerMask, BOOL NoSetBrush)
   if ((OwnerMask == GDI_OBJ_HMGR_PUBLIC) || OwnerMask == GDI_OBJ_HMGR_NONE)
   {
      pDC = DC_LockDc ( hDC );
-     MmCopyFromCaller(&pDC->Dc_Attr, pDC->pdcattr, sizeof(DC_ATTR));
+     MmCopyFromCaller(&pDC->dcattr, pDC->pdcattr, sizeof(DC_ATTR));
      DC_UnlockDc( pDC );
 
      DC_FreeDcAttr( hDC );         // Free the dcattr!
@@ -1574,7 +1574,7 @@ IntGdiSetDCOwnerEx( HDC hDC, DWORD OwnerMask, BOOL NoSetBrush)
   if (OwnerMask == GDI_OBJ_HMGR_POWNED)
   {
      pDC = DC_LockDc ( hDC );
-     ASSERT(pDC->pdcattr == &pDC->Dc_Attr);
+     ASSERT(pDC->pdcattr == &pDC->dcattr);
      DC_UnlockDc( pDC );
 
      if (!DC_SetOwnership( hDC, PsGetCurrentProcess() )) return Ret;
@@ -1587,8 +1587,8 @@ IntGdiSetDCOwnerEx( HDC hDC, DWORD OwnerMask, BOOL NoSetBrush)
   if ((OwnerMask != GDI_OBJ_HMGR_NONE) && !NoSetBrush)
   {
      pDC = DC_LockDc ( hDC );
-     if (IntGdiSetBrushOwner((PGDIBRUSHOBJ)pDC->DcLevel.pbrFill, OwnerMask))
-         IntGdiSetBrushOwner((PGDIBRUSHOBJ)pDC->DcLevel.pbrLine, OwnerMask);
+     if (IntGdiSetBrushOwner((PGDIBRUSHOBJ)pDC->dclevel.pbrFill, OwnerMask))
+         IntGdiSetBrushOwner((PGDIBRUSHOBJ)pDC->dclevel.pbrLine, OwnerMask);
      DC_UnlockDc( pDC );
   }
   return TRUE;

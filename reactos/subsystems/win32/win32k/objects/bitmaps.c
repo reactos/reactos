@@ -940,7 +940,7 @@ NtGdiSelectBitmap(
     pDC->rosdc.hBitmap = hBmp;
 
     // If Info DC this is zero and pSurface is moved to DC->pSurfInfo.
-    pDC->DcLevel.pSurface = psurfBmp;
+    pDC->dclevel.pSurface = psurfBmp;
     psurfBmp->hDC = hDC;
 
     // if we're working with a DIB, get the palette 

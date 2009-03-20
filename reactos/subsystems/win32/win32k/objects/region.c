@@ -2706,10 +2706,10 @@ NtGdiGetRandomRgn(
     {
     case CLIPRGN:
         hSrc = pDC->rosdc.hClipRgn;
-//        if (pDC->DcLevel.prgnClip) hSrc = ((PROSRGNDATA)pDC->DcLevel.prgnClip)->BaseObject.hHmgr;
+//        if (pDC->dclevel.prgnClip) hSrc = ((PROSRGNDATA)pDC->dclevel.prgnClip)->BaseObject.hHmgr;
         break;
     case METARGN:
-        if (pDC->DcLevel.prgnMeta) hSrc = ((PROSRGNDATA)pDC->DcLevel.prgnMeta)->BaseObject.hHmgr;
+        if (pDC->dclevel.prgnMeta) hSrc = ((PROSRGNDATA)pDC->dclevel.prgnMeta)->BaseObject.hHmgr;
         break;
     case APIRGN:
         DPRINT1("hMetaRgn not implemented\n");
@@ -2717,8 +2717,8 @@ NtGdiGetRandomRgn(
         if (!hSrc) hSrc = pDC->rosdc.hClipRgn;
         //if (!hSrc) rgn = dc->hMetaRgn;
 //        if (pDC->prgnAPI) hSrc = ((PROSRGNDATA)pDC->prgnAPI)->BaseObject.hHmgr;
-//        else if (pDC->DcLevel.prgnClip) hSrc = ((PROSRGNDATA)pDC->DcLevel.prgnClip)->BaseObject.hHmgr;
-//        else if (pDC->DcLevel.prgnMeta) hSrc = ((PROSRGNDATA)pDC->DcLevel.prgnMeta)->BaseObject.hHmgr;
+//        else if (pDC->dclevel.prgnClip) hSrc = ((PROSRGNDATA)pDC->dclevel.prgnClip)->BaseObject.hHmgr;
+//        else if (pDC->dclevel.prgnMeta) hSrc = ((PROSRGNDATA)pDC->dclevel.prgnMeta)->BaseObject.hHmgr;
         break;
     case SYSRGN:
         hSrc = pDC->rosdc.hVisRgn;

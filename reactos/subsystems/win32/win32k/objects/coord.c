@@ -144,23 +144,23 @@ IntGdiModifyWorldTransform(PDC pDc,
             xformWorld2Wnd.eM22 = 1.0f;
             xformWorld2Wnd.eDx  = 0.0f;
             xformWorld2Wnd.eDy  = 0.0f;
-            XForm2MatrixS(&pDc->DcLevel.mxWorldToPage, &xformWorld2Wnd);
+            XForm2MatrixS(&pDc->dclevel.mxWorldToPage, &xformWorld2Wnd);
             break;
 
         case MWT_LEFTMULTIPLY:
-            MatrixS2XForm(&xformWorld2Wnd, &pDc->DcLevel.mxWorldToPage);
+            MatrixS2XForm(&xformWorld2Wnd, &pDc->dclevel.mxWorldToPage);
             IntGdiCombineTransform(&xformWorld2Wnd, lpXForm, &xformWorld2Wnd);
-            XForm2MatrixS(&pDc->DcLevel.mxWorldToPage, &xformWorld2Wnd);
+            XForm2MatrixS(&pDc->dclevel.mxWorldToPage, &xformWorld2Wnd);
             break;
 
         case MWT_RIGHTMULTIPLY:
-            MatrixS2XForm(&xformWorld2Wnd, &pDc->DcLevel.mxWorldToPage);
+            MatrixS2XForm(&xformWorld2Wnd, &pDc->dclevel.mxWorldToPage);
             IntGdiCombineTransform(&xformWorld2Wnd, &xformWorld2Wnd, lpXForm);
-            XForm2MatrixS(&pDc->DcLevel.mxWorldToPage, &xformWorld2Wnd);
+            XForm2MatrixS(&pDc->dclevel.mxWorldToPage, &xformWorld2Wnd);
             break;
 
         case MWT_MAX+1: // Must be MWT_SET????
-            XForm2MatrixS(&pDc->DcLevel.mxWorldToPage, lpXForm); // Do it like Wine.
+            XForm2MatrixS(&pDc->dclevel.mxWorldToPage, lpXForm); // Do it like Wine.
             break;
 
         default:
@@ -198,7 +198,7 @@ NtGdiGetTransform(HDC  hDC,
         switch (iXform)
         {
             case GdiWorldSpaceToPageSpace:
-                MatrixS2XForm(XForm, &dc->DcLevel.mxWorldToPage);
+                MatrixS2XForm(XForm, &dc->dclevel.mxWorldToPage);
                 break;
             default:
                 break;
@@ -897,10 +897,10 @@ NtGdiSetLayout(
 
     if (!(pdcattr->flTextAlign & TA_CENTER)) pdcattr->flTextAlign |= TA_RIGHT;
 
-    if (dc->DcLevel.flPath & DCPATH_CLOCKWISE)
-        dc->DcLevel.flPath &= ~DCPATH_CLOCKWISE;
+    if (dc->dclevel.flPath & DCPATH_CLOCKWISE)
+        dc->dclevel.flPath &= ~DCPATH_CLOCKWISE;
     else
-        dc->DcLevel.flPath |= DCPATH_CLOCKWISE;
+        dc->dclevel.flPath |= DCPATH_CLOCKWISE;
 
     pdcattr->flXform |= (PAGE_EXTENTS_CHANGED |
                          INVALIDATE_ATTRIBUTES |

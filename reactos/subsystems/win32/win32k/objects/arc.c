@@ -207,7 +207,7 @@ IntGdiArcInternal(
 
   if ((LeftRect == RightRect) || (TopRect == BottomRect)) return TRUE;
 
-  if (PATH_IsPathOpen(dc->DcLevel))
+  if (PATH_IsPathOpen(dc->dclevel))
   {
      return PATH_Arc( dc,
                 LeftRect,
@@ -231,7 +231,7 @@ IntGdiArcInternal(
 
   if (arctype == GdiTypeArcTo)
   {
-    if (dc->DcLevel.flPath & DCPATH_CLOCKWISE)
+    if (dc->dclevel.flPath & DCPATH_CLOCKWISE)
        IntGdiLineTo(dc, XEndArc, YEndArc);
     else
        IntGdiLineTo(dc, XStartArc, YStartArc);
@@ -250,7 +250,7 @@ IntGdiArcInternal(
 
   if (arctype == GdiTypeArcTo)
   {
-     if (dc->DcLevel.flPath & DCPATH_CLOCKWISE)
+     if (dc->dclevel.flPath & DCPATH_CLOCKWISE)
        IntGdiMoveToEx(dc, XStartArc, YStartArc, NULL);
      else
        IntGdiMoveToEx(dc, XEndArc, YEndArc, NULL);
@@ -277,11 +277,11 @@ IntGdiAngleArc( PDC pDC,
   x1 = x + (INT)(cos((eStartAngle/360)*(M_PI*2)) * dwRadius);
   y1 = y - (INT)(sin((eStartAngle/360)*(M_PI*2)) * dwRadius);
 
-  arcdir = pDC->DcLevel.flPath & DCPATH_CLOCKWISE;
+  arcdir = pDC->dclevel.flPath & DCPATH_CLOCKWISE;
   if (eSweepAngle >= 0)
-     pDC->DcLevel.flPath &= ~DCPATH_CLOCKWISE;
+     pDC->dclevel.flPath &= ~DCPATH_CLOCKWISE;
   else
-     pDC->DcLevel.flPath |= DCPATH_CLOCKWISE;
+     pDC->dclevel.flPath |= DCPATH_CLOCKWISE;
 
   result = IntGdiArcInternal( GdiTypeArcTo,
                                        pDC,
@@ -294,7 +294,7 @@ IntGdiAngleArc( PDC pDC,
                                         x2,
                                         y2 );
 
-  pDC->DcLevel.flPath |= (arcdir & DCPATH_CLOCKWISE);
+  pDC->dclevel.flPath |= (arcdir & DCPATH_CLOCKWISE);
 
   if (result)
   {
