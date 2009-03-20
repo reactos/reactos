@@ -722,7 +722,7 @@ NdisMGetDmaAlignment(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 NDIS_STATUS
 EXPORT
@@ -734,9 +734,44 @@ NdisMRegisterDmaChannel(
     IN  PNDIS_DMA_DESCRIPTION   DmaDescription,
     IN  ULONG                   MaximumLength)
 {
-    UNIMPLEMENTED
+  PLOGICAL_ADAPTER Adapter = (PLOGICAL_ADAPTER)MiniportAdapterHandle;
+  DEVICE_DESCRIPTION DeviceDesc;
+  ULONG MapRegisters;
 
-  return NDIS_STATUS_FAILURE;
+  NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
+  if (Adapter->NdisMiniportBlock.SystemAdapterObject)
+  {
+      NDIS_DbgPrint(MIN_TRACE,("Using existing DMA adapter\n"));
+      *MiniportDmaHandle = &Adapter->NdisMiniportBlock;
+      return NDIS_STATUS_SUCCESS;
+  }
+
+  RtlZeroMemory(&DeviceDesc, sizeof(DEVICE_DESCRIPTION));
+
+  DeviceDesc.Version = DEVICE_DESCRIPTION_VERSION;
+  DeviceDesc.Master = (Adapter->NdisMiniportBlock.Flags & NDIS_ATTRIBUTE_BUS_MASTER);
+  DeviceDesc.ScatterGather = FALSE; //Is this correct?
+  DeviceDesc.DemandMode = DmaDescription->DemandMode;
+  DeviceDesc.AutoInitialize = DmaDescription->AutoInitialize;
+  DeviceDesc.Dma32BitAddresses = Dma32BitAddresses;
+  DeviceDesc.Dma64BitAddresses = !Dma32BitAddresses; //Is this correct?
+  DeviceDesc.BusNumber = Adapter->NdisMiniportBlock.BusNumber;
+  DeviceDesc.DmaChannel = DmaDescription->DmaChannel;
+  DeviceDesc.InterfaceType = Adapter->NdisMiniportBlock.BusType;
+  DeviceDesc.DmaWidth = DmaDescription->DmaWidth;
+  DeviceDesc.DmaSpeed = DmaDescription->DmaSpeed;
+  DeviceDesc.MaximumLength = MaximumLength;
+
+  Adapter->NdisMiniportBlock.SystemAdapterObject = 
+         IoGetDmaAdapter(Adapter->NdisMiniportBlock.PhysicalDeviceObject, &DeviceDesc, &MapRegisters);
+
+  if (!Adapter->NdisMiniportBlock.SystemAdapterObject)
+      return NDIS_STATUS_RESOURCES;
+
+  *MiniportDmaHandle = &Adapter->NdisMiniportBlock;
+
+  return NDIS_STATUS_SUCCESS;
 }
 
 
@@ -920,6 +955,57 @@ NdisMUnmapIoSpace(
   ASSERT(MiniportAdapterHandle);
 
   MmUnmapIoSpace(VirtualAddress, Length);
+}
+
+/*
+ * @implemented
+ */
+NDIS_STATUS
+EXPORT
+NdisMInitializeScatterGatherDma(
+    IN  NDIS_HANDLE MiniportAdapterHandle,
+    IN  BOOLEAN     Dma64BitAddresses,
+    IN  ULONG       MaximumPhysicalMapping)
+/*
+ * FUNCTION:
+ * ARGUMENTS:
+ * NOTES:
+ *    NDIS 5.0
+ */
+{
+    PLOGICAL_ADAPTER Adapter = (PLOGICAL_ADAPTER)MiniportAdapterHandle;
+    ULONG MapRegisters;
+    DEVICE_DESCRIPTION DeviceDesc;
+
+    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
+    if (!(Adapter->NdisMiniportBlock.Flags & NDIS_ATTRIBUTE_BUS_MASTER))
+        return NDIS_STATUS_NOT_SUPPORTED;
+
+    if (Adapter->NdisMiniportBlock.SystemAdapterObject)
+    {
+        NDIS_DbgPrint(MIN_TRACE,("Using existing DMA adapter\n"));
+        return NDIS_STATUS_SUCCESS;
+    }
+
+    RtlZeroMemory(&DeviceDesc, sizeof(DEVICE_DESCRIPTION));
+
+    DeviceDesc.Version = DEVICE_DESCRIPTION_VERSION;
+    DeviceDesc.Master = TRUE;
+    DeviceDesc.ScatterGather = TRUE;
+    DeviceDesc.Dma32BitAddresses = !Dma64BitAddresses;
+    DeviceDesc.Dma64BitAddresses = Dma64BitAddresses;
+    DeviceDesc.BusNumber = Adapter->NdisMiniportBlock.BusNumber;
+    DeviceDesc.InterfaceType = Adapter->NdisMiniportBlock.BusType;
+    DeviceDesc.MaximumLength = MaximumPhysicalMapping;
+
+    Adapter->NdisMiniportBlock.SystemAdapterObject = 
+         IoGetDmaAdapter(Adapter->NdisMiniportBlock.PhysicalDeviceObject, &DeviceDesc, &MapRegisters);
+
+    if (!Adapter->NdisMiniportBlock.SystemAdapterObject)
+        return NDIS_STATUS_RESOURCES;
+
+    return NDIS_STATUS_SUCCESS;
 }
 
 /* EOF */

@@ -675,28 +675,6 @@ NdisMGetDeviceProperty(
  */
 NDIS_STATUS
 EXPORT
-NdisMInitializeScatterGatherDma(
-    IN  NDIS_HANDLE MiniportAdapterHandle,
-    IN  BOOLEAN     Dma64BitAddresses,
-    IN  ULONG       MaximumPhysicalMapping)
-/*
- * FUNCTION:
- * ARGUMENTS:
- * NOTES:
- *    NDIS 5.0
- */
-{
-    UNIMPLEMENTED
-
-    return NDIS_STATUS_FAILURE;
-}
-
-
-/*
- * @unimplemented
- */
-NDIS_STATUS
-EXPORT
 NdisMPromoteMiniport(
     IN  NDIS_HANDLE MiniportAdapterHandle)
 /*
