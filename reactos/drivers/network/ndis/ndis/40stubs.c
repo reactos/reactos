@@ -1,8 +1,8 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS NDIS library
- * FILE:        ndis/50gone.c
- * PURPOSE:     Obsoleted functions in NDIS 5.0
+ * FILE:        ndis/40stubs.c
+ * PURPOSE:     NDIS 4.0 stubs
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
  * REVISIONS:
  *   CSH 01/08-2000 Created
@@ -71,24 +71,6 @@ NdisDeregisterAdapter(
 
 
 /*
- * @implemented
- */
-VOID
-EXPORT
-NdisDeregisterAdapterShutdownHandler(
-    IN  NDIS_HANDLE NdisAdapterHandle)
-/*
- * FUNCTION:
- * ARGUMENTS:
- * NOTES:
- *    NDIS 4.0
- */
-{
-    NdisMDeregisterAdapterShutdownHandler(NdisAdapterHandle);
-}
-
-
-/*
  * @unimplemented
  */
 VOID
@@ -122,32 +104,6 @@ NdisFreeDmaChannel(
  */
 {
     UNIMPLEMENTED
-}
-
-
-/*
- * @implemented
- */
-VOID
-EXPORT
-NdisFreeSharedMemory(
-    IN NDIS_HANDLE              NdisAdapterHandle,
-    IN ULONG                    Length,
-    IN BOOLEAN                  Cached,
-    IN PVOID                    VirtualAddress,
-    IN NDIS_PHYSICAL_ADDRESS    PhysicalAddress)
-/*
- * FUNCTION:
- * ARGUMENTS:
- * NOTES:
- *    NDIS 4.0
- */
-{
-    NdisMFreeSharedMemory(NdisAdapterHandle,
-                          Length,
-                          Cached,
-                          VirtualAddress,
-                          PhysicalAddress);
 }
 
 
@@ -210,31 +166,6 @@ NdisIMSwitchToMiniport(
     UNIMPLEMENTED
 
 	return FALSE;
-}
-
-
-/*
- * @implemented
- */
-VOID
-EXPORT
-NdisMapIoSpace(
-    OUT PNDIS_STATUS            Status,
-    OUT PVOID                   *VirtualAddress,
-    IN  NDIS_HANDLE             NdisAdapterHandle,
-    IN  NDIS_PHYSICAL_ADDRESS   PhysicalAddress,
-    IN  UINT                    Length)
-/*
- * FUNCTION:
- * ARGUMENTS:
- * NOTES:
- *    NDIS 4.0
- */
-{
-    *Status = NdisMMapIoSpace(VirtualAddress,
-                              NdisAdapterHandle,
-                              PhysicalAddress,
-                              Length);
 }
 
 
@@ -331,28 +262,6 @@ NdisRegisterAdapter(
 
 
 /*
- * @implemented
- */
-VOID
-EXPORT
-NdisRegisterAdapterShutdownHandler(
-    IN  NDIS_HANDLE                 NdisAdapterHandle,
-    IN  PVOID                       ShutdownContext,
-    IN  ADAPTER_SHUTDOWN_HANDLER    ShutdownHandler)
-/*
- * FUNCTION:
- * ARGUMENTS:
- * NOTES:
- *    NDIS 4.0
- */
-{
-    NdisMRegisterAdapterShutdownHandler(NdisAdapterHandle,
-                                        ShutdownContext,
-                                        ShutdownHandler);
-}
-
-
-/*
  * @unimplemented
  */
 VOID
@@ -412,6 +321,68 @@ NdisUpdateSharedMemory(
  */
 {
     /* No-op. */
+}
+
+
+/*
+ * @unimplemented
+ */
+VOID
+EXPORT
+NdisImmediateReadSharedMemory(
+    IN  NDIS_HANDLE WrapperConfigurationContext,
+    IN  ULONG       SharedMemoryAddress,
+    OUT PUCHAR      Buffer,
+    IN  ULONG       Length)
+{
+    UNIMPLEMENTED
+}
+
+
+/*
+ * @unimplemented
+ */
+VOID
+EXPORT
+NdisImmediateWriteSharedMemory(
+    IN  NDIS_HANDLE WrapperConfigurationContext,
+    IN  ULONG       SharedMemoryAddress,
+    IN  PUCHAR      Buffer,
+    IN  ULONG       Length)
+{
+    UNIMPLEMENTED
+}
+
+
+
+/*
+ * @unimplemented
+ */
+VOID
+EXPORT
+NdisReadEisaSlotInformation(
+    OUT PNDIS_STATUS                    Status,
+    IN  NDIS_HANDLE                     WrapperConfigurationContext,
+    OUT PUINT                           SlotNumber,
+    OUT PNDIS_EISA_FUNCTION_INFORMATION EisaData)
+{
+    UNIMPLEMENTED
+}
+
+
+/*
+ * @unimplemented
+ */
+VOID
+EXPORT
+NdisReadEisaSlotInformationEx(
+    OUT PNDIS_STATUS                    Status,
+    IN  NDIS_HANDLE                     WrapperConfigurationContext,
+    OUT PUINT                           SlotNumber,
+    OUT PNDIS_EISA_FUNCTION_INFORMATION *EisaData,
+    OUT PUINT                           NumberOfFunctions)
+{
+    UNIMPLEMENTED
 }
 
 /* EOF */

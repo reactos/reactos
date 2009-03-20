@@ -1,8 +1,8 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS NDIS library
- * FILE:        ndis/40gone.c
- * PURPOSE:     Obsoleted functions in NDIS 4.0
+ * FILE:        ndis/30stubs.c
+ * PURPOSE:     NDIS 3.0 Stubs
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
  * REVISIONS:
  *   CSH 01/08-2000 Created
@@ -101,27 +101,6 @@ NdisAllocateDmaChannel(
 {
     UNIMPLEMENTED
 }
-
-
-/*
- * @implemented
- */
-VOID
-EXPORT
-NdisAllocateSharedMemory(
-    IN  NDIS_HANDLE             NdisAdapterHandle,
-    IN  ULONG                   Length,
-    IN  BOOLEAN                 Cached,
-    OUT PVOID                   *VirtualAddress,
-    OUT PNDIS_PHYSICAL_ADDRESS  PhysicalAddress)
-{
-    NdisMAllocateSharedMemory(NdisAdapterHandle,
-                              Length,
-                              Cached,
-                              VirtualAddress,
-                              PhysicalAddress);
-}
-
 
 /*
  * @unimplemented

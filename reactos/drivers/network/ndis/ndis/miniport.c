@@ -2491,5 +2491,44 @@ NdisMQueryAdapterInstanceName(
     return NDIS_STATUS_SUCCESS;
 }
 
+/*
+ * @implemented
+ */
+VOID
+EXPORT
+NdisDeregisterAdapterShutdownHandler(
+    IN  NDIS_HANDLE NdisAdapterHandle)
+/*
+ * FUNCTION:
+ * ARGUMENTS:
+ * NOTES:
+ *    NDIS 4.0
+ */
+{
+    NdisMDeregisterAdapterShutdownHandler(NdisAdapterHandle);
+}
+
+
+/*
+ * @implemented
+ */
+VOID
+EXPORT
+NdisRegisterAdapterShutdownHandler(
+    IN  NDIS_HANDLE                 NdisAdapterHandle,
+    IN  PVOID                       ShutdownContext,
+    IN  ADAPTER_SHUTDOWN_HANDLER    ShutdownHandler)
+/*
+ * FUNCTION:
+ * ARGUMENTS:
+ * NOTES:
+ *    NDIS 4.0
+ */
+{
+    NdisMRegisterAdapterShutdownHandler(NdisAdapterHandle,
+                                        ShutdownContext,
+                                        ShutdownHandler);
+}
+
 /* EOF */
 

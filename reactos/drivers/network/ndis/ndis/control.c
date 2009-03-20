@@ -218,23 +218,6 @@ NdisFreeSpinLock(
   /* Nothing to do here! */
 }
 
-
-/*
- * @unimplemented
- */
-VOID
-EXPORT
-NdisGetCurrentProcessorCpuUsage(
-    PULONG  pCpuUsage)
-/*
- * FUNCTION: Returns how busy the current processor is as a percentage
- * ARGUMENTS:
- *     pCpuUsage = Pointer to a buffer to place CPU usage
- */
-{
-    UNIMPLEMENTED
-}
-
 
 /*
  * @implemented

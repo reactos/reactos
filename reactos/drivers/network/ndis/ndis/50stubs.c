@@ -1,8 +1,8 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS NDIS library
- * FILE:        ndis/stubs.c
- * PURPOSE:     Stubs
+ * FILE:        ndis/50stubs.c
+ * PURPOSE:     NDIS 5.0 Stubs
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
  * REVISIONS:
  *   CSH 01/08-2000 Created
@@ -21,147 +21,6 @@ NdisCompleteQueryStatistics(
     IN  NDIS_STATUS     Status)
 {
     UNIMPLEMENTED
-}
-
-
-/*
- * @implemented
- */
-#undef NdisInterlockedAddUlong
-VOID
-EXPORT
-NdisInterlockedAddUlong (
-    IN  PULONG          Addend,
-    IN  ULONG           Increment,
-    IN  PNDIS_SPIN_LOCK SpinLock)
-{
-   ExInterlockedAddUlong ( Addend, Increment, (PKSPIN_LOCK)SpinLock );
-}
-
-
-/*
- * @implemented
- */
-#undef NdisInterlockedInsertHeadList
-PLIST_ENTRY
-EXPORT
-NdisInterlockedInsertHeadList(
-    IN  PLIST_ENTRY     ListHead,
-    IN  PLIST_ENTRY     ListEntry,
-    IN  PNDIS_SPIN_LOCK SpinLock)
-{
-  return ExInterlockedInsertHeadList ( ListHead, ListEntry, (PKSPIN_LOCK)SpinLock );
-}
-
-
-/*
- * @implemented
- */
-#undef NdisInterlockedInsertTailList
-PLIST_ENTRY
-EXPORT
-NdisInterlockedInsertTailList(
-    IN  PLIST_ENTRY     ListHead,
-    IN  PLIST_ENTRY     ListEntry,
-    IN  PNDIS_SPIN_LOCK SpinLock)
-{
-  return ExInterlockedInsertTailList ( ListHead, ListEntry, (PKSPIN_LOCK)SpinLock );
-}
-
-
-/*
- * @implemented
- */
-#undef NdisInterlockedRemoveHeadList
-PLIST_ENTRY
-EXPORT
-NdisInterlockedRemoveHeadList(
-    IN  PLIST_ENTRY     ListHead,
-    IN  PNDIS_SPIN_LOCK SpinLock)
-{
-  return ExInterlockedRemoveHeadList ( ListHead, (PKSPIN_LOCK)SpinLock );
-}
-
-typedef struct _NDIS_HANDLE_OBJECT
-{
-  HANDLE FileHandle;
-  BOOLEAN Mapped;
-  ULONG FileLength;
-  PVOID MapBuffer;
-} NDIS_HANDLE_OBJECT, *PNDIS_HANDLE_OBJECT;
-
-__inline
-PNDIS_HANDLE_OBJECT
-NDIS_HANDLE_TO_POBJECT ( NDIS_HANDLE handle )
-{
-  return (PNDIS_HANDLE_OBJECT)handle;
-}
-
-__inline
-NDIS_HANDLE
-NDIS_POBJECT_TO_HANDLE ( PNDIS_HANDLE_OBJECT obj )
-{
-  return (NDIS_HANDLE)obj;
-}
-
-const WCHAR* NDIS_FILE_FOLDER = L"\\SystemRoot\\System32\\Drivers\\";
-
-/*
- * @implemented
- */
-VOID
-EXPORT
-NdisMapFile(
-    OUT PNDIS_STATUS    Status,
-    OUT PVOID           *MappedBuffer,
-    IN  NDIS_HANDLE     FileHandle)
-{
-  PNDIS_HANDLE_OBJECT HandleObject = (PNDIS_HANDLE_OBJECT) FileHandle;
-
-  NDIS_DbgPrint(MAX_TRACE, ("called: FileHandle 0x%x\n", FileHandle));
-
-  if (HandleObject->Mapped)
-  {
-      /* If a file already mapped we will return an error code */
-      *Status = NDIS_STATUS_ALREADY_MAPPED;
-      return;
-  }
-
-  HandleObject->Mapped = TRUE;
-  *MappedBuffer = HandleObject->MapBuffer;
-
-  /* Set returned status */
-  *Status = STATUS_SUCCESS;
-}
-
-/*
- * @implemented
- */
-VOID
-EXPORT
-NdisCloseFile(
-    IN  NDIS_HANDLE FileHandle)
-{
-  PNDIS_HANDLE_OBJECT FileHandleObject;
-
-  ASSERT_IRQL(PASSIVE_LEVEL);
-
-  ASSERT ( FileHandle );
-
-  FileHandleObject = NDIS_HANDLE_TO_POBJECT(FileHandle);
-
-  ASSERT ( FileHandleObject->FileHandle );
-
-  /*
-  if ( FileHandleObject->Mapped )
-    NdisUnmapFile ( FileHandle );
-  */
-
-  ZwClose ( FileHandleObject->FileHandle );
-
-  memset ( FileHandleObject, 0, sizeof(NDIS_HANDLE_OBJECT) );
-
-  ExFreePool ( FileHandleObject );
 }
 
 
@@ -258,101 +117,6 @@ NdisMWanSendComplete(
 
 
 /*
- * @unimplemented
- */
-VOID
-EXPORT
-NdisOpenFile(
-    OUT PNDIS_STATUS            Status,
-    OUT PNDIS_HANDLE            FileHandle,
-    OUT PUINT                   FileLength,
-    IN  PNDIS_STRING            FileName,
-    IN  NDIS_PHYSICAL_ADDRESS   HighestAcceptableAddress)
-{
-  NDIS_STRING FullFileName;
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  PNDIS_HANDLE_OBJECT FileHandleObject = NULL;
-  IO_STATUS_BLOCK IoStatusBlock;
-
-  ASSERT_IRQL(PASSIVE_LEVEL);
-
-  *Status = NDIS_STATUS_SUCCESS;
-  FullFileName.Buffer = NULL;
-
-  ASSERT ( Status && FileName );
-
-  FullFileName.Length = sizeof(NDIS_FILE_FOLDER);
-  FullFileName.MaximumLength = FileName->MaximumLength + sizeof(NDIS_FILE_FOLDER);
-  FullFileName.Buffer = ExAllocatePool ( NonPagedPool, FullFileName.MaximumLength );
-
-  if ( !FullFileName.Buffer )
-  {
-    *Status = NDIS_STATUS_RESOURCES;
-    goto cleanup;
-  }
-
-  FileHandleObject = ExAllocatePool ( NonPagedPool, sizeof(NDIS_HANDLE_OBJECT) );
-  if ( !FileHandleObject )
-  {
-    *Status = NDIS_STATUS_RESOURCES;
-    goto cleanup;
-  }
-  memset ( FileHandleObject, 0, sizeof(NDIS_HANDLE_OBJECT) );
-
-  memmove ( FullFileName.Buffer, NDIS_FILE_FOLDER, FullFileName.Length );
-  *Status = RtlAppendUnicodeStringToString ( &FullFileName, FileName );
-  if ( !NT_SUCCESS(*Status) )
-  {
-    *Status = NDIS_STATUS_FAILURE;
-    goto cleanup;
-  }
-
-  InitializeObjectAttributes ( &ObjectAttributes,
-    &FullFileName,
-    OBJ_CASE_INSENSITIVE,
-    NULL,
-    NULL );
-
-  *Status = ZwCreateFile (
-    &FileHandleObject->FileHandle,
-    FILE_READ_DATA|SYNCHRONIZE,
-    &ObjectAttributes,
-    &IoStatusBlock,
-    NULL, // PLARGE_INTEGER AllocationSize
-    0, // ULONG FileAttributes
-    FILE_SHARE_READ, // ULONG ShareAccess
-    FILE_CREATE, // ULONG CreateDisposition
-    FILE_SYNCHRONOUS_IO_NONALERT, // ULONG CreateOptions
-    0, // PVOID EaBuffer
-    0 ); // ULONG EaLength
-  
-  if ( !NT_SUCCESS(*Status) )
-  {
-    *Status = NDIS_STATUS_FAILURE;
-  }
-
-cleanup:
-  if ( FullFileName.Buffer != NULL )
-  {
-    ExFreePool ( FullFileName.Buffer );
-    FullFileName.Buffer = NULL;
-  }
-  if ( !NT_SUCCESS(*Status) )
-  {
-    if( FileHandleObject ) {
-	ExFreePool ( FileHandleObject );
-	FileHandleObject = NULL;
-    }
-    *FileHandle = NULL;
-  }
-  else
-    *FileHandle = NDIS_POBJECT_TO_HANDLE(FileHandleObject);
-
-  return;
-}
-
-
-/*
 NdisOpenGlobalConfiguration
 */
 
@@ -391,32 +155,6 @@ NdisSetProtocolFilter(
 
 
 /*
- * @implemented
- */
-CCHAR
-EXPORT
-NdisSystemProcessorCount(
-    VOID)
-{
-	return (CCHAR)KeNumberProcessors;
-}
-
-
-/*
- * @implemented
- */
-VOID
-EXPORT
-NdisUnmapFile(
-    IN  NDIS_HANDLE FileHandle)
-{
-  PNDIS_HANDLE_OBJECT HandleObject = (PNDIS_HANDLE_OBJECT) FileHandle;
-
-  HandleObject->Mapped = FALSE;
-}
-
-
-/*
 NdisUpcaseUnicodeString
 NdisUpdateSharedMemory@4
 */
@@ -426,9 +164,6 @@ NdisUpdateSharedMemory@4
 NdisWriteEventLogEntry
 */
 
-
-
-/* NDIS 5.0 extensions */
 
 /*
  * @unimplemented
@@ -471,53 +206,6 @@ NdisConvertStringToAtmAddress(
 
 
 /*
- * @implemented
- */
-VOID
-EXPORT
-NdisGetCurrentProcessorCounts(
-    OUT PULONG  pIdleCount,
-    OUT PULONG  pKernelAndUser,
-    OUT PULONG  pIndex)
-/*
- * FUNCTION:
- * ARGUMENTS:
- * NOTES:
- *    NDIS 5.0
- */
-{
-    ExGetCurrentProcessorCounts( (PULONG) pIdleCount, (PULONG) pKernelAndUser, (PULONG) pIndex); 
-}
-
-
-/*
- * @implemented
- */
-VOID
-EXPORT
-NdisGetDriverHandle(
-    IN  PNDIS_HANDLE    NdisBindingHandle,
-    OUT PNDIS_HANDLE    NdisDriverHandle)
-/*
- * FUNCTION:
- * ARGUMENTS:
- * NOTES:
- *    NDIS 5.0
- */
-{
-    PADAPTER_BINDING Binding = (PADAPTER_BINDING)NdisBindingHandle;
-
-    if (!Binding)
-    {
-        *NdisDriverHandle = NULL;
-        return;
-    }
-
-    *NdisDriverHandle = Binding->Adapter->NdisMiniportBlock.DriverHandle;
-}
-
-
-/*
  * @unimplemented
  */
 PNDIS_PACKET
@@ -535,106 +223,6 @@ NdisGetReceivedPacket(
     UNIMPLEMENTED
 
     return NULL;
-}
-
-
-/*
- * @implemented
- */
-VOID
-EXPORT
-NdisGetSystemUpTime(OUT PULONG pSystemUpTime)
-{           
-    ULONG Increment;
-    LARGE_INTEGER TickCount;
-
-    /* Get the increment and current tick count */
-    Increment = KeQueryTimeIncrement();
-    KeQueryTickCount(&TickCount);
-
-    /* Convert to milliseconds and return */
-    TickCount.QuadPart *= Increment;
-    TickCount.QuadPart /= (10 * 1000);
-    *pSystemUpTime = TickCount.LowPart;
-}
-
-
-/*
- * @implemented
- */
-#undef NdisInterlockedDecrement
-LONG
-EXPORT
-NdisInterlockedDecrement(
-    IN  PLONG   Addend)
-/*
- * FUNCTION:
- * ARGUMENTS:
- * NOTES:
- *    NDIS 5.0
- */
-{
-  return InterlockedDecrement ( Addend );
-}
-
-
-/*
- * @implemented
- */
-#undef NdisInterlockedIncrement
-LONG
-EXPORT
-NdisInterlockedIncrement(
-    IN  PLONG   Addend)
-/*
- * FUNCTION:
- * ARGUMENTS:
- * NOTES:
- *    NDIS 5.0
- */
-{
-  return InterlockedIncrement ( Addend );
-}
-
-
-/*
- * @implemented
- */
-#undef NdisInterlockedPopEntrySList
-PSINGLE_LIST_ENTRY
-EXPORT
-NdisInterlockedPopEntrySList(
-    IN  PSLIST_HEADER   ListHead,
-    IN  PKSPIN_LOCK     Lock)
-/*
- * FUNCTION:
- * ARGUMENTS:
- * NOTES:
- *    NDIS 5.0
- */
-{
-  return ExInterlockedPopEntrySList ( ListHead, Lock );
-}
-
-
-/*
- * @implemented
- */
-#undef NdisInterlockedPushEntrySList
-PSINGLE_LIST_ENTRY
-EXPORT
-NdisInterlockedPushEntrySList(
-    IN  PSLIST_HEADER       ListHead,
-    IN  PSINGLE_LIST_ENTRY  ListEntry,
-    IN  PKSPIN_LOCK         Lock)
-/*
- * FUNCTION:
- * ARGUMENTS:
- * NOTES:
- *    NDIS 5.0
- */
-{
-  return ExInterlockedPushEntrySList ( ListHead, ListEntry, Lock );
 }
 
 
@@ -854,8 +442,6 @@ NdisWritePcmciaAttributeMemory(
 }
 
 
-/* NDIS 5.0 extensions for intermediate drivers */
-
 /*
  * @unimplemented
  */
@@ -1014,22 +600,123 @@ NdisIMInitializeDeviceInstanceEx(
 }
 
 
- 
+/*
+ * @unimplemented
+ */
 VOID
-NTAPI
-ndisProcWorkItemHandler(PVOID pContext)
+EXPORT
+NdisReturnPackets(
+    IN  PNDIS_PACKET    *PacketsToReturn,
+    IN  UINT            NumberOfPackets)
+/*
+ * FUNCTION: Releases ownership of one or more packets
+ * ARGUMENTS:
+ *     PacketsToReturn = Pointer to an array of pointers to packet descriptors
+ *     NumberOfPackets = Number of pointers in descriptor pointer array
+ */
 {
-    PNDIS_WORK_ITEM pNdisItem = (PNDIS_WORK_ITEM)pContext;
-    pNdisItem->Routine(pNdisItem, pNdisItem->Context);
+    UNIMPLEMENTED
 }
 
+
+/*
+ * @unimplemented
+ */
+UINT
 EXPORT
-NDIS_STATUS
-NdisScheduleWorkItem(
-    IN PNDIS_WORK_ITEM  pWorkItem)
+NdisPacketPoolUsage(
+    IN  NDIS_HANDLE PoolHandle)
+/*
+ * FUNCTION:
+ * ARGUMENTS:
+ * NOTES:
+ *    NDIS 5.0
+ */
 {
-    PWORK_QUEUE_ITEM pntWorkItem = (PWORK_QUEUE_ITEM)pWorkItem->WrapperReserved;
-    ExInitializeWorkItem(pntWorkItem, ndisProcWorkItemHandler, pWorkItem);
-    ExQueueWorkItem(pntWorkItem, CriticalWorkQueue);
-    return NDIS_STATUS_SUCCESS;
+    UNIMPLEMENTED
+
+    return 0;
+}
+
+
+/*
+ * @unimplemented
+ */
+VOID
+EXPORT
+NdisMDeregisterIoPortRange(
+    IN  NDIS_HANDLE MiniportAdapterHandle,
+    IN  UINT        InitialPort,
+    IN  UINT        NumberOfPorts,
+    IN  PVOID       PortOffset)
+/*
+ * FUNCTION: Releases a register mapping to I/O ports
+ * ARGUMENTS:
+ *     MiniportAdapterHandle = Specifies handle input to MiniportInitialize
+ *     InitialPort           = Bus-relative base port address of a range to be mapped
+ *     NumberOfPorts         = Specifies number of ports to be mapped
+ *     PortOffset            = Pointer to mapped base port address
+ */
+{
+   UNIMPLEMENTED
+}
+
+
+/*
+ * @unimplemented
+ */
+NDIS_STATUS
+EXPORT
+NdisMAllocateSharedMemoryAsync(
+    IN  NDIS_HANDLE MiniportAdapterHandle,
+    IN  ULONG       Length,
+    IN  BOOLEAN     Cached,
+    IN  PVOID       Context)
+{
+  UNIMPLEMENTED
+
+  return NDIS_STATUS_FAILURE;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+EXPORT
+NdisCopyBuffer(
+    OUT PNDIS_STATUS    Status,
+    OUT PNDIS_BUFFER    *Buffer,
+    IN  NDIS_HANDLE     PoolHandle,
+    IN  PVOID           MemoryDescriptor,
+    IN  UINT            Offset,
+    IN  UINT            Length)
+/*
+ * FUNCTION: Returns a new buffer descriptor for a (partial) buffer
+ * ARGUMENTS:
+ *     Status           = Address of a buffer to place status of operation
+ *     Buffer           = Address of a buffer to place new buffer descriptor
+ *     PoolHandle       = Handle returned by NdisAllocateBufferPool
+ *     MemoryDescriptor = Pointer to a memory descriptor (possibly NDIS_BUFFER)
+ *     Offset           = Offset in buffer to start copying
+ *     Length           = Number of bytes to copy
+ */
+{
+    *Status = NDIS_STATUS_FAILURE;
+}
+
+
+/*
+ * @unimplemented
+ */
+VOID
+EXPORT
+NdisGetCurrentProcessorCpuUsage(
+    PULONG  pCpuUsage)
+/*
+ * FUNCTION: Returns how busy the current processor is as a percentage
+ * ARGUMENTS:
+ *     pCpuUsage = Pointer to a buffer to place CPU usage
+ */
+{
+    UNIMPLEMENTED
 }

@@ -980,4 +980,31 @@ NdisReEnumerateProtocolBindings(IN NDIS_HANDLE NdisProtocolHandle)
     ndisBindMiniportsToProtocol(&NdisStatus, &Protocol->Chars);
 }
 
+
+/*
+ * @implemented
+ */
+VOID
+EXPORT
+NdisGetDriverHandle(
+    IN  PNDIS_HANDLE    NdisBindingHandle,
+    OUT PNDIS_HANDLE    NdisDriverHandle)
+/*
+ * FUNCTION:
+ * ARGUMENTS:
+ * NOTES:
+ *    NDIS 5.0
+ */
+{
+    PADAPTER_BINDING Binding = (PADAPTER_BINDING)NdisBindingHandle;
+
+    if (!Binding)
+    {
+        *NdisDriverHandle = NULL;
+        return;
+    }
+
+    *NdisDriverHandle = Binding->Adapter->NdisMiniportBlock.DriverHandle;
+}
+
 /* EOF */

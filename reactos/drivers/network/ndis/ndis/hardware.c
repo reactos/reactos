@@ -152,37 +152,6 @@ NdisQueryMapRegisterCount(
   return NDIS_STATUS_NOT_SUPPORTED;
 }
 
-
-/*
- * @unimplemented
- */
-VOID
-EXPORT
-NdisReadEisaSlotInformation(
-    OUT PNDIS_STATUS                    Status,
-    IN  NDIS_HANDLE                     WrapperConfigurationContext,
-    OUT PUINT                           SlotNumber,
-    OUT PNDIS_EISA_FUNCTION_INFORMATION EisaData)
-{
-    UNIMPLEMENTED
-}
-
-
-/*
- * @unimplemented
- */
-VOID
-EXPORT
-NdisReadEisaSlotInformationEx(
-    OUT PNDIS_STATUS                    Status,
-    IN  NDIS_HANDLE                     WrapperConfigurationContext,
-    OUT PUINT                           SlotNumber,
-    OUT PNDIS_EISA_FUNCTION_INFORMATION *EisaData,
-    OUT PUINT                           NumberOfFunctions)
-{
-    UNIMPLEMENTED
-}
-
 
 /*
  * @implemented

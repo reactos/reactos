@@ -137,36 +137,6 @@ NdisFreeMemory(
 
 
 /*
- * @unimplemented
- */
-VOID
-EXPORT
-NdisImmediateReadSharedMemory(
-    IN  NDIS_HANDLE WrapperConfigurationContext,
-    IN  ULONG       SharedMemoryAddress,
-    OUT PUCHAR      Buffer,
-    IN  ULONG       Length)
-{
-    UNIMPLEMENTED
-}
-
-
-/*
- * @unimplemented
- */
-VOID
-EXPORT
-NdisImmediateWriteSharedMemory(
-    IN  NDIS_HANDLE WrapperConfigurationContext,
-    IN  ULONG       SharedMemoryAddress,
-    IN  PUCHAR      Buffer,
-    IN  ULONG       Length)
-{
-    UNIMPLEMENTED
-}
-
-
-/*
  * @implemented
  */
 VOID
@@ -195,24 +165,6 @@ NdisMAllocateSharedMemory(
 
   *VirtualAddress = Adapter->NdisMiniportBlock.SystemAdapterObject->DmaOperations->AllocateCommonBuffer(
       Adapter->NdisMiniportBlock.SystemAdapterObject, Length, PhysicalAddress, Cached);
-}
-
-
-/*
- * @unimplemented
- */
-NDIS_STATUS
-EXPORT
-NdisMAllocateSharedMemoryAsync(
-    IN  NDIS_HANDLE MiniportAdapterHandle,
-    IN  ULONG       Length,
-    IN  BOOLEAN     Cached,
-    IN  PVOID       Context)
-{
-    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
-    UNIMPLEMENTED
-
-  return NDIS_STATUS_FAILURE;
 }
 
 
@@ -292,6 +244,53 @@ NdisMFreeSharedMemory(
   PsCreateSystemThread(&ThreadHandle, THREAD_ALL_ACCESS, 0, 0, 0, NdisMFreeSharedMemoryPassive, Memory);
   ZwClose(ThreadHandle);
 }
+
+
+/*
+ * @implemented
+ */
+VOID
+EXPORT
+NdisAllocateSharedMemory(
+    IN  NDIS_HANDLE             NdisAdapterHandle,
+    IN  ULONG                   Length,
+    IN  BOOLEAN                 Cached,
+    OUT PVOID                   *VirtualAddress,
+    OUT PNDIS_PHYSICAL_ADDRESS  PhysicalAddress)
+{
+    NdisMAllocateSharedMemory(NdisAdapterHandle,
+                              Length,
+                              Cached,
+                              VirtualAddress,
+                              PhysicalAddress);
+}
+
+
+/*
+ * @implemented
+ */
+VOID
+EXPORT
+NdisFreeSharedMemory(
+    IN NDIS_HANDLE              NdisAdapterHandle,
+    IN ULONG                    Length,
+    IN BOOLEAN                  Cached,
+    IN PVOID                    VirtualAddress,
+    IN NDIS_PHYSICAL_ADDRESS    PhysicalAddress)
+/*
+ * FUNCTION:
+ * ARGUMENTS:
+ * NOTES:
+ *    NDIS 4.0
+ */
+{
+    NdisMFreeSharedMemory(NdisAdapterHandle,
+                          Length,
+                          Cached,
+                          VirtualAddress,
+                          PhysicalAddress);
+}
+
 
 /* EOF */
 

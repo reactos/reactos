@@ -527,29 +527,6 @@ NdisMDeregisterInterrupt(
 
 
 /*
- * @unimplemented
- */
-VOID
-EXPORT
-NdisMDeregisterIoPortRange(
-    IN  NDIS_HANDLE MiniportAdapterHandle,
-    IN  UINT        InitialPort,
-    IN  UINT        NumberOfPorts,
-    IN  PVOID       PortOffset)
-/*
- * FUNCTION: Releases a register mapping to I/O ports
- * ARGUMENTS:
- *     MiniportAdapterHandle = Specifies handle input to MiniportInitialize
- *     InitialPort           = Bus-relative base port address of a range to be mapped
- *     NumberOfPorts         = Specifies number of ports to be mapped
- *     PortOffset            = Pointer to mapped base port address
- */
-{
-  NDIS_DbgPrint(MAX_TRACE, ("called - IMPLEMENT ME.\n"));
-}
-
-
-/*
  * @implemented
  */
 VOID
@@ -970,6 +947,32 @@ NdisMInitializeScatterGatherDma(
 
     return NDIS_STATUS_SUCCESS;
 }
+
+
+/*
+ * @implemented
+ */
+VOID
+EXPORT
+NdisMapIoSpace(
+    OUT PNDIS_STATUS            Status,
+    OUT PVOID                   *VirtualAddress,
+    IN  NDIS_HANDLE             NdisAdapterHandle,
+    IN  NDIS_PHYSICAL_ADDRESS   PhysicalAddress,
+    IN  UINT                    Length)
+/*
+ * FUNCTION:
+ * ARGUMENTS:
+ * NOTES:
+ *    NDIS 4.0
+ */
+{
+    *Status = NdisMMapIoSpace(VirtualAddress,
+                              NdisAdapterHandle,
+                              PhysicalAddress,
+                              Length);
+}
+
 
 /* EOF */
 
