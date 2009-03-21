@@ -40,20 +40,28 @@ static NTSTATUS NTAPI SendComplete
 
     ASSERT_IRQL(APC_LEVEL);
 
-    if( !SocketAcquireStateLock( FCB ) ) return Status;
+    if( !SocketAcquireStateLock( FCB ) ) {
+        Irp->IoStatus.Status = STATUS_FILE_CLOSED;
+        Irp->IoStatus.Information = 0;
+        return STATUS_FILE_CLOSED;
+    }
 
     FCB->SendIrp.InFlightRequest = NULL;
     /* Request is not in flight any longer */
 
     if( Irp->Cancel ) {
+        Irp->IoStatus.Status = STATUS_CANCELLED;
+        Irp->IoStatus.Information = 0;
         SocketStateUnlock( FCB );
 	return STATUS_CANCELLED;
     }
 
     if( FCB->State == SOCKET_STATE_CLOSED ) {
+        Irp->IoStatus.Status = STATUS_FILE_CLOSED;
+        Irp->IoStatus.Information = 0;
 	SocketStateUnlock( FCB );
 	DestroySocket( FCB );
-	return STATUS_SUCCESS;
+	return STATUS_FILE_CLOSED;
     }
 
     if( !NT_SUCCESS(Status) ) {
@@ -176,13 +184,18 @@ static NTSTATUS NTAPI PacketSocketSendComplete
 			    Irp->IoStatus.Status,
 			    Irp->IoStatus.Information));
 
-    /* It's ok if the FCB already died */
-    if( !SocketAcquireStateLock( FCB ) ) return STATUS_SUCCESS;
+    if( !SocketAcquireStateLock( FCB ) ) {
+        Irp->IoStatus.Status = STATUS_FILE_CLOSED;
+        Irp->IoStatus.Information = 0;
+        return STATUS_FILE_CLOSED;
+    }
 
     FCB->SendIrp.InFlightRequest = NULL;
     /* Request is not in flight any longer */
 
     if( Irp->Cancel ) {
+        Irp->IoStatus.Status = STATUS_CANCELLED;
+        Irp->IoStatus.Information = 0;
         SocketStateUnlock( FCB );
 	return STATUS_CANCELLED;
     }
@@ -191,9 +204,11 @@ static NTSTATUS NTAPI PacketSocketSendComplete
     PollReeval( FCB->DeviceExt, FCB->FileObject );
 
     if( FCB->State == SOCKET_STATE_CLOSED ) {
+        Irp->IoStatus.Status = STATUS_FILE_CLOSED;
+        Irp->IoStatus.Information = 0;
 	SocketStateUnlock( FCB );
 	DestroySocket( FCB );
-	return STATUS_SUCCESS;
+	return STATUS_FILE_CLOSED;
     }
 
     SocketStateUnlock( FCB );

@@ -235,11 +235,17 @@ NTSTATUS NTAPI ReceiveComplete
 
     ASSERT_IRQL(APC_LEVEL);
 
-    if( !SocketAcquireStateLock( FCB ) ) return Status;
+    if( !SocketAcquireStateLock( FCB ) ) {
+        Irp->IoStatus.Status = STATUS_FILE_CLOSED;
+        Irp->IoStatus.Information = 0;
+        return STATUS_FILE_CLOSED;
+    }
 
     FCB->ReceiveIrp.InFlightRequest = NULL;
 
     if( Irp->Cancel ) {
+        Irp->IoStatus.Status = STATUS_CANCELLED;
+        Irp->IoStatus.Information = 0;
         SocketStateUnlock( FCB );
 	return STATUS_CANCELLED;
     }
@@ -249,11 +255,15 @@ NTSTATUS NTAPI ReceiveComplete
 
     if( FCB->State == SOCKET_STATE_CLOSED ) {
         AFD_DbgPrint(MIN_TRACE,("!!! CLOSED SOCK GOT A RECEIVE COMPLETE !!!\n"));
+        Irp->IoStatus.Status = STATUS_FILE_CLOSED;
+        Irp->IoStatus.Information = 0;
 	SocketStateUnlock( FCB );
 	DestroySocket( FCB );
-	return STATUS_SUCCESS;
+	return STATUS_FILE_CLOSED;
     } else if( FCB->State == SOCKET_STATE_LISTENING ) {
         AFD_DbgPrint(MIN_TRACE,("!!! LISTENER GOT A RECEIVE COMPLETE !!!\n"));
+        Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+        Irp->IoStatus.Information = 0;
         SocketStateUnlock( FCB );
         return STATUS_INVALID_PARAMETER;
     }
@@ -457,19 +467,27 @@ PacketSocketRecvComplete(
 
     AFD_DbgPrint(MID_TRACE,("Called on %x\n", FCB));
 
-    if( !SocketAcquireStateLock( FCB ) ) return STATUS_FILE_CLOSED;
+    if( !SocketAcquireStateLock( FCB ) ) {
+        Irp->IoStatus.Status = STATUS_FILE_CLOSED;
+        Irp->IoStatus.Information = 0;
+        return STATUS_FILE_CLOSED;
+    }
 
     FCB->ReceiveIrp.InFlightRequest = NULL;
 
     if( Irp->Cancel ) {
+        Irp->IoStatus.Status = STATUS_CANCELLED;
+        Irp->IoStatus.Information = 0;
         SocketStateUnlock( FCB );
 	return STATUS_CANCELLED;
     }
 
     if( FCB->State == SOCKET_STATE_CLOSED ) {
+        Irp->IoStatus.Status = STATUS_FILE_CLOSED;
+        Irp->IoStatus.Information = 0;
 	SocketStateUnlock( FCB );
 	DestroySocket( FCB );
-	return STATUS_SUCCESS;
+	return STATUS_FILE_CLOSED;
     }
 
     DatagramRecv = ExAllocatePool( NonPagedPool, DGSize );
@@ -488,6 +506,8 @@ PacketSocketRecvComplete(
     } else Status = STATUS_NO_MEMORY;
 
     if( !NT_SUCCESS( Status ) ) {
+        Irp->IoStatus.Status = Status;
+        Irp->IoStatus.Information = 0;
 	if( DatagramRecv ) ExFreePool( DatagramRecv );
 	SocketStateUnlock( FCB );
 	return Status;
