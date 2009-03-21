@@ -169,17 +169,17 @@ reactos/dll/win32/wuapi           # Autosync
 
 ReactOS shares the following programs with Winehq.
 
-reactos/base/applications/cmdutils/xcopy  # Synced to Wine-0_9_54
+reactos/base/applications/cmdutils/xcopy  # Autosync
 reactos/base/applications/games/winemine  # Out of sync
-reactos/base/applications/iexplore        # Wine 1.0-rc1
+reactos/base/applications/iexplore        # Autosync
 reactos/base/applications/notepad         # Forked at Wine-20041201
 reactos/base/applications/regedit         # Out of sync
-reactos/base/applications/winhelp         # Synced to Wine-0_9_53
-reactos/base/applications/wordpad         # Synced to Wine-0_9_53
+reactos/base/applications/winhlp32        # Autosync
+reactos/base/applications/wordpad         # Autosync
 reactos/base/services/rpcss               # Synced to Wine-20081105
 reactos/base/system/expand                # Out of sync
 reactos/base/system/msiexec               # Wine 1.0-rc1
-reactos/modules/rosapps/winefile          # Synced to Wine-0_9_53
+reactos/modules/rosapps/winfile           # Autosync
 
 In addition the following libs, dlls and source files are mostly based on code ported
 from Winehq CVS. If you are looking to update something in these files

@@ -61,7 +61,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT           "Praðome áraðyti savo vardà", IDIGNORE,      25,  10, 150,  10
 	EDITTEXT                                      IDC_EDITNAME,  25,  20, 110,  12
-	DEFPUSHBUTTON   "OK",                         IDOK,          60,  40,  40,  15
+	DEFPUSHBUTTON   "Gerai",                         IDOK,          60,  40,  40,  15
 END
 
 IDD_CUSTOM DIALOGEX DISCARDABLE  0, 0, 139, 80
@@ -75,6 +75,6 @@ BEGIN
 	EDITTEXT                       IDC_EDITROWS,  49,  15,  30,  12, ES_NUMBER
 	EDITTEXT                       IDC_EDITCOLS,  49,  35,  30,  12, ES_NUMBER
 	EDITTEXT                       IDC_EDITMINES, 49,  55,  30,  12, ES_NUMBER
-	DEFPUSHBUTTON   "OK",          IDOK,          86,  32,  45,  15
-	PUSHBUTTON      "Atðaukti",    IDCANCEL,      86,  52,  45,  15
+	DEFPUSHBUTTON   "Gerai",          IDOK,          86,  32,  45,  15
+	PUSHBUTTON      "Atsisakyti",    IDCANCEL,      86,  52,  45,  15
 END

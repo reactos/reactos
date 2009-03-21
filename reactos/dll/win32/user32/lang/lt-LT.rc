@@ -1,0 +1,79 @@
+/*
+ * Translation by Vytis "CMan" Girdþijauskas (cman@cman.us)
+ */
+ 
+LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialogs
+//
+
+SELWINDOW DIALOGEX DISCARDABLE 20, 20, 220, 140
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION |
+    WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Pasirinkti langà"
+BEGIN
+  LISTBOX 100, 5, 5, 210, 110, LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL
+  PUSHBUTTON "Gerai", 1, 60, 120, 40, 15, BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+  PUSHBUTTON "Atsisakyti", 2, 120, 120, 40, 15, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menus
+//
+
+EDITMENU MENU LOADONCALL MOVEABLE DISCARDABLE
+BEGIN
+  POPUP "DUMMY"
+  BEGIN
+    MENUITEM "&Atðaukti", EM_UNDO
+    MENUITEM SEPARATOR
+    MENUITEM "&Iðkirpti", WM_CUT
+    MENUITEM "&Kopijuoti", WM_COPY
+    MENUITEM "Á&dëti", WM_PASTE
+    MENUITEM "&Trinti", WM_CLEAR
+    MENUITEM SEPARATOR
+    MENUITEM "Paþymëti &viskà", EM_SETSEL
+  END
+END
+
+
+SYSMENU MENU LOADONCALL MOVEABLE DISCARDABLE
+BEGIN
+  MENUITEM "A&tkurti", SC_RESTORE
+  MENUITEM "Pe&rkelti", SC_MOVE
+  MENUITEM "D&ydis", SC_SIZE
+  MENUITEM "Su&skleisti", SC_MINIMIZE
+  MENUITEM "Pa&didint", SC_MAXIMIZE
+  MENUITEM SEPARATOR
+  MENUITEM "&Uþverti\tAlt-F4", SC_CLOSE
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Strings
+//
+
+STRINGTABLE
+BEGIN
+  IDS_ERROR,    "Klaida"
+  IDS_OK,       "Gerai"
+  IDS_CANCEL,   "Atsisakyti"
+  IDS_ABORT,    "N&utraukti"
+  IDS_RETRY,    "&Kartoti"
+  IDS_IGNORE,   "&Praleisti"
+  IDS_YES,      "&Taip"
+  IDS_NO,       "&Ne"
+  IDS_HELP,     "Pagalba"
+  IDS_TRYAGAIN, "&Bandyti vël"
+  IDS_CONTINUE, "Tæ&sti"
+END
+
+STRINGTABLE
+BEGIN
+  IDS_MDI_MOREWINDOWS, "&Daugiau langø..."
+END
+
