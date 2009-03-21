@@ -249,7 +249,7 @@ SH_FileGeneralSetText(HWND hwndDlg, WCHAR *lpstr)
     if (lpstr == NULL)
         return FALSE;
 
-    lpdir = wcschr(lpstr, '\\');        /* find the last occurence of '\\' */
+    lpdir = wcsrchr(lpstr, '\\');        /* find the last occurence of '\\' */
 
     plength = wcslen(lpstr);
     flength = wcslen(lpdir);
