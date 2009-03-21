@@ -561,48 +561,48 @@ typedef struct _ACMSTREAMHEADER
 
 typedef BOOL (CALLBACK *ACMFILTERENUMCBA)(
   HACMDRIVERID hadid, PACMFILTERDETAILSA pafd,
-  DWORD dwInstance, DWORD fdwSupport
+  DWORD_PTR dwInstance, DWORD fdwSupport
 );
 
 typedef BOOL (CALLBACK *ACMFILTERENUMCBW)(
   HACMDRIVERID hadid, PACMFILTERDETAILSW pafd,
-  DWORD dwInstance, DWORD fdwSupport
+  DWORD_PTR dwInstance, DWORD fdwSupport
 );
 
 #define ACMFILTERENUMCB WINELIB_NAME_AW(ACMFILTERENUMCB)
 
 typedef BOOL (CALLBACK *ACMFILTERTAGENUMCBA)(
   HACMDRIVERID hadid, PACMFILTERTAGDETAILSA paftd,
-  DWORD dwInstance, DWORD fdwSupport
+  DWORD_PTR dwInstance, DWORD fdwSupport
 );
 
 typedef BOOL (CALLBACK *ACMFILTERTAGENUMCBW)(
   HACMDRIVERID hadid, PACMFILTERTAGDETAILSW paftd,
-  DWORD dwInstance, DWORD fdwSupport
+  DWORD_PTR dwInstance, DWORD fdwSupport
 );
 
 #define ACMFILTERTAGENUMCB WINELIB_NAME_AW(ACMFILTERTAGENUMCB)
 
 typedef BOOL (CALLBACK *ACMFORMATENUMCBA)(
   HACMDRIVERID hadid, PACMFORMATDETAILSA pafd,
-  DWORD dwInstance, DWORD fdwSupport
+  DWORD_PTR dwInstance, DWORD fdwSupport
 );
 
 typedef BOOL (CALLBACK *ACMFORMATENUMCBW)(
   HACMDRIVERID hadid, PACMFORMATDETAILSW pafd,
-  DWORD dwInstance, DWORD fdwSupport
+  DWORD_PTR dwInstance, DWORD fdwSupport
 );
 
 #define ACMFORMATENUMCB WINELIB_NAME_AW(ACMFORMATENUMCB)
 
 typedef BOOL (CALLBACK *ACMFORMATTAGENUMCBA)(
   HACMDRIVERID hadid, PACMFORMATTAGDETAILSA paftd,
-  DWORD dwInstance, DWORD fdwSupport
+  DWORD_PTR dwInstance, DWORD fdwSupport
 );
 
 typedef BOOL (CALLBACK *ACMFORMATTAGENUMCBW)(
   HACMDRIVERID hadid, PACMFORMATTAGDETAILSW paftd,
-  DWORD dwInstance, DWORD fdwSupport
+  DWORD_PTR dwInstance, DWORD fdwSupport
 );
 
 #define ACMFORMATTAGENUMCB WINELIB_NAME_AW(ACMFORMATTAGENUMCB)
@@ -633,7 +633,7 @@ MMRESULT WINAPI acmDriverDetailsW(
 #define acmDriverDetails WINELIB_NAME_AW(acmDriverDetails)
 
 MMRESULT WINAPI acmDriverEnum(
-  ACMDRIVERENUMCB fnCallback, DWORD dwInstance, DWORD fdwEnum
+  ACMDRIVERENUMCB fnCallback, DWORD_PTR dwInstance, DWORD fdwEnum
 );
 MMRESULT WINAPI acmDriverID(
   HACMOBJ hao, PHACMDRIVERID phadid, DWORD fdwDriverID
@@ -668,11 +668,11 @@ MMRESULT WINAPI acmFilterDetailsW(
 
 MMRESULT WINAPI acmFilterEnumA(
   HACMDRIVER had, PACMFILTERDETAILSA pafd,
-  ACMFILTERENUMCBA fnCallback, DWORD dwInstance, DWORD fdwEnum
+  ACMFILTERENUMCBA fnCallback, DWORD_PTR dwInstance, DWORD fdwEnum
 );
 MMRESULT WINAPI acmFilterEnumW(
   HACMDRIVER had, PACMFILTERDETAILSW pafd,
-  ACMFILTERENUMCBW fnCallback, DWORD dwInstance, DWORD fdwEnum
+  ACMFILTERENUMCBW fnCallback, DWORD_PTR dwInstance, DWORD fdwEnum
 );
 #define acmFilterEnum WINELIB_NAME_AW(acmFilterEnum)
 
@@ -686,11 +686,11 @@ MMRESULT WINAPI acmFilterTagDetailsW(
 
 MMRESULT WINAPI acmFilterTagEnumA(
   HACMDRIVER had, PACMFILTERTAGDETAILSA paftd,
-  ACMFILTERTAGENUMCBA fnCallback, DWORD dwInstance, DWORD fdwEnum
+  ACMFILTERTAGENUMCBA fnCallback, DWORD_PTR dwInstance, DWORD fdwEnum
 );
 MMRESULT WINAPI acmFilterTagEnumW(
   HACMDRIVER had, PACMFILTERTAGDETAILSW paftd,
-  ACMFILTERTAGENUMCBW fnCallback, DWORD dwInstance, DWORD fdwEnum
+  ACMFILTERTAGENUMCBW fnCallback, DWORD_PTR dwInstance, DWORD fdwEnum
 );
 #define acmFilterTagEnum WINELIB_NAME_AW(acmFilterTagEnum)
 
@@ -712,11 +712,11 @@ MMRESULT WINAPI acmFormatDetailsW(
 
 MMRESULT WINAPI acmFormatEnumA(
   HACMDRIVER had, PACMFORMATDETAILSA pafd,
-  ACMFORMATENUMCBA fnCallback, DWORD dwInstance, DWORD fdwEnum
+  ACMFORMATENUMCBA fnCallback, DWORD_PTR dwInstance, DWORD fdwEnum
 );
 MMRESULT WINAPI acmFormatEnumW(
   HACMDRIVER had, PACMFORMATDETAILSW pafd,
-  ACMFORMATENUMCBW fnCallback, DWORD dwInstance,  DWORD fdwEnum
+  ACMFORMATENUMCBW fnCallback, DWORD_PTR dwInstance,  DWORD fdwEnum
 );
 #define acmFormatEnum WINELIB_NAME_AW(acmFormatEnum)
 
@@ -734,11 +734,11 @@ MMRESULT WINAPI acmFormatTagDetailsW(
 
 MMRESULT WINAPI acmFormatTagEnumA(
   HACMDRIVER had, PACMFORMATTAGDETAILSA paftd,
-  ACMFORMATTAGENUMCBA fnCallback, DWORD dwInstance, DWORD fdwEnum
+  ACMFORMATTAGENUMCBA fnCallback, DWORD_PTR dwInstance, DWORD fdwEnum
 );
 MMRESULT WINAPI acmFormatTagEnumW(
   HACMDRIVER had, PACMFORMATTAGDETAILSW paftd,
-  ACMFORMATTAGENUMCBW fnCallback, DWORD dwInstance, DWORD fdwEnum
+  ACMFORMATTAGENUMCBW fnCallback, DWORD_PTR dwInstance, DWORD fdwEnum
 );
 #define acmFormatTagEnum WINELIB_NAME_AW(acmFormatTagEnum)
 
@@ -758,8 +758,8 @@ MMRESULT WINAPI acmStreamMessage(
 );
 MMRESULT WINAPI acmStreamOpen(
   PHACMSTREAM phas, HACMDRIVER had, PWAVEFORMATEX pwfxSrc,
-  PWAVEFORMATEX pwfxDst, PWAVEFILTER pwfltr, DWORD dwCallback,
-  DWORD dwInstance, DWORD fdwOpen
+  PWAVEFORMATEX pwfxDst, PWAVEFILTER pwfltr, DWORD_PTR dwCallback,
+  DWORD_PTR dwInstance, DWORD fdwOpen
 );
 MMRESULT WINAPI acmStreamPrepareHeader(
   HACMSTREAM has, PACMSTREAMHEADER pash, DWORD fdwPrepare

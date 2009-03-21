@@ -38,7 +38,7 @@
  */
 
 #define MAKE_ACM_VERSION(mjr, mnr, bld) \
-  (((long)(mjr)<<24) | ((long)(mnr)<<16) | ((long)bld))
+  (((LONG)(mjr)<<24) | ((LONG)(mnr)<<16) | ((LONG)bld))
 
 #define ACMDRVOPENDESC_SECTIONNAME_CHARS
 
@@ -100,40 +100,40 @@ typedef struct _ACMDRVSTREAMINSTANCE
   PWAVEFORMATEX   pwfxSrc;
   PWAVEFORMATEX   pwfxDst;
   PWAVEFILTER     pwfltr;
-  DWORD           dwCallback;
-  DWORD           dwInstance;
+  DWORD_PTR       dwCallback;
+  DWORD_PTR       dwInstance;
   DWORD           fdwOpen;
   DWORD           fdwDriver;
-  DWORD           dwDriver;
+  DWORD_PTR       dwDriver;
   HACMSTREAM    has;
 } ACMDRVSTREAMINSTANCE, *PACMDRVSTREAMINSTANCE;
 
 typedef struct _ACMDRVSTREAMHEADER *PACMDRVSTREAMHEADER;
 typedef struct _ACMDRVSTREAMHEADER {
-  DWORD  cbStruct;
-  DWORD  fdwStatus;
-  DWORD  dwUser;
-  LPBYTE pbSrc;
-  DWORD  cbSrcLength;
-  DWORD  cbSrcLengthUsed;
-  DWORD  dwSrcUser;
-  LPBYTE pbDst;
-  DWORD  cbDstLength;
-  DWORD  cbDstLengthUsed;
-  DWORD  dwDstUser;
+  DWORD                cbStruct;
+  DWORD                fdwStatus;
+  DWORD_PTR            dwUser;
+  LPBYTE               pbSrc;
+  DWORD                cbSrcLength;
+  DWORD                cbSrcLengthUsed;
+  DWORD_PTR            dwSrcUser;
+  LPBYTE               pbDst;
+  DWORD                cbDstLength;
+  DWORD                cbDstLengthUsed;
+  DWORD_PTR            dwDstUser;
 
-  DWORD fdwConvert;
+  DWORD                fdwConvert;
   PACMDRVSTREAMHEADER *padshNext;
-  DWORD fdwDriver;
-  DWORD dwDriver;
+  DWORD                fdwDriver;
+  DWORD_PTR            dwDriver;
 
   /* Internal fields for ACM */
-  DWORD  fdwPrepared;
-  DWORD  dwPrepared;
-  LPBYTE pbPreparedSrc;
-  DWORD  cbPreparedSrcLength;
-  LPBYTE pbPreparedDst;
-  DWORD  cbPreparedDstLength;
+  DWORD                fdwPrepared;
+  DWORD_PTR            dwPrepared;
+  LPBYTE               pbPreparedSrc;
+  DWORD                cbPreparedSrcLength;
+  LPBYTE               pbPreparedDst;
+  DWORD                cbPreparedDstLength;
 } ACMDRVSTREAMHEADER;
 
 typedef struct _ACMDRVSTREAMSIZE

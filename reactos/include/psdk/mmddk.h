@@ -381,8 +381,8 @@ typedef JOYDEVMSGPROC *LPJOYDEVMSGPROC;
 #define MAKEMCIRESOURCE(wRet, wRes) MAKELRESULT((wRet), (wRes))
 
 typedef struct {
-	DWORD   		dwCallback;
-	DWORD   		dwInstance;
+	DWORD_PTR		dwCallback;
+	DWORD_PTR		dwInstance;
 	HMIDIOUT		hMidi;
 	DWORD   		dwFlags;
 } PORTALLOC, *LPPORTALLOC;
@@ -393,7 +393,7 @@ typedef struct {
 	DWORD_PTR		dwCallback;
 	DWORD_PTR		dwInstance;
 	UINT			uMappedDeviceID;
-	DWORD			dnDevNode;
+	DWORD_PTR		dnDevNode;
 } WAVEOPENDESC, *LPWAVEOPENDESC;
 
 typedef struct {
@@ -403,9 +403,9 @@ typedef struct {
 
 typedef struct {
 	HMIDI			hMidi;
-	DWORD			dwCallback;
-	DWORD			dwInstance;
-        DWORD          		dnDevNode;
+	DWORD_PTR		dwCallback;
+	DWORD_PTR		dwInstance;
+	DWORD_PTR		dnDevNode;
         DWORD          		cIds;
         MIDIOPENSTRMID 		rgIds;
 } MIDIOPENDESC, *LPMIDIOPENDESC;
@@ -413,9 +413,9 @@ typedef struct {
 typedef struct tMIXEROPENDESC
 {
 	HMIXEROBJ		hmx;
-        LPVOID			pReserved0;
-	DWORD			dwCallback;
-	DWORD			dwInstance;
+	LPVOID			pReserved0;
+	DWORD_PTR		dwCallback;
+	DWORD_PTR		dwInstance;
 } MIXEROPENDESC, *LPMIXEROPENDESC;
 
 typedef struct {
@@ -433,7 +433,7 @@ typedef struct {
 } MCI_OPEN_DRIVER_PARMSW, *LPMCI_OPEN_DRIVER_PARMSW;
 
 DWORD 			WINAPI	mciGetDriverData(UINT uDeviceID);
-BOOL			WINAPI	mciSetDriverData(UINT uDeviceID, DWORD dwData);
+BOOL			WINAPI	mciSetDriverData(UINT uDeviceID, DWORD_PTR dwData);
 UINT			WINAPI	mciDriverYield(UINT uDeviceID);
 BOOL			WINAPI	mciDriverNotify(HWND hwndCallback, UINT uDeviceID,
 						UINT uStatus);
@@ -449,8 +449,8 @@ BOOL			WINAPI	mciFreeCommandResource(UINT uTable);
 #define DCB_TYPEMASK		0x0007
 #define DCB_NOSWITCH		0x0008			/* don't switch stacks for callback */
 
-BOOL		 	WINAPI	DriverCallback(DWORD dwCallBack, UINT uFlags, HDRVR hDev,
-					       UINT wMsg, DWORD dwUser, DWORD dwParam1, DWORD dwParam2);
+BOOL		 	WINAPI	DriverCallback(DWORD_PTR dwCallBack, UINT uFlags, HDRVR hDev,
+					       UINT wMsg, DWORD_PTR dwUser, DWORD_PTR dwParam1, DWORD_PTR dwParam2);
 
 typedef void (*LPTASKCALLBACK)(DWORD dwInst);
 
@@ -458,9 +458,9 @@ typedef void (*LPTASKCALLBACK)(DWORD dwInst);
 #define TASKERR_OUTOFMEMORY   2
 MMRESULT WINAPI mmTaskCreate(LPTASKCALLBACK, HANDLE*, DWORD);
 void     WINAPI mmTaskBlock(HANDLE);
-BOOL     WINAPI mmTaskSignal(HANDLE);
+BOOL     WINAPI mmTaskSignal(DWORD);
 void     WINAPI mmTaskYield(void);
-HANDLE   WINAPI mmGetCurrentTask(void);
+DWORD   WINAPI mmGetCurrentTask(void);
 
 
 #define  WAVE_DIRECTSOUND               0x0080

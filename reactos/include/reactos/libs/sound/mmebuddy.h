@@ -160,7 +160,7 @@ struct _SOUND_DEVICE_INSTANCE;
         IN  DWORD CapabilitiesSize);
 
 /* This one is for those of us who don't care */
-DEFINE_GETCAPS_FUNCTYPE(MMGETCAPS_FUNC, DWORD_PTR);
+DEFINE_GETCAPS_FUNCTYPE(MMGETCAPS_FUNC, PVOID);
 
 /* These are for those of us that do */
 DEFINE_GETCAPS_FUNCTYPE(MMGETWAVEOUTCAPS_FUNC, LPWAVEOUTCAPS);
