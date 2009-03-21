@@ -173,8 +173,7 @@ IIrpQueue_fnAddMapping(
 
     DPRINT("IIrpQueue_fnAddMapping NumMappings %u SizeOfMapping %lu NumDataAvailable %lu Irp %p\n", This->NumMappings, Mapping->Header->DataUsed, This->NumDataAvailable, Irp);
 
-    /* FIXME use InterlockedCompareExchangePointer */
-    if (InterlockedCompareExchange((volatile long *)&This->FirstMap, (LONG)Mapping, (LONG)0) != 0)
+    if (InterlockedCompareExchangePointer((volatile void *)&This->FirstMap, Mapping, (LONG)0) != 0)
         ExInterlockedInsertTailList(&This->ListHead, &Mapping->Entry, &This->Lock);
 
     (void)InterlockedIncrement((volatile long*)&This->NumMappings);
