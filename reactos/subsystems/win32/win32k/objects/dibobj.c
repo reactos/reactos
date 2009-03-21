@@ -606,6 +606,9 @@ NtGdiGetDIBitsInternal(HDC hDC,
     PBYTE ChkBits = Bits;
     PVOID ColorPtr;
     RGBQUAD *rgbQuads;
+    ULONG SourcePaletteType = 0;
+    ULONG DestPaletteType;
+    ULONG Index;
 
     DPRINT("Entered NtGdiGetDIBitsInternal()\n");
 
@@ -656,6 +659,163 @@ NtGdiGetDIBitsInternal(HDC hDC,
     ColorPtr = ((PBYTE)Info + Info->bmiHeader.biSize);
     rgbQuads = (RGBQUAD *)ColorPtr;
 
+    /* Copy palette information */
+    if (Info->bmiHeader.biBitCount == BitsPerFormat(psurf->SurfObj.iBitmapFormat))
+    {
+      hDestPalette = hSourcePalette;
+      bPaletteMatch = TRUE;
+    }
+    else
+      hDestPalette = BuildDIBPalette(Info, (PINT)&DestPaletteType); //hDestPalette = Dc->DevInfo->hpalDefault;
+
+    SourcePalette = PALETTE_LockPalette(hSourcePalette);
+    /* FIXME - SourcePalette can be NULL!!! Don't assert here! */
+    ASSERT(SourcePalette);
+    SourcePaletteType = SourcePalette->Mode;
+    PALETTE_UnlockPalette(SourcePalette);
+
+    if (bPaletteMatch)
+    {
+      DestPalette = PALETTE_LockPalette(hDestPalette);
+      /* FIXME - DestPalette can be NULL!!!! Don't assert here!!! */
+      DPRINT("DestPalette : %p\n", DestPalette);
+      ASSERT(DestPalette);
+      DestPaletteType = DestPalette->Mode;
+    }
+    else
+    {
+      DestPalette = SourcePalette;
+    }
+
+    /* Copy palette. */
+    /* FIXME: This is largely incomplete. ATM no Core!*/
+    switch(Info->bmiHeader.biBitCount)
+    {
+      case 1:
+      case 4:
+      case 8:
+         Info->bmiHeader.biClrUsed = 0;
+         if ( psurf->hSecure && 
+              BitsPerFormat(psurf->SurfObj.iBitmapFormat) == Info->bmiHeader.biBitCount)
+         {
+            if (Usage == DIB_RGB_COLORS)
+            {
+                if (DestPalette->NumColors != 1 << Info->bmiHeader.biBitCount)
+                   Info->bmiHeader.biClrUsed = DestPalette->NumColors;
+                for (Index = 0;
+                     Index < (1 << Info->bmiHeader.biBitCount) && Index < DestPalette->NumColors;
+                     Index++)
+                {
+                   rgbQuads[Index].rgbRed   = DestPalette->IndexedColors[Index].peRed;
+                   rgbQuads[Index].rgbGreen = DestPalette->IndexedColors[Index].peGreen;
+                   rgbQuads[Index].rgbBlue  = DestPalette->IndexedColors[Index].peBlue;
+                   rgbQuads[Index].rgbReserved = 0;
+                }
+            }
+            else
+            {
+               PWORD Ptr = ColorPtr;
+               for (Index = 0;
+                    Index < (1 << Info->bmiHeader.biBitCount);
+                    Index++)
+               {
+                  Ptr[Index] = (WORD)Index;
+               }
+            }
+         }
+         else
+         {
+            if (Usage == DIB_PAL_COLORS)
+            {
+               PWORD Ptr = ColorPtr;
+               for (Index = 0;
+                    Index < (1 << Info->bmiHeader.biBitCount);
+                    Index++)
+               {
+                  Ptr[Index] = (WORD)Index;
+               }                   
+            }
+            else if (Info->bmiHeader.biBitCount > 1  && bPaletteMatch)
+            {
+               for (Index = 0;
+                    Index < (1 << Info->bmiHeader.biBitCount) && Index < DestPalette->NumColors;
+                    Index++)
+               {
+                  Info->bmiColors[Index].rgbRed   = DestPalette->IndexedColors[Index].peRed;
+                  Info->bmiColors[Index].rgbGreen = DestPalette->IndexedColors[Index].peGreen;
+                  Info->bmiColors[Index].rgbBlue  = DestPalette->IndexedColors[Index].peBlue;
+                  Info->bmiColors[Index].rgbReserved = 0;
+               }
+            }
+            else
+            {
+               switch(Info->bmiHeader.biBitCount)
+               {
+                  case 1:
+                     rgbQuads[0].rgbRed = rgbQuads[0].rgbGreen = rgbQuads[0].rgbBlue = 0;
+                     rgbQuads[0].rgbReserved = 0;
+                     rgbQuads[1].rgbRed = rgbQuads[1].rgbGreen = rgbQuads[1].rgbBlue = 0xff;
+                     rgbQuads[1].rgbReserved = 0;
+                     break;
+                  case 4:
+                     RtlCopyMemory(ColorPtr, EGAColorsQuads, sizeof(EGAColorsQuads));
+                     break;
+                  case 8:
+                  {
+                     INT r, g, b;
+                     RGBQUAD *color;
+
+                     RtlCopyMemory(rgbQuads, DefLogPaletteQuads, 10 * sizeof(RGBQUAD));
+                     RtlCopyMemory(rgbQuads + 246, DefLogPaletteQuads + 10, 10 * sizeof(RGBQUAD));
+                     color = rgbQuads + 10;
+                     for(r = 0; r <= 5; r++) /* FIXME */
+                        for(g = 0; g <= 5; g++)
+                           for(b = 0; b <= 5; b++)
+                           {
+                              color->rgbRed =   (r * 0xff) / 5;
+                              color->rgbGreen = (g * 0xff) / 5;
+                              color->rgbBlue =  (b * 0xff) / 5;
+                              color->rgbReserved = 0;
+                              color++;
+                           }
+                  }
+                  break;
+               }
+            }
+         }
+
+      case 15:
+         if (Info->bmiHeader.biCompression == BI_BITFIELDS)
+         {
+            ((PDWORD)Info->bmiColors)[0] = 0x7c00;
+            ((PDWORD)Info->bmiColors)[1] = 0x03e0;
+            ((PDWORD)Info->bmiColors)[2] = 0x001f;
+         }
+         break;
+
+      case 16:
+         if (Info->bmiHeader.biCompression == BI_BITFIELDS)
+         {
+            ((PDWORD)Info->bmiColors)[0] = 0xf800;
+            ((PDWORD)Info->bmiColors)[1] = 0x07e0;
+            ((PDWORD)Info->bmiColors)[2] = 0x001f;
+         }
+         break;
+
+      case 24:
+      case 32:
+         if (Info->bmiHeader.biCompression == BI_BITFIELDS)
+         {
+            ((PDWORD)Info->bmiColors)[0] = 0xff0000;
+            ((PDWORD)Info->bmiColors)[1] = 0x00ff00;
+            ((PDWORD)Info->bmiColors)[2] = 0x0000ff;
+         }
+         break;
+    }
+
+    if (bPaletteMatch)
+      PALETTE_UnlockPalette(DestPalette);
+
     /* fill out the BITMAPINFO struct */
     if (!ChkBits)
     {  // Core or not to Core? We have converted from Core in Gdi~ so?
@@ -678,6 +838,7 @@ NtGdiGetDIBitsInternal(HDC hDC,
           Info->bmiHeader.biBitCount = BitsPerFormat(psurf->SurfObj.iBitmapFormat);
           switch (psurf->SurfObj.iBitmapFormat)
           {
+              /* FIXME: What about BI_BITFIELDS? */
               case BMF_1BPP:
               case BMF_4BPP:
               case BMF_8BPP:
@@ -715,166 +876,8 @@ NtGdiGetDIBitsInternal(HDC hDC,
     else
     {
        SIZEL DestSize;
-       ULONG SourcePaletteType = 0;
-       ULONG DestPaletteType;
        POINTL SourcePoint;
-       ULONG Index;
 
-       if (Info->bmiHeader.biBitCount == BitsPerFormat(psurf->SurfObj.iBitmapFormat))
-       {
-          hDestPalette = hSourcePalette;
-          bPaletteMatch = TRUE;
-       }
-       else
-          hDestPalette = BuildDIBPalette(Info, (PINT)&DestPaletteType); //hDestPalette = Dc->DevInfo->hpalDefault;
-
-       SourcePalette = PALETTE_LockPalette(hSourcePalette);
-       /* FIXME - SourcePalette can be NULL!!! Don't assert here! */
-       ASSERT(SourcePalette);
-       SourcePaletteType = SourcePalette->Mode;
-       PALETTE_UnlockPalette(SourcePalette);
-
-       if (bPaletteMatch)
-       {
-          DestPalette = PALETTE_LockPalette(hDestPalette);
-          /* FIXME - DestPalette can be NULL!!!! Don't assert here!!! */
-          DPRINT("DestPalette : %p\n", DestPalette);
-          ASSERT(DestPalette);
-          DestPaletteType = DestPalette->Mode;
-       }
-       else
-       {
-          DestPalette = SourcePalette;
-       }
-
-       /* Copy palette. */
-       /* FIXME: This is largely incomplete. ATM no Core!*/
-       switch(Info->bmiHeader.biBitCount)
-       {
-          case 1:
-          case 4:
-          case 8:
-             Info->bmiHeader.biClrUsed = 0;
-             if ( psurf->hSecure && 
-                  BitsPerFormat(psurf->SurfObj.iBitmapFormat) == Info->bmiHeader.biBitCount)
-             {
-                if (Usage == DIB_RGB_COLORS)
-                {
-                    if (DestPalette->NumColors != 1 << Info->bmiHeader.biBitCount)
-                       Info->bmiHeader.biClrUsed = DestPalette->NumColors;
-                    for (Index = 0;
-                         Index < (1 << Info->bmiHeader.biBitCount) && Index < DestPalette->NumColors;
-                         Index++)
-                    {
-                       rgbQuads[Index].rgbRed   = DestPalette->IndexedColors[Index].peRed;
-                       rgbQuads[Index].rgbGreen = DestPalette->IndexedColors[Index].peGreen;
-                       rgbQuads[Index].rgbBlue  = DestPalette->IndexedColors[Index].peBlue;
-                       rgbQuads[Index].rgbReserved = 0;
-                    }
-                }
-                else
-                {
-                   PWORD Ptr = ColorPtr;
-                   for (Index = 0;
-                        Index < (1 << Info->bmiHeader.biBitCount);
-                        Index++)
-                   {
-                      Ptr[Index] = (WORD)Index;
-                   }
-                }
-             }
-             else
-             {
-                if (Usage == DIB_PAL_COLORS)
-                {
-                   PWORD Ptr = ColorPtr;
-                   for (Index = 0;
-                        Index < (1 << Info->bmiHeader.biBitCount);
-                        Index++)
-                   {
-                      Ptr[Index] = (WORD)Index;
-                   }                   
-                }
-                else if (Info->bmiHeader.biBitCount > 1  && bPaletteMatch)
-                {
-                   for (Index = 0;
-                        Index < (1 << Info->bmiHeader.biBitCount) && Index < DestPalette->NumColors;
-                        Index++)
-                   {
-                      Info->bmiColors[Index].rgbRed   = DestPalette->IndexedColors[Index].peRed;
-                      Info->bmiColors[Index].rgbGreen = DestPalette->IndexedColors[Index].peGreen;
-                      Info->bmiColors[Index].rgbBlue  = DestPalette->IndexedColors[Index].peBlue;
-                      Info->bmiColors[Index].rgbReserved = 0;
-                   }
-                }
-                else
-                {
-                   switch(Info->bmiHeader.biBitCount)
-                   {
-                      case 1:
-                         rgbQuads[0].rgbRed = rgbQuads[0].rgbGreen = rgbQuads[0].rgbBlue = 0;
-                         rgbQuads[0].rgbReserved = 0;
-                         rgbQuads[1].rgbRed = rgbQuads[1].rgbGreen = rgbQuads[1].rgbBlue = 0xff;
-                         rgbQuads[1].rgbReserved = 0;
-                         break;
-                      case 4:
-                         RtlCopyMemory(ColorPtr, EGAColorsQuads, sizeof(EGAColorsQuads));
-                         break;
-                      case 8:
-                      {
-                         INT r, g, b;
-                         RGBQUAD *color;
-
-                         RtlCopyMemory(rgbQuads, DefLogPaletteQuads, 10 * sizeof(RGBQUAD));
-                         RtlCopyMemory(rgbQuads + 246, DefLogPaletteQuads + 10, 10 * sizeof(RGBQUAD));
-                         color = rgbQuads + 10;
-                         for(r = 0; r <= 5; r++) /* FIXME */
-                            for(g = 0; g <= 5; g++)
-                               for(b = 0; b <= 5; b++)
-                               {
-                                  color->rgbRed =   (r * 0xff) / 5;
-                                  color->rgbGreen = (g * 0xff) / 5;
-                                  color->rgbBlue =  (b * 0xff) / 5;
-                                  color->rgbReserved = 0;
-                                  color++;
-                               }
-                      }
-                      break;
-                   }
-                }
-             }
-
-          case 15:
-             if (Info->bmiHeader.biCompression == BI_BITFIELDS)
-             {
-                ((PDWORD)Info->bmiColors)[0] = 0x7c00;
-                ((PDWORD)Info->bmiColors)[1] = 0x03e0;
-                ((PDWORD)Info->bmiColors)[2] = 0x001f;
-             }
-             break;
-
-          case 16:
-             if (Info->bmiHeader.biCompression == BI_BITFIELDS)
-             {
-                ((PDWORD)Info->bmiColors)[0] = 0xf800;
-                ((PDWORD)Info->bmiColors)[1] = 0x07e0;
-                ((PDWORD)Info->bmiColors)[2] = 0x001f;
-             }
-             break;
-
-          case 24:
-          case 32:
-             if (Info->bmiHeader.biCompression == BI_BITFIELDS)
-             {
-                ((PDWORD)Info->bmiColors)[0] = 0xff0000;
-                ((PDWORD)Info->bmiColors)[1] = 0x00ff00;
-                ((PDWORD)Info->bmiColors)[2] = 0x0000ff;
-             }
-             break;
-       }
-
-       if (bPaletteMatch)
-          PALETTE_UnlockPalette(DestPalette);
 //
 // If we have a good dib pointer, why not just copy bits from there w/o XLATE'ing them.
 //

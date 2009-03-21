@@ -485,7 +485,7 @@ NtGdiGetBitmapBits(
     OUT OPTIONAL PBYTE pUnsafeBits)
 {
     PSURFACE psurf;
-    LONG  ret;
+    LONG bmSize, ret;
 
     if (pUnsafeBits != NULL && Bytes == 0)
     {
@@ -499,16 +499,19 @@ NtGdiGetBitmapBits(
         return 0;
     }
 
+    bmSize = BITMAP_GetWidthBytes(psurf->SurfObj.sizlBitmap.cx, 
+             BitsPerFormat(psurf->SurfObj.iBitmapFormat)) * 
+             abs(psurf->SurfObj.sizlBitmap.cy);
+    
     /* If the bits vector is null, the function should return the read size */
     if (pUnsafeBits == NULL)
     {
-        ret = psurf->SurfObj.cjBits;
         SURFACE_UnlockSurface(psurf);
-        return ret;
+        return bmSize;
     }
 
     /* Don't copy more bytes than the buffer has */
-    Bytes = min(Bytes, psurf->SurfObj.cjBits);
+    Bytes = min(Bytes, bmSize);
 
     // FIXME: use MmSecureVirtualMemory
     _SEH2_TRY
@@ -852,7 +855,30 @@ BITMAP_GetObject(SURFACE *psurf, INT Count, LPVOID buffer)
             pds->dsBmih.biHeight = pds->dsBm.bmHeight;
             pds->dsBmih.biPlanes = pds->dsBm.bmPlanes;
             pds->dsBmih.biBitCount = pds->dsBm.bmBitsPixel;
-            pds->dsBmih.biCompression = 0; // FIXME!
+            switch (psurf->SurfObj.iBitmapFormat)
+            {
+                /* FIXME: What about BI_BITFIELDS? */
+                case BMF_1BPP:
+                case BMF_4BPP:
+                case BMF_8BPP:
+                case BMF_16BPP:
+                case BMF_24BPP:
+                case BMF_32BPP:
+                   pds->dsBmih.biCompression = BI_RGB;
+                   break;
+                case BMF_4RLE:
+                   pds->dsBmih.biCompression = BI_RLE4;
+                   break;
+                case BMF_8RLE:
+                   pds->dsBmih.biCompression = BI_RLE8;
+                   break;
+                case BMF_JPEG:
+                   pds->dsBmih.biCompression = BI_JPEG;
+                   break;
+                case BMF_PNG:
+                   pds->dsBmih.biCompression = BI_PNG;
+                   break;
+            }
             pds->dsBmih.biSizeImage = psurf->SurfObj.cjBits;
             pds->dsBmih.biXPelsPerMeter = 0;
             pds->dsBmih.biYPelsPerMeter = 0;
