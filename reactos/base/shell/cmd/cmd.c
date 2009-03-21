@@ -258,52 +258,50 @@ static BOOL IsConsoleProcess(HANDLE Process)
 
 
 #ifdef _UNICODE
-#define SHELLEXECUTETEXT   	"ShellExecuteW"
+#define SHELLEXECUTETEXT   	"ShellExecuteExW"
 #else
-#define SHELLEXECUTETEXT   	"ShellExecuteA"
+#define SHELLEXECUTETEXT   	"ShellExecuteExA"
 #endif
 
-typedef HINSTANCE (WINAPI *MYEX)(
-	HWND hwnd,
-	LPCTSTR lpOperation,
-	LPCTSTR lpFile,
-	LPCTSTR lpParameters,
-	LPCTSTR lpDirectory,
-	INT nShowCmd
-);
+typedef BOOL (WINAPI *MYEX)(LPSHELLEXECUTEINFO lpExecInfo);
 
-
-
-static BOOL RunFile(LPTSTR filename)
+static HANDLE RunFile(LPTSTR filename, LPTSTR params)
 {
+	SHELLEXECUTEINFO sei;
 	HMODULE     hShell32;
 	MYEX        hShExt;
-	HINSTANCE   ret;
+	BOOL        ret;
 
 	TRACE ("RunFile(%s)\n", debugstr_aw(filename));
 	hShell32 = LoadLibrary(_T("SHELL32.DLL"));
 	if (!hShell32)
 	{
 		WARN ("RunFile: couldn't load SHELL32.DLL!\n");
-		return FALSE;
+		return NULL;
 	}
 
 	hShExt = (MYEX)(FARPROC)GetProcAddress(hShell32, SHELLEXECUTETEXT);
 	if (!hShExt)
 	{
-		WARN ("RunFile: couldn't find ShellExecuteA/W in SHELL32.DLL!\n");
+		WARN ("RunFile: couldn't find ShellExecuteExA/W in SHELL32.DLL!\n");
 		FreeLibrary(hShell32);
-		return FALSE;
+		return NULL;
 	}
 
-	TRACE ("RunFile: ShellExecuteA/W is at %x\n", hShExt);
+	TRACE ("RunFile: ShellExecuteExA/W is at %x\n", hShExt);
 
-	ret = (hShExt)(NULL, _T("open"), filename, NULL, NULL, SW_SHOWNORMAL);
+	memset(&sei, 0, sizeof sei);
+	sei.cbSize = sizeof sei;
+	sei.fMask = SEE_MASK_NOCLOSEPROCESS | SEE_MASK_NO_CONSOLE;
+	sei.lpFile = filename;
+	sei.lpParameters = params;
+	sei.nShow = SW_SHOWNORMAL;
+	ret = hShExt(&sei);
 
-	TRACE ("RunFile: ShellExecuteA/W returned 0x%p\n", ret);
+	TRACE ("RunFile: ShellExecuteExA/W returned 0x%p\n", ret);
 
 	FreeLibrary(hShell32);
-	return (((DWORD_PTR)ret) > 32);
+	return ret ? sei.hProcess : NULL;
 }
 
 
@@ -496,6 +494,16 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
 		                   &prci))
 
 		{
+			CloseHandle(prci.hThread);
+		}
+		else
+		{
+			// See if we can run this with ShellExecute() ie myfile.xls
+			prci.hProcess = RunFile(szFullName, rest);
+		}
+
+		if (prci.hProcess != NULL)
+		{
 			if (IsConsoleProcess(prci.hProcess))
 			{
 				/* FIXME: Protect this with critical section */
@@ -514,24 +522,15 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
                         {
                             nErrorLevel = 0;
                         }
-			CloseHandle (prci.hThread);
 			CloseHandle (prci.hProcess);
 		}
 		else
 		{
-			TRACE ("[ShellExecute: %s]\n", debugstr_aw(full));
-			// See if we can run this with ShellExecute() ie myfile.xls
-			if (!RunFile(full))
-			{
-				TRACE ("[ShellExecute failed!: %s]\n", debugstr_aw(full));
-				error_bad_command (first);
-                                nErrorLevel = 1;
-			}
-                        else
-                        {
-                                nErrorLevel = 0;
-                        }
+			TRACE ("[ShellExecute failed!: %s]\n", debugstr_aw(full));
+			error_bad_command (first);
+			nErrorLevel = 1;
 		}
+
 		// restore console mode
 		SetConsoleMode (
 			GetStdHandle( STD_INPUT_HANDLE ),
