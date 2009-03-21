@@ -84,7 +84,7 @@
 
     [%+ INCLUDE "global/help-header.html.tmpl" %]
 
-    <link href="/style.css" type="text/css" rel="stylesheet">
+    <link href="/shared/css/menu.css" type="text/css" rel="stylesheet">
     
     [%# Set up the skin CSS cascade:
       #  1. Standard Bugzilla stylesheet set (persistent)
@@ -309,9 +309,8 @@
 </td>
 
 <td id="bugzillaContent">
-<div class="contentSmall">
 [% INCLUDE global/banner.html.tmpl %]
-<span class="contentSmallTitle">ReactOS bug tracking and reporting - [% title %]</span>
+<h1>ReactOS bug tracking and reporting - [% title %]</h1>
 
 [%# Migration note: the following file corresponds to the old Param
   # 'bannerhtml'

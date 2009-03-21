@@ -14,6 +14,8 @@
 if( !defined( 'MEDIAWIKI' ) )
 	die( -1 );
 
+require_once(ROOT_PATH . "shared/subsys_layout.php");
+
 /**
  * Inherit main code from SkinTemplate, set the CSS and template filter.
  * @todo document
@@ -63,7 +65,7 @@ class RosCMSTemplate extends QuickTemplate {
 		<meta http-equiv="Content-Type" content="<?php $this->text('mimetype') ?>; charset=<?php $this->text('charset') ?>" />
 		<?php $this->html('headlinks') ?>
 		<title><?php $this->text('pagetitle') ?></title>
-		<link href="/css/menu.css" type="text/css" rel="stylesheet" />
+		<link href="/shared/css/menu.css" type="text/css" rel="stylesheet" />
 		<style type="text/css" media="screen, projection">/*<![CDATA[*/
 			@import "<?php $this->text('stylepath') ?>/common/shared.css?<?php echo $GLOBALS['wgStyleVersion'] ?>";
 			@import "<?php $this->text('stylepath') ?>/<?php $this->text('stylename') ?>/main.css?<?php echo $GLOBALS['wgStyleVersion'] ?>";
@@ -107,8 +109,7 @@ class RosCMSTemplate extends QuickTemplate {
 	if(strlen($userlang) != 2)
 		$userlang = "en";
 	
-	readfile("http://www.reactos.org/$userlang/subsys_extern_menu_top.html");
-	readfile("http://www.reactos.org/$userlang/subsys_extern_menu_left.html");
+	BasicLayout($userlang);
 
 		$sidebar = $this->data['sidebar'];		
 		if ( !isset( $sidebar['SEARCH'] ) ) $sidebar['SEARCH'] = true;
@@ -166,7 +167,7 @@ class RosCMSTemplate extends QuickTemplate {
 			<!-- Google AdSense - end -->
 		</td>
 		<td>
-			<div class="contentSmallTitle"><a href="http://www.reactos.org/en/community.html">ReactOS Community</a> &gt; ReactOS Wiki</div>
+			<h1><a href="http://www.reactos.org/<?php echo $userlang; ?>/community.html">ReactOS Community</a> &gt; ReactOS Wiki</h1>
 
 <div id="wikiContent">
 	<div id="globalWrapper">

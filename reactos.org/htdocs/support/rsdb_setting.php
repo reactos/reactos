@@ -53,8 +53,8 @@
 		// Items per Page
 		$RSDB_intern_items_per_page = 25;
 		
-		@define("ROSCMS_PATH", "../roscms/");
-		require_once(ROSCMS_PATH . "logon/subsys_login.php");
+		@define("ROOT_PATH", "../");
+		require_once(ROOT_PATH . "roscms/logon/subsys_login.php");
 
 		// User ID
 		$RSDB_intern_user_id = roscms_subsys_login('', ROSCMS_LOGIN_OPTIONAL, "/" . $RSDB_intern_path);

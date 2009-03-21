@@ -273,7 +273,7 @@ function serendipity_deleteCookie($name) {
     unset($serendipity['COOKIE'][$name]);
 }
 
-require_once(ROSCMS_PATH . "logon/subsys_login.php");
+require_once(ROOT_PATH . "roscms/logon/subsys_login.php");
 
 function serendipity_authenticate_author($username = '', $password = '', $is_md5 = false, $use_external = true) {
     global $serendipity;

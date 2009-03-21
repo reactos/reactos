@@ -14,7 +14,7 @@ if (file_exists($probelang)) {
 @define('PLUGIN_ROSCMSACCOUNT_REGISTER', 'Register');
 @define('PLUGIN_ROSCMSACCOUNT_MANAGE', 'Manage blog entries');
 
-require_once(ROSCMS_PATH . "logon/subsys_login.php");
+require_once(ROOT_PATH . "roscms/logon/subsys_login.php");
 
 class serendipity_plugin_roscmsaccount extends serendipity_plugin 
 {

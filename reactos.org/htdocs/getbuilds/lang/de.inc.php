@@ -1,16 +1,14 @@
-﻿<?php
+<?php
 /*
   PROJECT:    ReactOS Website
-  LICENSE:    GPL v2 or any later version
-  FILE:       web/reactos.org/htdocs/getbuilds/lang/de.inc.php
+  LICENSE:    GNU GPLv2 or any later version as published by the Free Software Foundation
   PURPOSE:    Easily download prebuilt ReactOS Revisions
-  COPYRIGHT:  Copyright 2007-2008 Colin Finck <mail@colinfinck.de>
+  COPYRIGHT:  Copyright 2007-2009 Colin Finck <mail@colinfinck.de>
   TRANSLATOR: Colin Finck <mail@colinfinck.de>
+  
+  charset=utf-8 without BOM
 */
-	
-	/**** German resources (charset=utf-8) ****/
-	$getbuilds_langres["language"] = "Sprache";
-	
+
 	$getbuilds_langres["header"] = '<a href="http://www.reactos.org/">Startseite</a> &gt; ReactOS SVN Trunk-Builds';
 	$getbuilds_langres["title"] = "ReactOS Trunk-Builds Herunterladen";
 	$getbuilds_langres["intro"] = 'Hier können Sie aktuelle aber auch ältere ReactOS-Entwicklerversionen herunterladen, die von unserem <a href="http://www.reactos.org/wiki/index.php/RosBuild">BuildBot</a> erstellt wurden.';
@@ -30,23 +28,12 @@
 	$getbuilds_langres["nextrev"] = "Nächste Revision";
 	$getbuilds_langres["showrev"] = "Anzeigen";
 	$getbuilds_langres["gettinglist"] = "Dateiliste wird geladen";
-	$getbuilds_langres["rangeinfo"] = "Sie können eine Revisionsnummer (z.B. %s) oder einen Revisionsbereich eingeben (z.B. %s-%s)";
 	$getbuilds_langres["isotype"] = "CD-Image-Typen anzeigen";
 	
 	$getbuilds_langres["foundfiles"] = "%s Dateien gefunden!";
-	
-	$getbuilds_langres["firstpage_title"] = "Gehe zur ersten Seite";
-	$getbuilds_langres["prevpage_title"] = "Vorherige Seite";
-	$getbuilds_langres["prevpage"] = "Zurück";
-	$getbuilds_langres["page"] = "Seite";
-	$getbuilds_langres["nextpage"] = "Vor";
-	$getbuilds_langres["nextpage_title"] = "Nächste Seite";
-	$getbuilds_langres["lastpage_title"] = "Gehe zur letzten Seite";
-	
 	$getbuilds_langres["filename"] = "Dateiname";
 	$getbuilds_langres["filesize"] = "Größe";
 	$getbuilds_langres["filedate"] = "Zuletzt geändert";
-	$getbuilds_langres["pleasewait"] = "Bitte warten";
 	
 	$getbuilds_langres["nofiles"] 	 = "Für Revision %s gibt es keine vorkompilierten Dateien!";
 	$getbuilds_langres["invalidrev"] = "Ungültige Revisionsnummer!";

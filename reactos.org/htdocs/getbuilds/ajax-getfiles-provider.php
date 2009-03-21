@@ -1,8 +1,7 @@
 <?php
 /*
   PROJECT:    ReactOS Website
-  LICENSE:    GPL v2 or any later version
-  FILE:       web/reactos.org/htdocs/getbuilds/ajax-getfiles-provider.php
+  LICENSE:    GNU GPLv2 or any later version as published by the Free Software Foundation
   PURPOSE:    Easily download prebuilt ReactOS Revisions
   COPYRIGHT:  Copyright 2007-2008 Colin Finck <mail@colinfinck.de>
 */
@@ -16,77 +15,63 @@
 	$REV_RANGE_LIMIT = 3000;
 
 	// Functions
-	function fsize_str( $size )
+	function fsize_str($size)
 	{
-		if( $size > 1000000 )
+		if($size > 1000000)
 		{
 			$size = $size / 1048576;
 			$unit = " MB";
 		}
-		else if( $size > 1000 )
+		else if($size > 1000)
 		{
 			$size = $size / 1024;
 			$unit = " KB";
 		}
 		else
+		{
 			$unit = " Bytes";
+		}
 		
-		return number_format( $size, 2, ".", ",") . $unit;
+		return number_format($size, 2, ".", ",") . $unit;
 	}
 	
 	
 	// Entry point
 	header("Content-type: text/xml");
 	
-	if( !isset( $_GET["get"] ) || !isset( $_GET["startrev"] ) )
+	if(!isset($_GET["startrev"]))
 		die("<error><message>Necessary information not specified!</message></error>");
 	
-	if( $_GET["endrev"] - $_GET["startrev"] > $REV_RANGE_LIMIT )
-		die( "<error><message>LIMIT</message><limit>$REV_RANGE_LIMIT</limit></error>" );
+	if($_GET["endrev"] - $_GET["startrev"] > $REV_RANGE_LIMIT)
+		die("<error><message>LIMIT</message><limit>$REV_RANGE_LIMIT</limit></error>");
 	
-	switch( $_GET["get"] )
-	{
-		case "all":
-			$get_infos = true;
-			$get_filelist = true;
-			break;
-		
-		case "infos":
-			$get_infos = true;
-			break;
-		
-		case "filelist":
-			$get_filelist = true;
-			break;
-		
-		default:
-			die("<error><message>Wrong input for parameter 'get'!</message></error>");
-	}
+	if($_GET["filelist"])
+		$get_filelist = true;
 	
 	$directories = array("bootcd", "livecd");
 	$file_patterns = array();
 	
-	if( $_GET["bootcd-dbg"] == 1 )
+	if($_GET["bootcd-dbg"])
 		$file_patterns[] = "#bootcd-[0-9]+-dbg#";
-	if( $_GET["livecd-dbg"] == 1 )
+	if($_GET["livecd-dbg"])
 		$file_patterns[] = "#livecd-[0-9]+-dbg#";
-	if( $_GET["bootcd-rel"] == 1 )
+	if($_GET["bootcd-rel"])
 		$file_patterns[] = "#bootcd-[0-9]+-rel#";
-	if( $_GET["livecd-rel"] == 1 )
+	if($_GET["livecd-rel"])
 		$file_patterns[] = "#livecd-[0-9]+-rel#";
 	
 	$exitloop = false;
-	$filenum = 0;
+	$filecount = 0;
 	$firstrev = 0;
 	$lastrev = 0;
 	$morefiles = 0;
 	
 	foreach($directories as $d)
 	{
-		$dir = opendir( $ROOT_DIR . $d ) or die("<error><message>opendir failed!</message></error>");
+		$dir = opendir($ROOT_DIR . $d) or die("<error><message>opendir failed!</message></error>");
 	
-		while( $fname = readdir($dir) )
-			if( preg_match( "#-([0-9]+)-#", $fname, $matches ) )
+		while($fname = readdir($dir))
+			if(preg_match("#-([0-9]+)-#", $fname, $matches))
 				$fnames[ $matches[1] ][] = $fname;
 		
 		closedir($dir);
@@ -94,43 +79,43 @@
 	
 	echo "<fileinformation>";
 	
-	for( $i = $_GET["startrev"]; $i <= $_GET["endrev"]; $i++ )
+	for($i = $_GET["startrev"]; $i <= $_GET["endrev"]; $i++)
 	{
-		if( isset( $fnames[$i] ) )
+		if(isset($fnames[$i]))
 		{
-			sort( $fnames[$i] );
+			sort($fnames[$i]);
 			
-			foreach( $fnames[$i] as $fname )
+			foreach($fnames[$i] as $fname)
 			{
 				// Is it an allowed CD Image type?
-				foreach( $file_patterns as $p )
+				foreach($file_patterns as $p)
 				{
-					if( preg_match( $p, $fname ) )
+					if(preg_match($p, $fname))
 					{
 						// This is a file we are looking for
-						if( $get_filelist )
+						if($get_filelist)
 						{
 							$dir = substr($fname, 0, 6);
 							
 							echo "<file>";
-							printf("<name>%s</name>", $fname );
-							printf("<size>%s</size>", fsize_str( filesize( "$ROOT_DIR/$dir/$fname" ) ) );
-							printf("<date>%s</date>", date( "Y-m-d H:i", filemtime( "$ROOT_DIR/$dir/$fname" ) ) );
+							printf("<name>%s</name>", $fname);
+							printf("<size>%s</size>", fsize_str(filesize("$ROOT_DIR/$dir/$fname")));
+							printf("<date>%s</date>", date("Y-m-d H:i", filemtime("$ROOT_DIR/$dir/$fname")));
 							echo "</file>";
 						}
 					
-						if( $i < $firstrev || $firstrev == 0 )
+						if($i < $firstrev || $firstrev == 0)
 							$firstrev = $i;
 				
-						if( $i > $lastrev )
+						if($i > $lastrev)
 							$lastrev = $i;
 						
-						$filenum++;
+						$filecount++;
 						break;
 					}
 				}
 				
-				if( $filenum == $MAX_FILES_PER_PAGE )
+				if($filecount == $MAX_FILES_PER_PAGE)
 				{
 					$morefiles = 1;
 					$exitloop = true;
@@ -139,17 +124,14 @@
 			}
 		}
 		
-		if( $exitloop )
+		if($exitloop)
 			break;
 	}
 	
-	if( $get_infos )
-	{
-		printf( "<filenum>%s</filenum>", $filenum );
-		printf( "<firstrev>%s</firstrev>", $firstrev );
-		printf( "<lastrev>%s</lastrev>", $lastrev );
-		printf( "<morefiles>%s</morefiles>", $morefiles );
-	}
+	printf("<filecount>%d</filecount>", $filecount);
+	printf("<firstrev>%d</firstrev>", $firstrev);
+	printf("<lastrev>%d</lastrev>", $lastrev);
+	printf("<morefiles>%d</morefiles>", $morefiles);
 	
 	echo "</fileinformation>";
 ?>

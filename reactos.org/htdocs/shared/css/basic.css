@@ -1,0 +1,30 @@
+/*
+  PROJECT:    ReactOS Shared Website Components
+  LICENSE:    GNU GPLv2 or any later version as published by the Free Software Foundation
+  PURPOSE:    Style file for inclusion inside subsystems, provides the general look of ReactOS webpages
+  COPYRIGHT:  Copyright 2008-2009 Colin Finck <colin@reactos.org>
+*/
+
+body {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 10pt;
+}
+
+h1 {
+	font-size: 14px;
+	font-weight: bold;
+	color: white;
+	background-color: #5984C3;
+	padding: 0px 0px 1px 10px;
+	margin-top: 0;
+}
+
+h1 a {
+	color: white;
+	text-decoration: none;
+}
+
+h1 a:hover {
+	color: white;
+	text-decoration: underline;
+}

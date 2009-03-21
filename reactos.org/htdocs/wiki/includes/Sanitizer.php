@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * XHTML sanitizer for MediaWiki
  *

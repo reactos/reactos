@@ -135,6 +135,12 @@
 	}
 	else {
 		if ($ros_paste_SET_cnp == "1") {
+			/* Form processing.. */
+			
+			// deny any form coming from non logged in users
+			if (!$RSDB_intern_user_id) {
+				die('log in first');
+			}
 		
 			$ros_paste_SET_lang = "";
 			$ros_paste_SET_usrname = "";
@@ -169,15 +175,10 @@
 				$PASTE_var_nick = $ros_paste_SET_nick;
 			}
 			elseif ($ros_paste_SET_usrname == "2") {
-				if ($ros_paste_SET_husrname == "") {
-					$PASTE_var_nick = "Anonymous";
-				}
-				else {
-					$PASTE_var_nick = $ros_paste_SET_husrname;
-				}
+				$PASTE_var_nick = $ros_paste_SET_husrname;
 			}
 			else {
-				$PASTE_var_nick = "Anonymous";
+				die("Invalid usrname option!");
 			}
 			
 			// Days:
@@ -247,7 +248,6 @@
 			$paste_sql="INSERT INTO `paste_service` ( `paste_date` , `paste_days` , `paste_usrid` , `paste_nick` , `paste_desc` , `paste_lines` , `paste_tabs`, `paste_public` , `paste_lang` , `paste_datetime` , `paste_ip` , `paste_proxy` , `paste_host` ) 
 						VALUES ( CURDATE( ) , '".mysql_real_escape_string($PASTE_var_days)."', '".mysql_real_escape_string($ros_paste_SET_husrid)."', '".mysql_real_escape_string($PASTE_var_nick)."', '".mysql_real_escape_string($PASTE_var_desc)."', '".mysql_real_escape_string($PASTE_var_lines)."', '".mysql_real_escape_string($PASTE_var_tabs)."', '".mysql_real_escape_string($PASTE_var_public)."', '".mysql_real_escape_string($PASTE_var_lang)."', '".$tmp_insert_date."', '".mysql_real_escape_string($ip)."', '".mysql_real_escape_string($proxy)."', '".mysql_real_escape_string($host)."' );";
 			$paste_query=mysql_query($paste_sql);
-			
 			$sql_inserted_entry = "SELECT paste_id 
 									FROM paste_service 
 									WHERE paste_datetime = '".$tmp_insert_date."'
@@ -297,7 +297,11 @@
 			header("Location: ". $ros_paste_SET_path_ex . $result_inserted_entry['paste_id']. "/");
 		}
 		else {
+			/* Show interface for submissions */
 			create_header();
+			
+			// show interface only to logged in users
+			if($RSDB_intern_user_id) {
 
 	?>
 		<h1><a href="http://www.reactos.org/">Home</a> &gt; Paste Service</h1>
@@ -398,6 +402,16 @@ Yes <font size="1">(list the paste on &quot;recent pastes&quot; page) </font><br
 	  </form>
 	
 <?php
+		} // ! if ($RSDB_intern_user_id)
+		else {
+			// user is not logged in. forbid any posting
+			echo '<h1><a href="http://www.reactos.org/">Home</a> &gt; Paste Service</h1>
+			<h2>Please log in first</h2>
+			<table border="0" cellpadding="1" cellspacing="1" style="width: 100%; background: #E2E2E2">
+			<tr><td>You need to be logged in to use this service</td></tr>
+			</table>';
 		}
+		
+		} // end of submission interface
 	}
 ?>

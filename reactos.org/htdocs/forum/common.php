@@ -16,6 +16,8 @@ if (!defined('IN_PHPBB'))
 	exit;
 }
 
+define("ROOT_PATH", "$phpbb_root_path/../");
+
 $starttime = explode(' ', microtime());
 $starttime = $starttime[1] + $starttime[0];
 

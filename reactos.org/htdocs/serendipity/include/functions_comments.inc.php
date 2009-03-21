@@ -309,7 +309,7 @@ function serendipity_approveComment($cid, $entry_id, $force = false) {
     return true;
 }
 
-require_once(ROSCMS_PATH . "logon/subsys_login.php");
+require_once(ROOT_PATH . "roscms/logon/subsys_login.php");
 @define('ROSCMSLOGIN_NOT_LOGGEDIN', 'You need to be logged in to leave a comment');
 
 

@@ -1,16 +1,14 @@
-﻿<?php
+<?php
 /*
   PROJECT:    People Map of the ReactOS Website
-  LICENSE:    GPL v2 or any later version
-  FILE:       web/reactos.org/htdocs/peoplemap/lang/de.inc.php
+  LICENSE:    GNU GPLv2 or any later version as published by the Free Software Foundation
   PURPOSE:    Translation
-  COPYRIGHT:  Copyright 2007-2008 Colin Finck <mail@colinfinck.de>
+  COPYRIGHT:  Copyright 2007-2009 Colin Finck <mail@colinfinck.de>
   TRANSLATOR: Colin Finck
+  
+  charset=utf-8 without BOM
 */
-	
-	/**** German resources (charset=utf-8) ****/
-	$peoplemap_langres["language"] = "Sprache";
-	
+
 	$peoplemap_langres["header"] = '<a href="http://www.reactos.org/">Startseite</a> &gt; ReactOS Personen-Karte';
 	$peoplemap_langres["title"] = "ReactOS Personen-Karte";
 	$peoplemap_langres["intro"] = 'Die folgende Karte zeigt die Standorte von ReactOS-Entwicklern und -Benutzern.';

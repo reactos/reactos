@@ -1,51 +1,19 @@
 <?php
 /*
   PROJECT:    People Map of the ReactOS Website
-  LICENSE:    GPL v2 or any later version
-  FILE:       web/reactos.org/htdocs/peoplemap/index.php
+  LICENSE:    GNU GPLv2 or any later version as published by the Free Software Foundation
   PURPOSE:    Main web page
-  COPYRIGHT:  Copyright 2007-2008 Colin Finck <mail@colinfinck.de>
+  COPYRIGHT:  Copyright 2007-2009 Colin Finck <mail@colinfinck.de>
 */
+
+	define("ROOT_PATH", "../");
 
 	require_once("config.inc.php");
 	require_once("languages.inc.php");
+	require_once(ROOT_PATH . "shared/subsys_layout.php");
 	
-	// Get the domain for the cookie (with a leading dot if possible). Borrowed from "utils.php" of RosCMS.
-	function cookie_domain()
-	{
-		if( isset($_SERVER['SERVER_NAME']) )
-		{
-			if( preg_match('/(\.[^.]+\.[^.]+$)/', $_SERVER['SERVER_NAME'], $matches) )
-				return $matches[1];
-			else
-				return "";
-		}
-		else
-			return "";
-	}
-	
-	// Get the language and include it
-	if( isset($_GET["lang"]) )
-		$lang = $_GET["lang"];
-	else if( isset($_COOKIE["roscms_usrset_lang"]) )
-		$lang = $_COOKIE["roscms_usrset_lang"];
-	
-	// Check if the language is valid
-	$lang_valid = false;
-	
-	foreach( $peoplemap_languages as $lang_key => $lang_name )
-	{
-		if( $lang == $lang_key )
-		{
-			$lang_valid = true;
-			break;
-		}
-	}
-	
-	if( !$lang_valid )
-		$lang = "en";
-	
-	setcookie( "roscms_usrset_lang", $lang, time() + 5 * 30 * 24 * 3600, "/", cookie_domain() );
+	GetLanguage();
+	require_once(ROOT_PATH . "shared/lang/$lang.inc.php");
 	require_once("lang/$lang.inc.php");
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
@@ -53,31 +21,22 @@
 <head>
 	<meta http-equiv="content-type" content="text/html; charset=utf-8">
 	<title><?php echo $peoplemap_langres["title"]; ?></title>
+	<link rel="stylesheet" type="text/css" href="../shared/css/menu.css">
+	<link rel="stylesheet" type="text/css" href="../shared/css/reactos.css">
 	<link rel="stylesheet" type="text/css" href="peoplemap.css">
 	<!--[if IE 6]><link rel="stylesheet" type="text/css" href="ie6-fixes.css"><![endif]-->
 	<script type="text/javascript" src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo $GOOGLE_MAPS_KEY; ?>"></script>
+	<script type="text/javascript" src="../shared/js/ajax.js"></script>
 	<script type="text/javascript">
-	<?php require_once("peoplemap.js.php"); ?>
+		<?php require_once("peoplemap.js.php"); ?>
 	</script>
 </head>
 <body onload="Load()" onunload="Unload()">
 
 <?php
-	readfile("http://www.reactos.org/$lang/subsys_extern_menu_top.html");
-	readfile("http://www.reactos.org/$lang/subsys_extern_menu_left.html");
+	BasicLayout($lang);
+	LanguageBox($lang);
 ?>
-
-<div class="navTitle"><?php echo $peoplemap_langres["language"]; ?></div>
-	<ol>
-		<li style="text-align: center;">
-			<select size="1" onchange="window.location.href = '<?php echo "http://" . $_SERVER["SERVER_NAME"] . $_SERVER["PHP_SELF"]; ?>?lang=' + this.options[this.selectedIndex].value;">
-				<?php
-					foreach($peoplemap_languages as $lang_key => $lang_name)
-						printf('<option value="%s"%s>%s</option>', $lang_key, ($lang_key == $lang ? ' selected' : ''), $lang_name);
-				?>
-			</select>
-		</li>
-	</ol>
 </td>
 <td id="content">
 
@@ -119,15 +78,21 @@
 				<div class="bubble">
 					<div id="counttext">
 						<?php
-							$db = mysql_connect($DB_HOST, $DB_USER, $DB_PASS) or die("Could not connect to the database!");
+							try
+							{
+								$dbh = new PDO("mysql:host=$DB_HOST", $DB_USER, $DB_PASS);
+							}
+							catch(PDOException $e)
+							{
+								// Give no exact error message here, so no server internals are exposed
+								die("<error>Could not establish the DB connection</error>");
+							}
 							
-							$query = "SELECT COUNT(*) FROM $DB_ROSCMS.users;";
-							$result = mysql_query($query, $db);
-							$user_count = mysql_result($result, 0);
+							$stmt = $dbh->query("SELECT COUNT(*) FROM $DB_ROSCMS.users") or die("Query failed #1");
+							$user_count = (int)$stmt->fetchColumn();
 							
-							$query = "SELECT COUNT(*) FROM $DB_PEOPLEMAP.user_locations;";
-							$result = mysql_query($query, $db);
-							$location_count = mysql_result($result, 0);
+							$stmt = $dbh->query("SELECT COUNT(*) FROM $DB_PEOPLEMAP.user_locations") or die("Query failed #2");
+							$location_count = (int)$stmt->fetchColumn();
 							
 							echo $peoplemap_langres["count1"] . "0" . $peoplemap_langres["count2"] . $location_count . $peoplemap_langres["count3"] . $user_count . $peoplemap_langres["count4"];
 							
@@ -172,22 +137,20 @@
 					<div id="toolbox0_controls">
 						<?php
 							echo $peoplemap_langres["filter_intro"] . "<br><br>";
-							
-							$query = "SELECT usrgroup_name_id, usrgroup_name FROM $DB_ROSCMS.usergroups WHERE usrgroup_visible = 1;";
-							$result = mysql_query($query, $db) or die("Query failed #1!");
-							
 							echo "<table>";
 							
 							$iconcode  = '<script type="text/javascript">';
 							$iconcode .= 'IconTable = new Object();';
 							
-							while($row = mysql_fetch_row($result))
+							$stmt = $dbh->query("SELECT usrgroup_name_id, usrgroup_name FROM $DB_ROSCMS.usergroups WHERE usrgroup_visible = 1") or die("Query failed #3");
+							
+							while($row = $stmt->fetch(PDO::FETCH_NUM))
 							{
 								echo "<tr>";
 								echo "<td><input type=\"checkbox\" name=\"usergroups\" onclick=\"ToggleUserGroup(this, '" . $row[0] . "');\"></td>";
 								echo "<td><div class=\"colorbox\" style=\"background: " . current($MARKERS) . "\"></div></td>";
 								echo "<td>" . $row[1] . "</td>";
-								echo "<td><img id=\"ajaxloading_" . $row[0] . "\" style=\"visibility: hidden;\" src=\"images/ajax_loading.gif\" alt=\"\"></td>";
+								echo "<td><img id=\"ajaxloading_" . $row[0] . "\" style=\"visibility: hidden;\" src=\"../shared/images/ajax_loading.gif\" alt=\"\"></td>";
 								echo "</tr>";
 								
 								$iconcode .= "IconTable['" . $row[0] . "'] = '" . current($MARKERS) . "';";
@@ -231,7 +194,7 @@
 							</select>:
 							
 							<input type="text" id="add_query" size="16" onkeyup="GetUser()">
-							<img id="ajaxloading_add" style="visibility: hidden;" src="images/ajax_loading.gif" alt="">
+							<img id="ajaxloading_add" style="visibility: hidden;" src="../shared/images/ajax_loading.gif" alt="">
 						</p>
 						
 						<div id="add_user_result">
@@ -271,13 +234,10 @@
 							
 							if($_COOKIE["roscmsusrkey"])
 							{
-								$query = "SELECT usersession_user_id FROM $DB_ROSCMS.user_sessions WHERE usersession_id = '" . mysql_real_escape_string($_COOKIE["roscmsusrkey"]) . "' LIMIT 1;";
-								$result = mysql_query($query, $db) or die("Query failed #2!");
-								
-								if(mysql_num_rows($result) > 0)
-									$userid = mysql_result($result, 0);
-								
-								mysql_close($db);
+								$stmt = $dbh->prepare("SELECT usersession_user_id FROM $DB_ROSCMS.user_sessions WHERE usersession_id = :usersessionid LIMIT 1");
+								$stmt->bindParam(":usersessionid", $_COOKIE["roscmsusrkey"]);
+								$stmt->execute() or die("Query failed #4");
+								$userid = (int)$stmt->fetchColumn();
 								
 								if($userid)
 								{
@@ -298,7 +258,7 @@
 									echo "<tr><td>" . $peoplemap_langres["longitude"] . ":</td><td><input type=\"text\" id=\"mylocation_longitude\" size=\"10\" onkeyup=\"CheckCoordinate(this);\">&deg;</td></tr>";
 									echo "</table>";
 									echo "<input type=\"button\" onclick=\"SetLocationCoordinates();\" value=\"" . $peoplemap_langres["mylocation_coordinates_button"] . "\"> ";
-									echo "<img id=\"ajaxloading_setlocation_coordinates\" style=\"visibility: hidden;\" src=\"images/ajax_loading.gif\" alt=\"\">";
+									echo "<img id=\"ajaxloading_setlocation_coordinates\" style=\"visibility: hidden;\" src=\"../shared/images/ajax_loading.gif\" alt=\"\">";
 									echo "<br><br>";
 									echo "</li>";
 									
@@ -314,10 +274,14 @@
 									echo "</script>";
 								}
 								else
+								{
 									echo $logintext;
+								}
 							}
 							else
+							{
 								echo $logintext;
+							}
 						?>
 					</div>
 				</div>

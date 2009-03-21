@@ -1,0 +1,85 @@
+/*
+  PROJECT:    ReactOS Web Test Manager
+  LICENSE:    GNU GPLv2 or any later version as published by the Free Software Foundation
+  PURPOSE:    Stylesheet for the Compare Page
+  COPYRIGHT:  Copyright 2008-2009 Colin Finck <colin@reactos.org>
+*/
+
+#legend {
+	border: solid 1px black;
+	margin-bottom: 1em;
+}
+
+#legend #intro {
+	font-weight: bold;
+	padding-right: 10px;
+}
+
+#legend td {
+	padding-right: 5px;
+}
+
+#legend td.box {
+	border: solid 1px black;
+	padding: 0;
+	width: 15px;
+}
+
+.totaltests {
+	color: black;
+}
+
+.failedtests {
+	color: #BF0A00;
+}
+
+.todotests {
+	color: #1701E4;
+}
+
+.skippedtests {
+	color: #818181;
+}
+
+.diff {
+	color: green;
+}
+
+#TempBlock {
+	background: #5984C3;
+	color: white;
+	font-weight: bold;
+}
+
+#comparetable th, #TempBlock {
+	cursor: move;
+	padding: 3px 8px 3px 3px;
+	vertical-align: bottom;
+}
+
+#comparetable th.TestSuite {
+	cursor: default;
+	width: 200px;
+}
+
+#comparetable td {
+	border-right: solid 1px #BBBBBB;
+	border-bottom: solid 1px #BBBBBB;
+	padding: 3px;
+}
+
+#comparetable td.clickable {
+	cursor: pointer;
+}
+
+.celltable {
+	width: 215px;
+}
+
+.celltable td {
+	text-align: center;
+}
+
+.celltable td.totaltests {
+	font-weight: bold;
+}

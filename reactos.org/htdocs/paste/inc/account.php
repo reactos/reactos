@@ -18,13 +18,12 @@
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
     */
 
-	include("connect.db.php");
-
-
-	define("ROSCMS_PATH", "../roscms/");
-	require_once(ROSCMS_PATH . "logon/subsys_login.php");
+	define("ROOT_PATH", "../");
+	require_once(ROOT_PATH . "roscms/logon/subsys_login.php");
 	$RSDB_intern_user_id = roscms_subsys_login('', ROSCMS_LOGIN_OPTIONAL, "/" . "http://localhost/reactos.org/");
 
+	include("connect.db.php");
+	
 	if($RSDB_intern_user_id != 0) {
 		$query_roscms_user = mysql_query("SELECT * 
 				FROM roscms.users 

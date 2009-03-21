@@ -1,0 +1,59 @@
+/*
+  PROJECT:    ReactOS Web Test Manager
+  LICENSE:    GNU GPLv2 or any later version as published by the Free Software Foundation
+  PURPOSE:    Stylesheet for the Index Page
+  COPYRIGHT:  Copyright 2008-2009 Colin Finck <colin@reactos.org>
+*/
+
+button {
+	font-weight: bold;
+}
+
+.datatable {
+	cursor: pointer;
+}
+
+#js_stuff {
+	/* Will be shown by the JavaScript */
+	display: none;
+}
+
+#mainbox_td, #rightbox_td {
+	vertical-align: top;
+}
+
+#rightbox_td {
+	width: 300px;
+	padding-left: 7px;
+}
+
+.datatable {
+	width: 100%;
+}
+
+th.TestCheckbox {
+	width: 30px;
+}
+
+#searchform tr td {
+	vertical-align: top;
+}
+
+#ajax_loading_search {
+	font-weight: bold;
+	margin-left: 20px;
+	visibility: hidden;
+}
+
+#infotable {
+	margin-top: 2em;
+}
+
+#infotable {
+	width: 100%;
+}
+
+#pagesbox {
+	font-weight: bold;
+	text-align: right;
+}

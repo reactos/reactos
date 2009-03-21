@@ -44,6 +44,7 @@
         -moz-border-radius-bottomleft: 5px;
         -moz-border-radius-bottomright: 5px;
         padding: 0.5em;
+        margin-top: -9px;
     }
 
     #message {
@@ -138,12 +139,10 @@
     #footer .label {
         display: table-cell;
         white-space: nowrap;
-        vertical-align: top;
     }
 
     #footer .links {
         display: table-cell;
-        vertical-align: top;
     }
 /* footer (end) */
 

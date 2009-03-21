@@ -36,3 +36,7 @@
 #footer .links {
     display: inline;
 }
+
+#header .links {
+    margin-top: -20px;
+}

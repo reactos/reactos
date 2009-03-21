@@ -4,7 +4,7 @@
  * @ingroup SpecialPage
  */
 
-require_once(ROSCMS_PATH . "logon/subsys_login.php");
+require_once(ROOT_PATH . "roscms/logon/subsys_login.php");
 
 /**
  * constructor

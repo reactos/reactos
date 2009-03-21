@@ -76,7 +76,7 @@
 <script type="text/javascript" src="{T_TEMPLATE_PATH}/styleswitcher.js"></script>
 <script type="text/javascript" src="{T_TEMPLATE_PATH}/forum_fn.js"></script>
 
-<link href="/css/menu.css" type="text/css" rel="stylesheet" />
+<link href="/shared/css/menu.css" type="text/css" rel="stylesheet" />
 <link href="{T_THEME_PATH}/print.css" rel="stylesheet" type="text/css" media="print" title="printonly" />
 <link href="{T_STYLESHEET_LINK}" rel="stylesheet" type="text/css" media="screen, projection" />
 
@@ -91,8 +91,8 @@
 <div><a name="top" accesskey="t"></a></div>
 
 <!-- PHP -->
-	readfile("http://www.reactos.org/en/subsys_extern_menu_top.html");
-	readfile("http://www.reactos.org/en/subsys_extern_menu_left.html");
+	require_once(ROOT_PATH . "shared/subsys_layout.php");
+	BasicLayout("en");
 <!-- ENDPHP -->
 
 	<div class="navTitle">{L_FORUM}</div>
@@ -134,7 +134,7 @@
 </td>
 <td>
 
-<div class="contentSmallTitle"><a href="http://www.reactos.org/en/community.html">ReactOS Community</a> &gt; ReactOS Forum</div>
+<h1><a href="http://www.reactos.org/en/community.html">ReactOS Community</a> &gt; ReactOS Forum</h1>
 
 <div id="wrap">
 	<div id="page-header">

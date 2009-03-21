@@ -1,0 +1,89 @@
+/*
+  PROJECT:    ReactOS Shared Website Components
+  LICENSE:    GNU GPLv2 or any later version as published by the Free Software Foundation
+  PURPOSE:    Style file for inclusion inside custom subsystems, provides the look and feel of ReactOS Website components
+  COPYRIGHT:  Copyright 2008-2009 Colin Finck <colin@reactos.org>
+*/
+
+#content {
+	padding-right: 10px;
+}
+
+/* Headings */
+h2 {
+	font-size: 22px;
+	color: #5984C3;
+	font-weight: bold;
+	margin-top: 0;
+}
+
+/* Bubbles */
+.bubble_bg, .selectable_bubble_bg, .hovered_bubble_bg {
+	margin-bottom: 10px;
+}
+
+/* IE6 doesn't add the size of the edges to the box height. So we have to add this space by enhancing the "padding-bottom" value */
+* html .bubble_bg, * html .selectable_bubble_bg, * html .hovered_bubble_bg {
+	padding-bottom: 4px;
+}
+
+.bubble_bg {
+	background: #C9DAF8;
+}
+
+.selectable_bubble_bg {
+	background: #E1EAFB;
+}
+
+.hovered_bubble_bg {
+	background: #FFFFCC;
+}
+
+.bubble {
+	padding: 8px;
+}
+
+.bubble h1 {
+	background: transparent;
+	color: black;
+	font-size: 10pt;
+	font-weight: bold;
+	margin: 0 0 1em 0;
+	padding: 0;
+}
+
+.rounded_ul {
+	background: transparent url(../images/ul.gif) no-repeat scroll left top;
+}
+.rounded_ur {
+	background: transparent url(../images/ur.gif) no-repeat scroll right top;
+}
+.rounded_ll {
+	background: transparent url(../images/ll.gif) no-repeat scroll left bottom;
+}
+.rounded_lr {
+	background: transparent url(../images/lr.gif) no-repeat scroll right bottom;
+}
+
+/* Data Table */
+.datatable th, .datatable td {
+	padding: 1px 1px 1px 2px;
+}
+
+.datatable tr.head th {
+	background: #5984C3;
+	color: white;
+	text-align: left;
+}
+
+.datatable tr.odd td,
+.datatable tr.even td {
+	border-bottom: 1px solid #BBBBBB;
+}
+
+.datatable tr.odd td {
+	background-color: #DDDDDD;
+}
+.datatable tr.even td {
+	background-color: #EEEEEE;
+}

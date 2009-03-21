@@ -1,15 +1,9 @@
 /*
   PROJECT:    People Map of the ReactOS Website
-  LICENSE:    GPL v2 or any later version
-  FILE:       web/reactos.org/htdocs/peoplemap/ie6-fixes.css
+  LICENSE:    GNU GPLv2 or any later version as published by the Free Software Foundation
   PURPOSE:    This file contains fixes for Internet Explorer 6.0
   COPYRIGHT:  Copyright 2007-2008 Colin Finck <mail@colinfinck.de>
 */
-
-/* IE6 doesn't add the size of the edges to the box height. So we have to add this space by enhancing the "padding-bottom" value */
-.bubble_bg, .selectable_bubble_bg, .hovered_bubble_bg {
-	padding-bottom: 4px;
-}
 
 /* Show PNG's with alpha transparency through the AlphaImageLoader filter */
 #icon_marker, #icon_circle, #toolbox0_image, #toolbox1_image, #toolbox2_image {
