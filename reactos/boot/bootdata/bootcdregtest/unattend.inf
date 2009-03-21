@@ -51,4 +51,4 @@ LocaleID = 409
 ; after 3rd boot
 ;
 [GuiRunOnce]
-%SystemRoot%\system32\rosautotest.exe /s
+%SystemRoot%\system32\rosautotest.exe /r /s
