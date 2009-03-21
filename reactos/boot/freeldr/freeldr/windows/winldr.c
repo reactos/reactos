@@ -201,7 +201,11 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
 	Extension->DrvDBImage = PaToVa(WinLdrLoadModule(MiscFiles,
 		&Extension->DrvDBSize, LoaderRegistryData));
 
+	/* Convert extension and setup block pointers */
 	LoaderBlock->Extension = PaToVa(Extension);
+
+	if (LoaderBlock->SetupLdrBlock)
+		LoaderBlock->SetupLdrBlock = PaToVa(LoaderBlock->SetupLdrBlock);
 }
 
 // Last step before going virtual
