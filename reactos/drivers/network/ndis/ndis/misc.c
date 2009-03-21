@@ -121,6 +121,19 @@ NdisMapFile(
  */
 VOID
 EXPORT
+NdisUnmapFile(
+    IN  NDIS_HANDLE FileHandle)
+{
+  PNDIS_HANDLE_OBJECT HandleObject = (PNDIS_HANDLE_OBJECT) FileHandle;
+
+  HandleObject->Mapped = FALSE;
+}
+
+/*
+ * @implemented
+ */
+VOID
+EXPORT
 NdisCloseFile(
     IN  NDIS_HANDLE FileHandle)
 {
@@ -134,10 +147,8 @@ NdisCloseFile(
 
   ASSERT ( FileHandleObject->FileHandle );
 
-  /*
   if ( FileHandleObject->Mapped )
     NdisUnmapFile ( FileHandle );
-  */
 
   ZwClose ( FileHandleObject->FileHandle );
 
@@ -250,20 +261,6 @@ NdisSystemProcessorCount(
     VOID)
 {
 	return (CCHAR)KeNumberProcessors;
-}
-
-
-/*
- * @implemented
- */
-VOID
-EXPORT
-NdisUnmapFile(
-    IN  NDIS_HANDLE FileHandle)
-{
-  PNDIS_HANDLE_OBJECT HandleObject = (PNDIS_HANDLE_OBJECT) FileHandle;
-
-  HandleObject->Mapped = FALSE;
 }
 
 
