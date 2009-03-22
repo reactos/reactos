@@ -955,7 +955,7 @@ gdiPlaySpoolStream(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 HANDLE
 WINAPI
@@ -966,9 +966,12 @@ AddFontMemResourceEx(
 	DWORD *pcFonts
 )
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  if ( pbFont && cbFont && pcFonts)
+  {
+     return NtGdiAddFontMemResourceEx(pbFont, cbFont, NULL, 0, pcFonts);
+  }
+  SetLastError(ERROR_INVALID_PARAMETER);
+  return NULL;
 }
 
 /*
@@ -1267,17 +1270,12 @@ BOOL
 WINAPI
 RemoveFontMemResourceEx(HANDLE fh)
 {
-    BOOL retValue=0;
-
-    if (fh)
-    {
-        retValue = NtGdiRemoveFontMemResourceEx(fh);
-    }
-    else
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-    }
-    return retValue;
+  if (fh)
+  {
+     return NtGdiRemoveFontMemResourceEx(fh);
+  }
+  SetLastError(ERROR_INVALID_PARAMETER);
+  return FALSE;
 }
 
 /*
