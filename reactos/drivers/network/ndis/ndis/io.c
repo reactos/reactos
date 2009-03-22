@@ -974,5 +974,24 @@ NdisMapIoSpace(
 }
 
 
+/*
+ * @implemented
+ */
+VOID
+EXPORT
+NdisFreeDmaChannel(
+    IN  PNDIS_HANDLE    NdisDmaHandle)
+/*
+ * FUNCTION:
+ * ARGUMENTS:
+ * NOTES:
+ *    NDIS 4.0
+ */
+{
+    NdisMDeregisterDmaChannel(NdisDmaHandle);
+}
+
+
+
 /* EOF */
 

@@ -92,24 +92,6 @@ NdisDeregisterMac(
 /*
  * @unimplemented
  */
-VOID
-EXPORT
-NdisFreeDmaChannel(
-    IN  PNDIS_HANDLE    NdisDmaHandle)
-/*
- * FUNCTION:
- * ARGUMENTS:
- * NOTES:
- *    NDIS 4.0
- */
-{
-    UNIMPLEMENTED
-}
-
-
-/*
- * @unimplemented
- */
 NDIS_STATUS
 EXPORT
 NdisIMQueueMiniportCallback(
