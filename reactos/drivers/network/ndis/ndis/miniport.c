@@ -1621,7 +1621,8 @@ NdisIPnPStartDevice(
   NDIS_HANDLE ConfigHandle;
   ULONG Size;
   LARGE_INTEGER Timeout;
-  /* FIXME - KIRQL OldIrql; */
+  UINT MaxMulticastAddresses;
+  ULONG BytesWritten;
 
   /*
    * Prepare wrapper context used by HW and configuration routines.
@@ -1806,7 +1807,17 @@ NdisIPnPStartDevice(
         NdisStatus = DoQueries(Adapter, AddressOID);
         if (NdisStatus == NDIS_STATUS_SUCCESS)
           {
-            Success = EthCreateFilter(32, /* FIXME: Query this from miniport. */
+            NdisStatus = MiniQueryInformation(Adapter, OID_802_3_MAXIMUM_LIST_SIZE, sizeof(UINT),
+                                    &MaxMulticastAddresses, &BytesWritten);
+
+            if (NdisStatus != NDIS_STATUS_SUCCESS)
+            {
+               ExInterlockedRemoveEntryList( &Adapter->ListEntry, &AdapterListLock );
+               NDIS_DbgPrint(MAX_TRACE, ("MiniQueryInformation failed (%x)\n", NdisStatus));
+               return NdisStatus;
+            }
+
+            Success = EthCreateFilter(MaxMulticastAddresses,
                                       Adapter->Address.Type.Medium802_3,
                                       &Adapter->NdisMiniportBlock.EthDB);
             if (Success)
