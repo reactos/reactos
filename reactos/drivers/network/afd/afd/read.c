@@ -228,7 +228,6 @@ NTSTATUS NTAPI ReceiveComplete
 ( PDEVICE_OBJECT DeviceObject,
   PIRP Irp,
   PVOID Context ) {
-    NTSTATUS Status = Irp->IoStatus.Status;
     PAFD_FCB FCB = (PAFD_FCB)Context;
 
     AFD_DbgPrint(MID_TRACE,("Called\n"));
@@ -275,8 +274,6 @@ NTSTATUS NTAPI ReceiveComplete
 	PollReeval( FCB->DeviceExt, FCB->FileObject );
 		
     SocketStateUnlock( FCB );
-
-    AFD_DbgPrint(MID_TRACE,("Returned %x\n", Status));
 
     return STATUS_SUCCESS;
 }
