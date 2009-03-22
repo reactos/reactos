@@ -25,10 +25,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS セットアップ"
 FONT 9, "MS UI Gothic"
 BEGIN
-    LTEXT "ReactOS セットアップ ウィザードへようこそ。", IDC_WELCOMETITLE, 115, 8, 195, 24
-    LTEXT "このウィザードでは、ReactOS をあなたのコンピュータにインストールします。"\
-          "ReactOS を正しくインストールするには、利用者とコンピュータに関する情報を"\
-          "集める必要があります。", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "ReactOSセットアップ ウィザードへようこそ。", IDC_WELCOMETITLE, 115, 8, 195, 24
+    LTEXT "このウィザードでは、ReactOS をコンピュータにインストールします。 "\
+          "ReactOSを正しくセットアップするために、ユーザーとコンピュータに "\
+          "関する情報を集める必要があります。", IDC_STATIC, 115, 40, 195, 100
     LTEXT "セットアップを続行するには [次へ] をクリックしてください。", IDC_STATIC, 115, 169, 195, 17
 END
 
@@ -38,15 +38,15 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS セットアップ"
 FONT 9, "MS UI Gothic", 0, 0, 0x0
 BEGIN
-    LTEXT           "ReactOS の開発者より、以下のオープンソ\ース プロジェクトに感謝の意を表\明します。"\
-                    "ReactOS 作成にはこれらのオープンソ\ース プロジェクトが用いられました:",
+    LTEXT           "ReactOSの開発者より、下記のオープンソ\ース プロジェクトに感謝の意を表\明します。 "\
+                    "これらのすべてまたは一部はReactOSの開発に利用されました。",
                     IDC_STATIC,15,7,286,19
     LISTBOX         IDC_PROJECTS,15,30,286,75,LBS_NOSEL | LBS_HASSTRINGS |
                     LBS_NOINTEGRALHEIGHT | WS_VSCROLL
-    LTEXT           "ReactOS は GPL の下でライセンスされており、ReactOS やその一部を再利用や"\
-                    "配布をするには GPL に従わなくてはなりません。",
+    LTEXT           "ReactOS はGPLの下にライセンスされており、すべてまたは一部を再利用、再配布する "\
+                    "場合はGPLに従う必要があります。",
                     IDC_STATIC,15,110,227,19
-    PUSHBUTTON      "GPL を読む(&V)...",IDC_VIEWGPL,251,110,50,19
+    PUSHBUTTON      "GPLを表\示(&V)...",IDC_VIEWGPL,251,110,50,19
     LTEXT           "セットアップを続行するには [次へ] をクリックしてください。",IDC_STATIC,15,136,
                     195,17
 END
@@ -71,20 +71,20 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS セットアップ"
 FONT 9, "MS UI Gothic"
 BEGIN
-    LTEXT "コンピュータ名を半角 63 文字以内で入力してください。"\
+    LTEXT "コンピュータ名を半角63文字以内で入力してください。 "\
           "コンピュータがネットワーク上にある場合は、名前が重複しないようにしてください。",
           IDC_STATIC, 54, 7, 250, 24
     LTEXT "コンピュータ名(&C):", IDC_STATIC, 54, 38, 75, 8
-    EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
-    LTEXT "Administrator と呼ばれるユーザー アカウントを作成します。"\
-          "コンピュータにフル アクセスが必要なとき、このアカウントを使います。",
+    EDITTEXT IDC_COMPUTERNAME, 165, 35, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
+    LTEXT "Administratorと呼ばれるユーザーアカウントを作成します。"\
+          "コンピュータにフルアクセスが必要なとき、このアカウントを使用します。",
           IDC_STATIC, 54, 57, 250, 25
-    LTEXT "Administrator のパスワードを半角 14 文字以内で入力してください。",
+    LTEXT "Administratorのパスワードを半角 14 文字以内で入力してください。",
           IDC_STATIC, 54, 87, 250, 8
-    LTEXT "Administrator のパスワード(&A):", IDC_STATIC, 54, 104, 75, 8
-    EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
-    LTEXT "パスワードの確認入力(&O):", IDC_STATIC, 54, 123, 75, 8
-    EDITTEXT IDC_ADMINPASSWORD2, 132, 120, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    LTEXT "Administrator のパスワード(&A):", IDC_STATIC, 54, 104, 105, 8
+    EDITTEXT IDC_ADMINPASSWORD1, 165, 101, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    LTEXT "パスワードの確認入力(&O):", IDC_STATIC, 54, 123, 105, 8
+    EDITTEXT IDC_ADMINPASSWORD2, 165, 120, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
 END
 
 
@@ -93,19 +93,19 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS セットアップ"
 FONT 9, "MS UI Gothic"
 BEGIN
-    LTEXT "システムのロケールを、アプリケーションで使用したい言語に設定して"\
-          "ください。ユーザー ロケールは、数値、通貨、日付の表\示方法を制御"\
-          "します。", IDC_STATIC, 53, 7, 253, 20
+    LTEXT "システムのロケールを、アプリケーションで使用したい言語に設定してください。 "\
+          "ユーザーロケールは、数値、通貨、日付の表\示方法を制御します。 "\
+          "", IDC_STATIC, 53, 7, 253, 20
     LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
-    LTEXT "システムやユーザーのロケール設定を変更するには、[カスタマイズ] をクリックしてください。",
-          IDC_STATIC, 53, 60, 184, 8
-    PUSHBUTTON "カスタマイズ(&C)...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
+    LTEXT "システム、ユーザーロケール設定変更には[カスタマイズ]をクリックします。",
+          IDC_STATIC, 53, 60, 196, 8
+    PUSHBUTTON "カスタマイズ(&C)...", IDC_CUSTOMLOCALE, 250, 57, 50, 14
     LTEXT "キーボード レイアウトは、キーを押したときにどの文字が入力されるかを制御します。",
           IDC_STATIC, 53, 86, 253, 8
     LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
-    LTEXT "キーボード レイアウトを変更するには、[カスタマイズ] をクリックしてください。",
+    LTEXT "キーボードレイアウト変更には[カスタマイズ]をクリックします。",
           IDC_STATIC, 53, 126, 184, 8
-    PUSHBUTTON "カスタマイズ(&U)...", IDC_CUSTOMLAYOUT, 245, 122, 50, 14
+    PUSHBUTTON "カスタマイズ(&U)...", IDC_CUSTOMLAYOUT, 250, 122, 50, 14
 END
 
 
@@ -114,15 +114,15 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS セットアップ"
 FONT 9, "MS UI Gothic"
 BEGIN
-    LTEXT "日付と時刻", IDC_STATIC, 53, 7, 253, 8
+    LTEXT "日付と時刻:", IDC_STATIC, 53, 7, 253, 8
     CONTROL "", IDC_DATEPICKER, "SysDateTimePick32",
             DTS_LONGDATEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 53, 17, 137, 14
     CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32",
             DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 200, 17, 54, 14
-    LTEXT "タイム ゾーン", IDC_STATIC, 53, 42, 253, 8
+    LTEXT "タイムゾーン:", IDC_STATIC, 53, 42, 253, 8
     COMBOBOX IDC_TIMEZONELIST, 53, 52, 201, 93,
              CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    AUTOCHECKBOX "自動的にサマー タイムの調整をする(&D)",
+    AUTOCHECKBOX "自動的にサマータイムの調整をする(&D)",
                  IDC_AUTODAYLIGHT, 53, 124, 201, 10
 END
 
@@ -141,15 +141,15 @@ END
 
 IDD_FINISHPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS セットアップが完了しました"
+CAPTION "ReactOS セットアップの完了"
 FONT 9, "MS UI Gothic"
 BEGIN
-    LTEXT "ReactOS セットアップ ウィザードが完了しました", IDC_FINISHTITLE, 115, 8, 195, 24
+    LTEXT "ReactOS セットアップ ウィザードの完了", IDC_FINISHTITLE, 115, 8, 195, 24
     LTEXT "ReactOS セットアップが正常に完了しました。\n\n" \
           "[完了] をクリックすると、コンピュータを再起動します。", IDC_STATIC, 115, 40, 195, 100
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
-    LTEXT "ドライブに CD が入っている場合は、CD を取り出してください。CD を取り出し"\
-          "たら、[完了] をクリックしてコンピュータを再起動してください。", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "ドライブにCDがある場合は取り出してください。 再起動するには "\
+          "完了をクリックしてください。", IDC_STATIC, 115, 169, 195, 17
 END
 
 
@@ -166,8 +166,8 @@ END
 
 IDD_STATUSWINDOW_DLG DIALOGEX 0,0,274,26
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "Please wait..."
-FONT 9,"MS UI Gothic 2",400,0,1
+CAPTION "お待ちください..."
+FONT 9,"MS Shell Dlg 2",400,0,1
 BEGIN
     LTEXT           "",IDC_STATUSLABEL,7,8,234,12,SS_WORDELLIPSIS
 END
@@ -179,118 +179,118 @@ BEGIN
     IDS_ACKSUBTITLE      "ReactOS が利用しているプロジェクトとライセンスに関する情報"
     IDS_OWNERTITLE       "ソ\フトウェアの個人用設定"
     IDS_OWNERSUBTITLE    "この情報は、ReactOS の個人用設定に用いられます。"
-    IDS_COMPUTERTITLE    "コンピュータ名と Administrator のパスワード"
-    IDS_COMPUTERSUBTITLE "コンピュータ名と Administrator のパスワードを入力する必要があります。"
+    IDS_COMPUTERTITLE    "コンピュータ名と Administrator パスワード"
+    IDS_COMPUTERSUBTITLE "コンピュータ名と Administrator パスワードを入力する必要があります。"
     IDS_LOCALETITLE      "地域の設定"
     IDS_LOCALESUBTITLE   "ReactOS を様々な地域と言語にあわせてカスタマイズすることができます。"
     IDS_DATETIMETITLE    "日付と時刻"
-    IDS_DATETIMESUBTITLE "コンピュータの日付と時刻を正しく設定します。"
-    IDS_PROCESSTITLE     "Process page title"
-    IDS_PROCESSSUBTITLE  "Process page subtitle"
+    IDS_DATETIMESUBTITLE "コンピュータの日付と時刻を正しく設定してください。"
+    IDS_PROCESSTITLE     "コンポーネントの登録中"
+    IDS_PROCESSSUBTITLE  "お待ちください..."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CMT_DOWNLOADER  "Download and install various applications"
+    IDS_CMT_DOWNLOADER  "様々なアプリケーションのダウンロードとインストールを行います"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_ACCESSORIES     "Accessories"
-    IDS_CMT_CALC        "Launch Calculator"
-    IDS_CMT_CMD         "Open command prompt"
-    IDS_CMT_EXPLORER    "Launch Explorer"
-    IDS_CMT_NOTEPAD     "Launch Text Editor"
-    IDS_CMT_REGEDIT     "Launch Registry Editor"
-    IDS_CMT_WORDPAD     "Launch Document Editor"
-    IDS_CMT_SCREENSHOT  "Take screenshot"
-    IDS_CMT_DEVMGMT     "Launch Device Manager"
-    IDS_CMT_SERVMAN     "Launch Service Manager"
-    IDS_CMT_RDESKTOP    "Launch Remote Desktop"
-    IDS_CMT_EVENTVIEW   "Launch Event Viewer"
-    IDS_CMT_MSCONFIG    "Launch System Configuration program"
+    IDS_ACCESSORIES     "アクセサリ"
+    IDS_CMT_CALC        "電卓を起動します"
+    IDS_CMT_CMD         "コマンド プロンプトを開きます"
+    IDS_CMT_DEVMGMT     "デバイス マネージャを起動します"
+    IDS_CMT_EVENTVIEW   "イベント ビューアを起動します"
+    IDS_CMT_EXPLORER    "エクスプローラを起動します"
+    IDS_CMT_MSCONFIG    "システムの構\成プログラムを開きます"
+    IDS_CMT_NOTEPAD     "テキストエディタを起動します"
+    IDS_CMT_RDESKTOP    "リモート デスクトップを起動します"
+    IDS_CMT_REGEDIT     "レジストリエディタを起動します"
+    IDS_CMT_SCREENSHOT  "スクリーンショットを撮ります"
+    IDS_CMT_SERVMAN     "サービス マネージャを起動します"
+    IDS_CMT_WORDPAD     "ドキュメントエディタを起動します"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_GAMES		    "Games"
-    IDS_CMT_SOLITAIRE	"Solitaire"
-    IDS_CMT_WINEMINE	"WineMine"
+    IDS_GAMES           "ゲーム"
+    IDS_CMT_SOLITAIRE   "ソ\リティア"
+    IDS_CMT_WINEMINE    "WineMine"
 END
 
 STRINGTABLE
 BEGIN
-	IDS_SYS_TOOLS        "System Tools"
-	IDS_CMT_CHARMAP      "CharMap"
-	IDS_CMT_KBSWITCH     "Keyboard Layout Switcher"
-    IDS_CMT_DXDIAG       "Launch ReactX-Diagnostic program"
+    IDS_SYS_TOOLS       "システムツール"
+    IDS_CMT_CHARMAP     "キャラクターマップ"
+    IDS_CMT_DXDIAG      "ReactX 診断プログラムを起動します"
+    IDS_CMT_KBSWITCH    "キーボードレイアウト切替器"
 END
 
 STRINGTABLE
 BEGIN
-	IDS_SYS_ACCESSIBILITY        "Accessibility"
-	IDS_CMT_MAGNIFY      	     "Magnify"
+    IDS_SYS_ACCESSIBILITY   "アクセシビリティ"
+    IDS_CMT_MAGNIFY         "拡大鏡"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_SYS_ENTERTAINMENT       "Entertainment"
-    IDS_CMT_MPLAY32             "Launch Multimedia Player"
-    IDS_CMT_SNDVOL32            "Launch Volume Control"
+    IDS_SYS_ENTERTAINMENT   "エンターテイメント"
+    IDS_CMT_MPLAY32         "マルチメディア プレーヤーを起動します"
+    IDS_CMT_SNDVOL32        "ボリューム コントロールを起動します"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_REACTOS_SETUP		    "ReactOS Setup"
-    IDS_UNKNOWN_ERROR           "Unknown error"
-    IDS_REGISTERING_COMPONENTS  "Registering components..."
-    IDS_LOADLIBRARY_FAILED	    "LoadLibrary failed: "
-    IDS_GETPROCADDR_FAILED	    "GetProcAddr failed: "
-    IDS_REGSVR_FAILED           "DllRegisterServer failed: "
-    IDS_DLLINSTALL_FAILED	    "DllInstall failed: "
-    IDS_TIMEOUT			        "Timeout during registration"
+    IDS_REACTOS_SETUP           "ReactOS セットアップ"
+    IDS_UNKNOWN_ERROR           "不明なエラー"
+    IDS_REGISTERING_COMPONENTS  "コンポーネントを登録しています..."
+    IDS_LOADLIBRARY_FAILED      "LoadLibraryに失敗: "
+    IDS_GETPROCADDR_FAILED      "GetProcAddrに失敗: "
+    IDS_REGSVR_FAILED           "DllRegisterServerに失敗: "
+    IDS_DLLINSTALL_FAILED       "DllInstallに失敗: "
+    IDS_TIMEOUT                 "登録中にタイムアウトしました"
     IDS_REASON_UNKNOWN          ""
 END
 
 STRINGTABLE
 BEGIN
-    IDS_SHORT_CMD        "Command Prompt.lnk"
+    IDS_SHORT_CALC       "電卓.lnk"
+    IDS_SHORT_CHARMAP    "キャラクター マップ.lnk"
+    IDS_SHORT_CMD        "コマンド プロンプト.lnk"
+    IDS_SHORT_DEVICE     "デバイス マネージャ.lnk"
+    IDS_SHORT_DOWNLOADER "ダウンロード !.lnk"
+    IDS_SHORT_DXDIAG     "ReactX 診断.lnk"
+    IDS_SHORT_EVENTVIEW  "イベント ビューア.lnk"
     IDS_SHORT_EXPLORER   "ReactOS Explorer.lnk"
-    IDS_SHORT_DOWNLOADER "Download !.lnk"
-    IDS_SHORT_SERVICE    "Service Manager.lnk"
-    IDS_SHORT_DEVICE     "Device Manager.lnk"
-    IDS_SHORT_MPLAY32    "Multimedia Player.lnk"
-    IDS_SHORT_CALC       "Calculator.lnk"
-    IDS_SHORT_REGEDIT    "Regedit.lnk"
-    IDS_SHORT_NOTEPAD    "Notepad.lnk"
-    IDS_SHORT_WORDPAD    "WordPad.lnk"
-    IDS_SHORT_SNAP       "SnapShot.lnk"
-    IDS_SHORT_SOLITAIRE  "Solitaire.lnk"
+    IDS_SHORT_KBSWITCH   "キーボード レイアウト 切替器.lnk"
+    IDS_SHORT_MAGNIFY    "拡大鏡.lnk"
+    IDS_SHORT_MPLAY32    "マルチメディア プレーヤ.lnk"
+    IDS_SHORT_MSCONFIG   "システムの構\成.lnk"
+    IDS_SHORT_NOTEPAD    "メモ帳.lnk"
+    IDS_SHORT_RDESKTOP   "リモート デスクトップ接続.lnk"
+    IDS_SHORT_REGEDIT    "レジストリ エディタ.lnk"
+    IDS_SHORT_SERVICE    "サービス マネージャ.lnk"
+    IDS_SHORT_SNAP       "スナップショット.lnk"
+    IDS_SHORT_SNDVOL32   "ボリューム コントロール.lnk"
+    IDS_SHORT_SOLITAIRE  "ソ\リティア.lnk"
     IDS_SHORT_WINEMINE   "WineMine.lnk"
-    IDS_SHORT_CHARMAP    "CharMap.lnk"
-    IDS_SHORT_MAGNIFY    "Magnify.lnk"
-    IDS_SHORT_RDESKTOP   "Remote Desktop.lnk"
-    IDS_SHORT_KBSWITCH   "Keyboard Layout Switcher.lnk"
-    IDS_SHORT_EVENTVIEW  "Event Viewer.lnk"
-    IDS_SHORT_MSCONFIG   "System Configuration.lnk"
-    IDS_SHORT_SNDVOL32   "Volume Control.lnk"
-    IDS_SHORT_DXDIAG     "ReactX Diagnostic.lnk"
+    IDS_SHORT_WORDPAD    "ワードパッド.lnk"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_WZD_NAME         "Setup cannot continue until you enter your name."
-    IDS_WZD_SETCOMPUTERNAME  "Setup failed to set the computer name."
-    IDS_WZD_COMPUTERNAME  "Setup cannot continue until you enter the name of your computer."
-    IDS_WZD_PASSWORDEMPTY  "You must enter a password !"
-    IDS_WZD_PASSWORDMATCH  "The passwords you entered do not match. Please enter the desired password again."
-    IDS_WZD_PASSWORDCHAR  "The password you entered contains invalid characters. Please enter a cleaned password."
-    IDS_WZD_LOCALTIME    "Setup was unable to set the local time."
+    IDS_WZD_NAME            "セットアップはユーザ名が入力されるまで続行できません。"
+    IDS_WZD_SETCOMPUTERNAME "コンピュータ名の設定に失敗しました。"
+    IDS_WZD_COMPUTERNAME    "セットアップはコンピュータ名が入力されるまで続行できません。"
+    IDS_WZD_PASSWORDEMPTY   "パスワードを入力してください !"
+    IDS_WZD_PASSWORDMATCH   "入力されたパスワードが一致しません。 もう一度望ましいパスワードを入力してください。"
+    IDS_WZD_PASSWORDCHAR    "入力されたパスワードには無効な文字が含まれています。 有効なパスワードを入力してください。"
+    IDS_WZD_LOCALTIME       "セットアップはローカルタイムを設定できませんでした。"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_STATUS_INSTALL_DEV "Installing devices..."
+    IDS_STATUS_INSTALL_DEV  "デバイスをインストールしています..."
 END
 
 /* EOF */
