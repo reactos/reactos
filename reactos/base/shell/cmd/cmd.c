@@ -265,7 +265,8 @@ static BOOL IsConsoleProcess(HANDLE Process)
 
 typedef BOOL (WINAPI *MYEX)(LPSHELLEXECUTEINFO lpExecInfo);
 
-static HANDLE RunFile(LPTSTR filename, LPTSTR params)
+HANDLE RunFile(DWORD flags, LPTSTR filename, LPTSTR params,
+               LPTSTR directory, INT show)
 {
 	SHELLEXECUTEINFO sei;
 	HMODULE     hShell32;
@@ -292,10 +293,11 @@ static HANDLE RunFile(LPTSTR filename, LPTSTR params)
 
 	memset(&sei, 0, sizeof sei);
 	sei.cbSize = sizeof sei;
-	sei.fMask = SEE_MASK_NOCLOSEPROCESS | SEE_MASK_NO_CONSOLE;
+	sei.fMask = flags;
 	sei.lpFile = filename;
 	sei.lpParameters = params;
-	sei.nShow = SW_SHOWNORMAL;
+	sei.lpDirectory = directory;
+	sei.nShow = show;
 	ret = hShExt(&sei);
 
 	TRACE ("RunFile: ShellExecuteExA/W returned 0x%p\n", ret);
@@ -499,7 +501,11 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
 		else
 		{
 			// See if we can run this with ShellExecute() ie myfile.xls
-			prci.hProcess = RunFile(szFullName, rest);
+			prci.hProcess = RunFile(SEE_MASK_NOCLOSEPROCESS | SEE_MASK_NO_CONSOLE,
+			                        szFullName,
+			                        rest,
+			                        NULL,
+			                        SW_SHOWNORMAL);
 		}
 
 		if (prci.hProcess != NULL)

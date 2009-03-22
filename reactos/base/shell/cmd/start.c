@@ -37,7 +37,7 @@ static TCHAR *GetParameter(TCHAR **pPointer)
 INT cmd_start (LPTSTR Rest)
 {
 	TCHAR szFullName[CMDLINE_LENGTH];
-	TCHAR rest[CMDLINE_LENGTH];
+	TCHAR szUnquotedName[CMDLINE_LENGTH];
 	TCHAR *param = NULL;
 	TCHAR *dot;
 	INT size;
@@ -136,7 +136,6 @@ INT cmd_start (LPTSTR Rest)
 			break;
 		}
 	}
-	_tcscpy(rest, Rest);
 
 	/* get comspec */
 	comspec = cmd_alloc ( MAX_PATH * sizeof(TCHAR));
@@ -166,81 +165,56 @@ INT cmd_start (LPTSTR Rest)
 
 	nErrorLevel = 0;
 
-	if(!*rest)
+	if (!*Rest)
 	{
-		_tcscpy(rest,_T("\""));
-		_tcscat(rest,comspec);
-		_tcscat(rest,_T("\""));
+		Rest = _T("cmd.exe");
 	}
-
+	else
 	/* Parsing the command that gets called by start, and it's parameters */
 	{
 		BOOL bInside = FALSE;
 
 		/* find the end of the command and put the arguments in param */
-		for(i = 0; rest[i]; i++)
+		for (i = 0; Rest[i]; i++)
 		{
-			if(rest[i] == _T('\"'))
+			if (Rest[i] == _T('\"'))
 				bInside = !bInside;
-			if((rest[i] == _T(' ')) && !bInside)
+			if (_istspace(Rest[i]) && !bInside)
 			{
-				param = &rest[i+1];
-				rest[i] = _T('\0');
+				param = &Rest[i+1];
+				Rest[i] = _T('\0');
 				break;
 			}
 		}
-		/* remove any slashes */
-		StripQuotes(rest);
 	}
 
-	/* check for a drive change */
-
-	if (!_tcscmp (rest + 1, _T(":")) && _istalpha (*rest))
-	{
-		TCHAR szPath[CMDLINE_LENGTH];
-
-		_tcscpy (szPath, _T("A:"));
-		szPath[0] = _totupper (*rest);
-		SetCurrentDirectory (szPath);
-		GetCurrentDirectory (CMDLINE_LENGTH, szPath);
-		if (szPath[0] != (TCHAR)_totupper (*rest))
-			ConErrResPuts (STRING_FREE_ERROR1);
-
-		cmd_free(comspec);
-		return 0;
-	}
+	_tcscpy(szUnquotedName, Rest);
+	StripQuotes(szUnquotedName);
 
 	/* get the PATH environment variable and parse it */
 	/* search the PATH environment variable for the binary */
-	if (!SearchForExecutable (rest, szFullName))
+	if (SearchForExecutable(szUnquotedName, szFullName))
 	{
-		error_bad_command(rest);
+		/* check if this is a .BAT or .CMD file */
+		dot = _tcsrchr(szFullName, _T('.'));
+		if (dot && (!_tcsicmp(dot, _T(".bat")) || !_tcsicmp(dot, _T(".cmd"))))
+		{
+			bBat = TRUE;
+			_stprintf(szFullCmdLine, _T("\"%s\" /K %s"), comspec, Rest);
+			TRACE ("[BATCH: %s %s]\n", debugstr_aw(szFullName), debugstr_aw(Rest));
+		}
+		else
+		{
+			TRACE ("[EXEC: %s %s]\n", debugstr_aw(szFullName), debugstr_aw(Rest));
+			_tcscpy(szFullCmdLine, Rest);
+		}
 
-		cmd_free(comspec);
-		return 1;
-	}
-
-
-	/* check if this is a .BAT or .CMD file */
-	dot = _tcsrchr (szFullName, _T('.'));
-	if (dot && (!_tcsicmp (dot, _T(".bat")) || !_tcsicmp (dot, _T(".cmd"))))
-	{
-		bBat = TRUE;
-		_stprintf(szFullCmdLine, _T("\"%s\" /K \"%s\""), comspec, szFullName);
-		TRACE ("[BATCH: %s %s]\n", debugstr_aw(szFullName), debugstr_aw(rest));
-	}
-	else
-	{
-		TRACE ("[EXEC: %s %s]\n", debugstr_aw(szFullName), debugstr_aw(rest));
 		/* build command line for CreateProcess() */
-		  _tcscpy (szFullCmdLine, rest);
-		  if( param != NULL )
-		  {
-
-		    _tcscat(szFullCmdLine, _T(" ") );
-		    _tcscat (szFullCmdLine, param);
-		  }
-	}
+		if (param != NULL)
+		{
+			_tcscat(szFullCmdLine, _T(" "));
+			_tcscat(szFullCmdLine, param);
+		}
 
 		/* fill startup info */
 		memset (&stui, 0, sizeof (STARTUPINFO));
@@ -259,9 +233,25 @@ INT cmd_start (LPTSTR Rest)
 				bCreate = CreateProcess (szFullName, szFullCmdLine, NULL, NULL, FALSE,
 					CREATE_NEW_CONSOLE | Priority, NULL, lpDirectory, &stui, &prci);
 		}
-
 		if (bCreate)
-		{
+			CloseHandle(prci.hThread);
+	}
+	else
+	{
+		/* The file name did not seem to be valid, but maybe it's actually a
+		 * directory or URL, so we still want to pass it to ShellExecute. */
+		_tcscpy(szFullName, szUnquotedName);
+	}
+
+	if (!bCreate)
+	{
+		/* CreateProcess didn't work; try ShellExecute */
+		prci.hProcess = RunFile(SEE_MASK_NOCLOSEPROCESS, szFullName,
+		                        param, lpDirectory, wShowWindow);
+	}
+
+	if (prci.hProcess != NULL)
+	{
 			if (bWait)
 			{
 				DWORD dwExitCode;
@@ -269,7 +259,6 @@ INT cmd_start (LPTSTR Rest)
 				GetExitCodeProcess (prci.hProcess, &dwExitCode);
 				nErrorLevel = (INT)dwExitCode;
 			}
-			CloseHandle (prci.hThread);
 			CloseHandle (prci.hProcess);
 		/* Get New code page if it has change */
 		InputCodePage= GetConsoleCP();
