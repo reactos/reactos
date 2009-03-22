@@ -1990,22 +1990,13 @@ FinishDlgProc(HWND hwndDlg,
             {
               case PSN_SETACTIVE:
                 /* Enable the correct buttons on for the active page */
-                PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_FINISH);
+                PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_FINISH);
 
                 SendDlgItemMessage(hwndDlg, IDC_RESTART_PROGRESS, PBM_SETRANGE, 0,
                                    MAKELPARAM(0, 300));
                 SendDlgItemMessage(hwndDlg, IDC_RESTART_PROGRESS, PBM_SETPOS, 0, 0);
                 SetTimer(hwndDlg, 1, 50, NULL);
                 break;
-
-              case PSN_WIZBACK:
-                /* Handle a Back button click, if necessary */
-                KillTimer(hwndDlg, 1);
-
-                /* Skip the progress page */
-                SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_DATETIMEPAGE);
-                SetupData.UnattendSetup = FALSE;
-                return TRUE;
 
               case PSN_WIZFINISH:
                 /* Handle a Finish button click, if necessary */
