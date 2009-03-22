@@ -1898,6 +1898,12 @@ NdisIPnPStopDevice(
       Adapter->NdisMiniportBlock.AllocatedResourcesTranslated = NULL;
     }
 
+  if (Adapter->NdisMiniportBlock.EthDB)
+    {
+      EthDeleteFilter(Adapter->NdisMiniportBlock.EthDB);
+      Adapter->NdisMiniportBlock.EthDB = NULL;
+    }
+
   Adapter->NdisMiniportBlock.OldPnPDeviceState = Adapter->NdisMiniportBlock.PnPDeviceState;
   Adapter->NdisMiniportBlock.PnPDeviceState = NdisPnPDeviceStopped;
 
