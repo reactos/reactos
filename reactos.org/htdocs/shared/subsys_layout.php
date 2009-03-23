@@ -6,7 +6,7 @@
   COPYRIGHT:  Copyright 2008-2009 Colin Finck <colin@reactos.org>
 */
 
-	require_once(ROOT_PATH . "roscms/inc/utils.php");
+	require_once(ROSCMS_PATH . "inc/utils.php");
 	
 	function GetLanguage()
 	{

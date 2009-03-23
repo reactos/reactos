@@ -13,6 +13,7 @@
 
 
 	require_once("config.inc.php");
+	require_once("connect.db.php");
 	require_once("utils.inc.php");
 	
 	try
@@ -40,15 +41,15 @@
 			$where .= "AND r.id >= " . (int)$_GET["startid"] . " ";
 		
 		if($_GET["user"])
-			$where .= "AND u.user_name LIKE " . $dbh->quote($_GET["user"] . "%") . " ";
+			$where .= "AND a.name LIKE " . $dbh->quote($_GET["user"] . "%") . " ";
 		
 		if($_GET["platform"])
 			$where .= "AND r.platform LIKE " . $dbh->quote($_GET["platform"] . "%") . " ";
 	}
 	
 	// Prepare some clauses
-	$tables = "FROM " . DB_TESTMAN . ".winetest_runs r JOIN " . DB_ROSCMS . ".users u ON r.user_id = u.user_id ";
-	$order = "ORDER BY revision ASC, id ASC ";
+	$tables = "FROM " . DB_TESTMAN . ".winetest_runs r JOIN " . DB_ROSCMS . ".roscms_accounts a ON r.user_id = a.id ";
+	$order = "ORDER BY revision ASC, r.id ASC ";
 	
 	echo "<results>";
 	
@@ -81,7 +82,7 @@
 		if($_GET["resultlist"])
 		{
 			$stmt = $dbh->query(
-				"SELECT r.id, UNIX_TIMESTAMP(r.timestamp) timestamp, u.user_name, r.revision, r.platform, r.comment " .
+				"SELECT r.id, UNIX_TIMESTAMP(r.timestamp) timestamp, a.name, r.revision, r.platform, r.comment " .
 				$tables .	$where . $order .
 				"LIMIT " . RESULTS_PER_PAGE
 			) or die("<error>Query failed #2</error>");
@@ -100,7 +101,7 @@
 				echo "<result>";
 				printf("<id>%d</id>", $row["id"]);
 				printf("<date>%s</date>", GetDateString($row["timestamp"]));
-				printf("<user>%s</user>", htmlspecialchars($row["user_name"]));
+				printf("<user>%s</user>", htmlspecialchars($row["name"]));
 				printf("<revision>%d</revision>", $row["revision"]);
 				printf("<platform>%s</platform>", GetPlatformString($row["platform"]));
 				printf("<comment>%s</comment>", htmlspecialchars($row["comment"]));

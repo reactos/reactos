@@ -7,13 +7,12 @@
   
   charset=utf-8 without BOM
 */
-
-	define("ROOT_PATH", "../");
 	
 	require_once("config.inc.php");
+	require_once("connect.db.php");
 	require_once("utils.inc.php");
 	require_once("languages.inc.php");
-	require_once(ROOT_PATH . "shared/subsys_layout.php");
+	require_once(SHARED_PATH . "subsys_layout.php");
 	
 	GetLanguage();
 	require_once("lang/$lang.inc.php");
@@ -53,11 +52,11 @@
 	
 	// Get information about this result
 	$stmt = $dbh->prepare(
-		"SELECT e.log, e.count, e.todo, e.failures, e.skipped, s.module, s.test, UNIX_TIMESTAMP(r.timestamp) timestamp, r.revision, r.platform, u.user_name, r.comment " .
+		"SELECT e.log, e.count, e.todo, e.failures, e.skipped, s.module, s.test, UNIX_TIMESTAMP(r.timestamp) timestamp, r.revision, r.platform, a.name, r.comment " .
 		"FROM " . DB_TESTMAN . ".winetest_results e " .
 		"JOIN " . DB_TESTMAN . ".winetest_suites s ON e.suite_id = s.id " .
 		"JOIN " . DB_TESTMAN . ".winetest_runs r ON e.test_id = r.id " .
-		"JOIN " . DB_ROSCMS . ".users u ON r.user_id = u.user_id " .
+		"JOIN " . DB_ROSCMS . ".roscms_accounts a ON r.user_id = a.id " .
 		"WHERE e.id = :id"
 	);
 	$stmt->bindParam(":id", $_GET["id"]);
@@ -111,7 +110,7 @@
 	</tr>
 	<tr class="even" onmouseover="Row_OnMouseOver(this)" onmouseout="Row_OnMouseOut(this)">
 		<td class="info"><?php echo $testman_langres["user"]; ?>:</td>
-		<td><?php echo $row["user_name"]; ?></td>
+		<td><?php echo $row["name"]; ?></td>
 	</tr>
 	<tr class="odd" onmouseover="Row_OnMouseOver(this)" onmouseout="Row_OnMouseOut(this)">
 		<td class="info"><?php echo $testman_langres["platform"]; ?>:</td>

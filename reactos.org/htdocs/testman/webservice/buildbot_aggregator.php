@@ -5,8 +5,9 @@
   PURPOSE:    Aggregator for the Debug Log of ReactOS BuildBot Buildslaves
   COPYRIGHT:  Copyright 2009 Colin Finck <colin@reactos.org>
 */
-
-	require_once("../config.inc.php");
+	
+	require_once("config.inc.php");
+	require_once(TESTMAN_PATH . "connect.db.php");
 	require_once("utils.inc.php");
 	
 	if(!isset($_GET["username"]) || !isset($_GET["password"]) || !isset($_GET["slavename"]) || !is_numeric($_GET["platform"]) || !is_numeric($_GET["build"]))

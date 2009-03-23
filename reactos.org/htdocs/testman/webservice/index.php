@@ -6,7 +6,8 @@
   COPYRIGHT:  Copyright 2008-2009 Colin Finck <colin@reactos.org>
 */
 
-	require_once("../config.inc.php");
+	require_once("config.inc.php");
+	require_once(TESTMAN_PATH . "connect.db.php");
 	require_once("utils.inc.php");
 	
 	if(!isset($_POST["username"]) || !isset($_POST["password"]) || !isset($_POST["testtype"]))

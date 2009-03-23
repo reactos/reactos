@@ -23,6 +23,8 @@ error_reporting( E_ALL );
 header( "Content-type: text/html; charset=utf-8" );
 @ini_set( "display_errors", true );
 
+define("ROSCMS_PATH", "../../roscms/");
+
 # In case of errors, let output be clean.
 $wgRequestTime = microtime( true );
 

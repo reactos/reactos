@@ -417,7 +417,7 @@ sub bz_locations {
     }
 
     # The "localconfig" file has another path on the ReactOS Web Server
-    $localconfig = "../../config/bugzilla-config";
+    $localconfig = "../../www.reactos.org_config/bugzilla-config";
     
     # We have to return absolute paths for mod_perl. 
     # That means that if you modify these paths, they must be absolute paths.

@@ -26,7 +26,7 @@
 		global $dbh;
 		
 		// Check the login credentials
-		$stmt = $dbh->prepare("SELECT user_id FROM " . DB_ROSCMS . ".users WHERE user_name = :username AND user_roscms_password = MD5(:password) AND user_account_enabled = 'yes'");
+		$stmt = $dbh->prepare("SELECT id FROM " . DB_ROSCMS . ".roscms_accounts WHERE name = :username AND password = MD5(:password) AND disabled = 0");
 		$stmt->bindParam(":username", $username);
 		$stmt->bindParam(":password", $password);
 		$stmt->execute() or die("SQL failed #1");

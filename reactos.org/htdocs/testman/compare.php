@@ -8,12 +8,11 @@
   charset=utf-8 without BOM
 */
 
-	define("ROOT_PATH", "../");
-	
 	require_once("config.inc.php");
+	require_once("connect.db.php");
 	require_once("utils.inc.php");
 	require_once("languages.inc.php");
-	require_once(ROOT_PATH . "shared/subsys_layout.php");
+	require_once(SHARED_PATH . "subsys_layout.php");
 	
 	GetLanguage();
 	require_once("lang/$lang.inc.php");
@@ -166,10 +165,10 @@
 	printf('<th class="TestSuite">%s</th>', $testman_langres["testsuite"]);
 	
 	$stmt = $dbh->prepare(
-		"SELECT UNIX_TIMESTAMP(r.timestamp) timestamp, u.user_name, r.revision, r.platform " .
+		"SELECT UNIX_TIMESTAMP(r.timestamp) timestamp, a.name, r.revision, r.platform " .
 		"FROM " . DB_TESTMAN . ".winetest_runs r " .
-		"JOIN " . DB_ROSCMS . ".users u ON r.user_id = u.user_id " .
-		"WHERE r.id = :id" 
+		"JOIN " . DB_ROSCMS . ".roscms_accounts a ON r.user_id = a.id " .
+		"WHERE r.id = :id"
 	);
 	
 	foreach($id_array as $id)
@@ -179,7 +178,7 @@
 		$row = $stmt->fetch(PDO::FETCH_ASSOC);
 		
 		echo '<th onmousedown="ResultHead_OnMouseDown(this)">';
-		printf($testman_langres["resulthead"], $row["revision"], GetDateString($row["timestamp"]), $row["user_name"], GetPlatformString($row["platform"]));
+		printf($testman_langres["resulthead"], $row["revision"], GetDateString($row["timestamp"]), $row["name"], GetPlatformString($row["platform"]));
 		echo '</th>';
 	}
 	

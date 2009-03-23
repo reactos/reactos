@@ -7,17 +7,16 @@
   
   charset=utf-8 without BOM
 */
-
-	define("ROOT_PATH", "../");
 	
 	require_once("config.inc.php");
+	require_once("connect.db.php");
 	require_once("utils.inc.php");
 	require_once("languages.inc.php");
-	require_once(ROOT_PATH . "shared/subsys_layout.php");
-	require_once(ROOT_PATH . "shared/svn.php");
+	require_once(SHARED_PATH . "subsys_layout.php");
+	require_once(SHARED_PATH . "svn.php");
 	
 	GetLanguage();
-	require_once(ROOT_PATH . "shared/lang/$lang.inc.php");
+	require_once(SHARED_PATH . "lang/$lang.inc.php");
 	require_once("lang/$lang.inc.php");
 	
 	$rev = GetLatestRevision();
@@ -113,10 +112,10 @@
 									}
 									
 									$stmt = $dbh->query(
-										"SELECT r.id, UNIX_TIMESTAMP(r.timestamp) timestamp, u.user_name, r.revision, r.platform, r.comment " .
+										"SELECT r.id, UNIX_TIMESTAMP(r.timestamp) timestamp, a.name, r.revision, r.platform, r.comment " .
 										"FROM " . DB_TESTMAN . ".winetest_runs r " .
-										"JOIN " . DB_ROSCMS . ".users u ON r.user_id = u.user_id " .
-										"ORDER BY revision DESC, id DESC " .
+										"JOIN " . DB_ROSCMS . ".roscms_accounts a ON r.user_id = a.id " .
+										"ORDER BY revision DESC, r.id DESC " .
 										"LIMIT 10"
 									) or die("Query failed #1");
 									
@@ -131,7 +130,7 @@
 										printf('<td><input onclick="Result_OnCheckboxClick(this)" type="checkbox" name="test_%s" /></td>', $row["id"]);
 										printf('<td onclick="Result_OnCellClick(this)">%s</td>', $row["revision"]);
 										printf('<td onclick="Result_OnCellClick(this)">%s</td>', GetDateString($row["timestamp"]));
-										printf('<td onclick="Result_OnCellClick(this)">%s</td>', htmlspecialchars($row["user_name"]));
+										printf('<td onclick="Result_OnCellClick(this)">%s</td>', htmlspecialchars($row["name"]));
 										printf('<td onclick="Result_OnCellClick(this)">%s</td>', GetPlatformString($row["platform"]));
 										printf('<td onclick="Result_OnCellClick(this)">%s</td>', htmlspecialchars($row["comment"]));
 										echo "</tr>";
