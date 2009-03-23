@@ -165,7 +165,7 @@ INT CommandPushd (LPTSTR rest)
 		return 0;
 
 	if (bChangePath)
-		SetCurrentDirectory (newPath);
+		_tchdir(newPath);
 
 	return 0;
 }
@@ -192,7 +192,7 @@ INT CommandPopd (LPTSTR rest)
 	GetDirectoryStackTop (szPath);
 	PopDirectory ();
 
-	SetCurrentDirectory (szPath);
+	_tchdir(szPath);
 
 	return 0;
 }
