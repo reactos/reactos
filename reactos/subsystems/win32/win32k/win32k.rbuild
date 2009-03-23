@@ -160,8 +160,12 @@
 		<file>cliprgn.c</file>
 		<file>color.c</file>
 		<file>coord.c</file>
-		<file>dc.c</file>
+		<file>dcattr.c</file>
+		<file>dclife.c</file>
+		<file>dcobjs.c</file>
+		<file>dcstate.c</file>
 		<file>dcutil.c</file>
+		<file>device.c</file>
 		<file>dibobj.c</file>
 		<file>drawing.c</file>
 		<file>fillshap.c</file>

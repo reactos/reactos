@@ -105,58 +105,6 @@ INT APIENTRY  func_name( HDC hdc, INT mode ) \
 }
 
 
-static
-VOID
-CopytoUserDcAttr(PDC dc, PDC_ATTR pdcattr)
-{
-  NTSTATUS Status = STATUS_SUCCESS;
-  dc->dcattr.mxWorldToDevice = dc->dclevel.mxWorldToDevice;
-  dc->dcattr.mxDeviceToWorld = dc->dclevel.mxDeviceToWorld;
-  dc->dcattr.mxWorldToPage = dc->dclevel.mxWorldToPage;
-
-  _SEH2_TRY
-  {
-      ProbeForWrite( pdcattr,
-             sizeof(DC_ATTR),
-                           1);
-      RtlCopyMemory( pdcattr,
-                &dc->dcattr,
-             sizeof(DC_ATTR));
-  }
-  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-  {
-     Status = _SEH2_GetExceptionCode();
-     ASSERT(FALSE);
-  }
-  _SEH2_END;
-}
-
-
-BOOL
-FASTCALL
-DCU_SyncDcAttrtoUser(PDC dc)
-{
-  PDC_ATTR pdcattr = dc->pdcattr;
-
-  if (pdcattr == &dc->dcattr) return TRUE; // No need to copy self.
-  ASSERT(pdcattr);
-  CopytoUserDcAttr( dc, pdcattr);
-  return TRUE;
-}
-
-BOOL
-FASTCALL
-DCU_SynchDcAttrtoUser(HDC hDC)
-{
-  BOOL Ret;
-  PDC pDC = DC_LockDc ( hDC );
-  if (!pDC) return FALSE;
-  Ret = DCU_SyncDcAttrtoUser(pDC);
-  DC_UnlockDc( pDC );
-  return Ret;
-}
-
-
 DC_GET_VAL( INT, IntGdiGetMapMode, iMapMode )
 DC_GET_VAL( INT, IntGdiGetPolyFillMode, jFillMode )
 DC_GET_VAL( COLORREF, IntGdiGetBkColor, crBackgroundClr )
@@ -282,4 +230,294 @@ DCU_SetDcUndeletable(HDC  hDC)
   dc->fs |= DC_FLAG_PERMANENT;
   DC_UnlockDc( dc );
   return;
+}
+
+#if 0
+BOOL FASTCALL
+IntIsPrimarySurface(SURFOBJ *SurfObj)
+{
+   if (PrimarySurface.pSurface == NULL)
+     {
+       return FALSE;
+     }
+   return SurfObj->hsurf == PrimarySurface.pSurface; // <- FIXME: WTF?
+}
+#endif
+
+// FIXME: remove me
+HDC FASTCALL
+DC_GetNextDC (PDC pDC)
+{
+  return pDC->hdcNext;
+}
+
+VOID FASTCALL
+DC_SetNextDC (PDC pDC, HDC hNextDC)
+{
+  pDC->hdcNext = hNextDC;
+}
+
+
+BOOL APIENTRY
+NtGdiCancelDC(HDC  hDC)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+
+
+
+WORD APIENTRY
+IntGdiSetHookFlags(HDC hDC, WORD Flags)
+{
+  WORD wRet;
+  DC *dc = DC_LockDc(hDC);
+
+  if (NULL == dc)
+    {
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return 0;
+    }
+
+  wRet = dc->fs & DC_FLAG_DIRTY_RAO; // Fixme wrong flag!
+
+  /* "Undocumented Windows" info is slightly confusing.
+   */
+
+  DPRINT("DC %p, Flags %04x\n", hDC, Flags);
+
+  if (Flags & DCHF_INVALIDATEVISRGN)
+    { /* hVisRgn has to be updated */
+      dc->fs |= DC_FLAG_DIRTY_RAO;
+    }
+  else if (Flags & DCHF_VALIDATEVISRGN || 0 == Flags)
+    {
+      dc->fs &= ~DC_FLAG_DIRTY_RAO;
+    }
+
+  DC_UnlockDc(dc);
+
+  return wRet;
+}
+
+
+BOOL
+APIENTRY
+NtGdiGetDCDword(
+             HDC hDC,
+             UINT u,
+             DWORD *Result
+               )
+{
+  BOOL Ret = TRUE;
+  PDC dc;
+  PDC_ATTR pdcattr;
+
+  DWORD SafeResult = 0;
+  NTSTATUS Status = STATUS_SUCCESS;
+
+  if(!Result)
+  {
+    SetLastWin32Error(ERROR_INVALID_PARAMETER);
+    return FALSE;
+  }
+
+  dc = DC_LockDc(hDC);
+  if(!dc)
+  {
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    return FALSE;
+  }
+  pdcattr = dc->pdcattr;
+
+  switch (u)
+  {
+    case GdiGetJournal:
+      break;
+    case GdiGetRelAbs:
+      SafeResult = pdcattr->lRelAbs;
+      break;
+    case GdiGetBreakExtra:
+      SafeResult = pdcattr->lBreakExtra;
+      break;
+    case GdiGerCharBreak:
+      SafeResult = pdcattr->cBreak;
+      break;
+    case GdiGetArcDirection:
+      if (pdcattr->dwLayout & LAYOUT_RTL)
+          SafeResult = AD_CLOCKWISE - ((dc->dclevel.flPath & DCPATH_CLOCKWISE) != 0);
+      else
+          SafeResult = ((dc->dclevel.flPath & DCPATH_CLOCKWISE) != 0) + AD_COUNTERCLOCKWISE;
+      break;
+    case GdiGetEMFRestorDc:
+      break;
+    case GdiGetFontLanguageInfo:
+          SafeResult = IntGetFontLanguageInfo(dc);
+      break;
+    case GdiGetIsMemDc:
+          SafeResult = dc->dctype;
+      break;
+    case GdiGetMapMode:
+      SafeResult = pdcattr->iMapMode;
+      break;
+    case GdiGetTextCharExtra:
+      SafeResult = pdcattr->lTextExtra;
+      break;
+    default:
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      Ret = FALSE;
+      break;
+  }
+
+  if (Ret)
+  {
+    _SEH2_TRY
+    {
+      ProbeForWrite(Result,
+                    sizeof(DWORD),
+                    1);
+      *Result = SafeResult;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+      Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+  }
+
+  if(!NT_SUCCESS(Status))
+  {
+    SetLastNtError(Status);
+    DC_UnlockDc(dc);
+    return FALSE;
+  }
+
+  DC_UnlockDc(dc);
+  return Ret;
+}
+
+BOOL
+APIENTRY
+NtGdiGetAndSetDCDword(
+                  HDC hDC,
+                  UINT u,
+                  DWORD dwIn,
+                  DWORD *Result
+                     )
+{
+  BOOL Ret = TRUE;
+  PDC dc;
+  PDC_ATTR pdcattr;
+
+  DWORD SafeResult = 0;
+  NTSTATUS Status = STATUS_SUCCESS;
+
+  if(!Result)
+  {
+    SetLastWin32Error(ERROR_INVALID_PARAMETER);
+    return FALSE;
+  }
+
+  dc = DC_LockDc(hDC);
+  if(!dc)
+  {
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    return FALSE;
+  }
+  pdcattr = dc->pdcattr;
+
+  switch (u)
+  {
+    case GdiGetSetCopyCount:
+      SafeResult = dc->ulCopyCount;
+      dc->ulCopyCount = dwIn;
+      break;
+    case GdiGetSetTextAlign:
+      SafeResult = pdcattr->lTextAlign;
+      pdcattr->lTextAlign = dwIn;
+      // pdcattr->flTextAlign = dwIn; // Flags!
+      break;
+    case GdiGetSetRelAbs:
+      SafeResult = pdcattr->lRelAbs;
+      pdcattr->lRelAbs = dwIn;
+      break;
+    case GdiGetSetTextCharExtra:
+      SafeResult = pdcattr->lTextExtra;
+      pdcattr->lTextExtra = dwIn;
+      break;
+    case GdiGetSetSelectFont:
+      break;
+    case GdiGetSetMapperFlagsInternal:
+      if (dwIn & ~1)
+      {
+         SetLastWin32Error(ERROR_INVALID_PARAMETER);
+         Ret = FALSE;
+         break;
+      }
+      SafeResult = pdcattr->flFontMapper;
+      pdcattr->flFontMapper = dwIn;
+      break;
+    case GdiGetSetMapMode:
+      SafeResult = IntGdiSetMapMode( dc, dwIn);
+      break;
+    case GdiGetSetArcDirection:
+      if (dwIn != AD_COUNTERCLOCKWISE && dwIn != AD_CLOCKWISE)
+      {
+         SetLastWin32Error(ERROR_INVALID_PARAMETER);
+         Ret = FALSE;
+         break;
+      }
+      if ( pdcattr->dwLayout & LAYOUT_RTL ) // Right to Left
+      {
+         SafeResult = AD_CLOCKWISE - ((dc->dclevel.flPath & DCPATH_CLOCKWISE) != 0);
+         if ( dwIn == AD_CLOCKWISE )
+         {
+            dc->dclevel.flPath &= ~DCPATH_CLOCKWISE;
+            break;
+         }
+         dc->dclevel.flPath |= DCPATH_CLOCKWISE;
+      }
+      else // Left to Right
+      {
+         SafeResult = ((dc->dclevel.flPath & DCPATH_CLOCKWISE) != 0) + AD_COUNTERCLOCKWISE;
+         if ( dwIn == AD_COUNTERCLOCKWISE)
+         {
+            dc->dclevel.flPath &= ~DCPATH_CLOCKWISE;
+            break;
+         }
+         dc->dclevel.flPath |= DCPATH_CLOCKWISE;
+      }
+      break;
+    default:
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      Ret = FALSE;
+      break;
+  }
+
+  if (Ret)
+  {
+    _SEH2_TRY
+    {
+      ProbeForWrite(Result,
+                    sizeof(DWORD),
+                    1);
+      *Result = SafeResult;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+      Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+  }
+
+  if(!NT_SUCCESS(Status))
+  {
+    SetLastNtError(Status);
+    DC_UnlockDc(dc);
+    return FALSE;
+  }
+
+  DC_UnlockDc(dc);
+  return Ret;
 }

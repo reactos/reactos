@@ -130,8 +130,8 @@ typedef struct _DCLEVEL
   DWORD             unk1_00000000;
   HGDIOBJ           hdcSave;
   POINTL            ptlBrushOrigin;
-  PBRUSH      pbrFill;
-  PBRUSH      pbrLine;
+  PBRUSH            pbrFill;
+  PBRUSH            pbrLine;
   PVOID             plfnt; /* LFONTOBJ* (TEXTOBJ*) */
   HGDIOBJ           hPath; /* HPATH */
   FLONG             flPath;
@@ -277,5 +277,9 @@ HBRUSH FASTCALL IntGdiSelectBrush(PDC,HBRUSH);
 INT FASTCALL IntGdiGetDeviceCaps(PDC,INT);
 
 extern PPDEVOBJ pPrimarySurface;
+
+BOOL FASTCALL
+IntPrepareDriverIfNeeded();
+extern PDEVOBJ PrimarySurface;
 
 #endif /* not __WIN32K_DC_H */
