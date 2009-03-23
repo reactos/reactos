@@ -294,7 +294,7 @@ function SearchCallback(HttpRequest)
 	
 		if(!results.length)
 		{
-			html += '<tr class="even"><td colspan="5"><?php echo addslashes($testman_langres["noresults"]); ?><\/td><\/tr>';
+			html += '<tr class="even"><td colspan="6"><?php echo addslashes($testman_langres["noresults"]); ?><\/td><\/tr>';
 		}
 		else
 		{
