@@ -15,7 +15,7 @@
  * A MAILING LIST FIRST.
  */
 
-typedef struct
+typedef struct _BRUSH
 {
   /* Header for all gdi objects in the handle table.
      Do not (re)move this. */
@@ -44,11 +44,33 @@ typedef struct
    ULONG Unknown6C;
 } BRUSH, *PBRUSH;
 
-typedef struct
+typedef struct _EBRUSHOBJ
 {
-   BRUSHOBJ BrushObject;
-   PBRUSH GdiBrushObject;
-   XLATEOBJ *XlateObject;
+    BRUSHOBJ    BrushObject;
+
+    COLORREF    crRealize;
+    ULONG       ulRGBColor;
+    DWORD       pengbrush;
+    ULONG       ulSurfPalTime;
+    ULONG       ulDCPalTime;
+    COLORREF    crCurrentText;
+    COLORREF    crCurrentBack;
+    COLORADJUSTMENT *pca;
+//    DWORD       dwUnknown2c;
+//    DWORD       dwUnknown30;
+    SURFACE *   psurfTrg;
+//    PALETTE *   ppalSurf;
+//    PALETTE *   ppalDC;
+//    PALETTE *   ppal3;
+//    DWORD       dwUnknown44;
+    BRUSH *     pbrush;
+    FLONG       flattrs;
+    DWORD       ulUnique;
+//    DWORD       dwUnknown54;
+//    DWORD       dwUnknown58;
+
+    /* Ros specific */
+    XLATEOBJ *XlateObject;
 } EBRUSHOBJ, *PEBRUSHOBJ;
 
 /* GDI Brush Attributes */
@@ -78,10 +100,25 @@ typedef struct
 #define  BRUSH_LockBrush(hBrush) ((PBRUSH)GDIOBJ_LockObj((HGDIOBJ)hBrush, GDI_OBJECT_TYPE_BRUSH))
 #define  BRUSH_UnlockBrush(pBrush) GDIOBJ_UnlockObjByPtr((POBJ)pBrush)
 
+#define  BRUSH_ShareLockBrush(hBrush) ((PBRUSH)GDIOBJ_ShareLockObj((HGDIOBJ)hBrush, GDI_OBJECT_TYPE_BRUSH))
+#define  BRUSH_ShareUnlockBrush(pBrush) GDIOBJ_ShareUnlockObjByPtr((POBJ)pBrush)
+
 INT FASTCALL BRUSH_GetObject (PBRUSH GdiObject, INT Count, LPLOGBRUSH Buffer);
 BOOL INTERNAL_CALL BRUSH_Cleanup(PVOID ObjectBody);
 
 VOID FASTCALL
 EBRUSHOBJ_vInit(EBRUSHOBJ *BrushInst, PBRUSH BrushObj, XLATEOBJ *XlateObj);
+
+VOID
+FASTCALL
+EBRUSHOBJ_vSetSolidBrushColor(EBRUSHOBJ *pebo, ULONG iSolidColor);
+
+VOID
+FASTCALL
+EBRUSHOBJ_vUpdate(EBRUSHOBJ *pebo, PBRUSH pbrush, XLATEOBJ *pxlo);
+
+BOOL
+FASTCALL
+EBRUSHOBJ_bRealizeBrush(EBRUSHOBJ *pebo);
 
 #endif

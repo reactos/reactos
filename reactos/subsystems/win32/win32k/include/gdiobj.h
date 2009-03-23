@@ -61,7 +61,7 @@ BOOL    INTERNAL_CALL GDIOBJ_OwnedByCurrentProcess(HGDIOBJ ObjectHandle);
 BOOL    INTERNAL_CALL GDIOBJ_SetOwnership(HGDIOBJ ObjectHandle, PEPROCESS Owner);
 BOOL    INTERNAL_CALL GDIOBJ_CopyOwnership(HGDIOBJ CopyFrom, HGDIOBJ CopyTo);
 BOOL    INTERNAL_CALL GDIOBJ_ConvertToStockObj(HGDIOBJ *hObj);
-VOID    INTERNAL_CALL GDIOBJ_ShareUnlockObjByPtr(POBJ Object);
+//VOID    INTERNAL_CALL GDIOBJ_ShareUnlockObjByPtr(POBJ Object);
 BOOL    INTERNAL_CALL GDIOBJ_ValidateHandle(HGDIOBJ hObj, ULONG ObjectType);
 POBJ    INTERNAL_CALL GDIOBJ_AllocObj(UCHAR ObjectType);
 POBJ    INTERNAL_CALL GDIOBJ_AllocObjWithHandle(ULONG ObjectType);
@@ -96,6 +96,24 @@ GDIOBJ_UnlockObjByPtr(POBJ Object)
 {
     INT cLocks = InterlockedDecrement((PLONG)&Object->cExclusiveLock);
     ASSERT(cLocks >= 0);
+    return cLocks;
+}
+
+ULONG
+FORCEINLINE
+GDIOBJ_ShareUnlockObjByPtr(POBJ Object)
+{
+    INT cLocks = InterlockedDecrement((PLONG)&Object->ulShareCount);
+    ASSERT(cLocks >= 0);
+    return cLocks;
+}
+
+ULONG
+FORCEINLINE
+GDIOBJ_IncrementShareCount(POBJ Object)
+{
+    INT cLocks = InterlockedIncrement((PLONG)&Object->ulShareCount);
+    ASSERT(cLocks >= 1);
     return cLocks;
 }
 

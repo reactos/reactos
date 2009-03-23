@@ -2422,8 +2422,6 @@ DC_AllocDC(PUNICODE_STRING Driver)
   }
   pdcattr = NewDC->pdcattr;
 
-  NewDC->BaseObject.hHmgr = (HGDIOBJ) hDC; // Save the handle for this DC object.
-  
   xformTemplate.eM11 = 1.0f;
   xformTemplate.eM12 = 0.0f;
   xformTemplate.eM21 = 0.0f;
@@ -2461,9 +2459,18 @@ DC_AllocDC(PUNICODE_STRING Driver)
   pdcattr->crBrushClr = RGB( 255, 255, 255 );
 
 //// This fixes the default brush and pen settings. See DC_InitDC.
+
+  /* Create the default fill brush */
   pdcattr->hbrush = NtGdiGetStockObject( WHITE_BRUSH );
+  NewDC->dclevel.pbrFill = BRUSH_ShareLockBrush(pdcattr->hbrush);
+  EBRUSHOBJ_vInit(&NewDC->eboFill, NewDC->dclevel.pbrFill, NULL);
+
+  /* Create the default pen / line brush */
   pdcattr->hpen = NtGdiGetStockObject( BLACK_PEN );
-////
+  NewDC->dclevel.pbrLine = PEN_ShareLockPen(pdcattr->hpen);
+  EBRUSHOBJ_vInit(&NewDC->eboLine, NewDC->dclevel.pbrFill, NULL);
+
+
   pdcattr->hlfntNew = NtGdiGetStockObject(SYSTEM_FONT);
   TextIntRealizeFont(pdcattr->hlfntNew,NULL);
 
@@ -2743,7 +2750,7 @@ IntIsPrimarySurface(SURFOBJ *SurfObj)
      {
        return FALSE;
      }
-   return SurfObj->hsurf == PrimarySurface.pSurface;
+   return SurfObj->hsurf == PrimarySurface.pSurface; // <- FIXME: WTF?
 }
 
 //
@@ -3465,5 +3472,158 @@ NtGdiMakeInfoDC(
     UNIMPLEMENTED;
     return FALSE;
 }
+
+VOID
+FASTCALL
+DC_vUpdateFillBrush(PDC pdc)
+{
+    PDC_ATTR pdcattr = pdc->pdcattr;
+    PBRUSH pbrFill;
+    XLATEOBJ *pxlo;
+    ULONG iSolidColor;
+
+    /* Check if update of eboFill is needed */
+    if (pdcattr->ulDirty_ & DIRTY_FILL)
+    {
+        /* ROS HACK, should use surf xlate */
+        pxlo = pdc->rosdc.XlatePen;
+
+        /* Check if the brush handle has changed */
+        if (pdcattr->hbrush != pdc->dclevel.pbrFill->BaseObject.hHmgr)
+        {
+            /* Try to lock the new brush */
+            pbrFill = BRUSH_ShareLockBrush(pdcattr->hbrush);
+            if (pbrFill)
+            {
+                /* Unlock old brush, set new brush */
+                BRUSH_ShareUnlockBrush(pdc->dclevel.pbrFill);
+                pdc->dclevel.pbrFill = pbrFill;
+
+                /* Update eboFill, realizing it, if needed */
+                EBRUSHOBJ_vUpdate(&pdc->eboFill, pbrFill, pxlo);
+            }
+            else
+            {
+                /* Invalid brush handle, restore old one */
+                pdcattr->hbrush = pdc->dclevel.pbrFill->BaseObject.hHmgr;
+            }
+        }
+
+        /* Check for DC brush */
+        if (pdcattr->hbrush == StockObjects[DC_BRUSH])
+        {
+            /* Translate the color to the target format */
+            iSolidColor = XLATEOBJ_iXlate(pxlo, pdcattr->crPenClr);
+
+            /* Update the eboFill's solid color */
+            EBRUSHOBJ_vSetSolidBrushColor(&pdc->eboFill, iSolidColor);
+        }
+
+        /* Clear flag */
+        pdcattr->ulDirty_ &= ~DIRTY_FILL;
+    }
+}
+
+VOID
+FASTCALL
+DC_vUpdateLineBrush(PDC pdc)
+{
+    PDC_ATTR pdcattr = pdc->pdcattr;
+    PBRUSH pbrLine;
+    XLATEOBJ *pxlo;
+    ULONG iSolidColor;
+
+    /* Check if update of eboLine is needed */
+    if (pdcattr->ulDirty_ & DIRTY_LINE)
+    {
+        /* ROS HACK, should use surf xlate */
+        pxlo = pdc->rosdc.XlatePen;
+
+        /* Check if the pen handle has changed */
+        if (pdcattr->hpen != pdc->dclevel.pbrLine->BaseObject.hHmgr)
+        {
+            /* Try to lock the new pen */
+            pbrLine = BRUSH_ShareLockBrush(pdcattr->hpen);
+            if (pbrLine)
+            {
+                /* Unlock old brush, set new brush */
+                BRUSH_ShareUnlockBrush(pdc->dclevel.pbrLine);
+                pdc->dclevel.pbrLine = pbrLine;
+
+                /* Update eboLine, realizing it, if needed */
+                EBRUSHOBJ_vUpdate(&pdc->eboLine, pbrLine, pxlo);
+            }
+            else
+            {
+                /* Invalid pen handle, restore old one */
+                pdcattr->hpen = pdc->dclevel.pbrLine->BaseObject.hHmgr;
+            }
+        }
+
+        /* Check for DC pen */
+        if (pdcattr->hpen == StockObjects[DC_PEN])
+        {
+            /* Translate the color to the target format */
+            iSolidColor = XLATEOBJ_iXlate(pxlo, pdcattr->crPenClr);
+
+            /* Update the eboLine's solid color */
+            EBRUSHOBJ_vSetSolidBrushColor(&pdc->eboLine, iSolidColor);
+        }
+
+        /* Clear flag */
+        pdcattr->ulDirty_ &= ~DIRTY_LINE;
+    }
+}
+
+VOID
+FASTCALL
+DC_vUpdateTextBrush(PDC pdc)
+{
+    PDC_ATTR pdcattr = pdc->pdcattr;
+    XLATEOBJ *pxlo;
+    ULONG iSolidColor;
+
+    /* Check if update of eboText is needed */
+    if (pdcattr->ulDirty_ & DIRTY_TEXT)
+    {
+        /* ROS HACK, should use surf xlate */
+        pxlo = pdc->rosdc.XlatePen;
+
+        /* Translate the color to the target format */
+        iSolidColor = XLATEOBJ_iXlate(pxlo, pdcattr->crForegroundClr);
+
+        /* Update the eboText's solid color */
+        EBRUSHOBJ_vSetSolidBrushColor(&pdc->eboText, iSolidColor);
+
+        /* Clear flag */
+        pdcattr->ulDirty_ &= ~DIRTY_TEXT;
+    }
+}
+
+VOID
+FASTCALL
+DC_vUpdateBackgroundBrush(PDC pdc)
+{
+    PDC_ATTR pdcattr = pdc->pdcattr;
+    XLATEOBJ *pxlo;
+    ULONG iSolidColor;
+
+    /* Check if update of eboBackground is needed */
+    if (pdcattr->ulDirty_ & DIRTY_BACKGROUND)
+    {
+        /* ROS HACK, should use surf xlate */
+        pxlo = pdc->rosdc.XlatePen;
+
+        /* Translate the color to the target format */
+        iSolidColor = XLATEOBJ_iXlate(pxlo, pdcattr->crBackgroundClr);
+
+        /* Update the eboBackground's solid color */
+        EBRUSHOBJ_vSetSolidBrushColor(&pdc->eboBackground, iSolidColor);
+
+        /* Clear flag */
+        pdcattr->ulDirty_ &= ~DIRTY_BACKGROUND;
+    }
+}
+
 
 /* EOF */

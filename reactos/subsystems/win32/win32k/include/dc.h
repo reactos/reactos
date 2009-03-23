@@ -190,10 +190,10 @@ typedef struct _DC
   PVOID       prgnVis;
   PVOID       prgnRao;
   POINTL      ptlFillOrigin;
-  unsigned    eboFill_[23]; /* EBRUSHOBJ */
-  unsigned    eboLine_[23];
-  unsigned    eboText_[23];
-  unsigned    eboBackground_[23];
+  EBRUSHOBJ   eboFill;
+  EBRUSHOBJ   eboLine;
+  EBRUSHOBJ   eboText;
+  EBRUSHOBJ   eboBackground;
   HFONT       hlfntCur;
   FLONG       flSimulationFlags;
   LONG        lEscapement;

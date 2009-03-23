@@ -144,11 +144,11 @@ IntGdiLineTo(DC  *dc,
         Bounds.bottom = max(Points[0].y, Points[1].y);
 
         /* get BRUSH from current pen. */
-        pbrushLine = PENOBJ_LockPen( pdcattr->hpen );
+        pbrushLine = PEN_LockPen( pdcattr->hpen );
         if (!pbrushLine)
         {
             /* default to BLACK_PEN */
-            pbrushLine = PENOBJ_LockPen(NtGdiGetStockObject(BLACK_PEN));
+            pbrushLine = PEN_LockPen(NtGdiGetStockObject(BLACK_PEN));
             ASSERT(pbrushLine);
         }
 
@@ -165,7 +165,7 @@ IntGdiLineTo(DC  *dc,
         }
 
         SURFACE_UnlockSurface(psurf);
-        PENOBJ_UnlockPen( pbrushLine );
+        PEN_UnlockPen( pbrushLine );
     }
 
     if (Ret)
@@ -268,7 +268,7 @@ IntGdiPolyline(DC      *dc,
        IntGdiSelectPen(dc,pdcattr->hpen);
 
     /* Get BRUSHOBJ from current pen. */
-    pbrushLine = PENOBJ_LockPen(pdcattr->hpen);
+    pbrushLine = PEN_LockPen(pdcattr->hpen);
     /* FIXME - pbrushLine can be NULL! Don't assert here! */
     ASSERT(pbrushLine);
 
@@ -309,7 +309,7 @@ IntGdiPolyline(DC      *dc,
         }
     }
 
-    PENOBJ_UnlockPen(pbrushLine);
+    PEN_UnlockPen(pbrushLine);
 
     return Ret;
 }

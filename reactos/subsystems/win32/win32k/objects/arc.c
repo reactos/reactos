@@ -45,7 +45,6 @@ IntArc( DC *dc,
     PDC_ATTR pdcattr;
     RECTL RectBounds, RectSEpts;
     PBRUSH pbrushPen;
-    EBRUSHOBJ eboPen;
     SURFACE *psurf;
     BOOL ret = TRUE;
     LONG PenWidth, PenOrigWidth;
@@ -70,7 +69,7 @@ IntArc( DC *dc,
 
     pdcattr = dc->pdcattr;
 
-    pbrushPen = PENOBJ_LockPen(pdcattr->hpen);
+    pbrushPen = PEN_LockPen(pdcattr->hpen);
     if (!pbrushPen)
     {
         DPRINT1("Arc Fail 1\n");
@@ -161,24 +160,24 @@ IntArc( DC *dc,
     if (NULL == psurf)
     {
         DPRINT1("Arc Fail 2\n");
-        PENOBJ_UnlockPen(pbrushPen);
+        PEN_UnlockPen(pbrushPen);
         SetLastWin32Error(ERROR_INTERNAL_ERROR);
         return FALSE;
     }
 
-    EBRUSHOBJ_vInit(&eboPen, pbrushPen, dc->rosdc.XlatePen);
+    EBRUSHOBJ_vInit(&dc->eboLine, pbrushPen, dc->rosdc.XlatePen);
 
     if (arctype == GdiTypePie)
     {
-       PUTLINE(CenterX, CenterY, SfCx + CenterX, SfCy + CenterY, eboPen);
-       PUTLINE(EfCx + CenterX, EfCy + CenterY, CenterX, CenterY, eboPen);
+       PUTLINE(CenterX, CenterY, SfCx + CenterX, SfCy + CenterY, dc->eboLine);
+       PUTLINE(EfCx + CenterX, EfCy + CenterY, CenterX, CenterY, dc->eboLine);
     }
     if (arctype == GdiTypeChord)
-        PUTLINE(EfCx + CenterX, EfCy + CenterY, SfCx + CenterX, SfCy + CenterY, eboPen);
+        PUTLINE(EfCx + CenterX, EfCy + CenterY, SfCx + CenterX, SfCy + CenterY, dc->eboLine);
            
     pbrushPen->ptPenWidth.x = PenOrigWidth;
     SURFACE_UnlockSurface(psurf);
-    PENOBJ_UnlockPen(pbrushPen);
+    PEN_UnlockPen(pbrushPen);
     DPRINT("IntArc Exit.\n");
     return ret;
 }

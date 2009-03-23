@@ -506,27 +506,33 @@ EngCreateDeviceSurface(IN DHSURF dhsurf,
 /*
  * @implemented
  */
-BOOL APIENTRY
-EngAssociateSurface(IN HSURF hsurf,
-                    IN HDEV hdev,
-                    IN ULONG Hooks)
+BOOL
+APIENTRY
+EngAssociateSurface(
+    IN HSURF hsurf,
+    IN HDEV hdev,
+    IN FLONG flHooks)
 {
     SURFOBJ *pso;
     PSURFACE psurf;
-    PDEVOBJ* Device;
+    PDEVOBJ* ppdev;
 
-    Device = (PDEVOBJ*)hdev;
+    ppdev = (PDEVOBJ*)hdev;
 
+    /* Lock the surface */
     psurf = SURFACE_LockSurface(hsurf);
-    ASSERT(psurf);
+    if (!psurf)
+    {
+        return FALSE;
+    }
     pso = &psurf->SurfObj;
 
     /* Associate the hdev */
     pso->hdev = hdev;
-    pso->dhpdev = Device->hPDev;
+    pso->dhpdev = ppdev->hPDev;
 
     /* Hook up specified functions */
-    psurf->flHooks = Hooks;
+    psurf->flHooks = flHooks;
 
     SURFACE_UnlockSurface(psurf);
 
@@ -548,25 +554,29 @@ EngModifySurface(
     IN VOID *pvReserved)
 {
     SURFOBJ *pso;
+    PSURFACE psurf;
+    PDEVOBJ* ppdev;
 
-    pso = EngLockSurface(hsurf);
-    if (pso == NULL)
+    psurf = SURFACE_LockSurface(hsurf);
+    if (psurf == NULL)
     {
         return FALSE;
     }
 
-    if (!EngAssociateSurface(hsurf, hdev, flHooks))
-    {
-        EngUnlockSurface(pso);
-
-        return FALSE;
-    }
-
+    ppdev = (PDEVOBJ*)hdev;
+    pso = &psurf->SurfObj;
     pso->dhsurf = dhsurf;
     pso->lDelta = lDelta;
     pso->pvScan0 = pvScan0;
 
-    EngUnlockSurface(pso);
+    /* Associate the hdev */
+    pso->hdev = hdev;
+    pso->dhpdev = ppdev->hPDev;
+
+    /* Hook up specified functions */
+    psurf->flHooks = flHooks;
+
+    SURFACE_UnlockSurface(psurf);
 
     return TRUE;
 }

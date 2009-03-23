@@ -530,9 +530,9 @@ IntEngLineTo(SURFOBJ *psoDest,
                    EBRUSHOBJ,
                    BrushObject);
     ASSERT(GdiBrush);
-    ASSERT(GdiBrush->GdiBrushObject);
+    ASSERT(GdiBrush->pbrush);
 
-    if (GdiBrush->GdiBrushObject->flAttrs & GDIBRUSH_IS_NULL)
+    if (GdiBrush->pbrush->flAttrs & GDIBRUSH_IS_NULL)
         return TRUE;
 
     /* No success yet */

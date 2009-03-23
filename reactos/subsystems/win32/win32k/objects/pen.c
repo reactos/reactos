@@ -29,12 +29,22 @@
 
 PBRUSH
 FASTCALL
-PENOBJ_LockPen(HGDIOBJ hBMObj)
+PEN_LockPen(HGDIOBJ hBMObj)
 {
    if (GDI_HANDLE_GET_TYPE(hBMObj) == GDI_OBJECT_TYPE_EXTPEN)
       return GDIOBJ_LockObj( hBMObj, GDI_OBJECT_TYPE_EXTPEN);
    else
       return GDIOBJ_LockObj( hBMObj, GDI_OBJECT_TYPE_PEN);
+}
+
+PBRUSH
+FASTCALL
+PEN_ShareLockPen(HGDIOBJ hBMObj)
+{
+   if (GDI_HANDLE_GET_TYPE(hBMObj) == GDI_OBJECT_TYPE_EXTPEN)
+      return GDIOBJ_ShareLockObj( hBMObj, GDI_OBJECT_TYPE_EXTPEN);
+   else
+      return GDIOBJ_ShareLockObj( hBMObj, GDI_OBJECT_TYPE_PEN);
 }
 
 HPEN APIENTRY
@@ -68,11 +78,11 @@ IntGdiExtCreatePen(
 
    if (bOldStylePen)
    {
-      pbrushPen = PENOBJ_AllocPenWithHandle();
+      pbrushPen = PEN_AllocPenWithHandle();
    }
    else
    {
-      pbrushPen = PENOBJ_AllocExtPenWithHandle();
+      pbrushPen = PEN_AllocExtPenWithHandle();
    }
 
    if (!pbrushPen)
@@ -173,17 +183,17 @@ IntGdiExtCreatePen(
       default:
          DPRINT1("IntGdiExtCreatePen unknown penstyle %x\n", dwPenStyle);
    }
-   PENOBJ_UnlockPen(pbrushPen);
+   PEN_UnlockPen(pbrushPen);
    return hPen;
 
 ExitCleanup:
    SetLastWin32Error(ERROR_INVALID_PARAMETER);
    pbrushPen->pStyle = NULL;
-   PENOBJ_UnlockPen(pbrushPen);
+   PEN_UnlockPen(pbrushPen);
    if (bOldStylePen)
-      PENOBJ_FreePenByHandle(hPen);
+      PEN_FreePenByHandle(hPen);
    else
-      PENOBJ_FreeExtPenByHandle(hPen);
+      PEN_FreeExtPenByHandle(hPen);
    return NULL;
 }
 
@@ -192,14 +202,14 @@ IntGdiSetSolidPenColor(HPEN hPen, COLORREF Color)
 {
   PBRUSH pbrushPen;
 
-  pbrushPen = PENOBJ_LockPen(hPen);
+  pbrushPen = PEN_LockPen(hPen);
   if (pbrushPen)
   {
     if (pbrushPen->flAttrs & GDIBRUSH_IS_SOLID)
     {
       pbrushPen->BrushAttr.lbColor = Color & 0xFFFFFF;
     }
-    PENOBJ_UnlockPen(pbrushPen);
+    PEN_UnlockPen(pbrushPen);
   }
 }
 
@@ -282,14 +292,14 @@ IntGdiSelectPen(
 
     pdcattr = pDC->pdcattr;
 
-    pbrushPen = PENOBJ_LockPen(hPen);
+    pbrushPen = PEN_LockPen(hPen);
     if (pbrushPen == NULL)
     {
         return NULL;
     }
 
     XlateObj = IntGdiCreateBrushXlate(pDC, pbrushPen, &bFailed);
-    PENOBJ_UnlockPen(pbrushPen);
+    PEN_UnlockPen(pbrushPen);
     if (bFailed)
     {
         SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);

@@ -96,7 +96,7 @@ IntGdiPolygon(PDC    dc,
 
         /* Special locking order to avoid lock-ups */
         pbrushFill = BRUSH_LockBrush(pdcattr->hbrush);
-        pbrushLine = PENOBJ_LockPen(pdcattr->hpen);
+        pbrushLine = PEN_LockPen(pdcattr->hpen);
         psurf = SURFACE_LockSurface(dc->rosdc.hBitmap);
         /* FIXME - psurf can be NULL!!!! don't assert but handle this case gracefully! */
         ASSERT(psurf);
@@ -154,7 +154,7 @@ IntGdiPolygon(PDC    dc,
             }
         }
         if (pbrushLine)
-            PENOBJ_UnlockPen(pbrushLine);
+            PEN_UnlockPen(pbrushLine);
     }
     SURFACE_UnlockSurface(psurf);
 
@@ -252,7 +252,7 @@ NtGdiEllipse(
     if (pdcattr->ulDirty_ & DC_PEN_DIRTY)
        IntGdiSelectPen(dc,pdcattr->hpen);
 
-    pbrush = PENOBJ_LockPen(pdcattr->hpen);
+    pbrush = PEN_LockPen(pdcattr->hpen);
     if (!pbrush)
     {
         DPRINT1("Ellipse Fail 1\n");
@@ -333,7 +333,7 @@ NtGdiEllipse(
                              pbrush);
 
     pbrush->ptPenWidth.x = PenOrigWidth;
-    PENOBJ_UnlockPen(pbrush);
+    PEN_UnlockPen(pbrush);
     DC_UnlockDc(dc);
     DPRINT("Ellipse Exit.\n");
     return ret;
@@ -580,7 +580,7 @@ IntRectangle(PDC dc,
 
     /* Special locking order to avoid lock-ups! */
     pbrushFill = BRUSH_LockBrush(pdcattr->hbrush);
-    pbrushLine = PENOBJ_LockPen(pdcattr->hpen);
+    pbrushLine = PEN_LockPen(pdcattr->hpen);
     if (!pbrushLine)
     {
         ret = FALSE;
@@ -658,7 +658,7 @@ cleanup:
         BRUSH_UnlockBrush(pbrushFill);
 
     if (pbrushLine)
-        PENOBJ_UnlockPen(pbrushLine);
+        PEN_UnlockPen(pbrushLine);
 
     if (psurf)
         SURFACE_UnlockSurface(psurf);
@@ -746,7 +746,7 @@ IntRoundRect(
     if (pdcattr->ulDirty_ & DC_PEN_DIRTY)
        IntGdiSelectPen(dc,pdcattr->hpen);
 
-    pbrushLine = PENOBJ_LockPen(pdcattr->hpen);
+    pbrushLine = PEN_LockPen(pdcattr->hpen);
     if (!pbrushLine)
     {
         /* Nothing to do, as we don't have a bitmap */
@@ -816,7 +816,7 @@ IntRoundRect(
                    pbrushLine);
 
     pbrushLine->ptPenWidth.x = PenOrigWidth;
-    PENOBJ_UnlockPen(pbrushLine);
+    PEN_UnlockPen(pbrushLine);
     return ret;
 }
 

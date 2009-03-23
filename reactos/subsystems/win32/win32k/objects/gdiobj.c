@@ -1013,16 +1013,6 @@ GDIOBJ_ShareLockObj(HGDIOBJ hObj, DWORD ExpectedType)
     return Object;
 }
 
-
-VOID INTERNAL_CALL
-GDIOBJ_ShareUnlockObjByPtr(POBJ Object)
-{
-    if (InterlockedDecrement((PLONG)&Object->ulShareCount) < 0)
-    {
-        DPRINT1("Trying to unlock non-existant object\n");
-    }
-}
-
 BOOL INTERNAL_CALL
 GDIOBJ_OwnedByCurrentProcess(HGDIOBJ ObjectHandle)
 {

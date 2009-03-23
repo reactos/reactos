@@ -118,7 +118,7 @@ IntCreateStockPen( DWORD dwPenStyle,
                    ULONG ulColor)
 {
   HPEN hPen;
-  PBRUSH pbrushPen = PENOBJ_AllocPenWithHandle();
+  PBRUSH pbrushPen = PEN_AllocPenWithHandle();
 
   if ((dwPenStyle & PS_STYLE_MASK) == PS_NULL) dwWidth = 1;
    
@@ -143,7 +143,7 @@ IntCreateStockPen( DWORD dwPenStyle,
         break;
   }
   hPen = pbrushPen->BaseObject.hHmgr;
-  PENOBJ_UnlockPen(pbrushPen);
+  PEN_UnlockPen(pbrushPen);
   return hPen;    
 }
 

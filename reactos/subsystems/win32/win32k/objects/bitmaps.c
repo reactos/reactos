@@ -960,11 +960,15 @@ NtGdiSelectBitmap(
         DC_UnlockDc(pDC);
         return NULL;
     }
+
     hOrgBmp = pDC->rosdc.hBitmap;
 
-    /* Release the old bitmap, lock the new one and convert it to a SURF */
     pDC->rosdc.hBitmap = hBmp;
 
+    /* Release the old bitmap */
+    if (pDC->dclevel.pSurface)
+        SURFACE_ShareUnlockSurface(pDC->dclevel.pSurface);
+    
     // If Info DC this is zero and pSurface is moved to DC->pSurfInfo.
     pDC->dclevel.pSurface = psurfBmp;
     psurfBmp->hDC = hDC;
@@ -985,6 +989,9 @@ NtGdiSelectBitmap(
                                  0,
                                  psurfBmp->SurfObj.sizlBitmap.cx,
                                  psurfBmp->SurfObj.sizlBitmap.cy);
+
+    /* Keep a shared reference on the bitmap */
+    GDIOBJ_IncrementShareCount((POBJ)psurfBmp);
     SURFACE_UnlockSurface(psurfBmp);
 
     /* Regenerate the XLATEOBJs. */
@@ -999,7 +1006,7 @@ NtGdiSelectBitmap(
         BRUSH_UnlockBrush(pbrush);
     }
 
-    pbrush = PENOBJ_LockPen(pdcattr->hpen);
+    pbrush = PEN_LockPen(pdcattr->hpen);
     if (pbrush)
     {
         if (pDC->rosdc.XlatePen)
@@ -1007,7 +1014,7 @@ NtGdiSelectBitmap(
             EngDeleteXlate(pDC->rosdc.XlatePen);
         }
         pDC->rosdc.XlatePen = IntGdiCreateBrushXlate(pDC, pbrush, &bFailed);
-        PENOBJ_UnlockPen(pbrush);
+        PEN_UnlockPen(pbrush);
     }
 
     DC_UnlockDc(pDC);

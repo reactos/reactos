@@ -92,7 +92,7 @@ BltMask(SURFOBJ* Dest,
     BYTE *tMask, *lMask;
     static BYTE maskbit[8] = { 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };
     /* Pattern brushes */
-    PEBRUSHOBJ GdiBrush = NULL;
+    PEBRUSHOBJ pebo = NULL;
     SURFOBJ *psoPattern = NULL;
     PSURFACE psurfPattern;
     ULONG PatternWidth = 0, PatternHeight = 0, PatternY = 0;
@@ -107,12 +107,12 @@ BltMask(SURFOBJ* Dest,
 
     if (pbo && pbo->iSolidColor == 0xFFFFFFFF)
     {
-        GdiBrush = CONTAINING_RECORD(
+        pebo = CONTAINING_RECORD(
                        pbo,
                        EBRUSHOBJ,
                        BrushObject);
 
-        psurfPattern = SURFACE_LockSurface(GdiBrush->GdiBrushObject->hbmPattern);
+        psurfPattern = SURFACE_LockSurface(pebo->pbrush->hbmPattern);
         if (psurfPattern != NULL)
         {
             psoPattern = &psurfPattern->SurfObj;
@@ -145,7 +145,7 @@ BltMask(SURFOBJ* Dest,
                 {
                     DibFunctionsForBitmapFormat[Dest->iBitmapFormat].DIB_PutPixel(
                         Dest, DestRect->left + i, DestRect->top + j,
-                        DIB_GetSource(psoPattern, (DestRect->left + i) % PatternWidth, PatternY, GdiBrush ? GdiBrush->XlateObject : NULL));
+                        DIB_GetSource(psoPattern, (DestRect->left + i) % PatternWidth, PatternY, pebo ? pebo->XlateObject : NULL));
                 }
             }
             c8++;
@@ -220,7 +220,7 @@ CallDibBitBlt(SURFOBJ* OutputObj,
     if (ROP4_USES_PATTERN(Rop4) && pbo && pbo->iSolidColor == 0xFFFFFFFF)
     {
         GdiBrush = CONTAINING_RECORD(pbo, EBRUSHOBJ, BrushObject);
-        if ((psurfPattern = SURFACE_LockSurface(GdiBrush->GdiBrushObject->hbmPattern)))
+        if ((psurfPattern = SURFACE_LockSurface(GdiBrush->pbrush->hbmPattern)))
         {
             BltInfo.PatternSurface = &psurfPattern->SurfObj;
         }
@@ -763,7 +763,7 @@ CallDibStretchBlt(SURFOBJ* psoDest,
     if (ROP4_USES_PATTERN(Rop4) && pbo && pbo->iSolidColor == 0xFFFFFFFF)
     {
         GdiBrush = CONTAINING_RECORD(pbo, EBRUSHOBJ, BrushObject);
-        psurfPattern = SURFACE_LockSurface(GdiBrush->GdiBrushObject->hbmPattern);
+        psurfPattern = SURFACE_LockSurface(GdiBrush->pbrush->hbmPattern);
         if (psurfPattern)
         {
             PatternSurface = &psurfPattern->SurfObj;

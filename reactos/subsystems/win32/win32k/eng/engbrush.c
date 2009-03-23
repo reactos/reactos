@@ -4,8 +4,7 @@
  * PURPOSE:           GDI Driver Brush Functions
  * FILE:              subsystem/win32/win32k/eng/engbrush.c
  * PROGRAMER:         Jason Filby
- * REVISION HISTORY:
- *                 3/7/1999: Created
+ *                    Timo Kreuzer
  */
 
 #include <w32k.h>
@@ -15,9 +14,29 @@
 
 /** Internal functions ********************************************************/
 
-VOID FASTCALL
+/**
+ * This function is not exported, because it makes no sense for
+ * The driver to punt back to this function */
+BOOL
+APIENTRY
+EngRealizeBrush(
+    BRUSHOBJ *pbo,
+    SURFOBJ  *psoDst,
+    SURFOBJ  *psoPattern,
+    SURFOBJ  *psoMask,
+    XLATEOBJ *pxlo,
+    ULONG    iHatch)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+VOID
+FASTCALL
 EBRUSHOBJ_vInit(EBRUSHOBJ *pebo, PBRUSH pbrush, XLATEOBJ *pxlo)
 {
+    ULONG iSolidColor;
+
     ASSERT(pebo);
     ASSERT(pbrush);
 
@@ -27,19 +46,108 @@ EBRUSHOBJ_vInit(EBRUSHOBJ *pebo, PBRUSH pbrush, XLATEOBJ *pxlo)
     }
     else if (pbrush->flAttrs & GDIBRUSH_IS_SOLID)
     {
-        pebo->BrushObject.iSolidColor = XLATEOBJ_iXlate(pxlo, pbrush->BrushAttr.lbColor);
+        /* Set the RGB color */
+        pebo->crRealize = pbrush->BrushAttr.lbColor;
+        pebo->ulRGBColor = pbrush->BrushAttr.lbColor;
+
+        /* Translate the brush color to the target format */
+        iSolidColor = XLATEOBJ_iXlate(pxlo, pbrush->BrushAttr.lbColor);
+        pebo->BrushObject.iSolidColor = iSolidColor;
     }
     else
     {
+        /* This is a pattern brush that needs realization */
         pebo->BrushObject.iSolidColor = 0xFFFFFFFF;
-        // FIXME: What about calling DrvRealizeBrush?
+//        EBRUSHOBJ_bRealizeBrush(pebo);
     }
 
     pebo->BrushObject.pvRbrush = pbrush->ulRealization;
     pebo->BrushObject.flColorType = 0;
-    pebo->GdiBrushObject = pbrush;
+    pebo->pbrush = pbrush;
     pebo->XlateObject = pxlo;
 }
+
+VOID
+FASTCALL
+EBRUSHOBJ_vSetSolidBrushColor(EBRUSHOBJ *pebo, ULONG iSolidColor)
+{
+    /* Never use with non-solid brushes */
+    ASSERT(pebo->flattrs & GDIBRUSH_IS_SOLID);
+
+    pebo->BrushObject.iSolidColor = iSolidColor;
+}
+
+BOOL
+FASTCALL
+EBRUSHOBJ_bRealizeBrush(EBRUSHOBJ *pebo)
+{
+    BOOL bResult;
+    PFN_DrvRealizeBrush pfnRealzizeBrush;
+    PSURFACE psurfTrg, psurfPattern, psurfMask;
+    PPDEVOBJ ppdev;
+    XLATEOBJ *pxlo;
+
+    psurfTrg = pebo->psurfTrg; // FIXME: all EBRUSHOBJs need a surface
+    ppdev = (PPDEVOBJ)psurfTrg->SurfObj.hdev; // FIXME: all SURFACEs need a PDEV
+
+    pfnRealzizeBrush = ppdev->DriverFunctions.RealizeBrush;
+    if (!pfnRealzizeBrush)
+    {
+        pfnRealzizeBrush = EngRealizeBrush;
+    }
+
+    psurfPattern = SURFACE_LockSurface(pebo->pbrush->hbmPattern);
+
+    /* FIXME: implement mask */
+    psurfMask = NULL;
+
+    // FIXME
+    pxlo = NULL;
+
+    bResult = pfnRealzizeBrush(&pebo->BrushObject, 
+                               &pebo->psurfTrg->SurfObj,
+                               psurfPattern ? &psurfPattern->SurfObj : NULL,
+                               psurfMask ? &psurfMask->SurfObj : NULL,
+                               pxlo,
+                               -1); // FIXME: what about hatch brushes?
+
+    if (psurfPattern)
+        SURFACE_UnlockSurface(psurfPattern);
+
+    if (psurfMask)
+        SURFACE_UnlockSurface(psurfMask);
+
+    return bResult;
+}
+
+VOID
+FASTCALL
+EBRUSHOBJ_vUnrealizeBrush(EBRUSHOBJ *pebo)
+{
+    /* Check if it's a GDI realisation */
+    if (pebo->pengbrush)
+    {
+        
+    }
+    else if (pebo->BrushObject.pvRbrush)
+    {
+        /* Free allocated driver memory */
+        EngFreeMem(pebo->BrushObject.pvRbrush);
+    }
+}
+
+
+
+VOID
+FASTCALL
+EBRUSHOBJ_vUpdate(EBRUSHOBJ *pebo, PBRUSH pbrush, XLATEOBJ *pxlo)
+{
+    /* Unrealize the brush */
+    EBRUSHOBJ_vUnrealizeBrush(pebo);
+
+    EBRUSHOBJ_vInit(pebo, pbrush, pxlo);
+}
+
 
 
 /** Exported DDI functions ****************************************************/
@@ -48,30 +156,34 @@ EBRUSHOBJ_vInit(EBRUSHOBJ *pebo, PBRUSH pbrush, XLATEOBJ *pxlo)
  * @implemented
  */
 PVOID APIENTRY
-BRUSHOBJ_pvAllocRbrush(IN BRUSHOBJ  *BrushObj,
-		       IN ULONG  ObjSize)
+BRUSHOBJ_pvAllocRbrush(
+    IN BRUSHOBJ *pbo,
+    IN ULONG cj)
 {
-  BrushObj->pvRbrush=EngAllocMem(0, ObjSize, 0);
-  return(BrushObj->pvRbrush);
+    pbo->pvRbrush = EngAllocMem(0, cj, 'rbdG');
+    return pbo->pvRbrush;
 }
 
 /*
  * @implemented
  */
 PVOID APIENTRY
-BRUSHOBJ_pvGetRbrush(IN BRUSHOBJ  *BrushObj)
+BRUSHOBJ_pvGetRbrush(
+    IN BRUSHOBJ *pbo)
 {
     // FIXME: this is wrong! Read msdn.
-  return(BrushObj->pvRbrush);
+    return pbo->pvRbrush;
 }
 
 /*
  * @implemented
  */
 ULONG APIENTRY
-BRUSHOBJ_ulGetBrushColor(IN BRUSHOBJ *BrushObj)
+BRUSHOBJ_ulGetBrushColor(
+    IN BRUSHOBJ *pbo)
 {
-   return BrushObj->iSolidColor;
+    EBRUSHOBJ *pebo = CONTAINING_RECORD(pbo, EBRUSHOBJ, BrushObject);
+    return pebo->ulRGBColor;
 }
 
 /* EOF */
