@@ -10,7 +10,7 @@ CREATE TABLE `winetest_results` (
   `test_id` int(10) unsigned NOT NULL,
   `suite_id` int(10) unsigned NOT NULL,
   `log` longtext collate latin1_general_ci NOT NULL,
-  `count` int(10) unsigned NOT NULL COMMENT 'Number of all executed tests',
+  `count` int(10) NOT NULL COMMENT 'Number of all executed tests',
   `todo` int(10) unsigned NOT NULL COMMENT 'Tests marked as TODO',
   `failures` int(10) unsigned NOT NULL COMMENT 'Number of failed tests',
   `skipped` int(10) unsigned NOT NULL COMMENT 'Number of skipped tests',
@@ -24,6 +24,7 @@ CREATE TABLE `winetest_runs` (
   `user_id` bigint(20) unsigned NOT NULL,
   `revision` int(9) unsigned NOT NULL,
   `platform` varchar(24) collate latin1_general_ci NOT NULL,
+  `comment` varchar(255) collate latin1_general_ci default NULL,
   PRIMARY KEY  (`id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=latin1 COLLATE=latin1_general_ci;
 
