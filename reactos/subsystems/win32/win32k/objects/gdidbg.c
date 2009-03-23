@@ -7,6 +7,7 @@ static int leak_reported = 0;
 #define GDI_STACK_LEVELS 12
 static ULONG GDIHandleAllocator[GDI_HANDLE_COUNT][GDI_STACK_LEVELS+1];
 static ULONG GDIHandleLocker[GDI_HANDLE_COUNT][GDI_STACK_LEVELS+1];
+static ULONG GDIHandleShareLocker[GDI_HANDLE_COUNT][GDI_STACK_LEVELS+1];
 static ULONG GDIHandleDeleter[GDI_HANDLE_COUNT][GDI_STACK_LEVELS+1];
 struct DbgOpenGDIHandle
 {
@@ -233,7 +234,6 @@ GdiDbgHTIntegrityCheck()
 	return r;
 }
 
-
 #define GDIDBG_TRACECALLER() \
   DPRINT1("-> called from:\n"); \
   KeRosDumpStackFrames(NULL, 20);
@@ -243,6 +243,9 @@ GdiDbgHTIntegrityCheck()
 #define GDIDBG_TRACELOCKER(handle) \
   DPRINT1("-> locked from:\n"); \
   KeRosDumpStackFrames(GDIHandleLocker[GDI_HANDLE_GET_INDEX(handle)], GDI_STACK_LEVELS);
+#define GDIDBG_TRACESHARELOCKER(handle) \
+  DPRINT1("-> locked from:\n"); \
+  KeRosDumpStackFrames(GDIHandleShareLocker[GDI_HANDLE_GET_INDEX(handle)], GDI_STACK_LEVELS);
 #define GDIDBG_TRACEDELETER(handle) \
   DPRINT1("-> deleted from:\n"); \
   KeRosDumpStackFrames(GDIHandleDeleter[GDI_HANDLE_GET_INDEX(handle)], GDI_STACK_LEVELS);
@@ -250,6 +253,8 @@ GdiDbgHTIntegrityCheck()
   CaptureStackBackTace((PVOID*)GDIHandleAllocator[GDI_HANDLE_GET_INDEX(handle)], GDI_STACK_LEVELS);
 #define GDIDBG_CAPTURELOCKER(handle) \
   CaptureStackBackTace((PVOID*)GDIHandleLocker[GDI_HANDLE_GET_INDEX(handle)], GDI_STACK_LEVELS);
+#define GDIDBG_CAPTURESHARELOCKER(handle) \
+  CaptureStackBackTace((PVOID*)GDIHandleShareLocker[GDI_HANDLE_GET_INDEX(handle)], GDI_STACK_LEVELS);
 #define GDIDBG_CAPTUREDELETER(handle) \
   CaptureStackBackTace((PVOID*)GDIHandleDeleter[GDI_HANDLE_GET_INDEX(handle)], GDI_STACK_LEVELS);
 #define GDIDBG_DUMPHANDLETABLE() \
@@ -262,13 +267,25 @@ GdiDbgHTIntegrityCheck()
     DPRINT1("[%d] Handle 0x%p Locked by 0x%x (we're 0x%x)\n", Attempts, Handle, PrevThread, Thread); \
   }
 
+ULONG
+FASTCALL
+GDIOBJ_IncrementShareCount(POBJ Object)
+{
+    INT cLocks = InterlockedIncrement((PLONG)&Object->ulShareCount);
+    GDIDBG_CAPTURESHARELOCKER(Object->hHmgr);
+    ASSERT(cLocks >= 1);
+    return cLocks;
+}
+
 #else
 
 #define GDIDBG_TRACECALLER()
 #define GDIDBG_TRACEALLOCATOR(index)
 #define GDIDBG_TRACELOCKER(index)
+#define GDIDBG_TRACESHARELOCKER(index)
 #define GDIDBG_CAPTUREALLOCATOR(index)
 #define GDIDBG_CAPTURELOCKER(index)
+#define GDIDBG_CAPTURESHARELOCKER(index)
 #define GDIDBG_CAPTUREDELETER(handle)
 #define GDIDBG_DUMPHANDLETABLE()
 #define GDIDBG_INITLOOPTRACE()

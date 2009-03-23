@@ -140,6 +140,7 @@ DC_Cleanup(PVOID ObjectBody)
   PDC pDC = (PDC)ObjectBody;
   if (pDC->rosdc.DriverName.Buffer)
     ExFreePoolWithTag(pDC->rosdc.DriverName.Buffer, TAG_DC);
+  DC_vSelectSurface(pDC, NULL);
   return TRUE;
 }
 
@@ -264,7 +265,7 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
   pdc->dhpdev = PrimarySurface.hPDev;
   if(pUMdhpdev) pUMdhpdev = pdc->dhpdev; // set DHPDEV for device.
   pdc->ppdev = (PVOID)&PrimarySurface;
-  pdc->rosdc.hBitmap = (HBITMAP)PrimarySurface.pSurface;
+  pdc->rosdc.hBitmap = (HBITMAP)PrimarySurface.pSurface; // <- what kind of haxx0ry is that?
   // ATM we only have one display.
   pdcattr->ulDirty_ |= DC_PRIMARY_DISPLAY;
 
@@ -310,7 +311,7 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
      */
     pdc->dctype = DC_TYPE_INFO;
 //    pdc->pSurfInfo = 
-    pdc->dclevel.pSurface = NULL;
+    DC_vSelectSurface(pdc, NULL);
     pdcattr->crBackgroundClr = pdcattr->ulBackgroundClr = RGB(255, 255, 255);
     pdcattr->crForegroundClr = RGB(0, 0, 0);
     DC_UnlockDc( pdc );

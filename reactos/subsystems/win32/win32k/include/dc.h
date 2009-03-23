@@ -278,6 +278,20 @@ INT FASTCALL IntGdiGetDeviceCaps(PDC,INT);
 
 extern PPDEVOBJ pPrimarySurface;
 
+VOID
+FORCEINLINE
+DC_vSelectSurface(PDC pdc, PSURFACE psurfNew)
+{
+    PSURFACE psurfOld = pdc->dclevel.pSurface;
+    if (psurfOld)
+        SURFACE_ShareUnlockSurface(psurfOld);
+    
+    if (psurfNew)
+        GDIOBJ_IncrementShareCount((POBJ)psurfNew);
+
+    pdc->dclevel.pSurface = psurfNew;
+}
+
 BOOL FASTCALL
 IntPrepareDriverIfNeeded();
 extern PDEVOBJ PrimarySurface;

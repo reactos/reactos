@@ -932,7 +932,7 @@ NtGdiSelectBitmap(
     PDC pDC;
     PDC_ATTR pdcattr;
     HBITMAP hOrgBmp;
-    PSURFACE psurfBmp;
+    PSURFACE psurfBmp, psurfOld;
     HRGN hVisRgn;
     BOOLEAN bFailed;
     PBRUSH pbrush;
@@ -961,23 +961,26 @@ NtGdiSelectBitmap(
         return NULL;
     }
 
+    /* Get the handle for the old bitmap */
+    psurfOld = pDC->dclevel.pSurface;
+    hOrgBmp = psurfOld ? psurfOld->BaseObject.hHmgr : NULL;
+
+    /* FIXME: ros hack */
     hOrgBmp = pDC->rosdc.hBitmap;
 
     pDC->rosdc.hBitmap = hBmp;
 
-    /* Release the old bitmap */
-    if (pDC->dclevel.pSurface)
-        SURFACE_ShareUnlockSurface(pDC->dclevel.pSurface);
-    
+    /* Release the old bitmap, reference the new */
+    DC_vSelectSurface(pDC, psurfBmp);
+
     // If Info DC this is zero and pSurface is moved to DC->pSurfInfo.
-    pDC->dclevel.pSurface = psurfBmp;
     psurfBmp->hDC = hDC;
 
     // if we're working with a DIB, get the palette 
     // [fixme: only create if the selected palette is null]
     if (psurfBmp->hSecure)
     {
-//        pDC->rosdcbitsPerPixel = psurfBmp->dib->dsBmih.biBitCount; ???
+//        pDC->rosdc.bitsPerPixel = psurfBmp->dib->dsBmih.biBitCount; ???
         pDC->rosdc.bitsPerPixel = BitsPerFormat(psurfBmp->SurfObj.iBitmapFormat);
     }
     else
@@ -985,16 +988,16 @@ NtGdiSelectBitmap(
         pDC->rosdc.bitsPerPixel = BitsPerFormat(psurfBmp->SurfObj.iBitmapFormat);
     }
 
+    /* FIXME; improve by using a region without a handle and selecting it */
     hVisRgn = NtGdiCreateRectRgn(0,
                                  0,
                                  psurfBmp->SurfObj.sizlBitmap.cx,
                                  psurfBmp->SurfObj.sizlBitmap.cy);
 
-    /* Keep a shared reference on the bitmap */
-    GDIOBJ_IncrementShareCount((POBJ)psurfBmp);
+    /* Release the exclusive lock */
     SURFACE_UnlockSurface(psurfBmp);
 
-    /* Regenerate the XLATEOBJs. */
+    /* Regenerate the XLATEOBJs. (hack!) */
     pbrush = BRUSH_LockBrush(pdcattr->hbrush);
     if (pbrush)
     {

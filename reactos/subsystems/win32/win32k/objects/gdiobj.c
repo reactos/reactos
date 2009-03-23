@@ -481,6 +481,8 @@ GDIOBJ_FreeObj(POBJ pObject, UCHAR BaseType)
  * \return Returns TRUE if succesful.
  * \return Returns FALSE if the cleanup routine returned FALSE or the object doesn't belong
  * to the calling process.
+ *
+ * \bug This function should return VOID and kill the object no matter what...
 */
 BOOL INTERNAL_CALL
 GDIOBJ_FreeObjByHandle(HGDIOBJ hObj, DWORD ExpectedType)
@@ -537,8 +539,9 @@ LockHandle:
 
             Object = Entry->KernelData;
 
-            if (Object->cExclusiveLock == 0 ||
-                Object->Tid == (PW32THREAD)PsGetCurrentThreadWin32Thread())
+            if ((Object->cExclusiveLock == 0 ||
+                Object->Tid == (PW32THREAD)PsGetCurrentThreadWin32Thread()) &&
+                 Object->ulShareCount == 0)
             {
                 BOOL Ret;
                 PW32PROCESS W32Process = PsGetCurrentProcessWin32Process();
@@ -568,6 +571,15 @@ LockHandle:
 
                 GDIDBG_CAPTUREDELETER(hObj);
                 return Ret;
+            }
+            else if (Object->ulShareCount != 0)
+            {
+                DPRINT("Object %p, ulShareCount = %d\n", Object->hHmgr, Object->ulShareCount);
+                GDIDBG_TRACECALLER();
+                GDIDBG_TRACESHARELOCKER(GDI_HANDLE_GET_INDEX(hObj));
+                (void)InterlockedExchangePointer((PVOID*)&Entry->ProcessId, PrevProcId);
+                /* Don't wait on shared locks */
+                return FALSE;
             }
             else
             {
@@ -702,8 +714,12 @@ IntDeleteHandlesForProcess(struct _EPROCESS *Process, ULONG ObjectType)
                        simply ignore this fact here. */
                     ObjectHandle = (HGDIOBJ)(Index | (Entry->Type << GDI_ENTRY_UPPER_SHIFT));
 
-                    if (GDIOBJ_FreeObjByHandle(ObjectHandle, GDI_OBJECT_TYPE_DONTCARE) &&
-                        W32Process->GDIObjects == 0)
+                    if (!GDIOBJ_FreeObjByHandle(ObjectHandle, GDI_OBJECT_TYPE_DONTCARE))
+                    {
+                        DPRINT1("Failed to delete object %p!\n", ObjectHandle);
+                    }
+
+                    if (W32Process->GDIObjects == 0)
                     {
                         /* there are no more gdi handles for this process, bail */
                         break;
@@ -723,6 +739,7 @@ BOOL INTERNAL_CALL
 GDI_CleanupForProcess(struct _EPROCESS *Process)
 {
     PEPROCESS CurrentProcess;
+    PW32PROCESS W32Process;
 
     DPRINT("Starting CleanupForProcess prochandle %x Pid %d\n", Process, Process->UniqueProcessId);
     CurrentProcess = PsGetCurrentProcess();
@@ -730,6 +747,8 @@ GDI_CleanupForProcess(struct _EPROCESS *Process)
     {
         KeAttachProcess(&Process->Pcb);
     }
+
+    W32Process = (PW32PROCESS)CurrentProcess->Win32Process;
 
     /* Delete objects. Begin with types that are not referenced by other types */
     IntDeleteHandlesForProcess(Process, GDILoObjType_LO_DC_TYPE);
@@ -749,6 +768,10 @@ GDI_CleanupForProcess(struct _EPROCESS *Process)
 #endif
 
     DPRINT("Completed cleanup for process %d\n", Process->UniqueProcessId);
+    if (W32Process->GDIObjects > 0)
+    {
+        DPRINT1("Leaking %d handles!\n", W32Process->GDIObjects);
+    }
 
     return TRUE;
 }
@@ -973,11 +996,12 @@ GDIOBJ_ShareLockObj(HGDIOBJ hObj, DWORD ExpectedType)
             {
                 Object = (POBJ)Entry->KernelData;
 
-#ifdef GDI_DEBUG
+GDIDBG_CAPTURESHARELOCKER(HandleIndex);
+#ifdef GDI_DEBUG3
                 if (InterlockedIncrement((PLONG)&Object->ulShareCount) == 1)
                 {
                     memset(GDIHandleLocker[HandleIndex], 0x00, GDI_STACK_LEVELS * sizeof(ULONG));
-                    RtlCaptureStackBackTrace(1, GDI_STACK_LEVELS, (PVOID*)GDIHandleLocker[HandleIndex], NULL);
+                    RtlCaptureStackBackTrace(1, GDI_STACK_LEVELS, (PVOID*)GDIHandleShareLocker[HandleIndex], NULL);
                 }
 #else
                 InterlockedIncrement((PLONG)&Object->ulShareCount);
