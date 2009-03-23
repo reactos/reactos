@@ -891,8 +891,8 @@ GrowIfNecessary_dbg ( UINT needed, LPTSTR* ret, UINT* retlen, const char *file, 
 }
 #define GrowIfNecessary(x, y, z) GrowIfNecessary_dbg(x, y, z, __FILE__, __LINE__)
 
-LPCTSTR
-GetEnvVarOrSpecial ( LPCTSTR varName )
+LPTSTR
+GetEnvVar(LPCTSTR varName)
 {
 	static LPTSTR ret = NULL;
 	static UINT retlen = 0;
@@ -907,20 +907,23 @@ GetEnvVarOrSpecial ( LPCTSTR varName )
 	}
 	if ( size )
 		return ret;
+	return NULL;
+}
+
+LPCTSTR
+GetEnvVarOrSpecial(LPCTSTR varName)
+{
+	static TCHAR ret[MAX_PATH];
+
+	LPTSTR var = GetEnvVar(varName);
+	if (var)
+		return var;
 
 	/* env var doesn't exist, look for a "special" one */
 	/* %CD% */
 	if (_tcsicmp(varName,_T("cd")) ==0)
 	{
-		size = GetCurrentDirectory ( retlen, ret );
-		if ( size > retlen )
-		{
-			if ( !GrowIfNecessary ( size, &ret, &retlen ) )
-				return NULL;
-			size = GetCurrentDirectory ( retlen, ret );
-		}
-		if ( !size )
-			return NULL;
+		GetCurrentDirectory(MAX_PATH, ret);
 		return ret;
 	}
 	/* %TIME% */
@@ -937,8 +940,6 @@ GetEnvVarOrSpecial ( LPCTSTR varName )
 	/* %RANDOM% */
 	else if (_tcsicmp(varName,_T("random")) ==0)
 	{
-		if ( !GrowIfNecessary ( MAX_PATH, &ret, &retlen ) )
-			return NULL;
 		/* Get random number */
 		_itot(rand(),ret,10);
 		return ret;
@@ -953,8 +954,6 @@ GetEnvVarOrSpecial ( LPCTSTR varName )
 	/* %CMDEXTVERSION% */
 	else if (_tcsicmp(varName,_T("cmdextversion")) ==0)
 	{
-		if ( !GrowIfNecessary ( MAX_PATH, &ret, &retlen ) )
-			return NULL;
 		/* Set version number to 2 */
 		_itot(2,ret,10);
 		return ret;
@@ -963,8 +962,6 @@ GetEnvVarOrSpecial ( LPCTSTR varName )
 	/* %ERRORLEVEL% */
 	else if (_tcsicmp(varName,_T("errorlevel")) ==0)
 	{
-		if ( !GrowIfNecessary ( MAX_PATH, &ret, &retlen ) )
-			return NULL;
 		_itot(nErrorLevel,ret,10);
 		return ret;
 	}
@@ -990,6 +987,7 @@ GetEnhancedVar(TCHAR **pFormat, LPTSTR (*GetVar)(TCHAR, BOOL *))
 	} Modifiers = 0;
 
 	TCHAR *Format, *FormatEnd;
+	TCHAR *PathVarName = NULL;
 	LPTSTR Variable;
 	TCHAR *VarEnd;
 	BOOL VariableIsParam0;
@@ -1011,17 +1009,31 @@ GetEnhancedVar(TCHAR **pFormat, LPTSTR (*GetVar)(TCHAR, BOOL *))
 	while (*FormatEnd && _tcschr(ModifierTable, _totlower(*FormatEnd)))
 		FormatEnd++;
 
-	/* TODO: check for $PATH: syntax */
-
-	/* Now backtrack if necessary to get a variable name match */
-	while (!(Variable = GetVar(*FormatEnd, &VariableIsParam0)))
+	if (*FormatEnd == _T('$'))
 	{
-		if (FormatEnd == Format)
+		/* $PATH: syntax */
+		PathVarName = FormatEnd + 1;
+		FormatEnd = _tcschr(PathVarName, _T(':'));
+		if (!FormatEnd)
 			return NULL;
-		FormatEnd--;
+
+		/* Must be immediately followed by the variable */
+		Variable = GetVar(*++FormatEnd, &VariableIsParam0);
+		if (!Variable)
+			return NULL;
+	}
+	else
+	{
+		/* Backtrack if necessary to get a variable name match */
+		while (!(Variable = GetVar(*FormatEnd, &VariableIsParam0)))
+		{
+			if (FormatEnd == Format)
+				return NULL;
+			FormatEnd--;
+		}
 	}
 
-	for (; Format < FormatEnd; Format++)
+	for (; Format < FormatEnd && *Format != _T('$'); Format++)
 		Modifiers |= 1 << (_tcschr(ModifierTable, _totlower(*Format)) - ModifierTable);
 
 	*pFormat = FormatEnd + 1;
@@ -1040,11 +1052,26 @@ GetEnhancedVar(TCHAR **pFormat, LPTSTR (*GetVar)(TCHAR, BOOL *))
 	memcpy(Result, Variable, (char *)VarEnd - (char *)Variable);
 	Result[VarEnd - Variable] = _T('\0');
 
-	/* For plain %~var with no modifiers, just return the variable without quotes */
-	if (Modifiers == 0)
+	if (PathVarName)
+	{
+		/* $PATH: syntax - search the directories listed in the
+		 * specified environment variable for the file */
+		LPTSTR PathVar;
+		FormatEnd[-1] = _T('\0');
+		PathVar = GetEnvVar(PathVarName);
+		FormatEnd[-1] = _T(':');
+		if (!PathVar ||
+		    !SearchPath(PathVar, Result, NULL, MAX_PATH, FullPath, NULL))
+		{
+			return _T("");
+		}
+	}
+	else if (Modifiers == 0)
+	{
+		/* For plain %~var with no modifiers, just return the variable without quotes */
 		return Result;
-
-	if (VariableIsParam0)
+	}
+	else if (VariableIsParam0)
 	{
 		/* Special case: If the variable is %0 and modifier characters are present,
 		 * use the batch file's path (which includes the .bat/.cmd extension)
@@ -1141,6 +1168,7 @@ GetEnhancedVar(TCHAR **pFormat, LPTSTR (*GetVar)(TCHAR, BOOL *))
 			Out += FormatDate(Out, &st, TRUE);
 			*Out++ = _T(' ');
 			Out += FormatTime(Out, &st);
+			*Out++ = _T(' ');
 		}
 		if (Modifiers & M_SIZE)
 		{
@@ -1151,25 +1179,32 @@ GetEnhancedVar(TCHAR **pFormat, LPTSTR (*GetVar)(TCHAR, BOOL *))
 		}
 	}
 
+	/* When using the path-searching syntax or the S modifier,
+	 * at least part of the file path is always included.
+	 * If none of the DPNX modifiers are present, include the full path */
+	if (PathVarName || (Modifiers & M_SHORT))
+		if ((Modifiers & (M_DRIVE | M_PATH | M_NAME | M_EXT)) == 0)
+			Modifiers |= M_FULL;
+
 	/* Now add the requested parts of the name.
-	 * With the F or S modifiers, add all parts to form the full path. */
+	 * With the F modifier, add all parts to form the full path. */
 	Extension = _tcsrchr(Filename, _T('.'));
-	if (Modifiers & (M_DRIVE | M_FULL | M_SHORT))
+	if (Modifiers & (M_DRIVE | M_FULL))
 	{
 		*Out++ = FixedPath[0];
 		*Out++ = FixedPath[1];
 	}
-	if (Modifiers & (M_PATH | M_FULL | M_SHORT))
+	if (Modifiers & (M_PATH | M_FULL))
 	{
 		memcpy(Out, &FixedPath[2], (char *)Filename - (char *)&FixedPath[2]);
 		Out += Filename - &FixedPath[2];
 	}
-	if (Modifiers & (M_NAME | M_FULL | M_SHORT))
+	if (Modifiers & (M_NAME | M_FULL))
 	{
 		while (*Filename && Filename != Extension)
 			*Out++ = *Filename++;
 	}
-	if (Modifiers & (M_EXT | M_FULL | M_SHORT))
+	if (Modifiers & (M_EXT | M_FULL))
 	{
 		if (Extension)
 			Out = _stpcpy(Out, Extension);
