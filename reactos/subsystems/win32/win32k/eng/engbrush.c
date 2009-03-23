@@ -64,6 +64,7 @@ EBRUSHOBJ_vInit(EBRUSHOBJ *pebo, PBRUSH pbrush, XLATEOBJ *pxlo)
     pebo->BrushObject.pvRbrush = pbrush->ulRealization;
     pebo->BrushObject.flColorType = 0;
     pebo->pbrush = pbrush;
+    pebo->flattrs = pbrush->flAttrs;
     pebo->XlateObject = pxlo;
 }
 
