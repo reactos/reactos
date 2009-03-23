@@ -321,5 +321,7 @@ NTSTATUS LostSocket( PIRP Irp ) {
 NTSTATUS LeaveIrpUntilLater( PAFD_FCB FCB, PIRP Irp, UINT Function ) {
     InsertTailList( &FCB->PendingIrpList[Function],
 		    &Irp->Tail.Overlay.ListEntry );
+	IoMarkIrpPending(Irp);
+	Irp->IoStatus.Status = STATUS_PENDING;
     return UnlockAndMaybeComplete( FCB, STATUS_PENDING, Irp, 0, NULL );
 }
