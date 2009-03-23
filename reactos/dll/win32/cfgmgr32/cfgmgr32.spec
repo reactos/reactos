@@ -1,5 +1,5 @@
 @ stdcall CMP_Init_Detection(long) setupapi.CMP_Init_Detection
-@ stub CMP_RegisterNotification # setupapi.CMP_RegisterNotification
+@ stdcall CMP_RegisterNotification(ptr ptr long ptr) setupapi.CMP_RegisterNotification
 @ stdcall CMP_Report_LogOn(long long) setupapi.CMP_Report_LogOn
 @ stub CMP_UnregisterNotification # setupapi.CMP_UnregisterNotification
 @ stdcall CMP_WaitNoPendingInstallEvents(long) setupapi.CMP_WaitNoPendingInstallEvents
