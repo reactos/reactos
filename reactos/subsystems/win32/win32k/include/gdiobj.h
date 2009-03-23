@@ -104,7 +104,13 @@ FORCEINLINE
 GDIOBJ_ShareUnlockObjByPtr(POBJ Object)
 {
     INT cLocks = InterlockedDecrement((PLONG)&Object->ulShareCount);
-    ASSERT(cLocks >= 0);
+//    ASSERT(cLocks >= 0);
+    if (cLocks < 0)
+    {
+        DbgPrint("Unlocked object %p, that was not locked!\n", Object->hHmgr);
+        KdSystemDebugControl(TAG('R', 'o', 's', 'D'), NULL, 20, NULL, 0, NULL, KernelMode);
+        InterlockedIncrement((PLONG)&Object->ulShareCount);
+    }
     return cLocks;
 }
 
