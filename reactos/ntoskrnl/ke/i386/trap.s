@@ -1924,10 +1924,14 @@ _KiTrap14:
 NoFixUp:
     mov edi, cr2
 
+    /* REACTOS Mm Hack of Doom */
+    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_INTERRUPT_MASK
+    je HandlePf
+
     /* Enable interrupts and check if we got here with interrupts disabled */
     sti
-    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_INTERRUPT_MASK
-    jz IllegalState
+    /* test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_INTERRUPT_MASK
+    jz IllegalState */
 
 HandlePf:
     /* Send trap frame and check if this is kernel-mode or usermode */

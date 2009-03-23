@@ -389,9 +389,6 @@ SetStack:
 
     /* Checking NPX, disable interrupts now */
     mov eax, [esi+KTHREAD_INITIAL_STACK]
-
-    /* HACK */
-    mov ecx, [eax - 4]
     cli
 
     /* Get the NPX State */
