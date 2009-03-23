@@ -134,8 +134,6 @@ static NTSTATUS NTAPI SendComplete
     if( FCB->Send.BytesUsed ) {
 	FCB->PollState &= ~AFD_EVENT_SEND;
 
-	SocketCalloutEnter( FCB );
-
 	Status = TdiSend( &FCB->SendIrp.InFlightRequest,
 			  FCB->Connection.Object,
 			  0,
@@ -144,8 +142,6 @@ static NTSTATUS NTAPI SendComplete
 			  &FCB->SendIrp.Iosb,
 			  SendComplete,
 			  FCB );
-
-	SocketCalloutLeave( FCB );
     } else {
 	FCB->PollState |= AFD_EVENT_SEND;
     }
@@ -260,8 +256,6 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         TdiBuildConnectionInfo( &TargetAddress, FCB->RemoteAddress );
 
 	if( TargetAddress ) {
-            SocketCalloutEnter( FCB );
-
             Status = TdiSendDatagram
                 ( &FCB->SendIrp.InFlightRequest,
                   FCB->AddressFile.Object,
@@ -271,8 +265,6 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
                   &FCB->SendIrp.Iosb,
                   PacketSocketSendComplete,
                   FCB );
-
-           SocketCalloutLeave( FCB );
 
            ExFreePool( TargetAddress );
 	} else Status = STATUS_NO_MEMORY;
@@ -358,10 +350,6 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	if( TotalBytesCopied > 0 ) {
 	    UnlockBuffers( SendReq->BufferArray, SendReq->BufferCount, FALSE );
 
-	    FCB->SendIrp.InFlightRequest = (PVOID)1; /* Placeholder */
-
-	    SocketCalloutEnter( FCB );
-
 	    Status = TdiSend( &FCB->SendIrp.InFlightRequest,
 			      FCB->Connection.Object,
 			      0,
@@ -370,8 +358,6 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 			      &FCB->SendIrp.Iosb,
 			      SendComplete,
 			      FCB );
-
-	    SocketCalloutLeave( FCB );
 
 	    if( Status == STATUS_PENDING )
 		Status = STATUS_SUCCESS;
@@ -434,8 +420,6 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     /* Check the size of the Address given ... */
 
     if( TargetAddress ) {
-	SocketCalloutEnter( FCB );
-
 	Status = TdiSendDatagram
 	    ( &FCB->SendIrp.InFlightRequest,
 	      FCB->AddressFile.Object,
@@ -445,8 +429,6 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	      &FCB->SendIrp.Iosb,
 	      PacketSocketSendComplete,
 	      FCB );
-
-	SocketCalloutLeave( FCB );
 
 	ExFreePool( TargetAddress );
     } else Status = STATUS_NO_MEMORY;

@@ -104,8 +104,6 @@ static NTSTATUS TryToSatisfyRecvRequestFromBuffer( PAFD_FCB FCB,
 	if( !FCB->ReceiveIrp.InFlightRequest ) {
 	    AFD_DbgPrint(MID_TRACE,("Replenishing buffer\n"));
 
-	    SocketCalloutEnter( FCB );
-
 	    Status = TdiReceive( &FCB->ReceiveIrp.InFlightRequest,
 				 FCB->Connection.Object,
 				 TDI_RECEIVE_NORMAL,
@@ -114,8 +112,6 @@ static NTSTATUS TryToSatisfyRecvRequestFromBuffer( PAFD_FCB FCB,
 				 &FCB->ReceiveIrp.Iosb,
 				 ReceiveComplete,
 				 FCB );
-
-	    SocketCalloutLeave( FCB );
 
             if( Status == STATUS_SUCCESS )
                 FCB->Recv.Content = FCB->ReceiveIrp.Iosb.Information;
@@ -559,9 +555,8 @@ PacketSocketRecvComplete(
     PollReeval( FCB->DeviceExt, FCB->FileObject );
 
     if( NT_SUCCESS(Irp->IoStatus.Status) ) {
-	/* Now relaunch the datagram request */
-	SocketCalloutEnter( FCB );
 
+	/* Now relaunch the datagram request */
 	Status = TdiReceiveDatagram
 	    ( &FCB->ReceiveIrp.InFlightRequest,
 	      FCB->AddressFile.Object,
@@ -572,8 +567,6 @@ PacketSocketRecvComplete(
 	      &FCB->ReceiveIrp.Iosb,
 	      PacketSocketRecvComplete,
 	      FCB );
-
-	SocketCalloutLeave( FCB );
     }
 
     SocketStateUnlock( FCB );

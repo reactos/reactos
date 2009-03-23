@@ -323,14 +323,3 @@ NTSTATUS LeaveIrpUntilLater( PAFD_FCB FCB, PIRP Irp, UINT Function ) {
 		    &Irp->Tail.Overlay.ListEntry );
     return UnlockAndMaybeComplete( FCB, STATUS_PENDING, Irp, 0, NULL );
 }
-
-VOID SocketCalloutEnter( PAFD_FCB FCB ) {
-    ASSERT(FCB->Locked);
-    FCB->Critical = TRUE;
-    SocketStateUnlock( FCB );
-}
-
-VOID SocketCalloutLeave( PAFD_FCB FCB ) {
-    FCB->Critical = FALSE;
-    SocketAcquireStateLock( FCB );
-}
