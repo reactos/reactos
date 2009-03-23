@@ -16,7 +16,8 @@ typedef struct _SETLOCAL {
 } SETLOCAL;
 
 /* Create a copy of the current environment */
-static LPTSTR DuplicateEnvironment()
+LPTSTR
+DuplicateEnvironment(VOID)
 {
 	LPTSTR Environ = GetEnvironmentStrings();
 	LPTSTR End, EnvironCopy;

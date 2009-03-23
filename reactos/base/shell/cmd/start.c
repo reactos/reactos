@@ -49,9 +49,15 @@ INT cmd_start (LPTSTR Rest)
 	PROCESS_INFORMATION prci;
 	STARTUPINFO stui;
 	INT i = 0;
-	DWORD Priority = 0;
+#ifdef UNICODE
+	DWORD dwCreationFlags = CREATE_NEW_CONSOLE | CREATE_UNICODE_ENVIRONMENT;
+#else
+	DWORD dwCreationFlags = CREATE_NEW_CONSOLE;
+#endif
+	DWORD dwAffinityMask = 0;
 	LPTSTR lpTitle = NULL;
 	LPTSTR lpDirectory = NULL;
+	LPTSTR lpEnvironment = NULL;
 	WORD wShowWindow = SW_SHOWNORMAL;
 
 	while (1)
@@ -86,6 +92,11 @@ INT cmd_start (LPTSTR Rest)
 				}
 				StripQuotes(lpDirectory);
 			}
+			else if (_totupper(*option) == _T('I'))
+			{
+				/* rest of the option is apparently ignored */
+				lpEnvironment = lpOriginalEnvironment;
+			}
 			else if (!_tcsicmp(option, _T("MIN")))
 			{
 				wShowWindow = SW_MINIMIZE;
@@ -94,29 +105,58 @@ INT cmd_start (LPTSTR Rest)
 			{
 				wShowWindow = SW_MAXIMIZE;
 			}
+			else if (!_tcsicmp(option, _T("AFFINITY")))
+			{
+				TCHAR *end;
+				while (_istspace(*Rest))
+					Rest++;
+				option = GetParameter(&Rest);
+				/* Affinity mask is given in hexadecimal */
+				dwAffinityMask = _tcstoul(option, &end, 16);
+				if (*end != _T('\0') || dwAffinityMask == 0 ||
+				    dwAffinityMask == (DWORD)-1)
+				{
+					ConErrResPrintf(STRING_ERROR_INVALID_PARAM_FORMAT, option);
+					return 1;
+				}
+				dwCreationFlags |= CREATE_SUSPENDED;
+			}
+			else if (!_tcsicmp(option, _T("B")))
+			{
+				dwCreationFlags &= ~CREATE_NEW_CONSOLE;
+				dwCreationFlags |= CREATE_NEW_PROCESS_GROUP;
+			}
 			else if (!_tcsicmp(option, _T("LOW")))
 			{
-				Priority = IDLE_PRIORITY_CLASS;
+				dwCreationFlags |= IDLE_PRIORITY_CLASS;
 			}
 			else if (!_tcsicmp(option, _T("NORMAL")))
 			{
-				Priority = NORMAL_PRIORITY_CLASS;
+				dwCreationFlags |= NORMAL_PRIORITY_CLASS;
 			}
 			else if (!_tcsicmp(option, _T("HIGH")))
 			{
-				Priority = HIGH_PRIORITY_CLASS;
+				dwCreationFlags |= HIGH_PRIORITY_CLASS;
 			}
 			else if (!_tcsicmp(option, _T("REALTIME")))
 			{
-				Priority = REALTIME_PRIORITY_CLASS;
+				dwCreationFlags |= REALTIME_PRIORITY_CLASS;
 			}
 			else if (!_tcsicmp(option, _T("ABOVENORMAL")))
 			{
-				Priority = ABOVE_NORMAL_PRIORITY_CLASS;
+				dwCreationFlags |= ABOVE_NORMAL_PRIORITY_CLASS;
 			}
 			else if (!_tcsicmp(option, _T("BELOWNORMAL")))
 			{
-				Priority = BELOW_NORMAL_PRIORITY_CLASS;
+				dwCreationFlags |= BELOW_NORMAL_PRIORITY_CLASS;
+			}
+			else if (!_tcsicmp(option, _T("SEPARATE")))
+			{
+				dwCreationFlags |= CREATE_SEPARATE_WOW_VDM;
+			}
+			else if (!_tcsicmp(option, _T("SHARED")))
+			{
+				dwCreationFlags |= CREATE_SHARED_WOW_VDM;
 			}
 			else if (!_tcsicmp(option, _T("W")) ||
 			         !_tcsicmp(option, _T("WAIT")))
@@ -223,18 +263,18 @@ INT cmd_start (LPTSTR Rest)
 		stui.lpTitle = lpTitle;
 		stui.wShowWindow = wShowWindow;
 
-		if (bBat == TRUE)
-		{
-		 bCreate = CreateProcess (NULL, szFullCmdLine, NULL, NULL, FALSE,
-			 CREATE_NEW_CONSOLE | Priority, NULL, lpDirectory, &stui, &prci);
-		}
-		else
-		{
-				bCreate = CreateProcess (szFullName, szFullCmdLine, NULL, NULL, FALSE,
-					CREATE_NEW_CONSOLE | Priority, NULL, lpDirectory, &stui, &prci);
-		}
+		bCreate = CreateProcess(bBat ? comspec : szFullName,
+		                        szFullCmdLine, NULL, NULL, TRUE, dwCreationFlags,
+		                        lpEnvironment, lpDirectory, &stui, &prci);
 		if (bCreate)
+		{
+			if (dwAffinityMask)
+			{
+				SetProcessAffinityMask(prci.hProcess, dwAffinityMask);
+				ResumeThread(prci.hThread);
+			}
 			CloseHandle(prci.hThread);
+		}
 	}
 	else
 	{
@@ -246,8 +286,10 @@ INT cmd_start (LPTSTR Rest)
 	if (!bCreate)
 	{
 		/* CreateProcess didn't work; try ShellExecute */
-		prci.hProcess = RunFile(SEE_MASK_NOCLOSEPROCESS, szFullName,
-		                        param, lpDirectory, wShowWindow);
+		DWORD flags = SEE_MASK_NOCLOSEPROCESS;
+		if (!(dwCreationFlags & CREATE_NEW_CONSOLE))
+			flags |= SEE_MASK_NO_CONSOLE;
+		prci.hProcess = RunFile(flags, szFullName, param, lpDirectory, wShowWindow);
 	}
 
 	if (prci.hProcess != NULL)

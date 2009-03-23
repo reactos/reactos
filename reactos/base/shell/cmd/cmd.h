@@ -54,6 +54,7 @@
 extern HANDLE hOut;
 extern HANDLE hIn;
 extern HANDLE hConsole;
+extern LPTSTR lpOriginalEnvironment;
 extern WORD   wColor;
 extern WORD   wDefColor;
 extern BOOL   bCtrlBreak;
@@ -437,6 +438,7 @@ INT CommandScreen (LPTSTR);
 INT cmd_set (LPTSTR);
 
 /* Prototypes for SETLOCAL.C */
+LPTSTR DuplicateEnvironment(VOID);
 INT cmd_setlocal (LPTSTR);
 INT cmd_endlocal (LPTSTR);
 

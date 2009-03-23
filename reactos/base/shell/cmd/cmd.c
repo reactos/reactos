@@ -163,6 +163,7 @@ OSVERSIONINFO osvi;
 HANDLE hIn;
 HANDLE hOut;
 HANDLE hConsole;
+LPTSTR lpOriginalEnvironment;
 HANDLE CMD_ModuleHandle;
 
 static NtQueryInformationProcessProc NtQueryInformationProcessPtr = NULL;
@@ -1928,6 +1929,8 @@ int cmd_main (int argc, const TCHAR *argv[])
 	CONSOLE_SCREEN_BUFFER_INFO Info;
 	INT nExitCode;
 
+	lpOriginalEnvironment = DuplicateEnvironment();
+
 	GetCurrentDirectory(MAX_PATH,startPath);
 	_tchdir(startPath);
 
@@ -1958,6 +1961,8 @@ int cmd_main (int argc, const TCHAR *argv[])
 
 	/* do the cleanup */
 	Cleanup();
+
+	cmd_free(lpOriginalEnvironment);
 
 	cmd_exit(nExitCode);
 	return(nExitCode);
