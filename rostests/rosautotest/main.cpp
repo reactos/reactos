@@ -59,7 +59,7 @@ wmain(int argc, wchar_t* argv[])
         /* Run the tests */
         WineTest.Run();
 
-        /* For sysreg */
+        /* For sysreg2 */
         DbgPrint("SYSREG_CHECKPOINT:THIRDBOOT_COMPLETE\n");
 
         ReturnValue = 0;
@@ -83,6 +83,10 @@ wmain(int argc, wchar_t* argv[])
            << "Last Win32 Error: " << GetLastError() << endl;
         StringOut(ss.str());
     }
+
+    /* For sysreg2 to notice if rosautotest itself failed */
+    if(ReturnValue == 1)
+        DbgPrint("SYSREG_ROSAUTOTEST_FAILURE\n");
 
     /* Shut down the system if requested, also in case of an exception above */
     if(Configuration.DoShutdown() && !ShutdownSystem())
