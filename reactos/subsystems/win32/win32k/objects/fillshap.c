@@ -566,7 +566,7 @@ IntRectangle(PDC dc,
     DestRect.bottom += dc->ptlDCOrig.y;
 
     /* In GM_COMPATIBLE, don't include bottom and right edges */
-    if (IntGetGraphicsMode(dc) == GM_COMPATIBLE)
+    if (pdcattr->iGraphicsMode == GM_COMPATIBLE)
     {
         DestRect.right--;
         DestRect.bottom--;

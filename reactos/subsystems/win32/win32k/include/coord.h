@@ -10,10 +10,6 @@
 #define XForm2MatrixS(m, x) XFORMOBJ_iSetXform((XFORMOBJ*)m, (XFORML*)x)
 #define MatrixS2XForm(x, m) XFORMOBJ_iGetXform((XFORMOBJ*)m, (XFORML*)x)
 
-int
-FASTCALL
-IntGetGraphicsMode ( PDC dc );
-
 int APIENTRY IntGdiSetMapMode(PDC, int);
 
 BOOL

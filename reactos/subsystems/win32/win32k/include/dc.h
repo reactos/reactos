@@ -248,15 +248,11 @@ BOOL FASTCALL IntGdiDeleteDC(HDC, BOOL);
 
 VOID FASTCALL DC_UpdateXforms(PDC  dc);
 BOOL FASTCALL DC_InvertXform(const XFORM *xformSrc, XFORM *xformDest);
+VOID FASTCALL DC_vUpdateViewportExt(PDC pdc);
 
 BOOL FASTCALL DCU_SyncDcAttrtoUser(PDC);
 BOOL FASTCALL DCU_SynchDcAttrtoUser(HDC);
 VOID FASTCALL DCU_SetDcUndeletable(HDC);
-
-VOID FASTCALL IntGetViewportExtEx(PDC dc, LPSIZE pt);
-VOID FASTCALL IntGetViewportOrgEx(PDC dc, LPPOINT pt);
-VOID FASTCALL IntGetWindowExtEx(PDC dc, LPSIZE pt);
-VOID FASTCALL IntGetWindowOrgEx(PDC dc, LPPOINT pt);
 
 COLORREF FASTCALL IntGdiSetBkColor (HDC hDC, COLORREF Color);
 INT FASTCALL IntGdiSetBkMode(HDC  hDC, INT  backgroundMode);

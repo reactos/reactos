@@ -350,7 +350,7 @@ PATH_Rectangle ( PDC dc, INT x1, INT y1, INT x2, INT y2 )
   }
 
   /* In GM_COMPATIBLE, don't include bottom and right edges */
-  if ( IntGetGraphicsMode(dc) == GM_COMPATIBLE )
+  if (dc->pdcattr->iGraphicsMode == GM_COMPATIBLE)
   {
     corners[1].x--;
     corners[1].y--;
@@ -606,7 +606,7 @@ PATH_Arc ( PDC dc, INT x1, INT y1, INT x2, INT y2,
   }
 
   /* In GM_COMPATIBLE, don't include bottom and right edges */
-  if ( IntGetGraphicsMode(dc) == GM_COMPATIBLE )
+  if (dc->pdcattr->iGraphicsMode == GM_COMPATIBLE )
   {
     corners[1].x--;
     corners[1].y--;
@@ -1343,11 +1343,13 @@ BOOL FASTCALL PATH_StrokePath(DC *dc, PPATH pPath)
 
     /* Save the mapping mode info */
     mapMode = pdcattr->iMapMode;
-    IntGetViewportExtEx(dc, &szViewportExt);
-    IntGetViewportOrgEx(dc, &ptViewportOrg);
-    IntGetWindowExtEx(dc, &szWindowExt);
-    IntGetWindowOrgEx(dc, &ptWindowOrg);
-    
+
+    DC_vUpdateViewportExt(dc);
+    szViewportExt = dc->pdcattr->szlViewportExt;
+    ptViewportOrg = dc->pdcattr->ptlViewportOrg;
+    szWindowExt = dc->pdcattr->szlWindowExt;
+    ptWindowOrg = dc->pdcattr->ptlWindowOrg;
+
     MatrixS2XForm(&xform, &dc->dclevel.mxWorldToPage);
 
     /* Set MM_TEXT */

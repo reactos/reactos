@@ -119,17 +119,6 @@ BOOL APIENTRY NtGdiCombineTransform(
     return Ret;
 }
 
-// FIXME: remove me!
-int
-FASTCALL
-IntGetGraphicsMode(PDC dc)
-{
-    PDC_ATTR pdcattr;
-    ASSERT(dc);
-    pdcattr = dc->pdcattr;
-    return pdcattr->iGraphicsMode;
-}
-
 // FIXME: Don't use floating point in the kernel
 BOOL
 FASTCALL
@@ -262,7 +251,8 @@ NtGdiTransformPoints(
 
     Size = Count * sizeof(POINT);
 
-    Points = (LPPOINT)ExAllocatePoolWithTag(PagedPool, Size, TAG_COORD);
+    // FIXME: It would be wise to have a small stack buffer as optimization
+    Points = ExAllocatePoolWithTag(PagedPool, Size, TAG_COORD);
     if (!Points)
     {
         DC_UnlockDc(dc);
@@ -1129,7 +1119,7 @@ GdiSetDCOrg(HDC hDC, LONG Left, LONG Top, PRECTL prc)
     DC_UnlockDc(pdc);
 }
 
-
+// FIXME: remove me
 BOOL FASTCALL
 IntGdiGetDCOrg(PDC pDc, PPOINTL ppt)
 {
@@ -1137,6 +1127,7 @@ IntGdiGetDCOrg(PDC pDc, PPOINTL ppt)
     return TRUE;
 }
 
+// FIXME: remove me
 BOOL APIENTRY
 GdiGetDCOrgEx(HDC hDC, PPOINTL ppt, PRECTL prc)
 {
@@ -1152,14 +1143,11 @@ GdiGetDCOrgEx(HDC hDC, PPOINTL ppt, PRECTL prc)
     return TRUE;
 }
 
-BOOL FASTCALL
-IntGetAspectRatioFilter(PDC pDC, LPSIZE AspectRatio)
+static
+VOID FASTCALL
+DC_vGetAspectRatioFilter(PDC pDC, LPSIZE AspectRatio)
 {
-    PDC_ATTR pdcattr;
-
-    pdcattr = pDC->pdcattr;
-
-    if ( pdcattr->flFontMapper & 1 ) // TRUE assume 1.
+    if (pDC->pdcattr->flFontMapper & 1) // TRUE assume 1.
     {
         // "This specifies that Windows should only match fonts that have the
         // same aspect ratio as the display.", Programming Windows, Fifth Ed.
@@ -1171,12 +1159,11 @@ IntGetAspectRatioFilter(PDC pDC, LPSIZE AspectRatio)
         AspectRatio->cx = 0;
         AspectRatio->cy = 0;
     }
-    return TRUE;
 }
 
 VOID
 FASTCALL
-IntGetViewportExtEx(PDC pdc, LPSIZE pSize)
+DC_vUpdateViewportExt(PDC pdc)
 {
     PDC_ATTR pdcattr;
 
@@ -1195,9 +1182,6 @@ IntGetViewportExtEx(PDC pdc, LPSIZE pSize)
         /* Update xforms, CHECKME: really done here? */
         DC_UpdateXforms(pdc);
     }
-
-    /* Copy the viewport extension */
-    *pSize = pdcattr->szlViewportExt;
 }
 
 BOOL APIENTRY
@@ -1207,7 +1191,7 @@ NtGdiGetDCPoint(
     PPOINTL Point)
 {
     BOOL Ret = TRUE;
-    DC *dc;
+    DC *pdc;
     POINTL SafePoint;
     SIZE Size;
     NTSTATUS Status = STATUS_SUCCESS;
@@ -1218,10 +1202,8 @@ NtGdiGetDCPoint(
         return FALSE;
     }
 
-    RtlZeroMemory(&SafePoint, sizeof(POINT));
-
-    dc = DC_LockDc(hDC);
-    if (!dc)
+    pdc = DC_LockDc(hDC);
+    if (!pdc)
     {
         SetLastWin32Error(ERROR_INVALID_HANDLE);
         return FALSE;
@@ -1230,31 +1212,30 @@ NtGdiGetDCPoint(
     switch (iPoint)
     {
         case GdiGetViewPortExt:
-            IntGetViewportExtEx(dc, &Size);
-            SafePoint.x = Size.cx;
-            SafePoint.y = Size.cy;
+            DC_vUpdateViewportExt(pdc);
+            SafePoint.x = pdc->pdcattr->szlViewportExt.cx;
+            SafePoint.y = pdc->pdcattr->szlViewportExt.cy;
             break;
 
         case GdiGetWindowExt:
-            IntGetWindowExtEx(dc, &Size);
-            SafePoint.x = Size.cx;
-            SafePoint.y = Size.cy;
+            SafePoint.x = pdc->pdcattr->szlWindowExt.cx;
+            SafePoint.y = pdc->pdcattr->szlWindowExt.cy;
             break;
 
         case GdiGetViewPortOrg:
-            IntGetViewportOrgEx(dc, &SafePoint);
+            SafePoint = pdc->pdcattr->ptlViewportOrg;
             break;
 
         case GdiGetWindowOrg:
-            IntGetWindowOrgEx(dc, &SafePoint);
+            SafePoint = pdc->pdcattr->ptlWindowOrg;
             break;
 
         case GdiGetDCOrg:
-            Ret = IntGdiGetDCOrg(dc, &SafePoint);
+            SafePoint = pdc->ptlDCOrig;
             break;
 
         case GdiGetAspectRatioFilter:
-            Ret = IntGetAspectRatioFilter(dc, &Size);
+            DC_vGetAspectRatioFilter(pdc, &Size);
             SafePoint.x = Size.cx;
             SafePoint.y = Size.cy;
             break;
@@ -1269,9 +1250,7 @@ NtGdiGetDCPoint(
     {
         _SEH2_TRY
         {
-            ProbeForWrite(Point,
-            sizeof(POINT),
-            1);
+            ProbeForWrite(Point, sizeof(POINT), 1);
             *Point = SafePoint;
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -1279,16 +1258,15 @@ NtGdiGetDCPoint(
             Status = _SEH2_GetExceptionCode();
         }
         _SEH2_END;
+
+        if (!NT_SUCCESS(Status))
+        {
+            SetLastNtError(Status);
+            Ret = FALSE;
+        }
     }
 
-    if (!NT_SUCCESS(Status))
-    {
-        SetLastNtError(Status);
-        DC_UnlockDc(dc);
-        return FALSE;
-    }
-
-    DC_UnlockDc(dc);
+    DC_UnlockDc(pdc);
     return Ret;
 }
 
