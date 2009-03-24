@@ -112,18 +112,10 @@ static NTSTATUS NTAPI ListenComplete
 
     FCB->ListenIrp.InFlightRequest = NULL;
 
-    if( Irp->Cancel ) {
-        Irp->IoStatus.Status = STATUS_CANCELLED;
-        Irp->IoStatus.Information = 0;
-        SocketStateUnlock( FCB );
-	return STATUS_CANCELLED;
-    }
-
     if( FCB->State == SOCKET_STATE_CLOSED ) {
         Irp->IoStatus.Status = STATUS_FILE_CLOSED;
         Irp->IoStatus.Information = 0;
 	SocketStateUnlock( FCB );
-	DestroySocket( FCB );
 	return STATUS_FILE_CLOSED;
     }
 

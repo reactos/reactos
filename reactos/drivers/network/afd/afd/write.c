@@ -49,18 +49,10 @@ static NTSTATUS NTAPI SendComplete
     FCB->SendIrp.InFlightRequest = NULL;
     /* Request is not in flight any longer */
 
-    if( Irp->Cancel ) {
-        Irp->IoStatus.Status = STATUS_CANCELLED;
-        Irp->IoStatus.Information = 0;
-        SocketStateUnlock( FCB );
-	return STATUS_CANCELLED;
-    }
-
     if( FCB->State == SOCKET_STATE_CLOSED ) {
         Irp->IoStatus.Status = STATUS_FILE_CLOSED;
         Irp->IoStatus.Information = 0;
 	SocketStateUnlock( FCB );
-	DestroySocket( FCB );
 	return STATUS_FILE_CLOSED;
     }
 
@@ -189,13 +181,6 @@ static NTSTATUS NTAPI PacketSocketSendComplete
     FCB->SendIrp.InFlightRequest = NULL;
     /* Request is not in flight any longer */
 
-    if( Irp->Cancel ) {
-        Irp->IoStatus.Status = STATUS_CANCELLED;
-        Irp->IoStatus.Information = 0;
-        SocketStateUnlock( FCB );
-	return STATUS_CANCELLED;
-    }
-
     FCB->PollState |= AFD_EVENT_SEND;
     PollReeval( FCB->DeviceExt, FCB->FileObject );
 
@@ -203,7 +188,6 @@ static NTSTATUS NTAPI PacketSocketSendComplete
         Irp->IoStatus.Status = STATUS_FILE_CLOSED;
         Irp->IoStatus.Information = 0;
 	SocketStateUnlock( FCB );
-	DestroySocket( FCB );
 	return STATUS_FILE_CLOSED;
     }
 

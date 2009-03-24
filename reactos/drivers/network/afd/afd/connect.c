@@ -84,16 +84,22 @@ static NTSTATUS NTAPI StreamSocketConnectComplete
 
     /* I was wrong about this before as we can have pending writes to a not
      * yet connected socket */
-    if( !SocketAcquireStateLock( FCB ) ) return STATUS_FILE_CLOSED;
+    if( !SocketAcquireStateLock( FCB ) ) {
+        Irp->IoStatus.Status = STATUS_FILE_CLOSED;
+        Irp->IoStatus.Information = 0;
+        return STATUS_FILE_CLOSED;
+    }
 
     AFD_DbgPrint(MID_TRACE,("Irp->IoStatus.Status = %x\n",
 			    Irp->IoStatus.Status));
 
     FCB->ConnectIrp.InFlightRequest = NULL;
 
-    if( Irp->Cancel ) {
-        SocketStateUnlock( FCB );
-	return STATUS_CANCELLED;
+    if( FCB->State == SOCKET_STATE_CLOSED ) {
+        Irp->IoStatus.Status = STATUS_FILE_CLOSED;
+        Irp->IoStatus.Information = 0;
+	SocketStateUnlock( FCB );
+	return STATUS_FILE_CLOSED;
     }
 
     if( NT_SUCCESS(Irp->IoStatus.Status) ) {
@@ -123,6 +129,8 @@ static NTSTATUS NTAPI StreamSocketConnectComplete
 	Status = MakeSocketIntoConnection( FCB );
 
 	if( !NT_SUCCESS(Status) ) {
+            Irp->IoStatus.Status = Status;
+            Irp->IoStatus.Information = 0;
 	    SocketStateUnlock( FCB );
 	    return Status;
 	}
@@ -141,6 +149,12 @@ static NTSTATUS NTAPI StreamSocketConnectComplete
 
 	if( Status == STATUS_PENDING )
 	    Status = STATUS_SUCCESS;
+    }
+
+    if (!NT_SUCCESS(Status))
+    {
+        Irp->IoStatus.Status = Status;
+        Irp->IoStatus.Information = 0;
     }
 
     SocketStateUnlock( FCB );

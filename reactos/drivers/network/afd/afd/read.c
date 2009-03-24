@@ -238,13 +238,6 @@ NTSTATUS NTAPI ReceiveComplete
 
     FCB->ReceiveIrp.InFlightRequest = NULL;
 
-    if( Irp->Cancel ) {
-        Irp->IoStatus.Status = STATUS_CANCELLED;
-        Irp->IoStatus.Information = 0;
-        SocketStateUnlock( FCB );
-		return STATUS_CANCELLED;
-    }
-
     FCB->Recv.Content = Irp->IoStatus.Information;
     FCB->Recv.BytesUsed = 0;
 
@@ -253,7 +246,6 @@ NTSTATUS NTAPI ReceiveComplete
         Irp->IoStatus.Status = STATUS_FILE_CLOSED;
         Irp->IoStatus.Information = 0;
 		SocketStateUnlock( FCB );
-		DestroySocket( FCB );
 		return STATUS_FILE_CLOSED;
     } else if( FCB->State == SOCKET_STATE_LISTENING ) {
         AFD_DbgPrint(MIN_TRACE,("!!! LISTENER GOT A RECEIVE COMPLETE !!!\n"));
@@ -468,18 +460,10 @@ PacketSocketRecvComplete(
 
     FCB->ReceiveIrp.InFlightRequest = NULL;
 
-    if( Irp->IoStatus.Status == STATUS_CANCELLED ) {
-        Irp->IoStatus.Status = STATUS_CANCELLED;
-        Irp->IoStatus.Information = 0;
-        SocketStateUnlock( FCB );
-		return STATUS_CANCELLED;
-    }
-
     if( FCB->State == SOCKET_STATE_CLOSED ) {
         Irp->IoStatus.Status = STATUS_FILE_CLOSED;
         Irp->IoStatus.Information = 0;
 		SocketStateUnlock( FCB );
-		DestroySocket( FCB );
 		return STATUS_FILE_CLOSED;
     }
 
