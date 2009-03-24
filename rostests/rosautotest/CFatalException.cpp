@@ -15,12 +15,12 @@
  * Constant pointer to a char array with the source file where the exception occured (__FILE__)
  *
  * @param Line
- * Constant pointer to a char array with the appropriate source line (#__LINE__)
+ * Integer value with the appropriate source line (__LINE__)
  *
  * @param Message
  * Constant pointer to a char array containing a short message about the exception
  */
-CFatalException::CFatalException(const char* File, const char* Line, const char* Message)
+CFatalException::CFatalException(const char* File, int Line, const char* Message)
     : m_File(File), m_Line(Line), m_Message(Message)
 {
 }

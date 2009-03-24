@@ -9,13 +9,13 @@ class CFatalException
 {
 private:
     string m_File;
-    string m_Line;
+    int m_Line;
     string m_Message;
 
 public:
-    CFatalException(const char* File, const char* Line, const char* Message);
+    CFatalException(const char* File, int Line, const char* Message);
 
     const string& GetFile() const { return m_File; }
-    const string& GetLine() const { return m_Line; }
+    int GetLine() const { return m_Line; }
     const string& GetMessage() const { return m_Message; }
 };

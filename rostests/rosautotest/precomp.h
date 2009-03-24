@@ -33,9 +33,8 @@ using namespace std;
 #include "CWineTest.h"
 
 /* Useful macros */
-#define STRINGIZER(Value)    #Value
 #define EXCEPTION(Message)   throw CSimpleException(Message)
-#define FATAL(Message)       throw CFatalException(__FILE__, STRINGIZER(__LINE__), Message)
+#define FATAL(Message)       throw CFatalException(__FILE__, __LINE__, Message)
 #define SSEXCEPTION          throw CSimpleException(ss.str().c_str())
 
 /* main.c */
