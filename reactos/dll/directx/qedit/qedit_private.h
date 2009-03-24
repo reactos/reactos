@@ -1,7 +1,9 @@
-/*
- * QEDIT.DLL - ReactOS DirectShow Editing
+/*              DirectShow Editing Services (qedit.dll)
  *
- * Copyright 2008 Dmitry Chapyshev
+ * Copyright 2008 Google (Lei Zhang)
+ *
+ * This file contains the (internal) driver registration functions,
+ * driver enumeration APIs and DirectDraw creation functions.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,34 +20,22 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <windows.h>
-#include <stdio.h>
-#include <wchar.h>
-#include <tchar.h>
+#ifndef __QEDIT_PRIVATE_INCLUDED__
+#define __QEDIT_PRIVATE_INCLUDED__
 
-HRESULT WINAPI
-DllCanUnloadNow(void)
-{
-    return S_OK;
-}
+#include <stdarg.h>
 
-HRESULT WINAPI
-DllGetClassObject(
-	REFCLSID rclsid,
-	REFIID riid,
-	LPVOID *ppv)
-{
-    return S_OK;
-}
+#define COBJMACROS
 
-HRESULT WINAPI
-DllRegisterServer(void)
-{
-    return S_OK;
-}
+#include "windef.h"
+#include "winbase.h"
+#include "wtypes.h"
+#include "wingdi.h"
+#include "winuser.h"
+#include "dshow.h"
+#define __WINE_DDRAW_H /* ROS HACK */
+#include "qedit.h"
 
-HRESULT WINAPI
-DllUnregisterServer(void)
-{
-    return S_OK;
-}
+HRESULT MediaDet_create(IUnknown *pUnkOuter, LPVOID *ppObj);
+
+#endif /* __QEDIT_PRIVATE_INCLUDED__ */
