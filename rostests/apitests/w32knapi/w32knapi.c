@@ -13,6 +13,22 @@ MyGdiQueryTable()
 	return pPeb->GdiSharedHandleTable;
 }
 
+BOOL
+IsHandleValid(HGDIOBJ hobj)
+{
+    USHORT Index = (ULONG_PTR)hobj;
+    PGDI_TABLE_ENTRY pentry = &GdiHandleTable[Index];
+
+    if (pentry->KernelData == NULL ||
+        pentry->KernelData < (PVOID)0x80000000 ||
+        (USHORT)pentry->FullUnique != (USHORT)((ULONG_PTR)hobj >> 16))
+    {
+        return FALSE;
+    }
+    
+    return TRUE;
+}
+
 static DWORD WINAPI
 IntSyscall(FARPROC proc, UINT cParams, PVOID pFirstParam)
 {

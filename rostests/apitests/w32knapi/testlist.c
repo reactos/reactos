@@ -13,6 +13,7 @@
 #include "ntgdi/NtGdiCreateCompatibleBitmap.c"
 #include "ntgdi/NtGdiCreateCompatibleDC.c"
 #include "ntgdi/NtGdiCreateDIBSection.c"
+#include "ntgdi/NtGdiDeleteObjectApp.c"
 #include "ntgdi/NtGdiDoPalette.c"
 #include "ntgdi/NtGdiEngCreatePalette.c"
 //#include "ntgdi/NtGdiEnumFontChunk.c"
@@ -72,6 +73,7 @@ TESTENTRY TestList[] =
 	{ L"NtGdiCreateCompatibleBitmap", Test_NtGdiCreateCompatibleBitmap },
 	{ L"NtGdiCreateCompatibleDC", Test_NtGdiCreateCompatibleDC },
 	{ L"NtGdiCreateDIBSection", Test_NtGdiCreateDIBSection },
+	{ L"NtGdiDeleteObjectApp", Test_NtGdiDeleteObjectApp },
 	{ L"NtGdiDoPalette", Test_NtGdiDoPalette },
 	{ L"NtGdiEngCreatePalette", Test_NtGdiEngCreatePalette },
 //	{ L"NtGdiEnumFontChunk", Test_NtGdiEnumFontChunk },
