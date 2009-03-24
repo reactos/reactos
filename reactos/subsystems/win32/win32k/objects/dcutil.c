@@ -124,19 +124,6 @@ IntIsPrimarySurface(SURFOBJ *SurfObj)
 }
 #endif
 
-// FIXME: remove me
-HDC FASTCALL
-DC_GetNextDC (PDC pDC)
-{
-    return pDC->hdcNext;
-}
-
-VOID FASTCALL
-DC_SetNextDC (PDC pDC, HDC hNextDC)
-{
-    pDC->hdcNext = hNextDC;
-}
-
 
 BOOL APIENTRY
 NtGdiCancelDC(HDC  hDC)
@@ -144,8 +131,6 @@ NtGdiCancelDC(HDC  hDC)
     UNIMPLEMENTED;
     return FALSE;
 }
-
-
 
 
 WORD APIENTRY
@@ -191,7 +176,7 @@ NtGdiGetDCDword(
     DWORD *Result)
 {
     BOOL Ret = TRUE;
-    PDC dc;
+    PDC pdc;
     PDC_ATTR pdcattr;
 
     DWORD SafeResult = 0;
@@ -203,13 +188,13 @@ NtGdiGetDCDword(
         return FALSE;
     }
 
-    dc = DC_LockDc(hDC);
-    if (!dc)
+    pdc = DC_LockDc(hDC);
+    if (!pdc)
     {
         SetLastWin32Error(ERROR_INVALID_HANDLE);
         return FALSE;
     }
-    pdcattr = dc->pdcattr;
+    pdcattr = pdc->pdcattr;
 
     switch (u)
     {
@@ -230,20 +215,20 @@ NtGdiGetDCDword(
 
         case GdiGetArcDirection:
             if (pdcattr->dwLayout & LAYOUT_RTL)
-                SafeResult = AD_CLOCKWISE - ((dc->dclevel.flPath & DCPATH_CLOCKWISE) != 0);
+                SafeResult = AD_CLOCKWISE - ((pdc->dclevel.flPath & DCPATH_CLOCKWISE) != 0);
             else
-                SafeResult = ((dc->dclevel.flPath & DCPATH_CLOCKWISE) != 0) + AD_COUNTERCLOCKWISE;
+                SafeResult = ((pdc->dclevel.flPath & DCPATH_CLOCKWISE) != 0) + AD_COUNTERCLOCKWISE;
             break;
 
         case GdiGetEMFRestorDc:
             break;
 
         case GdiGetFontLanguageInfo:
-            SafeResult = IntGetFontLanguageInfo(dc);
+            SafeResult = IntGetFontLanguageInfo(pdc);
             break;
 
         case GdiGetIsMemDc:
-            SafeResult = dc->dctype;
+            SafeResult = pdc->dctype;
             break;
 
         case GdiGetMapMode:
@@ -264,9 +249,7 @@ NtGdiGetDCDword(
     {
         _SEH2_TRY
         {
-            ProbeForWrite(Result,
-            sizeof(DWORD),
-            1);
+            ProbeForWrite(Result, sizeof(DWORD), 1);
             *Result = SafeResult;
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -274,16 +257,15 @@ NtGdiGetDCDword(
             Status = _SEH2_GetExceptionCode();
         }
         _SEH2_END;
+
+        if (!NT_SUCCESS(Status))
+        {
+            SetLastNtError(Status);
+            Ret = FALSE;
+        }
     }
 
-    if (!NT_SUCCESS(Status))
-    {
-        SetLastNtError(Status);
-        DC_UnlockDc(dc);
-        return FALSE;
-    }
-
-    DC_UnlockDc(dc);
+    DC_UnlockDc(pdc);
     return Ret;
 }
 
@@ -296,7 +278,7 @@ NtGdiGetAndSetDCDword(
     DWORD *Result)
 {
     BOOL Ret = TRUE;
-    PDC dc;
+    PDC pdc;
     PDC_ATTR pdcattr;
 
     DWORD SafeResult = 0;
@@ -308,19 +290,19 @@ NtGdiGetAndSetDCDword(
         return FALSE;
     }
 
-    dc = DC_LockDc(hDC);
-    if (!dc)
+    pdc = DC_LockDc(hDC);
+    if (!pdc)
     {
         SetLastWin32Error(ERROR_INVALID_HANDLE);
         return FALSE;
     }
-    pdcattr = dc->pdcattr;
+    pdcattr = pdc->pdcattr;
 
     switch (u)
     {
         case GdiGetSetCopyCount:
-            SafeResult = dc->ulCopyCount;
-            dc->ulCopyCount = dwIn;
+            SafeResult = pdc->ulCopyCount;
+            pdc->ulCopyCount = dwIn;
             break;
 
         case GdiGetSetTextAlign:
@@ -354,7 +336,7 @@ NtGdiGetAndSetDCDword(
             break;
 
         case GdiGetSetMapMode:
-            SafeResult = IntGdiSetMapMode(dc, dwIn);
+            SafeResult = IntGdiSetMapMode(pdc, dwIn);
             break;
 
         case GdiGetSetArcDirection:
@@ -366,23 +348,24 @@ NtGdiGetAndSetDCDword(
             }
             if (pdcattr->dwLayout & LAYOUT_RTL) // Right to Left
             {
-                SafeResult = AD_CLOCKWISE - ((dc->dclevel.flPath & DCPATH_CLOCKWISE) != 0);
+                SafeResult = AD_CLOCKWISE - ((pdc->dclevel.flPath & DCPATH_CLOCKWISE) != 0);
                 if (dwIn == AD_CLOCKWISE)
                 {
-                    dc->dclevel.flPath &= ~DCPATH_CLOCKWISE;
+                    pdc->dclevel.flPath &= ~DCPATH_CLOCKWISE;
                     break;
                 }
-                dc->dclevel.flPath |= DCPATH_CLOCKWISE;
+                pdc->dclevel.flPath |= DCPATH_CLOCKWISE;
             }
             else // Left to Right
             {
-                SafeResult = ((dc->dclevel.flPath & DCPATH_CLOCKWISE) != 0) + AD_COUNTERCLOCKWISE;
+                SafeResult = ((pdc->dclevel.flPath & DCPATH_CLOCKWISE) != 0) +
+                             AD_COUNTERCLOCKWISE;
                 if (dwIn == AD_COUNTERCLOCKWISE)
                 {
-                    dc->dclevel.flPath &= ~DCPATH_CLOCKWISE;
+                    pdc->dclevel.flPath &= ~DCPATH_CLOCKWISE;
                     break;
                 }
-                dc->dclevel.flPath |= DCPATH_CLOCKWISE;
+                pdc->dclevel.flPath |= DCPATH_CLOCKWISE;
             }
             break;
 
@@ -396,9 +379,7 @@ NtGdiGetAndSetDCDword(
     {
         _SEH2_TRY
         {
-            ProbeForWrite(Result,
-            sizeof(DWORD),
-            1);
+            ProbeForWrite(Result, sizeof(DWORD), 1);
             *Result = SafeResult;
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -406,15 +387,14 @@ NtGdiGetAndSetDCDword(
             Status = _SEH2_GetExceptionCode();
         }
         _SEH2_END;
+
+        if (!NT_SUCCESS(Status))
+        {
+            SetLastNtError(Status);
+            Ret = FALSE;
+        }
     }
 
-    if (!NT_SUCCESS(Status))
-    {
-        SetLastNtError(Status);
-        DC_UnlockDc(dc);
-        return FALSE;
-    }
-
-    DC_UnlockDc(dc);
+    DC_UnlockDc(pdc);
     return Ret;
 }

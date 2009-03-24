@@ -177,34 +177,33 @@ IntGdiCopyFromSaveState(PDC dc, PDC dcs, HDC hDC)
 }
 
 HDC APIENTRY
-IntGdiGetDCState(HDC  hDC)
+IntGdiGetDCState(HDC hDC)
 {
-  PDC  newdc, dc;
-  HDC hnewdc;
+  PDC pdcNew, pdc;
+  HDC hdcNew;
 
-  dc = DC_LockDc(hDC);
-  if (dc == NULL)
+  pdc = DC_LockDc(hDC);
+  if (pdc == NULL)
   {
     SetLastWin32Error(ERROR_INVALID_HANDLE);
     return 0;
   }
 
-  hnewdc = DC_AllocDC(NULL);
-  if (hnewdc == NULL)
+  pdcNew = DC_AllocDC(NULL);
+  if (pdcNew == NULL)
   {
-    DC_UnlockDc(dc);
+    DC_UnlockDc(pdc);
     return 0;
   }
-  newdc = DC_LockDc( hnewdc );
-  /* FIXME - newdc can be NULL!!!! Don't assert here!!! */
-  ASSERT( newdc );
+  hdcNew = pdcNew->BaseObject.hHmgr;
 
-  newdc->dclevel.hdcSave = hnewdc;
-  IntGdiCopyToSaveState( dc, newdc);
+  pdcNew->dclevel.hdcSave = hdcNew;
+  IntGdiCopyToSaveState(pdc, pdcNew);
 
-  DC_UnlockDc( newdc );
-  DC_UnlockDc( dc );
-  return  hnewdc;
+  DC_UnlockDc(pdcNew);
+  DC_UnlockDc(pdc);
+
+  return hdcNew;
 }
 
 VOID
@@ -281,7 +280,7 @@ NtGdiRestoreDC(HDC  hDC, INT  SaveLevel)
   success=TRUE;
   while (dc->dclevel.lSaveDepth >= SaveLevel)
   {
-     HDC hdcs = DC_GetNextDC (dc);
+     HDC hdcs = dc->hdcNext;
 
      dcs = DC_LockDc (hdcs);
      if (dcs == NULL)
@@ -290,7 +289,7 @@ NtGdiRestoreDC(HDC  hDC, INT  SaveLevel)
         return FALSE;
      }
 
-     DC_SetNextDC (dc, DC_GetNextDC (dcs));
+     dc->hdcNext = dcs->hdcNext;
      dcs->hdcNext = 0;
 
      if (--dc->dclevel.lSaveDepth < SaveLevel)
@@ -359,8 +358,8 @@ NtGdiSaveDC(HDC  hDC)
   dcs->dclevel.hPath = dc->dclevel.hPath;
   if (dcs->dclevel.hPath) dcs->dclevel.flPath |= DCPATH_SAVE;
 
-  DC_SetNextDC (dcs, DC_GetNextDC (dc));
-  DC_SetNextDC (dc, hdcs);
+  dcs->hdcNext = dc->hdcNext;
+  dc->hdcNext = hdcs;
   ret = ++dc->dclevel.lSaveDepth;
   DC_UnlockDc( dcs );
   DC_UnlockDc( dc );

@@ -57,6 +57,7 @@ DC_AllocDC(PUNICODE_STRING Driver)
     }
     pdcattr = NewDC->pdcattr;
 
+    // FIXME: no floating point in the kernel!
     xformTemplate.eM11 = 1.0f;
     xformTemplate.eM12 = 0.0f;
     xformTemplate.eM21 = 0.0f;
@@ -67,7 +68,7 @@ DC_AllocDC(PUNICODE_STRING Driver)
     XForm2MatrixS(&NewDC->dclevel.mxDeviceToWorld, &xformTemplate);
     XForm2MatrixS(&NewDC->dclevel.mxWorldToPage, &xformTemplate);
 
-// Setup syncing bits for the dcattr data packets.
+    // Setup syncing bits for the dcattr data packets.
     pdcattr->flXform = DEVICE_TO_PAGE_INVALID;
 
     pdcattr->ulDirty_ = 0;  // Server side
@@ -87,21 +88,21 @@ DC_AllocDC(PUNICODE_STRING Driver)
     pdcattr->ulBackgroundClr = 0xffffff;
     pdcattr->crBackgroundClr = 0xffffff;
 
-    pdcattr->ulPenClr = RGB( 0, 0, 0 );
-    pdcattr->crPenClr = RGB( 0, 0, 0 );
+    pdcattr->ulPenClr = RGB(0, 0, 0);
+    pdcattr->crPenClr = RGB(0, 0, 0);
 
-    pdcattr->ulBrushClr = RGB( 255, 255, 255 ); // Do this way too.
-    pdcattr->crBrushClr = RGB( 255, 255, 255 );
+    pdcattr->ulBrushClr = RGB(255, 255, 255);   // Do this way too.
+    pdcattr->crBrushClr = RGB(255, 255, 255);
 
 //// This fixes the default brush and pen settings. See DC_InitDC.
 
     /* Create the default fill brush */
-    pdcattr->hbrush = NtGdiGetStockObject( WHITE_BRUSH );
+    pdcattr->hbrush = NtGdiGetStockObject(WHITE_BRUSH);
     NewDC->dclevel.pbrFill = BRUSH_ShareLockBrush(pdcattr->hbrush);
     EBRUSHOBJ_vInit(&NewDC->eboFill, NewDC->dclevel.pbrFill, NULL);
 
     /* Create the default pen / line brush */
-    pdcattr->hpen = NtGdiGetStockObject( BLACK_PEN );
+    pdcattr->hpen = NtGdiGetStockObject(BLACK_PEN);
     NewDC->dclevel.pbrLine = PEN_ShareLockPen(pdcattr->hpen);
     EBRUSHOBJ_vInit(&NewDC->eboLine, NewDC->dclevel.pbrFill, NULL);
 
@@ -112,16 +113,14 @@ DC_AllocDC(PUNICODE_STRING Driver)
     NewDC->dclevel.hpal = NtGdiGetStockObject(DEFAULT_PALETTE);
     NewDC->dclevel.laPath.eMiterLimit = 10.0;
 
-    DC_UnlockDc(NewDC);
-
-    return  hDC;
+    return NewDC;
 }
 
 VOID FASTCALL
 DC_FreeDC(HDC DCToFree)
 {
     DC_FreeDcAttr(DCToFree);
-    if (!IsObjectDead( DCToFree ))
+    if (!IsObjectDead(DCToFree))
     {
         if (!GDIOBJ_FreeObjByHandle(DCToFree, GDI_OBJECT_TYPE_DC))
         {
@@ -172,6 +171,7 @@ DC_SetOwnership(HDC hDC, PEPROCESS Owner)
         }
         DC_UnlockDc(pDC);
     }
+
     return TRUE;
 }
 
@@ -248,20 +248,13 @@ IntGdiCreateDC(
     }
 
     /*  Allocate a DC object  */
-    if ((hdc = DC_AllocDC(Driver)) == NULL)
+    pdc = DC_AllocDC(Driver);
+    if (pdc == NULL)
     {
         DPRINT1("DC_AllocDC() failed\n");
-        return  NULL;
-    }
-
-    pdc = DC_LockDc( hdc );
-    if ( !pdc )
-    {
-        DC_FreeDC( hdc );
-        DPRINT1("DC_LockDc() failed\n");
         return NULL;
     }
-
+    hdc = pdc->BaseObject.hHmgr;
     pdcattr = pdc->pdcattr;
 
     pdc->dctype = DC_TYPE_DIRECT;
@@ -298,7 +291,7 @@ IntGdiCreateDC(
     {
         pdc->pSurfInfo = NULL;
 //    pdc->dclevel.pSurface =
-        DC_UnlockDc( pdc );
+        DC_UnlockDc(pdc);
 
         /*  Initialize the DC state  */
         DC_InitDC(hdc);
@@ -318,7 +311,7 @@ IntGdiCreateDC(
         DC_vSelectSurface(pdc, NULL);
         pdcattr->crBackgroundClr = pdcattr->ulBackgroundClr = RGB(255, 255, 255);
         pdcattr->crForegroundClr = RGB(0, 0, 0);
-        DC_UnlockDc( pdc );
+        DC_UnlockDc(pdc);
     }
 
     if (hVisRgn)
@@ -342,7 +335,7 @@ NtGdiOpenDCW(
     ULONG iType,
     HANDLE hspool,
     VOID *pDriverInfo2,
-    VOID *pUMdhpdev )
+    VOID *pUMdhpdev)
 {
     UNICODE_STRING SafeDevice;
     DEVMODEW SafeInitData;
@@ -417,17 +410,17 @@ IntGdiCreateDisplayDC(HDEV hDev, ULONG DcType, BOOL EmptyDC)
 //
     if (hDC && !defaultDCstate) // Ultra HAX! Dedicated to GvG!
     { // This is a cheesy way to do this.
-        PDC dc = DC_LockDc ( hDC );
+        PDC dc = DC_LockDc(hDC);
         defaultDCstate = ExAllocatePoolWithTag(PagedPool, sizeof(DC), TAG_DC);
         if (!defaultDCstate)
         {
-            DC_UnlockDc( dc );
+            DC_UnlockDc(dc);
             return NULL;
         }
         RtlZeroMemory(defaultDCstate, sizeof(DC));
         defaultDCstate->pdcattr = &defaultDCstate->dcattr;
         IntGdiCopyToSaveState(dc, defaultDCstate);
-        DC_UnlockDc( dc );
+        DC_UnlockDc(dc);
     }
     return hDC;
 }
@@ -436,7 +429,7 @@ BOOL
 FASTCALL
 IntGdiDeleteDC(HDC hDC, BOOL Force)
 {
-    PDC  DCToDelete = DC_LockDc(hDC);
+    PDC DCToDelete = DC_LockDc(hDC);
 
     if (DCToDelete == NULL)
     {
@@ -449,7 +442,7 @@ IntGdiDeleteDC(HDC hDC, BOOL Force)
         if (DCToDelete->fs & DC_FLAG_PERMANENT)
         {
             DPRINT1("No! You Naughty Application!\n");
-            DC_UnlockDc( DCToDelete );
+            DC_UnlockDc(DCToDelete);
             return UserReleaseDC(NULL, hDC, FALSE);
         }
     }
@@ -460,15 +453,15 @@ IntGdiDeleteDC(HDC hDC, BOOL Force)
         PDC  savedDC;
         HDC  savedHDC;
 
-        savedHDC = DC_GetNextDC (DCToDelete);
-        savedDC = DC_LockDc (savedHDC);
+        savedHDC = DCToDelete->hdcNext;
+        savedDC = DC_LockDc(savedHDC);
         if (savedDC == NULL)
         {
             break;
         }
-        DC_SetNextDC (DCToDelete, DC_GetNextDC (savedDC));
+        DCToDelete->hdcNext = savedDC->hdcNext;
         DCToDelete->dclevel.lSaveDepth--;
-        DC_UnlockDc( savedDC );
+        DC_UnlockDc(savedDC);
         IntGdiDeleteDC(savedHDC, Force);
     }
 
@@ -487,11 +480,11 @@ IntGdiDeleteDC(HDC hDC, BOOL Force)
     }
     if (DCToDelete->rosdc.hClipRgn)
     {
-        NtGdiDeleteObject (DCToDelete->rosdc.hClipRgn);
+        NtGdiDeleteObject(DCToDelete->rosdc.hClipRgn);
     }
     if (DCToDelete->rosdc.hVisRgn)
     {
-        NtGdiDeleteObject (DCToDelete->rosdc.hVisRgn);
+        NtGdiDeleteObject(DCToDelete->rosdc.hVisRgn);
     }
     if (NULL != DCToDelete->rosdc.CombinedClip)
     {
@@ -499,12 +492,12 @@ IntGdiDeleteDC(HDC hDC, BOOL Force)
     }
     if (DCToDelete->rosdc.hGCClipRgn)
     {
-        NtGdiDeleteObject (DCToDelete->rosdc.hGCClipRgn);
+        NtGdiDeleteObject(DCToDelete->rosdc.hGCClipRgn);
     }
     PATH_Delete(DCToDelete->dclevel.hPath);
 
-    DC_UnlockDc( DCToDelete );
-    DC_FreeDC ( hDC );
+    DC_UnlockDc(DCToDelete);
+    DC_FreeDC(hDC);
     return TRUE;
 }
 
@@ -553,9 +546,9 @@ NtGdiMakeInfoDC(
 HDC APIENTRY
 NtGdiCreateCompatibleDC(HDC hDC)
 {
-    PDC  NewDC, OrigDC;
+    PDC pdcNew, pdcOld;
     PDC_ATTR pdcattrNew, pdcattrOld;
-    HDC hNewDC, DisplayDC = NULL;
+    HDC hdcNew, DisplayDC = NULL;
     HRGN hVisRgn;
     UNICODE_STRING DriverName;
     DWORD Layout = 0;
@@ -573,8 +566,8 @@ NtGdiCreateCompatibleDC(HDC hDC)
     }
 
     /*  Allocate a new DC based on the original DC's device  */
-    OrigDC = DC_LockDc(hDC);
-    if (NULL == OrigDC)
+    pdcOld = DC_LockDc(hDC);
+    if (NULL == pdcOld)
     {
         if (NULL != DisplayDC)
         {
@@ -583,35 +576,28 @@ NtGdiCreateCompatibleDC(HDC hDC)
         DPRINT1("Failed to lock hDC\n");
         return NULL;
     }
-    hNewDC = DC_AllocDC(&OrigDC->rosdc.DriverName);
-    if (NULL == hNewDC)
+    pdcNew = DC_AllocDC(&pdcOld->rosdc.DriverName);
+    if (!pdcNew)
     {
-        DPRINT1("Failed to create hNewDC\n");
-        DC_UnlockDc(OrigDC);
-        if (NULL != DisplayDC)
+        DPRINT1("Failed to create pdcNew\n");
+        DC_UnlockDc(pdcOld);
+        if (DisplayDC)
         {
             NtGdiDeleteObjectApp(DisplayDC);
         }
         return  NULL;
     }
-    NewDC = DC_LockDc( hNewDC );
+    hdcNew = pdcNew->BaseObject.hHmgr;
 
-    if (!NewDC)
-    {
-        DPRINT1("Failed to lock hNewDC\n");
-        NtGdiDeleteObjectApp(hNewDC);
-        return NULL;
-    }
-
-    pdcattrOld = OrigDC->pdcattr;
-    pdcattrNew = NewDC->pdcattr;
+    pdcattrOld = pdcOld->pdcattr;
+    pdcattrNew = pdcNew->pdcattr;
 
     /* Copy information from original DC to new DC  */
-    NewDC->dclevel.hdcSave = hNewDC;
+    pdcNew->dclevel.hdcSave = hdcNew;
 
-    NewDC->dhpdev = OrigDC->dhpdev;
+    pdcNew->dhpdev = pdcOld->dhpdev;
 
-    NewDC->rosdc.bitsPerPixel = OrigDC->rosdc.bitsPerPixel;
+    pdcNew->rosdc.bitsPerPixel = pdcOld->rosdc.bitsPerPixel;
 
     /* DriverName is copied in the AllocDC routine  */
     pdcattrNew->ptlWindowOrg   = pdcattrOld->ptlWindowOrg;
@@ -619,10 +605,10 @@ NtGdiCreateCompatibleDC(HDC hDC)
     pdcattrNew->ptlViewportOrg = pdcattrOld->ptlViewportOrg;
     pdcattrNew->szlViewportExt = pdcattrOld->szlViewportExt;
 
-    NewDC->dctype        = DC_TYPE_MEMORY; // Always!
-    NewDC->rosdc.hBitmap      = NtGdiGetStockObject(DEFAULT_BITMAP);
-    NewDC->ppdev          = OrigDC->ppdev;
-    NewDC->dclevel.hpal    = OrigDC->dclevel.hpal;
+    pdcNew->dctype        = DC_TYPE_MEMORY; // Always!
+    pdcNew->rosdc.hBitmap      = NtGdiGetStockObject(DEFAULT_BITMAP);
+    pdcNew->ppdev          = pdcOld->ppdev;
+    pdcNew->dclevel.hpal    = pdcOld->dclevel.hpal;
 
     pdcattrNew->lTextAlign      = pdcattrOld->lTextAlign;
     pdcattrNew->lBkMode         = pdcattrOld->lBkMode;
@@ -630,17 +616,14 @@ NtGdiCreateCompatibleDC(HDC hDC)
     pdcattrNew->jROP2           = pdcattrOld->jROP2;
     pdcattrNew->dwLayout        = pdcattrOld->dwLayout;
     if (pdcattrOld->dwLayout & LAYOUT_ORIENTATIONMASK) Layout = pdcattrOld->dwLayout;
-    NewDC->dclevel.flPath     = OrigDC->dclevel.flPath;
+    pdcNew->dclevel.flPath     = pdcOld->dclevel.flPath;
     pdcattrNew->ulDirty_        = pdcattrOld->ulDirty_;
     pdcattrNew->iCS_CP          = pdcattrOld->iCS_CP;
 
-    NewDC->erclWindow = (RECTL)
-    {
-        0,0,1,1
-    };
+    pdcNew->erclWindow = (RECTL){0, 0, 1, 1};
 
-    DC_UnlockDc(NewDC);
-    DC_UnlockDc(OrigDC);
+    DC_UnlockDc(pdcNew);
+    DC_UnlockDc(pdcOld);
     if (NULL != DisplayDC)
     {
         NtGdiDeleteObjectApp(DisplayDC);
@@ -649,19 +632,19 @@ NtGdiCreateCompatibleDC(HDC hDC)
     hVisRgn = NtGdiCreateRectRgn(0, 0, 1, 1);
     if (hVisRgn)
     {
-        GdiSelectVisRgn(hNewDC, hVisRgn);
+        GdiSelectVisRgn(hdcNew, hVisRgn);
         NtGdiDeleteObject(hVisRgn);
     }
-    if (Layout) NtGdiSetLayout( hNewDC, -1, Layout);
+    if (Layout) NtGdiSetLayout(hdcNew, -1, Layout);
 
-    DC_InitDC(hNewDC);
-    return hNewDC;
+    DC_InitDC(hdcNew);
+    return hdcNew;
 }
 
 
 BOOL
 APIENTRY
-NtGdiDeleteObjectApp(HANDLE  DCHandle)
+NtGdiDeleteObjectApp(HANDLE DCHandle)
 {
     /* Complete all pending operations */
     NtGdiFlushUserBatch();
