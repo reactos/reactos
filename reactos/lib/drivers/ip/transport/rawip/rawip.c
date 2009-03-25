@@ -191,7 +191,7 @@ NTSTATUS RawIPSendDatagram(
 {
     IP_PACKET Packet;
     PTA_IP_ADDRESS RemoteAddressTa = (PTA_IP_ADDRESS)ConnInfo->RemoteAddress;
-    IP_ADDRESS RemoteAddress;
+    IP_ADDRESS RemoteAddress,  LocalAddress;
     USHORT RemotePort;
     NTSTATUS Status;
     PNEIGHBOR_CACHE_ENTRY NCE;
@@ -212,10 +212,17 @@ NTSTATUS RawIPSendDatagram(
 	return STATUS_UNSUCCESSFUL;
     }
 
+    LocalAddress = AddrFile->Address;
+    if (AddrIsUnspecified(&LocalAddress))
+    {
+        if (!IPGetDefaultAddress(&LocalAddress))
+            return STATUS_UNSUCCESSFUL;
+    }
+
     Status = BuildRawIpPacket( &Packet,
                                &RemoteAddress,
                                RemotePort,
-                               &AddrFile->Address,
+                               &LocalAddress,
                                AddrFile->Port,
                                BufferData,
                                DataSize );
