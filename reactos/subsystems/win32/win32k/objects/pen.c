@@ -276,50 +276,6 @@ PEN_GetObject(PBRUSH pbrushPen, INT cbCount, PLOGPEN pBuffer)
 }
 
 
-HPEN
-FASTCALL
-IntGdiSelectPen(
-    PDC pDC,
-    HPEN hPen)
-{
-    PDC_ATTR pdcattr;
-    HPEN hOrgPen = NULL;
-    PBRUSH pbrushPen;
-    XLATEOBJ *XlateObj;
-    BOOLEAN bFailed;
-
-    if (pDC == NULL || hPen == NULL) return NULL;
-
-    pdcattr = pDC->pdcattr;
-
-    pbrushPen = PEN_LockPen(hPen);
-    if (pbrushPen == NULL)
-    {
-        return NULL;
-    }
-
-    XlateObj = IntGdiCreateBrushXlate(pDC, pbrushPen, &bFailed);
-    PEN_UnlockPen(pbrushPen);
-    if (bFailed)
-    {
-        SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
-        return NULL;
-    }
-
-    hOrgPen = pdcattr->hpen;
-    pdcattr->hpen = hPen;
-
-    if (pDC->rosdc.XlatePen != NULL)
-    {
-        EngDeleteXlate(pDC->rosdc.XlatePen);
-    }
-    pdcattr->ulDirty_ &= ~DC_PEN_DIRTY;
-
-    pDC->rosdc.XlatePen = XlateObj;
-
-    return hOrgPen;
-}
-
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 HPEN APIENTRY
@@ -439,31 +395,6 @@ NtGdiExtCreatePen(
    return hPen;
 }
 
- /*
- * @implemented
- */
-HPEN
-APIENTRY
-NtGdiSelectPen(
-    IN HDC hDC,
-    IN HPEN hPen)
-{
-    PDC pDC;
-    HPEN hOrgPen;
 
-    if (hDC == NULL || hPen == NULL) return NULL;
-
-    pDC = DC_LockDc(hDC);
-    if (!pDC)
-    {
-        return NULL;
-    }
-
-    hOrgPen = IntGdiSelectPen(pDC,hPen);
-
-    DC_UnlockDc(pDC);
-
-    return hOrgPen;
-}
 
 /* EOF */

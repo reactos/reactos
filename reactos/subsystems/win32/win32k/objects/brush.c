@@ -484,50 +484,6 @@ IntGdiCreateNullBrush(VOID)
    return hBrush;
 }
 
-HBRUSH
-FASTCALL
-IntGdiSelectBrush(
-    PDC pDC,
-    HBRUSH hBrush)
-{
-    PDC_ATTR pdcattr;
-    HBRUSH hOrgBrush;
-    PBRUSH pbrush;
-    XLATEOBJ *XlateObj;
-    BOOLEAN bFailed;
-
-    if (pDC == NULL || hBrush == NULL) return NULL;
-
-    pdcattr = pDC->pdcattr;
-
-    pbrush = BRUSH_LockBrush(hBrush);
-    if (pbrush == NULL)
-    {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
-        return NULL;
-    }
-
-    XlateObj = IntGdiCreateBrushXlate(pDC, pbrush, &bFailed);
-    BRUSH_UnlockBrush(pbrush);
-    if(bFailed)
-    {
-        return NULL;
-    }
-
-    hOrgBrush = pdcattr->hbrush;
-    pdcattr->hbrush = hBrush;
-
-    if (pDC->rosdc.XlateBrush != NULL)
-    {
-        EngDeleteXlate(pDC->rosdc.XlateBrush);
-    }
-    pDC->rosdc.XlateBrush = XlateObj;
-
-    pdcattr->ulDirty_ &= ~DC_BRUSH_DIRTY;
-
-    return hOrgBrush;
-}
-
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
@@ -673,33 +629,6 @@ IntGdiSetSolidBrushColor(HBRUSH hBrush, COLORREF Color)
       pbrush->BrushAttr.lbColor = Color & 0xFFFFFF;
   }
   BRUSH_UnlockBrush(pbrush);
-}
-
- /*
- * @implemented
- */
-HBRUSH
-APIENTRY
-NtGdiSelectBrush(
-    IN HDC hDC,
-    IN HBRUSH hBrush)
-{
-    PDC pDC;
-    HBRUSH hOrgBrush;
-
-    if (hDC == NULL || hBrush == NULL) return NULL;
-
-    pDC = DC_LockDc(hDC);
-    if (!pDC)
-    {
-        return NULL;
-    }
-
-    hOrgBrush = IntGdiSelectBrush(pDC,hBrush);
-
-    DC_UnlockDc(pDC);
-
-    return hOrgBrush;
 }
 
 /* EOF */
