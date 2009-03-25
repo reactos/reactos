@@ -227,7 +227,7 @@ NTSTATUS RawIPSendDatagram(
 
     if(!(NCE = RouteGetRouteToDestination( &RemoteAddress ))) {
         FreeNdisPacket(Packet.NdisPacket);
-	return STATUS_UNSUCCESSFUL;
+	return STATUS_NETWORK_UNREACHABLE;
     }
 
     TI_DbgPrint(MID_TRACE,("About to send datagram\n"));

@@ -527,6 +527,9 @@ NTSTATUS TCPTranslateError( int OskitError ) {
     default: Status = STATUS_INVALID_CONNECTION; break;
     }
 
+    if (Status != STATUS_SUCCESS)
+        DbgPrint("%d -> %x\n", OskitError, Status);
+
     TI_DbgPrint(DEBUG_TCP,("Error %d -> %x\n", OskitError, Status));
     return Status;
 }
