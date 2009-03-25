@@ -7,7 +7,7 @@
 */
 	
 	// Configuration
-	$AJAX_GETFILES_PROVIDER_URL = "http://localhost/getbuilds/ajax-getfiles-provider.php";
+	$AJAX_GETFILES_PROVIDER_URL = "http://iso.reactos.org/scripts/ajax-getfiles-provider.php";
 	$ISO_DOWNLOAD_URL = "http://iso.reactos.org/";
 	$MAX_FILES_PER_PAGE = 100;			// The same value has to be set in "ajax-getfiles-provider.php"
 ?>
