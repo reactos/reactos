@@ -2975,7 +2975,7 @@ KsFreeObjectCreateItemsByContext(
     IN  KSDEVICE_HEADER Header,
     IN  PVOID Context);
 
-VOID
+KSDDKAPI VOID NTAPI
 KsNullDriverUnload(
     IN  PDRIVER_OBJECT DriverObject);
 
