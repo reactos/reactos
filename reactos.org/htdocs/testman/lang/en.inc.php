@@ -17,6 +17,7 @@
 		"js_disclaimer" => "You have to activate JavaScript to use the interface!",
 		
 		"lastresults_header" => "Last 10 Test Results",
+		"comparelasttwo_button" => "Compare last two Results",
 		"date" => "Date",
 		"revision" => "Revision",
 		"user" => "User",

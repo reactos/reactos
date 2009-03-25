@@ -26,19 +26,19 @@
 }
 
 .totaltests {
-	color: black;
+	background-color: #FFFFCC !important;
 }
 
 .failedtests {
-	color: #BF0A00;
+	background-color: #FF6666 !important;
 }
 
 .todotests {
-	color: #1701E4;
+	background-color: #9999FF !important;
 }
 
 .skippedtests {
-	color: #818181;
+	background-color: #CCCCCC !important;
 }
 
 .diff {

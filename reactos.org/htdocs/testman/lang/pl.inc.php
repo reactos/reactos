@@ -18,6 +18,7 @@
 		"js_disclaimer" => "Musisz włączyć obsługę JavaScriptu, aby używać tego interfejsu!",
 		
 		"lastresults_header" => "10 ostatnich wyników testów",
+		"comparelasttwo_button" => "Porównaj dwa ostatnie wyniki testów",
 		"date" => "Data",
 		"revision" => "Rewizja",
 		"user" => "Użytkownik",

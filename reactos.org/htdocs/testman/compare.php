@@ -98,16 +98,16 @@
 	<tr>
 		<td id="intro"><?php echo $testman_langres["legend"]; ?>:</td>
 		
-		<td class="box" style="background: black;"></td>
+		<td class="box totaltests"></td>
 		<td><?php echo $testman_langres["totaltests"]; ?></td>
 		
-		<td class="box" style="background: #BF0A00;"></td>
+		<td class="box failedtests"></td>
 		<td><?php echo $testman_langres["failedtests"]; ?></td>
 		
-		<td class="box" style="background: #1701E4;"></td>
+		<td class="box todotests"></td>
 		<td><?php echo $testman_langres["todotests"]; ?></td>
 		
-		<td class="box" style="background: #818181;"></td>
+		<td class="box skippedtests"></td>
 		<td><?php echo $testman_langres["skippedtests"]; ?></td>
 		
 		<td class="box" style="background: green;"></td>

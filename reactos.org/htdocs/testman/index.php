@@ -88,7 +88,10 @@
 					<div class="bubble">
 						<h1><?php echo $testman_langres["lastresults_header"]; ?></h1>
 						
-						<table class="datatable" cellspacing="0" cellpadding="0">
+						<button onclick="CompareLastTwoButton_OnClick()"><?php echo $testman_langres["comparelasttwo_button"]; ?></button>
+						<br /><br />
+						
+						<table id="lastresults" class="datatable" cellspacing="0" cellpadding="0">
 							<thead>
 								<tr class="head">
 									<th class="TestCheckbox"></th>

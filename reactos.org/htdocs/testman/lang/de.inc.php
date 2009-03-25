@@ -17,6 +17,7 @@
 		"js_disclaimer" => "Sie müssen JavaScript aktivieren, um die Oberfläche zu benutzen!",
 		
 		"lastresults_header" => "Letzte 10 Testergebnisse",
+		"comparelasttwo_button" => "Letzte zwei Ergebnisse vergleichen",
 		"date" => "Datum",
 		"revision" => "Revision",
 		"user" => "Benutzer",

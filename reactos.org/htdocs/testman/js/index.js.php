@@ -367,6 +367,21 @@ function SearchCallback(HttpRequest)
 	document.getElementById("ajax_loading_search").style.visibility = "hidden";
 }
 
+function CompareLastTwoButton_OnClick()
+{
+	var parameters = "ids=";
+	var trs = document.getElementById("lastresults").getElementsByTagName("tbody")[0].getElementsByTagName("tr");
+	
+	if(trs.length < 2)
+		return;
+	
+	// Get the IDs through the "name" attribute of the checkboxes	
+	parameters += trs[1].firstChild.firstChild.name.substr(5) + ",";
+	parameters += trs[0].firstChild.firstChild.name.substr(5);
+	
+	window.open("compare.php?" + parameters);
+}
+
 function PageSwitch(NewPage, StartID)
 {
 	CurrentPage = NewPage;
