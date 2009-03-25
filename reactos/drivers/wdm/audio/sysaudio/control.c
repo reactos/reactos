@@ -67,8 +67,6 @@ SysAudioOpenVirtualDevice(
     IN ULONG DeviceNumber,
     PSYSAUDIODEVEXT DeviceExtension)
 {
-    PSYSAUDIO_CLIENT_HANDELS Index;
-    ULONG Count;
     PSYSAUDIO_CLIENT ClientInfo;
     PKSAUDIO_DEVICE_ENTRY Entry;
     PKSOBJECT_CREATE_ITEM CreateItem;
@@ -83,66 +81,26 @@ SysAudioOpenVirtualDevice(
         return SetIrpIoStatus(Irp, STATUS_INVALID_PARAMETER, 0);
     }
 
+    /* get client context */
+    ClientInfo = (PSYSAUDIO_CLIENT)CreateItem->Context;
+
+    /* sanity check */
+    ASSERT(ClientInfo);
+
+    /* check for valid device index */
+    if (DeviceNumber >= ClientInfo->NumDevices)
+    {
+        /* invalid device index */
+        return SetIrpIoStatus(Irp, STATUS_INVALID_PARAMETER, 0);
+    }
+
     /* get device context */
     Entry = GetListEntry(&DeviceExtension->KsAudioDeviceList, DeviceNumber);
     ASSERT(Entry != NULL);
 
-    /* get client context */
-    ClientInfo = (PSYSAUDIO_CLIENT)CreateItem->Context;
-    /* does the client already use a device */
-    if (!ClientInfo->NumDevices)
-    {
-        /* first device to be openend */
-        ClientInfo->Devs = ExAllocatePool(NonPagedPool, sizeof(SYSAUDIO_CLIENT_HANDELS));
-        if (!ClientInfo->Devs)
-        {
-            /* no memory */
-            return SetIrpIoStatus(Irp, STATUS_NO_MEMORY, 0);
-        }
-
-        ClientInfo->NumDevices = 1;
-        ClientInfo->Devs[0].DeviceId = DeviceNumber;
-        ClientInfo->Devs[0].ClientHandles = NULL;
-        ClientInfo->Devs[0].ClientHandlesCount = 0;
-        /* increase usage count */
-        Entry->NumberOfClients++;
-        return SetIrpIoStatus(Irp, STATUS_SUCCESS, 0);
-    }
-
-    /* check if device has already been openend */
-    for(Count = 0; Count < ClientInfo->NumDevices; Count++)
-    {
-        if (ClientInfo->Devs[Count].DeviceId == DeviceNumber)
-        {
-            /* device has already been opened */
-            return SetIrpIoStatus(Irp, STATUS_SUCCESS, 0);
-        }
-    }
-    /* new device to be openend */
-    Index = ExAllocatePool(NonPagedPool, sizeof(SYSAUDIO_CLIENT_HANDELS) * (ClientInfo->NumDevices + 1));
-    if (!Index)
-    {
-        /* no memory */
-        return SetIrpIoStatus(Irp, STATUS_NO_MEMORY, 0);
-    }
-
-    if (ClientInfo->NumDevices)
-    {
-        /* copy device count array */
-        RtlMoveMemory(Index, ClientInfo->Devs, ClientInfo->NumDevices * sizeof(SYSAUDIO_CLIENT_HANDELS));
-    }
-
-    Index[ClientInfo->NumDevices].DeviceId = DeviceNumber;
-    Index[ClientInfo->NumDevices].ClientHandlesCount = 0;
-    Index[ClientInfo->NumDevices].ClientHandles = NULL;
-
     /* increase usage count */
     Entry->NumberOfClients++;
 
-    ExFreePool(ClientInfo->Devs);
-
-    ClientInfo->Devs = Index;
-    ClientInfo->NumDevices++;
     return SetIrpIoStatus(Irp, STATUS_SUCCESS, 0);
 }
 
@@ -362,7 +320,7 @@ CreatePinWorkerRoutine(
 
         if (WorkerContext->Entry->Pins[WorkerContext->PinConnect->PinId].MaxPinInstanceCount == 1)
         {
-            /* store the pin handle there is the pin can only be instantiated once*/
+            /* store the pin handle there if the pin can only be instantiated once*/
             WorkerContext->Entry->Pins[WorkerContext->PinConnect->PinId].PinHandle = RealPinHandle;
         }
 
@@ -955,8 +913,7 @@ SysAudioHandleProperty(
     PSYSAUDIODEVEXT DeviceExtension;
     PKSAUDIO_DEVICE_ENTRY Entry;
     PSYSAUDIO_INSTANCE_INFO InstanceInfo;
-    PSYSAUDIO_CLIENT ClientInfo;
-    ULONG Count, BytesReturned;
+    ULONG BytesReturned;
     PKSOBJECT_CREATE_ITEM CreateItem;
     UNICODE_STRING GuidString;
 
@@ -1034,30 +991,13 @@ SysAudioHandleProperty(
             if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(ULONG))
             {
                 /* too small buffer */
-                return SetIrpIoStatus(Irp, STATUS_BUFFER_TOO_SMALL, sizeof(KSCOMPONENTID));
+                return SetIrpIoStatus(Irp, STATUS_BUFFER_TOO_SMALL, sizeof(ULONG));
             }
 
             if (Property->Flags & KSPROPERTY_TYPE_SET)
             {
                 Index = (PULONG)Irp->UserBuffer;
                 return SysAudioOpenVirtualDevice(Irp, *Index, DeviceExtension);
-            }
-            else if (Property->Flags & KSPROPERTY_TYPE_GET)
-            {
-                Index = (PULONG)Irp->UserBuffer;
-                /* get client context */
-                ClientInfo = (PSYSAUDIO_CLIENT)CreateItem->Context;
-                ASSERT(ClientInfo);
-                /* does the client already use a device */
-                if (!ClientInfo->NumDevices)
-                {
-                    /* no device open */
-                    return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, 0);
-                }
-                /* store last opened device number */
-                *Index = ClientInfo->Devs[ClientInfo->NumDevices-1].DeviceId;
-                /* found no device with that device index open */
-                return SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(ULONG));
             }
         }
         else if (Property->Id == KSPROPERTY_SYSAUDIO_INSTANCE_INFO)
@@ -1074,28 +1014,6 @@ SysAudioHandleProperty(
             if (Property->Flags & KSPROPERTY_TYPE_SET)
             {
                 return SysAudioOpenVirtualDevice(Irp, InstanceInfo->DeviceNumber, DeviceExtension);
-            }
-            else if (Property->Flags & KSPROPERTY_TYPE_GET)
-            {
-                /* get client context */
-                ClientInfo = (PSYSAUDIO_CLIENT)CreateItem->Context;
-                ASSERT(ClientInfo);
-                /* does the client already use a device */
-                if (!ClientInfo->NumDevices)
-                {
-                    /* no device open */
-                    return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, 0);
-                }
-                for(Count = 0; Count < ClientInfo->NumDevices; Count++)
-                {
-                    if (ClientInfo->Devs[Count].DeviceId == InstanceInfo->DeviceNumber)
-                    {
-                        /* specified device is open */
-                        return SetIrpIoStatus(Irp, STATUS_SUCCESS, 0);
-                    }
-                }
-                /* found no device with that device index open */
-                return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, 0);
             }
         }
         else if (Property->Id == (ULONG)-1)

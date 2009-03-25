@@ -24,17 +24,13 @@ Dispatch_fnDeviceIoControl(
 {
     PIO_STACK_LOCATION IoStack;
 
-    //DPRINT("Dispatch_fnDeviceIoControl called DeviceObject %p Irp %p\n", DeviceObject);
-
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_PROPERTY)
     {
        return SysAudioHandleProperty(DeviceObject, Irp);
     }
 
-    DPRINT1("Dispatch_fnDeviceIoControl Unhandeled %x\n", IoStack->Parameters.DeviceIoControl.IoControlCode);
-    DbgBreakPoint();
-
+    /* unsupported request */
     Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
     Irp->IoStatus.Information = 0;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -47,8 +43,7 @@ Dispatch_fnRead(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
-    DPRINT1("Dispatch_fnRead called DeviceObject %p Irp %p\n", DeviceObject);
-
+    /* unsupported request */
     Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
     Irp->IoStatus.Information = 0;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -61,8 +56,7 @@ Dispatch_fnWrite(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
-    DPRINT1("Dispatch_fnWrite called DeviceObject %p Irp %p\n", DeviceObject);
-
+    /* unsupported request */
     Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
     Irp->IoStatus.Information = 0;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -75,9 +69,6 @@ Dispatch_fnFlush(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
-    DPRINT1("Dispatch_fnFlush called DeviceObject %p Irp %p\n", DeviceObject);
-    //FIXME
-    // cleanup resources
     Irp->IoStatus.Status = STATUS_SUCCESS;
     Irp->IoStatus.Information = 0;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -127,8 +118,9 @@ Dispatch_fnClose(
                 }
                 else
                 {
-                    /* this is pin which can only be instantiated once
-                     * so we just need to release the reference count on that pin */
+                    /* this is a pin which can only be instantiated once
+                     * so we just need to release the reference count on that pin
+                     */
                     Entry->Pins[Client->Devs[Index].ClientHandles[SubIndex].PinId].References--;
 
                     DispatchContext = (PDISPATCH_CONTEXT)Client->Devs[Index].ClientHandles[SubIndex].DispatchContext;
@@ -274,6 +266,8 @@ DispatchCreateSysAudio(
     PKSOBJECT_CREATE_ITEM CreateItem;
     PIO_STACK_LOCATION IoStatus;
     LPWSTR Buffer;
+    PSYSAUDIODEVEXT DeviceExtension;
+    ULONG Index;
 
     static LPWSTR KS_NAME_PIN = L"{146F1A80-4791-11D0-A5D6-28DB04C10000}";
 
@@ -300,16 +294,55 @@ DispatchCreateSysAudio(
     /* allocate create item */
     CreateItem = ExAllocatePool(NonPagedPool, sizeof(KSOBJECT_CREATE_ITEM));
     if (!CreateItem)
+    {
+        Irp->IoStatus.Information = 0;
+        Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
         return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
     Client = ExAllocatePool(NonPagedPool, sizeof(SYSAUDIO_CLIENT));
     if (!Client)
     {
         ExFreePool(CreateItem);
+
+        Irp->IoStatus.Information = 0;
+        Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
-    /* initialize client struct */
-    RtlZeroMemory(Client, sizeof(SYSAUDIO_CLIENT));
+
+    /* get device extension */
+    DeviceExtension = (PSYSAUDIODEVEXT) DeviceObject->DeviceExtension;
+
+    Client->NumDevices = DeviceExtension->NumberOfKsAudioDevices;
+    /* has sysaudio found any devices */
+    if (Client->NumDevices)
+    {
+        Client->Devs = ExAllocatePool(NonPagedPool, sizeof(SYSAUDIO_CLIENT_HANDELS) * Client->NumDevices);
+        if (!Client->Devs)
+        {
+            ExFreePool(CreateItem);
+            ExFreePool(Client);
+            Irp->IoStatus.Information = 0;
+            Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+    }
+    else
+    {
+        /* no devices yet available */
+        Client->Devs = NULL;
+    }
+
+    /* Initialize devs array */
+    for(Index = 0; Index < Client->NumDevices; Index++)
+    {
+        Client->Devs[Index].DeviceId = Index;
+        Client->Devs[Index].ClientHandles = NULL;
+        Client->Devs[Index].ClientHandlesCount = 0;
+    }
 
     /* zero create struct */
     RtlZeroMemory(CreateItem, sizeof(KSOBJECT_CREATE_ITEM));

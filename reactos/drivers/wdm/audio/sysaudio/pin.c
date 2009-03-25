@@ -27,13 +27,19 @@ Pin_fnDeviceIoControl(
     ULONG BytesReturned;
     PIO_STACK_LOCATION IoStack;
 
-    DPRINT1("Pin_fnDeviceIoControl called DeviceObject %p Irp %p\n", DeviceObject);
+    DPRINT("Pin_fnDeviceIoControl called DeviceObject %p Irp %p\n", DeviceObject);
 
+    /* Get current stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
+    /* The dispatch context is stored in the FsContext2 member */
     Context = (PDISPATCH_CONTEXT)IoStack->FileObject->FsContext2;
-    ASSERT(Context);
 
+    /* Sanity check */
+    ASSERT(Context);
+    ASSERT(Context->FileObject != NULL);
+
+    /* Re-dispatch the request to the real target pin */
     Status = KsSynchronousIoControlDevice(Context->FileObject, KernelMode, IoStack->Parameters.DeviceIoControl.IoControlCode,
                                           IoStack->Parameters.DeviceIoControl.Type3InputBuffer,
                                           IoStack->Parameters.DeviceIoControl.InputBufferLength,
@@ -41,11 +47,12 @@ Pin_fnDeviceIoControl(
                                           IoStack->Parameters.DeviceIoControl.OutputBufferLength,
                                           &BytesReturned);
 
-    DPRINT1("Status %x\n", Status);
-
+    /* Save status and information */
     Irp->IoStatus.Information = BytesReturned;
     Irp->IoStatus.Status = Status;
+    /* Complete the irp */
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    /* Done */
     return Status;
 }
 
@@ -55,27 +62,43 @@ Pin_fnRead(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
-    DPRINT1("Pin_fnRead called DeviceObject %p Irp %p\n", DeviceObject);
+    PDISPATCH_CONTEXT Context;
+    PIO_STACK_LOCATION IoStack;
+    ULONG BytesReturned;
+    NTSTATUS Status;
 
-    Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+    /* Get current stack location */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    /* The dispatch context is stored in the FsContext2 member */
+    Context = (PDISPATCH_CONTEXT)IoStack->FileObject->FsContext2;
+
+    /* Sanity check */
+    ASSERT(Context);
+    ASSERT(Context->FileObject != NULL);
+
+    /* Re-dispatch the request to the real target pin */
+    Status = KsSynchronousIoControlDevice(Context->FileObject, KernelMode, IOCTL_KS_READ_STREAM,
+                                          MmGetMdlVirtualAddress(Irp->MdlAddress),
+                                          IoStack->Parameters.Read.Length,
+                                          NULL,
+                                          0,
+                                          &BytesReturned);
+
+    if (Context->hMixerPin && Context->MixerFileObject)
+    {
+        // FIXME
+        // call kmixer to convert stream
+        UNIMPLEMENTED
+    }
+
+    /* Save status and information */
+    Irp->IoStatus.Status = Status;
     Irp->IoStatus.Information = 0;
+    /* Complete the irp */
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return STATUS_UNSUCCESSFUL;
-}
-
-NTSTATUS
-NTAPI
-PinWriteCompletionRoutine(
-    IN PDEVICE_OBJECT  DeviceObject,
-    IN PIRP  Irp,
-    IN PVOID  Context)
-{
-    PIRP CIrp = (PIRP)Context;
-
-    CIrp->IoStatus.Status = STATUS_SUCCESS;
-    CIrp->IoStatus.Information = 0;
-    IoCompleteRequest(CIrp, IO_NO_INCREMENT);
-    return STATUS_SUCCESS;
+    /* Done */
+    return Status;
 }
 
 NTSTATUS
@@ -89,23 +112,38 @@ Pin_fnWrite(
     ULONG BytesReturned;
     NTSTATUS Status;
 
-    DPRINT1("Pin_fnWrite called DeviceObject %p Irp %p\n", DeviceObject);
-
+    /* Get current stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
+    /* The dispatch context is stored in the FsContext2 member */
     Context = (PDISPATCH_CONTEXT)IoStack->FileObject->FsContext2;
-    ASSERT(Context);
 
+    /* Sanity check */
+    ASSERT(Context);
+    ASSERT(Context->FileObject != NULL);
+
+    if (Context->hMixerPin && Context->MixerFileObject)
+    {
+        // FIXME
+        // call kmixer to convert stream
+        UNIMPLEMENTED
+    }
+
+
+    /* Re-dispatch the request to the real target pin */
     Status = KsSynchronousIoControlDevice(Context->FileObject, KernelMode, IOCTL_KS_WRITE_STREAM,
                                           MmGetMdlVirtualAddress(Irp->MdlAddress),
-                                          IoStack->Parameters.Write.Length,
+                                          IoStack->Parameters.Read.Length,
                                           NULL,
                                           0,
                                           &BytesReturned);
 
-    Irp->IoStatus.Information = BytesReturned;
+    /* Save status and information */
     Irp->IoStatus.Status = Status;
+    Irp->IoStatus.Information = 0;
+    /* Complete the irp */
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    /* Done */
     return Status;
 }
 
@@ -115,12 +153,59 @@ Pin_fnFlush(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
-    DPRINT1("Pin_fnFlush called DeviceObject %p Irp %p\n", DeviceObject);
+    PDISPATCH_CONTEXT Context;
+    PIO_STACK_LOCATION IoStack;
+    PDEVICE_OBJECT PinDeviceObject;
+    PIRP PinIrp;
+    IO_STATUS_BLOCK IoStatus;
+    KEVENT Event;
+    NTSTATUS Status = STATUS_UNSUCCESSFUL;
 
-    Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+    /* Get current stack location */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    /* The dispatch context is stored in the FsContext2 member */
+    Context = (PDISPATCH_CONTEXT)IoStack->FileObject->FsContext2;
+
+    /* Sanity check */
+    ASSERT(Context);
+    ASSERT(Context->FileObject != NULL);
+
+    /* Get Pin's device object */
+    PinDeviceObject = IoGetRelatedDeviceObject(Context->FileObject);
+
+    /* Initialize notification event */
+    KeInitializeEvent(&Event, NotificationEvent, FALSE);
+
+    /* build target irp */
+    PinIrp = IoBuildSynchronousFsdRequest(IRP_MJ_FLUSH_BUFFERS, PinDeviceObject, NULL, 0, NULL, &Event, &IoStatus);
+    if (PinIrp)
+    {
+
+        /* Get the next stack location */
+        IoStack = IoGetNextIrpStackLocation(PinIrp);
+        /* The file object must be present in the irp as it contains the KSOBJECT_HEADER */
+        IoStack->FileObject = Context->FileObject;
+
+        /* call the driver */
+        Status = IoCallDriver(PinDeviceObject, PinIrp);
+        /* Has request already completed ? */
+        if (Status == STATUS_PENDING)
+        {
+            /* Wait untill the request has completed */
+            KeWaitForSingleObject(&Event, UserRequest, KernelMode, FALSE, NULL);
+            /* Update status */
+            Status = IoStatus.Status;
+        }
+    }
+
+    /* store status */
+    Irp->IoStatus.Status = Status;
     Irp->IoStatus.Information = 0;
+    /* Complete the irp */
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return STATUS_UNSUCCESSFUL;
+    /* Done */
+    return Status;
 }
 
 NTSTATUS

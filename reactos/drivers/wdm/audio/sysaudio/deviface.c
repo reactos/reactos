@@ -178,7 +178,7 @@ DeviceInterfaceChangeCallback(
         DeviceEntry = ExAllocatePool(NonPagedPool, sizeof(KSAUDIO_DEVICE_ENTRY));
         if (!DeviceEntry)
         {
-            DPRINT1("No Mem\n");
+
             return STATUS_INSUFFICIENT_RESOURCES;
         }
 
@@ -188,14 +188,12 @@ DeviceInterfaceChangeCallback(
         DeviceEntry->DeviceName.Buffer = ExAllocatePool(NonPagedPool, DeviceEntry->DeviceName.MaximumLength);
         if (!DeviceEntry->DeviceName.Buffer)
         {
-            DPRINT1("No Mem\n");
             ExFreePool(DeviceEntry);
             return STATUS_INSUFFICIENT_RESOURCES;
         }
 
         if (!NT_SUCCESS(RtlAppendUnicodeToString(&DeviceEntry->DeviceName, L"\\??\\")))
         {
-            DPRINT1("No Mem\n");
             ExFreePool(DeviceEntry->DeviceName.Buffer);
             ExFreePool(DeviceEntry);
             return STATUS_INSUFFICIENT_RESOURCES;
@@ -203,13 +201,10 @@ DeviceInterfaceChangeCallback(
 
         if (!NT_SUCCESS(RtlAppendUnicodeStringToString(&DeviceEntry->DeviceName, Event->SymbolicLinkName)))
         {
-            DPRINT1("No Mem\n");
             ExFreePool(DeviceEntry->DeviceName.Buffer);
             ExFreePool(DeviceEntry);
             return STATUS_INSUFFICIENT_RESOURCES;
         }
-
-        DPRINT1("Sym %wZ\n", &DeviceEntry->DeviceName);
 
         Status = OpenDevice(&DeviceEntry->DeviceName, &DeviceEntry->Handle, &DeviceEntry->FileObject);
         if (!NT_SUCCESS(Status))
@@ -231,24 +226,12 @@ DeviceInterfaceChangeCallback(
 
         return Status;
     }
-    else if (IsEqualGUIDAligned(&Event->Event,
-                                &GUID_DEVICE_INTERFACE_REMOVAL))
-    {
-        DPRINT1("Remove interface to audio device!\n");
-        ///FIXME
-        ///
-        return STATUS_SUCCESS;
-    }
     else
     {
-        UNICODE_STRING EventName, InterfaceGuid;
-
-        RtlStringFromGUID(&Event->Event, &EventName);
-        RtlStringFromGUID(&Event->InterfaceClassGuid, &InterfaceGuid);
-        DPRINT1("Unknown event: Event %wZ GUID %wZ\n", &EventName, &InterfaceGuid);
+        DPRINT1("Remove interface to audio device!\n");
+        UNIMPLEMENTED
         return STATUS_SUCCESS;
     }
-
 }
 
 NTSTATUS

@@ -16,6 +16,7 @@ typedef struct
     KSSTATE State;
     PKSDATAFORMAT Format;
     KSPIN_CONNECT * ConnectDetails;
+    KDPC Dpc;
 
     PVOID CommonBuffer;
     ULONG CommonBufferSize;
@@ -183,6 +184,42 @@ UpdateCommonBufferOverlap(
     UpdateCommonBuffer(This, Position);
 }
 
+VOID
+NTAPI
+StopStreamWorkerRoutine(
+    IN PDEVICE_OBJECT  DeviceObject,
+    IN PVOID  Context)
+{
+    IPortPinWaveCyclicImpl * This = (IPortPinWaveCyclicImpl*)Context;
+
+    DPRINT1("Stopping %u Irql %u\n", This->IrpQueue->lpVtbl->NumMappings(This->IrpQueue), KeGetCurrentIrql());
+
+    This->Stream->lpVtbl->SetState(This->Stream, KSSTATE_STOP);
+    This->State = KSSTATE_STOP;
+}
+
+VOID
+NTAPI
+StopStreamRoutine(
+    IN PKDPC  Dpc,
+    IN PVOID  DeferredContext,
+    IN PVOID  SystemArgument1,
+    IN PVOID  SystemArgument2)
+{
+   IPortPinWaveCyclicImpl * This = (IPortPinWaveCyclicImpl*)DeferredContext;
+   PIO_WORKITEM WorkItem;
+
+    if (This->IrpQueue->lpVtbl->NumMappings(This->IrpQueue))
+        return;
+
+    WorkItem = IoAllocateWorkItem(GetDeviceObject(This->Port));
+    if (!WorkItem)
+        return;
+
+    IoQueueWorkItem(WorkItem, StopStreamWorkerRoutine, DelayedWorkQueue, (PVOID)This);
+}
+
+
 
 static
 VOID
@@ -194,32 +231,18 @@ IServiceSink_fnRequestService(
     NTSTATUS Status;
     PUCHAR Buffer;
     ULONG BufferSize;
-
     IPortPinWaveCyclicImpl * This = (IPortPinWaveCyclicImpl*)CONTAINING_RECORD(iface, IPortPinWaveCyclicImpl, lpVtblServiceSink);
 
     Status = This->IrpQueue->lpVtbl->GetMapping(This->IrpQueue, &Buffer, &BufferSize);
     if (!NT_SUCCESS(Status))
     {
-        if (!This->IrpQueue->lpVtbl->CancelBuffers(This->IrpQueue))
-        {
-            /* there is an active dpc pending
-             * wait untill this dpc is done, in order to complete the remaining irps
-             */
-            return;
-        }
-        DPRINT1("Stopping %u\n", This->IrpQueue->lpVtbl->NumMappings(This->IrpQueue));
-
-        This->Stream->lpVtbl->SetState(This->Stream, KSSTATE_STOP);
-        This->State = KSSTATE_STOP;
+        KeInsertQueueDpc(&This->Dpc, NULL, NULL);
         return;
     }
 
-    if (KeGetCurrentIrql() == DISPATCH_LEVEL)
-        return;
-
 
     Status = This->Stream->lpVtbl->GetPosition(This->Stream, &Position);
-    DPRINT("Position %u BufferSize %u ActiveIrpOffset %u\n", Position, This->CommonBufferSize, BufferSize);
+    DPRINT1("Position %u Buffer %p BufferSize %u ActiveIrpOffset %u\n", Position, Buffer, This->CommonBufferSize, BufferSize);
 
     if (Position < This->CommonBufferOffset)
     {
@@ -836,6 +859,7 @@ IPortPinWaveCyclic_fnInit(
     This->KsPinDescriptor = KsPinDescriptor;
     This->ConnectDetails = ConnectDetails;
     This->Miniport = GetWaveCyclicMiniport(Port);
+    KeInitializeDpc(&This->Dpc, StopStreamRoutine, (PVOID)This);
 
     DeviceObject = GetDeviceObject(Port);
 
@@ -904,7 +928,7 @@ IPortPinWaveCyclic_fnInit(
     This->CommonBuffer = This->DmaChannel->lpVtbl->SystemAddress(This->DmaChannel);
     This->Capture = Capture;
 
-    //Status = This->Stream->lpVtbl->SetNotificationFreq(This->Stream, 10, &This->FrameSize);
+    Status = This->Stream->lpVtbl->SetNotificationFreq(This->Stream, 10, &This->FrameSize);
 
     return STATUS_SUCCESS;
 }
