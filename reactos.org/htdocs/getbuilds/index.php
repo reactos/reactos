@@ -68,7 +68,7 @@
 		
 		<?php echo $getbuilds_langres["buildbot_status"]; ?>:
 		<ul class="web">
-			<li><a href="http://www.reactos.org:8010"><?php echo $getbuilds_langres["buildbot_web"]; ?></a></li>
+			<li><a href="http://build.reactos.org:8010"><?php echo $getbuilds_langres["buildbot_web"]; ?></a></li>
 			<li><a href="<?php echo $ISO_DOWNLOAD_URL; ?>"><?php echo $getbuilds_langres["browsebuilds"]; ?></a></li>
 		</ul>
 	</div>
