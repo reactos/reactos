@@ -25,6 +25,8 @@
 #include "ntgdi/NtGdiGetFontResourceInfoInternalW.c"
 #include "ntgdi/NtGdiGetRandomRgn.c"
 #include "ntgdi/NtGdiPolyPolyDraw.c"
+#include "ntgdi/NtGdiRestoreDC.c"
+#include "ntgdi/NtGdiSaveDC.c"
 #include "ntgdi/NtGdiSelectBitmap.c"
 #include "ntgdi/NtGdiSelectBrush.c"
 #include "ntgdi/NtGdiSelectFont.c"
@@ -85,6 +87,8 @@ TESTENTRY TestList[] =
 	{ L"NtGdiGetFontResourceInfoInternalW", Test_NtGdiGetFontResourceInfoInternalW },
 	{ L"NtGdiGetRandomRgn", Test_NtGdiGetRandomRgn },
 	{ L"NtGdiPolyPolyDraw", Test_NtGdiPolyPolyDraw },
+	{ L"NtGdiRestoreDC", Test_NtGdiRestoreDC },
+	{ L"NtGdiSaveDC", Test_NtGdiSaveDC },
 	{ L"NtGdiSetBitmapBits", Test_NtGdiSetBitmapBits },
 	{ L"NtGdiSetDIBitsToDeviceInternal", Test_NtGdiSetDIBitsToDeviceInternal },
 	{ L"NtGdiSelectBitmap", Test_NtGdiSelectBitmap },

@@ -13,6 +13,11 @@ Test_NtGdiDeleteObjectApp(PTESTINFO pti)
     TEST(ret == 0);
     TEST(GetLastError() == 0);
 
+    /* Try to delete something with a stockbit */
+    SetLastError(0);
+    TEST(NtGdiDeleteObjectApp((PVOID)(GDI_HANDLE_STOCK_MASK | 0x1234)) == 1);
+    TEST(GetLastError() == 0);
+
     /* Delete a DC */
     SetLastError(0);
     hdc = CreateCompatibleDC(NULL);
@@ -74,6 +79,7 @@ Test_NtGdiDeleteObjectApp(PTESTINFO pti)
     ASSERT(hbmp);
     TEST(IsHandleValid(hbmp) == 1);
     TEST(NtGdiSelectBitmap(hdc, hbmp));
+
     ret = NtGdiDeleteObjectApp(hbmp);
     TEST(ret == 1);
     TEST(GetLastError() == 0);
