@@ -34,7 +34,7 @@
 		die("The script already processed this build before!");
 	
 	// Read the Buildslave test log
-	$fp = @fopen("http://reactos.org:8010/builders/" . $_GET["slavename"] . "/builds/" . $_GET["build"] . "/steps/test/logs/stdio/text", "r");
+	$fp = @fopen("http://build.reactos.org:8010/builders/" . $_GET["slavename"] . "/builds/" . $_GET["build"] . "/steps/test/logs/stdio/text", "r");
 	
 	if(!$fp)
 		die("Could not open the test log!");
