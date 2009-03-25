@@ -1577,8 +1577,6 @@ static void cleanup_test(void)
 
 START_TEST(shlexec)
 {
-    skip("ROS-HACK: Skipping shell execute tests\n");
-    return;
 
     myARGC = winetest_get_mainargs(&myARGV);
     if (myARGC >= 3)

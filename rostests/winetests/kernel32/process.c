@@ -1202,9 +1202,6 @@ static void test_Console(void)
     const char*         msg = "This is a std-handle inheritance test.";
     unsigned            msg_len;
     BOOL                run_tests = TRUE;
-    
-    skip("ROS-HACK: Skipping process console tests\n");
-    return;
 
     memset(&startup, 0, sizeof(startup));
     startup.cb = sizeof(startup);

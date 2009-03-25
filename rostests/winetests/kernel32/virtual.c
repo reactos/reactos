@@ -304,9 +304,6 @@ static void test_MapViewOfFile(void)
     MEMORY_BASIC_INFORMATION info;
     BOOL ret;
 
-    skip("ROS-HACK: Skipping MapViewOfFile tests\n");
-    return;
-
     SetLastError(0xdeadbeef);
     file = CreateFileA( testfile, GENERIC_READ|GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, 0 );
     ok( file != INVALID_HANDLE_VALUE, "CreateFile error %u\n", GetLastError() );
@@ -780,9 +777,6 @@ static void test_write_watch(void)
         win_skip( "GetWriteWatch not supported\n" );
         return;
     }
-
-    skip("ROS-HACK: Skipping WriteWatch tests\n");
-    return;
 
     size = 0x10000;
     base = VirtualAlloc( 0, size, MEM_RESERVE | MEM_COMMIT | MEM_WRITE_WATCH, PAGE_READWRITE );

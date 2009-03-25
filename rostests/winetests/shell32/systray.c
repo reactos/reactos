@@ -138,9 +138,6 @@ START_TEST(systray)
     RECT rc;
     HMODULE huser32, hshell32;
 
-    skip("ROS-HACK: Skipping systray tests\n");
-    return;
-
     hshell32 = GetModuleHandleA("shell32.dll");
     pShell_NotifyIconW = (void*)GetProcAddress(hshell32, "Shell_NotifyIconW");
 

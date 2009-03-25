@@ -297,8 +297,6 @@ static void test_isotropic_mapping(void)
 
 START_TEST(mapping)
 {
-    skip("ROS-HACK: Skipping mapping tests!\n");
-    return;
     test_modify_world_transform();
     test_world_transform();
     test_isotropic_mapping();

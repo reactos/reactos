@@ -2804,10 +2804,6 @@ static void test_PrivateObjectSecurity(void)
         return;
     }
 
-    /* ReactOS Hack: ros' Security Descriptor string parsing sucks */
-    skip("ROS-HACK: Skipping 'test_PrivateObjectSecurity' -- ros' SID string parsing sucks\n");
-    return;
-
     ok(pConvertStringSecurityDescriptorToSecurityDescriptorA(
         "O:SY"
         "G:S-1-5-21-93476-23408-4576"
