@@ -113,6 +113,8 @@ DC_AllocDC(PUNICODE_STRING Driver)
     NewDC->dclevel.hpal = NtGdiGetStockObject(DEFAULT_PALETTE);
     NewDC->dclevel.laPath.eMiterLimit = 10.0;
 
+    NewDC->dclevel.lSaveDepth = 1;
+
     return NewDC;
 }
 
@@ -419,7 +421,7 @@ IntGdiCreateDisplayDC(HDEV hDev, ULONG DcType, BOOL EmptyDC)
         }
         RtlZeroMemory(defaultDCstate, sizeof(DC));
         defaultDCstate->pdcattr = &defaultDCstate->dcattr;
-        IntGdiCopyToSaveState(dc, defaultDCstate);
+        DC_vCopyState(dc, defaultDCstate);
         DC_UnlockDc(dc);
     }
     return hDC;
@@ -448,7 +450,7 @@ IntGdiDeleteDC(HDC hDC, BOOL Force)
     }
 
     /*  First delete all saved DCs  */
-    while (DCToDelete->dclevel.lSaveDepth)
+    while (DCToDelete->dclevel.lSaveDepth > 1)
     {
         PDC  savedDC;
         HDC  savedHDC;

@@ -2,7 +2,7 @@
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            subsystems/win32/win32k/ntuser/windc.c
- * PURPOSE:         Keyboard layout management
+ * PURPOSE:         Window DC management
  * COPYRIGHT:       Copyright 2007 ReactOS
  *
  */
@@ -45,7 +45,7 @@ DceCreateDisplayDC(VOID)
       defaultDCstate = ExAllocatePoolWithTag(PagedPool, sizeof(DC), TAG_DC);
       RtlZeroMemory(defaultDCstate, sizeof(DC));
       defaultDCstate->pdcattr = &defaultDCstate->dcattr;
-      IntGdiCopyToSaveState(dc, defaultDCstate);
+      DC_vCopyState(dc, defaultDCstate);
       DC_UnlockDc( dc );
   }
   return hDC;
