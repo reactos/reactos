@@ -837,10 +837,10 @@
 @ stdcall SetHandleCount(long)
 @ stdcall SetHandleInformation(long long long)
 @ stdcall SetInformationJobObject(long long ptr long)
-@ stub SetastConsoleEventActive # missed in XP SP3
+@ stub SetLastConsoleEventActive # missing in XP SP3
 @ stdcall SetLastError(long)
-@ stub SetocalPrimaryComputerNameA # missed in XP SP3
-@ stub SetocalPrimaryComputerNameW # missed in XP SP3
+@ stub SetLocalPrimaryComputerNameA # missing in XP SP3
+@ stub SetLocalPrimaryComputerNameW # missing in XP SP3
 @ stdcall SetLocalTime(ptr)
 @ stdcall SetLocaleInfoA(long long str)
 @ stdcall SetLocaleInfoW(long long wstr)
