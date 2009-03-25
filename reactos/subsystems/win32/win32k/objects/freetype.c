@@ -3641,10 +3641,10 @@ GreExtTextOutW(
     if (hbrushBackGnd != NULL)
     {
         BRUSH_UnlockBrush(pbrushBackGnd);
-        NtGdiDeleteObject(hbrushBackGnd);
+        GreDeleteObject(hbrushBackGnd);
     }
     BRUSH_UnlockBrush(pbrushText);
-    NtGdiDeleteObject(hbrushText);
+    GreDeleteObject(hbrushText);
 good:
     DC_UnlockDc( dc );
 
@@ -3662,12 +3662,12 @@ fail:
     if (hbrushBackGnd != NULL)
     {
         BRUSH_UnlockBrush(pbrushBackGnd);
-        NtGdiDeleteObject(hbrushBackGnd);
+        GreDeleteObject(hbrushBackGnd);
     }
     if (hbrushText != NULL)
     {
         BRUSH_UnlockBrush(pbrushText);
-        NtGdiDeleteObject(hbrushText);
+        GreDeleteObject(hbrushText);
     }
     DC_UnlockDc(dc);
 

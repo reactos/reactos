@@ -102,7 +102,7 @@ GdiFlushUserBatch(PDC dc, PGDIBATCHHDR pHdr)
      case GdiBCDelRgn:
      {
         PGDIBSOBJECT pgO = (PGDIBSOBJECT) pHdr;
-        NtGdiDeleteObject( pgO->hgdiobj );
+        GreDeleteObject( pgO->hgdiobj );
         break;
      }
      default:

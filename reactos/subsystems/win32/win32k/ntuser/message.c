@@ -398,7 +398,7 @@ IntDispatchMessage(PMSG pMsg)
   /* send a WM_NCPAINT and WM_ERASEBKGND if the non-client area is still invalid */
      HRGN hrgn = NtGdiCreateRectRgn( 0, 0, 0, 0 );
      co_UserGetUpdateRgn( Window, hrgn, TRUE );
-     NtGdiDeleteObject( hrgn );
+     GreDeleteObject( hrgn );
   }
   return retval;
 }

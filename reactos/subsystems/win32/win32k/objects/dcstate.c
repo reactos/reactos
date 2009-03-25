@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
- * PURPOSE:           Functions for creation and destruction of DCs
+ * PURPOSE:           Functions for saving and restoring dc states
  * FILE:              subsystem/win32/win32k/objects/dcstate.c
  * PROGRAMER:         Timo Kreuzer (timo.kreuzer@rectos.org)
  */

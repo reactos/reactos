@@ -661,7 +661,7 @@ IsObjectDead(HGDIOBJ hObject)
 */
 BOOL
 FASTCALL
-NtGdiDeleteObject(HGDIOBJ hObject)
+GreDeleteObject(HGDIOBJ hObject)
 {
     DPRINT("NtGdiDeleteObject handle 0x%08x\n", hObject);
     if (!IsObjectDead(hObject))

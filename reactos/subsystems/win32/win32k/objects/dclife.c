@@ -319,7 +319,7 @@ IntGdiCreateDC(
     if (hVisRgn)
     {
         GdiSelectVisRgn(hdc, hVisRgn);
-        NtGdiDeleteObject(hVisRgn);
+        GreDeleteObject(hVisRgn);
     }
 
     IntGdiSetTextAlign(hdc, TA_TOP);
@@ -482,11 +482,11 @@ IntGdiDeleteDC(HDC hDC, BOOL Force)
     }
     if (DCToDelete->rosdc.hClipRgn)
     {
-        NtGdiDeleteObject(DCToDelete->rosdc.hClipRgn);
+        GreDeleteObject(DCToDelete->rosdc.hClipRgn);
     }
     if (DCToDelete->rosdc.hVisRgn)
     {
-        NtGdiDeleteObject(DCToDelete->rosdc.hVisRgn);
+        GreDeleteObject(DCToDelete->rosdc.hVisRgn);
     }
     if (NULL != DCToDelete->rosdc.CombinedClip)
     {
@@ -494,7 +494,7 @@ IntGdiDeleteDC(HDC hDC, BOOL Force)
     }
     if (DCToDelete->rosdc.hGCClipRgn)
     {
-        NtGdiDeleteObject(DCToDelete->rosdc.hGCClipRgn);
+        GreDeleteObject(DCToDelete->rosdc.hGCClipRgn);
     }
     PATH_Delete(DCToDelete->dclevel.hPath);
 
@@ -635,7 +635,7 @@ NtGdiCreateCompatibleDC(HDC hDC)
     if (hVisRgn)
     {
         GdiSelectVisRgn(hdcNew, hVisRgn);
-        NtGdiDeleteObject(hVisRgn);
+        GreDeleteObject(hVisRgn);
     }
     if (Layout) NtGdiSetLayout(hdcNew, -1, Layout);
 
@@ -654,7 +654,7 @@ NtGdiDeleteObjectApp(HANDLE DCHandle)
     if (GDI_HANDLE_IS_STOCKOBJ(DCHandle)) return TRUE;
 
     if (GDI_HANDLE_GET_TYPE(DCHandle) != GDI_OBJECT_TYPE_DC)
-        return NtGdiDeleteObject((HGDIOBJ) DCHandle);
+        return GreDeleteObject((HGDIOBJ) DCHandle);
 
     if (IsObjectDead((HGDIOBJ)DCHandle)) return TRUE;
 
@@ -689,7 +689,7 @@ NewNtGdiDeleteObjectApp(HANDLE DCHandle)
         case GDIObjType_PAL_TYPE:
         case GDIObjType_LFONT_TYPE:
         case GDIObjType_BRUSH_TYPE:
-          return NtGdiDeleteObject((HGDIOBJ) DCHandle);
+          return GreDeleteObject((HGDIOBJ) DCHandle);
 
         default:
           return FALSE; 

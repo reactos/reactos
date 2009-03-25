@@ -149,7 +149,7 @@ PATH_FillPath( PDC dc, PPATH pPath )
 
     /* Paint the region */
     IntGdiPaintRgn( dc, hrgn );
-    NtGdiDeleteObject( hrgn );
+    GreDeleteObject( hrgn );
     /* Restore the old mapping mode */
 //    IntGdiSetMapMode( dc, mapMode );
 //    pdcattr->szlViewportExt = ptViewportExt;
@@ -2670,7 +2670,7 @@ NtGdiSelectClipPath(HDC  hDC,
  else if( PATH_PathToRegion( pPath, pdcattr->jFillMode, &hrgnPath ) )
  {
    success = GdiExtSelectClipRgn( dc, hrgnPath, Mode ) != ERROR;
-   NtGdiDeleteObject( hrgnPath );
+   GreDeleteObject( hrgnPath );
 
    /* Empty the path */
    if( success )

@@ -947,7 +947,7 @@ co_WinPosSetWindowPos(
                REGION_GetRgnBox(VisRgn, &TempRect) == NULLREGION)
          {
             REGION_UnlockRgn(VisRgn);
-            NtGdiDeleteObject(VisBefore);
+            GreDeleteObject(VisBefore);
             VisBefore = NULL;
          }
          else if(VisRgn)
@@ -1097,7 +1097,7 @@ co_WinPosSetWindowPos(
             REGION_GetRgnBox(VisRgn, &TempRect) == NULLREGION)
       {
          REGION_UnlockRgn(VisRgn);
-         NtGdiDeleteObject(VisAfter);
+         GreDeleteObject(VisAfter);
          VisAfter = NULL;
       }
       else if(VisRgn)
@@ -1160,7 +1160,7 @@ co_WinPosSetWindowPos(
          {
             /* Nothing to copy, clean up */
             REGION_UnlockRgn(VisRgn);
-            NtGdiDeleteObject(CopyRgn);
+            GreDeleteObject(CopyRgn);
             CopyRgn = NULL;
          }
          else if (OldWindowRect.left != NewWindowRect.left ||
@@ -1222,7 +1222,7 @@ co_WinPosSetWindowPos(
             IntInvalidateWindows(Window, DirtyRgn,
                RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
          }
-         NtGdiDeleteObject(DirtyRgn);
+         GreDeleteObject(DirtyRgn);
          */
 
             PWINDOW_OBJECT Parent = Window->Parent;
@@ -1244,12 +1244,12 @@ co_WinPosSetWindowPos(
                 RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
             }
          }
-         NtGdiDeleteObject(DirtyRgn);
+         GreDeleteObject(DirtyRgn);
       }
 
       if (CopyRgn != NULL)
       {
-         NtGdiDeleteObject(CopyRgn);
+         GreDeleteObject(CopyRgn);
       }
 
       /* Expose what was covered before but not covered anymore */
@@ -1268,13 +1268,13 @@ co_WinPosSetWindowPos(
          {
             co_VIS_WindowLayoutChanged(Window, ExposedRgn);
          }
-         NtGdiDeleteObject(ExposedRgn);
-         NtGdiDeleteObject(VisBefore);
+         GreDeleteObject(ExposedRgn);
+         GreDeleteObject(VisBefore);
       }
 
       if (VisAfter != NULL)
       {
-         NtGdiDeleteObject(VisAfter);
+         GreDeleteObject(VisAfter);
       }
 
       if (!(WinPos.flags & SWP_NOACTIVATE))

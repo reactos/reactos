@@ -505,7 +505,7 @@ static LRESULT co_UserFreeWindow(PWINDOW_OBJECT Window,
 
    if(Window->WindowRegion)
    {
-      NtGdiDeleteObject(Window->WindowRegion);
+      GreDeleteObject(Window->WindowRegion);
    }
 
    ASSERT(Window->Wnd != NULL);
@@ -4478,7 +4478,7 @@ IntGetWindowRgn(PWINDOW_OBJECT Window, HRGN hRgn)
    else
       Ret = ERROR;
 
-   NtGdiDeleteObject(VisRgn);
+   GreDeleteObject(VisRgn);
 
    return Ret;
 }
@@ -4518,7 +4518,7 @@ IntGetWindowRgnBox(PWINDOW_OBJECT Window, RECTL *Rect)
    else
       Ret = ERROR;
 
-   NtGdiDeleteObject(VisRgn);
+   GreDeleteObject(VisRgn);
 
    return Ret;
 }
@@ -4550,7 +4550,7 @@ NtUserSetWindowRgn(
    if(Window->WindowRegion)
    {
       /* Delete no longer needed region handle */
-      NtGdiDeleteObject(Window->WindowRegion);
+      GreDeleteObject(Window->WindowRegion);
    }
    Window->WindowRegion = hRgn;
 

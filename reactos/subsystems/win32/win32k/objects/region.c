@@ -1740,7 +1740,7 @@ REGION_XorRegion(
     if (!trb)
     {
         REGION_UnlockRgn(tra);
-        NtGdiDeleteObject(htra);
+        GreDeleteObject(htra);
         return;
     }
     htrb = trb->BaseObject.hHmgr;
@@ -1751,8 +1751,8 @@ REGION_XorRegion(
     REGION_UnlockRgn(tra);
     REGION_UnlockRgn(trb);
 
-    NtGdiDeleteObject(htra);
-    NtGdiDeleteObject(htrb);
+    GreDeleteObject(htra);
+    GreDeleteObject(htrb);
     return;
 }
 
@@ -2577,7 +2577,7 @@ NtGdiExtCreateRegion(
     {
         SetLastWin32Error(ERROR_INVALID_PARAMETER);
         REGION_UnlockRgn(Region);
-        NtGdiDeleteObject(hRgn);
+        GreDeleteObject(hRgn);
         return NULL;
     }
 
@@ -2639,13 +2639,13 @@ NtGdiFrameRgn(
     }
     if (!REGION_CreateFrameRgn(FrameRgn, hRgn, Width, Height))
     {
-        NtGdiDeleteObject(FrameRgn);
+        GreDeleteObject(FrameRgn);
         return FALSE;
     }
 
     Ret = NtGdiFillRgn(hDC, FrameRgn, hBrush);
 
-    NtGdiDeleteObject(FrameRgn);
+    GreDeleteObject(FrameRgn);
     return Ret;
 }
 
@@ -2918,7 +2918,7 @@ IntGdiPaintRgn(
     if (!REGION_LPTODP(dc, tmpVisRgn, hRgn) || 
          NtGdiOffsetRgn(tmpVisRgn, dc->ptlDCOrig.x, dc->ptlDCOrig.y) == ERROR)
     {
-        NtGdiDeleteObject(tmpVisRgn);
+        GreDeleteObject(tmpVisRgn);
         return FALSE;
     }
 
@@ -2927,7 +2927,7 @@ IntGdiPaintRgn(
     visrgn = REGION_LockRgn(tmpVisRgn);
     if (visrgn == NULL)
     {
-        NtGdiDeleteObject(tmpVisRgn);
+        GreDeleteObject(tmpVisRgn);
         return FALSE;
     }
 
@@ -2953,7 +2953,7 @@ IntGdiPaintRgn(
     SURFACE_UnlockSurface(psurf);
     BRUSH_UnlockBrush(pbrush);
     REGION_UnlockRgn(visrgn);
-    NtGdiDeleteObject(tmpVisRgn);
+    GreDeleteObject(tmpVisRgn);
 
     // Fill the region
     return TRUE;
@@ -3708,7 +3708,7 @@ IntCreatePolyPolygonRgn(
         total += Count[poly];
     if (! (pETEs = ExAllocatePoolWithTag(PagedPool, sizeof(EdgeTableEntry) * total, TAG_REGION)) )
     {
-        NtGdiDeleteObject(hrgn);
+        GreDeleteObject(hrgn);
         return 0;
     }
     pts = FirstPtBlock.pts;
@@ -3812,7 +3812,7 @@ IntCreatePolyPolygonRgn(
                         {
                             DPRINT1("Can't alloc tPB\n");
                             ExFreePoolWithTag(pETEs, TAG_REGION);
-                            NtGdiDeleteObject(hrgn);
+                            GreDeleteObject(hrgn);
                             return 0;
                         }
                         curPtBlock->next = tmpPtBlock;

@@ -76,7 +76,7 @@ IntGdiCreateBitmap(
     psurfBmp = SURFACE_LockSurface(hBitmap);
     if (psurfBmp == NULL)
     {
-        NtGdiDeleteObject(hBitmap);
+        GreDeleteObject(hBitmap);
         return NULL;
     }
 
@@ -428,7 +428,7 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
                         SURFACE_UnlockSurface(psurf);
                     }
                 }
-                NtGdiDeleteObject(hBmpTmp);
+                GreDeleteObject(hBmpTmp);
             }
             NtGdiDeleteObjectApp(hDCTmp);
         }
@@ -667,13 +667,13 @@ GdiSetPixelV(
     OldBrush = NtGdiSelectBrush(hDC, hbrush);
     if (OldBrush == NULL)
     {
-        NtGdiDeleteObject(hbrush);
+        GreDeleteObject(hbrush);
         return(FALSE);
     }
 
     NtGdiPatBlt(hDC, X, Y, 1, 1, PATCOPY);
     NtGdiSelectBrush(hDC, OldBrush);
-    NtGdiDeleteObject(hbrush);
+    GreDeleteObject(hbrush);
 
     return TRUE;
 }
@@ -801,7 +801,7 @@ BITMAP_CopyBitmap(HBITMAP hBitmap)
             {
                 GDIOBJ_UnlockObjByPtr((POBJ)resBitmap);
                 GDIOBJ_UnlockObjByPtr((POBJ)Bitmap);
-                NtGdiDeleteObject(res);
+                GreDeleteObject(res);
                 return 0;
             }
             IntGetBitmapBits(Bitmap, bm.bmWidthBytes * abs(bm.bmHeight), buf);
@@ -812,7 +812,7 @@ BITMAP_CopyBitmap(HBITMAP hBitmap)
         }
         else
         {
-            NtGdiDeleteObject(res);
+            GreDeleteObject(res);
             res = NULL;
         }
     }
@@ -1025,7 +1025,7 @@ NtGdiSelectBitmap(
     if (hVisRgn)
     {
         GdiSelectVisRgn(hDC, hVisRgn);
-        NtGdiDeleteObject(hVisRgn);
+        GreDeleteObject(hVisRgn);
     }
 
     return hOrgBmp;

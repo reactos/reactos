@@ -470,13 +470,13 @@ IntDestroyCurIconObject(PWINSTATION_OBJECT WinSta, PCURICON_OBJECT CurIcon, BOOL
    if(bmpMask)
    {
       GDIOBJ_SetOwnership(bmpMask, PsGetCurrentProcess());
-      NtGdiDeleteObject(bmpMask);
+      GreDeleteObject(bmpMask);
       CurIcon->IconInfo.hbmMask = NULL;
    }
    if(bmpColor)
    {
       GDIOBJ_SetOwnership(bmpColor, PsGetCurrentProcess());
-      NtGdiDeleteObject(bmpColor);
+      GreDeleteObject(bmpColor);
       CurIcon->IconInfo.hbmColor = NULL;
    }
 
@@ -1152,11 +1152,11 @@ NtUserSetCursorContents(
    /* Delete old bitmaps */
    if (CurIcon->IconInfo.hbmColor != IconInfo.hbmColor)
    {
-      NtGdiDeleteObject(CurIcon->IconInfo.hbmColor);
+      GreDeleteObject(CurIcon->IconInfo.hbmColor);
    }
    if (CurIcon->IconInfo.hbmMask != IconInfo.hbmMask)
    {
-      NtGdiDeleteObject(CurIcon->IconInfo.hbmMask);
+      GreDeleteObject(CurIcon->IconInfo.hbmMask);
    }
 
    /* Copy new IconInfo field */
@@ -1683,7 +1683,7 @@ cleanup:
    {
       if(hOldOffBmp) NtGdiSelectBitmap(hdcOff, hOldOffBmp);
       if(hOldOffBrush) NtGdiSelectBrush(hdcOff, hOldOffBrush);
-      if(hbmOff) NtGdiDeleteObject(hbmOff);
+      if(hbmOff) GreDeleteObject(hbmOff);
       if(hdcOff) NtGdiDeleteObjectApp(hdcOff);
    }
 

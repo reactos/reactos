@@ -43,7 +43,7 @@ BRUSH_Cleanup(PVOID ObjectBody)
   {
     ASSERT(pbrush->hbmPattern);
     GDIOBJ_SetOwnership(pbrush->hbmPattern, PsGetCurrentProcess());
-    NtGdiDeleteObject(pbrush->hbmPattern);
+    GreDeleteObject(pbrush->hbmPattern);
   }
 
   /* Free the kmode styles array of EXTPENS */
@@ -346,7 +346,7 @@ IntGdiCreateDIBBrush(
    pbrush = BRUSH_AllocBrushWithHandle();
    if (pbrush == NULL)
    {
-      NtGdiDeleteObject(hPattern);
+      GreDeleteObject(hPattern);
       SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
       return NULL;
    }
@@ -387,7 +387,7 @@ IntGdiCreateHatchBrush(
    pbrush = BRUSH_AllocBrushWithHandle();
    if (pbrush == NULL)
    {
-      NtGdiDeleteObject(hPattern);
+      GreDeleteObject(hPattern);
       SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
       return NULL;
    }
@@ -422,7 +422,7 @@ IntGdiCreatePatternBrush(
    pbrush = BRUSH_AllocBrushWithHandle();
    if (pbrush == NULL)
    {
-      NtGdiDeleteObject(hPattern);
+      GreDeleteObject(hPattern);
       SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
       return NULL;
    }

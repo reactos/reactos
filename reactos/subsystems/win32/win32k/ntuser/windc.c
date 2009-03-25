@@ -176,7 +176,7 @@ DceDeleteClipRgn(DCE* Dce)
    }
    else if (Dce->hClipRgn != NULL)
    {
-      NtGdiDeleteObject(Dce->hClipRgn);
+      GreDeleteObject(Dce->hClipRgn);
    }
 
    Dce->hClipRgn = NULL;
@@ -290,7 +290,7 @@ noparent:
       {
          if(hRgnVisible != NULL)
          {
-            NtGdiDeleteObject(hRgnVisible);
+            GreDeleteObject(hRgnVisible);
          }
          hRgnVisible = NtGdiCreateRectRgn(0, 0, 0, 0);
       }
@@ -311,7 +311,7 @@ noparent:
 
    if (hRgnVisible != NULL)
    {
-      NtGdiDeleteObject(hRgnVisible);
+      GreDeleteObject(hRgnVisible);
    }
 }
 
@@ -519,7 +519,7 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
    if (!(Flags & (DCX_EXCLUDERGN | DCX_INTERSECTRGN)) && ClipRegion)
    {
       if (!(Flags & DCX_KEEPCLIPRGN))
-         NtGdiDeleteObject(ClipRegion);
+         GreDeleteObject(ClipRegion);
       ClipRegion = NULL;
    }
 
@@ -609,7 +609,7 @@ DceFreeDCE(PDCE pdce, BOOLEAN Force)
 
   if (pdce->hClipRgn && ! (pdce->DCXFlags & DCX_KEEPCLIPRGN))
   {
-      NtGdiDeleteObject(pdce->hClipRgn);
+      GreDeleteObject(pdce->hClipRgn);
   }
 
   RemoveEntryList(&pdce->List);

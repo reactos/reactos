@@ -1095,7 +1095,7 @@ NtGdiStretchDIBitsInternal(
 
    NtGdiDeleteObjectApp(hdcMem);
 
-   NtGdiDeleteObject(hBitmap);
+   GreDeleteObject(hBitmap);
 
    return SrcHeight;
 }
@@ -1476,7 +1476,7 @@ DIB_CreateDIBSection(
             ExFreePoolWithTag(lpRGB, TAG_COLORMAP);
         }
         SetLastWin32Error(ERROR_INVALID_HANDLE);
-        NtGdiDeleteObject(bmp);
+        GreDeleteObject(bmp);
         return NULL;
     }
 

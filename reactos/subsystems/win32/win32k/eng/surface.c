@@ -132,7 +132,7 @@ SURFACE_Cleanup(PVOID ObjectBody)
 
         if (psurf->hDIBPalette != NULL)
         {
-            NtGdiDeleteObject(psurf->hDIBPalette);
+            GreDeleteObject(psurf->hDIBPalette);
         }
     }
 

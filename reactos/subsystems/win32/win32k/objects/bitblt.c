@@ -703,8 +703,8 @@ NtGdiMaskBlt (
     NtGdiSelectBitmap(hDC2, hOldBitmap3);
 
     /* 6. delete all temp objects */
-    NtGdiDeleteObject(hBitmap2);
-    NtGdiDeleteObject(hBitmap3);
+    GreDeleteObject(hBitmap2);
+    GreDeleteObject(hBitmap3);
 
     NtGdiDeleteObjectApp(hDC1);
     NtGdiDeleteObjectApp(hDC2);

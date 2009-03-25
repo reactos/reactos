@@ -108,7 +108,7 @@ int FASTCALL GdiExtSelectClipRgn(PDC dc,
     {
       if (dc->rosdc.hClipRgn != NULL)
       {
-        NtGdiDeleteObject(dc->rosdc.hClipRgn);
+        GreDeleteObject(dc->rosdc.hClipRgn);
         dc->rosdc.hClipRgn = NULL;
         retval = NULLREGION;
       }
@@ -265,7 +265,7 @@ int APIENTRY NtGdiExcludeClipRect(HDC  hDC,
       {
          Result = NtGdiCombineRgn(dc->rosdc.hClipRgn, dc->rosdc.hClipRgn, NewRgn, RGN_DIFF);
       }
-      NtGdiDeleteObject(NewRgn);
+      GreDeleteObject(NewRgn);
    }
    if (Result != ERROR)
       CLIPPING_UpdateGCRegion(dc);
@@ -315,7 +315,7 @@ int APIENTRY NtGdiIntersectClipRect(HDC  hDC,
    else
    {
       Result = NtGdiCombineRgn(dc->rosdc.hClipRgn, dc->rosdc.hClipRgn, NewRgn, RGN_AND);
-      NtGdiDeleteObject(NewRgn);
+      GreDeleteObject(NewRgn);
    }
    if (Result != ERROR)
       CLIPPING_UpdateGCRegion(dc);

@@ -376,7 +376,7 @@ IntSystemParametersInfo(
                      if(hOldBitmap != NULL)
                      {
                         /* delete the old wallpaper */
-                        NtGdiDeleteObject(hOldBitmap);
+                        GreDeleteObject(hOldBitmap);
                      }
 
                      /* Set the style */
