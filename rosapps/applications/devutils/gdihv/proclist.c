@@ -70,7 +70,16 @@ ProcessList_Update(HWND hListCtrl)
 	item.pszText = L"<deleted>";
 	(void)ListView_InsertItem(hListCtrl, &item);
 	item.pszText = strText;
-	wsprintf(strText, L"%#08x",1);
+	wsprintf(strText, L"%#08x", 1);
+	ListView_SetItemText(hListCtrl, 1, 1, strText);
+
+	/* Insert "all" */
+	item.iItem = 2;
+	item.lParam = 2;
+	item.pszText = L"<all>";
+	(void)ListView_InsertItem(hListCtrl, &item);
+	item.pszText = strText;
+	wsprintf(strText, L"%#08x", 2);
 	ListView_SetItemText(hListCtrl, 1, 1, strText);
 
 	if (!EnumProcesses(ProcessIds, sizeof(ProcessIds), &BytesReturned ))
