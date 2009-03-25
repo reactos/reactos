@@ -322,7 +322,7 @@
 @ stdcall GetConsoleMode(long ptr)
 @ stdcall GetConsoleNlsMode(long ptr)
 @ stdcall GetConsoleOutputCP()
-@ stub GetConsoleProcess # missing in XP SP3
+@ stub GetConsoleProcessList # missing in XP SP3
 @ stdcall GetConsoleScreenBufferInfo(long ptr)
 @ stdcall GetConsoleSelectionInfo(ptr)
 @ stdcall GetConsoleTitleA(ptr long)
