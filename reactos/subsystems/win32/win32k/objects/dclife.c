@@ -665,3 +665,34 @@ NtGdiDeleteObjectApp(HANDLE DCHandle)
     return IntGdiDeleteDC(DCHandle, FALSE);
 }
 
+BOOL
+APIENTRY
+NewNtGdiDeleteObjectApp(HANDLE DCHandle)
+{
+  GDIOBJTYPE ObjType;
+
+  if (GDI_HANDLE_IS_STOCKOBJ(DCHandle)) return TRUE;
+
+  ObjType = GDI_HANDLE_GET_TYPE(DCHandle) >> GDI_ENTRY_UPPER_SHIFT;
+
+  if (GreGetObjectOwner( DCHandle, ObjType))
+  {
+     switch(ObjType)
+     {
+        case GDIObjType_DC_TYPE:
+          return IntGdiDeleteDC(DCHandle, FALSE);
+
+        case GDIObjType_RGN_TYPE:
+        case GDIObjType_SURF_TYPE:
+        case GDIObjType_PAL_TYPE:
+        case GDIObjType_LFONT_TYPE:
+        case GDIObjType_BRUSH_TYPE:
+          return NtGdiDeleteObject((HGDIOBJ) DCHandle);
+
+        default:
+          return FALSE; 
+     }
+  }
+  return (DCHandle != NULL);
+}
+

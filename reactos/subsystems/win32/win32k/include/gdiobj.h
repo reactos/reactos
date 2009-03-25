@@ -121,4 +121,6 @@ GDIOBJ_IncrementShareCount(POBJ Object)
 }
 #endif
 
+INT FASTCALL GreGetObjectOwner(HGDIOBJ, GDIOBJTYPE);
+
 #endif

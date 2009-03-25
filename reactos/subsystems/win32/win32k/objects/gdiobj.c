@@ -1608,6 +1608,26 @@ IntGdiSetDCOwnerEx( HDC hDC, DWORD OwnerMask, BOOL NoSetBrush)
   return TRUE;
 }
 
+INT
+FASTCALL
+GreGetObjectOwner(HGDIOBJ Handle, GDIOBJTYPE ObjType)
+{
+  INT Ret = GDI_OBJ_HMGR_RESTRICTED;
+
+  if ( GDI_HANDLE_GET_INDEX(Handle) < GDI_HANDLE_COUNT )
+  {
+     PGDI_TABLE_ENTRY pEntry = &GdiHandleTable->Entries[GDI_HANDLE_GET_INDEX(Handle)];
+
+     if (pEntry->ObjectType == ObjType)
+     {
+        if (pEntry->FullUnique == (GDI_HANDLE_GET_UPPER(Handle) >> GDI_ENTRY_UPPER_SHIFT))
+           Ret = pEntry->ProcessId & ~1;
+     }
+  }
+  return Ret;
+}
+
+
 W32KAPI
 HANDLE
 APIENTRY
