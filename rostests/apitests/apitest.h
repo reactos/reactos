@@ -40,7 +40,7 @@ typedef struct tagTEST
 		if (x)\
 		{\
 			(pti->passed)++;\
-			printf("non-rtest succeeded in %s:%d (%s)\n", __FILE__, __LINE__, #x);\
+			printf("%s:%d: non-rtest succeeded (%s)\n", __FILE__, __LINE__, #x);\
 		} else {\
 			(pti->failed)++;\
 		} \
@@ -52,7 +52,30 @@ typedef struct tagTEST
 			(pti->passed)++;\
 		} else {\
 			(pti->failed)++;\
-			printf("test failed in %s:%d (%s)\n", __FILE__, __LINE__, #x);\
+			printf("%s:%d: test failed (%s)\n", __FILE__, __LINE__, #x);\
+		} \
+	}
+
+#define TESTX(x, format, ...) \
+	if (pti->bRegress) \
+	{ \
+		if (x)\
+		{\
+			(pti->passed)++;\
+			printf("%s:%d: non-rtest succeeded (%s)\n", __FILE__, __LINE__, #x);\
+		} else {\
+			(pti->failed)++;\
+		} \
+	} \
+	else \
+	{ \
+		if (x)\
+		{\
+			(pti->passed)++;\
+		} else {\
+			(pti->failed)++;\
+			printf("%s:%d: test failed (%s) ", __FILE__, __LINE__, #x);\
+			printf(format, __VA_ARGS__); \
 		} \
 	}
 
