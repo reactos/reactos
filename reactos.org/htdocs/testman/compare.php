@@ -213,7 +213,7 @@
 			
 			// Check whether there are any changes within the test results of several runs
 			CheckIfChanged($changed, $temp_totaltests, $result_row["count"]);
-			CheckIfChanged($changed, $temp_failedtests, $result_row["failedtests"]);
+			CheckIfChanged($changed, $temp_failedtests, $result_row["failures"]);
 			CheckIfChanged($changed, $temp_todotests, $result_row["todo"]);
 			CheckIfChanged($changed, $temp_skippedtests, $result_row["skipped"]);
 			
@@ -223,9 +223,9 @@
 				echo '<tr>';
 				printf('<td colspan="3" title="%s" class="totaltests">%s <span class="diff">%s</span></td>', $testman_langres["totaltests"], GetTotalTestsString($result_row["count"]), GetDifference($result_row, $prev_result_row, "count"));
 				echo '</tr><tr>';
-				printf('<td title="%s" class="failedtests">%d <span class="diff">%s</span></td>', $testman_langres["failedtests"], $result_row["failed"], GetDifference($result_row, $prev_result_row, "failedtests"));
-				printf('<td title="%s" class="todotests">%d <span class="diff">%s</span></td>', $testman_langres["todotests"], $result_row["todo"], GetDifference($result_row, $prev_result_row, "todotests"));
-				printf('<td title="%s" class="skippedtests">%d <span class="diff">%s</span></td>', $testman_langres["skippedtests"], $result_row["skipped"], GetDifference($result_row, $prev_result_row, "skippedtests"));
+				printf('<td title="%s" class="failedtests">%d <span class="diff">%s</span></td>', $testman_langres["failedtests"], $result_row["failures"], GetDifference($result_row, $prev_result_row, "failures"));
+				printf('<td title="%s" class="todotests">%d <span class="diff">%s</span></td>', $testman_langres["todotests"], $result_row["todo"], GetDifference($result_row, $prev_result_row, "todo"));
+				printf('<td title="%s" class="skippedtests">%d <span class="diff">%s</span></td>', $testman_langres["skippedtests"], $result_row["skipped"], GetDifference($result_row, $prev_result_row, "skipped"));
 				echo '</tr></table>';
 			}
 			else
