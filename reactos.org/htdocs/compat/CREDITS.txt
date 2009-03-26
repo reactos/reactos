@@ -1,0 +1,4 @@
+ReactOS Support Database is available thanks to the work of
+
+
+Klemens Friedl <frik85@reactos.org>
