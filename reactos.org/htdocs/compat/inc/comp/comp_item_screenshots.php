@@ -34,13 +34,10 @@
 	}
 
 
-	$query_page = mysql_query("SELECT * 
-								FROM `rsdb_item_comp` 
-								WHERE `comp_visible` = '1'
-								AND `comp_id` = " . $RSDB_SET_item . "
-								ORDER BY `comp_name` ASC") ;
-	
-	$result_page = mysql_fetch_array($query_page);		
+  $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp WHERE comp_visible = '1' AND comp_id = :comp_id ORDER BY comp_name ASC");
+  $stmt->bindParam('comp_id',$RSDB_SET_item,PDO::PARAM_STR);
+  $stmt->execute();
+	$result_page = $stmt->fetch(PDO::FETCH_ASSOC);
 	
 if ($result_page['comp_id']) {
 	echo "<h2>".$result_page['comp_name'] ." [". "ReactOS ".@show_osversion($result_page['comp_osversion']) ."]</h2>"; 
@@ -67,12 +64,10 @@ if ($RSDB_SET_entry == "" || $RSDB_SET_entry == 0) {
 <?php
 	$roscms_TEMP_counter = 0;
 	
-	$query_screenshots = mysql_query("SELECT * 
-										FROM `rsdb_object_media` 
-										WHERE `media_groupid` = ". mysql_escape_string($result_page['comp_media']) ."  
-										AND (( media_useful_vote_value / media_useful_vote_user) > 2 OR  media_useful_vote_user < 5)
-										ORDER BY `media_order` ASC") ;
-	while($result_screenshots= mysql_fetch_array($query_screenshots)) {
+	$stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_object_media WHERE media_groupid = :group_id AND (( media_useful_vote_value / media_useful_vote_user) > 2 OR  media_useful_vote_user < 5) ORDER BY media_order ASC");
+  $stmt->bindParam('group_id',$result_page['comp_media'],PDO::PARAM_STR);
+  $stmt->execute();
+	while($result_screenshots= $stmt->fetch(PDO::FETCH_ASSOC)) {
 		$roscms_TEMP_counter++;
 		if ($roscms_TEMP_counter == 1) {
 			echo "<tr>";
@@ -121,11 +116,10 @@ echo "</table>";
 }
 else {
 	// Show one picture in max resolution:
-	$query_screenshots = mysql_query("SELECT * 
-										FROM `rsdb_object_media` 
-										WHERE `media_id` = ". mysql_escape_string($RSDB_SET_entry) ."  
-										LIMIT 1 ;") ;
-	$result_screenshots= mysql_fetch_array($query_screenshots);
+  $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_object_media WHERE media_id = :media_id LIMIT 1") ;
+  $stmt->bindParam('media_id',$RSDB_SET_entry,PDO::PARAM_STR);
+  $stmt->execute();
+	$result_screenshots= $stmt->fetch(PDO::FETCH_ASSOC);
 	echo '<p align="center"><b><a href="'.$RSDB_intern_link_item_item2.'screens">Show all screenshots</a></b></p>';
 	echo '<h5>'.htmlentities($result_screenshots["media_description"]).'&nbsp;</h5>';
 	echo '<p><img src="media/files/'.$result_screenshots["media_filetype"].'/'.urlencode($result_screenshots["media_file"]).'" border="0" alt="';

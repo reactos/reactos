@@ -114,9 +114,8 @@
 		/* Delete an existing cookie (if any) which uses the full hostname */
 		setcookie('roscms_usrset_lang', '', -3600);
 		/* Add cookie using just the domain name */
-		require_once('inc/utils.php');
-		setcookie('roscms_usrset_lang', $rpm_lang, time() + 5 * 30 * 24 * 3600,
-				  '/', cookie_domain());
+		Cookie::write('roscms_usrset_lang', $rpm_lang, time() + 5 * 30 * 24 * 3600,
+				  '/');
 	}
 		
 /* This HACK is only to for the first few weeks; when more language files are available, simply delete the following line */

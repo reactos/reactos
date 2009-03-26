@@ -60,9 +60,9 @@ function create_head($page_title, $logo, $RSDB_langres)
 	<meta name="Content-language" content="<?php echo $RSDB_langres['lang_code']; ?>" />
 	<meta name="Robots" content="index,follow" />
 	<link rel="SHORTCUT ICON" href="../favicon.ico" />
-	<link href="<?php echo $RSDB_intern_path_server.$RSDB_intern_path; ?>style.css" type="text/css" rel="stylesheet" />
-	<script src="<?php echo $RSDB_intern_path_server.$RSDB_intern_path; ?>smoothscroll.js" language="javascript"></script>
-	<script src="<?php echo $RSDB_intern_path_server.$RSDB_intern_path; ?>search.js" language="javascript"></script>
+	<link href="<?php echo $RSDB_intern_path_server.$RSDB_intern_path; ?>css/style.css" type="text/css" rel="stylesheet" />
+	<script src="<?php echo $RSDB_intern_path_server.$RSDB_intern_path; ?>js/smoothscroll.js" language="javascript"></script>
+	<script src="<?php echo $RSDB_intern_path_server.$RSDB_intern_path; ?>js/search.js" language="javascript"></script>
 	
 
 	<script>

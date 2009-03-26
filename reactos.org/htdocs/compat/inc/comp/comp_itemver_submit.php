@@ -34,13 +34,11 @@
 	}
 
 
-	$query_page_group = mysql_query("SELECT * 
-								FROM `rsdb_groups` 
-								WHERE `grpentr_visible` = '1'
-								AND `grpentr_id` = '" . mysql_escape_string($RSDB_SET_group) . "'
-								ORDER BY `grpentr_id` DESC LIMIT 1") ;
+  $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_id = :group_id ORDER BY grpentr_id DESC LIMIT 1");
+  $stmt->bindParam('group_id',$RSDB_SET_group,PDO::PARAM_STR);
+  $stmt->execute();
 	
-	$result_page_group = mysql_fetch_array($query_page_group);		
+	$result_page_group = $stmt->fetch(PDO::FETCH_ASSOC);
 
 ?>
 
@@ -124,21 +122,18 @@ else {
 	if (array_key_exists("sOSver", $_GET)) $RSDB_TEMP_sOSver=htmlspecialchars($_GET["sOSver"]);
 	if ($RSDB_TEMP_sApp != "" && $RSDB_TEMP_sOSver != "") {
 		if (is_num($RSDB_TEMP_sOSver)) {
-			$query_app_entry=mysql_query("SELECT * 
-												FROM `rsdb_item_comp` 
-												WHERE `comp_appversion` = '".mysql_real_escape_string($RSDB_TEMP_sApp)."'
-												AND `comp_visible` = '1'
-												AND `comp_groupid` = '".mysql_real_escape_string($RSDB_SET_group)."'
-												LIMIT 1 ;");	
-			$result_app_entry = mysql_fetch_array($query_app_entry);
+      $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp WHERE comp_appversion = :version AND comp_visible = '1' AND comp_groupid = :group_id LIMIT 1");
+      $stmt->bindParam('version',$RSDB_TEMP_sApp,PDO::PARAM_STR);
+      $stmt->bindParam('group_id',$RSDB_SET_group,PDO::PARAM_STR);
+      $stmt->execute();
+			$result_app_entry = $stmt->fetch(PDO::FETCH_ASSOC);
 			
-			$query_app_entry_checking=mysql_query("SELECT COUNT('comp_id')
-												FROM `rsdb_item_comp` 
-												WHERE `comp_appversion` = '".mysql_real_escape_string($RSDB_TEMP_sApp)."'
-												AND `comp_visible` = '1'
-												AND `comp_groupid` = '".mysql_real_escape_string($RSDB_SET_group)."'
-												AND `comp_osversion` = '".mysql_real_escape_string($RSDB_TEMP_sOSver)."' ;");	
-			$result_app_entry_checking = mysql_fetch_array($query_app_entry_checking);
+      $stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_item_comp WHERE comp_appversion = :appversion AND comp_visible = '1' AND comp_groupid = :group_id AND comp_osversion = :oversion");
+      $stmt->bindParam('appversion',$RSDB_TEMP_sApp,PDO::PARAM_STR);
+      $stmt->bindParam('group_id',$RSDB_SET_group,PDO::PARAM_STR);
+      $stmt->bindParam('osversion',$RSDB_TEMP_sOSver,PDO::PARAM_STR);
+      $stmt->execute();
+			$result_app_entry_checking = $stmt->fetch();
 			
 			if ($result_app_entry_checking[0] == 0) {
 				$RSDB_TEMP_txtappver = substr($result_app_entry['comp_name'], strlen($result_page_group['grpentr_name'])+1 );
@@ -174,12 +169,11 @@ else {
 
 	if ($RSDB_TEMP_subok != "okay" || $RSDB_TEMP_SUBMIT_valid != true || $RSDB_TEMP_postgroupid != $RSDB_SET_group) {
 	
-			$query_page_vendor = mysql_query("SELECT * 
-										FROM `rsdb_item_vendor` 
-										WHERE `vendor_id` = '" . mysql_escape_string($result_page_group['grpentr_vendor']) . "'
-										ORDER BY `vendor_id` DESC LIMIT 1") ;
+      $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_vendor WHERE vendor_id = :vendor_id ORDER BY vendor_id DESC LIMIT 1");
+      $stmt->bindParam('vendor_id',$result_page_group['grpentr_vendor'],PDO::PARAM_STR);
+      $stmt->execute();
 			
-			$result_page_vendor = mysql_fetch_array($query_page_vendor);		
+			$result_page_vendor = $stmt->fetch(PDO::FETCH_ASSOC);
 ?>
 <noscript>
 	Sorry, currently the submit function is only usable with ECMAScript enabled! The noscript methode will be available soon!
@@ -208,11 +202,10 @@ else {
               <p><font size="2" face="Verdana, Arial, Helvetica, sans-serif">This Submit new &quot;<?php echo htmlentities($result_page_group['grpentr_name']); ?>&quot; version Wizard<sup>&dagger;</sup> wizard will guide you through the submission process. </font><font size="2" face="Verdana, Arial, Helvetica, sans-serif">The Compatibility  Database is for <i><b>release versions</b></i> of ReactOS, use <a href="http://www.reactos.org/bugzilla/">Bugzilla</a> for development builds<sup>&Dagger;</sup>. [<a href="http://www.reactos.org/wiki/index.php/File_Bugs">more</a>]</font></p>              
 
 	<?php
-		$query_date_entry_records=mysql_query("SELECT COUNT('comp_id')
-											FROM `rsdb_item_comp`
-											WHERE `comp_visible` = '1' 
-											AND `comp_groupid` = '". mysql_escape_string($RSDB_SET_group) ."' ;");	
-		$result_date_entry_records = mysql_fetch_array($query_date_entry_records);
+    $stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_item_comp WHERE comp_visible = '1' AND comp_groupid = :group_id");
+    $stmt->bindParam('group_id',$RSDB_SET_group,PDO::PARAM_STR);
+    $stmt->execute();
+		$result_date_entry_records = $stmt->fetch();
 		if ($result_date_entry_records[0] != 0) {
 	?>
 	<p>&nbsp;</p>
@@ -222,12 +215,9 @@ else {
       <tr bgcolor="#5984C3">
         <td width="100" bgcolor="#5984C3"><div align="center"><font color="#FFFFFF" face="Arial, Helvetica, sans-serif"><strong>ReactOS:</strong></font></div></td>
 	<?php
-		$query_appnames=mysql_query("SELECT * 
-										FROM `rsdb_object_osversions` 
-										WHERE `ver_visible` = '1'
-										ORDER BY `ver_value` DESC
-										LIMIT 0, 6  ; ;");	
-		while($result_appnames = mysql_fetch_array($query_appnames)) {
+    $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_object_osversions WHERE ver_visible = '1' ORDER BY ver_value DESC LIMIT 6");
+    $stmt->execute();
+		while($result_appnames = $stmt->fetch(PDO::FETCH_ASSOC)) {
 	?>
 	    <td width="100" bgcolor="#5984C3"><div align="center"><font color="#FFFFFF" face="Arial, Helvetica, sans-serif"><strong><?php echo $result_appnames['ver_name']; ?></strong></font></div></td>
 	<?php
@@ -238,30 +228,11 @@ else {
 		$cellcolor1="#E2E2E2";
 		$cellcolor2="#EEEEEE";
 		$cellcolorcounter="0";
-
-	/*$temp_result=0;
-	$query_appsum=mysql_query("SELECT DISTINCT (
-											`comp_appversion` 
-											)
-										FROM `rsdb_item_comp` 
-										WHERE `comp_visible` = '1' 
-										AND `comp_groupid` = '". mysql_escape_string($RSDB_SET_group) ."'
-										GROUP BY `comp_appversion` 
-										ORDER BY `comp_appversion` ASC ;");	
-	while($result_appsum = mysql_fetch_array($query_appsum)) {
-		$temp_result++;
-	}
-	echo $temp_result;*/
  
-	$query_appsum=mysql_query("SELECT DISTINCT (
-											`comp_appversion` 
-											), `comp_name`, `comp_osversion`
-										FROM `rsdb_item_comp` 
-										WHERE `comp_visible` = '1' 
-										AND `comp_groupid` = '". mysql_escape_string($RSDB_SET_group) ."'
-										GROUP BY `comp_appversion` 
-										ORDER BY `comp_appversion` ASC ;");	
-	while($result_appsum = mysql_fetch_array($query_appsum)) {
+  $stmt=CDBConnection::getInstance()->prepare("SELECT DISTINCT (comp_appversion), comp_name, comp_osversion FROM rsdb_item_comp WHERE comp_visible = '1' AND comp_groupid = :group_id GROUP BY comp_appversion ORDER BY comp_appversion ASC");
+  $stmt->bindParam('group_id',$RSDB_SET_group,PDO::PARAM_STR);
+  $stmt->execute();
+	while($result_appsum = $stmt->fetch(PDO::FETCH_ASSOC)) {
 ?>
       <tr bgcolor="<?php
 									$cellcolorcounter++;
@@ -282,21 +253,15 @@ else {
 			</font></div>
 		</td>
 		<?php
-			$query_osvers=mysql_query("SELECT * 
-										FROM `rsdb_object_osversions` 
-										WHERE `ver_visible` = '1'
-										ORDER BY `ver_value` DESC
-										LIMIT 0, 6  ;");	
-			while($result_osvers = mysql_fetch_array($query_osvers)) {
-					$query_appvers=mysql_query("SELECT * 
-													FROM `rsdb_item_comp` 
-													WHERE `comp_visible` = '1'
-													AND `comp_groupid` = '". mysql_escape_string($RSDB_SET_group) ."'
-													AND `comp_osversion` = '". mysql_escape_string($result_osvers['ver_value']) ."'
-													AND `comp_appversion` = '". mysql_escape_string($result_appsum['comp_appversion']) ."'
-													GROUP BY `comp_appversion` 
-													ORDER BY `comp_appversion` ASC ;");	
-					$result_appvers = mysql_fetch_array($query_appvers);
+      $stmt_osv=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_object_osversions WHERE ver_visible = '1' ORDER BY ver_value DESC LIMIT 6");
+      $stmt_osv->execute();
+			while($result_osvers = $stmt_osv->fetch(PDO::FETCH_ASSOC)) {
+        $stmt_appv=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp WHERE comp_visible = '1' AND comp_groupid = :group_id AND comp_osversion = :osversion AND comp_appversion = :appversion GROUP BY comp_appversion ORDER BY comp_appversion ASC");
+        $stmt_appv->bindParam('group_id',$RSDB_SET_group,PDO::PARAM_STR);
+        $stmt_appv->bindParam('osversion',$result_osvers['ver_value'],PDO::PARAM_STR);
+        $stmt_appv->bindParam('appversion',$result_appsum['comp_appversion'],PDO::PARAM_STR);
+        $stmt_appv->execute();
+					$result_appvers = $stmt_appv->fetch(PDO::FETCH_ASSOC);
 				if ($result_osvers['ver_value'] == $result_appvers['comp_osversion']) {
 		?>
         	<td>
@@ -304,11 +269,10 @@ else {
 				<?php
 
 
-					$query_apptests=mysql_query("SELECT COUNT('comp_id')
-														FROM `rsdb_item_comp_testresults` 
-														WHERE `test_comp_id` = '". mysql_escape_string($result_appvers['comp_id']) ."'
-														AND `test_visible` = '1' ;");	
-					$result_apptests = mysql_fetch_array($query_apptests);
+          $stmt_count=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_item_comp_testresults WHERE test_comp_id = :comp_id AND test_visible = '1'");
+          $stmt_count->bindParam('comp_id',$result_appvers['comp_id'],PDO::PARAM_STR);
+          $stmt_count->execute();
+					$result_apptests = $stmt_count->fetch();
 					if ($result_apptests[0] == 1) {
 						echo "<b><a href=\"". $RSDB_intern_link_item_comp.$result_appvers['comp_id']."&amp;item2=tests&amp;addbox=add\">1 report</a></b>";
 					}
@@ -409,11 +373,9 @@ else {
 					}
 				?>>Please select a version</option>
                         <?php
-					$query_osvers=mysql_query("SELECT * 
-												FROM `rsdb_object_osversions` 
-												WHERE `ver_visible` = '1'
-												ORDER BY `ver_value` DESC  ;");	
-					while($result_osvers = mysql_fetch_array($query_osvers)) {
+					$stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_object_osversions WHERE ver_visible = '1' ORDER BY ver_value DESC");
+          $stmt->execute();
+					while($result_osvers = $stmt->fetch(PDO::FETCH_ASSOC)) {
 						echo '<option value="'. $result_osvers['ver_value'] .'"';
 						if  (htmlentities($RSDB_TEMP_cboversion) == $result_osvers['ver_value']) {
 							echo ' selected';
@@ -553,35 +515,34 @@ else {
 	}
 	else {
 		
-		$query_app_entry_checking2=mysql_query("SELECT COUNT('comp_id')
-											FROM `rsdb_item_comp` 
-											WHERE `comp_name` = '".mysql_real_escape_string($RSDB_TEMP_postgroupname." ".$RSDB_TEMP_txtappver)."'
-											AND `comp_groupid` = '".mysql_real_escape_string($RSDB_SET_group)."'
-											AND `comp_osversion` = '".mysql_real_escape_string($RSDB_TEMP_cboversion)."' ;");	
-		$result_app_entry_checking2 = mysql_fetch_array($query_app_entry_checking2);
+    $stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_item_comp WHERE comp_name = :name AND comp_groupid = :group_id AND comp_osversion = :osversion");
+    $stmt->bindValue('name',$RSDB_TEMP_postgroupname." ".$RSDB_TEMP_txtappver,PDO::PARAM_STR);
+    $stmt->bindParam('group_id',$RSDB_SET_group,PDO::PARAM_STR);
+    $stmt->bindParam('osversion',$RSDB_TEMP_cboversion,PDO::PARAM_STR);
+    $stmt->execute();
+		$result_app_entry_checking2 = $stmt->fetch();
 		
 		if ($RSDB_TEMP_txtverint == "") {
 			$RSDB_TEMP_txtverint = "0";
 		}
 
 		if ($result_app_entry_checking2[0] == 0 && $RSDB_TEMP_subok == "okay" && $RSDB_TEMP_SUBMIT_valid == true && $RSDB_TEMP_postgroupid == $RSDB_SET_group) {
-			$report_submit="INSERT INTO `rsdb_item_comp` ( `comp_id` , `comp_name` , `comp_visible` , `comp_groupid` , `comp_appversion` , `comp_osversion` , `comp_description` , `comp_usrid` , `comp_date` ) 
-							VALUES ('', '".mysql_real_escape_string($RSDB_TEMP_postgroupname." ".$RSDB_TEMP_txtappver)."', '1', '".mysql_real_escape_string($RSDB_SET_group)."', '".mysql_real_escape_string($RSDB_TEMP_txtverint)."', '".mysql_real_escape_string($RSDB_TEMP_cboversion)."', '', '".mysql_real_escape_string($RSDB_intern_user_id)."', NOW() );";
-			$db_report_submit=mysql_query($report_submit);
+      $stmt=CDBConnection::getInstance()->prepare("INSERT INTO rsdb_item_comp ( comp_id, comp_name, comp_visible, comp_groupid, comp_appversion, comp_osversion, comp_description, comp_usrid, comp_date) VALUES ('', :name, '1', :group_id, :appversion, :osversion, '', :user_id, NOW() )");
+      $stmt->bindValue('name',$RSDB_TEMP_postgroupname." ".$RSDB_TEMP_txtappver,PDO::PARAM_STR);
+      $stmt->bindParam('group_id',$RSDB_SET_group,PDO::PARAM_STR);
+      $stmt->bindParam('appversion',$RSDB_TEMP_txtverint,PDO::PARAM_STR);
+      $stmt->bindParam('osversion',$RSDB_TEMP_cboversion,PDO::PARAM_STR);
+      $stmt->bindParam('user_id',$RSDB_intern_user_id,PDO::PARAM_STR);
+      $stmt->execute();
 			
-			$query_page = mysql_query("SELECT * 
-										FROM `rsdb_item_comp` 
-										WHERE `comp_visible` = '1'
-										AND `comp_name` = '" . mysql_real_escape_string($RSDB_TEMP_postgroupname." ".$RSDB_TEMP_txtappver) . "'
-										ORDER BY `comp_id` DESC LIMIT 1") ;
+      $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp WHERE comp_visible = '1' AND comp_name = :name ORDER BY comp_id DESC LIMIT 1");
+      $stmt->bindValue('name',$RSDB_TEMP_postgroupname." ".$RSDB_TEMP_txtappver,PDO::PARAM_STR);
+      $stmt->execute();
 			
-			$result_page = mysql_fetch_array($query_page);		
+			$result_page = $stmt->fetch();
 			
 			// Stats update:
-			$update_stats_entry = "UPDATE `rsdb_stats` SET
-									`stat_s_icomp` = (stat_s_icomp + 1) 
-									WHERE `stat_date` = '". date("Y-m-d") ."' LIMIT 1 ;";
-			mysql_query($update_stats_entry);
+      CDBConnection::getInstance()->exec("UPDATE rsdb_stats SET stat_s_icomp = (stat_s_icomp + 1) WHERE stat_date = '". date("Y-m-d") ."'");
 ?>
 	<table width="100%" border="0">
 		<tr>

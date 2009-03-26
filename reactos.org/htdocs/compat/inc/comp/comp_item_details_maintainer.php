@@ -35,21 +35,15 @@
 
 
 	if (usrfunc_IsModerator($RSDB_intern_user_id)) {
-	
-		$query_maintainer_group = mysql_query("SELECT * 
-									FROM `rsdb_item_comp` 
-									WHERE `comp_visible` = '1'
-									AND `comp_id` = '".mysql_real_escape_string($RSDB_SET_item)."'
-									LIMIT 1 ;") ;
-		$result_maintainer_item = mysql_fetch_array($query_maintainer_group);
+    $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp WHERE comp_visible = '1' AND comp_id = :comp_id LIMIT 1");
+    $stmt->bindParam('comp_id',$RSDB_SET_item,PDO::PARAM_STR);
+    $stmt->execute();
+		$result_maintainer_item = $stmt->fetch(PDO::FETCH_ASSOC);
 
-		$query_maintainer_group = mysql_query("SELECT * 
-									FROM `rsdb_groups` 
-									WHERE `grpentr_visible` = '1'
-									AND `grpentr_id` = '".mysql_real_escape_string($result_maintainer_item['comp_groupid'])."'
-									" . $RSDB_intern_code_db_rsdb_groups . "
-									LIMIT 1 ;") ;
-		$result_maintainer_group = mysql_fetch_array($query_maintainer_group);
+    $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_id = :group_id " . $RSDB_intern_code_db_rsdb_groups . " LIMIT 1");
+    $stmt->bindParam('group_id',$result_maintainer_item['comp_groupid'],PDO::PARAM_STR);
+    $stmt->execute();
+		$result_maintainer_group = $stmt->fetch(PDO::FETCH_ASSOC);
 
 
 
@@ -87,23 +81,21 @@
 		// Edit application group data:
 		if ($RSDB_TEMP_pmod == "ok" && $RSDB_SET_item != "" && $RSDB_TEMP_appn != "" && $RSDB_TEMP_apppr != "" && $RSDB_TEMP_appit != "" && $RSDB_TEMP_version != "" && usrfunc_IsModerator($RSDB_intern_user_id)) {
 
-			$query_maintainer_group2 = mysql_query("SELECT * 
-										FROM `rsdb_groups` 
-										WHERE `grpentr_visible` = '1'
-										AND `grpentr_id` = '".mysql_real_escape_string($RSDB_TEMP_appn)."'
-										" . $RSDB_intern_code_db_rsdb_groups . "
-										LIMIT 1 ;") ;
-			$result_maintainer_group2 = mysql_fetch_array($query_maintainer_group2);
+      $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_id = :group_id ".$RSDB_intern_code_db_rsdb_groups." LIMIT 1");
+      $stmt->bindParam('group_id',$RSDB_TEMP_appn,PDO::PARAM_STR);
+      $stmt->execute();
+			$result_maintainer_group2 = $stmt->fetch(PDO::FETCH_ASSOC);
 
 			// Update item entry:
-			$update_group_entry = "UPDATE `rsdb_item_comp` SET `comp_name` = '". mysql_real_escape_string($result_maintainer_group2['grpentr_name']." ".$RSDB_TEMP_apppr) ."',
-								`comp_appversion` = '". mysql_real_escape_string($RSDB_TEMP_appit) ."',
-								`comp_groupid` = '". mysql_real_escape_string($RSDB_TEMP_appn) ."',
-								`comp_description` = '". mysql_real_escape_string($RSDB_TEMP_appdesc) ."', 
-								`comp_infotext` = '". mysql_real_escape_string($RSDB_TEMP_appinfo) ."', 
-								`comp_osversion` = '". mysql_real_escape_string($RSDB_TEMP_version) ."' 
-								WHERE `comp_id` = '". mysql_real_escape_string($RSDB_SET_item) ."' LIMIT 1 ;";
-			mysql_query($update_group_entry);
+      $stmt=CDBConnection::getInstance()->prepare("UPDATE rsdb_item_comp SET comp_name = :new_name, comp_appversion = :new_appversion, comp_groupid = :new_groupid, comp_description = :new_description, comp_infotext = :new_infotext, comp_osversion = :new_osversion WHERE comp_id = :comp_id");
+      $stmt->bindValue('new_name',$result_maintainer_group2['grpentr_name']." ".$RSDB_TEMP_apppr,PDO::PARAM_STR);
+      $stmt->bindParam('new_appversion',$RSDB_TEMP_appit,PDO::PARAM_STR);
+      $stmt->bindParam('new_groupid',$RSDB_TEMP_appn,PDO::PARAM_STR);
+      $stmt->bindParam('new_description',$RSDB_TEMP_appdesc,PDO::PARAM_STR);
+      $stmt->bindParam('new_infotext',$RSDB_TEMP_appinfo,PDO::PARAM_STR);
+      $stmt->bindParam('new_osversion',$RSDB_TEMP_version,PDO::PARAM_STR);
+      $stmt->bindParam('comp_id',$RSDB_SET_item,PDO::PARAM_STR);
+      $stmt->execute();
 			
 			add_log_entry("low", "comp_item", "edit", "[App Item] Edit entry", @usrfunc_GetUsername($RSDB_intern_user_id)." changed the group data from: \n\nAppName: ".htmlentities($result_maintainer_item['comp_name'])." - ".$result_maintainer_item['comp_id']."\n\nDesc: ".htmlentities($result_maintainer_item['comp_description'])." \n\GroupID: ".$result_maintainer_item['comp_groupid']." \n\ReactOS version: ".$result_maintainer_item['comp_osversion']." \n\n\nTo: \n\nAppName: ".htmlentities($result_maintainer_group['grpentr_name']." ".$RSDB_TEMP_apppr)." - ".htmlentities($RSDB_TEMP_appn)."\n\nInternVersion: ".htmlentities($RSDB_TEMP_appit)." \n\nDesc: ".htmlentities($RSDB_TEMP_appdesc)." \n\nReactOS version: ".htmlentities($RSDB_TEMP_version), "0");
 			?>
@@ -115,15 +107,20 @@
 
 		// Special request:
 		if ($RSDB_TEMP_pmod == "ok" && $RSDB_TEMP_txtreq1 != "" && $RSDB_TEMP_txtreq2 != "" && usrfunc_IsModerator($RSDB_intern_user_id)) {
-			$report_submit="INSERT INTO `rsdb_logs` ( `log_id` , `log_date` , `log_usrid` , `log_usrip` , `log_level` , `log_action` , `log_title` , `log_description` , `log_category` , `log_badusr` , `log_referrer` , `log_browseragent` , `log_read` , `log_taskdone_usr` ) 
-							VALUES ('', NOW( ) , '".mysql_real_escape_string($RSDB_intern_user_id)."', '".mysql_escape_string($RSDB_ipaddr)."', 'low', 'request', '".mysql_escape_string($RSDB_TEMP_txtreq1)."', '".mysql_escape_string($RSDB_TEMP_txtreq2)."', 'user_moderator', '0', '".mysql_escape_string($RSDB_referrer)."', '".mysql_escape_string($RSDB_usragent)."', ';', '0');";
-			$db_report_submit=mysql_query($report_submit);
+      $stmt=CDBConnection::getInstance()->prepare("INSERT INTO rsdb_logs ( log_id , log_date , log_usrid , log_usrip , log_level , log_action , log_title , log_description , log_category , log_badusr , log_referrer , log_browseragent , log_read , log_taskdone_usr ) VALUES ('', NOW( ) , :user_id, :ip, 'low', 'request', :title, :description, 'user_moderator', '0', :referrer, :user_agend, ';', '0')");
+      $stmt->bindParam('user_id',$RSDB_intern_user_id,PDO::PARAM_STR);
+      $stmt->bindParam('ip',$RSDB_ipaddr,PDO::PARAM_STR);
+      $stmt->bindParam('title',$RSDB_TEMP_txtreq1,PDO::PARAM_STR);
+      $stmt->bindParam('description',$RSDB_TEMP_txtreq2,PDO::PARAM_STR);
+      $stmt->bindParam('referrer',$RSDB_referrer,PDO::PARAM_STR);
+      $stmt->bindParam('user_agent',$RSDB_usragent,PDO::PARAM_STR);
+      $stmt->execute();
 		}
 		// Report spam:
 		if ($RSDB_TEMP_pmod == "ok" && $RSDB_TEMP_txtspam != "" && usrfunc_IsModerator($RSDB_intern_user_id)) {
-			$update_log_entry = "UPDATE `rsdb_item_comp` SET
-									`comp_visible` = '3' WHERE `comp_id` = '". mysql_real_escape_string($RSDB_SET_item) ."' LIMIT 1 ;";
-			mysql_query($update_log_entry);
+			$stmt=CDBConnection::getInstance()->prepare("UPDATE rsdb_item_comp SET comp_visible = '3' WHERE comp_id = :comp_id");
+      $stmt->bindParam('comp_id',$RSDB_SET_item,PDO::PARAM_STR);
+      $stmt->execute();
 			add_log_entry("low", "comp_item", "report_spam", "[App Item] Spam/ads report", @usrfunc_GetUsername($RSDB_intern_user_id)." wrote: \n".htmlentities($RSDB_TEMP_txtspam)." \n\n\n\nUser: ".@usrfunc_GetUsername($result_maintainer_item['comp_usrid'])." - ".$result_maintainer_item['comp_usrid']."\n\nAppName: ".htmlentities($result_maintainer_item['comp_name'])." - ".$result_maintainer_item['comp_id']."\n\nDesc: ".htmlentities($result_maintainer_item['comp_description'])." \n\GroupID: ".$result_maintainer_item['comp_groupid']." \n\ReactOS version: ".$result_maintainer_item['comp_osversion'], $result_maintainer_item['comp_usrid']);
 		
 		}
@@ -137,9 +134,10 @@
 		if ($result_maintainer_item['comp_checked'] == "1" || $result_maintainer_item['comp_checked'] == "no") {
 			if ($RSDB_TEMP_pmod == "ok" && $RSDB_TEMP_verified == "done" && usrfunc_IsModerator($RSDB_intern_user_id)) {
 				echo "!";
-				$update_log_entry = "UPDATE `rsdb_item_comp` SET
-										`comp_checked` = '". mysql_real_escape_string($temp_verified) ."' WHERE `comp_id` = '". mysql_real_escape_string($RSDB_SET_item) ."' LIMIT 1 ;";
-				mysql_query($update_log_entry);
+        $stmt=CDBConnection::getInstance()->prepare("UPDATE rsdb_item_comp SET comp_checked = :checked WHERE comp_id = :comp_id ");
+        $stmt->bindParam('checked',$temp_verified,PDO::PARAM_STR);
+        $stmt->bindParam('comp_id',$RSDB_SET_item,PDO::PARAM_STR);
+        $stmt->execute();
 				add_log_entry("low", "comp_item", "verified", "[App Item] Verified", @usrfunc_GetUsername($RSDB_intern_user_id)." has verified the following app version: \n\n\n\nUser: ".@usrfunc_GetUsername($result_maintainer_item['comp_usrid'])." - ".$result_maintainer_item['comp_usrid']."\n\nAppName: ".htmlentities($result_maintainer_item['comp_name'])." - ".$result_maintainer_item['comp_id']."\n\nDesc: ".htmlentities($result_maintainer_item['comp_description'])." \n\GroupID: ".$result_maintainer_item['comp_groupid']." \n\ReactOS version: ".$result_maintainer_item['comp_osversion'], "0");
 			}
 		}
@@ -157,11 +155,8 @@
 				      <p><font size="2">Application name: 
 				        <select name="appn" id="appn">
                           <?php
-					$query_appn=mysql_query("SELECT * 
-												FROM `rsdb_groups` 
-												WHERE `grpentr_visible` = '1'
-												ORDER BY `grpentr_name` ASC  ;");	
-					while($result_appn = mysql_fetch_array($query_appn)) {
+          $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_groups WHERE grpentr_visible = '1' ORDER BY grpentr_name ASC");
+					while($result_appn = $stmt->fetch(PDO::FETCH_ASSOC)) {
 						echo '<option value="'. $result_appn['grpentr_id'] .'"';
 						if  ($result_maintainer_item['comp_groupid'] == $result_appn['grpentr_id']) {
 							echo ' selected';
@@ -188,11 +183,8 @@
                       ReactOS version:
                       <select name="version" id="version">
 				  <?php
-					$query_osvers=mysql_query("SELECT * 
-												FROM `rsdb_object_osversions` 
-												WHERE `ver_visible` = '1'
-												ORDER BY `ver_value` DESC  ;");	
-					while($result_osvers = mysql_fetch_array($query_osvers)) {
+          $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_object_osversions WHERE ver_visible = '1' ORDER BY ver_value DESC");
+          while($result_osvers = $stmt->fetch(PDO::FETCH_ASSOC)) {
 						echo '<option value="'. $result_osvers['ver_value'] .'"';
 						if  ($result_maintainer_item['comp_osversion'] == $result_osvers['ver_value']) {
 							echo ' selected';
@@ -388,14 +380,16 @@
 
 		
 		if ($RSDB_TEMP_padmin == "ok" && $RSDB_TEMP_done != "" && usrfunc_IsAdmin($RSDB_intern_user_id)) {
-			$update_log_entry = "UPDATE `rsdb_logs` SET 
-									`log_taskdone_usr` = '". mysql_real_escape_string($RSDB_intern_user_id) ."' WHERE `log_id` = '". mysql_real_escape_string($RSDB_TEMP_done) ."' LIMIT 1 ;";
-			mysql_query($update_log_entry);
+      $stmt=CDBConnection::getInstance()->prepare("UPDATE rsdb_logs SET log_taskdone_usr = :user_id WHERE log_id = :log_id");
+      $stmt->bindParam('user_id',$RSDB_intern_user_id,PDO::PARAM_STR);
+      $stmt->bindParam('log_id',$RSDB_TEMP_done,PDO::PARAM_STR);
+      $stmt->execute();
 		}
 		if ($RSDB_TEMP_padmin == "ok" && $RSDB_TEMP_medal != "" && $RSDB_SET_item != "" && usrfunc_IsAdmin($RSDB_intern_user_id)) {
-			$update_medal = "UPDATE `rsdb_item_comp` SET 
-									`comp_award` = '". mysql_real_escape_string($RSDB_TEMP_medal) ."' WHERE `comp_id` = '". mysql_real_escape_string($RSDB_SET_item) ."' LIMIT 1 ;";
-			mysql_query($update_medal);
+      $stmt=CDBConnection::getInstance()->prepare("UPDATE rsdb_item_comp SET comp_award = :award WHERE comp_id = :comp_id");
+      $stmt->bindParam('award',$RSDB_TEMP_medal,PDO::PARAM_STR);
+      $stmt->bindParam('comp_id',$RSDB_SET_item,PDO::PARAM_STR);
+      $stmt->execute();
 			add_log_entry("medium", "comp_item", "change award", "[App Item] Change Award", @usrfunc_GetUsername($RSDB_intern_user_id)." (".$RSDB_intern_user_id.") has changed the award symbol from: ".$result_maintainer_item['comp_award']." to ".$RSDB_TEMP_medal, "0");
 			?>
 			<script language="JavaScript">
@@ -422,14 +416,9 @@
 					$cellcolor1="#E2E2E2";
 					$cellcolor2="#EEEEEE";
 					$cellcolorcounter="0";
-					$query_entry_sprequest = mysql_query("SELECT * 
-							FROM `rsdb_logs` 
-							WHERE `log_level` LIKE 'low'
-							AND `log_action` LIKE 'request'
-							AND `log_category` LIKE 'user_moderator'
-							ORDER BY `log_date` DESC
-							LIMIT 0, 30;") ;
-					while($result_entry_sprequest = mysql_fetch_array($query_entry_sprequest)) {
+					$stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_logs WHERE log_level LIKE 'low' AND log_action LIKE 'request' AND log_category LIKE 'user_moderator' ORDER BY log_date DESC LIMIT 30");
+          $stmt->execute();
+					while($result_entry_sprequest = $stmt->fetch(PDO::FETCH_ASSOC)) {
 				?> 
   <tr valign="top" bgcolor="<?php
 					$cellcolorcounter++;

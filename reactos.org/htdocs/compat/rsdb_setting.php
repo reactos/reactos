@@ -40,8 +40,8 @@
 	
 		// Config: (please sync this with the database)
 		$RSDB_intern_version = "RSDB 0.1 - http://www.reactos.org/"; // RSDB version info
-		$RSDB_intern_path_server = "http://www.reactos.org/"; // complete server path
-		$RSDB_intern_path = "support/"; // the dirs after http://www.reactos.org
+		$RSDB_intern_path_server = "/checkout/"; // complete server path
+		$RSDB_intern_path = "compat/"; // the dirs after http://www.reactos.org
 		
 		// script file fix (for Safari browser)
 		$RSDB_intern_index_php = $RSDB_intern_path_server.$RSDB_intern_path."index.php";
@@ -52,23 +52,15 @@
 	
 		// Items per Page
 		$RSDB_intern_items_per_page = 25;
-		
-		@define("ROOT_PATH", "../");
-		require_once(ROOT_PATH . "roscms/logon/subsys_login.php");
 
 		// User ID
-		$RSDB_intern_user_id = roscms_subsys_login('', ROSCMS_LOGIN_OPTIONAL, "/" . $RSDB_intern_path);
+    require_once(ROSCMS_PATH.'lib/RosCMS_Autoloader.class.php');
+		$RSDB_intern_user_id = Subsystem::in(Login::OPTIONAL, '/'.$RSDB_intern_path);
 		
-		require_once('inc/user_settings.php');
-		
-		if($RSDB_intern_user_id != 0) {
-			$query_roscms_user = mysql_query("SELECT * 
-					FROM roscms.users 
-					WHERE `user_id` = '".mysql_escape_string($RSDB_intern_user_id)."' LIMIT 1;") ;
-			$result_roscms_user = mysql_fetch_array($query_roscms_user);
+		if($RSDB_intern_user_id !== false) {
 			
 			// Name
-			$RSDB_USER_name = $result_roscms_user['user_name'];
+			$RSDB_USER_name = Subsystem::getUserName($RSDB_intern_user_id);
 			
 			
 			// RSDB user settings

@@ -128,13 +128,11 @@ else {
 					}
 				}
 			}
-			$query_check = mysql_query("SELECT COUNT('grpentr_id') 
-										FROM `rsdb_groups` 
-										WHERE `grpentr_visible` = '1'
-										AND `grpentr_name` = '" . mysql_real_escape_string($RSDB_TEMP_txtname) . "'
-										ORDER BY `grpentr_id` DESC LIMIT 1") ;
+      $stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_name = :name ORDER BY grpentr_id DESC LIMIT 1");
+      $stmt->bindParam('name',$RSDB_TEMP_txtname,PDO::PARAM_STR);
+      $stmt->execute();
 			
-			$result_check = mysql_fetch_array($query_check);
+			$result_check = $stmt->fetch();
 			if ($result_check[0] != 0) {
 				msg_bar("Double Entry Prevention: please check the data!");
 				add_log_entry("low", "comp_group_submit", "submit", "Double Entry Prevention!", "Double Entry Prevention! \n\nAn error occur while checking the data. The data is invalid! Please submit the data again, thx. \n\nIf this message appear more then one times and you are sure everything is valid and okay, then please report this to the ReactOS forum.", $RSDB_intern_user_id);
@@ -517,16 +515,18 @@ else {
 				$rem_adr = "";
 				if (array_key_exists('REMOTE_ADDR', $_SERVER)) $rem_adr=htmlspecialchars($_SERVER['REMOTE_ADDR']);
 				
-				$report_vendor_submit="INSERT INTO `rsdb_item_vendor` ( `vendor_id` , `vendor_name` , `vendor_fullname` , `vendor_url` , `vendor_email` , `vendor_infotext` , `vendor_problem` , `vendor_usrid` , `vendor_usrip` , `vendor_date` ) 
-										VALUES ('', '".mysql_real_escape_string($RSDB_TEMP_txtvname)."', '".mysql_real_escape_string($RSDB_TEMP_txtvname)."', '".mysql_real_escape_string($RSDB_TEMP_txtvurl)."', '', '', '', '".mysql_real_escape_string($RSDB_intern_user_id)."', '".mysql_real_escape_string($rem_adr)."', NOW( ) );";
-				$db_report_vendor_submit=mysql_query($report_vendor_submit);
+				$stmt=CDBConnection::getInstance()->prepare("INSERT INTO rsdb_item_vendor ( vendor_id , vendor_name , vendor_fullname , vendor_url , vendor_email , vendor_infotext , vendor_problem , vendor_usrid , vendor_usrip , vendor_date ) VALUES ('', :name, :fullname, :url, '', '', '', :user_id, :ip, NOW() )");
+        $stmt->bindParam('name',$RSDB_TEMP_txtvname,PDO::PARAM_STR);
+        $stmt->bindParam('fullname',$RSDB_TEMP_txtvname,PDO::PARAM_STR);
+        $stmt->bindParam('url',$RSDB_TEMP_txtvurl,PDO::PARAM_STR);
+        $stmt->bindParam('user_id',$RSDB_intern_user_id,PDO::PARAM_STR);
+        $stmt->bindParam('ip',$rem_adr,PDO::PARAM_STR);
+        $stmt->execute();
 				
-				$query_vendor_entry=mysql_query("SELECT * 
-													FROM `rsdb_item_vendor` 
-													WHERE `vendor_name` = '".mysql_real_escape_string($RSDB_TEMP_txtvname)."'
-													ORDER BY `vendor_id` DESC 
-													LIMIT 1;");	
-				$result_vendor_entry = mysql_fetch_array($query_vendor_entry);
+        $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_vendor WHERE vendor_name = :name ORDER BY vendor_id DESC LIMIT 1");
+        $stmt->bindParam('name',$RSDB_TEMP_txtvname,PDO::PARAM_STR);
+        $stmt->execute();
+				$result_vendor_entry = $stmt->fetch(PDO::FETCH_ASSOC)
 				
 				$RSDB_TEMP_cboVendor = $result_vendor_entry['vendor_id'];
 
@@ -535,23 +535,23 @@ else {
 				$RSDB_TEMP_cboVendor = $RSDB_TEMP_rockhide;
 			}
 
-			$report_submit="INSERT INTO `rsdb_groups` ( `grpentr_id` , `grpentr_name` , `grpentr_visible` , `grpentr_category` , `grpentr_vendor` , `grpentr_description` , `grpentr_usrid` , `grpentr_date` ) 
-							VALUES ('', '".mysql_real_escape_string($RSDB_TEMP_txtname)."', '1', '".mysql_real_escape_string($RSDB_TEMP_cboCategory)."', '".mysql_real_escape_string($RSDB_TEMP_cboVendor)."', '".mysql_real_escape_string($RSDB_TEMP_txtdesc)."' , '".mysql_real_escape_string($RSDB_intern_user_id)."' , NOW() );";
-			$db_report_submit=mysql_query($report_submit);
+      $stmt=CDBConnection::getInstance()->prepare("INSERT INTO rsdb_groups ( grpentr_id, grpentr_name, grpentr_visible, grpentr_category, grpentr_vendor, grpentr_description, grpentr_usrid, grpentr_date ) VALUES ('', :name, '1', :category, :vendor, :description, :user_id , NOW() )";
+      $stmt->bindParam('name',$RSDB_TEMP_txtname,PDO::PARAM_STR);
+      $stmt->bindParam('category',$RSDB_TEMP_cboCategory,PDO::PARAM_STR);
+      $stmt->bindParam('vendor',$RSDB_TEMP_cboVendor,PDO::PARAM_STR);
+      $stmt->bindParam('description',$RSDB_TEMP_txtdesc,PDO::PARAM_STR);
+      $stmt->bindParam('user_id',$RSDB_intern_user_id,PDO::PARAM_STR);
+      $stmt->execute();
 			
-			$query_page1 = mysql_query("SELECT * 
-										FROM `rsdb_groups` 
-										WHERE `grpentr_visible` = '1'
-										AND `grpentr_name` = '" . mysql_real_escape_string($RSDB_TEMP_txtname) . "'
-										ORDER BY `grpentr_id` DESC LIMIT 1") ;
+      $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_name = :name ORDER BY grpentr_id DESC LIMIT 1");
+      $stmt->bindParam('name',$RSDB_TEMP_txtname,PDO::PARAM_STR);
+      $stmt->execute();
 			
-			$result_page1 = mysql_fetch_array($query_page1);
+			$result_page1 = $stmt->fetch();
 			
 			// Stats update:
-			$update_stats_entry = "UPDATE `rsdb_stats` SET
-									`stat_s_grp` = (stat_s_grp + 1) 
-									WHERE `stat_date` = '". date("Y-m-d") ."' LIMIT 1 ;";
-			mysql_query($update_stats_entry);
+      $stmt=CDBConnection::getInstance()->prepare("UPDATE rsdb_stats SET stat_s_grp = (stat_s_grp + 1) WHERE stat_date = '". date("Y-m-d") ."' LIMIT 1");
+      $stmt->execute();
 			
 ?>
 <table width="100%" border="0">

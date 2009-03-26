@@ -34,13 +34,11 @@
 	}
 
 
-$query_page = mysql_query("SELECT * 
-							FROM `rsdb_item_comp` 
-							WHERE `comp_visible` = '1'
-							AND `comp_id` = " . $RSDB_SET_item . "
-							ORDER BY `comp_name` ASC") ;
+$stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp WHERE comp_visible = '1' AND comp_id = :comp_id ORDER BY comp_name ASC");
+$stmt->bindParam('comp_id',$RSDB_SET_item,PDO::PARAM_STR);
+$stmt->execute();
 
-$result_page = mysql_fetch_array($query_page);		
+$result_page = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if ($result_page['comp_id']) {
 
@@ -75,30 +73,27 @@ else {
 	
 		if ($result_page['comp_media'] == 0) {
 		
-			$query_media_entry=mysql_query("SELECT * 
-											FROM `rsdb_object_media` 
-											ORDER BY `media_groupid` DESC   
-											LIMIT 1;");	
-			$result_media_entry = mysql_fetch_array($query_media_entry);
+      $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_object_media ORDER BY media_groupid DESC LIMIT 1");
+      $stmt->execute();
+			$result_media_entry = $stmt->fetch(PDO::FETCH_ASSOC);
 			
 			$RSDB_TEMP_picgrpnr = $result_media_entry['media_groupid'];
 			$RSDB_TEMP_picgrpnr++;
 			
-			$update_item_entry = "UPDATE `rsdb_item_comp` SET `comp_media` = '". $RSDB_TEMP_picgrpnr ."' WHERE `comp_id` = '". $result_page['comp_id'] ."' LIMIT 1 ;";
-			mysql_query($update_item_entry);
+			$stmt=CDBConnection::getInstance()->prepare("UPDATE rsdb_item_comp SET comp_media = :media WHERE comp_id = :comp_id");
+      $stmt->bindParam('media',$RSDB_TEMP_picgrpnr,PDO::PARAM_STR);
+      $stmt->bindParam('comp_id',$result_page['comp_id'],PDO::PARAM_STR);
+      $stmt->execute();
 			
 			$RSDB_TEMP_picorder = 1;
 		
 		}
 		else {
 		
-			$query_media_entry=mysql_query("SELECT * 
-											FROM `rsdb_object_media` 
-											WHERE `media_groupid` = '". $result_page['comp_media'] ."'
-											AND `media_visible` = '1'
-											ORDER BY `media_order` DESC  
-											LIMIT 1;");	
-			$result_media_entry = mysql_fetch_array($query_media_entry);
+      $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_object_media WHERE media_groupid = :group_id AND media_visible = '1' ORDER BY media_order DESC LIMIT 1");
+      $stmt->bindParam('group_id',$result_page['comp_media'],PDO::FETCH_ASSOC);
+      $stmt->execute();
+			$result_media_entry = $stmt->fetch(PDO::FETCH_ASSOC);
 			
 			$RSDB_TEMP_picgrpnr = $result_page['comp_media'];
 			$RSDB_TEMP_picorder = $result_media_entry['media_order'];
@@ -106,18 +101,24 @@ else {
 		
 		}
 				
-		$report_submit="INSERT INTO `rsdb_object_media` ( `media_id` , `media_groupid` , `media_visible` , `media_order` , `media_file` , `media_filetype` , `media_thumbnail` , `media_description` , `media_exif` , `media_date` , `media_user_id` , `media_user_ip`  ) 
-						VALUES ('', '".mysql_real_escape_string($RSDB_TEMP_picgrpnr)."', '1', '".mysql_real_escape_string($RSDB_TEMP_picorder)."', '".mysql_real_escape_string($Tdbfile)."', 'picture', '".mysql_real_escape_string($Tdbfiletb)."', '".mysql_real_escape_string($RSDB_TEMP_txtdesc)."', '".mysql_real_escape_string($infoExif)."', NOW( ), '".mysql_real_escape_string($RSDB_intern_user_id)."', '".mysql_real_escape_string($rem_adr)."' );";
-		$db_report_submit=mysql_query($report_submit);
+    $stmt=CDBConnection::getInstance()->prepare("INSERT INTO rsdb_object_media ( media_id, media_groupid, media_visible, media_order, media_file, media_filetype, media_thumbnail, media_description, media_exif, media_date, media_user_id, media_user_ip) VALUES ('', :group_id, '1', :order, :file, 'picture', :thumbnail, :decription, :exif, NOW(), :user_id, :ip)");
+    $stmt->bindParam('group_id',$RSDB_TEMP_picgrpnr,PDO::PARAM_STR);
+    $stmt->bindParam('order',$RSDB_TEMP_picorder,PDO::PARAM_STR);
+    $stmt->bindParam('file',$Tdbfile,PDO::PARAM_STR);
+    $stmt->bindParam('thumbnail',$Tdbfiletb,PDO::PARAM_STR);
+    $stmt->bindParam('description',$RSDB_TEMP_txtdesc,PDO::PARAM_STR);
+    $stmt->bindParam('exif',$infoExif,PDO::PARAM_STR);
+    $stmt->bindParam('user_id',$RSDB_intern_user_id,PDO::PARAM_STR);
+    $stmt->bindParam('ip',$rem_adr,PDO::PARAM_STR);
+    $stmt->execute();
+
 		echo "<p><b>Your screenshot has been stored!</b></p>";
 		echo "<p><b><a href=\"". $RSDB_intern_link_item_item2 ."screens\">View screenshots</a></b></p>";
 		echo "<p><a href=\"". $RSDB_intern_link_submit_comp_screenshot ."add\">Submit new screenshot</a></p>";
 		
 		// Stats update:
-		$update_stats_entry = "UPDATE `rsdb_stats` SET
-								`stat_s_media` = (stat_s_media + 1) 
-								WHERE `stat_date` = '". date("Y-m-d") ."' LIMIT 1 ;";
-		mysql_query($update_stats_entry);
+    $stmt=CDBConnection::getInstance()->prepare("UPDATE rsdb_stats SET stat_s_media = (stat_s_media + 1) WHERE stat_date = '". date("Y-m-d") ."'");
+    $stmt->execute();
 		
 	}
 	else {

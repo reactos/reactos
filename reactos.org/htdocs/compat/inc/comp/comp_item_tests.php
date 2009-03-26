@@ -34,13 +34,11 @@
 	}
 
 
-	$query_page = mysql_query("SELECT * 
-								FROM `rsdb_item_comp` 
-								WHERE `comp_visible` = '1'
-								AND `comp_id` = " . mysql_real_escape_string($RSDB_SET_item) . "
-								ORDER BY `comp_name` ASC") ;
+  $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp WHERE comp_visible = '1' AND comp_id = :comp_id ORDER BY comp_name ASC");
+  $stmt->bindParam('comp_id',$RSDB_SET_item,PDO::PARAM_STR);
+  $stmt->execute();
 	
-	$result_page = mysql_fetch_array($query_page);		
+	$result_page = $stmt->fetch(PDO::FETCH_ASSOC);
 	
 if ($result_page['comp_id']) {
 
@@ -68,13 +66,11 @@ if ($result_page['comp_id']) {
 	}
 
 
-	$query_testreports = mysql_query("SELECT * 
-					FROM `rsdb_item_comp_testresults` 
-					WHERE `test_visible` = '1'
-					AND `test_comp_id` = " . mysql_real_escape_string($RSDB_SET_item) . "
-					ORDER BY `test_date` " . mysql_real_escape_string($RSDB_TEMP_order) . " ;") ;
-					
-	while($result_testreports = mysql_fetch_array($query_testreports)) {
+  $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp_testresults WHERE test_visible = '1' AND test_comp_id = :comp_id ORDER BY test_date ".$RSDB_TEMP_order);
+  $stmt->bindParam('comp_id',$RSDB_SET_item,PDO::PARAM_STR);
+  $stmt->execute();
+
+	while($result_testreports = $stmt->fetch(PDO::FETCH_ASSOC)) {
 		$number = $result_testreports['test_useful_vote_value'];
 		$user = $result_testreports['test_useful_vote_user'];
 		$result_stars = @($number / $user);

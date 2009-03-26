@@ -34,13 +34,10 @@
 	}
 
 
-$query_page = mysql_query("SELECT * 
-							FROM `rsdb_item_comp` 
-							WHERE `comp_visible` = '1'
-							AND `comp_id` = " . mysql_real_escape_string($RSDB_SET_item) . "
-							ORDER BY `comp_name` ASC") ;
-
-$result_page = mysql_fetch_array($query_page);		
+$stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp WHERE comp_visible = '1' AND comp_id = :comp_id ORDER BY comp_name ASC") ;
+$stmt->bindParam('comp_id',$RSDB_SET_item,PDO::PARAM_STR);
+$stmt->execute();
+$result_page = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if ($result_page['comp_id']) {
 
@@ -112,10 +109,18 @@ else {
 		}
 	}
 	if ($RSDB_TEMP_SUBMIT_valid == "yes" && $RSDB_TEMP_submitpost == true) {
-		$report_submit="INSERT INTO `rsdb_item_comp_testresults` ( `test_id` , `test_comp_id` , `test_visible` , `test_whatworks` , `test_whatdoesntwork` , `test_whatnottested` , `test_date` , `test_result_install` , `test_result_function` , `test_user_comment` , `test_conclusion` , `test_user_id` , `test_user_submit_timestamp` , `test_useful_vote_value` , `test_useful_vote_user` , `test_useful_vote_user_history` , `test_com_version` ) 
-						VALUES ('', '".mysql_real_escape_string($RSDB_SET_item)."', '1', '".mysql_real_escape_string($RSDB_TEMP_txtwhatwork)."', '".mysql_real_escape_string($RSDB_TEMP_txtwhatnot)."', '".mysql_real_escape_string($RSDB_TEMP_txtwhatnottested)."', NOW( ), '".mysql_real_escape_string($RSDB_TEMP_optinstall)."', '".mysql_real_escape_string($RSDB_TEMP_optfunc)."', '".mysql_real_escape_string($RSDB_TEMP_txtcomment)."', '".mysql_real_escape_string($RSDB_TEMP_txtconclusion)."', '".mysql_real_escape_string($RSDB_intern_user_id)."', NOW( ) , '', '', '', '".mysql_real_escape_string($RSDB_TEMP_txtrevision)."' );";
-		//echo $report_submit;
-		$db_report_submit=mysql_query($report_submit);
+		$stmt=CDBConnection::getInstance()->prepare("INSERT INTO rsdb_item_comp_testresults ( test_id, test_comp_id, test_visible, test_whatworks, test_whatdoesntwork, test_whatnottested, test_date, test_result_install, test_result_function, test_user_comment, test_conclusion, test_user_id, test_user_submit_timestamp, test_useful_vote_value, test_useful_vote_user, test_useful_vote_user_history, test_com_version) VALUES ('', :comp_id, '1', :whatworks, :whatnot, :whatnottestet, NOW(), :install, :function, :comment, :conclusion, :user_id, NOW( ) , '', '', '', :version );");
+    $stmt->bindParam('comp_id',$RSDB_SET_item,PDO::PARAM_STR);
+    $stmt->bindParam('whatworks',$RSDB_TEMP_txtwhatwork,PDO::PARAM_STR);
+    $stmt->bindParam('whatnot',$RSDB_TEMP_txtwhatnot,PDO::PARAM_STR);
+    $stmt->bindParam('whatnottested',$RSDB_TEMP_txtwhatnottested,PDO::PARAM_STR);
+    $stmt->bindParam('install',$RSDB_TEMP_optinstall,PDO::PARAM_STR);
+    $stmt->bindParam('function',$RSDB_TEMP_optfunc,PDO::PARAM_STR);
+    $stmt->bindParam('comment',$RSDB_TEMP_txtcomment,PDO::PARAM_STR);
+    $stmt->bindParam('conclusion',$RSDB_TEMP_txtconclusion,PDO::PARAM_STR);
+    $stmt->bindParam('user_id',$RSDB_intern_user_id,PDO::PARAM_STR);
+    $stmt->bindParam('version',$RSDB_TEMP_txtrevision,PDO::PARAM_STR);
+    $stmt->execute();
 		echo "<p><b>Your Compatibility Test Report has been saved!</b></p>";
 		echo "<p>&nbsp;</p>";
 		echo '<p><b><a href="'.$RSDB_intern_link_item_item2.'screens&amp;addbox=add">Submit Screenshots</a></b></p>';
@@ -124,10 +129,7 @@ else {
 		
 		
 		// Stats update:
-		$update_stats_entry = "UPDATE `rsdb_stats` SET
-								`stat_s_ictest` = (stat_s_ictest + 1) 
-								WHERE `stat_date` = '". date("Y-m-d") ."' LIMIT 1 ;";
-		mysql_query($update_stats_entry);
+		$CDBConnection::getInstance()->exec("UPDATE rsdb_stats SET stat_s_ictest = (stat_s_ictest + 1) WHERE stat_date = '". date("Y-m-d") ."'";
 	}
 	else {
 ?>

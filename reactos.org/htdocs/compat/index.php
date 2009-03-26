@@ -35,17 +35,15 @@ if (get_magic_quotes_gpc()) {
 
 //global $HTTP_GET_VARS; // set the Get var global
 
-
-	require_once("connect.db.php");
+define('CDB_PATH', '');
+require_once("lib/Compat_Autoloader.class.php");
 
 
 
 	if ( !defined('RSDB') ) {
 		define ("RSDB", "rossupportdb"); // to prevent hacking activity
 	}
-	if ( !defined('ROSCMS_SYSTEM') ) {
-		define ("ROSCMS_SYSTEM", "Version 0.1"); // to prevent hacking activity
-	}
+  define('ROSCMS_PATH', '../roscms/');
 	
 	
 	
@@ -60,16 +58,14 @@ if (get_magic_quotes_gpc()) {
 		
 		if (array_key_exists("ajax", $_GET)) $RSDB_ENV_ajax=htmlspecialchars($_GET["ajax"]);
 	
-		require_once('inc/utils.php');
-	
 		if ($RSDB_ENV_ajax != "?") {
 			if ($RSDB_ENV_ajax == "true") {
 				$RSDB_ENV_ajax = "true";
-				setcookie('rsdb_ajat', 'true', time() + 24 * 3600 * 30 * 5, '/', cookie_domain());
+				Cookie::write('rsdb_ajat', 'true', time() + 24 * 3600 * 30 * 5, '/');
 			}
 			else {
 				$RSDB_ENV_ajax = "false";
-				setcookie('rsdb_ajat', 'false', time() + 24 * 3600 * 30 * 5, '/', cookie_domain());
+				Cookie::write('rsdb_ajat', 'false', time() + 24 * 3600 * 30 * 5, '/');
 			}
 		}
 		else {
@@ -78,7 +74,7 @@ if (get_magic_quotes_gpc()) {
 			}
 			else {
 				$RSDB_ENV_ajax = "false";
-				setcookie('rsdb_ajat', 'false', time() + 24 * 3600 * 30 * 5, '/', cookie_domain());
+				Cookie::write('rsdb_ajat', 'false', time() + 24 * 3600 * 30 * 5, '/');
 			}
 		}
 		
@@ -97,9 +93,9 @@ if (get_magic_quotes_gpc()) {
 			if (array_key_exists("fstyle", $_POST)) $RSDB_ENV_forumsytle=htmlspecialchars($_POST["fstyle"]);
 			if (array_key_exists("order", $_POST)) $RSDB_ENV_forumorder=htmlspecialchars($_POST["order"]);
 
-			setcookie('rsdb_threshold', $RSDB_ENV_forumthreshold, time() + 24 * 3600 * 30 * 5, '/', cookie_domain());
-			setcookie('rsdb_fstyle', $RSDB_ENV_forumsytle, time() + 24 * 3600 * 30 * 5, '/', cookie_domain());
-			setcookie('rsdb_order', $RSDB_ENV_forumorder, time() + 24 * 3600 * 30 * 5, '/', cookie_domain());
+			Cookie::write('rsdb_threshold', $RSDB_ENV_forumthreshold, time() + 24 * 3600 * 30 * 5, '/');
+			Cookie::write('rsdb_fstyle', $RSDB_ENV_forumsytle, time() + 24 * 3600 * 30 * 5, '/');
+			Cookie::write('rsdb_order', $RSDB_ENV_forumorder, time() + 24 * 3600 * 30 * 5, '/');
 		}
 	
 		// Test report bar settings:
@@ -113,8 +109,8 @@ if (get_magic_quotes_gpc()) {
 			if (array_key_exists("threshold", $_POST)) $RSDB_ENV_testthreshold=htmlspecialchars($_POST["threshold"]);
 			if (array_key_exists("order", $_POST)) $RSDB_ENV_testorder=htmlspecialchars($_POST["order"]);
 			
-			setcookie('rsdb_threshold', $RSDB_ENV_testthreshold, time() + 24 * 3600 * 30 * 5, '/', cookie_domain());
-			setcookie('rsdb_order', $RSDB_ENV_testorder, time() + 24 * 3600 * 30 * 5, '/', cookie_domain());
+			Cookie::write('rsdb_threshold', $RSDB_ENV_testthreshold, time() + 24 * 3600 * 30 * 5, '/');
+			Cookie::write('rsdb_order', $RSDB_ENV_testorder, time() + 24 * 3600 * 30 * 5, '/');
 		}
 
 
@@ -250,7 +246,7 @@ if (get_magic_quotes_gpc()) {
 	require_once("inc/tools/log.php");
 
 	// Stats
-	require_once("inc/rsdb_stats.php");
+//	require_once("inc/rsdb_stats.php");
 
 	// Tools
 	require_once("inc/tools/stars.php");

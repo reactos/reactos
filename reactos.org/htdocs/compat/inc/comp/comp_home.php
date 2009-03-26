@@ -139,11 +139,9 @@
 <p>There are <a href="<?php echo $RSDB_intern_link_db_sec; ?>stats"><b> 
   <?php
 
-	$query_count_cat=mysql_query("SELECT COUNT('cat_id')
-							FROM `rsdb_groups`
-							WHERE `grpentr_visible` = '1' 
-							AND `grpentr_comp` = '1' ;");	
-	$result_count_cat = mysql_fetch_row($query_count_cat);
+  $stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_comp = '1'");
+  $stmt->execute();
+	$result_count_cat = $stmt->fetch();
 	echo $result_count_cat[0];
 
 
@@ -162,12 +160,9 @@
 		$cellcolor2="#EEEEEE";
 		$cellcolorcounter="0";
 
-	$query_date_entry_records=mysql_query("SELECT *
-											FROM `rsdb_item_comp_testresults`
-											WHERE `test_visible` = '1' 
-											ORDER BY `test_id` DESC 
-											LIMIT 0 , 5 ;");	
-	while($result_date_entry_records = mysql_fetch_array($query_date_entry_records)) {
+  $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp_testresults WHERE test_visible = '1' ORDER BY test_id DESC LIMIT 5");
+  $stmt->execute();
+	while($result_date_entry_records = $stmt->fetch(PDO::FETCH_ASSOC)) {
 ?>
   <tr bgcolor="<?php
 									$cellcolorcounter++;
@@ -189,11 +184,10 @@
     </font></div></td>
     <td><font size="2" face="Arial, Helvetica, sans-serif"> &nbsp;
           <?php
- 		$query_date_vendor=mysql_query("SELECT *
-										FROM `rsdb_item_comp`
-										WHERE `comp_id` = '". mysql_escape_string($result_date_entry_records['test_comp_id']) ."' 
-										LIMIT 1 ;");	
-		$result_date_vendor = mysql_fetch_array($query_date_vendor);
+    $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp WHERE comp_id = :comp_id LIMIT 1");
+    $stmt->bindParam('comp_id',$result_date_entry_records['test_comp_id'],PDO::PARAM_STR);
+    $stmt->execute();
+		$result_date_vendor = $stmt->fetch(PDO::PARAM_STR);
 		echo "<b><a href=\"". $RSDB_intern_link_item_comp.$result_date_vendor['comp_id'] ."&amp;item2=tests\">".$result_date_vendor['comp_name']."</a></b>";
 
     ?>

@@ -48,11 +48,9 @@
     <td width="65%" bgcolor="#E2E2E2"><font size="2" face="Arial, Helvetica, sans-serif">&nbsp;Compatibility <strong></strong><strong>category</strong> entries:</font></td>
     <td width="35%" bgcolor="#E2E2E2"><div align="right"><font size="2" face="Arial, Helvetica, sans-serif">
         <?php
-		$query_date_entry_records=mysql_query("SELECT COUNT('cat_id')
-												FROM `rsdb_categories`
-												WHERE `cat_visible` = '1' 
-												AND `cat_comp` = '1' ;");	
-		$result_date_entry_records = mysql_fetch_array($query_date_entry_records);
+    $stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_categories WHERE cat_visible = '1' AND cat_comp = '1'");
+    $stmt->execute();
+		$result_date_entry_records = $stmt->fetch();
 		echo "<b>".$result_date_entry_records[0]."</b>";
 
     ?>
@@ -62,11 +60,9 @@
     <td><font size="2" face="Arial, Helvetica, sans-serif">&nbsp;Compatibility <strong></strong><strong>group</strong> entries:</font></td>
     <td><div align="right"><font size="2" face="Arial, Helvetica, sans-serif">
         <?php
-		$query_date_entry_records=mysql_query("SELECT COUNT('cat_id')
-												FROM `rsdb_groups`
-												WHERE `grpentr_visible` = '1' 
-												AND `grpentr_comp` = '1' ;");	
-		$result_date_entry_records = mysql_fetch_array($query_date_entry_records);
+    $stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_comp = '1'");
+    $stmt->execute();
+		$result_date_entry_records = $stmt->fetch();
 		echo "<b>".$result_date_entry_records[0]."</b>";
 
     ?>
@@ -76,10 +72,9 @@
     <td bgcolor="#E2E2E2"><font size="2" face="Arial, Helvetica, sans-serif">&nbsp;Compatibility <strong></strong><strong>item </strong>entries:</font></td>
     <td bgcolor="#E2E2E2"><div align="right"><font size="2" face="Arial, Helvetica, sans-serif">
       <?php
-		$query_date_entry_records=mysql_query("SELECT COUNT('comp_id')
-												FROM `rsdb_item_comp`
-												WHERE `comp_visible` = '1' ;");	
-		$result_date_entry_records = mysql_fetch_array($query_date_entry_records);
+    $stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_item_comp WHERE comp_visible = '1'");
+    $stmt->execute();
+		$result_date_entry_records = $stmt->fetch();
 		echo "<b>".$result_date_entry_records[0]."</b>";
 
     ?>
@@ -89,10 +84,9 @@
     <td><font size="2" face="Arial, Helvetica, sans-serif">&nbsp;Compatibility <strong>test report</strong> entries:</font></td>
     <td><div align="right"><font size="2" face="Arial, Helvetica, sans-serif">
     <?php
-		$query_date_entry_records=mysql_query("SELECT COUNT('test_id')
-												FROM `rsdb_item_comp_testresults`
-												WHERE `test_visible` = '1' ;");	
-		$result_date_entry_records = mysql_fetch_array($query_date_entry_records);
+    $stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_item_comp_testresults WHERE test_visible = '1'");
+    $stmt->execute();
+		$result_date_entry_records = $stmt->fetch();
 		echo "<b>".$result_date_entry_records[0]."</b>";
 
     ?>
@@ -102,10 +96,9 @@
     <td bgcolor="#E2E2E2"><font size="2" face="Arial, Helvetica, sans-serif">&nbsp;Compatibility <strong>forum</strong> entries:</font></td>
     <td bgcolor="#E2E2E2"><div align="right"><font size="2" face="Arial, Helvetica, sans-serif">
     <?php
-		$query_date_entry_records=mysql_query("SELECT COUNT('fmsg_id')
-												FROM `rsdb_item_comp_forum`
-												WHERE `fmsg_visible` = '1' ;");	
-		$result_date_entry_records = mysql_fetch_array($query_date_entry_records);
+    $stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_item_comp_forum WHERE fmsg_visible = '1'");
+    $stmt->execute();
+		$result_date_entry_records = $stmt->fetch();
 		echo "<b>".$result_date_entry_records[0]."</b>";
 
     ?>
@@ -126,25 +119,15 @@
 		$cellcolor2="#EEEEEE";
 		$cellcolorcounter="0";
 
+  $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_comp = '1' ORDER BY grpentr_id DESC LIMIT :limit");
 	if (usrfunc_IsAdmin($RSDB_intern_user_id) == true) {
- 
- 		$query_date_entry_records=mysql_query("SELECT *
-												FROM `rsdb_groups`
-												WHERE `grpentr_visible` = '1' 
-												AND `grpentr_comp` = '1'
-												ORDER BY `grpentr_id` DESC 
-												LIMIT 0 , 25 ;");	
+    $stmt->bindValue('limit',25,PDO::PARAM_INT);
 	}
 	else {
- 		$query_date_entry_records=mysql_query("SELECT *
-												FROM `rsdb_groups`
-												WHERE `grpentr_visible` = '1' 
-												AND `grpentr_comp` = '1'
-												ORDER BY `grpentr_id` DESC 
-												LIMIT 0 , 5 ;");	
+    $stmt->bindValue('limit',5,PDO::PARAM_INT);
 	}
-	
-	while($result_date_entry_records = mysql_fetch_array($query_date_entry_records)) {
+  $stmt->execute();
+	while($result_date_entry_records = $stmt->fetch()) {
 ?>
   <tr bgcolor="<?php
 									$cellcolorcounter++;
@@ -172,11 +155,10 @@
     <td><font size="2" face="Arial, Helvetica, sans-serif">
       &nbsp;
       <?php
- 		$query_date_vendor=mysql_query("SELECT *
-												FROM `rsdb_item_vendor`
-												WHERE `vendor_id` = '". mysql_escape_string($result_date_entry_records['grpentr_vendor']) ."' 
-												LIMIT 1 ;");	
-		$result_date_vendor = mysql_fetch_array($query_date_vendor);
+    $stmt_vendor=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_vendor WHERE vendor_id = :vendor_id  LIMIT 1");
+    $stmt_vendor->bindParam('vendor_id',$result_date_entry_records['grpentr_vendor'],PDO::PARAM_STR);
+    $stmt_vendor->execute();
+		$result_date_vendor = $stmt_vendor->fetch(PDO::FETCH_ASSOC);
 		echo "<a href=\"". $RSDB_intern_link_vendor_sec_comp.$result_date_vendor['vendor_id'] ."\">".$result_date_vendor['vendor_name']."</a>";
 		?>
 </font></td>

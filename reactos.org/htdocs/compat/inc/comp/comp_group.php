@@ -35,20 +35,16 @@
 
 
 	
-		$query_page = mysql_query("SELECT * 
-									FROM `rsdb_groups` 
-									WHERE `grpentr_visible` = '1'
-									AND `grpentr_id` = " . mysql_real_escape_string($RSDB_SET_group) . "
-									" . $RSDB_intern_code_db_rsdb_groups . "
-									ORDER BY `grpentr_name` ASC") ;
-		
-		$result_page = mysql_fetch_array($query_page);
+    $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_id = :group_id ".$RSDB_intern_code_db_rsdb_groups." ORDER BY grpentr_name ASC") ;
+    $stmt->bindParam('group_id',$RSDB_SET_group,PDO::PARAM_STR);
+    $stmt->execute();
+		$result_page = $stmt->fetch(PDO::FETCH_ASSOC);
 		
 		if ($result_page['grpentr_type'] == "default") {
 		// Update the ViewCounter:
 		if ($RSDB_SET_group != "" || $RSDB_SET_group != "0") {
-			$query_update_viewcounter = "UPDATE `rsdb_groups` SET `grpentr_viewcounter` = (grpentr_viewcounter + 1) WHERE `grpentr_id` = '" . $RSDB_SET_group . "' LIMIT 1 ;";
-			@mysql_query($query_update_viewcounter);
+      $stmt=CDBConnection::getInstance()->prepare("UPDATE rsdb_groups SET grpentr_viewcounter = grpentr_viewcounter + 1 WHERE grpentr_id = '" . $RSDB_SET_group . "'");
+      $stmt->execute();
 		}
 	
 	?>
@@ -100,13 +96,11 @@
 				  	echo "Overview";
 				  }
 				  else { 
-						$query_entry_appname = mysql_query("SELECT `comp_name`,  `comp_appversion`
-															FROM `rsdb_item_comp` 
-															WHERE `comp_visible` = '1'
-															AND `comp_groupid` = '" .  mysql_real_escape_string($result_page['grpentr_id']) ."'
-															AND `comp_appversion` = '" .  mysql_real_escape_string($RSDB_SET_group2) ."'
-															LIMIT 1 ;") ;
-						$result_entry_appname = mysql_fetch_array($query_entry_appname);
+						$stmt=CDBConnection::getInstance()->prepare("SELECT comp_name, comp_appversion FROM rsdb_item_comp  WHERE comp_visible = '1' AND comp_groupid = :group_id AND comp_appversion = :version LIMIT 1");
+            $stmt->bindParam('group_id',$result_page['grpentr_id'],PDO::PARAM_STR);
+            $stmt->bindParam('version',$RSDB_SET_group2,PDO::PARAM_STR);
+            $stmt->execute();
+						$result_entry_appname = $stmt->fetch(PDO::FETCH_ASSOC);
 						echo $result_entry_appname['comp_name'];
 				  }
 			  
@@ -154,16 +148,9 @@
 
 <?php
 
-		$query_entry_appver = mysql_query("SELECT DISTINCT (
-											`comp_appversion` 
-											), `comp_osversion` , `comp_id` , `comp_name` 
-											FROM `rsdb_item_comp` 
-											WHERE `comp_visible` = '1'
-											AND `comp_groupid` = '" .  mysql_real_escape_string($result_page['grpentr_id']) ."'
-											GROUP BY `comp_appversion` 
-											ORDER BY `comp_appversion` ASC 
-											LIMIT 0 , 15 ;") ;
-		while($result_entry_appver = mysql_fetch_array($query_entry_appver)) {
+    $stmt=CDBConnection::getInstance()->prepare("SELECT DISTINCT (comp_appversion), comp_osversion, comp_id, comp_name FROM rsdb_item_comp WHERE comp_visible = '1' AND comp_groupid = :group_id GROUP BY comp_appversion ORDER BY comp_appversion ASC LIMIT 15");
+    $stmt->bindParam('group_id',$result_page['grpentr_id'],PDO::PARAM_STR);
+		while($result_entry_appver = $stmt->fetch()) {
 ?>
           <!-- start tab -->
           <td nowrap="nowrap">
@@ -220,60 +207,49 @@
 				$counter_items = 0;
 	
 				if ($RSDB_SET_group2 == "" || $RSDB_SET_group2 == "overview") {
-				$query_group_sum_items = mysql_query("SELECT * 
-														FROM `rsdb_item_comp` 
-														WHERE `comp_groupid` = '" . mysql_real_escape_string($result_page['grpentr_id']) . "'
-														AND `comp_visible` = '1'
-														ORDER BY `comp_groupid` DESC ;") ;
+          $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp WHERE comp_groupid = :group_id AND comp_visible = '1' ORDER BY comp_groupid DESC");
+          $stmt->bindParam('group_id',$result_page['grpentr_id'],PDO::PARAM_STR);
+          $stmt->execute();
 				}
 				else {
-				$query_group_sum_items = mysql_query("SELECT * 
-														FROM `rsdb_item_comp` 
-														WHERE `comp_groupid` = '" . mysql_real_escape_string($result_page['grpentr_id']) . "'
-														AND `comp_visible` = '1'
-														AND `comp_appversion` = '" . mysql_real_escape_string($RSDB_SET_group2) . "' 
-														ORDER BY `comp_groupid` DESC ;") ;
+          $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp WHERE comp_groupid = :group_id AND comp_visible = '1' AND `comp_appversion` = :version ORDER BY comp_groupid DESC");
+          $stmt->bindParam('group_id',$result_page['grpentr_id'],PDO::PARAM_STR);
+          $stmt->bindParam('version',$RSDB_SET_group2,PDO::PARAM_STR);
+          $stmt->execute();
 				}
-				while($result_group_sum_items = mysql_fetch_array($query_group_sum_items)) { 
+				while($result_group_sum_items = $stmt->fetch(PDO::FETCH_ASSOC)) { 
 					$counter_items++;
 					if ($counter_awards_best < $result_group_sum_items['comp_award']) {
 						$counter_awards_best = $result_group_sum_items['comp_award'];
 					}
-					$query_count_stars_sum = mysql_query("SELECT * 
-									FROM `rsdb_item_comp_testresults` 
-									WHERE `test_visible` = '1'
-									AND `test_comp_id` = " . $result_group_sum_items['comp_id'] . "
-									ORDER BY `test_comp_id` ASC") ;
-									
-					while($result_count_stars_sum = mysql_fetch_array($query_count_stars_sum)) {
+          $stmt_sub=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp_testresults WHERE test_visible = '1' AND test_comp_id = :comp_id ORDER BY test_comp_id ASC");
+          $stmt_sub->bindParam('comp_id',$result_group_sum_items['comp_id'],PDO::PARAM_STR);
+          $stmt_sub->execute();
+					while($result_count_stars_sum = $stmt_sub->fetch(PDO::FETCH_ASSOC)) {
 						$counter_stars_install_sum += $result_count_stars_sum['test_result_install'];
 						$counter_stars_function_sum += $result_count_stars_sum['test_result_function'];
 						$counter_stars_user_sum++;
 					}
 				}
 	
-				$query_entry_vendor = mysql_query("SELECT * 
-													FROM `rsdb_item_vendor` 
-													WHERE `vendor_id` = " .  $result_page['grpentr_vendor'] ."
-													AND `vendor_visible` = '1' ;") ;
-				$result_entry_vendor = mysql_fetch_array($query_entry_vendor);
+        $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_vendor WHERE vendor_id = :vendor_id AND vendor_visible = '1'");
+        $stmt->bindParam('vendor_id',$result_page['grpentr_vendor'],PDO::PARAM_STR);
+        $stmt->execute();
+				$result_entry_vendor = $stmt->fetch(PDO::FETCH_ASSOC);
 	
 
 	
-	$query_item_entry_records=mysql_query("SELECT COUNT('comp_id')
-											FROM `rsdb_item_comp`
-											WHERE `comp_groupid` = '" . mysql_real_escape_string($RSDB_SET_group) . "' 
-											AND `comp_visible` = '1' 
-											AND `comp_visible` = '1' ;");	
-	$result_item_entry_records = mysql_fetch_array($query_item_entry_records);
+  $stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(comp_id) FROM rsdb_item_comp WHERE comp_groupid = :group_id AND comp_visible = '1'");
+  $stmt->bindParam('group_id',$RSDB_SET_group,PDO::PARAM_STR);
+  $stmt->execute();
+	$result_item_entry_records = $stmt->fetch(PDO::FETCH_ASSOC);
 	
 	if ($result_item_entry_records[0] == 0) {
 	
-		$query_vend = mysql_query("SELECT * 
-											FROM `rsdb_item_vendor` 
-											WHERE `vendor_id` = " .  $result_page['grpentr_vendor'] ."
-											AND `vendor_visible` = '1' ;") ;
-		$result_vend = mysql_fetch_array($query_vend);
+    $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_vendor WHERE vendor_id = :vendor_id AND vendor_visible = '1'");
+    $stmt->bindParam('vendor_id',$result_page['grpentr_vendor'],PDO::PARAM_STR);
+    $stmt->execute();
+		$result_vend = $stmt->fetch(PDO::FETCH_ASSOC);
 ?>
 		<p>&nbsp;</p>
 		<p><b>Vendor:</b> <?php echo '<a href="'.$RSDB_intern_link_vendor_sec.$result_vend['vendor_id'].'">'.$result_vend['vendor_name'].'</a>'; ?></p>
@@ -298,8 +274,10 @@
 		<div id="versions" style="display: block">	
 		<?php
 		// Count the comp entries
-		$query_count_comp=mysql_query("SELECT COUNT('comp_id') FROM rsdb_item_comp WHERE comp_groupid = '". $result_page["grpentr_id"] ."' ;");	
-		$result_count_comp = mysql_fetch_row($query_count_comp);
+		$stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(comp_id) FROM rsdb_item_comp WHERE comp_groupid = :group_id");
+    $stmt->bindParam('group_id',$result_page["grpentr_id"],PDO::PARAM_STR);
+    $stmt->execute();
+		$result_count_comp = $stmt->fetch(PDO::FETCH_ASSOC);
 		
 		if ($result_count_comp[0]) {
 	
@@ -326,25 +304,16 @@
 	
 			<?php
 				if ($RSDB_SET_group2 == "" || $RSDB_SET_group2 == "overview") {
-					$RSDB_TEMP_version_newest = "SELECT * 
-										FROM `rsdb_item_comp` 
-										WHERE `comp_groupid` = '" . mysql_real_escape_string($RSDB_SET_group) . "'
-										AND `comp_visible` = '1' 
-										ORDER BY `comp_award` DESC, `comp_appversion` DESC, `comp_osversion` DESC
-										LIMIT 1;";
+          $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp WHERE comp_groupid = :group_id  AND comp_visible = '1' ORDER BY comp_award DESC, comp_appversion DESC, comp_osversion DESC LIMIT 1");
 				}
 				else {
-					$RSDB_TEMP_version_newest = "SELECT * 
-										FROM `rsdb_item_comp` 
-										WHERE `comp_groupid` = '" . mysql_real_escape_string($RSDB_SET_group) . "'
-										AND `comp_visible` = '1' 
-										AND `comp_appversion` = '" . mysql_real_escape_string($RSDB_SET_group2) . "' 
-										ORDER BY `comp_award` DESC, `comp_appversion` DESC, `comp_osversion` DESC
-										LIMIT 1;";
+          $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp WHERE comp_groupid = :group_id AND comp_visible = '1' AND comp_appversion = :version ORDER BY comp_award DESC, comp_osversion DESC LIMIT 1");
+          $stmt->bindParam('version',$RSDB_SET_group2,PDO::PARAM_STR);
 
 				}
-				$query_version_newest = mysql_query($RSDB_TEMP_version_newest) ;
-				$result_version_newest = mysql_fetch_array($query_version_newest);
+        $stmt->bindParam('group_id',$RSDB_SET_group,PDO::PARAM_STR);
+				$stmt->execute();
+				$result_version_newest = $stmt->fetch(PDO::FETCH_ASSOC);;
 				
 				echo "<h3 align=\"center\"><font size=\"2\">".$result_entry_vendor['vendor_name']."</font> ".$result_version_newest['comp_name']."</h3>";
 			?>
@@ -369,13 +338,11 @@
 			  <li><strong>Other tested versions:</strong><ul class=simple>
 			  <?php
 		
-			$query_entry_osver = mysql_query("SELECT * 
-												FROM `rsdb_item_comp` 
-												WHERE `comp_name` = '" .  mysql_real_escape_string($result_version_newest['comp_name']) ."'
-												AND `comp_visible` = '1'
-												AND `comp_groupid` = '" .  mysql_real_escape_string($result_page['grpentr_id']) ."'
-												ORDER BY `comp_osversion` DESC ;") ;
-			while($result_entry_osver = mysql_fetch_array($query_entry_osver)) {
+      $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp WHERE comp_name = :name AND comp_visible = '1' AND `comp_groupid` = :group_id ORDER BY `comp_osversion` DESC");
+      $stmt->bindParam('group_id',$result_page['grpentr_id'],PDO::PARAM_STR);
+      $stmt->bindParam('name',$result_version_newest['comp_name'],PDO::PARAM_STR);
+      $stmt->execute();
+			while($result_entry_osver = $stmt->fetch(PDO::FETCH_ASSOC)) {
 				if ($result_entry_osver['comp_osversion'] != $result_version_newest['comp_osversion']) {
 					echo "<li><a href=\"".$RSDB_intern_link_item.$result_entry_osver['comp_id']."\">"."ReactOS ". @show_osversion($result_entry_osver['comp_osversion'])."</a></li>";
 				}
@@ -394,13 +361,10 @@
 				$counter_stars_function = 0;
 				$counter_stars_user = 0;
 				
-				$query_count_stars = @mysql_query("SELECT * 
-								FROM `rsdb_item_comp_testresults` 
-								WHERE `test_visible` = '1'
-								AND `test_comp_id` = " . $result_version_newest['comp_id'] . "
-								ORDER BY `test_comp_id` ASC ;") ;
-								
-				while($result_count_stars = @mysql_fetch_array($query_count_stars)) {
+        $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp_testresults WHERE test_visible = '1' AND test_comp_id = :comp_id ORDER BY test_comp_id ASC");
+        $stmt->bindParam('comp_id',$result_version_newest['comp_id'],PDO::PARAM_STR);
+        $stmt->execute();
+				while($result_count_stars = $stmt->fetch(PDO::FETCH_ASSOC)) {
 					$counter_stars_install += $result_count_stars['test_result_install'];
 					$counter_stars_function += $result_count_stars['test_result_function'];
 					$counter_stars_user++;
@@ -417,11 +381,10 @@
 			<ul class=simple>
 			  <li><a href="<?php echo $RSDB_intern_link_item.$result_version_newest['comp_id']."&amp;item2="; ?>details">Details</a></li>
 <?php
-					$query_count_testentries=mysql_query("SELECT COUNT('test_id')
-														FROM `rsdb_item_comp_testresults` 
-														WHERE `test_comp_id` = '".mysql_real_escape_string($result_version_newest['comp_id'])."'
-														AND `test_visible` = '1' ;");	
-					$result_count_testentries = mysql_fetch_array($query_count_testentries);
+        $stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_item_comp_testresults WHERE test_comp_id = :comp_id AND test_visible = '1'");
+        $stmt->bindParam('comp_id',$result_version_newest['comp_id'],PDO::PARAM_STR);
+        $stmt->execute();
+					$result_count_testentries = $stmt->fetch(PDO::FETCH_ASSOC);
 					
 					echo '<b><li><a href="'. $RSDB_intern_link_item.$result_version_newest['comp_id'] .'&amp;item2=tests">Compatibility Tests</b>';
 					
@@ -433,11 +396,10 @@
 					}
 ?>
 <?php
-					$query_count_forumentries=mysql_query("SELECT COUNT('fmsg_id')
-														FROM `rsdb_item_comp_forum` 
-														WHERE `fmsg_comp_id` = '".mysql_real_escape_string($result_version_newest['comp_id'])."'
-														AND `fmsg_visible` = '1' ;");	
-					$result_count_forumentries = mysql_fetch_array($query_count_forumentries);
+          $stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(fmsg_id) FROM rsdb_item_comp_forum WHERE fmsg_comp_id = :comp_id AND fmsg_visible = '1' ;");
+          $stmt->bindParam('comp_id',$result_version_newest['comp_id'],PDO::PARAM_STR);
+          $stmt->execute();
+					$result_count_forumentries = $stmt->fetch(PDO::FETCH_ASSOC);
 					
 					if ($result_count_forumentries[0] > 0) {
 						echo "<b>";
@@ -453,11 +415,10 @@
 					}
 ?>
 <?php
-					$query_count_screenshots=mysql_query("SELECT COUNT('media_id')
-														FROM `rsdb_object_media` 
-														WHERE `media_groupid` = '".mysql_real_escape_string($result_version_newest['comp_media'])."'
-														AND `media_visible` = '1' ;");	
-					$result_count_screenshots = mysql_fetch_array($query_count_screenshots);
+          $stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(media_id) FROM rsdb_object_media WHERE media_groupid = :group_id AND media_visible = '1'");
+          $stmt->bindParam('group_id',$result_version_newest['comp_media'],PDO::PARAM_STR);
+          $stmt->execute();
+					$result_count_screenshots = $stmt->fetch();
 					
 					if ($result_count_screenshots[0] > 0) {
 						echo "<b>";
@@ -476,19 +437,17 @@
 			</ul>
 		<br />
         <?php 
-			$query_count_bundle=mysql_query("SELECT COUNT('bundle_id') FROM rsdb_group_bundles WHERE bundle_groupid = '". $result_page["grpentr_id"] ."' ;");	
-			$result_count_bundle = mysql_fetch_row($query_count_bundle);
+      $stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(bundle_id) FROM rsdb_group_bundles WHERE bundle_groupid = :group_id");
+      $stmt->bindParam('group_id',$result_page["grpentr_id"],PDO::PARAM_STR);
+			$result_count_bundle = $stmt->fetch();
 
 			if ($RSDB_SET_group2 != "" && $RSDB_SET_group2 != "overview" || $result_count_bundle[0] != 0) {
 				$temp_pic = mt_rand(1,$result_count_screenshots[0]);
-				$query_screenshots = mysql_query("SELECT * 
-													FROM `rsdb_object_media` 
-													WHERE `media_groupid` = '". mysql_escape_string($result_version_newest['comp_media']) ."' 
-													AND `media_order` = '". mysql_escape_string($temp_pic) ."'   
-													AND (( media_useful_vote_value / media_useful_vote_user) > 2 OR  media_useful_vote_user < 5)
-													ORDER BY `media_useful_vote_value` DESC 
-													LIMIT 1 ;") ;
-				$result_screenshots= mysql_fetch_array($query_screenshots);
+        $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_object_media WHERE media_groupid = :group_id AND media_order = :order AND (( media_useful_vote_value / media_useful_vote_user) > 2 OR  media_useful_vote_user < 5) ORDER BY media_useful_vote_value DESC LIMIT 1");
+        $stmt->bindParam('group_id',$result_version_newest['comp_media'],PDO::PARAM_STR);
+        $stmt->bindParam('order',$temp_pic,PDO::PARAM_STR);
+        $stmt->execute();
+				$result_screenshots= $stmt->fetch($result_version_newest['comp_media']);
 		
 				if ($result_screenshots['media_thumbnail']=="") {
 					echo '<img src="media/screenshots/comp_default.jpg" width="250" height="188" border="0" />';
@@ -534,16 +493,10 @@
               <ul class=simple>
 		<?php
 		
-			$query_entry_appver = mysql_query("SELECT DISTINCT (
-												`comp_appversion` 
-												), `comp_osversion` , `comp_id` , `comp_name` 
-												FROM `rsdb_item_comp` 
-												WHERE `comp_visible` = '1'
-												AND `comp_groupid` = '" .  mysql_real_escape_string($result_page['grpentr_id']) ."'
-												GROUP BY `comp_appversion` 
-												ORDER BY `comp_appversion` ASC 
-												LIMIT 0 , 15 ;") ;
-			while($result_entry_appver = mysql_fetch_array($query_entry_appver)) {
+      $stmt=CDBConnection::getInstance()->prepare("SELECT DISTINCT(comp_appversion), comp_osversion, comp_id, comp_name FROM rsdb_item_comp WHERE comp_visible = '1' AND comp_groupid = :group_id GROUP BY comp_appversion ORDER BY comp_appversion ASC LIMIT 15") ;
+      $stmt->bindParam('group_id',$result_page['grpentr_id'],PDO::PARAM_STR);
+      $stmt->execute();
+			while($result_entry_appver = $stmt->fetch(PDO::FETCH_ASSOC)) {
 				echo "<li><b><a href=\"".$RSDB_intern_link_group_group2.$result_entry_appver['comp_appversion']."\">".$result_entry_appver['comp_name']."</a></b></li>";
 			}
 		
@@ -559,11 +512,15 @@
 			<blockquote>
 	            <?php  
 		// Query Bundles	
-		$query_bundlelist = mysql_query("SELECT * FROM rsdb_group_bundles WHERE bundle_groupid = '". $result_page["grpentr_id"] ."' ;") ;
-		while($result_bundlelist = mysql_fetch_array($query_bundlelist)) {
+		$stmt=DBConnections::getInstance()->prepare("SELECT * FROM rsdb_group_bundles WHERE bundle_groupid = :group_id") ;
+    $stmt->bindParam('group_id',$result_page["grpentr_id"],PDO::PARAM_STR);
+    $stmt->execute();
+		while($result_bundlelist = $stmt->fetch(PDO::FETCH_ASSOC)) {
 			// Count the bundle entries for the current bundle
-			$query_count_bundle=mysql_query("SELECT COUNT('bundle_id') FROM rsdb_group_bundles WHERE bundle_id = '". $result_bundlelist["bundle_id"] ."' ;");	
-			$result_count_bundle = mysql_fetch_row($query_count_bundle);
+      $stmt_sub=CDBConnection::getInstance()->prepare("SELECT COUNT('bundle_id') FROM rsdb_group_bundles WHERE bundle_id = :bundle_id");
+      $stmt_sub->bindParam('bundle_id',$result_bundlelist["bundle_id"],PDO::PARAM_STR);
+      $stmt_sub->execute();
+			$result_count_bundle = $stmt_sub->fetch();
 
 			if ($result_count_bundle[0]) {
 
@@ -575,10 +532,14 @@
 				echo "	<td width='30%'><div align='center'><font color='#FFFFFF' size='2' face='Arial, Helvetica, sans-serif'><b>Name</b></font></div></td>";
 				echo "	<td width='70%'><div align='center'><font color='#FFFFFF' size='2' face='Arial, Helvetica, sans-serif'><b>Description</b></font></div></td>";
 				echo "  </tr>";
-				$query_bundlelist_groupitem = mysql_query("SELECT * FROM rsdb_group_bundles WHERE bundle_id = '". $result_bundlelist["bundle_id"] ."' ORDER BY `bundle_groupid` ASC ;") ;
-				while($result_bundlelist_groupitem = mysql_fetch_array($query_bundlelist_groupitem)) {
-					$query_bundlelist_item = mysql_query("SELECT * FROM rsdb_groups WHERE grpentr_id = '". $result_bundlelist_groupitem["bundle_groupid"] ."' ORDER BY `grpentr_name` ASC ;") ;
-					$result_bundlelist_item = mysql_fetch_array($query_bundlelist_item);
+        $stmt_bundle=DBConnnection::getInstance()->prepare("SELECT * FROM rsdb_group_bundles WHERE bundle_id = :bundle_id ORDER BY bundle_groupid ASC");
+        $stmt_bundle->bindParam('bundle_id',$result_bundlelist["bundle_id"],PDO::PARAM_STR);
+        $stmt_bundle->execute();
+				while($result_bundlelist_groupitem = $stmt->fetch(PDO::FETCH_ASSOC)) {
+          $stmt_sub=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_groups WHERE grpentr_id = :group_id ORDER BY grpentr_name ASC");
+          $stmt_sub->bindParam('group_id',$result_bundlelist_groupitem["bundle_groupid"],PDO::PARAM_STR);
+          $stmt_sub->execute();
+					$result_bundlelist_item = $stmt_sub->fetch(PDO::FETCH_ASSOC);
 					echo "  <tr bgcolor='";
 						$zaehler++;
 						if ($zaehler == "1") {
@@ -608,14 +569,11 @@
 	          <p>
 	            <?php
 					$temp_pic = mt_rand(1,$result_count_screenshots[0]);
-					$query_screenshots = mysql_query("SELECT * 
-														FROM `rsdb_object_media` 
-														WHERE `media_groupid` = '". mysql_escape_string($result_version_newest['comp_media']) ."' 
-														AND `media_order` = '". mysql_escape_string($temp_pic) ."'   
-														AND (( media_useful_vote_value / media_useful_vote_user) > 2 OR  media_useful_vote_user < 5)
-														ORDER BY `media_useful_vote_value` DESC 
-														LIMIT 1 ;") ;
-					$result_screenshots= mysql_fetch_array($query_screenshots);
+          $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_object_media WHERE media_groupid = :group_id AND media_order = :order AND (( media_useful_vote_value / media_useful_vote_user) > 2 OR  media_useful_vote_user < 5) ORDER BY media_useful_vote_value DESC LIMIT 1");
+          $stmt->bindParam('group_id',$result_version_newest['comp_media'],PDO::PARAM_STR);
+          $stmt->bindParam('order',$temp_pic,PDO::PARAM_STR);
+          $stmt->execute();
+					$result_screenshots= $stmt->fetch(PDO::FETCH_ASSOC);
 			
 					if ($result_screenshots['media_thumbnail']=="") {
 						echo '<img src="media/screenshots/comp_default.jpg" width="250" height="188">';
@@ -679,13 +637,11 @@
 			$farbe1="#E2E2E2";
 			$farbe2="#EEEEEE";
 			$zaehler="0";
-			$RSDB_intern_sortby_SQL_b_query = mysql_query("SELECT * 
-										FROM `rsdb_item_comp` 
-										WHERE `comp_groupid` = '". mysql_real_escape_string($RSDB_SET_group) ."' 
-										AND `comp_appversion` = '". mysql_real_escape_string($result_entry_appname['comp_appversion']) ."' 
-										AND `comp_visible` = '1' 
-										ORDER BY `comp_osversion` DESC ;");
-			while($result_sortby_b = mysql_fetch_array($RSDB_intern_sortby_SQL_b_query)) { 
+      $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp WHERE comp_groupid = :group_id AND comp_appversion = :version AND comp_visible = '1' ORDER BY comp_osversion DESC");
+      $stmt->bindParam('group_id',$RSDB_SET_group,PDO::PARAM_STR);
+      $stmt->bindParam('version',$result_entry_appname['comp_appversion'],PDO::PARAM_STR);
+      $stmt->execute();
+			while($result_sortby_b = $stmt->fetch(PDO::FETCH_ASSOC)) { 
 ?>
                 <tr bgcolor="<?php
 									$zaehler++;
@@ -717,13 +673,10 @@
 				$counter_stars_function = 0;
 				$counter_stars_user = 0;
 				
-				$query_count_stars = mysql_query("SELECT * 
-								FROM `rsdb_item_comp_testresults` 
-								WHERE `test_visible` = '1'
-								AND `test_comp_id` = " . $result_sortby_b['comp_id'] . "
-								ORDER BY `test_comp_id` ASC") ;
-								
-				while($result_count_stars = mysql_fetch_array($query_count_stars)) {
+				$stmt_sub=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp_testresults WHERE test_visible = '1' AND test_comp_id = :comp_id ORDER BY test_comp_id ASC");
+        $stmt_sub->bindParam('comp_id',$result_sortby_b['comp_id'],PDO::PARAM_STR);
+        $stmt_sub->execute();
+				while($result_count_stars = $stmt_sub->fetch(PDO::FETCH_ASSOC)) {
 					$counter_stars_install += $result_count_stars['test_result_install'];
 					$counter_stars_function += $result_count_stars['test_result_function'];
 					$counter_stars_user++;
