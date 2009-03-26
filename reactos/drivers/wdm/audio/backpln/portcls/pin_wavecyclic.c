@@ -30,6 +30,7 @@ typedef struct
     ULONG DelayedRequestInProgress;
     ULONG FrameSize;
     BOOL Capture;
+    PIRP CloseIrp;
 
 }IPortPinWaveCyclicImpl;
 
@@ -242,7 +243,7 @@ IServiceSink_fnRequestService(
 
 
     Status = This->Stream->lpVtbl->GetPosition(This->Stream, &Position);
-    DPRINT1("Position %u Buffer %p BufferSize %u ActiveIrpOffset %u\n", Position, Buffer, This->CommonBufferSize, BufferSize);
+    DPRINT("Position %u Buffer %p BufferSize %u ActiveIrpOffset %u\n", Position, Buffer, This->CommonBufferSize, BufferSize);
 
     if (Position < This->CommonBufferOffset)
     {
@@ -616,10 +617,62 @@ CloseStreamRoutine(
     IN PDEVICE_OBJECT  DeviceObject,
     IN PVOID  Context)
 {
-    PMINIPORTWAVECYCLICSTREAM Stream = (PMINIPORTWAVECYCLICSTREAM)Context;
+    PMINIPORTWAVECYCLICSTREAM Stream;
+    NTSTATUS Status;
+    ISubdevice *ISubDevice;
+    PSUBDEVICE_DESCRIPTOR Descriptor;
 
-    DPRINT("CloseStreamRoutine %p\n", Stream);
-    Stream->lpVtbl->Release(Stream);
+    IPortPinWaveCyclicImpl * This = (IPortPinWaveCyclicImpl*)Context;
+
+    if (This->Stream)
+    {
+        if (This->State != KSSTATE_STOP)
+        {
+            This->Stream->lpVtbl->SetState(This->Stream, KSSTATE_STOP);
+            KeStallExecutionProcessor(10);
+        }
+    }
+
+    This->ServiceGroup->lpVtbl->RemoveMember(This->ServiceGroup, (PSERVICESINK)&This->lpVtblServiceSink);
+    This->ServiceGroup->lpVtbl->Release(This->ServiceGroup);
+    This->DmaChannel->lpVtbl->Release(This->DmaChannel);
+
+    Status = This->Port->lpVtbl->QueryInterface(This->Port, &IID_ISubdevice, (PVOID*)&ISubDevice);
+    if (NT_SUCCESS(Status))
+    {
+        Status = ISubDevice->lpVtbl->GetDescriptor(ISubDevice, &Descriptor);
+        if (NT_SUCCESS(Status))
+        {
+            ISubDevice->lpVtbl->Release(ISubDevice);
+            Descriptor->Factory.Instances[This->ConnectDetails->PinId].CurrentPinInstanceCount--;
+        }
+    }
+
+    if (This->Format)
+    {
+        ExFreePool(This->Format);
+        This->Format = NULL;
+    }
+
+    if (This->IrpQueue)
+    {
+        This->IrpQueue->lpVtbl->Release(This->IrpQueue);
+    }
+
+    if (This->Stream)
+    {
+        Stream = This->Stream;
+        This->Stream = NULL;
+
+        if (This->CloseIrp)
+        {
+            This->CloseIrp->IoStatus.Information = 0;
+            This->CloseIrp->IoStatus.Status = STATUS_SUCCESS;
+            IoCompleteRequest(This->CloseIrp, IO_NO_INCREMENT);
+        }
+        Stream->lpVtbl->Release(Stream);
+        /* this line is never reached */
+    }
 }
 
 /*
@@ -632,55 +685,33 @@ IPortPinWaveCyclic_fnClose(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
-    ISubdevice *ISubDevice;
-    NTSTATUS Status;
-    SUBDEVICE_DESCRIPTOR * Descriptor;
     PIO_WORKITEM WorkItem;
 
     IPortPinWaveCyclicImpl * This = (IPortPinWaveCyclicImpl*)iface;
-    DPRINT1("IPortPinWaveCyclic_fnClose\n");
-
-    Status = This->Port->lpVtbl->QueryInterface(This->Port, &IID_ISubdevice, (PVOID*)&ISubDevice);
-    if (NT_SUCCESS(Status))
-    {
-        Status = ISubDevice->lpVtbl->GetDescriptor(ISubDevice, &Descriptor);
-        if (NT_SUCCESS(Status))
-        {
-            ISubDevice->lpVtbl->Release(ISubDevice);
-            Descriptor->Factory.Instances[This->ConnectDetails->PinId].CurrentPinInstanceCount--;
-            DPRINT1("InstanceCount %u\n", Descriptor->Factory.Instances[This->ConnectDetails->PinId].CurrentPinInstanceCount);
-        }
-    }
-
-
-    if (This->Stream)
-    {
-        This->Stream->lpVtbl->SetState(This->Stream, KSSTATE_STOP);
-    }
-
-    This->ServiceGroup->lpVtbl->RemoveMember(This->ServiceGroup, (PSERVICESINK)&This->lpVtblServiceSink);
-    This->ServiceGroup->lpVtbl->Release(This->ServiceGroup);
-    This->DmaChannel->lpVtbl->Release(This->DmaChannel);
-
-    if (This->Format)
-        ExFreePool(This->Format);
-
-    This->IrpQueue->lpVtbl->Release(This->IrpQueue);
-
 
     if (This->Stream)
     {
         WorkItem = IoAllocateWorkItem(DeviceObject);
         if (WorkItem)
         {
-            IoQueueWorkItem(WorkItem, CloseStreamRoutine, DelayedWorkQueue, (PVOID)This->Stream);
+            if (Irp)
+            {
+                This->CloseIrp = Irp;
+                IoMarkIrpPending(Irp);
+                Irp->IoStatus.Information = 0;
+                Irp->IoStatus.Status = STATUS_PENDING;
+            }
+            IoQueueWorkItem(WorkItem, CloseStreamRoutine, DelayedWorkQueue, (PVOID)This);
+            return STATUS_PENDING;
         }
     }
 
-    Irp->IoStatus.Information = 0;
-    Irp->IoStatus.Status = STATUS_SUCCESS;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
+    if (Irp)
+    {
+        Irp->IoStatus.Information = 0;
+        Irp->IoStatus.Status = STATUS_SUCCESS;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    }
     return STATUS_SUCCESS;
 }
 

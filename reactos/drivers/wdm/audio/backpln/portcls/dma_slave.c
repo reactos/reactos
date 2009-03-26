@@ -113,9 +113,6 @@ IDmaChannelSlave_fnAllocateBuffer(
         return STATUS_UNSUCCESSFUL;
     }
 
-    //FIXME
-    // retry with different size on failure
-
     This->Buffer = This->pAdapter->DmaOperations->AllocateCommonBuffer(This->pAdapter, BufferSize, &This->Address, FALSE);
     if (!This->Buffer)
     {
@@ -400,7 +397,7 @@ IDmaChannelSlave_fnStop(
 
     This->DmaStarted = FALSE;
 
-    return 0;
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -493,7 +490,7 @@ PcNewDmaChannel(
 
     IDmaChannelSlaveImpl * This;
 
-    DPRINT1("OutDmaChannel %p OuterUnknown %p PoolType %p DeviceDescription %p DeviceObject %p\n",
+    DPRINT("OutDmaChannel %p OuterUnknown %p PoolType %p DeviceDescription %p DeviceObject %p\n",
             OutDmaChannel, OuterUnknown, PoolType, DeviceDescription, DeviceObject);
 
     This = AllocateItem(PoolType, sizeof(IDmaChannelSlaveImpl), TAG_PORTCLASS);
@@ -509,8 +506,6 @@ PcNewDmaChannel(
     {
         DeviceDescription->InterfaceType = BusType;
     }
-
-    DPRINT1("Calling IoGetDmaAdapter\n");
 
     Adapter = IoGetDmaAdapter(DeviceExt->PhysicalDeviceObject, DeviceDescription, &MapRegisters);
     if (!Adapter)

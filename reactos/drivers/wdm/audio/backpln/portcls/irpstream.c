@@ -179,8 +179,6 @@ IIrpQueue_fnAddMapping(
 
     (void)InterlockedIncrement((volatile long*)&This->NumMappings);
 
-
-
     if (Irp)
     {
         Irp->IoStatus.Status = STATUS_PENDING;

@@ -50,15 +50,6 @@ PcInitializeAdapterDriver(
 
     DPRINT1("PcInitializeAdapterDriver\n");
 
-#if 0
-    /* Set default stub - is this a good idea? */
-    DPRINT1("Setting IRP stub\n");
-    for ( i = 0; i <= IRP_MJ_MAXIMUM_FUNCTION; i ++ )
-    {
-        DriverObject->MajorFunction[i] = IrpStub;
-    }
-#endif
-
     /* Our IRP handlers */
     DPRINT1("Setting IRP handlers\n");
     DriverObject->MajorFunction[IRP_MJ_CREATE] = PcDispatchIrp;
@@ -195,8 +186,6 @@ PcAddAdapterDevice(
         return STATUS_UNSUCCESSFUL;
     }
 
-
-
     return status;
 }
 
@@ -241,6 +230,17 @@ PcRegisterSubdevice(
         /* the provided port driver doesnt support ISubdevice */
         return STATUS_INVALID_PARAMETER;
     }
+
+    /* get the subdevice descriptor */
+    Status = SubDevice->lpVtbl->GetDescriptor(SubDevice, &SubDeviceDescriptor);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to get subdevice descriptor %x\n", Status);
+        SubDevice->lpVtbl->Release(SubDevice);
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    /* add an create item to the device header */
     Status = KsAddObjectCreateItemToDeviceHeader(DeviceExt->KsDeviceHeader, PcCreateItemDispatch, (PVOID)SubDevice, Name, NULL);
     if (!NT_SUCCESS(Status))
     {
@@ -249,17 +249,16 @@ PcRegisterSubdevice(
         DPRINT1("KsAddObjectCreateItemToDeviceHeader failed with %x\n", Status);
         return Status;
     }
-    SubDevice->lpVtbl->AddRef(SubDevice);
 
-    Status = SubDevice->lpVtbl->GetDescriptor(SubDevice, &SubDeviceDescriptor);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to get subdevice descriptor %x\n", Status);
-        SubDevice->lpVtbl->Release(SubDevice);
-    }
+    /* increment reference count */
+    SubDevice->lpVtbl->AddRef(SubDevice);
 
     for(Index = 0; Index < SubDeviceDescriptor->InterfaceCount; Index++)
     {
+        //FIXME
+        // Use a reference string such as Wave0001 / Topology0001
+        //
+
         Status = IoRegisterDeviceInterface(DeviceExt->PhysicalDeviceObject,
                                            &SubDeviceDescriptor->Interfaces[Index],
                                            NULL,

@@ -49,7 +49,7 @@ PcRegisterIoTimeout(
     Status = IoInitializeTimer(pDeviceObject, pTimerRoutine, pContext);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("IoInitializeTimer failed with %x\n", Status);
+        DPRINT1("IoInitializeTimer failed with %x\n", Status);
         return Status;
     }
 

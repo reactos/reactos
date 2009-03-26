@@ -598,7 +598,7 @@ PcCreateItemDispatch(
                 IoCompleteRequest(Irp, IO_NO_INCREMENT);
                 return STATUS_INSUFFICIENT_RESOURCES;
             }
-            DPRINT1("Queueing IRP %p\n", Irp);
+            DPRINT1("Queueing IRP %p Irql %u\n", Irp, KeGetCurrentIrql());
             Irp->IoStatus.Information = 0;
             Irp->IoStatus.Status = STATUS_PENDING;
             IoMarkIrpPending(Irp);

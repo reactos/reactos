@@ -6,20 +6,14 @@ Dispatch_fnDeviceIoControl(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
-    PIO_STACK_LOCATION IoStack;
     IIrpTarget * IrpTarget;
     PKSOBJECT_CREATE_ITEM CreateItem;
 
-    //DPRINT1("Dispatch_fnDeviceIoControl called DeviceObject %p Irp %p\n", DeviceObject);
-
     /* access the create item */
     CreateItem = KSCREATE_ITEM_IRP_STORAGE(Irp);
-
-    IoStack = IoGetCurrentIrpStackLocation(Irp);
-    ASSERT(IoStack->FileObject);
-
+    /* get the IrpTarget */
     IrpTarget = (IIrpTarget*)CreateItem->Context;
-
+    /* let IrpTarget handle request */
     return IrpTarget->lpVtbl->DeviceIoControl(IrpTarget, DeviceObject, Irp);
 }
 
@@ -29,20 +23,14 @@ Dispatch_fnRead(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
-    PIO_STACK_LOCATION IoStack;
     IIrpTarget * IrpTarget;
     PKSOBJECT_CREATE_ITEM CreateItem;
 
-    DPRINT1("Dispatch_fnRead called DeviceObject %p Irp %p\n", DeviceObject);
-
     /* access the create item */
     CreateItem = KSCREATE_ITEM_IRP_STORAGE(Irp);
-
-    IoStack = IoGetCurrentIrpStackLocation(Irp);
-    ASSERT(IoStack->FileObject);
-
+    /* get the IrpTarget */
     IrpTarget = (IIrpTarget*)CreateItem->Context;
-
+    /* let IrpTarget handle request */
     return IrpTarget->lpVtbl->Read(IrpTarget, DeviceObject, Irp);
 }
 
@@ -52,20 +40,14 @@ Dispatch_fnWrite(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
-    PIO_STACK_LOCATION IoStack;
     IIrpTarget * IrpTarget;
     PKSOBJECT_CREATE_ITEM CreateItem;
 
-    DPRINT1("Dispatch_fnWrite called DeviceObject %p Irp %p\n", DeviceObject);
-
     /* access the create item */
     CreateItem = KSCREATE_ITEM_IRP_STORAGE(Irp);
-
-    IoStack = IoGetCurrentIrpStackLocation(Irp);
-    ASSERT(IoStack->FileObject);
-
+    /* get the IrpTarget */
     IrpTarget = (IIrpTarget*)CreateItem->Context;
-
+    /* let IrpTarget handle request */
     return IrpTarget->lpVtbl->Write(IrpTarget, DeviceObject, Irp);
 }
 
@@ -75,20 +57,14 @@ Dispatch_fnFlush(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
-    PIO_STACK_LOCATION IoStack;
     IIrpTarget * IrpTarget;
     PKSOBJECT_CREATE_ITEM CreateItem;
 
-    DPRINT1("Dispatch_fnFlush called DeviceObject %p Irp %p\n", DeviceObject);
-
     /* access the create item */
     CreateItem = KSCREATE_ITEM_IRP_STORAGE(Irp);
-
-    IoStack = IoGetCurrentIrpStackLocation(Irp);
-    ASSERT(IoStack->FileObject);
-
+    /* get the IrpTarget */
     IrpTarget = (IIrpTarget*)CreateItem->Context;
-
+    /* let IrpTarget handle request */
     return IrpTarget->lpVtbl->Flush(IrpTarget, DeviceObject, Irp);
 }
 
@@ -98,24 +74,14 @@ Dispatch_fnClose(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
-    PIO_STACK_LOCATION IoStack;
     IIrpTarget * IrpTarget;
     PKSOBJECT_CREATE_ITEM CreateItem;
 
-    DPRINT1("Dispatch_fnClose called DeviceObject %p Irp %p\n", DeviceObject);
-
     /* access the create item */
     CreateItem = KSCREATE_ITEM_IRP_STORAGE(Irp);
-    ASSERT(CreateItem != NULL);
-
-    IoStack = IoGetCurrentIrpStackLocation(Irp);
-    ASSERT(IoStack != NULL);
-    ASSERT(IoStack->FileObject != NULL);
-
+    /* get the IrpTarget */
     IrpTarget = (IIrpTarget*)CreateItem->Context;
-
-    //DPRINT1("IrpTarget %p\n", IrpTarget);
-
+    /* let IrpTarget handle request */
     return IrpTarget->lpVtbl->Close(IrpTarget, DeviceObject, Irp);
 }
 
@@ -125,20 +91,14 @@ Dispatch_fnQuerySecurity(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
-    PIO_STACK_LOCATION IoStack;
     IIrpTarget * IrpTarget;
     PKSOBJECT_CREATE_ITEM CreateItem;
 
-    DPRINT1("Dispatch_fnQuerySecurity called DeviceObject %p Irp %p\n", DeviceObject);
-
     /* access the create item */
     CreateItem = KSCREATE_ITEM_IRP_STORAGE(Irp);
-
-    IoStack = IoGetCurrentIrpStackLocation(Irp);
-    ASSERT(IoStack->FileObject);
-
+    /* get the IrpTarget */
     IrpTarget = (IIrpTarget*)CreateItem->Context;
-
+    /* let IrpTarget handle request */
     return IrpTarget->lpVtbl->QuerySecurity(IrpTarget, DeviceObject, Irp);
 }
 
@@ -148,20 +108,14 @@ Dispatch_fnSetSecurity(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
-    PIO_STACK_LOCATION IoStack;
     IIrpTarget * IrpTarget;
     PKSOBJECT_CREATE_ITEM CreateItem;
 
-    DPRINT1("Dispatch_fnSetSecurity called DeviceObject %p Irp %p\n", DeviceObject);
-
     /* access the create item */
     CreateItem = KSCREATE_ITEM_IRP_STORAGE(Irp);
-
-    IoStack = IoGetCurrentIrpStackLocation(Irp);
-    ASSERT(IoStack->FileObject);
-
+    /* get the IrpTarget */
     IrpTarget = (IIrpTarget*)CreateItem->Context;
-
+    /* let IrpTarget handle request */
     return IrpTarget->lpVtbl->SetSecurity(IrpTarget, DeviceObject, Irp);
 }
 
@@ -178,10 +132,13 @@ Dispatch_fnFastDeviceIoControl(
     PIO_STATUS_BLOCK IoStatus,
     PDEVICE_OBJECT DeviceObject)
 {
-    DPRINT1("Dispatch_fnFastDeviceIoControl called DeviceObject %p Irp %p\n", DeviceObject);
+    IIrpTarget * IrpTarget;
 
+    /* access IrpTarget */
+    IrpTarget = (IIrpTarget *)FileObject->FsContext2;
 
-    return FALSE;
+    /* let IrpTarget handle request */
+    return IrpTarget->lpVtbl->FastDeviceIoControl(IrpTarget, FileObject, Wait, InputBuffer, InputBufferLength, OutputBuffer, OutputBufferLength, IoControlCode, IoStatus, DeviceObject);
 }
 
 
@@ -197,10 +154,13 @@ Dispatch_fnFastRead(
     PIO_STATUS_BLOCK IoStatus,
     PDEVICE_OBJECT DeviceObject)
 {
-    DPRINT1("Dispatch_fnFastRead called DeviceObject %p Irp %p\n", DeviceObject);
+    IIrpTarget * IrpTarget;
 
-    return FALSE;
+    /* access IrpTarget */
+    IrpTarget = (IIrpTarget *)FileObject->FsContext2;
 
+    /* let IrpTarget handle request */
+    return IrpTarget->lpVtbl->FastRead(IrpTarget, FileObject, FileOffset, Length, Wait, LockKey, Buffer, IoStatus, DeviceObject);
 }
 
 BOOLEAN
@@ -216,10 +176,10 @@ Dispatch_fnFastWrite(
     PDEVICE_OBJECT DeviceObject)
 {
     IIrpTarget * IrpTarget;
-    //DPRINT1("Dispatch_fnFastWrite called DeviceObject %p Irp %p\n", DeviceObject);
 
+    /* access IrpTarget */
     IrpTarget = (IIrpTarget *)FileObject->FsContext2;
-
+    /* let IrpTarget handle request */
     return IrpTarget->lpVtbl->FastWrite(IrpTarget, FileObject, FileOffset, Length, Wait, LockKey, Buffer, IoStatus, DeviceObject);
 }
 
