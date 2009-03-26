@@ -139,9 +139,16 @@ BOOL INTERNAL_CALL
 DC_Cleanup(PVOID ObjectBody)
 {
     PDC pDC = (PDC)ObjectBody;
+
+    /* Free driver name (HACK) */
     if (pDC->rosdc.DriverName.Buffer)
         ExFreePoolWithTag(pDC->rosdc.DriverName.Buffer, TAG_DC);
+
+    /* Clean up selected objects */
     DC_vSelectSurface(pDC, NULL);
+    DC_vSelectFillBrush(pDC, NULL);
+    DC_vSelectLineBrush(pDC, NULL);
+
     return TRUE;
 }
 

@@ -278,11 +278,33 @@ DC_vSelectSurface(PDC pdc, PSURFACE psurfNew)
     PSURFACE psurfOld = pdc->dclevel.pSurface;
     if (psurfOld)
         SURFACE_ShareUnlockSurface(psurfOld);
-    
     if (psurfNew)
         GDIOBJ_IncrementShareCount((POBJ)psurfNew);
-
     pdc->dclevel.pSurface = psurfNew;
+}
+
+VOID
+FORCEINLINE
+DC_vSelectFillBrush(PDC pdc, PBRUSH pbrFill)
+{
+    PBRUSH pbrFillOld = pdc->dclevel.pbrFill;
+    if (pbrFillOld)
+        BRUSH_ShareUnlockBrush(pbrFillOld);
+    if (pbrFill)
+        GDIOBJ_IncrementShareCount((POBJ)pbrFill);
+    pdc->dclevel.pbrFill = pbrFill;
+}
+
+VOID
+FORCEINLINE
+DC_vSelectLineBrush(PDC pdc, PBRUSH pbrLine)
+{
+    PBRUSH pbrLineOld = pdc->dclevel.pbrLine;
+    if (pbrLineOld)
+        BRUSH_ShareUnlockBrush(pbrLineOld);
+    if (pbrLine)
+        GDIOBJ_IncrementShareCount((POBJ)pbrLine);
+    pdc->dclevel.pbrLine = pbrLine;
 }
 
 BOOL FASTCALL

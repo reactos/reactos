@@ -39,12 +39,12 @@ DC_vCopyState(PDC pdcSrc, PDC pdcDst)
 
     /* Handle references here correctly */
     DC_vSelectSurface(pdcDst, pdcSrc->dclevel.pSurface);
+    DC_vSelectFillBrush(pdcDst, pdcSrc->dclevel.pbrFill);
+    DC_vSelectLineBrush(pdcDst, pdcSrc->dclevel.pbrLine);
 
     // FIXME: handle refs
     pdcDst->dclevel.hpal            = pdcSrc->dclevel.hpal;
     pdcDst->dclevel.ppal            = pdcSrc->dclevel.ppal;
-    pdcDst->dclevel.pbrFill         = pdcSrc->dclevel.pbrFill;
-    pdcDst->dclevel.pbrLine         = pdcSrc->dclevel.pbrLine;
     pdcDst->dclevel.plfnt           = pdcSrc->dclevel.plfnt;
 
     /* ROS hacks */
