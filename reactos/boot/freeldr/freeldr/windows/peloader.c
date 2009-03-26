@@ -406,7 +406,7 @@ WinLdrLoadImage(IN PCHAR FileName,
 		if (SizeOfRawData < VirtualSize)
 		{
 			DPRINTM(DPRINT_PELOADER, "WinLdrLoadImage(): SORD %d < VS %d\n", SizeOfRawData, VirtualSize);
-			RtlZeroMemory((PVOID)(SectionHeader->VirtualAddress + (ULONG)PhysicalBase + SizeOfRawData), VirtualSize - SizeOfRawData);
+			RtlZeroMemory((PVOID)(SectionHeader->VirtualAddress + (ULONG_PTR)PhysicalBase + SizeOfRawData), VirtualSize - SizeOfRawData);
 		}
 
 		SectionHeader++;
@@ -421,7 +421,7 @@ WinLdrLoadImage(IN PCHAR FileName,
 
 
 	/* Relocate the image, if it needs it */
-	if (NtHeaders->OptionalHeader.ImageBase != (ULONG)VirtualBase)
+	if (NtHeaders->OptionalHeader.ImageBase != (ULONG_PTR)VirtualBase)
 	{
 		DPRINTM(DPRINT_PELOADER, "Relocating %p -> %p\n",
 			NtHeaders->OptionalHeader.ImageBase, VirtualBase);
@@ -528,7 +528,7 @@ WinLdrpBindImportName(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
 			/* AddressOfData in thunk entry will become a virtual address (from relative) */
 			//DPRINTM(DPRINT_PELOADER, "WinLdrpBindImportName(): ThunkData->u1.AOD was %p\n", ThunkData->u1.AddressOfData);
 			ThunkData->u1.AddressOfData =
-				(ULONG)RVA(ImageBase, ThunkData->u1.AddressOfData);
+				(ULONG_PTR)RVA(ImageBase, ThunkData->u1.AddressOfData);
 			//DPRINTM(DPRINT_PELOADER, "WinLdrpBindImportName(): ThunkData->u1.AOD became %p\n", ThunkData->u1.AddressOfData);
 		}
 
@@ -630,11 +630,11 @@ WinLdrpBindImportName(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
 	FunctionTable = (PULONG)VaToPa(RVA(DllBase, ExportDirectory->AddressOfFunctions));
 
 	/* Save a pointer to the function */
-	ThunkData->u1.Function = (ULONG)RVA(DllBase, FunctionTable[Ordinal]);
+	ThunkData->u1.Function = (ULONG_PTR)RVA(DllBase, FunctionTable[Ordinal]);
 
 	/* Is it a forwarder? (function pointer isn't within the export directory) */
-	if (((ULONG)VaToPa((PVOID)ThunkData->u1.Function) > (ULONG)ExportDirectory) &&
-		((ULONG)VaToPa((PVOID)ThunkData->u1.Function) < ((ULONG)ExportDirectory + ExportSize)))
+	if (((ULONG_PTR)VaToPa((PVOID)ThunkData->u1.Function) > (ULONG_PTR)ExportDirectory) &&
+		((ULONG_PTR)VaToPa((PVOID)ThunkData->u1.Function) < ((ULONG_PTR)ExportDirectory + ExportSize)))
 	{
 		PLDR_DATA_TABLE_ENTRY DataTableEntry;
 		CHAR ForwardDllName[255];
@@ -685,7 +685,7 @@ WinLdrpBindImportName(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
 			ImportByName->Hint = 0;
 
 			/* And finally point ThunkData's AddressOfData to that structure */
-			RefThunkData.u1.AddressOfData = (ULONG)ImportByName;
+			RefThunkData.u1.AddressOfData = (ULONG_PTR)ImportByName;
 
 			/* And recursively call ourselves */
 			Status = WinLdrpBindImportName(

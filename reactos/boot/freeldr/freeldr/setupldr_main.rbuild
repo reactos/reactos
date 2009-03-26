@@ -18,6 +18,8 @@
 		<file>setupldr.c</file>
 	</directory>
 	<directory name="windows">
-		<file>setupldr2.c</file>
+		<if property="ARCH" value="i386">
+			<file>setupldr2.c</file>
+		</if>
 	</directory>
 </module>
