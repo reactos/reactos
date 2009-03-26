@@ -23,7 +23,7 @@
  * class Subsystem_PHPBB
  * 
  */
-class Subsystem_PHPBB extends Subsystem
+class Subsystem_PHPBB extends SubsystemExternal
 {
 
 

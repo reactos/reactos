@@ -23,7 +23,7 @@
  * class Subsystem_Wiki
  * 
  */
-class Subsystem_Wiki extends Subsystem
+class Subsystem_Wiki extends SubsystemExternal
 {
 
 

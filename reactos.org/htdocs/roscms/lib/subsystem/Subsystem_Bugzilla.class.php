@@ -23,7 +23,7 @@
  * class Subsystem_Bugzilla
  * 
  */
-class Subsystem_Bugzilla extends Subsystem
+class Subsystem_Bugzilla extends SubsystemExternal
 {
 
 
