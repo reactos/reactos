@@ -1,0 +1,134 @@
+Index: boot/freeldr/freeldr/arch/i386/loader.c
+===================================================================
+--- boot/freeldr/freeldr/arch/i386/loader.c	(revision 27633)
++++ boot/freeldr/freeldr/arch/i386/loader.c	(working copy)
+@@ -85,7 +85,7 @@
+ FrLdrStartup(ULONG Magic)
+ {
+     /* Goodbye OFW */
+-    OFInterpret0("usb-quiet");
++    //OFInterpret0("usb-quiet");
+ 
+     /* Disable Interrupts */
+     _disable();
+Index: boot/freeldr/freeldr/arch/i386/macholpc.c
+===================================================================
+--- boot/freeldr/freeldr/arch/i386/macholpc.c	(revision 27284)
++++ boot/freeldr/freeldr/arch/i386/macholpc.c	(working copy)
+@@ -230,9 +230,9 @@
+ 	//char * gethomedir();
+ 	//char *homedir = gethomedir();
+ 
++	ofwprintf("OlpcDiskReadLogicalSectors() SN %x %x, SC %x\n", (ULONG)(SectorNumber >> 25), 
++		(ULONG)((SectorNumber * 512) & 0xffffffff), SectorCount);
+ 
+-	//ofwprintf("OlpcDiskReadLogicalSectors() SN %x, SC %x\n", SectorNumber, SectorCount); //FIXME: incorrect due to SN being ULONGLONG
+-
+ 	if( part_handle == -1 )
+ 	{
+ 		part_handle = OFOpen(BootPart);
+@@ -244,7 +244,7 @@
+ 		}
+ 	}
+ 
+-	//ofwprintf("Got partition handle %x\n", part_handle);
++	ofwprintf("Got partition handle %x\n", part_handle);
+ 
+ 	if( part_handle == -1 )
+ 	{
+Index: drivers/base/bootvid/vid_fb.c
+===================================================================
+--- drivers/base/bootvid/vid_fb.c	(revision 27277)
++++ drivers/base/bootvid/vid_fb.c	(working copy)
+@@ -101,7 +101,8 @@
+             if (!Transparent)
+                 Pixel[Col] = (0 != (FontPtr[Line] & Mask) ? Color : BackTextColor);
+             else
+-                Pixel[Col] = (0 != (FontPtr[Line] & Mask) ? Color : Pixel[Col]); // transparent background
++                /* FIXME: A hack here preventing transparent chars */
++                Pixel[Col] = (0 != (FontPtr[Line] & Mask) ? Color : BackTextColor/*Pixel[Col]*/); // transparent background
+ 
+             Mask = Mask >> 1;
+         }
+@@ -182,7 +183,8 @@
+ 
+    if (!VidpInitialized)
+    {
+-      PhysicalAddress.QuadPart = 0xFD000000;
++      PhysicalAddress.QuadPart = 0xFD000000; // OLPC
++      //PhysicalAddress.QuadPart = 0xF0000000; // VMWare
+       VidpMemory = MmMapIoSpace(PhysicalAddress, 0x200000, MmNonCached);
+       if (VidpMemory == NULL)
+          return FALSE;
+@@ -269,7 +271,7 @@
+ VidFbDisplayString(
+    IN PCSTR String)
+ {
+-    ULONG TopDelta = CHAR_HEIGHT-2;
++    ULONG TopDelta = CHAR_HEIGHT;//-2;
+ 
+     /* Start looping the string */
+     while (*String)
+Index: ntoskrnl/io/iomgr/iomgr.c
+===================================================================
+--- ntoskrnl/io/iomgr/iomgr.c	(revision 27165)
++++ ntoskrnl/io/iomgr/iomgr.c	(working copy)
+@@ -400,6 +400,7 @@
+                         FILE_NON_DIRECTORY_FILE);
+     if (!NT_SUCCESS(Status))
+     {
++        while (TRUE) { NtYieldExecution(); }; // HACK to watch olpc boot process
+         /* Fail */
+         KeBugCheckEx(INACCESSIBLE_BOOT_DEVICE,
+                      (ULONG_PTR)&DeviceName,
+Index: ntoskrnl/ke/i386/ctxswitch.S
+===================================================================
+--- ntoskrnl/ke/i386/ctxswitch.S	(revision 26941)
++++ ntoskrnl/ke/i386/ctxswitch.S	(working copy)
+@@ -175,14 +175,14 @@
+     /* Save the NPX State */
+     mov ecx, [eax+KTHREAD_INITIAL_STACK]
+     sub ecx, NPX_FRAME_LENGTH
+-    fxsave [ecx]
++    fsave [ecx]
+     mov byte ptr [eax+KTHREAD_NPX_STATE], NPX_STATE_NOT_LOADED
+ 
+ DontSave:
+     /* Load the NPX State */
+     mov ecx, [esi+KTHREAD_INITIAL_STACK]
+     sub ecx, NPX_FRAME_LENGTH
+-    fxrstor [ecx]
++    frstor [ecx]
+ 
+     /* Get the CR0 state and destination */
+     mov edx, [ecx+FN_CR0_NPX_STATE]
+@@ -213,7 +213,7 @@
+     jz DoneLoad
+ 
+     /* Save the FX State */
+-    fxsave [ecx]
++    fsave [ecx]
+ 
+     /* Check if we also have to save it in the parameter */
+     mov ecx, [esp+20]
+Index: ntoskrnl/mm/freelist.c
+===================================================================
+--- ntoskrnl/mm/freelist.c	(revision 26941)
++++ ntoskrnl/mm/freelist.c	(working copy)
+@@ -473,6 +473,16 @@
+                               &MmPageArray[j].ListEntry);
+ 	       MmStats.NrReservedPages++;
+ 	    }
++	    else if (j >= 0x7000000 / PAGE_SIZE)
++	    {
++               MmPageArray[j].Flags.Type = MM_PHYSICAL_PAGE_BIOS;
++               MmPageArray[j].Flags.Zero = 0;
++               MmPageArray[j].Flags.Consumer = MC_NPPOOL;
++               MmPageArray[j].ReferenceCount = 1;
++               InsertTailList(&BiosPageListHead,
++                              &MmPageArray[j].ListEntry);
++	       MmStats.NrReservedPages++;
++	    }
+ 	    else if (j >= (ULONG)FirstPhysKernelAddress/PAGE_SIZE &&
+ 		     j < (ULONG)LastPhysKernelAddress/PAGE_SIZE)
+ 	    {
