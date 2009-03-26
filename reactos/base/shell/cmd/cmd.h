@@ -60,6 +60,7 @@ extern WORD   wDefColor;
 extern BOOL   bCtrlBreak;
 extern BOOL   bIgnoreEcho;
 extern BOOL   bExit;
+extern BOOL   bDisableBatchEcho;
 extern BOOL   bDelayedExpansion;
 extern INT    nErrorLevel;
 extern SHORT  maxx;
@@ -211,6 +212,7 @@ INT  CommandDirs (LPTSTR);
 
 
 /* Prototypes for ECHO.C */
+BOOL OnOffCommand(LPTSTR param, LPBOOL flag, INT message);
 INT  CommandEcho (LPTSTR);
 INT  CommandEchos (LPTSTR);
 INT  CommandEchoerr (LPTSTR);

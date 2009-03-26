@@ -293,9 +293,10 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param, PARSED_COMMAND *Cmd
 
 		/* JPP 19980807 */
 		/* Echo batch file line */
-		if (bEcho && Cmd->Type != C_QUIET)
+		if (bEcho && !bDisableBatchEcho && Cmd->Type != C_QUIET)
 		{
-			ConOutChar(_T('\n'));
+			if (!bIgnoreEcho)
+				ConOutChar(_T('\n'));
 			PrintPrompt();
 			EchoCommand(Cmd);
 			ConOutChar(_T('\n'));

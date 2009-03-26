@@ -701,7 +701,8 @@ ParseCommand(LPTSTR Line)
 
 	if (Line)
 	{
-		_tcscpy(ParseLine, Line);
+		if (!SubstituteVars(Line, ParseLine, _T('%')))
+			return NULL;
 		bLineContinuations = FALSE;
 	}
 	else
@@ -724,6 +725,11 @@ ParseCommand(LPTSTR Line)
 			FreeCommand(Cmd);
 			Cmd = NULL;
 		}
+		bIgnoreEcho = FALSE;
+	}
+	else
+	{
+		bIgnoreEcho = TRUE;
 	}
 	return Cmd;
 }
@@ -748,10 +754,22 @@ EchoCommand(PARSED_COMMAND *Cmd)
 		return;
 	case C_BLOCK:
 		ConOutChar(_T('('));
-		for (Sub = Cmd->Subcommands; Sub; Sub = Sub->Next)
+		Sub = Cmd->Subcommands;
+		if (Sub && !Sub->Next)
 		{
+			/* Single-command block: display all on one line */
 			EchoCommand(Sub);
+		}
+		else if (Sub)
+		{
+			/* Multi-command block: display parenthesis on separate lines */
 			ConOutChar(_T('\n'));
+			do
+			{
+				EchoCommand(Sub);
+				ConOutChar(_T('\n'));
+				Sub = Sub->Next;
+			} while (Sub);
 		}
 		ConOutChar(_T(')'));
 		break;

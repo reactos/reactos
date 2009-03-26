@@ -71,9 +71,10 @@ static BOOL GetNextElement(TCHAR **pStart, TCHAR **pEnd)
 /* Execute a single instance of a FOR command */
 static void RunInstance(PARSED_COMMAND *Cmd)
 {
-	if (bEcho && Cmd->Subcommands->Type != C_QUIET)
+	if (bEcho && !bDisableBatchEcho && Cmd->Subcommands->Type != C_QUIET)
 	{
-		ConOutChar(_T('\n'));
+		if (!bIgnoreEcho)
+			ConOutChar(_T('\n'));
 		PrintPrompt();
 		EchoCommand(Cmd->Subcommands);
 		ConOutChar(_T('\n'));

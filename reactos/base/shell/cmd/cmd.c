@@ -157,6 +157,7 @@ BOOL bCtrlBreak = FALSE;  /* Ctrl-Break or Ctrl-C hit */
 BOOL bIgnoreEcho = FALSE; /* Set this to TRUE to prevent a newline, when executing a command */
 INT  nErrorLevel = 0;     /* Errorlevel of last launched external program */
 BOOL bChildProcessRunning = FALSE;
+BOOL bDisableBatchEcho = FALSE;
 BOOL bDelayedExpansion = FALSE;
 DWORD dwChildProcessId = 0;
 OSVERSIONINFO osvi;
@@ -1509,7 +1510,11 @@ ReadLine (TCHAR *commandline, BOOL bMore)
 		{
 			/* JPP 19980807 - if echo off, don't print prompt */
 			if (bEcho)
+			{
+				if (!bIgnoreEcho)
+					ConOutChar('\n');
 				PrintPrompt();
+			}
 		}
 
 		ReadCommand (readline, CMDLINE_LENGTH - 1);
@@ -1542,10 +1547,7 @@ ProcessInput()
 			continue;
 
 		ExecuteCommand(Cmd);
-		if (bEcho && !bIgnoreEcho)
-			ConOutChar ('\n');
 		FreeCommand(Cmd);
-		bIgnoreEcho = FALSE;
 	}
 	while (!bCanExit || !bExit);
 
@@ -1676,7 +1678,8 @@ ExecuteAutoRunFile (VOID)
                            (LPBYTE)autorun, 
                            &len) == ERROR_SUCCESS)
 	    {
-		    ParseCommandLine (autorun);
+			if (*autorun)
+				ParseCommandLine(autorun);
 	    }
     }
 
@@ -1748,9 +1751,9 @@ Initialize()
 	TCHAR lpBuffer[2];
 
 	//INT len;
-	TCHAR *ptr, *cmdLine;
+	TCHAR *ptr, *cmdLine, option = 0;
 	BOOL AlwaysStrip = FALSE;
-	BOOL ShowVersion = TRUE;
+	BOOL AutoRun = TRUE;
 
 	/* get version information */
 	osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
@@ -1793,12 +1796,13 @@ Initialize()
 	{
 		if (*ptr == _T('/'))
 		{
-			if (ptr[1] == _T('?'))
+			option = _totupper(ptr[1]);
+			if (option == _T('?'))
 			{
 				ConOutResPaging(TRUE,STRING_CMD_HELP8);
 				cmd_exit(0);
 			}
-			else if (_totlower(ptr[1]) == _T('p'))
+			else if (option == _T('P'))
 			{
 				if (!IsExistingFile (_T("\\autoexec.bat")))
 				{
@@ -1815,27 +1819,25 @@ Initialize()
 				}
 				bCanExit = FALSE;
 			}
-			else if (_totlower(ptr[1]) == _T('c'))
+			else if (option == _T('C') || option == _T('K') || option == _T('R'))
 			{
-				/* This just runs a program and exits */
-				GetCmdLineCommand(commandline, &ptr[2], AlwaysStrip);
-				ParseCommandLine(commandline);
-				cmd_exit(nErrorLevel);
-			}
-			else if (_totlower(ptr[1]) == _T('k'))
-			{
-				/* This just runs a program and remains */
-				GetCmdLineCommand(commandline, &ptr[2], AlwaysStrip);
-				ParseCommandLine(commandline);
-				ShowVersion = FALSE;
+				/* Remainder of command line is a command to be run */
 				break;
 			}
-			else if (_totlower(ptr[1]) == _T('s'))
+			else if (option == _T('D'))
+			{
+				AutoRun = FALSE;
+			}
+			else if (option == _T('Q'))
+			{
+				bDisableBatchEcho = TRUE;
+			}
+			else if (option == _T('S'))
 			{
 				AlwaysStrip = TRUE;
 			}
 #ifdef INCLUDE_CMD_COLOR
-			else if (!_tcsnicmp(ptr, _T("/t:"), 3))
+			else if (!_tcsnicmp(ptr, _T("/T:"), 3))
 			{
 				/* process /t (color) argument */
 				wDefColor = (WORD)_tcstoul(&ptr[3], &ptr, 16);
@@ -1843,24 +1845,21 @@ Initialize()
 				SetScreenColor (wColor, TRUE);
 			}
 #endif
-			else if (_totlower(ptr[1]) == _T('v'))
+			else if (option == _T('V'))
 			{
-				bDelayedExpansion = _tcsnicmp(&ptr[2], _T(":off"), 4);
+				bDelayedExpansion = _tcsnicmp(&ptr[2], _T(":OFF"), 4);
 			}
 		}
 	}
 
-	if (ShowVersion)
-    {
-        /* Display a simple version string */
+	if (!*ptr)
+	{
+		/* If neither /C or /K was given, display a simple version string */
 		ConOutResPrintf(STRING_REACTOS_VERSION, 
-            _T(KERNEL_RELEASE_STR),
-            _T(KERNEL_VERSION_BUILD_STR));
-
-	    ConOutPuts (_T("(C) Copyright 1998-") _T(COPYRIGHT_YEAR) _T(" ReactOS Team.\n"));
-    }
-
-    ExecuteAutoRunFile ();
+			_T(KERNEL_RELEASE_STR),
+			_T(KERNEL_VERSION_BUILD_STR));
+		ConOutPuts(_T("(C) Copyright 1998-") _T(COPYRIGHT_YEAR) _T(" ReactOS Team."));
+	}
 
 #ifdef FEATURE_DIR_STACK
 	/* initialize directory stack */
@@ -1882,6 +1881,18 @@ Initialize()
 
 	/* add ctrl break handler */
 	AddBreakHandler ();
+
+	if (AutoRun)
+		ExecuteAutoRunFile();
+
+	if (*ptr)
+	{
+		/* Do the /C or /K command */
+		GetCmdLineCommand(commandline, &ptr[2], AlwaysStrip);
+		ParseCommandLine(commandline);
+		if (option != _T('K'))
+			cmd_exit(nErrorLevel);
+	}
 }
 
 

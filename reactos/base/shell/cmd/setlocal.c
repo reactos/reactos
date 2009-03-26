@@ -35,6 +35,8 @@ DuplicateEnvironment(VOID)
 INT cmd_setlocal(LPTSTR param)
 {
 	SETLOCAL *Saved;
+	LPTSTR *arg;
+	INT argc, i;
 
 	/* SETLOCAL only works inside a batch file */
 	if (!bc)
@@ -59,14 +61,24 @@ INT cmd_setlocal(LPTSTR param)
 
 	nErrorLevel = 0;
 
-	if (*param == _T('\0'))
-		/* nothing */;
-	else if (!_tcsicmp(param, _T("enabledelayedexpansion")))
-		bDelayedExpansion = TRUE;
-	else if (!_tcsicmp(param, _T("disabledelayedexpansion")))
-		bDelayedExpansion = FALSE;
-	else
-		error_invalid_parameter_format(param);
+	arg = splitspace(param, &argc);
+	for (i = 0; i < argc; i++)
+	{
+		if (!_tcsicmp(arg[i], _T("enableextensions")))
+			/* not implemented, ignore */;
+		else if (!_tcsicmp(arg[i], _T("disableextensions")))
+			/* not implemented, ignore */;
+		else if (!_tcsicmp(arg[i], _T("enabledelayedexpansion")))
+			bDelayedExpansion = TRUE;
+		else if (!_tcsicmp(arg[i], _T("disabledelayedexpansion")))
+			bDelayedExpansion = FALSE;
+		else
+		{
+			error_invalid_parameter_format(arg[i]);
+			break;
+		}
+	}
+	freep(arg);
 
 	return nErrorLevel;
 }
