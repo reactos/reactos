@@ -11,6 +11,60 @@
 #define NDEBUG
 #include <debug.h>
 
+// HACK!
+static
+BOOLEAN
+IntUpdateBrushXlate(PDC pdc, XLATEOBJ **ppxlo, BRUSH *pbrush)
+{
+    SURFACE * psurf;
+    XLATEOBJ *pxlo = NULL;
+    HPALETTE hPalette = NULL;
+
+    psurf = SURFACE_LockSurface(pdc->rosdc.hBitmap);
+    if (psurf)
+    {
+        hPalette = psurf->hDIBPalette;
+        SURFACE_UnlockSurface(psurf);
+    }
+    if (!hPalette) hPalette = pPrimarySurface->DevInfo.hpalDefault;
+
+    if (pbrush->flAttrs & GDIBRUSH_IS_NULL)
+    {
+        pxlo = NULL;
+    }
+    else if (pbrush->flAttrs & GDIBRUSH_IS_SOLID)
+    {
+        pxlo = IntEngCreateXlate(0, PAL_RGB, hPalette, NULL);
+    }
+    else
+    {
+        SURFACE *psurfPattern = SURFACE_LockSurface(pbrush->hbmPattern);
+        if (psurfPattern == NULL)
+            return FALSE;
+
+        /* Special case: 1bpp pattern */
+        if (psurfPattern->SurfObj.iBitmapFormat == BMF_1BPP)
+        {
+            if (pdc->rosdc.bitsPerPixel != 1)
+                pxlo = IntEngCreateSrcMonoXlate(hPalette,
+                                                pdc->pdcattr->crBackgroundClr,
+                                                pbrush->BrushAttr.lbColor);
+        }
+        else if (pbrush->flAttrs & GDIBRUSH_IS_DIB)
+        {
+            pxlo = IntEngCreateXlate(0, 0, hPalette, psurfPattern->hDIBPalette);
+        }
+
+        SURFACE_UnlockSurface(psurfPattern);
+    }
+
+    if (*ppxlo != NULL)
+        EngDeleteXlate(*ppxlo);
+
+    *ppxlo = pxlo;
+    return TRUE;
+}
+
 
 VOID
 FASTCALL
@@ -102,8 +156,8 @@ DC_vUpdateLineBrush(PDC pdc)
         EBRUSHOBJ_vSetSolidBrushColor(&pdc->eboLine, iSolidColor);
     }
 
-    /* Clear flag */
-    pdcattr->ulDirty_ &= ~DIRTY_LINE;
+    /* Clear flags */
+    pdcattr->ulDirty_ &= ~(DIRTY_LINE | DC_PEN_DIRTY);
 }
 
 VOID
@@ -202,8 +256,7 @@ IntGdiSelectBrush(
     PDC_ATTR pdcattr;
     HBRUSH hOrgBrush;
     PBRUSH pbrush;
-    XLATEOBJ *XlateObj;
-    BOOLEAN bFailed;
+    BOOLEAN bSuccess;
 
     if (pDC == NULL || hBrush == NULL) return NULL;
 
@@ -216,23 +269,17 @@ IntGdiSelectBrush(
         return NULL;
     }
 
-    DC_vSelectFillBrush(pDC, pbrush);
-
-    XlateObj = IntGdiCreateBrushXlate(pDC, pbrush, &bFailed);
-    BRUSH_UnlockBrush(pbrush);
-    if(bFailed)
-    {
-        return NULL;
-    }
-
     hOrgBrush = pdcattr->hbrush;
     pdcattr->hbrush = hBrush;
 
-    if (pDC->rosdc.XlateBrush != NULL)
+    DC_vSelectFillBrush(pDC, pbrush);
+
+    bSuccess = IntUpdateBrushXlate(pDC, &pDC->rosdc.XlateBrush, pbrush);
+    BRUSH_UnlockBrush(pbrush);
+    if(!bSuccess)
     {
-        EngDeleteXlate(pDC->rosdc.XlateBrush);
+        return NULL;
     }
-    pDC->rosdc.XlateBrush = XlateObj;
 
     pdcattr->ulDirty_ &= ~DC_BRUSH_DIRTY;
 
@@ -248,8 +295,7 @@ IntGdiSelectPen(
     PDC_ATTR pdcattr;
     HPEN hOrgPen = NULL;
     PBRUSH pbrushPen;
-    XLATEOBJ *XlateObj;
-    BOOLEAN bFailed;
+    BOOLEAN bSuccess;
 
     if (pDC == NULL || hPen == NULL) return NULL;
 
@@ -261,26 +307,20 @@ IntGdiSelectPen(
         return NULL;
     }
 
+    hOrgPen = pdcattr->hpen;
+    pdcattr->hpen = hPen;
+
     DC_vSelectLineBrush(pDC, pbrushPen);
 
-    XlateObj = IntGdiCreateBrushXlate(pDC, pbrushPen, &bFailed);
+    bSuccess = IntUpdateBrushXlate(pDC, &pDC->rosdc.XlatePen, pbrushPen);
     PEN_UnlockPen(pbrushPen);
-    if (bFailed)
+    if (!bSuccess)
     {
         SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
         return NULL;
     }
 
-    hOrgPen = pdcattr->hpen;
-    pdcattr->hpen = hPen;
-
-    if (pDC->rosdc.XlatePen != NULL)
-    {
-        EngDeleteXlate(pDC->rosdc.XlatePen);
-    }
     pdcattr->ulDirty_ &= ~DC_PEN_DIRTY;
-
-    pDC->rosdc.XlatePen = XlateObj;
 
     return hOrgPen;
 }
@@ -354,7 +394,6 @@ NtGdiSelectBitmap(
     HBITMAP hOrgBmp;
     PSURFACE psurfBmp, psurfOld;
     HRGN hVisRgn;
-    BOOLEAN bFailed;
     PBRUSH pbrush;
 
     if (hDC == NULL || hBmp == NULL) return NULL;
@@ -420,22 +459,14 @@ NtGdiSelectBitmap(
     pbrush = BRUSH_LockBrush(pdcattr->hbrush);
     if (pbrush)
     {
-        if (pDC->rosdc.XlateBrush)
-        {
-            EngDeleteXlate(pDC->rosdc.XlateBrush);
-        }
-        pDC->rosdc.XlateBrush = IntGdiCreateBrushXlate(pDC, pbrush, &bFailed);
+        IntUpdateBrushXlate(pDC, &pDC->rosdc.XlateBrush, pbrush);
         BRUSH_UnlockBrush(pbrush);
     }
 
     pbrush = PEN_LockPen(pdcattr->hpen);
     if (pbrush)
     {
-        if (pDC->rosdc.XlatePen)
-        {
-            EngDeleteXlate(pDC->rosdc.XlatePen);
-        }
-        pDC->rosdc.XlatePen = IntGdiCreateBrushXlate(pDC, pbrush, &bFailed);
+        IntUpdateBrushXlate(pDC, &pDC->rosdc.XlatePen, pbrush);
         PEN_UnlockPen(pbrush);
     }
 

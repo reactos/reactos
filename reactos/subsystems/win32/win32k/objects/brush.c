@@ -114,58 +114,6 @@ BRUSH_GetObject (PBRUSH pbrush, INT Count, LPLOGBRUSH Buffer)
     return sizeof(LOGBRUSH);
 }
 
-
-XLATEOBJ* FASTCALL
-IntGdiCreateBrushXlate(PDC Dc, BRUSH *pbrush, BOOLEAN *Failed)
-{
-   XLATEOBJ *Result = NULL;
-   SURFACE * psurf;
-   HPALETTE hPalette = NULL;
-
-   psurf = SURFACE_LockSurface(Dc->rosdc.hBitmap);
-   if (psurf)
-   {
-      hPalette = psurf->hDIBPalette;
-      SURFACE_UnlockSurface(psurf);
-   }
-   if (!hPalette) hPalette = pPrimarySurface->DevInfo.hpalDefault;
-
-   if (pbrush->flAttrs & GDIBRUSH_IS_NULL)
-   {
-      Result = NULL;
-      *Failed = FALSE;
-   }
-   else if (pbrush->flAttrs & GDIBRUSH_IS_SOLID)
-   {
-      Result = IntEngCreateXlate(0, PAL_RGB, hPalette, NULL);
-      *Failed = FALSE;
-   }
-   else
-   {
-      SURFACE *Pattern = SURFACE_LockSurface(pbrush->hbmPattern);
-      if (Pattern == NULL)
-         return NULL;
-
-      /* Special case: 1bpp pattern */
-      if (Pattern->SurfObj.iBitmapFormat == BMF_1BPP)
-      {
-         PDC_ATTR pdcattr = Dc->pdcattr;
-
-         if (Dc->rosdc.bitsPerPixel != 1)
-            Result = IntEngCreateSrcMonoXlate(hPalette, pdcattr->crBackgroundClr, pbrush->BrushAttr.lbColor);
-      }
-      else if (pbrush->flAttrs & GDIBRUSH_IS_DIB)
-      {
-         Result = IntEngCreateXlate(0, 0, hPalette, Pattern->hDIBPalette);
-      }
-
-      SURFACE_UnlockSurface(Pattern);
-      *Failed = FALSE;
-   }
-
-   return Result;
-}
-
 /**
  * @name CalculateColorTableSize
  *

@@ -8,9 +8,6 @@
 extern HDC hSystemBM;
 extern HSEMAPHORE hsemDriverMgmt;
 
-XLATEOBJ* FASTCALL
-IntGdiCreateBrushXlate(PDC Dc, BRUSH *BrushObj, BOOLEAN *Failed);
-
 XLATEOBJ*
 FASTCALL
 IntCreateXlateForBlt(PDC pDCDest, PDC pDCSrc, SURFACE* pDestSurf, SURFACE* pSrcSurf);
