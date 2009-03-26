@@ -335,7 +335,7 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
 	   need rewrite some code to use cmd_realloc when it need instead
 	   of add 512bytes extra */
 
-	first = cmd_alloc ( (_tcslen(First) + 512) * sizeof(TCHAR));
+	first = cmd_alloc ( (_tcslen(Full) + 512) * sizeof(TCHAR));
 	if (first == NULL)
 	{
 		error_out_of_memory();
@@ -343,7 +343,7 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
 		return FALSE;
 	}
 
-	rest = cmd_alloc ( (_tcslen(Rest) + 512) * sizeof(TCHAR));
+	rest = cmd_alloc ( (_tcslen(Full) + 512) * sizeof(TCHAR));
 	if (rest == NULL)
 	{
 		cmd_free (first);
@@ -1540,7 +1540,7 @@ ProcessInput()
 {
 	PARSED_COMMAND *Cmd;
 
-	do
+	while (!bCanExit || !bExit)
 	{
 		Cmd = ParseCommand(NULL);
 		if (!Cmd)
@@ -1549,7 +1549,6 @@ ProcessInput()
 		ExecuteCommand(Cmd);
 		FreeCommand(Cmd);
 	}
-	while (!bCanExit || !bExit);
 
 	return nErrorLevel;
 }
@@ -1891,7 +1890,7 @@ Initialize()
 		GetCmdLineCommand(commandline, &ptr[2], AlwaysStrip);
 		ParseCommandLine(commandline);
 		if (option != _T('K'))
-			cmd_exit(nErrorLevel);
+			bExit = TRUE;
 	}
 }
 
