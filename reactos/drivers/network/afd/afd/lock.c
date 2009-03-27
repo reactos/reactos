@@ -72,7 +72,6 @@ PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count,
     UINT Lock = (LockAddress && AddressLen) ? 2 : 0;
     UINT Size = sizeof(AFD_WSABUF) * (Count + Lock);
     PAFD_WSABUF NewBuf = ExAllocatePool( PagedPool, Size * 2 );
-    PMDL NewMdl;
     BOOLEAN LockFailed = FALSE;
 
     AFD_DbgPrint(MID_TRACE,("Called(%08x)\n", NewBuf));
@@ -82,7 +81,7 @@ PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count,
 
         _SEH2_TRY {
             RtlCopyMemory( NewBuf, Buf, sizeof(AFD_WSABUF) * Count );
-            if( LockAddress ) {
+            if( Lock != 0 ) {
                 NewBuf[Count].buf = AddressBuf;
                 NewBuf[Count].len = *AddressLen;
                 Count++;
@@ -102,20 +101,18 @@ PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count,
 	    AFD_DbgPrint(MID_TRACE,("Locking buffer %d (%x:%d)\n",
 				    i, NewBuf[i].buf, NewBuf[i].len));
 
-	    if( NewBuf[i].len ) {
-		NewMdl = IoAllocateMdl( NewBuf[i].buf,
-					NewBuf[i].len,
-					FALSE,
-					FALSE,
-					NULL );
+	    if( NewBuf[i].buf && NewBuf[i].len ) {
+		MapBuf[i].Mdl = IoAllocateMdl( NewBuf[i].buf,
+					       NewBuf[i].len,
+					       FALSE,
+					       FALSE,
+					       NULL );
 	    } else {
 		MapBuf[i].Mdl = NULL;
 		continue;
 	    }
 
-	    AFD_DbgPrint(MID_TRACE,("NewMdl @ %x\n", NewMdl));
-
-	    MapBuf[i].Mdl = NewMdl;
+	    AFD_DbgPrint(MID_TRACE,("NewMdl @ %x\n", MapBuf[i].Mdl));
 
 	    if( MapBuf[i].Mdl ) {
 		AFD_DbgPrint(MID_TRACE,("Probe and lock pages\n"));

@@ -391,6 +391,15 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	return UnlockAndMaybeComplete
 	    ( FCB, STATUS_NO_MEMORY, Irp, 0, NULL );
 
+    SendReq->BufferArray = LockBuffers( SendReq->BufferArray,
+                                        SendReq->BufferCount,
+                                        NULL, NULL,
+                                        FALSE, FALSE );
+
+    if( !SendReq->BufferArray )
+	return UnlockAndMaybeComplete( FCB, STATUS_ACCESS_VIOLATION,
+                                       Irp, 0, NULL );
+
     AFD_DbgPrint
 	(MID_TRACE,("RemoteAddress #%d Type %d\n",
 		    ((PTRANSPORT_ADDRESS)SendReq->RemoteAddress)->
