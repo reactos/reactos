@@ -402,6 +402,7 @@ WSPCloseSocket(IN SOCKET Handle,
     /* If a Close is already in Process, give up */
     if (Socket->SharedData.State == SocketClosed)
     {
+        NtClose(SockEvent);
         *lpErrno = WSAENOTSOCK;
         return SOCKET_ERROR;
     }
@@ -447,6 +448,7 @@ WSPCloseSocket(IN SOCKET Handle,
              */
             if (Socket->SharedData.NonBlocking)
             {
+                NtClose(SockEvent);
                 Socket->SharedData.State = OldState;
                 *lpErrno = WSAEWOULDBLOCK;
                 return SOCKET_ERROR;
@@ -504,6 +506,7 @@ WSPCloseSocket(IN SOCKET Handle,
 
     /* Close the handle */
     NtClose((HANDLE)Handle);
+    NtClose(SockEvent);
 
     return NO_ERROR;
 }
@@ -951,7 +954,10 @@ WSPAccept(SOCKET Handle,
     WSPSelect(0, &ReadSet, NULL, NULL, &Timeout, NULL);
 
     if (ReadSet.fd_array[0] != Socket->Handle)
+    {
+        NtClose(SockEvent);
         return 0;
+    }
 
     /* Send IOCTL */
     Status = NtDeviceIoControlFile((HANDLE)Socket->Handle,
@@ -1199,6 +1205,7 @@ WSPAccept(SOCKET Handle,
 
     if (!NT_SUCCESS(Status))
     {
+        NtClose(SockEvent);
         WSPCloseSocket( AcceptSocket, lpErrno );
         MsafdReturnWithErrno( Status, lpErrno, 0, NULL );
         return INVALID_SOCKET;
