@@ -202,16 +202,6 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	    TaCopyTransportAddress( &ConnectReq->RemoteAddress );
 
 	if( FCB->LocalAddress ) {
-	    RtlZeroMemory( FCB->LocalAddress,
-			   TaLengthOfTransportAddress
-			   ( &ConnectReq->RemoteAddress ) );
-
-	    FCB->LocalAddress->TAAddressCount = 1;
-	    FCB->LocalAddress->Address[0].AddressType =
-		ConnectReq->RemoteAddress.Address[0].AddressType;
-	    FCB->LocalAddress->Address[0].AddressLength =
-		ConnectReq->RemoteAddress.Address[0].AddressLength;
-
 	    Status = WarmSocketForBind( FCB );
 
 	    if( NT_SUCCESS(Status) )
