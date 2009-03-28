@@ -284,14 +284,14 @@ AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         AFD_DbgPrint(MID_TRACE,("Called recv on wrong kind of socket (s%x)\n",
                                 FCB->State));
         return UnlockAndMaybeComplete( FCB, STATUS_INVALID_PARAMETER,
-									   Irp, 0, NULL );
+									   Irp, 0 );
     }
 
     if( FCB->Flags & AFD_ENDPOINT_CONNECTIONLESS )
     {
 		AFD_DbgPrint(MID_TRACE,("Receive on connection-less sockets not implemented\n"));
 		return UnlockAndMaybeComplete( FCB, STATUS_NOT_IMPLEMENTED,
-									   Irp, 0, NULL );
+									   Irp, 0 );
     }
 
     FCB->EventsFired &= ~AFD_EVENT_RECEIVE;
@@ -299,7 +299,7 @@ AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if( !(RecvReq = LockRequest( Irp, IrpSp )) )
 		return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY,
-									   Irp, 0, NULL );
+									   Irp, 0 );
 
     AFD_DbgPrint(MID_TRACE,("Recv flags %x\n", RecvReq->AfdFlags));
 
@@ -310,7 +310,7 @@ AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if( !RecvReq->BufferArray ) {
         return UnlockAndMaybeComplete( FCB, STATUS_ACCESS_VIOLATION,
-                                       Irp, 0, NULL );
+                                       Irp, 0 );
     }
 
     Irp->IoStatus.Status = STATUS_PENDING;
@@ -330,7 +330,7 @@ AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         RemoveEntryList( &Irp->Tail.Overlay.ListEntry );
         UnlockBuffers( RecvReq->BufferArray, RecvReq->BufferCount, FALSE );
         return UnlockAndMaybeComplete( FCB, Status, Irp,
-                                       TotalBytesCopied, NULL );
+                                       TotalBytesCopied );
     } else if( Status == STATUS_PENDING ) {
         AFD_DbgPrint(MID_TRACE,("Leaving read irp\n"));
         IoMarkIrpPending( Irp );
@@ -576,10 +576,10 @@ AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     /* Check that the socket is bound */
     if( FCB->State != SOCKET_STATE_BOUND )
 		return UnlockAndMaybeComplete
-			( FCB, STATUS_INVALID_PARAMETER, Irp, 0, NULL );
+			( FCB, STATUS_INVALID_PARAMETER, Irp, 0 );
     if( !(RecvReq = LockRequest( Irp, IrpSp )) )
 		return UnlockAndMaybeComplete
-			( FCB, STATUS_NO_MEMORY, Irp, 0, NULL );
+			( FCB, STATUS_NO_MEMORY, Irp, 0 );
 
     AFD_DbgPrint(MID_TRACE,("Recv flags %x\n", RecvReq->AfdFlags));
 
@@ -591,7 +591,7 @@ AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if( !RecvReq->BufferArray ) { /* access violation in userspace */
 	    return UnlockAndMaybeComplete
-			( FCB, STATUS_ACCESS_VIOLATION, Irp, 0, NULL );
+			( FCB, STATUS_ACCESS_VIOLATION, Irp, 0 );
     }
 
     if( !IsListEmpty( &FCB->DatagramList ) ) {
@@ -615,7 +615,7 @@ AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 			UnlockBuffers( RecvReq->BufferArray, RecvReq->BufferCount, TRUE );
 
 			return UnlockAndMaybeComplete
-				( FCB, Status, Irp, Irp->IoStatus.Information, NULL );
+				( FCB, Status, Irp, Irp->IoStatus.Information );
 		} else {
 			Status = SatisfyPacketRecvRequest
 				( FCB, Irp, DatagramRecv,
@@ -631,14 +631,14 @@ AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 			UnlockBuffers( RecvReq->BufferArray, RecvReq->BufferCount, TRUE );
 
 			return UnlockAndMaybeComplete
-				( FCB, Status, Irp, Irp->IoStatus.Information, NULL );
+				( FCB, Status, Irp, Irp->IoStatus.Information );
 		}
     } else if( RecvReq->AfdFlags & AFD_IMMEDIATE ) {
 		AFD_DbgPrint(MID_TRACE,("Nonblocking\n"));
 		Status = STATUS_CANT_WAIT;
 		PollReeval( FCB->DeviceExt, FCB->FileObject );
 		UnlockBuffers( RecvReq->BufferArray, RecvReq->BufferCount, TRUE );
-		return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL );
+		return UnlockAndMaybeComplete( FCB, Status, Irp, 0 );
     } else {
 		PollReeval( FCB->DeviceExt, FCB->FileObject );
 		return LeaveIrpUntilLater( FCB, Irp, FUNCTION_RECV );

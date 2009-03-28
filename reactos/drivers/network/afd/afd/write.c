@@ -148,8 +148,7 @@ static NTSTATUS NTAPI SendComplete
 
 	AFD_DbgPrint(MID_TRACE,("Dismissing request: %x\n", Status));
 
-	return UnlockAndMaybeComplete( FCB, Status, NextIrp, TotalBytesCopied,
-				       NULL );
+	return UnlockAndMaybeComplete( FCB, Status, NextIrp, TotalBytesCopied );
     } else if( NextIrp ) {
 	AFD_DbgPrint(MID_TRACE,("Could not do any more with Irp %x\n",
 				NextIrp));
@@ -220,11 +219,10 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         /* Check that the socket is bound */
         if( FCB->State != SOCKET_STATE_BOUND )
             return UnlockAndMaybeComplete( FCB, STATUS_INVALID_PARAMETER, Irp,
-                                           0, NULL );
+                                           0 );
 
         if( !(SendReq = LockRequest( Irp, IrpSp )) )
-            return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY, Irp, 0,
-                                           NULL );
+            return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY, Irp, 0 );
 
         /* Must lock buffers before handing off user data */
         SendReq->BufferArray = LockBuffers( SendReq->BufferArray,
@@ -234,7 +232,7 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
 	if( !SendReq->BufferArray ) {
 	    return UnlockAndMaybeComplete( FCB, STATUS_ACCESS_VIOLATION,
-                                           Irp, 0, NULL );
+                                           Irp, 0 );
 	}
 
         TdiBuildConnectionInfo( &TargetAddress, FCB->RemoteAddress );
@@ -258,13 +256,12 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         AFD_DbgPrint(MID_TRACE,("Dismissing request: %x\n", Status));
 
         return UnlockAndMaybeComplete( FCB, Status, Irp,
-                                       SendReq->BufferArray[0].len,
-                                       NULL );
+                                       SendReq->BufferArray[0].len );
     }
 
     if( !(SendReq = LockRequest( Irp, IrpSp )) )
 	return UnlockAndMaybeComplete
-	    ( FCB, STATUS_NO_MEMORY, Irp, TotalBytesCopied, NULL );
+	    ( FCB, STATUS_NO_MEMORY, Irp, TotalBytesCopied );
 
     SendReq->BufferArray = LockBuffers( SendReq->BufferArray,
 					SendReq->BufferCount,
@@ -273,7 +270,7 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if( !SendReq->BufferArray ) {
         return UnlockAndMaybeComplete( FCB, STATUS_ACCESS_VIOLATION,
-                                       Irp, 0, NULL );
+                                       Irp, 0 );
     }
 
     AFD_DbgPrint(MID_TRACE,("Socket state %d\n", FCB->State));
@@ -283,7 +280,7 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	    AFD_DbgPrint(MID_TRACE,("Nonblocking\n"));
 	    UnlockBuffers( SendReq->BufferArray, SendReq->BufferCount, FALSE );
 	    return UnlockAndMaybeComplete
-		( FCB, STATUS_CANT_WAIT, Irp, 0, NULL );
+		( FCB, STATUS_CANT_WAIT, Irp, 0 );
 	} else {
 	    AFD_DbgPrint(MID_TRACE,("Queuing request\n"));
 	    return LeaveIrpUntilLater( FCB, Irp, FUNCTION_SEND );
@@ -326,7 +323,7 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
 	    AFD_DbgPrint(MID_TRACE,("Empty send\n"));
 	    return UnlockAndMaybeComplete
-		( FCB, Status, Irp, TotalBytesCopied, NULL );
+		( FCB, Status, Irp, TotalBytesCopied );
 	}
 
 	AFD_DbgPrint(MID_TRACE,("Completed %d bytes\n", TotalBytesCopied));
@@ -350,7 +347,7 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 				    Status, TotalBytesCopied));
 
 	    return UnlockAndMaybeComplete
-		( FCB, Status, Irp, TotalBytesCopied, NULL );
+		( FCB, Status, Irp, TotalBytesCopied );
 	}
     }
 
@@ -358,7 +355,7 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	AFD_DbgPrint(MID_TRACE,("Nonblocking\n"));
 	UnlockBuffers( SendReq->BufferArray, SendReq->BufferCount, FALSE );
 	return UnlockAndMaybeComplete
-	    ( FCB, STATUS_CANT_WAIT, Irp, 0, NULL );
+	    ( FCB, STATUS_CANT_WAIT, Irp, 0 );
     } else {
 	AFD_DbgPrint(MID_TRACE,("Queuing request\n"));
 	return LeaveIrpUntilLater( FCB, Irp, FUNCTION_SEND );
@@ -386,10 +383,10 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     /* Check that the socket is bound */
     if( FCB->State != SOCKET_STATE_BOUND )
 	return UnlockAndMaybeComplete
-	    ( FCB, STATUS_INVALID_PARAMETER, Irp, 0, NULL );
+	    ( FCB, STATUS_INVALID_PARAMETER, Irp, 0 );
     if( !(SendReq = LockRequest( Irp, IrpSp )) )
 	return UnlockAndMaybeComplete
-	    ( FCB, STATUS_NO_MEMORY, Irp, 0, NULL );
+	    ( FCB, STATUS_NO_MEMORY, Irp, 0 );
 
     SendReq->BufferArray = LockBuffers( SendReq->BufferArray,
                                         SendReq->BufferCount,
@@ -398,7 +395,7 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if( !SendReq->BufferArray )
 	return UnlockAndMaybeComplete( FCB, STATUS_ACCESS_VIOLATION,
-                                       Irp, 0, NULL );
+                                       Irp, 0 );
 
     AFD_DbgPrint
 	(MID_TRACE,("RemoteAddress #%d Type %d\n",
@@ -431,6 +428,6 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     AFD_DbgPrint(MID_TRACE,("Dismissing request: %x\n", Status));
 
     return UnlockAndMaybeComplete
-	( FCB, Status, Irp, SendReq->BufferArray[0].len, NULL );
+	( FCB, Status, Irp, SendReq->BufferArray[0].len );
 }
 

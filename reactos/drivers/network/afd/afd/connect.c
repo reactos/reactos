@@ -179,7 +179,7 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
     if( !(ConnectReq = LockRequest( Irp, IrpSp )) )
 	return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY, Irp,
-				       0, NULL );
+				       0 );
 
     AFD_DbgPrint(MID_TRACE,("Connect request:\n"));
 #if 0
@@ -207,10 +207,10 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	    if( NT_SUCCESS(Status) )
 		FCB->State = SOCKET_STATE_BOUND;
 	    else
-		return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL );
+		return UnlockAndMaybeComplete( FCB, Status, Irp, 0 );
 	} else
 	    return UnlockAndMaybeComplete
-		( FCB, STATUS_NO_MEMORY, Irp, 0, NULL );
+		( FCB, STATUS_NO_MEMORY, Irp, 0 );
     
     /* Drop through to SOCKET_STATE_BOUND */
 
@@ -264,5 +264,5 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	break;
     }
 
-    return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL );
+    return UnlockAndMaybeComplete( FCB, Status, Irp, 0 );
 }

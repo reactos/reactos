@@ -285,8 +285,7 @@ VOID SocketStateUnlock( PAFD_FCB FCB ) {
 
 NTSTATUS NTAPI UnlockAndMaybeComplete
 ( PAFD_FCB FCB, NTSTATUS Status, PIRP Irp,
-  UINT Information,
-  PIO_COMPLETION_ROUTINE Completion ) {
+  UINT Information ) {
 
     Irp->IoStatus.Status = Status;
     Irp->IoStatus.Information = Information;
@@ -300,8 +299,6 @@ NTSTATUS NTAPI UnlockAndMaybeComplete
     } else {
 	if ( Irp->MdlAddress ) UnlockRequest( Irp, IoGetCurrentIrpStackLocation( Irp ) );
 	SocketStateUnlock( FCB );
-	if( Completion )
-	    Completion( FCB->DeviceExt->DeviceObject, Irp, FCB );
 	IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
     }
     return Status;
@@ -323,5 +320,5 @@ NTSTATUS LeaveIrpUntilLater( PAFD_FCB FCB, PIRP Irp, UINT Function ) {
 		    &Irp->Tail.Overlay.ListEntry );
 	IoMarkIrpPending(Irp);
 	Irp->IoStatus.Status = STATUS_PENDING;
-    return UnlockAndMaybeComplete( FCB, STATUS_PENDING, Irp, 0, NULL );
+    return UnlockAndMaybeComplete( FCB, STATUS_PENDING, Irp, 0 );
 }

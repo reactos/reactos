@@ -263,8 +263,7 @@ VOID UnlockBuffers( PAFD_WSABUF Buf, UINT Count, BOOL Address );
 UINT SocketAcquireStateLock( PAFD_FCB FCB );
 NTSTATUS NTAPI UnlockAndMaybeComplete
 ( PAFD_FCB FCB, NTSTATUS Status, PIRP Irp,
-  UINT Information,
-  PIO_COMPLETION_ROUTINE Completion );
+  UINT Information );
 VOID SocketStateUnlock( PAFD_FCB FCB );
 NTSTATUS LostSocket( PIRP Irp );
 PAFD_HANDLE LockHandles( PAFD_HANDLE HandleArray, UINT HandleCount );

@@ -270,7 +270,7 @@ AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if( !(DisReq = LockRequest( Irp, IrpSp )) )
 	return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY,
-				       Irp, 0, NULL );
+				       Irp, 0 );
 
     if (NULL == FCB->RemoteAddress)
       {
@@ -283,7 +283,7 @@ AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
 	if( !NT_SUCCESS(Status) || !ConnInfo )
 	    return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY,
-					   Irp, 0, NULL );
+					   Irp, 0 );
       }
 
     if( DisReq->DisconnectType & AFD_DISCONNECT_SEND )
@@ -303,7 +303,7 @@ AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if (ConnInfo) ExFreePool( ConnInfo );
 
-    return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL );
+    return UnlockAndMaybeComplete( FCB, Status, Irp, 0 );
 }
 
 static NTSTATUS NTAPI

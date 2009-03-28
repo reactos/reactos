@@ -281,7 +281,7 @@ AfdEventSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if ( !EventSelectInfo ) {
          return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY, Irp,
-				   0, NULL );
+				   0 );
     }
     AFD_DbgPrint(MID_TRACE,("Called (Event %x Triggers %x)\n",
 			    EventSelectInfo->EventObject,
@@ -310,7 +310,7 @@ AfdEventSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     AFD_DbgPrint(MID_TRACE,("Returning %x\n", Status));
 
     return UnlockAndMaybeComplete( FCB, Status, Irp,
-				   0, NULL );
+				   0 );
 }
 
 NTSTATUS NTAPI
@@ -329,14 +329,14 @@ AfdEnumEvents( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if ( !EnumReq ) {
          return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY, Irp,
-				   0, NULL );
+				   0 );
     }
 
     EnumReq->PollEvents = FCB->PollState;
     RtlZeroMemory( EnumReq->EventStatus, sizeof(EnumReq->EventStatus) );
 
     return UnlockAndMaybeComplete( FCB, STATUS_SUCCESS, Irp,
-				   0, NULL );
+				   0 );
 }
 
 /* * * NOTE ALWAYS CALLED AT DISPATCH_LEVEL * * */
