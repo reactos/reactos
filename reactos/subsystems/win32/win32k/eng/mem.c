@@ -32,13 +32,6 @@
 #define NDEBUG
 #include <debug.h>
 
-typedef struct _USERMEMHEADER
-  {
-  ULONG Tag;
-  ULONG MemSize;
-  }
-USERMEMHEADER, *PUSERMEMHEADER;
-
 /*
  * @implemented
  */
@@ -76,8 +69,7 @@ EngAllocUserMem(SIZE_T cj, ULONG Tag)
 {
   PVOID NewMem = NULL;
   NTSTATUS Status;
-  SIZE_T MemSize = sizeof(USERMEMHEADER) + cj;
-  PUSERMEMHEADER Header;
+  SIZE_T MemSize = cj;
 
   Status = ZwAllocateVirtualMemory(NtCurrentProcess(), &NewMem, 0, &MemSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
 
@@ -86,11 +78,9 @@ EngAllocUserMem(SIZE_T cj, ULONG Tag)
       return NULL;
     }
 
-  Header = (PUSERMEMHEADER) NewMem;
-  Header->Tag = Tag;
-  Header->MemSize = cj;
+  /* TODO: Add allocation info to AVL tree (stored inside W32PROCESS structure) */
 
-  return (PVOID)(Header + 1);
+  return NewMem;
 }
 
 /*
@@ -99,10 +89,12 @@ EngAllocUserMem(SIZE_T cj, ULONG Tag)
 VOID APIENTRY
 EngFreeUserMem(PVOID pv)
 {
-  PUSERMEMHEADER Header = ((PUSERMEMHEADER) pv) - 1;
+  PVOID BaseAddress = pv;
   SIZE_T MemSize = 0;
 
-  ZwFreeVirtualMemory(NtCurrentProcess(), (PVOID *) &Header, &MemSize, MEM_RELEASE);
+  ZwFreeVirtualMemory(NtCurrentProcess(), &BaseAddress, &MemSize, MEM_RELEASE);
+
+  /* TODO: Remove allocation info from AVL tree */
 }
 
 
