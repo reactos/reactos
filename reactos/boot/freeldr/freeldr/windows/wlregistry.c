@@ -388,7 +388,7 @@ WinLdrLoadNLSData(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 		if (!Status)
 			goto Failure;
 
-		FsCloseFile(AnsiFileHandle);
+		FsCloseFile(OemFileHandle);
 	}
 
 	/* finally the language file */
