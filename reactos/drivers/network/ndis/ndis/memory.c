@@ -268,7 +268,8 @@ NdisMAllocateSharedMemoryPassive(
 
   if (Memory->Adapter->DriverHandle->MiniportCharacteristics.AllocateCompleteHandler)
       Memory->Adapter->DriverHandle->MiniportCharacteristics.AllocateCompleteHandler(
-             Memory->Adapter, Memory->VirtualAddress, &Memory->PhysicalAddress, Memory->Length, Memory->Context);
+             Memory->Adapter->MiniportAdapterContext, Memory->VirtualAddress, 
+             &Memory->PhysicalAddress, Memory->Length, Memory->Context);
 
   ExFreePool(Memory);
 }
