@@ -69,7 +69,7 @@ PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count,
 			 BOOLEAN Write, BOOLEAN LockAddress ) {
     UINT i;
     /* Copy the buffer array so we don't lose it */
-    UINT Lock = (LockAddress && AddressLen) ? 2 : 0;
+    UINT Lock = LockAddress ? 2 : 0;
     UINT Size = sizeof(AFD_WSABUF) * (Count + Lock);
     PAFD_WSABUF NewBuf = ExAllocatePool( PagedPool, Size * 2 );
     BOOLEAN LockFailed = FALSE;
@@ -77,17 +77,20 @@ PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count,
     AFD_DbgPrint(MID_TRACE,("Called(%08x)\n", NewBuf));
 
     if( NewBuf ) {
+        RtlZeroMemory(NewBuf, Size * 2);
+
 	PAFD_MAPBUF MapBuf = (PAFD_MAPBUF)(NewBuf + Count + Lock);
 
         _SEH2_TRY {
             RtlCopyMemory( NewBuf, Buf, sizeof(AFD_WSABUF) * Count );
-            if( Lock != 0 ) {
-                NewBuf[Count].buf = AddressBuf;
-                NewBuf[Count].len = *AddressLen;
-                Count++;
-                NewBuf[Count].buf = (PVOID)AddressLen;
-                NewBuf[Count].len = sizeof(*AddressLen);
-                Count++;
+            if( LockAddress ) {
+                if (AddressBuf && AddressLen) {
+                    NewBuf[Count].buf = AddressBuf;
+                    NewBuf[Count].len = *AddressLen;
+                    NewBuf[Count + 1].buf = (PVOID)AddressLen;
+                    NewBuf[Count + 1].len = sizeof(*AddressLen);
+                }
+                Count += 2;
             }
         } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
             AFD_DbgPrint(MIN_TRACE,("Access violation copying buffer info "
