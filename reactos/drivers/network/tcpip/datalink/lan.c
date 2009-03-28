@@ -302,7 +302,6 @@ VOID LanSubmitReceiveWork(
     UINT BytesTransferred) {
     LAN_WQ_ITEM WQItem;
     PLAN_ADAPTER Adapter = (PLAN_ADAPTER)BindingContext;
-    PVOID LanWorkItem;
 
     TI_DbgPrint(DEBUG_DATALINK,("called\n"));
 
@@ -311,7 +310,7 @@ VOID LanSubmitReceiveWork(
     WQItem.BytesTransferred = BytesTransferred;
 
     if( !ChewCreate
-	( &LanWorkItem, sizeof(LAN_WQ_ITEM),  LanReceiveWorker, &WQItem ) )
+	( NULL, sizeof(LAN_WQ_ITEM),  LanReceiveWorker, &WQItem ) )
 	ASSERT(0);
 }
 
