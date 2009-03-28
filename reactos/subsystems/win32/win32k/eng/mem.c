@@ -79,7 +79,7 @@ EngAllocUserMem(SIZE_T cj, ULONG Tag)
   SIZE_T MemSize = sizeof(USERMEMHEADER) + cj;
   PUSERMEMHEADER Header;
 
-  Status = ZwAllocateVirtualMemory(NtCurrentProcess(), &NewMem, 0, &MemSize, MEM_COMMIT, PAGE_READWRITE);
+  Status = ZwAllocateVirtualMemory(NtCurrentProcess(), &NewMem, 0, &MemSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
 
   if (! NT_SUCCESS(Status))
     {
@@ -100,7 +100,7 @@ VOID APIENTRY
 EngFreeUserMem(PVOID pv)
 {
   PUSERMEMHEADER Header = ((PUSERMEMHEADER) pv) - 1;
-  SIZE_T MemSize = sizeof(USERMEMHEADER) + Header->MemSize;
+  SIZE_T MemSize = 0;
 
   ZwFreeVirtualMemory(NtCurrentProcess(), (PVOID *) &Header, &MemSize, MEM_RELEASE);
 }
