@@ -424,7 +424,7 @@ NdisAllocatePacket(
 
         KeReleaseSpinLock(&Pool->SpinLock.SpinLock, OldIrql);
 
-        RtlZeroMemory(&Temp->Private, sizeof(NDIS_PACKET_PRIVATE));
+        RtlZeroMemory(Temp, sizeof(NDIS_PACKET));
         Temp->Private.Pool = Pool;
 
         *Packet = Temp;

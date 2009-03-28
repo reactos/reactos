@@ -661,23 +661,6 @@ NdisMDeregisterIoPortRange(
    UNIMPLEMENTED
 }
 
-
-/*
- * @unimplemented
- */
-NDIS_STATUS
-EXPORT
-NdisMAllocateSharedMemoryAsync(
-    IN  NDIS_HANDLE MiniportAdapterHandle,
-    IN  ULONG       Length,
-    IN  BOOLEAN     Cached,
-    IN  PVOID       Context)
-{
-  UNIMPLEMENTED
-
-  return NDIS_STATUS_FAILURE;
-}
-
 /*
  * @unimplemented
  */
@@ -701,6 +684,8 @@ NdisCopyBuffer(
  *     Length           = Number of bytes to copy
  */
 {
+    UNIMPLEMENTED
+
     *Status = NDIS_STATUS_FAILURE;
 }
 
