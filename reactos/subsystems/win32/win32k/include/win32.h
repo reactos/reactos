@@ -71,10 +71,16 @@ typedef struct _W32PROCESS
   FAST_MUTEX DriverObjListLock;
   LIST_ENTRY DriverObjListHead;
   struct _KBL* KeyboardLayout;
-  ULONG Flags;
-  LONG GDIObjects;
-  LONG UserObjects;
-  PKEVENT InputIdleEvent;
+
+  ULONG     Flags;
+  PKEVENT   InputIdleEvent;
+  PVOID     pDCAttrList;
+  PVOID     pBrushAttrList;
+  DWORD     W32Pid;
+  LONG      GDIObjects;
+  LONG      UserObjects;
+  DWORD     cSimpleLock;   /* Locking Process during access to structure. */
+  PVOID     pvAvlTable;    /* Pointer to AVL Table. */
 
   W32HEAP_USER_MAPPING HeapMappings;
   PW32PROCESSINFO ProcessInfo;
