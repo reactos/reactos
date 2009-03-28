@@ -157,6 +157,7 @@ BOOL bCtrlBreak = FALSE;  /* Ctrl-Break or Ctrl-C hit */
 BOOL bIgnoreEcho = FALSE; /* Set this to TRUE to prevent a newline, when executing a command */
 INT  nErrorLevel = 0;     /* Errorlevel of last launched external program */
 BOOL bChildProcessRunning = FALSE;
+BOOL bUnicodeOutput = FALSE;
 BOOL bDisableBatchEcho = FALSE;
 BOOL bDelayedExpansion = FALSE;
 DWORD dwChildProcessId = 0;
@@ -171,7 +172,6 @@ static NtQueryInformationProcessProc NtQueryInformationProcessPtr = NULL;
 static NtReadVirtualMemoryProc       NtReadVirtualMemoryPtr = NULL;
 
 #ifdef INCLUDE_CMD_COLOR
-WORD wColor;              /* current color */
 WORD wDefColor;           /* default color */
 #endif
 
@@ -1818,6 +1818,10 @@ Initialize()
 				}
 				bCanExit = FALSE;
 			}
+			else if (option == _T('A'))
+			{
+				bUnicodeOutput = FALSE;
+			}
 			else if (option == _T('C') || option == _T('K') || option == _T('R'))
 			{
 				/* Remainder of command line is a command to be run */
@@ -1840,10 +1844,13 @@ Initialize()
 			{
 				/* process /t (color) argument */
 				wDefColor = (WORD)_tcstoul(&ptr[3], &ptr, 16);
-				wColor = wDefColor;
-				SetScreenColor (wColor, TRUE);
+				SetScreenColor(wDefColor, TRUE);
 			}
 #endif
+			else if (option == _T('U'))
+			{
+				bUnicodeOutput = TRUE;
+			}
 			else if (option == _T('V'))
 			{
 				bDelayedExpansion = _tcsnicmp(&ptr[2], _T(":OFF"), 4);
@@ -1956,8 +1963,7 @@ int cmd_main (int argc, const TCHAR *argv[])
 		ConErrFormatMessage(GetLastError());
 		return(1);
 	}
-	wColor = Info.wAttributes;
-	wDefColor = wColor;
+	wDefColor = Info.wAttributes;
 
 	InputCodePage= GetConsoleCP();
 	OutputCodePage = GetConsoleOutputCP();
