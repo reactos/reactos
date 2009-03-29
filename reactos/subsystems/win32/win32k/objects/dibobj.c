@@ -659,8 +659,10 @@ NtGdiGetDIBitsInternal(HDC hDC,
     ColorPtr = ((PBYTE)Info + Info->bmiHeader.biSize);
     rgbQuads = (RGBQUAD *)ColorPtr;
 
-    /* Copy palette information */
-    if (Info->bmiHeader.biBitCount == BitsPerFormat(psurf->SurfObj.iBitmapFormat))
+    /* Copy palette information
+     * Always create a palette for 15 & 16 bit. */
+    if (Info->bmiHeader.biBitCount == BitsPerFormat(psurf->SurfObj.iBitmapFormat) &&
+        Info->bmiHeader.biBitCount != 15 && Info->bmiHeader.biBitCount != 16)
     {
       hDestPalette = hSourcePalette;
       bPaletteMatch = TRUE;
