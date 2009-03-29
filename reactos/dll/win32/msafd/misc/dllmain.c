@@ -326,6 +326,7 @@ DWORD MsafdReturnWithErrno(NTSTATUS Status,
         case STATUS_PENDING: 
             *Errno = WSA_IO_PENDING;
             break;
+        case STATUS_BUFFER_TOO_SMALL:
         case STATUS_BUFFER_OVERFLOW:
             DbgPrint("MSAFD: STATUS_BUFFER_TOO_SMALL/STATUS_BUFFER_OVERFLOW\n");
             *Errno = WSAEMSGSIZE;
