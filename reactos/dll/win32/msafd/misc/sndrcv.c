@@ -130,18 +130,15 @@ WSPRecv(SOCKET Handle,
         {
             RecvInfo.TdiFlags |= TDI_RECEIVE_EXPEDITED;
         }
-        else
-        {
-            RecvInfo.TdiFlags |= TDI_RECEIVE_NORMAL;
-        }
 
         if (*ReceiveFlags & MSG_PEEK)
         {
             RecvInfo.TdiFlags |= TDI_RECEIVE_PEEK;
         }
 
-        if (*ReceiveFlags & MSG_PARTIAL) {
-            RecvInfo.TdiFlags |= TDI_RECEIVE_NORMAL;
+        if (*ReceiveFlags & MSG_PARTIAL)
+        {
+            RecvInfo.TdiFlags |= TDI_RECEIVE_PARTIAL;
         }
     }
 
@@ -285,10 +282,6 @@ WSPRecvFrom(SOCKET Handle,
         {
             RecvInfo.TdiFlags |= TDI_RECEIVE_EXPEDITED;
         }
-        else
-        {
-            RecvInfo.TdiFlags |= TDI_RECEIVE_NORMAL;
-        }
 
         if (*ReceiveFlags & MSG_PEEK)
         {
@@ -297,7 +290,7 @@ WSPRecvFrom(SOCKET Handle,
 
         if (*ReceiveFlags & MSG_PARTIAL)
         {
-            RecvInfo.TdiFlags |= TDI_RECEIVE_NORMAL;
+            RecvInfo.TdiFlags |= TDI_RECEIVE_PARTIAL;
         }
     }
 
