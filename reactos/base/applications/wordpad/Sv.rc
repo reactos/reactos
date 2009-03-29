@@ -22,7 +22,7 @@ LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 
 IDM_MAINMENU MENU DISCARDABLE
 BEGIN
-    POPUP "&Fil"
+    POPUP "&Arkiv"
     BEGIN
         MENUITEM "&Nytt...\tCtrl+N",       ID_FILE_NEW
         MENUITEM "&Öppna...\tCtrl+O",      ID_FILE_OPEN
@@ -151,7 +151,7 @@ STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 Caption "Tabulatorer"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Tabulatorstopp", -1, 10, 10, 120, 90
+    GROUPBOX "Tabbstopp", -1, 10, 10, 120, 90
     COMBOBOX IDC_TABSTOPS, 20, 20, 100, 60, CBS_SIMPLE
     DEFPUSHBUTTON "Lägg &till", ID_TAB_ADD, 20, 80, 45, 15
     PUSHBUTTON "Ta &bort", ID_TAB_DEL, 72, 80, 45, 15
@@ -242,6 +242,7 @@ BEGIN
     STRING_OPEN_FAILED,               "Kunde inte öppna filen."
     STRING_OPEN_ACCESS_DENIED,        "Du har inte tillgång till att öppna filen."
     STRING_PRINTING_NOT_IMPLEMENTED, "Utskrift ej implementerat."
+    STRING_MAX_TAB_STOPS,            "Kan ej lägga till mer än 32 tabbstopp."
 END
 
 #pragma code_page(default)

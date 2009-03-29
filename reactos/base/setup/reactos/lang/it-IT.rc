@@ -8,7 +8,7 @@ BEGIN
     LTEXT "Benvenuto al wizard di installazione di ReactOS.", IDC_STARTTITLE, 115, 8, 195, 24
     LTEXT "Non è ancora possibile installare ReactOS direttamente da questo CD! "\
           "E' necessario riavviare il computer da questo CD per procedere "\
-	  "alla instalazione di ReactOS.", IDC_STATIC, 115, 40, 195, 100
+	  "alla installazione di ReactOS.", IDC_STATIC, 115, 40, 195, 100
     LTEXT "Cliccare Fine per uscire.", IDC_STATIC, 115, 169, 195, 17
 END
 
@@ -128,8 +128,8 @@ BEGIN
  
     LTEXT "Quando verrà premuto fine il computer si riavvierà.", IDC_STATIC, 20, 80, 277, 10
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
-    LTEXT "Se presente rimuovere il CD dal lettore e per riavviare "\
-          "il computer cliccare Fine.", IDC_STATIC, 10, 180, 297, 20
+    LTEXT "Se presente rimuovere il CD dal lettore e cliccare Fine "\
+          "per riavviare il computer.", IDC_STATIC, 10, 180, 297, 20
 END
 
 STRINGTABLE
@@ -146,8 +146,8 @@ BEGIN
     IDS_PROCESSSUBTITLE "Creazione e formattazione della partizione, copia dei file, installazione del Boot loader"
     IDS_RESTARTTITLE    "Prima fase della installazione completata"
     IDS_RESTARTSUBTITLE "La prima fase della installazione è stata completata, riavviare il computer per procedere alla seconda fase"
-    IDS_SUMMARYTITLE    "Installation Summary"
-    IDS_SUMMARYSUBTITLE "List installation properties to check before apply to the installation device"
+    IDS_SUMMARYTITLE    "Sintesi della installazione"
+    IDS_SUMMARYSUBTITLE "Elencare le proprietà della installazione da controllare prima che siano eseguite sul dispositivo di installazione"
     IDS_ABORTSETUP      "ReactOS non è installato completamente sul computer. Se interropete l'installazione ora sarà necessario eseguire l'installazione di nuovo. Volete procedere?"
     IDS_ABORTSETUP2     "Volete interrompere l'installazione?"
 END
