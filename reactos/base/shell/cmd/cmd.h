@@ -112,7 +112,7 @@ VOID RemoveBreakHandler (VOID);
 BOOL SubstituteVars(TCHAR *Src, TCHAR *Dest, TCHAR Delim);
 BOOL SubstituteForVars(TCHAR *Src, TCHAR *Dest);
 LPTSTR DoDelayedExpansion(LPTSTR Line);
-BOOL DoCommand (LPTSTR line, struct _PARSED_COMMAND *Cmd);
+BOOL DoCommand(LPTSTR first, LPTSTR rest, struct _PARSED_COMMAND *Cmd);
 BOOL ReadLine(TCHAR *commandline, BOOL bMore);
 int cmd_main (int argc, const TCHAR *argv[]);
 
@@ -375,8 +375,8 @@ typedef struct _PARSED_COMMAND
 	{
 		struct
 		{
-			TCHAR *Tail;
-			TCHAR CommandLine[];
+			TCHAR *Rest;
+			TCHAR First[];
 		} Command;
 		struct
 		{

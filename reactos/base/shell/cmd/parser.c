@@ -576,7 +576,7 @@ static PARSED_COMMAND *ParseCommandPart(void)
 		Type = ParseToken(_T('('), STANDARD_SEPS);
 		if (Type == TOK_NORMAL)
 		{
-			Pos = _stpcpy(ParsedLine, CurrentToken);
+			Pos = _stpcpy(ParsedLine, CurrentToken) + 1;
 			break;
 		}
 		else if (Type == TOK_REDIRECTION)
@@ -645,14 +645,15 @@ static PARSED_COMMAND *ParseCommandPart(void)
 			break;
 		}
 	}
+	*Pos++ = _T('\0');
 
-	Cmd = cmd_alloc(FIELD_OFFSET(PARSED_COMMAND, Command.CommandLine[Pos + 1 - ParsedLine]));
+	Cmd = cmd_alloc(FIELD_OFFSET(PARSED_COMMAND, Command.First[Pos - ParsedLine]));
 	Cmd->Type = C_COMMAND;
 	Cmd->Next = NULL;
 	Cmd->Subcommands = NULL;
 	Cmd->Redirections = RedirList;
-	_tcscpy(Cmd->Command.CommandLine, ParsedLine);
-	Cmd->Command.Tail = Cmd->Command.CommandLine + TailOffset;
+	memcpy(Cmd->Command.First, ParsedLine, (Pos - ParsedLine) * sizeof(TCHAR));
+	Cmd->Command.Rest = Cmd->Command.First + TailOffset;
 	return Cmd;
 }
 
@@ -747,7 +748,9 @@ EchoCommand(PARSED_COMMAND *Cmd)
 	switch (Cmd->Type)
 	{
 	case C_COMMAND:
-		if (SubstituteForVars(Cmd->Command.CommandLine, Buf))
+		if (SubstituteForVars(Cmd->Command.First, Buf))
+			ConOutPrintf(_T("%s"), Buf);
+		if (SubstituteForVars(Cmd->Command.Rest, Buf))
 			ConOutPrintf(_T("%s"), Buf);
 		break;
 	case C_QUIET:
@@ -852,10 +855,12 @@ Unparse(PARSED_COMMAND *Cmd, TCHAR *Out, TCHAR *OutEnd)
 	switch (Cmd->Type)
 	{
 	case C_COMMAND:
-		if (!SubstituteForVars(Cmd->Command.CommandLine, Buf)) return NULL;
 		/* This is fragile since there could be special characters, but
 		 * Windows doesn't bother escaping them, so for compatibility
 		 * we probably shouldn't do it either */
+		if (!SubstituteForVars(Cmd->Command.First, Buf)) return NULL;
+		STRING(Buf)
+		if (!SubstituteForVars(Cmd->Command.Rest, Buf)) return NULL;
 		STRING(Buf)
 		break;
 	case C_QUIET:

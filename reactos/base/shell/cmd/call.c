@@ -37,7 +37,9 @@
 
 INT cmd_call (LPTSTR param)
 {
-	TCHAR line[CMDLINE_LENGTH];
+	TCHAR line[CMDLINE_LENGTH + 1];
+	TCHAR *first;
+	BOOL bInQuote = FALSE;
 
 	TRACE ("cmd_call: (\'%s\')\n", debugstr_aw(param));
 	if (!_tcsncmp (param, _T("/?"), 2))
@@ -50,26 +52,31 @@ INT cmd_call (LPTSTR param)
 	if (!SubstituteVars(param, line, _T('%')))
 		return nErrorLevel = 1;
 
-	param = line;
-	while (_istspace(*param))
-		param++;
-	if (*param == _T(':') && (bc))
+	/* Find start and end of first word */
+	first = line;
+	while (_istspace(*first))
+		first++;
+
+	for (param = first; *param; param++)
+	{
+		if (!bInQuote && (_istspace(*param) || _tcschr(_T(",;="), *param)))
+			break;
+		bInQuote ^= (*param == _T('"'));
+	}
+
+	/* Separate first word from rest of line */
+	memmove(param + 1, param, (_tcslen(param) + 1) * sizeof(TCHAR));
+	*param++ = _T('\0');
+
+	if (*first == _T(':') && (bc))
 	{
 		/* CALL :label - call a subroutine of the current batch file */
-		TCHAR *first = param;
-		while (*param && !_istspace(*param))
+		while (*param == _T(' '))
 			param++;
-		if (*param)
-		{
-			/* Separate label and arguments */
-			*param++ = _T('\0');
-			while (_istspace(*param))
-				param++;
-		}
 		return !Batch(bc->BatchFilePath, first, param, NULL);
 	}
 
-	return !DoCommand(param, NULL);
+	return !DoCommand(first, param, NULL);
 }
 
 /* EOF */

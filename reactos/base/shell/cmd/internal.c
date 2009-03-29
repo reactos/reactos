@@ -704,11 +704,7 @@ INT CommandShowCommandsDetail (LPTSTR param)
 	/* If a param was send, display help of correspondent command */
 	if (_tcslen(param))
 	{
-		LPTSTR NewCommand = cmd_alloc((_tcslen(param)+4)*sizeof(TCHAR));
-		_tcscpy(NewCommand, param);
-		_tcscat(NewCommand, _T(" /?"));
-		DoCommand(NewCommand, NULL);
-		cmd_free(NewCommand);
+		DoCommand(param, _T("/?"), NULL);
 	}
 	/* Else, display detailed commands list */
 	else

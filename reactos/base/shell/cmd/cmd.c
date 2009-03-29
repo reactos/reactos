@@ -214,15 +214,6 @@ ConvertULargeInteger(ULONGLONG num, LPTSTR des, INT len, BOOL bPutSeperator)
 }
 
 /*
- * is character a delimeter when used on first word?
- *
- */
-static BOOL IsDelimiter (TCHAR c)
-{
-	return (c == _T('/') || c == _T('=') || c == _T('\0') || _istspace (c));
-}
-
-/*
  * Is a process a console process?
  */
 static BOOL IsConsoleProcess(HANDLE Process)
@@ -313,7 +304,7 @@ HANDLE RunFile(DWORD flags, LPTSTR filename, LPTSTR params,
 /*
  * This command (in first) was not found in the command table
  *
- * Full  - whole command line
+ * Full  - buffer to hold whole command line
  * First - first word on command line
  * Rest  - rest of command line
  */
@@ -321,103 +312,41 @@ HANDLE RunFile(DWORD flags, LPTSTR filename, LPTSTR params,
 static BOOL
 Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
 {
-	TCHAR *szFullName=NULL;
-	TCHAR *first = NULL;
-	TCHAR *rest = NULL;
-	TCHAR *full = NULL;
-	TCHAR *dot = NULL;
+	TCHAR szFullName[MAX_PATH];
+	TCHAR *first, *rest, *dot;
 	TCHAR szWindowTitle[MAX_PATH];
 	DWORD dwExitCode = 0;
+	TCHAR *FirstEnd;
 
-	TRACE ("Execute: \'%s\' \'%s\'\n", debugstr_aw(first), debugstr_aw(rest));
-
-	/* we need biger buffer that First, Rest, Full are already
-	   need rewrite some code to use cmd_realloc when it need instead
-	   of add 512bytes extra */
-
-	first = cmd_alloc ( (_tcslen(Full) + 512) * sizeof(TCHAR));
-	if (first == NULL)
-	{
-		error_out_of_memory();
-                nErrorLevel = 1;
-		return FALSE;
-	}
-
-	rest = cmd_alloc ( (_tcslen(Full) + 512) * sizeof(TCHAR));
-	if (rest == NULL)
-	{
-		cmd_free (first);
-		error_out_of_memory();
-                nErrorLevel = 1;
-		return FALSE;
-	}
-
-	full = cmd_alloc ( (_tcslen(Full) + 512) * sizeof(TCHAR));
-	if (full == NULL)
-	{
-		cmd_free (first);
-		cmd_free (rest);
-		error_out_of_memory();
-                nErrorLevel = 1;
-		return FALSE;
-	}
-
-	szFullName = cmd_alloc ( (_tcslen(Full) + 512) * sizeof(TCHAR));
-	if (full == NULL)
-	{
-		cmd_free (first);
-		cmd_free (rest);
-		cmd_free (full);
-		error_out_of_memory();
-                nErrorLevel = 1;
-		return FALSE;
-	}
-
+	TRACE ("Execute: \'%s\' \'%s\'\n", debugstr_aw(First), debugstr_aw(Rest));
 
 	/* Though it was already parsed once, we have a different set of rules
 	   for parsing before we pass to CreateProccess */
-	if(!_tcschr(Full,_T('\"')))
+	if (First[0] == _T('/') || (First[0] && First[1] == _T(':')))
 	{
-		_tcscpy(first,First);
-		_tcscpy(rest,Rest);
-		_tcscpy(full,Full);
+		/* Use the entire first word as the program name (no change) */
+		FirstEnd = First + _tcslen(First);
 	}
 	else
 	{
-		UINT i = 0;
+		/* If present in the first word, spaces and ,;=/ end the program
+		 * name and become the beginning of its parameters. */
 		BOOL bInside = FALSE;
-		rest[0] = _T('\0');
-		full[0] = _T('\0');
-		first[0] = _T('\0');
-		_tcscpy(first,Full);
-		/* find the end of the command and start of the args */
-		for(i = 0; i < _tcslen(first); i++)
+		for (FirstEnd = First; *FirstEnd; FirstEnd++)
 		{
-			if(!_tcsncmp(&first[i], _T("\""), 1))
-				bInside = !bInside;
-			if(!_tcsncmp(&first[i], _T(" "), 1) && !bInside)
-			{
-				_tcscpy(rest,&first[i]);
-				first[i] = _T('\0');
+			if (!bInside && (_istspace(*FirstEnd) || _tcschr(_T(",;=/"), *FirstEnd)))
 				break;
-			}
-
+			bInside ^= *FirstEnd == _T('"');
 		}
-		i = 0;
-		/* remove any slashes */
-		while(i < _tcslen(first))
-		{
-			if(first[i] == _T('\"'))
-				memmove(&first[i],&first[i + 1], _tcslen(&first[i]) * sizeof(TCHAR));
-			else
-				i++;
-		}
-		/* Drop quotes around it just in case there is a space */
-		_tcscpy(full,_T("\""));
-		_tcscat(full,first);
-		_tcscat(full,_T("\" "));
-		_tcscat(full,rest);
 	}
+
+	/* Copy the new first/rest into the buffer */
+	first = Full;
+	rest = &Full[FirstEnd - First + 1];
+	_tcscpy(rest, FirstEnd);
+	_tcscat(rest, Rest);
+	*FirstEnd = _T('\0');
+	_tcscpy(first, First);
 
 	/* check for a drive change */
 	if ((_istalpha (first[0])) && (!_tcscmp (first + 1, _T(":"))))
@@ -435,27 +364,16 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
 		}
 
 		if (!working) ConErrResPuts (STRING_FREE_ERROR1);
-
-		cmd_free (first);
-		cmd_free (rest);
-		cmd_free (full);
-		cmd_free (szFullName);
-                nErrorLevel = 1;
 		return working;
 	}
 
 	/* get the PATH environment variable and parse it */
 	/* search the PATH environment variable for the binary */
-	if (!SearchForExecutable (first, szFullName))
+	StripQuotes(First);
+	if (!SearchForExecutable(First, szFullName))
 	{
-			error_bad_command (first);
-			cmd_free (first);
-			cmd_free (rest);
-			cmd_free (full);
-			cmd_free (szFullName);
-                        nErrorLevel = 1;
-			return FALSE;
-
+		error_bad_command(first);
+		return FALSE;
 	}
 
 	GetConsoleTitle (szWindowTitle, MAX_PATH);
@@ -464,6 +382,8 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
 	dot = _tcsrchr (szFullName, _T('.'));
 	if (dot && (!_tcsicmp (dot, _T(".bat")) || !_tcsicmp (dot, _T(".cmd"))))
 	{
+		while (*rest == _T(' '))
+			rest++;
 		TRACE ("[BATCH: %s %s]\n", debugstr_aw(szFullName), debugstr_aw(rest));
 		Batch (szFullName, first, rest, Cmd);
 	}
@@ -473,8 +393,11 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
 		PROCESS_INFORMATION prci;
 		STARTUPINFO stui;
 
-		TRACE ("[EXEC: %s %s]\n", debugstr_aw(full), debugstr_aw(rest));
-		/* build command line for CreateProcess() */
+		/* build command line for CreateProcess(): first + " " + rest */
+		if (*rest)
+			rest[-1] = _T(' ');
+
+		TRACE ("[EXEC: %s]\n", debugstr_aw(Full));
 
 		/* fill startup info */
 		memset (&stui, 0, sizeof (STARTUPINFO));
@@ -487,7 +410,7 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
 		                ENABLE_LINE_INPUT | ENABLE_PROCESSED_INPUT | ENABLE_ECHO_INPUT );
 
 		if (CreateProcess (szFullName,
-		                   full,
+		                   Full,
 		                   NULL,
 		                   NULL,
 		                   TRUE,
@@ -534,7 +457,7 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
 		}
 		else
 		{
-			TRACE ("[ShellExecute failed!: %s]\n", debugstr_aw(full));
+			TRACE ("[ShellExecute failed!: %s]\n", debugstr_aw(Full));
 			error_bad_command (first);
 			nErrorLevel = 1;
 		}
@@ -550,10 +473,6 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
 	OutputCodePage = GetConsoleOutputCP();
 	SetConsoleTitle (szWindowTitle);
 
-	cmd_free(first);
-	cmd_free(rest);
-	cmd_free(full);
-	cmd_free (szFullName);
 	return nErrorLevel == 0;
 }
 
@@ -563,120 +482,60 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
  * command is one of them.  If it is, call the command.  If not, call
  * execute to run it as an external program.
  *
- * line - the command line of the program to run
- *
+ * first - first word on command line
+ * rest  - rest of command line
  */
 
 BOOL
-DoCommand (LPTSTR line, PARSED_COMMAND *Cmd)
+DoCommand(LPTSTR first, LPTSTR rest, PARSED_COMMAND *Cmd)
 {
-	TCHAR *com = NULL;  /* the first word in the command */
-	TCHAR *cp = NULL;
-	LPTSTR cstart;
-	LPTSTR rest;   /* pointer to the rest of the command line */
+	TCHAR com[_tcslen(first) + _tcslen(rest) + 2];  /* full command line */
+	TCHAR *cp;
+	LPTSTR param;   /* pointer to command's parameters */
 	INT cl;
 	LPCOMMAND cmdptr;
-	BOOL ret = TRUE;
+	BOOL nointernal = FALSE;
 
-	TRACE ("DoCommand: (\'%s\')\n", debugstr_aw(line));
+	TRACE ("DoCommand: (\'%s\' \'%s\')\n", debugstr_aw(first), debugstr_aw(rest));
 
-	com = cmd_alloc( (_tcslen(line) +512)*sizeof(TCHAR) );
-	if (com == NULL)
+	/* If present in the first word, these characters end the name of an
+	 * internal command and become the beginning of its parameters. */
+	cp = first + _tcscspn(first, _T("\t +,/;=[]"));
+
+	for (cl = 0; cl < (cp - first); cl++)
 	{
-		error_out_of_memory();
-		return FALSE;
+		/* These characters do it too, but if one of them is present,
+		 * then we check to see if the word is a file name and skip
+		 * checking for internal commands if so.
+		 * This allows running programs with names like "echo.exe" */
+		if (_tcschr(_T(".:\\"), first[cl]))
+		{
+			TCHAR tmp = *cp;
+			*cp = _T('\0');
+			nointernal = IsExistingFile(first);
+			*cp = tmp;
+			break;
+		}
 	}
 
-	cp = com;
-	/* Skip over initial white space */
-	while (_istspace (*line))
-		line++;
-	rest = line;
-
-	cstart = rest;
-
-	/* Anything to do ? */
-	if (*rest)
+	/* Scan internal command table */
+	for (cmdptr = cmds; !nointernal && cmdptr->name; cmdptr++)
 	{
-		if (*rest == _T('"'))
+		if (!_tcsnicmp(first, cmdptr->name, cl) && cmdptr->name[cl] == _T('\0'))
 		{
-			/* treat quoted words specially */
+			_tcscpy(com, first);
+			_tcscat(com, rest);
+			param = &com[cl];
 
-			rest++;
-
-			while(*rest != _T('\0') && *rest != _T('"'))
-				*cp++ = _totlower (*rest++);
-			if (*rest == _T('"'))
-				rest++;
-		}
-		else
-		{
-			while (!IsDelimiter (*rest))
-				*cp++ = _totlower (*rest++);
-		}
-
-
-		/* Terminate first word */
-		*cp = _T('\0');
-
-		/* Do not limit commands to MAX_PATH */
-		/*
-		if(_tcslen(com) > MAX_PATH)
-		{
-			error_bad_command();
-			cmd_free(com);
-			return;
-		}
-		*/
-
-		/* Skip over whitespace to rest of line, exclude 'echo' command */
-		if (_tcsicmp (com, _T("echo")))
-		{
-			while (_istspace (*rest))
-			rest++;
-		}
-
-		/* Scan internal command table */
-		for (cmdptr = cmds;; cmdptr++)
-		{
-			/* If end of table execute ext cmd */
-			if (cmdptr->name == NULL)
-			{
-				ret = Execute (line, com, rest, Cmd);
-				break;
-			}
-
-			if (!_tcscmp (com, cmdptr->name))
-			{
-				cmdptr->func (rest);
-				break;
-			}
-
-			/* The following code handles the case of commands like CD which
-			 * are recognised even when the command name and parameter are
-			 * not space separated.
-			 *
-			 * e.g dir..
-			 * cd\freda
-			 */
-
-			/* Get length of command name */
-			cl = _tcslen (cmdptr->name);
-
-			if ((cmdptr->flags & CMD_SPECIAL) &&
-			    (!_tcsncmp (cmdptr->name, com, cl)) &&
-			    (_tcschr (_T("\\.-"), *(com + cl))))
-			{
-				/* OK its one of the specials...*/
-
-				/* Call with new rest */
-				cmdptr->func (cstart + cl);
-				break;
-			}
+			/* Skip over whitespace to rest of line, exclude 'echo' command */
+			if (_tcsicmp(cmdptr->name, _T("echo")) != 0)
+				while (_istspace(*param))
+					param++;
+			return !cmdptr->func(param);
 		}
 	}
-	cmd_free(com);
-	return ret;
+
+	return Execute(com, first, rest, Cmd);
 }
 
 
@@ -825,7 +684,7 @@ BOOL
 ExecuteCommand(PARSED_COMMAND *Cmd)
 {
 	PARSED_COMMAND *Sub;
-	LPTSTR ExpandedLine;
+	LPTSTR First, Rest;
 	BOOL Success = TRUE;
 
 	if (!PerformRedirection(Cmd->Redirections))
@@ -834,14 +693,18 @@ ExecuteCommand(PARSED_COMMAND *Cmd)
 	switch (Cmd->Type)
 	{
 	case C_COMMAND:
-		ExpandedLine = DoDelayedExpansion(Cmd->Command.CommandLine);
-		if (!ExpandedLine)
+		Success = FALSE;
+		First = DoDelayedExpansion(Cmd->Command.First);
+		if (First)
 		{
-			Success = FALSE;
-			break;
+			Rest = DoDelayedExpansion(Cmd->Command.Rest);
+			if (Rest)
+			{
+				Success = DoCommand(First, Rest, Cmd);
+				cmd_free(Rest);
+			}
+			cmd_free(First);
 		}
-		Success = DoCommand(ExpandedLine, Cmd);
-		cmd_free(ExpandedLine);
 		break;
 	case C_QUIET:
 	case C_BLOCK:
