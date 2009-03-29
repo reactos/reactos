@@ -331,10 +331,12 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
 
     if ((Ccb->OtherSide == NULL) && (Ccb->ReadDataAvailable == 0))
     {
-        /* Its ok if the other side has been Disconnect, but if we have data still in the buffer
-                   , need to still be able to read it. Currently this is a HAXXXX */
-        DPRINT("Pipe no longer connected and no data exist in buffer. Ok to close pipe\n");
-        if (Ccb->PipeState == FILE_PIPE_LISTENING_STATE)
+        if (Ccb->PipeState == FILE_PIPE_CONNECTED_STATE)
+        {
+            DPRINT("File pipe broken\n");
+            Status = STATUS_PIPE_BROKEN;
+        }
+        else if (Ccb->PipeState == FILE_PIPE_LISTENING_STATE)
             Status = STATUS_PIPE_LISTENING;
         else if (Ccb->PipeState == FILE_PIPE_DISCONNECTED_STATE)
             Status = STATUS_PIPE_DISCONNECTED;
@@ -431,9 +433,8 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
                 if (Ccb->PipeEnd == FILE_PIPE_CLIENT_END) ConnectionSideReadMode=Ccb->Fcb->ClientReadMode;
                 else ConnectionSideReadMode = Ccb->Fcb->ServerReadMode;
 
-                if (Ccb->PipeState == FILE_PIPE_CONNECTED_STATE)
+                if ((Ccb->PipeState == FILE_PIPE_CONNECTED_STATE) && (Ccb->OtherSide))
                 {
-                    ASSERT(Ccb->OtherSide != NULL);
                     KeSetEvent(&Ccb->OtherSide->WriteEvent, IO_NO_INCREMENT, FALSE);
                 }
                 if (Information > 0 &&
@@ -526,7 +527,7 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
 
                 if ((Length == 0) || (Ccb->ReadDataAvailable == 0))
                 {
-                    if (Ccb->PipeState == FILE_PIPE_CONNECTED_STATE)
+                    if ((Ccb->PipeState == FILE_PIPE_CONNECTED_STATE) && (Ccb->OtherSide))
                     {
                         KeSetEvent(&Ccb->OtherSide->WriteEvent, IO_NO_INCREMENT, FALSE);
                     }
@@ -545,6 +546,8 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
                     memcpy(Ccb->Data, Ccb->ReadPtr, (ULONG_PTR)Ccb->WritePtr - (ULONG_PTR)Ccb->ReadPtr);
                     Ccb->WritePtr = (PVOID)((ULONG_PTR)Ccb->WritePtr - ((ULONG_PTR)Ccb->ReadPtr - (ULONG_PTR)Ccb->Data));
                     Ccb->ReadPtr = Ccb->Data;
+                    ASSERT((ULONG_PTR)Ccb->WritePtr < ((ULONG_PTR)Ccb->Data + Ccb->MaxDataLength));
+                    ASSERT(Ccb->WritePtr >= Ccb->Data);
                 }
 
                 /* For Message mode, the Message length is stored in the buffer preceeding the Message. */
@@ -631,7 +634,7 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
                     {
                         KeResetEvent(&Ccb->ReadEvent);
 
-                        if ((Ccb->PipeState == FILE_PIPE_CONNECTED_STATE) && (Ccb->WriteQuotaAvailable > 0))
+                        if ((Ccb->PipeState == FILE_PIPE_CONNECTED_STATE) && (Ccb->WriteQuotaAvailable > 0) && (Ccb->OtherSide))
                         {
                             KeSetEvent(&Ccb->OtherSide->WriteEvent, IO_NO_INCREMENT, FALSE);
                         }
@@ -817,7 +820,7 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
             if ((Status == STATUS_USER_APC) || (Status == STATUS_KERNEL_APC))
             {
                 Status = STATUS_CANCELLED;
-                break;
+                goto done;
             }
             if (!NT_SUCCESS(Status))
             {
