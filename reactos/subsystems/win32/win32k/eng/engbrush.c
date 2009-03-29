@@ -27,8 +27,48 @@ EngRealizeBrush(
     XLATEOBJ *pxlo,
     ULONG    iHatch)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    EBRUSHOBJ *pebo;
+    HBITMAP hbmpRealize;
+    SURFOBJ *psoRealize;
+    POINTL ptlSrc = {0, 0};
+    RECTL rclDest;
+    ULONG lWidth;
+
+    rclDest = (RECTL){0, 0, psoPattern->sizlBitmap.cx, psoPattern->sizlBitmap.cy};
+
+    /* Calculate width in bytes of the realized brush */
+    lWidth = DIB_GetDIBWidthBytes(psoPattern->sizlBitmap.cx,
+                                  BitsPerFormat(psoDst->iBitmapFormat));
+
+    /* Allocate a bitmap */
+    hbmpRealize = EngCreateBitmap(psoPattern->sizlBitmap,
+                                  lWidth,
+                                  psoDst->iBitmapFormat,
+                                  BMF_NOZEROINIT,
+                                  NULL);
+    if (!hbmpRealize)
+    {
+        return FALSE;
+    }
+
+    /* Lock the bitmap */
+    psoRealize = EngLockSurface(hbmpRealize);
+    if (!psoRealize)
+    {
+        EngDeleteSurface(hbmpRealize);
+        return FALSE;
+    }
+
+    /* Copy the bits to the new format bitmap */
+    EngCopyBits(psoRealize, psoPattern, NULL, pxlo, &rclDest, &ptlSrc);
+
+    /* Unlock the bitmap again */
+    EngUnlockSurface(psoRealize);
+
+    pebo = CONTAINING_RECORD(pbo, EBRUSHOBJ, BrushObject);
+    pebo->pengbrush = (PVOID)hbmpRealize;
+
+    return TRUE;
 }
 
 VOID
@@ -61,6 +101,7 @@ EBRUSHOBJ_vInit(EBRUSHOBJ *pebo, PBRUSH pbrush, XLATEOBJ *pxlo)
 //        EBRUSHOBJ_bRealizeBrush(pebo);
     }
 
+//    pebo->psurfTrg = psurfTrg;
     pebo->BrushObject.pvRbrush = pbrush->ulRealization;
     pebo->BrushObject.flColorType = 0;
     pebo->pbrush = pbrush;
@@ -91,7 +132,7 @@ EBRUSHOBJ_bRealizeBrush(EBRUSHOBJ *pebo)
     psurfTrg = pebo->psurfTrg; // FIXME: all EBRUSHOBJs need a surface
     ppdev = (PPDEVOBJ)psurfTrg->SurfObj.hdev; // FIXME: all SURFACEs need a PDEV
 
-    pfnRealzizeBrush = ppdev->DriverFunctions.RealizeBrush;
+    pfnRealzizeBrush = NULL;//ppdev->DriverFunctions.RealizeBrush;
     if (!pfnRealzizeBrush)
     {
         pfnRealzizeBrush = EngRealizeBrush;

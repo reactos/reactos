@@ -14,7 +14,6 @@
  * DON'T MODIFY THIS STRUCTURE UNLESS REALLY NEEDED AND EVEN THEN ASK ON
  * A MAILING LIST FIRST.
  */
-
 typedef struct _BRUSH
 {
   /* Header for all gdi objects in the handle table.
@@ -50,7 +49,7 @@ typedef struct _EBRUSHOBJ
 
     COLORREF    crRealize;
     ULONG       ulRGBColor;
-    DWORD       pengbrush;
+    PVOID       pengbrush;
     ULONG       ulSurfPalTime;
     ULONG       ulDCPalTime;
     COLORREF    crCurrentText;
