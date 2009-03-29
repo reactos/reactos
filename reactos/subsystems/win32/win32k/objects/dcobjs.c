@@ -72,11 +72,8 @@ DC_vUpdateFillBrush(PDC pdc)
 {
     PDC_ATTR pdcattr = pdc->pdcattr;
     PBRUSH pbrFill;
-    XLATEOBJ *pxlo;
+    XLATEOBJ *pxlo = NULL;
     ULONG iSolidColor;
-
-    /* ROS HACK, should use surf xlate */
-    pxlo = pdc->rosdc.XlatePen;
 
     /* Check if the brush handle has changed */
     if (pdcattr->hbrush != pdc->dclevel.pbrFill->BaseObject.hHmgr)
@@ -89,15 +86,24 @@ DC_vUpdateFillBrush(PDC pdc)
             BRUSH_ShareUnlockBrush(pdc->dclevel.pbrFill);
             pdc->dclevel.pbrFill = pbrFill;
 
+            /* ROS HACK, should use surf xlate */
+            IntUpdateBrushXlate(pdc, &pdc->rosdc.XlateBrush, pbrFill);
+
             /* Update eboFill, realizing it, if needed */
-            EBRUSHOBJ_vUpdate(&pdc->eboFill, pbrFill, pxlo);
+            EBRUSHOBJ_vUpdate(&pdc->eboFill, pbrFill, pdc->rosdc.XlateBrush);
         }
         else
         {
             /* Invalid brush handle, restore old one */
             pdcattr->hbrush = pdc->dclevel.pbrFill->BaseObject.hHmgr;
+
+            /* ROS HACK, should use surf xlate */
+            IntUpdateBrushXlate(pdc, &pdc->rosdc.XlateBrush, pdc->dclevel.pbrFill);
         }
     }
+
+    /* ROS HACK, should use surf xlate */
+    pxlo = pdc->rosdc.XlateBrush;
 
     /* Check for DC brush */
     if (pdcattr->hbrush == StockObjects[DC_BRUSH])
@@ -136,15 +142,24 @@ DC_vUpdateLineBrush(PDC pdc)
             BRUSH_ShareUnlockBrush(pdc->dclevel.pbrLine);
             pdc->dclevel.pbrLine = pbrLine;
 
+            /* ROS HACK, should use surf xlate */
+            IntUpdateBrushXlate(pdc, &pdc->rosdc.XlatePen, pbrLine);
+
             /* Update eboLine, realizing it, if needed */
-            EBRUSHOBJ_vUpdate(&pdc->eboLine, pbrLine, pxlo);
+            EBRUSHOBJ_vUpdate(&pdc->eboLine, pbrLine, pdc->rosdc.XlatePen);
         }
         else
         {
             /* Invalid pen handle, restore old one */
             pdcattr->hpen = pdc->dclevel.pbrLine->BaseObject.hHmgr;
+
+            /* ROS HACK, should use surf xlate */
+            IntUpdateBrushXlate(pdc, &pdc->rosdc.XlatePen, pdc->dclevel.pbrLine);
         }
     }
+
+    /* ROS HACK, should use surf xlate */
+    pxlo = pdc->rosdc.XlatePen;
 
     /* Check for DC pen */
     if (pdcattr->hpen == StockObjects[DC_PEN])
