@@ -148,11 +148,14 @@ static void vbo_exec_copy_to_current( struct vbo_exec_context *exec )
          /* Note: the exec->vtx.current[i] pointers point into the
           * ctx->Current.Attrib and ctx->Light.Material.Attrib arrays.
           */
+         if (exec->vtx.attrptr[i]) {
+
 	 COPY_CLEAN_4V(current, 
 		       exec->vtx.attrsz[i], 
 		       exec->vtx.attrptr[i]);
 
-	 
+	 }
+
 	 /* Given that we explicitly state size here, there is no need
 	  * for the COPY_CLEAN above, could just copy 16 bytes and be
 	  * done.  The only problem is when Mesa accesses ctx->Current

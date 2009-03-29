@@ -110,6 +110,9 @@ static void vbo_bind_vertex_list( GLcontext *ctx,
    GLuint data = node->buffer_offset;
    const GLuint *map;
    GLuint attr;
+   GLubyte node_attrsz[VBO_ATTRIB_MAX];  /* copy of node->attrsz[] */
+
+   memcpy(node_attrsz, node->attrsz, sizeof(node->attrsz));
 
    /* Install the default (ie Current) attributes first, then overlay
     * all active ones.
@@ -135,13 +138,26 @@ static void vbo_bind_vertex_list( GLcontext *ctx,
          save->inputs[attr + 16] = &vbo->generic_currval[attr];
       }
       map = vbo->map_vp_arb;
+
+      /* check if VERT_ATTRIB_POS is not read but VERT_BIT_GENERIC0 is read.
+       * In that case we effectively need to route the data from
+       * glVertexAttrib(0, val) calls to feed into the GENERIC0 input.
+       */
+      if ((ctx->VertexProgram._Current->Base.InputsRead & VERT_BIT_POS) == 0 &&
+          (ctx->VertexProgram._Current->Base.InputsRead & VERT_BIT_GENERIC0)) {
+         save->inputs[16] = save->inputs[0];
+         node_attrsz[16] = node_attrsz[0];
+         node_attrsz[0] = 0;
+      }
       break;
+   default:
+      assert(0);
    }
 
    for (attr = 0; attr < VERT_ATTRIB_MAX; attr++) {
       GLuint src = map[attr];
 
-      if (node->attrsz[src]) {
+      if (node_attrsz[src]) {
          /* override the default array set above */
          save->inputs[attr] = &arrays[attr];
 

@@ -955,8 +955,21 @@ _mesa_printf( const char *fmtString, ... )
    va_start( args, fmtString );  
    vsnprintf(s, MAXSTRING, fmtString, args);
    va_end( args );
-   fprintf(stderr,"%s", s);
+   fprintf(stderr, "%s", s);
 }
+
+/** Wrapper around fprintf(), using vsprintf() for the formatting. */
+void
+_mesa_fprintf( FILE *f, const char *fmtString, ... )
+{
+   char s[MAXSTRING];
+   va_list args;
+   va_start( args, fmtString );  
+   vsnprintf(s, MAXSTRING, fmtString, args);
+   va_end( args );
+   fprintf(f, "%s", s);
+}
+
 
 /** Wrapper around vsprintf() */
 int

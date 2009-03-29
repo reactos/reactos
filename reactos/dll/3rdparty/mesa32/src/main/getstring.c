@@ -82,9 +82,18 @@ compute_version(const GLcontext *ctx)
                               ctx->Extensions.ARB_vertex_shader &&
                               ctx->Extensions.ARB_fragment_shader &&
                               ctx->Extensions.ARB_texture_non_power_of_two &&
-                              ctx->Extensions.EXT_blend_equation_separate);
+                              ctx->Extensions.EXT_blend_equation_separate &&
+
+			      /* Technically, 2.0 requires the functionality
+			       * of the EXT version.  Enable 2.0 if either
+			       * extension is available, and assume that a
+			       * driver that only exposes the ATI extension
+			       * will fallback to software when necessary.
+			       */
+			      (ctx->Extensions.EXT_stencil_two_side
+			       || ctx->Extensions.ATI_separate_stencil));
    const GLboolean ver_2_1 = (ver_2_0 &&
-                              /*ctx->Extensions.ARB_shading_language_120 &&*/
+                              ctx->Extensions.ARB_shading_language_120 &&
                               ctx->Extensions.EXT_pixel_buffer_object &&
                               ctx->Extensions.EXT_texture_sRGB);
    if (ver_2_1)

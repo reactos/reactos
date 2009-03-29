@@ -194,6 +194,59 @@ texture_put_row(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
    }
 }
 
+/**
+ * Put row of RGB values into a renderbuffer that wraps a texture image.
+ */
+static void
+texture_put_row_rgb(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
+                GLint x, GLint y, const void *values, const GLubyte *mask)
+{
+   const struct texture_renderbuffer *trb
+      = (const struct texture_renderbuffer *) rb;
+   const GLint z = trb->Zoffset;
+   GLuint i;
+
+   y += trb->Yoffset;
+
+   if (rb->DataType == CHAN_TYPE) {
+      const GLchan *rgb = (const GLchan *) values;
+      for (i = 0; i < count; i++) {
+         if (!mask || mask[i]) {
+            trb->Store(trb->TexImage, x + i, y, z, rgb);
+         }
+         rgb += 3;
+      }
+   }
+   else if (rb->DataType == GL_UNSIGNED_SHORT) {
+      const GLushort *zValues = (const GLushort *) values;
+      for (i = 0; i < count; i++) {
+         if (!mask || mask[i]) {
+            trb->Store(trb->TexImage, x + i, y, z, zValues + i);
+         }
+      }
+   }
+   else if (rb->DataType == GL_UNSIGNED_INT) {
+      const GLuint *zValues = (const GLuint *) values;
+      for (i = 0; i < count; i++) {
+         if (!mask || mask[i]) {
+            trb->Store(trb->TexImage, x + i, y, z, zValues + i);
+         }
+      }
+   }
+   else if (rb->DataType == GL_UNSIGNED_INT_24_8_EXT) {
+      const GLuint *zValues = (const GLuint *) values;
+      for (i = 0; i < count; i++) {
+         if (!mask || mask[i]) {
+            GLfloat flt = (GLfloat) ((zValues[i] >> 8) * (1.0 / 0xffffff));
+            trb->Store(trb->TexImage, x + i, y, z, &flt);
+         }
+      }
+   }
+   else {
+      _mesa_problem(ctx, "invalid rb->DataType in texture_put_row");
+   }
+}
+
 
 static void
 texture_put_mono_row(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
@@ -380,6 +433,7 @@ wrap_texture(GLcontext *ctx, struct gl_renderbuffer_attachment *att)
    trb->Base.GetRow = texture_get_row;
    trb->Base.GetValues = texture_get_values;
    trb->Base.PutRow = texture_put_row;
+   trb->Base.PutRowRGB = texture_put_row_rgb;
    trb->Base.PutMonoRow = texture_put_mono_row;
    trb->Base.PutValues = texture_put_values;
    trb->Base.PutMonoValues = texture_put_mono_values;

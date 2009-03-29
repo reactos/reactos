@@ -87,7 +87,13 @@ find_entry( const char * n )
    GLuint i;
    for (i = 0; static_functions[i].Name_offset >= 0; i++) {
       const char *testName = gl_string_table + static_functions[i].Name_offset;
-      if (strcmp(testName, n) == 0) {
+#ifdef MANGLE
+      /* skip the "m" prefix on the name */
+      if (strcmp(testName, n + 1) == 0)
+#else
+      if (strcmp(testName, n) == 0)
+#endif
+      {
 	 return &static_functions[i];
       }
    }
