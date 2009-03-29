@@ -53,7 +53,6 @@
 /* global variables */
 extern HANDLE hOut;
 extern HANDLE hIn;
-extern HANDLE hConsole;
 extern LPTSTR lpOriginalEnvironment;
 extern WORD   wColor;
 extern WORD   wDefColor;
@@ -120,7 +119,7 @@ extern HANDLE CMD_ModuleHandle;
 
 
 /* Prototypes for CMDINPUT.C */
-VOID ReadCommand (LPTSTR, INT);
+BOOL ReadCommand (LPTSTR, INT);
 
 
 /* Prototypes for CMDTABLE.C */

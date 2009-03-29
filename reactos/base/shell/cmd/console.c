@@ -413,7 +413,7 @@ VOID GetCursorXY (PSHORT x, PSHORT y)
 {
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
 
-	GetConsoleScreenBufferInfo (hConsole, &csbi);
+	GetConsoleScreenBufferInfo (GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
 
 	*x = csbi.dwCursorPosition.X;
 	*y = csbi.dwCursorPosition.Y;
@@ -424,7 +424,7 @@ SHORT GetCursorX (VOID)
 {
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
 
-	GetConsoleScreenBufferInfo (hConsole, &csbi);
+	GetConsoleScreenBufferInfo (GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
 
 	return csbi.dwCursorPosition.X;
 }
@@ -434,7 +434,7 @@ SHORT GetCursorY (VOID)
 {
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
 
-	GetConsoleScreenBufferInfo (hConsole, &csbi);
+	GetConsoleScreenBufferInfo (GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
 
 	return csbi.dwCursorPosition.Y;
 }
@@ -444,7 +444,11 @@ VOID GetScreenSize (PSHORT maxx, PSHORT maxy)
 {
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
 
-	GetConsoleScreenBufferInfo (hConsole, &csbi);
+	if (!GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi))
+	{
+		csbi.dwSize.X = 80;
+		csbi.dwSize.Y = 25;
+	}
 
 	if (maxx)
 		*maxx = csbi.dwSize.X;

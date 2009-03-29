@@ -164,7 +164,6 @@ DWORD dwChildProcessId = 0;
 OSVERSIONINFO osvi;
 HANDLE hIn;
 HANDLE hOut;
-HANDLE hConsole;
 LPTSTR lpOriginalEnvironment;
 HANDLE CMD_ModuleHandle;
 
@@ -1380,7 +1379,12 @@ ReadLine (TCHAR *commandline, BOOL bMore)
 			}
 		}
 
-		ReadCommand (readline, CMDLINE_LENGTH - 1);
+		if (!ReadCommand(readline, CMDLINE_LENGTH - 1))
+		{
+			bExit = TRUE;
+			return FALSE;
+		}
+
 		if (CheckCtrlBreak(BREAK_INPUT))
 		{
 			ConOutPuts(_T("\n"));
@@ -1805,6 +1809,7 @@ static VOID Cleanup()
  */
 int cmd_main (int argc, const TCHAR *argv[])
 {
+	HANDLE hConsole;
 	TCHAR startPath[MAX_PATH];
 	CONSOLE_SCREEN_BUFFER_INFO Info;
 	INT nExitCode;
@@ -1821,12 +1826,16 @@ int cmd_main (int argc, const TCHAR *argv[])
 	hConsole = CreateFile(_T("CONOUT$"), GENERIC_READ|GENERIC_WRITE,
 		FILE_SHARE_READ|FILE_SHARE_WRITE, NULL,
 		OPEN_EXISTING, 0, NULL);
-	if (GetConsoleScreenBufferInfo(hConsole, &Info) == FALSE)
+	if (hConsole != INVALID_HANDLE_VALUE)
 	{
-		ConErrFormatMessage(GetLastError());
-		return(1);
+		if (!GetConsoleScreenBufferInfo(hConsole, &Info))
+		{
+			ConErrFormatMessage(GetLastError());
+			return(1);
+		}
+		wDefColor = Info.wAttributes;
+		CloseHandle(hConsole);
 	}
-	wDefColor = Info.wAttributes;
 
 	InputCodePage= GetConsoleCP();
 	OutputCodePage = GetConsoleOutputCP();
