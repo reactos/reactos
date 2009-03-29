@@ -75,8 +75,8 @@ typedef struct _W32PROCESS
   DWORD     W32Pid;
   LONG      GDIObjects;
   LONG      UserObjects;
-  DWORD     cSimpleLock;   /* Locking Process during access to structure. */
-  PVOID     pvAvlTable;    /* Pointer to AVL Table. */
+  DWORD     cSimpleLock;     /* Locking Process during access to structure. */
+  RTL_AVL_TABLE rtlAvlTable; /* Process AVL Table. */
 /* ReactOS */
   LIST_ENTRY ClassList;
   LIST_ENTRY MenuListHead;
