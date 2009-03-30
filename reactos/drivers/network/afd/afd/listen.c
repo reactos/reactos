@@ -215,7 +215,21 @@ NTSTATUS AfdListenSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	  FCB->LocalAddress->Address[0].AddressType );
 
     if( !FCB->ListenIrp.ConnectionReturnInfo || !FCB->ListenIrp.ConnectionCallInfo )
+    {
+        if (FCB->ListenIrp.ConnectionReturnInfo)
+        {
+            ExFreePool(FCB->ListenIrp.ConnectionReturnInfo);
+            FCB->ListenIrp.ConnectionReturnInfo = NULL;
+        }
+
+        if (FCB->ListenIrp.ConnectionCallInfo)
+        {
+            ExFreePool(FCB->ListenIrp.ConnectionCallInfo);
+            FCB->ListenIrp.ConnectionCallInfo = NULL;
+        }
+
 	return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY, Irp, 0 );
+    }
 
     FCB->State = SOCKET_STATE_LISTENING;
 
@@ -229,6 +243,9 @@ NTSTATUS AfdListenSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if( Status == STATUS_PENDING )
 	Status = STATUS_SUCCESS;
+
+    if (NT_SUCCESS(Status))
+        FCB->NeedsNewListen = FALSE;
 
     AFD_DbgPrint(MID_TRACE,("Returning %x\n", Status));
     return UnlockAndMaybeComplete( FCB, Status, Irp, 0 );
@@ -298,7 +315,21 @@ NTSTATUS AfdAccept( PDEVICE_OBJECT DeviceObject, PIRP Irp,
                 FCB->LocalAddress->Address[0].AddressType );
 
             if( !FCB->ListenIrp.ConnectionReturnInfo || !FCB->ListenIrp.ConnectionCallInfo )
+            {
+                if (FCB->ListenIrp.ConnectionReturnInfo)
+                {
+                    ExFreePool(FCB->ListenIrp.ConnectionReturnInfo);
+                    FCB->ListenIrp.ConnectionReturnInfo = NULL;
+                }
+
+                if (FCB->ListenIrp.ConnectionCallInfo)
+                {
+                    ExFreePool(FCB->ListenIrp.ConnectionCallInfo);
+                    FCB->ListenIrp.ConnectionCallInfo = NULL;
+                }
+
 	        return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY, Irp, 0 );
+            }
 
 	    Status = TdiListen( &FCB->ListenIrp.InFlightRequest,
 				FCB->Connection.Object,

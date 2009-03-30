@@ -154,8 +154,10 @@ AfdGetPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
                 if (NT_SUCCESS(Status))
                 {
-                    RtlCopyMemory(Irp->UserBuffer, ConnInfo->RemoteAddress, TaLengthOfTransportAddress
-                                                                                  (ConnInfo->RemoteAddress));
+                    if (IrpSp->Parameters.DeviceIoControl.OutputBufferLength >= TaLengthOfTransportAddress(ConnInfo->RemoteAddress))
+                        RtlCopyMemory(Irp->UserBuffer, ConnInfo->RemoteAddress, TaLengthOfTransportAddress(ConnInfo->RemoteAddress));
+                    else
+                        Status = STATUS_BUFFER_TOO_SMALL;
                 }
             }
          }

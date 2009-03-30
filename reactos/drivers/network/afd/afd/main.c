@@ -142,11 +142,14 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	/* Allocate our backup buffer */
 	FCB->Recv.Window = ExAllocatePool( NonPagedPool, FCB->Recv.Size );
 	if( !FCB->Recv.Window ) Status = STATUS_NO_MEMORY;
-        FCB->Send.Window = ExAllocatePool( NonPagedPool, FCB->Send.Size );
-	if( !FCB->Send.Window ) {
-	    if( FCB->Recv.Window ) ExFreePool( FCB->Recv.Window );
-	    Status = STATUS_NO_MEMORY;
-	}
+        if( NT_SUCCESS(Status) )
+        {
+            FCB->Send.Window = ExAllocatePool( NonPagedPool, FCB->Send.Size );
+	    if( !FCB->Send.Window ) {
+	         if( FCB->Recv.Window ) ExFreePool( FCB->Recv.Window );
+	         Status = STATUS_NO_MEMORY;
+            }
+	     }
 	/* A datagram socket is always sendable */
 	FCB->PollState |= AFD_EVENT_SEND;
         PollReeval( FCB->DeviceExt, FCB->FileObject );
@@ -235,6 +238,8 @@ AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     AFD_DbgPrint(MID_TRACE,
 		 ("AfdClose(DeviceObject %p Irp %p)\n", DeviceObject, Irp));
 
+    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
+
     AFD_DbgPrint(MID_TRACE,("FCB %x\n", FCB));
 
     FCB->PollState |= AFD_EVENT_CLOSE;
@@ -244,11 +249,13 @@ AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     if( FCB->EventSelect ) ObDereferenceObject( FCB->EventSelect );
 
     FileObject->FsContext = NULL;
+    SocketStateUnlock( FCB );
+
     DestroySocket( FCB );
 
     Irp->IoStatus.Status = STATUS_SUCCESS;
     Irp->IoStatus.Information = 0;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
 
     AFD_DbgPrint(MID_TRACE, ("Returning success.\n"));
 
