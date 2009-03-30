@@ -674,6 +674,14 @@ NTSTATUS DispTdiQueryInformation(
         PTA_IP_ADDRESS Address;
         PCONNECTION_ENDPOINT Endpoint = NULL;
 
+
+        if (MmGetMdlByteCount(Irp->MdlAddress) <
+            (FIELD_OFFSET(TDI_ADDRESS_INFO, Address.Address[0].Address) +
+             sizeof(TDI_ADDRESS_IP))) {
+          TI_DbgPrint(MID_TRACE, ("MDL buffer too small.\n"));
+          return STATUS_BUFFER_TOO_SMALL;
+        }
+
         AddressInfo = (PTDI_ADDRESS_INFO)MmGetSystemAddressForMdl(Irp->MdlAddress);
 		Address = (PTA_IP_ADDRESS)&AddressInfo->Address;
 
@@ -711,13 +719,6 @@ NTSTATUS DispTdiQueryInformation(
           return STATUS_INVALID_PARAMETER;
         }
 
-        if (MmGetMdlByteCount(Irp->MdlAddress) <
-            (FIELD_OFFSET(TDI_ADDRESS_INFO, Address.Address[0].Address) +
-             sizeof(TDI_ADDRESS_IP))) {
-          TI_DbgPrint(MID_TRACE, ("MDL buffer too small.\n"));
-          return STATUS_BUFFER_OVERFLOW;
-        }
-
         return STATUS_SUCCESS;
       }
 
@@ -726,6 +727,13 @@ NTSTATUS DispTdiQueryInformation(
         PTDI_CONNECTION_INFORMATION AddressInfo;
         PADDRESS_FILE AddrFile;
         PCONNECTION_ENDPOINT Endpoint = NULL;
+
+        if (MmGetMdlByteCount(Irp->MdlAddress) <
+            (FIELD_OFFSET(TDI_CONNECTION_INFORMATION, RemoteAddress) +
+             sizeof(PVOID))) {
+          TI_DbgPrint(MID_TRACE, ("MDL buffer too small (ptr).\n"));
+          return STATUS_BUFFER_TOO_SMALL;
+        }
 
         AddressInfo = (PTDI_CONNECTION_INFORMATION)
           MmGetSystemAddressForMdl(Irp->MdlAddress);
@@ -748,13 +756,6 @@ NTSTATUS DispTdiQueryInformation(
         if (!Endpoint) {
           TI_DbgPrint(MID_TRACE, ("No connection object.\n"));
           return STATUS_INVALID_PARAMETER;
-        }
-
-        if (MmGetMdlByteCount(Irp->MdlAddress) <
-            (FIELD_OFFSET(TDI_CONNECTION_INFORMATION, RemoteAddress) +
-             sizeof(PVOID))) {
-          TI_DbgPrint(MID_TRACE, ("MDL buffer too small (ptr).\n"));
-          return STATUS_BUFFER_OVERFLOW;
         }
 
         return TCPGetSockAddress( Endpoint, AddressInfo->RemoteAddress, TRUE );
