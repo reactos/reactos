@@ -152,7 +152,30 @@ int MainFrameBase::OpenShellFolders(LPIDA pida, HWND hFrameWnd)
 MainFrameBase::MainFrameBase(HWND hwnd)
  :	super(hwnd)
 {
-	_himl = ImageList_Create(GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), ILC_MASK|ILC_COLOR24, 2, 0);
+    HDC hDC = GetDC(NULL);
+    if (hDC)
+    {
+        DWORD ilMask;
+        INT bpp = GetDeviceCaps(hDC, BITSPIXEL);
+        ReleaseDC(NULL, hDC);
+
+        if (bpp <= 4)
+            ilMask = ILC_COLOR4;
+        else if (bpp <= 8)
+            ilMask = ILC_COLOR8;
+        else if (bpp <= 16)
+            ilMask = ILC_COLOR16;
+        else if (bpp <= 24)
+            ilMask = ILC_COLOR24;
+        else if (bpp <= 32)
+            ilMask = ILC_COLOR32;
+        else
+            ilMask = ILC_COLOR;
+
+        ilMask |= ILC_MASK;
+
+        _himl = ImageList_Create(GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), ilMask, 2, 0);
+    }
 
 	_hMenuFrame = GetMenu(hwnd);
 	_hMenuWindow = GetSubMenu(_hMenuFrame, GetMenuItemCount(_hMenuFrame)-3);
