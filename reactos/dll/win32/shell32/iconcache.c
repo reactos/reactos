@@ -438,6 +438,11 @@ BOOL SIC_Initialize(void)
                                 cx_small,
                                 cy_small,
                                 LR_SHARED | LR_DEFAULTCOLOR);
+        if (!hSm)
+        {
+            ERR("Failed to load IDI_SHELL_DOCUMENT icon!\n");
+            return FALSE;
+        }
     }
 
     ShellBigIconList = ImageList_Create(cx_large,
@@ -445,7 +450,7 @@ BOOL SIC_Initialize(void)
                                         ilMask,
                                         100,
                                         100);
-    if (!ShellSmallIconList)
+    if (!ShellBigIconList)
     {
         hLg = (HICON)LoadImageW(shell32_hInstance,
                                 MAKEINTRESOURCEW(IDI_SHELL_DOCUMENT),
@@ -453,16 +458,20 @@ BOOL SIC_Initialize(void)
                                 cx_large,
                                 cy_large,
                                 LR_SHARED | LR_DEFAULTCOLOR);
+        if (!hLg)
+        {
+            ERR("Failed to load IDI_SHELL_DOCUMENT icon!\n");
+            DestroyIcon(hSm);
+            return FALSE;
+        }
     }
 
-    if (!hSm || !hLg)
-    {
-      FIXME("Failed to load IDI_SHELL_DOCUMENT icon!\n");
-      return FALSE;
-    }
 
     SIC_IconAppend(swShell32Name, IDI_SHELL_DOCUMENT-1, hSm, hLg, 0);
     SIC_IconAppend(swShell32Name, -IDI_SHELL_DOCUMENT, hSm, hLg, 0);
+
+    DestroyIcon(hSm);
+    DestroyIcon(hLg);
 
     TRACE("hIconSmall=%p hIconBig=%p\n",ShellSmallIconList, ShellBigIconList);
 
