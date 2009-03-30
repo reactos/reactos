@@ -64,19 +64,21 @@ typedef struct _W32HEAP_USER_MAPPING
 
 typedef struct _W32PROCESS
 {
-  PEPROCESS peProcess;
-  DWORD     RefCount;
-  ULONG     Flags;        /* W32PF_flags; */
-  PKEVENT   InputIdleEvent;
-  DWORD     StartCursorHideTime;
-  DWORD     NextStart;
-  PVOID     pDCAttrList;
-  PVOID     pBrushAttrList;
-  DWORD     W32Pid;
-  LONG      GDIObjects;
-  LONG      UserObjects;
-  DWORD     cSimpleLock;     /* Locking Process during access to structure. */
-  RTL_AVL_TABLE rtlAvlTable; /* Process AVL Table. */
+  PEPROCESS     peProcess;
+  DWORD         RefCount;
+  ULONG         W32PF_flags;
+  PKEVENT       InputIdleEvent;
+  DWORD         StartCursorHideTime;
+  DWORD         NextStart;
+  PVOID         pDCAttrList;
+  PVOID         pBrushAttrList;
+  DWORD         W32Pid;
+  LONG          GDIHandleCount;
+  LONG          UserHandleCount;
+  DWORD         cSimpleLock;  /* Locking Process during access to structure. */
+  RTL_AVL_TABLE rtlAvlTable;  /* Process AVL Table. */
+  LIST_ENTRY    leDCAttrList;
+  LIST_ENTRY    leObjAttrList;
 /* ReactOS */
   LIST_ENTRY ClassList;
   LIST_ENTRY MenuListHead;

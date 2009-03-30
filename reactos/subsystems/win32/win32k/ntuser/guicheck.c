@@ -47,7 +47,7 @@ static LONG NrGuiAppsRunning = 0;
 static BOOL FASTCALL
 co_AddGuiApp(PW32PROCESS W32Data)
 {
-   W32Data->Flags |= W32PF_CREATEDWINORDC;
+   W32Data->W32PF_flags |= W32PF_CREATEDWINORDC;
    if (InterlockedIncrement(&NrGuiAppsRunning) == 1)
    {
       BOOL Initialized;
@@ -56,7 +56,7 @@ co_AddGuiApp(PW32PROCESS W32Data)
 
       if (!Initialized)
       {
-         W32Data->Flags &= ~W32PF_CREATEDWINORDC;
+         W32Data->W32PF_flags &= ~W32PF_CREATEDWINORDC;
          InterlockedDecrement(&NrGuiAppsRunning);
          return FALSE;
       }
@@ -67,7 +67,7 @@ co_AddGuiApp(PW32PROCESS W32Data)
 static void FASTCALL
 RemoveGuiApp(PW32PROCESS W32Data)
 {
-   W32Data->Flags &= ~W32PF_CREATEDWINORDC;
+   W32Data->W32PF_flags &= ~W32PF_CREATEDWINORDC;
    if (InterlockedDecrement(&NrGuiAppsRunning) == 0)
    {
       IntEndDesktopGraphics();
@@ -82,14 +82,14 @@ co_IntGraphicsCheck(BOOL Create)
    W32Data = PsGetCurrentProcessWin32Process();
    if (Create)
    {
-      if (! (W32Data->Flags & W32PF_CREATEDWINORDC) && ! (W32Data->Flags & W32PF_MANUALGUICHECK))
+      if (! (W32Data->W32PF_flags & W32PF_CREATEDWINORDC) && ! (W32Data->W32PF_flags & W32PF_MANUALGUICHECK))
       {
          return co_AddGuiApp(W32Data);
       }
    }
    else
    {
-      if ((W32Data->Flags & W32PF_CREATEDWINORDC) && ! (W32Data->Flags & W32PF_MANUALGUICHECK))
+      if ((W32Data->W32PF_flags & W32PF_CREATEDWINORDC) && ! (W32Data->W32PF_flags & W32PF_MANUALGUICHECK))
       {
          RemoveGuiApp(W32Data);
       }
@@ -109,18 +109,18 @@ IntUserManualGuiCheck(LONG Check)
    W32Data = PsGetCurrentProcessWin32Process();
    if (0 == Check)
    {
-      W32Data->Flags |= W32PF_MANUALGUICHECK;
+      W32Data->W32PF_flags |= W32PF_MANUALGUICHECK;
    }
    else if (0 < Check)
    {
-      if (! (W32Data->Flags & W32PF_CREATEDWINORDC))
+      if (! (W32Data->W32PF_flags & W32PF_CREATEDWINORDC))
       {
          co_AddGuiApp(W32Data);
       }
    }
    else
    {
-      if (W32Data->Flags & W32PF_CREATEDWINORDC)
+      if (W32Data->W32PF_flags & W32PF_CREATEDWINORDC)
       {
          RemoveGuiApp(W32Data);
       }

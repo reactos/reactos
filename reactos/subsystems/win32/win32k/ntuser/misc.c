@@ -283,12 +283,12 @@ NtUserGetGuiResources(
    {
       case GR_GDIOBJECTS:
          {
-            Ret = (DWORD)W32Process->GDIObjects;
+            Ret = (DWORD)W32Process->GDIHandleCount;
             break;
          }
       case GR_USEROBJECTS:
          {
-            Ret = (DWORD)W32Process->UserObjects;
+            Ret = (DWORD)W32Process->UserHandleCount;
             break;
          }
       default:

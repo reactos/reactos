@@ -342,11 +342,11 @@ NtUserCallOneParam(
 
                if(Enable)
                {
-                  Process->Flags &= ~W32PF_NOWINDOWGHOSTING;
+                  Process->W32PF_flags &= ~W32PF_NOWINDOWGHOSTING;
                }
                else
                {
-                  Process->Flags |= W32PF_NOWINDOWGHOSTING;
+                  Process->W32PF_flags |= W32PF_NOWINDOWGHOSTING;
                }
 
                RETURN( TRUE);

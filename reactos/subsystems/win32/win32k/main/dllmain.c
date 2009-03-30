@@ -129,7 +129,7 @@ Win32kProcessCallback(struct _EPROCESS *Process,
       }
 
       /* setup process flags */
-      Win32Process->Flags = 0;
+      Win32Process->W32PF_flags = 0;
     }
   else
     {

@@ -355,7 +355,7 @@ GDIOBJ_AllocObjWithHandle(ULONG ObjectType)
     W32Process = PsGetCurrentProcessWin32Process();
     /* HACK HACK HACK: simplest-possible quota implementation - don't allow a process
        to take too many GDI objects, itself. */
-    if (W32Process && W32Process->GDIObjects >= 0x2710)
+    if (W32Process && W32Process->GDIHandleCount >= 0x2710)
     {
         DPRINT1("Too many objects for process!!!\n");
         GDIDBG_DUMPHANDLETABLE();
@@ -426,7 +426,7 @@ LockHandle:
 
             if (W32Process != NULL)
             {
-                InterlockedIncrement(&W32Process->GDIObjects);
+                InterlockedIncrement(&W32Process->GDIHandleCount);
             }
 
             DPRINT("GDIOBJ_AllocObj: 0x%x ob: 0x%x\n", Handle, newObject);
@@ -559,7 +559,7 @@ LockHandle:
 
                 if (W32Process != NULL)
                 {
-                    InterlockedDecrement(&W32Process->GDIObjects);
+                    InterlockedDecrement(&W32Process->GDIHandleCount);
                 }
 
                 /* call the cleanup routine. */
@@ -688,7 +688,7 @@ IntDeleteHandlesForProcess(struct _EPROCESS *Process, ULONG ObjectType)
     W32Process = (PW32PROCESS)Process->Win32Process;
     ASSERT(W32Process);
 
-    if (W32Process->GDIObjects > 0)
+    if (W32Process->GDIHandleCount > 0)
     {
        ProcId = Process->UniqueProcessId;
 
@@ -719,7 +719,7 @@ IntDeleteHandlesForProcess(struct _EPROCESS *Process, ULONG ObjectType)
                         DPRINT1("Failed to delete object %p!\n", ObjectHandle);
                     }
 
-                    if (W32Process->GDIObjects == 0)
+                    if (W32Process->GDIHandleCount == 0)
                     {
                         /* there are no more gdi handles for this process, bail */
                         break;
@@ -768,9 +768,9 @@ GDI_CleanupForProcess(struct _EPROCESS *Process)
 #endif
 
     DPRINT("Completed cleanup for process %d\n", Process->UniqueProcessId);
-    if (W32Process->GDIObjects > 0)
+    if (W32Process->GDIHandleCount > 0)
     {
-        DPRINT1("Leaking %d handles!\n", W32Process->GDIObjects);
+        DPRINT1("Leaking %d handles!\n", W32Process->GDIHandleCount);
     }
 
     return TRUE;
@@ -1140,7 +1140,7 @@ LockHandle:
                             W32Process = (PW32PROCESS)OldProcess->Win32Process;
                             if (W32Process != NULL)
                             {
-                                InterlockedDecrement(&W32Process->GDIObjects);
+                                InterlockedDecrement(&W32Process->GDIHandleCount);
                             }
                             ObDereferenceObject(OldProcess);
                         }
@@ -1243,7 +1243,7 @@ LockHandle:
                             W32Process = (PW32PROCESS)OldProcess->Win32Process;
                             if (W32Process != NULL)
                             {
-                                InterlockedDecrement(&W32Process->GDIObjects);
+                                InterlockedDecrement(&W32Process->GDIHandleCount);
                             }
                             ObDereferenceObject(OldProcess);
                         }
@@ -1257,7 +1257,7 @@ LockHandle:
                         W32Process = (PW32PROCESS)NewOwner->Win32Process;
                         if (W32Process != NULL)
                         {
-                            InterlockedIncrement(&W32Process->GDIObjects);
+                            InterlockedIncrement(&W32Process->GDIHandleCount);
                         }
                     }
                     else
