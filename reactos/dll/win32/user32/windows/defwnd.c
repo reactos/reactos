@@ -1394,10 +1394,15 @@ User32DefWindowProc(HWND hWnd,
         {
             if (HIWORD(lParam) & KEYDATA_ALT)
             {
+                HWND top = GetAncestor(hWnd, GA_ROOT);
              /* if( HIWORD(lParam) & ~KEYDATA_PREVSTATE ) */
                 if ( (wParam == VK_MENU || wParam == VK_LMENU
                                     || wParam == VK_RMENU) && !iMenuSysKey )
+                {
                    iMenuSysKey = 1;
+                   /* mimic behaviour of XP, sending a WM_SYSCOMMAND when pressing <alt> */
+                   SendMessageW( top, WM_SYSCOMMAND, SC_KEYMENU, 0L );
+                }
                 else
                    iMenuSysKey = 0;
 
@@ -1405,7 +1410,6 @@ User32DefWindowProc(HWND hWnd,
 
                 if (wParam == VK_F4) /* Try to close the window */
                 {
-                    HWND top = GetAncestor(hWnd, GA_ROOT);
                     if (!(GetClassLongW(top, GCL_STYLE) & CS_NOCLOSE))
                     {
                         if (bUnicode)
@@ -1629,7 +1633,7 @@ User32DefWindowProc(HWND hWnd,
 
         case WM_CHANGEUISTATE:
         {
-            BOOL AlwaysShowCues = TRUE;
+            BOOL AlwaysShowCues = FALSE;
             WORD Action = LOWORD(wParam);
             WORD Flags = HIWORD(wParam);
             PWINDOW Wnd;
@@ -1711,7 +1715,7 @@ User32DefWindowProc(HWND hWnd,
         case WM_UPDATEUISTATE:
         {
             BOOL Change = TRUE;
-            BOOL AlwaysShowCues = TRUE;
+            BOOL AlwaysShowCues = FALSE;
             WORD Action = LOWORD(wParam);
             WORD Flags = HIWORD(wParam);
             PWINDOW Wnd;

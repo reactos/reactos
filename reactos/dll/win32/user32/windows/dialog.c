@@ -2408,6 +2408,14 @@ IsDialogMessageW(
          if (lpMsg->lParam & (1 << 29))
              SendMessageW(hDlg, WM_CHANGEUISTATE, MAKEWPARAM(UIS_CLEAR, UISF_HIDEACCEL | UISF_HIDEFOCUS), 0);
          break;
+
+     case WM_SYSCOMMAND:
+         /* If the ALT key is being pressed display the keyboard cues */
+         if (lpMsg->wParam == SC_KEYMENU)
+         {
+            SendMessageW(hDlg, WM_CHANGEUISTATE, MAKEWPARAM(UIS_CLEAR, UISF_HIDEACCEL | UISF_HIDEFOCUS), 0);
+         }
+         break;
      }
 
      TranslateMessage( lpMsg );

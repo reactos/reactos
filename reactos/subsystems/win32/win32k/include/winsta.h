@@ -34,7 +34,15 @@ typedef struct _WINSTATION_OBJECT
     HANDLE ShellWindow;
     HANDLE ShellListView;
 
+    /* Effects */
+    BOOL FontSmoothing; /* enable */
+    UINT FontSmoothingType; /* 1:Standard,2:ClearType */
+    /* FIXME: Big Icons (SPI_GETICONMETRICS?) */
+    BOOL DropShadow;
+    BOOL DragFullWindows;
     BOOL FlatMenu;
+    USERPREFERENCESMASK UserPreferences;
+
     /* ScreenSaver */
     BOOL ScreenSaverRunning;
     UINT  ScreenSaverTimeOut;
