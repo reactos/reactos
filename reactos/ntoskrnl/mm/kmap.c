@@ -25,7 +25,7 @@ MiZeroPage(PFN_TYPE Page)
    KIRQL Irql;
    PVOID TempAddress;
 
-   Process = (PEPROCESS)KeGetCurrentThread()->ApcState.Process;
+   Process = PsGetCurrentProcess();
    TempAddress = MiMapPageInHyperSpace(Process, Page, &Irql);
    if (TempAddress == NULL)
    {
@@ -40,15 +40,19 @@ NTSTATUS
 NTAPI
 MiCopyFromUserPage(PFN_TYPE DestPage, PVOID SourceAddress)
 {
+   PEPROCESS Process;
+   KIRQL Irql;
    PVOID TempAddress;
 
-   TempAddress = MmCreateHyperspaceMapping(DestPage);
+   Process = PsGetCurrentProcess();
+   TempAddress = MiMapPageInHyperSpace(Process, DestPage, &Irql);
    if (TempAddress == NULL)
    {
       return(STATUS_NO_MEMORY);
    }
    memcpy(TempAddress, SourceAddress, PAGE_SIZE);
-   MmDeleteHyperspaceMapping(TempAddress);
+   MiUnmapPageInHyperSpace(Process, TempAddress, Irql);
    return(STATUS_SUCCESS);
 }
 
+/* EOF */
