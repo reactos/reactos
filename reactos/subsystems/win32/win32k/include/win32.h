@@ -88,7 +88,7 @@ typedef struct _W32PROCESS
   LIST_ENTRY DriverObjListHead;
   struct _KBL* KeyboardLayout;
   W32HEAP_USER_MAPPING HeapMappings;
-  PW32PROCESSINFO ProcessInfo;
+  PPROCESSINFO ProcessInfo;
 } W32PROCESS, *PW32PROCESS;
 
 #endif /* __INCLUDE_NAPI_WIN32_H */

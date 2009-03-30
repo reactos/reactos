@@ -101,7 +101,7 @@ IntDestroyClass(IN OUT PWINDOWCLASS Class)
 void FASTCALL DestroyProcessClasses(PW32PROCESS Process )
 {
     PWINDOWCLASS Class;
-    PW32PROCESSINFO pi = Process->ProcessInfo;
+    PPROCESSINFO pi = Process->ProcessInfo;
 
     if (pi != NULL)
     {
@@ -266,7 +266,7 @@ IntSetClassAtom(IN OUT PWINDOWCLASS Class,
 
 static WNDPROC
 IntGetClassWndProc(IN PWINDOWCLASS Class,
-                   IN PW32PROCESSINFO pi,
+                   IN PPROCESSINFO pi,
                    IN BOOL Ansi)
 {
     ASSERT(UserIsEnteredExclusive() == TRUE);
@@ -564,7 +564,7 @@ IntMakeCloneBaseClass(IN OUT PWINDOWCLASS Class,
 VOID
 IntDereferenceClass(IN OUT PWINDOWCLASS Class,
                     IN PDESKTOPINFO Desktop,
-                    IN PW32PROCESSINFO pi)
+                    IN PPROCESSINFO pi)
 {
     PWINDOWCLASS *PrevLink, BaseClass, CurrentClass;
 
@@ -752,7 +752,7 @@ BOOL
 IntCheckProcessDesktopClasses(IN PDESKTOP Desktop,
                               IN BOOL FreeOnFailure)
 {
-    PW32PROCESSINFO pi;
+    PPROCESSINFO pi;
     BOOL Ret = TRUE;
 
     pi = GetW32ProcessInfo();
@@ -793,7 +793,7 @@ IntCreateClass(IN CONST WNDCLASSEXW* lpwcx,
                IN WNDPROC wpExtra,
                IN DWORD dwFlags,
                IN PDESKTOP Desktop,
-               IN PW32PROCESSINFO pi)
+               IN PPROCESSINFO pi)
 {
     SIZE_T ClassSize;
     PWINDOWCLASS Class = NULL;
@@ -1046,7 +1046,7 @@ IntGetAtomFromStringOrAtom(IN PUNICODE_STRING ClassName,
 RTL_ATOM
 IntGetClassAtom(IN PUNICODE_STRING ClassName,
                 IN HINSTANCE hInstance  OPTIONAL,
-                IN PW32PROCESSINFO pi  OPTIONAL,
+                IN PPROCESSINFO pi  OPTIONAL,
                 OUT PWINDOWCLASS *BaseClass  OPTIONAL,
                 OUT PWINDOWCLASS **Link  OPTIONAL)
 {
@@ -1133,7 +1133,7 @@ UserRegisterClass(IN CONST WNDCLASSEXW* lpwcx,
 {
     PTHREADINFO pti;
     PW32THREADINFO ti;
-    PW32PROCESSINFO pi;
+    PPROCESSINFO pi;
     PWINDOWCLASS Class;
     RTL_ATOM ClassAtom;
     RTL_ATOM Ret = (RTL_ATOM)0;
@@ -1215,7 +1215,7 @@ UserUnregisterClass(IN PUNICODE_STRING ClassName,
                     IN HINSTANCE hInstance)
 {
     PWINDOWCLASS *Link;
-    PW32PROCESSINFO pi;
+    PPROCESSINFO pi;
     RTL_ATOM ClassAtom;
     PWINDOWCLASS Class;
 
@@ -1775,7 +1775,7 @@ UserGetClassInfo(IN PWINDOWCLASS Class,
                  IN BOOL Ansi,
                  HINSTANCE hInstance)
 {
-    PW32PROCESSINFO pi;
+    PPROCESSINFO pi;
 
     lpwcx->style = Class->Style;
 
@@ -1814,7 +1814,7 @@ UserRegisterSystemClasses(IN ULONG Count,
     /* NOTE: This routine may raise exceptions! */
     UINT i;
     UNICODE_STRING ClassName, MenuName;
-    PW32PROCESSINFO pi = GetW32ProcessInfo();
+    PPROCESSINFO pi = GetW32ProcessInfo();
     WNDCLASSEXW wc;
     PWINDOWCLASS Class;
     BOOL Ret = TRUE;
@@ -2136,7 +2136,7 @@ NtUserSetClassLong(HWND hWnd,
                    ULONG_PTR dwNewLong,
                    BOOL Ansi)
 {
-    PW32PROCESSINFO pi;
+    PPROCESSINFO pi;
     PWINDOW_OBJECT Window;
     ULONG_PTR Ret = 0;
 
@@ -2281,7 +2281,7 @@ NtUserGetClassInfo(
     UNICODE_STRING CapturedClassName;
     PWINDOWCLASS Class;
     RTL_ATOM ClassAtom;
-    PW32PROCESSINFO pi;
+    PPROCESSINFO pi;
     BOOL Ret = FALSE;
 
     /* NOTE: need exclusive lock because getting the wndproc might require the

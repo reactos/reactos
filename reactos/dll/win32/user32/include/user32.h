@@ -48,8 +48,8 @@ BOOL WINAPI NtGdiPatBlt(HDC hdcDst, INT x, INT y, INT cx, INT cy, DWORD rop4);
 LONG WINAPI GdiGetCharDimensions(HDC, LPTEXTMETRICW, LONG *);
 BOOL FASTCALL IsMetaFile(HDC);
 
-extern PW32PROCESSINFO g_pi;
-extern PW32PROCESSINFO g_kpi;
+extern PPROCESSINFO g_pi;
+extern PPROCESSINFO g_kpi;
 extern PSERVERINFO g_psi;
 
 static __inline PVOID

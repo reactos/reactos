@@ -120,11 +120,11 @@ GetW32ThreadInfo(VOID)
     return ti;
 }
 
-PW32PROCESSINFO
+PPROCESSINFO
 GetW32ProcessInfo(VOID)
 {
     PW32THREADINFO ti;
-    PW32PROCESSINFO pi = NULL;
+    PPROCESSINFO pi = NULL;
 
     ti = GetW32ThreadInfo();
     if (ti != NULL)

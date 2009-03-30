@@ -9,12 +9,12 @@ static ULONG User32TlsIndex;
 HINSTANCE User32Instance;
 PUSER_HANDLE_TABLE gHandleTable = NULL;
 PUSER_HANDLE_ENTRY gHandleEntries = NULL;
-PW32PROCESSINFO g_pi = NULL; /* User Mode Pointer */
-PW32PROCESSINFO g_kpi = NULL; /* Kernel Mode Pointer */
+PPROCESSINFO g_pi = NULL; /* User Mode Pointer */
+PPROCESSINFO g_kpi = NULL; /* Kernel Mode Pointer */
 PSERVERINFO g_psi = NULL;
 WCHAR szAppInit[KEY_LENGTH];
 
-PW32PROCESSINFO
+PPROCESSINFO
 GetW32ProcessInfo(VOID);
 
 PUSER32_THREAD_DATA
@@ -324,7 +324,7 @@ VOID
 FASTCALL
 GetConnected(VOID)
 {
-  PW32PROCESSINFO pi;
+  PPROCESSINFO pi;
 
   if ((PW32THREADINFO)NtCurrentTeb()->Win32ThreadInfo == NULL)
      NtUserGetThreadState(THREADSTATE_GETTHREADINFO);

@@ -435,10 +435,10 @@ IntFreeNULLTerminatedFromUnicodeString(PWSTR NullTerminated, PUNICODE_STRING Uni
    }
 }
 
-PW32PROCESSINFO
+PPROCESSINFO
 GetW32ProcessInfo(VOID)
 {
-    PW32PROCESSINFO pi;
+    PPROCESSINFO pi;
     PW32PROCESS W32Process = PsGetCurrentProcessWin32Process();
 
     if (W32Process == NULL)
@@ -449,11 +449,11 @@ GetW32ProcessInfo(VOID)
 
     if (W32Process->ProcessInfo == NULL)
     {
-        pi = UserHeapAlloc(sizeof(W32PROCESSINFO));
+        pi = UserHeapAlloc(sizeof(PROCESSINFO));
         if (pi != NULL)
         {
             RtlZeroMemory(pi,
-                          sizeof(W32PROCESSINFO));
+                          sizeof(PROCESSINFO));
 
             /* initialize it */
             pi->UserHandleTable = gHandleTable;
