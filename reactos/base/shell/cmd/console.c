@@ -88,15 +88,14 @@ VOID ConInKey (PINPUT_RECORD lpBuffer)
 VOID ConInString (LPTSTR lpInput, DWORD dwLength)
 {
 	DWORD dwOldMode;
-	DWORD dwRead;
+	DWORD dwRead = 0;
 	HANDLE hFile;
 
 	LPTSTR p;
-	DWORD  i;
 	PCHAR pBuf;
 
 #ifdef _UNICODE
-	pBuf = (PCHAR)cmd_alloc(dwLength);
+	pBuf = (PCHAR)cmd_alloc(dwLength - 1);
 #else
 	pBuf = lpInput;
 #endif
@@ -106,13 +105,13 @@ VOID ConInString (LPTSTR lpInput, DWORD dwLength)
 
 	SetConsoleMode (hFile, ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT);
 
-	ReadFile (hFile, (PVOID)pBuf, dwLength, &dwRead, NULL);
+	ReadFile (hFile, (PVOID)pBuf, dwLength - 1, &dwRead, NULL);
 
 #ifdef _UNICODE
-	MultiByteToWideChar(  InputCodePage, 0, pBuf, dwLength + 1, lpInput, dwLength + 1);
+	MultiByteToWideChar(InputCodePage, 0, pBuf, dwRead, lpInput, dwLength - 1);
+	cmd_free(pBuf);
 #endif
-	p = lpInput;
-	for (i = 0; i < dwRead; i++, p++)
+	for (p = lpInput; *p; p++)
 	{
 		if (*p == _T('\x0d'))
 		{
@@ -120,10 +119,6 @@ VOID ConInString (LPTSTR lpInput, DWORD dwLength)
 			break;
 		}
 	}
-
-#ifdef _UNICODE
-	cmd_free(pBuf);
-#endif
 
 	SetConsoleMode (hFile, dwOldMode);
 }
