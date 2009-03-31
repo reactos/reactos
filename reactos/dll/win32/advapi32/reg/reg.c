@@ -4225,11 +4225,11 @@ RegQueryValueA(HKEY hKey,
             RtlUnicodeStringToAnsiString(&AnsiString,
                                          &Value,
                                          FALSE);
-            *lpcbValue = ValueSize / sizeof(WCHAR);
+            *lpcbValue = ValueSize;
         }
         else if (lpcbValue != NULL)
         {
-            *lpcbValue = ValueSize / sizeof(WCHAR);
+            *lpcbValue = ValueSize;
         }
     }
 
