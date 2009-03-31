@@ -189,6 +189,20 @@ IntDesktopObjectDelete(PWIN32_DELETEMETHOD_PARAMETERS Parameters)
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
+PVOID
+FASTCALL
+DesktopAlloc(PDESKTOP DesktopObject, SIZE_T Size)
+{
+  return RtlAllocateHeap(DesktopObject->pheapDesktop, HEAP_NO_SERIALIZE, Size);
+}
+
+BOOL
+FASTCALL
+DesktopFree(PDESKTOP DesktopObject, PVOID HeapBase)
+{
+  return RtlFreeHeap(DesktopObject->pheapDesktop, HEAP_NO_SERIALIZE, HeapBase);
+}
+
 NTSTATUS
 FASTCALL
 InitDesktopImpl(VOID)
@@ -1772,6 +1786,7 @@ IntUnmapDesktopView(IN PDESKTOP DesktopObject)
         {
             ti->Desktop = NULL;
         }
+        GetWin32ClientInfo()->pDeskInfo = NULL;
     }
     GetWin32ClientInfo()->ulClientDelta = 0;
 
@@ -1846,14 +1861,16 @@ IntMapDesktopView(IN PDESKTOP DesktopObject)
 
     /* create a W32THREADINFO structure if not already done, or update it */
     ti = GetW32ThreadInfo();
+    GetWin32ClientInfo()->ulClientDelta = DesktopHeapGetUserDelta();
     if (ti != NULL)
     {
         if (ti->Desktop == NULL)
         {
-            ti->Desktop = DesktopObject->DesktopInfo;
+           ti->Desktop = DesktopObject->DesktopInfo;
+           GetWin32ClientInfo()->pDeskInfo = 
+                (PVOID)((ULONG_PTR)ti->Desktop - GetWin32ClientInfo()->ulClientDelta);
         }
     }
-    GetWin32ClientInfo()->ulClientDelta = DesktopHeapGetUserDelta();
 
     return STATUS_SUCCESS;
 }

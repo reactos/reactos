@@ -884,8 +884,33 @@ NtUserProcessConnect(
     PUSERCONNECT pUserConnect,
     DWORD Size)
 {
-    UNIMPLEMENTED;
-    return 0;
+  NTSTATUS Status = STATUS_SUCCESS;
+  DPRINT("NtUserProcessConnect\n");
+  if (pUserConnect && ( Size == sizeof(USERCONNECT) ))
+  {
+     UserEnterShared();
+     GetW32ThreadInfo();
+     PPROCESSINFO ppi = GetW32ProcessInfo();
+     _SEH2_TRY
+     {
+        pUserConnect->siClient.psi = gpsi;
+        pUserConnect->siClient.aheList = ppi->UserHandleTable;
+        pUserConnect->siClient.ulSharedDelta = ppi->UserHeapDelta;
+     }
+     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+     {
+        Status = _SEH2_GetExceptionCode();
+     }
+     _SEH2_END
+     if (!NT_SUCCESS(Status))
+     {
+        SetLastNtError(Status);
+     }
+     DPRINT("NtUserPC SI 0x%x : HT 0x%x : D 0x%x\n", gpsi, ppi->UserHandleTable, ppi->UserHeapDelta);
+     UserLeave();
+     return Status;
+  }
+  return STATUS_UNSUCCESSFUL;
 }
 
 DWORD

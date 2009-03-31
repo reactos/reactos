@@ -460,7 +460,6 @@ GetW32ProcessInfo(VOID)
             pi->hUserHeap = W32Process->HeapMappings.KernelMapping;
             pi->UserHeapDelta = (ULONG_PTR)W32Process->HeapMappings.KernelMapping -
                                 (ULONG_PTR)W32Process->HeapMappings.UserMapping;
-            pi->psi = gpsi;
 
             if (InterlockedCompareExchangePointer(&W32Process->ProcessInfo,
                                                   pi,
@@ -525,9 +524,9 @@ GetW32ThreadInfo(VOID)
                 ProbeForWrite(Teb,
                               sizeof(TEB),
                               sizeof(ULONG));
-
+       // FIXME PLEASE! it's a ref pointer and not user data! Use ClientThreadInfo!
                 Teb->Win32ThreadInfo = UserHeapAddressToUser(W32Thread->ThreadInfo);
-                ci->pClientThreadInfo = &ti->ClientThreadInfo;
+                ci->pClientThreadInfo = &ti->ClientThreadInfo; // FIXME!
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {

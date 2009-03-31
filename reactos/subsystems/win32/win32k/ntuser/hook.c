@@ -109,6 +109,9 @@ IntAddHook(PETHREAD Thread, int HookId, BOOLEAN Global, PWINSTATION_OBJECT WinSt
       W32Thread = ((PTHREADINFO)Thread->Tcb.Win32Thread);
       ASSERT(W32Thread != NULL);
       W32Thread->Hooks |= HOOKID_TO_FLAG(HookId);
+
+      GetWin32ClientInfo()->fsHooks = W32Thread->Hooks;
+
       if (W32Thread->ThreadInfo != NULL)
           W32Thread->ThreadInfo->Hooks = W32Thread->Hooks;
    }
@@ -220,6 +223,9 @@ IntRemoveHook(PHOOK Hook, PWINSTATION_OBJECT WinStaObj, BOOL TableAlreadyLocked)
    W32Thread = ((PTHREADINFO)Hook->Thread->Tcb.Win32Thread);
    ASSERT(W32Thread != NULL);
    W32Thread->Hooks &= ~HOOKID_TO_FLAG(Hook->HookId);
+
+   GetWin32ClientInfo()->fsHooks = W32Thread->Hooks;
+
    if (W32Thread->ThreadInfo != NULL)
        W32Thread->ThreadInfo->Hooks = W32Thread->Hooks;
 

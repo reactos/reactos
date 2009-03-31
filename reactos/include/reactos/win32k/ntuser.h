@@ -347,8 +347,6 @@ typedef struct _PROCESSINFO
 
     UINT RegisteredSysClasses : 1;
 
-    PSERVERINFO psi;
-
 } PROCESSINFO, *PPROCESSINFO;
 
 #define CTI_INSENDMESSAGE 0x0002
@@ -413,7 +411,6 @@ typedef struct _CLIENTINFO
     PHOOK phkCurrent;
     ULONG fsHooks;
     CALLBACKWND CallbackWnd;
-    ULONG Win32ClientInfo;
     DWORD dwHookCurrent;
     INT cInDDEMLCallback;
     PCLIENTTHREADINFO pClientThreadInfo;
@@ -426,7 +423,8 @@ typedef struct _CLIENTINFO
     HKL hKL;
     USHORT CodePage;
     USHORT achDbcsCF;
-    ULONG Win32ClientInfo3[35];
+    MSG msgDbcsCB;
+    ULONG Win32ClientInfo3[29];
 } CLIENTINFO, *PCLIENTINFO;
 
 /* Make sure it fits exactly into the TEB */

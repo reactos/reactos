@@ -7,15 +7,13 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
 static ULONG User32TlsIndex;
 HINSTANCE User32Instance;
+
 PUSER_HANDLE_TABLE gHandleTable = NULL;
 PUSER_HANDLE_ENTRY gHandleEntries = NULL;
-PPROCESSINFO g_pi = NULL; /* User Mode Pointer */
-PPROCESSINFO g_kpi = NULL; /* Kernel Mode Pointer */
 PSERVERINFO g_psi = NULL;
-WCHAR szAppInit[KEY_LENGTH];
+ULONG_PTR g_ulSharedDelta;
 
-PPROCESSINFO
-GetW32ProcessInfo(VOID);
+WCHAR szAppInit[KEY_LENGTH];
 
 PUSER32_THREAD_DATA
 User32GetThreadData()
@@ -216,6 +214,8 @@ CleanupThread(VOID)
 BOOL
 Init(VOID)
 {
+   USERCONNECT UserCon;
+
    /* Set up the kernel callbacks. */
    NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_WINDOWPROC] =
       (PVOID)User32CallWindowProcFromKernel;
@@ -230,11 +230,15 @@ Init(VOID)
    NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_EVENTPROC] =
       (PVOID)User32CallEventProcFromKernel;
 
-   g_pi = GetW32ProcessInfo();
-   g_kpi = SharedPtrToKernel(g_pi);
-   g_psi = SharedPtrToUser(g_pi->psi);
-   gHandleTable = SharedPtrToUser(g_pi->UserHandleTable);
+   NtUserProcessConnect( NtCurrentProcess(),
+                         &UserCon,
+                         sizeof(USERCONNECT));
+
+   g_ulSharedDelta = UserCon.siClient.ulSharedDelta;
+   g_psi = SharedPtrToUser(UserCon.siClient.psi);
+   gHandleTable = SharedPtrToUser(UserCon.siClient.aheList);
    gHandleEntries = SharedPtrToUser(gHandleTable->handles);
+   //ERR("1 SI 0x%x : HT 0x%x : D 0x%x\n", UserCon.siClient.psi, UserCon.siClient.aheList,  g_ulSharedDelta);
 
    /* Allocate an index for user32 thread local data. */
    User32TlsIndex = TlsAlloc();
@@ -324,19 +328,20 @@ VOID
 FASTCALL
 GetConnected(VOID)
 {
-  PPROCESSINFO pi;
+  USERCONNECT UserCon;
 
   if ((PW32THREADINFO)NtCurrentTeb()->Win32ThreadInfo == NULL)
      NtUserGetThreadState(THREADSTATE_GETTHREADINFO);
 
-  if (g_pi && g_kpi && g_psi) return;
+  if (g_psi) return;
 
-  pi = GetW32ProcessInfo();
-  if (!g_pi)  g_pi = pi;
-  if (!g_kpi) g_kpi = SharedPtrToKernel(pi);
-  if (!g_psi) g_psi = SharedPtrToUser(pi->psi);
-  if (!g_psi) { WARN("Global Share Information has not been initialized!\n"); }
-  if (!gHandleTable) gHandleTable = SharedPtrToUser(pi->UserHandleTable);
-  if (!gHandleEntries) gHandleEntries = SharedPtrToUser(gHandleTable->handles);
+  NtUserProcessConnect( NtCurrentProcess(),
+                         &UserCon,
+                         sizeof(USERCONNECT));
 
+  g_ulSharedDelta = UserCon.siClient.ulSharedDelta;
+  g_psi = SharedPtrToUser(UserCon.siClient.psi);
+  gHandleTable = SharedPtrToUser(UserCon.siClient.aheList);
+  gHandleEntries = SharedPtrToUser(gHandleTable->handles);
+//  ERR("2 SI 0x%x : HT 0x%x : D 0x%x\n", UserCon.siClient.psi, UserCon.siClient.aheList,  g_ulSharedDelta);  
 }
