@@ -1662,6 +1662,12 @@ ISAPNPControl(
     Status = ISAPNPStopDevice(DeviceObject, Irp, IrpSp);
     break;
 
+  case IRP_MN_FILTER_RESOURCE_REQUIREMENTS:
+    /* Nothing to do here */
+    DPRINT("IRP_MN_FILTER_RESOURCE_REQUIREMENTS\n");
+    Status = Irp->IoStatus.Status;
+    break;
+
   default:
     DPRINT("Unknown IOCTL 0x%X\n", IrpSp->MinorFunction);
     Status = STATUS_NOT_IMPLEMENTED;
