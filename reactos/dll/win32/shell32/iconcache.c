@@ -384,8 +384,9 @@ BOOL SIC_Initialize(void)
 
     TRACE("Entered SIC_Initialize\n");
 
-    if (sic_hdpa) /* already initialized?*/
+    if (sic_hdpa)
     {
+        TRACE("Icon cache already initialized\n");
         return TRUE;
     }
 
@@ -429,25 +430,56 @@ BOOL SIC_Initialize(void)
                                           ilMask,
                                           100,
                                           100);
+
     ShellBigIconList = ImageList_Create(cx_large,
                                         cy_large,
                                         ilMask,
                                         100,
                                         100);
-        /* Load the document icon, which is used as the default if an icon isn't found. */
-        hSm = LoadImageA(shell32_hInstance, MAKEINTRESOURCEA(IDI_SHELL_DOCUMENT),
-                                IMAGE_ICON, cx_small, cy_small, LR_SHARED);
-        hLg = LoadImageA(shell32_hInstance, MAKEINTRESOURCEA(IDI_SHELL_DOCUMENT),
-                                IMAGE_ICON, cx_large, cy_large, LR_SHARED);
-
-        if (!hSm || !hLg) 
+    if (ShellSmallIconList)
+    {
+         /* Load the document icon, which is used as the default if an icon isn't found. */
+        hSm = (HICON)LoadImageW(shell32_hInstance,
+                                MAKEINTRESOURCEW(IDI_SHELL_DOCUMENT),
+                                IMAGE_ICON,
+                                cx_small,
+                                cy_small,
+                                LR_SHARED | LR_DEFAULTCOLOR);
+        if (!hSm)
         {
-          FIXME("Failed to load IDI_SHELL_DOCUMENT icon!\n");
-          return FALSE;
+            ERR("Failed to load IDI_SHELL_DOCUMENT icon1!\n");
+            return FALSE;
         }
+    }
+    else
+    {
+        ERR("Failed to load ShellSmallIconList\n");
+        return FALSE;
+    }
 
-        SIC_IconAppend (swShell32Name, IDI_SHELL_DOCUMENT-1, hSm, hLg, 0);
-        SIC_IconAppend (swShell32Name, -IDI_SHELL_DOCUMENT, hSm, hLg, 0);
+    if (ShellBigIconList)
+    {
+        hLg = (HICON)LoadImageW(shell32_hInstance,
+                                MAKEINTRESOURCEW(IDI_SHELL_DOCUMENT),
+                                IMAGE_ICON,
+                                cx_large,
+                                cy_large,
+                                LR_SHARED | LR_DEFAULTCOLOR);
+        if (!hLg)
+        {
+            ERR("Failed to load IDI_SHELL_DOCUMENT icon2!\n");
+            DestroyIcon(hSm);
+            return FALSE;
+        }
+    }
+    else
+    {
+        ERR("Failed to load ShellBigIconList\n");
+        return FALSE;
+    }
+
+    SIC_IconAppend(swShell32Name, IDI_SHELL_DOCUMENT-1, hSm, hLg, 0);
+    SIC_IconAppend(swShell32Name, -IDI_SHELL_DOCUMENT, hSm, hLg, 0);
 
     TRACE("hIconSmall=%p hIconBig=%p\n",ShellSmallIconList, ShellBigIconList);
 
