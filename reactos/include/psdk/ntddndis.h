@@ -1,6 +1,5 @@
 #ifndef _NTDDNDIS_
 #define _NTDDNDIS_
-#endif
 
 /* Defines */
 #define NDIS_802_11_LENGTH_SSID  32
@@ -83,3 +82,4 @@ typedef struct _NDIS_802_11_BSSID_LIST
     NDIS_WLAN_BSSID Bssid[1];
 } NDIS_802_11_BSSID_LIST, *PNDIS_802_11_BSSID_LIST;
 
+#endif
