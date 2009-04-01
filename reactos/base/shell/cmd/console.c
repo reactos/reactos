@@ -49,17 +49,6 @@ VOID ConInEnable (VOID)
 }
 
 
-VOID ConInDummy (VOID)
-{
-	HANDLE hInput = GetStdHandle (STD_INPUT_HANDLE);
-	INPUT_RECORD dummy;
-	DWORD  dwRead;
-
-	if (hInput == INVALID_HANDLE_VALUE)
-		WARN ("Invalid input handle!!!\n");
-	ReadConsoleInput (hInput, &dummy, 1, &dwRead);
-}
-
 VOID ConInFlush (VOID)
 {
 	FlushConsoleInputBuffer (GetStdHandle (STD_INPUT_HANDLE));

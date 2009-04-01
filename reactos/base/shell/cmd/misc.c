@@ -43,39 +43,20 @@ TCHAR cgetchar (VOID)
 	HANDLE hInput = GetStdHandle (STD_INPUT_HANDLE);
 	INPUT_RECORD irBuffer;
 	DWORD  dwRead;
-/*
+
 	do
 	{
 		ReadConsoleInput (hInput, &irBuffer, 1, &dwRead);
 		if ((irBuffer.EventType == KEY_EVENT) &&
 			(irBuffer.Event.KeyEvent.bKeyDown == TRUE))
 		{
-			if ((irBuffer.Event.KeyEvent.dwControlKeyState &
-				 (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)) &
-				(irBuffer.Event.KeyEvent.wVirtualKeyCode == 'C'))
-				bCtrlBreak = TRUE;
-
-			break;
-		}
-	}
-	while (TRUE);
-*/
-	do
- 	{
- 		ReadConsoleInput (hInput, &irBuffer, 1, &dwRead);
-
-		if (irBuffer.EventType == KEY_EVENT)
- 		{
 			if (irBuffer.Event.KeyEvent.dwControlKeyState &
 				 (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED))
 			{
 				if (irBuffer.Event.KeyEvent.wVirtualKeyCode == 'C')
 				{
-//					if (irBuffer.Event.KeyEvent.bKeyDown == TRUE)
-//					{
-						bCtrlBreak = TRUE;
-						break;
-//					}
+					bCtrlBreak = TRUE;
+					break;
 				}
 			}
 			else if ((irBuffer.Event.KeyEvent.wVirtualKeyCode == VK_SHIFT) ||
@@ -538,7 +519,7 @@ BOOL FileGetString (HANDLE hFile, LPTSTR lpBuffer, INT nBufferLength)
 
 	lpString[len++] = '\0';
 #ifdef _UNICODE
-	MultiByteToWideChar(CP_ACP, 0, lpString, -1, lpBuffer, len);
+	MultiByteToWideChar(OutputCodePage, 0, lpString, -1, lpBuffer, len);
 	cmd_free(lpString);
 #endif
 	return TRUE;
