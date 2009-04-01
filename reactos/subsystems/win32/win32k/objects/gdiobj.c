@@ -574,6 +574,7 @@ LockHandle:
             }
             else if (Object->ulShareCount != 0)
             {
+                Object->BaseFlags |= BASEFLAG_READY_TO_DIE;
                 DPRINT("Object %p, ulShareCount = %d\n", Object->hHmgr, Object->ulShareCount);
                 GDIDBG_TRACECALLER();
                 GDIDBG_TRACESHARELOCKER(GDI_HANDLE_GET_INDEX(hObj));

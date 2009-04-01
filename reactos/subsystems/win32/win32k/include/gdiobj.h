@@ -54,7 +54,10 @@ typedef struct _CLIENTOBJ
 
 enum BASEFLAGS
 {
-    BASEFLAG_LOOKASIDE = 0x80
+    BASEFLAG_LOOKASIDE = 0x80,
+
+    /* ReactOS specific: */
+    BASEFLAG_READY_TO_DIE = 0x1000
 };
 
 BOOL    INTERNAL_CALL GDIOBJ_OwnedByCurrentProcess(HGDIOBJ ObjectHandle);
@@ -103,8 +106,14 @@ ULONG
 FORCEINLINE
 GDIOBJ_ShareUnlockObjByPtr(POBJ Object)
 {
+    HGDIOBJ hobj = Object->hHmgr;
+    USHORT flags = Object->BaseFlags;
     INT cLocks = InterlockedDecrement((PLONG)&Object->ulShareCount);
     ASSERT(cLocks >= 0);
+    if ((flags & BASEFLAG_READY_TO_DIE) && (cLocks == 0))
+    {
+        GDIOBJ_FreeObjByHandle(hobj, GDI_OBJECT_TYPE_DONTCARE);
+    }
     return cLocks;
 }
 
