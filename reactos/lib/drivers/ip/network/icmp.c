@@ -226,17 +226,12 @@ VOID ICMPReply(
  *     notify him of the problem
  */
 {
-    UINT DataSize, PayloadSize;
+    UINT DataSize;
     IP_PACKET NewPacket = *IPPacket;
 
     TI_DbgPrint(DEBUG_ICMP, ("Called. Type (%d)  Code (%d).\n", Type, Code));
 
     DataSize = IPPacket->TotalSize - IPPacket->HeaderSize;
-    PayloadSize = DataSize - sizeof(ICMP_HEADER);
-    if ((PayloadSize) > 576) {
-	PayloadSize = 576;
-        DataSize = PayloadSize + sizeof(ICMP_HEADER);
-    }
 
     if( !PrepareICMPPacket(Interface, &NewPacket, &IPPacket->SrcAddr,
 			   IPPacket->Data, DataSize) ) return;
