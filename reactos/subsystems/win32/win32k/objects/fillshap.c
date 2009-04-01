@@ -36,8 +36,7 @@ IntGdiPolygon(PDC    dc,
               int    Count)
 {
     SURFACE *psurf;
-    PBRUSH pbrushLine, pbrushFill;
-    EBRUSHOBJ eboLine, eboFill;
+    PBRUSH pbrLine, pbrFill;
     BOOL ret = FALSE; // default to failure
     RECTL DestRect;
     int CurrentPoint;
@@ -95,31 +94,31 @@ IntGdiPolygon(PDC    dc,
            IntGdiSelectPen(dc,pdcattr->hpen);
 
         /* Special locking order to avoid lock-ups */
-        pbrushFill = BRUSH_LockBrush(pdcattr->hbrush);
-        pbrushLine = PEN_LockPen(pdcattr->hpen);
+        pbrFill = dc->dclevel.pbrFill;
+        pbrLine = dc->dclevel.pbrLine;
         psurf = SURFACE_LockSurface(dc->rosdc.hBitmap);
         /* FIXME - psurf can be NULL!!!! don't assert but handle this case gracefully! */
         ASSERT(psurf);
 
-        /* Now fill the polygon with the current brush. */
-        if (pbrushFill && !(pbrushFill->flAttrs & GDIBRUSH_IS_NULL))
+        /* Now fill the polygon with the current fill brush. */
+        if (!(pbrFill->flAttrs & GDIBRUSH_IS_NULL))
         {
-            BrushOrigin = *((PPOINTL)&pbrushFill->ptOrigin);
+            BrushOrigin = *((PPOINTL)&pbrFill->ptOrigin);
             BrushOrigin.x += dc->ptlDCOrig.x;
             BrushOrigin.y += dc->ptlDCOrig.y;
-            EBRUSHOBJ_vInit(&eboFill, pbrushFill, dc->rosdc.XlateBrush);
-            ret = IntFillPolygon (dc, psurf, &eboFill.BrushObject, Points, Count, 
-                  DestRect, &BrushOrigin);
+            ret = IntFillPolygon (dc,
+                                  psurf,
+                                  &dc->eboFill.BrushObject,
+                                  Points,
+                                  Count, 
+                                  DestRect,
+                                  &BrushOrigin);
         }
-        if (pbrushFill)
-            BRUSH_UnlockBrush(pbrushFill);
 
         // Draw the Polygon Edges with the current pen ( if not a NULL pen )
-        if (pbrushLine && !(pbrushLine->flAttrs & GDIBRUSH_IS_NULL))
+        if (!(pbrLine->flAttrs & GDIBRUSH_IS_NULL))
         {
             int i;
-
-            EBRUSHOBJ_vInit(&eboLine, pbrushLine, dc->rosdc.XlatePen);
 
             for (i = 0; i < Count-1; i++)
             {
@@ -130,7 +129,7 @@ IntGdiPolygon(PDC    dc,
 
                 ret = IntEngLineTo(&psurf->SurfObj,
                                    dc->rosdc.CombinedClip,
-                                   &eboLine.BrushObject,
+                                   &dc->eboLine.BrushObject,
                                    Points[i].x,          /* From */
                                    Points[i].y,
                                    Points[i+1].x,          /* To */
@@ -144,7 +143,7 @@ IntGdiPolygon(PDC    dc,
             {
                 ret = IntEngLineTo(&psurf->SurfObj,
                                    dc->rosdc.CombinedClip,
-                                   &eboLine.BrushObject,
+                                   &dc->eboLine.BrushObject,
                                    Points[Count-1].x, /* From */
                                    Points[Count-1].y,
                                    Points[0].x,       /* To */
@@ -153,8 +152,6 @@ IntGdiPolygon(PDC    dc,
                                    ROP2_TO_MIX(pdcattr->jROP2)); /* MIX */
             }
         }
-        if (pbrushLine)
-            PEN_UnlockPen(pbrushLine);
     }
     SURFACE_UnlockSurface(psurf);
 
@@ -522,8 +519,7 @@ IntRectangle(PDC dc,
              int BottomRect)
 {
     SURFACE *psurf = NULL;
-    PBRUSH pbrushLine = NULL, pbrushFill = NULL;
-    EBRUSHOBJ eboLine, eboFill;
+    PBRUSH pbrLine, pbrFill;
     BOOL       ret = FALSE; // default to failure
     RECTL      DestRect;
     MIX        Mix;
@@ -578,10 +574,9 @@ IntRectangle(PDC dc,
     if (pdcattr->ulDirty_ & DC_PEN_DIRTY)
        IntGdiSelectPen(dc,pdcattr->hpen);
 
-    /* Special locking order to avoid lock-ups! */
-    pbrushFill = BRUSH_LockBrush(pdcattr->hbrush);
-    pbrushLine = PEN_LockPen(pdcattr->hpen);
-    if (!pbrushLine)
+    pbrFill = dc->dclevel.pbrFill;
+    pbrLine = dc->dclevel.pbrLine;
+    if (!pbrLine)
     {
         ret = FALSE;
         goto cleanup;
@@ -593,14 +588,13 @@ IntRectangle(PDC dc,
         goto cleanup;
     }
 
-    if ( pbrushFill )
+    if (pbrFill)
     {
-        if (!(pbrushFill->flAttrs & GDIBRUSH_IS_NULL))
+        if (!(pbrFill->flAttrs & GDIBRUSH_IS_NULL))
         {
-            BrushOrigin = *((PPOINTL)&pbrushFill->ptOrigin);
+            BrushOrigin = *((PPOINTL)&pbrFill->ptOrigin);
             BrushOrigin.x += dc->ptlDCOrig.x;
             BrushOrigin.y += dc->ptlDCOrig.y;
-            EBRUSHOBJ_vInit(&eboFill, pbrushFill, dc->rosdc.XlateBrush);
             ret = IntEngBitBlt(&psurf->SurfObj,
                                NULL,
                                NULL,
@@ -609,57 +603,49 @@ IntRectangle(PDC dc,
                                &DestRect,
                                NULL,
                                NULL,
-                               &eboFill.BrushObject,
+                               &dc->eboFill.BrushObject,
                                &BrushOrigin,
                                ROP3_TO_ROP4(PATCOPY));
         }
     }
 
-    EBRUSHOBJ_vInit(&eboLine, pbrushLine, dc->rosdc.XlatePen);
-
     // Draw the rectangle with the current pen
 
     ret = TRUE; // change default to success
 
-    if (!(pbrushLine->flAttrs & GDIBRUSH_IS_NULL))
+    if (!(pbrLine->flAttrs & GDIBRUSH_IS_NULL))
     {
         Mix = ROP2_TO_MIX(pdcattr->jROP2);
         ret = ret && IntEngLineTo(&psurf->SurfObj,
                                   dc->rosdc.CombinedClip,
-                                  &eboLine.BrushObject,
+                                  &dc->eboLine.BrushObject,
                                   DestRect.left, DestRect.top, DestRect.right, DestRect.top,
                                   &DestRect, // Bounding rectangle
                                   Mix);
 
         ret = ret && IntEngLineTo(&psurf->SurfObj,
                                   dc->rosdc.CombinedClip,
-                                  &eboLine.BrushObject,
+                                  &dc->eboLine.BrushObject,
                                   DestRect.right, DestRect.top, DestRect.right, DestRect.bottom,
                                   &DestRect, // Bounding rectangle
                                   Mix);
 
         ret = ret && IntEngLineTo(&psurf->SurfObj,
                                   dc->rosdc.CombinedClip,
-                                  &eboLine.BrushObject,
+                                  &dc->eboLine.BrushObject,
                                   DestRect.right, DestRect.bottom, DestRect.left, DestRect.bottom,
                                   &DestRect, // Bounding rectangle
                                   Mix);
 
         ret = ret && IntEngLineTo(&psurf->SurfObj,
                                   dc->rosdc.CombinedClip,
-                                  &eboLine.BrushObject,
+                                  &dc->eboLine.BrushObject,
                                   DestRect.left, DestRect.bottom, DestRect.left, DestRect.top,
                                   &DestRect, // Bounding rectangle
                                   Mix);
     }
 
 cleanup:
-    if (pbrushFill)
-        BRUSH_UnlockBrush(pbrushFill);
-
-    if (pbrushLine)
-        PEN_UnlockPen(pbrushLine);
-
     if (psurf)
         SURFACE_UnlockSurface(psurf);
 
@@ -1086,12 +1072,10 @@ NtGdiExtFloodFill(
     PDC dc;
     PDC_ATTR pdcattr;
     SURFACE *psurf = NULL;
-    PBRUSH pbrushFill = NULL;
-    EBRUSHOBJ eboFill;
+    PBRUSH pbrFill = NULL;
     BOOL       Ret = FALSE;
     RECTL      DestRect;
     POINTL     Pt;
-    POINTL BrushOrigin;
 
     DPRINT1("FIXME: NtGdiExtFloodFill is UNIMPLEMENTED\n");
 
@@ -1110,11 +1094,11 @@ NtGdiExtFloodFill(
 
     pdcattr = dc->pdcattr;
 
-    if (pdcattr->ulDirty_ & DC_PEN_DIRTY)
-        IntGdiSelectPen(dc,pdcattr->hpen);
+    if (pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
+        DC_vUpdateFillBrush(dc);
 
-    if (pdcattr->ulDirty_ & DC_BRUSH_DIRTY)
-        IntGdiSelectBrush(dc,pdcattr->hbrush);
+    if (pdcattr->ulDirty_ & (DIRTY_LINE | DC_PEN_DIRTY))
+        DC_vUpdateLineBrush(dc);
 
     Pt.x = XStart;
     Pt.y = YStart;
@@ -1126,8 +1110,8 @@ NtGdiExtFloodFill(
     else
         goto cleanup;
 
-    pbrushFill = BRUSH_LockBrush(pdcattr->hbrush);
-    if (!pbrushFill)
+    pbrFill = dc->dclevel.pbrFill;
+    if (!pbrFill)
     {
         Ret = FALSE;
         goto cleanup;
@@ -1139,31 +1123,7 @@ NtGdiExtFloodFill(
         goto cleanup;
     }
 
-    if ( pbrushFill && (FillType == FLOODFILLBORDER))
-    {
-        if (!(pbrushFill->flAttrs & GDIBRUSH_IS_NULL))
-        {
-            pbrushFill->BrushAttr.lbColor = Color;
-            BrushOrigin = *((PPOINTL)&pbrushFill->ptOrigin);
-            BrushOrigin.x += dc->ptlDCOrig.x;
-            BrushOrigin.y += dc->ptlDCOrig.y;
-            EBRUSHOBJ_vInit(&eboFill, pbrushFill, dc->rosdc.XlateBrush);
-            Ret = IntEngBitBlt(&psurf->SurfObj, NULL, NULL,
-                               dc->rosdc.CombinedClip, NULL,
-                               &DestRect, NULL, NULL,
-                               &eboFill.BrushObject,
-                               &BrushOrigin,
-                               ROP3_TO_ROP4(PATCOPY));
-        }
-    }
-    else
-    {
-    }
-
 cleanup:
-    if (pbrushFill)
-        BRUSH_UnlockBrush(pbrushFill);
-
     if (psurf)
         SURFACE_UnlockSurface(psurf);
 

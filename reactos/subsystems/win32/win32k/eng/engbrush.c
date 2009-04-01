@@ -111,10 +111,20 @@ EBRUSHOBJ_vInit(EBRUSHOBJ *pebo, PBRUSH pbrush, XLATEOBJ *pxlo)
 
 VOID
 FASTCALL
-EBRUSHOBJ_vSetSolidBrushColor(EBRUSHOBJ *pebo, ULONG iSolidColor)
+EBRUSHOBJ_vSetSolidBrushColor(EBRUSHOBJ *pebo, COLORREF crColor, XLATEOBJ *pxlo)
 {
+    ULONG iSolidColor;
+
     /* Never use with non-solid brushes */
     ASSERT(pebo->flattrs & GDIBRUSH_IS_SOLID);
+
+    /* Set the RGB color */
+    pebo->crRealize = crColor;
+    pebo->ulRGBColor = crColor;
+
+    /* Translate the brush color to the target format */
+    iSolidColor = XLATEOBJ_iXlate(pxlo, crColor);
+    pebo->BrushObject.iSolidColor = iSolidColor;
 
     pebo->BrushObject.iSolidColor = iSolidColor;
 }
@@ -169,7 +179,7 @@ EBRUSHOBJ_vUnrealizeBrush(EBRUSHOBJ *pebo)
     /* Check if it's a GDI realisation */
     if (pebo->pengbrush)
     {
-        
+        EngDeleteSurface(pebo->pengbrush);
     }
     else if (pebo->BrushObject.pvRbrush)
     {

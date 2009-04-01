@@ -22,6 +22,7 @@ DC_AllocDC(PUNICODE_STRING Driver)
     HDC  hDC;
     PWSTR Buf = NULL;
     XFORM xformTemplate;
+    PBRUSH pbrush;
 
     if (Driver != NULL)
     {
@@ -104,8 +105,16 @@ DC_AllocDC(PUNICODE_STRING Driver)
     /* Create the default pen / line brush */
     pdcattr->hpen = NtGdiGetStockObject(BLACK_PEN);
     NewDC->dclevel.pbrLine = PEN_ShareLockPen(pdcattr->hpen);
-    EBRUSHOBJ_vInit(&NewDC->eboLine, NewDC->dclevel.pbrFill, NULL);
+    EBRUSHOBJ_vInit(&NewDC->eboLine, NewDC->dclevel.pbrLine, NULL);
 
+    /* Create the default text brush */
+    pbrush = BRUSH_ShareLockBrush(NtGdiGetStockObject(BLACK_BRUSH));
+    EBRUSHOBJ_vInit(&NewDC->eboText, pbrush, NULL);
+    pdcattr->ulDirty_ |= DIRTY_TEXT;
+
+    /* Create the default background brush */
+    pbrush = BRUSH_ShareLockBrush(NtGdiGetStockObject(WHITE_BRUSH));
+    EBRUSHOBJ_vInit(&NewDC->eboBackground, pbrush, NULL);
 
     pdcattr->hlfntNew = NtGdiGetStockObject(SYSTEM_FONT);
     TextIntRealizeFont(pdcattr->hlfntNew,NULL);
@@ -148,6 +157,10 @@ DC_Cleanup(PVOID ObjectBody)
     DC_vSelectSurface(pDC, NULL);
     DC_vSelectFillBrush(pDC, NULL);
     DC_vSelectLineBrush(pDC, NULL);
+
+    /* Dereference default brushes */
+    BRUSH_ShareUnlockBrush(pDC->eboText.pbrush);
+    BRUSH_ShareUnlockBrush(pDC->eboBackground.pbrush);
 
     return TRUE;
 }

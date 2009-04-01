@@ -165,8 +165,6 @@ IntArc( DC *dc,
         return FALSE;
     }
 
-    EBRUSHOBJ_vInit(&dc->eboLine, pbrushPen, dc->rosdc.XlatePen);
-
     if (arctype == GdiTypePie)
     {
        PUTLINE(CenterX, CenterY, SfCx + CenterX, SfCy + CenterY, dc->eboLine);
@@ -222,11 +220,11 @@ IntGdiArcInternal(
 
   pdcattr = dc->pdcattr;
 
-  if (pdcattr->ulDirty_ & DC_BRUSH_DIRTY)
-     IntGdiSelectBrush(dc,pdcattr->hbrush);
+  if (pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
+    DC_vUpdateFillBrush(dc);
 
-  if (pdcattr->ulDirty_ & DC_PEN_DIRTY)
-     IntGdiSelectPen(dc,pdcattr->hpen);
+  if (pdcattr->ulDirty_ & (DIRTY_LINE | DC_PEN_DIRTY))
+    DC_vUpdateLineBrush(dc);
 
   if (arctype == GdiTypeArcTo)
   {

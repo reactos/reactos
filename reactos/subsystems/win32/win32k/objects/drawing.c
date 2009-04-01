@@ -1192,7 +1192,6 @@ IntFillRect( DC *dc,
   DWORD ROP = PATCOPY;
   RECTL DestRect;
   SURFACE *psurf;
-  EBRUSHOBJ eboFill;
   POINTL BrushOrigin;
   BOOL Ret = TRUE;
   PDC_ATTR pdcattr;
@@ -1236,11 +1235,6 @@ IntFillRect( DC *dc,
      else
         ROP = PATCOPY;
 
-     if (Pen)
-        EBRUSHOBJ_vInit(&eboFill, pbrush, dc->rosdc.XlatePen);
-     else
-        EBRUSHOBJ_vInit(&eboFill, pbrush, dc->rosdc.XlateBrush);
-
      Ret = IntEngBitBlt(
          &psurf->SurfObj,
          NULL,
@@ -1250,7 +1244,7 @@ IntFillRect( DC *dc,
          &DestRect,
          NULL,
          NULL,
-         &eboFill.BrushObject, // use pDC->eboFill
+         Pen ? &dc->eboLine.BrushObject : &dc->eboFill.BrushObject,
          &BrushOrigin,
          ROP3_TO_ROP4(ROP));
   }

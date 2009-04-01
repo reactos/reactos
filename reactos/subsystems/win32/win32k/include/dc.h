@@ -246,6 +246,10 @@ VOID FASTCALL DC_UpdateXforms(PDC  dc);
 BOOL FASTCALL DC_InvertXform(const XFORM *xformSrc, XFORM *xformDest);
 VOID FASTCALL DC_vUpdateViewportExt(PDC pdc);
 VOID FASTCALL DC_vCopyState(PDC pdcSrc, PDC pdcDst);
+VOID FASTCALL DC_vUpdateFillBrush(PDC pdc);
+VOID FASTCALL DC_vUpdateLineBrush(PDC pdc);
+VOID FASTCALL DC_vUpdateTextBrush(PDC pdc);
+VOID FASTCALL DC_vUpdateBackgroundBrush(PDC pdc);
 
 BOOL FASTCALL DCU_SyncDcAttrtoUser(PDC);
 BOOL FASTCALL DCU_SynchDcAttrtoUser(HDC);

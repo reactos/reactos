@@ -192,10 +192,7 @@ NtGdiBitBlt(
     POINTL SourcePoint, BrushOrigin;
     BOOL Status = FALSE;
     XLATEOBJ *XlateObj = NULL;
-    PBRUSH pbrush = NULL;
-    EBRUSHOBJ BrushInst;
     BOOL UsesSource = ROP3_USES_SOURCE(ROP);
-    BOOL UsesPattern = ROP3_USES_PATTERN(ROP);
 
     DCDest = DC_LockDc(hDCDest);
     if (NULL == DCDest)
@@ -237,8 +234,8 @@ NtGdiBitBlt(
 
     pdcattr = DCDest->pdcattr;
 
-    if (pdcattr->ulDirty_ & DC_BRUSH_DIRTY)
-        IntGdiSelectBrush(DCDest,pdcattr->hbrush);
+    if (pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
+        DC_vUpdateFillBrush(DCDest);
 
     /* Offset the destination and source by the origin of their DCs. */
     XDest += DCDest->ptlDCOrig.x;
@@ -283,18 +280,6 @@ NtGdiBitBlt(
         }
     }
 
-    if (UsesPattern)
-    {
-        pbrush = BRUSH_LockBrush(pdcattr->hbrush);
-        if (NULL == pbrush)
-        {
-            SetLastWin32Error(ERROR_INVALID_HANDLE);
-            goto cleanup;
-        }
-        BrushOrigin = *((PPOINTL)&pbrush->ptOrigin);
-        EBRUSHOBJ_vInit(&BrushInst, pbrush, DCDest->rosdc.XlateBrush);
-    }
-
     /* Create the XLATEOBJ. */
     if (UsesSource)
     {
@@ -310,11 +295,17 @@ NtGdiBitBlt(
     }
 
     /* Perform the bitblt operation */
-    Status = IntEngBitBlt(&BitmapDest->SurfObj, BitmapSrc ? &BitmapSrc->SurfObj : NULL, NULL,
-        DCDest->rosdc.CombinedClip, XlateObj, &DestRect,
-        &SourcePoint, NULL,
-        pbrush ? &BrushInst.BrushObject : NULL,
-        &BrushOrigin, ROP3_TO_ROP4(ROP));
+    Status = IntEngBitBlt(&BitmapDest->SurfObj,
+                          BitmapSrc ? &BitmapSrc->SurfObj : NULL,
+                          NULL,
+                          DCDest->rosdc.CombinedClip,
+                          XlateObj,
+                          &DestRect,
+                          &SourcePoint,
+                          NULL,
+                          &DCDest->eboFill.BrushObject,
+                          &DCDest->dclevel.pbrFill->ptOrigin,
+                          ROP3_TO_ROP4(ROP));
 
 cleanup:
     if (UsesSource && XlateObj != NULL)
@@ -327,10 +318,6 @@ cleanup:
     if (BitmapSrc != NULL && BitmapSrc != BitmapDest)
     {
         SURFACE_UnlockSurface(BitmapSrc);
-    }
-    if (pbrush != NULL)
-    {
-        BRUSH_UnlockBrush(pbrush);
     }
     if (UsesSource && hDCSrc != hDCDest)
     {
@@ -756,10 +743,7 @@ NtGdiStretchBlt(
     BOOL Status = FALSE;
     XLATEOBJ *XlateObj = NULL;
     POINTL BrushOrigin;
-    PBRUSH pbrush = NULL;
-    EBRUSHOBJ BrushInst;
     BOOL UsesSource = ROP3_USES_SOURCE(ROP);
-    BOOL UsesPattern = ROP3_USES_PATTERN(ROP);
 
     if (0 == WidthDest || 0 == HeightDest || 0 == WidthSrc || 0 == HeightSrc)
     {
@@ -808,8 +792,8 @@ NtGdiStretchBlt(
 
     pdcattr = DCDest->pdcattr;
 
-    if (pdcattr->ulDirty_ & DC_BRUSH_DIRTY)
-        IntGdiSelectBrush(DCDest,pdcattr->hbrush);
+    if (pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
+        DC_vUpdateFillBrush(DCDest);
 
     /* Offset the destination and source by the origin of their DCs. */
     XOriginDest += DCDest->ptlDCOrig.x;
@@ -865,37 +849,27 @@ NtGdiStretchBlt(
         }
     }
 
-    if (UsesPattern)
-    {
-        pbrush = BRUSH_LockBrush(pdcattr->hbrush);
-        if (NULL == pbrush)
-        {
-            SetLastWin32Error(ERROR_INVALID_HANDLE);
-            goto failed;
-        }
-        BrushOrigin = *((PPOINTL)&pbrush->ptOrigin);
-        EBRUSHOBJ_vInit(&BrushInst, pbrush, DCDest->rosdc.XlateBrush);
-    }
-
     /* Offset the brush */
     BrushOrigin.x += DCDest->ptlDCOrig.x;
     BrushOrigin.y += DCDest->ptlDCOrig.y;
 
     /* Perform the bitblt operation */
-    Status = IntEngStretchBlt(&BitmapDest->SurfObj, &BitmapSrc->SurfObj,
-        NULL, DCDest->rosdc.CombinedClip, XlateObj,
-        &DestRect, &SourceRect, NULL, 
-        pbrush ? &BrushInst.BrushObject : NULL,
-        &BrushOrigin, ROP3_TO_ROP4(ROP));
+    Status = IntEngStretchBlt(&BitmapDest->SurfObj,
+                              &BitmapSrc->SurfObj,
+                              NULL,
+                              DCDest->rosdc.CombinedClip,
+                              XlateObj,
+                              &DestRect,
+                              &SourceRect,
+                              NULL, 
+                              &DCDest->eboFill.BrushObject,
+                              &BrushOrigin,
+                              ROP3_TO_ROP4(ROP));
 
 failed:
     if (XlateObj)
     {
         EngDeleteXlate(XlateObj);
-    }
-    if (pbrush)
-    {
-        BRUSH_UnlockBrush(pbrush);
     }
     if (BitmapSrc && DCSrc->rosdc.hBitmap != DCDest->rosdc.hBitmap)
     {

@@ -3128,12 +3128,6 @@ GreExtTextOutW(
     FT_Bool use_kerning;
     RECTL DestRect, MaskRect;
     POINTL SourcePoint, BrushOrigin;
-    HBRUSH hbrushText = NULL;
-    PBRUSH pbrushText = NULL;
-    EBRUSHOBJ eboText;
-    HBRUSH hbrushBackGnd = NULL;
-    PBRUSH pbrushBackGnd = NULL;
-    EBRUSHOBJ eboBackGnd;
     HBITMAP HSourceGlyph;
     SURFOBJ *SourceGlyphSurf;
     SIZEL bitSize;
@@ -3142,9 +3136,7 @@ GreExtTextOutW(
     FONTOBJ *FontObj;
     PFONTGDI FontGDI;
     PTEXTOBJ TextObj = NULL;
-    PPALGDI PalDestGDI;
     XLATEOBJ *XlateObj=NULL, *XlateObj2=NULL;
-    ULONG Mode;
     FT_Render_Mode RenderMode;
     BOOLEAN Render;
     POINT Start;
@@ -3168,6 +3160,15 @@ GreExtTextOutW(
     }
 
     pdcattr = dc->pdcattr;
+
+    if (pdcattr->ulDirty_ & DIRTY_TEXT)
+        DC_vUpdateTextBrush(dc);
+
+    if ((fuOptions & ETO_OPAQUE) || pdcattr->jBkMode == OPAQUE)
+    {
+        if (pdcattr->ulDirty_ & DIRTY_BACKGROUND)
+            DC_vUpdateBackgroundBrush(dc);
+    }
 
     /* Check if String is valid */
     if ((Count > 0xFFFF) || (Count > 0 && String == NULL))
@@ -3202,7 +3203,6 @@ GreExtTextOutW(
         goto fail;
     }
     SurfObj = &psurf->SurfObj;
-    ASSERT(SurfObj);
 
     Start.x = XStart;
     Start.y = YStart;
@@ -3214,45 +3214,12 @@ GreExtTextOutW(
     /* Create the brushes */
     hDestPalette = psurf->hDIBPalette;
     if (!hDestPalette) hDestPalette = pPrimarySurface->DevInfo.hpalDefault;
-    PalDestGDI = PALETTE_LockPalette(hDestPalette);
-    if ( !PalDestGDI )
-        Mode = PAL_RGB;
-    else
-    {
-        Mode = PalDestGDI->Mode;
-        PALETTE_UnlockPalette(PalDestGDI);
-    }
-    XlateObj = (XLATEOBJ*)IntEngCreateXlate(Mode, PAL_RGB, hDestPalette, NULL);
+    XlateObj = (XLATEOBJ*)IntEngCreateXlate(0, PAL_RGB, hDestPalette, NULL);
     if ( !XlateObj )
     {
         goto fail;
     }
-    hbrushText = NtGdiCreateSolidBrush(XLATEOBJ_iXlate(XlateObj, pdcattr->crForegroundClr), 0);
-    if ( !hbrushText )
-    {
-        goto fail;
-    }
-    pbrushText = BRUSH_LockBrush(hbrushText);
-    if ( !pbrushText )
-    {
-        goto fail;
-    }
-    EBRUSHOBJ_vInit(&eboText, pbrushText, NULL);
-    if ((fuOptions & ETO_OPAQUE) || pdcattr->jBkMode == OPAQUE)
-    {
-        hbrushBackGnd = NtGdiCreateSolidBrush(XLATEOBJ_iXlate(XlateObj, pdcattr->crBackgroundClr), 0);
-        if ( !hbrushBackGnd )
-        {
-            goto fail;
-        }
-        pbrushBackGnd = BRUSH_LockBrush(hbrushBackGnd);
-        if ( !pbrushBackGnd )
-        {
-            goto fail;
-        }
-        EBRUSHOBJ_vInit(&eboBackGnd, pbrushBackGnd, NULL);
-    }
-    XlateObj2 = (XLATEOBJ*)IntEngCreateXlate(PAL_RGB, Mode, NULL, hDestPalette);
+    XlateObj2 = (XLATEOBJ*)IntEngCreateXlate(PAL_RGB, 0, NULL, hDestPalette);
     if ( !XlateObj2 )
     {
         goto fail;
@@ -3281,7 +3248,7 @@ GreExtTextOutW(
             &DestRect,
             &SourcePoint,
             &SourcePoint,
-            &eboBackGnd.BrushObject,
+            &dc->eboBackground.BrushObject,
             &BrushOrigin,
             ROP3_TO_ROP4(PATCOPY));
         fuOptions &= ~ETO_OPAQUE;
@@ -3527,7 +3494,7 @@ GreExtTextOutW(
                 &DestRect,
                 &SourcePoint,
                 &SourcePoint,
-                &eboBackGnd.BrushObject,
+                &dc->eboBackground.BrushObject,
                 &BrushOrigin,
                 ROP3_TO_ROP4(PATCOPY));
             BackgroundLeft = DestRect.right;
@@ -3599,7 +3566,7 @@ GreExtTextOutW(
             &DestRect,
             &SourcePoint,
             (PPOINTL)&MaskRect,
-            &eboText.BrushObject,
+            &dc->eboText.BrushObject,
             &BrushOrigin);
 
         EngUnlockSurface(SourceGlyphSurf);
@@ -3638,13 +3605,6 @@ GreExtTextOutW(
     SURFACE_UnlockSurface(psurf);
     if (TextObj != NULL)
         TEXTOBJ_UnlockText(TextObj);
-    if (hbrushBackGnd != NULL)
-    {
-        BRUSH_UnlockBrush(pbrushBackGnd);
-        GreDeleteObject(hbrushBackGnd);
-    }
-    BRUSH_UnlockBrush(pbrushText);
-    GreDeleteObject(hbrushText);
 good:
     DC_UnlockDc( dc );
 
@@ -3659,16 +3619,6 @@ fail:
         TEXTOBJ_UnlockText(TextObj);
     if (psurf != NULL)
         SURFACE_UnlockSurface(psurf);
-    if (hbrushBackGnd != NULL)
-    {
-        BRUSH_UnlockBrush(pbrushBackGnd);
-        GreDeleteObject(hbrushBackGnd);
-    }
-    if (hbrushText != NULL)
-    {
-        BRUSH_UnlockBrush(pbrushText);
-        GreDeleteObject(hbrushText);
-    }
     DC_UnlockDc(dc);
 
     return FALSE;

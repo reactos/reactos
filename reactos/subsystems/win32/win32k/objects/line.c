@@ -89,12 +89,10 @@ IntGdiLineTo(DC  *dc,
 {
     SURFACE *psurf;
     BOOL      Ret = TRUE;
-    PBRUSH pbrushLine;
-    EBRUSHOBJ eboLine;
+    PBRUSH pbrLine;
     RECTL     Bounds;
     POINT     Points[2];
     PDC_ATTR pdcattr = dc->pdcattr;
-
 
     if (PATH_IsPathOpen(dc->dclevel))
     {
@@ -112,11 +110,8 @@ IntGdiLineTo(DC  *dc,
     }
     else
     {
-       if (pdcattr->ulDirty_ & DC_BRUSH_DIRTY)
-          IntGdiSelectBrush(dc,pdcattr->hbrush);
-
-       if (pdcattr->ulDirty_ & DC_PEN_DIRTY)
-          IntGdiSelectPen(dc,pdcattr->hpen);
+       if (pdcattr->ulDirty_ & (DIRTY_LINE | DC_PEN_DIRTY))
+          DC_vUpdateLineBrush(dc);
 
         psurf = SURFACE_LockSurface( dc->rosdc.hBitmap );
         if (NULL == psurf)
@@ -144,20 +139,14 @@ IntGdiLineTo(DC  *dc,
         Bounds.bottom = max(Points[0].y, Points[1].y);
 
         /* get BRUSH from current pen. */
-        pbrushLine = PEN_LockPen( pdcattr->hpen );
-        if (!pbrushLine)
-        {
-            /* default to BLACK_PEN */
-            pbrushLine = PEN_LockPen(NtGdiGetStockObject(BLACK_PEN));
-            ASSERT(pbrushLine);
-        }
+        pbrLine = dc->dclevel.pbrLine;
+        ASSERT(pbrLine);
 
-        if (!(pbrushLine->flAttrs & GDIBRUSH_IS_NULL))
+        if (!(pbrLine->flAttrs & GDIBRUSH_IS_NULL))
         {
-            EBRUSHOBJ_vInit(&eboLine, pbrushLine, dc->rosdc.XlatePen);
             Ret = IntEngLineTo(&psurf->SurfObj,
                                dc->rosdc.CombinedClip,
-                               &eboLine.BrushObject,
+                               &dc->eboLine.BrushObject,
                                Points[0].x, Points[0].y,
                                Points[1].x, Points[1].y,
                                &Bounds,
@@ -165,7 +154,6 @@ IntGdiLineTo(DC  *dc,
         }
 
         SURFACE_UnlockSurface(psurf);
-        PEN_UnlockPen( pbrushLine );
     }
 
     if (Ret)
@@ -251,8 +239,7 @@ IntGdiPolyline(DC      *dc,
                int     Count)
 {
     SURFACE *psurf;
-    BRUSH *pbrushLine;
-    EBRUSHOBJ eboLine;
+    BRUSH *pbrLine;
     LPPOINT Points;
     BOOL Ret = TRUE;
     LONG i;
@@ -261,18 +248,17 @@ IntGdiPolyline(DC      *dc,
     if (PATH_IsPathOpen(dc->dclevel))
         return PATH_Polyline(dc, pt, Count);
 
-    if (pdcattr->ulDirty_ & DC_BRUSH_DIRTY)
-       IntGdiSelectBrush(dc,pdcattr->hbrush);
+    if (pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
+        DC_vUpdateFillBrush(dc);
 
-    if (pdcattr->ulDirty_ & DC_PEN_DIRTY)
-       IntGdiSelectPen(dc,pdcattr->hpen);
+    if (pdcattr->ulDirty_ & (DIRTY_LINE | DC_PEN_DIRTY))
+        DC_vUpdateLineBrush(dc);
 
     /* Get BRUSHOBJ from current pen. */
-    pbrushLine = PEN_LockPen(pdcattr->hpen);
-    /* FIXME - pbrushLine can be NULL! Don't assert here! */
-    ASSERT(pbrushLine);
+    pbrLine = dc->dclevel.pbrLine;
+    ASSERT(pbrLine);
 
-    if (!(pbrushLine->flAttrs & GDIBRUSH_IS_NULL))
+    if (!(pbrLine->flAttrs & GDIBRUSH_IS_NULL))
     {
         Points = EngAllocMem(0, Count * sizeof(POINT), TAG_COORD);
         if (Points != NULL)
@@ -292,10 +278,9 @@ IntGdiPolyline(DC      *dc,
                 Points[i].y += dc->ptlDCOrig.y;
             }
 
-            EBRUSHOBJ_vInit(&eboLine, pbrushLine, dc->rosdc.XlatePen);
             Ret = IntEngPolyline(&psurf->SurfObj,
                                  dc->rosdc.CombinedClip,
-                                 &eboLine.BrushObject,
+                                 &dc->eboLine.BrushObject,
                                  Points,
                                  Count,
                                  ROP2_TO_MIX(pdcattr->jROP2));
@@ -308,8 +293,6 @@ IntGdiPolyline(DC      *dc,
             Ret = FALSE;
         }
     }
-
-    PEN_UnlockPen(pbrushLine);
 
     return Ret;
 }

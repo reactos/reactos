@@ -75,25 +75,26 @@ FASTCALL
 IntGdiSetTextColor(HDC hDC,
                    COLORREF color)
 {
-    COLORREF  oldColor;
-    PDC  dc = DC_LockDc(hDC);
+    COLORREF crOldColor;
+    PDC pdc;
     PDC_ATTR pdcattr;
-    HBRUSH hBrush;
 
-    if (!dc)
+    pdc = DC_LockDc(hDC);
+    if (!pdc)
     {
         SetLastWin32Error(ERROR_INVALID_HANDLE);
         return CLR_INVALID;
     }
-    pdcattr = dc->pdcattr;
+    pdcattr = pdc->pdcattr;
 
-    oldColor = pdcattr->crForegroundClr;
+    // What about ulForegroundClr, like in gdi32?
+    crOldColor = pdcattr->crForegroundClr;
     pdcattr->crForegroundClr = color;
-    hBrush = pdcattr->hbrush;
-    pdcattr->ulDirty_ &= ~(DIRTY_TEXT|DIRTY_LINE|DIRTY_FILL);
-    DC_UnlockDc(dc);
-    NtGdiSelectBrush(hDC, hBrush);
-    return  oldColor;
+    DC_vUpdateTextBrush(pdc);
+
+    DC_UnlockDc(pdc);
+
+    return  crOldColor;
 }
 
 VOID
