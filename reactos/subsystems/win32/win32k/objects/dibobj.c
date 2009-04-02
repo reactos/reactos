@@ -437,6 +437,7 @@ NtGdiSetDIBitsToDeviceInternal(
     PDC pDC;
     HBITMAP hSourceBitmap = NULL;
     SURFOBJ *pDestSurf, *pSourceSurf = NULL;
+    SURFACE *pSurf;
     RECTL rcDest;
     POINTL ptSource;
     INT DIBWidth;
@@ -476,13 +477,18 @@ NtGdiSetDIBitsToDeviceInternal(
         return 0;
     }
 
-    pDestSurf = EngLockSurface((HSURF)pDC->rosdc.hBitmap);
-    if (!pDestSurf)
+    /* Use destination palette obtained from the DC by default */
+    DDBPalette = pDC->ppdev->DevInfo.hpalDefault;
+
+    /* Try to use hDIBPalette if it exists */
+    pSurf = SURFACE_LockSurface(pDC->rosdc.hBitmap);
+    if (pSurf && pSurf->hDIBPalette)
     {
-        /* FIXME: SetLastError ? */
-        DC_UnlockDc(pDC);
-        return 0;
+        DDBPalette = pSurf->hDIBPalette;
+        SURFACE_UnlockSurface(pSurf);
     }
+
+    pDestSurf = EngLockSurface((HSURF)pDC->rosdc.hBitmap);
 
     rcDest.left = XDest;
     rcDest.top = YDest;
@@ -521,8 +527,8 @@ NtGdiSetDIBitsToDeviceInternal(
        goto Exit;
     }
 
-    /* Obtain destination palette from the DC */
-    pDCPalette = PALETTE_LockPalette(pDC->ppdev->DevInfo.hpalDefault);
+    /* Obtain destination palette */
+    pDCPalette = PALETTE_LockPalette(DDBPalette);
     if (!pDCPalette)
     {
        SetLastWin32Error(ERROR_INVALID_HANDLE);
@@ -531,7 +537,6 @@ NtGdiSetDIBitsToDeviceInternal(
     }
 
     DDBPaletteType = pDCPalette->Mode;
-    DDBPalette = pDC->ppdev->DevInfo.hpalDefault;
     PALETTE_UnlockPalette(pDCPalette);
 
     DIBPalette = BuildDIBPalette(bmi, (PINT)&DIBPaletteType);
