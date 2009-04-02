@@ -253,5 +253,20 @@ IntGetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, RGBQUAD *Colors);
 UINT APIENTRY
 IntSetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, CONST RGBQUAD *Colors);
 
+BOOL APIENTRY
+GreStretchBltMask(IN HDC hdcDst,
+                  IN INT xDst,
+                  IN INT yDst,
+                  IN INT cxDst,
+                  IN INT cyDst,
+                  IN HDC hdcSrc,
+                  IN INT xSrc,
+                  IN INT ySrc,
+                  IN INT cxSrc,
+                  IN INT cySrc,
+                  IN DWORD dwRop,
+                  IN DWORD dwBackColor,
+                  IN HDC hdcMask);
+
 #endif /* _WIN32K_INTGDI_H */
 

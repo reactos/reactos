@@ -808,7 +808,7 @@ CallDibStretchBlt(SURFOBJ* psoDest,
     }
 
     return DibFunctionsForBitmapFormat[psoDest->iBitmapFormat].DIB_StretchBlt(
-               psoDest, psoSource, PatternSurface, 
+               psoDest, psoSource, Mask, PatternSurface, 
                OutputRect, InputRect, MaskOrigin, pbo, &RealBrushOrigin, 
                ColorTranslation, XlatePatternToDest, Rop4);
 
@@ -1021,21 +1021,7 @@ EngStretchBltROP(
         AdjustedBrushOrigin = Translate;
     }
 
-    if (Mask != NULL)
-    {
-        //BltRectFunc = BltMask;
-        DPRINT("EngStretchBlt isn't capable of handling mask yet.\n");
-        IntEngLeave(&EnterLeaveDest);
-        if (UsesSource)
-        {
-            IntEngLeave(&EnterLeaveSource);
-        }
-        return FALSE;
-    }
-    else
-    {
-        BltRectFunc = CallDibStretchBlt;
-    }
+    BltRectFunc = CallDibStretchBlt;
 
     DstHeight = OutputRect.bottom - OutputRect.top;
     DstWidth = OutputRect.right - OutputRect.left;

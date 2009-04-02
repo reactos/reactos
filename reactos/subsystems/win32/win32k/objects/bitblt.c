@@ -720,7 +720,7 @@ NtGdiPlgBlt(
 }
 
 BOOL APIENTRY
-NtGdiStretchBlt(
+GreStretchBltMask(
                 HDC  hDCDest,
                 INT  XOriginDest,
                 INT  YOriginDest,
@@ -732,12 +732,15 @@ NtGdiStretchBlt(
                 INT  WidthSrc,
                 INT  HeightSrc,
                 DWORD  ROP,
-                IN DWORD  dwBackColor)
+                IN DWORD  dwBackColor,
+                HDC  hDCMask)
 {
     PDC DCDest;
     PDC DCSrc  = NULL;
+    PDC DCMask = NULL;
     PDC_ATTR pdcattr;
     SURFACE *BitmapDest, *BitmapSrc = NULL;
+    SURFACE *BitmapMask = NULL;
     RECTL DestRect;
     RECTL SourceRect;
     BOOL Status = FALSE;
@@ -853,6 +856,23 @@ NtGdiStretchBlt(
     BrushOrigin.x += DCDest->ptlDCOrig.x;
     BrushOrigin.y += DCDest->ptlDCOrig.y;
 
+    /* Make mask surface for source surface */
+    if (BitmapSrc && hDCMask)
+    {
+        DCMask = DC_LockDc(hDCMask);
+        if (DCMask)
+        {
+            BitmapMask = SURFACE_LockSurface(DCMask->rosdc.hBitmap);
+            if (BitmapMask && 
+                (BitmapMask->SurfObj.sizlBitmap.cx != WidthSrc ||
+                 BitmapMask->SurfObj.sizlBitmap.cy != HeightSrc))
+            {
+                DPRINT1("Mask and bitmap sizes don't match!\n");
+                goto failed;
+            }
+        }
+    }
+
     /* Perform the bitblt operation */
     Status = IntEngStretchBlt(&BitmapDest->SurfObj,
                               &BitmapSrc->SurfObj,
@@ -879,14 +899,55 @@ failed:
     {
         SURFACE_UnlockSurface(BitmapDest);
     }
+    if (BitmapMask)
+    {
+        SURFACE_UnlockSurface(BitmapMask);
+    }
     if (UsesSource && hDCSrc != hDCDest)
     {
         DC_UnlockDc(DCSrc);
+    }
+    if (DCMask)
+    {
+        DC_UnlockDc(DCMask);
     }
     DC_UnlockDc(DCDest);
 
     return Status;
 }
+
+
+BOOL APIENTRY
+NtGdiStretchBlt(
+                HDC  hDCDest,
+                INT  XOriginDest,
+                INT  YOriginDest,
+                INT  WidthDest,
+                INT  HeightDest,
+                HDC  hDCSrc,
+                INT  XOriginSrc,
+                INT  YOriginSrc,
+                INT  WidthSrc,
+                INT  HeightSrc,
+                DWORD  ROP,
+                IN DWORD  dwBackColor)
+{
+    return GreStretchBltMask(
+                hDCDest,
+                XOriginDest,
+                YOriginDest,
+                WidthDest,
+                HeightDest,
+                hDCSrc,
+                XOriginSrc,
+                YOriginSrc,
+                WidthSrc,
+                HeightSrc,
+                ROP,
+                dwBackColor,
+                NULL);
+}
+
 
 BOOL FASTCALL
 IntPatBlt(
