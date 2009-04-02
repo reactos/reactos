@@ -41,8 +41,6 @@ static NTSTATUS NTAPI SendComplete
     ASSERT_IRQL(APC_LEVEL);
 
     if( !SocketAcquireStateLock( FCB ) ) {
-        Irp->IoStatus.Status = STATUS_FILE_CLOSED;
-        Irp->IoStatus.Information = 0;
         return STATUS_FILE_CLOSED;
     }
 
@@ -50,8 +48,6 @@ static NTSTATUS NTAPI SendComplete
     /* Request is not in flight any longer */
 
     if( FCB->State == SOCKET_STATE_CLOSED ) {
-        Irp->IoStatus.Status = STATUS_FILE_CLOSED;
-        Irp->IoStatus.Information = 0;
 		SocketStateUnlock( FCB );
 		return STATUS_FILE_CLOSED;
     }
@@ -172,8 +168,6 @@ static NTSTATUS NTAPI PacketSocketSendComplete
 							Irp->IoStatus.Information));
 
     if( !SocketAcquireStateLock( FCB ) ) {
-        Irp->IoStatus.Status = STATUS_FILE_CLOSED;
-        Irp->IoStatus.Information = 0;
         return STATUS_FILE_CLOSED;
     }
 
@@ -184,8 +178,6 @@ static NTSTATUS NTAPI PacketSocketSendComplete
     PollReeval( FCB->DeviceExt, FCB->FileObject );
 
     if( FCB->State == SOCKET_STATE_CLOSED ) {
-        Irp->IoStatus.Status = STATUS_FILE_CLOSED;
-        Irp->IoStatus.Information = 0;
 		SocketStateUnlock( FCB );
 		return STATUS_FILE_CLOSED;
     }
@@ -202,6 +194,7 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
     PAFD_SEND_INFO SendReq;
+	ULONG Information;
     UINT TotalBytesCopied = 0, i, CopySize = 0,
 		SpaceAvail = 0, TotalBytesEncountered = 0;
 
@@ -255,8 +248,11 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
         AFD_DbgPrint(MID_TRACE,("Dismissing request: %x\n", Status));
 
-        return UnlockAndMaybeComplete( FCB, Status, Irp,
-                                       SendReq->BufferArray[0].len );
+		/* Even if we were pended, we're done with the user buffer at this
+		 * point. */
+		Information = SendReq->BufferArray[0].len;
+		UnlockBuffers(SendReq->BufferArray, SendReq->BufferCount, FALSE);
+        return UnlockAndMaybeComplete( FCB, Status, Irp, Information );
     }
 
     if( !(SendReq = LockRequest( Irp, IrpSp )) )
@@ -370,6 +366,7 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
     PAFD_SEND_INFO_UDP SendReq;
+	ULONG Information;
 
     AFD_DbgPrint(MID_TRACE,("Called on %x\n", FCB));
 
@@ -427,7 +424,10 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     AFD_DbgPrint(MID_TRACE,("Dismissing request: %x\n", Status));
 
-    return UnlockAndMaybeComplete
-		( FCB, Status, Irp, SendReq->BufferArray[0].len );
+	/* Even if we were pended, we're done with the user buffer at this
+	 * point. */
+	Information = SendReq->BufferArray[0].len;
+	UnlockBuffers(SendReq->BufferArray, SendReq->BufferCount, FALSE);
+    return UnlockAndMaybeComplete( FCB, Status, Irp, Information );
 }
 
