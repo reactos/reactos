@@ -7,7 +7,16 @@
 
 #legend {
 	border: solid 1px black;
+	display: inline-block;
+	height: 16px;
 	margin-bottom: 1em;
+	padding: 5px;
+}
+
+#legend div {
+	float: left;
+	height: 15px;
+	margin-right: 5px;
 }
 
 #legend #intro {
@@ -15,21 +24,24 @@
 	padding-right: 10px;
 }
 
-#legend td {
-	padding-right: 5px;
+#legend .box {
+	border: solid 1px black;
+	width: 15px;
 }
 
-#legend td.box {
-	border: solid 1px black;
-	padding: 0;
-	width: 15px;
+#legend .desc {
+	margin-right: 9px;
 }
 
 .totaltests {
 	background-color: #FFFFCC !important;
 }
 
-.failedtests {
+.zero_failedtests {
+	background-color: #33FF66 !important;
+}
+
+.real_failedtests {
 	background-color: #FF6666 !important;
 }
 
@@ -41,14 +53,22 @@
 	background-color: #CCCCCC !important;
 }
 
+.diff_legend {
+	background-color: #5A5A5A !important;
+}
+
 .diff {
-	color: green;
+	color: #5A5A5A;
 }
 
 #TempBlock {
 	background: #5984C3;
 	color: white;
 	font-weight: bold;
+}
+
+#comparetable {
+	clear: left;
 }
 
 #comparetable th, #TempBlock {

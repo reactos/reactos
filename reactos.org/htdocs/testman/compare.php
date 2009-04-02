@@ -79,8 +79,8 @@
 		die("<i>ids</i> parameter is no array");
 	
 	// Verify that the array only contains numeric values to prevent SQL injections
-	foreach($id_array as $id)
-		if(!is_numeric($id))
+	for($i = 0; $i < count($id_array); $i++)
+		if(!is_numeric($id_array[$i]))
 			die("<i>ids</i> parameter is not entirely numeric!");
 	
 	if(count($id_array) > MAX_COMPARE_RESULTS)
@@ -94,26 +94,25 @@
 	}
 ?>
 
-<table id="legend" cellspacing="5">
-	<tr>
-		<td id="intro"><?php echo $testman_langres["legend"]; ?>:</td>
-		
-		<td class="box totaltests"></td>
-		<td><?php echo $testman_langres["totaltests"]; ?></td>
-		
-		<td class="box failedtests"></td>
-		<td><?php echo $testman_langres["failedtests"]; ?></td>
-		
-		<td class="box todotests"></td>
-		<td><?php echo $testman_langres["todotests"]; ?></td>
-		
-		<td class="box skippedtests"></td>
-		<td><?php echo $testman_langres["skippedtests"]; ?></td>
-		
-		<td class="box" style="background: green;"></td>
-		<td><?php echo $testman_langres["difference"]; ?></td>
-	</tr>
-</table>
+<div id="legend">
+	<div id="intro"><?php echo $testman_langres["legend"]; ?>:</div>
+	
+	<div class="box totaltests"></div>
+	<div class="desc"><?php echo $testman_langres["totaltests"]; ?></div>
+	
+	<div class="zero_failedtests" style="border: solid 1px black; border-right: none; margin: 0; width: 8px;"></div>
+	<div class="real_failedtests" style="border: solid 1px black; border-left: none; width: 7px;"></div>
+	<div class="desc"><?php echo $testman_langres["failedtests"]; ?></div>
+	
+	<div class="box todotests"></div>
+	<div class="desc"><?php echo $testman_langres["todotests"]; ?></div>
+	
+	<div class="box skippedtests"></div>
+	<div class="desc"><?php echo $testman_langres["skippedtests"]; ?></div>
+	
+	<div class="box diff_legend"></div>
+	<div class="desc"><?php echo $testman_langres["difference"]; ?></div>
+</div>
 
 <?php
 	// Establish a DB connection
@@ -127,37 +126,30 @@
 		die("Could not establish the DB connection");
 	}
 	
-	// Get all test suites for which we have at least one result in our ID list
-	$suites_stmt = $dbh->query(
-		"SELECT DISTINCT s.id, s.module, s.test " .
+	// Get all Suite IDs linked to our Test IDs
+	$stmt = $dbh->query(
+		"SELECT s.id " .
 		"FROM " . DB_TESTMAN . ".winetest_suites s " .
 		"JOIN " . DB_TESTMAN . ".winetest_results e ON e.suite_id = s.id " .
-		"WHERE test_id IN (" . $_GET["ids"] . ") " .
-		"ORDER BY s.module ASC, s.test ASC"
+		"WHERE e.test_id IN (" . $_GET["ids"] . ")"
 	) or die("Query failed #1");
+	$suite_ids = $stmt->fetchAll(PDO::FETCH_COLUMN);
+	$suite_idlist = implode(",", $suite_ids);
 	
 	// Get the test results for each column
 	$result_stmt = array();
-	$i = 0;
 	
-	foreach($id_array as $id)
+	for($i = 0; $i < count($id_array); $i++)
 	{
 		$result_stmt[$i] = $dbh->prepare(
 			"SELECT e.id, e.count, e.todo, e.failures, e.skipped " .
 			"FROM " . DB_TESTMAN . ".winetest_suites s " .
 			"LEFT JOIN " . DB_TESTMAN . ".winetest_results e ON e.suite_id = s.id AND e.test_id = :testid " .
-			"WHERE s.id IN (" .
-				"SELECT s.id " .
-				"FROM " . DB_TESTMAN . ".winetest_suites s " .
-				"JOIN " . DB_TESTMAN . ".winetest_results e ON e.suite_id = s.id " .
-				"WHERE e.test_id IN (" . $_GET["ids"] . ") " .
-			") " .
+			"WHERE s.id IN (" . $suite_idlist . ")" .
 			"ORDER BY s.module, s.test"
 		);
-		$result_stmt[$i]->bindParam(":testid", $id);
-		$result_stmt[$i]->execute() or die("Query failed #2 for statement $i" . print_r($result_stmt[$i]->errorInfo(), true));
-		
-		$i++;
+		$result_stmt[$i]->bindParam(":testid", $id_array[$i]);
+		$result_stmt[$i]->execute() or die("Query failed #2 for statement $i");
 	}
 	
 	echo '<table id="comparetable" class="datatable" cellspacing="0" cellpadding="0">';
@@ -171,9 +163,9 @@
 		"WHERE r.id = :id"
 	);
 	
-	foreach($id_array as $id)
+	for($i = 0; $i < count($id_array); $i++)
 	{
-		$stmt->bindParam(":id", $id);
+		$stmt->bindParam(":id", $id_array[$i]);
 		$stmt->execute() or die("Query failed #3");
 		$row = $stmt->fetch(PDO::FETCH_ASSOC);
 		
@@ -188,7 +180,16 @@
 	$oddeven = false;
 	$unchanged = array();
 	
-	while($suites_row = $suites_stmt->fetch(PDO::FETCH_ASSOC))
+	// Get all test suites for which we have at least one result in our ID list
+	$stmt = $dbh->query(
+		"SELECT DISTINCT s.id, s.module, s.test " .
+		"FROM " . DB_TESTMAN . ".winetest_suites s " .
+		"JOIN " . DB_TESTMAN . ".winetest_results e ON e.suite_id = s.id " .
+		"WHERE test_id IN (" . $_GET["ids"] . ") " .
+		"ORDER BY s.module ASC, s.test ASC"
+	) or die("Query failed #3");
+	
+	while($suites_row = $stmt->fetch(PDO::FETCH_ASSOC))
 	{
 		printf('<tr id="suite_%s" class="%s">', $suites_row["id"], ($oddeven ? "odd" : "even"));
 		printf('<td onmouseover="Cell_OnMouseOver(this)" onmouseout="Cell_OnMouseOut(this)">%s:%s</td>', $suites_row["module"], $suites_row["test"]);
@@ -223,7 +224,7 @@
 				echo '<tr>';
 				printf('<td colspan="3" title="%s" class="totaltests">%s <span class="diff">%s</span></td>', $testman_langres["totaltests"], GetTotalTestsString($result_row["count"]), GetDifference($result_row, $prev_result_row, "count"));
 				echo '</tr><tr>';
-				printf('<td title="%s" class="failedtests">%d <span class="diff">%s</span></td>', $testman_langres["failedtests"], $result_row["failures"], GetDifference($result_row, $prev_result_row, "failures"));
+				printf('<td title="%s" class="%s_failedtests">%d <span class="diff">%s</span></td>', $testman_langres["failedtests"], ($result_row["failures"] > 0 ? 'real' : 'zero'), $result_row["failures"], GetDifference($result_row, $prev_result_row, "failures"));
 				printf('<td title="%s" class="todotests">%d <span class="diff">%s</span></td>', $testman_langres["todotests"], $result_row["todo"], GetDifference($result_row, $prev_result_row, "todo"));
 				printf('<td title="%s" class="skippedtests">%d <span class="diff">%s</span></td>', $testman_langres["skippedtests"], $result_row["skipped"], GetDifference($result_row, $prev_result_row, "skipped"));
 				echo '</tr></table>';
@@ -254,13 +255,8 @@
 	echo "//<![CDATA[\n";
 	echo "var UnchangedRows = Array(";
 	
-	for($i = 0; $i < count($unchanged); $i++)
-	{
-		if($i)
-			echo "," . $unchanged[$i];
-		else
-			echo $unchanged[$i];
-	}
+	// Cut the last comma from the string
+	echo implode(",", $unchanged);
 	
 	echo ");\n";
 	echo "//]]>\n";

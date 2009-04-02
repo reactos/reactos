@@ -14,7 +14,8 @@ CREATE TABLE `winetest_results` (
   `todo` int(10) unsigned NOT NULL COMMENT 'Tests marked as TODO',
   `failures` int(10) unsigned NOT NULL COMMENT 'Number of failed tests',
   `skipped` int(10) unsigned NOT NULL COMMENT 'Number of skipped tests',
-  PRIMARY KEY  (`id`)
+  PRIMARY KEY  (`id`),
+  KEY `suite_id` (`suite_id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=latin1 COLLATE=latin1_general_ci;
 
 CREATE TABLE `winetest_runs` (
