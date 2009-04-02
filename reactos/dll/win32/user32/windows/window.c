@@ -1126,7 +1126,8 @@ GetWindowTextA(HWND hWnd, LPSTR lpString, int nMaxCount)
 
     _SEH2_TRY
     {
-        if (TestWindowProcess( Wnd))// if (Wnd->pi != g_kpi)
+//        if (TestWindowProcess( Wnd))
+        if (Wnd->pi != GetWin32ClientInfo()->ppi)
         {
             if (nMaxCount > 0)
             {
@@ -1216,7 +1217,8 @@ GetWindowTextW(HWND hWnd, LPWSTR lpString, int nMaxCount)
 
     _SEH2_TRY
     {
-        if (TestWindowProcess( Wnd)) //if (Wnd->pi != g_kpi)
+//        if (TestWindowProcess( Wnd))
+        if (Wnd->pi != GetWin32ClientInfo()->ppi)        
         {
             if (nMaxCount > 0)
             {

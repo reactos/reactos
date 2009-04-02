@@ -1748,9 +1748,9 @@ IntUnmapDesktopView(IN PDESKTOP DesktopObject)
     ti = GetW32ThreadInfo();
     if (ti != NULL)
     {
-        if (ti->Desktop == DesktopObject->DesktopInfo)
+        if (ti->pDeskInfo == DesktopObject->DesktopInfo)
         {
-            ti->Desktop = NULL;
+            ti->pDeskInfo = NULL;
         }
         GetWin32ClientInfo()->pDeskInfo = NULL;
     }
@@ -1830,11 +1830,11 @@ IntMapDesktopView(IN PDESKTOP DesktopObject)
     GetWin32ClientInfo()->ulClientDelta = DesktopHeapGetUserDelta();
     if (ti != NULL)
     {
-        if (ti->Desktop == NULL)
+        if (ti->pDeskInfo == NULL)
         {
-           ti->Desktop = DesktopObject->DesktopInfo;
+           ti->pDeskInfo = DesktopObject->DesktopInfo;
            GetWin32ClientInfo()->pDeskInfo = 
-                (PVOID)((ULONG_PTR)ti->Desktop - GetWin32ClientInfo()->ulClientDelta);
+                (PVOID)((ULONG_PTR)ti->pDeskInfo - GetWin32ClientInfo()->ulClientDelta);
         }
     }
 
@@ -1882,7 +1882,7 @@ IntSetThreadDesktop(IN PDESKTOP DesktopObject,
             PW32THREADINFO ti = GetW32ThreadInfo();
             if (ti != NULL)
             {
-                ti->Desktop = NULL;
+                ti->pDeskInfo = NULL;
             }
         }
 

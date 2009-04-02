@@ -91,9 +91,9 @@ NtUserGetThreadState(
          /* FIXME should use UserEnterShared */
          RETURN( (DWORD)IntGetCapture());
       case THREADSTATE_PROGMANWINDOW:
-         RETURN( (DWORD)GetW32ThreadInfo()->Desktop->hProgmanWindow);
+         RETURN( (DWORD)GetW32ThreadInfo()->pDeskInfo->hProgmanWindow);
       case THREADSTATE_TASKMANWINDOW:
-         RETURN( (DWORD)GetW32ThreadInfo()->Desktop->hTaskManWindow);
+         RETURN( (DWORD)GetW32ThreadInfo()->pDeskInfo->hTaskManWindow);
       case THREADSTATE_ACTIVEWINDOW:
          RETURN ( (DWORD)UserGetActiveWindow());
    }
@@ -501,17 +501,16 @@ GetW32ThreadInfo(VOID)
                           sizeof(W32THREADINFO));
 
             /* initialize it */
-            ti->kpi = GetW32ProcessInfo();
-            ti->pi = UserHeapAddressToUser(ti->kpi);
-            ti->Hooks = W32Thread->Hooks;
+            ti->ppi = GetW32ProcessInfo();
+            ti->fsHooks = W32Thread->Hooks;
             W32Thread->pcti = &ti->ClientThreadInfo;
             if (W32Thread->Desktop != NULL)
             {
-                ti->Desktop = W32Thread->Desktop->DesktopInfo;
+                ti->pDeskInfo = W32Thread->Desktop->DesktopInfo;
             }
             else
             {
-                ti->Desktop = NULL;
+                ti->pDeskInfo = NULL;
             }
 
             W32Thread->ThreadInfo = ti;
@@ -527,6 +526,7 @@ GetW32ThreadInfo(VOID)
        // FIXME PLEASE! it's a ref pointer and not user data! Use ClientThreadInfo!
                 Teb->Win32ThreadInfo = UserHeapAddressToUser(W32Thread->ThreadInfo);
                 ci->pClientThreadInfo = &ti->ClientThreadInfo; // FIXME!
+                ci->ppi = ti->ppi;
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {

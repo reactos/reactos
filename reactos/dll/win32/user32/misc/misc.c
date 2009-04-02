@@ -431,7 +431,7 @@ FASTCALL
 ValidateCallProc(HANDLE hCallProc)
 {
     PCALLPROC CallProc = ValidateHandle(hCallProc, VALIDATE_TYPE_CALLPROC);
-    if (CallProc != NULL ) //&& CallProc->pi == g_kpi)
+    if (CallProc != NULL && CallProc->pi == GetWin32ClientInfo()->ppi)
         return CallProc;
 
     return NULL;

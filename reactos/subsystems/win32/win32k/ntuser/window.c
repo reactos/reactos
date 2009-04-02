@@ -499,8 +499,8 @@ static LRESULT co_UserFreeWindow(PWINDOW_OBJECT Window,
 
    /* dereference the class */
    IntDereferenceClass(Wnd->Class,
-                       Window->ti->Desktop,
-                       Window->ti->kpi);
+                       Window->ti->pDeskInfo,
+                       Window->ti->ppi);
    Wnd->Class = NULL;
 
    if(Window->WindowRegion)
@@ -581,10 +581,10 @@ IntGetWindowProc(IN PWINDOW_OBJECT Window,
                                                Wnd->Unicode);
                 if (NewCallProc == NULL)
                 {
-                    NewCallProc = CreateCallProc(Wnd->ti->Desktop,
+                    NewCallProc = CreateCallProc(Wnd->ti->pDeskInfo,
                                                  Wnd->WndProc,
                                                  Wnd->Unicode,
-                                                 Wnd->ti->kpi);
+                                                 Wnd->ti->ppi);
                     if (NewCallProc == NULL)
                     {
                         SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
@@ -1630,7 +1630,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
 
    ClassAtom = IntGetClassAtom(ClassName,
                                hInstance,
-                               ti->kpi,
+                               ti->ppi,
                                &Class,
                                &ClassLink);
 
@@ -1679,7 +1679,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
        Wnd = Window->Wnd;
 
        Wnd->ti = ti;
-       Wnd->pi = ti->kpi;
+       Wnd->pi = ti->ppi;
        Wnd->pdesktop = pti->Desktop;
        Wnd->hWndLastActive = hWnd;
    }
@@ -2245,8 +2245,8 @@ AllocErr:
    if (ClassAtom == 0XC007)
    {
       PCALLPROC CallProc;
-      //CallProc = CreateCallProc(NULL, Wnd->WndProc, bUnicodeWindow, Wnd->ti->kpi);
-      CallProc = CreateCallProc(NULL, Wnd->WndProc, Wnd->Unicode , Wnd->ti->kpi);
+      //CallProc = CreateCallProc(NULL, Wnd->WndProc, bUnicodeWindow, Wnd->ti->ppi);
+      CallProc = CreateCallProc(NULL, Wnd->WndProc, Wnd->Unicode , Wnd->ti->ppi);
 
       if (!CallProc)
       {
@@ -2279,8 +2279,8 @@ CLEANUP:
        if (Class != NULL)
        {
            IntDereferenceClass(Class,
-                               ti->Desktop,
-                               ti->kpi);
+                               ti->pDeskInfo,
+                               ti->ppi);
        }
    }
    END_CLEANUP;
@@ -3339,7 +3339,7 @@ NtUserSetShellWindowEx(HWND hwndShell, HWND hwndListView)
    WinStaObject->ShellListView = hwndListView;
 
    ti = GetW32ThreadInfo();
-   if (ti->Desktop) ti->Desktop->hShellWindow = hwndShell;
+   if (ti->pDeskInfo) ti->pDeskInfo->hShellWindow = hwndShell;
 
    UserDerefObjectCo(WndShell);
 
@@ -3707,7 +3707,7 @@ IntSetWindowProc(PWINDOW_OBJECT Window,
                 CallProc = CreateCallProc(NULL,
                                           Wnd->WndProc,
                                           Wnd->Unicode,
-                                          Wnd->ti->kpi);
+                                          Wnd->ti->ppi);
                 if (CallProc == NULL)
                 {
                     SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);

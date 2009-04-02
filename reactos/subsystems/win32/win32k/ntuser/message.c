@@ -306,7 +306,7 @@ IntCallWndProc
    if (Window->ti == ((PTHREADINFO)PsGetCurrentThreadWin32Thread())->ThreadInfo)
       SameThread = TRUE;
 
-   if ((!SameThread && (Window->ti->Hooks & HOOKID_TO_FLAG(WH_CALLWNDPROC))) ||
+   if ((!SameThread && (Window->ti->fsHooks & HOOKID_TO_FLAG(WH_CALLWNDPROC))) ||
         (SameThread && ISITHOOKED(WH_CALLWNDPROC)) )
    {
       CWPSTRUCT CWP;
@@ -328,7 +328,7 @@ IntCallWndProcRet
    if (Window->ti == ((PTHREADINFO)PsGetCurrentThreadWin32Thread())->ThreadInfo)
       SameThread = TRUE;
 
-   if ((!SameThread && (Window->ti->Hooks & HOOKID_TO_FLAG(WH_CALLWNDPROCRET))) ||
+   if ((!SameThread && (Window->ti->fsHooks & HOOKID_TO_FLAG(WH_CALLWNDPROCRET))) ||
         (SameThread && ISITHOOKED(WH_CALLWNDPROCRET)) )
    {
       CWPRETSTRUCT CWPR;

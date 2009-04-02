@@ -376,7 +376,7 @@ NtUserCallOneParam(
               RETURN(FALSE);
           }
 
-          if (InterlockedCompareExchangePointer(&ti->kpi->hModUser,
+          if (InterlockedCompareExchangePointer(&ti->ppi->hModUser,
                                                 (HINSTANCE)Param,
                                                 NULL) == NULL)
           {
@@ -814,11 +814,11 @@ NtUserCallHwndOpt(
    switch (Routine)
    {
       case HWNDOPT_ROUTINE_SETPROGMANWINDOW:
-         GetW32ThreadInfo()->Desktop->hProgmanWindow = hWnd;
+         GetW32ThreadInfo()->pDeskInfo->hProgmanWindow = hWnd;
          break;
 
       case HWNDOPT_ROUTINE_SETTASKMANWINDOW:
-         GetW32ThreadInfo()->Desktop->hTaskManWindow = hWnd;
+         GetW32ThreadInfo()->pDeskInfo->hTaskManWindow = hWnd;
          break;
    }
 

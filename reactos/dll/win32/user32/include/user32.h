@@ -93,7 +93,7 @@ SharedPtrToKernel(PVOID Ptr)
 static __inline BOOL
 IsThreadHooked(PW32THREADINFO ti)
 {
-    return ti->Hooks != 0;
+    return ti->fsHooks != 0;
 }
 
 static __inline PDESKTOPINFO
@@ -104,7 +104,7 @@ GetThreadDesktopInfo(VOID)
 
     ti = GetW32ThreadInfo();
     if (ti != NULL)
-        di = DesktopPtrToUser(ti->Desktop);
+        di = DesktopPtrToUser(ti->pDeskInfo);
 
     return di;
 }

@@ -364,13 +364,12 @@ typedef struct _CLIENTTHREADINFO
 
 typedef struct _W32THREADINFO
 {
-    PPROCESSINFO pi; /* [USER] */
-    PPROCESSINFO kpi; /* [KERNEL] */
-    PDESKTOPINFO Desktop;
+    PPROCESSINFO ppi; /* [KERNEL] */
+    PDESKTOPINFO pDeskInfo;
 //    PVOID DesktopHeapBase;
 //    ULONG_PTR DesktopHeapLimit;
     /* A mask of what hooks are currently active */
-    ULONG Hooks;
+    ULONG fsHooks;
     CLIENTTHREADINFO ClientThreadInfo;
 } W32THREADINFO, *PW32THREADINFO;
 
@@ -424,7 +423,9 @@ typedef struct _CLIENTINFO
     USHORT CodePage;
     USHORT achDbcsCF;
     MSG msgDbcsCB;
-    ULONG Win32ClientInfo3[29];
+    ULONG Win32ClientInfo3[28];
+/* It's just a pointer reference not to be used w the structure in user space. */
+    PPROCESSINFO ppi;    
 } CLIENTINFO, *PCLIENTINFO;
 
 /* Make sure it fits exactly into the TEB */

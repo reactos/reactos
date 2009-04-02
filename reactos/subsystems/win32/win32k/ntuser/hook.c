@@ -113,7 +113,7 @@ IntAddHook(PETHREAD Thread, int HookId, BOOLEAN Global, PWINSTATION_OBJECT WinSt
       GetWin32ClientInfo()->fsHooks = W32Thread->Hooks;
 
       if (W32Thread->ThreadInfo != NULL)
-          W32Thread->ThreadInfo->Hooks = W32Thread->Hooks;
+          W32Thread->ThreadInfo->fsHooks = W32Thread->Hooks;
    }
 
    RtlInitUnicodeString(&Hook->ModuleName, NULL);
@@ -227,7 +227,7 @@ IntRemoveHook(PHOOK Hook, PWINSTATION_OBJECT WinStaObj, BOOL TableAlreadyLocked)
    GetWin32ClientInfo()->fsHooks = W32Thread->Hooks;
 
    if (W32Thread->ThreadInfo != NULL)
-       W32Thread->ThreadInfo->Hooks = W32Thread->Hooks;
+       W32Thread->ThreadInfo->fsHooks = W32Thread->Hooks;
 
    if (0 != Table->Counts[HOOKID_TO_INDEX(Hook->HookId)])
    {

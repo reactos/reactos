@@ -1142,13 +1142,13 @@ UserRegisterClass(IN CONST WNDCLASSEXW* lpwcx,
 
     pti = PsGetCurrentThreadWin32Thread();
     ti = GetW32ThreadInfo();
-    if (ti == NULL || !ti->kpi->RegisteredSysClasses)
+    if (ti == NULL || !ti->ppi->RegisteredSysClasses)
     {
         SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
         return (RTL_ATOM)0;
     }
 
-    pi = ti->kpi;
+    pi = ti->ppi;
 
     /* try to find a previously registered class */
     ClassAtom = IntGetClassAtom(ClassName,
@@ -2149,7 +2149,7 @@ NtUserSetClassLong(HWND hWnd,
     Window = UserGetWindowObject(hWnd);
     if (Window != NULL)
     {
-        if (Window->ti->kpi != pi)
+        if (Window->ti->ppi != pi)
         {
             SetLastWin32Error(ERROR_ACCESS_DENIED);
             goto Cleanup;
