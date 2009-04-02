@@ -62,8 +62,11 @@ DIB_1BPP_VLine(SURFOBJ *SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
 static
 void
 DIB_1BPP_BitBltSrcCopy_From1BPP (
-	SURFOBJ* DestSurf, SURFOBJ* SourceSurf,
-	PRECTL DestRect, POINTL *SourcePoint )
+	SURFOBJ* DestSurf,
+	SURFOBJ* SourceSurf,
+	XLATEOBJ* pxlo,
+	PRECTL DestRect,
+	POINTL *SourcePoint )
 {
 	// the 'window' in this sense is the x-position that corresponds
 	// to the left-edge of the 8-pixel byte we are currently working with.
@@ -88,9 +91,9 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
 	int dy2; // dest y end
 	int sy1; // src y start
 
-    int dx;
+	int dx;
 	int shift;
-	BYTE srcmask, dstmask;
+	BYTE srcmask, dstmask, xormask;
 
 	// 'd' and 's' are the dest & src buffer pointers that I use on my x-sweep
 	// 'pd' and 'ps' are the dest & src buffer pointers used on the inner y-sweep
@@ -98,6 +101,8 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
 	PBYTE s, ps; // src ptrs
 
 	shift = (dl-sl)&7;
+
+	xormask = 0xFF * XLATEOBJ_iXlate(pxlo, 0);
 
 	if ( DestRect->top <= SourcePoint->y )
 	{
@@ -164,7 +169,7 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
 		{
 			for ( ;; )
 			{
-				*pd = (BYTE)((*pd & dstmask) | (*ps & srcmask));
+				*pd = (BYTE)((*pd & dstmask) | ((ps[0]^xormask) & srcmask));
 
 				// this *must* be here, because we could be going up *or* down...
 				if ( dy == dy2 )
@@ -179,7 +184,7 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
 			for ( ;; )
 			{
 				*pd = (BYTE)((*pd & dstmask)
-					| ( ( ps[1] >> shift ) & srcmask ));
+					| ( ( (ps[1]^xormask) >> shift ) & srcmask ));
 
 				// this *must* be here, because we could be going up *or* down...
 				if ( dy == dy2 )
@@ -194,7 +199,7 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
 			for ( ;; )
 			{
 				*pd = (*pd & dstmask)
-					| ( ( ps[0] << ( 8 - shift ) ) & srcmask );
+					| ( ( (ps[0]^xormask) << ( 8 - shift ) ) & srcmask );
 
 				// this *must* be here, because we could be going up *or* down...
 				if ( dy == dy2 )
@@ -209,7 +214,7 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
 			for ( ;; )
 			{
 				*pd = (*pd & dstmask)
-					| ( ( ( (ps[1])|(ps[0]<<8) ) >> shift ) & srcmask );
+					| ( ( ( ((ps[1]^xormask))|((ps[0]^xormask)<<8) ) >> shift ) & srcmask );
 
 				// this *must* be here, because we could be going up *or* down...
 				if ( dy == dy2 )
@@ -239,7 +244,7 @@ DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 	switch ( BltInfo->SourceSurface->iBitmapFormat )
 	{
 	case BMF_1BPP:
-		DIB_1BPP_BitBltSrcCopy_From1BPP ( BltInfo->DestSurface, BltInfo->SourceSurface, &BltInfo->DestRect, &BltInfo->SourcePoint );
+		DIB_1BPP_BitBltSrcCopy_From1BPP ( BltInfo->DestSurface, BltInfo->SourceSurface, BltInfo->XlateSourceToDest, &BltInfo->DestRect, &BltInfo->SourcePoint );
 		break;
 
 	case BMF_4BPP:
