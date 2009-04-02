@@ -67,9 +67,15 @@
 	}
 
 
-	$report_submit="INSERT INTO `rsdb_urls` ( `url_id` , `url_t` , `url_u` , `url_a` , `url_i` , `url_s` , `url_lang` , `url_browser` ) 
-					VALUES ('', '".mysql_real_escape_string($RSDB_url_t)."', '".mysql_real_escape_string($RSDB_referrer)."', '".mysql_real_escape_string($RSDB_url_a)."', '".mysql_real_escape_string($RSDB_url_i)."', '".mysql_real_escape_string($RSDB_url_s)."', '".mysql_real_escape_string($roscms_usrsetting_lang)."', '".mysql_real_escape_string($RSDB_usragent)."' );";
-	$db_report_submit=mysql_query($report_submit);
+  $stmt=CDBConnection::getInstance()-prepare("INSERT INTO rsdb_urls (url_id, url_t, url_u, url_a, url_i, url_s, url_lang, url_browser) VALUES ('', :t, :u, :a, :i, :s, :lang, :user_agent )");
+  $stmt->bindParam('t',$RSDB_url_t,PDO::PARAM_STR);
+  $stmt->bindParam('u',$RSDB_referrer,PDO::PARAM_STR);
+  $stmt->bindParam('a',$RSDB_url_a,PDO::PARAM_STR);
+  $stmt->bindParam('i',$RSDB_url_i,PDO::PARAM_STR);
+  $stmt->bindParam('s',$RSDB_url_s,PDO::PARAM_STR);
+  $stmt->bindParam('lang',$roscms_usrsetting_lang,PDO::PARAM_STR);
+  $stmt->bindParam('user_agent',$RSDB_usragent,PDO::PARAM_STR);
+  $stmt->execute();
 
 
 ?>

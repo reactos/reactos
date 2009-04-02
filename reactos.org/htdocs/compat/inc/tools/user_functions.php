@@ -37,61 +37,25 @@
 	$roscms_connected = 1;
 	
 	function usrfunc_GetUsername($RSDB_TEMP_getusrid) { // Get the user name from the RosCMS user table
-		global $roscms_connected;
-		
-		$RSDB_TEMP_usrname = "";
-		
-		$query_roscms_user = @mysql_query("SELECT * 
-				FROM roscms.users 
-				WHERE `user_id` = '".mysql_escape_string($RSDB_TEMP_getusrid)."' LIMIT 1;") ;
-		$result_roscms_user = @mysql_fetch_array($query_roscms_user);
-		
-		$RSDB_TEMP_usrname = $result_roscms_user['user_name'];
-		
-		if ($roscms_connected == 0) {
-			$RSDB_TEMP_usrname = "??? (Anonymous)";
-		}
-		/*if ($RSDB_TEMP_usrname == "") {
-			$RSDB_TEMP_usrname = "Anonymous";
-		}*/
-		
-		return $RSDB_TEMP_usrname;
+
+    require_once(ROSCMS_PATH.'lib/RosCMS_Autoloader.class.php');
+    $RSDB_USER_name = Subsystem::getUserName($RSDB_TEMP_getusrid);
+    if ($RSDB_USER_name !== false) {
+      return $RSDB_USER_name;
+    }
+    return '';
 	}
 	
 	function usrfunc_IsAdmin($RSDB_TEMP_getusrid) { // Check if the user is an developer, admin or super admin
-		global $roscms_connected;
-		
-		$RSDB_TEMP_isadmin = false;
-		
-		$query_roscms_user = @mysql_query("SELECT * 
-				FROM roscms.usergroup_members 
-				WHERE `usergroupmember_userid` = '".mysql_escape_string($RSDB_TEMP_getusrid)."' AND ( `usergroupmember_usergroupid` = 'ros_sadmin' OR `usergroupmember_usergroupid` = 'ros_admin' OR `usergroupmember_usergroupid` = 'developer' ) LIMIT 1;") ;
-		$result_roscms_user = @mysql_fetch_array($query_roscms_user);
-		
-		if ($result_roscms_user['usergroupmember_usergroupid'] == "ros_admin" || $result_roscms_user['usergroupmember_usergroupid'] == "ros_sadmin" || $result_roscms_user['usergroupmember_usergroupid'] == "developer") {
-		
-			$RSDB_TEMP_isadmin = true;
-		}
-		
-		return $RSDB_TEMP_isadmin;
+
+    //@IMPLEMENT Usergroup check
+    return false;
 	}
 
 	function usrfunc_IsModerator($RSDB_TEMP_getusrid) { // Check if the user is an RSDB Moderator
-		global $roscms_connected;
-		
-		$RSDB_TEMP_ismoderator = false;
-		
-		$query_roscms_user = @mysql_query("SELECT * 
-				FROM roscms.usergroup_members 
-				WHERE `usergroupmember_userid` = '".mysql_escape_string($RSDB_TEMP_getusrid)."' AND `usergroupmember_usergroupid` = 'moderator' LIMIT 1;") ;
-		$result_roscms_user = @mysql_fetch_array($query_roscms_user);
-		
-		if ($result_roscms_user['usergroupmember_usergroupid'] == "moderator") {
-		
-			$RSDB_TEMP_ismoderator = true;
-		}
-		
-		return $RSDB_TEMP_ismoderator;
+
+    //@IMPLEMENT Usergroup check
+		return false;
 	}
 	
 ?>

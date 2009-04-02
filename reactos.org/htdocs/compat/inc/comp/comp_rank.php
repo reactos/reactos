@@ -543,7 +543,7 @@ if ($RSDB_SET_rank2 == "new" || $RSDB_SET_rank2 == "") {
                     <?php
 
     $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp WHERE comp_media = :group_id LIMIT 1");
-    $stmt->bindParam('media',$result_date_entry_records['media_groupid'],PDO::PARAM_STR);
+    $stmt->bindParam('group_id',$result_date_entry_records['media_groupid'],PDO::PARAM_STR);
     $stmt->execute();
 		$result_date_vendor = $stmt->fetch(PDO::FETCH_ASSOC);
 		echo "<b><a href=\"". $RSDB_intern_link_item_comp.$result_date_vendor['comp_id'] ."&amp;item2=screens&amp;entry=". urlencode($result_date_entry_records['media_id']) ."\">".htmlentities($result_date_entry_records['media_description'])."</a></b>";
@@ -629,13 +629,11 @@ else if ($RSDB_SET_rank2 == "awards" || $RSDB_SET_rank2 == "ratings") {
 	  <?php
 		
 		if ($RSDB_SET_rank2 == "awards") {
-      $stmt=CDBConnection::getInstance()->prepare("SELECT v1.grpentr_id, v1.derived_max, v1.grpentr_vendor, v1.grpentr_name FROM ( SELECT grpentr_id, MAX(i.comp_award) derived_max, g.grpentr_vendor, g.grpentr_name FROM rsdb_groups g  JOIN rsdb_item_comp i ON i.comp_groupid = g.grpentr_id AND g.grpentr_visible = '1' AND g.grpentr_comp = '1' GROUP BY grpentr_id) v1 ORDER BY v1.derived_max DESC LIMIT :limit OFFSET :offset");
+      $stmt=CDBConnection::getInstance()->prepare("SELECT v1.grpentr_id, v1.derived_max, v1.grpentr_vendor, v1.grpentr_name FROM (SELECT grpentr_id, MAX(i.comp_award) derived_max, g.grpentr_vendor, g.grpentr_name FROM rsdb_groups g  JOIN rsdb_item_comp i ON i.comp_groupid = g.grpentr_id AND g.grpentr_visible = '1' AND g.grpentr_comp = '1' GROUP BY grpentr_id) v1 ORDER BY v1.derived_max DESC LIMIT ".intval($RSDB_intern_items_per_page)." OFFSET ".intval($RSDB_SET_curpos)."");
 		}
 		else if ($RSDB_SET_rank2 == "ratings") {
-      $stmt=CDBConnection::getInstance()->prepare("SELECT v1.grpentr_id, v1.derived_max, v1.grpentr_vendor, v1.grpentr_name FROM (SELECT grpentr_id, MAX(i.comp_award) derived_max, g.grpentr_vendor, g.grpentr_name FROM rsdb_groups g JOIN rsdb_item_comp i ON i.comp_groupid = g.grpentr_id AND g.grpentr_visible = '1' AND g.grpentr_comp = '1' GROUP BY grpentr_id) v1 ORDER BY v1.derived_max DESC LIMIT :limit OFFSET :offset");
+      $stmt=CDBConnection::getInstance()->prepare("SELECT v1.grpentr_id, v1.derived_max, v1.grpentr_vendor, v1.grpentr_name FROM (SELECT grpentr_id, MAX(i.comp_award) derived_max, g.grpentr_vendor, g.grpentr_name FROM rsdb_groups g JOIN rsdb_item_comp i ON i.comp_groupid = g.grpentr_id AND g.grpentr_visible = '1' AND g.grpentr_comp = '1' GROUP BY grpentr_id) v1 ORDER BY v1.derived_max DESC LIMIT ".intval($RSDB_intern_items_per_page)." OFFSET ".intval($RSDB_SET_curpos)."");
 		}
-    $stmt->bindParam('limit',$RSDB_intern_items_per_page,PDO::PARAM_INT);
-    $stmt->bindParam('offset',$RSDB_SET_curpos,PDO::PARAM_INT);
     $stmt->execute();
 
 			$farbe1="#E2E2E2";
@@ -664,7 +662,7 @@ else if ($RSDB_SET_rank2 == "awards" || $RSDB_SET_rank2 == "ratings") {
 				$stmt_sub=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_vendor WHERE vendor_id = :vendor_id");
         $stmt_sub->bindParam('vendor_id',$result_page['grpentr_vendor'],PDO::PARAM_STR);
         $stmt_sub->execute();
-				$result_entry_vendor = $stmt->fetch(PDO::FETCH_ASSOC);
+				$result_entry_vendor = $stmt_sub->fetchOnce(PDO::FETCH_ASSOC);
 				echo '<a href="'.$RSDB_intern_link_vendor_sec.$result_entry_vendor['vendor_id'].'">'.$result_entry_vendor['vendor_name'].'</a>';
 				
 			?>
@@ -854,9 +852,7 @@ else if ($RSDB_SET_rank2 == "screenshots") {
  
 		$roscms_TEMP_counter = 0;
 		echo '<table width="100%"  border="0" cellpadding="3" cellspacing="1">';
-		$stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_object_media WHERE (( media_useful_vote_value / media_useful_vote_user) > 2 OR  media_useful_vote_user < 5) ORDER BY media_order ASC LIMIT :limit OFFSET :offset");
-    $stmt->bindParam('limit',$RSDB_intern_items_per_page,PDO::PARAM_INT);
-    $stmt->bindParam('offset',$RSDB_SET_curpos,PDO::PARAM_INT);
+		$stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_object_media WHERE (( media_useful_vote_value / media_useful_vote_user) > 2 OR  media_useful_vote_user < 5) ORDER BY media_order ASC LIMIT ".intval($RSDB_intern_items_per_page)." OFFSET ".intval($RSDB_SET_curpos)."");
     $stmt->execute();
 		while($result_screenshots= $stmt->fetch(PDO::FETCH_ASSOC)) {
 			$roscms_TEMP_counter++;

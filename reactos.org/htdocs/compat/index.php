@@ -245,9 +245,6 @@ require_once("lib/Compat_Autoloader.class.php");
 	// Security
 	require_once("inc/tools/log.php");
 
-	// Stats
-//	require_once("inc/rsdb_stats.php");
-
 	// Tools
 	require_once("inc/tools/stars.php");
 	require_once("inc/tools/awards.php");

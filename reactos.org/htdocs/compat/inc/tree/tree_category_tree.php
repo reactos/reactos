@@ -159,7 +159,6 @@ if ($result_count_cat[0]) {
     $stmt->bindParam('path',$RSDB_TEMP_cat_id,PDO::PARAM_STR);
     $stmt->execute();
 					
-		//$result_create_historybar=mysql_fetch_array($query_create_historybar);
 		while($result_create_historybar=$stmt->fetch(PDO::FETCH_ASSOC)) { 
 			//echo "&nbsp;&nbsp; catlev: ".$result_create_historybar['cat_level']." | curlev: ".$RSDB_TEMP_cat_level."<br>";
 			

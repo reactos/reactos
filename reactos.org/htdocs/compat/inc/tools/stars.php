@@ -146,31 +146,28 @@ function db_update_stars_vote($entry_id, $star_nr, $tblname, $fieldname) { // fo
 	global $RSDB_intern_user_id;
 
 	if ($entry_id != "" && $star_nr != "" && ($star_nr >= 1 && $star_nr <= 5)) {
-		$query_star_vote1=mysql_query("SELECT * 
-							FROM `". mysql_escape_string($tblname) ."` 
-							WHERE `".mysql_escape_string($fieldname)."_id` =". mysql_escape_string($entry_id) ." ;");
-		$result_star_vote1=mysql_fetch_array($query_star_vote1);
+    $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM ".$tblname." WHERE ".$fieldname."_id = :entry_id");
+    $stmt->bindParam('entry_id',$entry_id,PDO::PARAM_STR);
+    $stmt->execute();
+		$result_star_vote1=$stmt->fetchOnce(PDO::FETCH_ASSOC);
 
 		$RSDB_TEMP_voting_history1 = strchr($result_star_vote1[$fieldname.'_useful_vote_user_history'],("|".$RSDB_intern_user_id."="));
 		
 		if ($RSDB_TEMP_voting_history1 == false) {
-			$RSDB_TEMP_voting_history2 = $result_star_vote1[$fieldname.'_useful_vote_user_history']."|". mysql_escape_string($RSDB_intern_user_id) ."=". mysql_escape_string($star_nr);
-			$query_star_vote2="UPDATE `". mysql_escape_string($tblname) ."` 
-							SET `".mysql_escape_string($fieldname)."_useful_vote_value` = ".mysql_escape_string($fieldname)."_useful_vote_value+". mysql_escape_string($star_nr) .", 
-							`".mysql_escape_string($fieldname)."_useful_vote_user` = ".mysql_escape_string($fieldname)."_useful_vote_user+1,   
-							`".mysql_escape_string($fieldname)."_useful_vote_user_history` = '". mysql_escape_string($RSDB_TEMP_voting_history2) ."' 
-							WHERE `".mysql_escape_string($fieldname)."_id` =". mysql_escape_string($entry_id) ." LIMIT 1 ;";
-							//echo $query_star_vote2;
-			$result_star_vote2=mysql_query($query_star_vote2);
+			$RSDB_TEMP_voting_history2 = $result_star_vote1[$fieldname.'_useful_vote_user_history']."|". $RSDB_intern_user_id ."=". $star_nr;
+      $stmt=CDBConnection::getInstance()->prepare("UPDATE ".$tblname." SET ".$fieldname."_useful_vote_value = ".$fieldname."_useful_vote_value+:star_nr, ".$fieldname."_useful_vote_user = ".$fieldname."_useful_vote_user+1, ".$fieldname."_useful_vote_user_history = :history WHERE ".$fieldname."_id = :entry_id");
+      $stmt->bindParam('star_nr',$star_nr,PDO::PARAM_INT);
+      $stmt->bindParam('history',$RSDB_TEMP_voting_history2,PDO::PARAM_STR);
+      $stmt->bindParam('entry_id',$entry_id,PDO::PARAM_STR);
+      $stmt->execute();
+
 			msg_bar("<b>Your rating/vote has been casted!</b>");
 			echo "<br />";
 			
 			// Stats update:
-			$update_stats_entry = "UPDATE `rsdb_stats` SET
-									`stat_s_icvotes` = (stat_s_icvotes + 1) 
-									`stat_s_votes` = (stat_s_votes + 1) 
-									WHERE `stat_date` = '". date("Y-m-d") ."' LIMIT 1 ;";
-			mysql_query($update_stats_entry);
+      $stmt=CDBConnection::getInstance()->prepare("UPDATE rsdb_stats SET stat_s_icvotes = (stat_s_icvotes + 1), stat_s_votes = (stat_s_votes + 1) WHERE stat_date = :date");
+      $stmt->bindValue('date',date('Y-m-d'),PDO::PARAM_STR);
+      $stmt->execute();
 		}
 		else {
 			msg_bar("<b>You have already rated/voted this entry!</b>");
@@ -198,14 +195,12 @@ function calc_threshold_stars_forum($RSDB_TEMP_msgid, $RSDB_TEMP_threshold, $RSD
 		$RSDB_TEMP_counter_threshold = 0;
 	}
 
-	$query_fmsgreports = mysql_query("SELECT * 
-					FROM `rsdb_item_comp_".mysql_escape_string($RSDB_TEMP_tablename)."` 
-					WHERE `".mysql_escape_string($RSDB_TEMP_fieldname)."_visible` = '1'
-					AND `".mysql_escape_string($RSDB_TEMP_fieldname)."_".mysql_escape_string($RSDB_intern_code_view_shortname)."_id` = " . mysql_escape_string($RSDB_SET_item) . "
-					AND `".mysql_escape_string($RSDB_TEMP_fieldname)."_parent` = " . mysql_escape_string($RSDB_TEMP_msgid) . "
-					ORDER BY `".mysql_escape_string($RSDB_TEMP_fieldname)."_date` " . mysql_escape_string($RSDB_TEMP_order) . " ;") ;
+  $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp_".$RSDB_TEMP_tablename." WHERE ".$RSDB_TEMP_fieldname."_visible = '1' AND ".$RSDB_TEMP_fieldname."_".$RSDB_intern_code_view_shortname."_id = :item_id AND ".$RSDB_TEMP_fieldname."_parent = :parent ORDER BY ".$RSDB_TEMP_fieldname."_date ".$RSDB_TEMP_order."");
+  $stmt->bindParam('item_id',$RSDB_SET_item,PDO::PARAM_STR);
+  $stmt->bindParam('parent',$RSDB_TEMP_msgid,PDO::PARAM_STR);
+  $stmt->execute();
 
-	while($result_fmsgreports = mysql_fetch_array($query_fmsgreports)) {
+	while($result_fmsgreports = $stmt->fetch(PDO::FETCH_ASSOC)) {
 		
 		$number = $result_fmsgreports[$RSDB_TEMP_fieldname.'_useful_vote_value'];
 		$user = $result_fmsgreports[$RSDB_TEMP_fieldname.'_useful_vote_user'];
@@ -238,13 +233,11 @@ function calc_threshold_stars_test($RSDB_TEMP_msgid, $RSDB_TEMP_threshold, $RSDB
 		$RSDB_TEMP_counter_threshold = 0;
 	}
 
-	$query_fmsgreports = mysql_query("SELECT * 
-					FROM `rsdb_item_comp_".mysql_escape_string($RSDB_TEMP_tablename)."` 
-					WHERE `".mysql_escape_string($RSDB_TEMP_fieldname)."_visible` = '1'
-					AND `".mysql_escape_string($RSDB_TEMP_fieldname)."_".mysql_escape_string($RSDB_intern_code_view_shortname)."_id` = " . mysql_escape_string($RSDB_SET_item) . "
-					ORDER BY `".mysql_escape_string($RSDB_TEMP_fieldname)."_date` " . mysql_escape_string($RSDB_TEMP_order) . " ;") ;
+  $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp_".$RSDB_TEMP_tablename." WHERE ".$RSDB_TEMP_fieldname."_visible` = '1' AND ".$RSDB_TEMP_fieldname."_".$RSDB_intern_code_view_shortname."_id = :item_id ORDER BY ".$RSDB_TEMP_fieldname."_date " . $RSDB_TEMP_order . "");
+  $stmt->bindParam('item_id',$RSDB_SET_item,PDO::PARAM_STR);
+  $stmt->execute();
 
-	while($result_fmsgreports = mysql_fetch_array($query_fmsgreports)) {
+	while($result_fmsgreports = $stmt->fetch(PDO::FETCH_ASSOC)) {
 		
 		$number = $result_fmsgreports[$RSDB_TEMP_fieldname.'_useful_vote_value'];
 		$user = $result_fmsgreports[$RSDB_TEMP_fieldname.'_useful_vote_user'];

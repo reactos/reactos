@@ -20,10 +20,10 @@
 
 /*
  *	ReactOS Support Database System - RSDB
- *	
+ *
  *	(c) by Klemens Friedl <frik85>
- *	
- *	2005 - 2006 
+ *
+ *	2005 - 2006
  */
 
 
@@ -34,48 +34,45 @@
 	}
 
 
-	$query_page = mysql_query("SELECT * 
-								FROM `rsdb_item_comp` 
-								WHERE `comp_visible` = '1'
-								AND `comp_id` = " . $RSDB_SET_item . "
-								ORDER BY `comp_name` ASC") ;
-	
-	$result_page = mysql_fetch_array($query_page);		
-	
-	
-//	echo "<h2>".$result_page['comp_name'] ." [". "ReactOS ".show_osversion($result_page['comp_osversion']) ."]</h2>"; 
-	
+  $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp WHERE comp_visible = '1' AND comp_id = :comp_id ORDER BY comp_name ASC");
+  $stmt->bindParam('comp_id',$RSDB_SET_item,PDO::PARAM_STR);
+  $stmt->execute();
+
+	$result_page = $stmt->fetchOnce(PDO::FETCH_ASSOC);
+
+
+//	echo "<h2>".$result_page['comp_name'] ." [". "ReactOS ".show_osversion($result_page['comp_osversion']) ."]</h2>";
+
 //	include("inc/comp/comp_item_menubar.php");
-	
+
 	echo "<h3>Submit a forum post</h3>";
-	
+
 if ($RSDB_intern_user_id <= 0) {
-	please_register(); 
+	please_register();
 }
 else {
-	
+
 
 	$RSDB_TEMP_SUBMIT_valid = true;
-	
+
 	$RSDB_TEMP_submitpost = "";
 	$RSDB_TEMP_txtsubject = "";
 	$RSDB_TEMP_txtbody = "";
 	$RSDB_TEMP_parententry = "";
-	
+
 	if (array_key_exists("submitpost", $_POST)) $RSDB_TEMP_submitpost=htmlspecialchars($_POST["submitpost"]);
 	if (array_key_exists("txtsubject", $_POST)) $RSDB_TEMP_txtsubject=htmlspecialchars($_POST["txtsubject"]);
 	if (array_key_exists("txtbody", $_POST)) $RSDB_TEMP_txtbody=htmlspecialchars($_POST["txtbody"]);
 	if (array_key_exists("parententry", $_POST)) $RSDB_TEMP_parententry=htmlspecialchars($_POST["parententry"]);
-	
+
 
 	if ($RSDB_SET_entry != "0") {
 		if ($RSDB_TEMP_txtsubject == "") {
-			$query_page_entry = mysql_query("SELECT * 
-										FROM `rsdb_item_comp_forum` 
-										WHERE `fmsg_visible` = '1'
-										AND `fmsg_id` = " . $RSDB_SET_entry . " ;") ;
-			
-			$result_page_entry = mysql_fetch_array($query_page_entry);		
+      $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp_forum WHERE fmsg_visible = '1' AND fmsg_id = " .  . "");
+      $stmt->bindParam('msg_id',$RSDB_SET_entry,PDO::PARAM_STR);
+      $stmt->execute();
+
+			$result_page_entry = $stmt->fetchOnce(PDO::FETCH_ASSOC);
 			$RSDB_TEMP_txtsubject = "Re: ".$result_page_entry['fmsg_subject'];
 		}
 	}
@@ -102,24 +99,28 @@ else {
 		$rem_adr = "";
 		if (array_key_exists('REMOTE_ADDR', $_SERVER)) $rem_adr=htmlspecialchars($_SERVER['REMOTE_ADDR']);
 
-		$query_fmsgforum = mysql_query("SELECT * 
-											FROM `rsdb_item_comp_forum` 
-											ORDER BY `fmsg_date` DESC 
-											LIMIT 1 ;") ;
-		$result_fmsgforum = mysql_fetch_array($query_fmsgforum);
-		
+    $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp_forum ORDER BY fmsg_date DESC LIMIT 1");
+    $stmt->execute();
+		$result_fmsgforum = $stmt->fetchOnce(PDO::FETCH_ASSOC);
+
 		if ($result_fmsgforum['fmsg_body'] != $RSDB_TEMP_txtbody && $RSDB_intern_user_id != 0) {
-			$report_post="INSERT INTO `rsdb_item_comp_forum` ( `fmsg_id` , `fmsg_comp_id` , `fmsg_parent` , `fmsg_visible` , `fmsg_subject` , `fmsg_body` , `fmsg_user_id` , `fmsg_user_ip` , `fmsg_date` , `fmsg_useful_vote_value` , `fmsg_useful_vote_user` , `fmsg_useful_vote_user_history` ) 
-							VALUES ('', '".mysql_real_escape_string($RSDB_SET_item)."', '".mysql_real_escape_string($RSDB_TEMP_parententry)."', '1', '".mysql_real_escape_string($RSDB_TEMP_txtsubject)."', '".mysql_real_escape_string($RSDB_TEMP_txtbody)."', '".mysql_real_escape_string($RSDB_intern_user_id)."', '".mysql_real_escape_string($rem_adr)."', NOW( ) , '0', '0', '');";
-			$db_post_submit=mysql_query($report_post);
+      $stmt=CDBConnection::getInstance()->prepare("INSERT INTO `rsdb_item_comp_forum` ( `fmsg_id` , `fmsg_comp_id` , `fmsg_parent` , `fmsg_visible` , `fmsg_subject` , `fmsg_body` , `fmsg_user_id` , `fmsg_user_ip` , `fmsg_date` , `fmsg_useful_vote_value` , `fmsg_useful_vote_user` , `fmsg_useful_vote_user_history` )
+							VALUES ('', :comp_id, :parent, '1', :subject, :body, :user_id, :ip, NOW( ) , '0', '0', '')");
+      $stmt->bindParam('comp_id',$RSDB_SET_item,PDO::PARAM_STR);
+      $stmt->bindParam('parent',$RSDB_TEMP_parententry,PDO::PARAM_STR);
+      $stmt->bindParam('subject',$RSDB_TEMP_txtsubject,PDO::PARAM_STR);
+      $stmt->bindParam('body',$RSDB_TEMP_txtbody,PDO::PARAM_STR);
+      $stmt->bindParam('user_id',$RSDB_intern_user_id,PDO::PARAM_STR);
+      $stmt->bindParam('ip',$rem_adr,PDO::PARAM_STR);
+      $stmt->execute();
+
 			echo "<p><b>Your forum post has been saved!</b></p>";
 			include("inc/tools/forum.php");
-			
+
 			// Stats update:
-			$update_stats_entry = "UPDATE `rsdb_stats` SET
-									`stat_s_icbb` = (stat_s_icbb + 1) 
-									WHERE `stat_date` = '". date("Y-m-d") ."' LIMIT 1 ;";
-			mysql_query($update_stats_entry);
+      $stmt=CDBConnection::getInstance()->prepare("UPDATE rsdb_stats SET stat_s_icbb = (stat_s_icbb + 1) WHERE stat_date = :date");
+      $stmt->bindValue('date',date("Y-m-d"),PDO::PARAM_STR);
+      $stmt->execute();
 		}
 		else {
 			msg_bar("Double post ...");
@@ -140,9 +141,9 @@ else {
 <p><font size="2">Please add the <strong>ReactOS version</strong> (and the revision if you use a svn snapshot) and some<strong> hardware information</strong> if you want to post problems, bugs, etc. </font></p>
 <p><font size="2">
   <input name="submitpost" type="hidden" id="submitpost" value="yes">
-  <input name="parententry" type="hidden" value="<?php 
+  <input name="parententry" type="hidden" value="<?php
 	if ($RSDB_SET_entry != "") {
-		echo $RSDB_SET_entry; 
+		echo $RSDB_SET_entry;
 	}
   	else {
 		echo $RSDB_TEMP_parententry;

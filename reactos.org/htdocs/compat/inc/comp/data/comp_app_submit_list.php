@@ -34,11 +34,10 @@
 	}
 
 
-	$query_count_groups=mysql_query("SELECT COUNT('grpentr_id')
-							FROM `rsdb_groups`
-							WHERE `grpentr_visible` = '1'
-							AND `grpentr_name` LIKE '%" . mysql_real_escape_string($RSDB_SET_search) . "%' ;");	
-	$result_count_groups = mysql_fetch_row($query_count_groups);
+  $stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_name LIKE :name");
+  $stmt->bindValue('name','%'.$RSDB_SET_search.'%',PDO::PARAM_STR);
+  $stmt->execute();
+	$result_count_groups = $stmt->fetchOnce(PDO::FETCH_ASSOC);
 
 header( 'Content-type: text/xml' );
 echo '<?xml version="1.0" encoding="UTF-8"?>
@@ -52,13 +51,11 @@ echo '<?xml version="1.0" encoding="UTF-8"?>
 		echo "    ".$result_count_groups[0]."\n";
 	}
 
-	$query_page = mysql_query("SELECT * 
-								FROM `rsdb_groups` 
-								WHERE `grpentr_visible` = '1'
-								AND `grpentr_name` LIKE '%" . mysql_real_escape_string($RSDB_SET_search) . "%' 
-								ORDER BY `grpentr_name` ASC ;") ;
+  $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_name LIKE :name ORDER BY grpentr_name ASC");
+  $stmt->bindValue('name','%'.$RSDB_SET_search.'%',PDO::PARAM_STR);
+  $stmt->execute();
 	
-	while($result_page = mysql_fetch_array($query_page)) { // Pages
+	while($result_page = $stmt->fetch(PDO::FETCH_ASSOC)) { // Pages
 ?>
 	<dbentry>
 		<item id="<?php echo $result_page['grpentr_id']; ?>"><?php echo $result_page['grpentr_name']; ?></item>
@@ -80,10 +77,10 @@ echo '<?xml version="1.0" encoding="UTF-8"?>
 					echo ".";
 				}
 				else {
-					$query_entry_vendor = mysql_query("SELECT * 
-														FROM `rsdb_item_vendor` 
-														WHERE `vendor_id` = " .  $result_page['grpentr_vendor'] ." ;") ;
-					$result_entry_vendor = mysql_fetch_array($query_entry_vendor);
+          $stmt_vendor=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_vendor WHERE vendor_id = :vendor_id");
+          $stmt_vendor->bindParam('vendor_id',$result_page['grpentr_vendor'],PDO::PARAM_STR);
+          $stmt_vendor->execute();
+					$result_entry_vendor = $stmt->fetchOnce(PDO::FETCH_ASSOC);
 					echo $result_entry_vendor['vendor_name'];
 				}
 		  ?> </vendor>

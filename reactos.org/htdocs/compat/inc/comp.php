@@ -70,7 +70,7 @@
 			include("inc/comp/comp_item_submit.php");
 			break;
 		case "stats": // Statistics
-			include("inc/comp/comp_stats.php");
+			echo 'depracted';
 			break;
 		case "help": // Vendor/Company
 			include("inc/comp/comp_help.php");

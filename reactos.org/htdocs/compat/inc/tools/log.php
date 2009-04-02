@@ -46,10 +46,18 @@
 		if (array_key_exists('REMOTE_ADDR', $_SERVER)) $RSDB_ipaddr=htmlspecialchars($_SERVER['REMOTE_ADDR']);
 	
 	
-		$insert_new_log="INSERT INTO `rsdb_logs` ( `log_id` , `log_date` , `log_usrid` , `log_usrip` , `log_level` , `log_action` , `log_title` , `log_description` , `log_category` , `log_badusr` , `log_referrer` , `log_browseragent` , `log_read` ) 
-							VALUES (
-							'', NOW( ) , '".mysql_escape_string($RSDB_intern_user_id)."', '".mysql_escape_string($RSDB_ipaddr)."', '".mysql_escape_string($level)."', '".mysql_escape_string($laction)."', '".mysql_escape_string($title)."', '".mysql_escape_string($desc)."', '".mysql_escape_string($category)."', '".mysql_escape_string($baduser)."', '".mysql_escape_string($RSDB_referrer)."', '".mysql_escape_string($RSDB_usragent)."', ';');";
-		$insert_new_log_submit=mysql_query($insert_new_log);
+    $stmt=CDBConnection::getInstance()->prepare("INSERT INTO rsdb_logs (log_id, log_date, log_usrid, log_usrip, log_level, log_action, log_title, log_description, log_category, log_badusr, log_referrer, log_browseragent, log_read) VALUES ('', NOW( ) , :user_id, :ip, :level, :action, :title, :description, :category, :baduser, :referrer, :user_agent, ';')");
+    $stmt->bindParam('user_id',$RSDB_intern_user_id,PDO::PARAM_STR);
+    $stmt->bindParam('ip',$RSDB_ipaddr,PDO::PARAM_STR);
+    $stmt->bindParam('level',$level,PDO::PARAM_STR);
+    $stmt->bindParam('action',$laction,PDO::PARAM_STR);
+    $stmt->bindParam('title',$title,PDO::PARAM_STR);
+    $stmt->bindParam('description',$desc,PDO::PARAM_STR);
+    $stmt->bindParam('category',$category,PDO::PARAM_STR);
+    $stmt->bindParam('baduser',$baduser,PDO::PARAM_STR);
+    $stmt->bindParam('referrer',$RSDB_referrer,PDO::PARAM_STR);
+    $stmt->bindParam('user_agent',$RSDB_usragent,PDO::PARAM_STR);
+    $stmt->execute();
 
 	}
 

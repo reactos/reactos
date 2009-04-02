@@ -34,16 +34,14 @@
 	}
 
  
-	$query_page = mysql_query("SELECT * 
-								FROM `rsdb_item_vendor` 
-								WHERE `vendor_name` LIKE  '%' 
-								ORDER BY `vendor_name` ASC ;") ;
+  $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_vendor ORDER BY `vendor_name` ASC");
+  $stmt->execute();
 
 	$zaehler="0";
 	
 	
 	
-	while($result_page = mysql_fetch_array($query_page)) { // Pages
+	while($result_page = $stmt->fetch(PDO::FETCH_ASSOC)) { // Pages
 		echo "<option value=\"". $result_page['vendor_id'] ."\"";
 		if ($RSDB_intern_selected != "" && $RSDB_intern_selected == $result_page['vendor_id']) {
 			echo " selected "; 

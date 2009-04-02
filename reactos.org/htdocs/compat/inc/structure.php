@@ -162,10 +162,10 @@ function create_structure($page )
             <select id="select" size="1" name="select" class="selectbox" style="width:140px" onchange="window.open(this.options[this.selectedIndex].value,'_main')">
 			<optgroup label="current language"> 
 			  <?php 
-			$query_roscms_lang = mysql_query("SELECT * 
-														FROM `rsdb_languages` 
-														WHERE `lang_id` = '". mysql_real_escape_string($rpm_lang) ."' ;");
-			$result_roscms_lang = mysql_fetch_array($query_roscms_lang);
+      $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_languages WHERE lang_id = :lang_id");
+      $stmt->bindParam('lang_id',$rpm_lang,PDO::PARAM_STR);
+      $stmt->execute();
+			$result_roscms_lang = $stmt->fetchOnce(PDO::FETCH_ASSOC);
 			
 			echo '<option value="#">'.$result_roscms_lang[1].'</option>';
               ?>

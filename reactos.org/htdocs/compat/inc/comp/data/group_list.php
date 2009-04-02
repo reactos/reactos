@@ -32,32 +32,19 @@
 		die(" ");
 	}
 
-	$query_count_groups=mysql_query("SELECT COUNT('grpentr_id')
-							FROM `rsdb_groups`, `rsdb_item_vendor`
-							WHERE grpentr_vendor = vendor_id 
-							AND (`grpentr_name` LIKE '%" . mysql_real_escape_string($RSDB_SET_search) . "%' 
-								OR `vendor_name` LIKE '%" . mysql_real_escape_string($RSDB_SET_search) . "%')					
-							AND `grpentr_comp` = '1'
-							AND `vendor_visible` = '1'
-							AND `grpentr_visible` = '1'
-							 ;");	
-	$result_count_groups = mysql_fetch_row($query_count_groups);
+  $stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_groups JOIN rsdb_item_vendor ON grpentr_vendor = vendor_id WHERE (grpentr_name LIKE :search OR vendor_name LIKE :search) AND grpentr_comp = '1' AND vendor_visible = '1' AND grpentr_visible = '1'");
+  $stmt->bindValue('search','%'.$RSDB_SET_search.'%',PDO::PARAM_STR);
+  $stmt->execute();
+	$result_count_groups = $stmt->fetchOnce(PDO::FETCH_NUM);
 
 	if (!$result_count_groups[0]) {
 		// Remove temp characters and try again
 		$RSDB_SET_search = str_replace("-","",$RSDB_SET_search);
 		$RSDB_SET_search = str_replace("_","",$RSDB_SET_search);
 		$RSDB_SET_search = str_replace(" ","",$RSDB_SET_search);
-		$query_count_groups=mysql_query("SELECT COUNT('grpentr_id')
-								FROM `rsdb_groups`, `rsdb_item_vendor`
-								WHERE grpentr_vendor = vendor_id 
-								AND (`grpentr_name` LIKE '%" . mysql_real_escape_string($RSDB_SET_search) . "%' 
-									OR `vendor_name` LIKE '%" . mysql_real_escape_string($RSDB_SET_search) . "%')					
-								AND `grpentr_comp` = '1'
-								AND `vendor_visible` = '1'
-								AND `grpentr_visible` = '1'
-								 ;");	
-		$result_count_groups = mysql_fetch_row($query_count_groups);
+    $stmt->bindValue('search','%'.$RSDB_SET_search.'%',PDO::PARAM_STR);
+    $stmt->execute();
+		$result_count_groups = $stmt->fetchOnce(PDO::FETCH_NUM);
 	}
 
 header( 'Content-type: text/xml' );
@@ -74,18 +61,11 @@ echo '<?xml version="1.0" encoding="UTF-8"?>
 	
 if ($RSDB_SET_search != "" || strlen($RSDB_SET_search) > 1) {
 
-	$query_page = mysql_query("SELECT * 
-								FROM `rsdb_groups`, `rsdb_item_vendor`
-								WHERE grpentr_vendor = vendor_id 
-								AND (`grpentr_name` LIKE '%" . mysql_real_escape_string($RSDB_SET_search) . "%' 
-									OR `vendor_name` LIKE '%" . mysql_real_escape_string($RSDB_SET_search) . "%')					
-								AND `grpentr_comp` = '1'
-								AND `vendor_visible` = '1'
-								AND `grpentr_visible` = '1'
-								ORDER BY `grpentr_name` ASC 
-								LIMIT 20 ;") ; // Limit to 20 entry
+  $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_groups JOIN rsdb_item_vendor ON grpentr_vendor = vendor_id WHERE (grpentr_name LIKE :search OR `vendor_name` LIKE :search) AND `grpentr_comp` = '1' AND `vendor_visible` = '1' AND `grpentr_visible` = '1' ORDER BY `grpentr_name` ASC LIMIT 20") ; // Limit to 20 entry
+  $stmt->bindValue('search',$RSDB_SET_search,PDO::PARAM_STR);
+  $stmt->execute();
 	
-	while($result_page = mysql_fetch_array($query_page)) {
+	while($result_page = $stmt->fetch(PDO::FETCH_ASSOC)) {
 ?>
 	<dbentry>
 		<item id="<?php echo $result_page['grpentr_id']; ?>"><?php echo $result_page['grpentr_name']; ?></item>
@@ -107,10 +87,10 @@ if ($RSDB_SET_search != "" || strlen($RSDB_SET_search) > 1) {
 					echo ".";
 				}
 				else {
-					$query_entry_vendor = mysql_query("SELECT * 
-														FROM `rsdb_item_vendor` 
-														WHERE `vendor_id` = " .  $result_page['grpentr_vendor'] ." ;") ;
-					$result_entry_vendor = mysql_fetch_array($query_entry_vendor);
+          $stmt_vendor=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_vendor WHERE vendor_id = :vendor_id");
+          $stmt_vendor->bindParam('vendor_id',$result_page['grpentr_vendor'],PDO::PARAM_STR);
+          $stmt_vendor->execute();
+					$result_entry_vendor = $stmt_vendor->fetchOnce(PDO::FETCH_ASSOC);
 					echo $result_entry_vendor['vendor_name'];
 				}
 		  ?> </vendor>

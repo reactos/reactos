@@ -34,11 +34,10 @@
 	}
 
 
-	$query_count_groups=mysql_query("SELECT COUNT('vendor_id')
-							FROM `rsdb_item_vendor`
-							WHERE `vendor_visible` = '1'
-							AND `vendor_name` LIKE '%" . mysql_real_escape_string($RSDB_SET_search) . "%'  ;");	
-	$result_count_groups = mysql_fetch_row($query_count_groups);
+  $stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_item_vendor WHERE vendor_visible = '1' AND vendor_name LIKE :search");
+  $stmt->bindValue('search','%'.$RSDB_SET_search.'%',PDO::PARAM_STR);
+  $stmt->execute();
+	$result_count_groups = $stmt->fetchOnce(PDO::FETCH_NUM);
 
 header( 'Content-type: text/xml' );
 echo '<?xml version="1.0" encoding="UTF-8"?>
@@ -54,13 +53,11 @@ echo '<?xml version="1.0" encoding="UTF-8"?>
 	
 if ($RSDB_SET_search != "" || strlen($RSDB_SET_search) > 1) {
 
-	$query_page = mysql_query("SELECT * 
-								FROM `rsdb_item_vendor` 
-								WHERE `vendor_visible` = '1'
-								AND `vendor_name` LIKE '%" . mysql_real_escape_string($RSDB_SET_search) . "%'  
-								ORDER BY `vendor_name` ASC ;") ;
+  $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_vendor WHERE vendor_visible = '1' AND vendor_name LIKE :search ORDER BY vendor_name ASC");
+  $stmt->bindValue('search','%'.$RSDB_SET_search.'%',PDO::PARAM_STR);
+  $stmt->execute();
 	
-	while($result_page = mysql_fetch_array($query_page)) { // Pages
+	while($result_page = $stmt->fetch(PDO::FETCH_ASSOC)) { // Pages
 ?>
 	<dbentry>
 		<vendor id="<?php echo $result_page['vendor_id']; ?>"><?php echo $result_page['vendor_name']; ?></vendor>
