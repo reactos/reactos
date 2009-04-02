@@ -286,7 +286,7 @@
 		<h3>All Versions</h3>
 		<?php
 			if ($RSDB_ENV_ajax == "true") { 
-				noscript();
+				Message::noScript();
 			}
 			else {
 				include("inc/comp/data/group_item_list.php");
@@ -353,7 +353,7 @@
 			  </ul>
 			<span class="simple"><strong>Compatibility</strong></span>
 			<ul class=simple>
-			  <li><strong>Award:</strong> <font size="2"><img src="media/icons/awards/<?php echo draw_award_icon($result_version_newest['comp_award']); ?>.gif" alt="<?php echo draw_award_name($result_version_newest['comp_award']); ?>" width="16" height="16" /> <?php echo draw_award_name($result_version_newest['comp_award']); ?></font></li>
+			  <li><strong>Award:</strong> <font size="2"><img src="media/icons/awards/<?php echo Award::icon($result_version_newest['comp_award']); ?>.gif" alt="<?php echo Award::name($result_version_newest['comp_award']); ?>" width="16" height="16" /> <?php echo Award::name($result_version_newest['comp_award']); ?></font></li>
 			  <li><strong>Function:</strong>
 				  <?php 
 				  
@@ -370,12 +370,12 @@
 					$counter_stars_user++;
 				}
 				
-				echo draw_stars($counter_stars_function, $counter_stars_user, 5, "tests");
+				echo Star::drawNormal($counter_stars_function, $counter_stars_user, 5, "tests");
 	
 				
 				?>
 			  </li>
-			  <li><strong>Install:</strong> <?php echo draw_stars($counter_stars_install, $counter_stars_user, 5, "tests"); ?></li>
+			  <li><strong>Install:</strong> <?php echo Star::drawNormal($counter_stars_install, $counter_stars_user, 5, "tests"); ?></li>
 			</ul>
 			<span class="simple"><strong>Further Information</strong></span>
 			<ul class=simple>
@@ -479,15 +479,15 @@
 			  </ul>
 			  <span class="simple"><strong>Compatibility</strong></span>
               <strong>&Oslash;</strong>              <ul class=simple>
-				<li><strong>Award (best):</strong> <font size="2"><img src="media/icons/awards/<?php echo draw_award_icon($counter_awards_best); ?>.gif" alt="<?php echo draw_award_name($counter_awards_best); ?>" width="16" height="16" /> <?php echo draw_award_name($counter_awards_best); ?></font></li>
+				<li><strong>Award (best):</strong> <font size="2"><img src="media/icons/awards/<?php echo Award::icon($counter_awards_best); ?>.gif" alt="<?php echo Award::name($counter_awards_best); ?>" width="16" height="16" /> <?php echo Award::name($counter_awards_best); ?></font></li>
 				<li><strong>Function &Oslash;:</strong>
 					<?php 
 				
-				echo draw_stars($counter_stars_function_sum, $counter_stars_user_sum, 5, "tests");
+				echo Star::drawNormal($counter_stars_function_sum, $counter_stars_user_sum, 5, "tests");
 				
 				?>
 				</li>
-				<li><strong>Install &Oslash;:</strong> <?php echo draw_stars($counter_stars_install_sum, $counter_stars_user_sum, 5, "tests"); ?></li>
+				<li><strong>Install &Oslash;:</strong> <?php echo Star::drawNormal($counter_stars_install_sum, $counter_stars_user_sum, 5, "tests"); ?></li>
 		      </ul>
 			  <span class="simple"><strong>Application versions</strong></span>
               <ul class=simple>
@@ -604,15 +604,15 @@
 			</ul>
 			<span class="simple"><strong>Compatibility &Oslash;</strong></span>
 			<ul class=simple>
-			  <li><strong>Award (best):</strong> <font size="2"><img src="media/icons/awards/<?php echo draw_award_icon($counter_awards_best); ?>.gif" alt="<?php echo draw_award_name($counter_awards_best); ?>" width="16" height="16" /> <?php echo draw_award_name($counter_awards_best); ?></font></li>
+			  <li><strong>Award (best):</strong> <font size="2"><img src="media/icons/awards/<?php echo Award::icon($counter_awards_best); ?>.gif" alt="<?php echo Award::name($counter_awards_best); ?>" width="16" height="16" /> <?php echo Award::name($counter_awards_best); ?></font></li>
 			  <li><strong>Function &Oslash;:</strong>
 				  <?php 
 							
-							echo draw_stars($counter_stars_function_sum, $counter_stars_user_sum, 5, "tests");
+							echo Star::drawNormal($counter_stars_function_sum, $counter_stars_user_sum, 5, "tests");
 							
 							?>
 			  </li>
-			  <li><strong>Install &Oslash;:</strong> <?php echo draw_stars($counter_stars_install_sum, $counter_stars_user_sum, 5, "tests"); ?></li>
+			  <li><strong>Install &Oslash;:</strong> <?php echo Star::drawNormal($counter_stars_install_sum, $counter_stars_user_sum, 5, "tests"); ?></li>
 			</ul>
 			  <table width="100%">
                 <tr bgcolor="#5984C3">
@@ -666,7 +666,7 @@
 					echo '</a></b>';
 
 				 ?></td>
-                  <td width="20%" bgcolor="<?php echo $farbe; ?>"><font size="1">&nbsp;<img src="media/icons/awards/<?php echo draw_award_icon($result_sortby_b['comp_award']); ?>.gif" alt="<?php echo draw_award_name($result_sortby_b['comp_award']); ?>" width="16" height="16" /> <?php echo draw_award_name($result_sortby_b['comp_award']); ?></font></td>
+                  <td width="20%" bgcolor="<?php echo $farbe; ?>"><font size="1">&nbsp;<img src="media/icons/awards/<?php echo Award::icon($result_sortby_b['comp_award']); ?>.gif" alt="<?php echo Award::name($result_sortby_b['comp_award']); ?>" width="16" height="16" /> <?php echo Award::name($result_sortby_b['comp_award']); ?></font></td>
                   <?php
 			
 				$counter_stars_install = 0;
@@ -683,8 +683,8 @@
 				}
 							
 			?>
-                  <td width="20%" bgcolor="<?php echo $farbe; ?>"><font size="1"><?php echo draw_stars($counter_stars_function, $counter_stars_user, 5, "tests"); ?></font></td>
-                  <td width="20%" bgcolor="<?php echo $farbe; ?>"><font size="1"><?php echo draw_stars($counter_stars_install, $counter_stars_user, 5, "tests"); ?></font></td>
+                  <td width="20%" bgcolor="<?php echo $farbe; ?>"><font size="1"><?php echo Star::drawNormal($counter_stars_function, $counter_stars_user, 5, "tests"); ?></font></td>
+                  <td width="20%" bgcolor="<?php echo $farbe; ?>"><font size="1"><?php echo Star::drawNormal($counter_stars_install, $counter_stars_user, 5, "tests"); ?></font></td>
                 </tr>
                 <?php
 			}

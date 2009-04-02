@@ -240,20 +240,11 @@ require_once("lib/Compat_Autoloader.class.php");
 	
 	// URI building
 	require_once('rsdb_config.php');
-	
-	
-	// Security
-	require_once("inc/tools/log.php");
 
 	// Tools
-	require_once("inc/tools/stars.php");
-	require_once("inc/tools/awards.php");
-	require_once("inc/tools/message_bar.php");
 	require_once("inc/tools/forum_bar.php");
 	require_once("inc/tools/test_bar.php");
 	require_once("inc/tools/osversion.php");
-	require_once("inc/tools/noscript.php");
-	require_once("inc/tools/please_register.php");	
 	require_once("inc/tools/user_functions.php");
 	require_once("inc/tools/plugins.php");
 	

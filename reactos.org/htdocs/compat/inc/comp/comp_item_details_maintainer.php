@@ -97,7 +97,7 @@
       $stmt->bindParam('comp_id',$RSDB_SET_item,PDO::PARAM_STR);
       $stmt->execute();
 			
-			add_log_entry("low", "comp_item", "edit", "[App Item] Edit entry", @usrfunc_GetUsername($RSDB_intern_user_id)." changed the group data from: \n\nAppName: ".htmlentities($result_maintainer_item['comp_name'])." - ".$result_maintainer_item['comp_id']."\n\nDesc: ".htmlentities($result_maintainer_item['comp_description'])." \n\GroupID: ".$result_maintainer_item['comp_groupid']." \n\ReactOS version: ".$result_maintainer_item['comp_osversion']." \n\n\nTo: \n\nAppName: ".htmlentities($result_maintainer_group['grpentr_name']." ".$RSDB_TEMP_apppr)." - ".htmlentities($RSDB_TEMP_appn)."\n\nInternVersion: ".htmlentities($RSDB_TEMP_appit)." \n\nDesc: ".htmlentities($RSDB_TEMP_appdesc)." \n\nReactOS version: ".htmlentities($RSDB_TEMP_version), "0");
+			CLog::add("low", "comp_item", "edit", "[App Item] Edit entry", @usrfunc_GetUsername($RSDB_intern_user_id)." changed the group data from: \n\nAppName: ".htmlentities($result_maintainer_item['comp_name'])." - ".$result_maintainer_item['comp_id']."\n\nDesc: ".htmlentities($result_maintainer_item['comp_description'])." \n\GroupID: ".$result_maintainer_item['comp_groupid']." \n\ReactOS version: ".$result_maintainer_item['comp_osversion']." \n\n\nTo: \n\nAppName: ".htmlentities($result_maintainer_group['grpentr_name']." ".$RSDB_TEMP_apppr)." - ".htmlentities($RSDB_TEMP_appn)."\n\nInternVersion: ".htmlentities($RSDB_TEMP_appit)." \n\nDesc: ".htmlentities($RSDB_TEMP_appdesc)." \n\nReactOS version: ".htmlentities($RSDB_TEMP_version), "0");
 			?>
 			<script language="JavaScript">
 				window.setTimeout('window.location.href="<?php echo $RSDB_intern_link_item_item2_both_javascript; ?>"','500')
@@ -121,7 +121,7 @@
 			$stmt=CDBConnection::getInstance()->prepare("UPDATE rsdb_item_comp SET comp_visible = '3' WHERE comp_id = :comp_id");
       $stmt->bindParam('comp_id',$RSDB_SET_item,PDO::PARAM_STR);
       $stmt->execute();
-			add_log_entry("low", "comp_item", "report_spam", "[App Item] Spam/ads report", @usrfunc_GetUsername($RSDB_intern_user_id)." wrote: \n".htmlentities($RSDB_TEMP_txtspam)." \n\n\n\nUser: ".@usrfunc_GetUsername($result_maintainer_item['comp_usrid'])." - ".$result_maintainer_item['comp_usrid']."\n\nAppName: ".htmlentities($result_maintainer_item['comp_name'])." - ".$result_maintainer_item['comp_id']."\n\nDesc: ".htmlentities($result_maintainer_item['comp_description'])." \n\GroupID: ".$result_maintainer_item['comp_groupid']." \n\ReactOS version: ".$result_maintainer_item['comp_osversion'], $result_maintainer_item['comp_usrid']);
+			CLog::add("low", "comp_item", "report_spam", "[App Item] Spam/ads report", @usrfunc_GetUsername($RSDB_intern_user_id)." wrote: \n".htmlentities($RSDB_TEMP_txtspam)." \n\n\n\nUser: ".@usrfunc_GetUsername($result_maintainer_item['comp_usrid'])." - ".$result_maintainer_item['comp_usrid']."\n\nAppName: ".htmlentities($result_maintainer_item['comp_name'])." - ".$result_maintainer_item['comp_id']."\n\nDesc: ".htmlentities($result_maintainer_item['comp_description'])." \n\GroupID: ".$result_maintainer_item['comp_groupid']." \n\ReactOS version: ".$result_maintainer_item['comp_osversion'], $result_maintainer_item['comp_usrid']);
 		
 		}
 		// Verified:
@@ -138,7 +138,7 @@
         $stmt->bindParam('checked',$temp_verified,PDO::PARAM_STR);
         $stmt->bindParam('comp_id',$RSDB_SET_item,PDO::PARAM_STR);
         $stmt->execute();
-				add_log_entry("low", "comp_item", "verified", "[App Item] Verified", @usrfunc_GetUsername($RSDB_intern_user_id)." has verified the following app version: \n\n\n\nUser: ".@usrfunc_GetUsername($result_maintainer_item['comp_usrid'])." - ".$result_maintainer_item['comp_usrid']."\n\nAppName: ".htmlentities($result_maintainer_item['comp_name'])." - ".$result_maintainer_item['comp_id']."\n\nDesc: ".htmlentities($result_maintainer_item['comp_description'])." \n\GroupID: ".$result_maintainer_item['comp_groupid']." \n\ReactOS version: ".$result_maintainer_item['comp_osversion'], "0");
+				CLog::add("low", "comp_item", "verified", "[App Item] Verified", @usrfunc_GetUsername($RSDB_intern_user_id)." has verified the following app version: \n\n\n\nUser: ".@usrfunc_GetUsername($result_maintainer_item['comp_usrid'])." - ".$result_maintainer_item['comp_usrid']."\n\nAppName: ".htmlentities($result_maintainer_item['comp_name'])." - ".$result_maintainer_item['comp_id']."\n\nDesc: ".htmlentities($result_maintainer_item['comp_description'])." \n\GroupID: ".$result_maintainer_item['comp_groupid']." \n\ReactOS version: ".$result_maintainer_item['comp_osversion'], "0");
 			}
 		}
 ?>
@@ -390,7 +390,7 @@
       $stmt->bindParam('award',$RSDB_TEMP_medal,PDO::PARAM_STR);
       $stmt->bindParam('comp_id',$RSDB_SET_item,PDO::PARAM_STR);
       $stmt->execute();
-			add_log_entry("medium", "comp_item", "change award", "[App Item] Change Award", @usrfunc_GetUsername($RSDB_intern_user_id)." (".$RSDB_intern_user_id.") has changed the award symbol from: ".$result_maintainer_item['comp_award']." to ".$RSDB_TEMP_medal, "0");
+			CLog::add("medium", "comp_item", "change award", "[App Item] Change Award", @usrfunc_GetUsername($RSDB_intern_user_id)." (".$RSDB_intern_user_id.") has changed the award symbol from: ".$result_maintainer_item['comp_award']." to ".$RSDB_TEMP_medal, "0");
 			?>
 			<script language="JavaScript">
 				window.setTimeout('window.location.href="<?php echo $RSDB_intern_link_item_item2_both; ?>"','500')

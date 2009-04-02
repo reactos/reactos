@@ -44,7 +44,7 @@
   <?php 
   
 if ($RSDB_intern_user_id <= 0) {
-	please_register(); 
+	Message::loginRequired(); 
 }
 else {
 		$RSDB_TEMP_subok = "";
@@ -79,50 +79,50 @@ else {
 		
 		if ($RSDB_TEMP_subok == "okay") {
 			if ($RSDB_TEMP_cboCategory == 0) {
-				msg_bar("Invalid Category!");
+				Message::show("Invalid Category!");
 				echo "<br />";
 				$RSDB_TEMP_SUBMIT_valid = false;
 			}
 
 			if (strlen($RSDB_TEMP_txtname) <= 1) {
-				msg_bar("The 'Application/Driver Name' textbox is (almost) empty  ...");
+				Message::show("The 'Application/Driver Name' textbox is (almost) empty  ...");
 				$RSDB_TEMP_SUBMIT_valid = false;
 				echo "<br />";
 			}
 			if (strlen($RSDB_TEMP_txtdesc) <= 3) {
-				msg_bar("The 'Description' textbox is (almost) empty  ...");
+				Message::show("The 'Description' textbox is (almost) empty  ...");
 				$RSDB_TEMP_SUBMIT_valid = false;
 				echo "<br />";
 			}
 			
 			if ($RSDB_TEMP_vendmode == "" || $RSDB_TEMP_vendmode == "none") {
-				msg_bar("Invalid Vendor!");
+				Message::show("Invalid Vendor!");
 				echo "<br />";
 				$RSDB_TEMP_SUBMIT_valid = false;
 			}
 			else {
 				if ($RSDB_TEMP_vendmode == "select") {
 					if ($RSDB_TEMP_cboVendor == 0 && strlen($RSDB_TEMP_txtvname) <= 1) {
-						msg_bar("Invalid Vendor name!");
+						Message::show("Invalid Vendor name!");
 						$RSDB_TEMP_SUBMIT_valid = false;
 						echo "<br />";
 					}
 				}
 				if ($RSDB_TEMP_vendmode == "rock") {
 					if ($RSDB_TEMP_rockhide == 0) {
-						msg_bar("Invalid Vendor name!");
+						Message::show("Invalid Vendor name!");
 						echo "<br />";
 						$RSDB_TEMP_SUBMIT_valid = false;
 					}
 				}
 				if ($RSDB_TEMP_vendmode == "add") {
 					if (strlen($RSDB_TEMP_txtvname) <= 1) {
-						msg_bar("The Vendor name is (almost) empty  ...");
+						Message::show("The Vendor name is (almost) empty  ...");
 						$RSDB_TEMP_SUBMIT_valid = false;
 						echo "<br />";
 					}
 					if (strlen($RSDB_TEMP_txtvurl) <= 3) {
-						msg_bar("The Vendor Website textbox is (almost) empty  ...");
+						Message::show("The Vendor Website textbox is (almost) empty  ...");
 						$RSDB_TEMP_SUBMIT_valid = false;
 						echo "<br />";
 					}
@@ -134,8 +134,8 @@ else {
 			
 			$result_check = $stmt->fetch();
 			if ($result_check[0] != 0) {
-				msg_bar("Double Entry Prevention: please check the data!");
-				add_log_entry("low", "comp_group_submit", "submit", "Double Entry Prevention!", "Double Entry Prevention! \n\nAn error occur while checking the data. The data is invalid! Please submit the data again, thx. \n\nIf this message appear more then one times and you are sure everything is valid and okay, then please report this to the ReactOS forum.", $RSDB_intern_user_id);
+				Message::show("Double Entry Prevention: please check the data!");
+				CLog::add("low", "comp_group_submit", "submit", "Double Entry Prevention!", "Double Entry Prevention! \n\nAn error occur while checking the data. The data is invalid! Please submit the data again, thx. \n\nIf this message appear more then one times and you are sure everything is valid and okay, then please report this to the ReactOS forum.", $RSDB_intern_user_id);
 				$RSDB_TEMP_SUBMIT_valid = false;
 				echo "<br />";
 			}

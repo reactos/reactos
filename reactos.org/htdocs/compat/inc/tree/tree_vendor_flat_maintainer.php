@@ -83,7 +83,7 @@
       $stmt->bindParam('ip',$RSDB_ipaddr,PDO::PARAM_STR);
       $stmt->execute();
 			
-			add_log_entry("low", "tree_vendor", "submit", "[Vendor] Submit entry", @usrfunc_GetUsername($RSDB_intern_user_id)." submitted the following vendor: \n\nVendor-Name: ".htmlentities($RSDB_TEMP_vendname)."\n\Fullname: ".htmlentities($RSDB_TEMP_fullname)." \n\nUrl: ".htmlentities($RSDB_TEMP_txturl)." \n\E-Mail: ".htmlentities($RSDB_TEMP_txtemail)." \n\Info: ".htmlentities($RSDB_TEMP_txtinfo), "0");
+			CLog::add("low", "tree_vendor", "submit", "[Vendor] Submit entry", @usrfunc_GetUsername($RSDB_intern_user_id)." submitted the following vendor: \n\nVendor-Name: ".htmlentities($RSDB_TEMP_vendname)."\n\Fullname: ".htmlentities($RSDB_TEMP_fullname)." \n\nUrl: ".htmlentities($RSDB_TEMP_txturl)." \n\E-Mail: ".htmlentities($RSDB_TEMP_txtemail)." \n\Info: ".htmlentities($RSDB_TEMP_txtinfo), "0");
 			?>
 			<script language="JavaScript">
 				window.setTimeout('window.location.href="<?php echo $RSDB_intern_link_db_sec_javascript2; ?>"','500')

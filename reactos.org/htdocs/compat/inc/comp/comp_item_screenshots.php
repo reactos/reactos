@@ -53,7 +53,7 @@ if ($result_page['comp_id']) {
 
 // Voting - update DB
 if ($RSDB_SET_vote != "" && $RSDB_SET_vote2 != "") {
-	db_update_stars_vote($RSDB_SET_vote, $RSDB_SET_vote2, "rsdb_object_media", "media");
+	Star::addVote($RSDB_SET_vote, $RSDB_SET_vote2, "rsdb_object_media", "media");
 }
 	
 if ($RSDB_SET_entry == "" || $RSDB_SET_entry == 0) {
@@ -83,15 +83,15 @@ if ($RSDB_SET_entry == "" || $RSDB_SET_entry == 0) {
 				if ($RSDB_TEMP_voting_history == false) {
 					echo "Rate this screenshot: ";
 					if ($result_screenshots['media_useful_vote_user'] > $RSDB_setting_stars_threshold) {
-						echo draw_stars_vote($result_screenshots['media_useful_vote_value'], $result_screenshots['media_useful_vote_user'], 5, "", ($RSDB_intern_link_item_item2_vote.$result_screenshots['media_id']."&amp;vote2="));
+						echo drawVoteable($result_screenshots['media_useful_vote_value'], $result_screenshots['media_useful_vote_user'], 5, "", ($RSDB_intern_link_item_item2_vote.$result_screenshots['media_id']."&amp;vote2="));
 					}
 					else {
-						echo draw_stars_vote(0, 0, 5, "", ($RSDB_intern_link_item_item2_vote.$result_screenshots['media_id']."&amp;vote2="));
+						echo Star::drawVoteable(0, 0, 5, "", ($RSDB_intern_link_item_item2_vote.$result_screenshots['media_id']."&amp;vote2="));
 					}
 				}
 				else {
 					echo "Rating: ";
-					echo draw_stars($result_screenshots['media_useful_vote_value'], $result_screenshots['media_useful_vote_user'], 5, "");
+					echo Star::drawNormal($result_screenshots['media_useful_vote_value'], $result_screenshots['media_useful_vote_user'], 5, "");
 				}
 				
 		echo '</font><br /><br /></p>';

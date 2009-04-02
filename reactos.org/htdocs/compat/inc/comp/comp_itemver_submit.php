@@ -47,7 +47,7 @@
 
 <?php 
 if ($RSDB_intern_user_id <= 0) {
-	please_register(); 
+	Message::loginRequired(); 
 }
 else {
 ?>
@@ -87,18 +87,6 @@ else {
 <br />
 <?php
 
-   function is_num($var) {
-       for ($i=0;$i<strlen($var);$i++) {
-           $ascii_code=ord($var[$i]);
-           if (intval($ascii_code) >=48 && intval($ascii_code) <=57) {
-               continue;
-           } else {          
-               return false;
-           }
-       } 
-       return true;
-   } 
-
 	$RSDB_TEMP_subok = "";
 	$RSDB_TEMP_postgroupid = "";
 	$RSDB_TEMP_postgroupname = "";
@@ -121,7 +109,7 @@ else {
 	if (array_key_exists("sApp", $_GET)) $RSDB_TEMP_sApp=htmlspecialchars($_GET["sApp"]);
 	if (array_key_exists("sOSver", $_GET)) $RSDB_TEMP_sOSver=htmlspecialchars($_GET["sOSver"]);
 	if ($RSDB_TEMP_sApp != "" && $RSDB_TEMP_sOSver != "") {
-		if (is_num($RSDB_TEMP_sOSver)) {
+		if (preg_match('/^\d+$/',$RSDB_TEMP_sOSver)) {
       $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp WHERE comp_appversion = :version AND comp_visible = '1' AND comp_groupid = :group_id LIMIT 1");
       $stmt->bindParam('version',$RSDB_TEMP_sApp,PDO::PARAM_STR);
       $stmt->bindParam('group_id',$RSDB_SET_group,PDO::PARAM_STR);
@@ -144,8 +132,8 @@ else {
 				$RSDB_TEMP_postgroupid = $RSDB_SET_group;
 			}
 			else {
-				msg_bar("This combination of application version and ReactOS version is already available.");
-				add_log_entry("low", "comp_item_submit", "submit", "Double Entry Prevention! (light)", "Double Entry Prevention! (light) \n\nThis combination of application version and ReactOS version is already available.", $RSDB_intern_user_id);
+				Message::show("This combination of application version and ReactOS version is already available.");
+				CLog::add("low", "comp_item_submit", "submit", "Double Entry Prevention! (light)", "Double Entry Prevention! (light) \n\nThis combination of application version and ReactOS version is already available.", $RSDB_intern_user_id);
 			}
 		}
 	}
@@ -156,12 +144,12 @@ else {
 	if ($RSDB_TEMP_subok == "okay") {
 		$RSDB_TEMP_SUBMIT_valid = true;
 		if ($RSDB_TEMP_cboversion == "" || $RSDB_TEMP_cboversion == "0") {
-			msg_bar("Invalid Version!");
+			Message::show("Invalid Version!");
 			echo "<br />";
 			$RSDB_TEMP_SUBMIT_valid = false;
 		}
 		if (strlen($RSDB_TEMP_txtappver) < 1) {
-			msg_bar("The 'Version' textbox is (almost) empty  ...");
+			Message::show("The 'Version' textbox is (almost) empty  ...");
 			$RSDB_TEMP_SUBMIT_valid = false;
 			echo "<br />";
 		}
@@ -649,13 +637,13 @@ else {
 		}
 		else {
 			echo "<p>";
-			msg_bar("An error occur while checking the data. The data is invalid! Please submit the data again, thx.");
+			Message::show("An error occur while checking the data. The data is invalid! Please submit the data again, thx.");
 			echo "<br />";
-			msg_bar("If this message appear more then one times and you are sure everything is valid and okay, then please report this to the ReactOS forum.");
+			Message::show("If this message appear more then one times and you are sure everything is valid and okay, then please report this to the ReactOS forum.");
 			echo "</p>";
 			if ($result_app_entry_checking2[0] != 0) {
-				msg_bar("Double Entry Prevention: please check the data!");
-				add_log_entry("low", "comp_item_submit", "submit", "Double Entry Prevention!", "Double Entry Prevention! \n\nAn error occur while checking the data. The data is invalid! Please submit the data again, thx. \n\nIf this message appear more then one times and you are sure everything is valid and okay, then please report this to the ReactOS forum.", $RSDB_intern_user_id);
+				Message::show("Double Entry Prevention: please check the data!");
+				CLog::add("low", "comp_item_submit", "submit", "Double Entry Prevention!", "Double Entry Prevention! \n\nAn error occur while checking the data. The data is invalid! Please submit the data again, thx. \n\nIf this message appear more then one times and you are sure everything is valid and okay, then please report this to the ReactOS forum.", $RSDB_intern_user_id);
 			}
 			echo '<p><a href="javascript:history.go(-1)">Click here to go back!</a></p>';
 		}

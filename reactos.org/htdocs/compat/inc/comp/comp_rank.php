@@ -431,7 +431,7 @@ if ($RSDB_SET_rank2 == "new" || $RSDB_SET_rank2 == "") {
               </font></td>
               <td><div align="left"><font size="2" face="Arial, Helvetica, sans-serif">&nbsp;
                         <?php 
-		echo draw_stars_small($result_date_entry_records['test_result_function'], 1, 5, "");
+		echo Star::drawSmall($result_date_entry_records['test_result_function'], 1, 5, "");
 	?>
               </font></div></td>
             </tr>
@@ -667,7 +667,7 @@ else if ($RSDB_SET_rank2 == "awards" || $RSDB_SET_rank2 == "ratings") {
 				
 			?>
         </font></div></td>
-		<td valign="top" bgcolor="<?php echo $farbe; ?>"><div align="left"><font size="1" face="Arial, Helvetica, sans-serif">			&nbsp;<img src="media/icons/awards/<?php echo draw_award_icon($result_page["derived_max"]); ?>.gif" alt="<?php echo draw_award_name($result_page["derived_max"]); ?>" width="16" height="16" /> <?php echo draw_award_name($result_page["derived_max"]); ?>	</font></div></td>
+		<td valign="top" bgcolor="<?php echo $farbe; ?>"><div align="left"><font size="1" face="Arial, Helvetica, sans-serif">			&nbsp;<img src="media/icons/awards/<?php echo Award::icon($result_page["derived_max"]); ?>.gif" alt="<?php echo Award::name($result_page["derived_max"]); ?>" width="16" height="16" /> <?php echo Award::name($result_page["derived_max"]); ?>	</font></div></td>
 		<td valign="top" bgcolor="<?php echo $farbe; ?>"><div align="left"><font size="2">
             </font><font size="1" face="Arial, Helvetica, sans-serif">
             <?php 
@@ -720,14 +720,14 @@ else if ($RSDB_SET_rank2 == "awards" || $RSDB_SET_rank2 == "ratings") {
             </font><font size="2">
             <?php 
 				
-				echo draw_stars_small($counter_stars_function_sum, $counter_stars_user_sum, 5, "") . " (".$counter_stars_user_sum.")";
+				echo Star::drawSmall($counter_stars_function_sum, $counter_stars_user_sum, 5, "") . " (".$counter_stars_user_sum.")";
 				
 				?>
             </font></div></td>
 		<td valign="top" bgcolor="<?php echo $farbe; ?>"><div align="left"><font size="2">
 			<?php 
 				
-				echo draw_stars_small($counter_stars_function_sum, $counter_stars_user_sum, 5, "") . " (".$counter_stars_user_sum.")";
+				echo Star::drawSmall($counter_stars_function_sum, $counter_stars_user_sum, 5, "") . " (".$counter_stars_user_sum.")";
 				
 				?>
 		</font></div></td>
@@ -870,15 +870,15 @@ else if ($RSDB_SET_rank2 == "screenshots") {
 					if ($RSDB_TEMP_voting_history == false) {
 						echo "Rate this screenshot: ";
 						if ($result_screenshots['media_useful_vote_user'] > $RSDB_setting_stars_threshold) {
-							echo draw_stars_vote($result_screenshots['media_useful_vote_value'], $result_screenshots['media_useful_vote_user'], 5, "", ($RSDB_intern_link_item_item2_vote.$result_screenshots['media_id']."&amp;vote2="));
+							echo Star::drawVoteable($result_screenshots['media_useful_vote_value'], $result_screenshots['media_useful_vote_user'], 5, "", ($RSDB_intern_link_item_item2_vote.$result_screenshots['media_id']."&amp;vote2="));
 						}
 						else {
-							echo draw_stars_vote(0, 0, 5, "", ($RSDB_intern_link_item_item2_vote.$result_screenshots['media_id']."&amp;vote2="));
+							echo Star::drawVoteable(0, 0, 5, "", ($RSDB_intern_link_item_item2_vote.$result_screenshots['media_id']."&amp;vote2="));
 						}
 					}
 					else {
 						echo "Rating: ";
-						echo draw_stars($result_screenshots['media_useful_vote_value'], $result_screenshots['media_useful_vote_user'], 5, "");
+						echo Star::drawNormal($result_screenshots['media_useful_vote_value'], $result_screenshots['media_useful_vote_user'], 5, "");
 					}
 					
 			echo '</font><br /><br /></p>';

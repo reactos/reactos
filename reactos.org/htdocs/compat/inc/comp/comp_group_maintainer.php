@@ -96,7 +96,7 @@
       $stmt->bindParam('group_id',$result_maintainer_group['grpentr_id'],PDO::PARAM_STR);
       $stmt->execute();
 
-			add_log_entry("low", "comp_group", "edit", "[App Group] Edit entry", @usrfunc_GetUsername($RSDB_intern_user_id)." changed the group data from: \n\nName: ".htmlentities($result_maintainer_group['grpentr_name'])." \n\nDescription: ".htmlentities($result_maintainer_group['grpentr_description'])." \n\nCategory: ".$result_maintainer_group_category['cat_name']."\n\nVendor: ".$result_maintainer_group_vendor['vendor_name']." \n\n\nTo: \n\nName: ".htmlentities($RSDB_TEMP_appgroup)."\n\nDesc: ".htmlentities($RSDB_TEMP_description)." \n\nCategory: ".htmlentities($RSDB_TEMP_category)." \n\nVendor: ".htmlentities($RSDB_TEMP_vendor), "0");
+			CLog::add("low", "comp_group", "edit", "[App Group] Edit entry", @usrfunc_GetUsername($RSDB_intern_user_id)." changed the group data from: \n\nName: ".htmlentities($result_maintainer_group['grpentr_name'])." \n\nDescription: ".htmlentities($result_maintainer_group['grpentr_description'])." \n\nCategory: ".$result_maintainer_group_category['cat_name']."\n\nVendor: ".$result_maintainer_group_vendor['vendor_name']." \n\n\nTo: \n\nName: ".htmlentities($RSDB_TEMP_appgroup)."\n\nDesc: ".htmlentities($RSDB_TEMP_description)." \n\nCategory: ".htmlentities($RSDB_TEMP_category)." \n\nVendor: ".htmlentities($RSDB_TEMP_vendor), "0");
 			?>
 			<script language="JavaScript">
 				window.setTimeout('window.location.href="<?php echo $RSDB_intern_link_group_group2_both_javascript; ?>"','500')
@@ -120,7 +120,7 @@
       $stmt=CDBConnection::getInstance()->prepare("UPDATE rsdb_groups SET grpentr_visible = '3' WHERE grpentr_id = :group_id");
       $stmt->bindParam('group_id',$RSDB_SET_group,PDO::PARAM_STR);
       $stmt->execute();
-			add_log_entry("low", "comp_group", "report_spam", "[App Group] Spam/ads report", @usrfunc_GetUsername($RSDB_intern_user_id)." wrote: \n".htmlentities($RSDB_TEMP_txtspam)." \n\n\n\nUser: ".@usrfunc_GetUsername($result_maintainer_group['grpentr_usrid'])." - ".$result_maintainer_group['grpentr_usrid']."\n\nAppName: ".htmlentities($result_maintainer_group['grpentr_name'])." - ".$result_maintainer_group['grpentr_id']."\n\nDesc: ".htmlentities($result_maintainer_group['grpentr_description'])." \n\nCategory: ".$result_maintainer_group_category['cat_name']." \n\nVendor: ".$result_maintainer_group_vendor['vendor_name'], $result_maintainer_group['grpentr_usrid']);
+			CLog::add("low", "comp_group", "report_spam", "[App Group] Spam/ads report", @usrfunc_GetUsername($RSDB_intern_user_id)." wrote: \n".htmlentities($RSDB_TEMP_txtspam)." \n\n\n\nUser: ".@usrfunc_GetUsername($result_maintainer_group['grpentr_usrid'])." - ".$result_maintainer_group['grpentr_usrid']."\n\nAppName: ".htmlentities($result_maintainer_group['grpentr_name'])." - ".$result_maintainer_group['grpentr_id']."\n\nDesc: ".htmlentities($result_maintainer_group['grpentr_description'])." \n\nCategory: ".$result_maintainer_group_category['cat_name']." \n\nVendor: ".$result_maintainer_group_vendor['vendor_name'], $result_maintainer_group['grpentr_usrid']);
 		
 		}
 		// Verified:
@@ -136,7 +136,7 @@
         $stmt->bindParam('checked',$temp_verified,PDO::PARAM_STR);
         $stmt->bindParam('group_id',$RSDB_SET_group,PDO::PARAM_STR);
 				$stmt->execute();
-				add_log_entry("low", "comp_group", "verified", "[App Group] Verified", @usrfunc_GetUsername($RSDB_intern_user_id)." has verified the following app group: \n\n\n\nUser: ".@usrfunc_GetUsername($result_maintainer_group['grpentr_usrid'])." - ".$result_maintainer_group['grpentr_usrid']."\n\nAppName: ".htmlentities($result_maintainer_group['grpentr_name'])." - ".$result_maintainer_group['grpentr_id']."\n\nDesc: ".htmlentities($result_maintainer_group['grpentr_description'])." \n\nCategory: ".$result_maintainer_group_category['cat_name']." \n\nVendor: ".$result_maintainer_group_vendor['vendor_name'], "0");
+				CLog::add("low", "comp_group", "verified", "[App Group] Verified", @usrfunc_GetUsername($RSDB_intern_user_id)." has verified the following app group: \n\n\n\nUser: ".@usrfunc_GetUsername($result_maintainer_group['grpentr_usrid'])." - ".$result_maintainer_group['grpentr_usrid']."\n\nAppName: ".htmlentities($result_maintainer_group['grpentr_name'])." - ".$result_maintainer_group['grpentr_id']."\n\nDesc: ".htmlentities($result_maintainer_group['grpentr_description'])." \n\nCategory: ".$result_maintainer_group_category['cat_name']." \n\nVendor: ".$result_maintainer_group_vendor['vendor_name'], "0");
 			}
 		}
 ?>

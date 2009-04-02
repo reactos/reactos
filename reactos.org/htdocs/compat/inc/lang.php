@@ -33,43 +33,13 @@
 		die(" ");
 	}
 
-
-	// Language detection
-	function check_lang($lang)
-	{
-		if ($lang) {
-			if (@preg_match('/^([a-zA-Z]+)(-[a-zA-Z]+)?$/', $lang, $matches)) {
-				$checked_lang = @strtolower($matches[1]);
-				switch($checked_lang) {
-				case 'de':
-				case 'en':
-				case 'fr':
-				case 'ru':
-					break;
-				default:
-					$checked_lang = '';
-				}
-			}
-			else if ($lang == '*') {
-				$checked_lang = 'en';
-			}
-			else {
-				$checked_lang = '';
-			}
-		}
-		else {
-			$checked_lang = '';
-		}
-	
-		return $checked_lang;
-	}
 	
 	if ($rpm_lang == '' && isset($_COOKIE['roscms_usrset_lang'])) {
 		$rpm_lang = $_COOKIE['roscms_usrset_lang'];
 		if (substr($rpm_lang, -1) == '/') {
 			$rpm_lang = substr($rpm_lang, strlen($rpm_lang) - 1);
 		}
-		$rpm_lang = check_lang($rpm_lang);
+		$rpm_lang = CLanguage::validate($rpm_lang);
 	}
 	
 	if ($rpm_lang == '') {
@@ -84,7 +54,7 @@
 			$accept_language = @$matches[4];
 			if (@preg_match('/^(([a-zA-Z]+)(-[a-zA-Z]+)?)(;q=([0-1](\.[0-9]{1,3})?))?/',
 						   $lang_range, $matches)) {
-				$lang = check_lang($matches[1]);
+				$lang = CLanguage::validate($matches[1]);
 				if ($lang != '') {
 					$q = @$matches[5];
 					if ($q == "") {
@@ -103,7 +73,7 @@
 	}
 	if ($rpm_lang == '') {
 		/* If all else fails, use the default language */
-		$rpm_lang = check_lang('*');
+		$rpm_lang = CLanguage::validate('*');
 	}
 	
 	$roscms_page_lang = $rpm_lang . '/';

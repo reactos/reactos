@@ -126,21 +126,21 @@
 							case 'gif':
 								$Tdbfiletb = $file_name_new."_thumb.gif";
 								$Tdbfile = $file_name_new.".gif";
-								makeGifThumb("media/files/upload/$file_name","media/files/picture/".$Tdbfiletb,"90","250","www.ReactOS.org");
-								makeGif("media/files/upload/$file_name","media/files/picture/".$Tdbfile,"90","www.ReactOS.org");
+								Image::thumbGIF("media/files/upload/$file_name","media/files/picture/".$Tdbfiletb,"90","250","www.ReactOS.org");
+								Image::toGIF("media/files/upload/$file_name","media/files/picture/".$Tdbfile,"90","www.ReactOS.org");
 								break;
 							case 'jpg':
 								$Tdbfiletb = $file_name_new."_thumb.jpg";
 								$Tdbfile = $file_name_new.".jpg";
-								makeJpgThumb("media/files/upload/$file_name","media/files/picture/".$Tdbfiletb,"90","250","www.ReactOS.org");
-								makeJpg("media/files/upload/$file_name","media/files/picture/".$Tdbfile,"90","www.ReactOS.org");
+								Image::thumbJPG("media/files/upload/$file_name","media/files/picture/".$Tdbfiletb,"90","250","www.ReactOS.org");
+								Image::toJPG("media/files/upload/$file_name","media/files/picture/".$Tdbfile,"90","www.ReactOS.org");
 								$infoExif = read_exif_ex("media/files/upload/$file_name", "1");
 								break;
 							case 'png':
 								$Tdbfiletb = $file_name_new."_thumb.png";
 								$Tdbfile = $file_name_new.".png";
-								makePngThumb("media/files/upload/$file_name","media/files/picture/".$Tdbfiletb,"90","250","www.ReactOS.org");
-								makePng("media/files/upload/$file_name","media/files/picture/".$Tdbfile,"90","www.ReactOS.org");
+								Image::thumbPNG("media/files/upload/$file_name","media/files/picture/".$Tdbfiletb,"90","250","www.ReactOS.org");
+								Image::toPNG("media/files/upload/$file_name","media/files/picture/".$Tdbfile,"90","www.ReactOS.org");
 								break;
 							default:
 								$suoka="1";
@@ -166,158 +166,5 @@ if ($suoka == "1") {
 	echo "<p><b>The picture upload process was not successful!</b></p>";
 	@unlink("media/files/upload/$file_name");
 }
-
-	function makeJpgThumb($img_sourse, $save_to, $quality, $width, $str) { 
-		$size = GetImageSize($img_sourse);
-		$im_in = ImageCreateFromJPEG($img_sourse);
-		
-		$new_height = ($width * $size[1]) / $size[0]; // Generate new height for image
-		$im_out = imagecreatetruecolor($width, $new_height);
-		
-		ImageCopyResampled($im_out, $im_in, 0, 0, 0, 0, $width, $new_height, $size[0], $size[1]);
-		
-		#Find X & Y for note
-		$X_var = ImageSX($im_out); 
-		$X_var = $X_var - 130;
-		$Y_var = ImageSY($im_out); 
-		$Y_var = $Y_var - 25;
-		
-		#Color
-		$white = ImageColorAllocate($im_out, 0, 0, 0);
-		
-		#Add note(simple: site address)
-		ImageString($im_out,2,$X_var,$Y_var,$str,$white);
-		
-		ImageJPEG($im_out, $save_to, $quality); // Create image
-		ImageDestroy($im_in);
-		ImageDestroy($im_out);
-	}
-	
-	function makePngThumb($img_sourse, $save_to, $quality, $width, $str) { 
-		$size = GetImageSize($img_sourse);
-		$im_in = ImageCreateFromPNG($img_sourse);
-		
-		$new_height = ($width * $size[1]) / $size[0]; // Generate new height for image
-		$im_out = imagecreatetruecolor($width, $new_height);
-		
-		ImageCopyResampled($im_out, $im_in, 0, 0, 0, 0, $width, $new_height, $size[0], $size[1]);
-		   
-		#Find X & Y for note
-		$X_var = ImageSX($im_out); 
-		$X_var = $X_var - 130;
-		$Y_var = ImageSY($im_out); 
-		$Y_var = $Y_var - 25;
-		
-		#Color
-		$white = ImageColorAllocate($im_out, 0, 0, 0);
-		
-		#Add note(simple: site address)
-		ImageString($im_out,2,$X_var,$Y_var,$str,$white);
-		
-		ImagePNG($im_out, $save_to, $quality); // Create image
-		ImageDestroy($im_in);
-		ImageDestroy($im_out);
-	}
-	
-	function makeGifThumb($img_sourse, $save_to, $quality, $width, $str) { 
-		$size = GetImageSize($img_sourse);
-		$im_in = ImageCreateFromGIF($img_sourse);
-		
-		$new_height = ($width * $size[1]) / $size[0]; // Generate new height for image
-		$im_out = imagecreatetruecolor($width, $new_height);
-		
-		ImageCopyResampled($im_out, $im_in, 0, 0, 0, 0, $width, $new_height, $size[0], $size[1]);
-		   
-		#Find X & Y for note
-		$X_var = ImageSX($im_out); 
-		$X_var = $X_var - 130;
-		$Y_var = ImageSY($im_out); 
-		$Y_var = $Y_var - 25;
-		
-		#Color
-		$white = ImageColorAllocate($im_out, 0, 0, 0);
-		
-		#Add note(simple: site address)
-		ImageString($im_out,2,$X_var,$Y_var,$str,$white);
-		
-		ImageGIF($im_out, $save_to, $quality); // Create image
-		ImageDestroy($im_in);
-		ImageDestroy($im_out);
-	}
-
-	function makeJpg($img_sourse, $save_to, $quality, $str) { 
-		$size = GetImageSize($img_sourse);
-		$im_in = ImageCreateFromJPEG($img_sourse);
-		
-		$im_out = imagecreatetruecolor($size[0], $size[1]);
-		
-		ImageCopyResampled($im_out, $im_in, 0, 0, 0, 0, $size[0], $size[1], $size[0], $size[1]);
-		   
-		#Find X & Y for note
-		$X_var = ImageSX($im_out); 
-		$X_var = $X_var - 130;
-		$Y_var = ImageSY($im_out); 
-		$Y_var = $Y_var - 25;
-		
-		#Color
-		$white = ImageColorAllocate($im_out, 0, 0, 0);
-		
-		#Add note(simple: site address)
-		ImageString($im_out,2,$X_var,$Y_var,$str,$white);
-		
-		ImageJPEG($im_out, $save_to, $quality); // Create image
-		ImageDestroy($im_in);
-		ImageDestroy($im_out);
-	}
-	
-	function makePng($img_sourse, $save_to, $quality, $str) { 
-		$size = GetImageSize($img_sourse);
-		$im_in = ImageCreateFromPNG($img_sourse);
-		
-		$im_out = imagecreatetruecolor($size[0], $size[1]);
-		
-		ImageCopyResampled($im_out, $im_in, 0, 0, 0, 0, $size[0], $size[1], $size[0], $size[1]);
-		   
-		#Find X & Y for note
-		$X_var = ImageSX($im_out); 
-		$X_var = $X_var - 130;
-		$Y_var = ImageSY($im_out); 
-		$Y_var = $Y_var - 25;
-		
-		#Color
-		$white = ImageColorAllocate($im_out, 0, 0, 0);
-		
-		#Add note(simple: site address)
-		ImageString($im_out,2,$X_var,$Y_var,$str,$white);
-		
-		ImagePNG($im_out, $save_to, $quality); // Create image
-		ImageDestroy($im_in);
-		ImageDestroy($im_out);
-	}
-	
-	function makeGif($img_sourse, $save_to, $quality, $str) { 
-		$size = GetImageSize($img_sourse);
-		$im_in = ImageCreateFromGIF($img_sourse);
-		
-		$im_out = imagecreatetruecolor($size[0], $size[1]);
-		
-		ImageCopyResampled($im_out, $im_in, 0, 0, 0, 0, $size[0], $size[1], $size[0], $size[1]);
-		   
-		#Find X & Y for note
-		$X_var = ImageSX($im_out); 
-		$X_var = $X_var - 130;
-		$Y_var = ImageSY($im_out); 
-		$Y_var = $Y_var - 25;
-		
-		#Color
-		$white = ImageColorAllocate($im_out, 0, 0, 0);
-		
-		#Add note(simple: site address)
-		ImageString($im_out,2,$X_var,$Y_var,$str,$white);
-		
-		ImageGIF($im_out, $save_to, $quality); // Create image
-		ImageDestroy($im_in);
-		ImageDestroy($im_out);
-	}
 
 ?>

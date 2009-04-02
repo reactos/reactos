@@ -55,7 +55,7 @@ if ($result_page['comp_id']) {
 
 	// Voting - update DB
 	if ($RSDB_SET_vote != "" && $RSDB_SET_vote2 != "") {
-		db_update_stars_vote($RSDB_SET_vote, $RSDB_SET_vote2, "rsdb_item_comp_testresults", "test");
+		Star::addVote($RSDB_SET_vote, $RSDB_SET_vote2, "rsdb_item_comp_testresults", "test");
 	}
 
 	if ($RSDB_SET_order == "new") {
@@ -105,15 +105,15 @@ if ($result_page['comp_id']) {
 				if ($RSDB_TEMP_voting_history == false) {
 					echo "Rate this test: ";
 					if ($result_testreports['test_useful_vote_user'] > $RSDB_setting_stars_threshold) {
-						echo draw_stars_vote($result_testreports['test_useful_vote_value'], $result_testreports['test_useful_vote_user'], 5, "", ($RSDB_intern_link_item_item2_vote.$result_testreports['test_id']."&amp;vote2="));draw_stars_vote($result_testreports['test_useful_vote_value'], $result_testreports['test_useful_vote_user'], 5, "", ($RSDB_intern_link_item_item2_vote.$result_testreports['test_id']."&amp;vote2="));
+						echo Star::drawVoteable($result_testreports['test_useful_vote_value'], $result_testreports['test_useful_vote_user'], 5, "", ($RSDB_intern_link_item_item2_vote.$result_testreports['test_id']."&amp;vote2="));Star::drawVoteable($result_testreports['test_useful_vote_value'], $result_testreports['test_useful_vote_user'], 5, "", ($RSDB_intern_link_item_item2_vote.$result_testreports['test_id']."&amp;vote2="));
 					}
 					else {
-						echo draw_stars_vote(0, 0, 5, "", ($RSDB_intern_link_item_item2_vote.$result_testreports['test_id']."&amp;vote2="));draw_stars_vote($result_testreports['test_useful_vote_value'], $result_testreports['test_useful_vote_user'], 5, "", ($RSDB_intern_link_item_item2_vote.$result_testreports['test_id']."&amp;vote2="));
+						echo Star::drawVoteable(0, 0, 5, "", ($RSDB_intern_link_item_item2_vote.$result_testreports['test_id']."&amp;vote2="));Star::drawVoteable($result_testreports['test_useful_vote_value'], $result_testreports['test_useful_vote_user'], 5, "", ($RSDB_intern_link_item_item2_vote.$result_testreports['test_id']."&amp;vote2="));
 					}
 				}
 				else {
 					echo "Rating: ";
-					echo draw_stars($result_testreports['test_useful_vote_value'], $result_testreports['test_useful_vote_user'], 5, "");
+					echo Star::drawNormal($result_testreports['test_useful_vote_value'], $result_testreports['test_useful_vote_user'], 5, "");
 				}
 			    ?>
               </font></div></td>
@@ -183,11 +183,11 @@ if ($result_page['comp_id']) {
             <td rowspan="2" valign="top"><p><font size="2"><strong>Conclusion</strong><br />
             <?php echo wordwrap(nl2br(htmlentities($result_testreports['test_conclusion'], ENT_QUOTES))); ?></font></p>			</td>
             <td width="70"><div align="right">Function: </div></td>
-            <td width="110">&nbsp;<font size="1"><?php echo draw_stars($result_testreports['test_result_function'], 1, 5, ""); ?></font></td>
+            <td width="110">&nbsp;<font size="1"><?php echo Star::drawNormal($result_testreports['test_result_function'], 1, 5, ""); ?></font></td>
           </tr>
           <tr>
             <td><div align="right">Install: </div></td>
-            <td>&nbsp;<font size="1"><?php echo draw_stars($result_testreports['test_result_install'], 1, 5, ""); ?></font></td>
+            <td>&nbsp;<font size="1"><?php echo Star::drawNormal($result_testreports['test_result_install'], 1, 5, ""); ?></font></td>
           </tr>
         </table></td>
       </tr>

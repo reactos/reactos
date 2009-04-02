@@ -568,5 +568,5 @@
 	}
 	
 	
-			//msg_bar("Compatibility");
+			//Message::show("Compatibility");
 ?>

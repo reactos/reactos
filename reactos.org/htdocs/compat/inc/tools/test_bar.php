@@ -52,11 +52,11 @@ function test_bar() { // show the forum bar
 	
 	Threshold: 
 		<select name="threshold" size="1">
-			<option value="1" <?php if ($RSDB_SET_threshold == "1") { echo 'selected="selected"'; } ?>>1 star (<?php echo calc_threshold_stars_test(0, 1, true, "testresults", "test"); ?>)</option>
-			<option value="2" <?php if ($RSDB_SET_threshold == "2") { echo 'selected="selected"'; } ?>>2 stars (<?php echo calc_threshold_stars_test(0, 2, true, "testresults", "test"); ?>)</option>
-			<option value="3" <?php if ($RSDB_SET_threshold == "3") { echo 'selected="selected"'; } ?>>3 stars (<?php echo calc_threshold_stars_test(0, 3, true, "testresults", "test"); ?>)</option>
-			<option value="4" <?php if ($RSDB_SET_threshold == "4") { echo 'selected="selected"'; } ?>>4 stars (<?php echo calc_threshold_stars_test(0, 4, true, "testresults", "test"); ?>)</option>
-			<option value="5" <?php if ($RSDB_SET_threshold == "5") { echo 'selected="selected"'; } ?>>5 stars (<?php echo calc_threshold_stars_test(0, 5, true, "testresults", "test"); ?>)</option>
+			<option value="1" <?php if ($RSDB_SET_threshold == "1") { echo 'selected="selected"'; } ?>>1 star (<?php echo Star::thresholdTests(0, 1, true, "testresults", "test"); ?>)</option>
+			<option value="2" <?php if ($RSDB_SET_threshold == "2") { echo 'selected="selected"'; } ?>>2 stars (<?php echo Star::thresholdTests(0, 2, true, "testresults", "test"); ?>)</option>
+			<option value="3" <?php if ($RSDB_SET_threshold == "3") { echo 'selected="selected"'; } ?>>3 stars (<?php echo Star::thresholdTests(0, 3, true, "testresults", "test"); ?>)</option>
+			<option value="4" <?php if ($RSDB_SET_threshold == "4") { echo 'selected="selected"'; } ?>>4 stars (<?php echo Star::thresholdTests(0, 4, true, "testresults", "test"); ?>)</option>
+			<option value="5" <?php if ($RSDB_SET_threshold == "5") { echo 'selected="selected"'; } ?>>5 stars (<?php echo Star::thresholdTests(0, 5, true, "testresults", "test"); ?>)</option>
 		</select>
 	 | </nobr><nobr>
 	 <select name="order" size="1">

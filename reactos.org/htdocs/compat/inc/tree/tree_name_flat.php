@@ -184,7 +184,7 @@ if ($result_count_cat[0]) {
 				$counter_screenshots += $result_count_screenshots[0];
 			}
 	?>
-        &nbsp;<img src="media/icons/awards/<?php echo draw_award_icon($counter_awards_best); ?>.gif" alt="<?php echo draw_award_name($counter_awards_best); ?>" width="16" height="16" /> <?php echo draw_award_name($counter_awards_best); ?>	</font></div></td>
+        &nbsp;<img src="media/icons/awards/<?php echo Award::icon($counter_awards_best); ?>.gif" alt="<?php echo Award::name($counter_awards_best); ?>" width="16" height="16" /> <?php echo Award::name($counter_awards_best); ?>	</font></div></td>
     <td valign="top" bgcolor="<?php echo $farbe; ?>"><div align="center"><font size="2" face="Arial, Helvetica, sans-serif">
         <?php 
 			
@@ -215,7 +215,7 @@ if ($result_count_cat[0]) {
     <td valign="top" bgcolor="<?php echo $farbe; ?>"><div align="left"><font size="2">
         <?php 
 			
-			echo draw_stars_small($counter_stars_function_sum, $counter_stars_user_sum, 5, "") . " (".$counter_stars_user_sum.")";
+			echo Star::drawSmall($counter_stars_function_sum, $counter_stars_user_sum, 5, "") . " (".$counter_stars_user_sum.")";
 			
 			?>
     </font></div></td>

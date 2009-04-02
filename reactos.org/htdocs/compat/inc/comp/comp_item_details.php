@@ -87,8 +87,8 @@ if ($result_page['comp_id']) {
             </ul>
             <span class="simple"><strong>Compatibility</strong></span>
             <ul class=simple>
-              <li><strong>Award:</strong> <img src="media/icons/awards/<?php echo draw_award_icon($result_page['comp_award']); ?>_32.gif" alt="<?php echo draw_award_name($result_page['comp_award']); ?>" width="32" height="32" />
-			  <?php echo draw_award_name($result_page['comp_award']); ?></li>
+              <li><strong>Award:</strong> <img src="media/icons/awards/<?php echo Award::icon($result_page['comp_award']); ?>_32.gif" alt="<?php echo Award::name($result_page['comp_award']); ?>" width="32" height="32" />
+			  <?php echo Award::name($result_page['comp_award']); ?></li>
               <li><strong>Function:</strong> <?php
 			
 			$counter_stars_install = 0;
@@ -105,13 +105,13 @@ if ($result_page['comp_id']) {
 				$counter_stars_user++;
 			}
 			
-			echo draw_stars($counter_stars_function, $counter_stars_user, 5, "tests");
+			echo Star::drawNormal($counter_stars_function, $counter_stars_user, 5, "tests");
 
 			
 			?></li>
               <li><strong>Install:</strong> <?php
 			
-			echo draw_stars($counter_stars_install, $counter_stars_user, 5, "tests");
+			echo Star::drawNormal($counter_stars_install, $counter_stars_user, 5, "tests");
 			
 			?></li>
             </ul>

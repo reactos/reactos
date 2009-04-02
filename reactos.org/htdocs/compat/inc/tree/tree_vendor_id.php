@@ -256,20 +256,20 @@ p.tabLink_u         { color: black; font-size : 10pt; padding : 0 8px 1px 2px; m
 				
 				// Forum entries:
         $stmt_count=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_item_comp_forum WHERE fmsg_visible = '1' AND fmsg_comp_id = :comp_id");
-        $stmt->bindParam('comp_id',$result_group_sum_items['comp_id'],PDO::PARAM_STR);
-        $stmt->execute();
-				$result_count_forumentries = $stmt->fetchOnce(PDO::FETCH_NUM);
+        $stmt_count->bindParam('comp_id',$result_group_sum_items['comp_id'],PDO::PARAM_STR);
+        $stmt_count->execute();
+				$result_count_forumentries = $stmt_count->fetchOnce(PDO::FETCH_NUM);
 				$counter_forumentries += $result_count_forumentries[0];
 
 				// Screenshots:
         $stmt_count=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_object_media WHERE media_visible = '1' AND media_groupid = :group_id");
         $stmt_count->bindParam('group_id',$result_group_sum_items['comp_media'],PDO::PARAM_STR);
         $stmt_count->execute();
-				$result_count_screenshots = $stmt_count->fetchOnce(PDO::FETCH_ASSOC);
+				$result_count_screenshots = $stmt_count->fetchOnce(PDO::FETCH_NUM);
 				$counter_screenshots += $result_count_screenshots[0];
 			}
 ?>
-        <td valign="top" bgcolor="<?php echo $farbe; ?>"><div align="left"><font size="1">&nbsp;<img src="media/icons/awards/<?php echo draw_award_icon($counter_awards_best); ?>.gif" alt="<?php echo draw_award_name($counter_awards_best); ?>" width="16" height="16" /> <?php echo draw_award_name($counter_awards_best); ?></font></div></td>
+        <td valign="top" bgcolor="<?php echo $farbe; ?>"><div align="left"><font size="1">&nbsp;<img src="media/icons/awards/<?php echo Award::icon($counter_awards_best); ?>.gif" alt="<?php echo Award::name($counter_awards_best); ?>" width="16" height="16" /> <?php echo Award::name($counter_awards_best); ?></font></div></td>
         <td valign="top" bgcolor="<?php echo $farbe; ?>"><div align="center"><font size="2">
             <?php 
 			
@@ -280,7 +280,7 @@ p.tabLink_u         { color: black; font-size : 10pt; padding : 0 8px 1px 2px; m
         <td valign="top" bgcolor="<?php echo $farbe; ?>"><div align="left"><font size="2">
             <?php 
 			
-			echo draw_stars_small($counter_stars_function_sum, $counter_stars_user_sum, 5, "") . " (".$counter_stars_user_sum.")";
+			echo Star::drawSmall($counter_stars_function_sum, $counter_stars_user_sum, 5, "") . " (".$counter_stars_user_sum.")";
 			
 			?>
         </font></div></td>

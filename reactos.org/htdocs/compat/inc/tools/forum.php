@@ -39,7 +39,7 @@
 
 // Voting - update DB
 if ($RSDB_SET_vote != "" && $RSDB_SET_vote2 != "") {
-	db_update_stars_vote($RSDB_SET_vote, $RSDB_SET_vote2, "rsdb_item_comp_forum", "fmsg");
+	Star::addVote($RSDB_SET_vote, $RSDB_SET_vote2, "rsdb_item_comp_forum", "fmsg");
 }
 if ($RSDB_SET_order == "new") {
 	$RSDB_TEMP_order = "DESC";
@@ -137,15 +137,15 @@ function create_forum_flat() {
 				if ($RSDB_TEMP_voting_history == false) {
 					echo "Rate this message: ";
 					if ($result_fmsgreports['fmsg_useful_vote_value'] > $RSDB_setting_stars_threshold) {
-						echo draw_stars_vote($result_fmsgreports['fmsg_useful_vote_value'], $result_fmsgreports['fmsg_useful_vote_user'], 5, "", ($RSDB_intern_link_item_item2_vote.$result_fmsgreports['fmsg_id']."&amp;vote2="));
+						echo Star::drawVoteable($result_fmsgreports['fmsg_useful_vote_value'], $result_fmsgreports['fmsg_useful_vote_user'], 5, "", ($RSDB_intern_link_item_item2_vote.$result_fmsgreports['fmsg_id']."&amp;vote2="));
 					}
 					else {
-						echo draw_stars_vote(0, 0, 5, "", ($RSDB_intern_link_item_item2_vote.$result_fmsgreports['fmsg_id']."&amp;vote2="));
+						echo Star::drawVoteable(0, 0, 5, "", ($RSDB_intern_link_item_item2_vote.$result_fmsgreports['fmsg_id']."&amp;vote2="));
 					}
 				}
 				else {
 					echo "Rating: ";
-					echo draw_stars($result_fmsgreports['fmsg_useful_vote_value'], $result_fmsgreports['fmsg_useful_vote_user'], 5, "");
+					echo Star::drawNormal($result_fmsgreports['fmsg_useful_vote_value'], $result_fmsgreports['fmsg_useful_vote_user'], 5, "");
 				}
 			    ?>
               </font></div></td>
@@ -188,7 +188,7 @@ function create_forum_flat() {
 		}
 		else {
 			echo "<p><i>This message is beneath your threshold</i> - ";
-			echo draw_stars_small($result_fmsgreports['fmsg_useful_vote_value'], $result_fmsgreports['fmsg_useful_vote_user'], 5, "") ."</p>";
+			echo Star::drawSmall($result_fmsgreports['fmsg_useful_vote_value'], $result_fmsgreports['fmsg_useful_vote_user'], 5, "") ."</p>";
 		}
 	}
 }
@@ -211,8 +211,8 @@ function create_forum_nested($RSDB_TEMP_msgid) {
 	}
 
   $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp_forum WHERE fmsg_visible = '1' AND fmsg_".$RSDB_intern_code_view_shortname."_id = :item_id AND fmsg_parent = :parent ORDER BY fmsg_date ".$RSDB_TEMP_order."");
-  $stmt->bindParam('item_id',$RSDB_SET_item,PDO::PARAM_sTR);
-  $stmt->bindParam('parent',$RSDB_TEMP_msgid,PDO::PARAM_sTR);
+  $stmt->bindParam('item_id',$RSDB_SET_item,PDO::PARAM_STR);
+  $stmt->bindParam('parent',$RSDB_TEMP_msgid,PDO::PARAM_STR);
   $stmt->execute();
 
 	while($result_fmsgreports = $stmt->fetch(PDO::FETCH_ASSOC)) {
@@ -263,15 +263,15 @@ function create_forum_nested($RSDB_TEMP_msgid) {
 				if ($RSDB_TEMP_voting_history == false) {
 					echo "Rate this message: ";
 					if ($result_fmsgreports['fmsg_useful_vote_value'] > $RSDB_setting_stars_threshold) {
-						echo draw_stars_vote($result_fmsgreports['fmsg_useful_vote_value'], $result_fmsgreports['fmsg_useful_vote_user'], 5, "", ($RSDB_intern_link_item_item2_vote.$result_fmsgreports['fmsg_id']."&amp;vote2="));
+						echo Star::drawVoteable($result_fmsgreports['fmsg_useful_vote_value'], $result_fmsgreports['fmsg_useful_vote_user'], 5, "", ($RSDB_intern_link_item_item2_vote.$result_fmsgreports['fmsg_id']."&amp;vote2="));
 					}
 					else {
-						echo draw_stars_vote(0, 0, 5, "", ($RSDB_intern_link_item_item2_vote.$result_fmsgreports['fmsg_id']."&amp;vote2="));
+						echo Star::drawVoteable(0, 0, 5, "", ($RSDB_intern_link_item_item2_vote.$result_fmsgreports['fmsg_id']."&amp;vote2="));
 					}
 				}
 				else {
 					echo "Rating: ";
-					echo draw_stars($result_fmsgreports['fmsg_useful_vote_value'], $result_fmsgreports['fmsg_useful_vote_user'], 5, "");
+					echo Star::drawNormal($result_fmsgreports['fmsg_useful_vote_value'], $result_fmsgreports['fmsg_useful_vote_user'], 5, "");
 				}
 			    ?>
               </font></div></td>
@@ -327,7 +327,7 @@ function create_forum_nested($RSDB_TEMP_msgid) {
 	?>"></td>
     <td><font size="2"><?php 
 		echo "<i>This message is beneath your threshold</i> - "; // : <strike>".$result_fmsgreports['fmsg_subject']."</i>, Anonymous on ".$result_fmsgreports['fmsg_date']."</strike> - ";
-		echo draw_stars_small($result_fmsgreports['fmsg_useful_vote_value'], $result_fmsgreports['fmsg_useful_vote_user'], 5, "") ."";
+		echo Star::drawSmall($result_fmsgreports['fmsg_useful_vote_value'], $result_fmsgreports['fmsg_useful_vote_user'], 5, "") ."";
 
 	?></font></td>
   </tr>
@@ -392,7 +392,7 @@ function create_forum_threaded($RSDB_TEMP_msgid) {
 		else {
 			echo "<li><i>This message is beneath your threshold - "; //: <strike>".$result_fmsgreports['fmsg_subject']."</i>, Anonymous on ".$result_fmsgreports['fmsg_date']."</strike> - ";
 		}
-		echo draw_stars_small($result_fmsgreports['fmsg_useful_vote_value'], $result_fmsgreports['fmsg_useful_vote_user'], 5, "") ."</li>";
+		echo Star::drawSmall($result_fmsgreports['fmsg_useful_vote_value'], $result_fmsgreports['fmsg_useful_vote_user'], 5, "") ."</li>";
 
     $stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_item_comp_forum WHERE fmsg_visible = '1' AND fmsg_".$RSDB_intern_code_view_shortname."_id = :item_id AND fmsg_parent = :parent");
     $stmt->bindParam('item_id',$RSDB_SET_item,PDO::PARAM_STR);
@@ -465,7 +465,7 @@ function create_forum_bboard($RSDB_TEMP_msgid) {
 				
 			?></font></div></td>
 			<td bgcolor="#EEEEEE"><div align="center"><font size="2"><?php echo usrfunc_GetUsername($result_fmsgreports['fmsg_user_id']); ?></font></div></td>
-			<td bgcolor="#E2E2E2"><div align="left"><font size="2">&nbsp;<?php echo draw_stars_small($result_fmsgreports['fmsg_useful_vote_value'], $result_fmsgreports['fmsg_useful_vote_user'], 5, ""); ?></font></div></td>
+			<td bgcolor="#E2E2E2"><div align="left"><font size="2">&nbsp;<?php echo Star::drawSmall($result_fmsgreports['fmsg_useful_vote_value'], $result_fmsgreports['fmsg_useful_vote_user'], 5, ""); ?></font></div></td>
 			<td bgcolor="#EEEEEE"><div align="center"><font size="2"><?php 
 
 				$RSDB_TEMP_counter_lastreply = 0;
@@ -486,7 +486,7 @@ function create_forum_bboard($RSDB_TEMP_msgid) {
 
 <?php
 		//echo "<li><b><i>".$result_fmsgreports['fmsg_subject']."</i></b>, Anonymous on ".$result_fmsgreports['fmsg_date']." - ";
-		//echo draw_stars_small($result_fmsgreports['fmsg_useful_vote_value'], $result_fmsgreports['fmsg_useful_vote_user'], 5, "") ."</li>";
+		//echo Star::drawSmall($result_fmsgreports['fmsg_useful_vote_value'], $result_fmsgreports['fmsg_useful_vote_user'], 5, "") ."</li>";
 	
 	}
 	
@@ -533,15 +533,15 @@ function show_msg($RSDB_TEMP_msgid) {
 				if ($RSDB_TEMP_voting_history == false) {
 					echo "Rate this message: ";
 					if ($result_fmsgreports['fmsg_useful_vote_value'] > $RSDB_setting_stars_threshold) {
-						echo draw_stars_vote($result_fmsgreports['fmsg_useful_vote_value'], $result_fmsgreports['fmsg_useful_vote_user'], 5, "", ($RSDB_intern_link_item_item2_vote.$result_fmsgreports['fmsg_id']."&amp;vote2="));
+						echo Star::drawVoteable($result_fmsgreports['fmsg_useful_vote_value'], $result_fmsgreports['fmsg_useful_vote_user'], 5, "", ($RSDB_intern_link_item_item2_vote.$result_fmsgreports['fmsg_id']."&amp;vote2="));
 					}
 					else {
-						echo draw_stars_vote(0, 0, 5, "", ($RSDB_intern_link_item_item2_vote.$result_fmsgreports['fmsg_id']."&amp;vote2="));
+						echo Star::drawVoteable(0, 0, 5, "", ($RSDB_intern_link_item_item2_vote.$result_fmsgreports['fmsg_id']."&amp;vote2="));
 					}
 				}
 				else {
 					echo "Rating: ";
-					echo draw_stars($result_fmsgreports['fmsg_useful_vote_value'], $result_fmsgreports['fmsg_useful_vote_user'], 5, "");
+					echo Star::drawNormal($result_fmsgreports['fmsg_useful_vote_value'], $result_fmsgreports['fmsg_useful_vote_user'], 5, "");
 				}
 			    ?>
               </font></div></td>
@@ -582,7 +582,7 @@ function show_msg($RSDB_TEMP_msgid) {
 <?php
 	}
 	else {
-		msg_bar("<b>This message is beneath your threshold.</b>");
+		Message::show("<b>This message is beneath your threshold.</b>");
 	}
 }
 

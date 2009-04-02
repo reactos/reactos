@@ -194,7 +194,7 @@
     </font></td>
     <td><div align="left"><font size="2" face="Arial, Helvetica, sans-serif">&nbsp;
               <?php 
-		echo draw_stars_small($result_date_entry_records['test_result_function'], 1, 5, "");
+		echo Star::drawSmall($result_date_entry_records['test_result_function'], 1, 5, "");
 	?>
     </font></div></td>
   </tr>

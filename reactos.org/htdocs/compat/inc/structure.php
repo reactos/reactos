@@ -155,7 +155,7 @@ function create_structure($page )
 				if (substr($rpm_lang, -1) == '/') {
 					$rpm_lang = substr($rpm_lang, strlen($rpm_lang) - 1);
 				}
-				$rpm_lang = check_lang($rpm_lang);
+				$rpm_lang = CLanguage::validate($rpm_lang);
 			}
 //			echo $rpm_lang;
 		  ?>

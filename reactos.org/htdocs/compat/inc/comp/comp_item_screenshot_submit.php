@@ -45,7 +45,7 @@ if ($result_page['comp_id']) {
 echo "<h2>".$result_page['comp_name'] ." [ReactOS ".  @show_osversion($result_page['comp_osversion']) ."]</h2>"; 
 
 if ($RSDB_intern_user_id <= 0) {
-	please_register(); 
+	Message::loginRequired(); 
 }
 else {
 	

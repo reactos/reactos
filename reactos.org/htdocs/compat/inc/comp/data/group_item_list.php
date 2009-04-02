@@ -169,7 +169,7 @@
 
 				 ?></td>
 
-              <td width="20%" bgcolor="<?php echo $farbe; ?>"><font size="1">&nbsp;<img src="media/icons/awards/<?php echo draw_award_icon($result_sortby_b['comp_award']); ?>.gif" alt="<?php echo draw_award_name($result_sortby_b['comp_award']); ?>" width="16" height="16" /> <?php echo draw_award_name($result_sortby_b['comp_award']); ?></font></td>
+              <td width="20%" bgcolor="<?php echo $farbe; ?>"><font size="1">&nbsp;<img src="media/icons/awards/<?php echo Award::icon($result_sortby_b['comp_award']); ?>.gif" alt="<?php echo Award::name($result_sortby_b['comp_award']); ?>" width="16" height="16" /> <?php echo Award::name($result_sortby_b['comp_award']); ?></font></td>
               <?php
 			
 				$counter_stars_install = 0;
@@ -186,8 +186,8 @@
 				$counter_stars_user += $tmp['user_sum'];
 
 			?>
-              <td width="20%" bgcolor="<?php echo $farbe; ?>"><font size="1"><?php echo draw_stars($counter_stars_function, $counter_stars_user, 5, "tests"); ?></font></td>
-              <td width="20%" bgcolor="<?php echo $farbe; ?>"><font size="1"><?php echo draw_stars($counter_stars_install, $counter_stars_user, 5, "tests"); ?></font></td>
+              <td width="20%" bgcolor="<?php echo $farbe; ?>"><font size="1"><?php echo Star::drawNormal($counter_stars_function, $counter_stars_user, 5, "tests"); ?></font></td>
+              <td width="20%" bgcolor="<?php echo $farbe; ?>"><font size="1"><?php echo Star::drawNormal($counter_stars_install, $counter_stars_user, 5, "tests"); ?></font></td>
               <td width="10%" bgcolor="<?php echo $farbe; ?>" <?php 
 	
 				$counter_testentries = 0;

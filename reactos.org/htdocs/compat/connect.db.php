@@ -24,12 +24,7 @@ $cdb_host = 'localhost';
 $cdb_user = 'username';
 $cdb_pass = 'password';
 $cdb_name = 'compat';
-$cdb_port = 3301;
-
-//@HACK backward compatability for mysql_* calls
-$connect = @mysql_connect($cdb_host, $cdb_user, $cdb_pass) or die("ERROR: Cannot connect to the database!");
-$selectDB = @mysql_select_db($cdb_name, $connect) or die("Cannot find and select <b>$cdb_name</b>!");
-	
+$cdb_port = 3306;
 
 // vars are unset in CDBConnection class
 // !!! so be sure to use CDBConnection or unset(..) yourself

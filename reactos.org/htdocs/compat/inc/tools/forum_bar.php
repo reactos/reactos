@@ -54,11 +54,11 @@ function forum_bar() { // show the forum bar
 	
 	Threshold: 
 		<select name="threshold" size="1">
-			<option value="1" <?php if ($RSDB_SET_threshold == "1") { echo 'selected="selected"'; } ?>>1 star (<?php echo calc_threshold_stars_forum(0, 1, true, "forum", "fmsg"); ?>)</option>
-			<option value="2" <?php if ($RSDB_SET_threshold == "2") { echo 'selected="selected"'; } ?>>2 stars (<?php echo calc_threshold_stars_forum(0, 2, true, "forum", "fmsg"); ?>)</option>
-			<option value="3" <?php if ($RSDB_SET_threshold == "3") { echo 'selected="selected"'; } ?>>3 stars (<?php echo calc_threshold_stars_forum(0, 3, true, "forum", "fmsg"); ?>)</option>
-			<option value="4" <?php if ($RSDB_SET_threshold == "4") { echo 'selected="selected"'; } ?>>4 stars (<?php echo calc_threshold_stars_forum(0, 4, true, "forum", "fmsg"); ?>)</option>
-			<option value="5" <?php if ($RSDB_SET_threshold == "5") { echo 'selected="selected"'; } ?>>5 stars (<?php echo calc_threshold_stars_forum(0, 5, true, "forum", "fmsg"); ?>)</option>
+			<option value="1" <?php if ($RSDB_SET_threshold == "1") { echo 'selected="selected"'; } ?>>1 star (<?php echo Star::thresholdForum(0, 1, true, "forum", "fmsg"); ?>)</option>
+			<option value="2" <?php if ($RSDB_SET_threshold == "2") { echo 'selected="selected"'; } ?>>2 stars (<?php echo Star::thresholdForum(0, 2, true, "forum", "fmsg"); ?>)</option>
+			<option value="3" <?php if ($RSDB_SET_threshold == "3") { echo 'selected="selected"'; } ?>>3 stars (<?php echo Star::thresholdForum(0, 3, true, "forum", "fmsg"); ?>)</option>
+			<option value="4" <?php if ($RSDB_SET_threshold == "4") { echo 'selected="selected"'; } ?>>4 stars (<?php echo Star::thresholdForum(0, 4, true, "forum", "fmsg"); ?>)</option>
+			<option value="5" <?php if ($RSDB_SET_threshold == "5") { echo 'selected="selected"'; } ?>>5 stars (<?php echo Star::thresholdForum(0, 5, true, "forum", "fmsg"); ?>)</option>
 		</select>
 	 | </nobr><nobr>Style: 
 	<select name="fstyle" size="1">

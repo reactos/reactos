@@ -79,83 +79,10 @@ if ($result_count_cat[0]) {
 			
 			$RSDB_TEMP_cat_current_id_guess=$RSDB_TEMP_cat_id;
 	
-			create_treeview($RSDB_TEMP_cat_path, $RSDB_TEMP_cat_id, $RSDB_TEMP_cat_level, $RSDB_TEMP_cat_level);
+			Category::showTree($RSDB_TEMP_cat_path, $RSDB_TEMP_cat_id, $RSDB_TEMP_cat_level, $RSDB_TEMP_cat_level, true);
 	
 		}	// end while
 }
-?>
-
-<?php
-
-		
-	function create_treeview($RSDB_TEMP_cat_path, $RSDB_TEMP_cat_id, $RSDB_TEMP_cat_level, $RSDB_TEMP_cat_level_newmain) {
-		global $RSDB_intern_link_category_cat;
-		global $RSDB_intern_code_db_rsdb_categories;
-		global $RSDB_TEMP_sortby;
-
-		$stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_categories WHERE cat_path = :cat_path AND cat_visible = '1' " . $RSDB_intern_code_db_rsdb_categories . " ORDER BY ".$RSDB_TEMP_sortby." ASC");
-    $stmt->bindParam('cat_path',$RSDB_TEMP_cat_id,PDO::PARAM_STR);
-    $stmt->execute();
-					
-		while($result_create_historybar=$stmt->fetch(PDO::FETCH_ASSOC)) { 
-				create_tree_entry($result_create_historybar['cat_id'], $RSDB_TEMP_cat_level_newmain);
-				create_treeview($result_create_historybar['cat_path'], $result_create_historybar['cat_id'], $RSDB_TEMP_cat_level, $RSDB_TEMP_cat_level_newmain);
-		}
-	}
-?>
-
-<?php
-	function create_tree_entry($RSDB_TEMP_entry_id, $RSDB_TEMP_cat_level_newmain) {
-	global $RSDB_intern_selected;
-		
-		global $RSDB_intern_link_category_cat;
-		global $cellcolor2;
-		global $RSDB_intern_code_db_rsdb_categories;
-		$cellcolor=$cellcolor2;
-		
-
-		
-    $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_categories WHERE cat_id = :cat_id AND cat_visible = '1' " . $RSDB_intern_code_db_rsdb_categories . "");
-    $stmt->bindParam('cat_id',$RSDB_TEMP_entry_id,PDO::PARAM_STR);
-    $stmt->execute();
-					
-		$result_create_tree_entry=$stmt->fetchOnce(PDO::FETCH_ASSOC);
-
-		
-		
-		
-		$RSDB_TEMP_cat_current_id_guess = $result_create_tree_entry['cat_id'];
-
-		for ($guesslevel=1; ; $guesslevel++) {
-      $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_categories WHERE cat_id = :cat_id AND cat_visible = '1' " . $RSDB_intern_code_db_rsdb_categories . "");
-      $stmt->bindParam('cat_id',$RSDB_TEMP_cat_current_id_guess,PDO::PARAM_STR);
-      $stmt->execute();
-				$result_category_tree_guesslevel=$stmt->fetchOnce(PDO::FETCH_ASSOC);
-				$RSDB_TEMP_cat_current_id_guess = $result_category_tree_guesslevel['cat_path'];
-				
-				if (!$result_category_tree_guesslevel['cat_name']) {
-					$RSDB_intern_catlevel = ($guesslevel-1);
-					break;
-				}
-		}
-
-		echo "<option value=\"". $result_create_tree_entry['cat_id']. "\"";
-		if ($RSDB_intern_selected != "" && $RSDB_intern_selected == $result_create_tree_entry['cat_id']) {
-			echo " selected "; 
-		}		
-		echo ">\n\n";
-
-		for ($n=$RSDB_TEMP_cat_level_newmain;$n<$RSDB_intern_catlevel;$n++) {
-			echo "&nbsp;&nbsp;&nbsp;&nbsp;";
-		}
-
-		echo $result_create_tree_entry['cat_name'];
-
-		//echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(".$result_create_tree_entry['cat_description'] .")";
-		
-		echo "</option>";
-		
-	}
 ?>
 
 

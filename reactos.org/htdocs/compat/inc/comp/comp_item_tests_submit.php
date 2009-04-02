@@ -46,7 +46,7 @@ if ($result_page['comp_id']) {
 
 
 if ($RSDB_intern_user_id <= 0) {
-	please_register(); 
+	Message::loginRequired(); 
 }
 else {
 	
@@ -78,32 +78,32 @@ else {
 
 	if ($RSDB_TEMP_submitpost == "yes") {
 		if (strlen($RSDB_TEMP_txtwhatwork) <= 3) {
-			msg_bar("The 'What works' textbox is (almost) empty  ...");
+			Message::show("The 'What works' textbox is (almost) empty  ...");
 			echo "<br />";
 			$RSDB_TEMP_SUBMIT_valid = false;
 		}
 		/*if (strlen($RSDB_TEMP_txtwhatnot) <= 3) {
-			msg_bar("The 'What does not work' textbox is (almost) empty  ...");
+			Message::show("The 'What does not work' textbox is (almost) empty  ...");
 			$RSDB_TEMP_SUBMIT_valid = false;
 			echo "<br />";
 		}*/
 		if ((strlen($RSDB_TEMP_txtwhatnottested) <= 3) || $RSDB_TEMP_txtwhatnottested != "Features tested:\n\n\nNOT tested features:\n") {
-			msg_bar("The 'What has been tested and what not' textbox is (almost) empty  ...");
+			Message::show("The 'What has been tested and what not' textbox is (almost) empty  ...");
 			$RSDB_TEMP_SUBMIT_valid = false;
 			echo "<br />";
 		}
 		if ($RSDB_TEMP_optfunc < 1 || $RSDB_TEMP_optfunc > 5) {
-			msg_bar("Application function: please select the star(s) ...");
+			Message::show("Application function: please select the star(s) ...");
 			$RSDB_TEMP_SUBMIT_valid = false;
 			echo "<br />";
 		}
 		if ($RSDB_TEMP_optinstall < 1 || $RSDB_TEMP_optinstall > 5) {
-			msg_bar("Installation routine: please select the star(s) ...");
+			Message::show("Installation routine: please select the star(s) ...");
 			$RSDB_TEMP_SUBMIT_valid = false;
 			echo "<br />";
 		}
 		if (strlen($RSDB_TEMP_txtconclusion) <= 3) {
-			msg_bar("The 'Conclusion' textbox is (almost) empty  ...");
+			Message::show("The 'Conclusion' textbox is (almost) empty  ...");
 			$RSDB_TEMP_SUBMIT_valid = false;
 			echo "<br />";
 		}

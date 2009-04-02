@@ -48,7 +48,7 @@
 	echo "<h3>Submit a forum post</h3>";
 
 if ($RSDB_intern_user_id <= 0) {
-	please_register();
+	Message::loginRequired();
 }
 else {
 
@@ -82,12 +82,12 @@ else {
 
 	if ($RSDB_TEMP_submitpost == "yes") {
 		if (strlen($RSDB_TEMP_txtsubject) <= 3) {
-			msg_bar("The subject textfield is (almost) empty  ...");
+			Message::show("The subject textfield is (almost) empty  ...");
 			echo "<br />";
 			$RSDB_TEMP_SUBMIT_valid = false;
 		}
 		if (strlen($RSDB_TEMP_txtbody) <= 3) {
-			msg_bar("The body textbox is (almost) empty  ...");
+			Message::show("The body textbox is (almost) empty  ...");
 			$RSDB_TEMP_SUBMIT_valid = false;
 			echo "<br />";
 		}
@@ -123,7 +123,7 @@ else {
       $stmt->execute();
 		}
 		else {
-			msg_bar("Double post ...");
+			Message::show("Double post ...");
 			echo "<br />";
 			include("inc/tools/forum.php");
 		}

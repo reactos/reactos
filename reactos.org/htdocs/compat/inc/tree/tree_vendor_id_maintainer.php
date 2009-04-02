@@ -82,7 +82,7 @@
       $stmt->bindParam('vendor_id',$RSDB_SET_vendor,PDO::PARAM_STR);
       $stmt->execute();
 			
-			add_log_entry("low", "tree_vendor", "edit", "[Vendor] Edit entry", @usrfunc_GetUsername($RSDB_intern_user_id)." changed the group data from: \n\nVendor-Name: ".htmlentities($result_maintainer_vendor['vendor_name'])." - ".htmlentities($result_maintainer_vendor['vendor_fullname'])." - ".$result_maintainer_vendor['vendor_id']."\n\nUrl: ".htmlentities($result_maintainer_vendor['vendor_url'])." \n\E-Mail: ".$result_maintainer_vendor['vendor_email']." \n\Info: ".$result_maintainer_vendor['vendor_infotext']." \n\n\nTo: \n\nVendor-Name: ".htmlentities($RSDB_TEMP_vendname)."\n\Fullname: ".htmlentities($RSDB_TEMP_fullname)." \n\nUrl: ".htmlentities($RSDB_TEMP_txturl)." \n\E-Mail: ".htmlentities($RSDB_TEMP_txtemail)." \n\Info: ".htmlentities($RSDB_TEMP_txtinfo), "0");
+			CLog::add("low", "tree_vendor", "edit", "[Vendor] Edit entry", @usrfunc_GetUsername($RSDB_intern_user_id)." changed the group data from: \n\nVendor-Name: ".htmlentities($result_maintainer_vendor['vendor_name'])." - ".htmlentities($result_maintainer_vendor['vendor_fullname'])." - ".$result_maintainer_vendor['vendor_id']."\n\nUrl: ".htmlentities($result_maintainer_vendor['vendor_url'])." \n\E-Mail: ".$result_maintainer_vendor['vendor_email']." \n\Info: ".$result_maintainer_vendor['vendor_infotext']." \n\n\nTo: \n\nVendor-Name: ".htmlentities($RSDB_TEMP_vendname)."\n\Fullname: ".htmlentities($RSDB_TEMP_fullname)." \n\nUrl: ".htmlentities($RSDB_TEMP_txturl)." \n\E-Mail: ".htmlentities($RSDB_TEMP_txtemail)." \n\Info: ".htmlentities($RSDB_TEMP_txtinfo), "0");
 			?>
 			<script language="JavaScript">
 				window.setTimeout('window.location.href="<?php echo $RSDB_intern_link_vendor_both_javascript; ?>"','500')
@@ -106,7 +106,7 @@
       $stmt=CDBConnection::getInstance()->prepare("UPDATE rsdb_item_vendor SET vendor_visible = '3' WHERE vendor_id = :vendor_id LIMIT 1");
       $stmt->bindParam('vendor_id',$RSDB_SET_vendor,PDO::PARAM_STR);
       $stmt->execute();
-			add_log_entry("low", "tree_vendor", "report_spam", "[Vendor] Spam/ads report", @usrfunc_GetUsername($RSDB_intern_user_id)." wrote: \n".htmlentities($RSDB_TEMP_txtspam)." \n\n\n\nUser: ".@usrfunc_GetUsername($result_maintainer_vendor['vendor_usrid'])." - ".$result_maintainer_vendor['vendor_usrid']."\n\nVendor-Name: ".htmlentities($result_maintainer_vendor['vendor_name'])." - ".$result_maintainer_vendor['vendor_id']."\n\nUrl: ".htmlentities($result_maintainer_vendor['vendor_url'])." \n\E-Mail: ".$result_maintainer_vendor['vendor_email']." \n\Info: ".$result_maintainer_vendor['vendor_infotext'], $result_maintainer_vendor['vendor_usrid']);
+			CLog::add("low", "tree_vendor", "report_spam", "[Vendor] Spam/ads report", @usrfunc_GetUsername($RSDB_intern_user_id)." wrote: \n".htmlentities($RSDB_TEMP_txtspam)." \n\n\n\nUser: ".@usrfunc_GetUsername($result_maintainer_vendor['vendor_usrid'])." - ".$result_maintainer_vendor['vendor_usrid']."\n\nVendor-Name: ".htmlentities($result_maintainer_vendor['vendor_name'])." - ".$result_maintainer_vendor['vendor_id']."\n\nUrl: ".htmlentities($result_maintainer_vendor['vendor_url'])." \n\E-Mail: ".$result_maintainer_vendor['vendor_email']." \n\Info: ".$result_maintainer_vendor['vendor_infotext'], $result_maintainer_vendor['vendor_usrid']);
 		}
 		// Verified:
 		if ($result_maintainer_vendor['vendor_checked'] == "no") {
@@ -121,7 +121,7 @@
         $stmt->bindParam('checked',$temp_verified,PDO::PARAM_STR);
         $stmt->bindParam('vendor_id',$RSDB_SET_vendor,PDO::PARAM_STR);
         $stmt->execute();
-				add_log_entry("low", "tree_vendor", "verified", "[Vendor] Verified", @usrfunc_GetUsername($RSDB_intern_user_id)." has verified the following vendor: \n\n\n\nUser: ".@usrfunc_GetUsername($result_maintainer_vendor['vendor_usrid'])." - ".$result_maintainer_vendor['vendor_usrid']."\n\nVendor-Name: ".htmlentities($result_maintainer_vendor['vendor_name'])." - ".$result_maintainer_vendor['vendor_id']."\n\nUrl: ".htmlentities($result_maintainer_vendor['vendor_url'])." \n\E-Mail: ".$result_maintainer_vendor['vendor_email']." \n\Info: ".$result_maintainer_vendor['vendor_infotext'], "0");
+				CLog::add("low", "tree_vendor", "verified", "[Vendor] Verified", @usrfunc_GetUsername($RSDB_intern_user_id)." has verified the following vendor: \n\n\n\nUser: ".@usrfunc_GetUsername($result_maintainer_vendor['vendor_usrid'])." - ".$result_maintainer_vendor['vendor_usrid']."\n\nVendor-Name: ".htmlentities($result_maintainer_vendor['vendor_name'])." - ".$result_maintainer_vendor['vendor_id']."\n\nUrl: ".htmlentities($result_maintainer_vendor['vendor_url'])." \n\E-Mail: ".$result_maintainer_vendor['vendor_email']." \n\Info: ".$result_maintainer_vendor['vendor_infotext'], "0");
 			}
 		}
 ?>
@@ -359,7 +359,7 @@
 		if (array_key_exists("done", $_POST)) $RSDB_TEMP_done=htmlspecialchars($_POST["done"]);
 		
 		if ($RSDB_TEMP_padmin == "ok" && $RSDB_TEMP_done != "" && usrfunc_IsAdmin($RSDB_intern_user_id)) {
-      $stmt=CDBConnection::getInstance()->prepare"UPDATE rsdb_logs SET log_taskdone_usr = :user_id WHERE log_id = :log_id LIMIT 1");
+      $stmt=CDBConnection::getInstance()->prepare("UPDATE rsdb_logs SET log_taskdone_usr = :user_id WHERE log_id = :log_id");
       $stmt->bindParam('user_id',$RSDB_intern_user_id,PDO::PARAM_STR);
       $stmt->bindParam('log_id',$RSDB_TEMP_done,PDO::PARAM_STR);
       $stmt->execute();
