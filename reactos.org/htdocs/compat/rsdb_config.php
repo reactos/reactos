@@ -168,9 +168,6 @@
 		
 		// Views	
 		$RSDB_intern_link_db_view_comp = $RSDB_intern_link_db_view."comp";
-		$RSDB_intern_link_db_view_pack = $RSDB_intern_link_db_view."pack";
-		$RSDB_intern_link_db_view_devnet = $RSDB_intern_link_db_view."devnet";
-		$RSDB_intern_link_db_view_media = $RSDB_intern_link_db_view."media";
 		
 		// Category	
 		$RSDB_intern_link_category_all = $RSDB_intern_link_db_sec.$RSDB_SET_sec."&amp;cat=".$RSDB_SET_cat."&amp;cat2=".$RSDB_SET_cat2;
@@ -337,100 +334,29 @@
 	
 		// Views
 		$RSDB_intern_trigger_comp = "0";
-		$RSDB_intern_trigger_pack = "0";
-		$RSDB_intern_trigger_devnet = "0";
-		$RSDB_intern_trigger_media = "0";
-		switch ($RSDB_SET_view) {
-			case "comp": // Compatibility
-			default:
 				$RSDB_intern_trigger_comp = "1";
-				break;
-			case "pack": // Packages
-				$RSDB_intern_trigger_pack = "1";
-				break;
-			case "devnet": // Developer Network
-				$RSDB_intern_trigger_devnet = "1";
-				break;
-			case "media": // Media
-				$RSDB_intern_trigger_media = "1";
-				break;
-		}
 	
 	// Code Snips:
 	// ***********
 
 		// Views
 	
-			switch ($RSDB_SET_view) {
-				case "comp": // Compatibility
-				default:
 					$RSDB_intern_code_view_name = $RSDB_langres['TEXT_compdb_short'];
 					$RSDB_intern_code_view_shortname = "comp";
 					$RSDB_intern_code_view_description = $RSDB_langres['CONTENT_compdb_description'];
-					break;
-				case "pack": // Packages
-					$RSDB_intern_code_view_name = $RSDB_langres['TEXT_packdb_short'];
-					$RSDB_intern_code_view_shortname = "pack";
-					$RSDB_intern_code_view_description = $RSDB_langres['CONTENT_packdb_description'];
-					break;
-				case "devnet": // Developer Network
-					$RSDB_intern_code_view_name = $RSDB_langres['TEXT_devnet_long'];
-					$RSDB_intern_code_view_shortname = "devnet";
-					$RSDB_intern_code_view_description = $RSDB_langres['CONTENT_devnet_description_short'];
-					break;
-				case "media": // Media
-					$RSDB_intern_code_view_name = $RSDB_langres['TEXT_mediadb_short'];
-					$RSDB_intern_code_view_shortname = "media";
-					$RSDB_intern_code_view_description = $RSDB_langres['CONTENT_mediadb_description'];
-					break;
-			}
 	
 		// Database
 		
 			// rsdb_categories
 			$RSDB_intern_code_db_rsdb_categories_comp = "";
-			$RSDB_intern_code_db_rsdb_categories_pack = "";
-			$RSDB_intern_code_db_rsdb_categories_devnet = "";
-			$RSDB_intern_code_db_rsdb_categories_media = "";
-			switch ($RSDB_SET_view) {
-				case "comp": // Compatibility
-				default:
 					$RSDB_intern_code_db_rsdb_categories_comp = " AND `cat_comp` = '" . $RSDB_intern_trigger_comp . "' ";
-					break;
-				case "pack": // Packages
-					$RSDB_intern_code_db_rsdb_categories_pack = " AND `cat_pack` = '" . $RSDB_intern_trigger_pack . "' ";
-					break;
-				case "devnet": // Developer Network
-					$RSDB_intern_code_db_rsdb_categories_devnet = " AND `cat_devnet` = '" . $RSDB_intern_trigger_devnet . "' ";
-					break;
-				case "media": // Media
-					$RSDB_intern_code_db_rsdb_categories_media = " AND `cat_media` = '" . $RSDB_intern_trigger_media . "' ";
-					break;
-			}
-			$RSDB_intern_code_db_rsdb_categories = $RSDB_intern_code_db_rsdb_categories_comp.$RSDB_intern_code_db_rsdb_categories_pack.$RSDB_intern_code_db_rsdb_categories_devnet.$RSDB_intern_code_db_rsdb_categories_media;
+			$RSDB_intern_code_db_rsdb_categories = $RSDB_intern_code_db_rsdb_categories_comp;
 			// Code: " . $RSDB_intern_code_db_rsdb_categories . "
 
 			// rsdb_groups
 			$RSDB_intern_code_db_rsdb_groups_comp = "";
-			$RSDB_intern_code_db_rsdb_groups_pack = "";
-			$RSDB_intern_code_db_rsdb_groups_devnet = "";
-			$RSDB_intern_code_db_rsdb_groups_media = "";
-			switch ($RSDB_SET_view) {
-				case "comp": // Compatibility
-				default:
 					$RSDB_intern_code_db_rsdb_groups_comp = " AND `grpentr_comp` = '" . $RSDB_intern_trigger_comp . "' ";
-					break;
-				case "pack": // Packages
-					$RSDB_intern_code_db_rsdb_groups_pack = " AND `grpentr_pack` = '" . $RSDB_intern_trigger_pack . "' ";
-					break;
-				case "devnet": // Developer Network
-					$RSDB_intern_code_db_rsdb_groups_devnet = " AND `grpentr_devnet` = '" . $RSDB_intern_trigger_devnet . "' ";
-					break;
-				case "media": // Media
-					$RSDB_intern_code_db_rsdb_groups_media = " AND `grpentr_media` = '" . $RSDB_intern_trigger_media . "' ";
-					break;
-			}
-			$RSDB_intern_code_db_rsdb_groups = $RSDB_intern_code_db_rsdb_groups_comp.$RSDB_intern_code_db_rsdb_groups_pack.$RSDB_intern_code_db_rsdb_groups_devnet.$RSDB_intern_code_db_rsdb_groups_media;
+			$RSDB_intern_code_db_rsdb_groups = $RSDB_intern_code_db_rsdb_groups_comp;
 			// Code: " . $RSDB_intern_code_db_rsdb_groups . "
 
 ?>

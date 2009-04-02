@@ -65,17 +65,7 @@ if ($result_count_cat[0]) {
     <td width="20%" bgcolor="#5984C3"> 
       <div align="center"><font color="#FFFFFF" face="Arial, Helvetica, sans-serif" ><strong><?php
 		
-		switch ($RSDB_SET_view) {
-			case "comp": // Compatibility
 				echo "Application";
-				break;
-			case "pack": // Packages
-				echo "Package";
-				break;
-			default:
-				echo "Name";
-				break;
-		}
 
 		?></strong></font></div></td>
     <td width="12%"> <div align="center"><font color="#FFFFFF" face="Arial, Helvetica, sans-serif" ><strong>Vendor</strong></font></div></td>

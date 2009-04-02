@@ -35,9 +35,6 @@
 
 
 
-	switch ($RSDB_SET_view) {
-		case "comp": // Compatibility
-		default:
 			switch ($RSDB_SET_item2) {
 				case "details": // Details
 				default:
@@ -85,16 +82,5 @@
 					include('inc/comp/comp_item_tips.php');
 					break;
 			}
-			break;
-		case "pack": // Packages
-			include('inc/pack/pack_item.php');
-			break;
-		case "devnet": // Developer Network
-			include('inc/devnet/devnet_item.php');
-			break;
-		case "media": // Media
-			include('inc/media/media_item.php');
-			break;
-	}
 	
 ?>

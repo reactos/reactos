@@ -51,12 +51,7 @@ if ($RSDB_SET_cat != "" || $RSDB_SET_cat != "0") {
 if ($result_count_cat[0]) {
 
 
-	if ($RSDB_intern_code_view_shortname == "devnet") {
-		$RSDB_TEMP_sortby = "cat_order";
-	}
-	else {
 		$RSDB_TEMP_sortby = "cat_name";
-	}
 
 ?>
 	 

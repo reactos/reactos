@@ -42,7 +42,7 @@
 if ($result_page['comp_id']) {
 	echo "<h2>".$result_page['comp_name'] ." [". "ReactOS ".@show_osversion($result_page['comp_osversion']) ."]</h2>"; 
 	
-	include('inc/tree/tree_item_menubar.php');
+	include("inc/comp/comp_item_menubar.php");
 	
   $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_groups WHERE grpentr_id = :group_id");
   $stmt->bindParam('group_id',$result_page['comp_groupid'],PDO::PARAM_STR);

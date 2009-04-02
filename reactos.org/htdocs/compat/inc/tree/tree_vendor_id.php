@@ -145,17 +145,7 @@ p.tabLink_u         { color: black; font-size : 10pt; padding : 0 8px 1px 2px; m
           <div align="center"><font color="#FFFFFF" face="Arial, Helvetica, sans-serif"><strong>
             <?php
 		
-		switch ($RSDB_SET_view) {
-			case "comp": // Compatibility
 				echo "Application";
-				break;
-			case "pack": // Packages
-				echo "Package";
-				break;
-			default:
-				echo "Name";
-				break;
-		}
 
 		?>
         </strong></font></div></td>

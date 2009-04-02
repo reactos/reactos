@@ -50,7 +50,7 @@ if ($RSDB_intern_user_id <= 0) {
 }
 else {
 	
-	include('inc/tree/tree_item_menubar.php');
+	include("inc/comp/comp_item_menubar.php");
 	
 	echo "<h3>Submit a Report - Step 3</h3>";
 

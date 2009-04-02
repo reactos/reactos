@@ -45,17 +45,8 @@ if ($result_count_groups[0]) {
 	  <tr bgcolor="#5984C3"> 
 		<td width="20%" title="Item"> <div align="center"><font color="#FFFFFF" face="Arial, Helvetica, sans-serif"><strong><?php
 		
-		switch ($RSDB_SET_view) {
-			case "comp": // Compatibility
+
 				echo "Application";
-				break;
-			case "pack": // Packages
-				echo "Package";
-				break;
-			default:
-				echo "Name";
-				break;
-		}
 
 		?></strong></font></div></td>
 		<td width="15%" title="Company/Vendor/Project"> <div align="center"><font color="#FFFFFF" face="Arial, Helvetica, sans-serif"><strong>Vendor</strong></font></div></td>

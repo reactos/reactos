@@ -54,7 +54,7 @@
 				include("inc/comp/comp_itemver_submit.php");
 			}
 			else {
-				include("inc/tree/tree_group.php");
+				include("inc/comp/comp_group.php");
 			}
 		}
 		else {

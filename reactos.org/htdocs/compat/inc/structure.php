@@ -72,24 +72,10 @@ function create_structure($page )
       </ol></div>
       <p></p>
 <?php 
-	if ($RSDB_SET_view == "comp" || $RSDB_SET_view == "pack" || $RSDB_SET_view == "devnet" || $RSDB_SET_view == "media") {
+	if ($RSDB_SET_view == "comp") {
 	?>
 	  <div class="navTitle"><?php 
-								if ($RSDB_SET_view == "comp") {
 									echo "Compatibility";
-								}
-								if ($RSDB_SET_view == "") {
-									echo "Compatibility";
-								}
-								if ($RSDB_SET_view == "pack") {
-									echo "Packages";
-								}
-								if ($RSDB_SET_view == "devnet") {
-									echo "Dev Network";
-								}
-								if ($RSDB_SET_view == "media") {
-									echo "Media";
-								}
 						  ?></div>
 		<ol>
 		  <li><a href="<?php echo $RSDB_intern_link_view_EX."home".$RSDB_URI_slash; ?>">Overview</a></li>
@@ -100,12 +86,12 @@ function create_structure($page )
 			  <li><a href="<?php echo $RSDB_intern_link_category_EX."0".$RSDB_URI_slash; ?>">&nbsp;- By Category</a></li>
 			  <li><a href="<?php echo $RSDB_intern_link_name_letter_EX."all".$RSDB_URI_slash; ?>">&nbsp;- By Name</a></li>
 		<?php
-			if ($RSDB_SET_view == "comp" || $RSDB_SET_view == "pack") {
+			if ($RSDB_SET_view == "comp") {
 		?>
 			  <li><a href="<?php echo $RSDB_intern_link_vendor_letter_EX."all".$RSDB_URI_slash; ?>">&nbsp;- By Vendor</a></li>
 		<?php
 			}
-			if ($RSDB_SET_view == "comp" || $RSDB_SET_view == "pack") {
+			if ($RSDB_SET_view == "comp") {
 		?>
 			  <li><a href="<?php echo $RSDB_intern_link_rank_EX."rank".$RSDB_URI_slash; ?>">&nbsp;- By Rank</a></li>
 		<?php

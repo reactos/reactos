@@ -48,9 +48,6 @@
 			if ($RSDB_SET_cat != "" && $RSDB_SET_item =="" && $RSDB_SET_group =="") {
 				if ($RSDB_SET_cat == 0) {
 					$result_count_group['cat_comp']=1;
-					$result_count_group['cat_pack']=1;
-					$result_count_group['cat_devnet']=1;
-					$result_count_group['cat_media']=1;
 				}
 				else {
           $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_categories WHERE cat_id = :cat_id AND cat_visible = '1'");
@@ -63,21 +60,9 @@
 			else {
 				if ($RSDB_SET_item != "") {
 					$result_count_group['item_comp']=0;
-					$result_count_group['item_pack']=0;
-					$result_count_group['item_devnet']=0;
-					$result_count_group['item_media']=0;
 						
 					if ($RSDB_SET_view == "comp")  {
 						$result_count_group['item_comp']=1;
-					}
-					if ($RSDB_SET_view == "pack")  { 
-						$result_count_group['item_pack']=1;
-					}
-					if ($RSDB_SET_view == "devnet")  { 
-						$result_count_group['item_devnet']=1;
-					}
-					if ($RSDB_SET_view == "media")  { 
-						$result_count_group['item_media']=1;
 					}
 					$RSDB_compare_string = 'item';
 				}
@@ -94,27 +79,6 @@
 			}
 			else {
 				echo '<font color="#cccccc">&nbsp;'. $RSDB_langres['TEXT_compdb_short'] .'&nbsp;</font>'; 
-			}
-			echo ' <font color="#ffffff">|</font> ';
-			if ($result_count_group[$RSDB_compare_string."_pack"] == "1") {
-				echo '<a href="'. $RSDB_intern_link_db_view2 .'pack">'. $RSDB_langres['TEXT_packdb_short'] .'</a>';
-			}
-			else {
-				echo '<font color="#cccccc">&nbsp;'. $RSDB_langres['TEXT_packdb_short'] .'&nbsp;</font>'; 
-			}
-			echo ' <font color="#ffffff">|</font> ';
-			if ($result_count_group[$RSDB_compare_string."_devnet"] == "1") {
-				echo '<a href="'. $RSDB_intern_link_db_view2 .'devnet">'. $RSDB_langres['TEXT_devnet_short'] .'</a>';
-			}
-			else {
-				echo '<font color="#cccccc">&nbsp;'. $RSDB_langres['TEXT_devnet_short'] .'&nbsp;</font>'; 
-			}
-			echo ' <font color="#ffffff">|</font> ';
-			if ($result_count_group[$RSDB_compare_string."_media"] == "1") {
-				echo '<a href="'. $RSDB_intern_link_db_view2 .'media">'. $RSDB_langres['TEXT_mediadb_short'] .'</a>'; 
-			}
-			else {
-				echo '<font color="#cccccc">&nbsp;'. $RSDB_langres['TEXT_mediadb_short'] .'&nbsp;</font>'; 
 			}
 			
 			

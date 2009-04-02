@@ -296,26 +296,9 @@ require_once("lib/Compat_Autoloader.class.php");
 		default:
 		case "db": // developer interface
 			//require($RSDB_intern_path_server.$RSDB_intern_loginsystem_path."inc/login.php");
-			switch ($RSDB_SET_view) {
-				case "comp": // Compatibility
-				default:
 					$RSDB_SET_view = "comp";
 					$rpm_page_title="Support Database - Compatibility";
 					$RSDB_intern_section_script = "inc/comp.php";
-					break;
-				case "pack": // Packages
-					$rpm_page_title="Support Database - Packages";
-					$RSDB_intern_section_script = "inc/pack.php";
-					break;
-				case "devnet": // Developer Network
-					$rpm_page_title="Support Database - Developer Network";
-					$RSDB_intern_section_script = "inc/devnet.php";
-					break;
-				case "media": // Media
-					$rpm_page_title="Support Database - Media";
-					$RSDB_intern_section_script = "inc/media.php";
-					break;
-			}
 
 			include("inc/header.php");
 			create_head($rpm_page_title, $rpm_logo, $RSDB_langres);

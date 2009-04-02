@@ -53,7 +53,7 @@
 				include("inc/comp/comp_itemver_submit.php");
 			}
 			else {
-				include("inc/tree/tree_group.php");
+				include("inc/comp/comp_group.php");
 			}
 		}
 		else {
@@ -66,7 +66,7 @@
 					include("inc/tree/tree_category_tree.php");
 					break;
 			}
-			include("inc/tree/tree_category_grouplist.php");
+			include("inc/tree/tree_category_grouplist_1.php");
 		}
 	}
 	

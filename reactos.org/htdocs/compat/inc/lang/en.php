@@ -58,13 +58,6 @@ $RSDB_langres['Info'] = 'Info';
 	
 	$RSDB_langres['TEXT_compdb'] = 'Compatibility Database';
 	$RSDB_langres['TEXT_compdb_short'] = 'Compatibility';
-	$RSDB_langres['TEXT_packdb'] = 'Package Database';
-	$RSDB_langres['TEXT_packdb_short'] = 'Packages';
-	$RSDB_langres['TEXT_devnet'] = 'Developer Network';
-	$RSDB_langres['TEXT_devnet_short'] = 'Dev Network';
-	$RSDB_langres['TEXT_devnet_long'] = 'ReactOS Developer Network';
-	$RSDB_langres['TEXT_mediadb'] = 'Media Database';
-	$RSDB_langres['TEXT_mediadb_short'] = 'Media';
 	
 	$RSDB_langres['TEXT_about_rsdb'] = 'About the ReactOS Support Database';
 	$RSDB_langres['TEXT_credits'] = 'Credits';
@@ -78,14 +71,6 @@ $RSDB_langres['Info'] = 'Info';
 	$RSDB_langres['CONTENT_about_short'] = 'The ReactOS Support Database is a free service of the ReactOS Foundation.';
 	
 	$RSDB_langres['CONTENT_compdb_description'] = 'ReactOS Software and Hardware Compatibility Database.';
-	$RSDB_langres['CONTENT_packdb_description'] = 'ReactOS Package Database, the official online database for the ReactOS Package Manager.';
-	$RSDB_langres['CONTENT_devnet_description'] = 'ReactOS Developer Network, the online documentation of the ReactOS Internals.<br /><br />
-													  The ReactOS Developer Network (RosDevNet or RDN) Library is the essential reference 
-													  for developers, with technical programming information, including sample code, 
-													  documentation, technical articles, the ReactOS Developer Knowledge Base, and 
-													  anything else you might need to develop solutions for ReactOS (or compatible).';
-	$RSDB_langres['CONTENT_devnet_description_short'] = 'ReactOS Developer Network, the online documentation of the ReactOS Internals';
-	$RSDB_langres['CONTENT_mediadb_description'] = 'ReactOS Media Database, ReactOS related media files stored in a huge database.';
 
 	$RSDB_langres['CONTENT_about_rsdb'] = 'The ReactOS Support Database  (application and driver compatibility, 
 												  application packages, developer network and media files) is a free service of the ReactOS 

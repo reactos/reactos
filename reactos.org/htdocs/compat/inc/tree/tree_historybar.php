@@ -37,7 +37,7 @@
 	
 
 
-//	echo "Comp: ".$RSDB_intern_trigger_comp." | Pack:".$RSDB_intern_trigger_pack." | DevNet:".$RSDB_intern_trigger_devnet." | Media:".$RSDB_intern_trigger_media;
+//	echo "Comp: ".$RSDB_intern_trigger_comp.";
 //	echo "<br>".$RSDB_intern_code_db_rsdb_categories;
 
 	$RSDB_viewpage = true;
@@ -185,21 +185,7 @@
 				$result_current_group = $stmt->fetch(PDO::PARAM_STR);
 				echo " <font size='2'>&rarr;</font> <a href='".$RSDB_intern_link_item2_id_EX.$RSDB_SET_item.$RSDB_URI_slash."'>".$result_current_group[$RSDB_intern_code_view_shortname .'_name'];
 				
-					switch ($RSDB_SET_view) {
-						case "comp": // Compatibility
-						default:
 							echo " ["."ReactOS ".show_osversion($result_current_group['comp_osversion'])."]";
-							break;
-						case "pack": // Packages
-							echo " [".$result_current_group['pack_rosversion']."]";
-							break;
-						case "devnet": // Developer Network
-							echo " [rev. ".$result_current_group['devnet_version']."]";
-							break;
-						case "media": // Media
-							echo " [".$result_current_group['media_version']."]";
-							break;
-					}
 				
 				echo "</a>";
 			}
@@ -295,21 +281,7 @@
 			$result_current_group = $stmt->fetch(PDO::FETCH_ASSOC);
 			echo " <font size='2'>&rarr;</font> <a href='".$RSDB_intern_link_item_EX.$RSDB_SET_item.$RSDB_URI_slash."'>".$result_current_group[$RSDB_intern_code_view_shortname .'_name'];
 			
-				switch ($RSDB_SET_view) {
-					case "comp": // Compatibility
-					default:
 						echo " ["."ReactOS ".show_osversion($result_current_group['comp_osversion'])."]";
-						break;
-					case "pack": // Packages
-						echo " [".$result_current_group['pack_rosversion']."]";
-						break;
-					case "devnet": // Developer Network
-						echo " [rev. ".$result_current_group['devnet_version']."]";
-						break;
-					case "media": // Media
-						echo " [".$result_current_group['media_version']."]";
-						break;
-				}
 			
 			echo "</a>";
 		}
@@ -596,22 +568,5 @@
 	}
 	
 	
-	switch ($RSDB_SET_view) {
-		case "comp": // Compatibility
-		default:
 			//msg_bar("Compatibility");
-			break;
-		case "pack": // Packages
-			msg_bar("The Package Section is under heavy construction!");
-			echo "<br />";
-			break;
-		case "devnet": // Developer Network
-			msg_bar("The Dev Network Section is under heavy construction!");
-			echo "<br />";
-			break;
-		case "media": // Media
-			msg_bar("The Media Section is under heavy construction!");
-			echo "<br />";
-			break;
-	}
 ?>

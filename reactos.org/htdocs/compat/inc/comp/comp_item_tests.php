@@ -44,7 +44,7 @@ if ($result_page['comp_id']) {
 
 	echo "<h2>".$result_page['comp_name'] ." [". "ReactOS ".@show_osversion($result_page['comp_osversion']) ."]</h2>"; 
 	
-	include('inc/tree/tree_item_menubar.php');
+	include("inc/comp/comp_item_menubar.php");
 
 	echo test_bar();
 ?>

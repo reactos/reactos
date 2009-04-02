@@ -46,17 +46,5 @@
 	<?php echo $RSDB_langres['CONTENT_compdb_description']; ?> <a href="<?php echo $RSDB_intern_link_db_view_comp; ?>&amp;sec=home"><?php echo $RSDB_langres['TEXT_more']; ?></a>
 </p>
 
-<h3><?php echo $RSDB_langres['TEXT_packdb']; ?></h3>
-<p>
-	<?php echo $RSDB_langres['CONTENT_packdb_description']; ?> <a href="<?php echo $RSDB_intern_link_db_view_pack; ?>&amp;sec=home"><?php echo $RSDB_langres['TEXT_more']; ?></a>
-</p>
-
-<h3><?php echo $RSDB_langres['TEXT_devnet']; ?></h3>
-<p> <?php echo $RSDB_langres['CONTENT_devnet_description']; ?> 
-  <a href="<?php echo $RSDB_intern_link_db_view_devnet; ?>&amp;sec=home"><?php echo $RSDB_langres['TEXT_more']; ?></a> 
-</p>
-<h3><?php echo $RSDB_langres['TEXT_mediadb']; ?></h3>
-<p><?php echo $RSDB_langres['CONTENT_mediadb_description']; ?> <a href="<?php echo $RSDB_intern_link_db_view_media; ?>&amp;sec=home"><?php echo $RSDB_langres['TEXT_more']; ?></a> 
-</p>
 <p>&nbsp;</p>
 

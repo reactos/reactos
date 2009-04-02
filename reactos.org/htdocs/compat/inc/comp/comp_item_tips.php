@@ -40,7 +40,7 @@
 
 		$result_page = $stmt->fetch(PDO::FETCH_ASSOC);
 
-		include('inc/tree/tree_item_menubar.php');
+		include("inc/comp/comp_item_menubar.php");
 		
 ?>
 
