@@ -93,6 +93,14 @@
 				break;
 			
 			$log .= $line;
+			
+			// We can easily exceed PHP's memory limit here in case we're reading a bloated log
+			// Stop in this case
+			if(memory_get_usage() > MAX_MEMORY)
+			{
+				$log .= "[TESTMAN] Maximum memory for log exceeded, aborting!";
+				break;
+			}
 		}
 		while(strpos($line, " tests executed (") === false &&	substr($line, 0, 9) != "[SYSREG] " &&	!feof($fp));
 		
