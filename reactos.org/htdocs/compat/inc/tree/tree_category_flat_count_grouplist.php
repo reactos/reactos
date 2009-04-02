@@ -51,24 +51,19 @@
 		
 		$RSDB_VAR_counter_tree_grouplist = 0;
 	
-		$query_count_groups=mysql_query("SELECT COUNT('cat_id')
-								FROM `rsdb_categories`
-								WHERE `cat_visible` = '1'
-								AND `cat_path` = " . $RSDB_SET_cat . "
-								" . $RSDB_intern_code_db_rsdb_categories . " ;");	
-		$result_count_groups = mysql_fetch_row($query_count_groups);
+		$stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_categories WHERE cat_visible = '1' AND cat_path = :path " . $RSDB_intern_code_db_rsdb_categories . "");
+    $stmt->bindParam('path',$RSDB_SET_cat,PDO::PARAM_STR);
+    $stmt->execute();
+		$result_count_groups = $stmt->fetch();
 		
 		$RSDB_TEMP_counter_group=0;
 		count_group_and_category($RSDB_TEMP_cat_id_grouplista);
 
 		if ($result_count_groups[0]) {
 			
-			$query_treeview_count_groups = mysql_query("SELECT * 
-										FROM `rsdb_categories` 
-										WHERE `cat_visible` = '1'
-										AND `cat_path` = " . $RSDB_TEMP_cat_id_grouplist . "
-										" . $RSDB_intern_code_db_rsdb_categories . "
-										ORDER BY `cat_name` ASC") ;
+      $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_categories WHERE cat_visible = '1' AND cat_path = :path " . $RSDB_intern_code_db_rsdb_categories . " ORDER BY cat_name ASC");
+      $stmt->bindParam('path',$RSDB_TEMP_cat_id_grouplist,PDO::PARAM_STR);
+      $stmt->execute();
 			
 			
 				$cellcolor1="#E2E2E2";
@@ -76,7 +71,7 @@
 				$cellcolorcounter="0";
 				
 				
-			while($result_treeview_count_groups = mysql_fetch_array($query_treeview_count_groups)) { // treeview_count_groups
+			while($result_treeview_count_groups = $stmt->fetch(PDO::FETCH_ASSOC)) { // treeview_count_groups
 		  
 				
 //				echo "<br><a href='".$RSDB_intern_link_category_cat.$result_treeview_count_groups['cat_id']."'>".$result_treeview_count_groups['cat_name']."</a>";
@@ -101,12 +96,9 @@
 		global $RSDB_TEMP_counter_group;
 		global $RSDB_intern_code_db_rsdb_groups;
 
-		$query_count_group_and_category=mysql_query("SELECT COUNT('grpentr_id')
-						FROM `rsdb_groups`
-						WHERE `grpentr_visible` = '1'
-						AND `grpentr_category` = " . $RSDB_TEMP_cat_id_group . "
-						" . $RSDB_intern_code_db_rsdb_groups . " ;");	
-		$result_count_group_and_category = mysql_fetch_row($query_count_group_and_category);
+    $stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_category = :category " . $RSDB_intern_code_db_rsdb_groups . "");
+    $stmt->bindParam('category',$RSDB_TEMP_cat_id_group,PDO::PARAM_STR);
+		$result_count_group_and_category = $stmt->fetch(PDO::FETCH_NUM);
 //		echo "->".$result_count_group_and_category[0]."<-";
 		
 		if ($result_count_group_and_category[0]) {
@@ -131,13 +123,11 @@
 		global $RSDB_intern_code_db_rsdb_categories;
 
 
-		$query_create_historybar=mysql_query("SELECT * 
-								FROM `rsdb_categories` 
-								WHERE `cat_path` = " . $RSDB_TEMP_cat_id ."
-								" . $RSDB_intern_code_db_rsdb_categories . "
-								AND `cat_visible` = '1' ;");
+    $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_categories WHERE cat_path = :path " . $RSDB_intern_code_db_rsdb_categories . " AND cat_visible = '1'");
+    $stmt->bindParam('path',$RSDB_TEMP_cat_id,PDO::PARAM_STR);
+    $stmt->execute();
 					
-		while($result_create_historybar=mysql_fetch_array($query_create_historybar)) { 
+		while($result_create_historybar=$stmt->fetch(PDO::FETCH_ASSOC)) { 
 			count_tree_groups_entry($result_create_historybar['cat_id'], $RSDB_TEMP_cat_level_newmain);
 			create_counter_groups($result_create_historybar['cat_path'], $result_create_historybar['cat_id'], 0, $RSDB_TEMP_cat_level_newmain);
 		}
@@ -152,13 +142,11 @@
 		
 
 		
-		$query_count_tree_groups_entry=mysql_query("SELECT * 
-												FROM `rsdb_categories` 
-												WHERE `cat_id` = " . $RSDB_TEMP_entry_id ."
-												AND `cat_visible` = '1'
-												" . $RSDB_intern_code_db_rsdb_categories . " ;");
+    $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_categories WHERE cat_id = :cat_id AND cat_visible = '1' " . $RSDB_intern_code_db_rsdb_categories . "");
+    $stmt->bindParam('cat_id',$RSDB_TEMP_entry_id,PDO::PARAM_STR);
+    $stmt->execute();
 					
-		$result_count_tree_groups_entry=mysql_fetch_array($query_count_tree_groups_entry);
+		$result_count_tree_groups_entry=$stmt->fetch(PDO::FETCH_ASSOC);
 
 //		echo "<a href='".$RSDB_intern_link_category_cat.$result_count_tree_groups_entry['cat_id']."'>".$result_count_tree_groups_entry['cat_name']."</a>";
 

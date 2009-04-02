@@ -526,7 +526,7 @@ else {
         $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_vendor WHERE vendor_name = :name ORDER BY vendor_id DESC LIMIT 1");
         $stmt->bindParam('name',$RSDB_TEMP_txtvname,PDO::PARAM_STR);
         $stmt->execute();
-				$result_vendor_entry = $stmt->fetch(PDO::FETCH_ASSOC)
+				$result_vendor_entry = $stmt->fetch(PDO::FETCH_ASSOC);
 				
 				$RSDB_TEMP_cboVendor = $result_vendor_entry['vendor_id'];
 
@@ -535,7 +535,7 @@ else {
 				$RSDB_TEMP_cboVendor = $RSDB_TEMP_rockhide;
 			}
 
-      $stmt=CDBConnection::getInstance()->prepare("INSERT INTO rsdb_groups ( grpentr_id, grpentr_name, grpentr_visible, grpentr_category, grpentr_vendor, grpentr_description, grpentr_usrid, grpentr_date ) VALUES ('', :name, '1', :category, :vendor, :description, :user_id , NOW() )";
+      $stmt=CDBConnection::getInstance()->prepare("INSERT INTO rsdb_groups ( grpentr_id, grpentr_name, grpentr_visible, grpentr_category, grpentr_vendor, grpentr_description, grpentr_usrid, grpentr_date ) VALUES ('', :name, '1', :category, :vendor, :description, :user_id , NOW() )");
       $stmt->bindParam('name',$RSDB_TEMP_txtname,PDO::PARAM_STR);
       $stmt->bindParam('category',$RSDB_TEMP_cboCategory,PDO::PARAM_STR);
       $stmt->bindParam('vendor',$RSDB_TEMP_cboVendor,PDO::PARAM_STR);

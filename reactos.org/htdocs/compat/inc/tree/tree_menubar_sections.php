@@ -53,11 +53,10 @@
 					$result_count_group['cat_media']=1;
 				}
 				else {
-					$query_count_group=mysql_query("SELECT *
-													FROM `rsdb_categories` 
-													WHERE `cat_id` = ". $RSDB_SET_cat ."
-													AND `cat_visible` = '1' ;");	
-					$result_count_group = mysql_fetch_array($query_count_group);
+          $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_categories WHERE cat_id = :cat_id AND cat_visible = '1'");
+          $stmt->bindParam('cat_id',$RSDB_SET_cat,PDO::PARAM_STR);
+          $stmt->execute();
+					$result_count_group = $stmt->fetch(PDO::FETCH_ASSOC);
 				}
 				$RSDB_compare_string = 'cat';
 			}
@@ -83,11 +82,10 @@
 					$RSDB_compare_string = 'item';
 				}
 				elseif ($RSDB_SET_group != "") {
-					$query_count_group=mysql_query("SELECT *
-													FROM `rsdb_groups` 
-													WHERE `grpentr_id` = ". $RSDB_SET_group ."
-													AND `grpentr_visible` = '1' ;");	
-					$result_count_group = mysql_fetch_array($query_count_group);
+          $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_groups WHERE grpentr_id = :group_id AND grpentr_visible = '1'");
+          $stmt->bindParam('group_id',$RSDB_SET_group,PDO::PARAM_STR);
+          $stmt->execute();
+					$result_count_group = $stmt->fetch(PDO::FETCH_ASSOC);
 					$RSDB_compare_string = 'grpentr';
 				}
 			}

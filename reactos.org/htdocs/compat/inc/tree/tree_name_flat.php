@@ -39,12 +39,10 @@ if ($RSDB_SET_letter == "all") {
 	$RSDB_SET_letter = "%";
 }
 
-$query_count_cat=mysql_query("SELECT COUNT('cat_id')
-						FROM `rsdb_groups`
-						WHERE `grpentr_visible` = '1'
-						AND `grpentr_name` LIKE  '" . $RSDB_SET_letter . "%'
-						" . $RSDB_intern_code_db_rsdb_groups . " ;");	
-$result_count_cat = mysql_fetch_row($query_count_cat);
+$stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_name LIKE  :starts_with " . $RSDB_intern_code_db_rsdb_groups . "");
+$stmt->bindValue('starts_with',$RSDB_SET_letter.'%',PDO::PARAM_STR);
+$stmt->execute();
+$result_count_cat = $stmt->fetch(PDO::FETCH_NUM);
 if ($result_count_cat[0]) {
 
 	echo "<p align='center'>";
@@ -102,20 +100,16 @@ if ($result_count_cat[0]) {
   </tr>
   <?php
 	
-		$query_page = mysql_query("SELECT * 
-									FROM `rsdb_groups` 
-									WHERE `grpentr_visible` = '1'
-									AND `grpentr_name` LIKE  '" . $RSDB_SET_letter . "%'
-									" . $RSDB_intern_code_db_rsdb_groups . "
-									ORDER BY `grpentr_name` ASC
-									LIMIT " . $RSDB_SET_curpos . " , " . $RSDB_intern_items_per_page . " ;") ;
+    $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_name LIKE :starts_with " . $RSDB_intern_code_db_rsdb_groups . " ORDER BY grpentr_name ASC LIMIT ".intval($RSDB_intern_items_per_page)." OFFSET ".intval($RSDB_SET_curpos));
+    $stmt->bindValue('starts_with',$RSDB_SET_letter.'%',PDO::PARAM_STR);
+    $stmt->execute();
 	
 		$farbe1="#E2E2E2";
 		$farbe2="#EEEEEE";
 		$zaehler="0";
 		//$farbe="#CCCCC";
 		
-		while($result_page = mysql_fetch_array($query_page)) { // Pages
+		while($result_page = $stmt->fetch(PDO::FETCH_ASSOC)) { // Pages
 	?>
   <tr> 
     <td valign="top" bgcolor="<?php
@@ -132,10 +126,10 @@ if ($result_count_cat[0]) {
 								 ?>" > <div align="left"><font face="Arial, Helvetica, sans-serif">&nbsp;<a href="<?php echo $RSDB_intern_link_group_EX.$result_page['grpentr_id'].$RSDB_URI_slash; ?>"><b><?php echo $result_page['grpentr_name']; ?></b></a></font></div></td>
     <td valign="top" bgcolor="<?php echo $farbe; ?>"> <div align="left"><font size="2" face="Arial, Helvetica, sans-serif">&nbsp;<?php
 		
-			$query_entry_vendor = mysql_query("SELECT * 
-												FROM `rsdb_item_vendor` 
-												WHERE `vendor_id` = " .  $result_page['grpentr_vendor'] ." ;") ;
-			$result_entry_vendor = mysql_fetch_array($query_entry_vendor);
+      $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_vendor WHERE vendor_id = :vendor_id");
+      $stmt->bindParam('vendor_id',$result_page['grpentr_vendor'],PDO::PARAM_STR);
+      $stmt->execute();
+			$result_entry_vendor = $stmt->fetch(PDO::FETCH_ASSOC);
 			echo '<a href="'.$RSDB_intern_link_vendor_sec.$result_entry_vendor['vendor_id'].'">'.$result_entry_vendor['vendor_name'].'</a>';
 
 		  ?></font><font face="Arial, Helvetica, sans-serif"></font> 
@@ -163,49 +157,40 @@ if ($result_count_cat[0]) {
 			$counter_forumentries = 0;
 			$counter_screenshots = 0;
 
-			$query_group_sum_items = mysql_query("SELECT * 
-													FROM `rsdb_item_comp` 
-													WHERE `comp_groupid` = " . mysql_real_escape_string($result_page['grpentr_id']) . "
-													AND `comp_visible` = '1'
-													ORDER BY `comp_groupid` DESC ;") ;
-			while($result_group_sum_items = mysql_fetch_array($query_group_sum_items)) { 
+      $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp WHERE comp_groupid = :group_id AND comp_visible = '1' ORDER BY comp_groupid DESC");
+      $stmt->bindParam('group_id',$result_page['grpentr_id'],PDO::PARAM_STR);
+      $stmt->execute();
+			while($result_group_sum_items = $stmt->fetch(PDO::FETCH_ASSOC)) { 
 				$counter_items++;
 				if ($counter_awards_best < $result_group_sum_items['comp_award']) {
 					$counter_awards_best = $result_group_sum_items['comp_award'];
 				}
-				$query_count_stars_sum = mysql_query("SELECT * 
-								FROM `rsdb_item_comp_testresults` 
-								WHERE `test_visible` = '1'
-								AND `test_comp_id` = " . $result_group_sum_items['comp_id'] . "
-								ORDER BY `test_comp_id` ASC") ;
-								
-				while($result_count_stars_sum = mysql_fetch_array($query_count_stars_sum)) {
-					$counter_stars_install_sum += $result_count_stars_sum['test_result_install'];
-					$counter_stars_function_sum += $result_count_stars_sum['test_result_function'];
-					$counter_stars_user_sum++;
-				}
-				
-				$query_count_testentries=mysql_query("SELECT COUNT('test_id')
-														FROM `rsdb_item_comp_testresults`
-														WHERE `test_visible` = '1' 
-														AND `test_comp_id` = '".mysql_real_escape_string($result_group_sum_items['comp_id'])."' ;");	
-				$result_count_testentries = mysql_fetch_row($query_count_testentries);
+        $stmt_sub=CDBConnection::getInstance()->prepare("SELECT SUM(test_result_install) AS install_sum, SUM(test_result_function) AS function_sum, COUNT(*) AS user_sum FROM rsdb_item_comp_testresults WHERE test_visible = '1' AND test_comp_id = :comp_id ORDER BY test_comp_id ASC");
+        $stmt_sub->bindParam('comp_id',$result_group_sum_items['comp_id'],PDO::PARAM_STR);
+        $stmt_sub->execute();
+        $tmp=$stmt_sub->fetchOnce(PDO::FETCH_ASSOC);
+				$counter_stars_install_sum += $tmp['install_sum'];
+				$counter_stars_function_sum += $tmp['function_sum'];
+				$counter_stars_user_sum += $tmp['user_sum'];
+
+        $stmt_sub=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_item_comp_testresults WHERE test_visible = '1' AND test_comp_id = :comp_id");
+        $stmt_sub->bindParam('comp_id',$result_group_sum_items['comp_id'],PDO::PARAM_STR);
+        $stmt_sub->execute();
+				$result_count_testentries = $stmt->fetch(PDO::FETCH_NUM);
 				$counter_testentries += $result_count_testentries[0];
 				
 				// Forum entries:
-				$query_count_forumentries=mysql_query("SELECT COUNT('fmsg_id')
-														FROM `rsdb_item_comp_forum`
-														WHERE `fmsg_visible` = '1' 
-														AND `fmsg_comp_id` = '".mysql_real_escape_string($result_group_sum_items['comp_id'])."' ;");	
-				$result_count_forumentries = mysql_fetch_row($query_count_forumentries);
+        $stmt=CDBCOnnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_item_comp_forum WHERE fmsg_visible = '1' AND fmsg_comp_id = :comp_id");
+        $stmt->bindParam('comp_id',$result_group_sum_items['comp_id'],PDO::PARAM_STR);
+        $stmt->execute();
+				$result_count_forumentries = $stmt->fetch(PDO::FETCH_NUM);
 				$counter_forumentries += $result_count_forumentries[0];
 
 				// Screenshots:
-				$query_count_screenshots=mysql_query("SELECT COUNT('media_id')
-														FROM `rsdb_object_media`
-														WHERE `media_visible` = '1' 
-														AND `media_groupid` = '".mysql_real_escape_string($result_group_sum_items['comp_media'])."' ;");	
-				$result_count_screenshots = mysql_fetch_row($query_count_screenshots);
+        $stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_object_media WHERE media_visible = '1' AND media_groupid = :group_id");
+        $stmt->bindParam('group_id',$result_group_sum_items['comp_media'],PDO::PARAM_STR);
+        $stmt->execute();
+				$result_count_screenshots = $stmt->fetch(PDO::FETCH_NUM);
 				$counter_screenshots += $result_count_screenshots[0];
 			}
 	?>
@@ -219,24 +204,19 @@ if ($result_count_cat[0]) {
 			
 			$counter_items = 0;
 
-			$query_group_sum_items = mysql_query("SELECT * 
-													FROM `rsdb_item_comp` 
-													WHERE `comp_groupid` = " . $result_page['grpentr_id'] . "
-													AND `comp_visible` = '1'
-													ORDER BY `comp_groupid` DESC ;") ;
-			while($result_group_sum_items = mysql_fetch_array($query_group_sum_items)) { 
+      $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp WHERE comp_groupid = :group_id AND comp_visible = '1' ORDER BY comp_groupid DESC");
+      $stmt->bindParam('group_id',$result_page['grpentr_id'],PDO::PARAM_STR);
+      $stmt->execute();
+			while($result_group_sum_items = $stmt->fetch(PDO::FETCH_ASSOC)) { 
 				$counter_items++;
-				$query_count_stars_sum = mysql_query("SELECT * 
-								FROM `rsdb_item_comp_testresults` 
-								WHERE `test_visible` = '1'
-								AND `test_comp_id` = " . $result_group_sum_items['comp_id'] . "
-								ORDER BY `test_comp_id` ASC") ;
-								
-				while($result_count_stars_sum = mysql_fetch_array($query_count_stars_sum)) {
-					$counter_stars_install_sum += $result_count_stars_sum['test_result_install'];
-					$counter_stars_function_sum += $result_count_stars_sum['test_result_function'];
-					$counter_stars_user_sum++;
-				}
+        $stmt_test=CDBConnection::getInstance()->prepare("SELECT SUM(test_result_install) AS install_sum, SUM(test_result_function) AS function_sum, COUNT(*) AS user_sum FROM rsdb_item_comp_testresults WHERE test_visible = '1' AND test_comp_id = :comp_id ORDER BY test_comp_id ASC");
+        $stmt_test->bindParam('comp_id',$result_group_sum_items['comp_id'],PDO::PARAM_STR);
+        $stmt_test->execute();
+        $stmt_test->fetchOnce(PDO::FETCH_ASSOC);
+
+				$counter_stars_install_sum += $tmp['install_sum'];
+				$counter_stars_function_sum += $tmp['function_sum'];
+				$counter_stars_user_sum += $tmp['user_sum'];
 			}
 			echo $counter_items;
 			

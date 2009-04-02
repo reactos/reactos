@@ -512,7 +512,7 @@
 			<blockquote>
 	            <?php  
 		// Query Bundles	
-		$stmt=DBConnections::getInstance()->prepare("SELECT * FROM rsdb_group_bundles WHERE bundle_groupid = :group_id") ;
+		$stmt=CDBConnections::getInstance()->prepare("SELECT * FROM rsdb_group_bundles WHERE bundle_groupid = :group_id") ;
     $stmt->bindParam('group_id',$result_page["grpentr_id"],PDO::PARAM_STR);
     $stmt->execute();
 		while($result_bundlelist = $stmt->fetch(PDO::FETCH_ASSOC)) {

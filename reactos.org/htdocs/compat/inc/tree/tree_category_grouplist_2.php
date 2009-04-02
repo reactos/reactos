@@ -34,12 +34,10 @@
 	}
 
 
-$query_count_groups=mysql_query("SELECT COUNT('grpentr_id')
-						FROM `rsdb_groups`
-						WHERE `grpentr_visible` = '1'
-						AND `grpentr_category` = " . $RSDB_SET_cat . "
-						" . $RSDB_intern_code_db_rsdb_groups . " ;");	
-$result_count_groups = mysql_fetch_row($query_count_groups);
+$stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_category = :category " . $RSDB_intern_code_db_rsdb_groups . "");
+$stmt->bindParam('category',$RSDB_SET_cat,PDO::PARAM_STR);
+$stmt->execute();
+$result_count_groups = $stmt->fetch(PDO::FETCH_NUM);
 if ($result_count_groups[0]) {
 
 ?>
@@ -52,18 +50,15 @@ if ($result_count_groups[0]) {
 	  </tr>
 	  <?php
 	
-		$query_page = mysql_query("SELECT * 
-									FROM `rsdb_groups` 
-									WHERE `grpentr_visible` = '1'
-									AND `grpentr_category` = " . $RSDB_SET_cat . "
-									" . $RSDB_intern_code_db_rsdb_groups . "
-									ORDER BY `grpentr_order` ASC") ;
+    $stmt=CDBConnecion::getInstance()->prepare("SELECT * FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_category = :category " . $RSDB_intern_code_db_rsdb_groups . " ORDER BY grpentr_order ASC");
+    $stmt->bindParam('category',$RSDB_SET_cat,PDO::PARAM_STR);
+    $stmt->execute();
 	
 		$farbe1="#E2E2E2";
 		$farbe2="#EEEEEE";
 		$zaehler="0";
 		
-		while($result_page = mysql_fetch_array($query_page)) { // Pages
+		while($result_page = $stmt->fetch(PDO::FETCH_ASSOC)) { // Pages
 	?>
 	  <tr> 
 		<td valign="top" bgcolor="<?php
@@ -97,24 +92,19 @@ if ($result_count_groups[0]) {
 			
 			$counter_items = 0;
 
-			$query_group_sum_items = @mysql_query("SELECT * 
-													FROM `rsdb_item_".mysql_escape_string($RSDB_intern_code_view_shortname)."` 
-													WHERE `".mysql_escape_string($RSDB_intern_code_view_shortname)."_groupid` = " . $result_page['grpentr_id'] . "
-													AND `".mysql_escape_string($RSDB_intern_code_view_shortname)."_visible` = '1'
-													ORDER BY `".mysql_escape_string($RSDB_intern_code_view_shortname)."_groupid` DESC ;") ;
-			while($result_group_sum_items = @mysql_fetch_array($query_group_sum_items)) { 
+      $stmt_item=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_".$RSDB_intern_code_view_shortname." WHERE ".$RSDB_intern_code_view_shortname."_groupid = :group_id AND ".$RSDB_intern_code_view_shortname."_visible` = '1' ORDER BY ".$RSDB_intern_code_view_shortname."_groupid DESC");
+      $stmt_item->bindParam('group_id',$result_page['grpentr_id'],PDO::PARAM_STR);
+      $stmt_item->execute();
+			while($result_group_sum_items = $stmt_item->fetch(PDO::FETCH_ASSOC)) { 
 				$counter_items++;
-				$query_count_stars_sum = @mysql_query("SELECT * 
-								FROM `".mysql_escape_string($RSDB_intern_code_view_shortname)."_item_".mysql_escape_string($RSDB_intern_code_view_shortname)."_testresults` 
-								WHERE `test_visible` = '1'
-								AND `test_comp_id` = " . $result_group_sum_items[$RSDB_intern_code_view_shortname.'_id'] . "
-								ORDER BY `test_comp_id` ASC") ;
-								
-				while($result_count_stars_sum = @mysql_fetch_array($query_count_stars_sum)) {
-					$counter_stars_install_sum += $result_count_stars_sum['test_result_install'];
-					$counter_stars_function_sum += $result_count_stars_sum['test_result_function'];
-					$counter_stars_user_sum++;
-				}
+        $stmt_tests=CDBConnection::getInstance()->prepare("SELECT SUM(test_result_install) AS install_sum, SUM(test_result_function) AS function_sum, COUNT(*) AS user_sum FROM ".$RSDB_intern_code_view_shortname."_item_".$RSDB_intern_code_view_shortname."_testresults  WHERE test_visible = '1' AND test_comp_id = :comp_id ORDER BY test_comp_id ASC");
+        $stmt_tests->bindParam('comp_id',$result_group_sum_items[$RSDB_intern_code_view_shortname.'_id'],PDO::PARAM_STR);
+        $stmt_tests->execute();
+        $tmp=$stmt_tests->fetch(PDO::FETCH_ASSOC);
+
+        $counter_stars_install_sum += $tmp['install_sum'];
+        $counter_stars_function_sum += $tmp['function_sum'];
+        $counter_stars_user_sum += $tmp['user_sum'];
 			}
 			echo $counter_items;
 			

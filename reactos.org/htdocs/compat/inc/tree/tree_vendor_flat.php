@@ -39,11 +39,10 @@ if ($RSDB_SET_letter == "all") {
 	$RSDB_SET_letter = "%";
 }
 
-$query_count_cat=mysql_query("SELECT COUNT('cat_id')
-									FROM `rsdb_item_vendor` 
-									WHERE `vendor_name` LIKE  '" . $RSDB_SET_letter . "%' 
-									AND `vendor_visible` = '1' ;");	
-$result_count_cat = mysql_fetch_row($query_count_cat);
+$stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_item_vendor WHERE vendor_name LIKE :starts_with AND vendor_visible = '1'");
+$stmt->bindValue('starts_with',$RSDB_SET_letter.'%',PDO::PARAM_STR);
+$stmt->execute();
+$result_count_cat = $stmt->fetchOnce(PDO::FETCH_NUM);
 if ($result_count_cat[0]) {
 
 	echo "<p align='center'>";
@@ -71,19 +70,17 @@ if ($result_count_cat[0]) {
   </tr>
   <?php
 	
-		$query_page = mysql_query("SELECT * 
-									FROM `rsdb_item_vendor` 
-									WHERE `vendor_name` LIKE  '" . mysql_real_escape_string($RSDB_SET_letter) . "%' 
-									AND `vendor_visible` = '1' 
-									ORDER BY `vendor_name` ASC
-									LIMIT " . mysql_real_escape_string($RSDB_SET_curpos) . " , " . mysql_real_escape_string($RSDB_intern_items_per_page) . " ;") ;
+    $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_vendor WHERE vendor_name LIKE :starts_with AND vendor_visible = '1' ORDER BY vendor_name ASC LIMIT :limit OFFSET :offset");
+    $stmt->bindValue('starts_with',$RSDB_SET_letter.'%',PDO::PARAM_STR);
+    $stmt->bindParam('limit',$RSDB_intern_items_per_page,PDO::PARAM_INT);
+    $stmt->bindParam('offset',$RSDB_SET_curpos,PDO::PARAM_INT);
 	
 		$farbe1="#E2E2E2";
 		$farbe2="#EEEEEE";
 		$zaehler="0";
 		//$farbe="#CCCCC";
 		
-		while($result_page = mysql_fetch_array($query_page)) { // Pages
+		while($result_page = $stmt->fetch(PDO::FETCH_ASSOC)) { // Pages
 	?>
   <tr> 
     <td valign="top" bgcolor="<?php

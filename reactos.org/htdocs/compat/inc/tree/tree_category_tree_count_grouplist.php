@@ -55,12 +55,10 @@
 		global $RSDB_TEMP_counter_group;
 		global $RSDB_intern_code_db_rsdb_groups;
 
-		$query_count_group_and_category=mysql_query("SELECT COUNT('grpentr_id')
-						FROM `rsdb_groups`
-						WHERE `grpentr_visible` = '1'
-						AND `grpentr_category` = " . $RSDB_TEMP_cat_id_group . "
-						" . $RSDB_intern_code_db_rsdb_groups . " ;");	
-		$result_count_group_and_category = mysql_fetch_row($query_count_group_and_category);
+		$stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_category = :category " . $RSDB_intern_code_db_rsdb_groups . "");
+    $stmt->bindParam('category',$RSDB_TEMP_cat_id_group,PDO::PARAM_STR);
+    $stmt->execute();
+		$result_count_group_and_category = $stmt->fetch(PDO::FETCH_NUM);
 //		echo "->".$result_count_group_and_category[0]."<-";
 		
 		if ($result_count_group_and_category[0]) {

@@ -35,17 +35,16 @@
 
 
 
-$query_count_cat=mysql_query("SELECT COUNT('cat_id')
-						FROM `rsdb_categories`
-						WHERE `cat_visible` = '1'
-						AND `cat_path` = " . htmlentities($RSDB_SET_cat) . "
-						" . $RSDB_intern_code_db_rsdb_categories . " ;");	
-$result_count_cat = mysql_fetch_row($query_count_cat);
+$stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_categories WHERE cat_visible = '1' AND cat_path = :path " . $RSDB_intern_code_db_rsdb_categories . "");
+$stmt->bindParam('path',$RSDB_SET_cat,PDO::PARAM_STR);
+$stmt->execute();
+$result_count_cat = $stmt->fetch(PDO::FETCH_NUM);
 
 // Update the ViewCounter:
 if ($RSDB_SET_cat != "" || $RSDB_SET_cat != "0") {
-	$query_update_viewcounter = "UPDATE `rsdb_categories` SET `cat_viewcounter` = (cat_viewcounter + 1) WHERE `cat_id` = '" . $RSDB_SET_cat . "' LIMIT 1 ;";
-	@mysql_query($query_update_viewcounter);
+  $stmt=CDBConnection::getInstance()->prepare("UPDATE rsdb_categories SET cat_viewcounter = (cat_viewcounter + 1) WHERE cat_id = :cat_id");
+  $stmt->bindParam('cat_id',$RSDB_SET_cat,PDO::PARAM_STR);
+  $stmt->execute();
 }
 
 if ($result_count_cat[0]) {
@@ -66,12 +65,9 @@ if ($result_count_cat[0]) {
 	  </tr>
 	  <?php
 	
-		$query_page = mysql_query("SELECT * 
-									FROM `rsdb_categories` 
-									WHERE `cat_visible` = '1'
-									AND `cat_path` = " . htmlentities($RSDB_SET_cat) . "
-									" . $RSDB_intern_code_db_rsdb_categories . "
-									ORDER BY `".htmlentities($RSDB_TEMP_sortby)."` ASC") ;
+    $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_categories WHERE cat_visible = '1' AND cat_path = :path " . $RSDB_intern_code_db_rsdb_categories . " ORDER BY `".htmlentities($RSDB_TEMP_sortby)."` ASC");
+    $stmt->bindParam('path',$RSDB_SET_cat,PDO::PARAM_STR);
+    $stmt->execute();
 	
 		$farbe1="#E2E2E2";
 		$farbe2="#EEEEEE";
@@ -81,7 +77,7 @@ if ($result_count_cat[0]) {
 		include('inc/tree/tree_category_flat_count_grouplist.php');
 
 		
-		while($result_page = mysql_fetch_array($query_page)) { // Pages
+		while($result_page = $stmt->fetch(PDO::FETCH_ASSOC)) { // Pages
 	?>
 	  <tr> 
 		<td width="25%" valign="top" bgcolor="<?php

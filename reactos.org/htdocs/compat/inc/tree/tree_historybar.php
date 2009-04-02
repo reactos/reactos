@@ -62,12 +62,10 @@
 		if ($RSDB_SET_cat != "") {
 
 			if ($RSDB_SET_item != "" && $RSDB_viewpage != false) {
-				$query_itemid = mysql_query("SELECT * 
-												FROM `rsdb_item_" . $RSDB_intern_code_view_shortname ."` 
-												WHERE `" . $RSDB_intern_code_view_shortname . "_visible` = '1'
-												AND `" . $RSDB_intern_code_view_shortname . "_id` = " . $RSDB_SET_item . "
-												ORDER BY `" . $RSDB_intern_code_view_shortname . "_name` ASC") ;				
-				$result_itempid = @mysql_fetch_array($query_itemid);			
+				$stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_" . $RSDB_intern_code_view_shortname ." WHERE " . $RSDB_intern_code_view_shortname . "_visible = '1' AND " . $RSDB_intern_code_view_shortname . "_id = :item_id ORDER BY " . $RSDB_intern_code_view_shortname . "_name ASC");
+        $stmt->bindParam('item_id',$RSDB_SET_item,PDO::PARAM_STR);
+        $stmt->execute();
+				$result_itempid = $stmt->fetch(PDO::FETCH_ASSOC);
 				if ($result_itempid[$RSDB_intern_code_view_shortname.'_groupid'] == "" || $result_itempid[$RSDB_intern_code_view_shortname . '_groupid'] == "0") {
 					//die("");
 					//echo "die1";
@@ -77,25 +75,20 @@
 			}
 			if ($RSDB_SET_group != "" && $RSDB_viewpage != false) {
 				//echo "+++++".$RSDB_SET_group;
-				$query_groupid = mysql_query("SELECT * 
-												FROM `rsdb_groups` 
-												WHERE `grpentr_visible` = '1'
-												AND `grpentr_id` = " . $RSDB_SET_group . "
-												" . $RSDB_intern_code_db_rsdb_groups . "
-												ORDER BY `grpentr_name` ASC") ;				
-				$result_groupid = mysql_fetch_array($query_groupid);			
+        $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_id = :group_id " . $RSDB_intern_code_db_rsdb_groups . " ORDER BY grpentr_name ASC") ;
+        $stmt->bindParam('group_id',$RSDB_SET_group,PDO::PARAM_STR);
+        $stmt->execute();
+				$result_groupid = $stmt->fetch(PDO::FETCH_ASSOC);
 				if ($result_groupid['grpentr_category'] == "" || $result_groupid['grpentr_category'] == "0") {
 					//die("");
 					//echo "die2";
 					$RSDB_viewpage = false;
 				}
 				if ($RSDB_viewpage != false) {
-					$query_category_treehistory_groupid= mysql_query("SELECT * 
-																FROM `rsdb_categories` 
-																WHERE `cat_id` = " . $result_groupid['grpentr_category'] ."
-																AND `cat_visible` = '1'
-																" . $RSDB_intern_code_db_rsdb_categories . " ;");
-					$result_category_treehistory_groupid=mysql_fetch_array($query_category_treehistory_groupid);
+          $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_categories WHERE cat_id = :cat_id AND cat_visible = '1' " . $RSDB_intern_code_db_rsdb_categories . "");
+          $stmt->bindParam('cat_id',$result_groupid['grpentr_category'],PDO::PARAM_STR);
+          $stmt->execute();
+					$result_category_treehistory_groupid=$stmt->fetch(PDO::FETCH_ASSOC);
 					
 					$RSDB_TEMP_cat_path = $result_category_treehistory_groupid['cat_path'];
 					$RSDB_TEMP_cat_id = $result_category_treehistory_groupid['cat_id'];
@@ -109,12 +102,10 @@
 			}
 			elseif ($RSDB_viewpage != false) {
 				//echo "hjall";
-				$query_category_treehistory= mysql_query("SELECT * 
-															FROM `rsdb_categories` 
-															WHERE `cat_id` = " . $RSDB_SET_cat ."
-															AND `cat_visible` = '1'
-															" . $RSDB_intern_code_db_rsdb_categories . " ;");
-				$result_category_treehistory=mysql_fetch_array($query_category_treehistory);
+        $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_categories WHERE cat_id = :cat_id AND cat_visible = '1' " . $RSDB_intern_code_db_rsdb_categories . "");
+        $stmt->bindParam('cat_id',$RSDB_SET_cat,PDO::PARAM_STR);
+        $stmt->execute();
+				$result_category_treehistory=$stmt->fetch(PDO::FETCH_ASSOC);
 				
 				$RSDB_TEMP_cat_path = $result_category_treehistory['cat_path'];
 				$RSDB_TEMP_cat_id = $result_category_treehistory['cat_id'];
@@ -130,12 +121,10 @@
 				// count the levels -> current category level
 				for ($guesslevel=1; ; $guesslevel++) {
 	//				echo $guesslevel."#";
-						$query_category_tree_guesslevel= mysql_query("SELECT * 
-																	FROM `rsdb_categories` 
-																	WHERE `cat_id` = " . $RSDB_TEMP_cat_current_id_guess ."
-																	AND `cat_visible` = '1'
-																	" . $RSDB_intern_code_db_rsdb_categories . " ;");
-						$result_category_tree_guesslevel=@mysql_fetch_array($query_category_tree_guesslevel);
+            $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_categories WHERE cat_id = :cat_id AND cat_visible = '1' " . $RSDB_intern_code_db_rsdb_categories . "");
+            $stmt->bindParam('cat_id',$RSDB_TEMP_cat_current_id_guess,PDO::PARAM_STR);
+            $stmt->execute();
+						$result_category_tree_guesslevel=$stmt->fetch(PDO::FETCH_ASSOC);
 	//					echo $result_category_tree_guesslevel['cat_name'];
 						$RSDB_TEMP_cat_current_id_guess = $result_category_tree_guesslevel['cat_path'];
 						
@@ -153,12 +142,10 @@
 	//				echo "<br>Ring0: ".$i." ";
 					for ($k=1; $k < ($RSDB_intern_catlevel+1-$i); $k++) {
 	//					echo $k."|";
-							$query_category_tree_temp= mysql_query("SELECT * 
-																		FROM `rsdb_categories` 
-																		WHERE `cat_id` = " . $RSDB_TEMP_cat_current_id ."
-																		AND `cat_visible` = '1'
-																		" . $RSDB_intern_code_db_rsdb_categories . " ;");
-							$result_category_tree_temp=mysql_fetch_array($query_category_tree_temp);
+              $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_categories WHERE cat_id = :cat_id AND `cat_visible` = '1' " . $RSDB_intern_code_db_rsdb_categories . "");
+              $stmt->bindParam('cat_id',$RSDB_TEMP_cat_current_id,PDO::PARAM_STR);
+              $stmt->execute();
+							$result_category_tree_temp=$stmt->fetch(PDO::FETCH_ASSOC);
 							$RSDB_TEMP_cat_current_id = $result_category_tree_temp['cat_path'];
 							
 	//						echo "K:".$k."|E:".($result_category_treehistory['cat_level']+1-$i);
@@ -185,22 +172,17 @@
 			}
 			
 			if ($RSDB_SET_group != "" && $RSDB_viewpage != false) {
-				$query_current_group = mysql_query("SELECT * 
-								FROM `rsdb_groups` 
-								WHERE `grpentr_visible` = '1'
-								AND `grpentr_id` = " . $RSDB_SET_group . "
-								" . $RSDB_intern_code_db_rsdb_groups . "
-								ORDER BY `grpentr_name` ASC") ;
-				$result_current_group = mysql_fetch_array($query_current_group);
+        $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_id = :group_id " . $RSDB_intern_code_db_rsdb_groups . " ORDER BY grpentr_name ASC");
+        $stmt->bindParam('group_id',$RSDB_SET_group,PDO::PARAM_STR);
+        $stmt->execute();
+				$result_current_group = $stmt->fetch(PDO::FETCH_ASSOC);
 				echo " <font size='2'>&rarr;</font> <a href='".$RSDB_intern_link_group_EX.$RSDB_SET_group.$RSDB_URI_slash."'>".$result_current_group['grpentr_name']."</a>";
 			}
 			if ($RSDB_SET_item != "" && $RSDB_viewpage != false) {
-				$query_current_group = mysql_query("SELECT * 
-								FROM `rsdb_item_" . $RSDB_intern_code_view_shortname ."` 
-								WHERE `" . $RSDB_intern_code_view_shortname . "_visible` = '1'
-								AND `" . $RSDB_intern_code_view_shortname . "_id` = " . $RSDB_SET_item . "
-								ORDER BY `" . $RSDB_intern_code_view_shortname . "_name` ASC") ;
-				$result_current_group = mysql_fetch_array($query_current_group);
+        $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_" . $RSDB_intern_code_view_shortname ." WHERE " . $RSDB_intern_code_view_shortname . "_visible = '1' AND " . $RSDB_intern_code_view_shortname . "_id = :item_id ORDER BY " . $RSDB_intern_code_view_shortname . "_name ASC");
+        $stmt->bindParam('item_id',$RSDB_SET_item,PDO::PARAM_STR);
+        $stmt->execute();
+				$result_current_group = $stmt->fetch(PDO::PARAM_STR);
 				echo " <font size='2'>&rarr;</font> <a href='".$RSDB_intern_link_item2_id_EX.$RSDB_SET_item.$RSDB_URI_slash."'>".$result_current_group[$RSDB_intern_code_view_shortname .'_name'];
 				
 					switch ($RSDB_SET_view) {
@@ -254,24 +236,20 @@
 	if ($RSDB_SET_sec == "name" || $RSDB_SET_sec == "vendor") {
 		if ($RSDB_SET_sec == "name") {
 			if ($RSDB_SET_item != "") {
-				$query_itemid = mysql_query("SELECT * 
-												FROM `rsdb_item_" . $RSDB_intern_code_view_shortname ."` 
-												WHERE `" . $RSDB_intern_code_view_shortname . "_visible` = '1'
-												AND `" . $RSDB_intern_code_view_shortname . "_id` = " . $RSDB_SET_item . "
-												ORDER BY `" . $RSDB_intern_code_view_shortname . "_name` ASC") ;				
-				$result_itempid = @mysql_fetch_array($query_itemid);			
+        $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_" . $RSDB_intern_code_view_shortname ."  WHERE " . $RSDB_intern_code_view_shortname . "_visible = '1' AND " . $RSDB_intern_code_view_shortname . "_id = :item_id ORDER BY " . $RSDB_intern_code_view_shortname . "_name ASC") ;
+        $stmt->bindParam('item_id',$RSDB_SET_item,PDO::PARAM_STR);
+        $stmt->execute();
+				$result_itempid = $stmt->fetch(PDO::FETCH_ASSOC);
 				if ($result_itempid[$RSDB_intern_code_view_shortname.'_groupid'] == "" || $result_itempid[$RSDB_intern_code_view_shortname . '_groupid'] == "0") {
 					$RSDB_viewpage = false;
 				}
 				$RSDB_SET_group = $result_itempid[$RSDB_intern_code_view_shortname . '_groupid'];
 			}
 			if ($RSDB_SET_group != "") {
-			$query_groupid = mysql_query("SELECT * 
-											FROM `rsdb_groups` 
-											WHERE `grpentr_visible` = '1'
-											AND `grpentr_id` = " . $RSDB_SET_group . "
-											ORDER BY `grpentr_id` ASC") ;				
-			$result_groupid = mysql_fetch_array($query_groupid);			
+      $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_id = :group_id ORDER BY grpentr_id ASC");
+      $stmt->bindParam('group_id',$RSDB_SET_group,PDO::PARAM_STR);
+      $stmt->execute();
+			$result_groupid = $stmt->fetch(PDO::FETCH_ASSOC);
 			$RSDB_SET_letter = strtolower(substr($result_groupid['grpentr_name'], 0, 1)); 
 		}
 	?>
@@ -289,12 +267,10 @@
 		echo "</a>";
 		 
 		if ($RSDB_SET_item != "" && $RSDB_viewpage != false) {
-			$query_itemid = mysql_query("SELECT * 
-											FROM `rsdb_item_" . $RSDB_intern_code_view_shortname ."` 
-											WHERE `" . $RSDB_intern_code_view_shortname . "_visible` = '1'
-											AND `" . $RSDB_intern_code_view_shortname . "_id` = " . $RSDB_SET_item . "
-											ORDER BY `" . $RSDB_intern_code_view_shortname . "_name` ASC") ;				
-			$result_itempid = mysql_fetch_array($query_itemid);			
+      $stmt=CDBConnection::getInstance("SELECT * FROM rsdb_item_" . $RSDB_intern_code_view_shortname ." WHERE " . $RSDB_intern_code_view_shortname . "_visible = '1' AND " . $RSDB_intern_code_view_shortname . "_id = :item_id ORDER BY " . $RSDB_intern_code_view_shortname . "_name ASC");
+      $stmt->bindParam('item_id',$RSDB_SET_item,PDO::PARAM_STR);
+      $stmt->execute();
+			$result_itempid = $stmt->fetch(PDO::FETCH_ASSOC);
 			if ($result_itempid[$RSDB_intern_code_view_shortname.'_groupid'] == "" || $result_itempid[$RSDB_intern_code_view_shortname . '_groupid'] == "0") {
 				//die("");
 				$RSDB_viewpage = false;
@@ -302,13 +278,10 @@
 			$RSDB_SET_group = $result_itempid[$RSDB_intern_code_view_shortname . '_groupid'];
 		}
 		if ($RSDB_SET_group != "" && $RSDB_viewpage != false) {
-			$query_current_group = mysql_query("SELECT * 
-							FROM `rsdb_groups` 
-							WHERE `grpentr_visible` = '1'
-							AND `grpentr_id` = " . $RSDB_SET_group . "
-							" . $RSDB_intern_code_db_rsdb_groups . "
-							ORDER BY `grpentr_name` ASC") ;
-			$result_current_group = mysql_fetch_array($query_current_group);
+			$stmt=CDBConnection::getInstance()->prepare("SELECT *  FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_id = :group_id " . $RSDB_intern_code_db_rsdb_groups . " ORDER BY grpentr_name ASC");
+      $stmt->bindParam('group_id',$RSDB_SET_group,PDO::PARAM_STR);
+      $stmt->execute();
+			$result_current_group = $stmt->fetch(PDO::FETCH_ASSOC);
 			if ($result_current_group['grpentr_category'] == "" || $result_current_group['grpentr_category'] == "0") {
 				//die("");
 				$RSDB_viewpage = false;
@@ -316,12 +289,10 @@
 			echo " <font size='2'>&rarr;</font> <a href='".$RSDB_intern_link_group_EX.$RSDB_SET_group.$RSDB_URI_slash."'>".$result_current_group['grpentr_name']."</a>";
 		}
 		if ($RSDB_SET_item != "" && $RSDB_viewpage != false) {
-			$query_current_group = mysql_query("SELECT * 
-							FROM `rsdb_item_" . $RSDB_intern_code_view_shortname ."` 
-							WHERE `" . $RSDB_intern_code_view_shortname . "_visible` = '1'
-							AND `" . $RSDB_intern_code_view_shortname . "_id` = " . $RSDB_SET_item . "
-							ORDER BY `" . $RSDB_intern_code_view_shortname . "_name` ASC") ;
-			$result_current_group = mysql_fetch_array($query_current_group);
+      $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_" . $RSDB_intern_code_view_shortname ." WHERE " . $RSDB_intern_code_view_shortname . "_visible = '1' AND " . $RSDB_intern_code_view_shortname . "_id = :item_id ORDER BY " . $RSDB_intern_code_view_shortname . "_name ASC");
+      $stmt->bindParam('item_id',$RSDB_SET_item,PDO::PARAM_STR);
+      $stmt->execute();
+			$result_current_group = $stmt->fetch(PDO::FETCH_ASSOC);
 			echo " <font size='2'>&rarr;</font> <a href='".$RSDB_intern_link_item_EX.$RSDB_SET_item.$RSDB_URI_slash."'>".$result_current_group[$RSDB_intern_code_view_shortname .'_name'];
 			
 				switch ($RSDB_SET_view) {
@@ -349,11 +320,10 @@
 	elseif ($RSDB_SET_sec == "vendor") {
 
 			if ($RSDB_SET_vendor != "") {
-				$query_itemid = mysql_query("SELECT * 
-												FROM `rsdb_item_vendor` 
-												WHERE `vendor_id` = " . $RSDB_SET_vendor . "
-												ORDER BY `vendor_name` ASC") ;				
-				$result_itempid = @mysql_fetch_array($query_itemid);			
+        $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_vendor WHERE vendor_id = :vendor_id ORDER BY vendor_name ASC");
+        $stmt->bindParam('vendor_id',$RSDB_SET_vendor,PDO::PARAM_STR);
+        $stmt->execute();
+				$result_itempid = $stmt->fetch(PDO::FETCH_ASSOC);
 				if ($result_itempid['vendor_id'] == "" || $result_itempid['vendor_id'] == "0") {
 					$RSDB_viewpage = false;
 				}
@@ -376,11 +346,10 @@
 		echo "</a></font>";
 		 
 		if ($RSDB_SET_vendor != "" && $RSDB_viewpage != false) {
-			$query_itemid = mysql_query("SELECT * 
-												FROM `rsdb_item_vendor` 
-												WHERE `vendor_id` = " . $RSDB_SET_vendor . "
-												ORDER BY `vendor_name` ASC") ;				
-			$result_itempid = mysql_fetch_array($query_itemid);			
+      $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_vendor WHERE vendor_id = :vendor_id ORDER BY vendor_name ASC");
+      $stmt->bindParam('vendor_id',$RSDB_SET_vendor,PDO::PARAM_STR);
+      $stmt->execute();
+			$result_itempid = $stmt->fetch(PDO::FETCH_ASSOC);
 			if ($result_itempid['vendor_id'] == "" || $result_itempid['vendor_id'] == "0") {
 				//die("");
 				$RSDB_viewpage = false;
@@ -389,13 +358,10 @@
 			echo " <font size='2'>&rarr;</font> <a href='".$RSDB_intern_link_vendor_id_EX.$RSDB_SET_vendor.$RSDB_URI_slash."'>".$result_itempid['vendor_name']."</a>";
 		}
 		if ($RSDB_SET_group != "" && $RSDB_viewpage != false) {
-			$query_current_group = mysql_query("SELECT * 
-							FROM `rsdb_groups` 
-							WHERE `grpentr_visible` = '1'
-							AND `grpentr_id` = " . $RSDB_SET_group . "
-							" . $RSDB_intern_code_db_rsdb_groups . "
-							ORDER BY `grpentr_name` ASC") ;
-			$result_current_group = mysql_fetch_array($query_current_group);
+      $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_id = :group_id " . $RSDB_intern_code_db_rsdb_groups . " ORDER BY grpentr_name ASC");
+      $stmt->bindParam('group_id',$RSDB_SET_group,PDO::PARAM_STR);
+      $stmt->execute();
+			$result_current_group = $stmt->fetch(PDO::FETCH_ASSOC);
 			if ($result_current_group['grpentr_category'] == "" || $result_current_group['grpentr_category'] == "0") {
 				//die("");
 				$RSDB_viewpage = false;
@@ -403,11 +369,10 @@
 			echo " <font size='2'>&rarr;</font> <a href='".$RSDB_intern_link_name_group_EX.$RSDB_SET_group.$RSDB_URI_slash."'>".$result_current_group['grpentr_name']."</a>";
 		}
 		if ($RSDB_SET_item != "" && $RSDB_viewpage != false) {
-			$query_current_group = mysql_query("SELECT * 
-												FROM `rsdb_item_vendor` 
-												WHERE `vendor_id` = " . $RSDB_SET_vendor . "
-												ORDER BY `vendor_name` ASC") ;				
-			$result_current_group = mysql_fetch_array($query_current_group);
+      $stmt=CDBCOnnection::getInstance()->prepare("SELECT * FROM rsdb_item_vendor WHERE vendor_id = :vendor_id ORDER BY vendor_name ASC");
+      $stmt->bindParam('group_id',$RSDB_SET_vendor,PDO::PARAM_STR);
+      $stmt->execute();
+			$result_current_group = $stmt->fetch(PDO::PARAM_STR);
 			echo " <font size='2'>&rarr;</font> <a href='".$RSDB_intern_link_name_item_EX.$RSDB_SET_item.$RSDB_URI_slash."'>".$result_current_group['vendor_name'];
 			echo "</a>";
 		}

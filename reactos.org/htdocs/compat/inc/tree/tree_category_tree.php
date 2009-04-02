@@ -36,17 +36,16 @@
 
 								
 
-$query_count_cat=mysql_query("SELECT COUNT('cat_id')
-						FROM `rsdb_categories`
-						WHERE `cat_visible` = '1'
-						AND `cat_path` = " . htmlentities($RSDB_SET_cat) . "
-						" . $RSDB_intern_code_db_rsdb_categories . " ;");	
-$result_count_cat = mysql_fetch_row($query_count_cat);
+$stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_categories WHERE cat_visible = '1' AND cat_path = :path " . $RSDB_intern_code_db_rsdb_categories . "");
+$stmt->bindParam('path',$RSDB_SET_cat,PDO::PARAM_STR);
+$stmt->execute();
+$result_count_cat = $stmt->fetch(PDO::FETCH_NUM);
 
 // Update the ViewCounter:
 if ($RSDB_SET_cat != "" || $RSDB_SET_cat != "0") {
-	$query_update_viewcounter = "UPDATE `rsdb_categories` SET `cat_viewcounter` = (cat_viewcounter + 1) WHERE `cat_id` = '" . $RSDB_SET_cat . "' LIMIT 1 ;";
-	@mysql_query($query_update_viewcounter);
+  $stmt=CDBConnection::getInstance()->prepare("UPDATE rsdb_categories SET cat_viewcounter = (cat_viewcounter + 1) WHERE cat_id = :cat_id");
+  $stmt->bindParam('cat_id',$RSDB_SET_cat,PDO::PARAM_STR);
+  $stmt->execute();
 }
 
 if ($result_count_cat[0]) {
@@ -74,12 +73,9 @@ if ($result_count_cat[0]) {
 	  <?php
 	
 
-		$query_treeview = mysql_query("SELECT * 
-									FROM `rsdb_categories` 
-									WHERE `cat_visible` = '1'
-									AND `cat_path` = " . htmlentities($RSDB_SET_cat) . "
-									" . $RSDB_intern_code_db_rsdb_categories . "
-									ORDER BY `".htmlentities($RSDB_TEMP_sortby)."` ASC") ;
+    $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_categories WHERE cat_visible = '1' AND cat_path = :path " . $RSDB_intern_code_db_rsdb_categories . " ORDER BY ".$RSDB_TEMP_sortby." ASC");
+    $stmt->bindParam('path',$RSDB_SET_cat,PDO::PARAM_STR);
+    $stmt->execute();
 		
 		
 			$cellcolor1="#E2E2E2";
@@ -88,7 +84,7 @@ if ($result_count_cat[0]) {
 			
 			include('inc/tree/tree_category_tree_count_grouplist.php');
 			
-		while($result_treeview = mysql_fetch_array($query_treeview)) { // TreeView
+		while($result_treeview = $stmt->fetch(PDO::FETCH_ASSOC)) { // TreeView
 	?>
 	  <tr> 
 		
@@ -112,12 +108,10 @@ if ($result_count_cat[0]) {
 		
 		for ($guesslevel=1; ; $guesslevel++) {
 //				echo $guesslevel."#";
-				$query_category_tree_guesslevel= mysql_query("SELECT * 
-															FROM `rsdb_categories` 
-															WHERE `cat_id` = " . $RSDB_TEMP_cat_current_id_guess ."
-															AND `cat_visible` = '1'
-															" . $RSDB_intern_code_db_rsdb_categories . " ;");
-				$result_category_tree_guesslevel=mysql_fetch_array($query_category_tree_guesslevel);
+				$stmt_cat=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_categories WHERE cat_id = :cat_id AND cat_visible = '1' " . $RSDB_intern_code_db_rsdb_categories . "");
+        $stmt_cat->bindParam('cat_id',$RSDB_TEMP_cat_current_id_guess,PDO::PARAM_STR);
+        $stmt_cat->execute();
+				$result_category_tree_guesslevel=$stmt_cat->fetch(PDO::FETCH_ASSOC);
 //					echo $result_category_tree_guesslevel['cat_name'];
 				$RSDB_TEMP_cat_current_id_guess = $result_category_tree_guesslevel['cat_path'];
 				
@@ -166,15 +160,12 @@ if ($result_count_cat[0]) {
 		global $RSDB_intern_code_db_rsdb_categories;
 		global $RSDB_TEMP_sortby;
 
-		$query_create_historybar=mysql_query("SELECT * 
-								FROM `rsdb_categories` 
-								WHERE `cat_path` = " . $RSDB_TEMP_cat_id ."
-								AND `cat_visible` = '1' 
-								" . $RSDB_intern_code_db_rsdb_categories . "
-								ORDER BY `".$RSDB_TEMP_sortby."` ASC ;");
+    $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_categories WHERE cat_path = :path AND cat_visible = '1' " . $RSDB_intern_code_db_rsdb_categories . " ORDER BY ".$RSDB_TEMP_sortby." ASC");
+    $stmt->bindParam('path',$RSDB_TEMP_cat_id,PDO::PARAM_STR);
+    $stmt->execute();
 					
 		//$result_create_historybar=mysql_fetch_array($query_create_historybar);
-		while($result_create_historybar=mysql_fetch_array($query_create_historybar)) { 
+		while($result_create_historybar=$stmt->fetch(PDO::FETCH_ASSOC)) { 
 			//echo "&nbsp;&nbsp; catlev: ".$result_create_historybar['cat_level']." | curlev: ".$RSDB_TEMP_cat_level."<br>";
 			
 /*			if ($result_create_historybar['cat_level'] > $RSDB_TEMP_cat_level) {
@@ -205,13 +196,11 @@ if ($result_count_cat[0]) {
 //		global $RSDB_TEMP_cat_icon;
 
 		
-		$query_create_tree_entry=mysql_query("SELECT * 
-												FROM `rsdb_categories` 
-												WHERE `cat_id` = " . $RSDB_TEMP_entry_id ."
-												AND `cat_visible` = '1'
-												" . $RSDB_intern_code_db_rsdb_categories . " ;");
+    $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_categories WHERE cat_id = :cat_id AND cat_visible = '1' " . $RSDB_intern_code_db_rsdb_categories . "");
+    $stmt->bindParam('cat_id',$RSDB_TEMP_entry_id,PDO::PARAM_STR);
+    $stmt->execute();
 					
-		$result_create_tree_entry=mysql_fetch_array($query_create_tree_entry);
+		$result_create_tree_entry=$stmt->fetch(PDO::FETCH_ASSOC);
 
 /*		if ($result_create_tree_entry['cat_icon'] != "") {
 			$RSDB_TEMP_cat_icon = $result_create_tree_entry['cat_icon'];
@@ -227,12 +216,10 @@ if ($result_count_cat[0]) {
 		// count the levels -> current category level
 		for ($guesslevel=1; ; $guesslevel++) {
 //				echo $guesslevel."#";
-				$query_category_tree_guesslevel= mysql_query("SELECT * 
-															FROM `rsdb_categories` 
-															WHERE `cat_id` = " . $RSDB_TEMP_cat_current_id_guess ."
-															AND `cat_visible` = '1'
-															" . $RSDB_intern_code_db_rsdb_categories . " ;");
-				$result_category_tree_guesslevel=mysql_fetch_array($query_category_tree_guesslevel);
+        $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_categories WHERE cat_id = :cat_id AND cat_visible = '1' " . $RSDB_intern_code_db_rsdb_categories . "");
+        $stmt->bindParam('cat_id',$RSDB_TEMP_cat_current_id_guess,PDO::PARAM_STR);
+        $stmt->execute();
+				$result_category_tree_guesslevel=$stmt->fetch(PDO::FETCH_ASSOC);
 //					echo $result_category_tree_guesslevel['cat_name'];
 				$RSDB_TEMP_cat_current_id_guess = $result_category_tree_guesslevel['cat_path'];
 				

@@ -36,12 +36,10 @@
 
 	if (usrfunc_IsModerator($RSDB_intern_user_id)) {
 	
-		$query_maintainer_vendor = mysql_query("SELECT * 
-									FROM `rsdb_item_vendor` 
-									WHERE `vendor_visible` = '1'
-									AND `vendor_id` = '".mysql_real_escape_string($RSDB_SET_vendor)."'
-									LIMIT 1 ;") ;
-		$result_maintainer_vendor = mysql_fetch_array($query_maintainer_vendor);
+    $stmt=CDBConnection::getInstance()->prepapare("SELECT * FROM rsdb_item_vendor WHERE vendor_visible = '1' AND vendor_id = :vendor_id LIMIT 1");
+    $stmt->bindParam('vendor_id',$RSDB_SET_vendor,PDO::PARAM_STR);
+    $stmt->execute();
+		$result_maintainer_vendor = $stmt->fetchOnce(PDO::FETCH_ASSOC);
 
 		$RSDB_referrer="";
 		$RSDB_usragent="";
@@ -75,13 +73,14 @@
 		// Edit application group data:
 		if ($RSDB_TEMP_pmod == "ok" && $RSDB_SET_vendor != "" && $RSDB_TEMP_vendname != "" && $RSDB_TEMP_txturl != "" && usrfunc_IsModerator($RSDB_intern_user_id)) {
 			// Update group entry:
-			$update_group_entry = "UPDATE `rsdb_item_vendor` SET `vendor_name` = '". mysql_real_escape_string($RSDB_TEMP_vendname) ."',
-								`vendor_fullname` = '". mysql_real_escape_string($RSDB_TEMP_fullname) ."',
-								`vendor_url` = '". mysql_real_escape_string($RSDB_TEMP_txturl) ."',
-								`vendor_email` = '". mysql_real_escape_string($RSDB_TEMP_txtemail) ."',
-								`vendor_infotext` = '". mysql_real_escape_string($RSDB_TEMP_txtinfo) ."' 
-								WHERE `vendor_id` = '". mysql_real_escape_string($RSDB_SET_vendor) ."' LIMIT 1 ;";
-			mysql_query($update_group_entry);
+      $stmt=CDBConnection::getInstance()->prepare("UPDATE rsdb_item_vendor SET vendor_name = :name, vendor_fullname = :fullname, vendor_url = :url, vendor_email = :email, vendor_infotext = :info WHERE vendor_id = :vendor_id LIMIT 1");
+      $stmt->bindParam('name',$RSDB_TEMP_vendname,PDO::PARAM_STR);
+      $stmt->bindParam('fullname',$RSDB_TEMP_fullname,PDO::PARAM_STR);
+      $stmt->bindParam('url',$RSDB_TEMP_txturl,PDO::PARAM_STR);
+      $stmt->bindParam('email',$RSDB_TEMP_txtemail,PDO::PARAM_STR);
+      $stmt->bindParam('info',$RSDB_TEMP_txtinfo,PDO::PARAM_STR);
+      $stmt->bindParam('vendor_id',$RSDB_SET_vendor,PDO::PARAM_STR);
+      $stmt->execute();
 			
 			add_log_entry("low", "tree_vendor", "edit", "[Vendor] Edit entry", @usrfunc_GetUsername($RSDB_intern_user_id)." changed the group data from: \n\nVendor-Name: ".htmlentities($result_maintainer_vendor['vendor_name'])." - ".htmlentities($result_maintainer_vendor['vendor_fullname'])." - ".$result_maintainer_vendor['vendor_id']."\n\nUrl: ".htmlentities($result_maintainer_vendor['vendor_url'])." \n\E-Mail: ".$result_maintainer_vendor['vendor_email']." \n\Info: ".$result_maintainer_vendor['vendor_infotext']." \n\n\nTo: \n\nVendor-Name: ".htmlentities($RSDB_TEMP_vendname)."\n\Fullname: ".htmlentities($RSDB_TEMP_fullname)." \n\nUrl: ".htmlentities($RSDB_TEMP_txturl)." \n\E-Mail: ".htmlentities($RSDB_TEMP_txtemail)." \n\Info: ".htmlentities($RSDB_TEMP_txtinfo), "0");
 			?>
@@ -93,15 +92,20 @@
 
 		// Special request:
 		if ($RSDB_TEMP_pmod == "ok" && $RSDB_TEMP_txtreq1 != "" && $RSDB_TEMP_txtreq2 != "" && usrfunc_IsModerator($RSDB_intern_user_id)) {
-			$report_submit="INSERT INTO `rsdb_logs` ( `log_id` , `log_date` , `log_usrid` , `log_usrip` , `log_level` , `log_action` , `log_title` , `log_description` , `log_category` , `log_badusr` , `log_referrer` , `log_browseragent` , `log_read` , `log_taskdone_usr` ) 
-							VALUES ('', NOW( ) , '".mysql_real_escape_string($RSDB_intern_user_id)."', '".mysql_escape_string($RSDB_ipaddr)."', 'low', 'request', '".mysql_escape_string($RSDB_TEMP_txtreq1)."', '".mysql_escape_string($RSDB_TEMP_txtreq2)."', 'user_moderator', '0', '".mysql_escape_string($RSDB_referrer)."', '".mysql_escape_string($RSDB_usragent)."', ';', '0');";
-			$db_report_submit=mysql_query($report_submit);
+      $stmt=CDBConnection::getInstance()->prepare("INSERT INTO rsdb_logs (log_id, log_date, log_usrid, log_usrip, log_level, log_action, log_title, log_description, log_category, log_badusr, log_referrer, log_browseragent, log_read, log_taskdone_usr) VALUES ('', NOW(), :user_id, :ip, 'low', 'request', :title, :description, 'user_moderator', '0', :referrer, :user_agent, ';', '0')");
+      $stmt->bindParam('user_id',$RSDB_intern_user_id,PDO::PARAM_STR);
+      $stmt->bindParam('ip',$RSDB_ipaddr,PDO::PARAM_STR);
+      $stmt->bindParam('title',$RSDB_TEMP_txtreq1,PDO::PARAM_STR);
+      $stmt->bindParam('description',$RSDB_TEMP_txtreq2,PDO::PARAM_STR);
+      $stmt->bindParam('referrer',$RSDB_referrer,PDO::PARAM_STR);
+      $stmt->bindParam('user_agent',$RSDB_usragent,PDO::PARAM_STR);
+      $stmt->execute();
 		}
 		// Report spam:
 		if ($RSDB_TEMP_pmod == "ok" && $RSDB_TEMP_txtspam != "" && usrfunc_IsModerator($RSDB_intern_user_id)) {
-			$update_log_entry = "UPDATE `rsdb_item_vendor` SET
-									`vendor_visible` = '3' WHERE `vendor_id` = '". mysql_real_escape_string($RSDB_SET_vendor) ."' LIMIT 1 ;";
-			mysql_query($update_log_entry);
+      $stmt=CDBConnection::getInstance()->prepare("UPDATE rsdb_item_vendor SET vendor_visible = '3' WHERE vendor_id = :vendor_id LIMIT 1");
+      $stmt->bindParam('vendor_id',$RSDB_SET_vendor,PDO::PARAM_STR);
+      $stmt->execute();
 			add_log_entry("low", "tree_vendor", "report_spam", "[Vendor] Spam/ads report", @usrfunc_GetUsername($RSDB_intern_user_id)." wrote: \n".htmlentities($RSDB_TEMP_txtspam)." \n\n\n\nUser: ".@usrfunc_GetUsername($result_maintainer_vendor['vendor_usrid'])." - ".$result_maintainer_vendor['vendor_usrid']."\n\nVendor-Name: ".htmlentities($result_maintainer_vendor['vendor_name'])." - ".$result_maintainer_vendor['vendor_id']."\n\nUrl: ".htmlentities($result_maintainer_vendor['vendor_url'])." \n\E-Mail: ".$result_maintainer_vendor['vendor_email']." \n\Info: ".$result_maintainer_vendor['vendor_infotext'], $result_maintainer_vendor['vendor_usrid']);
 		}
 		// Verified:
@@ -113,9 +117,10 @@
 		}
 		if ($result_maintainer_vendor['vendor_checked'] == "1" || $result_maintainer_vendor['vendor_checked'] == "no") {
 			if ($RSDB_TEMP_pmod == "ok" && $RSDB_TEMP_verified == "done" && usrfunc_IsModerator($RSDB_intern_user_id)) {
-				$update_log_entry = "UPDATE `rsdb_item_vendor` SET
-										`vendor_checked` = '". mysql_real_escape_string($temp_verified) ."' WHERE `vendor_id` = '". mysql_real_escape_string($RSDB_SET_vendor) ."' LIMIT 1 ;";
-				mysql_query($update_log_entry);
+        $stmt=CDBConnection::getInstance()->prepare("UPDATE rsdb_item_vendor SET vendor_checked = :checked WHERE vendor_id = :vendor_id LIMIT 1");
+        $stmt->bindParam('checked',$temp_verified,PDO::PARAM_STR);
+        $stmt->bindParam('vendor_id',$RSDB_SET_vendor,PDO::PARAM_STR);
+        $stmt->execute();
 				add_log_entry("low", "tree_vendor", "verified", "[Vendor] Verified", @usrfunc_GetUsername($RSDB_intern_user_id)." has verified the following vendor: \n\n\n\nUser: ".@usrfunc_GetUsername($result_maintainer_vendor['vendor_usrid'])." - ".$result_maintainer_vendor['vendor_usrid']."\n\nVendor-Name: ".htmlentities($result_maintainer_vendor['vendor_name'])." - ".$result_maintainer_vendor['vendor_id']."\n\nUrl: ".htmlentities($result_maintainer_vendor['vendor_url'])." \n\E-Mail: ".$result_maintainer_vendor['vendor_email']." \n\Info: ".$result_maintainer_vendor['vendor_infotext'], "0");
 			}
 		}
@@ -354,9 +359,10 @@
 		if (array_key_exists("done", $_POST)) $RSDB_TEMP_done=htmlspecialchars($_POST["done"]);
 		
 		if ($RSDB_TEMP_padmin == "ok" && $RSDB_TEMP_done != "" && usrfunc_IsAdmin($RSDB_intern_user_id)) {
-			$update_log_entry = "UPDATE `rsdb_logs` SET 
-									`log_taskdone_usr` = '". mysql_real_escape_string($RSDB_intern_user_id) ."' WHERE `log_id` = '". mysql_real_escape_string($RSDB_TEMP_done) ."' LIMIT 1 ;";
-			mysql_query($update_log_entry);
+      $stmt=CDBConnection::getInstance()->prepare"UPDATE rsdb_logs SET log_taskdone_usr = :user_id WHERE log_id = :log_id LIMIT 1");
+      $stmt->bindParam('user_id',$RSDB_intern_user_id,PDO::PARAM_STR);
+      $stmt->bindParam('log_id',$RSDB_TEMP_done,PDO::PARAM_STR);
+      $stmt->execute();
 		}
 		
 ?>
@@ -377,14 +383,9 @@
 					$cellcolor1="#E2E2E2";
 					$cellcolor2="#EEEEEE";
 					$cellcolorcounter="0";
-					$query_entry_sprequest = mysql_query("SELECT * 
-							FROM `rsdb_logs` 
-							WHERE `log_level` LIKE 'low'
-							AND `log_action` LIKE 'request'
-							AND `log_category` LIKE 'user_moderator'
-							ORDER BY `log_date` DESC
-							LIMIT 0, 30;") ;
-					while($result_entry_sprequest = mysql_fetch_array($query_entry_sprequest)) {
+          $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_logs WHERE log_level LIKE 'low' AND log_action LIKE 'request' AND log_category LIKE 'user_moderator' ORDER BY log_date DESC LIMIT 30;");
+          $stmt->execute();
+					while($result_entry_sprequest = $stmt->fetch(PDO::FETCH_ASSOC)) {
 				?> 
   <tr valign="top" bgcolor="<?php
 					$cellcolorcounter++;
