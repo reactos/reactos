@@ -233,6 +233,7 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
 BOOLEAN
 DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 {
+	ULONG Color;
 	LONG i, j, sx, sy = BltInfo->SourcePoint.y;
 
 	switch ( BltInfo->SourceSurface->iBitmapFormat )
@@ -247,12 +248,8 @@ DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 			sx = BltInfo->SourcePoint.x;
 			for (i=BltInfo->DestRect.left; i<BltInfo->DestRect.right; i++)
 			{
-				if(XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, DIB_4BPP_GetPixel(BltInfo->SourceSurface, sx, sy)) == 0)
-				{
-					DIB_1BPP_PutPixel(BltInfo->DestSurface, i, j, 0);
-				} else {
-					DIB_1BPP_PutPixel(BltInfo->DestSurface, i, j, 1);
-				}
+				Color = XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, DIB_4BPP_GetPixel(BltInfo->SourceSurface, sx, sy));
+				DIB_1BPP_PutPixel(BltInfo->DestSurface, i, j, Color);
 				sx++;
 			}
 			sy++;
@@ -265,12 +262,8 @@ DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 			sx = BltInfo->SourcePoint.x;
 			for (i=BltInfo->DestRect.left; i<BltInfo->DestRect.right; i++)
 			{
-				if(XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, DIB_8BPP_GetPixel(BltInfo->SourceSurface, sx, sy)) == 0)
-				{
-					DIB_1BPP_PutPixel(BltInfo->DestSurface, i, j, 0);
-				} else {
-					DIB_1BPP_PutPixel(BltInfo->DestSurface, i, j, 1);
-				}
+				Color = XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, DIB_8BPP_GetPixel(BltInfo->SourceSurface, sx, sy));
+				DIB_1BPP_PutPixel(BltInfo->DestSurface, i, j, Color);
 				sx++;
 			}
 			sy++;
@@ -283,12 +276,8 @@ DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 			sx = BltInfo->SourcePoint.x;
 			for (i=BltInfo->DestRect.left; i<BltInfo->DestRect.right; i++)
 			{
-				if(XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, DIB_16BPP_GetPixel(BltInfo->SourceSurface, sx, sy)) == 0)
-				{
-					DIB_1BPP_PutPixel(BltInfo->DestSurface, i, j, 0);
-				} else {
-					DIB_1BPP_PutPixel(BltInfo->DestSurface, i, j, 1);
-				}
+				Color = XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, DIB_16BPP_GetPixel(BltInfo->SourceSurface, sx, sy));
+				DIB_1BPP_PutPixel(BltInfo->DestSurface, i, j, Color);
 				sx++;
 			}
 			sy++;
@@ -301,12 +290,8 @@ DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 			sx = BltInfo->SourcePoint.x;
 			for (i=BltInfo->DestRect.left; i<BltInfo->DestRect.right; i++)
 			{
-				if(XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, DIB_24BPP_GetPixel(BltInfo->SourceSurface, sx, sy)) == 0)
-				{
-					DIB_1BPP_PutPixel(BltInfo->DestSurface, i, j, 0);
-				} else {
-					DIB_1BPP_PutPixel(BltInfo->DestSurface, i, j, 1);
-				}
+				Color = XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, DIB_24BPP_GetPixel(BltInfo->SourceSurface, sx, sy));
+				DIB_1BPP_PutPixel(BltInfo->DestSurface, i, j, Color);
 				sx++;
 			}
 			sy++;
@@ -319,12 +304,8 @@ DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 			sx = BltInfo->SourcePoint.x;
 			for (i=BltInfo->DestRect.left; i<BltInfo->DestRect.right; i++)
 			{
-				if(XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, DIB_32BPP_GetPixel(BltInfo->SourceSurface, sx, sy)) == 0)
-				{
-					DIB_1BPP_PutPixel(BltInfo->DestSurface, i, j, 0);
-				} else {
-					DIB_1BPP_PutPixel(BltInfo->DestSurface, i, j, 1);
-				}
+				Color = XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, DIB_32BPP_GetPixel(BltInfo->SourceSurface, sx, sy));
+				DIB_1BPP_PutPixel(BltInfo->DestSurface, i, j, Color);
 				sx++;
 			}
 			sy++;
