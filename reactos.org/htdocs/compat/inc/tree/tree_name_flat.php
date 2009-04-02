@@ -74,18 +74,7 @@ if ($result_count_cat[0]) {
     <td width="10%" title="Version">
       <div align="center"><font color="#FFFFFF" face="Arial, Helvetica, sans-serif"><strong>Ver.</strong></font></div></td>
     <td width="20%">
-      <div align="center"><font color="#FFFFFF" face="Arial, Helvetica, sans-serif"><strong><?php
-		
-		switch ($RSDB_SET_view) {
-			case "comp": // Compatibility
-				echo "Compatibility";
-				break;
-			default:
-				echo "Rating";
-				break;
-		}
-
-		?> &Oslash; </strong></font></div></td>
+      <div align="center"><font color="#FFFFFF" face="Arial, Helvetica, sans-serif"><strong>Compatibility &Oslash; </strong></font></div></td>
     <td width="8%" title="Status"><div align="center"><font color="#FFFFFF" face="Arial, Helvetica, sans-serif"><strong>Stat.</strong></font></div></td>
   </tr>
   <?php

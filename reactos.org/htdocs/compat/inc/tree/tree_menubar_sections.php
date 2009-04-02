@@ -59,11 +59,7 @@
 			}
 			else {
 				if ($RSDB_SET_item != "") {
-					$result_count_group['item_comp']=0;
-						
-					if ($RSDB_SET_view == "comp")  {
 						$result_count_group['item_comp']=1;
-					}
 					$RSDB_compare_string = 'item';
 				}
 				elseif ($RSDB_SET_group != "") {

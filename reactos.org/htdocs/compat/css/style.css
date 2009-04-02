@@ -3,7 +3,7 @@ body {
 	font-size: 12px;
 	margin: 0 0 1em 0;
 	padding: 0; /* Only affects Opera */
-	background: #FFFFFF url('http://localhost/reactos.org/images/topbar.jpg') repeat-x scroll top left;
+	background: #FFFFFF url('../images/topbar.jpg') repeat-x scroll top left;
 }
  
 hr {
@@ -100,7 +100,7 @@ a:hover {
  
 /* set by the generator */
 a.extern { 
-	background: url('http://localhost/reactos.org/wiki/stylesheets/monobook/external.png') no-repeat center right;
+	background: url('../../wiki/stylesheets/monobook/external.png') no-repeat center right;
 	padding-right: 14px; 
 } 
  
@@ -111,12 +111,12 @@ a.extern {
 }
  
 #content li {
-	list-style-image: url('http://localhost/reactos.org/images/bullet.png')
+	list-style-image: url('../images/bullet.png')
 }
  
 #top {
 	margin: 0;
-	background: url('http://localhost/reactos.org/support/images/logo_rsdb.jpg') no-repeat scroll 35px 0;
+	background: url('../images/logo_rsdb.jpg') no-repeat scroll 35px 0;
 	padding: 103px 0 26px 0;
 	color: #FFFFFF;
 	text-align: right;

@@ -118,7 +118,6 @@ require_once("lib/Compat_Autoloader.class.php");
 	// Global Vars:
 	$RSDB_SET_page=""; // Page: Home or DB
 	$RSDB_SET_sec=""; // Browse by: Category, Name, Company, Rank, etc.
-	$RSDB_SET_view=""; // Compatibility, Packages, Dev Network, Media
 	$RSDB_SET_cat="0"; // Category ID
 	$RSDB_SET_cat2="flat"; // Category Style: Flat or Tree
 	$RSDB_SET_letter=""; // Browse by Name: Letter: All, A, B, C, ..., X, Y, Z
@@ -168,7 +167,6 @@ require_once("lib/Compat_Autoloader.class.php");
 	
 	if (array_key_exists("page", $_GET)) $RSDB_SET_page=htmlspecialchars($_GET["page"]);
 	if (array_key_exists("sec", $_GET)) $RSDB_SET_sec=htmlspecialchars($_GET["sec"]);
-	if (array_key_exists("view", $_GET)) $RSDB_SET_view=htmlspecialchars($_GET["view"]);
 	if (array_key_exists("cat", $_GET)) $RSDB_SET_cat=htmlspecialchars($_GET["cat"]);
 	if (array_key_exists("cat2", $_GET)) $RSDB_SET_cat2=htmlspecialchars($_GET["cat2"]);
 	if (array_key_exists("letter", $_GET)) $RSDB_SET_letter=htmlspecialchars($_GET["letter"]);
@@ -249,7 +247,7 @@ require_once("lib/Compat_Autoloader.class.php");
 	require_once("inc/tools/plugins.php");
 	
 
-//	echo "<hr />db: ".$RSDB_SET_page.", view: ".$RSDB_SET_view.", sec: ".$RSDB_SET_sec."<hr />";
+//	echo "<hr />db: ".$RSDB_SET_page.", sec: ".$RSDB_SET_sec."<hr />";
 
 	switch ($RSDB_SET_page) {
 		case "home": // Frontpage
@@ -263,14 +261,7 @@ require_once("lib/Compat_Autoloader.class.php");
 			include("inc/footer.php"); // Body
 			break;
 		case "about": // RSDB About Page
-			//require($RSDB_intern_path_server.$RSDB_intern_loginsystem_path."inc/login.php");
-			$rpm_page_title="Support Database - About";
-			include("inc/header.php"); // Head
-			create_head($rpm_page_title, $rpm_logo, $RSDB_langres);
-			include("inc/structure.php");  // Layout-Structure
-			create_structure($rpm_page);
-			include("inc/about.php"); // Content
-			include("inc/footer.php"); // Body
+			new About();
 			break;
 		case "conditions": // RSDB Submit Conditions Page
 			$rpm_page_title="Support Database - Submit Conditions";
@@ -284,7 +275,6 @@ require_once("lib/Compat_Autoloader.class.php");
 		default:
 		case "db": // developer interface
 			//require($RSDB_intern_path_server.$RSDB_intern_loginsystem_path."inc/login.php");
-					$RSDB_SET_view = "comp";
 					$rpm_page_title="Support Database - Compatibility";
 					$RSDB_intern_section_script = "inc/comp.php";
 

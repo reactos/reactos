@@ -36,7 +36,6 @@
 
 
 		global $RSDB_SET_page;
-		global $RSDB_SET_view;
 		global $RSDB_SET_sec;
 		global $RSDB_SET_cat;
 		global $RSDB_SET_cat2;
@@ -93,14 +92,14 @@
 			$RSDB_intern_link_HRU_about = $RSDB_intern_index_HRU."/about/";
 			$RSDB_intern_link_HRU_conditions = $RSDB_intern_index_HRU."/comp/conditions/";
 			$RSDB_intern_link_HRU_help = $RSDB_intern_index_HRU."/comp/help/";
-			$RSDB_intern_index_HRU_view = $RSDB_intern_index_HRU."/".$RSDB_SET_view;
+			$RSDB_intern_index_HRU_view = $RSDB_intern_index_HRU."/comp";
 			$RSDB_intern_link_HRU_view = $RSDB_intern_index_HRU_view."/";
 			
 			// Browse - general
-			$RSDB_intern_link_HRU_view_group = $RSDB_intern_index_HRU."/".$RSDB_SET_view."/".$RSDB_SET_sec."/group/";
-			$RSDB_intern_link_HRU_view_item = $RSDB_intern_index_HRU."/".$RSDB_SET_view."/".$RSDB_SET_sec."/item/";
-			$RSDB_intern_link_HRU_view_letter = $RSDB_intern_index_HRU."/".$RSDB_SET_view."/".$RSDB_SET_sec."/letter/";
-			$RSDB_intern_link_HRU_view_cat = $RSDB_intern_index_HRU."/".$RSDB_SET_view."/".$RSDB_SET_sec."/id/";
+			$RSDB_intern_link_HRU_view_group = $RSDB_intern_index_HRU."/comp/".$RSDB_SET_sec."/group/";
+			$RSDB_intern_link_HRU_view_item = $RSDB_intern_index_HRU."/comp/".$RSDB_SET_sec."/item/";
+			$RSDB_intern_link_HRU_view_letter = $RSDB_intern_index_HRU."/comp/".$RSDB_SET_sec."/letter/";
+			$RSDB_intern_link_HRU_view_cat = $RSDB_intern_index_HRU."/comp/".$RSDB_SET_sec."/id/";
 			
 			
 
@@ -157,9 +156,9 @@
 		$RSDB_intern_link_roscms_page = $RSDB_intern_link_roscms."?page=";
 	
 		// Section
-		$RSDB_intern_link_db_sec = $RSDB_intern_index_php."?page=db&amp;view=".$RSDB_SET_view."&amp;sec=";
-		$RSDB_intern_link_db_sec_javascript = $RSDB_intern_index_php."?page=db&view=".$RSDB_SET_view."&sec=";
-		$RSDB_intern_link_db_sec_javascript2 = $RSDB_intern_index_php."?page=db&view=".$RSDB_SET_view."&sec=".$RSDB_SET_sec;
+		$RSDB_intern_link_db_sec = $RSDB_intern_index_php."?page=db&amp;sec=";
+		$RSDB_intern_link_db_sec_javascript = $RSDB_intern_index_php."?page=db&sec=";
+		$RSDB_intern_link_db_sec_javascript2 = $RSDB_intern_index_php."?page=db&sec=".$RSDB_SET_sec;
 		
 		
 		// View
@@ -229,7 +228,7 @@
 
 		// Item
 		$RSDB_intern_link_item = $RSDB_intern_link_db_sec.$RSDB_SET_sec."&amp;item=";
-		$RSDB_intern_link_item_javascript = $RSDB_intern_index_php."?page=db&view=".$RSDB_SET_view."&sec=".$RSDB_SET_sec."&item=";
+		$RSDB_intern_link_item_javascript = $RSDB_intern_index_php."?page=db&sec=".$RSDB_SET_sec."&item=";
 		$RSDB_intern_link_item_item2 = $RSDB_intern_link_item.$RSDB_SET_item."&amp;item2=";
 		$RSDB_intern_link_item_item2_both = $RSDB_intern_link_item_item2.$RSDB_SET_item2;
 		$RSDB_intern_link_item_item2_both_javascript = $RSDB_intern_link_db_sec_javascript.$RSDB_SET_sec."&item=".$RSDB_SET_item."&item2=".$RSDB_SET_item2;
@@ -308,14 +307,14 @@
 
 
 		// Language
-		$RSDB_intern_link_language = $RSDB_intern_index_php."?page=".$RSDB_SET_page."&amp;sec=".$RSDB_SET_sec."&amp;view=".$RSDB_SET_view."&amp;cat=".$RSDB_SET_cat."&amp;cat2=".$RSDB_SET_cat2."&amp;letter=".$RSDB_SET_letter."&amp;group=".$RSDB_SET_group."&amp;item=".$RSDB_SET_item."&amp;order=".$RSDB_SET_order."&amp;filter=".$RSDB_SET_filter."&amp;vendor=".$RSDB_SET_vendor."&amp;lang=";
+		$RSDB_intern_link_language = $RSDB_intern_index_php."?page=".$RSDB_SET_page."&amp;sec=".$RSDB_SET_sec."&amp;cat=".$RSDB_SET_cat."&amp;cat2=".$RSDB_SET_cat2."&amp;letter=".$RSDB_SET_letter."&amp;group=".$RSDB_SET_group."&amp;item=".$RSDB_SET_item."&amp;order=".$RSDB_SET_order."&amp;filter=".$RSDB_SET_filter."&amp;vendor=".$RSDB_SET_vendor."&amp;lang=";
 
 		// Ajax
 		$RSDB_intern_link_ajax = $RSDB_intern_link_language.$RSDB_SET_lang."&amp;ajax=";
 
 		// Export
-		//$RSDB_intern_link_export = $RSDB_intern_index_php."?page=data&amp;sec=".$RSDB_SET_sec."&amp;view=".$RSDB_SET_view."&amp;cat=".$RSDB_SET_cat."&amp;cat2=".$RSDB_SET_cat2."&amp;letter=".$RSDB_SET_letter."&amp;group=".$RSDB_SET_group."&amp;item=".$RSDB_SET_item."&amp;order=".$RSDB_SET_order."&amp;filter=".$RSDB_SET_filter."&amp;vendor=".$RSDB_SET_vendor."&amp;lang=".$RSDB_SET_lang."&amp;export=";
-		$RSDB_intern_link_export = $RSDB_intern_index_php."?page=dat&sec=".$RSDB_SET_sec."&view=".$RSDB_SET_view."&cat=".$RSDB_SET_cat."&cat2=".$RSDB_SET_cat2."&letter=".$RSDB_SET_letter."&group=".$RSDB_SET_group."&item=".$RSDB_SET_item."&order=".$RSDB_SET_order."&filter=".$RSDB_SET_filter."&vendor=".$RSDB_SET_vendor."&lang=".$RSDB_SET_lang."&export=";
+		//$RSDB_intern_link_export = $RSDB_intern_index_php."?page=data&amp;sec=".$RSDB_SET_sec."&amp;cat=".$RSDB_SET_cat."&amp;cat2=".$RSDB_SET_cat2."&amp;letter=".$RSDB_SET_letter."&amp;group=".$RSDB_SET_group."&amp;item=".$RSDB_SET_item."&amp;order=".$RSDB_SET_order."&amp;filter=".$RSDB_SET_filter."&amp;vendor=".$RSDB_SET_vendor."&amp;lang=".$RSDB_SET_lang."&amp;export=";
+		$RSDB_intern_link_export = $RSDB_intern_index_php."?page=dat&sec=".$RSDB_SET_sec."&cat=".$RSDB_SET_cat."&cat2=".$RSDB_SET_cat2."&letter=".$RSDB_SET_letter."&group=".$RSDB_SET_group."&item=".$RSDB_SET_item."&order=".$RSDB_SET_order."&filter=".$RSDB_SET_filter."&vendor=".$RSDB_SET_vendor."&lang=".$RSDB_SET_lang."&export=";
 		$RSDB_intern_link_export2 = $RSDB_intern_index_php."?page=dat&export=";
 
 

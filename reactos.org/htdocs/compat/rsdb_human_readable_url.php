@@ -94,7 +94,6 @@
 				break;
 			case "comp": // .../comp/cat/id/xx
 				$RSDB_SET_page = "db";
-				$RSDB_SET_view = "comp";
 				switch( $RSDB_HUMAN_URI_tree_2 ) {
 					case "cat": // short
 					case "category":
@@ -166,7 +165,6 @@
 		
 		$RSDB_SET_page = "db";
 		$RSDB_SET_lang = "en";
-		$RSDB_SET_view = "comp";
 		/*$RSDB_SET_entry = "";
 		$RSDB_SET_entry = @$RSDB_URI_tree_array[2];
 		$RSDB_SET_action = "";
