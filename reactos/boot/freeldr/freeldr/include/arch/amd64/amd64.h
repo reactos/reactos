@@ -28,6 +28,7 @@
 #define LMODE_DS	0x18
 #define RMODE_CS	0x20	/* RMode code selector, base 0 limit 64k */
 #define RMODE_DS	0x28	/* RMode data selector, base 0 limit 64k */
+#define CMODE_CS    0x30
 
 #define VA_MASK 0x0000FFFFFFFFFFFFUL
 
