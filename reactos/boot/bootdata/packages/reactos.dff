@@ -648,7 +648,6 @@ modules\rosapps\applications\devutils\gdb2\gdb2.exe                             
 modules\rosapps\applications\devutils\gdihv\gdihv.exe                                   1   optional
 modules\rosapps\applications\devutils\genguid\genguid.exe                               1   optional
 modules\rosapps\applications\sysutils\gettype\gettype.exe                               1   optional
-modules\rosapps\applications\devutils\roswebparser\roswebparser.exe                     1   optional
 modules\rosapps\applications\devutils\zoomin\zoomin.exe                                 1   optional
 modules\rosapps\applications\downloader\downloader.exe                                  1   optional
 modules\rosapps\applications\downloader\downloader.xml                                  1   optional
