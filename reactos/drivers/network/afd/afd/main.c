@@ -198,6 +198,8 @@ VOID DestroySocket( PAFD_FCB FCB ) {
     if( ReturnEarly )
         return;
 
+    if( FCB->Context )
+        ExFreePool(FCB->Context);
     if( FCB->Recv.Window )
 	ExFreePool( FCB->Recv.Window );
     if( FCB->Send.Window )
