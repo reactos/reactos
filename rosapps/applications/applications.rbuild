@@ -26,10 +26,6 @@
 	</directory>
 -->
 
-	<directory name="imagesoft">
-		<xi:include href="imagesoft/imagesoft.rbuild" />
-	</directory>
-
 	<directory name="magnify">
 		<xi:include href="magnify/magnify.rbuild" />
 	</directory>
