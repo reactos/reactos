@@ -876,7 +876,7 @@ GreStretchBltMask(
     /* Perform the bitblt operation */
     Status = IntEngStretchBlt(&BitmapDest->SurfObj,
                               &BitmapSrc->SurfObj,
-                              NULL,
+                              BitmapMask ? &BitmapMask->SurfObj : NULL,
                               DCDest->rosdc.CombinedClip,
                               XlateObj,
                               &DestRect,
