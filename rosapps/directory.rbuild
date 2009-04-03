@@ -20,8 +20,4 @@
 	<directory name="lib">
 		<xi:include href="lib/directory.rbuild" />
 	</directory>
-
-	<directory name="templates">
-		<xi:include href="templates/directory.rbuild" />
-	</directory>
 </group>

@@ -1,7 +1,0 @@
-<package>
-  <name>TuxPaint</name>
-  <version>0.9.15-2</version>
-  <description>An open source bitmap graphics editor geared towards young children.</description>
-  <scripts inst="tuxpaint.inst.rps"/>
-</package>
-
