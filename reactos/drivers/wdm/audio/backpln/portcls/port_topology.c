@@ -1,3 +1,11 @@
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS Kernel Streaming
+ * FILE:            drivers/wdm/audio/backpln/portcls/port_topology.c
+ * PURPOSE:         Topology Port driver
+ * PROGRAMMER:      Johannes Anderwald
+ */
+
 #include "private.h"
 
 typedef struct
@@ -70,10 +78,10 @@ IPortTopology_fnQueryInterface(
     IN  REFIID refiid,
     OUT PVOID* Output)
 {
-    WCHAR Buffer[100];
+    UNICODE_STRING GuidString;
     IPortTopologyImpl * This = (IPortTopologyImpl*)iface;
 
-    DPRINT1("IPortTopology_fnQueryInterface\n");
+    DPRINT("IPortTopology_fnQueryInterface\n");
 
     if (IsEqualGUIDAligned(refiid, &IID_IPortTopology) ||
         IsEqualGUIDAligned(refiid, &IID_IPort) ||
@@ -94,9 +102,11 @@ IPortTopology_fnQueryInterface(
         return NewPortClsVersion((PPORTCLSVERSION*)Output);
     }
 
-    StringFromCLSID(refiid, Buffer);
-    DPRINT1("IPortTopology_fnQueryInterface no iface %S\n", Buffer);
-    KeBugCheckEx(0, 0, 0, 0, 0);
+    if (RtlStringFromGUID(refiid, &GuidString) == STATUS_SUCCESS)
+    {
+        DPRINT1("IPortTopology_fnQueryInterface no interface!!! iface %S\n", GuidString.Buffer);
+        RtlFreeUnicodeString(&GuidString);
+    }
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -167,7 +177,7 @@ IPortTopology_fnInit(
     NTSTATUS Status;
     IPortTopologyImpl * This = (IPortTopologyImpl*)iface;
 
-    DPRINT1("IPortTopology_fnInit entered This %p DeviceObject %p Irp %p UnknownMiniport %p UnknownAdapter %p ResourceList %p\n",
+    DPRINT("IPortTopology_fnInit entered This %p DeviceObject %p Irp %p UnknownMiniport %p UnknownAdapter %p ResourceList %p\n",
             This, DeviceObject, Irp, UnknownMiniport, UnknownAdapter, ResourceList);
 
     if (This->bInitialized)
@@ -227,7 +237,7 @@ IPortTopology_fnInit(
                                          This->pDescriptor);
 
 
-    DPRINT1("IPortTopology_fnInit success\n");
+    DPRINT("IPortTopology_fnInit success\n");
     return STATUS_SUCCESS;
 }
 
@@ -326,9 +336,9 @@ ISubDevice_fnNewIrpTarget(
     IN PIRP Irp, 
     IN KSOBJECT_CREATE *CreateObject)
 {
-    IPortTopologyImpl * This = (IPortTopologyImpl*)CONTAINING_RECORD(iface, IPortTopologyImpl, lpVtblSubDevice);
+    //IPortTopologyImpl * This = (IPortTopologyImpl*)CONTAINING_RECORD(iface, IPortTopologyImpl, lpVtblSubDevice);
 
-    DPRINT1("ISubDevice_NewIrpTarget this %p\n", This);
+    UNIMPLEMENTED
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -338,9 +348,9 @@ NTAPI
 ISubDevice_fnReleaseChildren(
     IN ISubdevice *iface)
 {
-    IPortTopologyImpl * This = (IPortTopologyImpl*)CONTAINING_RECORD(iface, IPortTopologyImpl, lpVtblSubDevice);
+    //IPortTopologyImpl * This = (IPortTopologyImpl*)CONTAINING_RECORD(iface, IPortTopologyImpl, lpVtblSubDevice);
 
-    DPRINT1("ISubDevice_ReleaseChildren this %p\n", This);
+    UNIMPLEMENTED
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -353,7 +363,7 @@ ISubDevice_fnGetDescriptor(
 {
     IPortTopologyImpl * This = (IPortTopologyImpl*)CONTAINING_RECORD(iface, IPortTopologyImpl, lpVtblSubDevice);
 
-    DPRINT1("ISubDevice_GetDescriptor this %p\n", This);
+    DPRINT("ISubDevice_GetDescriptor this %p\n", This);
     *Descriptor = This->SubDeviceDescriptor;
     return STATUS_SUCCESS;
 }
@@ -468,7 +478,7 @@ CreatePinWorkerRoutine(
         DPRINT("Pin %p\n", Pin);
     }
 
-    DPRINT1("CreatePinWorkerRoutine completing irp %p\n", WorkerContext->Irp);
+    DPRINT("CreatePinWorkerRoutine completing irp %p\n", WorkerContext->Irp);
     WorkerContext->Irp->IoStatus.Status = Status;
     WorkerContext->Irp->IoStatus.Information = 0;
     IoCompleteRequest(WorkerContext->Irp, IO_SOUND_INCREMENT);
@@ -492,7 +502,7 @@ PcCreateItemDispatch(
     PPIN_WORKER_CONTEXT Context;
     PIO_WORKITEM WorkItem;
 
-    DPRINT1("PcCreateItemDispatch called DeviceObject %p\n", DeviceObject);
+    DPRINT("PcCreateItemDispatch called DeviceObject %p\n", DeviceObject);
 
     /* access the create item */
     CreateItem = KSCREATE_ITEM_IRP_STORAGE(Irp);
@@ -556,7 +566,7 @@ PcCreateItemDispatch(
                                              NULL);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to get filter object\n");
+        DPRINT("Failed to get filter object\n");
         return Status;
     }
 
@@ -566,7 +576,7 @@ PcCreateItemDispatch(
         /* create the dispatch object */
         Status = NewDispatchObject(Irp, Filter);
 
-        DPRINT1("Filter %p\n", Filter);
+        DPRINT("Filter %p\n", Filter);
     }
     else
     {
@@ -598,7 +608,7 @@ PcCreateItemDispatch(
                 IoCompleteRequest(Irp, IO_NO_INCREMENT);
                 return STATUS_INSUFFICIENT_RESOURCES;
             }
-            DPRINT1("Queueing IRP %p Irql %u\n", Irp, KeGetCurrentIrql());
+            DPRINT("Queueing IRP %p Irql %u\n", Irp, KeGetCurrentIrql());
             Irp->IoStatus.Information = 0;
             Irp->IoStatus.Status = STATUS_PENDING;
             IoMarkIrpPending(Irp);
@@ -629,7 +639,7 @@ NewPortTopology(
     This->lpVtblSubDevice = &vt_ISubdeviceVtbl;
     This->ref = 1;
     *OutPort = (PPORT)(&This->lpVtbl);
-    DPRINT1("NewPortTopology result %p\n", *OutPort);
+    DPRINT("NewPortTopology result %p\n", *OutPort);
 
     return STATUS_SUCCESS;
 }

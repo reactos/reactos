@@ -1,6 +1,15 @@
 #ifndef SYSAUDIO_H__
 #define SYSAUDIO_H__
 
+#include <ntifs.h>
+#include <ntddk.h>
+#include <portcls.h>
+#include <ks.h>
+#include <ksmedia.h>
+#include <math.h>
+#define NDEBUG
+#include <debug.h>
+
 typedef struct
 {
     BOOL bHandle;                    // indicates if an audio pin can be instantated more than once
@@ -65,6 +74,9 @@ typedef struct
 
     PFILE_OBJECT KMixerFileObject;                      // mixer file object
     HANDLE KMixerHandle;                                // mixer file handle
+
+    PIO_WORKITEM WorkItem;                              // work item for pin creation
+    PVOID WorkerContext;                                // work item context
 
 }SYSAUDIODEVEXT, *PSYSAUDIODEVEXT;
 

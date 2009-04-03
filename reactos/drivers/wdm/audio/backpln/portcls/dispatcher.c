@@ -1,3 +1,12 @@
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS Kernel Streaming
+ * FILE:            drivers/wdm/audio/backpln/portcls/dispatcher.c
+ * PURPOSE:         portcls generic dispatcher
+ * PROGRAMMER:      Johannes Anderwald
+ */
+
+
 #include "private.h"
 
 NTSTATUS
@@ -221,7 +230,7 @@ NewDispatchObject(
     IoStack->FileObject->FsContext2 = (PVOID)Target;
 
     Status = KsAllocateObjectHeader(&ObjectHeader, 1, CreateItem, Irp, &DispatchTable);
-    DPRINT1("KsAllocateObjectHeader result %x\n", Status);
+    DPRINT("KsAllocateObjectHeader result %x\n", Status);
     return Status;
 }
 

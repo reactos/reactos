@@ -1,3 +1,11 @@
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS Kernel Streaming
+ * FILE:            drivers/wdm/audio/backpln/portcls/dma_slave.c
+ * PURPOSE:         portcls dma support object
+ * PROGRAMMER:      Johannes Anderwald
+ */
+
 #include "private.h"
 
 
@@ -523,7 +531,7 @@ PcNewDmaChannel(
     This->MaxMapRegisters = MapRegisters;
 
     *OutDmaChannel = (PVOID)(&This->lpVtbl);
-    DPRINT1("PcNewDmaChannel result %p\n", *OutDmaChannel);
+    DPRINT("PcNewDmaChannel result %p\n", *OutDmaChannel);
     return STATUS_SUCCESS;
 
 }

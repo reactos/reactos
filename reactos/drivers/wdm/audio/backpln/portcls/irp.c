@@ -1,10 +1,10 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS
- * FILE:            drivers/multimedia/portcls/irp.c
+ * FILE:            drivers/wdm/audio/backpln/portcls/irp.c
  * PURPOSE:         Port Class driver / IRP Handling
  * PROGRAMMER:      Andrew Greenwood
- *
+ *                  Johannes Anderwald
  * HISTORY:
  *                  27 Jan 07   Created
  */
@@ -12,30 +12,6 @@
 
 #include "private.h"
 #include <portcls.h>
-
-/*
-    A safe place for IRPs to be bounced to, if no handler has been
-    set. Whether this is a good idea or not...?
-*/
-#if 0
-static
-NTSTATUS
-NTAPI
-IrpStub(
-    IN  PDEVICE_OBJECT DeviceObject,
-    IN  PIRP Irp)
-{
-    NTSTATUS status = STATUS_NOT_SUPPORTED;
-
-    Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
-    Irp->IoStatus.Information = 0;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
-    DPRINT1("IRP Stub called\n");
-
-    return status;
-}
-#endif
 
 /*
     Handles IRP_MJ_CREATE, which occurs when someone wants to make use of
@@ -47,7 +23,7 @@ PortClsCreate(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
 {
-    DPRINT1("PortClsCreate called\n");
+    DPRINT("PortClsCreate called\n");
 
     return KsDispatchIrp(DeviceObject, Irp);
 }
@@ -68,7 +44,7 @@ PortClsPnp(
     PIO_STACK_LOCATION IoStack;
     IResourceList* resource_list = NULL;
 
-    DPRINT1("PortClsPnp called\n");
+    DPRINT("PortClsPnp called\n");
 
     DeviceExt = (PPCLASS_DEVICE_EXTENSION) DeviceObject->DeviceExtension;
     IoStack = IoGetCurrentIrpStackLocation(Irp);
@@ -165,7 +141,7 @@ PortClsPower(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
 {
-    DPRINT1("PortClsPower called\n");
+    DPRINT("PortClsPower called\n");
 
     /* TODO */
 
@@ -186,7 +162,7 @@ PortClsSysControl(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
 {
-    DPRINT1("PortClsSysControl called\n");
+    DPRINT("PortClsSysControl called\n");
 
     /* TODO */
 
@@ -215,7 +191,7 @@ PcDispatchIrp(
 {
     PIO_STACK_LOCATION IoStack;
 
-    DPRINT1("PcDispatchIrp called - handling IRP in PortCls\n");
+    DPRINT("PcDispatchIrp called - handling IRP in PortCls\n");
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
@@ -287,16 +263,12 @@ PcForwardIrpSynchronous(
     PPCLASS_DEVICE_EXTENSION DeviceExt;
     NTSTATUS Status;
 
-    DPRINT1("PcForwardIrpSynchronous\n");
-
     DeviceExt = (PPCLASS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
     /* initialize the notification event */
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
     IoCopyCurrentIrpStackLocationToNext(Irp);
-
-    DPRINT1("PcForwardIrpSynchronous %p Irp %p\n", DeviceExt->PrevDeviceObject, Irp);
 
     IoSetCompletionRoutine(Irp, CompletionRoutine, (PVOID)&Event, TRUE, TRUE, TRUE);
 
@@ -309,6 +281,5 @@ PcForwardIrpSynchronous(
         KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
         Status = STATUS_SUCCESS;
     }
-    DPRINT1("Returning status %x\n", Status);
     return Status;
 }

@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Kernel Streaming
- * FILE:            drivers/multimedia/portcls/adapter.c
+ * FILE:            drivers/wdm/audio/backpln/portcls/api.c
  * PURPOSE:         Port Class driver / DriverEntry and IRP handlers
  * PROGRAMMER:      Andrew Greenwood
  *
@@ -61,7 +61,7 @@ PcInitializeAdapterDriver(
     DriverObject->DriverExtension->AddDevice = AddDevice;
 
     /* KS handles these */
-    DPRINT1("Setting KS function handlers\n");
+    DPRINT("Setting KS function handlers\n");
     KsSetMajorFunctionHandler(DriverObject, IRP_MJ_CLOSE);
     KsSetMajorFunctionHandler(DriverObject, IRP_MJ_DEVICE_CONTROL);
     KsSetMajorFunctionHandler(DriverObject, IRP_MJ_FLUSH_BUFFERS);
@@ -70,7 +70,7 @@ PcInitializeAdapterDriver(
     KsSetMajorFunctionHandler(DriverObject, IRP_MJ_SET_SECURITY);
     KsSetMajorFunctionHandler(DriverObject, IRP_MJ_WRITE);
 
-    DPRINT1("PortCls has finished initializing the adapter driver\n");
+    DPRINT("PortCls has finished initializing the adapter driver\n");
 
     return STATUS_SUCCESS;
 }

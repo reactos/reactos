@@ -1,3 +1,11 @@
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS Kernel Streaming
+ * FILE:            drivers/wdm/audio/backpln/portcls/port_wavepci.c
+ * PURPOSE:         Wave PCI Port driver
+ * PROGRAMMER:      Johannes Anderwald
+ */
+
 #include "private.h"
 
 typedef struct
@@ -55,7 +63,7 @@ IPortEvents_fnQueryInterface(
 {
     IPortWavePciImpl * This = (IPortWavePciImpl*)CONTAINING_RECORD(iface, IPortWavePciImpl, lpVtblPortEvents);
 
-    DPRINT1("IPortEvents_fnQueryInterface entered\n");
+    DPRINT("IPortEvents_fnQueryInterface entered\n");
 
     if (IsEqualGUIDAligned(refiid, &IID_IPortEvents) ||
         IsEqualGUIDAligned(refiid, &IID_IUnknown))
@@ -74,7 +82,7 @@ IPortEvents_fnAddRef(
     IPortEvents* iface)
 {
     IPortWavePciImpl * This = (IPortWavePciImpl*)CONTAINING_RECORD(iface, IPortWavePciImpl, lpVtblPortEvents);
-    DPRINT1("IPortEvents_fnAddRef entered\n");
+    DPRINT("IPortEvents_fnAddRef entered\n");
     return InterlockedIncrement(&This->ref);
 }
 
@@ -85,7 +93,7 @@ IPortEvents_fnRelease(
     IPortEvents* iface)
 {
     IPortWavePciImpl * This = (IPortWavePciImpl*)CONTAINING_RECORD(iface, IPortWavePciImpl, lpVtblPortEvents);
-    DPRINT1("IPortEvents_fnRelease entered\n");
+    DPRINT("IPortEvents_fnRelease entered\n");
     InterlockedDecrement(&This->ref);
 
     if (This->ref == 0)
@@ -104,7 +112,7 @@ IPortEvents_fnAddEventToEventList(
     IPortEvents* iface,
     IN PKSEVENT_ENTRY EventEntry)
 {
-    DPRINT1("IPortEvents_fnAddEventToEventList stub\n");
+    UNIMPLEMENTED
 }
 
 
@@ -120,7 +128,7 @@ IPortEvents_fnGenerateEventList(
     IN  BOOL NodeEvent,
     IN  ULONG NodeId)
 {
-    DPRINT1("IPortEvents_fnGenerateEventList stub\n");
+    UNIMPLEMENTED
 }
 
 static IPortEventsVtbl vt_IPortEvents = 
@@ -146,7 +154,7 @@ IServiceSink_fnQueryInterface(
 {
     IPortWavePciImpl * This = (IPortWavePciImpl*)CONTAINING_RECORD(iface, IPortWavePciImpl, lpVtblServiceSink);
 
-    DPRINT1("IServiceSink_fnQueryInterface entered\n");
+    DPRINT("IServiceSink_fnQueryInterface entered\n");
 
     if (IsEqualGUIDAligned(refiid, &IID_IServiceSink) ||
         IsEqualGUIDAligned(refiid, &IID_IUnknown))
@@ -165,7 +173,7 @@ IServiceSink_fnAddRef(
     IServiceSink* iface)
 {
     IPortWavePciImpl * This = (IPortWavePciImpl*)CONTAINING_RECORD(iface, IPortWavePciImpl, lpVtblServiceSink);
-    DPRINT1("IServiceSink_fnAddRef entered\n");
+    DPRINT("IServiceSink_fnAddRef entered\n");
     return InterlockedIncrement(&This->ref);
 }
 
@@ -176,7 +184,7 @@ IServiceSink_fnRelease(
     IServiceSink* iface)
 {
     IPortWavePciImpl * This = (IPortWavePciImpl*)CONTAINING_RECORD(iface, IPortWavePciImpl, lpVtblServiceSink);
-    DPRINT1("IServiceSink_fnRelease entered\n");
+    DPRINT("IServiceSink_fnRelease entered\n");
     InterlockedDecrement(&This->ref);
 
     if (This->ref == 0)
@@ -195,7 +203,7 @@ IServiceSink_fnRequestService(
     IServiceSink* iface)
 {
     IPortWavePciImpl * This = (IPortWavePciImpl*)CONTAINING_RECORD(iface, IPortWavePciImpl, lpVtblServiceSink);
-    DPRINT1("IServiceSink_fnRequestService entered\n");
+    DPRINT("IServiceSink_fnRequestService entered\n");
     if (This->Miniport)
     {
         This->Miniport->lpVtbl->Service(This->Miniport);
@@ -222,10 +230,10 @@ IPortWavePci_fnQueryInterface(
     IN  REFIID refiid,
     OUT PVOID* Output)
 {
-	WCHAR Buffer[100];
+    UNICODE_STRING GuidString;
     IPortWavePciImpl * This = (IPortWavePciImpl*)iface;
 
-    DPRINT1("IPortWavePci_fnQueryInterface entered\n");
+    DPRINT("IPortWavePci_fnQueryInterface entered\n");
 
     if (IsEqualGUIDAligned(refiid, &IID_IPortWavePci) || 
         IsEqualGUIDAligned(refiid, &IID_IUnknown))
@@ -257,9 +265,12 @@ IPortWavePci_fnQueryInterface(
         return NewPortClsVersion((PPORTCLSVERSION*)Output);
     }
 
-    StringFromCLSID(refiid, Buffer);
-    DPRINT1("IPortWavePci_fnQueryInterface no interface!!! iface %S\n", Buffer);
-    KeBugCheckEx(0, 0, 0, 0, 0);
+    if (RtlStringFromGUID(refiid, &GuidString) == STATUS_SUCCESS)
+    {
+        DPRINT1("IPortWavePci_fnQueryInterface no interface!!! iface %S\n", GuidString.Buffer);
+        RtlFreeUnicodeString(&GuidString);
+    }
+
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -271,7 +282,7 @@ IPortWavePci_fnAddRef(
 {
     IPortWavePciImpl * This = (IPortWavePciImpl*)iface;
 
-    DPRINT1("IPortWavePci_fnAddRef entered\n");
+    DPRINT("IPortWavePci_fnAddRef entered\n");
 
     return InterlockedIncrement(&This->ref);
 }
@@ -284,7 +295,7 @@ IPortWavePci_fnRelease(
 {
     IPortWavePciImpl * This = (IPortWavePciImpl*)iface;
 
-    DPRINT1("IPortWavePci_fnRelease entered\n");
+    DPRINT("IPortWavePci_fnRelease entered\n");
 
     InterlockedDecrement(&This->ref);
 
@@ -305,12 +316,12 @@ ServiceNotifyRoutine(
     IN PVOID  SystemArgument1,
     IN PVOID  SystemArgument2)
 {
-    DPRINT1("ServiceNotifyRoutine entered %p %p %p\n", DeferredContext, SystemArgument1, SystemArgument2);
+    DPRINT("ServiceNotifyRoutine entered %p %p %p\n", DeferredContext, SystemArgument1, SystemArgument2);
 
     IPortWavePciImpl * This = (IPortWavePciImpl*)DeferredContext;
     if (This->ServiceGroup && This->bInitialized)
     {
-        DPRINT1("ServiceGroup %p\n", This->ServiceGroup);
+        DPRINT("ServiceGroup %p\n", This->ServiceGroup);
         This->ServiceGroup->lpVtbl->RequestService(This->ServiceGroup);
     }
 }
@@ -334,7 +345,7 @@ IPortWavePci_fnInit(
     PPOWERNOTIFY PowerNotify;
     IPortWavePciImpl * This = (IPortWavePciImpl*)iface;
 
-    DPRINT1("IPortWavePci_fnInit entered with This %p, DeviceObject %p Irp %p UnknownMiniport %p, UnknownAdapter %p ResourceList %p\n", 
+    DPRINT("IPortWavePci_fnInit entered with This %p, DeviceObject %p Irp %p UnknownMiniport %p, UnknownAdapter %p ResourceList %p\n", 
             This, DeviceObject, Irp, UnknownMiniport, UnknownAdapter, ResourceList);
 
     if (This->bInitialized)
@@ -458,7 +469,7 @@ IPortWavePci_fnNewRegistryKey(
 {
     IPortWavePciImpl * This = (IPortWavePciImpl*)iface;
 
-    DPRINT1("IPortWavePci_fnNewRegistryKey entered\n");
+    DPRINT("IPortWavePci_fnNewRegistryKey entered\n");
 
     if (!This->bInitialized)
     {
@@ -488,7 +499,7 @@ IPortWavePci_fnGetDeviceProperty(
 {
     IPortWavePciImpl * This = (IPortWavePciImpl*)iface;
 
-    DPRINT1("IPortWavePci_fnGetDeviceProperty entered\n");
+    DPRINT("IPortWavePci_fnGetDeviceProperty entered\n");
 
     if (!This->bInitialized)
     {
@@ -520,7 +531,7 @@ IPortWavePci_fnNewMasterDmaChannel(
     DEVICE_DESCRIPTION DeviceDescription;
     IPortWavePciImpl * This = (IPortWavePciImpl*)iface;
 
-    DPRINT1("IPortWavePci_fnNewMasterDmaChannel This %p entered\n", This);
+    DPRINT("IPortWavePci_fnNewMasterDmaChannel This %p entered\n", This);
 
     Status = PcDmaMasterDescription(ResourceList, ScatterGather, Dma32BitAddresses, IgnoreCount, Dma64BitAddresses, DmaWidth, DmaSpeed, MaximumLength, DmaPort, &DeviceDescription);
     if (NT_SUCCESS(Status))
@@ -617,9 +628,9 @@ ISubDevice_fnNewIrpTarget(
     IN PIRP Irp, 
     IN KSOBJECT_CREATE *CreateObject)
 {
-    IPortWavePciImpl * This = (IPortWavePciImpl*)CONTAINING_RECORD(iface, IPortWavePciImpl, lpVtblSubDevice);
+    //IPortWavePciImpl * This = (IPortWavePciImpl*)CONTAINING_RECORD(iface, IPortWavePciImpl, lpVtblSubDevice);
 
-    DPRINT1("ISubDevice_NewIrpTarget this %p\n", This);
+    UNIMPLEMENTED
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -629,9 +640,9 @@ NTAPI
 ISubDevice_fnReleaseChildren(
     IN ISubdevice *iface)
 {
-    IPortWavePciImpl * This = (IPortWavePciImpl*)CONTAINING_RECORD(iface, IPortWavePciImpl, lpVtblSubDevice);
+    //IPortWavePciImpl * This = (IPortWavePciImpl*)CONTAINING_RECORD(iface, IPortWavePciImpl, lpVtblSubDevice);
 
-    DPRINT1("ISubDevice_ReleaseChildren this %p\n", This);
+    UNIMPLEMENTED
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -746,6 +757,6 @@ NewPortWavePci(
     This->ref = 1;
 
     *OutPort = (PPORT)&This->lpVtbl;
-    DPRINT1("NewPortWavePci %p\n", *OutPort);
+    DPRINT("NewPortWavePci %p\n", *OutPort);
     return STATUS_SUCCESS;
 }

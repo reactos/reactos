@@ -1,3 +1,11 @@
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS Kernel Streaming
+ * FILE:            drivers/wdm/audio/backpln/portcls/propertyhandler.c
+ * PURPOSE:         Pin property handler
+ * PROGRAMMER:      Johannes Anderwald
+ */
+
 #include "private.h"
 
 NTSTATUS

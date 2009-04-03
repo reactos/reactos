@@ -9,15 +9,6 @@
  *                  8 Jul 07    Started basic implementation
  */
 
-#include <ntifs.h>
-#include <ntddk.h>
-#include <portcls.h>
-#include <ks.h>
-#include <ksmedia.h>
-#include <math.h>
-#define YDEBUG
-#include <debug.h>
-//#include <dxsdk/mediaobj.h>
 #include "sysaudio.h"
 
 
@@ -148,6 +139,23 @@ SysAudio_InstallDevice(
         DPRINT1("Failed to register device notifications\n");
         goto cleanup;
     }
+
+    /* allocate work item */
+    DeviceExtension->WorkItem = IoAllocateWorkItem(DeviceObject);
+    if (!DeviceExtension->WorkItem)
+    {
+        DPRINT1("Failed to allocate work item\n");
+        goto cleanup;
+    }
+
+    /* allocate work item context */
+    DeviceExtension->WorkerContext = ExAllocatePool(NonPagedPool, sizeof(PIN_WORKER_CONTEXT));
+    if (!DeviceExtension->WorkerContext)
+    {
+        DPRINT1("Failed to allocate work item context\n");
+        goto cleanup;
+    }
+
 
     /* Load kmixer */
     Status = SysAudioOpenKMixer(DeviceExtension);

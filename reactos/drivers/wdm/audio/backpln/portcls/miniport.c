@@ -1,18 +1,12 @@
 /*
-    ReactOS Operating System
-
-    Port Class API
-    IMiniPortMidi Implementation
-
-    by Andrew Greenwood
-
-    REFERENCE:
-        http://www.osronline.com/ddkx/stream/audmp-routines_64vn.htm
-*/
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS Kernel Streaming
+ * FILE:            drivers/wdm/audio/backpln/portcls/miniport.c
+ * PURPOSE:         Miniport construction api
+ * PROGRAMMER:      Andrew Greenwood
+ */
 
 #include "private.h"
-
-
 
 /*
  * @implemented
@@ -24,7 +18,7 @@ PcNewMiniport(
 {
     NTSTATUS Status = STATUS_INVALID_PARAMETER;
 
-    DPRINT1("PcNewMiniport entered\n");
+    DPRINT("PcNewMiniport entered\n");
 
     if (!OutMiniport)
     {

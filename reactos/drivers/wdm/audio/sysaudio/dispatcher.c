@@ -6,14 +6,6 @@
  * PROGRAMMER:      Johannes Anderwald
  */
 
-#include <ntifs.h>
-#include <ntddk.h>
-#include <portcls.h>
-#include <ks.h>
-#include <ksmedia.h>
-#include <math.h>
-#define YDEBUG
-#include <debug.h>
 #include "sysaudio.h"
 
 NTSTATUS
@@ -95,10 +87,10 @@ Dispatch_fnClose(
     DeviceExtension = (PSYSAUDIODEVEXT)DeviceObject->DeviceExtension;
 
 
-    DPRINT1("Client %p NumDevices %u\n", Client, Client->NumDevices);
+    DPRINT("Client %p NumDevices %u\n", Client, Client->NumDevices);
     for(Index = 0; Index < Client->NumDevices; Index++)
     {
-        DPRINT1("Index %u Device %u Handels Count %u\n", Index, Client->Devs[Index].DeviceId, Client->Devs[Index].ClientHandlesCount);
+        DPRINT("Index %u Device %u Handels Count %u\n", Index, Client->Devs[Index].DeviceId, Client->Devs[Index].ClientHandlesCount);
         if (Client->Devs[Index].ClientHandlesCount)
         {
             Entry = GetListEntry(&DeviceExtension->KsAudioDeviceList, Client->Devs[Index].DeviceId);
@@ -111,7 +103,7 @@ Dispatch_fnClose(
 
                 if (Client->Devs[Index].ClientHandles[SubIndex].bHandle)
                 {
-                    DPRINT1("Closing handle %p\n", Client->Devs[Index].ClientHandles[SubIndex].hPin);
+                    DPRINT("Closing handle %p\n", Client->Devs[Index].ClientHandles[SubIndex].hPin);
 
                     ZwClose(Client->Devs[Index].ClientHandles[SubIndex].hPin);
                     Entry->Pins[Client->Devs[Index].ClientHandles[SubIndex].PinId].References--;
@@ -132,7 +124,7 @@ Dispatch_fnClose(
                     //DPRINT1("Index %u DeviceIndex %u Pin %u References %u\n", Index, Client->Devs[Index].DeviceId, SubIndex, Entry->Pins[Client->Devs[Index].ClientHandles[SubIndex].PinId].References);
                     if (!Entry->Pins[Client->Devs[Index].ClientHandles[SubIndex].PinId].References)
                     {
-                        DPRINT1("Closing pin %p\n", Entry->Pins[Client->Devs[Index].ClientHandles[SubIndex].PinId].PinHandle);
+                        DPRINT("Closing pin %p\n", Entry->Pins[Client->Devs[Index].ClientHandles[SubIndex].PinId].PinHandle);
 
                         ZwClose(Entry->Pins[Client->Devs[Index].ClientHandles[SubIndex].PinId].PinHandle);
                         Entry->Pins[Client->Devs[Index].ClientHandles[SubIndex].PinId].PinHandle = NULL;
@@ -148,8 +140,6 @@ Dispatch_fnClose(
 
     ExFreePool(Client);
 
-    //FIXME
-    // cleanup resources
     Irp->IoStatus.Status = STATUS_SUCCESS;
     Irp->IoStatus.Information = 0;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -274,7 +264,7 @@ DispatchCreateSysAudio(
     IoStatus = IoGetCurrentIrpStackLocation(Irp);
     Buffer = IoStatus->FileObject->FileName.Buffer;
 
-    DPRINT1("DispatchCreateSysAudio entered\n");
+    DPRINT("DispatchCreateSysAudio entered\n");
 
     if (Buffer)
     {

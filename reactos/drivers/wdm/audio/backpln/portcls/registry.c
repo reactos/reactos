@@ -1,3 +1,11 @@
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS Kernel Streaming
+ * FILE:            drivers/wdm/audio/backpln/portcls/registry.c
+ * PURPOSE:         Registry access object
+ * PROGRAMMER:      Johannes Anderwald
+ */
+
 #include "private.h"
 
 typedef struct
@@ -193,7 +201,7 @@ IRegistryKey_fnQueryValueKey(
     OUT PULONG  ResultLength)
 {
     IRegistryKeyImpl * This = (IRegistryKeyImpl*)iface;
-    DPRINT1("IRegistryKey_fnQueryValueKey entered %p value %wZ\n", This, ValueName);
+    DPRINT("IRegistryKey_fnQueryValueKey entered %p value %wZ\n", This, ValueName);
     return ZwQueryValueKey(This->hKey, ValueName, KeyValueInformationClass, KeyValueInformation, Length, ResultLength);
 }
 
@@ -208,7 +216,7 @@ IRegistryKey_fnSetValueKey(
     )
 {
     IRegistryKeyImpl * This = (IRegistryKeyImpl*)iface;
-    DPRINT1("IRegistryKey_fnSetValueKey entered %S\n", ValueName->Buffer);
+    DPRINT("IRegistryKey_fnSetValueKey entered %S\n", ValueName->Buffer);
     return ZwSetValueKey(This->hKey, ValueName, 0, Type, Data, DataSize);
 }
 

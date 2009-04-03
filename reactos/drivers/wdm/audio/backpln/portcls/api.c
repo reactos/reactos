@@ -1,3 +1,11 @@
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS Kernel Streaming
+ * FILE:            drivers/wdm/audio/backpln/portcls/api.c
+ * PURPOSE:         Port api functions
+ * PROGRAMMER:      Johannes Anderwald
+ */
+
 #include "private.h"
 
 /*
@@ -73,6 +81,38 @@ PcUnregisterIoTimeout(
     IoStopTimer(pDeviceObject);
     return STATUS_SUCCESS;
 }
+
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+PcCompletePendingPropertyRequest(
+    IN  PPCPROPERTY_REQUEST PropertyRequest,
+    IN  NTSTATUS NtStatus)
+{
+    /* sanity checks */
+
+    if (!PropertyRequest)
+        return STATUS_INVALID_PARAMETER;
+
+    ASSERT(PropertyRequest->Irp);
+    ASSERT(NtStatus != STATUS_PENDING);
+
+    /* set the final status code */
+    PropertyRequest->Irp->IoStatus.Status = NtStatus;
+
+    /* complete the irp */
+    IoCompleteRequest(PropertyRequest->Irp, IO_SOUND_INCREMENT);
+
+    /* free the property request */
+    ExFreePool(PropertyRequest);
+
+    /* return success */
+    return STATUS_SUCCESS;
+}
+
 
 /*
  * @implemented

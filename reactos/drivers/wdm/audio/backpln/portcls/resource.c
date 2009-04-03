@@ -1,10 +1,10 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS
- * FILE:            drivers/multimedia/portcls/helpers/ResourceList.c
+ * FILE:            drivers/wdm/audio/backpln/portcls/resource.c
  * PURPOSE:         Port Class driver / ResourceList implementation
  * PROGRAMMER:      Andrew Greenwood
- *
+ *                  Johannes Anderwald
  * HISTORY:
  *                  27 Jan 07   Created
  */
@@ -24,8 +24,6 @@ typedef struct CResourceList
     PCM_RESOURCE_LIST UntranslatedResourceList;
 } IResourceListImpl;
 
-
-
 /*
     Basic IUnknown methods
 */
@@ -37,7 +35,7 @@ IResourceList_fnQueryInterface(
     IN  REFIID refiid,
     OUT PVOID* Output)
 {
-    WCHAR Buffer[100];
+    UNICODE_STRING GuidString;
 
     IResourceListImpl * This = (IResourceListImpl*)iface;
     if (IsEqualGUIDAligned(refiid, &IID_IResourceList) ||
@@ -47,16 +45,12 @@ IResourceList_fnQueryInterface(
         InterlockedIncrement(&This->ref);
         return STATUS_SUCCESS;
     }
-#if 0
-    else if (IsEqualGUIDAligned(refiid, &IID_IDrmPort) ||
-             IsEqualGUIDAligned(refiid, &IID_IDrmPort2))
+
+    if (RtlStringFromGUID(refiid, &GuidString) == STATUS_SUCCESS)
     {
-        return NewIDrmPort((PDRMPORT2*)Output);
+        DPRINT1("IResourceList_QueryInterface no interface!!! iface %S\n", GuidString.Buffer);
+        RtlFreeUnicodeString(&GuidString);
     }
-#endif
-    StringFromCLSID(refiid, Buffer);
-    DPRINT1("IResourceList_fnQueryInterface no interface!!! iface %S\n", Buffer);
-    KeBugCheckEx(0, 0, 0, 0, 0);
 
     return STATUS_UNSUCCESSFUL;
 }
@@ -122,7 +116,7 @@ IResourceList_fnNumberOfEntriesOfType(
     for (Index = 0; Index < This->TranslatedResourceList->List[0].PartialResourceList.Count; Index ++ )
     {
         PartialDescriptor = &This->TranslatedResourceList->List[0].PartialResourceList.PartialDescriptors[Index];
-        DPRINT1("Descriptor Type %u\n", PartialDescriptor->Type);
+        DPRINT("Descriptor Type %u\n", PartialDescriptor->Type);
         if (PartialDescriptor->Type == Type)
         {
             /* Yay! Finally found one that matches! */
@@ -345,7 +339,7 @@ PcNewResourceList(
 
     /* TODO: Validate parameters */
 
-    DPRINT1("PcNewResourceList\n");
+    DPRINT("PcNewResourceList\n");
 
     NewList = AllocateItem(PoolType, sizeof(IResourceListImpl), TAG_PORTCLASS);
 
@@ -411,7 +405,7 @@ PcNewResourceSublist(
 
     Parent = (IResourceListImpl*)ParentList;
 
-    DPRINT1("PcNewResourceSublist entered\n");
+    DPRINT("PcNewResourceSublist entered\n");
 
     if (!Parent->TranslatedResourceList->List->PartialResourceList.Count ||
         !Parent->UntranslatedResourceList->List->PartialResourceList.Count)
@@ -453,6 +447,6 @@ PcNewResourceSublist(
 
     *OutResourceList = (IResourceList*)&NewList->lpVtbl;
 
-    DPRINT1("PcNewResourceSublist OutResourceList %p OuterUnknown %p ParentList %p\n", *OutResourceList, OuterUnknown, ParentList);
+    DPRINT("PcNewResourceSublist OutResourceList %p OuterUnknown %p ParentList %p\n", *OutResourceList, OuterUnknown, ParentList);
     return STATUS_SUCCESS;
 }

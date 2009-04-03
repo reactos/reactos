@@ -1,3 +1,11 @@
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS Kernel Streaming
+ * FILE:            drivers/wdm/audio/backpln/portcls/port_midi.c
+ * PURPOSE:         Midi Port driver
+ * PROGRAMMER:      Johannes Anderwald
+ */
+
 #include "private.h"
 
 typedef struct
@@ -45,10 +53,10 @@ IPortMidi_fnQueryInterface(
     IN  REFIID refiid,
     OUT PVOID* Output)
 {
-    WCHAR Buffer[100];
+    UNICODE_STRING GuidString;
     IPortMidiImpl * This = (IPortMidiImpl*)iface;
 
-    DPRINT1("IPortMidi_fnQueryInterface\n");
+    DPRINT("IPortMidi_fnQueryInterface\n");
 
     if (IsEqualGUIDAligned(refiid, &IID_IPortMidi) ||
         IsEqualGUIDAligned(refiid, &IID_IPort) ||
@@ -74,9 +82,11 @@ IPortMidi_fnQueryInterface(
         return NewIDrmPort((PDRMPORT2*)Output);
     }
 
-    StringFromCLSID(refiid, Buffer);
-    DPRINT1("IPortMidi_fnQueryInterface no iface %S\n", Buffer);
-    KeBugCheckEx(0, 0, 0, 0, 0);
+    if (RtlStringFromGUID(refiid, &GuidString) == STATUS_SUCCESS)
+    {
+        DPRINT1("IPortMidi_fnQueryInterface no interface!!! iface %S\n", GuidString.Buffer);
+        RtlFreeUnicodeString(&GuidString);
+    }
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -148,7 +158,7 @@ IPortMidi_fnInit(
     NTSTATUS Status;
     IPortMidiImpl * This = (IPortMidiImpl*)iface;
 
-    DPRINT1("IPortMidi_fnInit entered This %p DeviceObject %p Irp %p UnknownMiniport %p UnknownAdapter %p ResourceList %p\n",
+    DPRINT("IPortMidi_fnInit entered This %p DeviceObject %p Irp %p UnknownMiniport %p UnknownAdapter %p ResourceList %p\n",
             This, DeviceObject, Irp, UnknownMiniport, UnknownAdapter, ResourceList);
 
     if (This->bInitialized)
@@ -210,7 +220,7 @@ IPortMidi_fnInit(
                                          This->pDescriptor);
 
 
-    DPRINT1("IPortMidi_fnInit success\n");
+    DPRINT("IPortMidi_fnInit success\n");
     return STATUS_SUCCESS;
 }
 
@@ -331,9 +341,9 @@ ISubDevice_fnNewIrpTarget(
     IN PIRP Irp, 
     IN KSOBJECT_CREATE *CreateObject)
 {
-    IPortMidiImpl * This = (IPortMidiImpl*)CONTAINING_RECORD(iface, IPortMidiImpl, lpVtblSubDevice);
+    //IPortMidiImpl * This = (IPortMidiImpl*)CONTAINING_RECORD(iface, IPortMidiImpl, lpVtblSubDevice);
 
-    DPRINT1("ISubDevice_NewIrpTarget this %p\n", This);
+    UNIMPLEMENTED
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -343,9 +353,9 @@ NTAPI
 ISubDevice_fnReleaseChildren(
     IN ISubdevice *iface)
 {
-    IPortMidiImpl * This = (IPortMidiImpl*)CONTAINING_RECORD(iface, IPortMidiImpl, lpVtblSubDevice);
+    //IPortMidiImpl * This = (IPortMidiImpl*)CONTAINING_RECORD(iface, IPortMidiImpl, lpVtblSubDevice);
 
-    DPRINT1("ISubDevice_ReleaseChildren this %p\n", This);
+    UNIMPLEMENTED
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -358,7 +368,7 @@ ISubDevice_fnGetDescriptor(
 {
     IPortMidiImpl * This = (IPortMidiImpl*)CONTAINING_RECORD(iface, IPortMidiImpl, lpVtblSubDevice);
 
-    DPRINT1("ISubDevice_GetDescriptor this %p\n", This);
+    DPRINT("ISubDevice_GetDescriptor this %p\n", This);
     *Descriptor = This->SubDeviceDescriptor;
     return STATUS_SUCCESS;
 }
@@ -459,7 +469,7 @@ NewPortMidi(
     This->ref = 1;
     *OutPort = (PPORT)(&This->lpVtbl);
 
-    DPRINT1("NewPortMidi result %p\n", *OutPort);
+    DPRINT("NewPortMidi result %p\n", *OutPort);
 
     return STATUS_SUCCESS;
 }

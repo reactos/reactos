@@ -321,7 +321,7 @@ KsAllocateObjectHeader(
         {
             RtlMoveMemory(ObjectClass, IoStack->FileObject->FileName.Buffer, 38 * sizeof(WCHAR));
             ObjectClass[38] = L'\0';
-            DPRINT1("ObjectClass %S\n", ObjectClass);
+            DPRINT("ObjectClass %S\n", ObjectClass);
         }
     }
     /* allocate the object header */
@@ -369,7 +369,7 @@ KsAllocateObjectHeader(
     *Header = ObjectHeader;
 
 
-    DPRINT1("KsAllocateObjectHeader ObjectClass %S FileObject %p, ObjectHeader %p\n", ObjectClass, IoStack->FileObject, ObjectHeader);
+    DPRINT("KsAllocateObjectHeader ObjectClass %S FileObject %p, ObjectHeader %p\n", ObjectClass, IoStack->FileObject, ObjectHeader);
 
     return STATUS_SUCCESS;
 
@@ -727,7 +727,7 @@ KsCreate(
     NTSTATUS Status = STATUS_SUCCESS;
     KIRQL OldLevel;
 
-    DPRINT1("KS / CREATE\n");
+    DPRINT("KS / CREATE\n");
     /* get current stack location */
     //IoStack = IoGetCurrentIrpStackLocation(Irp);
     /* get device extension */
@@ -766,7 +766,7 @@ KsClose(
     /* get current stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    DPRINT1("KS / CLOSE\n");
+    DPRINT("KS / CLOSE\n");
 
     if (IoStack->FileObject && IoStack->FileObject->FsContext)
     {
@@ -794,7 +794,7 @@ KsDeviceControl(
     /* get current stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    DPRINT1("KS / DeviceControl\n");
+    DPRINT("KS / DeviceControl\n");
     if (IoStack->FileObject && IoStack->FileObject->FsContext)
     {
         ObjectHeader = (PKSIOBJECT_HEADER) IoStack->FileObject->FsContext;
@@ -822,7 +822,7 @@ KsRead(
     /* get current stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    DPRINT1("KS / Read\n");
+    DPRINT("KS / Read\n");
     if (IoStack->FileObject && IoStack->FileObject->FsContext)
     {
         ObjectHeader = (PKSIOBJECT_HEADER) IoStack->FileObject->FsContext;
@@ -850,7 +850,7 @@ KsWrite(
     /* get current stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    DPRINT1("KS / Write\n");
+    DPRINT("KS / Write\n");
     if (IoStack->FileObject && IoStack->FileObject->FsContext)
     {
         ObjectHeader = (PKSIOBJECT_HEADER) IoStack->FileObject->FsContext;
@@ -878,7 +878,7 @@ KsFlushBuffers(
     /* get current stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    DPRINT1("KS / FlushBuffers\n");
+    DPRINT("KS / FlushBuffers\n");
     if (IoStack->FileObject && IoStack->FileObject->FsContext)
     {
         ObjectHeader = (PKSIOBJECT_HEADER) IoStack->FileObject->FsContext;
@@ -906,7 +906,7 @@ KsQuerySecurity(
     /* get current stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    DPRINT1("KS / QuerySecurity\n");
+    DPRINT("KS / QuerySecurity\n");
     if (IoStack->FileObject && IoStack->FileObject->FsContext)
     {
         ObjectHeader = (PKSIOBJECT_HEADER) IoStack->FileObject->FsContext;
@@ -934,7 +934,7 @@ KsSetSecurity(
     /* get current stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    DPRINT1("KS / SetSecurity\n");
+    DPRINT("KS / SetSecurity\n");
     if (IoStack->FileObject && IoStack->FileObject->FsContext)
     {
         ObjectHeader = (PKSIOBJECT_HEADER) IoStack->FileObject->FsContext;
@@ -1019,7 +1019,7 @@ KsDispatchIrp(
     */
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
-    DPRINT1("KsDispatchIrp %x\n", IoStack->MajorFunction);
+    DPRINT("KsDispatchIrp %x\n", IoStack->MajorFunction);
 
     switch (IoStack->MajorFunction)
     {

@@ -6,14 +6,6 @@
  * PROGRAMMER:      Johannes Anderwald
  */
 
-#include <ntifs.h>
-#include <ntddk.h>
-#include <portcls.h>
-#include <ks.h>
-#include <ksmedia.h>
-#include <math.h>
-#define YDEBUG
-#include <debug.h>
 #include "sysaudio.h"
 
 NTSTATUS
@@ -308,7 +300,6 @@ Pin_fnFastWrite(
 
     Context = (PDISPATCH_CONTEXT)FileObject->FsContext2;
 
-#if 1
     if (Context->hMixerPin && Context->MixerFileObject)
     {
         Status = KsStreamIo(Context->MixerFileObject, NULL, NULL, NULL, NULL, 0, IoStatus, Buffer, Length, KSSTREAM_WRITE, KernelMode);
@@ -318,7 +309,7 @@ Pin_fnFastWrite(
             return FALSE;
         }
     }
-#endif
+
     Status = KsStreamIo(Context->FileObject, NULL, NULL, NULL, NULL, 0, IoStatus, Buffer, Length, KSSTREAM_WRITE, KernelMode);
     if (Status == STATUS_SUCCESS)
         return TRUE;

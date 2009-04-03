@@ -109,10 +109,6 @@ FreeItem(
     IN PVOID Item,
     IN ULONG Tag);
 
-NTSTATUS StringFromCLSID(
-    const CLSID *id,
-    LPWSTR idstr);
-
 NTSTATUS
 NTAPI
 NewIrpQueue(

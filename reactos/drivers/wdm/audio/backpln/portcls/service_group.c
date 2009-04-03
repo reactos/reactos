@@ -1,3 +1,12 @@
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS Kernel Streaming
+ * FILE:            drivers/wdm/audio/backpln/portcls/service_group.c
+ * PURPOSE:         ServiceGroup object implementation
+ * PROGRAMMER:      Johannes Anderwald
+ */
+
+
 #include "private.h"
 
 typedef struct
@@ -35,8 +44,9 @@ IServiceGroup_fnQueryInterface(
     IN  REFIID refiid,
     OUT PVOID* Output)
 {
-    WCHAR Buffer[100];
+    UNICODE_STRING GuidString;
     IServiceGroupImpl * This = (IServiceGroupImpl*)iface;
+
     if (IsEqualGUIDAligned(refiid, &IID_IServiceGroup) ||
         IsEqualGUIDAligned(refiid, &IID_IServiceSink) ||
         IsEqualGUIDAligned(refiid, &IID_IUnknown))
@@ -46,8 +56,11 @@ IServiceGroup_fnQueryInterface(
         return STATUS_SUCCESS;
     }
 
-    StringFromCLSID(refiid, Buffer);
-    DPRINT1("IPortWaveCyclic_fnQueryInterface no interface!!! iface %S\n", Buffer);
+    if (RtlStringFromGUID(refiid, &GuidString) == STATUS_SUCCESS)
+    {
+        DPRINT1("IServiceGroup_fnQueryInterface no interface!!! iface %S\n", GuidString.Buffer);
+        RtlFreeUnicodeString(&GuidString);
+    }
 
     return STATUS_UNSUCCESSFUL;
 }
@@ -262,7 +275,7 @@ PcNewServiceGroup(
 {
     IServiceGroupImpl * This;
 
-    DPRINT1("PcNewServiceGroup entered\n");
+    DPRINT("PcNewServiceGroup entered\n");
 
     This = AllocateItem(NonPagedPool, sizeof(IServiceGroupImpl), TAG_PORTCLASS);
     if (!This)

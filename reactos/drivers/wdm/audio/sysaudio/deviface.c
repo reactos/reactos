@@ -6,14 +6,6 @@
  * PROGRAMMER:      Johannes Anderwald
  */
 
-#include <ntifs.h>
-#include <ntddk.h>
-#include <portcls.h>
-#include <ks.h>
-#include <ksmedia.h>
-#include <math.h>
-#define YDEBUG
-#include <debug.h>
 #include "sysaudio.h"
 
 const GUID GUID_DEVICE_INTERFACE_ARRIVAL       = {0xCB3A4004L, 0x46F0, 0x11D0, {0xB0, 0x8F, 0x00, 0x60, 0x97, 0x13, 0x05, 0x3F}};
@@ -38,7 +30,7 @@ FilterPinWorkerRoutine(
     PKSAUDIO_DEVICE_ENTRY DeviceEntry = (PKSAUDIO_DEVICE_ENTRY)Context;
 
 
-    DPRINT1("Querying filter...\n");
+    DPRINT("Querying filter...\n");
 
     PropertyRequest.Set = KSPROPSETID_Pin;
     PropertyRequest.Flags = KSPROPERTY_TYPE_GET;

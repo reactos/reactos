@@ -6,14 +6,6 @@
  * PROGRAMMER:      Johannes Anderwald
  */
 
-#include <ntifs.h>
-#include <ntddk.h>
-#include <portcls.h>
-#include <ks.h>
-#include <ksmedia.h>
-#include <math.h>
-#define YDEBUG
-#include <debug.h>
 #include "sysaudio.h"
 
 const GUID KSPROPSETID_Sysaudio                 = {0xCBE3FAA0L, 0xCC75, 0x11D0, {0xB4, 0x65, 0x00, 0x00, 0x1A, 0x18, 0x18, 0xE6}};
@@ -230,7 +222,6 @@ CreatePinWorkerRoutine(
             SetIrpIoStatus(WorkerContext->Irp, STATUS_NO_MEMORY, 0);
             ExFreePool(WorkerContext->DispatchContext);
             ExFreePool(WorkerContext->MixerFormat);
-            ExFreePool(WorkerContext);
             return;
         }
 
@@ -251,7 +242,6 @@ CreatePinWorkerRoutine(
             DPRINT1("Failed to create Mixer Pin with %x\n", Status);
             SetIrpIoStatus(WorkerContext->Irp, STATUS_UNSUCCESSFUL, 0);
             ExFreePool(WorkerContext->DispatchContext);
-            ExFreePool(WorkerContext);
             return;
         }
     }
@@ -268,7 +258,6 @@ CreatePinWorkerRoutine(
             DPRINT1("Failed to create Mixer Pin with %x\n", Status);
             SetIrpIoStatus(WorkerContext->Irp, STATUS_UNSUCCESSFUL, 0);
             ExFreePool(WorkerContext->DispatchContext);
-            ExFreePool(WorkerContext);
             return;
         }
     }
@@ -283,7 +272,7 @@ CreatePinWorkerRoutine(
         else
             Status = KsCreatePin(WorkerContext->Entry->Handle, WorkerContext->PinConnect, GENERIC_READ | GENERIC_WRITE, &RealPinHandle);
 
-        DPRINT1("Status %x\n", Status);
+        DPRINT("Status %x\n", Status);
         if (!NT_SUCCESS(Status))
         {
             PKSDATAFORMAT_WAVEFORMATEX RequestedFormat = (PKSDATAFORMAT_WAVEFORMATEX)(WorkerContext->PinConnect + 1);
@@ -295,7 +284,7 @@ CreatePinWorkerRoutine(
                 /* The mixer pin format should have been accepted */
                 ObDereferenceObject(WorkerContext->DispatchContext->MixerFileObject);
                 ZwClose(WorkerContext->DispatchContext->hMixerPin);
-                ASSERT(0);
+                KeBugCheck(0);
             }
 
             SetIrpIoStatus(WorkerContext->Irp, STATUS_UNSUCCESSFUL, 0);
@@ -314,7 +303,6 @@ CreatePinWorkerRoutine(
             DPRINT1("Failed to get file object with %x\n", Status);
             SetIrpIoStatus(WorkerContext->Irp, STATUS_UNSUCCESSFUL, 0);
             ExFreePool(WorkerContext->DispatchContext);
-            ExFreePool(WorkerContext);
             return;
         }
 
@@ -346,7 +334,6 @@ CreatePinWorkerRoutine(
             DPRINT1("Failed to get file object with %x %p\n", Status, WorkerContext->Entry->Pins[WorkerContext->PinConnect->PinId].PinHandle);
             SetIrpIoStatus(WorkerContext->Irp, STATUS_UNSUCCESSFUL, 0);
             ExFreePool(WorkerContext->DispatchContext);
-            ExFreePool(WorkerContext);
             return;
         }
         WorkerContext->DispatchContext->FileObject = FileObject;
@@ -369,7 +356,7 @@ CreatePinWorkerRoutine(
 
     }
 
-    DPRINT("creating virtual pin\n");
+    DPRINT1("creating virtual pin\n");
     /* now create the virtual audio pin which is exposed to wdmaud */
     Status = KsCreatePin(Filter, WorkerContext->PinConnect, GENERIC_READ | GENERIC_WRITE, &VirtualPinHandle);
 
@@ -384,7 +371,6 @@ CreatePinWorkerRoutine(
 
         SetIrpIoStatus(WorkerContext->Irp, STATUS_UNSUCCESSFUL, 0);
         ExFreePool(WorkerContext->DispatchContext);
-        ExFreePool(WorkerContext);
         return;
     }
 
@@ -400,7 +386,6 @@ CreatePinWorkerRoutine(
         ZwClose(VirtualPinHandle);
         SetIrpIoStatus(WorkerContext->Irp, STATUS_UNSUCCESSFUL, 0);
         ExFreePool(WorkerContext->DispatchContext);
-        ExFreePool(WorkerContext);
         return;
     }
 
@@ -463,7 +448,6 @@ CreatePinWorkerRoutine(
     *((PHANDLE)WorkerContext->Irp->UserBuffer) = VirtualPinHandle;
 
     SetIrpIoStatus(WorkerContext->Irp, STATUS_SUCCESS, sizeof(HANDLE));
-    ExFreePool(WorkerContext);
 }
 
 NTSTATUS
@@ -651,6 +635,61 @@ ComputeCompatibleFormat(
         return STATUS_NOT_IMPLEMENTED;
 }
 
+NTSTATUS
+GetPinInstanceCount(
+    PKSAUDIO_DEVICE_ENTRY Entry,
+    PKSPIN_CINSTANCES PinInstances,
+    PKSPIN_CONNECT PinConnect)
+{
+    KSP_PIN PinRequest;
+    ULONG BytesReturned;
+
+    /* query the instance count */
+    PinRequest.PinId = PinConnect->PinId;
+    PinRequest.Property.Set = KSPROPSETID_Pin;
+    PinRequest.Property.Flags = KSPROPERTY_TYPE_GET;
+    PinRequest.Property.Id = KSPROPERTY_PIN_CINSTANCES;
+
+    return KsSynchronousIoControlDevice(Entry->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PinRequest, sizeof(KSP_PIN), (PVOID)PinInstances, sizeof(KSPIN_CINSTANCES), &BytesReturned);
+
+}
+
+VOID
+CloseExistingPin(
+    PSYSAUDIO_CLIENT ClientInfo,
+    PSYSAUDIO_INSTANCE_INFO InstanceInfo,
+    PKSPIN_CONNECT PinConnect)
+{
+    ULONG Index, SubIndex;
+    PDISPATCH_CONTEXT DispatchContext;
+
+    /* scan the clientinfo if the client has already opened device with the specified pin */
+    for (Index = 0; Index < ClientInfo->NumDevices; Index++)
+    {
+        if (ClientInfo->Devs[Index].DeviceId == InstanceInfo->DeviceNumber)
+        {
+            if (ClientInfo->Devs[Index].ClientHandlesCount)
+            {
+                for(SubIndex = 0; SubIndex < ClientInfo->Devs[Index].ClientHandlesCount; SubIndex++)
+                {
+                    if (ClientInfo->Devs[Index].ClientHandles[SubIndex].PinId == PinConnect->PinId)
+                    {
+                        /* the pin has been already opened by the client, re-use it */
+                        ASSERT(ClientInfo->Devs[Index].ClientHandles[SubIndex].bHandle == FALSE);
+
+                        DispatchContext = ClientInfo->Devs[Index].ClientHandles[SubIndex].DispatchContext;
+                        ObDereferenceObject(DispatchContext->MixerFileObject);
+                        ObDereferenceObject(DispatchContext->FileObject);
+                        ZwClose(DispatchContext->hMixerPin);
+                        ZwClose(DispatchContext->Handle);
+                        ClientInfo->Devs[Index].ClientHandles[SubIndex].PinId = (ULONG)-1;
+                    }
+                }
+            }
+        }
+    }
+
+}
 
 NTSTATUS
 HandleSysAudioFilterPinCreation(
@@ -669,12 +708,9 @@ HandleSysAudioFilterPinCreation(
     KSP_PIN PinRequest;
     NTSTATUS Status;
     KSPIN_CINSTANCES PinInstances;
-    PIO_WORKITEM WorkItem;
     PPIN_WORKER_CONTEXT WorkerContext;
     PDISPATCH_CONTEXT DispatchContext;
-    ULONG Index, SubIndex;
     BOOL CreateMixerPin;
-    ULONG DeviceId;
     PKSDATAFORMAT_WAVEFORMATEX MixerFormat = NULL, ClientFormat;
 
 
@@ -730,14 +766,11 @@ HandleSysAudioFilterPinCreation(
         return SetIrpIoStatus(Irp, STATUS_INVALID_PARAMETER, 0);
     }
 
-Retry:
-    /* get the instances count */
-    PinRequest.PinId = PinConnect->PinId;
-    PinRequest.Property.Set = KSPROPSETID_Pin;
-    PinRequest.Property.Flags = KSPROPERTY_TYPE_GET;
-    PinRequest.Property.Id = KSPROPERTY_PIN_CINSTANCES;
+    /* close existing pin first */
+    CloseExistingPin(ClientInfo, InstanceInfo, PinConnect);
 
-    Status = KsSynchronousIoControlDevice(Entry->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PinRequest, sizeof(KSP_PIN), (PVOID)&PinInstances, sizeof(KSPIN_CINSTANCES), &BytesReturned);
+    /* query instance count */
+    Status = GetPinInstanceCount(Entry, &PinInstances, PinConnect);
     if (!NT_SUCCESS(Status))
     {
         DPRINT("Property Request KSPROPERTY_PIN_GLOBALCINSTANCES failed with %x\n", Status);
@@ -749,7 +782,6 @@ Retry:
         /* caller wanted to open an instance-less pin */
         return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, 0);
     }
-
 
     /* check the format */
     PinRequest.PinId = PinConnect->PinId;
@@ -788,38 +820,6 @@ Retry:
         CreateMixerPin = TRUE;
     }
 
-    DeviceId = (ULONG)-1;
-
-    /* scan the clientinfo if the client has already opened device with the specified pin */
-    for (Index = 0; Index < ClientInfo->NumDevices; Index++)
-    {
-        if (ClientInfo->Devs[Index].DeviceId == InstanceInfo->DeviceNumber)
-        {
-            DeviceId = Index;
-            if (ClientInfo->Devs[Index].ClientHandlesCount)
-            {
-                for(SubIndex = 0; SubIndex < ClientInfo->Devs[Index].ClientHandlesCount; SubIndex++)
-                {
-                    if (ClientInfo->Devs[Index].ClientHandles[SubIndex].PinId == PinConnect->PinId)
-                    {
-                        /* the pin has been already opened by the client, re-use it */
-                        ASSERT(ClientInfo->Devs[Index].ClientHandles[SubIndex].bHandle == FALSE);
-
-                        DispatchContext = ClientInfo->Devs[Index].ClientHandles[SubIndex].DispatchContext;
-                        ObDereferenceObject(DispatchContext->MixerFileObject);
-                        ObDereferenceObject(DispatchContext->FileObject);
-                        ZwClose(DispatchContext->hMixerPin);
-                        ZwClose(DispatchContext->Handle);
-                        ClientInfo->Devs[Index].ClientHandles[SubIndex].PinId = (ULONG)-1;
-                        goto Retry;
-                    }
-                }
-            }
-        }
-    }
-
-    ASSERT(DeviceId != (ULONG)-1);
-
     if (PinInstances.CurrentCount == PinInstances.PossibleCount)
     {
         /* pin already exists */
@@ -834,44 +834,31 @@ Retry:
         }
     }
 
-    WorkItem = IoAllocateWorkItem(DeviceObject);
-    if (!WorkItem)
-    {
-        if (MixerFormat)
-            ExFreePool(MixerFormat);
-        Irp->IoStatus.Information = 0;
-        Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    /* create worker context */
-    WorkerContext = ExAllocatePool(NonPagedPool, sizeof(PIN_WORKER_CONTEXT));
-    if (!WorkerContext)
-    {
-        /* invalid parameters */
-        if (MixerFormat)
-            ExFreePool(MixerFormat);
-        IoFreeWorkItem(WorkItem);
-        return SetIrpIoStatus(Irp, STATUS_NO_MEMORY, 0);
-    }
+    ASSERT(DeviceExtension->WorkItem);
+    ASSERT(DeviceExtension->WorkerContext);
 
     /* create worker context */
     DispatchContext = ExAllocatePool(NonPagedPool, sizeof(DISPATCH_CONTEXT));
     if (!DispatchContext)
     {
-        /* invalid parameters */
         if (MixerFormat)
+        {
             ExFreePool(MixerFormat);
-        IoFreeWorkItem(WorkItem);
-        ExFreePool(WorkerContext);
+        }
         return SetIrpIoStatus(Irp, STATUS_NO_MEMORY, 0);
     }
+
+    // FIXME
+    // mutal exclusion
+
+    /* get worker context */
+    WorkerContext = (PPIN_WORKER_CONTEXT)DeviceExtension->WorkerContext;
+
     /* prepare context */
     RtlZeroMemory(WorkerContext, sizeof(PIN_WORKER_CONTEXT));
     RtlZeroMemory(DispatchContext, sizeof(DISPATCH_CONTEXT));
 
-    DPRINT1("PinInstances.CurrentCount %u\n", PinInstances.CurrentCount);
+    DPRINT("PinInstances.CurrentCount %u\n", PinInstances.CurrentCount);
 
     if (PinInstances.CurrentCount < PinInstances.PossibleCount)
     {
@@ -893,7 +880,7 @@ Retry:
     IoMarkIrpPending(Irp);
     Irp->IoStatus.Status = STATUS_PENDING;
     Irp->IoStatus.Information = 0;
-    IoQueueWorkItem(WorkItem, CreatePinWorkerRoutine, DelayedWorkQueue, (PVOID)WorkerContext);
+    IoQueueWorkItem(DeviceExtension->WorkItem, CreatePinWorkerRoutine, DelayedWorkQueue, (PVOID)WorkerContext);
 
     /* mark irp as pending */
     return STATUS_PENDING;
@@ -969,7 +956,7 @@ SysAudioHandleProperty(
             Status = KsSynchronousIoControlDevice(Entry->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PropertyRequest, sizeof(KSPROPERTY), (PVOID)&ComponentId, sizeof(KSCOMPONENTID), &BytesReturned);
             if (!NT_SUCCESS(Status))
             {
-                DPRINT1("KsSynchronousIoControlDevice failed with %x for KSPROPERTY_GENERAL_COMPONENTID\n", Status);
+                DPRINT("KsSynchronousIoControlDevice failed with %x for KSPROPERTY_GENERAL_COMPONENTID\n", Status);
                 return SetIrpIoStatus(Irp, Status, 0);
             }
             RtlMoveMemory(Irp->UserBuffer, &ComponentId, sizeof(KSCOMPONENTID));
@@ -1019,14 +1006,13 @@ SysAudioHandleProperty(
         else if (Property->Id == (ULONG)-1)
         {
             /* ros specific pin creation request */
-            DPRINT1("Initiating create request\n");
+            DPRINT("Initiating create request\n");
             return HandleSysAudioFilterPinCreation(Irp, Property, DeviceExtension, DeviceObject);
         }
     }
 
     RtlStringFromGUID(&Property->Set, &GuidString);
     DPRINT1("Unhandeled property Set |%S| Id %u Flags %x\n", GuidString.Buffer, Property->Id, Property->Flags);
-    DbgBreakPoint();
     RtlFreeUnicodeString(&GuidString);
     return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, 0);
 }

@@ -1,3 +1,11 @@
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS Kernel Streaming
+ * FILE:            drivers/wdm/audio/backpln/portcls/pin_wavecyclic.c
+ * PURPOSE:         WaveCyclic IRP Audio Pin
+ * PROGRAMMER:      Johannes Anderwald
+ */
+
 #include "private.h"
 
 typedef struct
@@ -335,7 +343,7 @@ IPortPinWaveCyclic_fnNewIrpTarget(
     IN PIRP Irp,
     IN KSOBJECT_CREATE *CreateObject)
 {
-    DPRINT1("IPortPinWaveCyclic_fnNewIrpTarget\n");
+    UNIMPLEMENTED
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -353,7 +361,7 @@ IPortPinWaveCyclic_HandleKsProperty(
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    //DPRINT1("IPortPinWave_HandleKsProperty entered\n");
+    DPRINT("IPortPinWave_HandleKsProperty entered\n");
 
     if (IoStack->Parameters.DeviceIoControl.InputBufferLength < sizeof(KSPROPERTY))
     {
@@ -513,8 +521,7 @@ IPortPinWaveCyclic_HandleKsStream(
 {
     IPortPinWaveCyclicImpl * This = (IPortPinWaveCyclicImpl*)iface;
 
-    DPRINT1("IPortPinWaveCyclic_HandleKsStream entered State %u Stream %p\n", This->State, This->Stream);
-    DbgBreakPoint();
+    DPRINT("IPortPinWaveCyclic_HandleKsStream entered State %u Stream %p\n", This->State, This->Stream);
 
     return STATUS_PENDING;
 }
@@ -783,7 +790,7 @@ IPortPinWaveCyclic_fnFastRead(
     PIRP Irp;
     IPortPinWaveCyclicImpl * This = (IPortPinWaveCyclicImpl*)iface;
 
-    DPRINT1("IPortPinWaveCyclic_fnFastRead entered\n");
+    DPRINT("IPortPinWaveCyclic_fnFastRead entered\n");
 
     Packet = (PCONTEXT_WRITE)Buffer;
 
@@ -798,7 +805,7 @@ IPortPinWaveCyclic_fnFastRead(
     if (This->IrpQueue->lpVtbl->MinimumDataAvailable(This->IrpQueue) == TRUE && This->State != KSSTATE_RUN)
     {
         /* some should initiate a state request but didnt do it */
-        DPRINT1("Starting stream with %lu mappings Offset %u\n", This->IrpQueue->lpVtbl->NumMappings(This->IrpQueue), This->ActiveIrpOffset);
+        DPRINT1("Starting stream with %lu mappings\n", This->IrpQueue->lpVtbl->NumMappings(This->IrpQueue));
 
         This->Stream->lpVtbl->SetState(This->Stream, KSSTATE_RUN);
         This->State = KSSTATE_RUN;
@@ -827,7 +834,7 @@ IPortPinWaveCyclic_fnFastWrite(
     PIRP Irp;
     IPortPinWaveCyclicImpl * This = (IPortPinWaveCyclicImpl*)iface;
 
-    //DPRINT1("IPortPinWaveCyclic_fnFastWrite entered\n");
+    DPRINT("IPortPinWaveCyclic_fnFastWrite entered\n");
 
     Packet = (PCONTEXT_WRITE)Buffer;
 
@@ -854,7 +861,7 @@ IPortPinWaveCyclic_fnFastWrite(
     if (This->IrpQueue->lpVtbl->MinimumDataAvailable(This->IrpQueue) == TRUE && This->State != KSSTATE_RUN)
     {
         /* some should initiate a state request but didnt do it */
-        DPRINT1("Starting stream with %lu mappings Offset %u\n", This->IrpQueue->lpVtbl->NumMappings(This->IrpQueue), This->ActiveIrpOffset);
+        DPRINT1("Starting stream with %lu\n", This->IrpQueue->lpVtbl->NumMappings(This->IrpQueue));
 
         This->Stream->lpVtbl->SetState(This->Stream, KSSTATE_RUN);
         This->State = KSSTATE_RUN;

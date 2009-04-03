@@ -210,7 +210,7 @@ Pin_fnRead(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
-    DPRINT1("Pin_fnRead called DeviceObject %p Irp %p\n", DeviceObject);
+    UNIMPLEMENTED
 
     Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
     Irp->IoStatus.Information = 0;
@@ -220,27 +220,11 @@ Pin_fnRead(
 
 NTSTATUS
 NTAPI
-PinWriteCompletionRoutine(
-    IN PDEVICE_OBJECT  DeviceObject,
-    IN PIRP  Irp,
-    IN PVOID  Context)
-{
-    PIRP CIrp = (PIRP)Context;
-
-    CIrp->IoStatus.Status = STATUS_SUCCESS;
-    CIrp->IoStatus.Information = 0;
-    IoCompleteRequest(CIrp, IO_NO_INCREMENT);
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-NTAPI
 Pin_fnWrite(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
-    DPRINT1("Pin_fnWrite called DeviceObject %p Irp %p\n", DeviceObject);
-
+    UNIMPLEMENTED
 
     Irp->IoStatus.Information = 0;
     Irp->IoStatus.Status = STATUS_SUCCESS;
@@ -254,7 +238,7 @@ Pin_fnFlush(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
-    DPRINT1("Pin_fnFlush called DeviceObject %p Irp %p\n", DeviceObject);
+    UNIMPLEMENTED
 
     Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
     Irp->IoStatus.Information = 0;
@@ -268,7 +252,7 @@ Pin_fnClose(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
-    DPRINT1("Pin_fnClose called DeviceObject %p Irp %p\n", DeviceObject);
+    UNIMPLEMENTED
 
     Irp->IoStatus.Status = STATUS_SUCCESS;
     Irp->IoStatus.Information = 0;
@@ -282,7 +266,7 @@ Pin_fnQuerySecurity(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
-    DPRINT1("Pin_fnQuerySecurity called DeviceObject %p Irp %p\n", DeviceObject);
+    UNIMPLEMENTED
 
     Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
     Irp->IoStatus.Information = 0;
@@ -297,7 +281,7 @@ Pin_fnSetSecurity(
     PIRP Irp)
 {
 
-    DPRINT1("Pin_fnSetSecurity called DeviceObject %p Irp %p\n", DeviceObject);
+    UNIMPLEMENTED
 
     Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
     Irp->IoStatus.Information = 0;
@@ -318,7 +302,7 @@ Pin_fnFastDeviceIoControl(
     PIO_STATUS_BLOCK IoStatus,
     PDEVICE_OBJECT DeviceObject)
 {
-    DPRINT1("Pin_fnFastDeviceIoControl called DeviceObject %p Irp %p\n", DeviceObject);
+    UNIMPLEMENTED
 
 
     return FALSE;
@@ -337,8 +321,7 @@ Pin_fnFastRead(
     PIO_STATUS_BLOCK IoStatus,
     PDEVICE_OBJECT DeviceObject)
 {
-    DPRINT1("Pin_fnFastRead called DeviceObject %p Irp %p\n", DeviceObject);
-
+    UNIMPLEMENTED
     return FALSE;
 
 }
@@ -362,7 +345,7 @@ Pin_fnFastWrite(
     PKSDATAFORMAT_WAVEFORMATEX Formats;
     PKSDATAFORMAT_WAVEFORMATEX InputFormat, OutputFormat;
 
-    //DPRINT1("Pin_fnFastWrite called DeviceObject %p Irp %p\n", DeviceObject);
+    DPRINT("Pin_fnFastWrite called DeviceObject %p Irp %p\n", DeviceObject);
 
     Formats = (PKSDATAFORMAT_WAVEFORMATEX)FileObject->FsContext2;
 
@@ -370,12 +353,12 @@ Pin_fnFastWrite(
     OutputFormat = (Formats + 1);
     StreamHeader = (PKSSTREAM_HEADER)Buffer;
 
-#if 0
-    DPRINT1("Num Channels %u Old Channels %u\n SampleRate %u Old SampleRate %u\n BitsPerSample %u Old BitsPerSample %u\n",
+
+    DPRINT("Num Channels %u Old Channels %u\n SampleRate %u Old SampleRate %u\n BitsPerSample %u Old BitsPerSample %u\n",
                InputFormat->WaveFormatEx.nChannels, OutputFormat->WaveFormatEx.nChannels,
                InputFormat->WaveFormatEx.nSamplesPerSec, OutputFormat->WaveFormatEx.nSamplesPerSec,
                InputFormat->WaveFormatEx.wBitsPerSample, OutputFormat->WaveFormatEx.wBitsPerSample);
-#endif
+
 
     if (InputFormat->WaveFormatEx.wBitsPerSample != OutputFormat->WaveFormatEx.wBitsPerSample)
     {

@@ -1,11 +1,22 @@
 /*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS Kernel Streaming
+ * FILE:            drivers/wdm/audio/backpln/portcls/api.c
+ * PURPOSE:         Port api functions
+ * PROGRAMMER:      Johannes Anderwald
+ */
+
+/*
     Undocumented PortCls exports
 */
 
 #include "private.h"
-#include <portcls.h>
 
+/*
+ * @unimplemented
+ */
 NTSTATUS
+NTAPI
 KsoDispatchCreateWithGenericFactory(
     LONG Unknown,
     PIRP Irp)
@@ -14,23 +25,42 @@ KsoDispatchCreateWithGenericFactory(
     return STATUS_NOT_IMPLEMENTED;
 }
 
-void
+/*
+ * @implemented
+ */
+IIrpTarget *
+NTAPI
 KsoGetIrpTargetFromFileObject(
-    LONG Unknown)
+    PFILE_OBJECT FileObject)
 {
-    UNIMPLEMENTED;
-	return;
+    ASSERT(FileObject);
+
+    /* IrpTarget is stored in FsContext2 */
+    return FileObject->FsContext2;
 }
 
-void
+/*
+ * @implemented
+ */
+IIrpTarget *
+NTAPI
 KsoGetIrpTargetFromIrp(
-    LONG Unknown)
+    PIRP Irp)
 {
-    UNIMPLEMENTED;
-	return;
+    PKSOBJECT_CREATE_ITEM CreateItem;
+
+    /* access the create item */
+    CreateItem = KSCREATE_ITEM_IRP_STORAGE(Irp);
+
+    /* IIrpTarget is stored in Context member */
+    return CreateItem->Context;
 }
 
-void
+/*
+ * @unimplemented
+ */
+VOID
+NTAPI
 PcAcquireFormatResources(
     LONG Unknown,
     LONG Unknown2,

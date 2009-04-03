@@ -1,7 +1,13 @@
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS Kernel Streaming
+ * FILE:            drivers/wdm/audio/backpln/portcls/guids.c
+ * PURPOSE:         portcls guid mess
+ * PROGRAMMER:      Johannes Anderwald
+ */
+
+
 #include "private.h"
-
-
-
 
 const GUID CLSID_PortTopology = {0xb4c90a32L, 0x5791, 0x11d0, {0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44}};
 const GUID CLSID_PortMidi = {0xb4c90a43L, 0x5791, 0x11d0, {0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44}};
