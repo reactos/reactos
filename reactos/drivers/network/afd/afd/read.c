@@ -460,7 +460,7 @@ PacketSocketRecvComplete(
     PAFD_RECV_INFO RecvReq;
     PAFD_STORED_DATAGRAM DatagramRecv;
     UINT DGSize = Irp->IoStatus.Information + sizeof( AFD_STORED_DATAGRAM );
-    PLIST_ENTRY NextIrpEntry;
+    PLIST_ENTRY NextIrpEntry, DatagramRecvEntry;
 
     AFD_DbgPrint(MID_TRACE,("Called on %x\n", FCB));
 
@@ -485,6 +485,15 @@ PacketSocketRecvComplete(
 	       if( NextIrp->MdlAddress ) UnlockRequest( NextIrp, IoGetCurrentIrpStackLocation( NextIrp ) );
 	       IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
         }
+
+        /* Free all items on the datagram list */
+        while( !IsListEmpty( &FCB->DatagramList ) ) {
+               DatagramRecvEntry = RemoveHeadList(&FCB->DatagramList);
+               DatagramRecv = CONTAINING_RECORD(DatagramRecvEntry, AFD_STORED_DATAGRAM, ListEntry);
+               ExFreePool( DatagramRecv->Address );
+               ExFreePool( DatagramRecv );
+        }
+
 	SocketStateUnlock( FCB );
 	return STATUS_FILE_CLOSED;
     }

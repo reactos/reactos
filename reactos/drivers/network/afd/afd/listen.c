@@ -95,7 +95,7 @@ static NTSTATUS NTAPI ListenComplete
     NTSTATUS Status = STATUS_SUCCESS;
     PAFD_FCB FCB = (PAFD_FCB)Context;
     PAFD_TDI_OBJECT_QELT Qelt;
-    PLIST_ENTRY NextIrpEntry;
+    PLIST_ENTRY NextIrpEntry, QeltEntry;
     PIRP NextIrp;
 
     if( !SocketAcquireStateLock( FCB ) ) {
@@ -116,6 +116,27 @@ static NTSTATUS NTAPI ListenComplete
 	       if( NextIrp->MdlAddress ) UnlockRequest( NextIrp, IoGetCurrentIrpStackLocation( NextIrp ) );
 	       IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
         }
+
+        /* Free all pending connections */
+        while( !IsListEmpty( &FCB->PendingConnections ) ) {
+               QeltEntry = RemoveHeadList(&FCB->PendingConnections);
+               Qelt = CONTAINING_RECORD(QeltEntry, AFD_TDI_OBJECT_QELT, ListEntry);
+               ExFreePool(Qelt);
+        }
+
+        /* Free ConnectionReturnInfo and ConnectionCallInfo */
+        if (FCB->ListenIrp.ConnectionReturnInfo)
+        {
+            ExFreePool(FCB->ListenIrp.ConnectionReturnInfo);
+            FCB->ListenIrp.ConnectionReturnInfo = NULL;
+        }
+
+        if (FCB->ListenIrp.ConnectionCallInfo)
+        {
+            ExFreePool(FCB->ListenIrp.ConnectionCallInfo);
+            FCB->ListenIrp.ConnectionCallInfo = NULL;
+        }
+
 	SocketStateUnlock( FCB );
 	return STATUS_FILE_CLOSED;
     }
@@ -381,7 +402,7 @@ NTSTATUS AfdAccept( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 		  (PVOID *)&NewFileObject,
 		  NULL );
 
-            if( !NT_SUCCESS(Status) ) UnlockAndMaybeComplete( FCB, Status, Irp, 0 );
+            if( !NT_SUCCESS(Status) ) return UnlockAndMaybeComplete( FCB, Status, Irp, 0 );
 
             ASSERT(NewFileObject != FileObject);
             ASSERT(NewFileObject->FsContext != FCB);
