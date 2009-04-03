@@ -8,6 +8,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
 static ULONG User32TlsIndex;
 HINSTANCE User32Instance;
 
+PPROCESSINFO g_ppi = NULL;
 PUSER_HANDLE_TABLE gHandleTable = NULL;
 PUSER_HANDLE_ENTRY gHandleEntries = NULL;
 PSERVERINFO g_psi = NULL;
@@ -234,6 +235,7 @@ Init(VOID)
                          &UserCon,
                          sizeof(USERCONNECT));
 
+   g_ppi = GetWin32ClientInfo()->ppi; // Snapshot PI, used as pointer only!
    g_ulSharedDelta = UserCon.siClient.ulSharedDelta;
    g_psi = SharedPtrToUser(UserCon.siClient.psi);
    gHandleTable = SharedPtrToUser(UserCon.siClient.aheList);
@@ -333,12 +335,13 @@ GetConnected(VOID)
   if ((PW32THREADINFO)NtCurrentTeb()->Win32ThreadInfo == NULL)
      NtUserGetThreadState(THREADSTATE_GETTHREADINFO);
 
-  if (g_psi) return;
+  if (g_psi && g_ppi) return;
 
   NtUserProcessConnect( NtCurrentProcess(),
                          &UserCon,
                          sizeof(USERCONNECT));
 
+  g_ppi = GetWin32ClientInfo()->ppi;
   g_ulSharedDelta = UserCon.siClient.ulSharedDelta;
   g_psi = SharedPtrToUser(UserCon.siClient.psi);
   gHandleTable = SharedPtrToUser(UserCon.siClient.aheList);
