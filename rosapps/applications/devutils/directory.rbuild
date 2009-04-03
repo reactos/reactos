@@ -12,10 +12,6 @@
 		<xi:include href="genguid/genguid.rbuild" />
 	</directory>
 
-	<directory name="roswebparser">
-		<xi:include href="roswebparser/roswebparser.rbuild" />
-	</directory>
-
 	<directory name="syscalldump">
 		<xi:include href="syscalldump/syscalldump.rbuild" />
 	</directory>
@@ -26,10 +22,6 @@
 
 	<directory name="vgafontedit">
 		<xi:include href="vgafontedit/vgafontedit.rbuild" />
-	</directory>
-	
-	<directory name="zoomin">
-		<xi:include href="zoomin/zoomin.rbuild" />
 	</directory>
 </group>
 
