@@ -95,6 +95,8 @@ static NTSTATUS NTAPI ListenComplete
     NTSTATUS Status = STATUS_SUCCESS;
     PAFD_FCB FCB = (PAFD_FCB)Context;
     PAFD_TDI_OBJECT_QELT Qelt;
+    PLIST_ENTRY NextIrpEntry;
+    PIRP NextIrp;
 
     if( !SocketAcquireStateLock( FCB ) ) {
         Irp->IoStatus.Status = STATUS_FILE_CLOSED;
@@ -105,8 +107,15 @@ static NTSTATUS NTAPI ListenComplete
     FCB->ListenIrp.InFlightRequest = NULL;
 
     if( FCB->State == SOCKET_STATE_CLOSED ) {
-        Irp->IoStatus.Status = STATUS_FILE_CLOSED;
-        Irp->IoStatus.Information = 0;
+        /* Cleanup our IRP queue because the FCB is being destroyed */
+        while( !IsListEmpty( &FCB->PendingIrpList[FUNCTION_PREACCEPT] ) ) {
+	       NextIrpEntry = RemoveHeadList(&FCB->PendingIrpList[FUNCTION_PREACCEPT]);
+	       NextIrp = CONTAINING_RECORD(NextIrpEntry, IRP, Tail.Overlay.ListEntry);
+	       NextIrp->IoStatus.Status = STATUS_FILE_CLOSED;
+	       NextIrp->IoStatus.Information = 0;
+	       if( NextIrp->MdlAddress ) UnlockRequest( NextIrp, IoGetCurrentIrpStackLocation( NextIrp ) );
+	       IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
+        }
 	SocketStateUnlock( FCB );
 	return STATUS_FILE_CLOSED;
     }

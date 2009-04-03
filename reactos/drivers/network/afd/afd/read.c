@@ -225,16 +225,17 @@ NTSTATUS NTAPI ReceiveComplete
   PIRP Irp,
   PVOID Context ) {
     PAFD_FCB FCB = (PAFD_FCB)Context;
+    PLIST_ENTRY NextIrpEntry;
+    PIRP NextIrp;
+    PAFD_RECV_INFO RecvReq;
+    PIO_STACK_LOCATION NextIrpSp;
 
     AFD_DbgPrint(MID_TRACE,("Called\n"));
 
     ASSERT_IRQL(APC_LEVEL);
 
-    if( !SocketAcquireStateLock( FCB ) ) {
-        Irp->IoStatus.Status = STATUS_FILE_CLOSED;
-        Irp->IoStatus.Information = 0;
+    if( !SocketAcquireStateLock( FCB ) )
         return STATUS_FILE_CLOSED;
-    }
 
     FCB->ReceiveIrp.InFlightRequest = NULL;
 
@@ -242,11 +243,21 @@ NTSTATUS NTAPI ReceiveComplete
     FCB->Recv.BytesUsed = 0;
 
     if( FCB->State == SOCKET_STATE_CLOSED ) {
-        AFD_DbgPrint(MIN_TRACE,("!!! CLOSED SOCK GOT A RECEIVE COMPLETE !!!\n"));
-        Irp->IoStatus.Status = STATUS_FILE_CLOSED;
-        Irp->IoStatus.Information = 0;
-		SocketStateUnlock( FCB );
-		return STATUS_FILE_CLOSED;
+        AFD_DbgPrint(MIN_TRACE,("!!! CLOSING SOCK GOT A RECEIVE COMPLETE !!!\n"));
+        /* Cleanup our IRP queue because the FCB is being destroyed */
+        while( !IsListEmpty( &FCB->PendingIrpList[FUNCTION_RECV] ) ) {
+	       NextIrpEntry = RemoveHeadList(&FCB->PendingIrpList[FUNCTION_RECV]);
+	       NextIrp = CONTAINING_RECORD(NextIrpEntry, IRP, Tail.Overlay.ListEntry);
+               NextIrpSp = IoGetCurrentIrpStackLocation(NextIrp);
+               RecvReq = NextIrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
+	       NextIrp->IoStatus.Status = STATUS_FILE_CLOSED;
+	       NextIrp->IoStatus.Information = 0;
+	       UnlockBuffers(RecvReq->BufferArray, RecvReq->BufferCount, FALSE);
+	       if( NextIrp->MdlAddress ) UnlockRequest( NextIrp, IoGetCurrentIrpStackLocation( NextIrp ) );
+	       IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
+        }
+	SocketStateUnlock( FCB );
+	return STATUS_FILE_CLOSED;
     } else if( FCB->State == SOCKET_STATE_LISTENING ) {
         AFD_DbgPrint(MIN_TRACE,("!!! LISTENER GOT A RECEIVE COMPLETE !!!\n"));
         Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
@@ -449,6 +460,7 @@ PacketSocketRecvComplete(
     PAFD_RECV_INFO RecvReq;
     PAFD_STORED_DATAGRAM DatagramRecv;
     UINT DGSize = Irp->IoStatus.Information + sizeof( AFD_STORED_DATAGRAM );
+    PLIST_ENTRY NextIrpEntry;
 
     AFD_DbgPrint(MID_TRACE,("Called on %x\n", FCB));
 
@@ -461,10 +473,20 @@ PacketSocketRecvComplete(
     FCB->ReceiveIrp.InFlightRequest = NULL;
 
     if( FCB->State == SOCKET_STATE_CLOSED ) {
-        Irp->IoStatus.Status = STATUS_FILE_CLOSED;
-        Irp->IoStatus.Information = 0;
-		SocketStateUnlock( FCB );
-		return STATUS_FILE_CLOSED;
+        /* Cleanup our IRP queue because the FCB is being destroyed */
+        while( !IsListEmpty( &FCB->PendingIrpList[FUNCTION_RECV] ) ) {
+	       NextIrpEntry = RemoveHeadList(&FCB->PendingIrpList[FUNCTION_RECV]);
+	       NextIrp = CONTAINING_RECORD(NextIrpEntry, IRP, Tail.Overlay.ListEntry);
+	       NextIrpSp = IoGetCurrentIrpStackLocation( NextIrp );
+	       RecvReq = NextIrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
+	       NextIrp->IoStatus.Status = STATUS_FILE_CLOSED;
+	       NextIrp->IoStatus.Information = 0;
+	       UnlockBuffers(RecvReq->BufferArray, RecvReq->BufferCount, FALSE);
+	       if( NextIrp->MdlAddress ) UnlockRequest( NextIrp, IoGetCurrentIrpStackLocation( NextIrp ) );
+	       IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
+        }
+	SocketStateUnlock( FCB );
+	return STATUS_FILE_CLOSED;
     }
 
     DatagramRecv = ExAllocatePool( NonPagedPool, DGSize );

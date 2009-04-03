@@ -48,8 +48,18 @@ static NTSTATUS NTAPI SendComplete
     /* Request is not in flight any longer */
 
     if( FCB->State == SOCKET_STATE_CLOSED ) {
-		SocketStateUnlock( FCB );
-		return STATUS_FILE_CLOSED;
+        /* Cleanup our IRP queue because the FCB is being destroyed */
+        while( !IsListEmpty( &FCB->PendingIrpList[FUNCTION_SEND] ) ) {
+	       NextIrpEntry = RemoveHeadList(&FCB->PendingIrpList[FUNCTION_SEND]);
+	       NextIrp = CONTAINING_RECORD(NextIrpEntry, IRP, Tail.Overlay.ListEntry);
+	       NextIrp->IoStatus.Status = STATUS_FILE_CLOSED;
+	       NextIrp->IoStatus.Information = 0;
+	       UnlockBuffers(SendReq->BufferArray, SendReq->BufferCount, FALSE);
+	       if( NextIrp->MdlAddress ) UnlockRequest( NextIrp, IoGetCurrentIrpStackLocation( NextIrp ) );
+	       IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
+        }
+	SocketStateUnlock( FCB );
+	return STATUS_FILE_CLOSED;
     }
 
     if( !NT_SUCCESS(Status) ) {
@@ -162,6 +172,8 @@ static NTSTATUS NTAPI PacketSocketSendComplete
   PIRP Irp,
   PVOID Context ) {
     PAFD_FCB FCB = (PAFD_FCB)Context;
+    PLIST_ENTRY NextIrpEntry;
+    PIRP NextIrp;
 
     AFD_DbgPrint(MID_TRACE,("Called, status %x, %d bytes used\n",
 							Irp->IoStatus.Status,
@@ -178,8 +190,17 @@ static NTSTATUS NTAPI PacketSocketSendComplete
     PollReeval( FCB->DeviceExt, FCB->FileObject );
 
     if( FCB->State == SOCKET_STATE_CLOSED ) {
-		SocketStateUnlock( FCB );
-		return STATUS_FILE_CLOSED;
+        /* Cleanup our IRP queue because the FCB is being destroyed */
+        while( !IsListEmpty( &FCB->PendingIrpList[FUNCTION_SEND] ) ) {
+	       NextIrpEntry = RemoveHeadList(&FCB->PendingIrpList[FUNCTION_SEND]);
+	       NextIrp = CONTAINING_RECORD(NextIrpEntry, IRP, Tail.Overlay.ListEntry);
+	       NextIrp->IoStatus.Status = STATUS_FILE_CLOSED;
+	       NextIrp->IoStatus.Information = 0;
+	       if( NextIrp->MdlAddress ) UnlockRequest( NextIrp, IoGetCurrentIrpStackLocation( NextIrp ) );
+	       IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
+        }
+	SocketStateUnlock( FCB );
+	return STATUS_FILE_CLOSED;
     }
 
     SocketStateUnlock( FCB );

@@ -96,8 +96,15 @@ static NTSTATUS NTAPI StreamSocketConnectComplete
     FCB->ConnectIrp.InFlightRequest = NULL;
 
     if( FCB->State == SOCKET_STATE_CLOSED ) {
-        Irp->IoStatus.Status = STATUS_FILE_CLOSED;
-        Irp->IoStatus.Information = 0;
+        /* Cleanup our IRP queue because the FCB is being destroyed */
+        while( !IsListEmpty( &FCB->PendingIrpList[FUNCTION_CONNECT] ) ) {
+	       NextIrpEntry = RemoveHeadList(&FCB->PendingIrpList[FUNCTION_CONNECT]);
+	       NextIrp = CONTAINING_RECORD(NextIrpEntry, IRP, Tail.Overlay.ListEntry);
+	       NextIrp->IoStatus.Status = STATUS_FILE_CLOSED;
+	       NextIrp->IoStatus.Information = 0;
+	       if( NextIrp->MdlAddress ) UnlockRequest( NextIrp, IoGetCurrentIrpStackLocation( NextIrp ) );
+	       IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
+        }
 	SocketStateUnlock( FCB );
 	return STATUS_FILE_CLOSED;
     }
