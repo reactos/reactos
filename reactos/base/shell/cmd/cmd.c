@@ -1525,13 +1525,13 @@ ShowCommands (VOID)
 #endif
 
 static VOID
-ExecuteAutoRunFile (VOID)
+ExecuteAutoRunFile(HKEY hkeyRoot)
 {
-    TCHAR autorun[MAX_PATH];
-	DWORD len = MAX_PATH;
+	TCHAR autorun[2048];
+	DWORD len = sizeof autorun;
 	HKEY hkey;
 
-    if( RegOpenKeyEx(HKEY_LOCAL_MACHINE, 
+    if (RegOpenKeyEx(hkeyRoot,
                     _T("SOFTWARE\\Microsoft\\Command Processor"),
                     0, 
                     KEY_READ, 
@@ -1547,9 +1547,8 @@ ExecuteAutoRunFile (VOID)
 			if (*autorun)
 				ParseCommandLine(autorun);
 	    }
+	    RegCloseKey(hkey);
     }
-
-	RegCloseKey(hkey);
 }
 
 /* Get the command that comes after a /C or /K switch */
@@ -1756,7 +1755,10 @@ Initialize()
 	AddBreakHandler ();
 
 	if (AutoRun)
-		ExecuteAutoRunFile();
+	{
+		ExecuteAutoRunFile(HKEY_LOCAL_MACHINE);
+		ExecuteAutoRunFile(HKEY_CURRENT_USER);
+	}
 
 	if (*ptr)
 	{
