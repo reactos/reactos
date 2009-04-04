@@ -1388,8 +1388,6 @@ NtUserSetSystemCursor(
    return FALSE;
 }
 
-
-/* FIXME: ReactOS specific hack */
 BOOL
 UserDrawIconEx(
    HDC hDc,
@@ -1405,7 +1403,6 @@ UserDrawIconEx(
    BOOL Ret = FALSE;
    HBITMAP hbmMask, hbmColor;
    BITMAP bmpMask, bmpColor;
-   COLORREF oldFg, oldBg;
    BOOL DoFlickerFree;
    SIZE IconSize;
 
@@ -1413,8 +1410,10 @@ UserDrawIconEx(
    HGDIOBJ hOldOffBrush = 0;
    HGDIOBJ hOldOffBmp = 0;
    HBITMAP hbmOff = 0;
-   HDC hdcMem = 0;
-   HGDIOBJ hOldMem;
+   HDC hdcMask = 0;
+   HGDIOBJ hOldMask = NULL;
+   HDC hdcImage = 0;
+   HGDIOBJ hOldImage = NULL;
    BOOL bAlpha = FALSE;
 
    hbmMask = pIcon->IconInfo.hbmMask;
@@ -1452,7 +1451,8 @@ UserDrawIconEx(
       PFN_DIB_GetPixel fnSource_GetPixel = NULL;
       INT x, y;
 
-      //Find alpha into icon
+      /* In order to correctly display 32 bit icons Windows first scans the image,
+         because information about transparency is not stored in any image's headers */
       psurfOff = SURFACE_LockSurface(hbmColor ? hbmColor : hbmMask);
       if (psurfOff)
       {
@@ -1549,60 +1549,62 @@ UserDrawIconEx(
    else
        hdcOff = hDc;
 
-   hdcMem = NtGdiCreateCompatibleDC(hDc);
-   if (!hdcMem)
+   if (diFlags & DI_IMAGE)
    {
-      DPRINT1("NtGdiCreateCompatibleDC() failed!\n");
-      goto cleanup;
-   }
-
-   oldFg = IntGdiSetTextColor(hdcOff, RGB(0, 0, 0));
-   oldBg = IntGdiSetBkColor(hdcOff, RGB(255, 255, 255));
-
-   if (diFlags & DI_MASK)
-   {
-      hOldMem = NtGdiSelectBitmap(hdcMem, hbmMask);
-      if (!hOldMem)
+      hdcImage = NtGdiCreateCompatibleDC(hDc);
+      if (!hdcImage)
+      {
+         DPRINT1("NtGdiCreateCompatibleDC() failed!\n");
+         goto cleanup;
+      }
+      hOldImage = NtGdiSelectBitmap(hdcImage, (hbmColor ? hbmColor : hbmMask));
+      if (!hOldImage)
       {
          DPRINT("NtGdiSelectBitmap() failed!\n");
          goto cleanup;
       }
-
-      NtGdiStretchBlt(hdcOff,
-                   (DoFlickerFree || bAlpha ? 0 : xLeft),
-                   (DoFlickerFree || bAlpha ? 0 : yTop), 
-                   cxWidth,
-                   cyHeight,
-                   hdcMem,
-                   0,
-                   0,
-                   IconSize.cx,
-                   IconSize.cy,
-                   ((diFlags & DI_IMAGE) ? SRCAND : SRCCOPY),
-                   0);
-
-      NtGdiSelectBitmap(hdcMem, hOldMem);
    }
 
-   if(diFlags & DI_IMAGE)
+   /* If DI_IMAGE flag is specified and hbmMask exists, then always use mask for drawing */
+   if (diFlags & DI_MASK || (diFlags & DI_IMAGE && hbmMask))
    {
-      hOldMem = NtGdiSelectBitmap(hdcMem, (hbmColor ? hbmColor : hbmMask));
+      hdcMask = NtGdiCreateCompatibleDC(hDc);
+      if (!hdcMask)
+      {
+         DPRINT1("NtGdiCreateCompatibleDC() failed!\n");
+         goto cleanup;
+      }
 
-      NtGdiStretchBlt(hdcOff, 
-                   (DoFlickerFree || bAlpha ? 0 : xLeft),
-                   (DoFlickerFree || bAlpha ? 0 : yTop),
-                   cxWidth,
-                   cyHeight,
-                   hdcMem,
-                   0,
-                   (hbmColor ? 0 : IconSize.cy),
-                   IconSize.cx,
-                   IconSize.cy,
-                   ((diFlags & DI_MASK) ? SRCINVERT : SRCCOPY),
-                   0);
-
-      NtGdiSelectBitmap(hdcMem, hOldMem);
+      hOldMask = NtGdiSelectBitmap(hdcMask, hbmMask);
+      if (!hOldMask)
+      {
+         DPRINT("NtGdiSelectBitmap() failed!\n");
+         goto cleanup;
+      }
    }
+
+   if (hdcMask || hdcImage)
+   {
+      GreStretchBltMask(hdcOff,
+                        (DoFlickerFree || bAlpha) ? 0 : xLeft,
+                        (DoFlickerFree || bAlpha) ? 0 : yTop, 
+                        cxWidth,
+                        cyHeight,
+                        hdcImage ? hdcImage : hdcMask,
+                        0,
+                        ((diFlags & DI_MASK && !(diFlags & DI_IMAGE)) || 
+                         (diFlags & DI_IMAGE && hbmColor) ? 0 : IconSize.cy),
+                        IconSize.cx,
+                        IconSize.cy,
+                        SRCCOPY,
+                        0,
+                        hdcImage ? hdcMask : NULL);
+   }
+
+   if (hOldMask) NtGdiSelectBitmap(hdcMask, hOldMask);
+   if (hOldImage) NtGdiSelectBitmap(hdcImage, hOldImage);
+   if (hdcImage) NtGdiDeleteObjectApp(hdcImage);
+   if (hdcMask) NtGdiDeleteObjectApp(hdcMask);
 
     if (bAlpha)
     {
@@ -1673,9 +1675,6 @@ UserDrawIconEx(
                     cyHeight, hdcOff, 0, 0, SRCCOPY, 0, 0);
     }
 
-   IntGdiSetTextColor(hdcOff, oldFg);
-   IntGdiSetBkColor(hdcOff, oldBg);
-
    Ret = TRUE;
 
 cleanup:
@@ -1687,7 +1686,6 @@ cleanup:
       if(hdcOff) NtGdiDeleteObjectApp(hdcOff);
    }
 
-   if(hdcMem) NtGdiDeleteObjectApp(hdcMem);
    return Ret;
 }
 
