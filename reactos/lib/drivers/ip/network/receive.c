@@ -608,11 +608,13 @@ VOID IPReceive( PIP_INTERFACE IF, PIP_PACKET IPPacket )
   case 6:
     IPPacket->Type = IP_ADDRESS_V6;
     TI_DbgPrint(MAX_TRACE, ("Datagram of type IPv6 discarded.\n"));
-    return;
+    break;
   default:
 	  TI_DbgPrint(MIN_TRACE, ("Datagram has an unsupported IP version %d.\n", Version));
-    return;
+    break;
   }
+
+  IPPacket->Free(IPPacket);
 }
 
 /* EOF */

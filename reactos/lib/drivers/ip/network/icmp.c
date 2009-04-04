@@ -34,7 +34,7 @@ VOID SendICMPComplete(
 }
 
 
-PIP_PACKET PrepareICMPPacket(
+BOOLEAN PrepareICMPPacket(
     PIP_INTERFACE Interface,
     PIP_PACKET IPPacket,
     PIP_ADDRESS Destination,
@@ -57,6 +57,8 @@ PIP_PACKET PrepareICMPPacket(
 
     TI_DbgPrint(DEBUG_ICMP, ("Called. DataSize (%d).\n", DataSize));
 
+    IPInitializePacket(IPPacket, IP_ADDRESS_V4);
+
     /* No special flags */
     IPPacket->Flags = 0;
 
@@ -65,7 +67,7 @@ PIP_PACKET PrepareICMPPacket(
     /* Allocate NDIS packet */
     NdisStatus = AllocatePacketWithBuffer( &NdisPacket, NULL, Size );
 
-    if( !NT_SUCCESS(NdisStatus) ) return NULL;
+    if( !NT_SUCCESS(NdisStatus) ) return FALSE;
 
     IPPacket->NdisPacket = NdisPacket;
 
@@ -114,7 +116,7 @@ PIP_PACKET PrepareICMPPacket(
 
     TI_DbgPrint(MID_TRACE,("Leaving\n"));
 
-    return IPPacket;
+    return TRUE;
 }
 
 

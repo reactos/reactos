@@ -46,6 +46,9 @@ VOID LoopTransmit(
         return;
     }
 
+    /* FIXME: IPv4 only */
+    IPInitializePacket(&IPPacket, IP_ADDRESS_V4);
+
     NdisGetFirstBufferFromPacket(XmitPacket,
                                  &NdisBuffer,
                                  &IPPacket.Header,

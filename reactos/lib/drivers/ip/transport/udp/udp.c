@@ -88,8 +88,6 @@ NTSTATUS BuildUDPPacket(
 
     /* FIXME: Assumes IPv4 */
     IPInitializePacket(Packet, IP_ADDRESS_V4);
-    if (!Packet)
-	return STATUS_INSUFFICIENT_RESOURCES;
 
     Packet->TotalSize = sizeof(IPv4_HEADER) + sizeof(UDP_HEADER) + DataLen;
 
