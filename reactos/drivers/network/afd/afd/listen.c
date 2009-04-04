@@ -98,11 +98,8 @@ static NTSTATUS NTAPI ListenComplete
     PLIST_ENTRY NextIrpEntry, QeltEntry;
     PIRP NextIrp;
 
-    if( !SocketAcquireStateLock( FCB ) ) {
-        Irp->IoStatus.Status = STATUS_FILE_CLOSED;
-        Irp->IoStatus.Information = 0;
+    if( !SocketAcquireStateLock( FCB ) )
         return STATUS_FILE_CLOSED;
-    }
 
     FCB->ListenIrp.InFlightRequest = NULL;
 

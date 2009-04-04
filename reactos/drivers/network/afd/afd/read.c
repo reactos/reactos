@@ -260,8 +260,6 @@ NTSTATUS NTAPI ReceiveComplete
 	return STATUS_FILE_CLOSED;
     } else if( FCB->State == SOCKET_STATE_LISTENING ) {
         AFD_DbgPrint(MIN_TRACE,("!!! LISTENER GOT A RECEIVE COMPLETE !!!\n"));
-        Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
-        Irp->IoStatus.Information = 0;
         SocketStateUnlock( FCB );
         return STATUS_INVALID_PARAMETER;
     }
@@ -464,11 +462,8 @@ PacketSocketRecvComplete(
 
     AFD_DbgPrint(MID_TRACE,("Called on %x\n", FCB));
 
-    if( !SocketAcquireStateLock( FCB ) ) {
-        Irp->IoStatus.Status = STATUS_FILE_CLOSED;
-        Irp->IoStatus.Information = 0;
+    if( !SocketAcquireStateLock( FCB ) )
         return STATUS_FILE_CLOSED;
-    }
 
     FCB->ReceiveIrp.InFlightRequest = NULL;
 
@@ -514,8 +509,6 @@ PacketSocketRecvComplete(
     } else Status = STATUS_NO_MEMORY;
 
     if( !NT_SUCCESS( Status ) ) {
-        Irp->IoStatus.Status = Status;
-        Irp->IoStatus.Information = 0;
 		if( DatagramRecv ) ExFreePool( DatagramRecv );
 		SocketStateUnlock( FCB );
 		return Status;

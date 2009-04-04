@@ -40,9 +40,8 @@ static NTSTATUS NTAPI SendComplete
 
     ASSERT_IRQL(APC_LEVEL);
 
-    if( !SocketAcquireStateLock( FCB ) ) {
+    if( !SocketAcquireStateLock( FCB ) )
         return STATUS_FILE_CLOSED;
-    }
 
     FCB->SendIrp.InFlightRequest = NULL;
     /* Request is not in flight any longer */
@@ -179,9 +178,8 @@ static NTSTATUS NTAPI PacketSocketSendComplete
 							Irp->IoStatus.Status,
 							Irp->IoStatus.Information));
 
-    if( !SocketAcquireStateLock( FCB ) ) {
+    if( !SocketAcquireStateLock( FCB ) )
         return STATUS_FILE_CLOSED;
-    }
 
     FCB->SendIrp.InFlightRequest = NULL;
     /* Request is not in flight any longer */
