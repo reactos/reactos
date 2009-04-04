@@ -50,7 +50,7 @@ BOOLEAN DIB_XXBPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf, SURFOBJ *Ma
     PFN_DIB_GetPixel fnPattern_GetPixel = NULL;
     PFN_DIB_GetPixel fnMask_GetPixel = NULL;
 
-    ULONG PatternX = 0, PatternY = 0;
+    LONG PatternX = 0, PatternY = 0;
 
     BOOL UsesSource = ROP4_USES_SOURCE(ROP);
     BOOL UsesPattern = ROP4_USES_PATTERN(ROP);

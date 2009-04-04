@@ -938,8 +938,8 @@ EngStretchBltROP(
     }
     if (OutputRect.bottom < OutputRect.top)
     {
-        OutputRect.left = prclDest->right;
-        OutputRect.right = prclDest->left;
+        OutputRect.top = prclDest->bottom;
+        OutputRect.bottom = prclDest->top;
     }
     
     InputRect = *prclSrc;
@@ -1198,8 +1198,8 @@ IntEngStretchBlt(SURFOBJ *psoDest,
         }
         InputRect = *SourceRect;
  
-        if (InputClippedRect.right < InputClippedRect.left ||
-                InputClippedRect.bottom < InputClippedRect.top)
+        if (InputRect.right < InputRect.left ||
+                InputRect.bottom < InputRect.top)
         {
             /* Everything clipped away, nothing to do */
             return TRUE;
