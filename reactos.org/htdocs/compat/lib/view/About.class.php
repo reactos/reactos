@@ -27,9 +27,10 @@ class About extends HTML
   protected function body( )
   {
     global $RSDB_langres;
+    global $RSDB_intern_index_php;
 
     echo '
-      <h1><a href="<?php echo $RSDB_intern_index_php ?>?page=home">ReactOS Support Database</a> &gt; '.$RSDB_langres['TEXT_about_rsdb'].'</h1> 
+      <h1><a href="'.$RSDB_intern_index_php.'?page=about">ReactOS Compatability Database</a> &gt; '.$RSDB_langres['TEXT_about_rsdb'].'</h1> 
       <h2>'.$RSDB_langres['TEXT_about_rsdb'].'</h2> 
       <p>'.$RSDB_langres['CONTENT_about_rsdb'].'</p>
       <p>'.$RSDB_langres['CONTENT_about_webteam'].'</p>

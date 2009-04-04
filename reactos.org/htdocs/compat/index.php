@@ -250,43 +250,68 @@ require_once("lib/Compat_Autoloader.class.php");
 //	echo "<hr />db: ".$RSDB_SET_page.", sec: ".$RSDB_SET_sec."<hr />";
 
 	switch ($RSDB_SET_page) {
-		case "home": // Frontpage
-			//require($RSDB_intern_path_server.$RSDB_intern_loginsystem_path."inc/login.php");
-			$rpm_page_title="Support Database - Overview";
-			include("inc/header.php"); // Head
-			create_head($rpm_page_title, $rpm_logo, $RSDB_langres);
-			include("inc/structure.php");  // Layout-Structure
-			create_structure($rpm_page);
-			include("inc/home.php"); // Content
-			include("inc/footer.php"); // Body
-			break;
-		case "about": // RSDB About Page
-			new About();
-			break;
-		case "conditions": // RSDB Submit Conditions Page
-			$rpm_page_title="Support Database - Submit Conditions";
-			include("inc/header.php"); // Head
-			create_head($rpm_page_title, $rpm_logo, $RSDB_langres);
-			include("inc/structure.php");  // Layout-Structure
-			create_structure($rpm_page);
-			include("inc/conditions.php"); // Content
-			include("inc/footer.php"); // Body
-			break;
-		default:
-		case "db": // developer interface
-			//require($RSDB_intern_path_server.$RSDB_intern_loginsystem_path."inc/login.php");
-					$rpm_page_title="Support Database - Compatibility";
-					$RSDB_intern_section_script = "inc/comp.php";
 
-			include("inc/header.php");
-			create_head($rpm_page_title, $rpm_logo, $RSDB_langres);
-			include("inc/structure.php");
-			create_structure($rpm_page);
-			
-			include($RSDB_intern_section_script);
-			
-			include("inc/footer.php");
-			
+    // Frontpage
+    case 'home': 
+      new Home();
+      break;
+
+    // RSDB About Page
+    case 'about': 
+      new About();
+      break;
+
+    // RSDB Submit Conditions Page
+    case 'conditions': 
+      new Conditions();
+      break;
+
+    case 'comp':
+      switch ($RSDB_SET_sec) {
+
+        // Browse Database
+        case "category":
+          include("inc/tree/tree_category.php");
+          break;
+
+        // Name
+        case "name": 
+          include("inc/tree/tree_name.php");
+          break;
+
+        // Vendor/Company
+        case "vendor": 
+          include("inc/tree/tree_vendor.php");
+          break;
+
+        // Rank
+        case "rank": 
+          include("inc/tree/tree_rank.php");
+          break;
+
+        // Search
+        case "search":
+          if ($RSDB_SET_group != "") {
+            $RSDB_SET_sec="name";
+            include("inc/tree/tree_name.php");
+          }
+          else {
+            include("inc/comp/comp_search.php");
+          }
+          break;
+
+        // Category
+        case "submit": 
+          include("inc/comp/comp_item_submit.php");
+          break;
+
+        // Vendor/Company
+        case "help": 
+          include("inc/comp/comp_help.php");
+          break;
+      }
+
+    default:
 			break;
 		case "dat": // export data
 			switch ($RSDB_SET_export) {
