@@ -500,7 +500,6 @@ PcCreateItemDispatch(
     IIrpTarget *Filter;
     PKSOBJECT_CREATE_ITEM CreateItem;
     PPIN_WORKER_CONTEXT Context;
-    PIO_WORKITEM WorkItem;
 
     DPRINT("PcCreateItemDispatch called DeviceObject %p\n", DeviceObject);
 
@@ -599,20 +598,11 @@ PcCreateItemDispatch(
             Context->Filter = Filter;
             Context->Irp = Irp;
 
-            WorkItem = IoAllocateWorkItem(DeviceObject);
-            if (!WorkItem)
-            {
-                Irp->IoStatus.Information = 0;
-                Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
-                FreeItem(Context, TAG_PORTCLASS);
-                IoCompleteRequest(Irp, IO_NO_INCREMENT);
-                return STATUS_INSUFFICIENT_RESOURCES;
-            }
             DPRINT("Queueing IRP %p Irql %u\n", Irp, KeGetCurrentIrql());
             Irp->IoStatus.Information = 0;
             Irp->IoStatus.Status = STATUS_PENDING;
             IoMarkIrpPending(Irp);
-            IoQueueWorkItem(WorkItem, CreatePinWorkerRoutine, DelayedWorkQueue, (PVOID)Context);
+            IoQueueWorkItem(DeviceExt->WorkItem, CreatePinWorkerRoutine, DelayedWorkQueue, (PVOID)Context);
 
             return STATUS_PENDING;
         }

@@ -10,9 +10,6 @@
  */
 
 #include "private.h"
-#include <devguid.h>
-#include <initguid.h>
-#include <ksmedia.h>
 
 /*
     This is called from DriverEntry so that PortCls can take care of some
@@ -151,6 +148,9 @@ PcAddAdapterDevice(
     fdo->Flags |= DO_DIRECT_IO | DO_POWER_PAGABLE;
     /* clear initializing flag */
     fdo->Flags &= ~ DO_DEVICE_INITIALIZING;
+
+    /* allocate work item */
+    portcls_ext->WorkItem = IoAllocateWorkItem(fdo);
 
     /* allocate the device header */
     status = KsAllocateDeviceHeader(&portcls_ext->KsDeviceHeader, MaxObjects, portcls_ext->CreateItems);

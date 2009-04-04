@@ -156,7 +156,7 @@ typedef struct
     ULONG MaxSubDevices;
     KSOBJECT_CREATE_ITEM * CreateItems;
 
-
+    PIO_WORKITEM WorkItem;
     IResourceList* resources;
     LIST_ENTRY SubDeviceList;
     LIST_ENTRY PhysicalConnectionList;
