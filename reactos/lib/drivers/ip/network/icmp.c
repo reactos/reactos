@@ -74,13 +74,12 @@ BOOLEAN PrepareICMPPacket(
     GetDataPtr( IPPacket->NdisPacket, MaxLLHeaderSize,
 		(PCHAR *)&IPPacket->Header, &IPPacket->ContigSize );
 
-    IPPacket->Data = ((PCHAR)IPPacket->Header) + IPPacket->HeaderSize;
-
     TI_DbgPrint(DEBUG_ICMP, ("Size (%d). Data at (0x%X).\n", Size, Data));
     TI_DbgPrint(DEBUG_ICMP, ("NdisPacket at (0x%X).\n", NdisPacket));
 
     IPPacket->HeaderSize = sizeof(IPv4_HEADER);
     IPPacket->TotalSize  = Size - MaxLLHeaderSize;
+    IPPacket->Data = ((PCHAR)IPPacket->Header) + IPPacket->HeaderSize;
 
     TI_DbgPrint(DEBUG_ICMP, ("Copying Address: %x -> %x\n",
 			     &IPPacket->DstAddr, Destination));
