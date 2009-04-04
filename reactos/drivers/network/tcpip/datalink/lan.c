@@ -254,6 +254,8 @@ VOID LanReceiveWorker( PVOID Context ) {
     Adapter = WorkItem->Adapter;
     BytesTransferred = WorkItem->BytesTransferred;
 
+    IPInitializePacket(&IPPacket, 0);
+
     IPPacket.NdisPacket = Packet;
 
     NdisGetFirstBufferFromPacket(Packet,
@@ -289,6 +291,7 @@ VOID LanReceiveWorker( PVOID Context ) {
 	TI_DbgPrint(MID_TRACE,("Received ARP Packet\n"));
 	ARPReceive(Adapter->Context, &IPPacket);
     default:
+        IPPacket.Free(&IPPacket);
 	break;
     }
 
