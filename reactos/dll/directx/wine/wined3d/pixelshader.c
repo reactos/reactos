@@ -354,7 +354,7 @@ static HRESULT WINAPI IWineD3DPixelShaderImpl_SetFunction(IWineD3DPixelShader *i
         for (i = 0; i < MAX_REG_INPUT; ++i)
         {
             if (This->input_reg_used[i]) This->input_reg_map[i] = This->declared_in_count++;
-            else This->input_reg_map[i] = -1;
+            else This->input_reg_map[i] = ~0U;
         }
     }
 
@@ -428,14 +428,13 @@ static GLuint pixelshader_compile(IWineD3DPixelShaderImpl *This, const struct ps
     pixelshader_update_samplers(&This->baseShader.reg_maps,
             ((IWineD3DDeviceImpl *)This->baseShader.device)->stateBlock->textures);
 
-    /* Reset fields tracking stateblock values being hardcoded in the shader */
-    This->baseShader.num_sampled_samplers = 0;
-
     /* Generate the HW shader */
     TRACE("(%p) : Generating hardware program\n", This);
+    This->cur_args = args;
     shader_buffer_init(&buffer);
     retval = device->shader_backend->shader_generate_pshader((IWineD3DPixelShader *)This, &buffer, args);
     shader_buffer_free(&buffer);
+    This->cur_args = NULL;
 
     return retval;
 }
@@ -456,20 +455,26 @@ const IWineD3DPixelShaderVtbl IWineD3DPixelShader_Vtbl =
 };
 
 void find_ps_compile_args(IWineD3DPixelShaderImpl *shader, IWineD3DStateBlockImpl *stateblock, struct ps_compile_args *args) {
-    UINT i, sampler;
+    UINT i;
     IWineD3DBaseTextureImpl *tex;
 
     memset(args, 0, sizeof(*args)); /* FIXME: Make sure all bits are set */
     args->srgb_correction = stateblock->renderState[WINED3DRS_SRGBWRITEENABLE] ? 1 : 0;
+    args->texrect_fixup = 0;
 
-    for(i = 0; i < shader->baseShader.num_sampled_samplers; i++) {
-        sampler = shader->baseShader.sampled_samplers[i];
-        tex = (IWineD3DBaseTextureImpl *) stateblock->textures[sampler];
+    for(i = 0; i < MAX_FRAGMENT_SAMPLERS; i++) {
+        if(shader->baseShader.reg_maps.samplers[i] == 0) continue;
+        tex = (IWineD3DBaseTextureImpl *) stateblock->textures[i];
         if(!tex) {
-            args->color_fixup[sampler] = COLOR_FIXUP_IDENTITY;
+            args->color_fixup[i] = COLOR_FIXUP_IDENTITY;
             continue;
         }
-        args->color_fixup[sampler] = tex->baseTexture.shader_color_fixup;
+        args->color_fixup[i] = tex->resource.format_desc->color_fixup;
+
+        /* Flag samplers that need NP2 texcoord fixup. */
+        if(!tex->baseTexture.pow2Matrix_identity) {
+            args->texrect_fixup |= (1 << i);
+        }
     }
     if (shader->baseShader.reg_maps.shader_version >= WINED3DPS_VERSION(3,0))
     {
@@ -531,7 +536,8 @@ GLuint find_gl_pshader(IWineD3DPixelShaderImpl *shader, const struct ps_compile_
 
     TRACE("No matching GL shader found, compiling a new shader\n");
     if(shader->shader_array_size == shader->num_gl_shaders) {
-        if(shader->gl_shaders) {
+        if (shader->num_gl_shaders)
+        {
             new_size = shader->shader_array_size + max(1, shader->shader_array_size / 2);
             new_array = HeapReAlloc(GetProcessHeap(), 0, shader->gl_shaders,
                                     new_size * sizeof(*shader->gl_shaders));

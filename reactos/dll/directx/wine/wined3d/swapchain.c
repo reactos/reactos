@@ -109,7 +109,7 @@ static HRESULT WINAPI IWineD3DSwapChainImpl_Present(IWineD3DSwapChain *iface, CO
         cursor.resource.ref = 1;
         cursor.resource.wineD3DDevice = This->wineD3DDevice;
         cursor.resource.pool = WINED3DPOOL_SCRATCH;
-        cursor.resource.format = WINED3DFMT_A8R8G8B8;
+        cursor.resource.format_desc = getFormatDescEntry(WINED3DFMT_A8R8G8B8, &This->wineD3DDevice->adapter->gl_info);
         cursor.resource.resourceType = WINED3DRTYPE_SURFACE;
         cursor.glDescription.textureName = This->wineD3DDevice->cursorTexture;
         cursor.glDescription.target = GL_TEXTURE_2D;

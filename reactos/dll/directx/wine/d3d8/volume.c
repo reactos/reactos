@@ -167,6 +167,9 @@ static HRESULT WINAPI IDirect3DVolume8Impl_GetDesc(LPDIRECT3DVOLUME8 iface, D3DV
     EnterCriticalSection(&d3d8_cs);
     hr = IWineD3DVolume_GetDesc(This->wineD3DVolume, &wined3ddesc);
     LeaveCriticalSection(&d3d8_cs);
+
+    if (SUCCEEDED(hr)) pDesc->Format = d3dformat_from_wined3dformat(pDesc->Format);
+
     return hr;
 }
 

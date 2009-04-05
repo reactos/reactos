@@ -77,6 +77,7 @@ static void stateblock_savedstates_copy(IWineD3DStateBlock* iface, SAVEDSTATES *
     unsigned bsize = sizeof(BOOL);
 
     /* Single values */
+    dest->primitive_type = source->primitive_type;
     dest->indices = source->indices;
     dest->material = source->material;
     dest->viewport = source->viewport;
@@ -121,6 +122,7 @@ void stateblock_savedstates_set(
     unsigned bsize = sizeof(BOOL);
 
     /* Single values */
+    states->primitive_type = value;
     states->indices = value;
     states->material = value;
     states->viewport = value;
@@ -188,6 +190,7 @@ void stateblock_copy(
     stateblock_savedstates_copy(source, &Dest->changed, &This->changed);
 
     /* Single items */
+    Dest->gl_primitive_type = This->gl_primitive_type;
     Dest->vertexDecl = This->vertexDecl;
     Dest->vertexShader = This->vertexShader;
     Dest->streamIsUP = This->streamIsUP;
@@ -227,7 +230,7 @@ void stateblock_copy(
     
     memcpy(Dest->streamStride, This->streamStride, sizeof(UINT) * MAX_STREAMS);
     memcpy(Dest->streamOffset, This->streamOffset, sizeof(UINT) * MAX_STREAMS);
-    memcpy(Dest->streamSource, This->streamSource, sizeof(IWineD3DVertexBuffer*) * MAX_STREAMS);
+    memcpy(Dest->streamSource, This->streamSource, sizeof(IWineD3DBuffer *) * MAX_STREAMS);
     memcpy(Dest->streamFreq,   This->streamFreq,   sizeof(UINT) * MAX_STREAMS);
     memcpy(Dest->streamFlags,  This->streamFlags,  sizeof(UINT) * MAX_STREAMS);
     memcpy(Dest->transforms,   This->transforms,   sizeof(WINED3DMATRIX) * (HIGHEST_TRANSFORMSTATE + 1));
@@ -292,7 +295,8 @@ static ULONG  WINAPI IWineD3DStateBlockImpl_Release(IWineD3DStateBlock *iface) {
 
         for (counter = 0; counter < MAX_STREAMS; counter++) {
             if(This->streamSource[counter]) {
-                if(0 != IWineD3DVertexBuffer_Release(This->streamSource[counter])) {
+                if (IWineD3DBuffer_Release(This->streamSource[counter]))
+                {
                     TRACE("Vertex buffer still referenced by stateblock, applications has leaked Stream %u, buffer %p\n", counter, This->streamSource[counter]);
                 }
             }
@@ -499,6 +503,8 @@ static HRESULT  WINAPI IWineD3DStateBlockImpl_Capture(IWineD3DStateBlock *iface)
                 targetStateBlock->transforms[This->contained_transform_states[i]];
         }
 
+        if (This->changed.primitive_type) This->gl_primitive_type = targetStateBlock->gl_primitive_type;
+
         if (This->changed.indices && ((This->pIndexData != targetStateBlock->pIndexData)
                         || (This->baseVertexIndex != targetStateBlock->baseVertexIndex))) {
             TRACE("Updating pIndexData to %p, baseVertexIndex to %d\n",
@@ -548,8 +554,8 @@ static HRESULT  WINAPI IWineD3DStateBlockImpl_Capture(IWineD3DStateBlock *iface)
                 TRACE("Updating stream source %u to %p, stride to %u\n",
                         i, targetStateBlock->streamSource[i], targetStateBlock->streamStride[i]);
                 This->streamStride[i] = targetStateBlock->streamStride[i];
-                if(targetStateBlock->streamSource[i]) IWineD3DVertexBuffer_AddRef(targetStateBlock->streamSource[i]);
-                if(This->streamSource[i]) IWineD3DVertexBuffer_Release(This->streamSource[i]);
+                if (targetStateBlock->streamSource[i]) IWineD3DBuffer_AddRef(targetStateBlock->streamSource[i]);
+                if (This->streamSource[i]) IWineD3DBuffer_Release(This->streamSource[i]);
                 This->streamSource[i] = targetStateBlock->streamSource[i];
             }
         }
@@ -628,6 +634,7 @@ static HRESULT  WINAPI IWineD3DStateBlockImpl_Capture(IWineD3DStateBlock *iface)
         memcpy(This->vertexShaderConstantB, targetStateBlock->vertexShaderConstantB, sizeof(This->vertexShaderConstantI));
         memcpy(This->vertexShaderConstantI, targetStateBlock->vertexShaderConstantI, sizeof(This->vertexShaderConstantF));
         memcpy(This->vertexShaderConstantF, targetStateBlock->vertexShaderConstantF, sizeof(float) * GL_LIMITS(vshader_constantsF) * 4);
+        This->gl_primitive_type = targetStateBlock->gl_primitive_type;
         memcpy(This->streamStride, targetStateBlock->streamStride, sizeof(This->streamStride));
         memcpy(This->streamOffset, targetStateBlock->streamOffset, sizeof(This->streamOffset));
         memcpy(This->streamFreq, targetStateBlock->streamFreq, sizeof(This->streamFreq));
@@ -649,14 +656,14 @@ static HRESULT  WINAPI IWineD3DStateBlockImpl_Capture(IWineD3DStateBlock *iface)
         This->scissorRect = targetStateBlock->scissorRect;
 
         if(targetStateBlock->pIndexData != This->pIndexData) {
-            if(targetStateBlock->pIndexData) IWineD3DIndexBuffer_AddRef(targetStateBlock->pIndexData);
-            if(This->pIndexData) IWineD3DIndexBuffer_Release(This->pIndexData);
+            if (targetStateBlock->pIndexData) IWineD3DIndexBuffer_AddRef(targetStateBlock->pIndexData);
+            if (This->pIndexData) IWineD3DIndexBuffer_Release(This->pIndexData);
             This->pIndexData = targetStateBlock->pIndexData;
         }
         for(i = 0; i < MAX_STREAMS; i++) {
             if(targetStateBlock->streamSource[i] != This->streamSource[i]) {
-                if(targetStateBlock->streamSource[i]) IWineD3DVertexBuffer_AddRef(targetStateBlock->streamSource[i]);
-                if(This->streamSource[i]) IWineD3DVertexBuffer_Release(This->streamSource[i]);
+                if(targetStateBlock->streamSource[i]) IWineD3DBuffer_AddRef(targetStateBlock->streamSource[i]);
+                if(This->streamSource[i]) IWineD3DBuffer_Release(This->streamSource[i]);
                 This->streamSource[i] = targetStateBlock->streamSource[i];
             }
         }
@@ -690,8 +697,8 @@ static HRESULT  WINAPI IWineD3DStateBlockImpl_Capture(IWineD3DStateBlock *iface)
         }
         for(i = 0; i < MAX_STREAMS; i++) {
             if(targetStateBlock->streamSource[i] != This->streamSource[i]) {
-                if(targetStateBlock->streamSource[i]) IWineD3DVertexBuffer_AddRef(targetStateBlock->streamSource[i]);
-                if(This->streamSource[i]) IWineD3DVertexBuffer_Release(This->streamSource[i]);
+                if (targetStateBlock->streamSource[i]) IWineD3DBuffer_AddRef(targetStateBlock->streamSource[i]);
+                if (This->streamSource[i]) IWineD3DBuffer_Release(This->streamSource[i]);
                 This->streamSource[i] = targetStateBlock->streamSource[i];
             }
         }
@@ -825,6 +832,12 @@ should really perform a delta so that only the changes get updated*/
         for (i = 0; i < This->num_contained_transform_states; i++) {
             IWineD3DDevice_SetTransform(pDevice, This->contained_transform_states[i],
                                         &This->transforms[This->contained_transform_states[i]]);
+        }
+
+        if (This->changed.primitive_type)
+        {
+                This->wineD3DDevice->updateStateBlock->changed.primitive_type = TRUE;
+                This->wineD3DDevice->updateStateBlock->gl_primitive_type = This->gl_primitive_type;
         }
 
         if (This->changed.indices) {
@@ -1009,6 +1022,7 @@ should really perform a delta so that only the changes get updated*/
         for(i = 1; i <= HIGHEST_TRANSFORMSTATE; i++) {
             IWineD3DDevice_SetTransform(pDevice, i, &This->transforms[i]);
         }
+        This->wineD3DDevice->updateStateBlock->gl_primitive_type = This->gl_primitive_type;
         IWineD3DDevice_SetIndices(pDevice, This->pIndexData);
         IWineD3DDevice_SetBaseVertexIndex(pDevice, This->baseVertexIndex);
         IWineD3DDevice_SetVertexDeclaration(pDevice, This->vertexDecl);

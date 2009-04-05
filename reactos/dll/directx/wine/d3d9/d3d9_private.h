@@ -45,6 +45,8 @@ extern HRESULT vdecl_convert_fvf(
     DWORD FVF,
     D3DVERTEXELEMENT9** ppVertexElements);
 extern CRITICAL_SECTION d3d9_cs;
+D3DFORMAT d3dformat_from_wined3dformat(WINED3DFORMAT format);
+WINED3DFORMAT wined3dformat_from_d3dformat(D3DFORMAT format);
 
 /* ===========================================================================
     Macros
@@ -275,26 +277,6 @@ typedef struct IDirect3DSwapChain9Impl
     BOOL                        isImplicit;
 } IDirect3DSwapChain9Impl;
 
-/* ------------------ */
-/* IDirect3DResource9 */
-/* ------------------ */
-
-/*****************************************************************************
- * IDirect3DResource9 implementation structure
- */
-typedef struct IDirect3DResource9Impl
-{
-    /* IUnknown fields */
-    const IDirect3DResource9Vtbl *lpVtbl;
-    LONG                    ref;
-
-    /* IDirect3DResource9 fields */
-    IWineD3DResource       *wineD3DResource;
-} IDirect3DResource9Impl;
-
-extern HRESULT  WINAPI        IDirect3DResource9Impl_GetDevice(LPDIRECT3DRESOURCE9 iface, IDirect3DDevice9** ppDevice);
-
-
 /* ----------------- */
 /* IDirect3DSurface9 */
 /* ----------------- */
@@ -343,7 +325,7 @@ typedef struct IDirect3DVertexBuffer9Impl
     LONG                    ref;
 
     /* IDirect3DResource9 fields */
-    IWineD3DVertexBuffer   *wineD3DVertexBuffer;
+    IWineD3DBuffer *wineD3DVertexBuffer;
 
     /* Parent reference */
     LPDIRECT3DDEVICE9EX       parentDevice;
@@ -386,8 +368,6 @@ typedef struct IDirect3DBaseTexture9Impl
     IWineD3DBaseTexture    *wineD3DBaseTexture;
     
 } IDirect3DBaseTexture9Impl;
-
-extern DWORD    WINAPI        IDirect3DBaseTexture9Impl_GetLOD(LPDIRECT3DBASETEXTURE9 iface);
 
 /* --------------------- */
 /* IDirect3DCubeTexture9 */

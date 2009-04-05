@@ -834,7 +834,8 @@ static void set_tex_op_atifs(DWORD state, IWineD3DStateBlockImpl *stateblock, Wi
      */
     for(i = 0; i < desc->num_textures_used; i++) {
         mapped_stage = This->texUnitMap[i];
-        if(mapped_stage != -1) {
+        if (mapped_stage != WINED3D_UNMAPPED_STAGE)
+        {
             GL_EXTCALL(glActiveTextureARB(GL_TEXTURE0_ARB + mapped_stage));
             checkGLcall("glActiveTextureARB");
             texture_activate_dimensions(i, stateblock, context);
@@ -885,6 +886,7 @@ static void atifs_apply_pixelshader(DWORD state, IWineD3DStateBlockImpl *statebl
     IWineD3DDeviceImpl *device = stateblock->wineD3DDevice;
     BOOL use_vshader = use_vs(stateblock);
 
+    context->last_was_pshader = use_ps(stateblock);
     /* The ATIFS code does not support pixel shaders currently, but we have to provide a state handler
      * to call shader_select to select a vertex shader if one is applied because the vertex shader state
      * may defer calling the shader backend if the pshader state is dirty.

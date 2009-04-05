@@ -368,10 +368,11 @@ static void WINAPI IWineD3DVertexShaderImpl_FakeSemantics(IWineD3DVertexShader *
     IWineD3DVertexShaderImpl *This =(IWineD3DVertexShaderImpl *)iface;
     IWineD3DVertexDeclarationImpl* vdecl = (IWineD3DVertexDeclarationImpl*)vertex_declaration;
 
-    int i;
-    for (i = 0; i < vdecl->declarationWNumElements - 1; ++i) {
-        const WINED3DVERTEXELEMENT *element = vdecl->pDeclarationWine + i;
-        vshader_set_input(This, element->Reg, element->Usage, element->UsageIndex);
+    unsigned int i;
+    for (i = 0; i < vdecl->element_count; ++i)
+    {
+        const struct wined3d_vertex_declaration_element *e = &vdecl->elements[i];
+        vshader_set_input(This, e->output_slot, e->usage, e->usage_idx);
     }
 }
 
@@ -465,7 +466,8 @@ GLuint find_gl_vshader(IWineD3DVertexShaderImpl *shader, const struct vs_compile
     TRACE("No matching GL shader found, compiling a new shader\n");
 
     if(shader->shader_array_size == shader->num_gl_shaders) {
-        if(shader->gl_shaders) {
+        if (shader->num_gl_shaders)
+        {
             new_size = shader->shader_array_size + max(1, shader->shader_array_size / 2);
             new_array = HeapReAlloc(GetProcessHeap(), 0, shader->gl_shaders,
                                     new_size * sizeof(*shader->gl_shaders));

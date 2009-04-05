@@ -10,4 +10,7 @@
 	<directory name="d3d9">
 		<xi:include href="d3d9/d3d9.rbuild" />
 	</directory>
+	<directory name="ddraw">
+		<xi:include href="ddraw/ddraw.rbuild" />
+	</directory>
 </group>

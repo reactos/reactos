@@ -69,10 +69,16 @@ static ULONG WINAPI IDirect3DTexture8Impl_Release(LPDIRECT3DTEXTURE8 iface) {
 /* IDirect3DTexture8 IDirect3DResource8 Interface follow: */
 static HRESULT WINAPI IDirect3DTexture8Impl_GetDevice(LPDIRECT3DTEXTURE8 iface, IDirect3DDevice8 **ppDevice) {
     IDirect3DTexture8Impl *This = (IDirect3DTexture8Impl *)iface;
+    IWineD3DDevice *wined3d_device;
     HRESULT hr;
     TRACE("(%p) Relay\n", This);
     EnterCriticalSection(&d3d8_cs);
-    hr = IDirect3DResource8Impl_GetDevice((LPDIRECT3DRESOURCE8) This, ppDevice);
+    hr = IWineD3DTexture_GetDevice(This->wineD3DTexture, &wined3d_device);
+    if (SUCCEEDED(hr))
+    {
+        IWineD3DDevice_GetParent(wined3d_device, (IUnknown **)ppDevice);
+        IWineD3DDevice_Release(wined3d_device);
+    }
     LeaveCriticalSection(&d3d8_cs);
     return hr;
 }
@@ -208,6 +214,9 @@ static HRESULT WINAPI IDirect3DTexture8Impl_GetLevelDesc(LPDIRECT3DTEXTURE8 ifac
     EnterCriticalSection(&d3d8_cs);
     hr = IWineD3DTexture_GetLevelDesc(This->wineD3DTexture, Level, &wined3ddesc);
     LeaveCriticalSection(&d3d8_cs);
+
+    if (SUCCEEDED(hr)) pDesc->Format = d3dformat_from_wined3dformat(pDesc->Format);
+
     return hr;
 }
 

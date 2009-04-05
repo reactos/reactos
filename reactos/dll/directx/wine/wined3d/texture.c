@@ -92,29 +92,36 @@ static DWORD WINAPI IWineD3DTextureImpl_GetPriority(IWineD3DTexture *iface) {
     return resource_get_priority((IWineD3DResource *)iface);
 }
 
-static void WINAPI IWineD3DTextureImpl_PreLoad(IWineD3DTexture *iface) {
+void texture_internal_preload(IWineD3DBaseTexture *iface, enum WINED3DSRGB srgb) {
 
     /* Override the IWineD3DResource PreLoad method */
     unsigned int i;
     IWineD3DTextureImpl *This = (IWineD3DTextureImpl *)iface;
     IWineD3DDeviceImpl *device = This->resource.wineD3DDevice;
-    BOOL srgb_mode = This->baseTexture.is_srgb;
-    BOOL srgb_was_toggled = FALSE;
+    BOOL srgb_mode;
+    BOOL *dirty;
 
     TRACE("(%p) : About to load texture\n", This);
+
+    switch(srgb) {
+        case SRGB_RGB:      srgb_mode = FALSE; break;
+        case SRGB_BOTH:     texture_internal_preload(iface, SRGB_RGB);
+        case SRGB_SRGB:     srgb_mode = TRUE; break;
+        /* DONTKNOW, and shut up the compiler */
+        default:            srgb_mode = This->baseTexture.is_srgb; break;
+    }
+    dirty = srgb_mode ? &This->baseTexture.srgbDirty : &This->baseTexture.dirty;
 
     if(!device->isInDraw) {
         /* ActivateContext sets isInDraw to TRUE when loading a pbuffer into a texture, thus no danger of
          * recursive calls
          */
         ActivateContext(device, device->lastActiveRenderTarget, CTXUSAGE_RESOURCELOAD);
-    } else if (GL_SUPPORT(EXT_TEXTURE_SRGB) && This->baseTexture.bindCount > 0) {
-        srgb_mode = device->stateBlock->samplerState[This->baseTexture.sampler][WINED3DSAMP_SRGBTEXTURE];
-        srgb_was_toggled = This->baseTexture.is_srgb != srgb_mode;
-        This->baseTexture.is_srgb = srgb_mode;
     }
 
-    if (This->resource.format == WINED3DFMT_P8 || This->resource.format == WINED3DFMT_A8P8) {
+    if (This->resource.format_desc->format == WINED3DFMT_P8
+            || This->resource.format_desc->format == WINED3DFMT_A8P8)
+    {
         for (i = 0; i < This->baseTexture.levels; i++) {
             if(palette9_changed((IWineD3DSurfaceImpl *)This->surfaces[i])) {
                 TRACE("Reloading surface because the d3d8/9 palette was changed\n");
@@ -126,19 +133,8 @@ static void WINAPI IWineD3DTextureImpl_PreLoad(IWineD3DTexture *iface) {
         }
     }
     /* If the texture is marked dirty or the srgb sampler setting has changed since the last load then reload the surfaces */
-    if (This->baseTexture.dirty) {
+    if (*dirty) {
         for (i = 0; i < This->baseTexture.levels; i++) {
-            IWineD3DSurface_LoadTexture(This->surfaces[i], srgb_mode);
-        }
-    } else if (srgb_was_toggled) {
-        if (This->baseTexture.srgb_mode_change_count < 20)
-            ++This->baseTexture.srgb_mode_change_count;
-        else
-            FIXME("Texture (%p) has been reloaded at least 20 times due to WINED3DSAMP_SRGBTEXTURE changes on it\'s sampler\n", This);
-
-        for (i = 0; i < This->baseTexture.levels; i++) {
-            surface_add_dirty_rect(This->surfaces[i], NULL);
-            surface_force_reload(This->surfaces[i]);
             IWineD3DSurface_LoadTexture(This->surfaces[i], srgb_mode);
         }
     } else {
@@ -146,9 +142,13 @@ static void WINAPI IWineD3DTextureImpl_PreLoad(IWineD3DTexture *iface) {
     }
 
     /* No longer dirty */
-    This->baseTexture.dirty = FALSE;
+    *dirty = FALSE;
 
     return ;
+}
+
+static void WINAPI IWineD3DTextureImpl_PreLoad(IWineD3DTexture *iface) {
+    texture_internal_preload((IWineD3DBaseTexture *) iface, SRGB_ANY);
 }
 
 static void WINAPI IWineD3DTextureImpl_UnLoad(IWineD3DTexture *iface) {
@@ -162,7 +162,8 @@ static void WINAPI IWineD3DTextureImpl_UnLoad(IWineD3DTexture *iface) {
      */
     for (i = 0; i < This->baseTexture.levels; i++) {
         IWineD3DSurface_UnLoad(This->surfaces[i]);
-        surface_set_texture_name(This->surfaces[i], 0);
+        surface_set_texture_name(This->surfaces[i], 0, FALSE); /* Delete rgb name */
+        surface_set_texture_name(This->surfaces[i], 0, TRUE); /* delete srgb name */
     }
 
     basetexture_unload((IWineD3DBaseTexture *)iface);
@@ -212,18 +213,22 @@ static BOOL WINAPI IWineD3DTextureImpl_GetDirty(IWineD3DTexture *iface) {
     return basetexture_get_dirty((IWineD3DBaseTexture *)iface);
 }
 
-static HRESULT WINAPI IWineD3DTextureImpl_BindTexture(IWineD3DTexture *iface) {
+static HRESULT WINAPI IWineD3DTextureImpl_BindTexture(IWineD3DTexture *iface, BOOL srgb) {
     IWineD3DTextureImpl *This = (IWineD3DTextureImpl *)iface;
-    BOOL set_gl_texture_desc = This->baseTexture.textureName == 0;
+    BOOL set_gl_texture_desc;
     HRESULT hr;
 
     TRACE("(%p) : relay to BaseTexture\n", This);
 
-    hr = basetexture_bind((IWineD3DBaseTexture *)iface);
+    hr = basetexture_bind((IWineD3DBaseTexture *)iface, srgb, &set_gl_texture_desc);
     if (set_gl_texture_desc && SUCCEEDED(hr)) {
         UINT i;
         for (i = 0; i < This->baseTexture.levels; ++i) {
-            surface_set_texture_name(This->surfaces[i], This->baseTexture.textureName);
+            if(This->baseTexture.is_srgb) {
+                surface_set_texture_name(This->surfaces[i], This->baseTexture.srgbTextureName, TRUE);
+            } else {
+                surface_set_texture_name(This->surfaces[i], This->baseTexture.textureName, FALSE);
+            }
         }
         /* Conditinal non power of two textures use a different clamping default. If we're using the GL_WINE_normalized_texrect
          * partial driver emulation, we're dealing with a GL_TEXTURE_2D texture which has the address mode set to repeat - something
@@ -278,13 +283,14 @@ static void WINAPI IWineD3DTextureImpl_ApplyStateChanges(IWineD3DTexture *iface,
    ******************************************* */
 static void WINAPI IWineD3DTextureImpl_Destroy(IWineD3DTexture *iface, D3DCB_DESTROYSURFACEFN D3DCB_DestroySurface) {
     IWineD3DTextureImpl *This = (IWineD3DTextureImpl *)iface;
-    int i;
+    unsigned int i;
 
     TRACE("(%p) : Cleaning up\n",This);
     for (i = 0; i < This->baseTexture.levels; i++) {
         if (This->surfaces[i] != NULL) {
             /* Clean out the texture name we gave to the surface so that the surface doesn't try and release it */
-            surface_set_texture_name(This->surfaces[i], 0);
+            surface_set_texture_name(This->surfaces[i], 0, TRUE);
+            surface_set_texture_name(This->surfaces[i], 0, FALSE);
             surface_set_texture_target(This->surfaces[i], 0);
             IWineD3DSurface_SetContainer(This->surfaces[i], 0);
             D3DCB_DestroySurface(This->surfaces[i]);
@@ -359,6 +365,7 @@ static HRESULT WINAPI IWineD3DTextureImpl_UnlockRect(IWineD3DTexture *iface, UIN
 static HRESULT WINAPI IWineD3DTextureImpl_AddDirtyRect(IWineD3DTexture *iface, CONST RECT* pDirtyRect) {
     IWineD3DTextureImpl *This = (IWineD3DTextureImpl *)iface;
     This->baseTexture.dirty = TRUE;
+    This->baseTexture.srgbDirty = TRUE;
     TRACE("(%p) : dirtyfication of surface Level (0)\n", This);
     surface_add_dirty_rect(This->surfaces[0], pDirtyRect);
 
