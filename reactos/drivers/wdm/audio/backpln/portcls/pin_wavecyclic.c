@@ -215,20 +215,20 @@ StopStreamRoutine(
     IN PVOID  SystemArgument1,
     IN PVOID  SystemArgument2)
 {
+   PDEVICE_OBJECT DeviceObject;
+   PPCLASS_DEVICE_EXTENSION DeviceExtension;
    IPortPinWaveCyclicImpl * This = (IPortPinWaveCyclicImpl*)DeferredContext;
-   PIO_WORKITEM WorkItem;
 
     if (This->IrpQueue->lpVtbl->NumMappings(This->IrpQueue))
         return;
 
-    WorkItem = IoAllocateWorkItem(GetDeviceObject(This->Port));
-    if (!WorkItem)
-        return;
-
-    IoQueueWorkItem(WorkItem, StopStreamWorkerRoutine, DelayedWorkQueue, (PVOID)This);
+    /* Get device object */
+    DeviceObject = GetDeviceObject(This->Port);
+    /* Get device extension */
+    DeviceExtension = (PPCLASS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    /* queue the work item */
+    IoQueueWorkItem(DeviceExtension->WorkItem, StopStreamWorkerRoutine, DelayedWorkQueue, (PVOID)This);
 }
-
-
 
 static
 VOID
@@ -248,7 +248,6 @@ IServiceSink_fnRequestService(
         KeInsertQueueDpc(&This->Dpc, NULL, NULL);
         return;
     }
-
 
     Status = This->Stream->lpVtbl->GetPosition(This->Stream, &Position);
     DPRINT("Position %u Buffer %p BufferSize %u ActiveIrpOffset %u\n", Position, Buffer, This->CommonBufferSize, BufferSize);
@@ -692,23 +691,26 @@ IPortPinWaveCyclic_fnClose(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
-    PIO_WORKITEM WorkItem;
-
+    PPCLASS_DEVICE_EXTENSION DeviceExtension;
     IPortPinWaveCyclicImpl * This = (IPortPinWaveCyclicImpl*)iface;
 
     if (This->Stream)
     {
-        WorkItem = IoAllocateWorkItem(DeviceObject);
-        if (WorkItem)
+        if (Irp)
         {
-            if (Irp)
-            {
-                This->CloseIrp = Irp;
-                IoMarkIrpPending(Irp);
-                Irp->IoStatus.Information = 0;
-                Irp->IoStatus.Status = STATUS_PENDING;
-            }
-            IoQueueWorkItem(WorkItem, CloseStreamRoutine, DelayedWorkQueue, (PVOID)This);
+            This->CloseIrp = Irp;
+            IoMarkIrpPending(Irp);
+            Irp->IoStatus.Information = 0;
+            Irp->IoStatus.Status = STATUS_PENDING;
+        }
+        /* Get device extension */
+        DeviceExtension = (PPCLASS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+        /* defer work item */
+        IoQueueWorkItem(DeviceExtension->WorkItem, CloseStreamRoutine, DelayedWorkQueue, (PVOID)This);
+
+        if (Irp)
+        {
+            /* The WaveCyclic filter passes close request with NULL / IRP */
             return STATUS_PENDING;
         }
     }

@@ -135,6 +135,13 @@ PcAddAdapterDevice(
     /* allocate create item */
     portcls_ext->CreateItems = AllocateItem(NonPagedPool, MaxObjects * sizeof(KSOBJECT_CREATE_ITEM), TAG_PORTCLASS);
 
+    if (!portcls_ext->CreateItems)
+    {
+        /* not enough resources */
+        IoDeleteDevice(fdo);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
     /* store the physical device object */
     portcls_ext->PhysicalDeviceObject = PhysicalDeviceObject;
     /* set up the start device function */
@@ -152,6 +159,17 @@ PcAddAdapterDevice(
     /* allocate work item */
     portcls_ext->WorkItem = IoAllocateWorkItem(fdo);
 
+    if (!portcls_ext->WorkItem)
+    {
+        /* not enough resources */
+        FreeItem(portcls_ext->CreateItems, TAG_PORTCLASS);
+        /* delete created fdo */
+        IoDeleteDevice(fdo);
+        /* return error code */
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+
     /* allocate the device header */
     status = KsAllocateDeviceHeader(&portcls_ext->KsDeviceHeader, MaxObjects, portcls_ext->CreateItems);
     /* did we succeed */
@@ -159,6 +177,8 @@ PcAddAdapterDevice(
     {
         /* free previously allocated create items */
         FreeItem(portcls_ext->CreateItems, TAG_PORTCLASS);
+        /* free allocated work item */
+        IoFreeWorkItem(portcls_ext->WorkItem);
         /* delete created fdo */
         IoDeleteDevice(fdo);
         /* return error code */
@@ -180,6 +200,8 @@ PcAddAdapterDevice(
         KsFreeDeviceHeader(portcls_ext->KsDeviceHeader);
         /* free previously allocated create items */
         FreeItem(portcls_ext->CreateItems, TAG_PORTCLASS);
+        /* free allocated work item */
+        IoFreeWorkItem(portcls_ext->WorkItem);
         /* delete created fdo */
         IoDeleteDevice(fdo);
         /* return error code */
