@@ -456,12 +456,6 @@ NtGdiTransparentBlt(
     rcSrc.bottom = rcSrc.top + cySrc;
     IntLPtoDP(DCSrc, (LPPOINT)&rcSrc, 2);
 
-    if((cxDst != cxSrc) || (cyDst != cySrc))
-    {
-        DPRINT1("TransparentBlt() does not support stretching at the moment!\n");
-        goto done;
-    }
-
     Ret = IntEngTransparentBlt(&BitmapDest->SurfObj, &BitmapSrc->SurfObj,
         DCDest->rosdc.CombinedClip, XlateObj, &rcDest, &rcSrc,
         TransparentColor, 0);

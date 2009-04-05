@@ -268,14 +268,23 @@ DIB_8BPP_ColorFill(SURFOBJ* DestSurface, RECTL* DestRect, ULONG color)
 
 BOOLEAN
 DIB_8BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
-                        RECTL*  DestRect,  POINTL  *SourcePoint,
+                        RECTL*  DestRect,  RECTL *SourceRect,
                         XLATEOBJ *ColorTranslation, ULONG iTransColor)
 {
-  ULONG RoundedRight, X, Y, SourceX, SourceY, Source, wd, Dest;
+  ULONG RoundedRight, X, Y, SourceX = 0, SourceY = 0, Source, wd, Dest;
   ULONG *DestBits;
 
+  LONG DstHeight;
+  LONG DstWidth;
+  LONG SrcHeight;
+  LONG SrcWidth;
+
+  DstHeight = DestRect->bottom - DestRect->top;
+  DstWidth = DestRect->right - DestRect->left;
+  SrcHeight = SourceRect->bottom - SourceRect->top;
+  SrcWidth = SourceRect->right - SourceRect->left;
+
   RoundedRight = DestRect->right - ((DestRect->right - DestRect->left) & 0x3);
-  SourceY = SourcePoint->y;
   DestBits = (ULONG*)((PBYTE)DestSurf->pvScan0 + DestRect->left +
                       (DestRect->top * DestSurf->lDelta));
   wd = DestSurf->lDelta - (DestRect->right - DestRect->left);
@@ -284,37 +293,57 @@ DIB_8BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
   {
     DestBits = (ULONG*)((PBYTE)DestSurf->pvScan0 + DestRect->left +
                         (Y * DestSurf->lDelta));
-    SourceX = SourcePoint->x;
+    SourceY = SourceRect->top+(Y - DestRect->top) * SrcHeight / DstHeight;
     for (X = DestRect->left; X < RoundedRight; X += 4, DestBits++)
     {
       Dest = *DestBits;
 
-      Source = DIB_GetSourceIndex(SourceSurf, SourceX++, SourceY);
-      if(Source != iTransColor)
+      SourceX = SourceRect->left+(X - DestRect->left) * SrcWidth / DstWidth;
+      if (SourceX >= 0 && SourceY >= 0 &&
+          SourceSurf->sizlBitmap.cx > SourceX && SourceSurf->sizlBitmap.cy > SourceY)
       {
-        Dest &= 0xFFFFFF00;
-        Dest |= (XLATEOBJ_iXlate(ColorTranslation, Source) & 0xFF);
+        Source = DIB_GetSourceIndex(SourceSurf, SourceX, SourceY);
+        if(Source != iTransColor)
+        {
+          Dest &= 0xFFFFFF00;
+          Dest |= (XLATEOBJ_iXlate(ColorTranslation, Source) & 0xFF);
+        }
       }
 
-      Source = DIB_GetSourceIndex(SourceSurf, SourceX++, SourceY);
-      if(Source != iTransColor)
+      SourceX = SourceRect->left+(X+1 - DestRect->left) * SrcWidth / DstWidth;
+      if (SourceX >= 0 && SourceY >= 0 &&
+          SourceSurf->sizlBitmap.cx > SourceX && SourceSurf->sizlBitmap.cy > SourceY)
       {
-        Dest &= 0xFFFF00FF;
-        Dest |= ((XLATEOBJ_iXlate(ColorTranslation, Source) << 8) & 0xFF00);
+        Source = DIB_GetSourceIndex(SourceSurf, SourceX, SourceY);
+        if(Source != iTransColor)
+        {
+          Dest &= 0xFFFF00FF;
+          Dest |= ((XLATEOBJ_iXlate(ColorTranslation, Source) << 8) & 0xFF00);
+        }
       }
 
-      Source = DIB_GetSourceIndex(SourceSurf, SourceX++, SourceY);
-      if(Source != iTransColor)
+      SourceX = SourceRect->left+(X+2 - DestRect->left) * SrcWidth / DstWidth;
+      if (SourceX >= 0 && SourceY >= 0 &&
+          SourceSurf->sizlBitmap.cx > SourceX && SourceSurf->sizlBitmap.cy > SourceY)
       {
-        Dest &= 0xFF00FFFF;
-        Dest |= ((XLATEOBJ_iXlate(ColorTranslation, Source) << 16) & 0xFF0000);
+        Source = DIB_GetSourceIndex(SourceSurf, SourceX, SourceY);
+        if(Source != iTransColor)
+        {
+          Dest &= 0xFF00FFFF;
+          Dest |= ((XLATEOBJ_iXlate(ColorTranslation, Source) << 16) & 0xFF0000);
+        }
       }
 
-      Source = DIB_GetSourceIndex(SourceSurf, SourceX++, SourceY);
-      if(Source != iTransColor)
+      SourceX = SourceRect->left+(X+3 - DestRect->left) * SrcWidth / DstWidth;
+      if (SourceX >= 0 && SourceY >= 0 &&
+          SourceSurf->sizlBitmap.cx > SourceX && SourceSurf->sizlBitmap.cy > SourceY)
       {
-        Dest &= 0x00FFFFFF;
-        Dest |= ((XLATEOBJ_iXlate(ColorTranslation, Source) << 24) & 0xFF000000);
+        Source = DIB_GetSourceIndex(SourceSurf, SourceX, SourceY);
+        if(Source != iTransColor)
+        {
+          Dest &= 0x00FFFFFF;
+          Dest |= ((XLATEOBJ_iXlate(ColorTranslation, Source) << 24) & 0xFF000000);
+        }
       }
 
       *DestBits = Dest;
@@ -324,15 +353,19 @@ DIB_8BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
     {
       for (; X < DestRect->right; X++)
       {
-        Source = DIB_GetSourceIndex(SourceSurf, SourceX++, SourceY);
-        if(Source != iTransColor)
+        SourceX = SourceRect->left+(X - DestRect->left) * SrcWidth / DstWidth;
+        if (SourceX >= 0 && SourceY >= 0 &&
+            SourceSurf->sizlBitmap.cx > SourceX && SourceSurf->sizlBitmap.cy > SourceY)
         {
-          *((BYTE*)DestBits) = (BYTE)(XLATEOBJ_iXlate(ColorTranslation, Source) & 0xFF);
+          Source = DIB_GetSourceIndex(SourceSurf, SourceX, SourceY);
+          if(Source != iTransColor)
+          {
+            *((BYTE*)DestBits) = (BYTE)(XLATEOBJ_iXlate(ColorTranslation, Source) & 0xFF);
+          }
         }
         DestBits = (PULONG)((ULONG_PTR)DestBits + 1);
       }
     }
-    SourceY++;
   }
 
   return TRUE;

@@ -235,7 +235,7 @@ BOOLEAN Dummy_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 }
 
 BOOLEAN Dummy_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
-                             RECTL*  DestRect,  POINTL  *SourcePoint,
+                             RECTL*  DestRect,  RECTL  *SourceRect,
                              XLATEOBJ *ColorTranslation, ULONG iTransColor)
 {
   return FALSE;

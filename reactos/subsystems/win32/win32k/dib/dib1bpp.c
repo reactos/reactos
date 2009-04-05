@@ -481,7 +481,7 @@ return TRUE;
 
 BOOLEAN
 DIB_1BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
-                        RECTL*  DestRect,  POINTL  *SourcePoint,
+                        RECTL*  DestRect,  RECTL *SourceRect,
                         XLATEOBJ *ColorTranslation, ULONG iTransColor)
 {
   return FALSE;

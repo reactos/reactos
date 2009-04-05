@@ -279,13 +279,22 @@ DIB_32BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 
 BOOLEAN
 DIB_32BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
-                         RECTL*  DestRect,  POINTL  *SourcePoint,
+                         RECTL*  DestRect,  RECTL *SourceRect,
                          XLATEOBJ *ColorTranslation, ULONG iTransColor)
 {
-  ULONG X, Y, SourceX, SourceY, Source, wd;
+  ULONG X, Y, SourceX, SourceY = 0, Source = 0, wd;
   ULONG *DestBits;
 
-  SourceY = SourcePoint->y;
+  LONG DstHeight;
+  LONG DstWidth;
+  LONG SrcHeight;
+  LONG SrcWidth;
+
+  DstHeight = DestRect->bottom - DestRect->top;
+  DstWidth = DestRect->right - DestRect->left;
+  SrcHeight = SourceRect->bottom - SourceRect->top;
+  SrcWidth = SourceRect->right - SourceRect->left;
+
   DestBits = (ULONG*)((PBYTE)DestSurf->pvScan0 +
                       (DestRect->left << 2) +
                       DestRect->top * DestSurf->lDelta);
@@ -293,17 +302,21 @@ DIB_32BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
   for(Y = DestRect->top; Y < DestRect->bottom; Y++)
   {
-    SourceX = SourcePoint->x;
-    for(X = DestRect->left; X < DestRect->right; X++, DestBits++, SourceX++)
+    SourceY = SourceRect->top+(Y - DestRect->top) * SrcHeight / DstHeight;
+    for(X = DestRect->left; X < DestRect->right; X++, DestBits++)
     {
-      Source = DIB_GetSourceIndex(SourceSurf, SourceX, SourceY);
-      if(Source != iTransColor)
+      SourceX = SourceRect->left+(X - DestRect->left) * SrcWidth / DstWidth;
+      if (SourceX >= 0 && SourceY >= 0 &&
+          SourceSurf->sizlBitmap.cx > SourceX && SourceSurf->sizlBitmap.cy > SourceY)
       {
-        *DestBits = XLATEOBJ_iXlate(ColorTranslation, Source);
+        Source = DIB_GetSourceIndex(SourceSurf, SourceX, SourceY);
+        if(Source != iTransColor)
+        {
+          *DestBits = XLATEOBJ_iXlate(ColorTranslation, Source);
+        }
       }
     }
 
-    SourceY++;
     DestBits = (ULONG*)((ULONG_PTR)DestBits + wd);
   }
 
