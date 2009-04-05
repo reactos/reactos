@@ -26,3 +26,4 @@
 @ stub VidMemFree
 @ stub VidMemInit
 @ stub VidMemLargestFree
+@ stdcall D3DParseUnknownCommand(ptr ptr)

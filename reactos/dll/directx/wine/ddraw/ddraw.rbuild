@@ -30,6 +30,7 @@
 	<file>palette.c</file>
 	<file>parent.c</file>
 	<file>regsvr.c</file>
+	<file>stubs.c</file>
 	<file>surface.c</file>
 	<file>surface_thunks.c</file>
 	<file>texture.c</file>
