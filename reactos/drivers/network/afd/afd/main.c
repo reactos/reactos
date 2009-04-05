@@ -167,9 +167,8 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     return Status;
 }
 
-VOID DestroySocket( PAFD_FCB FCB ) {
+VOID CleanupSocket( PAFD_FCB FCB ) {
     UINT i;
-    BOOLEAN ReturnEarly = FALSE;
     PAFD_IN_FLIGHT_REQUEST InFlightRequest[IN_FLIGHT_REQUESTS];
 
     AFD_DbgPrint(MIN_TRACE,("Called (%x)\n", FCB));
@@ -188,46 +187,60 @@ VOID DestroySocket( PAFD_FCB FCB ) {
 	if( InFlightRequest[i]->InFlightRequest ) {
 	    AFD_DbgPrint(MID_TRACE,("Cancelling in flight irp %d (%x)\n",
 				    i, InFlightRequest[i]->InFlightRequest));
-            if (!IoCancelIrp(InFlightRequest[i]->InFlightRequest))
-                ReturnEarly = TRUE;
+            IoCancelIrp(InFlightRequest[i]->InFlightRequest);
 	}
     }
 
-    SocketStateUnlock( FCB );
+    FCB->State = SOCKET_STATE_CREATED;
 
-    if( ReturnEarly )
-        return;
-
-    if( FCB->Context )
-        ExFreePool(FCB->Context);
-    if( FCB->Recv.Window )
+    if( FCB->EventSelect ) {
+        ObDereferenceObject( FCB->EventSelect );
+        FCB->EventSelect = NULL;
+    }
+    if( FCB->Context ) {
+        ExFreePool( FCB->Context );
+        FCB->Context = NULL;
+    }
+    if( FCB->Recv.Window ) {
 	ExFreePool( FCB->Recv.Window );
-    if( FCB->Send.Window )
+        FCB->Recv.Window = NULL;
+    }
+    if( FCB->Send.Window ) {
 	ExFreePool( FCB->Send.Window );
-    if( FCB->AddressFrom )
+        FCB->Send.Window = NULL;
+    }
+    if( FCB->AddressFrom ) {
 	ExFreePool( FCB->AddressFrom );
-    if( FCB->LocalAddress )
+        FCB->AddressFrom = NULL;
+    }
+    if( FCB->LocalAddress ) {
 	ExFreePool( FCB->LocalAddress );
-    if( FCB->RemoteAddress )
+        FCB->LocalAddress = NULL;
+    }
+    if( FCB->RemoteAddress ) {
 	ExFreePool( FCB->RemoteAddress );
+        FCB->RemoteAddress = NULL;
+    }
+    if( FCB->Connection.Object ) {
+	NtClose(FCB->Connection.Handle);
+	ObDereferenceObject(FCB->Connection.Object);
+        FCB->Connection.Object = NULL;
+    }
+    if( FCB->AddressFile.Object ) {
+	NtClose(FCB->AddressFile.Handle);
+	ObDereferenceObject(FCB->AddressFile.Object);
+        FCB->AddressFile.Object = NULL;
+    }
+
+    SocketStateUnlock( FCB );
+}
+
+VOID DestroySocket( PAFD_FCB FCB ) {
     if( FCB->TdiDeviceName.Buffer )
 	ExFreePool(FCB->TdiDeviceName.Buffer);
 
-	if (FCB->Connection.Object)
-	{
-		NtClose(FCB->Connection.Handle);
-		ObDereferenceObject(FCB->Connection.Object);
-	}
-	if (FCB->AddressFile.Object)
-	{
-		NtClose(FCB->AddressFile.Handle);
-		ObDereferenceObject(FCB->AddressFile.Object);
-	}
-
     ExFreePool(FCB);
     AFD_DbgPrint(MIN_TRACE,("Deleted (%x)\n", FCB));
-
-    AFD_DbgPrint(MIN_TRACE,("Leaving\n"));
 }
 
 static NTSTATUS NTAPI
@@ -244,12 +257,6 @@ AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     AFD_DbgPrint(MID_TRACE,("FCB %x\n", FCB));
 
-    FCB->PollState |= AFD_EVENT_CLOSE;
-    PollReeval( FCB->DeviceExt, FileObject );
-    KillSelectsForFCB( FCB->DeviceExt, FileObject, FALSE );
-
-    if( FCB->EventSelect ) ObDereferenceObject( FCB->EventSelect );
-
     FileObject->FsContext = NULL;
     SocketStateUnlock( FCB );
 
@@ -260,6 +267,28 @@ AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
 
     AFD_DbgPrint(MID_TRACE, ("Returning success.\n"));
+
+    return STATUS_SUCCESS;
+}
+
+static NTSTATUS NTAPI
+AfdCleanupSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
+                 PIO_STACK_LOCATION IrpSp)
+{
+    PFILE_OBJECT FileObject = IrpSp->FileObject;
+    PAFD_FCB FCB = FileObject->FsContext;
+
+    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
+
+    CleanupSocket( FCB );
+
+    KillSelectsForFCB( FCB->DeviceExt, FileObject, FALSE );
+
+    SocketStateUnlock( FCB );
+
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+    Irp->IoStatus.Information = 0;
+    IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
 
     return STATUS_SUCCESS;
 }
@@ -343,6 +372,9 @@ AfdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     case IRP_MJ_CLOSE:
 	/* Ditto the borrowing */
 	return AfdCloseSocket(DeviceObject, Irp, IrpSp);
+
+    case IRP_MJ_CLEANUP:
+        return AfdCleanupSocket(DeviceObject, Irp, IrpSp);
 
     /* write data */
     case IRP_MJ_WRITE:
@@ -519,6 +551,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
     /* register driver routines */
     DriverObject->MajorFunction[IRP_MJ_CLOSE] = AfdDispatch;
     DriverObject->MajorFunction[IRP_MJ_CREATE] = AfdDispatch;
+    DriverObject->MajorFunction[IRP_MJ_CLEANUP] = AfdDispatch;
     DriverObject->MajorFunction[IRP_MJ_WRITE] = AfdDispatch;
     DriverObject->MajorFunction[IRP_MJ_READ] = AfdDispatch;
     DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = AfdDispatch;
