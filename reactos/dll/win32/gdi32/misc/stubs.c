@@ -1157,17 +1157,10 @@ BOOL
 WINAPI
 GdiIsPlayMetafileDC(HDC hDC)
 {
-  PDC_ATTR Dc_Attr;
-  PLDC pLDC;
-  
-  GdiGetHandleUserData((HGDIOBJ) hDC, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr);
-  if ( Dc_Attr )
+  PLDC pLDC = GdiGetLDC(hDC);
+  if ( pLDC )
   {
-     pLDC = Dc_Attr->pvLDC;
-     if ( pLDC )
-     {
-        if ( pLDC->Flags & LDC_PLAY_MFDC ) return TRUE;
-     }
+     if ( pLDC->Flags & LDC_PLAY_MFDC ) return TRUE;
   }
   return FALSE;
 }
