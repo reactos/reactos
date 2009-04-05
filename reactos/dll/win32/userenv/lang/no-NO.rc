@@ -47,4 +47,5 @@ BEGIN
     IDS_HISTORY        "Lokale innstillinger\\Logg"
     IDS_COOKIES        "Informasjonkapsel"
     IDS_PROGRAMFILES   "%SystemDrive%\\Programfiler"
+    IDS_COMMONFILES    "Common Files"
 END

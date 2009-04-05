@@ -38,4 +38,5 @@ BEGIN
     IDS_HISTORY        "Impostazioni locali\\Cronologia"
     IDS_COOKIES        "Cookies"
     IDS_PROGRAMFILES   "%SystemDrive%\\Programmi"
+    IDS_COMMONFILES    "Common Files"
 END
