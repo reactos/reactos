@@ -139,11 +139,11 @@ VOID ControlChannelFree(
 }
 
 
-NTSTATUS FileCloseAddress(PTDI_REQUEST Request)
+VOID DeleteAddress(PADDRESS_FILE AddrFile)
 /*
- * FUNCTION: Closes an address file object
+ * FUNCTION: Deletes an address file object
  * ARGUMENTS:
- *     AddrFile = Pointer to address file object to close
+ *     AddrFile = Pointer to address file object to delete
  */
 {
   KIRQL OldIrql;
@@ -151,15 +151,15 @@ NTSTATUS FileCloseAddress(PTDI_REQUEST Request)
   PLIST_ENTRY NextEntry;
   PDATAGRAM_SEND_REQUEST SendRequest;
   PDATAGRAM_RECEIVE_REQUEST ReceiveRequest;
-  PADDRESS_FILE AddrFile = Request->Handle.AddressHandle;
 
   TI_DbgPrint(MID_TRACE, ("Called.\n"));
 
-  TcpipAcquireSpinLock(&AddrFile->Lock, &OldIrql);
+  /* Remove address file from the global list */
+  TcpipAcquireSpinLock(&AddressFileListLock, &OldIrql);
+  RemoveEntryList(&AddrFile->ListEntry);
+  TcpipReleaseSpinLock(&AddressFileListLock, OldIrql);
 
-  /* Set address file object exclusive to us */
-  AF_SET_BUSY(AddrFile);
-  AF_CLR_VALID(AddrFile);
+  TcpipAcquireSpinLock(&AddrFile->Lock, &OldIrql);
 
   /* FIXME: Kill TCP connections on this address file object */
 
@@ -197,9 +197,9 @@ NTSTATUS FileCloseAddress(PTDI_REQUEST Request)
 
   TcpipReleaseSpinLock(&AddrFile->Lock, OldIrql);
 
-  TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
+  (*AddrFile->Free)(AddrFile);
 
-  return STATUS_SUCCESS;
+  TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 }
 
 
@@ -339,7 +339,7 @@ NTSTATUS FileOpenAddress(
  * RETURNS:
  *     Status of operation
  */
-NTSTATUS FileFreeAddress(
+NTSTATUS FileCloseAddress(
   PTDI_REQUEST Request)
 {
   KIRQL OldIrql;
@@ -350,10 +350,13 @@ NTSTATUS FileFreeAddress(
 
   AddrFile = Request->Handle.AddressHandle;
 
-  /* Remove address file from the global list */
-  TcpipAcquireSpinLock(&AddressFileListLock, &OldIrql);
-  RemoveEntryList(&AddrFile->ListEntry);
-  TcpipReleaseSpinLock(&AddressFileListLock, OldIrql);
+  TcpipAcquireSpinLock(&AddrFile->Lock, &OldIrql);
+
+  /* Set address file object exclusive to us */
+  AF_SET_BUSY(AddrFile);
+  AF_CLR_VALID(AddrFile);
+
+  TcpipReleaseSpinLock(&AddrFile->Lock, OldIrql);
 
   /* Protocol specific handling */
   switch (AddrFile->Protocol) {
@@ -369,9 +372,33 @@ NTSTATUS FileFreeAddress(
     UDPFreePort( AddrFile->Port );
     break;
   }
+
   TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 
-  (*AddrFile->Free)(AddrFile);
+  return Status;
+}
+
+
+/*
+ * FUNCTION: Closes an address file object
+ * ARGUMENTS:
+ *     Request = Pointer to TDI request structure for this request
+ * RETURNS:
+ *     Status of operation
+ */
+NTSTATUS FileFreeAddress(
+  PTDI_REQUEST Request)
+{
+  PADDRESS_FILE AddrFile;
+  NTSTATUS Status = STATUS_SUCCESS;
+
+  AddrFile = Request->Handle.AddressHandle;
+
+  TI_DbgPrint(MID_TRACE, ("Called.\n"));
+
+  DeleteAddress(AddrFile);
+
+  TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 
   return Status;
 }
