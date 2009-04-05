@@ -87,11 +87,11 @@ IntGdiPolygon(PDC    dc,
             DestRect.bottom   = max(DestRect.bottom, Points[CurrentPoint].y);
         }
 
-        if (pdcattr->ulDirty_ & DC_BRUSH_DIRTY)
-           IntGdiSelectBrush(dc,pdcattr->hbrush);
+        if (pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
+            DC_vUpdateFillBrush(dc);
 
-        if (pdcattr->ulDirty_ & DC_PEN_DIRTY)
-           IntGdiSelectPen(dc,pdcattr->hpen);
+        if (pdcattr->ulDirty_ & (DIRTY_LINE | DC_PEN_DIRTY))
+            DC_vUpdateLineBrush(dc);
 
         /* Special locking order to avoid lock-ups */
         pbrFill = dc->dclevel.pbrFill;
@@ -568,11 +568,11 @@ IntRectangle(PDC dc,
         DestRect.bottom--;
     }
 
-    if (pdcattr->ulDirty_ & DC_BRUSH_DIRTY)
-       IntGdiSelectBrush(dc,pdcattr->hbrush);
+    if (pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
+        DC_vUpdateFillBrush(dc);
 
-    if (pdcattr->ulDirty_ & DC_PEN_DIRTY)
-       IntGdiSelectPen(dc,pdcattr->hpen);
+    if (pdcattr->ulDirty_ & (DIRTY_LINE | DC_PEN_DIRTY))
+        DC_vUpdateLineBrush(dc);
 
     pbrFill = dc->dclevel.pbrFill;
     pbrLine = dc->dclevel.pbrLine;

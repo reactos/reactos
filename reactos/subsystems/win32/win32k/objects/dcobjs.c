@@ -85,11 +85,8 @@ DC_vUpdateFillBrush(PDC pdc)
             BRUSH_ShareUnlockBrush(pdc->dclevel.pbrFill);
             pdc->dclevel.pbrFill = pbrFill;
 
-            /* ROS HACK, should use surf xlate */
-            IntUpdateBrushXlate(pdc, &pdc->rosdc.XlateBrush, pbrFill);
-
-            /* Update eboFill, realizing it, if needed */
-            EBRUSHOBJ_vUpdate(&pdc->eboFill, pbrFill, pdc->rosdc.XlateBrush);
+            /* Mark eboFill as dirty */
+            pdcattr->ulDirty_ |= DIRTY_FILL;
         }
         else
         {
@@ -98,12 +95,24 @@ DC_vUpdateFillBrush(PDC pdc)
         }
     }
 
-    /* ROS HACK, should use surf xlate */
-    pxlo = pdc->rosdc.XlateBrush;
+    /* Check if the EBRUSHOBJ needs update */
+    if (pdcattr->ulDirty_ & DIRTY_FILL)
+    {
+        pbrFill = pdc->dclevel.pbrFill;
+
+        /* ROS HACK, should use surf xlate */
+        IntUpdateBrushXlate(pdc, &pdc->rosdc.XlateBrush, pbrFill);
+
+        /* Update eboFill, realizing it, if needed */
+        EBRUSHOBJ_vUpdate(&pdc->eboFill, pbrFill, pdc->rosdc.XlateBrush);
+    }
 
     /* Check for DC brush */
     if (pdcattr->hbrush == StockObjects[DC_BRUSH])
     {
+        /* ROS HACK, should use surf xlate */
+        pxlo = pdc->rosdc.XlateBrush;
+
         /* Update the eboFill's solid color */
         EBRUSHOBJ_vSetSolidBrushColor(&pdc->eboFill, pdcattr->crPenClr, pxlo);
     }
@@ -131,11 +140,8 @@ DC_vUpdateLineBrush(PDC pdc)
             BRUSH_ShareUnlockBrush(pdc->dclevel.pbrLine);
             pdc->dclevel.pbrLine = pbrLine;
 
-            /* ROS HACK, should use surf xlate */
-            IntUpdateBrushXlate(pdc, &pdc->rosdc.XlatePen, pbrLine);
-
-            /* Update eboLine, realizing it, if needed */
-            EBRUSHOBJ_vUpdate(&pdc->eboLine, pbrLine, pdc->rosdc.XlatePen);
+            /* Mark eboLine as dirty */
+            pdcattr->ulDirty_ |= DIRTY_LINE;
         }
         else
         {
@@ -144,12 +150,24 @@ DC_vUpdateLineBrush(PDC pdc)
         }
     }
 
-    /* ROS HACK, should use surf xlate */
-    pxlo = pdc->rosdc.XlatePen;
+    /* Check if the EBRUSHOBJ needs update */
+    if (pdcattr->ulDirty_ & DIRTY_LINE)
+    {
+        pbrLine = pdc->dclevel.pbrLine;
+
+        /* ROS HACK, should use surf xlate */
+        IntUpdateBrushXlate(pdc, &pdc->rosdc.XlatePen, pbrLine);
+
+        /* Update eboLine, realizing it, if needed */
+        EBRUSHOBJ_vUpdate(&pdc->eboLine, pbrLine, pdc->rosdc.XlatePen);
+    }
 
     /* Check for DC pen */
     if (pdcattr->hpen == StockObjects[DC_PEN])
     {
+        /* ROS HACK, should use surf xlate */
+        pxlo = pdc->rosdc.XlatePen;
+
         /* Update the eboLine's solid color */
         EBRUSHOBJ_vSetSolidBrushColor(&pdc->eboLine, pdcattr->crPenClr, pxlo);
     }
@@ -250,13 +268,13 @@ GdiSelectPalette(
     if ((pdc->rosdc.bitsPerPixel <= 8 && ppal->Mode == PAL_INDEXED) ||
         (pdc->rosdc.bitsPerPixel > 8  && ppal->Mode != PAL_INDEXED))
     {
+        /* Get old palette, set new one */
         oldPal = pdc->dclevel.hpal;
         pdc->dclevel.hpal = hpal;
-    }
-    else if (pdc->rosdc.bitsPerPixel > 8 && ppal->Mode == PAL_INDEXED)
-    {
-        oldPal = pdc->dclevel.hpal;
-        pdc->dclevel.hpal = hpal;
+
+        /* Mark the brushes invalid */
+        pdc->pdcattr->ulDirty_ |= DIRTY_FILL | DIRTY_LINE |
+                                  DIRTY_BACKGROUND | DIRTY_TEXT;
     }
 
     PALETTE_UnlockPalette(ppal);
@@ -382,7 +400,6 @@ NtGdiSelectBitmap(
     HBITMAP hOrgBmp;
     PSURFACE psurfBmp, psurfOld;
     HRGN hVisRgn;
-    PBRUSH pbrush;
 
     if (hDC == NULL || hBmp == NULL) return NULL;
 
@@ -443,20 +460,8 @@ NtGdiSelectBitmap(
     /* Release the exclusive lock */
     SURFACE_UnlockSurface(psurfBmp);
 
-    /* Regenerate the XLATEOBJs. (hack!) */
-    pbrush = BRUSH_LockBrush(pdcattr->hbrush);
-    if (pbrush)
-    {
-        IntUpdateBrushXlate(pDC, &pDC->rosdc.XlateBrush, pbrush);
-        BRUSH_UnlockBrush(pbrush);
-    }
-
-    pbrush = PEN_LockPen(pdcattr->hpen);
-    if (pbrush)
-    {
-        IntUpdateBrushXlate(pDC, &pDC->rosdc.XlatePen, pbrush);
-        PEN_UnlockPen(pbrush);
-    }
+    /* Mark the brushes invalid */
+    pdcattr->ulDirty_ |= DIRTY_FILL | DIRTY_LINE;
 
     DC_UnlockDc(pDC);
 

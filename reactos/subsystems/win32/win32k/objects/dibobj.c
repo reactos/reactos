@@ -129,6 +129,9 @@ IntSetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, CONST RGBQUAD *Color
    else
       Entries = 0;
 
+   /* Mark the brushes invalid */
+   dc->pdcattr->ulDirty_ |= DIRTY_FILL|DIRTY_LINE|DIRTY_BACKGROUND|DIRTY_TEXT;
+
    SURFACE_UnlockSurface(psurf);
    DC_UnlockDc(dc);
 
