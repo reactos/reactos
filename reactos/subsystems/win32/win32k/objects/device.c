@@ -1246,7 +1246,8 @@ IntChangeDisplaySettings(
         RtlZeroMemory(&lpDevMode, sizeof(DEVMODEW));
         lpDevMode.dmSize = sizeof(DEVMODEW);
 
-        if (!IntEnumDisplaySettings(pDeviceName, ENUM_CURRENT_SETTINGS, &lpDevMode, 0))
+        Status = IntEnumDisplaySettings(pDeviceName, ENUM_CURRENT_SETTINGS, &lpDevMode, 0);
+        if (!NT_SUCCESS(Status))
             return DISP_CHANGE_FAILED;
 
         DPRINT1("Req Mode     : %d x %d x %d\n", DevMode->dmPelsWidth,DevMode->dmPelsHeight,DevMode->dmBitsPerPel);
