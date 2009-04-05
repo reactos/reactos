@@ -131,15 +131,6 @@ SysAudio_InstallDevice(
         goto cleanup;
     }
 
-    /* Register device notification hooks */
-    Status = SysAudioRegisterNotifications(DriverObject,
-                                           DeviceObject);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to register device notifications\n");
-        goto cleanup;
-    }
-
     /* allocate work item */
     DeviceExtension->WorkItem = IoAllocateWorkItem(DeviceObject);
     if (!DeviceExtension->WorkItem)
@@ -156,6 +147,14 @@ SysAudio_InstallDevice(
         goto cleanup;
     }
 
+    /* Register device notification hooks */
+    Status = SysAudioRegisterNotifications(DriverObject,
+                                           DeviceObject);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to register device notifications\n");
+        goto cleanup;
+    }
 
     /* Load kmixer */
     Status = SysAudioOpenKMixer(DeviceExtension);

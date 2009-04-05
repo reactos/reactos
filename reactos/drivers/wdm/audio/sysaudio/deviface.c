@@ -17,7 +17,7 @@ VOID
 NTAPI
 FilterPinWorkerRoutine(
     IN PDEVICE_OBJECT DeviceObject,
-    IN PVOID  Context)
+    IN PVOID Context)
 {
     KSPROPERTY PropertyRequest;
     KSP_PIN PinRequest;
@@ -27,6 +27,7 @@ FilterPinWorkerRoutine(
     ULONG Count, Index;
     NTSTATUS Status;
     ULONG BytesReturned;
+    PSYSAUDIODEVEXT DeviceExtension;
     PKSAUDIO_DEVICE_ENTRY DeviceEntry = (PKSAUDIO_DEVICE_ENTRY)Context;
 
 
@@ -40,17 +41,22 @@ FilterPinWorkerRoutine(
     Status = KsSynchronousIoControlDevice(DeviceEntry->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PropertyRequest, sizeof(KSPROPERTY), (PVOID)&Count, sizeof(ULONG), &BytesReturned);
     if (!NT_SUCCESS(Status))
     {
+        ExFreePool(DeviceEntry);
         return;
     }
 
     if (!Count)
+    {
+        ExFreePool(DeviceEntry);
         return;
+    }
 
     /* allocate pin array */
     DeviceEntry->Pins = ExAllocatePool(NonPagedPool, Count * sizeof(PIN_INFO));
     if (!DeviceEntry->Pins)
     {
         /* no memory */
+        ExFreePool(DeviceEntry);
         return;
     }
     /* clear array */
@@ -96,6 +102,12 @@ FilterPinWorkerRoutine(
     }
 
     DPRINT1("Num Pins %u Num WaveIn Pins %u Name WaveOut Pins %u\n", DeviceEntry->NumberOfPins, DeviceEntry->NumWaveInPin, DeviceEntry->NumWaveOutPin);
+
+    DeviceExtension = (PSYSAUDIODEVEXT)DeviceObject->DeviceExtension;
+
+    InsertTailList(&DeviceExtension->KsAudioDeviceList, &DeviceEntry->Entry);
+    DeviceExtension->NumberOfKsAudioDevices++;
+
 }
 
 NTSTATUS
@@ -153,6 +165,7 @@ DeviceInterfaceChangeCallback(
     DEVICE_INTERFACE_CHANGE_NOTIFICATION * Event;
     NTSTATUS Status = STATUS_SUCCESS;
     PSYSAUDIODEVEXT DeviceExtension;
+    PKSAUDIO_DEVICE_ENTRY DeviceEntry;
     PDEVICE_OBJECT DeviceObject = (PDEVICE_OBJECT)Context;
 
     DeviceExtension = (PSYSAUDIODEVEXT)DeviceObject->DeviceExtension;
@@ -163,10 +176,6 @@ DeviceInterfaceChangeCallback(
                            &GUID_DEVICE_INTERFACE_ARRIVAL))
     {
         /* a new device has arrived */
-
-        PKSAUDIO_DEVICE_ENTRY DeviceEntry;
-        PIO_WORKITEM WorkItem;
-
         DeviceEntry = ExAllocatePool(NonPagedPool, sizeof(KSAUDIO_DEVICE_ENTRY));
         if (!DeviceEntry)
         {
@@ -206,16 +215,11 @@ DeviceInterfaceChangeCallback(
             return Status;
         }
 
-        DPRINT1("Successfully opened audio device %u handle %p file object %p device object %p\n", DeviceExtension->KsAudioDeviceList, DeviceEntry->Handle, DeviceEntry->FileObject, DeviceEntry->FileObject->DeviceObject);
-        DeviceExtension->NumberOfKsAudioDevices++;
+        DPRINT1("Successfully opened audio device %u handle %p file object %p device object %p\n", DeviceExtension->NumberOfKsAudioDevices, DeviceEntry->Handle, DeviceEntry->FileObject, DeviceEntry->FileObject->DeviceObject);
 
-        WorkItem = IoAllocateWorkItem(DeviceObject);
-        if (WorkItem)
-        {
-            IoQueueWorkItem(WorkItem, FilterPinWorkerRoutine, DelayedWorkQueue, (PVOID)DeviceEntry);
-        }
-        InsertTailList(&DeviceExtension->KsAudioDeviceList, &DeviceEntry->Entry);
-
+        //FIXME
+        // mutal exclusion
+        IoQueueWorkItem(DeviceExtension->WorkItem, FilterPinWorkerRoutine, DelayedWorkQueue, (PVOID)DeviceEntry);
         return Status;
     }
     else
