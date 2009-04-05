@@ -142,7 +142,7 @@ dll\directx\dplay\dplay.dll                         1
 dll\directx\dplayx\dplayx.dll                       1
 dll\directx\dsound\dsound.dll                       1
 dll\directx\dxdiagn\dxdiagn.dll                     1
-dll\directx\ddraw\ddraw.dll                         1
+dll\directx\wine\ddraw\ddraw.dll                    1
 dll\directx\d3d8thk\d3d8thk.dll                     1
 dll\directx\devenum\devenum.dll                     1
 dll\directx\ksproxy\ksproxy.ax                      1
