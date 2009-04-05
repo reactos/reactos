@@ -1653,10 +1653,6 @@ Initialize()
 
 	SetConsoleMode (hIn, ENABLE_PROCESSED_INPUT);
 
-#ifdef INCLUDE_CMD_CHDIR
-	InitLastPath ();
-#endif
-
 	for (ptr = cmdLine; *ptr; ptr++)
 	{
 		if (*ptr == _T('/'))
@@ -1789,10 +1785,6 @@ static VOID Cleanup()
 #ifdef FEATURE_DIECTORY_STACK
 	/* destroy directory stack */
 	DestroyDirectoryStack ();
-#endif
-
-#ifdef INCLUDE_CMD_CHDIR
-	FreeLastPath ();
 #endif
 
 #ifdef FEATURE_HISTORY
