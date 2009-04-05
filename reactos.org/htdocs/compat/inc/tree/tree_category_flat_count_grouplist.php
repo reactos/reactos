@@ -42,7 +42,6 @@
 		global $RSDB_TEMP_cat_id_grouplist;
 		global $RSDB_TEMP_counter_group;
 		global $RSDB_TEMP_counter_group_sum;
-		global $RSDB_intern_code_db_rsdb_categories;
 
 		
 		if ($RSDB_TEMP_cat_id_grouplista) {
@@ -51,7 +50,7 @@
 		
 		$RSDB_VAR_counter_tree_grouplist = 0;
 	
-		$stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_categories WHERE cat_visible = '1' AND cat_path = :path " . $RSDB_intern_code_db_rsdb_categories . "");
+		$stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_categories WHERE cat_visible = '1' AND cat_path = :path AND cat_comp = '1'");
     $stmt->bindParam('path',$RSDB_SET_cat,PDO::PARAM_STR);
     $stmt->execute();
 		$result_count_groups = $stmt->fetch();
@@ -61,7 +60,7 @@
 
 		if ($result_count_groups[0]) {
 			
-      $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_categories WHERE cat_visible = '1' AND cat_path = :path " . $RSDB_intern_code_db_rsdb_categories . " ORDER BY cat_name ASC");
+      $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_categories WHERE cat_visible = '1' AND cat_path = :path AND cat_comp = '1' ORDER BY cat_name ASC");
       $stmt->bindParam('path',$RSDB_TEMP_cat_id_grouplist,PDO::PARAM_STR);
       $stmt->execute();
 			
@@ -94,9 +93,8 @@
 	function count_group_and_category($RSDB_TEMP_cat_id_group) {
 	
 		global $RSDB_TEMP_counter_group;
-		global $RSDB_intern_code_db_rsdb_groups;
 
-    $stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_category = :category " . $RSDB_intern_code_db_rsdb_groups . "");
+    $stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_category = :category AND grpentr_comp = '1'");
     $stmt->bindParam('category',$RSDB_TEMP_cat_id_group,PDO::PARAM_STR);
 		$result_count_group_and_category = $stmt->fetch(PDO::FETCH_NUM);
 //		echo "->".$result_count_group_and_category[0]."<-";
@@ -120,10 +118,9 @@
 		
 		global $RSDB_intern_link_category_cat;
 		global $RSDB_TEMP_counter_group;
-		global $RSDB_intern_code_db_rsdb_categories;
 
 
-    $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_categories WHERE cat_path = :path " . $RSDB_intern_code_db_rsdb_categories . " AND cat_visible = '1'");
+    $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_categories WHERE cat_path = :path AND cat_comp = '1' AND cat_visible = '1'");
     $stmt->bindParam('path',$RSDB_TEMP_cat_id,PDO::PARAM_STR);
     $stmt->execute();
 					
@@ -138,11 +135,10 @@
 		
 		global $RSDB_intern_link_category_cat;
 		global $RSDB_TEMP_counter_group;
-		global $RSDB_intern_code_db_rsdb_categories;
 		
 
 		
-    $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_categories WHERE cat_id = :cat_id AND cat_visible = '1' " . $RSDB_intern_code_db_rsdb_categories . "");
+    $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_categories WHERE cat_id = :cat_id AND cat_visible = '1' AND cat_comp = '1'");
     $stmt->bindParam('cat_id',$RSDB_TEMP_entry_id,PDO::PARAM_STR);
     $stmt->execute();
 					

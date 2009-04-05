@@ -218,13 +218,12 @@ class Star
 	global $RSDB_intern_user_id;
 	global $RSDB_intern_link_item_item2_vote;
 	global $RSDB_TEMP_counter_threshold;
-	global $RSDB_intern_code_view_shortname;
 	
 	if ($RSDB_TEMP_threshold_new == true) {
 		$RSDB_TEMP_counter_threshold = 0;
 	}
 
-  $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp_".$RSDB_TEMP_tablename." WHERE ".$RSDB_TEMP_fieldname."_visible = '1' AND ".$RSDB_TEMP_fieldname."_".$RSDB_intern_code_view_shortname."_id = :item_id AND ".$RSDB_TEMP_fieldname."_parent = :parent ORDER BY ".$RSDB_TEMP_fieldname."_date ".$RSDB_TEMP_order."");
+  $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp_".$RSDB_TEMP_tablename." WHERE ".$RSDB_TEMP_fieldname."_visible = '1' AND ".$RSDB_TEMP_fieldname."_comp_id = :item_id AND ".$RSDB_TEMP_fieldname."_parent = :parent ORDER BY ".$RSDB_TEMP_fieldname."_date ".$RSDB_TEMP_order."");
   $stmt->bindParam('item_id',$RSDB_SET_item,PDO::PARAM_STR);
   $stmt->bindParam('parent',$RSDB_TEMP_msgid,PDO::PARAM_STR);
   $stmt->execute();
@@ -260,13 +259,12 @@ class Star
 	global $RSDB_intern_user_id;
 	global $RSDB_intern_link_item_item2_vote;
 	global $RSDB_TEMP_counter_threshold;
-	global $RSDB_intern_code_view_shortname;
 	
 	if ($RSDB_TEMP_threshold_new == true) {
 		$RSDB_TEMP_counter_threshold = 0;
 	}
 
-  $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp_".$RSDB_TEMP_tablename." WHERE ".$RSDB_TEMP_fieldname."_visible = '1' AND ".$RSDB_TEMP_fieldname."_".$RSDB_intern_code_view_shortname."_id = :item_id ORDER BY ".$RSDB_TEMP_fieldname."_date " . $RSDB_TEMP_order . "");
+  $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp_".$RSDB_TEMP_tablename." WHERE ".$RSDB_TEMP_fieldname."_visible = '1' AND ".$RSDB_TEMP_fieldname."_comp_id = :item_id ORDER BY ".$RSDB_TEMP_fieldname."_date " . $RSDB_TEMP_order . "");
   $stmt->bindParam('item_id',$RSDB_SET_item,PDO::PARAM_STR);
   $stmt->execute();
 

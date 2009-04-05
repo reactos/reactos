@@ -33,9 +33,9 @@
 		var tempb = "";
 		
 		tempb += "<tr> \n";
-		tempb += "<td width=\"30%\" valign=\"top\" bgcolor=\"" + colorcur + "\"><font size=\"2\"><b><a href=\""+twebsite+"?page=db&amp;view=comp&amp;sec=category&amp;group=" + itemid + "\">" + itemname + "</a></b></font></td> \n";
+		tempb += "<td width=\"30%\" valign=\"top\" bgcolor=\"" + colorcur + "\"><font size=\"2\"><b><a href=\""+twebsite+"?page=category&amp;group=" + itemid + "\">" + itemname + "</a></b></font></td> \n";
 		if (vendorid != 0) {		
-			tempb += "<td width=\"30%\" valign=\"top\" bgcolor=\"" + colorcur + "\"><font size=\"2\"><a href=\""+twebsite+"?page=db&amp;view=comp&amp;sec=vendor&amp;vendor=" + vendorid + "\">" + vendorname + "</a></font></td> \n";
+			tempb += "<td width=\"30%\" valign=\"top\" bgcolor=\"" + colorcur + "\"><font size=\"2\"><a href=\""+twebsite+"?page=vendor&amp;vendor=" + vendorid + "\">" + vendorname + "</a></font></td> \n";
 		}
 		else {
 			tempb += "<td width=\"30%\" valign=\"top\" bgcolor=\"" + colorcur + "\"><font size=\"2\">&nbsp;</font></td> \n";
@@ -56,7 +56,7 @@
 		
 	function write_bar_entry(itemid, itemname) {
 		var tempb = "";	
-		tempb += "<a href=\""+twebsite+"?page=db&amp;view=comp&amp;sec=category&amp;group=" + itemid + "\">&bull; " + itemname + "</a>\n";
+		tempb += "<a href=\""+twebsite+"?page=category&amp;group=" + itemid + "\">&bull; " + itemname + "</a>\n";
 		return tempb;
 	}
 
@@ -81,7 +81,7 @@
 		var tempb = "";
 		
 		tempb += "<tr> \n";
-		tempb += "<td width=\"60%\" valign=\"top\" bgcolor=\"" + colorcur + "\"><font size=\"2\"><b><a href=\""+twebsite+"?page=db&amp;view=comp&amp;sec=category&amp;group=" + itemid + "\">" + itemname + "</a></b></font></td> \n";
+		tempb += "<td width=\"60%\" valign=\"top\" bgcolor=\"" + colorcur + "\"><font size=\"2\"><b><a href=\""+twebsite+"?page=category&amp;group=" + itemid + "\">" + itemname + "</a></b></font></td> \n";
 		if (vendorname != ". ") {		
 			tempb += "<td width=\"40%\" valign=\"top\" bgcolor=\"" + colorcur + "\"><font size=\"2\">" + vendorname + "</font></td> \n";
 		}

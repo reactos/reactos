@@ -36,7 +36,7 @@
 
 								
 
-$stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_categories WHERE cat_visible = '1' AND cat_path = '0' " . $RSDB_intern_code_db_rsdb_categories . "");
+$stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_categories WHERE cat_visible = '1' AND cat_path = '0' AND cat_comp = '1'");
 $stmt->execute();
 $result_count_cat = $stmt->fetchOnce(PDO::FETCH_ASSOC);
 
@@ -55,7 +55,7 @@ if ($result_count_cat[0]) {
 
 	
 
-    $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_categories WHERE cat_visible = '1' AND cat_path = :cat_path " . $RSDB_intern_code_db_rsdb_categories . " ORDER BY cat_name ASC");
+    $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_categories WHERE cat_visible = '1' AND cat_path = :cat_path AND cat_comp = '1' ORDER BY cat_name ASC");
     $stmt->bindParam('cat_path',$RSDB_SET_cat,PDO::PARAM_STR);
     $stmt->execute();
 		

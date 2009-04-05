@@ -63,6 +63,6 @@
               <td><font size="2"><span class="Stil3">Weird icons in title bar while windowed</span></font></td>
               <td align="center"><font size="2"><span class="Stil3">CLOSED</span></font></td>
               <td align="center"><font size="2"><span class="Stil3">WORKSFORME</span></font></td>
-              <td align="center"><font size="2"><a href="<?php echo $RSDB_intern_link_db_view_comp; ?>&amp;bug=1284" class="Stil3">View</a></font></td>
+              <td align="center"><font size="2"><a href="<?php echo $RSDB_intern_link_db_view; ?>&amp;bug=1284" class="Stil3">View</a></font></td>
   </tr>
 </table>

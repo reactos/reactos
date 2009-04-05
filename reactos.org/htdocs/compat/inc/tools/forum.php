@@ -109,11 +109,10 @@ function create_forum_flat() {
 	global $RSDB_intern_user_id;
 	global $RSDB_intern_link_item_item2_vote;
 	global $RSDB_SET_threshold;
-	global $RSDB_intern_code_view_shortname;
 	global $RSDB_intern_link_submit_forum_post;
 	global $RSDB_setting_stars_threshold;
 
-  $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp_forum WHERE fmsg_visible = '1' AND fmsg_".$RSDB_intern_code_view_shortname."_id` = :item_id ORDER BY fmsg_date " . $RSDB_TEMP_order . "");
+  $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp_forum WHERE fmsg_visible = '1' AND fmsg_comp_id` = :item_id ORDER BY fmsg_date " . $RSDB_TEMP_order . "");
   $stmt->bindParam('item_id',$RSDB_SET_item,PDO::PARAM_STR);
   $stmt->execute();
 					
@@ -202,7 +201,6 @@ function create_forum_nested($RSDB_TEMP_msgid) {
 	global $RSDB_intern_user_id;
 	global $RSDB_intern_link_item_item2_vote;
 	global $RSDB_SET_threshold;
-	global $RSDB_intern_code_view_shortname;
 	global $RSDB_intern_link_submit_forum_post;
 	global $RSDB_setting_stars_threshold;
 
@@ -210,7 +208,7 @@ function create_forum_nested($RSDB_TEMP_msgid) {
 		$RSDB_TEMP_order  = "ASC";
 	}
 
-  $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp_forum WHERE fmsg_visible = '1' AND fmsg_".$RSDB_intern_code_view_shortname."_id = :item_id AND fmsg_parent = :parent ORDER BY fmsg_date ".$RSDB_TEMP_order."");
+  $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp_forum WHERE fmsg_visible = '1' AND fmsg_comp_id = :item_id AND fmsg_parent = :parent ORDER BY fmsg_date ".$RSDB_TEMP_order."");
   $stmt->bindParam('item_id',$RSDB_SET_item,PDO::PARAM_STR);
   $stmt->bindParam('parent',$RSDB_TEMP_msgid,PDO::PARAM_STR);
   $stmt->execute();
@@ -338,7 +336,7 @@ function create_forum_nested($RSDB_TEMP_msgid) {
 
 		echo "<br />";
 
-    $stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_item_comp_forum WHERE fmsg_visible = '1' AND fmsg_".$RSDB_intern_code_view_shortname."_id = :item_id AND fmsg_parent = :parent");
+    $stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_item_comp_forum WHERE fmsg_visible = '1' AND fmsg_comp_id = :item_id AND fmsg_parent = :parent");
     $stmt->bindParam('parent',$result_fmsgreports['fmsg_id'],PDO::PARAM_STR);
     $stmt->bindParam('item_id',$RSDB_SET_item,PDO::PARAM_STR);
 		$result_count_msgs = $stmt->fetchOnce(PDO::FETCH_NUM);
@@ -366,11 +364,10 @@ function create_forum_threaded($RSDB_TEMP_msgid) {
 	global $RSDB_intern_link_item_item2_vote;
 	global $RSDB_TEMP_msg_highlight;
 	global $RSDB_SET_threshold;
-	global $RSDB_intern_code_view_shortname;
 	global $RSDB_intern_link_submit_forum_post;
 	global $RSDB_setting_stars_threshold;
 
-  $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp_forum WHERE fmsg_visible = '1' AND fmsg_".$RSDB_intern_code_view_shortname."_id = :item_id AND fmsg_parent = :parent ORDER BY fmsg_date ".$RSDB_TEMP_order."");
+  $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp_forum WHERE fmsg_visible = '1' AND fmsg_comp_id = :item_id AND fmsg_parent = :parent ORDER BY fmsg_date ".$RSDB_TEMP_order."");
   $stmt->bindParam('item_id',$RSDB_SET_item,PDO::PARAM_STR);
   $stmt->bindParam('parent',$RSDB_TEMP_msgid,PDO::PARAM_STR);
   $stmt->execute();
@@ -394,7 +391,7 @@ function create_forum_threaded($RSDB_TEMP_msgid) {
 		}
 		echo Star::drawSmall($result_fmsgreports['fmsg_useful_vote_value'], $result_fmsgreports['fmsg_useful_vote_user'], 5, "") ."</li>";
 
-    $stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_item_comp_forum WHERE fmsg_visible = '1' AND fmsg_".$RSDB_intern_code_view_shortname."_id = :item_id AND fmsg_parent = :parent");
+    $stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_item_comp_forum WHERE fmsg_visible = '1' AND fmsg_comp_id = :item_id AND fmsg_parent = :parent");
     $stmt->bindParam('item_id',$RSDB_SET_item,PDO::PARAM_STR);
     $stmt->bindParam('parent',$result_fmsgreports['fmsg_id'],PDO::PARAM_STR);
     $stmt->execute();
@@ -419,11 +416,10 @@ function create_forum_bboard($RSDB_TEMP_msgid) {
 	global $RSDB_TEMP_msg_highlight;
 	global $RSDB_TEMP_counter_replies;
 	global $RSDB_SET_threshold;
-	global $RSDB_intern_code_view_shortname;
 	global $RSDB_intern_link_submit_forum_post;
 	global $RSDB_setting_stars_threshold;
 
-  $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp_forum WHERE fmsg_visible = '1' AND fmsg_".$RSDB_intern_code_view_shortname."_id` = :item_id AND fmsg_parent = :parent ORDER BY fmsg_date " . $RSDB_TEMP_order . "");
+  $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp_forum WHERE fmsg_visible = '1' AND fmsg_comp_id` = :item_id AND fmsg_parent = :parent ORDER BY fmsg_date " . $RSDB_TEMP_order . "");
   $stmt->bindParam('item_id',$RSDB_SET_item,PDO::PARAM_STR);
   $stmt->bindParam('parent',$RSDB_TEMP_msgid,PDO::PARAM_STR);
   $stmt->execute();
@@ -504,7 +500,6 @@ function show_msg($RSDB_TEMP_msgid) {
 	global $RSDB_intern_user_id;
 	global $RSDB_intern_link_item_item2_vote;
 	global $RSDB_SET_threshold;
-	global $RSDB_intern_code_view_shortname;
 	global $RSDB_intern_link_submit_forum_post;
 	global $RSDB_setting_stars_threshold;
 
@@ -590,10 +585,9 @@ function calc_replies($RSDB_TEMP_msgid) {
 	global $RSDB_TEMP_counter_replies;
 	global $RSDB_TEMP_order;
 	global $RSDB_SET_item;
-	global $RSDB_intern_code_view_shortname;
 	global $RSDB_setting_stars_threshold;
 
-  $stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_item_comp_forum WHERE fmsg_visible = '1' AND fmsg_".$RSDB_intern_code_view_shortname."_id = :item_id AND fmsg_parent = :parent");
+  $stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_item_comp_forum WHERE fmsg_visible = '1' AND fmsg_comp_id = :item_id AND fmsg_parent = :parent");
   $stmt->bindParam('item_id',$RSDB_SET_item,PDO::PARAM_STR);
   $stmt->bindParam('parent',$RSDB_TEMP_msgid,PDO::PARAM_STR);
   $stmt->execute();
@@ -603,7 +597,7 @@ function calc_replies($RSDB_TEMP_msgid) {
 	if ($result_count_msgs[0] != "0" && $result_count_msgs[0] != "") {
 		$RSDB_TEMP_counter_replies++;
 		
-    $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp_forum WHERE fmsg_visible = '1' AND fmsg_".$RSDB_intern_code_view_shortname."_id = :item_id AND fmsg_parent = :parent
+    $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp_forum WHERE fmsg_visible = '1' AND fmsg_comp_id = :item_id AND fmsg_parent = :parent
 						ORDER BY `fmsg_date` " . $RSDB_TEMP_order . "");
     $stmt->bindParam('item_id',$RSDB_SET_item,PDO::PARAM_STR);
     $stmt->bindParam('parent',$RSDB_TEMP_msgid,PDO::PARAM_STR);
@@ -619,15 +613,14 @@ function query_lastreply($RSDB_TEMP_msgid) {
 	global $RSDB_TEMP_counter_lastreply;
 	global $RSDB_TEMP_order;
 	global $RSDB_SET_item;
-	global $RSDB_intern_code_view_shortname;
 	global $RSDB_setting_stars_threshold;
 
-  $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp_forum WHERE fmsg_visible = '1' AND fmsg_".$RSDB_intern_code_view_shortname."_id = :item_id AND fmsg_parent = :parent ORDER BY fmsg_date DESC") ;
+  $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp_forum WHERE fmsg_visible = '1' AND fmsg_comp_id = :item_id AND fmsg_parent = :parent ORDER BY fmsg_date DESC") ;
   $stmt->bindParam('item_id',$RSDB_SET_item,PDO::PARAM_STR);
   $stmt->bindParam('parent',$RSDB_TEMP_msgid,PDO::PARAM_STR);
   $stmt->execute();
 	while($result_fmsgreports = $stmt->fetch(PDO::FETCH_ASSOC)) {
-    $stmt_count=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_item_comp_forum WHERE fmsg_visible = '1' AND fmsg_".$RSDB_intern_code_view_shortname."_id = :item_id AND fmsg_parent = :parent");
+    $stmt_count=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_item_comp_forum WHERE fmsg_visible = '1' AND fmsg_comp_id = :item_id AND fmsg_parent = :parent");
   $stmt->bindParam('item_id',$RSDB_SET_item,PDO::PARAM_STR);
   $stmt->bindParam('parent',$result_fmsgreports['fmsg_id'],PDO::PARAM_STR);
   $stmt->execute();

@@ -37,22 +37,19 @@
 	
 
 
-//	echo "Comp: ".$RSDB_intern_trigger_comp.";
-//	echo "<br>".$RSDB_intern_code_db_rsdb_categories;
-
 	$RSDB_viewpage = true;
 
 	if ($RSDB_SET_sec == "category") {
 ?>
 <table width="100%" border="1" cellpadding="3" cellspacing="0" bordercolor="#5984C3">
   <tr>
-    <td>&nbsp;<font size="2">Browsing: </font><a href="<?php echo $RSDB_intern_link_category_cat_EX."0";
+    <td>&nbsp;<font size="2">Browsing: </font><a href="<?php echo $RSDB_intern_link_category_cat."0";
 
 		if ($RSDB_SET_cat2 == "flat" || $RSDB_SET_cat2 == "") {
-			echo $RSDB_URI_slash;
+
 		}
 		else {
-			echo $RSDB_URI_slash2."cat2=".$RSDB_SET_cat2;
+			echo "&amp;cat2=".$RSDB_SET_cat2;
 		}
 		
 	?>">Main</a><?php
@@ -62,20 +59,20 @@
 		if ($RSDB_SET_cat != "") {
 
 			if ($RSDB_SET_item != "" && $RSDB_viewpage != false) {
-				$stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_" . $RSDB_intern_code_view_shortname ." WHERE " . $RSDB_intern_code_view_shortname . "_visible = '1' AND " . $RSDB_intern_code_view_shortname . "_id = :item_id ORDER BY " . $RSDB_intern_code_view_shortname . "_name ASC");
+				$stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp WHERE comp_visible = '1' AND comp_id = :item_id ORDER BY comp_name ASC");
         $stmt->bindParam('item_id',$RSDB_SET_item,PDO::PARAM_STR);
         $stmt->execute();
 				$result_itempid = $stmt->fetch(PDO::FETCH_ASSOC);
-				if ($result_itempid[$RSDB_intern_code_view_shortname.'_groupid'] == "" || $result_itempid[$RSDB_intern_code_view_shortname . '_groupid'] == "0") {
+				if ($result_itempid['comp_groupid'] == "" || $result_itempid['comp_groupid'] == "0") {
 					//die("");
 					//echo "die1";
 					$RSDB_viewpage = false;
 				}
-				$RSDB_SET_group = $result_itempid[$RSDB_intern_code_view_shortname . '_groupid'];
+				$RSDB_SET_group = $result_itempid['comp_groupid'];
 			}
 			if ($RSDB_SET_group != "" && $RSDB_viewpage != false) {
 				//echo "+++++".$RSDB_SET_group;
-        $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_id = :group_id " . $RSDB_intern_code_db_rsdb_groups . " ORDER BY grpentr_name ASC") ;
+        $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_id = :group_id AND grpentr_comp = '1' ORDER BY grpentr_name ASC") ;
         $stmt->bindParam('group_id',$RSDB_SET_group,PDO::PARAM_STR);
         $stmt->execute();
 				$result_groupid = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -85,7 +82,7 @@
 					$RSDB_viewpage = false;
 				}
 				if ($RSDB_viewpage != false) {
-          $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_categories WHERE cat_id = :cat_id AND cat_visible = '1' " . $RSDB_intern_code_db_rsdb_categories . "");
+          $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_categories WHERE cat_id = :cat_id AND cat_visible = '1' AND cat_comp = '1'");
           $stmt->bindParam('cat_id',$result_groupid['grpentr_category'],PDO::PARAM_STR);
           $stmt->execute();
 					$result_category_treehistory_groupid=$stmt->fetch(PDO::FETCH_ASSOC);
@@ -102,7 +99,7 @@
 			}
 			elseif ($RSDB_viewpage != false) {
 				//echo "hjall";
-        $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_categories WHERE cat_id = :cat_id AND cat_visible = '1' " . $RSDB_intern_code_db_rsdb_categories . "");
+        $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_categories WHERE cat_id = :cat_id AND cat_visible = '1' AND cat_comp = '1'");
         $stmt->bindParam('cat_id',$RSDB_SET_cat,PDO::PARAM_STR);
         $stmt->execute();
 				$result_category_treehistory=$stmt->fetch(PDO::FETCH_ASSOC);
@@ -121,7 +118,7 @@
 				// count the levels -> current category level
 				for ($guesslevel=1; ; $guesslevel++) {
 	//				echo $guesslevel."#";
-            $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_categories WHERE cat_id = :cat_id AND cat_visible = '1' " . $RSDB_intern_code_db_rsdb_categories . "");
+            $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_categories WHERE cat_id = :cat_id AND cat_visible = '1' AND cat_comp = '1'");
             $stmt->bindParam('cat_id',$RSDB_TEMP_cat_current_id_guess,PDO::PARAM_STR);
             $stmt->execute();
 						$result_category_tree_guesslevel=$stmt->fetch(PDO::FETCH_ASSOC);
@@ -142,7 +139,7 @@
 	//				echo "<br>Ring0: ".$i." ";
 					for ($k=1; $k < ($RSDB_intern_catlevel+1-$i); $k++) {
 	//					echo $k."|";
-              $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_categories WHERE cat_id = :cat_id AND `cat_visible` = '1' " . $RSDB_intern_code_db_rsdb_categories . "");
+              $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_categories WHERE cat_id = :cat_id AND `cat_visible` = '1' AND cat_comp = '1'");
               $stmt->bindParam('cat_id',$RSDB_TEMP_cat_current_id,PDO::PARAM_STR);
               $stmt->execute();
 							$result_category_tree_temp=$stmt->fetch(PDO::FETCH_ASSOC);
@@ -152,12 +149,12 @@
 							if ($k == $RSDB_TEMP_cat_current_counter) {
 								$RSDB_TEMP_current_category = $result_category_tree_temp['cat_name'];
 								$RSDB_TEMP_current_category_desc = $result_category_tree_temp['cat_description'];
-								echo " <font size='2'>&rarr;</font> <a href='".$RSDB_intern_link_category_cat_EX.$result_category_tree_temp['cat_id'];
+								echo " <font size='2'>&rarr;</font> <a href='".$RSDB_intern_link_category_cat.$result_category_tree_temp['cat_id'];
 								if ($RSDB_SET_cat2 == "flat" || $RSDB_SET_cat2 == "") {
-									echo $RSDB_URI_slash;
+
 								}
 								else {
-									echo $RSDB_URI_slash2."cat2=".$RSDB_SET_cat2;
+									echo "&amp;cat2=".$RSDB_SET_cat2;
 								}
 								echo "'>".$result_category_tree_temp['cat_name']."</a>";
 							}
@@ -172,18 +169,18 @@
 			}
 			
 			if ($RSDB_SET_group != "" && $RSDB_viewpage != false) {
-        $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_id = :group_id " . $RSDB_intern_code_db_rsdb_groups . " ORDER BY grpentr_name ASC");
+        $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_id = :group_id AND grpentr_comp = '1' ORDER BY grpentr_name ASC");
         $stmt->bindParam('group_id',$RSDB_SET_group,PDO::PARAM_STR);
         $stmt->execute();
 				$result_current_group = $stmt->fetch(PDO::FETCH_ASSOC);
-				echo " <font size='2'>&rarr;</font> <a href='".$RSDB_intern_link_group_EX.$RSDB_SET_group.$RSDB_URI_slash."'>".$result_current_group['grpentr_name']."</a>";
+				echo " <font size='2'>&rarr;</font> <a href='".$RSDB_intern_link_group.$RSDB_SET_group."'>".$result_current_group['grpentr_name']."</a>";
 			}
 			if ($RSDB_SET_item != "" && $RSDB_viewpage != false) {
-        $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_" . $RSDB_intern_code_view_shortname ." WHERE " . $RSDB_intern_code_view_shortname . "_visible = '1' AND " . $RSDB_intern_code_view_shortname . "_id = :item_id ORDER BY " . $RSDB_intern_code_view_shortname . "_name ASC");
+        $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp WHERE comp_visible = '1' AND comp_id = :item_id ORDER BY comp_name ASC");
         $stmt->bindParam('item_id',$RSDB_SET_item,PDO::PARAM_STR);
         $stmt->execute();
 				$result_current_group = $stmt->fetch(PDO::PARAM_STR);
-				echo " <font size='2'>&rarr;</font> <a href='".$RSDB_intern_link_item2_id_EX.$RSDB_SET_item.$RSDB_URI_slash."'>".$result_current_group[$RSDB_intern_code_view_shortname .'_name'];
+				echo " <font size='2'>&rarr;</font> <a href='".$RSDB_intern_link_group.$RSDB_SET_item."'>".$result_current_group['comp_name'];
 				
 							echo " ["."ReactOS ".show_osversion($result_current_group['comp_osversion'])."]";
 				
@@ -206,10 +203,10 @@
 		else {
 			echo "<p align='center'>";
 			if ($RSDB_SET_cat2 == "flat") {
-				echo "<b>Flat Style</b> | <a href='".$RSDB_intern_link_category_cat_EX.$RSDB_SET_cat.$RSDB_URI_slash2."cat2=tree'>Tree Style</a>";
+				echo "<b>Flat Style</b> | <a href='".$RSDB_intern_link_category_cat.$RSDB_SET_cat."&amp;cat2=tree'>Tree Style</a>";
 			}
 			if ($RSDB_SET_cat2 == "tree") {
-				echo "<a href='".$RSDB_intern_link_category_cat_EX.$RSDB_SET_cat.$RSDB_URI_slash2."cat2=flat'>Flat Style</a> | <b>Tree Style</b>";
+				echo "<a href='".$RSDB_intern_link_category_cat.$RSDB_SET_cat."&amp;cat2=flat'>Flat Style</a> | <b>Tree Style</b>";
 			}
 			echo "</p>";
 		}
@@ -222,14 +219,14 @@
 	if ($RSDB_SET_sec == "name" || $RSDB_SET_sec == "vendor") {
 		if ($RSDB_SET_sec == "name") {
 			if ($RSDB_SET_item != "") {
-        $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_" . $RSDB_intern_code_view_shortname ."  WHERE " . $RSDB_intern_code_view_shortname . "_visible = '1' AND " . $RSDB_intern_code_view_shortname . "_id = :item_id ORDER BY " . $RSDB_intern_code_view_shortname . "_name ASC") ;
+        $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp WHERE comp_visible = '1' AND comp_id = :item_id ORDER BY comp_name ASC") ;
         $stmt->bindParam('item_id',$RSDB_SET_item,PDO::PARAM_STR);
         $stmt->execute();
 				$result_itempid = $stmt->fetch(PDO::FETCH_ASSOC);
-				if ($result_itempid[$RSDB_intern_code_view_shortname.'_groupid'] == "" || $result_itempid[$RSDB_intern_code_view_shortname . '_groupid'] == "0") {
+				if ($result_itempid['comp_groupid'] == "" || $result_itempid['comp_groupid'] == "0") {
 					$RSDB_viewpage = false;
 				}
-				$RSDB_SET_group = $result_itempid[$RSDB_intern_code_view_shortname . '_groupid'];
+				$RSDB_SET_group = $result_itempid['comp_groupid'];
 			}
 			if ($RSDB_SET_group != "") {
       $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_id = :group_id ORDER BY grpentr_id ASC");
@@ -241,7 +238,7 @@
 	?>
 	<table width="100%" border="1" cellpadding="3" cellspacing="0" bordercolor="#5984C3">
 	  <tr>
-		<td>&nbsp;<font size="2">Browsing: </font> <a href="<?php echo $RSDB_intern_link_name_letter_EX."all".$RSDB_URI_slash; ?>"><?php
+		<td>&nbsp;<font size="2">Browsing: </font> <a href="<?php echo $RSDB_intern_link_name_letter_EX."all"; ?>"><?php
 	
 		if ($RSDB_SET_letter != "") {
 			echo ucfirst($RSDB_SET_letter);
@@ -253,18 +250,18 @@
 		echo "</a>";
 		 
 		if ($RSDB_SET_item != "" && $RSDB_viewpage != false) {
-      $stmt=CDBConnection::getInstance("SELECT * FROM rsdb_item_" . $RSDB_intern_code_view_shortname ." WHERE " . $RSDB_intern_code_view_shortname . "_visible = '1' AND " . $RSDB_intern_code_view_shortname . "_id = :item_id ORDER BY " . $RSDB_intern_code_view_shortname . "_name ASC");
+      $stmt=CDBConnection::getInstance("SELECT * FROM rsdb_item_comp WHERE comp_visible = '1' AND comp_id = :item_id ORDER BY comp_name ASC");
       $stmt->bindParam('item_id',$RSDB_SET_item,PDO::PARAM_STR);
       $stmt->execute();
 			$result_itempid = $stmt->fetch(PDO::FETCH_ASSOC);
-			if ($result_itempid[$RSDB_intern_code_view_shortname.'_groupid'] == "" || $result_itempid[$RSDB_intern_code_view_shortname . '_groupid'] == "0") {
+			if ($result_itempid['comp_groupid'] == "" || $result_itempid['comp_groupid'] == "0") {
 				//die("");
 				$RSDB_viewpage = false;
 			}
-			$RSDB_SET_group = $result_itempid[$RSDB_intern_code_view_shortname . '_groupid'];
+			$RSDB_SET_group = $result_itempid['comp_groupid'];
 		}
 		if ($RSDB_SET_group != "" && $RSDB_viewpage != false) {
-			$stmt=CDBConnection::getInstance()->prepare("SELECT *  FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_id = :group_id " . $RSDB_intern_code_db_rsdb_groups . " ORDER BY grpentr_name ASC");
+			$stmt=CDBConnection::getInstance()->prepare("SELECT *  FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_id = :group_id AND grpentr_comp = '1' ORDER BY grpentr_name ASC");
       $stmt->bindParam('group_id',$RSDB_SET_group,PDO::PARAM_STR);
       $stmt->execute();
 			$result_current_group = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -272,14 +269,14 @@
 				//die("");
 				$RSDB_viewpage = false;
 			}
-			echo " <font size='2'>&rarr;</font> <a href='".$RSDB_intern_link_group_EX.$RSDB_SET_group.$RSDB_URI_slash."'>".$result_current_group['grpentr_name']."</a>";
+			echo " <font size='2'>&rarr;</font> <a href='".$RSDB_intern_link_group.$RSDB_SET_group."'>".$result_current_group['grpentr_name']."</a>";
 		}
 		if ($RSDB_SET_item != "" && $RSDB_viewpage != false) {
-      $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_" . $RSDB_intern_code_view_shortname ." WHERE " . $RSDB_intern_code_view_shortname . "_visible = '1' AND " . $RSDB_intern_code_view_shortname . "_id = :item_id ORDER BY " . $RSDB_intern_code_view_shortname . "_name ASC");
+      $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp WHERE comp_visible = '1' AND comp_id = :item_id ORDER BY comp_name ASC");
       $stmt->bindParam('item_id',$RSDB_SET_item,PDO::PARAM_STR);
       $stmt->execute();
 			$result_current_group = $stmt->fetch(PDO::FETCH_ASSOC);
-			echo " <font size='2'>&rarr;</font> <a href='".$RSDB_intern_link_item_EX.$RSDB_SET_item.$RSDB_URI_slash."'>".$result_current_group[$RSDB_intern_code_view_shortname .'_name'];
+			echo " <font size='2'>&rarr;</font> <a href='".$RSDB_intern_link_item_EX.$RSDB_SET_item."'>".$result_current_group['comp_name'];
 			
 						echo " ["."ReactOS ".show_osversion($result_current_group['comp_osversion'])."]";
 			
@@ -304,7 +301,7 @@
 	?>
 	<table width="100%" border="1" cellpadding="3" cellspacing="0" bordercolor="#5984C3">
 	  <tr>
-		<td>&nbsp;<font size="2">Browsing: <a href="<?php echo $RSDB_intern_link_vendor_letter_EX.$RSDB_SET_letter.$RSDB_URI_slash; ?>">
+		<td>&nbsp;<font size="2">Browsing: <a href="<?php echo $RSDB_intern_link_vendor_letter_EX.$RSDB_SET_letter; ?>">
 		
 		<?php
 	
@@ -327,10 +324,10 @@
 				$RSDB_viewpage = false;
 			}
 			//$RSDB_SET_group = $result_itempid['vendor_id'];
-			echo " <font size='2'>&rarr;</font> <a href='".$RSDB_intern_link_vendor_id_EX.$RSDB_SET_vendor.$RSDB_URI_slash."'>".$result_itempid['vendor_name']."</a>";
+			echo " <font size='2'>&rarr;</font> <a href='".$RSDB_intern_link_vendor_id_EX.$RSDB_SET_vendor."'>".$result_itempid['vendor_name']."</a>";
 		}
 		if ($RSDB_SET_group != "" && $RSDB_viewpage != false) {
-      $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_id = :group_id " . $RSDB_intern_code_db_rsdb_groups . " ORDER BY grpentr_name ASC");
+      $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_id = :group_id AND grpentr_comp = '1' ORDER BY grpentr_name ASC");
       $stmt->bindParam('group_id',$RSDB_SET_group,PDO::PARAM_STR);
       $stmt->execute();
 			$result_current_group = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -338,14 +335,14 @@
 				//die("");
 				$RSDB_viewpage = false;
 			}
-			echo " <font size='2'>&rarr;</font> <a href='".$RSDB_intern_link_name_group_EX.$RSDB_SET_group.$RSDB_URI_slash."'>".$result_current_group['grpentr_name']."</a>";
+			echo " <font size='2'>&rarr;</font> <a href='".$RSDB_intern_link_name_group_EX.$RSDB_SET_group."'>".$result_current_group['grpentr_name']."</a>";
 		}
 		if ($RSDB_SET_item != "" && $RSDB_viewpage != false) {
       $stmt=CDBCOnnection::getInstance()->prepare("SELECT * FROM rsdb_item_vendor WHERE vendor_id = :vendor_id ORDER BY vendor_name ASC");
       $stmt->bindParam('group_id',$RSDB_SET_vendor,PDO::PARAM_STR);
       $stmt->execute();
 			$result_current_group = $stmt->fetch(PDO::PARAM_STR);
-			echo " <font size='2'>&rarr;</font> <a href='".$RSDB_intern_link_name_item_EX.$RSDB_SET_item.$RSDB_URI_slash."'>".$result_current_group['vendor_name'];
+			echo " <font size='2'>&rarr;</font> <a href='".$RSDB_intern_link_name_item_EX.$RSDB_SET_item."'>".$result_current_group['vendor_name'];
 			echo "</a>";
 		}
 	
@@ -373,189 +370,189 @@
 			echo '  <b>All</b> ';
 		}
 		else {
-			echo '  <a href="'. $RSDB_TEMP_link_letter .'all'.$RSDB_URI_slash.'" class="letterbarlink">All</a> ';
+			echo '  <a href="'. $RSDB_TEMP_link_letter .'all" class="letterbarlink">All</a> ';
 		}
 	
 		if ($RSDB_SET_letter == "a") {
 			echo '  <b>A</b> ';
 		}
 		else {
-			echo '  <a href="'. $RSDB_TEMP_link_letter .'a'.$RSDB_URI_slash.'" class="letterbarlink">A</a> ';
+			echo '  <a href="'. $RSDB_TEMP_link_letter .'a" class="letterbarlink">A</a> ';
 		}
 	
 		if ($RSDB_SET_letter == "b") {
 			echo '  <b>B</b> ';
 		}
 		else {
-			echo '  <a href="'. $RSDB_TEMP_link_letter .'b'.$RSDB_URI_slash.'" class="letterbarlink">B</a> ';
+			echo '  <a href="'. $RSDB_TEMP_link_letter .'b" class="letterbarlink">B</a> ';
 		}
 	
 		if ($RSDB_SET_letter == "c") {
 			echo '  <b>C</b> ';
 		}
 		else {
-			echo '  <a href="'. $RSDB_TEMP_link_letter .'c'.$RSDB_URI_slash.'" class="letterbarlink">C</a> ';
+			echo '  <a href="'. $RSDB_TEMP_link_letter .'c" class="letterbarlink">C</a> ';
 		}
 	
 		if ($RSDB_SET_letter == "d") {
 			echo '  <b>D</b> ';
 		}
 		else {
-			echo '  <a href="'. $RSDB_TEMP_link_letter .'d'.$RSDB_URI_slash.'" class="letterbarlink">D</a> ';
+			echo '  <a href="'. $RSDB_TEMP_link_letter .'d" class="letterbarlink">D</a> ';
 		}
 	
 		if ($RSDB_SET_letter == "e") {
 			echo '  <b>E</b> ';
 		}
 		else {
-			echo '  <a href="'. $RSDB_TEMP_link_letter .'e'.$RSDB_URI_slash.'" class="letterbarlink">E</a> ';
+			echo '  <a href="'. $RSDB_TEMP_link_letter .'e" class="letterbarlink">E</a> ';
 		}
 	
 		if ($RSDB_SET_letter == "f") {
 			echo '  <b>F</b> ';
 		}
 		else {
-			echo '  <a href="'. $RSDB_TEMP_link_letter .'f'.$RSDB_URI_slash.'" class="letterbarlink">F</a> ';
+			echo '  <a href="'. $RSDB_TEMP_link_letter .'f" class="letterbarlink">F</a> ';
 		}
 	
 		if ($RSDB_SET_letter == "g") {
 			echo '  <b>G</b> ';
 		}
 		else {
-			echo '  <a href="'. $RSDB_TEMP_link_letter .'g'.$RSDB_URI_slash.'" class="letterbarlink">G</a> ';
+			echo '  <a href="'. $RSDB_TEMP_link_letter .'g" class="letterbarlink">G</a> ';
 		}
 	
 		if ($RSDB_SET_letter == "h") {
 			echo '  <b>H</b> ';
 		}
 		else {
-			echo '  <a href="'. $RSDB_TEMP_link_letter .'h'.$RSDB_URI_slash.'" class="letterbarlink">H</a> ';
+			echo '  <a href="'. $RSDB_TEMP_link_letter .'h" class="letterbarlink">H</a> ';
 		}
 	
 		if ($RSDB_SET_letter == "i") {
 			echo '  <b>I</b> ';
 		}
 		else {
-			echo '  <a href="'. $RSDB_TEMP_link_letter .'i'.$RSDB_URI_slash.'" class="letterbarlink">I</a> ';
+			echo '  <a href="'. $RSDB_TEMP_link_letter .'i" class="letterbarlink">I</a> ';
 		}
 	
 		if ($RSDB_SET_letter == "j") {
 			echo '  <b>J</b> ';
 		}
 		else {
-			echo '  <a href="'. $RSDB_TEMP_link_letter .'j'.$RSDB_URI_slash.'" class="letterbarlink">J</a> ';
+			echo '  <a href="'. $RSDB_TEMP_link_letter .'j" class="letterbarlink">J</a> ';
 		}
 	
 		if ($RSDB_SET_letter == "k") {
 			echo '  <b>K</b> ';
 		}
 		else {
-			echo '  <a href="'. $RSDB_TEMP_link_letter .'k'.$RSDB_URI_slash.'" class="letterbarlink">K</a> ';
+			echo '  <a href="'. $RSDB_TEMP_link_letter .'k" class="letterbarlink">K</a> ';
 		}
 	
 		if ($RSDB_SET_letter == "l") {
 			echo '  <b>L</b> ';
 		}
 		else {
-			echo '  <a href="'. $RSDB_TEMP_link_letter .'l'.$RSDB_URI_slash.'" class="letterbarlink">L</a> ';
+			echo '  <a href="'. $RSDB_TEMP_link_letter .'l" class="letterbarlink">L</a> ';
 		}
 	
 		if ($RSDB_SET_letter == "m") {
 			echo '  <b>M</b> ';
 		}
 		else {
-			echo '  <a href="'. $RSDB_TEMP_link_letter .'m'.$RSDB_URI_slash.'" class="letterbarlink">M</a> ';
+			echo '  <a href="'. $RSDB_TEMP_link_letter .'m" class="letterbarlink">M</a> ';
 		}
 		
 		if ($RSDB_SET_letter == "n") {
 			echo '  <b>N</b> ';
 		}
 		else {
-			echo '  <a href="'. $RSDB_TEMP_link_letter .'n'.$RSDB_URI_slash.'" class="letterbarlink">N</a> ';
+			echo '  <a href="'. $RSDB_TEMP_link_letter .'n" class="letterbarlink">N</a> ';
 		}
 		
 		if ($RSDB_SET_letter == "o") {
 			echo '  <b>O</b> ';
 		}
 		else {
-			echo '  <a href="'. $RSDB_TEMP_link_letter .'o'.$RSDB_URI_slash.'" class="letterbarlink">O</a> ';
+			echo '  <a href="'. $RSDB_TEMP_link_letter .'o" class="letterbarlink">O</a> ';
 		}
 	
 		if ($RSDB_SET_letter == "p") {
 			echo '  <b>P</b> ';
 		}
 		else {
-			echo '  <a href="'. $RSDB_TEMP_link_letter .'p'.$RSDB_URI_slash.'" class="letterbarlink">P</a> ';
+			echo '  <a href="'. $RSDB_TEMP_link_letter .'p" class="letterbarlink">P</a> ';
 		}
 	
 		if ($RSDB_SET_letter == "q") {
 			echo '  <b>Q</b> ';
 		}
 		else {
-			echo '  <a href="'. $RSDB_TEMP_link_letter .'q'.$RSDB_URI_slash.'" class="letterbarlink">Q</a> ';
+			echo '  <a href="'. $RSDB_TEMP_link_letter .'q" class="letterbarlink">Q</a> ';
 		}
 	
 		if ($RSDB_SET_letter == "r") {
 			echo '  <b>R</b> ';
 		}
 		else {
-			echo '  <a href="'. $RSDB_TEMP_link_letter .'r'.$RSDB_URI_slash.'" class="letterbarlink">R</a> ';
+			echo '  <a href="'. $RSDB_TEMP_link_letter .'r" class="letterbarlink">R</a> ';
 		}
 	
 		if ($RSDB_SET_letter == "s") {
 			echo '  <b>S</b> ';
 		}
 		else {
-			echo '  <a href="'. $RSDB_TEMP_link_letter .'s'.$RSDB_URI_slash.'" class="letterbarlink">S</a> ';
+			echo '  <a href="'. $RSDB_TEMP_link_letter .'s" class="letterbarlink">S</a> ';
 		}
 	
 		if ($RSDB_SET_letter == "t") {
 			echo '  <b>T</b> ';
 		}
 		else {
-			echo '  <a href="'. $RSDB_TEMP_link_letter .'t'.$RSDB_URI_slash.'" class="letterbarlink">T</a> ';
+			echo '  <a href="'. $RSDB_TEMP_link_letter .'t" class="letterbarlink">T</a> ';
 		}
 	
 		if ($RSDB_SET_letter == "u") {
 			echo '  <b>U</b> ';
 		}
 		else {
-			echo '  <a href="'. $RSDB_TEMP_link_letter .'u'.$RSDB_URI_slash.'" class="letterbarlink">U</a> ';
+			echo '  <a href="'. $RSDB_TEMP_link_letter .'u" class="letterbarlink">U</a> ';
 		}
 	
 		if ($RSDB_SET_letter == "v") {
 			echo '  <b>V</b> ';
 		}
 		else {
-			echo '  <a href="'. $RSDB_TEMP_link_letter .'v'.$RSDB_URI_slash.'" class="letterbarlink">V</a> ';
+			echo '  <a href="'. $RSDB_TEMP_link_letter .'v" class="letterbarlink">V</a> ';
 		}
 	
 		if ($RSDB_SET_letter == "w") {
 			echo '  <b>W</b> ';
 		}
 		else {
-			echo '  <a href="'. $RSDB_TEMP_link_letter .'w'.$RSDB_URI_slash.'" class="letterbarlink">W</a> ';
+			echo '  <a href="'. $RSDB_TEMP_link_letter .'w" class="letterbarlink">W</a> ';
 		}
 	
 		if ($RSDB_SET_letter == "x") {
 			echo '  <b>X</b> ';
 		}
 		else {
-			echo '  <a href="'. $RSDB_TEMP_link_letter .'x'.$RSDB_URI_slash.'" class="letterbarlink">X</a> ';
+			echo '  <a href="'. $RSDB_TEMP_link_letter .'x" class="letterbarlink">X</a> ';
 		}
 	
 		if ($RSDB_SET_letter == "y") {
 			echo '  <b>Y</b> ';
 		}
 		else {
-			echo '  <a href="'. $RSDB_TEMP_link_letter .'y'.$RSDB_URI_slash.'" class="letterbarlink">Y</a> ';
+			echo '  <a href="'. $RSDB_TEMP_link_letter .'y" class="letterbarlink">Y</a> ';
 		}
 	
 		if ($RSDB_SET_letter == "z") {
 			echo '  <b>Z</b> ';
 		}
 		else {
-			echo '  <a href="'. $RSDB_TEMP_link_letter .'z'.$RSDB_URI_slash.'" class="letterbarlink">Z</a> ';
+			echo '  <a href="'. $RSDB_TEMP_link_letter .'z" class="letterbarlink">Z</a> ';
 		}
 	
 		echo "</p><br />";

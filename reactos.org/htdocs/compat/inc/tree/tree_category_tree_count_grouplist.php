@@ -53,9 +53,8 @@
 	function count_group_and_category($RSDB_TEMP_cat_id_group) {
 	
 		global $RSDB_TEMP_counter_group;
-		global $RSDB_intern_code_db_rsdb_groups;
 
-		$stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_category = :category " . $RSDB_intern_code_db_rsdb_groups . "");
+		$stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_category = :category AND grpentr_comp = '1'");
     $stmt->bindParam('category',$RSDB_TEMP_cat_id_group,PDO::PARAM_STR);
     $stmt->execute();
 		$result_count_group_and_category = $stmt->fetch(PDO::FETCH_NUM);

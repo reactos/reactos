@@ -35,7 +35,7 @@
 
 
 
-$stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_categories WHERE cat_visible = '1' AND cat_path = :path " . $RSDB_intern_code_db_rsdb_categories . "");
+$stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_categories WHERE cat_visible = '1' AND cat_path = :path AND cat_comp = '1'");
 $stmt->bindParam('path',$RSDB_SET_cat,PDO::PARAM_STR);
 $stmt->execute();
 $result_count_cat = $stmt->fetch(PDO::FETCH_NUM);
@@ -60,7 +60,7 @@ if ($result_count_cat[0]) {
 	  </tr>
 	  <?php
 	
-    $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_categories WHERE cat_visible = '1' AND cat_path = :path " . $RSDB_intern_code_db_rsdb_categories . " ORDER BY `".htmlentities($RSDB_TEMP_sortby)."` ASC");
+    $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_categories WHERE cat_visible = '1' AND cat_path = :path AND cat_comp = '1' ORDER BY `".htmlentities($RSDB_TEMP_sortby)."` ASC");
     $stmt->bindParam('path',$RSDB_SET_cat,PDO::PARAM_STR);
     $stmt->execute();
 	
@@ -86,7 +86,7 @@ if ($result_count_cat[0]) {
 										echo $farbe2;
 										$farbe = $farbe2;
 									}
-								 ?>" > <div align="left"><font size="2" face="Arial, Helvetica, sans-serif">&nbsp;<b><a href="<?php echo $RSDB_intern_link_cat_EX.$result_page['cat_id'].$RSDB_URI_slash; ?>"><?php echo $result_page['cat_name']; ?></a></b></font></div></td>
+								 ?>" > <div align="left"><font size="2" face="Arial, Helvetica, sans-serif">&nbsp;<b><a href="<?php echo $RSDB_intern_link_cat_EX.$result_page['cat_id']; ?>"><?php echo $result_page['cat_name']; ?></a></b></font></div></td>
 		<td width="65%" valign="top" bgcolor="<?php echo $farbe; ?>"> <div align="left"><font face="Arial, Helvetica, sans-serif"><font size="2"> 
         </font><font face="Arial, Helvetica, sans-serif"><font size="2" face="Arial, Helvetica, sans-serif"><?php echo $result_page['cat_description']; ?></font></font><font size="2"> 
         </font> </font></div></td>

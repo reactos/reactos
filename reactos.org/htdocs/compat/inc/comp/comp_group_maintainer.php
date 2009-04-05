@@ -36,7 +36,7 @@
 
 	if (usrfunc_IsModerator($RSDB_intern_user_id)) {
 	
-    $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_id = :group_id ".$RSDB_intern_code_db_rsdb_groups ) ;
+    $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_id = :group_id AND grpentr_comp = '1'") ;
     $stmt->bindParam('group_id',$RSDB_SET_group,PDO::PARAM_STR);
     $stmt->execute();
 		$result_maintainer_group =$stmt->fetchOnce(PDO::FETCH_ASSOC);

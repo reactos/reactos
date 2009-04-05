@@ -176,6 +176,7 @@ abstract class HTML
     global $roscms_intern_usrgrp_trans;
     global $roscms_intern_usrgrp_user;
     global $RSDB_langres;
+    global $RSDB_intern_link_db_sec;
 
     echo '
       <table style="border: none; width:100%;" cellpadding="0" cellspacing="0">
@@ -193,22 +194,21 @@ abstract class HTML
 
             <div class="navTitle">Compatibility</div>
             <ol>
-              <li><a href="'.$RSDB_intern_link_view_EX.'home'.$RSDB_URI_slash.'">Overview</a></li>
-              <li><a href="'.$RSDB_intern_link_category_EX.'0'.$RSDB_URI_slash.'">Browse Database</a></li>';
+              <li><a href="'.$RSDB_intern_link_db_sec.'home">Overview</a></li>
+              <li><a href="'.$RSDB_intern_link_category_EX.'0">Browse Database</a></li>';
 
     if ( $RSDB_SET_sec == 'category' || $RSDB_SET_sec == 'name' || $RSDB_SET_sec == 'vendor' || $RSDB_SET_sec == 'rank') {
       echo '
-        <li><a href="'.$RSDB_intern_link_category_EX.'0'.$RSDB_URI_slash.'">&nbsp;- By Category</a></li>
-        <li><a href="'.$RSDB_intern_link_name_letter_EX.'all'.$RSDB_URI_slash.'">&nbsp;- By Name</a></li>
-        <li><a href="'.$RSDB_intern_link_vendor_letter_EX.'all'.$RSDB_URI_slash.'">&nbsp;- By Vendor</a></li>
-        <li><a href="'.$RSDB_intern_link_rank_EX.'rank'.$RSDB_URI_slash.'">&nbsp;- By Rank</a></li>';
+        <li><a href="'.$RSDB_intern_link_category_EX.'0">&nbsp;- By Category</a></li>
+        <li><a href="'.$RSDB_intern_link_name_letter_EX.'all">&nbsp;- By Name</a></li>
+        <li><a href="'.$RSDB_intern_link_vendor_letter_EX.'all">&nbsp;- By Vendor</a></li>
+        <li><a href="'.$RSDB_intern_link_db_sec.'rank">&nbsp;- By Rank</a></li>';
     }
 
     echo '
-        <li id="noscriptsearchbar" style="display: block"><a href="'.$RSDB_intern_link_view_EX.'search'.$RSDB_URI_slash.'">Search</a></li>
-        <li><a href="'.$RSDB_intern_link_view_EX.'submit'.$RSDB_URI_slash.'">Submit Application</a></li>
-        <li><a href="'.$RSDB_intern_link_view_EX.'stats'.$RSDB_URI_slash.'">Database Statistics</a></li>
-        <li><a href="'.$RSDB_intern_link_view_EX.'help'.$RSDB_URI_slash.'">Help &amp; FAQ</a></li>
+        <li id="noscriptsearchbar" style="display: block"><a href="'.$RSDB_intern_link_db_sec.'search">Search</a></li>
+        <li><a href="'.$RSDB_intern_link_db_sec.'submit">Submit Application</a></li>
+        <li><a href="'.$RSDB_intern_link_db_sec.'help">Help &amp; FAQ</a></li>
       </ol>
       <br />
 

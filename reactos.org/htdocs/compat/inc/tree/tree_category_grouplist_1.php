@@ -34,7 +34,7 @@
 	}
 
 
-$stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_category = :category " . $RSDB_intern_code_db_rsdb_groups . "");
+$stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_category = :category AND grpentr_comp = '1'");
 $stmt->bindParam('category',$RSDB_SET_cat,PDO::PARAM_STR);
 $stmt->execute();
 $result_count_groups = $stmt->fetch(PDO::FETCH_NUM);
@@ -58,7 +58,7 @@ if ($result_count_groups[0]) {
 	  </tr>
 	  <?php
 	
-    $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_category = :category " . $RSDB_intern_code_db_rsdb_groups . " ORDER BY grpentr_name ASC");
+    $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_category = :category AND grpentr_comp = '1' ORDER BY grpentr_name ASC");
     $stmt->bindParam('category',$RSDB_SET_cat,PDO::PARAM_STR);
     $stmt->execute();
 	
@@ -80,12 +80,12 @@ if ($result_count_groups[0]) {
 										echo $farbe2;
 										$farbe = $farbe2;
 									}
-								 ?>" > <div align="left"><font size="2" face="Arial, Helvetica, sans-serif"><b><a href="<?php echo $RSDB_intern_link_group_EX.$result_page['grpentr_id'].$RSDB_URI_slash; ?>">
+								 ?>" > <div align="left"><font size="2" face="Arial, Helvetica, sans-serif"><b><a href="<?php echo $RSDB_intern_link_group.$result_page['grpentr_id']; ?>">
 		  <?php
 			$stmt_vendor=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_vendor WHERE vendor_id = :vendor_id");
       $stmt_vendor->bindParam('vendor_id',$result_page['grpentr_vendor'],PDO::PARAM_STR);
       $stmt_vendor->execute();
-			$result_entry_vendor = $stmt->fetch(PDO::FETCH_ASSOC);
+			$result_entry_vendor = $stmt_vendor->fetchOnce(PDO::FETCH_ASSOC);
 	/*	
 			echo $result_entry_vendor['vendor_name']."&nbsp;";
 	*/
@@ -97,14 +97,14 @@ if ($result_count_groups[0]) {
       $stmt_comp->execute();
 			while($result_entry_appver = $stmt_comp->fetch(PDO::FETCH_ASSOC)) {
 				if ($result_entry_appver['comp_name'] > $result_page['grpentr_name']) {
-					echo "<a href=\"".$RSDB_intern_link_group_EX.$result_page['grpentr_id'].$RSDB_URI_slash2."&amp;group2=".$result_entry_appver['comp_appversion']."\">".substr($result_entry_appver['comp_name'], strlen($result_page['grpentr_name'])+1 )."</a>, ";
+					echo "<a href=\"".$RSDB_intern_link_group.$result_page['grpentr_id']."&amp;group2=".$result_entry_appver['comp_appversion']."\">".substr($result_entry_appver['comp_name'], strlen($result_page['grpentr_name'])+1 )."</a>, ";
 				}
 			}
 			echo "</i>";
 		?></font></div></td>
 		<td valign="top" bgcolor="<?php echo $farbe; ?>"> <div align="left"><font size="2" face="Arial, Helvetica, sans-serif">&nbsp;<?php
 		
-			echo '<a href="'.$RSDB_intern_link_vendor_id_EX.$result_entry_vendor['vendor_id'].$RSDB_URI_slash.'">'.$result_entry_vendor['vendor_name'].'</a>';
+			echo '<a href="'.$RSDB_intern_link_vendor_id_EX.$result_entry_vendor['vendor_id'].'">'.$result_entry_vendor['vendor_name'].'</a>';
 
 		  ?></font></div></td>
 		<td valign="top" bgcolor="<?php echo $farbe; ?>"><font size="2"><?php

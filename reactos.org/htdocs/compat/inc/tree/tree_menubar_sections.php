@@ -71,7 +71,7 @@
 				}
 			}
 			if ($result_count_group[$RSDB_compare_string."_comp"] == "1") {
-				echo '<a href="'. $RSDB_intern_link_db_view2 .'comp">'. $RSDB_langres['TEXT_compdb_short'] .'</a>'; 
+				echo '<a href="'. $RSDB_intern_link_db_view2 .'">'. $RSDB_langres['TEXT_compdb_short'] .'</a>'; 
 			}
 			else {
 				echo '<font color="#cccccc">&nbsp;'. $RSDB_langres['TEXT_compdb_short'] .'&nbsp;</font>'; 

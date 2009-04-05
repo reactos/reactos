@@ -50,14 +50,14 @@ class Message
    * @access public
    */
   public static 	function noScript() {
-    global $RSDB_intern_link_ajax;
+    global $RSDB_intern_link_language,$RSDB_SET_lang;
     echo '<noscript>
     Your browser does not support JavaScript/JScript or (more likely) you have ECMAScript/JavaScript/JScript<br />
     disabled in your browser security option.<br /><br />
     To gain the best user interface experience please enable ECMAScript/JavaScript/JScript in your browser,<br />
     if possible.<br /><br />
     You will also be able to use the ReactOS Support Database without ECMAScript/JavaScript/JScript.<br /><br />
-    <a href="'. $RSDB_intern_link_ajax .'false"><b>Please, click here to disable ECMAScript/JavaScript/JScript features</b></a> (DHTML & Ajax) on this page<br />
+    <a href="'.$RSDB_intern_link_language.$RSDB_SET_lang.'"&amp;ajax=false"><b>Please, click here to disable ECMAScript/JavaScript/JScript features</b></a> (DHTML & Ajax) on this page<br />
     and then you will be able to use all feature even without ECMAScript/JavaScript/JScript enabled!
     </noscript>';
   } // end of member function noScript
@@ -69,7 +69,7 @@ class Message
    *
    * @access public
    */
-  public static 	function loginRequrired() {
+  public static 	function loginRequired() {
 	global $RSDB_intern_path_server;
 	global $RSDB_intern_loginsystem_path;
 	

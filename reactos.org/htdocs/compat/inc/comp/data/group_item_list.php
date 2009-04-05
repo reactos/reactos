@@ -41,31 +41,13 @@
                   <?php
 
 				if ($RSDB_SET_sort == "item" || $RSDB_SET_sort == "") {
-					if ($RSDB_ENV_ajax == "true") { ?>
-						<b>Application version</b> | <a href="javascript://" onclick="ajat_LoadText('<?php echo $RSDB_intern_link_export; ?>grpitemlst&amp;sort=ros','group_version_list')">ReactOS version</a><?php 
-					}
-					else {
 						echo "<b>Application version</b> | <a href='".$RSDB_intern_link_group_sort."ros#ver'>ReactOS version</a>";
-					}
-
-					$RSDB_intern_sortby_SQL_a_query = "SELECT * 
-														FROM `rsdb_item_comp` 
-														WHERE `comp_groupid` = " . $RSDB_SET_group . "
-														ORDER BY `comp_appversion` DESC ;";
-					
 					
 					$RSDB_intern_sortby_headline_field = "comp_appversion";
 					$RSDB_intern_sortby_linkname_field = "comp_osversion";
 				}
 				if ($RSDB_SET_sort == "ros") {
-					if ($RSDB_ENV_ajax == "true") { ?>
-						<a href="javascript://" onclick="ajat_LoadText('<?php echo $RSDB_intern_link_export; ?>grpitemlst&amp;sort=item','group_version_list')">Application version</a> | <b>ReactOS version</b><?php 
-					}
-					else {
 						echo "<a href='".$RSDB_intern_link_group_sort."item#ver'>Application version</a> | <b>ReactOS version</b>";
-					}
-					
-					
 					
 					$RSDB_intern_sortby_headline_field = "comp_osversion";
 					$RSDB_intern_sortby_linkname_field = "comp_appversion";
@@ -240,9 +222,9 @@
 			}*/  
 			   ?> title="<?php echo "Tests: ".$counter_testentries.", Forum entries: ".$counter_forumentries.", Screenshots: ".$counter_screenshots; ?>"><div align="center"><font size="1"><table width="100%" border="0" cellpadding="1" cellspacing="1">
             <tr>
-              <td width="33%"><div align="center"><?php if ($counter_testentries > 0) { ?><a href="<?php echo $RSDB_intern_link_item_EX.$result_sortby_b['comp_id'].$RSDB_URI_slash2; ?>item2=tests"><img src="media/icons/info/test.gif" alt="Compatibility Test Report entries" border="0" width="13" height="13"></a><?php } else { echo "&nbsp;"; } ?></div></td>
-              <td width="33%"><div align="center"><?php if ($counter_forumentries > 0) { ?><a href="<?php echo $RSDB_intern_link_item_EX.$result_sortby_b['comp_id'].$RSDB_URI_slash2; ?>item2=forum"><img src="media/icons/info/forum.gif" alt="Forum entries" border="0" width="13" height="13"></a><?php } else { echo "&nbsp;"; } ?></div></td>
-              <td width="33%"><div align="center"><?php if ($counter_screenshots > 0) { ?><a href="<?php echo $RSDB_intern_link_item_EX.$result_sortby_b['comp_id'].$RSDB_URI_slash2; ?>item2=screens"><img src="media/icons/info/screenshot.gif" alt="Screenshots" border="0" width="13" height="13"></a><?php } else { echo "&nbsp;"; } ?></div></td>
+              <td width="33%"><div align="center"><?php if ($counter_testentries > 0) { ?><a href="<?php echo $RSDB_intern_link_group.$result_sortby_b['comp_id'];?>&amp;item2=tests"><img src="media/icons/info/test.gif" alt="Compatibility Test Report entries" border="0" width="13" height="13"></a><?php } else { echo "&nbsp;"; } ?></div></td>
+              <td width="33%"><div align="center"><?php if ($counter_forumentries > 0) { ?><a href="<?php echo $RSDB_intern_link_group.$result_sortby_b['comp_id'];?>&amp;item2=forum"><img src="media/icons/info/forum.gif" alt="Forum entries" border="0" width="13" height="13"></a><?php } else { echo "&nbsp;"; } ?></div></td>
+              <td width="33%"><div align="center"><?php if ($counter_screenshots > 0) { ?><a href="<?php echo $RSDB_intern_link_group.$result_sortby_b['comp_id'];?>&amp;item2=screens"><img src="media/icons/info/screenshot.gif" alt="Screenshots" border="0" width="13" height="13"></a><?php } else { echo "&nbsp;"; } ?></div></td>
             </tr>
           </table></font></div></td>            </tr>
             <?php

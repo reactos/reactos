@@ -35,7 +35,7 @@
 
 
 	
-    $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_id = :group_id ".$RSDB_intern_code_db_rsdb_groups." ORDER BY grpentr_name ASC") ;
+    $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_id = :group_id AND grpentr_comp = '1' ORDER BY grpentr_name ASC") ;
     $stmt->bindParam('group_id',$RSDB_SET_group,PDO::PARAM_STR);
     $stmt->execute();
 		$result_page = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -285,12 +285,7 @@
 		<a name="ver"></a>
 		<h3>All Versions</h3>
 		<?php
-			if ($RSDB_ENV_ajax == "true") { 
-				Message::noScript();
-			}
-			else {
 				include("inc/comp/data/group_item_list.php");
-			}
 		?>
 		<div id="group_version_list"></div>
 		<br />
@@ -532,7 +527,7 @@
 				echo "	<td width='30%'><div align='center'><font color='#FFFFFF' size='2' face='Arial, Helvetica, sans-serif'><b>Name</b></font></div></td>";
 				echo "	<td width='70%'><div align='center'><font color='#FFFFFF' size='2' face='Arial, Helvetica, sans-serif'><b>Description</b></font></div></td>";
 				echo "  </tr>";
-        $stmt_bundle=DBConnnection::getInstance()->prepare("SELECT * FROM rsdb_group_bundles WHERE bundle_id = :bundle_id ORDER BY bundle_groupid ASC");
+        $stmt_bundle=CDBConnnection::getInstance()->prepare("SELECT * FROM rsdb_group_bundles WHERE bundle_id = :bundle_id ORDER BY bundle_groupid ASC");
         $stmt_bundle->bindParam('bundle_id',$result_bundlelist["bundle_id"],PDO::PARAM_STR);
         $stmt_bundle->execute();
 				while($result_bundlelist_groupitem = $stmt->fetch(PDO::FETCH_ASSOC)) {
@@ -766,11 +761,6 @@
 				show_Versions('Show all Versions &gt;&gt;');
 			}
 			else {
-				<?php
-					if ($RSDB_ENV_ajax == "true") {
-						echo "ajat_LoadText('". $RSDB_intern_link_export ."grpitemlst','group_version_list');";
-					}
-				?>
 				show_Versions('Hide all Versions &lt;&lt;');
 			}
 		}

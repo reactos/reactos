@@ -26,7 +26,6 @@ class Home extends HTML
 
   protected function body( )
   {
-    global $RSDB_intern_code_view_name;
     global $RSDB_intern_index_php;
     global $RSDB_intern_link_db_sec;
     global $RSDB_intern_user_id;

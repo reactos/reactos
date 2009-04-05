@@ -92,8 +92,8 @@
 	$rpm_lang="en";
 	
 	
-	require("inc/lang/en.php"); // preload the english language text
-	require("inc/lang/".$rpm_lang.".php"); // load the and overwrite the language text
+	require("lang/en.php"); // preload the english language text
+	require("lang/".$rpm_lang.".php"); // load the and overwrite the language text
 
 	ini_set ('session.name', 'roscms');
 

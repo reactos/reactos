@@ -94,7 +94,7 @@ if ($result_count_cat[0]) {
 										echo $farbe2;
 										$farbe = $farbe2;
 									}
-								 ?>"> <div align="left"><font face="Arial, Helvetica, sans-serif">&nbsp;<b><a href="<?php echo $RSDB_intern_link_vendor_id_EX.$result_page['vendor_id'].$RSDB_URI_slash; ?>"><?php echo $result_page['vendor_name']; ?></a></b></font> 
+								 ?>"> <div align="left"><font face="Arial, Helvetica, sans-serif">&nbsp;<b><a href="<?php echo $RSDB_intern_link_vendor_id_EX.$result_page['vendor_id']; ?>"><?php echo $result_page['vendor_name']; ?></a></b></font> 
         </div></td>
     <td valign="top" bgcolor="<?php echo $farbe; ?>"><font size="2"><?php echo $result_page['vendor_fullname']; ?></font></td>
     <td valign="top" bgcolor="<?php echo $farbe; ?>"><div align="left"><font size="2"><a href="<?php echo $result_page['vendor_url']; ?>" onmousedown="return clk(this.href,'res','')"><?php echo $result_page['vendor_url']; ?></a></font></div></td>

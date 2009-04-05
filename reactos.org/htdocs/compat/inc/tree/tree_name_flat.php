@@ -39,7 +39,7 @@ if ($RSDB_SET_letter == "all") {
 	$RSDB_SET_letter = "%";
 }
 
-$stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_name LIKE  :starts_with " . $RSDB_intern_code_db_rsdb_groups . "");
+$stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_name LIKE  :starts_with AND grpentr_comp = '1'");
 $stmt->bindValue('starts_with',$RSDB_SET_letter.'%',PDO::PARAM_STR);
 $stmt->execute();
 $result_count_cat = $stmt->fetch(PDO::FETCH_NUM);
@@ -79,7 +79,7 @@ if ($result_count_cat[0]) {
   </tr>
   <?php
 	
-    $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_name LIKE :starts_with " . $RSDB_intern_code_db_rsdb_groups . " ORDER BY grpentr_name ASC LIMIT ".intval($RSDB_intern_items_per_page)." OFFSET ".intval($RSDB_SET_curpos));
+    $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_name LIKE :starts_with AND grpentr_comp = '1' ORDER BY grpentr_name ASC LIMIT ".intval($RSDB_intern_items_per_page)." OFFSET ".intval($RSDB_SET_curpos));
     $stmt->bindValue('starts_with',$RSDB_SET_letter.'%',PDO::PARAM_STR);
     $stmt->execute();
 	
@@ -102,7 +102,7 @@ if ($result_count_cat[0]) {
 										echo $farbe2;
 										$farbe = $farbe2;
 									}
-								 ?>" > <div align="left"><font face="Arial, Helvetica, sans-serif">&nbsp;<a href="<?php echo $RSDB_intern_link_group_EX.$result_page['grpentr_id'].$RSDB_URI_slash; ?>"><b><?php echo $result_page['grpentr_name']; ?></b></a></font></div></td>
+								 ?>" > <div align="left"><font face="Arial, Helvetica, sans-serif">&nbsp;<a href="<?php echo $RSDB_intern_link_group.$result_page['grpentr_id']; ?>"><b><?php echo $result_page['grpentr_name']; ?></b></a></font></div></td>
     <td valign="top" bgcolor="<?php echo $farbe; ?>"> <div align="left"><font size="2" face="Arial, Helvetica, sans-serif">&nbsp;<?php
 		
       $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_vendor WHERE vendor_id = :vendor_id");

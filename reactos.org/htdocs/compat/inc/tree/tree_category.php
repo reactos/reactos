@@ -34,10 +34,10 @@
 	}
 
 ?>
-<a href="<?php echo $RSDB_intern_link_db_sec; ?>home"><?php echo $RSDB_intern_code_view_name; ?></a> 
+<a href="<?php echo $RSDB_intern_link_db_sec; ?>home"><?php echo $RSDB_langres['TEXT_compdb_short']; ?></a> 
 &gt; <a href="<?php echo $RSDB_intern_link_category_cat; ?>0">Browse Database</a> &gt; By Category<a href="<?php echo $RSDB_intern_index_php; ?>?page=about"><img src="media/pictures/compatibility_small.jpg" vspace="1" border="0" align="right"></a>
 </h1> 
-<p><?php echo $RSDB_intern_code_view_description; ?></p>
+<p><?php echo $RSDB_langres['CONTENT_compdb_description']; ?></p>
 <?php
 	
 	//echo "<h1>Browse by Category</h1>";

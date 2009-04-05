@@ -40,7 +40,7 @@
     $stmt->execute();
 		$result_maintainer_item = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_id = :group_id " . $RSDB_intern_code_db_rsdb_groups . " LIMIT 1");
+    $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_id = :group_id AND grpentr_comp = '1' LIMIT 1");
     $stmt->bindParam('group_id',$result_maintainer_item['comp_groupid'],PDO::PARAM_STR);
     $stmt->execute();
 		$result_maintainer_group = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -81,7 +81,7 @@
 		// Edit application group data:
 		if ($RSDB_TEMP_pmod == "ok" && $RSDB_SET_item != "" && $RSDB_TEMP_appn != "" && $RSDB_TEMP_apppr != "" && $RSDB_TEMP_appit != "" && $RSDB_TEMP_version != "" && usrfunc_IsModerator($RSDB_intern_user_id)) {
 
-      $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_id = :group_id ".$RSDB_intern_code_db_rsdb_groups." LIMIT 1");
+      $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_id = :group_id AND grpentr_comp = '1' LIMIT 1");
       $stmt->bindParam('group_id',$RSDB_TEMP_appn,PDO::PARAM_STR);
       $stmt->execute();
 			$result_maintainer_group2 = $stmt->fetch(PDO::FETCH_ASSOC);

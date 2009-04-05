@@ -160,7 +160,7 @@ p.tabLink_u         { color: black; font-size : 10pt; padding : 0 8px 1px 2px; m
       </tr>
       <?php
 	
-    $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_groups WHERE grpentr_vendor = :vendor_id AND grpentr_visible = '1' ". $RSDB_intern_code_db_rsdb_groups ." ORDER BY grpentr_name ASC");
+    $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_groups WHERE grpentr_vendor = :vendor_id AND grpentr_visible = '1' AND grpentr_comp = '1' ORDER BY grpentr_name ASC");
     $stmt->bindParam('vendor_id',$RSDB_SET_vendor,PDO::PARAM_STR);
     $stmt->execute();
 	

@@ -34,7 +34,7 @@
 	}
 
 ?>
-<a href="<?php echo $RSDB_intern_link_db_sec; ?>home"><?php echo $RSDB_intern_code_view_name; ?></a> &gt; Help &amp; FAQ
+<a href="<?php echo $RSDB_intern_link_db_sec; ?>home"><?php echo $RSDB_langres['TEXT_compdb_short']; ?></a> &gt; Help &amp; FAQ
 <a href="<?php echo $RSDB_intern_index_php; ?>?page=about"><img src="media/pictures/compatibility_small.jpg" vspace="1" border="0" align="right"></a>
 </h1> 
 <p>ReactOS Software and Hardware Compatibility Database.</p>

@@ -36,7 +36,7 @@
 
 								
 
-$stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_categories WHERE cat_visible = '1' AND cat_path = :path " . $RSDB_intern_code_db_rsdb_categories . "");
+$stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_categories WHERE cat_visible = '1' AND cat_path = :path AND cat_comp = '1'");
 $stmt->bindParam('path',$RSDB_SET_cat,PDO::PARAM_STR);
 $stmt->execute();
 $result_count_cat = $stmt->fetch(PDO::FETCH_NUM);
@@ -68,7 +68,7 @@ if ($result_count_cat[0]) {
 	  <?php
 	
 
-    $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_categories WHERE cat_visible = '1' AND cat_path = :path " . $RSDB_intern_code_db_rsdb_categories . " ORDER BY ".$RSDB_TEMP_sortby." ASC");
+    $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_categories WHERE cat_visible = '1' AND cat_path = :path AND cat_comp = '1' ORDER BY ".$RSDB_TEMP_sortby." ASC");
     $stmt->bindParam('path',$RSDB_SET_cat,PDO::PARAM_STR);
     $stmt->execute();
 		
@@ -92,7 +92,7 @@ if ($result_count_cat[0]) {
 	  
 //		echo "<img src='media/icons/categories/".$result_treeview['cat_icon']."' width='16' height='16'>";
 		
-		echo "&nbsp;<b><a href='".$RSDB_intern_link_cat2_EX.$result_treeview['cat_id'].$RSDB_URI_slash2."&amp;cat2=".$RSDB_SET_cat2."'>".$result_treeview['cat_name']."</a></b>";
+		echo "&nbsp;<b><a href='".$RSDB_intern_link_cat2_EX.$result_treeview['cat_id']."&amp;cat2=".$RSDB_SET_cat2."'>".$result_treeview['cat_name']."</a></b>";
 //		$RSDB_TEMP_cat_icon = $result_treeview['cat_icon'];
 		$RSDB_TEMP_cat_path = $result_treeview['cat_path'];
 		$RSDB_TEMP_cat_id = $result_treeview['cat_id'];
@@ -103,7 +103,7 @@ if ($result_count_cat[0]) {
 		
 		for ($guesslevel=1; ; $guesslevel++) {
 //				echo $guesslevel."#";
-				$stmt_cat=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_categories WHERE cat_id = :cat_id AND cat_visible = '1' " . $RSDB_intern_code_db_rsdb_categories . "");
+				$stmt_cat=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_categories WHERE cat_id = :cat_id AND cat_visible = '1' AND cat_comp = '1'");
         $stmt_cat->bindParam('cat_id',$RSDB_TEMP_cat_current_id_guess,PDO::PARAM_STR);
         $stmt_cat->execute();
 				$result_category_tree_guesslevel=$stmt_cat->fetch(PDO::FETCH_ASSOC);

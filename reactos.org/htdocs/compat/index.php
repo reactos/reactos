@@ -52,32 +52,6 @@ require_once("lib/Compat_Autoloader.class.php");
 	
 		$RSDB_intern_selected="";
 	
-		 // Asyncchronous Javascript and XML (or plain text) - Setting:
-		 
-		$RSDB_ENV_ajax="?";
-		
-		if (array_key_exists("ajax", $_GET)) $RSDB_ENV_ajax=htmlspecialchars($_GET["ajax"]);
-	
-		if ($RSDB_ENV_ajax != "?") {
-			if ($RSDB_ENV_ajax == "true") {
-				$RSDB_ENV_ajax = "true";
-				Cookie::write('rsdb_ajat', 'true', time() + 24 * 3600 * 30 * 5, '/');
-			}
-			else {
-				$RSDB_ENV_ajax = "false";
-				Cookie::write('rsdb_ajat', 'false', time() + 24 * 3600 * 30 * 5, '/');
-			}
-		}
-		else {
-			if (isset($_COOKIE['rsdb_ajat'])) {
-				$RSDB_ENV_ajax = $_COOKIE['rsdb_ajat'];
-			}
-			else {
-				$RSDB_ENV_ajax = "false";
-				Cookie::write('rsdb_ajat', 'false', time() + 24 * 3600 * 30 * 5, '/');
-			}
-		}
-		
 		
 		// Forum bar settings:
 		
@@ -223,18 +197,13 @@ require_once("lib/Compat_Autoloader.class.php");
 	$roscms_intern_dynamic="true";
 	
 		
-	require_once('inc/lang.php');
+	require_once('lang.php');
 	
 	$RSDB_SET_lang=$rpm_lang;
 
 
 	// Config
 	require_once('rsdb_setting.php');
-	
-	// Human Readable URI
-	if ($RSDB_SET_export == "") {
-		require_once('rsdb_human_readable_url.php');
-	}
 	
 	// URI building
 	require_once('rsdb_config.php');
@@ -265,9 +234,6 @@ require_once("lib/Compat_Autoloader.class.php");
     case 'conditions': 
       new Conditions();
       break;
-
-    case 'comp':
-      switch ($RSDB_SET_sec) {
 
         // Browse Database
         case "category":
@@ -309,7 +275,6 @@ require_once("lib/Compat_Autoloader.class.php");
         case "help": 
           include("inc/comp/comp_help.php");
           break;
-      }
 
     default:
 			break;
