@@ -773,7 +773,7 @@ MiniQueueWorkItem(
 
     IoWorkItem = IoAllocateWorkItem(Adapter->NdisMiniportBlock.DeviceObject);
     if (IoWorkItem)
-        IoQueueWorkItem(IoWorkItem, MiniportWorker, CriticalWorkQueue, IoWorkItem);
+        IoQueueWorkItem(IoWorkItem, MiniportWorker, DelayedWorkQueue, IoWorkItem);
 
     KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
 }

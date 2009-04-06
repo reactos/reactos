@@ -398,7 +398,7 @@ NdisScheduleWorkItem(
 {
     PWORK_QUEUE_ITEM pntWorkItem = (PWORK_QUEUE_ITEM)pWorkItem->WrapperReserved;
     ExInitializeWorkItem(pntWorkItem, ndisProcWorkItemHandler, pWorkItem);
-    ExQueueWorkItem(pntWorkItem, CriticalWorkQueue);
+    ExQueueWorkItem(pntWorkItem, DelayedWorkQueue);
     return NDIS_STATUS_SUCCESS;
 }
 
