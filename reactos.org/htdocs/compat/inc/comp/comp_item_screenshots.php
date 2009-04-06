@@ -35,7 +35,7 @@
 
 
   $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp WHERE comp_visible = '1' AND comp_id = :comp_id ORDER BY comp_name ASC");
-  $stmt->bindParam('comp_id',$RSDB_SET_item,PDO::PARAM_STR);
+  $stmt->bindParam('comp_id',@$_GET['item'],PDO::PARAM_STR);
   $stmt->execute();
 	$result_page = $stmt->fetch(PDO::FETCH_ASSOC);
 	
@@ -52,11 +52,11 @@ if ($result_page['comp_id']) {
 <?php
 
 // Voting - update DB
-if ($RSDB_SET_vote != "" && $RSDB_SET_vote2 != "") {
-	Star::addVote($RSDB_SET_vote, $RSDB_SET_vote2, "rsdb_object_media", "media");
+if (isset($_GET['vote']) && $_GET['vote'] != '' && isset($_GET['vote2']) && $_GET['vote2'] != '') {
+	Star::addVote($_GET['vote'], $_GET['vote2'], "rsdb_object_media", "media");
 }
 	
-if ($RSDB_SET_entry == "" || $RSDB_SET_entry == 0) {
+if (isset($_GET['entry']) && ($_GET['entry'] == '' || $_GET['entry'] == 0)) {
 
 ?>
 
@@ -117,7 +117,7 @@ echo "</table>";
 else {
 	// Show one picture in max resolution:
   $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_object_media WHERE media_id = :media_id LIMIT 1") ;
-  $stmt->bindParam('media_id',$RSDB_SET_entry,PDO::PARAM_STR);
+  $stmt->bindParam('media_id',@$_GET['entry'],PDO::PARAM_STR);
   $stmt->execute();
 	$result_screenshots= $stmt->fetch(PDO::FETCH_ASSOC);
 	echo '<p align="center"><b><a href="'.$RSDB_intern_link_item_item2.'screens">Show all screenshots</a></b></p>';

@@ -211,7 +211,6 @@ class Star
    * @access public
    */
   public static function thresholdForum($RSDB_TEMP_msgid, $RSDB_TEMP_threshold, $RSDB_TEMP_threshold_new, $RSDB_TEMP_tablename, $RSDB_TEMP_fieldname) {
-	global $RSDB_SET_item;
 	global $RSDB_TEMP_order;
 	global $RSDB_intern_link_item_item2_forum_msg;
 	global $RSDB_SET_fstyle;
@@ -224,7 +223,7 @@ class Star
 	}
 
   $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp_".$RSDB_TEMP_tablename." WHERE ".$RSDB_TEMP_fieldname."_visible = '1' AND ".$RSDB_TEMP_fieldname."_comp_id = :item_id AND ".$RSDB_TEMP_fieldname."_parent = :parent ORDER BY ".$RSDB_TEMP_fieldname."_date ".$RSDB_TEMP_order."");
-  $stmt->bindParam('item_id',$RSDB_SET_item,PDO::PARAM_STR);
+  $stmt->bindParam('item_id',@$_GET['item'],PDO::PARAM_STR);
   $stmt->bindParam('parent',$RSDB_TEMP_msgid,PDO::PARAM_STR);
   $stmt->execute();
 
@@ -252,7 +251,6 @@ class Star
    * @access public
    */
   public static function thresholdTests($RSDB_TEMP_msgid, $RSDB_TEMP_threshold, $RSDB_TEMP_threshold_new, $RSDB_TEMP_tablename, $RSDB_TEMP_fieldname) {
-	global $RSDB_SET_item;
 	global $RSDB_TEMP_order;
 	global $RSDB_intern_link_item_item2_forum_msg;
 	global $RSDB_SET_fstyle;
@@ -265,7 +263,7 @@ class Star
 	}
 
   $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp_".$RSDB_TEMP_tablename." WHERE ".$RSDB_TEMP_fieldname."_visible = '1' AND ".$RSDB_TEMP_fieldname."_comp_id = :item_id ORDER BY ".$RSDB_TEMP_fieldname."_date " . $RSDB_TEMP_order . "");
-  $stmt->bindParam('item_id',$RSDB_SET_item,PDO::PARAM_STR);
+  $stmt->bindParam('item_id',@$_GET['item'],PDO::PARAM_STR);
   $stmt->execute();
 
 	while($result_fmsgreports = $stmt->fetch(PDO::FETCH_ASSOC)) {

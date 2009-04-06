@@ -39,28 +39,28 @@
 
 	$RSDB_viewpage = true;
 
-	if ($RSDB_SET_sec == "category") {
+	if (isset($_GET['page']) && $_GET['page'] == "category") {
 ?>
 <table width="100%" border="1" cellpadding="3" cellspacing="0" bordercolor="#5984C3">
   <tr>
     <td>&nbsp;<font size="2">Browsing: </font><a href="<?php echo $RSDB_intern_link_category_cat."0";
 
-		if ($RSDB_SET_cat2 == "flat" || $RSDB_SET_cat2 == "") {
+		if (empty($_GET['cat2']) || $_GET['cat2'] == 'flat') {
 
 		}
 		else {
-			echo "&amp;cat2=".$RSDB_SET_cat2;
+			echo "&amp;cat2=".htmlspecialchars(@$_GET['cat2']);
 		}
 		
 	?>">Main</a><?php
 		$RSDB_TEMP_current_category = "Main";
 		$RSDB_TEMP_current_category_desc = "Root directory of the tree.";
 	
-		if ($RSDB_SET_cat != "") {
+		if (!empty($_GET['cat'])) {
 
-			if ($RSDB_SET_item != "" && $RSDB_viewpage != false) {
+			if (isset($_GET['item']) && $_GET['item'] != "" && $RSDB_viewpage != false) {
 				$stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp WHERE comp_visible = '1' AND comp_id = :item_id ORDER BY comp_name ASC");
-        $stmt->bindParam('item_id',$RSDB_SET_item,PDO::PARAM_STR);
+        $stmt->bindParam('item_id',$_GET['item'],PDO::PARAM_STR);
         $stmt->execute();
 				$result_itempid = $stmt->fetch(PDO::FETCH_ASSOC);
 				if ($result_itempid['comp_groupid'] == "" || $result_itempid['comp_groupid'] == "0") {
@@ -100,7 +100,7 @@
 			elseif ($RSDB_viewpage != false) {
 				//echo "hjall";
         $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_categories WHERE cat_id = :cat_id AND cat_visible = '1' AND cat_comp = '1'");
-        $stmt->bindParam('cat_id',$RSDB_SET_cat,PDO::PARAM_STR);
+        $stmt->bindParam('cat_id',@$_GET['cat'],PDO::PARAM_STR);
         $stmt->execute();
 				$result_category_treehistory=$stmt->fetch(PDO::FETCH_ASSOC);
 				
@@ -150,11 +150,8 @@
 								$RSDB_TEMP_current_category = $result_category_tree_temp['cat_name'];
 								$RSDB_TEMP_current_category_desc = $result_category_tree_temp['cat_description'];
 								echo " <font size='2'>&rarr;</font> <a href='".$RSDB_intern_link_category_cat.$result_category_tree_temp['cat_id'];
-								if ($RSDB_SET_cat2 == "flat" || $RSDB_SET_cat2 == "") {
-
-								}
-								else {
-									echo "&amp;cat2=".$RSDB_SET_cat2;
+								if (!empty($_GET['cat2']) && $_GET['cat2'] != 'flat') {
+									echo "&amp;cat2=".htmlentities(@$_GET['cat2']);
 								}
 								echo "'>".$result_category_tree_temp['cat_name']."</a>";
 							}
@@ -175,12 +172,12 @@
 				$result_current_group = $stmt->fetch(PDO::FETCH_ASSOC);
 				echo " <font size='2'>&rarr;</font> <a href='".$RSDB_intern_link_group.$RSDB_SET_group."'>".$result_current_group['grpentr_name']."</a>";
 			}
-			if ($RSDB_SET_item != "" && $RSDB_viewpage != false) {
+			if (isset($_GET['item']) && $_GET['item'] != "" && $RSDB_viewpage != false) {
         $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp WHERE comp_visible = '1' AND comp_id = :item_id ORDER BY comp_name ASC");
-        $stmt->bindParam('item_id',$RSDB_SET_item,PDO::PARAM_STR);
+        $stmt->bindParam('item_id',$_GET['item'],PDO::PARAM_STR);
         $stmt->execute();
 				$result_current_group = $stmt->fetch(PDO::PARAM_STR);
-				echo " <font size='2'>&rarr;</font> <a href='".$RSDB_intern_link_group.$RSDB_SET_item."'>".$result_current_group['comp_name'];
+				echo " <font size='2'>&rarr;</font> <a href='".$RSDB_intern_link_group.htmlspecialchars($_GET['item'])."'>".$result_current_group['comp_name'];
 				
 							echo " ["."ReactOS ".show_osversion($result_current_group['comp_osversion'])."]";
 				
@@ -191,22 +188,22 @@
     echo "</td></tr></table>";
 	include('inc/tree/tree_menubar_sections.php');	
 
-	if ($RSDB_SET_group == "" && $RSDB_SET_item == "" && $RSDB_viewpage != false) {
+	if ($RSDB_SET_group == "" && isset($_GET['item']) && $_GET['item'] == "" && $RSDB_viewpage != false) {
 		echo "<h2>".$RSDB_TEMP_current_category."</h2>";
 		echo "<p>".$RSDB_TEMP_current_category_desc."</p>";
 	}
 
 	if ($RSDB_viewpage != false) {
-		if ($RSDB_SET_group != "" || $RSDB_SET_item != "") {
+		if ($RSDB_SET_group != "" || isset($_GET['item']) && $_GET['item'] != "") {
 			echo "<br />";
 		}
 		else {
 			echo "<p align='center'>";
-			if ($RSDB_SET_cat2 == "flat") {
-				echo "<b>Flat Style</b> | <a href='".$RSDB_intern_link_category_cat.$RSDB_SET_cat."&amp;cat2=tree'>Tree Style</a>";
+			if (isset($_GET['cat2']) && $_GET['cat2'] == 'flat') {
+				echo "<b>Flat Style</b> | <a href='".$RSDB_intern_link_category_cat.htmlspecialchars(@$_GET['cat'])."&amp;cat2=tree'>Tree Style</a>";
 			}
-			if ($RSDB_SET_cat2 == "tree") {
-				echo "<a href='".$RSDB_intern_link_category_cat.$RSDB_SET_cat."&amp;cat2=flat'>Flat Style</a> | <b>Tree Style</b>";
+			elseif (isset($_GET['cat2']) && $_GET['cat2'] == 'tree') {
+				echo "<a href='".$RSDB_intern_link_category_cat.htmlspecialchars(@$_GET['cat'])."&amp;cat2=flat'>Flat Style</a> | <b>Tree Style</b>";
 			}
 			echo "</p>";
 		}
@@ -216,11 +213,11 @@
 
 
 <?php
-	if ($RSDB_SET_sec == "name" || $RSDB_SET_sec == "vendor") {
-		if ($RSDB_SET_sec == "name") {
-			if ($RSDB_SET_item != "") {
+	if (isset($_GET['page']) && ($_GET['page'] == "name" || $_GET['page'] == "vendor")) {
+		if ($_GET['page'] == "name") {
+			if (isset($_GET['item']) && $_GET['item'] != "") {
         $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp WHERE comp_visible = '1' AND comp_id = :item_id ORDER BY comp_name ASC") ;
-        $stmt->bindParam('item_id',$RSDB_SET_item,PDO::PARAM_STR);
+        $stmt->bindParam('item_id',@$_GET['item'],PDO::PARAM_STR);
         $stmt->execute();
 				$result_itempid = $stmt->fetch(PDO::FETCH_ASSOC);
 				if ($result_itempid['comp_groupid'] == "" || $result_itempid['comp_groupid'] == "0") {
@@ -249,9 +246,9 @@
 		
 		echo "</a>";
 		 
-		if ($RSDB_SET_item != "" && $RSDB_viewpage != false) {
+		if (isset($_GET['item']) && $_GET['item'] != "" && $RSDB_viewpage != false) {
       $stmt=CDBConnection::getInstance("SELECT * FROM rsdb_item_comp WHERE comp_visible = '1' AND comp_id = :item_id ORDER BY comp_name ASC");
-      $stmt->bindParam('item_id',$RSDB_SET_item,PDO::PARAM_STR);
+      $stmt->bindParam('item_id',$_GET['item'],PDO::PARAM_STR);
       $stmt->execute();
 			$result_itempid = $stmt->fetch(PDO::FETCH_ASSOC);
 			if ($result_itempid['comp_groupid'] == "" || $result_itempid['comp_groupid'] == "0") {
@@ -271,12 +268,12 @@
 			}
 			echo " <font size='2'>&rarr;</font> <a href='".$RSDB_intern_link_group.$RSDB_SET_group."'>".$result_current_group['grpentr_name']."</a>";
 		}
-		if ($RSDB_SET_item != "" && $RSDB_viewpage != false) {
+		if (isset($_GET['item']) && $_GET['item'] != "" && $RSDB_viewpage != false) {
       $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp WHERE comp_visible = '1' AND comp_id = :item_id ORDER BY comp_name ASC");
-      $stmt->bindParam('item_id',$RSDB_SET_item,PDO::PARAM_STR);
+      $stmt->bindParam('item_id',$_GET['item'],PDO::PARAM_STR);
       $stmt->execute();
 			$result_current_group = $stmt->fetch(PDO::FETCH_ASSOC);
-			echo " <font size='2'>&rarr;</font> <a href='".$RSDB_intern_link_item_EX.$RSDB_SET_item."'>".$result_current_group['comp_name'];
+			echo " <font size='2'>&rarr;</font> <a href='".$RSDB_intern_link_item_EX.htmlspecialchars($_GET['item'])."'>".$result_current_group['comp_name'];
 			
 						echo " ["."ReactOS ".show_osversion($result_current_group['comp_osversion'])."]";
 			
@@ -286,11 +283,11 @@
 		echo "</td></tr></table>";
 	
 	}
-	elseif ($RSDB_SET_sec == "vendor") {
+	elseif ($_GET['page'] == "vendor") {
 
-			if ($RSDB_SET_vendor != "") {
+			if (isset($_GET['vendor']) && $_GET['vendor'] != '') {
         $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_vendor WHERE vendor_id = :vendor_id ORDER BY vendor_name ASC");
-        $stmt->bindParam('vendor_id',$RSDB_SET_vendor,PDO::PARAM_STR);
+        $stmt->bindParam('vendor_id',$_GET['vendor'],PDO::PARAM_STR);
         $stmt->execute();
 				$result_itempid = $stmt->fetch(PDO::FETCH_ASSOC);
 				if ($result_itempid['vendor_id'] == "" || $result_itempid['vendor_id'] == "0") {
@@ -314,9 +311,9 @@
 		
 		echo "</a></font>";
 		 
-		if ($RSDB_SET_vendor != "" && $RSDB_viewpage != false) {
+		if (isset($_GET['vendor']) && $_GET['vendor'] != '' && $RSDB_viewpage != false) {
       $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_vendor WHERE vendor_id = :vendor_id ORDER BY vendor_name ASC");
-      $stmt->bindParam('vendor_id',$RSDB_SET_vendor,PDO::PARAM_STR);
+      $stmt->bindParam('vendor_id',$_GET['vendor'],PDO::PARAM_STR);
       $stmt->execute();
 			$result_itempid = $stmt->fetch(PDO::FETCH_ASSOC);
 			if ($result_itempid['vendor_id'] == "" || $result_itempid['vendor_id'] == "0") {
@@ -324,7 +321,7 @@
 				$RSDB_viewpage = false;
 			}
 			//$RSDB_SET_group = $result_itempid['vendor_id'];
-			echo " <font size='2'>&rarr;</font> <a href='".$RSDB_intern_link_vendor_id_EX.$RSDB_SET_vendor."'>".$result_itempid['vendor_name']."</a>";
+			echo " <font size='2'>&rarr;</font> <a href='".$RSDB_intern_link_vendor_id_EX.htmlspecialchars($_GET['vendor'])."'>".$result_itempid['vendor_name']."</a>";
 		}
 		if ($RSDB_SET_group != "" && $RSDB_viewpage != false) {
       $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_id = :group_id AND grpentr_comp = '1' ORDER BY grpentr_name ASC");
@@ -337,12 +334,12 @@
 			}
 			echo " <font size='2'>&rarr;</font> <a href='".$RSDB_intern_link_name_group_EX.$RSDB_SET_group."'>".$result_current_group['grpentr_name']."</a>";
 		}
-		if ($RSDB_SET_item != "" && $RSDB_viewpage != false) {
+		if (isset($_GET['item']) && $_GET['item'] != "" && $RSDB_viewpage != false) {
       $stmt=CDBCOnnection::getInstance()->prepare("SELECT * FROM rsdb_item_vendor WHERE vendor_id = :vendor_id ORDER BY vendor_name ASC");
-      $stmt->bindParam('group_id',$RSDB_SET_vendor,PDO::PARAM_STR);
+      $stmt->bindParam('group_id',@$_GET['vendor'],PDO::PARAM_STR);
       $stmt->execute();
 			$result_current_group = $stmt->fetch(PDO::PARAM_STR);
-			echo " <font size='2'>&rarr;</font> <a href='".$RSDB_intern_link_name_item_EX.$RSDB_SET_item."'>".$result_current_group['vendor_name'];
+			echo " <font size='2'>&rarr;</font> <a href='".$RSDB_intern_link_name_item_EX.htmlspecialchars($_GET['item'])."'>".$result_current_group['vendor_name'];
 			echo "</a>";
 		}
 	
@@ -355,10 +352,10 @@
 
 	include('inc/tree/tree_menubar_sections.php');	
 
-	if ($RSDB_SET_sec == "name") {
+	if (isset($_GET['page']) && $_GET['page'] == "name") {
 		$RSDB_TEMP_link_letter = $RSDB_intern_link_name_letter_EX;
 	}
-	elseif ($RSDB_SET_sec == "vendor") {
+	elseif (isset($_GET['page']) && $_GET['page'] == "vendor") {
 		$RSDB_TEMP_link_letter = $RSDB_intern_link_vendor_letter_EX;
 	}
 

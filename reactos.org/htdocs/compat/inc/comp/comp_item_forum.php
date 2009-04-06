@@ -35,7 +35,7 @@
 
 
   $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp WHERE comp_visible = '1' AND comp_id = :comp_id ORDER BY comp_name ASC");
-  $stmt->bindParam('comp_id',$RSDB_SET_item,PDO::PARAM_STR);
+  $stmt->bindParam('comp_id',@$_GET['item'],PDO::PARAM_STR);
   $stmt->execute();
 	
 	$result_page = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -54,7 +54,7 @@
 <p align="center"><a href="<?php echo $RSDB_intern_link_submit_forum_post."0"; ?>"><strong>Submit New Topic</strong></a></p>
 
 <?php
-	switch ($RSDB_SET_addbox) {
+	switch (@$_GET['addbox']) {
 		case "":
 		default:
 			include("inc/tools/forum.php");

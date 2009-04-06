@@ -35,7 +35,7 @@
 
 
 $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp WHERE comp_visible = '1' AND comp_id = :comp_id ORDER BY comp_name ASC") ;
-$stmt->bindParam('comp_id',$RSDB_SET_item,PDO::PARAM_STR);
+$stmt->bindParam('comp_id',@$_GET['item'],PDO::PARAM_STR);
 $stmt->execute();
 $result_page = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -110,7 +110,7 @@ else {
 	}
 	if ($RSDB_TEMP_SUBMIT_valid == "yes" && $RSDB_TEMP_submitpost == true) {
 		$stmt=CDBConnection::getInstance()->prepare("INSERT INTO rsdb_item_comp_testresults ( test_id, test_comp_id, test_visible, test_whatworks, test_whatdoesntwork, test_whatnottested, test_date, test_result_install, test_result_function, test_user_comment, test_conclusion, test_user_id, test_user_submit_timestamp, test_useful_vote_value, test_useful_vote_user, test_useful_vote_user_history, test_com_version) VALUES ('', :comp_id, '1', :whatworks, :whatnot, :whatnottestet, NOW(), :install, :function, :comment, :conclusion, :user_id, NOW( ) , '', '', '', :version );");
-    $stmt->bindParam('comp_id',$RSDB_SET_item,PDO::PARAM_STR);
+    $stmt->bindParam('comp_id',@$_GET['item'],PDO::PARAM_STR);
     $stmt->bindParam('whatworks',$RSDB_TEMP_txtwhatwork,PDO::PARAM_STR);
     $stmt->bindParam('whatnot',$RSDB_TEMP_txtwhatnot,PDO::PARAM_STR);
     $stmt->bindParam('whatnottested',$RSDB_TEMP_txtwhatnottested,PDO::PARAM_STR);

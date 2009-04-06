@@ -35,7 +35,7 @@
 
 
     $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp WHERE comp_visible = '1' AND comp_id = :comp_id ORDER BY comp_name ASC");
-    $stmt->bindParam('comp_id',$RSDB_SET_item,PDO::PARAM_STR);
+    $stmt->bindParam('comp_id',@$_GET['item'],PDO::PARAM_STR);
     $stmt->execute();
 
 		$result_page = $stmt->fetch(PDO::FETCH_ASSOC);

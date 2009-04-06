@@ -37,7 +37,7 @@
 	if (usrfunc_IsModerator($RSDB_intern_user_id)) {
 	
     $stmt=CDBConnection::getInstance()->prepapare("SELECT * FROM rsdb_item_vendor WHERE vendor_visible = '1' AND vendor_id = :vendor_id LIMIT 1");
-    $stmt->bindParam('vendor_id',$RSDB_SET_vendor,PDO::PARAM_STR);
+    $stmt->bindParam('vendor_id',@$_GET['vendor'],PDO::PARAM_STR);
     $stmt->execute();
 		$result_maintainer_vendor = $stmt->fetchOnce(PDO::FETCH_ASSOC);
 
@@ -71,7 +71,7 @@
 
 
 		// Edit application group data:
-		if ($RSDB_TEMP_pmod == "ok" && $RSDB_SET_vendor != "" && $RSDB_TEMP_vendname != "" && $RSDB_TEMP_txturl != "" && usrfunc_IsModerator($RSDB_intern_user_id)) {
+		if ($RSDB_TEMP_pmod == "ok" && isset($_GET['vendor']) && $_GET['vendor'] != '' && $RSDB_TEMP_vendname != "" && $RSDB_TEMP_txturl != "" && usrfunc_IsModerator($RSDB_intern_user_id)) {
 			// Update group entry:
       $stmt=CDBConnection::getInstance()->prepare("UPDATE rsdb_item_vendor SET vendor_name = :name, vendor_fullname = :fullname, vendor_url = :url, vendor_email = :email, vendor_infotext = :info WHERE vendor_id = :vendor_id LIMIT 1");
       $stmt->bindParam('name',$RSDB_TEMP_vendname,PDO::PARAM_STR);
@@ -79,7 +79,7 @@
       $stmt->bindParam('url',$RSDB_TEMP_txturl,PDO::PARAM_STR);
       $stmt->bindParam('email',$RSDB_TEMP_txtemail,PDO::PARAM_STR);
       $stmt->bindParam('info',$RSDB_TEMP_txtinfo,PDO::PARAM_STR);
-      $stmt->bindParam('vendor_id',$RSDB_SET_vendor,PDO::PARAM_STR);
+      $stmt->bindParam('vendor_id',$_GET['vendor'],PDO::PARAM_STR);
       $stmt->execute();
 			
 			CLog::add("low", "tree_vendor", "edit", "[Vendor] Edit entry", @usrfunc_GetUsername($RSDB_intern_user_id)." changed the group data from: \n\nVendor-Name: ".htmlentities($result_maintainer_vendor['vendor_name'])." - ".htmlentities($result_maintainer_vendor['vendor_fullname'])." - ".$result_maintainer_vendor['vendor_id']."\n\nUrl: ".htmlentities($result_maintainer_vendor['vendor_url'])." \n\E-Mail: ".$result_maintainer_vendor['vendor_email']." \n\Info: ".$result_maintainer_vendor['vendor_infotext']." \n\n\nTo: \n\nVendor-Name: ".htmlentities($RSDB_TEMP_vendname)."\n\Fullname: ".htmlentities($RSDB_TEMP_fullname)." \n\nUrl: ".htmlentities($RSDB_TEMP_txturl)." \n\E-Mail: ".htmlentities($RSDB_TEMP_txtemail)." \n\Info: ".htmlentities($RSDB_TEMP_txtinfo), "0");
@@ -104,7 +104,7 @@
 		// Report spam:
 		if ($RSDB_TEMP_pmod == "ok" && $RSDB_TEMP_txtspam != "" && usrfunc_IsModerator($RSDB_intern_user_id)) {
       $stmt=CDBConnection::getInstance()->prepare("UPDATE rsdb_item_vendor SET vendor_visible = '3' WHERE vendor_id = :vendor_id LIMIT 1");
-      $stmt->bindParam('vendor_id',$RSDB_SET_vendor,PDO::PARAM_STR);
+      $stmt->bindParam('vendor_id',@$_GET['vendor'],PDO::PARAM_STR);
       $stmt->execute();
 			CLog::add("low", "tree_vendor", "report_spam", "[Vendor] Spam/ads report", @usrfunc_GetUsername($RSDB_intern_user_id)." wrote: \n".htmlentities($RSDB_TEMP_txtspam)." \n\n\n\nUser: ".@usrfunc_GetUsername($result_maintainer_vendor['vendor_usrid'])." - ".$result_maintainer_vendor['vendor_usrid']."\n\nVendor-Name: ".htmlentities($result_maintainer_vendor['vendor_name'])." - ".$result_maintainer_vendor['vendor_id']."\n\nUrl: ".htmlentities($result_maintainer_vendor['vendor_url'])." \n\E-Mail: ".$result_maintainer_vendor['vendor_email']." \n\Info: ".$result_maintainer_vendor['vendor_infotext'], $result_maintainer_vendor['vendor_usrid']);
 		}
@@ -119,7 +119,7 @@
 			if ($RSDB_TEMP_pmod == "ok" && $RSDB_TEMP_verified == "done" && usrfunc_IsModerator($RSDB_intern_user_id)) {
         $stmt=CDBConnection::getInstance()->prepare("UPDATE rsdb_item_vendor SET vendor_checked = :checked WHERE vendor_id = :vendor_id LIMIT 1");
         $stmt->bindParam('checked',$temp_verified,PDO::PARAM_STR);
-        $stmt->bindParam('vendor_id',$RSDB_SET_vendor,PDO::PARAM_STR);
+        $stmt->bindParam('vendor_id',@$_GET['vendor'],PDO::PARAM_STR);
         $stmt->execute();
 				CLog::add("low", "tree_vendor", "verified", "[Vendor] Verified", @usrfunc_GetUsername($RSDB_intern_user_id)." has verified the following vendor: \n\n\n\nUser: ".@usrfunc_GetUsername($result_maintainer_vendor['vendor_usrid'])." - ".$result_maintainer_vendor['vendor_usrid']."\n\nVendor-Name: ".htmlentities($result_maintainer_vendor['vendor_name'])." - ".$result_maintainer_vendor['vendor_id']."\n\nUrl: ".htmlentities($result_maintainer_vendor['vendor_url'])." \n\E-Mail: ".$result_maintainer_vendor['vendor_email']." \n\Info: ".$result_maintainer_vendor['vendor_infotext'], "0");
 			}
@@ -134,7 +134,7 @@
 			<fieldset>
 			<legend>Edit vendor data</legend>
 				<div align="left">
-				  <form name="form1" method="post" action="<?php echo $RSDB_intern_link_vendor.$RSDB_SET_vendor."#maintainerbar"; ?>">
+				  <form name="form1" method="post" action="<?php echo $RSDB_intern_link_vendor.htmlspecialchars(@$_GET['vendor'])."#maintainerbar"; ?>">
 				      <p><font size="2">Vendor </font><font size="2">name: 
 		                  <input name="vendname" type="text" id="vendname" value="<?php echo $result_maintainer_vendor['vendor_name']; ?>" size="40" maxlength="100">
 			          (max. 100 chars)	<br>
@@ -196,7 +196,7 @@
 					 ?>
                   </font></p>
 				  <p><font size="2">			        Please verify the data and choose one of the three available options below:</font></p>
-				  <form name="form2" method="post" action="<?php echo $RSDB_intern_link_vendor.$RSDB_SET_vendor."#maintainerbar"; ?>">
+				  <form name="form2" method="post" action="<?php echo $RSDB_intern_link_vendor.htmlspecialchars(@$_GET['vendor'])."#maintainerbar"; ?>">
 				  <ul>
 				    <li><font size="2"><a href="javascript:Show_spam()"><strong>Report spam/ads</strong></a></font></li>
 				  </ul>
@@ -219,7 +219,7 @@
 			<fieldset>
 			<legend>Report spam/ads</legend>
 				<div align="left">
-				  <form name="form4" method="post" action="<?php echo $RSDB_intern_link_vendor.$RSDB_SET_vendor."#maintainerbar"; ?>">
+				  <form name="form4" method="post" action="<?php echo $RSDB_intern_link_vendor.htmlspecialchars(@$_GET['vendor'])."#maintainerbar"; ?>">
 				    <p><font size="2">Please write a useful description:<br> 
 			          <textarea name="txtspam" cols="70" rows="5" id="txtspam"></textarea>
 </font><font size="2" face="Arial, Helvetica, sans-serif">
@@ -246,7 +246,7 @@
 		<div id="requests" style="display: block">
 			<fieldset><legend>Special requests</legend>
 				<div align="left">
-				  <form name="form4" method="post" action="<?php echo $RSDB_intern_link_vendor.$RSDB_SET_vendor."#maintainerbar"; ?>">
+				  <form name="form4" method="post" action="<?php echo $RSDB_intern_link_vendor.htmlspecialchars(@$_GET['vendor'])."#maintainerbar"; ?>">
 				    <p><font size="2">Message title:<br> 
 		            <input name="txtreq1" type="text" id="txtreq1" size="40" maxlength="100">
 				    </font></p>

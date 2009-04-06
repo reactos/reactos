@@ -36,7 +36,7 @@
 
 
   $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_vendor WHERE vendor_id = :vendor_id AND vendor_visible = '1' ORDER BY vendor_name ASC");
-  $stmt->bindParam('vendor_id',$RSDB_SET_vendor,PDO::PARAM_STR);
+  $stmt->bindParam('vendor_id',@$_GET['vendor'],PDO::PARAM_STR);
   $stmt->execute();
 	
 	$result_page = $stmt->fetchOnce(PDO::FETCH_ASSOC);
@@ -109,7 +109,7 @@ p.tabLink_u         { color: black; font-size : 10pt; padding : 0 8px 1px 2px; m
                 <tr valign="middle">
                   <td class="tab_s" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
                   <td width="4"><img src="images/blank.gif" alt="" height="1" width="4"></td>
-                  <td nowrap="nowrap"><p class="tabLink_s"><a href="<?php echo $RSDB_intern_link_vendor.$RSDB_SET_vendor; ?>" class="tabLink">Overview</a></p></td>
+                  <td nowrap="nowrap"><p class="tabLink_s"><a href="<?php echo $RSDB_intern_link_vendor.htmlspecialchars($_GET['vendor']); ?>" class="tabLink">Overview</a></p></td>
                   <td class="tab_s" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
                   <td width="2"><img src="images/blank.gif" alt="" height="1" width="2"></td>
                 </tr>
@@ -161,7 +161,7 @@ p.tabLink_u         { color: black; font-size : 10pt; padding : 0 8px 1px 2px; m
       <?php
 	
     $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_groups WHERE grpentr_vendor = :vendor_id AND grpentr_visible = '1' AND grpentr_comp = '1' ORDER BY grpentr_name ASC");
-    $stmt->bindParam('vendor_id',$RSDB_SET_vendor,PDO::PARAM_STR);
+    $stmt->bindParam('vendor_id',@$_GET['vendor'],PDO::PARAM_STR);
     $stmt->execute();
 	
 		$farbe1="#E2E2E2";

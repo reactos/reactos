@@ -37,14 +37,14 @@
 								
 
 $stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_categories WHERE cat_visible = '1' AND cat_path = :path AND cat_comp = '1'");
-$stmt->bindParam('path',$RSDB_SET_cat,PDO::PARAM_STR);
+$stmt->bindParam('path',@$_GET['cat'],PDO::PARAM_STR);
 $stmt->execute();
 $result_count_cat = $stmt->fetch(PDO::FETCH_NUM);
 
 // Update the ViewCounter:
-if ($RSDB_SET_cat != "" || $RSDB_SET_cat != "0") {
+if (!empty($_GET['cat'])) {
   $stmt=CDBConnection::getInstance()->prepare("UPDATE rsdb_categories SET cat_viewcounter = (cat_viewcounter + 1) WHERE cat_id = :cat_id");
-  $stmt->bindParam('cat_id',$RSDB_SET_cat,PDO::PARAM_STR);
+  $stmt->bindParam('cat_id',@$_GET['cat'],PDO::PARAM_STR);
   $stmt->execute();
 }
 
@@ -69,7 +69,7 @@ if ($result_count_cat[0]) {
 	
 
     $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_categories WHERE cat_visible = '1' AND cat_path = :path AND cat_comp = '1' ORDER BY ".$RSDB_TEMP_sortby." ASC");
-    $stmt->bindParam('path',$RSDB_SET_cat,PDO::PARAM_STR);
+    $stmt->bindParam('path',@$_GET['cat'],PDO::PARAM_STR);
     $stmt->execute();
 		
 		
@@ -92,7 +92,7 @@ if ($result_count_cat[0]) {
 	  
 //		echo "<img src='media/icons/categories/".$result_treeview['cat_icon']."' width='16' height='16'>";
 		
-		echo "&nbsp;<b><a href='".$RSDB_intern_link_cat2_EX.$result_treeview['cat_id']."&amp;cat2=".$RSDB_SET_cat2."'>".$result_treeview['cat_name']."</a></b>";
+		echo "&nbsp;<b><a href='".$RSDB_intern_link_cat2_EX.$result_treeview['cat_id']."&amp;cat2=".htmlspecialchars(@$_GET['cat2'])."'>".$result_treeview['cat_name']."</a></b>";
 //		$RSDB_TEMP_cat_icon = $result_treeview['cat_icon'];
 		$RSDB_TEMP_cat_path = $result_treeview['cat_path'];
 		$RSDB_TEMP_cat_id = $result_treeview['cat_id'];

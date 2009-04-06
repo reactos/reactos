@@ -35,7 +35,7 @@
 
 
   $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp WHERE comp_visible = '1' AND comp_id = :comp_id ORDER BY comp_name ASC");
-  $stmt->bindParam('comp_id',$RSDB_SET_item,PDO::PARAM_STR);
+  $stmt->bindParam('comp_id',@$_GET['item'],PDO::PARAM_STR);
   $stmt->execute();
 
 	$result_page = $stmt->fetchOnce(PDO::FETCH_ASSOC);
@@ -66,10 +66,10 @@ else {
 	if (array_key_exists("parententry", $_POST)) $RSDB_TEMP_parententry=htmlspecialchars($_POST["parententry"]);
 
 
-	if ($RSDB_SET_entry != "0") {
+	if (isset($_GET['entry']) && $_GET['entry'] != 0) {
 		if ($RSDB_TEMP_txtsubject == "") {
       $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp_forum WHERE fmsg_visible = '1' AND fmsg_id = " .  . "");
-      $stmt->bindParam('msg_id',$RSDB_SET_entry,PDO::PARAM_STR);
+      $stmt->bindParam('msg_id',@$_GET['entry'],PDO::PARAM_STR);
       $stmt->execute();
 
 			$result_page_entry = $stmt->fetchOnce(PDO::FETCH_ASSOC);
@@ -106,7 +106,7 @@ else {
 		if ($result_fmsgforum['fmsg_body'] != $RSDB_TEMP_txtbody && $RSDB_intern_user_id != 0) {
       $stmt=CDBConnection::getInstance()->prepare("INSERT INTO `rsdb_item_comp_forum` ( `fmsg_id` , `fmsg_comp_id` , `fmsg_parent` , `fmsg_visible` , `fmsg_subject` , `fmsg_body` , `fmsg_user_id` , `fmsg_user_ip` , `fmsg_date` , `fmsg_useful_vote_value` , `fmsg_useful_vote_user` , `fmsg_useful_vote_user_history` )
 							VALUES ('', :comp_id, :parent, '1', :subject, :body, :user_id, :ip, NOW( ) , '0', '0', '')");
-      $stmt->bindParam('comp_id',$RSDB_SET_item,PDO::PARAM_STR);
+      $stmt->bindParam('comp_id',@$_GET['item'],PDO::PARAM_STR);
       $stmt->bindParam('parent',$RSDB_TEMP_parententry,PDO::PARAM_STR);
       $stmt->bindParam('subject',$RSDB_TEMP_txtsubject,PDO::PARAM_STR);
       $stmt->bindParam('body',$RSDB_TEMP_txtbody,PDO::PARAM_STR);
@@ -142,8 +142,8 @@ else {
 <p><font size="2">
   <input name="submitpost" type="hidden" id="submitpost" value="yes">
   <input name="parententry" type="hidden" value="<?php
-	if ($RSDB_SET_entry != "") {
-		echo $RSDB_SET_entry;
+	if (isset($_GET['entry']) && $_GET['entry'] != '') {
+		echo $_GET['entry'];
 	}
   	else {
 		echo $RSDB_TEMP_parententry;

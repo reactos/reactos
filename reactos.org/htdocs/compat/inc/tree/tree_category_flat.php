@@ -36,14 +36,14 @@
 
 
 $stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_categories WHERE cat_visible = '1' AND cat_path = :path AND cat_comp = '1'");
-$stmt->bindParam('path',$RSDB_SET_cat,PDO::PARAM_STR);
+$stmt->bindParam('path',@$_GET['cat'],PDO::PARAM_STR);
 $stmt->execute();
 $result_count_cat = $stmt->fetch(PDO::FETCH_NUM);
 
 // Update the ViewCounter:
-if ($RSDB_SET_cat != "" || $RSDB_SET_cat != "0") {
+if (!empty($_GET['cat'])) {
   $stmt=CDBConnection::getInstance()->prepare("UPDATE rsdb_categories SET cat_viewcounter = (cat_viewcounter + 1) WHERE cat_id = :cat_id");
-  $stmt->bindParam('cat_id',$RSDB_SET_cat,PDO::PARAM_STR);
+  $stmt->bindParam('cat_id',@$_GET['cat'],PDO::PARAM_STR);
   $stmt->execute();
 }
 
@@ -61,7 +61,7 @@ if ($result_count_cat[0]) {
 	  <?php
 	
     $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_categories WHERE cat_visible = '1' AND cat_path = :path AND cat_comp = '1' ORDER BY `".htmlentities($RSDB_TEMP_sortby)."` ASC");
-    $stmt->bindParam('path',$RSDB_SET_cat,PDO::PARAM_STR);
+    $stmt->bindParam('path',@$_GET['cat'],PDO::PARAM_STR);
     $stmt->execute();
 	
 		$farbe1="#E2E2E2";

@@ -37,7 +37,7 @@
 	if (usrfunc_IsModerator($RSDB_intern_user_id)) {
 	
     $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_vendor WHERE vendor_visible = '1' AND vendor_id = :vendor_id LIMIT 1");
-    $stmt->bindParam('vendor_id',$RSDB_SET_vendor,PDO::PARAM_STR);
+    $stmt->bindParam('vendor_id',@$_GET['vendor'],PDO::PARAM_STR);
     $stmt->execute();
 		$result_maintainer_vendor = $stmt->fetchOnce(PDO::FETCH_ASSOC);
 
@@ -70,7 +70,7 @@
 		if (array_key_exists("txtinfo", $_POST)) $RSDB_TEMP_txtinfo=htmlspecialchars($_POST["txtinfo"]);
 
 		// Edit application group data:
-		if ($RSDB_TEMP_pmod == "ok" && $RSDB_SET_sec == "vendor" && $RSDB_TEMP_vendname != "" && $RSDB_TEMP_txturl != "" && usrfunc_IsModerator($RSDB_intern_user_id)) {
+		if ($RSDB_TEMP_pmod == "ok" && isset($_GET['page']) && $_GET['page'] == "vendor" && $RSDB_TEMP_vendname != "" && $RSDB_TEMP_txturl != "" && usrfunc_IsModerator($RSDB_intern_user_id)) {
 			// Submit vendor entry:
 				
       $stmt=CDBConnection::getInstance()->prepare("INSERT INTO rsdb_item_vendor ( vendor_id, vendor_name, vendor_visible, vendor_fullname, vendor_url, vendor_email, vendor_infotext, vendor_usrid, vendor_usrip, vendor_date, vendor_checked ) VALUES ('', :name, '1', :fullname, :url, :email, :info, :user_id, :ip, NOW() , 'yes')");
@@ -114,7 +114,7 @@
 			<fieldset>
 			<legend>Submit new vendor</legend>
 				<div align="left">
-				  <form name="form1" method="post" action="<?php echo $RSDB_intern_link_db_sec.$RSDB_SET_sec."#maintainerbar"; ?>">
+				  <form name="form1" method="post" action="<?php echo $RSDB_intern_link_db_sec.htmlspecialchars(@$_GET['page'])."#maintainerbar"; ?>">
 				      <p><font size="2">Vendor </font><font size="2">name: 
 		                  <input name="vendname" type="text" id="vendname" size="40" maxlength="100">
 			          (max. 100 chars)	<br>
@@ -146,7 +146,7 @@
 		<div id="requests" style="display: block">
 			<fieldset><legend>Special requests</legend>
 				<div align="left">
-				  <form name="form4" method="post" action="<?php echo $RSDB_intern_link_vendor.$RSDB_SET_vendor."#maintainerbar"; ?>">
+				  <form name="form4" method="post" action="<?php echo $RSDB_intern_link_vendor.htmlspecialchars($_GET['vendor'])."#maintainerbar"; ?>">
 				    <p><font size="2">Message title:<br> 
 		            <input name="txtreq1" type="text" id="txtreq1" size="40" maxlength="100">
 				    </font></p>

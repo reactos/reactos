@@ -49,7 +49,7 @@ if ($result_count_cat[0]) {
 	$j=0;
 	for ($i=0; $i < $result_count_cat[0]; $i += $RSDB_intern_items_per_page) {
 		$j++;
-		if ($RSDB_SET_curpos == $i) {
+		if (isset($_GET['curpos']) && $_GET['curpos'] == $i) {
 			echo "<b>".$j."</b> ";
 		}
 		else {
@@ -79,7 +79,7 @@ if ($result_count_cat[0]) {
   </tr>
   <?php
 	
-    $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_name LIKE :starts_with AND grpentr_comp = '1' ORDER BY grpentr_name ASC LIMIT ".intval($RSDB_intern_items_per_page)." OFFSET ".intval($RSDB_SET_curpos));
+    $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_name LIKE :starts_with AND grpentr_comp = '1' ORDER BY grpentr_name ASC LIMIT ".intval($RSDB_intern_items_per_page)." OFFSET ".intval(@$_GET['curpos']));
     $stmt->bindValue('starts_with',$RSDB_SET_letter.'%',PDO::PARAM_STR);
     $stmt->execute();
 	
@@ -236,13 +236,13 @@ if ($result_count_cat[0]) {
 </table>
 <p align="center"><b><?php
 
-	echo ($RSDB_SET_curpos+1)." to ";
+	echo (@$_GET['curpos']+1)." to ";
 
-	if (($RSDB_SET_curpos + $RSDB_intern_items_per_page) > $result_count_cat[0]) {
+	if ((@$_GET['curpos'] + $RSDB_intern_items_per_page) > $result_count_cat[0]) {
 		echo $result_count_cat[0];
 	}
 	else {
-		echo ($RSDB_SET_curpos + $RSDB_intern_items_per_page);
+		echo (@$_GET['curpos'] + $RSDB_intern_items_per_page);
 	}
 		
 	echo " of ".$result_count_cat[0]; 

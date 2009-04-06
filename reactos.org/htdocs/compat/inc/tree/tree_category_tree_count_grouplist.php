@@ -37,7 +37,6 @@
 
 	function count_tree_grouplist ($RSDB_TEMP_cat_id_grouplista) {
 	
-			global $RSDB_SET_cat;
 			global $RSDB_intern_link_category_cat;
 			global $RSDB_TEMP_cat_id_grouplist;
 			global $RSDB_TEMP_counter_group;

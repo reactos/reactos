@@ -40,13 +40,13 @@
         <td><div align="left"><span class="Stil2">Sort by:
                   <?php
 
-				if ($RSDB_SET_sort == "item" || $RSDB_SET_sort == "") {
+				if (isset($_GET['sort']) && ($_GET['sort'] == 'item' || $_GET['sort'] == '')) {
 						echo "<b>Application version</b> | <a href='".$RSDB_intern_link_group_sort."ros#ver'>ReactOS version</a>";
 					
 					$RSDB_intern_sortby_headline_field = "comp_appversion";
 					$RSDB_intern_sortby_linkname_field = "comp_osversion";
 				}
-				if ($RSDB_SET_sort == "ros") {
+				if (isset($_GET['sort']) && $_GET['sort'] == 'ros') {
 						echo "<a href='".$RSDB_intern_link_group_sort."item#ver'>Application version</a> | <b>ReactOS version</b>";
 					
 					$RSDB_intern_sortby_headline_field = "comp_osversion";
@@ -66,11 +66,11 @@
 	while($result_sortby_a = $stmt->fetch(PDO::FETCH_ASSOC)) {
 		if ($result_sortby_a[$RSDB_intern_sortby_headline_field] != $RSDB_intern_TEMP_version_saved_a) {
 		
-				if ($RSDB_SET_sort == "item" || $RSDB_SET_sort == "") {
+				if (isset($_GET['sort']) && ($_GET['sort'] == 'item' || $_GET['sort'] == '')) {
               $stmt_comp=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp WHERE comp_groupid = :group_id AND comp_appversion = :version ORDER BY comp_osversion DESC, comp_status ASC");
               $stmt_comp->bindParam('version',$result_sortby_a['comp_appversion'],PDO::PARAM_STR);
 				}
-				if ($RSDB_SET_sort == "ros") {
+				if (isset($_GET['sort']) && $_GET['sort'] == 'ros') {
               $stmt_comp=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp WHERE comp_groupid = :group_id AND comp_osversion = :version ORDER BY comp_appversion DESC, comp_status ASC");
               $stmt_comp->bindParam('version',$result_sortby_a['comp_osversion'],PDO::PARAM_STR);
 														//echo $RSDB_intern_sortby_SQL_b_query;
@@ -88,7 +88,7 @@
                     <td width="30%"><font color="#FFFFFF" face="Arial, Helvetica, sans-serif"><strong>&nbsp;
                             <?php
 									
-						if ($RSDB_SET_sort == "item" || $RSDB_SET_sort == "") {
+						if (isset($_GET['sort']) && ($_GET['sort'] == 'item' || $_GET['sort'] == '')) {
 							echo $result_sortby_a['comp_name']." (v. ";
 							echo $result_sortby_a[$RSDB_intern_sortby_headline_field].")"; 
 						}
@@ -135,7 +135,7 @@
 					echo '<a href="';
 					echo $RSDB_intern_link_item.$result_sortby_b['comp_id'].'">';
 					
-					if ($RSDB_SET_sort == "ros") {
+					if (isset($_GET['sort']) && $_GET['sort'] == 'ros') {
 						echo $result_sortby_b['comp_name']." (v. ";
 						echo $result_sortby_b[$RSDB_intern_sortby_linkname_field].")";
 					}

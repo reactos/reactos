@@ -36,7 +36,7 @@
 
 	if (usrfunc_IsModerator($RSDB_intern_user_id)) {
     $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp WHERE comp_visible = '1' AND comp_id = :comp_id LIMIT 1");
-    $stmt->bindParam('comp_id',$RSDB_SET_item,PDO::PARAM_STR);
+    $stmt->bindParam('comp_id',@$_GET['item'],PDO::PARAM_STR);
     $stmt->execute();
 		$result_maintainer_item = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -79,7 +79,7 @@
 
 
 		// Edit application group data:
-		if ($RSDB_TEMP_pmod == "ok" && $RSDB_SET_item != "" && $RSDB_TEMP_appn != "" && $RSDB_TEMP_apppr != "" && $RSDB_TEMP_appit != "" && $RSDB_TEMP_version != "" && usrfunc_IsModerator($RSDB_intern_user_id)) {
+		if ($RSDB_TEMP_pmod == "ok" && @$_GET['item'] != "" && $RSDB_TEMP_appn != "" && $RSDB_TEMP_apppr != "" && $RSDB_TEMP_appit != "" && $RSDB_TEMP_version != "" && usrfunc_IsModerator($RSDB_intern_user_id)) {
 
       $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_id = :group_id AND grpentr_comp = '1' LIMIT 1");
       $stmt->bindParam('group_id',$RSDB_TEMP_appn,PDO::PARAM_STR);
@@ -94,7 +94,7 @@
       $stmt->bindParam('new_description',$RSDB_TEMP_appdesc,PDO::PARAM_STR);
       $stmt->bindParam('new_infotext',$RSDB_TEMP_appinfo,PDO::PARAM_STR);
       $stmt->bindParam('new_osversion',$RSDB_TEMP_version,PDO::PARAM_STR);
-      $stmt->bindParam('comp_id',$RSDB_SET_item,PDO::PARAM_STR);
+      $stmt->bindParam('comp_id',@$_GET['item'],PDO::PARAM_STR);
       $stmt->execute();
 			
 			CLog::add("low", "comp_item", "edit", "[App Item] Edit entry", @usrfunc_GetUsername($RSDB_intern_user_id)." changed the group data from: \n\nAppName: ".htmlentities($result_maintainer_item['comp_name'])." - ".$result_maintainer_item['comp_id']."\n\nDesc: ".htmlentities($result_maintainer_item['comp_description'])." \n\GroupID: ".$result_maintainer_item['comp_groupid']." \n\ReactOS version: ".$result_maintainer_item['comp_osversion']." \n\n\nTo: \n\nAppName: ".htmlentities($result_maintainer_group['grpentr_name']." ".$RSDB_TEMP_apppr)." - ".htmlentities($RSDB_TEMP_appn)."\n\nInternVersion: ".htmlentities($RSDB_TEMP_appit)." \n\nDesc: ".htmlentities($RSDB_TEMP_appdesc)." \n\nReactOS version: ".htmlentities($RSDB_TEMP_version), "0");
@@ -119,7 +119,7 @@
 		// Report spam:
 		if ($RSDB_TEMP_pmod == "ok" && $RSDB_TEMP_txtspam != "" && usrfunc_IsModerator($RSDB_intern_user_id)) {
 			$stmt=CDBConnection::getInstance()->prepare("UPDATE rsdb_item_comp SET comp_visible = '3' WHERE comp_id = :comp_id");
-      $stmt->bindParam('comp_id',$RSDB_SET_item,PDO::PARAM_STR);
+      $stmt->bindParam('comp_id',@$_GET['item'],PDO::PARAM_STR);
       $stmt->execute();
 			CLog::add("low", "comp_item", "report_spam", "[App Item] Spam/ads report", @usrfunc_GetUsername($RSDB_intern_user_id)." wrote: \n".htmlentities($RSDB_TEMP_txtspam)." \n\n\n\nUser: ".@usrfunc_GetUsername($result_maintainer_item['comp_usrid'])." - ".$result_maintainer_item['comp_usrid']."\n\nAppName: ".htmlentities($result_maintainer_item['comp_name'])." - ".$result_maintainer_item['comp_id']."\n\nDesc: ".htmlentities($result_maintainer_item['comp_description'])." \n\GroupID: ".$result_maintainer_item['comp_groupid']." \n\ReactOS version: ".$result_maintainer_item['comp_osversion'], $result_maintainer_item['comp_usrid']);
 		
@@ -136,7 +136,7 @@
 				echo "!";
         $stmt=CDBConnection::getInstance()->prepare("UPDATE rsdb_item_comp SET comp_checked = :checked WHERE comp_id = :comp_id ");
         $stmt->bindParam('checked',$temp_verified,PDO::PARAM_STR);
-        $stmt->bindParam('comp_id',$RSDB_SET_item,PDO::PARAM_STR);
+        $stmt->bindParam('comp_id',@$_GET['item'],PDO::PARAM_STR);
         $stmt->execute();
 				CLog::add("low", "comp_item", "verified", "[App Item] Verified", @usrfunc_GetUsername($RSDB_intern_user_id)." has verified the following app version: \n\n\n\nUser: ".@usrfunc_GetUsername($result_maintainer_item['comp_usrid'])." - ".$result_maintainer_item['comp_usrid']."\n\nAppName: ".htmlentities($result_maintainer_item['comp_name'])." - ".$result_maintainer_item['comp_id']."\n\nDesc: ".htmlentities($result_maintainer_item['comp_description'])." \n\GroupID: ".$result_maintainer_item['comp_groupid']." \n\ReactOS version: ".$result_maintainer_item['comp_osversion'], "0");
 			}
@@ -385,10 +385,10 @@
       $stmt->bindParam('log_id',$RSDB_TEMP_done,PDO::PARAM_STR);
       $stmt->execute();
 		}
-		if ($RSDB_TEMP_padmin == "ok" && $RSDB_TEMP_medal != "" && $RSDB_SET_item != "" && usrfunc_IsAdmin($RSDB_intern_user_id)) {
+		if ($RSDB_TEMP_padmin == "ok" && $RSDB_TEMP_medal != "" && isset($_GET['item']) && $_GET['item'] != "" && usrfunc_IsAdmin($RSDB_intern_user_id)) {
       $stmt=CDBConnection::getInstance()->prepare("UPDATE rsdb_item_comp SET comp_award = :award WHERE comp_id = :comp_id");
       $stmt->bindParam('award',$RSDB_TEMP_medal,PDO::PARAM_STR);
-      $stmt->bindParam('comp_id',$RSDB_SET_item,PDO::PARAM_STR);
+      $stmt->bindParam('comp_id',$_GET['item'],PDO::PARAM_STR);
       $stmt->execute();
 			CLog::add("medium", "comp_item", "change award", "[App Item] Change Award", @usrfunc_GetUsername($RSDB_intern_user_id)." (".$RSDB_intern_user_id.") has changed the award symbol from: ".$result_maintainer_item['comp_award']." to ".$RSDB_TEMP_medal, "0");
 			?>

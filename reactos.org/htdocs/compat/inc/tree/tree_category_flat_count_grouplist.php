@@ -37,7 +37,6 @@
 
 	function count_tree_grouplist ($RSDB_TEMP_cat_id_grouplista) {
 	
-		global $RSDB_SET_cat;
 		global $RSDB_intern_link_category_cat;
 		global $RSDB_TEMP_cat_id_grouplist;
 		global $RSDB_TEMP_counter_group;
@@ -51,7 +50,7 @@
 		$RSDB_VAR_counter_tree_grouplist = 0;
 	
 		$stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_categories WHERE cat_visible = '1' AND cat_path = :path AND cat_comp = '1'");
-    $stmt->bindParam('path',$RSDB_SET_cat,PDO::PARAM_STR);
+    $stmt->bindParam('path',@$_GET['cat'],PDO::PARAM_STR);
     $stmt->execute();
 		$result_count_groups = $stmt->fetch();
 		

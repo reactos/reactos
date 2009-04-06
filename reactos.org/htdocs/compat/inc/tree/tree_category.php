@@ -44,12 +44,12 @@
 	
 	include("inc/tree/tree_historybar.php");	
 
-	if ($RSDB_SET_item != "") {
+	if (isset($_GET['item']) && $_GET['item'] != "") {
 		include("inc/tree/tree_item.php");
 	}
 	else {
 		if ($RSDB_SET_group != "") {
-			if ($RSDB_SET_addbox == "submit") {
+			if (isset($_GET['addbox']) && $_GET['addbox'] == 'submit') {
 				include("inc/comp/comp_itemver_submit.php");
 			}
 			else {
@@ -57,7 +57,7 @@
 			}
 		}
 		else {
-			switch ($RSDB_SET_cat2) {
+			switch (@$_GET['cat2']) {
 				case "flat": // Flat Style
 				default:
 					include("inc/tree/tree_category_flat.php");

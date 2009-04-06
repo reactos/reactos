@@ -70,21 +70,23 @@ p.tabLink_u         { color: black; font-size : 10pt; padding : 0 8px 1px 2px; m
                 <tr>
                   <td class="title_group" nowrap="nowrap"><?php 
 				  
-				  if ($RSDB_SET_item2 == "details" || $RSDB_SET_item2 == "") { 
-				  	echo "Overview";
-				  }
-				  elseif ($RSDB_SET_item2 == "screens") { 
-				  	echo "Screenshots";
-				  }
-				  elseif ($RSDB_SET_item2 == "tests") { 
-				  	echo "Compatibility Test Reports";
-				  }
-				  elseif ($RSDB_SET_item2 == "forum") { 
-				  	echo "Forum";
-				  }
-				  elseif ($RSDB_SET_item2 == "bugs") { 
-				  	echo "Known Bugs";
-				  }
+          if (isset($_GET['item2'])) {
+				    if ($_GET['item2'] == 'details' || $_GET['item2'] == '') { 
+				    	echo "Overview";
+				    }
+				    elseif ($_GET['item2'] == 'screens') { 
+				    	echo "Screenshots";
+				    }
+				    elseif ($_GET['item2'] == 'tests') { 
+				    	echo "Compatibility Test Reports";
+				    }
+				    elseif ($_GET['item2'] == 'forum') { 
+				    	echo "Forum";
+				    }
+				    elseif ($_GET['item2'] == 'bugs') { 
+				    	echo "Known Bugs";
+				    }
+          }
 			  
 				  
 				  ?></td>
@@ -99,28 +101,28 @@ p.tabLink_u         { color: black; font-size : 10pt; padding : 0 8px 1px 2px; m
                 <tr align="left" valign="top">
                   <td width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
                   <td width="4"><img src="images/blank.gif" alt="" height="1" width="1"></td>
-                  <td class="<?php if ($RSDB_SET_item2 == "details" || $RSDB_SET_item2 == "") { echo "tab_s"; } else { echo "tab_u"; } ?>"><img src="images/blank.gif" alt="" height="1" width="1"></td>
-                  <td class="<?php if ($RSDB_SET_item2 == "details" || $RSDB_SET_item2 == "") { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
+                  <td class="<?php if (isset($_GET['item2']) && ($_GET['item2'] == 'details' || $_GET['item2'] == '')) { echo "tab_s"; } else { echo "tab_u"; } ?>"><img src="images/blank.gif" alt="" height="1" width="1"></td>
+                  <td class="<?php if (isset($_GET['item2']) && ($_GET['item2'] == 'details' || $_GET['item2'] == '')) { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
                   <td width="2"><img src="images/blank.gif" alt="" height="1" width="2"></td>
                 </tr>
                 <tr align="left" valign="top">
-                  <td class="<?php if ($RSDB_SET_item2 == "details" || $RSDB_SET_item2 == "") { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/white_pixel.gif" alt="" height="4" width="1"></td>
-                  <td width="4"><img src="images/tab_corner_<?php if ($RSDB_SET_item2 == "details" || $RSDB_SET_item2 == "") { echo "active"; } else { echo "inactive"; } ?>.gif" alt="" height="4" width="4"></td>
+                  <td class="<?php if (isset($_GET['item2']) && ($_GET['item2'] == 'details' || $_GET['item2'] == '')) { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/white_pixel.gif" alt="" height="4" width="1"></td>
+                  <td width="4"><img src="images/tab_corner_<?php if (isset($_GET['item2']) && ($_GET['item2'] == 'details' || $_GET['item2'] == '')) { echo "active"; } else { echo "inactive"; } ?>.gif" alt="" height="4" width="4"></td>
                   <td><img src="images/blank.gif" alt="" height="1" width="1"></td>
-                  <td class="<?php if ($RSDB_SET_item2 == "details" || $RSDB_SET_item2 == "") { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
+                  <td class="<?php if (isset($_GET['item2']) && ($_GET['item2'] == 'details' || $_GET['item2'] == '')) { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
                   <td width="2"><img src="images/blank.gif" alt="" height="1" width="2"></td>
                 </tr>
                 <tr valign="middle">
-                  <td class="<?php if ($RSDB_SET_item2 == "details" || $RSDB_SET_item2 == "") { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
+                  <td class="<?php if (isset($_GET['item2']) && ($_GET['item2'] == 'details' || $_GET['item2'] == '')) { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
                   <td width="4"><img src="images/blank.gif" alt="" height="1" width="4"></td>
-                  <td nowrap="nowrap"><p class="<?php if ($RSDB_SET_item2 == "details" || $RSDB_SET_item2 == "") { echo "tabLink_s"; } else { echo "tabLink_u"; } ?>"><a href="<?php echo $RSDB_intern_link_item_item2; ?>details" class="tabLink">Overview</a></p></td>
-                  <td class="<?php if ($RSDB_SET_item2 == "details" || $RSDB_SET_item2 == "") { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
+                  <td nowrap="nowrap"><p class="<?php if (isset($_GET['item2']) && ($_GET['item2'] == 'details' || $_GET['item2'] == '')) { echo "tabLink_s"; } else { echo "tabLink_u"; } ?>"><a href="<?php echo $RSDB_intern_link_item_item2; ?>details" class="tabLink">Overview</a></p></td>
+                  <td class="<?php if (isset($_GET['item2']) && ($_GET['item2'] == 'details' || $_GET['item2'] == '')) { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
                   <td width="2"><img src="images/blank.gif" alt="" height="1" width="2"></td>
                 </tr>
                 <tr valign="bottom">
                   <td class="tab_s" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
-                  <td class="<?php if ($RSDB_SET_item2 == "details" || $RSDB_SET_item2 == "") { echo "tab"; } else { echo "tab_s"; } ?>" width="4"><img src="images/blank.gif" alt="" height="1" width="1"></td>
-                  <td class="<?php if ($RSDB_SET_item2 == "details" || $RSDB_SET_item2 == "") { echo "tab"; } else { echo "tab_s"; } ?>"><img src="images/blank.gif" alt="" height="1" width="1"></td>
+                  <td class="<?php if (isset($_GET['item2']) && ($_GET['item2'] == 'details' || $_GET['item2'] == '')) { echo "tab"; } else { echo "tab_s"; } ?>" width="4"><img src="images/blank.gif" alt="" height="1" width="1"></td>
+                  <td class="<?php if (isset($_GET['item2']) && ($_GET['item2'] == 'details' || $_GET['item2'] == '')) { echo "tab"; } else { echo "tab_s"; } ?>"><img src="images/blank.gif" alt="" height="1" width="1"></td>
                   <td class="tab_s" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
                   <td class="tab_s" width="2"><img src="images/blank.gif" alt="" height="1" width="2"></td>
                 </tr>
@@ -133,28 +135,28 @@ p.tabLink_u         { color: black; font-size : 10pt; padding : 0 8px 1px 2px; m
                 <tr align="left" valign="top">
                   <td width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
                   <td width="4"><img src="images/blank.gif" alt="" height="1" width="1"></td>
-                  <td class="<?php if ($RSDB_SET_item2 == "tests") { echo "tab_s"; } else { echo "tab_u"; } ?>"><img src="images/blank.gif" alt="" height="1" width="1"></td>
-                  <td class="<?php if ($RSDB_SET_item2 == "tests") { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
+                  <td class="<?php if (isset($_GET['item2']) && $_GET['item2'] == 'tests') { echo "tab_s"; } else { echo "tab_u"; } ?>"><img src="images/blank.gif" alt="" height="1" width="1"></td>
+                  <td class="<?php if (isset($_GET['item2']) && $_GET['item2'] == 'tests') { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
                   <td width="2"><img src="images/blank.gif" alt="" height="1" width="2"></td>
                 </tr>
                 <tr align="left" valign="top">
-                  <td class="<?php if ($RSDB_SET_item2 == "tests") { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/white_pixel.gif" alt="" height="4" width="1"></td>
-                  <td width="4"><img src="images/tab_corner_<?php if ($RSDB_SET_item2 == "tests") { echo "active"; } else { echo "inactive"; } ?>.gif" alt="" height="4" width="4"></td>
+                  <td class="<?php if (isset($_GET['item2']) && $_GET['item2'] == 'tests') { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/white_pixel.gif" alt="" height="4" width="1"></td>
+                  <td width="4"><img src="images/tab_corner_<?php if (isset($_GET['item2']) && $_GET['item2'] == 'tests') { echo "active"; } else { echo "inactive"; } ?>.gif" alt="" height="4" width="4"></td>
                   <td><img src="images/blank.gif" alt="" height="1" width="1"></td>
-                  <td class="<?php if ($RSDB_SET_item2 == "tests") { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
+                  <td class="<?php if (isset($_GET['item2']) && $_GET['item2'] == 'tests') { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
                   <td width="2"><img src="images/blank.gif" alt="" height="1" width="2"></td>
                 </tr>
                 <tr valign="middle">
-                  <td class="<?php if ($RSDB_SET_item2 == "tests") { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
+                  <td class="<?php if (isset($_GET['item2']) && $_GET['item2'] == 'tests') { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
                   <td width="4"><img src="images/blank.gif" alt="" height="1" width="4"></td>
-                  <td nowrap="nowrap"><p class="<?php if ($RSDB_SET_item2 == "tests") { echo "tabLink_s"; } else { echo "tabLink_u"; } ?>"><a href="<?php echo $RSDB_intern_link_item_item2; ?>tests" class="tabLink">Compatibility</a></p></td>
-                  <td class="<?php if ($RSDB_SET_item2 == "tests") { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
+                  <td nowrap="nowrap"><p class="<?php if (isset($_GET['item2']) && $_GET['item2'] == 'tests') { echo "tabLink_s"; } else { echo "tabLink_u"; } ?>"><a href="<?php echo $RSDB_intern_link_item_item2; ?>tests" class="tabLink">Compatibility</a></p></td>
+                  <td class="<?php if (isset($_GET['item2']) && $_GET['item2'] == 'tests') { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
                   <td width="2"><img src="images/blank.gif" alt="" height="1" width="2"></td>
                 </tr>
                 <tr valign="bottom">
                   <td class="tab_s" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
-                  <td class="<?php if ($RSDB_SET_item2 == "tests") { echo "tab"; } else { echo "tab_s"; } ?>" width="4"><img src="images/blank.gif" alt="" height="1" width="1"></td>
-                  <td class="<?php if ($RSDB_SET_item2 == "tests") { echo "tab"; } else { echo "tab_s"; } ?>"><img src="images/blank.gif" alt="" height="1" width="1"></td>
+                  <td class="<?php if (isset($_GET['item2']) && $_GET['item2'] == 'tests') { echo "tab"; } else { echo "tab_s"; } ?>" width="4"><img src="images/blank.gif" alt="" height="1" width="1"></td>
+                  <td class="<?php if (isset($_GET['item2']) && $_GET['item2'] == 'tests') { echo "tab"; } else { echo "tab_s"; } ?>"><img src="images/blank.gif" alt="" height="1" width="1"></td>
                   <td class="tab_s" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
                   <td class="tab_s" width="2"><img src="images/blank.gif" alt="" height="1" width="2"></td>
                 </tr>
@@ -167,28 +169,28 @@ p.tabLink_u         { color: black; font-size : 10pt; padding : 0 8px 1px 2px; m
                 <tr align="left" valign="top">
                   <td width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
                   <td width="4"><img src="images/blank.gif" alt="" height="1" width="1"></td>
-                  <td class="<?php if ($RSDB_SET_item2 == "forum") { echo "tab_s"; } else { echo "tab_u"; } ?>"><img src="images/blank.gif" alt="" height="1" width="1"></td>
-                  <td class="<?php if ($RSDB_SET_item2 == "forum") { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
+                  <td class="<?php if (isset($_GET['item2']) && $_GET['item2'] == 'forum') { echo "tab_s"; } else { echo "tab_u"; } ?>"><img src="images/blank.gif" alt="" height="1" width="1"></td>
+                  <td class="<?php if (isset($_GET['item2']) && $_GET['item2'] == 'forum') { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
                   <td width="2"><img src="images/blank.gif" alt="" height="1" width="2"></td>
                 </tr>
                 <tr align="left" valign="top">
-                  <td class="<?php if ($RSDB_SET_item2 == "forum") { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/white_pixel.gif" alt="" height="4" width="1"></td>
-                  <td width="4"><img src="images/tab_corner_<?php if ($RSDB_SET_item2 == "forum") { echo "active"; } else { echo "inactive"; } ?>.gif" alt="" height="4" width="4"></td>
+                  <td class="<?php if (isset($_GET['item2']) && $_GET['item2'] == 'forum') { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/white_pixel.gif" alt="" height="4" width="1"></td>
+                  <td width="4"><img src="images/tab_corner_<?php if (isset($_GET['item2']) && $_GET['item2'] == 'forum') { echo "active"; } else { echo "inactive"; } ?>.gif" alt="" height="4" width="4"></td>
                   <td><img src="images/blank.gif" alt="" height="1" width="1"></td>
-                  <td class="<?php if ($RSDB_SET_item2 == "forum") { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
+                  <td class="<?php if (isset($_GET['item2']) && $_GET['item2'] == 'forum') { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
                   <td width="2"><img src="images/blank.gif" alt="" height="1" width="2"></td>
                 </tr>
                 <tr valign="middle">
-                  <td class="<?php if ($RSDB_SET_item2 == "forum") { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
+                  <td class="<?php if (isset($_GET['item2']) && $_GET['item2'] == 'forum') { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
                   <td width="4"><img src="images/blank.gif" alt="" height="1" width="4"></td>
-                  <td nowrap="nowrap"><p class="<?php if ($RSDB_SET_item2 == "forum") { echo "tabLink_s"; } else { echo "tabLink_u"; } ?>"><a href="<?php echo $RSDB_intern_link_item_item2; ?>forum" class="tabLink">Forum</a></p></td>
-                  <td class="<?php if ($RSDB_SET_item2 == "forum") { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
+                  <td nowrap="nowrap"><p class="<?php if (isset($_GET['item2']) && $_GET['item2'] == 'forum') { echo "tabLink_s"; } else { echo "tabLink_u"; } ?>"><a href="<?php echo $RSDB_intern_link_item_item2; ?>forum" class="tabLink">Forum</a></p></td>
+                  <td class="<?php if (isset($_GET['item2']) && $_GET['item2'] == 'forum') { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
                   <td width="2"><img src="images/blank.gif" alt="" height="1" width="2"></td>
                 </tr>
                 <tr valign="bottom">
                   <td class="tab_s" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
-                  <td class="<?php if ($RSDB_SET_item2 == "forum") { echo "tab"; } else { echo "tab_s"; } ?>" width="4"><img src="images/blank.gif" alt="" height="1" width="1"></td>
-                  <td class="<?php if ($RSDB_SET_item2 == "forum") { echo "tab"; } else { echo "tab_s"; } ?>"><img src="images/blank.gif" alt="" height="1" width="1"></td>
+                  <td class="<?php if (isset($_GET['item2']) && $_GET['item2'] == 'forum') { echo "tab"; } else { echo "tab_s"; } ?>" width="4"><img src="images/blank.gif" alt="" height="1" width="1"></td>
+                  <td class="<?php if (isset($_GET['item2']) && $_GET['item2'] == 'forum') { echo "tab"; } else { echo "tab_s"; } ?>"><img src="images/blank.gif" alt="" height="1" width="1"></td>
                   <td class="tab_s" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
                   <td class="tab_s" width="2"><img src="images/blank.gif" alt="" height="1" width="2"></td>
                 </tr>
@@ -201,28 +203,28 @@ p.tabLink_u         { color: black; font-size : 10pt; padding : 0 8px 1px 2px; m
                 <tr align="left" valign="top">
                   <td width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
                   <td width="4"><img src="images/blank.gif" alt="" height="1" width="1"></td>
-                  <td class="<?php if ($RSDB_SET_item2 == "screens") { echo "tab_s"; } else { echo "tab_u"; } ?>"><img src="images/blank.gif" alt="" height="1" width="1"></td>
-                  <td class="<?php if ($RSDB_SET_item2 == "screens") { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
+                  <td class="<?php if (isset($_GET['item2']) && $_GET['item2'] == 'screens') { echo "tab_s"; } else { echo "tab_u"; } ?>"><img src="images/blank.gif" alt="" height="1" width="1"></td>
+                  <td class="<?php if (isset($_GET['item2']) && $_GET['item2'] == 'screens') { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
                   <td width="2"><img src="images/blank.gif" alt="" height="1" width="2"></td>
                 </tr>
                 <tr align="left" valign="top">
-                  <td class="<?php if ($RSDB_SET_item2 == "screens") { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/white_pixel.gif" alt="" height="4" width="1"></td>
-                  <td width="4"><img src="images/tab_corner_<?php if ($RSDB_SET_item2 == "screens") { echo "active"; } else { echo "inactive"; } ?>.gif" alt="" height="4" width="4"></td>
+                  <td class="<?php if (isset($_GET['item2']) && $_GET['item2'] == 'screens') { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/white_pixel.gif" alt="" height="4" width="1"></td>
+                  <td width="4"><img src="images/tab_corner_<?php if (isset($_GET['item2']) && $_GET['item2'] == 'screens') { echo "active"; } else { echo "inactive"; } ?>.gif" alt="" height="4" width="4"></td>
                   <td><img src="images/blank.gif" alt="" height="1" width="1"></td>
-                  <td class="<?php if ($RSDB_SET_item2 == "screens") { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
+                  <td class="<?php if (isset($_GET['item2']) && $_GET['item2'] == 'screens') { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
                   <td width="2"><img src="images/blank.gif" alt="" height="1" width="2"></td>
                 </tr>
                 <tr valign="middle">
-                  <td class="<?php if ($RSDB_SET_item2 == "screens") { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
+                  <td class="<?php if (isset($_GET['item2']) && $_GET['item2'] == 'screens') { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
                   <td width="4"><img src="images/blank.gif" alt="" height="1" width="4"></td>
-                  <td nowrap="nowrap"><p class="<?php if ($RSDB_SET_item2 == "screens") { echo "tabLink_s"; } else { echo "tabLink_u"; } ?>"><a href="<?php echo $RSDB_intern_link_item_item2; ?>screens" class="tabLink">Screenshots</a></p></td>
-                  <td class="<?php if ($RSDB_SET_item2 == "screens") { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
+                  <td nowrap="nowrap"><p class="<?php if (isset($_GET['item2']) && $_GET['item2'] == 'screens') { echo "tabLink_s"; } else { echo "tabLink_u"; } ?>"><a href="<?php echo $RSDB_intern_link_item_item2; ?>screens" class="tabLink">Screenshots</a></p></td>
+                  <td class="<?php if (isset($_GET['item2']) && $_GET['item2'] == 'screens') { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
                   <td width="2"><img src="images/blank.gif" alt="" height="1" width="2"></td>
                 </tr>
                 <tr valign="bottom">
                   <td class="tab_s" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
-                  <td class="<?php if ($RSDB_SET_item2 == "screens") { echo "tab"; } else { echo "tab_s"; } ?>" width="4"><img src="images/blank.gif" alt="" height="1" width="1"></td>
-                  <td class="<?php if ($RSDB_SET_item2 == "screens") { echo "tab"; } else { echo "tab_s"; } ?>"><img src="images/blank.gif" alt="" height="1" width="1"></td>
+                  <td class="<?php if (isset($_GET['item2']) && $_GET['item2'] == 'screens') { echo "tab"; } else { echo "tab_s"; } ?>" width="4"><img src="images/blank.gif" alt="" height="1" width="1"></td>
+                  <td class="<?php if (isset($_GET['item2']) && $_GET['item2'] == 'screens') { echo "tab"; } else { echo "tab_s"; } ?>"><img src="images/blank.gif" alt="" height="1" width="1"></td>
                   <td class="tab_s" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
                   <td class="tab_s" width="2"><img src="images/blank.gif" alt="" height="1" width="2"></td>
                 </tr>
@@ -235,28 +237,28 @@ p.tabLink_u         { color: black; font-size : 10pt; padding : 0 8px 1px 2px; m
                 <tr align="left" valign="top">
                   <td width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
                   <td width="4"><img src="images/blank.gif" alt="" height="1" width="1"></td>
-                  <td class="<?php if ($RSDB_SET_item2 == "bugs") { echo "tab_s"; } else { echo "tab_u"; } ?>"><img src="images/blank.gif" alt="" height="1" width="1"></td>
-                  <td class="<?php if ($RSDB_SET_item2 == "bugs") { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
+                  <td class="<?php if (isset($_GET['item2']) && $_GET['item2'] == 'bugs') { echo "tab_s"; } else { echo "tab_u"; } ?>"><img src="images/blank.gif" alt="" height="1" width="1"></td>
+                  <td class="<?php if (isset($_GET['item2']) && $_GET['item2'] == 'bugs') { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
                   <td width="2"><img src="images/blank.gif" alt="" height="1" width="2"></td>
                 </tr>
                 <tr align="left" valign="top">
-                  <td class="<?php if ($RSDB_SET_item2 == "bugs") { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/white_pixel.gif" alt="" height="4" width="1"></td>
-                  <td width="4"><img src="images/tab_corner_<?php if ($RSDB_SET_item2 == "bugs") { echo "active"; } else { echo "inactive"; } ?>.gif" alt="" height="4" width="4"></td>
+                  <td class="<?php if (isset($_GET['item2']) && $_GET['item2'] == 'bugs') { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/white_pixel.gif" alt="" height="4" width="1"></td>
+                  <td width="4"><img src="images/tab_corner_<?php if (isset($_GET['item2']) && $_GET['item2'] == 'bugs') { echo "active"; } else { echo "inactive"; } ?>.gif" alt="" height="4" width="4"></td>
                   <td><img src="images/blank.gif" alt="" height="1" width="1"></td>
-                  <td class="<?php if ($RSDB_SET_item2 == "bugs") { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
+                  <td class="<?php if (isset($_GET['item2']) && $_GET['item2'] == 'bugs') { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
                   <td width="2"><img src="images/blank.gif" alt="" height="1" width="2"></td>
                 </tr>
                 <tr valign="middle">
-                  <td class="<?php if ($RSDB_SET_item2 == "bugs") { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
+                  <td class="<?php if (isset($_GET['item2']) && $_GET['item2'] == 'bugs') { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
                   <td width="4"><img src="images/blank.gif" alt="" height="1" width="4"></td>
-                  <td nowrap="nowrap"><p class="<?php if ($RSDB_SET_item2 == "bugs") { echo "tabLink_s"; } else { echo "tabLink_u"; } ?>"><a href="<?php echo "http://www.reactos.org/bugzilla/buglist.cgi?bug_status=UNCONFIRMED&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&field0-0-0=product&type0-0-0=substring&value0-0-0=".$result_page['comp_name']."&field0-0-1=component&type0-0-1=substring&value0-0-1=".$result_page['comp_name']."&field0-0-2=short_desc&type0-0-2=substring&value0-0-2=".$result_page['comp_name']."&field0-0-3=status_whiteboard&type0-0-3=substring&value0-0-3=".$result_page['comp_name']; ?>" target="_blank" class="tabLink">Bugs</a></p></td>
-                  <td class="<?php if ($RSDB_SET_item2 == "bugs") { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
+                  <td nowrap="nowrap"><p class="<?php if (isset($_GET['item2']) && $_GET['item2'] == 'bugs') { echo "tabLink_s"; } else { echo "tabLink_u"; } ?>"><a href="<?php echo "http://www.reactos.org/bugzilla/buglist.cgi?bug_status=UNCONFIRMED&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&field0-0-0=product&type0-0-0=substring&value0-0-0=".$result_page['comp_name']."&field0-0-1=component&type0-0-1=substring&value0-0-1=".$result_page['comp_name']."&field0-0-2=short_desc&type0-0-2=substring&value0-0-2=".$result_page['comp_name']."&field0-0-3=status_whiteboard&type0-0-3=substring&value0-0-3=".$result_page['comp_name']; ?>" target="_blank" class="tabLink">Bugs</a></p></td>
+                  <td class="<?php if (isset($_GET['item2']) && $_GET['item2'] == 'bugs') { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
                   <td width="2"><img src="images/blank.gif" alt="" height="1" width="2"></td>
                 </tr>
                 <tr valign="bottom">
                   <td class="tab_s" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
-                  <td class="<?php if ($RSDB_SET_item2 == "bugs") { echo "tab"; } else { echo "tab_s"; } ?>" width="4"><img src="images/blank.gif" alt="" height="1" width="1"></td>
-                  <td class="<?php if ($RSDB_SET_item2 == "bugs") { echo "tab"; } else { echo "tab_s"; } ?>"><img src="images/blank.gif" alt="" height="1" width="1"></td>
+                  <td class="<?php if (isset($_GET['item2']) && $_GET['item2'] == 'bugs') { echo "tab"; } else { echo "tab_s"; } ?>" width="4"><img src="images/blank.gif" alt="" height="1" width="1"></td>
+                  <td class="<?php if (isset($_GET['item2']) && $_GET['item2'] == 'bugs') { echo "tab"; } else { echo "tab_s"; } ?>"><img src="images/blank.gif" alt="" height="1" width="1"></td>
                   <td class="tab_s" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
                   <td class="tab_s" width="2"><img src="images/blank.gif" alt="" height="1" width="2"></td>
                 </tr>

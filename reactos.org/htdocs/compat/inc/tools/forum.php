@@ -38,8 +38,8 @@
 
 
 // Voting - update DB
-if ($RSDB_SET_vote != "" && $RSDB_SET_vote2 != "") {
-	Star::addVote($RSDB_SET_vote, $RSDB_SET_vote2, "rsdb_item_comp_forum", "fmsg");
+if (isset($_GET['vote']) && $_GET['vote'] != '' && isset($_GET['vote2']) && $_GET['vote2'] != '') {
+	Star::addVote($_GET['vote'], $_GET['vote2'], "rsdb_item_comp_forum", "fmsg");
 }
 if ($RSDB_SET_order == "new") {
 	$RSDB_TEMP_order = "DESC";
@@ -102,7 +102,6 @@ elseif ($RSDB_SET_fstyle == "bboard") {
 
 
 function create_forum_flat() {
-	global $RSDB_SET_item;
 	global $RSDB_TEMP_order;
 	global $RSDB_intern_link_item_item2_forum_msg;
 	global $RSDB_SET_fstyle;
@@ -113,7 +112,7 @@ function create_forum_flat() {
 	global $RSDB_setting_stars_threshold;
 
   $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp_forum WHERE fmsg_visible = '1' AND fmsg_comp_id` = :item_id ORDER BY fmsg_date " . $RSDB_TEMP_order . "");
-  $stmt->bindParam('item_id',$RSDB_SET_item,PDO::PARAM_STR);
+  $stmt->bindParam('item_id',@$_GET['item'],PDO::PARAM_STR);
   $stmt->execute();
 					
 	while($result_fmsgreports = $stmt->fetch(PDO::FETCH_ASSOC)) {
@@ -194,7 +193,6 @@ function create_forum_flat() {
 
 	
 function create_forum_nested($RSDB_TEMP_msgid) {
-	global $RSDB_SET_item;
 	global $RSDB_TEMP_order;
 	global $RSDB_intern_link_item_item2_forum_msg;
 	global $RSDB_SET_fstyle;
@@ -209,7 +207,7 @@ function create_forum_nested($RSDB_TEMP_msgid) {
 	}
 
   $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp_forum WHERE fmsg_visible = '1' AND fmsg_comp_id = :item_id AND fmsg_parent = :parent ORDER BY fmsg_date ".$RSDB_TEMP_order."");
-  $stmt->bindParam('item_id',$RSDB_SET_item,PDO::PARAM_STR);
+  $stmt->bindParam('item_id',@$_GET['item'],PDO::PARAM_STR);
   $stmt->bindParam('parent',$RSDB_TEMP_msgid,PDO::PARAM_STR);
   $stmt->execute();
 
@@ -338,7 +336,7 @@ function create_forum_nested($RSDB_TEMP_msgid) {
 
     $stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_item_comp_forum WHERE fmsg_visible = '1' AND fmsg_comp_id = :item_id AND fmsg_parent = :parent");
     $stmt->bindParam('parent',$result_fmsgreports['fmsg_id'],PDO::PARAM_STR);
-    $stmt->bindParam('item_id',$RSDB_SET_item,PDO::PARAM_STR);
+    $stmt->bindParam('item_id',@$_GET['item'],PDO::PARAM_STR);
 		$result_count_msgs = $stmt->fetchOnce(PDO::FETCH_NUM);
 	
 		if ($result_count_msgs[0] != "0" && $result_count_msgs[0] != "") {
@@ -356,7 +354,6 @@ function create_forum_nested($RSDB_TEMP_msgid) {
 }
 
 function create_forum_threaded($RSDB_TEMP_msgid) {
-	global $RSDB_SET_item;
 	global $RSDB_TEMP_order;
 	global $RSDB_intern_link_item_item2_forum_msg;
 	global $RSDB_SET_fstyle;
@@ -368,7 +365,7 @@ function create_forum_threaded($RSDB_TEMP_msgid) {
 	global $RSDB_setting_stars_threshold;
 
   $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp_forum WHERE fmsg_visible = '1' AND fmsg_comp_id = :item_id AND fmsg_parent = :parent ORDER BY fmsg_date ".$RSDB_TEMP_order."");
-  $stmt->bindParam('item_id',$RSDB_SET_item,PDO::PARAM_STR);
+  $stmt->bindParam('item_id',@$_GET['item'],PDO::PARAM_STR);
   $stmt->bindParam('parent',$RSDB_TEMP_msgid,PDO::PARAM_STR);
   $stmt->execute();
 
@@ -392,7 +389,7 @@ function create_forum_threaded($RSDB_TEMP_msgid) {
 		echo Star::drawSmall($result_fmsgreports['fmsg_useful_vote_value'], $result_fmsgreports['fmsg_useful_vote_user'], 5, "") ."</li>";
 
     $stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_item_comp_forum WHERE fmsg_visible = '1' AND fmsg_comp_id = :item_id AND fmsg_parent = :parent");
-    $stmt->bindParam('item_id',$RSDB_SET_item,PDO::PARAM_STR);
+    $stmt->bindParam('item_id',@$_GET['item'],PDO::PARAM_STR);
     $stmt->bindParam('parent',$result_fmsgreports['fmsg_id'],PDO::PARAM_STR);
     $stmt->execute();
 		$result_count_msgs = $stmt->fetchOnce(PDO::FETCH_NUM);
@@ -407,7 +404,6 @@ function create_forum_threaded($RSDB_TEMP_msgid) {
 }
 
 function create_forum_bboard($RSDB_TEMP_msgid) {
-	global $RSDB_SET_item;
 	global $RSDB_TEMP_order;
 	global $RSDB_intern_link_item_item2_forum_msg;
 	global $RSDB_SET_fstyle;
@@ -420,7 +416,7 @@ function create_forum_bboard($RSDB_TEMP_msgid) {
 	global $RSDB_setting_stars_threshold;
 
   $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp_forum WHERE fmsg_visible = '1' AND fmsg_comp_id` = :item_id AND fmsg_parent = :parent ORDER BY fmsg_date " . $RSDB_TEMP_order . "");
-  $stmt->bindParam('item_id',$RSDB_SET_item,PDO::PARAM_STR);
+  $stmt->bindParam('item_id',@$_GET['item'],PDO::PARAM_STR);
   $stmt->bindParam('parent',$RSDB_TEMP_msgid,PDO::PARAM_STR);
   $stmt->execute();
 ?>
@@ -493,7 +489,6 @@ function create_forum_bboard($RSDB_TEMP_msgid) {
 }
 
 function show_msg($RSDB_TEMP_msgid) {
-	global $RSDB_SET_item;
 	global $RSDB_TEMP_order;
 	global $RSDB_intern_link_item_item2_forum_msg;
 	global $RSDB_SET_fstyle;
@@ -584,11 +579,10 @@ function show_msg($RSDB_TEMP_msgid) {
 function calc_replies($RSDB_TEMP_msgid) {
 	global $RSDB_TEMP_counter_replies;
 	global $RSDB_TEMP_order;
-	global $RSDB_SET_item;
 	global $RSDB_setting_stars_threshold;
 
   $stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_item_comp_forum WHERE fmsg_visible = '1' AND fmsg_comp_id = :item_id AND fmsg_parent = :parent");
-  $stmt->bindParam('item_id',$RSDB_SET_item,PDO::PARAM_STR);
+  $stmt->bindParam('item_id',@$_GET['item'],PDO::PARAM_STR);
   $stmt->bindParam('parent',$RSDB_TEMP_msgid,PDO::PARAM_STR);
   $stmt->execute();
 	$result_count_msgs = $stmt->fetchOnce(PDO::FETCH_NUM);
@@ -599,7 +593,7 @@ function calc_replies($RSDB_TEMP_msgid) {
 		
     $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp_forum WHERE fmsg_visible = '1' AND fmsg_comp_id = :item_id AND fmsg_parent = :parent
 						ORDER BY `fmsg_date` " . $RSDB_TEMP_order . "");
-    $stmt->bindParam('item_id',$RSDB_SET_item,PDO::PARAM_STR);
+    $stmt->bindParam('item_id',@$_GET['item'],PDO::PARAM_STR);
     $stmt->bindParam('parent',$RSDB_TEMP_msgid,PDO::PARAM_STR);
     $stmt->execute();
 		while($result_fmsgreports = $stmt->fetch(PDO::FETCH_ASSOC)) {
@@ -612,16 +606,15 @@ function calc_replies($RSDB_TEMP_msgid) {
 function query_lastreply($RSDB_TEMP_msgid) {
 	global $RSDB_TEMP_counter_lastreply;
 	global $RSDB_TEMP_order;
-	global $RSDB_SET_item;
 	global $RSDB_setting_stars_threshold;
 
   $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp_forum WHERE fmsg_visible = '1' AND fmsg_comp_id = :item_id AND fmsg_parent = :parent ORDER BY fmsg_date DESC") ;
-  $stmt->bindParam('item_id',$RSDB_SET_item,PDO::PARAM_STR);
+  $stmt->bindParam('item_id',@$_GET['item'],PDO::PARAM_STR);
   $stmt->bindParam('parent',$RSDB_TEMP_msgid,PDO::PARAM_STR);
   $stmt->execute();
 	while($result_fmsgreports = $stmt->fetch(PDO::FETCH_ASSOC)) {
     $stmt_count=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_item_comp_forum WHERE fmsg_visible = '1' AND fmsg_comp_id = :item_id AND fmsg_parent = :parent");
-  $stmt->bindParam('item_id',$RSDB_SET_item,PDO::PARAM_STR);
+  $stmt->bindParam('item_id',@$_GET['item'],PDO::PARAM_STR);
   $stmt->bindParam('parent',$result_fmsgreports['fmsg_id'],PDO::PARAM_STR);
   $stmt->execute();
 		$result_count_msgs = $stmt->fetchOnce(PDO::FETCH_NUM);

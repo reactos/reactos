@@ -35,7 +35,7 @@
 
 
   $stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_name LIKE :name");
-  $stmt->bindValue('name','%'.$RSDB_SET_search.'%',PDO::PARAM_STR);
+  $stmt->bindValue('name','%'.@$_GET['search'].'%',PDO::PARAM_STR);
   $stmt->execute();
 	$result_count_groups = $stmt->fetchOnce(PDO::FETCH_ASSOC);
 
@@ -52,7 +52,7 @@ echo '<?xml version="1.0" encoding="UTF-8"?>
 	}
 
   $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_name LIKE :name ORDER BY grpentr_name ASC");
-  $stmt->bindValue('name','%'.$RSDB_SET_search.'%',PDO::PARAM_STR);
+  $stmt->bindValue('name','%'.@$_GET['search'].'%',PDO::PARAM_STR);
   $stmt->execute();
 	
 	while($result_page = $stmt->fetch(PDO::FETCH_ASSOC)) { // Pages

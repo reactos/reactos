@@ -35,13 +35,13 @@
 
 
 
-			switch ($RSDB_SET_item2) {
+			switch (@$_GET['item2']) {
 				case "details": // Details
 				default:
 					include('inc/comp/comp_item_details.php');
 					break;
 				case "screens": // Screenshots
-					switch ($RSDB_SET_addbox) {
+					switch (@$_GET['addbox']) {
 						case "add":
 						case "submit":
 							include('inc/comp/comp_item_screenshot_submit.php');
@@ -53,7 +53,7 @@
 					}
 					break;
 				case "tests": // Test Reports
-					switch ($RSDB_SET_addbox) {
+					switch (@$_GET['addbox']) {
 						case "":
 						default:
 							include('inc/comp/comp_item_tests.php');
@@ -65,7 +65,7 @@
 					}
 					break;
 				case "forum": // Comments/Forum
-					switch ($RSDB_SET_addbox) {
+					switch (@$_GET['addbox']) {
 						case "":
 						default:
 							include('inc/comp/comp_item_forum.php');

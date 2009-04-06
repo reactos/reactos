@@ -44,11 +44,11 @@
 
 	include("inc/tree/tree_historybar.php");	
 	
-	if ($RSDB_SET_item != "") {
+	if (isset($_GET['item']) && $_GET['item'] != '') {
 		include("inc/tree/tree_item.php");
 	}
 	else {
-		if ($RSDB_SET_vendor != "") {
+		if (isset($_GET['vendor']) && $_GET['vendor'] != '') {
 			include("inc/tree/tree_vendor_id.php");
 		}
 		else {

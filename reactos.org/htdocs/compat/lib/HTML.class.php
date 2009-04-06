@@ -142,11 +142,11 @@ abstract class HTML
     <body>
       <div id="top">
         <div id="topMenu"> 
-          <a href="<?php echo $RSDB_intern_path_server; ?>?page=index">'.$RSDB_langres['Home'].'</a> |
-          <a href="<?php echo $RSDB_intern_path_server; ?>?page=about">'.$RSDB_langres['Info'].'</a> |
-          <a href="<?php echo $RSDB_intern_path_server; ?>?page=community">'.$RSDB_langres['Community'].'</a> |
-          <a href="<?php echo $RSDB_intern_path_server; ?>?page=dev">'.$RSDB_langres['Dev'].'</a> |
-          <a href="<?php echo $RSDB_intern_path_server."roscms/"; ?>?page=user">'.$RSDB_langres['myReactOS'].'</a>
+          <a href="'.$RSDB_intern_path_server.'?page=index">'.$RSDB_langres['Home'].'</a> |
+          <a href="'.$RSDB_intern_path_server.'?page=about">'.$RSDB_langres['Info'].'</a> |
+          <a href="'.$RSDB_intern_path_server.'?page=community">'.$RSDB_langres['Community'].'</a> |
+          <a href="'.$RSDB_intern_path_server.'?page=dev">'.$RSDB_langres['Dev'].'</a> |
+          <a href="'.$RSDB_intern_path_server.'roscms/?page=user">'.$RSDB_langres['myReactOS'].'</a>
         </div>
       </div>';
   } // end of member function header
@@ -162,8 +162,6 @@ abstract class HTML
   {
     include('rsdb_setting.php');
     include('rsdb_config.php');
-
-    global $RSDB_SET_page;
 
     global $roscms_intern_account_level;
     global $roscms_intern_login_check;
@@ -197,7 +195,7 @@ abstract class HTML
               <li><a href="'.$RSDB_intern_link_db_sec.'home">Overview</a></li>
               <li><a href="'.$RSDB_intern_link_category_EX.'0">Browse Database</a></li>';
 
-    if ( $RSDB_SET_sec == 'category' || $RSDB_SET_sec == 'name' || $RSDB_SET_sec == 'vendor' || $RSDB_SET_sec == 'rank') {
+    if (isset($_GET['page']) && ($_GET['page'] == 'category' || $_GET['page'] == 'name' || $_GET['page'] == 'vendor' || $_GET['page'] == 'rank')) {
       echo '
         <li><a href="'.$RSDB_intern_link_category_EX.'0">&nbsp;- By Category</a></li>
         <li><a href="'.$RSDB_intern_link_name_letter_EX.'all">&nbsp;- By Name</a></li>

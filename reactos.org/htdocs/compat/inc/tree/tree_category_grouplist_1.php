@@ -35,7 +35,7 @@
 
 
 $stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_category = :category AND grpentr_comp = '1'");
-$stmt->bindParam('category',$RSDB_SET_cat,PDO::PARAM_STR);
+$stmt->bindParam('category',@$_GET['cat'],PDO::PARAM_STR);
 $stmt->execute();
 $result_count_groups = $stmt->fetch(PDO::FETCH_NUM);
 if ($result_count_groups[0]) {
@@ -59,7 +59,7 @@ if ($result_count_groups[0]) {
 	  <?php
 	
     $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_groups WHERE grpentr_visible = '1' AND grpentr_category = :category AND grpentr_comp = '1' ORDER BY grpentr_name ASC");
-    $stmt->bindParam('category',$RSDB_SET_cat,PDO::PARAM_STR);
+    $stmt->bindParam('category',@$_GET['cat'],PDO::PARAM_STR);
     $stmt->execute();
 	
 		$farbe1="#E2E2E2";

@@ -92,13 +92,13 @@
 				<tr>
 				  <td class="title_group" nowrap="nowrap"><?php 
 				  
-				  if ($RSDB_SET_group2 == "overview" || $RSDB_SET_group2 == "") { 
+				  if (isset($_GET['group2']) && ($_GET['group2'] == "overview" || $_GET['group2'] == "")) { 
 				  	echo "Overview";
 				  }
 				  else { 
 						$stmt=CDBConnection::getInstance()->prepare("SELECT comp_name, comp_appversion FROM rsdb_item_comp  WHERE comp_visible = '1' AND comp_groupid = :group_id AND comp_appversion = :version LIMIT 1");
             $stmt->bindParam('group_id',$result_page['grpentr_id'],PDO::PARAM_STR);
-            $stmt->bindParam('version',$RSDB_SET_group2,PDO::PARAM_STR);
+            $stmt->bindParam('version',@$_GET['group2'],PDO::PARAM_STR);
             $stmt->execute();
 						$result_entry_appname = $stmt->fetch(PDO::FETCH_ASSOC);
 						echo $result_entry_appname['comp_name'];
@@ -118,28 +118,28 @@
                 <tr align="left" valign="top">
                   <td width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
                   <td width="4"><img src="images/blank.gif" alt="" height="1" width="1"></td>
-                  <td class="<?php if ($RSDB_SET_group2 == "overview" || $RSDB_SET_group2 == "") { echo "tab_s"; } else { echo "tab_u"; } ?>"><img src="images/blank.gif" alt="" height="1" width="1"></td>
-                  <td class="<?php if ($RSDB_SET_group2 == "overview" || $RSDB_SET_group2 == "") { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
+                  <td class="<?php if (isset($_GET['group2']) && ($_GET['group2'] == 'overview' || $_GET['group2'] == '')) { echo "tab_s"; } else { echo "tab_u"; } ?>"><img src="images/blank.gif" alt="" height="1" width="1"></td>
+                  <td class="<?php if (isset($_GET['group2']) && ($_GET['group2'] == 'overview' || $_GET['group2'] == '')) { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
                   <td width="2"><img src="images/blank.gif" alt="" height="1" width="2"></td>
                 </tr>
                 <tr align="left" valign="top">
-                  <td class="<?php if ($RSDB_SET_group2 == "overview" || $RSDB_SET_group2 == "") { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/white_pixel.gif" alt="" height="4" width="1"></td>
-                  <td width="4"><img src="images/tab_corner_<?php if ($RSDB_SET_group2 == "overview" || $RSDB_SET_group2 == "") { echo "active"; } else { echo "inactive"; } ?>.gif" alt="" height="4" width="4"></td>
+                  <td class="<?php if (isset($_GET['group2']) && ($_GET['group2'] == 'overview' || $_GET['group2'] == '')) { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/white_pixel.gif" alt="" height="4" width="1"></td>
+                  <td width="4"><img src="images/tab_corner_<?php if (isset($_GET['group2']) && ($_GET['group2'] == 'overview' || $_GET['group2'] == '')) { echo "active"; } else { echo "inactive"; } ?>.gif" alt="" height="4" width="4"></td>
                   <td><img src="images/blank.gif" alt="" height="1" width="1"></td>
-                  <td class="<?php if ($RSDB_SET_group2 == "overview" || $RSDB_SET_group2 == "") { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
+                  <td class="<?php if (isset($_GET['group2']) && ($_GET['group2'] == 'overview' || $_GET['group2'] == '')) { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
                   <td width="2"><img src="images/blank.gif" alt="" height="1" width="2"></td>
                 </tr>
                 <tr valign="middle">
-                  <td class="<?php if ($RSDB_SET_group2 == "overview" || $RSDB_SET_group2 == "") { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
+                  <td class="<?php if (isset($_GET['group2']) && ($_GET['group2'] == 'overview' || $_GET['group2'] == '')) { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
                   <td width="4"><img src="images/blank.gif" alt="" height="1" width="4"></td>
-                  <td nowrap="nowrap"><p class="<?php if ($RSDB_SET_group2 == "overview" || $RSDB_SET_group2 == "") { echo "tabLink_s"; } else { echo "tabLink_u"; } ?>"><a href="<?php echo $RSDB_intern_link_group_group2; ?>overview" class="tabLink">Overview</a></p></td>
-                  <td class="<?php if ($RSDB_SET_group2 == "overview" || $RSDB_SET_group2 == "") { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
+                  <td nowrap="nowrap"><p class="<?php if (isset($_GET['group2']) && ($_GET['group2'] == 'overview' || $_GET['group2'] == '')) { echo "tabLink_s"; } else { echo "tabLink_u"; } ?>"><a href="<?php echo $RSDB_intern_link_group_group2; ?>overview" class="tabLink">Overview</a></p></td>
+                  <td class="<?php if (v) { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
                   <td width="2"><img src="images/blank.gif" alt="" height="1" width="2"></td>
                 </tr>
                 <tr valign="bottom">
                   <td class="tab_s" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
-                  <td class="<?php if ($RSDB_SET_group2 == "overview" || $RSDB_SET_group2 == "") { echo "tab"; } else { echo "tab_s"; } ?>" width="4"><img src="images/blank.gif" alt="" height="1" width="1"></td>
-                  <td class="<?php if ($RSDB_SET_group2 == "overview" || $RSDB_SET_group2 == "") { echo "tab"; } else { echo "tab_s"; } ?>"><img src="images/blank.gif" alt="" height="1" width="1"></td>
+                  <td class="<?php if (isset($_GET['group2']) && ($_GET['group2'] == 'overview' || $_GET['group2'] == '')) { echo "tab"; } else { echo "tab_s"; } ?>" width="4"><img src="images/blank.gif" alt="" height="1" width="1"></td>
+                  <td class="<?php if (isset($_GET['group2']) && ($_GET['group2'] == 'overview' || $_GET['group2'] == '')) { echo "tab"; } else { echo "tab_s"; } ?>"><img src="images/blank.gif" alt="" height="1" width="1"></td>
                   <td class="tab_s" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
                   <td class="tab_s" width="2"><img src="images/blank.gif" alt="" height="1" width="2"></td>
                 </tr>
@@ -158,28 +158,28 @@
                 <tr align="left" valign="top">
                   <td width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
                   <td width="4"><img src="images/blank.gif" alt="" height="1" width="1"></td>
-                  <td class="<?php if ($RSDB_SET_group2 == $result_entry_appver['comp_appversion']) { echo "tab_s"; } else { echo "tab_u"; } ?>"><img src="images/blank.gif" alt="" height="1" width="1"></td>
-                  <td class="<?php if ($RSDB_SET_group2 == $result_entry_appver['comp_appversion']) { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
+                  <td class="<?php if (isset($_GET['group2']) && $_GET['group2'] == $result_entry_appver['comp_appversion']) { echo "tab_s"; } else { echo "tab_u"; } ?>"><img src="images/blank.gif" alt="" height="1" width="1"></td>
+                  <td class="<?php if (isset($_GET['group2']) && $_GET['group2'] == $result_entry_appver['comp_appversion']) { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
                   <td width="2"><img src="images/blank.gif" alt="" height="1" width="2"></td>
                 </tr>
                 <tr align="left" valign="top">
-                  <td class="<?php if ($RSDB_SET_group2 == $result_entry_appver['comp_appversion']) { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/white_pixel.gif" alt="" height="4" width="1"></td>
-                  <td width="4"><img src="images/tab_corner_<?php if ($RSDB_SET_group2 == $result_entry_appver['comp_appversion']) { echo "active"; } else { echo "inactive"; } ?>.gif" alt="" height="4" width="4"></td>
+                  <td class="<?php if (isset($_GET['group2']) && $_GET['group2'] == $result_entry_appver['comp_appversion']) { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/white_pixel.gif" alt="" height="4" width="1"></td>
+                  <td width="4"><img src="images/tab_corner_<?php if (isset($_GET['group2']) && $_GET['group2'] == $result_entry_appver['comp_appversion']) { echo "active"; } else { echo "inactive"; } ?>.gif" alt="" height="4" width="4"></td>
                   <td><img src="images/blank.gif" alt="" height="1" width="1"></td>
-                  <td class="<?php if ($RSDB_SET_group2 == $result_entry_appver['comp_appversion']) { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
+                  <td class="<?php if (isset($_GET['group2']) && $_GET['group2'] == $result_entry_appver['comp_appversion']) { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
                   <td width="2"><img src="images/blank.gif" alt="" height="1" width="2"></td>
                 </tr>
                 <tr valign="middle">
-                  <td class="<?php if ($RSDB_SET_group2 == $result_entry_appver['comp_appversion']) { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
+                  <td class="<?php if (isset($_GET['group2']) && $_GET['group2'] == $result_entry_appver['comp_appversion']) { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
                   <td width="4"><img src="images/blank.gif" alt="" height="1" width="4"></td>
-                  <td nowrap="nowrap"><p class="<?php if ($RSDB_SET_group2 == $result_entry_appver['comp_appversion']) { echo "tabLink_s"; } else { echo "tabLink_u"; } ?>"><?php echo "<a href=\"".$RSDB_intern_link_group_group2.$result_entry_appver['comp_appversion']."\" class=\"tabLink\">".$result_entry_appver['comp_name']."</a>"; ?></p></td>
-                  <td class="<?php if ($RSDB_SET_group2 == $result_entry_appver['comp_appversion']) { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
+                  <td nowrap="nowrap"><p class="<?php if (isset($_GET['group2']) && $_GET['group2'] == $result_entry_appver['comp_appversion']) { echo "tabLink_s"; } else { echo "tabLink_u"; } ?>"><?php echo "<a href=\"".$RSDB_intern_link_group_group2.$result_entry_appver['comp_appversion']."\" class=\"tabLink\">".$result_entry_appver['comp_name']."</a>"; ?></p></td>
+                  <td class="<?php if (isset($_GET['group2']) && $_GET['group2'] == $result_entry_appver['comp_appversion']) { echo "tab_s"; } else { echo "tab_u"; } ?>" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
                   <td width="2"><img src="images/blank.gif" alt="" height="1" width="2"></td>
                 </tr>
                 <tr valign="bottom">
                   <td class="tab_s" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
-                  <td class="<?php if ($RSDB_SET_group2 == $result_entry_appver['comp_appversion']) { echo "tab"; } else { echo "tab_s"; } ?>" width="4"><img src="images/blank.gif" alt="" height="1" width="1"></td>
-                  <td class="<?php if ($RSDB_SET_group2 == $result_entry_appver['comp_appversion']) { echo "tab"; } else { echo "tab_s"; } ?>"><img src="images/blank.gif" alt="" height="1" width="1"></td>
+                  <td class="<?php if (isset($_GET['group2']) && $_GET['group2'] == $result_entry_appver['comp_appversion']) { echo "tab"; } else { echo "tab_s"; } ?>" width="4"><img src="images/blank.gif" alt="" height="1" width="1"></td>
+                  <td class="<?php if (isset($_GET['group2']) && $_GET['group2'] == $result_entry_appver['comp_appversion']) { echo "tab"; } else { echo "tab_s"; } ?>"><img src="images/blank.gif" alt="" height="1" width="1"></td>
                   <td class="tab_s" width="1"><img src="images/blank.gif" alt="" height="1" width="1"></td>
                   <td class="tab_s" width="2"><img src="images/blank.gif" alt="" height="1" width="2"></td>
                 </tr>
@@ -206,7 +206,7 @@
 				
 				$counter_items = 0;
 	
-				if ($RSDB_SET_group2 == "" || $RSDB_SET_group2 == "overview") {
+				if (isset($_GET['group2']) && ($_GET['group2'] == '' || $_GET['group2'] == 'overview')) {
           $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp WHERE comp_groupid = :group_id AND comp_visible = '1' ORDER BY comp_groupid DESC");
           $stmt->bindParam('group_id',$result_page['grpentr_id'],PDO::PARAM_STR);
           $stmt->execute();
@@ -214,7 +214,7 @@
 				else {
           $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp WHERE comp_groupid = :group_id AND comp_visible = '1' AND `comp_appversion` = :version ORDER BY comp_groupid DESC");
           $stmt->bindParam('group_id',$result_page['grpentr_id'],PDO::PARAM_STR);
-          $stmt->bindParam('version',$RSDB_SET_group2,PDO::PARAM_STR);
+          $stmt->bindParam('version',@$_GET['group2'],PDO::PARAM_STR);
           $stmt->execute();
 				}
 				while($result_group_sum_items = $stmt->fetch(PDO::FETCH_ASSOC)) { 
@@ -298,12 +298,12 @@
 			<td width="40%" valign="top">
 	
 			<?php
-				if ($RSDB_SET_group2 == "" || $RSDB_SET_group2 == "overview") {
+				if (isset($_GET['group2']) && ($_GET['group2'] == '' || $_GET['group2'] == 'overview')) {
           $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp WHERE comp_groupid = :group_id  AND comp_visible = '1' ORDER BY comp_award DESC, comp_appversion DESC, comp_osversion DESC LIMIT 1");
 				}
 				else {
           $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_comp WHERE comp_groupid = :group_id AND comp_visible = '1' AND comp_appversion = :version ORDER BY comp_award DESC, comp_osversion DESC LIMIT 1");
-          $stmt->bindParam('version',$RSDB_SET_group2,PDO::PARAM_STR);
+          $stmt->bindParam('version',@$_GET['group2'],PDO::PARAM_STR);
 
 				}
         $stmt->bindParam('group_id',$RSDB_SET_group,PDO::PARAM_STR);
@@ -436,7 +436,7 @@
       $stmt->bindParam('group_id',$result_page["grpentr_id"],PDO::PARAM_STR);
 			$result_count_bundle = $stmt->fetch();
 
-			if ($RSDB_SET_group2 != "" && $RSDB_SET_group2 != "overview" || $result_count_bundle[0] != 0) {
+			if (isset($_GET['group2']) && $_GET['group2'] != "" && $_GET['group2'] != "overview" || $result_count_bundle[0] != 0) {
 				$temp_pic = mt_rand(1,$result_count_screenshots[0]);
         $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_object_media WHERE media_groupid = :group_id AND media_order = :order AND (( media_useful_vote_value / media_useful_vote_user) > 2 OR  media_useful_vote_user < 5) ORDER BY media_useful_vote_value DESC LIMIT 1");
         $stmt->bindParam('group_id',$result_version_newest['comp_media'],PDO::PARAM_STR);
@@ -456,7 +456,7 @@
 			<td width="10%" align="center" valign="top"></td>
 			<td width="40%" valign="top">
 <?php 
-	if ($RSDB_SET_group2 == "" || $RSDB_SET_group2 == "overview") {
+	if (isset($_GET['group2']) && ($_GET['group2'] == '' || $_GET['group2'] == 'overview')) {
 ?>
 			  <h3 align="center">All Versions <font size="2">- Overview</font></h3>
 			  <p><font size="2">A sum up of all tested versions.</font></p>
@@ -746,9 +746,9 @@
 	 	document.getElementById('moreinfo').style.display = "block";
 	  
 	  
-		show_Versions('<?php if ($RSDB_SET_sort != "") { echo "Hide"; } else { echo "Show"; } ?> all Versions <?php if ($RSDB_SET_sort != "") { echo "&lt;&lt;"; } else { echo "&gt;&gt;"; } ?>');
-		document.getElementById('versions').style.display = '<?php if ($RSDB_SET_sort != "") { echo "block"; } else { echo "none"; } ?>';
-		var TOCstate1 = '<?php if ($RSDB_SET_sort != "") { echo "block"; } else { echo "none"; } ?>';
+		show_Versions('<?php if (isset($_GET['sort']) && $_GET['sort'] != '') { echo "Hide"; } else { echo "Show"; } ?> all Versions <?php if (isset($_GET['sort']) && $_GET['sort'] != '') { echo "&lt;&lt;"; } else { echo "&gt;&gt;"; } ?>');
+		document.getElementById('versions').style.display = '<?php if (isset($_GET['sort']) && $_GET['sort'] != '') { echo "block"; } else { echo "none"; } ?>';
+		var TOCstate1 = '<?php if (isset($_GET['sort']) && $_GET['sort'] != '') { echo "block"; } else { echo "none"; } ?>';
 	
 
 	

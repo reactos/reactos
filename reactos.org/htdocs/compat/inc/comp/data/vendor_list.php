@@ -35,7 +35,7 @@
 
 
   $stmt=CDBConnection::getInstance()->prepare("SELECT COUNT(*) FROM rsdb_item_vendor WHERE vendor_visible = '1' AND vendor_name LIKE :search");
-  $stmt->bindValue('search','%'.$RSDB_SET_search.'%',PDO::PARAM_STR);
+  $stmt->bindValue('search','%'.@$_GET['search'].'%',PDO::PARAM_STR);
   $stmt->execute();
 	$result_count_groups = $stmt->fetchOnce(PDO::FETCH_NUM);
 
@@ -51,10 +51,10 @@ echo '<?xml version="1.0" encoding="UTF-8"?>
 		echo "    ".$result_count_groups[0]."\n";
 	}
 	
-if ($RSDB_SET_search != "" || strlen($RSDB_SET_search) > 1) {
+if (isset($_GET['search']) && strlen($_GET['search']) > 1) {
 
   $stmt=CDBConnection::getInstance()->prepare("SELECT * FROM rsdb_item_vendor WHERE vendor_visible = '1' AND vendor_name LIKE :search ORDER BY vendor_name ASC");
-  $stmt->bindValue('search','%'.$RSDB_SET_search.'%',PDO::PARAM_STR);
+  $stmt->bindValue('search','%'.$_GET['search'].'%',PDO::PARAM_STR);
   $stmt->execute();
 	
 	while($result_page = $stmt->fetch(PDO::FETCH_ASSOC)) { // Pages
