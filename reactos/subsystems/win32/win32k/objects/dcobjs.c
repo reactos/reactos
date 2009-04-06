@@ -264,9 +264,10 @@ GdiSelectPalette(
         return NULL;
     }
 
+    // FIXME: This looks wrong
     /* Is this a valid palette for this depth? */
     if ((pdc->rosdc.bitsPerPixel <= 8 && ppal->Mode == PAL_INDEXED) ||
-        (pdc->rosdc.bitsPerPixel > 8  && ppal->Mode != PAL_INDEXED))
+        (pdc->rosdc.bitsPerPixel > 8))
     {
         /* Get old palette, set new one */
         oldPal = pdc->dclevel.hpal;
