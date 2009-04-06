@@ -88,51 +88,6 @@ typedef struct _PATHGDI {
   PATHOBJ PathObj;
 } PATHGDI;
 
-typedef BOOL (APIENTRY *PFN_BitBlt)(SURFOBJ *, SURFOBJ *, SURFOBJ *, CLIPOBJ *,
-                           XLATEOBJ *, RECTL *, POINTL *, POINTL *,
-                           BRUSHOBJ *, POINTL *, ROP4);
-
-typedef BOOL (APIENTRY *PFN_TransparentBlt)(SURFOBJ *, SURFOBJ *, CLIPOBJ *, XLATEOBJ *, RECTL *, RECTL *, ULONG, ULONG);
-
-typedef BOOL (APIENTRY *PFN_StretchBlt)(SURFOBJ *, SURFOBJ *, SURFOBJ *, CLIPOBJ *,
-                               XLATEOBJ *, COLORADJUSTMENT *, POINTL *,
-                               RECTL *, RECTL *, PPOINT, ULONG);
-
-typedef BOOL (APIENTRY *PFN_TextOut)(SURFOBJ *, STROBJ *, FONTOBJ *, CLIPOBJ *,
-                            RECTL *, RECTL *, BRUSHOBJ *, BRUSHOBJ *,
-                            POINTL *, MIX);
-
-typedef BOOL (APIENTRY *PFN_Paint)(SURFOBJ *, CLIPOBJ *, BRUSHOBJ *, POINTL *, MIX);
-
-typedef BOOL (APIENTRY *PFN_StrokePath)(SURFOBJ *, PATHOBJ *, CLIPOBJ *, XFORMOBJ *,
-                               BRUSHOBJ *, POINTL *, LINEATTRS *, MIX);
-
-typedef BOOL (APIENTRY *PFN_FillPath)(SURFOBJ *, PATHOBJ *, CLIPOBJ *, BRUSHOBJ *,
-                             POINTL *, MIX, ULONG);
-
-typedef BOOL (APIENTRY *PFN_StrokeAndFillPath)(SURFOBJ *, PATHOBJ *, CLIPOBJ *,
-                XFORMOBJ *, BRUSHOBJ *, LINEATTRS *, BRUSHOBJ *,
-                POINTL *, MIX, ULONG);
-
-typedef BOOL (APIENTRY *PFN_LineTo)(SURFOBJ *, CLIPOBJ *, BRUSHOBJ *,
-                           LONG, LONG, LONG, LONG, RECTL *, MIX);
-
-typedef BOOL (APIENTRY *PFN_CopyBits)(SURFOBJ *, SURFOBJ *, CLIPOBJ *,
-                             XLATEOBJ *, RECTL *, POINTL *);
-
-typedef VOID (APIENTRY *PFN_Synchronize)(DHPDEV, RECTL *);
-
-typedef VOID (APIENTRY *PFN_MovePointer)(SURFOBJ *, LONG, LONG, RECTL *);
-
-typedef ULONG (APIENTRY *PFN_SetPointerShape)(SURFOBJ *, SURFOBJ *, SURFOBJ *, XLATEOBJ *,
-			    LONG, LONG, LONG, LONG, RECTL *, FLONG);
-
-typedef HBITMAP (APIENTRY *PFN_CreateDeviceBitmap)(DHPDEV, SIZEL, ULONG);
-
-typedef BOOL (APIENTRY *PFN_SetPalette)(DHPDEV, PALOBJ*, ULONG, ULONG, ULONG);
-
-typedef BOOL (APIENTRY *PFN_GradientFill)(SURFOBJ*, CLIPOBJ*, XLATEOBJ*, TRIVERTEX*, ULONG, PVOID, ULONG, RECTL*, POINTL*, ULONG);
-
 typedef struct _WNDGDI {
   WNDOBJ            WndObj;
   LIST_ENTRY        ListEntry;
