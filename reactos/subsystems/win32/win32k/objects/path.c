@@ -28,7 +28,7 @@
  * PROJECT:         ReactOS win32 kernel mode subsystem
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            subsystems/win32/win32k/objects/path.c
- * PURPOSE:         Freetype library support
+ * PURPOSE:         Path support
  * PROGRAMMER:
  */
 
