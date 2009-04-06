@@ -698,6 +698,7 @@ modules\rostests\winetests\comcat\comcat_winetest.exe                      7   o
 modules\rostests\winetests\comctl32\comctl32_winetest.exe                  7   optional
 modules\rostests\winetests\comdlg32\comdlg32_winetest.exe                  7   optional
 modules\rostests\winetests\crypt32\crypt32_winetest.exe                    7   optional
+modules\rostests\winetests\cryptnet\cryptnet_winetest.exe                  7   optional
 modules\rostests\winetests\gdi32\gdi32_winetest.exe                        7   optional
 modules\rostests\winetests\gdiplus\gdiplus_winetest.exe                    7   optional
 modules\rostests\winetests\hlink\hlink_winetest.exe                        7   optional
