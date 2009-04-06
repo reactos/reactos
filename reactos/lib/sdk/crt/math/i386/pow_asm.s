@@ -76,8 +76,7 @@ _pow:
         and     ah,    0b10111010       // Turn off CF, PF and ZF
         or      ah,al                   // Set new  CF, PF and ZF
         sahf                            // Store AH into Flags
-        ja      __fpow2                 // Re-direct if y > 0
-        jmp     __fpow4                 // End of case
+        jmp     __fpow2                 // Re-direct
 __fpow1:        fxch                            // Put y on top of stack
         fld    st                       // Duplicate y as st(1)
         frndint                         // Round to integer
