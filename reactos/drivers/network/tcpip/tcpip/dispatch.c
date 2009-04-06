@@ -397,14 +397,14 @@ NTSTATUS DispTdiConnect(
   TranContext = IrpSp->FileObject->FsContext;
   if (!TranContext) {
     TI_DbgPrint(MID_TRACE, ("Bad transport context.\n"));
-    Status = STATUS_INVALID_CONNECTION;
+    Status = STATUS_INVALID_PARAMETER;
     goto done;
   }
 
   Connection = (PCONNECTION_ENDPOINT)TranContext->Handle.ConnectionContext;
   if (!Connection) {
     TI_DbgPrint(MID_TRACE, ("No connection endpoint file object.\n"));
-    Status = STATUS_INVALID_CONNECTION;
+    Status = STATUS_INVALID_PARAMETER;
     goto done;
   }
 
@@ -500,14 +500,14 @@ NTSTATUS DispTdiDisconnect(
   TranContext = IrpSp->FileObject->FsContext;
   if (!TranContext) {
     TI_DbgPrint(MID_TRACE, ("Bad transport context.\n"));
-    Status = STATUS_INVALID_CONNECTION;
+    Status = STATUS_INVALID_PARAMETER;
     goto done;
   }
 
   Connection = (PCONNECTION_ENDPOINT)TranContext->Handle.ConnectionContext;
   if (!Connection) {
     TI_DbgPrint(MID_TRACE, ("No connection endpoint file object.\n"));
-    Status = STATUS_INVALID_CONNECTION;
+    Status = STATUS_INVALID_PARAMETER;
     goto done;
   }
 
@@ -561,7 +561,7 @@ NTSTATUS DispTdiListen(
   if (TranContext == NULL)
     {
       TI_DbgPrint(MID_TRACE, ("Bad transport context.\n"));
-      Status = STATUS_INVALID_CONNECTION;
+      Status = STATUS_INVALID_PARAMETER;
       goto done;
     }
 
@@ -569,7 +569,7 @@ NTSTATUS DispTdiListen(
   if (Connection == NULL)
     {
       TI_DbgPrint(MID_TRACE, ("No connection endpoint file object.\n"));
-      Status = STATUS_INVALID_CONNECTION;
+      Status = STATUS_INVALID_PARAMETER;
       goto done;
     }
 
@@ -662,7 +662,7 @@ NTSTATUS DispTdiQueryInformation(
   TranContext = IrpSp->FileObject->FsContext;
   if (!TranContext) {
     TI_DbgPrint(MID_TRACE, ("Bad transport context.\n"));
-    return STATUS_INVALID_CONNECTION;
+    return STATUS_INVALID_PARAMETER;
   }
 
   switch (Parameters->QueryType)
@@ -793,14 +793,14 @@ NTSTATUS DispTdiReceive(
   if (TranContext == NULL)
     {
       TI_DbgPrint(MID_TRACE, ("Bad transport context.\n"));
-      Status = STATUS_INVALID_CONNECTION;
+      Status = STATUS_INVALID_PARAMETER;
       goto done;
     }
 
   if (TranContext->Handle.ConnectionContext == NULL)
     {
       TI_DbgPrint(MID_TRACE, ("No connection endpoint file object.\n"));
-      Status = STATUS_INVALID_CONNECTION;
+      Status = STATUS_INVALID_PARAMETER;
       goto done;
     }
 
@@ -865,7 +865,7 @@ NTSTATUS DispTdiReceiveDatagram(
   if (TranContext == NULL)
     {
       TI_DbgPrint(MID_TRACE, ("Bad transport context.\n"));
-      Status = STATUS_INVALID_CONNECTION;
+      Status = STATUS_INVALID_PARAMETER;
       goto done;
     }
 
@@ -942,14 +942,14 @@ NTSTATUS DispTdiSend(
   if (TranContext == NULL)
     {
       TI_DbgPrint(MID_TRACE, ("Bad transport context.\n"));
-      Status = STATUS_INVALID_CONNECTION;
+      Status = STATUS_INVALID_PARAMETER;
       goto done;
     }
 
   if (TranContext->Handle.ConnectionContext == NULL)
     {
       TI_DbgPrint(MID_TRACE, ("No connection endpoint file object.\n"));
-      Status = STATUS_INVALID_CONNECTION;
+      Status = STATUS_INVALID_PARAMETER;
       goto done;
     }
 
@@ -1018,7 +1018,7 @@ NTSTATUS DispTdiSendDatagram(
     if (TranContext == NULL)
     {
       TI_DbgPrint(MID_TRACE, ("Bad transport context.\n"));
-      Status = STATUS_INVALID_CONNECTION;
+      Status = STATUS_INVALID_PARAMETER;
       goto done;
     }
 
