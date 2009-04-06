@@ -44,7 +44,7 @@ typedef struct _GDIPOINTER /* should stay private to ENG? No, part of PDEVOBJ ak
 
   /* public pointer information */
   RECTL    Exclude; /* required publicly for SPS_ACCEPT_EXCLUDE */
-  PGD_MOVEPOINTER MovePointer;
+  PFN_DrvMovePointer MovePointer;
   ULONG    Status;
 } GDIPOINTER, *PGDIPOINTER;
 

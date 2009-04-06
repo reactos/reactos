@@ -204,7 +204,7 @@ SetupDevMode(PDEVMODEW DevMode, ULONG DisplayNumber)
 static BOOL FASTCALL
 IntPrepareDriver()
 {
-    PGD_ENABLEDRIVER GDEnableDriver;
+    PFN_DrvEnableDriver GDEnableDriver;
     DRVENABLEDATA DED;
     UNICODE_STRING DriverFileNames;
     PWSTR CurrentName;
@@ -326,7 +326,7 @@ IntPrepareDriver()
                                        HS_DDI_MAX,
                                        PrimarySurface.FillPatterns,
                                        sizeof(PrimarySurface.GDIInfo),
-                                       (ULONG *) &PrimarySurface.GDIInfo,
+                                       &PrimarySurface.GDIInfo,
                                        sizeof(PrimarySurface.DevInfo),
                                        &PrimarySurface.DevInfo,
                                        NULL,
@@ -353,7 +353,7 @@ IntPrepareDriver()
                                        HS_DDI_MAX,
                                        PrimarySurface.FillPatterns,
                                        sizeof(PrimarySurface.GDIInfo),
-                                       (ULONG *) &PrimarySurface.GDIInfo,
+                                       &PrimarySurface.GDIInfo,
                                        sizeof(PrimarySurface.DevInfo),
                                        &PrimarySurface.DevInfo,
                                        NULL,
@@ -1552,8 +1552,8 @@ IntEnumDisplaySettings(
                     CurrentName += wcslen(CurrentName) + 1)
             {
                 INT i;
-                PGD_ENABLEDRIVER GDEnableDriver;
-                PGD_GETMODES GetModes = NULL;
+                PFN_DrvEnableDriver GDEnableDriver;
+                PFN_DrvGetModes GetModes = NULL;
                 INT SizeNeeded, SizeUsed;
 
                 /* Get the DDI driver's entry point */
@@ -1583,7 +1583,7 @@ IntEnumDisplaySettings(
 
                     if (DrvFn->iFunc == INDEX_DrvGetModes)
                     {
-                        GetModes = (PGD_GETMODES)DrvFn->pfn;
+                        GetModes = (PFN_DrvGetModes)DrvFn->pfn;
                         break;
                     }
                 }
