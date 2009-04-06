@@ -33,6 +33,7 @@
 #include <include/floatobj.h>
 #include <include/gdiobj.h>
 #include <include/palette.h>
+#include <include/pdevobj.h>
 #include <include/rect.h>
 #include <include/win32.h>
 #include <include/window.h>
