@@ -464,7 +464,7 @@ static DWORD MCICDA_Open(UINT wDevID, DWORD dwFlags, LPMCI_OPEN_PARMSW lpOpenPar
     /* now, open the handle */
     root[0] = root[1] = '\\'; root[2] = '.'; root[3] = '\\'; root[4] = drive; root[5] = ':'; root[6] = '\0';
     wmcda->handle = CreateFileW(root, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, 0);
-    if (wmcda->handle != 0)
+    if (wmcda->handle != INVALID_HANDLE_VALUE)
         return 0;
 
  the_error:
