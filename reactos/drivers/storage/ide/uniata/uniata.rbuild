@@ -4,7 +4,6 @@
 	<bootstrap installbase="$(CDOUTPUT)" />
 	<include base="uniata">.</include>
 	<include base="uniata">inc</include>
-	<compilerflag>-mrtd</compilerflag>
 	<!-- define name="_DEBUG" /-->
 	<library>ntoskrnl</library>
 	<library>hal</library>
