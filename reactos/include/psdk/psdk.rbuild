@@ -35,6 +35,7 @@
 	<file>oledb.idl</file>
 	<file>oleidl.idl</file>
 	<file>optary.idl</file>
+	<file>perhist.idl</file>
 	<file>propidl.idl</file>
 	<file>pstore.idl</file>
 	<file>richole.idl</file>
