@@ -112,6 +112,8 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 
     switch (fdwReason)
     {
+    case DLL_WINE_PREATTACH:
+        return FALSE;  /* prefer native version */
     case DLL_PROCESS_ATTACH:
         DisableThreadLibraryCalls(hinstDLL);
         break;
@@ -252,6 +254,12 @@ HRESULT WINAPI LoadLibraryShim( LPCWSTR szDllName, LPCWSTR szVersion, LPVOID pvR
     FIXME("(%p %s, %p, %p, %p): semi-stub\n", szDllName, debugstr_w(szDllName), szVersion, pvReserved, phModDll);
 
     if (phModDll) *phModDll = LoadLibraryW(szDllName);
+    return S_OK;
+}
+
+HRESULT WINAPI LockClrVersion(FLockClrVersionCallback hostCallback, FLockClrVersionCallback *pBeginHostSetup, FLockClrVersionCallback *pEndHostSetup)
+{
+    FIXME("(%p %p %p): stub\n", hostCallback, pBeginHostSetup, pEndHostSetup);
     return S_OK;
 }
 
