@@ -187,6 +187,9 @@ PAFD_HANDLE LockHandles( PAFD_HANDLE HandleArray, UINT HandleCount ) {
 	      	 (PVOID*)&FileObjects[i].Handle,
 	      	 NULL );
 	}
+
+        if( !NT_SUCCESS(Status) )
+            FileObjects[i].Handle = 0;
     }
 
     if( !NT_SUCCESS(Status) ) {
