@@ -50,7 +50,8 @@ NTSTATUS MakeSocketIntoConnection( PAFD_FCB FCB ) {
 	ExAllocatePool( NonPagedPool, FCB->Send.Size );
 
     if( !FCB->Send.Window ) {
-	ExFreePool( FCB->Recv.Window );	
+	ExFreePool( FCB->Recv.Window );
+	FCB->Recv.Window = NULL;
 	return STATUS_NO_MEMORY;
     }
 
