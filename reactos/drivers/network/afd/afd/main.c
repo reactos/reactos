@@ -222,12 +222,12 @@ VOID CleanupSocket( PAFD_FCB FCB ) {
         FCB->RemoteAddress = NULL;
     }
     if( FCB->Connection.Object ) {
-	NtClose(FCB->Connection.Handle);
+	ZwClose(FCB->Connection.Handle);
 	ObDereferenceObject(FCB->Connection.Object);
         FCB->Connection.Object = NULL;
     }
     if( FCB->AddressFile.Object ) {
-	NtClose(FCB->AddressFile.Handle);
+	ZwClose(FCB->AddressFile.Handle);
 	ObDereferenceObject(FCB->AddressFile.Object);
         FCB->AddressFile.Object = NULL;
     }
