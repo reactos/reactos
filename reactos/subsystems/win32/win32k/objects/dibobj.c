@@ -329,7 +329,7 @@ IntSetDIBits(
   DestRect.right	= SourceSize.cx;
   DestRect.bottom	= DestRect.top + ScanLines;
 
-  copyBitsResult = EngCopyBits(DestSurf, SourceSurf, NULL, XlateObj, &DestRect, &ZeroPoint);
+  copyBitsResult = IntEngCopyBits(DestSurf, SourceSurf, NULL, XlateObj, &DestRect, &ZeroPoint);
 
   // If it succeeded, return number of scanlines copies
   if(copyBitsResult == TRUE)
@@ -952,7 +952,7 @@ NtGdiGetDIBitsInternal(HDC hDC,
 
           DestSurfObj = EngLockSurface((HSURF)hDestBitmap);
 
-          if (EngCopyBits( DestSurfObj,
+          if (IntEngCopyBits( DestSurfObj,
                           &psurf->SurfObj,
                            NULL,
                            XlateObj,

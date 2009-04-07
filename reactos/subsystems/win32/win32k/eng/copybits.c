@@ -54,17 +54,12 @@ EngCopyBits(SURFOBJ *psoDest,
 
   psurfSource = CONTAINING_RECORD(psoSource, SURFACE, SurfObj);
   SURFACE_LockBitmapBits(psurfSource);
-  MouseSafetyOnDrawStart(psoSource, SourcePoint->x, SourcePoint->y,
-                         (SourcePoint->x + abs(DestRect->right - DestRect->left)),
-                         (SourcePoint->y + abs(DestRect->bottom - DestRect->top)));
 
   psurfDest = CONTAINING_RECORD(psoDest, SURFACE, SurfObj);
   if (psoDest != psoSource)
   {
     SURFACE_LockBitmapBits(psurfDest);
   }
-
-  MouseSafetyOnDrawStart(psoDest, DestRect->left, DestRect->top, DestRect->right, DestRect->bottom);
 
   // FIXME: Don't punt to the driver's DrvCopyBits immediately. Instead,
   //        mark the copy block function to be DrvCopyBits instead of the
@@ -83,12 +78,10 @@ EngCopyBits(SURFOBJ *psoDest,
         ret = GDIDEVFUNCS(psoDest).CopyBits(
           psoDest, psoSource, Clip, ColorTranslation, DestRect, SourcePoint);
 
-        MouseSafetyOnDrawEnd(psoDest);
         if (psoDest != psoSource)
         {
           SURFACE_UnlockBitmapBits(psurfDest);
         }
-        MouseSafetyOnDrawEnd(psoSource);
         SURFACE_UnlockBitmapBits(psurfSource);
 
         return ret;
@@ -104,12 +97,10 @@ EngCopyBits(SURFOBJ *psoDest,
         ret = GDIDEVFUNCS(psoSource).CopyBits(
           psoDest, psoSource, Clip, ColorTranslation, DestRect, SourcePoint);
 
-        MouseSafetyOnDrawEnd(psoDest);
         if (psoDest != psoSource)
         {
           SURFACE_UnlockBitmapBits(psurfDest);
         }
-        MouseSafetyOnDrawEnd(psoSource);
         SURFACE_UnlockBitmapBits(psurfSource);
 
         return ret;
@@ -121,12 +112,10 @@ EngCopyBits(SURFOBJ *psoDest,
                        NULL, Clip, ColorTranslation, DestRect, SourcePoint,
                        NULL, NULL, NULL, ROP3_TO_ROP4(SRCCOPY));
 
-    MouseSafetyOnDrawEnd(psoDest);
     if (psoDest != psoSource)
     {
       SURFACE_UnlockBitmapBits(psurfDest);
     }
-    MouseSafetyOnDrawEnd(psoSource);
     SURFACE_UnlockBitmapBits(psurfSource);
 
     return ret;
@@ -160,7 +149,6 @@ EngCopyBits(SURFOBJ *psoDest,
         {
           SURFACE_UnlockBitmapBits(psurfDest);
         }
-        MouseSafetyOnDrawEnd(psoSource);
         SURFACE_UnlockBitmapBits(psurfSource);
 
         return(TRUE);
@@ -174,12 +162,10 @@ EngCopyBits(SURFOBJ *psoDest,
 
         DibFunctionsForBitmapFormat[psoDest->iBitmapFormat].DIB_BitBltSrcCopy(&BltInfo);
 
-        MouseSafetyOnDrawEnd(psoDest);
         if (psoDest != psoSource)
         {
           SURFACE_UnlockBitmapBits(psurfDest);
         }
-        MouseSafetyOnDrawEnd(psoSource);
         SURFACE_UnlockBitmapBits(psurfSource);
 
         return(TRUE);
@@ -212,26 +198,48 @@ EngCopyBits(SURFOBJ *psoDest,
 
           } while(EnumMore);
 
-          MouseSafetyOnDrawEnd(psoDest);
           if (psoDest != psoSource)
           {
             SURFACE_UnlockBitmapBits(psurfDest);
           }
-          MouseSafetyOnDrawEnd(psoSource);
           SURFACE_UnlockBitmapBits(psurfSource);
 
           return(TRUE);
     }
 
-  MouseSafetyOnDrawEnd(psoDest);
   if (psoDest != psoSource)
   {
     SURFACE_UnlockBitmapBits(psurfDest);
   }
-  MouseSafetyOnDrawEnd(psoSource);
   SURFACE_UnlockBitmapBits(psurfSource);
 
   return FALSE;
 }
+
+BOOL APIENTRY
+IntEngCopyBits(
+    SURFOBJ *psoDest,
+    SURFOBJ *psoSource,
+    CLIPOBJ *pco,
+    XLATEOBJ *pxlo,
+    RECTL *prclDest,
+    POINTL *ptlSource)
+{
+    BOOL bResult;
+
+    MouseSafetyOnDrawStart(psoSource, ptlSource->x, ptlSource->y,
+                         (ptlSource->x + abs(prclDest->right - prclDest->left)),
+                         (ptlSource->y + abs(prclDest->bottom - prclDest->top)));
+
+    MouseSafetyOnDrawStart(psoDest, prclDest->left, prclDest->top, prclDest->right, prclDest->bottom);
+
+    bResult = EngCopyBits(psoDest, psoSource, pco, pxlo, prclDest, ptlSource);
+
+    MouseSafetyOnDrawEnd(psoDest);
+    MouseSafetyOnDrawEnd(psoSource);
+
+    return bResult;
+}
+
 
 /* EOF */

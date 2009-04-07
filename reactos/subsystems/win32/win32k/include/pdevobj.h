@@ -28,15 +28,13 @@ typedef struct _GDIPOINTER /* should stay private to ENG? No, part of PDEVOBJ ak
   SIZEL    Size;
   POINTL   HotSpot;
   XLATEOBJ *XlateObject;
-  HSURF    ColorSurface;
-  HSURF    MaskSurface;
-  HSURF    SaveSurface;
+  SURFACE  *psurfColor;
+  SURFACE  *psurfMask;
+  SURFACE  *psurfSave;
   int      ShowPointer; /* counter negtive  do not show the mouse postive show the mouse */
 
   /* public pointer information */
   RECTL    Exclude; /* required publicly for SPS_ACCEPT_EXCLUDE */
-  PFN_DrvMovePointer MovePointer;
-  ULONG    Status;
 } GDIPOINTER, *PGDIPOINTER;
 
 typedef struct _GRAPHICS_DEVICE
@@ -59,7 +57,7 @@ typedef struct _PDEVOBJ
 //  FLONG                     flAccelerated;
     PERESOURCE                hsemDevLock;    /* Device lock. */
 //  HSEMAPHORE                hsemPointer;
-//  POINTL                    ptlPointer;
+    POINTL                    ptlPointer;
 //  SIZEL                     szlPointer;
 //  SPRITESTATE               SpriteState;
 //  HFONT                     hlfntDefault;
@@ -80,7 +78,7 @@ typedef struct _PDEVOBJ
 //  ULONG                     ulVertRes;
 //  PFN_DrvSetPointerShape    pfnDrvSetPointerShape;
 //  PFN_DrvMovePointer        pfnDrvMovePointer;
-//  PFN_DrvMovePointer        pfnMovePointer;
+    PFN_DrvMovePointer        pfnMovePointer;
 //  PFN_DrvSynchronize        pfnDrvSynchronize;
 //  PFN_DrvSynchronizeSurface pfnDrvSynchronizeSurface;
 //  PFN_DrvSetPalette         pfnDrvSetPalette;

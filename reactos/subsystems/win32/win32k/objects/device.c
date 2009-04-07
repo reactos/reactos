@@ -553,6 +553,11 @@ IntCreatePrimarySurface()
     gpsi->ptCursor.x = (SurfaceRect.right - SurfaceRect.left) / 2;
     gpsi->ptCursor.y = (SurfaceRect.bottom - SurfaceRect.top) / 2;
 
+    /* Give the PDEV a MovePointer function */
+    PrimarySurface.pfnMovePointer = PrimarySurface.DriverFunctions.MovePointer;
+    if (!PrimarySurface.pfnMovePointer)
+        PrimarySurface.pfnMovePointer = EngMovePointer;
+
     EngUnlockSurface(SurfObj);
     co_IntShowDesktop(IntGetActiveDesktop(), SurfSize.cx, SurfSize.cy);
 

@@ -95,6 +95,7 @@ IntSetCursor(PWINSTATION_OBJECT WinSta, PCURICON_OBJECT NewCursor,
    XLATEOBJ *XlateObj = NULL;
    HDC Screen;
    PDC dc;
+   ULONG Status;
 
    CurInfo = IntGetSysCursorInfo(WinSta);
    OldCursor = CurInfo->CurrentCursorObject;
@@ -137,13 +138,11 @@ IntSetCursor(PWINSTATION_OBJECT WinSta, PCURICON_OBJECT NewCursor,
             UserDereferenceObject(CurInfo->CurrentCursorObject);
             if (CurInfo->ShowingCursor)
             {
-                DPRINT1("Removing pointer!\n");
+                DPRINT("Removing pointer!\n");
                /* Remove the cursor if it was displayed */
                IntEngMovePointer(pso, -1, -1, &GDIDEV(pso)->Pointer.Exclude);
             }
          }
-
-         GDIDEV(pso)->Pointer.Status = SPS_ACCEPT_NOEXCLUDE;
 
          CurInfo->CurrentCursorObject = NewCursor; /* i.e. CurrentCursorObject = NULL */
          CurInfo->ShowingCursor = 0;
@@ -212,7 +211,7 @@ IntSetCursor(PWINSTATION_OBJECT WinSta, PCURICON_OBJECT NewCursor,
                   return (HCURSOR)0;
                }
                soMask = EngLockSurface((HSURF)hMask);
-               EngCopyBits(soMask, &MaskBmpObj->SurfObj, NULL, NULL,
+               IntEngCopyBits(soMask, &MaskBmpObj->SurfObj, NULL, NULL,
                            &DestRect, &SourcePoint);
                SURFACE_UnlockSurface(MaskBmpObj);
             }
@@ -234,40 +233,20 @@ IntSetCursor(PWINSTATION_OBJECT WinSta, PCURICON_OBJECT NewCursor,
       UserDereferenceObject(OldCursor);
    }
 
-   if (GDIDEVFUNCS(pso).SetPointerShape)
-   {
-      GDIDEV(pso)->Pointer.Status =
-         GDIDEVFUNCS(pso).SetPointerShape(
-            pso, soMask, soColor, XlateObj,
-            NewCursor->IconInfo.xHotspot,
-            NewCursor->IconInfo.yHotspot,
-            gpsi->ptCursor.x,
-            gpsi->ptCursor.y,
-            &(GDIDEV(pso)->Pointer.Exclude),
-            SPS_CHANGE);
-      DPRINT("SetCursor: DrvSetPointerShape() returned %x\n",
-             GDIDEV(pso)->Pointer.Status);
-   }
-   else
-   {
-      GDIDEV(pso)->Pointer.Status = SPS_DECLINE;
-   }
+   Status  = IntEngSetPointerShape(pso,
+                                   soMask,
+                                   soColor,
+                                   XlateObj,
+                                   NewCursor->IconInfo.xHotspot,
+                                   NewCursor->IconInfo.yHotspot,
+                                   gpsi->ptCursor.x,
+                                   gpsi->ptCursor.y,
+                                   &(GDIDEV(pso)->Pointer.Exclude),
+                                   SPS_CHANGE);
 
-   if(GDIDEV(pso)->Pointer.Status == SPS_DECLINE)
+   if (Status != SPS_ACCEPT_NOEXCLUDE)
    {
-      GDIDEV(pso)->Pointer.Status = EngSetPointerShape(
-                                           pso, soMask, soColor, XlateObj,
-                                           NewCursor->IconInfo.xHotspot,
-                                           NewCursor->IconInfo.yHotspot,
-                                           gpsi->ptCursor.x,
-                                           gpsi->ptCursor.y,
-                                           &(GDIDEV(pso)->Pointer.Exclude),
-                                           SPS_CHANGE);
-      GDIDEV(pso)->Pointer.MovePointer = NULL;
-   }
-   else
-   {
-      GDIDEV(pso)->Pointer.MovePointer = GDIDEVFUNCS(pso).MovePointer;
+       DPRINT1("IntEngSetPointerShape returned %lx\n", Status);
    }
 
    SURFACE_UnlockSurface(psurf);
@@ -280,9 +259,6 @@ IntSetCursor(PWINSTATION_OBJECT WinSta, PCURICON_OBJECT NewCursor,
    {
       EngDeleteXlate(XlateObj);
    }
-
-   if(GDIDEV(pso)->Pointer.Status == SPS_ERROR)
-      DPRINT1("SetCursor: DrvSetPointerShape() returned SPS_ERROR\n");
 
    return Ret;
 }
@@ -1804,7 +1780,7 @@ UserShowCursor(BOOL bShow)
         {
             //ppdev->SafetyRemoveCount = 1;
             //ppdev->SafetyRemoveLevel = 1;
-            EngMovePointer(SurfObj,-1,-1,NULL);
+            IntEngMovePointer(SurfObj,-1,-1,NULL);
             CurInfo->ShowingCursor = 0;
         }
 
@@ -1819,7 +1795,7 @@ UserShowCursor(BOOL bShow)
         {
             //ppdev->SafetyRemoveCount = 0;
             //ppdev->SafetyRemoveLevel = 0;
-            EngMovePointer(SurfObj,-1,-1,NULL);
+            IntEngMovePointer(SurfObj,-1,-1,NULL);
             CurInfo->ShowingCursor = CURSOR_SHOWING;
         }
     }
