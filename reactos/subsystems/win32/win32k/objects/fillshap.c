@@ -243,11 +243,11 @@ NtGdiEllipse(
 
     pdcattr = dc->pdcattr;
 
-    if (pdcattr->ulDirty_ & DC_BRUSH_DIRTY)
-       IntGdiSelectBrush(dc,pdcattr->hbrush);
+    if (pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
+        DC_vUpdateFillBrush(dc);
 
-    if (pdcattr->ulDirty_ & DC_PEN_DIRTY)
-       IntGdiSelectPen(dc,pdcattr->hpen);
+    if (pdcattr->ulDirty_ & (DIRTY_LINE | DC_PEN_DIRTY))
+        DC_vUpdateLineBrush(dc);
 
     pbrush = PEN_LockPen(pdcattr->hpen);
     if (!pbrush)
@@ -726,11 +726,11 @@ IntRoundRect(
 
     pdcattr = dc->pdcattr;
 
-    if (pdcattr->ulDirty_ & DC_BRUSH_DIRTY)
-       IntGdiSelectBrush(dc,pdcattr->hbrush);
+    if (pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
+        DC_vUpdateFillBrush(dc);
 
-    if (pdcattr->ulDirty_ & DC_PEN_DIRTY)
-       IntGdiSelectPen(dc,pdcattr->hpen);
+    if (pdcattr->ulDirty_ & (DIRTY_LINE | DC_PEN_DIRTY))
+        DC_vUpdateLineBrush(dc);
 
     pbrushLine = PEN_LockPen(pdcattr->hpen);
     if (!pbrushLine)

@@ -2294,8 +2294,8 @@ NtGdiFillPath(HDC  hDC)
 
   pdcattr = dc->pdcattr;
 
-  if (pdcattr->ulDirty_ & DC_BRUSH_DIRTY)
-     IntGdiSelectBrush(dc,pdcattr->hbrush);
+  if (pdcattr->ulDirty_ & (DIRTY_LINE | DC_PEN_DIRTY))
+      DC_vUpdateLineBrush(dc);
 
   ret = PATH_FillPath( dc, pPath );
   if ( ret )
@@ -2569,10 +2569,11 @@ NtGdiStrokeAndFillPath(HDC hDC)
 
   pdcattr = pDc->pdcattr;
 
-  if (pdcattr->ulDirty_ & DC_BRUSH_DIRTY)
-     IntGdiSelectBrush(pDc,pdcattr->hbrush);
-  if (pdcattr->ulDirty_ & DC_PEN_DIRTY)
-     IntGdiSelectPen(pDc,pdcattr->hpen);
+  if (pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
+    DC_vUpdateFillBrush(pDc);
+
+  if (pdcattr->ulDirty_ & (DIRTY_LINE | DC_PEN_DIRTY))
+    DC_vUpdateLineBrush(pDc);
 
   bRet = PATH_FillPath(pDc, pPath);
   if (bRet) bRet = PATH_StrokePath(pDc, pPath);
@@ -2608,8 +2609,8 @@ NtGdiStrokePath(HDC hDC)
 
   pdcattr = pDc->pdcattr;
 
-  if (pdcattr->ulDirty_ & DC_PEN_DIRTY)
-     IntGdiSelectPen(pDc,pdcattr->hpen);
+  if (pdcattr->ulDirty_ & (DIRTY_LINE | DC_PEN_DIRTY))
+     DC_vUpdateLineBrush(pDc);
 
   bRet = PATH_StrokePath(pDc, pPath);
   PATH_EmptyPath(pPath);

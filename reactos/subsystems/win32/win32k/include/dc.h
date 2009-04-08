@@ -180,8 +180,6 @@ VOID FASTCALL IntGdiUnreferencePdev(PPDEVOBJ pPDev, DWORD CleanUpType);
 HDC FASTCALL IntGdiCreateDisplayDC(HDEV hDev, ULONG DcType, BOOL EmptyDC);
 BOOL FASTCALL IntGdiCleanDC(HDC hDC);
 VOID FASTCALL IntvGetDeviceCaps(PPDEVOBJ, PDEVCAPS);
-HPEN FASTCALL IntGdiSelectPen(PDC,HPEN);
-HBRUSH FASTCALL IntGdiSelectBrush(PDC,HBRUSH);
 INT FASTCALL IntGdiGetDeviceCaps(PDC,INT);
 
 extern PPDEVOBJ pPrimarySurface;

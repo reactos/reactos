@@ -284,49 +284,6 @@ GdiSelectPalette(
     return oldPal;
 }
 
-HBRUSH
-FASTCALL
-IntGdiSelectBrush(
-    PDC pDC,
-    HBRUSH hBrush)
-{
-    PDC_ATTR pdcattr;
-    HBRUSH hOrgBrush;
-
-    if (pDC == NULL || hBrush == NULL) return NULL;
-
-    pdcattr = pDC->pdcattr;
-
-    hOrgBrush = pdcattr->hbrush;
-    pdcattr->hbrush = hBrush;
-
-    DC_vUpdateFillBrush(pDC);
-
-    return hOrgBrush;
-}
-
-HPEN
-FASTCALL
-IntGdiSelectPen(
-    PDC pDC,
-    HPEN hPen)
-{
-    PDC_ATTR pdcattr;
-    HPEN hOrgPen = NULL;
-
-    if (pDC == NULL || hPen == NULL) return NULL;
-
-    pdcattr = pDC->pdcattr;
-
-    hOrgPen = pdcattr->hpen;
-    pdcattr->hpen = hPen;
-
-    DC_vUpdateLineBrush(pDC);
-
-    return hOrgPen;
-}
-
-
  /*
  * @implemented
  */
@@ -347,7 +304,7 @@ NtGdiSelectBrush(
         return NULL;
     }
 
-//    hOrgBrush = IntGdiSelectBrush(pDC,hBrush);
+    /* Simply return the user mode value, without checking */
     hOrgBrush = pDC->pdcattr->hbrush;
     pDC->pdcattr->hbrush = hBrush;
     DC_vUpdateFillBrush(pDC);
@@ -377,7 +334,7 @@ NtGdiSelectPen(
         return NULL;
     }
 
-//    hOrgPen = IntGdiSelectPen(pDC, hPen);
+    /* Simply return the user mode value, without checking */
     hOrgPen = pDC->pdcattr->hpen;
     pDC->pdcattr->hpen = hPen;
     DC_vUpdateLineBrush(pDC);
@@ -547,11 +504,11 @@ NtGdiGetDCObject(HDC hDC, INT ObjectType)
     }
     pdcattr = pdc->pdcattr;
 
-    if (pdcattr->ulDirty_ & DC_BRUSH_DIRTY)
-        IntGdiSelectBrush(pdc, pdcattr->hbrush);
+    if (pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
+        DC_vUpdateFillBrush(pdc);
 
-    if (pdcattr->ulDirty_ & DC_PEN_DIRTY)
-        IntGdiSelectPen(pdc, pdcattr->hpen);
+    if (pdcattr->ulDirty_ & (DIRTY_LINE | DC_PEN_DIRTY))
+        DC_vUpdateLineBrush(pdc);
 
     switch(ObjectType)
     {

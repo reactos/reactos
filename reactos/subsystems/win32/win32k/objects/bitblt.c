@@ -1047,8 +1047,8 @@ IntGdiPolyPatBlt(
 
     pdcattr = dc->pdcattr;
 
-    if (pdcattr->ulDirty_ & DC_BRUSH_DIRTY)
-        IntGdiSelectBrush(dc,pdcattr->hbrush);
+    if (pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
+        DC_vUpdateFillBrush(dc);
 
     for (r = pRects, i = 0; i < cRects; i++)
     {
@@ -1110,8 +1110,8 @@ NtGdiPatBlt(
 
     pdcattr = dc->pdcattr;
 
-    if (pdcattr->ulDirty_ & DC_BRUSH_DIRTY)
-        IntGdiSelectBrush(dc,pdcattr->hbrush);
+    if (pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
+        DC_vUpdateFillBrush(dc);
 
     pbrush = BRUSH_LockBrush(pdcattr->hbrush);
     if (pbrush == NULL)
