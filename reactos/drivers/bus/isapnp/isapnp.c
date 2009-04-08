@@ -301,7 +301,7 @@ static ULONG IsolatePnPCards(VOID)
 
   DPRINT("Called\n");
 
-	IsaPnPReadPort = (PUCHAR)ISAPNP_MIN_READ_PORT;
+	IsaPnPReadPort = (PUCHAR)(ISAPNP_MIN_READ_PORT - READ_DATA_PORT_STEP);
   if (!IsolateReadDataPortSelect()) {
     DPRINT("Could not set read data port\n");
 		return 0;
@@ -340,7 +340,6 @@ static ULONG IsolatePnPCards(VOID)
 			goto next;
 		}
 		if (iteration == 1) {
-			IsaPnPReadPort += READ_DATA_PORT_STEP;
       if (!IsolateReadDataPortSelect()) {
         DPRINT("Could not set read data port\n");
 				return 0;
