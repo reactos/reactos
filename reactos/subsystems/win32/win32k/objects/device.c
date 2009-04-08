@@ -1369,6 +1369,13 @@ IntChangeDisplaySettings(
             Status = ZwSetValueKey(DevInstRegKey, &RegistryKey, 0, REG_DWORD, &NewValue, sizeof(NewValue));
         }
 
+        if (NT_SUCCESS(Status) && DevMode->dmFields & DM_DISPLAYFREQUENCY)
+        {
+            RtlInitUnicodeString(&RegistryKey, L"DefaultSettings.VRefresh");
+            NewValue = DevMode->dmDisplayFrequency;
+            Status = ZwSetValueKey(DevInstRegKey, &RegistryKey, 0, REG_DWORD, &NewValue, sizeof(NewValue));
+        }
+
         ZwClose(DevInstRegKey);
         if (NT_SUCCESS(Status))
             Ret = DISP_CHANGE_RESTART;
