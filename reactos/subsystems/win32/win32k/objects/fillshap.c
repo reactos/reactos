@@ -907,6 +907,8 @@ IntGdiGradientFill(
 
     DitherOrg.x = dc->ptlDCOrig.x;
     DitherOrg.y = dc->ptlDCOrig.y;
+    IntLPtoDP(dc, (LPPOINT)&DitherOrg, 1);
+
     Extent.left += DitherOrg.x;
     Extent.right += DitherOrg.x;
     Extent.top += DitherOrg.y;
