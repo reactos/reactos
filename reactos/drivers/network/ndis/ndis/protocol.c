@@ -225,14 +225,14 @@ proSendPacketToMiniport(PLOGICAL_ADAPTER Adapter, PNDIS_PACKET Packet)
         {
             NDIS_DbgPrint(MAX_TRACE, ("Calling miniport's Send handler\n"));
             NdisStatus = (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.SendHandler)(
-                          Adapter->NdisMiniportBlock.MiniportAdapterContext, Packet, 0);
+                          Adapter->NdisMiniportBlock.MiniportAdapterContext, Packet, Packet->Private.Flags);
             NDIS_DbgPrint(MAX_TRACE, ("back from miniport's send handler\n"));
         } else {
             /* Send is called at DISPATCH_LEVEL for all serialized miniports */
             KeRaiseIrql(DISPATCH_LEVEL, &RaiseOldIrql);
             NDIS_DbgPrint(MAX_TRACE, ("Calling miniport's Send handler\n"));
             NdisStatus = (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.SendHandler)(
-                          Adapter->NdisMiniportBlock.MiniportAdapterContext, Packet, 0);
+                          Adapter->NdisMiniportBlock.MiniportAdapterContext, Packet, Packet->Private.Flags);
             NDIS_DbgPrint(MAX_TRACE, ("back from miniport's send handler\n"));
             KeLowerIrql(RaiseOldIrql);
 
@@ -351,7 +351,7 @@ ProSendPackets(
           for (i = 0; i < NumberOfPackets; i++)
           {
              NdisStatus = (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.SendHandler)(
-                           Adapter->NdisMiniportBlock.MiniportAdapterContext, PacketArray[i], 0);
+                           Adapter->NdisMiniportBlock.MiniportAdapterContext, PacketArray[i], PacketArray[i]->Private.Flags);
              if (NdisStatus != NDIS_STATUS_PENDING)
                  MiniSendComplete(Adapter, PacketArray[i], NdisStatus);
           }
@@ -363,7 +363,7 @@ ProSendPackets(
          for (i = 0; i < NumberOfPackets; i++)
          {
             NdisStatus = (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.SendHandler)(
-                           Adapter->NdisMiniportBlock.MiniportAdapterContext, PacketArray[i], 0);
+                           Adapter->NdisMiniportBlock.MiniportAdapterContext, PacketArray[i], PacketArray[i]->Private.Flags);
             if (NdisStatus != NDIS_STATUS_PENDING)
                 MiniSendComplete(Adapter, PacketArray[i], NdisStatus);
          }

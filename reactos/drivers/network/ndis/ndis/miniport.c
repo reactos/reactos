@@ -1000,7 +1000,8 @@ MiniportWorker(IN PDEVICE_OBJECT DeviceObject, IN PVOID Context)
                 {
                   NDIS_DbgPrint(MAX_TRACE, ("Calling miniport's Send handler\n"));
                   NdisStatus = (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.SendHandler)(
-                                Adapter->NdisMiniportBlock.MiniportAdapterContext, (PNDIS_PACKET)WorkItemContext, 0);
+                                Adapter->NdisMiniportBlock.MiniportAdapterContext, (PNDIS_PACKET)WorkItemContext,
+                                ((PNDIS_PACKET)WorkItemContext)->Private.Flags);
                   NDIS_DbgPrint(MAX_TRACE, ("back from miniport's send handler\n"));
                 }
                 else
@@ -1009,7 +1010,8 @@ MiniportWorker(IN PDEVICE_OBJECT DeviceObject, IN PVOID Context)
                   KeRaiseIrql(DISPATCH_LEVEL, &RaiseOldIrql);
                   NDIS_DbgPrint(MAX_TRACE, ("Calling miniport's Send handler\n"));
                   NdisStatus = (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.SendHandler)(
-                                Adapter->NdisMiniportBlock.MiniportAdapterContext, (PNDIS_PACKET)WorkItemContext, 0);
+                                Adapter->NdisMiniportBlock.MiniportAdapterContext, (PNDIS_PACKET)WorkItemContext,
+                                ((PNDIS_PACKET)WorkItemContext)->Private.Flags);
                   NDIS_DbgPrint(MAX_TRACE, ("back from miniport's send handler\n"));
                   KeLowerIrql(RaiseOldIrql);
                   if( NdisStatus == NDIS_STATUS_RESOURCES ) {
