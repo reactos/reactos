@@ -40,8 +40,11 @@ EngDebugPrint(PCHAR StandardPrefix,
 	      PCHAR DebugMessage,
 	      va_list ap)
 {
-  DbgPrint(StandardPrefix);
-  DbgPrint(DebugMessage, ap);
-  DbgPrint("\n");
+    vDbgPrintExWithPrefix(StandardPrefix,
+                          -1,
+                          DPFLTR_ERROR_LEVEL,
+                          DebugMessage,
+                          ap);
 }
+
 /* EOF */
