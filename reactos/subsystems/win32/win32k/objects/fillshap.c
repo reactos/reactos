@@ -904,15 +904,18 @@ IntGdiGradientFill(
         Extent.top = min(Extent.top, (pVertex + i)->y);
         Extent.bottom = max(Extent.bottom, (pVertex + i)->y);
     }
+    IntLPtoDP(dc, (LPPOINT)&Extent, 2);
 
-    DitherOrg.x = dc->ptlDCOrig.x;
-    DitherOrg.y = dc->ptlDCOrig.y;
+    Extent.left   += dc->ptlDCOrig.x;
+    Extent.right  += dc->ptlDCOrig.x;
+    Extent.top    += dc->ptlDCOrig.y;
+    Extent.bottom += dc->ptlDCOrig.y;
+
+    DitherOrg.x = DitherOrg.y = 0;
     IntLPtoDP(dc, (LPPOINT)&DitherOrg, 1);
 
-    Extent.left += DitherOrg.x;
-    Extent.right += DitherOrg.x;
-    Extent.top += DitherOrg.y;
-    Extent.bottom += DitherOrg.y;
+    DitherOrg.x += dc->ptlDCOrig.x;
+    DitherOrg.y += dc->ptlDCOrig.y;
 
     psurf = SURFACE_LockSurface(dc->rosdc.hBitmap);
     /* FIXME - psurf can be NULL!!! Don't assert but handle this case gracefully! */

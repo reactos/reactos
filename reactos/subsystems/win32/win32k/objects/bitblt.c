@@ -86,23 +86,27 @@ NtGdiAlphaBlend(
         DCSrc = DCDest;
     }
 
-    /* Offset the destination and source by the origin of their DCs. */
-    XOriginDest += DCDest->ptlDCOrig.x;
-    YOriginDest += DCDest->ptlDCOrig.y;
-    XOriginSrc += DCSrc->ptlDCOrig.x;
-    YOriginSrc += DCSrc->ptlDCOrig.y;
-
     DestRect.left   = XOriginDest;
     DestRect.top    = YOriginDest;
     DestRect.right  = XOriginDest + WidthDest;
     DestRect.bottom = YOriginDest + HeightDest;
     IntLPtoDP(DCDest, (LPPOINT)&DestRect, 2);
 
+    DestRect.left   += DCDest->ptlDCOrig.x;
+    DestRect.top    += DCDest->ptlDCOrig.y;
+    DestRect.right  += DCDest->ptlDCOrig.x;
+    DestRect.bottom += DCDest->ptlDCOrig.y;
+
     SourceRect.left   = XOriginSrc;
     SourceRect.top    = YOriginSrc;
     SourceRect.right  = XOriginSrc + WidthSrc;
     SourceRect.bottom = YOriginSrc + HeightSrc;
     IntLPtoDP(DCSrc, (LPPOINT)&SourceRect, 2);
+
+    SourceRect.left   += DCSrc->ptlDCOrig.x;
+    SourceRect.top    += DCSrc->ptlDCOrig.y;
+    SourceRect.right  += DCSrc->ptlDCOrig.x;
+    SourceRect.bottom += DCSrc->ptlDCOrig.y;
 
     if (!DestRect.right ||
         !DestRect.bottom ||
@@ -189,7 +193,7 @@ NtGdiBitBlt(
     PDC_ATTR pdcattr = NULL;
     SURFACE *BitmapDest, *BitmapSrc = NULL;
     RECTL DestRect;
-    POINTL SourcePoint, BrushOrigin;
+    POINTL SourcePoint;
     BOOL Status = FALSE;
     XLATEOBJ *XlateObj = NULL;
     BOOL UsesSource = ROP3_USES_SOURCE(ROP);
@@ -237,31 +241,27 @@ NtGdiBitBlt(
     if (pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
         DC_vUpdateFillBrush(DCDest);
 
-    /* Offset the destination and source by the origin of their DCs. */
-    XDest += DCDest->ptlDCOrig.x;
-    YDest += DCDest->ptlDCOrig.y;
-    if (UsesSource)
-    {
-        XSrc += DCSrc->ptlDCOrig.x;
-        YSrc += DCSrc->ptlDCOrig.y;
-    }
-
     DestRect.left   = XDest;
     DestRect.top    = YDest;
     DestRect.right  = XDest+Width;
     DestRect.bottom = YDest+Height;
-
     IntLPtoDP(DCDest, (LPPOINT)&DestRect, 2);
+
+    DestRect.left   += DCDest->ptlDCOrig.x;
+    DestRect.top    += DCDest->ptlDCOrig.y;
+    DestRect.right  += DCDest->ptlDCOrig.x;
+    DestRect.bottom += DCDest->ptlDCOrig.y;
 
     SourcePoint.x = XSrc;
     SourcePoint.y = YSrc;
+
     if (UsesSource)
     {
         IntLPtoDP(DCSrc, (LPPOINT)&SourcePoint, 1);
-    }
 
-    BrushOrigin.x = 0;
-    BrushOrigin.y = 0;
+        SourcePoint.x += DCSrc->ptlDCOrig.x;
+        SourcePoint.y += DCSrc->ptlDCOrig.y;
+    }
 
     /* Determine surfaces to be used in the bitblt */
     BitmapDest = SURFACE_LockSurface(DCDest->rosdc.hBitmap);
@@ -387,12 +387,6 @@ NtGdiTransparentBlt(
         return TRUE;
     }
 
-    /* Offset positions */
-    xDst += DCDest->ptlDCOrig.x;
-    yDst += DCDest->ptlDCOrig.y;
-    xSrc += DCSrc->ptlDCOrig.x;
-    ySrc += DCSrc->ptlDCOrig.y;
-
     BitmapDest = SURFACE_LockSurface(DCDest->rosdc.hBitmap);
     if (!BitmapDest)
     {
@@ -444,17 +438,27 @@ NtGdiTransparentBlt(
     /* Create the XLATE object to convert colors between source and destination */
     XlateObj = (XLATEOBJ*)IntEngCreateXlate(PalDestMode, PalSrcMode, DestPalette, SourcePalette);
 
-    rcDest.left = xDst;
-    rcDest.top = yDst;
-    rcDest.right = rcDest.left + cxDst;
+    rcDest.left   = xDst;
+    rcDest.top    = yDst;
+    rcDest.right  = rcDest.left + cxDst;
     rcDest.bottom = rcDest.top + cyDst;
     IntLPtoDP(DCDest, (LPPOINT)&rcDest, 2);
 
-    rcSrc.left = xSrc;
-    rcSrc.top = ySrc;
-    rcSrc.right = rcSrc.left + cxSrc;
+    rcDest.left   += DCDest->ptlDCOrig.x;
+    rcDest.top    += DCDest->ptlDCOrig.y;
+    rcDest.right  += DCDest->ptlDCOrig.x;
+    rcDest.bottom += DCDest->ptlDCOrig.y;
+
+    rcSrc.left   = xSrc;
+    rcSrc.top    = ySrc;
+    rcSrc.right  = rcSrc.left + cxSrc;
     rcSrc.bottom = rcSrc.top + cySrc;
     IntLPtoDP(DCSrc, (LPPOINT)&rcSrc, 2);
+
+    rcSrc.left   += DCSrc->ptlDCOrig.x;
+    rcSrc.top    += DCSrc->ptlDCOrig.y;
+    rcSrc.right  += DCSrc->ptlDCOrig.x;
+    rcSrc.bottom += DCSrc->ptlDCOrig.y;
 
     Ret = IntEngTransparentBlt(&BitmapDest->SurfObj, &BitmapSrc->SurfObj,
         DCDest->rosdc.CombinedClip, XlateObj, &rcDest, &rcSrc,
@@ -792,28 +796,30 @@ GreStretchBltMask(
     if (pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
         DC_vUpdateFillBrush(DCDest);
 
-    /* Offset the destination and source by the origin of their DCs. */
-    XOriginDest += DCDest->ptlDCOrig.x;
-    YOriginDest += DCDest->ptlDCOrig.y;
-    if (UsesSource)
-    {
-        XOriginSrc += DCSrc->ptlDCOrig.x;
-        YOriginSrc += DCSrc->ptlDCOrig.y;
-    }
-
     DestRect.left   = XOriginDest;
     DestRect.top    = YOriginDest;
     DestRect.right  = XOriginDest+WidthDest;
     DestRect.bottom = YOriginDest+HeightDest;
     IntLPtoDP(DCDest, (LPPOINT)&DestRect, 2);
 
+    DestRect.left   += DCDest->ptlDCOrig.x;
+    DestRect.top    += DCDest->ptlDCOrig.y;
+    DestRect.right  += DCDest->ptlDCOrig.x;
+    DestRect.bottom += DCDest->ptlDCOrig.y;
+
     SourceRect.left   = XOriginSrc;
     SourceRect.top    = YOriginSrc;
     SourceRect.right  = XOriginSrc+WidthSrc;
     SourceRect.bottom = YOriginSrc+HeightSrc;
+
     if (UsesSource)
     {
         IntLPtoDP(DCSrc, (LPPOINT)&SourceRect, 2);
+
+        SourceRect.left   += DCSrc->ptlDCOrig.x;
+        SourceRect.top    += DCSrc->ptlDCOrig.y;
+        SourceRect.right  += DCSrc->ptlDCOrig.x;
+        SourceRect.bottom += DCSrc->ptlDCOrig.y;
     }
 
     BrushOrigin.x = 0;
@@ -972,27 +978,32 @@ IntPatBlt(
     {
         if (Width > 0)
         {
-            DestRect.left = XLeft + dc->ptlDCOrig.x;
-            DestRect.right = XLeft + Width + dc->ptlDCOrig.x;
+            DestRect.left = XLeft;
+            DestRect.right = XLeft + Width;
         }
         else
         {
-            DestRect.left = XLeft + Width + 1 + dc->ptlDCOrig.x;
-            DestRect.right = XLeft + dc->ptlDCOrig.x + 1;
+            DestRect.left = XLeft + Width + 1;
+            DestRect.right = XLeft + 1;
         }
 
         if (Height > 0)
         {
-            DestRect.top = YLeft + dc->ptlDCOrig.y;
-            DestRect.bottom = YLeft + Height + dc->ptlDCOrig.y;
+            DestRect.top = YLeft;
+            DestRect.bottom = YLeft + Height;
         }
         else
         {
-            DestRect.top = YLeft + Height + dc->ptlDCOrig.y + 1;
-            DestRect.bottom = YLeft + dc->ptlDCOrig.y + 1;
+            DestRect.top = YLeft + Height + 1;
+            DestRect.bottom = YLeft + 1;
         }
 
         IntLPtoDP(dc, (LPPOINT)&DestRect, 2);
+
+        DestRect.left   += dc->ptlDCOrig.x;
+        DestRect.top    += dc->ptlDCOrig.y;
+        DestRect.right  += dc->ptlDCOrig.x;
+        DestRect.bottom += dc->ptlDCOrig.y;
 
         BrushOrigin.x = BrushObj->ptOrigin.x + dc->ptlDCOrig.x;
         BrushOrigin.y = BrushObj->ptOrigin.y + dc->ptlDCOrig.y;

@@ -3234,11 +3234,18 @@ GreExtTextOutW(
 
     if ((fuOptions & ETO_OPAQUE) && lprc)
     {
-        DestRect.left   = lprc->left   + dc->ptlDCOrig.x;
-        DestRect.top    = lprc->top    + dc->ptlDCOrig.y;
-        DestRect.right  = lprc->right  + dc->ptlDCOrig.x;
-        DestRect.bottom = lprc->bottom + dc->ptlDCOrig.y;
+        DestRect.left   = lprc->left;
+        DestRect.top    = lprc->top;
+        DestRect.right  = lprc->right;
+        DestRect.bottom = lprc->bottom;
+
         IntLPtoDP(dc, (LPPOINT)&DestRect, 2);
+
+        DestRect.left   += dc->ptlDCOrig.x;
+        DestRect.top    += dc->ptlDCOrig.y;
+        DestRect.right  += dc->ptlDCOrig.x;
+        DestRect.bottom += dc->ptlDCOrig.y;
+
         IntEngBitBlt(
             &psurf->SurfObj,
             NULL,

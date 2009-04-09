@@ -271,7 +271,7 @@ IntGdiPolyline(DC      *dc,
             RtlCopyMemory(Points, pt, Count * sizeof(POINT));
             IntLPtoDP(dc, Points, Count);
 
-            /* Offset the array of point by the dc->rosdc.DCOrg */
+            /* Offset the array of points by the DC origin */
             for (i = 0; i < Count; i++)
             {
                 Points[i].x += dc->ptlDCOrig.x;
