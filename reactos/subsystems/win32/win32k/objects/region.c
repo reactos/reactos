@@ -2043,7 +2043,7 @@ REGION_AllocRgnWithHandle(INT nReg)
     
     hReg = pReg->BaseObject.hHmgr;
 
-    if (nReg == 1)
+    if (nReg == 0 || nReg == 1)
     {
         /* Testing shows that > 95% of all regions have only 1 rect.
            Including that here saves us from having to do another allocation */
@@ -2496,6 +2496,8 @@ NtGdiExtCreateRegion(
     HRGN hRgn;
     PROSRGNDATA Region;
     DWORD nCount = 0;
+    DWORD iType = 0;
+    DWORD dwSize = 0;
     NTSTATUS Status = STATUS_SUCCESS;
     MATRIX matrix;
 
@@ -2504,14 +2506,8 @@ NtGdiExtCreateRegion(
     {
         ProbeForRead(RgnData, Count, 1);
         nCount = RgnData->rdh.nCount;
-        if (Count < sizeof(RGNDATAHEADER) + nCount * sizeof(RECT) ||
-            nCount == 0 ||
-            RgnData->rdh.iType != RDH_RECTANGLES ||
-            RgnData->rdh.dwSize != sizeof(RGNDATAHEADER))
-        {
-            Status = STATUS_INVALID_PARAMETER;
-            _SEH2_LEAVE;
-        }
+        iType = RgnData->rdh.iType;
+        dwSize = RgnData->rdh.dwSize;
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -2521,6 +2517,14 @@ NtGdiExtCreateRegion(
     if (!NT_SUCCESS(Status))
     {
         SetLastNtError(Status);
+        return NULL;
+    }
+
+    /* Check parameters, but don't set last error here */
+    if (Count < sizeof(RGNDATAHEADER) + nCount * sizeof(RECT) ||
+        iType != RDH_RECTANGLES ||
+        dwSize != sizeof(RGNDATAHEADER))
+    {
         return NULL;
     }
 
@@ -2712,10 +2716,7 @@ NtGdiGetRandomRgn(
         if (pDC->dclevel.prgnMeta) hSrc = ((PROSRGNDATA)pDC->dclevel.prgnMeta)->BaseObject.hHmgr;
         break;
     case APIRGN:
-        DPRINT1("hMetaRgn not implemented\n");
-        //hSrc = dc->hMetaClipRgn;
-        if (!hSrc) hSrc = pDC->rosdc.hClipRgn;
-        //if (!hSrc) rgn = dc->hMetaRgn;
+        hSrc = pDC->rosdc.hClipRgn;
 //        if (pDC->prgnAPI) hSrc = ((PROSRGNDATA)pDC->prgnAPI)->BaseObject.hHmgr;
 //        else if (pDC->dclevel.prgnClip) hSrc = ((PROSRGNDATA)pDC->dclevel.prgnClip)->BaseObject.hHmgr;
 //        else if (pDC->dclevel.prgnMeta) hSrc = ((PROSRGNDATA)pDC->dclevel.prgnMeta)->BaseObject.hHmgr;
