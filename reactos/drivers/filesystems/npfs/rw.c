@@ -836,6 +836,17 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
                 Status = STATUS_PIPE_BROKEN;
                 goto done;
             }
+            /* Check that the pipe has not been closed */
+            if (ReaderCcb->PipeState != FILE_PIPE_CONNECTED_STATE)
+            {
+                /* If the other side is valid, fire event */
+                if (Ccb)
+                {
+                    KeResetEvent(&Ccb->WriteEvent);
+                }
+                Status = STATUS_PIPE_BROKEN;
+                goto done;
+            }
             ExAcquireFastMutex(&ReaderCcb->DataListLock);
         }
 
