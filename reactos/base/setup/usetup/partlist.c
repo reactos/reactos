@@ -70,8 +70,9 @@ AssignDriverLetters (PPARTLIST List)
   PDISKENTRY DiskEntry;
   PPARTENTRY PartEntry;
   PLIST_ENTRY Entry1;
-  PLIST_ENTRY Entry2;
+  //PLIST_ENTRY Entry2;
   CHAR Letter;
+  UCHAR i;
 
   Letter = 'C';
 
@@ -87,19 +88,25 @@ AssignDriverLetters (PPARTLIST List)
                                      PARTENTRY,
                                      ListEntry);
 
-      PartEntry->DriveLetter = 0;
+      for (i=0; i<3; i++)
+        PartEntry->DriveLetter[i] = 0;
 
-      if (PartEntry->Unpartitioned == FALSE &&
-        !IsContainerPartition (PartEntry->PartInfo[0].PartitionType))
+      if (PartEntry->Unpartitioned == FALSE)
       {
-        if (IsRecognizedPartition (PartEntry->PartInfo[0].PartitionType) ||
-           (PartEntry->PartInfo[0].PartitionType == PARTITION_ENTRY_UNUSED &&
-           PartEntry->PartInfo[0].PartitionLength.QuadPart != 0LL))
+        for (i=0; i<3; i++)
         {
-          if (Letter <= 'Z')
+          if (IsContainerPartition (PartEntry->PartInfo[i].PartitionType))
+            continue;
+
+          if (IsRecognizedPartition (PartEntry->PartInfo[i].PartitionType) ||
+             (PartEntry->PartInfo[i].PartitionType == PARTITION_ENTRY_UNUSED &&
+             PartEntry->PartInfo[i].PartitionLength.QuadPart != 0LL))
           {
-            PartEntry->DriveLetter = Letter;
-            Letter++;
+            if (Letter <= 'Z')
+            {
+              PartEntry->DriveLetter[i] = Letter;
+              Letter++;
+            }
           }
         }
       }
@@ -108,8 +115,8 @@ AssignDriverLetters (PPARTLIST List)
     Entry1 = Entry1->Flink;
   }
 
-
   /* Assign drive letters to logical drives */
+#if 0
   Entry1 = List->DiskListHead.Flink;
   while (Entry1 != &List->DiskListHead)
   {
@@ -148,6 +155,7 @@ AssignDriverLetters (PPARTLIST List)
 
     Entry1 = Entry1->Flink;
   }
+#endif
 }
 
 
@@ -1197,8 +1205,8 @@ PrintPartitionData (PPARTLIST List,
     {
       sprintf (LineBuffer,
                MUIGetString(STRING_HDDINFOUNK5),
-               (PartEntry->DriveLetter == 0) ? '-' : PartEntry->DriveLetter,
-               (PartEntry->DriveLetter == 0) ? '-' : ':',
+               (PartEntry->DriveLetter[PartNumber] == 0) ? '-' : PartEntry->DriveLetter[PartNumber],
+               (PartEntry->DriveLetter[PartNumber] == 0) ? '-' : ':',
                PartEntry->PartInfo[PartNumber].PartitionType,
                PartSize.u.LowPart,
                Unit);
@@ -1207,8 +1215,8 @@ PrintPartitionData (PPARTLIST List,
     {
       sprintf (LineBuffer,
                "%c%c  %-24s         %6lu %s",
-               (PartEntry->DriveLetter == 0) ? '-' : PartEntry->DriveLetter,
-               (PartEntry->DriveLetter == 0) ? '-' : ':',
+               (PartEntry->DriveLetter[PartNumber] == 0) ? '-' : PartEntry->DriveLetter[PartNumber],
+               (PartEntry->DriveLetter[PartNumber] == 0) ? '-' : ':',
                PartType,
                PartSize.u.LowPart,
                Unit);
@@ -2294,12 +2302,15 @@ CheckActiveBootPartition (PPARTLIST List)
 {
   PDISKENTRY DiskEntry;
   PPARTENTRY PartEntry;
+  PLIST_ENTRY ListEntry;
+  UCHAR i;
 
   /* Check for empty disk list */
   if (IsListEmpty (&List->DiskListHead))
   {
     List->ActiveBootDisk = NULL;
     List->ActiveBootPartition = NULL;
+    List->ActiveBootPartitionNumber = 0;
     return;
   }
 
@@ -2321,6 +2332,7 @@ CheckActiveBootPartition (PPARTLIST List)
   {
     List->ActiveBootDisk = NULL;
     List->ActiveBootPartition = NULL;
+    List->ActiveBootPartitionNumber = 0;
     return;
   }
 
@@ -2338,11 +2350,50 @@ CheckActiveBootPartition (PPARTLIST List)
     PartEntry->PartInfo[0].BootIndicator = TRUE;
     PartEntry->PartInfo[0].RewritePartition = TRUE;
     DiskEntry->Modified = TRUE;
+
+    /* FIXME: Might be incorrect if partitions were created by Linux FDISK */
+    List->ActiveBootDisk = DiskEntry;
+    List->ActiveBootPartition = PartEntry;
+
+    return;
   }
 
-  /* FIXME: Might be incorrect if partitions were created by Linux FDISK */
-  List->ActiveBootDisk = DiskEntry;
-  List->ActiveBootPartition = PartEntry;
+  /* Disk is not new, scan all partitions to find a bootable one */
+  List->ActiveBootDisk = NULL;
+  List->ActiveBootPartition = NULL;
+  List->ActiveBootPartitionNumber = 0;
+
+  ListEntry = DiskEntry->PartListHead.Flink;
+  while (ListEntry != &DiskEntry->PartListHead)
+  {
+    PartEntry = CONTAINING_RECORD(ListEntry,
+                                  PARTENTRY,
+                                  ListEntry);
+
+    /* Check if it's partitioned */
+    if (!PartEntry->Unpartitioned)
+    {
+      /* Go through all of its 4 partitions */
+      for (i=0; i<4; i++)
+      {
+        if (PartEntry->PartInfo[i].PartitionType != PARTITION_ENTRY_UNUSED &&
+            PartEntry->PartInfo[i].BootIndicator)
+        {
+          /* Yes, we found it */
+          List->ActiveBootDisk = DiskEntry;
+          List->ActiveBootPartition = PartEntry;
+          List->ActiveBootPartitionNumber = i;
+
+          DPRINT1("Found bootable partition disk %d, drive letter %c\n",
+              DiskEntry->BiosDiskNumber, PartEntry->DriveLetter[i]);
+
+          break;
+        }
+      }
+    }
+    /* Go to the next one */
+    ListEntry = ListEntry->Flink;
+  }
 }
 
 
@@ -2635,6 +2686,7 @@ BOOL SetMountedDeviceValues(PPARTLIST List)
   PLIST_ENTRY Entry1, Entry2;
   PDISKENTRY DiskEntry;
   PPARTENTRY PartEntry;
+  UCHAR i;
 
   if (List == NULL)
   {
@@ -2652,11 +2704,17 @@ BOOL SetMountedDeviceValues(PPARTLIST List)
     while (Entry2 != &DiskEntry->PartListHead)
     {
       PartEntry = CONTAINING_RECORD(Entry2, PARTENTRY, ListEntry);
-      if (!PartEntry->Unpartitioned && PartEntry->DriveLetter)
+      if (!PartEntry->Unpartitioned)
       {
-        if (!SetMountedDeviceValue(PartEntry->DriveLetter, DiskEntry->Signature, PartEntry->PartInfo[0].StartingOffset))
+        for (i=0; i<4; i++)
         {
-          return FALSE;
+          if (PartEntry->DriveLetter[i])
+          {
+            if (!SetMountedDeviceValue(PartEntry->DriveLetter[i], DiskEntry->Signature, PartEntry->PartInfo[i].StartingOffset))
+            {
+              return FALSE;
+            }
+          }
         }
       }
       Entry2 = Entry2->Flink;

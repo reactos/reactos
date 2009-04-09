@@ -43,7 +43,7 @@ typedef struct _PARTENTRY
 {
   LIST_ENTRY ListEntry;
 
-  CHAR DriveLetter;
+  CHAR DriveLetter[4];
   CHAR VolumeLabel[17];
   CHAR FileSystemName[9];
 
@@ -136,6 +136,7 @@ typedef struct _PARTLIST
 
   PDISKENTRY ActiveBootDisk;
   PPARTENTRY ActiveBootPartition;
+  UCHAR      ActiveBootPartitionNumber;
 
   LIST_ENTRY DiskListHead;
   LIST_ENTRY BiosDiskListHead;
