@@ -247,7 +247,7 @@ GdiSelectPalette(
 {
     PDC pdc;
     HPALETTE oldPal = NULL;
-    PPALGDI ppal;
+    PPALETTE ppal;
 
     // FIXME: mark the palette as a [fore\back]ground pal
     pdc = DC_LockDc(hDC);

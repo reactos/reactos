@@ -36,7 +36,7 @@
 //
 //
 VOID FASTCALL
-ColorCorrection(PPALGDI PalGDI, PPALETTEENTRY PaletteEntry, ULONG Colors)
+ColorCorrection(PPALETTE PalGDI, PPALETTEENTRY PaletteEntry, ULONG Colors)
 {
    PPDEVOBJ ppdev = (PPDEVOBJ)PalGDI->hPDev;
 
@@ -91,10 +91,10 @@ EngDeletePalette(IN HPALETTE Palette)
 ULONG APIENTRY
 PALOBJ_cGetColors(PALOBJ *PalObj, ULONG Start, ULONG Colors, ULONG *PaletteEntry)
 {
-   PALGDI *PalGDI;
+   PALETTE *PalGDI;
 
-   PalGDI = (PALGDI*)PalObj;
-   /* PalGDI = (PALGDI*)AccessInternalObjectFromUserObject(PalObj); */
+   PalGDI = (PALETTE*)PalObj;
+   /* PalGDI = (PALETTE*)AccessInternalObjectFromUserObject(PalObj); */
 
    if (Start >= PalGDI->NumColors)
       return 0;

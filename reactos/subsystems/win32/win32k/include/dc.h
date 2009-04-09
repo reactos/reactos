@@ -43,7 +43,7 @@ typedef struct _XCLIPOBJ
 typedef struct _DCLEVEL
 {
   HPALETTE          hpal;
-  struct _PALGDI  * ppal;
+  struct _PALETTE  * ppal;
   PVOID             pColorSpace; /* COLORSPACE* */
   LONG              lIcmMode;
   LONG              lSaveDepth;

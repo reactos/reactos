@@ -232,7 +232,7 @@ FASTCALL
 UpdateDeviceGammaRamp( HDEV hPDev )
 {
   BOOL Ret = FALSE;
-  PPALGDI palGDI;
+  PPALETTE palGDI;
   PALOBJ *palPtr;
   PPDEVOBJ pGDev = (PPDEVOBJ) hPDev;
 

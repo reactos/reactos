@@ -347,7 +347,7 @@ NtGdiTransparentBlt(
     SURFACE *BitmapDest, *BitmapSrc = NULL;
     XLATEOBJ *XlateObj = NULL;
     HPALETTE SourcePalette = 0, DestPalette = 0;
-    PPALGDI PalDestGDI, PalSourceGDI;
+    PPALETTE PalDestGDI, PalSourceGDI;
     USHORT PalDestMode, PalSrcMode;
     ULONG TransparentColor = 0;
     BOOL Ret = FALSE;

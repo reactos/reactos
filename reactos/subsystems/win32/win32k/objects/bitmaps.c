@@ -218,7 +218,7 @@ IntCreateCompatibleBitmap(
                         {
                             /* Copy the color table */
                             UINT Index;
-                            PPALGDI PalGDI = PALETTE_LockPalette(psurf->hDIBPalette);
+                            PPALETTE PalGDI = PALETTE_LockPalette(psurf->hDIBPalette);
 
                             if (!PalGDI)
                             {

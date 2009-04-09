@@ -851,7 +851,7 @@ IntGdiGradientFill(
     ULONG ulMode)
 {
     SURFACE *psurf;
-    PPALGDI PalDestGDI;
+    PPALETTE PalDestGDI;
     XLATEOBJ *XlateObj;
     RECTL Extent;
     POINTL DitherOrg;

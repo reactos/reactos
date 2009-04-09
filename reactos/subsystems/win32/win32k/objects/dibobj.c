@@ -74,7 +74,7 @@ IntSetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, CONST RGBQUAD *Color
 {
    PDC dc;
    PSURFACE psurf;
-   PPALGDI PalGDI;
+   PPALETTE PalGDI;
    UINT Index;
    ULONG biBitCount;
 
@@ -143,7 +143,7 @@ IntGetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, RGBQUAD *Colors)
 {
    PDC dc;
    PSURFACE psurf;
-   PPALGDI PalGDI;
+   PPALETTE PalGDI;
    UINT Index;
    ULONG biBitCount;
 
@@ -226,7 +226,7 @@ IntSetDIBits(
   POINTL      ZeroPoint;
   RECTL       DestRect;
   XLATEOBJ   *XlateObj;
-  PPALGDI     hDCPalette;
+  PPALETTE     hDCPalette;
   //RGBQUAD    *lpRGB;
   HPALETTE    DDB_Palette, DIB_Palette;
   ULONG       DDB_Palette_Type, DIB_Palette_Type;
@@ -446,7 +446,7 @@ NtGdiSetDIBitsToDeviceInternal(
     INT DIBWidth;
     SIZEL SourceSize;
     XLATEOBJ *XlateObj = NULL;
-    PPALGDI pDCPalette;
+    PPALETTE pDCPalette;
     HPALETTE DDBPalette, DIBPalette = NULL;
     ULONG DDBPaletteType, DIBPaletteType;
 
@@ -606,8 +606,8 @@ NtGdiGetDIBitsInternal(HDC hDC,
     HBITMAP hDestBitmap = NULL;
     HPALETTE hSourcePalette = NULL;
     HPALETTE hDestPalette = NULL;
-    PPALGDI SourcePalette = NULL;
-    PPALGDI DestPalette = NULL;
+    PPALETTE SourcePalette = NULL;
+    PPALETTE DestPalette = NULL;
     NTSTATUS Status = STATUS_SUCCESS;
     ULONG Result = 0;
     BOOL bPaletteMatch = FALSE;
@@ -1615,7 +1615,7 @@ DIB_MapPaletteColors(PDC dc, CONST BITMAPINFO* lpbmi)
   RGBQUAD *lpRGB;
   ULONG nNumColors,i;
   USHORT *lpIndex;
-  PPALGDI palGDI;
+  PPALETTE palGDI;
 
   palGDI = PALETTE_LockPalette(dc->dclevel.hpal);
 

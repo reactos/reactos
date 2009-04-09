@@ -84,14 +84,14 @@ IntAnimatePalette(HPALETTE hPal,
 
     if( hPal != NtGdiGetStockObject(DEFAULT_PALETTE) )
     {
-        PPALGDI palPtr;
+        PPALETTE palPtr;
         UINT pal_entries;
         HDC hDC;
         PDC dc;
         PWINDOW_OBJECT Wnd;
         const PALETTEENTRY *pptr = PaletteColors;
 
-        palPtr = (PPALGDI)PALETTE_LockPalette(hPal);
+        palPtr = (PPALETTE)PALETTE_LockPalette(hPal);
         if (!palPtr) return FALSE;
 
         pal_entries = palPtr->NumColors;
@@ -246,7 +246,7 @@ HPALETTE APIENTRY NtGdiCreateHalftonePalette(HDC  hDC)
 HPALETTE APIENTRY
 NtGdiCreatePaletteInternal ( IN LPLOGPALETTE pLogPal, IN UINT cEntries )
 {
-    PPALGDI PalGDI;
+    PPALETTE PalGDI;
     HPALETTE NewPalette;
 
     pLogPal->palNumEntries = cEntries;
@@ -260,7 +260,7 @@ NtGdiCreatePaletteInternal ( IN LPLOGPALETTE pLogPal, IN UINT cEntries )
         return NULL;
     }
 
-    PalGDI = (PPALGDI) PALETTE_LockPalette(NewPalette);
+    PalGDI = (PPALETTE) PALETTE_LockPalette(NewPalette);
     if (PalGDI != NULL)
     {
         PALETTE_ValidateFlags(PalGDI->IndexedColors, PalGDI->NumColors);
@@ -295,14 +295,14 @@ COLORREF APIENTRY NtGdiGetNearestColor(HDC hDC, COLORREF Color)
 {
    COLORREF nearest = CLR_INVALID;
    PDC dc;
-   PPALGDI palGDI;
+   PPALETTE palGDI;
    LONG RBits, GBits, BBits;
 
    dc = DC_LockDc(hDC);
    if (NULL != dc)
    {
       HPALETTE hpal = dc->dclevel.hpal;
-      palGDI = (PPALGDI) PALETTE_LockPalette(hpal);
+      palGDI = (PPALETTE) PALETTE_LockPalette(hpal);
       if (!palGDI)
       {
          DC_UnlockDc(dc);
@@ -339,7 +339,7 @@ COLORREF APIENTRY NtGdiGetNearestColor(HDC hDC, COLORREF Color)
 UINT APIENTRY NtGdiGetNearestPaletteIndex(HPALETTE  hpal,
                                  COLORREF  Color)
 {
-  PPALGDI palGDI = (PPALGDI) PALETTE_LockPalette(hpal);
+  PPALETTE palGDI = (PPALETTE) PALETTE_LockPalette(hpal);
   UINT index  = 0;
 
   if (NULL != palGDI)
@@ -358,10 +358,10 @@ IntGetPaletteEntries(HPALETTE  hpal,
                      UINT  Entries,
                      LPPALETTEENTRY  pe)
 {
-    PPALGDI palGDI;
+    PPALETTE palGDI;
     UINT numEntries;
 
-    palGDI = (PPALGDI) PALETTE_LockPalette(hpal);
+    palGDI = (PPALETTE) PALETTE_LockPalette(hpal);
     if (NULL == palGDI)
     {
         return 0;
@@ -403,7 +403,7 @@ IntGetSystemPaletteEntries(HDC  hDC,
                            UINT  Entries,
                            LPPALETTEENTRY  pe)
 {
-    PPALGDI palGDI = NULL;
+    PPALETTE palGDI = NULL;
     PDC dc = NULL;
     UINT EntriesSize = 0;
     UINT Ret = 0;
@@ -489,7 +489,7 @@ UINT FASTCALL IntGdiRealizePalette(HDC hDC)
    * of bugs in it.
    */
 
-  PPALGDI palGDI, sysGDI;
+  PPALETTE palGDI, sysGDI;
   int realized = 0;
   PDC dc;
   HPALETTE systemPalette;
@@ -608,7 +608,7 @@ IntSetPaletteEntries(HPALETTE  hpal,
                       UINT  Entries,
                       CONST LPPALETTEENTRY  pe)
 {
-    PPALGDI palGDI;
+    PPALETTE palGDI;
     WORD numEntries;
 
     if ((UINT)hpal & GDI_HANDLE_STOCK_MASK)
@@ -670,7 +670,7 @@ APIENTRY
 NtGdiUnrealizeObject(HGDIOBJ hgdiobj)
 {
    BOOL Ret = FALSE;
-   PPALGDI palGDI;
+   PPALETTE palGDI;
 
    if ( !hgdiobj ||
         ((UINT)hgdiobj & GDI_HANDLE_STOCK_MASK) ||

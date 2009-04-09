@@ -50,7 +50,7 @@ OBJ_TYPE_INFO ObjTypeInfo[BASE_OBJTYPE_COUNT] =
   {1, sizeof(SURFACE),       TAG_SURFACE,      SURFACE_Cleanup},  /* 05 SURFACE */
   {1, sizeof(CLIENTOBJ),     TAG_CLIENTOBJ,    GDI_CleanupDummy}, /* 06 CLIENTOBJ: METADC,... */
   {1, sizeof(PATH),          TAG_PATH,         GDI_CleanupDummy}, /* 07 PATH */
-  {1, sizeof(PALGDI),        TAG_PALETTE,      PALETTE_Cleanup},  /* 08 PAL */
+  {1, sizeof(PALETTE),       TAG_PALETTE,      PALETTE_Cleanup},  /* 08 PAL */
   {1, sizeof(COLORSPACE),    TAG_ICMLCS,       GDI_CleanupDummy}, /* 09 ICMLCS, */
   {1, sizeof(TEXTOBJ),       TAG_LFONT,        GDI_CleanupDummy}, /* 0a LFONT */
   {0, 0,                     TAG_RFONT,        NULL},             /* 0b RFONT, unused */
@@ -1721,7 +1721,7 @@ IntGdiGetObject(IN HANDLE Handle,
         break;
 
       case GDI_OBJECT_TYPE_PALETTE:
-        Result = PALETTE_GetObject((PPALGDI) pGdiObject, cbCount, lpBuffer);
+        Result = PALETTE_GetObject((PPALETTE) pGdiObject, cbCount, lpBuffer);
         break;
 
       default:
