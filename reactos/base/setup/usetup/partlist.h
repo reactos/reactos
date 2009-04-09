@@ -132,6 +132,7 @@ typedef struct _PARTLIST
 
   PDISKENTRY CurrentDisk;
   PPARTENTRY CurrentPartition;
+  UCHAR      CurrentPartitionNumber;
 
   PDISKENTRY ActiveBootDisk;
   PPARTENTRY ActiveBootPartition;
