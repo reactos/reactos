@@ -1507,7 +1507,7 @@ typedef struct _devicemodeW {
 #ifdef __WINESRC__
   } DUMMYUNIONNAME1;
 #else
-  } DUMMYUNIONNAME2;
+  } DUMMYUNIONNAME;
 #endif
 
   short  dmColor;
