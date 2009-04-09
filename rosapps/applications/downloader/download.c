@@ -127,7 +127,7 @@ dlOnProgress(IBindStatusCallback* iface, ULONG ulProgress,
     Item = GetDlgItem(This->hDialog, IDC_PROGRESS);
     if (NULL != Item && 0 != ulProgressMax)
     {
-        SendMessageW(Item, PBM_SETPOS, (ulProgress * 100) / ulProgressMax, 0);
+        SendMessageW(Item, PBM_SETPOS, ((ULONGLONG)ulProgress * 100) / ulProgressMax, 0);
     }
 
     Item = GetDlgItem(This->hDialog, IDC_STATUS);
