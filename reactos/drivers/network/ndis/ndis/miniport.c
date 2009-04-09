@@ -425,10 +425,11 @@ MiniTransferDataComplete(
     AdapterBinding = (PADAPTER_BINDING)Packet->Reserved[0];
 
     KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
-    (*AdapterBinding->ProtocolBinding->Chars.SendCompleteHandler)(
+    (*AdapterBinding->ProtocolBinding->Chars.TransferDataCompleteHandler)(
         AdapterBinding->NdisOpenBlock.ProtocolBindingContext,
         Packet,
-        Status);
+        Status,
+        BytesTransferred);
     KeLowerIrql(OldIrql);
 }
 
