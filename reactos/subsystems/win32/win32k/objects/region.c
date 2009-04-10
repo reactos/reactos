@@ -2539,9 +2539,6 @@ NtGdiExtCreateRegion(
 
     _SEH2_TRY
     {
-        /* Copy header */
-        Region->rdh = RgnData->rdh;
-
         if (Xform)
         {
             ULONG ret;
