@@ -42,6 +42,7 @@ base\applications\cmdutils\more\more.exe                1
 base\applications\cmdutils\xcopy\xcopy.exe              1
 base\applications\control\control.exe                   1
 base\applications\dxdiag\dxdiag.exe                     1
+base\applications\fontview\fontview.exe                 1
 base\applications\mscutils\devmgmt\devmgmt.exe          1
 base\applications\mscutils\eventvwr\eventvwr.exe        1
 base\applications\games\solitaire\sol.exe               1
@@ -50,6 +51,7 @@ base\applications\hh\hh.exe                             4
 base\applications\kbswitch\kbswitch.exe                 1
 base\applications\kbswitch\kbsdll\kbsdll.dll            1
 base\applications\logoff\logoff.exe                     1
+base\applications\magnify\magnify.exe                   1
 base\applications\mplay32\mplay32.exe                   1
 base\applications\msconfig\msconfig.exe                 1
 base\applications\mstsc\mstsc.exe                       1
@@ -76,7 +78,9 @@ base\applications\shutdown\shutdown.exe                 1
 base\applications\sndvol32\sndvol32.exe                 1
 base\applications\taskmgr\taskmgr.exe                   1
 base\applications\winhlp32\winhlp32.exe                 4
+base\applications\winver\winver.exe                     1
 base\applications\wordpad\wordpad.exe                   1
+base\applications\write\write.exe                       1
 
 base\services\audiosrv\audiosrv.exe                 1
 base\services\dhcp\dhcp.exe                         1
@@ -650,13 +654,11 @@ modules\rosapps\applications\devutils\genguid\genguid.exe                       
 modules\rosapps\applications\sysutils\gettype\gettype.exe                               1   optional
 modules\rosapps\applications\downloader\downloader.exe                                  1   optional
 modules\rosapps\applications\downloader\downloader.xml                                  1   optional
-modules\rosapps\applications\fontview\fontview.exe                                      1   optional
 modules\rosapps\applications\net\ncftp\ncftp.exe                                        1   optional
 modules\rosapps\applications\net\netreg\netreg.exe                                      1   optional
 modules\rosapps\applications\net\niclist\niclist.exe                                    1   optional
 modules\rosapps\applications\net\roshttpd\roshttpd.exe                                  1   optional
 modules\rosapps\applications\notevil\notevil.exe                                        1   optional
-modules\rosapps\applications\magnify\magnify.exe                                        1   optional
 modules\rosapps\applications\sysutils\chkdsk\chkdsk.exe                                 1   optional
 modules\rosapps\applications\sysutils\systeminfo\systeminfo.exe                         1   optional
 modules\rosapps\applications\sysutils\chklib\chklib.exe                                 1   optional
@@ -683,8 +685,6 @@ modules\rosapps\applications\sysutils\utils\rosperf\rosperf.exe                 
 modules\rosapps\applications\sysutils\utils\stats\stats.exe                             1   optional
 modules\rosapps\applications\sysutils\utils\tickcount\tickcount.exe                     1   optional
 modules\rosapps\applications\winfile\winfile.exe                                        1   optional
-modules\rosapps\applications\winver\winver.exe                                          1   optional
-modules\rosapps\applications\write\write.exe                                            1   optional
 modules\rosapps\demos\maze\maze.exe                                        1   optional
 modules\rosapps\drivers\green\green.sys                                    2   optional
 
