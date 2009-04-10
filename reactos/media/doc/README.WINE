@@ -191,7 +191,7 @@ advapi32 -
   reactos/dll/win32/advapi32/crypt/*.c          # ekohl says we're not sharing this
 
 gdi32 -
-  reactos/dll/win32/gdi32/objects/linedda.c     # Out of sync
+  reactos/dll/win32/gdi32/objects/linedda.c     # Synched at 20090410
 
 kernel32 -
   reactos/dll/win32/kernel32/misc/errormsg.c    # Out of sync
@@ -199,12 +199,12 @@ kernel32 -
   reactos/dll/win32/kernel32/misc/lcformat.c    # Out of sync
 
 msvcrt -
-  reactos/lib/sdk/crt/cpp.c                     # Synced at 20071111
-  reactos/lib/sdk/crt/cppexcept.c               # Synced at 20071111
+  reactos/lib/sdk/crt/except/cpp.c              # Synced at 20071111
+  reactos/lib/sdk/crt/except/cppexcept.c        # Synced at 20071111
   reactos/lib/sdk/crt/strings/scanf.c/h         # Synced at 20080604
   reactos/lib/sdk/crt/strings/wcs.c             # Synced at 20080611
   reactos/lib/sdk/crt/wine/heap.c               # Synced at 20080529
-  reactos/lib/sdk/crt/wine/undname.c            # Synced at XXXXXXXX
+  reactos/lib/sdk/crt/wine/undname.c            # Synced at 20081130
   reactos/lib/sdk/crt/thread/thread.c           # Synced at 20080604
 
 snmpapi -
