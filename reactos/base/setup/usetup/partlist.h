@@ -109,6 +109,7 @@ typedef struct _DISKENTRY
   BOOLEAN Modified;
 
   BOOLEAN NewDisk;
+  BOOLEAN NoMbr; /* MBR is absent */
 
   UNICODE_STRING DriverName;
 

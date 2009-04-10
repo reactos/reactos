@@ -775,10 +775,6 @@ AddDiskToList (HANDLE FileHandle,
   }
   Checksum = ~Checksum + 1;
 
-  RtlFreeHeap (ProcessHeap,
-               0,
-               Mbr);
-
   swprintf(Identifier, L"%08x-%08x-A", Checksum, Signature);
   DPRINT("Identifier: %S\n", Identifier);
 
@@ -798,6 +794,17 @@ AddDiskToList (HANDLE FileHandle,
     DiskEntry->Modified = TRUE;
   }
   DiskEntry->BiosFound = FALSE;
+
+  /* Check if this disk has a valid MBR */
+  if (Mbr->BootCode[0] == 0 && Mbr->BootCode[1] == 0)
+    DiskEntry->NoMbr = TRUE;
+  else
+    DiskEntry->NoMbr = FALSE;
+
+  /* Free Mbr sector buffer */
+  RtlFreeHeap (ProcessHeap,
+               0,
+               Mbr);
 
   ListEntry = List->BiosDiskListHead.Flink;
   while(ListEntry != &List->BiosDiskListHead)
@@ -2672,6 +2679,7 @@ WritePartitionsToDisk (PPARTLIST List)
         }
 
         DiskEntry1->NewDisk = FALSE;
+        DiskEntry1->NoMbr = FALSE;
       }
     }
 

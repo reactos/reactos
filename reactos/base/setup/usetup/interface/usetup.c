@@ -2380,6 +2380,28 @@ FormatPartitionPage (PINPUT_RECORD Ir)
                 CheckActiveBootPartition(PartitionList);
             }
 
+            /* Install MBR if necessary */
+            if (DiskEntry->NoMbr &&
+                DiskEntry->BiosDiskNumber == 0)
+            {
+                wcscpy(PathBuffer, SourceRootPath.Buffer);
+                wcscat(PathBuffer, L"\\loader\\dosmbr.bin");
+
+                DPRINT("Install MBR bootcode: %S ==> %S\n",
+                    PathBuffer, DestinationRootPath.Buffer);
+
+                /* Install MBR bootcode */
+                Status = InstallMbrBootCodeToDisk(PathBuffer, DestinationRootPath.Buffer);
+                if (!NT_SUCCESS (Status))
+                {
+                    DPRINT1("InstallMbrBootCodeToDisk() failed (Status %lx)\n",
+                        Status);
+                    return FALSE;
+                }
+
+                DiskEntry->NoMbr = FALSE;
+            }
+
             if (wcscmp(FileSystemList->Selected->FileSystem, L"FAT") == 0)
             {
                 /* FIXME: Install boot code. This is a hack! */
