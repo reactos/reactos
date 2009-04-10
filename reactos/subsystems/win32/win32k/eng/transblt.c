@@ -143,7 +143,7 @@ EngTransparentBlt(SURFOBJ *psoDest,
       ClipRect.right = Clip->rclBounds.right + Translate.x;
       ClipRect.top = Clip->rclBounds.top + Translate.y;
       ClipRect.bottom = Clip->rclBounds.bottom + Translate.y;
-      if (EngIntersectRect(&CombinedRect, &OutputRect, &ClipRect))
+      if (RECTL_bIntersectRect(&CombinedRect, &OutputRect, &ClipRect))
       {
         InputToCombinedRect.top = InputRect.top + (CombinedRect.top - OutputRect.top) * SrcHeight / DstHeight;
         InputToCombinedRect.bottom = InputRect.top + (CombinedRect.bottom - OutputRect.top) * SrcHeight / DstHeight;
@@ -189,7 +189,7 @@ EngTransparentBlt(SURFOBJ *psoDest,
           ClipRect.right = RectEnum.arcl[i].right + Translate.x;
           ClipRect.top = RectEnum.arcl[i].top + Translate.y;
           ClipRect.bottom = RectEnum.arcl[i].bottom + Translate.y;
-          if (EngIntersectRect(&CombinedRect, &OutputRect, &ClipRect))
+          if (RECTL_bIntersectRect(&CombinedRect, &OutputRect, &ClipRect))
           {
             InputToCombinedRect.top = InputRect.top + (CombinedRect.top - OutputRect.top) * SrcHeight / DstHeight;
             InputToCombinedRect.bottom = InputRect.top + (CombinedRect.bottom - OutputRect.top) * SrcHeight / DstHeight;
@@ -264,7 +264,7 @@ IntEngTransparentBlt(SURFOBJ *psoDest,
    * outside the surface */
   if(Clip)
   {
-    if(!EngIntersectRect(&OutputRect, &InputClippedRect, &Clip->rclBounds))
+    if(!RECTL_bIntersectRect(&OutputRect, &InputClippedRect, &Clip->rclBounds))
     {
       return TRUE;
     }

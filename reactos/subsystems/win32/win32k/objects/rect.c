@@ -62,22 +62,25 @@ RECTL_bUnionRect(RECTL *prclDst, const RECTL *prcl1, const RECTL *prcl2)
 
 BOOL
 FASTCALL
-RECTL_bIntersectRect(RECTL *prclDst, const RECTL *prcl1, const RECTL *prcl2)
+RECTL_bIntersectRect(RECTL* prclDst, const RECTL* prcl1, const RECTL* prcl2)
 {
-    if (RECTL_bIsEmptyRect(prcl1) || RECTL_bIsEmptyRect(prcl2) ||
-        prcl1->left >= prcl2->right || prcl2->left >= prcl1->right ||
-        prcl1->top >= prcl2->bottom || prcl2->top >= prcl1->bottom)
+    prclDst->left  = max(prcl1->left, prcl2->left);
+    prclDst->right = min(prcl1->right, prcl2->right);
+
+    if (prclDst->left < prclDst->right)
     {
-        RECTL_vSetEmptyRect(prclDst);
-        return FALSE;
+        prclDst->top    = max(prcl1->top, prcl2->top);
+        prclDst->bottom = min(prcl1->bottom, prcl2->bottom);
+
+        if (prclDst->top < prclDst->bottom)
+        {
+            return TRUE;
+        }
     }
 
-    prclDst->left = max(prcl1->left, prcl2->left);
-    prclDst->right = min(prcl1->right, prcl2->right);
-    prclDst->top = max(prcl1->top, prcl2->top);
-    prclDst->bottom = min(prcl1->bottom, prcl2->bottom);
+    RECTL_vSetEmptyRect(prclDst);
 
-    return TRUE;
+    return FALSE;
 }
 
 

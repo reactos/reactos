@@ -155,7 +155,7 @@ EngCopyBits(SURFOBJ *psoDest,
 
       case DC_RECT:
         // Clip the blt to the clip rectangle
-        EngIntersectRect(&BltInfo.DestRect, DestRect, &Clip->rclBounds);
+        RECTL_bIntersectRect(&BltInfo.DestRect, DestRect, &Clip->rclBounds);
 
         BltInfo.SourcePoint.x = SourcePoint->x + BltInfo.DestRect.left - DestRect->left;
         BltInfo.SourcePoint.y = SourcePoint->y + BltInfo.DestRect.top  - DestRect->top;
@@ -183,7 +183,7 @@ EngCopyBits(SURFOBJ *psoDest,
             RECTL* prcl    = &RectEnum.arcl[0];
 
             do {
-              EngIntersectRect(&BltInfo.DestRect, prcl, DestRect);
+              RECTL_bIntersectRect(&BltInfo.DestRect, prcl, DestRect);
 
               BltInfo.SourcePoint.x = SourcePoint->x + prcl->left - DestRect->left;
               BltInfo.SourcePoint.y = SourcePoint->y + prcl->top - DestRect->top;
