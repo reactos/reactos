@@ -1057,19 +1057,19 @@ VOID FASTCALL
 DC_UpdateXforms(PDC dc)
 {
     XFORM  xformWnd2Vport;
-    DOUBLE  scaleX, scaleY;
+    FLOAT  scaleX, scaleY;
     PDC_ATTR pdcattr = dc->pdcattr;
     XFORM xformWorld2Vport, xformWorld2Wnd, xformVport2World;
 
     /* Construct a transformation to do the window-to-viewport conversion */
-    scaleX = (pdcattr->szlWindowExt.cx ? (DOUBLE)pdcattr->szlViewportExt.cx / (DOUBLE)pdcattr->szlWindowExt.cx : 0.0f);
-    scaleY = (pdcattr->szlWindowExt.cy ? (DOUBLE)pdcattr->szlViewportExt.cy / (DOUBLE)pdcattr->szlWindowExt.cy : 0.0f);
+    scaleX = (pdcattr->szlWindowExt.cx ? (FLOAT)pdcattr->szlViewportExt.cx / (FLOAT)pdcattr->szlWindowExt.cx : 0.0f);
+    scaleY = (pdcattr->szlWindowExt.cy ? (FLOAT)pdcattr->szlViewportExt.cy / (FLOAT)pdcattr->szlWindowExt.cy : 0.0f);
     xformWnd2Vport.eM11 = scaleX;
     xformWnd2Vport.eM12 = 0.0;
     xformWnd2Vport.eM21 = 0.0;
     xformWnd2Vport.eM22 = scaleY;
-    xformWnd2Vport.eDx  = (DOUBLE)pdcattr->ptlViewportOrg.x - scaleX * (DOUBLE)pdcattr->ptlWindowOrg.x;
-    xformWnd2Vport.eDy  = (DOUBLE)pdcattr->ptlViewportOrg.y - scaleY * (DOUBLE)pdcattr->ptlWindowOrg.y;
+    xformWnd2Vport.eDx  = (FLOAT)pdcattr->ptlViewportOrg.x - scaleX * (FLOAT)pdcattr->ptlWindowOrg.x;
+    xformWnd2Vport.eDy  = (FLOAT)pdcattr->ptlViewportOrg.y - scaleY * (FLOAT)pdcattr->ptlWindowOrg.y;
 
     /* Combine with the world transformation */
     MatrixS2XForm(&xformWorld2Vport, &dc->dclevel.mxWorldToDevice);
