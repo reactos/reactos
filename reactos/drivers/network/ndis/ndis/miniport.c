@@ -975,7 +975,7 @@ MiniportWorker(IN PDEVICE_OBJECT DeviceObject, IN PVOID Context)
                     NDIS_DbgPrint(MAX_TRACE, ("Calling miniport's SendPackets handler\n"));
                     (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.SendPacketsHandler)(
                      Adapter->NdisMiniportBlock.MiniportAdapterContext, (PPNDIS_PACKET)&WorkItemContext, 1);
-                    NdisStatus = NDIS_GET_PACKET_STATUS((PNDIS_PACKET)WorkItemContext);
+                    NdisStatus = NDIS_STATUS_PENDING;
                 }
                 else
                 {

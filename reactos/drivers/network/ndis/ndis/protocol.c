@@ -201,7 +201,7 @@ proSendPacketToMiniport(PLOGICAL_ADAPTER Adapter, PNDIS_PACKET Packet)
             NDIS_DbgPrint(MAX_TRACE, ("Calling miniport's SendPackets handler\n"));
             (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.SendPacketsHandler)(
              Adapter->NdisMiniportBlock.MiniportAdapterContext, &Packet, 1);
-             NdisStatus = NDIS_GET_PACKET_STATUS(Packet);
+             NdisStatus = NDIS_STATUS_PENDING;
         } else {
             /* SendPackets is called at DISPATCH_LEVEL for all serialized miniports */
             KeRaiseIrql(DISPATCH_LEVEL, &RaiseOldIrql);
@@ -322,12 +322,6 @@ ProSendPackets(
        {
           (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.SendPacketsHandler)(
            Adapter->NdisMiniportBlock.MiniportAdapterContext, PacketArray, NumberOfPackets);
-          for (i = 0; i < NumberOfPackets; i++)
-          {
-             NdisStatus = NDIS_GET_PACKET_STATUS(PacketArray[i]);
-             if (NdisStatus != NDIS_STATUS_PENDING)
-                 MiniSendComplete(Adapter, PacketArray[i], NdisStatus);
-          }
        }
        else
        {
