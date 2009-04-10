@@ -349,15 +349,15 @@ ProSendPackets(
        else
        {
          /* Send is called at DISPATCH_LEVEL for all serialized miniports */
-         KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &RaiseOldIrql);
          for (i = 0; i < NumberOfPackets; i++)
          {
+            KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &RaiseOldIrql);
             NdisStatus = (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.SendHandler)(
                            Adapter->NdisMiniportBlock.MiniportAdapterContext, PacketArray[i], PacketArray[i]->Private.Flags);
+            KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, RaiseOldIrql);
             if (NdisStatus != NDIS_STATUS_PENDING)
                 MiniSendComplete(Adapter, PacketArray[i], NdisStatus);
          }
-         KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, RaiseOldIrql);
        }
      }
 }
