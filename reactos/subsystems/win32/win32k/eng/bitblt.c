@@ -78,14 +78,14 @@ BOOL APIENTRY EngIntersectRect(RECTL* prcDst, RECTL* prcSrc1, RECTL* prcSrc2)
 
 static BOOLEAN APIENTRY
 BltMask(SURFOBJ* psoDest,
-        SURFOBJ* psoSource, // FIXME: why isn't this used?
+        SURFOBJ* psoSource, // unused
         SURFOBJ* psoMask,
-        XLATEOBJ* ColorTranslation,
-        RECTL* DestRect,
-        POINTL* SourcePoint,
-        POINTL* MaskPoint,  // FIXME: why isn't this used?
+        XLATEOBJ* ColorTranslation,  // unused
+        RECTL* prclDest,
+        POINTL* pptlSource, // unused
+        POINTL* pptlMask,
         BRUSHOBJ* pbo,
-        POINTL* BrushPoint,
+        POINTL* pptlBrush,
         ROP4 Rop4)
 {
     LONG x, y;
@@ -123,31 +123,31 @@ BltMask(SURFOBJ* psoDest,
     else
         psurfPattern = NULL;
 
-    pjMskLine = (PBYTE)psoMask->pvScan0 + SourcePoint->y * psoMask->lDelta + (SourcePoint->x >> 3);
-    fjMaskBit0 = 0x80 >> (SourcePoint->x & 0x07);
+    pjMskLine = (PBYTE)psoMask->pvScan0 + pptlMask->y * psoMask->lDelta + (pptlMask->x >> 3);
+    fjMaskBit0 = 0x80 >> (pptlMask->x & 0x07);
 
     fnDest_PutPixel = DibFunctionsForBitmapFormat[psoDest->iBitmapFormat].DIB_PutPixel;
     if (psurfPattern)
     {
         XlateObj = pebo ? pebo->XlateObject : NULL;
-        PatternY = (DestRect->top - BrushPoint->y) % PatternHeight;
+        PatternY = (prclDest->top - pptlBrush->y) % PatternHeight;
         if (PatternY < 0)
         {
             PatternY += PatternHeight;
         }
-        PatternX0 = (DestRect->left - BrushPoint->x) % PatternWidth;
+        PatternX0 = (prclDest->left - pptlBrush->x) % PatternWidth;
         if (PatternX0 < 0)
         {
             PatternX0 += PatternWidth;
         }
 
-        for (y = DestRect->top; y < DestRect->bottom; y++)
+        for (y = prclDest->top; y < prclDest->bottom; y++)
         {
             pjMskCurrent = pjMskLine;
             fjMaskBit = fjMaskBit0;
             PatternX = PatternX0;
 
-            for (x = DestRect->left; x < DestRect->right; x++)
+            for (x = prclDest->left; x < prclDest->right; x++)
             {
                 if (*pjMskCurrent & fjMaskBit)
                 {
@@ -168,12 +168,12 @@ BltMask(SURFOBJ* psoDest,
     else
     {
         Pattern = pbo ? pbo->iSolidColor : 0;
-        for (y = DestRect->top; y < DestRect->bottom; y++)
+        for (y = prclDest->top; y < prclDest->bottom; y++)
         {
             pjMskCurrent = pjMskLine;
             fjMaskBit = fjMaskBit0;
 
-            for (x = DestRect->left; x < DestRect->right; x++)
+            for (x = prclDest->left; x < prclDest->right; x++)
             {
                 if (*pjMskCurrent & fjMaskBit)
                 {
@@ -1651,32 +1651,32 @@ IntEngAlphaBlend(IN SURFOBJ *psoDest,
 /* renders the alpha mask bitmap */
 static BOOLEAN APIENTRY
 AlphaBltMask(SURFOBJ* psoDest,
-             SURFOBJ* psoSource,
-             SURFOBJ* Mask,
+             SURFOBJ* psoSource, // unused
+             SURFOBJ* psoMask,
              XLATEOBJ* ColorTranslation,
              XLATEOBJ* SrcColorTranslation,
-             RECTL* DestRect,
-             POINTL* SourcePoint,
-             POINTL* MaskPoint,
+             RECTL* prclDest,
+             POINTL* pptlSource, // unused
+             POINTL* pptlMask,
              BRUSHOBJ* pbo,
-             POINTL* BrushPoint)
+             POINTL* pptlBrush)
 {
     LONG i, j, dx, dy;
     int r, g, b;
     ULONG Background, BrushColor, NewColor;
     BYTE *tMask, *lMask;
 
-    dx = DestRect->right  - DestRect->left;
-    dy = DestRect->bottom - DestRect->top;
+    dx = prclDest->right  - prclDest->left;
+    dy = prclDest->bottom - prclDest->top;
 
-    if (Mask != NULL)
+    if (psoMask != NULL)
     {
         BrushColor = XLATEOBJ_iXlate(SrcColorTranslation, pbo ? pbo->iSolidColor : 0);
         r = (int)GetRValue(BrushColor);
         g = (int)GetGValue(BrushColor);
         b = (int)GetBValue(BrushColor);
 
-        tMask = (PBYTE)Mask->pvScan0 + (SourcePoint->y * Mask->lDelta) + SourcePoint->x;
+        tMask = (PBYTE)psoMask->pvScan0 + (pptlMask->y * psoMask->lDelta) + pptlMask->x;
         for (j = 0; j < dy; j++)
         {
             lMask = tMask;
@@ -1687,11 +1687,11 @@ AlphaBltMask(SURFOBJ* psoDest,
                     if (*lMask == 0xff)
                     {
                         DibFunctionsForBitmapFormat[psoDest->iBitmapFormat].DIB_PutPixel(
-                            psoDest, DestRect->left + i, DestRect->top + j, pbo ? pbo->iSolidColor : 0);
+                            psoDest, prclDest->left + i, prclDest->top + j, pbo ? pbo->iSolidColor : 0);
                     }
                     else
                     {
-                        Background = DIB_GetSource(psoDest, DestRect->left + i, DestRect->top + j,
+                        Background = DIB_GetSource(psoDest, prclDest->left + i, prclDest->top + j,
                                                    SrcColorTranslation);
 
                         NewColor =
@@ -1701,12 +1701,12 @@ AlphaBltMask(SURFOBJ* psoDest,
 
                         Background = XLATEOBJ_iXlate(ColorTranslation, NewColor);
                         DibFunctionsForBitmapFormat[psoDest->iBitmapFormat].DIB_PutPixel(
-                            psoDest, DestRect->left + i, DestRect->top + j, Background);
+                            psoDest, prclDest->left + i, prclDest->top + j, Background);
                     }
                 }
                 lMask++;
             }
-            tMask += Mask->lDelta;
+            tMask += psoMask->lDelta;
         }
         return TRUE;
     }
@@ -1716,6 +1716,7 @@ AlphaBltMask(SURFOBJ* psoDest,
     }
 }
 
+static
 BOOL APIENTRY
 EngMaskBitBlt(SURFOBJ *psoDest,
               SURFOBJ *psoMask,
@@ -1723,8 +1724,7 @@ EngMaskBitBlt(SURFOBJ *psoDest,
               XLATEOBJ *DestColorTranslation,
               XLATEOBJ *SourceColorTranslation,
               RECTL *DestRect,
-              POINTL *SourcePoint,
-              POINTL *MaskOrigin,
+              POINTL *pptlMask,
               BRUSHOBJ *pbo,
               POINTL *BrushOrigin)
 {
@@ -1749,12 +1749,12 @@ EngMaskBitBlt(SURFOBJ *psoDest,
 
     ASSERT(psoMask);
 
-    if (NULL != SourcePoint)
+    if (pptlMask)
     {
-        InputRect.left = SourcePoint->x;
-        InputRect.right = SourcePoint->x + (DestRect->right - DestRect->left);
-        InputRect.top = SourcePoint->y;
-        InputRect.bottom = SourcePoint->y + (DestRect->bottom - DestRect->top);
+        InputRect.left = pptlMask->x;
+        InputRect.right = pptlMask->x + (DestRect->right - DestRect->left);
+        InputRect.top = pptlMask->y;
+        InputRect.bottom = pptlMask->y + (DestRect->bottom - DestRect->top);
     }
     else
     {
@@ -1764,29 +1764,12 @@ EngMaskBitBlt(SURFOBJ *psoDest,
         InputRect.bottom = DestRect->bottom - DestRect->top;
     }
 
-    if (! IntEngEnter(&EnterLeaveSource, psoDest, &InputRect, TRUE, &Translate, &psoInput))
-    {
-        return FALSE;
-    }
-
-    if (NULL != SourcePoint)
-    {
-        InputPoint.x = SourcePoint->x + Translate.x;
-        InputPoint.y = SourcePoint->y + Translate.y;
-    }
-    else
-    {
-        InputPoint.x = 0;
-        InputPoint.y = 0;
-    }
-
     OutputRect = *DestRect;
     if (NULL != ClipRegion)
     {
         if (OutputRect.left < ClipRegion->rclBounds.left)
         {
             InputRect.left += ClipRegion->rclBounds.left - OutputRect.left;
-            InputPoint.x += ClipRegion->rclBounds.left - OutputRect.left;
             OutputRect.left = ClipRegion->rclBounds.left;
         }
         if (ClipRegion->rclBounds.right < OutputRect.right)
@@ -1797,7 +1780,6 @@ EngMaskBitBlt(SURFOBJ *psoDest,
         if (OutputRect.top < ClipRegion->rclBounds.top)
         {
             InputRect.top += ClipRegion->rclBounds.top - OutputRect.top;
-            InputPoint.y += ClipRegion->rclBounds.top - OutputRect.top;
             OutputRect.top = ClipRegion->rclBounds.top;
         }
         if (ClipRegion->rclBounds.bottom < OutputRect.bottom)
@@ -1806,6 +1788,14 @@ EngMaskBitBlt(SURFOBJ *psoDest,
             OutputRect.bottom = ClipRegion->rclBounds.bottom;
         }
     }
+
+    if (! IntEngEnter(&EnterLeaveSource, psoMask, &InputRect, TRUE, &Translate, &psoInput))
+    {
+        return FALSE;
+    }
+
+    InputPoint.x = InputRect.left + Translate.x;
+    InputPoint.y = InputRect.top + Translate.y;
 
     /* Check for degenerate case: if height or width of OutputRect is 0 pixels there's
        nothing to do */
@@ -1846,11 +1836,11 @@ EngMaskBitBlt(SURFOBJ *psoDest,
     {
         case DC_TRIVIAL:
             if (psoMask->iBitmapFormat == BMF_8BPP)
-                Ret = AlphaBltMask(psoOutput, psoInput, psoMask, DestColorTranslation, SourceColorTranslation,
-                                   &OutputRect, &InputPoint, MaskOrigin, pbo, &AdjustedBrushOrigin);
+                Ret = AlphaBltMask(psoOutput, NULL , psoInput, DestColorTranslation, SourceColorTranslation,
+                                   &OutputRect, &InputPoint, pptlMask, pbo, &AdjustedBrushOrigin);
             else
-                Ret = BltMask(psoOutput, psoInput, psoMask, DestColorTranslation,
-                              &OutputRect, &InputPoint, MaskOrigin, pbo, &AdjustedBrushOrigin,
+                Ret = BltMask(psoOutput, NULL, psoInput, DestColorTranslation,
+                              &OutputRect, &InputPoint, pptlMask, pbo, &AdjustedBrushOrigin,
                               R4_MASK);
             break;
         case DC_RECT:
@@ -1866,12 +1856,12 @@ EngMaskBitBlt(SURFOBJ *psoDest,
                 if (psoMask->iBitmapFormat == BMF_8BPP)
                 {
                     Ret = AlphaBltMask(psoOutput, psoInput, psoMask, DestColorTranslation, SourceColorTranslation,
-                                       &CombinedRect, &Pt, MaskOrigin, pbo, &AdjustedBrushOrigin);
+                                       &CombinedRect, &Pt, pptlMask, pbo, &AdjustedBrushOrigin);
                 }
                 else
                 {
                     Ret = BltMask(psoOutput, psoInput, psoMask, DestColorTranslation,
-                                  &CombinedRect, &Pt, MaskOrigin, pbo, &AdjustedBrushOrigin, R4_MASK);
+                                  &CombinedRect, &Pt, pptlMask, pbo, &AdjustedBrushOrigin, R4_MASK);
                 }
             }
             break;
@@ -1912,14 +1902,14 @@ EngMaskBitBlt(SURFOBJ *psoDest,
                             Ret = AlphaBltMask(psoOutput, psoInput, psoMask,
                                                DestColorTranslation,
                                                SourceColorTranslation,
-                                               &CombinedRect, &Pt, MaskOrigin, pbo,
+                                               &CombinedRect, &Pt, pptlMask, pbo,
                                                &AdjustedBrushOrigin) && Ret;
                         }
                         else
                         {
                             Ret = BltMask(psoOutput, psoInput, psoMask,
                                           DestColorTranslation, &CombinedRect, &Pt,
-                                          MaskOrigin, pbo, &AdjustedBrushOrigin,
+                                          pptlMask, pbo, &AdjustedBrushOrigin,
                                           R4_MASK) && Ret;
                         }
                     }
@@ -1943,8 +1933,7 @@ IntEngMaskBlt(SURFOBJ *psoDest,
               XLATEOBJ *DestColorTranslation,
               XLATEOBJ *SourceColorTranslation,
               RECTL *DestRect,
-              POINTL *SourcePoint,
-              POINTL *MaskOrigin,
+              POINTL *pptlMask,
               BRUSHOBJ *pbo,
               POINTL *BrushOrigin)
 {
@@ -1955,9 +1944,9 @@ IntEngMaskBlt(SURFOBJ *psoDest,
 
     ASSERT(psoMask);
 
-    if (NULL != SourcePoint)
+    if (pptlMask)
     {
-        InputPoint = *SourcePoint;
+        InputPoint = *pptlMask;
     }
 
     /* Clip against the bounds of the clipping region so we won't try to write
@@ -1989,15 +1978,15 @@ IntEngMaskBlt(SURFOBJ *psoDest,
        This should really be done using a call to DrvSynchronizeSurface,
        but the VMware driver doesn't hook that call. */
     IntEngBitBltEx(psoDest, NULL, psoMask, ClipRegion, DestColorTranslation,
-                   DestRect, SourcePoint, MaskOrigin, pbo, BrushOrigin,
+                   DestRect, pptlMask, pptlMask, pbo, BrushOrigin,
                    R4_NOOP, FALSE);
 
     ret = EngMaskBitBlt(psoDest, psoMask, ClipRegion, DestColorTranslation, SourceColorTranslation,
-                        &OutputRect, &InputPoint, MaskOrigin, pbo, BrushOrigin);
+                        &OutputRect, &InputPoint, pbo, BrushOrigin);
 
     /* Dummy BitBlt to let driver know that something has changed. */
     IntEngBitBltEx(psoDest, NULL, psoMask, ClipRegion, DestColorTranslation,
-                   DestRect, SourcePoint, MaskOrigin, pbo, BrushOrigin,
+                   DestRect, pptlMask, pptlMask, pbo, BrushOrigin,
                    R4_NOOP, FALSE);
 
     MouseSafetyOnDrawEnd(psoDest);

@@ -3571,7 +3571,6 @@ GreExtTextOutW(
             XlateObj,
             XlateObj2,
             &DestRect,
-            &SourcePoint,
             (PPOINTL)&MaskRect,
             &dc->eboText.BrushObject,
             &BrushOrigin);
