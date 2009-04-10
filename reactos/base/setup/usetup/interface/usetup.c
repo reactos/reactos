@@ -3345,7 +3345,8 @@ BootLoaderPage(PINPUT_RECORD Ir)
 
     CONSOLE_SetStatusText(MUIGetString(STRING_PLEASEWAIT));
 
-    PartitionType = PartitionList->ActiveBootPartition->PartInfo[0].PartitionType;
+    PartitionType = PartitionList->ActiveBootPartition->
+        PartInfo[PartitionList->ActiveBootPartitionNumber].PartitionType;
 
     if (PartitionType == PARTITION_ENTRY_UNUSED)
     {
@@ -3518,7 +3519,8 @@ BootLoaderHarddiskPage(PINPUT_RECORD Ir)
     UCHAR PartitionType;
     NTSTATUS Status;
 
-    PartitionType = PartitionList->ActiveBootPartition->PartInfo[0].PartitionType;
+    PartitionType = PartitionList->ActiveBootPartition->
+        PartInfo[PartitionList->ActiveBootPartitionNumber].PartitionType;
     if ((PartitionType == PARTITION_FAT_12) ||
         (PartitionType == PARTITION_FAT_16) ||
         (PartitionType == PARTITION_HUGE) ||

@@ -2361,6 +2361,7 @@ CheckActiveBootPartition (PPARTLIST List)
     /* FIXME: Might be incorrect if partitions were created by Linux FDISK */
     List->ActiveBootDisk = DiskEntry;
     List->ActiveBootPartition = PartEntry;
+    List->ActiveBootPartitionNumber = 0;
 
     return;
   }
@@ -2391,7 +2392,7 @@ CheckActiveBootPartition (PPARTLIST List)
           List->ActiveBootPartition = PartEntry;
           List->ActiveBootPartitionNumber = i;
 
-          DPRINT1("Found bootable partition disk %d, drive letter %c\n",
+          DPRINT("Found bootable partition disk %d, drive letter %c\n",
               DiskEntry->BiosDiskNumber, PartEntry->DriveLetter[i]);
 
           break;
