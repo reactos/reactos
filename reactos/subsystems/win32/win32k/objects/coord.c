@@ -674,36 +674,36 @@ IntGdiSetMapMode(
             /* Fall through */
 
         case MM_LOMETRIC:
-            pdcattr->szlWindowExt.cx = 3600;
-            pdcattr->szlWindowExt.cy = 2700;
+            pdcattr->szlWindowExt.cx = dc->ppdev->GDIInfo.ulHorzSize * 10;
+            pdcattr->szlWindowExt.cy = dc->ppdev->GDIInfo.ulVertSize * 10;
             pdcattr->szlViewportExt.cx = dc->ppdev->GDIInfo.ulHorzRes;
             pdcattr->szlViewportExt.cy = -dc->ppdev->GDIInfo.ulVertRes;
             break;
 
         case MM_HIMETRIC:
-            pdcattr->szlWindowExt.cx = 36000;
-            pdcattr->szlWindowExt.cy = 27000;
+            pdcattr->szlWindowExt.cx = dc->ppdev->GDIInfo.ulHorzSize * 100;
+            pdcattr->szlWindowExt.cy = dc->ppdev->GDIInfo.ulVertSize * 100;
             pdcattr->szlViewportExt.cx = dc->ppdev->GDIInfo.ulHorzRes;
             pdcattr->szlViewportExt.cy = -dc->ppdev->GDIInfo.ulVertRes;
             break;
 
         case MM_LOENGLISH:
-            pdcattr->szlWindowExt.cx = 1417;
-            pdcattr->szlWindowExt.cy = 1063;
+            pdcattr->szlWindowExt.cx = MulDiv(1000, dc->ppdev->GDIInfo.ulHorzSize, 254);
+            pdcattr->szlWindowExt.cy = MulDiv(1000, dc->ppdev->GDIInfo.ulVertSize, 254);
             pdcattr->szlViewportExt.cx = dc->ppdev->GDIInfo.ulHorzRes;
             pdcattr->szlViewportExt.cy = -dc->ppdev->GDIInfo.ulVertRes;
             break;
 
         case MM_HIENGLISH:
-            pdcattr->szlWindowExt.cx = 14173;
-            pdcattr->szlWindowExt.cy = 10630;
+            pdcattr->szlWindowExt.cx = MulDiv(10000, dc->ppdev->GDIInfo.ulHorzSize, 254);
+            pdcattr->szlWindowExt.cy = MulDiv(10000, dc->ppdev->GDIInfo.ulVertSize, 254);
             pdcattr->szlViewportExt.cx = dc->ppdev->GDIInfo.ulHorzRes;
             pdcattr->szlViewportExt.cy = -dc->ppdev->GDIInfo.ulVertRes;
             break;
 
         case MM_TWIPS:
-            pdcattr->szlWindowExt.cx = 20409;
-            pdcattr->szlWindowExt.cy = 15307;
+            pdcattr->szlWindowExt.cx = MulDiv(14400, dc->ppdev->GDIInfo.ulHorzSize, 254);
+            pdcattr->szlWindowExt.cy = MulDiv(14400, dc->ppdev->GDIInfo.ulVertSize, 254);
             pdcattr->szlViewportExt.cx = dc->ppdev->GDIInfo.ulHorzRes;
             pdcattr->szlViewportExt.cy = -dc->ppdev->GDIInfo.ulVertRes;
             break;
@@ -1057,19 +1057,19 @@ VOID FASTCALL
 DC_UpdateXforms(PDC dc)
 {
     XFORM  xformWnd2Vport;
-    FLOAT  scaleX, scaleY;
+    DOUBLE  scaleX, scaleY;
     PDC_ATTR pdcattr = dc->pdcattr;
     XFORM xformWorld2Vport, xformWorld2Wnd, xformVport2World;
 
     /* Construct a transformation to do the window-to-viewport conversion */
-    scaleX = (pdcattr->szlWindowExt.cx ? (FLOAT)pdcattr->szlViewportExt.cx / (FLOAT)pdcattr->szlWindowExt.cx : 0.0f);
-    scaleY = (pdcattr->szlWindowExt.cy ? (FLOAT)pdcattr->szlViewportExt.cy / (FLOAT)pdcattr->szlWindowExt.cy : 0.0f);
+    scaleX = (pdcattr->szlWindowExt.cx ? (DOUBLE)pdcattr->szlViewportExt.cx / (DOUBLE)pdcattr->szlWindowExt.cx : 0.0f);
+    scaleY = (pdcattr->szlWindowExt.cy ? (DOUBLE)pdcattr->szlViewportExt.cy / (DOUBLE)pdcattr->szlWindowExt.cy : 0.0f);
     xformWnd2Vport.eM11 = scaleX;
     xformWnd2Vport.eM12 = 0.0;
     xformWnd2Vport.eM21 = 0.0;
     xformWnd2Vport.eM22 = scaleY;
-    xformWnd2Vport.eDx  = (FLOAT)pdcattr->ptlViewportOrg.x - scaleX * (FLOAT)pdcattr->ptlWindowOrg.x;
-    xformWnd2Vport.eDy  = (FLOAT)pdcattr->ptlViewportOrg.y - scaleY * (FLOAT)pdcattr->ptlWindowOrg.y;
+    xformWnd2Vport.eDx  = (DOUBLE)pdcattr->ptlViewportOrg.x - scaleX * (DOUBLE)pdcattr->ptlWindowOrg.x;
+    xformWnd2Vport.eDy  = (DOUBLE)pdcattr->ptlViewportOrg.y - scaleY * (DOUBLE)pdcattr->ptlWindowOrg.y;
 
     /* Combine with the world transformation */
     MatrixS2XForm(&xformWorld2Vport, &dc->dclevel.mxWorldToDevice);
