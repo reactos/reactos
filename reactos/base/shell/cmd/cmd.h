@@ -65,7 +65,7 @@ extern INT    nErrorLevel;
 extern SHORT  maxx;
 extern SHORT  maxy;
 extern OSVERSIONINFO osvi;
-
+extern BOOL bUnicodeOutput;
 
 
 /* Prototypes for ALIAS.C */
