@@ -1,5 +1,5 @@
 /*
- * Copyright 2005 Dmitry Timoshkov
+ * Copyright 2009 CodeWeavers, Aric Stewart
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,23 +16,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "windef.h"
-#include "winuser.h"
-#include "msvideo_private.h"
+#define WINE_FILEDESCRIPTION_STR "Wine Msctf"
+#define WINE_FILENAME_STR "msctf.dll"
+#define WINE_FILEVERSION 5,1,2600,3319
+#define WINE_FILEVERSION_STR " 5.1.2600.3319"
+#define WINE_PRODUCTVERSION 5,1,2600,3319
+#define WINE_PRODUCTVERSION_STR "5.1.2600.3319"
 
-#include "msvfw32_Da.rc"
-#include "msvfw32_De.rc"
-#include "msvfw32_En.rc"
-#include "msvfw32_Es.rc"
-#include "msvfw32_Fr.rc"
-#include "msvfw32_Hu.rc"
-#include "msvfw32_Ko.rc"
-#include "msvfw32_Nl.rc"
-#include "msvfw32_No.rc"
-#include "msvfw32_Pl.rc"
-#include "msvfw32_Pt.rc"
-#include "msvfw32_Ru.rc"
-#include "msvfw32_Si.rc"
-#include "msvfw32_Sv.rc"
-#include "msvfw32_Tr.rc"
-#include "msvfw32_Zh.rc"
+#include "wine/wine_common_ver.rc"

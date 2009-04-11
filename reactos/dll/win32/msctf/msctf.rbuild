@@ -12,6 +12,7 @@
 	<file>msctf.c</file>
 	<file>regsvr.c</file>
 	<file>threadmgr.c</file>
+	<file>version.rc</file>
 	<library>wine</library>
 	<library>uuid</library>
 	<library>ole32</library>

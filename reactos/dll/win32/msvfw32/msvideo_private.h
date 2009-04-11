@@ -19,9 +19,6 @@
 #ifndef __WINE_MSVIDEO_PRIVATE_H
 #define __WINE_MSVIDEO_PRIVATE_H
 
-/* Installable Compressor Manager */
-#define ICVERSION 0x0104
-
 #define ICM_CHOOSE_COMPRESSOR 1
 #define IDC_COMP_LIST 880
 #define IDS_FULLFRAMES 901

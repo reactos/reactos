@@ -7,7 +7,7 @@
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -50,6 +50,7 @@ static HINSTANCE MSVIDC32_hModule;
 #define CRAM_MAGIC mmioFOURCC('C', 'R', 'A', 'M')
 #define MSVC_MAGIC mmioFOURCC('M', 'S', 'V', 'C')
 #define WHAM_MAGIC mmioFOURCC('W', 'H', 'A', 'M')
+#define compare_fourcc(fcc1, fcc2) (((fcc1)^(fcc2))&~0x20202020)
 
 #define PALETTE_COUNT 256
 #define LE_16(x)  ((((const uint8_t *)(x))[1] << 8) | ((const uint8_t *)(x))[0])
@@ -502,7 +503,7 @@ LRESULT WINAPI CRAM_DriverProc( DWORD_PTR dwDriverId, HDRVR hdrvr, UINT msg,
 
         TRACE("Opened\n");
 
-        if (icinfo && icinfo->fccType != ICTYPE_VIDEO) return 0;
+        if (icinfo && compare_fourcc(icinfo->fccType, ICTYPE_VIDEO)) return 0;
 
         info = HeapAlloc( GetProcessHeap(), 0, sizeof (Msvideo1Context) );
         if( info )

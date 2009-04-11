@@ -1,7 +1,7 @@
 /*
  * Copyright 1998 Marcus Meissner
  * Copyright 2000 Bradley Baetz
- * Copyright 2003 Michael Günnewig
+ * Copyright 2003 Michael GÃ¼nnewig
  * Copyright 2005 Dmitry Timoshkov
  *
  * This library is free software; you can redistribute it and/or
@@ -102,7 +102,7 @@ static int compare_fourcc(DWORD fcc1, DWORD fcc2)
   return strncasecmp(fcc_str1, fcc_str2, 4);
 }
 
-typedef BOOL (*enum_handler_t)(const char*, int, void*);
+typedef BOOL (*enum_handler_t)(const char*, unsigned int, void*);
 
 static BOOL enum_drivers(DWORD fccType, enum_handler_t handler, void* param)
 {
@@ -173,9 +173,9 @@ DWORD WINAPI VideoForWindowsVersion(void)
     return 0x040003B6; /* 4.950 */
 }
 
-static BOOL ICInfo_enum_handler(const char *drv, int nr, void *param)
+static BOOL ICInfo_enum_handler(const char *drv, unsigned int nr, void *param)
 {
-    ICINFO *lpicinfo = (ICINFO *)param;
+    ICINFO *lpicinfo = param;
     DWORD fccHandler = mmioStringToFOURCCA(drv + 5, 0);
 
     /* exact match of fccHandler or nth driver found */
@@ -519,9 +519,9 @@ static HIC try_driver(driver_info_t *info)
     return 0;
 }
 
-static BOOL ICLocate_enum_handler(const char *drv, int nr, void *param)
+static BOOL ICLocate_enum_handler(const char *drv, unsigned int nr, void *param)
 {
-    driver_info_t *info = (driver_info_t *)param;
+    driver_info_t *info = param;
     info->fccHandler = mmioStringToFOURCCA(drv + 5, 0);
     info->hic = try_driver(info);
     return info->hic != 0;
@@ -1026,9 +1026,9 @@ void VFWAPI ICCompressorFree(PCOMPVARS pc)
 LRESULT MSVIDEO_SendMessage(WINE_HIC* whic, UINT msg, DWORD_PTR lParam1, DWORD_PTR lParam2)
 {
     LRESULT     ret;
-    
-#define XX(x) case x: TRACE("(%p,"#x",0x%08lx,0x%08lx)\n",whic,lParam1,lParam2); break;
-    
+
+#define XX(x) case x: TRACE("(%p,"#x",0x%08lx,0x%08lx)\n",whic,lParam1,lParam2); break
+
     switch (msg) {
         /* DRV_* */
         XX(DRV_LOAD);
@@ -1299,7 +1299,7 @@ HANDLE VFWAPI ICImageDecompress(
 		pHdr = HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,cbHdr+sizeof(RGBQUAD)*256);
 		if ( pHdr == NULL )
 			goto err;
-		if ( ICDecompressGetFormat( hic, lpbiIn, (BITMAPINFO*)pHdr ) != ICERR_OK )
+		if ( ICDecompressGetFormat( hic, lpbiIn, pHdr ) != ICERR_OK )
 			goto err;
 		lpbiOut = (BITMAPINFO*)pHdr;
 		if ( lpbiOut->bmiHeader.biBitCount <= 8 &&
@@ -1337,7 +1337,7 @@ HANDLE VFWAPI ICImageDecompress(
 		WARN( "out of memory\n" );
 		goto err;
 	}
-	pMem = (BYTE*)GlobalLock( hMem );
+	pMem = GlobalLock( hMem );
 	if ( pMem == NULL )
 		goto err;
 	memcpy( pMem, lpbiOut, cbHdr );
@@ -1368,7 +1368,7 @@ err:
  */
 LPVOID VFWAPI ICSeqCompressFrame(PCOMPVARS pc, UINT uiFlags, LPVOID lpBits, BOOL *pfKey, LONG *plSize)
 {
-    ICCOMPRESS* icComp = (ICCOMPRESS *)pc->lpState;
+    ICCOMPRESS* icComp = pc->lpState;
     DWORD ret;
     TRACE("(%p, 0x%08x, %p, %p, %p)\n", pc, uiFlags, lpBits, pfKey, plSize);
 
@@ -1490,7 +1490,7 @@ BOOL VFWAPI ICSeqCompressFrameStart(PCOMPVARS pc, LPBITMAPINFO lpbiIn)
     TRACE(" -- %x\n", ret);
     if (ret == ICERR_OK)
     {
-       ICCOMPRESS* icComp = (ICCOMPRESS *)pc->lpState;
+       ICCOMPRESS* icComp = pc->lpState;
        /* Initialise some variables */
        pc->lFrame = 0; pc->lKeyCount = 0;
 

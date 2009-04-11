@@ -1,6 +1,5 @@
 /*
- * Copyright 2005 Dmitry Timoshkov
- * Copyright 2005,2006 YunSong Hwang
+ * Copyright 2008 Ricardo Filipe
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -17,36 +16,36 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
 ICM_CHOOSE_COMPRESSOR DIALOG DISCARDABLE  36, 24, 187, 95
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "∫Òµø¿ æ–√‡"
-FONT 9, "MS Shell Dlg"
+CAPTION "Compress„o de vÌdeo"
+FONT 8, "MS Shell Dlg"
 {
-    DEFPUSHBUTTON "»Æ¿Œ",IDOK,129,2,49,14
-    PUSHBUTTON "√Îº“",IDCANCEL,129,18,49,14
+    DEFPUSHBUTTON "OK",IDOK,129,2,49,14
+    PUSHBUTTON "Cancelar",IDCANCEL,129,18,49,14
 
-    LTEXT "æ–√‡(&C):",-1,9,6,105,8
+    LTEXT "&Compressor:",-1,9,6,105,8
     COMBOBOX 880,9,16,111,67,CBS_DROPDOWNLIST|WS_VSCROLL|WS_TABSTOP
 
-    PUSHBUTTON "º≥¡§(&F)...",882,129,36,49,14
-    PUSHBUTTON "¡§∫∏(&A)...",883,129,52,49,14
+    PUSHBUTTON "Con&figurar...",882,129,36,49,14
+    PUSHBUTTON "&Sobre...",883,129,52,49,14
 
     SCROLLBAR 884,9,44,111,9,WS_TABSTOP
 
-    LTEXT "æ–√‡ «∞¡˙(&Q):",886,9,34,80,8
+    LTEXT "&Qualidade de compress„o:",886,9,34,80,8
 
-    CONTROL "∏µÁ ≈∞ «¡∑π¿”(&K)",887,"Button",BS_AUTOCHECKBOX|WS_TABSTOP,9,60,66,12
+    CONTROL "&Imagem chave todos os",887,"Button",BS_AUTOCHECKBOX|WS_TABSTOP,9,60,66,12
     EDITTEXT 888,78,60,22,12
-    LTEXT "«¡∑π¿”",889,103,62,26,10
+    LTEXT "frames",889,103,62,26,10
 
-    CONTROL "µ•¿Ã≈∏ ¿¸º€¿≤(&D)",894,"Button",BS_AUTOCHECKBOX|WS_TABSTOP,9,76,66,12
+    CONTROL "&CadÍncia de dados",894,"Button",BS_AUTOCHECKBOX|WS_TABSTOP,9,76,66,12
     EDITTEXT 895,78,76,22,12
     LTEXT "KB/sec",896,102,78,26,10
 }
 
 STRINGTABLE DISCARDABLE
 {
-    IDS_FULLFRAMES "¿¸√§ «¡∑π¿”(∫Òæ–√‡)"
+    IDS_FULLFRAMES "Imagens Completas (Descomprimidas)"
 }
