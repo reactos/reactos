@@ -140,6 +140,7 @@ dll\cpl\sysdm\sysdm.cpl                             1
 dll\cpl\timedate\timedate.cpl                       1
 ;dll\cpl\usrmgr\usrmgr.cpl                          1
 
+dll\directx\amstream\amstream.dll                   1
 dll\directx\dinput\dinput.dll                       1
 dll\directx\dinput8\dinput8.dll                     1
 dll\directx\dplay\dplay.dll                         1
