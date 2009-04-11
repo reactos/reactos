@@ -204,11 +204,13 @@ proSendPacketToMiniport(PLOGICAL_ADAPTER Adapter, PNDIS_PACKET Packet)
              NdisStatus = NDIS_STATUS_PENDING;
         } else {
             /* SendPackets is called at DISPATCH_LEVEL for all serialized miniports */
-            KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &RaiseOldIrql);
+            KeRaiseIrql(DISPATCH_LEVEL, &RaiseOldIrql);
+            {
                NDIS_DbgPrint(MAX_TRACE, ("Calling miniport's SendPackets handler\n"));
                (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.SendPacketsHandler)(
                 Adapter->NdisMiniportBlock.MiniportAdapterContext, &Packet, 1);
-            KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, RaiseOldIrql);
+            }
+            KeLowerIrql(RaiseOldIrql);
 
             NdisStatus = NDIS_GET_PACKET_STATUS(Packet);
             if (NdisStatus == NDIS_STATUS_RESOURCES) {
@@ -227,12 +229,12 @@ proSendPacketToMiniport(PLOGICAL_ADAPTER Adapter, PNDIS_PACKET Packet)
             NDIS_DbgPrint(MAX_TRACE, ("back from miniport's send handler\n"));
         } else {
             /* Send is called at DISPATCH_LEVEL for all serialized miniports */
-            KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &RaiseOldIrql);
+            KeRaiseIrql(DISPATCH_LEVEL, &RaiseOldIrql);
             NDIS_DbgPrint(MAX_TRACE, ("Calling miniport's Send handler\n"));
             NdisStatus = (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.SendHandler)(
                           Adapter->NdisMiniportBlock.MiniportAdapterContext, Packet, Packet->Private.Flags);
             NDIS_DbgPrint(MAX_TRACE, ("back from miniport's send handler\n"));
-            KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, RaiseOldIrql);
+            KeLowerIrql(RaiseOldIrql);
 
             if (NdisStatus == NDIS_STATUS_RESOURCES) {
                 MiniQueueWorkItem(Adapter, NdisWorkItemSend, Packet, TRUE);
@@ -272,6 +274,8 @@ ProSend(
   Adapter = AdapterBinding->Adapter;
 
   ASSERT(Adapter);
+
+  /* if the following is not true, KeRaiseIrql() below will break */
   ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
 
   /* XXX what is this crazy black magic? */
@@ -322,10 +326,10 @@ ProSendPackets(
        else
        {
           /* SendPackets is called at DISPATCH_LEVEL for all serialized miniports */
-          KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &RaiseOldIrql);
+          KeRaiseIrql(DISPATCH_LEVEL, &RaiseOldIrql);
           (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.SendPacketsHandler)(
            Adapter->NdisMiniportBlock.MiniportAdapterContext, PacketArray, NumberOfPackets);
-          KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, RaiseOldIrql);
+          KeLowerIrql(RaiseOldIrql);
           for (i = 0; i < NumberOfPackets; i++)
           {
              NdisStatus = NDIS_GET_PACKET_STATUS(PacketArray[i]);
@@ -349,15 +353,15 @@ ProSendPackets(
        else
        {
          /* Send is called at DISPATCH_LEVEL for all serialized miniports */
+         KeRaiseIrql(DISPATCH_LEVEL, &RaiseOldIrql);
          for (i = 0; i < NumberOfPackets; i++)
          {
-            KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &RaiseOldIrql);
             NdisStatus = (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.SendHandler)(
                            Adapter->NdisMiniportBlock.MiniportAdapterContext, PacketArray[i], PacketArray[i]->Private.Flags);
-            KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, RaiseOldIrql);
             if (NdisStatus != NDIS_STATUS_PENDING)
                 MiniSendComplete(Adapter, PacketArray[i], NdisStatus);
          }
+         KeLowerIrql(RaiseOldIrql);
        }
      }
 }
@@ -404,7 +408,7 @@ ProTransferData(
         return NDIS_STATUS_SUCCESS;
     }
 
-    KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &OldIrql);
+    KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
 
     Status = (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.TransferDataHandler)(
         Packet,
@@ -414,7 +418,7 @@ ProTransferData(
         ByteOffset,
         BytesToTransfer);
 
-    KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
+    KeLowerIrql(OldIrql);
 
     return Status;
 }
