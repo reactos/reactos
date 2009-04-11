@@ -257,7 +257,7 @@ DIB_32BPP_BitBltSrcCopy(PBLTINFO BltInfo)
                   {
                     Dest32 = (DWORD *) DestBits + (BltInfo->DestRect.right - BltInfo->DestRect.left - 1);
                     Source32 = (DWORD *) SourceBits + (BltInfo->DestRect.right - BltInfo->DestRect.left - 1);
-                    for (i = BltInfo->DestRect.right; BltInfo->DestRect.left <= i; i--)
+                    for (i = BltInfo->DestRect.right - 1; BltInfo->DestRect.left <= i; i--)
                       {
                         *Dest32-- = XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, *Source32--);
                       }
