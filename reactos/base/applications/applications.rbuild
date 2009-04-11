@@ -16,6 +16,9 @@
 	<directory name="control">
 		<xi:include href="control/control.rbuild" />
 	</directory>
+	<directory name="downloader">
+		<xi:include href="downloader/downloader.rbuild" />
+	</directory>	
 	<directory name="dxdiag">
 		<xi:include href="dxdiag/dxdiag.rbuild" />
 	</directory>

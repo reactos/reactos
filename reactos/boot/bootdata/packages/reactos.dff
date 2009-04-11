@@ -41,6 +41,8 @@ base\applications\cmdutils\lodctr\lodctr.exe            1
 base\applications\cmdutils\more\more.exe                1
 base\applications\cmdutils\xcopy\xcopy.exe              1
 base\applications\control\control.exe                   1
+base\applications\downloader\downloader.exe             1
+base\applications\downloader\downloader.xml             1
 base\applications\dxdiag\dxdiag.exe                     1
 base\applications\fontview\fontview.exe                 1
 base\applications\mscutils\devmgmt\devmgmt.exe          1
