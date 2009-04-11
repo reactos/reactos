@@ -326,6 +326,7 @@ NtGdiGetTextFaceW(
    HFONT hFont;
    PTEXTOBJ TextObj;
    NTSTATUS Status;
+   INT fLen, ret;
 
    /* FIXME: Handle bAliasName */
 
@@ -341,16 +342,32 @@ NtGdiGetTextFaceW(
 
    TextObj = RealizeFontInit(hFont);
    ASSERT(TextObj != NULL);
-   Count = min(Count, wcslen(TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfFaceName));
-   Status = MmCopyToCaller(FaceName, TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfFaceName, Count * sizeof(WCHAR));
-   TEXTOBJ_UnlockText(TextObj);
-   if (!NT_SUCCESS(Status))
+   fLen = wcslen(TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfFaceName) + 1;
+
+   if (FaceName != NULL)
    {
-      SetLastNtError(Status);
-      return 0;
+      Count = min(Count, fLen);
+      Status = MmCopyToCaller(FaceName, TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfFaceName, Count * sizeof(WCHAR));
+      if (!NT_SUCCESS(Status))
+      {
+         TEXTOBJ_UnlockText(TextObj);
+         SetLastNtError(Status);
+         return 0;
+      }
+      /* Terminate if we copied only part of the font name */
+      if (Count > 0 && Count < fLen)
+      {
+         FaceName[Count - 1] = '\0';
+      }
+      ret = Count;
+   }
+   else
+   {
+      ret = fLen; 
    }
 
-   return Count;
+   TEXTOBJ_UnlockText(TextObj);
+   return ret;
 }
 
 W32KAPI
