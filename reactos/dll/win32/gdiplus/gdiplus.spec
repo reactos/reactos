@@ -47,7 +47,7 @@
 @ stdcall GdipBitmapUnlockBits(ptr ptr)
 @ stdcall GdipClearPathMarkers(ptr)
 @ stub GdipCloneBitmapArea
-@ stub GdipCloneBitmapAreaI
+@ stdcall GdipCloneBitmapAreaI(long long long long long ptr ptr)
 @ stdcall GdipCloneBrush(ptr ptr)
 @ stdcall GdipCloneCustomLineCap(ptr ptr)
 @ stdcall GdipCloneFont(ptr ptr)

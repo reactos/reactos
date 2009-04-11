@@ -214,7 +214,7 @@ INT arc2polybezier(GpPointF * points, REAL x1, REAL y1, REAL x2, REAL y2,
     unstretch_angle(&startAngle, x2 / 2.0, y2 / 2.0);
     unstretch_angle(&endAngle, x2 / 2.0, y2 / 2.0);
 
-    count = ceil(fabs(endAngle - startAngle) / M_PI_2) * 3 + 1;
+    count = ceilf(fabs(endAngle - startAngle) / M_PI_2) * 3 + 1;
     /* don't make more than a full circle */
     count = min(MAX_ARC_PTS, count);
 
