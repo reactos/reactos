@@ -13,10 +13,6 @@
 		<xi:include href="devutils/directory.rbuild" />
 	</directory>
 
-	<directory name="downloader">
-		<xi:include href="downloader/downloader.rbuild" />
-	</directory>
-
 <!--
 	<directory name="fraginator">
 		<xi:include href="fraginator/fraginator.rbuild" />
