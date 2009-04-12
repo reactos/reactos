@@ -203,11 +203,12 @@ VOID ExitBatch()
  *
  */
 
-BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param, PARSED_COMMAND *Cmd)
+INT Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param, PARSED_COMMAND *Cmd)
 {
 	BATCH_CONTEXT new;
 	LPFOR_CONTEXT saved_fc;
 	INT i;
+	INT ret = 0;
 
 	HANDLE hFile;
 	SetLastError(0);
@@ -221,7 +222,7 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param, PARSED_COMMAND *Cmd
 	if (hFile == INVALID_HANDLE_VALUE)
 	{
 		ConErrResPuts(STRING_BATCH_ERROR);
-		return FALSE;
+		return 1;
 	}
 
 	if (bc != NULL && Cmd == bc->current)
@@ -238,10 +239,19 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param, PARSED_COMMAND *Cmd
 	else
 	{
 		struct _SETLOCAL *setlocal = NULL;
-		/* If a batch file runs another batch file as part of a compound command
-		 * (e.g. "x.bat & somethingelse") then the first file gets terminated. */
-		if (bc && Cmd != NULL)
+
+		if (Cmd == NULL)
 		{
+			/* This is a CALL. CALL will set errorlevel to our return value, so
+			 * in order to keep the value of errorlevel unchanged in the case
+			 * of calling an empty batch file, we must return that same value. */
+			ret = nErrorLevel;
+		}
+		else if (bc)
+		{
+			/* If a batch file runs another batch file as part of a compound command
+			 * (e.g. "x.bat & somethingelse") then the first file gets terminated. */
+
 			/* Get its SETLOCAL stack so it can be migrated to the new context */
 			setlocal = bc->setlocal;
 			bc->setlocal = NULL;
@@ -272,7 +282,7 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param, PARSED_COMMAND *Cmd
     if (bc->raw_params == NULL)
     {
         error_out_of_memory();
-        return FALSE;
+        return 1;
     }
 
 	/* Check if this is a "CALL :label" */
@@ -303,14 +313,14 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param, PARSED_COMMAND *Cmd
 		}
 
 		bc->current = Cmd;
-		ExecuteCommand(Cmd);
+		ret = ExecuteCommand(Cmd);
 		FreeCommand(Cmd);
 	}
 
 	TRACE ("Batch: returns TRUE\n");
 
 	fc = saved_fc;
-	return TRUE;
+	return ret;
 }
 
 VOID AddBatchRedirection(REDIRECTION **RedirList)

@@ -73,10 +73,12 @@ INT cmd_call (LPTSTR param)
 		/* CALL :label - call a subroutine of the current batch file */
 		while (*param == _T(' '))
 			param++;
-		return !Batch(bc->BatchFilePath, first, param, NULL);
+		nErrorLevel = Batch(bc->BatchFilePath, first, param, NULL);
+		return nErrorLevel;
 	}
 
-	return !DoCommand(first, param, NULL);
+	nErrorLevel = DoCommand(first, param, NULL);
+	return nErrorLevel;
 }
 
 /* EOF */

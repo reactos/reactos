@@ -102,16 +102,16 @@ INT cmd_cls (LPTSTR);
 /* Prototypes for CMD.C */
 INT ConvertULargeInteger(ULONGLONG num, LPTSTR des, INT len, BOOL bPutSeperator);
 HANDLE RunFile(DWORD, LPTSTR, LPTSTR, LPTSTR, INT);
-VOID ParseCommandLine (LPTSTR);
+INT ParseCommandLine(LPTSTR);
 struct _PARSED_COMMAND;
-BOOL ExecuteCommand(struct _PARSED_COMMAND *Cmd);
+INT ExecuteCommand(struct _PARSED_COMMAND *Cmd);
 LPCTSTR GetEnvVarOrSpecial ( LPCTSTR varName );
 VOID AddBreakHandler (VOID);
 VOID RemoveBreakHandler (VOID);
 BOOL SubstituteVars(TCHAR *Src, TCHAR *Dest, TCHAR Delim);
 BOOL SubstituteForVars(TCHAR *Src, TCHAR *Dest);
 LPTSTR DoDelayedExpansion(LPTSTR Line);
-BOOL DoCommand(LPTSTR first, LPTSTR rest, struct _PARSED_COMMAND *Cmd);
+INT DoCommand(LPTSTR first, LPTSTR rest, struct _PARSED_COMMAND *Cmd);
 BOOL ReadLine(TCHAR *commandline, BOOL bMore);
 int cmd_main (int argc, const TCHAR *argv[]);
 
@@ -254,7 +254,7 @@ VOID CompleteFilename (LPTSTR, BOOL, LPTSTR, UINT);
 #define FOR_LOOP      4 /* /L */
 #define FOR_RECURSIVE 8 /* /R */
 INT cmd_for (LPTSTR);
-BOOL ExecuteFor(struct _PARSED_COMMAND *Cmd);
+INT ExecuteFor(struct _PARSED_COMMAND *Cmd);
 
 
 /* Prototypes for FREE.C */
@@ -283,7 +283,7 @@ INT CommandHistory (LPTSTR param);
 enum { IF_CMDEXTVERSION, IF_DEFINED, IF_ERRORLEVEL, IF_EXIST,
        IF_STRINGEQ,         /* == */
        IF_EQU, IF_GTR, IF_GEQ, IF_LSS, IF_LEQ, IF_NEQ };
-BOOL ExecuteIf(struct _PARSED_COMMAND *Cmd);
+INT ExecuteIf(struct _PARSED_COMMAND *Cmd);
 
 
 /* Prototypes for INTERNAL.C */

@@ -47,7 +47,7 @@ extern TCHAR textline[BATCH_BUFFSIZE]; /* Buffer for reading Batch file lines */
 LPTSTR FindArg (TCHAR, BOOL *);
 LPTSTR BatchParams (LPTSTR, LPTSTR);
 VOID   ExitBatch ();
-BOOL   Batch (LPTSTR, LPTSTR, LPTSTR, PARSED_COMMAND *);
+INT    Batch (LPTSTR, LPTSTR, LPTSTR, PARSED_COMMAND *);
 LPTSTR ReadBatchLine();
 VOID AddBatchRedirection(REDIRECTION **);
 
