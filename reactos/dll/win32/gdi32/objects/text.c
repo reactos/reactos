@@ -383,8 +383,19 @@ int
 WINAPI
 GetTextFaceA( HDC hdc, INT count, LPSTR name )
 {
-    INT res = GetTextFaceW(hdc, 0, NULL);
-    LPWSTR nameW = HeapAlloc( GetProcessHeap(), 0, res * 2 );
+    INT res;
+    LPWSTR nameW;
+
+    /* Validate parameters */
+    if (name && count <= 0)
+    {
+        /* Set last error and return failure */
+        GdiSetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
+    res = GetTextFaceW(hdc, 0, NULL);
+    nameW = HeapAlloc( GetProcessHeap(), 0, res * 2 );
     GetTextFaceW( hdc, res, nameW );
 
     if (name)
