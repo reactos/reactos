@@ -143,9 +143,6 @@ static NTSTATUS NTAPI ListenComplete
 
     Qelt = ExAllocatePool( NonPagedPool, sizeof(*Qelt) );
     if( !Qelt ) {
-	/* Is this correct? */
-	TdiCloseDevice( FCB->Connection.Handle,
-			FCB->Connection.Object );
 	Status = STATUS_NO_MEMORY;
     } else {
         UINT AddressType =
