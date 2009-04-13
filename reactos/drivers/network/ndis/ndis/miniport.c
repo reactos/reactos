@@ -299,6 +299,60 @@ MiniIndicateReceivePacket(
                PacketArray[i]);
           }
       }
+      else
+      {
+          for (i = 0; i < NumberOfPackets; i++)
+          {
+              UINT FirstBufferLength, TotalBufferLength, LookAheadSize, HeaderSize;
+              PNDIS_BUFFER NdisBuffer;
+              PVOID NdisBufferVA, LookAheadBuffer;
+              NDIS_STATUS NdisStatus;
+
+
+              NdisGetFirstBufferFromPacket(PacketArray[i],
+                                           &NdisBuffer,
+                                           &NdisBufferVA,
+                                           &FirstBufferLength,
+                                           &TotalBufferLength);
+
+              HeaderSize = NDIS_GET_PACKET_HEADER_SIZE(PacketArray[i]);
+
+              if (Adapter->NdisMiniportBlock.CurrentLookahead < (TotalBufferLength - HeaderSize))
+              {
+                  LookAheadSize = Adapter->NdisMiniportBlock.CurrentLookahead;
+              }
+              else
+              {
+                  LookAheadSize = TotalBufferLength - HeaderSize;
+              }
+
+
+              LookAheadBuffer = ExAllocatePool(NonPagedPool, LookAheadSize);
+              if (!LookAheadSize)
+              {
+                  NDIS_DbgPrint(MIN_TRACE, ("Failed to allocate lookahead buffer!\n"));
+                  return;
+              }
+
+              CopyBufferChainToBuffer(LookAheadBuffer,
+                                      NdisBuffer,
+                                      HeaderSize,
+                                      LookAheadSize);
+
+              NdisStatus = (*AdapterBinding->ProtocolBinding->Chars.ReceiveHandler)(
+                            AdapterBinding->NdisOpenBlock.ProtocolBindingContext,
+                            AdapterBinding->NdisOpenBlock.MacHandle,
+                            NdisBufferVA,
+                            HeaderSize,
+                            LookAheadBuffer,
+                            LookAheadSize,
+                            TotalBufferLength - HeaderSize);
+
+              NDIS_SET_PACKET_STATUS(PacketArray[i], NdisStatus);
+
+              ExFreePool(LookAheadBuffer);
+          }
+      }
 
       CurrentEntry = CurrentEntry->Flink;
   }
