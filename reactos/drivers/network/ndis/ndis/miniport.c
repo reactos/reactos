@@ -328,7 +328,7 @@ MiniIndicateReceivePacket(
 
 
               LookAheadBuffer = ExAllocatePool(NonPagedPool, LookAheadSize);
-              if (!LookAheadSize)
+              if (!LookAheadBuffer)
               {
                   NDIS_DbgPrint(MIN_TRACE, ("Failed to allocate lookahead buffer!\n"));
                   return;
