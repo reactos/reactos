@@ -12,6 +12,7 @@
 	<file>rosperf.c</file>
 	<file>lines.c</file>
 	<file>fill.c</file>
+	<file>scroll.c</file>
 	<file>text.c</file>
 	<file>alphablend.c</file>
 	<file>testlist.c</file>
