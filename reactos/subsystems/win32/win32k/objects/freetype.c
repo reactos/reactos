@@ -75,8 +75,6 @@ static FAST_MUTEX FontListLock;
 static BOOL RenderingEnabled = TRUE;
 
 #define MAX_FONT_CACHE 256
-UINT Hits;
-UINT Misses;
 
 typedef struct _FONT_CACHE_ENTRY
 {
@@ -1322,8 +1320,6 @@ ftGdiGlyphCacheGet(
     PLIST_ENTRY CurrentEntry;
     PFONT_CACHE_ENTRY FontEntry;
 
-//   DbgPrint("CacheGet\n");
-
     CurrentEntry = FontCacheListHead.Flink;
     while (CurrentEntry != &FontCacheListHead)
     {
@@ -1337,29 +1333,11 @@ ftGdiGlyphCacheGet(
 
     if (CurrentEntry == &FontCacheListHead)
     {
-//      DbgPrint("Miss! %x\n", FontEntry->Glyph);
-        /*
-              Misses++;
-              if (Misses>100) {
-                 DbgPrint ("Hits: %d Misses: %d\n", Hits, Misses);
-                 Hits = Misses = 0;
-              }
-        */
         return NULL;
     }
 
     RemoveEntryList(CurrentEntry);
     InsertHeadList(&FontCacheListHead, CurrentEntry);
-
-//   DbgPrint("Hit! %x\n", FontEntry->Glyph);
-    /*
-       Hits++;
-
-          if (Hits>100) {
-             DbgPrint ("Hits: %d Misses: %d\n", Hits, Misses);
-             Hits = Misses = 0;
-          }
-    */
     return FontEntry->Glyph;
 }
 
@@ -1375,25 +1353,23 @@ ftGdiGlyphCacheSet(
     INT error;
     PFONT_CACHE_ENTRY NewEntry;
 
-//   DbgPrint("CacheSet.\n");
-
     error = FT_Get_Glyph(GlyphSlot, &GlyphCopy);
     if (error)
     {
-        DbgPrint("Failure caching glyph.\n");
+        DPRINT1("Failure caching glyph.\n");
         return NULL;
     };
     error = FT_Glyph_To_Bitmap(&GlyphCopy, RenderMode, 0, 1);
     if (error)
     {
-        DbgPrint("Failure rendering glyph.\n");
+        DPRINT1("Failure rendering glyph.\n");
         return NULL;
     };
 
     NewEntry = ExAllocatePoolWithTag(PagedPool, sizeof(FONT_CACHE_ENTRY), TAG_FONT);
     if (!NewEntry)
     {
-        DbgPrint("Alloc failure caching glyph.\n");
+        DPRINT1("Alloc failure caching glyph.\n");
         FT_Done_Glyph(GlyphCopy);
         return NULL;
     }
@@ -1412,8 +1388,6 @@ ftGdiGlyphCacheSet(
         ExFreePool(NewEntry);
         FontCacheNumEntries--;
     }
-
-//   DbgPrint("Returning the glyphcopy: %x\n", GlyphCopy);
 
     return GlyphCopy;
 }
@@ -3457,8 +3431,6 @@ GreExtTextOutW(
                 goto fail;
             }
         }
-//      DbgPrint("realglyph: %x\n", realglyph);
-//      DbgPrint("TextLeft: %d\n", TextLeft);
 
         /* retrieve kerning distance and move pen position */
         if (use_kerning && previous && glyph_index && NULL == Dx)
@@ -3467,12 +3439,12 @@ GreExtTextOutW(
             FT_Get_Kerning(face, previous, glyph_index, 0, &delta);
             TextLeft += delta.x;
         }
-//      DPRINT1("TextLeft: %d\n", TextLeft);
-//      DPRINT1("TextTop: %d\n", TextTop);
+        DPRINT("TextLeft: %d\n", TextLeft);
+        DPRINT("TextTop: %d\n", TextTop);
 
         if (realglyph->format == ft_glyph_format_outline)
         {
-            DbgPrint("Should already be done\n");
+            DPRINT1("Should already be done\n");
 //         error = FT_Render_Glyph(glyph, RenderMode);
             error = FT_Glyph_To_Bitmap(&realglyph, RenderMode, 0, 0);
             if (error)
@@ -3483,8 +3455,7 @@ GreExtTextOutW(
         }
         realglyph2 = (FT_BitmapGlyph)realglyph;
 
-//      DPRINT1("Pitch: %d\n", pitch);
-//      DPRINT1("Advance: %d\n", realglyph->advance.x);
+        DPRINT("Advance: %d\n", realglyph->advance.x);
 
         if (fuOptions & ETO_OPAQUE)
         {
@@ -3586,12 +3557,12 @@ GreExtTextOutW(
         if (NULL == Dx)
         {
             TextLeft += realglyph->advance.x >> 10;
-//         DbgPrint("new TextLeft: %d\n", TextLeft);
+             DPRINT("new TextLeft: %d\n", TextLeft);
         }
         else
         {
             TextLeft += Dx[i<<DxShift] << 6;
-//         DbgPrint("new TextLeft2: %d\n", TextLeft);
+             DPRINT("new TextLeft2: %d\n", TextLeft);
         }
 
         if (DxShift)
