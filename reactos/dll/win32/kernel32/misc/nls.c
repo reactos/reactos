@@ -1252,6 +1252,7 @@ BOOL
 WINAPI
 IsValidCodePage(UINT CodePage)
 {
+    if (CodePage == 0) return FALSE;
     if (CodePage == CP_UTF8 || CodePage == CP_UTF7)
         return TRUE;
     if (IntGetLoadedCodePageEntry(CodePage))
