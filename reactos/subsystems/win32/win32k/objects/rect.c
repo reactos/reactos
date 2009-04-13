@@ -83,6 +83,24 @@ RECTL_bIntersectRect(RECTL* prclDst, const RECTL* prcl1, const RECTL* prcl2)
     return FALSE;
 }
 
+VOID
+FASTCALL
+RECTL_vMakeWellOrdered(RECTL *prcl)
+{
+    LONG lTmp;
+    if (prcl->left > prcl->right)
+    {
+        lTmp = prcl->left;
+        prcl->left = prcl->right;
+        prcl->right = lTmp;       
+    }
+    if (prcl->top > prcl->bottom)
+    {
+        lTmp = prcl->top;
+        prcl->top = prcl->bottom;
+        prcl->bottom = lTmp;       
+    }
+}
 
 
 /* EOF */

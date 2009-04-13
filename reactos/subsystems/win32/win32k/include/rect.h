@@ -54,7 +54,9 @@ BOOL
 FASTCALL
 RECTL_bIntersectRect(RECTL *prclDst, const RECTL *prcl1, const RECTL *prcl2);
 
-
+VOID
+FASTCALL
+RECTL_vMakeWellOrdered(RECTL *prcl);
 
 
 #endif /* _WIN32K_RECT_H */
