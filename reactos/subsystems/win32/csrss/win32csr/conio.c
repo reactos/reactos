@@ -3023,12 +3023,20 @@ CSR_API(CsrSetConsoleOutputCodePage)
 
   Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
   Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
-  if (IsValidCodePage(Request->Data.SetConsoleOutputCodePage.CodePage))
+  if (Request->Data.SetConsoleOutputCodePage.CodePage == 0)
+  {
+    ConioUnlockConsole(Console);
+    return STATUS_INVALID_PARAMETER;
+  }
+  else
+  {
+    if (IsValidCodePage(Request->Data.SetConsoleOutputCodePage.CodePage))
     {
       Console->OutputCodePage = Request->Data.SetConsoleOutputCodePage.CodePage;
       ConioUnlockConsole(Console);
       return STATUS_SUCCESS;
     }
+  }
   ConioUnlockConsole(Console);
   return STATUS_UNSUCCESSFUL;
 }
