@@ -52,10 +52,6 @@
 		<xi:include href="tcat/tcat.rbuild" />
 	</directory>
 
-	<directory name="telnetd">
-		<xi:include href="telnetd/telnetd.rbuild" />
-	</directory>
-
 	<directory name="utils">
 		<xi:include href="utils/utils.rbuild" />
 	</directory>
