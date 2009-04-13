@@ -14,9 +14,7 @@
 #include "ndissys.h"
 #include "efilter.h"
 
-#ifdef DBG
 #include <buffer.h>
-#endif /* DBG */
 
 #undef NdisMSendComplete
 VOID
