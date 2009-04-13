@@ -15,19 +15,15 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-#if 0
+
 #define WIN32_LEAN_AND_MEAN
 
 #include <windows.h>
+#include "wine/debug.h"
 
-#define WINE_FIXME printf
-#define WINE_TRACE printf
+WINE_DEFAULT_DEBUG_CHANNEL(telnetd);
 
-//#include "wine/debug.h"
-
-//WINE_DEFAULT_DEBUG_CHANNEL(spoolsv);
-
-static WCHAR telnetdW[] = {'T','e','l','n','e','t','D',0};
+static WCHAR telnetdW[] = {'t','e','l','n','e','t','d',0};
 
 static SERVICE_STATUS_HANDLE service_handle;
 static HANDLE stop_event;
@@ -106,6 +102,5 @@ int main(int argc, char **argv)
     StartServiceCtrlDispatcherW(servtbl);
     return 0;
 }
-#endif
 /* EOF */
 

@@ -6,6 +6,7 @@
 	<library>kernel32</library>
 	<library>advapi32</library>
 	<library>ws2_32</library>
+	<library>wine</library>
 
 	<file>telnetd.c</file>
 	<file>serviceentry.c</file>

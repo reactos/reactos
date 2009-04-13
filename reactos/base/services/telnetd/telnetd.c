@@ -45,7 +45,7 @@ static int sock;
  * rename this function
  * int kickoff_telnetd(void)
  */
-int main(int argc, char **argv)
+int kickoff_telnetd(void)
 {
   printf("Attempting to start Simple TelnetD\n");
 

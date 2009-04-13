@@ -90,6 +90,7 @@ base\services\eventlog\eventlog.exe                 1
 base\services\rpcss\rpcss.exe                       1
 base\services\spoolsv\spoolsv.exe                   1
 base\services\tcpsvcs\tcpsvcs.exe                   1
+base\services\telnetd\telnetd.exe                   1
 base\services\tcpsvcs\quotes                        5
 base\services\umpnpmgr\umpnpmgr.exe                 1
 base\services\wlansvc\wlansvc.exe                   1
