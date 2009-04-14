@@ -193,6 +193,8 @@ reactos/lib/uuid                  # Synced to Wine-20080114
 
 advapi32 -
   reactos/dll/win32/advapi32/crypt/*.c          # ekohl says we're not sharing this
+  reactos/dll/win32/advapi32/sec/cred.c         # Out of Sync
+  reactos/dll/win32/advapi32/sec/sid.c          # Out of Sync
 
 gdi32 -
   reactos/dll/win32/gdi32/objects/linedda.c     # Synched at 20090410
