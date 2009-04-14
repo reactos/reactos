@@ -94,9 +94,9 @@ ICON_CreateIconFromData(HDC hDC, PVOID ImageData, ICONIMAGE* IconImage, int cxDe
 HICON
 ICON_CreateCursorFromData(HDC hDC, PVOID ImageData, ICONIMAGE* IconImage, int cxDesired, int cyDesired, int xHotspot, int yHotspot)
 {
-   /* FIXME - color cursors */
    BYTE BitmapInfoBuffer[sizeof(BITMAPINFOHEADER) + 2 * sizeof(RGBQUAD)];
    BITMAPINFO *bwBIH = (BITMAPINFO *)BitmapInfoBuffer;
+   BITMAPINFO *orgBIH = (BITMAPINFO *)IconImage;
    ICONINFO IconInfo;
    PVOID XORImageData = ImageData;
 
@@ -104,7 +104,7 @@ ICON_CreateCursorFromData(HDC hDC, PVOID ImageData, ICONIMAGE* IconImage, int cx
    IconInfo.xHotspot = xHotspot;
    IconInfo.yHotspot = yHotspot;
 
-   /* Create a BITMAPINFO header for the monocrome part of the icon */
+   /* Create a BITMAPINFO header for the monochrome part of the icon */
    bwBIH->bmiHeader.biBitCount = 1;
    bwBIH->bmiHeader.biWidth = IconImage->icHeader.biWidth;
    bwBIH->bmiHeader.biHeight = IconImage->icHeader.biHeight;
@@ -133,10 +133,24 @@ ICON_CreateCursorFromData(HDC hDC, PVOID ImageData, ICONIMAGE* IconImage, int cx
    if (IconInfo.hbmMask)
    {
       SetDIBits(hDC, IconInfo.hbmMask, 0, IconImage->icHeader.biHeight,
-                XORImageData, bwBIH, DIB_RGB_COLORS);
+                XORImageData, orgBIH, DIB_RGB_COLORS);
    }
 
-   IconInfo.hbmColor = (HBITMAP)0;
+   if (IconImage->icHeader.biBitCount == 1)
+   {
+      IconInfo.hbmColor = (HBITMAP)0;
+   }
+   else
+   {
+      /* Create the color part of the icon */
+      IconInfo.hbmColor = CreateDIBitmap(hDC, &IconImage->icHeader, 0,
+                                          XORImageData, orgBIH, DIB_RGB_COLORS);
+      if (IconInfo.hbmColor)
+      {
+         SetDIBits(hDC, IconInfo.hbmColor, 0, IconImage->icHeader.biHeight,
+                   XORImageData, orgBIH, DIB_RGB_COLORS);
+      }
+   }
 
    /* Create the icon based on everything we have so far */
    return NtUserCreateCursorIconHandle(&IconInfo, FALSE);
