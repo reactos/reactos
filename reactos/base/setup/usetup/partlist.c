@@ -1362,7 +1362,8 @@ PrintDiskData (PPARTLIST List,
     /* Print disk entry */
     for (i=0; i<4; i++)
     {
-      if (PartEntry->PartInfo[i].PartitionType != PARTITION_ENTRY_UNUSED)
+      if (PartEntry->PartInfo[i].PartitionType != PARTITION_ENTRY_UNUSED ||
+          PartEntry->PartInfo[i].PartitionLength.QuadPart != 0ULL)
       {
         PrintPartitionData (List,
                             DiskEntry,
@@ -1370,6 +1371,16 @@ PrintDiskData (PPARTLIST List,
                             i);
       }
     }
+
+    /* Print unpartitioned entry */
+    if (PartEntry->Unpartitioned || PartEntry->New)
+    {
+        PrintPartitionData (List,
+                            DiskEntry,
+                            PartEntry,
+                            0);
+    }
+
   }
 
   /* Print separator line */
