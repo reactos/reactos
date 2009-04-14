@@ -4,6 +4,7 @@
  * PURPOSE:          GDI BitBlt Functions
  * FILE:             subsys/win32k/eng/bitblt.c
  * PROGRAMER:        Jason Filby
+ *                   Timo Kreuzer
  * REVISION HISTORY:
  *        2/10/1999: Created
  */
@@ -285,7 +286,7 @@ EngBitBlt(SURFOBJ *DestObj,
           POINTL *MaskOrigin,
           BRUSHOBJ *pbo,
           POINTL *BrushOrigin,
-          ROP4 Rop4)
+          ROP4 rop4)
 {
     BYTE               clippingType;
     RECTL              CombinedRect;
@@ -294,10 +295,7 @@ EngBitBlt(SURFOBJ *DestObj,
     POINTL             InputPoint;
     RECTL              InputRect;
     RECTL              OutputRect;
-    POINTL             Translate;
-    INTENG_ENTER_LEAVE EnterLeaveSource;
-    INTENG_ENTER_LEAVE EnterLeaveDest;
-    SURFOBJ*           InputObj;
+    SURFOBJ*           InputObj = 0;
     SURFOBJ*           OutputObj;
     PBLTRECTFUNC       BltRectFunc;
     BOOLEAN            Ret = TRUE;
@@ -309,9 +307,9 @@ EngBitBlt(SURFOBJ *DestObj,
     BOOL               UsesPattern;
     POINTL             AdjustedBrushOrigin;
 
-    UsesSource = ROP4_USES_SOURCE(Rop4);
-    UsesPattern = ROP4_USES_PATTERN(Rop4);
-    if (R4_NOOP == Rop4)
+    UsesSource = ROP4_USES_SOURCE(rop4);
+    UsesPattern = ROP4_USES_PATTERN(rop4);
+    if (R4_NOOP == rop4)
     {
         /* Copy destination onto itself: nop */
         return TRUE;
@@ -367,14 +365,7 @@ EngBitBlt(SURFOBJ *DestObj,
         InputRect.top = InputPoint.y;
         InputRect.bottom = InputPoint.y + (OutputRect.bottom - OutputRect.top);
 
-        if (! IntEngEnter(&EnterLeaveSource, SourceObj, &InputRect, TRUE,
-                          &Translate, &InputObj))
-        {
-            return FALSE;
-        }
-
-        InputPoint.x += Translate.x;
-        InputPoint.y += Translate.y;
+        InputObj = SourceObj;
     }
     else
     {
@@ -415,36 +406,20 @@ EngBitBlt(SURFOBJ *DestObj,
     if (OutputRect.right <= OutputRect.left ||
             OutputRect.bottom <= OutputRect.top)
     {
-        if (UsesSource)
-        {
-            IntEngLeave(&EnterLeaveSource);
-        }
         return TRUE;
     }
 
-    if (! IntEngEnter(&EnterLeaveDest, DestObj, &OutputRect, FALSE, &Translate,
-                      &OutputObj))
-    {
-        if (UsesSource)
-        {
-            IntEngLeave(&EnterLeaveSource);
-        }
-        return FALSE;
-    }
-
-    OutputRect.left += Translate.x;
-    OutputRect.right += Translate.x;
-    OutputRect.top += Translate.y;
-    OutputRect.bottom += Translate.y;
+    OutputObj = DestObj;
 
     if (BrushOrigin)
     {
-        AdjustedBrushOrigin.x = BrushOrigin->x + Translate.x;
-        AdjustedBrushOrigin.y = BrushOrigin->y + Translate.y;
+        AdjustedBrushOrigin.x = BrushOrigin->x;
+        AdjustedBrushOrigin.y = BrushOrigin->y;
     }
     else
     {
-        AdjustedBrushOrigin = Translate;
+        AdjustedBrushOrigin.x = 0;
+        AdjustedBrushOrigin.y = 0;
     }
 
     /* Determine clipping type */
@@ -457,11 +432,11 @@ EngBitBlt(SURFOBJ *DestObj,
         clippingType = ClipRegion->iDComplexity;
     }
 
-    if (R4_MASK == Rop4)
+    if (R4_MASK == rop4)
     {
         BltRectFunc = BltMask;
     }
-    else if (ROP3_TO_ROP4(PATCOPY) == Rop4)
+    else if (ROP3_TO_ROP4(PATCOPY) == rop4)
     {
         if (pbo && pbo->iSolidColor == 0xFFFFFFFF)
             BltRectFunc = CallDibBitBlt;
@@ -479,21 +454,21 @@ EngBitBlt(SURFOBJ *DestObj,
         case DC_TRIVIAL:
             Ret = (*BltRectFunc)(OutputObj, InputObj, Mask, ColorTranslation,
                                  &OutputRect, &InputPoint, MaskOrigin, pbo,
-                                 &AdjustedBrushOrigin, Rop4);
+                                 &AdjustedBrushOrigin, rop4);
             break;
         case DC_RECT:
             /* Clip the blt to the clip rectangle */
-            ClipRect.left = ClipRegion->rclBounds.left + Translate.x;
-            ClipRect.right = ClipRegion->rclBounds.right + Translate.x;
-            ClipRect.top = ClipRegion->rclBounds.top + Translate.y;
-            ClipRect.bottom = ClipRegion->rclBounds.bottom + Translate.y;
+            ClipRect.left = ClipRegion->rclBounds.left;
+            ClipRect.right = ClipRegion->rclBounds.right;
+            ClipRect.top = ClipRegion->rclBounds.top;
+            ClipRect.bottom = ClipRegion->rclBounds.bottom;
             if (RECTL_bIntersectRect(&CombinedRect, &OutputRect, &ClipRect))
             {
                 Pt.x = InputPoint.x + CombinedRect.left - OutputRect.left;
                 Pt.y = InputPoint.y + CombinedRect.top - OutputRect.top;
                 Ret = (*BltRectFunc)(OutputObj, InputObj, Mask, ColorTranslation,
                                      &CombinedRect, &Pt, MaskOrigin, pbo,
-                                     &AdjustedBrushOrigin, Rop4);
+                                     &AdjustedBrushOrigin, rop4);
             }
             break;
         case DC_COMPLEX:
@@ -523,10 +498,10 @@ EngBitBlt(SURFOBJ *DestObj,
 
                 for (i = 0; i < RectEnum.c; i++)
                 {
-                    ClipRect.left = RectEnum.arcl[i].left + Translate.x;
-                    ClipRect.right = RectEnum.arcl[i].right + Translate.x;
-                    ClipRect.top = RectEnum.arcl[i].top + Translate.y;
-                    ClipRect.bottom = RectEnum.arcl[i].bottom + Translate.y;
+                    ClipRect.left = RectEnum.arcl[i].left;
+                    ClipRect.right = RectEnum.arcl[i].right;
+                    ClipRect.top = RectEnum.arcl[i].top;
+                    ClipRect.bottom = RectEnum.arcl[i].bottom;
                     if (RECTL_bIntersectRect(&CombinedRect, &OutputRect, &ClipRect))
                     {
                         Pt.x = InputPoint.x + CombinedRect.left - OutputRect.left;
@@ -534,7 +509,7 @@ EngBitBlt(SURFOBJ *DestObj,
                         Ret = (*BltRectFunc)(OutputObj, InputObj, Mask,
                                              ColorTranslation, &CombinedRect, &Pt,
                                              MaskOrigin, pbo, &AdjustedBrushOrigin,
-                                             Rop4) && Ret;
+                                             rop4) && Ret;
                     }
                 }
             }
@@ -542,170 +517,141 @@ EngBitBlt(SURFOBJ *DestObj,
             break;
     }
 
-
-    IntEngLeave(&EnterLeaveDest);
-    if (UsesSource)
-    {
-        IntEngLeave(&EnterLeaveSource);
-    }
-
     return Ret;
 }
 
 BOOL APIENTRY
-IntEngBitBltEx(SURFOBJ *psoDest,
-               SURFOBJ *psoSource,
-               SURFOBJ *MaskSurf,
-               CLIPOBJ *ClipRegion,
-               XLATEOBJ *ColorTranslation,
-               RECTL *DestRect,
-               POINTL *SourcePoint,
-               POINTL *MaskOrigin,
-               BRUSHOBJ *pbo,
-               POINTL *BrushOrigin,
-               ROP4 Rop4,
-               BOOL RemoveMouse)
+IntEngBitBltEx(
+    SURFOBJ *psoTrg,
+    SURFOBJ *psoSrc,
+    SURFOBJ *psoMask,
+    CLIPOBJ *pco,
+    XLATEOBJ *pxlo,
+    RECTL *prclTrg,
+    POINTL *pptlSrc,
+    POINTL *pptlMask,
+    BRUSHOBJ *pbo,
+    POINTL *pptlBrush,
+    ROP4 rop4,
+    BOOL bRemoveMouse)
 {
-    BOOLEAN ret;
-    RECTL InputClippedRect;
-    RECTL OutputRect;
-    POINTL InputPoint;
-    BOOLEAN UsesSource;
-    SURFACE *psurfDest;
-    SURFACE *psurfSource = NULL;
+    SURFACE *psurfTrg;
+    SURFACE *psurfSrc = NULL;
+    BOOL bResult;
+    RECTL rclClipped;
+    RECTL rclSrc;
+//    INTENG_ENTER_LEAVE EnterLeaveSource;
+//    INTENG_ENTER_LEAVE EnterLeaveDest;
+    PFN_DrvBitBlt pfnBitBlt;
 
-    if (psoDest == NULL)
-        return FALSE;
+    ASSERT(psoTrg);
+    psurfTrg = CONTAINING_RECORD(psoTrg, SURFACE, SurfObj);
 
-    psurfDest = CONTAINING_RECORD(psoDest, SURFACE, SurfObj);
-    ASSERT(psurfDest);
+    /* FIXME: Should we really allow to pass non-well-ordered rects? */
+    rclClipped = *prclTrg;
+    RECTL_vMakeWellOrdered(&rclClipped);
 
-    InputClippedRect = *DestRect;
-    if (InputClippedRect.right < InputClippedRect.left)
+    /* Clip target rect against the bounds of the clipping region */
+    if (pco)
     {
-        InputClippedRect.left = DestRect->right;
-        InputClippedRect.right = DestRect->left;
-    }
-    if (InputClippedRect.bottom < InputClippedRect.top)
-    {
-        InputClippedRect.top = DestRect->bottom;
-        InputClippedRect.bottom = DestRect->top;
-    }
-    UsesSource = ROP4_USES_SOURCE(Rop4);
-    if (UsesSource)
-    {
-        if (NULL == SourcePoint || NULL == psoSource)
+        if (!RECTL_bIntersectRect(&rclClipped, &rclClipped, &pco->rclBounds))
         {
-            return FALSE;
-        }
-        InputPoint = *SourcePoint;
-
-        /* Make sure we don't try to copy anything outside the valid source
-           region */
-        if (InputPoint.x < 0)
-        {
-            InputClippedRect.left -= InputPoint.x;
-            InputPoint.x = 0;
-        }
-        if (InputPoint.y < 0)
-        {
-            InputClippedRect.top -= InputPoint.y;
-            InputPoint.y = 0;
-        }
-        if (psoSource->sizlBitmap.cx < InputPoint.x +
-                InputClippedRect.right -
-                InputClippedRect.left)
-        {
-            InputClippedRect.right = InputClippedRect.left +
-                                     psoSource->sizlBitmap.cx - InputPoint.x;
-        }
-        if (psoSource->sizlBitmap.cy < InputPoint.y +
-                InputClippedRect.bottom -
-                InputClippedRect.top)
-        {
-            InputClippedRect.bottom = InputClippedRect.top +
-                                      psoSource->sizlBitmap.cy - InputPoint.y;
-        }
-
-        if (InputClippedRect.right < InputClippedRect.left ||
-                InputClippedRect.bottom < InputClippedRect.top)
-        {
-            /* Everything clipped away, nothing to do */
+            /* Nothing left */
             return TRUE;
         }
+
+        /* Don't pass a clipobj with only a single rect */
+        if (pco->iDComplexity == DC_RECT)
+            pco = NULL;
     }
 
-    /* Clip against the bounds of the clipping region so we won't try to write
-     * outside the surface */
-    if (NULL != ClipRegion)
+    if (ROP4_USES_SOURCE(rop4))
     {
-        if (!RECTL_bIntersectRect(&OutputRect, &InputClippedRect,
-                               &ClipRegion->rclBounds))
-        {
-            return TRUE;
-        }
-        InputPoint.x += OutputRect.left - InputClippedRect.left;
-        InputPoint.y += OutputRect.top - InputClippedRect.top;
+        ASSERT(psoSrc);
+        psurfSrc = CONTAINING_RECORD(psoSrc, SURFACE, SurfObj);
+
+        /* Calculate source rect */
+        rclSrc.left = pptlSrc->x + rclClipped.left - prclTrg->left;
+        rclSrc.top = pptlSrc->y + rclClipped.top - prclTrg->top;
+        rclSrc.right = rclSrc.left + rclClipped.right - rclClipped.left;
+        rclSrc.bottom = rclSrc.top + rclClipped.bottom - rclClipped.top;
     }
     else
     {
-        OutputRect = InputClippedRect;
+        psoSrc = NULL;
+        psurfSrc = NULL;
     }
 
-    if (RemoveMouse)
+    if (bRemoveMouse)
     {
-        SURFACE_LockBitmapBits(psurfDest);
+        SURFACE_LockBitmapBits(psurfTrg);
 
-        if (UsesSource)
+        if (psoSrc)
         {
-            if (psoSource != psoDest)
+            if (psoSrc != psoTrg)
             {
-                psurfSource = CONTAINING_RECORD(psoSource, SURFACE, SurfObj);
-                SURFACE_LockBitmapBits(psurfSource);
+                SURFACE_LockBitmapBits(psurfSrc);
             }
-            MouseSafetyOnDrawStart(psoSource, InputPoint.x, InputPoint.y,
-                                   (InputPoint.x + abs(DestRect->right - DestRect->left)),
-                                   (InputPoint.y + abs(DestRect->bottom - DestRect->top)));
+            MouseSafetyOnDrawStart(psoSrc, rclSrc.left, rclSrc.top,
+                                   rclSrc.right, rclSrc.bottom);
         }
-        MouseSafetyOnDrawStart(psoDest, OutputRect.left, OutputRect.top,
-                               OutputRect.right, OutputRect.bottom);
+        MouseSafetyOnDrawStart(psoTrg, rclClipped.left, rclClipped.top,
+                               rclClipped.right, rclClipped.bottom);
     }
 
-    /* No success yet */
-    ret = FALSE;
-
-    /* Call the driver's DrvBitBlt if available */
-    if (psurfDest->flHooks & HOOK_BITBLT)
+    /* Is the target surface device managed? */
+    if (psurfTrg->flHooks & HOOK_BITBLT)
     {
-        ret = GDIDEVFUNCS(psoDest).BitBlt(
-                  psoDest, psoSource, MaskSurf, ClipRegion, ColorTranslation,
-                  &OutputRect, &InputPoint, MaskOrigin, pbo, BrushOrigin,
-                  Rop4);
-    }
-
-    if (! ret)
-    {
-        ret = EngBitBlt(psoDest, psoSource, MaskSurf, ClipRegion, ColorTranslation,
-                        &OutputRect, &InputPoint, MaskOrigin, pbo, BrushOrigin,
-                        Rop4);
-    }
-
-    if (RemoveMouse)
-    {
-        MouseSafetyOnDrawEnd(psoDest);
-        if (UsesSource)
+        /* Is the source a different device managed surface? */
+        if (psoSrc && psoSrc->hdev != psoTrg->hdev && psurfSrc->flHooks & HOOK_BITBLT)
         {
-            MouseSafetyOnDrawEnd(psoSource);
-            if (psoSource != psoDest)
-            {
-                SURFACE_UnlockBitmapBits(psurfSource);
-            }
+            DPRINT1("Need to copy to standard bitmap format!\n");
+            ASSERT(FALSE);
         }
 
-        SURFACE_UnlockBitmapBits(psurfDest);
+        pfnBitBlt = GDIDEVFUNCS(psoTrg).BitBlt;
     }
 
-    return ret;
+    /* Is the source surface device managed? */
+    else if (psoSrc && psurfSrc->flHooks & HOOK_BITBLT)
+    {
+        pfnBitBlt = GDIDEVFUNCS(psoSrc).BitBlt;
+    }
+    else
+    {
+        pfnBitBlt = EngBitBlt;
+    }
+
+    bResult = pfnBitBlt(psoTrg,
+                        psoSrc,
+                        psoMask,
+                        pco,
+                        pxlo,
+                        &rclClipped,
+                        (POINTL*)&rclSrc,
+                        pptlMask,
+                        pbo,
+                        pptlBrush,
+                        rop4);
+
+    // FIXME: cleanup temp surface!
+
+    if (bRemoveMouse)
+    {
+        MouseSafetyOnDrawEnd(psoTrg);
+        if (psoSrc)
+        {
+            MouseSafetyOnDrawEnd(psoSrc);
+            if (psoSrc != psoTrg)
+            {
+                SURFACE_UnlockBitmapBits(psurfSrc);
+            }
+        }
+
+        SURFACE_UnlockBitmapBits(psurfTrg);
+    }
+
+    return bResult;
 }
 
 
@@ -1057,4 +1003,5 @@ IntEngMaskBlt(SURFOBJ *psoDest,
 
     return ret;
 }
+
 /* EOF */
