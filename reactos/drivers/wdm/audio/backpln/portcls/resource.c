@@ -29,7 +29,7 @@ typedef struct CResourceList
 */
 
 NTSTATUS
-STDMETHODCALLTYPE
+NTAPI
 IResourceList_fnQueryInterface(
     IResourceList* iface,
     IN  REFIID refiid,
@@ -56,7 +56,7 @@ IResourceList_fnQueryInterface(
 }
 
 ULONG
-STDMETHODCALLTYPE
+NTAPI
 IResourceList_fnAddRef(
     IResourceList* iface)
 {
@@ -66,7 +66,7 @@ IResourceList_fnAddRef(
 }
 
 ULONG
-STDMETHODCALLTYPE
+NTAPI
 IResourceList_fnRelease(
     IResourceList* iface)
 {
@@ -93,7 +93,7 @@ IResourceList_fnRelease(
 */
 
 ULONG
-STDMETHODCALLTYPE
+NTAPI
 IResourceList_fnNumberOfEntries(IResourceList* iface)
 {
     IResourceListImpl * This = (IResourceListImpl*)iface;
@@ -102,7 +102,7 @@ IResourceList_fnNumberOfEntries(IResourceList* iface)
 }
 
 ULONG
-STDMETHODCALLTYPE
+NTAPI
 IResourceList_fnNumberOfEntriesOfType(
     IResourceList* iface,
     IN  CM_RESOURCE_TYPE Type)
@@ -129,7 +129,7 @@ IResourceList_fnNumberOfEntriesOfType(
 }
 
 PCM_PARTIAL_RESOURCE_DESCRIPTOR
-STDMETHODCALLTYPE
+NTAPI
 IResourceList_fnFindTranslatedEntry(
     IResourceList* iface,
     IN  CM_RESOURCE_TYPE Type,
@@ -158,7 +158,7 @@ IResourceList_fnFindTranslatedEntry(
 }
 
 PCM_PARTIAL_RESOURCE_DESCRIPTOR
-STDMETHODCALLTYPE
+NTAPI
 IResourceList_fnFindUntranslatedEntry(
     IResourceList* iface,
     IN  CM_RESOURCE_TYPE Type,
@@ -186,7 +186,7 @@ IResourceList_fnFindUntranslatedEntry(
 }
 
 NTSTATUS
-STDMETHODCALLTYPE
+NTAPI
 IResourceList_fnAddEntry(
     IResourceList* iface,
     IN  PCM_PARTIAL_RESOURCE_DESCRIPTOR Translated,
@@ -242,7 +242,7 @@ IResourceList_fnAddEntry(
 }
 
 NTSTATUS
-STDMETHODCALLTYPE
+NTAPI
 IResourceList_fnAddEntryFromParent(
     IResourceList* iface,
     IN  IResourceList* Parent,
@@ -281,7 +281,7 @@ IResourceList_fnAddEntryFromParent(
 }
 
 PCM_RESOURCE_LIST
-STDMETHODCALLTYPE
+NTAPI
 IResourceList_fnTranslatedList(
     IResourceList* iface)
 {
@@ -291,7 +291,7 @@ IResourceList_fnTranslatedList(
 }
 
 PCM_RESOURCE_LIST
-STDMETHODCALLTYPE
+NTAPI
 IResourceList_fnUntranslatedList(
     IResourceList* iface)
 {
@@ -325,7 +325,9 @@ static const IResourceListVtbl vt_ResourceListVtbl =
 /*
     Factory for creating a resource list
 */
-PORTCLASSAPI NTSTATUS NTAPI
+PORTCLASSAPI
+NTSTATUS
+NTAPI
 PcNewResourceList(
     OUT PRESOURCELIST* OutResourceList,
     IN  PUNKNOWN OuterUnknown OPTIONAL,
@@ -338,8 +340,6 @@ PcNewResourceList(
     IResourceListImpl* NewList;
 
     /* TODO: Validate parameters */
-
-    DPRINT("PcNewResourceList\n");
 
     NewList = AllocateItem(PoolType, sizeof(IResourceListImpl), TAG_PORTCLASS);
 

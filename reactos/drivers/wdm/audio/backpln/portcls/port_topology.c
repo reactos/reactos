@@ -602,8 +602,7 @@ PcCreateItemDispatch(
             Irp->IoStatus.Information = 0;
             Irp->IoStatus.Status = STATUS_PENDING;
             IoMarkIrpPending(Irp);
-            IoQueueWorkItem(DeviceExt->WorkItem, CreatePinWorkerRoutine, DelayedWorkQueue, (PVOID)Context);
-
+            IoQueueWorkItem(DeviceExt->StartWorkItem, CreatePinWorkerRoutine, DelayedWorkQueue, (PVOID)Context);
             return STATUS_PENDING;
         }
     }

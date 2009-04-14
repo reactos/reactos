@@ -91,7 +91,7 @@ PcAddAdapterDevice(
     NTSTATUS status = STATUS_UNSUCCESSFUL;
     PDEVICE_OBJECT fdo = NULL;
     PDEVICE_OBJECT PrevDeviceObject;
-    PPCLASS_DEVICE_EXTENSION portcls_ext;
+    PPCLASS_DEVICE_EXTENSION portcls_ext = NULL;
 
     DPRINT1("PcAddAdapterDevice called\n");
 
@@ -138,8 +138,8 @@ PcAddAdapterDevice(
     if (!portcls_ext->CreateItems)
     {
         /* not enough resources */
-        IoDeleteDevice(fdo);
-        return STATUS_INSUFFICIENT_RESOURCES;
+        status = STATUS_INSUFFICIENT_RESOURCES;
+        goto cleanup;
     }
 
     /* store the physical device object */
@@ -157,32 +157,41 @@ PcAddAdapterDevice(
     fdo->Flags &= ~ DO_DEVICE_INITIALIZING;
 
     /* allocate work item */
-    portcls_ext->WorkItem = IoAllocateWorkItem(fdo);
+    portcls_ext->CloseWorkItem = IoAllocateWorkItem(fdo);
 
-    if (!portcls_ext->WorkItem)
+    if (!portcls_ext->CloseWorkItem)
     {
         /* not enough resources */
-        FreeItem(portcls_ext->CreateItems, TAG_PORTCLASS);
-        /* delete created fdo */
-        IoDeleteDevice(fdo);
-        /* return error code */
-        return STATUS_INSUFFICIENT_RESOURCES;
+        goto cleanup;
+        status = STATUS_INSUFFICIENT_RESOURCES;
     }
 
+    /* allocate work item */
+    portcls_ext->StartWorkItem = IoAllocateWorkItem(fdo);
+
+    if (!portcls_ext->StartWorkItem)
+    {
+        /* not enough resources */
+        goto cleanup;
+        status = STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* allocate work item */
+    portcls_ext->StopWorkItem = IoAllocateWorkItem(fdo);
+
+    if (!portcls_ext->StopWorkItem)
+    {
+        /* not enough resources */
+        goto cleanup;
+        status = STATUS_INSUFFICIENT_RESOURCES;
+    }
 
     /* allocate the device header */
     status = KsAllocateDeviceHeader(&portcls_ext->KsDeviceHeader, MaxObjects, portcls_ext->CreateItems);
     /* did we succeed */
     if (!NT_SUCCESS(status))
     {
-        /* free previously allocated create items */
-        FreeItem(portcls_ext->CreateItems, TAG_PORTCLASS);
-        /* free allocated work item */
-        IoFreeWorkItem(portcls_ext->WorkItem);
-        /* delete created fdo */
-        IoDeleteDevice(fdo);
-        /* return error code */
-        return status;
+        goto cleanup;
     }
 
     /* attach device to device stack */
@@ -196,16 +205,52 @@ PcAddAdapterDevice(
     }
     else
     {
-        /* free the device header */
-        KsFreeDeviceHeader(portcls_ext->KsDeviceHeader);
-        /* free previously allocated create items */
-        FreeItem(portcls_ext->CreateItems, TAG_PORTCLASS);
-        /* free allocated work item */
-        IoFreeWorkItem(portcls_ext->WorkItem);
+        /* return error code */
+        status = STATUS_UNSUCCESSFUL;
+        goto cleanup;
+    }
+    return status;
+
+cleanup:
+
+    if (portcls_ext)
+    {
+
+        if (portcls_ext->KsDeviceHeader)
+        {
+            /* free the device header */
+            KsFreeDeviceHeader(portcls_ext->KsDeviceHeader);
+        }
+
+        if (portcls_ext->CloseWorkItem)
+        {
+            /* free allocated work item */
+            IoFreeWorkItem(portcls_ext->CloseWorkItem);
+        }
+
+        if (portcls_ext->StartWorkItem)
+        {
+            /* free allocated work item */
+            IoFreeWorkItem(portcls_ext->StartWorkItem);
+        }
+
+        if (portcls_ext->StopWorkItem)
+        {
+            /* free allocated work item */
+            IoFreeWorkItem(portcls_ext->StopWorkItem);
+        }
+
+        if (portcls_ext->CreateItems)
+        {
+            /* free previously allocated create items */
+            FreeItem(portcls_ext->CreateItems, TAG_PORTCLASS);
+        }
+    }
+
+    if (fdo)
+    {
         /* delete created fdo */
         IoDeleteDevice(fdo);
-        /* return error code */
-        return STATUS_UNSUCCESSFUL;
     }
 
     return status;

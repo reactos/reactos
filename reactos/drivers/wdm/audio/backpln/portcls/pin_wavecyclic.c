@@ -199,12 +199,18 @@ StopStreamWorkerRoutine(
     IN PDEVICE_OBJECT  DeviceObject,
     IN PVOID  Context)
 {
+    PPCLASS_DEVICE_EXTENSION DeviceExtension;
     IPortPinWaveCyclicImpl * This = (IPortPinWaveCyclicImpl*)Context;
 
-    DPRINT1("Stopping %u Irql %u\n", This->IrpQueue->lpVtbl->NumMappings(This->IrpQueue), KeGetCurrentIrql());
-
+    /* Set the state to stop */
     This->Stream->lpVtbl->SetState(This->Stream, KSSTATE_STOP);
+    /* Set internal state to stop */
     This->State = KSSTATE_STOP;
+
+    /* Get device extension */
+    DeviceExtension = (PPCLASS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    DPRINT1("Stopping %u Irql %u\n", This->IrpQueue->lpVtbl->NumMappings(This->IrpQueue), KeGetCurrentIrql());
 }
 
 VOID
@@ -219,15 +225,24 @@ StopStreamRoutine(
    PPCLASS_DEVICE_EXTENSION DeviceExtension;
    IPortPinWaveCyclicImpl * This = (IPortPinWaveCyclicImpl*)DeferredContext;
 
+    ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
+
+    /* Has the audio stream resumed? */
     if (This->IrpQueue->lpVtbl->NumMappings(This->IrpQueue))
+        return;
+
+    /* Has the audio stream already stopped */
+    if (This->State == KSSTATE_STOP)
         return;
 
     /* Get device object */
     DeviceObject = GetDeviceObject(This->Port);
+
     /* Get device extension */
     DeviceExtension = (PPCLASS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
     /* queue the work item */
-    IoQueueWorkItem(DeviceExtension->WorkItem, StopStreamWorkerRoutine, DelayedWorkQueue, (PVOID)This);
+    IoQueueWorkItem(DeviceExtension->StopWorkItem, StopStreamWorkerRoutine, DelayedWorkQueue, (PVOID)This);
 }
 
 static
@@ -696,23 +711,18 @@ IPortPinWaveCyclic_fnClose(
 
     if (This->Stream)
     {
-        if (Irp)
-        {
-            This->CloseIrp = Irp;
-            IoMarkIrpPending(Irp);
-            Irp->IoStatus.Information = 0;
-            Irp->IoStatus.Status = STATUS_PENDING;
-        }
         /* Get device extension */
         DeviceExtension = (PPCLASS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-        /* defer work item */
-        IoQueueWorkItem(DeviceExtension->WorkItem, CloseStreamRoutine, DelayedWorkQueue, (PVOID)This);
 
-        if (Irp)
-        {
-            /* The WaveCyclic filter passes close request with NULL / IRP */
-            return STATUS_PENDING;
-        }
+        This->CloseIrp = Irp;
+        IoMarkIrpPending(Irp);
+        Irp->IoStatus.Information = 0;
+        Irp->IoStatus.Status = STATUS_PENDING;
+
+        /* defer work item */
+        IoQueueWorkItem(DeviceExtension->CloseWorkItem, CloseStreamRoutine, DelayedWorkQueue, (PVOID)This);
+        /* Return result */
+        return STATUS_PENDING;
     }
 
     if (Irp)

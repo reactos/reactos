@@ -113,6 +113,7 @@ IPortFilterWaveCyclic_fnNewIrpTarget(
     if (This->Pins[ConnectDetails->PinId] && This->Descriptor->Factory.Instances[ConnectDetails->PinId].CurrentPinInstanceCount)
     {
         /* release existing instance */
+        ASSERT(0);
         This->Pins[ConnectDetails->PinId]->lpVtbl->Close(This->Pins[ConnectDetails->PinId], DeviceObject, NULL);
     }
 

@@ -405,6 +405,9 @@ IDmaChannelSlave_fnStop(
 
     This->DmaStarted = FALSE;
 
+    IoFreeMdl(This->Mdl);
+    This->Mdl = NULL;
+
     return STATUS_SUCCESS;
 }
 
