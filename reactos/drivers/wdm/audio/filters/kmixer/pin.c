@@ -11,6 +11,127 @@
 const GUID KSPROPSETID_Connection              = {0x1D58C920L, 0xAC9B, 0x11CF, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
 
 NTSTATUS
+PerformChannelConversion(
+    PUCHAR Buffer,
+    ULONG BufferLength,
+    ULONG OldChannels,
+    ULONG NewChannels,
+    ULONG BitsPerSample,
+    PVOID * Result,
+    PULONG ResultLength)
+{
+    ULONG Samples;
+    ULONG NewIndex, OldIndex;
+
+    Samples = BufferLength / (BitsPerSample / 8) / OldChannels;
+
+    if (NewChannels > OldChannels)
+    {
+        if (BitsPerSample == 8)
+        {
+            PUCHAR BufferOut = ExAllocatePool(NonPagedPool, Samples * NewChannels);
+            if (!BufferOut)
+                return STATUS_INSUFFICIENT_RESOURCES;
+
+            for(NewIndex = 0, OldIndex = 0; OldIndex < Samples * OldChannels; NewIndex += NewChannels, OldIndex += OldChannels)
+            {
+                ULONG SubIndex = 0;
+
+                RtlMoveMemory(&BufferOut[NewIndex], &Buffer[OldIndex], OldChannels * sizeof(UCHAR));
+
+                do
+                {
+                    /* 2 channel stretched to 4 looks like LRLR */
+                     BufferOut[NewIndex+OldChannels + SubIndex] = Buffer[OldIndex + (SubIndex % OldChannels)];
+                }while(SubIndex++ < NewChannels - OldChannels);
+            }
+            *Result = BufferOut;
+            *ResultLength = Samples * NewChannels;
+        }
+        else if (BitsPerSample == 16)
+        {
+            PUSHORT BufferOut = ExAllocatePool(NonPagedPool, Samples * NewChannels);
+            if (!BufferOut)
+                return STATUS_INSUFFICIENT_RESOURCES;
+
+            for(NewIndex = 0, OldIndex = 0; OldIndex < Samples * OldChannels; NewIndex += NewChannels, OldIndex += OldChannels)
+            {
+                ULONG SubIndex = 0;
+
+                RtlMoveMemory(&BufferOut[NewIndex], &Buffer[OldIndex], OldChannels * sizeof(USHORT));
+
+                do
+                {
+                     BufferOut[NewIndex+OldChannels + SubIndex] = Buffer[OldIndex + (SubIndex % OldChannels)];
+                }while(SubIndex++ < NewChannels - OldChannels);
+            }
+            *Result = BufferOut;
+            *ResultLength = Samples * NewChannels;
+        }
+        else if (BitsPerSample == 24)
+        {
+            PUCHAR BufferOut = ExAllocatePool(NonPagedPool, Samples * NewChannels);
+            if (!BufferOut)
+                return STATUS_INSUFFICIENT_RESOURCES;
+
+            for(NewIndex = 0, OldIndex = 0; OldIndex < Samples * OldChannels; NewIndex += NewChannels, OldIndex += OldChannels)
+            {
+                ULONG SubIndex = 0;
+
+                RtlMoveMemory(&BufferOut[NewIndex], &Buffer[OldIndex], OldChannels * 3);
+
+                do
+                {
+                     RtlMoveMemory(&BufferOut[(NewIndex+OldChannels + SubIndex) * 3], &Buffer[(OldIndex + (SubIndex % OldChannels)) * 3], 3);
+                }while(SubIndex++ < NewChannels - OldChannels);
+            }
+            *Result = BufferOut;
+            *ResultLength = Samples * NewChannels;
+        }
+        else if (BitsPerSample == 32)
+        {
+            PULONG BufferOut = ExAllocatePool(NonPagedPool, Samples * NewChannels);
+            if (!BufferOut)
+                return STATUS_INSUFFICIENT_RESOURCES;
+
+            for(NewIndex = 0, OldIndex = 0; OldIndex < Samples * OldChannels; NewIndex += NewChannels, OldIndex += OldChannels)
+            {
+                ULONG SubIndex = 0;
+
+                RtlMoveMemory(&BufferOut[NewIndex], &Buffer[OldIndex], OldChannels * sizeof(ULONG));
+
+                do
+                {
+                     BufferOut[NewIndex+OldChannels + SubIndex] = Buffer[OldIndex + (SubIndex % OldChannels)];
+                }while(SubIndex++ < NewChannels - OldChannels);
+            }
+            *Result = BufferOut;
+            *ResultLength = Samples * NewChannels;
+        }
+
+    }
+    else
+    {
+        PUSHORT BufferOut = ExAllocatePool(NonPagedPool, Samples * NewChannels);
+        if (!BufferOut)
+            return STATUS_INSUFFICIENT_RESOURCES;
+
+        for(NewIndex = 0, OldIndex = 0; OldIndex < Samples * OldChannels; NewIndex += NewChannels, OldIndex += OldChannels)
+        {
+            /* TODO
+             * mix stream instead of just dumping part of it ;)
+             */
+            RtlMoveMemory(&BufferOut[NewIndex], &Buffer[OldIndex], NewChannels * (BitsPerSample/8));
+        }
+
+        *Result = BufferOut;
+        *ResultLength = Samples * NewChannels;
+    }
+    return STATUS_SUCCESS;
+}
+
+
+NTSTATUS
 PerformQualityConversion(
     PUCHAR Buffer,
     ULONG BufferLength,
@@ -359,7 +480,6 @@ Pin_fnFastWrite(
                InputFormat->WaveFormatEx.nSamplesPerSec, OutputFormat->WaveFormatEx.nSamplesPerSec,
                InputFormat->WaveFormatEx.wBitsPerSample, OutputFormat->WaveFormatEx.wBitsPerSample);
 
-
     if (InputFormat->WaveFormatEx.wBitsPerSample != OutputFormat->WaveFormatEx.wBitsPerSample)
     {
         Status = PerformQualityConversion(StreamHeader->Data,
@@ -370,7 +490,24 @@ Pin_fnFastWrite(
                                           &BufferLength);
         if (NT_SUCCESS(Status))
         {
-            //DPRINT1("Old BufferSize %u NewBufferSize %u\n", StreamHeader->DataUsed, BufferLength);
+            ExFreePool(StreamHeader->Data);
+            StreamHeader->Data = BufferOut;
+            StreamHeader->DataUsed = BufferLength;
+        }
+    }
+
+    if (InputFormat->WaveFormatEx.nChannels != OutputFormat->WaveFormatEx.nChannels)
+    {
+        Status = PerformChannelConversion(StreamHeader->Data,
+                                          StreamHeader->DataUsed,
+                                          InputFormat->WaveFormatEx.nChannels,
+                                          OutputFormat->WaveFormatEx.nChannels,
+                                          InputFormat->WaveFormatEx.wBitsPerSample,
+                                          &BufferOut,
+                                          &BufferLength);
+
+        if (NT_SUCCESS(Status))
+        {
             ExFreePool(StreamHeader->Data);
             StreamHeader->Data = BufferOut;
             StreamHeader->DataUsed = BufferLength;
