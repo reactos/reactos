@@ -320,7 +320,7 @@ VOID LoadReactOSSetup2(VOID)
     LoaderBlockVA = PaToVa(LoaderBlock);
 
     /* "Stop all motors", change videomode */
-    MachPrepareForReactOS(FALSE);
+    MachPrepareForReactOS(TRUE);
 
     /* Debugging... */
     //DumpMemoryAllocMap();
