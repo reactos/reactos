@@ -33,13 +33,19 @@ IPortFilterWaveCyclic_fnQueryInterface(
     IPortFilterWaveCyclicImpl * This = (IPortFilterWaveCyclicImpl*)iface;
 
     if (IsEqualGUIDAligned(refiid, &IID_IIrpTarget) || 
-        //IsEqualGUIDAligned(refiid, &IID_IPortFilterWaveCyclic) ||
         IsEqualGUIDAligned(refiid, &IID_IUnknown))
     {
         *Output = &This->lpVtbl;
         InterlockedIncrement(&This->ref);
         return STATUS_SUCCESS;
     }
+    else if (IsEqualGUIDAligned(refiid, &IID_IPort))
+    {
+        *Output = This->Port;
+        This->Port->lpVtbl->AddRef(This->Port);
+        return STATUS_SUCCESS;
+    }
+
 
     return STATUS_UNSUCCESSFUL;
 }
