@@ -114,7 +114,7 @@ IntGdiExtEscape(
    INT    OutSize,
    LPSTR  OutData)
 {
-   SURFACE *psurf = SURFACE_LockSurface(dc->rosdc.hBitmap);
+   SURFACE *psurf = dc->dclevel.pSurface;
    INT Result;
 
    /* FIXME - Handle psurf == NULL !!!!!! */
@@ -139,7 +139,6 @@ IntGdiExtEscape(
          OutSize,
          (PVOID)OutData );
    }
-   SURFACE_UnlockSurface(psurf);
 
    return Result;
 }

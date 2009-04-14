@@ -85,7 +85,7 @@ IntSetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, CONST RGBQUAD *Color
       return 0;
    }
 
-   psurf = SURFACE_LockSurface(dc->rosdc.hBitmap);
+   psurf = dc->dclevel.pSurface;
    if (psurf == NULL)
    {
       DC_UnlockDc(dc);
@@ -95,7 +95,6 @@ IntSetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, CONST RGBQUAD *Color
 
    if (psurf->hSecure == NULL)
    {
-      SURFACE_UnlockSurface(psurf);
       DC_UnlockDc(dc);
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       return 0;
@@ -110,7 +109,6 @@ IntSetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, CONST RGBQUAD *Color
       PalGDI = PALETTE_LockPalette(psurf->hDIBPalette);
       if (PalGDI == NULL)
       {
-          SURFACE_UnlockSurface(psurf);
           DC_UnlockDc(dc);
           SetLastWin32Error(ERROR_INVALID_HANDLE);
           return 0;
@@ -132,7 +130,6 @@ IntSetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, CONST RGBQUAD *Color
    /* Mark the brushes invalid */
    dc->pdcattr->ulDirty_ |= DIRTY_FILL|DIRTY_LINE|DIRTY_BACKGROUND|DIRTY_TEXT;
 
-   SURFACE_UnlockSurface(psurf);
    DC_UnlockDc(dc);
 
    return Entries;
@@ -154,7 +151,7 @@ IntGetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, RGBQUAD *Colors)
       return 0;
    }
 
-   psurf = SURFACE_LockSurface(dc->rosdc.hBitmap);
+   psurf = dc->dclevel.pSurface;
    if (psurf == NULL)
    {
       DC_UnlockDc(dc);
@@ -164,7 +161,6 @@ IntGetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, RGBQUAD *Colors)
 
    if (psurf->hSecure == NULL)
    {
-      SURFACE_UnlockSurface(psurf);
       DC_UnlockDc(dc);
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       return 0;
@@ -180,7 +176,6 @@ IntGetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, RGBQUAD *Colors)
       PalGDI = PALETTE_LockPalette(psurf->hDIBPalette);
       if (PalGDI == NULL)
       {
-          SURFACE_UnlockSurface(psurf);
           DC_UnlockDc(dc);
           SetLastWin32Error(ERROR_INVALID_HANDLE);
           return 0;
@@ -200,7 +195,6 @@ IntGetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, RGBQUAD *Colors)
    else
       Entries = 0;
 
-   SURFACE_UnlockSurface(psurf);
    DC_UnlockDc(dc);
 
    return Entries;
@@ -484,14 +478,13 @@ NtGdiSetDIBitsToDeviceInternal(
     DDBPalette = pDC->ppdev->DevInfo.hpalDefault;
 
     /* Try to use hDIBPalette if it exists */
-    pSurf = SURFACE_LockSurface(pDC->rosdc.hBitmap);
+    pSurf = pDC->dclevel.pSurface;
     if (pSurf && pSurf->hDIBPalette)
     {
         DDBPalette = pSurf->hDIBPalette;
-        SURFACE_UnlockSurface(pSurf);
     }
 
-    pDestSurf = EngLockSurface((HSURF)pDC->rosdc.hBitmap);
+    pDestSurf = pSurf ? &pSurf->SurfObj : NULL;
 
     rcDest.left = XDest;
     rcDest.top = YDest;
@@ -582,7 +575,6 @@ Exit:
     if (hSourceBitmap) EngDeleteSurface((HSURF)hSourceBitmap);
     if (XlateObj) EngDeleteXlate(XlateObj);
     if (DIBPalette) PALETTE_FreePaletteByHandle(DIBPalette);
-    EngUnlockSurface(pDestSurf);
     DC_UnlockDc(pDC);
 
     return ret;
@@ -1257,7 +1249,7 @@ NtGdiCreateDIBitmapInternal(IN HDC hDc,
         {
            DIBSECTION dibs;
            INT Count;           
-           SURFACE *psurf = SURFACE_LockSurface(Dc->rosdc.hBitmap);
+           SURFACE *psurf = Dc->dclevel.pSurface;
            Count = BITMAP_GetObject(psurf, sizeof(dibs), &dibs);
            if (!Count)
               bpp = 1;
@@ -1270,7 +1262,6 @@ NtGdiCreateDIBitmapInternal(IN HDC hDc,
               /* A DIB section is selected in the DC */
                  bpp = dibs.dsBmih.biBitCount;
            }
-           SURFACE_UnlockSurface(psurf);           
         }
      }
      Bmp = IntCreateDIBitmap(Dc, cx, cy, bpp, fInit, pjInit, pbmi, iUsage);

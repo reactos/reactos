@@ -120,7 +120,7 @@ NtGdiAlphaBlend(
     }
 
     /* Determine surfaces to be used in the bitblt */
-    BitmapDest = SURFACE_LockSurface(DCDest->rosdc.hBitmap);
+    BitmapDest = DCDest->dclevel.pSurface;
     if (!BitmapDest)
     {
         if (hDCSrc != hDCDest)
@@ -128,14 +128,11 @@ NtGdiAlphaBlend(
         DC_UnlockDc(DCDest);
         return FALSE;
     }
-    if (DCSrc->rosdc.hBitmap == DCDest->rosdc.hBitmap)
-        BitmapSrc = BitmapDest;
-    else
+
     {
-        BitmapSrc = SURFACE_LockSurface(DCSrc->rosdc.hBitmap);
+        BitmapSrc = DCSrc->dclevel.pSurface;
         if (!BitmapSrc)
         {
-            SURFACE_UnlockSurface(BitmapDest);
             if (hDCSrc != hDCDest)
                 DC_UnlockDc(DCSrc);
             DC_UnlockDc(DCDest);
@@ -164,9 +161,6 @@ NtGdiAlphaBlend(
     if (XlateObj != NULL)
         EngDeleteXlate(XlateObj);
 
-    SURFACE_UnlockSurface(BitmapDest);
-    if (BitmapSrc != BitmapDest)
-        SURFACE_UnlockSurface(BitmapSrc);
     DC_UnlockDc(DCDest);
     if (hDCSrc != hDCDest)
         DC_UnlockDc(DCSrc);
@@ -264,17 +258,14 @@ NtGdiBitBlt(
     }
 
     /* Determine surfaces to be used in the bitblt */
-    BitmapDest = SURFACE_LockSurface(DCDest->rosdc.hBitmap);
+    BitmapDest = DCDest->dclevel.pSurface;
     if (!BitmapDest)
         goto cleanup;
 
     if (UsesSource)
     {
-        if (DCSrc->rosdc.hBitmap == DCDest->rosdc.hBitmap)
-            BitmapSrc = BitmapDest;
-        else
         {
-            BitmapSrc = SURFACE_LockSurface(DCSrc->rosdc.hBitmap);
+            BitmapSrc = DCSrc->dclevel.pSurface;
             if (!BitmapSrc)
                 goto cleanup;
         }
@@ -311,14 +302,6 @@ cleanup:
     if (UsesSource && XlateObj != NULL)
         EngDeleteXlate(XlateObj);
 
-    if(BitmapDest != NULL)
-    {
-        SURFACE_UnlockSurface(BitmapDest);
-    }
-    if (BitmapSrc != NULL && BitmapSrc != BitmapDest)
-    {
-        SURFACE_UnlockSurface(BitmapSrc);
-    }
     if (UsesSource && hDCSrc != hDCDest)
     {
         DC_UnlockDc(DCSrc);
@@ -387,13 +370,13 @@ NtGdiTransparentBlt(
         return TRUE;
     }
 
-    BitmapDest = SURFACE_LockSurface(DCDest->rosdc.hBitmap);
+    BitmapDest = DCDest->dclevel.pSurface;
     if (!BitmapDest)
     {
         goto done;
     }
 
-    BitmapSrc = SURFACE_LockSurface(DCSrc->rosdc.hBitmap);
+    BitmapSrc = DCSrc->dclevel.pSurface;
     if (!BitmapSrc)
     {
         goto done;
@@ -466,14 +449,6 @@ NtGdiTransparentBlt(
 
 done:
     DC_UnlockDc(DCSrc);
-    if (BitmapDest)
-    {
-        SURFACE_UnlockSurface(BitmapDest);
-    }
-    if (BitmapSrc)
-    {
-        SURFACE_UnlockSurface(BitmapSrc);
-    }
     if(hdcDst != hdcSrc)
     {
         DC_UnlockDc(DCDest);
@@ -826,18 +801,13 @@ GreStretchBltMask(
     BrushOrigin.y = 0;
 
     /* Determine surfaces to be used in the bitblt */
-    BitmapDest = SURFACE_LockSurface(DCDest->rosdc.hBitmap);
+    BitmapDest = DCDest->dclevel.pSurface;
     if (BitmapDest == NULL)
         goto failed;
     if (UsesSource)
     {
-        if (DCSrc->rosdc.hBitmap == DCDest->rosdc.hBitmap)
         {
-            BitmapSrc = BitmapDest;
-        }
-        else
-        {
-            BitmapSrc = SURFACE_LockSurface(DCSrc->rosdc.hBitmap);
+            BitmapSrc = DCSrc->dclevel.pSurface;
             if (BitmapSrc == NULL)
                 goto failed;
         }
@@ -862,7 +832,7 @@ GreStretchBltMask(
         DCMask = DC_LockDc(hDCMask);
         if (DCMask)
         {
-            BitmapMask = SURFACE_LockSurface(DCMask->rosdc.hBitmap);
+            BitmapMask = DCMask->dclevel.pSurface;
             if (BitmapMask && 
                 (BitmapMask->SurfObj.sizlBitmap.cx != WidthSrc ||
                  BitmapMask->SurfObj.sizlBitmap.cy != HeightSrc))
@@ -890,18 +860,6 @@ failed:
     if (XlateObj)
     {
         EngDeleteXlate(XlateObj);
-    }
-    if (BitmapSrc && DCSrc->rosdc.hBitmap != DCDest->rosdc.hBitmap)
-    {
-        SURFACE_UnlockSurface(BitmapSrc);
-    }
-    if (BitmapDest)
-    {
-        SURFACE_UnlockSurface(BitmapDest);
-    }
-    if (BitmapMask)
-    {
-        SURFACE_UnlockSurface(BitmapMask);
     }
     if (UsesSource && hDCSrc != hDCDest)
     {
@@ -967,7 +925,7 @@ IntPatBlt(
 
     ASSERT(BrushObj);
 
-    psurf = SURFACE_LockSurface(dc->rosdc.hBitmap);
+    psurf = dc->dclevel.pSurface;
     if (psurf == NULL)
     {
         SetLastWin32Error(ERROR_INVALID_HANDLE);
@@ -1023,8 +981,6 @@ IntPatBlt(
             &BrushOrigin,
             ROP3_TO_ROP4(ROP));
     }
-
-    SURFACE_UnlockSurface(psurf);
 
     return ret;
 }

@@ -2936,7 +2936,7 @@ IntGdiPaintRgn(
 
     BrushOrigin.x = pdcattr->ptlBrushOrigin.x;
     BrushOrigin.y = pdcattr->ptlBrushOrigin.y;
-    psurf = SURFACE_LockSurface(dc->rosdc.hBitmap);
+    psurf = dc->dclevel.pSurface;
     /* FIXME - Handle psurf == NULL !!!! */
 
     bRet = IntEngPaint(&psurf->SurfObj,
@@ -2945,7 +2945,6 @@ IntGdiPaintRgn(
                        &BrushOrigin,
                        0xFFFF);//FIXME:don't know what to put here
 
-    SURFACE_UnlockSurface(psurf);
     REGION_UnlockRgn(visrgn);
     GreDeleteObject(tmpVisRgn);
 

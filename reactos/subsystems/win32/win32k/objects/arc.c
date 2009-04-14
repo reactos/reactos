@@ -156,7 +156,7 @@ IntArc( DC *dc,
               arctype,
               pbrushPen);
 
-    psurf = SURFACE_LockSurface(dc->rosdc.hBitmap);
+    psurf = dc->dclevel.pSurface;
     if (NULL == psurf)
     {
         DPRINT1("Arc Fail 2\n");
@@ -174,7 +174,6 @@ IntArc( DC *dc,
         PUTLINE(EfCx + CenterX, EfCy + CenterY, SfCx + CenterX, SfCy + CenterY, dc->eboLine);
            
     pbrushPen->ptPenWidth.x = PenOrigWidth;
-    SURFACE_UnlockSurface(psurf);
     PEN_UnlockPen(pbrushPen);
     DPRINT("IntArc Exit.\n");
     return ret;

@@ -1198,7 +1198,7 @@ IntFillRect( DC *dc,
 
   ASSERT(pbrush);
 
-  psurf = SURFACE_LockSurface(dc->rosdc.hBitmap);
+  psurf = dc->dclevel.pSurface;
   if (psurf == NULL)
   {
       SetLastWin32Error(ERROR_INVALID_HANDLE);
@@ -1249,7 +1249,6 @@ IntFillRect( DC *dc,
          ROP3_TO_ROP4(ROP));
   }
 
-  SURFACE_UnlockSurface(psurf);
   return (int)Ret;
 }
 

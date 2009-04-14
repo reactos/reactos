@@ -20,11 +20,10 @@ IntUpdateBrushXlate(PDC pdc, XLATEOBJ **ppxlo, BRUSH *pbrush)
     XLATEOBJ *pxlo = NULL;
     HPALETTE hPalette = NULL;
 
-    psurf = SURFACE_LockSurface(pdc->rosdc.hBitmap);
+    psurf = pdc->dclevel.pSurface;
     if (psurf)
     {
         hPalette = psurf->hDIBPalette;
-        SURFACE_UnlockSurface(psurf);
     }
     if (!hPalette) hPalette = pPrimarySurface->DevInfo.hpalDefault;
 
@@ -185,14 +184,12 @@ DC_vUpdateTextBrush(PDC pdc)
     SURFACE *psurf;
     HPALETTE hpal;
 
-//    psurf = pdc->dclevel.pSurface;
-    psurf = SURFACE_LockSurface(pdc->rosdc.hBitmap);
+    psurf = pdc->dclevel.pSurface;
     if (psurf)
     {
         hpal = psurf->hDIBPalette;
         if (!hpal) hpal = pPrimarySurface->DevInfo.hpalDefault;
         pxlo = IntEngCreateXlate(0, PAL_RGB, hpal, NULL);
-        SURFACE_UnlockSurface(psurf);
     }
 
     /* Update the eboText's solid color */
@@ -216,14 +213,12 @@ DC_vUpdateBackgroundBrush(PDC pdc)
     SURFACE *psurf;
     HPALETTE hpal;
 
-//    psurf = pdc->dclevel.pSurface;
-    psurf = SURFACE_LockSurface(pdc->rosdc.hBitmap);
+    psurf = pdc->dclevel.pSurface;
     if (psurf)
     {
         hpal = psurf->hDIBPalette;
         if (!hpal) hpal = pPrimarySurface->DevInfo.hpalDefault;
         pxlo = IntEngCreateXlate(0, PAL_RGB, hpal, NULL);
-        SURFACE_UnlockSurface(psurf);
     }
 
     /* Update the eboBackground's solid color */
@@ -386,11 +381,6 @@ NtGdiSelectBitmap(
     psurfOld = pDC->dclevel.pSurface;
     hOrgBmp = psurfOld ? psurfOld->BaseObject.hHmgr : NULL;
 
-    /* FIXME: ros hack */
-    hOrgBmp = pDC->rosdc.hBitmap;
-
-    pDC->rosdc.hBitmap = hBmp;
-
     /* Release the old bitmap, reference the new */
     DC_vSelectSurface(pDC, psurfBmp);
 
@@ -530,8 +520,11 @@ NtGdiGetDCObject(HDC hDC, INT ObjectType)
             break;
 
         case GDI_OBJECT_TYPE_BITMAP:
-            SelObject = pdc->rosdc.hBitmap;
+        {
+            SURFACE *psurf = pdc->dclevel.pSurface;
+            SelObject = psurf ? psurf->BaseObject.hHmgr : NULL;
             break;
+        }
 
         case GDI_OBJECT_TYPE_COLORSPACE:
             DPRINT1("FIXME: NtGdiGetCurrentObject() ObjectType OBJ_COLORSPACE not supported yet!\n");

@@ -432,12 +432,11 @@ IntGetDesktopWorkArea(PDESKTOP Desktop, RECTL *Rect)
       SURFACE *psurf;
       dc = DC_LockDc(ScreenDeviceContext);
       /* FIXME - Handle dc == NULL!!!! */
-      psurf = SURFACE_LockSurface(dc->rosdc.hBitmap);
-      if(psurf)
+      psurf = dc->dclevel.pSurface;
+      if (psurf)
       {
          Ret->right = psurf->SurfObj.sizlBitmap.cx;
          Ret->bottom = psurf->SurfObj.sizlBitmap.cy;
-         SURFACE_UnlockSurface(psurf);
       }
       DC_UnlockDc(dc);
    }

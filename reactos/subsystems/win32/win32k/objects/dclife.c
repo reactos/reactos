@@ -212,6 +212,7 @@ IntGdiCreateDC(
     HRGN     hVisRgn;
     UNICODE_STRING StdDriver;
     BOOL calledFromUser;
+    HSURF hsurf;
 
     RtlInitUnicodeString(&StdDriver, L"DISPLAY");
 
@@ -284,7 +285,9 @@ IntGdiCreateDC(
     pdc->dhpdev = PrimarySurface.hPDev;
     if (pUMdhpdev) pUMdhpdev = pdc->dhpdev; // set DHPDEV for device.
     pdc->ppdev = (PVOID)&PrimarySurface;
-    pdc->rosdc.hBitmap = (HBITMAP)PrimarySurface.pSurface; // <- what kind of haxx0ry is that?
+    hsurf = (HBITMAP)PrimarySurface.pSurface; // <- what kind of haxx0ry is that?
+    pdc->dclevel.pSurface = SURFACE_ShareLockSurface(hsurf);
+
     // ATM we only have one display.
     pdcattr->ulDirty_ |= DC_PRIMARY_DISPLAY;
 
@@ -574,6 +577,7 @@ NtGdiCreateCompatibleDC(HDC hDC)
     HRGN hVisRgn;
     UNICODE_STRING DriverName;
     DWORD Layout = 0;
+    HSURF hsurf;
 
     if (hDC == NULL)
     {
@@ -628,7 +632,8 @@ NtGdiCreateCompatibleDC(HDC hDC)
     pdcattrNew->szlViewportExt = pdcattrOld->szlViewportExt;
 
     pdcNew->dctype        = DC_TYPE_MEMORY; // Always!
-    pdcNew->rosdc.hBitmap      = NtGdiGetStockObject(DEFAULT_BITMAP);
+    hsurf      = NtGdiGetStockObject(DEFAULT_BITMAP);
+    pdcNew->dclevel.pSurface = SURFACE_ShareLockSurface(hsurf);
     pdcNew->ppdev          = pdcOld->ppdev;
     pdcNew->dclevel.hpal    = pdcOld->dclevel.hpal;
 

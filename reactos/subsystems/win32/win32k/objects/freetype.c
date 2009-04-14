@@ -3171,7 +3171,7 @@ GreExtTextOutW(
         IntLPtoDP(dc, (POINT *)lprc, 2);
     }
 
-    psurf = SURFACE_LockSurface(dc->rosdc.hBitmap);
+    psurf = dc->dclevel.pSurface;
     if (!psurf)
     {
         goto fail;
@@ -3579,7 +3579,6 @@ GreExtTextOutW(
 
     EngDeleteXlate(XlateObj);
     EngDeleteXlate(XlateObj2);
-    SURFACE_UnlockSurface(psurf);
     if (TextObj != NULL)
         TEXTOBJ_UnlockText(TextObj);
 good:
@@ -3594,8 +3593,6 @@ fail:
         EngDeleteXlate(XlateObj);
     if (TextObj != NULL)
         TEXTOBJ_UnlockText(TextObj);
-    if (psurf != NULL)
-        SURFACE_UnlockSurface(psurf);
     DC_UnlockDc(dc);
 
     return FALSE;
