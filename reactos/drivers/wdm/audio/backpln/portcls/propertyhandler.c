@@ -106,7 +106,7 @@ HandleDataIntersection(
     }
 
     /* Access parameters */
-    MultipleItem = (PKSMULTIPLE_ITEM)(Request + 1);
+    MultipleItem = (PKSMULTIPLE_ITEM)(Pin + 1);
     DataRange = (PKSDATARANGE)(MultipleItem + 1);
 
     /* Get current stack location */
@@ -115,7 +115,9 @@ HandleDataIntersection(
     for(Index = 0; Index < MultipleItem->Count; Index++)
     {
         /* Call miniport's properitary handler */
-        Status = SubDevice->lpVtbl->DataRangeIntersection(SubDevice, Pin->PinId, DataRange, (PKSDATARANGE)&Descriptor->Factory.KsPinDescriptor[Pin->PinId].DataRanges[0],
+        ASSERT(Descriptor->Factory.KsPinDescriptor[Pin->PinId].DataRangesCount);
+        ASSERT(Descriptor->Factory.KsPinDescriptor[Pin->PinId].DataRanges[0]);
+        Status = SubDevice->lpVtbl->DataRangeIntersection(SubDevice, Pin->PinId, DataRange, (PKSDATARANGE)Descriptor->Factory.KsPinDescriptor[Pin->PinId].DataRanges[0],
                                                           IoStack->Parameters.DeviceIoControl.OutputBufferLength, Data, &Length);
 
         if (Status == STATUS_SUCCESS)

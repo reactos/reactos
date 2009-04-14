@@ -116,9 +116,16 @@ Dispatch_fnClose(
                     Entry->Pins[Client->Devs[Index].ClientHandles[SubIndex].PinId].References--;
 
                     DispatchContext = (PDISPATCH_CONTEXT)Client->Devs[Index].ClientHandles[SubIndex].DispatchContext;
-                    ObDereferenceObject(DispatchContext->MixerFileObject);
-                    ObDereferenceObject(DispatchContext->FileObject);
-                    ZwClose(DispatchContext->hMixerPin);
+
+                    if (DispatchContext->MixerFileObject)
+                        ObDereferenceObject(DispatchContext->MixerFileObject);
+
+                    if (DispatchContext->hMixerPin)
+                        ZwClose(DispatchContext->hMixerPin);
+
+                    if (DispatchContext->FileObject)
+                        ObDereferenceObject(DispatchContext->FileObject);
+
                     ExFreePool(DispatchContext);
 
                     //DPRINT1("Index %u DeviceIndex %u Pin %u References %u\n", Index, Client->Devs[Index].DeviceId, SubIndex, Entry->Pins[Client->Devs[Index].ClientHandles[SubIndex].PinId].References);
@@ -272,7 +279,7 @@ DispatchCreateSysAudio(
         if (!wcsncmp(KS_NAME_PIN, Buffer, wcslen(KS_NAME_PIN)))
         {
             Status = CreateDispatcher(Irp);
-            DPRINT1("Virtual pin Status %x FileObject %p\n", Status, IoStatus->FileObject);
+            DPRINT("Virtual pin Status %x FileObject %p\n", Status, IoStatus->FileObject);
 
             Irp->IoStatus.Information = 0;
             Irp->IoStatus.Status = Status;
