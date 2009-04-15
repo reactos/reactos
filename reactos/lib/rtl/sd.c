@@ -667,6 +667,13 @@ RtlSetControlSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
                                 IN SECURITY_DESCRIPTOR_CONTROL ControlBitsOfInterest,
                                 IN SECURITY_DESCRIPTOR_CONTROL ControlBitsToSet)
 {
+   SECURITY_DESCRIPTOR_CONTROL const immutable
+       = SE_OWNER_DEFAULTED  | SE_GROUP_DEFAULTED
+       | SE_DACL_PRESENT     | SE_DACL_DEFAULTED
+       | SE_SACL_PRESENT     | SE_SACL_DEFAULTED
+       | SE_RM_CONTROL_VALID | SE_SELF_RELATIVE
+       ;
+
    PISECURITY_DESCRIPTOR pSD = (PISECURITY_DESCRIPTOR)SecurityDescriptor;
 
    PAGED_CODE_RTL();
@@ -675,6 +682,9 @@ RtlSetControlSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
    {
       return STATUS_UNKNOWN_REVISION;
    }
+
+   if ((ControlBitsOfInterest | ControlBitsToSet) & immutable)
+      return STATUS_INVALID_PARAMETER;
 
    /* Zero the 'bits of interest' */
    pSD->Control &= ~ControlBitsOfInterest;
