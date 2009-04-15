@@ -1067,7 +1067,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\telnetd","DisplayName",0x00000000,"React
 HKLM,"SYSTEM\CurrentControlSet\Services\telnetd","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\telnetd","Group",0x00000000,"Network"
 HKLM,"SYSTEM\CurrentControlSet\Services\telnetd","ImagePath",0x00020000,"%SystemRoot%\system32\telnetd.exe"
-HKLM,"SYSTEM\CurrentControlSet\Services\telnetd","Start",0x00010001,0x00000002
+HKLM,"SYSTEM\CurrentControlSet\Services\telnetd","Start",0x00010001,0x00000003
 HKLM,"SYSTEM\CurrentControlSet\Services\telnetd","Type",0x00010001,0x00000020
 
 ; Sound Blaster (NT4)
