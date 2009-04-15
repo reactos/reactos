@@ -2512,7 +2512,7 @@ LdrGetProcedureAddress (IN PVOID BaseAddress,
    }
    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
-       /* Ignore exception and return */
+       _SEH2_YIELD(return STATUS_DLL_NOT_FOUND);
    }
    _SEH2_END;
    return STATUS_PROCEDURE_NOT_FOUND;
