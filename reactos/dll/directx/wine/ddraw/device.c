@@ -316,9 +316,9 @@ IDirect3DDeviceImpl_7_Release(IDirect3DDevice7 *iface)
 
         EnterCriticalSection(&ddraw_cs);
         /* Free the index buffer. */
-        IWineD3DDevice_SetIndices(This->wineD3DDevice, NULL);
-        IWineD3DIndexBuffer_GetParent(This->indexbuffer,
-                                      (IUnknown **) &IndexBufferParent);
+        IWineD3DDevice_SetIndices(This->wineD3DDevice, NULL, WINED3DFMT_UNKNOWN);
+        IWineD3DBuffer_GetParent(This->indexbuffer,
+                                 (IUnknown **) &IndexBufferParent);
         IParent_Release(IndexBufferParent); /* Once for the getParent */
         if( IParent_Release(IndexBufferParent) != 0)  /* And now to destroy it */
         {
@@ -4104,7 +4104,6 @@ IDirect3DDeviceImpl_7_DrawPrimitiveVB(IDirect3DDevice7 *iface,
     IDirect3DVertexBufferImpl *vb = (IDirect3DVertexBufferImpl *)D3DVertexBuf;
     HRESULT hr;
     DWORD stride;
-    WINED3DVERTEXBUFFER_DESC Desc;
 
     TRACE("(%p)->(%08x,%p,%08x,%08x,%08x)\n", This, PrimitiveType, D3DVertexBuf, StartVertex, NumVertices, Flags);
 
@@ -4114,18 +4113,9 @@ IDirect3DDeviceImpl_7_DrawPrimitiveVB(IDirect3DDevice7 *iface,
         ERR("(%p) No Vertex buffer specified\n", This);
         return DDERR_INVALIDPARAMS;
     }
+    stride = get_flexible_vertex_size(vb->fvf);
 
-    /* Get the FVF of the vertex buffer, and its stride */
     EnterCriticalSection(&ddraw_cs);
-    hr = IWineD3DBuffer_GetDesc(vb->wineD3DVertexBuffer, &Desc);
-    if(hr != D3D_OK)
-    {
-        ERR("(%p) IWineD3DVertexBuffer::GetDesc failed with hr = %08x\n", This, hr);
-        LeaveCriticalSection(&ddraw_cs);
-        return hr;
-    }
-    stride = get_flexible_vertex_size(Desc.FVF);
-
     hr = IWineD3DDevice_SetVertexDeclaration(This->wineD3DDevice,
                                              vb->wineD3DVertexDeclaration);
     if(FAILED(hr))
@@ -4229,32 +4219,20 @@ IDirect3DDeviceImpl_7_DrawIndexedPrimitiveVB(IDirect3DDevice7 *iface,
 {
     IDirect3DDeviceImpl *This = (IDirect3DDeviceImpl *)iface;
     IDirect3DVertexBufferImpl *vb = (IDirect3DVertexBufferImpl *)D3DVertexBuf;
-    DWORD stride;
+    DWORD stride = get_flexible_vertex_size(vb->fvf);
     WORD *LockedIndices;
     HRESULT hr;
-    WINED3DVERTEXBUFFER_DESC Desc;
 
     TRACE("(%p)->(%08x,%p,%d,%d,%p,%d,%08x)\n", This, PrimitiveType, vb, StartVertex, NumVertices, Indices, IndexCount, Flags);
 
     /* Steps:
-     * 1) Calculate some things: stride, ...
-     * 2) Upload the Indices to the index buffer
-     * 3) Set the index source
-     * 4) Set the Vertex Buffer as the Stream source
-     * 5) Call IWineD3DDevice::DrawIndexedPrimitive
+     * 1) Upload the Indices to the index buffer
+     * 2) Set the index source
+     * 3) Set the Vertex Buffer as the Stream source
+     * 4) Call IWineD3DDevice::DrawIndexedPrimitive
      */
 
     EnterCriticalSection(&ddraw_cs);
-    /* Get the FVF of the vertex buffer, and its stride */
-    hr = IWineD3DBuffer_GetDesc(vb->wineD3DVertexBuffer, &Desc);
-    if(hr != D3D_OK)
-    {
-        ERR("(%p) IWineD3DVertexBuffer::GetDesc failed with hr = %08x\n", This, hr);
-        LeaveCriticalSection(&ddraw_cs);
-        return hr;
-    }
-    stride = get_flexible_vertex_size(Desc.FVF);
-    TRACE("Vertex buffer FVF = %08x, stride=%d\n", Desc.FVF, stride);
 
     hr = IWineD3DDevice_SetVertexDeclaration(This->wineD3DDevice,
                                              vb->wineD3DVertexDeclaration);
@@ -4271,30 +4249,31 @@ IDirect3DDeviceImpl_7_DrawIndexedPrimitiveVB(IDirect3DDevice7 *iface,
      * or a SetData-Method for the index buffer, which
      * overrides the index buffer data with our pointer.
      */
-    hr = IWineD3DIndexBuffer_Lock(This->indexbuffer,
-                                  0 /* OffSetToLock */,
-                                  IndexCount * sizeof(WORD),
-                                  (BYTE **) &LockedIndices,
-                                  0 /* Flags */);
+    hr = IWineD3DBuffer_Map(This->indexbuffer,
+                            0 /* OffSetToLock */,
+                            IndexCount * sizeof(WORD),
+                            (BYTE **) &LockedIndices,
+                            0 /* Flags */);
     assert(IndexCount < 0x100000);
     if(hr != D3D_OK)
     {
-        ERR("(%p) IWineD3DIndexBuffer::Lock failed with hr = %08x\n", This, hr);
+        ERR("(%p) IWineD3DBuffer::Map failed with hr = %08x\n", This, hr);
         LeaveCriticalSection(&ddraw_cs);
         return hr;
     }
     memcpy(LockedIndices, Indices, IndexCount * sizeof(WORD));
-    hr = IWineD3DIndexBuffer_Unlock(This->indexbuffer);
+    hr = IWineD3DBuffer_Unmap(This->indexbuffer);
     if(hr != D3D_OK)
     {
-        ERR("(%p) IWineD3DIndexBuffer::Unlock failed with hr = %08x\n", This, hr);
+        ERR("(%p) IWineD3DBuffer::Unmap failed with hr = %08x\n", This, hr);
         LeaveCriticalSection(&ddraw_cs);
         return hr;
     }
 
     /* Set the index stream */
     IWineD3DDevice_SetBaseVertexIndex(This->wineD3DDevice, StartVertex);
-    hr = IWineD3DDevice_SetIndices(This->wineD3DDevice, This->indexbuffer);
+    hr = IWineD3DDevice_SetIndices(This->wineD3DDevice, This->indexbuffer,
+                                   WINED3DFMT_R16_UINT);
 
     /* Set the vertex stream source */
     hr = IWineD3DDevice_SetStreamSource(This->wineD3DDevice,

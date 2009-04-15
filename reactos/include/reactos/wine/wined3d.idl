@@ -766,12 +766,10 @@ typedef enum _WINED3DRESOURCETYPE
     WINED3DRTYPE_TEXTURE                    = 3,
     WINED3DRTYPE_VOLUMETEXTURE              = 4,
     WINED3DRTYPE_CUBETEXTURE                = 5,
-    WINED3DRTYPE_VERTEXBUFFER               = 6,
-    WINED3DRTYPE_INDEXBUFFER                = 7,
-    WINED3DRTYPE_BUFFER                     = 8,
+    WINED3DRTYPE_BUFFER                     = 6,
     WINED3DRTYPE_FORCE_DWORD                = 0x7fffffff
 } WINED3DRESOURCETYPE;
-const UINT WINED3DRTYPECOUNT                = WINED3DRTYPE_INDEXBUFFER + 1;
+const UINT WINED3DRTYPECOUNT                = WINED3DRTYPE_BUFFER + 1;
 
 typedef enum _WINED3DPOOL
 {
@@ -1864,24 +1862,13 @@ typedef struct WINED3DDEVINFO_VCACHE
                            non user modifiable (only valid if OptMethod==1) */
 } WINED3DDEVINFO_VCACHE;
 
-typedef struct _WINED3DVERTEXBUFFER_DESC
+typedef struct _WINED3DBUFFER_DESC
 {
-    WINED3DFORMAT Format;
     WINED3DRESOURCETYPE Type;
     DWORD Usage;
     WINED3DPOOL Pool;
     UINT Size;
-    DWORD FVF;
-} WINED3DVERTEXBUFFER_DESC;
-
-typedef struct _WINED3DINDEXBUFFER_DESC
-{
-    WINED3DFORMAT Format;
-    WINED3DRESOURCETYPE Type;
-    DWORD Usage;
-    WINED3DPOOL Pool;
-    UINT Size;
-} WINED3DINDEXBUFFER_DESC;
+} WINED3DBUFFER_DESC;
 
 typedef struct glDescriptor
 {
@@ -2347,26 +2334,6 @@ interface IWineD3DRendertargetView : IWineD3DBase
 {
     HRESULT GetResource(
         [out] IWineD3DResource **resource
-    );
-}
-
-[
-    object,
-    local,
-    uuid(3a02a54e-6f30-11d9-c687-00046142c14f)
-]
-interface IWineD3DIndexBuffer : IWineD3DResource
-{
-    HRESULT Lock(
-        [in] UINT offset,
-        [in] UINT size,
-        [out] BYTE **data,
-        [in] DWORD flags
-    );
-    HRESULT Unlock(
-    );
-    HRESULT GetDesc(
-        [out] WINED3DINDEXBUFFER_DESC *desc
     );
 }
 
@@ -2844,7 +2811,7 @@ interface IWineD3DBuffer : IWineD3DResource
     HRESULT Unmap(
     );
     HRESULT GetDesc(
-        [out] WINED3DVERTEXBUFFER_DESC *desc
+        [out] WINED3DBUFFER_DESC *desc
     );
 }
 
@@ -2925,9 +2892,8 @@ interface IWineD3DDevice : IWineD3DBase
     HRESULT CreateIndexBuffer(
         [in] UINT length,
         [in] DWORD usage,
-        [in] WINED3DFORMAT format,
         [in] WINED3DPOOL pool,
-        [out] IWineD3DIndexBuffer **index_buffer,
+        [out] IWineD3DBuffer **index_buffer,
         [in] HANDLE *shared_handle,
         [in] IUnknown *parent
     );
@@ -3150,10 +3116,11 @@ interface IWineD3DDevice : IWineD3DBase
         [out] WINED3DGAMMARAMP *ramp
     );
     HRESULT SetIndices(
-        [in] IWineD3DIndexBuffer *index_buffer
+        [in] IWineD3DBuffer *index_buffer,
+        [in] WINED3DFORMAT format
     );
     HRESULT GetIndices(
-        [out] IWineD3DIndexBuffer **index_buffer
+        [out] IWineD3DBuffer **index_buffer
     );
     HRESULT SetBaseVertexIndex(
         [in] INT base_index
@@ -3380,7 +3347,8 @@ interface IWineD3DDevice : IWineD3DBase
         [in] UINT vertex_count,
         [in] IWineD3DBuffer *dest_buffer,
         [in] IWineD3DVertexDeclaration *declaration,
-        [in] DWORD flags
+        [in] DWORD flags,
+        [in] DWORD DestFVF
     );
     HRESULT BeginStateBlock(
     );

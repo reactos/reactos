@@ -154,13 +154,9 @@ static void WINAPI IDirect3DVertexBuffer9Impl_PreLoad(LPDIRECT3DVERTEXBUFFER9 if
 
 static D3DRESOURCETYPE WINAPI IDirect3DVertexBuffer9Impl_GetType(LPDIRECT3DVERTEXBUFFER9 iface) {
     IDirect3DVertexBuffer9Impl *This = (IDirect3DVertexBuffer9Impl *)iface;
-    D3DRESOURCETYPE ret;
-    TRACE("(%p) Relay\n", This);
+    TRACE("(%p)\n", This);
 
-    EnterCriticalSection(&d3d9_cs);
-    ret = IWineD3DBuffer_GetType(This->wineD3DVertexBuffer);
-    LeaveCriticalSection(&d3d9_cs);
-    return ret;
+    return D3DRTYPE_VERTEXBUFFER;
 }
 
 /* IDirect3DVertexBuffer9 Interface follow: */
@@ -189,13 +185,22 @@ static HRESULT WINAPI IDirect3DVertexBuffer9Impl_Unlock(LPDIRECT3DVERTEXBUFFER9 
 static HRESULT WINAPI IDirect3DVertexBuffer9Impl_GetDesc(LPDIRECT3DVERTEXBUFFER9 iface, D3DVERTEXBUFFER_DESC* pDesc) {
     IDirect3DVertexBuffer9Impl *This = (IDirect3DVertexBuffer9Impl *)iface;
     HRESULT hr;
+    WINED3DBUFFER_DESC desc;
     TRACE("(%p) Relay\n", This);
 
     EnterCriticalSection(&d3d9_cs);
-    hr = IWineD3DBuffer_GetDesc(This->wineD3DVertexBuffer, (WINED3DVERTEXBUFFER_DESC *)pDesc);
+    hr = IWineD3DBuffer_GetDesc(This->wineD3DVertexBuffer, &desc);
     LeaveCriticalSection(&d3d9_cs);
 
-    if (SUCCEEDED(hr)) pDesc->Format = d3dformat_from_wined3dformat(pDesc->Format);
+    if (SUCCEEDED(hr)) {
+        pDesc->Format = D3DFMT_VERTEXDATA;
+        pDesc->Usage = desc.Usage;
+        pDesc->Pool = desc.Pool;
+        pDesc->Size = desc.Size;
+        pDesc->Type = D3DRTYPE_VERTEXBUFFER;
+        pDesc->FVF = This->fvf;
+    }
+
 
     return hr;
 }
@@ -240,8 +245,11 @@ HRESULT WINAPI IDirect3DDevice9Impl_CreateVertexBuffer(LPDIRECT3DDEVICE9EX iface
 
     object->lpVtbl = &Direct3DVertexBuffer9_Vtbl;
     object->ref = 1;
+    object->fvf = FVF;
     EnterCriticalSection(&d3d9_cs);
-    hrc = IWineD3DDevice_CreateVertexBuffer(This->WineD3DDevice, Size, Usage & WINED3DUSAGE_MASK, FVF, (WINED3DPOOL) Pool, &(object->wineD3DVertexBuffer), pSharedHandle, (IUnknown *)object);
+    hrc = IWineD3DDevice_CreateVertexBuffer(This->WineD3DDevice, Size, Usage & WINED3DUSAGE_MASK,
+            0 /* fvf for ddraw only */, (WINED3DPOOL) Pool, &(object->wineD3DVertexBuffer),
+            pSharedHandle, (IUnknown *)object);
     LeaveCriticalSection(&d3d9_cs);
     
     if (hrc != D3D_OK) {

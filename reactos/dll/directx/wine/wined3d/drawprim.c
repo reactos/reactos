@@ -95,7 +95,7 @@ static void drawStridedSlow(IWineD3DDevice *iface, const struct wined3d_stream_i
          * idxData will be != NULL
          */
         if(idxData == NULL) {
-            idxData = ((IWineD3DIndexBufferImpl *) This->stateBlock->pIndexData)->resource.allocatedMemory;
+            idxData = buffer_get_sysmem((struct wined3d_buffer *) This->stateBlock->pIndexData);
         }
 
         if (idxSize == 2) pIdxBufS = idxData;
@@ -413,7 +413,7 @@ static void drawStridedSlowVs(IWineD3DDevice *iface, const struct wined3d_stream
          * idxData will be != NULL
          */
         if(idxData == NULL) {
-            idxData = ((IWineD3DIndexBufferImpl *) stateblock->pIndexData)->resource.allocatedMemory;
+            idxData = buffer_get_sysmem((struct wined3d_buffer *) This->stateBlock->pIndexData);
         }
 
         if (idxSize == 2) pIdxBufS = idxData;
@@ -512,7 +512,7 @@ static inline void drawStridedInstanced(IWineD3DDevice *iface, const struct wine
             {
                 struct wined3d_buffer *vb =
                         (struct wined3d_buffer *)stateblock->streamSource[si->elements[instancedData[j]].stream_idx];
-                ptr += (long) vb->resource.allocatedMemory;
+                ptr += (long) buffer_get_sysmem(vb);
             }
 
             send_attribute(This, si->elements[instancedData[j]].format_desc->format, instancedData[j], ptr);
@@ -535,7 +535,7 @@ static inline void remove_vbos(IWineD3DDeviceImpl *This, struct wined3d_stream_i
         {
             struct wined3d_buffer *vb = (struct wined3d_buffer *)This->stateBlock->streamSource[e->stream_idx];
             e->buffer_object = 0;
-            e->data = (BYTE *)((unsigned long)e->data + (unsigned long)vb->resource.allocatedMemory);
+            e->data = (BYTE *)((unsigned long)e->data + (unsigned long)buffer_get_sysmem(vb));
         }
     }
 }
@@ -744,7 +744,7 @@ HRESULT tesselate_rectpatch(IWineD3DDeviceImpl *This,
     {
         struct wined3d_buffer *vb;
         vb = (struct wined3d_buffer *)This->stateBlock->streamSource[e->stream_idx];
-        e->data = (BYTE *)((unsigned long)e->data + (unsigned long)vb->resource.allocatedMemory);
+        e->data = (BYTE *)((unsigned long)e->data + (unsigned long)buffer_get_sysmem(vb));
     }
     vtxStride = e->stride;
     data = e->data +

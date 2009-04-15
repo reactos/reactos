@@ -428,17 +428,18 @@ static HRESULT WINAPI reset_enum_callback(IWineD3DResource *resource, void *data
     HRESULT ret = S_OK;
     WINED3DSURFACE_DESC surface_desc;
     WINED3DVOLUME_DESC volume_desc;
-    WINED3DINDEXBUFFER_DESC index_desc;
-    WINED3DVERTEXBUFFER_DESC vertex_desc;
+    D3DINDEXBUFFER_DESC index_desc;
+    D3DVERTEXBUFFER_DESC vertex_desc;
     WINED3DFORMAT dummy_format;
     WINED3DMULTISAMPLE_TYPE dummy_multisampletype;
     DWORD dummy_dword;
     WINED3DPOOL pool = WINED3DPOOL_SCRATCH; /* a harmless pool */
-    IUnknown *parent;
+    IDirect3DResource9 *parent;
 
-    type = IWineD3DResource_GetType(resource);
+    IWineD3DResource_GetParent(resource, (IUnknown **) &parent);
+    type = IDirect3DResource9_GetType(parent);
     switch(type) {
-        case WINED3DRTYPE_SURFACE:
+        case D3DRTYPE_SURFACE:
             surface_desc.Format = &dummy_format;
             surface_desc.Type = &type;
             surface_desc.Usage = &dummy_dword;
@@ -452,7 +453,7 @@ static HRESULT WINAPI reset_enum_callback(IWineD3DResource *resource, void *data
             IWineD3DSurface_GetDesc((IWineD3DSurface *) resource, &surface_desc);
             break;
 
-        case WINED3DRTYPE_VOLUME:
+        case D3DRTYPE_VOLUME:
             volume_desc.Format = &dummy_format;
             volume_desc.Type = &type;
             volume_desc.Usage = &dummy_dword;
@@ -464,13 +465,13 @@ static HRESULT WINAPI reset_enum_callback(IWineD3DResource *resource, void *data
             IWineD3DVolume_GetDesc((IWineD3DVolume *) resource, &volume_desc);
             break;
 
-        case WINED3DRTYPE_INDEXBUFFER:
-            IWineD3DIndexBuffer_GetDesc((IWineD3DIndexBuffer *) resource, &index_desc);
+        case D3DRTYPE_INDEXBUFFER:
+            IDirect3DIndexBuffer9_GetDesc((IDirect3DIndexBuffer9 *) parent, &index_desc);
             pool = index_desc.Pool;
             break;
 
-        case WINED3DRTYPE_VERTEXBUFFER:
-            IWineD3DBuffer_GetDesc((IWineD3DBuffer *)resource, &vertex_desc);
+        case D3DRTYPE_VERTEXBUFFER:
+            IDirect3DVertexBuffer9_GetDesc((IDirect3DVertexBuffer9 *)parent, &vertex_desc);
             pool = vertex_desc.Pool;
             break;
 
@@ -482,7 +483,6 @@ static HRESULT WINAPI reset_enum_callback(IWineD3DResource *resource, void *data
     }
 
     if(pool == WINED3DPOOL_DEFAULT) {
-        IWineD3DResource_GetParent(resource, &parent);
         if(IUnknown_Release(parent) == 0) {
             TRACE("Parent %p is an implicit resource with ref 0\n", parent);
         } else {
@@ -490,6 +490,8 @@ static HRESULT WINAPI reset_enum_callback(IWineD3DResource *resource, void *data
             ret = S_FALSE;
             *resources_ok = FALSE;
         }
+    } else {
+        IUnknown_Release(parent);
     }
     IWineD3DResource_Release(resource);
 
@@ -514,8 +516,7 @@ static HRESULT  WINAPI  IDirect3DDevice9Impl_Reset(LPDIRECT3DDEVICE9EX iface, D3
      * below fails, the device is considered "lost", and _Reset and _Release are the only allowed calls
      */
     EnterCriticalSection(&d3d9_cs);
-
-    IWineD3DDevice_SetIndices(This->WineD3DDevice, NULL);
+    IWineD3DDevice_SetIndices(This->WineD3DDevice, NULL, WINED3DFMT_UNKNOWN);
     for(i = 0; i < 16; i++) {
         IWineD3DDevice_SetStreamSource(This->WineD3DDevice, i, NULL, 0, 0);
     }
@@ -1447,10 +1448,11 @@ static HRESULT  WINAPI  IDirect3DDevice9Impl_ProcessVertices(LPDIRECT3DDEVICE9EX
     IDirect3DDevice9Impl *This = (IDirect3DDevice9Impl *)iface;
     IDirect3DVertexDeclaration9Impl *Decl = (IDirect3DVertexDeclaration9Impl *) pVertexDecl;
     HRESULT hr;
+    IDirect3DVertexBuffer9Impl *dest = (IDirect3DVertexBuffer9Impl *) pDestBuffer;
     TRACE("(%p) Relay\n" , This);
 
     EnterCriticalSection(&d3d9_cs);
-    hr = IWineD3DDevice_ProcessVertices(This->WineD3DDevice,SrcStartIndex, DestIndex, VertexCount, ((IDirect3DVertexBuffer9Impl *)pDestBuffer)->wineD3DVertexBuffer, Decl ? Decl->wineD3DVertexDeclaration : NULL, Flags);
+    hr = IWineD3DDevice_ProcessVertices(This->WineD3DDevice,SrcStartIndex, DestIndex, VertexCount, dest->wineD3DVertexBuffer, Decl ? Decl->wineD3DVertexDeclaration : NULL, Flags, dest->fvf);
     LeaveCriticalSection(&d3d9_cs);
     return hr;
 }
@@ -1636,18 +1638,20 @@ static HRESULT  WINAPI  IDirect3DDevice9Impl_GetStreamSourceFreq(LPDIRECT3DDEVIC
 static HRESULT  WINAPI  IDirect3DDevice9Impl_SetIndices(LPDIRECT3DDEVICE9EX iface, IDirect3DIndexBuffer9* pIndexData) {
     IDirect3DDevice9Impl *This = (IDirect3DDevice9Impl *)iface;
     HRESULT hr;
+    IDirect3DIndexBuffer9Impl *ib = (IDirect3DIndexBuffer9Impl *) pIndexData;
     TRACE("(%p) Relay\n", This);
 
     EnterCriticalSection(&d3d9_cs);
     hr = IWineD3DDevice_SetIndices(This->WineD3DDevice,
-            pIndexData ? ((IDirect3DIndexBuffer9Impl *)pIndexData)->wineD3DIndexBuffer : NULL);
+            ib ? ib->wineD3DIndexBuffer : NULL,
+            ib ? ib->format : WINED3DFMT_UNKNOWN);
     LeaveCriticalSection(&d3d9_cs);
     return hr;
 }
 
 static HRESULT  WINAPI  IDirect3DDevice9Impl_GetIndices(LPDIRECT3DDEVICE9EX iface, IDirect3DIndexBuffer9 **ppIndexData) {
     IDirect3DDevice9Impl *This = (IDirect3DDevice9Impl *)iface;
-    IWineD3DIndexBuffer *retIndexData = NULL;
+    IWineD3DBuffer *retIndexData = NULL;
     HRESULT rc = D3D_OK;
 
     TRACE("(%p) Relay\n", This);
@@ -1659,8 +1663,8 @@ static HRESULT  WINAPI  IDirect3DDevice9Impl_GetIndices(LPDIRECT3DDEVICE9EX ifac
     EnterCriticalSection(&d3d9_cs);
     rc = IWineD3DDevice_GetIndices(This->WineD3DDevice, &retIndexData);
     if (SUCCEEDED(rc) && retIndexData) {
-        IWineD3DIndexBuffer_GetParent(retIndexData, (IUnknown **)ppIndexData);
-        IWineD3DIndexBuffer_Release(retIndexData);
+        IWineD3DBuffer_GetParent(retIndexData, (IUnknown **)ppIndexData);
+        IWineD3DBuffer_Release(retIndexData);
     } else {
         if (FAILED(rc)) FIXME("Call to GetIndices failed\n");
         *ppIndexData = NULL;

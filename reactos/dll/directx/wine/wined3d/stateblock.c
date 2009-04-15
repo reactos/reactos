@@ -195,6 +195,7 @@ void stateblock_copy(
     Dest->vertexShader = This->vertexShader;
     Dest->streamIsUP = This->streamIsUP;
     Dest->pIndexData = This->pIndexData;
+    Dest->IndexFmt = This->IndexFmt;
     Dest->baseVertexIndex = This->baseVertexIndex;
     /* Dest->lights = This->lights; */
     Dest->clip_status = This->clip_status;
@@ -301,7 +302,7 @@ static ULONG  WINAPI IWineD3DStateBlockImpl_Release(IWineD3DStateBlock *iface) {
                 }
             }
         }
-        if(This->pIndexData) IWineD3DIndexBuffer_Release(This->pIndexData);
+        if(This->pIndexData) IWineD3DBuffer_Release(This->pIndexData);
         if(This->vertexShader) IWineD3DVertexShader_Release(This->vertexShader);
         if(This->pixelShader) IWineD3DPixelShader_Release(This->pixelShader);
 
@@ -506,13 +507,15 @@ static HRESULT  WINAPI IWineD3DStateBlockImpl_Capture(IWineD3DStateBlock *iface)
         if (This->changed.primitive_type) This->gl_primitive_type = targetStateBlock->gl_primitive_type;
 
         if (This->changed.indices && ((This->pIndexData != targetStateBlock->pIndexData)
-                        || (This->baseVertexIndex != targetStateBlock->baseVertexIndex))) {
+                        || (This->baseVertexIndex != targetStateBlock->baseVertexIndex)
+                        || (This->IndexFmt != targetStateBlock->IndexFmt))) {
             TRACE("Updating pIndexData to %p, baseVertexIndex to %d\n",
                     targetStateBlock->pIndexData, targetStateBlock->baseVertexIndex);
-            if(targetStateBlock->pIndexData) IWineD3DIndexBuffer_AddRef(targetStateBlock->pIndexData);
-            if(This->pIndexData) IWineD3DIndexBuffer_Release(This->pIndexData);
+            if(targetStateBlock->pIndexData) IWineD3DBuffer_AddRef(targetStateBlock->pIndexData);
+            if(This->pIndexData) IWineD3DBuffer_Release(This->pIndexData);
             This->pIndexData = targetStateBlock->pIndexData;
             This->baseVertexIndex = targetStateBlock->baseVertexIndex;
+            This->IndexFmt = targetStateBlock->IndexFmt;
         }
 
         if(This->changed.vertexDecl && This->vertexDecl != targetStateBlock->vertexDecl){
@@ -655,10 +658,12 @@ static HRESULT  WINAPI IWineD3DStateBlockImpl_Capture(IWineD3DStateBlock *iface)
         memcpy(This->samplerState, targetStateBlock->samplerState, sizeof(This->samplerState));
         This->scissorRect = targetStateBlock->scissorRect;
 
-        if(targetStateBlock->pIndexData != This->pIndexData) {
-            if (targetStateBlock->pIndexData) IWineD3DIndexBuffer_AddRef(targetStateBlock->pIndexData);
-            if (This->pIndexData) IWineD3DIndexBuffer_Release(This->pIndexData);
+        if(targetStateBlock->pIndexData != This->pIndexData ||
+           targetStateBlock->IndexFmt != This->IndexFmt) {
+            if (targetStateBlock->pIndexData) IWineD3DBuffer_AddRef(targetStateBlock->pIndexData);
+            if (This->pIndexData) IWineD3DBuffer_Release(This->pIndexData);
             This->pIndexData = targetStateBlock->pIndexData;
+            This->IndexFmt = targetStateBlock->IndexFmt;
         }
         for(i = 0; i < MAX_STREAMS; i++) {
             if(targetStateBlock->streamSource[i] != This->streamSource[i]) {
@@ -841,7 +846,7 @@ should really perform a delta so that only the changes get updated*/
         }
 
         if (This->changed.indices) {
-            IWineD3DDevice_SetIndices(pDevice, This->pIndexData);
+            IWineD3DDevice_SetIndices(pDevice, This->pIndexData, This->IndexFmt);
             IWineD3DDevice_SetBaseVertexIndex(pDevice, This->baseVertexIndex);
         }
 
@@ -1023,7 +1028,7 @@ should really perform a delta so that only the changes get updated*/
             IWineD3DDevice_SetTransform(pDevice, i, &This->transforms[i]);
         }
         This->wineD3DDevice->updateStateBlock->gl_primitive_type = This->gl_primitive_type;
-        IWineD3DDevice_SetIndices(pDevice, This->pIndexData);
+        IWineD3DDevice_SetIndices(pDevice, This->pIndexData, This->IndexFmt);
         IWineD3DDevice_SetBaseVertexIndex(pDevice, This->baseVertexIndex);
         IWineD3DDevice_SetVertexDeclaration(pDevice, This->vertexDecl);
         IWineD3DDevice_SetMaterial(pDevice, &This->material);

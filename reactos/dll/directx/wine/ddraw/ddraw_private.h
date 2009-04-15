@@ -378,7 +378,7 @@ struct IDirect3DDeviceImpl
     /* Other object connections */
     IWineD3DDevice          *wineD3DDevice;
     IDirectDrawImpl         *ddraw;
-    IWineD3DIndexBuffer     *indexbuffer;
+    IWineD3DBuffer          *indexbuffer;
     IDirectDrawSurfaceImpl  *target;
     BOOL                    OffScreenTarget;
 
@@ -680,6 +680,7 @@ struct IDirect3DVertexBufferImpl
 
     /*** Storage for D3D7 specific things ***/
     DWORD                Caps;
+    DWORD                fvf;
 };
 
 /* The Vtables */
