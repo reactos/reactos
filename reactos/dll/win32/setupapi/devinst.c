@@ -3373,7 +3373,12 @@ SetupDiInstallClassExA(
     PWSTR InfFileNameW = NULL;
     BOOL Result;
 
-    if (InfFileName)
+    if (!InfFileName)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+    else
     {
         InfFileNameW = MultiByteToUnicode(InfFileName, CP_ACP);
         if (InfFileNameW == NULL)
