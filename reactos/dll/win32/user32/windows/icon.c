@@ -197,6 +197,11 @@ CreateIcon(
   IconInfo.fIcon = TRUE;
   IconInfo.xHotspot = nWidth / 2;
   IconInfo.yHotspot = nHeight / 2;
+  
+  if (cBitsPixel == 1)
+  {
+    nHeight <<= 1;
+  }
   IconInfo.hbmMask = CreateBitmap(nWidth, nHeight, 1, 1, ANDbits);
   if(!IconInfo.hbmMask)
   {

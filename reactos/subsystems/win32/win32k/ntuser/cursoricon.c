@@ -561,7 +561,7 @@ NtUserCreateCursorIconHandle(PICONINFO IconInfo OPTIONAL, BOOL Indirect)
             if (CurIcon->IconInfo.hbmColor == NULL)
             {
                CurIcon->Size.cx = psurfBmp->SurfObj.sizlBitmap.cx;
-               CurIcon->Size.cy = psurfBmp->SurfObj.sizlBitmap.cy;
+               CurIcon->Size.cy = psurfBmp->SurfObj.sizlBitmap.cy >> 1;
             }
             SURFACE_UnlockSurface(psurfBmp);
             GDIOBJ_SetOwnership(CurIcon->IconInfo.hbmMask, NULL);
