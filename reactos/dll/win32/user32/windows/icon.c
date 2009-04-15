@@ -195,8 +195,6 @@ CreateIcon(
   ICONINFO IconInfo;
 
   IconInfo.fIcon = TRUE;
-  IconInfo.xHotspot = nWidth / 2;
-  IconInfo.yHotspot = nHeight / 2;
   
   if (cBitsPixel == 1)
   {
@@ -347,6 +345,7 @@ CreateIconIndirect(PICONINFO IconInfo)
 {
   BITMAP ColorBitmap;
   BITMAP MaskBitmap;
+  HBITMAP hbmTemp;
 
   if(!IconInfo)
   {
@@ -363,12 +362,19 @@ CreateIconIndirect(PICONINFO IconInfo)
   if (GetObjectW(IconInfo->hbmColor, sizeof(BITMAP), &ColorBitmap))
   {
      /* Compare size of color and mask bitmap*/
-     if(ColorBitmap.bmWidth != MaskBitmap.bmWidth ||
+     if (ColorBitmap.bmWidth != MaskBitmap.bmWidth ||
         ColorBitmap.bmHeight != MaskBitmap.bmHeight)
      {
         ERR("Color and mask size are different!");
         SetLastError(ERROR_INVALID_PARAMETER);
         return (HICON)0;
+     }
+     /* Check if color and mask are switched and switch them back */
+     if (MaskBitmap.bmBitsPixel != 1 && ColorBitmap.bmBitsPixel == 1)
+     {
+        hbmTemp = IconInfo->hbmMask;
+        IconInfo->hbmMask = IconInfo->hbmColor;
+        IconInfo->hbmColor = hbmTemp;
      }
   }
   return (HICON)NtUserCreateCursorIconHandle(IconInfo, TRUE);
