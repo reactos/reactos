@@ -345,20 +345,19 @@ CreateIconIndirect(PICONINFO IconInfo)
   {
     return (HICON)0;
   }
-  /* FIXME - does there really *have* to be a color bitmap? monochrome cursors don't have one */
-  if(/*IconInfo->hbmColor &&*/ !GetObjectW(IconInfo->hbmColor, sizeof(BITMAP), &ColorBitmap))
+
+  /* Try to get color bitmap */
+  if (GetObjectW(IconInfo->hbmColor, sizeof(BITMAP), &ColorBitmap))
   {
-    return (HICON)0;
+     /* Compare size of color and mask bitmap*/
+     if(ColorBitmap.bmWidth != MaskBitmap.bmWidth ||
+        ColorBitmap.bmHeight != MaskBitmap.bmHeight)
+     {
+        ERR("Color and mask size are different!");
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return (HICON)0;
+     }
   }
-
-  /* FIXME - i doubt this is right (monochrome cursors */
-  /*if(ColorBitmap.bmWidth != MaskBitmap.bmWidth ||
-     ColorBitmap.bmHeight != MaskBitmap.bmWidth)
-  {
-    SetLastError(ERROR_INVALID_PARAMETER);
-    return (HICON)0;
-  }*/
-
   return (HICON)NtUserCreateCursorIconHandle(IconInfo, TRUE);
 }
 

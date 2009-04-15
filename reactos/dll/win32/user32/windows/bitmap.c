@@ -285,7 +285,7 @@ LoadCursorIconImage(
 
    if (fuLoad & LR_SHARED)
    {
-      DbgPrint("FIXME: need LR_SHARED support for loading icon images from files\n");
+      FIXME("Need LR_SHARED support for loading icon images from files\n");
    }
 
    hFile = CreateFileW(lpszName, GENERIC_READ, FILE_SHARE_READ, NULL,
@@ -491,7 +491,7 @@ LoadBitmapImage(HINSTANCE hInstance, LPCWSTR lpszName, UINT fuLoad)
 
    if (Hit)
    {
-      DbgPrint("We have a thread overrun, these are already freed! pi -> %d bi -> %d\n", PrivateInfo, BitmapInfo);
+      ERR("We have a thread overrun, these are already freed! pi -> %d, bi -> %d\n", PrivateInfo, BitmapInfo);
       RtlFreeHeap(GetProcessHeap(), 0, PrivateInfo);
       if (fuLoad & LR_LOADFROMFILE)
          UnmapViewOfFile(BitmapInfo);
