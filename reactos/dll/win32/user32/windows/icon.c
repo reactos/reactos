@@ -202,11 +202,19 @@ CreateIcon(
   {
     return (HICON)0;
   }
-  IconInfo.hbmColor = CreateBitmap(nWidth, nHeight, cPlanes, cBitsPixel, XORbits);
-  if(!IconInfo.hbmColor)
+
+  if (cBitsPixel == 1)
   {
-    DeleteObject(IconInfo.hbmMask);
-    return (HICON)0;
+    IconInfo.hbmColor = (HBITMAP)0;
+  }
+  else
+  {
+    IconInfo.hbmColor = CreateBitmap(nWidth, nHeight, cPlanes, cBitsPixel, XORbits);
+    if(!IconInfo.hbmColor)
+    { 
+       DeleteObject(IconInfo.hbmMask);
+       return (HICON)0;
+    }
   }
 
   return NtUserCreateCursorIconHandle(&IconInfo, FALSE);

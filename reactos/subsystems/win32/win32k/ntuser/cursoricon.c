@@ -541,6 +541,7 @@ NtUserCreateCursorIconHandle(PICONINFO IconInfo OPTIONAL, BOOL Indirect)
       Status = MmCopyFromCaller(&CurIcon->IconInfo, IconInfo, sizeof(ICONINFO));
       if(NT_SUCCESS(Status))
       {
+         /* Copy bitmaps and size info */
          if(Indirect)
          {
             CurIcon->IconInfo.hbmMask = BITMAP_CopyBitmap(CurIcon->IconInfo.hbmMask);
@@ -560,10 +561,17 @@ NtUserCreateCursorIconHandle(PICONINFO IconInfo OPTIONAL, BOOL Indirect)
             if (CurIcon->IconInfo.hbmColor == NULL)
             {
                CurIcon->Size.cx = psurfBmp->SurfObj.sizlBitmap.cx;
-               CurIcon->Size.cy = psurfBmp->SurfObj.sizlBitmap.cy / 2;
+               CurIcon->Size.cy = psurfBmp->SurfObj.sizlBitmap.cy;
             }
             SURFACE_UnlockSurface(psurfBmp);
             GDIOBJ_SetOwnership(CurIcon->IconInfo.hbmMask, NULL);
+         }
+
+         /* Calculate icon hotspot */
+         if (CurIcon->IconInfo.fIcon == TRUE)
+         {
+            CurIcon->IconInfo.xHotspot = CurIcon->Size.cx >> 1;
+            CurIcon->IconInfo.yHotspot = CurIcon->Size.cy >> 1;
          }
       }
       else
