@@ -882,7 +882,7 @@ LdrFindEntryForName(PUNICODE_STRING Name,
       return(STATUS_SUCCESS);
     }
 
-  LdrAdjustDllName (&AdjustedName, Name, FALSE);
+  LdrAdjustDllName (&AdjustedName, Name, TRUE);
 
   ContainsPath = (AdjustedName.Length >= 2 * sizeof(WCHAR) && L':' == AdjustedName.Buffer[1]);
   for (i = 0; ! ContainsPath && i < AdjustedName.Length / sizeof(WCHAR); i++)
