@@ -87,11 +87,20 @@ check_valid_to_render(GLcontext *ctx, char *function)
       return GL_FALSE;
    }
 
-   /* Always need vertex positions, unless a vertex program is in use */
-   if (!ctx->VertexProgram._Current &&
-       !ctx->Array.ArrayObj->Vertex.Enabled &&
+#if FEATURE_es2_glsl
+   /* For ES2, we can draw if any vertex array is enabled (and we should
+    * always have a vertex program/shader).
+    */
+   if (ctx->Array.ArrayObj->_Enabled == 0x0 || !ctx->VertexProgram._Current)
+      return GL_FALSE;
+#else
+   /* For regular OpenGL, only draw if we have vertex positions (regardless
+    * of whether or not we have a vertex program/shader).
+    */
+   if (!ctx->Array.ArrayObj->Vertex.Enabled &&
        !ctx->Array.ArrayObj->VertexAttrib[0].Enabled)
       return GL_FALSE;
+#endif
 
    return GL_TRUE;
 }

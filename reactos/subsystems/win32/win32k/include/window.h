@@ -116,7 +116,7 @@ NTSTATUS FASTCALL
 CleanupWindowImpl (VOID);
 
 VOID FASTCALL
-IntGetClientRect (PWINDOW_OBJECT WindowObject, PRECT Rect);
+IntGetClientRect (PWINDOW_OBJECT WindowObject, RECTL *Rect);
 
 HWND FASTCALL
 IntGetActiveWindow (VOID);
@@ -147,7 +147,7 @@ INT FASTCALL
 IntGetWindowRgn(PWINDOW_OBJECT Window, HRGN hRgn);
 
 INT FASTCALL
-IntGetWindowRgnBox(PWINDOW_OBJECT Window, RECT *Rect);
+IntGetWindowRgnBox(PWINDOW_OBJECT Window, RECTL *Rect);
 
 BOOL FASTCALL
 IntGetWindowInfo(PWINDOW_OBJECT WindowObject, PWINDOWINFO pwi);

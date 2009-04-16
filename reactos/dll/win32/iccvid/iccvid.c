@@ -57,6 +57,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(iccvid);
 static HINSTANCE ICCVID_hModule;
 
 #define ICCVID_MAGIC mmioFOURCC('c', 'v', 'i', 'd')
+#define compare_fourcc(fcc1, fcc2) (((fcc1)^(fcc2))&~0x20202020)
 
 #define DBUG    0
 #define MAX_STRIPS 32
@@ -975,7 +976,7 @@ LRESULT WINAPI ICCVID_DriverProc( DWORD_PTR dwDriverId, HDRVR hdrvr, UINT msg,
 
         TRACE("Opened\n");
 
-        if (icinfo && icinfo->fccType != ICTYPE_VIDEO) return 0;
+        if (icinfo && compare_fourcc(icinfo->fccType, ICTYPE_VIDEO)) return 0;
 
         info = heap_alloc( sizeof (ICCVID_Info) );
         if( info )

@@ -57,7 +57,7 @@ static void volume_bind_and_dirtify(IWineD3DVolume *iface) {
     }
 
     if (SUCCEEDED(IWineD3DSurface_GetContainer(iface, &IID_IWineD3DVolumeTexture, (void **)&texture))) {
-        IWineD3DVolumeTexture_BindTexture(texture);
+        IWineD3DVolumeTexture_BindTexture(texture, FALSE);
         IWineD3DVolumeTexture_Release(texture);
     } else {
         ERR("Volume should be part of a volume texture\n");
@@ -196,7 +196,7 @@ static HRESULT WINAPI IWineD3DVolumeImpl_GetDesc(IWineD3DVolume *iface, WINED3DV
     IWineD3DVolumeImpl *This = (IWineD3DVolumeImpl *)iface;
     TRACE("(%p) : copying into %p\n", This, pDesc);
 
-    *(pDesc->Format)  = This->resource.format;
+    *(pDesc->Format)  = This->resource.format_desc->format;
     *(pDesc->Type)    = This->resource.resourceType;
     *(pDesc->Usage)   = This->resource.usage;
     *(pDesc->Pool)    = This->resource.pool;
@@ -218,8 +218,9 @@ static HRESULT WINAPI IWineD3DVolumeImpl_LockBox(IWineD3DVolume *iface, WINED3DL
     /* fixme: should we really lock as such? */
     TRACE("(%p) : box=%p, output pbox=%p, allMem=%p\n", This, pBox, pLockedVolume, This->resource.allocatedMemory);
 
-    pLockedVolume->RowPitch   = This->bytesPerPixel * This->currentDesc.Width;                        /* Bytes / row   */
-    pLockedVolume->SlicePitch = This->bytesPerPixel * This->currentDesc.Width * This->currentDesc.Height;  /* Bytes / slice */
+    pLockedVolume->RowPitch = This->resource.format_desc->byte_count * This->currentDesc.Width; /* Bytes / row   */
+    pLockedVolume->SlicePitch = This->resource.format_desc->byte_count
+            * This->currentDesc.Width * This->currentDesc.Height;                               /* Bytes / slice */
     if (!pBox) {
         TRACE("No box supplied - all is ok\n");
         pLockedVolume->pBits = This->resource.allocatedMemory;
@@ -231,10 +232,10 @@ static HRESULT WINAPI IWineD3DVolumeImpl_LockBox(IWineD3DVolume *iface, WINED3DL
         This->lockedBox.Back   = This->currentDesc.Depth;
     } else {
         TRACE("Lock Box (%p) = l %d, t %d, r %d, b %d, fr %d, ba %d\n", pBox, pBox->Left, pBox->Top, pBox->Right, pBox->Bottom, pBox->Front, pBox->Back);
-        pLockedVolume->pBits = This->resource.allocatedMemory +
-          (pLockedVolume->SlicePitch * pBox->Front) + /* FIXME: is front < back or vica versa? */
-          (pLockedVolume->RowPitch * pBox->Top) +
-          (pBox->Left * This->bytesPerPixel);
+        pLockedVolume->pBits = This->resource.allocatedMemory
+                + (pLockedVolume->SlicePitch * pBox->Front)     /* FIXME: is front < back or vica versa? */
+                + (pLockedVolume->RowPitch * pBox->Top)
+                + (pBox->Left * This->resource.format_desc->byte_count);
         This->lockedBox.Left   = pBox->Left;
         This->lockedBox.Top    = pBox->Top;
         This->lockedBox.Front  = pBox->Front;
@@ -301,11 +302,9 @@ static HRESULT WINAPI IWineD3DVolumeImpl_SetContainer(IWineD3DVolume *iface, IWi
 
 static HRESULT WINAPI IWineD3DVolumeImpl_LoadTexture(IWineD3DVolume *iface, int gl_level, BOOL srgb_mode) {
     IWineD3DVolumeImpl *This     = (IWineD3DVolumeImpl *)iface;
-    WINED3DFORMAT format = This->resource.format;
-    const struct GlPixelFormatDesc *glDesc;
-    getFormatDescEntry(format, &GLINFO_LOCATION, &glDesc);
+    const struct GlPixelFormatDesc *glDesc = This->resource.format_desc;
 
-    TRACE("(%p) : level %u, format %s (0x%08x)\n", This, gl_level, debug_d3dformat(format), format);
+    TRACE("(%p) : level %u, format %s (0x%08x)\n", This, gl_level, debug_d3dformat(glDesc->format), glDesc->format);
 
     volume_bind_and_dirtify(iface);
 

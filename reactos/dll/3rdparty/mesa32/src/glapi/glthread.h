@@ -225,8 +225,20 @@ typedef xmutex_rec _glthread_Mutex;
  */
 #ifdef BEOS_THREADS
 
+/* Problem with OS.h and this file on haiku */
+#ifndef __HAIKU__
 #include <kernel/OS.h>
+#endif
+
 #include <support/TLS.h>
+
+/* The only two typedefs required here
+ * this is cause of the OS.h problem
+ */
+#ifdef __HAIKU__
+typedef int32 thread_id;
+typedef int32 sem_id;
+#endif
 
 typedef struct {
    int32        key;

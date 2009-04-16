@@ -781,30 +781,89 @@ SetPriorityClass (HANDLE hProcess,
  * @implemented
  */
 DWORD WINAPI
-GetProcessVersion (DWORD ProcessId)
+GetProcessVersion(DWORD ProcessId)
 {
-  DWORD			Version = 0;
-  PIMAGE_NT_HEADERS	NtHeader = NULL;
-  PVOID			BaseAddress = NULL;
+    DWORD Version = 0;
+    PIMAGE_NT_HEADERS NtHeader = NULL;
+    IMAGE_NT_HEADERS NtHeaders;
+    IMAGE_DOS_HEADER DosHeader;
+    PROCESS_BASIC_INFORMATION ProcessBasicInfo;
+    PVOID BaseAddress = NULL;
+    HANDLE ProcessHandle;
+    NTSTATUS Status;
+    SIZE_T Count;
+    PEB Peb;
 
-  /* Caller's */
-  if (0 == ProcessId || GetCurrentProcessId() == ProcessId)
+    _SEH2_TRY
     {
-      BaseAddress = (PVOID) NtCurrentPeb()->ImageBaseAddress;
-      NtHeader = RtlImageNtHeader (BaseAddress);
-      if (NULL != NtHeader)
-	{
-	  Version =
-	    (NtHeader->OptionalHeader.MajorOperatingSystemVersion << 16) |
-	    (NtHeader->OptionalHeader.MinorOperatingSystemVersion);
-	}
+        /* Caller's */
+        if (0 == ProcessId || GetCurrentProcessId() == ProcessId)
+        {
+            BaseAddress = (PVOID) NtCurrentPeb()->ImageBaseAddress;
+            NtHeader = RtlImageNtHeader(BaseAddress);
+
+            Version = (NtHeader->OptionalHeader.MajorOperatingSystemVersion << 16) |
+                      (NtHeader->OptionalHeader.MinorOperatingSystemVersion);
+        }
+        else /* other process */
+        {
+            ProcessHandle = OpenProcess(PROCESS_VM_READ | PROCESS_QUERY_INFORMATION,
+                                        FALSE,
+                                        ProcessId);
+
+            if (!ProcessHandle) return 0;
+
+            Status = NtQueryInformationProcess(ProcessHandle,
+                                               ProcessBasicInformation,
+                                               &ProcessBasicInfo,
+                                               sizeof(ProcessBasicInfo),
+                                               NULL);
+            if (!NT_SUCCESS(Status)) goto Error;
+
+            Status = NtReadVirtualMemory(ProcessHandle,
+                                         ProcessBasicInfo.PebBaseAddress,
+                                         &Peb,
+                                         sizeof(Peb),
+                                         &Count);
+            if (!NT_SUCCESS(Status) || Count != sizeof(Peb)) goto Error;
+
+            memset(&DosHeader, 0, sizeof(DosHeader));
+            Status = NtReadVirtualMemory(ProcessHandle,
+                                         Peb.ImageBaseAddress,
+                                         &DosHeader,
+                                         sizeof(DosHeader),
+                                         &Count);
+
+            if (!NT_SUCCESS(Status) || Count != sizeof(DosHeader)) goto Error;
+            if (DosHeader.e_magic != IMAGE_DOS_SIGNATURE) goto Error;
+
+            memset(&NtHeaders, 0, sizeof(NtHeaders));
+            Status = NtReadVirtualMemory(ProcessHandle,
+                                         (char *)Peb.ImageBaseAddress + DosHeader.e_lfanew,
+                                         &NtHeaders,
+                                         sizeof(NtHeaders),
+                                         &Count);
+
+            if (!NT_SUCCESS(Status) || Count != sizeof(NtHeaders)) goto Error;
+            if (NtHeaders.Signature != IMAGE_NT_SIGNATURE) goto Error;
+
+            Version = MAKELONG(NtHeaders.OptionalHeader.MinorSubsystemVersion,
+                               NtHeaders.OptionalHeader.MajorSubsystemVersion);
+
+Error:
+            if (!NT_SUCCESS(Status))
+            {
+                SetLastErrorByStatus(Status);
+            }
+        }
     }
-  else /* other process */
+    _SEH2_FINALLY
     {
-      /* FIXME: open the other process */
-      SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+        if (ProcessHandle) CloseHandle(ProcessHandle);
     }
-  return (Version);
+    _SEH2_END;
+
+    return Version;
 }
 
 

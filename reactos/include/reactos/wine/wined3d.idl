@@ -97,12 +97,17 @@ typedef enum _WINED3DLIGHTTYPE
 
 typedef enum _WINED3DPRIMITIVETYPE
 {
+    WINED3DPT_UNDEFINED                     = 0,
     WINED3DPT_POINTLIST                     = 1,
     WINED3DPT_LINELIST                      = 2,
     WINED3DPT_LINESTRIP                     = 3,
     WINED3DPT_TRIANGLELIST                  = 4,
     WINED3DPT_TRIANGLESTRIP                 = 5,
     WINED3DPT_TRIANGLEFAN                   = 6,
+    WINED3DPT_LINELIST_ADJ                  = 10,
+    WINED3DPT_LINESTRIP_ADJ                 = 11,
+    WINED3DPT_TRIANGLELIST_ADJ              = 12,
+    WINED3DPT_TRIANGLESTRIP_ADJ             = 13,
     WINED3DPT_FORCE_DWORD                   = 0x7fffffff
 } WINED3DPRIMITIVETYPE;
 
@@ -126,58 +131,131 @@ typedef enum _WINED3DDEGREETYPE
 
 typedef enum _WINED3DFORMAT
 {
-    WINED3DFMT_UNKNOWN                      = 0,
-    WINED3DFMT_R8G8B8                       = 20,
-    WINED3DFMT_A8R8G8B8                     = 21,
-    WINED3DFMT_X8R8G8B8                     = 22,
-    WINED3DFMT_R5G6B5                       = 23,
-    WINED3DFMT_X1R5G5B5                     = 24,
-    WINED3DFMT_A1R5G5B5                     = 25,
-    WINED3DFMT_A4R4G4B4                     = 26,
-    WINED3DFMT_R3G3B2                       = 27,
-    WINED3DFMT_A8                           = 28,
-    WINED3DFMT_A8R3G3B2                     = 29,
-    WINED3DFMT_X4R4G4B4                     = 30,
-    WINED3DFMT_A2B10G10R10                  = 31,
-    WINED3DFMT_A8B8G8R8                     = 32,
-    WINED3DFMT_X8B8G8R8                     = 33,
-    WINED3DFMT_G16R16                       = 34,
-    WINED3DFMT_A2R10G10B10                  = 35,
-    WINED3DFMT_A16B16G16R16                 = 36,
-    WINED3DFMT_A8P8                         = 40,
-    WINED3DFMT_P8                           = 41,
-    WINED3DFMT_L8                           = 50,
-    WINED3DFMT_A8L8                         = 51,
-    WINED3DFMT_A4L4                         = 52,
-    WINED3DFMT_V8U8                         = 60,
-    WINED3DFMT_L6V5U5                       = 61,
-    WINED3DFMT_X8L8V8U8                     = 62,
-    WINED3DFMT_Q8W8V8U8                     = 63,
-    WINED3DFMT_V16U16                       = 64,
-    WINED3DFMT_W11V11U10                    = 65,
-    WINED3DFMT_A2W10V10U10                  = 67,
-    WINED3DFMT_D16_LOCKABLE                 = 70,
-    WINED3DFMT_D32                          = 71,
-    WINED3DFMT_D15S1                        = 73,
-    WINED3DFMT_D24S8                        = 75,
-    WINED3DFMT_D24X8                        = 77,
-    WINED3DFMT_D24X4S4                      = 79,
-    WINED3DFMT_D16                          = 80,
-    WINED3DFMT_L16                          = 81,
-    WINED3DFMT_D32F_LOCKABLE                = 82,
-    WINED3DFMT_D24FS8                       = 83,
-    WINED3DFMT_VERTEXDATA                   = 100,
-    WINED3DFMT_INDEX16                      = 101,
-    WINED3DFMT_INDEX32                      = 102,
-    WINED3DFMT_Q16W16V16U16                 = 110,
-    WINED3DFMT_R16F                         = 111,
-    WINED3DFMT_G16R16F                      = 112,
-    WINED3DFMT_A16B16G16R16F                = 113,
-    WINED3DFMT_R32F                         = 114,
-    WINED3DFMT_G32R32F                      = 115,
-    WINED3DFMT_A32B32G32R32F                = 116,
-    WINED3DFMT_CxV8U8                       = 117,
-    WINED3DFMT_FORCE_DWORD                  = 0xffffffff
+    WINED3DFMT_UNKNOWN,
+    WINED3DFMT_R8G8B8,
+    WINED3DFMT_A8R8G8B8,
+    WINED3DFMT_X8R8G8B8,
+    WINED3DFMT_R5G6B5,
+    WINED3DFMT_X1R5G5B5,
+    WINED3DFMT_A1R5G5B5,
+    WINED3DFMT_A4R4G4B4,
+    WINED3DFMT_R3G3B2,
+    WINED3DFMT_A8R3G3B2,
+    WINED3DFMT_X4R4G4B4,
+    WINED3DFMT_X8B8G8R8,
+    WINED3DFMT_A2R10G10B10,
+    WINED3DFMT_A8P8,
+    WINED3DFMT_P8,
+    WINED3DFMT_L8,
+    WINED3DFMT_A8L8,
+    WINED3DFMT_A4L4,
+    WINED3DFMT_L6V5U5,
+    WINED3DFMT_X8L8V8U8,
+    WINED3DFMT_W11V11U10,
+    WINED3DFMT_A2W10V10U10,
+    WINED3DFMT_D16_LOCKABLE,
+    WINED3DFMT_D32,
+    WINED3DFMT_D15S1,
+    WINED3DFMT_D24S8,
+    WINED3DFMT_D24X8,
+    WINED3DFMT_D24X4S4,
+    WINED3DFMT_L16,
+    WINED3DFMT_D32F_LOCKABLE,
+    WINED3DFMT_D24FS8,
+    WINED3DFMT_VERTEXDATA,
+    WINED3DFMT_CxV8U8,
+    /* DXGI formats */
+    WINED3DFMT_R32G32B32A32_TYPELESS,
+    WINED3DFMT_R32G32B32A32_FLOAT,
+    WINED3DFMT_R32G32B32A32_UINT,
+    WINED3DFMT_R32G32B32A32_SINT,
+    WINED3DFMT_R32G32B32_TYPELESS,
+    WINED3DFMT_R32G32B32_FLOAT,
+    WINED3DFMT_R32G32B32_UINT,
+    WINED3DFMT_R32G32B32_SINT,
+    WINED3DFMT_R16G16B16A16_TYPELESS,
+    WINED3DFMT_R16G16B16A16_FLOAT,
+    WINED3DFMT_R16G16B16A16_UNORM,
+    WINED3DFMT_R16G16B16A16_UINT,
+    WINED3DFMT_R16G16B16A16_SNORM,
+    WINED3DFMT_R16G16B16A16_SINT,
+    WINED3DFMT_R32G32_TYPELESS,
+    WINED3DFMT_R32G32_FLOAT,
+    WINED3DFMT_R32G32_UINT,
+    WINED3DFMT_R32G32_SINT,
+    WINED3DFMT_R32G8X24_TYPELESS,
+    WINED3DFMT_D32_FLOAT_S8X24_UINT,
+    WINED3DFMT_R32_FLOAT_X8X24_TYPELESS,
+    WINED3DFMT_X32_TYPELESS_G8X24_UINT,
+    WINED3DFMT_R10G10B10A2_TYPELESS,
+    WINED3DFMT_R10G10B10A2_UNORM,
+    WINED3DFMT_R10G10B10A2_UINT,
+    WINED3DFMT_R10G10B10A2_SNORM,
+    WINED3DFMT_R11G11B10_FLOAT,
+    WINED3DFMT_R8G8B8A8_TYPELESS,
+    WINED3DFMT_R8G8B8A8_UNORM,
+    WINED3DFMT_R8G8B8A8_UNORM_SRGB,
+    WINED3DFMT_R8G8B8A8_UINT,
+    WINED3DFMT_R8G8B8A8_SNORM,
+    WINED3DFMT_R8G8B8A8_SINT,
+    WINED3DFMT_R16G16_TYPELESS,
+    WINED3DFMT_R16G16_FLOAT,
+    WINED3DFMT_R16G16_UNORM,
+    WINED3DFMT_R16G16_UINT,
+    WINED3DFMT_R16G16_SNORM,
+    WINED3DFMT_R16G16_SINT,
+    WINED3DFMT_R32_TYPELESS,
+    WINED3DFMT_D32_FLOAT,
+    WINED3DFMT_R32_FLOAT,
+    WINED3DFMT_R32_UINT,
+    WINED3DFMT_R32_SINT,
+    WINED3DFMT_R24G8_TYPELESS,
+    WINED3DFMT_D24_UNORM_S8_UINT,
+    WINED3DFMT_R24_UNORM_X8_TYPELESS,
+    WINED3DFMT_X24_TYPELESS_G8_UINT,
+    WINED3DFMT_R8G8_TYPELESS,
+    WINED3DFMT_R8G8_UNORM,
+    WINED3DFMT_R8G8_UINT,
+    WINED3DFMT_R8G8_SNORM,
+    WINED3DFMT_R8G8_SINT,
+    WINED3DFMT_R16_TYPELESS,
+    WINED3DFMT_R16_FLOAT,
+    WINED3DFMT_D16_UNORM,
+    WINED3DFMT_R16_UNORM,
+    WINED3DFMT_R16_UINT,
+    WINED3DFMT_R16_SNORM,
+    WINED3DFMT_R16_SINT,
+    WINED3DFMT_R8_TYPELESS,
+    WINED3DFMT_R8_UNORM,
+    WINED3DFMT_R8_UINT,
+    WINED3DFMT_R8_SNORM,
+    WINED3DFMT_R8_SINT,
+    WINED3DFMT_A8_UNORM,
+    WINED3DFMT_R1_UNORM,
+    WINED3DFMT_R9G9B9E5_SHAREDEXP,
+    WINED3DFMT_R8G8_B8G8_UNORM,
+    WINED3DFMT_G8R8_G8B8_UNORM,
+    WINED3DFMT_BC1_TYPELESS,
+    WINED3DFMT_BC1_UNORM,
+    WINED3DFMT_BC1_UNORM_SRGB,
+    WINED3DFMT_BC2_TYPELESS,
+    WINED3DFMT_BC2_UNORM,
+    WINED3DFMT_BC2_UNORM_SRGB,
+    WINED3DFMT_BC3_TYPELESS,
+    WINED3DFMT_BC3_UNORM,
+    WINED3DFMT_BC3_UNORM_SRGB,
+    WINED3DFMT_BC4_TYPELESS,
+    WINED3DFMT_BC4_UNORM,
+    WINED3DFMT_BC4_SNORM,
+    WINED3DFMT_BC5_TYPELESS,
+    WINED3DFMT_BC5_UNORM,
+    WINED3DFMT_BC5_SNORM,
+    WINED3DFMT_B5G6R5_UNORM,
+    WINED3DFMT_B5G5R5A1_UNORM,
+    WINED3DFMT_B8G8R8A8_UNORM,
+    WINED3DFMT_B8G8R8X8_UNORM,
+
+    WINED3DFMT_FORCE_DWORD = 0xffffffff
 } WINED3DFORMAT;
 cpp_quote("#define WINEMAKEFOURCC(ch0, ch1, ch2, ch3) \\")
 cpp_quote("        ((DWORD)(BYTE)(ch0) | ((DWORD)(BYTE)(ch1) << 8) | \\")
@@ -690,6 +768,7 @@ typedef enum _WINED3DRESOURCETYPE
     WINED3DRTYPE_CUBETEXTURE                = 5,
     WINED3DRTYPE_VERTEXBUFFER               = 6,
     WINED3DRTYPE_INDEXBUFFER                = 7,
+    WINED3DRTYPE_BUFFER                     = 8,
     WINED3DRTYPE_FORCE_DWORD                = 0x7fffffff
 } WINED3DRESOURCETYPE;
 const UINT WINED3DRTYPECOUNT                = WINED3DRTYPE_INDEXBUFFER + 1;
@@ -745,30 +824,6 @@ typedef enum _WINED3DDECLMETHOD
     WINED3DDECLMETHOD_LOOKUP                = 5,
     WINED3DDECLMETHOD_LOOKUPPRESAMPLED      = 6
 } WINED3DDECLMETHOD;
-
-typedef enum _WINED3DDECLTYPE
-{
-    WINED3DDECLTYPE_FLOAT1                  = 0,
-    WINED3DDECLTYPE_FLOAT2                  = 1,
-    WINED3DDECLTYPE_FLOAT3                  = 2,
-    WINED3DDECLTYPE_FLOAT4                  = 3,
-    WINED3DDECLTYPE_D3DCOLOR                = 4,
-    WINED3DDECLTYPE_UBYTE4                  = 5,
-    WINED3DDECLTYPE_SHORT2                  = 6,
-    WINED3DDECLTYPE_SHORT4                  = 7,
-    /* VS 2.0 */
-    WINED3DDECLTYPE_UBYTE4N                 = 8,
-    WINED3DDECLTYPE_SHORT2N                 = 9,
-    WINED3DDECLTYPE_SHORT4N                 = 10,
-    WINED3DDECLTYPE_USHORT2N                = 11,
-    WINED3DDECLTYPE_USHORT4N                = 12,
-    WINED3DDECLTYPE_UDEC3                   = 13,
-    WINED3DDECLTYPE_DEC3N                   = 14,
-    WINED3DDECLTYPE_FLOAT16_2               = 15,
-    WINED3DDECLTYPE_FLOAT16_4               = 16,
-    WINED3DDECLTYPE_UNUSED                  = 17,
-} WINED3DDECLTYPE;
-cpp_quote("#define WINED3DDECL_END() {0xFF, 0, WINED3DDECLTYPE_UNUSED, 0, 0, 0, -1}")
 
 typedef enum _WINED3DDECLUSAGE
 {
@@ -1689,14 +1744,14 @@ typedef struct _WINED3DCLIPSTATUS
 
 typedef struct _WINED3DVERTEXELEMENT
 {
-  WORD Stream;
-  WORD Offset;
-  BYTE Type;
-  BYTE Method;
-  BYTE Usage;
-  BYTE UsageIndex;
-  int Reg; /* DirectX 8 */
-} WINED3DVERTEXELEMENT, *LPWINED3DVERTEXELEMENT;
+    WINED3DFORMAT format;
+    WORD input_slot;
+    WORD offset;
+    UINT output_slot; /* D3D 8 & 10 */
+    BYTE method;
+    BYTE usage;
+    BYTE usage_idx;
+} WINED3DVERTEXELEMENT;
 
 typedef struct _WINED3DDEVICE_CREATION_PARAMETERS
 {
@@ -1830,63 +1885,26 @@ typedef struct _WINED3DINDEXBUFFER_DESC
 
 typedef struct glDescriptor
 {
-    UINT textureName;
+    UINT textureName, srgbTextureName;
     int level;
     int /*GLenum*/ target;
-    int /*GLenum*/ glFormat;
-    int /*GLenum*/ glFormatInternal;
-    int /*GLenum*/ glType;
 } glDescriptor;
 
 typedef struct WineDirect3DStridedData
 {
-    const BYTE *lpData; /* Pointer to start of data */
-    DWORD dwStride;     /* Stride between occurrences of this data */
-    DWORD dwType;       /* Type (as in D3DVSDT_TYPE) */
-    int VBO;            /* Vertex buffer object this data is in */
-    UINT streamNo;      /* D3D stream number */
+    WINED3DFORMAT format;   /* Format of the data */
+    const BYTE *lpData;     /* Pointer to start of data */
+    DWORD dwStride;         /* Stride between occurrences of this data */
 } WineDirect3DStridedData;
 
 typedef struct WineDirect3DVertexStridedData
 {
-    /*
-     * IMPORTANT:
-     * This structure can be accessed in two ways: Named access, and array
-     * access. Please note that named access is only valid with the fixed
-     * function vertex pipeline, and the arrays are only valid with the
-     * programmable vertex pipeline(vertex shaders).
-     */
-    union
-    {
-        struct
-        {
-            /* Do not add or reorder fields here,
-             * so this can be indexed as an array */
-            WineDirect3DStridedData position;
-            WineDirect3DStridedData blendWeights;
-            WineDirect3DStridedData blendMatrixIndices;
-            WineDirect3DStridedData normal;
-            WineDirect3DStridedData pSize;
-            WineDirect3DStridedData diffuse;
-            WineDirect3DStridedData specular;
-            WineDirect3DStridedData texCoords[WINED3DDP_MAXTEXCOORD];
-            WineDirect3DStridedData position2;  /* tween data */
-            WineDirect3DStridedData normal2;    /* tween data */
-            WineDirect3DStridedData tangent;
-            WineDirect3DStridedData binormal;
-            WineDirect3DStridedData tessFactor;
-            WineDirect3DStridedData fog;
-            WineDirect3DStridedData depth;
-            WineDirect3DStridedData sample;
-
-            /* Add fields here */
-        } s;
-        WineDirect3DStridedData input[16];  /* Indexed by constants in D3DVSDE_REGISTER */
-    } u;
-
+    WineDirect3DStridedData position;
+    WineDirect3DStridedData normal;
+    WineDirect3DStridedData diffuse;
+    WineDirect3DStridedData specular;
+    WineDirect3DStridedData texCoords[WINED3DDP_MAXTEXCOORD];
     BOOL position_transformed;
-    WORD swizzle_map;       /* MAX_ATTRIBS, 16 */
-    WORD use_map;           /* MAX_ATTRIBS, 16 */
 } WineDirect3DVertexStridedData;
 
 typedef struct _WINED3DVSHADERCAPS2_0
@@ -2103,6 +2121,15 @@ typedef struct _WINEDDOVERLAYFX
     DWORD dwFlags;                                  /* flags */
 } WINEDDOVERLAYFX;
 
+struct wined3d_buffer_desc
+{
+    UINT byte_width;
+    DWORD usage;
+    UINT bind_flags;
+    UINT cpu_access_flags;
+    UINT misc_flags;
+};
+
 interface IWineD3DResource;
 interface IWineD3DSurface;
 interface IWineD3DVolume;
@@ -2116,6 +2143,10 @@ interface IWineD3DDevice;
 ]
 interface IWineD3DDeviceParent : IUnknown
 {
+    void WineD3DDeviceCreated(
+        [in] IWineD3DDevice *device
+    );
+
     HRESULT CreateSurface(
         [in] IUnknown *superior,
         [in] UINT width,
@@ -2310,20 +2341,12 @@ interface IWineD3DResource : IWineD3DBase
 [
     object,
     local,
-    uuid(217f671e-6f30-11d9-c687-00046142c14f)
+    uuid(f7d8abf4-fb93-43e4-9c96-4618cf9b3cbc)
 ]
-interface IWineD3DVertexBuffer : IWineD3DResource
+interface IWineD3DRendertargetView : IWineD3DBase
 {
-    HRESULT Lock(
-        [in] UINT offset,
-        [in] UINT size,
-        [out] BYTE **data,
-        [in] DWORD flags
-    );
-    HRESULT Unlock(
-    );
-    HRESULT GetDesc(
-        [out] WINED3DVERTEXBUFFER_DESC *desc
+    HRESULT GetResource(
+        [out] IWineD3DResource **resource
     );
 }
 
@@ -2501,6 +2524,7 @@ interface IWineD3DSurface : IWineD3DResource
         [in] BOOL srgb_mode
     );
     void BindTexture(
+        [in] BOOL srgb
     );
     HRESULT SaveSnapshot(
         [in] const char *filename
@@ -2589,6 +2613,7 @@ interface IWineD3DBaseTexture : IWineD3DResource
     BOOL GetDirty(
     );
     HRESULT BindTexture(
+        [in] BOOL srgb
     );
     UINT GetTextureDimensions(
     );
@@ -2710,14 +2735,6 @@ interface IWineD3DVertexDeclaration : IWineD3DBase
     HRESULT GetDevice(
         [out] IWineD3DDevice **device
     );
-    HRESULT GetDeclaration(
-        [out] WINED3DVERTEXELEMENT *elements,
-        [out] UINT *element_count
-    );
-    HRESULT SetDeclaration(
-        [in] const WINED3DVERTEXELEMENT *elements,
-        [in] UINT element_count
-    );
 }
 
 [
@@ -2814,6 +2831,26 @@ interface IWineD3DSwapChain : IWineD3DBase
 [
     object,
     local,
+    uuid(b3f028e8-1a40-4ab3-9292-5bf6cfd80209)
+]
+interface IWineD3DBuffer : IWineD3DResource
+{
+    HRESULT Map(
+        [in] UINT offset,
+        [in] UINT size,
+        [out] BYTE **data,
+        [in] DWORD flags
+    );
+    HRESULT Unmap(
+    );
+    HRESULT GetDesc(
+        [out] WINED3DVERTEXBUFFER_DESC *desc
+    );
+}
+
+[
+    object,
+    local,
     uuid(eac93065-a4df-446f-86a1-9ef2bca40a3c)
 ]
 interface IWineD3DBaseShader : IWineD3DBase
@@ -2870,12 +2907,18 @@ interface IWineD3DPixelShader : IWineD3DBaseShader
 ]
 interface IWineD3DDevice : IWineD3DBase
 {
+    HRESULT CreateBuffer(
+        [in] struct wined3d_buffer_desc *desc,
+        [in] const void *data,
+        [in] IUnknown *parent,
+        [out] IWineD3DBuffer **buffer
+    );
     HRESULT CreateVertexBuffer(
         [in] UINT length,
         [in] DWORD usage,
         [in] DWORD fvf,
         [in] WINED3DPOOL pool,
-        [out] IWineD3DVertexBuffer **vertex_buffer,
+        [out] IWineD3DBuffer **vertex_buffer,
         [in] HANDLE *shared_handle,
         [in] IUnknown *parent
     );
@@ -2909,6 +2952,11 @@ interface IWineD3DDevice : IWineD3DBase
         [in] HANDLE *shared_handle,
         [in] WINED3DSURFTYPE surface_type,
         [in] IUnknown *parent
+    );
+    HRESULT CreateRendertargetView(
+        [in] IWineD3DResource *resource,
+        [in] IUnknown *parent,
+        [out] IWineD3DRendertargetView **rendertarget_view
     );
     HRESULT CreateTexture(
         [in] UINT width,
@@ -3227,13 +3275,13 @@ interface IWineD3DDevice : IWineD3DBase
     );
     HRESULT SetStreamSource(
         [in] UINT stream_idx,
-        [in] IWineD3DVertexBuffer *vertex_buffer,
+        [in] IWineD3DBuffer *buffer,
         [in] UINT offset,
         [in] UINT stride
     );
     HRESULT GetStreamSource(
         [in] UINT stream_idx,
-        [out] IWineD3DVertexBuffer **vertex_buffer,
+        [out] IWineD3DBuffer **buffer,
         [out] UINT *offset,
         [out] UINT *stride
     );
@@ -3330,7 +3378,7 @@ interface IWineD3DDevice : IWineD3DBase
         [in] UINT src_start_idx,
         [in] UINT dst_idx,
         [in] UINT vertex_count,
-        [in] IWineD3DVertexBuffer *dest_buffer,
+        [in] IWineD3DBuffer *dest_buffer,
         [in] IWineD3DVertexDeclaration *declaration,
         [in] DWORD flags
     );
@@ -3357,42 +3405,46 @@ interface IWineD3DDevice : IWineD3DBase
         [in] float z,
         [in] DWORD stencil
     );
+    void ClearRendertargetView(
+        [in] IWineD3DRendertargetView *rendertarget_view,
+        [in] const float color[4]
+    );
+    void SetPrimitiveType(
+        [in] WINED3DPRIMITIVETYPE primitive_topology
+    );
+    void GetPrimitiveType(
+        [out] WINED3DPRIMITIVETYPE *primitive_topology
+    );
     HRESULT DrawPrimitive(
-        [in] WINED3DPRIMITIVETYPE primitive_type,
         [in] UINT start_vertex,
-        [in] UINT primitive_count
+        [in] UINT vertex_count
     );
     HRESULT DrawIndexedPrimitive(
-        [in] WINED3DPRIMITIVETYPE primitive_type,
         [in] UINT min_vertex_idx,
         [in] UINT vertex_count,
         [in] UINT start_idx,
-        [in] UINT primitive_count
+        [in] UINT index_count
     );
     HRESULT DrawPrimitiveUP(
-        [in] WINED3DPRIMITIVETYPE primitive_type,
-        [in] UINT primitive_count,
+        [in] UINT vertex_count,
         [in] const void *stream_data,
         [in] UINT stream_stride
     );
     HRESULT DrawIndexedPrimitiveUP(
-        [in] WINED3DPRIMITIVETYPE primitive_type,
         [in] UINT min_vertex_idx,
         [in] UINT vertex_count,
-        [in] UINT primitive_count,
+        [in] UINT index_count,
         [in] const void *index_data,
         [in] WINED3DFORMAT index_data_format,
         [in] const void *stream_data,
         [in] UINT stream_stride
     );
     HRESULT DrawPrimitiveStrided(
-        [in] WINED3DPRIMITIVETYPE primitive_type,
-        [in] UINT primitive_count,
+        [in] UINT vertex_count,
         [in] const WineDirect3DVertexStridedData *strided_data
     );
     HRESULT DrawIndexedPrimitiveStrided(
-        [in] WINED3DPRIMITIVETYPE primitive_type,
-        [in] UINT primitive_count,
+        [in] UINT index_count,
         [in] const WineDirect3DVertexStridedData *strided_data,
         [in] UINT vertex_count,
         [in] const void *index_data,

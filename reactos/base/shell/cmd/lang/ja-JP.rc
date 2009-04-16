@@ -658,7 +658,8 @@ STRING_ERROR_DRIVER_NOT_READY,     "ドライブの準備ができていません。"
 
 STRING_PATH_ERROR,                 "CMD: Not in environment '%s'\n"
 
-STRING_CMD_SHELLINFO,              "\nReactOS Command Line Interpreter"
+STRING_REACTOS_VERSION,            "ReactOS Operating System [Version %s-%s]\n"
+STRING_CMD_SHELLINFO,              "\nReactOS Command Line Interpreter\nVersion %s %s"
 STRING_VERSION_RUNVER,             " running on %s"
 STRING_COPY_FILE ,                 "        %d 個のファイルがコピーされました\n"
 STRING_DELETE_WIPE,                "完全に消去されました。"
@@ -669,6 +670,8 @@ STRING_TIMER_TIME                  "タイマー %d は %s です。: "
 STRING_MKLINK_CREATED_SYMBOLIC,    "Symbolic link created for %s <<===>> %s\n"
 STRING_MKLINK_CREATED_HARD,        "Hard link created for %s <<===>> %s\n"
 STRING_MKLINK_CREATED_JUNCTION,    "Junction created for %s <<===>> %s\n"
+STRING_MORE,                       "More? "
+STRING_CANCEL_BATCH_FILE,          "\r\nCtrl-Break pressed.  Cancel batch file? (Yes/No/All) "
 
 STRING_INVALID_OPERAND,            "無効なオペランドです。"
 STRING_EXPECTED_CLOSE_PAREN,       "Expected ')'"

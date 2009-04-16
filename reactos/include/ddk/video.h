@@ -20,10 +20,10 @@
  *
  */
 
-#ifndef __VIDEO_H
-#define __VIDEO_H
+#ifndef __VIDEO_H__
+#define __VIDEO_H__
 
-#ifdef __WINDDI_H
+#ifdef _WINDDI_
 #error winddi.h cannot be included with video.h
 #else
 
@@ -628,14 +628,6 @@ typedef struct _VPOSVERSIONINFO {
 
 
 /* Video port functions for miniports */
-
-VPAPI
-VOID
-DDKAPI
-VideoDebugPrint(
-  IN ULONG  DebugPrintLevel,
-  IN PCHAR  DebugMessage,
-  IN ...);
 
 VPAPI
 VOID
@@ -1558,6 +1550,6 @@ VideoPortZeroMemory(
 }
 #endif
 
-#endif /* defined __WINDDI_H */
+#endif /* defined _WINDDI_ */
 
-#endif /* __VIDEO_H */
+#endif /* __VIDEO_H__ */

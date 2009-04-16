@@ -1,0 +1,68 @@
+/*
+ *      translated by Caemyr - Olaf Siejka (Feb, 2008)
+ *      Use ReactOS forum PM or IRC to contact me
+ *      http://www.reactos.org
+ *      IRC: irc.freenode.net #reactos-pl;
+ */
+
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+IDD_DOWNLOAD DIALOGEX LOADONCALL MOVEABLE DISCARDABLE  0, 0, 220, 76
+STYLE DS_SHELLFONT | DS_CENTER | WS_BORDER | WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_VISIBLE
+CAPTION "Œci¹gaj..."
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "Progress1",IDC_PROGRESS,"msctls_progress32",WS_BORDER|PBS_SMOOTH,10,10,200,12
+    LTEXT "", IDC_STATUS, 10, 30, 200, 10, SS_CENTER
+    PUSHBUTTON "Anuluj", IDCANCEL, 85, 58, 50, 15, WS_GROUP | WS_TABSTOP
+END
+
+IDD_PROF DIALOGEX 6, 6, 267, 110
+STYLE DS_SHELLFONT | DS_CENTER | WS_BORDER | WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_VISIBLE
+CAPTION "Ustawienia"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Katalog do œci¹gania:", -1, 6, 10, 140, 8
+    EDITTEXT IDC_DOWNLOAD_FOLDER_EDIT, 6, 20, 205, 14, WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "&Wybierz...", IDC_CHOOSE_BUTTON, 216, 20, 45, 14
+    AUTOCHECKBOX "&Skasuj œci¹gniête pliki po zainstalowaniu programu", IDC_DELINST_FILES_CHECKBOX, 8, 40, 210, 10, WS_GROUP
+    LTEXT "Uaktualnij:", -1, 6, 55, 140, 8
+    EDITTEXT IDC_UPDATE_SERVER_EDIT, 6, 65, 255, 14, WS_VISIBLE | WS_TABSTOP
+    DEFPUSHBUTTON "&OK", IDOK, 147, 90, 54, 15
+    PUSHBUTTON "&Anuluj", IDCANCEL, 207, 90, 54, 15
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_WINDOW_TITLE         "Œci¹gnij ! - Mened¿er pobierania dla ReactOS"
+    IDS_WELCOME_TITLE        "Witamy w Œci¹gnij dla ReactOS"
+    IDS_WELCOME              "Proszê wybraæ kategoriê po lewej. Wersja programu: 1.1."
+    IDS_NO_APP_TITLE         "Nie wybrano programu"
+    IDS_NO_APP               "Proszê wybraæ program, przed klikniêciem w przycisk Œci¹gnij. W razie problemów kliknij w znak zapytania, w prawym górnym rogu okna."
+    IDS_UPDATE_TITLE         "Uaktualnij"
+    IDS_UPDATE               "Przepraszamy, ta opcja nie jest jeszcze dostêpna."
+    IDS_HELP_TITLE           "Pomoc"
+    IDS_HELP                 "Wybierz kategoriê po lewej, nastêpnie wybierz program i kliknij w przycisk Œci¹gnij. Aby uaktualniæ listê programów, naciœnij przycisk obok przycisku Pomocy."
+    IDS_NO_APPS              "Przepraszamy, nie ma programów w tej kategorii. Mo¿esz pomóc nam w wyborze nowych programów."
+    IDS_CHOOSE_APP           "Proszê wybraæ program."
+    IDS_CHOOSE_SUB           "Proszê wybraæ podkategoriê."
+    IDS_CHOOSE_CATEGORY      "Proszê wybraæ kategoriê."
+    IDS_CHOOSE_BOTH          "Proszê wybraæ podkategoriê albo program."
+    IDS_XMLERROR_1           "Plik XML nie zosta³ znaleziony !"
+    IDS_XMLERROR_2           "Nie uda³o siê przetworzyæ pliku XML !"
+    IDS_DOWNLOAD_ERROR       "Sci¹ganie pliku nieudane.\nProszê sprawdziæ po³¹czenie z internetem."
+    IDS_VERSION              "Wersja: "
+    IDS_LICENCE              "Licenccja: "
+    IDS_MAINTAINER           "Opiekun: "
+    IDS_APPS_TITLE           "Programy"
+    IDS_CATS_TITLE           "Kategorie"
+    IDS_CHOOSE_FOLDER        "Proszê wybraæ katalog..."
+    IDS_NOTCREATE_REGKEY     "Nie uda³o siê utworzyæ kluczy rejestru."
+    IDS_DOWNLOAD_FOLDER      "Pobrane"
+    IDS_UNABLECREATE_FOLDER  "Nie uda³o siê stworzyæ katalogu o tej nazwie!"
+    IDS_UPDATE_URL           "http://svn.reactos.org"
+    IDS_INSTALL_DEP          "%s jest wymagany do uruchomienia %s. Czy chcesz zainstalowaæ %s w tej chwili?"
+    TTT_HELPBUTTON           "Pomoc Mened¿era pobierania"
+    TTT_UPDATEBUTTON         "Niedostêpne"
+    TTT_PROFBUTTON           "Ustawienia Mened¿era pobierania"
+END

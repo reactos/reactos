@@ -455,14 +455,23 @@ DIB_16BPP_ColorFill(SURFOBJ* DestSurface, RECTL* DestRect, ULONG color)
 
 BOOLEAN
 DIB_16BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
-                         RECTL*  DestRect,  POINTL  *SourcePoint,
+                         RECTL*  DestRect,  RECTL *SourceRect,
                          XLATEOBJ *ColorTranslation, ULONG iTransColor)
 {
-    ULONG RoundedRight, X, Y, SourceX, SourceY, Source, wd, Dest;
+    ULONG RoundedRight, X, Y, SourceX = 0, SourceY = 0, Source, wd, Dest;
     ULONG *DestBits;
 
+    LONG DstHeight;
+    LONG DstWidth;
+    LONG SrcHeight;
+    LONG SrcWidth;
+
+    DstHeight = DestRect->bottom - DestRect->top;
+    DstWidth = DestRect->right - DestRect->left;
+    SrcHeight = SourceRect->bottom - SourceRect->top;
+    SrcWidth = SourceRect->right - SourceRect->left;
+
     RoundedRight = DestRect->right - ((DestRect->right - DestRect->left) & 0x1);
-    SourceY = SourcePoint->y;
     DestBits = (ULONG*)((PBYTE)DestSurf->pvScan0 +
                       (DestRect->left << 1) +
                       DestRect->top * DestSurf->lDelta);
@@ -470,23 +479,33 @@ DIB_16BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
     for(Y = DestRect->top; Y < DestRect->bottom; Y++)
     {
-        SourceX = SourcePoint->x;
+        SourceY = SourceRect->top+(Y - DestRect->top) * SrcHeight / DstHeight;
         for(X = DestRect->left; X < RoundedRight; X += 2, DestBits++, SourceX += 2)
         {
             Dest = *DestBits;
-            Source = DIB_GetSourceIndex(SourceSurf, SourceX, SourceY);
 
-            if(Source != iTransColor)
+            SourceX = SourceRect->left+(X - DestRect->left) * SrcWidth / DstWidth;
+            if (SourceX >= 0 && SourceY >= 0 &&
+                SourceSurf->sizlBitmap.cx > SourceX && SourceSurf->sizlBitmap.cy > SourceY)
             {
-                Dest &= 0xFFFF0000;
-                Dest |= (XLATEOBJ_iXlate(ColorTranslation, Source) & 0xFFFF);
+                Source = DIB_GetSourceIndex(SourceSurf, SourceX, SourceY);
+                if(Source != iTransColor)
+                {
+                    Dest &= 0xFFFF0000;
+                    Dest |= (XLATEOBJ_iXlate(ColorTranslation, Source) & 0xFFFF);
+                }
             }
 
-            Source = DIB_GetSourceIndex(SourceSurf, SourceX + 1, SourceY);
-            if(Source != iTransColor)
+            SourceX = SourceRect->left+(X+1 - DestRect->left) * SrcWidth / DstWidth;
+            if (SourceX >= 0 && SourceY >= 0 &&
+                SourceSurf->sizlBitmap.cx > SourceX && SourceSurf->sizlBitmap.cy > SourceY)
             {
-                Dest &= 0xFFFF;
-                Dest |= (XLATEOBJ_iXlate(ColorTranslation, Source) << 16);
+                Source = DIB_GetSourceIndex(SourceSurf, SourceX, SourceY);
+                if(Source != iTransColor)
+                {
+                    Dest &= 0xFFFF;
+                    Dest |= (XLATEOBJ_iXlate(ColorTranslation, Source) << 16);
+                }
             }
 
             *DestBits = Dest;
@@ -494,17 +513,21 @@ DIB_16BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
             if(X < DestRect->right)
             {
-                Source = DIB_GetSourceIndex(SourceSurf, SourceX, SourceY);
-                if(Source != iTransColor)
+                SourceX = SourceRect->left+(X - DestRect->left) * SrcWidth / DstWidth;
+                if (SourceX >= 0 && SourceY >= 0 &&
+                    SourceSurf->sizlBitmap.cx > SourceX && SourceSurf->sizlBitmap.cy > SourceY)
                 {
-                    *((USHORT*)DestBits) = (USHORT)XLATEOBJ_iXlate(ColorTranslation,
+                    Source = DIB_GetSourceIndex(SourceSurf, SourceX, SourceY);
+                    if(Source != iTransColor)
+                    {
+                        *((USHORT*)DestBits) = (USHORT)XLATEOBJ_iXlate(ColorTranslation,
                                                                    Source);
+                    }
                 }
 
                 DestBits = (PULONG)((ULONG_PTR)DestBits + 2);
             }
 
-            SourceY++;
             DestBits = (ULONG*)((ULONG_PTR)DestBits + wd);
         }
 

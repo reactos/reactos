@@ -1438,9 +1438,11 @@ typedef struct _devicemodeA {
 #else
     } DUMMYSTRUCTNAME;
 #endif
-    POINTL dmPosition;
-    DWORD  dmDisplayOrientation;
-    DWORD  dmDisplayFixedOutput;
+    struct {
+      POINTL dmPosition;
+      DWORD  dmDisplayOrientation;
+      DWORD  dmDisplayFixedOutput;
+    } DUMMYSTRUCTNAME2;
 #ifdef __WINESRC__
   } DUMMYUNIONNAME1;
 #else
@@ -1497,9 +1499,11 @@ typedef struct _devicemodeW {
 #else
     } DUMMYSTRUCTNAME;
 #endif
-    POINTL dmPosition;
-    DWORD  dmDisplayOrientation;
-    DWORD  dmDisplayFixedOutput;
+    struct {
+      POINTL dmPosition;
+      DWORD  dmDisplayOrientation;
+      DWORD  dmDisplayFixedOutput;
+    } DUMMYSTRUCTNAME2;
 #ifdef __WINESRC__
   } DUMMYUNIONNAME1;
 #else
@@ -1533,7 +1537,7 @@ typedef struct _devicemodeW {
   DWORD  dmPanningHeight;
 #endif
 #endif /* WINVER >= 0x0400 */
-} DEVMODEW,*LPDEVMODEW,*PDEVMODEW;
+} DEVMODEW,*LPDEVMODEW,*PDEVMODEW,*NPDEVMODEW;
 typedef struct tagDIBSECTION {
 	BITMAP dsBm;
 	BITMAPINFOHEADER dsBmih;

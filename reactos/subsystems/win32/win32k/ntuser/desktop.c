@@ -1,28 +1,8 @@
-
 /*
- *  ReactOS W32 Subsystem
- *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- *
- *  $Id$
- *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
  *  PURPOSE:          Desktops
- *  FILE:             subsys/win32k/ntuser/desktop.c
+ *  FILE:             subsystems/win32/win32k/ntuser/desktop.c
  *  PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
  *  REVISION HISTORY:
  *       06-06-2001  CSH  Created
@@ -439,9 +419,9 @@ IntValidateDesktopHandle(
 }
 
 VOID FASTCALL
-IntGetDesktopWorkArea(PDESKTOP Desktop, PRECT Rect)
+IntGetDesktopWorkArea(PDESKTOP Desktop, RECTL *Rect)
 {
-   PRECT Ret;
+   RECTL *Ret;
 
    ASSERT(Desktop);
 
@@ -452,7 +432,7 @@ IntGetDesktopWorkArea(PDESKTOP Desktop, PRECT Rect)
       SURFACE *psurf;
       dc = DC_LockDc(ScreenDeviceContext);
       /* FIXME - Handle dc == NULL!!!! */
-      psurf = SURFACE_LockSurface(dc->w.hBitmap);
+      psurf = SURFACE_LockSurface(dc->rosdc.hBitmap);
       if(psurf)
       {
          Ret->right = psurf->SurfObj.sizlBitmap.cx;
@@ -1358,7 +1338,7 @@ CLEANUP:
 BOOL APIENTRY
 NtUserPaintDesktop(HDC hDC)
 {
-   RECT Rect;
+   RECTL Rect;
    HBRUSH DesktopBrush, PreviousBrush;
    HWND hWndDesktop;
    BOOL doPatBlt = TRUE;
@@ -1513,7 +1493,7 @@ NtUserPaintDesktop(HDC hDC)
    if (g_PaintDesktopVersion)
    {
       static WCHAR s_wszVersion[256] = {0};
-      RECT rect;
+      RECTL rect;
 
       if (*s_wszVersion)
       {
@@ -1768,10 +1748,11 @@ IntUnmapDesktopView(IN PDESKTOP DesktopObject)
     ti = GetW32ThreadInfo();
     if (ti != NULL)
     {
-        if (ti->Desktop == DesktopObject->DesktopInfo)
+        if (ti->pDeskInfo == DesktopObject->DesktopInfo)
         {
-            ti->Desktop = NULL;
+            ti->pDeskInfo = NULL;
         }
+        GetWin32ClientInfo()->pDeskInfo = NULL;
     }
     GetWin32ClientInfo()->ulClientDelta = 0;
 
@@ -1846,14 +1827,16 @@ IntMapDesktopView(IN PDESKTOP DesktopObject)
 
     /* create a W32THREADINFO structure if not already done, or update it */
     ti = GetW32ThreadInfo();
+    GetWin32ClientInfo()->ulClientDelta = DesktopHeapGetUserDelta();
     if (ti != NULL)
     {
-        if (ti->Desktop == NULL)
+        if (ti->pDeskInfo == NULL)
         {
-            ti->Desktop = DesktopObject->DesktopInfo;
+           ti->pDeskInfo = DesktopObject->DesktopInfo;
+           GetWin32ClientInfo()->pDeskInfo = 
+                (PVOID)((ULONG_PTR)ti->pDeskInfo - GetWin32ClientInfo()->ulClientDelta);
         }
     }
-    GetWin32ClientInfo()->ulClientDelta = DesktopHeapGetUserDelta();
 
     return STATUS_SUCCESS;
 }
@@ -1899,7 +1882,7 @@ IntSetThreadDesktop(IN PDESKTOP DesktopObject,
             PW32THREADINFO ti = GetW32ThreadInfo();
             if (ti != NULL)
             {
-                ti->Desktop = NULL;
+                ti->pDeskInfo = NULL;
             }
         }
 

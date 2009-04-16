@@ -224,7 +224,7 @@ BOOLEAN Dummy_BitBlt(PBLTINFO BltInfo)
 }
 
 BOOLEAN Dummy_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
-                         SURFOBJ *PatternSurface,
+                         SURFOBJ *PatternSurface, SURFOBJ *MaskSurf,
                          RECTL*  DestRect,  RECTL  *SourceRect,
                          POINTL* MaskOrigin, BRUSHOBJ* Brush,
                          POINTL* BrushOrign,
@@ -235,7 +235,7 @@ BOOLEAN Dummy_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 }
 
 BOOLEAN Dummy_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
-                             RECTL*  DestRect,  POINTL  *SourcePoint,
+                             RECTL*  DestRect,  RECTL  *SourceRect,
                              XLATEOBJ *ColorTranslation, ULONG iTransColor)
 {
   return FALSE;

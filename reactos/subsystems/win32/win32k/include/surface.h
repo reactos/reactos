@@ -57,8 +57,8 @@ BOOL INTERNAL_CALL SURFACE_Cleanup(PVOID ObjectBody);
 BOOL INTERNAL_CALL SURFACE_InitBitsLock(SURFACE *pBMObj);
 void INTERNAL_CALL SURFACE_CleanupBitsLock(SURFACE *pBMObj);
 
-#define GDIDEV(SurfObj) ((GDIDEVICE *)((SurfObj)->hdev))
-#define GDIDEVFUNCS(SurfObj) ((GDIDEVICE *)((SurfObj)->hdev))->DriverFunctions
+#define GDIDEV(SurfObj) ((PDEVOBJ *)((SurfObj)->hdev))
+#define GDIDEVFUNCS(SurfObj) ((PDEVOBJ *)((SurfObj)->hdev))->DriverFunctions
 
 INT   FASTCALL BitsPerFormat (ULONG Format);
 ULONG FASTCALL BitmapFormat (WORD Bits, DWORD Compression);

@@ -656,7 +656,8 @@ STRING_ERROR_DRIVER_NOT_READY,     "Устройство не готово"
 
 STRING_PATH_ERROR,                 "CMD: Не в среде окружения '%s'\n"
 
-STRING_CMD_SHELLINFO,              "\nИнтерпретатор командной строки ReactOS"
+STRING_REACTOS_VERSION,            "ReactOS Operating System [Version %s-%s]\n"
+STRING_CMD_SHELLINFO,              "\nИнтерпретатор командной строки ReactOS\nVersion %s %s"
 STRING_VERSION_RUNVER,             " запущен на %s"
 STRING_COPY_FILE ,                 "        %d файл(ов) скопировано\n"
 STRING_DELETE_WIPE,                "wiped"
@@ -667,6 +668,8 @@ STRING_TIMER_TIME                  "Timer %d is %s: "
 STRING_MKLINK_CREATED_SYMBOLIC,    "Symbolic link created for %s <<===>> %s\n"
 STRING_MKLINK_CREATED_HARD,        "Hard link created for %s <<===>> %s\n"
 STRING_MKLINK_CREATED_JUNCTION,    "Junction created for %s <<===>> %s\n"
+STRING_MORE,                       "More? "
+STRING_CANCEL_BATCH_FILE,          "\r\nCtrl-Break pressed.  Cancel batch file? (Yes/No/All) "
 
 STRING_INVALID_OPERAND,            "Неверный операнд."
 STRING_EXPECTED_CLOSE_PAREN,       "Ожидается ')'."

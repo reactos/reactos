@@ -1,3 +1,11 @@
+/*
+ * PROJECT:     ReactOS Setup
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        base\setup\reactos\lang\uk-UA.rc
+ * PURPOSE:     Ukraianian Language File for ReactOS Setup
+ * TRANSLATOR:  Sakara Yevhen
+ */
+
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 IDD_STARTPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
@@ -5,112 +13,112 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Встановлення ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Welcome to the ReactOS Setup Wizard.", IDC_STARTTITLE, 115, 8, 195, 24
+    LTEXT "Вас вітає програма встановлення ReactOS.", IDC_STARTTITLE, 115, 8, 195, 24
     LTEXT "Ви не можете встановити ReactOS прямо з цього CD! Будь ласка перезапустіть Ваш комп’ютер з цього CD для того, щоб встановити ReactOS.", IDC_STATIC, 115, 40, 195, 100
-    LTEXT "Click Finish to exit the Setup.", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "Натисніть кнопку Завершити для виходу.", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_LANGSELPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Setup"
+CAPTION "Встановлення ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "IDB_LOGO", IDB_ROSLOGO, "Static", WS_CHILD | WS_VISIBLE | SS_OWNERDRAW, 18, 0, 290, 99
-    CONTROL "Setup language:", IDC_STATIC, "Static", WS_CHILD | WS_VISIBLE | WS_GROUP | SS_RIGHT, 20, 109, 106, 11
+    CONTROL "Мова системи:", IDC_STATIC, "Static", WS_CHILD | WS_VISIBLE | WS_GROUP | SS_RIGHT, 20, 109, 106, 11
     CONTROL "", IDC_LANGUAGES, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 132, 107, 176, 142
-    CONTROL "Keyboard or input method:", IDC_STATIC, "Static", WS_CHILD | WS_VISIBLE | WS_GROUP | SS_RIGHT, 20, 142, 106, 11
+    CONTROL "Розкладка клавіатури:", IDC_STATIC, "Static", WS_CHILD | WS_VISIBLE | WS_GROUP | SS_RIGHT, 20, 142, 106, 11
     CONTROL "", IDC_KEYLAYOUT, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 132, 141, 176, 81
-    LTEXT "Click Next to select the setup type.", IDC_STATIC, 10, 180 ,297, 10
+    LTEXT "Для вибору типу встановлення натисніть Далі.", IDC_STATIC, 10, 180 ,297, 10
 END
 
 IDD_TYPEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Setup"
+CAPTION "Встановлення ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Type of setup", IDC_STATIC, "Button", BS_GROUPBOX, 10,0,297,172
-    CONTROL "Install ReactOS", IDC_INSTALL, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 20, 15, 277, 10
-    CONTROL "Repair or update an installed ReactOS", IDC_SETUP, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_DISABLED , 20, 30, 277, 10
-    LTEXT "Click Next to setup the devices.", IDC_STATIC, 10, 180 ,297, 10
+    CONTROL "Тип встановлення", IDC_STATIC, "Button", BS_GROUPBOX, 10,0,297,172
+    CONTROL "Встановлення ReactOS", IDC_INSTALL, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 20, 15, 277, 10
+    CONTROL "Відновити або змінити встановлений раніше ReactOS", IDC_SETUP, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_DISABLED , 20, 30, 277, 10
+    LTEXT "Для встановлення пристроїв натисніть Далі.", IDC_STATIC, 10, 180 ,297, 10
 END
 
 IDD_DEVICEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Setup"
+CAPTION "Встановлення ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Device settings", IDC_STATIC, "Button", BS_GROUPBOX, 10,0,297,172
-    LTEXT "Computer:", IDC_STATIC, 20,15, 80, 10
+    CONTROL "Основні пристрої", IDC_STATIC, "Button", BS_GROUPBOX, 10,0,297,172
+    LTEXT "Комп’ютер:", IDC_STATIC, 20,15, 80, 10
     CONTROL "", IDC_COMPUTER, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST , 100, 15, 180, 80
-    LTEXT "Display:", IDC_STATIC, 20,35, 80, 10
+    LTEXT "Екран:", IDC_STATIC, 20,35, 80, 10
     CONTROL "", IDC_DISPLAY, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST , 100, 35, 180, 80
-    LTEXT "Keyboard:", IDC_STATIC, 20,55, 80, 10
+    LTEXT "Клавіатура:", IDC_STATIC, 20,55, 80, 10
     CONTROL "", IDC_KEYBOARD, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST , 100, 55, 180, 80
-    LTEXT "Click Next setup of the installation device.", IDC_STATIC, 10, 180 ,277, 20
+    LTEXT "Для встановлення пристроїв натисніть Далі.", IDC_STATIC, 10, 180 ,277, 20
 END
 
 IDD_DRIVEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Setup"
+CAPTION "Встановлення ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Partition for ReactOS installation", IDC_STATIC, "Button", BS_GROUPBOX, 10,1,298,176
+    CONTROL "Розділи для встановлення ReactOS", IDC_STATIC, "Button", BS_GROUPBOX, 10,1,298,176
     LISTBOX IDC_PARTITION, 20,12,278,142,LBS_HASSTRINGS | WS_VSCROLL
-    PUSHBUTTON "&Create", IDC_PARTCREATE, 20,155,50,15
-    PUSHBUTTON "&Delete", IDC_PARTDELETE, 76,155,50,15
-    PUSHBUTTON "D&river", IDC_DEVICEDRIVER, 162,155,50,15, WS_DISABLED
-    PUSHBUTTON "&Advanced Options...", IDC_PARTMOREOPTS, 218,155,80,15
-    LTEXT "Click Next to check the summary.", IDC_STATIC, 10, 180 ,277, 20
+    PUSHBUTTON "&Створити", IDC_PARTCREATE, 20,155,50,15
+    PUSHBUTTON "&Видалити", IDC_PARTDELETE, 76,155,50,15
+    PUSHBUTTON "Д&райвер", IDC_DEVICEDRIVER, 162,155,50,15, WS_DISABLED
+    PUSHBUTTON "&Додаткові параметри...", IDC_PARTMOREOPTS, 218,155,80,15
+    LTEXT "Для початку встановлення натисніть Далі", IDC_STATIC, 10, 180 ,277, 20
 END
 
 IDD_PARTITION DIALOGEX DISCARDABLE  0, 0, 145, 90
 STYLE WS_VISIBLE|WS_CAPTION|WS_THICKFRAME
-CAPTION "Create Partition"
+CAPTION "Створення розділу"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "",IDC_UPDOWN1,"msctls_updown32", WS_VISIBLE,104,22,9,13
-    CONTROL "Create and format partition",IDC_STATIC,"Button",BS_GROUPBOX,7,5,129,57
-    LTEXT "Size:",IDC_STATIC, 13,24,27,9
+    CONTROL "Створити та відформатувати розділ диску",IDC_STATIC,"Button",BS_GROUPBOX,7,5,129,57
+    LTEXT "Розмір:",IDC_STATIC, 13,24,27,9
     EDITTEXT IDC_PARTSIZE,52,23,53,13, WS_VISIBLE|WS_TABSTOP
-    LTEXT "GB",IDC_UNIT, 117,24,14,9
-    LTEXT "Filesystem:",IDC_STATIC,13,46,35,9
+    LTEXT "Гб",IDC_UNIT, 117,24,14,9
+    LTEXT "Файлова система:",IDC_STATIC,13,46,35,9
     CONTROL "",IDC_FSTYPE,"ComboBox",WS_VISIBLE|WS_TABSTOP|CBS_DROPDOWNLIST,52,42,79,50
-    PUSHBUTTON "&OK",IDOK,35,68,47,15, WS_VISIBLE|WS_TABSTOP
-    PUSHBUTTON "&Cancel",IDCANCEL,87,68,47,15, WS_VISIBLE|WS_TABSTOP
+    PUSHBUTTON "&Так",IDOK,35,68,47,15, WS_VISIBLE|WS_TABSTOP
+    PUSHBUTTON "&Ні",IDCANCEL,87,68,47,15, WS_VISIBLE|WS_TABSTOP
 END
 
 IDD_BOOTOPTIONS DIALOGEX DISCARDABLE  0, 0, 305, 105
 STYLE WS_VISIBLE|WS_CAPTION|WS_THICKFRAME
-CAPTION "Advanced Partition Settings"
+CAPTION "Додаткові параметри встановлення"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Installation folder", IDC_STATIC, "Button", BS_GROUPBOX, 4,1,298,30
+    CONTROL "Базовий каталог", IDC_STATIC, "Button", BS_GROUPBOX, 4,1,298,30
     EDITTEXT IDC_PATH, 10,11,278,13, WS_VISIBLE
 
-    CONTROL "Boot loader installation", IDC_STATIC, "Button", BS_GROUPBOX, 4,36,298,41
+    CONTROL "Встановлення завантажувача", IDC_STATIC, "Button", BS_GROUPBOX, 4,36,298,41
 
-    CONTROL "Install boot loader on the hard disk (MBR)", IDC_INSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10,46,278,11
-    CONTROL "No installation of bootloader", IDC_NOINSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_DISABLED , 10,57,278,11
-    PUSHBUTTON "&OK", IDOK, 180,83,50,15, WS_TABSTOP | WS_VISIBLE
-    PUSHBUTTON "&Cancel", IDCANCEL, 240,83,50,15, WS_TABSTOP | WS_VISIBLE
+    CONTROL "Встановити завантажувач на диск (MBR)", IDC_INSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10,46,278,11
+    CONTROL "Не встановлювати завантажувач", IDC_NOINSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_DISABLED , 10,57,278,11
+    PUSHBUTTON "&Так", IDOK, 180,83,50,15, WS_TABSTOP | WS_VISIBLE
+    PUSHBUTTON "&Ні", IDCANCEL, 240,83,50,15, WS_TABSTOP | WS_VISIBLE
 END
 
 IDD_SUMMARYPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Setup"
+CAPTION "Встановлення ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Installation summary", IDC_ACTION, "Button", BS_GROUPBOX, 10,0,297,172
-    LTEXT "Click Next to start the installation process.", IDC_STATIC, 10, 180 ,277, 20
+    CONTROL "Встановлення Акаунта", IDC_ACTION, "Button", BS_GROUPBOX, 10,0,297,172
+    LTEXT "Для початку встановлення натисніть Далі.", IDC_STATIC, 10, 180 ,277, 20
 END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Setup"
+CAPTION "Встановлення ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Setup action", IDC_ACTION, "Button", BS_GROUPBOX, 10,0,297,172
-    LTEXT "Install files...", IDC_ACTIVITY, 20, 50, 277, 10
+    CONTROL "Виконується встановлення", IDC_ACTION, "Button", BS_GROUPBOX, 10,0,297,172
+    LTEXT "Копіювання файлів...", IDC_ACTIVITY, 20, 50, 277, 10
     LTEXT "test.txt", IDC_ITEM, 30, 80, 257, 10
     CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32",
             PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
@@ -118,34 +126,34 @@ END
 
 IDD_RESTARTPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Completing ReactOS Setup"
+CAPTION "Завершення встановлення ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Completing the first stage of ReactOS Setup", IDC_FINISHTITLE, "Button", BS_GROUPBOX, 10,0,297,172
-    LTEXT "You have successfully completed the first stage of ReactOS Setup.", IDC_STATIC, 20, 50, 277, 10
+    CONTROL "Завершення першого етапу встановлення ReactOS", IDC_FINISHTITLE, "Button", BS_GROUPBOX, 10,0,297,172
+    LTEXT "Перший етап встановлення ReactOS завершено.", IDC_STATIC, 20, 50, 277, 10
  
-    LTEXT "When you click Finish, your computer will restart.", IDC_STATIC, 20, 80, 277, 10
+    LTEXT "Після натискання клавіші Завершити ваш комп'ютер буде перезавантажений.", IDC_STATIC, 20, 80, 277, 10
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
-    LTEXT "If there is a CD in a drive, remove it. Then, to restart your computer, click Finish.", IDC_STATIC, 10, 180, 297, 20
+    LTEXT "Ви можете витягнути інсталяційний диск. Для перезавантаження комп'ютера натисніть Завершити", IDC_STATIC, 10, 180, 297, 20
 END
 
 STRINGTABLE
 BEGIN
-    IDS_LANGTITLE       "Language Selection"
-    IDS_LANGSUBTITLE    "Choose language for setup and final system."
-    IDS_TYPETITLE       "Welcome to ReactOS Setup"
-    IDS_TYPESUBTITLE    "Choose setup type."
-    IDS_DEVICETITLE     "Setup the basic devices"
-    IDS_DEVICESUBTITLE  "Set the settings of display and keyboard."
-    IDS_DRIVETITLE      "Setup the installation partition and system folder"
-    IDS_DRIVESUBTITLE   "Prepare installation partition, system folder and boot loader."
-    IDS_PROCESSTITLE    "Prepare partition, copy files and setup system"
-    IDS_PROCESSSUBTITLE "Create and format partition, copy files, install and setup boot loader"
-    IDS_RESTARTTITLE    "First stage of setup finished"
-    IDS_RESTARTSUBTITLE "The first stage of setup has been completed, restart to continue with second stage"
-    IDS_SUMMARYTITLE    "Installation Summary"
-    IDS_SUMMARYSUBTITLE "List installation properties to check before apply to the installation device"
-    IDS_ABORTSETUP      "ReactOS is not completely installed on your computer. If you quit Setup now, you will need to run Setup again to install Reactos. Really quit?"
-    IDS_ABORTSETUP2     "Abort installation?"
+    IDS_LANGTITLE       "Вибір мови"
+    IDS_LANGSUBTITLE    "Виберіть мову за замовчуванням в системі."
+    IDS_TYPETITLE       "Вас вітає програма встановлення ReactOS"
+    IDS_TYPESUBTITLE    "Виберіть тип встановлення."
+    IDS_DEVICETITLE     "Встановлення базових пристроїв"
+    IDS_DEVICESUBTITLE  "Налаштування параметрів екрану та клавіатури."
+    IDS_DRIVETITLE      "Вибір розташування на диску і системного каталогу"
+    IDS_DRIVESUBTITLE   "Підготовка розділу диска, системного каталогу та завантажувача."
+    IDS_PROCESSTITLE    "Підготовка розділу диска, копіювання системних файлів"
+    IDS_PROCESSSUBTITLE "Створення розділу на диску, копіювання файлів, встановлення завантажувача"
+    IDS_RESTARTTITLE    "Перший етап встановлення завершено"
+    IDS_RESTARTSUBTITLE "Перший етап завершено, для продовження потрібне перезавантаження"
+    IDS_SUMMARYTITLE    "Встановлення Акаунта"
+    IDS_SUMMARYSUBTITLE "Список встановлення властивостей для перевірки, перш ніж звернутися при встановленні пристроїв"
+    IDS_ABORTSETUP      "ReactOS встановлений на комп'ютер не повністю. Якщо ви закриєте програму встановлення зараз, в подальшому вам доведеться повторити встановлення ReactOS. Ви впевнені, що необхідно перервати встановлення?"
+    IDS_ABORTSETUP2     "Перервати встановлення?"
 END
 /* EOF */

@@ -155,7 +155,7 @@ static inline void imagelist_copy_images( HIMAGELIST himl, HDC hdcSrc, HDC hdcDe
  *     This function CANNOT be used to reduce the number of images.
  */
 static void
-IMAGELIST_InternalExpandBitmaps (HIMAGELIST himl, INT nImageCount, INT cx, INT cy)
+IMAGELIST_InternalExpandBitmaps (HIMAGELIST himl, INT nImageCount, INT cy)
 {
     HDC     hdcBitmap;
     HBITMAP hbmNewBitmap, hbmNull;
@@ -166,15 +166,14 @@ IMAGELIST_InternalExpandBitmaps (HIMAGELIST himl, INT nImageCount, INT cx, INT c
         && (himl->cy >= cy))
 	return;
 
-    if (cx == 0) cx = himl->cx;
     nNewCount = himl->cCurImage + nImageCount + himl->cGrow;
 
-    imagelist_get_bitmap_size(himl, nNewCount, cx, &sz);
+    imagelist_get_bitmap_size(himl, nNewCount, himl->cx, &sz);
 
     TRACE("Create expanded bitmaps : himl=%p x=%d y=%d count=%d\n", himl, sz.cx, cy, nNewCount);
     hdcBitmap = CreateCompatibleDC (0);
 
-    hbmNewBitmap = ImageList_CreateImage(hdcBitmap, himl, nNewCount, cx);
+    hbmNewBitmap = ImageList_CreateImage(hdcBitmap, himl, nNewCount, himl->cx);
 
     if (hbmNewBitmap == 0)
         ERR("creating new image bitmap (x=%d y=%d)!\n", sz.cx, cy);
@@ -248,7 +247,7 @@ ImageList_Add (HIMAGELIST himl,	HBITMAP hbmImage, HBITMAP hbmMask)
 
     nImageCount = bmp.bmWidth / himl->cx;
 
-    IMAGELIST_InternalExpandBitmaps (himl, nImageCount, bmp.bmWidth, bmp.bmHeight);
+    IMAGELIST_InternalExpandBitmaps (himl, nImageCount, bmp.bmHeight);
 
     hdcBitmap = CreateCompatibleDC(0);
 
@@ -350,7 +349,7 @@ ImageList_AddMasked (HIMAGELIST himl, HBITMAP hBitmap, COLORREF clrMask)
     else
 	nImageCount = 0;
 
-    IMAGELIST_InternalExpandBitmaps (himl, nImageCount, bmp.bmWidth, bmp.bmHeight);
+    IMAGELIST_InternalExpandBitmaps (himl, nImageCount, bmp.bmHeight);
 
     nIndex = himl->cCurImage;
     himl->cCurImage += nImageCount;
@@ -2304,7 +2303,7 @@ ImageList_ReplaceIcon (HIMAGELIST himl, INT nIndex, HICON hIcon)
 
     if (nIndex == -1) {
         if (himl->cCurImage + 1 > himl->cMaxImage)
-            IMAGELIST_InternalExpandBitmaps (himl, 1, 0, 0);
+            IMAGELIST_InternalExpandBitmaps (himl, 1, 0);
 
         nIndex = himl->cCurImage;
         himl->cCurImage++;

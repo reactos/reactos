@@ -51,6 +51,26 @@ NdisCompleteBindAdapter(
   ExInterlockedInsertTailList(&ProtocolListHead, &Protocol->ListEntry, &ProtocolListLock);
 }
 
+/*
+ * @implemented
+ */
+VOID
+EXPORT
+NdisCompleteUnbindAdapter(
+    IN  NDIS_HANDLE UnbindAdapterContext,
+    IN  NDIS_STATUS Status)
+{
+  /* We probably need to do more here but for now we just do
+   * the opposite of what NdisCompleteBindAdapter does
+   */
+
+  PROTOCOL_BINDING *Protocol = (PROTOCOL_BINDING *)UnbindAdapterContext;
+
+  if (!NT_SUCCESS(Status)) return;
+
+  ExInterlockedRemoveEntryList(&Protocol->ListEntry, &ProtocolListLock);
+}
+
 
 NDIS_STATUS
 ProIndicatePacket(
@@ -181,7 +201,7 @@ proSendPacketToMiniport(PLOGICAL_ADAPTER Adapter, PNDIS_PACKET Packet)
             NDIS_DbgPrint(MAX_TRACE, ("Calling miniport's SendPackets handler\n"));
             (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.SendPacketsHandler)(
              Adapter->NdisMiniportBlock.MiniportAdapterContext, &Packet, 1);
-             NdisStatus = NDIS_GET_PACKET_STATUS(Packet);
+             NdisStatus = NDIS_STATUS_PENDING;
         } else {
             /* SendPackets is called at DISPATCH_LEVEL for all serialized miniports */
             KeRaiseIrql(DISPATCH_LEVEL, &RaiseOldIrql);
@@ -205,14 +225,14 @@ proSendPacketToMiniport(PLOGICAL_ADAPTER Adapter, PNDIS_PACKET Packet)
         {
             NDIS_DbgPrint(MAX_TRACE, ("Calling miniport's Send handler\n"));
             NdisStatus = (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.SendHandler)(
-                          Adapter->NdisMiniportBlock.MiniportAdapterContext, Packet, 0);
+                          Adapter->NdisMiniportBlock.MiniportAdapterContext, Packet, Packet->Private.Flags);
             NDIS_DbgPrint(MAX_TRACE, ("back from miniport's send handler\n"));
         } else {
             /* Send is called at DISPATCH_LEVEL for all serialized miniports */
             KeRaiseIrql(DISPATCH_LEVEL, &RaiseOldIrql);
             NDIS_DbgPrint(MAX_TRACE, ("Calling miniport's Send handler\n"));
             NdisStatus = (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.SendHandler)(
-                          Adapter->NdisMiniportBlock.MiniportAdapterContext, Packet, 0);
+                          Adapter->NdisMiniportBlock.MiniportAdapterContext, Packet, Packet->Private.Flags);
             NDIS_DbgPrint(MAX_TRACE, ("back from miniport's send handler\n"));
             KeLowerIrql(RaiseOldIrql);
 
@@ -302,12 +322,6 @@ ProSendPackets(
        {
           (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.SendPacketsHandler)(
            Adapter->NdisMiniportBlock.MiniportAdapterContext, PacketArray, NumberOfPackets);
-          for (i = 0; i < NumberOfPackets; i++)
-          {
-             NdisStatus = NDIS_GET_PACKET_STATUS(PacketArray[i]);
-             if (NdisStatus != NDIS_STATUS_PENDING)
-                 MiniSendComplete(Adapter, PacketArray[i], NdisStatus);
-          }
        }
        else
        {
@@ -331,7 +345,7 @@ ProSendPackets(
           for (i = 0; i < NumberOfPackets; i++)
           {
              NdisStatus = (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.SendHandler)(
-                           Adapter->NdisMiniportBlock.MiniportAdapterContext, PacketArray[i], 0);
+                           Adapter->NdisMiniportBlock.MiniportAdapterContext, PacketArray[i], PacketArray[i]->Private.Flags);
              if (NdisStatus != NDIS_STATUS_PENDING)
                  MiniSendComplete(Adapter, PacketArray[i], NdisStatus);
           }
@@ -343,7 +357,7 @@ ProSendPackets(
          for (i = 0; i < NumberOfPackets; i++)
          {
             NdisStatus = (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.SendHandler)(
-                           Adapter->NdisMiniportBlock.MiniportAdapterContext, PacketArray[i], 0);
+                           Adapter->NdisMiniportBlock.MiniportAdapterContext, PacketArray[i], PacketArray[i]->Private.Flags);
             if (NdisStatus != NDIS_STATUS_PENDING)
                 MiniSendComplete(Adapter, PacketArray[i], NdisStatus);
          }
@@ -958,6 +972,33 @@ NdisReEnumerateProtocolBindings(IN NDIS_HANDLE NdisProtocolHandle)
     NDIS_STATUS NdisStatus;
 
     ndisBindMiniportsToProtocol(&NdisStatus, &Protocol->Chars);
+}
+
+
+/*
+ * @implemented
+ */
+VOID
+EXPORT
+NdisGetDriverHandle(
+    IN  PNDIS_HANDLE    NdisBindingHandle,
+    OUT PNDIS_HANDLE    NdisDriverHandle)
+/*
+ * FUNCTION:
+ * ARGUMENTS:
+ * NOTES:
+ *    NDIS 5.0
+ */
+{
+    PADAPTER_BINDING Binding = (PADAPTER_BINDING)NdisBindingHandle;
+
+    if (!Binding)
+    {
+        *NdisDriverHandle = NULL;
+        return;
+    }
+
+    *NdisDriverHandle = Binding->Adapter->NdisMiniportBlock.DriverHandle;
 }
 
 /* EOF */

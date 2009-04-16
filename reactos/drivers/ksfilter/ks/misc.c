@@ -165,7 +165,7 @@ KsLoadResource(
 /*
     @unimplemented
 */
-VOID
+KSDDKAPI VOID NTAPI
 KsNullDriverUnload(
     IN  PDRIVER_OBJECT DriverObject)
 {

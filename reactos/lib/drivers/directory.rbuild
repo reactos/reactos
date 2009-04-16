@@ -13,7 +13,7 @@
 	<directory name="chew">
 		<xi:include href="chew/chew.rbuild" />
 	</directory>
-	<!-- directory name="sound">
+	<directory name="sound">
 		<xi:include href="sound/sound.rbuild" />
-	</directory -->
+	</directory>
 </group>

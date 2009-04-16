@@ -1,5 +1,5 @@
 DESCRIPTION 'Mesa (OpenGL driver) for Win32'
-VERSION 7.3
+VERSION 7.4
 
 EXPORTS
 ;
@@ -22,7 +22,7 @@ EXPORTS
 	DrvSwapLayerBuffers
 	DrvValidateVersion
 
-; Standalon
+; Standalone
 	glNewList
 	glEndList
 	glCallList

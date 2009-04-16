@@ -429,6 +429,7 @@ one_time_init( GLcontext *ctx )
 static GLboolean
 alloc_shared_state( GLcontext *ctx )
 {
+   GLuint i;
    struct gl_shared_state *ss = CALLOC_STRUCT(gl_shared_state);
    if (!ss)
       return GL_FALSE;
@@ -470,36 +471,24 @@ alloc_shared_state( GLcontext *ctx )
    ss->ShaderObjects = _mesa_NewHashTable();
 #endif
 
-   ss->Default1D = (*ctx->Driver.NewTextureObject)(ctx, 0, GL_TEXTURE_1D);
-   if (!ss->Default1D)
-      goto cleanup;
-
-   ss->Default2D = (*ctx->Driver.NewTextureObject)(ctx, 0, GL_TEXTURE_2D);
-   if (!ss->Default2D)
-      goto cleanup;
-
-   ss->Default3D = (*ctx->Driver.NewTextureObject)(ctx, 0, GL_TEXTURE_3D);
-   if (!ss->Default3D)
-      goto cleanup;
-
-   ss->DefaultCubeMap = (*ctx->Driver.NewTextureObject)(ctx, 0, GL_TEXTURE_CUBE_MAP_ARB);
-   if (!ss->DefaultCubeMap)
-      goto cleanup;
-
-   ss->DefaultRect = (*ctx->Driver.NewTextureObject)(ctx, 0, GL_TEXTURE_RECTANGLE_NV);
-   if (!ss->DefaultRect)
-      goto cleanup;
-
-   ss->Default1DArray = (*ctx->Driver.NewTextureObject)(ctx, 0, GL_TEXTURE_1D_ARRAY_EXT);
-   if (!ss->Default1DArray)
-      goto cleanup;
-
-   ss->Default2DArray = (*ctx->Driver.NewTextureObject)(ctx, 0, GL_TEXTURE_2D_ARRAY_EXT);
-   if (!ss->Default2DArray)
-      goto cleanup;
+   /* Create default texture objects */
+   for (i = 0; i < NUM_TEXTURE_TARGETS; i++) {
+      static const GLenum targets[NUM_TEXTURE_TARGETS] = {
+         GL_TEXTURE_1D,
+         GL_TEXTURE_2D,
+         GL_TEXTURE_3D,
+         GL_TEXTURE_CUBE_MAP,
+         GL_TEXTURE_RECTANGLE_NV,
+         GL_TEXTURE_1D_ARRAY_EXT,
+         GL_TEXTURE_2D_ARRAY_EXT
+      };
+      ss->DefaultTex[i] = ctx->Driver.NewTextureObject(ctx, 0, targets[i]);
+      if (!ss->DefaultTex[i])
+         goto cleanup;
+   }
 
    /* sanity check */
-   assert(ss->Default1D->RefCount == 1);
+   assert(ss->DefaultTex[TEXTURE_1D_INDEX]->RefCount == 1);
 
    _glthread_INIT_MUTEX(ss->TexMutex);
    ss->TextureStateStamp = 0;
@@ -553,20 +542,10 @@ cleanup:
       _mesa_DeleteHashTable(ss->RenderBuffers);
 #endif
 
-   if (ss->Default1D)
-      (*ctx->Driver.DeleteTexture)(ctx, ss->Default1D);
-   if (ss->Default2D)
-      (*ctx->Driver.DeleteTexture)(ctx, ss->Default2D);
-   if (ss->Default3D)
-      (*ctx->Driver.DeleteTexture)(ctx, ss->Default3D);
-   if (ss->DefaultCubeMap)
-      (*ctx->Driver.DeleteTexture)(ctx, ss->DefaultCubeMap);
-   if (ss->DefaultRect)
-      (*ctx->Driver.DeleteTexture)(ctx, ss->DefaultRect);
-   if (ss->Default1DArray)
-      (*ctx->Driver.DeleteTexture)(ctx, ss->Default1DArray);
-   if (ss->Default2DArray)
-      (*ctx->Driver.DeleteTexture)(ctx, ss->Default2DArray);
+   for (i = 0; i < NUM_TEXTURE_TARGETS; i++) {
+      if (ss->DefaultTex[i])
+         ctx->Driver.DeleteTexture(ctx, ss->DefaultTex[i]);
+   }
 
    _mesa_free(ss);
 
@@ -728,6 +707,8 @@ delete_renderbuffer_cb(GLuint id, void *data, void *userData)
 static void
 free_shared_state( GLcontext *ctx, struct gl_shared_state *ss )
 {
+   GLuint i;
+
    /*
     * Free display lists
     */
@@ -777,13 +758,9 @@ free_shared_state( GLcontext *ctx, struct gl_shared_state *ss )
     */
    ASSERT(ctx->Driver.DeleteTexture);
    /* the default textures */
-   ctx->Driver.DeleteTexture(ctx, ss->Default1D);
-   ctx->Driver.DeleteTexture(ctx, ss->Default2D);
-   ctx->Driver.DeleteTexture(ctx, ss->Default3D);
-   ctx->Driver.DeleteTexture(ctx, ss->DefaultCubeMap);
-   ctx->Driver.DeleteTexture(ctx, ss->DefaultRect);
-   ctx->Driver.DeleteTexture(ctx, ss->Default1DArray);
-   ctx->Driver.DeleteTexture(ctx, ss->Default2DArray);
+   for (i = 0; i < NUM_TEXTURE_TARGETS; i++) {
+      ctx->Driver.DeleteTexture(ctx, ss->DefaultTex[i]);
+   }
    /* all other textures */
    _mesa_HashDeleteAll(ss->TexObjects, delete_texture_cb, ctx);
    _mesa_DeleteHashTable(ss->TexObjects);
@@ -1293,6 +1270,8 @@ _mesa_create_context(const GLvisual *visual,
 void
 _mesa_free_context_data( GLcontext *ctx )
 {
+   GLint RefCount;
+
    if (!_mesa_get_current_context()){
       /* No current context, but we may need one in order to delete
        * texture objs, etc.  So temporarily bind the context now.
@@ -1342,10 +1321,10 @@ _mesa_free_context_data( GLcontext *ctx )
 
    /* Shared context state (display lists, textures, etc) */
    _glthread_LOCK_MUTEX(ctx->Shared->Mutex);
-   ctx->Shared->RefCount--;
-   assert(ctx->Shared->RefCount >= 0);
+   RefCount = --ctx->Shared->RefCount;
    _glthread_UNLOCK_MUTEX(ctx->Shared->Mutex);
-   if (ctx->Shared->RefCount == 0) {
+   assert(RefCount >= 0);
+   if (RefCount == 0) {
       /* free shared state */
       free_shared_state( ctx, ctx->Shared );
    }

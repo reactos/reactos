@@ -8,15 +8,9 @@
 extern HDC hSystemBM;
 extern HSEMAPHORE hsemDriverMgmt;
 
-XLATEOBJ* FASTCALL
-IntGdiCreateBrushXlate(PDC Dc, GDIBRUSHOBJ *BrushObj, BOOLEAN *Failed);
-
 XLATEOBJ*
 FASTCALL
 IntCreateXlateForBlt(PDC pDCDest, PDC pDCSrc, SURFACE* pDestSurf, SURFACE* pSrcSurf);
-
-VOID FASTCALL
-IntGdiInitBrushInstance(GDIBRUSHINST *BrushInst, PGDIBRUSHOBJ BrushObj, XLATEOBJ *XlateObj);
 
 HBRUSH APIENTRY
 IntGdiCreateDIBBrush(
@@ -49,7 +43,7 @@ IntPatBlt(
    INT Width,
    INT Height,
    DWORD ROP,
-   PGDIBRUSHOBJ BrushObj);
+   PBRUSH BrushObj);
 
 VOID FASTCALL
 IntGdiSetSolidBrushColor(HBRUSH hBrush, COLORREF Color);
@@ -155,26 +149,6 @@ IntGdiCombineTransform(LPXFORM XFormResult,
                        LPXFORM xform1,
                        LPXFORM xform2);
 
-/* RECT functions */
-
-VOID FASTCALL
-IntGdiSetRect(PRECT Rect, INT left, INT top, INT right, INT bottom);
-
-VOID FASTCALL
-IntGdiSetEmptyRect(PRECT Rect);
-
-BOOL FASTCALL
-IntGdiIsEmptyRect(const RECT* Rect);
-
-VOID FASTCALL
-IntGdiOffsetRect(LPRECT Rect, INT x, INT y);
-
-BOOL FASTCALL
-IntGdiUnionRect(PRECT Dest, const RECT* Src1, const RECT* Src2);
-
-BOOL FASTCALL
-IntGdiIntersectRect(PRECT Dest, const RECT* Src1, const RECT* Src2);
-
 /* Stock objects */
 
 BOOL FASTCALL
@@ -278,6 +252,21 @@ IntGetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, RGBQUAD *Colors);
 
 UINT APIENTRY
 IntSetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, CONST RGBQUAD *Colors);
+
+BOOL APIENTRY
+GreStretchBltMask(IN HDC hdcDst,
+                  IN INT xDst,
+                  IN INT yDst,
+                  IN INT cxDst,
+                  IN INT cyDst,
+                  IN HDC hdcSrc,
+                  IN INT xSrc,
+                  IN INT ySrc,
+                  IN INT cxSrc,
+                  IN INT cySrc,
+                  IN DWORD dwRop,
+                  IN DWORD dwBackColor,
+                  IN HDC hdcMask);
 
 #endif /* _WIN32K_INTGDI_H */
 

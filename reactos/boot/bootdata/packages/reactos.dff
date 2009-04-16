@@ -41,6 +41,8 @@ Signature = "$ReactOS$"
 ;base\applications\cmdutils\more\more.exe                1
 ;base\applications\cmdutils\xcopy\xcopy.exe              1
 ;base\applications\control\control.exe                   1
+;base\applications\downloader\downloader.exe             1
+;base\applications\downloader\downloader.xml             1
 ;base\applications\dxdiag\dxdiag.exe                     1
 ;base\applications\mscutils\devmgmt\devmgmt.exe          1
 ;base\applications\mscutils\eventvwr\eventvwr.exe        1
@@ -77,6 +79,7 @@ Signature = "$ReactOS$"
 ;base\applications\taskmgr\taskmgr.exe                   1
 ;base\applications\winhlp32\winhlp32.exe                 4
 ;base\applications\wordpad\wordpad.exe                   1
+;base\applications\write\write.exe                       1
 
 ;base\services\audiosrv\audiosrv.exe                 1
 ;base\services\dhcp\dhcp.exe                         1
@@ -84,6 +87,7 @@ Signature = "$ReactOS$"
 ;base\services\rpcss\rpcss.exe                       1
 ;base\services\spoolsv\spoolsv.exe                   1
 ;base\services\tcpsvcs\tcpsvcs.exe                   1
+;base\services\telnetd\telnetd.exe                   1
 ;base\services\tcpsvcs\quotes                        5
 ;base\services\umpnpmgr\umpnpmgr.exe                 1
 ;base\services\wlansvc\wlansvc.exe                   1
@@ -136,13 +140,14 @@ Signature = "$ReactOS$"
 ;dll\cpl\timedate\timedate.cpl                       1
 ;dll\cpl\usrmgr\usrmgr.cpl                          1
 
+;dll\directx\amstream\amstream.dll                   1
 ;dll\directx\dinput\dinput.dll                       1
 ;dll\directx\dinput8\dinput8.dll                     1
 ;dll\directx\dplay\dplay.dll                         1
 ;dll\directx\dplayx\dplayx.dll                       1
 ;dll\directx\dsound\dsound.dll                       1
 ;dll\directx\dxdiagn\dxdiagn.dll                     1
-;dll\directx\ddraw\ddraw.dll                         1
+;dll\directx\wine\ddraw\ddraw.dll                    1
 ;dll\directx\d3d8thk\d3d8thk.dll                     1
 ;dll\directx\devenum\devenum.dll                     1
 ;dll\directx\ksproxy\ksproxy.ax                      1
@@ -482,10 +487,10 @@ Signature = "$ReactOS$"
 ;drivers\storage\ide\pciide\pciide.sys               2
 ;drivers\storage\ide\pciidex\pciidex.sys             2
 
-;;drivers\usb\miniport\usbohci\usbohci.sys           2
-;;drivers\usb\miniport\usbuhci\usbuhci.sys           2
-;;drivers\usb\usbhub\usbhub.sys                      2
-;;drivers\usb\usbport\usbport.sys                    2
+;drivers\usb\miniport\usbohci\usbohci.sys   .        2
+;drivers\usb\miniport\usbuhci\usbuhci.sys    .       2
+;drivers\usb\usbhub\usbhub.sys                .      2
+;drivers\usb\usbport\usbport.sys               .     2
 ;drivers\usb\nt4compat\usbdriver\usbdriver.sys       2
 
 ;drivers\video\displays\vga\vgaddi.dll               1
@@ -631,135 +636,136 @@ Signature = "$ReactOS$"
 boot\bootdata\bootcdregtest\testboot.bat            7   optional
 
 ; Modules
-;modules\rosapps\applications\screensavers\cylfrac\cylfrac.scr              1   optional
-;modules\rosapps\applications\screensavers\matrix\matrix.scr                1   optional
-;modules\rosapps\applications\screensavers\blankscr\scrnsave.scr            1   optional
-;modules\rosapps\applications\screensavers\starfield\starfield.scr          1   optional
-;modules\rosapps\applications\screensavers\mazescr\mazescr.scr              1   optional
-;modules\rosapps\applications\screensavers\butterflies\butterflies.scr      1   optional
-;modules\rosapps\applications\cmdutils\comp\comp.exe                                     1   optional
-;modules\rosapps\applications\cmdutils\mode\mode.exe                                     1   optional
-;modules\rosapps\applications\cmdutils\sort\sort.exe                                     1   optional
-;modules\rosapps\applications\cmdutils\tee\tee.exe                                       1   optional
-;modules\rosapps\applications\cmdutils\touch\touch.exe                                   1   optional
-;modules\rosapps\applications\cmdutils\uptime\uptime.exe                                 1   optional
-;modules\rosapps\applications\cmdutils\y\y.exe                                           1   optional
-;modules\rosapps\applications\devutils\gdb2\gdb2.exe                                     1   optional
-;modules\rosapps\applications\devutils\gdihv\gdihv.exe                                   1   optional
-;modules\rosapps\applications\devutils\genguid\genguid.exe                               1   optional
-;modules\rosapps\applications\sysutils\gettype\gettype.exe                               1   optional
-;modules\rosapps\applications\devutils\roswebparser\roswebparser.exe                     1   optional
-;modules\rosapps\applications\devutils\zoomin\zoomin.exe                                 1   optional
-;modules\rosapps\applications\downloader\downloader.exe                                  1   optional
-;modules\rosapps\applications\downloader\downloader.xml                                  1   optional
-;modules\rosapps\applications\fontview\fontview.exe                                      1   optional
-;modules\rosapps\applications\imagesoft\imagesoft.exe                                    1   optional
-;modules\rosapps\applications\net\ncftp\ncftp.exe                                        1   optional
-;modules\rosapps\applications\net\netreg\netreg.exe                                      1   optional
-;modules\rosapps\applications\net\niclist\niclist.exe                                    1   optional
-;modules\rosapps\applications\net\roshttpd\roshttpd.exe                                  1   optional
-;modules\rosapps\applications\notevil\notevil.exe                                        1   optional
-;modules\rosapps\applications\magnify\magnify.exe                                        1   optional
-;modules\rosapps\applications\packmgr\cmd-line\rosget.exe                                1   optional
-;modules\rosapps\applications\packmgr\gui\packmgr.exe                                    1   optional
-;modules\rosapps\applications\packmgr\lib\package.dll                                    1   optional
-;modules\rosapps\applications\sysutils\chkdsk\chkdsk.exe                                 1   optional
-;modules\rosapps\applications\sysutils\systeminfo\systeminfo.exe                         1   optional
-;modules\rosapps\applications\sysutils\chklib\chklib.exe                                 1   optional
-;modules\rosapps\applications\sysutils\ctm\ctm.exe                                       1   optional
-;modules\rosapps\applications\sysutils\kill\kill.exe                                     1   optional
-;modules\rosapps\applications\sysutils\lsdd\lsdd.exe                                     1   optional
-;modules\rosapps\applications\sysutils\man\man.exe                                       1   optional
-;modules\rosapps\applications\sysutils\pedump\pedump.exe                                 1   optional
-;modules\rosapps\applications\sysutils\regexpl\regexpl.exe                               1   optional
-;modules\rosapps\applications\sysutils\tcat\tcat.exe                                     1   optional
-;modules\rosapps\applications\sysutils\telnetd\telnetd.exe                               1   optional
-;modules\rosapps\applications\sysutils\tlist\tlist.exe                                   1   optional
-;modules\rosapps\applications\sysutils\screenshot\screenshot.exe                         1   optional
-;modules\rosapps\applications\sysutils\utils\binpatch\binpatch.exe                       1   optional
-;modules\rosapps\applications\sysutils\utils\cat\cat.exe                                 1   optional
-;modules\rosapps\applications\sysutils\utils\driver\load\load.exe                        1   optional
-;modules\rosapps\applications\sysutils\utils\driver\unload\unload.exe                    1   optional
-;modules\rosapps\applications\sysutils\utils\infinst\infinst.exe                         1   optional
-;modules\rosapps\applications\sysutils\utils\nts2w32err\nts2w32err.exe                   1   optional
-;modules\rosapps\applications\sysutils\utils\objdir\objdir.exe                           1   optional
-;modules\rosapps\applications\sysutils\utils\partinfo\partinfo.exe                       1   optional
-;modules\rosapps\applications\sysutils\utils\ps\ps.exe                                   1   optional
-;modules\rosapps\applications\sysutils\utils\rosperf\rosperf.exe                         1   optional
-;modules\rosapps\applications\sysutils\utils\stats\stats.exe                             1   optional
-;modules\rosapps\applications\sysutils\utils\tickcount\tickcount.exe                     1   optional
-;modules\rosapps\applications\winfile\winfile.exe                                        1   optional
-;modules\rosapps\applications\winver\winver.exe                                          1   optional
-;modules\rosapps\applications\write\write.exe                                            1   optional
-;modules\rosapps\demos\ddraw\ddraw_demo.exe                                 1   optional
-;modules\rosapps\demos\maze\maze.exe                                        1   optional
-;modules\rosapps\dflat32\edit.exe                                           1   optional
-;modules\rosapps\drivers\green\green.sys                                    2   optional
-;modules\rosapps\templates\dialog\dialog.exe                                1   optional
+modules\rosapps\applications\screensavers\cylfrac\cylfrac.scr              1   optional
+modules\rosapps\applications\screensavers\matrix\matrix.scr                1   optional
+modules\rosapps\applications\screensavers\blankscr\scrnsave.scr            1   optional
+modules\rosapps\applications\screensavers\starfield\starfield.scr          1   optional
+modules\rosapps\applications\screensavers\mazescr\mazescr.scr              1   optional
+modules\rosapps\applications\screensavers\butterflies\butterflies.scr      1   optional
+modules\rosapps\applications\cmdutils\comp\comp.exe                                     1   optional
+modules\rosapps\applications\cmdutils\mode\mode.exe                                     1   optional
+modules\rosapps\applications\cmdutils\sort\sort.exe                                     1   optional
+modules\rosapps\applications\cmdutils\tee\tee.exe                                       1   optional
+modules\rosapps\applications\cmdutils\touch\touch.exe                                   1   optional
+modules\rosapps\applications\cmdutils\uptime\uptime.exe                                 1   optional
+modules\rosapps\applications\cmdutils\y\y.exe                                           1   optional
+modules\rosapps\applications\devutils\gdb2\gdb2.exe                                     1   optional
+modules\rosapps\applications\devutils\gdihv\gdihv.exe                                   1   optional
+modules\rosapps\applications\devutils\genguid\genguid.exe                               1   optional
+modules\rosapps\applications\sysutils\gettype\gettype.exe                               1   optional
+modules\rosapps\applications\net\ncftp\ncftp.exe                                        1   optional
+modules\rosapps\applications\net\netreg\netreg.exe                                      1   optional
+modules\rosapps\applications\net\niclist\niclist.exe                                    1   optional
+modules\rosapps\applications\net\roshttpd\roshttpd.exe                                  1   optional
+modules\rosapps\applications\notevil\notevil.exe                                        1   optional
+modules\rosapps\applications\sysutils\chkdsk\chkdsk.exe                                 1   optional
+modules\rosapps\applications\net\ncftp\ncftp.exe                                        1   optional
+modules\rosapps\applications\net\netreg\netreg.exe                                      1   optional
+modules\rosapps\applications\net\niclist\niclist.exe                                    1   optional
+modules\rosapps\applications\net\roshttpd\roshttpd.exe                                  1   optional
+modules\rosapps\applications\notevil\notevil.exe                                        1   optional
+modules\rosapps\applications\magnify\magnify.exe                                        1   optional
+modules\rosapps\applications\packmgr\cmd-line\rosget.exe                                1   optional
+modules\rosapps\applications\packmgr\gui\packmgr.exe                                    1   optional
+modules\rosapps\applications\packmgr\lib\package.dll                                    1   optional
+modules\rosapps\applications\sysutils\chkdsk\chkdsk.exe                                 1   optional
+modules\rosapps\applications\sysutils\systeminfo\systeminfo.exe                         1   optional
+modules\rosapps\applications\sysutils\chklib\chklib.exe                                 1   optional
+modules\rosapps\applications\sysutils\ctm\ctm.exe                                       1   optional
+modules\rosapps\applications\sysutils\kill\kill.exe                                     1   optional
+modules\rosapps\applications\sysutils\lsdd\lsdd.exe                                     1   optional
+modules\rosapps\applications\sysutils\man\man.exe                                       1   optional
+modules\rosapps\applications\sysutils\pedump\pedump.exe                                 1   optional
+modules\rosapps\applications\sysutils\regexpl\regexpl.exe                               1   optional
+modules\rosapps\applications\sysutils\tcat\tcat.exe                                     1   optional
+modules\rosapps\applications\sysutils\telnetd\telnetd.exe                               1   optional
+modules\rosapps\applications\sysutils\tlist\tlist.exe                                   1   optional
+modules\rosapps\applications\sysutils\screenshot\screenshot.exe                         1   optional
+modules\rosapps\applications\sysutils\utils\binpatch\binpatch.exe                       1   optional
+modules\rosapps\applications\sysutils\utils\cat\cat.exe                                 1   optional
+modules\rosapps\applications\sysutils\utils\driver\load\load.exe                        1   optional
+modules\rosapps\applications\sysutils\utils\driver\unload\unload.exe                    1   optional
+modules\rosapps\applications\sysutils\utils\infinst\infinst.exe                         1   optional
+modules\rosapps\applications\sysutils\utils\nts2w32err\nts2w32err.exe                   1   optional
+modules\rosapps\applications\sysutils\utils\objdir\objdir.exe                           1   optional
+modules\rosapps\applications\sysutils\utils\partinfo\partinfo.exe                       1   optional
+modules\rosapps\applications\sysutils\utils\ps\ps.exe                                   1   optional
+modules\rosapps\applications\sysutils\utils\rosperf\rosperf.exe                         1   optional
+modules\rosapps\applications\sysutils\utils\stats\stats.exe                             1   optional
+modules\rosapps\applications\sysutils\utils\tickcount\tickcount.exe                     1   optional
+modules\rosapps\applications\winfile\winfile.exe                                        1   optional
+modules\rosapps\applications\winver\winver.exe                                          1   optional
+modules\rosapps\applications\write\write.exe                                            1   optional
+modules\rosapps\demos\ddraw\ddraw_demo.exe                                 1   optional
+modules\rosapps\demos\maze\maze.exe                                        1   optional
+modules\rosapps\dflat32\edit.exe                                           1   optional
+modules\rosapps\drivers\green\green.sys                                    2   optional
+modules\rosapps\templates\dialog\dialog.exe                                1   optional
 
-;modules\rostests\rosautotest\rosautotest.exe                               1   optional
-;modules\rostests\tests\pseh2\pseh2_test.exe                                7   optional
-;modules\rostests\winetests\advapi32\advapi32_winetest.exe                  7   optional
-;modules\rostests\winetests\advpack\advpack_winetest.exe                    7   optional
-;modules\rostests\winetests\browseui\browseui_winetest.exe                  7   optional
-;modules\rostests\winetests\cabinet\cabinet_winetest.exe                    7   optional
-;modules\rostests\winetests\comcat\comcat_winetest.exe                      7   optional
-;modules\rostests\winetests\comctl32\comctl32_winetest.exe                  7   optional
-;modules\rostests\winetests\comdlg32\comdlg32_winetest.exe                  7   optional
-;modules\rostests\winetests\crypt32\crypt32_winetest.exe                    7   optional
-;modules\rostests\winetests\gdi32\gdi32_winetest.exe                        7   optional
-;modules\rostests\winetests\gdiplus\gdiplus_winetest.exe                    7   optional
-;modules\rostests\winetests\hlink\hlink_winetest.exe                        7   optional
-;modules\rostests\winetests\icmp\icmp_winetest.exe                          7   optional
-;modules\rostests\winetests\iphlpapi\iphlpapi_winetest.exe                  7   optional
-;modules\rostests\winetests\jscript\jscript_winetest.exe                    7   optional
-;modules\rostests\winetests\kernel32\kernel32_winetest.exe                  7   optional
-;modules\rostests\winetests\lz32\lz32_winetest.exe                          7   optional
-;modules\rostests\winetests\mapi32\mapi32_winetest.exe                      7   optional
-;modules\rostests\winetests\mlang\mlang_winetest.exe                        7   optional
-;modules\rostests\winetests\mshtml\mshtml_winetest.exe                      7   optional
-;modules\rostests\winetests\msi\msi_winetest.exe                            7   optional
-;modules\rostests\winetests\mstask\mstask_winetest.exe                      7   optional
-;modules\rostests\winetests\msvcrt\msvcrt_winetest.exe                      7   optional
-;modules\rostests\winetests\msxml3\msxml3_winetest.exe                      7   optional
-;modules\rostests\winetests\netapi32\netapi32_winetest.exe                  7   optional
-;modules\rostests\winetests\ntdll\ntdll_winetest.exe                        7   optional
-;modules\rostests\winetests\odbccp32\odbccp32_winetest.exe                  7   optional
-;modules\rostests\winetests\ole32\ole32_winetest.exe                        7   optional
-;modules\rostests\winetests\oleaut32\oleaut32_winetest.exe                  7   optional
-;modules\rostests\winetests\powrprof\powrprof_winetest.exe                  7   optional
-;modules\rostests\winetests\psapi\psapi_winetest.exe                        7   optional
-;modules\rostests\winetests\riched20\riched20_winetest.exe                  7   optional
-;modules\rostests\winetests\rpcrt4\rpcrt4_winetest.exe                      7   optional
-;modules\rostests\winetests\rsabase\rsabase_winetest.exe                    7   optional
-;modules\rostests\winetests\rsaenh\rsaenh_winetest.exe                      7   optional
-;modules\rostests\winetests\schannel\schannel_winetest.exe                  7   optional
-;modules\rostests\winetests\secur32\secur32_winetest.exe                    7   optional
-;modules\rostests\winetests\setupapi\setupapi_winetest.exe                  7   optional
-;modules\rostests\winetests\shdocvw\shdocvw_winetest.exe                    7   optional
-;modules\rostests\winetests\shell32\shell32_winetest.exe                    7   optional
-;modules\rostests\winetests\shlwapi\shlwapi_winetest.exe                    7   optional
-;modules\rostests\winetests\urlmon\urlmon_winetest.exe                      7   optional
-;modules\rostests\winetests\user32\user32_winetest.exe                      7   optional
-;modules\rostests\winetests\usp10\usp10_winetest.exe                        7   optional
-;modules\rostests\winetests\uxtheme\uxtheme_winetest.exe                    7   optional
-;modules\rostests\winetests\version\version_winetest.exe                    7   optional
-;modules\rostests\winetests\winhttp\winhttp_winetest.exe                    7   optional
-;modules\rostests\winetests\wininet\wininet_winetest.exe                    7   optional
-;modules\rostests\winetests\wintrust\wintrust_winetest.exe                  7   optional
-;modules\rostests\winetests\wlanapi\wlanapi_winetest.exe                    7   optional
-;modules\rostests\winetests\ws2_32\ws2_32_winetest.exe                      7   optional
+modules\rostests\rosautotest\rosautotest.exe                               1   optional
+modules\rostests\tests\pseh2\pseh2_test.exe                                7   optional
+modules\rostests\winetests\advapi32\advapi32_winetest.exe                  7   optional
+modules\rostests\winetests\advpack\advpack_winetest.exe                    7   optional
+modules\rostests\winetests\browseui\browseui_winetest.exe                  7   optional
+modules\rostests\winetests\cabinet\cabinet_winetest.exe                    7   optional
+modules\rostests\winetests\comcat\comcat_winetest.exe                      7   optional
+modules\rostests\winetests\comctl32\comctl32_winetest.exe                  7   optional
+modules\rostests\winetests\comdlg32\comdlg32_winetest.exe                  7   optional
+modules\rostests\winetests\crypt32\crypt32_winetest.exe                    7   optional
+modules\rostests\winetests\cryptnet\cryptnet_winetest.exe                  7   optional
+modules\rostests\winetests\gdi32\gdi32_winetest.exe                        7   optional
+modules\rostests\winetests\gdiplus\gdiplus_winetest.exe                    7   optional
+modules\rostests\winetests\hlink\hlink_winetest.exe                        7   optional
+modules\rostests\winetests\icmp\icmp_winetest.exe                          7   optional
+modules\rostests\winetests\iphlpapi\iphlpapi_winetest.exe                  7   optional
+modules\rostests\winetests\jscript\jscript_winetest.exe                    7   optional
+modules\rostests\winetests\kernel32\kernel32_winetest.exe                  7   optional
+modules\rostests\winetests\lz32\lz32_winetest.exe                          7   optional
+modules\rostests\winetests\mapi32\mapi32_winetest.exe                      7   optional
+modules\rostests\winetests\mlang\mlang_winetest.exe                        7   optional
+modules\rostests\winetests\mshtml\mshtml_winetest.exe                      7   optional
+modules\rostests\winetests\msi\msi_winetest.exe                            7   optional
+modules\rostests\winetests\mstask\mstask_winetest.exe                      7   optional
+modules\rostests\winetests\msvcrt\msvcrt_winetest.exe                      7   optional
+modules\rostests\winetests\msxml3\msxml3_winetest.exe                      7   optional
+modules\rostests\winetests\netapi32\netapi32_winetest.exe                  7   optional
+modules\rostests\winetests\ntdll\ntdll_winetest.exe                        7   optional
+modules\rostests\winetests\odbccp32\odbccp32_winetest.exe                  7   optional
+modules\rostests\winetests\ole32\ole32_winetest.exe                        7   optional
+modules\rostests\winetests\oleaut32\oleaut32_winetest.exe                  7   optional
+modules\rostests\winetests\powrprof\powrprof_winetest.exe                  7   optional
+modules\rostests\winetests\psapi\psapi_winetest.exe                        7   optional
+modules\rostests\winetests\riched20\riched20_winetest.exe                  7   optional
+modules\rostests\winetests\rpcrt4\rpcrt4_winetest.exe                      7   optional
+modules\rostests\winetests\rsabase\rsabase_winetest.exe                    7   optional
+modules\rostests\winetests\rsaenh\rsaenh_winetest.exe                      7   optional
+modules\rostests\winetests\schannel\schannel_winetest.exe                  7   optional
+modules\rostests\winetests\secur32\secur32_winetest.exe                    7   optional
+modules\rostests\winetests\setupapi\setupapi_winetest.exe                  7   optional
+modules\rostests\winetests\shdocvw\shdocvw_winetest.exe                    7   optional
+modules\rostests\winetests\shell32\shell32_winetest.exe                    7   optional
+modules\rostests\winetests\shlwapi\shlwapi_winetest.exe                    7   optional
+modules\rostests\winetests\urlmon\urlmon_winetest.exe                      7   optional
+modules\rostests\winetests\user32\user32_winetest.exe                      7   optional
+modules\rostests\winetests\usp10\usp10_winetest.exe                        7   optional
+modules\rostests\winetests\uxtheme\uxtheme_winetest.exe                    7   optional
+modules\rostests\winetests\version\version_winetest.exe                    7   optional
+modules\rostests\winetests\winhttp\winhttp_winetest.exe                    7   optional
+modules\rostests\winetests\wininet\wininet_winetest.exe                    7   optional
+modules\rostests\winetests\wintrust\wintrust_winetest.exe                  7   optional
+modules\rostests\winetests\wlanapi\wlanapi_winetest.exe                    7   optional
+modules\rostests\winetests\ws2_32\ws2_32_winetest.exe                      7   optional
 
-;modules\wallpaper\Angelus_02_ROSWP.bmp                                     4   optional
+modules\wallpaper\Angelus_02_ROSWP.bmp                                     4   optional
 
 ; Native libraries
-;modules\windows\mfc42.dll                                                  1   optional
-;modules\windows\vmx_fb.dll                                                 1   optional
-;modules\windows\vmx_mode.dll                                               1   optional
-;modules\windows\vmx_svga.sys                                               2   optional
-;modules\windows\vmx_svga.inf                                               6   optional
-;modules\windows\kvmnet.sys                                                 2   optional
-;modules\windows\kvmnet.inf                                                 6   optional
+modules\windows\mfc42.dll                                                  1   optional
+modules\windows\vmx_fb.dll                                                 1   optional
+modules\windows\vmx_mode.dll                                               1   optional
+modules\windows\vmx_svga.sys                                               2   optional
+modules\windows\vmx_svga.inf                                               6   optional
+modules\windows\kvmnet.sys                                                 2   optional
+modules\windows\kvmnet.inf                                                 6   optional
 
 ; Gecko
-;modules\windows\wine_gecko-0.9.1.cab                                       4   optional
+modules\windows\wine_gecko-0.9.1.cab                                       4   optional

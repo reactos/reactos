@@ -21,6 +21,27 @@ typedef struct _PATRECT
     HBRUSH hBrush;
 } PATRECT, * PPATRECT;
 
+/* Bitfields for UserpreferencesMask SPI_ values (with defaults) */
+/* See also http://technet.microsoft.com/nl-nl/library/cc957204(en-us).aspx */
+typedef struct {
+    DWORD bActiveWindowTracking:1;      //0 SPI_GETACTIVEWINDOWTRACKING
+    DWORD bMenuAnimation:1;             //1 SPI_GETMENUANIMATION
+    DWORD bComboBoxAnimation:1;         //1 SPI_GETCOMBOBOXANIMATION
+    DWORD bListBoxSmoothScrolling:1;    //1 SPI_GETLISTBOXSMOOTHSCROLLING
+    DWORD bGradientCaptions:1;          //1 SPI_GETGRADIENTCAPTIONS
+    DWORD bKeyboardCues:1;              //0 SPI_GETKEYBOARDCUES
+    DWORD bActiveWndTrkZorder:1;        //0 SPI_GETACTIVEWNDTRKZORDER
+    DWORD bHotTracking:1;               //1 SPI_GETHOTTRACKING
+    DWORD bReserved1:1;                 //0 Reserved
+    DWORD bMenuFade:1;                  //1 SPI_GETMENUFADE
+    DWORD bSelectionFade:1;             //1 SPI_GETSELECTIONFADE
+    DWORD bTooltipAnimation:1;          //1 SPI_GETTOOLTIPANIMATION
+    DWORD bTooltipFade:1;               //1 SPI_GETTOOLTIPFADE
+    DWORD bCursorShadow:1;              //1 SPI_GETCURSORSHADOW
+    DWORD bReserved2:17;                //0 Reserved
+    DWORD bUiEffects:1;                 //1 SPI_GETUIEFFECTS
+} USERPREFERENCESMASK, *PUSERPREFERENCESMASK;
+
 /* Structures for reading icon/cursor files and resources */
 #pragma pack(push,1)
 typedef struct _ICONIMAGE

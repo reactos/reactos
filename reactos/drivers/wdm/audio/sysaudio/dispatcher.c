@@ -6,14 +6,6 @@
  * PROGRAMMER:      Johannes Anderwald
  */
 
-#include <ntifs.h>
-#include <ntddk.h>
-#include <portcls.h>
-#include <ks.h>
-#include <ksmedia.h>
-#include <math.h>
-#define YDEBUG
-#include <debug.h>
 #include "sysaudio.h"
 
 NTSTATUS
@@ -24,17 +16,13 @@ Dispatch_fnDeviceIoControl(
 {
     PIO_STACK_LOCATION IoStack;
 
-    //DPRINT("Dispatch_fnDeviceIoControl called DeviceObject %p Irp %p\n", DeviceObject);
-
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_PROPERTY)
     {
        return SysAudioHandleProperty(DeviceObject, Irp);
     }
 
-    DPRINT1("Dispatch_fnDeviceIoControl Unhandeled %x\n", IoStack->Parameters.DeviceIoControl.IoControlCode);
-    DbgBreakPoint();
-
+    /* unsupported request */
     Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
     Irp->IoStatus.Information = 0;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -47,8 +35,7 @@ Dispatch_fnRead(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
-    DPRINT1("Dispatch_fnRead called DeviceObject %p Irp %p\n", DeviceObject);
-
+    /* unsupported request */
     Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
     Irp->IoStatus.Information = 0;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -61,8 +48,7 @@ Dispatch_fnWrite(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
-    DPRINT1("Dispatch_fnWrite called DeviceObject %p Irp %p\n", DeviceObject);
-
+    /* unsupported request */
     Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
     Irp->IoStatus.Information = 0;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -75,9 +61,6 @@ Dispatch_fnFlush(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
-    DPRINT1("Dispatch_fnFlush called DeviceObject %p Irp %p\n", DeviceObject);
-    //FIXME
-    // cleanup resources
     Irp->IoStatus.Status = STATUS_SUCCESS;
     Irp->IoStatus.Information = 0;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -104,10 +87,10 @@ Dispatch_fnClose(
     DeviceExtension = (PSYSAUDIODEVEXT)DeviceObject->DeviceExtension;
 
 
-    DPRINT1("Client %p NumDevices %u\n", Client, Client->NumDevices);
+    DPRINT("Client %p NumDevices %u\n", Client, Client->NumDevices);
     for(Index = 0; Index < Client->NumDevices; Index++)
     {
-        DPRINT1("Index %u Device %u Handels Count %u\n", Index, Client->Devs[Index].DeviceId, Client->Devs[Index].ClientHandlesCount);
+        DPRINT("Index %u Device %u Handels Count %u\n", Index, Client->Devs[Index].DeviceId, Client->Devs[Index].ClientHandlesCount);
         if (Client->Devs[Index].ClientHandlesCount)
         {
             Entry = GetListEntry(&DeviceExtension->KsAudioDeviceList, Client->Devs[Index].DeviceId);
@@ -120,27 +103,35 @@ Dispatch_fnClose(
 
                 if (Client->Devs[Index].ClientHandles[SubIndex].bHandle)
                 {
-                    DPRINT1("Closing handle %p\n", Client->Devs[Index].ClientHandles[SubIndex].hPin);
+                    DPRINT("Closing handle %p\n", Client->Devs[Index].ClientHandles[SubIndex].hPin);
 
                     ZwClose(Client->Devs[Index].ClientHandles[SubIndex].hPin);
                     Entry->Pins[Client->Devs[Index].ClientHandles[SubIndex].PinId].References--;
                 }
                 else
                 {
-                    /* this is pin which can only be instantiated once
-                     * so we just need to release the reference count on that pin */
+                    /* this is a pin which can only be instantiated once
+                     * so we just need to release the reference count on that pin
+                     */
                     Entry->Pins[Client->Devs[Index].ClientHandles[SubIndex].PinId].References--;
 
                     DispatchContext = (PDISPATCH_CONTEXT)Client->Devs[Index].ClientHandles[SubIndex].DispatchContext;
-                    ObDereferenceObject(DispatchContext->MixerFileObject);
-                    ObDereferenceObject(DispatchContext->FileObject);
-                    ZwClose(DispatchContext->hMixerPin);
+
+                    if (DispatchContext->MixerFileObject)
+                        ObDereferenceObject(DispatchContext->MixerFileObject);
+
+                    if (DispatchContext->hMixerPin)
+                        ZwClose(DispatchContext->hMixerPin);
+
+                    if (DispatchContext->FileObject)
+                        ObDereferenceObject(DispatchContext->FileObject);
+
                     ExFreePool(DispatchContext);
 
                     //DPRINT1("Index %u DeviceIndex %u Pin %u References %u\n", Index, Client->Devs[Index].DeviceId, SubIndex, Entry->Pins[Client->Devs[Index].ClientHandles[SubIndex].PinId].References);
                     if (!Entry->Pins[Client->Devs[Index].ClientHandles[SubIndex].PinId].References)
                     {
-                        DPRINT1("Closing pin %p\n", Entry->Pins[Client->Devs[Index].ClientHandles[SubIndex].PinId].PinHandle);
+                        DPRINT("Closing pin %p\n", Entry->Pins[Client->Devs[Index].ClientHandles[SubIndex].PinId].PinHandle);
 
                         ZwClose(Entry->Pins[Client->Devs[Index].ClientHandles[SubIndex].PinId].PinHandle);
                         Entry->Pins[Client->Devs[Index].ClientHandles[SubIndex].PinId].PinHandle = NULL;
@@ -156,8 +147,6 @@ Dispatch_fnClose(
 
     ExFreePool(Client);
 
-    //FIXME
-    // cleanup resources
     Irp->IoStatus.Status = STATUS_SUCCESS;
     Irp->IoStatus.Information = 0;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -274,13 +263,15 @@ DispatchCreateSysAudio(
     PKSOBJECT_CREATE_ITEM CreateItem;
     PIO_STACK_LOCATION IoStatus;
     LPWSTR Buffer;
+    PSYSAUDIODEVEXT DeviceExtension;
+    ULONG Index;
 
     static LPWSTR KS_NAME_PIN = L"{146F1A80-4791-11D0-A5D6-28DB04C10000}";
 
     IoStatus = IoGetCurrentIrpStackLocation(Irp);
     Buffer = IoStatus->FileObject->FileName.Buffer;
 
-    DPRINT1("DispatchCreateSysAudio entered\n");
+    DPRINT("DispatchCreateSysAudio entered\n");
 
     if (Buffer)
     {
@@ -288,7 +279,7 @@ DispatchCreateSysAudio(
         if (!wcsncmp(KS_NAME_PIN, Buffer, wcslen(KS_NAME_PIN)))
         {
             Status = CreateDispatcher(Irp);
-            DPRINT1("Virtual pin Status %x FileObject %p\n", Status, IoStatus->FileObject);
+            DPRINT("Virtual pin Status %x FileObject %p\n", Status, IoStatus->FileObject);
 
             Irp->IoStatus.Information = 0;
             Irp->IoStatus.Status = Status;
@@ -300,16 +291,55 @@ DispatchCreateSysAudio(
     /* allocate create item */
     CreateItem = ExAllocatePool(NonPagedPool, sizeof(KSOBJECT_CREATE_ITEM));
     if (!CreateItem)
+    {
+        Irp->IoStatus.Information = 0;
+        Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
         return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
     Client = ExAllocatePool(NonPagedPool, sizeof(SYSAUDIO_CLIENT));
     if (!Client)
     {
         ExFreePool(CreateItem);
+
+        Irp->IoStatus.Information = 0;
+        Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
-    /* initialize client struct */
-    RtlZeroMemory(Client, sizeof(SYSAUDIO_CLIENT));
+
+    /* get device extension */
+    DeviceExtension = (PSYSAUDIODEVEXT) DeviceObject->DeviceExtension;
+
+    Client->NumDevices = DeviceExtension->NumberOfKsAudioDevices;
+    /* has sysaudio found any devices */
+    if (Client->NumDevices)
+    {
+        Client->Devs = ExAllocatePool(NonPagedPool, sizeof(SYSAUDIO_CLIENT_HANDELS) * Client->NumDevices);
+        if (!Client->Devs)
+        {
+            ExFreePool(CreateItem);
+            ExFreePool(Client);
+            Irp->IoStatus.Information = 0;
+            Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+    }
+    else
+    {
+        /* no devices yet available */
+        Client->Devs = NULL;
+    }
+
+    /* Initialize devs array */
+    for(Index = 0; Index < Client->NumDevices; Index++)
+    {
+        Client->Devs[Index].DeviceId = Index;
+        Client->Devs[Index].ClientHandles = NULL;
+        Client->Devs[Index].ClientHandlesCount = 0;
+    }
 
     /* zero create struct */
     RtlZeroMemory(CreateItem, sizeof(KSOBJECT_CREATE_ITEM));

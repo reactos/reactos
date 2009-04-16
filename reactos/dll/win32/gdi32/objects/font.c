@@ -971,7 +971,7 @@ GetGlyphOutlineA(
     LPWSTR p = NULL;
     DWORD ret;
     UINT c;
-    DPRINT1("GetGlyphOutlineA  uChar %x\n", uChar);
+    DPRINT("GetGlyphOutlineA uChar %x\n", uChar);
     if(!(uFormat & GGO_GLYPH_INDEX)) {
         int len;
         char mbchs[2];
@@ -984,7 +984,7 @@ GetGlyphOutlineA(
             mbchs[0] = (uChar & 0xff);
         }
         p = FONT_mbtowc(hdc, mbchs, len, NULL, NULL);
-	c = p[0];
+        c = p[0];
     } else
         c = uChar;
     ret = NtGdiGetGlyphOutline(hdc, c, uFormat, lpgm, cbBuffer, lpvBuffer, (CONST LPMAT2)lpmat2, TRUE);
@@ -1008,7 +1008,7 @@ GetGlyphOutlineW(
 	CONST MAT2	*lpmat2
 	)
 {
-  DPRINT("GetGlyphOutlineW  uChar %x\n", uChar);
+  DPRINT("GetGlyphOutlineW uChar %x\n", uChar);
   if (!lpgm & !lpmat2) return GDI_ERROR;
   if (!lpvBuffer) cbBuffer = 0;
   return NtGdiGetGlyphOutline ( hdc, uChar, uFormat, lpgm, cbBuffer, lpvBuffer, (CONST LPMAT2)lpmat2, TRUE);

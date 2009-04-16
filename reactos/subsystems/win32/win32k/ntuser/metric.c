@@ -40,8 +40,8 @@ InitMetrics(VOID)
         pScreenDC = DC_LockDc(hScreenDC);
         if (pScreenDC)
         {
-            Width = ((PGDIDEVICE)pScreenDC->pPDev)->GDIInfo.ulHorzRes;
-            Height = ((PGDIDEVICE)pScreenDC->pPDev)->GDIInfo.ulVertRes;
+            Width = pScreenDC->ppdev->GDIInfo.ulHorzRes;
+            Height = pScreenDC->ppdev->GDIInfo.ulVertRes;
             DC_UnlockDc(pScreenDC);
         }
         NtGdiDeleteObjectApp(hScreenDC);

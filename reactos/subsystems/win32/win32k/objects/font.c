@@ -59,7 +59,7 @@ FASTCALL
 IntGetCharDimensions(HDC hdc, PTEXTMETRICW ptm, PDWORD height)
 {
   PDC pdc;
-  PDC_ATTR pDc_Attr;
+  PDC_ATTR pdcattr;
   PTEXTOBJ TextObj;
   SIZE sz;
   TMW_INTERNAL tmwi;
@@ -76,10 +76,9 @@ IntGetCharDimensions(HDC hdc, PTEXTMETRICW ptm, PDWORD height)
 
   if (!pdc) return 0;
 
-  pDc_Attr = pdc->pDc_Attr;
-  if(!pDc_Attr) pDc_Attr = &pdc->Dc_Attr;
+  pdcattr = pdc->pdcattr;
 
-  TextObj = RealizeFontInit(pDc_Attr->hlfntNew);
+  TextObj = RealizeFontInit(pdcattr->hlfntNew);
   if ( !TextObj )
   {
      DC_UnlockDc(pdc);
@@ -101,7 +100,7 @@ DWORD
 FASTCALL
 IntGetFontLanguageInfo(PDC Dc)
 {
-  PDC_ATTR Dc_Attr;
+  PDC_ATTR pdcattr;
   FONTSIGNATURE fontsig;
   static const DWORD GCP_DBCS_MASK=0x003F0000,
 		GCP_DIACRITIC_MASK=0x00000000,
@@ -138,11 +137,10 @@ IntGetFontLanguageInfo(PDC Dc)
   if( (fontsig.fsCsb[0]&GCP_USEKERNING_MASK)!=0 )
 		result|=GCP_USEKERNING;
 
-  Dc_Attr = Dc->pDc_Attr;
-  if(!Dc_Attr) Dc_Attr = &Dc->Dc_Attr;
+  pdcattr = Dc->pdcattr;
 
   /* this might need a test for a HEBREW- or ARABIC_CHARSET as well */
-  if ( Dc_Attr->lTextAlign & TA_RTLREADING )
+  if ( pdcattr->lTextAlign & TA_RTLREADING )
      if( (fontsig.fsCsb[0]&GCP_REORDER_MASK)!=0 )
                     result|=GCP_REORDER;
 
@@ -229,7 +227,7 @@ NtGdiGetFontData(
    DWORD Size)
 {
   PDC Dc;
-  PDC_ATTR Dc_Attr;
+  PDC_ATTR pdcattr;
   HFONT hFont;
   PTEXTOBJ TextObj;
   PFONTGDI FontGdi;
@@ -257,10 +255,9 @@ NtGdiGetFontData(
      SetLastWin32Error(ERROR_INVALID_HANDLE);
      return GDI_ERROR;
   }
-  Dc_Attr = Dc->pDc_Attr;
-  if(!Dc_Attr) Dc_Attr = &Dc->Dc_Attr;
+  pdcattr = Dc->pdcattr;
 
-  hFont = Dc_Attr->hlfntNew;
+  hFont = pdcattr->hlfntNew;
   TextObj = RealizeFontInit(hFont);
   DC_UnlockDc(Dc);
 
@@ -289,7 +286,7 @@ NtGdiGetFontUnicodeRanges(
     OUT OPTIONAL LPGLYPHSET pgs)
 {
   PDC pDc;
-  PDC_ATTR Dc_Attr;
+  PDC_ATTR pdcattr;
   HFONT hFont;
   PTEXTOBJ TextObj;
   PFONTGDI FontGdi;
@@ -304,10 +301,9 @@ NtGdiGetFontUnicodeRanges(
      return 0;
   }
 
-  Dc_Attr = pDc->pDc_Attr;
-  if(!Dc_Attr) Dc_Attr = &pDc->Dc_Attr;
+  pdcattr = pDc->pdcattr;
 
-  hFont = Dc_Attr->hlfntNew;
+  hFont = pdcattr->hlfntNew;
   TextObj = RealizeFontInit(hFont);
         
   if ( TextObj == NULL)
@@ -446,7 +442,7 @@ NtGdiGetKerningPairs(HDC  hDC,
                      LPKERNINGPAIR  krnpair)
 {
   PDC dc;
-  PDC_ATTR Dc_Attr;
+  PDC_ATTR pdcattr;
   PTEXTOBJ TextObj;
   PFONTGDI FontGDI;
   DWORD Count;
@@ -460,9 +456,8 @@ NtGdiGetKerningPairs(HDC  hDC,
      return 0;
   }
 
-  Dc_Attr = dc->pDc_Attr;
-  if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
-  TextObj = RealizeFontInit(Dc_Attr->hlfntNew);
+  pdcattr = dc->pdcattr;
+  TextObj = RealizeFontInit(pdcattr->hlfntNew);
   DC_UnlockDc(dc);
 
   if (!TextObj)
@@ -522,7 +517,7 @@ NtGdiGetOutlineTextMetricsInternalW (HDC  hDC,
                                    TMDIFF *Tmd)
 {
   PDC dc;
-  PDC_ATTR Dc_Attr;
+  PDC_ATTR pdcattr;
   PTEXTOBJ TextObj;
   PFONTGDI FontGDI;
   HFONT hFont = 0;
@@ -536,9 +531,8 @@ NtGdiGetOutlineTextMetricsInternalW (HDC  hDC,
      SetLastWin32Error(ERROR_INVALID_HANDLE);
      return 0;
   }
-  Dc_Attr = dc->pDc_Attr;
-  if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
-  hFont = Dc_Attr->hlfntNew;
+  pdcattr = dc->pdcattr;
+  hFont = pdcattr->hlfntNew;
   TextObj = RealizeFontInit(hFont);
   DC_UnlockDc(dc);
   if (!TextObj)
@@ -699,7 +693,7 @@ NtGdiGetRealizationInfo(
   PDC pDc;
   PTEXTOBJ pTextObj;
   PFONTGDI pFontGdi;
-  PDC_ATTR Dc_Attr;
+  PDC_ATTR pdcattr;
   BOOL Ret = FALSE;
   INT i = 0;
   REALIZATION_INFO ri;
@@ -710,9 +704,8 @@ NtGdiGetRealizationInfo(
      SetLastWin32Error(ERROR_INVALID_HANDLE);
      return 0;
   }
-  Dc_Attr = pDc->pDc_Attr;
-  if(!Dc_Attr) Dc_Attr = &pDc->Dc_Attr;
-  pTextObj = RealizeFontInit(Dc_Attr->hlfntNew);
+  pdcattr = pDc->pdcattr;
+  pTextObj = RealizeFontInit(pdcattr->hlfntNew);
   pFontGdi = ObjToGDI(pTextObj->Font, FONT);
   TEXTOBJ_UnlockText(pTextObj);
   DC_UnlockDc(pDc);
@@ -841,7 +834,7 @@ NtGdiSelectFont(
     IN HFONT hFont)
 {
     PDC pDC;
-    PDC_ATTR pDc_Attr;
+    PDC_ATTR pdcattr;
     HFONT hOrgFont = NULL;
 
     if (hDC == NULL || hFont == NULL) return NULL;
@@ -852,14 +845,13 @@ NtGdiSelectFont(
         return NULL;
     }
 
-    pDc_Attr = pDC->pDc_Attr;
-    if(!pDc_Attr) pDc_Attr = &pDC->Dc_Attr;
+    pdcattr = pDC->pdcattr;
 
     /* FIXME: what if not successful? */
     if(NT_SUCCESS(TextIntRealizeFont((HFONT)hFont,NULL)))
     {
-        hOrgFont = pDc_Attr->hlfntNew;
-        pDc_Attr->hlfntNew = hFont;
+        hOrgFont = pdcattr->hlfntNew;
+        pdcattr->hlfntNew = hFont;
     }
 
     DC_UnlockDc(pDC);

@@ -251,25 +251,26 @@ static LONG copy_servername_from_name(LPCWSTR name, LPWSTR target)
     ptr = strchrW(server, '\\');
     serverlen = (ptr) ? ptr - server : lstrlenW(server);
 
-    /* servername is empty or to long */
+    /* servername is empty */
     if (serverlen == 0) return 0;
 
     TRACE("found %s\n", debugstr_wn(server, serverlen));
 
     if (serverlen > MAX_COMPUTERNAME_LENGTH) return -serverlen;
 
+    if (target) {
+        memcpy(target, server, serverlen * sizeof(WCHAR));
+        target[serverlen] = '\0';
+    }
+
     len = sizeof(buffer) / sizeof(buffer[0]);
     if (GetComputerNameW(buffer, &len)) {
         if ((serverlen == len) && (strncmpiW(server, buffer, len) == 0)) {
             /* The requested Servername is our computername */
-            if (target) {
-                memcpy(target, server, serverlen * sizeof(WCHAR));
-                target[serverlen] = '\0';
-            }
-            return serverlen;
+            return 0;
         }
     }
-    return 0;
+    return serverlen;
 }
 
 /******************************************************************

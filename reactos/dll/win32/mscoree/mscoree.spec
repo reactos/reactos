@@ -70,7 +70,7 @@
 @ stdcall LoadLibraryShim(ptr ptr ptr ptr)
 @ stub LoadLibraryWithPolicyShim
 @ stdcall LoadStringRCEx(long long ptr long long ptr)
-@ stub LockClrVersion
+@ stdcall LockClrVersion(ptr ptr ptr)
 @ stub MetaDataGetDispenser
 @ stdcall ND_CopyObjDst(ptr ptr long long)
 @ stdcall ND_CopyObjSrc(ptr long ptr long)

@@ -185,6 +185,8 @@ static const ClassFactory SecurityManagerCF =
     { &ClassFactoryVtbl, SecManagerImpl_Construct};
 static const ClassFactory ZoneManagerCF =
     { &ClassFactoryVtbl, ZoneMgrImpl_Construct};
+static const ClassFactory StdURLMonikerCF =
+    { &ClassFactoryVtbl, StdURLMoniker_Construct};
  
 struct object_creation_info
 {
@@ -209,7 +211,8 @@ static const struct object_creation_info object_creation[] =
     { &CLSID_HttpSProtocol,           CLASSFACTORY(&HttpSProtocolCF),   wszHttps },
     { &CLSID_MkProtocol,              CLASSFACTORY(&MkProtocolCF),      wszMk },
     { &CLSID_InternetSecurityManager, CLASSFACTORY(&SecurityManagerCF), NULL    },
-    { &CLSID_InternetZoneManager,     CLASSFACTORY(&ZoneManagerCF),     NULL    }
+    { &CLSID_InternetZoneManager,     CLASSFACTORY(&ZoneManagerCF),     NULL    },
+    { &CLSID_StdURLMoniker,           CLASSFACTORY(&StdURLMonikerCF),   NULL    }
 };
 
 static void init_session(BOOL init)

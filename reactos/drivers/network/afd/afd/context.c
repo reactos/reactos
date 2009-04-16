@@ -33,7 +33,7 @@ AfdGetContext( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     AFD_DbgPrint(MID_TRACE,("Returning %x\n", Status));
 
-    return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL );
+    return UnlockAndMaybeComplete( FCB, Status, Irp, 0 );
 }
 
 NTSTATUS NTAPI
@@ -52,7 +52,7 @@ AfdSetContext( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     FCB->Context = ExAllocatePool( PagedPool,
 	                           IrpSp->Parameters.DeviceIoControl.InputBufferLength );
 
-    if( !FCB->Context ) return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY, Irp, 0, NULL );
+    if( !FCB->Context ) return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY, Irp, 0 );
 
     FCB->ContextSize = IrpSp->Parameters.DeviceIoControl.InputBufferLength;
 
@@ -60,5 +60,5 @@ AfdSetContext( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 		   IrpSp->Parameters.DeviceIoControl.Type3InputBuffer,
 		   FCB->ContextSize );
 
-    return UnlockAndMaybeComplete( FCB, STATUS_SUCCESS, Irp, 0, NULL );
+    return UnlockAndMaybeComplete( FCB, STATUS_SUCCESS, Irp, 0 );
 }

@@ -22,7 +22,7 @@
 #define NDEBUG
 #include <debug.h>
 
-BOOLEAN DIB_XXBPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
+BOOLEAN DIB_XXBPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf, SURFOBJ *MaskSurf,
                             SURFOBJ *PatternSurface,
                             RECTL *DestRect, RECTL *SourceRect,
                             POINTL *MaskOrigin, BRUSHOBJ *Brush,
@@ -48,8 +48,9 @@ BOOLEAN DIB_XXBPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
     PFN_DIB_GetPixel fnDest_GetPixel = NULL;
     PFN_DIB_PutPixel fnDest_PutPixel = NULL;
     PFN_DIB_GetPixel fnPattern_GetPixel = NULL;
+    PFN_DIB_GetPixel fnMask_GetPixel = NULL;
 
-    ULONG PatternX = 0, PatternY = 0;
+    LONG PatternX = 0, PatternY = 0;
 
     BOOL UsesSource = ROP4_USES_SOURCE(ROP);
     BOOL UsesPattern = ROP4_USES_PATTERN(ROP);
@@ -65,6 +66,11 @@ BOOLEAN DIB_XXBPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
         fnSource_GetPixel = DibFunctionsForBitmapFormat[SourceSurf->iBitmapFormat].DIB_GetPixel;
         DPRINT("Source BPP: %u, srcRect: (%d,%d)-(%d,%d)\n",
             BitsPerFormat(SourceSurf->iBitmapFormat), SourceRect->left, SourceRect->top, SourceRect->right, SourceRect->bottom);
+    }
+
+    if (MaskSurf)
+    {
+        fnMask_GetPixel = DibFunctionsForBitmapFormat[MaskSurf->iBitmapFormat].DIB_GetPixel;
     }
 
     DstHeight = DestRect->bottom - DestRect->top;
@@ -120,7 +126,19 @@ BOOLEAN DIB_XXBPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
         for (DesX = DestRect->left; DesX < DestRect->right; DesX++)
         {
             CanDraw = TRUE;
-            if (UsesSource)
+
+            if (fnMask_GetPixel)
+            {
+                sx = SourceRect->left+(DesX - DestRect->left) * SrcWidth / DstWidth;
+                if (sx < 0 || sy < 0 ||
+                    MaskSurf->sizlBitmap.cx < sx || MaskSurf->sizlBitmap.cy < sy || 
+                    fnMask_GetPixel(MaskSurf, sx, sy) != 0)
+                {
+                    CanDraw = FALSE;
+                }
+            }
+
+            if (UsesSource && CanDraw)
             {
                 sx = SourceRect->left+(DesX - DestRect->left) * SrcWidth / DstWidth;
                 if (sx >= 0 && sy >= 0 &&

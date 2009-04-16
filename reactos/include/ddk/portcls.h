@@ -1080,6 +1080,9 @@ DEFINE_GUID(IID_IPort,
         IN  ULONG CreateOptiona OPTIONAL, \
         OUT PULONG Disposition OPTIONAL);
 
+#undef INTERFACE
+#define INTERFACE IPort
+
 DECLARE_INTERFACE_(IPort, IUnknown)
 {
     DEFINE_ABSTRACT_UNKNOWN()

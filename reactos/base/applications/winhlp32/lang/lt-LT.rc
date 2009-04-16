@@ -26,28 +26,40 @@ LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
 /* Menu */
 
 MAIN_MENU MENU
-BEGIN
- POPUP "&Byla"
- BEGIN
+{
+ POPUP "&Byla" {
   MENUITEM "&Atverti", MNID_FILE_OPEN
   MENUITEM SEPARATOR
   MENUITEM "&Spausdinti", MNID_FILE_PRINT
   MENUITEM "S&pausdintuvo nuostatos...", MNID_FILE_SETUP
    MENUITEM SEPARATOR
   MENUITEM "&Baigti", MNID_FILE_EXIT
- END
- POPUP "&Redaguoti"
- BEGIN
+ }
+ POPUP "&Redaguoti" {
    MENUITEM "&Kopijuoti...", MNID_EDIT_COPYDLG
    MENUITEM SEPARATOR
-   MENUITEM "&Pastaba...", MNID_EDIT_ANNOTATE
- END
- POPUP "&Þymë"
- BEGIN
+   MENUITEM "&Komentarai...", MNID_EDIT_ANNOTATE
+ }
+ POPUP "&Þymës" {
    MENUITEM "&Kurti...", MNID_BKMK_DEFINE
- END
- POPUP "&Pagalba"
- BEGIN
+ }
+ POPUP "&Parinktys" {
+   POPUP	"Pagalba visada matoma"
+   BEGIN
+     MENUITEM "Numatyta",	MNID_OPTS_HELP_DEFAULT
+     MENUITEM "Matoma",	MNID_OPTS_HELP_VISIBLE
+     MENUITEM "Nematoma",	MNID_OPTS_HELP_NONVISIBLE
+  END
+  MENUITEM "Istorija",		MNID_OPTS_HISTORY
+  POPUP    "Ðriftas"
+  BEGIN
+    MENUITEM "Maþas",		MNID_OPTS_FONTS_SMALL
+    MENUITEM "Normalus",    	MNID_OPTS_FONTS_NORMAL
+    MENUITEM "Didelis",     	MNID_OPTS_FONTS_LARGE
+  END
+  MENUITEM "Naudoti sistemos spalvas",	MNID_OPTS_SYSTEM_COLORS
+ }
+ POPUP "&Pagalba" {
    MENUITEM "&Turinys", MNID_HELP_HELPON
    MENUITEM "Visada &virðuje", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
@@ -55,24 +67,63 @@ BEGIN
 #ifdef WINELIB
    MENUITEM "Apie &Wine", MNID_HELP_WINE
 #endif
- END
-END
+ }
+}
+
+IDD_INDEX DIALOG DISCARDABLE 0, 0, 200, 190
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Rodyklë"
+{
+    LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
+}
+
+IDD_SEARCH DIALOG DISCARDABLE 0, 0, 200, 190
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Paieðka"
+{
+    LTEXT  "Dar nesukurta", -1, 10, 10, 180, 150
+}
 
 /* Strings */
-
 STRINGTABLE DISCARDABLE
-BEGIN
-STID_WINE_HELP, 	"WINE Pagalba"
+{
+STID_WINE_HELP, 	"Wine Pagalba"
 STID_WHERROR, 		"KLAIDA"
 STID_WARNING,  		"DËMESIO"
 STID_INFO,  		"Informacija"
 STID_NOT_IMPLEMENTED, 	"Dar nesukurta"
 STID_HLPFILE_ERROR_s, 	"Ávyko klaida skaitant pagalbos bylà '%s'."
+STID_INDEX, 		"&Rodyklë"
 STID_CONTENTS, 		"&Turinys"
-STID_SEARCH, 		"&Paieðka"
 STID_BACK, 		"&Atgal"
-STID_TOPICS,		"&Temos"
 STID_ALL_FILES, 	"Visos bylos (*.*)"
 STID_HELP_FILES_HLP, 	"Pagalbos bylos (*.hlp)"
 STID_FILE_NOT_FOUND_s	"Nepavyko rasti '%s'. Ar norëtumëte pabandyti surasti ðia bylà patys?"
+STID_NO_RICHEDIT	"Nerastas richedit palaikymas... Darbas nutraukiamas"
+STID_PSH_INDEX,		"Pagalbos temos: "
+}
+
+CONTEXT_MENU MENU
+BEGIN
+	POPUP ""
+	BEGIN
+		MENUITEM "Komentarai...",       MNID_CTXT_ANNOTATE
+		MENUITEM "Kopijuoti",                MNID_CTXT_COPY
+		MENUITEM "Spausdinti...",            MNID_CTXT_PRINT
+		POPUP    "Ðriftas"
+		BEGIN
+			MENUITEM "Maþas",       MNID_CTXT_FONTS_SMALL
+			MENUITEM "Normalus",      MNID_CTXT_FONTS_NORMAL
+			MENUITEM "Didelis",       MNID_CTXT_FONTS_LARGE
+		END
+		POPUP   "Pagalba visada matoma"
+		BEGIN
+			MENUITEM "Numatyta",     MNID_CTXT_HELP_DEFAULT
+			MENUITEM "Matoma",     MNID_CTXT_HELP_VISIBLE
+			MENUITEM "Nematoma", MNID_CTXT_HELP_NONVISIBLE
+		END
+		MENUITEM "Naudoti sistemos spalvas",   MNID_CTXT_SYSTEM_COLORS
+	END
 END

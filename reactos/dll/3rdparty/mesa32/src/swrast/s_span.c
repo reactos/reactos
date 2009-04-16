@@ -442,11 +442,10 @@ _swrast_span_interpolate_z( const GLcontext *ctx, SWspan *span )
  * Compute mipmap LOD from partial derivatives.
  * This the ideal solution, as given in the OpenGL spec.
  */
-#if 0
-static GLfloat
-compute_lambda(GLfloat dsdx, GLfloat dsdy, GLfloat dtdx, GLfloat dtdy,
-               GLfloat dqdx, GLfloat dqdy, GLfloat texW, GLfloat texH,
-               GLfloat s, GLfloat t, GLfloat q, GLfloat invQ)
+GLfloat
+_swrast_compute_lambda(GLfloat dsdx, GLfloat dsdy, GLfloat dtdx, GLfloat dtdy,
+                       GLfloat dqdx, GLfloat dqdy, GLfloat texW, GLfloat texH,
+                       GLfloat s, GLfloat t, GLfloat q, GLfloat invQ)
 {
    GLfloat dudx = texW * ((s + dsdx) / (q + dqdx) - s * invQ);
    GLfloat dvdx = texH * ((t + dtdx) / (q + dqdx) - t * invQ);
@@ -458,13 +457,13 @@ compute_lambda(GLfloat dsdx, GLfloat dsdy, GLfloat dtdx, GLfloat dtdy,
    GLfloat lambda = LOG2(rho);
    return lambda;
 }
-#endif
 
 
 /**
  * Compute mipmap LOD from partial derivatives.
  * This is a faster approximation than above function.
  */
+#if 0
 GLfloat
 _swrast_compute_lambda(GLfloat dsdx, GLfloat dsdy, GLfloat dtdx, GLfloat dtdy,
                      GLfloat dqdx, GLfloat dqdy, GLfloat texW, GLfloat texH,
@@ -485,6 +484,7 @@ _swrast_compute_lambda(GLfloat dsdx, GLfloat dsdy, GLfloat dtdx, GLfloat dtdy,
    lambda = LOG2(rho);
    return lambda;
 }
+#endif
 
 
 /**

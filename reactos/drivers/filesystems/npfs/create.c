@@ -605,7 +605,7 @@ NpfsCleanup(PDEVICE_OBJECT DeviceObject,
     {
         DPRINT("Client\n");
     }
-    if (Ccb->PipeState == FILE_PIPE_CONNECTED_STATE)
+    if ((Ccb->PipeState == FILE_PIPE_CONNECTED_STATE) && (Ccb->OtherSide))
     {
         OtherSide = Ccb->OtherSide;
         /* Lock the server first */
@@ -619,7 +619,7 @@ NpfsCleanup(PDEVICE_OBJECT DeviceObject,
             ExAcquireFastMutex(&OtherSide->DataListLock);
             ExAcquireFastMutex(&Ccb->DataListLock);
         }
-        OtherSide->PipeState = FILE_PIPE_DISCONNECTED_STATE;
+        //OtherSide->PipeState = FILE_PIPE_DISCONNECTED_STATE;
         OtherSide->OtherSide = NULL;
         /*
         * Signaling the write event. If is possible that an other

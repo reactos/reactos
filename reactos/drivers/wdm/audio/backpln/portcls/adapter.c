@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Kernel Streaming
- * FILE:            drivers/multimedia/portcls/adapter.c
+ * FILE:            drivers/wdm/audio/backpln/portcls/api.c
  * PURPOSE:         Port Class driver / DriverEntry and IRP handlers
  * PROGRAMMER:      Andrew Greenwood
  *
@@ -10,9 +10,6 @@
  */
 
 #include "private.h"
-#include <devguid.h>
-#include <initguid.h>
-#include <ksmedia.h>
 
 /*
     This is called from DriverEntry so that PortCls can take care of some
@@ -50,15 +47,6 @@ PcInitializeAdapterDriver(
 
     DPRINT1("PcInitializeAdapterDriver\n");
 
-#if 0
-    /* Set default stub - is this a good idea? */
-    DPRINT1("Setting IRP stub\n");
-    for ( i = 0; i <= IRP_MJ_MAXIMUM_FUNCTION; i ++ )
-    {
-        DriverObject->MajorFunction[i] = IrpStub;
-    }
-#endif
-
     /* Our IRP handlers */
     DPRINT1("Setting IRP handlers\n");
     DriverObject->MajorFunction[IRP_MJ_CREATE] = PcDispatchIrp;
@@ -70,7 +58,7 @@ PcInitializeAdapterDriver(
     DriverObject->DriverExtension->AddDevice = AddDevice;
 
     /* KS handles these */
-    DPRINT1("Setting KS function handlers\n");
+    DPRINT("Setting KS function handlers\n");
     KsSetMajorFunctionHandler(DriverObject, IRP_MJ_CLOSE);
     KsSetMajorFunctionHandler(DriverObject, IRP_MJ_DEVICE_CONTROL);
     KsSetMajorFunctionHandler(DriverObject, IRP_MJ_FLUSH_BUFFERS);
@@ -79,7 +67,7 @@ PcInitializeAdapterDriver(
     KsSetMajorFunctionHandler(DriverObject, IRP_MJ_SET_SECURITY);
     KsSetMajorFunctionHandler(DriverObject, IRP_MJ_WRITE);
 
-    DPRINT1("PortCls has finished initializing the adapter driver\n");
+    DPRINT("PortCls has finished initializing the adapter driver\n");
 
     return STATUS_SUCCESS;
 }
@@ -103,7 +91,7 @@ PcAddAdapterDevice(
     NTSTATUS status = STATUS_UNSUCCESSFUL;
     PDEVICE_OBJECT fdo = NULL;
     PDEVICE_OBJECT PrevDeviceObject;
-    PPCLASS_DEVICE_EXTENSION portcls_ext;
+    PPCLASS_DEVICE_EXTENSION portcls_ext = NULL;
 
     DPRINT1("PcAddAdapterDevice called\n");
 
@@ -147,6 +135,13 @@ PcAddAdapterDevice(
     /* allocate create item */
     portcls_ext->CreateItems = AllocateItem(NonPagedPool, MaxObjects * sizeof(KSOBJECT_CREATE_ITEM), TAG_PORTCLASS);
 
+    if (!portcls_ext->CreateItems)
+    {
+        /* not enough resources */
+        status = STATUS_INSUFFICIENT_RESOURCES;
+        goto cleanup;
+    }
+
     /* store the physical device object */
     portcls_ext->PhysicalDeviceObject = PhysicalDeviceObject;
     /* set up the start device function */
@@ -161,17 +156,42 @@ PcAddAdapterDevice(
     /* clear initializing flag */
     fdo->Flags &= ~ DO_DEVICE_INITIALIZING;
 
+    /* allocate work item */
+    portcls_ext->CloseWorkItem = IoAllocateWorkItem(fdo);
+
+    if (!portcls_ext->CloseWorkItem)
+    {
+        /* not enough resources */
+        goto cleanup;
+        status = STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* allocate work item */
+    portcls_ext->StartWorkItem = IoAllocateWorkItem(fdo);
+
+    if (!portcls_ext->StartWorkItem)
+    {
+        /* not enough resources */
+        goto cleanup;
+        status = STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* allocate work item */
+    portcls_ext->StopWorkItem = IoAllocateWorkItem(fdo);
+
+    if (!portcls_ext->StopWorkItem)
+    {
+        /* not enough resources */
+        goto cleanup;
+        status = STATUS_INSUFFICIENT_RESOURCES;
+    }
+
     /* allocate the device header */
     status = KsAllocateDeviceHeader(&portcls_ext->KsDeviceHeader, MaxObjects, portcls_ext->CreateItems);
     /* did we succeed */
     if (!NT_SUCCESS(status))
     {
-        /* free previously allocated create items */
-        FreeItem(portcls_ext->CreateItems, TAG_PORTCLASS);
-        /* delete created fdo */
-        IoDeleteDevice(fdo);
-        /* return error code */
-        return status;
+        goto cleanup;
     }
 
     /* attach device to device stack */
@@ -185,17 +205,53 @@ PcAddAdapterDevice(
     }
     else
     {
-        /* free the device header */
-        KsFreeDeviceHeader(portcls_ext->KsDeviceHeader);
-        /* free previously allocated create items */
-        FreeItem(portcls_ext->CreateItems, TAG_PORTCLASS);
-        /* delete created fdo */
-        IoDeleteDevice(fdo);
         /* return error code */
-        return STATUS_UNSUCCESSFUL;
+        status = STATUS_UNSUCCESSFUL;
+        goto cleanup;
+    }
+    return status;
+
+cleanup:
+
+    if (portcls_ext)
+    {
+
+        if (portcls_ext->KsDeviceHeader)
+        {
+            /* free the device header */
+            KsFreeDeviceHeader(portcls_ext->KsDeviceHeader);
+        }
+
+        if (portcls_ext->CloseWorkItem)
+        {
+            /* free allocated work item */
+            IoFreeWorkItem(portcls_ext->CloseWorkItem);
+        }
+
+        if (portcls_ext->StartWorkItem)
+        {
+            /* free allocated work item */
+            IoFreeWorkItem(portcls_ext->StartWorkItem);
+        }
+
+        if (portcls_ext->StopWorkItem)
+        {
+            /* free allocated work item */
+            IoFreeWorkItem(portcls_ext->StopWorkItem);
+        }
+
+        if (portcls_ext->CreateItems)
+        {
+            /* free previously allocated create items */
+            FreeItem(portcls_ext->CreateItems, TAG_PORTCLASS);
+        }
     }
 
-
+    if (fdo)
+    {
+        /* delete created fdo */
+        IoDeleteDevice(fdo);
+    }
 
     return status;
 }
@@ -241,6 +297,17 @@ PcRegisterSubdevice(
         /* the provided port driver doesnt support ISubdevice */
         return STATUS_INVALID_PARAMETER;
     }
+
+    /* get the subdevice descriptor */
+    Status = SubDevice->lpVtbl->GetDescriptor(SubDevice, &SubDeviceDescriptor);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to get subdevice descriptor %x\n", Status);
+        SubDevice->lpVtbl->Release(SubDevice);
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    /* add an create item to the device header */
     Status = KsAddObjectCreateItemToDeviceHeader(DeviceExt->KsDeviceHeader, PcCreateItemDispatch, (PVOID)SubDevice, Name, NULL);
     if (!NT_SUCCESS(Status))
     {
@@ -249,17 +316,16 @@ PcRegisterSubdevice(
         DPRINT1("KsAddObjectCreateItemToDeviceHeader failed with %x\n", Status);
         return Status;
     }
-    SubDevice->lpVtbl->AddRef(SubDevice);
 
-    Status = SubDevice->lpVtbl->GetDescriptor(SubDevice, &SubDeviceDescriptor);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to get subdevice descriptor %x\n", Status);
-        SubDevice->lpVtbl->Release(SubDevice);
-    }
+    /* increment reference count */
+    SubDevice->lpVtbl->AddRef(SubDevice);
 
     for(Index = 0; Index < SubDeviceDescriptor->InterfaceCount; Index++)
     {
+        //FIXME
+        // Use a reference string such as Wave0001 / Topology0001
+        //
+
         Status = IoRegisterDeviceInterface(DeviceExt->PhysicalDeviceObject,
                                            &SubDeviceDescriptor->Interfaces[Index],
                                            NULL,

@@ -211,7 +211,7 @@ typedef BOOL
  * probabaly later pass them to functions. Rob Lake  */
 static ULONG recurse_dir_cnt;
 static ULONG recurse_file_cnt;
-static ULARGE_INTEGER recurse_bytes;
+static ULONGLONG recurse_bytes;
 
 
 /*
@@ -772,7 +772,7 @@ static INT
 PrintSummary(LPTSTR szPath,
 	     ULONG ulFiles,
 	     ULONG ulDirs,
-	     ULARGE_INTEGER u64Bytes,
+	     ULONGLONG u64Bytes,
 	     LPDIRSWITCHFLAGS lpFlags,
 	     BOOL TotalSummary)
 {
@@ -817,7 +817,7 @@ PrintSummary(LPTSTR szPath,
 	if (!lpFlags->bRecursive || TotalSummary)
 	{
 		GetUserDiskFreeSpace(szPath, &uliFree);
-		ConvertULargeInteger(uliFree, szBuffer, sizeof(szBuffer), lpFlags->bTSeperator);
+		ConvertULargeInteger(uliFree.QuadPart, szBuffer, sizeof(szBuffer), lpFlags->bTSeperator);
 		LoadString(CMD_ModuleHandle, STRING_DIR_HELP6, (LPTSTR) szMsg, RC_STRING_MAX_SIZE);
 		DirPrintf(lpFlags, szMsg, ulDirs, szBuffer);
 	}
@@ -910,7 +910,7 @@ DirPrintNewList(LPWIN32_FIND_DATA ptrFiles[],	/* [IN]Files' Info */
       iSizeFormat = 14;
       u64FileSize.HighPart = ptrFiles[i]->nFileSizeHigh;
       u64FileSize.LowPart = ptrFiles[i]->nFileSizeLow;
-      ConvertULargeInteger(u64FileSize, szSize, 20, lpFlags->bTSeperator);
+      ConvertULargeInteger(u64FileSize.QuadPart, szSize, 20, lpFlags->bTSeperator);
     }
 
     /* Calculate short name */
@@ -1065,7 +1065,7 @@ ULARGE_INTEGER u64FileSize;		/* The file size */
 			iSizeFormat = 17;
 			u64FileSize.HighPart = ptrFiles[i]->nFileSizeHigh;
 			u64FileSize.LowPart = ptrFiles[i]->nFileSizeLow;
-			ConvertULargeInteger(u64FileSize, szSize, 20, lpFlags->bTSeperator);
+			ConvertULargeInteger(u64FileSize.QuadPart, szSize, 20, lpFlags->bTSeperator);
 		}
 
 		/* Format date and time */
@@ -1345,7 +1345,7 @@ DirList(LPTSTR szPath,			/* [IN] The path that dir starts */
 	DWORD dwCount;							/* A counter of files found in directory */
 	DWORD dwCountFiles;						/* Counter for files */
 	DWORD dwCountDirs;						/* Counter for directories */
-	ULARGE_INTEGER u64CountBytes;			/* Counter for bytes */
+	ULONGLONG u64CountBytes;				/* Counter for bytes */
 	ULARGE_INTEGER u64Temp;					/* A temporary counter */
 
 	/* Initialize Variables */
@@ -1354,7 +1354,7 @@ DirList(LPTSTR szPath,			/* [IN] The path that dir starts */
 	dwCount = 0;
 	dwCountFiles = 0;
 	dwCountDirs = 0;
-	u64CountBytes.QuadPart = 0;
+	u64CountBytes = 0;
 	fPoint= FALSE;
 
 	/* Create szFullPath */
@@ -1448,7 +1448,7 @@ DirList(LPTSTR szPath,			/* [IN] The path that dir starts */
 							dwCountFiles++;
 							u64Temp.HighPart = wfdFileInfo.nFileSizeHigh;
 							u64Temp.LowPart = wfdFileInfo.nFileSizeLow;
-							u64CountBytes.QuadPart += u64Temp.QuadPart;
+							u64CountBytes += u64Temp.QuadPart;
 						}
 					}
 				}
@@ -1524,7 +1524,7 @@ DirList(LPTSTR szPath,			/* [IN] The path that dir starts */
 	/* Add statistics to recursive statistics*/
 	recurse_dir_cnt += dwCountDirs;
 	recurse_file_cnt += dwCountFiles;
-	recurse_bytes.QuadPart += u64CountBytes.QuadPart;
+	recurse_bytes += u64CountBytes;
 
 	/* Do the recursive job if requested
 	   the recursive is be done on ALL(indepent of their attribs)
@@ -1648,7 +1648,7 @@ CommandDir(LPTSTR rest)
 
 		recurse_dir_cnt = 0L;
 		recurse_file_cnt = 0L;
-		recurse_bytes.QuadPart = 0;
+		recurse_bytes = 0;
 
 	/* <Debug :>
 	   Uncomment this to show the final state of switch flags*/

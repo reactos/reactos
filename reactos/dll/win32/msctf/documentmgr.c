@@ -46,6 +46,7 @@ typedef struct tagDocumentMgr {
     LONG refCount;
 
     ITfContext*  contextStack[2]; /* limit of 2 contexts */
+    ITfThreadMgrEventSink* ThreadMgrSink;
 } DocumentMgr;
 
 static inline DocumentMgr *impl_from_ITfSourceVtbl(ITfSource *iface)
@@ -130,8 +131,13 @@ static HRESULT WINAPI DocumentMgr_Push(ITfDocumentMgr *iface, ITfContext *pic)
     if (!pic || FAILED(IUnknown_QueryInterface(pic,&IID_ITfContext,(LPVOID*) &check)))
         return E_INVALIDARG;
 
+    if (This->contextStack[0] == NULL)
+        ITfThreadMgrEventSink_OnInitDocumentMgr(This->ThreadMgrSink,iface);
+
     This->contextStack[1] = This->contextStack[0];
     This->contextStack[0] = check;
+
+    ITfThreadMgrEventSink_OnPushContext(This->ThreadMgrSink,check);
 
     return S_OK;
 }
@@ -144,10 +150,17 @@ static HRESULT WINAPI DocumentMgr_Pop(ITfDocumentMgr *iface, DWORD dwFlags)
     if (dwFlags == TF_POPF_ALL)
     {
         if (This->contextStack[0])
+        {
+            ITfThreadMgrEventSink_OnPopContext(This->ThreadMgrSink,This->contextStack[0]);
             ITfContext_Release(This->contextStack[0]);
+        }
         if (This->contextStack[1])
+        {
+            ITfThreadMgrEventSink_OnPopContext(This->ThreadMgrSink,This->contextStack[1]);
             ITfContext_Release(This->contextStack[1]);
+        }
         This->contextStack[0] = This->contextStack[1] = NULL;
+        ITfThreadMgrEventSink_OnUninitDocumentMgr(This->ThreadMgrSink, iface);
         return S_OK;
     }
 
@@ -157,9 +170,13 @@ static HRESULT WINAPI DocumentMgr_Pop(ITfDocumentMgr *iface, DWORD dwFlags)
     if (This->contextStack[0] == NULL) /* Cannot pop last context */
         return E_FAIL;
 
+    ITfThreadMgrEventSink_OnPopContext(This->ThreadMgrSink,This->contextStack[0]);
     ITfContext_Release(This->contextStack[0]);
     This->contextStack[0] = This->contextStack[1];
     This->contextStack[1] = NULL;
+
+    if (This->contextStack[0] == NULL)
+        ITfThreadMgrEventSink_OnUninitDocumentMgr(This->ThreadMgrSink, iface);
 
     return S_OK;
 }
@@ -262,7 +279,7 @@ static const ITfSourceVtbl DocumentMgr_SourceVtbl =
     DocumentMgrSource_UnadviseSink,
 };
 
-HRESULT DocumentMgr_Constructor(ITfDocumentMgr **ppOut)
+HRESULT DocumentMgr_Constructor(ITfThreadMgrEventSink *ThreadMgrSink, ITfDocumentMgr **ppOut)
 {
     DocumentMgr *This;
 
@@ -273,6 +290,7 @@ HRESULT DocumentMgr_Constructor(ITfDocumentMgr **ppOut)
     This->DocumentMgrVtbl= &DocumentMgr_DocumentMgrVtbl;
     This->SourceVtbl = &DocumentMgr_SourceVtbl;
     This->refCount = 1;
+    This->ThreadMgrSink = ThreadMgrSink;
 
     TRACE("returning %p\n", This);
     *ppOut = (ITfDocumentMgr*)This;

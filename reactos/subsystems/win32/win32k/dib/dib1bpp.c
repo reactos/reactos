@@ -62,8 +62,11 @@ DIB_1BPP_VLine(SURFOBJ *SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
 static
 void
 DIB_1BPP_BitBltSrcCopy_From1BPP (
-	SURFOBJ* DestSurf, SURFOBJ* SourceSurf,
-	PRECTL DestRect, POINTL *SourcePoint )
+	SURFOBJ* DestSurf,
+	SURFOBJ* SourceSurf,
+	XLATEOBJ* pxlo,
+	PRECTL DestRect,
+	POINTL *SourcePoint )
 {
 	// the 'window' in this sense is the x-position that corresponds
 	// to the left-edge of the 8-pixel byte we are currently working with.
@@ -88,9 +91,9 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
 	int dy2; // dest y end
 	int sy1; // src y start
 
-    int dx;
+	int dx;
 	int shift;
-	BYTE srcmask, dstmask;
+	BYTE srcmask, dstmask, xormask;
 
 	// 'd' and 's' are the dest & src buffer pointers that I use on my x-sweep
 	// 'pd' and 'ps' are the dest & src buffer pointers used on the inner y-sweep
@@ -98,6 +101,8 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
 	PBYTE s, ps; // src ptrs
 
 	shift = (dl-sl)&7;
+
+	xormask = 0xFF * XLATEOBJ_iXlate(pxlo, 0);
 
 	if ( DestRect->top <= SourcePoint->y )
 	{
@@ -164,7 +169,7 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
 		{
 			for ( ;; )
 			{
-				*pd = (BYTE)((*pd & dstmask) | (*ps & srcmask));
+				*pd = (BYTE)((*pd & dstmask) | ((ps[0]^xormask) & srcmask));
 
 				// this *must* be here, because we could be going up *or* down...
 				if ( dy == dy2 )
@@ -179,7 +184,7 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
 			for ( ;; )
 			{
 				*pd = (BYTE)((*pd & dstmask)
-					| ( ( ps[1] >> shift ) & srcmask ));
+					| ( ( (ps[1]^xormask) >> shift ) & srcmask ));
 
 				// this *must* be here, because we could be going up *or* down...
 				if ( dy == dy2 )
@@ -194,7 +199,7 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
 			for ( ;; )
 			{
 				*pd = (*pd & dstmask)
-					| ( ( ps[0] << ( 8 - shift ) ) & srcmask );
+					| ( ( (ps[0]^xormask) << ( 8 - shift ) ) & srcmask );
 
 				// this *must* be here, because we could be going up *or* down...
 				if ( dy == dy2 )
@@ -209,7 +214,7 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
 			for ( ;; )
 			{
 				*pd = (*pd & dstmask)
-					| ( ( ( (ps[1])|(ps[0]<<8) ) >> shift ) & srcmask );
+					| ( ( ( ((ps[1]^xormask))|((ps[0]^xormask)<<8) ) >> shift ) & srcmask );
 
 				// this *must* be here, because we could be going up *or* down...
 				if ( dy == dy2 )
@@ -233,12 +238,13 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
 BOOLEAN
 DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 {
+	ULONG Color;
 	LONG i, j, sx, sy = BltInfo->SourcePoint.y;
 
 	switch ( BltInfo->SourceSurface->iBitmapFormat )
 	{
 	case BMF_1BPP:
-		DIB_1BPP_BitBltSrcCopy_From1BPP ( BltInfo->DestSurface, BltInfo->SourceSurface, &BltInfo->DestRect, &BltInfo->SourcePoint );
+		DIB_1BPP_BitBltSrcCopy_From1BPP ( BltInfo->DestSurface, BltInfo->SourceSurface, BltInfo->XlateSourceToDest, &BltInfo->DestRect, &BltInfo->SourcePoint );
 		break;
 
 	case BMF_4BPP:
@@ -247,12 +253,8 @@ DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 			sx = BltInfo->SourcePoint.x;
 			for (i=BltInfo->DestRect.left; i<BltInfo->DestRect.right; i++)
 			{
-				if(XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, DIB_4BPP_GetPixel(BltInfo->SourceSurface, sx, sy)) == 0)
-				{
-					DIB_1BPP_PutPixel(BltInfo->DestSurface, i, j, 0);
-				} else {
-					DIB_1BPP_PutPixel(BltInfo->DestSurface, i, j, 1);
-				}
+				Color = XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, DIB_4BPP_GetPixel(BltInfo->SourceSurface, sx, sy));
+				DIB_1BPP_PutPixel(BltInfo->DestSurface, i, j, Color);
 				sx++;
 			}
 			sy++;
@@ -265,12 +267,8 @@ DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 			sx = BltInfo->SourcePoint.x;
 			for (i=BltInfo->DestRect.left; i<BltInfo->DestRect.right; i++)
 			{
-				if(XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, DIB_8BPP_GetPixel(BltInfo->SourceSurface, sx, sy)) == 0)
-				{
-					DIB_1BPP_PutPixel(BltInfo->DestSurface, i, j, 0);
-				} else {
-					DIB_1BPP_PutPixel(BltInfo->DestSurface, i, j, 1);
-				}
+				Color = XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, DIB_8BPP_GetPixel(BltInfo->SourceSurface, sx, sy));
+				DIB_1BPP_PutPixel(BltInfo->DestSurface, i, j, Color);
 				sx++;
 			}
 			sy++;
@@ -283,12 +281,8 @@ DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 			sx = BltInfo->SourcePoint.x;
 			for (i=BltInfo->DestRect.left; i<BltInfo->DestRect.right; i++)
 			{
-				if(XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, DIB_16BPP_GetPixel(BltInfo->SourceSurface, sx, sy)) == 0)
-				{
-					DIB_1BPP_PutPixel(BltInfo->DestSurface, i, j, 0);
-				} else {
-					DIB_1BPP_PutPixel(BltInfo->DestSurface, i, j, 1);
-				}
+				Color = XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, DIB_16BPP_GetPixel(BltInfo->SourceSurface, sx, sy));
+				DIB_1BPP_PutPixel(BltInfo->DestSurface, i, j, Color);
 				sx++;
 			}
 			sy++;
@@ -301,12 +295,8 @@ DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 			sx = BltInfo->SourcePoint.x;
 			for (i=BltInfo->DestRect.left; i<BltInfo->DestRect.right; i++)
 			{
-				if(XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, DIB_24BPP_GetPixel(BltInfo->SourceSurface, sx, sy)) == 0)
-				{
-					DIB_1BPP_PutPixel(BltInfo->DestSurface, i, j, 0);
-				} else {
-					DIB_1BPP_PutPixel(BltInfo->DestSurface, i, j, 1);
-				}
+				Color = XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, DIB_24BPP_GetPixel(BltInfo->SourceSurface, sx, sy));
+				DIB_1BPP_PutPixel(BltInfo->DestSurface, i, j, Color);
 				sx++;
 			}
 			sy++;
@@ -319,12 +309,8 @@ DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 			sx = BltInfo->SourcePoint.x;
 			for (i=BltInfo->DestRect.left; i<BltInfo->DestRect.right; i++)
 			{
-				if(XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, DIB_32BPP_GetPixel(BltInfo->SourceSurface, sx, sy)) == 0)
-				{
-					DIB_1BPP_PutPixel(BltInfo->DestSurface, i, j, 0);
-				} else {
-					DIB_1BPP_PutPixel(BltInfo->DestSurface, i, j, 1);
-				}
+				Color = XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, DIB_32BPP_GetPixel(BltInfo->SourceSurface, sx, sy));
+				DIB_1BPP_PutPixel(BltInfo->DestSurface, i, j, Color);
 				sx++;
 			}
 			sy++;
@@ -495,7 +481,7 @@ return TRUE;
 
 BOOLEAN
 DIB_1BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
-                        RECTL*  DestRect,  POINTL  *SourcePoint,
+                        RECTL*  DestRect,  RECTL *SourceRect,
                         XLATEOBJ *ColorTranslation, ULONG iTransColor)
 {
   return FALSE;

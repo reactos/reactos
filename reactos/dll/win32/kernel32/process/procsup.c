@@ -718,6 +718,16 @@ CreateProcessInternalW(HANDLE hToken,
         return FALSE;
     }
 
+    if (lpCurrentDirectory)
+    {
+        if ((GetFileAttributesW(lpCurrentDirectory) == INVALID_FILE_ATTRIBUTES) ||
+            !(GetFileAttributesW(lpCurrentDirectory) & FILE_ATTRIBUTE_DIRECTORY))
+        {
+            SetLastError(ERROR_DIRECTORY);
+            return FALSE;
+        }
+    }
+
     /*
      * We're going to modify and mask out flags and stuff in lpStartupInfo,
      * so we'll use our own local copy for that.

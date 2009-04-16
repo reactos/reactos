@@ -118,32 +118,32 @@ IntCreateStockPen( DWORD dwPenStyle,
                    ULONG ulColor)
 {
   HPEN hPen;
-  PGDIBRUSHOBJ PenObject = PENOBJ_AllocPenWithHandle();
+  PBRUSH pbrushPen = PEN_AllocPenWithHandle();
 
   if ((dwPenStyle & PS_STYLE_MASK) == PS_NULL) dwWidth = 1;
    
-  PenObject->ptPenWidth.x = abs(dwWidth);  
-  PenObject->ptPenWidth.y = 0;  
-  PenObject->ulPenStyle = dwPenStyle;  
-  PenObject->BrushAttr.lbColor = ulColor;  
-  PenObject->ulStyle = ulBrushStyle;
-  PenObject->hbmClient = (HANDLE)NULL;
-  PenObject->dwStyleCount = 0;
-  PenObject->pStyle = 0;
-  PenObject->flAttrs = GDIBRUSH_IS_OLDSTYLEPEN;
+  pbrushPen->ptPenWidth.x = abs(dwWidth);  
+  pbrushPen->ptPenWidth.y = 0;  
+  pbrushPen->ulPenStyle = dwPenStyle;  
+  pbrushPen->BrushAttr.lbColor = ulColor;  
+  pbrushPen->ulStyle = ulBrushStyle;
+  pbrushPen->hbmClient = (HANDLE)NULL;
+  pbrushPen->dwStyleCount = 0;
+  pbrushPen->pStyle = 0;
+  pbrushPen->flAttrs = GDIBRUSH_IS_OLDSTYLEPEN;
 
   switch (dwPenStyle & PS_STYLE_MASK)
   {
      case PS_NULL:
-        PenObject->flAttrs |= GDIBRUSH_IS_NULL;
+        pbrushPen->flAttrs |= GDIBRUSH_IS_NULL;
         break;
 
     case PS_SOLID:
-        PenObject->flAttrs |= GDIBRUSH_IS_SOLID;
+        pbrushPen->flAttrs |= GDIBRUSH_IS_SOLID;
         break;
   }
-  hPen = PenObject->BaseObject.hHmgr;
-  PENOBJ_UnlockPen(PenObject);
+  hPen = pbrushPen->BaseObject.hHmgr;
+  PEN_UnlockPen(pbrushPen);
   return hPen;    
 }
 
@@ -232,11 +232,11 @@ IntSetSysColors(UINT nColors, INT *Elements, COLORREF *Colors)
 }
 
 BOOL FASTCALL
-IntGetSysColorBrushes(HBRUSH *Brushes, UINT nBrushes)
+IntGetSysColorBrushes(HBRUSH *pahBrushes, UINT nBrushes)
 {
   UINT i;
 
-  ASSERT(Brushes);
+  ASSERT(pahBrushes);
 
   if(nBrushes > NUM_SYSCOLORS)
   {
@@ -246,7 +246,7 @@ IntGetSysColorBrushes(HBRUSH *Brushes, UINT nBrushes)
 
   for(i = 0; i < nBrushes; i++)
   {
-    *(Brushes++) = gpsi->SysColorBrushes[i];
+    pahBrushes[i] = gpsi->SysColorBrushes[i];
   }
 
   return nBrushes > 0;

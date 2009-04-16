@@ -63,7 +63,7 @@ INT cmd_if (LPTSTR param)
 	return 1;
 }
 
-BOOL ExecuteIf(PARSED_COMMAND *Cmd)
+INT ExecuteIf(PARSED_COMMAND *Cmd)
 {
 	INT result = FALSE; /* when set cause 'then' clause to be executed */
 	LPTSTR param;
@@ -73,13 +73,13 @@ BOOL ExecuteIf(PARSED_COMMAND *Cmd)
 	{
 		Left = DoDelayedExpansion(Cmd->If.LeftArg);
 		if (!Left)
-			return FALSE;
+			return 1;
 	}
 	Right = DoDelayedExpansion(Cmd->If.RightArg);
 	if (!Right)
 	{
 		cmd_free(Left);
-		return FALSE;
+		return 1;
 	}
 
 	if (Cmd->If.Operator == IF_CMDEXTVERSION)
@@ -91,7 +91,7 @@ BOOL ExecuteIf(PARSED_COMMAND *Cmd)
 		{
 			error_syntax(Right);
 			cmd_free(Right);
-			return FALSE;
+			return 1;
 		}
 		result = (2 >= n);
 	}
@@ -108,7 +108,7 @@ BOOL ExecuteIf(PARSED_COMMAND *Cmd)
 		{
 			error_syntax(Right);
 			cmd_free(Right);
-			return FALSE;
+			return 1;
 		}
 		result = (nErrorLevel >= n);
 	}
@@ -166,7 +166,7 @@ BOOL ExecuteIf(PARSED_COMMAND *Cmd)
 		/* full condition was false, do the "else" command if there is one */
 		if (Cmd->Subcommands->Next)
 			return ExecuteCommand(Cmd->Subcommands->Next);
-		return TRUE;
+		return 0;
 	}
 }
 

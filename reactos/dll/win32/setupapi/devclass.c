@@ -480,10 +480,12 @@ SetupDiGetClassImageListExW(
     else
     {
         struct ClassImageList *list = NULL;
+        HDC hDC;
         DWORD RequiredSize;
+        DWORD ilMask, bkColor;
         HICON hIcon;
         DWORD size;
-        INT i;
+        INT i, bpp;
 
         /* Get list of all class GUIDs in given computer */
         ret = SetupDiBuildClassInfoListExW(
@@ -529,11 +531,38 @@ SetupDiGetClassImageListExW(
 
         /* Prepare a HIMAGELIST */
         InitCommonControls();
-        ClassImageListData->ImageList = ImageList_Create(16, 16, ILC_COLOR32 | ILC_MASK, 100, 10);
+
+        hDC = GetDC(NULL);
+        if (!hDC)
+            goto cleanup;
+
+        bpp = GetDeviceCaps(hDC, BITSPIXEL);
+        ReleaseDC(NULL, hDC);
+
+        if (bpp <= 4)
+            ilMask = ILC_COLOR4;
+        else if (bpp <= 8)
+            ilMask = ILC_COLOR8;
+        else if (bpp <= 16)
+            ilMask = ILC_COLOR16;
+        else if (bpp <= 24)
+            ilMask = ILC_COLOR24;
+        else if (bpp <= 32)
+            ilMask = ILC_COLOR32;
+        else
+            ilMask = ILC_COLOR;
+
+        ilMask |= ILC_MASK;
+
+        ClassImageListData->ImageList = ImageList_Create(16, 16, ilMask, 100, 10);
         if (!ClassImageListData->ImageList)
             goto cleanup;
 
         ClassImageListData->Reserved = (ULONG_PTR)list;
+
+        /* For some reason, Windows sets the list background to COLOR_WINDOW */
+        bkColor = GetSysColor(COLOR_WINDOW);
+        ImageList_SetBkColor(ClassImageListData->ImageList, bkColor);
 
         /* Now, we "simply" need to load icons associated with all class guids,
          * and put their index in the image list in the IconIndexes array */

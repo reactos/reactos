@@ -25,86 +25,81 @@
 
 /* FUNCTIONS *****************************************************************/
 
-VOID FASTCALL
-IntGdiSetEmptyRect(PRECT Rect)
+BOOL
+FASTCALL
+RECTL_bUnionRect(RECTL *prclDst, const RECTL *prcl1, const RECTL *prcl2)
 {
-  Rect->left = Rect->right = Rect->top = Rect->bottom = 0;
-}
-
-BOOL FASTCALL
-IntGdiIsEmptyRect(const RECT* Rect)
-{
-  return(Rect->left >= Rect->right || Rect->top >= Rect->bottom);
-}
-
-VOID FASTCALL
-IntGdiOffsetRect(LPRECT Rect, INT x, INT y)
-{
-  Rect->left += x;
-  Rect->right += x;
-  Rect->top += y;
-  Rect->bottom += y;
-}
-
-BOOL FASTCALL
-IntGdiUnionRect(PRECT Dest, const RECT* Src1, const RECT* Src2)
-{
-  if (IntGdiIsEmptyRect(Src1))
+    if (RECTL_bIsEmptyRect(prcl1))
     {
-      if (IntGdiIsEmptyRect(Src2))
-	{
-	  IntGdiSetEmptyRect(Dest);
-	  return FALSE;
-	}
-      else
-	{
-	  *Dest = *Src2;
-	}
+        if (RECTL_bIsEmptyRect(prcl2))
+	    {
+	        RECTL_vSetEmptyRect(prclDst);
+	        return FALSE;
+	    }
+        else
+	    {
+	        *prclDst = *prcl2;
+	    }
     }
-  else
+    else
     {
-      if (IntGdiIsEmptyRect(Src2))
-	{
-	  *Dest = *Src1;
-	}
-      else
-	{
-	  Dest->left = min(Src1->left, Src2->left);
-	  Dest->top = min(Src1->top, Src2->top);
-	  Dest->right = max(Src1->right, Src2->right);
-	  Dest->bottom = max(Src1->bottom, Src2->bottom);
-	}
+        if (RECTL_bIsEmptyRect(prcl2))
+	    {
+	        *prclDst = *prcl1;
+	    }
+        else
+	    {
+	        prclDst->left = min(prcl1->left, prcl2->left);
+	        prclDst->top = min(prcl1->top, prcl2->top);
+	        prclDst->right = max(prcl1->right, prcl2->right);
+	        prclDst->bottom = max(prcl1->bottom, prcl2->bottom);
+	    }
     }
 
-  return TRUE;
+    return TRUE;
 }
 
-VOID FASTCALL
-IntGdiSetRect(PRECT Rect, INT left, INT top, INT right, INT bottom)
-{
-  Rect->left = left;
-  Rect->top = top;
-  Rect->right = right;
-  Rect->bottom = bottom;
-}
 
-BOOL FASTCALL
-IntGdiIntersectRect(PRECT Dest, const RECT* Src1, const RECT* Src2)
+BOOL
+FASTCALL
+RECTL_bIntersectRect(RECTL* prclDst, const RECTL* prcl1, const RECTL* prcl2)
 {
-  if (IntGdiIsEmptyRect(Src1) || IntGdiIsEmptyRect(Src2) ||
-      Src1->left >= Src2->right || Src2->left >= Src1->right ||
-      Src1->top >= Src2->bottom || Src2->top >= Src1->bottom)
+    prclDst->left  = max(prcl1->left, prcl2->left);
+    prclDst->right = min(prcl1->right, prcl2->right);
+
+    if (prclDst->left < prclDst->right)
     {
-      IntGdiSetEmptyRect(Dest);
-      return FALSE;
+        prclDst->top    = max(prcl1->top, prcl2->top);
+        prclDst->bottom = min(prcl1->bottom, prcl2->bottom);
+
+        if (prclDst->top < prclDst->bottom)
+        {
+            return TRUE;
+        }
     }
 
-  Dest->left = max(Src1->left, Src2->left);
-  Dest->right = min(Src1->right, Src2->right);
-  Dest->top = max(Src1->top, Src2->top);
-  Dest->bottom = min(Src1->bottom, Src2->bottom);
+    RECTL_vSetEmptyRect(prclDst);
 
-  return TRUE;
+    return FALSE;
+}
+
+VOID
+FASTCALL
+RECTL_vMakeWellOrdered(RECTL *prcl)
+{
+    LONG lTmp;
+    if (prcl->left > prcl->right)
+    {
+        lTmp = prcl->left;
+        prcl->left = prcl->right;
+        prcl->right = lTmp;       
+    }
+    if (prcl->top > prcl->bottom)
+    {
+        lTmp = prcl->top;
+        prcl->top = prcl->bottom;
+        prcl->bottom = lTmp;       
+    }
 }
 
 

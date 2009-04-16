@@ -1,126 +1,14 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS TCP/IP protocol driver
- * FILE:        datalink/loopback.c
+ * FILE:        lib/drivers/ip/network/loopback.c
  * PURPOSE:     Loopback adapter
- * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
- * REVISIONS:
- *   CSH 01/08-2000 Created
+ * PROGRAMMERS: Cameron Gutman (cgutman@reactos.org)
  */
 
 #include "precomp.h"
 
 PIP_INTERFACE Loopback = NULL;
-typedef struct _LAN_WQ_ITEM {
-    LIST_ENTRY ListEntry;
-    PNDIS_PACKET Packet;
-    PLAN_ADAPTER Adapter;
-    UINT BytesTransferred;
-} LAN_WQ_ITEM, *PLAN_WQ_ITEM;
-
-/* Work around being called back into afd at Dpc level */
-KSPIN_LOCK LoopWorkLock;
-LIST_ENTRY LoopWorkList;
-WORK_QUEUE_ITEM LoopWorkItem;
-BOOLEAN LoopReceiveWorkerBusy = FALSE;
-
-VOID NTAPI LoopReceiveWorker( PVOID Context ) {
-    PLIST_ENTRY ListEntry;
-    PLAN_WQ_ITEM WorkItem;
-    PNDIS_PACKET Packet;
-    PLAN_ADAPTER Adapter;
-    UINT BytesTransferred;
-    PNDIS_BUFFER NdisBuffer;
-    IP_PACKET IPPacket;
-	KIRQL OldIrql;
-
-    TI_DbgPrint(DEBUG_DATALINK, ("Called.\n"));
-
-	TcpipAcquireSpinLock( &LoopWorkLock, &OldIrql );
-    while( !IsListEmpty(&LoopWorkList) )
-    {
-		ListEntry = RemoveHeadList( &LoopWorkList );
-		TcpipReleaseSpinLock( &LoopWorkLock, OldIrql );
-
-		WorkItem = CONTAINING_RECORD(ListEntry, LAN_WQ_ITEM, ListEntry);
-		
-		TI_DbgPrint(DEBUG_DATALINK, ("WorkItem: %x\n", WorkItem));
-		
-		Packet = WorkItem->Packet;
-		Adapter = WorkItem->Adapter;
-		BytesTransferred = WorkItem->BytesTransferred;
-		
-		exFreePool( WorkItem );
-		
-        IPPacket.NdisPacket = Packet;
-		
-        TI_DbgPrint(DEBUG_DATALINK, ("Packet %x Adapter %x Trans %x\n",
-                                     Packet, Adapter, BytesTransferred));
-		
-        NdisGetFirstBufferFromPacket(Packet,
-                                     &NdisBuffer,
-                                     &IPPacket.Header,
-                                     &IPPacket.ContigSize,
-                                     &IPPacket.TotalSize);
-
-		IPPacket.ContigSize = IPPacket.TotalSize = BytesTransferred;
-        /* Determine which upper layer protocol that should receive
-           this packet and pass it to the correct receive handler */
-		
-		TI_DbgPrint
-			(MID_TRACE,
-			 ("ContigSize: %d, TotalSize: %d, BytesTransferred: %d\n",
-			  IPPacket.ContigSize, IPPacket.TotalSize,
-			  BytesTransferred));
-		
-		IPPacket.Position = 0;
-		
-        IPReceive(Loopback, &IPPacket);
-		
-		FreeNdisPacket( Packet );
-		TcpipAcquireSpinLock( &LoopWorkLock, &OldIrql );
-    }
-    TI_DbgPrint(DEBUG_DATALINK, ("Leaving\n"));
-    LoopReceiveWorkerBusy = FALSE;
-	TcpipReleaseSpinLock( &LoopWorkLock, OldIrql );
-}
-
-VOID LoopSubmitReceiveWork(
-    NDIS_HANDLE BindingContext,
-    PNDIS_PACKET Packet,
-    NDIS_STATUS Status,
-    UINT BytesTransferred) {
-    PLAN_WQ_ITEM WQItem;
-    PLAN_ADAPTER Adapter = (PLAN_ADAPTER)BindingContext;
-    KIRQL OldIrql;
-
-    TcpipAcquireSpinLock( &LoopWorkLock, &OldIrql );
-
-    WQItem = exAllocatePool( NonPagedPool, sizeof(LAN_WQ_ITEM) );
-    if( !WQItem ) {
-	TcpipReleaseSpinLock( &LoopWorkLock, OldIrql );
-	return;
-    }
-
-    WQItem->Packet = Packet;
-    WQItem->Adapter = Adapter;
-    WQItem->BytesTransferred = BytesTransferred;
-    InsertTailList( &LoopWorkList, &WQItem->ListEntry );
-
-    TI_DbgPrint(DEBUG_DATALINK, ("Packet %x Adapter %x BytesTrans %x\n",
-                                 Packet, Adapter, BytesTransferred));
-
-    if( !LoopReceiveWorkerBusy ) {
-	LoopReceiveWorkerBusy = TRUE;
-	ExQueueWorkItem( &LoopWorkItem, CriticalWorkQueue );
-	TI_DbgPrint(DEBUG_DATALINK,
-		    ("Work item inserted %x %x\n", &LoopWorkItem, WQItem));
-    } else {
-        TI_DbgPrint(DEBUG_DATALINK,
-                    ("LOOP WORKER BUSY %x %x\n", &LoopWorkItem, WQItem));
-    }
-    TcpipReleaseSpinLock( &LoopWorkLock, OldIrql );
-}
 
 VOID LoopTransmit(
   PVOID Context,
@@ -138,31 +26,46 @@ VOID LoopTransmit(
  *   Type        = LAN protocol type (unused)
  */
 {
+    IP_PACKET IPPacket;
+    PNDIS_PACKET XmitPacket;
+    PNDIS_BUFFER NdisBuffer;
+    NDIS_STATUS NdisStatus;
     PCHAR PacketBuffer;
     UINT PacketLength;
-    PNDIS_PACKET XmitPacket;
-    NDIS_STATUS NdisStatus;
 
-    ASSERT_KM_POINTER(NdisPacket);
-    ASSERT_KM_POINTER(PC(NdisPacket));
-    ASSERT_KM_POINTER(PC(NdisPacket)->DLComplete);
+    ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
 
-    TI_DbgPrint(MAX_TRACE, ("Called (NdisPacket = %x)\n", NdisPacket));
-
-    GetDataPtr( NdisPacket, MaxLLHeaderSize, &PacketBuffer, &PacketLength );
+    GetDataPtr( NdisPacket, Offset, &PacketBuffer, &PacketLength );
 
     NdisStatus = AllocatePacketWithBuffer
         ( &XmitPacket, PacketBuffer, PacketLength );
 
-    if( NT_SUCCESS(NdisStatus) ) {
-        LoopSubmitReceiveWork
-            ( NULL, XmitPacket, STATUS_SUCCESS, PacketLength );
+    if (NdisStatus != NDIS_STATUS_SUCCESS)
+    {
+        (PC(NdisPacket)->DLComplete)( PC(NdisPacket)->Context, NdisPacket, NdisStatus );
+        return;
     }
 
-    (PC(NdisPacket)->DLComplete)
-        ( PC(NdisPacket)->Context, NdisPacket, STATUS_SUCCESS );
+    IPInitializePacket(&IPPacket, 0);
 
-    TI_DbgPrint(MAX_TRACE, ("Done\n"));
+    NdisGetFirstBufferFromPacket(XmitPacket,
+                                 &NdisBuffer,
+                                 &IPPacket.Header,
+                                 &IPPacket.ContigSize,
+                                 &IPPacket.TotalSize);
+
+    IPPacket.NdisPacket = XmitPacket;
+    IPPacket.Position = 0;
+
+    TI_DbgPrint(MID_TRACE,
+		 ("ContigSize: %d, TotalSize: %d\n",
+		  IPPacket.ContigSize, IPPacket.TotalSize));
+		
+    IPReceive(Loopback, &IPPacket);
+
+    FreeNdisPacket(XmitPacket);
+
+    (PC(NdisPacket)->DLComplete)( PC(NdisPacket)->Context, NdisPacket, NDIS_STATUS_SUCCESS );
 }
 
 NDIS_STATUS LoopRegisterAdapter(
@@ -177,15 +80,9 @@ NDIS_STATUS LoopRegisterAdapter(
  *   Status of operation
  */
 {
-  NDIS_STATUS Status;
   LLIP_BIND_INFO BindInfo;
 
-  Status = NDIS_STATUS_SUCCESS;
-
   TI_DbgPrint(MID_TRACE, ("Called.\n"));
-
-  InitializeListHead( &LoopWorkList );
-  ExInitializeWorkItem( &LoopWorkItem, LoopReceiveWorker, NULL );
 
   /* Bind the adapter to network (IP) layer */
   BindInfo.Context = NULL;
@@ -211,7 +108,7 @@ NDIS_STATUS LoopRegisterAdapter(
 
   TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 
-  return Status;
+  return NDIS_STATUS_SUCCESS;
 }
 
 

@@ -309,7 +309,7 @@ static LRESULT MCIWND_Create(HWND hWnd, LPCREATESTRUCTW cs)
         /* MCI wnd class is prepared to be embedded as an MDI child window */
         if (cs->dwExStyle & WS_EX_MDICHILD)
         {
-            MDICREATESTRUCTW *mdics = (MDICREATESTRUCTW *)cs->lpCreateParams;
+            MDICREATESTRUCTW *mdics = cs->lpCreateParams;
             lParam = mdics->lParam;
         }
         else
@@ -449,7 +449,7 @@ static LRESULT WINAPI MCIWndProc(HWND hWnd, UINT wMsg, WPARAM wParam, LPARAM lPa
 
     TRACE("%p %04x %08lx %08lx\n", hWnd, wMsg, wParam, lParam);
 
-    mwi = (MCIWndInfo*)GetWindowLongW(hWnd, 0);
+    mwi = (MCIWndInfo*)GetWindowLongPtrW(hWnd, 0);
     if (!mwi && wMsg != WM_CREATE)
         return DefWindowProcW(hWnd, wMsg, wParam, lParam);
 
@@ -568,7 +568,7 @@ static LRESULT WINAPI MCIWndProc(HWND hWnd, UINT wMsg, WPARAM wParam, LPARAM lPa
             hCursor = SetCursor(hCursor);
 
             mci_open.lpstrElementName = (LPWSTR)lParam;
-            wsprintfW(aliasW, formatW, (int)hWnd + 1);
+            wsprintfW(aliasW, formatW, HandleToLong(hWnd) + 1);
             mci_open.lpstrAlias = aliasW;
             mwi->lasterror = mciSendCommandW(mwi->mci, MCI_OPEN,
                                              MCI_OPEN_ELEMENT | MCI_OPEN_ALIAS | MCI_WAIT,
@@ -588,7 +588,7 @@ static LRESULT WINAPI MCIWndProc(HWND hWnd, UINT wMsg, WPARAM wParam, LPARAM lPa
             }
 
             mwi->mci = mci_open.wDeviceID;
-            mwi->alias = (int)hWnd + 1;
+            mwi->alias = HandleToLong(hWnd) + 1;
 
             mwi->lpName = HeapAlloc(GetProcessHeap(), 0, (strlenW((LPWSTR)lParam) + 1) * sizeof(WCHAR));
             strcpyW(mwi->lpName, (LPWSTR)lParam);
@@ -752,7 +752,7 @@ end_of_mci_open:
                 MCIWND_notify_error(mwi);
                 return 0;
             }
-            TRACE("MCIWNDM_GETLENGTH: %d\n", mci_status.dwReturn);
+            TRACE("MCIWNDM_GETLENGTH: %ld\n", mci_status.dwReturn);
             return mci_status.dwReturn;
         }
 
@@ -769,7 +769,7 @@ end_of_mci_open:
                 MCIWND_notify_error(mwi);
                 return 0;
             }
-            TRACE("MCIWNDM_GETSTART: %d\n", mci_status.dwReturn);
+            TRACE("MCIWNDM_GETSTART: %ld\n", mci_status.dwReturn);
             return mci_status.dwReturn;
         }
 

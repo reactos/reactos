@@ -91,6 +91,7 @@
 #define STRING_ASSOC_HELP                  616
 #define STRING_MKLINK_HELP                 617
 
+#define STRING_REACTOS_VERSION             623
 #define STRING_CMD_SHELLINFO               624
 
 #define STRING_COLOR_HELP1                 625
@@ -246,6 +247,9 @@
 #define STRING_MKLINK_CREATED_SYMBOLIC     738
 #define STRING_MKLINK_CREATED_HARD         739
 #define STRING_MKLINK_CREATED_JUNCTION     740
+
+#define STRING_MORE                        741
+#define STRING_CANCEL_BATCH_FILE           742
 
 /* These strings are language independent (cmd.rc) */
 #define STRING_FREEDOS_DEV                 800

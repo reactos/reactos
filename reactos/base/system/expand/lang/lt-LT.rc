@@ -7,7 +7,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
 
 IDS_Copy, "ReactOS bylø iðplëtimo pagalbinë programa. Versija 1.0\n\
-Copyright Victor Schneider 1997\n\n\
+(C) Victor Schneider 1997\n\n\
 Naudojimas: %s ðaltinio_byla [iðvesties_byla]\n"
 
 IDS_FAILS "LZCopy nepavyko: graþino %ld\n"

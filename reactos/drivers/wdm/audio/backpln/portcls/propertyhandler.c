@@ -1,3 +1,11 @@
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS Kernel Streaming
+ * FILE:            drivers/wdm/audio/backpln/portcls/propertyhandler.c
+ * PURPOSE:         Pin property handler
+ * PROGRAMMER:      Johannes Anderwald
+ */
+
 #include "private.h"
 
 NTSTATUS
@@ -57,6 +65,76 @@ HandleNecessaryPropertyInstances(
     return STATUS_SUCCESS;
 }
 
+NTSTATUS
+HandleDataIntersection(
+    IN PIRP Irp,
+    IN PKSIDENTIFIER Request,
+    IN OUT PVOID  Data,
+    IN PSUBDEVICE_DESCRIPTOR Descriptor)
+{
+    IIrpTarget * IrpTarget;
+    IPort *Port;
+    ISubdevice *SubDevice;
+    KSP_PIN * Pin = (KSP_PIN*)Request;
+    PKSOBJECT_CREATE_ITEM CreateItem;
+    PKSMULTIPLE_ITEM MultipleItem;
+    PKSDATARANGE DataRange;
+    PIO_STACK_LOCATION IoStack;
+    NTSTATUS Status;
+    ULONG Index, Length;
+
+    /* Access the create item */
+    CreateItem = KSCREATE_ITEM_IRP_STORAGE(Irp);
+    /* Get the IrpTarget */
+    IrpTarget = (IIrpTarget*)CreateItem->Context;
+    /* Get the parent */
+    Status = IrpTarget->lpVtbl->QueryInterface(IrpTarget, &IID_IPort, (PVOID*)&Port);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to obtain IPort interface from filter\n");
+        Irp->IoStatus.Information = 0;
+        Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    /* Get private ISubdevice interface */
+    Status = Port->lpVtbl->QueryInterface(Port, &IID_ISubdevice, (PVOID*)&SubDevice);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to obtain ISubdevice interface from port driver\n");
+        KeBugCheck(0);
+    }
+
+    /* Access parameters */
+    MultipleItem = (PKSMULTIPLE_ITEM)(Pin + 1);
+    DataRange = (PKSDATARANGE)(MultipleItem + 1);
+
+    /* Get current stack location */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    for(Index = 0; Index < MultipleItem->Count; Index++)
+    {
+        /* Call miniport's properitary handler */
+        ASSERT(Descriptor->Factory.KsPinDescriptor[Pin->PinId].DataRangesCount);
+        ASSERT(Descriptor->Factory.KsPinDescriptor[Pin->PinId].DataRanges[0]);
+        Status = SubDevice->lpVtbl->DataRangeIntersection(SubDevice, Pin->PinId, DataRange, (PKSDATARANGE)Descriptor->Factory.KsPinDescriptor[Pin->PinId].DataRanges[0],
+                                                          IoStack->Parameters.DeviceIoControl.OutputBufferLength, Data, &Length);
+
+        if (Status == STATUS_SUCCESS)
+        {
+            Irp->IoStatus.Information = Length;
+            break;
+        }
+        DataRange =  UlongToPtr(PtrToUlong(DataRange) + DataRange->FormatSize);
+    }
+
+    /* Release reference */
+    Port->lpVtbl->Release(Port);
+
+    Irp->IoStatus.Status = Status;
+    return Status;
+}
+
 
 NTSTATUS
 NTAPI
@@ -95,6 +173,8 @@ PinPropertyHandler(
             break;
 
         case KSPROPERTY_PIN_DATAINTERSECTION:
+            Status = HandleDataIntersection(Irp, Request, Data, Descriptor);
+            break;
         case KSPROPERTY_PIN_PHYSICALCONNECTION:
         case KSPROPERTY_PIN_CONSTRAINEDDATARANGES:
             DPRINT1("Unhandled %x\n", Request->Id);
@@ -133,7 +213,7 @@ PcPropertyHandler(
     PFNKSHANDLER PropertyHandler = NULL;
     UNICODE_STRING GuidString;
     NTSTATUS Status = STATUS_UNSUCCESSFUL;
-    PCPROPERTY_REQUEST PropertyRequest;
+    PPCPROPERTY_REQUEST PropertyRequest;
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
@@ -151,17 +231,25 @@ PcPropertyHandler(
                 {
                     if(Descriptor->DeviceDescriptor->AutomationTable->Properties[Index].Flags & Property->Flags)
                     {
-                        RtlZeroMemory(&PropertyRequest, sizeof(PCPROPERTY_REQUEST));
-                        PropertyRequest.PropertyItem = &Descriptor->DeviceDescriptor->AutomationTable->Properties[Index];
-                        PropertyRequest.Verb = Property->Flags;
-                        PropertyRequest.Value = Irp->UserBuffer;
-                        PropertyRequest.ValueSize = IoStack->Parameters.DeviceIoControl.OutputBufferLength;
-                        PropertyRequest.Irp = Irp;
+                        PropertyRequest = ExAllocatePool(NonPagedPool, sizeof(PCPROPERTY_REQUEST));
+                        if (!PropertyRequest)
+                        {
+                            /* no memory */
+                            Irp->IoStatus.Information = 0;
+                            Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
+                            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                            return STATUS_INSUFFICIENT_RESOURCES;
+                        }
+                        RtlZeroMemory(PropertyRequest, sizeof(PCPROPERTY_REQUEST));
+                        PropertyRequest->PropertyItem = &Descriptor->DeviceDescriptor->AutomationTable->Properties[Index];
+                        PropertyRequest->Verb = Property->Flags;
+                        PropertyRequest->Value = Irp->UserBuffer;
+                        PropertyRequest->ValueSize = IoStack->Parameters.DeviceIoControl.OutputBufferLength;
+                        PropertyRequest->Irp = Irp;
 
                         DPRINT("Calling handler %p\n", Descriptor->DeviceDescriptor->AutomationTable->Properties[Index].Handler);
-                        Status = Descriptor->DeviceDescriptor->AutomationTable->Properties[Index].Handler(&PropertyRequest);
+                        Status = Descriptor->DeviceDescriptor->AutomationTable->Properties[Index].Handler(PropertyRequest);
 
-                        Irp->IoStatus.Information = PropertyRequest.ValueSize;
                         Irp->IoStatus.Status = Status;
                         IoCompleteRequest(Irp, IO_NO_INCREMENT);
                         return Status;
@@ -228,5 +316,3 @@ PcPropertyHandler(
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
     return STATUS_NOT_IMPLEMENTED;
 }
-
-

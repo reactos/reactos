@@ -5791,6 +5791,13 @@ KeTryToAcquireSpinLockAtDpcLevel(
     IN OUT PKSPIN_LOCK SpinLock
 );
 
+NTKERNELAPI
+BOOLEAN
+FASTCALL
+KeTestSpinLock(
+    IN PKSPIN_LOCK SpinLock
+);
+
 #if defined (_X86_)
 
 NTKERNELAPI

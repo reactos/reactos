@@ -147,7 +147,7 @@ static BOOL flatten_bezier(path_list_node_t *start, REAL x2, REAL y2, REAL x3, R
     /* check flatness as a half of distance between middle point and a linearized path */
     if(fabs(((pt.Y - pt_st.Y)*mp[2].X + (pt_st.X - pt.X)*mp[2].Y +
         (pt_st.Y*pt.X - pt_st.X*pt.Y))) <=
-        (0.5 * flatness*sqrt((powf(pt.Y - pt_st.Y, 2.0) + powf(pt_st.X - pt.X, 2.0))))){
+        (0.5 * flatness*sqrtf((powf(pt.Y - pt_st.Y, 2.0) + powf(pt_st.X - pt.X, 2.0))))){
         return TRUE;
     }
     else

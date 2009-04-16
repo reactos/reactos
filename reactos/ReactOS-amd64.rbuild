@@ -154,9 +154,9 @@
 			<xi:include href="drivers/directx/directory.rbuild" />
 		</directory -->
 
-		<!-- directory name="ksfilter">
+		<directory name="ksfilter">
 			<xi:include href="drivers/ksfilter/directory.rbuild" />
-		</directory -->
+		</directory>
 
 		<!-- directory name="multimedia">
 			<xi:include href="drivers/multimedia/directory.rbuild" />
@@ -178,9 +178,9 @@
 			<xi:include href="drivers/video/directory.rbuild" />
 		</directory-->
 	
-		<!-- directory name="wdm">
+		<directory name="wdm">
 			<xi:include href="drivers/wdm/wdm.rbuild" />
-		</directory -->
+		</directory>
 
 		<directory name="wmi">
 			<xi:include href="drivers/wmi/wmilib.rbuild" />
@@ -251,6 +251,9 @@
 			</directory>
 			<directory name="icu4ros">
 				<xi:include href="lib/3rdparty/icu4ros/icu4ros.rbuild" />
+			</directory>
+			<directory name="libsamplerate">
+				<xi:include href="lib/3rdparty/libsamplerate/libsamplerate.rbuild" />
 			</directory>
 			<directory name="libwine">
 				<xi:include href="lib/3rdparty/libwine/libwine.rbuild" />

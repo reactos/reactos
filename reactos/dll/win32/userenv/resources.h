@@ -49,5 +49,6 @@
 #define IDS_HISTORY        22
 #define IDS_COOKIES        23
 #define IDS_PROGRAMFILES   24
+#define IDS_COMMONFILES    25
 
 /* EOF */

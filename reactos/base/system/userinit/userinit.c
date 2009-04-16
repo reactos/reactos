@@ -30,6 +30,7 @@
 #include <shlwapi.h>
 #include "resource.h"
 #include <wine/debug.h>
+#include <win32k/ntusrtyp.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(userinit);
 
@@ -535,6 +536,61 @@ VOID SetUserWallpaper(VOID)
         WARN("RegOpenKeyEx() failed with error %lu\n", rc);
 }
 
+static VOID SetUserPreference(UINT uiAction,BOOL bValue,UINT fWinIni)
+{
+    DWORD dwvalue = bValue;
+    SystemParametersInfo(uiAction, 0, (PVOID)&dwvalue, fWinIni);
+}
+
+static VOID SetUserPreferences(VOID)
+{
+    HKEY hKey;
+    DWORD Type, Size;
+    LONG rc;
+    USERPREFERENCESMASK Preferences;
+
+    TRACE("()\n");
+
+    rc = RegOpenKeyEx(HKEY_CURRENT_USER, REGSTR_PATH_DESKTOP,
+                      0, KEY_QUERY_VALUE, &hKey);
+    if (rc == ERROR_SUCCESS)
+    {
+        Size = sizeof(USERPREFERENCESMASK);
+        ERR("USERPREFERENCESMASK size: %d\n",Size);
+
+        rc = RegQueryValueEx(hKey,
+                             L"UserPreferencesMask",
+                             NULL,
+                             &Type,
+                             (LPBYTE)&Preferences,
+                             &Size);
+        if (rc == ERROR_SUCCESS && Type == REG_BINARY)
+        {
+            SetUserPreference(SPI_SETUIEFFECTS, Preferences.bUiEffects, SPIF_SENDCHANGE);
+            SetUserPreference(SPI_SETACTIVEWINDOWTRACKING, Preferences.bActiveWindowTracking, SPIF_SENDCHANGE);
+            SetUserPreference(SPI_SETMENUANIMATION, Preferences.bMenuAnimation, SPIF_SENDCHANGE);
+            SetUserPreference(SPI_SETCOMBOBOXANIMATION, Preferences.bComboBoxAnimation, SPIF_SENDCHANGE);
+            SetUserPreference(SPI_SETLISTBOXSMOOTHSCROLLING, Preferences.bListBoxSmoothScrolling, SPIF_SENDCHANGE);
+            SetUserPreference(SPI_SETGRADIENTCAPTIONS, Preferences.bGradientCaptions, SPIF_SENDCHANGE);
+            SetUserPreference(SPI_SETKEYBOARDCUES, Preferences.bKeyboardCues, SPIF_SENDCHANGE);
+            SetUserPreference(SPI_SETACTIVEWNDTRKZORDER, Preferences.bActiveWndTrkZorder, SPIF_SENDCHANGE);
+            SetUserPreference(SPI_SETHOTTRACKING, Preferences.bHotTracking, SPIF_SENDCHANGE);
+            SetUserPreference(SPI_SETMENUFADE, Preferences.bMenuFade, SPIF_SENDCHANGE);
+            SetUserPreference(SPI_SETSELECTIONFADE, Preferences.bSelectionFade, SPIF_SENDCHANGE);
+            SetUserPreference(SPI_SETTOOLTIPANIMATION, Preferences.bTooltipAnimation, SPIF_SENDCHANGE);
+            SetUserPreference(SPI_SETTOOLTIPFADE, Preferences.bTooltipFade, SPIF_SENDCHANGE);
+            SetUserPreference(SPI_SETCURSORSHADOW, Preferences.bCursorShadow, SPIF_SENDCHANGE);
+        }
+        else
+        {
+            ERR("No User Preferences set in registry or incorrect type (error %lu)\n", rc);
+        }
+        RegCloseKey(hKey);
+    }
+    else
+        WARN("RegOpenKeyEx() failed with error %lu\n", rc);
+}
+
 static
 VOID SetUserSettings(VOID)
 {
@@ -543,6 +599,7 @@ VOID SetUserSettings(VOID)
     SetUserSysColors();
     SetUserMetrics();
     SetUserWallpaper();
+    SetUserPreferences();
 }
 
 typedef DWORD (WINAPI *PCMP_REPORT_LOGON)(DWORD, DWORD);

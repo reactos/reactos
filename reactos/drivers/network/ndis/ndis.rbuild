@@ -18,8 +18,9 @@
 		<pch>ndissys.h</pch>
 	</directory>
 	<directory name="ndis">
-		<file>40gone.c</file>
-		<file>50gone.c</file>
+		<file>30stubs.c</file>
+		<file>40stubs.c</file>
+		<file>50stubs.c</file>
 		<file>buffer.c</file>
 		<file>cl.c</file>
 		<file>cm.c</file>
@@ -32,9 +33,9 @@
 		<file>main.c</file>
 		<file>memory.c</file>
 		<file>miniport.c</file>
+		<file>misc.c</file>
 		<file>protocol.c</file>
 		<file>string.c</file>
-		<file>stubs.c</file>
 		<file>time.c</file>
 	</directory>
 	<file>ndis.rc</file>

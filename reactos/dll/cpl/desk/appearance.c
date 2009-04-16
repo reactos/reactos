@@ -127,6 +127,19 @@ LoadCurrentTheme(GLOBALS* g)
 	g->Theme.lfFont[FONT_INFO] = NonClientMetrics.lfStatusFont;
 	g->Theme.lfFont[FONT_DIALOG] = NonClientMetrics.lfMessageFont;
 	SystemParametersInfo(SPI_GETICONTITLELOGFONT, sizeof(LOGFONT), &g->Theme.lfFont[FONT_ICON], 0);
+
+    /* Effects */
+   /* "Use the following transition effect for menus and tooltips" */
+    SystemParametersInfo(SPI_GETMENUANIMATION, sizeof(BOOL), &g->Theme.Effects.bMenuAnimation, 0);
+    SystemParametersInfo(SPI_GETMENUFADE, sizeof(BOOL), &g->Theme.Effects.bMenuFade, 0);
+    /* FIXME: XP seems to use grayed checkboxes to reflect differences between menu and tooltips settings
+     * Just keep them in sync for now:
+     */
+    g->Theme.Effects.bTooltipAnimation  = g->Theme.Effects.bMenuAnimation;
+    g->Theme.Effects.bTooltipFade       = g->Theme.Effects.bMenuFade;
+
+    /* "Hide underlined letters for keyboard navigation until I press the Alt key" */
+    SystemParametersInfo(SPI_GETKEYBOARDCUES, sizeof(BOOL), &g->Theme.Effects.bKeyboardCues, 0);
 }
 
 
@@ -206,6 +219,12 @@ LoadThemeFromReg(GLOBALS* g)
 	return Ret;
 }
 
+static VOID
+_UpdateUserPref(UINT SpiGet,UINT SpiSet,BOOL *pbFlag)
+{
+    SystemParametersInfo(SpiSet, 0, (PVOID)pbFlag, SPIF_UPDATEINIFILE|SPIF_SENDCHANGE);
+}
+#define UPDATE_USERPREF(NAME,pbFlag) _UpdateUserPref(SPI_GET ## NAME, SPI_SET ## NAME, pbFlag)
 
 static VOID
 ApplyTheme(GLOBALS* g)
@@ -333,6 +352,27 @@ ApplyTheme(GLOBALS* g)
 
 		RegCloseKey(hKey);
 	}
+
+    /* Effects, save only when needed: */
+    /* FIXME: XP seems to use grayed checkboxes to reflect differences between menu and tooltips settings
+     * Just keep them in sync for now.
+     */
+    g->Theme.Effects.bTooltipAnimation  = g->Theme.Effects.bMenuAnimation;
+    g->Theme.Effects.bTooltipFade       = g->Theme.Effects.bMenuFade;
+    UPDATE_USERPREF(KEYBOARDCUES, &g->Theme.Effects.bKeyboardCues);
+    //UPDATE_USERPREF(ACTIVEWINDOWTRACKING, &g->Theme.Effects.bActiveWindowTracking);
+    UPDATE_USERPREF(MENUANIMATION, &g->Theme.Effects.bMenuAnimation);
+    //UPDATE_USERPREF(COMBOBOXANIMATION, &g->Theme.Effects.bComboBoxAnimation);
+    //UPDATE_USERPREF(LISTBOXSMOOTHSCROLLING, &g->Theme.Effects.bListBoxSmoothScrolling);
+    //UPDATE_USERPREF(GRADIENTCAPTIONS, &g->Theme.Effects.bGradientCaptions);
+    //UPDATE_USERPREF(ACTIVEWNDTRKZORDER, &g->Theme.Effects.bActiveWndTrkZorder);
+    //UPDATE_USERPREF(HOTTRACKING, &g->Theme.Effects.bHotTracking);
+    UPDATE_USERPREF(MENUFADE, &g->Theme.Effects.bMenuFade);
+    //UPDATE_USERPREF(SELECTIONFADE, &g->Theme.Effects.bSelectionFade);
+    UPDATE_USERPREF(TOOLTIPANIMATION, &g->Theme.Effects.bTooltipAnimation);
+    UPDATE_USERPREF(TOOLTIPFADE, &g->Theme.Effects.bTooltipFade);
+    //UPDATE_USERPREF(CURSORSHADOW, &g->Theme.Effects.bCursorShadow);
+    //UPDATE_USERPREF(UIEFFECTS, &g->Theme.Effects.bUiEffects);
 	/* Save ThemeId */
 	Result = RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Control Panel\\Appearance\\New Schemes"), 0, KEY_ALL_ACCESS, &hKey);
 	if (Result == ERROR_SUCCESS)
@@ -462,6 +502,19 @@ AppearancePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case WM_COMMAND:
 			switch (LOWORD(wParam))
 			{
+				case IDC_APPEARANCE_EFFECTS:
+					DialogBoxParam(hApplet, (LPCTSTR)IDD_EFFAPPEARANCE,
+						hwndDlg, EffAppearanceDlgProc, (LPARAM)g);
+
+					/* Was anything changed in the effects appearance dialog? */
+					if (memcmp(&g->Theme, &g->ThemeAdv, sizeof(THEME)) != 0)
+					{
+						PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+						g->Theme = g->ThemeAdv;
+						g->Theme.bHasChanged = TRUE;
+					}
+					break;
+
 				case IDC_APPEARANCE_ADVANCED:
 					DialogBoxParam(hApplet, (LPCTSTR)IDD_ADVAPPEARANCE,
 						hwndDlg, AdvAppearanceDlgProc, (LPARAM)g);

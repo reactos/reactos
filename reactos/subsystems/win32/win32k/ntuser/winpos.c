@@ -191,7 +191,7 @@ UINT
 FASTCALL
 co_WinPosArrangeIconicWindows(PWINDOW_OBJECT parent)
 {
-   RECT rectParent;
+   RECTL rectParent;
    INT i, x, y, xspacing, yspacing;
    HWND *List = IntWinListChildren(parent);
 
@@ -248,7 +248,7 @@ WinPosFindIconPos(PWINDOW_OBJECT Window, POINT *Pos)
 }
 
 VOID FASTCALL
-WinPosInitInternalPos(PWINDOW_OBJECT Window, POINT *pt, PRECT RestoreRect)
+WinPosInitInternalPos(PWINDOW_OBJECT Window, POINT *pt, RECTL *RestoreRect)
 {
     PWINDOW_OBJECT Parent;
     UINT XInc, YInc;
@@ -256,7 +256,7 @@ WinPosInitInternalPos(PWINDOW_OBJECT Window, POINT *pt, PRECT RestoreRect)
 
    if (!Wnd->InternalPosInitialized)
    {
-      RECT WorkArea;
+      RECTL WorkArea;
       PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
       PDESKTOP Desktop = pti->Desktop; /* Or rather get it from the window? */
 
@@ -333,7 +333,7 @@ co_WinPosMinMaximize(PWINDOW_OBJECT Window, UINT ShowFlag, RECT* NewPos)
                                    RDW_NOINTERNALPAINT);
                Wnd->Style |= WS_MINIMIZE;
                WinPosFindIconPos(Window, &Wnd->InternalPos.IconPos);
-               IntGdiSetRect(NewPos, Wnd->InternalPos.IconPos.x, Wnd->InternalPos.IconPos.y,
+               RECTL_vSetRect(NewPos, Wnd->InternalPos.IconPos.x, Wnd->InternalPos.IconPos.y,
                              UserGetSystemMetrics(SM_CXMINIMIZED),
                              UserGetSystemMetrics(SM_CYMINIMIZED));
                SwpFlags |= SWP_NOCOPYBITS;
@@ -351,7 +351,7 @@ co_WinPosMinMaximize(PWINDOW_OBJECT Window, UINT ShowFlag, RECT* NewPos)
                   Wnd->Style &= ~WS_MINIMIZE;
                }
                Wnd->Style |= WS_MAXIMIZE;
-               IntGdiSetRect(NewPos, Wnd->InternalPos.MaxPos.x, Wnd->InternalPos.MaxPos.y,
+               RECTL_vSetRect(NewPos, Wnd->InternalPos.MaxPos.x, Wnd->InternalPos.MaxPos.y,
                              Size.x, Size.y);
                break;
             }
@@ -366,7 +366,7 @@ co_WinPosMinMaximize(PWINDOW_OBJECT Window, UINT ShowFlag, RECT* NewPos)
                      co_WinPosGetMinMaxInfo(Window, &Size,
                                             &Wnd->InternalPos.MaxPos, NULL, NULL);
                      Wnd->Style |= WS_MAXIMIZE;
-                     IntGdiSetRect(NewPos, Wnd->InternalPos.MaxPos.x,
+                     RECTL_vSetRect(NewPos, Wnd->InternalPos.MaxPos.x,
                                    Wnd->InternalPos.MaxPos.y, Size.x, Size.y);
                      break;
                   }
@@ -401,7 +401,7 @@ VOID FASTCALL
 WinPosFillMinMaxInfoStruct(PWINDOW_OBJECT Window, MINMAXINFO *Info)
 {
    UINT XInc, YInc;
-   RECT WorkArea;
+   RECTL WorkArea;
    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
    PDESKTOP Desktop = pti->Desktop; /* Or rather get it from the window? */
 
@@ -459,7 +459,7 @@ co_WinPosGetMinMaxInfo(PWINDOW_OBJECT Window, POINT* MaxSize, POINT* MaxPos,
 
 static
 VOID FASTCALL
-FixClientRect(PRECT ClientRect, PRECT WindowRect)
+FixClientRect(PRECTL ClientRect, PRECTL WindowRect)
 {
    if (ClientRect->left < WindowRect->left)
    {
@@ -519,11 +519,11 @@ co_WinPosDoNCCALCSize(PWINDOW_OBJECT Window, PWINDOWPOS WinPos,
       Parent = Window->Parent;
       if (0 != (Wnd->Style & WS_CHILD) && Parent)
       {
-         IntGdiOffsetRect(&(params.rgrc[0]), - Parent->Wnd->ClientRect.left,
+         RECTL_vOffsetRect(&(params.rgrc[0]), - Parent->Wnd->ClientRect.left,
                           - Parent->Wnd->ClientRect.top);
-         IntGdiOffsetRect(&(params.rgrc[1]), - Parent->Wnd->ClientRect.left,
+         RECTL_vOffsetRect(&(params.rgrc[1]), - Parent->Wnd->ClientRect.left,
                           - Parent->Wnd->ClientRect.top);
-         IntGdiOffsetRect(&(params.rgrc[2]), - Parent->Wnd->ClientRect.left,
+         RECTL_vOffsetRect(&(params.rgrc[2]), - Parent->Wnd->ClientRect.left,
                           - Parent->Wnd->ClientRect.top);
       }
       params.lppos = &winposCopy;
@@ -538,7 +538,7 @@ co_WinPosDoNCCALCSize(PWINDOW_OBJECT Window, PWINDOWPOS WinPos,
          *ClientRect = params.rgrc[0];
          if ((Wnd->Style & WS_CHILD) && Parent)
          {
-            IntGdiOffsetRect(ClientRect, Parent->Wnd->ClientRect.left,
+            RECTL_vOffsetRect(ClientRect, Parent->Wnd->ClientRect.left,
                              Parent->Wnd->ClientRect.top);
          }
          FixClientRect(ClientRect, WindowRect);
@@ -577,8 +577,8 @@ static
 BOOL FASTCALL
 co_WinPosDoWinPosChanging(PWINDOW_OBJECT Window,
                           PWINDOWPOS WinPos,
-                          PRECT WindowRect,
-                          PRECT ClientRect)
+                          PRECTL WindowRect,
+                          PRECTL ClientRect)
 {
    INT X, Y;
    PWINDOW Wnd;
@@ -616,7 +616,7 @@ co_WinPosDoWinPosChanging(PWINDOW_OBJECT Window,
       WindowRect->top = Y;
       WindowRect->right += X - Wnd->WindowRect.left;
       WindowRect->bottom += Y - Wnd->WindowRect.top;
-      IntGdiOffsetRect(ClientRect,
+      RECTL_vOffsetRect(ClientRect,
                        X - Wnd->WindowRect.left,
                        Y - Wnd->WindowRect.top);
    }
@@ -871,8 +871,8 @@ co_WinPosSetWindowPos(
 )
 {
    WINDOWPOS WinPos;
-   RECT NewWindowRect;
-   RECT NewClientRect;
+   RECTL NewWindowRect;
+   RECTL NewClientRect;
    PROSRGNDATA VisRgn;
    HRGN VisBefore = NULL;
    HRGN VisAfter = NULL;
@@ -880,11 +880,11 @@ co_WinPosSetWindowPos(
    HRGN ExposedRgn = NULL;
    HRGN CopyRgn = NULL;
    ULONG WvrFlags = 0;
-   RECT OldWindowRect, OldClientRect;
+   RECTL OldWindowRect, OldClientRect;
    int RgnType;
    HDC Dc;
-   RECT CopyRect;
-   RECT TempRect;
+   RECTL CopyRect;
+   RECTL TempRect;
    PWINDOW_OBJECT Ancestor;
 
    ASSERT_REFS_CO(Window);
@@ -947,7 +947,7 @@ co_WinPosSetWindowPos(
                REGION_GetRgnBox(VisRgn, &TempRect) == NULLREGION)
          {
             REGION_UnlockRgn(VisRgn);
-            NtGdiDeleteObject(VisBefore);
+            GreDeleteObject(VisBefore);
             VisBefore = NULL;
          }
          else if(VisRgn)
@@ -1097,7 +1097,7 @@ co_WinPosSetWindowPos(
             REGION_GetRgnBox(VisRgn, &TempRect) == NULLREGION)
       {
          REGION_UnlockRgn(VisRgn);
-         NtGdiDeleteObject(VisAfter);
+         GreDeleteObject(VisAfter);
          VisAfter = NULL;
       }
       else if(VisRgn)
@@ -1132,11 +1132,11 @@ co_WinPosSetWindowPos(
                RgnType != NULLREGION)
          {
             PROSRGNDATA pCopyRgn;
-            RECT ORect = OldClientRect;
-            RECT NRect = NewClientRect;
-            IntGdiOffsetRect(&ORect, - OldWindowRect.left, - OldWindowRect.top);
-            IntGdiOffsetRect(&NRect, - NewWindowRect.left, - NewWindowRect.top);
-            IntGdiIntersectRect(&CopyRect, &ORect, &NRect);
+            RECTL ORect = OldClientRect;
+            RECTL NRect = NewClientRect;
+            RECTL_vOffsetRect(&ORect, - OldWindowRect.left, - OldWindowRect.top);
+            RECTL_vOffsetRect(&NRect, - NewWindowRect.left, - NewWindowRect.top);
+            RECTL_bIntersectRect(&CopyRect, &ORect, &NRect);
             pCopyRgn = REGION_LockRgn(CopyRgn);
             REGION_CropAndOffsetRegion(pCopyRgn, pCopyRgn, &CopyRect, NULL);
             REGION_UnlockRgn(pCopyRgn);
@@ -1160,7 +1160,7 @@ co_WinPosSetWindowPos(
          {
             /* Nothing to copy, clean up */
             REGION_UnlockRgn(VisRgn);
-            NtGdiDeleteObject(CopyRgn);
+            GreDeleteObject(CopyRgn);
             CopyRgn = NULL;
          }
          else if (OldWindowRect.left != NewWindowRect.left ||
@@ -1222,7 +1222,7 @@ co_WinPosSetWindowPos(
             IntInvalidateWindows(Window, DirtyRgn,
                RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
          }
-         NtGdiDeleteObject(DirtyRgn);
+         GreDeleteObject(DirtyRgn);
          */
 
             PWINDOW_OBJECT Parent = Window->Parent;
@@ -1244,12 +1244,12 @@ co_WinPosSetWindowPos(
                 RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
             }
          }
-         NtGdiDeleteObject(DirtyRgn);
+         GreDeleteObject(DirtyRgn);
       }
 
       if (CopyRgn != NULL)
       {
-         NtGdiDeleteObject(CopyRgn);
+         GreDeleteObject(CopyRgn);
       }
 
       /* Expose what was covered before but not covered anymore */
@@ -1268,13 +1268,13 @@ co_WinPosSetWindowPos(
          {
             co_VIS_WindowLayoutChanged(Window, ExposedRgn);
          }
-         NtGdiDeleteObject(ExposedRgn);
-         NtGdiDeleteObject(VisBefore);
+         GreDeleteObject(ExposedRgn);
+         GreDeleteObject(VisBefore);
       }
 
       if (VisAfter != NULL)
       {
-         NtGdiDeleteObject(VisAfter);
+         GreDeleteObject(VisAfter);
       }
 
       if (!(WinPos.flags & SWP_NOACTIVATE))
@@ -1316,7 +1316,7 @@ co_WinPosShowWindow(PWINDOW_OBJECT Window, INT Cmd)
 {
    BOOLEAN WasVisible;
    UINT Swp = 0;
-   RECT NewPos;
+   RECTL NewPos;
    BOOLEAN ShowFlag;
    //  HRGN VisibleRgn;
    PWINDOW Wnd;

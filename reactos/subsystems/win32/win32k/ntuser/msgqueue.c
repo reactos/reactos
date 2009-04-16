@@ -79,7 +79,7 @@ IdlePing(VOID)
 
   if (Window && Window->ti)
   {
-     if (Window->ti->Hooks & HOOKID_TO_FLAG(WH_FOREGROUNDIDLE))
+     if (Window->ti->fsHooks & HOOKID_TO_FLAG(WH_FOREGROUNDIDLE))
      {
         co_HOOK_CallHooks(WH_FOREGROUNDIDLE,HC_ACTION,0,0);
      }
@@ -547,7 +547,7 @@ co_MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
    if (DesktopWindow)
    {
        UserRefObjectCo(DesktopWindow, &Ref);//can DesktopWindow be NULL?
-       Desk = DesktopWindow->ti->Desktop;
+       Desk = DesktopWindow->ti->pDeskInfo;
    }
 
    /* Process messages in the message queue itself. */

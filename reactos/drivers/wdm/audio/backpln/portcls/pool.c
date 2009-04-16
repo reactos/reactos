@@ -1,6 +1,12 @@
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS Kernel Streaming
+ * FILE:            drivers/wdm/audio/backpln/portcls/pool.c
+ * PURPOSE:         Memory functions
+ * PROGRAMMER:      Johannes Anderwald
+ */
+
 #include "private.h"
-
-
 
 PVOID
 AllocateItem(

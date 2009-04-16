@@ -1,3 +1,12 @@
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS Kernel Streaming
+ * FILE:            drivers/wdm/audio/backpln/portcls/connection.c
+ * PURPOSE:         portcls physical connection registration
+ * PROGRAMMER:      Johannes Anderwald
+ */
+
+
 #include "private.h"
 
 
@@ -94,8 +103,6 @@ cleanup:
     return Status;
 }
 
-
-
 /*
  * @implemented
  */
@@ -108,7 +115,7 @@ PcRegisterPhysicalConnection(
     IN  ULONG ToPin)
 {
 
-    DPRINT1("PcRegisterPhysicalConnection\n");
+    DPRINT("PcRegisterPhysicalConnection\n");
 
     if (!DeviceObject || !FromUnknown || !ToUnknown)
         return STATUS_INVALID_PARAMETER;

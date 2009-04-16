@@ -37,40 +37,41 @@
 void FASTCALL
 IntFixIsotropicMapping(PDC dc)
 {
-    PDC_ATTR pDcAttr;
+    PDC_ATTR pdcattr;
     LONG fx, fy, s;
 
     /* Get a pointer to the DC_ATTR */
-    pDcAttr = dc->pDc_Attr;
-    if (!pDcAttr) pDcAttr = &dc->Dc_Attr;
+    pdcattr = dc->pdcattr;
 
     /* Check if all values are valid */
-    if (pDcAttr->szlWindowExt.cx == 0 || pDcAttr->szlWindowExt.cy == 0 ||
-        pDcAttr->szlViewportExt.cx == 0 || pDcAttr->szlViewportExt.cy == 0)
+    if (pdcattr->szlWindowExt.cx == 0 || pdcattr->szlWindowExt.cy == 0 ||
+        pdcattr->szlViewportExt.cx == 0 || pdcattr->szlViewportExt.cy == 0)
     {
         /* Don't recalculate */
         return;
     }
 
-    fx = abs(pDcAttr->szlWindowExt.cx * pDcAttr->szlViewportExt.cy);
-    fy = abs(pDcAttr->szlWindowExt.cy * pDcAttr->szlViewportExt.cx);
+    fx = abs(pdcattr->szlWindowExt.cx * pdcattr->szlViewportExt.cy);
+    fy = abs(pdcattr->szlWindowExt.cy * pdcattr->szlViewportExt.cx);
 
     if (fy > fx)
     {
-        s = pDcAttr->szlWindowExt.cy * pDcAttr->szlViewportExt.cx > 0 ? 1 : -1;
-        pDcAttr->szlViewportExt.cx = s * fx / pDcAttr->szlWindowExt.cy;
+        s = pdcattr->szlWindowExt.cy * pdcattr->szlViewportExt.cx > 0 ? 1 : -1;
+        pdcattr->szlViewportExt.cx = s * fx / pdcattr->szlWindowExt.cy;
     }
     else if (fx > fy)
     {
-        s = pDcAttr->szlWindowExt.cx * pDcAttr->szlViewportExt.cy > 0 ? 1 : -1;
-        pDcAttr->szlViewportExt.cy = s * fy / pDcAttr->szlWindowExt.cx;
+        s = pdcattr->szlWindowExt.cx * pdcattr->szlViewportExt.cy > 0 ? 1 : -1;
+        pdcattr->szlViewportExt.cy = s * fy / pdcattr->szlWindowExt.cx;
     }
 }
 
+// FIXME: don't use floating point in the kernel! use XFORMOBJ function
 BOOL FASTCALL
-IntGdiCombineTransform(LPXFORM XFormResult,
-                       LPXFORM xform1,
-                       LPXFORM xform2)
+IntGdiCombineTransform(
+    LPXFORM XFormResult,
+    LPXFORM xform1,
+    LPXFORM xform2)
 {
     XFORM xformTemp;
     /* Check for illegal parameters */
@@ -92,9 +93,11 @@ IntGdiCombineTransform(LPXFORM XFormResult,
     return TRUE;
 }
 
-BOOL APIENTRY NtGdiCombineTransform(LPXFORM  UnsafeXFormResult,
-                                    LPXFORM  Unsafexform1,
-                                    LPXFORM  Unsafexform2)
+// FIXME: should be XFORML and use XFORMOBJ functions
+BOOL APIENTRY NtGdiCombineTransform(
+    LPXFORM  UnsafeXFormResult,
+    LPXFORM  Unsafexform1,
+    LPXFORM  Unsafexform2)
 {
     BOOL Ret;
 
@@ -116,23 +119,13 @@ BOOL APIENTRY NtGdiCombineTransform(LPXFORM  UnsafeXFormResult,
     return Ret;
 }
 
-
-int
-FASTCALL
-IntGetGraphicsMode(PDC dc)
-{
-    PDC_ATTR Dc_Attr;
-    ASSERT(dc);
-    Dc_Attr = dc->pDc_Attr;
-    if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
-    return Dc_Attr->iGraphicsMode;
-}
-
+// FIXME: Don't use floating point in the kernel
 BOOL
 FASTCALL
-IntGdiModifyWorldTransform(PDC pDc,
-                           CONST LPXFORM lpXForm,
-                           DWORD Mode)
+IntGdiModifyWorldTransform(
+    PDC pDc,
+    CONST LPXFORM lpXForm,
+    DWORD Mode)
 {
     ASSERT(pDc);
     XFORM xformWorld2Wnd;
@@ -146,23 +139,23 @@ IntGdiModifyWorldTransform(PDC pDc,
             xformWorld2Wnd.eM22 = 1.0f;
             xformWorld2Wnd.eDx  = 0.0f;
             xformWorld2Wnd.eDy  = 0.0f;
-            XForm2MatrixS(&pDc->DcLevel.mxWorldToPage, &xformWorld2Wnd);
+            XForm2MatrixS(&pDc->dclevel.mxWorldToPage, &xformWorld2Wnd);
             break;
 
         case MWT_LEFTMULTIPLY:
-            MatrixS2XForm(&xformWorld2Wnd, &pDc->DcLevel.mxWorldToPage);
+            MatrixS2XForm(&xformWorld2Wnd, &pDc->dclevel.mxWorldToPage);
             IntGdiCombineTransform(&xformWorld2Wnd, lpXForm, &xformWorld2Wnd);
-            XForm2MatrixS(&pDc->DcLevel.mxWorldToPage, &xformWorld2Wnd);
+            XForm2MatrixS(&pDc->dclevel.mxWorldToPage, &xformWorld2Wnd);
             break;
 
         case MWT_RIGHTMULTIPLY:
-            MatrixS2XForm(&xformWorld2Wnd, &pDc->DcLevel.mxWorldToPage);
+            MatrixS2XForm(&xformWorld2Wnd, &pDc->dclevel.mxWorldToPage);
             IntGdiCombineTransform(&xformWorld2Wnd, &xformWorld2Wnd, lpXForm);
-            XForm2MatrixS(&pDc->DcLevel.mxWorldToPage, &xformWorld2Wnd);
+            XForm2MatrixS(&pDc->dclevel.mxWorldToPage, &xformWorld2Wnd);
             break;
 
         case MWT_MAX+1: // Must be MWT_SET????
-            XForm2MatrixS(&pDc->DcLevel.mxWorldToPage, lpXForm); // Do it like Wine.
+            XForm2MatrixS(&pDc->dclevel.mxWorldToPage, lpXForm); // Do it like Wine.
             break;
 
         default:
@@ -172,11 +165,13 @@ IntGdiModifyWorldTransform(PDC pDc,
     return TRUE;
 }
 
+// FIXME: Should be XFORML and use XFORMOBJ functions directly
 BOOL
 APIENTRY
-NtGdiGetTransform(HDC  hDC,
-                  DWORD iXform,
-                  LPXFORM  XForm)
+NtGdiGetTransform(
+    HDC  hDC,
+    DWORD iXform,
+    LPXFORM  XForm)
 {
     PDC  dc;
     NTSTATUS Status = STATUS_SUCCESS;
@@ -200,8 +195,9 @@ NtGdiGetTransform(HDC  hDC,
         switch (iXform)
         {
             case GdiWorldSpaceToPageSpace:
-                MatrixS2XForm(XForm, &dc->DcLevel.mxWorldToPage);
+                MatrixS2XForm(XForm, &dc->dclevel.mxWorldToPage);
                 break;
+
             default:
                 break;
         }
@@ -227,11 +223,12 @@ NtGdiGetTransform(HDC  hDC,
 */
 BOOL
 APIENTRY
-NtGdiTransformPoints(HDC hDC,
-                     PPOINT UnsafePtsIn,
-                     PPOINT UnsafePtOut,
-                     INT Count,
-                     INT iMode)
+NtGdiTransformPoints(
+    HDC hDC,
+    PPOINT UnsafePtsIn,
+    PPOINT UnsafePtOut,
+    INT Count,
+    INT iMode)
 {
     PDC dc;
     NTSTATUS Status = STATUS_SUCCESS;
@@ -254,7 +251,8 @@ NtGdiTransformPoints(HDC hDC,
 
     Size = Count * sizeof(POINT);
 
-    Points = (LPPOINT)ExAllocatePoolWithTag(PagedPool, Size, TAG_COORD);
+    // FIXME: It would be wise to have a small stack buffer as optimization
+    Points = ExAllocatePoolWithTag(PagedPool, Size, TAG_COORD);
     if (!Points)
     {
         DC_UnlockDc(dc);
@@ -287,9 +285,11 @@ NtGdiTransformPoints(HDC hDC,
         case GdiDpToLp:
             IntDPtoLP(dc, Points, Count);
             break;
+
         case GdiLpToDp:
             IntLPtoDP(dc, Points, Count);
             break;
+
         case 2: // Not supported yet. Need testing.
         default:
         {
@@ -328,9 +328,10 @@ NtGdiTransformPoints(HDC hDC,
 
 BOOL
 APIENTRY
-NtGdiModifyWorldTransform(HDC hDC,
-                          LPXFORM  UnsafeXForm,
-                          DWORD Mode)
+NtGdiModifyWorldTransform(
+    HDC hDC,
+    LPXFORM  UnsafeXForm,
+    DWORD Mode)
 {
     PDC dc;
     XFORM SafeXForm;
@@ -367,13 +368,14 @@ NtGdiModifyWorldTransform(HDC hDC,
 
 BOOL
 APIENTRY
-NtGdiOffsetViewportOrgEx(HDC hDC,
-                         int XOffset,
-                         int YOffset,
-                         LPPOINT UnsafePoint)
+NtGdiOffsetViewportOrgEx(
+    HDC hDC,
+    int XOffset,
+    int YOffset,
+    LPPOINT UnsafePoint)
 {
     PDC      dc;
-    PDC_ATTR Dc_Attr;
+    PDC_ATTR pdcattr;
     NTSTATUS Status = STATUS_SUCCESS;
 
     dc = DC_LockDc(hDC);
@@ -382,17 +384,16 @@ NtGdiOffsetViewportOrgEx(HDC hDC,
         SetLastWin32Error(ERROR_INVALID_HANDLE);
         return FALSE;
     }
-    Dc_Attr = dc->pDc_Attr;
-    if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+    pdcattr = dc->pdcattr;
 
     if (UnsafePoint)
     {
         _SEH2_TRY
         {
             ProbeForWrite(UnsafePoint, sizeof(POINT), 1);
-            UnsafePoint->x = Dc_Attr->ptlViewportOrg.x;
-            UnsafePoint->y = Dc_Attr->ptlViewportOrg.y;
-            if (Dc_Attr->dwLayout & LAYOUT_RTL)
+            UnsafePoint->x = pdcattr->ptlViewportOrg.x;
+            UnsafePoint->y = pdcattr->ptlViewportOrg.y;
+            if (pdcattr->dwLayout & LAYOUT_RTL)
             {
                 UnsafePoint->x = -UnsafePoint->x;
             }
@@ -411,12 +412,12 @@ NtGdiOffsetViewportOrgEx(HDC hDC,
         }
     }
 
-    if (Dc_Attr->dwLayout & LAYOUT_RTL)
+    if (pdcattr->dwLayout & LAYOUT_RTL)
     {
         XOffset = -XOffset;
     }
-    Dc_Attr->ptlViewportOrg.x += XOffset;
-    Dc_Attr->ptlViewportOrg.y += YOffset;
+    pdcattr->ptlViewportOrg.x += XOffset;
+    pdcattr->ptlViewportOrg.y += YOffset;
     DC_UpdateXforms(dc);
     DC_UnlockDc(dc);
 
@@ -425,13 +426,14 @@ NtGdiOffsetViewportOrgEx(HDC hDC,
 
 BOOL
 APIENTRY
-NtGdiOffsetWindowOrgEx(HDC  hDC,
-                       int  XOffset,
-                       int  YOffset,
-                       LPPOINT  Point)
+NtGdiOffsetWindowOrgEx(
+    HDC hDC,
+    int XOffset,
+    int YOffset,
+    LPPOINT Point)
 {
     PDC dc;
-    PDC_ATTR Dc_Attr;
+    PDC_ATTR pdcattr;
 
     dc = DC_LockDc(hDC);
     if (!dc)
@@ -439,8 +441,7 @@ NtGdiOffsetWindowOrgEx(HDC  hDC,
         SetLastWin32Error(ERROR_INVALID_HANDLE);
         return FALSE;
     }
-    Dc_Attr = dc->pDc_Attr;
-    if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+    pdcattr = dc->pdcattr;
 
     if (Point)
     {
@@ -449,8 +450,8 @@ NtGdiOffsetWindowOrgEx(HDC  hDC,
         _SEH2_TRY
         {
             ProbeForWrite(Point, sizeof(POINT), 1);
-            Point->x = Dc_Attr->ptlWindowOrg.x;
-            Point->y = Dc_Attr->ptlWindowOrg.y;
+            Point->x = pdcattr->ptlWindowOrg.x;
+            Point->y = pdcattr->ptlWindowOrg.y;
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
@@ -466,8 +467,8 @@ NtGdiOffsetWindowOrgEx(HDC  hDC,
         }
     }
 
-    Dc_Attr->ptlWindowOrg.x += XOffset;
-    Dc_Attr->ptlWindowOrg.y += YOffset;
+    pdcattr->ptlWindowOrg.x += XOffset;
+    pdcattr->ptlWindowOrg.y += YOffset;
 
     DC_UpdateXforms(dc);
     DC_UnlockDc(dc);
@@ -477,15 +478,16 @@ NtGdiOffsetWindowOrgEx(HDC  hDC,
 
 BOOL
 APIENTRY
-NtGdiScaleViewportExtEx(HDC  hDC,
-                        int  Xnum,
-                        int  Xdenom,
-                        int  Ynum,
-                        int  Ydenom,
-                        LPSIZE pSize)
+NtGdiScaleViewportExtEx(
+    HDC hDC,
+    int Xnum,
+    int Xdenom,
+    int Ynum,
+    int Ydenom,
+    LPSIZE pSize)
 {
     PDC pDC;
-    PDC_ATTR pDc_Attr;
+    PDC_ATTR pdcattr;
     BOOL Ret = FALSE;
     LONG X, Y;
 
@@ -495,8 +497,7 @@ NtGdiScaleViewportExtEx(HDC  hDC,
         SetLastWin32Error(ERROR_INVALID_HANDLE);
         return FALSE;
     }
-    pDc_Attr = pDC->pDc_Attr;
-    if (!pDc_Attr) pDc_Attr = &pDC->Dc_Attr;
+    pdcattr = pDC->pdcattr;
 
     if (pSize)
     {
@@ -506,8 +507,8 @@ NtGdiScaleViewportExtEx(HDC  hDC,
         {
             ProbeForWrite(pSize, sizeof(LPSIZE), 1);
 
-            pSize->cx = pDc_Attr->szlViewportExt.cx;
-            pSize->cy = pDc_Attr->szlViewportExt.cy;
+            pSize->cx = pdcattr->szlViewportExt.cx;
+            pSize->cy = pdcattr->szlViewportExt.cy;
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
@@ -523,26 +524,26 @@ NtGdiScaleViewportExtEx(HDC  hDC,
         }
     }
 
-    if (pDc_Attr->iMapMode > MM_TWIPS)
+    if (pdcattr->iMapMode > MM_TWIPS)
     {
         if (Xdenom && Ydenom)
         {
-            X = Xnum * pDc_Attr->szlViewportExt.cx / Xdenom;
+            X = Xnum * pdcattr->szlViewportExt.cx / Xdenom;
             if (X)
             {
-                Y = Ynum * pDc_Attr->szlViewportExt.cy / Ydenom;
+                Y = Ynum * pdcattr->szlViewportExt.cy / Ydenom;
                 if (Y)
                 {
-                    pDc_Attr->szlViewportExt.cx = X;
-                    pDc_Attr->szlViewportExt.cy = Y;
+                    pdcattr->szlViewportExt.cx = X;
+                    pdcattr->szlViewportExt.cy = Y;
 
                     IntMirrorWindowOrg(pDC);
 
-                    pDc_Attr->flXform |= (PAGE_EXTENTS_CHANGED |
-                                          INVALIDATE_ATTRIBUTES |
-                                          DEVICE_TO_WORLD_INVALID);
+                    pdcattr->flXform |= (PAGE_EXTENTS_CHANGED |
+                                         INVALIDATE_ATTRIBUTES |
+                                         DEVICE_TO_WORLD_INVALID);
 
-                    if (pDc_Attr->iMapMode == MM_ISOTROPIC)
+                    if (pdcattr->iMapMode == MM_ISOTROPIC)
                     {
                         IntFixIsotropicMapping(pDC);
                     }
@@ -562,15 +563,16 @@ NtGdiScaleViewportExtEx(HDC  hDC,
 
 BOOL
 APIENTRY
-NtGdiScaleWindowExtEx(HDC  hDC,
-                      int  Xnum,
-                      int  Xdenom,
-                      int  Ynum,
-                      int  Ydenom,
-                      LPSIZE pSize)
+NtGdiScaleWindowExtEx(
+    HDC hDC,
+    int Xnum,
+    int Xdenom,
+    int Ynum,
+    int Ydenom,
+    LPSIZE pSize)
 {
     PDC pDC;
-    PDC_ATTR pDc_Attr;
+    PDC_ATTR pdcattr;
     BOOL Ret = FALSE;
     LONG X, Y;
 
@@ -580,8 +582,7 @@ NtGdiScaleWindowExtEx(HDC  hDC,
         SetLastWin32Error(ERROR_INVALID_HANDLE);
         return FALSE;
     }
-    pDc_Attr = pDC->pDc_Attr;
-    if (!pDc_Attr) pDc_Attr = &pDC->Dc_Attr;
+    pdcattr = pDC->pdcattr;
 
     if (pSize)
     {
@@ -591,10 +592,10 @@ NtGdiScaleWindowExtEx(HDC  hDC,
         {
             ProbeForWrite(pSize, sizeof(LPSIZE), 1);
 
-            X = pDc_Attr->szlWindowExt.cx;
-            if (pDc_Attr->dwLayout & LAYOUT_RTL) X = -X;
+            X = pdcattr->szlWindowExt.cx;
+            if (pdcattr->dwLayout & LAYOUT_RTL) X = -X;
             pSize->cx = X;
-            pSize->cy = pDc_Attr->szlWindowExt.cy;
+            pSize->cy = pdcattr->szlWindowExt.cy;
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
@@ -610,24 +611,24 @@ NtGdiScaleWindowExtEx(HDC  hDC,
         }
     }
 
-    if (pDc_Attr->iMapMode > MM_TWIPS)
+    if (pdcattr->iMapMode > MM_TWIPS)
     {
         if (Xdenom && Ydenom)
         {
-            X = Xnum * pDc_Attr->szlWindowExt.cx / Xdenom;
+            X = Xnum * pdcattr->szlWindowExt.cx / Xdenom;
             if (X)
             {
-                Y = Ynum * pDc_Attr->szlWindowExt.cy / Ydenom;
+                Y = Ynum * pdcattr->szlWindowExt.cy / Ydenom;
                 if (Y)
                 {
-                    pDc_Attr->szlWindowExt.cx = X;
-                    pDc_Attr->szlWindowExt.cy = Y;
+                    pdcattr->szlWindowExt.cx = X;
+                    pdcattr->szlWindowExt.cy = Y;
 
                     IntMirrorWindowOrg(pDC);
 
-                    pDc_Attr->flXform |= (PAGE_EXTENTS_CHANGED|INVALIDATE_ATTRIBUTES|DEVICE_TO_WORLD_INVALID);
+                    pdcattr->flXform |= (PAGE_EXTENTS_CHANGED|INVALIDATE_ATTRIBUTES|DEVICE_TO_WORLD_INVALID);
 
-                    if (pDc_Attr->iMapMode == MM_ISOTROPIC) IntFixIsotropicMapping(pDC);
+                    if (pdcattr->iMapMode == MM_ISOTROPIC) IntFixIsotropicMapping(pDC);
                     DC_UpdateXforms(pDC);
 
                     Ret = TRUE;
@@ -644,75 +645,76 @@ NtGdiScaleWindowExtEx(HDC  hDC,
 
 int
 APIENTRY
-IntGdiSetMapMode(PDC  dc,
-                 int  MapMode)
+IntGdiSetMapMode(
+    PDC dc,
+    int MapMode)
 {
     int PrevMapMode;
-    PDC_ATTR Dc_Attr = dc->pDc_Attr;
-    if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+    PDC_ATTR pdcattr = dc->pdcattr;
 
-    PrevMapMode = Dc_Attr->iMapMode;
+    PrevMapMode = pdcattr->iMapMode;
 
-    Dc_Attr->iMapMode = MapMode;
+    pdcattr->iMapMode = MapMode;
 
     switch (MapMode)
     {
         case MM_TEXT:
-            Dc_Attr->szlWindowExt.cx = 1;
-            Dc_Attr->szlWindowExt.cy = 1;
-            Dc_Attr->szlViewportExt.cx = 1;
-            Dc_Attr->szlViewportExt.cy = 1;
-            Dc_Attr->flXform &= ~(ISO_OR_ANISO_MAP_MODE|PTOD_EFM22_NEGATIVE|
+            pdcattr->szlWindowExt.cx = 1;
+            pdcattr->szlWindowExt.cy = 1;
+            pdcattr->szlViewportExt.cx = 1;
+            pdcattr->szlViewportExt.cy = 1;
+            pdcattr->flXform &= ~(ISO_OR_ANISO_MAP_MODE|PTOD_EFM22_NEGATIVE|
                                   PTOD_EFM11_NEGATIVE|POSITIVE_Y_IS_UP);
-            Dc_Attr->flXform |= (PAGE_XLATE_CHANGED|PAGE_TO_DEVICE_SCALE_IDENTITY|
+            pdcattr->flXform |= (PAGE_XLATE_CHANGED|PAGE_TO_DEVICE_SCALE_IDENTITY|
                                  INVALIDATE_ATTRIBUTES|DEVICE_TO_WORLD_INVALID);
             break;
 
         case MM_ISOTROPIC:
-            Dc_Attr->flXform |= ISO_OR_ANISO_MAP_MODE;
+            pdcattr->flXform |= ISO_OR_ANISO_MAP_MODE;
             /* Fall through */
 
         case MM_LOMETRIC:
-            Dc_Attr->szlWindowExt.cx = 3600;
-            Dc_Attr->szlWindowExt.cy = 2700;
-            Dc_Attr->szlViewportExt.cx = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzRes;
-            Dc_Attr->szlViewportExt.cy = -((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertRes;
+            pdcattr->szlWindowExt.cx = dc->ppdev->GDIInfo.ulHorzSize * 10;
+            pdcattr->szlWindowExt.cy = dc->ppdev->GDIInfo.ulVertSize * 10;
+            pdcattr->szlViewportExt.cx = dc->ppdev->GDIInfo.ulHorzRes;
+            pdcattr->szlViewportExt.cy = -dc->ppdev->GDIInfo.ulVertRes;
             break;
 
         case MM_HIMETRIC:
-            Dc_Attr->szlWindowExt.cx = 36000;
-            Dc_Attr->szlWindowExt.cy = 27000;
-            Dc_Attr->szlViewportExt.cx = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzRes;
-            Dc_Attr->szlViewportExt.cy = -((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertRes;
+            pdcattr->szlWindowExt.cx = dc->ppdev->GDIInfo.ulHorzSize * 100;
+            pdcattr->szlWindowExt.cy = dc->ppdev->GDIInfo.ulVertSize * 100;
+            pdcattr->szlViewportExt.cx = dc->ppdev->GDIInfo.ulHorzRes;
+            pdcattr->szlViewportExt.cy = -dc->ppdev->GDIInfo.ulVertRes;
             break;
 
         case MM_LOENGLISH:
-            Dc_Attr->szlWindowExt.cx = 1417;
-            Dc_Attr->szlWindowExt.cy = 1063;
-            Dc_Attr->szlViewportExt.cx = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzRes;
-            Dc_Attr->szlViewportExt.cy = -((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertRes;
+            pdcattr->szlWindowExt.cx = MulDiv(1000, dc->ppdev->GDIInfo.ulHorzSize, 254);
+            pdcattr->szlWindowExt.cy = MulDiv(1000, dc->ppdev->GDIInfo.ulVertSize, 254);
+            pdcattr->szlViewportExt.cx = dc->ppdev->GDIInfo.ulHorzRes;
+            pdcattr->szlViewportExt.cy = -dc->ppdev->GDIInfo.ulVertRes;
             break;
 
         case MM_HIENGLISH:
-            Dc_Attr->szlWindowExt.cx = 14173;
-            Dc_Attr->szlWindowExt.cy = 10630;
-            Dc_Attr->szlViewportExt.cx = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzRes;
-            Dc_Attr->szlViewportExt.cy = -((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertRes;
+            pdcattr->szlWindowExt.cx = MulDiv(10000, dc->ppdev->GDIInfo.ulHorzSize, 254);
+            pdcattr->szlWindowExt.cy = MulDiv(10000, dc->ppdev->GDIInfo.ulVertSize, 254);
+            pdcattr->szlViewportExt.cx = dc->ppdev->GDIInfo.ulHorzRes;
+            pdcattr->szlViewportExt.cy = -dc->ppdev->GDIInfo.ulVertRes;
             break;
 
         case MM_TWIPS:
-            Dc_Attr->szlWindowExt.cx = 20409;
-            Dc_Attr->szlWindowExt.cy = 15307;
-            Dc_Attr->szlViewportExt.cx = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzRes;
-            Dc_Attr->szlViewportExt.cy = -((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertRes;
+            pdcattr->szlWindowExt.cx = MulDiv(14400, dc->ppdev->GDIInfo.ulHorzSize, 254);
+            pdcattr->szlWindowExt.cy = MulDiv(14400, dc->ppdev->GDIInfo.ulVertSize, 254);
+            pdcattr->szlViewportExt.cx = dc->ppdev->GDIInfo.ulHorzRes;
+            pdcattr->szlViewportExt.cy = -dc->ppdev->GDIInfo.ulVertRes;
             break;
 
         case MM_ANISOTROPIC:
-            Dc_Attr->flXform &= ~(PAGE_TO_DEVICE_IDENTITY|POSITIVE_Y_IS_UP);
-            Dc_Attr->flXform |= ISO_OR_ANISO_MAP_MODE;
+            pdcattr->flXform &= ~(PAGE_TO_DEVICE_IDENTITY|POSITIVE_Y_IS_UP);
+            pdcattr->flXform |= ISO_OR_ANISO_MAP_MODE;
             break;
+
         default:
-            Dc_Attr->iMapMode = PrevMapMode;
+            pdcattr->iMapMode = PrevMapMode;
             PrevMapMode = 0;
     }
     DC_UpdateXforms(dc);
@@ -723,13 +725,14 @@ IntGdiSetMapMode(PDC  dc,
 
 BOOL
 APIENTRY
-NtGdiSetViewportOrgEx(HDC  hDC,
-                      int  X,
-                      int  Y,
-                      LPPOINT  Point)
+NtGdiSetViewportOrgEx(
+    HDC hDC,
+    int X,
+    int Y,
+    LPPOINT Point)
 {
     PDC dc;
-    PDC_ATTR Dc_Attr;
+    PDC_ATTR pdcattr;
 
     dc = DC_LockDc(hDC);
     if (!dc)
@@ -737,8 +740,7 @@ NtGdiSetViewportOrgEx(HDC  hDC,
         SetLastWin32Error(ERROR_INVALID_HANDLE);
         return FALSE;
     }
-    Dc_Attr = dc->pDc_Attr;
-    if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+    pdcattr = dc->pdcattr;
 
     if (Point)
     {
@@ -747,8 +749,8 @@ NtGdiSetViewportOrgEx(HDC  hDC,
         _SEH2_TRY
         {
             ProbeForWrite(Point, sizeof(POINT), 1);
-            Point->x = Dc_Attr->ptlViewportOrg.x;
-            Point->y = Dc_Attr->ptlViewportOrg.y;
+            Point->x = pdcattr->ptlViewportOrg.x;
+            Point->y = pdcattr->ptlViewportOrg.y;
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
@@ -764,8 +766,8 @@ NtGdiSetViewportOrgEx(HDC  hDC,
         }
     }
 
-    Dc_Attr->ptlViewportOrg.x = X;
-    Dc_Attr->ptlViewportOrg.y = Y;
+    pdcattr->ptlViewportOrg.x = X;
+    pdcattr->ptlViewportOrg.y = Y;
 
     DC_UpdateXforms(dc);
     DC_UnlockDc(dc);
@@ -775,13 +777,14 @@ NtGdiSetViewportOrgEx(HDC  hDC,
 
 BOOL
 APIENTRY
-NtGdiSetWindowOrgEx(HDC  hDC,
-                    int  X,
-                    int  Y,
-                    LPPOINT  Point)
+NtGdiSetWindowOrgEx(
+    HDC hDC,
+    int X,
+    int Y,
+    LPPOINT Point)
 {
     PDC dc;
-    PDC_ATTR Dc_Attr;
+    PDC_ATTR pdcattr;
 
     dc = DC_LockDc(hDC);
     if (!dc)
@@ -789,8 +792,7 @@ NtGdiSetWindowOrgEx(HDC  hDC,
         SetLastWin32Error(ERROR_INVALID_HANDLE);
         return FALSE;
     }
-    Dc_Attr = dc->pDc_Attr;
-    if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+    pdcattr = dc->pdcattr;
 
     if (Point)
     {
@@ -799,8 +801,8 @@ NtGdiSetWindowOrgEx(HDC  hDC,
         _SEH2_TRY
         {
             ProbeForWrite(Point, sizeof(POINT), 1);
-            Point->x = Dc_Attr->ptlWindowOrg.x;
-            Point->y = Dc_Attr->ptlWindowOrg.y;
+            Point->x = pdcattr->ptlWindowOrg.x;
+            Point->y = pdcattr->ptlWindowOrg.y;
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
@@ -816,8 +818,8 @@ NtGdiSetWindowOrgEx(HDC  hDC,
         }
     }
 
-    Dc_Attr->ptlWindowOrg.x = X;
-    Dc_Attr->ptlWindowOrg.y = Y;
+    pdcattr->ptlWindowOrg.x = X;
+    pdcattr->ptlWindowOrg.y = Y;
 
     DC_UpdateXforms(dc);
     DC_UnlockDc(dc);
@@ -832,26 +834,25 @@ VOID
 FASTCALL
 IntMirrorWindowOrg(PDC dc)
 {
-    PDC_ATTR Dc_Attr;
+    PDC_ATTR pdcattr;
     LONG X;
 
-    Dc_Attr = dc->pDc_Attr;
-    if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+    pdcattr = dc->pdcattr;
 
-    if (!(Dc_Attr->dwLayout & LAYOUT_RTL))
+    if (!(pdcattr->dwLayout & LAYOUT_RTL))
     {
-        Dc_Attr->ptlWindowOrg.x = Dc_Attr->lWindowOrgx; // Flip it back.
+        pdcattr->ptlWindowOrg.x = pdcattr->lWindowOrgx; // Flip it back.
         return;
     }
-    if (!Dc_Attr->szlViewportExt.cx) return;
+    if (!pdcattr->szlViewportExt.cx) return;
     //
     // WOrgx = wox - (Width - 1) * WExtx / VExtx
     //
     X = (dc->erclWindow.right - dc->erclWindow.left) - 1; // Get device width - 1
 
-    X = (X * Dc_Attr->szlWindowExt.cx) / Dc_Attr->szlViewportExt.cx;
+    X = (X * pdcattr->szlWindowExt.cx) / pdcattr->szlViewportExt.cx;
 
-    Dc_Attr->ptlWindowOrg.x = Dc_Attr->lWindowOrgx - X; // Now set the inverted win origion.
+    pdcattr->ptlWindowOrg.x = pdcattr->lWindowOrgx - X; // Now set the inverted win origion.
 
     return;
 }
@@ -872,7 +873,7 @@ NtGdiSetLayout(
     IN DWORD dwLayout)
 {
     PDC dc;
-    PDC_ATTR Dc_Attr;
+    PDC_ATTR pdcattr;
     DWORD oLayout;
 
     dc = DC_LockDc(hdc);
@@ -881,11 +882,10 @@ NtGdiSetLayout(
         SetLastWin32Error(ERROR_INVALID_HANDLE);
         return GDI_ERROR;
     }
-    Dc_Attr = dc->pDc_Attr;
-    if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+    pdcattr = dc->pdcattr;
 
-    Dc_Attr->dwLayout = dwLayout;
-    oLayout = Dc_Attr->dwLayout;
+    pdcattr->dwLayout = dwLayout;
+    oLayout = pdcattr->dwLayout;
 
     if (!(dwLayout & LAYOUT_ORIENTATIONMASK))
     {
@@ -895,25 +895,25 @@ NtGdiSetLayout(
 
     if (dwLayout & LAYOUT_RTL)
     {
-        Dc_Attr->iMapMode = MM_ANISOTROPIC;
+        pdcattr->iMapMode = MM_ANISOTROPIC;
     }
 
-    Dc_Attr->szlWindowExt.cy = -Dc_Attr->szlWindowExt.cy;
-    Dc_Attr->ptlWindowOrg.x  = -Dc_Attr->ptlWindowOrg.x;
+    pdcattr->szlWindowExt.cy = -pdcattr->szlWindowExt.cy;
+    pdcattr->ptlWindowOrg.x  = -pdcattr->ptlWindowOrg.x;
 
     if (wox == -1)
         IntMirrorWindowOrg(dc);
     else
-        Dc_Attr->ptlWindowOrg.x = wox - Dc_Attr->ptlWindowOrg.x;
+        pdcattr->ptlWindowOrg.x = wox - pdcattr->ptlWindowOrg.x;
 
-    if (!(Dc_Attr->flTextAlign & TA_CENTER)) Dc_Attr->flTextAlign |= TA_RIGHT;
+    if (!(pdcattr->flTextAlign & TA_CENTER)) pdcattr->flTextAlign |= TA_RIGHT;
 
-    if (dc->DcLevel.flPath & DCPATH_CLOCKWISE)
-        dc->DcLevel.flPath &= ~DCPATH_CLOCKWISE;
+    if (dc->dclevel.flPath & DCPATH_CLOCKWISE)
+        dc->dclevel.flPath &= ~DCPATH_CLOCKWISE;
     else
-        dc->DcLevel.flPath |= DCPATH_CLOCKWISE;
+        dc->dclevel.flPath |= DCPATH_CLOCKWISE;
 
-    Dc_Attr->flXform |= (PAGE_EXTENTS_CHANGED |
+    pdcattr->flXform |= (PAGE_EXTENTS_CHANGED |
                          INVALIDATE_ATTRIBUTES |
                          DEVICE_TO_WORLD_INVALID);
 
@@ -974,7 +974,7 @@ NtGdiSetSizeDevice(
     IN INT cyVirtualDevice)
 {
     PDC dc;
-    PDC_ATTR pDc_Attr;
+    PDC_ATTR pdcattr;
 
     if (!cxVirtualDevice || !cyVirtualDevice)
     {
@@ -984,11 +984,10 @@ NtGdiSetSizeDevice(
     dc = DC_LockDc(hdc);
     if (!dc) return FALSE;
 
-    pDc_Attr = dc->pDc_Attr;
-    if (!pDc_Attr) pDc_Attr = &dc->Dc_Attr;
+    pdcattr = dc->pdcattr;
 
-    pDc_Attr->szlVirtualDeviceSize.cx = cxVirtualDevice;
-    pDc_Attr->szlVirtualDeviceSize.cy = cyVirtualDevice;
+    pdcattr->szlVirtualDeviceSize.cx = cxVirtualDevice;
+    pdcattr->szlVirtualDeviceSize.cy = cyVirtualDevice;
 
 //    DC_UpdateXforms(dc);
     DC_UnlockDc(dc);
@@ -1009,24 +1008,290 @@ NtGdiSetVirtualResolution(
     IN INT cyVirtualDeviceMm)
 {
     PDC dc;
-    PDC_ATTR pDc_Attr;
+    PDC_ATTR pdcattr;
 
     // Need test types for zeros and non zeros
 
     dc = DC_LockDc(hdc);
     if (!dc) return FALSE;
 
-    pDc_Attr = dc->pDc_Attr;
-    if (!pDc_Attr) pDc_Attr = &dc->Dc_Attr;
+    pdcattr = dc->pdcattr;
 
-    pDc_Attr->szlVirtualDevicePixel.cx = cxVirtualDevicePixel;
-    pDc_Attr->szlVirtualDevicePixel.cy = cyVirtualDevicePixel;
-    pDc_Attr->szlVirtualDeviceMm.cx = cxVirtualDeviceMm;
-    pDc_Attr->szlVirtualDeviceMm.cy = cyVirtualDeviceMm;
+    pdcattr->szlVirtualDevicePixel.cx = cxVirtualDevicePixel;
+    pdcattr->szlVirtualDevicePixel.cy = cyVirtualDevicePixel;
+    pdcattr->szlVirtualDeviceMm.cx = cxVirtualDeviceMm;
+    pdcattr->szlVirtualDeviceMm.cy = cyVirtualDeviceMm;
 
 //    DC_UpdateXforms(dc);
     DC_UnlockDc(dc);
     return TRUE;
 }
+
+
+// FIXME: Don't use floating point in the kernel!
+BOOL FASTCALL
+DC_InvertXform(const XFORM *xformSrc,
+               XFORM *xformDest)
+{
+    FLOAT  determinant;
+
+    determinant = xformSrc->eM11*xformSrc->eM22 - xformSrc->eM12*xformSrc->eM21;
+    if (determinant > -1e-12 && determinant < 1e-12)
+    {
+        return  FALSE;
+    }
+
+    xformDest->eM11 =  xformSrc->eM22 / determinant;
+    xformDest->eM12 = -xformSrc->eM12 / determinant;
+    xformDest->eM21 = -xformSrc->eM21 / determinant;
+    xformDest->eM22 =  xformSrc->eM11 / determinant;
+    xformDest->eDx  = -xformSrc->eDx * xformDest->eM11 - xformSrc->eDy * xformDest->eM21;
+    xformDest->eDy  = -xformSrc->eDx * xformDest->eM12 - xformSrc->eDy * xformDest->eM22;
+
+    return  TRUE;
+}
+
+
+// FIXME: Don't use floating point in the kernel!
+VOID FASTCALL
+DC_UpdateXforms(PDC dc)
+{
+    XFORM  xformWnd2Vport;
+    FLOAT  scaleX, scaleY;
+    PDC_ATTR pdcattr = dc->pdcattr;
+    XFORM xformWorld2Vport, xformWorld2Wnd, xformVport2World;
+
+    /* Construct a transformation to do the window-to-viewport conversion */
+    scaleX = (pdcattr->szlWindowExt.cx ? (FLOAT)pdcattr->szlViewportExt.cx / (FLOAT)pdcattr->szlWindowExt.cx : 0.0f);
+    scaleY = (pdcattr->szlWindowExt.cy ? (FLOAT)pdcattr->szlViewportExt.cy / (FLOAT)pdcattr->szlWindowExt.cy : 0.0f);
+    xformWnd2Vport.eM11 = scaleX;
+    xformWnd2Vport.eM12 = 0.0;
+    xformWnd2Vport.eM21 = 0.0;
+    xformWnd2Vport.eM22 = scaleY;
+    xformWnd2Vport.eDx  = (FLOAT)pdcattr->ptlViewportOrg.x - scaleX * (FLOAT)pdcattr->ptlWindowOrg.x;
+    xformWnd2Vport.eDy  = (FLOAT)pdcattr->ptlViewportOrg.y - scaleY * (FLOAT)pdcattr->ptlWindowOrg.y;
+
+    /* Combine with the world transformation */
+    MatrixS2XForm(&xformWorld2Vport, &dc->dclevel.mxWorldToDevice);
+    MatrixS2XForm(&xformWorld2Wnd, &dc->dclevel.mxWorldToPage);
+    IntGdiCombineTransform(&xformWorld2Vport, &xformWorld2Wnd, &xformWnd2Vport);
+
+    /* Create inverse of world-to-viewport transformation */
+    MatrixS2XForm(&xformVport2World, &dc->dclevel.mxDeviceToWorld);
+    if (DC_InvertXform(&xformWorld2Vport, &xformVport2World))
+    {
+        pdcattr->flXform &= ~DEVICE_TO_WORLD_INVALID;
+    }
+    else
+    {
+        pdcattr->flXform |= DEVICE_TO_WORLD_INVALID;
+    }
+
+    XForm2MatrixS(&dc->dclevel.mxWorldToDevice, &xformWorld2Vport);
+
+}
+
+LONG FASTCALL
+IntCalcFillOrigin(PDC pdc)
+{
+    pdc->ptlFillOrigin.x = pdc->dclevel.ptlBrushOrigin.x + pdc->ptlDCOrig.x;
+    pdc->ptlFillOrigin.y = pdc->dclevel.ptlBrushOrigin.y + pdc->ptlDCOrig.y;
+
+    return pdc->ptlFillOrigin.y;
+}
+
+VOID
+APIENTRY
+GdiSetDCOrg(HDC hDC, LONG Left, LONG Top, PRECTL prc)
+{
+    PDC pdc;
+
+    pdc = DC_LockDc(hDC);
+    if (!pdc) return;
+
+    pdc->ptlDCOrig.x = Left;
+    pdc->ptlDCOrig.y = Top;
+
+    IntCalcFillOrigin(pdc);
+
+    if (prc) pdc->erclWindow = *prc;
+
+    DC_UnlockDc(pdc);
+}
+
+// FIXME: remove me
+BOOL FASTCALL
+IntGdiGetDCOrg(PDC pDc, PPOINTL ppt)
+{
+    *ppt = pDc->ptlDCOrig;
+    return TRUE;
+}
+
+// FIXME: remove me
+BOOL APIENTRY
+GdiGetDCOrgEx(HDC hDC, PPOINTL ppt, PRECTL prc)
+{
+    PDC pdc;
+
+    pdc = DC_LockDc(hDC);
+    if (!pdc) return FALSE;
+
+    *prc = pdc->erclWindow;
+    *ppt = pdc->ptlDCOrig;
+
+    DC_UnlockDc(pdc);
+    return TRUE;
+}
+
+static
+VOID FASTCALL
+DC_vGetAspectRatioFilter(PDC pDC, LPSIZE AspectRatio)
+{
+    if (pDC->pdcattr->flFontMapper & 1) // TRUE assume 1.
+    {
+        // "This specifies that Windows should only match fonts that have the
+        // same aspect ratio as the display.", Programming Windows, Fifth Ed.
+        AspectRatio->cx = pDC->ppdev->GDIInfo.ulLogPixelsX;
+        AspectRatio->cy = pDC->ppdev->GDIInfo.ulLogPixelsY;
+    }
+    else
+    {
+        AspectRatio->cx = 0;
+        AspectRatio->cy = 0;
+    }
+}
+
+VOID
+FASTCALL
+DC_vUpdateViewportExt(PDC pdc)
+{
+    PDC_ATTR pdcattr;
+
+    /* Get a pointer to the dc attribute */
+    pdcattr = pdc->pdcattr;
+
+    /* Check if we need to recalculate */
+    if (pdcattr->flXform & PAGE_EXTENTS_CHANGED)
+    {
+        /* Check if we need to do isotropic fixup */
+        if (pdcattr->iMapMode == MM_ISOTROPIC)
+        {
+            IntFixIsotropicMapping(pdc);
+        }
+
+        /* Update xforms, CHECKME: really done here? */
+        DC_UpdateXforms(pdc);
+    }
+}
+
+BOOL APIENTRY
+NtGdiGetDCPoint(
+    HDC hDC,
+    UINT iPoint,
+    PPOINTL Point)
+{
+    BOOL Ret = TRUE;
+    DC *pdc;
+    POINTL SafePoint;
+    SIZE Size;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    if (!Point)
+    {
+        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    pdc = DC_LockDc(hDC);
+    if (!pdc)
+    {
+        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+
+    switch (iPoint)
+    {
+        case GdiGetViewPortExt:
+            DC_vUpdateViewportExt(pdc);
+            SafePoint.x = pdc->pdcattr->szlViewportExt.cx;
+            SafePoint.y = pdc->pdcattr->szlViewportExt.cy;
+            break;
+
+        case GdiGetWindowExt:
+            SafePoint.x = pdc->pdcattr->szlWindowExt.cx;
+            SafePoint.y = pdc->pdcattr->szlWindowExt.cy;
+            break;
+
+        case GdiGetViewPortOrg:
+            SafePoint = pdc->pdcattr->ptlViewportOrg;
+            break;
+
+        case GdiGetWindowOrg:
+            SafePoint = pdc->pdcattr->ptlWindowOrg;
+            break;
+
+        case GdiGetDCOrg:
+            SafePoint = pdc->ptlDCOrig;
+            break;
+
+        case GdiGetAspectRatioFilter:
+            DC_vGetAspectRatioFilter(pdc, &Size);
+            SafePoint.x = Size.cx;
+            SafePoint.y = Size.cy;
+            break;
+
+        default:
+            SetLastWin32Error(ERROR_INVALID_PARAMETER);
+            Ret = FALSE;
+            break;
+    }
+
+    if (Ret)
+    {
+        _SEH2_TRY
+        {
+            ProbeForWrite(Point, sizeof(POINT), 1);
+            *Point = SafePoint;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
+
+        if (!NT_SUCCESS(Status))
+        {
+            SetLastNtError(Status);
+            Ret = FALSE;
+        }
+    }
+
+    DC_UnlockDc(pdc);
+    return Ret;
+}
+
+
+DWORD
+APIENTRY
+NtGdiGetBoundsRect(
+    IN HDC hdc,
+    OUT LPRECT prc,
+    IN DWORD f)
+{
+    DPRINT1("stub\n");
+    return  DCB_RESET;   /* bounding rectangle always empty */
+}
+
+DWORD
+APIENTRY
+NtGdiSetBoundsRect(
+    IN HDC hdc,
+    IN LPRECT prc,
+    IN DWORD f)
+{
+    DPRINT1("stub\n");
+    return  DCB_DISABLE;   /* bounding rectangle always empty */
+}
+
 
 /* EOF */

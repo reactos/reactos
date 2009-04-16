@@ -254,6 +254,8 @@ VOID LanReceiveWorker( PVOID Context ) {
     Adapter = WorkItem->Adapter;
     BytesTransferred = WorkItem->BytesTransferred;
 
+    IPInitializePacket(&IPPacket, 0);
+
     IPPacket.NdisPacket = Packet;
 
     NdisGetFirstBufferFromPacket(Packet,
@@ -289,6 +291,7 @@ VOID LanReceiveWorker( PVOID Context ) {
 	TI_DbgPrint(MID_TRACE,("Received ARP Packet\n"));
 	ARPReceive(Adapter->Context, &IPPacket);
     default:
+        IPPacket.Free(&IPPacket);
 	break;
     }
 
@@ -302,7 +305,6 @@ VOID LanSubmitReceiveWork(
     UINT BytesTransferred) {
     LAN_WQ_ITEM WQItem;
     PLAN_ADAPTER Adapter = (PLAN_ADAPTER)BindingContext;
-    PVOID LanWorkItem;
 
     TI_DbgPrint(DEBUG_DATALINK,("called\n"));
 
@@ -311,7 +313,7 @@ VOID LanSubmitReceiveWork(
     WQItem.BytesTransferred = BytesTransferred;
 
     if( !ChewCreate
-	( &LanWorkItem, sizeof(LAN_WQ_ITEM),  LanReceiveWorker, &WQItem ) )
+	( NULL, sizeof(LAN_WQ_ITEM),  LanReceiveWorker, &WQItem ) )
 	ASSERT(0);
 }
 

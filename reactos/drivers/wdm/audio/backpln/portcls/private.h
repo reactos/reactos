@@ -109,10 +109,6 @@ FreeItem(
     IN PVOID Item,
     IN ULONG Tag);
 
-NTSTATUS StringFromCLSID(
-    const CLSID *id,
-    LPWSTR idstr);
-
 NTSTATUS
 NTAPI
 NewIrpQueue(
@@ -160,6 +156,9 @@ typedef struct
     ULONG MaxSubDevices;
     KSOBJECT_CREATE_ITEM * CreateItems;
 
+    PIO_WORKITEM StartWorkItem;
+    PIO_WORKITEM StopWorkItem;
+    PIO_WORKITEM CloseWorkItem;
 
     IResourceList* resources;
     LIST_ENTRY SubDeviceList;

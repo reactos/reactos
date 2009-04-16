@@ -1,3 +1,11 @@
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS Kernel Streaming
+ * FILE:            drivers/wdm/audio/backpln/portcls/port_wavecyclic.c
+ * PURPOSE:         WaveCyclic Port Driver
+ * PROGRAMMER:      Johannes Anderwald
+ */
+
 #include "private.h"
 
 typedef struct
@@ -96,7 +104,7 @@ IPortEvents_fnQueryInterface(
 {
     IPortWaveCyclicImpl * This = (IPortWaveCyclicImpl*)CONTAINING_RECORD(iface, IPortWaveCyclicImpl, lpVtblPortEvents);
 
-    DPRINT1("IPortEvents_fnQueryInterface entered\n");
+    DPRINT("IPortEvents_fnQueryInterface entered\n");
 
     if (IsEqualGUIDAligned(refiid, &IID_IPortEvents) ||
         IsEqualGUIDAligned(refiid, &IID_IUnknown))
@@ -115,7 +123,7 @@ IPortEvents_fnAddRef(
     IPortEvents* iface)
 {
     IPortWaveCyclicImpl * This = (IPortWaveCyclicImpl*)CONTAINING_RECORD(iface, IPortWaveCyclicImpl, lpVtblPortEvents);
-    DPRINT1("IPortEvents_fnQueryInterface entered\n");
+    DPRINT("IPortEvents_fnQueryInterface entered\n");
     return InterlockedIncrement(&This->ref);
 }
 
@@ -126,7 +134,8 @@ IPortEvents_fnRelease(
     IPortEvents* iface)
 {
     IPortWaveCyclicImpl * This = (IPortWaveCyclicImpl*)CONTAINING_RECORD(iface, IPortWaveCyclicImpl, lpVtblPortEvents);
-    DPRINT1("IPortEvents_fnRelease entered\n");
+
+    DPRINT("IPortEvents_fnRelease entered\n");
     InterlockedDecrement(&This->ref);
 
     if (This->ref == 0)
@@ -145,7 +154,7 @@ IPortEvents_fnAddEventToEventList(
     IPortEvents* iface,
     IN PKSEVENT_ENTRY EventEntry)
 {
-    DPRINT1("IPortEvents_fnAddEventToEventList stub\n");
+    UNIMPLEMENTED
 }
 
 
@@ -161,7 +170,7 @@ IPortEvents_fnGenerateEventList(
     IN  BOOL NodeEvent,
     IN  ULONG NodeId)
 {
-    DPRINT1("IPortEvents_fnGenerateEventList stub\n");
+    UNIMPLEMENTED
 }
 
 static IPortEventsVtbl vt_IPortEvents = 
@@ -184,8 +193,9 @@ IPortWaveCyclic_fnQueryInterface(
     IN  REFIID refiid,
     OUT PVOID* Output)
 {
-    WCHAR Buffer[100];
+    UNICODE_STRING GuidString;
     IPortWaveCyclicImpl * This = (IPortWaveCyclicImpl*)iface;
+
     if (IsEqualGUIDAligned(refiid, &IID_IPortWaveCyclic) ||
         IsEqualGUIDAligned(refiid, &IID_IUnknown))
     {
@@ -215,9 +225,11 @@ IPortWaveCyclic_fnQueryInterface(
         return NewIDrmPort((PDRMPORT2*)Output);
     }
 
-    StringFromCLSID(refiid, Buffer);
-    DPRINT1("IPortWaveCyclic_fnQueryInterface no interface!!! iface %S\n", Buffer);
-    KeBugCheckEx(0, 0, 0, 0, 0);
+    if (RtlStringFromGUID(refiid, &GuidString) == STATUS_SUCCESS)
+    {
+        DPRINT1("IPortWaveCyclic_fnQueryInterface no interface!!! iface %S\n", GuidString.Buffer);
+        RtlFreeUnicodeString(&GuidString);
+    }
 
     return STATUS_UNSUCCESSFUL;
 }
@@ -301,7 +313,7 @@ IPortWaveCyclic_fnInit(
     PPOWERNOTIFY PowerNotify;
     IPortWaveCyclicImpl * This = (IPortWaveCyclicImpl*)iface;
 
-    DPRINT1("IPortWaveCyclic_Init entered %p\n", This);
+    DPRINT("IPortWaveCyclic_Init entered %p\n", This);
 
     if (This->bInitialized)
     {
@@ -389,7 +401,7 @@ IPortWaveCyclic_fnInit(
     ResourceList->lpVtbl->AddRef(ResourceList);
 
 
-    DPRINT1("IPortWaveCyclic successfully initialized\n");
+    DPRINT("IPortWaveCyclic successfully initialized\n");
     return STATUS_SUCCESS;
 }
 
@@ -573,7 +585,7 @@ ISubDevice_fnNewIrpTarget(
     IPortFilterWaveCyclic * Filter;
     IPortWaveCyclicImpl * This = (IPortWaveCyclicImpl*)CONTAINING_RECORD(iface, IPortWaveCyclicImpl, lpVtblSubDevice);
 
-    DPRINT1("ISubDevice_NewIrpTarget this %p\n", This);
+    DPRINT("ISubDevice_NewIrpTarget this %p\n", This);
 
     if (This->Filter)
     {
@@ -605,9 +617,9 @@ NTAPI
 ISubDevice_fnReleaseChildren(
     IN ISubdevice *iface)
 {
-    IPortWaveCyclicImpl * This = (IPortWaveCyclicImpl*)CONTAINING_RECORD(iface, IPortWaveCyclicImpl, lpVtblSubDevice);
+    //IPortWaveCyclicImpl * This = (IPortWaveCyclicImpl*)CONTAINING_RECORD(iface, IPortWaveCyclicImpl, lpVtblSubDevice);
 
-    DPRINT1("ISubDevice_ReleaseChildren this %p\n", This);
+    UNIMPLEMENTED
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -746,7 +758,7 @@ NewPortWaveCyclic(
     This->ref = 1;
     *OutPort = (PPORT)(&This->lpVtbl);
 
-    DPRINT1("NewPortWaveCyclic %p\n", *OutPort);
+    DPRINT("NewPortWaveCyclic %p\n", *OutPort);
 
     return STATUS_SUCCESS;
 }

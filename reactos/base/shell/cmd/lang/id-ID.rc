@@ -651,7 +651,8 @@ STRING_ERROR_DRIVER_NOT_READY,     "Drive tidak siap"
 
 STRING_PATH_ERROR,                 "CMD: Tidak dalam lingkungan '%s'\n"
 
-STRING_CMD_SHELLINFO,              "\nInterpreter Baris Perintah ReactOS"
+STRING_REACTOS_VERSION,            "ReactOS Operating System [Version %s-%s]\n"
+STRING_CMD_SHELLINFO,              "\nInterpreter Baris Perintah ReactOS\nVersion %s %s"
 STRING_VERSION_RUNVER,             " berjalan pada %s"
 STRING_COPY_FILE ,                 "        %d file di-copy\n"
 STRING_DELETE_WIPE,                "dihapus"
@@ -662,6 +663,8 @@ STRING_TIMER_TIME                  "Timer %d adalah %s: "
 STRING_MKLINK_CREATED_SYMBOLIC,    "Symbolic link created for %s <<===>> %s\n"
 STRING_MKLINK_CREATED_HARD,        "Hard link created for %s <<===>> %s\n"
 STRING_MKLINK_CREATED_JUNCTION,    "Junction created for %s <<===>> %s\n"
+STRING_MORE,                       "More? "
+STRING_CANCEL_BATCH_FILE,          "\r\nCtrl-Break pressed.  Cancel batch file? (Ya/Tidak/Semua) "
 
 STRING_INVALID_OPERAND,            "Operand tidak benar."
 STRING_EXPECTED_CLOSE_PAREN,       "Diharapkan ')'."

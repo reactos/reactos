@@ -5,13 +5,13 @@ LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 STRINGTABLE DISCARDABLE
 BEGIN
 
-STRING_ASSOC_HELP,    "Modify file extension associations.\n\n\
+STRING_ASSOC_HELP,    "Modifica le associazioni per le estensioni dei file.\n\n\
 assoc [.ext[=[FileType]]]\n\
 \n\
-assoc (print all associations)\n\
-assoc .ext (print specific association)\n\
-assoc .ext= (remove specific association)\n\
-assoc .ext=FileType (add new association)\n"
+assoc (mostra tutte le associazioni)\n\
+assoc .ext (mostra una specifica associazione)\n\
+assoc .ext= (rimuove una specifica associazione)\n\
+assoc .ext=FileType (aggiung una associazione)\n"
 
 STRING_ATTRIB_HELP,    "Visualizza o modifica gli attributi dei file.\n\n\
 ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] file ...\n\
@@ -72,7 +72,7 @@ ERRORLEVEL è valorizzato alla posizione in elenco delle scelta dell'utente.\n"
 
 STRING_CLS_HELP, "Cancella lo schermo.\n\nCLS\n"
 
-STRING_CMD_HELP1, "\nComandi interni disponibilin:\n"
+STRING_CMD_HELP1, "\nComandi interni disponibili:\n"
 
 STRING_CMD_HELP2, "\nFunzioni disponibili:"
 
@@ -154,10 +154,10 @@ ERASE [/N /P /T /Q /S /W /Y /Z /A[[:]attributi]] file ...\n\n\
   /Q    Tacito.\n\
   /W    Sovrascive con valori casuali prima di cancellare.\n\
   /Y    Cancella anche *.* senza chiedere conferma.\n\
-  /F    Forza la cancellazione di file nascost, di sistema o in sola lettura.\n\
+  /F    Forza la cancellazione di file nascosti, di sistema o in sola lettura.\n\
   /S    Cancella i file anche nelle sottocartelle\n\
   /A    Seleziona i file da cancellare in base agli attributi.\n\
-        attributes\n\
+        attributi\n\
         R     Sola lettura\n\
         S     Sistema\n\
         A     Archiviabile\n\
@@ -219,7 +219,7 @@ passa alla cartella indicata.\n\n\
 PUSHD [percorso | ..]\n\n\
   percorso        Indica la cartella che deve diventare quella corrente\n"
 
-STRING_DIRSTACK_HELP2, "cambia alla cartella memorizzata da PUSHD.\n\nPOPD"
+STRING_DIRSTACK_HELP2, "Cambia alla cartella memorizzata da PUSHD.\n\nPOPD"
 
 STRING_DIRSTACK_HELP3, "Visualizza il contenuto dello stack delle cartelle.\n\nDIRS"
 
@@ -301,12 +301,12 @@ STRING_LOCALE_HELP1, "L'ora attuale è"
 STRING_MKDIR_HELP,   "Crea una cartella.\n\n\
 MKDIR [disco:]percorso\nMD    [disco:]percorso"
 
-STRING_MKLINK_HELP, "Creates a filesystem link object.\n\n\
-MKLINK [/D | /H | /J] linkname target\n\n\
-  /D  Indicates that the symbolic link target is a directory.\n\
-  /H  Create a hard link.\n\
-  /J  Create a directory junction.\n\n\
-If neither /H or /J is specified, a symbolic link is created."
+STRING_MKLINK_HELP, "Crea un oggetto di collegamento nel filesystem.\n\n\
+MKLINK [/D | /H | /J] nomelink target\n\n\
+  /D  Indica che il link simbolico è riferito a una cartella.\n\
+  /H  Crea un hard link.\n\
+  /J  Crea una directory junction.\n\n\
+Se non sono specificati ne /H ne /J verrà creato un link simbolico."
 
 STRING_MEMMORY_HELP1, "Visualizza la quantità della memoria di sistema.\n\n\
 MEMORY"
@@ -347,7 +347,7 @@ ERRORLEVEL assume il valore in funzione del bottone premuto:\n\n\
 YES  :  10    |  NO      :  11\n\
 OK   :  10    |  CANCEL  :  12\n"
 
-STRING_PATH_HELP1, "visualizza o imposta i percorsi di ricerca per\n\
+STRING_PATH_HELP1, "Visualizza o imposta i percorsi di ricerca per\n\
 gli eseguibili.\n\n\
 PATH [[disco:][percorso[;...]]\n\
 PATH ;\n\n\
@@ -394,8 +394,8 @@ RMDIR [disco:]percorso\nRD [disco:]percorso\n\
 STRING_RMDIR_HELP2,	"La cartella non è vuota!\n"
 
 STRING_REN_HELP1, "Rinomina file/cartella or file/cartelle.\n\n\
-RENAME [/E /N /P /Q /S /T] vecchi_onome ... novo_nome\n\
-REN    [/E /N /P /Q /S /T] vecchi_onome ... novo_nome\n\n\
+RENAME [/E /N /P /Q /S /T] vecchio_nome ... nuovo_nome\n\
+REN    [/E /N /P /Q /S /T] vecchio_nome ... nuovo_nome\n\n\
   /E    Nessun messaggio di errore.\n\
   /N    Nulla.\n\
   /P    Chiede conferma per ogni file.\n\
@@ -549,7 +549,7 @@ STRING_VOL_HELP3, " Il numero di serie del Volume è %04X-%04X\n"
 STRING_VOL_HELP4, "Visualizza l'etichetta del volume del disco e il numero di serie se disponibili.\n\n\
 VOL [disco:]"
 
-STRING_WINDOW_HELP1, "cambia l'aspetto della finestra della console\n\n\
+STRING_WINDOW_HELP1, "Cambia l'aspetto della finestra della console\n\n\
 WINDOW [/POS[=]sinistra,alto,larghezza,altezza]\n\
               [MIN|MAX|RESTORE] ['titolo']\n\n\
 /POS          specifica la posizione e la dimensione della finestra\n\
@@ -557,7 +557,7 @@ MIN           minimizza la finestra\n\
 MAX           massimizza la finestra\n\
 RESTORE       ripristina la finestra"
 
-STRING_WINDOW_HELP2, "cambia l'aspetto della finestra della console\n\n\
+STRING_WINDOW_HELP2, "Cambia l'aspetto della finestra della console\n\n\
 ACTIVATE 'window' [/POS[=]sinistra,alto,larghezza,altezza]\n\
               [MIN|MAX|RESTORE] ['title']\n\n\
 window        finestra su cui eseguire l'azione\n\
@@ -572,6 +572,7 @@ STRING_HELP1, "Elenco di tutti i comandi disponibili (+ descrizione)\n\n\
   comando /?   Per i dettagli su uno specifico comando\n\n\
 ?        Elenco di tutti i comandi disponibili.\n\
 ALIAS    Imposta, toglie o visualizza gli alias.\n\
+ASSOC    Modifica le associazioni per le estensioni dei file.\n\
 ATTRIB   Visualizza o modifica gli attributi dei file.\n\
 BEEP     Segnale acustico.\n\
 CALL     Chiama un batch da un'altro.\n\
@@ -597,7 +598,7 @@ IF       Esegue elaborazioni condizionali in un batch.\n\
 LABEL    Crea, modifica, o cancella l'etichetta di un disco.\n\
 MD       Crea una cartella.\n\
 MKDIR    Crea una cartella.\n\
-MKLINK   Creates a filesystem link object.\n\
+MKLINK   Crea un oggetto di collegamento nel filesystem.\n\
 MOVE     Muove uno o più file da una cartella a un'altra\n\
 PATH     Visualizza o imposta i percorsi di ricerca per gli eseguibili.\n\
 PAUSE    Ferma l'esecuzione di un batch e visualizza un messaggio.\n\
@@ -705,7 +706,8 @@ STRING_REPLACE_ERROR5, "Accesso negato - %s\n"
 STRING_REPLACE_ERROR6, "Nessun file trovato - %s\n"
 STRING_REPLACE_ERROR7, "Errore esteso 32\n"
 
-STRING_CMD_SHELLINFO,              "\nInterprete di linea di comando di ReactOS"
+STRING_REACTOS_VERSION,            "ReactOS Operating System [Version %s-%s]\n"
+STRING_CMD_SHELLINFO,              "\nInterprete di linea di comando di ReactOS\nVersion %s %s"
 STRING_VERSION_RUNVER,             " in esecuzione su %s"
 STRING_COPY_FILE ,                 "        %d file copiati\n"
 STRING_DELETE_WIPE,                "resi illeggibili"
@@ -713,9 +715,11 @@ STRING_FOR_ERROR,                  "variabile non valida."
 STRING_SCREEN_COL,                 "valore non valido per colonna"
 STRING_SCREEN_ROW,                 "valore non valido per riga"
 STRING_TIMER_TIME                  "Timer %d è %s: "
-STRING_MKLINK_CREATED_SYMBOLIC,    "Symbolic link created for %s <<===>> %s\n"
-STRING_MKLINK_CREATED_HARD,        "Hard link created for %s <<===>> %s\n"
-STRING_MKLINK_CREATED_JUNCTION,    "Junction created for %s <<===>> %s\n"
+STRING_MKLINK_CREATED_SYMBOLIC,    "Link simbolico creato per %s <<===>> %s\n"
+STRING_MKLINK_CREATED_HARD,        "Hard link creato per %s <<===>> %s\n"
+STRING_MKLINK_CREATED_JUNCTION,    "Junction creato per %s <<===>> %s\n"
+STRING_MORE,                       "Avanti? "
+STRING_CANCEL_BATCH_FILE,          "\r\nCtrl-Break.  Interrompere il file batch? (Si/No/Tutti)"
 
 STRING_INVALID_OPERAND,            "Operando non valido."
 STRING_EXPECTED_CLOSE_PAREN,       "Attesa una ')'."

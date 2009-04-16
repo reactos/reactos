@@ -44,6 +44,7 @@
 		</ifnot>
 	</directory>
 	<directory name="eng">
+		<file>alphablend.c</file>
 		<file>bitblt.c</file>
 		<file>engbrush.c</file>
 		<file>clip.c</file>
@@ -70,6 +71,7 @@
 		<file>semaphor.c</file>
 		<file>sort.c</file>
 		<file>string.c</file>
+		<file>stretchblt.c</file>
 		<file>surface.c</file>
 		<file>transblt.c</file>
 		<file>engwindow.c</file>
@@ -160,8 +162,12 @@
 		<file>cliprgn.c</file>
 		<file>color.c</file>
 		<file>coord.c</file>
-		<file>dc.c</file>
+		<file>dcattr.c</file>
+		<file>dclife.c</file>
+		<file>dcobjs.c</file>
+		<file>dcstate.c</file>
 		<file>dcutil.c</file>
+		<file>device.c</file>
 		<file>dibobj.c</file>
 		<file>drawing.c</file>
 		<file>fillshap.c</file>

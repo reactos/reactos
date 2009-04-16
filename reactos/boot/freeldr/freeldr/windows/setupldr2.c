@@ -21,6 +21,8 @@
 #include <freeldr.h>
 
 #include <ndk/ldrtypes.h>
+#include <arc/setupblk.h>
+
 #include <debug.h>
 
 // TODO: Move to .h
@@ -155,6 +157,7 @@ VOID LoadReactOSSetup2(VOID)
     CHAR  SystemPath[512], SearchPath[512];
     CHAR  FileName[512];
     CHAR  BootPath[512];
+    CHAR  LoadOptions[512];
     LPCSTR BootOptions;
     PVOID NtosBase = NULL, HalBase = NULL, KdComBase = NULL;
     BOOLEAN Status;
@@ -163,6 +166,7 @@ VOID LoadReactOSSetup2(VOID)
     HINF InfHandle;
     INFCONTEXT InfContext;
     PLOADER_PARAMETER_BLOCK LoaderBlock, LoaderBlockVA;
+    PSETUP_LOADER_BLOCK SetupBlock;
     KERNEL_ENTRY_POINT KiSystemStartup;
     PLDR_DATA_TABLE_ENTRY KernelDTE, HalDTE, KdComDTE = NULL;
     // Mm-related things
@@ -249,6 +253,14 @@ VOID LoadReactOSSetup2(VOID)
     /* Allocate and minimalistic-initialize LPB */
     AllocateAndInitLPB(&LoaderBlock);
 
+    /* Allocate and initialize setup loader block */
+    SetupBlock = MmHeapAlloc(sizeof(SETUP_LOADER_BLOCK));
+    RtlZeroMemory(SetupBlock, sizeof(SETUP_LOADER_BLOCK));
+    LoaderBlock->SetupLdrBlock = SetupBlock;
+
+    /* Set textmode setup flag */
+    SetupBlock->Flags = SETUPLDR_TEXT_MODE;
+
     /* Detect hardware */
     UseRealHeap = TRUE;
     LoaderBlock->ConfigurationRoot = MachHwDetect();
@@ -300,14 +312,15 @@ VOID LoadReactOSSetup2(VOID)
     WinLdrSetupForNt(LoaderBlock, &GdtIdt, &PcrBasePage, &TssBasePage);
 
     /* Initialize Phase 1 - no drivers loading anymore */
-    WinLdrInitializePhase1(LoaderBlock, (PCHAR)BootOptions, SystemPath, BootPath, _WIN32_WINNT_WS03);
+    LoadOptions[0] = 0;
+    WinLdrInitializePhase1(LoaderBlock, LoadOptions, SystemPath, BootPath, _WIN32_WINNT_WS03);
 
     /* Save entry-point pointer and Loader block VAs */
     KiSystemStartup = (KERNEL_ENTRY_POINT)KernelDTE->EntryPoint;
     LoaderBlockVA = PaToVa(LoaderBlock);
 
     /* "Stop all motors", change videomode */
-    MachPrepareForReactOS(FALSE);
+    MachPrepareForReactOS(TRUE);
 
     /* Debugging... */
     //DumpMemoryAllocMap();
@@ -324,6 +337,11 @@ VOID LoadReactOSSetup2(VOID)
     //WinLdrpDumpMemoryDescriptors(LoaderBlockVA);
     //WinLdrpDumpBootDriver(LoaderBlockVA);
     //WinLdrpDumpArcDisks(LoaderBlockVA);
+
+    /*asm(".intel_syntax noprefix\n");
+    asm("test1:\n");
+    asm("jmp test1\n");
+    asm(".att_syntax\n");*/
 
     /* Pass control */
     (*KiSystemStartup)(LoaderBlockVA);

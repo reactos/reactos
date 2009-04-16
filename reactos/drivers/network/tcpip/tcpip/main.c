@@ -695,7 +695,7 @@ VOID NTAPI IPTimeoutDpcFn(
  */
 {
     if( !IpWorkItemQueued ) {
-	ExQueueWorkItem( &IpWorkItem, CriticalWorkQueue );
+	ExQueueWorkItem( &IpWorkItem, DelayedWorkQueue );
 	IpWorkItemQueued = TRUE;
     }
 }

@@ -13,6 +13,7 @@
 #define NDEBUG
 #include <debug.h>
 
+#include <winsta.h>
 
 VOID FASTCALL
 IntGetFontMetricSetting(LPWSTR lpValueName, PLOGFONTW font)
@@ -45,8 +46,12 @@ IntGetFontMetricSetting(LPWSTR lpValueName, PLOGFONTW font)
    }
 }
 
-VOID
-IntWriteSystemParametersSettings(PUNICODE_STRING SubKeyName, PUNICODE_STRING KeyName, ULONG Type, PVOID Data, ULONG DataSize)
+static NTSTATUS FASTCALL
+IntWriteSystemParametersSettings(PUNICODE_STRING SubKeyName, 
+                                 PUNICODE_STRING KeyName, 
+                                 ULONG Type, 
+                                 PVOID Data, 
+                                 ULONG DataSize)
 {
     UNICODE_STRING KeyPath;
     NTSTATUS Status;
@@ -56,14 +61,14 @@ IntWriteSystemParametersSettings(PUNICODE_STRING SubKeyName, PUNICODE_STRING Key
     /* Get a handle to the current users settings */
     Status = RtlFormatCurrentUserKeyPath(&KeyPath);
     if(!NT_SUCCESS(Status))
-        return;
+        return Status;
 
     InitializeObjectAttributes(&ObjectAttributes, &KeyPath, OBJ_CASE_INSENSITIVE, NULL, NULL);
     /* Open the HKCU key */
     Status = ZwOpenKey(&CurrentUserKey, KEY_WRITE, &ObjectAttributes);
     RtlFreeUnicodeString(&KeyPath);
     if(!NT_SUCCESS(Status))
-        return;
+        return Status;
 
 
     /* Open up the settings to read the values */
@@ -76,9 +81,90 @@ IntWriteSystemParametersSettings(PUNICODE_STRING SubKeyName, PUNICODE_STRING Key
         ZwSetValueKey(KeyHandle, KeyName, 0, Type, Data, DataSize);
         ZwClose(KeyHandle);
     }
+    return Status;
 }
 
+#if 0 
+/* not used at the moment */
+/* FIXME: currently only supporting known DataSize */
+static NTSTATUS FASTCALL
+IntReadSystemParametersSettings(PUNICODE_STRING SubKeyName, 
+                                PUNICODE_STRING KeyName, 
+                                ULONG Type, 
+                                PVOID Data, 
+                                ULONG DataSize)
+{
+    UNICODE_STRING KeyPath;
+    ULONG  Length, ReqLength;
+    NTSTATUS Status;
+    HANDLE CurrentUserKey, KeyHandle;
+    OBJECT_ATTRIBUTES KeyAttributes, ObjectAttributes;
+    PKEY_VALUE_PARTIAL_INFORMATION KeyValuePartialInfo;
 
+    /* Get a handle to the current users settings */
+    Status = RtlFormatCurrentUserKeyPath(&KeyPath);
+    if(!NT_SUCCESS(Status)) {
+        return Status;
+    }
+
+    InitializeObjectAttributes(&ObjectAttributes, &KeyPath, OBJ_CASE_INSENSITIVE, NULL, NULL);
+    /* Open the HKCU key */
+    Status = ZwOpenKey(&CurrentUserKey, KEY_READ, &ObjectAttributes);
+    if(!NT_SUCCESS(Status)) {
+        RtlFreeUnicodeString(&KeyPath);
+        return Status;
+    }
+    RtlFreeUnicodeString(&KeyPath);
+
+    /* Open up the settings to read the values */
+    InitializeObjectAttributes(&KeyAttributes, SubKeyName, OBJ_CASE_INSENSITIVE, CurrentUserKey, NULL);
+    Status = ZwOpenKey(&KeyHandle, KEY_READ, &KeyAttributes);
+    ZwClose(CurrentUserKey);
+    RtlFreeUnicodeString(&KeyPath);
+    if(!NT_SUCCESS(Status)) {
+        return Status;
+    }
+
+    Length = sizeof(KEY_VALUE_PARTIAL_INFORMATION)+DataSize;
+    KeyValuePartialInfo = ExAllocatePoolWithTag(PagedPool, Length, TAG_WINSTA);
+    if(KeyValuePartialInfo)  {
+        Status = ZwQueryValueKey(KeyHandle, KeyName, KeyValuePartialInformation, (PVOID)KeyValuePartialInfo, Length, &ReqLength);
+        if(NT_SUCCESS(Status)) {
+            RtlCopyMemory(Data, KeyValuePartialInfo->Data, DataSize);
+        } else {
+        }
+        ExFreePoolWithTag(KeyValuePartialInfo, TAG_WINSTA);
+    } else {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+    }
+    ZwClose(KeyHandle); 
+
+    return Status;
+}
+#endif
+
+static ULONG FASTCALL
+IntUpdateUserPreferencesMask(PWINSTATION_OBJECT WinStaObject, UINT fWinIni)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+    UNICODE_STRING SubKeyName = RTL_CONSTANT_STRING(L"Control Panel\\Desktop");
+    UNICODE_STRING UserPreferencesMask = RTL_CONSTANT_STRING(L"UserPreferencesMask");
+
+    if (fWinIni & SPIF_UPDATEINIFILE)
+    {
+        Status = IntWriteSystemParametersSettings(
+            &SubKeyName, 
+            &UserPreferencesMask,
+            REG_BINARY, 
+            &WinStaObject->UserPreferences, 
+            sizeof(USERPREFERENCESMASK));
+        if(!NT_SUCCESS(Status))
+        {
+            DPRINT1("Registry update of UserPreferencesMask failed (%0X)\n",Status);
+        }
+    }
+    return Status;
+}
 
 ULONG FASTCALL
 IntSystemParametersInfo(
@@ -147,13 +233,11 @@ IntSystemParametersInfo(
            *(PBOOL)pvParam = FALSE;
            break;
 
-
-
-      case SPI_GETKEYBOARDCUES:
-           /* FIXME: Implement this, don't just return constant */
-           *(PBOOL)pvParam = FALSE;
-           break;
-
+      case SPI_SETKEYBOARDCUES:
+      case SPI_SETMENUANIMATION:
+      case SPI_SETMENUFADE:
+      case SPI_SETTOOLTIPANIMATION:
+      case SPI_SETTOOLTIPFADE:
       case SPI_SETDOUBLECLKWIDTH:
       case SPI_SETDOUBLECLKHEIGHT:
       case SPI_SETDOUBLECLICKTIME:
@@ -169,6 +253,11 @@ IntSystemParametersInfo(
       case SPI_SETMOUSEBUTTONSWAP:
          /* We will change something, so set the flag here */
          bChanged = TRUE;
+      case SPI_GETKEYBOARDCUES:
+      case SPI_GETMENUANIMATION:
+      case SPI_GETMENUFADE:
+      case SPI_GETTOOLTIPANIMATION:
+      case SPI_GETTOOLTIPFADE:
       case SPI_GETDESKWALLPAPER:
       case SPI_GETWHEELSCROLLLINES:
       case SPI_GETWHEELSCROLLCHARS:
@@ -198,7 +287,44 @@ IntSystemParametersInfo(
             {
                case SPI_GETKEYBOARDCUES:
                   ASSERT(pvParam);
-                  *((BOOL*)pvParam) = TRUE;
+                  *((BOOL*)pvParam) = (BOOL)WinStaObject->UserPreferences.bKeyboardCues;
+                  break;
+               case SPI_GETMENUANIMATION:
+                  ASSERT(pvParam);
+                  *((BOOL*)pvParam) = (BOOL)WinStaObject->UserPreferences.bMenuAnimation;
+                  break;
+               case SPI_GETMENUFADE:
+                  ASSERT(pvParam);
+                  *((BOOL*)pvParam) = (BOOL)WinStaObject->UserPreferences.bMenuFade;
+                  break;
+               case SPI_GETTOOLTIPANIMATION:
+                  ASSERT(pvParam);
+                  *((BOOL*)pvParam) = (BOOL)WinStaObject->UserPreferences.bTooltipAnimation;
+                  break;
+               case SPI_GETTOOLTIPFADE:
+                  ASSERT(pvParam);
+                  *((BOOL*)pvParam) = (BOOL)WinStaObject->UserPreferences.bTooltipFade;
+                  break;
+               case SPI_SETKEYBOARDCUES:
+                   WinStaObject->UserPreferences.bKeyboardCues = (BOOL)pvParam;
+                   IntUpdateUserPreferencesMask(WinStaObject,fWinIni);
+                   break;
+               case SPI_SETMENUANIMATION:
+                   WinStaObject->UserPreferences.bMenuAnimation = (BOOL)pvParam;
+                   IntUpdateUserPreferencesMask(WinStaObject,fWinIni);
+                  break;
+               case SPI_SETMENUFADE:
+                   WinStaObject->UserPreferences.bMenuFade = (BOOL)pvParam;
+                   IntUpdateUserPreferencesMask(WinStaObject,fWinIni);
+                  break;
+               case SPI_SETTOOLTIPANIMATION:
+                   WinStaObject->UserPreferences.bTooltipAnimation = (BOOL)pvParam;
+                   IntUpdateUserPreferencesMask(WinStaObject,fWinIni);
+                  break;
+               case SPI_SETTOOLTIPFADE:
+                   WinStaObject->UserPreferences.bTooltipFade = (BOOL)pvParam;
+                   IntUpdateUserPreferencesMask(WinStaObject,fWinIni);
+                  break;
                case SPI_GETFLATMENU:
                   ASSERT(pvParam);
                   *((UINT*)pvParam) = WinStaObject->FlatMenu;
@@ -376,7 +502,7 @@ IntSystemParametersInfo(
                      if(hOldBitmap != NULL)
                      {
                         /* delete the old wallpaper */
-                        NtGdiDeleteObject(hOldBitmap);
+                        GreDeleteObject(hOldBitmap);
                      }
 
                      /* Set the style */
@@ -506,7 +632,7 @@ IntSystemParametersInfo(
          }
       case SPI_SETWORKAREA:
          {
-            RECT *rc;
+            RECTL *rc;
             PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
             PDESKTOP Desktop = pti->Desktop;
 
@@ -517,7 +643,7 @@ IntSystemParametersInfo(
             }
 
             ASSERT(pvParam);
-            rc = (RECT*)pvParam;
+            rc = pvParam;
             Desktop->WorkArea = *rc;
             bChanged = TRUE;
 
@@ -535,7 +661,7 @@ IntSystemParametersInfo(
             }
 
             ASSERT(pvParam);
-            IntGetDesktopWorkArea(Desktop, (PRECT)pvParam);
+            IntGetDesktopWorkArea(Desktop, pvParam);
 
             break;
          }

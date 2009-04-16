@@ -56,7 +56,7 @@ NtGdiAlphaBlend(
         SetLastWin32Error(ERROR_INVALID_HANDLE);
         return FALSE;
     }
-    if (DCDest->DC_Type == DC_TYPE_INFO)
+    if (DCDest->dctype == DC_TYPE_INFO)
     {
         DC_UnlockDc(DCDest);
         /* Yes, Windows really returns TRUE in this case */
@@ -73,7 +73,7 @@ NtGdiAlphaBlend(
             SetLastWin32Error(ERROR_INVALID_HANDLE);
             return FALSE;
         }
-        if (DCSrc->DC_Type == DC_TYPE_INFO)
+        if (DCSrc->dctype == DC_TYPE_INFO)
         {
             DC_UnlockDc(DCSrc);
             DC_UnlockDc(DCDest);
@@ -86,23 +86,27 @@ NtGdiAlphaBlend(
         DCSrc = DCDest;
     }
 
-    /* Offset the destination and source by the origin of their DCs. */
-    XOriginDest += DCDest->ptlDCOrig.x;
-    YOriginDest += DCDest->ptlDCOrig.y;
-    XOriginSrc += DCSrc->ptlDCOrig.x;
-    YOriginSrc += DCSrc->ptlDCOrig.y;
-
     DestRect.left   = XOriginDest;
     DestRect.top    = YOriginDest;
     DestRect.right  = XOriginDest + WidthDest;
     DestRect.bottom = YOriginDest + HeightDest;
     IntLPtoDP(DCDest, (LPPOINT)&DestRect, 2);
 
+    DestRect.left   += DCDest->ptlDCOrig.x;
+    DestRect.top    += DCDest->ptlDCOrig.y;
+    DestRect.right  += DCDest->ptlDCOrig.x;
+    DestRect.bottom += DCDest->ptlDCOrig.y;
+
     SourceRect.left   = XOriginSrc;
     SourceRect.top    = YOriginSrc;
     SourceRect.right  = XOriginSrc + WidthSrc;
     SourceRect.bottom = YOriginSrc + HeightSrc;
     IntLPtoDP(DCSrc, (LPPOINT)&SourceRect, 2);
+
+    SourceRect.left   += DCSrc->ptlDCOrig.x;
+    SourceRect.top    += DCSrc->ptlDCOrig.y;
+    SourceRect.right  += DCSrc->ptlDCOrig.x;
+    SourceRect.bottom += DCSrc->ptlDCOrig.y;
 
     if (!DestRect.right ||
         !DestRect.bottom ||
@@ -116,7 +120,7 @@ NtGdiAlphaBlend(
     }
 
     /* Determine surfaces to be used in the bitblt */
-    BitmapDest = SURFACE_LockSurface(DCDest->w.hBitmap);
+    BitmapDest = SURFACE_LockSurface(DCDest->rosdc.hBitmap);
     if (!BitmapDest)
     {
         if (hDCSrc != hDCDest)
@@ -124,11 +128,11 @@ NtGdiAlphaBlend(
         DC_UnlockDc(DCDest);
         return FALSE;
     }
-    if (DCSrc->w.hBitmap == DCDest->w.hBitmap)
+    if (DCSrc->rosdc.hBitmap == DCDest->rosdc.hBitmap)
         BitmapSrc = BitmapDest;
     else
     {
-        BitmapSrc = SURFACE_LockSurface(DCSrc->w.hBitmap);
+        BitmapSrc = SURFACE_LockSurface(DCSrc->rosdc.hBitmap);
         if (!BitmapSrc)
         {
             SURFACE_UnlockSurface(BitmapDest);
@@ -153,7 +157,7 @@ NtGdiAlphaBlend(
     {
         /* Perform the alpha blend operation */
         Status = IntEngAlphaBlend(&BitmapDest->SurfObj, &BitmapSrc->SurfObj,
-            DCDest->CombinedClip, XlateObj,
+            DCDest->rosdc.CombinedClip, XlateObj,
             &DestRect, &SourceRect, &BlendObj);
     }
 
@@ -186,16 +190,13 @@ NtGdiBitBlt(
 {
     PDC DCDest;
     PDC DCSrc = NULL;
-    PDC_ATTR Dc_Attr = NULL;
+    PDC_ATTR pdcattr = NULL;
     SURFACE *BitmapDest, *BitmapSrc = NULL;
     RECTL DestRect;
-    POINTL SourcePoint, BrushOrigin;
+    POINTL SourcePoint;
     BOOL Status = FALSE;
     XLATEOBJ *XlateObj = NULL;
-    PGDIBRUSHOBJ BrushObj = NULL;
-    GDIBRUSHINST BrushInst;
     BOOL UsesSource = ROP3_USES_SOURCE(ROP);
-    BOOL UsesPattern = ROP3_USES_PATTERN(ROP);
 
     DCDest = DC_LockDc(hDCDest);
     if (NULL == DCDest)
@@ -203,7 +204,7 @@ NtGdiBitBlt(
         DPRINT("Invalid destination dc handle (0x%08x) passed to NtGdiBitBlt\n", hDCDest);
         return FALSE;
     }
-    if (DCDest->DC_Type == DC_TYPE_INFO)
+    if (DCDest->dctype == DC_TYPE_INFO)
     {
         DC_UnlockDc(DCDest);
         /* Yes, Windows really returns TRUE in this case */
@@ -221,7 +222,7 @@ NtGdiBitBlt(
                 DPRINT("Invalid source dc handle (0x%08x) passed to NtGdiBitBlt\n", hDCSrc);
                 return FALSE;
             }
-            if (DCSrc->DC_Type == DC_TYPE_INFO)
+            if (DCSrc->dctype == DC_TYPE_INFO)
             {
                 DC_UnlockDc(DCSrc);
                 DC_UnlockDc(DCDest);
@@ -235,65 +236,48 @@ NtGdiBitBlt(
         }
     }
 
-    Dc_Attr = DCDest->pDc_Attr;
-    if (!Dc_Attr) Dc_Attr = &DCDest->Dc_Attr;
+    pdcattr = DCDest->pdcattr;
 
-    if (Dc_Attr->ulDirty_ & DC_BRUSH_DIRTY)
-        IntGdiSelectBrush(DCDest,Dc_Attr->hbrush);
-
-    /* Offset the destination and source by the origin of their DCs. */
-    XDest += DCDest->ptlDCOrig.x;
-    YDest += DCDest->ptlDCOrig.y;
-    if (UsesSource)
-    {
-        XSrc += DCSrc->ptlDCOrig.x;
-        YSrc += DCSrc->ptlDCOrig.y;
-    }
+    if (pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
+        DC_vUpdateFillBrush(DCDest);
 
     DestRect.left   = XDest;
     DestRect.top    = YDest;
     DestRect.right  = XDest+Width;
     DestRect.bottom = YDest+Height;
-
     IntLPtoDP(DCDest, (LPPOINT)&DestRect, 2);
+
+    DestRect.left   += DCDest->ptlDCOrig.x;
+    DestRect.top    += DCDest->ptlDCOrig.y;
+    DestRect.right  += DCDest->ptlDCOrig.x;
+    DestRect.bottom += DCDest->ptlDCOrig.y;
 
     SourcePoint.x = XSrc;
     SourcePoint.y = YSrc;
+
     if (UsesSource)
     {
         IntLPtoDP(DCSrc, (LPPOINT)&SourcePoint, 1);
+
+        SourcePoint.x += DCSrc->ptlDCOrig.x;
+        SourcePoint.y += DCSrc->ptlDCOrig.y;
     }
 
-    BrushOrigin.x = 0;
-    BrushOrigin.y = 0;
-
     /* Determine surfaces to be used in the bitblt */
-    BitmapDest = SURFACE_LockSurface(DCDest->w.hBitmap);
+    BitmapDest = SURFACE_LockSurface(DCDest->rosdc.hBitmap);
     if (!BitmapDest)
         goto cleanup;
 
     if (UsesSource)
     {
-        if (DCSrc->w.hBitmap == DCDest->w.hBitmap)
+        if (DCSrc->rosdc.hBitmap == DCDest->rosdc.hBitmap)
             BitmapSrc = BitmapDest;
         else
         {
-            BitmapSrc = SURFACE_LockSurface(DCSrc->w.hBitmap);
+            BitmapSrc = SURFACE_LockSurface(DCSrc->rosdc.hBitmap);
             if (!BitmapSrc)
                 goto cleanup;
         }
-    }
-
-    if (UsesPattern)
-    {
-        BrushObj = BRUSHOBJ_LockBrush(Dc_Attr->hbrush);
-        if (NULL == BrushObj)
-        {
-            SetLastWin32Error(ERROR_INVALID_HANDLE);
-            goto cleanup;
-        }
-        BrushOrigin = *((PPOINTL)&BrushObj->ptOrigin);
-        IntGdiInitBrushInstance(&BrushInst, BrushObj, DCDest->XlateBrush);
     }
 
     /* Create the XLATEOBJ. */
@@ -311,11 +295,17 @@ NtGdiBitBlt(
     }
 
     /* Perform the bitblt operation */
-    Status = IntEngBitBlt(&BitmapDest->SurfObj, BitmapSrc ? &BitmapSrc->SurfObj : NULL, NULL,
-        DCDest->CombinedClip, XlateObj, &DestRect,
-        &SourcePoint, NULL,
-        BrushObj ? &BrushInst.BrushObject : NULL,
-        &BrushOrigin, ROP3_TO_ROP4(ROP));
+    Status = IntEngBitBlt(&BitmapDest->SurfObj,
+                          BitmapSrc ? &BitmapSrc->SurfObj : NULL,
+                          NULL,
+                          DCDest->rosdc.CombinedClip,
+                          XlateObj,
+                          &DestRect,
+                          &SourcePoint,
+                          NULL,
+                          &DCDest->eboFill.BrushObject,
+                          &DCDest->dclevel.pbrFill->ptOrigin,
+                          ROP3_TO_ROP4(ROP));
 
 cleanup:
     if (UsesSource && XlateObj != NULL)
@@ -328,10 +318,6 @@ cleanup:
     if (BitmapSrc != NULL && BitmapSrc != BitmapDest)
     {
         SURFACE_UnlockSurface(BitmapSrc);
-    }
-    if (BrushObj != NULL)
-    {
-        BRUSHOBJ_UnlockBrush(BrushObj);
     }
     if (UsesSource && hDCSrc != hDCDest)
     {
@@ -361,7 +347,7 @@ NtGdiTransparentBlt(
     SURFACE *BitmapDest, *BitmapSrc = NULL;
     XLATEOBJ *XlateObj = NULL;
     HPALETTE SourcePalette = 0, DestPalette = 0;
-    PPALGDI PalDestGDI, PalSourceGDI;
+    PPALETTE PalDestGDI, PalSourceGDI;
     USHORT PalDestMode, PalSrcMode;
     ULONG TransparentColor = 0;
     BOOL Ret = FALSE;
@@ -372,7 +358,7 @@ NtGdiTransparentBlt(
         SetLastWin32Error(ERROR_INVALID_HANDLE);
         return FALSE;
     }
-    if (DCDest->DC_Type == DC_TYPE_INFO)
+    if (DCDest->dctype == DC_TYPE_INFO)
     {
         DC_UnlockDc(DCDest);
         /* Yes, Windows really returns TRUE in this case */
@@ -390,7 +376,7 @@ NtGdiTransparentBlt(
     {
         DCSrc = DCDest;
     }
-    if (DCSrc->DC_Type == DC_TYPE_INFO)
+    if (DCSrc->dctype == DC_TYPE_INFO)
     {
         DC_UnlockDc(DCSrc);
         if(hdcDst != hdcSrc)
@@ -401,19 +387,13 @@ NtGdiTransparentBlt(
         return TRUE;
     }
 
-    /* Offset positions */
-    xDst += DCDest->ptlDCOrig.x;
-    yDst += DCDest->ptlDCOrig.y;
-    xSrc += DCSrc->ptlDCOrig.x;
-    ySrc += DCSrc->ptlDCOrig.y;
-
-    BitmapDest = SURFACE_LockSurface(DCDest->w.hBitmap);
+    BitmapDest = SURFACE_LockSurface(DCDest->rosdc.hBitmap);
     if (!BitmapDest)
     {
         goto done;
     }
 
-    BitmapSrc = SURFACE_LockSurface(DCSrc->w.hBitmap);
+    BitmapSrc = SURFACE_LockSurface(DCSrc->rosdc.hBitmap);
     if (!BitmapSrc)
     {
         goto done;
@@ -458,26 +438,30 @@ NtGdiTransparentBlt(
     /* Create the XLATE object to convert colors between source and destination */
     XlateObj = (XLATEOBJ*)IntEngCreateXlate(PalDestMode, PalSrcMode, DestPalette, SourcePalette);
 
-    rcDest.left = xDst;
-    rcDest.top = yDst;
-    rcDest.right = rcDest.left + cxDst;
+    rcDest.left   = xDst;
+    rcDest.top    = yDst;
+    rcDest.right  = rcDest.left + cxDst;
     rcDest.bottom = rcDest.top + cyDst;
     IntLPtoDP(DCDest, (LPPOINT)&rcDest, 2);
 
-    rcSrc.left = xSrc;
-    rcSrc.top = ySrc;
-    rcSrc.right = rcSrc.left + cxSrc;
+    rcDest.left   += DCDest->ptlDCOrig.x;
+    rcDest.top    += DCDest->ptlDCOrig.y;
+    rcDest.right  += DCDest->ptlDCOrig.x;
+    rcDest.bottom += DCDest->ptlDCOrig.y;
+
+    rcSrc.left   = xSrc;
+    rcSrc.top    = ySrc;
+    rcSrc.right  = rcSrc.left + cxSrc;
     rcSrc.bottom = rcSrc.top + cySrc;
     IntLPtoDP(DCSrc, (LPPOINT)&rcSrc, 2);
 
-    if((cxDst != cxSrc) || (cyDst != cySrc))
-    {
-        DPRINT1("TransparentBlt() does not support stretching at the moment!\n");
-        goto done;
-    }
+    rcSrc.left   += DCSrc->ptlDCOrig.x;
+    rcSrc.top    += DCSrc->ptlDCOrig.y;
+    rcSrc.right  += DCSrc->ptlDCOrig.x;
+    rcSrc.bottom += DCSrc->ptlDCOrig.y;
 
     Ret = IntEngTransparentBlt(&BitmapDest->SurfObj, &BitmapSrc->SurfObj,
-        DCDest->CombinedClip, XlateObj, &rcDest, &rcSrc,
+        DCDest->rosdc.CombinedClip, XlateObj, &rcDest, &rcSrc,
         TransparentColor, 0);
 
 done:
@@ -704,8 +688,8 @@ NtGdiMaskBlt (
     NtGdiSelectBitmap(hDC2, hOldBitmap3);
 
     /* 6. delete all temp objects */
-    NtGdiDeleteObject(hBitmap2);
-    NtGdiDeleteObject(hBitmap3);
+    GreDeleteObject(hBitmap2);
+    GreDeleteObject(hBitmap3);
 
     NtGdiDeleteObjectApp(hDC1);
     NtGdiDeleteObjectApp(hDC2);
@@ -734,7 +718,7 @@ NtGdiPlgBlt(
 }
 
 BOOL APIENTRY
-NtGdiStretchBlt(
+GreStretchBltMask(
                 HDC  hDCDest,
                 INT  XOriginDest,
                 INT  YOriginDest,
@@ -746,21 +730,21 @@ NtGdiStretchBlt(
                 INT  WidthSrc,
                 INT  HeightSrc,
                 DWORD  ROP,
-                IN DWORD  dwBackColor)
+                IN DWORD  dwBackColor,
+                HDC  hDCMask)
 {
     PDC DCDest;
     PDC DCSrc  = NULL;
-    PDC_ATTR Dc_Attr;
+    PDC DCMask = NULL;
+    PDC_ATTR pdcattr;
     SURFACE *BitmapDest, *BitmapSrc = NULL;
+    SURFACE *BitmapMask = NULL;
     RECTL DestRect;
     RECTL SourceRect;
     BOOL Status = FALSE;
     XLATEOBJ *XlateObj = NULL;
     POINTL BrushOrigin;
-    PGDIBRUSHOBJ BrushObj = NULL;
-    GDIBRUSHINST BrushInst;
     BOOL UsesSource = ROP3_USES_SOURCE(ROP);
-    BOOL UsesPattern = ROP3_USES_PATTERN(ROP);
 
     if (0 == WidthDest || 0 == HeightDest || 0 == WidthSrc || 0 == HeightSrc)
     {
@@ -774,7 +758,7 @@ NtGdiStretchBlt(
         SetLastWin32Error(ERROR_INVALID_HANDLE);
         return FALSE;
     }
-    if (DCDest->DC_Type == DC_TYPE_INFO)
+    if (DCDest->dctype == DC_TYPE_INFO)
     {
         DC_UnlockDc(DCDest);
         /* Yes, Windows really returns TRUE in this case */
@@ -793,7 +777,7 @@ NtGdiStretchBlt(
                 SetLastWin32Error(ERROR_INVALID_HANDLE);
                 return FALSE;
             }
-            if (DCSrc->DC_Type == DC_TYPE_INFO)
+            if (DCSrc->dctype == DC_TYPE_INFO)
             {
                 DC_UnlockDc(DCSrc);
                 DC_UnlockDc(DCDest);
@@ -807,20 +791,10 @@ NtGdiStretchBlt(
         }
     }
 
-    Dc_Attr = DCDest->pDc_Attr;
-    if (!Dc_Attr) Dc_Attr = &DCDest->Dc_Attr;
+    pdcattr = DCDest->pdcattr;
 
-    if (Dc_Attr->ulDirty_ & DC_BRUSH_DIRTY)
-        IntGdiSelectBrush(DCDest,Dc_Attr->hbrush);
-
-    /* Offset the destination and source by the origin of their DCs. */
-    XOriginDest += DCDest->ptlDCOrig.x;
-    YOriginDest += DCDest->ptlDCOrig.y;
-    if (UsesSource)
-    {
-        XOriginSrc += DCSrc->ptlDCOrig.x;
-        YOriginSrc += DCSrc->ptlDCOrig.y;
-    }
+    if (pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
+        DC_vUpdateFillBrush(DCDest);
 
     DestRect.left   = XOriginDest;
     DestRect.top    = YOriginDest;
@@ -828,31 +802,42 @@ NtGdiStretchBlt(
     DestRect.bottom = YOriginDest+HeightDest;
     IntLPtoDP(DCDest, (LPPOINT)&DestRect, 2);
 
+    DestRect.left   += DCDest->ptlDCOrig.x;
+    DestRect.top    += DCDest->ptlDCOrig.y;
+    DestRect.right  += DCDest->ptlDCOrig.x;
+    DestRect.bottom += DCDest->ptlDCOrig.y;
+
     SourceRect.left   = XOriginSrc;
     SourceRect.top    = YOriginSrc;
     SourceRect.right  = XOriginSrc+WidthSrc;
     SourceRect.bottom = YOriginSrc+HeightSrc;
+
     if (UsesSource)
     {
         IntLPtoDP(DCSrc, (LPPOINT)&SourceRect, 2);
+
+        SourceRect.left   += DCSrc->ptlDCOrig.x;
+        SourceRect.top    += DCSrc->ptlDCOrig.y;
+        SourceRect.right  += DCSrc->ptlDCOrig.x;
+        SourceRect.bottom += DCSrc->ptlDCOrig.y;
     }
 
     BrushOrigin.x = 0;
     BrushOrigin.y = 0;
 
     /* Determine surfaces to be used in the bitblt */
-    BitmapDest = SURFACE_LockSurface(DCDest->w.hBitmap);
+    BitmapDest = SURFACE_LockSurface(DCDest->rosdc.hBitmap);
     if (BitmapDest == NULL)
         goto failed;
     if (UsesSource)
     {
-        if (DCSrc->w.hBitmap == DCDest->w.hBitmap)
+        if (DCSrc->rosdc.hBitmap == DCDest->rosdc.hBitmap)
         {
             BitmapSrc = BitmapDest;
         }
         else
         {
-            BitmapSrc = SURFACE_LockSurface(DCSrc->w.hBitmap);
+            BitmapSrc = SURFACE_LockSurface(DCSrc->rosdc.hBitmap);
             if (BitmapSrc == NULL)
                 goto failed;
         }
@@ -867,39 +852,46 @@ NtGdiStretchBlt(
         }
     }
 
-    if (UsesPattern)
-    {
-        BrushObj = BRUSHOBJ_LockBrush(Dc_Attr->hbrush);
-        if (NULL == BrushObj)
-        {
-            SetLastWin32Error(ERROR_INVALID_HANDLE);
-            goto failed;
-        }
-        BrushOrigin = *((PPOINTL)&BrushObj->ptOrigin);
-        IntGdiInitBrushInstance(&BrushInst, BrushObj, DCDest->XlateBrush);
-    }
-
     /* Offset the brush */
     BrushOrigin.x += DCDest->ptlDCOrig.x;
     BrushOrigin.y += DCDest->ptlDCOrig.y;
 
+    /* Make mask surface for source surface */
+    if (BitmapSrc && hDCMask)
+    {
+        DCMask = DC_LockDc(hDCMask);
+        if (DCMask)
+        {
+            BitmapMask = SURFACE_LockSurface(DCMask->rosdc.hBitmap);
+            if (BitmapMask && 
+                (BitmapMask->SurfObj.sizlBitmap.cx != WidthSrc ||
+                 BitmapMask->SurfObj.sizlBitmap.cy != HeightSrc))
+            {
+                DPRINT1("Mask and bitmap sizes don't match!\n");
+                goto failed;
+            }
+        }
+    }
+
     /* Perform the bitblt operation */
-    Status = IntEngStretchBlt(&BitmapDest->SurfObj, &BitmapSrc->SurfObj,
-        NULL, DCDest->CombinedClip, XlateObj,
-        &DestRect, &SourceRect, NULL, 
-        BrushObj ? &BrushInst.BrushObject : NULL,
-        &BrushOrigin, ROP3_TO_ROP4(ROP));
+    Status = IntEngStretchBlt(&BitmapDest->SurfObj,
+                              &BitmapSrc->SurfObj,
+                              BitmapMask ? &BitmapMask->SurfObj : NULL,
+                              DCDest->rosdc.CombinedClip,
+                              XlateObj,
+                              &DestRect,
+                              &SourceRect,
+                              NULL, 
+                              &DCDest->eboFill.BrushObject,
+                              &BrushOrigin,
+                              ROP3_TO_ROP4(ROP));
 
 failed:
     if (XlateObj)
     {
         EngDeleteXlate(XlateObj);
     }
-    if (BrushObj)
-    {
-        BRUSHOBJ_UnlockBrush(BrushObj);
-    }
-    if (BitmapSrc && DCSrc->w.hBitmap != DCDest->w.hBitmap)
+    if (BitmapSrc && DCSrc->rosdc.hBitmap != DCDest->rosdc.hBitmap)
     {
         SURFACE_UnlockSurface(BitmapSrc);
     }
@@ -907,14 +899,55 @@ failed:
     {
         SURFACE_UnlockSurface(BitmapDest);
     }
+    if (BitmapMask)
+    {
+        SURFACE_UnlockSurface(BitmapMask);
+    }
     if (UsesSource && hDCSrc != hDCDest)
     {
         DC_UnlockDc(DCSrc);
+    }
+    if (DCMask)
+    {
+        DC_UnlockDc(DCMask);
     }
     DC_UnlockDc(DCDest);
 
     return Status;
 }
+
+
+BOOL APIENTRY
+NtGdiStretchBlt(
+                HDC  hDCDest,
+                INT  XOriginDest,
+                INT  YOriginDest,
+                INT  WidthDest,
+                INT  HeightDest,
+                HDC  hDCSrc,
+                INT  XOriginSrc,
+                INT  YOriginSrc,
+                INT  WidthSrc,
+                INT  HeightSrc,
+                DWORD  ROP,
+                IN DWORD  dwBackColor)
+{
+    return GreStretchBltMask(
+                hDCDest,
+                XOriginDest,
+                YOriginDest,
+                WidthDest,
+                HeightDest,
+                hDCSrc,
+                XOriginSrc,
+                YOriginSrc,
+                WidthSrc,
+                HeightSrc,
+                ROP,
+                dwBackColor,
+                NULL);
+}
+
 
 BOOL FASTCALL
 IntPatBlt(
@@ -924,17 +957,17 @@ IntPatBlt(
           INT  Width,
           INT  Height,
           DWORD  ROP,
-          PGDIBRUSHOBJ  BrushObj)
+          PBRUSH  BrushObj)
 {
     RECTL DestRect;
     SURFACE *psurf;
-    GDIBRUSHINST BrushInst;
+    EBRUSHOBJ eboFill;
     POINTL BrushOrigin;
     BOOL ret = TRUE;
 
     ASSERT(BrushObj);
 
-    psurf = SURFACE_LockSurface(dc->w.hBitmap);
+    psurf = SURFACE_LockSurface(dc->rosdc.hBitmap);
     if (psurf == NULL)
     {
         SetLastWin32Error(ERROR_INVALID_HANDLE);
@@ -945,43 +978,48 @@ IntPatBlt(
     {
         if (Width > 0)
         {
-            DestRect.left = XLeft + dc->ptlDCOrig.x;
-            DestRect.right = XLeft + Width + dc->ptlDCOrig.x;
+            DestRect.left = XLeft;
+            DestRect.right = XLeft + Width;
         }
         else
         {
-            DestRect.left = XLeft + Width + 1 + dc->ptlDCOrig.x;
-            DestRect.right = XLeft + dc->ptlDCOrig.x + 1;
+            DestRect.left = XLeft + Width + 1;
+            DestRect.right = XLeft + 1;
         }
 
         if (Height > 0)
         {
-            DestRect.top = YLeft + dc->ptlDCOrig.y;
-            DestRect.bottom = YLeft + Height + dc->ptlDCOrig.y;
+            DestRect.top = YLeft;
+            DestRect.bottom = YLeft + Height;
         }
         else
         {
-            DestRect.top = YLeft + Height + dc->ptlDCOrig.y + 1;
-            DestRect.bottom = YLeft + dc->ptlDCOrig.y + 1;
+            DestRect.top = YLeft + Height + 1;
+            DestRect.bottom = YLeft + 1;
         }
 
         IntLPtoDP(dc, (LPPOINT)&DestRect, 2);
 
+        DestRect.left   += dc->ptlDCOrig.x;
+        DestRect.top    += dc->ptlDCOrig.y;
+        DestRect.right  += dc->ptlDCOrig.x;
+        DestRect.bottom += dc->ptlDCOrig.y;
+
         BrushOrigin.x = BrushObj->ptOrigin.x + dc->ptlDCOrig.x;
         BrushOrigin.y = BrushObj->ptOrigin.y + dc->ptlDCOrig.y;
 
-        IntGdiInitBrushInstance(&BrushInst, BrushObj, dc->XlateBrush);
+        EBRUSHOBJ_vInit(&eboFill, BrushObj, dc->rosdc.XlateBrush);
 
         ret = IntEngBitBlt(
             &psurf->SurfObj,
             NULL,
             NULL,
-            dc->CombinedClip,
+            dc->rosdc.CombinedClip,
             NULL,
             &DestRect,
             NULL,
             NULL,
-            &BrushInst.BrushObject, // use pDC->eboFill
+            &eboFill.BrushObject, // use pDC->eboFill
             &BrushOrigin,
             ROP3_TO_ROP4(ROP));
     }
@@ -1001,8 +1039,8 @@ IntGdiPolyPatBlt(
 {
     int i;
     PPATRECT r;
-    PGDIBRUSHOBJ BrushObj;
-    PDC_ATTR Dc_Attr;
+    PBRUSH pbrush;
+    PDC_ATTR pdcattr;
     DC *dc;
 
     dc = DC_LockDc(hDC);
@@ -1011,23 +1049,22 @@ IntGdiPolyPatBlt(
         SetLastWin32Error(ERROR_INVALID_HANDLE);
         return FALSE;
     }
-    if (dc->DC_Type == DC_TYPE_INFO)
+    if (dc->dctype == DC_TYPE_INFO)
     {
         DC_UnlockDc(dc);
         /* Yes, Windows really returns TRUE in this case */
         return TRUE;
     }
 
-    Dc_Attr = dc->pDc_Attr;
-    if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+    pdcattr = dc->pdcattr;
 
-    if (Dc_Attr->ulDirty_ & DC_BRUSH_DIRTY)
-        IntGdiSelectBrush(dc,Dc_Attr->hbrush);
+    if (pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
+        DC_vUpdateFillBrush(dc);
 
     for (r = pRects, i = 0; i < cRects; i++)
     {
-        BrushObj = BRUSHOBJ_LockBrush(r->hBrush);
-        if(BrushObj != NULL)
+        pbrush = BRUSH_LockBrush(r->hBrush);
+        if(pbrush != NULL)
         {
             IntPatBlt(
                 dc,
@@ -1036,8 +1073,8 @@ IntGdiPolyPatBlt(
                 r->r.right,
                 r->r.bottom,
                 dwRop,
-                BrushObj);
-            BRUSHOBJ_UnlockBrush(BrushObj);
+                pbrush);
+            BRUSH_UnlockBrush(pbrush);
         }
         r++;
     }
@@ -1057,9 +1094,9 @@ NtGdiPatBlt(
             INT  Height,
             DWORD  ROP)
 {
-    PGDIBRUSHOBJ BrushObj;
+    PBRUSH pbrush;
     DC *dc;
-    PDC_ATTR Dc_Attr;
+    PDC_ATTR pdcattr;
     BOOL ret;
 
     BOOL UsesSource = ROP3_USES_SOURCE(ROP);
@@ -1075,21 +1112,20 @@ NtGdiPatBlt(
         SetLastWin32Error(ERROR_INVALID_HANDLE);
         return FALSE;
     }
-    if (dc->DC_Type == DC_TYPE_INFO)
+    if (dc->dctype == DC_TYPE_INFO)
     {
         DC_UnlockDc(dc);
         /* Yes, Windows really returns TRUE in this case */
         return TRUE;
     }
 
-    Dc_Attr = dc->pDc_Attr;
-    if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+    pdcattr = dc->pdcattr;
 
-    if (Dc_Attr->ulDirty_ & DC_BRUSH_DIRTY)
-        IntGdiSelectBrush(dc,Dc_Attr->hbrush);
+    if (pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
+        DC_vUpdateFillBrush(dc);
 
-    BrushObj = BRUSHOBJ_LockBrush(Dc_Attr->hbrush);
-    if (BrushObj == NULL)
+    pbrush = BRUSH_LockBrush(pdcattr->hbrush);
+    if (pbrush == NULL)
     {
         SetLastWin32Error(ERROR_INVALID_HANDLE);
         DC_UnlockDc(dc);
@@ -1103,9 +1139,9 @@ NtGdiPatBlt(
         Width,
         Height,
         ROP,
-        BrushObj);
+        pbrush);
 
-    BRUSHOBJ_UnlockBrush(BrushObj);
+    BRUSH_UnlockBrush(pbrush);
     DC_UnlockDc(dc);
 
     return ret;

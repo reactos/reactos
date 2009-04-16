@@ -431,7 +431,7 @@ POLYGONFILL_FillScanLineAlternate(
 
       //DPRINT("Fill Line (%d, %d) to (%d, %d)\n",x1, ScanLine, x2, ScanLine);
       IntEngLineTo(&psurf->SurfObj,
-                   dc->CombinedClip,
+                   dc->rosdc.CombinedClip,
                    BrushObj,
                    x1,
                    ScanLine,
@@ -504,7 +504,7 @@ POLYGONFILL_FillScanLineWinding(
 
 	//DPRINT("Fill Line (%d, %d) to (%d, %d)\n",x1, ScanLine, x2, ScanLine);
 	IntEngLineTo(&psurf->SurfObj,
-                     dc->CombinedClip,
+                     dc->rosdc.CombinedClip,
                      BrushObj,
                      x1,
                      ScanLine,
@@ -527,7 +527,7 @@ POLYGONFILL_FillScanLineWinding(
 
   //DPRINT("Fill Line (%d, %d) to (%d, %d)\n",x1, ScanLine, x2, ScanLine);
   IntEngLineTo(&psurf->SurfObj,
-               dc->CombinedClip,
+               dc->rosdc.CombinedClip,
                BrushObj,
                x1,
                ScanLine,
@@ -560,7 +560,7 @@ FillPolygon(
   FILL_EDGE_LIST *list = 0;
   FILL_EDGE *ActiveHead = 0;
   int ScanLine;
-  PDC_ATTR Dc_Attr = dc->pDc_Attr;
+  PDC_ATTR pdcattr = dc->pdcattr;
   void
   (APIENTRY *FillScanLine)(
     PDC dc,
@@ -570,8 +570,6 @@ FillPolygon(
     BRUSHOBJ *BrushObj,
     MIX RopMode );
 
-  if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
-  
   //DPRINT("FillPolygon\n");
 
   /* Create Edge List. */
@@ -580,7 +578,7 @@ FillPolygon(
   if (NULL == list)
     return FALSE;
 
-  if ( WINDING == Dc_Attr->jFillMode )
+  if ( WINDING == pdcattr->jFillMode )
     FillScanLine = POLYGONFILL_FillScanLineWinding;
   else /* default */
     FillScanLine = POLYGONFILL_FillScanLineAlternate;
@@ -652,7 +650,7 @@ IntFillPolygon(
                 IntEngBitBlt(&psurf->SurfObj,
                                  NULL,
                                  NULL,
-                                 dc->CombinedClip,
+                                 dc->rosdc.CombinedClip,
                                  NULL,
                                  &LineRect,
                                  NULL,

@@ -218,27 +218,22 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection,
 
     if( NewState & SEL_FIN ) {
         PLIST_ENTRY ListsToErase[4];
-        NTSTATUS    IrpStatus[4];
         UINT i;
 
 		TI_DbgPrint(DEBUG_TCP, ("EOF From socket\n"));
 
         ListsToErase[0] = &Connection->ReceiveRequest;
-        IrpStatus   [0] = STATUS_SUCCESS;
         ListsToErase[1] = &Connection->ListenRequest;
-        IrpStatus   [1] = STATUS_UNSUCCESSFUL;
         ListsToErase[2] = &Connection->ConnectRequest;
-        IrpStatus   [2] = STATUS_UNSUCCESSFUL;
-        ListsToErase[3] = 0;
-		IrpStatus   [3] = 0;
+        ListsToErase[3] = &Connection->SendRequest;
 
-        for( i = 0; ListsToErase[i]; i++ ) {
+        for( i = 0; i < 4; i++ ) {
             while( !IsListEmpty( ListsToErase[i] ) ) {
                 Entry = RemoveHeadList( ListsToErase[i] );
                 Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
                 Complete = Bucket->Request.RequestNotifyObject;
-                Complete( Bucket->Request.RequestContext, IrpStatus[i], 0 );
-				exFreePool( Bucket );
+                Complete( Bucket->Request.RequestContext, STATUS_CANCELLED, 0 );
+                exFreePool( Bucket );
             }
         }
     }

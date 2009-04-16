@@ -51,14 +51,14 @@ const PALETTEENTRY COLOR_sysPalTemplate[NB_RESERVED_COLORS] =
   { 0x00, 0x80, 0x80, PC_SYS_USED },
   { 0xc0, 0xc0, 0xc0, PC_SYS_USED },
   { 0xc0, 0xdc, 0xc0, PC_SYS_USED },
-  { 0xd4, 0xd0, 0xc7, PC_SYS_USED },
+  { 0xa6, 0xca, 0xf0, PC_SYS_USED },
 
   // ... c_min/2 dynamic colorcells
   // ... gap (for sparse palettes)
   // ... c_min/2 dynamic colorcells
 
   { 0xff, 0xfb, 0xf0, PC_SYS_USED },
-  { 0x3a, 0x6e, 0xa5, PC_SYS_USED },
+  { 0xa0, 0xa0, 0xa4, PC_SYS_USED },
   { 0x80, 0x80, 0x80, PC_SYS_USED },
   { 0xff, 0x00, 0x00, PC_SYS_USED },
   { 0x00, 0xff, 0x00, PC_SYS_USED },
@@ -84,14 +84,14 @@ IntAnimatePalette(HPALETTE hPal,
 
     if( hPal != NtGdiGetStockObject(DEFAULT_PALETTE) )
     {
-        PPALGDI palPtr;
+        PPALETTE palPtr;
         UINT pal_entries;
         HDC hDC;
         PDC dc;
         PWINDOW_OBJECT Wnd;
         const PALETTEENTRY *pptr = PaletteColors;
 
-        palPtr = (PPALGDI)PALETTE_LockPalette(hPal);
+        palPtr = (PPALETTE)PALETTE_LockPalette(hPal);
         if (!palPtr) return FALSE;
 
         pal_entries = palPtr->NumColors;
@@ -122,7 +122,7 @@ IntAnimatePalette(HPALETTE hPal,
         dc = DC_LockDc(hDC);
         if (NULL != dc)
         {
-            if (dc->DcLevel.hpal == hPal)
+            if (dc->dclevel.hpal == hPal)
             {
                 DC_UnlockDc(dc);
                 IntGdiRealizePalette(hDC);
@@ -246,7 +246,7 @@ HPALETTE APIENTRY NtGdiCreateHalftonePalette(HDC  hDC)
 HPALETTE APIENTRY
 NtGdiCreatePaletteInternal ( IN LPLOGPALETTE pLogPal, IN UINT cEntries )
 {
-    PPALGDI PalGDI;
+    PPALETTE PalGDI;
     HPALETTE NewPalette;
 
     pLogPal->palNumEntries = cEntries;
@@ -260,7 +260,7 @@ NtGdiCreatePaletteInternal ( IN LPLOGPALETTE pLogPal, IN UINT cEntries )
         return NULL;
     }
 
-    PalGDI = (PPALGDI) PALETTE_LockPalette(NewPalette);
+    PalGDI = (PPALETTE) PALETTE_LockPalette(NewPalette);
     if (PalGDI != NULL)
     {
         PALETTE_ValidateFlags(PalGDI->IndexedColors, PalGDI->NumColors);
@@ -295,14 +295,14 @@ COLORREF APIENTRY NtGdiGetNearestColor(HDC hDC, COLORREF Color)
 {
    COLORREF nearest = CLR_INVALID;
    PDC dc;
-   PPALGDI palGDI;
+   PPALETTE palGDI;
    LONG RBits, GBits, BBits;
 
    dc = DC_LockDc(hDC);
    if (NULL != dc)
    {
-      HPALETTE hpal = dc->DcLevel.hpal;
-      palGDI = (PPALGDI) PALETTE_LockPalette(hpal);
+      HPALETTE hpal = dc->dclevel.hpal;
+      palGDI = (PPALETTE) PALETTE_LockPalette(hpal);
       if (!palGDI)
       {
          DC_UnlockDc(dc);
@@ -339,7 +339,7 @@ COLORREF APIENTRY NtGdiGetNearestColor(HDC hDC, COLORREF Color)
 UINT APIENTRY NtGdiGetNearestPaletteIndex(HPALETTE  hpal,
                                  COLORREF  Color)
 {
-  PPALGDI palGDI = (PPALGDI) PALETTE_LockPalette(hpal);
+  PPALETTE palGDI = (PPALETTE) PALETTE_LockPalette(hpal);
   UINT index  = 0;
 
   if (NULL != palGDI)
@@ -358,10 +358,10 @@ IntGetPaletteEntries(HPALETTE  hpal,
                      UINT  Entries,
                      LPPALETTEENTRY  pe)
 {
-    PPALGDI palGDI;
+    PPALETTE palGDI;
     UINT numEntries;
 
-    palGDI = (PPALGDI) PALETTE_LockPalette(hpal);
+    palGDI = (PPALETTE) PALETTE_LockPalette(hpal);
     if (NULL == palGDI)
     {
         return 0;
@@ -403,7 +403,7 @@ IntGetSystemPaletteEntries(HDC  hDC,
                            UINT  Entries,
                            LPPALETTEENTRY  pe)
 {
-    PPALGDI palGDI = NULL;
+    PPALETTE palGDI = NULL;
     PDC dc = NULL;
     UINT EntriesSize = 0;
     UINT Ret = 0;
@@ -431,7 +431,7 @@ IntGetSystemPaletteEntries(HDC  hDC,
         return 0;
     }
 
-    palGDI = PALETTE_LockPalette(dc->DcLevel.hpal);
+    palGDI = PALETTE_LockPalette(dc->dclevel.hpal);
     if (palGDI != NULL)
     {
         if (pe != NULL)
@@ -449,7 +449,7 @@ IntGetSystemPaletteEntries(HDC  hDC,
         }
         else
         {
-            Ret = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulNumPalReg;
+            Ret = dc->ppdev->GDIInfo.ulNumPalReg;
         }
     }
 
@@ -489,7 +489,7 @@ UINT FASTCALL IntGdiRealizePalette(HDC hDC)
    * of bugs in it.
    */
 
-  PPALGDI palGDI, sysGDI;
+  PPALETTE palGDI, sysGDI;
   int realized = 0;
   PDC dc;
   HPALETTE systemPalette;
@@ -499,7 +499,7 @@ UINT FASTCALL IntGdiRealizePalette(HDC hDC)
   if (!dc) return 0;
 
   systemPalette = NtGdiGetStockObject(DEFAULT_PALETTE);
-  palGDI = PALETTE_LockPalette(dc->DcLevel.hpal);
+  palGDI = PALETTE_LockPalette(dc->dclevel.hpal);
 
   if (palGDI == NULL)
   {
@@ -521,7 +521,7 @@ UINT FASTCALL IntGdiRealizePalette(HDC hDC)
   // The RealizePalette function modifies the palette for the device associated with the specified device context. If the
   // device context is a memory DC, the color table for the bitmap selected into the DC is modified. If the device
   // context is a display DC, the physical palette for that device is modified.
-  if(dc->DC_Type == DC_TYPE_MEMORY)
+  if(dc->dctype == DC_TYPE_MEMORY)
   {
     // Memory managed DC
     DPRINT1("RealizePalette unimplemented for memory managed DCs\n");
@@ -537,13 +537,13 @@ UINT FASTCALL IntGdiRealizePalette(HDC hDC)
   PALETTE_UnlockPalette(palGDI);
 
   // Create the XLATEOBJ for device managed DCs
-  if(dc->DC_Type != DC_TYPE_MEMORY)
+  if(dc->dctype != DC_TYPE_MEMORY)
   {
     if (palGDI->logicalToSystem != NULL)
     {
         EngDeleteXlate(palGDI->logicalToSystem);
     }
-    palGDI->logicalToSystem = IntEngCreateXlate(sysMode, palMode, systemPalette, dc->DcLevel.hpal);
+    palGDI->logicalToSystem = IntEngCreateXlate(sysMode, palMode, systemPalette, dc->dclevel.hpal);
   }
 
   DC_UnlockDc(dc);
@@ -608,7 +608,7 @@ IntSetPaletteEntries(HPALETTE  hpal,
                       UINT  Entries,
                       CONST LPPALETTEENTRY  pe)
 {
-    PPALGDI palGDI;
+    PPALETTE palGDI;
     WORD numEntries;
 
     if ((UINT)hpal & GDI_HANDLE_STOCK_MASK)
@@ -670,7 +670,7 @@ APIENTRY
 NtGdiUnrealizeObject(HGDIOBJ hgdiobj)
 {
    BOOL Ret = FALSE;
-   PPALGDI palGDI;
+   PPALETTE palGDI;
 
    if ( !hgdiobj ||
         ((UINT)hgdiobj & GDI_HANDLE_STOCK_MASK) ||

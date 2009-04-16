@@ -55,7 +55,8 @@ BEGIN
                     WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
     LTEXT           "Fargevalg", IDC_STATIC, 7, 140, 64, 9
     COMBOBOX        IDC_APPEARANCE_COLORSCHEME, 7, 150, 134, 90 , CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "Avansert", IDC_APPEARANCE_ADVANCED, 182, 150, 56, 15
+    PUSHBUTTON      "&Effekter...", IDC_APPEARANCE_EFFECTS, 182, 150, 56, 15
+    PUSHBUTTON      "Avansert", IDC_APPEARANCE_ADVANCED, 182, 170, 56, 15
 END
 
 IDD_ADVAPPEARANCE DIALOGEX DISCARDABLE 0, 0, 250, 239
@@ -96,6 +97,30 @@ BEGIN
     DEFPUSHBUTTON "OK", IDOK, 137, 220, 50, 14
 END
 
+IDD_EFFAPPEARANCE DIALOGEX DISCARDABLE 0, 0, 285, 185
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
+CAPTION "Effekter"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "&Bruk følgende overgang effekter for menyer og verktøytips:",IDC_EFFAPPEARANCE_ANIMATION,"button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP, 10, 5, 285, 19
+    COMBOBOX        IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 80, 19 , CBS_DROPDOWNLIST | CBS_HASSTRINGS | WS_CHILD | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "B&ruk følgende metode for kantutjevning av skjerm skifter:",IDC_EFFAPPEARANCE_SMOOTHING,"button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 42, 285, 19
+    COMBOBOX        IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 80, 19 , CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
+    CONTROL         "Br&uk store ikoner",IDC_EFFAPPEARANCE_LARGEICONS,"button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 80, 285, 19
+    CONTROL         "Vis sk&ygger under menyer",IDC_EFFAPPEARANCE_SETDROPSHADOW,"button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 95, 285, 19
+    CONTROL         "Vis &vindu innholdet ved flytting",IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,"button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 110, 285, 19
+    CONTROL         "&Skjul visning av understrekning for tastatur hurtigtast til jeg trykker på Alt tasten",IDC_EFFAPPEARANCE_KEYBOARDCUES,"button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 285, 19
+    PUSHBUTTON "Avbryt", IDCANCEL, 226, 165, 50, 14
+    DEFPUSHBUTTON "OK", IDOK, 172, 165, 50, 14
+END
+
 IDD_SETTINGS DIALOGEX DISCARDABLE  0, 0, 246, 204
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Innstillinger"
@@ -109,7 +134,7 @@ BEGIN
     CONTROL         "",IDC_SETTINGS_RESOLUTION,"msctls_trackbar32",
                     TBS_AUTOTICKS | WS_TABSTOP, 30, 137, 58, 17
     LTEXT           "Mindre",1815,9,137,21,8,NOT WS_GROUP
-    LTEXT           "Mere",1816,93,137,21,8,NOT WS_GROUP
+    LTEXT           "Større",1816,93,137,21,8,NOT WS_GROUP
     LTEXT           "",IDC_SETTINGS_RESOLUTION_TEXT,10,157,100,10,NOT WS_GROUP | SS_CENTER
     GROUPBOX        "&Farger",1817,125,127,115,43
     COMBOBOX        IDC_SETTINGS_BPP,131,137,103,80,CBS_DROPDOWNLIST | CBS_AUTOHSCROLL |
@@ -146,11 +171,23 @@ BEGIN
     POPUP ""
     BEGIN
         MENUITEM "&Attached",   ID_MENU_ATTACHED
-        MENUITEM "&Primary",    ID_MENU_PRIMARY
+        MENUITEM "&Primær",    ID_MENU_PRIMARY
         MENUITEM SEPARATOR
         MENUITEM "&Identify",   ID_MENU_IDENTIFY
         MENUITEM "E&genskaper", ID_MENU_PROPERTIES
     END
+END
+
+STRINGTABLE  DISCARDABLE
+BEGIN
+    IDS_SLIDEEFFECT "Slide effekter"
+    IDS_FADEEFFECT  "Fade effekter"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_STANDARDEFFECT  "Vanlig"
+    IDS_CLEARTYPEEFFECT "Klartype"
 END
 
 STRINGTABLE
@@ -191,8 +228,8 @@ BEGIN
     IDS_INACTWIN "Uaktiv vindu"
     IDS_ACTWIN   "Aktiv vindu"
     IDS_WINTEXT  "Vindu tekst"
-    IDS_MESSBOX  "Melding boks"
-    IDS_MESSTEXT "Melding tekst"
+    IDS_MESSBOX  "Meldingboks"
+    IDS_MESSTEXT "Meldingtekst"
     IDS_BUTTEXT  "OK"
 END
 
@@ -207,18 +244,18 @@ BEGIN
     IDS_ELEMENT_7 "Valgt enhet"
     IDS_ELEMENT_8 "Vindu"
     IDS_ELEMENT_9 "Scrollbars"
-    IDS_ELEMENT_10 "3D objects"
+    IDS_ELEMENT_10 "3D objekter"
     IDS_ELEMENT_11 "Palette title"
-    IDS_ELEMENT_12 "Symbol title"
+    IDS_ELEMENT_12 "Tegn tittel"
     IDS_ELEMENT_13 "Captionbar"
-    IDS_ELEMENT_14 "Deactivated menu elements"
+    IDS_ELEMENT_14 "Deaktivert meny elementer"
     IDS_ELEMENT_15 "Dialog"
     IDS_ELEMENT_16 "Scrollbar controls"
-    IDS_ELEMENT_17 "Application background"
+    IDS_ELEMENT_17 "Program bakgrunn"
     IDS_ELEMENT_18 "Small captionbar"
-    IDS_ELEMENT_19 "Symbol distance (horizontal)"
-    IDS_ELEMENT_20 "Symbol distance (vertical)"
-    IDS_ELEMENT_21 "Quickinfo"
+    IDS_ELEMENT_19 "Tegn avstand (horisontalt)"
+    IDS_ELEMENT_20 "Tegn avstand (vertikalt)"
+    IDS_ELEMENT_21 "Rask infomasjon"
     IDS_ELEMENT_22 "Symbol"
 END
 

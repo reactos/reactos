@@ -268,14 +268,23 @@ DIB_8BPP_ColorFill(SURFOBJ* DestSurface, RECTL* DestRect, ULONG color)
 
 BOOLEAN
 DIB_8BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
-                        RECTL*  DestRect,  POINTL  *SourcePoint,
+                        RECTL*  DestRect,  RECTL *SourceRect,
                         XLATEOBJ *ColorTranslation, ULONG iTransColor)
 {
-  ULONG RoundedRight, X, Y, SourceX, SourceY, Source, wd, Dest;
+  ULONG RoundedRight, X, Y, SourceX = 0, SourceY = 0, Source, wd, Dest;
   ULONG *DestBits;
 
+  LONG DstHeight;
+  LONG DstWidth;
+  LONG SrcHeight;
+  LONG SrcWidth;
+
+  DstHeight = DestRect->bottom - DestRect->top;
+  DstWidth = DestRect->right - DestRect->left;
+  SrcHeight = SourceRect->bottom - SourceRect->top;
+  SrcWidth = SourceRect->right - SourceRect->left;
+
   RoundedRight = DestRect->right - ((DestRect->right - DestRect->left) & 0x3);
-  SourceY = SourcePoint->y;
   DestBits = (ULONG*)((PBYTE)DestSurf->pvScan0 + DestRect->left +
                       (DestRect->top * DestSurf->lDelta));
   wd = DestSurf->lDelta - (DestRect->right - DestRect->left);
@@ -284,37 +293,57 @@ DIB_8BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
   {
     DestBits = (ULONG*)((PBYTE)DestSurf->pvScan0 + DestRect->left +
                         (Y * DestSurf->lDelta));
-    SourceX = SourcePoint->x;
+    SourceY = SourceRect->top+(Y - DestRect->top) * SrcHeight / DstHeight;
     for (X = DestRect->left; X < RoundedRight; X += 4, DestBits++)
     {
       Dest = *DestBits;
 
-      Source = DIB_GetSourceIndex(SourceSurf, SourceX++, SourceY);
-      if(Source != iTransColor)
+      SourceX = SourceRect->left+(X - DestRect->left) * SrcWidth / DstWidth;
+      if (SourceX >= 0 && SourceY >= 0 &&
+          SourceSurf->sizlBitmap.cx > SourceX && SourceSurf->sizlBitmap.cy > SourceY)
       {
-        Dest &= 0xFFFFFF00;
-        Dest |= (XLATEOBJ_iXlate(ColorTranslation, Source) & 0xFF);
+        Source = DIB_GetSourceIndex(SourceSurf, SourceX, SourceY);
+        if(Source != iTransColor)
+        {
+          Dest &= 0xFFFFFF00;
+          Dest |= (XLATEOBJ_iXlate(ColorTranslation, Source) & 0xFF);
+        }
       }
 
-      Source = DIB_GetSourceIndex(SourceSurf, SourceX++, SourceY);
-      if(Source != iTransColor)
+      SourceX = SourceRect->left+(X+1 - DestRect->left) * SrcWidth / DstWidth;
+      if (SourceX >= 0 && SourceY >= 0 &&
+          SourceSurf->sizlBitmap.cx > SourceX && SourceSurf->sizlBitmap.cy > SourceY)
       {
-        Dest &= 0xFFFF00FF;
-        Dest |= ((XLATEOBJ_iXlate(ColorTranslation, Source) << 8) & 0xFF00);
+        Source = DIB_GetSourceIndex(SourceSurf, SourceX, SourceY);
+        if(Source != iTransColor)
+        {
+          Dest &= 0xFFFF00FF;
+          Dest |= ((XLATEOBJ_iXlate(ColorTranslation, Source) << 8) & 0xFF00);
+        }
       }
 
-      Source = DIB_GetSourceIndex(SourceSurf, SourceX++, SourceY);
-      if(Source != iTransColor)
+      SourceX = SourceRect->left+(X+2 - DestRect->left) * SrcWidth / DstWidth;
+      if (SourceX >= 0 && SourceY >= 0 &&
+          SourceSurf->sizlBitmap.cx > SourceX && SourceSurf->sizlBitmap.cy > SourceY)
       {
-        Dest &= 0xFF00FFFF;
-        Dest |= ((XLATEOBJ_iXlate(ColorTranslation, Source) << 16) & 0xFF0000);
+        Source = DIB_GetSourceIndex(SourceSurf, SourceX, SourceY);
+        if(Source != iTransColor)
+        {
+          Dest &= 0xFF00FFFF;
+          Dest |= ((XLATEOBJ_iXlate(ColorTranslation, Source) << 16) & 0xFF0000);
+        }
       }
 
-      Source = DIB_GetSourceIndex(SourceSurf, SourceX++, SourceY);
-      if(Source != iTransColor)
+      SourceX = SourceRect->left+(X+3 - DestRect->left) * SrcWidth / DstWidth;
+      if (SourceX >= 0 && SourceY >= 0 &&
+          SourceSurf->sizlBitmap.cx > SourceX && SourceSurf->sizlBitmap.cy > SourceY)
       {
-        Dest &= 0x00FFFFFF;
-        Dest |= ((XLATEOBJ_iXlate(ColorTranslation, Source) << 24) & 0xFF000000);
+        Source = DIB_GetSourceIndex(SourceSurf, SourceX, SourceY);
+        if(Source != iTransColor)
+        {
+          Dest &= 0x00FFFFFF;
+          Dest |= ((XLATEOBJ_iXlate(ColorTranslation, Source) << 24) & 0xFF000000);
+        }
       }
 
       *DestBits = Dest;
@@ -324,15 +353,19 @@ DIB_8BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
     {
       for (; X < DestRect->right; X++)
       {
-        Source = DIB_GetSourceIndex(SourceSurf, SourceX++, SourceY);
-        if(Source != iTransColor)
+        SourceX = SourceRect->left+(X - DestRect->left) * SrcWidth / DstWidth;
+        if (SourceX >= 0 && SourceY >= 0 &&
+            SourceSurf->sizlBitmap.cx > SourceX && SourceSurf->sizlBitmap.cy > SourceY)
         {
-          *((BYTE*)DestBits) = (BYTE)(XLATEOBJ_iXlate(ColorTranslation, Source) & 0xFF);
+          Source = DIB_GetSourceIndex(SourceSurf, SourceX, SourceY);
+          if(Source != iTransColor)
+          {
+            *((BYTE*)DestBits) = (BYTE)(XLATEOBJ_iXlate(ColorTranslation, Source) & 0xFF);
+          }
         }
         DestBits = (PULONG)((ULONG_PTR)DestBits + 1);
       }
     }
-    SourceY++;
   }
 
   return TRUE;
@@ -372,12 +405,12 @@ DIB_8BPP_AlphaBlend(SURFOBJ* Dest, SURFOBJ* Source, RECTL* DestRect,
    register PUCHAR Dst;
    ULONG DstDelta;
    BLENDFUNCTION BlendFunc;
-   register NICEPIXEL32 DstPixel;
-   register NICEPIXEL32 SrcPixel;
+   register NICEPIXEL32 DstPixel32;
+   register NICEPIXEL32 SrcPixel32;
    register NICEPIXEL16 SrcPixel16;
    UCHAR Alpha, SrcBpp;
-   HPALETTE SrcPalette, DstPalette;
-   XLATEOBJ *SrcTo32Xlate, *DstTo32Xlate, *DstFrom32Xlate;
+   XLATEGDI* XlateGDI;
+   XLATEOBJ* SrcXlateObj;
 
    DPRINT("DIB_8BPP_AlphaBlend: srcRect: (%d,%d)-(%d,%d), dstRect: (%d,%d)-(%d,%d)\n",
           SourceRect->left, SourceRect->top, SourceRect->right, SourceRect->bottom,
@@ -408,35 +441,17 @@ DIB_8BPP_AlphaBlend(SURFOBJ* Dest, SURFOBJ* Source, RECTL* DestRect,
       DPRINT1("Source bitmap must be 32bpp when AC_SRC_ALPHA is set\n");
       return FALSE;
    }
-
-   SrcBpp = BitsPerFormat(Source->iBitmapFormat);
-   SrcPalette = IntEngGetXlatePalette(ColorTranslation, XO_SRCPALETTE);
-   if (SrcPalette != 0)
+   if (!ColorTranslation)
    {
-      SrcTo32Xlate = IntEngCreateXlate(PAL_RGB, 0, NULL, SrcPalette);
-      if (SrcTo32Xlate == NULL)
-      {
-         DPRINT1("IntEngCreateXlate failed\n");
-         return FALSE;
-      }
-   }
-   else
-   {
-      SrcTo32Xlate = NULL;
-      ASSERT(SrcBpp >= 16);
+      DPRINT1("ColorTranslation must not be NULL!\n");
+      return FALSE;
    }
 
-   DstPalette = IntEngGetXlatePalette(ColorTranslation, XO_DESTPALETTE);
-   DstTo32Xlate = IntEngCreateXlate(PAL_RGB, 0, NULL, DstPalette);
-   DstFrom32Xlate = IntEngCreateXlate(0, PAL_RGB, DstPalette, NULL);
-   if (DstTo32Xlate == NULL || DstFrom32Xlate == NULL)
+   XlateGDI = ObjToGDI(ColorTranslation, XLATE);
+   SrcXlateObj = IntEngCreateXlate(0, 0, XlateGDI->SourcePal, XlateGDI->DestPal);
+
+   if (!SrcXlateObj)
    {
-      if (SrcTo32Xlate != NULL)
-         EngDeleteXlate(SrcTo32Xlate);
-      if (DstTo32Xlate != NULL)
-         EngDeleteXlate(DstTo32Xlate);
-      if (DstFrom32Xlate != NULL)
-         EngDeleteXlate(DstFrom32Xlate);
       DPRINT1("IntEngCreateXlate failed\n");
       return FALSE;
    }
@@ -444,6 +459,7 @@ DIB_8BPP_AlphaBlend(SURFOBJ* Dest, SURFOBJ* Source, RECTL* DestRect,
    Dst = (PUCHAR)((ULONG_PTR)Dest->pvScan0 + (DestRect->top * Dest->lDelta) +
                              DestRect->left);
    DstDelta = Dest->lDelta - (DestRect->right - DestRect->left);
+   SrcBpp = BitsPerFormat(Source->iBitmapFormat);
 
    Rows = DestRect->bottom - DestRect->top;
    SrcY = SourceRect->top;
@@ -453,45 +469,37 @@ DIB_8BPP_AlphaBlend(SURFOBJ* Dest, SURFOBJ* Source, RECTL* DestRect,
       SrcX = SourceRect->left;
       while (--Cols >= 0)
       {
-         if (SrcTo32Xlate != NULL)
+         if (SrcBpp <= 16)
          {
-            SrcPixel.ul = DIB_GetSource(Source, SrcX++, SrcY, SrcTo32Xlate);
-         }
-         else if (SrcBpp <= 16)
-         {
-            SrcPixel16.us = DIB_GetSource(Source, SrcX++, SrcY, ColorTranslation);
-            SrcPixel.col.red = (SrcPixel16.col.red << 3) | (SrcPixel16.col.red >> 2);
-            SrcPixel.col.green = (SrcPixel16.col.green << 2) | (SrcPixel16.col.green >> 4);
-            SrcPixel.col.blue = (SrcPixel16.col.blue << 3) | (SrcPixel16.col.blue >> 2);
+             SrcPixel16.us = DIB_GetSource(Source, SrcX++, SrcY, ColorTranslation);
+             SrcPixel32.col.red = (SrcPixel16.col.red << 3) | (SrcPixel16.col.red >> 2);
+             SrcPixel32.col.green = (SrcPixel16.col.green << 2) | (SrcPixel16.col.green >> 4);
+             SrcPixel32.col.blue = (SrcPixel16.col.blue << 3) | (SrcPixel16.col.blue >> 2);
          }
          else
          {
-            SrcPixel.ul = DIB_GetSourceIndex(Source, SrcX++, SrcY);
+             SrcPixel32.ul = DIB_GetSourceIndex(Source, SrcX++, SrcY);
          }
-         SrcPixel.col.red = SrcPixel.col.red * BlendFunc.SourceConstantAlpha / 255;
-         SrcPixel.col.green = SrcPixel.col.green * BlendFunc.SourceConstantAlpha / 255;
-         SrcPixel.col.blue = SrcPixel.col.blue * BlendFunc.SourceConstantAlpha / 255;
-         SrcPixel.col.alpha = (SrcBpp == 32) ? (SrcPixel.col.alpha * BlendFunc.SourceConstantAlpha / 255) : BlendFunc.SourceConstantAlpha;
+         SrcPixel32.col.red = SrcPixel32.col.red * BlendFunc.SourceConstantAlpha / 255;
+         SrcPixel32.col.green = SrcPixel32.col.green * BlendFunc.SourceConstantAlpha / 255;
+         SrcPixel32.col.blue = SrcPixel32.col.blue * BlendFunc.SourceConstantAlpha / 255;
+         SrcPixel32.col.alpha = (SrcBpp == 32) ? (SrcPixel32.col.alpha * BlendFunc.SourceConstantAlpha / 255) : BlendFunc.SourceConstantAlpha;
 
          Alpha = ((BlendFunc.AlphaFormat & AC_SRC_ALPHA) != 0) ?
-                 SrcPixel.col.alpha : BlendFunc.SourceConstantAlpha;
+             SrcPixel32.col.alpha : BlendFunc.SourceConstantAlpha;
 
-         DstPixel.ul = XLATEOBJ_iXlate(DstTo32Xlate, *Dst);
-         DstPixel.col.red = Clamp8(DstPixel.col.red * (255 - Alpha) / 255 + SrcPixel.col.red);
-         DstPixel.col.green = Clamp8(DstPixel.col.green * (255 - Alpha) / 255 + SrcPixel.col.green);
-         DstPixel.col.blue = Clamp8(DstPixel.col.blue * (255 - Alpha) / 255 + SrcPixel.col.blue);
-         *Dst++ = XLATEOBJ_iXlate(DstFrom32Xlate, DstPixel.ul);
+         DstPixel32.ul = XLATEOBJ_iXlate(SrcXlateObj, *Dst);
+         SrcPixel32.col.red = Clamp8(DstPixel32.col.red * (255 - Alpha) / 255 + SrcPixel32.col.red);
+         SrcPixel32.col.green = Clamp8(DstPixel32.col.green * (255 - Alpha) / 255 + SrcPixel32.col.green);
+         SrcPixel32.col.blue = Clamp8(DstPixel32.col.blue * (255 - Alpha) / 255 +  SrcPixel32.col.blue);
+         *Dst++ = XLATEOBJ_iXlate(ColorTranslation, SrcPixel32.ul);
       }
       Dst = (PUCHAR)((ULONG_PTR)Dst + DstDelta);
       SrcY++;
    }
 
-   if (SrcTo32Xlate != NULL)
-      EngDeleteXlate(SrcTo32Xlate);
-   if (DstTo32Xlate != NULL)
-      EngDeleteXlate(DstTo32Xlate);
-   if (DstFrom32Xlate != NULL)
-      EngDeleteXlate(DstFrom32Xlate);
+   if (SrcXlateObj)
+       EngDeleteXlate(SrcXlateObj);
 
    return TRUE;
 }

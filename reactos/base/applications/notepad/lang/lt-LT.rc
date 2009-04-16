@@ -47,7 +47,7 @@ BEGIN
     POPUP "&Byla"
     BEGIN
         MENUITEM "&Nauja\tCtrl+N",             CMD_NEW
-        MENUITEM "&Atverti\tCtrl+O",           CMD_OPEN
+        MENUITEM "&Atverti...\tCtrl+O",        CMD_OPEN
         MENUITEM "Á&raðyti\tCtrl+S",           CMD_SAVE
         MENUITEM "Áraðyti &kaip...",           CMD_SAVE_AS
         MENUITEM SEPARATOR
@@ -89,8 +89,8 @@ BEGIN
         MENUITEM "&Ieðkoti...",  CMD_HELP_SEARCH
         MENUITEM "&Pagalba",     CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&Apie Notepad" CMD_ABOUT
-        MENUITEM "Apie &Wine",   CMD_ABOUT_WINE
+        MENUITEM "&Apie Notepad", CMD_ABOUT
+        MENUITEM "Apie &ReactOS", CMD_ABOUT_WINE
     END
 END
 
@@ -116,8 +116,8 @@ EDITTEXT /*STRING_PAGESETUP_RIGHTVALUE,*/  0x14D,     130, 55, 35, 11, WS_CHILD 
 LTEXT    "Apaè&ia:",      0x14E,100, 73, 30, 10, WS_CHILD
 EDITTEXT /*STRING_PAGESETUP_BOTTOMVALUE,*/ 0x150,    130, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
 
-DEFPUSHBUTTON "OK",         IDOK,                   180,  3, 40, 15, WS_TABSTOP
-PUSHBUTTON    "Atðaukti",     IDCANCEL,               180, 21, 40, 15, WS_TABSTOP
+DEFPUSHBUTTON "Gerai",         IDOK,                   180,  3, 40, 15, WS_TABSTOP
+PUSHBUTTON    "Atsisakyti",     IDCANCEL,               180, 21, 40, 15, WS_TABSTOP
 PUSHBUTTON    "Pagalba",       IDHELP,                180, 39, 40, 15, WS_TABSTOP
 END
 
@@ -142,8 +142,8 @@ CAPTION "Eiti á eilutæ"
 BEGIN
 EDITTEXT        ID_LINENUMBER,64,10,96,12,WS_CHILD | WS_BORDER | WS_TABSTOP
 LTEXT           "Eilutës numeris:",0x155,5,12,54,12,WS_CHILD | WS_TABSTOP | ES_NUMBER
-DEFPUSHBUTTON   "OK", IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
-PUSHBUTTON      "Atðaukti", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
+DEFPUSHBUTTON   "Gerai", IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
+PUSHBUTTON      "Atsisakyti", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
 END
 
 IDD_ABOUTBOX DIALOGEX DISCARDABLE  22,16,290,170
@@ -151,7 +151,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Apie ReactOS Notepad"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL         "ReactOS Notepad v1.0\r\nCopyright 1997,98 Marcel Baur <mbaur@g26.ethz.ch>\r\nCopyright 2000 Mike McCormack <Mike_McCormack@looksmart.com.au>\r\nCopyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>\r\nCopyright 2002 Andriy Palamarchuk\r\n",
+    CONTROL         "ReactOS Notepad v1.0\r\n(C) 1997,98 Marcel Baur <mbaur@g26.ethz.ch>\r\n(C) 2000 Mike McCormack <Mike_McCormack@looksmart.com.au>\r\n(C) 2002 Sylvain Petreolle <spetreolle@yahoo.fr>\r\n(C) 2002 Andriy Palamarchuk\r\n",
                     -1,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,46,7,238,39
     CONTROL         " ",
                     -1,"Static",0x50000000,8,48,272,11
@@ -204,5 +204,5 @@ STRING_UTF8,                                    "UTF-8"
 STRING_CRLF,                                    "Windows"
 STRING_LF,                                      "Unix"
 STRING_CR,                                      "Mac"
-STRING_LINE_COLUMN,                             "Line %d, column %d"
+STRING_LINE_COLUMN,                             "Eilutë %d, stulpelis %d"
 END

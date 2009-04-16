@@ -91,8 +91,8 @@ IntEngWndUpdateClipObj(
     {
       if (visRgn->rdh.nCount > 0)
       {
-        ClipObj = IntEngCreateClipRegion(visRgn->rdh.nCount, (PRECTL)visRgn->Buffer,
-                                         (PRECTL)&visRgn->rdh.rcBound);
+        ClipObj = IntEngCreateClipRegion(visRgn->rdh.nCount, visRgn->Buffer,
+                                         &visRgn->rdh.rcBound);
         DPRINT("Created visible region with %d rects\n", visRgn->rdh.nCount);
         DPRINT("  BoundingRect: %d, %d  %d, %d\n",
                visRgn->rdh.rcBound.left, visRgn->rdh.rcBound.top,
@@ -122,8 +122,8 @@ IntEngWndUpdateClipObj(
   if (ClipObj == NULL)
   {
     /* Fall back to client rect */
-    ClipObj = IntEngCreateClipRegion(1, (PRECTL)&Window->Wnd->ClientRect,
-                                     (PRECTL)&Window->Wnd->ClientRect);
+    ClipObj = IntEngCreateClipRegion(1, &Window->Wnd->ClientRect,
+                                     &Window->Wnd->ClientRect);
   }
 
   if (ClipObj == NULL)

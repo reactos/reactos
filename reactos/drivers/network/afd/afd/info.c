@@ -66,7 +66,7 @@ AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     AFD_DbgPrint(MID_TRACE,("Returning %x\n", Status));
 
-    return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL );
+    return UnlockAndMaybeComplete( FCB, Status, Irp, 0 );
 }
 
 NTSTATUS NTAPI
@@ -80,8 +80,7 @@ AfdGetSockName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
 
     if( FCB->AddressFile.Object == NULL && FCB->Connection.Object == NULL ) {
-	 return UnlockAndMaybeComplete( FCB, STATUS_INVALID_PARAMETER, Irp, 0,
-	                                NULL );
+	 return UnlockAndMaybeComplete( FCB, STATUS_INVALID_PARAMETER, Irp, 0 );
     }
 
     Mdl = IoAllocateMdl
@@ -108,7 +107,7 @@ AfdGetSockName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     } else
         Status = STATUS_INSUFFICIENT_RESOURCES;
 
-    return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL );
+    return UnlockAndMaybeComplete( FCB, Status, Irp, 0 );
 }
 
 NTSTATUS NTAPI
@@ -124,7 +123,7 @@ AfdGetPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
 
     if (FCB->RemoteAddress == NULL || FCB->Connection.Object == NULL) {
-        return UnlockAndMaybeComplete( FCB, STATUS_INVALID_PARAMETER, Irp, 0, NULL );
+        return UnlockAndMaybeComplete( FCB, STATUS_INVALID_PARAMETER, Irp, 0 );
     }
 
     if(NT_SUCCESS(Status = TdiBuildNullConnectionInfo
@@ -155,8 +154,10 @@ AfdGetPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
                 if (NT_SUCCESS(Status))
                 {
-                    RtlCopyMemory(Irp->UserBuffer, ConnInfo->RemoteAddress, TaLengthOfTransportAddress
-                                                                                  (ConnInfo->RemoteAddress));
+                    if (IrpSp->Parameters.DeviceIoControl.OutputBufferLength >= TaLengthOfTransportAddress(ConnInfo->RemoteAddress))
+                        RtlCopyMemory(Irp->UserBuffer, ConnInfo->RemoteAddress, TaLengthOfTransportAddress(ConnInfo->RemoteAddress));
+                    else
+                        Status = STATUS_BUFFER_TOO_SMALL;
                 }
             }
          }
@@ -164,5 +165,5 @@ AfdGetPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
          ExFreePool(ConnInfo);
     }
 
-    return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL );
+    return UnlockAndMaybeComplete( FCB, Status, Irp, 0 );
 }

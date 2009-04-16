@@ -126,6 +126,12 @@ VOID DGDeliverData(
                        ("Target Buffer: %x, Source Buffer: %x, Size %d\n",
                         Current->Buffer, DataBuffer, DataSize));
 
+          if (DataSize > Current->BufferSize)
+          {
+              Current->Complete(Current->Context, STATUS_BUFFER_TOO_SMALL, DataSize);
+              return;
+          }
+
           /* Copy the data into buffer provided by the user */
 	  RtlCopyMemory( Current->Buffer,
 			 DataBuffer,

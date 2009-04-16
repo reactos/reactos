@@ -1,3 +1,11 @@
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS Kernel Streaming
+ * FILE:            drivers/wdm/audio/backpln/portcls/filter_wavecyclic.c
+ * PURPOSE:         portcls wave cyclic filter
+ * PROGRAMMER:      Johannes Anderwald
+ */
+
 #include "private.h"
 
 typedef struct
@@ -7,7 +15,8 @@ typedef struct
     LONG ref;
 
     IPortWaveCyclic* Port;
-    IPortPinWaveCyclic * Pin;
+    IPortPinWaveCyclic ** Pins;
+    SUBDEVICE_DESCRIPTOR * Descriptor;
 
 }IPortFilterWaveCyclicImpl;
 
@@ -24,13 +33,19 @@ IPortFilterWaveCyclic_fnQueryInterface(
     IPortFilterWaveCyclicImpl * This = (IPortFilterWaveCyclicImpl*)iface;
 
     if (IsEqualGUIDAligned(refiid, &IID_IIrpTarget) || 
-        //IsEqualGUIDAligned(refiid, &IID_IPortFilterWaveCyclic) ||
         IsEqualGUIDAligned(refiid, &IID_IUnknown))
     {
         *Output = &This->lpVtbl;
         InterlockedIncrement(&This->ref);
         return STATUS_SUCCESS;
     }
+    else if (IsEqualGUIDAligned(refiid, &IID_IPort))
+    {
+        *Output = This->Port;
+        This->Port->lpVtbl->AddRef(This->Port);
+        return STATUS_SUCCESS;
+    }
+
 
     return STATUS_UNSUCCESSFUL;
 }
@@ -69,7 +84,7 @@ IPortFilterWaveCyclic_fnRelease(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI
@@ -83,55 +98,59 @@ IPortFilterWaveCyclic_fnNewIrpTarget(
     IN PIRP Irp,
     IN KSOBJECT_CREATE *CreateObject)
 {
-    ISubdevice * ISubDevice;
     NTSTATUS Status;
     IPortPinWaveCyclic * Pin;
-    SUBDEVICE_DESCRIPTOR * Descriptor;
     PKSPIN_CONNECT ConnectDetails;
     IPortFilterWaveCyclicImpl * This = (IPortFilterWaveCyclicImpl *)iface;
 
     ASSERT(This->Port);
+    ASSERT(This->Descriptor);
+    ASSERT(This->Pins);
 
     DPRINT("IPortFilterWaveCyclic_fnNewIrpTarget entered\n");
 
-    Status = This->Port->lpVtbl->QueryInterface(This->Port, &IID_ISubdevice, (PVOID*)&ISubDevice);
-    if (!NT_SUCCESS(Status))
-        return STATUS_UNSUCCESSFUL;
-
-    Status = ISubDevice->lpVtbl->GetDescriptor(ISubDevice, &Descriptor);
-    if (!NT_SUCCESS(Status))
-        return STATUS_UNSUCCESSFUL;
-
-    Status = PcValidateConnectRequest(Irp, &Descriptor->Factory, &ConnectDetails);
+    /* let's verify the connection request */
+    Status = PcValidateConnectRequest(Irp, &This->Descriptor->Factory, &ConnectDetails);
     if (!NT_SUCCESS(Status))
     {
-        ISubDevice->lpVtbl->Release(ISubDevice);
         return STATUS_UNSUCCESSFUL;
     }
 
-    ISubDevice->lpVtbl->Release(ISubDevice);
+    if (This->Pins[ConnectDetails->PinId] && This->Descriptor->Factory.Instances[ConnectDetails->PinId].CurrentPinInstanceCount)
+    {
+        /* release existing instance */
+        ASSERT(0);
+        This->Pins[ConnectDetails->PinId]->lpVtbl->Close(This->Pins[ConnectDetails->PinId], DeviceObject, NULL);
+    }
 
+    /* now create the pin */
     Status = NewPortPinWaveCyclic(&Pin);
     if (!NT_SUCCESS(Status))
     {
         return Status;
     }
 
-    Status = Pin->lpVtbl->Init(Pin, This->Port, iface, ConnectDetails, &Descriptor->Factory.KsPinDescriptor[ConnectDetails->PinId]);
+    /* initialize the pin */
+    Status = Pin->lpVtbl->Init(Pin, This->Port, iface, ConnectDetails, &This->Descriptor->Factory.KsPinDescriptor[ConnectDetails->PinId]);
     if (!NT_SUCCESS(Status))
     {
         Pin->lpVtbl->Release(Pin);
         return Status;
     }
 
-    /* store pin handle */
-    This->Pin = Pin;
+    /* release existing pin */
+    if (This->Pins[ConnectDetails->PinId])
+    {
+        This->Pins[ConnectDetails->PinId]->lpVtbl->Release(This->Pins[ConnectDetails->PinId]);
+    }
+    /* store pin */
+    This->Pins[ConnectDetails->PinId] = Pin;
 
     /* store result */
     *OutTarget = (IIrpTarget*)Pin;
 
     /* increment current instance count */
-    Descriptor->Factory.Instances[ConnectDetails->PinId].CurrentPinInstanceCount++;
+    This->Descriptor->Factory.Instances[ConnectDetails->PinId].CurrentPinInstanceCount++;
 
     return Status;
 }
@@ -207,7 +226,7 @@ IPortFilterWaveCyclic_fnFlush(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI
@@ -216,10 +235,18 @@ IPortFilterWaveCyclic_fnClose(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
-    DPRINT1("IPortFilterWaveCyclic_fnClose entered\n");
+    ULONG Index;
+    IPortFilterWaveCyclicImpl * This = (IPortFilterWaveCyclicImpl *)iface;
 
-    //FIXME
-    //close all pin instances
+    for(Index = 0; Index < This->Descriptor->Factory.PinDescriptorCount; Index++)
+    {
+        if (This->Pins[Index])
+        {
+            This->Pins[Index]->lpVtbl->Close(This->Pins[Index], DeviceObject, NULL);
+        }
+
+    }
+
 
     Irp->IoStatus.Status = STATUS_SUCCESS;
     Irp->IoStatus.Information = 0;
@@ -271,7 +298,7 @@ IPortFilterWaveCyclic_fnFastDeviceIoControl(
     OUT PIO_STATUS_BLOCK StatusBlock,
     IN PDEVICE_OBJECT DeviceObject)
 {
-
+    UNIMPLEMENTED
     return STATUS_SUCCESS;
 }
 
@@ -291,6 +318,7 @@ IPortFilterWaveCyclic_fnFastRead(
     OUT PIO_STATUS_BLOCK StatusBlock,
     IN PDEVICE_OBJECT DeviceObject)
 {
+    UNIMPLEMENTED
     return STATUS_SUCCESS;
 }
 
@@ -310,6 +338,7 @@ IPortFilterWaveCyclic_fnFastWrite(
     OUT PIO_STATUS_BLOCK StatusBlock,
     IN PDEVICE_OBJECT DeviceObject)
 {
+    UNIMPLEMENTED
     return STATUS_SUCCESS;
 }
 
@@ -323,12 +352,38 @@ IPortFilterWaveCyclic_fnInit(
     IN IPortFilterWaveCyclic* iface,
     IN IPortWaveCyclic* Port)
 {
+    ISubdevice * ISubDevice;
+    SUBDEVICE_DESCRIPTOR * Descriptor;
+    NTSTATUS Status;
     IPortFilterWaveCyclicImpl * This = (IPortFilterWaveCyclicImpl*)iface;
 
     This->Port = Port;
 
+    /* get our private interface */
+    Status = This->Port->lpVtbl->QueryInterface(This->Port, &IID_ISubdevice, (PVOID*)&ISubDevice);
+    if (!NT_SUCCESS(Status))
+        return STATUS_UNSUCCESSFUL;
+
+    /* get the subdevice descriptor */
+    Status = ISubDevice->lpVtbl->GetDescriptor(ISubDevice, &Descriptor);
+
+    /* release subdevice interface */
+    ISubDevice->lpVtbl->Release(ISubDevice);
+
+    if (!NT_SUCCESS(Status))
+        return STATUS_UNSUCCESSFUL;
+
+    /* save descriptor */
+    This->Descriptor = Descriptor;
+
+    /* allocate pin array */
+    This->Pins = AllocateItem(NonPagedPool, Descriptor->Factory.PinDescriptorCount * sizeof(IPortPinWaveCyclic*), TAG_PORTCLASS);
+
+    if (!This->Pins)
+        return STATUS_UNSUCCESSFUL;
+
     /* increment reference count */
-    iface->lpVtbl->AddRef(iface);
+    Port->lpVtbl->AddRef(Port);
 
     return STATUS_SUCCESS;
 }

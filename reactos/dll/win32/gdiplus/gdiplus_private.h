@@ -61,7 +61,7 @@ extern inline void delete_element(region_element *element);
 
 static inline INT roundr(REAL x)
 {
-    return (INT) floor(x + 0.5);
+    return (INT) floorf(x + 0.5);
 }
 
 static inline REAL deg2rad(REAL degrees)

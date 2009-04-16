@@ -35,7 +35,7 @@ PCALLPROC
 CreateCallProc(IN PDESKTOPINFO Desktop,
                IN WNDPROC WndProc,
                IN BOOL Unicode,
-               IN PW32PROCESSINFO pi);
+               IN PPROCESSINFO pi);
 
 BOOL
 UserGetCallProcInfo(IN HANDLE hCallProc,
@@ -52,7 +52,7 @@ IntReferenceClass(IN OUT PWINDOWCLASS BaseClass,
 VOID
 IntDereferenceClass(IN OUT PWINDOWCLASS Class,
                     IN PDESKTOPINFO Desktop,
-                    IN PW32PROCESSINFO pi);
+                    IN PPROCESSINFO pi);
 
 RTL_ATOM
 UserRegisterClass(IN CONST WNDCLASSEXW* lpwcx,
@@ -74,7 +74,7 @@ UserGetClassLongPtr(IN PWINDOWCLASS Class,
 RTL_ATOM
 IntGetClassAtom(IN PUNICODE_STRING ClassName,
                 IN HINSTANCE hInstance  OPTIONAL,
-                IN PW32PROCESSINFO pi  OPTIONAL,
+                IN PPROCESSINFO pi  OPTIONAL,
                 OUT PWINDOWCLASS *BaseClass  OPTIONAL,
                 OUT PWINDOWCLASS **Link  OPTIONAL);
 

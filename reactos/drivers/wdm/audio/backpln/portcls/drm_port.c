@@ -1,3 +1,11 @@
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS Kernel Streaming
+ * FILE:            drivers/wdm/audio/backpln/portcls/drm_port.c
+ * PURPOSE:         portcls drm port object
+ * PROGRAMMER:      Johannes Anderwald
+ */
+
 #include "private.h"
 
 typedef struct
@@ -15,7 +23,7 @@ IDrmPort2_fnAddRef(
 
     DPRINT("IDrmPort2_AddRef: This %p\n", This);
 
-    return _InterlockedIncrement(&This->ref);
+    return InterlockedIncrement(&This->ref);
 }
 
 ULONG
@@ -25,7 +33,7 @@ IDrmPort2_fnRelease(
 {
     IDrmPort2Impl * This = (IDrmPort2Impl*)iface;
 
-    _InterlockedDecrement(&This->ref);
+    InterlockedDecrement(&This->ref);
 
     if (This->ref == 0)
     {
@@ -43,7 +51,7 @@ IDrmPort2_fnQueryInterface(
     IN  REFIID refiid,
     OUT PVOID* Output)
 {
-    WCHAR Buffer[100];
+    UNICODE_STRING GuidString;
     IDrmPort2Impl * This = (IDrmPort2Impl*)iface;
 
     if (IsEqualGUIDAligned(refiid, &IID_IDrmPort) ||
@@ -51,13 +59,15 @@ IDrmPort2_fnQueryInterface(
         IsEqualGUIDAligned(refiid, &IID_IUnknown))
     {
         *Output = (PVOID)&This->lpVtbl;
-        _InterlockedIncrement(&This->ref);
+        InterlockedIncrement(&This->ref);
         return STATUS_SUCCESS;
     }
 
-    StringFromCLSID(refiid, Buffer);
-    DPRINT1("IDrmPort2_QueryInterface no interface!!! iface %S\n", Buffer);
-    KeBugCheckEx(0, 0, 0, 0, 0);
+    if (RtlStringFromGUID(refiid, &GuidString) == STATUS_SUCCESS)
+    {
+        DPRINT1("IDrmPort2_QueryInterface no interface!!! iface %S\n", GuidString.Buffer);
+        RtlFreeUnicodeString(&GuidString);
+    }
     return STATUS_UNSUCCESSFUL;
 }
 

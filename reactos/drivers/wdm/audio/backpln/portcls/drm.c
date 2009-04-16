@@ -1,20 +1,18 @@
 /*
-    ReactOS Kernel Streaming
-    Port Class / Digital Rights Management
-
-    Author: Andrew Greenwood
-
-    Notes:
-        These are convenience functions for accessing DRM facilities, as
-        documented here:
-        http://www.osronline.com/ddkx/stream/aud-prop_9f77.htm
-*/
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS Kernel Streaming
+ * FILE:            drivers/wdm/audio/backpln/portcls/drm.c
+ * PURPOSE:         portcls drm functions
+ * PROGRAMMER:      Andrew Greenwood
+ */
 
 #include "private.h"
-#include <portcls.h>
-#include <drmk.h>
 
-NTSTATUS NTAPI
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
 PcAddContentHandlers(
     IN  ULONG ContentId,
     IN  PVOID *paHandlers,
@@ -23,7 +21,11 @@ PcAddContentHandlers(
     return DrmAddContentHandlers(ContentId, paHandlers, NumHandlers);
 }
 
-NTSTATUS NTAPI
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
 PcCreateContentMixed(
     IN  PULONG paContentId,
     IN  ULONG cContentId,
@@ -32,14 +34,22 @@ PcCreateContentMixed(
     return DrmCreateContentMixed(paContentId, cContentId, pMixedContentId);
 }
 
-NTSTATUS NTAPI
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
 PcDestroyContent(
     IN  ULONG ContentId)
 {
     return DrmDestroyContent(ContentId);
 }
 
-NTSTATUS NTAPI
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
 PcForwardContentToDeviceObject(
     IN  ULONG ContentId,
     IN  PVOID Reserved,
@@ -48,7 +58,11 @@ PcForwardContentToDeviceObject(
     return DrmForwardContentToDeviceObject(ContentId, Reserved, DrmForward);
 }
 
-NTSTATUS NTAPI
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
 PcForwardContentToFileObject(
     IN  ULONG ContentId,
     IN  PFILE_OBJECT FileObject)
@@ -56,7 +70,11 @@ PcForwardContentToFileObject(
     return DrmForwardContentToFileObject(ContentId, FileObject);
 }
 
-NTSTATUS NTAPI
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
 PcForwardContentToInterface(
     IN  ULONG ContentId,
     IN  PUNKNOWN pUnknown,
@@ -65,7 +83,11 @@ PcForwardContentToInterface(
     return DrmForwardContentToInterface(ContentId, pUnknown, NumMethods);
 }
 
-NTSTATUS NTAPI
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
 PcGetContentRights(
     IN  ULONG ContentId,
     OUT PDRMRIGHTS DrmRights)

@@ -23,14 +23,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#define IN_RECT(r,x,y) \
-( \
- (x) >= (r).left && \
- (y) >= (r).top && \
- (x) < (r).right && \
- (y) < (r).bottom \
-)
-
 HBITMAP APIENTRY
 IntGdiCreateBitmap(
     INT Width,
@@ -84,7 +76,7 @@ IntGdiCreateBitmap(
     psurfBmp = SURFACE_LockSurface(hBitmap);
     if (psurfBmp == NULL)
     {
-        NtGdiDeleteObject(hBitmap);
+        GreDeleteObject(hBitmap);
         return NULL;
     }
 
@@ -150,7 +142,7 @@ IntCreateCompatibleBitmap(
     }
     else
     {
-        if (Dc->DC_Type != DC_TYPE_MEMORY)
+        if (Dc->dctype != DC_TYPE_MEMORY)
         {
             Bmp = IntGdiCreateBitmap(abs(Width),
                                      abs(Height),
@@ -162,7 +154,7 @@ IntCreateCompatibleBitmap(
         {
             DIBSECTION dibs;
             INT Count;
-            PSURFACE psurf = SURFACE_LockSurface(Dc->w.hBitmap);
+            PSURFACE psurf = SURFACE_LockSurface(Dc->rosdc.hBitmap);
             Count = BITMAP_GetObject(psurf, sizeof(dibs), &dibs);
 
             if (Count)
@@ -226,7 +218,7 @@ IntCreateCompatibleBitmap(
                         {
                             /* Copy the color table */
                             UINT Index;
-                            PPALGDI PalGDI = PALETTE_LockPalette(psurf->hDIBPalette);
+                            PPALETTE PalGDI = PALETTE_LockPalette(psurf->hDIBPalette);
 
                             if (!PalGDI)
                             {
@@ -289,7 +281,7 @@ NtGdiCreateCompatibleBitmap(
     Dc = DC_LockDc(hDC);
 
     DPRINT("NtGdiCreateCompatibleBitmap(%04x,%d,%d, bpp:%d) = \n",
-           hDC, Width, Height, ((PGDIDEVICE)Dc->pPDev)->GDIInfo.cBitsPixel);
+           hDC, Width, Height, Dc->ppdev->GDIInfo.cBitsPixel);
 
     if (NULL == Dc)
     {
@@ -358,7 +350,7 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
         return Result;
     }
 
-    if (dc->DC_Type == DC_TYPE_INFO)
+    if (dc->dctype == DC_TYPE_INFO)
     {
         DC_UnlockDc(dc);
         return Result;
@@ -366,10 +358,10 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
 
     XPos += dc->ptlDCOrig.x;
     YPos += dc->ptlDCOrig.y;
-    if (IN_RECT(dc->CombinedClip->rclBounds,XPos,YPos))
+    if (RECTL_bPointInRect(&dc->rosdc.CombinedClip->rclBounds, XPos, YPos))
     {
         bInRect = TRUE;
-        psurf = SURFACE_LockSurface(dc->w.hBitmap);
+        psurf = SURFACE_LockSurface(dc->rosdc.hBitmap);
         pso = &psurf->SurfObj;
         if (psurf)
         {
@@ -436,7 +428,7 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
                         SURFACE_UnlockSurface(psurf);
                     }
                 }
-                NtGdiDeleteObject(hBmpTmp);
+                GreDeleteObject(hBmpTmp);
             }
             NtGdiDeleteObjectApp(hDCTmp);
         }
@@ -493,7 +485,7 @@ NtGdiGetBitmapBits(
     OUT OPTIONAL PBYTE pUnsafeBits)
 {
     PSURFACE psurf;
-    LONG  ret;
+    LONG bmSize, ret;
 
     if (pUnsafeBits != NULL && Bytes == 0)
     {
@@ -507,16 +499,19 @@ NtGdiGetBitmapBits(
         return 0;
     }
 
+    bmSize = BITMAP_GetWidthBytes(psurf->SurfObj.sizlBitmap.cx, 
+             BitsPerFormat(psurf->SurfObj.iBitmapFormat)) * 
+             abs(psurf->SurfObj.sizlBitmap.cy);
+    
     /* If the bits vector is null, the function should return the read size */
     if (pUnsafeBits == NULL)
     {
-        ret = psurf->SurfObj.cjBits;
         SURFACE_UnlockSurface(psurf);
-        return ret;
+        return bmSize;
     }
 
     /* Don't copy more bytes than the buffer has */
-    Bytes = min(Bytes, psurf->SurfObj.cjBits);
+    Bytes = min(Bytes, bmSize);
 
     // FIXME: use MmSecureVirtualMemory
     _SEH2_TRY
@@ -663,22 +658,22 @@ GdiSetPixelV(
     INT Y,
     COLORREF Color)
 {
-    HBRUSH NewBrush = NtGdiCreateSolidBrush(Color, NULL);
+    HBRUSH hbrush = NtGdiCreateSolidBrush(Color, NULL);
     HGDIOBJ OldBrush;
 
-    if (NewBrush == NULL)
+    if (hbrush == NULL)
         return(FALSE);
 
-    OldBrush = NtGdiSelectBrush(hDC, NewBrush);
+    OldBrush = NtGdiSelectBrush(hDC, hbrush);
     if (OldBrush == NULL)
     {
-        NtGdiDeleteObject(NewBrush);
+        GreDeleteObject(hbrush);
         return(FALSE);
     }
 
     NtGdiPatBlt(hDC, X, Y, 1, 1, PATCOPY);
     NtGdiSelectBrush(hDC, OldBrush);
-    NtGdiDeleteObject(NewBrush);
+    GreDeleteObject(hbrush);
 
     return TRUE;
 }
@@ -806,7 +801,7 @@ BITMAP_CopyBitmap(HBITMAP hBitmap)
             {
                 GDIOBJ_UnlockObjByPtr((POBJ)resBitmap);
                 GDIOBJ_UnlockObjByPtr((POBJ)Bitmap);
-                NtGdiDeleteObject(res);
+                GreDeleteObject(res);
                 return 0;
             }
             IntGetBitmapBits(Bitmap, bm.bmWidthBytes * abs(bm.bmHeight), buf);
@@ -817,7 +812,7 @@ BITMAP_CopyBitmap(HBITMAP hBitmap)
         }
         else
         {
-            NtGdiDeleteObject(res);
+            GreDeleteObject(res);
             res = NULL;
         }
     }
@@ -860,7 +855,30 @@ BITMAP_GetObject(SURFACE *psurf, INT Count, LPVOID buffer)
             pds->dsBmih.biHeight = pds->dsBm.bmHeight;
             pds->dsBmih.biPlanes = pds->dsBm.bmPlanes;
             pds->dsBmih.biBitCount = pds->dsBm.bmBitsPixel;
-            pds->dsBmih.biCompression = 0; // FIXME!
+            switch (psurf->SurfObj.iBitmapFormat)
+            {
+                /* FIXME: What about BI_BITFIELDS? */
+                case BMF_1BPP:
+                case BMF_4BPP:
+                case BMF_8BPP:
+                case BMF_16BPP:
+                case BMF_24BPP:
+                case BMF_32BPP:
+                   pds->dsBmih.biCompression = BI_RGB;
+                   break;
+                case BMF_4RLE:
+                   pds->dsBmih.biCompression = BI_RLE4;
+                   break;
+                case BMF_8RLE:
+                   pds->dsBmih.biCompression = BI_RLE8;
+                   break;
+                case BMF_JPEG:
+                   pds->dsBmih.biCompression = BI_JPEG;
+                   break;
+                case BMF_PNG:
+                   pds->dsBmih.biCompression = BI_PNG;
+                   break;
+            }
             pds->dsBmih.biSizeImage = psurf->SurfObj.cjBits;
             pds->dsBmih.biXPelsPerMeter = 0;
             pds->dsBmih.biYPelsPerMeter = 0;
@@ -900,108 +918,6 @@ NtGdiGetDCforBitmap(
         SURFACE_UnlockSurface(psurf);
     }
     return hDC;
-}
-
-/*
- * @implemented
- */
-HBITMAP
-APIENTRY
-NtGdiSelectBitmap(
-    IN HDC hDC,
-    IN HBITMAP hBmp)
-{
-    PDC pDC;
-    PDC_ATTR pDc_Attr;
-    HBITMAP hOrgBmp;
-    PSURFACE psurfBmp;
-    HRGN hVisRgn;
-    BOOLEAN bFailed;
-    PGDIBRUSHOBJ pBrush;
-
-    if (hDC == NULL || hBmp == NULL) return NULL;
-
-    pDC = DC_LockDc(hDC);
-    if (!pDC)
-    {
-        return NULL;
-    }
-
-    pDc_Attr = pDC->pDc_Attr;
-    if (!pDc_Attr) pDc_Attr = &pDC->Dc_Attr;
-
-    /* must be memory dc to select bitmap */
-    if (pDC->DC_Type != DC_TYPE_MEMORY)
-    {
-        DC_UnlockDc(pDC);
-        return NULL;
-    }
-
-    psurfBmp = SURFACE_LockSurface(hBmp);
-    if (!psurfBmp)
-    {
-        DC_UnlockDc(pDC);
-        return NULL;
-    }
-    hOrgBmp = pDC->w.hBitmap;
-
-    /* Release the old bitmap, lock the new one and convert it to a SURF */
-    pDC->w.hBitmap = hBmp;
-
-    // If Info DC this is zero and pSurface is moved to DC->pSurfInfo.
-    pDC->DcLevel.pSurface = psurfBmp;
-    psurfBmp->hDC = hDC;
-
-    // if we're working with a DIB, get the palette 
-    // [fixme: only create if the selected palette is null]
-    if (psurfBmp->hSecure)
-    {
-//        pDC->w.bitsPerPixel = psurfBmp->dib->dsBmih.biBitCount; ???
-        pDC->w.bitsPerPixel = BitsPerFormat(psurfBmp->SurfObj.iBitmapFormat);
-    }
-    else
-    {
-        pDC->w.bitsPerPixel = BitsPerFormat(psurfBmp->SurfObj.iBitmapFormat);
-    }
-
-    hVisRgn = NtGdiCreateRectRgn(0,
-                                 0,
-                                 psurfBmp->SurfObj.sizlBitmap.cx,
-                                 psurfBmp->SurfObj.sizlBitmap.cy);
-    SURFACE_UnlockSurface(psurfBmp);
-
-    /* Regenerate the XLATEOBJs. */
-    pBrush = BRUSHOBJ_LockBrush(pDc_Attr->hbrush);
-    if (pBrush)
-    {
-        if (pDC->XlateBrush)
-        {
-            EngDeleteXlate(pDC->XlateBrush);
-        }
-        pDC->XlateBrush = IntGdiCreateBrushXlate(pDC, pBrush, &bFailed);
-        BRUSHOBJ_UnlockBrush(pBrush);
-    }
-
-    pBrush = PENOBJ_LockPen(pDc_Attr->hpen);
-    if (pBrush)
-    {
-        if (pDC->XlatePen)
-        {
-            EngDeleteXlate(pDC->XlatePen);
-        }
-        pDC->XlatePen = IntGdiCreateBrushXlate(pDC, pBrush, &bFailed);
-        PENOBJ_UnlockPen(pBrush);
-    }
-
-    DC_UnlockDc(pDC);
-
-    if (hVisRgn)
-    {
-        GdiSelectVisRgn(hDC, hVisRgn);
-        NtGdiDeleteObject(hVisRgn);
-    }
-
-    return hOrgBmp;
 }
 
 /* EOF */

@@ -1907,15 +1907,15 @@ static HRESULT WINAPI fnIMLangFontLink_GetCharCodePages(
 static HRESULT WINAPI fnIMLangFontLink_GetStrCodePages(
         IMLangFontLink* iface,
         const WCHAR* pszSrc,
-        long cchSrc,
+        LONG cchSrc,
         DWORD dwPriorityCodePages,
         DWORD* pdwCodePages,
-        long* pcchCodePages)
+        LONG* pcchCodePages)
 {
-    long i;
+    LONG i;
     DWORD cps = 0;
 
-    TRACE("(%p)->%s %ld %x %p %p\n", iface, debugstr_wn(pszSrc,cchSrc),cchSrc,dwPriorityCodePages,pdwCodePages,pcchCodePages);
+    TRACE("(%p)->%s %d %x %p %p\n", iface, debugstr_wn(pszSrc, cchSrc), cchSrc, dwPriorityCodePages, pdwCodePages, pcchCodePages);
 
     if (pdwCodePages) *pdwCodePages = 0;
     if (pcchCodePages) *pcchCodePages = 0;
@@ -3203,8 +3203,8 @@ static HRESULT WINAPI fnIMLangFontLink2_GetCharCodePages( IMLangFontLink2* This,
 }
 
 static HRESULT WINAPI fnIMLangFontLink2_GetStrCodePages( IMLangFontLink2* This,
-        const WCHAR *pszSrc, long cchSrc, DWORD dwPriorityCodePages,
-        DWORD *pdwCodePages, long *pcchCodePages)
+        const WCHAR *pszSrc, LONG cchSrc, DWORD dwPriorityCodePages,
+        DWORD *pdwCodePages, LONG *pcchCodePages)
 {
     return fnIMLangFontLink_GetStrCodePages((IMLangFontLink *)This,
             pszSrc, cchSrc, dwPriorityCodePages, pdwCodePages, pcchCodePages);
@@ -3354,14 +3354,14 @@ static ULONG WINAPI fnIMLangLineBreakConsole_Release(
 static HRESULT WINAPI fnIMLangLineBreakConsole_BreakLineML(
     IMLangLineBreakConsole* iface,
     IMLangString* pSrcMLStr,
-    long lSrcPos,
-    long lSrcLen,
-    long cMinColumns,
-    long cMaxColumns,
-    long* plLineLen,
-    long* plSkipLen)
+    LONG lSrcPos,
+    LONG lSrcLen,
+    LONG cMinColumns,
+    LONG cMaxColumns,
+    LONG* plLineLen,
+    LONG* plSkipLen)
 {
-    FIXME("(%p)->%p %li %li %li %li %p %p\n", iface, pSrcMLStr, lSrcPos, lSrcLen, cMinColumns, cMaxColumns, plLineLen, plSkipLen);
+    FIXME("(%p)->%p %i %i %i %i %p %p\n", iface, pSrcMLStr, lSrcPos, lSrcLen, cMinColumns, cMaxColumns, plLineLen, plSkipLen);
     return E_NOTIMPL;
 }
 
@@ -3369,12 +3369,12 @@ static HRESULT WINAPI fnIMLangLineBreakConsole_BreakLineW(
     IMLangLineBreakConsole* iface,
     LCID locale,
     const WCHAR* pszSrc,
-    long cchSrc,
-    long cMaxColumns,
-    long* pcchLine,
-    long* pcchSkip )
+    LONG cchSrc,
+    LONG cMaxColumns,
+    LONG* pcchLine,
+    LONG* pcchSkip )
 {
-    FIXME("(%p)->%i %s %li %li %p %p\n", iface, locale, debugstr_wn(pszSrc,cchSrc), cchSrc, cMaxColumns, pcchLine, pcchSkip);
+    FIXME("(%p)->%i %s %i %i %p %p\n", iface, locale, debugstr_wn(pszSrc,cchSrc), cchSrc, cMaxColumns, pcchLine, pcchSkip);
 
     *pcchLine = cchSrc;
     *pcchSkip = 0;
@@ -3386,12 +3386,12 @@ static HRESULT WINAPI fnIMLangLineBreakConsole_BreakLineA(
     LCID locale,
     UINT uCodePage,
     const CHAR* pszSrc,
-    long cchSrc,
-    long cMaxColumns,
-    long* pcchLine,
-    long* pcchSkip)
+    LONG cchSrc,
+    LONG cMaxColumns,
+    LONG* pcchLine,
+    LONG* pcchSkip)
 {
-    FIXME("(%p)->%i %i %s %li %li %p %p\n", iface, locale, uCodePage, debugstr_an(pszSrc,cchSrc), cchSrc, cMaxColumns, pcchLine, pcchSkip);
+    FIXME("(%p)->%i %i %s %i %i %p %p\n", iface, locale, uCodePage, debugstr_an(pszSrc,cchSrc), cchSrc, cMaxColumns, pcchLine, pcchSkip);
 
     *pcchLine = cchSrc;
     *pcchSkip = 0;

@@ -232,9 +232,9 @@ extern	void		WDML_QueueTransaction(WDML_CONV* pConv, WDML_XACT* pXAct);
 extern	BOOL		WDML_UnQueueTransaction(WDML_CONV* pConv, WDML_XACT*  pXAct);
 extern	void		WDML_FreeTransaction(WDML_INSTANCE* pInstance, WDML_XACT* pXAct, BOOL doFreePmt);
 extern	WDML_XACT*	WDML_FindTransaction(WDML_CONV* pConv, DWORD tid);
-extern	HGLOBAL		WDML_DataHandle2Global(HDDEDATA hDdeData, BOOL fResponse, BOOL fRelease,
-					       BOOL fDeferUpd, BOOL dAckReq);
-extern	HDDEDATA	WDML_Global2DataHandle(HGLOBAL hMem, WINE_DDEHEAD* da);
+extern  HGLOBAL     WDML_DataHandle2Global(HDDEDATA hDdeData, BOOL fResponse, BOOL fRelease,
+                           BOOL fDeferUpd, BOOL fAckReq);
+extern  HDDEDATA    WDML_Global2DataHandle(WDML_CONV* pConv, HGLOBAL hMem, WINE_DDEHEAD* p);
 extern  BOOL            WDML_IsAppOwned(HDDEDATA hDdeData);
 extern	WDML_INSTANCE*	WDML_GetInstance(DWORD InstId);
 extern	WDML_INSTANCE*	WDML_GetInstanceFromWnd(HWND hWnd);

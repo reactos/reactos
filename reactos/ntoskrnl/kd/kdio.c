@@ -21,6 +21,7 @@ BOOLEAN KdpLogInitialized;
 CHAR DebugBuffer[BufferSize];
 ULONG CurrentPosition;
 WORK_QUEUE_ITEM KdpDebugLogQueue;
+KSPIN_LOCK KdpSerialSpinLock;
 BOOLEAN ItemQueued;
 KD_PORT_INFORMATION SerialPortInfo = {DEFAULT_DEBUG_PORT, DEFAULT_DEBUG_BAUD_RATE, 0};
 
@@ -150,8 +151,27 @@ NTAPI
 KdpSerialDebugPrint(LPSTR Message,
                     ULONG Length)
 {
+    KIRQL OldIrql;
     PCHAR pch = (PCHAR) Message;
 
+    /* Acquire the printing spinlock without waiting at raised IRQL */
+    while (TRUE)
+    {
+        /* Wait when the spinlock becomes available */
+        while (!KeTestSpinLock(&KdpSerialSpinLock));
+
+        /* Spinlock was free, raise irql */
+        KeRaiseIrql(HIGH_LEVEL, &OldIrql);
+
+        /* Try to get the spinlock */
+        if (KeTryToAcquireSpinLockAtDpcLevel(&KdpSerialSpinLock))
+            break;
+
+        /* Someone else got the spinlock, lower IRQL back */
+        KeLowerIrql(OldIrql);
+    }
+
+    /* Output the message */
     while (*pch != 0)
     {
         if (*pch == '\n')
@@ -161,6 +181,12 @@ KdpSerialDebugPrint(LPSTR Message,
         KdPortPutByteEx(&SerialPortInfo, *pch);
         pch++;
     }
+
+    /* Release spinlock */
+    KiReleaseSpinLock(&KdpSerialSpinLock);
+
+    /* Lower IRQL */
+    KeLowerIrql(OldIrql);
 }
 
 VOID
@@ -183,6 +209,9 @@ KdpSerialInit(PKD_DISPATCH_TABLE DispatchTable,
             return;
         }
         KdComPortInUse = (PUCHAR)(ULONG_PTR)SerialPortInfo.BaseAddress;
+
+        /* Initialize spinlock */
+        KeInitializeSpinLock(&KdpSerialSpinLock);
 
         /* Register as a Provider */
         InsertTailList(&KdProviders, &DispatchTable->KdProvidersList);

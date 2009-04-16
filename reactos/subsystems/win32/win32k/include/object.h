@@ -23,7 +23,7 @@ typedef struct _USER_HANDLE_ENTRY
     {
         PVOID pi;
         PW32THREADINFO pti;          // pointer to Win32ThreadInfo
-        PW32PROCESSINFO ppi;         // pointer to W32ProcessInfo
+        PPROCESSINFO ppi;         // pointer to W32ProcessInfo
     };
     unsigned short type;         /* object type (0 if free) */
     unsigned short generation;   /* generation counter */

@@ -92,10 +92,10 @@ NtUserGetThreadState(
          ret = (DWORD_PTR)IntGetCapture();
          break;
       case THREADSTATE_PROGMANWINDOW:
-         ret = (DWORD_PTR)GetW32ThreadInfo()->Desktop->hProgmanWindow;
+         ret = (DWORD_PTR)GetW32ThreadInfo()->pDeskInfo->hProgmanWindow;
          break;
       case THREADSTATE_TASKMANWINDOW:
-         ret = (DWORD_PTR)GetW32ThreadInfo()->Desktop->hTaskManWindow;
+         ret = (DWORD_PTR)GetW32ThreadInfo()->pDeskInfo->hTaskManWindow;
          break;
       case THREADSTATE_ACTIVEWINDOW:
          ret = (DWORD_PTR)UserGetActiveWindow();
@@ -286,12 +286,12 @@ NtUserGetGuiResources(
    {
       case GR_GDIOBJECTS:
          {
-            Ret = (DWORD)W32Process->GDIObjects;
+            Ret = (DWORD)W32Process->GDIHandleCount;
             break;
          }
       case GR_USEROBJECTS:
          {
-            Ret = (DWORD)W32Process->UserObjects;
+            Ret = (DWORD)W32Process->UserHandleCount;
             break;
          }
       default:
@@ -438,10 +438,10 @@ IntFreeNULLTerminatedFromUnicodeString(PWSTR NullTerminated, PUNICODE_STRING Uni
    }
 }
 
-PW32PROCESSINFO
+PPROCESSINFO
 GetW32ProcessInfo(VOID)
 {
-    PW32PROCESSINFO pi;
+    PPROCESSINFO pi;
     PW32PROCESS W32Process = PsGetCurrentProcessWin32Process();
 
     if (W32Process == NULL)
@@ -452,18 +452,17 @@ GetW32ProcessInfo(VOID)
 
     if (W32Process->ProcessInfo == NULL)
     {
-        pi = UserHeapAlloc(sizeof(W32PROCESSINFO));
+        pi = UserHeapAlloc(sizeof(PROCESSINFO));
         if (pi != NULL)
         {
             RtlZeroMemory(pi,
-                          sizeof(W32PROCESSINFO));
+                          sizeof(PROCESSINFO));
 
             /* initialize it */
             pi->UserHandleTable = gHandleTable;
             pi->hUserHeap = W32Process->HeapMappings.KernelMapping;
             pi->UserHeapDelta = (ULONG_PTR)W32Process->HeapMappings.KernelMapping -
                                 (ULONG_PTR)W32Process->HeapMappings.UserMapping;
-            pi->psi = gpsi;
 
             if (InterlockedCompareExchangePointer((PVOID*)&W32Process->ProcessInfo,
                                                   pi,
@@ -505,17 +504,16 @@ GetW32ThreadInfo(VOID)
                           sizeof(W32THREADINFO));
 
             /* initialize it */
-            ti->kpi = GetW32ProcessInfo();
-            ti->pi = UserHeapAddressToUser(ti->kpi);
-            ti->Hooks = W32Thread->Hooks;
+            ti->ppi = GetW32ProcessInfo();
+            ti->fsHooks = W32Thread->Hooks;
             W32Thread->pcti = &ti->ClientThreadInfo;
             if (W32Thread->Desktop != NULL)
             {
-                ti->Desktop = W32Thread->Desktop->DesktopInfo;
+                ti->pDeskInfo = W32Thread->Desktop->DesktopInfo;
             }
             else
             {
-                ti->Desktop = NULL;
+                ti->pDeskInfo = NULL;
             }
 
             W32Thread->ThreadInfo = ti;
@@ -528,9 +526,10 @@ GetW32ThreadInfo(VOID)
                 ProbeForWrite(Teb,
                               sizeof(TEB),
                               sizeof(ULONG));
-
+       // FIXME PLEASE! it's a ref pointer and not user data! Use ClientThreadInfo!
                 Teb->Win32ThreadInfo = UserHeapAddressToUser(W32Thread->ThreadInfo);
-                ci->pClientThreadInfo = &ti->ClientThreadInfo;
+                ci->pClientThreadInfo = &ti->ClientThreadInfo; // FIXME!
+                ci->ppi = ti->ppi;
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {

@@ -175,7 +175,20 @@ static void vbo_exec_bind_arrays( GLcontext *ctx )
          exec->vtx.inputs[attr + 16] = &vbo->generic_currval[attr];
       }
       map = vbo->map_vp_arb;
+
+      /* check if VERT_ATTRIB_POS is not read but VERT_BIT_GENERIC0 is read.
+       * In that case we effectively need to route the data from
+       * glVertexAttrib(0, val) calls to feed into the GENERIC0 input.
+       */
+      if ((ctx->VertexProgram._Current->Base.InputsRead & VERT_BIT_POS) == 0 &&
+          (ctx->VertexProgram._Current->Base.InputsRead & VERT_BIT_GENERIC0)) {
+         exec->vtx.inputs[16] = exec->vtx.inputs[0];
+         exec->vtx.attrsz[16] = exec->vtx.attrsz[0];
+         exec->vtx.attrsz[0] = 0;
+      }
       break;
+   default:
+      assert(0);
    }
 
    /* Make all active attributes (including edgeflag) available as

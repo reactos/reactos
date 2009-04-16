@@ -44,7 +44,7 @@ CAPTION "Nutolusio darbalaukio prisijungimas"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "Prisijungti",IDOK,147,245,50,14
-    PUSHBUTTON      "Atðaukti",IDCANCEL,203,245,50,14
+    PUSHBUTTON      "Atsisakyti",IDCANCEL,203,245,50,14
     CONTROL         "",IDC_TAB,"SysTabControl32",0x0,7,50,246,190
 END
 
@@ -57,9 +57,9 @@ BEGIN
     IDS_HIGHCOLOR15         "32,768 spalvos (15 bitø)"
     IDS_HIGHCOLOR16         "65,536 spalvos (16 bitø)"
     IDS_HIGHCOLOR24         "16,777,216 spalvø (24 bitai)"
-    IDS_PIXEL               "%lux%lu taðkai"
+    IDS_PIXEL               "%lux%lu taðkø"
     IDS_FULLSCREEN          "Visas ekranas"
-    IDS_BROWSESERVER        "<Narðyti...>"
+    IDS_BROWSESERVER        "<Daugiau...>"
     IDS_HEADERTEXT1         "Nuotolinis"
     IDS_HEADERTEXT2         "Darbalaukis"
 END

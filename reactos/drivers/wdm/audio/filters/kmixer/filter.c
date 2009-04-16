@@ -18,8 +18,7 @@ Dispatch_fnDeviceIoControl(
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    DPRINT1("Dispatch_fnDeviceIoControl Unhandeled %x\n", IoStack->Parameters.DeviceIoControl.IoControlCode);
-    DbgBreakPoint();
+    UNIMPLEMENTED
 
     Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
     Irp->IoStatus.Information = 0;
@@ -33,7 +32,7 @@ Dispatch_fnRead(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
-    DPRINT1("Dispatch_fnRead called DeviceObject %p Irp %p\n", DeviceObject);
+    UNIMPLEMENTED
 
     Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
     Irp->IoStatus.Information = 0;
@@ -47,7 +46,7 @@ Dispatch_fnWrite(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
-    DPRINT1("Dispatch_fnWrite called DeviceObject %p Irp %p\n", DeviceObject);
+    UNIMPLEMENTED
 
     Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
     Irp->IoStatus.Information = 0;
@@ -61,9 +60,7 @@ Dispatch_fnFlush(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
-    DPRINT1("Dispatch_fnFlush called DeviceObject %p Irp %p\n", DeviceObject);
-    //FIXME
-    // cleanup resources
+    UNIMPLEMENTED
     Irp->IoStatus.Status = STATUS_SUCCESS;
     Irp->IoStatus.Information = 0;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -76,10 +73,8 @@ Dispatch_fnClose(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
-    DPRINT1("Dispatch_fnClose called DeviceObject %p Irp %p\n", DeviceObject);
+    UNIMPLEMENTED
 
-    //FIXME
-    // cleanup resources
     Irp->IoStatus.Status = STATUS_SUCCESS;
     Irp->IoStatus.Information = 0;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -92,7 +87,7 @@ Dispatch_fnQuerySecurity(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
-    DPRINT1("Dispatch_fnQuerySecurity called DeviceObject %p Irp %p\n", DeviceObject);
+    UNIMPLEMENTED
 
     Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
     Irp->IoStatus.Information = 0;
@@ -107,7 +102,7 @@ Dispatch_fnSetSecurity(
     PIRP Irp)
 {
 
-    DPRINT1("Dispatch_fnSetSecurity called DeviceObject %p Irp %p\n", DeviceObject);
+    UNIMPLEMENTED
 
     Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
     Irp->IoStatus.Information = 0;
@@ -128,7 +123,7 @@ Dispatch_fnFastDeviceIoControl(
     PIO_STATUS_BLOCK IoStatus,
     PDEVICE_OBJECT DeviceObject)
 {
-    DPRINT1("Dispatch_fnFastDeviceIoControl called DeviceObject %p Irp %p\n", DeviceObject);
+    UNIMPLEMENTED
 
 
     return FALSE;
@@ -147,7 +142,7 @@ Dispatch_fnFastRead(
     PIO_STATUS_BLOCK IoStatus,
     PDEVICE_OBJECT DeviceObject)
 {
-    DPRINT1("Dispatch_fnFastRead called DeviceObject %p Irp %p\n", DeviceObject);
+    UNIMPLEMENTED
 
     return FALSE;
 
@@ -165,7 +160,7 @@ Dispatch_fnFastWrite(
     PIO_STATUS_BLOCK IoStatus,
     PDEVICE_OBJECT DeviceObject)
 {
-    DPRINT1("Dispatch_fnFastWrite called DeviceObject %p Irp %p\n", DeviceObject);
+    UNIMPLEMENTED
 
     return FALSE;
 }
@@ -200,7 +195,7 @@ DispatchCreateKMix(
     IoStatus = IoGetCurrentIrpStackLocation(Irp);
     Buffer = IoStatus->FileObject->FileName.Buffer;
 
-    DPRINT1("DispatchCreateKMix entered\n");
+    DPRINT("DispatchCreateKMix entered\n");
 
     if (Buffer)
     {
@@ -219,7 +214,7 @@ DispatchCreateKMix(
     /* allocate object header */
     Status = KsAllocateObjectHeader(&ObjectHeader, 0, NULL, Irp, &DispatchTable);
 
-    DPRINT1("KsAllocateObjectHeader result %x\n", Status);
+    DPRINT("KsAllocateObjectHeader result %x\n", Status);
     /* complete the irp */
     Irp->IoStatus.Information = 0;
     Irp->IoStatus.Status = Status;

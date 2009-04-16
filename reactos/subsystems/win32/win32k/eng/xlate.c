@@ -95,7 +95,7 @@ ClosestColorMatch(XLATEGDI *XlateGDI, LPPALETTEENTRY SourceColor,
 }
 
 static __inline VOID
-BitMasksFromPal(USHORT PalType, PPALGDI Palette,
+BitMasksFromPal(USHORT PalType, PPALETTE Palette,
                 PULONG RedMask, PULONG BlueMask, PULONG GreenMask)
 {
    static const union { PALETTEENTRY Color; ULONG Mask; } Red   = {{0xFF, 0x00, 0x00}};
@@ -152,8 +152,8 @@ IntEngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
 {
    XLATEOBJ *XlateObj;
    XLATEGDI *XlateGDI;
-   PALGDI *SourcePalGDI = 0;
-   PALGDI *DestPalGDI = 0;
+   PALETTE *SourcePalGDI = 0;
+   PALETTE *DestPalGDI = 0;
    ULONG SourceRedMask = 0, SourceGreenMask = 0, SourceBlueMask = 0;
    ULONG DestRedMask = 0, DestGreenMask = 0, DestBlueMask = 0;
    ULONG i;
@@ -297,7 +297,7 @@ IntEngCreateMonoXlate(
 {
    XLATEOBJ *XlateObj;
    XLATEGDI *XlateGDI;
-   PALGDI *SourcePalGDI;
+   PALETTE *SourcePalGDI;
 
    XlateGDI = EngAllocMem(0, sizeof(XLATEGDI), TAG_XLATEOBJ);
    if (XlateGDI == NULL)
@@ -363,7 +363,7 @@ IntEngCreateSrcMonoXlate(HPALETTE PaletteDest,
 {
    XLATEOBJ *XlateObj;
    XLATEGDI *XlateGDI;
-   PALGDI *DestPalGDI;
+   PALETTE *DestPalGDI;
 
    DestPalGDI = PALETTE_LockPalette(PaletteDest);
    if (DestPalGDI == NULL)
@@ -450,7 +450,7 @@ IntCreateXlateForBlt(PDC pDCDest, PDC pDCSrc, SURFACE* psurfDest, SURFACE* psurf
 {
 	XLATEOBJ *XlateObj;
 	HPALETTE DestPalette, SourcePalette;
-	PDC_ATTR pDc_Attr;
+	PDC_ATTR pdcattr;
 
 	DPRINT("Enter IntCreateXlateFromDCs\n");
 
@@ -476,9 +476,8 @@ IntCreateXlateForBlt(PDC pDCDest, PDC pDCSrc, SURFACE* psurfDest, SURFACE* psurf
 		}
 		else
 		{
-			pDc_Attr = pDCSrc->pDc_Attr;
-			if (!pDc_Attr) pDc_Attr = &pDCSrc->Dc_Attr;
-			XlateObj = IntEngCreateMonoXlate(0, DestPalette, SourcePalette, pDc_Attr->crBackgroundClr);
+			pdcattr = pDCSrc->pdcattr;
+			XlateObj = IntEngCreateMonoXlate(0, DestPalette, SourcePalette, pdcattr->crBackgroundClr);
 		}
 	}
 	else
@@ -488,7 +487,7 @@ IntCreateXlateForBlt(PDC pDCDest, PDC pDCSrc, SURFACE* psurfDest, SURFACE* psurf
 			/* DIB sections need special handling */
 			if (psurfSrc->hSecure)
 			{
-				PPALGDI ppal = PALETTE_LockPalette(psurfSrc->hDIBPalette);
+				PPALETTE ppal = PALETTE_LockPalette(psurfSrc->hDIBPalette);
 				if (ppal)
 				{
 					XlateObj = IntEngCreateSrcMonoXlate(DestPalette, ((ULONG*)ppal->IndexedColors)[0], ((ULONG*)ppal->IndexedColors)[1]);
@@ -499,9 +498,8 @@ IntCreateXlateForBlt(PDC pDCDest, PDC pDCSrc, SURFACE* psurfDest, SURFACE* psurf
 			}
 			else
 			{
-				pDc_Attr = pDCDest->pDc_Attr;
-				if (!pDc_Attr) pDc_Attr = &pDCDest->Dc_Attr;
-				XlateObj = IntEngCreateSrcMonoXlate(DestPalette, pDc_Attr->crForegroundClr, pDc_Attr->crBackgroundClr);
+				pdcattr = pDCDest->pdcattr;
+				XlateObj = IntEngCreateSrcMonoXlate(DestPalette, pdcattr->crForegroundClr, pdcattr->crBackgroundClr);
 			}
 		}
 		else
@@ -566,7 +564,7 @@ ULONG APIENTRY
 XLATEOBJ_iXlate(XLATEOBJ *XlateObj, ULONG Color)
 {
    XLATEGDI *XlateGDI;
-   PALGDI *PalGDI;
+   PALETTE *PalGDI;
    ULONG Closest;
 
    /* Return the original color if there's no color translation object. */
@@ -625,7 +623,7 @@ XLATEOBJ_cGetPalette(XLATEOBJ *XlateObj, ULONG PalOutType, ULONG cPal,
 {
    HPALETTE hPalette;
    XLATEGDI *XlateGDI;
-   PALGDI *PalGDI;
+   PALETTE *PalGDI;
    ULONG *InPal;
 
    XlateGDI = ObjToGDI(XlateObj, XLATE);

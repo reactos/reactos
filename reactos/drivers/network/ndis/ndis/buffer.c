@@ -424,7 +424,7 @@ NdisAllocatePacket(
 
         KeReleaseSpinLock(&Pool->SpinLock.SpinLock, OldIrql);
 
-        RtlZeroMemory(&Temp->Private, sizeof(NDIS_PACKET_PRIVATE));
+        RtlZeroMemory(Temp, sizeof(NDIS_PACKET));
         Temp->Private.Pool = Pool;
 
         *Packet = Temp;
@@ -578,33 +578,6 @@ NdisBufferVirtualAddress(
  */
 {
     return MmGetSystemAddressForMdl(Buffer);
-}
-
-
-/*
- * @unimplemented
- */
-VOID
-EXPORT
-NdisCopyBuffer(
-    OUT PNDIS_STATUS    Status,
-    OUT PNDIS_BUFFER    *Buffer,
-    IN  NDIS_HANDLE     PoolHandle,
-    IN  PVOID           MemoryDescriptor,
-    IN  UINT            Offset,
-    IN  UINT            Length)
-/*
- * FUNCTION: Returns a new buffer descriptor for a (partial) buffer
- * ARGUMENTS:
- *     Status           = Address of a buffer to place status of operation
- *     Buffer           = Address of a buffer to place new buffer descriptor
- *     PoolHandle       = Handle returned by NdisAllocateBufferPool
- *     MemoryDescriptor = Pointer to a memory descriptor (possibly NDIS_BUFFER)
- *     Offset           = Offset in buffer to start copying
- *     Length           = Number of bytes to copy
- */
-{
-    *Status = NDIS_STATUS_FAILURE;
 }
 
 
@@ -972,45 +945,6 @@ NdisGetFirstBufferFromPacket(
         *_TotalBufferLength += MmGetMdlByteCount(Buffer);
         Buffer = Buffer->Next;
     }
-}
-
-
-/*
- * @unimplemented
- */
-VOID
-EXPORT
-NdisReturnPackets(
-    IN  PNDIS_PACKET    *PacketsToReturn,
-    IN  UINT            NumberOfPackets)
-/*
- * FUNCTION: Releases ownership of one or more packets
- * ARGUMENTS:
- *     PacketsToReturn = Pointer to an array of pointers to packet descriptors
- *     NumberOfPackets = Number of pointers in descriptor pointer array
- */
-{
-    UNIMPLEMENTED
-}
-
-
-/*
- * @unimplemented
- */
-UINT
-EXPORT
-NdisPacketPoolUsage(
-    IN  NDIS_HANDLE PoolHandle)
-/*
- * FUNCTION:
- * ARGUMENTS:
- * NOTES:
- *    NDIS 5.0
- */
-{
-    UNIMPLEMENTED
-
-    return 0;
 }
 
 

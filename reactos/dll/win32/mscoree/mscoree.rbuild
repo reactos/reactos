@@ -1,6 +1,8 @@
 <module name="mscoree" type="win32dll" baseaddress="${BASEADDRESS_MSCOREE}" installbase="system32" installname="mscoree.dll">
 	<importlibrary definition="mscoree.spec" />
 	<include base="mscoree">.</include>
+	<include base="ReactOS">include/reactos/wine</include>
+	<define name="__WINESRC__" />
 	<library>wine</library>
 	<library>kernel32</library>
 	<library>advapi32</library>

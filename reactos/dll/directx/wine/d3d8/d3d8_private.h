@@ -35,9 +35,6 @@
 #include "d3d8.h"
 #include "wine/wined3d.h"
 
-/* Device caps */
-#define INITIAL_SHADER_HANDLE_TABLE_SIZE        64
-
 /* CreateVertexShader can return > 0xFFFF */
 #define VS_HIGHESTFIXEDFXF 0xF0000000
 
@@ -166,7 +163,16 @@ extern const IWineD3DDeviceParentVtbl d3d8_wined3d_device_parent_vtbl;
  * IDirect3DDevice8 implementation structure
  */
 
-typedef void * shader_handle;
+#define D3D8_INITIAL_HANDLE_TABLE_SIZE 64
+#define D3D8_INVALID_HANDLE ~0U
+
+struct d3d8_handle_table
+{
+    void **entries;
+    void **free_entries;
+    UINT table_size;
+    UINT entry_count;
+};
 
 struct FvfToDecl
 {
@@ -182,10 +188,7 @@ struct IDirect3DDevice8Impl
     LONG                         ref;
 /* But what about baseVertexIndex in state blocks? hmm... it may be a better idea to pass this to wined3d */
     IWineD3DDevice               *WineD3DDevice;
-    DWORD                         shader_handle_table_size;
-    DWORD                         allocated_shader_handles;
-    shader_handle                *shader_handles;
-    shader_handle                *free_shader_handles;
+    struct d3d8_handle_table handle_table;
 
     /* FVF management */
     struct FvfToDecl       *decls;
@@ -299,7 +302,6 @@ struct IDirect3DResource8Impl
     /* IDirect3DResource8 fields */
     IWineD3DResource             *wineD3DResource;
 };
-extern HRESULT WINAPI IDirect3DResource8Impl_GetDevice(LPDIRECT3DRESOURCE8 iface, IDirect3DDevice8** ppDevice);
 
 /* ---------------------- */
 /* IDirect3DVertexBuffer8 */
@@ -320,7 +322,7 @@ struct IDirect3DVertexBuffer8Impl
     LONG                              ref;
 
     /* IDirect3DResource8 fields */
-    IWineD3DVertexBuffer             *wineD3DVertexBuffer;
+    IWineD3DBuffer *wineD3DVertexBuffer;
 
     /* Parent reference */
     LPDIRECT3DDEVICE8                 parentDevice;
@@ -622,6 +624,8 @@ typedef struct IDirect3DPixelShader8Impl {
  *
  * to see how not defined it here
  */
+D3DFORMAT d3dformat_from_wined3dformat(WINED3DFORMAT format);
+WINED3DFORMAT wined3dformat_from_d3dformat(D3DFORMAT format);
 void load_local_constants(const DWORD *d3d8_elements, IWineD3DVertexShader *wined3d_vertex_shader);
 UINT convert_to_wined3d_declaration(const DWORD *d3d8_elements, DWORD *d3d8_elements_size, WINED3DVERTEXELEMENT **wined3d_elements);
 size_t parse_token(const DWORD* pToken);

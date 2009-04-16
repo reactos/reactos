@@ -1,12 +1,9 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Kernel Streaming
- * FILE:            drivers/multimedia/portcls/irpstream.c
+ * FILE:            drivers/wdm/audio/backpln/portcls/irpstream.c
  * PURPOSE:         IRP Stream handling
  * PROGRAMMER:      Johannes Anderwald
- *
- * HISTORY:
- *                  27 Jan 07   Created
  */
 
 #include "private.h"
@@ -177,8 +174,6 @@ IIrpQueue_fnAddMapping(
         ExInterlockedInsertTailList(&This->ListHead, &Mapping->Entry, &This->Lock);
 
     (void)InterlockedIncrement((volatile long*)&This->NumMappings);
-
-
 
     if (Irp)
     {

@@ -44,4 +44,5 @@ BEGIN
     IDS_HISTORY         "การตั้งค่าตั้งต้น\\ประวัติใช้งาน"
     IDS_COOKIES         "คุกกี้"
     IDS_PROGRAMFILES    "%SystemDrive%\\โปรแกรมไฟล์"
+    IDS_COMMONFILES    "Common Files"
 END

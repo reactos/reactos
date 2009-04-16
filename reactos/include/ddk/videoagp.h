@@ -20,8 +20,8 @@
  *
  */
 
-#ifndef __VIDEOAGP_H
-#define __VIDEOAGP_H
+#ifndef __VIDEOAGP_H__
+#define __VIDEOAGP_H__
 
 #include "video.h"
 
@@ -120,4 +120,4 @@ VideoPortGetAgpServices(
 }
 #endif
 
-#endif /* __VIDEOAGP_H */
+#endif /* __VIDEOAGP_H__ */

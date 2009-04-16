@@ -18,6 +18,7 @@
 #define D3DLIGHTCAPS_POINT                          0x00000001
 #define D3DLIGHTCAPS_SPOT                           0x00000002
 #define D3DLIGHTCAPS_DIRECTIONAL                    0x00000004
+#define D3DLIGHTCAPS_PARALLELPOINT                  0x00000008
 #define D3DPMISCCAPS_MASKPLANES                     0x00000001
 #define D3DPMISCCAPS_MASKZ                          0x00000002
 #define D3DPMISCCAPS_LINEPATTERNREP                 0x00000004
@@ -197,6 +198,7 @@
 #define D3DSTENCILCAPS_INVERT                       0x00000020
 #define D3DSTENCILCAPS_INCR                         0x00000040
 #define D3DSTENCILCAPS_DECR                         0x00000080
+#define D3DSTENCILCAPS_TWOSIDED                     0x00000100
 #define D3DTEXOPCAPS_DISABLE                        0x00000001
 #define D3DTEXOPCAPS_SELECTARG1                     0x00000002
 #define D3DTEXOPCAPS_SELECTARG2                     0x00000004

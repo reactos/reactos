@@ -602,7 +602,7 @@ static void MSVIDEO_UnmapMsg16To32(UINT msg, LPVOID data16, LPDWORD lParam1, LPD
     case ICM_GETINFO:
         {
             ICINFO *ici = (ICINFO*)(*lParam1);
-            ICINFO16 *ici16 = (ICINFO16*)data16;
+            ICINFO16 *ici16 = data16;
 
             UNCOPY(ici, fccType);
             UNCOPY(ici, fccHandler);

@@ -43,22 +43,19 @@
 #include <pseh/pseh2.h>
 
 /* FIXME: Use ntgdi.h then cleanup... */
-HGDIOBJ WINAPI  NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj);
-BOOL WINAPI NtGdiPatBlt(HDC hdcDst, INT x, INT y, INT cx, INT cy, DWORD rop4);
 LONG WINAPI GdiGetCharDimensions(HDC, LPTEXTMETRICW, LONG *);
 BOOL FASTCALL IsMetaFile(HDC);
 
-extern PW32PROCESSINFO g_pi;
-extern PW32PROCESSINFO g_kpi;
+extern PPROCESSINFO g_ppi;
+extern ULONG_PTR g_ulSharedDelta;
 extern PSERVERINFO g_psi;
 
 static __inline PVOID
 SharedPtrToUser(PVOID Ptr)
 {
     ASSERT(Ptr != NULL);
-    ASSERT(g_pi != NULL);
-    ASSERT(g_pi->UserHeapDelta != 0);
-    return (PVOID)((ULONG_PTR)Ptr - g_pi->UserHeapDelta);
+    ASSERT(g_ulSharedDelta != 0);
+    return (PVOID)((ULONG_PTR)Ptr - g_ulSharedDelta);
 }
 
 static __inline PVOID
@@ -88,15 +85,14 @@ static __inline PVOID
 SharedPtrToKernel(PVOID Ptr)
 {
     ASSERT(Ptr != NULL);
-    ASSERT(g_pi != NULL);
-    ASSERT(g_pi->UserHeapDelta != 0);
-    return (PVOID)((ULONG_PTR)Ptr + g_pi->UserHeapDelta);
+    ASSERT(g_ulSharedDelta != 0);
+    return (PVOID)((ULONG_PTR)Ptr + g_ulSharedDelta);
 }
 
 static __inline BOOL
 IsThreadHooked(PW32THREADINFO ti)
 {
-    return ti->Hooks != 0;
+    return ti->fsHooks != 0;
 }
 
 static __inline PDESKTOPINFO
@@ -107,7 +103,7 @@ GetThreadDesktopInfo(VOID)
 
     ti = GetW32ThreadInfo();
     if (ti != NULL)
-        di = DesktopPtrToUser(ti->Desktop);
+        di = DesktopPtrToUser(ti->pDeskInfo);
 
     return di;
 }
@@ -120,3 +116,4 @@ PVOID FASTCALL ValidateHandleNoErr(HANDLE handle, UINT uType);
 PWINDOW FASTCALL ValidateHwndNoErr(HWND hwnd);
 VOID FASTCALL GetConnected(VOID);
 BOOL FASTCALL DefSetText(HWND hWnd, PCWSTR String, BOOL Ansi);
+BOOL FASTCALL TestWindowProcess(PWINDOW);

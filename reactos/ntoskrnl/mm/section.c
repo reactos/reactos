@@ -657,8 +657,11 @@ MiReadPage(PMEMORY_AREA MemoryArea,
    }
    else
    {
+      PEPROCESS Process;
+      KIRQL Irql;
       PVOID PageAddr;
       ULONG CacheSegOffset;
+
       /*
        * Allocate a page, this is rather complicated by the possibility
        * we might have to move other things out of memory
@@ -692,7 +695,8 @@ MiReadPage(PMEMORY_AREA MemoryArea,
          }
       }
 
-      PageAddr = MmCreateHyperspaceMapping(*Page);
+      Process = PsGetCurrentProcess();
+      PageAddr = MiMapPageInHyperSpace(Process, *Page, &Irql);
       CacheSegOffset = BaseOffset + CacheSeg->Bcb->CacheSegmentSize - FileOffset;
       Length = RawLength - SegOffset;
       if (Length <= CacheSegOffset && Length <= PAGE_SIZE)
@@ -706,7 +710,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
       else
       {
          memcpy(PageAddr, (char*)BaseAddress + FileOffset - BaseOffset, CacheSegOffset);
-         MmDeleteHyperspaceMapping(PageAddr);
+         MiUnmapPageInHyperSpace(Process, PageAddr, Irql);
          CcRosReleaseCacheSegment(Bcb, CacheSeg, TRUE, FALSE, FALSE);
          Status = CcRosGetCacheSegment(Bcb,
                                        FileOffset + CacheSegOffset,
@@ -731,7 +735,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
                return Status;
             }
          }
-         PageAddr = MmCreateHyperspaceMapping(*Page);
+         PageAddr = MiMapPageInHyperSpace(Process, *Page, &Irql);
          if (Length < PAGE_SIZE)
          {
             memcpy((char*)PageAddr + CacheSegOffset, BaseAddress, Length - CacheSegOffset);
@@ -741,7 +745,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
             memcpy((char*)PageAddr + CacheSegOffset, BaseAddress, PAGE_SIZE - CacheSegOffset);
          }
       }
-      MmDeleteHyperspaceMapping(PageAddr);
+      MiUnmapPageInHyperSpace(Process, PageAddr, Irql);
       CcRosReleaseCacheSegment(Bcb, CacheSeg, TRUE, FALSE, FALSE);
    }
    return(STATUS_SUCCESS);

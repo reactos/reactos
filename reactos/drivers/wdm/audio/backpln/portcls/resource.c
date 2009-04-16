@@ -1,10 +1,10 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS
- * FILE:            drivers/multimedia/portcls/helpers/ResourceList.c
+ * FILE:            drivers/wdm/audio/backpln/portcls/resource.c
  * PURPOSE:         Port Class driver / ResourceList implementation
  * PROGRAMMER:      Andrew Greenwood
- *
+ *                  Johannes Anderwald
  * HISTORY:
  *                  27 Jan 07   Created
  */
@@ -24,20 +24,18 @@ typedef struct CResourceList
     PCM_RESOURCE_LIST UntranslatedResourceList;
 } IResourceListImpl;
 
-
-
 /*
     Basic IUnknown methods
 */
 
 NTSTATUS
-STDMETHODCALLTYPE
+NTAPI
 IResourceList_fnQueryInterface(
     IResourceList* iface,
     IN  REFIID refiid,
     OUT PVOID* Output)
 {
-    WCHAR Buffer[100];
+    UNICODE_STRING GuidString;
 
     IResourceListImpl * This = (IResourceListImpl*)iface;
     if (IsEqualGUIDAligned(refiid, &IID_IResourceList) ||
@@ -47,22 +45,18 @@ IResourceList_fnQueryInterface(
         InterlockedIncrement(&This->ref);
         return STATUS_SUCCESS;
     }
-#if 0
-    else if (IsEqualGUIDAligned(refiid, &IID_IDrmPort) ||
-             IsEqualGUIDAligned(refiid, &IID_IDrmPort2))
+
+    if (RtlStringFromGUID(refiid, &GuidString) == STATUS_SUCCESS)
     {
-        return NewIDrmPort((PDRMPORT2*)Output);
+        DPRINT1("IResourceList_QueryInterface no interface!!! iface %S\n", GuidString.Buffer);
+        RtlFreeUnicodeString(&GuidString);
     }
-#endif
-    StringFromCLSID(refiid, Buffer);
-    DPRINT1("IResourceList_fnQueryInterface no interface!!! iface %S\n", Buffer);
-    KeBugCheckEx(0, 0, 0, 0, 0);
 
     return STATUS_UNSUCCESSFUL;
 }
 
 ULONG
-STDMETHODCALLTYPE
+NTAPI
 IResourceList_fnAddRef(
     IResourceList* iface)
 {
@@ -72,7 +66,7 @@ IResourceList_fnAddRef(
 }
 
 ULONG
-STDMETHODCALLTYPE
+NTAPI
 IResourceList_fnRelease(
     IResourceList* iface)
 {
@@ -99,7 +93,7 @@ IResourceList_fnRelease(
 */
 
 ULONG
-STDMETHODCALLTYPE
+NTAPI
 IResourceList_fnNumberOfEntries(IResourceList* iface)
 {
     IResourceListImpl * This = (IResourceListImpl*)iface;
@@ -108,7 +102,7 @@ IResourceList_fnNumberOfEntries(IResourceList* iface)
 }
 
 ULONG
-STDMETHODCALLTYPE
+NTAPI
 IResourceList_fnNumberOfEntriesOfType(
     IResourceList* iface,
     IN  CM_RESOURCE_TYPE Type)
@@ -122,7 +116,7 @@ IResourceList_fnNumberOfEntriesOfType(
     for (Index = 0; Index < This->TranslatedResourceList->List[0].PartialResourceList.Count; Index ++ )
     {
         PartialDescriptor = &This->TranslatedResourceList->List[0].PartialResourceList.PartialDescriptors[Index];
-        DPRINT1("Descriptor Type %u\n", PartialDescriptor->Type);
+        DPRINT("Descriptor Type %u\n", PartialDescriptor->Type);
         if (PartialDescriptor->Type == Type)
         {
             /* Yay! Finally found one that matches! */
@@ -135,7 +129,7 @@ IResourceList_fnNumberOfEntriesOfType(
 }
 
 PCM_PARTIAL_RESOURCE_DESCRIPTOR
-STDMETHODCALLTYPE
+NTAPI
 IResourceList_fnFindTranslatedEntry(
     IResourceList* iface,
     IN  CM_RESOURCE_TYPE Type,
@@ -164,7 +158,7 @@ IResourceList_fnFindTranslatedEntry(
 }
 
 PCM_PARTIAL_RESOURCE_DESCRIPTOR
-STDMETHODCALLTYPE
+NTAPI
 IResourceList_fnFindUntranslatedEntry(
     IResourceList* iface,
     IN  CM_RESOURCE_TYPE Type,
@@ -192,7 +186,7 @@ IResourceList_fnFindUntranslatedEntry(
 }
 
 NTSTATUS
-STDMETHODCALLTYPE
+NTAPI
 IResourceList_fnAddEntry(
     IResourceList* iface,
     IN  PCM_PARTIAL_RESOURCE_DESCRIPTOR Translated,
@@ -248,7 +242,7 @@ IResourceList_fnAddEntry(
 }
 
 NTSTATUS
-STDMETHODCALLTYPE
+NTAPI
 IResourceList_fnAddEntryFromParent(
     IResourceList* iface,
     IN  IResourceList* Parent,
@@ -287,7 +281,7 @@ IResourceList_fnAddEntryFromParent(
 }
 
 PCM_RESOURCE_LIST
-STDMETHODCALLTYPE
+NTAPI
 IResourceList_fnTranslatedList(
     IResourceList* iface)
 {
@@ -297,7 +291,7 @@ IResourceList_fnTranslatedList(
 }
 
 PCM_RESOURCE_LIST
-STDMETHODCALLTYPE
+NTAPI
 IResourceList_fnUntranslatedList(
     IResourceList* iface)
 {
@@ -331,7 +325,9 @@ static const IResourceListVtbl vt_ResourceListVtbl =
 /*
     Factory for creating a resource list
 */
-PORTCLASSAPI NTSTATUS NTAPI
+PORTCLASSAPI
+NTSTATUS
+NTAPI
 PcNewResourceList(
     OUT PRESOURCELIST* OutResourceList,
     IN  PUNKNOWN OuterUnknown OPTIONAL,
@@ -344,8 +340,6 @@ PcNewResourceList(
     IResourceListImpl* NewList;
 
     /* TODO: Validate parameters */
-
-    DPRINT1("PcNewResourceList\n");
 
     NewList = AllocateItem(PoolType, sizeof(IResourceListImpl), TAG_PORTCLASS);
 
@@ -411,7 +405,7 @@ PcNewResourceSublist(
 
     Parent = (IResourceListImpl*)ParentList;
 
-    DPRINT1("PcNewResourceSublist entered\n");
+    DPRINT("PcNewResourceSublist entered\n");
 
     if (!Parent->TranslatedResourceList->List->PartialResourceList.Count ||
         !Parent->UntranslatedResourceList->List->PartialResourceList.Count)
@@ -453,6 +447,6 @@ PcNewResourceSublist(
 
     *OutResourceList = (IResourceList*)&NewList->lpVtbl;
 
-    DPRINT1("PcNewResourceSublist OutResourceList %p OuterUnknown %p ParentList %p\n", *OutResourceList, OuterUnknown, ParentList);
+    DPRINT("PcNewResourceSublist OutResourceList %p OuterUnknown %p ParentList %p\n", *OutResourceList, OuterUnknown, ParentList);
     return STATUS_SUCCESS;
 }

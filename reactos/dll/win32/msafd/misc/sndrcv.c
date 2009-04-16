@@ -98,7 +98,7 @@ WSPRecv(SOCKET Handle,
     NTSTATUS                Status;
     PVOID                   APCContext;
     PVOID                   APCFunction;
-    HANDLE                  Event;
+    HANDLE                  Event = NULL;
     HANDLE                  SockEvent;
     PSOCKET_INFORMATION     Socket;
 
@@ -130,18 +130,15 @@ WSPRecv(SOCKET Handle,
         {
             RecvInfo.TdiFlags |= TDI_RECEIVE_EXPEDITED;
         }
-        else
-        {
-            RecvInfo.TdiFlags |= TDI_RECEIVE_NORMAL;
-        }
 
         if (*ReceiveFlags & MSG_PEEK)
         {
             RecvInfo.TdiFlags |= TDI_RECEIVE_PEEK;
         }
 
-        if (*ReceiveFlags & MSG_PARTIAL) {
-            RecvInfo.TdiFlags |= TDI_RECEIVE_NORMAL;
+        if (*ReceiveFlags & MSG_PARTIAL)
+        {
+            RecvInfo.TdiFlags |= TDI_RECEIVE_PARTIAL;
         }
     }
 
@@ -180,7 +177,7 @@ WSPRecv(SOCKET Handle,
 
     /* Send IOCTL */
     Status = NtDeviceIoControlFile((HANDLE)Handle,
-        SockEvent,
+        Event ? Event : SockEvent,
         APCFunction,
         APCContext,
         IOSB,
@@ -253,7 +250,7 @@ WSPRecvFrom(SOCKET Handle,
     NTSTATUS                    Status;
     PVOID                       APCContext;
     PVOID                       APCFunction;
-    HANDLE                      Event;
+    HANDLE                      Event = NULL;
     HANDLE                      SockEvent;
     PSOCKET_INFORMATION         Socket;
 
@@ -285,10 +282,6 @@ WSPRecvFrom(SOCKET Handle,
         {
             RecvInfo.TdiFlags |= TDI_RECEIVE_EXPEDITED;
         }
-        else
-        {
-            RecvInfo.TdiFlags |= TDI_RECEIVE_NORMAL;
-        }
 
         if (*ReceiveFlags & MSG_PEEK)
         {
@@ -297,7 +290,7 @@ WSPRecvFrom(SOCKET Handle,
 
         if (*ReceiveFlags & MSG_PARTIAL)
         {
-            RecvInfo.TdiFlags |= TDI_RECEIVE_NORMAL;
+            RecvInfo.TdiFlags |= TDI_RECEIVE_PARTIAL;
         }
     }
 
@@ -336,7 +329,7 @@ WSPRecvFrom(SOCKET Handle,
 
     /* Send IOCTL */
     Status = NtDeviceIoControlFile((HANDLE)Handle,
-                                    SockEvent,
+                                    Event ? Event : SockEvent,
                                     APCFunction,
                                     APCContext,
                                     IOSB,
@@ -395,7 +388,7 @@ WSPSend(SOCKET Handle,
     NTSTATUS                Status;
     PVOID                   APCContext;
     PVOID                   APCFunction;
-    HANDLE                  Event;
+    HANDLE                  Event = NULL;
     HANDLE                  SockEvent;
     PSOCKET_INFORMATION     Socket;
 
@@ -463,7 +456,7 @@ WSPSend(SOCKET Handle,
 
     /* Send IOCTL */
     Status = NtDeviceIoControlFile((HANDLE)Handle,
-                                    SockEvent,
+                                    Event ? Event : SockEvent,
                                     APCFunction,
                                     APCContext,
                                     IOSB,
@@ -516,7 +509,7 @@ WSPSendTo(SOCKET Handle,
     NTSTATUS                Status;
     PVOID                   APCContext;
     PVOID                   APCFunction;
-    HANDLE                  Event;
+    HANDLE                  Event = NULL;
     PTRANSPORT_ADDRESS      RemoteAddress;
     UCHAR                   TdiBuffer[0x16];
     PSOCKADDR               BindAddress;
@@ -593,7 +586,7 @@ WSPSendTo(SOCKET Handle,
 
     /* Send IOCTL */
     Status = NtDeviceIoControlFile((HANDLE)Handle,
-             SockEvent,
+             Event ? Event : SockEvent,
              APCFunction,
              APCContext,
              IOSB,

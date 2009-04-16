@@ -281,7 +281,7 @@ DxEngGetHdevData(HDEV hDev,
                  DXEGSHDEVDATA Type)
 {
     DWORD_PTR retVal = 0;
-    PGDIDEVICE PDev = (PGDIDEVICE)hDev;
+    PPDEVOBJ PDev = (PPDEVOBJ)hDev;
 
     DPRINT1("ReactX Calling : DxEngGetHdevData DXEGSHDEVDATA : %ld\n", Type);
 
@@ -416,7 +416,7 @@ DxEngSetHdevData(HDEV hDev,
 
     if ( Type == DxEGShDevData_dd_nCount )
     {
-        ((PGDIDEVICE)hDev)->DxDd_nCount = Data;
+        ((PPDEVOBJ)hDev)->DxDd_nCount = Data;
         retVal = TRUE; // Set
     }
     return retVal;
@@ -430,7 +430,7 @@ DxEngSetHdevData(HDEV hDev,
 * DC states depending on what value is passed in its second parameter:
 * 1. If the DC is full screen
 * 2. Get Complexity of visible region
-* 3. Get Driver hdev, which is pPDev
+* 3. Get Driver hdev, which is ppdev
 *
 * @param HDC hdc
 * The DC handle
@@ -438,7 +438,7 @@ DxEngSetHdevData(HDEV hDev,
 * @param DWORD type
 * value 1 = Is DC fullscreen
 * value 2 = Get Complexity of visible region.
-* value 3 = Get Driver hdev, which is a pPDev.
+* value 3 = Get Driver hdev, which is a ppdev.
 *
 * @return
 * Return one of the type values
@@ -462,7 +462,7 @@ DxEngGetDCState(HDC hDC,
         switch (type)
         {
             case 1:
-                retVal = (DWORD_PTR) pDC->DC_Flags & DC_FLAG_FULLSCREEN;
+                retVal = (DWORD_PTR) pDC->fs & DC_FLAG_FULLSCREEN;
                 break;
             case 2:
                 UNIMPLEMENTED;
@@ -470,7 +470,7 @@ DxEngGetDCState(HDC hDC,
             case 3:
             {
                 /* Return the HDEV of this DC. */
-                retVal = (DWORD_PTR) pDC->pPDev;
+                retVal = (DWORD_PTR) pDC->ppdev;
                 break;
             }
             default:
@@ -514,7 +514,7 @@ DxEngIncDispUniq()
 * The function DxEngLockHdev lock the internal PDEV
 *
 * @param HDEV type
-* it is a pointer to win32k internal pdev struct known as PGDIDEVICE
+* it is a pointer to win32k internal pdev struct known as PPDEVOBJ
 
 * @return
 * This function returns TRUE no matter what.
@@ -527,14 +527,14 @@ BOOLEAN
 APIENTRY
 DxEngLockHdev(HDEV hDev)
 {
-    PGDIDEVICE pPDev = (PGDIDEVICE)hDev;
+    PPDEVOBJ ppdev = (PPDEVOBJ)hDev;
     PERESOURCE Resource;
 
     DPRINT1("ReactX Calling : DxEngLockHdev \n");
 
     DPRINT1("hDev                   : 0x%08lx\n",hDev);
 
-    Resource = pPDev->hsemDevLock;
+    Resource = ppdev->hsemDevLock;
 
     if (Resource)
     {
@@ -551,7 +551,7 @@ DxEngLockHdev(HDEV hDev)
 * The function DxEngUnlockHdev unlock the internal PDEV
 *
 * @param HDEV type
-* it is a pointer to win32k internal pdev struct known as PGDIDEVICE
+* it is a pointer to win32k internal pdev struct known as PPDEVOBJ
 
 * @return
 * This function returns TRUE no matter what.
@@ -564,8 +564,8 @@ BOOLEAN
 APIENTRY
 DxEngUnlockHdev(HDEV hDev)
 {
-    PGDIDEVICE pPDev = (PGDIDEVICE)hDev;
-    PERESOURCE Resource = pPDev->hsemDevLock;
+    PPDEVOBJ ppdev = (PPDEVOBJ)hDev;
+    PERESOURCE Resource = ppdev->hsemDevLock;
 
     DPRINT1("ReactX Calling : DxEngUnlockHdev \n");
 
@@ -585,7 +585,7 @@ BOOLEAN
 APIENTRY
 DxEngReferenceHdev(HDEV hDev)
 {
-    IntGdiReferencePdev((PGDIDEVICE) hDev);
+    IntGdiReferencePdev((PPDEVOBJ) hDev);
     /* ALWAYS return true */
     return TRUE;
 }
@@ -675,7 +675,7 @@ BOOLEAN
 APIENTRY
 DxEngIsHdevLockedByCurrentThread(HDEV hDev)
 {   // base on EngIsSemaphoreOwnedByCurrentThread w/o the Ex call.
-    PERESOURCE pSem = ((PGDIDEVICE)hDev)->hsemDevLock;
+    PERESOURCE pSem = ((PPDEVOBJ)hDev)->hsemDevLock;
     return pSem->OwnerEntry.OwnerThread == (ERESOURCE_THREAD)PsGetCurrentThread();
 }
 
@@ -687,7 +687,7 @@ BOOLEAN
 APIENTRY
 DxEngUnreferenceHdev(HDEV hDev)
 {
-    IntGdiUnreferencePdev((PGDIDEVICE) hDev, 0);
+    IntGdiUnreferencePdev((PPDEVOBJ) hDev, 0);
     return TRUE; // Always true.
 }
 
@@ -759,9 +759,9 @@ DxEngSetDCState(HDC hDC, DWORD SetType, DWORD Set)
       if (SetType == 1)
       {   
         if ( Set )
-            pDC->DC_Flags |= DC_FLAG_FULLSCREEN;
+            pDC->fs |= DC_FLAG_FULLSCREEN;
         else
-            pDC->DC_Flags &= ~DC_FLAG_FULLSCREEN;
+            pDC->fs &= ~DC_FLAG_FULLSCREEN;
         Ret = TRUE;
       }
       DC_UnlockDc(pDC);

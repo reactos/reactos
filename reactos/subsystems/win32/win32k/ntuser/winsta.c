@@ -556,6 +556,21 @@ NtUserCreateWindowStation(
    WindowStationObject->ScreenSaverActive = FALSE;
    WindowStationObject->ScreenSaverTimeOut = 10;
    WindowStationObject->SystemCursor = CurInfo;
+   
+   RtlZeroMemory(&WindowStationObject->UserPreferences, sizeof(USERPREFERENCESMASK));
+   /* Set all fields with default value = 1 : */
+   WindowStationObject->UserPreferences.bMenuAnimation = 1;
+   WindowStationObject->UserPreferences.bComboBoxAnimation = 1;
+   WindowStationObject->UserPreferences.bListBoxSmoothScrolling = 1;
+   WindowStationObject->UserPreferences.bGradientCaptions = 1;
+   WindowStationObject->UserPreferences.bHotTracking = 1;
+   WindowStationObject->UserPreferences.bMenuFade = 1;
+   WindowStationObject->UserPreferences.bSelectionFade = 1;
+   WindowStationObject->UserPreferences.bMenuFade = 1;
+   WindowStationObject->UserPreferences.bTooltipAnimation = 1;
+   WindowStationObject->UserPreferences.bTooltipFade = 1;
+   WindowStationObject->UserPreferences.bCursorShadow = 1;
+   WindowStationObject->UserPreferences.bUiEffects = 1;
 
    /* END FIXME loading from register */
 

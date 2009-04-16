@@ -58,11 +58,13 @@ typedef struct _MINIPORT_BUGCHECK_CONTEXT {
 
 /* a miniport's shared memory */
 typedef struct _MINIPORT_SHARED_MEMORY {
-    PDMA_ADAPTER      AdapterObject;
-    ULONG             Length;
-    PHYSICAL_ADDRESS  PhysicalAddress;
-    PVOID             VirtualAddress;
-    BOOLEAN           Cached;
+    PDMA_ADAPTER          AdapterObject;
+    ULONG                 Length;
+    PHYSICAL_ADDRESS      PhysicalAddress;
+    PVOID                 VirtualAddress;
+    BOOLEAN               Cached;
+    PNDIS_MINIPORT_BLOCK  Adapter;
+    PVOID                 Context;
 } MINIPORT_SHARED_MEMORY, *PMINIPORT_SHARED_MEMORY;
 
 /* A structure of WrapperConfigurationContext (not compatible with the

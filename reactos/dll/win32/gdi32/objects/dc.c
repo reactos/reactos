@@ -933,7 +933,7 @@ GetDCBrushColor(
   PDC_ATTR Dc_Attr;
 
   if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return CLR_INVALID;
-  return (COLORREF) Dc_Attr->ulPenClr;
+  return (COLORREF) Dc_Attr->ulBrushClr;
 }
 
 /*

@@ -512,8 +512,7 @@ static	LRESULT	ADPCM_FormatSuggest(PACMDRVFORMATSUGGEST adfs)
         if (ADPCM_GetFormatIndex(adfs->pwfxDst) == 0xFFFFFFFF) return ACMERR_NOTPOSSIBLE;
         break;
     default:
-        FIXME("\n");
-        break;
+        return ACMERR_NOTPOSSIBLE;
     }
 
     return MMSYSERR_NOERROR;

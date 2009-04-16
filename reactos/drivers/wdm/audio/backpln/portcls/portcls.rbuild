@@ -23,7 +23,6 @@
 	<file>irpstream.c</file>
 	<file>interrupt.c</file>
 	<file>drm.c</file>
-	<file>stubs.c</file>
 	<file>undoc.c</file>
 	<file>resource.c</file>
 	<file>registry.c</file>

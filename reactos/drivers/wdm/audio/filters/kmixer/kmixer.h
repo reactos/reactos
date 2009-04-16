@@ -5,7 +5,7 @@
 #include <portcls.h>
 #include <ks.h>
 #include <ksmedia.h>
-#define YDEBUG
+#define NDEBUG
 #include <debug.h>
 
 #include <samplerate.h>

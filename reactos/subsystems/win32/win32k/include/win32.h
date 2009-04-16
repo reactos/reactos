@@ -64,6 +64,22 @@ typedef struct _W32HEAP_USER_MAPPING
 
 typedef struct _W32PROCESS
 {
+  PEPROCESS     peProcess;
+  DWORD         RefCount;
+  ULONG         W32PF_flags;
+  PKEVENT       InputIdleEvent;
+  DWORD         StartCursorHideTime;
+  DWORD         NextStart;
+  PVOID         pDCAttrList;
+  PVOID         pBrushAttrList;
+  DWORD         W32Pid;
+  LONG          GDIHandleCount;
+  LONG          UserHandleCount;
+  DWORD         cSimpleLock;  /* Locking Process during access to structure. */
+  RTL_AVL_TABLE rtlAvlTable;  /* Process AVL Table. */
+  LIST_ENTRY    leDCAttrList;
+  LIST_ENTRY    leObjAttrList;
+/* ReactOS */
   LIST_ENTRY ClassList;
   LIST_ENTRY MenuListHead;
   FAST_MUTEX PrivateFontListLock;
@@ -71,13 +87,8 @@ typedef struct _W32PROCESS
   FAST_MUTEX DriverObjListLock;
   LIST_ENTRY DriverObjListHead;
   struct _KBL* KeyboardLayout;
-  ULONG Flags;
-  LONG GDIObjects;
-  LONG UserObjects;
-  PKEVENT InputIdleEvent;
-
   W32HEAP_USER_MAPPING HeapMappings;
-  PW32PROCESSINFO ProcessInfo;
+  PPROCESSINFO ProcessInfo;
 } W32PROCESS, *PW32PROCESS;
 
 #endif /* __INCLUDE_NAPI_WIN32_H */

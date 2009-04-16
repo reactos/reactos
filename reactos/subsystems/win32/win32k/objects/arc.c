@@ -8,25 +8,25 @@
  */
 #define PUTPIXEL(x,y,BrushInst)        \
   ret = ret && IntEngLineTo(&psurf->SurfObj, \
-       dc->CombinedClip,                         \
+       dc->rosdc.CombinedClip,                         \
        &BrushInst.BrushObject,                   \
        x, y, (x)+1, y,                           \
        &RectBounds,                              \
-       ROP2_TO_MIX(Dc_Attr->jROP2));
+       ROP2_TO_MIX(pdcattr->jROP2));
 
 #define PUTLINE(x1,y1,x2,y2,BrushInst) \
   ret = ret && IntEngLineTo(&psurf->SurfObj, \
-       dc->CombinedClip,                         \
+       dc->rosdc.CombinedClip,                         \
        &BrushInst.BrushObject,                   \
        x1, y1, x2, y2,                           \
        &RectBounds,                              \
-       ROP2_TO_MIX(Dc_Attr->jROP2));
+       ROP2_TO_MIX(pdcattr->jROP2));
 
 #define Rsin(d) ((d) == 0.0 ? 0.0 : ((d) == 90.0 ? 1.0 : sin(d*M_PI/180.0)))
 #define Rcos(d) ((d) == 0.0 ? 1.0 : ((d) == 90.0 ? 0.0 : cos(d*M_PI/180.0)))
 
 BOOL FASTCALL IntFillArc( PDC dc, INT XLeft, INT YLeft, INT Width, INT Height, double StartArc, double EndArc, ARCTYPE arctype);
-BOOL FASTCALL IntDrawArc( PDC dc, INT XLeft, INT YLeft, INT Width, INT Height, double StartArc, double EndArc, ARCTYPE arctype, PGDIBRUSHOBJ PenBrushObj);
+BOOL FASTCALL IntDrawArc( PDC dc, INT XLeft, INT YLeft, INT Width, INT Height, double StartArc, double EndArc, ARCTYPE arctype, PBRUSH pbrush);
 
 static
 BOOL
@@ -42,10 +42,9 @@ IntArc( DC *dc,
         int  YRadialEnd,
         ARCTYPE arctype)
 {
-    PDC_ATTR Dc_Attr;
+    PDC_ATTR pdcattr;
     RECTL RectBounds, RectSEpts;
-    PGDIBRUSHOBJ PenBrushObj;
-    GDIBRUSHINST PenBrushInst;
+    PBRUSH pbrushPen;
     SURFACE *psurf;
     BOOL ret = TRUE;
     LONG PenWidth, PenOrigWidth;
@@ -68,21 +67,20 @@ IntArc( DC *dc,
         (Bottom - Top == 1))))
        return TRUE;
 
-    Dc_Attr = dc->pDc_Attr;
-    if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+    pdcattr = dc->pdcattr;
 
-    PenBrushObj = PENOBJ_LockPen(Dc_Attr->hpen);
-    if (NULL == PenBrushObj)
+    pbrushPen = PEN_LockPen(pdcattr->hpen);
+    if (!pbrushPen)
     {
         DPRINT1("Arc Fail 1\n");
         SetLastWin32Error(ERROR_INTERNAL_ERROR);
         return FALSE;
     }
 
-    PenOrigWidth = PenWidth = PenBrushObj->ptPenWidth.x;
-    if (PenBrushObj->ulPenStyle == PS_NULL) PenWidth = 0;
+    PenOrigWidth = PenWidth = pbrushPen->ptPenWidth.x;
+    if (pbrushPen->ulPenStyle == PS_NULL) PenWidth = 0;
 
-    if (PenBrushObj->ulPenStyle == PS_INSIDEFRAME)
+    if (pbrushPen->ulPenStyle == PS_INSIDEFRAME)
     {
        if (2*PenWidth > (Right - Left)) PenWidth = (Right -Left + 1)/2;
        if (2*PenWidth > (Bottom - Top)) PenWidth = (Bottom -Top + 1)/2;
@@ -93,7 +91,7 @@ IntArc( DC *dc,
     }
 
     if (!PenWidth) PenWidth = 1;
-    PenBrushObj->ptPenWidth.x = PenWidth;  
+    pbrushPen->ptPenWidth.x = PenWidth;  
 
     RectBounds.left   = Left;
     RectBounds.right  = Right;
@@ -156,30 +154,28 @@ IntArc( DC *dc,
               AngleStart,
               AngleEnd,
               arctype,
-             PenBrushObj);
+              pbrushPen);
 
-    psurf = SURFACE_LockSurface(dc->w.hBitmap);
+    psurf = SURFACE_LockSurface(dc->rosdc.hBitmap);
     if (NULL == psurf)
     {
         DPRINT1("Arc Fail 2\n");
-        PENOBJ_UnlockPen(PenBrushObj);
+        PEN_UnlockPen(pbrushPen);
         SetLastWin32Error(ERROR_INTERNAL_ERROR);
         return FALSE;
     }
 
-    IntGdiInitBrushInstance(&PenBrushInst, PenBrushObj, dc->XlatePen);
-
     if (arctype == GdiTypePie)
     {
-       PUTLINE(CenterX, CenterY, SfCx + CenterX, SfCy + CenterY, PenBrushInst);
-       PUTLINE(EfCx + CenterX, EfCy + CenterY, CenterX, CenterY, PenBrushInst);
+       PUTLINE(CenterX, CenterY, SfCx + CenterX, SfCy + CenterY, dc->eboLine);
+       PUTLINE(EfCx + CenterX, EfCy + CenterY, CenterX, CenterY, dc->eboLine);
     }
     if (arctype == GdiTypeChord)
-        PUTLINE(EfCx + CenterX, EfCy + CenterY, SfCx + CenterX, SfCy + CenterY, PenBrushInst);
+        PUTLINE(EfCx + CenterX, EfCy + CenterY, SfCx + CenterX, SfCy + CenterY, dc->eboLine);
            
-    PenBrushObj->ptPenWidth.x = PenOrigWidth;
+    pbrushPen->ptPenWidth.x = PenOrigWidth;
     SURFACE_UnlockSurface(psurf);
-    PENOBJ_UnlockPen(PenBrushObj);
+    PEN_UnlockPen(pbrushPen);
     DPRINT("IntArc Exit.\n");
     return ret;
 }
@@ -199,7 +195,7 @@ IntGdiArcInternal(
           int YEndArc)
 {
   BOOL Ret;
-  PDC_ATTR pDc_Attr;
+  PDC_ATTR pdcattr;
 
   DPRINT("StartX: %d, StartY: %d, EndX: %d, EndY: %d\n",
            XStartArc,YStartArc,XEndArc,YEndArc);
@@ -208,7 +204,7 @@ IntGdiArcInternal(
 
   if ((LeftRect == RightRect) || (TopRect == BottomRect)) return TRUE;
 
-  if (PATH_IsPathOpen(dc->DcLevel))
+  if (PATH_IsPathOpen(dc->dclevel))
   {
      return PATH_Arc( dc,
                 LeftRect,
@@ -222,18 +218,17 @@ IntGdiArcInternal(
                  arctype);
   }
 
-  pDc_Attr = dc->pDc_Attr;
-  if (!pDc_Attr) pDc_Attr = &dc->Dc_Attr;
+  pdcattr = dc->pdcattr;
 
-  if (pDc_Attr->ulDirty_ & DC_BRUSH_DIRTY)
-     IntGdiSelectBrush(dc,pDc_Attr->hbrush);
+  if (pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
+    DC_vUpdateFillBrush(dc);
 
-  if (pDc_Attr->ulDirty_ & DC_PEN_DIRTY)
-     IntGdiSelectPen(dc,pDc_Attr->hpen);
+  if (pdcattr->ulDirty_ & (DIRTY_LINE | DC_PEN_DIRTY))
+    DC_vUpdateLineBrush(dc);
 
   if (arctype == GdiTypeArcTo)
   {
-    if (dc->DcLevel.flPath & DCPATH_CLOCKWISE)
+    if (dc->dclevel.flPath & DCPATH_CLOCKWISE)
        IntGdiLineTo(dc, XEndArc, YEndArc);
     else
        IntGdiLineTo(dc, XStartArc, YStartArc);
@@ -252,7 +247,7 @@ IntGdiArcInternal(
 
   if (arctype == GdiTypeArcTo)
   {
-     if (dc->DcLevel.flPath & DCPATH_CLOCKWISE)
+     if (dc->dclevel.flPath & DCPATH_CLOCKWISE)
        IntGdiMoveToEx(dc, XStartArc, YStartArc, NULL);
      else
        IntGdiMoveToEx(dc, XEndArc, YEndArc, NULL);
@@ -279,11 +274,11 @@ IntGdiAngleArc( PDC pDC,
   x1 = x + (INT)(cos((eStartAngle/360)*(M_PI*2)) * dwRadius);
   y1 = y - (INT)(sin((eStartAngle/360)*(M_PI*2)) * dwRadius);
 
-  arcdir = pDC->DcLevel.flPath & DCPATH_CLOCKWISE;
+  arcdir = pDC->dclevel.flPath & DCPATH_CLOCKWISE;
   if (eSweepAngle >= 0)
-     pDC->DcLevel.flPath &= ~DCPATH_CLOCKWISE;
+     pDC->dclevel.flPath &= ~DCPATH_CLOCKWISE;
   else
-     pDC->DcLevel.flPath |= DCPATH_CLOCKWISE;
+     pDC->dclevel.flPath |= DCPATH_CLOCKWISE;
 
   result = IntGdiArcInternal( GdiTypeArcTo,
                                        pDC,
@@ -296,7 +291,7 @@ IntGdiAngleArc( PDC pDC,
                                         x2,
                                         y2 );
 
-  pDC->DcLevel.flPath |= (arcdir & DCPATH_CLOCKWISE);
+  pDC->dclevel.flPath |= (arcdir & DCPATH_CLOCKWISE);
 
   if (result)
   {
@@ -327,7 +322,7 @@ NtGdiAngleArc(
     SetLastWin32Error(ERROR_INVALID_HANDLE);
     return FALSE;
   }
-  if (pDC->DC_Type == DC_TYPE_INFO)
+  if (pDC->dctype == DC_TYPE_INFO)
   {
     DC_UnlockDc(pDC);
     /* Yes, Windows really returns TRUE in this case */
@@ -363,7 +358,7 @@ NtGdiArcInternal(
     SetLastWin32Error(ERROR_INVALID_HANDLE);
     return FALSE;
   }
-  if (dc->DC_Type == DC_TYPE_INFO)
+  if (dc->dctype == DC_TYPE_INFO)
   {
     DC_UnlockDc(dc);
     /* Yes, Windows really returns TRUE in this case */

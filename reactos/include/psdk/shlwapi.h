@@ -388,7 +388,7 @@ BOOL WINAPI PathIsDirectoryEmptyW(LPCWSTR);
 
 BOOL WINAPI PathIsFileSpecA(LPCSTR);
 BOOL WINAPI PathIsFileSpecW(LPCWSTR);
-#define PathIsFileSpec WINELIB_NAME_AW(PathIsFileSpec);
+#define PathIsFileSpec WINELIB_NAME_AW(PathIsFileSpec)
 
 BOOL WINAPI PathIsPrefixA(LPCSTR,LPCSTR);
 BOOL WINAPI PathIsPrefixW(LPCWSTR,LPCWSTR);

@@ -328,7 +328,7 @@ BOOL MCIAVI_GetInfo(WINE_MCIAVI* wma)
                 WARN("ignoring another video stream\n");
             else
             {
-                wma->ash_audio = strh;
+                wma->ash_video = strh;
 
                 if (!MCIAVI_GetInfoVideo(wma, &mmckList, &mmckStream))
                     return FALSE;
@@ -342,7 +342,7 @@ BOOL MCIAVI_GetInfo(WINE_MCIAVI* wma)
                 WARN("ignoring another audio stream\n");
             else
             {
-                wma->ash_video = strh;
+                wma->ash_audio = strh;
 
                 if (!MCIAVI_GetInfoAudio(wma, &mmckList, &mmckStream))
                     return FALSE;

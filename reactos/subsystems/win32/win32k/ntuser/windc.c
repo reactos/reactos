@@ -2,7 +2,7 @@
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            subsystems/win32/win32k/ntuser/windc.c
- * PURPOSE:         Keyboard layout management
+ * PURPOSE:         Window DC management
  * COPYRIGHT:       Copyright 2007 ReactOS
  *
  */
@@ -44,7 +44,8 @@ DceCreateDisplayDC(VOID)
       PDC dc = DC_LockDc ( hDC );
       defaultDCstate = ExAllocatePoolWithTag(PagedPool, sizeof(DC), TAG_DC);
       RtlZeroMemory(defaultDCstate, sizeof(DC));
-      IntGdiCopyToSaveState(dc, defaultDCstate);
+      defaultDCstate->pdcattr = &defaultDCstate->dcattr;
+      DC_vCopyState(dc, defaultDCstate);
       DC_UnlockDc( dc );
   }
   return hDC;
@@ -175,7 +176,7 @@ DceDeleteClipRgn(DCE* Dce)
    }
    else if (Dce->hClipRgn != NULL)
    {
-      NtGdiDeleteObject(Dce->hClipRgn);
+      GreDeleteObject(Dce->hClipRgn);
    }
 
    Dce->hClipRgn = NULL;
@@ -289,7 +290,7 @@ noparent:
       {
          if(hRgnVisible != NULL)
          {
-            NtGdiDeleteObject(hRgnVisible);
+            GreDeleteObject(hRgnVisible);
          }
          hRgnVisible = NtGdiCreateRectRgn(0, 0, 0, 0);
       }
@@ -310,7 +311,7 @@ noparent:
 
    if (hRgnVisible != NULL)
    {
-      NtGdiDeleteObject(hRgnVisible);
+      GreDeleteObject(hRgnVisible);
    }
 }
 
@@ -518,7 +519,7 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
    if (!(Flags & (DCX_EXCLUDERGN | DCX_INTERSECTRGN)) && ClipRegion)
    {
       if (!(Flags & DCX_KEEPCLIPRGN))
-         NtGdiDeleteObject(ClipRegion);
+         GreDeleteObject(ClipRegion);
       ClipRegion = NULL;
    }
 
@@ -608,7 +609,7 @@ DceFreeDCE(PDCE pdce, BOOLEAN Force)
 
   if (pdce->hClipRgn && ! (pdce->DCXFlags & DCX_KEEPCLIPRGN))
   {
-      NtGdiDeleteObject(pdce->hClipRgn);
+      GreDeleteObject(pdce->hClipRgn);
   }
 
   RemoveEntryList(&pdce->List);
@@ -782,10 +783,10 @@ DceResetActiveDCEs(PWINDOW_OBJECT Window)
                dc->ptlDCOrig.x = CurrentWindow->Wnd->ClientRect.left;
                dc->ptlDCOrig.y = CurrentWindow->Wnd->ClientRect.top;
             }
-            if (NULL != dc->w.hClipRgn)
+            if (NULL != dc->rosdc.hClipRgn)
             {
                int FASTCALL CLIPPING_UpdateGCRegion(DC* Dc);
-               NtGdiOffsetRgn(dc->w.hClipRgn, DeltaX, DeltaY);
+               NtGdiOffsetRgn(dc->rosdc.hClipRgn, DeltaX, DeltaY);
                CLIPPING_UpdateGCRegion(dc);
             }
             if (NULL != pDCE->hClipRgn)

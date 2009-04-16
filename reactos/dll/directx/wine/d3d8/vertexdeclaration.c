@@ -61,7 +61,9 @@ static ULONG WINAPI IDirect3DVertexDeclaration8Impl_Release(IDirect3DVertexDecla
     TRACE("(%p) : Releasing to %d\n", This, ref_count);
 
     if (!ref_count) {
+        EnterCriticalSection(&d3d8_cs);
         IWineD3DVertexDeclaration_Release(This->wined3d_vertex_declaration);
+        LeaveCriticalSection(&d3d8_cs);
         HeapFree(GetProcessHeap(), 0, This->elements);
         HeapFree(GetProcessHeap(), 0, This);
     }
@@ -226,7 +228,8 @@ void load_local_constants(const DWORD *d3d8_elements, IWineD3DVertexShader *wine
 }
 
 /* NOTE: Make sure these are in the correct numerical order. (see /include/wined3d_types.h) */
-static const size_t wined3d_type_sizes[WINED3DDECLTYPE_UNUSED] = {
+static const size_t wined3d_type_sizes[] =
+{
     /*WINED3DDECLTYPE_FLOAT1*/    1 * sizeof(float),
     /*WINED3DDECLTYPE_FLOAT2*/    2 * sizeof(float),
     /*WINED3DDECLTYPE_FLOAT3*/    3 * sizeof(float),
@@ -244,6 +247,27 @@ static const size_t wined3d_type_sizes[WINED3DDECLTYPE_UNUSED] = {
     /*WINED3DDECLTYPE_DEC3N*/     3 * sizeof(short int),
     /*WINED3DDECLTYPE_FLOAT16_2*/ 2 * sizeof(short int),
     /*WINED3DDECLTYPE_FLOAT16_4*/ 4 * sizeof(short int)
+};
+
+static const WINED3DFORMAT wined3d_format_lookup[] =
+{
+    /*WINED3DDECLTYPE_FLOAT1*/    WINED3DFMT_R32_FLOAT,
+    /*WINED3DDECLTYPE_FLOAT2*/    WINED3DFMT_R32G32_FLOAT,
+    /*WINED3DDECLTYPE_FLOAT3*/    WINED3DFMT_R32G32B32_FLOAT,
+    /*WINED3DDECLTYPE_FLOAT4*/    WINED3DFMT_R32G32B32A32_FLOAT,
+    /*WINED3DDECLTYPE_D3DCOLOR*/  WINED3DFMT_A8R8G8B8,
+    /*WINED3DDECLTYPE_UBYTE4*/    WINED3DFMT_R8G8B8A8_UINT,
+    /*WINED3DDECLTYPE_SHORT2*/    WINED3DFMT_R16G16_SINT,
+    /*WINED3DDECLTYPE_SHORT4*/    WINED3DFMT_R16G16B16A16_SINT,
+    /*WINED3DDECLTYPE_UBYTE4N*/   WINED3DFMT_R8G8B8A8_UNORM,
+    /*WINED3DDECLTYPE_SHORT2N*/   WINED3DFMT_R16G16_SNORM,
+    /*WINED3DDECLTYPE_SHORT4N*/   WINED3DFMT_R16G16B16A16_SNORM,
+    /*WINED3DDECLTYPE_USHORT2N*/  WINED3DFMT_R16G16_UNORM,
+    /*WINED3DDECLTYPE_USHORT4N*/  WINED3DFMT_R16G16B16A16_UNORM,
+    /*WINED3DDECLTYPE_UDEC3*/     WINED3DFMT_R10G10B10A2_UINT,
+    /*WINED3DDECLTYPE_DEC3N*/     WINED3DFMT_R10G10B10A2_SNORM,
+    /*WINED3DDECLTYPE_FLOAT16_2*/ WINED3DFMT_R16G16_FLOAT,
+    /*WINED3DDECLTYPE_FLOAT16_4*/ WINED3DFMT_R16G16B16A16_FLOAT,
 };
 
 typedef struct {
@@ -300,13 +324,13 @@ UINT convert_to_wined3d_declaration(const DWORD *d3d8_elements, DWORD *d3d8_elem
             TRACE("Adding element %d:\n", element_count);
 
             element = *wined3d_elements + element_count++;
-            element->Stream = stream;
-            element->Method = WINED3DDECLMETHOD_DEFAULT;
-            element->Usage = wined3d_usage_lookup[reg].usage;
-            element->UsageIndex = wined3d_usage_lookup[reg].usage_idx;
-            element->Type = type;
-            element->Offset = offset;
-            element->Reg = reg;
+            element->format = wined3d_format_lookup[type];
+            element->input_slot = stream;
+            element->offset = offset;
+            element->output_slot = reg;
+            element->method = WINED3DDECLMETHOD_DEFAULT;
+            element->usage = wined3d_usage_lookup[reg].usage;
+            element->usage_idx = wined3d_usage_lookup[reg].usage_idx;
 
             offset += wined3d_type_sizes[type];
         } else if (token_type == D3DVSD_TOKEN_STREAMDATA && (token_type & 0x10000000)) {
@@ -321,11 +345,6 @@ UINT convert_to_wined3d_declaration(const DWORD *d3d8_elements, DWORD *d3d8_elem
 
         token += parse_token(token);
     }
-
-    /* END */
-    element = *wined3d_elements + element_count++;
-    element->Stream = 0xFF;
-    element->Type = WINED3DDECLTYPE_UNUSED;
 
     *d3d8_elements_size = (++token - d3d8_elements) * sizeof(DWORD);
 

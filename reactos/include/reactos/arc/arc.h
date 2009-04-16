@@ -30,6 +30,26 @@ typedef enum _ARC_CODES
     EMAXIMUM
 } ARC_CODES;
 
+typedef enum _SEEKMODE
+{
+    SeekAbsolute,
+    SeekRelative,
+} SEEKMODE;
+
+typedef enum _OPENMODE
+{
+    OpenReadOnly,
+    OpenWriteOnly,
+    OpenReadWrite,
+    CreateWriteOnly,
+    CreateReadOnly,
+    SupersedeWriteOnly,
+    SupersedeReadOnly,
+    SupersedeReadWrite,
+    OpenDirectory,
+    CreateDirectory,
+} OPENMODE;
+
 typedef enum _IDENTIFIER_FLAG
 {
     Failed = 0x01,
@@ -455,4 +475,21 @@ typedef struct _LOADER_PARAMETER_BLOCK
     FIRMWARE_INFORMATION_LOADER_BLOCK FirmwareInformation;
 } LOADER_PARAMETER_BLOCK, *PLOADER_PARAMETER_BLOCK;
 
+typedef int CONFIGTYPE;
+typedef struct tagFILEINFORMATION
+{
+    LARGE_INTEGER StartingAddress;
+    LARGE_INTEGER EndingAddress;
+    LARGE_INTEGER CurrentAddress;
+    CONFIGTYPE Type;
+    ULONG FileNameLength;
+    UCHAR Attributes;
+    CHAR Filename[32];
+} FILEINFORMATION;
+
+typedef LONG (*ARC_CLOSE)(ULONG FileId);
+typedef LONG (*ARC_GET_FILE_INFORMATION)(ULONG FileId, FILEINFORMATION* Information);
+typedef LONG (*ARC_OPEN)(CHAR* Path, OPENMODE OpenMode, ULONG* FileId);
+typedef LONG (*ARC_READ)(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count);
+typedef LONG (*ARC_SEEK)(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode);
 #endif

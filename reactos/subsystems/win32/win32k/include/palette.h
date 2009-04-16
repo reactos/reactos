@@ -40,7 +40,7 @@ typedef struct
     int max;
 } ColorShifts;
 
-typedef struct _PALGDI
+typedef struct _PALETTE
 {
   /* Header for all gdi objects in the handle table.
      Do not (re)move this. */
@@ -56,7 +56,7 @@ typedef struct _PALGDI
   ULONG GreenMask;
   ULONG BlueMask;
   HDEV  hPDev;
-} PALGDI, *PPALGDI;
+} PALETTE, *PPALETTE;
 
 HPALETTE FASTCALL PALETTE_AllocPalette(ULONG Mode,
                                        ULONG NumColors,
@@ -68,7 +68,7 @@ HPALETTE FASTCALL PALETTE_AllocPaletteIndexedRGB(ULONG NumColors,
                                                  CONST RGBQUAD *Colors);
 #define  PALETTE_FreePalette(pPalette)  GDIOBJ_FreeObj((POBJ)pPalette, GDIObjType_PAL_TYPE)
 #define  PALETTE_FreePaletteByHandle(hPalette)  GDIOBJ_FreeObjByHandle((HGDIOBJ)hPalette, GDI_OBJECT_TYPE_PALETTE)
-#define  PALETTE_LockPalette(hPalette) ((PPALGDI)GDIOBJ_LockObj((HGDIOBJ)hPalette, GDI_OBJECT_TYPE_PALETTE))
+#define  PALETTE_LockPalette(hPalette) ((PPALETTE)GDIOBJ_LockObj((HGDIOBJ)hPalette, GDI_OBJECT_TYPE_PALETTE))
 #define  PALETTE_UnlockPalette(pPalette) GDIOBJ_UnlockObjByPtr((POBJ)pPalette)
 BOOL INTERNAL_CALL PALETTE_Cleanup(PVOID ObjectBody);
 
@@ -79,7 +79,7 @@ INT      APIENTRY  PALETTE_SetMapping(PALOBJ* palPtr, UINT uStart, UINT uNum, BO
 #endif
 INT      FASTCALL PALETTE_ToPhysical (PDC dc, COLORREF color);
 
-INT FASTCALL PALETTE_GetObject(PPALGDI pGdiObject, INT cbCount, LPLOGBRUSH lpBuffer);
+INT FASTCALL PALETTE_GetObject(PPALETTE pGdiObject, INT cbCount, LPLOGBRUSH lpBuffer);
 
 PPALETTEENTRY FASTCALL ReturnSystemPalette (VOID);
 HPALETTE FASTCALL GdiSelectPalette(HDC, HPALETTE, BOOL);

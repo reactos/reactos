@@ -560,4 +560,19 @@ typedef enum {
 #define KSAUDIO_SPEAKER_5POINT1_BACK     KSAUDIO_SPEAKER_5POINT1
 #define KSAUDIO_SPEAKER_7POINT1_WIDE     KSAUDIO_SPEAKER_7POINT1
 #endif 
+
+typedef struct
+{
+    KSPROPERTY  Property;
+    ULONG  NodeId;
+    ULONG  Reserved;
+} KSNODEPROPERTY, *PKSNODEPROPERTY;
+
+typedef struct
+{
+    KSNODEPROPERTY  NodeProperty;
+    LONG  Channel;
+    ULONG  Reserved;
+} KSNODEPROPERTY_AUDIO_CHANNEL, *PKSNODEPROPERTY_AUDIO_CHANNEL;
+
 #endif
