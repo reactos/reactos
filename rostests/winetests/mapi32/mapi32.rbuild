@@ -2,6 +2,7 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
 <module name="mapi32_winetest" type="win32cui" installbase="bin" installname="mapi32_winetest.exe" allowwarnings="true">
+	<compilerflag compiler="cc">-Wno-format</compilerflag>
 	<include base="mapi32_winetest">.</include>
     <define name="__ROS_LONG64__" />
 	<file>imalloc.c</file>

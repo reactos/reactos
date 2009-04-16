@@ -1,5 +1,6 @@
 <module name="gdi32api" type="win32cui">
 	<include base="gdi32api">.</include>
+	<define name="__USE_W32API" />
 	<library>apitest</library>
 	<library>kernel32</library>
 	<library>user32</library>

@@ -2,6 +2,7 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
 <module name="gdiplus_winetest" type="win32cui" installbase="bin" installname="gdiplus_winetest.exe" allowwarnings="true">
+	<compilerflag compiler="cc">-Wno-format</compilerflag>
 	<include base="gdiplus_winetest">.</include>
     <define name="__ROS_LONG64__" />
 	<file>brush.c</file>

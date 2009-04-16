@@ -66,9 +66,9 @@ LRESULT CALLBACK WndProc(HWND hWnd,
 	return DefWindowProc(hWnd, msg, wParam, lParam);
 }
 
-int APIENTRY wWinMain(HINSTANCE hInst,
+int APIENTRY WinMain(HINSTANCE hInst,
     HINSTANCE hPrevInstance,
-    LPWSTR lpCmdLine,
+    LPSTR lpCmdLine,
     int nCmdShow)
 {
 	HWND hWnd1, hWnd2, hWnd3;

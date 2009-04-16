@@ -2,6 +2,7 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
 <module name="mstask_winetest" type="win32cui" installbase="bin" installname="mstask_winetest.exe" allowwarnings="true">
+	<compilerflag compiler="cc">-Wno-format</compilerflag>
 	<include base="mstask_winetest">.</include>
     <define name="__ROS_LONG64__" />
 	<file>task.c</file>

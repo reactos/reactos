@@ -1,4 +1,5 @@
 <module name="D3DParseUnknownCommand_show" type="win32cui" installbase="bin" installname="D3DParseUnknownCommand_show.exe">
+	<define name="__USE_W32API" />
 	<library>kernel32</library>
 	<library>gdi32</library>
 	<library>ddraw</library>

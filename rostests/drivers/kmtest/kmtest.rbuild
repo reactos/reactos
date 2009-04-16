@@ -1,5 +1,6 @@
 <module name="kmtest" type="kernelmodedriver" installbase="system32/drivers" installname="kmtest.sys">
 	<bootstrap base="$(CDOUTPUT)" />
+	<define name="__USE_W32API" />
 	<include base="ReactOS">include/reactos/drivers</include>
 	<library>ntoskrnl</library>
 	<library>hal</library>

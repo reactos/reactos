@@ -2,6 +2,7 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
 <module name="urlmon_winetest" type="win32cui" installbase="bin" installname="urlmon_winetest.exe" allowwarnings="true">
+	<compilerflag compiler="cc">-Wno-format</compilerflag>
 	<include base="urlmon_winetest">.</include>
     <define name="__ROS_LONG64__" />
 	<file>generated.c</file>

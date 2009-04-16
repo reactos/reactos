@@ -3,6 +3,7 @@
 <group xmlns:xi="http://www.w3.org/2001/XInclude">
 	<module name="apitest" type="staticlibrary">
 		<include base="apitest">.</include>
+		<define name="__USE_W32API" />
 		<file>apitest.c</file>
 	</module>
 
@@ -25,7 +26,7 @@
 	<directory name="w32knapi">
 		<xi:include href="w32knapi/w32knapi.rbuild" />
 	</directory>
-
+	
 	<directory name="ws2_32">
 		<xi:include href="ws2_32/ws2_32.rbuild" />
 	</directory>

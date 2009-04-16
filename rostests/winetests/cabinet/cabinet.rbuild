@@ -2,6 +2,7 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
 <module name="cabinet_winetest" type="win32cui" installbase="bin" installname="cabinet_winetest.exe" allowwarnings="true">
+	<compilerflag compiler="cc">-Wno-format</compilerflag>
 	<include base="cabinet_winetest">.</include>
     <define name="__ROS_LONG64__" />
 	<file>extract.c</file>

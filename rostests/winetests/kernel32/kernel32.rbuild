@@ -4,6 +4,7 @@
 <module name="kernel32_winetest" type="win32cui" installbase="bin" installname="kernel32_winetest.exe" allowwarnings="true">
     <compilerflag compiler="cc">-Wno-format</compilerflag>
     <include base="kernel32_winetest">.</include>
+    <define name="__USE_W32API" />
     <define name="__ROS_LONG64__" />
     <library>ntdll</library>
     <library>kernel32</library>
@@ -42,5 +43,6 @@
     <file>virtual.c</file>
     <file>volume.c</file>
     <file>testlist.c</file>
+    <file>resource.rc</file>
 </module>
 </group>

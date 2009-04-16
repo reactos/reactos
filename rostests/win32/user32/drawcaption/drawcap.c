@@ -180,7 +180,7 @@ LRESULT CALLBACK CaptWndProc(HWND hWnd,
 }
 
 
-int wmain(int argc, wchar_t**argv)
+INT main(INT argc, CHAR **argv)
 {
 	HWND hWnd;
 	MSG msg;
@@ -205,7 +205,7 @@ int wmain(int argc, wchar_t**argv)
 		return 0;
 	}
 
-	testnum = _wtoi(argv[1]);
+	testnum = atoi(argv[1]);
 	if(testnum < 1 || testnum > 8)
 	{
 		printf("Unknown test %d\n", testnum);
