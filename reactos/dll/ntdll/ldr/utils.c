@@ -2474,6 +2474,7 @@ LdrGetProcedureAddress (IN PVOID BaseAddress,
                         IN ULONG Ordinal,
                         OUT PVOID *ProcedureAddress)
 {
+   NTSTATUS Status = STATUS_PROCEDURE_NOT_FOUND;
    if (Name && Name->Length)
      {
        TRACE_LDR("LdrGetProcedureAddress by NAME - %Z\n", Name);
@@ -2494,7 +2495,7 @@ LdrGetProcedureAddress (IN PVOID BaseAddress,
        *ProcedureAddress = LdrGetExportByName(BaseAddress, (PUCHAR)Name->Buffer, 0xffff);
        if (*ProcedureAddress != NULL)
          {
-           return STATUS_SUCCESS;
+           Status = STATUS_SUCCESS;
          }
        DPRINT("LdrGetProcedureAddress: Can't resolve symbol '%Z'\n", Name);
      }
@@ -2505,17 +2506,18 @@ LdrGetProcedureAddress (IN PVOID BaseAddress,
        *ProcedureAddress = LdrGetExportByOrdinal(BaseAddress, (WORD)Ordinal);
        if (*ProcedureAddress)
          {
-           return STATUS_SUCCESS;
+           Status = STATUS_SUCCESS;
          }
        DPRINT("LdrGetProcedureAddress: Can't resolve symbol @%lu\n", Ordinal);
      }
    }
    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
-       _SEH2_YIELD(return STATUS_DLL_NOT_FOUND);
+       Status = STATUS_DLL_NOT_FOUND;
    }
    _SEH2_END;
-   return STATUS_PROCEDURE_NOT_FOUND;
+
+   return Status;
 }
 
 /**********************************************************************
