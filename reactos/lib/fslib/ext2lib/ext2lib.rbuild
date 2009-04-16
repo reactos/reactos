@@ -2,6 +2,7 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="ext2lib" type="staticlibrary">
 	<include base="ext2lib">.</include>
+	<define name="_DISABLE_TIDENTS" />
 	<file>Badblock.c</file>
 	<file>Bitmap.c</file>
 	<file>Disk.c</file>

@@ -3,6 +3,7 @@
 <module name="kbdheb" type="keyboardlayout" entrypoint="0" installbase="system32" installname="kbdheb.dll">
 	<importlibrary definition="kbdheb.spec" />
 	<include base="ntoskrnl">include</include>
+	<define name="_DISABLE_TIDENTS" />
 	<file>kbdheb.c</file>
 	<file>kbdheb.rc</file>
 </module>

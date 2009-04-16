@@ -4,7 +4,7 @@
 	<importlibrary definition="ncpa.spec" />
 	<include base="ncpa">.</include>
 
-	<redefine name="_WIN32_WINNT">0x600</redefine>
+	<define name="_WIN32_WINNT">0x600</define>
 
 	<library>kernel32</library>
 	<library>advapi32</library>

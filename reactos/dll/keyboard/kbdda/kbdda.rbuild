@@ -3,6 +3,7 @@
 <module name="kbdda" type="keyboardlayout" entrypoint="0" installbase="system32" installname="kbdda.dll">
 	<importlibrary definition="kbdda.spec" />
 	<include base="ntoskrnl">include</include>
+	<define name="_DISABLE_TIDENTS" />
 	<file>kbdda.c</file>
 	<file>kbdda.rc</file>
 </module>

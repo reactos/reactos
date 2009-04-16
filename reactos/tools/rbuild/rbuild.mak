@@ -250,7 +250,6 @@ RBUILD_SOURCES = \
 		cdfile.cpp \
 		compilationunit.cpp \
 		compilationunitsupportcode.cpp \
-		compilerdirective.cpp \
 		compilerflag.cpp \
 		configuration.cpp \
 		define.cpp \
@@ -382,10 +381,6 @@ $(RBUILD_INT_)compilationunit.o: $(RBUILD_BASE_)compilationunit.cpp $(RBUILD_HEA
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_INT_)compilationunitsupportcode.o: $(RBUILD_BASE_)compilationunitsupportcode.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
-	$(ECHO_HOSTCC)
-	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
-
-$(RBUILD_INT_)compilerdirective.o: $(RBUILD_BASE_)compilerdirective.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
 	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 

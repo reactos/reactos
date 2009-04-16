@@ -3,7 +3,7 @@
 <module name="dinput8" type="win32dll" entrypoint="0" baseaddress="${BASEADDRESS_DINPUT8}" installbase="system32" installname="dinput8.dll" unicode="yes">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="dinput8.spec" />
-	<redefine name="_WIN32_WINNT">0x600</redefine>
+	<define name="_WIN32_WINNT">0x600</define>
 	<include base="dinput8">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<library>wine</library>

@@ -30,7 +30,6 @@ Include::Include ( const Project& project,
 	  node ( includeNode ),
 	  module ( NULL )
 {
-	Initialize ();
 }
 
 Include::Include ( const Project& project,
@@ -41,7 +40,6 @@ Include::Include ( const Project& project,
 	  node ( includeNode ),
 	  module ( module )
 {
-	Initialize ();
 }
 
 Include::Include ( const Project& project,
@@ -128,10 +126,4 @@ Include::GetDefaultDirectoryTree ( const Module* module ) const
 		return IntermediateDirectory;
 	else
 		return SourceDirectory;
-}
-
-void
-Include::Initialize ()
-{
-	ParseCompilers ( *node, "cpp" );
 }

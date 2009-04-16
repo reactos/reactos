@@ -3,6 +3,7 @@
 <module name="halppc_generic" type="objectlibrary">
 	<include base="halppc_generic">../include</include>
 	<include base="ntoskrnl">include</include>
+	<define name="_DISABLE_TIDENTS" />
 	<define name="_NTHAL_" />
 	<file>beep.c</file>
 	<file>bus.c</file>

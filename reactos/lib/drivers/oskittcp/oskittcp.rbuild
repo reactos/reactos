@@ -3,6 +3,7 @@
 <module name="oskittcp" type="staticlibrary">
 	<define name="__NTDRIVER__"/>
 	<define name="KERNEL"/>
+	<define name="_DISABLE_TIDENTS"/>
 	<define name="__NO_CTYPE_INLINES" />
 	<include base="oskittcp">include/freebsd</include>
 	<include base="oskittcp">include/freebsd/sys/include</include>

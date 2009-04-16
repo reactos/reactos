@@ -6,6 +6,7 @@
 	<include base="zlib">.</include>
 	<include base="inflib">.</include>
 	<include base="ReactOS">include/reactos/drivers</include>
+	<define name="_DISABLE_TIDENTS" />
 	<define name="__NO_CTYPE_INLINES" />
 	<library>zlib</library>
 	<library>inflib</library>

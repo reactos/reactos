@@ -7,7 +7,7 @@
 	<include base="urlmon">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
-	<redefine name="_WIN32_WINNT">0x600</redefine>
+	<define name="_WIN32_WINNT">0x600</define>
 	<file>bindctx.c</file>
 	<file>binding.c</file>
 	<file>bindprot.c</file>

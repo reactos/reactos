@@ -3,7 +3,7 @@
 	<include base="localspl">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
-	<redefine name="_WIN32_WINNT">0x600</redefine>
+	<define name="_WIN32_WINNT">0x600</define>
 	<file>localmon.c</file>
 	<file>localspl_main.c</file>
 	<file>provider.c</file>

@@ -3,6 +3,7 @@
 <module name="kbdmac" type="keyboardlayout" entrypoint="0" installbase="system32" installname="kbdmac.dll">
 	<importlibrary definition="kbdmac.spec" />
 	<include base="ntoskrnl">include</include>
+	<define name="_DISABLE_TIDENTS" />
 	<file>kbdmac.c</file>
 	<file>kbdmac.rc</file>
 </module>

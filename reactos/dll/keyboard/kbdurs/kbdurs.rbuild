@@ -3,6 +3,7 @@
 <module name="kbdurs" type="keyboardlayout" entrypoint="0" installbase="system32" installname="kbdurs.dll">
 	<importlibrary definition="kbdurs.spec" />
 	<include base="ntoskrnl">include</include>
+	<define name="_DISABLE_TIDENTS" />
 	<file>kbdurs.c</file>
 	<file>kbdurs.rc</file>
 </module>

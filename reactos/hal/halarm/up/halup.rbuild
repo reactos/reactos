@@ -5,6 +5,7 @@
 	<bootstrap installbase="$(CDOUTPUT)" nameoncd="hal.dll" />
 	<include base="halarm_generic">../include</include>
 	<include base="ntoskrnl">include</include>
+	<define name="_DISABLE_TIDENTS" />
 	<define name="_NTHAL_" />
 	<library>halarm_generic</library>
 	<library>ntoskrnl</library>

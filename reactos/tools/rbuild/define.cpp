@@ -45,8 +45,7 @@ Define::Define ( const Project& project,
 Define::Define ( const Project& project,
                  const Module* module,
                  const std::string& name_,
-                 const std::string& backend_,
-                 bool redefine_)
+                 const std::string& backend_)
 	: project(project),
 	  module(module),
 	  node(NULL)
@@ -54,7 +53,6 @@ Define::Define ( const Project& project,
 	name = name_;
 	value = "";
 	backend = backend_;
-	redefine = redefine_;
 }
 
 Define::~Define ()
@@ -68,27 +66,22 @@ Define::~Define ()
 void
 Define::Initialize()
 {
-	redefine = node->name == "redefine";
-
 	const XMLAttribute* att = node->GetAttribute ( "name", true );
 
 	att = node->GetAttribute ( "name", true );
 	assert(att);
-
-	size_t name_len = att->value.find ( '(' );
-
-	name = att->value.substr ( 0, name_len );
-
-	if ( name_len != std::string::npos )
-		arguments = att->value.substr ( att->value.find ( '(' ) );
-
+	name = att->value;
 	value = node->value;
 
 	att = node->GetAttribute ( "backend", false );
 	if ( att )
 		backend = att->value;
 
-	ParseCompilers ( *node, "cpp" );
+	att = node->GetAttribute ( "overridable", false );
+	if ( att )
+		overridable = ( att->value == "true" || att->value == "yes" );
+	else
+		overridable = false;
 }
 
 void

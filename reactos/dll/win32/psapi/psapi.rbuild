@@ -2,6 +2,7 @@
 	<importlibrary definition="psapi.spec" />
 	<include base="psapi">.</include>
 	<include base="psapi">include</include>
+	<define name="_DISABLE_TIDENTS" />
 	<library>epsapi</library>
 	<library>pseh</library>
 	<library>ntdll</library>

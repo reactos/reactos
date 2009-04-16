@@ -3,6 +3,7 @@
 <module name="kbddv" type="keyboardlayout" entrypoint="0" installbase="system32" installname="kbddv.dll">
 	<importlibrary definition="kbddv.spec" />
 	<include base="ntoskrnl">include</include>
+	<define name="_DISABLE_TIDENTS" />
 	<file>kbddv.c</file>
 	<file>kbddv.rc</file>
 </module>

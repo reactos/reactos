@@ -3,6 +3,7 @@
 <module name="kbdsk" type="keyboardlayout" entrypoint="0" installbase="system32" installname="kbdsk.dll">
 	<importlibrary definition="kbdsk.spec" />
 	<include base="ntoskrnl">include</include>
+	<define name="_DISABLE_TIDENTS" />
 	<file>kbdsk.c</file>
 	<file>kbdsk.rc</file>
 </module>

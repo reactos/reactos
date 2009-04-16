@@ -257,9 +257,6 @@ MingwBackend::ProcessModules ()
 	size_t i;
 
 	for ( std::map<std::string, Module*>::iterator p = ProjectNode.modules.begin (); p != ProjectNode.modules.end (); ++ p )
-		fprintf ( fMakefile, "%s_TYPE:=%u\n", p->second->name.c_str(), p->second->type );
-
-	for ( std::map<std::string, Module*>::iterator p = ProjectNode.modules.begin (); p != ProjectNode.modules.end (); ++ p )
 	{
 		Module& module = *p->second;
 		if ( !module.enabled )
@@ -388,7 +385,28 @@ MingwBackend::GenerateHeader () const
 }
 
 void
-MingwBackend::GenerateGlobalProperties (
+MingwBackend::GenerateProjectCFlagsMacro ( const char* assignmentOperation,
+                                           const IfableData& data ) const
+{
+	set<string> used_defs;
+
+	if ( data.includes.size () > 0 )
+		fprintf (
+			fMakefile,
+			"PROJECT_CINCLUDES %s %s\n",
+			assignmentOperation,
+			MingwModuleHandler::GenerateGccIncludeParametersFromVector ( data.includes ).c_str ());
+
+	if ( data.defines.size () > 0 )
+		fprintf (
+			fMakefile,
+			"PROJECT_CDEFINES %s %s\n",
+			assignmentOperation,
+			MingwModuleHandler::GenerateGccDefineParametersFromVector ( data.defines, used_defs ).c_str ());
+}
+
+void
+MingwBackend::GenerateGlobalCFlagsAndProperties (
 	const char* assignmentOperation,
 	const IfableData& data ) const
 {
@@ -402,6 +420,86 @@ MingwBackend::GenerateGlobalProperties (
 				prop.name.c_str(),
 				prop.value.c_str() );
 		}
+	}
+
+	if ( data.includes.size() || data.defines.size() )
+	{
+		GenerateProjectCFlagsMacro ( assignmentOperation,
+		                             data );
+	}
+}
+
+void
+MingwBackend::GenerateProjectGccOptionsMacro ( const char* assignmentOperation,
+                                               IfableData& data ) const
+{
+	size_t i;
+
+	fprintf (
+		fMakefile,
+		"PROJECT_GCCOPTIONS %s",
+		assignmentOperation );
+
+	for ( i = 0; i < data.compilerFlags.size(); i++ )
+	{
+		if ( data.compilerFlags[i]->compiler == CompilerTypeDontCare )
+		{
+			fprintf (
+				fMakefile,
+				" %s",
+				data.compilerFlags[i]->flag.c_str() );
+		}
+	}
+
+	fputs ( "\n", fMakefile );
+
+	// TODO: reference these from somewhere
+	fprintf (
+		fMakefile,
+		"PROJECT_GCC_CFLAGS %s",
+		assignmentOperation );
+
+	for ( i = 0; i < data.compilerFlags.size(); i++ )
+	{
+		if ( data.compilerFlags[i]->compiler == CompilerTypeCC )
+		{
+			fprintf (
+				fMakefile,
+				" %s",
+				data.compilerFlags[i]->flag.c_str() );
+		}
+	}
+
+	fputs ( "\n", fMakefile );
+
+	fprintf (
+		fMakefile,
+		"PROJECT_GCC_CXXFLAGS %s",
+		assignmentOperation );
+
+	for ( i = 0; i < data.compilerFlags.size(); i++ )
+	{
+		if ( data.compilerFlags[i]->compiler == CompilerTypeCPP )
+		{
+			fprintf (
+				fMakefile,
+				" %s",
+				data.compilerFlags[i]->flag.c_str() );
+		}
+	}
+
+	fputs ( "\n", fMakefile );
+}
+
+void
+MingwBackend::GenerateProjectGccOptions (
+	const char* assignmentOperation,
+	IfableData& data ) const
+{
+	if ( data.compilerFlags.size() )
+	{
+		GenerateProjectGccOptionsMacro ( assignmentOperation,
+		                                 data );
 	}
 }
 
@@ -437,45 +535,14 @@ MingwBackend::GenerateGlobalVariables () const
 	          "PREFIX := %s\n",
 	          compilerPrefix.c_str () );
 	fprintf ( fMakefile,
-	          "nasm := $(Q)%s\n",
+	          "nasm := %s\n",
 	          nasmCommand.c_str () );
 
-	GenerateGlobalProperties ( "=", ProjectNode.non_if_data );
+	GenerateGlobalCFlagsAndProperties ( "=", ProjectNode.non_if_data );
+	GenerateProjectGccOptions ( "=", ProjectNode.non_if_data );
 
-	fprintf ( fMakefile, "PROJECT_CFLAGS += -Wall\n" );
-	fprintf ( fMakefile, "PROJECT_CXXFLAGS += -Wall\n" );
-	fprintf ( fMakefile, "ifneq ($(OARCH),)\n" );
-	fprintf ( fMakefile, "PROJECT_CFLAGS += -march=$(OARCH)\n" );
-	fprintf ( fMakefile, "PROJECT_CXXFLAGS += -march=$(OARCH)\n" );
-	fprintf ( fMakefile, "endif\n" );
-	fprintf ( fMakefile, "ifneq ($(TUNE),)\n" );
-	fprintf ( fMakefile, "PROJECT_CFLAGS += -mtune=$(TUNE)\n" );
-	fprintf ( fMakefile, "PROJECT_CXXFLAGS += -mtune=$(TUNE)\n" );
-	fprintf ( fMakefile, "endif\n" );
-
-	fprintf ( fMakefile, "PROJECT_CFLAGS += -g%s\n", Environment::GetArch() == "amd64" ? "dwarf-2" : "stabs+" );
-	fprintf ( fMakefile, "PROJECT_CXXFLAGS += -g%s\n", Environment::GetArch() == "amd64" ? "dwarf-2" : "stabs+" );
-	fprintf ( fMakefile, "PROJECT_ASFLAGS += -g%s\n", Environment::GetArch() == "amd64" ? "dwarf-2" : "stabs+" );
-
-	MingwModuleHandler::GenerateParameters ( "PROJECT", "+=", ProjectNode.non_if_data );
-	MingwModuleHandler::GenerateParameters ( "PROJECT_HOST", "+=", ProjectNode.host_non_if_data );
-
-	if ( usePipe )
-	{
-		fprintf ( fMakefile, "PROJECT_CFLAGS += -pipe\n" );
-		fprintf ( fMakefile, "PROJECT_CXXFLAGS += -pipe\n" );
-		fprintf ( fMakefile, "PROJECT_ASFLAGS += -pipe\n" );
-	}
-
-	// Because RosBE gcc is built to suck
-	fputs ( "BUILTIN_HOST_CINCLUDES+= $(HOST_CFLAGS)\n", fMakefile );
-	fputs ( "BUILTIN_HOST_CPPINCLUDES+= $(HOST_CFLAGS)\n", fMakefile );
-	fputs ( "BUILTIN_HOST_CXXINCLUDES+= $(HOST_CPPFLAGS)\n", fMakefile );
-
-	// Would be nice to have our own C++ runtime
-	fputs ( "BUILTIN_CXXINCLUDES+= $(TARGET_CPPFLAGS)\n", fMakefile );
-
-	// TODO: linker flags
+	fprintf ( fMakefile, "PROJECT_RCFLAGS := $(PROJECT_CINCLUDES) $(PROJECT_CDEFINES)\n" );
+	fprintf ( fMakefile, "PROJECT_WIDLFLAGS := $(PROJECT_CINCLUDES) $(PROJECT_CDEFINES)\n" );
 	fprintf ( fMakefile, "PROJECT_LFLAGS := '$(shell ${TARGET_CC} -print-libgcc-file-name)' %s\n", GenerateProjectLFLAGS ().c_str () );
 	fprintf ( fMakefile, "PROJECT_LPPFLAGS := '$(shell ${TARGET_CPP} -print-file-name=libstdc++.a)' '$(shell ${TARGET_CPP} -print-file-name=libgcc.a)' '$(shell ${TARGET_CPP} -print-file-name=libmingw32.a)' '$(shell ${TARGET_CPP} -print-file-name=libmingwex.a)' '$(shell ${TARGET_CPP} -print-file-name=libcoldname.a)'\n" );
 	/* hack to get libgcc_eh.a, should check mingw version or something */
@@ -483,38 +550,15 @@ MingwBackend::GenerateGlobalVariables () const
 	{
 	    fprintf ( fMakefile, "PROJECT_LPPFLAGS += '$(shell ${TARGET_CPP} -print-file-name=libgcc_eh.a)'\n" );
 	}
-
-	// TODO: use symbolic names for module types
-	for ( size_t i = 0; i < sizeof(ModuleHandlerInformations) / sizeof(ModuleHandlerInformations[0]); ++ i )
-	{
-		if ( ModuleHandlerInformations[i].cflags && ModuleHandlerInformations[i].cflags[0] )
-		{
-				fprintf ( fMakefile,
-						  "MODULETYPE%d_%sFLAGS:=%s\n",
-						  i,
-						  "C",
-						  ModuleHandlerInformations[i].cflags );
-		}
-
-		if ( ModuleHandlerInformations[i].cflags && ModuleHandlerInformations[i].cflags[0] )
-		{
-				fprintf ( fMakefile,
-						  "MODULETYPE%d_%sFLAGS:=%s\n",
-						  i,
-						  "CXX",
-						  ModuleHandlerInformations[i].cflags );
-		}
-
-		if ( ModuleHandlerInformations[i].nasmflags && ModuleHandlerInformations[i].nasmflags[0] )
-		{
-				fprintf ( fMakefile,
-						  "MODULETYPE%d_%sFLAGS:=%s\n",
-						  i,
-						  "NASM",
-						  ModuleHandlerInformations[i].nasmflags );
-		}
-	}
-
+	fprintf ( fMakefile, "PROJECT_GCCOPTIONS += -Wall\n" );
+	fprintf ( fMakefile, "ifneq ($(OARCH),)\n" );
+	fprintf ( fMakefile, "PROJECT_GCCOPTIONS += -march=$(OARCH)\n" );
+	fprintf ( fMakefile, "endif\n" );
+	fprintf ( fMakefile, "ifneq ($(TUNE),)\n" );
+	fprintf ( fMakefile, "PROJECT_GCCOPTIONS += -mtune=$(TUNE)\n" );
+	fprintf ( fMakefile, "endif\n" );
+	fprintf ( fMakefile, "PROJECT_CFLAGS = $(PROJECT_GCCOPTIONS) $(PROJECT_GCC_CFLAGS)\n" );
+	fprintf ( fMakefile, "PROJECT_CXXFLAGS = $(PROJECT_GCCOPTIONS) $(PROJECT_GCC_CXXFLAGS)\n" );
 	fprintf ( fMakefile, "\n" );
 }
 

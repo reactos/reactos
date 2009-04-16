@@ -3,8 +3,8 @@
 <module name="idndl_redist" type="win32dll" installname="idndl_redist.dll" crt="libcntpr">
 	<library>kernel32</library>
 	<library>scripts</library>
-	<compilerflag compiler="cxx">-fno-exceptions</compilerflag>
-	<compilerflag compiler="cxx">-fno-rtti</compilerflag>
+	<compilerflag compiler="cpp">-fno-exceptions</compilerflag>
+	<compilerflag compiler="cpp">-fno-rtti</compilerflag>
 	<linkerflag>--entry=0</linkerflag>
 	<include base="icu4ros">icu/source/common</include>
 	<include base="scripts">.</include>

@@ -6,6 +6,7 @@
 		<bootstrap installbase="$(CDOUTPUT)" />
 		<include>include</include>
 		<include base="ntoskrnl">include</include>
+		<define name="_DISABLE_TIDENTS" />
 		<define name="_NTHAL_" />
 		<library>hal_generic</library>
 		<library>hal_generic_up</library>

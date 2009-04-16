@@ -57,8 +57,23 @@ CompilerFlag::Initialize ()
 	}
 
 	flag = node.value;
+	compiler = CompilerTypeDontCare;
 
-	ParseCompilers ( node, "cc,cxx" );
+	const XMLAttribute* att = node.GetAttribute ( "compiler", false );
+	if ( att != NULL)
+	{
+		if ( att->value == "cpp" )
+			compiler = CompilerTypeCPP;
+		else if ( att->value == "cc" )
+			compiler = CompilerTypeCC;
+		else
+		{
+			throw InvalidAttributeValueException (
+				node.location,
+				"compiler",
+				att->value );
+		}
+	}
 }
 
 void

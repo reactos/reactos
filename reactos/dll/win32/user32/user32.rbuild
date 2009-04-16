@@ -3,6 +3,7 @@
 	<include base="user32">.</include>
 	<include base="user32">include</include>
 	<include base="ReactOS">include/reactos/subsys</include>
+	<define name="_DISABLE_TIDENTS" />
 	<library>wine</library>
 	<library>gdi32</library>
 	<library>kernel32</library>

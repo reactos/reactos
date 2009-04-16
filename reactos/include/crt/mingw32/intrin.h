@@ -28,8 +28,6 @@
 #ifndef KJK_INTRIN_H_
 #define KJK_INTRIN_H_
 
-#ifndef RC_INVOKED
-
 #ifndef __GNUC__
 #error Unsupported compiler
 #endif
@@ -92,8 +90,6 @@
 #define __noop(...) ((void)0)
 
 /* TODO: __assume. GCC only supports the weaker __builtin_expect */
-
-#endif
 
 #endif
 

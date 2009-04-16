@@ -2,6 +2,7 @@
 	<importlibrary definition="ws2_32.spec" />
 	<include base="ws2_32">include</include>
 	<include base="ReactOS">include/reactos/wine</include>
+	<define name="_DISABLE_TIDENTS" />
 	<define name="LE" />
 	<library>wine</library>
 	<library>ntdll</library>

@@ -3,7 +3,7 @@
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="jscript.spec" />
 	<include base="jscript">.</include>
-	<include base="jscript" root="intermediate" compiler="rc">.</include>
+	<include base="jscript" root="intermediate">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
 	<define name="RPC_NO_WINDOWS_H" />

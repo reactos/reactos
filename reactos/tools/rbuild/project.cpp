@@ -375,7 +375,7 @@ Project::ProcessXMLSubElement ( const XMLElement& e,
 
 		subs_invalid = true;
 	}
-	else if ( e.name == "define" || e.name == "redefine" )
+	else if ( e.name == "define" )
 	{
 		const XMLAttribute* host = e.GetAttribute("host", false);
 		Define* define = new Define ( *this, e );
