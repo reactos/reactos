@@ -2,7 +2,6 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
 <module name="mshtml_winetest" type="win32cui" installbase="bin" installname="mshtml_winetest.exe" allowwarnings="true">
-	<compilerflag compiler="cc">-Wno-format</compilerflag>
 	<include base="mshtml_winetest">.</include>
     <define name="__ROS_LONG64__" />
 	<file>dom.c</file>

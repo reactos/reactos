@@ -5,7 +5,6 @@
 	<compilerflag compiler="cc">-Wno-format</compilerflag>
 	<include base="msvcrt_winetest">.</include>
 	<include base="msvcrt">include/reactos/wine/msvcrt</include>
-	<define name="__USE_W32API" />
     <define name="__ROS_LONG64__" />
 	<define name="_CRT_NONSTDC_NO_DEPRECATE" />
 	<library>kernel32</library>

@@ -2,9 +2,8 @@
 	<include base="rtshared">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<include base="cmd">.</include>
-	<define name="__USE_W32API" />
 	<define name="ANONYMOUSUNIONS" />
-	<define name="_WIN32_WINNT">0x0501</define>
+	<redefine name="_WIN32_WINNT">0x501</redefine>
 	<library>rtshared</library>
 	<library>regtests</library>
 	<library>cmd_base</library>

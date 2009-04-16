@@ -2,9 +2,7 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
 <module name="ntdll_winetest" type="win32cui" installbase="bin" installname="ntdll_winetest.exe" allowwarnings="true">
-	<compilerflag compiler="cc">-Wno-format</compilerflag>
     <include base="ntdll_winetest">.</include>
-    <define name="__USE_W32API" />
     <define name="__ROS_LONG64__" />
     <library>kernel32</library>
     <library>ntdll</library>

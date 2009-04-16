@@ -2,7 +2,6 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
 <module name="imm32_winetest" type="win32cui" installbase="bin" installname="imm32_winetest.exe" allowwarnings="true">
-	<compilerflag compiler="cc">-Wno-format</compilerflag>
 	<include base="imm32_winetest">.</include>
     <define name="__ROS_LONG64__" />
 	<file>imm32.c</file>

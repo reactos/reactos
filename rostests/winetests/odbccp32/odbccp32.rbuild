@@ -2,7 +2,6 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
 <module name="odbccp32_winetest" type="win32cui" installbase="bin" installname="odbccp32_winetest.exe" allowwarnings="true">
-	<compilerflag compiler="cc">-Wno-format</compilerflag>
 	<include base="odbccp32_winetest">.</include>
     <define name="__ROS_LONG64__" />
 	<file>misc.c</file>
