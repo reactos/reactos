@@ -1,6 +1,5 @@
 <module name="user32api" type="win32cui">
 	<include base="user32api">.</include>
-	<define name="__USE_W32API" />
 	<library>apitest</library>
 	<library>kernel32</library>
 	<library>user32</library>
