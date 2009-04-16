@@ -220,12 +220,14 @@ ifeq ($(HALFVERBOSEECHO),yes)
   ECHO_CC      =@echo $(QUOTE)[CC]       $<$(QUOTE)
   ECHO_HOSTCC  =@echo $(QUOTE)[HOST-CC]  $<$(QUOTE)
   ECHO_CL      =@echo $(QUOTE)[CL]       $<$(QUOTE)
-  ECHO_GAS     =@echo $(QUOTE)[GAS]      $<$(QUOTE)
+  ECHO_AS      =@echo $(QUOTE)[AS]       $<$(QUOTE)
   ECHO_NASM    =@echo $(QUOTE)[NASM]     $<$(QUOTE)
   ECHO_AR      =@echo $(QUOTE)[AR]       $@$(QUOTE)
   ECHO_HOSTAR  =@echo $(QUOTE)[HOST-AR]  $@$(QUOTE)
   ECHO_WINEBLD =@echo $(QUOTE)[WINEBLD]  $@$(QUOTE)
   ECHO_WRC     =@echo $(QUOTE)[WRC]      $@$(QUOTE)
+  ECHO_RC      =@echo $(QUOTE)[RC]       $@$(QUOTE)
+  ECHO_CVTRES  =@echo $(QUOTE)[CVTRES]   $@$(QUOTE)
   ECHO_WIDL    =@echo $(QUOTE)[WIDL]     $@$(QUOTE)
   ECHO_BIN2RES =@echo $(QUOTE)[BIN2RES]  $<$(QUOTE)
   ECHO_DLLTOOL =@echo $(QUOTE)[DLLTOOL]  $@$(QUOTE)
@@ -256,12 +258,14 @@ else
   ECHO_CPP     =
   ECHO_CC      =
   ECHO_HOSTCC  =
-  ECHO_GAS     =
+  ECHO_AS      =
   ECHO_NASM    =
   ECHO_AR      =
   ECHO_HOSTAR  =
   ECHO_WINEBLD =
   ECHO_WRC     =
+  ECHO_RC      =
+  ECHO_CVTRES  =
   ECHO_WIDL    =
   ECHO_BIN2RES =
   ECHO_DLLTOOL =
@@ -315,6 +319,7 @@ ifeq ($(TARGET_CPP),)
 endif
 gcc = $(Q)$(TARGET_CC)
 gpp = $(Q)$(TARGET_CPP)
+gas = $(Q)$(TARGET_CC) -x assembler-with-cpp
 ld = $(Q)$(PREFIX_)ld
 nm = $(Q)$(PREFIX_)nm
 objdump = $(Q)$(PREFIX_)objdump

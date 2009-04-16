@@ -4,7 +4,6 @@
 	<module name="hal_generic_up" type="objectlibrary">
 		<include>include</include>
 		<include base="ntoskrnl">include</include>
-		<define name="_DISABLE_TIDENTS" />
 		<define name="_NTHAL_" />
 		<directory name="generic">
 			<file>irq.S</file>

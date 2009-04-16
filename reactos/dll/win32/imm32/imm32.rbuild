@@ -6,7 +6,7 @@
 	<include base="imm32">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
-	<define name="_WIN32_WINNT">0x600</define>
+	<redefine name="_WIN32_WINNT">0x600</redefine>
 	<file>imm.c</file>
 	<file>version.rc</file>
 	<library>wine</library>

@@ -9,8 +9,8 @@
 	<library>idna</library>
 	<library>normaliz_redist_data</library>
 	<library>kernel32</library>
-	<compilerflag compiler="cpp">-fno-exceptions</compilerflag>
-	<compilerflag compiler="cpp">-fno-rtti</compilerflag>
+	<compilerflag compiler="cxx">-fno-exceptions</compilerflag>
+	<compilerflag compiler="cxx">-fno-rtti</compilerflag>
 	<include base="icu4ros">icu/source/common</include>
 	<importlibrary definition="normaliz.def" />
 	<file>normaliz.cpp</file>

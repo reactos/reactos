@@ -28,6 +28,7 @@
 #include <map>
 #include <set>
 #include <utility>
+#include <bitset>
 
 #ifdef WIN32
 #include <windows.h>

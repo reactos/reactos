@@ -3,7 +3,7 @@
 	<importlibrary definition="amstream.spec" />
 	<include base="amstream">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
-	<define name="_WIN32_WINNT">0x600</define>
+	<redefine name="_WIN32_WINNT">0x600</redefine>
 	<define name="__WINESRC__" />
 	<file>amstream.c</file>
 	<file>main.c</file>
