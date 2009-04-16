@@ -44,7 +44,7 @@ void ME_PaintContent(ME_TextEditor *editor, HDC hDC, BOOL bOnlyNew, const RECT *
   editor->nSequence++;
   ME_InitContext(&c, editor, hDC);
   SetBkMode(hDC, TRANSPARENT);
-  ME_MoveCaret(editor); /* Calls ME_WrapMarkedParagraphs */
+  ME_MoveCaret(editor);
   item = editor->pBuffer->pFirst->next;
   /* This context point is an offset for the paragraph positions stored
    * during wrapping. It shouldn't be modified during painting. */
@@ -137,7 +137,6 @@ void ME_Repaint(ME_TextEditor *editor)
 void ME_UpdateRepaint(ME_TextEditor *editor)
 {
   /* Should be called whenever the contents of the control have changed */
-  ME_Cursor *pCursor;
   BOOL wrappedParagraphs;
 
   wrappedParagraphs = ME_WrapMarkedParagraphs(editor);
@@ -145,8 +144,7 @@ void ME_UpdateRepaint(ME_TextEditor *editor)
     ME_UpdateScrollBar(editor);
 
   /* Ensure that the cursor is visible */
-  pCursor = &editor->pCursors[0];
-  ME_EnsureVisible(editor, pCursor);
+  ME_EnsureVisible(editor, &editor->pCursors[0]);
 
   /* send EN_CHANGE if the event mask asks for it */
   if(editor->nEventMask & ENM_CHANGE)
@@ -446,9 +444,9 @@ static void ME_DrawRun(ME_Context *c, int x, int y, ME_DisplayItem *rundi, ME_Pa
   {
     if (c->editor->cPasswordMask)
     {
-      ME_String *szMasked = ME_MakeStringR(c->editor->cPasswordMask,ME_StrVLen(run->strText));
+      ME_String *szMasked = ME_MakeStringR(c->editor->cPasswordMask, run->strText->nLen);
       ME_DrawTextWithStyle(c, x, y,
-        szMasked->szData, ME_StrVLen(szMasked), run->style, run->nWidth,
+        szMasked->szData, szMasked->nLen, run->style, run->nWidth,
         nSelFrom-runofs,nSelTo-runofs,
         c->pt.y + para->pt.y + start->member.row.pt.y,
         start->member.row.nHeight);
@@ -456,7 +454,7 @@ static void ME_DrawRun(ME_Context *c, int x, int y, ME_DisplayItem *rundi, ME_Pa
     }
     else
       ME_DrawTextWithStyle(c, x, y,
-        run->strText->szData, ME_StrVLen(run->strText), run->style, run->nWidth,
+        run->strText->szData, run->strText->nLen, run->style, run->nWidth,
         nSelFrom-runofs,nSelTo-runofs,
         c->pt.y + para->pt.y + start->member.row.pt.y,
         start->member.row.nHeight);
@@ -1073,7 +1071,8 @@ void ME_ScrollAbs(ME_TextEditor *editor, int x, int y)
 
     bScrollBarIsVisible = (winStyle & WS_VSCROLL) != 0;
     bScrollBarWillBeVisible = (editor->nTotalLength > editor->sizeWindow.cy
-                               && (editor->styleFlags & WS_VSCROLL))
+                               && (editor->styleFlags & WS_VSCROLL)
+                               && (editor->styleFlags & ES_MULTILINE))
                               || (editor->styleFlags & ES_DISABLENOSCROLL);
     if (bScrollBarIsVisible != bScrollBarWillBeVisible)
       ITextHost_TxShowScrollBar(editor->texthost, SB_VERT,
@@ -1110,6 +1109,18 @@ void ME_ScrollLeft(ME_TextEditor *editor, int cx)
 void ME_ScrollRight(ME_TextEditor *editor, int cx)
 {
   ME_HScrollAbs(editor, editor->horz_si.nPos + cx);
+}
+
+/* Calculates the visiblity after a call to SetScrollRange or
+ * SetScrollInfo with SIF_RANGE. */
+static BOOL ME_PostSetScrollRangeVisibility(SCROLLINFO *si)
+{
+  if (si->fMask & SIF_DISABLENOSCROLL)
+    return TRUE;
+
+  /* This must match the check in SetScrollInfo to determine whether
+   * to show or hide the scrollbars. */
+  return si->nMin < si->nMax - max(si->nPage - 1, 0);
 }
 
 void ME_UpdateScrollBar(ME_TextEditor *editor)
@@ -1159,15 +1170,14 @@ void ME_UpdateScrollBar(ME_TextEditor *editor)
         ITextHost_TxSetScrollRange(editor->texthost, SB_HORZ, si.nMin, si.nMax, FALSE);
         ITextHost_TxSetScrollPos(editor->texthost, SB_HORZ, si.nPos, TRUE);
       }
+      /* SetScrollInfo or SetScrollRange change scrollbar visibility. */
+      bScrollBarWasVisible = ME_PostSetScrollRangeVisibility(&si);
     }
   }
 
   if (si.fMask & SIF_DISABLENOSCROLL) {
     bScrollBarWillBeVisible = TRUE;
   } else if (!(editor->styleFlags & WS_HSCROLL)) {
-    /* SetScrollInfo or SetScrollRange may cause the scrollbar to be
-     * shown, so hide the scrollbar if necessary. */
-    bScrollBarWasVisible = bScrollBarWillBeVisible;
     bScrollBarWillBeVisible = FALSE;
   }
 
@@ -1176,7 +1186,8 @@ void ME_UpdateScrollBar(ME_TextEditor *editor)
 
   /* Update vertical scrollbar */
   bScrollBarWasVisible = editor->vert_si.nMax > editor->vert_si.nPage;
-  bScrollBarWillBeVisible = editor->nTotalLength > editor->sizeWindow.cy;
+  bScrollBarWillBeVisible = editor->nTotalLength > editor->sizeWindow.cy &&
+                            (editor->styleFlags & ES_MULTILINE);
 
   if (editor->vert_si.nPos && !bScrollBarWillBeVisible)
   {
@@ -1205,15 +1216,14 @@ void ME_UpdateScrollBar(ME_TextEditor *editor)
         ITextHost_TxSetScrollRange(editor->texthost, SB_VERT, si.nMin, si.nMax, FALSE);
         ITextHost_TxSetScrollPos(editor->texthost, SB_VERT, si.nPos, TRUE);
       }
+      /* SetScrollInfo or SetScrollRange change scrollbar visibility. */
+      bScrollBarWasVisible = ME_PostSetScrollRangeVisibility(&si);
     }
   }
 
   if (si.fMask & SIF_DISABLENOSCROLL) {
     bScrollBarWillBeVisible = TRUE;
   } else if (!(editor->styleFlags & WS_VSCROLL)) {
-    /* SetScrollInfo or SetScrollRange may cause the scrollbar to be
-     * shown, so hide the scrollbar if necessary. */
-    bScrollBarWasVisible = bScrollBarWillBeVisible;
     bScrollBarWillBeVisible = FALSE;
   }
 
@@ -1226,7 +1236,7 @@ void ME_EnsureVisible(ME_TextEditor *editor, ME_Cursor *pCursor)
 {
   ME_Run *pRun = &pCursor->pRun->member.run;
   ME_DisplayItem *pRow = ME_FindItemBack(pCursor->pRun, diStartRow);
-  ME_DisplayItem *pPara = ME_FindItemBack(pCursor->pRun, diParagraph);
+  ME_DisplayItem *pPara = pCursor->pPara;
   int x, y, yheight;
 
   assert(pRow);
@@ -1267,26 +1277,24 @@ ME_InvalidateSelection(ME_TextEditor *editor)
   assert(para1->type == diParagraph);
   assert(para2->type == diParagraph);
   /* last selection markers aren't always updated, which means
-  they can point past the end of the document */ 
+   * they can point past the end of the document */
   if (editor->nLastSelStart > len || editor->nLastSelEnd > len) {
     ME_MarkForPainting(editor,
         ME_FindItemFwd(editor->pBuffer->pFirst, diParagraph),
-        ME_FindItemFwd(editor->pBuffer->pFirst, diTextEnd));
+        editor->pBuffer->pLast);
   } else {
     /* if the start part of selection is being expanded or contracted... */
     if (nStart < editor->nLastSelStart) {
-      ME_MarkForPainting(editor, para1, ME_FindItemFwd(editor->pLastSelStartPara, diParagraphOrEnd));
-    } else
-    if (nStart > editor->nLastSelStart) {
-      ME_MarkForPainting(editor, editor->pLastSelStartPara, ME_FindItemFwd(para1, diParagraphOrEnd));
+      ME_MarkForPainting(editor, para1, editor->pLastSelStartPara->member.para.next_para);
+    } else if (nStart > editor->nLastSelStart) {
+      ME_MarkForPainting(editor, editor->pLastSelStartPara, para1->member.para.next_para);
     }
 
     /* if the end part of selection is being contracted or expanded... */
     if (nEnd < editor->nLastSelEnd) {
-      ME_MarkForPainting(editor, para2, ME_FindItemFwd(editor->pLastSelEndPara, diParagraphOrEnd));
-    } else
-    if (nEnd > editor->nLastSelEnd) {
-      ME_MarkForPainting(editor, editor->pLastSelEndPara, ME_FindItemFwd(para2, diParagraphOrEnd));
+      ME_MarkForPainting(editor, para2, editor->pLastSelEndPara->member.para.next_para);
+    } else if (nEnd > editor->nLastSelEnd) {
+      ME_MarkForPainting(editor, editor->pLastSelEndPara, para2->member.para.next_para);
     }
   }
 

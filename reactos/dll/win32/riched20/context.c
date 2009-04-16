@@ -22,7 +22,7 @@
 
 void ME_InitContext(ME_Context *c, ME_TextEditor *editor, HDC hDC)
 {
-  c->nSequence = editor->nSequence++;  
+  c->nSequence = editor->nSequence++;
   c->hDC = hDC;
   c->editor = editor;
   c->pt.x = 0;
@@ -35,6 +35,10 @@ void ME_InitContext(ME_Context *c, ME_TextEditor *editor, HDC hDC)
   } else {
       c->dpi.cx = c->dpi.cy = 96;
   }
+  if (editor->nAvailWidth)
+      c->nAvailWidth = ME_twips2pointsX(c, editor->nAvailWidth);
+  else
+      c->nAvailWidth = c->rcView.right - c->rcView.left;
 }
 
 void ME_DestroyContext(ME_Context *c)

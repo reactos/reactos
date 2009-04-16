@@ -316,7 +316,7 @@ static void ME_PlayUndoItem(ME_TextEditor *editor, ME_DisplayItem *pItem)
     ME_Cursor tmp;
     ME_CursorFromCharOfs(editor, pUItem->nStart, &tmp);
     /* the only thing that's needed is paragraph offset, so no need to split runs */
-    ME_JoinParagraphs(editor, ME_GetParagraph(tmp.pRun), TRUE);
+    ME_JoinParagraphs(editor, tmp.pPara, TRUE);
     break;
   }
   case diUndoSplitParagraph:
@@ -329,7 +329,7 @@ static void ME_PlayUndoItem(ME_TextEditor *editor, ME_DisplayItem *pItem)
     if (tmp.nOffset)
       tmp.pRun = ME_SplitRunSimple(editor, tmp.pRun, tmp.nOffset);
     assert(pUItem->eol_str);
-    this_para = ME_GetParagraph(tmp.pRun);
+    this_para = tmp.pPara;
     bFixRowStart = this_para->member.para.nFlags & MEPF_ROWSTART;
     if (bFixRowStart)
     {

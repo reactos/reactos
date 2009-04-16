@@ -208,7 +208,7 @@ ME_DisplayItem *ME_SplitParagraph(ME_TextEditor *editor, ME_DisplayItem *run,
   ME_DisplayItem *new_para = ME_MakeDI(diParagraph);
   ME_DisplayItem *end_run;
   ME_UndoItem *undo = NULL;
-  int ofs;
+  int ofs, i;
   ME_DisplayItem *pp;
   int run_flags = MERF_ENDPARA;
 
@@ -236,14 +236,23 @@ ME_DisplayItem *ME_SplitParagraph(ME_TextEditor *editor, ME_DisplayItem *run,
   undo = ME_AddUndoItem(editor, diUndoJoinParagraphs, NULL);
   if (undo)
     undo->nStart = run_para->member.para.nCharOfs + ofs;
-  
+
+  /* Update selection cursors to point to the correct paragraph. */
+  for (i = 0; i < editor->nCursors; i++) {
+    if (editor->pCursors[i].pPara == run_para &&
+        run->member.run.nCharOfs <= editor->pCursors[i].pRun->member.run.nCharOfs)
+    {
+      editor->pCursors[i].pPara = new_para;
+    }
+  }
+
   /* the new paragraph will have a different starting offset, so let's update its runs */
   pp = run;
   while(pp->type == diRun) {
     pp->member.run.nCharOfs -= ofs;
     pp = ME_FindItemFwd(pp, diRunOrParagraphOrEnd);
   }
-  new_para->member.para.nCharOfs = ME_GetParagraph(run)->member.para.nCharOfs+ofs;
+  new_para->member.para.nCharOfs = run_para->member.para.nCharOfs + ofs;
   new_para->member.para.nCharOfs += eol_str->nLen;
   new_para->member.para.nFlags = MEPF_REWRAP;
 
@@ -309,11 +318,11 @@ ME_DisplayItem *ME_SplitParagraph(ME_TextEditor *editor, ME_DisplayItem *run,
   /* force rewrap of the */
   run_para->member.para.prev_para->member.para.nFlags |= MEPF_REWRAP;
   new_para->member.para.prev_para->member.para.nFlags |= MEPF_REWRAP;
-  
+
   /* we've added the end run, so we need to modify nCharOfs in the next paragraphs */
   ME_PropagateCharOffset(next_para, eol_str->nLen);
   editor->nParagraphs++;
-  
+
   return new_para;
 }
 
@@ -330,9 +339,9 @@ ME_DisplayItem *ME_JoinParagraphs(ME_TextEditor *editor, ME_DisplayItem *tp,
   assert(tp->type == diParagraph);
   assert(tp->member.para.next_para);
   assert(tp->member.para.next_para->type == diParagraph);
-  
+
   pNext = tp->member.para.next_para;
-  
+
   /* Need to locate end-of-paragraph run here, in order to know end_len */
   pRun = ME_FindItemBack(pNext, diRunOrParagraph);
 
@@ -397,19 +406,21 @@ ME_DisplayItem *ME_JoinParagraphs(ME_TextEditor *editor, ME_DisplayItem *tp,
       pTmp = pTmp->next;
     }
   }
-  
+
   shift = pNext->member.para.nCharOfs - tp->member.para.nCharOfs - end_len;
-  
+
   pFirstRunInNext = ME_FindItemFwd(pNext, diRunOrParagraph);
 
   assert(pFirstRunInNext->type == diRun);
-  
-  /* if some cursor points at end of paragraph, make it point to the first
-     run of the next joined paragraph */
-  for (i=0; i<editor->nCursors; i++) {
+
+  /* Update selection cursors so they don't point to the removed end
+   * paragraph run, and point to the correct paragraph. */
+  for (i=0; i < editor->nCursors; i++) {
     if (editor->pCursors[i].pRun == pRun) {
       editor->pCursors[i].pRun = pFirstRunInNext;
       editor->pCursors[i].nOffset = 0;
+    } else if (editor->pCursors[i].pPara == pNext) {
+      editor->pCursors[i].pPara = tp;
     }
   }
 
@@ -421,7 +432,7 @@ ME_DisplayItem *ME_JoinParagraphs(ME_TextEditor *editor, ME_DisplayItem *tp,
     TRACE("shifting \"%s\" by %d (previous %d)\n", debugstr_w(pTmp->member.run.strText->szData), shift, pTmp->member.run.nCharOfs);
     pTmp->member.run.nCharOfs += shift;
   } while(1);
-  
+
   ME_Remove(pRun);
   ME_DestroyDisplayItem(pRun);
 
@@ -429,16 +440,16 @@ ME_DisplayItem *ME_JoinParagraphs(ME_TextEditor *editor, ME_DisplayItem *tp,
     editor->pLastSelStartPara = tp;
   if (editor->pLastSelEndPara == pNext)
     editor->pLastSelEndPara = tp;
-    
+
   tp->member.para.next_para = pNext->member.para.next_para;
   pNext->member.para.next_para->member.para.prev_para = tp;
   ME_Remove(pNext);
   ME_DestroyDisplayItem(pNext);
 
   ME_PropagateCharOffset(tp->member.para.next_para, -end_len);
-  
+
   ME_CheckCharOffsets(editor);
-  
+
   editor->nParagraphs--;
   tp->member.para.nFlags |= MEPF_REWRAP;
   return tp;
@@ -515,9 +526,12 @@ void
 ME_GetSelectionParas(ME_TextEditor *editor, ME_DisplayItem **para, ME_DisplayItem **para_end)
 {
   ME_Cursor *pEndCursor = &editor->pCursors[1];
-  
-  *para = ME_GetParagraph(editor->pCursors[0].pRun);
-  *para_end = ME_GetParagraph(editor->pCursors[1].pRun);
+
+  *para = editor->pCursors[0].pPara;
+  *para_end = editor->pCursors[1].pPara;
+  if (*para == *para_end)
+    return;
+
   if ((*para_end)->member.para.nCharOfs < (*para)->member.para.nCharOfs) {
     ME_DisplayItem *tmp = *para;
 
@@ -525,22 +539,20 @@ ME_GetSelectionParas(ME_TextEditor *editor, ME_DisplayItem **para, ME_DisplayIte
     *para_end = tmp;
     pEndCursor = &editor->pCursors[0];
   }
-  
-  /* selection consists of chars from nFrom up to nTo-1 */
-  if ((*para_end)->member.para.nCharOfs > (*para)->member.para.nCharOfs) {
-    if (!pEndCursor->nOffset) {
-      *para_end = ME_GetParagraph(ME_FindItemBack(pEndCursor->pRun, diRun));
-    }
-  }
+
+  /* The paragraph at the end of a non-empty selection isn't included
+   * if the selection ends at the start of the paragraph. */
+  if (!pEndCursor->pRun->member.run.nCharOfs && !pEndCursor->nOffset)
+    *para_end = (*para_end)->member.para.prev_para;
 }
 
 
 BOOL ME_SetSelectionParaFormat(ME_TextEditor *editor, const PARAFORMAT2 *pFmt)
 {
   ME_DisplayItem *para, *para_end;
-  
+
   ME_GetSelectionParas(editor, &para, &para_end);
- 
+
   do {
     ME_SetParaFormat(editor, para, pFmt);
     if (para == para_end)
