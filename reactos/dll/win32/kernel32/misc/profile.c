@@ -213,30 +213,29 @@ static void PROFILE_Save( HANDLE hFile, const PROFILESECTION *section, ENCODING 
 
     for ( ; section; section = section->next)
     {
-        int len = 4;
+        int len = 0;
 
-        if (section->name[0]) len += wcslen(section->name);
+        if (section->name[0]) len += wcslen(section->name) + 4;
 
         for (key = section->key; key; key = key->next)
         {
-            len += wcslen(key->name);
-            if (key->value && key->value[0]) len += wcslen(key->value);
-            len += 3; /* '=' and "\r\n" */
+            len += wcslen(key->name) + 2;
+            if (key->value) len += wcslen(key->value) + 1;
         }
 
         buffer = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
         if (!buffer) return;
 
         p = buffer;
-        *p++ = '[';
         if (section->name[0])
         {
+            *p++ = '[';
             wcscpy( p, section->name );
             p += wcslen(p);
+            *p++ = ']';
+            *p++ = '\r';
+            *p++ = '\n';
         }
-        *p++ = ']';
-        *p++ = '\r';
-        *p++ = '\n';
 
         for (key = section->key; key; key = key->next)
         {
