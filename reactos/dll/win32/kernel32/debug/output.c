@@ -246,6 +246,8 @@ OutputDebugStringA(LPCSTR _OutputString)
 
 		_SEH2_TRY
 		{
+			volatile PCHAR a_cBuffer = NULL;
+
 			/* opening the mutex failed */
 			if(hDBMonMutex == NULL)
 			{
@@ -339,8 +341,13 @@ OutputDebugStringA(LPCSTR _OutputString)
 					else
 					{
 						/* output in blocks of 512 characters */
-						volatile PCHAR a_cBuffer;
 						a_cBuffer = (CHAR*)HeapAlloc(GetProcessHeap(), 0, 512);
+
+						if (!a_cBuffer)
+						{
+							DbgPrint("OutputDebugStringA: Failed\n");
+							break;
+						}
 
 						/* write a maximum of 511 bytes */
 						if(nOutputStringLen > 510)
@@ -357,7 +364,11 @@ OutputDebugStringA(LPCSTR _OutputString)
 						/* send the current block to the kernel debugger */
 						DbgPrint("%s", a_cBuffer);
 
-						HeapFree(GetProcessHeap(), 0, a_cBuffer);
+						if (a_cBuffer)
+						{
+							HeapFree(GetProcessHeap(), 0, a_cBuffer);
+							a_cBuffer = NULL;
+						}
 					}
 
 					/* move to the next block */
@@ -370,6 +381,9 @@ OutputDebugStringA(LPCSTR _OutputString)
 			/* ignore access violations and let other exceptions fall through */
 			_SEH2_EXCEPT((_SEH2_GetExceptionCode() == STATUS_ACCESS_VIOLATION) ? EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH)
 			{
+				if (a_cBuffer)
+					HeapFree(GetProcessHeap(), 0, a_cBuffer);
+
 				/* string copied verbatim from Microsoft's kernel32.dll */
 				DbgPrint("\nOutputDebugString faulted during output\n");
 			}
