@@ -29,6 +29,8 @@ NdisInitializeReadWriteLock(
  */
 {
   RtlZeroMemory(Lock, sizeof(NDIS_RW_LOCK));
+
+  KeInitializeSpinLock(&Lock->SpinLock);
 }
 
 
