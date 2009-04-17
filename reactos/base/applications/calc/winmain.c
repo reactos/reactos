@@ -38,10 +38,10 @@ typedef struct {
 } key2code_t;
 
 typedef struct {
-    WORD idc;  // IDC for posting message
-    CHAR key;  // Virtual key identifier
-    BYTE mask; // enable/disable into the various modes.
-    INT  col;  // color used for drawing the text
+    WORD     idc;  // IDC for posting message
+    CHAR     key;  // Virtual key identifier
+    BYTE     mask; // enable/disable into the various modes.
+    COLORREF col;  // color used for drawing the text
 } key3code_t;
 
 #define CTRL_FLAG   0x100
@@ -209,9 +209,9 @@ static const function_table_t function_table[] = {
     { IDC_BUTTON_DAT,  0,                         1, run_dat_sta, NULL,        NULL,     NULL,     },
     { IDC_BUTTON_MP,   MODIFIER_INV,              1, run_mp,      run_mm,      NULL,     NULL,     },
     { IDC_BUTTON_MS,   MODIFIER_INV,              1, run_ms,      run_mw,      NULL,     NULL,     },
-    { IDC_BUTTON_CANC, 0,                         0, run_canc,    NULL,        NULL,     NULL,     },
-    { IDC_BUTTON_RIGHTPAR, 0,                     1, run_rpar,    NULL,        NULL,     NULL,     },
-    { IDC_BUTTON_LEFTPAR,  0,                     0, run_lpar,    NULL,        NULL,     NULL,     },
+    { IDC_BUTTON_CANC, NO_CHAIN,                  0, run_canc,    NULL,        NULL,     NULL,     },
+    { IDC_BUTTON_RIGHTPAR, NO_CHAIN,              1, run_rpar,    NULL,        NULL,     NULL,     },
+    { IDC_BUTTON_LEFTPAR,  NO_CHAIN,              0, run_lpar,    NULL,        NULL,     NULL,     },
 };
 
 /*
@@ -223,6 +223,9 @@ static void load_config(void)
 {
     TCHAR buf[32];
     DWORD tmp;
+#if _WIN32_WINNT >= 0x0500
+    HKEY hKey;
+#endif
 
     /* Try to load last selected layout */
     GetProfileString(TEXT("SciCalc"), TEXT("layout"), TEXT("0"), buf, SIZEOF(buf));
@@ -239,9 +242,42 @@ static void load_config(void)
     /* memory is empty at startup */
     calc.is_memory = FALSE;
 
+#if _WIN32_WINNT >= 0x0500
+    /* empty these values */
+    calc.sDecimal[0] = TEXT('\0');
+    calc.sThousand[0] = TEXT('\0');
+
+    /* try to open the registry */
+    if (RegOpenKeyEx(HKEY_CURRENT_USER, 
+                     TEXT("Control Panel\\International"),
+                     0,
+                     KEY_QUERY_VALUE,
+                     &hKey) == ERROR_SUCCESS) {
+        /* get these values (ignore errors) */
+        tmp = sizeof(calc.sDecimal);
+        RegQueryValueEx(hKey, TEXT("sDecimal"), NULL, NULL, (LPBYTE)calc.sDecimal, &tmp);
+
+        tmp = sizeof(calc.sThousand);
+        RegQueryValueEx(hKey, TEXT("sThousand"), NULL, NULL, (LPBYTE)calc.sThousand, &tmp);
+
+        /* close the key */
+        RegCloseKey(hKey);
+    }
+    /* if something goes wrong, let's apply the defaults */
+    if (calc.sDecimal[0] == TEXT('\0'))
+        _tcscpy(calc.sDecimal, TEXT("."));
+
+    if (calc.sThousand[0] == TEXT('\0'))
+        _tcscpy(calc.sThousand, TEXT(","));
+
+    /* get the string lengths */
+    calc.sDecimal_len = _tcslen(calc.sDecimal);
+    calc.sThousand_len = _tcslen(calc.sThousand);
+#else
     /* acquire regional settings */
     calc.sDecimal_len  = GetProfileString(TEXT("intl"), TEXT("sDecimal"), TEXT("."), calc.sDecimal, SIZEOF(calc.sDecimal));
     calc.sThousand_len = GetProfileString(TEXT("intl"), TEXT("sThousand"), TEXT(","), calc.sThousand, SIZEOF(calc.sThousand));
+#endif
 }
 
 static void save_config(void)
@@ -1427,7 +1463,8 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
                         if (x == RPN_OPERATOR_EQUAL) {
                             exec_infix2postfix(&calc.code, calc.prev_operator);
                             rpn_copy(&calc.code, &calc.prev);
-                        }
+                        } else
+                            break;
                     }
 
                     /* if no change then quit silently, */
@@ -1569,6 +1606,8 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
                         convert_text2number(&calc.code);
                         cb(&calc.code);
                         display_rpn_result(hWnd, &calc.code);
+                        if (!(function_table[x].range & NO_CHAIN))
+                            exec_infix2postfix(&calc.code, RPN_OPERATOR_NONE);
                         if (function_table[x].range & MODIFIER_INV)
                             SendDlgItemMessage(hWnd, IDC_CHECK_INV, BM_SETCHECK, 0, 0);
                         if (function_table[x].range & MODIFIER_HYP)

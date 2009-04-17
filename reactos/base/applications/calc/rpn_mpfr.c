@@ -364,6 +364,9 @@ int exec_infix2postfix(calc_number_t *number, unsigned int func)
     push(&tmp);
     mpfr_clear(tmp.node.number.mf);
 
+    if (func == RPN_OPERATOR_NONE)
+        return 0;
+
     if (func != RPN_OPERATOR_PARENT) {
         calc.last_operator = func;
         evalStack(number);
