@@ -2397,9 +2397,11 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWINDOW_OBJECT Window)
    BOOLEAN isChild;
    PWINDOW Wnd;
 
-   ASSERT_REFS_CO(Window); //fixme: temp hack?
+   ASSERT_REFS_CO(Window); // FIXME: temp hack?
 
    Wnd = Window->Wnd;
+
+   if (!Wnd) return TRUE; // FIXME: Need to finish object rewrite or lock the thread when killing the window!
 
    /* Check for owner thread */
    if ((Window->OwnerThread != PsGetCurrentThread()))
