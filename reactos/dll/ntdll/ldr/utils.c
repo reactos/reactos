@@ -858,7 +858,6 @@ LdrFindEntryForName(PUNICODE_STRING Name,
   PLDR_DATA_TABLE_ENTRY ModulePtr;
   BOOLEAN ContainsPath;
   UNICODE_STRING AdjustedName;
-  unsigned i;
 
   DPRINT("LdrFindEntryForName(Name %wZ)\n", Name);
 
@@ -882,14 +881,8 @@ LdrFindEntryForName(PUNICODE_STRING Name,
       return(STATUS_SUCCESS);
     }
 
-  LdrAdjustDllName (&AdjustedName, Name, TRUE);
-
-  ContainsPath = (AdjustedName.Length >= 2 * sizeof(WCHAR) && L':' == AdjustedName.Buffer[1]);
-  for (i = 0; ! ContainsPath && i < AdjustedName.Length / sizeof(WCHAR); i++)
-    {
-      ContainsPath = L'\\' == AdjustedName.Buffer[i] ||
-                     L'/' == AdjustedName.Buffer[i];
-    }
+  ContainsPath = (Name->Length >= 2 * sizeof(WCHAR) && L':' == Name->Buffer[1]);
+  LdrAdjustDllName (&AdjustedName, Name, !ContainsPath);
 
   if (LdrpLastModule)
     {
