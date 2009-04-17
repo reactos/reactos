@@ -10,6 +10,7 @@
 #include "lang/fr-FR.rc"
 #include "lang/id-ID.rc"
 #include "lang/it-IT.rc"
+#include "lang/ja-JP.rc"
 #include "lang/no-NO.rc"
 #include "lang/pl-PL.rc"
 #include "lang/ru-RU.rc"
@@ -20,6 +21,5 @@
 /*
 #include "lang/da-DK.rc"
 #include "lang/hu-HU.rc"
-#include "lang/ja-JP.rc"
 #include "lang/nl-NL.rc"
 */

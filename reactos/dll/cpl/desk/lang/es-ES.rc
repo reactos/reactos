@@ -18,11 +18,11 @@ BEGIN
     CONTROL         "",IDC_BACKGROUND_LIST,"SysListView32",LVS_REPORT |
                     LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS |
                     WS_BORDER | WS_TABSTOP, 7, 99, 173, 71
-    LTEXT           "Fondo:",
+    LTEXT           "&Fondo:",
                     IDC_STATIC, 8, 87, 180, 8
-    PUSHBUTTON      "&Examinar...",IDC_BROWSE_BUTTON, 187, 135, 50, 14
-    PUSHBUTTON      "&Color...",IDC_COLOR_BUTTON, 187, 155, 50, 14
-    LTEXT           "Posición",IDC_STATIC, 187, 98, 36, 8
+    PUSHBUTTON      "E&xaminar...",IDC_BROWSE_BUTTON, 187, 135, 50, 14
+    PUSHBUTTON      "C&olor...",IDC_COLOR_BUTTON, 187, 155, 50, 14
+    LTEXT           "Po&sición",IDC_STATIC, 187, 98, 36, 8
     COMBOBOX        IDC_PLACEMENT_COMBO, 187, 108, 50, 90,
                     CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 END
@@ -43,13 +43,13 @@ BEGIN
     CONTROL         "",IDC_SCREENS_TIME ,UPDOWN_CLASS,UDS_SETBUDDYINT |
                     UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS |
                     WS_BORDER | WS_GROUP, 61, 123, 12, 13
-    LTEXT           "minutos", IDC_MINTEXT, 70, 125, 26, 9
+    LTEXT           "minutos", IDC_MINTEXT, 72, 125, 26, 9
     CONTROL         "Pr&oteger con contraseña al reanudar",IDC_SCREENS_USEPASSCHK,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP, 104, 120, 130, 19 //104
     GROUPBOX        "Energía del monitor ", IDC_SCREENS_DUMMY2, 6, 155, 232, 41
     LTEXT           "Para ajustar la configuración de energía del monitor y ahorrar energía, haga clic en Energía.",
                     IDC_STATIC, 14, 166, 146 ,24
-    PUSHBUTTON      "E&nergía...", IDC_SCREENS_POWER_BUTTON, 176, 171, 50, 13
+    PUSHBUTTON      "E&nergía...", IDC_SCREENS_POWER_BUTTON, 176, 175, 50, 13
 END
 
 IDD_APPEARANCE DIALOGEX DISCARDABLE  0, 0, 246, 228
@@ -59,10 +59,10 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass",
                     WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
-    LTEXT           "Combinación de colores", IDC_STATIC, 7, 140, 90, 7 //84
+    LTEXT           "Com&binación de colores:", IDC_STATIC, 7, 160, 90, 7 //84
     COMBOBOX        IDC_APPEARANCE_UI_ITEM, 7, 169, 120, 54, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "&Effects...", IDC_APPEARANCE_EFFECTS, 182, 150, 56, 15
-    PUSHBUTTON      "Avanzado", IDC_APPEARANCE_ADVANCED, 182, 170, 56, 15
+    PUSHBUTTON      "&Efectos...", IDC_APPEARANCE_EFFECTS, 162, 185, 76, 15
+    PUSHBUTTON      "Opciones &avanzadas", IDC_APPEARANCE_ADVANCED, 162, 205, 76, 15
 END
 
 IDD_ADVAPPEARANCE DIALOGEX DISCARDABLE 0, 0, 250, 239
@@ -74,26 +74,26 @@ BEGIN
     CONTROL         "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass",
                     WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
 
-    LTEXT "Elemento:", 8, 5, 160, 50, 9
+    LTEXT "&Elemento:", 8, 5, 160, 50, 9
     COMBOBOX IDC_ADVAPPEARANCE_ELEMENT, 5, 170, 130, 90, CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_CHILD | WS_VSCROLL | WS_TABSTOP
 
     LTEXT "&Tamaño", IDC_ADVAPPEARANCE_SIZE_T, 142, 160, 39, 9
     EDITTEXT IDC_ADVAPPEARANCE_SIZE_E, 142, 170, 38, 13, ES_RIGHT | WS_GROUP
     CONTROL "", IDC_ADVAPPEARANCE_SIZE_UD, UPDOWN_CLASS, UDS_AUTOBUDDY | WS_BORDER | WS_GROUP | UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_SETBUDDYINT | WS_CHILD | WS_VISIBLE, 172, 170, 10, 13
 
-    LTEXT   "Color &1:", IDC_ADVAPPEARANCE_COLOR1_T, 184, 160, 40, 9
+    LTEXT   "C&olor 1:", IDC_ADVAPPEARANCE_COLOR1_T, 184, 160, 40, 9
     CHECKBOX   "-", IDC_ADVAPPEARANCE_COLOR1_B, 184, 170, 28, 13, BS_PUSHLIKE | BS_BITMAP
 
     LTEXT   "Color &2:", IDC_ADVAPPEARANCE_COLOR2_T, 216, 160, 40, 9
     CHECKBOX   "-", IDC_ADVAPPEARANCE_COLOR2_B, 216, 170, 28, 13, BS_PUSHLIKE | BS_BITMAP
 
-    LTEXT "Fuente:", IDC_ADVAPPEARANCE_FONT_T, 5, 190, 50, 8
+    LTEXT "&Fuente:", IDC_ADVAPPEARANCE_FONT_T, 5, 190, 50, 8
     COMBOBOX IDC_ADVAPPEARANCE_FONT_C, 5, 200, 130, 90, CBS_DROPDOWN | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 
-    LTEXT   "Tamaño:", IDC_ADVAPPEARANCE_FONTSIZE_T, 142, 190, 39, 8
+    LTEXT   "Ta&maño:", IDC_ADVAPPEARANCE_FONTSIZE_T, 142, 190, 39, 8
     COMBOBOX IDC_ADVAPPEARANCE_FONTSIZE_E, 142, 200, 38, 200, CBS_DROPDOWN | WS_VSCROLL
 
-    LTEXT   "Color:", IDC_ADVAPPEARANCE_FONTCOLOR_T, 184, 190, 20, 9
+    LTEXT   "Colo&r:", IDC_ADVAPPEARANCE_FONTCOLOR_T, 184, 190, 20, 9
     CHECKBOX   "", IDC_ADVAPPEARANCE_FONTCOLOR_B, 184, 200, 28, 13, BS_PUSHLIKE | BS_BITMAP
 
     AUTOCHECKBOX   "B", IDC_ADVAPPEARANCE_FONTBOLD, 216, 200, 14, 13, BS_PUSHLIKE
@@ -103,40 +103,40 @@ BEGIN
     DEFPUSHBUTTON "Aceptar", IDOK, 137, 220, 50, 14
 END
 
-IDD_EFFAPPEARANCE DIALOGEX DISCARDABLE 0, 0, 285, 185
+IDD_EFFAPPEARANCE DIALOGEX DISCARDABLE 0, 0, 300, 185
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
-CAPTION "Effects"
+CAPTION "Efectos"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL         "&Use the following transition effect for menus and tooltips:",IDC_EFFAPPEARANCE_ANIMATION,"button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP, 10, 5, 285, 19
+    CONTROL         "&Usar el efecto de transición siguiente para menús e información sobre herramientas:",IDC_EFFAPPEARANCE_ANIMATION,"button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP, 10, 5, 290, 19
     COMBOBOX        IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 80, 19 , CBS_DROPDOWNLIST | CBS_HASSTRINGS | WS_CHILD | WS_VSCROLL | WS_TABSTOP
-    CONTROL         "U&se the following method to smooth edges of screen fonts:",IDC_EFFAPPEARANCE_SMOOTHING,"button",
+    CONTROL         "U&sar el siguiente método para suavizar los bordes de las fuentes de pantalla:",IDC_EFFAPPEARANCE_SMOOTHING,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 42, 285, 19
     COMBOBOX        IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 80, 19 , CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
-    CONTROL         "Us&e large icons",IDC_EFFAPPEARANCE_LARGEICONS,"button",
+    CONTROL         "Usar i&conos grandes",IDC_EFFAPPEARANCE_LARGEICONS,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 80, 285, 19
-    CONTROL         "Show sh&adows under menus",IDC_EFFAPPEARANCE_SETDROPSHADOW,"button",
+    CONTROL         "Mostrar som&bras bajo los menús",IDC_EFFAPPEARANCE_SETDROPSHADOW,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 95, 285, 19
-    CONTROL         "Show &window contents while dragging",IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,"button",
+    CONTROL         "&Mostrar el contenido de la ventana mientras se arrastra",IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 110, 285, 19
-    CONTROL         "&Hide underlined letters for keyboard navigation until I press the Alt key",IDC_EFFAPPEARANCE_KEYBOARDCUES,"button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 285, 19
-    PUSHBUTTON "Cancel", IDCANCEL, 226, 165, 50, 14
-    DEFPUSHBUTTON "OK", IDOK, 172, 165, 50, 14
+    CONTROL         "&Ocultar las letrar subrayadas de acceso rápido hasta que presione la tecla Alt",IDC_EFFAPPEARANCE_KEYBOARDCUES,"button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 290, 19
+    PUSHBUTTON "Cancelar", IDCANCEL, 241, 165, 50, 14
+    DEFPUSHBUTTON "Aceptar", IDOK, 187, 165, 50, 14
 END
 
 IDD_SETTINGS DIALOGEX DISCARDABLE  0, 0, 246, 188
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Configuración"
 FONT 8, "MS Shell Dlg"
-BEGIN
+BEGIN	
     LTEXT           "Arrastre los iconos para ajustar el orden físico de sus monitores.",-1,3,3,240,10
     CONTROL         "",IDC_SETTINGS_MONSEL,"MONITORSELWNDCLASS",WS_CHILD|WS_VISIBLE|WS_TABSTOP,3,16,240,82,WS_EX_CLIENTEDGE
-    LTEXT           "Monitor",1820,3,100,30,8
+    LTEXT           "Mostrar",1820,3,100,30,8
     LTEXT           "<ninguno>",IDC_SETTINGS_DEVICE,9,109,224,8
-    GROUPBOX        "Resolución de &pantalla ",1818,3,120,115,43
+    GROUPBOX        "&Resolución de pantalla ",1818,3,120,115,43
     CONTROL         "",IDC_SETTINGS_RESOLUTION,"msctls_trackbar32",
                     TBS_AUTOTICKS | WS_TABSTOP, 30, 130, 58, 17
     LTEXT           "Menor",1815,8,130,21,8,NOT WS_GROUP
@@ -146,7 +146,7 @@ BEGIN
     COMBOBOX        IDC_SETTINGS_BPP,131,130,103,80,CBS_DROPDOWNLIST | CBS_AUTOHSCROLL |
                     WS_VSCROLL | WS_TABSTOP
     CONTROL         "",IDC_SETTINGS_SPECTRUM,"Static",SS_OWNERDRAW | SS_SUNKEN,131,148,103,9
-    PUSHBUTTON      "A&vanzado...",IDC_SETTINGS_ADVANCED,170,165,70,14
+    PUSHBUTTON      "Opciones &avanzadas",IDC_SETTINGS_ADVANCED,140,165,100,14
 END
 
 IDD_ADVANCED_GENERAL DIALOGEX DISCARDABLE 0, 0, 253, 204
@@ -159,7 +159,7 @@ BEGIN
     COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_FONTSIZE_COSTOM, 14, 46, 223, 12
     GROUPBOX "Compatibilidad ", -1, 7, 67, 237, 97
-    LTEXT "Algunos programas no funcionan correctamente si no reinicia el equipo después de cambiar la configuración de pantalla.\r\n\nDespués de cambiar la configuración de pantalla:", -1, 12, 78, 228, 34
+    LTEXT "Es posible que algunos programas no funcionen correctamente si no reinicia el equipo después de cambiar la configuración de pantalla:", -1, 12, 78, 228, 34
     AUTORADIOBUTTON "&Reiniciar el equipo antes de aplicar la nueva configuración.", IDC_RESTART_RB, 14, 116, 224, 10
     AUTORADIOBUTTON "&Aplicar la nueva configuración de pantalla sin reiniciar.", IDC_WITHOUTREBOOT_RB, 14, 131, 224, 10
     AUTORADIOBUTTON "Pregu&ntar antes de aplicar la nueva configuración de pantalla.", IDC_ASKME_RB, 14, 146, 224, 10
@@ -186,13 +186,13 @@ END
 
 STRINGTABLE  DISCARDABLE
 BEGIN
-    IDS_SLIDEEFFECT "Slide effect"
-    IDS_FADEEFFECT  "Fade effect"
+    IDS_SLIDEEFFECT "Desplazamiento"
+    IDS_FADEEFFECT  "Atenuación"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_STANDARDEFFECT  "Standard"
+    IDS_STANDARDEFFECT  "Estándar"
     IDS_CLEARTYPEEFFECT "ClearType"
 END
 
