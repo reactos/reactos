@@ -327,6 +327,8 @@ NdisMAllocateMapRegisters(
       NDIS_DbgPrint(MIN_TRACE, ("Didn't get enough map registers from hal - requested 0x%x, got 0x%x\n",
           MapRegistersPerBaseRegister, AvailableMapRegisters));
 
+      AdapterObject->DmaOperations->PutDmaAdapter(AdapterObject);
+      Adapter->NdisMiniportBlock.SystemAdapterObject = NULL;
       return NDIS_STATUS_RESOURCES;
     }
 
@@ -335,6 +337,8 @@ NdisMAllocateMapRegisters(
   if(!Adapter->NdisMiniportBlock.MapRegisters)
     {
       NDIS_DbgPrint(MIN_TRACE, ("insufficient resources.\n"));
+      AdapterObject->DmaOperations->PutDmaAdapter(AdapterObject);
+      Adapter->NdisMiniportBlock.SystemAdapterObject = NULL;
       return NDIS_STATUS_RESOURCES;
     }
 
@@ -359,6 +363,9 @@ NdisMAllocateMapRegisters(
         {
           NDIS_DbgPrint(MIN_TRACE, ("IoAllocateAdapterChannel failed: 0x%x\n", NtStatus));
           ExFreePool(Adapter->NdisMiniportBlock.MapRegisters);
+          AdapterObject->DmaOperations->PutDmaAdapter(AdapterObject);
+          Adapter->NdisMiniportBlock.CurrentMapRegister = Adapter->NdisMiniportBlock.BaseMapRegistersNeeded = 0;
+          Adapter->NdisMiniportBlock.SystemAdapterObject = NULL;
           return NDIS_STATUS_RESOURCES;
         }
 
@@ -370,6 +377,9 @@ NdisMAllocateMapRegisters(
         {
           NDIS_DbgPrint(MIN_TRACE, ("KeWaitForSingleObject failed: 0x%x\n", NtStatus));
           ExFreePool(Adapter->NdisMiniportBlock.MapRegisters);
+          AdapterObject->DmaOperations->PutDmaAdapter(AdapterObject);
+          Adapter->NdisMiniportBlock.CurrentMapRegister = Adapter->NdisMiniportBlock.BaseMapRegistersNeeded = 0;
+          Adapter->NdisMiniportBlock.SystemAdapterObject = NULL;
           return NDIS_STATUS_RESOURCES;
         }
 
