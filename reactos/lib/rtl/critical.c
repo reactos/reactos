@@ -117,12 +117,15 @@ RtlpWaitForCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
     DPRINT("Waiting on Critical Section Event: %p %p\n",
             CriticalSection,
             CriticalSection->LockSemaphore);
-    CriticalSection->DebugInfo->EntryCount++;
+
+    if (CriticalSection->DebugInfo)
+        CriticalSection->DebugInfo->EntryCount++;
 
     for (;;) {
 
         /* Increase the number of times we've had contention */
-        CriticalSection->DebugInfo->ContentionCount++;
+        if (CriticalSection->DebugInfo)
+            CriticalSection->DebugInfo->ContentionCount++;
 
         /* Wait on the Event */
         Status = NtWaitForSingleObject(CriticalSection->LockSemaphore,
