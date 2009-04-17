@@ -219,9 +219,9 @@ OutputDebugStringA(LPCSTR _OutputString)
 		static BOOL s_bDBMonMutexTriedOpen = FALSE;
 
 		/* local copy of the mutex handle */
-		HANDLE hDBMonMutex = s_hDBMonMutex;
+		volatile HANDLE hDBMonMutex = s_hDBMonMutex;
 		/* handle to the Section of the shared buffer */
-		HANDLE hDBMonBuffer = NULL;
+		volatile HANDLE hDBMonBuffer = NULL;
 
 		/* pointer to the mapped view of the shared buffer. It consist of the current
 		   process id followed by the message string */
@@ -229,11 +229,11 @@ OutputDebugStringA(LPCSTR _OutputString)
 
 		/* event: signaled by the debug message monitor when OutputDebugString can write
 		   to the shared buffer */
-		HANDLE hDBMonBufferReady = NULL;
+		volatile HANDLE hDBMonBufferReady = NULL;
 
 		/* event: to be signaled by OutputDebugString when it's done writing to the
 		   shared buffer */
-		HANDLE hDBMonDataReady = NULL;
+		volatile HANDLE hDBMonDataReady = NULL;
 
 		/* mutex not opened, and no previous attempts to open/create it */
 		if(hDBMonMutex == NULL && !s_bDBMonMutexTriedOpen)
@@ -295,10 +295,10 @@ OutputDebugStringA(LPCSTR _OutputString)
 			_SEH2_TRY
 			{
 				/* size of the current output block */
-				SIZE_T nRoundLen;
+				volatile SIZE_T nRoundLen;
 
 				/* size of the remainder of the string */
-				SIZE_T nOutputStringLen;
+				volatile SIZE_T nOutputStringLen;
 
 				/* output the whole string */
 				nOutputStringLen = strlen(_OutputString);
@@ -339,11 +339,12 @@ OutputDebugStringA(LPCSTR _OutputString)
 					else
 					{
 						/* output in blocks of 512 characters */
-						CHAR a_cBuffer[512];
+						volatile PCHAR a_cBuffer;
+						a_cBuffer = (CHAR*)HeapAlloc(GetProcessHeap(), 0, 512);
 
 						/* write a maximum of 511 bytes */
-						if(nOutputStringLen > (sizeof(a_cBuffer) - 2))
-							nRoundLen = sizeof(a_cBuffer) - 2;
+						if(nOutputStringLen > 510)
+							nRoundLen = 510;
 						else
 							nRoundLen = nOutputStringLen;
 
@@ -355,6 +356,8 @@ OutputDebugStringA(LPCSTR _OutputString)
 
 						/* send the current block to the kernel debugger */
 						DbgPrint("%s", a_cBuffer);
+
+						HeapFree(GetProcessHeap(), 0, a_cBuffer);
 					}
 
 					/* move to the next block */
