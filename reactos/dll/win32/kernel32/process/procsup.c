@@ -720,34 +720,12 @@ CreateProcessInternalW(HANDLE hToken,
 
     if (lpCurrentDirectory)
     {
-        LPWSTR FilePart, Buffer = NULL;
-
-        Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
-                                 0,
-                                 (MAX_PATH + 1) * sizeof(WCHAR));
-
-        if (!Buffer)
+        if ((GetFileAttributesW(lpCurrentDirectory) == INVALID_FILE_ATTRIBUTES) ||
+            !(GetFileAttributesW(lpCurrentDirectory) & FILE_ATTRIBUTE_DIRECTORY))
         {
-            SetLastErrorByStatus(STATUS_NO_MEMORY);
-            return FALSE;
-        }
-
-        if (GetFullPathNameW(lpCurrentDirectory, MAX_PATH, Buffer, &FilePart) > MAX_PATH)
-        {
-            RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
             SetLastError(ERROR_DIRECTORY);
             return FALSE;
         }
-
-        if ((GetFileAttributesW(Buffer) == INVALID_FILE_ATTRIBUTES) ||
-            !(GetFileAttributesW(Buffer) & FILE_ATTRIBUTE_DIRECTORY))
-        {
-            RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
-            SetLastError(ERROR_DIRECTORY);
-            return FALSE;
-        }
-
-        RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
     }
 
     /*
