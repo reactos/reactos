@@ -749,5 +749,4 @@ BEGIN
 	IDS_INSTALLNEWFONT          "Install New Font..."
 
 	IDS_DEFAULT_CLUSTER_SIZE    "Default allocation size"
-	IDS_DESCRIPTION             "Description:"
 END
