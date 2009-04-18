@@ -9,6 +9,7 @@
 	<library>advapi32</library>
 	<library>userenv</library>
 	<library>secur32</library>
+	<library>shell32</library>
 	<file>sas.c</file>
 	<file>screensaver.c</file>
 	<file>setup.c</file>
