@@ -344,6 +344,10 @@ DWORD MsafdReturnWithErrno(NTSTATUS Status,
             DbgPrint("MSAFD: STATUS_REMOTE_NOT_LISTENING\n");
             *Errno = WSAECONNRESET;
             break;
+        case STATUS_NETWORK_UNREACHABLE:
+            DbgPrint("MSAFD: STATUS_NETWORK_UNREACHABLE\n");
+            *Errno = WSAENETUNREACH;
+            break;
         case STATUS_FILE_CLOSED:
             DbgPrint("MSAFD: STATUS_FILE_CLOSED\n");
             *Errno = WSAENOTSOCK;
