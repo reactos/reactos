@@ -234,9 +234,6 @@ DWORD PNP_ReportLogOn(
 
     DPRINT("PNP_ReportLogOn(%u, %u) called\n", Admin, ProcessId);
 
-    if (hInstallEvent != NULL)
-        SetEvent(hInstallEvent);
-
     /* Get the users token */
     hProcess = OpenProcess(PROCESS_ALL_ACCESS, TRUE, ProcessId);
 
@@ -259,8 +256,8 @@ DWORD PNP_ReportLogOn(
     }
 
     /* Trigger the installer thread */
-    /*if (hInstallEvent != NULL)
-        SetEvent(hInstallEvent);*/
+    if (hInstallEvent)
+        SetEvent(hInstallEvent);
 
     ReturnValue = CR_SUCCESS;
 
