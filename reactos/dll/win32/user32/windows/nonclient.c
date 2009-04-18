@@ -502,7 +502,13 @@ DefWndNCCalcSize(HWND hWnd, BOOL CalcSizeStruct, RECT *Rect)
    DWORD Style = GetClassLongW(hWnd, GCL_STYLE);
    DWORD ExStyle;
    SIZE WindowBorders;
-   RECT OrigRect = *Rect;
+   RECT OrigRect;
+
+   if (Rect == NULL)
+   {
+      return Result;
+   }
+   OrigRect = *Rect;
 
    if (CalcSizeStruct)
    {
