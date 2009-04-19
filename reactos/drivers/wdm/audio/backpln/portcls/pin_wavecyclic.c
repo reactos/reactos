@@ -691,6 +691,7 @@ CloseStreamRoutine(
             This->CloseIrp->IoStatus.Status = STATUS_SUCCESS;
             IoCompleteRequest(This->CloseIrp, IO_NO_INCREMENT);
         }
+        DPRINT1("Closing stream at Irql %u\n", KeGetCurrentIrql());
         Stream->lpVtbl->Release(Stream);
         /* this line is never reached */
     }
@@ -970,7 +971,10 @@ IPortPinWaveCyclic_fnInit(
         DPRINT1("Failed to add pin to service group\n");
         return Status;
     }
+    This->ServiceGroup->lpVtbl->AddRef(This->ServiceGroup);
     This->ServiceGroup->lpVtbl->SupportDelayedService(This->ServiceGroup);
+    This->DmaChannel->lpVtbl->AddRef(This->DmaChannel);
+
 
     This->State = KSSTATE_STOP;
     This->CommonBufferOffset = 0;
@@ -979,6 +983,9 @@ IPortPinWaveCyclic_fnInit(
     This->Capture = Capture;
 
     Status = This->Stream->lpVtbl->SetNotificationFreq(This->Stream, 10, &This->FrameSize);
+
+    This->Stream->lpVtbl->SetFormat(This->Stream, (PKSDATAFORMAT)This->Format);
+
 
     return STATUS_SUCCESS;
 }
