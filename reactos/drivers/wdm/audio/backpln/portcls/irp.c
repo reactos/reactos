@@ -122,6 +122,9 @@ PortClsPnp(
             Irp->IoStatus.Status = STATUS_SUCCESS;
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
             return STATUS_SUCCESS;
+       case IRP_MN_QUERY_RESOURCE_REQUIREMENTS:
+            DPRINT("IRP_MN_QUERY_RESOURCE_REQUIREMENTS\n");
+            return PcForwardIrpSynchronous(DeviceObject, Irp);
     }
 
     DPRINT1("unhandled function %u\n", IoStack->MinorFunction);
