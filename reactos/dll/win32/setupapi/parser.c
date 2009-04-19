@@ -1359,6 +1359,75 @@ void WINAPI SetupCloseInfFile( HINF hinf )
 
 
 /***********************************************************************
+ *            SetupEnumInfSectionsA   (SETUPAPI.@)
+ */
+BOOL WINAPI SetupEnumInfSectionsA( HINF hinf, UINT index, PSTR buffer, DWORD size, DWORD *need )
+{
+    struct inf_file *file = hinf;
+
+    for (file = hinf; file; file = file->next)
+    {
+        if (index < file->nb_sections)
+        {
+            DWORD len = WideCharToMultiByte( CP_ACP, 0, file->sections[index]->name, -1,
+                                             NULL, 0, NULL, NULL );
+            if (need) *need = len;
+            if (!buffer)
+            {
+                if (!size) return TRUE;
+                SetLastError( ERROR_INVALID_USER_BUFFER );
+                return FALSE;
+            }
+            if (len > size)
+            {
+                SetLastError( ERROR_INSUFFICIENT_BUFFER );
+                return FALSE;
+            }
+            WideCharToMultiByte( CP_ACP, 0, file->sections[index]->name, -1, buffer, size, NULL, NULL );
+            return TRUE;
+        }
+        index -= file->nb_sections;
+    }
+    SetLastError( ERROR_NO_MORE_ITEMS );
+    return FALSE;
+}
+
+
+/***********************************************************************
+ *            SetupEnumInfSectionsW   (SETUPAPI.@)
+ */
+BOOL WINAPI SetupEnumInfSectionsW( HINF hinf, UINT index, PWSTR buffer, DWORD size, DWORD *need )
+{
+    struct inf_file *file = hinf;
+
+    for (file = hinf; file; file = file->next)
+    {
+        if (index < file->nb_sections)
+        {
+            DWORD len = strlenW( file->sections[index]->name ) + 1;
+            if (need) *need = len;
+            if (!buffer)
+            {
+                if (!size) return TRUE;
+                SetLastError( ERROR_INVALID_USER_BUFFER );
+                return FALSE;
+            }
+            if (len > size)
+            {
+                SetLastError( ERROR_INSUFFICIENT_BUFFER );
+                return FALSE;
+            }
+            memcpy( buffer, file->sections[index]->name, len * sizeof(WCHAR) );
+            return TRUE;
+        }
+        index -= file->nb_sections;
+    }
+    SetLastError( ERROR_NO_MORE_ITEMS );
+    return FALSE;
+}
+
+
+/***********************************************************************
  *            SetupGetLineCountA   (SETUPAPI.@)
  */
 LONG WINAPI SetupGetLineCountA( HINF hinf, PCSTR name )

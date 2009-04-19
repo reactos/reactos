@@ -5337,7 +5337,7 @@ HKEY WINAPI SetupDiOpenDevRegKey(
        DWORD KeyType,
        REGSAM samDesired)
 {
-    struct DeviceInfoSet *set = (struct DeviceInfoSet *)DeviceInfoSet;
+    struct DeviceInfoSet *set = DeviceInfoSet;
     struct DeviceInfo *devInfo;
     HKEY key = INVALID_HANDLE_VALUE;
     HKEY RootKey;

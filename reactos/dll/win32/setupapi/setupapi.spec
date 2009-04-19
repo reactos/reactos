@@ -390,8 +390,8 @@
 @ stdcall SetupDiUnremoveDevice(ptr ptr)
 @ stub SetupDuplicateDiskSpaceListA
 @ stub SetupDuplicateDiskSpaceListW
-@ stub SetupEnumInfSectionsA
-@ stub SetupEnumInfSectionsW
+@ stdcall SetupEnumInfSectionsA(long long ptr long ptr)
+@ stdcall SetupEnumInfSectionsW(long long ptr long ptr)
 @ stdcall SetupFindFirstLineA(long str str ptr)
 @ stdcall SetupFindFirstLineW(long wstr wstr ptr)
 @ stdcall SetupFindNextLine(ptr ptr)
