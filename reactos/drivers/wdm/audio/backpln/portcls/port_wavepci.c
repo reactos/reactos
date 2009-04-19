@@ -760,3 +760,12 @@ NewPortWavePci(
     DPRINT("NewPortWavePci %p\n", *OutPort);
     return STATUS_SUCCESS;
 }
+
+PDEVICE_OBJECT
+GetDeviceObjectFromWaveCyclic(
+    IPortWavePci* iface)
+{
+    IPortWavePciImpl * This = (IPortWavePciImpl*)iface;
+    return This->pDeviceObject;
+}
+

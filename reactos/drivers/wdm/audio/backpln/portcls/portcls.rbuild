@@ -18,6 +18,7 @@
 	<file>drm_port.c</file>
 	<file>adapter.c</file>
 	<file>filter_wavecyclic.c</file>
+	<file>filter_wavepci.c</file>
 	<file>guids.c</file>
 	<file>irp.c</file>
 	<file>irpstream.c</file>
@@ -28,6 +29,7 @@
 	<file>registry.c</file>
 	<file>service_group.c</file>
 	<file>pin_wavecyclic.c</file>
+	<file>pin_wavepci.c</file>
 	<file>pool.c</file>
 	<file>port.c</file>
 	<file>power.c</file>

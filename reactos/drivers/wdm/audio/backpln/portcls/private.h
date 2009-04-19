@@ -88,6 +88,18 @@ NTSTATUS NewPortFilterWaveCyclic(
 NTSTATUS NewPortPinWaveCyclic(
     OUT IPortPinWaveCyclic ** OutPin);
 
+NTSTATUS 
+NewPortFilterWavePci(
+    OUT IPortFilterWavePci ** OutFilter);
+
+NTSTATUS NewPortPinWavePci(
+    OUT IPortPinWavePci ** OutPin);
+
+PDEVICE_OBJECT
+GetDeviceObjectFromWaveCyclic(
+    IPortWavePci* iface);
+
+
 NTSTATUS
 NTAPI
 NewDispatchObject(
