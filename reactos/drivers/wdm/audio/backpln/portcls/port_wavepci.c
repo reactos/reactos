@@ -30,6 +30,7 @@ typedef struct
     PPOWERNOTIFY pPowerNotify;
     PPCFILTER_DESCRIPTOR pDescriptor;
     PSUBDEVICE_DESCRIPTOR SubDeviceDescriptor;
+    IPortFilterWavePci * Filter;
 }IPortWavePciImpl;
 
 static GUID InterfaceGuids[3] = 
@@ -628,10 +629,33 @@ ISubDevice_fnNewIrpTarget(
     IN PIRP Irp, 
     IN KSOBJECT_CREATE *CreateObject)
 {
-    //IPortWavePciImpl * This = (IPortWavePciImpl*)CONTAINING_RECORD(iface, IPortWavePciImpl, lpVtblSubDevice);
+    NTSTATUS Status;
+    IPortFilterWavePci * Filter;
+    IPortWavePciImpl * This = (IPortWavePciImpl*)CONTAINING_RECORD(iface, IPortWavePciImpl, lpVtblSubDevice);
 
-    UNIMPLEMENTED
-    return STATUS_UNSUCCESSFUL;
+    DPRINT("ISubDevice_NewIrpTarget this %p\n", This);
+
+    if (This->Filter)
+    {
+        *OutTarget = (IIrpTarget*)This->Filter;
+        return STATUS_SUCCESS;
+    }
+
+    Status = NewPortFilterWavePci(&Filter);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    Status = Filter->lpVtbl->Init(Filter, (IPortWavePci*)This);
+    if (!NT_SUCCESS(Status))
+    {
+        Filter->lpVtbl->Release(Filter);
+        return Status;
+    }
+
+    *OutTarget = (IIrpTarget*)Filter;
+    return Status;
 }
 
 static
