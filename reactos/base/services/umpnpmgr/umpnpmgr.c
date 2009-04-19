@@ -1097,10 +1097,10 @@ DWORD PNP_DeviceInstanceAction(
     LPWSTR pszDeviceInstance2)
 {
     CONFIGRET ret = CR_SUCCESS;
+    NTSTATUS Status;
 
     UNREFERENCED_PARAMETER(hBinding);
     UNREFERENCED_PARAMETER(ulMinorAction);
-    UNREFERENCED_PARAMETER(pszDeviceInstance1);
     UNREFERENCED_PARAMETER(pszDeviceInstance2);
 
     DPRINT("PNP_DeviceInstanceAction() called\n");
@@ -1114,10 +1114,15 @@ DWORD PNP_DeviceInstanceAction(
             break;
 
         case PNP_DEVINST_ENABLE:
+        {
+            PLUGPLAY_CONTROL_RESET_DEVICE_DATA ResetDeviceData;
             DPRINT("Enable device instance\n");
-            /* FIXME */
-            ret = CR_CALL_NOT_IMPLEMENTED;
+            RtlInitUnicodeString(&ResetDeviceData.DeviceInstance, pszDeviceInstance1);
+            Status = NtPlugPlayControl(PlugPlayControlResetDevice, &ResetDeviceData, sizeof(PLUGPLAY_CONTROL_RESET_DEVICE_DATA));
+            if (!NT_SUCCESS(Status))
+                ret = NtStatusToCrError(Status);
             break;
+        }
 
         case PNP_DEVINST_REENUMERATE:
             DPRINT("Reenumerate device instance\n");
