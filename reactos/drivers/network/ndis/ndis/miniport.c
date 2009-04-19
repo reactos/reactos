@@ -259,6 +259,22 @@ MiniIndicateData(
   NDIS_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 }
 
+VOID NTAPI
+MiniQueryComplete(
+  IN NDIS_HANDLE  MiniportAdapterHandle,
+  IN NDIS_STATUS  Status)
+{
+    UNIMPLEMENTED;
+}
+
+VOID NTAPI
+MiniSetComplete(
+  IN NDIS_HANDLE  MiniportAdapterHandle,
+  IN NDIS_STATUS  Status)
+{
+    UNIMPLEMENTED;
+}
+
 
 VOID NTAPI
 MiniIndicateReceivePacket(
@@ -1825,6 +1841,9 @@ NdisIPnPStartDevice(
   Adapter->NdisMiniportBlock.PacketIndicateHandler= MiniIndicateReceivePacket;
   Adapter->NdisMiniportBlock.StatusHandler        = MiniStatus;
   Adapter->NdisMiniportBlock.StatusCompleteHandler= MiniStatusComplete;
+  Adapter->NdisMiniportBlock.SendPacketsHandler   = ProSendPackets;
+  Adapter->NdisMiniportBlock.QueryCompleteHandler = MiniQueryComplete;
+  Adapter->NdisMiniportBlock.SetCompleteHandler   = MiniSetComplete;
 
   /*
    * Call MiniportInitialize.
