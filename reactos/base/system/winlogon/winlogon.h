@@ -39,7 +39,6 @@
 #include <ntsecapi.h>
 #include <accctrl.h>
 #include <aclapi.h>
-#include <shlobj.h>
 
 #include <reactos/winlogon.h>
 
