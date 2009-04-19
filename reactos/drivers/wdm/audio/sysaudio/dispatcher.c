@@ -128,7 +128,7 @@ Dispatch_fnClose(
 
                     ExFreePool(DispatchContext);
 
-                    //DPRINT1("Index %u DeviceIndex %u Pin %u References %u\n", Index, Client->Devs[Index].DeviceId, SubIndex, Entry->Pins[Client->Devs[Index].ClientHandles[SubIndex].PinId].References);
+                    DPRINT("Index %u DeviceIndex %u Pin %u References %u\n", Index, Client->Devs[Index].DeviceId, SubIndex, Entry->Pins[Client->Devs[Index].ClientHandles[SubIndex].PinId].References);
                     if (!Entry->Pins[Client->Devs[Index].ClientHandles[SubIndex].PinId].References)
                     {
                         DPRINT("Closing pin %p\n", Entry->Pins[Client->Devs[Index].ClientHandles[SubIndex].PinId].PinHandle);
@@ -159,7 +159,7 @@ Dispatch_fnQuerySecurity(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
-    DPRINT1("Dispatch_fnQuerySecurity called DeviceObject %p Irp %p\n", DeviceObject);
+    DPRINT("Dispatch_fnQuerySecurity called DeviceObject %p Irp %p\n", DeviceObject);
 
     Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
     Irp->IoStatus.Information = 0;
@@ -174,7 +174,7 @@ Dispatch_fnSetSecurity(
     PIRP Irp)
 {
 
-    DPRINT1("Dispatch_fnSetSecurity called DeviceObject %p Irp %p\n", DeviceObject);
+    DPRINT("Dispatch_fnSetSecurity called DeviceObject %p Irp %p\n", DeviceObject);
 
     Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
     Irp->IoStatus.Information = 0;
@@ -195,7 +195,7 @@ Dispatch_fnFastDeviceIoControl(
     PIO_STATUS_BLOCK IoStatus,
     PDEVICE_OBJECT DeviceObject)
 {
-    DPRINT1("Dispatch_fnFastDeviceIoControl called DeviceObject %p Irp %p\n", DeviceObject);
+    DPRINT("Dispatch_fnFastDeviceIoControl called DeviceObject %p Irp %p\n", DeviceObject);
 
 
     return FALSE;
@@ -214,7 +214,7 @@ Dispatch_fnFastRead(
     PIO_STATUS_BLOCK IoStatus,
     PDEVICE_OBJECT DeviceObject)
 {
-    DPRINT1("Dispatch_fnFastRead called DeviceObject %p Irp %p\n", DeviceObject);
+    DPRINT("Dispatch_fnFastRead called DeviceObject %p Irp %p\n", DeviceObject);
 
     return FALSE;
 
@@ -232,7 +232,7 @@ Dispatch_fnFastWrite(
     PIO_STATUS_BLOCK IoStatus,
     PDEVICE_OBJECT DeviceObject)
 {
-    DPRINT1("Dispatch_fnFastWrite called DeviceObject %p Irp %p\n", DeviceObject);
+    DPRINT("Dispatch_fnFastWrite called DeviceObject %p Irp %p\n", DeviceObject);
 
     return FALSE;
 }
@@ -353,7 +353,7 @@ DispatchCreateSysAudio(
     /* allocate object header */
     Status = KsAllocateObjectHeader(&ObjectHeader, 1, CreateItem, Irp, &DispatchTable);
 
-    DPRINT1("KsAllocateObjectHeader result %x\n", Status);
+    DPRINT("KsAllocateObjectHeader result %x\n", Status);
     /* complete the irp */
     Irp->IoStatus.Information = 0;
     Irp->IoStatus.Status = Status;
