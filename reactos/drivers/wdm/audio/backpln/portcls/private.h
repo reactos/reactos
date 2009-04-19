@@ -164,6 +164,7 @@ typedef struct
     PDEVICE_OBJECT PhysicalDeviceObject;
     PDEVICE_OBJECT PrevDeviceObject;
     PCPFNSTARTDEVICE StartDevice;
+    ULONG_PTR Unused[4];
     IAdapterPowerManagement * AdapterPowerManagement;
     ULONG MaxSubDevices;
     KSOBJECT_CREATE_ITEM * CreateItems;
