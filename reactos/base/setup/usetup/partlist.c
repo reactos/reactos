@@ -1373,7 +1373,7 @@ PrintDiskData (PPARTLIST List,
     }
 
     /* Print unpartitioned entry */
-    if (PartEntry->Unpartitioned || PartEntry->New)
+    if (PartEntry->Unpartitioned)
     {
         PrintPartitionData (List,
                             DiskEntry,
