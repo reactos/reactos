@@ -56,8 +56,7 @@ typedef struct
 
 #include "poppack.h"
 
-/*forward declerations... actualy in user32\windows\icon.c but usful here****/
-HICON ICON_CreateCursorFromData(HDC hDC, PVOID ImageData, ICONIMAGE* IconImage, int cxDesired, int cyDesired, int xHotspot, int yHotspot);
+/* forward declerations... actually in user32\windows\icon.c but usful here */
 HICON ICON_CreateIconFromData(HDC hDC, PVOID ImageData, ICONIMAGE* IconImage, int cxDesired, int cyDesired, int xHotspot, int yHotspot);
 CURSORICONDIRENTRY *CURSORICON_FindBestIcon( CURSORICONDIR *dir, int width, int height, int colors);
 CURSORICONDIRENTRY *CURSORICON_FindBestCursor( CURSORICONDIR *dir, int width, int height, int colors);
@@ -286,7 +285,7 @@ LoadCursorIconImage(
 
    if (fuLoad & LR_SHARED)
    {
-      DbgPrint("FIXME: need LR_SHARED support for loading icon images from files\n");
+      FIXME("Need LR_SHARED support for loading icon images from files\n");
    }
 
    hFile = CreateFileW(lpszName, GENERIC_READ, FILE_SHARE_READ, NULL,
@@ -492,7 +491,7 @@ LoadBitmapImage(HINSTANCE hInstance, LPCWSTR lpszName, UINT fuLoad)
 
    if (Hit)
    {
-      DbgPrint("We have a thread overrun, these are already freed! pi -> %d bi -> %d\n", PrivateInfo, BitmapInfo);
+      ERR("We have a thread overrun, these are already freed! pi -> %d, bi -> %d\n", PrivateInfo, BitmapInfo);
       RtlFreeHeap(GetProcessHeap(), 0, PrivateInfo);
       if (fuLoad & LR_LOADFROMFILE)
          UnmapViewOfFile(BitmapInfo);

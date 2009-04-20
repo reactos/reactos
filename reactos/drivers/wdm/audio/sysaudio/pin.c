@@ -206,7 +206,7 @@ Pin_fnClose(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
-    DPRINT1("Pin_fnClose called DeviceObject %p Irp %p\n", DeviceObject);
+    DPRINT("Pin_fnClose called DeviceObject %p Irp %p\n", DeviceObject);
 
     Irp->IoStatus.Status = STATUS_SUCCESS;
     Irp->IoStatus.Information = 0;
@@ -220,7 +220,7 @@ Pin_fnQuerySecurity(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
-    DPRINT1("Pin_fnQuerySecurity called DeviceObject %p Irp %p\n", DeviceObject);
+    DPRINT("Pin_fnQuerySecurity called DeviceObject %p Irp %p\n", DeviceObject);
 
     Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
     Irp->IoStatus.Information = 0;
@@ -235,7 +235,7 @@ Pin_fnSetSecurity(
     PIRP Irp)
 {
 
-    DPRINT1("Pin_fnSetSecurity called DeviceObject %p Irp %p\n", DeviceObject);
+    DPRINT("Pin_fnSetSecurity called DeviceObject %p Irp %p\n", DeviceObject);
 
     Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
     Irp->IoStatus.Information = 0;
@@ -256,7 +256,7 @@ Pin_fnFastDeviceIoControl(
     PIO_STATUS_BLOCK IoStatus,
     PDEVICE_OBJECT DeviceObject)
 {
-    DPRINT1("Pin_fnFastDeviceIoControl called DeviceObject %p Irp %p\n", DeviceObject);
+    DPRINT("Pin_fnFastDeviceIoControl called DeviceObject %p Irp %p\n", DeviceObject);
 
 
     return FALSE;
@@ -275,7 +275,7 @@ Pin_fnFastRead(
     PIO_STATUS_BLOCK IoStatus,
     PDEVICE_OBJECT DeviceObject)
 {
-    DPRINT1("Pin_fnFastRead called DeviceObject %p Irp %p\n", DeviceObject);
+    DPRINT("Pin_fnFastRead called DeviceObject %p Irp %p\n", DeviceObject);
 
     return FALSE;
 
@@ -296,7 +296,7 @@ Pin_fnFastWrite(
     PDISPATCH_CONTEXT Context;
     NTSTATUS Status;
 
-    //DPRINT1("Pin_fnFastWrite called DeviceObject %p Irp %p\n", DeviceObject);
+    DPRINT("Pin_fnFastWrite called DeviceObject %p Irp %p\n", DeviceObject);
 
     Context = (PDISPATCH_CONTEXT)FileObject->FsContext2;
 

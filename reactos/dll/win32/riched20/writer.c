@@ -766,13 +766,11 @@ static BOOL
 ME_StreamOutRTF(ME_TextEditor *editor, ME_OutStream *pStream, int nStart, int nChars, int dwFormat)
 {
   ME_DisplayItem *p, *pEnd, *pPara;
-  int nOffset, nEndLen; 
-  
-  ME_RunOfsFromCharOfs(editor, nStart, &p, &nOffset);
-  ME_RunOfsFromCharOfs(editor, nStart+nChars, &pEnd, &nEndLen);
-  
-  pPara = ME_GetParagraph(p);
-  
+  int nOffset, nEndLen;
+
+  ME_RunOfsFromCharOfs(editor, nStart, &pPara, &p, &nOffset);
+  ME_RunOfsFromCharOfs(editor, nStart+nChars, NULL, &pEnd, &nEndLen);
+
   if (!ME_StreamOutRTFHeader(pStream, dwFormat))
     return FALSE;
 
@@ -891,7 +889,7 @@ ME_StreamOutRTF(ME_TextEditor *editor, ME_OutStream *pStream, int nStart, int nC
           if (!ME_StreamOutRTFCharProps(pStream, &p->member.run.style->fmt))
             return FALSE;
         
-          nEnd = (p == pEnd) ? nEndLen : ME_StrLen(p->member.run.strText);
+          nEnd = (p == pEnd) ? nEndLen : p->member.run.strText->nLen;
           if (!ME_StreamOutRTFText(pStream, p->member.run.strText->szData + nOffset, nEnd - nOffset))
             return FALSE;
           nOffset = 0;
@@ -922,7 +920,7 @@ ME_StreamOutText(ME_TextEditor *editor, ME_OutStream *pStream, int nStart, int n
   int nBufLen = 0;
   BOOL success = TRUE;
 
-  ME_RunOfsFromCharOfs(editor, nStart, &item, &nStart);
+  ME_RunOfsFromCharOfs(editor, nStart, NULL, &item, &nStart);
 
   if (!item)
     return FALSE;
@@ -933,7 +931,7 @@ ME_StreamOutText(ME_TextEditor *editor, ME_OutStream *pStream, int nStart, int n
   /* TODO: Handle SF_TEXTIZED */
 
   while (success && nChars && item) {
-    nLen = min(nChars, ME_StrLen(item->member.run.strText) - nStart);
+    nLen = min(nChars, item->member.run.strText->nLen - nStart);
 
     if (!editor->bEmulateVersion10 && item->member.run.nFlags & MERF_ENDPARA)
     {

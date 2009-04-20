@@ -475,6 +475,11 @@ static void RTFUngetToken(RTF_Info *info)
 	info->pushedMinor = info->rtfMinor;
 	info->pushedParam = info->rtfParam;
 	lstrcpyA (info->pushedTextBuf, info->rtfTextBuf);
+	/* The read hook decrements stackTop on rtfEndGroup, so
+	 * increment the value to compensate for it being decremented
+	 * twice due to the RTFUngetToken. */
+	if(RTFCheckCM (info, rtfGroup, rtfEndGroup))
+		info->stackTop++;
 }
 
 

@@ -76,23 +76,36 @@ PortClsPnp(
                 return Status;
             }
 
-            /* Assign the resource list to our extension */
-            DeviceExt->resources = resource_list;
+            /* forward irp to lower device object */
+            Status = PcForwardIrpSynchronous(DeviceObject, Irp);
 
+            if (!NT_SUCCESS(Status))
+            {
+                /* lower device object failed to start */
+                resource_list->lpVtbl->Release(resource_list);
+                /* complete the request */
+                IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                /* return result */
+                return Status;
+            }
+
+            /* sanity check */
             ASSERT(DeviceExt->StartDevice);
-
             /* Call the StartDevice routine */
             DPRINT("Calling StartDevice at 0x%8p\n", DeviceExt->StartDevice);
             Status = DeviceExt->StartDevice(DeviceObject, Irp, resource_list);
             if (!NT_SUCCESS(Status))
             {
                 DPRINT("StartDevice returned a failure code [0x%8x]\n", Status);
-                //resource_list->lpVtbl->Release(resource_list);
+                resource_list->lpVtbl->Release(resource_list);
 
                 Irp->IoStatus.Status = Status;
                 IoCompleteRequest(Irp, IO_NO_INCREMENT);
                 return Status;
             }
+
+            /* Assign the resource list to our extension */
+            DeviceExt->resources = resource_list;
 
             Irp->IoStatus.Status = STATUS_SUCCESS;
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -112,7 +125,10 @@ PortClsPnp(
 
         case IRP_MN_QUERY_INTERFACE:
             DPRINT("IRP_MN_QUERY_INTERFACE\n");
-            return PcForwardIrpSynchronous(DeviceObject, Irp);
+            Status = PcForwardIrpSynchronous(DeviceObject, Irp);
+            Irp->IoStatus.Status = Status;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            return Status;
 
         case IRP_MN_QUERY_DEVICE_RELATIONS:
             Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
@@ -122,6 +138,12 @@ PortClsPnp(
             Irp->IoStatus.Status = STATUS_SUCCESS;
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
             return STATUS_SUCCESS;
+       case IRP_MN_QUERY_RESOURCE_REQUIREMENTS:
+            DPRINT("IRP_MN_QUERY_RESOURCE_REQUIREMENTS\n");
+            Status = PcForwardIrpSynchronous(DeviceObject, Irp);
+            Irp->IoStatus.Status = Status;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            return Status;
     }
 
     DPRINT1("unhandled function %u\n", IoStack->MinorFunction);
@@ -279,7 +301,7 @@ PcForwardIrpSynchronous(
     {
         /* not yet, lets wait a bit */
         KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-        Status = STATUS_SUCCESS;
+        Status = Irp->IoStatus.Status;
     }
     return Status;
 }

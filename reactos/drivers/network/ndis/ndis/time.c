@@ -20,33 +20,6 @@
 #include "ndissys.h"
 
 
-VOID NTAPI
-MiniportTimerDpc(
-    PKDPC Dpc,
-    PVOID DeferredContext,
-    PVOID SystemArgument1,
-    PVOID SystemArgument2)
-/*
- * FUNCTION: Scheduled by the SetTimer family of functions
- * ARGUMENTS:
- *     Dpc: Pointer to the DPC Object being executed
- *     DeferredContext: Pointer to a NDIS_MINIPORT_TIMER object
- *     SystemArgument1: Unused.
- *     SystemArgument2: Unused.
- * NOTES:
- *     - runs at IRQL = DISPATCH_LEVEL
- */
-{
-  PNDIS_MINIPORT_TIMER Timer;
-
-  Timer = (PNDIS_MINIPORT_TIMER)DeferredContext;
-
-  ASSERT(Timer->MiniportTimerFunction);
-
-  Timer->MiniportTimerFunction (NULL, Timer->MiniportTimerContext, NULL, NULL);
-}
-
-
 /*
  * @implemented
  */
@@ -174,11 +147,7 @@ NdisMInitializeTimer(
   ASSERT(Timer);
   KeInitializeTimer (&Timer->Timer);
 
-  KeInitializeDpc (&Timer->Dpc, MiniportTimerDpc, (PVOID) Timer);
-
-  Timer->MiniportTimerFunction = TimerFunction;
-  Timer->MiniportTimerContext = FunctionContext;
-  Timer->Miniport = MiniportAdapterHandle;
+  KeInitializeDpc (&Timer->Dpc, (PKDEFERRED_ROUTINE)TimerFunction, FunctionContext);
 }
 
 
@@ -237,7 +206,7 @@ NdisMSetTimer(
   ASSERT(Timer);
 
   /* relative delays are negative, absolute are positive; resolution is 100ns */
-  Timeout.QuadPart = MillisecondsToDelay * -10000;
+  Timeout.QuadPart = Int32x32To64(MillisecondsToDelay, -10000);
 
   KeSetTimer (&Timer->Timer, Timeout, &Timer->Dpc);
 }
@@ -266,8 +235,10 @@ NdisSetTimer(
   ASSERT_IRQL(DISPATCH_LEVEL);
   ASSERT(Timer);
 
+  NDIS_DbgPrint(MAX_TRACE, ("Called. Timer is: 0x%x, Timeout is: %ld\n", Timer, MillisecondsToDelay));
+
   /* relative delays are negative, absolute are positive; resolution is 100ns */
-  Timeout.QuadPart = MillisecondsToDelay * -10000;
+  Timeout.QuadPart = Int32x32To64(MillisecondsToDelay, -10000);
 
   KeSetTimer (&Timer->Timer, Timeout, &Timer->Dpc);
 }

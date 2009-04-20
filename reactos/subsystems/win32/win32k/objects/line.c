@@ -113,7 +113,7 @@ IntGdiLineTo(DC  *dc,
        if (pdcattr->ulDirty_ & (DIRTY_LINE | DC_PEN_DIRTY))
           DC_vUpdateLineBrush(dc);
 
-        psurf = SURFACE_LockSurface( dc->rosdc.hBitmap );
+        psurf = dc->dclevel.pSurface;
         if (NULL == psurf)
         {
             SetLastWin32Error(ERROR_INVALID_HANDLE);
@@ -153,7 +153,6 @@ IntGdiLineTo(DC  *dc,
                                ROP2_TO_MIX(pdcattr->jROP2));
         }
 
-        SURFACE_UnlockSurface(psurf);
     }
 
     if (Ret)
@@ -263,7 +262,7 @@ IntGdiPolyline(DC      *dc,
         Points = EngAllocMem(0, Count * sizeof(POINT), TAG_COORD);
         if (Points != NULL)
         {
-            psurf = SURFACE_LockSurface(dc->rosdc.hBitmap);
+            psurf = dc->dclevel.pSurface;
             /* FIXME - psurf can be NULL!!!!
                Don't assert but handle this case gracefully! */
             ASSERT(psurf);
@@ -285,7 +284,6 @@ IntGdiPolyline(DC      *dc,
                                  Count,
                                  ROP2_TO_MIX(pdcattr->jROP2));
 
-            SURFACE_UnlockSurface(psurf);
             EngFreeMem(Points);
         }
         else

@@ -212,11 +212,24 @@ static void shader_delete_constant_list(struct list* clist) {
     list_init(clist);
 }
 
+static void shader_parse_dst_param(DWORD param, DWORD addr_param, struct wined3d_shader_dst_param *dst)
+{
+    dst->register_type = ((param & WINED3DSP_REGTYPE_MASK) >> WINED3DSP_REGTYPE_SHIFT)
+            | ((param & WINED3DSP_REGTYPE_MASK2) >> WINED3DSP_REGTYPE_SHIFT2);
+    dst->register_idx = param & WINED3DSP_REGNUM_MASK;
+    dst->write_mask = param & WINED3DSP_WRITEMASK_ALL;
+    dst->modifiers = param & WINED3DSP_DSTMOD_MASK;
+    dst->shift = (param & WINED3DSP_DSTSHIFT_MASK) >> WINED3DSP_DSTSHIFT_SHIFT;
+    dst->has_rel_addr = param & WINED3DSHADER_ADDRMODE_RELATIVE;
+    dst->addr_token = addr_param;
+}
+
 /* Note that this does not count the loop register
  * as an address register. */
 
 HRESULT shader_get_registers_used(IWineD3DBaseShader *iface, struct shader_reg_maps *reg_maps,
-        struct semantic *semantics_in, struct semantic *semantics_out, const DWORD *byte_code)
+        struct wined3d_shader_semantic *semantics_in, struct wined3d_shader_semantic *semantics_out,
+        const DWORD *byte_code)
 {
     IWineD3DBaseShaderImpl* This = (IWineD3DBaseShaderImpl*) iface;
     const SHADER_OPCODE *shader_ins = This->baseShader.shader_ins;
@@ -285,14 +298,19 @@ HRESULT shader_get_registers_used(IWineD3DBaseShader *iface, struct shader_reg_m
                 else
                     reg_maps->packed_input[regnum] = 1;
 
-                semantics_in[regnum].usage = usage;
-                semantics_in[regnum].reg = param;
+                semantics_in[regnum].usage = (usage & WINED3DSP_DCL_USAGE_MASK) >> WINED3DSP_DCL_USAGE_SHIFT;
+                semantics_in[regnum].usage_idx =
+                        (usage & WINED3DSP_DCL_USAGEINDEX_MASK) >> WINED3DSP_DCL_USAGEINDEX_SHIFT;
+                shader_parse_dst_param(param, 0, &semantics_in[regnum].reg);
 
             /* Vshader: mark 3.0 output registers used, save token */
             } else if (WINED3DSPR_OUTPUT == regtype) {
                 reg_maps->packed_output[regnum] = 1;
-                semantics_out[regnum].usage = usage;
-                semantics_out[regnum].reg = param;
+                semantics_out[regnum].usage = (usage & WINED3DSP_DCL_USAGE_MASK) >> WINED3DSP_DCL_USAGE_SHIFT;
+                semantics_out[regnum].usage_idx =
+                        (usage & WINED3DSP_DCL_USAGEINDEX_MASK) >> WINED3DSP_DCL_USAGEINDEX_SHIFT;
+                shader_parse_dst_param(param, 0, &semantics_out[regnum].reg);
+
                 if (usage & (WINED3DDECLUSAGE_FOG << WINED3DSP_DCL_USAGE_SHIFT))
                     reg_maps->fog = 1;
 
@@ -848,9 +866,9 @@ void shader_generate_main(IWineD3DBaseShader *iface, SHADER_BUFFER* buffer,
         ins.dst_count = curOpcode->dst_token ? 1 : 0;
         if (ins.dst_count)
         {
-            dst_param.addr_token = 0;
-            pToken += shader_get_param(pToken, shader_version, &dst_param.token, &dst_param.addr_token);
-            dst_param.register_idx = dst_param.token & WINED3DSP_REGNUM_MASK;
+            DWORD param, addr_param = 0;
+            pToken += shader_get_param(pToken, shader_version, &param, &addr_param);
+            shader_parse_dst_param(param, addr_param, &dst_param);
         }
 
         /* Predication token */
@@ -1075,6 +1093,7 @@ static void shader_none_deselect_depth_blt(IWineD3DDevice *iface) {}
 static void shader_none_update_float_vertex_constants(IWineD3DDevice *iface, UINT start, UINT count) {}
 static void shader_none_update_float_pixel_constants(IWineD3DDevice *iface, UINT start, UINT count) {}
 static void shader_none_load_constants(IWineD3DDevice *iface, char usePS, char useVS) {}
+static void shader_none_load_np2fixup_constants(IWineD3DDevice *iface, char usePS, char useVS) {}
 static void shader_none_destroy(IWineD3DBaseShader *iface) {}
 static HRESULT shader_none_alloc(IWineD3DDevice *iface) {return WINED3D_OK;}
 static void shader_none_free(IWineD3DDevice *iface) {}
@@ -1124,6 +1143,7 @@ const shader_backend_t none_shader_backend = {
     shader_none_update_float_vertex_constants,
     shader_none_update_float_pixel_constants,
     shader_none_load_constants,
+    shader_none_load_np2fixup_constants,
     shader_none_destroy,
     shader_none_alloc,
     shader_none_free,

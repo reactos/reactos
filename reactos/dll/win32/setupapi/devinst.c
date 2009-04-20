@@ -3373,7 +3373,12 @@ SetupDiInstallClassExA(
     PWSTR InfFileNameW = NULL;
     BOOL Result;
 
-    if (InfFileName)
+    if (!InfFileName)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+    else
     {
         InfFileNameW = MultiByteToUnicode(InfFileName, CP_ACP);
         if (InfFileNameW == NULL)
@@ -4637,21 +4642,18 @@ ResetDevice(
     IN PSP_DEVINFO_DATA DeviceInfoData)
 {
 #ifndef __WINESRC__
-    PLUGPLAY_CONTROL_RESET_DEVICE_DATA ResetDeviceData;
+    struct DeviceInfoSet *set = (struct DeviceInfoSet *)DeviceInfoSet;
     struct DeviceInfo *deviceInfo = (struct DeviceInfo *)DeviceInfoData->Reserved;
-    NTSTATUS Status;
+    CONFIGRET cr;
 
-    if (((struct DeviceInfoSet *)DeviceInfoSet)->HKLM != HKEY_LOCAL_MACHINE)
+    cr = CM_Enable_DevNode_Ex(deviceInfo->dnDevInst, 0, set->hMachine);
+    if (cr != CR_SUCCESS)
     {
-        /* At the moment, I only know how to start local devices */
-        SetLastError(ERROR_INVALID_COMPUTERNAME);
+        SetLastError(GetErrorCodeFromCrCode(cr));
         return FALSE;
     }
 
-    RtlInitUnicodeString(&ResetDeviceData.DeviceInstance, deviceInfo->instanceId);
-    Status = NtPlugPlayControl(PlugPlayControlResetDevice, &ResetDeviceData, sizeof(PLUGPLAY_CONTROL_RESET_DEVICE_DATA));
-    SetLastError(RtlNtStatusToDosError(Status));
-    return NT_SUCCESS(Status);
+    return TRUE;
 #else
     FIXME("Stub: ResetDevice(%p %p)\n", DeviceInfoSet, DeviceInfoData);
     return TRUE;
@@ -5335,7 +5337,7 @@ HKEY WINAPI SetupDiOpenDevRegKey(
        DWORD KeyType,
        REGSAM samDesired)
 {
-    struct DeviceInfoSet *set = (struct DeviceInfoSet *)DeviceInfoSet;
+    struct DeviceInfoSet *set = DeviceInfoSet;
     struct DeviceInfo *devInfo;
     HKEY key = INVALID_HANDLE_VALUE;
     HKEY RootKey;

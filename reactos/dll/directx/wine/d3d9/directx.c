@@ -194,11 +194,23 @@ static HRESULT WINAPI IDirect3D9Impl_CheckDeviceFormat(LPDIRECT3D9EX iface,
 						  DWORD Usage, D3DRESOURCETYPE RType, D3DFORMAT CheckFormat) {
     IDirect3D9Impl *This = (IDirect3D9Impl *)iface;
     HRESULT hr;
+    WINED3DRESOURCETYPE WineD3DRType;
     TRACE("%p\n", This);
+
+    switch(RType) {
+        case D3DRTYPE_VERTEXBUFFER:
+        case D3DRTYPE_INDEXBUFFER:
+            WineD3DRType = WINED3DRTYPE_BUFFER;
+            break;
+
+        default:
+            WineD3DRType = RType;
+            break;
+    }
 
     EnterCriticalSection(&d3d9_cs);
     hr = IWineD3D_CheckDeviceFormat(This->WineD3D, Adapter, DeviceType, wined3dformat_from_d3dformat(AdapterFormat),
-            Usage, RType, wined3dformat_from_d3dformat(CheckFormat), SURFACE_OPENGL);
+            Usage, WineD3DRType, wined3dformat_from_d3dformat(CheckFormat), SURFACE_OPENGL);
     LeaveCriticalSection(&d3d9_cs);
     return hr;
 }

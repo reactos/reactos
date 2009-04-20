@@ -48,8 +48,6 @@ DC_vCopyState(PDC pdcSrc, PDC pdcDst)
     pdcDst->dclevel.plfnt           = pdcSrc->dclevel.plfnt;
 
     /* ROS hacks */
-    pdcDst->rosdc.hBitmap            = pdcSrc->rosdc.hBitmap;
-
     if (pdcDst->dctype != DC_TYPE_MEMORY)
     {
         pdcDst->rosdc.bitsPerPixel = pdcSrc->rosdc.bitsPerPixel;

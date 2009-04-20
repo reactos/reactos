@@ -313,7 +313,7 @@ static BOOL CreateDesktopEnumList(IEnumIDList *list, DWORD dwFlags)
                     DWORD size;
                     LONG r;
 
-                    size = sizeof (iid);
+                    size = sizeof (iid) / sizeof (iid[0]);
                     r = RegEnumKeyExW(hkey, i, iid, &size, 0, NULL, NULL, NULL);
                     if (ERROR_SUCCESS == r)
                     {

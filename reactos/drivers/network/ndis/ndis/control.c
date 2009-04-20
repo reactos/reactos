@@ -29,6 +29,8 @@ NdisInitializeReadWriteLock(
  */
 {
   RtlZeroMemory(Lock, sizeof(NDIS_RW_LOCK));
+
+  KeInitializeSpinLock(&Lock->SpinLock);
 }
 
 
@@ -308,7 +310,7 @@ NdisWaitEvent(
   LARGE_INTEGER Timeout;
   NTSTATUS Status;
 
-  Timeout.QuadPart = MsToWait * -10000LL;
+  Timeout.QuadPart = Int32x32To64(MsToWait, -10000);
 
   Status = KeWaitForSingleObject(&Event->Event, Executive, KernelMode, TRUE, &Timeout);
 

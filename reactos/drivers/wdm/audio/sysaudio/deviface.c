@@ -41,12 +41,18 @@ FilterPinWorkerRoutine(
     Status = KsSynchronousIoControlDevice(DeviceEntry->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PropertyRequest, sizeof(KSPROPERTY), (PVOID)&Count, sizeof(ULONG), &BytesReturned);
     if (!NT_SUCCESS(Status))
     {
+        ObDereferenceObject(DeviceEntry->FileObject);
+        ZwClose(DeviceEntry->Handle);
+        ExFreePool(DeviceEntry->DeviceName.Buffer);
         ExFreePool(DeviceEntry);
         return;
     }
 
     if (!Count)
     {
+        ObDereferenceObject(DeviceEntry->FileObject);
+        ZwClose(DeviceEntry->Handle);
+        ExFreePool(DeviceEntry->DeviceName.Buffer);
         ExFreePool(DeviceEntry);
         return;
     }
@@ -56,6 +62,9 @@ FilterPinWorkerRoutine(
     if (!DeviceEntry->Pins)
     {
         /* no memory */
+        ObDereferenceObject(DeviceEntry->FileObject);
+        ZwClose(DeviceEntry->Handle);
+        ExFreePool(DeviceEntry->DeviceName.Buffer);
         ExFreePool(DeviceEntry);
         return;
     }
@@ -101,7 +110,7 @@ FilterPinWorkerRoutine(
 
     }
 
-    DPRINT1("Num Pins %u Num WaveIn Pins %u Name WaveOut Pins %u\n", DeviceEntry->NumberOfPins, DeviceEntry->NumWaveInPin, DeviceEntry->NumWaveOutPin);
+    DPRINT("Num Pins %u Num WaveIn Pins %u Name WaveOut Pins %u\n", DeviceEntry->NumberOfPins, DeviceEntry->NumWaveInPin, DeviceEntry->NumWaveOutPin);
 
     DeviceExtension = (PSYSAUDIODEVEXT)DeviceObject->DeviceExtension;
 
@@ -139,7 +148,7 @@ OpenDevice(
 
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("ZwCreateFile failed with %x\n", Status);
+        DPRINT("ZwCreateFile failed with %x\n", Status);
         return Status;
     }
 
@@ -147,7 +156,7 @@ OpenDevice(
     if (!NT_SUCCESS(Status))
     {
         ZwClose(NodeHandle);
-        DPRINT1("ObReferenceObjectByHandle failed with %x\n", Status);
+        DPRINT("ObReferenceObjectByHandle failed with %x\n", Status);
         return Status;
     }
 
@@ -210,12 +219,13 @@ DeviceInterfaceChangeCallback(
         Status = OpenDevice(&DeviceEntry->DeviceName, &DeviceEntry->Handle, &DeviceEntry->FileObject);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("ZwCreateFile failed with %x\n", Status);
+            DPRINT("ZwCreateFile failed with %x\n", Status);
+            ExFreePool(DeviceEntry->DeviceName.Buffer);
             ExFreePool(DeviceEntry);
             return Status;
         }
 
-        DPRINT1("Successfully opened audio device %u handle %p file object %p device object %p\n", DeviceExtension->NumberOfKsAudioDevices, DeviceEntry->Handle, DeviceEntry->FileObject, DeviceEntry->FileObject->DeviceObject);
+        DPRINT("Successfully opened audio device %u handle %p file object %p device object %p\n", DeviceExtension->NumberOfKsAudioDevices, DeviceEntry->Handle, DeviceEntry->FileObject, DeviceEntry->FileObject->DeviceObject);
 
         //FIXME
         // mutal exclusion
@@ -224,7 +234,7 @@ DeviceInterfaceChangeCallback(
     }
     else
     {
-        DPRINT1("Remove interface to audio device!\n");
+        DPRINT("Remove interface to audio device!\n");
         UNIMPLEMENTED
         return STATUS_SUCCESS;
     }
@@ -250,7 +260,7 @@ SysAudioRegisterNotifications(
 
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("IoRegisterPlugPlayNotification failed with %x\n", Status);
+        DPRINT("IoRegisterPlugPlayNotification failed with %x\n", Status);
     }
 
     Status = IoRegisterPlugPlayNotification(EventCategoryDeviceInterfaceChange,
@@ -264,7 +274,7 @@ SysAudioRegisterNotifications(
     if (!NT_SUCCESS(Status))
     {
         /* ignore failure for now */
-        DPRINT1("IoRegisterPlugPlayNotification failed for DMOCATEGORY_ACOUSTIC_ECHO_CANCEL\n", Status);
+        DPRINT("IoRegisterPlugPlayNotification failed for DMOCATEGORY_ACOUSTIC_ECHO_CANCEL\n", Status);
     }
 
     return STATUS_SUCCESS;
@@ -287,7 +297,7 @@ SysAudioRegisterDeviceInterfaces(
     }
     else
     {
-        DPRINT1("Failed to register KSCATEGORY_PREFERRED_MIDIOUT_DEVICE interface Status %x\n", Status);
+        DPRINT("Failed to register KSCATEGORY_PREFERRED_MIDIOUT_DEVICE interface Status %x\n", Status);
         return Status;
     }
 
@@ -299,7 +309,7 @@ SysAudioRegisterDeviceInterfaces(
     }
     else
     {
-        DPRINT1("Failed to register KSCATEGORY_PREFERRED_WAVEIN_DEVICE interface Status %x\n", Status);
+        DPRINT("Failed to register KSCATEGORY_PREFERRED_WAVEIN_DEVICE interface Status %x\n", Status);
         return Status;
     }
 
@@ -311,7 +321,7 @@ SysAudioRegisterDeviceInterfaces(
     }
     else
     {
-        DPRINT1("Failed to register KSCATEGORY_PREFERRED_WAVEOUT_DEVICE interface Status %x\n", Status);
+        DPRINT("Failed to register KSCATEGORY_PREFERRED_WAVEOUT_DEVICE interface Status %x\n", Status);
     }
 
     Status = IoRegisterDeviceInterface(DeviceObject, &KSCATEGORY_SYSAUDIO, NULL, &SymbolicLink);
@@ -322,7 +332,7 @@ SysAudioRegisterDeviceInterfaces(
     }
     else
     {
-        DPRINT1("Failed to register KSCATEGORY_SYSAUDIO interface Status %x\n", Status);
+        DPRINT("Failed to register KSCATEGORY_SYSAUDIO interface Status %x\n", Status);
     }
 
     return Status;

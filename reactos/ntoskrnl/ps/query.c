@@ -1306,17 +1306,27 @@ NtQueryInformationThread(IN HANDLE ThreadHandle,
     KIRQL OldIrql;
     PAGED_CODE();
 
-    /* Verify Information Class validity */
-#if 0
-    Status = DefaultQueryInfoBufferCheck(ThreadInformationClass,
-                                         PsThreadInfoClass,
-                                         RTL_NUMBER_OF(PsThreadInfoClass),
-                                         ThreadInformation,
-                                         ThreadInformationLength,
-                                         ReturnLength,
-                                         PreviousMode);
-    if (!NT_SUCCESS(Status)) return Status;
-#endif
+    if (PreviousMode != KernelMode)
+    {
+        _SEH2_TRY
+        {
+            ProbeForWrite(ThreadInformation,
+                          ThreadInformationLength,
+                          sizeof(ULONG));
+
+            if (ReturnLength)
+            {
+                ProbeForWriteUlong(ReturnLength);
+            }
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
+
+        if (!NT_SUCCESS(Status)) return Status;
+    }
 
     /* Check what class this is */
     Access = THREAD_QUERY_INFORMATION;
@@ -1497,6 +1507,33 @@ NtQueryInformationThread(IN HANDLE ThreadHandle,
 
             /* Lower IRQL back */
             KeLowerIrql(OldIrql);
+            break;
+
+        case ThreadDescriptorTableEntry:
+            DPRINT1("NtQueryInformationThread(): case ThreadDescriptorTableEntry not implemented!\n");
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+
+        case ThreadPriorityBoost:
+
+            /* Set the return length*/
+            Length = sizeof(ULONG);
+
+            if (ThreadInformationLength != Length)
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
+            _SEH2_TRY
+            {
+                *(PULONG)ThreadInformation = Thread->Tcb.DisableBoost ? 1 : 0;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                Status = _SEH2_GetExceptionCode();
+            }
+            _SEH2_END;
             break;
 
         /* Anything else */

@@ -259,6 +259,22 @@ MiniIndicateData(
   NDIS_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 }
 
+VOID NTAPI
+MiniQueryComplete(
+  IN NDIS_HANDLE  MiniportAdapterHandle,
+  IN NDIS_STATUS  Status)
+{
+    UNIMPLEMENTED;
+}
+
+VOID NTAPI
+MiniSetComplete(
+  IN NDIS_HANDLE  MiniportAdapterHandle,
+  IN NDIS_STATUS  Status)
+{
+    UNIMPLEMENTED;
+}
+
 
 VOID NTAPI
 MiniIndicateReceivePacket(
@@ -1592,6 +1608,10 @@ DoQueries(
       return NdisStatus;
     }
 
+
+  NDIS_DbgPrint(MIN_TRACE, ("Current lookahead is %ld\n", Adapter->NdisMiniportBlock.CurrentLookahead));
+  NDIS_DbgPrint(MIN_TRACE, ("Maximum lookahead is %ld\n", Adapter->NdisMiniportBlock.MaximumLookahead));
+
   NdisStatus = MiniQueryInformation(Adapter, OID_GEN_MAXIMUM_SEND_PACKETS, sizeof(ULONG),
                                     &Adapter->NdisMiniportBlock.MaxSendPackets, &BytesWritten);
 
@@ -1825,6 +1845,9 @@ NdisIPnPStartDevice(
   Adapter->NdisMiniportBlock.PacketIndicateHandler= MiniIndicateReceivePacket;
   Adapter->NdisMiniportBlock.StatusHandler        = MiniStatus;
   Adapter->NdisMiniportBlock.StatusCompleteHandler= MiniStatusComplete;
+  Adapter->NdisMiniportBlock.SendPacketsHandler   = ProSendPackets;
+  Adapter->NdisMiniportBlock.QueryCompleteHandler = MiniQueryComplete;
+  Adapter->NdisMiniportBlock.SetCompleteHandler   = MiniSetComplete;
 
   /*
    * Call MiniportInitialize.
@@ -2600,6 +2623,45 @@ NdisRegisterAdapterShutdownHandler(
     NdisMRegisterAdapterShutdownHandler(NdisAdapterHandle,
                                         ShutdownContext,
                                         ShutdownHandler);
+}
+
+/*
+ * @implemented
+ */
+VOID
+EXPORT
+NdisMGetDeviceProperty(
+    IN      NDIS_HANDLE         MiniportAdapterHandle,
+    IN OUT  PDEVICE_OBJECT      *PhysicalDeviceObject           OPTIONAL,
+    IN OUT  PDEVICE_OBJECT      *FunctionalDeviceObject         OPTIONAL,
+    IN OUT  PDEVICE_OBJECT      *NextDeviceObject               OPTIONAL,
+    IN OUT  PCM_RESOURCE_LIST   *AllocatedResources             OPTIONAL,
+    IN OUT  PCM_RESOURCE_LIST   *AllocatedResourcesTranslated   OPTIONAL)
+/*
+ * FUNCTION:
+ * ARGUMENTS:
+ * NOTES:
+ *    NDIS 5.0
+ */
+{
+    PLOGICAL_ADAPTER Adapter = MiniportAdapterHandle;
+
+    NDIS_DbgPrint(MAX_TRACE, ("Called\n"));
+
+    if (PhysicalDeviceObject != NULL)
+        *PhysicalDeviceObject = Adapter->NdisMiniportBlock.PhysicalDeviceObject;
+
+    if (FunctionalDeviceObject != NULL)
+        *FunctionalDeviceObject = Adapter->NdisMiniportBlock.DeviceObject;
+
+    if (NextDeviceObject != NULL)
+        *NextDeviceObject = Adapter->NdisMiniportBlock.NextDeviceObject;
+
+    if (AllocatedResources != NULL)
+        *AllocatedResources = Adapter->NdisMiniportBlock.AllocatedResources;
+
+    if (AllocatedResourcesTranslated != NULL)
+        *AllocatedResourcesTranslated = Adapter->NdisMiniportBlock.AllocatedResourcesTranslated;
 }
 
 /* EOF */

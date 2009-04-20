@@ -19,103 +19,105 @@ BEGIN
                     CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 END
 
+
 IDD_SCREENSAVER DIALOGEX 0, 0, 246, 204
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Screensaver"
+CAPTION "スクリーン セーバー"
 FONT 9, "MS UI Gothic", 0, 0
 BEGIN
     CONTROL         "", IDC_SCREENS_PREVIEW, "Static", SS_OWNERDRAW,
                     70, 10, 105, 70, WS_EX_STATICEDGE
-    GROUPBOX        "&Screensaver",IDC_SCREENS_DUMMY, 8, 92, 230, 52
+    GROUPBOX        "スクリーン セーバー(&S)",IDC_SCREENS_DUMMY, 8, 92, 230, 52
     COMBOBOX        IDC_SCREENS_LIST, 14, 103, 100, 100, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "Se&ttings",IDC_SCREENS_SETTINGS, 120, 103, 50, 13, WS_GROUP
-    PUSHBUTTON      "Pre&view",IDC_SCREENS_TESTSC, 175, 103, 50, 13
-    LTEXT           "&Wait",IDC_WAITTEXT, 14, 125, 16, 9
+    PUSHBUTTON      "設定(&T)",IDC_SCREENS_SETTINGS, 120, 103, 50, 13, WS_GROUP
+    PUSHBUTTON      "プレビュー(&V)",IDC_SCREENS_TESTSC, 175, 103, 50, 13
+    LTEXT           "待ち時間(&W)",IDC_WAITTEXT, 14, 125, 16, 9
     EDITTEXT        IDC_SCREENS_TIMEDELAY, 34, 123, 32, 13, ES_RIGHT | WS_GROUP
     CONTROL         "",IDC_SCREENS_TIME ,UPDOWN_CLASS,UDS_SETBUDDYINT |
                     UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS |
                     WS_BORDER | WS_GROUP, 54, 123, 12, 13
-    LTEXT           "minutes", IDC_MINTEXT, 70, 125, 26, 9
-    CONTROL         "Ask for &password on resume.",IDC_SCREENS_USEPASSCHK,"button",
+    LTEXT           "分間", IDC_MINTEXT, 70, 125, 26, 9
+    CONTROL         "レジューム時にパスワードを尋ねる(&P)",IDC_SCREENS_USEPASSCHK,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 104, 19
-    GROUPBOX        "&Energy Saving features of monitor", IDC_SCREENS_DUMMY2, 6, 155, 232, 41
-    LTEXT           "To adjust the power settings for your monitor, click on Power Settings.",
+    GROUPBOX        "モニタの省電力機能\(&E)", IDC_SCREENS_DUMMY2, 6, 155, 232, 41
+    LTEXT           "モニタの電源設定を変更するには、電源設定をクリックしてください。",
                     IDC_STATIC, 14, 166, 146 ,20
-    PUSHBUTTON      "P&ower...", IDC_SCREENS_POWER_BUTTON, 176, 171, 50, 13
+    PUSHBUTTON      "電源(&O)...", IDC_SCREENS_POWER_BUTTON, 176, 171, 50, 13
 END
+
 
 IDD_APPEARANCE DIALOGEX DISCARDABLE  0, 0, 246, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "外観のデザイン"
+CAPTION "デザイン"
 FONT 9, "MS UI Gothic"
 BEGIN
     CONTROL         "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass",
                     WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
-    LTEXT           "Colorscheme", IDC_STATIC, 7, 140, 64, 7
+    LTEXT           "色の設定", IDC_STATIC, 7, 140, 64, 7
     COMBOBOX        IDC_APPEARANCE_UI_ITEM, 7, 169, 120, 54, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "&Effects...", IDC_APPEARANCE_EFFECTS, 182, 150, 56, 15
-    PUSHBUTTON      "Advanced", IDC_APPEARANCE_ADVANCED, 182, 170, 56, 15
+    PUSHBUTTON      "効果(&E)...", IDC_APPEARANCE_EFFECTS, 182, 150, 56, 15
+    PUSHBUTTON      "詳細設定", IDC_APPEARANCE_ADVANCED, 182, 170, 56, 15
 END
 
 IDD_ADVAPPEARANCE DIALOGEX DISCARDABLE 0, 0, 250, 239
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
-CAPTION "Advanced Appearance"
+CAPTION "デザインの詳細"
 FONT 9, "MS UI Gothic"
 BEGIN
     CONTROL         "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass",
                     WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
 
-    LTEXT "Element:", 8, 5, 160, 50, 9
+    LTEXT "設定要素:", 8, 5, 160, 50, 9
     COMBOBOX IDC_ADVAPPEARANCE_ELEMENT, 5, 170, 130, 90, CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_CHILD | WS_VSCROLL | WS_TABSTOP
 
-    LTEXT "&Size", IDC_ADVAPPEARANCE_SIZE_T, 142, 160, 21, 9
+    LTEXT "サイズ(&S)", IDC_ADVAPPEARANCE_SIZE_T, 142, 160, 21, 9
     EDITTEXT IDC_ADVAPPEARANCE_SIZE_E, 142, 170, 38, 13, ES_RIGHT | WS_GROUP
     CONTROL "", IDC_ADVAPPEARANCE_SIZE_UD, UPDOWN_CLASS, UDS_AUTOBUDDY | WS_BORDER | WS_GROUP | UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_SETBUDDYINT | WS_CHILD | WS_VISIBLE, 172, 170, 10, 13
 
-    LTEXT   "&1st Color:", IDC_ADVAPPEARANCE_COLOR1_T, 184, 160, 40, 9
+    LTEXT   "色 1(&1):", IDC_ADVAPPEARANCE_COLOR1_T, 184, 160, 40, 9
     CHECKBOX   "-", IDC_ADVAPPEARANCE_COLOR1_B, 184, 170, 28, 13, BS_PUSHLIKE | BS_BITMAP
 
-    LTEXT   "&2nd Color:", IDC_ADVAPPEARANCE_COLOR2_T, 216, 160, 40, 9
+    LTEXT   "色 2(&2):", IDC_ADVAPPEARANCE_COLOR2_T, 216, 160, 40, 9
     CHECKBOX   "-", IDC_ADVAPPEARANCE_COLOR2_B, 216, 170, 28, 13, BS_PUSHLIKE | BS_BITMAP
 
-    LTEXT "Font:", IDC_ADVAPPEARANCE_FONT_T, 5, 190, 50, 8
+    LTEXT "フォント:", IDC_ADVAPPEARANCE_FONT_T, 5, 190, 50, 8
     COMBOBOX IDC_ADVAPPEARANCE_FONT_C, 5, 200, 130, 90, CBS_DROPDOWN | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 
-    LTEXT   "Fontsize:", IDC_ADVAPPEARANCE_FONTSIZE_T, 142, 190, 39, 8
+    LTEXT   "サイズ:", IDC_ADVAPPEARANCE_FONTSIZE_T, 142, 190, 39, 8
     COMBOBOX IDC_ADVAPPEARANCE_FONTSIZE_E, 142, 200, 38, 200, CBS_DROPDOWN | WS_VSCROLL
 
-    LTEXT   "Color:", IDC_ADVAPPEARANCE_FONTCOLOR_T, 184, 190, 20, 9
+    LTEXT   "色:", IDC_ADVAPPEARANCE_FONTCOLOR_T, 184, 190, 20, 9
     CHECKBOX   "", IDC_ADVAPPEARANCE_FONTCOLOR_B, 184, 200, 28, 13, BS_PUSHLIKE | BS_BITMAP
 
     AUTOCHECKBOX   "B", IDC_ADVAPPEARANCE_FONTBOLD, 216, 200, 14, 13, BS_PUSHLIKE
     AUTOCHECKBOX   "I ", IDC_ADVAPPEARANCE_FONTITALIC, 230, 200, 14, 13, BS_PUSHLIKE
 
-    PUSHBUTTON "Cancel", IDCANCEL, 191, 220, 50, 14
+    PUSHBUTTON "キャンセル", IDCANCEL, 191, 220, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 137, 220, 50, 14
 END
 
 IDD_EFFAPPEARANCE DIALOGEX DISCARDABLE 0, 0, 285, 185
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
-CAPTION "Effects"
-FONT 8, "MS Shell Dlg"
+CAPTION "効果"
+FONT 9, "MS UI Gothic"
 BEGIN
-    CONTROL         "&Use the following transition effect for menus and tooltips:",IDC_EFFAPPEARANCE_ANIMATION,"button",
+    CONTROL         "次のアニメーション効果をメニューとツールチップに使用する(&U):",IDC_EFFAPPEARANCE_ANIMATION,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP, 10, 5, 285, 19
     COMBOBOX        IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 80, 19 , CBS_DROPDOWNLIST | CBS_HASSTRINGS | WS_CHILD | WS_VSCROLL | WS_TABSTOP
-    CONTROL         "U&se the following method to smooth edges of screen fonts:",IDC_EFFAPPEARANCE_SMOOTHING,"button",
+    CONTROL         "次の方法でスクリーンフォントの縁を滑らかにする(&S):",IDC_EFFAPPEARANCE_SMOOTHING,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 42, 285, 19
     COMBOBOX        IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 80, 19 , CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
-    CONTROL         "Us&e large icons",IDC_EFFAPPEARANCE_LARGEICONS,"button",
+    CONTROL         "大きいアイコンを使用する(&E)",IDC_EFFAPPEARANCE_LARGEICONS,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 80, 285, 19
-    CONTROL         "Show sh&adows under menus",IDC_EFFAPPEARANCE_SETDROPSHADOW,"button",
+    CONTROL         "メニューの下に影を表\示する(&A)",IDC_EFFAPPEARANCE_SETDROPSHADOW,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 95, 285, 19
-    CONTROL         "Show &window contents while dragging",IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,"button",
+    CONTROL         "ドラッグ中にウィンドウの内容を表\示する(&W)",IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 110, 285, 19
-    CONTROL         "&Hide underlined letters for keyboard navigation until I press the Alt key",IDC_EFFAPPEARANCE_KEYBOARDCUES,"button",
+    CONTROL         "Altキーを押すまでキーボードナビゲーションの下線を隠しておく(&H)ide underlined letters for keyboard navigation until I press the Alt key",IDC_EFFAPPEARANCE_KEYBOARDCUES,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 285, 19
-    PUSHBUTTON "Cancel", IDCANCEL, 226, 165, 50, 14
+    PUSHBUTTON "キャンセル", IDCANCEL, 226, 165, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 172, 165, 50, 14
 END
 
@@ -124,15 +126,15 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "設定"
 FONT 9, "MS UI Gothic"
 BEGIN
-    LTEXT           "Drag the monitor icons to match the physical arrangement of your monitors.",-1,3,3,240,10
+    LTEXT           "モニタのアイコンを実際のモニタの配列と一致するように移動してください。",-1,3,3,240,10
     CONTROL         "",IDC_SETTINGS_MONSEL,"MONITORSELWNDCLASS",WS_CHILD|WS_VISIBLE|WS_TABSTOP,3,16,240,82,WS_EX_CLIENTEDGE
     LTEXT           "ディスプレイ(&D):",1820,3,140,30,8
-    LTEXT           "<none>",IDC_SETTINGS_DEVICE,9,149,224,8
+    LTEXT           "<なし>",IDC_SETTINGS_DEVICE,9,149,224,8
     GROUPBOX        "画面の解像度(&S)",1818,3,160,115,43
     CONTROL         "",IDC_SETTINGS_RESOLUTION,"msctls_trackbar32",
                     TBS_AUTOTICKS | WS_TABSTOP, 30, 170, 58, 17
-    LTEXT           "狭い",1815,9,170,15,8,NOT WS_GROUP
-    LTEXT           "広い",1816,93,170,21,8,NOT WS_GROUP
+    LTEXT           "小",1815,9,170,15,8,NOT WS_GROUP
+    LTEXT           "大",1816,93,170,21,8,NOT WS_GROUP
     LTEXT           "",IDC_SETTINGS_RESOLUTION_TEXT,10,190,100,10,NOT WS_GROUP | SS_CENTER
     GROUPBOX        "色(&C)",1817,125,160,115,43
     COMBOBOX        IDC_SETTINGS_BPP,131,170,103,80,CBS_DROPDOWNLIST | CBS_AUTOHSCROLL |
@@ -143,56 +145,56 @@ END
 
 IDD_ADVANCED_GENERAL DIALOGEX DISCARDABLE 0, 0, 253, 204
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "General"
-FONT 8, "MS Shell Dlg"
+CAPTION "全般"
+FONT 9, "MS UI Gothic"
 BEGIN
-    GROUPBOX "Display", -1, 7, 6, 237, 56, WS_GROUP
-    LTEXT "Font Size:", -1, 14, 20, 222, 8
+    GROUPBOX "表\示", -1, 7, 6, 237, 56, WS_GROUP
+    LTEXT "フォントサイズ:", -1, 14, 20, 222, 8
     COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_FONTSIZE_COSTOM, 14, 46, 223, 12
-    GROUPBOX "Compatibility", -1, 7, 67, 237, 97
-    LTEXT "Some programs operate improperly if you do not restart your computer after you change color settings.\r\n\nAfter I change color settings:", -1, 12, 78, 228, 34
-    AUTORADIOBUTTON "&Restart the computer before applying the new color settings.", IDC_RESTART_RB, 14, 116, 224, 10
-    AUTORADIOBUTTON "Apply the new color settings without restarting.", IDC_WITHOUTREBOOT_RB, 14, 131, 224, 10
-    AUTORADIOBUTTON "Ask me before applying the new color settings.", IDC_ASKME_RB, 14, 146, 224, 10
+    GROUPBOX "互換性", -1, 7, 67, 237, 97
+    LTEXT "色の設定を変更した後にコンピュータを再起動しないと、プログラムが正常に動作しないことがあります。\r\n\n色の設定を変更した後の動作:", -1, 12, 78, 228, 34
+    AUTORADIOBUTTON "新しい色の設定を適用する前に、コンピュータを再起動する(&R)", IDC_RESTART_RB, 14, 116, 224, 10
+    AUTORADIOBUTTON "再起動せずに、新しい色の設定を適用する", IDC_WITHOUTREBOOT_RB, 14, 131, 224, 10
+    AUTORADIOBUTTON "新しい色の設定を適用する前に確認する", IDC_ASKME_RB, 14, 146, 224, 10
 END
 
 IDR_PREVIEW_MENU MENU
 BEGIN
-    MENUITEM "Normal",           ID_MENU_NORMAL
-    MENUITEM "Disabled",         ID_MENU_DISABLED
-    MENUITEM "Selected",         ID_MENU_SELECTED
+    MENUITEM "通常",           ID_MENU_NORMAL
+    MENUITEM "選択不可",         ID_MENU_DISABLED
+    MENUITEM "選択済み",         ID_MENU_SELECTED
 END
 
 IDM_MONITOR_MENU MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Attached",   ID_MENU_ATTACHED
-        MENUITEM "&Primary",    ID_MENU_PRIMARY
+        MENUITEM "接続済み(&A)",   ID_MENU_ATTACHED
+        MENUITEM "プライマリ(&P)",    ID_MENU_PRIMARY
         MENUITEM SEPARATOR
-        MENUITEM "&Identify",   ID_MENU_IDENTIFY
-        MENUITEM "P&roperties", ID_MENU_PROPERTIES
+        MENUITEM "識別(&I)",   ID_MENU_IDENTIFY
+        MENUITEM "プロパティ(&R)", ID_MENU_PROPERTIES
     END
 END
 
 STRINGTABLE  DISCARDABLE
 BEGIN
-    IDS_SLIDEEFFECT "Slide effect"
-    IDS_FADEEFFECT  "Fade effect"
+    IDS_SLIDEEFFECT "スライド効果"
+    IDS_FADEEFFECT  "フェード効果"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_STANDARDEFFECT  "Standard"
+    IDS_STANDARDEFFECT  "スタンダード"
     IDS_CLEARTYPEEFFECT "ClearType"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_MULTIPLEMONITORS "(Multiple Monitors)"
-    IDS_UNKNOWNMONITOR "(Unknown Monitor)"
-    IDS_ADVANCEDTITLEFMT "%s and %s"
+    IDS_MULTIPLEMONITORS "(マルチ モニタ)"
+    IDS_UNKNOWNMONITOR "(不明なモニタ)"
+    IDS_ADVANCEDTITLEFMT "%s と %s"
 END
 
 STRINGTABLE
@@ -212,7 +214,7 @@ BEGIN
     IDS_COLOR_16BIT "High Color (16 ビット)"
     IDS_COLOR_24BIT "True Color (24 ビット)"
     IDS_COLOR_32BIT "True Color (32 ビット)"
-    IDS_PIXEL "%lux%lu ピクセル"
+    IDS_PIXEL "%lu x %lu ピクセル"
 END
 
 STRINGTABLE DISCARDABLE
@@ -223,43 +225,43 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_INACTWIN "Inactive Window"
-    IDS_ACTWIN   "Active Window"
-    IDS_WINTEXT  "Window Text"
-    IDS_MESSBOX  "Message Box"
-    IDS_MESSTEXT "Message Text"
+    IDS_INACTWIN "非アクティブ ウィンドウ"
+    IDS_ACTWIN   "アクティブ ウィンドウ"
+    IDS_WINTEXT  "ウィンドウ テキスト"
+    IDS_MESSBOX  "メッセージ ボックス"
+    IDS_MESSTEXT "メッセージ テキスト"
     IDS_BUTTEXT  "OK"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_ELEMENT_1 "Desktop"
-    IDS_ELEMENT_2 "Caption of inactive windows"
-    IDS_ELEMENT_3 "Border of inactive windows"
-    IDS_ELEMENT_4 "Caption of active windows"
-    IDS_ELEMENT_5 "Border of active windows"
-    IDS_ELEMENT_6 "Menu"
-    IDS_ELEMENT_7 "Hilited elements"
-    IDS_ELEMENT_8 "Windows"
-    IDS_ELEMENT_9 "Scrollbars"
-    IDS_ELEMENT_10 "3D objects"
-    IDS_ELEMENT_11 "Palette title"
-    IDS_ELEMENT_12 "Symbol title"
-    IDS_ELEMENT_13 "Captionbar"
-    IDS_ELEMENT_14 "Deactivated menu elements"
-    IDS_ELEMENT_15 "Dialog"
-    IDS_ELEMENT_16 "Scrollbar controls"
-    IDS_ELEMENT_17 "Application background"
-    IDS_ELEMENT_18 "Small captionbar"
-    IDS_ELEMENT_19 "Symbol distance (horizontal)"
-    IDS_ELEMENT_20 "Symbol distance (vertical)"
-    IDS_ELEMENT_21 "Quickinfo"
-    IDS_ELEMENT_22 "Symbol"
+    IDS_ELEMENT_1 "デスクトップ"
+    IDS_ELEMENT_2 "非アクティブ ウィンドウのタイトル"
+    IDS_ELEMENT_3 "非アクティブ ウィンドウの縁"
+    IDS_ELEMENT_4 "アクティブ ウィンドウのタイトル"
+    IDS_ELEMENT_5 "アクティブ ウィンドウの縁"
+    IDS_ELEMENT_6 "メニュー"
+    IDS_ELEMENT_7 "ハイライトされた項目"
+    IDS_ELEMENT_8 "ウィンドウ"
+    IDS_ELEMENT_9 "スクロールバー"
+    IDS_ELEMENT_10 "3D オブジェクト"
+    IDS_ELEMENT_11 "パレット タイトル"
+    IDS_ELEMENT_12 "シンボル タイトル"
+    IDS_ELEMENT_13 "キャプションバー"
+    IDS_ELEMENT_14 "非アクティブメニュー項目"
+    IDS_ELEMENT_15 "ダイアログ"
+    IDS_ELEMENT_16 "スクロールバー コントロール"
+    IDS_ELEMENT_17 "アプリケーションの背景"
+    IDS_ELEMENT_18 "小さいキャプションバー"
+    IDS_ELEMENT_19 "シンボルの間隔 (横)"
+    IDS_ELEMENT_20 "シンボルの間隔 (縦)"
+    IDS_ELEMENT_21 "クイック情報"
+    IDS_ELEMENT_22 "シンボル"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_DISPLAY_SETTINGS "Display settings"
-    IDS_APPLY_FAILED "Failed to apply new settings..."
-    IDS_APPLY_NEEDS_RESTART "You need to restart your computer to apply changes."
+    IDS_DISPLAY_SETTINGS "表示設定"
+    IDS_APPLY_FAILED "新しい設定の適用に失敗しました..."
+    IDS_APPLY_NEEDS_RESTART "変更を反映するコンピュータを再起動する必要があります。"
 END

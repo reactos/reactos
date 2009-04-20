@@ -232,7 +232,7 @@ BEGIN
 	IDS_SYS_TOOLS        "Herramientas del sistema"
 	IDS_CMT_CHARMAP      "Mapa de caracteres"
 	IDS_CMT_KBSWITCH     "Keyboard Layout Switcher"
-    IDS_CMT_DXDIAG       "Launch ReactX-Diagnostic program"
+	IDS_CMT_DXDIAG       "Ejecutar el programa de diagnóstico de ReactX"
 END
 
 
@@ -269,7 +269,7 @@ BEGIN
     IDS_SHORT_DOWNLOADER "Download !.lnk"
     IDS_SHORT_SERVICE    "Administrador de Servicios.lnk"
     IDS_SHORT_DEVICE     "Administrador de Dispositivos.lnk"
-    IDS_SHORT_MPLAY32    "Multimedia Player.lnk"
+    IDS_SHORT_MPLAY32    "Reproductor multimedia.lnk"
     IDS_SHORT_CALC       "Calculadora.lnk"
     IDS_SHORT_REGEDIT    "Editor de registro.lnk"
     IDS_SHORT_NOTEPAD    "Bloc de notas.lnk"
@@ -281,10 +281,10 @@ BEGIN
     IDS_SHORT_MAGNIFY    "Magnify.lnk"
     IDS_SHORT_RDESKTOP   "Escritorio Remoto.lnk"
     IDS_SHORT_KBSWITCH   "Keyboard Layout Switcher.lnk"
-    IDS_SHORT_EVENTVIEW  "Event Viewer.lnk"
-    IDS_SHORT_MSCONFIG   "System Configuration.lnk"
-    IDS_SHORT_SNDVOL32   "Volume Control.lnk"
-    IDS_SHORT_DXDIAG     "ReactX Diagnostic.lnk"
+    IDS_SHORT_EVENTVIEW  "Visor de sucesos.lnk"
+    IDS_SHORT_MSCONFIG   "Configuración del sistema.lnk"
+    IDS_SHORT_SNDVOL32   "Control de volumen.lnk"
+    IDS_SHORT_DXDIAG     "Diagnóstico de ReactX.lnk"
 END
 
 STRINGTABLE

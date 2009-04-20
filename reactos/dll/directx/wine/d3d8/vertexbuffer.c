@@ -151,13 +151,9 @@ static void WINAPI IDirect3DVertexBuffer8Impl_PreLoad(LPDIRECT3DVERTEXBUFFER8 if
 
 static D3DRESOURCETYPE WINAPI IDirect3DVertexBuffer8Impl_GetType(LPDIRECT3DVERTEXBUFFER8 iface) {
     IDirect3DVertexBuffer8Impl *This = (IDirect3DVertexBuffer8Impl *)iface;
-    D3DRESOURCETYPE type;
-    TRACE("(%p) Relay\n", This);
+    TRACE("(%p)\n", This);
 
-    EnterCriticalSection(&d3d8_cs);
-    type = IWineD3DBuffer_GetType(This->wineD3DVertexBuffer);
-    LeaveCriticalSection(&d3d8_cs);
-    return type;
+    return D3DRTYPE_VERTEXBUFFER;
 }
 
 /* IDirect3DVertexBuffer8 Interface follow: */
@@ -186,13 +182,21 @@ static HRESULT WINAPI IDirect3DVertexBuffer8Impl_Unlock(LPDIRECT3DVERTEXBUFFER8 
 static HRESULT WINAPI IDirect3DVertexBuffer8Impl_GetDesc(LPDIRECT3DVERTEXBUFFER8 iface, D3DVERTEXBUFFER_DESC *pDesc) {
     IDirect3DVertexBuffer8Impl *This = (IDirect3DVertexBuffer8Impl *)iface;
     HRESULT hr;
+    WINED3DBUFFER_DESC desc;
     TRACE("(%p) Relay\n", This);
 
     EnterCriticalSection(&d3d8_cs);
-    hr = IWineD3DBuffer_GetDesc(This->wineD3DVertexBuffer, (WINED3DVERTEXBUFFER_DESC *)pDesc);
+    hr = IWineD3DBuffer_GetDesc(This->wineD3DVertexBuffer, &desc);
     LeaveCriticalSection(&d3d8_cs);
 
-    if (SUCCEEDED(hr)) pDesc->Format = d3dformat_from_wined3dformat(pDesc->Format);
+    if (SUCCEEDED(hr)) {
+        pDesc->Type = D3DRTYPE_VERTEXBUFFER;
+        pDesc->Usage = desc.Usage;
+        pDesc->Pool = desc.Pool;
+        pDesc->Size = desc.Size;
+        pDesc->FVF = This->fvf;
+        pDesc->Format = D3DFMT_VERTEXDATA;
+    }
 
     return hr;
 }

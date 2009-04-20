@@ -70,7 +70,6 @@ void ME_ClearTempStyle(ME_TextEditor *editor);
 void ME_DumpStyleToBuf(CHARFORMAT2W *pFmt, char buf[2048]);
 void ME_DumpStyle(ME_Style *s);
 CHARFORMAT2W *ME_ToCF2W(CHARFORMAT2W *to, CHARFORMAT2W *from);
-void ME_CopyToCF2W(CHARFORMAT2W *to, CHARFORMAT2W *from);
 void ME_CopyToCFAny(CHARFORMAT2W *to, CHARFORMAT2W *from);
 void ME_CopyCharFormat(CHARFORMAT2W *pDest, const CHARFORMAT2W *pSrc); /* only works with 2W structs */
 void ME_CharFormatFromLogFont(HDC hDC, const LOGFONTW *lf, CHARFORMAT2W *fmt); /* ditto */
@@ -81,7 +80,6 @@ void ME_Remove(ME_DisplayItem *diWhere);
 ME_DisplayItem *ME_FindItemBack(ME_DisplayItem *di, ME_DIType nTypeOrClass);
 ME_DisplayItem *ME_FindItemFwd(ME_DisplayItem *di, ME_DIType nTypeOrClass);
 ME_DisplayItem *ME_FindItemBackOrHere(ME_DisplayItem *di, ME_DIType nTypeOrClass);
-ME_DisplayItem *ME_FindItemFwdOrHere(ME_DisplayItem *di, ME_DIType nTypeOrClass);
 ME_DisplayItem *ME_MakeDI(ME_DIType type);
 void ME_DestroyDisplayItem(ME_DisplayItem *item);
 void ME_DumpDocument(ME_TextBuffer *buffer);
@@ -91,26 +89,15 @@ const char *ME_GetDITypeName(ME_DIType type);
 ME_String *ME_MakeString(LPCWSTR szText);
 ME_String *ME_MakeStringN(LPCWSTR szText, int nMaxChars);
 ME_String *ME_MakeStringR(WCHAR cRepeat, int nMaxChars);
-ME_String *ME_MakeStringB(int nMaxChars);
 ME_String *ME_StrDup(const ME_String *s);
 void ME_DestroyString(ME_String *s);
 void ME_AppendString(ME_String *s1, const ME_String *s2);
-ME_String *ME_ConcatString(const ME_String *s1, const ME_String *s2);
 ME_String *ME_VSplitString(ME_String *orig, int nVPos);
 int ME_IsWhitespaces(const ME_String *s);
 int ME_IsSplitable(const ME_String *s);
-/* int ME_CalcSkipChars(ME_String *s); */
-int ME_StrLen(const ME_String *s);
-int ME_StrVLen(const ME_String *s);
 int ME_FindNonWhitespaceV(const ME_String *s, int nVChar);
 int ME_FindWhitespaceV(ME_String *s, int nVChar);
 int ME_CallWordBreakProc(ME_TextEditor *editor, ME_String *str, INT start, INT code);
-int ME_GetCharFwd(const ME_String *s, int nPos); /* get char starting from start */
-int ME_GetCharBack(const ME_String *s, int nPos); /* get char starting from \0  */
-int ME_StrRelPos(const ME_String *s, int nVChar, int *pRelChars);
-int ME_StrRelPos2(const ME_String *s, int nVChar, int nRelChars);
-int ME_VPosToPos(ME_String *s, int nVPos);
-int ME_PosToVPos(const ME_String *s, int nPos);
 void ME_StrDeleteV(ME_String *s, int nVChar, int nChars);
 /* smart helpers for A<->W conversions, they reserve/free memory and call MultiByte<->WideChar functions */
 LPWSTR ME_ToUnicode(BOOL unicode, LPVOID psz);
@@ -132,7 +119,6 @@ int ME_ReverseFindNonWhitespaceV(const ME_String *s, int nVChar);
 int ME_ReverseFindWhitespaceV(const ME_String *s, int nVChar);
 
 /* row.c */
-ME_DisplayItem *ME_FindRowStart(ME_Context *c, ME_DisplayItem *run, int nRelPos);
 ME_DisplayItem *ME_RowStart(ME_DisplayItem *item);
 /* ME_DisplayItem *ME_RowEnd(ME_DisplayItem *item); */
 void ME_RenumberParagraphs(ME_DisplayItem *item); /* TODO */
@@ -162,8 +148,8 @@ ME_DisplayItem *ME_SplitFurther(ME_TextEditor *editor, ME_DisplayItem *run);
 void ME_CalcRunExtent(ME_Context *c, const ME_Paragraph *para, int startx, ME_Run *run);
 SIZE ME_GetRunSize(ME_Context *c, const ME_Paragraph *para, ME_Run *run, int nLen, int startx);
 void ME_CursorFromCharOfs(ME_TextEditor *editor, int nCharOfs, ME_Cursor *pCursor);
-void ME_RunOfsFromCharOfs(ME_TextEditor *editor, int nCharOfs, ME_DisplayItem **ppRun, int *pOfs);
-int ME_CharOfsFromRunOfs(ME_TextEditor *editor, ME_DisplayItem *pRun, int nOfs);
+void ME_RunOfsFromCharOfs(ME_TextEditor *editor, int nCharOfs, ME_DisplayItem **ppPara, ME_DisplayItem **ppRun, int *pOfs);
+int ME_CharOfsFromRunOfs(ME_TextEditor *editor, const ME_DisplayItem *pPara, const ME_DisplayItem *pRun, int nOfs);
 void ME_SkipAndPropagateCharOffset(ME_DisplayItem *p, int shift);
 void ME_SetCharFormat(ME_TextEditor *editor, int nFrom, int nLen, CHARFORMAT2W *pFmt);
 void ME_SetSelectionCharFormat(ME_TextEditor *editor, CHARFORMAT2W *pFmt);
@@ -211,7 +197,7 @@ void ME_InvalidateMarkedParagraphs(ME_TextEditor *editor);
 void ME_SendRequestResize(ME_TextEditor *editor, BOOL force);
 
 /* para.c */
-ME_DisplayItem *ME_GetParagraph(ME_DisplayItem *run); 
+ME_DisplayItem *ME_GetParagraph(ME_DisplayItem *run);
 void ME_GetSelectionParas(ME_TextEditor *editor, ME_DisplayItem **para, ME_DisplayItem **para_end);
 void ME_MakeFirstParagraph(ME_TextEditor *editor);
 ME_DisplayItem *ME_SplitParagraph(ME_TextEditor *editor, ME_DisplayItem *rp, ME_Style *style, ME_String *eol_str, int paraFlags);

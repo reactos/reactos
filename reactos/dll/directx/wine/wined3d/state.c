@@ -3367,11 +3367,10 @@ static void sampler(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3DCont
 
         /* Trigger shader constant reloading (for NP2 texcoord fixup)
          * Only do this if pshaders are used (note: fixup is currently only implemented in GLSL). */
-        if (!tex_impl->baseTexture.pow2Matrix_identity && use_ps(stateblock)) {
+        if (!tex_impl->baseTexture.pow2Matrix_identity) {
             IWineD3DDeviceImpl* d3ddevice = stateblock->wineD3DDevice;
-            /* FIXME: add something like shader_load_rectfixup_consts to the backend to only reload the
-             * constants that are used for the fixup (and not the other ones too) */
-            d3ddevice->shader_backend->shader_load_constants((IWineD3DDevice*)d3ddevice, use_ps(stateblock), use_vs(stateblock));
+            d3ddevice->shader_backend->shader_load_np2fixup_constants(
+                (IWineD3DDevice*)d3ddevice, use_ps(stateblock), use_vs(stateblock));
         }
     } else if(mapped_stage < GL_LIMITS(textures)) {
         if(sampler < stateblock->lowest_disabled_stage) {
@@ -4631,8 +4630,8 @@ static void indexbuffer(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3D
     if(stateblock->streamIsUP || stateblock->pIndexData == NULL ) {
         GL_EXTCALL(glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0));
     } else {
-        IWineD3DIndexBufferImpl *ib = (IWineD3DIndexBufferImpl *) stateblock->pIndexData;
-        GL_EXTCALL(glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, ib->vbo));
+        struct wined3d_buffer *ib = (struct wined3d_buffer *) stateblock->pIndexData;
+        GL_EXTCALL(glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, ib->buffer_object));
     }
 }
 

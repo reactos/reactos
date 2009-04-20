@@ -330,7 +330,7 @@ FrLdrLoadNlsFiles(PCHAR szSystemRoot,
     rc = RegQueryValue(hKey, szIdBuffer, NULL, (PUCHAR)szNameBuffer, &BufferSize);
     if (rc != ERROR_SUCCESS) {
 
-        strcpy(szErrorOut, "Language Default setting exists, but isn't readable");
+        sprintf(szErrorOut, "Language Default setting exists, but isn't readable (%S)", szIdBuffer);
         return(FALSE);
     }
 

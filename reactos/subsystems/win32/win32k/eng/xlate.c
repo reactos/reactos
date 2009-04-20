@@ -177,9 +177,23 @@ IntEngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
       DestPalGDI = PALETTE_LockPalette(PaletteDest);
 
    if (SourcePalType == 0)
+   {
+      if (!SourcePalGDI)
+      {
+          DPRINT1("Failed to lock source palette %p\n", PaletteSource);
+          return NULL;
+      }
       SourcePalType = SourcePalGDI->Mode;
+   }
    if (DestPalType == 0)
+   {
+      if (!DestPalGDI)
+      {
+          DPRINT1("Failed to lock dest palette %p\n", PaletteDest);
+          return NULL;
+      }
       DestPalType = DestPalGDI->Mode;
+   }
 
    XlateObj->iSrcType = SourcePalType;
    XlateObj->iDstType = DestPalType;

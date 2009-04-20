@@ -96,7 +96,7 @@ IntGdiPolygon(PDC    dc,
         /* Special locking order to avoid lock-ups */
         pbrFill = dc->dclevel.pbrFill;
         pbrLine = dc->dclevel.pbrLine;
-        psurf = SURFACE_LockSurface(dc->rosdc.hBitmap);
+        psurf = dc->dclevel.pSurface;
         /* FIXME - psurf can be NULL!!!! don't assert but handle this case gracefully! */
         ASSERT(psurf);
 
@@ -153,7 +153,6 @@ IntGdiPolygon(PDC    dc,
             }
         }
     }
-    SURFACE_UnlockSurface(psurf);
 
     return ret;
 }
@@ -581,7 +580,7 @@ IntRectangle(PDC dc,
         ret = FALSE;
         goto cleanup;
     }
-    psurf = SURFACE_LockSurface(dc->rosdc.hBitmap);
+    psurf = dc->dclevel.pSurface;
     if (!psurf)
     {
         ret = FALSE;
@@ -646,9 +645,6 @@ IntRectangle(PDC dc,
     }
 
 cleanup:
-    if (psurf)
-        SURFACE_UnlockSurface(psurf);
-
     /* Move current position in DC?
        MSDN: The current position is neither used nor updated by Rectangle. */
 
@@ -917,7 +913,7 @@ IntGdiGradientFill(
     DitherOrg.x += dc->ptlDCOrig.x;
     DitherOrg.y += dc->ptlDCOrig.y;
 
-    psurf = SURFACE_LockSurface(dc->rosdc.hBitmap);
+    psurf = dc->dclevel.pSurface;
     /* FIXME - psurf can be NULL!!! Don't assert but handle this case gracefully! */
     ASSERT(psurf);
 
@@ -947,7 +943,6 @@ IntGdiGradientFill(
                              &DitherOrg,
                              ulMode);
 
-    SURFACE_UnlockSurface(psurf);
     EngDeleteXlate(XlateObj);
 
     return Ret;
@@ -1121,7 +1116,7 @@ NtGdiExtFloodFill(
         Ret = FALSE;
         goto cleanup;
     }
-    psurf = SURFACE_LockSurface(dc->rosdc.hBitmap);
+    psurf = dc->dclevel.pSurface;
     if (!psurf)
     {
         Ret = FALSE;
@@ -1129,9 +1124,6 @@ NtGdiExtFloodFill(
     }
 
 cleanup:
-    if (psurf)
-        SURFACE_UnlockSurface(psurf);
-
     DC_UnlockDc(dc);
     return Ret;
 }

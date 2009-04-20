@@ -42,10 +42,11 @@ static ME_DisplayItem *ME_MakeRow(int height, int baseline, int width)
   return item;
 }
 
-static void ME_BeginRow(ME_WrapContext *wc, ME_DisplayItem *para)
+static void ME_BeginRow(ME_WrapContext *wc)
 {
   PARAFORMAT2 *pFmt;
-  assert(para && para->type == diParagraph);
+  ME_DisplayItem *para = wc->pPara;
+
   pFmt = para->member.para.pFmt;
   wc->pRowStart = NULL;
   wc->bOverflown = FALSE;
@@ -77,7 +78,7 @@ static void ME_BeginRow(ME_WrapContext *wc, ME_DisplayItem *para)
         - (wc->nRow ? wc->nLeftMargin : wc->nFirstMargin) - wc->nRightMargin;
     wc->bWordWrap = TRUE;
   } else {
-    wc->nAvailWidth = wc->context->rcView.right - wc->context->rcView.left
+    wc->nAvailWidth = wc->context->nAvailWidth
         - (wc->nRow ? wc->nLeftMargin : wc->nFirstMargin) - wc->nRightMargin;
   }
   wc->pt.x = wc->context->pt.x;
@@ -94,7 +95,7 @@ static void ME_InsertRowStart(ME_WrapContext *wc, const ME_DisplayItem *pEnd)
   int ascent = 0, descent = 0, width=0, shift = 0, align = 0;
   PARAFORMAT2 *pFmt;
   /* wrap text */
-  para = ME_GetParagraph(wc->pRowStart);
+  para = wc->pPara;
   pFmt = para->member.para.pFmt;
 
   for (p = pEnd->prev; p!=wc->pRowStart->prev; p = p->prev)
@@ -114,7 +115,8 @@ static void ME_InsertRowStart(ME_WrapContext *wc, const ME_DisplayItem *pEnd)
           WCHAR *text = p->member.run.strText->szData + len - 1;
 
           assert (len);
-          while (len && *(text--) == ' ')
+          if (~p->member.run.nFlags & MERF_GRAPHICS)
+            while (len && *(text--) == ' ')
               len--;
           if (len)
           {
@@ -162,12 +164,12 @@ static void ME_InsertRowStart(ME_WrapContext *wc, const ME_DisplayItem *pEnd)
   ME_InsertBefore(wc->pRowStart, row);
   wc->nRow++;
   wc->pt.y += row->member.row.nHeight;
-  ME_BeginRow(wc, para);
+  ME_BeginRow(wc);
 }
 
 static void ME_WrapEndParagraph(ME_WrapContext *wc, ME_DisplayItem *p)
 {
-  ME_DisplayItem *para = p->member.para.prev_para;
+  ME_DisplayItem *para = wc->pPara;
   PARAFORMAT2 *pFmt = para->member.para.pFmt;
   if (wc->pRowStart)
     ME_InsertRowStart(wc, p);
@@ -180,7 +182,7 @@ static void ME_WrapEndParagraph(ME_WrapContext *wc, ME_DisplayItem *p)
   }
 
   /*
-  p = p->member.para.prev_para->next;
+  p = para->next;
   while(p) {
     if (p->type == diParagraph || p->type == diTextEnd)
       return;
@@ -200,7 +202,7 @@ static void ME_WrapSizeRun(ME_WrapContext *wc, ME_DisplayItem *p)
 
   ME_UpdateRunFlags(wc->context->editor, &p->member.run);
 
-  ME_CalcRunExtent(wc->context, &ME_GetParagraph(p)->member.para,
+  ME_CalcRunExtent(wc->context, &wc->pPara->member.para,
                    wc->nRow ? wc->nLeftMargin : wc->nFirstMargin, &p->member.run);
 }
 
@@ -253,7 +255,7 @@ static ME_DisplayItem *ME_SplitByBacktracking(ME_WrapContext *wc, ME_DisplayItem
   ME_Run *run = &p->member.run;
 
   idesp = i = ME_CharFromPoint(wc->context, loc, run);
-  len = ME_StrVLen(run->strText);
+  len = run->strText->nLen;
   assert(len>0);
   assert(i<len);
   if (i) {
@@ -280,7 +282,7 @@ static ME_DisplayItem *ME_SplitByBacktracking(ME_WrapContext *wc, ME_DisplayItem
 
       piter = wc->pLastSplittableRun;
       run = &piter->member.run;
-      len = ME_StrVLen(run->strText);
+      len = run->strText->nLen;
       /* don't split words */
       i = ME_ReverseFindWhitespaceV(run->strText, len);
       if (i == len)
@@ -315,11 +317,9 @@ static ME_DisplayItem *ME_SplitByBacktracking(ME_WrapContext *wc, ME_DisplayItem
   else
   {
     /* split point inside first character - no choice but split after that char */
-    int chars = 1;
-    int pos2 = ME_StrRelPos(run->strText, 0, &chars);
-    if (pos2 != len) {
+    if (len != 1) {
       /* the run is more than 1 char, so we may split */
-      return ME_SplitRun(wc, piter, pos2);
+      return ME_SplitRun(wc, piter, 1);
     }
     /* the run is one char, can't split it */
     return piter;
@@ -339,7 +339,7 @@ static ME_DisplayItem *ME_WrapHandleRun(ME_WrapContext *wc, ME_DisplayItem *p)
   run->pt.x = wc->pt.x;
   run->pt.y = wc->pt.y;
   ME_WrapSizeRun(wc, p);
-  len = ME_StrVLen(run->strText);
+  len = run->strText->nLen;
 
   if (wc->bOverflown) /* just skipping final whitespaces */
   {
@@ -473,6 +473,7 @@ static void ME_WrapTextParagraph(ME_Context *c, ME_DisplayItem *tp) {
   pFmt = tp->member.para.pFmt;
 
   wc.context = c;
+  wc.pPara = tp;
 /*   wc.para_style = tp->member.para.style; */
   wc.style = NULL;
   if (tp->member.para.nFlags & MEPF_ROWEND) {
@@ -511,7 +512,7 @@ static void ME_WrapTextParagraph(ME_Context *c, ME_DisplayItem *tp) {
 
   linespace = ME_GetParaLineSpace(c, &tp->member.para);
 
-  ME_BeginRow(&wc, tp);
+  ME_BeginRow(&wc);
   for (p = tp->next; p!=tp->member.para.next_para; ) {
     assert(p->type != diStartRow);
     if (p->type == diRun) {

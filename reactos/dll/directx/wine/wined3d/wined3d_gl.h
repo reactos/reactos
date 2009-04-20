@@ -3320,8 +3320,13 @@ typedef enum _GL_Cards {
   CARD_NVIDIA_GEFORCE_8600GT      = 0x0402,
   CARD_NVIDIA_GEFORCE_8600MGT     = 0x0407,
   CARD_NVIDIA_GEFORCE_8800GTS     = 0x0193,
+  CARD_NVIDIA_GEFORCE_9200        = 0x086d,
+  CARD_NVIDIA_GEFORCE_9400GT      = 0x042c,
+  CARD_NVIDIA_GEFORCE_9500GT      = 0x0640,
   CARD_NVIDIA_GEFORCE_9600GT      = 0x0622,
   CARD_NVIDIA_GEFORCE_9800GT      = 0x0614,
+  CARD_NVIDIA_GEFORCE_GTX260      = 0x05e2,
+  CARD_NVIDIA_GEFORCE_GTX275      = 0x05e6,
   CARD_NVIDIA_GEFORCE_GTX280      = 0x05e1,
 
   CARD_INTEL_845G                 = 0x2562,
@@ -3903,6 +3908,7 @@ typedef struct _WineD3D_GL_Info {
   UINT   vidmem;
   DWORD  driver_version;
   DWORD  driver_version_hipart;
+  CHAR   driver_description[255];
   CHAR   gl_renderer[255];
   /**
    * CAPS Constants

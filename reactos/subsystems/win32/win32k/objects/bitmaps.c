@@ -154,7 +154,7 @@ IntCreateCompatibleBitmap(
         {
             DIBSECTION dibs;
             INT Count;
-            PSURFACE psurf = SURFACE_LockSurface(Dc->rosdc.hBitmap);
+            PSURFACE psurf = Dc->dclevel.pSurface;
             Count = BITMAP_GetObject(psurf, sizeof(dibs), &dibs);
 
             if (Count)
@@ -223,7 +223,6 @@ IntCreateCompatibleBitmap(
                             if (!PalGDI)
                             {
                                 ExFreePoolWithTag(bi, TAG_TEMP);
-                                SURFACE_UnlockSurface(psurf);
                                 SetLastWin32Error(ERROR_INVALID_HANDLE);
                                 return 0;
                             }
@@ -239,7 +238,6 @@ IntCreateCompatibleBitmap(
                             }
                             PALETTE_UnlockPalette(PalGDI);
                         }
-                        SURFACE_UnlockSurface(psurf);
 
                         Bmp = DIB_CreateDIBSection(Dc,
                                                    bi,
@@ -254,7 +252,6 @@ IntCreateCompatibleBitmap(
                     }
                 }
             }
-            SURFACE_UnlockSurface(psurf);
         }
     }
     return Bmp;
@@ -361,7 +358,7 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
     if (RECTL_bPointInRect(&dc->rosdc.CombinedClip->rclBounds, XPos, YPos))
     {
         bInRect = TRUE;
-        psurf = SURFACE_LockSurface(dc->rosdc.hBitmap);
+        psurf = dc->dclevel.pSurface;
         pso = &psurf->SurfObj;
         if (psurf)
         {
@@ -381,7 +378,6 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
                 }
                 EngDeleteXlate(XlateObj);
             }
-            SURFACE_UnlockSurface(psurf);
         }
     }
     DC_UnlockDc(dc);

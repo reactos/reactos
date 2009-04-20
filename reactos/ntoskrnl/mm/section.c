@@ -4757,7 +4757,7 @@ MmCanFileBeTruncated (IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
       }
    }
 
-   DPRINT1("FIXME: didn't check for outstanding write probes\n");
+   DPRINT("FIXME: didn't check for outstanding write probes\n");
 
    return TRUE;
 }

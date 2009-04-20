@@ -174,16 +174,15 @@ static void vshader_set_input(
     unsigned int regnum,
     BYTE usage, BYTE usage_idx) {
 
-    /* Fake usage: set reserved bit, usage, usage_idx */
-    DWORD usage_token = (0x1 << 31) |
-        (usage << WINED3DSP_DCL_USAGE_SHIFT) | (usage_idx << WINED3DSP_DCL_USAGEINDEX_SHIFT);
-
-    /* Fake register; set reserved bit, regnum, type: input, wmask: all */
-    DWORD reg_token = (0x1 << 31) |
-        WINED3DSP_WRITEMASK_ALL | (WINED3DSPR_INPUT << WINED3DSP_REGTYPE_SHIFT) | regnum;
-
-    This->semantics_in[regnum].usage = usage_token;
-    This->semantics_in[regnum].reg = reg_token;
+    This->semantics_in[regnum].usage = usage;
+    This->semantics_in[regnum].usage_idx = usage_idx;
+    This->semantics_in[regnum].reg.register_type = WINED3DSPR_INPUT;
+    This->semantics_in[regnum].reg.register_idx = regnum;
+    This->semantics_in[regnum].reg.write_mask = WINED3DSP_WRITEMASK_ALL;
+    This->semantics_in[regnum].reg.modifiers = 0;
+    This->semantics_in[regnum].reg.shift = 0;
+    This->semantics_in[regnum].reg.has_rel_addr = FALSE;
+    This->semantics_in[regnum].reg.addr_token = 0;
 }
 
 static BOOL match_usage(BYTE usage1, BYTE usage_idx1, BYTE usage2, BYTE usage_idx2) {
@@ -204,11 +203,11 @@ BOOL vshader_get_input(
     int i;
 
     for (i = 0; i < MAX_ATTRIBS; i++) {
-        DWORD usage_token = This->semantics_in[i].usage;
-        DWORD usage = (usage_token & WINED3DSP_DCL_USAGE_MASK) >> WINED3DSP_DCL_USAGE_SHIFT;
-        DWORD usage_idx = (usage_token & WINED3DSP_DCL_USAGEINDEX_MASK) >> WINED3DSP_DCL_USAGEINDEX_SHIFT;
+        if (!This->baseShader.reg_maps.attributes[i]) continue;
 
-        if (usage_token && match_usage(usage, usage_idx, usage_req, usage_idx_req)) {
+        if (match_usage(This->semantics_in[i].usage,
+                This->semantics_in[i].usage_idx, usage_req, usage_idx_req))
+        {
             *regnum = i;
             return TRUE;
         }

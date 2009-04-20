@@ -924,7 +924,7 @@ static HRESULT _SHGetUserShellFolderPath(HKEY rootKey, LPCWSTR userPrefix,
     HRESULT hr;
     WCHAR shellFolderPath[MAX_PATH], userShellFolderPath[MAX_PATH];
     LPCWSTR pShellFolderPath, pUserShellFolderPath;
-    DWORD dwDisp, dwType, dwPathLen = MAX_PATH;
+    DWORD dwDisp, dwType, dwPathLen;
     HKEY userShellFolderKey, shellFolderKey;
 
     TRACE("%p,%s,%s,%p\n",rootKey, debugstr_w(userPrefix), debugstr_w(value),
@@ -962,21 +962,25 @@ static HRESULT _SHGetUserShellFolderPath(HKEY rootKey, LPCWSTR userPrefix,
         return E_FAIL;
     }
 
+    dwPathLen = MAX_PATH * sizeof(WCHAR);
+
     if (!RegQueryValueExW(userShellFolderKey, value, NULL, &dwType,
      (LPBYTE)path, &dwPathLen) && (dwType == REG_EXPAND_SZ || dwType == REG_SZ))
     {
         LONG ret;
 
-        path[dwPathLen / sizeof(WCHAR)] = '\0';
+        dwPathLen /= sizeof(WCHAR);
+
+        path[dwPathLen] = '\0';
         if (dwType == REG_EXPAND_SZ && path[0] == '%')
         {
             WCHAR szTemp[MAX_PATH];
 
-            ExpandEnvironmentStringsW(path, szTemp, MAX_PATH);
-            lstrcpynW(path, szTemp, MAX_PATH);
+            dwPathLen = ExpandEnvironmentStringsW(path, szTemp, MAX_PATH);
+            lstrcpynW(path, szTemp, dwPathLen);
         }
-        ret = RegSetValueExW(shellFolderKey, value, 0, REG_SZ, (LPBYTE)path,
-         (wcslen(path) + 1) * sizeof(WCHAR));
+
+        ret = RegSetValueExW(shellFolderKey, value, 0, REG_SZ, (LPBYTE)path, dwPathLen * sizeof(WCHAR));
         if (ret != ERROR_SUCCESS)
             hr = HRESULT_FROM_WIN32(ret);
         else
@@ -984,6 +988,7 @@ static HRESULT _SHGetUserShellFolderPath(HKEY rootKey, LPCWSTR userPrefix,
     }
     else
         hr = E_FAIL;
+
     RegCloseKey(shellFolderKey);
     RegCloseKey(userShellFolderKey);
     TRACE("returning 0x%08x\n", hr);

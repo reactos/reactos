@@ -580,6 +580,11 @@ UpdateKBLayout(VOID)
     if (LayoutList == NULL)
     {
         LayoutList = CreateKeyboardLayoutList(SetupInf, DefaultKBLayout);
+        if (LayoutList == NULL)
+        {
+            /* FIXME: Handle error! */
+            return;
+        }
     }
 
     ListEntry = GetFirstListEntry(LayoutList);
@@ -841,9 +846,9 @@ SetupStartPage(PINPUT_RECORD Ir)
 
 			ListEntry = GetNextListEntry(ListEntry);
 		}
-        SetConsoleCodePage();
+		SetConsoleCodePage();
 
-	    return INSTALL_INTRO_PAGE;
+		return INSTALL_INTRO_PAGE;
     }
 
     return LANGUAGE_PAGE;

@@ -425,6 +425,53 @@ DECLARE_INTERFACE_(IIrpStreamVirtual, IIrpStream)
     STDMETHOD_(ULONG, GetIrpStreamPositionLock)(THIS);
 };
 
+/*****************************************************************************
+ * IPortFilterWavePci
+ *****************************************************************************
+ */
+
+#undef INTERFACE
+#define INTERFACE IPortFilterWavePci
+
+DECLARE_INTERFACE_(IPortFilterWavePci, IIrpTarget)
+{
+    DEFINE_ABSTRACT_UNKNOWN()
+
+    DEFINE_ABSTRACT_IRPTARGET()
+
+    STDMETHOD_(NTSTATUS, Init)(THIS_
+        IN PPORTWAVEPCI Port)PURE;
+};
+
+typedef IPortFilterWavePci *PPORTFILTERWAVEPCI;
+
+
+/*****************************************************************************
+ * IPortPinWavePci
+ *****************************************************************************
+ */
+
+#undef INTERFACE
+#define INTERFACE IPortPinWavePci
+
+DECLARE_INTERFACE_(IPortPinWavePci, IIrpTarget)
+{
+    DEFINE_ABSTRACT_UNKNOWN()
+
+    DEFINE_ABSTRACT_IRPTARGET()
+
+    STDMETHOD_(NTSTATUS, Init)(THIS_
+        IN PPORTWAVEPCI Port,
+        IN PPORTFILTERWAVEPCI Filter,
+        IN KSPIN_CONNECT * ConnectDetails,
+        IN KSPIN_DESCRIPTOR * PinDescriptor,
+        IN PDEVICE_OBJECT DeviceObject) PURE;
+
+    STDMETHOD_(PVOID, GetIrpStream)(THIS);
+    STDMETHOD_(PMINIPORT, GetMiniport)(THIS);
+};
+
+typedef IPortPinWavePci *PPORTPINWAVEPCI;
 
 /*****************************************************************************
  * IPortFilterWaveCyclic

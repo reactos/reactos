@@ -122,7 +122,7 @@ SetMixerInputOutputFormat(
 
     /* set the input format */
     PinRequest.PinId = 0;
-    //DPRINT1("InputFormat %p Size %u WaveFormatSize %u DataFormat %u WaveEx %u\n", InputFormat, InputFormat->FormatSize, sizeof(KSDATAFORMAT_WAVEFORMATEX), sizeof(KSDATAFORMAT), sizeof(WAVEFORMATEX));
+    DPRINT("InputFormat %p Size %u WaveFormatSize %u DataFormat %u WaveEx %u\n", InputFormat, InputFormat->FormatSize, sizeof(KSDATAFORMAT_WAVEFORMATEX), sizeof(KSDATAFORMAT), sizeof(WAVEFORMATEX));
     Status = KsSynchronousIoControlDevice(FileObject, KernelMode, IOCTL_KS_PROPERTY,
                                           (PVOID)&PinRequest,
                                            sizeof(KSP_PIN),
@@ -134,7 +134,7 @@ SetMixerInputOutputFormat(
 
     /* set the the output format */
     PinRequest.PinId = 1;
-    //DPRINT1("OutputFormat %p Size %u WaveFormatSize %u DataFormat %u WaveEx %u\n", OutputFormat, OutputFormat->FormatSize, sizeof(KSDATAFORMAT_WAVEFORMATEX), sizeof(KSDATAFORMAT), sizeof(WAVEFORMATEX));
+    DPRINT("OutputFormat %p Size %u WaveFormatSize %u DataFormat %u WaveEx %u\n", OutputFormat, OutputFormat->FormatSize, sizeof(KSDATAFORMAT_WAVEFORMATEX), sizeof(KSDATAFORMAT), sizeof(WAVEFORMATEX));
     Status = KsSynchronousIoControlDevice(FileObject, KernelMode, IOCTL_KS_PROPERTY,
                                           (PVOID)&PinRequest,
                                            sizeof(KSP_PIN),
@@ -201,6 +201,7 @@ CreatePinWorkerRoutine(
     PFILE_OBJECT RealFileObject = NULL, VirtualFileObject = NULL;
     PSYSAUDIO_CLIENT AudioClient;
     PSYSAUDIO_PIN_HANDLE ClientPinHandle;
+    PKSDATAFORMAT_WAVEFORMATEX InputFormat;
     PKSDATAFORMAT_WAVEFORMATEX OutputFormat = NULL;
     PKSPIN_CONNECT MixerPinConnect = NULL;
     PPIN_WORKER_CONTEXT WorkerContext = (PPIN_WORKER_CONTEXT)Context;
@@ -215,6 +216,11 @@ CreatePinWorkerRoutine(
     ASSERT(WorkerContext->PinConnect);
     ASSERT(WorkerContext->Entry->Pins);
     ASSERT(WorkerContext->Entry->NumberOfPins > WorkerContext->PinConnect->PinId);
+
+
+    /* Fetch input format */
+    InputFormat = (PKSDATAFORMAT_WAVEFORMATEX)(WorkerContext->PinConnect + 1);
+
 
     /* Let's try to create the audio irp pin */
     Status = KsCreatePin(WorkerContext->Entry->Handle, WorkerContext->PinConnect, GENERIC_READ | GENERIC_WRITE, &RealPinHandle);
@@ -258,6 +264,8 @@ CreatePinWorkerRoutine(
             KeBugCheck(0);
             return;
         }
+        DPRINT(" InputFormat: SampleRate %u Bits %u Channels %u\n", InputFormat->WaveFormatEx.nSamplesPerSec, InputFormat->WaveFormatEx.wBitsPerSample, InputFormat->WaveFormatEx.nChannels);
+        DPRINT("OutputFormat: SampleRate %u Bits %u Channels %u\n", OutputFormat->WaveFormatEx.nSamplesPerSec, OutputFormat->WaveFormatEx.wBitsPerSample, OutputFormat->WaveFormatEx.nChannels);
     }
 
     /* get pin file object */
@@ -286,15 +294,10 @@ CreatePinWorkerRoutine(
     /* Do we need to transform the audio stream */
     if (OutputFormat != NULL)
     {
-        PKSDATAFORMAT InputFormat;
-
-        /* Fetch input format */
-        InputFormat = (PKSDATAFORMAT)(WorkerContext->PinConnect + 1);
-
         /* Now create the mixer pin */
         Status = CreateMixerPinAndSetFormat(WorkerContext->DeviceExtension->KMixerHandle,
                                             MixerPinConnect,
-                                            InputFormat,
+                                            (PKSDATAFORMAT)InputFormat,
                                             (PKSDATAFORMAT)OutputFormat,
                                             &WorkerContext->DispatchContext->hMixerPin,
                                             &WorkerContext->DispatchContext->MixerFileObject);
@@ -583,6 +586,7 @@ ComputeCompatibleFormat(
             AudioRange = (PKSDATARANGE_AUDIO)((PUCHAR)AudioRange + AudioRange->DataRange.FormatSize);
         }
         /* Select best quality available */
+
         MixerFormat->DataFormat.FormatSize = sizeof(KSDATAFORMAT) + sizeof(WAVEFORMATEX);
         MixerFormat->DataFormat.Flags = 0;
         MixerFormat->DataFormat.Reserved = 0;
@@ -591,9 +595,23 @@ ComputeCompatibleFormat(
         MixerFormat->DataFormat.Specifier = KSDATAFORMAT_SPECIFIER_WAVEFORMATEX;
         MixerFormat->DataFormat.SampleSize = 4;
         MixerFormat->WaveFormatEx.wFormatTag = ClientFormat->WaveFormatEx.wFormatTag;
-        MixerFormat->WaveFormatEx.nChannels = min(2, AudioRange->MaximumChannels);          /* AC97 does not support mono render / record */
-        MixerFormat->WaveFormatEx.nSamplesPerSec = AudioRange->MaximumSampleFrequency;
+#ifndef NO_AC97_HACK
+        /* HACK: AC97 does not support mono render / record */
+        MixerFormat->WaveFormatEx.nChannels = 2;
+        /*HACK: AC97 only supports 16-Bit Bits */
+        MixerFormat->WaveFormatEx.wBitsPerSample = 16;
+
+#else
+        MixerFormat->WaveFormatEx.nChannels = min(ClientFormat->WaveFormatEx.nSamplesPerSec, AudioRange->MaximumChannels);
         MixerFormat->WaveFormatEx.wBitsPerSample = AudioRange->MaximumBitsPerSample;
+#endif
+
+#ifdef KMIXER_RESAMPLING_IMPLEMENTED
+        MixerFormat->WaveFormatEx.nSamplesPerSec = AudioRange->MaximumSampleFrequency;
+#else
+        MixerFormat->WaveFormatEx.nSamplesPerSec = max(AudioRange->MinimumSampleFrequency, min(ClientFormat->WaveFormatEx.nSamplesPerSec, AudioRange->MaximumSampleFrequency));
+#endif
+
         MixerFormat->WaveFormatEx.cbSize = 0;
         MixerFormat->WaveFormatEx.nBlockAlign = (MixerFormat->WaveFormatEx.nChannels * MixerFormat->WaveFormatEx.wBitsPerSample) / 8;
         MixerFormat->WaveFormatEx.nAvgBytesPerSec = MixerFormat->WaveFormatEx.nChannels * MixerFormat->WaveFormatEx.nSamplesPerSec * (MixerFormat->WaveFormatEx.wBitsPerSample / 8);

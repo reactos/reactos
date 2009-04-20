@@ -89,7 +89,6 @@ IntSetCursor(PWINSTATION_OBJECT WinSta, PCURICON_OBJECT NewCursor,
    PSYSTEM_CURSORINFO CurInfo;
    PCURICON_OBJECT OldCursor;
    HCURSOR Ret = (HCURSOR)0;
-   HBITMAP dcbmp;
    HBITMAP hMask = 0;
    SURFOBJ *soMask = NULL, *soColor = NULL;
    XLATEOBJ *XlateObj = NULL;
@@ -120,13 +119,14 @@ IntSetCursor(PWINSTATION_OBJECT WinSta, PCURICON_OBJECT NewCursor,
    {
       return Ret;
    }
-   dcbmp = dc->rosdc.hBitmap;
    DevInfo = (PDEVINFO)&dc->ppdev->DevInfo;
-   DC_UnlockDc(dc);
 
-   psurf = SURFACE_LockSurface(dcbmp);
+   psurf = dc->dclevel.pSurface;
    if (!psurf)
+   {
+      DC_UnlockDc(dc);
       return (HCURSOR)0;
+   }
    pso = &psurf->SurfObj;
 
    if (!NewCursor)
@@ -148,7 +148,7 @@ IntSetCursor(PWINSTATION_OBJECT WinSta, PCURICON_OBJECT NewCursor,
          CurInfo->ShowingCursor = 0;
       }
 
-      SURFACE_UnlockSurface(psurf);
+      DC_UnlockDc(dc);
       return Ret;
    }
 
@@ -162,7 +162,7 @@ IntSetCursor(PWINSTATION_OBJECT WinSta, PCURICON_OBJECT NewCursor,
       if (maskBpp != 1)
       {
          DPRINT1("SetCursor: The Mask bitmap must have 1BPP!\n");
-         SURFACE_UnlockSurface(psurf);
+         DC_UnlockDc(dc);
          return Ret;
       }
 
@@ -207,7 +207,7 @@ IntSetCursor(PWINSTATION_OBJECT WinSta, PCURICON_OBJECT NewCursor,
                if ( !hMask )
                {
                   SURFACE_UnlockSurface(MaskBmpObj);
-                  SURFACE_UnlockSurface(psurf);
+                  DC_UnlockDc(dc);
                   return (HCURSOR)0;
                }
                soMask = EngLockSurface((HSURF)hMask);
@@ -249,7 +249,6 @@ IntSetCursor(PWINSTATION_OBJECT WinSta, PCURICON_OBJECT NewCursor,
        DPRINT1("IntEngSetPointerShape returned %lx\n", Status);
    }
 
-   SURFACE_UnlockSurface(psurf);
    if(hMask)
    {
       EngUnlockSurface(soMask);
@@ -260,6 +259,7 @@ IntSetCursor(PWINSTATION_OBJECT WinSta, PCURICON_OBJECT NewCursor,
       EngDeleteXlate(XlateObj);
    }
 
+   DC_UnlockDc(dc);
    return Ret;
 }
 
@@ -541,6 +541,7 @@ NtUserCreateCursorIconHandle(PICONINFO IconInfo OPTIONAL, BOOL Indirect)
       Status = MmCopyFromCaller(&CurIcon->IconInfo, IconInfo, sizeof(ICONINFO));
       if(NT_SUCCESS(Status))
       {
+         /* Copy bitmaps and size info */
          if(Indirect)
          {
             CurIcon->IconInfo.hbmMask = BITMAP_CopyBitmap(CurIcon->IconInfo.hbmMask);
@@ -560,10 +561,17 @@ NtUserCreateCursorIconHandle(PICONINFO IconInfo OPTIONAL, BOOL Indirect)
             if (CurIcon->IconInfo.hbmColor == NULL)
             {
                CurIcon->Size.cx = psurfBmp->SurfObj.sizlBitmap.cx;
-               CurIcon->Size.cy = psurfBmp->SurfObj.sizlBitmap.cy / 2;
+               CurIcon->Size.cy = psurfBmp->SurfObj.sizlBitmap.cy >> 1;
             }
             SURFACE_UnlockSurface(psurfBmp);
             GDIOBJ_SetOwnership(CurIcon->IconInfo.hbmMask, NULL);
+         }
+
+         /* Calculate icon hotspot */
+         if (CurIcon->IconInfo.fIcon == TRUE)
+         {
+            CurIcon->IconInfo.xHotspot = CurIcon->Size.cx >> 1;
+            CurIcon->IconInfo.yHotspot = CurIcon->Size.cy >> 1;
          }
       }
       else
@@ -1724,7 +1732,6 @@ UserShowCursor(BOOL bShow)
 
     HDC Screen;
     PDC dc;
-    HBITMAP hbmpDc;
     SURFOBJ *SurfObj;
     SURFACE *psurfDc;
     PDEVOBJ *ppdev;
@@ -1743,19 +1750,18 @@ UserShowCursor(BOOL bShow)
         return showpointer; /* No mouse */
     }
 
-    hbmpDc = dc->rosdc.hBitmap;
-    DC_UnlockDc(dc);
+    psurfDc = dc->dclevel.pSurface;
 
-    psurfDc = SURFACE_LockSurface(hbmpDc);
     if ( !psurfDc )
     {
+        DC_UnlockDc(dc);
         return showpointer; /* No Mouse */
     }
 
     SurfObj = &psurfDc->SurfObj;
     if (SurfObj == NULL)
     {
-        SURFACE_UnlockSurface(psurfDc);
+        DC_UnlockDc(dc);
         return showpointer; /* No mouse */
     }
 
@@ -1763,7 +1769,7 @@ UserShowCursor(BOOL bShow)
 
     if(ppdev == NULL)
     {
-        SURFACE_UnlockSurface(psurfDc);
+        DC_UnlockDc(dc);
         return showpointer; /* No mouse */
     }
 
@@ -1800,6 +1806,6 @@ UserShowCursor(BOOL bShow)
         }
     }
 
-    SURFACE_UnlockSurface(psurfDc);
+    DC_UnlockDc(dc);
     return showpointer;
 }

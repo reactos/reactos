@@ -425,14 +425,10 @@ static void select_shader_max_constants(
 
     switch (vs_selected_mode) {
         case SHADER_GLSL:
-            /* Subtract the other potential uniforms from the max available (bools, ints, and 1 row of projection matrix) */
-            gl_info->max_vshader_constantsF = gl_info->vs_glsl_constantsF - (MAX_CONST_B / 4) - MAX_CONST_I - 1;
+            gl_info->max_vshader_constantsF = gl_info->vs_glsl_constantsF;
             break;
         case SHADER_ARB:
-            /* We have to subtract any other PARAMs that we might use in our shader programs.
-             * ATI seems to count 2 implicit PARAMs when we use fog and NVIDIA counts 1,
-             * and we reference one row of the PROJECTION matrix which counts as 1 PARAM. */
-            gl_info->max_vshader_constantsF = gl_info->vs_arb_constantsF - 3;
+            gl_info->max_vshader_constantsF = gl_info->vs_arb_constantsF;
             break;
         default:
             gl_info->max_vshader_constantsF = 0;
@@ -441,18 +437,10 @@ static void select_shader_max_constants(
 
     switch (ps_selected_mode) {
         case SHADER_GLSL:
-            /* Subtract the other potential uniforms from the max available (bools & ints), and 2 states for fog.
-             * In theory the texbem instruction may need one more shader constant too. But lets assume
-             * that a sm <= 1.3 shader does not need all the uniforms provided by a glsl-capable card,
-             * and lets not take away a uniform needlessly from all other shaders.
-             */
-            gl_info->max_pshader_constantsF = gl_info->ps_glsl_constantsF - (MAX_CONST_B / 4) - MAX_CONST_I - 2;
+            gl_info->max_pshader_constantsF = gl_info->ps_glsl_constantsF;
             break;
         case SHADER_ARB:
-            /* The arb shader only loads the bump mapping environment matrix into the shader if it finds
-             * a free constant to do that, so only reduce the number of available constants by 2 for the fog states.
-             */
-            gl_info->max_pshader_constantsF = gl_info->ps_arb_constantsF - 2;
+            gl_info->max_pshader_constantsF = gl_info->ps_arb_constantsF;
             break;
         default:
             gl_info->max_pshader_constantsF = 0;
@@ -1089,13 +1077,29 @@ static BOOL IWineD3DImpl_FillGLCaps(WineD3D_GL_Info *gl_info) {
              * shader capabilities, so we use the shader capabilities to distinguish between FX and 6xxx/7xxx.
              */
             if(WINE_D3D9_CAPABLE(gl_info) && (gl_info->vs_nv_version == VS_VERSION_30)) {
-                /* Geforce GTX - highend */
-                if(strstr(gl_info->gl_renderer, "GTX 280")) {
+                /* Geforce 200 - highend */
+                if(strstr(gl_info->gl_renderer, "GTX 280") ||
+                   strstr(gl_info->gl_renderer, "GTX 285") ||
+                   strstr(gl_info->gl_renderer, "GTX 295"))
+                {
                     gl_info->gl_card = CARD_NVIDIA_GEFORCE_GTX280;
                     vidmem = 1024;
                 }
-                /* Geforce9 - highend */
-                else if(strstr(gl_info->gl_renderer, "9800")) {
+                /* Geforce 200 - midend high */
+                if(strstr(gl_info->gl_renderer, "GTX 275")) {
+                    gl_info->gl_card = CARD_NVIDIA_GEFORCE_GTX275;
+                    vidmem = 896;
+                }
+                /* Geforce 200 - midend */
+                if(strstr(gl_info->gl_renderer, "GTX 260")) {
+                    gl_info->gl_card = CARD_NVIDIA_GEFORCE_GTX260;
+                    vidmem = 1024;
+                }
+                /* Geforce9 - highend / Geforce 200 - midend (GTS 150/250 are based on the same core) */
+                else if(strstr(gl_info->gl_renderer, "9800") ||
+                        strstr(gl_info->gl_renderer, "GTS 150") ||
+                        strstr(gl_info->gl_renderer, "GTS 250"))
+                {
                     gl_info->gl_card = CARD_NVIDIA_GEFORCE_9800GT;
                     vidmem = 512;
                 }
@@ -1103,6 +1107,28 @@ static BOOL IWineD3DImpl_FillGLCaps(WineD3D_GL_Info *gl_info) {
                 else if(strstr(gl_info->gl_renderer, "9600")) {
                     gl_info->gl_card = CARD_NVIDIA_GEFORCE_9600GT;
                     vidmem = 384; /* The 9600GSO has 384MB, the 9600GT has 512-1024MB */
+                }
+                /* Geforce9 - midend low / Geforce 200 - low*/
+                else if(strstr(gl_info->gl_renderer, "9500") ||
+                        strstr(gl_info->gl_renderer, "GT 120") ||
+                        strstr(gl_info->gl_renderer, "GT 130"))
+                {
+                    gl_info->gl_card = CARD_NVIDIA_GEFORCE_9500GT;
+                    vidmem = 256; /* The 9500GT has 256-1024MB */
+                }
+                /* Geforce9 - lowend */
+                else if(strstr(gl_info->gl_renderer, "9400")) {
+                    gl_info->gl_card = CARD_NVIDIA_GEFORCE_9400GT;
+                    vidmem = 256; /* The 9400GT has 256-1024MB */
+                }
+                /* Geforce9 - lowend low */
+                else if(strstr(gl_info->gl_renderer, "9100") ||
+                        strstr(gl_info->gl_renderer, "9200") ||
+                        strstr(gl_info->gl_renderer, "9300") ||
+                        strstr(gl_info->gl_renderer, "G 100"))
+                {
+                    gl_info->gl_card = CARD_NVIDIA_GEFORCE_9200;
+                    vidmem = 256; /* The 9100-9300 cards have 256MB */
                 }
                 /* Geforce8 - highend */
                 else if (strstr(gl_info->gl_renderer, "8800")) {
@@ -1683,7 +1709,10 @@ static HRESULT WINAPI IWineD3DImpl_GetAdapterIdentifier(IWineD3D *iface, UINT Ad
     /* Return the information requested */
     TRACE_(d3d_caps)("device/Vendor Name and Version detection using FillGLCaps\n");
     strcpy(pIdentifier->Driver, This->adapters[Adapter].driver);
-    strcpy(pIdentifier->Description, This->adapters[Adapter].description);
+    if(This->adapters[Adapter].gl_info.driver_description)
+        strcpy(pIdentifier->Description, This->adapters[Adapter].gl_info.driver_description);
+    else /* Copy default description "Direct3D HAL" */
+        strcpy(pIdentifier->Description, This->adapters[Adapter].description);
 
     /* Note dx8 doesn't supply a DeviceName */
     if (NULL != pIdentifier->DeviceName) strcpy(pIdentifier->DeviceName, "\\\\.\\DISPLAY"); /* FIXME: May depend on desktop? */
@@ -3010,7 +3039,7 @@ static HRESULT WINAPI IWineD3DImpl_CheckDeviceFormat(IWineD3D *iface, UINT Adapt
                 /* Do nothing, continue with checking the format below */
                 break;
         }
-    } else if((RType == WINED3DRTYPE_INDEXBUFFER) || (RType == WINED3DRTYPE_VERTEXBUFFER)){
+    } else if(RType == WINED3DRTYPE_BUFFER){
         /* For instance vertexbuffer/indexbuffer aren't supported yet because no Windows drivers seem to offer it */
         TRACE_(d3d_caps)("Unhandled resource type D3DRTYPE_INDEXBUFFER / D3DRTYPE_VERTEXBUFFER\n");
         return WINED3DERR_NOTAVAILABLE;
@@ -3697,6 +3726,7 @@ static HRESULT WINAPI IWineD3DImpl_CreateDevice(IWineD3D *iface, UINT Adapter,
     const struct fragment_pipeline *frag_pipeline = NULL;
     int i;
     struct fragment_caps ffp_caps;
+    struct shader_caps shader_caps;
     HRESULT hr;
 
     /* Validate the adapter number. If no adapters are available(no GL), ignore the adapter
@@ -3751,6 +3781,11 @@ static HRESULT WINAPI IWineD3DImpl_CreateDevice(IWineD3D *iface, UINT Adapter,
     select_shader_mode(&adapter->gl_info, DeviceType,
             &object->ps_selected_mode, &object->vs_selected_mode);
     object->shader_backend = select_shader_backend(adapter, DeviceType);
+
+    memset(&shader_caps, 0, sizeof(shader_caps));
+    object->shader_backend->shader_get_caps(DeviceType, &adapter->gl_info, &shader_caps);
+    object->d3d_vshader_constantF = shader_caps.MaxVertexShaderConst;
+    object->d3d_pshader_constantF = shader_caps.MaxPixelShaderConst;
 
     memset(&ffp_caps, 0, sizeof(ffp_caps));
     frag_pipeline = select_fragment_implementation(adapter, DeviceType);
@@ -3913,41 +3948,59 @@ static void test_pbo_functionality(WineD3D_GL_Info *gl_info) {
 struct driver_version_information {
     WORD vendor;                        /* reported PCI card vendor ID  */
     WORD card;                          /* reported PCI card device ID  */
+    const char *description;                  /* Description of the card e.g. NVIDIA RIVA TNT */
     WORD hipart_hi, hipart_lo;          /* driver hiword to report      */
     WORD lopart_hi, lopart_lo;          /* driver loword to report      */
 };
 
 static const struct driver_version_information driver_version_table[] = {
-    /* Nvidia drivers. Geforce6 and newer cards are supported by the current driver (177.x)*/
-    /* GeforceFX support is up to 173.x, Geforce2MX/3/4 up to 96.x, TNT/Geforce1/2 up to 71.x */
-    /* Note that version numbers >100 lets say 123.45 use >= x.y.11.2345 and not x.y.10.12345 */
-    {VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCEFX_5200,     7,  15, 11, 7341   },
-    {VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCEFX_5600,     7,  15, 11, 7341   },
-    {VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCEFX_5800,     7,  15, 11, 7341   },
-    {VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_6200,       7,  15, 11, 7341   },
-    {VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_6600GT,     7,  15, 11, 7341   },
-    {VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_6800,       7,  15, 11, 7341   },
-    {VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_7400,       7,  15, 11, 7341   },
-    {VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_7300,       7,  15, 11, 7341   },
-    {VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_7600,       7,  15, 11, 7341   },
-    {VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_7800GT,     7,  15, 11, 7341   },
-    {VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_8300GS,     7,  15, 11, 7341   },
-    {VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_8600GT,     7,  15, 11, 7341   },
-    {VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_8600MGT,    7,  15, 11, 7341   },
-    {VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_8800GTS,    7,  15, 11, 7341   },
-    {VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_9600GT,     7,  15, 11, 7341    },
-    {VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_9800GT,     7,  15, 11, 7341    },
-    {VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_GTX280,     7,  15, 11, 7341    },
+    /* Nvidia drivers. Geforce6 and newer cards are supported by the current driver (180.x)
+     * GeforceFX support is up to 173.x, - driver uses numbering x.y.11.7341 for 173.41 where x is the windows revision (6=2000/xp, 7=vista), y is unknown
+     * Geforce2MX/3/4 up to 96.x - driver uses numbering 9.6.8.9 for 96.89
+     * TNT/Geforce1/2 up to 71.x - driver uses numbering 7.1.8.6 for 71.86
+     *
+     * All version numbers used below are from the Linux nvidia drivers.
+     */
+    {VENDOR_NVIDIA,     CARD_NVIDIA_RIVA_TNT,           "NVIDIA RIVA TNT",                  7,  1,  8,  6      },
+    {VENDOR_NVIDIA,     CARD_NVIDIA_RIVA_TNT2,          "NVIDIA RIVA TNT2/TNT2 Pro",        7,  1,  8,  6      },
+    {VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE,            "NVIDIA GeForce 256",               7,  1,  8,  6      },
+    {VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE2_MX,        "NVIDIA GeForce2 MX/MX 400",        9,  6,  4,  3      },
+    {VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE2,           "NVIDIA GeForce2 GTS/GeForce2 Pro", 7,  1,  8,  6      },
+    {VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE3,           "NVIDIA GeForce3",                  9,  6,  4,  3      },
+    {VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE4_MX,        "NVIDIA GeForce4 MX 460",           9,  6,  4,  3      },
+    {VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE4_TI4200,    "NVIDIA GeForce4 Ti 4200",          9,  6,  4,  3      },
+    {VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCEFX_5200,     "NVIDIA GeForce FX 5200",           7,  15, 11, 7341   },
+    {VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCEFX_5600,     "NVIDIA GeForce FX 5600",           7,  15, 11, 7341   },
+    {VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCEFX_5800,     "NVIDIA GeForce FX 5800",           7,  15, 11, 7341   },
+    {VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_6200,       "NVIDIA GeForce 6200",              7,  15, 11, 8044   },
+    {VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_6600GT,     "NVIDIA GeForce 6600 GT",           7,  15, 11, 8044   },
+    {VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_6800,       "NVIDIA GeForce 6800",              7,  15, 11, 8044   },
+    {VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_7300,       "NVIDIA GeForce Go 7300",           7,  15, 11, 8044   },
+    {VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_7400,       "NVIDIA GeForce Go 7400",           7,  15, 11, 8044   },
+    {VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_7600,       "NVIDIA GeForce 7600 GT",           7,  15, 11, 8044   },
+    {VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_7800GT,     "NVIDIA GeForce 7800 GT",           7,  15, 11, 8044   },
+    {VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_8300GS,     "NVIDIA GeForce 8300 GS",           7,  15, 11, 8044   },
+    {VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_8600GT,     "NVIDIA GeForce 8600 GT",           7,  15, 11, 8044   },
+    {VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_8600MGT,    "NVIDIA GeForce 8600M GT",          7,  15, 11, 8044   },
+    {VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_8800GTS,    "NVIDIA GeForce 8800 GTS",          7,  15, 11, 8044   },
+    {VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_9200,       "NVIDIA GeForce 9200",              7,  15, 11, 8044   },
+    {VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_9400GT,     "NVIDIA GeForce 9400 GT",           7,  15, 11, 8044   },
+    {VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_9500GT,     "NVIDIA GeForce 9500 GT",           7,  15, 11, 8044   },
+    {VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_9600GT,     "NVIDIA GeForce 9600 GT",           7,  15, 11, 8044   },
+    {VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_9800GT,     "NVIDIA GeForce 9800 GT",           7,  15, 11, 8044   },
+    {VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_GTX260,     "NVIDIA GeForce GTX 260",           7,  15, 11, 8044   },
+    {VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_GTX275,     "NVIDIA GeForce GTX 275",           7,  15, 11, 8044   },
+    {VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_GTX280,     "NVIDIA GeForce GTX 280",           7,  15, 11, 8044   },
 
     /* ATI cards. The driver versions are somewhat similar, but not quite the same. Let's hardcode */
-    {VENDOR_ATI,        CARD_ATI_RADEON_9500,           6,  14, 10, 6764    },
-    {VENDOR_ATI,        CARD_ATI_RADEON_X700,           6,  14, 10, 6764    },
-    {VENDOR_ATI,        CARD_ATI_RADEON_X1600,          6,  14, 10, 6764    },
-    {VENDOR_ATI,        CARD_ATI_RADEON_HD2300,         6,  14, 10, 6764    },
-    {VENDOR_ATI,        CARD_ATI_RADEON_HD2600,         6,  14, 10, 6764    },
-    {VENDOR_ATI,        CARD_ATI_RADEON_HD2900,         6,  14, 10, 6764    },
+    {VENDOR_ATI,        CARD_ATI_RADEON_9500,           "ATI Radeon 9500",                  6,  14, 10, 6764    },
+    {VENDOR_ATI,        CARD_ATI_RADEON_X700,           "ATI Radeon X700 SE",               6,  14, 10, 6764    },
+    {VENDOR_ATI,        CARD_ATI_RADEON_X1600,          "ATI Radeon X1600 Series",          6,  14, 10, 6764    },
+    {VENDOR_ATI,        CARD_ATI_RADEON_HD2300,         "ATI Mobility Radeon HD 2300",      6,  14, 10, 6764    },
+    {VENDOR_ATI,        CARD_ATI_RADEON_HD2600,         "ATI Mobility Radeon HD 2600",      6,  14, 10, 6764    },
+    {VENDOR_ATI,        CARD_ATI_RADEON_HD2900,         "ATI Radeon HD 2900 XT",            6,  14, 10, 6764    },
 
-    /* TODO: Add information about legacy nvidia and ATI hardware, Intel and other cards */
+    /* TODO: Add information about legacy ATI hardware, Intel and other cards */
 };
 
 static void fixup_extensions(WineD3D_GL_Info *gl_info) {
@@ -4049,6 +4102,7 @@ static void fixup_extensions(WineD3D_GL_Info *gl_info) {
                                                                driver_version_table[i].lopart_lo);
             gl_info->driver_version_hipart = MAKEDWORD_VERSION(driver_version_table[i].hipart_hi,
                                                                driver_version_table[i].hipart_lo);
+            strcpy(gl_info->driver_description, driver_version_table[i].description);
             break;
         }
     }

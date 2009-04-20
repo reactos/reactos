@@ -737,8 +737,11 @@ static HRESULT WINAPI IDirect3DDevice8Impl_CreateVertexBuffer(LPDIRECT3DDEVICE8 
     object->lpVtbl = &Direct3DVertexBuffer8_Vtbl;
     object->ref = 1;
     EnterCriticalSection(&d3d8_cs);
-    hrc = IWineD3DDevice_CreateVertexBuffer(This->WineD3DDevice, Size, Usage & WINED3DUSAGE_MASK, FVF, (WINED3DPOOL) Pool, &(object->wineD3DVertexBuffer), NULL, (IUnknown *)object);
+    hrc = IWineD3DDevice_CreateVertexBuffer(This->WineD3DDevice, Size, Usage & WINED3DUSAGE_MASK,
+            0 /* fvf for ddraw only */, (WINED3DPOOL) Pool, &(object->wineD3DVertexBuffer), NULL,
+            (IUnknown *)object);
     LeaveCriticalSection(&d3d8_cs);
+    object->fvf = FVF;
 
     if (D3D_OK != hrc) {
 
@@ -770,10 +773,11 @@ static HRESULT WINAPI IDirect3DDevice8Impl_CreateIndexBuffer(LPDIRECT3DDEVICE8 i
 
     object->lpVtbl = &Direct3DIndexBuffer8_Vtbl;
     object->ref = 1;
+    object->format = wined3dformat_from_d3dformat(Format);
     TRACE("Calling wined3d create index buffer\n");
     EnterCriticalSection(&d3d8_cs);
     hrc = IWineD3DDevice_CreateIndexBuffer(This->WineD3DDevice, Length, Usage & WINED3DUSAGE_MASK,
-            wined3dformat_from_d3dformat(Format), (WINED3DPOOL) Pool, &object->wineD3DIndexBuffer,
+            (WINED3DPOOL) Pool, &object->wineD3DIndexBuffer,
             NULL, (IUnknown *)object);
     LeaveCriticalSection(&d3d8_cs);
 
@@ -1661,10 +1665,11 @@ static HRESULT WINAPI IDirect3DDevice8Impl_DrawIndexedPrimitiveUP(LPDIRECT3DDEVI
 static HRESULT WINAPI IDirect3DDevice8Impl_ProcessVertices(LPDIRECT3DDEVICE8 iface, UINT SrcStartIndex,UINT DestIndex,UINT VertexCount,IDirect3DVertexBuffer8* pDestBuffer,DWORD Flags) {
     IDirect3DDevice8Impl *This = (IDirect3DDevice8Impl *)iface;
     HRESULT hr;
+    IDirect3DVertexBuffer8Impl *dest = (IDirect3DVertexBuffer8Impl *) pDestBuffer;
     TRACE("(%p) Relay\n" , This);
 
     EnterCriticalSection(&d3d8_cs);
-    hr = IWineD3DDevice_ProcessVertices(This->WineD3DDevice,SrcStartIndex, DestIndex, VertexCount, ((IDirect3DVertexBuffer8Impl *)pDestBuffer)->wineD3DVertexBuffer, NULL, Flags);
+    hr = IWineD3DDevice_ProcessVertices(This->WineD3DDevice,SrcStartIndex, DestIndex, VertexCount, dest->wineD3DVertexBuffer, NULL, Flags, dest->fvf);
     LeaveCriticalSection(&d3d8_cs);
     return hr;
 }
@@ -2081,6 +2086,7 @@ static HRESULT WINAPI IDirect3DDevice8Impl_GetVertexShaderFunction(LPDIRECT3DDEV
 static HRESULT WINAPI IDirect3DDevice8Impl_SetIndices(LPDIRECT3DDEVICE8 iface, IDirect3DIndexBuffer8* pIndexData, UINT baseVertexIndex) {
     IDirect3DDevice8Impl *This = (IDirect3DDevice8Impl *)iface;
     HRESULT hr;
+    IDirect3DIndexBuffer8Impl *ib = (IDirect3DIndexBuffer8Impl *)pIndexData;
     TRACE("(%p) Relay\n", This);
 
     EnterCriticalSection(&d3d8_cs);
@@ -2092,14 +2098,15 @@ static HRESULT WINAPI IDirect3DDevice8Impl_SetIndices(LPDIRECT3DDEVICE8 iface, I
      */
     IWineD3DDevice_SetBaseVertexIndex(This->WineD3DDevice, baseVertexIndex);
     hr = IWineD3DDevice_SetIndices(This->WineD3DDevice,
-            pIndexData ? ((IDirect3DIndexBuffer8Impl *)pIndexData)->wineD3DIndexBuffer : NULL);
+            ib ? ib->wineD3DIndexBuffer : NULL,
+            ib ? ib->format : WINED3DFMT_UNKNOWN);
     LeaveCriticalSection(&d3d8_cs);
     return hr;
 }
 
 static HRESULT WINAPI IDirect3DDevice8Impl_GetIndices(LPDIRECT3DDEVICE8 iface, IDirect3DIndexBuffer8** ppIndexData,UINT* pBaseVertexIndex) {
     IDirect3DDevice8Impl *This = (IDirect3DDevice8Impl *)iface;
-    IWineD3DIndexBuffer *retIndexData = NULL;
+    IWineD3DBuffer *retIndexData = NULL;
     HRESULT rc = D3D_OK;
 
     TRACE("(%p) Relay\n", This);
@@ -2113,8 +2120,8 @@ static HRESULT WINAPI IDirect3DDevice8Impl_GetIndices(LPDIRECT3DDEVICE8 iface, I
     IWineD3DDevice_GetBaseVertexIndex(This->WineD3DDevice, (INT *) pBaseVertexIndex);
     rc = IWineD3DDevice_GetIndices(This->WineD3DDevice, &retIndexData);
     if (SUCCEEDED(rc) && retIndexData) {
-        IWineD3DIndexBuffer_GetParent(retIndexData, (IUnknown **)ppIndexData);
-        IWineD3DIndexBuffer_Release(retIndexData);
+        IWineD3DBuffer_GetParent(retIndexData, (IUnknown **)ppIndexData);
+        IWineD3DBuffer_Release(retIndexData);
     } else {
         if (FAILED(rc)) FIXME("Call to GetIndices failed\n");
         *ppIndexData = NULL;

@@ -26,6 +26,10 @@
 #define IDC_STATIC    -1
 #endif
 
+#ifndef DS_SHELLFONT
+#define DS_SHELLFONT DS_SETFONT|DS_FIXEDSYS
+#endif
+
 // Common resources
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL

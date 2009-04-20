@@ -23,19 +23,23 @@
  * PURPOSE:          User-mode Plug and Play manager
  * PROGRAMMER:       Eric Kohl
  *                   Hervé Poussineau (hpoussin@reactos.org)
+ *                   Colin Finck (colin@reactos.org)
  */
 
 /* INCLUDES *****************************************************************/
 //#define HAVE_SLIST_ENTRY_IMPLEMENTED
 #define WIN32_NO_STATUS
 #include <windows.h>
+#include <stdio.h>
 #include <cmtypes.h>
 #include <cmfuncs.h>
 #include <rtlfuncs.h>
+#include <setypes.h>
 #include <umpnpmgr/sysguid.h>
 #include <wdmguid.h>
 #include <cfgmgr32.h>
 #include <regstr.h>
+#include <userenv.h>
 
 #include <rpc.h>
 #include <rpcdce.h>
@@ -222,6 +226,7 @@ DWORD PNP_ReportLogOn(
     BOOL Admin,
     DWORD ProcessId)
 {
+    DWORD ReturnValue = CR_FAILURE;
     HANDLE hProcess;
 
     UNREFERENCED_PARAMETER(hBinding);
@@ -229,32 +234,38 @@ DWORD PNP_ReportLogOn(
 
     DPRINT("PNP_ReportLogOn(%u, %u) called\n", Admin, ProcessId);
 
-    if (hInstallEvent != NULL)
-        SetEvent(hInstallEvent);
-
     /* Get the users token */
-    hProcess = OpenProcess(PROCESS_ALL_ACCESS,
-                           TRUE,
-                           ProcessId);
-    if (hProcess != NULL)
-    {
-        if (hUserToken != NULL)
-        {
-            CloseHandle(hUserToken);
-            hUserToken = NULL;
-        }
+    hProcess = OpenProcess(PROCESS_ALL_ACCESS, TRUE, ProcessId);
 
-        OpenProcessToken(hProcess,
-                         TOKEN_ALL_ACCESS,
-                         &hUserToken);
-        CloseHandle(hProcess);
+    if(!hProcess)
+    {
+        DPRINT1("OpenProcess failed with error %u\n", GetLastError());
+        goto cleanup;
+    }
+
+    if (hUserToken)
+    {
+        CloseHandle(hUserToken);
+        hUserToken = NULL;
+    }
+
+    if(!OpenProcessToken(hProcess, TOKEN_ASSIGN_PRIMARY | TOKEN_DUPLICATE | TOKEN_QUERY, &hUserToken))
+    {
+        DPRINT1("OpenProcessToken failed with error %u\n", GetLastError());
+        goto cleanup;
     }
 
     /* Trigger the installer thread */
-    /*if (hInstallEvent != NULL)
-        SetEvent(hInstallEvent);*/
+    if (hInstallEvent)
+        SetEvent(hInstallEvent);
 
-    return CR_SUCCESS;
+    ReturnValue = CR_SUCCESS;
+
+cleanup:
+    if(hProcess)
+        CloseHandle(hProcess);
+
+    return ReturnValue;
 }
 
 
@@ -1086,10 +1097,10 @@ DWORD PNP_DeviceInstanceAction(
     LPWSTR pszDeviceInstance2)
 {
     CONFIGRET ret = CR_SUCCESS;
+    NTSTATUS Status;
 
     UNREFERENCED_PARAMETER(hBinding);
     UNREFERENCED_PARAMETER(ulMinorAction);
-    UNREFERENCED_PARAMETER(pszDeviceInstance1);
     UNREFERENCED_PARAMETER(pszDeviceInstance2);
 
     DPRINT("PNP_DeviceInstanceAction() called\n");
@@ -1103,10 +1114,15 @@ DWORD PNP_DeviceInstanceAction(
             break;
 
         case PNP_DEVINST_ENABLE:
+        {
+            PLUGPLAY_CONTROL_RESET_DEVICE_DATA ResetDeviceData;
             DPRINT("Enable device instance\n");
-            /* FIXME */
-            ret = CR_CALL_NOT_IMPLEMENTED;
+            RtlInitUnicodeString(&ResetDeviceData.DeviceInstance, pszDeviceInstance1);
+            Status = NtPlugPlayControl(PlugPlayControlResetDevice, &ResetDeviceData, sizeof(PLUGPLAY_CONTROL_RESET_DEVICE_DATA));
+            if (!NT_SUCCESS(Status))
+                ret = NtStatusToCrError(Status);
             break;
+        }
 
         case PNP_DEVINST_REENUMERATE:
             DPRINT("Reenumerate device instance\n");
@@ -1900,18 +1916,29 @@ DWORD PNP_DeleteServiceDevices(
 }
 
 
-typedef BOOL (WINAPI *PDEV_INSTALL_W)(HWND, HINSTANCE, LPCWSTR, INT);
-
 static BOOL
 InstallDevice(PCWSTR DeviceInstance, BOOL ShowWizard)
 {
     PLUGPLAY_CONTROL_STATUS_DATA PlugPlayData;
-    HMODULE hNewDev = NULL;
-    PDEV_INSTALL_W DevInstallW;
     NTSTATUS Status;
     BOOL DeviceInstalled = FALSE;
+    DWORD BytesWritten;
+    DWORD Value;
+    HANDLE hPipe = INVALID_HANDLE_VALUE;
+    LPVOID Environment = NULL;
+    PROCESS_INFORMATION ProcessInfo;
+    STARTUPINFOW StartupInfo;
+    UUID RandomUuid;
+
+    /* The following lengths are constant (see below), they cannot overflow */
+    WCHAR CommandLine[116];
+    WCHAR InstallEventName[73];
+    WCHAR PipeName[74];
+    WCHAR UuidString[39];
 
     DPRINT("InstallDevice(%S, %d)\n", DeviceInstance, ShowWizard);
+
+    ZeroMemory(&ProcessInfo, sizeof(ProcessInfo));
 
     RtlInitUnicodeString(&PlugPlayData.DeviceInstance,
                          DeviceInstance);
@@ -1934,34 +1961,109 @@ InstallDevice(PCWSTR DeviceInstance, BOOL ShowWizard)
         return TRUE;
     }
 
-    /* Install device */
-    SetEnvironmentVariableW(L"USERPROFILE", L"."); /* FIXME: why is it needed? */
+    /* Create a random UUID for the named pipe */
+    UuidCreate(&RandomUuid);
+    swprintf(UuidString, L"{%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}",
+        RandomUuid.Data1, RandomUuid.Data2, RandomUuid.Data3,
+        RandomUuid.Data4[0], RandomUuid.Data4[1], RandomUuid.Data4[2],
+        RandomUuid.Data4[3], RandomUuid.Data4[4], RandomUuid.Data4[5],
+        RandomUuid.Data4[6], RandomUuid.Data4[7]);
 
-    hNewDev = LoadLibraryW(L"newdev.dll");
-    if (!hNewDev)
+    /* Create the named pipe */
+    wcscpy(PipeName, L"\\\\.\\pipe\\PNP_Device_Install_Pipe_0.");
+    wcscat(PipeName, UuidString);
+    hPipe = CreateNamedPipeW(PipeName, PIPE_ACCESS_OUTBOUND, PIPE_TYPE_BYTE, 1, 512, 512, 0, NULL);
+
+    if(hPipe == INVALID_HANDLE_VALUE)
     {
-        DPRINT1("Unable to load newdev.dll\n");
+        DPRINT1("CreateNamedPipeW failed with error %u\n", GetLastError());
         goto cleanup;
     }
 
-    DevInstallW = (PDEV_INSTALL_W)GetProcAddress(hNewDev, (LPCSTR)"DevInstallW");
-    if (!DevInstallW)
+    /* Launch rundll32 to call ClientSideInstallW */
+    wcscpy(CommandLine, L"rundll32.exe newdev.dll,ClientSideInstall ");
+    wcscat(CommandLine, PipeName);
+
+    ZeroMemory(&StartupInfo, sizeof(StartupInfo));
+    StartupInfo.cb = sizeof(StartupInfo);
+
+    if(hUserToken)
     {
-        DPRINT1("'DevInstallW' not found in newdev.dll\n");
+        /* newdev has to run under the environment of the current user */
+        if(!CreateEnvironmentBlock(&Environment, hUserToken, FALSE))
+        {
+            DPRINT1("CreateEnvironmentBlock failed with error %d\n", GetLastError());
+            goto cleanup;
+        }
+
+        if(!CreateProcessAsUserW(hUserToken, NULL, CommandLine, NULL, NULL, FALSE, CREATE_UNICODE_ENVIRONMENT, Environment, NULL, &StartupInfo, &ProcessInfo))
+        {
+            DPRINT1("CreateProcessAsUserW failed with error %u\n", GetLastError());
+            goto cleanup;
+        }
+    }
+    else
+    {
+        /* FIXME: This is probably not correct, I guess newdev should never be run with SYSTEM privileges.
+
+           Still, we currently do that in 2nd stage setup and probably Console mode as well, so allow it here.
+           (ShowWizard is only set to FALSE for these two modes) */
+        ASSERT(!ShowWizard);
+
+        if(!CreateProcessW(NULL, CommandLine, NULL, NULL, FALSE, 0, NULL, NULL, &StartupInfo, &ProcessInfo))
+        {
+            DPRINT1("CreateProcessW failed with error %u\n", GetLastError());
+            goto cleanup;
+        }
+    }
+
+    /* Wait for the function to connect to our pipe */
+    if(!ConnectNamedPipe(hPipe, NULL))
+    {
+        DPRINT1("ConnectNamedPipe failed with error %u\n", GetLastError());
         goto cleanup;
     }
 
-    if (!DevInstallW(NULL, NULL, DeviceInstance, ShowWizard ? SW_SHOWNOACTIVATE : SW_HIDE))
+    /* Pass the data. The following output is partly compatible to Windows XP SP2 (researched using a modified newdev.dll to log this stuff) */
+    wcscpy(InstallEventName, L"Global\\PNP_Device_Install_Event_0.");
+    wcscat(InstallEventName, UuidString);
+
+    Value = sizeof(InstallEventName);
+    WriteFile(hPipe, &Value, sizeof(Value), &BytesWritten, NULL);
+    WriteFile(hPipe, InstallEventName, Value, &BytesWritten, NULL);
+
+    /* I couldn't figure out what the following value means under WinXP. It's usually 0 in my tests, but was also 5 once.
+       Therefore the following line is entirely ReactOS-specific. We use the value here to pass the ShowWizard variable. */
+    WriteFile(hPipe, &ShowWizard, sizeof(ShowWizard), &BytesWritten, NULL);
+
+    Value = (wcslen(DeviceInstance) + 1) * sizeof(WCHAR);
+    WriteFile(hPipe, &Value, sizeof(Value), &BytesWritten, NULL);
+    WriteFile(hPipe, DeviceInstance, Value, &BytesWritten, NULL);
+
+    /* Wait for newdev.dll to finish processing */
+    WaitForSingleObject(ProcessInfo.hProcess, INFINITE);
+
+    /* The following check for success is probably not compatible to Windows, but should do its job */
+    if(!GetExitCodeProcess(ProcessInfo.hProcess, &Value))
     {
-        DPRINT1("DevInstallW('%S') failed\n", DeviceInstance);
+        DPRINT1("GetExitCodeProcess failed with error %u\n", GetLastError());
         goto cleanup;
     }
 
-    DeviceInstalled = TRUE;
+    DeviceInstalled = Value;
 
 cleanup:
-    if (hNewDev != NULL)
-        FreeLibrary(hNewDev);
+    if(hPipe != INVALID_HANDLE_VALUE)
+        CloseHandle(hPipe);
+
+    if(Environment)
+        DestroyEnvironmentBlock(Environment);
+
+    if(ProcessInfo.hProcess)
+        CloseHandle(ProcessInfo.hProcess);
+
+    if(ProcessInfo.hThread)
+        CloseHandle(ProcessInfo.hThread);
 
     return DeviceInstalled;
 }
@@ -2255,12 +2357,16 @@ ServiceMain(DWORD argc, LPTSTR *argv)
 int
 wmain(int argc, WCHAR *argv[])
 {
+    BOOLEAN OldValue;
     DWORD dwError;
 
     UNREFERENCED_PARAMETER(argc);
     UNREFERENCED_PARAMETER(argv);
 
     DPRINT("Umpnpmgr: main() started\n");
+
+    /* We need this privilege for using CreateProcessAsUserW */
+    RtlAdjustPrivilege(SE_ASSIGNPRIMARYTOKEN_PRIVILEGE, TRUE, FALSE, &OldValue);
 
     hInstallEvent = CreateEvent(NULL, TRUE, SetupIsActive()/*FALSE*/, NULL);
     if (hInstallEvent == NULL)
