@@ -34,6 +34,12 @@ typedef struct _NDIS_M_DRIVER_BLOCK {
 } NDIS_M_DRIVER_BLOCK, *PNDIS_M_DRIVER_BLOCK;
 #endif
 
+/* There must be some defined struct to do this... */
+typedef struct _NDIS_M_DEVICE_BLOCK {
+    PDEVICE_OBJECT DeviceObject;
+    PNDIS_STRING   SymbolicName;
+} NDIS_M_DEVICE_BLOCK, *PNDIS_M_DEVICE_BLOCK;
+
 /* resources allocated on behalf on the miniport */
 #define MINIPORT_RESOURCE_TYPE_MEMORY 0
 typedef struct _MINIPORT_RESOURCE {

@@ -231,26 +231,6 @@ NdisGetReceivedPacket(
  */
 NDIS_STATUS
 EXPORT
-NdisMDeregisterDevice(
-    IN  NDIS_HANDLE NdisDeviceHandle)
-/*
- * FUNCTION:
- * ARGUMENTS:
- * NOTES:
- *    NDIS 5.0
- */
-{
-    UNIMPLEMENTED
-
-    return NDIS_STATUS_FAILURE;
-}
-
-
-/*
- * @unimplemented
- */
-NDIS_STATUS
-EXPORT
 NdisMPromoteMiniport(
     IN  NDIS_HANDLE MiniportAdapterHandle)
 /*
@@ -263,50 +243,6 @@ NdisMPromoteMiniport(
     UNIMPLEMENTED
 
     return NDIS_STATUS_FAILURE;
-}
-
-
-/*
- * @unimplemented
- */
-NDIS_STATUS
-EXPORT
-NdisMRegisterDevice(
-    IN  NDIS_HANDLE         NdisWrapperHandle,
-    IN  PNDIS_STRING        DeviceName,
-    IN  PNDIS_STRING        SymbolicName,
-    IN  PDRIVER_DISPATCH    MajorFunctions[],
-    OUT PDEVICE_OBJECT      *pDeviceObject,
-    OUT NDIS_HANDLE         *NdisDeviceHandle)
-/*
- * FUNCTION:
- * ARGUMENTS:
- * NOTES:
- *    NDIS 5.0
- */
-{
-    UNIMPLEMENTED
-
-    return NDIS_STATUS_FAILURE;
-}
-
-
-/*
- * @unimplemented
- */
-VOID
-EXPORT
-NdisMRegisterUnloadHandler(
-    IN  NDIS_HANDLE     NdisWrapperHandle,
-    IN  PDRIVER_UNLOAD  UnloadHandler)
-/*
- * FUNCTION:
- * ARGUMENTS:
- * NOTES:
- *    NDIS 5.0
- */
-{
-    UNIMPLEMENTED
 }
 
 
