@@ -556,7 +556,7 @@ WdmAudCapabilities(
 
 NTSTATUS
 NTAPI
-WdmAudClose(
+WdmAudIoctlClose(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp,
     IN  PWDMAUD_DEVICE_INFO DeviceInfo,
@@ -630,7 +630,7 @@ WdmAudDeviceControl(
         case IOCTL_GETCAPABILITIES:
             return WdmAudCapabilities(DeviceObject, Irp, DeviceInfo, ClientInfo);
         case IOCTL_CLOSE_WDMAUD:
-            return WdmAudClose(DeviceObject, Irp, DeviceInfo, ClientInfo);
+            return WdmAudIoctlClose(DeviceObject, Irp, DeviceInfo, ClientInfo);
         case IOCTL_GETDEVID:
         case IOCTL_GETVOLUME:
         case IOCTL_SETVOLUME:
