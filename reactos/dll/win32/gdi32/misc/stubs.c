@@ -78,9 +78,8 @@ BOOL
 WINAPI
 CancelDC(HDC hdc)
 {
-    UNIMPLEMENTED;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    /* FIXME Sharememory */
+    return NtGdiCancelDC(hdc);
 }
 
 
@@ -90,13 +89,12 @@ CancelDC(HDC hdc)
 int
 WINAPI
 DrawEscape(HDC  hdc,
-           int a1,
-           int a2,
-           LPCSTR a3)
+           INT nEscape,
+           INT cbInput,
+           LPCSTR lpszInData)
 {
-    UNIMPLEMENTED;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+    /* FIXME Sharememory */
+    return NtGdiDrawEscape(hdc, nEscape, cbInput, (LPSTR) lpszInData);
 }
 
 
@@ -106,10 +104,21 @@ DrawEscape(HDC  hdc,
 int
 WINAPI
 EnumObjects(HDC hdc,
-            int a1,
-            GOBJENUMPROC a2,
-            LPARAM a3)
+            int nObjectType,
+            GOBJENUMPROC lpObjectFunc,
+            LPARAM lParam)
 {
+    switch (nObjectType)
+    {
+        case OBJ_BRUSH:
+        case OBJ_PEN:
+            break;
+
+        default:
+            SetLastError(ERROR_INVALID_PARAMETER);
+            return 0;
+    }
+
     UNIMPLEMENTED;
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return 0;
@@ -182,10 +191,21 @@ SetBoundsRect(HDC hdc,
 HMETAFILE
 WINAPI
 SetMetaFileBitsEx(
-	UINT		a0,
-	CONST BYTE	*a1
+	UINT		size,
+	CONST BYTE	*lpData
 	)
 {
+    const METAHEADER *mh_in = (const METAHEADER *)lpData;
+
+    if (size & 1) return 0;
+
+    if (!size || mh_in->mtType != METAFILE_MEMORY || mh_in->mtVersion != 0x300 ||
+        mh_in->mtHeaderSize != sizeof(METAHEADER) / 2)
+    {
+        SetLastError(ERROR_INVALID_DATA);
+        return 0;
+    }
+
 	UNIMPLEMENTED;
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
