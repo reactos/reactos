@@ -354,8 +354,8 @@ StoreUnwindCodes(PUNWIND_INFO Info, PDW2CFSTATE State, ULONG FunctionStart)
             {
                 Code[0].UnwindOp = UWOP_ALLOC_LARGE;
                 Code[0].OpInfo = 1;
-                Code[1].FrameOffset = (AllocSize / 8);
-                Code[2].FrameOffset = (AllocSize / 8) >> 16;
+                Code[1].FrameOffset = (USHORT)AllocSize;
+                Code[2].FrameOffset = (USHORT)(AllocSize >> 16);
                 cCodes = 3;
             }
             break;
