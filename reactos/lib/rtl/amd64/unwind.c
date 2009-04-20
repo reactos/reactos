@@ -103,8 +103,11 @@ RtlLookupFunctionTable(
     return (PVOID)((ULONG64)DosHeader + Directory->VirtualAddress);
 }
 
-
-// http://msdn.microsoft.com/en-us/library/ms680597(VS.85).aspx
+/*! RtlLookupFunctionEntry
+ * \brief Locates the RUNTIME_FUNCTION entry corresponding to a code address.
+ * \ref http://msdn.microsoft.com/en-us/library/ms680597(VS.85).aspx
+ * \todo Implement HistoryTable
+ */
 PRUNTIME_FUNCTION
 NTAPI
 RtlLookupFunctionEntry(
@@ -136,22 +139,20 @@ RtlLookupFunctionEntry(
         IndexMid = (IndexLo + IndexHi) / 2;
         FunctionEntry = &FunctionTable[IndexMid];
 
-        if ( (ControlPc >= FunctionEntry->BeginAddress) &&
-             (ControlPc < FunctionEntry->EndAddress) )
-        {
-            /* ControlPc is within limits, return entry */
-            return FunctionEntry;
-        }
-
         if (ControlPc < FunctionEntry->BeginAddress)
         {
             /* Continue search in lower half */
             IndexHi = IndexMid;
         }
-        else
+        else if (ControlPc >= FunctionEntry->EndAddress)
         {
             /* Continue search in upper half */
             IndexLo = IndexMid + 1;
+        }
+        else
+        {
+            /* ControlPc is within limits, return entry */
+            return FunctionEntry;
         }
     }
 
@@ -182,13 +183,14 @@ PopReg(PCONTEXT Context, BYTE Reg)
     SetReg(Context, Reg, Value);
 }
 
-/* Helper function that tries to unwind epilog instructions.
- * Returns TRUE we have been in an epilog and it could be unwound.
+/*! RtlpTryToUnwindEpilog
+ * \brief Helper function that tries to unwind epilog instructions.
+ * \return TRUE if we have been in an epilog and it could be unwound.
  *         FALSE if the instructions were not allowed for an epilog.
- * References:
+ * \ref
  *  http://msdn.microsoft.com/en-us/library/8ydc79k6(VS.80).aspx
  *  http://msdn.microsoft.com/en-us/library/tawsa7cb.aspx
- * TODO:
+ * \todo
  *  - Test and compare with Windows behaviour
  */
 BOOLEAN
@@ -426,12 +428,19 @@ RtlVirtualUnwind(
 
             case UWOP_SAVE_XMM_FAR:
                 i += 3;
+                break;
+
             case UWOP_SAVE_XMM128:
                 i += 2;
+                break;
+
             case UWOP_SAVE_XMM128_FAR:
                 i += 3;
+                break;
+
             case UWOP_PUSH_MACHFRAME:
                 i += 1;
+                break;
         }
     }
 
@@ -542,7 +551,9 @@ RtlWalkFrameChain(OUT PVOID *Callers,
     return i;
 }
 
-// http://undocumented.ntinternals.net/UserMode/Undocumented%20Functions/Debug/RtlGetCallersAddress.html
+/*! RtlGetCallersAddress
+ * \ref http://undocumented.ntinternals.net/UserMode/Undocumented%20Functions/Debug/RtlGetCallersAddress.html
+ */
 #undef RtlGetCallersAddress
 VOID
 NTAPI
