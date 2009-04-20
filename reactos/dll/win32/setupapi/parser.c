@@ -1494,11 +1494,9 @@ BOOL WINAPI SetupGetLineByIndexW( HINF hinf, PCWSTR section, DWORD index, INFCON
     struct inf_file *file = hinf;
     int section_index;
 
-    SetLastError( ERROR_SECTION_NOT_FOUND );
     for (file = hinf; file; file = file->next)
     {
         if ((section_index = find_section( file, section )) == -1) continue;
-        SetLastError( ERROR_LINE_NOT_FOUND );
         if (index < file->sections[section_index]->nb_lines)
         {
             context->Inf        = hinf;
@@ -1513,6 +1511,7 @@ BOOL WINAPI SetupGetLineByIndexW( HINF hinf, PCWSTR section, DWORD index, INFCON
         index -= file->sections[section_index]->nb_lines;
     }
     TRACE( "(%p,%s) not found\n", hinf, debugstr_w(section) );
+	SetLastError( ERROR_LINE_NOT_FOUND );
     return FALSE;
 }
 
@@ -1554,7 +1553,6 @@ BOOL WINAPI SetupFindFirstLineW( HINF hinf, PCWSTR section, PCWSTR key, INFCONTE
     struct inf_file *file;
     int section_index;
 
-    SetLastError( ERROR_SECTION_NOT_FOUND );
     for (file = hinf; file; file = file->next)
     {
         if ((section_index = find_section( file, section )) == -1) continue;
@@ -1567,7 +1565,6 @@ BOOL WINAPI SetupFindFirstLineW( HINF hinf, PCWSTR section, PCWSTR key, INFCONTE
             ctx.Line       = -1;
             return SetupFindNextMatchLineW( &ctx, key, context );
         }
-        SetLastError( ERROR_LINE_NOT_FOUND );  /* found at least one section */
         if (file->sections[section_index]->nb_lines)
         {
             context->Inf        = hinf;
@@ -1581,6 +1578,7 @@ BOOL WINAPI SetupFindFirstLineW( HINF hinf, PCWSTR section, PCWSTR key, INFCONTE
         }
     }
     TRACE( "(%p,%s,%s): not found\n", hinf, debugstr_w(section), debugstr_w(key) );
+	SetLastError( ERROR_LINE_NOT_FOUND );
     return FALSE;
 }
 
