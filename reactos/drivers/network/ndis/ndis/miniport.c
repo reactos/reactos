@@ -2783,5 +2783,27 @@ NdisMDeregisterDevice(
     return NDIS_STATUS_SUCCESS;
 }
 
+/*
+ * @implemented
+ */
+NDIS_STATUS
+EXPORT
+NdisQueryAdapterInstanceName(
+    OUT PNDIS_STRING    AdapterInstanceName,
+    IN  NDIS_HANDLE     NdisBindingHandle)
+/*
+ * FUNCTION:
+ * ARGUMENTS:
+ * NOTES:
+ *    NDIS 5.0
+ */
+{
+    PADAPTER_BINDING AdapterBinding = NdisBindingHandle;
+    PLOGICAL_ADAPTER Adapter = AdapterBinding->Adapter;
+
+    return NdisMQueryAdapterInstanceName(AdapterInstanceName,
+                                         Adapter);
+}
+
 /* EOF */
 
