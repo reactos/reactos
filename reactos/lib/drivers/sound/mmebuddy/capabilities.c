@@ -28,7 +28,7 @@
 MMRESULT
 GetSoundDeviceCapabilities(
     IN  PSOUND_DEVICE SoundDevice,
-    OUT DWORD_PTR Capabilities,
+    OUT DWORD_PTR Capabilities,    // FIXME: why use DWORD_PTR for an OUT value?
     IN  DWORD CapabilitiesSize)
 {
     MMDEVICE_TYPE DeviceType;
@@ -104,6 +104,6 @@ GetSoundDeviceCapabilities(
         return MMSYSERR_NOTSUPPORTED;
 
     return FunctionTable->GetCapabilities(SoundDevice,
-                                          Capabilities,
+                                          (PVOID)Capabilities,
                                           CapabilitiesSize);
 }
