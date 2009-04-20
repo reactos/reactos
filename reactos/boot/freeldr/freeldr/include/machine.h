@@ -28,6 +28,10 @@
 #include "mm.h"
 #endif
 
+#ifndef __FS_H
+#include "fs.h"
+#endif
+
 typedef enum tagVIDEODISPLAYMODE
 {
   VideoTextMode,

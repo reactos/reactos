@@ -319,3 +319,279 @@ VOID FsGetFirstNameFromPath(PCHAR Buffer, PCSTR Path)
 
 	DPRINTM(DPRINT_FILESYSTEM, "FatGetFirstNameFromPath() Path = %s FirstName = %s\n", Path, Buffer);
 }
+
+LONG CompatFsClose(ULONG FileId)
+{
+    PFILE FileHandle = FsGetDeviceSpecific(FileId);
+
+    FsCloseFile(FileHandle);
+    return ESUCCESS;
+}
+
+LONG CompatFsGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
+{
+    PFILE FileHandle = FsGetDeviceSpecific(FileId);
+
+    memset(Information, 0, sizeof(FILEINFORMATION));
+    Information->EndingAddress.LowPart = FsGetFileSize(FileHandle);
+    Information->CurrentAddress.LowPart = FsGetFilePointer(FileHandle);
+    return ESUCCESS;
+}
+
+LONG CompatFsOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
+{
+    PFILE FileHandle;
+    static BOOLEAN bVolumeOpened = FALSE;
+
+    if (!bVolumeOpened)
+    {
+        bVolumeOpened = FsOpenBootVolume();
+        if (!bVolumeOpened)
+            return EIO;
+    }
+
+    FileHandle = FsOpenFile(Path);
+    if (!FileHandle)
+        return EIO;
+    FsSetDeviceSpecific(*FileId, FileHandle);
+    return ESUCCESS;
+}
+
+LONG CompatFsRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
+{
+    PFILE FileHandle = FsGetDeviceSpecific(FileId);
+    BOOLEAN ret;
+
+    ret = FsReadFile(FileHandle, N, Count, Buffer);
+    return (ret ? ESUCCESS : EFAULT);
+}
+
+LONG CompatFsSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
+{
+    PFILE FileHandle = FsGetDeviceSpecific(FileId);
+
+    if (SeekMode != SeekAbsolute)
+        return EINVAL;
+
+    FsSetFilePointer(FileHandle, Position->LowPart);
+    return ESUCCESS;
+}
+
+const DEVVTBL CompatFsFuncTable = {
+    CompatFsClose,
+    CompatFsGetFileInformation,
+    CompatFsOpen,
+    CompatFsRead,
+    CompatFsSeek,
+};
+
+#define MAX_FDS 20
+typedef struct tagFILEDATA
+{
+    ULONG DeviceId;
+    ULONG ReferenceCount;
+    const DEVVTBL* FuncTable;
+    const DEVVTBL* FileFuncTable;
+    VOID* Specific;
+} FILEDATA;
+
+typedef struct tagDEVICE
+{
+    LIST_ENTRY ListEntry;
+    const DEVVTBL* FuncTable;
+    CHAR* Prefix;
+    ULONG DeviceId;
+    ULONG ReferenceCount;
+} DEVICE;
+
+static FILEDATA FileData[MAX_FDS];
+static LIST_ENTRY DeviceListHead;
+
+LONG ArcClose(ULONG FileId)
+{
+    LONG ret;
+
+    if (FileId >= MAX_FDS || !FileData[FileId].FuncTable)
+        return EBADF;
+
+    ret = FileData[FileId].FuncTable->Close(FileId);
+
+    if (ret == ESUCCESS)
+    {
+        FileData[FileId].FuncTable = NULL;
+        FileData[FileId].Specific = NULL;
+    }
+    return ret;
+}
+
+LONG ArcGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
+{
+    if (FileId >= MAX_FDS || !FileData[FileId].FuncTable)
+        return EBADF;
+    return FileData[FileId].FuncTable->GetFileInformation(FileId, Information);
+}
+
+LONG ArcOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
+{
+    ULONG i, ret;
+    PLIST_ENTRY pEntry;
+    DEVICE* pDevice;
+    CHAR* DeviceName;
+    CHAR* FileName;
+    CHAR* p;
+    CHAR* q;
+    ULONG dwCount, dwLength;
+    OPENMODE DeviceOpenMode;
+    ULONG DeviceId;
+
+    *FileId = MAX_FDS;
+
+    /* Search last ')', which delimits device and path */
+    FileName = strrchr(Path, ')');
+    if (!FileName)
+        return EINVAL;
+    FileName++;
+
+    /* Count number of "()", which needs to be replaced by "(0)" */
+    dwCount = 0;
+    for (p = Path; p != FileName; p++)
+        if (*p == '(' && *(p + 1) == ')')
+            dwCount++;
+
+    /* Duplicate device name, and replace "()" by "(0)" (if required) */
+    dwLength = FileName - Path + dwCount;
+    if (dwCount != 0)
+    {
+        DeviceName = MmHeapAlloc(FileName - Path + dwCount);
+        if (!DeviceName)
+            return ENOMEM;
+        for (p = Path, q = DeviceName; p != FileName; p++)
+        {
+            *q++ = *p;
+            if (*p == '(' && *(p + 1) == ')')
+                *q++ = '0';
+        }
+    }
+    else
+        DeviceName = Path;
+
+    /* Search for the device */
+    pEntry = DeviceListHead.Flink;
+    if (OpenMode == OpenReadOnly || OpenMode == OpenWriteOnly)
+        DeviceOpenMode = OpenMode;
+    else
+        DeviceOpenMode = OpenReadWrite;
+    while (pEntry != &DeviceListHead)
+    {
+        pDevice = CONTAINING_RECORD(pEntry, DEVICE, ListEntry);
+        if (strncmp(pDevice->Prefix, DeviceName, dwLength) == 0)
+        {
+            /* OK, device found. It is already opened? */
+            if (pDevice->ReferenceCount == 0)
+            {
+                /* Search some room for the device */
+                for (DeviceId = 0; DeviceId < MAX_FDS; DeviceId++)
+                    if (!FileData[DeviceId].FuncTable)
+                        break;
+                if (DeviceId == MAX_FDS)
+                    return EMFILE;
+                /* Try to open the device */
+                FileData[DeviceId].FuncTable = pDevice->FuncTable;
+                ret = pDevice->FuncTable->Open(pDevice->Prefix, DeviceOpenMode, &DeviceId);
+                if (ret != ESUCCESS)
+                {
+                    FileData[DeviceId].FuncTable = NULL;
+                    return ret;
+                }
+
+                /* Try to detect the file system */
+                /* FIXME: we link there to old infrastructure... */
+                FileData[DeviceId].FileFuncTable = &CompatFsFuncTable;
+
+                pDevice->DeviceId = DeviceId;
+            }
+            else
+            {
+                DeviceId = pDevice->DeviceId;
+            }
+            pDevice->ReferenceCount++;
+            break;
+        }
+        pEntry = pEntry->Flink;
+    }
+    if (pEntry == &DeviceListHead)
+        return ENODEV;
+
+    /* At this point, device is found and opened. Its file id is stored
+     * in DeviceId, and FileData[DeviceId].FileFuncTable contains what
+     * needs to be called to open the file */
+
+    /* Search some room for the device */
+    for (i = 0; i < MAX_FDS; i++)
+        if (!FileData[i].FuncTable)
+            break;
+    if (i == MAX_FDS)
+        return EMFILE;
+
+    /* Open the file */
+    FileData[i].FuncTable = FileData[DeviceId].FileFuncTable;
+    *FileId = i;
+    ret = FileData[i].FuncTable->Open(FileName, OpenMode, FileId);
+    if (ret != ESUCCESS)
+    {
+        FileData[i].FuncTable = NULL;
+        *FileId = MAX_FDS;
+    }
+    return ret;
+}
+
+LONG ArcRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
+{
+    if (FileId >= MAX_FDS || !FileData[FileId].FuncTable)
+        return EBADF;
+    return FileData[FileId].FuncTable->Read(FileId, Buffer, N, Count);
+}
+
+LONG ArcSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
+{
+    if (FileId >= MAX_FDS || !FileData[FileId].FuncTable)
+        return EBADF;
+    return FileData[FileId].FuncTable->Seek(FileId, Position, SeekMode);
+}
+
+VOID FsRegisterDevice(CHAR* Prefix, const DEVVTBL* FuncTable)
+{
+    DEVICE* pNewEntry;
+    ULONG dwLength;
+
+    dwLength = strlen(Prefix) + 1;
+    pNewEntry = MmHeapAlloc(sizeof(DEVICE) + dwLength);
+    if (!pNewEntry)
+        return;
+    pNewEntry->FuncTable = FuncTable;
+    pNewEntry->ReferenceCount = 0;
+    pNewEntry->Prefix = (CHAR*)(pNewEntry + 1);
+    memcpy(pNewEntry->Prefix, Prefix, dwLength);
+
+    InsertHeadList(&DeviceListHead, &pNewEntry->ListEntry);
+}
+
+VOID FsSetDeviceSpecific(ULONG FileId, VOID* Specific)
+{
+    if (FileId >= MAX_FDS || !FileData[FileId].FuncTable)
+        return;
+    FileData[FileId].Specific = Specific;
+}
+
+VOID* FsGetDeviceSpecific(ULONG FileId)
+{
+    if (FileId >= MAX_FDS || !FileData[FileId].FuncTable)
+        return NULL;
+    return FileData[FileId].Specific;
+}
+
+VOID FsInit(VOID)
+{
+    memset(FileData, 0, sizeof(FileData));
+    InitializeListHead(&DeviceListHead);
+}

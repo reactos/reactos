@@ -395,6 +395,99 @@ SetHarddiskConfigurationData(PCONFIGURATION_COMPONENT_DATA DiskKey,
   MmHeapFree(PartialResourceList);
 }
 
+typedef struct tagDISKCONTEXT
+{
+    ULONG DriveNumber;
+    ULONG SectorSize;
+    ULONGLONG SectorOffset;
+    ULONGLONG SectorNumber;
+} DISKCONTEXT;
+
+static LONG DiskClose(ULONG FileId)
+{
+    DISKCONTEXT* Context = FsGetDeviceSpecific(FileId);
+
+    MmHeapFree(Context);
+    return ESUCCESS;
+}
+
+static LONG DiskGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
+{
+    return EINVAL;
+}
+
+static LONG DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
+{
+    DISKCONTEXT* Context;
+    ULONG DriveNumber, DrivePartition, SectorSize;
+    ULONGLONG SectorOffset = 0;
+    PARTITION_TABLE_ENTRY PartitionTableEntry;
+    CHAR FileName[1];
+
+    if (!DissectArcPath(Path, FileName, &DriveNumber, &DrivePartition))
+        return EINVAL;
+    SectorSize = (DrivePartition == 0xff ? 2048 : 512);
+    if (DrivePartition != 0xff && DrivePartition != 0)
+    {
+        if (!MachDiskGetPartitionEntry(DriveNumber, DrivePartition, &PartitionTableEntry))
+            return EINVAL;
+        SectorOffset = PartitionTableEntry.SectorCountBeforePartition;
+    }
+
+    Context = MmHeapAlloc(sizeof(DISKCONTEXT));
+    if (!Context)
+        return ENOMEM;
+    Context->DriveNumber = DriveNumber;
+    Context->SectorSize = SectorSize;
+    Context->SectorOffset = SectorOffset;
+    Context->SectorNumber = 0;
+    FsSetDeviceSpecific(*FileId, Context);
+
+    return ESUCCESS;
+}
+
+static LONG DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
+{
+    DISKCONTEXT* Context = FsGetDeviceSpecific(FileId);
+    BOOLEAN ret;
+
+    *Count = 0;
+    if (N & (Context->SectorSize - 1))
+        return EINVAL;
+
+    ret = MachDiskReadLogicalSectors(
+        Context->DriveNumber,
+        Context->SectorNumber + Context->SectorOffset,
+        N / Context->SectorSize,
+        Buffer);
+    if (!ret)
+        return EIO;
+
+    *Count = N;
+    return ESUCCESS;
+}
+
+static LONG DiskSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
+{
+    DISKCONTEXT* Context = FsGetDeviceSpecific(FileId);
+
+    if (SeekMode != SeekAbsolute)
+        return EINVAL;
+    if (Position->LowPart & (Context->SectorSize - 1))
+        return EINVAL;
+
+    /* FIXME: take HighPart into account */
+    Context->SectorNumber = Position->LowPart / Context->SectorSize;
+    return ESUCCESS;
+}
+
+static const DEVVTBL DiskVtbl = {
+    DiskClose,
+    DiskGetFileInformation,
+    DiskOpen,
+    DiskRead,
+    DiskSeek,
+};
 
 static VOID
 SetHarddiskIdentifier(PCONFIGURATION_COMPONENT_DATA DiskKey,
@@ -407,6 +500,7 @@ SetHarddiskIdentifier(PCONFIGURATION_COMPONENT_DATA DiskKey,
   ULONG Signature;
   CHAR Identifier[20];
   CHAR ArcName[256];
+  PARTITION_TABLE_ENTRY PartitionTableEntry;
 
   /* Read the MBR */
   if (!MachDiskReadLogicalSectors(DriveNumber, 0ULL, 1, (PVOID)DISKREADBUFFER))
@@ -438,6 +532,21 @@ SetHarddiskIdentifier(PCONFIGURATION_COMPONENT_DATA DiskKey,
   reactos_arc_disk_info[reactos_disk_count].ArcName =
       reactos_arc_strings[reactos_disk_count];
   reactos_disk_count++;
+
+  sprintf(ArcName, "multi(0)disk(0)rdisk(%lu)partition(0)", DriveNumber - 0x80);
+  FsRegisterDevice(ArcName, &DiskVtbl);
+
+  /* Add partitions */
+  i = 0;
+  while (MachDiskGetPartitionEntry(DriveNumber, i, &PartitionTableEntry))
+  {
+    if (PartitionTableEntry.SystemIndicator != PARTITION_ENTRY_UNUSED)
+    {
+      sprintf(ArcName, "multi(0)disk(0)rdisk(%lu)partition(%lu)", DriveNumber - 0x80, i);
+      FsRegisterDevice(ArcName, &DiskVtbl);
+    }
+    i++;
+  }
 
   /* Convert checksum and signature to identifier string */
   Identifier[0] = Hex[(Checksum >> 28) & 0x0F];
@@ -776,6 +885,9 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
         SetHarddiskConfigurationData(DiskKey, 0x80 + i);
         SetHarddiskIdentifier(DiskKey, 0x80 + i);
     }
+
+    /* Also add one cdrom drive */
+    FsRegisterDevice("multi(0)disk(0)cdrom(224)", &DiskVtbl);
 }
 
 static VOID

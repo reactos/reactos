@@ -374,10 +374,12 @@ WinLdrLoadBootDrivers(PLOADER_PARAMETER_BLOCK LoaderBlock,
 PVOID WinLdrLoadModule(PCSTR ModuleName, ULONG *Size,
 					   TYPE_OF_MEMORY MemoryType)
 {
-	PFILE FileHandle;
+	ULONG FileId;
 	PVOID PhysicalBase;
+	FILEINFORMATION FileInfo;
 	ULONG FileSize;
-	BOOLEAN Status;
+	ULONG Status;
+	ULONG BytesRead;
 
 	//CHAR ProgressString[256];
 
@@ -389,38 +391,40 @@ PVOID WinLdrLoadModule(PCSTR ModuleName, ULONG *Size,
 	*Size = 0;
 
 	/* Open the image file */
-	FileHandle = FsOpenFile(ModuleName);
-
-	if (FileHandle == NULL)
+	Status = ArcOpen((PCHAR)ModuleName, OpenReadOnly, &FileId);
+	if (Status != ESUCCESS)
 	{
 		/* In case of errors, we just return, without complaining to the user */
 		return NULL;
 	}
 
 	/* Get this file's size */
-	FileSize = FsGetFileSize(FileHandle);
+	Status = ArcGetFileInformation(FileId, &FileInfo);
+	if (Status != ESUCCESS)
+	{
+		ArcClose(FileId);
+		return NULL;
+	}
+	FileSize = FileInfo.EndingAddress.LowPart;
 	*Size = FileSize;
 
 	/* Allocate memory */
 	PhysicalBase = MmAllocateMemoryWithType(FileSize, MemoryType);
 	if (PhysicalBase == NULL)
 	{
-		FsCloseFile(FileHandle);
+		ArcClose(FileId);
 		return NULL;
 	}
 
 	/* Load whole file */
-	Status = FsReadFile(FileHandle, FileSize, NULL, PhysicalBase);
-	if (!Status)
+	Status = ArcRead(FileId, PhysicalBase, FileSize, &BytesRead);
+	ArcClose(FileId);
+	if (Status != ESUCCESS)
 	{
-		FsCloseFile(FileHandle);
 		return NULL;
 	}
 
 	DPRINTM(DPRINT_WINDOWS, "Loaded %s at 0x%x with size 0x%x\n", ModuleName, PhysicalBase, FileSize);
-
-	/* We are done with the file - close it */
-	FsCloseFile(FileHandle);
 
 	return PhysicalBase;
 }
@@ -437,7 +441,6 @@ LoadAndBootWindows(PCSTR OperatingSystemName, USHORT OperatingSystemVersion)
 	PVOID NtosBase = NULL, HalBase = NULL, KdComBase = NULL;
 	BOOLEAN Status;
 	ULONG SectionId;
-	ULONG BootDevice;
 	PLOADER_PARAMETER_BLOCK LoaderBlock, LoaderBlockVA;
 	KERNEL_ENTRY_POINT KiSystemStartup;
 	PLDR_DATA_TABLE_ENTRY KernelDTE, HalDTE, KdComDTE = NULL;
@@ -476,25 +479,19 @@ LoadAndBootWindows(PCSTR OperatingSystemName, USHORT OperatingSystemVersion)
 		strcpy(BootOptions, "");
 	}
 
-	/* Normalize system path */
-	if (!MachDiskNormalizeSystemPath(SystemPath, sizeof(SystemPath)))
+	/* Special case for LiveCD */
+	if (!_strnicmp(SystemPath, "LiveCD", strlen("LiveCD")))
 	{
-		UiMessageBox("Invalid system path");
-		return;
+		strcpy(BootPath, SystemPath + strlen("LiveCD"));
+		MachDiskGetBootPath(SystemPath, sizeof(SystemPath));
+		strcat(SystemPath, BootPath);
 	}
 
 	/* Let user know we started loading */
 	UiDrawStatusText("Loading...");
 
-	/* Try to open system drive */
-	BootDevice = 0xffffffff;
-	if (!FsOpenSystemVolume(SystemPath, BootPath, &BootDevice))
-	{
-		UiMessageBox("Failed to open boot drive.");
-		return;
-	}
-
 	/* append a backslash */
+	strcpy(BootPath, SystemPath);
 	if ((strlen(BootPath)==0) ||
 	    BootPath[strlen(BootPath)] != '\\')
 		strcat(BootPath, "\\");
