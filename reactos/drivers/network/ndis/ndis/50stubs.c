@@ -249,29 +249,6 @@ NdisMDeregisterDevice(
 /*
  * @unimplemented
  */
-VOID
-EXPORT
-NdisMGetDeviceProperty(
-    IN      NDIS_HANDLE         MiniportAdapterHandle,
-    IN OUT  PDEVICE_OBJECT      *PhysicalDeviceObject           OPTIONAL,
-    IN OUT  PDEVICE_OBJECT      *FunctionalDeviceObject         OPTIONAL,
-    IN OUT  PDEVICE_OBJECT      *NextDeviceObject               OPTIONAL,
-    IN OUT  PCM_RESOURCE_LIST   *AllocatedResources             OPTIONAL,
-    IN OUT  PCM_RESOURCE_LIST   *AllocatedResourcesTranslated   OPTIONAL)
-/*
- * FUNCTION:
- * ARGUMENTS:
- * NOTES:
- *    NDIS 5.0
- */
-{
-    UNIMPLEMENTED
-}
-
-
-/*
- * @unimplemented
- */
 NDIS_STATUS
 EXPORT
 NdisMPromoteMiniport(

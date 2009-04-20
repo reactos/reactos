@@ -2625,5 +2625,44 @@ NdisRegisterAdapterShutdownHandler(
                                         ShutdownHandler);
 }
 
+/*
+ * @implemented
+ */
+VOID
+EXPORT
+NdisMGetDeviceProperty(
+    IN      NDIS_HANDLE         MiniportAdapterHandle,
+    IN OUT  PDEVICE_OBJECT      *PhysicalDeviceObject           OPTIONAL,
+    IN OUT  PDEVICE_OBJECT      *FunctionalDeviceObject         OPTIONAL,
+    IN OUT  PDEVICE_OBJECT      *NextDeviceObject               OPTIONAL,
+    IN OUT  PCM_RESOURCE_LIST   *AllocatedResources             OPTIONAL,
+    IN OUT  PCM_RESOURCE_LIST   *AllocatedResourcesTranslated   OPTIONAL)
+/*
+ * FUNCTION:
+ * ARGUMENTS:
+ * NOTES:
+ *    NDIS 5.0
+ */
+{
+    PLOGICAL_ADAPTER Adapter = MiniportAdapterHandle;
+
+    NDIS_DbgPrint(MAX_TRACE, ("Called\n"));
+
+    if (PhysicalDeviceObject != NULL)
+        *PhysicalDeviceObject = Adapter->NdisMiniportBlock.PhysicalDeviceObject;
+
+    if (FunctionalDeviceObject != NULL)
+        *FunctionalDeviceObject = Adapter->NdisMiniportBlock.DeviceObject;
+
+    if (NextDeviceObject != NULL)
+        *NextDeviceObject = Adapter->NdisMiniportBlock.NextDeviceObject;
+
+    if (AllocatedResources != NULL)
+        *AllocatedResources = Adapter->NdisMiniportBlock.AllocatedResources;
+
+    if (AllocatedResourcesTranslated != NULL)
+        *AllocatedResourcesTranslated = Adapter->NdisMiniportBlock.AllocatedResourcesTranslated;
+}
+
 /* EOF */
 
