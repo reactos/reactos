@@ -41,6 +41,7 @@ FilterPinWorkerRoutine(
     Status = KsSynchronousIoControlDevice(DeviceEntry->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PropertyRequest, sizeof(KSPROPERTY), (PVOID)&Count, sizeof(ULONG), &BytesReturned);
     if (!NT_SUCCESS(Status))
     {
+        DPRINT1("Failed to query number of pins Status %x\n", Status);
         ObDereferenceObject(DeviceEntry->FileObject);
         ZwClose(DeviceEntry->Handle);
         ExFreePool(DeviceEntry->DeviceName.Buffer);
@@ -50,6 +51,7 @@ FilterPinWorkerRoutine(
 
     if (!Count)
     {
+        DPRINT1("Filter has no pins!\n");
         ObDereferenceObject(DeviceEntry->FileObject);
         ZwClose(DeviceEntry->Handle);
         ExFreePool(DeviceEntry->DeviceName.Buffer);
@@ -62,6 +64,7 @@ FilterPinWorkerRoutine(
     if (!DeviceEntry->Pins)
     {
         /* no memory */
+        DPRINT1("Failed to allocate memory Block %x\n", Count * sizeof(PIN_INFO));
         ObDereferenceObject(DeviceEntry->FileObject);
         ZwClose(DeviceEntry->Handle);
         ExFreePool(DeviceEntry->DeviceName.Buffer);
