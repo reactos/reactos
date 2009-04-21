@@ -2,7 +2,7 @@
 #define __WIN32K_NTUSER_H
 
 struct _PROCESSINFO;
-struct _W32THREADINFO;
+struct _THREADINFO;
 struct _WINDOW;
 
 typedef struct _LARGE_UNICODE_STRING
@@ -149,7 +149,7 @@ typedef struct _WINDOW
              keeps a reference to this structure until all the information
              is moved to this structure */
     struct _PROCESSINFO *pi; /* FIXME: Move to object header some day */
-    struct _W32THREADINFO *ti;
+    struct _THREADINFO *ti;
     struct _DESKTOP *pdesktop;
     RECT WindowRect;
     RECT ClientRect;
@@ -362,16 +362,6 @@ typedef struct _CLIENTTHREADINFO
     DWORD dwcPumpHook;
 } CLIENTTHREADINFO, *PCLIENTTHREADINFO;
 
-typedef struct _W32THREADINFO
-{
-    PPROCESSINFO ppi; /* [KERNEL] */
-    PDESKTOPINFO pDeskInfo;
-//    PVOID DesktopHeapBase;
-//    ULONG_PTR DesktopHeapLimit;
-    /* A mask of what hooks are currently active */
-    ULONG fsHooks;
-    CLIENTTHREADINFO ClientThreadInfo;
-} W32THREADINFO, *PW32THREADINFO;
 
 /* Window Client Information structure */
 struct  _ETHREAD;
@@ -433,6 +423,59 @@ C_ASSERT(sizeof(CLIENTINFO) == FIELD_OFFSET(TEB, glDispatchTable) - FIELD_OFFSET
 
 #define GetWin32ClientInfo() ((PCLIENTINFO)(NtCurrentTeb()->Win32ClientInfo))
 
+#include <pshpack1.h>
+
+typedef struct _TL
+{
+    struct _TL* next;
+    PVOID pobj;
+    PVOID pfnFree;
+} TL, *PTL;
+
+typedef struct _W32THREAD
+{
+    struct _ETHREAD* pEThread;
+    ULONG RefCount;
+    PTL ptlW32;
+    PVOID pgdiDcattr;
+    PVOID pgdiBrushAttr;
+    PVOID pUMPDObjs;
+    PVOID pUMPDHeap;
+    DWORD dwEngAcquireCount;
+    PVOID pSemTable;
+    PVOID pUMPDObj;
+} W32THREAD, *PW32THREAD;
+
+typedef struct _THREADINFO
+{
+    W32THREAD           XzyxW32Thread; /* Do not use! */
+    PTL                 ptl;
+    PPROCESSINFO        ppi;
+    struct _USER_MESSAGE_QUEUE* MessageQueue;
+    struct _KBL*        KeyboardLayout;
+    PCLIENTTHREADINFO   pcti;
+    struct _DESKTOP*    Desktop;
+    PDESKTOPINFO        pDeskInfo;
+    PCLIENTINFO         pClientInfo;
+    FLONG               TIF_flags;
+    HANDLE              hDesktop;
+    UINT                cPaintsReady; /* Count of paints pending. */
+    UINT                cTimersReady; /* Count of timers pending. */
+    LIST_ENTRY          PtiLink;
+    ULONG               fsHooks;
+
+    CLIENTTHREADINFO    cti;  /* Internal to win32k */
+/* ReactOS */
+  LIST_ENTRY WindowListHead;
+  LIST_ENTRY W32CallbackListHead;
+  BOOLEAN IsExiting;
+  SINGLE_LIST_ENTRY  ReferencesList;
+
+} THREADINFO, *PTHREADINFO;
+
+#include <poppack.h>
+
+
 // Server event activity bits.
 #define SRV_EVENT_MENU            0x0001
 #define SRV_EVENT_END_APPLICATION 0x0002
@@ -465,7 +508,7 @@ typedef struct _BROADCASTPARM
   LUID  luid;  
 } BROADCASTPARM, *PBROADCASTPARM;
 
-PW32THREADINFO GetW32ThreadInfo(VOID);
+PTHREADINFO GetW32ThreadInfo(VOID);
 PPROCESSINFO GetW32ProcessInfo(VOID);
 
 typedef struct _WNDMSG
