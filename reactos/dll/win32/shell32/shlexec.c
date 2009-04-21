@@ -449,7 +449,7 @@ static UINT SHELL_FindExecutableByOperation(LPCWSTR lpOperation, LPWSTR key, LPW
 
     if (RegOpenKeyExW(HKEY_CLASSES_ROOT, filetype, 0, 0x02000000, &hkeyClass))
         return SE_ERR_NOASSOC;
-    if (!HCR_GetDefaultVerbW(hkeyClass, lpOperation, verb, sizeof(verb)))
+    if (!HCR_GetDefaultVerbW(hkeyClass, lpOperation, verb, sizeof(verb)/sizeof(verb[0])))
         return SE_ERR_NOASSOC;
     RegCloseKey(hkeyClass);
 
@@ -511,7 +511,7 @@ static UINT SHELL_FindExecutableByOperation(LPCWSTR lpOperation, LPWSTR key, LPW
  *              command (it'll be used afterwards for more information
  *              on the operation)
  */
-UINT SHELL_FindExecutable(LPCWSTR lpPath, LPCWSTR lpFile, LPCWSTR lpOperation,
+static UINT SHELL_FindExecutable(LPCWSTR lpPath, LPCWSTR lpFile, LPCWSTR lpOperation,
                                  LPWSTR lpResult, int resultLen, LPWSTR key, WCHAR **env, LPITEMIDLIST pidl, LPCWSTR args)
 {
     static const WCHAR wWindows[] = {'w','i','n','d','o','w','s',0};
@@ -565,6 +565,12 @@ UINT SHELL_FindExecutable(LPCWSTR lpPath, LPCWSTR lpFile, LPCWSTR lpOperation,
     }
     else
     {
+        /* Did we get something? Anything? */
+        if (xlpFile[0]==0)
+        {
+            TRACE("Returning SE_ERR_FNF\n");
+            return SE_ERR_FNF;
+        }
         /* First thing we need is the file's extension */
         extension = wcsrchr(xlpFile, '.'); /* Assume last "." is the one; */
         /* File->Run in progman uses */
@@ -609,7 +615,7 @@ UINT SHELL_FindExecutable(LPCWSTR lpPath, LPCWSTR lpFile, LPCWSTR lpOperation,
                      * attached */
                     TRACE("found %s\n", debugstr_w(lpResult));
                     return 33;
-                   /* Greater than 32 to indicate success */
+                    /* Greater than 32 to indicate success */
                 }
                 tok = p;
             }
