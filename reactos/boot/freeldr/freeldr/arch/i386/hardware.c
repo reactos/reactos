@@ -500,7 +500,9 @@ SetHarddiskIdentifier(PCONFIGURATION_COMPONENT_DATA DiskKey,
   ULONG Signature;
   CHAR Identifier[20];
   CHAR ArcName[256];
+#if 0
   PARTITION_TABLE_ENTRY PartitionTableEntry;
+#endif
 
   /* Read the MBR */
   if (!MachDiskReadLogicalSectors(DriveNumber, 0ULL, 1, (PVOID)DISKREADBUFFER))
