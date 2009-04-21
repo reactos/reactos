@@ -265,6 +265,7 @@ KsSynchronousIoControlDevice(
     IN  ULONG OutSize,
     OUT PULONG BytesReturned)
 {
+    PKSIOBJECT_HEADER ObjectHeader;
     PDEVICE_OBJECT DeviceObject;
     KEVENT Event;
     PIRP Irp;
@@ -280,6 +281,23 @@ KsSynchronousIoControlDevice(
     DeviceObject = IoGetRelatedDeviceObject(FileObject);
     if (!DeviceObject)
         return STATUS_UNSUCCESSFUL;
+
+    /* get object header */
+    ObjectHeader = (PKSIOBJECT_HEADER)FileObject->FsContext;
+    /* check if there is fast device io function */
+    if (ObjectHeader->DispatchTable.FastDeviceIoControl)
+    {
+        /* it is send the request */
+        Status = ObjectHeader->DispatchTable.FastDeviceIoControl(FileObject, TRUE, InBuffer, InSize, OutBuffer, OutSize, IoControl, &IoStatusBlock, DeviceObject);
+        /* check if the request was handled */
+        if (Status)
+        {
+            /* store bytes returned */
+            *BytesReturned = IoStatusBlock.Information;
+            /* return status */
+            return IoStatusBlock.Status;
+        }
+    }
 
     /* initialize the event */
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
