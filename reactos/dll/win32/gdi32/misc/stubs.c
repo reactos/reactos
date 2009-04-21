@@ -125,7 +125,7 @@ DrawEscape(HDC  hDC,
      {
         if (pLDC->Flags & LDC_META_PRINT)
         {
-//           if (nEscape != 8)
+//           if (nEscape != QUERYESCSUPPORT)
 //              return EMFDRV_WriteEscape(hDC, nEscape, cbInput, lpszInData, EMR_DRAWESCAPE);
 
            return NtGdiDrawEscape(hDC, nEscape, cbInput, (LPSTR) lpszInData);
