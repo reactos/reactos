@@ -3,7 +3,7 @@
 	<importlibrary definition="qedit.spec" />
 	<include base="qedit">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
-	<define name="_WIN32_WINNT">0x600</define>
+	<redefine name="_WIN32_WINNT">0x600</redefine>
 	<define name="__WINESRC__" />
 	<file>main.c</file>
 	<file>mediadet.c</file>

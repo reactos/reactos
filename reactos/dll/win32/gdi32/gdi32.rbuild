@@ -1,7 +1,6 @@
 <module name="gdi32" type="win32dll" baseaddress="${BASEADDRESS_GDI32}" installbase="system32" installname="gdi32.dll" unicode="yes" crt="dll" allowwarnings="true">
 	<importlibrary definition="gdi32.spec" />
 	<include base="gdi32">include</include>
-	<define name="_DISABLE_TIDENTS" />
 	<define name="LANGPACK" />
 	<library>user32</library>
 	<library>kernel32</library>

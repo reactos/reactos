@@ -6,7 +6,7 @@
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="_SHELL32_" />
 	<define name="COM_NO_WINDOWS_H" />
-	<define name="_WIN32_WINNT">0x600</define>
+	<redefine name="_WIN32_WINNT">0x600</redefine>
 	<library>wine</library>
 	<library>uuid</library>
 	<library>recyclebin</library>

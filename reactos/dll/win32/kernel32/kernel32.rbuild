@@ -6,8 +6,7 @@
 		<include base="kernel32_base">include</include>
 		<include base="ReactOS">include/reactos/subsys</include>
 		<define name="_KERNEL32_" />
-		<define name="_DISABLE_TIDENTS" />
-		<define name="_WIN32_WINNT">0x0600</define>
+		<redefine name="_WIN32_WINNT">0x0600</redefine>
 		<define name="__NO_CTYPE_INLINES" />
 		<define name="NTDDI_VERSION">0x05020100</define>
 		<dependency>errcodes</dependency>
@@ -130,8 +129,8 @@
 			</if>
 		</directory>
 
-		<compilerflag compiler="cpp">-fno-exceptions</compilerflag>
-		<compilerflag compiler="cpp">-fno-rtti</compilerflag>
+		<compilerflag compiler="cxx">-fno-exceptions</compilerflag>
+		<compilerflag compiler="cxx">-fno-rtti</compilerflag>
 
 		<directory name="misc">
 			<file>icustubs.cpp</file>
@@ -143,7 +142,6 @@
 		<include base="kernel32">.</include>
 		<include base="kernel32" root="intermediate">.</include>
 		<include base="kernel32">include</include>
-		<define name="_DISABLE_TIDENTS" />
 		<library>kernel32_base</library>
 		<library>wine</library>
 		<library>pseh</library>

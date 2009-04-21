@@ -1,7 +1,6 @@
 <module name="fmifs" type="win32dll" entrypoint="InitializeFmIfs@12" baseaddress="${BASEADDRESS_FMIFS}" installbase="system32" installname="fmifs.dll">
 	<importlibrary definition="fmifs.spec" />
 	<include base="fmifs">.</include>
-	<define name="_DISABLE_TIDENTS" />
 	<library>ntdll</library>
 	<library>kernel32</library>
 	<file>chkdsk.c</file>

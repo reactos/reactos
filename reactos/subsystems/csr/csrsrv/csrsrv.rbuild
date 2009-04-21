@@ -5,7 +5,6 @@
 	<include base="csrsrv">.</include>
 	<include base="csr">.</include>
 	<include base="ReactOS">include/reactos/subsys</include>
-	<define name="_DISABLE_TIDENTS" />
 	<library>ntdll</library>
 	<library>pseh</library>
 	<file>api.c</file>

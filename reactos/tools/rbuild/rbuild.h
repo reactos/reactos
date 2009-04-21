@@ -321,9 +321,15 @@ enum HostType
 
 enum CompilerType
 {
-	CompilerTypeDontCare,
 	CompilerTypeCC,
+	CompilerTypeCXX,
 	CompilerTypeCPP,
+	CompilerTypeAS,
+	CompilerTypeMIDL,
+	CompilerTypeRC,
+	CompilerTypeNASM,
+
+	CompilerTypesCount
 };
 
 class FileLocation
@@ -423,8 +429,23 @@ private:
 	                           bool default_value = false );
 };
 
+class CompilerDirective
+{
+private:
+	std::bitset<CompilerTypesCount> compilersSet;
 
-class Include
+public:
+	void SetCompiler ( CompilerType compiler );
+	void UnsetCompiler ( CompilerType compiler );
+	void SetAllCompilers ();
+	void UnsetAllCompilers ();
+
+	void ParseCompilers ( const XMLElement& node, const std::string& defaultValue );
+
+	bool IsCompilerSet ( CompilerType compiler ) const;
+};
+
+class Include: public CompilerDirective
 {
 public:
 	FileLocation *directory;
@@ -444,19 +465,21 @@ private:
 	const XMLElement* node;
 	const Module* module;
 	DirectoryLocation GetDefaultDirectoryTree ( const Module* module ) const;
+	void Initialize ();
 };
 
 
-class Define
+class Define: public CompilerDirective
 {
 public:
 	const Project& project;
 	const Module* module;
 	const XMLElement* node;
 	std::string name;
+	std::string arguments;
 	std::string value;
 	std::string backend;
-	bool overridable;
+	bool redefine;
 
 	Define ( const Project& project,
 	         const XMLElement& defineNode );
@@ -466,7 +489,8 @@ public:
 	Define ( const Project& project,
 	         const Module* module,
 	         const std::string& name_,
-	         const std::string& backend_ = "" );
+	         const std::string& backend_ = "",
+	         bool redefine_ = false );
 	~Define();
 	void ProcessXML();
 private:
@@ -609,14 +633,13 @@ public:
 };
 
 
-class CompilerFlag
+class CompilerFlag: public CompilerDirective
 {
 public:
 	const Project& project;
 	const Module* module;
 	const XMLElement& node;
 	std::string flag;
-	CompilerType compiler;
 
 	CompilerFlag ( const Project& project,
 	               const XMLElement& compilerFlagNode );

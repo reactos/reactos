@@ -6,7 +6,7 @@
 	<include base="lsa_client">.</include>
 	<include base="eventlog_client">.</include>
 
-	<define name="_WIN32_WINNT">0x600</define>
+	<redefine name="_WIN32_WINNT">0x600</redefine>
 
 	<define name="_ADVAPI32_" />
 	<library>scm_client</library>

@@ -7,7 +7,7 @@
 	<include base="inetcomm">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
-	<define name="_WIN32_WINNT">0x600</define>
+	<redefine name="_WIN32_WINNT">0x600</redefine>
 	<file>imaptransport.c</file>
 	<file>inetcomm_main.c</file>
 	<file>internettransport.c</file>

@@ -62,14 +62,8 @@ private:
 	void CreateMakefile ();
 	void CloseMakefile () const;
 	void GenerateHeader () const;
-	void GenerateProjectCFlagsMacro ( const char* assignmentOperation,
-	                                  const IfableData& data ) const;
-	void GenerateGlobalCFlagsAndProperties ( const char* op,
-	                                         const IfableData& data ) const;
-	void GenerateProjectGccOptionsMacro ( const char* assignmentOperation,
-	                                      IfableData& data ) const;
-	void GenerateProjectGccOptions ( const char* assignmentOperation,
-	                                 IfableData& data ) const;
+	void GenerateGlobalProperties ( const char* assignmentOperation,
+									  const IfableData& data ) const;
 	std::string GenerateProjectLFLAGS () const;
 	void GenerateDirectories ();
 	void GenerateGlobalVariables () const;
