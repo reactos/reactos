@@ -408,6 +408,8 @@ ProTransferData(
         return NDIS_STATUS_SUCCESS;
     }
 
+    ASSERT(Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.TransferDataHandler);
+
     KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
 
     Status = (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.TransferDataHandler)(
