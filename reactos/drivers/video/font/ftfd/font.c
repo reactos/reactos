@@ -13,12 +13,10 @@ HackFixup(
     ULONG cjView)
 {
     CHAR *pc;
-    CHAR c;
 
     pc = EngAllocMem(0, cjView, 'tmp ');
     memcpy(pc, pvView, cjView);
 
-    c = *pc;
     *pc = 0;
 
     return pc;
@@ -179,12 +177,14 @@ FtfdQueryFont(
     PIFIMETRICS pifi;
     FT_Face ftface;
     FT_Error fterror;
+    ULONG i;
 
     DbgPrint("FtfdQueryFont()\n");
 
     /* Validate parameters */
     if (iFace > pfile->cNumFaces || !pid)
     {
+        DbgPrint("iFace > pfile->cNumFaces || !pid\n");
         return NULL;
     }
 
@@ -195,6 +195,7 @@ FtfdQueryFont(
                                  &ftface);
     if (fterror)
     {
+        DbgPrint("FT_New_Memory_Face failed\n");
         return NULL;
     }
 
@@ -211,34 +212,52 @@ FtfdQueryFont(
     pifi = &pifiX->ifim;
     pifi->cjThis = sizeof(FTFD_IFIMETRICS);
     pifi->cjIfiExtra = 0;
+
+    /* Relative offsets */
     pifi->dpwszFamilyName = FIELD_OFFSET(FTFD_IFIMETRICS, wszFamilyName);
-    pifi->dpwszStyleName = FIELD_OFFSET(FTFD_IFIMETRICS, wszFamilyName);
+    pifi->dpwszStyleName = FIELD_OFFSET(FTFD_IFIMETRICS, wszStyleName);
     pifi->dpwszFaceName = FIELD_OFFSET(FTFD_IFIMETRICS, wszFaceName);
     pifi->dpwszUniqueName = FIELD_OFFSET(FTFD_IFIMETRICS, wszFaceName);
+    pifi->dpCharSets = FIELD_OFFSET(FTFD_IFIMETRICS, ajCharSet);
     pifi->dpFontSim = 0;
+
+    /* Charsets */
+    pifi->jWinCharSet = ANSI_CHARSET;
+    pifiX->ajCharSet[0] = pifi->jWinCharSet;
+    for (i = 1; i < 16; i++)
+    {
+        pifiX->ajCharSet[i] = DEFAULT_CHARSET;
+    }
+
     pifi->lEmbedId = 0;
     pifi->lItalicAngle = 0;
     pifi->lCharBias = 0;
-    pifi->dpCharSets = 0;
-//    pifi->jWinCharSet = pFontInfo->dfCharSet;
-//    pifi->jWinPitchAndFamily = pFontInfo->dfPitchAndFamily;
-//    pifi->usWinWeight = GETVAL(pFontInfo->dfWeight);
-//    pifi->flInfo = pface->flInfo;
+    pifi->jWinPitchAndFamily = VARIABLE_PITCH | FF_DONTCARE; // FIXME
+    pifi->usWinWeight = FW_MEDIUM; // FIXME
+    pifi->flInfo = FM_INFO_TECH_TRUETYPE | FM_INFO_ARB_XFORMS |
+                   FM_INFO_1BPP | FM_INFO_4BPP |
+                   FM_INFO_RETURNS_OUTLINES |
+                   FM_INFO_RETURNS_BITMAPS |
+                   FM_INFO_RIGHT_HANDED;
     pifi->fsSelection = 0;
     pifi->fsType = 0;
-//    pifi->fwdUnitsPerEm = GETVAL(pFontInfo->dfPixHeight);
-    pifi->fwdLowestPPEm = 0;
-//    pifi->fwdWinAscender = GETVAL(pFontInfo->dfAscent);
-    pifi->fwdWinDescender = pifi->fwdUnitsPerEm - pifi->fwdWinAscender;
+
+    /* Font resolution */
+    pifi->fwdUnitsPerEm = ftface->units_per_EM;
+    pifi->fwdLowestPPEm = 8; // FIXME
+
+    /* Font metrics */
+    pifi->fwdWinAscender = ftface->ascender;
+    pifi->fwdWinDescender = - ftface->descender;
     pifi->fwdMacAscender = pifi->fwdWinAscender;
     pifi->fwdMacDescender = - pifi->fwdWinDescender;
     pifi->fwdMacLineGap = 0;
     pifi->fwdTypoAscender = pifi->fwdWinAscender;
-    pifi->fwdTypoDescender = - pifi->fwdWinDescender;
+    pifi->fwdTypoDescender = 0; // FIXME!!! - pifi->fwdWinDescender;
     pifi->fwdTypoLineGap = 0;
-//    pifi->fwdAveCharWidth = GETVAL(pFontInfo->dfAvgWidth);
-//    pifi->fwdMaxCharInc =  GETVAL(pFontInfo->dfMaxWidth);
-//    pifi->fwdCapHeight = pifi->fwdUnitsPerEm / 2;
+    pifi->fwdAveCharWidth = 1085; // FIXME
+    pifi->fwdMaxCharInc =  ftface->max_advance_width;
+    pifi->fwdCapHeight = pifi->fwdUnitsPerEm / 2;
     pifi->fwdXHeight = pifi->fwdUnitsPerEm / 4;
     pifi->fwdSubscriptXSize = 0;
     pifi->fwdSubscriptYSize = 0;
@@ -248,41 +267,64 @@ FtfdQueryFont(
     pifi->fwdSuperscriptYSize = 0;
     pifi->fwdSuperscriptXOffset = 0;
     pifi->fwdSuperscriptYOffset = 0;
-    pifi->fwdUnderscoreSize = 01;
+    pifi->fwdUnderscoreSize = 1;
     pifi->fwdUnderscorePosition = -1;
     pifi->fwdStrikeoutSize = 1;
     pifi->fwdStrikeoutPosition = pifi->fwdXHeight + 1;
-//    pifi->chFirstChar = pFontInfo->dfFirstChar;
-//    pifi->chLastChar = pFontInfo->dfLastChar;
-//    pifi->chDefaultChar = pFontInfo->dfFirstChar + pFontInfo->dfDefaultChar;
-//    pifi->chBreakChar = pFontInfo->dfFirstChar + pFontInfo->dfBreakChar;
-//    pifi->wcFirstChar = pface->wcFirstChar;
-//    pifi->wcLastChar = pface->wcLastChar;
-//    pifi->wcDefaultChar = pface->wcDefaultChar;
-//    pifi->wcBreakChar = pface->wcBreakChar;
+
     pifi->ptlBaseline.x = 1;
     pifi->ptlBaseline.y = 0;
-//    pifi->ptlAspect.x = pFontInfo->dfVertRes; // CHECKME
-//    pifi->ptlAspect.y = pFontInfo->dfHorizRes;
+    pifi->ptlAspect.x = 1;
+    pifi->ptlAspect.y = 1;
     pifi->ptlCaret.x = 0;
     pifi->ptlCaret.y = 1;
-    pifi->rclFontBox.left = 0;
-    pifi->rclFontBox.right = pifi->fwdAveCharWidth;
-    pifi->rclFontBox.top = pifi->fwdWinAscender;
-    pifi->rclFontBox.bottom = - pifi->fwdWinDescender;
+
+    /* Set the biggest characters bounding box */
+    pifi->rclFontBox.left = ftface->bbox.xMin;
+    pifi->rclFontBox.right = ftface->bbox.xMax;
+    pifi->rclFontBox.top = ftface->bbox.yMax;
+    pifi->rclFontBox.bottom = ftface->bbox.yMin;
+
+    /* Special characters */
+    pifi->chFirstChar = 0x1c; // FIXME
+    pifi->chLastChar = 0x79;
+    pifi->chDefaultChar = 0x1d;
+    pifi->chBreakChar = 0x1e;
+    pifi->wcFirstChar = 0x1e;
+    pifi->wcLastChar = 0x79;
+    pifi->wcDefaultChar = 0x1d;
+    pifi->wcBreakChar = 0x1e;
+
+
     *(DWORD*)&pifi->achVendId = 0x30303030; // FIXME
     pifi->cKerningPairs = 0;
     pifi->ulPanoseCulture = FM_PANOSE_CULTURE_LATIN;
 //    pifi->panose = panose;
 
-    /* Set char sets */
-    pifiX->ajCharSet[0] = pifi->jWinCharSet;
-    pifiX->ajCharSet[1] = DEFAULT_CHARSET;
+    EngMultiByteToUnicodeN(pifiX->wszFamilyName,
+                           LF_FACESIZE,
+                           NULL,
+                           ftface->family_name,
+                           strnlen(ftface->family_name, MAX_PATH));
+
+    EngMultiByteToUnicodeN(pifiX->wszStyleName,
+                           LF_FACESIZE,
+                           NULL,
+                           ftface->style_name,
+                           strnlen(ftface->style_name, MAX_PATH));
+
+    EngMultiByteToUnicodeN(pifiX->wszFaceName,
+                           LF_FACESIZE,
+                           NULL,
+                           ftface->family_name,
+                           strnlen(ftface->family_name, MAX_PATH));
 
     FT_Done_Face(ftface);
 
+    DbgPrint("Finished with the ifi: %p\n", pifiX);
+    DbgBreakPoint();
 
-    return 0;
+    return pifi;
 }
 
 
@@ -336,28 +378,37 @@ FtfdQueryFontTree(
                                  &ftface);
     if (fterror)
     {
+        DbgPrint("FT_New_Memory_Face() failed.\n");
         return NULL;
     }
 
-    cGlyphs = ftface->num_glyphs;
-    cRuns = 1;
+    /* Get inital value for cGlyphs from ftface */
+    cGlyphs = ftface->num_glyphs + 1;
 
+    /* Allocate a buffer for the char codes and glyph indexes */
     pcp = EngAllocMem(0, cGlyphs * sizeof(FTFD_CHARPAIR), 'pcp ');
     if (!pcp)
     {
+        DbgPrint("EngAllocMem() failed.\n");
         return NULL;
     }
 
-    charcode = FT_Get_First_Char(ftface, &pcp[0].index);
-    for (i = 0; i < cGlyphs && charcode != 0; i++)
+    /* Gather char codes and indexes and count WCRUNs */
+    pcp[0].code = FT_Get_First_Char(ftface, &pcp[0].index);
+    charcode = pcp[0].code;
+    for (i = 1, cRuns = 1; charcode && i < cGlyphs; i++)
     {
-        pcp[i].charcode = charcode;
         charcode = FT_Get_Next_Char(ftface, charcode, &pcp[i].index);
-        if (charcode != pcp[i - 1].charcode + 1)
+        DbgPrint("charcode=0x%lx, index=0x%lx\n", charcode, pcp[i].index);
+        pcp[i].code = charcode;
+        if (charcode != pcp[i - 1].code + 1)
         {
             cRuns++;
         }
     }
+
+    /* Update cGlyphs to real value */
+    cGlyphs = i - 1;
 
     /* Calculate FD_GLYPHSET size */
     cjSize = sizeof(FD_GLYPHSET)
@@ -368,6 +419,7 @@ FtfdQueryFontTree(
     pGlyphSet = EngAllocMem(0, cjSize, TAG_GLYPHSET);
     if (!pGlyphSet)
     {
+        DbgPrint("EngAllocMem() failed.\n");
         return NULL;
     }
 
@@ -380,10 +432,12 @@ FtfdQueryFontTree(
     /* Initialize 1st WCRUN */
     pwcrun = pGlyphSet->awcrun;
     phglyphs = (PHGLYPH)&pGlyphSet->awcrun[cRuns];
-    pwcrun[0].wcLow = pcp[0].charcode;
+    pwcrun[0].wcLow = pcp[0].code;
     pwcrun[0].cGlyphs = 1;
-    pwcrun[0].phg = phglyphs;
+    pwcrun[0].phg = &phglyphs[0];
     phglyphs[0] = pcp[0].index;
+
+DbgPrint("pcp[0].index = 0x%lx\n", pcp[0].index);
 
     /* Walk through all supported chars */
     for (i = 1, j = 0; i < cGlyphs; i++)
@@ -392,7 +446,7 @@ FtfdQueryFontTree(
         phglyphs[i] = pcp[i].index;
 
         /* Check whether we can append the wchar to a run */
-        if (pcp[i].charcode == pcp[i - 1].charcode + 1)
+        if (pcp[i].code == pcp[i - 1].code + 1)
         {
             /* Append to current WCRUN */
             pwcrun[j].cGlyphs++;
@@ -400,14 +454,24 @@ FtfdQueryFontTree(
         else
         {
             /* Add a new WCRUN */
+            DbgPrint("adding new run\n");
             j++;
-            pwcrun[j].wcLow = pcp[i].charcode;
+            pwcrun[j].wcLow = pcp[i].code;
             pwcrun[j].cGlyphs = 1;
             pwcrun[j].phg = &phglyphs[i];
         }
     }
 
-    return NULL;
+    /* Free the temporary buffer */
+    EngFreeMem(pcp);
+
+    /* Set *pid to the allocated structure for use in FtfdFree */
+    *pid = (ULONG_PTR)pGlyphSet;
+
+DbgPrint("pGlyphSet=%p\n", pGlyphSet);
+DbgBreakPoint();
+
+    return pGlyphSet;
 }
 
 VOID
