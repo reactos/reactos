@@ -217,6 +217,7 @@ FastPropertyHandler(
 {
     PFNKSHANDLER PropertyHandler = NULL;
     NTSTATUS Status = STATUS_UNSUCCESSFUL;
+    KSP_PIN * Pin;
 
     ASSERT(Descriptor);
 
@@ -236,16 +237,37 @@ FastPropertyHandler(
     switch(Property->Id)
     {
         case KSPROPERTY_PIN_CTYPES:
-        case KSPROPERTY_PIN_DATAFLOW:
-        case KSPROPERTY_PIN_DATARANGES:
-        case KSPROPERTY_PIN_INTERFACES:
-        case KSPROPERTY_PIN_MEDIUMS:
-        case KSPROPERTY_PIN_COMMUNICATION:
-        case KSPROPERTY_PIN_CATEGORY:
-        case KSPROPERTY_PIN_NAME:
-        case KSPROPERTY_PIN_PROPOSEDATAFORMAT:
-            Status = KsFastPropertyHandler(FileObject, Property, PropertyLength, Data, DataLength, IoStatus, PropertySetsCount, PropertySet);
+            (*(PULONG)Data) = Descriptor->Factory.PinDescriptorCount;
+            IoStatus->Information = sizeof(ULONG);
+            IoStatus->Status = Status = STATUS_SUCCESS;
             break;
+        case KSPROPERTY_PIN_DATAFLOW:
+            Pin = (KSP_PIN*)Property;
+            if (Pin->PinId >= Descriptor->Factory.PinDescriptorCount)
+            {
+                IoStatus->Status = Status = STATUS_INVALID_PARAMETER;
+                IoStatus->Information = 0;
+                break;
+            }
+
+            *((KSPIN_DATAFLOW*)Data) = Descriptor->Factory.KsPinDescriptor[Pin->PinId].DataFlow;
+            IoStatus->Information = sizeof(KSPIN_DATAFLOW);
+            IoStatus->Status = Status = STATUS_SUCCESS;
+            break;
+        case KSPROPERTY_PIN_COMMUNICATION:
+            Pin = (KSP_PIN*)Property;
+            if (Pin->PinId >= Descriptor->Factory.PinDescriptorCount)
+            {
+                IoStatus->Status = Status = STATUS_INVALID_PARAMETER;
+                IoStatus->Information = 0;
+                break;
+            }
+
+            *((KSPIN_COMMUNICATION*)Data) = Descriptor->Factory.KsPinDescriptor[Pin->PinId].Communication;
+            IoStatus->Status = Status = STATUS_SUCCESS;
+            IoStatus->Information = sizeof(KSPIN_COMMUNICATION);
+            break;
+
         case KSPROPERTY_PIN_GLOBALCINSTANCES:
             Status = HandlePropertyInstances(IoStatus, Property, Data, Descriptor, TRUE);
             break;
@@ -261,12 +283,18 @@ FastPropertyHandler(
             break;
         case KSPROPERTY_PIN_PHYSICALCONNECTION:
         case KSPROPERTY_PIN_CONSTRAINEDDATARANGES:
+        case KSPROPERTY_PIN_DATARANGES:
+        case KSPROPERTY_PIN_INTERFACES:
+        case KSPROPERTY_PIN_MEDIUMS:
+        case KSPROPERTY_PIN_CATEGORY:
+        case KSPROPERTY_PIN_NAME:
+        case KSPROPERTY_PIN_PROPOSEDATAFORMAT:
             UNIMPLEMENTED
             Status = STATUS_NOT_IMPLEMENTED;
             break;
         default:
             UNIMPLEMENTED
-            Status = STATUS_UNSUCCESSFUL;
+            Status = STATUS_NOT_IMPLEMENTED;
     }
     return Status;
 }
