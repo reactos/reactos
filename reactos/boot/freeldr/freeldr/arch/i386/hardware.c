@@ -536,6 +536,7 @@ SetHarddiskIdentifier(PCONFIGURATION_COMPONENT_DATA DiskKey,
   sprintf(ArcName, "multi(0)disk(0)rdisk(%lu)partition(0)", DriveNumber - 0x80);
   FsRegisterDevice(ArcName, &DiskVtbl);
 
+#if 0
   /* Add partitions */
   i = 0;
   while (MachDiskGetPartitionEntry(DriveNumber, i, &PartitionTableEntry))
@@ -547,6 +548,7 @@ SetHarddiskIdentifier(PCONFIGURATION_COMPONENT_DATA DiskKey,
     }
     i++;
   }
+#endif
 
   /* Convert checksum and signature to identifier string */
   Identifier[0] = Hex[(Checksum >> 28) & 0x0F];
