@@ -284,7 +284,7 @@ IPortFilterWavePci_fnSetSecurity(
 /*
  * @implemented
  */
-NTSTATUS
+BOOLEAN
 NTAPI
 IPortFilterWavePci_fnFastDeviceIoControl(
     IN IPortFilterWavePci* iface,
@@ -299,13 +299,13 @@ IPortFilterWavePci_fnFastDeviceIoControl(
     IN PDEVICE_OBJECT DeviceObject)
 {
     UNIMPLEMENTED
-    return STATUS_SUCCESS;
+    return FALSE;
 }
 
 /*
  * @implemented
  */
-NTSTATUS
+BOOLEAN
 NTAPI
 IPortFilterWavePci_fnFastRead(
     IN IPortFilterWavePci* iface,
@@ -319,13 +319,13 @@ IPortFilterWavePci_fnFastRead(
     IN PDEVICE_OBJECT DeviceObject)
 {
     UNIMPLEMENTED
-    return STATUS_SUCCESS;
+    return FALSE;
 }
 
 /*
  * @implemented
  */
-NTSTATUS
+BOOLEAN
 NTAPI
 IPortFilterWavePci_fnFastWrite(
     IN IPortFilterWavePci* iface,
@@ -339,7 +339,7 @@ IPortFilterWavePci_fnFastWrite(
     IN PDEVICE_OBJECT DeviceObject)
 {
     UNIMPLEMENTED
-    return STATUS_SUCCESS;
+    return FALSE;
 }
 
 /*

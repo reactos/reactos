@@ -49,7 +49,7 @@ DEFINE_GUID(IID_IIrpTargetFactory, 0xB4C90A62, 0x5791, 0x11D0, 0xF9, 0x86, 0x00,
         IN PDEVICE_OBJECT DeviceObject,                    \
         IN PIRP Irp)PURE;                                  \
                                                            \
-    STDMETHOD_(NTSTATUS, FastDeviceIoControl)(THIS_        \
+    STDMETHOD_(BOOLEAN, FastDeviceIoControl)(THIS_        \
         IN PFILE_OBJECT FileObject,                        \
         IN BOOLEAN Wait,                                   \
         IN PVOID InputBuffer,                              \
@@ -60,7 +60,7 @@ DEFINE_GUID(IID_IIrpTargetFactory, 0xB4C90A62, 0x5791, 0x11D0, 0xF9, 0x86, 0x00,
         OUT PIO_STATUS_BLOCK StatusBlock,                  \
         IN PDEVICE_OBJECT DeviceObject)PURE;               \
                                                            \
-    STDMETHOD_(NTSTATUS, FastRead)(THIS_                   \
+    STDMETHOD_(BOOLEAN, FastRead)(THIS_                    \
         IN PFILE_OBJECT FileObject,                        \
         IN PLARGE_INTEGER FileOffset,                      \
         IN ULONG Length,                                   \
@@ -70,7 +70,7 @@ DEFINE_GUID(IID_IIrpTargetFactory, 0xB4C90A62, 0x5791, 0x11D0, 0xF9, 0x86, 0x00,
         OUT PIO_STATUS_BLOCK StatusBlock,                  \
         IN PDEVICE_OBJECT DeviceObject)PURE;               \
                                                            \
-    STDMETHOD_(NTSTATUS, FastWrite)(THIS_                  \
+    STDMETHOD_(BOOLEAN, FastWrite)(THIS_                   \
         IN PFILE_OBJECT FileObject,                        \
         IN PLARGE_INTEGER FileOffset,                      \
         IN ULONG Length,                                   \

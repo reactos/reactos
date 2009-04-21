@@ -284,7 +284,7 @@ IPortFilterWaveCyclic_fnSetSecurity(
 /*
  * @implemented
  */
-NTSTATUS
+BOOLEAN
 NTAPI
 IPortFilterWaveCyclic_fnFastDeviceIoControl(
     IN IPortFilterWaveCyclic* iface,
@@ -299,13 +299,13 @@ IPortFilterWaveCyclic_fnFastDeviceIoControl(
     IN PDEVICE_OBJECT DeviceObject)
 {
     UNIMPLEMENTED
-    return STATUS_SUCCESS;
+    return FALSE;
 }
 
 /*
  * @implemented
  */
-NTSTATUS
+BOOLEAN
 NTAPI
 IPortFilterWaveCyclic_fnFastRead(
     IN IPortFilterWaveCyclic* iface,
@@ -319,13 +319,13 @@ IPortFilterWaveCyclic_fnFastRead(
     IN PDEVICE_OBJECT DeviceObject)
 {
     UNIMPLEMENTED
-    return STATUS_SUCCESS;
+    return FALSE;
 }
 
 /*
  * @implemented
  */
-NTSTATUS
+BOOLEAN
 NTAPI
 IPortFilterWaveCyclic_fnFastWrite(
     IN IPortFilterWaveCyclic* iface,
@@ -339,7 +339,7 @@ IPortFilterWaveCyclic_fnFastWrite(
     IN PDEVICE_OBJECT DeviceObject)
 {
     UNIMPLEMENTED
-    return STATUS_SUCCESS;
+    return FALSE;
 }
 
 /*

@@ -764,7 +764,7 @@ IPortPinWaveCyclic_fnSetSecurity(
 /*
  * @implemented
  */
-NTSTATUS
+BOOLEAN
 NTAPI
 IPortPinWaveCyclic_fnFastDeviceIoControl(
     IN IPortPinWaveCyclic* iface,
@@ -778,14 +778,14 @@ IPortPinWaveCyclic_fnFastDeviceIoControl(
     OUT PIO_STATUS_BLOCK StatusBlock,
     IN PDEVICE_OBJECT DeviceObject)
 {
-
-    return STATUS_SUCCESS;
+    UNIMPLEMENTED
+    return FALSE;
 }
 
 /*
  * @implemented
  */
-NTSTATUS
+BOOLEAN
 NTAPI
 IPortPinWaveCyclic_fnFastRead(
     IN IPortPinWaveCyclic* iface,
@@ -829,7 +829,7 @@ IPortPinWaveCyclic_fnFastRead(
 /*
  * @implemented
  */
-NTSTATUS
+BOOLEAN
 NTAPI
 IPortPinWaveCyclic_fnFastWrite(
     IN IPortPinWaveCyclic* iface,
