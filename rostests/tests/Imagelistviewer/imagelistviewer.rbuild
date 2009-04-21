@@ -1,5 +1,4 @@
 <module name="Imagelistviewer" type="win32gui" installbase="bin" installname="Imagelistviewer.exe">
-	<define name="__USE_W32API" />
 	<include base="Imagelistviewer">.</include>
 	<library>kernel32</library>
 	<library>user32</library>

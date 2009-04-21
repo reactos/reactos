@@ -1,5 +1,4 @@
 <module name="carets" type="win32gui" installbase="bin" installname="carets.exe">
-	<define name="__USE_W32API" />
 	<include base="carets">.</include>
 	<library>kernel32</library>
 	<library>user32</library>

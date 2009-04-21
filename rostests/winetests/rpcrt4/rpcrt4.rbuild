@@ -11,7 +11,6 @@
 		<compilerflag compiler="cc">-Wno-format</compilerflag>
 		<include base="rpcrt4_winetest">.</include>
 		<include root="intermediate" base="rpcrt4_winetest">.</include>
-		<define name="__USE_W32API" />
 		<define name="__ROS_LONG64__" />
 		<library>wine</library>
 		<library>pseh</library>

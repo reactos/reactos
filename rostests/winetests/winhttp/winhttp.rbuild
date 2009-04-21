@@ -2,7 +2,6 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
 <module name="winhttp_winetest" type="win32cui" installbase="bin" installname="winhttp_winetest.exe" allowwarnings="true">
-	<compilerflag compiler="cc">-Wno-format</compilerflag>
 	<include base="winhttp_winetest">.</include>
     <define name="__ROS_LONG64__" />
 	<file>notification.c</file>

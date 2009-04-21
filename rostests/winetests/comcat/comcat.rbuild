@@ -2,7 +2,6 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
 <module name="comcat_winetest" type="win32cui" installbase="bin" installname="comcat_winetest.exe" allowwarnings="true">
-	<compilerflag compiler="cc">-Wno-format</compilerflag>
 	<include base="comcat_winetest">.</include>
     <define name="__ROS_LONG64__" />
 	<file>comcat.c</file>

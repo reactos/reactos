@@ -2,10 +2,9 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
 <module name="user32_winetest" type="win32cui" installbase="bin" installname="user32_winetest.exe" allowwarnings="true">
-	<compilerflag compiler="cc">-Wno-format</compilerflag>
+    <compilerflag compiler="cc">-Wno-format</compilerflag>
     <include base="user32_winetest">.</include>
     <include base="ReactOS">include/reactos/wine</include>
-    <define name="__USE_W32API" />
     <define name="__ROS_LONG64__" />
     <library>ntdll</library>
     <library>user32</library>
