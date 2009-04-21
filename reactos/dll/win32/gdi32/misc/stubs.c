@@ -72,29 +72,68 @@ SaveDC(IN HDC hdc)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
-CancelDC(HDC hdc)
+CancelDC(HDC hDC)
 {
-    /* FIXME Sharememory */
-    return NtGdiCancelDC(hdc);
+  PDC_ATTR pDc_Attr;
+
+  if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC &&
+      GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_METADC )
+  {
+     PLDC pLDC = GdiGetLDC(hDC);
+     if ( !pLDC )
+     {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+     }
+     /* If a document has started set it to die. */
+     if (pLDC->Flags & LDC_INIT_DOCUMENT) pLDC->Flags |= LDC_KILL_DOCUMENT;
+
+     return NtGdiCancelDC(hDC);
+  }
+
+  if (GdiGetHandleUserData((HGDIOBJ) hDC, GDI_OBJECT_TYPE_DC, (PVOID) &pDc_Attr))
+  {
+     pDc_Attr->ulDirty_ &= ~DC_PLAYMETAFILE;
+     return TRUE;
+  }
+
+  return FALSE;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 int
 WINAPI
-DrawEscape(HDC  hdc,
+DrawEscape(HDC  hDC,
            INT nEscape,
            INT cbInput,
            LPCSTR lpszInData)
 {
-    /* FIXME Sharememory */
-    return NtGdiDrawEscape(hdc, nEscape, cbInput, (LPSTR) lpszInData);
+  if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_DC)
+     return NtGdiDrawEscape(hDC, nEscape, cbInput, (LPSTR) lpszInData);
+
+  if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_METADC)
+  {
+     PLDC pLDC = GdiGetLDC(hDC);
+     if ( pLDC )
+     {
+        if (pLDC->Flags & LDC_META_PRINT)
+        {
+//           if (nEscape != 8)
+//              return EMFDRV_WriteEscape(hDC, nEscape, cbInput, lpszInData, EMR_DRAWESCAPE);
+
+           return NtGdiDrawEscape(hDC, nEscape, cbInput, (LPSTR) lpszInData);
+        }
+     }
+     SetLastError(ERROR_INVALID_HANDLE);
+  }
+  return 0;
 }
 
 
