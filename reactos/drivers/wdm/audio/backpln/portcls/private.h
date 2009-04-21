@@ -249,6 +249,20 @@ PcPropertyHandler(
     IN PIRP Irp,
     IN PSUBDEVICE_DESCRIPTOR Descriptor);
 
+NTSTATUS
+NTAPI
+FastPropertyHandler(
+    IN PFILE_OBJECT  FileObject,
+    IN PKSPROPERTY UNALIGNED  Property,
+    IN ULONG  PropertyLength,
+    IN OUT PVOID UNALIGNED  Data,
+    IN ULONG  DataLength,
+    OUT PIO_STATUS_BLOCK  IoStatus,
+    IN ULONG  PropertySetsCount,
+    IN const KSPROPERTY_SET *PropertySet,
+    IN PSUBDEVICE_DESCRIPTOR Descriptor,
+    IN ISubdevice *SubDevice);
+
 PDEVICE_OBJECT
 GetDeviceObject(
     IPortWaveCyclic* iface);

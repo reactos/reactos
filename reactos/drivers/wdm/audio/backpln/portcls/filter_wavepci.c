@@ -244,7 +244,6 @@ IPortFilterWavePci_fnClose(
         {
             This->Pins[Index]->lpVtbl->Close(This->Pins[Index], DeviceObject, NULL);
         }
-
     }
 
 
@@ -298,8 +297,49 @@ IPortFilterWavePci_fnFastDeviceIoControl(
     OUT PIO_STATUS_BLOCK StatusBlock,
     IN PDEVICE_OBJECT DeviceObject)
 {
-    UNIMPLEMENTED
-    return FALSE;
+    ULONG Index;
+    PKSPROPERTY Property;
+    NTSTATUS Status;
+    ISubdevice * SubDevice = NULL;
+    PSUBDEVICE_DESCRIPTOR Descriptor = NULL;
+    IPortFilterWavePciImpl * This = (IPortFilterWavePciImpl *)iface;
+
+    Property = (PKSPROPERTY)InputBuffer;
+
+    if (InputBufferLength < sizeof(KSPROPERTY))
+        return FALSE;
+
+
+    /* get private interface */
+    Status = This->Port->lpVtbl->QueryInterface(This->Port, &IID_ISubdevice, (PVOID*)&SubDevice);
+    if (!NT_SUCCESS(Status))
+        return FALSE;
+
+    /* get descriptor */
+    Status = SubDevice->lpVtbl->GetDescriptor(SubDevice, &Descriptor);
+    if (!NT_SUCCESS(Status))
+    {
+        SubDevice->lpVtbl->Release(SubDevice);
+        return FALSE;
+    }
+
+    Status = STATUS_UNSUCCESSFUL;
+    for(Index = 0; Index < Descriptor->FilterPropertySet.FreeKsPropertySetOffset; Index++)
+    {
+        if (IsEqualGUIDAligned(&Property->Set, Descriptor->FilterPropertySet.Properties[Index].Set))
+        {
+            Status = FastPropertyHandler(FileObject, (PKSPROPERTY)InputBuffer, InputBufferLength, OutputBuffer, OutputBufferLength, StatusBlock,
+                                         1,
+                                         &Descriptor->FilterPropertySet.Properties[Index],
+                                         Descriptor, SubDevice);
+            break;
+        }
+    }
+
+    if (NT_SUCCESS(Status))
+        return TRUE;
+    else
+        return FALSE;
 }
 
 /*
