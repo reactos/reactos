@@ -2375,7 +2375,7 @@ MenuExecFocusedItem(MTRACKER *Mt, PROSMENUINFO MenuInfo, UINT Flags)
                       PostMessageW(Mt->OwnerWnd, WM_MENUCOMMAND,
                                                  MenuInfo->FocusedItem,
                                                        (LPARAM)MenuInfo->Self);
-                  else if (GetParent(Mt->OwnerWnd) == GetDesktopWindow())
+                  else
                     PostMessageW(Mt->OwnerWnd, WM_COMMAND, ItemInfo.wID, 0);
                 }
             }
