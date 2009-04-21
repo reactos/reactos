@@ -255,7 +255,7 @@ static BOOL	EDIT_EM_Undo(EDITSTATE *es);
  *	WM_XXX message handlers
  */
 static LRESULT	EDIT_WM_Char(EDITSTATE *es, WCHAR c);
-static void	EDIT_WM_Command(EDITSTATE *es, INT code, INT id, HWND conrtol);
+static void	EDIT_WM_MenuSelect(EDITSTATE *es, INT code, INT id, HWND conrtol);
 static void	EDIT_WM_ContextMenu(EDITSTATE *es, INT x, INT y);
 static void	EDIT_WM_Copy(EDITSTATE *es);
 static LRESULT	EDIT_WM_Create(EDITSTATE *es, LPCWSTR name);
@@ -947,8 +947,8 @@ static LRESULT EditWndProc_common( HWND hwnd, UINT msg,
 		EDIT_WM_Clear(es);
 		break;
 
-	case WM_COMMAND:
-		EDIT_WM_Command(es, HIWORD(wParam), LOWORD(wParam), (HWND)lParam);
+	case WM_MENUSELECT:
+		EDIT_WM_MenuSelect(es, HIWORD(wParam), LOWORD(wParam), (HWND)lParam);
 		break;
 
         case WM_CONTEXTMENU:
@@ -4224,12 +4224,17 @@ static LRESULT EDIT_WM_Char(EDITSTATE *es, WCHAR c)
  *	WM_COMMAND
  *
  */
-static void EDIT_WM_Command(EDITSTATE *es, INT code, INT id, HWND control)
+static void EDIT_WM_MenuSelect(EDITSTATE *es, INT code, INT id, HWND control)
 {
-	if (code || control)
-		return;
 
-	switch (id) {
+	static INT MenuSelected;
+
+	if (id != 0) {
+		MenuSelected = id;
+		return;
+	}
+
+	switch (MenuSelected) {
 		case EM_UNDO:
                         SendMessageW(es->hwndSelf, WM_UNDO, 0, 0);
 			break;
@@ -4308,7 +4313,7 @@ static void EDIT_WM_ContextMenu(EDITSTATE *es, INT x, INT y)
             y = rc.top + (rc.bottom - rc.top) / 2;
         }
 
-	TrackPopupMenu(popup, TPM_LEFTALIGN | TPM_RIGHTBUTTON, x, y, 0, es->hwndSelf, NULL);
+	TrackPopupMenu(popup, TPM_LEFTALIGN | TPM_RIGHTBUTTON | TPM_RETURNCMD, x, y, 0, es->hwndSelf, NULL);
 	DestroyMenu(menu);
 }
 
