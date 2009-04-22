@@ -40,7 +40,7 @@ GetDllLoadPath(LPCWSTR lpModule)
 	UNICODE_STRING ModuleName;
 	DWORD LastError = GetLastError(); /* GetEnvironmentVariable changes LastError */
 
-	if (lpModule != NULL)
+	if ((lpModule != NULL) && (wcslen(lpModule) > 2) && (lpModule[1] == ':'))
 	{
 		lpModuleEnd = lpModule + wcslen(lpModule);
 	}
