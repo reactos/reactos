@@ -13,6 +13,7 @@
   <property name="BASEADDRESS_WLANAPI" value="0x470F0000" />
   <property name="BASEADDRESS_PIDGEN" value="0x473e0000" />
   <property name="BASEADDRESS_DWMAPI" value="0x4A3F0000" />
+  <property name="BASEADDRESS_T2EMBED" value="0x4b310000" />
   <property name="BASEADDRESS_LOADPERF" value="0x4B920000" />
   <property name="BASEADDRESS_MPRAPI" value="0x4C400000" />
   <property name="BASEADDRESS_MSFTEDIT" value="0x4b460000" />

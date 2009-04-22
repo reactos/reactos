@@ -412,6 +412,7 @@ dll\win32\stdole32.tlb\stdole32.tlb                 1
 dll\win32\sti\sti.dll                               1
 dll\win32\sxs\sxs.dll                               1
 dll\win32\syssetup\syssetup.dll                     1
+dll\win32\t2embed\t2embed.dll                       1
 dll\win32\tapi32\tapi32.dll                         1
 dll\win32\tapiui\tapiui.dll                         1
 dll\win32\traffic\traffic.dll                       1
