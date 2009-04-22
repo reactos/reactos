@@ -2151,7 +2151,7 @@ NdisQueryPacket(
  * NdisReinitializePacket(
  *   IN OUT  PNDIS_PACKET  Packet);
  */
-#define NdisReinitializePacketCounts(Packet)    \
+#define NdisReinitializePacket(Packet)    \
 {                                               \
 	(Packet)->Private.Head = (PNDIS_BUFFER)NULL;  \
 	(Packet)->Private.ValidCounts = FALSE;        \
