@@ -30,6 +30,7 @@ typedef struct
     ULONG CurrentOffset;
     LONG NumMappings;
     ULONG NumDataAvailable;
+    BOOL StartStream;
     KSPIN_CONNECT *ConnectDetails;
     PKSDATAFORMAT_WAVEFORMATEX DataFormat;
 
@@ -159,6 +160,7 @@ IIrpQueue_fnAddMapping(
     Mapping->Header = (KSSTREAM_HEADER*)Buffer;
     Mapping->Irp = Irp;
     KeInitializeDpc(&Mapping->Dpc, DpcRoutine, (PVOID)Mapping);
+    KeSetImportanceDpc(&Mapping->Dpc, HighImportance);
 
     if (This->MaxFrameSize)
     {
@@ -258,8 +260,14 @@ IIrpQueue_fnMinimumDataAvailable(
     BOOL Result;
     IIrpQueueImpl * This = (IIrpQueueImpl*)iface;
 
+    if (This->StartStream)
+        return TRUE;
+
     if (This->DataFormat->WaveFormatEx.nAvgBytesPerSec < This->NumDataAvailable)
+    {
+        This->StartStream = TRUE;
         Result = TRUE;
+    }
     else
         Result = FALSE;
 
@@ -282,6 +290,7 @@ IIrpQueue_fnUpdateFormat(
 {
     IIrpQueueImpl * This = (IIrpQueueImpl*)iface;
     This->DataFormat = (PKSDATAFORMAT_WAVEFORMATEX)DataFormat;
+    This->StartStream = FALSE;
 
 }
 

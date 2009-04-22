@@ -263,13 +263,18 @@ CreatePinWorkerRoutine(
         Status = KsCreatePin(WorkerContext->Entry->Handle, MixerPinConnect, GENERIC_READ | GENERIC_WRITE, &RealPinHandle);
         if (!NT_SUCCESS(Status))
         {
+           /* This should not fail */
             DPRINT1("KsCreatePin failed with %x\n", Status);
-            /* This should not fail */
-            KeBugCheck(0);
+            DPRINT1(" InputFormat: SampleRate %u Bits %u Channels %u\n", InputFormat->WaveFormatEx.nSamplesPerSec, InputFormat->WaveFormatEx.wBitsPerSample, InputFormat->WaveFormatEx.nChannels);
+            DPRINT1("OutputFormat: SampleRate %u Bits %u Channels %u\n", OutputFormat->WaveFormatEx.nSamplesPerSec, OutputFormat->WaveFormatEx.wBitsPerSample, OutputFormat->WaveFormatEx.nChannels);
+ 
+            SetIrpIoStatus(WorkerContext->Irp, STATUS_UNSUCCESSFUL, 0);
+            ExFreePool(WorkerContext->DispatchContext);
+            ExFreePool(MixerPinConnect);
+            IoFreeWorkItem(WorkerContext->WorkItem);
+            ExFreePool(WorkerContext);
             return;
         }
-        DPRINT(" InputFormat: SampleRate %u Bits %u Channels %u\n", InputFormat->WaveFormatEx.nSamplesPerSec, InputFormat->WaveFormatEx.wBitsPerSample, InputFormat->WaveFormatEx.nChannels);
-        DPRINT("OutputFormat: SampleRate %u Bits %u Channels %u\n", OutputFormat->WaveFormatEx.nSamplesPerSec, OutputFormat->WaveFormatEx.wBitsPerSample, OutputFormat->WaveFormatEx.nChannels);
     }
 
     /* get pin file object */

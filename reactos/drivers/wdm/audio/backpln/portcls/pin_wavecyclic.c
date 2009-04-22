@@ -203,13 +203,16 @@ StopStreamWorkerRoutine(
 
     This = (IPortPinWaveCyclicImpl*)Ctx->Pin;
 
+    IoFreeWorkItem(Ctx->WorkItem);
+    FreeItem(Ctx, TAG_PORTCLASS);
+
+    if (This->IrpQueue->lpVtbl->NumMappings(This->IrpQueue))
+        return;
+
     /* Set the state to stop */
     This->Stream->lpVtbl->SetState(This->Stream, KSSTATE_STOP);
     /* Set internal state to stop */
     This->State = KSSTATE_STOP;
-
-    IoFreeWorkItem(Ctx->WorkItem);
-    FreeItem(Ctx, TAG_PORTCLASS);
 
     DPRINT1("Stopping %p %u Irql %u\n", This, This->IrpQueue->lpVtbl->NumMappings(This->IrpQueue), KeGetCurrentIrql());
 }
