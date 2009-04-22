@@ -427,10 +427,12 @@ PcPropertyHandler(
         DPRINT("Calling property handler %p\n", PropertyHandler);
         Status = PropertyHandler(Irp, Property, Irp->UserBuffer);
     }
-
-    RtlStringFromGUID(&Property->Set, &GuidString);
-    DPRINT1("Unhandeled property: Set %S Id %u Flags %x\n", GuidString.Buffer, Property->Id, Property->Flags);
-    RtlFreeUnicodeString(&GuidString);
+    else
+    {
+        RtlStringFromGUID(&Property->Set, &GuidString);
+        DPRINT1("Unhandeled property: Set %S Id %u Flags %x\n", GuidString.Buffer, Property->Id, Property->Flags);
+        RtlFreeUnicodeString(&GuidString);
+    }
 
     /* the information member is set by the handler */
     Irp->IoStatus.Status = Status;

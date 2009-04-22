@@ -169,10 +169,6 @@ typedef struct
     ULONG MaxSubDevices;
     KSOBJECT_CREATE_ITEM * CreateItems;
 
-    PIO_WORKITEM StartWorkItem;
-    PIO_WORKITEM StopWorkItem;
-    PIO_WORKITEM CloseWorkItem;
-
     IResourceList* resources;
     LIST_ENTRY SubDeviceList;
     LIST_ENTRY PhysicalConnectionList;
@@ -185,6 +181,19 @@ typedef struct
     KSSTREAM_HEADER Header;
     PIRP Irp;
 }CONTEXT_WRITE, *PCONTEXT_WRITE;
+
+typedef struct
+{
+    PVOID Pin;
+    PIO_WORKITEM WorkItem;
+}STOPSTREAM_CONTEXT, *PSTOPSTREAM_CONTEXT;
+
+typedef struct
+{
+    PVOID Pin;
+    PIO_WORKITEM WorkItem;
+    PIRP Irp;
+}CLOSESTREAM_CONTEXT, *PCLOSESTREAM_CONTEXT;
 
 NTSTATUS
 NTAPI

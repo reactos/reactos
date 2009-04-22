@@ -38,7 +38,6 @@ typedef struct
     ULONG DelayedRequestInProgress;
     ULONG FrameSize;
     BOOL Capture;
-    PIRP CloseIrp;
 
 }IPortPinWaveCyclicImpl;
 
@@ -199,18 +198,20 @@ StopStreamWorkerRoutine(
     IN PDEVICE_OBJECT  DeviceObject,
     IN PVOID  Context)
 {
-    PPCLASS_DEVICE_EXTENSION DeviceExtension;
-    IPortPinWaveCyclicImpl * This = (IPortPinWaveCyclicImpl*)Context;
+    IPortPinWaveCyclicImpl * This;
+    PSTOPSTREAM_CONTEXT Ctx = (PSTOPSTREAM_CONTEXT)Context;
+
+    This = (IPortPinWaveCyclicImpl*)Ctx->Pin;
 
     /* Set the state to stop */
     This->Stream->lpVtbl->SetState(This->Stream, KSSTATE_STOP);
     /* Set internal state to stop */
     This->State = KSSTATE_STOP;
 
-    /* Get device extension */
-    DeviceExtension = (PPCLASS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    IoFreeWorkItem(Ctx->WorkItem);
+    FreeItem(Ctx, TAG_PORTCLASS);
 
-    DPRINT1("Stopping %u Irql %u\n", This->IrpQueue->lpVtbl->NumMappings(This->IrpQueue), KeGetCurrentIrql());
+    DPRINT1("Stopping %p %u Irql %u\n", This, This->IrpQueue->lpVtbl->NumMappings(This->IrpQueue), KeGetCurrentIrql());
 }
 
 VOID
@@ -222,8 +223,9 @@ StopStreamRoutine(
     IN PVOID  SystemArgument2)
 {
    PDEVICE_OBJECT DeviceObject;
-   PPCLASS_DEVICE_EXTENSION DeviceExtension;
    IPortPinWaveCyclicImpl * This = (IPortPinWaveCyclicImpl*)DeferredContext;
+   PIO_WORKITEM WorkItem;
+   PSTOPSTREAM_CONTEXT Context;
 
     ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
 
@@ -238,11 +240,26 @@ StopStreamRoutine(
     /* Get device object */
     DeviceObject = GetDeviceObject(This->Port);
 
-    /* Get device extension */
-    DeviceExtension = (PPCLASS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    /* allocate stop context */
+    Context = AllocateItem(NonPagedPool, sizeof(STOPSTREAM_CONTEXT), TAG_PORTCLASS);
+
+    if (!Context)
+        return;
+
+    /* allocate work item */
+    WorkItem = IoAllocateWorkItem(DeviceObject);
+
+    if (!WorkItem)
+    {
+        ExFreePool(Context);
+        return;
+    }
+
+    Context->Pin = (PVOID)This;
+    Context->WorkItem = WorkItem;
 
     /* queue the work item */
-    IoQueueWorkItem(DeviceExtension->StopWorkItem, StopStreamWorkerRoutine, DelayedWorkQueue, (PVOID)This);
+    IoQueueWorkItem(WorkItem, StopStreamWorkerRoutine, DelayedWorkQueue, (PVOID)Context);
 }
 
 static
@@ -636,14 +653,16 @@ VOID
 NTAPI
 CloseStreamRoutine(
     IN PDEVICE_OBJECT  DeviceObject,
-    IN PVOID  Context)
+    IN PVOID Context)
 {
     PMINIPORTWAVECYCLICSTREAM Stream;
     NTSTATUS Status;
     ISubdevice *ISubDevice;
     PSUBDEVICE_DESCRIPTOR Descriptor;
+    IPortPinWaveCyclicImpl * This;
+    PCLOSESTREAM_CONTEXT Ctx = (PCLOSESTREAM_CONTEXT)Context;
 
-    IPortPinWaveCyclicImpl * This = (IPortPinWaveCyclicImpl*)Context;
+    This = (IPortPinWaveCyclicImpl*)Ctx->Pin;
 
     if (This->Stream)
     {
@@ -680,17 +699,21 @@ CloseStreamRoutine(
         This->IrpQueue->lpVtbl->Release(This->IrpQueue);
     }
 
+    /* complete the irp */
+    Ctx->Irp->IoStatus.Information = 0;
+    Ctx->Irp->IoStatus.Status = STATUS_SUCCESS;
+    IoCompleteRequest(Ctx->Irp, IO_NO_INCREMENT);
+
+    /* free the work item */
+    IoFreeWorkItem(Ctx->WorkItem);
+
+    /* free work item ctx */
+    FreeItem(Ctx, TAG_PORTCLASS);
+
     if (This->Stream)
     {
         Stream = This->Stream;
         This->Stream = NULL;
-
-        if (This->CloseIrp)
-        {
-            This->CloseIrp->IoStatus.Information = 0;
-            This->CloseIrp->IoStatus.Status = STATUS_SUCCESS;
-            IoCompleteRequest(This->CloseIrp, IO_NO_INCREMENT);
-        }
         DPRINT1("Closing stream at Irql %u\n", KeGetCurrentIrql());
         Stream->lpVtbl->Release(Stream);
         /* this line is never reached */
@@ -707,32 +730,54 @@ IPortPinWaveCyclic_fnClose(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
-    PPCLASS_DEVICE_EXTENSION DeviceExtension;
+    PCLOSESTREAM_CONTEXT Ctx;
     IPortPinWaveCyclicImpl * This = (IPortPinWaveCyclicImpl*)iface;
 
     if (This->Stream)
     {
-        /* Get device extension */
-        DeviceExtension = (PPCLASS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+        Ctx = AllocateItem(NonPagedPool, sizeof(CLOSESTREAM_CONTEXT), TAG_PORTCLASS);
+        if (!Ctx)
+        {
+            DPRINT1("Failed to allocate stream context\n");
+            goto cleanup;
+        }
 
-        This->CloseIrp = Irp;
+        Ctx->WorkItem = IoAllocateWorkItem(DeviceObject);
+        if (!Ctx->WorkItem)
+        {
+            DPRINT1("Failed to allocate work item\n");
+            goto cleanup;
+        }
+
+        Ctx->Irp = Irp;
+        Ctx->Pin = (PVOID)This;
+
         IoMarkIrpPending(Irp);
         Irp->IoStatus.Information = 0;
         Irp->IoStatus.Status = STATUS_PENDING;
 
         /* defer work item */
-        IoQueueWorkItem(DeviceExtension->CloseWorkItem, CloseStreamRoutine, DelayedWorkQueue, (PVOID)This);
+        IoQueueWorkItem(Ctx->WorkItem, CloseStreamRoutine, DelayedWorkQueue, (PVOID)Ctx);
         /* Return result */
         return STATUS_PENDING;
     }
 
-    if (Irp)
-    {
-        Irp->IoStatus.Information = 0;
-        Irp->IoStatus.Status = STATUS_SUCCESS;
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    }
+    Irp->IoStatus.Information = 0;
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
     return STATUS_SUCCESS;
+
+cleanup:
+
+    if (Ctx)
+        FreeItem(Ctx, TAG_PORTCLASS);
+
+    Irp->IoStatus.Information = 0;
+    Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return STATUS_UNSUCCESSFUL;
+
 }
 
 /*
@@ -971,9 +1016,9 @@ IPortPinWaveCyclic_fnInit(
         DPRINT1("Failed to add pin to service group\n");
         return Status;
     }
-    This->ServiceGroup->lpVtbl->AddRef(This->ServiceGroup);
+    //This->ServiceGroup->lpVtbl->AddRef(This->ServiceGroup);
     This->ServiceGroup->lpVtbl->SupportDelayedService(This->ServiceGroup);
-    This->DmaChannel->lpVtbl->AddRef(This->DmaChannel);
+    //This->DmaChannel->lpVtbl->AddRef(This->DmaChannel);
 
 
     This->State = KSSTATE_STOP;

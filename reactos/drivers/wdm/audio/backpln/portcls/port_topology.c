@@ -29,7 +29,7 @@ typedef struct
 {
     PIRP Irp;
     IIrpTarget *Filter;
-
+    PIO_WORKITEM WorkItem;
 }PIN_WORKER_CONTEXT, *PPIN_WORKER_CONTEXT;
 
 static GUID InterfaceGuids[2] = 
@@ -459,7 +459,7 @@ CreatePinWorkerRoutine(
     PPIN_WORKER_CONTEXT WorkerContext = (PPIN_WORKER_CONTEXT)Context;
 
     DPRINT("CreatePinWorkerRoutine called\n");
-
+    /* create the pin */
     Status = WorkerContext->Filter->lpVtbl->NewIrpTarget(WorkerContext->Filter,
                                                          &Pin,
                                                          NULL,
@@ -479,10 +479,15 @@ CreatePinWorkerRoutine(
     }
 
     DPRINT("CreatePinWorkerRoutine completing irp %p\n", WorkerContext->Irp);
+    /* save status in irp */
     WorkerContext->Irp->IoStatus.Status = Status;
     WorkerContext->Irp->IoStatus.Information = 0;
+    /* complete the request */
     IoCompleteRequest(WorkerContext->Irp, IO_SOUND_INCREMENT);
-    ExFreePool(WorkerContext);
+    /* free allocated work item */
+    IoFreeWorkItem(WorkerContext->WorkItem);
+    /* free context */
+    FreeItem(WorkerContext, TAG_PORTCLASS);
 }
 
 
@@ -590,11 +595,24 @@ PcCreateItemDispatch(
             Context = AllocateItem(NonPagedPool, sizeof(PIN_WORKER_CONTEXT), TAG_PORTCLASS);
             if (!Context)
             {
+                DPRINT("Failed to allocate worker context\n");
                 Irp->IoStatus.Information = 0;
                 Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
                 IoCompleteRequest(Irp, IO_NO_INCREMENT);
                 return STATUS_INSUFFICIENT_RESOURCES;
             }
+            /* allocate work item */
+            Context->WorkItem = IoAllocateWorkItem(DeviceObject);
+            if (!Context->WorkItem)
+            {
+                DPRINT("Failed to allocate workitem\n");
+                FreeItem(Context, TAG_PORTCLASS);
+                Irp->IoStatus.Information = 0;
+                Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
+                IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                return STATUS_INSUFFICIENT_RESOURCES;
+            }
+
             Context->Filter = Filter;
             Context->Irp = Irp;
 
@@ -602,7 +620,7 @@ PcCreateItemDispatch(
             Irp->IoStatus.Information = 0;
             Irp->IoStatus.Status = STATUS_PENDING;
             IoMarkIrpPending(Irp);
-            IoQueueWorkItem(DeviceExt->StartWorkItem, CreatePinWorkerRoutine, DelayedWorkQueue, (PVOID)Context);
+            IoQueueWorkItem(Context->WorkItem, CreatePinWorkerRoutine, DelayedWorkQueue, (PVOID)Context);
             return STATUS_PENDING;
         }
     }

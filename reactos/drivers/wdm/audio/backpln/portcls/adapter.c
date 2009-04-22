@@ -156,36 +156,6 @@ PcAddAdapterDevice(
     /* clear initializing flag */
     fdo->Flags &= ~ DO_DEVICE_INITIALIZING;
 
-    /* allocate work item */
-    portcls_ext->CloseWorkItem = IoAllocateWorkItem(fdo);
-
-    if (!portcls_ext->CloseWorkItem)
-    {
-        /* not enough resources */
-        goto cleanup;
-        status = STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    /* allocate work item */
-    portcls_ext->StartWorkItem = IoAllocateWorkItem(fdo);
-
-    if (!portcls_ext->StartWorkItem)
-    {
-        /* not enough resources */
-        goto cleanup;
-        status = STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    /* allocate work item */
-    portcls_ext->StopWorkItem = IoAllocateWorkItem(fdo);
-
-    if (!portcls_ext->StopWorkItem)
-    {
-        /* not enough resources */
-        goto cleanup;
-        status = STATUS_INSUFFICIENT_RESOURCES;
-    }
-
     /* allocate the device header */
     status = KsAllocateDeviceHeader(&portcls_ext->KsDeviceHeader, MaxObjects, portcls_ext->CreateItems);
     /* did we succeed */
@@ -220,24 +190,6 @@ cleanup:
         {
             /* free the device header */
             KsFreeDeviceHeader(portcls_ext->KsDeviceHeader);
-        }
-
-        if (portcls_ext->CloseWorkItem)
-        {
-            /* free allocated work item */
-            IoFreeWorkItem(portcls_ext->CloseWorkItem);
-        }
-
-        if (portcls_ext->StartWorkItem)
-        {
-            /* free allocated work item */
-            IoFreeWorkItem(portcls_ext->StartWorkItem);
-        }
-
-        if (portcls_ext->StopWorkItem)
-        {
-            /* free allocated work item */
-            IoFreeWorkItem(portcls_ext->StopWorkItem);
         }
 
         if (portcls_ext->CreateItems)
