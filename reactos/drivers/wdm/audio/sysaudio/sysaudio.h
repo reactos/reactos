@@ -70,13 +70,10 @@ typedef struct
     LIST_ENTRY KsAudioDeviceList;                       // audio device list
     PVOID KsAudioNotificationEntry;                     // ks audio notification hook
     PVOID EchoCancelNotificationEntry;                  // ks echo cancel notification hook
-    KMUTEX Mutex;                                       // audio device list mutex
+    KSPIN_LOCK Lock;                                    // audio device list mutex
 
     PFILE_OBJECT KMixerFileObject;                      // mixer file object
     HANDLE KMixerHandle;                                // mixer file handle
-
-    PIO_WORKITEM WorkItem;                              // work item for pin creation
-    PVOID WorkerContext;                                // work item context
 
 }SYSAUDIODEVEXT, *PSYSAUDIODEVEXT;
 
@@ -113,7 +110,15 @@ typedef struct
     PSYSAUDIO_CLIENT AudioClient;
     PSYSAUDIODEVEXT DeviceExtension;
     PKSDATAFORMAT_WAVEFORMATEX MixerFormat;
+    PIO_WORKITEM WorkItem;
 }PIN_WORKER_CONTEXT, *PPIN_WORKER_CONTEXT;
+
+typedef struct
+{
+    PIO_WORKITEM WorkItem;
+    PKSAUDIO_DEVICE_ENTRY DeviceEntry;
+}FILTER_WORKER_CONTEXT, *PFILTER_WORKER_CONTEXT;
+
 
 NTSTATUS
 SysAudioAllocateDeviceHeader(

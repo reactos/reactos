@@ -236,6 +236,8 @@ CreatePinWorkerRoutine(
         {
             SetIrpIoStatus(WorkerContext->Irp, STATUS_UNSUCCESSFUL, 0);
             ExFreePool(WorkerContext->DispatchContext);
+            IoFreeWorkItem(WorkerContext->WorkItem);
+            ExFreePool(WorkerContext);
             return;
         }
 
@@ -252,6 +254,8 @@ CreatePinWorkerRoutine(
             SetIrpIoStatus(WorkerContext->Irp, STATUS_UNSUCCESSFUL, 0);
             ExFreePool(WorkerContext->DispatchContext);
             ExFreePool(MixerPinConnect);
+            IoFreeWorkItem(WorkerContext->WorkItem);
+            ExFreePool(WorkerContext);
             return;
         }
 
@@ -391,8 +395,9 @@ CreatePinWorkerRoutine(
     *((PHANDLE)WorkerContext->Irp->UserBuffer) = VirtualPinHandle;
 
     SetIrpIoStatus(WorkerContext->Irp, STATUS_SUCCESS, sizeof(HANDLE));
+    IoFreeWorkItem(WorkerContext->WorkItem);
+    ExFreePool(WorkerContext);
     return;
-
 
 cleanup:
     if (RealFileObject)
@@ -410,7 +415,8 @@ cleanup:
 
     ExFreePool(WorkerContext->DispatchContext);
     SetIrpIoStatus(WorkerContext->Irp, Status, 0);
-
+    IoFreeWorkItem(WorkerContext->WorkItem);
+    ExFreePool(WorkerContext);
 }
 
 NTSTATUS
@@ -722,8 +728,7 @@ HandleSysAudioFilterPinCreation(
     KSPIN_CINSTANCES PinInstances;
     PPIN_WORKER_CONTEXT WorkerContext;
     PDISPATCH_CONTEXT DispatchContext;
-
-
+    PIO_WORKITEM WorkItem;
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
@@ -806,10 +811,7 @@ HandleSysAudioFilterPinCreation(
         }
     }
 
-    ASSERT(DeviceExtension->WorkItem);
-    ASSERT(DeviceExtension->WorkerContext);
-
-    /* create worker context */
+    /* create dispatch pin context */
     DispatchContext = ExAllocatePool(NonPagedPool, sizeof(DISPATCH_CONTEXT));
     if (!DispatchContext)
     {
@@ -817,11 +819,24 @@ HandleSysAudioFilterPinCreation(
         return SetIrpIoStatus(Irp, STATUS_NO_MEMORY, 0);
     }
 
-    // FIXME
-    // mutal exclusion
+    /* allocate worker context */
+    WorkerContext = ExAllocatePool(NonPagedPool, sizeof(PIN_WORKER_CONTEXT));
+    if (!WorkerContext)
+    {
+        /* no memory */
+        ExFreePool(DispatchContext);
+        return SetIrpIoStatus(Irp, STATUS_NO_MEMORY, 0);
+    }
 
-    /* get worker context */
-    WorkerContext = (PPIN_WORKER_CONTEXT)DeviceExtension->WorkerContext;
+    /* allocate work item */
+    WorkItem = IoAllocateWorkItem(DeviceObject);
+    if (!WorkerContext)
+    {
+        /* no memory */
+        ExFreePool(DispatchContext);
+        ExFreePool(WorkerContext);
+        return SetIrpIoStatus(Irp, STATUS_NO_MEMORY, 0);
+    }
 
     /* prepare context */
     RtlZeroMemory(WorkerContext, sizeof(PIN_WORKER_CONTEXT));
@@ -841,13 +856,14 @@ HandleSysAudioFilterPinCreation(
     WorkerContext->PinConnect = PinConnect;
     WorkerContext->AudioClient = ClientInfo;
     WorkerContext->DeviceExtension = DeviceExtension;
+    WorkerContext->WorkItem = WorkItem;
 
     DPRINT("Queing Irp %p\n", Irp);
     /* queue the work item */
     IoMarkIrpPending(Irp);
     Irp->IoStatus.Status = STATUS_PENDING;
     Irp->IoStatus.Information = 0;
-    IoQueueWorkItem(DeviceExtension->WorkItem, CreatePinWorkerRoutine, DelayedWorkQueue, (PVOID)WorkerContext);
+    IoQueueWorkItem(WorkItem, CreatePinWorkerRoutine, DelayedWorkQueue, (PVOID)WorkerContext);
 
     /* mark irp as pending */
     return STATUS_PENDING;

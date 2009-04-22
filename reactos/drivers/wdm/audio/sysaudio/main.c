@@ -118,7 +118,7 @@ SysAudio_InstallDevice(
     RtlZeroMemory(DeviceExtension, sizeof(SYSAUDIODEVEXT));
 
     /* Initialize the mutex */
-    KeInitializeMutex(&DeviceExtension->Mutex, 0);
+    KeInitializeSpinLock(&DeviceExtension->Lock);
 
     /* Initialize the ks audio device list */
     InitializeListHead(&DeviceExtension->KsAudioDeviceList);
@@ -128,22 +128,6 @@ SysAudio_InstallDevice(
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("KsAllocateDeviceHeader failed with %x\n", Status);
-        goto cleanup;
-    }
-
-    /* allocate work item */
-    DeviceExtension->WorkItem = IoAllocateWorkItem(DeviceObject);
-    if (!DeviceExtension->WorkItem)
-    {
-        DPRINT1("Failed to allocate work item\n");
-        goto cleanup;
-    }
-
-    /* allocate work item context */
-    DeviceExtension->WorkerContext = ExAllocatePool(NonPagedPool, sizeof(PIN_WORKER_CONTEXT));
-    if (!DeviceExtension->WorkerContext)
-    {
-        DPRINT1("Failed to allocate work item context\n");
         goto cleanup;
     }
 
