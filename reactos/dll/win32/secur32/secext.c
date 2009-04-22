@@ -21,6 +21,8 @@
 #define NDEBUG
 #include <debug.h>
 
+#define UNLEN 256
+
 
 /***********************************************************************
  *		GetComputerObjectNameA (SECUR32.@) Wine 1.1.14
@@ -189,27 +191,99 @@ BOOLEAN WINAPI GetComputerObjectNameW(
 }
 
 
-BOOLEAN
-WINAPI
-GetUserNameExA (
-	EXTENDED_NAME_FORMAT extended_exe_format,
-	LPSTR lpstr,
-	PULONG pulong
-	)
+BOOLEAN WINAPI GetUserNameExA(
+  EXTENDED_NAME_FORMAT NameFormat, LPSTR lpNameBuffer, PULONG nSize)
 {
-	UNIMPLEMENTED;
-	return ERROR_CALL_NOT_IMPLEMENTED;
+    BOOLEAN rc;
+    LPWSTR bufferW = NULL;
+    ULONG sizeW = *nSize;
+    DPRINT("(%d %p %p)\n", NameFormat, lpNameBuffer, nSize);
+    if (lpNameBuffer) {
+        bufferW = HeapAlloc(GetProcessHeap(), 0, sizeW * sizeof(WCHAR));
+        if (bufferW == NULL) {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return FALSE;
+        }
+    }
+    rc = GetUserNameExW(NameFormat, bufferW, &sizeW);
+    if (rc) {
+        ULONG len = WideCharToMultiByte(CP_ACP, 0, bufferW, -1, NULL, 0, NULL, NULL);
+        if (len <= *nSize)
+        {
+            WideCharToMultiByte(CP_ACP, 0, bufferW, -1, lpNameBuffer, *nSize, NULL, NULL);
+            *nSize = len - 1;
+        }
+        else
+        {
+            *nSize = len;
+            rc = FALSE;
+            SetLastError(ERROR_MORE_DATA);
+        }
+    }
+    else
+        *nSize = sizeW;
+    HeapFree(GetProcessHeap(), 0, bufferW);
+    return rc;
 }
 
 
-BOOLEAN
-WINAPI
-GetUserNameExW (
-	EXTENDED_NAME_FORMAT extended_exe_format,
-	LPWSTR lpstr,
-	PULONG pulong
-	)
+BOOLEAN WINAPI GetUserNameExW(
+  EXTENDED_NAME_FORMAT NameFormat, LPWSTR lpNameBuffer, PULONG nSize)
 {
-	UNIMPLEMENTED;
-	return ERROR_CALL_NOT_IMPLEMENTED;
+    BOOLEAN status;
+    WCHAR samname[UNLEN + 1 + MAX_COMPUTERNAME_LENGTH + 1];
+    LPWSTR out;
+    DWORD len;
+    DPRINT("(%d %p %p)\n", NameFormat, lpNameBuffer, nSize);
+
+    switch (NameFormat)
+    {
+    case NameSamCompatible:
+        {
+            /* This assumes the current user is always a local account */
+            len = MAX_COMPUTERNAME_LENGTH + 1;
+            if (GetComputerNameW(samname, &len))
+            {
+                out = samname + lstrlenW(samname);
+                *out++ = '\\';
+                len = UNLEN + 1;
+                if (GetUserNameW(out, &len))
+                {
+                    status = (lstrlenW(samname) < *nSize);
+                    if (status)
+                    {
+                        lstrcpyW(lpNameBuffer, samname);
+                        *nSize = lstrlenW(samname);
+                    }
+                    else
+                    {
+                        SetLastError(ERROR_MORE_DATA);
+                        *nSize = lstrlenW(samname) + 1;
+                    }
+                }
+                else
+                    status = FALSE;
+            }
+            else
+                status = FALSE;
+        }
+        break;
+    case NameUnknown:
+    case NameFullyQualifiedDN:
+    case NameDisplay:
+    case NameUniqueId:
+    case NameCanonical:
+    case NameUserPrincipal:
+    case NameCanonicalEx:
+    case NameServicePrincipal:
+    case NameDnsDomain:
+        SetLastError(ERROR_NONE_MAPPED);
+        status = FALSE;
+        break;
+    default:
+        SetLastError(ERROR_INVALID_PARAMETER);
+        status = FALSE;
+    }
+
+    return status;
 }
