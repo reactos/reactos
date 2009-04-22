@@ -457,7 +457,7 @@ MiniSendComplete(
 
     NDIS_DbgPrint(DEBUG_MINIPORT, ("Called.\n"));
 
-    AdapterBinding = (PADAPTER_BINDING)Packet->Reserved[0];
+    AdapterBinding = (PADAPTER_BINDING)Packet->Reserved[1];
 
     KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
     (*AdapterBinding->ProtocolBinding->Chars.SendCompleteHandler)(
@@ -490,7 +490,7 @@ MiniTransferDataComplete(
 
     NDIS_DbgPrint(DEBUG_MINIPORT, ("Called.\n"));
 
-    AdapterBinding = (PADAPTER_BINDING)Packet->Reserved[0];
+    AdapterBinding = (PADAPTER_BINDING)Packet->Reserved[1];
 
     KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
     (*AdapterBinding->ProtocolBinding->Chars.TransferDataCompleteHandler)(
