@@ -172,6 +172,12 @@
 		</application>
 	</category>
 	<category name="Multimedia" icon="4">
+		<application name="SMPlayer 0.6.7">
+			<regname>smplayer</regname>
+			<version>0.6.7</version>
+			<description>SMPlayer</description>
+			<location>http://dfn.dl.sourceforge.net/sourceforge/smplayer/smplayer_0.6.7_setup.exe</location>
+		</application>
 	</category>
 	<category name="Development" icon="5">
 		<application name="ReactOS Build Environment">
