@@ -414,23 +414,6 @@ RealDriveTypeFlags(INT iDrive, BOOL bUnknown)
 /*
  * Unimplemented
  */
-HINSTANCE
-WINAPI
-WOWShellExecute(HWND hwnd,
-                LPCWSTR lpOperation,
-                LPCWSTR lpFile,
-                LPCWSTR lpParameters,
-                LPCWSTR lpDirectory,
-                INT nShowCmd,
-                void *lpfnCBWinExec)
-{
-    FIXME("WOWShellExecute() stub\n");
-    return NULL;
-}
-
-/*
- * Unimplemented
- */
 LPWSTR
 WINAPI
 StrRStrW(LPWSTR lpSrc, LPWSTR lpLast, LPWSTR lpSearch)
