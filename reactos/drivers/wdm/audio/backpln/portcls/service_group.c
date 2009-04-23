@@ -25,9 +25,7 @@ typedef struct
     BOOL Initialized;
     BOOL TimerActive;
     KTIMER Timer;
-    KEVENT DpcEvent;
     KDPC Dpc;
-
 }IServiceGroupImpl;
 
 
@@ -38,7 +36,7 @@ typedef struct
 
 
 NTSTATUS
-STDMETHODCALLTYPE
+NTAPI
 IServiceGroup_fnQueryInterface(
     IServiceGroup* iface,
     IN  REFIID refiid,
@@ -66,7 +64,7 @@ IServiceGroup_fnQueryInterface(
 }
 
 ULONG
-STDMETHODCALLTYPE
+NTAPI
 IServiceGroup_fnAddRef(
     IServiceGroup* iface)
 {
@@ -76,7 +74,7 @@ IServiceGroup_fnAddRef(
 }
 
 ULONG
-STDMETHODCALLTYPE
+NTAPI
 IServiceGroup_fnRelease(
     IServiceGroup* iface)
 {
@@ -95,7 +93,6 @@ IServiceGroup_fnRelease(
             Entry->pServiceSink->lpVtbl->Release(Entry->pServiceSink);
             FreeItem(Entry, TAG_PORTCLASS);
         }
-        KeWaitForSingleObject(&This->DpcEvent, Executive, KernelMode, FALSE, NULL);
         KeCancelTimer(&This->Timer);
         FreeItem(This, TAG_PORTCLASS);
         return 0;
@@ -115,17 +112,18 @@ NTAPI
 IServiceGroup_fnRequestService(
     IN IServiceGroup * iface)
 {
-    PLIST_ENTRY CurEntry;
-    PGROUP_ENTRY Entry;
+    KIRQL OldIrql;
     IServiceGroupImpl * This = (IServiceGroupImpl*)iface;
 
-    CurEntry = This->ServiceSinkHead.Flink;
-    while (CurEntry != &This->ServiceSinkHead)
+    if (KeGetCurrentIrql() > DISPATCH_LEVEL)
     {
-        Entry = CONTAINING_RECORD(CurEntry, GROUP_ENTRY, Entry);
-        Entry->pServiceSink->lpVtbl->RequestService(Entry->pServiceSink);
-        CurEntry = CurEntry->Flink;
+        KeInsertQueueDpc(&This->Dpc, NULL, NULL);
+        return;
     }
+
+    KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+    KeInsertQueueDpc(&This->Dpc, NULL, NULL);
+    KeLowerIrql(OldIrql);
 }
 
 //---------------------------------------------------------------
@@ -141,6 +139,8 @@ IServiceGroup_fnAddMember(
     PGROUP_ENTRY Entry;
     IServiceGroupImpl * This = (IServiceGroupImpl*)iface;
 
+    ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
+
     Entry = AllocateItem(NonPagedPool, sizeof(GROUP_ENTRY), TAG_PORTCLASS);
     if (!Entry)
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -148,8 +148,6 @@ IServiceGroup_fnAddMember(
     Entry->pServiceSink = pServiceSink;
     pServiceSink->lpVtbl->AddRef(pServiceSink);
 
-    //FIXME
-    //check if Dpc is active
     InsertTailList(&This->ServiceSinkHead, &Entry->Entry);
 
     return STATUS_SUCCESS;
@@ -165,9 +163,7 @@ IServiceGroup_fnRemoveMember(
     PGROUP_ENTRY Entry;
     IServiceGroupImpl * This = (IServiceGroupImpl*)iface;
 
-    //FIXME
-    //check if Dpc is active
-    //
+    ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
     CurEntry = This->ServiceSinkHead.Flink;
     while (CurEntry != &This->ServiceSinkHead)
@@ -194,11 +190,18 @@ IServiceGroupDpc(
     IN PVOID  SystemArgument2
     )
 {
+    PLIST_ENTRY CurEntry;
+    PGROUP_ENTRY Entry;
     IServiceGroupImpl * This = (IServiceGroupImpl*)DeferredContext;
-    IServiceGroup_fnRequestService((IServiceGroup*)DeferredContext);
-    KeSetEvent(&This->DpcEvent, IO_SOUND_INCREMENT, FALSE);
-}
 
+    CurEntry = This->ServiceSinkHead.Flink;
+    while (CurEntry != &This->ServiceSinkHead)
+    {
+        Entry = CONTAINING_RECORD(CurEntry, GROUP_ENTRY, Entry);
+        Entry->pServiceSink->lpVtbl->RequestService(Entry->pServiceSink);
+        CurEntry = CurEntry->Flink;
+    }
+}
 
 VOID
 NTAPI
@@ -207,11 +210,11 @@ IServiceGroup_fnSupportDelayedService(
 {
     IServiceGroupImpl * This = (IServiceGroupImpl*)iface;
 
+    ASSERT_IRQL(DISPATCH_LEVEL);
+
     if (!This->Initialized)
     {
-        KeInitializeEvent(&This->DpcEvent, SynchronizationEvent, FALSE);
         KeInitializeTimerEx(&This->Timer, NotificationTimer);
-        KeInitializeDpc(&This->Dpc, IServiceGroupDpc, (PVOID)This);
         This->Initialized = TRUE;
     }
 }
@@ -225,6 +228,8 @@ IServiceGroup_fnRequestDelayedService(
     LARGE_INTEGER DueTime;
     IServiceGroupImpl * This = (IServiceGroupImpl*)iface;
 
+    ASSERT_IRQL(DISPATCH_LEVEL);
+
     DueTime.QuadPart = ullDelay;
 
     if (This->Initialized)
@@ -233,8 +238,6 @@ IServiceGroup_fnRequestDelayedService(
             KeSetTimer(&This->Timer, DueTime, &This->Dpc);
         else
             KeInsertQueueDpc(&This->Dpc, NULL, NULL);
-
-        KeClearEvent(&This->DpcEvent);
     }
 }
 
@@ -244,6 +247,8 @@ IServiceGroup_fnCancelDelayedService(
     IN IServiceGroup * iface)
 {
     IServiceGroupImpl * This = (IServiceGroupImpl*)iface;
+
+    ASSERT_IRQL(DISPATCH_LEVEL);
 
     if (This->Initialized)
     {
@@ -283,6 +288,8 @@ PcNewServiceGroup(
 
     This->lpVtbl = &vt_IServiceGroup;
     This->ref = 1;
+    KeInitializeDpc(&This->Dpc, IServiceGroupDpc, (PVOID)This);
+    KeSetImportanceDpc(&This->Dpc, HighImportance);
     InitializeListHead(&This->ServiceSinkHead);
     *OutServiceGroup = (PSERVICEGROUP)&This->lpVtbl;
 

@@ -291,6 +291,8 @@ PcForwardIrpSynchronous(
     PPCLASS_DEVICE_EXTENSION DeviceExt;
     NTSTATUS Status;
 
+    ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
+
     DeviceExt = (PPCLASS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
     /* initialize the notification event */

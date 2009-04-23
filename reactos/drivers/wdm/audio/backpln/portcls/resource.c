@@ -98,6 +98,8 @@ IResourceList_fnNumberOfEntries(IResourceList* iface)
 {
     IResourceListImpl * This = (IResourceListImpl*)iface;
 
+    ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
+
     return This->TranslatedResourceList->List[0].PartialResourceList.Count;
 }
 
@@ -107,12 +109,13 @@ IResourceList_fnNumberOfEntriesOfType(
     IResourceList* iface,
     IN  CM_RESOURCE_TYPE Type)
 {
-    /* I guess the translated and untranslated lists will be same length? */
-
     IResourceListImpl * This = (IResourceListImpl*)iface;
     ULONG Index, Count = 0;
     PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
 
+    ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
+
+    /* I guess the translated and untranslated lists will be same length? */
     for (Index = 0; Index < This->TranslatedResourceList->List[0].PartialResourceList.Count; Index ++ )
     {
         PartialDescriptor = &This->TranslatedResourceList->List[0].PartialResourceList.PartialDescriptors[Index];
@@ -138,6 +141,8 @@ IResourceList_fnFindTranslatedEntry(
     IResourceListImpl * This = (IResourceListImpl*)iface;
     ULONG DescIndex, Count = 0;
     PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
+
+    ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
     for (DescIndex = 0; DescIndex < This->TranslatedResourceList->List[0].PartialResourceList.Count; DescIndex ++ )
     {
@@ -168,6 +173,8 @@ IResourceList_fnFindUntranslatedEntry(
     ULONG DescIndex, Count = 0;
     PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
 
+    ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
+
     for (DescIndex = 0; DescIndex < This->UntranslatedResourceList->List[0].PartialResourceList.Count; DescIndex ++ )
     {
         PartialDescriptor = &This->UntranslatedResourceList->List[0].PartialResourceList.PartialDescriptors[DescIndex];
@@ -195,6 +202,8 @@ IResourceList_fnAddEntry(
     PCM_RESOURCE_LIST NewUntranslatedResources, NewTranslatedResources;
     ULONG NewTranslatedSize, NewUntranslatedSize;
     IResourceListImpl * This = (IResourceListImpl*)iface;
+
+    ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
     NewTranslatedSize = sizeof(CM_RESOURCE_LIST) + This->TranslatedResourceList[0].List->PartialResourceList.Count * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
     NewTranslatedResources = AllocateItem(This->PoolType, NewTranslatedSize, TAG_PORTCLASS);
@@ -254,6 +263,8 @@ IResourceList_fnAddEntryFromParent(
     ULONG NewTranslatedSize;
     IResourceListImpl * This = (IResourceListImpl*)iface;
 
+    ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
+
     Translated = Parent->lpVtbl->FindTranslatedEntry(Parent, Type, Index);
     if (!Translated)
         return STATUS_INVALID_PARAMETER;
@@ -287,6 +298,8 @@ IResourceList_fnTranslatedList(
 {
     IResourceListImpl * This = (IResourceListImpl*)iface;
 
+    ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
+
     return This->TranslatedResourceList;
 }
 
@@ -296,6 +309,8 @@ IResourceList_fnUntranslatedList(
     IResourceList* iface)
 {
     IResourceListImpl * This = (IResourceListImpl*)iface;
+
+    ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
     return This->UntranslatedResourceList;
 }

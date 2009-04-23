@@ -86,6 +86,8 @@ IPortWavePciStream_fnGetMapping(
 {
     IPortWavePciStreamImpl * This = (IPortWavePciStreamImpl*)iface;
 
+    ASSERT_IRQL(DISPATCH_LEVEL);
+
     return This->Queue->lpVtbl->GetMappingWithTag(This->Queue, Tag, PhysicalAddress, VirtualAddress, ByteCount, Flags);
 }
 
@@ -97,6 +99,9 @@ IPortWavePciStream_fnReleaseMapping(
     IN PVOID  Tag)
 {
     IPortWavePciStreamImpl * This = (IPortWavePciStreamImpl*)iface;
+
+    ASSERT_IRQL(DISPATCH_LEVEL);
+
     This->Queue->lpVtbl->ReleaseMappingWithTag(This->Queue, Tag);
     return STATUS_SUCCESS;
 }
@@ -108,6 +113,7 @@ IPortWavePciStream_fnTerminatePacket(
     IN IPortWavePciStream *iface)
 {
     UNIMPLEMENTED
+    ASSERT_IRQL(DISPATCH_LEVEL);
     return STATUS_SUCCESS;
 }
 

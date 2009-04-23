@@ -46,6 +46,7 @@ PcInitializeAdapterDriver(
     //ULONG i;
 
     DPRINT1("PcInitializeAdapterDriver\n");
+    ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
     /* Our IRP handlers */
     DPRINT1("Setting IRP handlers\n");
@@ -94,6 +95,7 @@ PcAddAdapterDevice(
     PPCLASS_DEVICE_EXTENSION portcls_ext = NULL;
 
     DPRINT1("PcAddAdapterDevice called\n");
+    ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
     if (!DriverObject || !PhysicalDeviceObject || !StartDevice)
     {
@@ -223,6 +225,7 @@ PcRegisterSubdevice(
     ULONG Index;
 
     DPRINT1("PcRegisterSubdevice DeviceObject %p Name %S Unknown %p\n", DeviceObject, Name, Unknown);
+    ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
     /* check if all parameters are valid */
     if (!DeviceObject || !Name || !Unknown)

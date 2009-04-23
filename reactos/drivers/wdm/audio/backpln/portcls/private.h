@@ -29,6 +29,8 @@
   #define DDKAPI
 #endif
 
+#define ASSERT_IRQL(x) ASSERT(KeGetCurrentIrql() <= (x))
+
 NTSTATUS
 NTAPI
 PortClsCreate(
@@ -181,12 +183,6 @@ typedef struct
     KSSTREAM_HEADER Header;
     PIRP Irp;
 }CONTEXT_WRITE, *PCONTEXT_WRITE;
-
-typedef struct
-{
-    PVOID Pin;
-    PIO_WORKITEM WorkItem;
-}STOPSTREAM_CONTEXT, *PSTOPSTREAM_CONTEXT;
 
 typedef struct
 {

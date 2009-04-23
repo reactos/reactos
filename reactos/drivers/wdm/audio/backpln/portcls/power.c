@@ -24,6 +24,7 @@ PcRegisterAdapterPowerManagement(
     IAdapterPowerManagement * pPower;
 
     DPRINT("PcRegisterAdapterPowerManagement pUnknown %p pvContext %p\n", pUnknown, pvContext);
+    ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
     if (!pUnknown || !pvContext)
         return STATUS_INVALID_PARAMETER;
@@ -71,6 +72,8 @@ PcRequestNewPowerState(
     NTSTATUS Status;
     POWER_STATE PowerState;
     PPCLASS_DEVICE_EXTENSION DeviceExt;
+
+    ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
     if (!DeviceObject || !RequestedNewState)
         return STATUS_INVALID_PARAMETER;

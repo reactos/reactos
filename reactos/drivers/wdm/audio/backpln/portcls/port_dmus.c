@@ -97,6 +97,8 @@ IPortDMus_fnGetDeviceProperty(
 {
     IPortDMusImpl * This = (IPortDMusImpl*)iface;
 
+    ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
+
     if (!This->bInitialized)
     {
         DPRINT("IPortDMus_fnNewRegistryKey called w/o initiazed\n");
@@ -119,6 +121,8 @@ IPortDMus_fnInit(
     IMiniportDMus * Miniport;
     NTSTATUS Status;
     IPortDMusImpl * This = (IPortDMusImpl*)iface;
+
+    ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
     if (This->bInitialized)
     {
@@ -166,6 +170,8 @@ IPortDMus_fnNewRegistryKey(
 {
     IPortDMusImpl * This = (IPortDMusImpl*)iface;
 
+    ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
+
     if (!This->bInitialized)
     {
         DPRINT("IPortDMus_fnNewRegistryKey called w/o initialized\n");
@@ -173,13 +179,6 @@ IPortDMus_fnNewRegistryKey(
     }
     return STATUS_UNSUCCESSFUL;
 }
-
-
-
-
-
-
-
 
 NTSTATUS
 NewPortDMus(

@@ -13,7 +13,6 @@ typedef struct _IRP_MAPPING_
     LIST_ENTRY Entry;
     KSSTREAM_HEADER *Header;
     PIRP Irp;
-    KDPC Dpc;
 
     ULONG NumTags;
     PVOID * Tag;
@@ -48,15 +47,9 @@ typedef struct
 
 VOID
 NTAPI
-DpcRoutine(
-    IN struct _KDPC  *Dpc,
-    IN PVOID  DeferredContext,
-    IN PVOID  SystemArgument1,
-    IN PVOID  SystemArgument2)
+FreeMappingRoutine(
+    PIRP_MAPPING CurMapping)
 {
-    PIRP_MAPPING CurMapping;
-
-    CurMapping = (PIRP_MAPPING)SystemArgument1;
     ASSERT(CurMapping);
 
     if (CurMapping->Irp)
@@ -159,8 +152,6 @@ IIrpQueue_fnAddMapping(
 
     Mapping->Header = (KSSTREAM_HEADER*)Buffer;
     Mapping->Irp = Irp;
-    KeInitializeDpc(&Mapping->Dpc, DpcRoutine, (PVOID)Mapping);
-    KeSetImportanceDpc(&Mapping->Dpc, HighImportance);
 
     if (This->MaxFrameSize)
     {
@@ -215,7 +206,7 @@ IIrpQueue_fnUpdateMapping(
     IN ULONG BytesWritten)
 {
     IIrpQueueImpl * This = (IIrpQueueImpl*)iface;
-    PIRP_MAPPING Mapping;
+    PIRP_MAPPING Mapping, CurMapping;
 
     This->CurrentOffset += BytesWritten;
     This->NumDataAvailable -= BytesWritten;
@@ -224,11 +215,12 @@ IIrpQueue_fnUpdateMapping(
     {
         This->CurrentOffset = 0;
         Mapping = (PIRP_MAPPING)ExInterlockedRemoveHeadList(&This->ListHead, &This->Lock);
+        CurMapping = This->FirstMap;
 
+        (void)InterlockedExchangePointer((PVOID volatile*)&This->FirstMap, (PVOID)Mapping);
         InterlockedDecrement(&This->NumMappings);
 
-        KeInsertQueueDpc(&This->FirstMap->Dpc, (PVOID)This->FirstMap, NULL);
-        (void)InterlockedExchangePointer((PVOID volatile*)&This->FirstMap, (PVOID)Mapping);
+        FreeMappingRoutine(CurMapping);
     }
 
 }
@@ -279,6 +271,9 @@ NTAPI
 IIrpQueue_fnCancelBuffers(
     IN IIrpQueue *iface)
 {
+    IIrpQueueImpl * This = (IIrpQueueImpl*)iface;
+
+    This->StartStream = FALSE;
     return TRUE;
 }
 

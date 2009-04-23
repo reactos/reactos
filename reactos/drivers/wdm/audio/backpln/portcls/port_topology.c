@@ -153,6 +153,7 @@ IPortTopology_fnGetDeviceProperty(
     OUT PULONG  ReturnLength)
 {
     IPortTopologyImpl * This = (IPortTopologyImpl*)iface;
+    ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
     if (!This->bInitialized)
     {
@@ -179,6 +180,7 @@ IPortTopology_fnInit(
 
     DPRINT("IPortTopology_fnInit entered This %p DeviceObject %p Irp %p UnknownMiniport %p UnknownAdapter %p ResourceList %p\n",
             This, DeviceObject, Irp, UnknownMiniport, UnknownAdapter, ResourceList);
+    ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
     if (This->bInitialized)
     {
@@ -255,6 +257,7 @@ IPortTopology_fnNewRegistryKey(
     OUT PULONG  Disposition  OPTIONAL)
 {
     IPortTopologyImpl * This = (IPortTopologyImpl*)iface;
+    ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
     if (!This->bInitialized)
     {
@@ -506,7 +509,7 @@ PcCreateItemDispatch(
     PKSOBJECT_CREATE_ITEM CreateItem;
     PPIN_WORKER_CONTEXT Context;
 
-    DPRINT("PcCreateItemDispatch called DeviceObject %p\n", DeviceObject);
+    DPRINT1("PcCreateItemDispatch called DeviceObject %p\n", DeviceObject);
 
     /* access the create item */
     CreateItem = KSCREATE_ITEM_IRP_STORAGE(Irp);
@@ -570,7 +573,7 @@ PcCreateItemDispatch(
                                              NULL);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("Failed to get filter object\n");
+        DPRINT1("Failed to get filter object\n");
         return Status;
     }
 
@@ -580,7 +583,7 @@ PcCreateItemDispatch(
         /* create the dispatch object */
         Status = NewDispatchObject(Irp, Filter);
 
-        DPRINT("Filter %p\n", Filter);
+        DPRINT1("Filter %p\n", Filter);
     }
     else
     {

@@ -22,6 +22,8 @@ PcNewPort(
 
     DPRINT("PcNewPort entered\n");
 
+    ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
+
     if (!OutPort)
     {
         DPRINT("PcNewPort was supplied a NULL OutPort parameter\n");
