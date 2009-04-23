@@ -424,7 +424,7 @@ NdisAllocatePacket(
 
         KeReleaseSpinLock(&Pool->SpinLock.SpinLock, OldIrql);
 
-        RtlZeroMemory(Temp, sizeof(NDIS_PACKET));
+        RtlZeroMemory(Temp, Pool->PacketLength);
         Temp->Private.Pool = Pool;
         Temp->Private.ValidCounts = TRUE;
         Temp->Private.NdisPacketFlags = fPACKET_ALLOCATED_BY_NDIS;
@@ -707,7 +707,7 @@ NdisDprAllocatePacket(
 
         KeReleaseSpinLockFromDpcLevel(&Pool->SpinLock.SpinLock);
 
-        RtlZeroMemory(Temp, sizeof(NDIS_PACKET));
+        RtlZeroMemory(Temp, Pool->PacketLength);
         Temp->Private.Pool = Pool;
         Temp->Private.ValidCounts = TRUE;
         Temp->Private.NdisPacketFlags = fPACKET_ALLOCATED_BY_NDIS;
@@ -756,7 +756,7 @@ NdisDprAllocatePacketNonInterlocked(
         Temp           = Pool->FreeList;
         Pool->FreeList = (PNDIS_PACKET)Temp->Reserved[0];
 
-        RtlZeroMemory(Temp, sizeof(NDIS_PACKET));
+        RtlZeroMemory(Temp, Pool->PacketLength);
         Temp->Private.Pool = Pool;
         Temp->Private.ValidCounts = TRUE;
         Temp->Private.NdisPacketFlags = fPACKET_ALLOCATED_BY_NDIS;
