@@ -229,6 +229,12 @@ PcDispatchIrp(
         case IRP_MJ_POWER :
             return PortClsPower(DeviceObject, Irp);
 
+        case IRP_MJ_DEVICE_CONTROL:
+            return KsDispatchIrp(DeviceObject, Irp);
+
+        case IRP_MJ_CLOSE:
+            return KsDispatchIrp(DeviceObject, Irp);
+
         case IRP_MJ_SYSTEM_CONTROL :
             return PortClsSysControl(DeviceObject, Irp);
 
