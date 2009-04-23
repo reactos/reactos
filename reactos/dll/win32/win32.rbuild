@@ -589,9 +589,6 @@
 <directory name="winsta">
 	<xi:include href="winsta/winsta.rbuild" />
 </directory>
-<directory name="wintab32">
-	<xi:include href="wintab32/wintab32.rbuild" />
-</directory>
 <directory name="wintrust">
 	<xi:include href="wintrust/wintrust.rbuild" />
 </directory>
