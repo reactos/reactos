@@ -1431,8 +1431,6 @@ void do_error_dialog( UINT_PTR retval, HWND hwnd )
     WCHAR msg[2048];
     int error_code=GetLastError();
 
-    //FIXME
-    // call SHOpenWithDialog
     if (retval == SE_ERR_NOASSOC)
         LoadStringW(shell32_hInstance, IDS_SHLEXEC_NOASSOC, msg, sizeof(msg)/sizeof(WCHAR));
     else
@@ -1597,9 +1595,7 @@ BOOL SHELL_execute( LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc )
             Info.pcszClass = NULL;
             Info.oaifInFlags = OAIF_ALLOW_REGISTRATION | OAIF_EXEC;
 
-            if (SHOpenWithDialog(sei_tmp.hwnd, &Info))
-                retval = 33; //FIXME
-            else
+            //if (SHOpenWithDialog(sei_tmp.hwnd, &Info) != S_OK)
                do_error_dialog(retval, sei_tmp.hwnd);
         }
         HeapFree(GetProcessHeap(), 0, wszApplicationName);
@@ -1827,9 +1823,7 @@ BOOL SHELL_execute( LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc )
         Info.pcszClass = NULL;
         Info.oaifInFlags = OAIF_ALLOW_REGISTRATION | OAIF_EXEC;
 
-        if (SHOpenWithDialog(sei_tmp.hwnd, &Info))
-            retval = 33; //FIXME
-        else
+        //if (SHOpenWithDialog(sei_tmp.hwnd, &Info) != S_OK)
             do_error_dialog(retval, sei_tmp.hwnd);
     }
 
