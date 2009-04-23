@@ -520,4 +520,60 @@ DECLARE_INTERFACE_(IPortPinWaveCyclic, IIrpTarget)
     STDMETHOD_(PMINIPORT, GetMiniport)(THIS);
 };
 
+/*****************************************************************************
+ * IDmaChannelInit
+ *****************************************************************************
+ */
+
+#undef INTERFACE
+#define INTERFACE IDmaChannelInit
+
+DECLARE_INTERFACE_(IDmaChannelInit, IUnknown)
+{
+    DEFINE_ABSTRACT_UNKNOWN()
+
+    STDMETHOD_(NTSTATUS,AllocateBuffer)(THIS_
+        IN  ULONG BufferSize,
+        IN  PPHYSICAL_ADDRESS PhysicalAddressConstraint OPTIONAL);
+
+    STDMETHOD_(VOID, FreeBuffer)(THIS);
+    STDMETHOD_(ULONG, TransferCount)(THIS);
+    STDMETHOD_(ULONG, MaximumBufferSize)(THIS);
+    STDMETHOD_(ULONG, AllocatedBufferSize)(THIS);
+    STDMETHOD_(ULONG, BufferSize)(THIS);
+
+    STDMETHOD_(VOID, SetBufferSize)(THIS_ 
+        IN  ULONG BufferSize);
+
+    STDMETHOD_(PVOID, SystemAddress)(THIS);
+    STDMETHOD_(PHYSICAL_ADDRESS, PhysicalAddress)(THIS_
+        IN PPHYSICAL_ADDRESS Address);
+
+    STDMETHOD_(PADAPTER_OBJECT, GetAdapterObject)(THIS);
+
+    STDMETHOD_(VOID, CopyTo)(THIS_
+        IN  PVOID Destination,
+        IN  PVOID Source,
+        IN  ULONG ByteCount);
+
+    STDMETHOD_(VOID, CopyFrom)(THIS_
+        IN  PVOID Destination,
+        IN  PVOID Source,
+        IN  ULONG ByteCount);
+
+    STDMETHOD_(NTSTATUS, Start)( THIS_ 
+        IN  ULONG MapSize,
+        IN  BOOLEAN WriteToDevice) PURE;
+
+    STDMETHOD_(NTSTATUS, Stop)( THIS ) PURE;
+    STDMETHOD_(ULONG, ReadCounter)( THIS ) PURE;
+
+    STDMETHOD_(NTSTATUS, WaitForTC)( THIS_
+        ULONG Timeout) PURE;
+
+    STDMETHOD_(NTSTATUS, Init)( THIS_
+        IN PDEVICE_DESCRIPTION DeviceDescription,
+        IN PDEVICE_OBJECT DeviceObject) PURE;
+};
+
 #endif
