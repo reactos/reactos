@@ -469,6 +469,14 @@ LoadAndBootWindows(PCSTR OperatingSystemName, USHORT OperatingSystemVersion)
 		return;
 	}
 
+	/* Special case for LiveCD */
+	if (!_strnicmp(FullPath, "LiveCD", strlen("LiveCD")))
+	{
+		strcpy(BootPath, FullPath + strlen("LiveCD"));
+		MachDiskGetBootPath(FullPath, sizeof(FullPath));
+		strcat(FullPath, BootPath);
+	}
+
 	/* Convert FullPath to SystemRoot */
 	PathSeparator = strstr(FullPath, "\\");
 	strcpy(SystemRoot, PathSeparator);
@@ -479,14 +487,6 @@ LoadAndBootWindows(PCSTR OperatingSystemName, USHORT OperatingSystemVersion)
 	{
 		/* Nothing read, make the string empty */
 		strcpy(BootOptions, "");
-	}
-
-	/* Special case for LiveCD */
-	if (!_strnicmp(SystemRoot, "LiveCD", strlen("LiveCD")))
-	{
-		strcpy(BootPath, SystemRoot + strlen("LiveCD"));
-		MachDiskGetBootPath(SystemRoot, sizeof(SystemRoot));
-		strcat(SystemRoot, BootPath);
 	}
 
 	/* Let user know we started loading */
