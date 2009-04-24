@@ -1,12 +1,5 @@
 <tree Version="1"> <!-- Application version this tree is made for -->
 	<category name="Internet &amp; Network" icon="1">
-		<application name="Firefox 1.5">
-			<regname>Mozilla Firefox (1.5)</regname>
-			<licence>MPL/GPL/LGPL</licence>
-			<version>1.5.0.12</version>
-			<description>The most popular and one of the best free Web Browsers out there.</description>
-			<location>http://svn.reactos.org/packages/Firefox%20Setup%201.5.0.12.exe</location>
-		</application>
 		<application name="Firefox 2.0">
 			<regname>Mozilla Firefox (2.0.0.20)</regname>
 			<licence>MPL/GPL/LGPL</licence>
