@@ -157,7 +157,6 @@ VOID LoadReactOSSetup2(VOID)
     CHAR  SystemPath[512], SearchPath[512];
     CHAR  FileName[512];
     CHAR  BootPath[512];
-    CHAR  LoadOptions[512];
     LPCSTR BootOptions;
     PVOID NtosBase = NULL, HalBase = NULL, KdComBase = NULL;
     BOOLEAN Status;
@@ -234,7 +233,7 @@ VOID LoadReactOSSetup2(VOID)
     /* Construct the system path */
     sprintf(SystemPath, "%s\\", SourcePath);
 
-    DPRINTM(DPRINT_WINDOWS,"SystemRoot: '%s', SystemPath: '%s'\n", BootPath, SystemPath);
+    DPRINTM(DPRINT_WINDOWS,"BootPath: '%s', SystemPath: '%s'\n", BootPath, SystemPath);
 
     /* Allocate and minimalistic-initialize LPB */
     AllocateAndInitLPB(&LoaderBlock);
@@ -298,8 +297,7 @@ VOID LoadReactOSSetup2(VOID)
     WinLdrSetupForNt(LoaderBlock, &GdtIdt, &PcrBasePage, &TssBasePage);
 
     /* Initialize Phase 1 - no drivers loading anymore */
-    LoadOptions[0] = 0;
-    WinLdrInitializePhase1(LoaderBlock, LoadOptions, SystemPath, BootPath, _WIN32_WINNT_WS03);
+    WinLdrInitializePhase1(LoaderBlock, (PCHAR)BootOptions, SystemPath, BootPath, _WIN32_WINNT_WS03);
 
     /* Save entry-point pointer and Loader block VAs */
     KiSystemStartup = (KERNEL_ENTRY_POINT)KernelDTE->EntryPoint;
