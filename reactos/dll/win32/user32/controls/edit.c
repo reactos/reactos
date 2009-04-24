@@ -255,7 +255,6 @@ static BOOL	EDIT_EM_Undo(EDITSTATE *es);
  *	WM_XXX message handlers
  */
 static LRESULT	EDIT_WM_Char(EDITSTATE *es, WCHAR c);
-static void	EDIT_WM_MenuSelect(EDITSTATE *es, INT code, INT id, HWND conrtol);
 static void	EDIT_WM_ContextMenu(EDITSTATE *es, INT x, INT y);
 static void	EDIT_WM_Copy(EDITSTATE *es);
 static LRESULT	EDIT_WM_Create(EDITSTATE *es, LPCWSTR name);
@@ -945,10 +944,6 @@ static LRESULT EditWndProc_common( HWND hwnd, UINT msg,
 
 	case WM_CLEAR:
 		EDIT_WM_Clear(es);
-		break;
-
-	case WM_MENUSELECT:
-		EDIT_WM_MenuSelect(es, HIWORD(wParam), LOWORD(wParam), (HWND)lParam);
 		break;
 
         case WM_CONTEXTMENU:
@@ -4221,48 +4216,6 @@ static LRESULT EDIT_WM_Char(EDITSTATE *es, WCHAR c)
 
 /*********************************************************************
  *
- *	WM_COMMAND
- *
- */
-static void EDIT_WM_MenuSelect(EDITSTATE *es, INT code, INT id, HWND control)
-{
-
-	static INT MenuSelected;
-
-	if (id != 0) {
-		MenuSelected = id;
-		return;
-	}
-
-	switch (MenuSelected) {
-		case EM_UNDO:
-                        SendMessageW(es->hwndSelf, WM_UNDO, 0, 0);
-			break;
-		case WM_CUT:
-                        SendMessageW(es->hwndSelf, WM_CUT, 0, 0);
-			break;
-		case WM_COPY:
-                        SendMessageW(es->hwndSelf, WM_COPY, 0, 0);
-			break;
-		case WM_PASTE:
-                        SendMessageW(es->hwndSelf, WM_PASTE, 0, 0);
-			break;
-		case WM_CLEAR:
-                        SendMessageW(es->hwndSelf, WM_CLEAR, 0, 0);
-			break;
-		case EM_SETSEL:
-			EDIT_EM_SetSel(es, 0, (UINT)-1, FALSE);
-			EDIT_EM_ScrollCaret(es);
-			break;
-		default:
-			ERR("unknown menu item, please report\n");
-			break;
-	}
-}
-
-
-/*********************************************************************
- *
  *	WM_CONTEXTMENU
  *
  *	Note: the resource files resource/sysres_??.rc cannot define a
@@ -4287,6 +4240,8 @@ static void EDIT_WM_ContextMenu(EDITSTATE *es, INT x, INT y)
 	HMENU popup = GetSubMenu(menu, 0);
 	UINT start = es->selection_start;
 	UINT end = es->selection_end;
+
+	BOOL selectedItem;
 
 	ORDER_UINT(start, end);
 
@@ -4313,7 +4268,35 @@ static void EDIT_WM_ContextMenu(EDITSTATE *es, INT x, INT y)
             y = rc.top + (rc.bottom - rc.top) / 2;
         }
 
-	TrackPopupMenu(popup, TPM_LEFTALIGN | TPM_RIGHTBUTTON | TPM_RETURNCMD, x, y, 0, es->hwndSelf, NULL);
+	selectedItem = TrackPopupMenu(popup, TPM_LEFTALIGN | TPM_RIGHTBUTTON | TPM_RETURNCMD, x, y, 0, es->hwndSelf, NULL);
+
+	switch (selectedItem) {
+		case EM_UNDO:
+			SendMessageW(es->hwndSelf, WM_UNDO, 0, 0);
+			break;
+		case WM_CUT:
+			SendMessageW(es->hwndSelf, WM_CUT, 0, 0);
+			break;
+		case WM_COPY:
+			SendMessageW(es->hwndSelf, WM_COPY, 0, 0);
+			break;
+		case WM_PASTE:
+			SendMessageW(es->hwndSelf, WM_PASTE, 0, 0);
+			break;
+		case WM_CLEAR:
+			SendMessageW(es->hwndSelf, WM_CLEAR, 0, 0);
+			break;
+		case EM_SETSEL:
+			EDIT_EM_SetSel(es, 0, (UINT)-1, FALSE);
+			EDIT_EM_ScrollCaret(es);
+			break;
+		case 0:
+			break;
+		default:
+			ERR("unknown menu item, please report\n");
+			break;
+	}
+
 	DestroyMenu(menu);
 }
 
