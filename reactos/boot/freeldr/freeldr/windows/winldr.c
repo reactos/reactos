@@ -75,7 +75,7 @@ AllocateAndInitLPB(PLOADER_PARAMETER_BLOCK *OutLoaderBlock)
 VOID
 WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
                        PCHAR Options,
-                       PCHAR SystemPath,
+                       PCHAR SystemRoot,
                        PCHAR BootPath,
                        USHORT VersionToBoot)
 {
@@ -86,7 +86,6 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
 	//CHAR	ArcBoot[] = "multi(0)disk(0)rdisk(0)partition(1)";
 
 	CHAR	HalPath[] = "\\";
-	CHAR	SystemRoot[256];
 	CHAR	ArcBoot[256];
 	CHAR	MiscFiles[256];
 	ULONG i, PathSeparator;
@@ -95,11 +94,9 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
 	LoaderBlock->u.I386.CommonDataArea = NULL; // Force No ABIOS support
 
 	/* Construct SystemRoot and ArcBoot from SystemPath */
-	PathSeparator = strstr(SystemPath, "\\") - SystemPath;
-	strncpy(ArcBoot, SystemPath, PathSeparator);
+	PathSeparator = strstr(BootPath, "\\") - BootPath;
+	strncpy(ArcBoot, BootPath, PathSeparator);
 	ArcBoot[PathSeparator] = 0;
-	strcpy(SystemRoot, &SystemPath[PathSeparator]);
-	strcat(SystemRoot, "\\");
 
 	DPRINTM(DPRINT_WINDOWS, "ArcBoot: %s\n", ArcBoot);
 	DPRINTM(DPRINT_WINDOWS, "SystemRoot: %s\n", SystemRoot);
