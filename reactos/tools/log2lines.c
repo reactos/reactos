@@ -18,7 +18,7 @@
 
 #include "rsym.h"
 
-#define LOG2LINES_VERSION   "0.5"
+#define LOG2LINES_VERSION   "0.6"
 
 #define INVALID_BASE    0xFFFFFFFFL
 
@@ -31,6 +31,8 @@
 #define PATH_CHAR       '\\'
 #define PATH_STR        "\\"
 #define PATHCMP         strcasecmp
+#define CP_CMD          "copy /Y "
+#define DIR_FMT         "dir /a:-d /s /b %s > %s"
 
 #else  /* not defined (__DJGPP__) || defined (__WIN32__) */
 
@@ -43,12 +45,17 @@
 #define PATH_CHAR       '/'
 #define PATH_STR        "/"
 #define PATHCMP         strcmp
+#define CP_CMD          "cp -f "
+#define DIR_FMT         "find %s -type f > %s"
 
 #endif  /* not defined (__DJGPP__) || defined (__WIN32__) */
 
-#define UNZIP_FMT       "7z x -y -r %s -o%s > " DEV_NULL
+#define CP_FMT          CP_CMD "%s %s > " DEV_NULL
+
+#define CMD_7Z          "7z"
+#define UNZIP_FMT       "%s x -y -r %s -o%s > " DEV_NULL
 #define UNZIP_FMT_CAB \
-"7z x -y -r %s" PATH_STR "reactos" PATH_STR "reactos.cab -o%s" PATH_STR "reactos" PATH_STR "reactos > " DEV_NULL
+"%s x -y -r %s" PATH_STR "reactos" PATH_STR "reactos.cab -o%s" PATH_STR "reactos" PATH_STR "reactos > " DEV_NULL
 
 #define LINESIZE        1024
 
@@ -74,7 +81,7 @@ typedef struct cache_struct CACHE;
 
 static CACHE cache;
 
-static char *optchars  = "cd:fFhl:mMrv";
+static char *optchars  = "cd:fFhl:mMrvz:";
 static int opt_help    = 0;         // -h
 static int opt_force   = 0;         // -f
 static int opt_exit    = 0;         // -e
@@ -85,6 +92,7 @@ static int opt_Mark    = 0;         // -M
 static int opt_raw     = 0;         // -r
 static char opt_dir[MAX_PATH];      // -d
 static char opt_logFile[MAX_PATH];  // -l
+static char opt_7z[MAX_PATH];       // -z
 static FILE *logFile   = NULL;
 
 static char *cache_name;
@@ -565,7 +573,7 @@ create_cache(int force, int skipImageBase)
 
     remove(tmp_name);
     fprintf(stderr, "Scanning %s ...\n", opt_dir);
-    snprintf(Line, LINESIZE, "dir /a:-d /s /b %s > %s", opt_dir, tmp_name);
+    snprintf(Line, LINESIZE, DIR_FMT, opt_dir, tmp_name);
     system(Line);
     fprintf(stderr, "Creating cache ...");
 
@@ -616,14 +624,14 @@ translate_file(const char *cpath, size_t offset, char *toString)
     size_t base = 0;
     CACHE_ENTRY *pentry = NULL;
     int res = 0;
-    char *path;
+    char *path, *dpath;
 
     /* First get the ImageBase of the File. If its smaller than the given
      * Parameter, everything is ok, because it was already added onto the
      * adress and can be given directly to process_file. If not, add it and
      * give the result to process_file.
      */
-    path = convert_path(cpath);
+    dpath = path = convert_path(cpath);
     if (!path)
     {
         return 1;
@@ -658,7 +666,7 @@ translate_file(const char *cpath, size_t offset, char *toString)
         res = process_file(path, offset, toString);
     }
 
-    free(path);
+    free(dpath);
     return res;
 }
 
@@ -834,7 +842,7 @@ static char *verboseUsage =
 "       - The image will be unpacked to a directory with the same name.\n"
 "       - The embedded reactos.cab file will also be unpacked.\n"
 "       - Combined with -f the file will be re-unpacked.\n"
-"       - NOTE: this ISO unpack feature needs 7z to be in the current PATH.\n"
+"       - NOTE: this ISO unpack feature needs 7z to be in the PATH.\n"
 "       Default: " DEF_OPT_DIR "\n\n"
 "  -f   Force creating new cache.\n\n"
 "  -F   As -f but exits immediately after creating cache.\n\n"
@@ -849,6 +857,10 @@ static char *verboseUsage =
 "  -v   Show detailed errors and tracing.\n"
 "       Repeating this option adds more verbosity.\n"
 "       Default: only (major) errors\n" "\n"
+"  -z <path to 7z>\n"
+"       Specify path to 7z.\n"
+"       Default: '7z'\n"
+"\n"
 "Examples:\n"
 "  Setup is a VMware machine with its serial port set to: '\\\\.\\pipe\\kdbg'.\n\n"
 "  Just recreate cache after a svn update or a new module has been added:\n"
@@ -882,11 +894,33 @@ unpack_iso(char *dir, char *iso)
 {
     char Line[LINESIZE];
     int res = 0;
+    char iso_tmp[MAX_PATH];
+    int  iso_copied = 0;
+    FILE *fiso;
 
-    sprintf(Line, UNZIP_FMT, iso, dir);
+    strcpy(iso_tmp, iso);
+    if ((fiso = fopen(iso, "a")) == NULL)
+    {
+        if (opt_verbose)
+            fprintf(stderr, "Open of %s failed (locked), trying to copy first\n", iso);
+
+        strcat(iso_tmp,"~");
+        remove(iso_tmp);
+        sprintf(Line, CP_FMT, iso, iso_tmp);
+        if (opt_verbose > 1)
+            fprintf(stderr, "Executing: %s\n", Line);
+        system(Line);
+        iso_copied = 1;
+    }
+    else
+    {
+        fclose(fiso);
+    }
+
+    sprintf(Line, UNZIP_FMT, opt_7z, iso_tmp, dir);
     if (system(Line) < 0)
     {
-        fprintf(stderr, "Cannot unpack %s (check 7z path!)\n", iso);
+        fprintf(stderr, "\nCannot unpack %s (check 7z path!)\n", iso_tmp);
         if (opt_verbose)
             fprintf(stderr, "Failed to execute: '%s'\n", Line);
         res = 1;
@@ -894,20 +928,24 @@ unpack_iso(char *dir, char *iso)
     else
     {
         if (opt_verbose > 1)
-            fprintf(stderr, "Unpacking reactos.cab in %s\n", dir);
-        sprintf(Line, UNZIP_FMT_CAB, dir, dir);
+            fprintf(stderr, "\nUnpacking reactos.cab in %s\n", dir);
+        sprintf(Line, UNZIP_FMT_CAB, opt_7z, dir, dir);
         if (system(Line) < 0)
         {
-            fprintf(stderr, "Cannot unpack reactos.cab in %s\n", dir);
+            fprintf(stderr, "\nCannot unpack reactos.cab in %s\n", dir);
             if (opt_verbose)
                 fprintf(stderr, "Failed to execute: '%s'\n", Line);
             res = 2;
         }
     }
+    if (iso_copied)
+    {
+        remove(iso_tmp);
+    }
     return res;
 }
 
-static void
+static int
 check_directory(int force)
 {
     char freeldr_path[MAX_PATH];
@@ -938,6 +976,11 @@ check_directory(int force)
                     fprintf(stderr, "%s already unpacked in: %s\n", iso_path, opt_dir);
             }
         }
+        else
+        {
+            fprintf(stderr, "ISO image not found: %s\n", opt_dir);
+            return 1;
+        }
     }
     cache_name = malloc(MAX_PATH);
     tmp_name = malloc(MAX_PATH);
@@ -945,6 +988,7 @@ check_directory(int force)
     strcat(cache_name, PATH_STR "log2lines.cache");
     strcpy(tmp_name, cache_name);
     strcat(tmp_name, "~");
+    return 0;
 }
 
 int
@@ -956,6 +1000,7 @@ main(int argc, const char **argv)
 
     strcpy(opt_dir, DEF_OPT_DIR);
     strcpy(opt_logFile, "");
+    strcpy(opt_7z, CMD_7Z);
     while (-1 != (opt = getopt(argc, (char **const)argv, optchars)))
     {
         switch (opt)
@@ -995,6 +1040,10 @@ main(int argc, const char **argv)
         case 'v':
             opt_verbose++;
             break;
+        case 'z':
+            optCount++;
+            strcpy(opt_7z, optarg);
+            break;
         default:
             usage(0);
             exit(2);
@@ -1010,7 +1059,9 @@ main(int argc, const char **argv)
         exit(1);
     }
 
-    check_directory(opt_force);
+    if (check_directory(opt_force))
+        exit(3);
+
     create_cache(opt_force, 0);
     if (opt_exit)
         exit(0);
@@ -1018,7 +1069,20 @@ main(int argc, const char **argv)
     read_cache();
 
     if (*opt_logFile)
+    {
         logFile = fopen(opt_logFile, "a");
+        if (logFile)
+        {
+            // disable buffering so fflush is not needed
+            setbuf(logFile,NULL);
+        }
+        else
+        {
+            fprintf(stderr, "Could not open logfile %s (%s)\n", opt_logFile, strerror(errno));
+            exit(2);
+
+        }
+    }
     if (argc == 3)
     {  // translate <exefile> <offset>
         translate_file(argv[optCount + 1], my_atoi(argv[optCount + 2]), NULL);
