@@ -23,6 +23,7 @@ TuiDisplayMenu(PCSTR MenuItemList[],
                UiMenuKeyPressFilterCallback KeyPressFilter)
 {
     UI_MENU_INFO MenuInformation;
+    ULONG InitialClockSecond;
     ULONG LastClockSecond;
     ULONG CurrentClockSecond;
     ULONG KeyPress;
@@ -59,7 +60,7 @@ TuiDisplayMenu(PCSTR MenuItemList[],
     //
     // Get the current second of time
     //
-    MachRTCGetCurrentDateTime(NULL, NULL, NULL, NULL, NULL, &LastClockSecond);
+    InitialClockSecond = LastClockSecond = ArcGetRelativeTime();
 
     //
     // Process keys
@@ -87,17 +88,12 @@ TuiDisplayMenu(PCSTR MenuItemList[],
         //
         // Check if there is a countdown
         //
-        if (MenuInformation.MenuTimeRemaining)
+        if (MenuInformation.MenuTimeRemaining != -1)
         {
             //
-            // Get the updated time, seconds only
+            // Get the updated time
             //
-            MachRTCGetCurrentDateTime(NULL,
-                                      NULL,
-                                      NULL,
-                                      NULL,
-                                      NULL,
-                                      &CurrentClockSecond);
+            CurrentClockSecond = ArcGetRelativeTime();
 
             //
             // Check if more then a second has now elapsed
@@ -108,7 +104,10 @@ TuiDisplayMenu(PCSTR MenuItemList[],
                 // Update the time information
                 //
                 LastClockSecond = CurrentClockSecond;
-                MenuInformation.MenuTimeRemaining--;
+                MenuInformation.MenuTimeRemaining =
+                    InitialClockSecond + MenuTimeOut - LastClockSecond;
+                if (MenuInformation.MenuTimeRemaining < 0)
+                    MenuInformation.MenuTimeRemaining = 0;
 
                 //
                 // Update the menu
@@ -117,7 +116,7 @@ TuiDisplayMenu(PCSTR MenuItemList[],
                 VideoCopyOffScreenBufferToVRAM();
             }
         }
-        else
+        else if (MenuInformation.MenuTimeRemaining == 0)
         {
             //
             // A time out occurred, exit this loop and return default OS

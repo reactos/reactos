@@ -47,7 +47,6 @@
 #undef MachDiskGetPartitionEntry
 #undef MachDiskGetDriveGeometry
 #undef MachDiskGetCacheableBlockCount
-#undef MachRTCGetCurrentDateTime
 #undef MachHwDetect
 
 MACHVTBL MachVtbl;
@@ -228,10 +227,24 @@ MachDiskGetCacheableBlockCount(ULONG DriveNumber)
   return MachVtbl.DiskGetCacheableBlockCount(DriveNumber);
 }
 
-VOID
-MachRTCGetCurrentDateTime(PULONG Year, PULONG Month, PULONG Day, PULONG Hour, PULONG Minute, PULONG Second)
+TIMEINFO*
+ArcGetTime(VOID)
 {
-  MachVtbl.RTCGetCurrentDateTime(Year, Month, Day, Hour, Minute, Second);
+    return MachVtbl.GetTime();
+}
+
+ULONG
+ArcGetRelativeTime(VOID)
+{
+    TIMEINFO* TimeInfo;
+    ULONG ret;
+
+    if (MachVtbl.GetRelativeTime)
+        return MachVtbl.GetRelativeTime();
+
+    TimeInfo = ArcGetTime();
+    ret = ((TimeInfo->Hour * 24) + TimeInfo->Minute) * 60 + TimeInfo->Second;
+    return ret;
 }
 
 VOID

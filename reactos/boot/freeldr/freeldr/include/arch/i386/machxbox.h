@@ -57,7 +57,7 @@ BOOLEAN XboxDiskGetPartitionEntry(ULONG DriveNumber, ULONG PartitionNumber, PPAR
 BOOLEAN XboxDiskGetDriveGeometry(ULONG DriveNumber, PGEOMETRY DriveGeometry);
 ULONG XboxDiskGetCacheableBlockCount(ULONG DriveNumber);
 
-VOID XboxRTCGetCurrentDateTime(PULONG Year, PULONG Month, PULONG Day, PULONG Hour, PULONG Minute, PULONG Second);
+TIMEINFO* XboxGetTime(VOID);
 
 PCONFIGURATION_COMPONENT_DATA XboxHwDetect(VOID);
 
