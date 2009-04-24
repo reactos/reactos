@@ -500,9 +500,7 @@ SetHarddiskIdentifier(PCONFIGURATION_COMPONENT_DATA DiskKey,
   ULONG Signature;
   CHAR Identifier[20];
   CHAR ArcName[256];
-#if 0
   PARTITION_TABLE_ENTRY PartitionTableEntry;
-#endif
 
   /* Read the MBR */
   if (!MachDiskReadLogicalSectors(DriveNumber, 0ULL, 1, (PVOID)DISKREADBUFFER))
@@ -538,9 +536,9 @@ SetHarddiskIdentifier(PCONFIGURATION_COMPONENT_DATA DiskKey,
   sprintf(ArcName, "multi(0)disk(0)rdisk(%lu)partition(0)", DriveNumber - 0x80);
   FsRegisterDevice(ArcName, &DiskVtbl);
 
-#if 0
   /* Add partitions */
   i = 0;
+  DiskReportError(FALSE);
   while (MachDiskGetPartitionEntry(DriveNumber, i, &PartitionTableEntry))
   {
     if (PartitionTableEntry.SystemIndicator != PARTITION_ENTRY_UNUSED)
@@ -550,7 +548,7 @@ SetHarddiskIdentifier(PCONFIGURATION_COMPONENT_DATA DiskKey,
     }
     i++;
   }
-#endif
+  DiskReportError(TRUE);
 
   /* Convert checksum and signature to identifier string */
   Identifier[0] = Hex[(Checksum >> 28) & 0x0F];
