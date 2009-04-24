@@ -32,7 +32,7 @@
 			<regname>SeaMonkey (1.1.16)</regname>
 			<version>1.1.16</version>
 			<description>Mozilla Suite is alive. This is the one and only Browser, Mail, Chat, and Composer bundle you will ever need.</description>
-			<location> http://ftp.df.lth.se/mozilla/seamonkey/releases/1.1.16/seamonkey-1.1.16.en-US.win32.installer.exe</location>
+			<location>http://ftp.df.lth.se/mozilla/seamonkey/releases/1.1.16/seamonkey-1.1.16.en-US.win32.installer.exe</location>
 		</application>
 		<application name="Off By One Browser">
 			<regname>The Off By One Web Browser</regname>
