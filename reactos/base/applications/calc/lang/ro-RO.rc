@@ -1,0 +1,735 @@
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+#pragma code_page(65001)
+
+// Dialog
+
+IDD_DIALOG_SCIENTIFIC DIALOGEX 0, 0, 316, 161
+STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Calculatorul ReactOS"
+MENU IDR_MENU_SCIENTIFIC_1
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    GROUPBOX        "",IDC_STATIC,4,16,132,21
+    CONTROL         "Hex",IDC_RADIO_HEX,"Button",BS_AUTORADIOBUTTON,8,24,29,10
+    CONTROL         "Dec",IDC_RADIO_DEC,"Button",BS_AUTORADIOBUTTON,40,24,29,10
+    CONTROL         "Oct",IDC_RADIO_OCT,"Button",BS_AUTORADIOBUTTON,72,24,27,10
+    CONTROL         "Bin",IDC_RADIO_BIN,"Button",BS_AUTORADIOBUTTON,100,24,26,10
+    GROUPBOX        "",IDC_STATIC,4,36,76,21
+    CONTROL         "Inv",IDC_CHECK_INV,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,8,44,26,10
+    CONTROL         "Hyp",IDC_CHECK_HYP,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,40,44,29,10
+    CTEXT           "",IDC_TEXT_PARENT,84,40,24,17,SS_CENTERIMAGE,
+                    WS_EX_CLIENTEDGE
+    CTEXT           "",IDC_TEXT_MEMORY,112,40,24,17,SS_CENTERIMAGE,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "Sta",IDC_BUTTON_STA,4,64,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "Ave",IDC_BUTTON_AVE,4,83,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | WS_DISABLED | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "Sum",IDC_BUTTON_SUM,4,102,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | WS_DISABLED | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "s",IDC_BUTTON_S,4,121,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | WS_DISABLED | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "Dat",IDC_BUTTON_DAT,4,140,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | WS_DISABLED | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "F-E",IDC_BUTTON_FE,38,64,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "dms",IDC_BUTTON_DMS,38,83,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "sin",IDC_BUTTON_SIN,38,102,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "cos",IDC_BUTTON_COS,38,121,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "tan",IDC_BUTTON_TAN,38,140,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "(",IDC_BUTTON_LEFTPAR,64,64,24,17,BS_CENTER | 
+                    BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "Exp",IDC_BUTTON_EXP,64,83,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "x^y",IDC_BUTTON_XeY,64,102,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "x^2",IDC_BUTTON_Xe2,64,121,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "x^3",IDC_BUTTON_Xe3,64,140,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      ")",IDC_BUTTON_RIGHTPAR,90,64,24,17,BS_CENTER | 
+                    BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "ln",IDC_BUTTON_LN,90,83,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "log",IDC_BUTTON_LOG,90,102,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "n!",IDC_BUTTON_NF,90,121,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "1/x",IDC_BUTTON_RX,90,140,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "MC",IDC_BUTTON_MC,124,64,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "MR",IDC_BUTTON_MR,124,83,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "MS",IDC_BUTTON_MS,124,102,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "M+",IDC_BUTTON_MP,124,121,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "pi",IDC_BUTTON_PI,124,140,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "7",IDC_BUTTON_7,158,64,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "4",IDC_BUTTON_4,158,83,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "1",IDC_BUTTON_1,158,102,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "0",IDC_BUTTON_0,158,121,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "A",IDC_BUTTON_A,158,140,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "8",IDC_BUTTON_8,184,64,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "5",IDC_BUTTON_5,184,83,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "2",IDC_BUTTON_2,184,102,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "+/-",IDC_BUTTON_SIGN,184,121,24,17,BS_CENTER | 
+                    BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "B",IDC_BUTTON_B,184,140,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "9",IDC_BUTTON_9,210,64,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "6",IDC_BUTTON_6,210,83,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "3",IDC_BUTTON_3,210,102,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      ",",IDC_BUTTON_DOT,210,121,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "C",IDC_BUTTON_C,210,140,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "/",IDC_BUTTON_DIV,236,64,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "*",IDC_BUTTON_MULT,236,83,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "-",IDC_BUTTON_SUB,236,102,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "+",IDC_BUTTON_ADD,236,121,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "D",IDC_BUTTON_D,236,140,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "Mod",IDC_BUTTON_MOD,262,64,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "Sau",IDC_BUTTON_OR,262,83,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "Lsh",IDC_BUTTON_LSH,262,102,24,17,BS_CENTER | 
+                    BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "=",IDC_BUTTON_EQU,262,121,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "E",IDC_BUTTON_E,262,140,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "Şi",IDC_BUTTON_AND,288,64,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "Xor",IDC_BUTTON_XOR,288,83,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "Not",IDC_BUTTON_NOT,288,102,24,17,BS_CENTER | 
+                    BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "Int",IDC_BUTTON_INT,288,121,24,17,BS_CENTER | 
+                    BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "F",IDC_BUTTON_F,288,140,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    GROUPBOX        "",IDC_STATIC,140,16,172,21
+    CONTROL         "Qword",IDC_RADIO_QWORD,"Button",BS_AUTORADIOBUTTON | 
+                    NOT WS_VISIBLE,148,24,37,10
+    CONTROL         "Dword",IDC_RADIO_DWORD,"Button",BS_AUTORADIOBUTTON | 
+                    NOT WS_VISIBLE,188,24,37,10
+    CONTROL         "Word",IDC_RADIO_WORD,"Button",BS_AUTORADIOBUTTON | NOT 
+                    WS_VISIBLE,232,24,33,10
+    CONTROL         "Octet",IDC_RADIO_BYTE,"Button",BS_AUTORADIOBUTTON | NOT 
+                    WS_VISIBLE,272,24,30,10
+    CONTROL         "Grade",IDC_RADIO_DEG,"Button",BS_AUTORADIOBUTTON,148,24,
+                    42,10
+    CONTROL         "Radiani",IDC_RADIO_RAD,"Button",BS_AUTORADIOBUTTON,192,
+                    24,42,10
+    CONTROL         "Gradiani",IDC_RADIO_GRAD,"Button",BS_AUTORADIOBUTTON,
+                    236,24,44,10
+    PUSHBUTTON      "C",IDC_BUTTON_CANC,272,40,40,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "CE",IDC_BUTTON_CE,228,40,40,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "Înapoi",IDC_BUTTON_BACK,184,40,40,17,BS_CENTER | 
+                    BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    RTEXT           "",IDC_TEXT_OUTPUT,4,4,308,12,SS_CENTERIMAGE,
+                    WS_EX_CLIENTEDGE
+    DEFPUSHBUTTON   "",IDC_BUTTON_FOCUS,0,0,5,5, NOT WS_VISIBLE
+END
+
+IDD_DIALOG_STANDARD DIALOGEX 0, 0, 172, 127
+STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Calculatorul ReactOS"
+MENU IDR_MENU_STANDARD
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    PUSHBUTTON      "C",IDC_BUTTON_CANC,128,24,40,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "CE",IDC_BUTTON_CE,84,24,40,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "Înapoi",IDC_BUTTON_BACK,40,24,40,17,BS_CENTER | 
+                    BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    RTEXT           "",IDC_TEXT_OUTPUT,4,4,164,12,SS_CENTERIMAGE,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "7",IDC_BUTTON_7,40,48,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "4",IDC_BUTTON_4,40,67,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "1",IDC_BUTTON_1,40,86,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "0",IDC_BUTTON_0,40,105,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "8",IDC_BUTTON_8,66,48,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "5",IDC_BUTTON_5,66,67,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "2",IDC_BUTTON_2,66,86,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "+/-",IDC_BUTTON_SIGN,66,105,24,17,BS_CENTER | 
+                    BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "9",IDC_BUTTON_9,92,48,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "6",IDC_BUTTON_6,92,67,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "3",IDC_BUTTON_3,92,86,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      ",",IDC_BUTTON_DOT,92,105,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "/",IDC_BUTTON_DIV,118,48,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "*",IDC_BUTTON_MULT,118,67,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "-",IDC_BUTTON_SUB,118,86,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "+",IDC_BUTTON_ADD,118,105,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "Radical",IDC_BUTTON_SQRT,144,48,24,17,BS_CENTER | 
+                    BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "%",IDC_BUTTON_PERCENT,144,67,24,17,BS_CENTER | 
+                    BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "1/x",IDC_BUTTON_RX,144,86,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "=",IDC_BUTTON_EQU,144,105,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    CTEXT           "",IDC_TEXT_MEMORY,4,24,24,17,SS_CENTERIMAGE,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "MC",IDC_BUTTON_MC,4,48,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "MR",IDC_BUTTON_MR,4,67,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "MS",IDC_BUTTON_MS,4,86,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "M+",IDC_BUTTON_MP,4,105,24,17,BS_CENTER | BS_VCENTER | 
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    DEFPUSHBUTTON   "",IDC_BUTTON_FOCUS,0,0,5,5, NOT WS_VISIBLE
+END
+
+IDD_DIALOG_CONVERSION DIALOGEX 0, 0, 320, 130
+STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Calculatorul ReactOS"
+MENU IDR_MENU_STANDARD
+FONT 8, "MS Shell Dlg"
+BEGIN
+    PUSHBUTTON      "Conversie",IDC_BUTTON_CONVERT,35,105,76,17
+    COMBOBOX        IDC_COMBO_CATEGORY,4,31,140,168,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP | CBS_SORT
+    LTEXT           "Categorie:",IDC_STATIC,4,20,56,8
+    COMBOBOX        IDC_COMBO_FROM,4,60,140,168,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP | CBS_SORT
+    LTEXT           "Conversie din:",IDC_STATIC,4,49,56,8
+    COMBOBOX        IDC_COMBO_TO,4,87,140,168,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP | CBS_SORT
+    LTEXT           "Conversie in:",IDC_STATIC,4,76,56,8
+    CONTROL         "C",IDC_BUTTON_CANC,"Button",BS_OWNERDRAW | BS_CENTER | 
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,276,24,40,17
+    CONTROL         "CE",IDC_BUTTON_CE,"Button",BS_OWNERDRAW | BS_CENTER | 
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,232,24,40,17
+    CONTROL         "Înapoi",IDC_BUTTON_BACK,"Button",BS_OWNERDRAW | 
+                    BS_CENTER | BS_VCENTER | BS_NOTIFY | WS_TABSTOP,188,24,
+                    40,17
+    RTEXT           "",IDC_TEXT_OUTPUT,4,4,312,12,SS_CENTERIMAGE,
+                    WS_EX_CLIENTEDGE
+    CONTROL         "7",IDC_BUTTON_7,"Button",BS_OWNERDRAW | BS_CENTER | 
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,188,48,24,17
+    CONTROL         "4",IDC_BUTTON_4,"Button",BS_OWNERDRAW | BS_CENTER | 
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,188,67,24,17
+    CONTROL         "1",IDC_BUTTON_1,"Button",BS_OWNERDRAW | BS_CENTER | 
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,188,86,24,17
+    CONTROL         "0",IDC_BUTTON_0,"Button",BS_OWNERDRAW | BS_CENTER | 
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,188,105,24,17
+    CONTROL         "8",IDC_BUTTON_8,"Button",BS_OWNERDRAW | BS_CENTER | 
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,214,48,24,17
+    CONTROL         "5",IDC_BUTTON_5,"Button",BS_OWNERDRAW | BS_CENTER | 
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,214,67,24,17
+    CONTROL         "2",IDC_BUTTON_2,"Button",BS_OWNERDRAW | BS_CENTER | 
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,214,86,24,17
+    CONTROL         "+/-",IDC_BUTTON_SIGN,"Button",BS_OWNERDRAW | BS_CENTER | 
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,214,105,24,17
+    CONTROL         "9",IDC_BUTTON_9,"Button",BS_OWNERDRAW | BS_CENTER | 
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,240,48,24,17
+    CONTROL         "6",IDC_BUTTON_6,"Button",BS_OWNERDRAW | BS_CENTER | 
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,240,67,24,17
+    CONTROL         "3",IDC_BUTTON_3,"Button",BS_OWNERDRAW | BS_CENTER | 
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,240,86,24,17
+    CONTROL         ",",IDC_BUTTON_DOT,"Button",BS_OWNERDRAW | BS_CENTER | 
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,240,105,24,17
+    CONTROL         "/",IDC_BUTTON_DIV,"Button",BS_OWNERDRAW | BS_CENTER | 
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,266,48,24,17
+    CONTROL         "*",IDC_BUTTON_MULT,"Button",BS_OWNERDRAW | BS_CENTER | 
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,266,67,24,17
+    CONTROL         "-",IDC_BUTTON_SUB,"Button",BS_OWNERDRAW | BS_CENTER | 
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,266,86,24,17
+    CONTROL         "+",IDC_BUTTON_ADD,"Button",BS_OWNERDRAW | BS_CENTER | 
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,266,105,24,17
+    CONTROL         "Radical",IDC_BUTTON_SQRT,"Button",BS_OWNERDRAW | BS_CENTER | 
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,292,48,24,17
+    CONTROL         "%",IDC_BUTTON_PERCENT,"Button",BS_OWNERDRAW | BS_CENTER | 
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,292,67,24,17
+    CONTROL         "1/x",IDC_BUTTON_RX,"Button",BS_OWNERDRAW | BS_CENTER | 
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,292,86,24,17
+    CONTROL         "=",IDC_BUTTON_EQU,"Button",BS_OWNERDRAW | BS_CENTER | 
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,292,105,24,17
+    CTEXT           "",IDC_TEXT_MEMORY,152,24,24,17,SS_CENTERIMAGE,
+                    WS_EX_CLIENTEDGE
+    CONTROL         "MC",IDC_BUTTON_MC,"Button",BS_OWNERDRAW | BS_CENTER | 
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,152,48,24,17
+    CONTROL         "MR",IDC_BUTTON_MR,"Button",BS_OWNERDRAW | BS_CENTER | 
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,152,67,24,17
+    CONTROL         "MS",IDC_BUTTON_MS,"Button",BS_OWNERDRAW | BS_CENTER | 
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,152,86,24,17
+    CONTROL         "M+",IDC_BUTTON_MP,"Button",BS_OWNERDRAW | BS_CENTER | 
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,152,105,24,17
+    DEFPUSHBUTTON   "",IDC_BUTTON_FOCUS,0,0,5,5,NOT WS_VISIBLE
+END
+
+IDD_DIALOG_ABOUT DIALOGEX DISCARDABLE  0, 0, 264, 169
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "About ReactOS Calc"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,105,148,52,16
+    CONTROL         IDB_BITMAP_ROS,IDC_STATIC,"Static",SS_BITMAP | SS_CENTERIMAGE | 
+                    SS_REALSIZEIMAGE | WS_BORDER,4,4,104,48
+    LTEXT           "Calculatorul ReactOS",IDC_STATIC,120,12,132,8,
+                    SS_CENTERIMAGE
+    LTEXT           "Versiune ",IDC_TEXT_VERSION,120,20,132,8,SS_CENTERIMAGE
+    LTEXT           "Scris de Carlo Bramini",IDC_STATIC,120,32,132,8,
+                    SS_CENTERIMAGE
+    GROUPBOX        "",IDC_STATIC,112,0,148,52
+    GROUPBOX        "",IDC_STATIC,4,56,256,88
+    EDITTEXT        IDC_EDIT_LICENSE,12,68,240,68,ES_MULTILINE | ES_READONLY | 
+                    WS_VSCROLL
+END
+
+IDD_DIALOG_STAT DIALOGEX DISCARDABLE  0, 0, 163, 85
+STYLE DS_SHELLFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Statistics box"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LISTBOX         IDC_LIST_STAT,4,4,156,40,LBS_NOINTEGRALHEIGHT | 
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "RET",IDC_BUTTON_RET,4,48,36,16
+    PUSHBUTTON      "LOAD",IDC_BUTTON_LOAD,44,48,36,16
+    PUSHBUTTON      "CD",IDC_BUTTON_CD,84,48,36,16
+    PUSHBUTTON      "CAD",IDC_BUTTON_CAD,124,48,36,16
+    CTEXT           "n=0",IDC_TEXT_NITEMS,4,68,156,12,SS_CENTERIMAGE | 
+                    SS_SUNKEN
+END
+
+// Menus
+
+IDR_MENU_SCIENTIFIC_1 MENU DISCARDABLE 
+BEGIN
+    POPUP "Editare"
+    BEGIN
+        MENUITEM "Copiere\tCTRL-C",                IDM_EDIT_COPY
+        MENUITEM "Lipire\tCTRL-V",               IDM_EDIT_PASTE
+    END
+    POPUP "Vizualizare"
+    BEGIN
+        MENUITEM "Standard",                    IDM_VIEW_STANDARD, CHECKED
+        MENUITEM "Ştiinţific",                  IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "Conversie",                  IDM_VIEW_CONVERSION
+        MENUITEM SEPARATOR
+        MENUITEM "Hex\tF5",                     IDM_VIEW_HEX, CHECKED
+        MENUITEM "Zecimal\tF6",                 IDM_VIEW_DEC, CHECKED
+        MENUITEM "Octal\tF7",                   IDM_VIEW_OCT, CHECKED
+        MENUITEM "Binar\tF8",                  IDM_VIEW_BIN, CHECKED
+        MENUITEM SEPARATOR
+        MENUITEM "Grade\tF2",                 IDM_VIEW_DEG, CHECKED
+        MENUITEM "Radiani\tF3",                 IDM_VIEW_RAD, CHECKED
+        MENUITEM "Gradiani\tF4",                IDM_VIEW_GRAD, CHECKED
+        MENUITEM SEPARATOR
+        MENUITEM "Grupare cifre",                IDM_VIEW_GROUP, CHECKED
+    END
+    POPUP "Ajutor"
+    BEGIN
+        MENUITEM "Topici de ajutor",                 IDM_HELP_HELP
+        MENUITEM SEPARATOR
+        MENUITEM "Despre Calculatorul ReactOS",          IDM_HELP_ABOUT
+    END
+END
+
+IDR_MENU_SCIENTIFIC_2 MENU DISCARDABLE 
+BEGIN
+    POPUP "Editare"
+    BEGIN
+        MENUITEM "Copiere\tCTRL-C",                IDM_EDIT_COPY
+        MENUITEM "Lipire\tCTRL-V",               IDM_EDIT_PASTE
+    END
+    POPUP "Vizualizare"
+    BEGIN
+        MENUITEM "Standard",                    IDM_VIEW_STANDARD, CHECKED
+        MENUITEM "Ştiinţific",                  IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "Conversie",                  IDM_VIEW_CONVERSION
+        MENUITEM SEPARATOR
+        MENUITEM "Hex\tF5",                     IDM_VIEW_HEX, CHECKED
+        MENUITEM "Zecimal\tF6",                 IDM_VIEW_DEC, CHECKED
+        MENUITEM "Octal\tF7",                   IDM_VIEW_OCT, CHECKED
+        MENUITEM "Binar\tF8",                  IDM_VIEW_BIN, CHECKED
+        MENUITEM SEPARATOR
+        MENUITEM "Qword\tF12",                  IDM_VIEW_QWORD, CHECKED
+        MENUITEM "Dword\tF2",                   IDM_VIEW_DWORD, CHECKED
+        MENUITEM "Word\tF3",                    IDM_VIEW_WORD, CHECKED
+        MENUITEM "Octet\tF4",                    IDM_VIEW_BYTE, CHECKED
+        MENUITEM SEPARATOR
+        MENUITEM "Grupare cifre",                IDM_VIEW_GROUP, CHECKED
+    END
+    POPUP "Ajutor"
+    BEGIN
+        MENUITEM "Topici de ajutor",                 IDM_HELP_HELP
+        MENUITEM SEPARATOR
+        MENUITEM "Despre Calculatorul ReactOS",          IDM_HELP_ABOUT
+    END
+END
+
+IDR_MENU_STANDARD MENU DISCARDABLE 
+BEGIN
+    POPUP "Editare"
+    BEGIN
+        MENUITEM "Copy\tCTRL-C",                IDM_EDIT_COPY
+        MENUITEM "Paste\tCTRL-V",               IDM_EDIT_PASTE
+    END
+    POPUP "Vizualizare"
+    BEGIN
+        MENUITEM "Standard",                    IDM_VIEW_STANDARD, CHECKED
+        MENUITEM "Ştiinţific",                  IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "Conversie",                  IDM_VIEW_CONVERSION
+        MENUITEM SEPARATOR
+        MENUITEM "Grupare cifre",                IDM_VIEW_GROUP, CHECKED
+    END
+    POPUP "Ajutor"
+    BEGIN
+        MENUITEM "Topici de ajutor",                 IDM_HELP_HELP
+        MENUITEM SEPARATOR
+        MENUITEM "Despre Calculatorul ReactOS",          IDM_HELP_ABOUT
+    END
+END
+
+// String Tables
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_STRING_LICENSE      "ReactOS Calc este software liber sub licenţa GNU GPL. \r\n\r\nGăsiţi o copie a acestei licenţe aici:\r\nhttp://www.gnu.org/licenses/gpl.html\r\n\r\nDe asemenea găsiţi traduceri ale aceste licenţe aici:\r\nhttp://www.gnu.org/licenses/translations.html\r\nTraducerea în limba română de Petru Dimitriu."
+    IDS_MATH_ERROR          "Eroare"
+    IDS_QUICKHELP           "Ajutor rapid"
+END
+
+// Types of conversion
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_CONV_ANGLE          "Unghi"
+    IDS_CONV_AREA           "Suprafaţă"
+    IDS_CONV_CONSUMPTION    "Consum (motoare)"
+    IDS_CONV_CURRENCY       "Valută"
+    IDS_CONV_ENERGY         "Energie"
+    IDS_CONV_LENGTH         "Lungimi"
+    IDS_CONV_POWER          "Putere"
+    IDS_CONV_PRESSURE       "Presiune"
+    IDS_CONV_TEMPERATURE    "Temperatură"
+    IDS_CONV_TIME           "Timp"
+    IDS_CONV_VELOCITY       "Velocitate"
+    IDS_CONV_VOLUME         "Volum"
+    IDS_CONV_WEIGHT         "Masă"
+END
+
+// TYPES OF ANGLES
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ANGLE_DEGREES       "Grade"
+    IDS_ANGLE_GRADIANS      "Gradiani"
+    IDS_ANGLE_RADIANS       "Radiani"
+END
+
+// TYPES OF AREAS
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_AREA_ACRES                  "Acri"
+    IDS_AREA_ACRES_BRAZIL           "Acri (Brazilia)"
+    IDS_AREA_ACRES_FRANCE           "Acri (Franţa)"
+    IDS_AREA_ACRES_SCOTS            "Acri (Scots)"
+    IDS_AREA_ACRES_US               "Acri (SUA)"
+    IDS_AREA_ARES                   "Ares"
+    IDS_AREA_CHOU                   "Chou"
+    IDS_AREA_DANBO                  "Danbo"
+    IDS_AREA_HECTARES               "Hectare"
+    IDS_AREA_JEONGBO                "Jeongbo"
+    IDS_AREA_MORGEN_HUNGARY         "Morgen (Ungaria)"
+    IDS_AREA_MU                     "Mu"
+    IDS_AREA_PING                   "Ping"
+    IDS_AREA_PYEONG                 "Pyeong"
+    IDS_AREA_PYEONGBANGJA           "Pyeongbangja"
+    IDS_AREA_RAI                    "Rai"
+    IDS_AREA_SE                     "Se"
+    IDS_AREA_SQUARE_CENTIMETERS     "Centimetri pătraţi"
+    IDS_AREA_SQUARE_CHR             "Chr pătraţi"
+    IDS_AREA_SQUARE_FATHOMS         "Fathomi pătraţi"
+    IDS_AREA_SQUARE_FATHOMS_HUNGARY "Fathomi pătraţi (Ungaria)"
+    IDS_AREA_SQUARE_FEET            "Picioare pătrate"
+    IDS_AREA_SQUARE_INCHES          "Ţoli pătraţi"
+    IDS_AREA_SQUARE_KILOMETERS      "Kilometri pătraţi"
+    IDS_AREA_SQUARE_LAR             "Lar pătraţi"
+    IDS_AREA_SQUARE_METER           "Metri pătraţi"
+    IDS_AREA_SQUARE_MILES           "Mile pătrate"
+    IDS_AREA_SQUARE_MILLIMETERS     "Milimetri pătraţi"
+    IDS_AREA_SQUARE_SHAKU           "Shaku pătraţi"
+    IDS_AREA_SQUARE_TSUEN           "Tsuen pătraţi"
+    IDS_AREA_SQUARE_VA              "Va pătraţi"
+    IDS_AREA_SQUARE_YARD            "Yarzi pătraţi"
+    IDS_AREA_TAN                    "Tan"
+    IDS_AREA_TSUBO                  "Tsubo"
+END
+
+// TYPES OF COMSUMPTIONS
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_CONSUMPTION_KM_PER_L        "Kilometri/litru"
+    IDS_CONSUMPTION_L_PER_100_KM    "Litri/100 kilometri"
+    IDS_CONSUMPTION_MILES_GALLON_UK "Mile/galon (Marea Britanie)"
+    IDS_CONSUMPTION_MILES_GALLON_US "Mile/galon (SUA)"
+END
+
+// TYPES OF CURRENCIES
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_CURRENCY_AUSTRIAN_SCHILLING "Şiling autriac"
+    IDS_CURRENCY_BELGIAN_FRANC      "Franc belgian"
+    IDS_CURRENCY_CYPRIOT_POUND      "Liră cipriotă"
+    IDS_CURRENCY_CZECH_KORUNA       "Coroană cehă"
+    IDS_CURRENCY_DEUTSCHE_MARK      "Marcă nemţească"
+    IDS_CURRENCY_DUTCH_GUILDER      "Guilder olandez"
+    IDS_CURRENCY_EURO               "Euro"
+    IDS_CURRENCY_FINNISH_MARKKA     "Marcă finlandeză"
+    IDS_CURRENCY_FRENCH_FRANC       "Franc framcez"
+    IDS_CURRENCY_GREEK_DRACHMA      "Drahmă grecească"
+    IDS_CURRENCY_IRISH_POUND        "Liră irlandeză"
+    IDS_CURRENCY_ITALIAN_LIRA       "Liră italiană"
+    IDS_CURRENCY_LUXEMBOURG_FRANC   "Franc luxemburghez"
+    IDS_CURRENCY_MALTESE_LIRA       "Litră malteză"
+    IDS_CURRENCY_PORTOGUESE_ESCUDO  "Escudo portughez"
+    IDS_CURRENCY_SLOVAK_KORUNA      "Coroană slovacă"
+    IDS_CURRENCY_SLOVENIAN_TOLAR    "Tolar sloven"
+    IDS_CURRENCY_SPANISH_PESETA     "Peseta spaniolă"
+END
+
+// TYPES OF ENERGIES
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ENERGY_15_C_CALORIES        "Calorii 15 °C"
+    IDS_ENERGY_BTUS                 "Unităţi termale britanice"
+    IDS_ENERGY_ERGS                 "Ergs"
+    IDS_ENERGY_EVS                  "Electron-Volţi"
+    IDS_ENERGY_FOOT_POUNDS          "Picioare-Livră"
+    IDS_ENERGY_IT_CALORIES          "Calorii Tabel Internaţional"
+    IDS_ENERGY_IT_KILOCALORIES      "Kilocalorii Tabel Internaţional"
+    IDS_ENERGY_JOULES               "Jouli"
+    IDS_ENERGY_KILOJOULES           "KiloJouli"
+    IDS_ENERGY_KILOWATT_HOURS       "Kilowatt ore"
+    IDS_ENERGY_NUTRITION_CALORIES   "Calorii nutriţie"
+    IDS_ENERGY_TH_CALORIES          "Calorie termochimică"
+END
+
+// TYPES OF LENGTHS
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_LENGTH_ANGSTROMS            "Ångströms"
+    IDS_LENGTH_ASTRONOMICAL_UNITS   "Unităţi astronomice"
+    IDS_LENGTH_BARLEYCORNS          "Barleycorns"
+    IDS_LENGTH_CENTIMETERS          "Centimetri"
+    IDS_LENGTH_CHAINS_UK            "Chains (Marea Britanie)"
+    IDS_LENGTH_CHI                  "Chi"
+    IDS_LENGTH_CHOU                 "Chou"
+    IDS_LENGTH_CHR                  "Chr"
+    IDS_LENGTH_CUN                  "Cun"
+    IDS_LENGTH_FATHOMS              "Fathoms"
+    IDS_LENGTH_FATHOMS_HUNGARY      "Fathoms (Ungaria)"
+    IDS_LENGTH_FEET                 "Picioare"
+    IDS_LENGTH_FURLONGS             "Furlongs"
+    IDS_LENGTH_GAN                  "Gan"
+    IDS_LENGTH_HANDS                "Hands"
+    IDS_LENGTH_HUNH                 "Hunh"
+    IDS_LENGTH_INCHES               "Incii (Ţoli)"
+    IDS_LENGTH_JA                   "Ja"
+    IDS_LENGTH_JEONG                "Jeong"
+    IDS_LENGTH_KABIET               "Kabiet"
+    IDS_LENGTH_KEN                  "Ken"
+    IDS_LENGTH_KEUB                 "Keub"
+    IDS_LENGTH_KILOMETERS           "Kilometeri"
+    IDS_LENGTH_LAR                  "Lar"
+    IDS_LENGTH_LIGHT_YEARS          "Ani lumină"
+    IDS_LENGTH_LINKS_UK             "Links (Marea Britanie)"
+    IDS_LENGTH_METERS               "Metri"
+    IDS_LENGTH_MICRONS              "Microni"
+    IDS_LENGTH_MILES                "Mile"
+    IDS_LENGTH_MILLIMETERS          "Milimetri"
+    IDS_LENGTH_NAUTICAL_MILES       "Mile nautice"
+    IDS_LENGTH_NIEU                 "Nieu"
+    IDS_LENGTH_PARSECS              "Parsecs"
+    IDS_LENGTH_PICAS                "Picas"
+    IDS_LENGTH_RI_JAPAN             "Ri (Japonia)"
+    IDS_LENGTH_RI_KOREA             "Ri (Corea)"
+    IDS_LENGTH_RODS                 "Rods"
+    IDS_LENGTH_SAWK                 "Sawk"
+    IDS_LENGTH_SEN                  "Sen"
+    IDS_LENGTH_SHAKU                "Shaku"
+    IDS_LENGTH_SPAN                 "Span"
+    IDS_LENGTH_SUN                  "Sun"
+    IDS_LENGTH_TSUEN                "Tsuen"
+    IDS_LENGTH_VA                   "Va"
+    IDS_LENGTH_YARDS                "Yards"
+    IDS_LENGTH_YOTE                 "Yote"
+    IDS_LENGTH_ZHANG                "Zhang"
+END
+
+// TYPES OF POWERS
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_POWER_BTUS_PER_MINUTE       "Unităţi termice britanice pe minut"
+    IDS_POWER_FPS_PER_MINUTE        "Picior-livre pe minut"
+    IDS_POWER_HORSEPOWER            "Cai putere"
+    IDS_POWER_KILOWATTS             "Kilowaţi"
+    IDS_POWER_MEGAWATTS             "Megawaţi"
+    IDS_POWER_WATTS                 "Waţi"
+END
+
+// TYPE OF PRESSURES
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_PRESSURE_ATMOSPHERES        "Atmosfere"
+    IDS_PRESSURE_BARS               "Bari"
+    IDS_PRESSURE_HECTOPASCALS       "Hectopascali"
+    IDS_PRESSURE_KILOPASCALS        "Kilopascali"
+    IDS_PRESSURE_MM_OF_MERCURY      "Milimetri coloană de mercur"
+    IDS_PRESSURE_PASCALS            "Pascali"
+    IDS_PRESSURE_PSI                "Livre-forţă pe ţol pătrat"
+END
+
+// TYPES OF TEMPERATURES
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_TEMPERATURE_CELSIUS         "Celsius"
+    IDS_TEMPERATURE_FAHRENHEIT      "Fahrenheit"
+    IDS_TEMPERATURE_KELVIN          "Kelvin"
+    IDS_TEMPERATURE_RANKINE         "Rankine"
+END
+
+// TYPES OF TIME
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_TIME_DAYS         "Zile"
+    IDS_TIME_HOURS        "Ore"
+    IDS_TIME_MICROSECONDS "Microsecunde"
+    IDS_TIME_MILLISECONDS "Milisecunde"
+    IDS_TIME_MINUTES      "Minute"
+    IDS_TIME_SECONDS      "Secunde"
+    IDS_TIME_WEEKS        "Săptămâni"
+    IDS_TIME_YEARS        "Ani"
+END
+
+// TYPES OF VELOCITIES
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_VELOCITY_CMS_SECOND         "Centimetri/oră"
+    IDS_VELOCITY_FEET_HOUR          "Picioare/oră"
+    IDS_VELOCITY_FEET_SECOND        "Picioare/secundă"
+    IDS_VELOCITY_KILOMETERS_HOUR    "Kilometri/ore"
+    IDS_VELOCITY_KNOTS              "Nod"
+    IDS_VELOCITY_MACH               "Mach"
+    IDS_VELOCITY_METERS_SECOND      "Metri/secundă"
+    IDS_VELOCITY_MILES_HOUR         "Mile/oră"
+END
+
+// TYPES OF VOLUMES
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_VOLUME_BARRELS_UK           "Barili (Marea Britanie)"
+    IDS_VOLUME_BARRELS_OIL          "Barili de petrol"
+    IDS_VOLUME_BUN                  "Bun"
+    IDS_VOLUME_BUSHELS_UK           "Bushels (Marea Britanie)"
+    IDS_VOLUME_BUSHELS_US           "Bushels (SUA)"
+    IDS_VOLUME_CUBIC_CENTIMETERS    "Centrimetri cubi"
+    IDS_VOLUME_CUBIC_FEET           "Picioare^3"
+    IDS_VOLUME_CUBIC_INCHES         "Ţoli cubi"
+    IDS_VOLUME_CUBIC_METERS         "Metri cubi"
+    IDS_VOLUME_CUBIC_YARDS          "Yarzi cubi"
+    IDS_VOLUME_DOE                  "Doe"
+    IDS_VOLUME_FLUID_OUNCES_UK      "Fluid ounces (Marea Britanie)"
+    IDS_VOLUME_FLUID_OUNCES_US      "Fluid ounces (SUA)"
+    IDS_VOLUME_GALLONS_UK           "Galoni (Marea Britanie)"
+    IDS_VOLUME_GALLONS_DRY_US       "Galoni, uscat (SUA)"
+    IDS_VOLUME_GALLONS_LIQUID_US    "Galoni, lichid (SUA)"
+    IDS_VOLUME_GOU                  "Gou"
+    IDS_VOLUME_HOP                  "Hop"
+    IDS_VOLUME_ICCE                 "Icce"
+    IDS_VOLUME_KWIAN                "Kwian"
+    IDS_VOLUME_LITERS               "Litri"
+    IDS_VOLUME_MAL                  "Mal"
+    IDS_VOLUME_MILLILITERS          "Mililitri"
+    IDS_VOLUME_PINTS_UK             "Pints (Marea Britanie)"
+    IDS_VOLUME_PINTS_DRY_US         "Pints, uscat (SUA)"
+    IDS_VOLUME_PINTS_LIQUID_US      "Pints, lichid (SUA)"
+    IDS_VOLUME_QUARTS_UK            "Quarts (Marea Britanie)"
+    IDS_VOLUME_QUARTS_DRY_US        "Quarts, uscat (SUA)"
+    IDS_VOLUME_QUARTS_LIQUID_US     "Quarts, lichid (SUA)"
+    IDS_VOLUME_SEKI                 "Seki"
+    IDS_VOLUME_SYOU                 "Syou"
+    IDS_VOLUME_TANANLOUNG           "Tananloung"
+    IDS_VOLUME_TANG                 "Tang"
+    IDS_VOLUME_TO                   "To"
+END
+
+// TYPES OF WEIGHTS
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_WEIGHT_BAHT                 "Baht"
+    IDS_WEIGHT_CARATS               "Carate"
+    IDS_WEIGHT_CHUNG                "Chung"
+    IDS_WEIGHT_DON                  "Don"
+    IDS_WEIGHT_GEUN                 "Geun"
+    IDS_WEIGHT_GRAMS                "Grame"
+    IDS_WEIGHT_GWAN                 "Gwan"
+    IDS_WEIGHT_HARB                 "Harb"
+    IDS_WEIGHT_JIN_CHINA            "Jin (China)"
+    IDS_WEIGHT_JIN_TAIWAN           "Jin (Taiwan)"
+    IDS_WEIGHT_KAN                  "Kan"
+    IDS_WEIGHT_KILOGRAMS            "Kilograme"
+    IDS_WEIGHT_KIN                  "Kin"
+    IDS_WEIGHT_LIANG_CHINA          "Liang (China)"
+    IDS_WEIGHT_LIANG_TAIWAN         "Liang (Taiwan)"
+    IDS_WEIGHT_MONME                "Monme"
+    IDS_WEIGHT_OUNCES_AVOIRDUPOIS   "Uncii, avoirdupois"
+    IDS_WEIGHT_OUNCES_TROY          "Uncii, troy"
+    IDS_WEIGHT_POUNDS               "Livre"
+    IDS_WEIGHT_QUINTAL_METRIC       "Chintale (metric)"
+    IDS_WEIGHT_SALOUNG              "Saloung"
+    IDS_WEIGHT_STONES               "Stones"
+    IDS_WEIGHT_TAMLUNG              "Tamlung"
+    IDS_WEIGHT_TONNES               "Tonnes"
+    IDS_WEIGHT_TONS_UK              "Tone (Marea Britanie)"
+    IDS_WEIGHT_TONS_US              "Tone (SUA)"
+END
+
+#pragma code_page(default)
