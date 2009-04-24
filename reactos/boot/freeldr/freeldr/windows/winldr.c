@@ -431,10 +431,10 @@ VOID
 LoadAndBootWindows(PCSTR OperatingSystemName, USHORT OperatingSystemVersion)
 {
 	CHAR  MsgBuffer[256];
-	CHAR  SystemPath[512], SearchPath[512];
-	CHAR  FileName[512];
-	CHAR  BootPath[512];
+	CHAR  FullPath[MAX_PATH], SystemRoot[MAX_PATH], BootPath[MAX_PATH];
+	CHAR  FileName[MAX_PATH];
 	CHAR  BootOptions[256];
+	PCHAR PathSeparator;
 	PVOID NtosBase = NULL, HalBase = NULL, KdComBase = NULL;
 	BOOLEAN Status;
 	ULONG SectionId;
@@ -463,11 +463,16 @@ LoadAndBootWindows(PCSTR OperatingSystemName, USHORT OperatingSystemVersion)
 	UiDrawProgressBarCenter(1, 100, "Loading Windows...");
 
 	/* Make sure the system path is set in the .ini file */
-	if (!IniReadSettingByName(SectionId, "SystemPath", SystemPath, sizeof(SystemPath)))
+	if (!IniReadSettingByName(SectionId, "SystemPath", FullPath, sizeof(FullPath)))
 	{
 		UiMessageBox("System path not specified for selected operating system.");
 		return;
 	}
+
+	/* Convert FullPath to SystemRoot */
+	PathSeparator = strstr(FullPath, "\\");
+	strcpy(SystemRoot, PathSeparator);
+	strcat(SystemRoot, "\\");
 
 	/* Read booting options */
 	if (!IniReadSettingByName(SectionId, "Options", BootOptions, sizeof(BootOptions)))
@@ -477,23 +482,23 @@ LoadAndBootWindows(PCSTR OperatingSystemName, USHORT OperatingSystemVersion)
 	}
 
 	/* Special case for LiveCD */
-	if (!_strnicmp(SystemPath, "LiveCD", strlen("LiveCD")))
+	if (!_strnicmp(SystemRoot, "LiveCD", strlen("LiveCD")))
 	{
-		strcpy(BootPath, SystemPath + strlen("LiveCD"));
-		MachDiskGetBootPath(SystemPath, sizeof(SystemPath));
-		strcat(SystemPath, BootPath);
+		strcpy(BootPath, SystemRoot + strlen("LiveCD"));
+		MachDiskGetBootPath(SystemRoot, sizeof(SystemRoot));
+		strcat(SystemRoot, BootPath);
 	}
 
 	/* Let user know we started loading */
 	UiDrawStatusText("Loading...");
 
 	/* append a backslash */
-	strcpy(BootPath, SystemPath);
+	strcpy(BootPath, FullPath);
 	if ((strlen(BootPath)==0) ||
 	    BootPath[strlen(BootPath)] != '\\')
 		strcat(BootPath, "\\");
 
-	DPRINTM(DPRINT_WINDOWS,"SystemRoot: '%s'\n", BootPath);
+	DPRINTM(DPRINT_WINDOWS,"BootPath: '%s'\n", BootPath);
 
 	/* Allocate and minimalistic-initialize LPB */
 	AllocateAndInitLPB(&LoaderBlock);
@@ -535,12 +540,12 @@ LoadAndBootWindows(PCSTR OperatingSystemName, USHORT OperatingSystemVersion)
 	}
 
 	/* Load all referenced DLLs for kernel, HAL and kdcom.dll */
-	strcpy(SearchPath, BootPath);
-	strcat(SearchPath, "SYSTEM32\\");
-	WinLdrScanImportDescriptorTable(LoaderBlock, SearchPath, KernelDTE);
-	WinLdrScanImportDescriptorTable(LoaderBlock, SearchPath, HalDTE);
+	strcpy(FileName, BootPath);
+	strcat(FileName, "SYSTEM32\\");
+	WinLdrScanImportDescriptorTable(LoaderBlock, FileName, KernelDTE);
+	WinLdrScanImportDescriptorTable(LoaderBlock, FileName, HalDTE);
 	if (KdComDTE)
-		WinLdrScanImportDescriptorTable(LoaderBlock, SearchPath, KdComDTE);
+		WinLdrScanImportDescriptorTable(LoaderBlock, FileName, KdComDTE);
 
 	/* Load Hive, and then NLS data, OEM font, and prepare boot drivers list */
 	Status = WinLdrLoadAndScanSystemHive(LoaderBlock, BootPath);
@@ -554,7 +559,7 @@ LoadAndBootWindows(PCSTR OperatingSystemName, USHORT OperatingSystemVersion)
 	WinLdrSetupForNt(LoaderBlock, &GdtIdt, &PcrBasePage, &TssBasePage);
 
 	/* Initialize Phase 1 - no drivers loading anymore */
-	WinLdrInitializePhase1(LoaderBlock, BootOptions, SystemPath, BootPath, OperatingSystemVersion);
+	WinLdrInitializePhase1(LoaderBlock, BootOptions, SystemRoot, BootPath, OperatingSystemVersion);
 
 	/* Save entry-point pointer and Loader block VAs */
 	KiSystemStartup = (KERNEL_ENTRY_POINT)KernelDTE->EntryPoint;
