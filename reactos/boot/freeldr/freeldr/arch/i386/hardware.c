@@ -772,7 +772,8 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
     ULONG DiskCount;
     ULONG Size;
     ULONG i;
-    BOOLEAN Changed;
+    BOOLEAN Changed, BootDriveReported = FALSE;
+    CHAR BootPath[512];
     
     /* Count the number of visible drives */
     DiskReportError(FALSE);
@@ -846,6 +847,9 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
     Int13Drives = (PVOID)(((ULONG_PTR)PartialResourceList) + sizeof(CM_PARTIAL_RESOURCE_LIST));
     for (i = 0; i < DiskCount; i++)
     {
+        if (BootDrive == 0x80 + i)
+            BootDriveReported = TRUE;
+
         if (MachDiskGetDriveGeometry(0x80 + i, &Geometry))
         {
             Int13Drives[i].DriveSelect = 0x80 + i;
@@ -890,8 +894,16 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
         SetHarddiskIdentifier(DiskKey, 0x80 + i);
     }
 
-    /* Also add one cdrom drive */
-    FsRegisterDevice("multi(0)disk(0)cdrom(224)", &DiskVtbl);
+    /* Get the drive we're booting from */
+    MachDiskGetBootPath(BootPath, sizeof(BootPath));
+
+    /* Add it, if it's a floppy or cdrom */
+    if ((BootDrive >= 0x80 && !BootDriveReported) ||
+        DiskIsDriveRemovable(BootDrive))
+    {
+        /* TODO: Check if it's really a cdrom drive */
+        FsRegisterDevice(BootPath, &DiskVtbl);
+    }
 }
 
 static VOID
