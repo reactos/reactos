@@ -1608,10 +1608,6 @@ DoQueries(
       return NdisStatus;
     }
 
-
-  NDIS_DbgPrint(MIN_TRACE, ("Current lookahead is %ld\n", Adapter->NdisMiniportBlock.CurrentLookahead));
-  NDIS_DbgPrint(MIN_TRACE, ("Maximum lookahead is %ld\n", Adapter->NdisMiniportBlock.MaximumLookahead));
-
   NdisStatus = MiniQueryInformation(Adapter, OID_GEN_MAXIMUM_SEND_PACKETS, sizeof(ULONG),
                                     &Adapter->NdisMiniportBlock.MaxSendPackets, &BytesWritten);
 
