@@ -201,8 +201,8 @@ STRINGTABLE
 BEGIN
     IDS_ACCESSORIES     "Tilbehør"
     IDS_CMT_CALC        "Start Kalkulator"
-    IDS_CMT_CMD         "Åpne command prompt"
-    IDS_CMT_EXPLORER    "Start Explorer"
+    IDS_CMT_CMD         "Åpne Kommandolinje"
+    IDS_CMT_EXPLORER    "Start Utforsker"
     IDS_CMT_NOTEPAD     "Start Tekstredigering"
     IDS_CMT_REGEDIT     "Start Registerredigering"
     IDS_CMT_WORDPAD     "Start Dokument redigering"
@@ -210,48 +210,48 @@ BEGIN
     IDS_CMT_DEVMGMT     "Start Enhetsbehandler"
     IDS_CMT_SERVMAN     "Start Tjenestebehandler"
     IDS_CMT_RDESKTOP    "Start Ekstern skrivebord"
-    IDS_CMT_EVENTVIEW   "Launch Event Viewer"
-    IDS_CMT_MSCONFIG    "Launch System Configuration program"
+    IDS_CMT_EVENTVIEW   "Start Hendelseliste"
+    IDS_CMT_MSCONFIG    "Start Systemkonfigurasjon"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_GAMES		    "Spill"
-    IDS_CMT_SOLITAIRE	"Kabal"
-    IDS_CMT_WINEMINE	"Minnesveiper"
+    IDS_GAMES           "Spill"
+    IDS_CMT_SOLITAIRE   "Kabal"
+    IDS_CMT_WINEMINE    "Minnesveiper"
 END
 
 STRINGTABLE
 BEGIN
-	IDS_SYS_TOOLS        "System verktøy"
-	IDS_CMT_CHARMAP      "Tegnkart"
-	IDS_CMT_KBSWITCH     "Endre tastatur valg"
-    IDS_CMT_DXDIAG       "Launch ReactX-Diagnostic program"
+    IDS_SYS_TOOLS       "Systemverktøy"
+    IDS_CMT_CHARMAP     "Tegnkart"
+    IDS_CMT_KBSWITCH    "Endre tastaturvalg"
+    IDS_CMT_DXDIAG      "Kjør ReactX-Diagnose program"
 END
 
 STRINGTABLE
 BEGIN
-	IDS_SYS_ACCESSIBILITY        "Tilgjengelighet"
-	IDS_CMT_MAGNIFY      	     "Forstørrelse"
+    IDS_SYS_ACCESSIBILITY       "Tilgjengelighet"
+    IDS_CMT_MAGNIFY             "Forstørrelse"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_SYS_ENTERTAINMENT       "Entertainment"
-    IDS_CMT_MPLAY32             "Launch Multimedia Player"
-    IDS_CMT_SNDVOL32            "Launch Volume Control"
+    IDS_SYS_ENTERTAINMENT       "Underholdning"
+    IDS_CMT_MPLAY32             "Start Multimedia avspiller"
+    IDS_CMT_SNDVOL32            "Start Volumkontroll"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_REACTOS_SETUP		    "ReactOS installasjon"
+    IDS_REACTOS_SETUP           "ReactOS installasjon"
     IDS_UNKNOWN_ERROR           "Ukjent feil"
     IDS_REGISTERING_COMPONENTS  "Registrerer komponenter..."
-    IDS_LOADLIBRARY_FAILED	    "LoadLibrary feilet: "
-    IDS_GETPROCADDR_FAILED	    "GetProcAddr feilet: "
+    IDS_LOADLIBRARY_FAILED      "LoadLibrary feilet: "
+    IDS_GETPROCADDR_FAILED      "GetProcAddr feilet: "
     IDS_REGSVR_FAILED           "DllRegisterServer feilet: "
-    IDS_DLLINSTALL_FAILED	    "DllInstall feilet: "
-    IDS_TIMEOUT			        "Tidsavbrudd under registrering"
+    IDS_DLLINSTALL_FAILED       "DllInstall feilet: "
+    IDS_TIMEOUT                 "Tidsavbrudd under registrering"
     IDS_REASON_UNKNOWN          ""
 END
 
@@ -282,13 +282,13 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_WZD_NAME         "Installasjonen kan ikke fortsette uten ditt navn."
-    IDS_WZD_SETCOMPUTERNAME  "Installasjonen klarte ikke sette datamaskinnavnet."
-    IDS_WZD_COMPUTERNAME  "Installasjonen kan ikke fortsette før du taster inn navn for datamaskinen."
-    IDS_WZD_PASSWORDEMPTY  "Du må taste et passord!"
-    IDS_WZD_PASSWORDMATCH  "Passordene du tastet er ikke like. Vennligst tast inn på nytt."
-    IDS_WZD_PASSWORDCHAR  "Passordet du tastet inneholder ugyldige tegn. Vennligst tast inn et annet."
-    IDS_WZD_LOCALTIME    "Installasjonen klarte ikke å sette lokal tid."
+    IDS_WZD_NAME            "Installasjonen kan ikke fortsette uten ditt navn."
+    IDS_WZD_SETCOMPUTERNAME "Installasjonen klarte ikke sette datamaskinnavnet."
+    IDS_WZD_COMPUTERNAME    "Installasjonen kan ikke fortsette før du taster inn navn for datamaskinen."
+    IDS_WZD_PASSWORDEMPTY   "Du må taste et passord!"
+    IDS_WZD_PASSWORDMATCH   "Passordene du tastet er ikke like. Vennligst tast inn på nytt."
+    IDS_WZD_PASSWORDCHAR    "Passordet du tastet inneholder ugyldige tegn. Vennligst tast inn et annet."
+    IDS_WZD_LOCALTIME       "Installasjonen klarte ikke å sette lokal tid."
 END
 
 STRINGTABLE
