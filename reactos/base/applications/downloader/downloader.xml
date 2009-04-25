@@ -1,18 +1,18 @@
 <tree Version="1"> <!-- Application version this tree is made for -->
 	<category name="Internet &amp; Network" icon="1">
-		<application name="Firefox 1.5">
-			<regname>Mozilla Firefox (1.5)</regname>
-			<licence>MPL/GPL/LGPL</licence>
-			<version>1.5.0.12</version>
-			<description>The most popular and one of the best free Web Browsers out there.</description>
-			<location>http://svn.reactos.org/packages/Firefox%20Setup%201.5.0.12.exe</location>
-		</application>
 		<application name="Firefox 2.0">
 			<regname>Mozilla Firefox (2.0.0.20)</regname>
 			<licence>MPL/GPL/LGPL</licence>
 			<version>2.0.0.20</version>
 			<description>The most popular and one of the best free Web Browsers out there.</description>
 			<location>http://releases.mozilla.org/pub/mozilla.org/firefox/releases/2.0.0.20/win32/en-US/Firefox%20Setup%202.0.0.20.exe</location>
+		</application>
+		<application name="Firefox 3.0">
+			<regname>Mozilla Firefox (3.0.9)</regname>
+			<licence>MPL/GPL/LGPL</licence>
+			<version>3.0.9</version>
+			<description>The most popular and one of the best free Web Browsers out there.</description>
+			<location>http://releases.mozilla.org/pub/mozilla.org/firefox/releases/3.0.9/win32/en-US/Firefox%20Setup%203.0.9.exe</location>
 		</application>
 		<application name="Opera">
 			<regname>Opera</regname>
@@ -29,16 +29,10 @@
 			<location>http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/2.0.0.19/win32/en-US/Thunderbird%20Setup%202.0.0.19.exe</location>
 		</application>
 		<application name="SeaMonkey">
-			<regname>SeaMonkey (1.1.14)</regname>
-			<version>1.1.14</version>
+			<regname>SeaMonkey (1.1.16)</regname>
+			<version>1.1.16</version>
 			<description>Mozilla Suite is alive. This is the one and only Browser, Mail, Chat, and Composer bundle you will ever need.</description>
-			<location>http://releases.mozilla.org/pub/mozilla.org/seamonkey/releases/1.1.14/seamonkey-1.1.14.en-US.win32.installer.exe</location>
-		</application>
-		<application name="Mozilla ActiveX Control">
-			<regname>Mozilla ActiveX Control v1.7.12 (ReactOS special)</regname>
-			<version>1.7.12</version>
-			<description>Essential Component to get ReactOS Explorer's and other applications' Internet Browsing feature running.</description>
-			<location>http://ovh.dl.sourceforge.net/sourceforge/reactos/MozillaControl1712-ReactOS.exe</location>
+			<location>http://ftp.df.lth.se/mozilla/seamonkey/releases/1.1.16/seamonkey-1.1.16.en-US.win32.installer.exe</location>
 		</application>
 		<application name="Off By One Browser">
 			<regname>The Off By One Web Browser</regname>
