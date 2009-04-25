@@ -14,13 +14,6 @@
 			<description>The most popular and one of the best free Web Browsers out there.</description>
 			<location>http://releases.mozilla.org/pub/mozilla.org/firefox/releases/3.0.9/win32/en-US/Firefox%20Setup%203.0.9.exe</location>
 		</application>
-		<application name="Opera">
-			<regname>Opera</regname>
-			<licence>Freeware</licence>
-			<version>9.63</version>
-			<description>The popular Opera Browser with many advanced features and including a Mail and BitTorrent client.</description>
-			<location>http://ftp.opera.com/pub/opera/win/963/en/Opera_963_classic_Setup.exe</location>
-		</application>
 		<application name="Thunderbird 2.0">
 			<regname>Mozilla Thunderbird (2.0.0.19)</regname>
 			<licence>MPL/GPL/LGPL</licence>
@@ -50,12 +43,6 @@
 			<description>This tool allows you to access your Windows shared folders/printers with ReactOS.</description>
 			<location>http://svn.reactos.org/packages/samba-tng.exe</location>
 		</application>
-		<application name="Miranda IM">
-			<regname>Miranda IM</regname>
-			<version>0.7.4</version>
-			<description>Open source multiprotocol instant messaging application - May not work completely.</description>
-			<location>http://ovh.dl.sourceforge.net/sourceforge/miranda/miranda-im-v0.7.4-unicode.exe</location>
-		</application>
 		<application name="Putty">
 			<regname>PuTTY version 0.60</regname>
 			<licence>MIT</licence>
@@ -70,18 +57,6 @@
 			<version>2.6.4</version>
 			<description>Word processor.</description>
 			<location>http://www.abiword.org/downloads/abiword/2.6.4/Windows/abiword-setup-2.6.4.exe</location>
-		</application>
-		<application name="OpenOffice 2.4">
-			<regname>OpenOffice.org 2.4.2</regname>
-			<version>2.4.2</version>
-			<description>THE Open Source Office Suite.</description>
-			<location>http://ftp.plusline.de/OpenOffice/stable/2.4.2/OOo_2.4.2_Win32Intel_install_wJRE_en-US.exe</location>
-		</application>
-		<application name="OpenOffice 3.0">
-			<regname>OpenOffice.org 3.0.1</regname>
-			<version>3.0.1</version>
-			<description>THE Open Source Office Suite.</description>
-			<location>http://ftp.tu-chemnitz.de/pub/openoffice/stable/3.0.1/OOo_3.0.1_Win32Intel_install_en-US.exe</location>
 		</application>
 	</category>
 	<category name="Graphics" icon="3">
@@ -109,77 +84,7 @@
 			<location>http://www.zeckensack.de/glide/archive/GlideWrapper084c.exe</location>
 		</application>
 	</category>
-	<category name="Libraries" icon="4">
-		<application name="Microsoft XML 3">
-			<regname>msxml3</regname>
-			<version>3.0</version>
-			<description>MSXML3 is needed for some MSI Installers.</description>
-			<location>http://download.microsoft.com/download/8/8/8/888f34b7-4f54-4f06-8dac-fa29b19f33dd/msxml3.msi</location>
-		</application>
-		<application name="OLE Viewer and Microsoft Foundation Classes version 4">
-			<regname>mfc40</regname>
-			<version>4.0</version>
-			<description>MFC 4 is needed by some applications</description>
-			<location>http://download.microsoft.com/download/ole/ole2v/3.5/w351/en-us/ole2v.exe</location>
-		</application>
-
-		<application name="Visual Basic 5 Runtime">
-			<regname>vb5run</regname>
-			<version>5.0</version>
-			<description>Visual Basic 5 Runtime</description>
-			<location>http://download.microsoft.com/download/vb50pro/utility/1/win98/en-us/msvbvm50.exe</location>
-		</application>
-
-		<application name="Visual Basic 6 Runtime">
-			<regname>vb6run</regname>
-			<version>6.0</version>
-			<description>Visual Basic 6 Runtime</description>
-			<location>http://download.microsoft.com/download/vb60pro/install/6/win98me/en-us/vbrun60.exe</location>
-		</application>
-
-		<application name="Visual Studio 6 Runtime">
-			<regname>vc6run</regname>
-			<version>6.0</version>
-			<description>Visual Studio 6 Runtime</description>
-			<location>http://download.microsoft.com/download/vc60pro/update/1/w9xnt4/en-us/vc6redistsetup_enu.exe</location>
-		</application>
-
-		<application name="Visual Studio 2005 Runtime">
-			<regname>vc2005run</regname>
-			<version>7.0</version>
-			<description>Visual Studio 2005 Runtime</description>
-			<location>http://download.microsoft.com/download/d/3/4/d342efa6-3266-4157-a2ec-5174867be706/vcredist_x86.exe</location>
-		</application>
-
-		<application name="Visual Studio 2005 Runtime SP1">
-			<regname>vc2005sp1run</regname>
-			<version>7.1</version>
-			<description>Visual Studio 2005 Runtime SP1</description>
-			<location>http://download.microsoft.com/download/e/1/c/e1c773de-73ba-494a-a5ba-f24906ecf088/vcredist_x86.exe</location>
-		</application>
-
-		<application name="Visual Studio 2008 Runtime">
-			<regname>vc2008run</regname>
-			<version>8.0</version>
-			<description>Visual Studio 2008 Runtime</description>
-			<location>http://download.microsoft.com/download/1/1/1/1116b75a-9ec3-481a-a3c8-1777b5381140/vcredist_x86.exe</location>
-		</application>
-	</category>
-	<category name="Multimedia" icon="4">
-	</category>
 	<category name="Development" icon="5">
-		<application name="ReactOS Build Environment">
-			<regname>ReactOS Build Environment 1.2</regname>
-			<version>1.2</version>
-			<description>Allows you to build the ReactOS Source. For more instructions see ReactOS wiki.</description>
-			<location>http://ovh.dl.sourceforge.net/sourceforge/reactos/RosBE-1.2.exe</location>
-		</application>
-		<application name="MinGW">
-			<regname>MinGW 5.1.3</regname>
-			<version>5.1.3</version>
-			<description>A Port of the GNU toolchain with GCC, GDB, GNU make, etc.</description>
-			<location>http://ovh.dl.sourceforge.net/sourceforge/mingw/MinGW-5.1.3.exe</location>
-		</application>
 		<application name="FreeBASIC">
 			<regname>FreeBASIC 0.18.4b</regname>
 			<version>0.18.4b</version>
@@ -212,23 +117,11 @@
 			<description>Open Source clone of the "Transport Tycoon Deluxe" game engine. You need a copy of Transport Tycoon.</description>
 			<location>http://ovh.dl.sourceforge.net/sourceforge/openttd/openttd-0.6.0-win32.exe</location>
 		</application>
-		<application name="LBreakout2">
-			<regname>LBreakout2 2.4.1</regname>
-			<version>2.4.1</version>
-			<description>Breakout Clone using SDL libs.</description>
-			<location>http://ovh.dl.sourceforge.net/sourceforge/lgames/lbreakout2-2.4.1-win32.exe</location>
-		</application>
 		<application name="LGeneral">
 			<regname>LGeneral 1.1</regname>
 			<version>1.1</version>
 			<description>Panzer General Clone using SDL libs.</description>
 			<location>http://ovh.dl.sourceforge.net/sourceforge/lgames/lgeneral-1.1-win32.exe</location>
-		</application>
-		<application name="LMarbles">
-			<regname>LMarbles 1.0.6</regname>
-			<version>1.0.6</version>
-			<description>Atomix Clone using SDL libs.</description>
-			<location>http://ovh.dl.sourceforge.net/sourceforge/lgames/lmarbles-1.0.6-win32.exe</location>
 		</application>
 		<application name="WinBoard">
 			<regname>WinBoard 4.2.7b</regname>
@@ -237,12 +130,6 @@
 			<description>WinBoard is a graphical chessboard for the Windows/ReactOS that can serve as a user interface for GNU Chess, Crafty, and other chess engines, for the Internet Chess Servers, and for electronic mail correspondence chess.</description>
 			<location>http://ftp.gnu.org/gnu/winboard/winboard-4_2_7b.exe</location>
 		</application>
-	</category>
-	<category name="Science" icon="11">
-	</category>
-	<category name="Edutainment" icon="12">
-	</category>
-	<category name="Engineering" icon="13">
 	</category>
 	<category name="Tools" icon="7">
 		<application name="7-Zip">
@@ -256,19 +143,6 @@
 			<version>1.8</version>
 			<description>Small and fast BitTorrent Client</description>
 			<location>http://download.utorrent.com/1.8.2/utorrent-1.8.2.upx.exe</location>
-		</application>
-		<application name="Audio Grabber">
-			<regname>Audiograbber 1.83 SE</regname>
-			<version>1.83 SE</version>
-			<description>A very good CD Ripper/Audio File Converter.</description>
-			<location>http://www.audiograbber.de/files/4898276276/agsetup183se.exe</location>
-		</application>
-	</category>
-	<category name="Drivers" icon="8">
-		<application name="AC97 Driver for VirtualBox">
-			<version>5.10.00.3610</version>
-			<description>Unzip in the "ReactOS" folder then restart ReactOS twice.</description>
-			<location>http://svn.reactos.org/packages/ac97_vbox.exe</location>
 		</application>
 	</category>
 	<category name="Others" icon="8">
