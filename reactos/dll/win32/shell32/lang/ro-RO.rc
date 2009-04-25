@@ -1,0 +1,752 @@
+/*
+ * Copyright 1998 Juergen Schmied
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+MENU_001 MENU DISCARDABLE
+BEGIN
+	MENUITEM "Pictograme& mari",  FCIDM_SHVIEW_BIGICON
+	MENUITEM "Pictograme &mici",  FCIDM_SHVIEW_SMALLICON
+	MENUITEM "&Listã",         FCIDM_SHVIEW_LISTVIEW
+	MENUITEM "&Detalii",      FCIDM_SHVIEW_REPORTVIEW
+END
+
+/* shellview background menu */
+MENU_002 MENU DISCARDABLE
+BEGIN
+	POPUP ""
+	BEGIN
+		POPUP "&Vizualizare"
+		BEGIN
+			MENUITEM "Pictograme& mari",       FCIDM_SHVIEW_BIGICON
+			MENUITEM "Pictograme &mici",       FCIDM_SHVIEW_SMALLICON
+			MENUITEM "&Listã",              FCIDM_SHVIEW_LISTVIEW
+			MENUITEM "&Detailii",           FCIDM_SHVIEW_REPORTVIEW
+		END
+		MENUITEM SEPARATOR
+		POPUP "Aranjare &pictograme"
+		BEGIN
+			MENUITEM "Dupã &nume",           0x30  /* column 0 */
+			MENUITEM "Dupã &tip",           0x32  /* column 2 */
+			MENUITEM "Dupã &mãrime",           0x31  /* ... */
+			MENUITEM "Dupã &datã",           0x33
+			MENUITEM SEPARATOR
+			MENUITEM "&Aranjare automatã",      FCIDM_SHVIEW_AUTOARRANGE
+		END
+		MENUITEM "Aranjare în grilã",        FCIDM_SHVIEW_SNAPTOGRID
+		MENUITEM SEPARATOR
+		MENUITEM "Reîmprospãtare",              FCIDM_SHVIEW_REFRESH
+		MENUITEM SEPARATOR
+		MENUITEM "Lipire",                FCIDM_SHVIEW_INSERT
+		MENUITEM "Lipire ca legãturã",        FCIDM_SHVIEW_INSERTLINK
+		MENUITEM SEPARATOR
+		MENUITEM "Proprietãþi",           FCIDM_SHVIEW_PROPERTIES
+	END
+END
+
+/* shellview item menu */
+MENU_SHV_FILE MENU DISCARDABLE
+BEGIN
+	POPUP ""
+	BEGIN
+		MENUITEM "E&xplorare",             FCIDM_SHVIEW_EXPLORE
+		MENUITEM "&Deschidere",                FCIDM_SHVIEW_OPEN
+		MENUITEM SEPARATOR
+		MENUITEM "D&ecupare",                 FCIDM_SHVIEW_CUT
+		MENUITEM "&Copiere",                FCIDM_SHVIEW_COPY
+		MENUITEM SEPARATOR
+		MENUITEM "Creare legãturã",         FCIDM_SHVIEW_CREATELINK
+		MENUITEM "&ªtergere",              FCIDM_SHVIEW_DELETE
+		MENUITEM "&Redenumire",              FCIDM_SHVIEW_RENAME
+		MENUITEM SEPARATOR
+		MENUITEM "&Proprietãþi",          FCIDM_SHVIEW_PROPERTIES
+	END
+END
+
+SHBRSFORFOLDER_MSGBOX DIALOGEX LOADONCALL MOVEABLE DISCARDABLE 15, 40, 188, 192
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "Rãsfoire dupã dosar"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	DEFPUSHBUTTON "OK", 1, 60, 175, 60, 15, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+	PUSHBUTTON "Revocare", 2, 125, 175, 60, 15, WS_GROUP | WS_TABSTOP
+	LTEXT "", IDD_TITLE, 4, 4, 180, 12
+	LTEXT "", IDD_STATUS, 4, 25, 180, 12
+	CONTROL "", IDD_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | WS_BORDER | WS_TABSTOP, 4, 40, 180, 120
+END
+
+SHNEWBRSFORFOLDER_MSGBOX DIALOGEX LOADONCALL MOVEABLE DISCARDABLE 15, 40, 218, 196
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "Rãsfoire dupã dosar"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "", IDD_TITLE, 10, 8, 198, 24
+	LTEXT "", IDD_STATUS, 10, 25, 198, 12
+	LTEXT "Dosar:", IDD_FOLDER, 10, 152, 40, 12
+	CONTROL "", IDD_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | WS_BORDER | WS_TABSTOP, 12, 38, 194, 105
+	EDITTEXT IDD_FOLDERTEXT, 46, 150, 160, 14, WS_BORDER | WS_GROUP | WS_TABSTOP
+	PUSHBUTTON "&Creare dosar nou", IDD_MAKENEWFOLDER, 12, 174, 77, 14, WS_GROUP | WS_TABSTOP
+	DEFPUSHBUTTON "OK", IDOK, 102, 174, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+	PUSHBUTTON "Revocare", IDCANCEL, 156, 174, 50, 14, WS_GROUP | WS_TABSTOP
+END
+
+SHELL_YESTOALL_MSGBOX DIALOGEX 200, 100, 280, 90
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Mesaj"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	DEFPUSHBUTTON "&Da", IDYES, 34, 69, 53, 14, WS_GROUP | WS_TABSTOP
+	PUSHBUTTON "Da pentru &toate", IDD_YESTOALL, 92, 69, 65, 14, WS_GROUP | WS_TABSTOP
+	PUSHBUTTON "&Nu", IDNO, 162, 69, 53, 14, WS_GROUP | WS_TABSTOP
+	PUSHBUTTON "&Revocare", IDCANCEL, 220, 69, 53, 14, WS_GROUP | WS_TABSTOP
+	ICON "", IDD_ICON, 10, 10, 16, 16
+	LTEXT "", IDD_MESSAGE, 40, 10, 238, 52, 0
+END
+
+IDD_SHELL_ABOUT DIALOGEX LOADONCALL MOVEABLE DISCARDABLE 0, 0, 275, 198
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Despre %s"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	ICON "", IDC_SHELL_ABOUT_ICON, 7, 55, 21, 20
+	LTEXT "", IDC_SHELL_ABOUT_APPNAME, 35, 55, 200, 10
+	LTEXT "Versiune " KERNEL_VERSION_STR " (" KERNEL_VERSION_BUILD_STR ")", IDC_STATIC, 35, 65, 235, 10
+	LTEXT REACTOS_DEFAULT_STR_LEGAL_COPYRIGHT, IDC_STATIC, 35, 75, 210, 10
+	LTEXT "", IDC_SHELL_ABOUT_OTHERSTUFF, 35, 90, 180, 20
+	LTEXT "Versiune de ReactOS înregistratã pentru:", IDC_STATIC, 35, 115, 180, 10
+	LTEXT "", IDC_SHELL_ABOUT_REG_USERNAME, 45, 125, 180, 10
+	LTEXT "", IDC_SHELL_ABOUT_REG_ORGNAME, 45, 135, 180, 10
+	LTEXT "", IDC_STATIC, 35, 147, 235, 1, SS_ETCHEDHORZ
+	LTEXT "Memorie fizicã instalatã:", IDC_STATIC, 35, 152, 130, 10
+	LTEXT "", IDC_SHELL_ABOUT_PHYSMEM, 167, 152, 88, 10
+	DEFPUSHBUTTON "OK", IDOK, 220, 178, 50, 14
+	
+	PUSHBUTTON "", IDC_SHELL_ABOUT_AUTHORS, 5, 178, 70, 14
+END
+
+IDD_SHELL_ABOUT_AUTHORS DIALOGEX MOVEABLE DISCARDABLE 35, 90, 235, 85
+STYLE DS_SHELLFONT | WS_CHILD
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "ReactOS v-a fost adus de:", IDC_STATIC, 0, 0, 180, 10
+	LISTBOX IDC_SHELL_ABOUT_AUTHORS_LISTBOX, 0, 10, 165, 75
+END
+
+SHELL_RUN_DLG DIALOGEX LOADONCALL MOVEABLE DISCARDABLE 0, 0, 227, 95
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Rulare"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
+	LTEXT "Scrieþi numele unui program, dosar, document sau a unei resurse de Internet iar ReactOS le va deschide pentru dumneavoastrã.", 12289, 36, 11, 182, 18
+	LTEXT "&Deschidere:", 12305, 7, 39, 24, 10
+	CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
+	DEFPUSHBUTTON "OK", IDOK, 36, 63, 59, 14, WS_TABSTOP
+	PUSHBUTTON "Revocare", IDCANCEL, 98, 63, 59, 14, WS_TABSTOP
+	PUSHBUTTON "&Rãsfoire...", 12288, 160, 63, 59, 14, WS_TABSTOP
+END
+
+SHELL_GENERAL_SHORTCUT_DLG DIALOGEX 0, 0, 235, 215
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Scurtãturã"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+	ICON "", 14000, 10, 4, 30, 30, WS_VISIBLE
+	LTEXT "Tip þintã:", 14004, 8, 38, 64, 10
+	LTEXT "", 14005, 78, 38, 142, 10
+	LTEXT "Locaþie þintã:", 14006, 8, 58, 64, 10
+	LTEXT "", 14007, 79, 58, 141, 10
+	LTEXT "Þintã:", 14008, 8, 77, 45, 10
+	EDITTEXT 14009, 79, 75, 150, 14, ES_AUTOHSCROLL
+	LTEXT "&Pornire în:", 14010, 8, 96, 57, 10
+	EDITTEXT 14011, 79, 94, 150, 14, ES_AUTOHSCROLL
+	LTEXT "Taste rapide:", 14014, 8, 115, 57, 10
+	EDITTEXT 14015, 79, 112, 150, 14, ES_LEFT
+	LTEXT "Executare:", 14016, 8, 134, 57, 10
+	EDITTEXT 14017, 79, 131, 150, 14, ES_AUTOHSCROLL
+	LTEXT "C&omentariu:", 14018, 8, 152, 57, 10
+	EDITTEXT 14019, 79, 149, 150, 14, ES_AUTOHSCROLL
+	PUSHBUTTON "&Gãsire þintã...", 14020, 9, 172, 70, 14, ES_LEFT
+	PUSHBUTTON "&Pictogramã...", 14021, 84, 172, 70, 14, ES_LEFT
+	PUSHBUTTON "A&vansat...", 14022, 159, 172, 70, 14, ES_LEFT
+END
+
+SHELL_EXTENDED_SHORTCUT_DLG DIALOGEX 0, 0, 230, 150
+STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
+CAPTION "Proprietãþi extinse"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+	LTEXT "Alegeþi proprietãþi avansate pentru aceastã scurtãturã.", -1, 5, 30, 210, 10
+	CHECKBOX "Rulare ca alt utilizator", 14000, 25, 50, 150, 10
+	LTEXT "Aceastã opþiune vã permite sã rulaþi scurtãtura ca alt utilizator sau sã continuaþi sã folosiþi scurtãtura dvs protejând computerul de activitãþi neautorizate.", -1, 50, 60, 175, 40
+	CHECKBOX "Rulare în spaþiu de memorie separat", 14001, 25, 100, 90, 10, WS_DISABLED
+	PUSHBUTTON "OK", 1, 63, 124, 50, 15, WS_VISIBLE
+	PUSHBUTTON "Revocare", 2, 120, 124, 50, 15, WS_VISIBLE
+END
+
+SHELL_FOLDER_GENERAL_DLG DIALOGEX 0, 0, 240, 205
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "General"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+	ICON "", 14000, 10, 3, 30, 30, WS_VISIBLE
+	EDITTEXT 14001, 70, 9, 158, 14, ES_LEFT | ES_READONLY
+	LTEXT "Tip fiºier:", 14004, 8, 35, 50, 10
+	LTEXT "Folder", 14005, 68, 35, 160, 10
+	LTEXT "Locaþie:", 14006, 8, 53, 50, 10
+	LTEXT "", 14007, 68, 53, 315, 10
+	LTEXT "Mãrime:", 14008, 8, 72, 45, 10
+	LTEXT "", 14009, 68, 72, 315, 10
+	LTEXT "Conþine:", 14010, 8, 93, 45, 10
+	LTEXT "", 14011, 68, 93, 160, 10
+	LTEXT "Creat:", 14014, 8, 118, 45, 10
+	LTEXT "", 14015, 68, 118, 160, 10
+	AUTOCHECKBOX "&Doar-în-citire", 14021, 45, 150, 67, 10
+	AUTOCHECKBOX "&Ascuns", 14022, 126, 150, 50, 10
+END
+
+
+SHELL_FILE_GENERAL_DLG DIALOGEX 0, 0, 240, 205
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "General"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+	ICON "", 14000, 10, 3, 30, 30, WS_VISIBLE
+	EDITTEXT 14001, 70, 9, 158, 14, ES_LEFT | ES_READONLY
+	LTEXT "Tip fiºier:", 14004, 8, 35, 50, 10
+	LTEXT "Fiºier", 14005, 68, 35, 160, 10
+	LTEXT "Se deschide cu:", 14006, 8, 53, 50, 10
+	LTEXT "", 14007, 68, 53, 160, 10
+	LTEXT "Locaþie:", 14008, 8, 72, 45, 10
+	LTEXT "", 14009, 68, 72, 315, 10
+	LTEXT "Mãrime:", 14010, 8, 93, 45, 10
+	LTEXT "", 14011, 68, 93, 160, 10
+	LTEXT "Creat:", 14014, 8, 118, 45, 10
+	LTEXT "", 14015, 68, 118, 160, 10
+	LTEXT "Modificat:", 14016, 8, 140, 45, 10
+	LTEXT "", 14017, 68, 140, 160, 10
+	LTEXT "Accesat:", 14018, 8, 160, 45, 10
+	LTEXT "", 14019, 68, 160, 160, 10
+	LTEXT "Atribute:", 14020, 8, 189, 45, 10
+	CHECKBOX "&Doar-în-citire", 14021, 58, 189, 67, 10
+	CHECKBOX "&Ascuns", 14022, 126, 189, 50, 10
+	CHECKBOX "&Arhivã", 14023, 181, 189, 49, 10
+END
+
+SHELL_FILE_VERSION_DLG DIALOGEX 0, 0, 235, 215
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Versiune"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+	LTEXT "Versiune fiºier: ", 14000, 10, 10, 55, 10
+	LTEXT "", 14001, 77, 10, 152, 10
+	LTEXT "Descriere: ", 14002, 10, 27, 45, 10
+	LTEXT "", 14003, 77, 27, 152, 10
+	LTEXT "Drept de autor: ", 14004, 10, 46, 66, 10
+	LTEXT "", 14005, 77, 46, 152, 10
+	GROUPBOX "Alte informaþii versiune", 14006, 6, 70, 222, 115
+	LTEXT "Nume element: ", 14007, 13, 82, 50, 10
+	LTEXT "Valoare: ", 14008, 112, 82, 45, 10
+	LISTBOX 14009, 12, 94, 94, 83, LBS_STANDARD | WS_TABSTOP | LBS_NOTIFY
+	EDITTEXT 14010, 112, 93, 109, 83, ES_LEFT | WS_BORDER | WS_VSCROLL | WS_GROUP | ES_MULTILINE | ES_READONLY
+END
+
+DRIVE_GENERAL_DLG DIALOGEX 0, 0, 240, 230
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "General"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+	EDITTEXT 14001, 40, 20, 190, 14, ES_LEFT|WS_BORDER|WS_GROUP
+	LTEXT "Tip:", -1, 15, 55, 40, 10
+	LTEXT "", 14002, 110, 55, 100, 10
+
+	LTEXT "Sistem de fiºiere:", -1, 15, 70, 100, 10
+	LTEXT "", 14003, 110, 70, 100, 10
+
+	CONTROL "", 14013, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 90, 10, 10
+	LTEXT "Spaþiu folosit:", -1, 25, 90, 120, 10
+	LTEXT "", 14004, 110, 90, 120, 10
+	LTEXT "", 14005, 200, 90, 40, 10
+
+	CONTROL "", 14014, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 105, 10, 10
+	LTEXT "Spaþiu liber:", -1, 25, 105, 70, 10
+	LTEXT "", 14006, 110, 105, 120, 10
+	LTEXT "", 14007, 200, 105, 40, 10
+
+	LTEXT "Capacitate:", -1, 25, 125, 80, 10
+	LTEXT "", 14008, 110, 125, 120, 10
+	LTEXT "", 14009, 200, 125, 40, 10
+
+	CONTROL "", 14015, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 20, 140, 200, 20
+
+	LTEXT "Partiþie %s", 14010, 100, 170, 40, 10
+	PUSHBUTTON "Curãþire disc", 14011, 180, 175, 50, 15, WS_TABSTOP
+	CHECKBOX "Comprimare pentru a salva spaþiu", 14012, 15, 205, 180, 10, WS_DISABLED
+	CHECKBOX "Permitere Serviciu de Indexare pentru cãutare rapidã", 14012, 15, 220, 200, 10, WS_DISABLED
+END
+
+DRIVE_EXTRA_DLG DIALOGEX 0, 0, 240, 230
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Unelte"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+	GROUPBOX "Verificare pentru erori", -1, 5, 5, 230, 60
+	LTEXT "Aceastã opþiune va verifica\npartiþia pentru erori.", -1, 40, 25, 160, 20
+	PUSHBUTTON "Verificare acum...", 14000, 130, 45, 90, 15, WS_TABSTOP
+	GROUPBOX "Defragmentare", -1, 5, 65, 230, 60
+	LTEXT "Aceastã opþiune va defragmenta fiºierele de pe partiþie.", -1, 40, 85, 160, 20
+	PUSHBUTTON "Defragmentare acum...", 14001, 130, 105, 90, 15, WS_TABSTOP
+	GROUPBOX "Copie de siguranþã", -1, 5, 130, 230, 60
+	LTEXT "Aceastã opþiune va crea o copie de siguranþã a fiºierelor.", -1, 40, 150, 160, 20
+	PUSHBUTTON "Creare copie de siguranþã...", 14002, 130, 170, 90, 15, WS_TABSTOP
+END
+
+DRIVE_HARDWARE_DLG DIALOGEX 0, 0, 240, 230
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Hardware"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+END
+
+RUN_AS_DIALOG DIALOGEX 0, 0, 240, 190
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Rulare ca"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+	LTEXT "Ce cont vreþi sã folosiþi pentru a rula acest program?", -1, 10, 20, 220, 20
+	CHECKBOX "Utilizator curent: %s", 14000, 10, 45, 150, 10
+	LTEXT "Protejare computer de activiãþi neautorizate", -1, 25, 57, 200, 10, WS_DISABLED
+	CHECKBOX "Aceastã opþiune vã poate proteja computerul de activitãþi care pot fi dãunãtoare dar pot duce la funcþionarea incorectã a programului.", 14001, 25, 68, 200, 30, WS_DISABLED | BS_MULTILINE
+	CHECKBOX "Utilizator curent:", 14002, 10, 100, 90, 10
+	LTEXT "Nume utilizator:", -1, 20, 118, 54, 10
+	COMBOBOX 14003, 75, 115, 100, 15, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
+
+	PUSHBUTTON "...", 14004, 180, 115, 30, 14, WS_TABSTOP
+	LTEXT "Parolã:", -1, 20, 143, 53, 10
+	EDITTEXT 14005, 74, 140, 100, 14, ES_LEFT | WS_BORDER | WS_GROUP
+	PUSHBUTTON "...", 14006, 180, 140, 30, 14, WS_TABSTOP
+	PUSHBUTTON "OK", 14007, 57, 170, 60, 14, WS_TABSTOP
+	PUSHBUTTON "Revocare", 14008, 122, 170, 60, 14, WS_TABSTOP
+END
+
+BITBUCKET_PROPERTIES_DLG DIALOGEX 0, 0, 240, 190
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Proprietãþi pentru Coºul de reciclare"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+	CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 10, 10, 220, 50
+	GROUPBOX "Setãri pentru locaþia aleasã", -1, 10, 72, 220, 70
+	RADIOBUTTON "&Mãrime particul.:", 14001, 20, 90, 80, 10, WS_TABSTOP
+	EDITTEXT 14002, 106, 87, 50, 14, WS_TABSTOP | ES_NUMBER
+	LTEXT "M&ãrime maximã(MB):", -1, 20, 105, 70, 10
+	RADIOBUTTON "Nu muta fiºierele în &Coºul de Gunoi, ci eliminã-le când se alege ºtergere.", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
+	AUTOCHECKBOX "&Afiºare dialog de confirmare ºtergere", 14004, 20, 155, 140, 10, WS_TABSTOP
+END
+
+OPEN_WITH_PROGRAMM_DLG DIALOGEX 0, 0, 264, 256
+STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
+CAPTION "Open With"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+	ICON IDI_SHELL_OPEN_WITH, -1, 8, 12, 21, 20
+	LTEXT "Alegeþi programul pe care vreþi sã îl folosiþi la deschiderea acestui fiºier:", -1, 44, 12, 211, 10
+	LTEXT "Fiºier:    ", 14001, 44, 25, 188, 10
+	GROUPBOX "&Programe", -1, 7, 42, 249, 187
+        LISTBOX 14002, 16 ,57, 230, 130, LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP,WS_EX_STATICEDGE
+	AUTOCHECKBOX "&Folosire mereu aceastã aplicaþie", 14003, 20, 193, 225, 10
+	PUSHBUTTON "&Rãsfoire...", 14004, 198, 207, 50, 14
+	PUSHBUTTON "OK", 14005, 150, 236, 50, 14
+	PUSHBUTTON "Revocare", 14006, 206, 236, 50, 14
+END
+
+FOLDER_OPTIONS_GENERAL_DLG DIALOGEX 0, 0, 264, 256
+STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
+CAPTION "General"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+	GROUPBOX "Activitãþi", -1, 7, 10, 249, 45
+	ICON "", 30109, 14, 25, 21, 20, SS_REALSIZECONTROL
+	AUTORADIOBUTTON "Afiºare activiãþi comune în &dosare", 14001, 40, 25, 120, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Folosire dosare &clasice ReactOS", 14002, 40, 37, 120, 10, WS_TABSTOP | WS_GROUP
+	GROUPBOX "Rãsfoire dosare", -1, 7, 60, 249, 45, WS_TABSTOP
+	ICON "", 30110, 14, 70, 21, 20, SS_REALSIZECONTROL
+	AUTORADIOBUTTON "Deschidere &dosare în fereastrã comunã", 14004, 40, 70, 140, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Deschidere dosare în &fereastrã proprie", 14005, 40, 82, 140, 10, WS_TABSTOP | WS_GROUP
+	GROUPBOX "Selectare elemente astfel", -1, 7, 110, 249, 60
+	ICON "", 30111, 14, 120, 21, 20, SS_REALSIZECONTROL
+	AUTORADIOBUTTON "&Clic pentru deschidere (cursor deasupra pt. a selecta)", 14007, 40, 120, 170, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Subliniere titluri pictograme precum în navigatorul meu", 14008, 50, 132, 170, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Subliniere titluri pictograme când þin cursorul deasupra", 14009, 50, 144, 170, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "&Dublu-clic pentru a deschide (clic pt. a selecta)", 14010, 40, 156, 170, 10, WS_TABSTOP | WS_GROUP
+	PUSHBUTTON "&Restabilire implicite", 14011, 180, 180, 60, 14, WS_TABSTOP
+END
+
+FOLDER_OPTIONS_VIEW_DLG DIALOGEX 0, 0, 264, 256
+STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
+CAPTION "Vizualizare"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+GROUPBOX "Vizualizãri dosar", -1, 7, 10, 249, 60
+//ICON
+LTEXT "Puteþi aplica vizualizarea (precum Detalii sau Pictogramem mari)\npe care o folosiþi la acest dosar pt. toate dosarele.", -1, 60, 20, 180, 20
+PUSHBUTTON "Aplicare la &Toate", 14001, 60, 50, 80, 14, WS_TABSTOP
+PUSHBUTTON "&Resetare &Toate", 14002, 150, 50, 80, 14, WS_TABSTOP
+LTEXT "Setãri avansate:", -1, 7, 80, 100, 10
+CONTROL "", 14003, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 90, 249, 120
+PUSHBUTTON "Restabilire &implicite", 14004, 180, 210, 80, 14, WS_TABSTOP
+END
+
+FOLDER_OPTIONS_FILETYPES_DLG DIALOGEX 0, 0, 264, 256
+STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
+CAPTION "Tipuri fiºier"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+LTEXT "Tipuri fiºier înregistrate:", -1, 7, 10, 70, 10
+CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 80
+PUSHBUTTON "&Nou", 14001, 120, 110, 50, 14, WS_TABSTOP
+PUSHBUTTON "&Eliminare", 14002, 180, 110, 50, 14, WS_TABSTOP
+GROUPBOX "Detalii pentru extensia '%s'", 14003, 7, 130, 249, 70
+LTEXT "Deschidere cu:", -1, 12, 140, 40, 10
+//ICON
+LTEXT "Nume ap.", 14005, 100, 140, 40, 10
+PUSHBUTTON "&Schimbare", 14006, 180, 140, 50, 14, WS_TABSTOP
+LTEXT "Fiºierele cu extensia '%s' sunt de tipul '%s'. \nPentru a schimbat setãri care vor afecta\ntoate fiºierele '%s', clic pe Avansat.", 14007, 12, 155, 160, 30
+PUSHBUTTON "A&vansat", 14008, 180, 175, 50, 14, WS_TABSTOP
+END
+
+CONFIRM_FILE_REPLACE_DLG DIALOGEX 0, 0, 282, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_SETFOREGROUND | DS_CENTER | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Confirmare înlocuire fiºier"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	DEFPUSHBUTTON "&Da", IDYES, 20, 122, 60, 14
+	PUSHBUTTON "Da la &Toate", 12807, 85, 122, 60, 14
+	PUSHBUTTON "&Nu", IDNO, 150, 122, 60, 14
+	PUSHBUTTON "Revocare", IDCANCEL, 215, 122, 60, 14
+	ICON 146, -1, 11, 10, 21, 20, SS_REALSIZECONTROL
+	LTEXT "Dosarul curent deja conþine un fiºier cu numele '%2'.", 12291, 44, 10, 231, 22, SS_NOPREFIX
+	LTEXT "Dosarul curent deja conþine un fiºier doar-în-citire cu numele '%2'.", 12292, 41, 10, 222, 22, SS_NOPREFIX
+	LTEXT "Dosarul curent deja conþine un fiºier de sistem cu numele '%2'.", 12293, 41, 10, 222, 22, SS_NOPREFIX
+	LTEXT "Doriþi sã înlocuiþi fiºierul acesta", -1, 44, 35, 228, 10, SS_NOPREFIX
+	LTEXT "(mãrime/datã necunoscutã)", 12302, 79, 51, 198, 20, SS_NOPREFIX
+	ICON "", 12300, 50, 49, 21, 20, SS_REALSIZECONTROL
+	LTEXT "cu acesta?", -1, 44, 75, 228, 10, SS_NOPREFIX
+	LTEXT "(mãrime/datã necunoscutã)", 12303, 79, 91, 198, 20, SS_NOPREFIX
+	ICON "", 12301, 50, 89, 21, 20, SS_REALSIZECONTROL
+END
+
+LOGOFF_DLG DIALOGEX 0, 0, 190, 60
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Log off din ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	ICON 45, 14344, 10, 10, 21, 20, SS_REALSIZECONTROL
+	LTEXT "Sigur vreþi sã ieºiþi din ReactOS ?", -1, 43, 11, 140, 22
+	DEFPUSHBUTTON "&Log Off", IDOK, 57, 40, 60, 14
+	PUSHBUTTON "Revocare", IDCANCEL, 122, 40, 60, 14
+END
+
+DISCONNECT_DLG DIALOGEX 0, 0, 190, 60
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Deconectare ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	ICON 49, 14346, 10, 10, 21, 20, SS_REALSIZECONTROL
+	LTEXT "Sigur vreþi sã vã deconectaþi?", -1, 49, 12, 137, 23
+	DEFPUSHBUTTON "&Deconectare", IDOK, 57, 40, 60, 14
+	PUSHBUTTON "Revocare", IDCANCEL, 123, 40, 60, 14
+END
+
+AUTOPLAY1_DLG DIALOGEX 0, 0, 227, 218
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CAPTION
+CAPTION "AutoPlay"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "&Select a content type, then choose an action for ReactOS to perform automatically when that type is used in this device:", 1000, 7, 7, 215, 20
+	CONTROL "", 1001, "COMBOBOXEX32", WS_TABSTOP | 0x00000043, 7, 27, 212, 200
+	GROUPBOX "Actions", -1, 7, 45, 212, 146
+	AUTORADIOBUTTON "Select an action to &perform:", 1005, 14, 54, 202, 10, WS_GROUP
+	CONTROL "LIST2", 1002, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 22, 66, 192, 107
+	AUTORADIOBUTTON "Prompt me each time to &choose an action", 1006, 14, 177, 202, 10
+	PUSHBUTTON "&Restore Defaults", 1008, 108, 197, 110, 14, WS_DISABLED
+END
+
+MIXED_CONTENT1_DLG DIALOGEX 0, 0, 227, 207
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CAPTION
+CAPTION "Mixed Content"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	ICON "", 1000, 5, 7, 21, 20
+	LTEXT "Acest disc sau dispozitiv conþine mai mult de un tip de conþinut.", 1001, 32, 7, 191, 20
+	LTEXT "Ce vreþi sã facã ReactOS?", 1002, 32, 31, 188, 8
+	CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 43, 188, 139
+	DEFPUSHBUTTON "OK", IDOK, 96, 186, 60, 14
+	PUSHBUTTON "Revocare", IDCANCEL, 160, 186, 60, 14
+END
+
+MIXED_CONTENT2_DLG DIALOGEX 0, 0, 227, 206
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CAPTION
+CAPTION "Conþinut mixt"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	ICON "", 1000, 5, 7, 21, 20
+	LTEXT "ReactOS poate executa aceeaºi acþiune de fiecare datã când introduceþi un disc sau conectaþi un dispozitiv cu acest conþinut pe el:", 1001, 30, 7, 193, 20
+	ICON "", 1005, 32, 27, 11, 10, SS_REALSIZECONTROL
+	EDITTEXT 1006, 49, 28, 177, 14, ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+	LTEXT "Ce vreþi sã facã ReactOS?", 1002, 32, 41, 190, 8
+	CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 55, 188, 112
+	AUTOCHECKBOX "Efectuare mereu aceeºi acþiune", 1004, 32, 171, 190, 10
+	DEFPUSHBUTTON "OK", IDOK, 96, 185, 60, 14
+	PUSHBUTTON "Revocare", IDCANCEL, 160, 185, 60, 14
+END
+
+AUTOPLAY2_DLG DIALOGEX 0, 0, 227, 181
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CAPTION
+CAPTION "Autoplay"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	ICON "", 1000, 5, 7, 21, 20
+	LTEXT "ReactOS poate executa aceeaºi acþiune de fiecare datã când conectaþi acest dispozitiv.", 1001, 32, 7, 190, 22
+	LTEXT "&Ce vreþi sã facã ReactOS?", 1002, 32, 31, 190, 8
+	CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 43, 187, 96
+	AUTOCHECKBOX "&Efectuare mereu aceeaºi acþiune", 1004, 32, 143, 190, 8
+	DEFPUSHBUTTON "OK", IDOK, 94, 160, 60, 14
+	PUSHBUTTON "Revocare", IDCANCEL, 159, 160, 60, 14
+END
+
+SHUTDOWN_DLG DIALOGEX 0, 0, 211, 103
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Închidere ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	ICON 8240, -1, 6, 6, 21, 20, SS_REALSIZECONTROL | WS_GROUP
+	LTEXT "Ce vreþi sã facã computerul?", -1, 39, 7, 167, 10
+	COMBOBOX 8224, 39, 20, 165, 200, CBS_DROPDOWNLIST | WS_VSCROLL
+	LTEXT "Menþine sesiunea de lucru, lasã computerul pe consum redus dar menþine toate datele în memorie. Computerul îºi va reveni când apãsaþi o tastã sau miºcaþi mausul.", 8225, 39, 40, 167, 37
+	DEFPUSHBUTTON "OK", 1, 7, 82, 60, 14, WS_GROUP
+	PUSHBUTTON "Revocare", IDCANCEL, 75, 82, 60, 14
+	PUSHBUTTON "&Ajutor", IDHELP, 144, 82, 60, 14
+END
+
+FORMAT_DLG DIALOGEX 50, 50, 184, 218
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Formatare"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	DEFPUSHBUTTON "&Începere", IDOK, 53, 198, 60, 14
+	PUSHBUTTON "&Închidere", IDCANCEL, 118, 198, 60, 14
+	LTEXT "Ca&pacitate:", -1, 7, 6, 169, 9
+	COMBOBOX 28673, 7, 17, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+	LTEXT "&Sistem de fiºiere", -1, 7, 35, 170, 9
+	COMBOBOX 28677, 7, 46, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+	CONTROL "", 28678, "MSCTLS_PROGRESS32", 0, 7, 181, 170, 8
+	LTEXT "&Mãrime unitãþi de alocare", -1, 7, 64, 170, 9
+	COMBOBOX 28680, 7, 75, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+	LTEXT "Nume &volum", -1, 7, 93, 170, 9
+	EDITTEXT 28679, 7, 103, 170, 13, ES_AUTOHSCROLL
+	GROUPBOX "Opþiuni &formatare", 4610, 7, 121, 170, 49
+	AUTOCHECKBOX "Formatare r&apidã", 28674, 16, 135, 155, 10
+	AUTOCHECKBOX "&Activare compresie", 28675, 16, 152, 155, 10
+END
+
+CHKDSK_DLG DIALOGEX 50, 50, 194, 120
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Verificare disc"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	DEFPUSHBUTTON "Începere", IDOK, 53, 100, 60, 14
+	GROUPBOX "Verificare opþiuni disc", -1, 7, 6, 179, 50
+	PUSHBUTTON "Revocare", IDCANCEL, 118, 100, 60, 14
+	AUTOCHECKBOX "Reparare automatã erori", 14000, 16, 15, 155, 10
+	AUTOCHECKBOX "&Scanare ºi reparare înregistrãri eronate", 14001, 16, 30, 165, 10
+	CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 60, 170, 8
+	LTEXT "", 14003, 60, 80, 170, 10
+END
+
+IDD_PICK_ICON_DIALOG DIALOGEX 0, 0, 237, 204
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Schimbare pictogramã"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    LTEXT "Nume fiºier:", -1, 7, 14, 208, 10
+    PUSHBUTTON      "Rãsfoire...",IDC_BUTTON_PATH, 148, 24,67,14
+    EDITTEXT        IDC_EDIT_PATH, 6, 24, 135, 15, ES_AUTOHSCROLL
+    LTEXT "Icons:", -1, 7, 47, 208, 10
+    LISTBOX         IDC_PICKICON_LIST,7,57,208,119,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP,WS_EX_STATICEDGE
+    DEFPUSHBUTTON   "OK",IDOK, 107, 181,50, 14
+    PUSHBUTTON      "Revocare",IDCANCEL, 167, 181, 50, 14
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	/* columns in the shellview */
+	IDS_SHV_COLUMN1             "Fiºier"
+	IDS_SHV_COLUMN2             "Mãrime"
+	IDS_SHV_COLUMN3             "Tip"
+	IDS_SHV_COLUMN4             "Modificat"
+	IDS_SHV_COLUMN5             "Atribute"
+	IDS_SHV_COLUMN6             "Mãrime"
+	IDS_SHV_COLUMN7             "Mãrime disponibilã"
+	IDS_SHV_COLUMN8             "Nume"
+	IDS_SHV_COLUMN9             "Comentarii"
+	IDS_SHV_COLUMN10            "Posesor"
+	IDS_SHV_COLUMN11            "Grup"
+	IDS_SHV_COLUMN12            "Nume fiºier"
+	IDS_SHV_COLUMN13            "Categorie"
+	IDS_SHV_COLUMN_DELFROM      "Locaþie originalã"
+	IDS_SHV_COLUMN_DELDATE      "Data ºtergerii"
+	IDS_SHV_COLUMN_FONTTYPE     "Tip font"
+	IDS_SHV_COLUMN_WORKGROUP    "Grup de lucru"
+	IDS_SHV_NETWORKLOCATION     "Locaþie reþea"
+	IDS_SHV_COLUMN_DOCUMENTS    "Documente"
+	IDS_SHV_COLUMN_STATUS       "Stare"
+	IDS_SHV_COLUMN_COMMENTS     "Comentarii"
+	IDS_SHV_COLUMN_LOCATION     "Locaþie"
+	IDS_SHV_COLUMN_MODEL        "Model"
+
+	/* special folders */
+	IDS_DESKTOP                 "Spaþiu de lucru"
+	IDS_MYCOMPUTER              "Computerul meu"
+	IDS_RECYCLEBIN_FOLDER_NAME  "Gunoi"
+	IDS_CONTROLPANEL            "Panou de control"
+	IDS_ADMINISTRATIVETOOLS     "Unelte administrative"
+
+	/* context menus */
+	IDS_VIEW_LARGE              "Pictograme &mari"
+	IDS_VIEW_SMALL              "Pictograme m&ici"
+	IDS_VIEW_LIST               "&Listã"
+	IDS_VIEW_DETAILS            "&Detalii"
+	IDS_SELECT                  "Selectare"
+	IDS_OPEN                    "Deschidere"
+	IDS_CREATELINK              "Creare &legãturã"
+	IDS_COPY                    "Copiere"
+	IDS_DELETE                  "ªtergere"
+	IDS_PROPERTIES              "Proprietãþi"
+	IDS_CUT                     "Decupare"
+	IDS_RESTORE                 "Restabilire"
+	IDS_FORMATDRIVE             "Formatare..."
+	IDS_RENAME                  "Redenumire"
+	IDS_INSERT                  "Inserare"
+
+	IDS_CREATEFOLDER_DENIED     "Nu s-a putut crea dosar nou: Eroare de permisiune."
+	IDS_CREATEFOLDER_CAPTION    "Eroare în timpul creãrii unui nou dosar"
+	IDS_DELETEITEM_CAPTION      "Confirmare ºtergere fiºier"
+	IDS_DELETEFOLDER_CAPTION    "Confirmare ºtergere dosar"
+	IDS_DELETEITEM_TEXT         "Sigur vreþi sã ºtergeþi '%1'?"
+	IDS_DELETEMULTIPLE_TEXT     "Sigur vreþi sã ºtergeþi aceste %1 elemente?"
+	IDS_DELETESELECTED_TEXT     "Sigur vreþi sã ºtergeþi elementul/elementele selectat(e)?"
+	IDS_TRASHITEM_TEXT          "Sigur vreþi sã trimiteþi '%1' în Coºul de Gunoi?"
+	IDS_TRASHFOLDER_TEXT        "Sigur vreþi sã trimiteþi dosarul '%1' ºi tot conþinutul sãu în Coºul de Gunoi?"
+	IDS_TRASHMULTIPLE_TEXT      "Sigur vreþi sã trimiteþi aceste %1 elemente la Coºul de Gunoi?"
+	IDS_CANTTRASH_TEXT          "Elementul '%1' nu poate fi trimit la Gunoi. Vreþi sã îl ºtergeþi definitiv în schimb?"
+	IDS_OVERWRITEFILE_TEXT      "Acest dosar deja conþine un fiºier numit '%1'.\n\nVreþi sã îl înlocuiþi"
+	IDS_OVERWRITEFILE_CAPTION   "Confirmare înlocuire fiºier"
+	IDS_OVERWRITEFOLDER_TEXT    "Acest dosar deja conþine un sub-dosar cu numele '%1'.\n\n"\
+		"Dacã fiºierele din dosarul de destinaþie au acelaºi nume ca cele din\n"\
+		"dosarul selectat, ele vor fi înlocuite. Sigur vreþi sã copiaþi sau\n"\
+		"mutaþi dosarul?"
+
+	/* message box strings */
+	IDS_RESTART_TITLE           "Repornire"
+	IDS_RESTART_PROMPT          "Vreþi sã reporniþi sistemul?"
+	IDS_SHUTDOWN_TITLE          "Închidere"
+	IDS_SHUTDOWN_PROMPT         "Vreþi sã închideþi computerul?"
+
+	/* shell folder path default values */
+	IDS_PROGRAMS                "Start Menu\\Programs"
+	IDS_PERSONAL                "My Documents"
+	IDS_FAVORITES               "Favorites"
+	IDS_STARTUP                 "Start Menu\\Programs\\StartUp"
+	IDS_RECENT                  "Recent"
+	IDS_SENDTO                  "SendTo"
+	IDS_STARTMENU               "Start Menu"
+	IDS_MYMUSIC                 "My Music"
+	IDS_MYVIDEO                 "My Videos"
+	IDS_DESKTOPDIRECTORY        "Desktop"
+	IDS_NETHOOD                 "NetHood"
+	IDS_TEMPLATES               "Templates"
+	IDS_APPDATA                 "Application Data"
+	IDS_PRINTHOOD               "PrintHood"
+	IDS_LOCAL_APPDATA           "Local Settings\\Application Data"
+	IDS_INTERNET_CACHE          "Local Settings\\Temporary Internet Files"
+	IDS_COOKIES                 "Cookies"
+	IDS_HISTORY                 "Local Settings\\History"
+	IDS_PROGRAM_FILES           "Program Files"
+	IDS_MYPICTURES              "My Pictures"
+	IDS_PROGRAM_FILES_COMMON    "Program Files\\Common Files"
+	IDS_COMMON_DOCUMENTS        "Documents"
+	IDS_ADMINTOOLS              "Start Menu\\Programs\\Administrative Tools"
+	IDS_COMMON_MUSIC            "Documents\\My Music"
+	IDS_COMMON_PICTURES         "Documents\\My Pictures"
+	IDS_COMMON_VIDEO            "Documents\\My Videos"
+	IDS_CDBURN_AREA             "Local Settings\\Application Data\\Microsoft\\CD Burning"
+	IDS_NETWORKPLACE            "My Network Places"
+
+	IDS_NEWFOLDER               "Dosar nou nou"
+
+	IDS_DRIVE_FIXED             "Disc local"
+	IDS_DRIVE_CDROM             "CDROM"
+	IDS_DRIVE_NETWORK           "Disc de reþea"
+
+	IDS_OPEN_WITH               "Deschidere cu"
+	IDS_OPEN_WITH_CHOOSE        "Alegere program..."
+
+	IDS_SHELL_ABOUT_AUTHORS     "&Autori"
+	IDS_SHELL_ABOUT_BACK        "< &Înapoi"
+	FCIDM_SHVIEW_NEW 	    "Nou"
+	FCIDM_SHVIEW_NEWFOLDER 	    "Dosar &nou"
+	FCIDM_SHVIEW_NEWLINK 	    "Legãturã &nouã"
+	IDS_FOLDER_OPTIONS          "Opþiuni dosar"
+	IDS_RECYCLEBIN_LOCATION     "Locaþie Coº de Gunoi"
+	IDS_RECYCLEBIN_DISKSPACE    "Spaþiu disponibil"
+	IDS_EMPTY_BITBUCKET         "Golire Coº de Gunoi"
+	IDS_PICK_ICON_TITLE         "Alegere pictogramã"
+	IDS_PICK_ICON_FILTER        "Fiºiere pictogramã (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
+	IDS_OPEN_WITH_FILTER        "Fiºiere executabile\0*.exe\0"
+	IDS_DIRECTORY               "Dosar"
+	IDS_VIRTUAL_DRIVER          "Driver dispozitiv virtual"
+	IDS_BAT_FILE                "Fiºier serie de comenzi ReactOS"
+	IDS_CMD_FILE                "Scripturã de comenzi ReactOS"
+	IDS_COM_FILE                "Aplicaþie DOS"
+	IDS_CPL_FILE                "Element Panou de Control"
+	IDS_CUR_FILE                "Cursor"
+	IDS_DLL_FILE                "Extensie aplicaþie"
+	IDS_DRV_FILE                "Driver dispozitiv"
+	IDS_EXE_FILE                "Aplicaþie"
+	IDS_FON_FILE                "Fiºier font"
+	IDS_TTF_FILE                "Fiºier font TrueType"
+	IDS_HLP_FILE                "Fiºier ajutor"
+	IDS_INI_FILE                "Fiºier setãri"
+	IDS_LNK_FILE                "Scurtãturã"
+	IDS_SYS_FILE                "Fiºier de sistem"
+
+	IDS_OPEN_VERB               "Deschidere"
+	IDS_RUNAS_VERB              "Rulare ca "
+	IDS_EDIT_VERB               "Editare"
+	IDS_FIND_VERB               "Cãutare"
+	IDS_PRINT_VERB              "Imprimare"
+	IDS_PLAY_VERB               "Redare"
+	IDS_PREVIEW_VERB            "Previzualizare"
+
+	IDS_FILE_FOLDER             "%u fiºiere, %u dosare"
+	IDS_PRINTERS                "Imprimante"
+	IDS_FONTS                   "Fonturi"
+	IDS_INSTALLNEWFONT          "Instalare font nou..."
+
+	IDS_DEFAULT_CLUSTER_SIZE    "Mãrime de alocare implicitã"
+END

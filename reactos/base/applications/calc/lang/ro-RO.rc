@@ -1,5 +1,4 @@
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
-
 #pragma code_page(65001)
 
 // Dialog
@@ -410,8 +409,8 @@ IDR_MENU_STANDARD MENU DISCARDABLE
 BEGIN
     POPUP "Editare"
     BEGIN
-        MENUITEM "Copy\tCTRL-C",                IDM_EDIT_COPY
-        MENUITEM "Paste\tCTRL-V",               IDM_EDIT_PASTE
+        MENUITEM "Copiere\tCTRL-C",                IDM_EDIT_COPY
+        MENUITEM "Lipire\tCTRL-V",               IDM_EDIT_PASTE
     END
     POPUP "Vizualizare"
     BEGIN
