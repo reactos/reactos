@@ -12,3 +12,4 @@
 #include "lang/pl-PL.rc"
 #include "lang/ru-RU.rc"
 #include "lang/uk-UA.rc"
+#include "lang/zh-CN.rc"
