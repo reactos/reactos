@@ -259,22 +259,6 @@ MiniIndicateData(
   NDIS_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 }
 
-VOID NTAPI
-MiniQueryComplete(
-  IN NDIS_HANDLE  MiniportAdapterHandle,
-  IN NDIS_STATUS  Status)
-{
-    UNIMPLEMENTED;
-}
-
-VOID NTAPI
-MiniSetComplete(
-  IN NDIS_HANDLE  MiniportAdapterHandle,
-  IN NDIS_STATUS  Status)
-{
-    UNIMPLEMENTED;
-}
-
 
 VOID NTAPI
 MiniIndicateReceivePacket(
@@ -409,16 +393,14 @@ MiniResetComplete(
     KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
 }
 
-
-
 VOID NTAPI
 MiniRequestComplete(
-    IN PNDIS_HANDLE MiniportAdapterHandle,
-    IN PNDIS_REQUEST Request,
+    IN NDIS_HANDLE MiniportAdapterHandle,
     IN NDIS_STATUS Status)
 {
     PLOGICAL_ADAPTER Adapter = (PLOGICAL_ADAPTER)MiniportAdapterHandle;
-    PNDIS_REQUEST_MAC_BLOCK MacBlock = (PNDIS_REQUEST_MAC_BLOCK)Request->MacReserved;
+    PNDIS_REQUEST Request;
+    PNDIS_REQUEST_MAC_BLOCK MacBlock;
     KIRQL OldIrql;
 
     NDIS_DbgPrint(DEBUG_MINIPORT, ("Called.\n"));
@@ -426,8 +408,10 @@ MiniRequestComplete(
     KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
 
     KeAcquireSpinLockAtDpcLevel(&Adapter->NdisMiniportBlock.Lock);
-    Adapter->NdisMiniportBlock.PendingRequest = NULL;
+    Request = Adapter->NdisMiniportBlock.PendingRequest;
     KeReleaseSpinLockFromDpcLevel(&Adapter->NdisMiniportBlock.Lock);
+
+    MacBlock = (PNDIS_REQUEST_MAC_BLOCK)Request->MacReserved;
 
     if( MacBlock->Binding->RequestCompleteHandler ) {
         (*MacBlock->Binding->RequestCompleteHandler)(
@@ -435,6 +419,11 @@ MiniRequestComplete(
             Request,
             Status);
     }
+
+    KeAcquireSpinLockAtDpcLevel(&Adapter->NdisMiniportBlock.Lock);
+    Adapter->NdisMiniportBlock.PendingRequest = NULL;
+    KeReleaseSpinLockFromDpcLevel(&Adapter->NdisMiniportBlock.Lock);
+
     KeLowerIrql(OldIrql);
 }
 
@@ -1148,17 +1137,14 @@ MiniportWorker(IN PDEVICE_OBJECT DeviceObject, IN PVOID Context)
               {
                 case NdisRequestQueryInformation:
 		  NdisMQueryInformationComplete((NDIS_HANDLE)Adapter, NdisStatus);
-                  MiniRequestComplete( (NDIS_HANDLE)Adapter, (PNDIS_REQUEST)WorkItemContext, NdisStatus );
                   break;
 
                 case NdisRequestSetInformation:
                   NdisMSetInformationComplete((NDIS_HANDLE)Adapter, NdisStatus);
-                  MiniRequestComplete( (NDIS_HANDLE)Adapter, (PNDIS_REQUEST)WorkItemContext, NdisStatus );
                   break;
 
                 default:
                   NDIS_DbgPrint(MIN_TRACE, ("Unknown NDIS request type.\n"));
-                  MiniRequestComplete( (NDIS_HANDLE)Adapter, (PNDIS_REQUEST)WorkItemContext, NdisStatus );
                   break;
               }
             break;
@@ -1842,8 +1828,8 @@ NdisIPnPStartDevice(
   Adapter->NdisMiniportBlock.StatusHandler        = MiniStatus;
   Adapter->NdisMiniportBlock.StatusCompleteHandler= MiniStatusComplete;
   Adapter->NdisMiniportBlock.SendPacketsHandler   = ProSendPackets;
-  Adapter->NdisMiniportBlock.QueryCompleteHandler = MiniQueryComplete;
-  Adapter->NdisMiniportBlock.SetCompleteHandler   = MiniSetComplete;
+  Adapter->NdisMiniportBlock.QueryCompleteHandler = MiniRequestComplete;
+  Adapter->NdisMiniportBlock.SetCompleteHandler   = MiniRequestComplete;
 
   /*
    * Call MiniportInitialize.
