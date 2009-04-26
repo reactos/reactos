@@ -1971,6 +1971,12 @@ NdisIPnPStopDevice(
       Adapter->NdisMiniportBlock.AllocatedResourcesTranslated = NULL;
     }
 
+  if (Adapter->NdisMiniportBlock.Resources)
+    {
+      ExFreePool(Adapter->NdisMiniportBlock.Resources);
+      Adapter->NdisMiniportBlock.Resources = NULL;
+    }
+
   if (Adapter->NdisMiniportBlock.EthDB)
     {
       EthDeleteFilter(Adapter->NdisMiniportBlock.EthDB);
