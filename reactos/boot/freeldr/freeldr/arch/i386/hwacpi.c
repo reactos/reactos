@@ -83,7 +83,7 @@ DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 
         /* Get BIOS memory map */
         RtlZeroMemory(BiosMemoryMap, sizeof(BIOS_MEMORY_MAP) * 32);
-        BiosMemoryMapEntryCount = MachGetMemoryMap(BiosMemoryMap,
+        BiosMemoryMapEntryCount = PcMemGetMemoryMap(BiosMemoryMap,
             sizeof(BiosMemoryMap) / sizeof(BIOS_MEMORY_MAP));
 
         /* Calculate the table size */

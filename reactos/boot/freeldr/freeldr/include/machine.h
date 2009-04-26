@@ -59,6 +59,7 @@ typedef struct tagMACHVTBL
   VOID (*Beep)(VOID);
   VOID (*PrepareForReactOS)(IN BOOLEAN Setup);
 
+  MEMORY_DESCRIPTOR* (*GetMemoryDescriptor)(MEMORY_DESCRIPTOR* Current);
   ULONG (*GetMemoryMap)(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MaxMemoryMapSize);
 
   BOOLEAN (*DiskGetBootVolume)(PULONG DriveNumber, PULONGLONG StartSector, PULONGLONG SectorCount, int *FsType);
@@ -98,7 +99,7 @@ VOID MachVideoSetPaletteColor(UCHAR Color, UCHAR Red, UCHAR Green, UCHAR Blue);
 VOID MachVideoGetPaletteColor(UCHAR Color, UCHAR *Red, UCHAR *Green, UCHAR *Blue);
 VOID MachVideoSync(VOID);
 VOID MachBeep(VOID);
-ULONG MachGetMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MaxMemoryMapSize);
+MEMORY_DESCRIPTOR* ArcGetMemoryDescriptor(MEMORY_DESCRIPTOR* Current);
 BOOLEAN MachDiskGetBootVolume(PULONG DriveNumber, PULONGLONG StartSector, PULONGLONG SectorCount, int *FsType);
 BOOLEAN
 MachDiskGetSystemVolume(char *SystemPath,
@@ -138,7 +139,6 @@ VOID MachPrepareForReactOS(IN BOOLEAN Setup);
 #define MachVideoSync()				MachVtbl.VideoSync()
 #define MachBeep()                   MachVtbl.Beep()
 #define MachPrepareForReactOS(a)		MachVtbl.PrepareForReactOS(a)
-#define MachGetMemoryMap(MMap, Size)		MachVtbl.GetMemoryMap((MMap), (Size))
 #define MachDiskGetBootVolume(Drv, Start, Cnt, FsType)	MachVtbl.DiskGetBootVolume((Drv), (Start), (Cnt), (FsType))
 #define MachDiskGetSystemVolume(SysPath, RemPath, Dev, Drv, Start, Cnt, FsType)	MachVtbl.DiskGetSystemVolume((SysPath), (RemPath), (Dev), (Drv), (Start), (Cnt), (FsType))
 #define MachDiskGetBootPath(Path, Size)		MachVtbl.DiskGetBootPath((Path), (Size))

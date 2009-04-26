@@ -269,7 +269,7 @@ WinLdrLoadImage(IN PCHAR FileName,
 	CHAR ProgressString[256];
 
 	/* Inform user we are loading files */
-	sprintf(ProgressString, "Loading %s...", FileName);
+	sprintf(ProgressString, "Loading %s...", strchr(FileName, '\\') + 1);
 	UiDrawProgressBarCenter(1, 100, ProgressString);
 
 	/* Open the image file */
