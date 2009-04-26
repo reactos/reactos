@@ -1727,6 +1727,19 @@ NdisIPnPStartDevice(
           return STATUS_INSUFFICIENT_RESOURCES;
         }
 
+      Adapter->NdisMiniportBlock.Resources =
+        ExAllocatePool(PagedPool, ResourceListSize);
+      if (!Adapter->NdisMiniportBlock.Resources)
+      {
+          ExFreePool(Adapter->NdisMiniportBlock.AllocatedResources);
+          ExInterlockedRemoveEntryList(&Adapter->ListEntry, &AdapterListLock);
+          return STATUS_INSUFFICIENT_RESOURCES;
+      }
+
+      RtlCopyMemory(Adapter->NdisMiniportBlock.Resources,
+                    Stack->Parameters.StartDevice.AllocatedResources,
+                    ResourceListSize);
+
       RtlCopyMemory(Adapter->NdisMiniportBlock.AllocatedResources,
                     Stack->Parameters.StartDevice.AllocatedResources,
                     ResourceListSize);
