@@ -49,6 +49,27 @@ static GUID InterfaceGuids[3] =
     }
 };
 
+DEFINE_KSPROPERTY_TOPOLOGYSET(PortFilterWavePciTopologySet, TopologyPropertyHandler);
+DEFINE_KSPROPERTY_PINPROPOSEDATAFORMAT(PortFilterWavePciPinSet, PinPropertyHandler, PinPropertyHandler, PinPropertyHandler);
+
+KSPROPERTY_SET WavePciPropertySet[] =
+{
+    {
+        &KSPROPSETID_Topology,
+        sizeof(PortFilterWavePciTopologySet) / sizeof(KSPROPERTY_ITEM),
+        (const KSPROPERTY_ITEM*)&PortFilterWavePciTopologySet,
+        0,
+        NULL
+    },
+    {
+        &KSPROPSETID_Pin,
+        sizeof(PortFilterWavePciPinSet) / sizeof(KSPROPERTY_ITEM),
+        (const KSPROPERTY_ITEM*)&PortFilterWavePciPinSet,
+        0,
+        NULL
+    }
+};
+
 
 //---------------------------------------------------------------
 // IPortEvents
@@ -401,14 +422,14 @@ IPortWavePci_fnInit(
         return Status;
     }
 
-    /* create the subdevice descriptor */
+   /* create the subdevice descriptor */
     Status = PcCreateSubdeviceDescriptor(&This->SubDeviceDescriptor, 
                                          3,
-                                         InterfaceGuids, 
+                                         InterfaceGuids,
                                          0, 
                                          NULL,
-                                         0, 
-                                         NULL,
+                                         2, 
+                                         WavePciPropertySet,
                                          0,
                                          0,
                                          0,
@@ -416,6 +437,7 @@ IPortWavePci_fnInit(
                                          0,
                                          NULL,
                                          This->pDescriptor);
+
 
     if (!NT_SUCCESS(Status))
     {

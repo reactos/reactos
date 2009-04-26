@@ -224,6 +224,7 @@ FastPropertyHandler(
     if (!IsEqualGUIDAligned(&Property->Set, &KSPROPSETID_Pin))
     {
         /* the fast handler only supports pin properties */
+        DPRINT("Only KSPROPSETID_Pin is supported\n");
         return Status;
     }
 
@@ -231,6 +232,7 @@ FastPropertyHandler(
     Status = FindPropertyHandler(IoStatus, Descriptor, Property, PropertyLength, DataLength, &PropertyHandler);
     if (!NT_SUCCESS(Status))
     {
+        DPRINT("FindPropertyHandler failed with %x\n", Status);
         return Status;
     }
 
