@@ -216,15 +216,19 @@ FastPropertyHandler(
     IN ISubdevice *SubDevice)
 {
     PFNKSHANDLER PropertyHandler = NULL;
-    NTSTATUS Status = STATUS_UNSUCCESSFUL;
+    NTSTATUS Status;
     KSP_PIN * Pin;
+    ULONG Size, Index;
+    PKSMULTIPLE_ITEM Item;
 
     ASSERT(Descriptor);
 
     if (!IsEqualGUIDAligned(&Property->Set, &KSPROPSETID_Pin))
     {
-        /* the fast handler only supports pin properties */
+        /* the fast handler only supports pin properties atm*/
         DPRINT("Only KSPROPSETID_Pin is supported\n");
+        IoStatus->Status = Status = STATUS_NOT_IMPLEMENTED;
+        IoStatus->Information = 0;
         return Status;
     }
 
@@ -233,6 +237,8 @@ FastPropertyHandler(
     if (!NT_SUCCESS(Status))
     {
         DPRINT("FindPropertyHandler failed with %x\n", Status);
+        IoStatus->Status = Status = Status;
+        IoStatus->Information = 0;
         return Status;
     }
 
@@ -269,6 +275,41 @@ FastPropertyHandler(
             IoStatus->Status = Status = STATUS_SUCCESS;
             IoStatus->Information = sizeof(KSPIN_COMMUNICATION);
             break;
+        case KSPROPERTY_PIN_DATARANGES:
+            Pin = (KSP_PIN*)Property;
+            if (Pin->PinId >= Descriptor->Factory.PinDescriptorCount)
+            {
+                IoStatus->Status = Status = STATUS_INVALID_PARAMETER;
+                IoStatus->Information = 0;
+                break;
+            }
+            Size = sizeof(KSMULTIPLE_ITEM);
+            for (Index = 0; Index < Descriptor->Factory.KsPinDescriptor[Pin->PinId].DataRangesCount; Index++)
+            {
+                Size += Descriptor->Factory.KsPinDescriptor[Pin->PinId].DataRanges[Index]->FormatSize;
+            }
+
+            if (DataLength < Size)
+            {
+                IoStatus->Information = Size;
+                IoStatus->Status = STATUS_BUFFER_TOO_SMALL;
+                break;
+            }
+
+            Item = (KSMULTIPLE_ITEM*)Data;
+            Item->Size = Size;
+            Item->Count = Descriptor->Factory.KsPinDescriptor[Pin->PinId].DataRangesCount;
+
+            Data = (PUCHAR)(Item +1);
+            for (Index = 0; Index < Descriptor->Factory.KsPinDescriptor[Pin->PinId].DataRangesCount; Index++)
+            {
+                RtlMoveMemory(Data, Descriptor->Factory.KsPinDescriptor[Pin->PinId].DataRanges[Index], Descriptor->Factory.KsPinDescriptor[Pin->PinId].DataRanges[Index]->FormatSize);
+                Data = ((PUCHAR)Data + Descriptor->Factory.KsPinDescriptor[Pin->PinId].DataRanges[Index]->FormatSize);
+            }
+
+            IoStatus->Status = Status = STATUS_SUCCESS;
+            IoStatus->Information = Size;
+            break;
 
         case KSPROPERTY_PIN_GLOBALCINSTANCES:
             Status = HandlePropertyInstances(IoStatus, Property, Data, Descriptor, TRUE);
@@ -285,22 +326,22 @@ FastPropertyHandler(
             break;
         case KSPROPERTY_PIN_PHYSICALCONNECTION:
         case KSPROPERTY_PIN_CONSTRAINEDDATARANGES:
-        case KSPROPERTY_PIN_DATARANGES:
         case KSPROPERTY_PIN_INTERFACES:
         case KSPROPERTY_PIN_MEDIUMS:
         case KSPROPERTY_PIN_CATEGORY:
         case KSPROPERTY_PIN_NAME:
         case KSPROPERTY_PIN_PROPOSEDATAFORMAT:
             UNIMPLEMENTED
-            Status = STATUS_NOT_IMPLEMENTED;
+            IoStatus->Status = Status = STATUS_NOT_IMPLEMENTED;
+            IoStatus->Information = 0;
             break;
         default:
             UNIMPLEMENTED
-            Status = STATUS_NOT_IMPLEMENTED;
+            IoStatus->Status = Status = STATUS_NOT_IMPLEMENTED;
+            IoStatus->Information = 0;
     }
     return Status;
 }
-
 
 NTSTATUS
 NTAPI

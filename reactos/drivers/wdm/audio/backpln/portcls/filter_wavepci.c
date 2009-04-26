@@ -323,23 +323,17 @@ IPortFilterWavePci_fnFastDeviceIoControl(
         return FALSE;
     }
 
-    Status = STATUS_UNSUCCESSFUL;
     for(Index = 0; Index < Descriptor->FilterPropertySet.FreeKsPropertySetOffset; Index++)
     {
         if (IsEqualGUIDAligned(&Property->Set, Descriptor->FilterPropertySet.Properties[Index].Set))
         {
-            Status = FastPropertyHandler(FileObject, (PKSPROPERTY)InputBuffer, InputBufferLength, OutputBuffer, OutputBufferLength, StatusBlock,
-                                         1,
-                                         &Descriptor->FilterPropertySet.Properties[Index],
-                                         Descriptor, SubDevice);
-            break;
+            FastPropertyHandler(FileObject, (PKSPROPERTY)InputBuffer, InputBufferLength, OutputBuffer, OutputBufferLength, StatusBlock,
+                                1,
+                                &Descriptor->FilterPropertySet.Properties[Index],
+                                Descriptor, SubDevice);
         }
     }
-
-    if (NT_SUCCESS(Status))
-        return TRUE;
-    else
-        return FALSE;
+    return TRUE;
 }
 
 /*
