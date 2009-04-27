@@ -1417,6 +1417,19 @@ typedef struct
 
 typedef struct
 {
+    union {
+        ULONG       OptionsFlags;
+        ULONG       RequirementsFlags;
+    };
+#if defined(_NTDDK_)
+    POOL_TYPE   PoolType;
+#else
+    ULONG       PoolType;
+#endif 
+    ULONG       Frames;
+    ULONG       FrameSize;
+    ULONG       FileAlignment;
+    ULONG       Reserved;
 } KSALLOCATOR_FRAMING, *PKSALLOCATOR_FRAMING;
 
 typedef struct
