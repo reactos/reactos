@@ -124,8 +124,6 @@ UpdateCommonBuffer(
     ULONG BufferSize;
     PUCHAR Buffer;
     NTSTATUS Status;
-    PUSHORT Data;
-    ULONG Index;
 
     BufferLength = Position - This->CommonBufferOffset;
     while(BufferLength)
@@ -146,10 +144,6 @@ UpdateCommonBuffer(
         }
         else
         {
-            Data = (PUSHORT)Buffer;
-            for(Index = 0; Index < BytesToCopy / sizeof(USHORT); Index++)
-                Data[Index] = Data[Index] + 32768;
-
             This->DmaChannel->lpVtbl->CopyTo(This->DmaChannel,
                                              (PUCHAR)This->CommonBuffer + This->CommonBufferOffset,
                                              Buffer,
@@ -174,8 +168,7 @@ UpdateCommonBufferOverlap(
     ULONG BufferSize;
     PUCHAR Buffer;
     NTSTATUS Status;
-    PUSHORT Data;
-    ULONG Index;
+
 
     BufferLength = This->CommonBufferSize - This->CommonBufferOffset;
     while(BufferLength)
@@ -195,10 +188,6 @@ UpdateCommonBufferOverlap(
         }
         else
         {
-            Data = (PUSHORT)Buffer;
-            for(Index = 0; Index < BytesToCopy / sizeof(USHORT); Index++)
-                Data[Index] = Data[Index] + 32768;
-
             This->DmaChannel->lpVtbl->CopyTo(This->DmaChannel,
                                              (PUCHAR)This->CommonBuffer + This->CommonBufferOffset,
                                              Buffer,
