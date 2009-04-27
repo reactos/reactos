@@ -226,7 +226,7 @@ IServiceSink_fnRequestService(
     IServiceSink* iface)
 {
     IPortWavePciImpl * This = (IPortWavePciImpl*)CONTAINING_RECORD(iface, IPortWavePciImpl, lpVtblServiceSink);
-    DPRINT("IServiceSink_fnRequestService entered\n");
+    //DPRINT("IServiceSink_fnRequestService entered\n");
     if (This->Miniport)
     {
         This->Miniport->lpVtbl->Service(This->Miniport);
@@ -576,9 +576,9 @@ IPortWavePci_fnNotify(
     IN IPortWavePci * iface,
     IN  PSERVICEGROUP ServiceGroup)
 {
-    IPortWavePciImpl * This = (IPortWavePciImpl*)iface;
+    //IPortWavePciImpl * This = (IPortWavePciImpl*)iface;
 
-    DPRINT("IPortWavePci_fnNotify entered %p, ServiceGroup %p\n", This, ServiceGroup);
+    //DPRINT("IPortWavePci_fnNotify entered %p, ServiceGroup %p\n", This, ServiceGroup);
 
     if (ServiceGroup)
     {

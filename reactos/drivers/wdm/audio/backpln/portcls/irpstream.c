@@ -33,17 +33,12 @@ typedef struct
     KSPIN_CONNECT *ConnectDetails;
     PKSDATAFORMAT_WAVEFORMATEX DataFormat;
 
-    PIRP_MAPPING FirstMap;
-    PIRP_MAPPING LastMap;
-
     KSPIN_LOCK Lock;
     LIST_ENTRY ListHead;
 
     PVOID LastTag;
-    BOOL OutOfMapping;
+    ULONG OutOfMapping;
     ULONG MaxFrameSize;
-
-    BOOL LastMappingFailed;
 
 }IIrpQueueImpl;
 
@@ -128,7 +123,7 @@ IIrpQueue_fnInit(
     This->ConnectDetails = ConnectDetails;
     This->DataFormat = (PKSDATAFORMAT_WAVEFORMATEX)DataFormat;
     This->MaxFrameSize = FrameSize;
-    This->LastTag = (PVOID)0x12345678;
+    This->LastTag = NULL;
 
     InitializeListHead(&This->ListHead);
     KeInitializeSpinLock(&This->Lock);
@@ -158,17 +153,15 @@ IIrpQueue_fnAddMapping(
     if (This->MaxFrameSize)
     {
         Mapping->NumTags = max((Mapping->Header->DataUsed / This->MaxFrameSize) + 1, 1);
-        Mapping->Tag = AllocateItem(NonPagedPool, sizeof(PVOID) * This->NumMappings, TAG_PORTCLASS);
+        Mapping->Tag = AllocateItem(NonPagedPool, sizeof(PVOID) * Mapping->NumTags, TAG_PORTCLASS);
+        Mapping->ReferenceCount = Mapping->NumTags;
     }
 
     This->NumDataAvailable += Mapping->Header->DataUsed;
 
     DPRINT("IIrpQueue_fnAddMapping NumMappings %u SizeOfMapping %lu NumDataAvailable %lu Irp %p\n", This->NumMappings, Mapping->Header->DataUsed, This->NumDataAvailable, Irp);
 
-    /* FIXME use InterlockedCompareExchangePointer */
-    if (InterlockedCompareExchange((volatile long *)&This->FirstMap, (LONG)Mapping, (LONG)0) != 0)
-        ExInterlockedInsertTailList(&This->ListHead, &Mapping->Entry, &This->Lock);
-
+    ExInterlockedInsertTailList(&This->ListHead, &Mapping->Entry, &This->Lock);
     (void)InterlockedIncrement((volatile long*)&This->NumMappings);
 
     if (Irp)
@@ -188,17 +181,28 @@ IIrpQueue_fnGetMapping(
     OUT PUCHAR * Buffer,
     OUT PULONG BufferSize)
 {
-    IIrpQueueImpl * This = (IIrpQueueImpl*)iface;
 
-    if (!This->FirstMap)
+    PIRP_MAPPING CurMapping;
+    IIrpQueueImpl * This = (IIrpQueueImpl*)iface;
+    PLIST_ENTRY CurEntry;
+
+    KeAcquireSpinLockAtDpcLevel(&This->Lock);
+
+
+    CurEntry = This->ListHead.Flink;
+    CurMapping = CONTAINING_RECORD(CurEntry, IRP_MAPPING, Entry);
+    if (CurEntry == &This->ListHead)
     {
-        This->LastMappingFailed = TRUE;
+        KeReleaseSpinLockFromDpcLevel(&This->Lock);
+        This->OutOfMapping = TRUE;
         return STATUS_UNSUCCESSFUL;
     }
 
-    *Buffer = (PUCHAR)This->FirstMap->Header->Data + This->CurrentOffset;
-    *BufferSize = This->FirstMap->Header->DataUsed - This->CurrentOffset;
-    This->LastMappingFailed = FALSE;
+    *Buffer = (PUCHAR)CurMapping->Header->Data + This->CurrentOffset;
+    *BufferSize = CurMapping->Header->DataUsed - This->CurrentOffset;
+    This->OutOfMapping = FALSE;
+
+    KeReleaseSpinLockFromDpcLevel(&This->Lock);
     return STATUS_SUCCESS;
 }
 
@@ -210,21 +214,22 @@ IIrpQueue_fnUpdateMapping(
     IN IIrpQueue *iface,
     IN ULONG BytesWritten)
 {
+    PLIST_ENTRY CurEntry;
+    PIRP_MAPPING CurMapping;
     IIrpQueueImpl * This = (IIrpQueueImpl*)iface;
-    PIRP_MAPPING Mapping, CurMapping;
 
     This->CurrentOffset += BytesWritten;
     This->NumDataAvailable -= BytesWritten;
 
-    if (This->FirstMap->Header->DataUsed <=This->CurrentOffset)
+    CurEntry = This->ListHead.Flink;
+    CurMapping = CONTAINING_RECORD(CurEntry, IRP_MAPPING, Entry);
+
+    if (CurMapping->Header->DataUsed <= This->CurrentOffset)
     {
         This->CurrentOffset = 0;
-        Mapping = (PIRP_MAPPING)ExInterlockedRemoveHeadList(&This->ListHead, &This->Lock);
-        CurMapping = This->FirstMap;
 
-        (void)InterlockedExchangePointer((PVOID volatile*)&This->FirstMap, (PVOID)Mapping);
+        (void)ExInterlockedRemoveHeadList(&This->ListHead, &This->Lock);
         InterlockedDecrement(&This->NumMappings);
-
         FreeMappingRoutine(CurMapping);
     }
 
@@ -304,45 +309,37 @@ IIrpQueue_fnGetMappingWithTag(
     OUT PULONG  ByteCount,
     OUT PULONG  Flags)
 {
-    KIRQL OldIrql;
     PIRP_MAPPING CurMapping;
     PIRP_MAPPING Result;
     PLIST_ENTRY CurEntry;
     ULONG Index;
+    ULONG Offset;
     IIrpQueueImpl * This = (IIrpQueueImpl*)iface;
 
     *Flags = 0;
     Result = NULL;
 
-    KeAcquireSpinLock(&This->Lock, &OldIrql);
+    KeAcquireSpinLockAtDpcLevel(&This->Lock);
 
     CurEntry = This->ListHead.Flink;
+    if (CurEntry == &This->ListHead)
+    {
+        KeReleaseSpinLockFromDpcLevel(&This->Lock);
+        This->OutOfMapping = TRUE;
+        return STATUS_UNSUCCESSFUL;
+    }
+
 
     while (CurEntry != &This->ListHead)
     {
         CurMapping = CONTAINING_RECORD(CurEntry, IRP_MAPPING, Entry);
         for(Index = 0; Index < CurMapping->NumTags; Index++)
         {
-            if (This->LastTag == (PVOID)0x12345678)
-            {
-                CurMapping->Tag[Index] = Tag;
-                CurMapping->ReferenceCount++;
-                Result = CurMapping;
-                if (Index + 1 == CurMapping->NumTags - 1)
-                {
-                    /* indicate end of packet */
-                    *Flags = 1;
-                }
-                break;
-            }
-
-
             if (CurMapping->Tag[Index] == This->LastTag)
             {
                 if (Index + 1 < CurMapping->NumTags)
                 {
                     CurMapping->Tag[Index+1] = Tag;
-                    CurMapping->ReferenceCount++;
                     Result = CurMapping;
 
                     if (Index + 1 == CurMapping->NumTags - 1)
@@ -350,6 +347,11 @@ IIrpQueue_fnGetMappingWithTag(
                         /* indicate end of packet */
                         *Flags = 1;
                     }
+                    Offset = (Index + 1) * This->MaxFrameSize;
+                    ASSERT(Result->Header->DataUsed > Offset);
+                    *VirtualAddress = (PUCHAR)Result->Header->Data + Offset;
+                    *PhysicalAddress = MmGetPhysicalAddress(*VirtualAddress);
+                    *ByteCount = min(Result->Header->DataUsed - Offset, This->MaxFrameSize);
                     break;
                 }
 
@@ -357,30 +359,23 @@ IIrpQueue_fnGetMappingWithTag(
                 if (&This->ListHead == CurEntry)
                 {
                     This->OutOfMapping = TRUE;
-                    break;
+                    KeReleaseSpinLockFromDpcLevel(&This->Lock);
+                    return STATUS_UNSUCCESSFUL;
                 }
                 Result = CONTAINING_RECORD(CurEntry, IRP_MAPPING, Entry);
                 Result->Tag[0] = Tag;
-                Result->ReferenceCount++;
+                *VirtualAddress = (PUCHAR)Result->Header->Data;
+                *PhysicalAddress = MmGetPhysicalAddress(*VirtualAddress);
+                *ByteCount = min(Result->Header->DataUsed, This->MaxFrameSize);
                 break;
             }
         }
         CurEntry = CurEntry->Flink;
     }
 
-    KeReleaseSpinLock(&This->Lock, OldIrql);
-    if (!Result)
-    {
-        This->LastMappingFailed = TRUE;
-        return STATUS_UNSUCCESSFUL;
-    }
-
-    Result->Tag = Tag;
-    *PhysicalAddress = MmGetPhysicalAddress(Result->Header->Data);
-    *VirtualAddress = Result->Header->Data;
-    *ByteCount = Result->Header->DataUsed;
+    KeReleaseSpinLockFromDpcLevel(&This->Lock);
     This->LastTag = Tag;
-    This->LastMappingFailed = FALSE;
+    This->OutOfMapping = FALSE;
     return STATUS_SUCCESS;
 }
 
@@ -390,13 +385,12 @@ IIrpQueue_fnReleaseMappingWithTag(
     IN IIrpQueue *iface,
     IN PVOID Tag)
 {
-    KIRQL OldIrql;
     PIRP_MAPPING CurMapping;
     PLIST_ENTRY CurEntry;
     ULONG Index;
     IIrpQueueImpl * This = (IIrpQueueImpl*)iface;
 
-    KeAcquireSpinLock(&This->Lock, &OldIrql);
+    KeAcquireSpinLockAtDpcLevel(&This->Lock);
     CurEntry = This->ListHead.Flink;
 
     while (CurEntry != &This->ListHead)
@@ -427,7 +421,7 @@ IIrpQueue_fnReleaseMappingWithTag(
         CurEntry = CurEntry->Flink;
     }
 
-    KeReleaseSpinLock(&This->Lock, OldIrql);
+    KeReleaseSpinLockFromDpcLevel(&This->Lock);
 }
 
 BOOL
@@ -436,7 +430,7 @@ IIrpQueue_fnHasLastMappingFailed(
     IN IIrpQueue *iface)
 {
     IIrpQueueImpl * This = (IIrpQueueImpl*)iface;
-    return This->LastMappingFailed;
+    return This->OutOfMapping;
 }
 
 static IIrpQueueVtbl vt_IIrpQueue =

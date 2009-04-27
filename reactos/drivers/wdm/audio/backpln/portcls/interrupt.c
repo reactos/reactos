@@ -177,7 +177,7 @@ IInterruptServiceRoutine(
     BOOL Success;
     IInterruptSyncImpl * This = (IInterruptSyncImpl*)ServiceContext;
 
-    DPRINT("IInterruptServiceRoutine Mode %u\n", This->Mode);
+    //DPRINT("IInterruptServiceRoutine Mode %u\n", This->Mode);
 
     if (This->Mode == InterruptSyncModeNormal)
     {
