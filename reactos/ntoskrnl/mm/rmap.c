@@ -58,7 +58,7 @@ MmWritePagePhysicalAddress(PFN_TYPE Page)
 {
    PMM_RMAP_ENTRY entry;
    PMEMORY_AREA MemoryArea;
-   PMM_AVL_TABLE AddressSpace;
+   PMMSUPPORT AddressSpace;
    ULONG Type;
    PVOID Address;
    PEPROCESS Process;
@@ -91,7 +91,7 @@ MmWritePagePhysicalAddress(PFN_TYPE Page)
       {
          return Status;
       }
-      AddressSpace = &Process->VadRoot;
+      AddressSpace = &Process->Vm;
    }
    else
    {
@@ -192,7 +192,7 @@ MmPageOutPhysicalAddress(PFN_TYPE Page)
 {
    PMM_RMAP_ENTRY entry;
    PMEMORY_AREA MemoryArea;
-   PMM_AVL_TABLE AddressSpace;
+   PMMSUPPORT AddressSpace;
    ULONG Type;
    PVOID Address;
    PEPROCESS Process;
@@ -222,7 +222,7 @@ MmPageOutPhysicalAddress(PFN_TYPE Page)
       {
          return Status;
       }
-      AddressSpace = &Process->VadRoot;
+      AddressSpace = &Process->Vm;
    }
    else
    {

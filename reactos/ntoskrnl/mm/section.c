@@ -152,7 +152,7 @@ MmGetFileNameForAddress(IN PVOID Address,
 {
    PROS_SECTION_OBJECT Section;
    PMEMORY_AREA MemoryArea;
-   PMM_AVL_TABLE AddressSpace;
+   PMMSUPPORT AddressSpace;
    POBJECT_NAME_INFORMATION ModuleNameInformation;
    NTSTATUS Status = STATUS_ADDRESS_NOT_ASSOCIATED;
 
@@ -163,7 +163,7 @@ MmGetFileNameForAddress(IN PVOID Address,
    }
    else
    {
-      AddressSpace = &PsGetCurrentProcess()->VadRoot;
+      AddressSpace = &PsGetCurrentProcess()->Vm;
    }
 
    /* Lock address space */
@@ -753,7 +753,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
 
 NTSTATUS
 NTAPI
-MmNotPresentFaultSectionView(PMM_AVL_TABLE AddressSpace,
+MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
                              MEMORY_AREA* MemoryArea,
                              PVOID Address,
                              BOOLEAN Locked)
@@ -1273,7 +1273,7 @@ MmNotPresentFaultSectionView(PMM_AVL_TABLE AddressSpace,
 
 NTSTATUS
 NTAPI
-MmAccessFaultSectionView(PMM_AVL_TABLE AddressSpace,
+MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
                          MEMORY_AREA* MemoryArea,
                          PVOID Address,
                          BOOLEAN Locked)
@@ -1458,7 +1458,7 @@ MmPageOutDeleteMapping(PVOID Context, PEPROCESS Process, PVOID Address)
    PageOutContext = (MM_SECTION_PAGEOUT_CONTEXT*)Context;
    if (Process)
    {
-      MmLockAddressSpace(&Process->VadRoot);
+      MmLockAddressSpace(&Process->Vm);
    }
 
    MmDeleteVirtualMapping(Process,
@@ -1482,7 +1482,7 @@ MmPageOutDeleteMapping(PVOID Context, PEPROCESS Process, PVOID Address)
    }
    if (Process)
    {
-      MmUnlockAddressSpace(&Process->VadRoot);
+      MmUnlockAddressSpace(&Process->Vm);
    }
 
    if (PageOutContext->Private)
@@ -1495,7 +1495,7 @@ MmPageOutDeleteMapping(PVOID Context, PEPROCESS Process, PVOID Address)
 
 NTSTATUS
 NTAPI
-MmPageOutSectionView(PMM_AVL_TABLE AddressSpace,
+MmPageOutSectionView(PMMSUPPORT AddressSpace,
                      MEMORY_AREA* MemoryArea,
                      PVOID Address,
                      PMM_PAGEOP PageOp)
@@ -1849,7 +1849,7 @@ MmPageOutSectionView(PMM_AVL_TABLE AddressSpace,
 
 NTSTATUS
 NTAPI
-MmWritePageSectionView(PMM_AVL_TABLE AddressSpace,
+MmWritePageSectionView(PMMSUPPORT AddressSpace,
                        PMEMORY_AREA MemoryArea,
                        PVOID Address,
                        PMM_PAGEOP PageOp)
@@ -1996,7 +1996,7 @@ MmWritePageSectionView(PMM_AVL_TABLE AddressSpace,
 }
 
 static VOID
-MmAlterViewAttributes(PMM_AVL_TABLE AddressSpace,
+MmAlterViewAttributes(PMMSUPPORT AddressSpace,
                       PVOID BaseAddress,
                       ULONG RegionSize,
                       ULONG OldType,
@@ -2061,7 +2061,7 @@ MmAlterViewAttributes(PMM_AVL_TABLE AddressSpace,
 
 NTSTATUS
 NTAPI
-MmProtectSectionView(PMM_AVL_TABLE AddressSpace,
+MmProtectSectionView(PMMSUPPORT AddressSpace,
                      PMEMORY_AREA MemoryArea,
                      PVOID BaseAddress,
                      ULONG Length,
@@ -3611,7 +3611,7 @@ NtOpenSection(PHANDLE   SectionHandle,
 }
 
 static NTSTATUS
-MmMapViewOfSegment(PMM_AVL_TABLE AddressSpace,
+MmMapViewOfSegment(PMMSUPPORT AddressSpace,
                    PROS_SECTION_OBJECT Section,
                    PMM_SECTION_SEGMENT Segment,
                    PVOID* BaseAddress,
@@ -3722,7 +3722,7 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
    PROS_SECTION_OBJECT Section;
    PEPROCESS Process;
    KPROCESSOR_MODE PreviousMode;
-   PMM_AVL_TABLE AddressSpace;
+   PMMSUPPORT AddressSpace;
    NTSTATUS Status = STATUS_SUCCESS;
    ULONG tmpProtect;
 
@@ -3801,7 +3801,7 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
       return(Status);
    }
 
-   AddressSpace = &Process->VadRoot;
+   AddressSpace = &Process->Vm;
 
    Status = ObReferenceObjectByHandle(SectionHandle,
                                       SECTION_MAP_READ,
@@ -3883,10 +3883,10 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
    NTSTATUS Status;
    PROS_SECTION_OBJECT Section;
    PMM_SECTION_SEGMENT Segment;
-   PMM_AVL_TABLE AddressSpace;
+   PMMSUPPORT AddressSpace;
    PEPROCESS Process;
 
-   AddressSpace = (PMM_AVL_TABLE)Context;
+   AddressSpace = (PMMSUPPORT)Context;
    Process = MmGetAddressSpaceOwner(AddressSpace);
 
    Address = (PVOID)PAGE_ROUND_DOWN(Address);
@@ -3980,7 +3980,7 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
 }
 
 static NTSTATUS
-MmUnmapViewOfSegment(PMM_AVL_TABLE AddressSpace,
+MmUnmapViewOfSegment(PMMSUPPORT AddressSpace,
                      PVOID BaseAddress)
 {
    NTSTATUS Status;
@@ -4040,7 +4040,7 @@ MmUnmapViewOfSection(PEPROCESS Process,
 {
    NTSTATUS Status;
    PMEMORY_AREA MemoryArea;
-   PMM_AVL_TABLE AddressSpace;
+   PMMSUPPORT AddressSpace;
    PROS_SECTION_OBJECT Section;
    PMM_PAGEOP PageOp;
    ULONG_PTR Offset;
@@ -4051,7 +4051,7 @@ MmUnmapViewOfSection(PEPROCESS Process,
 
    ASSERT(Process);
 
-   AddressSpace = &Process->VadRoot;
+   AddressSpace = &Process->Vm;
 
    MmLockAddressSpace(AddressSpace);
    MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace,
@@ -4441,7 +4441,7 @@ MmAllocateSection (IN ULONG Length, PVOID BaseAddress)
    PVOID Result;
    MEMORY_AREA* marea;
    NTSTATUS Status;
-   PMM_AVL_TABLE AddressSpace;
+   PMMSUPPORT AddressSpace;
    PHYSICAL_ADDRESS BoundaryAddressMultiple;
 
    DPRINT("MmAllocateSection(Length %x)\n",Length);
@@ -4537,7 +4537,7 @@ MmMapViewOfSection(IN PVOID SectionObject,
                    IN ULONG Protect)
 {
    PROS_SECTION_OBJECT Section;
-   PMM_AVL_TABLE AddressSpace;
+   PMMSUPPORT AddressSpace;
    ULONG ViewOffset;
    NTSTATUS Status = STATUS_SUCCESS;
 
@@ -4550,7 +4550,7 @@ MmMapViewOfSection(IN PVOID SectionObject,
 
 
    Section = (PROS_SECTION_OBJECT)SectionObject;
-   AddressSpace = &Process->VadRoot;
+   AddressSpace = &Process->Vm;
 
    AllocationType |= (Section->AllocationAttributes & SEC_NO_CHANGE);
 
@@ -4815,7 +4815,7 @@ MmMapViewInSystemSpace (IN PVOID SectionObject,
                         IN OUT PULONG ViewSize)
 {
    PROS_SECTION_OBJECT Section;
-   PMM_AVL_TABLE AddressSpace;
+   PMMSUPPORT AddressSpace;
    NTSTATUS Status;
 
    DPRINT("MmMapViewInSystemSpace() called\n");
@@ -4875,7 +4875,7 @@ MmMapViewInSessionSpace (
 NTSTATUS NTAPI
 MmUnmapViewInSystemSpace (IN PVOID MappedBase)
 {
-   PMM_AVL_TABLE AddressSpace;
+   PMMSUPPORT AddressSpace;
    NTSTATUS Status;
 
    DPRINT("MmUnmapViewInSystemSpace() called\n");

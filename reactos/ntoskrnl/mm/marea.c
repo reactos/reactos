@@ -160,18 +160,18 @@ static PMEMORY_AREA MmIteratePrevNode(PMEMORY_AREA Node)
 }
 
 #ifdef VALIDATE_MEMORY_AREAS
-static VOID MmVerifyMemoryAreas(PMM_AVL_TABLE AddressSpace)
+static VOID MmVerifyMemoryAreas(PMMSUPPORT AddressSpace)
 {
    PMEMORY_AREA Node;
 
    ASSERT(AddressSpace != NULL);
 
    /* Special case for empty tree. */
-   if (AddressSpace->BalancedRoot.u1.Parent == NULL)
+   if (AddressSpace->WorkingSetExpansionLinks.Flink == NULL)
       return;
 
    /* Traverse the tree from left to right. */
-   for (Node = MmIterateFirstNode(AddressSpace->BalancedRoot.u1.Parent);
+   for (Node = MmIterateFirstNode(AddressSpace->WorkingSetExpansionLinks.Flink);
         Node != NULL;
         Node = MmIterateNextNode(Node))
    {
@@ -186,18 +186,18 @@ static VOID MmVerifyMemoryAreas(PMM_AVL_TABLE AddressSpace)
 #endif
 
 VOID NTAPI
-MmDumpMemoryAreas(PMM_AVL_TABLE AddressSpace)
+MmDumpMemoryAreas(PMMSUPPORT AddressSpace)
 {
    PMEMORY_AREA Node;
 
    DbgPrint("MmDumpMemoryAreas()\n");
 
    /* Special case for empty tree. */
-   if (AddressSpace->BalancedRoot.u1.Parent == NULL)
+   if (AddressSpace->WorkingSetExpansionLinks.Flink == NULL)
       return;
 
    /* Traverse the tree from left to right. */
-   for (Node = MmIterateFirstNode((PMEMORY_AREA)AddressSpace->BalancedRoot.u1.Parent);
+   for (Node = MmIterateFirstNode((PMEMORY_AREA)AddressSpace->WorkingSetExpansionLinks.Flink);
         Node != NULL;
         Node = MmIterateNextNode(Node))
    {
@@ -211,10 +211,10 @@ MmDumpMemoryAreas(PMM_AVL_TABLE AddressSpace)
 
 PMEMORY_AREA NTAPI
 MmLocateMemoryAreaByAddress(
-   PMM_AVL_TABLE AddressSpace,
+   PMMSUPPORT AddressSpace,
    PVOID Address)
 {
-   PMEMORY_AREA Node = (PMEMORY_AREA)AddressSpace->BalancedRoot.u1.Parent;
+   PMEMORY_AREA Node = (PMEMORY_AREA)AddressSpace->WorkingSetExpansionLinks.Flink;
 
    DPRINT("MmLocateMemoryAreaByAddress(AddressSpace %p, Address %p)\n",
            AddressSpace, Address);
@@ -241,7 +241,7 @@ MmLocateMemoryAreaByAddress(
 
 PMEMORY_AREA NTAPI
 MmLocateMemoryAreaByRegion(
-   PMM_AVL_TABLE AddressSpace,
+   PMMSUPPORT AddressSpace,
    PVOID Address,
    ULONG_PTR Length)
 {
@@ -251,11 +251,11 @@ MmLocateMemoryAreaByRegion(
    MmVerifyMemoryAreas(AddressSpace);
 
    /* Special case for empty tree. */
-   if (AddressSpace->BalancedRoot.u1.Parent == NULL)
+   if (AddressSpace->WorkingSetExpansionLinks.Flink == NULL)
       return NULL;
 
    /* Traverse the tree from left to right. */
-   for (Node = MmIterateFirstNode((PMEMORY_AREA)AddressSpace->BalancedRoot.u1.Parent);
+   for (Node = MmIterateFirstNode((PMEMORY_AREA)AddressSpace->WorkingSetExpansionLinks.Flink);
         Node != NULL;
         Node = MmIterateNextNode(Node))
    {
@@ -302,11 +302,11 @@ MmLocateMemoryAreaByRegion(
 
 static VOID
 MmCompressHelper(
-   PMM_AVL_TABLE AddressSpace,
+   PMMSUPPORT AddressSpace,
    ULONG Count)
 {
    PMEMORY_AREA Root = NULL;
-   PMEMORY_AREA Red = (PMEMORY_AREA)AddressSpace->BalancedRoot.u1.Parent;
+   PMEMORY_AREA Red = (PMEMORY_AREA)AddressSpace->WorkingSetExpansionLinks.Flink;
    PMEMORY_AREA Black = Red->LeftChild;
 
    while (Count--)
@@ -314,7 +314,7 @@ MmCompressHelper(
       if (Root)
          Root->LeftChild = Black;
       else
-         AddressSpace->BalancedRoot.u1.Parent = (PVOID)Black;
+         AddressSpace->WorkingSetExpansionLinks.Flink = (PVOID)Black;
       Black->Parent = Root;
       Red->LeftChild = Black->RightChild;
       if (Black->RightChild)
@@ -341,7 +341,7 @@ MmCompressHelper(
 
 static VOID
 MmRebalanceTree(
-   PMM_AVL_TABLE AddressSpace)
+   PMMSUPPORT AddressSpace)
 {
    PMEMORY_AREA PreviousNode;
    PMEMORY_AREA CurrentNode;
@@ -354,7 +354,7 @@ MmRebalanceTree(
    /* Transform the tree into Vine. */
 
    PreviousNode = NULL;
-   CurrentNode = (PMEMORY_AREA)AddressSpace->BalancedRoot.u1.Parent;
+   CurrentNode = (PMEMORY_AREA)AddressSpace->WorkingSetExpansionLinks.Flink;
    while (CurrentNode != NULL)
    {
       if (CurrentNode->RightChild == NULL)
@@ -379,7 +379,7 @@ MmRebalanceTree(
          if (PreviousNode != NULL)
             PreviousNode->LeftChild = TempNode;
          else
-            AddressSpace->BalancedRoot.u1.Parent = (PVOID)TempNode;
+            AddressSpace->WorkingSetExpansionLinks.Flink = (PVOID)TempNode;
          TempNode->Parent = PreviousNode;
       }
    }
@@ -410,7 +410,7 @@ MmRebalanceTree(
 
 static VOID
 MmInsertMemoryArea(
-   PMM_AVL_TABLE AddressSpace,
+   PMMSUPPORT AddressSpace,
    PMEMORY_AREA marea)
 {
    PMEMORY_AREA Node;
@@ -419,14 +419,14 @@ MmInsertMemoryArea(
 
    MmVerifyMemoryAreas(AddressSpace);
 
-   if (AddressSpace->BalancedRoot.u1.Parent == NULL)
+   if (AddressSpace->WorkingSetExpansionLinks.Flink == NULL)
    {
-      AddressSpace->BalancedRoot.u1.Parent = (PVOID)marea;
+      AddressSpace->WorkingSetExpansionLinks.Flink = (PVOID)marea;
       marea->LeftChild = marea->RightChild = marea->Parent = NULL;
       return;
    }
 
-   Node = (PMEMORY_AREA)AddressSpace->BalancedRoot.u1.Parent;
+   Node = (PMEMORY_AREA)AddressSpace->WorkingSetExpansionLinks.Flink;
    do
    {
       DPRINT("marea->EndingAddress: %p Node->StartingAddress: %p\n",
@@ -466,7 +466,7 @@ MmInsertMemoryArea(
 
 static PVOID
 MmFindGapBottomUp(
-   PMM_AVL_TABLE AddressSpace,
+   PMMSUPPORT AddressSpace,
    ULONG_PTR Length,
    ULONG_PTR Granularity)
 {
@@ -486,7 +486,7 @@ MmFindGapBottomUp(
    AlignedAddress = MM_ROUND_UP(LowestAddress, Granularity);
 
    /* Special case for empty tree. */
-   if (AddressSpace->BalancedRoot.u1.Parent == NULL)
+   if (AddressSpace->WorkingSetExpansionLinks.Flink == NULL)
    {
       if ((ULONG_PTR)HighestAddress - (ULONG_PTR)AlignedAddress >= Length)
       {
@@ -498,7 +498,7 @@ MmFindGapBottomUp(
    }
 
    /* Go to the node with lowest address in the tree. */
-   FirstNode = Node = MmIterateFirstNode((PMEMORY_AREA)AddressSpace->BalancedRoot.u1.Parent);
+   FirstNode = Node = MmIterateFirstNode((PMEMORY_AREA)AddressSpace->WorkingSetExpansionLinks.Flink);
 
    /* Traverse the tree from left to right. */
    PreviousNode = Node;
@@ -544,7 +544,7 @@ MmFindGapBottomUp(
 
 static PVOID
 MmFindGapTopDown(
-   PMM_AVL_TABLE AddressSpace,
+   PMMSUPPORT AddressSpace,
    ULONG_PTR Length,
    ULONG_PTR Granularity)
 {
@@ -567,7 +567,7 @@ MmFindGapTopDown(
       return NULL;
 
    /* Special case for empty tree. */
-   if (AddressSpace->BalancedRoot.u1.Parent == NULL)
+   if (AddressSpace->WorkingSetExpansionLinks.Flink == NULL)
    {
       if (AlignedAddress >= LowestAddress)
       {
@@ -579,7 +579,7 @@ MmFindGapTopDown(
    }
 
    /* Go to the node with highest address in the tree. */
-   Node = MmIterateLastNode((PMEMORY_AREA)AddressSpace->BalancedRoot.u1.Parent);
+   Node = MmIterateLastNode((PMEMORY_AREA)AddressSpace->WorkingSetExpansionLinks.Flink);
 
    /* Check if there is enough space after the last memory area. */
    if (Node->EndingAddress <= AlignedAddress)
@@ -630,7 +630,7 @@ MmFindGapTopDown(
 
 PVOID NTAPI
 MmFindGap(
-   PMM_AVL_TABLE AddressSpace,
+   PMMSUPPORT AddressSpace,
    ULONG_PTR Length,
    ULONG_PTR Granularity,
    BOOLEAN TopDown)
@@ -643,10 +643,10 @@ MmFindGap(
 
 ULONG_PTR NTAPI
 MmFindGapAtAddress(
-   PMM_AVL_TABLE AddressSpace,
+   PMMSUPPORT AddressSpace,
    PVOID Address)
 {
-   PMEMORY_AREA Node = (PMEMORY_AREA)AddressSpace->BalancedRoot.u1.Parent;
+   PMEMORY_AREA Node = (PMEMORY_AREA)AddressSpace->WorkingSetExpansionLinks.Flink;
    PMEMORY_AREA RightNeighbour = NULL;
    PVOID LowestAddress  = MmGetAddressSpaceOwner(AddressSpace) ? MM_LOWEST_USER_ADDRESS : MmSystemRangeStart;
    PVOID HighestAddress = MmGetAddressSpaceOwner(AddressSpace) ?
@@ -725,7 +725,7 @@ MmFindGapAtAddress(
 
 NTSTATUS NTAPI
 MmFreeMemoryArea(
-   PMM_AVL_TABLE AddressSpace,
+   PMMSUPPORT AddressSpace,
    PMEMORY_AREA MemoryArea,
    PMM_FREE_PAGE_FUNC FreePage,
    PVOID FreePageContext)
@@ -789,7 +789,7 @@ MmFreeMemoryArea(
             ParentReplace = &MemoryArea->Parent->RightChild;
       }
       else
-         ParentReplace = (PMEMORY_AREA*)&AddressSpace->BalancedRoot.u1.Parent;
+         ParentReplace = (PMEMORY_AREA*)&AddressSpace->WorkingSetExpansionLinks.Flink;
 
       if (MemoryArea->RightChild == NULL)
       {
@@ -867,7 +867,7 @@ MmFreeMemoryArea(
 
 NTSTATUS NTAPI
 MmFreeMemoryAreaByPtr(
-   PMM_AVL_TABLE AddressSpace,
+   PMMSUPPORT AddressSpace,
    PVOID BaseAddress,
    PMM_FREE_PAGE_FUNC FreePage,
    PVOID FreePageContext)
@@ -918,7 +918,7 @@ MmFreeMemoryAreaByPtr(
  */
 
 NTSTATUS NTAPI
-MmCreateMemoryArea(PMM_AVL_TABLE AddressSpace,
+MmCreateMemoryArea(PMMSUPPORT AddressSpace,
                    ULONG Type,
                    PVOID *BaseAddress,
                    ULONG_PTR Length,
@@ -1042,7 +1042,7 @@ MmMapMemoryArea(PVOID BaseAddress,
 
 VOID NTAPI
 MmReleaseMemoryAreaIfDecommitted(PEPROCESS Process,
-                                 PMM_AVL_TABLE AddressSpace,
+                                 PMMSUPPORT AddressSpace,
                                  PVOID BaseAddress)
 {
    PMEMORY_AREA MemoryArea;

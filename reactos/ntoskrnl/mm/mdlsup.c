@@ -366,12 +366,12 @@ MmUnmapLockedPages(IN PVOID BaseAddress,
         ASSERT(Mdl->Process == PsGetCurrentProcess());
         
         /* Find the memory area */
-        MemoryArea = MmLocateMemoryAreaByAddress(&Mdl->Process->VadRoot,
+        MemoryArea = MmLocateMemoryAreaByAddress(&Mdl->Process->Vm,
                                                  BaseAddress);
         ASSERT(MemoryArea);
 
         /* Free it */
-        MmFreeMemoryArea(&Mdl->Process->VadRoot,
+        MmFreeMemoryArea(&Mdl->Process->Vm,
                          MemoryArea,
                          NULL,
                          NULL);
@@ -395,7 +395,7 @@ MmProbeAndLockPages(IN PMDL Mdl,
     PFN_TYPE Page;
     PEPROCESS CurrentProcess;
     PETHREAD Thread;
-    PMM_AVL_TABLE AddressSpace;
+    PMMSUPPORT AddressSpace;
 	KIRQL OldIrql = KeGetCurrentIrql();
     DPRINT("Probing MDL: %p\n", Mdl);
     
@@ -480,7 +480,7 @@ MmProbeAndLockPages(IN PMDL Mdl,
         Mdl->Process = CurrentProcess;
         
         /* Use the process lock */
-        AddressSpace = &CurrentProcess->VadRoot;
+        AddressSpace = &CurrentProcess->Vm;
     }
     
     
@@ -758,8 +758,8 @@ MmMapLockedPagesSpecifyCache(IN PMDL Mdl,
     
     CurrentProcess = PsGetCurrentProcess();
     
-    MmLockAddressSpace(&CurrentProcess->VadRoot);
-    Status = MmCreateMemoryArea(&CurrentProcess->VadRoot,
+    MmLockAddressSpace(&CurrentProcess->Vm);
+    Status = MmCreateMemoryArea(&CurrentProcess->Vm,
                                 MEMORY_AREA_MDL_MAPPING,
                                 &Base,
                                 PageCount * PAGE_SIZE,
@@ -768,7 +768,7 @@ MmMapLockedPagesSpecifyCache(IN PMDL Mdl,
                                 (Base != NULL),
                                 0,
                                 BoundaryAddressMultiple);
-    MmUnlockAddressSpace(&CurrentProcess->VadRoot);
+    MmUnlockAddressSpace(&CurrentProcess->Vm);
     if (!NT_SUCCESS(Status))
     {
         if (Mdl->MdlFlags & MDL_MAPPING_CAN_FAIL)
