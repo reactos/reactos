@@ -578,15 +578,12 @@ IPortWavePci_fnNotify(
 {
     IPortWavePciImpl * This = (IPortWavePciImpl*)iface;
 
+    DPRINT("IPortWavePci_fnNotify entered %p, ServiceGroup %p\n", This, ServiceGroup);
 
-    DPRINT1("IPortWavePci_fnNotify entered %p, ServiceGroup %p\n", This, ServiceGroup);
-
-    //if (This->ServiceGroup)
-    //{
-    //    ServiceGroup->lpVtbl->RequestService (ServiceGroup);
-    //}
-
-   // KeInsertQueueDpc(&This->Dpc, NULL, NULL);
+    if (ServiceGroup)
+    {
+        ServiceGroup->lpVtbl->RequestService (ServiceGroup);
+    }
 }
 
 static IPortWavePciVtbl vt_IPortWavePci =

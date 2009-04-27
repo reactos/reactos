@@ -86,10 +86,12 @@ IPortWavePciStream_fnGetMapping(
     OUT PULONG  Flags)
 {
     IPortWavePciStreamImpl * This = (IPortWavePciStreamImpl*)iface;
-
+    NTSTATUS Status;
     ASSERT_IRQL(DISPATCH_LEVEL);
+    Status = This->Queue->lpVtbl->GetMappingWithTag(This->Queue, Tag, PhysicalAddress, VirtualAddress, ByteCount, Flags);
 
-    return This->Queue->lpVtbl->GetMappingWithTag(This->Queue, Tag, PhysicalAddress, VirtualAddress, ByteCount, Flags);
+    DPRINT("IPortWavePciStream_fnGetMapping Tag %p Status %x\n", Tag, Status);
+    return Status;
 }
 
 static
@@ -102,7 +104,7 @@ IPortWavePciStream_fnReleaseMapping(
     IPortWavePciStreamImpl * This = (IPortWavePciStreamImpl*)iface;
 
     ASSERT_IRQL(DISPATCH_LEVEL);
-
+    DPRINT("IPortWavePciStream_fnReleaseMapping Tag %p\n", Tag);
     This->Queue->lpVtbl->ReleaseMappingWithTag(This->Queue, Tag);
     return STATUS_SUCCESS;
 }
@@ -115,6 +117,7 @@ IPortWavePciStream_fnTerminatePacket(
 {
     UNIMPLEMENTED
     ASSERT_IRQL(DISPATCH_LEVEL);
+    DPRINT("IPortWavePciStream_fnTerminatePacket\n");
     return STATUS_SUCCESS;
 }
 
