@@ -37,6 +37,10 @@ typedef struct
     ULONG FrameSize;
     BOOL Capture;
 
+    ULONG TotalPackets;
+    ULONG PreCompleted;
+    ULONG PostCompleted;
+
 }IPortPinWaveCyclicImpl;
 
 
@@ -120,6 +124,8 @@ UpdateCommonBuffer(
     ULONG BufferSize;
     PUCHAR Buffer;
     NTSTATUS Status;
+    PUSHORT Data;
+    ULONG Index;
 
     BufferLength = Position - This->CommonBufferOffset;
     while(BufferLength)
@@ -140,6 +146,10 @@ UpdateCommonBuffer(
         }
         else
         {
+            Data = (PUSHORT)Buffer;
+            for(Index = 0; Index < BytesToCopy / sizeof(USHORT); Index++)
+                Data[Index] = Data[Index] + 32768;
+
             This->DmaChannel->lpVtbl->CopyTo(This->DmaChannel,
                                              (PUCHAR)This->CommonBuffer + This->CommonBufferOffset,
                                              Buffer,
@@ -164,6 +174,8 @@ UpdateCommonBufferOverlap(
     ULONG BufferSize;
     PUCHAR Buffer;
     NTSTATUS Status;
+    PUSHORT Data;
+    ULONG Index;
 
     BufferLength = This->CommonBufferSize - This->CommonBufferOffset;
     while(BufferLength)
@@ -183,6 +195,10 @@ UpdateCommonBufferOverlap(
         }
         else
         {
+            Data = (PUSHORT)Buffer;
+            for(Index = 0; Index < BytesToCopy / sizeof(USHORT); Index++)
+                Data[Index] = Data[Index] + 32768;
+
             This->DmaChannel->lpVtbl->CopyTo(This->DmaChannel,
                                              (PUCHAR)This->CommonBuffer + This->CommonBufferOffset,
                                              Buffer,
@@ -228,7 +244,7 @@ SetStreamWorkerRoutine(
         {
             /* reset start stream */
             This->IrpQueue->lpVtbl->CancelBuffers(This->IrpQueue); //FIX function name
-            DPRINT1("Stopping %u Irql %u\n", This, This->IrpQueue->lpVtbl->NumMappings(This->IrpQueue), KeGetCurrentIrql());
+            DPRINT1("Stopping PreCompleted %u PostCompleted %u\n", This->PreCompleted, This->PostCompleted);
         }
     }
 }
@@ -908,7 +924,9 @@ IPortPinWaveCyclic_fnFastWrite(
     PIRP Irp;
     IPortPinWaveCyclicImpl * This = (IPortPinWaveCyclicImpl*)iface;
 
-    DPRINT("IPortPinWaveCyclic_fnFastWrite entered\n");
+    InterlockedIncrement((PLONG)&This->TotalPackets);
+
+    DPRINT("IPortPinWaveCyclic_fnFastWrite entered Total %u Pre %u Post %u\n", This->TotalPackets, This->PreCompleted, This->PostCompleted);
 
     Packet = (PCONTEXT_WRITE)Buffer;
 
@@ -917,6 +935,7 @@ IPortPinWaveCyclic_fnFastWrite(
     {
         Irp = Packet->Irp;
         StatusBlock->Status = STATUS_PENDING;
+        InterlockedIncrement((PLONG)&This->PostCompleted);
     }
     else
     {
@@ -925,6 +944,7 @@ IPortPinWaveCyclic_fnFastWrite(
         Packet->Irp->IoStatus.Information = Packet->Header.FrameExtent;
         IoCompleteRequest(Packet->Irp, IO_SOUND_INCREMENT);
         StatusBlock->Status = STATUS_SUCCESS;
+        InterlockedIncrement((PLONG)&This->PreCompleted);
     }
 
     Status = This->IrpQueue->lpVtbl->AddMapping(This->IrpQueue, Buffer, Length, Irp);
@@ -958,6 +978,7 @@ IPortPinWaveCyclic_fnInit(
     PKSDATAFORMAT DataFormat;
     PDEVICE_OBJECT DeviceObject;
     BOOL Capture;
+    //IDrmAudioStream * DrmAudio = NULL;
 
     IPortPinWaveCyclicImpl * This = (IPortPinWaveCyclicImpl*)iface;
 
@@ -1016,6 +1037,21 @@ IPortPinWaveCyclic_fnInit(
                                                This->Format,
                                                &This->DmaChannel,
                                                &This->ServiceGroup);
+#if 0
+    Status = This->Stream->lpVtbl->QueryInterface(This->Stream, &IID_IDrmAudioStream, (PVOID*)&DrmAudio);
+    if (NT_SUCCESS(Status))
+    {
+        DRMRIGHTS DrmRights;
+        DPRINT1("Got IID_IDrmAudioStream interface %p\n", DrmAudio);
+
+        DrmRights.CopyProtect = FALSE;
+        DrmRights.Reserved = 0;
+        DrmRights.DigitalOutputDisable = FALSE;
+
+        Status = DrmAudio->lpVtbl->SetContentId(DrmAudio, 1, &DrmRights);
+        DPRINT("Status %x\n", Status);
+    }
+#endif
 
     DPRINT("IPortPinWaveCyclic_fnInit Status %x\n", Status);
 
@@ -1033,7 +1069,7 @@ IPortPinWaveCyclic_fnInit(
     This->ServiceGroup->lpVtbl->SupportDelayedService(This->ServiceGroup);
     //This->DmaChannel->lpVtbl->AddRef(This->DmaChannel);
 
-
+    This->Stream->lpVtbl->SetState(This->Stream, KSSTATE_STOP);
     This->State = KSSTATE_STOP;
     This->CommonBufferOffset = 0;
     This->CommonBufferSize = This->DmaChannel->lpVtbl->AllocatedBufferSize(This->DmaChannel);

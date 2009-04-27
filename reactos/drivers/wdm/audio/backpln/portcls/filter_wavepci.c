@@ -131,7 +131,7 @@ IPortFilterWavePci_fnNewIrpTarget(
     }
 
     /* initialize the pin */
-    Status = Pin->lpVtbl->Init(Pin, This->Port, iface, ConnectDetails, &This->Descriptor->Factory.KsPinDescriptor[ConnectDetails->PinId], GetDeviceObjectFromWaveCyclic(This->Port));
+    Status = Pin->lpVtbl->Init(Pin, This->Port, iface, ConnectDetails, &This->Descriptor->Factory.KsPinDescriptor[ConnectDetails->PinId], GetDeviceObjectFromPortWavePci(This->Port));
     if (!NT_SUCCESS(Status))
     {
         Pin->lpVtbl->Release(Pin);

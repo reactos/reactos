@@ -101,6 +101,13 @@ PDEVICE_OBJECT
 GetDeviceObjectFromWaveCyclic(
     IPortWavePci* iface);
 
+PDEVICE_OBJECT
+GetDeviceObjectFromPortWavePci(
+    IPortWavePci* iface);
+
+PMINIPORTWAVEPCI
+GetWavePciMiniport(
+    PPORTWAVEPCI Port);
 
 NTSTATUS
 NTAPI
@@ -272,22 +279,15 @@ PDEVICE_OBJECT
 GetDeviceObject(
     IPortWaveCyclic* iface);
 
-NTSTATUS
+IIrpQueue*
 NTAPI
-IPortWavePciStream_AddMapping(
-    IN IPortWavePciStream *iface,
-    IN PUCHAR Buffer,
-    IN ULONG BufferSize,
-    IN PIRP Irp);
+IPortWavePciStream_GetIrpQueue(
+    IN IPortWavePciStream *iface);
 
 NTSTATUS
 NTAPI
 NewIPortWavePciStream(
-    OUT PPORTWAVEPCISTREAM *Stream,
-    IN KSPIN_CONNECT *ConnectDetails,
-    IN PKSDATAFORMAT DataFormat,
-    IN PDEVICE_OBJECT DeviceObject,
-    IN ULONG FrameSize);
+    OUT PPORTWAVEPCISTREAM *Stream);
 
 #define DEFINE_KSPROPERTY_PINPROPOSEDATAFORMAT(PinSet,\
     PropGeneral, PropInstances, PropIntersection)\

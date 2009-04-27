@@ -43,6 +43,8 @@ typedef struct
     BOOL OutOfMapping;
     ULONG MaxFrameSize;
 
+    BOOL LastMappingFailed;
+
 }IIrpQueueImpl;
 
 VOID
@@ -189,11 +191,14 @@ IIrpQueue_fnGetMapping(
     IIrpQueueImpl * This = (IIrpQueueImpl*)iface;
 
     if (!This->FirstMap)
+    {
+        This->LastMappingFailed = TRUE;
         return STATUS_UNSUCCESSFUL;
+    }
 
     *Buffer = (PUCHAR)This->FirstMap->Header->Data + This->CurrentOffset;
     *BufferSize = This->FirstMap->Header->DataUsed - This->CurrentOffset;
-
+    This->LastMappingFailed = FALSE;
     return STATUS_SUCCESS;
 }
 
@@ -365,13 +370,17 @@ IIrpQueue_fnGetMappingWithTag(
 
     KeReleaseSpinLock(&This->Lock, OldIrql);
     if (!Result)
+    {
+        This->LastMappingFailed = TRUE;
         return STATUS_UNSUCCESSFUL;
+    }
 
     Result->Tag = Tag;
     *PhysicalAddress = MmGetPhysicalAddress(Result->Header->Data);
     *VirtualAddress = Result->Header->Data;
     *ByteCount = Result->Header->DataUsed;
     This->LastTag = Tag;
+    This->LastMappingFailed = FALSE;
     return STATUS_SUCCESS;
 }
 
@@ -421,6 +430,15 @@ IIrpQueue_fnReleaseMappingWithTag(
     KeReleaseSpinLock(&This->Lock, OldIrql);
 }
 
+BOOL
+NTAPI
+IIrpQueue_fnHasLastMappingFailed(
+    IN IIrpQueue *iface)
+{
+    IIrpQueueImpl * This = (IIrpQueueImpl*)iface;
+    return This->LastMappingFailed;
+}
+
 static IIrpQueueVtbl vt_IIrpQueue =
 {
     IIrpQueue_fnQueryInterface,
@@ -436,7 +454,9 @@ static IIrpQueueVtbl vt_IIrpQueue =
     IIrpQueue_fnCancelBuffers,
     IIrpQueue_fnUpdateFormat,
     IIrpQueue_fnGetMappingWithTag,
-    IIrpQueue_fnReleaseMappingWithTag
+    IIrpQueue_fnReleaseMappingWithTag,
+    IIrpQueue_fnHasLastMappingFailed
+
 };
 
 

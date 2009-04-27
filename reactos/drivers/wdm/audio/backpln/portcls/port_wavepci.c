@@ -813,10 +813,17 @@ NewPortWavePci(
 }
 
 PDEVICE_OBJECT
-GetDeviceObjectFromWaveCyclic(
+GetDeviceObjectFromPortWavePci(
     IPortWavePci* iface)
 {
     IPortWavePciImpl * This = (IPortWavePciImpl*)iface;
     return This->pDeviceObject;
 }
 
+PMINIPORTWAVEPCI
+GetWavePciMiniport(
+    PPORTWAVEPCI iface)
+{
+    IPortWavePciImpl * This = (IPortWavePciImpl*)iface;
+    return This->Miniport;
+}

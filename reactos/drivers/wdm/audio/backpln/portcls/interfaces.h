@@ -230,6 +230,7 @@ DECLARE_INTERFACE_(IIrpQueue, IUnknown)
     STDMETHOD_(VOID, ReleaseMappingWithTag)(THIS_
         IN PVOID Tag);
 
+    STDMETHOD_(BOOL, HasLastMappingFailed)(THIS);
 };
 
 

@@ -66,6 +66,7 @@ IPortWavePciStream_fnRelease(
 
     if (This->ref == 0)
     {
+        This->Queue->lpVtbl->Release(This->Queue);
         FreeItem(This, TAG_PORTCLASS);
         return 0;
     }
@@ -131,11 +132,7 @@ static IPortWavePciStreamVtbl vt_PortWavePciStream =
 NTSTATUS
 NTAPI
 NewIPortWavePciStream(
-    OUT PPORTWAVEPCISTREAM *Stream,
-    IN KSPIN_CONNECT *ConnectDetails,
-    IN PKSDATAFORMAT DataFormat,
-    IN PDEVICE_OBJECT DeviceObject,
-    IN ULONG FrameSize)
+    OUT PPORTWAVEPCISTREAM *Stream)
 {
     IIrpQueue * Queue;
     IPortWavePciStreamImpl * This;
@@ -144,13 +141,6 @@ NewIPortWavePciStream(
     Status = NewIrpQueue(&Queue);
     if (!NT_SUCCESS(Status))
         return Status;
-
-    Status = Queue->lpVtbl->Init(Queue, ConnectDetails, DataFormat, DeviceObject, FrameSize);
-    if (!NT_SUCCESS(Status))
-    {
-        Queue->lpVtbl->Release(Queue);
-        return Status;
-    }
 
     This = AllocateItem(NonPagedPool, sizeof(IPortWavePciStreamImpl), TAG_PORTCLASS);
     if (!This)
@@ -167,15 +157,12 @@ NewIPortWavePciStream(
     return STATUS_SUCCESS;
 }
 
-NTSTATUS
+IIrpQueue*
 NTAPI
-IPortWavePciStream_AddMapping(
-    IN IPortWavePciStream *iface,
-    IN PUCHAR Buffer,
-    IN ULONG BufferSize,
-    IN PIRP Irp)
+IPortWavePciStream_GetIrpQueue(
+    IN IPortWavePciStream *iface)
 {
     IPortWavePciStreamImpl * This = (IPortWavePciStreamImpl*)iface;
-    return This->Queue->lpVtbl->AddMapping(This->Queue, Buffer, BufferSize, Irp);
+    return This->Queue;
 }
 
