@@ -103,7 +103,7 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection,
 
 		while( !IsListEmpty( &Connection->ReceiveRequest ) ) {
 			OSK_UINT RecvLen = 0, Received = 0;
-			OSK_PCHAR RecvBuffer = 0;
+			PVOID RecvBuffer = 0;
 
 			Entry = RemoveHeadList( &Connection->ReceiveRequest );
 			Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
@@ -163,7 +163,7 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection,
 
 		while( !IsListEmpty( &Connection->SendRequest ) ) {
 			OSK_UINT SendLen = 0, Sent = 0;
-			OSK_PCHAR SendBuffer = 0;
+			PVOID SendBuffer = 0;
 
 			Entry = RemoveHeadList( &Connection->SendRequest );
 			Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
@@ -677,7 +677,7 @@ NTSTATUS TCPReceiveData
   ULONG ReceiveFlags,
   PTCP_COMPLETION_ROUTINE Complete,
   PVOID Context ) {
-    OSK_PCHAR DataBuffer;
+    PVOID DataBuffer;
     UINT DataLen, Received = 0;
     NTSTATUS Status;
     PTDI_BUCKET Bucket;
