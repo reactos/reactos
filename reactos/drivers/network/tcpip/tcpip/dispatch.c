@@ -881,7 +881,7 @@ NTSTATUS DispTdiReceiveDatagram(
 
   if (NT_SUCCESS(Status))
     {
-	PCHAR DataBuffer;
+	PVOID DataBuffer;
 	UINT BufferSize;
 
 	NdisQueryBuffer( (PNDIS_BUFFER)Irp->MdlAddress,
@@ -961,7 +961,7 @@ NTSTATUS DispTdiSend(
   TI_DbgPrint(MID_TRACE,("TCPIP<<< Got an MDL: %x\n", Irp->MdlAddress));
   if (NT_SUCCESS(Status))
     {
-	PCHAR Data;
+	PVOID Data;
 	UINT Len;
 
 	NdisQueryBuffer( Irp->MdlAddress, &Data, &Len );
@@ -1033,7 +1033,7 @@ NTSTATUS DispTdiSendDatagram(
         (PDRIVER_CANCEL)DispCancelRequest);
 
     if (NT_SUCCESS(Status)) {
-	PCHAR DataBuffer;
+	PVOID DataBuffer;
 	UINT BufferSize;
 
 	TI_DbgPrint(MID_TRACE,("About to query buffer %x\n", Irp->MdlAddress));
