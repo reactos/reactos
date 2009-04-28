@@ -212,12 +212,12 @@ static HRESULT WINAPI queryresult_Invoke(
 
 static HRESULT WINAPI queryresult_get_item(
         IXMLDOMNodeList* iface,
-        long index,
+        LONG index,
         IXMLDOMNode** listItem)
 {
     queryresult *This = impl_from_IXMLDOMNodeList( iface );
 
-    TRACE("%p %ld\n", This, index);
+    TRACE("%p %d\n", This, index);
 
     if(!listItem)
         return E_INVALIDARG;
@@ -235,7 +235,7 @@ static HRESULT WINAPI queryresult_get_item(
 
 static HRESULT WINAPI queryresult_get_length(
         IXMLDOMNodeList* iface,
-        long* listLength)
+        LONG* listLength)
 {
     queryresult *This = impl_from_IXMLDOMNodeList( iface );
 

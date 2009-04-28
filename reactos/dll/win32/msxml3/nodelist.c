@@ -198,14 +198,14 @@ static HRESULT WINAPI xmlnodelist_Invoke(
 
 static HRESULT WINAPI xmlnodelist_get_item(
         IXMLDOMNodeList* iface,
-        long index,
+        LONG index,
         IXMLDOMNode** listItem)
 {
     xmlnodelist *This = impl_from_IXMLDOMNodeList( iface );
     xmlNodePtr curr;
-    long nodeIndex = 0;
+    LONG nodeIndex = 0;
 
-    TRACE("%p %ld\n", This, index);
+    TRACE("%p %d\n", This, index);
 
     if(!listItem)
         return E_INVALIDARG;
@@ -230,11 +230,11 @@ static HRESULT WINAPI xmlnodelist_get_item(
 
 static HRESULT WINAPI xmlnodelist_get_length(
         IXMLDOMNodeList* iface,
-        long* listLength)
+        LONG* listLength)
 {
 
     xmlNodePtr curr;
-    long nodeCount = 0;
+    LONG nodeCount = 0;
 
     xmlnodelist *This = impl_from_IXMLDOMNodeList( iface );
 

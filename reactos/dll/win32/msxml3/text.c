@@ -519,12 +519,12 @@ static HRESULT WINAPI domtext_put_data(
 
 static HRESULT WINAPI domtext_get_length(
     IXMLDOMText *iface,
-    long *len)
+    LONG *len)
 {
     domtext *This = impl_from_IXMLDOMText( iface );
     xmlnode *pDOMNode = impl_from_IXMLDOMNode( This->node );
     xmlChar *pContent;
-    long nLength = 0;
+    LONG nLength = 0;
 
     TRACE("%p\n", iface);
 
@@ -545,12 +545,12 @@ static HRESULT WINAPI domtext_get_length(
 
 static HRESULT WINAPI domtext_substringData(
     IXMLDOMText *iface,
-    long offset, long count, BSTR *p)
+    LONG offset, LONG count, BSTR *p)
 {
     domtext *This = impl_from_IXMLDOMText( iface );
     xmlnode *pDOMNode = impl_from_IXMLDOMNode( This->node );
     xmlChar *pContent;
-    long nLength = 0;
+    LONG nLength = 0;
     HRESULT hr = S_FALSE;
 
     TRACE("%p\n", iface);
@@ -620,14 +620,14 @@ static HRESULT WINAPI domtext_appendData(
 
 static HRESULT WINAPI domtext_insertData(
     IXMLDOMText *iface,
-    long offset, BSTR p)
+    LONG offset, BSTR p)
 {
     domtext *This = impl_from_IXMLDOMText( iface );
     xmlnode *pDOMNode = impl_from_IXMLDOMNode( This->node );
     xmlChar *pXmlContent;
     BSTR sNewString;
     HRESULT hr = S_FALSE;
-    long nLength = 0, nLengthP = 0;
+    LONG nLength = 0, nLengthP = 0;
     xmlChar *str = NULL;
 
     TRACE("%p\n", This);
@@ -690,7 +690,7 @@ static HRESULT WINAPI domtext_insertData(
 
 static HRESULT WINAPI domtext_deleteData(
     IXMLDOMText *iface,
-    long offset, long count)
+    LONG offset, LONG count)
 {
     FIXME("\n");
     return E_NOTIMPL;
@@ -698,7 +698,7 @@ static HRESULT WINAPI domtext_deleteData(
 
 static HRESULT WINAPI domtext_replaceData(
     IXMLDOMText *iface,
-    long offset, long count, BSTR p)
+    LONG offset, LONG count, BSTR p)
 {
     FIXME("\n");
     return E_NOTIMPL;
@@ -706,7 +706,7 @@ static HRESULT WINAPI domtext_replaceData(
 
 static HRESULT WINAPI domtext_splitText(
     IXMLDOMText *iface,
-    long offset, IXMLDOMText **txtNode)
+    LONG offset, IXMLDOMText **txtNode)
 {
     FIXME("\n");
     return E_NOTIMPL;
