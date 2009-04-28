@@ -72,15 +72,6 @@ extern "C" {
 #define NDIS_PROTOCOL_MINOR_VERSION 1
 #endif
 
-#if defined(NDIS_MINIPORT_DRIVER) && !defined(BINARY_COMPATIBLE)
-#define BINARY_COMPATIBLE 1
-#endif
-
-#if !defined(_M_IX86) && BINARY_COMPATIBLE
-#undef BINARY_COMPATIBLE
-#define BINARY_COMPATIBLE 0
-#endif
-
 #if 1
 /* FIXME: */
 typedef PVOID QUEUED_CLOSE;
@@ -1721,8 +1712,6 @@ DDKAPI
 NdisFreeBuffer(
   IN PNDIS_BUFFER  Buffer);
 
-#if BINARY_COMPATIBLE
-
 NDISAPI
 VOID
 DDKAPI
@@ -1755,93 +1744,6 @@ NdisQueryBufferOffset(
   IN PNDIS_BUFFER  Buffer,
   OUT PUINT  Offset,
   OUT PUINT  Length);
-
-#else
-
-/*
- * VOID
- * NdisGetBufferPhysicalArraySize(
- *   IN PNDIS_BUFFER  Buffer,
- *   OUT PUINT  ArraySize);
- */
-#define NdisGetBufferPhysicalArraySize(Buffer,        \
-                                       ArraySize)     \
-{                                                     \
-  (*(ArraySize) = NDIS_BUFFER_TO_SPAN_PAGES(Buffer))  \
-}
-
-/*
- * VOID
- * NdisGetFirstBufferFromPacket(
- *   IN PNDIS_PACKET  _Packet,
- *   OUT PNDIS_BUFFER  * _FirstBuffer,
- *   OUT PVOID  * _FirstBufferVA,
- *   OUT PUINT  _FirstBufferLength,
- *   OUT PUINT  _TotalBufferLength)
- */
-#define	NdisGetFirstBufferFromPacket(_Packet,             \
-                                     _FirstBuffer,        \
-                                     _FirstBufferVA,      \
-                                     _FirstBufferLength,  \
-                                     _TotalBufferLength)  \
-{                                                         \
-  PNDIS_BUFFER _Buffer;                                   \
-                                                          \
-  _Buffer         = (_Packet)->Private.Head;              \
-  *(_FirstBuffer) = _Buffer;                              \
-  if (_Buffer != NULL)                                    \
-    {                                                     \
-	    *(_FirstBufferVA)     = MmGetSystemAddressForMdl(_Buffer);  \
-	    *(_FirstBufferLength) = MmGetMdlByteCount(_Buffer);	        \
-	    _Buffer = _Buffer->Next;                                    \
-		  *(_TotalBufferLength) = *(_FirstBufferLength);              \
-		  while (_Buffer != NULL) {                                   \
-		    *(_TotalBufferLength) += MmGetMdlByteCount(_Buffer);      \
-		    _Buffer = _Buffer->Next;                                  \
-		  }                                                           \
-    }                             \
-  else                            \
-    {                             \
-      *(_FirstBufferVA) = 0;      \
-      *(_FirstBufferLength) = 0;  \
-      *(_TotalBufferLength) = 0;  \
-    } \
-}
-
-/*
- * VOID
- * NdisQueryBuffer(
- *   IN PNDIS_BUFFER  Buffer,
- *   OUT PVOID  *VirtualAddress OPTIONAL,
- *   OUT PUINT  Length)
- */
-#define NdisQueryBuffer(Buffer,         \
-                        VirtualAddress, \
-                        Length)         \
-{                                       \
-	if (ARGUMENT_PRESENT(VirtualAddress))                   \
-		*((PVOID*)VirtualAddress) = MmGetSystemAddressForMdl(Buffer); \
-                                        \
-	*((PUINT)Length) = MmGetMdlByteCount(Buffer); \
-}
-
-
-/*
- * VOID
- * NdisQueryBufferOffset(
- *   IN PNDIS_BUFFER  Buffer,
- *   OUT PUINT  Offset,
- *   OUT PUINT  Length);
- */
-#define NdisQueryBufferOffset(Buffer,             \
-                              Offset,             \
-                              Length)             \
-{                                                 \
-  *((PUINT)Offset) = MmGetMdlByteOffset(Buffer);  \
-  *((PUINT)Length) = MmGetMdlByteCount(Buffer);   \
-}
-
-#endif /* BINARY_COMPATIBLE */
 
 /*
  * PVOID
@@ -2259,8 +2161,6 @@ NdisQueryPacket(
 
 /* Memory management routines */
 
-#if BINARY_COMPATIBLE
-
 NDISAPI
 VOID
 DDKAPI
@@ -2274,29 +2174,6 @@ VOID
 DDKAPI
 NdisDestroyLookaheadBufferFromSharedMemory(
   IN PVOID  pLookaheadBuffer);
-
-#else
-
-/*
- * VOID
- * NdisCreateLookaheadBufferFromSharedMemory(
- *   IN PVOID  pSharedMemory,
- *   IN UINT  LookaheadLength,
- *   OUT PVOID  *pLookaheadBuffer)
- */
-#define NdisCreateLookaheadBufferFromSharedMemory(_pSharedMemory,     \
-                                                  _LookaheadLength,   \
-                                                  _pLookaheadBuffer)  \
-  ((*(_pLookaheadBuffer)) = (_pSharedMemory))
-
-/*
- * VOID
- * NdisDestroyLookaheadBufferFromSharedMemory(
- *   IN PVOID  pLookaheadBuffer)
- */
-#define NdisDestroyLookaheadBufferFromSharedMemory(_pLookaheadBuffer)
-
-#endif
 
 #if defined(_M_IX86) || defined(_M_AMD64) || defined(_M_ARM) || defined(_M_PPC)
 
@@ -2654,8 +2531,6 @@ NdisUnicodeStringToAnsiString(
 
 /* Spin lock reoutines */
 
-#if BINARY_COMPATIBLE
-
 NDISAPI
 VOID
 DDKAPI
@@ -2691,60 +2566,6 @@ VOID
 DDKAPI
 NdisDprReleaseSpinLock(
   IN PNDIS_SPIN_LOCK  SpinLock);
-
-#else
-
-/*
- * VOID
- * NdisAllocateSpinLock(
- *   IN PNDIS_SPIN_LOCK  SpinLock);
- */
-#define NdisAllocateSpinLock(_SpinLock) \
-  KeInitializeSpinLock(&(_SpinLock)->SpinLock)
-
-/*
- * VOID
- * NdisFreeSpinLock(
- *   IN PNDIS_SPIN_LOCK  SpinLock);
- */
-#define NdisFreeSpinLock(_SpinLock)
-
-/*
- * VOID
- * NdisAcquireSpinLock(
- *   IN PNDIS_SPIN_LOCK  SpinLock);
- */
-#define NdisAcquireSpinLock(_SpinLock) \
-  KeAcquireSpinLock(&(_SpinLock)->SpinLock, &(_SpinLock)->OldIrql)
-
-/*
- * VOID
- * NdisReleaseSpinLock(
- *   IN PNDIS_SPIN_LOCK  SpinLock);
- */
-#define NdisReleaseSpinLock(_SpinLock) \
-  KeReleaseSpinLock(&(_SpinLock)->SpinLock, (_SpinLock)->OldIrql)
-
-/*
- * VOID
- * NdisDprAcquireSpinLock(
- *   IN PNDIS_SPIN_LOCK  SpinLock);
- */
-#define NdisDprAcquireSpinLock(_SpinLock)                \
-{                                                       \
-    KeAcquireSpinLockAtDpcLevel(&(_SpinLock)->SpinLock); \
-    (_SpinLock)->OldIrql = DISPATCH_LEVEL;               \
-}
-
-/*
- * VOID
- * NdisDprReleaseSpinLock(
- *   IN PNDIS_SPIN_LOCK  SpinLock);
- */
-#define NdisDprReleaseSpinLock(_SpinLock) \
-  KeReleaseSpinLockFromDpcLevel(&(_SpinLock)->SpinLock)
-
-#endif /* BINARY_COMPATIBLE */
 
 /* I/O routines */
 
@@ -3046,24 +2867,11 @@ NdisWriteErrorLogEntry(
  */
 #define NdisStallExecution KeStallExecutionProcessor
 
-#if BINARY_COMPATIBLE
-
 NDISAPI
 VOID
 DDKAPI
 NdisGetCurrentSystemTime(
   IN PLARGE_INTEGER  pSystemTime);
-
-#else
-
-/*
- * VOID
- * NdisGetCurrentSystemTime(
- *   IN PLARGE_INTEGER  pSystemTime);
- */
-#define NdisGetCurrentSystemTime KeQuerySystemTime
-
-#endif
 
 NDISAPI
 CCHAR
