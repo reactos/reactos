@@ -747,7 +747,7 @@ IopSetDeviceInstanceData(HANDLE InstanceKey,
                                    &KeyName,
                                    0,
                                    REG_RESOURCE_LIST,
-                                   &DeviceNode->BootResources,
+                                   DeviceNode->BootResources,
                                    ListSize);
          }
       }
