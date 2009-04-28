@@ -3337,7 +3337,7 @@ static void show_cert_usages(HWND hwnd, struct edit_cert_data *data)
     DWORD size;
     RECT rc;
     LVCOLUMNW column;
-    PurposeSelection purposeSelection;
+    PurposeSelection purposeSelection = PurposeEnableAll;
 
     GetWindowRect(lv, &rc);
     column.mask = LVCF_WIDTH;
