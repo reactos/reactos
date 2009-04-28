@@ -181,6 +181,7 @@ NdisMFreeSharedMemoryPassive(
  */
 {
   PMINIPORT_SHARED_MEMORY Memory = (PMINIPORT_SHARED_MEMORY)Context;
+  PRKEVENT Event = Memory->Event;
 
   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
@@ -191,6 +192,10 @@ NdisMFreeSharedMemoryPassive(
       Memory->VirtualAddress, Memory->Cached);
 
   ExFreePool(Memory);
+
+  KeSetEvent(Event,
+             IO_NO_INCREMENT,
+             FALSE);
 }
 
 
@@ -221,6 +226,7 @@ NdisMFreeSharedMemory(
   HANDLE ThreadHandle;
   PLOGICAL_ADAPTER Adapter = (PLOGICAL_ADAPTER)MiniportAdapterHandle;
   PMINIPORT_SHARED_MEMORY Memory;
+  KEVENT Event;
 
   NDIS_DbgPrint(MAX_TRACE,("Called.\n"));
 
@@ -235,14 +241,24 @@ NdisMFreeSharedMemory(
       return;
     }
 
+  KeInitializeEvent(&Event, NotificationEvent, FALSE);
+
   Memory->AdapterObject = Adapter->NdisMiniportBlock.SystemAdapterObject;
   Memory->Length = Length;
   Memory->PhysicalAddress = PhysicalAddress;
   Memory->VirtualAddress = VirtualAddress;
   Memory->Cached = Cached;
+  Memory->Adapter = &Adapter->NdisMiniportBlock;
+  Memory->Event = &Event;
 
   PsCreateSystemThread(&ThreadHandle, THREAD_ALL_ACCESS, 0, 0, 0, NdisMFreeSharedMemoryPassive, Memory);
   ZwClose(ThreadHandle);
+
+  KeWaitForSingleObject(&Event,
+                        Executive,
+                        KernelMode,
+                        FALSE,
+                        NULL);
 }
 
 VOID
