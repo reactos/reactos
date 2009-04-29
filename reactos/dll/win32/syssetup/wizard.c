@@ -2133,7 +2133,7 @@ ProcessUnattendInf(HINF hUnattendedInf)
                         KEY_SET_VALUE,
                         &hKey) != ERROR_SUCCESS)
     {
-      DPRINT1("Error: failed to open HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce\n");
+      DPRINT1("Error: failed to open HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce\n");
       return TRUE;
     }
 
