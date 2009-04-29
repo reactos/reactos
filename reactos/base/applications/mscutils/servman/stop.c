@@ -9,8 +9,16 @@
 
 #include "precomp.h"
 
+typedef struct _STOP_INFO
+{
+    PMAIN_WND_INFO pInfo;
+    SC_HANDLE hSCManager;
+    SC_HANDLE hMainService;
+} STOP_INFO, *PSTOP_INFO;
+
+
 static BOOL
-StopService(PMAIN_WND_INFO pInfo,
+StopService(PSTOP_INFO pStopInfo,
             SC_HANDLE hService)
 {
     SERVICE_STATUS_PROCESS ServiceStatus;
@@ -23,8 +31,8 @@ StopService(PMAIN_WND_INFO pInfo,
     dwStartTime = GetTickCount();
     dwTimeout = 30000; // 30 secs
 
-    hProgDlg = CreateProgressDialog(pInfo->hMainWnd,
-                                    pInfo->pCurrentService->lpServiceName,
+    hProgDlg = CreateProgressDialog(pStopInfo->pInfo->hMainWnd,
+                                    pStopInfo->pInfo->pCurrentService->lpServiceName,
                                     IDS_PROGRESS_INFO_STOP);
     if (hProgDlg)
     {
@@ -67,8 +75,7 @@ StopService(PMAIN_WND_INFO pInfo,
 }
 
 static LPENUM_SERVICE_STATUS
-GetDependentServices(PMAIN_WND_INFO pInfo,
-                     SC_HANDLE hService,
+GetDependentServices(SC_HANDLE hService,
                      LPDWORD lpdwCount)
 {
     LPENUM_SERVICE_STATUS lpDependencies;
@@ -88,7 +95,7 @@ GetDependentServices(PMAIN_WND_INFO pInfo,
     else
     {
         if (GetLastError() != ERROR_MORE_DATA)
-            return NULL; // Unexpected error
+            return NULL; /* Unexpected error */
 
         lpDependencies = (LPENUM_SERVICE_STATUS)HeapAlloc(GetProcessHeap(),
                                                           0,
@@ -120,8 +127,7 @@ GetDependentServices(PMAIN_WND_INFO pInfo,
 }
 
 static BOOL
-StopDependentServices(PMAIN_WND_INFO pInfo,
-                      SC_HANDLE hSCManager,
+StopDependentServices(PSTOP_INFO pStopInfo,
                       SC_HANDLE hService)
 {
     LPENUM_SERVICE_STATUS lpDependencies;
@@ -129,7 +135,7 @@ StopDependentServices(PMAIN_WND_INFO pInfo,
     DWORD dwCount;
     BOOL bRet = FALSE;
 
-    lpDependencies = GetDependentServices(pInfo, hService, &dwCount);
+    lpDependencies = GetDependentServices(hService, &dwCount);
     if (lpDependencies)
     {
         LPENUM_SERVICE_STATUS lpEnumServiceStatus;
@@ -139,12 +145,12 @@ StopDependentServices(PMAIN_WND_INFO pInfo,
         {
             lpEnumServiceStatus = &lpDependencies[i];
 
-            hDepService = OpenService(hSCManager,
+            hDepService = OpenService(pStopInfo->hSCManager,
                                       lpEnumServiceStatus->lpServiceName,
                                       SERVICE_STOP | SERVICE_QUERY_STATUS);
             if (hDepService)
             {
-                bRet = StopService(pInfo, hDepService);
+                bRet = StopService(pStopInfo, hDepService);
 
                 CloseServiceHandle(hDepService);
 
@@ -165,57 +171,46 @@ StopDependentServices(PMAIN_WND_INFO pInfo,
 }
 
 static BOOL
-HasDependentServices(PMAIN_WND_INFO pInfo)
+HasDependentServices(SC_HANDLE hService)
 {
-    SC_HANDLE hSCManager;
-    SC_HANDLE hService;
     DWORD dwBytesNeeded, dwCount;
     BOOL bRet = FALSE;
 
-    hSCManager = OpenSCManagerW(NULL,
-                                NULL,
-                                SC_MANAGER_ALL_ACCESS);
-    if (hSCManager)
+    if (hService)
     {
-        hService = OpenServiceW(hSCManager,
-                                pInfo->pCurrentService->lpServiceName,
-                                SERVICE_ENUMERATE_DEPENDENTS);
-        if (hService)
+        if (!EnumDependentServices(hService,
+                                   SERVICE_ACTIVE,
+                                   NULL,
+                                   0,
+                                   &dwBytesNeeded,
+                                   &dwCount))
         {
-            if (!EnumDependentServices(hService,
-                                       SERVICE_ACTIVE,
-                                       NULL,
-                                       0,
-                                       &dwBytesNeeded,
-                                       &dwCount))
-            {
-                 if (GetLastError() == ERROR_MORE_DATA)
-                     bRet = TRUE;
-            }
-
-            CloseServiceHandle(hService);
+             if (GetLastError() == ERROR_MORE_DATA)
+                 bRet = TRUE;
         }
-
-        CloseServiceHandle(hSCManager);
     }
 
     return bRet;
 }
 
 static BOOL
-DoInitDependsDialog(PMAIN_WND_INFO pInfo,
+DoInitDependsDialog(PSTOP_INFO pStopInfo,
                     HWND hDlg)
 {
+    SC_HANDLE hSCManager;
+    SC_HANDLE hService;
+    LPENUM_SERVICE_STATUS lpDependencies;
+    DWORD dwCount;
     LPTSTR lpPartialStr, lpStr;
     DWORD fullLen;
     HICON hIcon = NULL;
     BOOL bRet = FALSE;
 
-    if (pInfo)
+    if (pStopInfo)
     {
         SetWindowLongPtr(hDlg,
                          GWLP_USERDATA,
-                         (LONG_PTR)pInfo);
+                         (LONG_PTR)pStopInfo);
 
         hIcon = (HICON)LoadImage(hInstance,
                                  MAKEINTRESOURCE(IDI_SM_ICON),
@@ -232,18 +227,19 @@ DoInitDependsDialog(PMAIN_WND_INFO pInfo,
             DestroyIcon(hIcon);
         }
 
+        /* Add the label */
         if (AllocAndLoadString(&lpPartialStr,
                                hInstance,
                                IDS_STOP_DEPENDS))
         {
-            fullLen = _tcslen(lpPartialStr) + _tcslen(pInfo->pCurrentService->lpDisplayName) + 1;
+            fullLen = _tcslen(lpPartialStr) + _tcslen(pStopInfo->pInfo->pCurrentService->lpDisplayName) + 1;
 
             lpStr = HeapAlloc(ProcessHeap,
                               0,
                               fullLen * sizeof(TCHAR));
             if (lpStr)
             {
-                _sntprintf(lpStr, fullLen, lpPartialStr, pInfo->pCurrentService->lpDisplayName);
+                _sntprintf(lpStr, fullLen, lpPartialStr, pStopInfo->pInfo->pCurrentService->lpDisplayName);
 
                 SendDlgItemMessage(hDlg,
                                    IDC_STOP_DEPENDS,
@@ -262,6 +258,26 @@ DoInitDependsDialog(PMAIN_WND_INFO pInfo,
                      0,
                      lpPartialStr);
         }
+
+        /* Get the list of dependencies */
+        lpDependencies = GetDependentServices(pStopInfo->hMainService, &dwCount);
+        if (lpDependencies)
+        {
+            LPENUM_SERVICE_STATUS lpEnumServiceStatus;
+            DWORD i;
+
+            for (i = 0; i < dwCount; i++)
+            {
+                lpEnumServiceStatus = &lpDependencies[i];
+
+                /* Add the service to the listbox */
+                SendDlgItemMessage(hDlg,
+                                   IDC_STOP_DEPENDS_LB,
+                                   LB_ADDSTRING,
+                                   0,
+                                   (LPARAM)lpEnumServiceStatus->lpDisplayName);
+            }
+        }
     }
 
     return bRet;
@@ -270,17 +286,16 @@ DoInitDependsDialog(PMAIN_WND_INFO pInfo,
 
 INT_PTR CALLBACK
 StopDependsDialogProc(HWND hDlg,
-                 UINT message,
-                 WPARAM wParam,
-                 LPARAM lParam)
+                      UINT message,
+                      WPARAM wParam,
+                      LPARAM lParam)
 {
-    PMAIN_WND_INFO pInfo = NULL;
-    
+    PSTOP_INFO pStopInfo = NULL;
 
     /* Get the window context */
-    pInfo = (PMAIN_WND_INFO)GetWindowLongPtr(hDlg,
+    pStopInfo = (PSTOP_INFO)GetWindowLongPtr(hDlg,
                                              GWLP_USERDATA);
-    if (pInfo == NULL && message != WM_INITDIALOG)
+    if (pStopInfo == NULL && message != WM_INITDIALOG)
     {
         return FALSE;
     }
@@ -291,10 +306,10 @@ StopDependsDialogProc(HWND hDlg,
         {
             BOOL bRet = FALSE;
 
-            pInfo = (PMAIN_WND_INFO)lParam;
-            if (pInfo != NULL)
+            pStopInfo = (PSTOP_INFO)lParam;
+            if (pStopInfo != NULL)
             {
-                bRet = DoInitDependsDialog(pInfo, hDlg);
+                bRet = DoInitDependsDialog(pStopInfo, hDlg);
             }
 
             return bRet;
@@ -322,46 +337,54 @@ StopDependsDialogProc(HWND hDlg,
 BOOL
 DoStop(PMAIN_WND_INFO pInfo)
 {
-    SC_HANDLE hSCManager = NULL;
+    STOP_INFO stopInfo;
+    SC_HANDLE hSCManager;
     SC_HANDLE hService;
     BOOL bHasDepends;
     BOOL bRet = FALSE;
 
-    bHasDepends = HasDependentServices(pInfo);
-    if (bHasDepends)
+    if (pInfo)
     {
-        INT ret = DialogBoxParam(hInstance,
-                                 MAKEINTRESOURCE(IDD_DLG_DEPEND_STOP),
-                                 pInfo->hMainWnd,
-                                 StopDependsDialogProc,
-                                 (LPARAM)pInfo);
-        if (ret != IDOK)
-            return FALSE;
-    }
+        stopInfo.pInfo = pInfo;
 
-    hSCManager = OpenSCManager(NULL,
-                               NULL,
-                               SC_MANAGER_ALL_ACCESS);
-    if (hSCManager)
-    {
-        hService = OpenService(hSCManager,
-                               pInfo->pCurrentService->lpServiceName,
-                               SERVICE_STOP | SERVICE_QUERY_STATUS | SERVICE_ENUMERATE_DEPENDENTS);
-        if (hService)
+        hSCManager = OpenSCManager(NULL,
+                                   NULL,
+                                   SC_MANAGER_ALL_ACCESS);
+        if (hSCManager)
         {
-            if (bHasDepends)
+            hService = OpenService(hSCManager,
+                                   pInfo->pCurrentService->lpServiceName,
+                                   SERVICE_STOP | SERVICE_QUERY_STATUS | SERVICE_ENUMERATE_DEPENDENTS);
+            if (hService)
             {
-                StopDependentServices(pInfo,
-                                      hSCManager,
-                                      hService);
+                stopInfo.hSCManager = hSCManager;
+                stopInfo.hMainService = hService;
+
+                if (HasDependentServices(hService))
+                {
+                    INT ret = DialogBoxParam(hInstance,
+                                             MAKEINTRESOURCE(IDD_DLG_DEPEND_STOP),
+                                             pInfo->hMainWnd,
+                                             StopDependsDialogProc,
+                                             (LPARAM)&stopInfo);
+                    if (ret == IDOK)
+                    {
+                        if (StopDependentServices(&stopInfo, hService))
+                        {
+                            bRet = StopService(&stopInfo, hService);
+                        }
+                    }
+                }
+                else
+                {
+                    bRet = StopService(&stopInfo, hService);
+                }
+
+                CloseServiceHandle(hService);
             }
 
-            bRet = StopService(pInfo, hService);
-
-            CloseServiceHandle(hService);
+            CloseServiceHandle(hSCManager);
         }
-
-        CloseServiceHandle(hSCManager);
     }
 
     return bRet;

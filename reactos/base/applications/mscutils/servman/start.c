@@ -23,22 +23,22 @@ DoStartService(PMAIN_WND_INFO Info,
     DWORD dwMaxWait;
     BOOL bRet = FALSE;
 
-    hSCManager = OpenSCManagerW(NULL,
-                                NULL,
-                                SC_MANAGER_ALL_ACCESS);
+    hSCManager = OpenSCManager(NULL,
+                               NULL,
+                               SC_MANAGER_ALL_ACCESS);
     if (!hSCManager)
     {
         return FALSE;
     }
 
-    hService = OpenServiceW(hSCManager,
-                            Info->pCurrentService->lpServiceName,
-                            SERVICE_START | SERVICE_QUERY_STATUS);
+    hService = OpenService(hSCManager,
+                           Info->pCurrentService->lpServiceName,
+                           SERVICE_START | SERVICE_QUERY_STATUS);
     if (hService)
     {
-        bRet = StartServiceW(hService,
-                             0,
-                             NULL);
+        bRet = StartService(hService,
+                            0,
+                            NULL);
         if (!bRet && GetLastError() == ERROR_SERVICE_ALREADY_RUNNING)
         {
             bRet = TRUE;

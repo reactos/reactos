@@ -178,4 +178,5 @@
 /* stop dependencies */
 #define IDD_DLG_DEPEND_STOP 12000
 #define IDC_STOP_DEPENDS    12001
-#define IDS_STOP_DEPENDS    12001
+#define IDS_STOP_DEPENDS    12002
+#define IDC_STOP_DEPENDS_LB 12003
