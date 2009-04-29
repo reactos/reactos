@@ -14,6 +14,10 @@
 #define NDEBUG
 #include <debug.h>
 
+/* Uncomment to enable pool overruns debugging */
+//#define DEBUG_NPOOL
+//#define DEBUG_PPOOL
+
 extern PVOID MiNonPagedPoolStart;
 extern ULONG MiNonPagedPoolLength;
 extern ULONG MmTotalPagedPoolQuota;
@@ -60,7 +64,12 @@ EiAllocatePool(POOL_TYPE PoolType,
     {
         if (KeGetCurrentIrql() > DISPATCH_LEVEL)
             KeBugCheckEx(BAD_POOL_CALLER, 0x08, KeGetCurrentIrql(), PoolType, Tag);
-        Block = ExAllocateNonPagedPoolWithTag(PoolType, NumberOfBytes, Tag, Caller);
+#ifdef DEBUG_NPOOL
+        if (ExpIsPoolTagDebuggable(Tag))
+            Block = ExpAllocateDebugPool(PoolType, NumberOfBytes, Tag, Caller, TRUE);
+        else
+#endif
+            Block = ExAllocateNonPagedPoolWithTag(PoolType, NumberOfBytes, Tag, Caller);
     }
 
     if ((PoolType & MUST_SUCCEED_POOL_MASK) && !Block)
@@ -292,7 +301,12 @@ ExFreePoolWithTag(
                          (ULONG_PTR)Block);
 
         /* Free from non-paged pool */
-        ExFreeNonPagedPool(Block);
+#ifdef DEBUG_NPOOL
+        if (ExpIsPoolTagDebuggable(Tag))
+            ExpFreeDebugPool(Block);
+        else
+#endif
+            ExFreeNonPagedPool(Block);
     }
     else
     {

@@ -558,6 +558,24 @@ VOID
 NTAPI
 ExFreePagedPool(IN PVOID Block);
 
+BOOLEAN
+NTAPI
+ExpIsPoolTagDebuggable(ULONG Tag);
+
+PVOID
+NTAPI
+ExpAllocateDebugPool(
+    POOL_TYPE Type,
+    ULONG Size,
+    ULONG Tag,
+    PVOID Caller,
+    BOOLEAN EndOfPage
+);
+
+VOID
+NTAPI
+ExpFreeDebugPool(PVOID Block);
+
 VOID
 NTAPI
 MmInitializePagedPool(VOID);
