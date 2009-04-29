@@ -3,96 +3,366 @@
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/applications/mscutils/servman/stop.c
  * PURPOSE:     Stops running a service
- * COPYRIGHT:   Copyright 2006-2007 Ged Murphy <gedmurphy@reactos.org>
+ * COPYRIGHT:   Copyright 2006-2009 Ged Murphy <gedmurphy@reactos.org>
  *
  */
 
 #include "precomp.h"
 
-BOOL
-DoStop(PMAIN_WND_INFO Info)
+static BOOL
+StopService(PMAIN_WND_INFO pInfo,
+            SC_HANDLE hService)
 {
-    SC_HANDLE hSCManager = NULL;
-    SC_HANDLE hSc = NULL;
-    LPQUERY_SERVICE_CONFIG lpServiceConfig = NULL;
+    SERVICE_STATUS_PROCESS ServiceStatus;
+    DWORD dwBytesNeeded;
+    DWORD dwStartTime;
+    DWORD dwTimeout;
     HWND hProgDlg;
-    DWORD BytesNeeded = 0;
-    BOOL ret = FALSE;
+    BOOL bRet = FALSE;
 
-    hSCManager = OpenSCManager(NULL,
-                               NULL,
-                               SC_MANAGER_ENUMERATE_SERVICE);
-    if (hSCManager == NULL)
+    dwStartTime = GetTickCount();
+    dwTimeout = 30000; // 30 secs
+
+    hProgDlg = CreateProgressDialog(pInfo->hMainWnd,
+                                    pInfo->pCurrentService->lpServiceName,
+                                    IDS_PROGRESS_INFO_STOP);
+    if (hProgDlg)
     {
-        GetError();
+        IncrementProgressBar(hProgDlg);
+
+        if (ControlService(hService,
+                           SERVICE_CONTROL_STOP,
+                           (LPSERVICE_STATUS)&ServiceStatus))
+        {
+            while (ServiceStatus.dwCurrentState != SERVICE_STOPPED)
+            {
+                Sleep(ServiceStatus.dwWaitHint);
+
+                if (QueryServiceStatusEx(hService,
+                                         SC_STATUS_PROCESS_INFO,
+                                         (LPBYTE)&ServiceStatus,
+                                         sizeof(SERVICE_STATUS_PROCESS),
+                                         &dwBytesNeeded))
+                {
+                    if (GetTickCount() - dwStartTime > dwTimeout)
+                    {
+                        /* We exceeded our max wait time, give up */
+                        break;
+                    }
+                }
+            }
+
+            if (ServiceStatus.dwCurrentState == SERVICE_STOPPED)
+            {
+                bRet = TRUE;
+            }
+        }
+
+        CompleteProgressBar(hProgDlg);
+        Sleep(500);
+        DestroyWindow(hProgDlg);
+    }
+
+    return bRet;
+}
+
+static LPENUM_SERVICE_STATUS
+GetDependentServices(PMAIN_WND_INFO pInfo,
+                     SC_HANDLE hService,
+                     LPDWORD lpdwCount)
+{
+    LPENUM_SERVICE_STATUS lpDependencies;
+    DWORD dwBytesNeeded;
+    DWORD dwCount;
+
+    if (EnumDependentServices(hService,
+                              SERVICE_ACTIVE,
+                              NULL,
+                              0,
+                              &dwBytesNeeded,
+                              &dwCount))
+    {
+        /* There are no dependent services */
+         return NULL;
+    }
+    else
+    {
+        if (GetLastError() != ERROR_MORE_DATA)
+            return NULL; // Unexpected error
+
+        lpDependencies = (LPENUM_SERVICE_STATUS)HeapAlloc(GetProcessHeap(),
+                                                          0,
+                                                          dwBytesNeeded);
+        if (lpDependencies)
+        {
+            if (EnumDependentServices(hService,
+                                       SERVICE_ACTIVE,
+                                       lpDependencies,
+                                       dwBytesNeeded,
+                                       &dwBytesNeeded,
+                                       &dwCount))
+            {
+                *lpdwCount = dwCount;
+            }
+            else
+            {
+                HeapFree(ProcessHeap,
+                         0,
+                         lpDependencies);
+
+                lpDependencies = NULL;
+            }
+        }
+    }
+
+    return lpDependencies;
+
+}
+
+static BOOL
+StopDependentServices(PMAIN_WND_INFO pInfo,
+                      SC_HANDLE hSCManager,
+                      SC_HANDLE hService)
+{
+    LPENUM_SERVICE_STATUS lpDependencies;
+    SC_HANDLE hDepService;
+    DWORD dwCount;
+    BOOL bRet = FALSE;
+
+    lpDependencies = GetDependentServices(pInfo, hService, &dwCount);
+    if (lpDependencies)
+    {
+        LPENUM_SERVICE_STATUS lpEnumServiceStatus;
+        DWORD i;
+
+        for (i = 0; i < dwCount; i++)
+        {
+            lpEnumServiceStatus = &lpDependencies[i];
+
+            hDepService = OpenService(hSCManager,
+                                      lpEnumServiceStatus->lpServiceName,
+                                      SERVICE_STOP | SERVICE_QUERY_STATUS);
+            if (hDepService)
+            {
+                bRet = StopService(pInfo, hDepService);
+
+                CloseServiceHandle(hDepService);
+
+                if (!bRet)
+                {
+                    GetError();
+                    break;
+                }
+            }
+        }
+
+        HeapFree(GetProcessHeap(),
+                 0,
+                 lpDependencies);
+    }
+
+    return bRet;
+}
+
+static BOOL
+HasDependentServices(PMAIN_WND_INFO pInfo)
+{
+    SC_HANDLE hSCManager;
+    SC_HANDLE hService;
+    DWORD dwBytesNeeded, dwCount;
+    BOOL bRet = FALSE;
+
+    hSCManager = OpenSCManagerW(NULL,
+                                NULL,
+                                SC_MANAGER_ALL_ACCESS);
+    if (hSCManager)
+    {
+        hService = OpenServiceW(hSCManager,
+                                pInfo->pCurrentService->lpServiceName,
+                                SERVICE_ENUMERATE_DEPENDENTS);
+        if (hService)
+        {
+            if (!EnumDependentServices(hService,
+                                       SERVICE_ACTIVE,
+                                       NULL,
+                                       0,
+                                       &dwBytesNeeded,
+                                       &dwCount))
+            {
+                 if (GetLastError() == ERROR_MORE_DATA)
+                     bRet = TRUE;
+            }
+
+            CloseServiceHandle(hService);
+        }
+
+        CloseServiceHandle(hSCManager);
+    }
+
+    return bRet;
+}
+
+static BOOL
+DoInitDependsDialog(PMAIN_WND_INFO pInfo,
+                    HWND hDlg)
+{
+    LPTSTR lpPartialStr, lpStr;
+    DWORD fullLen;
+    HICON hIcon = NULL;
+    BOOL bRet = FALSE;
+
+    if (pInfo)
+    {
+        SetWindowLongPtr(hDlg,
+                         GWLP_USERDATA,
+                         (LONG_PTR)pInfo);
+
+        hIcon = (HICON)LoadImage(hInstance,
+                                 MAKEINTRESOURCE(IDI_SM_ICON),
+                                 IMAGE_ICON,
+                                 16,
+                                 16,
+                                 0);
+        if (hIcon)
+        {
+            SendMessage(hDlg,
+                        WM_SETICON,
+                        ICON_SMALL,
+                        (LPARAM)hIcon);
+            DestroyIcon(hIcon);
+        }
+
+        if (AllocAndLoadString(&lpPartialStr,
+                               hInstance,
+                               IDS_STOP_DEPENDS))
+        {
+            fullLen = _tcslen(lpPartialStr) + _tcslen(pInfo->pCurrentService->lpDisplayName) + 1;
+
+            lpStr = HeapAlloc(ProcessHeap,
+                              0,
+                              fullLen * sizeof(TCHAR));
+            if (lpStr)
+            {
+                _sntprintf(lpStr, fullLen, lpPartialStr, pInfo->pCurrentService->lpDisplayName);
+
+                SendDlgItemMessage(hDlg,
+                                   IDC_STOP_DEPENDS,
+                                   WM_SETTEXT,
+                                   0,
+                                   (LPARAM)lpStr);
+
+                bRet = TRUE;
+
+                HeapFree(ProcessHeap,
+                         0,
+                         lpStr);
+            }
+
+            HeapFree(ProcessHeap,
+                     0,
+                     lpPartialStr);
+        }
+    }
+
+    return bRet;
+}
+
+
+INT_PTR CALLBACK
+StopDependsDialogProc(HWND hDlg,
+                 UINT message,
+                 WPARAM wParam,
+                 LPARAM lParam)
+{
+    PMAIN_WND_INFO pInfo = NULL;
+    
+
+    /* Get the window context */
+    pInfo = (PMAIN_WND_INFO)GetWindowLongPtr(hDlg,
+                                             GWLP_USERDATA);
+    if (pInfo == NULL && message != WM_INITDIALOG)
+    {
         return FALSE;
     }
 
-    hSc = OpenService(hSCManager,
-                      Info->pCurrentService->lpServiceName,
-                      SERVICE_QUERY_CONFIG);
-    if (hSc)
+    switch (message)
     {
-        if (!QueryServiceConfig(hSc,
-                                lpServiceConfig,
-                                0,
-                                &BytesNeeded))
+        case WM_INITDIALOG:
         {
-            if (GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+            BOOL bRet = FALSE;
+
+            pInfo = (PMAIN_WND_INFO)lParam;
+            if (pInfo != NULL)
             {
-                lpServiceConfig = (LPQUERY_SERVICE_CONFIG)HeapAlloc(ProcessHeap,
-                                                                    0,
-                                                                    BytesNeeded);
-                if (lpServiceConfig == NULL)
-                    goto cleanup;
+                bRet = DoInitDependsDialog(pInfo, hDlg);
+            }
 
-                if (QueryServiceConfig(hSc,
-                                       lpServiceConfig,
-                                       BytesNeeded,
-                                       &BytesNeeded))
+            return bRet;
+        }
+
+        case WM_COMMAND:
+        {
+            switch (LOWORD(wParam))
+            {
+                case IDOK:
+                case IDCANCEL:
                 {
-#if 0
-                    if (lpServiceConfig->lpDependencies)
-                    {
-                        TCHAR str[500];
-
-                        _sntprintf(str, 499, _T("%s depends on this service, implement the dialog to allow closing of other services"),
-                                   lpServiceConfig->lpDependencies);
-                        MessageBox(NULL, str, NULL, 0);
-
-                        //FIXME: open 'stop other services' box
-                    }
-                    else
-                    {
-#endif
-                            hProgDlg = CreateProgressDialog(Info->hMainWnd,
-                                                            Info->pCurrentService->lpServiceName,
-                                                            IDS_PROGRESS_INFO_STOP);
-                            if (hProgDlg)
-                            {
-                                ret = Control(Info,
-                                              hProgDlg,
-                                              SERVICE_CONTROL_STOP);
-
-                                DestroyWindow(hProgDlg);
-                            }
-                    //}
-
-                    HeapFree(ProcessHeap,
-                             0,
-                             lpServiceConfig);
-
-                    lpServiceConfig = NULL;
+                    EndDialog(hDlg,
+                              LOWORD(wParam));
+                    return TRUE;
                 }
             }
         }
     }
 
-cleanup:
-    if (hSCManager != NULL)
-        CloseServiceHandle(hSCManager);
-    if (hSc != NULL)
-        CloseServiceHandle(hSc);
+    return FALSE;
+}
 
-    return ret;
+
+BOOL
+DoStop(PMAIN_WND_INFO pInfo)
+{
+    SC_HANDLE hSCManager = NULL;
+    SC_HANDLE hService;
+    BOOL bHasDepends;
+    BOOL bRet = FALSE;
+
+    bHasDepends = HasDependentServices(pInfo);
+    if (bHasDepends)
+    {
+        INT ret = DialogBoxParam(hInstance,
+                                 MAKEINTRESOURCE(IDD_DLG_DEPEND_STOP),
+                                 pInfo->hMainWnd,
+                                 StopDependsDialogProc,
+                                 (LPARAM)pInfo);
+        if (ret != IDOK)
+            return FALSE;
+    }
+
+    hSCManager = OpenSCManager(NULL,
+                               NULL,
+                               SC_MANAGER_ALL_ACCESS);
+    if (hSCManager)
+    {
+        hService = OpenService(hSCManager,
+                               pInfo->pCurrentService->lpServiceName,
+                               SERVICE_STOP | SERVICE_QUERY_STATUS | SERVICE_ENUMERATE_DEPENDENTS);
+        if (hService)
+        {
+            if (bHasDepends)
+            {
+                StopDependentServices(pInfo,
+                                      hSCManager,
+                                      hService);
+            }
+
+            bRet = StopService(pInfo, hService);
+
+            CloseServiceHandle(hService);
+        }
+
+        CloseServiceHandle(hSCManager);
+    }
+
+    return bRet;
 }
