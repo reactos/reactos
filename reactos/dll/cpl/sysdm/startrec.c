@@ -437,7 +437,7 @@ DeleteBootRecords(HWND hwndDlg)
     for (index = 0; index <lIndex; index++)
     {
         pRecord = (PBOOTRECORD) SendDlgItemMessageW(hwndDlg, IDC_STRECOSCOMBO, CB_GETITEMDATA, (WPARAM)index, (LPARAM)0);
-        if ((INT)pRecord != CB_ERR)
+        if ((INT_PTR)pRecord != CB_ERR)
         {
             HeapFree(GetProcessHeap(), 0, pRecord);
         }
@@ -713,7 +713,7 @@ StartRecDlgProc(HWND hwndDlg,
 
                     pRecord = (PBOOTRECORD) SendDlgItemMessage(hwndDlg, IDC_STRECOSCOMBO, CB_GETITEMDATA, (WPARAM)lResult, (LPARAM)0);
 
-                    if ((INT)pRecord != CB_ERR)
+                    if ((INT_PTR)pRecord != CB_ERR)
                     {
                         if (pStartInfo->iFreeLdrIni == 1) // FreeLdrIni style
                         {

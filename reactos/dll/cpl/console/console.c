@@ -12,7 +12,7 @@
 #define WM_SETCONSOLE (WM_USER+10)
 
 
-LONG APIENTRY InitApplet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam);
+LONG APIENTRY InitApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK OptionsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK FontProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK LayoutProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);

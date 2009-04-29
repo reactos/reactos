@@ -17,7 +17,7 @@ LaunchDeviceManager(HWND hWndParent)
 {
 /* hack for ROS to start our devmgmt until we have mmc */
 #ifdef __REACTOS__
-    return ((INT)ShellExecuteW(NULL, L"open", L"devmgmt.exe", NULL, NULL, SW_SHOWNORMAL) > 32);
+    return ((INT_PTR)ShellExecuteW(NULL, L"open", L"devmgmt.exe", NULL, NULL, SW_SHOWNORMAL) > 32);
 #else
     HMODULE hDll;
     PDEVMGREXEC DevMgrExec;
