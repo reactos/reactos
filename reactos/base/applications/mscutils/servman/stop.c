@@ -197,8 +197,6 @@ static BOOL
 DoInitDependsDialog(PSTOP_INFO pStopInfo,
                     HWND hDlg)
 {
-    SC_HANDLE hSCManager;
-    SC_HANDLE hService;
     LPENUM_SERVICE_STATUS lpDependencies;
     DWORD dwCount;
     LPTSTR lpPartialStr, lpStr;
@@ -277,6 +275,10 @@ DoInitDependsDialog(PSTOP_INFO pStopInfo,
                                    0,
                                    (LPARAM)lpEnumServiceStatus->lpDisplayName);
             }
+
+            HeapFree(ProcessHeap,
+                     0,
+                     lpDependencies);
         }
     }
 
@@ -340,7 +342,6 @@ DoStop(PMAIN_WND_INFO pInfo)
     STOP_INFO stopInfo;
     SC_HANDLE hSCManager;
     SC_HANDLE hService;
-    BOOL bHasDepends;
     BOOL bRet = FALSE;
 
     if (pInfo)
