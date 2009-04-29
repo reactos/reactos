@@ -223,28 +223,28 @@ static HRESULT WINAPI HTMLStyle2_get_right(IHTMLStyle2 *iface, VARIANT *p)
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLStyle2_put_pixelBottom(IHTMLStyle2 *iface, long v)
+static HRESULT WINAPI HTMLStyle2_put_pixelBottom(IHTMLStyle2 *iface, LONG v)
 {
     HTMLStyle *This = HTMLSTYLE2_THIS(iface);
-    FIXME("(%p)->(%ld)\n", This, v);
+    FIXME("(%p)->(%d)\n", This, v);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLStyle2_get_pixelBottom(IHTMLStyle2 *iface, long *p)
+static HRESULT WINAPI HTMLStyle2_get_pixelBottom(IHTMLStyle2 *iface, LONG *p)
 {
     HTMLStyle *This = HTMLSTYLE2_THIS(iface);
     FIXME("(%p)->(%p)\n", This, p);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLStyle2_put_pixelRight(IHTMLStyle2 *iface, long v)
+static HRESULT WINAPI HTMLStyle2_put_pixelRight(IHTMLStyle2 *iface, LONG v)
 {
     HTMLStyle *This = HTMLSTYLE2_THIS(iface);
-    FIXME("(%p)->(%ld)\n", This, v);
+    FIXME("(%p)->(%d)\n", This, v);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLStyle2_get_pixelRight(IHTMLStyle2 *iface, long *p)
+static HRESULT WINAPI HTMLStyle2_get_pixelRight(IHTMLStyle2 *iface, LONG *p)
 {
     HTMLStyle *This = HTMLSTYLE2_THIS(iface);
     FIXME("(%p)->(%p)\n", This, p);

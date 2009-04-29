@@ -192,28 +192,28 @@ static HRESULT WINAPI HTMLImgElement_get_border(IHTMLImgElement *iface, VARIANT 
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLImgElement_put_vspace(IHTMLImgElement *iface, long v)
+static HRESULT WINAPI HTMLImgElement_put_vspace(IHTMLImgElement *iface, LONG v)
 {
     HTMLImgElement *This = HTMLIMG_THIS(iface);
-    FIXME("(%p)->(%ld)\n", This, v);
+    FIXME("(%p)->(%d)\n", This, v);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLImgElement_get_vspace(IHTMLImgElement *iface, long *p)
+static HRESULT WINAPI HTMLImgElement_get_vspace(IHTMLImgElement *iface, LONG *p)
 {
     HTMLImgElement *This = HTMLIMG_THIS(iface);
     FIXME("(%p)->(%p)\n", This, p);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLImgElement_put_hspace(IHTMLImgElement *iface, long v)
+static HRESULT WINAPI HTMLImgElement_put_hspace(IHTMLImgElement *iface, LONG v)
 {
     HTMLImgElement *This = HTMLIMG_THIS(iface);
-    FIXME("(%p)->(%ld)\n", This, v);
+    FIXME("(%p)->(%d)\n", This, v);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLImgElement_get_hspace(IHTMLImgElement *iface, long *p)
+static HRESULT WINAPI HTMLImgElement_get_hspace(IHTMLImgElement *iface, LONG *p)
 {
     HTMLImgElement *This = HTMLIMG_THIS(iface);
     FIXME("(%p)->(%p)\n", This, p);
@@ -441,28 +441,28 @@ static HRESULT WINAPI HTMLImgElement_get_name(IHTMLImgElement *iface, BSTR *p)
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLImgElement_put_width(IHTMLImgElement *iface, long v)
+static HRESULT WINAPI HTMLImgElement_put_width(IHTMLImgElement *iface, LONG v)
 {
     HTMLImgElement *This = HTMLIMG_THIS(iface);
-    FIXME("(%p)->(%ld)\n", This, v);
+    FIXME("(%p)->(%d)\n", This, v);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLImgElement_get_width(IHTMLImgElement *iface, long *p)
+static HRESULT WINAPI HTMLImgElement_get_width(IHTMLImgElement *iface, LONG *p)
 {
     HTMLImgElement *This = HTMLIMG_THIS(iface);
     FIXME("(%p)->(%p)\n", This, p);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLImgElement_put_height(IHTMLImgElement *iface, long v)
+static HRESULT WINAPI HTMLImgElement_put_height(IHTMLImgElement *iface, LONG v)
 {
     HTMLImgElement *This = HTMLIMG_THIS(iface);
-    FIXME("(%p)->(%ld)\n", This, v);
+    FIXME("(%p)->(%d)\n", This, v);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLImgElement_get_height(IHTMLImgElement *iface, long *p)
+static HRESULT WINAPI HTMLImgElement_get_height(IHTMLImgElement *iface, LONG *p)
 {
     HTMLImgElement *This = HTMLIMG_THIS(iface);
     FIXME("(%p)->(%p)\n", This, p);

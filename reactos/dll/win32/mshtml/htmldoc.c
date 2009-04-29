@@ -27,6 +27,7 @@
 #include "winbase.h"
 #include "winuser.h"
 #include "ole2.h"
+#include "perhist.h"
 
 #include "wine/debug.h"
 
@@ -132,6 +133,9 @@ static HRESULT WINAPI HTMLDocument_QueryInterface(IHTMLDocument2 *iface, REFIID 
     }else if(IsEqualGUID(&IID_ISupportErrorInfo, riid)) {
         TRACE("(%p)->(IID_ISupportErrorInfo %p)\n", This, ppvObject);
         *ppvObject = SUPPERRINFO(This);
+    }else if(IsEqualGUID(&IID_IPersistHistory, riid)) {
+        TRACE("(%p)->(IID_IPersistHistory %p)\n", This, ppvObject);
+        *ppvObject = PERSISTHIST(This);
     }else if(IsEqualGUID(&CLSID_CMarkup, riid)) {
         FIXME("(%p)->(CLSID_CMarkup %p)\n", This, ppvObject);
         return E_NOINTERFACE;
@@ -1362,11 +1366,11 @@ static HRESULT WINAPI HTMLDocument_get_onselectstart(IHTMLDocument2 *iface, VARI
     return get_doc_event(This, EVENTID_SELECTSTART, p);
 }
 
-static HRESULT WINAPI HTMLDocument_elementFromPoint(IHTMLDocument2 *iface, long x, long y,
+static HRESULT WINAPI HTMLDocument_elementFromPoint(IHTMLDocument2 *iface, LONG x, LONG y,
                                                         IHTMLElement **elementHit)
 {
     HTMLDocument *This = HTMLDOC_THIS(iface);
-    FIXME("(%p)->(%ld %ld %p)\n", This, x, y, elementHit);
+    FIXME("(%p)->(%d %d %p)\n", This, x, y, elementHit);
     return E_NOTIMPL;
 }
 
@@ -1448,11 +1452,11 @@ static HRESULT WINAPI HTMLDocument_toString(IHTMLDocument2 *iface, BSTR *String)
 }
 
 static HRESULT WINAPI HTMLDocument_createStyleSheet(IHTMLDocument2 *iface, BSTR bstrHref,
-                                            long lIndex, IHTMLStyleSheet **ppnewStyleSheet)
+                                            LONG lIndex, IHTMLStyleSheet **ppnewStyleSheet)
 {
     HTMLDocument *This = HTMLDOC_THIS(iface);
 
-    FIXME("(%p)->(%s %ld %p) semi-stub\n", This, debugstr_w(bstrHref), lIndex, ppnewStyleSheet);
+    FIXME("(%p)->(%s %d %p) semi-stub\n", This, debugstr_w(bstrHref), lIndex, ppnewStyleSheet);
 
     *ppnewStyleSheet = HTMLStyleSheet_Create(NULL);
     return S_OK;

@@ -264,28 +264,28 @@ static HRESULT WINAPI HTMLTextAreaElement_get_readOnly(IHTMLTextAreaElement *ifa
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLTextAreaElement_put_rows(IHTMLTextAreaElement *iface, long v)
+static HRESULT WINAPI HTMLTextAreaElement_put_rows(IHTMLTextAreaElement *iface, LONG v)
 {
     HTMLTextAreaElement *This = HTMLTXTAREA_THIS(iface);
-    FIXME("(%p)->(%ld)\n", This, v);
+    FIXME("(%p)->(%d)\n", This, v);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLTextAreaElement_get_rows(IHTMLTextAreaElement *iface, long *p)
+static HRESULT WINAPI HTMLTextAreaElement_get_rows(IHTMLTextAreaElement *iface, LONG *p)
 {
     HTMLTextAreaElement *This = HTMLTXTAREA_THIS(iface);
     FIXME("(%p)->(%p)\n", This, p);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLTextAreaElement_put_cols(IHTMLTextAreaElement *iface, long v)
+static HRESULT WINAPI HTMLTextAreaElement_put_cols(IHTMLTextAreaElement *iface, LONG v)
 {
     HTMLTextAreaElement *This = HTMLTXTAREA_THIS(iface);
-    FIXME("(%p)->(%ld)\n", This, v);
+    FIXME("(%p)->(%d)\n", This, v);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLTextAreaElement_get_cols(IHTMLTextAreaElement *iface, long *p)
+static HRESULT WINAPI HTMLTextAreaElement_get_cols(IHTMLTextAreaElement *iface, LONG *p)
 {
     HTMLTextAreaElement *This = HTMLTXTAREA_THIS(iface);
     FIXME("(%p)->(%p)\n", This, p);

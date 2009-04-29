@@ -131,11 +131,15 @@ static nsIInputStream *get_post_data_stream(IBindCtx *bctx)
 
         static const char content_length[] = "Content-Length: %u\r\n\r\n";
 
-        data = heap_alloc(headers_len+post_len+sizeof(content_length)+8);
+        data = heap_alloc(headers_len+post_len+sizeof(content_length)+10);
 
         if(headers_len) {
             WideCharToMultiByte(CP_ACP, 0, headers, -1, data, headers_len, NULL, NULL);
             len = fix_headers(data, post_len);
+            if(len >= 2 && (data[len-1] != '\n' || data[len-2] != '\r')) {
+                data[len++] = '\r';
+                data[len++] = '\n';
+            }
         }
 
         if(post_len) {
@@ -744,12 +748,84 @@ static const IPersistStreamInitVtbl PersistStreamInitVtbl = {
     PersistStreamInit_InitNew
 };
 
+/**********************************************************
+ * IPersistHistory implementation
+ */
+
+#define PERSISTHIST_THIS(iface) DEFINE_THIS(HTMLDocument, PersistHistory, iface)
+
+static HRESULT WINAPI PersistHistory_QueryInterface(IPersistHistory *iface, REFIID riid, void **ppvObject)
+{
+    HTMLDocument *This = PERSISTHIST_THIS(iface);
+    return IHTMLDocument2_QueryInterface(HTMLDOC(This), riid, ppvObject);
+}
+
+static ULONG WINAPI PersistHistory_AddRef(IPersistHistory *iface)
+{
+    HTMLDocument *This = PERSISTHIST_THIS(iface);
+    return IHTMLDocument2_AddRef(HTMLDOC(This));
+}
+
+static ULONG WINAPI PersistHistory_Release(IPersistHistory *iface)
+{
+    HTMLDocument *This = PERSISTHIST_THIS(iface);
+    return IHTMLDocument2_Release(HTMLDOC(This));
+}
+
+static HRESULT WINAPI PersistHistory_GetClassID(IPersistHistory *iface, CLSID *pClassID)
+{
+    HTMLDocument *This = PERSISTHIST_THIS(iface);
+    return IPersist_GetClassID(PERSIST(This), pClassID);
+}
+
+static HRESULT WINAPI PersistHistory_LoadHistory(IPersistHistory *iface, IStream *pStream, IBindCtx *pbc)
+{
+    HTMLDocument *This = PERSISTHIST_THIS(iface);
+    FIXME("(%p)->(%p %p)\n", This, pStream, pbc);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI PersistHistory_SaveHistory(IPersistHistory *iface, IStream *pStream)
+{
+    HTMLDocument *This = PERSISTHIST_THIS(iface);
+    FIXME("(%p)->(%p)\n", This, pStream);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI PersistHistory_SetPositionCookie(IPersistHistory *iface, DWORD dwPositioncookie)
+{
+    HTMLDocument *This = PERSISTHIST_THIS(iface);
+    FIXME("(%p)->(%x)\n", This, dwPositioncookie);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI PersistHistory_GetPositionCookie(IPersistHistory *iface, DWORD *pdwPositioncookie)
+{
+    HTMLDocument *This = PERSISTHIST_THIS(iface);
+    FIXME("(%p)->(%p)\n", This, pdwPositioncookie);
+    return E_NOTIMPL;
+}
+
+#undef PERSISTHIST_THIS
+
+static const IPersistHistoryVtbl PersistHistoryVtbl = {
+    PersistHistory_QueryInterface,
+    PersistHistory_AddRef,
+    PersistHistory_Release,
+    PersistHistory_GetClassID,
+    PersistHistory_LoadHistory,
+    PersistHistory_SaveHistory,
+    PersistHistory_SetPositionCookie,
+    PersistHistory_GetPositionCookie
+};
+
 void HTMLDocument_Persist_Init(HTMLDocument *This)
 {
     This->lpPersistMonikerVtbl = &PersistMonikerVtbl;
     This->lpPersistFileVtbl = &PersistFileVtbl;
     This->lpMonikerPropVtbl = &MonikerPropVtbl;
     This->lpPersistStreamInitVtbl = &PersistStreamInitVtbl;
+    This->lpPersistHistoryVtbl = &PersistHistoryVtbl;
 
     This->bscallback = NULL;
     This->mon = NULL;

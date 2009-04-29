@@ -1,7 +1,7 @@
 /*
  * COM interfaces for shell objects
  *
- * Copyright (C) 2004 Maxime Bellengé
+ * Copyright (C) 2004 Maxime BellengÃ©
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -25,6 +25,8 @@ import "shtypes.idl";
 import "servprov.idl";
 import "comcat.idl";
 
+#include <shdispid.h>
+
 /*****************************************************************************
  * IAutoComplete interface
  */
@@ -41,7 +43,7 @@ interface IAutoComplete : IUnknown
 		  [in] IUnknown *punkACL,
 		  [in] LPCOLESTR pwszRegKeyPath,
 		  [in] LPCOLESTR pwszQuickComplete);
-
+    
     HRESULT Enable( [in] BOOL fEnable );
 }
 
@@ -82,6 +84,29 @@ interface IAutoComplete2 : IAutoComplete
 interface IFolderViewOC : IDispatch
 {
     HRESULT SetFolderView( [in] IDispatch *pdisp );
+}
+
+[
+    uuid(62112aa2-ebe4-11cf-a5fb-0020afe7292d)
+]
+dispinterface DShellFolderViewEvents
+{
+    properties:
+    methods:
+    [id(DISPID_SELECTIONCHANGED)]
+    void SelectionChanged();
+
+    [id(DISPID_FILELISTENUMDONE)]
+    void EnumDone();
+
+    [id(DISPID_VERBINVOKED)]
+    VARIANT_BOOL VerbInvoked();
+
+    [id(DISPID_DEFAULTVERBINVOKED)]
+    VARIANT_BOOL DefaultVerbInvoked();
+
+    [id(DISPID_BEGINDRAG)]
+    VARIANT_BOOL BeginDrag();
 }
 
 [

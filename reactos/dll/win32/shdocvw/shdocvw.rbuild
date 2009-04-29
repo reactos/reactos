@@ -36,6 +36,7 @@
 	<file>persist.c</file>
 	<file>shdocvw_main.c</file>
 	<file>shlinstobj.c</file>
+	<file>taskbarlist.c</file>
 	<file>urlhist.c</file>
 	<file>view.c</file>
 	<file>webbrowser.c</file>

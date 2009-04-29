@@ -678,7 +678,7 @@ static HRESULT WINAPI HTMLElement_contains(IHTMLElement *iface, IHTMLElement *pC
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLElement_get_sourceIndex(IHTMLElement *iface, long *p)
+static HRESULT WINAPI HTMLElement_get_sourceIndex(IHTMLElement *iface, LONG *p)
 {
     HTMLElement *This = HTMLELEM_THIS(iface);
     FIXME("(%p)->(%p)\n", This, p);
@@ -706,14 +706,14 @@ static HRESULT WINAPI HTMLElement_get_lang(IHTMLElement *iface, BSTR *p)
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLElement_get_offsetLeft(IHTMLElement *iface, long *p)
+static HRESULT WINAPI HTMLElement_get_offsetLeft(IHTMLElement *iface, LONG *p)
 {
     HTMLElement *This = HTMLELEM_THIS(iface);
     FIXME("(%p)->(%p)\n", This, p);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLElement_get_offsetTop(IHTMLElement *iface, long *p)
+static HRESULT WINAPI HTMLElement_get_offsetTop(IHTMLElement *iface, LONG *p)
 {
     HTMLElement *This = HTMLELEM_THIS(iface);
     nsIDOMNSHTMLElement *nselem;
@@ -739,7 +739,7 @@ static HRESULT WINAPI HTMLElement_get_offsetTop(IHTMLElement *iface, long *p)
     return S_OK;
 }
 
-static HRESULT WINAPI HTMLElement_get_offsetWidth(IHTMLElement *iface, long *p)
+static HRESULT WINAPI HTMLElement_get_offsetWidth(IHTMLElement *iface, LONG *p)
 {
     HTMLElement *This = HTMLELEM_THIS(iface);
     nsIDOMNSHTMLElement *nselem;
@@ -765,7 +765,7 @@ static HRESULT WINAPI HTMLElement_get_offsetWidth(IHTMLElement *iface, long *p)
     return S_OK;
 }
 
-static HRESULT WINAPI HTMLElement_get_offsetHeight(IHTMLElement *iface, long *p)
+static HRESULT WINAPI HTMLElement_get_offsetHeight(IHTMLElement *iface, LONG *p)
 {
     HTMLElement *This = HTMLELEM_THIS(iface);
     nsIDOMNSHTMLElement *nselem;
@@ -833,8 +833,37 @@ static HRESULT WINAPI HTMLElement_put_innerHTML(IHTMLElement *iface, BSTR v)
 static HRESULT WINAPI HTMLElement_get_innerHTML(IHTMLElement *iface, BSTR *p)
 {
     HTMLElement *This = HTMLELEM_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+    nsIDOMNSHTMLElement *nselem;
+    nsAString html_str;
+    nsresult nsres;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    if(!This->nselem) {
+        FIXME("NULL nselem\n");
+        return E_NOTIMPL;
+    }
+
+    nsres = nsIDOMHTMLElement_QueryInterface(This->nselem, &IID_nsIDOMNSHTMLElement, (void**)&nselem);
+    if(NS_FAILED(nsres)) {
+        ERR("Could not get nsIDOMNSHTMLElement: %08x\n", nsres);
+        return E_FAIL;
+    }
+
+    nsAString_Init(&html_str, NULL);
+    nsres = nsIDOMNSHTMLElement_GetInnerHTML(nselem, &html_str);
+    if(NS_SUCCEEDED(nsres)) {
+        const PRUnichar *html;
+
+        nsAString_GetData(&html_str, &html);
+        *p = *html ? SysAllocString(html) : NULL;
+    }else {
+        FIXME("SetInnerHtml failed %08x\n", nsres);
+        *p = NULL;
+    }
+
+    nsAString_Finish(&html_str);
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLElement_put_innerText(IHTMLElement *iface, BSTR v)

@@ -135,6 +135,7 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, void **ppv)
     static IClassFactoryImpl WB2ClassFactory = {&WBCF_Vtbl, WebBrowserV2_Create};
     static IClassFactoryImpl CUHClassFactory = {&WBCF_Vtbl, CUrlHistory_Create};
     static IClassFactoryImpl ISCClassFactory = {&WBCF_Vtbl, InternetShortcut_Create};
+    static IClassFactoryImpl TBLClassFactory = {&WBCF_Vtbl, TaskbarList_Create};
 
     TRACE("\n");
 
@@ -149,6 +150,9 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, void **ppv)
 
     if(IsEqualGUID(&CLSID_InternetShortcut, rclsid))
         return IClassFactory_QueryInterface(FACTORY(&ISCClassFactory), riid, ppv);
+
+    if(IsEqualGUID(&CLSID_TaskbarList, rclsid))
+        return IClassFactory_QueryInterface(FACTORY(&TBLClassFactory), riid, ppv);
 
     /* As a last resort, figure if the CLSID belongs to a 'Shell Instance Object' */
     return SHDOCVW_GetShellInstanceObjectClassObject(rclsid, riid, ppv);
@@ -213,8 +217,8 @@ static const GUID CLSID_MruLongList =
 static HRESULT register_server(BOOL doregister)
 {
     STRTABLEA strtable;
-    STRENTRYA pse[14];
-    static CLSID const *clsids[14];
+    STRENTRYA pse[15];
+    static CLSID const *clsids[15];
     unsigned int i = 0;
     HRESULT hres;
 
@@ -230,6 +234,7 @@ static HRESULT register_server(BOOL doregister)
     INF_SET_CLSID(ShellShellNameSpace);
     INF_SET_CLSID(ShellUIHelper);
     INF_SET_CLSID(ShellWindows);
+    INF_SET_CLSID(TaskbarList);
     INF_SET_CLSID(WebBrowser);
     INF_SET_CLSID(WebBrowser_V1);
 
