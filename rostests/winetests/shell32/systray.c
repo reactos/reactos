@@ -27,11 +27,11 @@
 
 static HWND hMainWnd;
 static BOOL (WINAPI *pShell_NotifyIconW)(DWORD,PNOTIFYICONDATAW);
-static HMONITOR (WINAPI *pMonitorFromWindow)(HWND, DWORD);
 
-void test_cbsize(void)
+static void test_cbsize(void)
 {
     NOTIFYICONDATAA nidA;
+    BOOL ret;
 
     if (pShell_NotifyIconW)
     {
@@ -44,16 +44,20 @@ void test_cbsize(void)
         nidW.uFlags = NIF_ICON|NIF_MESSAGE;
         nidW.hIcon = LoadIcon(NULL, IDI_APPLICATION);
         nidW.uCallbackMessage = WM_USER+17;
-        ok(pShell_NotifyIconW(NIM_ADD, &nidW), "NIM_ADD failed!\n");
-
-        /* using an invalid cbSize does work */
-        nidW.cbSize = 3;
-        nidW.hWnd = hMainWnd;
-        nidW.uID = 1;
-        ok(pShell_NotifyIconW(NIM_DELETE, &nidW), "NIM_DELETE failed!\n");
-        /* as icon doesn't exist anymore - now there will be an error */
-        nidW.cbSize = sizeof(nidW);
-        ok(!pShell_NotifyIconW(NIM_DELETE, &nidW), "The icon was not deleted\n");
+        ret = pShell_NotifyIconW(NIM_ADD, &nidW);
+        if (ret)
+        {
+            /* using an invalid cbSize does work */
+            nidW.cbSize = 3;
+            nidW.hWnd = hMainWnd;
+            nidW.uID = 1;
+            ret = pShell_NotifyIconW(NIM_DELETE, &nidW);
+            ok( ret || broken(!ret), /* nt4 */ "NIM_DELETE failed!\n");
+            /* as icon doesn't exist anymore - now there will be an error */
+            nidW.cbSize = sizeof(nidW);
+            ok(!pShell_NotifyIconW(NIM_DELETE, &nidW) != !ret, "The icon was not deleted\n");
+        }
+        else win_skip( "Shell_NotifyIconW not working\n" );  /* win9x */
     }
 
     /* same for Shell_NotifyIconA */
@@ -70,65 +74,11 @@ void test_cbsize(void)
     nidA.cbSize = 3;
     nidA.hWnd = hMainWnd;
     nidA.uID = 1;
-    ok(Shell_NotifyIconA(NIM_DELETE, &nidA), "NIM_DELETE failed!\n");
+    ret = Shell_NotifyIconA(NIM_DELETE, &nidA);
+    ok( ret || broken(!ret),  /* win9x */ "NIM_DELETE failed!\n");
     /* as icon doesn't exist anymore - now there will be an error */
     nidA.cbSize = sizeof(nidA);
-    ok(!Shell_NotifyIconA(NIM_DELETE, &nidA), "The icon was not deleted\n");
-}
-
-static void test_SHAppBarMessage(void)
-{
-    APPBARDATA abd;
-    HWND hwnd, foregnd;
-    UINT_PTR ret;
-
-    memset(&abd, 0xcc, sizeof(abd));
-    abd.cbSize = sizeof(abd);
-    abd.uEdge = ABE_BOTTOM;
-
-    hwnd = (HWND)SHAppBarMessage(ABM_GETAUTOHIDEBAR, &abd);
-    ok(hwnd == NULL || IsWindow(hwnd), "ret %p which is not a window\n", hwnd);
-    ok(abd.hWnd == (HWND)0xcccccccc, "hWnd overwritten\n");
-
-    if (!pMonitorFromWindow)
-    {
-        skip("MonitorFromWindow is not available\n");
-    }
-    else
-    {
-        /* Presumably one can pass a hwnd with ABM_GETAUTOHIDEBAR to specify a monitor.
-           Pass the foreground window and check */
-        foregnd = GetForegroundWindow();
-        if(foregnd)
-        {
-            abd.hWnd = foregnd;
-            hwnd = (HWND)SHAppBarMessage(ABM_GETAUTOHIDEBAR, &abd);
-            ok(hwnd == NULL || IsWindow(hwnd), "ret %p which is not a window\n", hwnd);
-            ok(abd.hWnd == foregnd, "hWnd overwritten\n");
-            if(hwnd)
-            {
-                HMONITOR appbar_mon, foregnd_mon;
-                appbar_mon = pMonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
-                foregnd_mon = pMonitorFromWindow(foregnd, MONITOR_DEFAULTTONEAREST);
-                ok(appbar_mon == foregnd_mon, "Windows on different monitors\n");
-            }
-        }
-    }
-
-    memset(&abd, 0xcc, sizeof(abd));
-    abd.cbSize = sizeof(abd);
-    ret = SHAppBarMessage(ABM_GETTASKBARPOS, &abd);
-    if(ret)
-    {
-        ok(abd.hWnd == (HWND)0xcccccccc, "hWnd overwritten\n");
-todo_wine
-{
-        ok(abd.uEdge >= ABE_LEFT && abd.uEdge <= ABE_BOTTOM, "uEdge not returned\n");
-        ok(abd.rc.left != 0xcccccccc, "rc not updated\n");
-}
-    }
-
-    return;
+    ok(!Shell_NotifyIconA(NIM_DELETE, &nidA) != !ret, "The icon was not deleted\n");
 }
 
 START_TEST(systray)
@@ -136,13 +86,10 @@ START_TEST(systray)
     WNDCLASSA wc;
     MSG msg;
     RECT rc;
-    HMODULE huser32, hshell32;
+    HMODULE hshell32;
 
     hshell32 = GetModuleHandleA("shell32.dll");
     pShell_NotifyIconW = (void*)GetProcAddress(hshell32, "Shell_NotifyIconW");
-
-    huser32 = GetModuleHandleA("user32.dll");
-    pMonitorFromWindow = (void*)GetProcAddress(huser32, "MonitorFromWindow");
 
     wc.style = CS_HREDRAW | CS_VREDRAW;
     wc.cbClsExtra = 0;
@@ -169,6 +116,4 @@ START_TEST(systray)
         DispatchMessageA(&msg);
     }
     DestroyWindow(hMainWnd);
-
-    test_SHAppBarMessage();
 }

@@ -32,12 +32,13 @@
  *   we could check
  */
 
-#include <stdio.h>
-#include <assert.h>
-
 /* Needed to get SEE_MASK_NOZONECHECKS with the PSDK */
 #define NTDDI_WINXPSP1 0x05010100
 #define NTDDI_VERSION NTDDI_WINXPSP1
+#define _WIN32_WINNT 0x0501
+
+#include <stdio.h>
+#include <assert.h>
 
 #include "wtypes.h"
 #include "winbase.h"
@@ -89,7 +90,7 @@ static void strcat_param(char* str, const char* param)
 static char shell_call[2048]="";
 static int shell_execute(LPCSTR operation, LPCSTR file, LPCSTR parameters, LPCSTR directory)
 {
-    int rc;
+    INT_PTR rc;
 
     strcpy(shell_call, "ShellExecute(");
     strcat_param(shell_call, operation);
@@ -110,8 +111,7 @@ static int shell_execute(LPCSTR operation, LPCSTR file, LPCSTR parameters, LPCST
      * association it displays the 'Open With' dialog and I could not find
      * a flag to prevent this.
      */
-    rc=(int)ShellExecute(NULL, operation, file, parameters, directory,
-                         SW_SHOWNORMAL);
+    rc=(INT_PTR)ShellExecute(NULL, operation, file, parameters, directory, SW_SHOWNORMAL);
 
     if (rc > 32)
     {
@@ -134,7 +134,7 @@ static int shell_execute_ex(DWORD mask, LPCSTR operation, LPCSTR file,
 {
     SHELLEXECUTEINFO sei;
     BOOL success;
-    int rc;
+    INT_PTR rc;
 
     strcpy(shell_call, "ShellExecuteEx(");
     strcat_param(shell_call, operation);
@@ -167,9 +167,9 @@ static int shell_execute_ex(DWORD mask, LPCSTR operation, LPCSTR file,
     DeleteFile(child_file);
     SetLastError(0xcafebabe);
     success=ShellExecuteEx(&sei);
-    rc=(int)sei.hInstApp;
+    rc=(INT_PTR)sei.hInstApp;
     ok((success && rc > 32) || (!success && rc <= 32),
-       "%s rc=%d and hInstApp=%d is not allowed\n", shell_call, success, rc);
+       "%s rc=%d and hInstApp=%ld is not allowed\n", shell_call, success, rc);
 
     if (rc > 32)
     {
@@ -200,7 +200,7 @@ static int shell_execute_ex(DWORD mask, LPCSTR operation, LPCSTR file,
  *
  ***/
 
-static void create_test_association(const char* extension)
+static BOOL create_test_association(const char* extension)
 {
     HKEY hkey, hkey_shell;
     char class[MAX_PATH];
@@ -209,19 +209,25 @@ static void create_test_association(const char* extension)
     sprintf(class, "shlexec%s", extension);
     rc=RegCreateKeyEx(HKEY_CLASSES_ROOT, extension, 0, NULL, 0, KEY_SET_VALUE,
                       NULL, &hkey, NULL);
-    assert(rc==ERROR_SUCCESS);
+    if (rc != ERROR_SUCCESS)
+        return FALSE;
+
     rc=RegSetValueEx(hkey, NULL, 0, REG_SZ, (LPBYTE) class, strlen(class)+1);
-    assert(rc==ERROR_SUCCESS);
+    ok(rc==ERROR_SUCCESS, "RegSetValueEx '%s' failed, expected ERROR_SUCCESS, got %d\n", class, rc);
     CloseHandle(hkey);
 
     rc=RegCreateKeyEx(HKEY_CLASSES_ROOT, class, 0, NULL, 0,
                       KEY_CREATE_SUB_KEY | KEY_ENUMERATE_SUB_KEYS, NULL, &hkey, NULL);
-    assert(rc==ERROR_SUCCESS);
+    ok(rc==ERROR_SUCCESS, "RegCreateKeyEx '%s' failed, expected ERROR_SUCCESS, got %d\n", class, rc);
+
     rc=RegCreateKeyEx(hkey, "shell", 0, NULL, 0,
                       KEY_CREATE_SUB_KEY, NULL, &hkey_shell, NULL);
-    assert(rc==ERROR_SUCCESS);
+    ok(rc==ERROR_SUCCESS, "RegCreateKeyEx 'shell' failed, expected ERROR_SUCCESS, got %d\n", rc);
+
     CloseHandle(hkey);
     CloseHandle(hkey_shell);
+
+    return TRUE;
 }
 
 /* Based on RegDeleteTreeW from dlls/advapi32/registry.c */
@@ -620,8 +626,8 @@ typedef struct
 static filename_tests_t filename_tests[]=
 {
     /* Test bad / nonexistent filenames */
-    {NULL,           "%s\\nonexistent.shlexec", 0x11, SE_ERR_FNF},
-    {NULL,           "%s\\nonexistent.noassoc", 0x11, SE_ERR_FNF},
+    {NULL,           "%s\\nonexistent.shlexec", 0x0, SE_ERR_FNF},
+    {NULL,           "%s\\nonexistent.noassoc", 0x0, SE_ERR_FNF},
 
     /* Standard tests */
     {NULL,           "%s\\test file.shlexec",   0x0, 33},
@@ -637,7 +643,7 @@ static filename_tests_t filename_tests[]=
     {NULL,           "%s\\test file.shlexec.noassoc", 0x0, SE_ERR_NOASSOC},
 
     /* Test alternate verbs */
-    {"LowerL",       "%s\\nonexistent.shlexec", 0x11, SE_ERR_FNF},
+    {"LowerL",       "%s\\nonexistent.shlexec", 0x0, SE_ERR_FNF},
     {"LowerL",       "%s\\test file.noassoc",   0x0,  SE_ERR_NOASSOC},
 
     {"QuotedLowerL", "%s\\test file.shlexec",   0x0, 33},
@@ -828,45 +834,56 @@ static void test_find_executable(void)
     char filename[MAX_PATH];
     char command[MAX_PATH];
     const filename_tests_t* test;
-    int rc;
+    INT_PTR rc;
 
-    create_test_association(".sfe");
+    if (!create_test_association(".sfe"))
+    {
+        skip("Unable to create association for '.sfe'\n");
+        return;
+    }
     create_test_verb(".sfe", "Open", 1, "%1");
 
     /* Don't test FindExecutable(..., NULL), it always crashes */
 
     strcpy(command, "your word");
-    rc=(int)FindExecutableA(NULL, NULL, command);
-    ok(rc == SE_ERR_FNF || rc > 32 /* nt4 */, "FindExecutable(NULL) returned %d\n", rc);
+    if (0) /* Can crash on Vista! */
+    {
+    rc=(INT_PTR)FindExecutableA(NULL, NULL, command);
+    ok(rc == SE_ERR_FNF || rc > 32 /* nt4 */, "FindExecutable(NULL) returned %ld\n", rc);
     ok(strcmp(command, "your word") != 0, "FindExecutable(NULL) returned command=[%s]\n", command);
+    }
 
     strcpy(command, "your word");
-    rc=(int)FindExecutableA(tmpdir, NULL, command);
-    ok(rc == SE_ERR_NOASSOC /* >= win2000 */ || rc > 32 /* win98, nt4 */, "FindExecutable(NULL) returned %d\n", rc);
+    rc=(INT_PTR)FindExecutableA(tmpdir, NULL, command);
+    ok(rc == SE_ERR_NOASSOC /* >= win2000 */ || rc > 32 /* win98, nt4 */, "FindExecutable(NULL) returned %ld\n", rc);
     ok(strcmp(command, "your word") != 0, "FindExecutable(NULL) returned command=[%s]\n", command);
 
     sprintf(filename, "%s\\test file.sfe", tmpdir);
-    rc=(int)FindExecutableA(filename, NULL, command);
-    ok(rc > 32, "FindExecutable(%s) returned %d\n", filename, rc);
+    rc=(INT_PTR)FindExecutableA(filename, NULL, command);
+    ok(rc > 32, "FindExecutable(%s) returned %ld\n", filename, rc);
     /* Depending on the platform, command could be '%1' or 'test file.sfe' */
 
-    rc=(int)FindExecutableA("test file.sfe", tmpdir, command);
-    ok(rc > 32, "FindExecutable(%s) returned %d\n", filename, rc);
+    rc=(INT_PTR)FindExecutableA("test file.sfe", tmpdir, command);
+    ok(rc > 32, "FindExecutable(%s) returned %ld\n", filename, rc);
 
-    rc=(int)FindExecutableA("test file.sfe", NULL, command);
-    todo_wine ok(rc == SE_ERR_FNF, "FindExecutable(%s) returned %d\n", filename, rc);
+    rc=(INT_PTR)FindExecutableA("test file.sfe", NULL, command);
+    ok(rc == SE_ERR_FNF, "FindExecutable(%s) returned %ld\n", filename, rc);
 
     delete_test_association(".sfe");
 
-    create_test_association(".shl");
+    if (!create_test_association(".shl"))
+    {
+        skip("Unable to create association for '.shl'\n");
+        return;
+    }
     create_test_verb(".shl", "Open", 0, "Open");
 
     sprintf(filename, "%s\\test file.shl", tmpdir);
-    rc=(int)FindExecutableA(filename, NULL, command);
-    ok(rc == SE_ERR_FNF /* NT4 */ || rc > 32, "FindExecutable(%s) returned %d\n", filename, rc);
+    rc=(INT_PTR)FindExecutableA(filename, NULL, command);
+    ok(rc == SE_ERR_FNF /* NT4 */ || rc > 32, "FindExecutable(%s) returned %ld\n", filename, rc);
 
     sprintf(filename, "%s\\test file.shlfoo", tmpdir);
-    rc=(int)FindExecutableA(filename, NULL, command);
+    rc=(INT_PTR)FindExecutableA(filename, NULL, command);
 
     delete_test_association(".shl");
 
@@ -901,16 +918,16 @@ static void test_find_executable(void)
         }
         /* Win98 does not '\0'-terminate command! */
         memset(command, '\0', sizeof(command));
-        rc=(int)FindExecutableA(filename, NULL, command);
+        rc=(INT_PTR)FindExecutableA(filename, NULL, command);
         if (rc > 32)
             rc=33;
         if ((test->todo & 0x10)==0)
         {
-            ok(rc==test->rc, "FindExecutable(%s) failed: rc=%d\n", filename, rc);
+            ok(rc==test->rc, "FindExecutable(%s) failed: rc=%ld\n", filename, rc);
         }
         else todo_wine
         {
-            ok(rc==test->rc, "FindExecutable(%s) failed: rc=%d\n", filename, rc);
+            ok(rc==test->rc, "FindExecutable(%s) failed: rc=%ld\n", filename, rc);
         }
         if (rc > 32)
         {
@@ -1195,7 +1212,7 @@ typedef struct
 
 static DWORD CALLBACK ddeThread(LPVOID arg)
 {
-    dde_thread_info_t *info = (dde_thread_info_t *)arg;
+    dde_thread_info_t *info = arg;
     assert(info && info->filename);
     PostThreadMessage(info->threadIdParent,
                       WM_QUIT,
@@ -1233,7 +1250,11 @@ static void test_dde(void)
     test = dde_tests;
     while (test->command)
     {
-        create_test_association(".sde");
+        if (!create_test_association(".sde"))
+        {
+            skip("Unable to create association for '.sfe'\n");
+            return;
+        }
         create_test_verb_dde(".sde", "Open", 0, test->command, test->ddeexec,
                              test->application, test->topic, test->ifexec);
         hszApplication = DdeCreateStringHandleA(ddeInst, test->application ?
@@ -1245,7 +1266,7 @@ static void test_dde(void)
         denyNextConnection = TRUE;
         ddeExec[0] = 0;
 
-        assert(CreateThread(NULL, 0, ddeThread, (LPVOID)&info, 0, &threadId));
+        assert(CreateThread(NULL, 0, ddeThread, &info, 0, &threadId));
         while (GetMessage(&msg, NULL, 0, 0)) DispatchMessage(&msg);
         rc = msg.wParam > 32 ? 33 : msg.wParam;
         if ((test->todo & 0x1)==0)
@@ -1383,7 +1404,11 @@ static void test_dde_default_app(void)
     test = dde_default_app_tests;
     while (test->command)
     {
-        create_test_association(".sde");
+        if (!create_test_association(".sde"))
+        {
+            skip("Unable to create association for '.sde'\n");
+            return;
+        }
         sprintf(params, test->command, tmpdir);
         create_test_verb_dde(".sde", "Open", 1, params, "[test]", NULL,
                              "shlexec", NULL);
@@ -1394,7 +1419,7 @@ static void test_dde_default_app(void)
          * so don't wait for it */
         SetEvent(hEvent);
 
-        assert(CreateThread(NULL, 0, ddeThread, (LPVOID)&info, 0, &threadId));
+        assert(CreateThread(NULL, 0, ddeThread, &info, 0, &threadId));
         while (GetMessage(&msg, NULL, 0, 0)) DispatchMessage(&msg);
         rc = msg.wParam > 32 ? 33 : msg.wParam;
 
@@ -1479,7 +1504,7 @@ static void init_test(void)
 
     r = CoInitialize(NULL);
     ok(SUCCEEDED(r), "CoInitialize failed (0x%08x)\n", r);
-    if (!SUCCEEDED(r))
+    if (FAILED(r))
         exit(1);
 
     rc=GetModuleFileName(NULL, argv0, sizeof(argv0));
@@ -1543,7 +1568,11 @@ static void init_test(void)
     create_lnk(lnkfile, &desc, 0);
 
     /* Create a basic association suitable for most tests */
-    create_test_association(".shlexec");
+    if (!create_test_association(".shlexec"))
+    {
+        skip("Unable to create association for '.shlexec'\n");
+        return;
+    }
     create_test_verb(".shlexec", "Open", 0, "Open \"%1\"");
     create_test_verb(".shlexec", "NoQuotes", 0, "NoQuotes %1");
     create_test_verb(".shlexec", "LowerL", 0, "LowerL %l");
@@ -1575,6 +1604,79 @@ static void cleanup_test(void)
     CoUninitialize();
 }
 
+static void test_commandline(void)
+{
+    static const WCHAR one[] = {'o','n','e',0};
+    static const WCHAR two[] = {'t','w','o',0};
+    static const WCHAR three[] = {'t','h','r','e','e',0};
+    static const WCHAR four[] = {'f','o','u','r',0};
+
+    static const WCHAR fmt1[] = {'%','s',' ','%','s',' ','%','s',' ','%','s',0};
+    static const WCHAR fmt2[] = {' ','%','s',' ','%','s',' ','%','s',' ','%','s',0};
+    static const WCHAR fmt3[] = {'%','s','=','%','s',' ','%','s','=','\"','%','s','\"',0};
+    static const WCHAR fmt4[] = {'\"','%','s','\"',' ','\"','%','s',' ','%','s','\"',' ','%','s',0};
+    static const WCHAR fmt5[] = {'\\','\"','%','s','\"',' ','%','s','=','\"','%','s','\\','\"',' ','\"','%','s','\\','\"',0};
+    static const WCHAR fmt6[] = {0};
+
+    static const WCHAR chkfmt1[] = {'%','s','=','%','s',0};
+    static const WCHAR chkfmt2[] = {'%','s',' ','%','s',0};
+    static const WCHAR chkfmt3[] = {'\\','\"','%','s','\"',0};
+    static const WCHAR chkfmt4[] = {'%','s','=','%','s','\"',' ','%','s','\"',0};
+    WCHAR cmdline[255];
+    LPWSTR *args = (LPWSTR*)0xdeadcafe;
+    INT numargs = -1;
+
+    wsprintfW(cmdline,fmt1,one,two,three,four);
+    args=CommandLineToArgvW(cmdline,&numargs);
+    if (args == NULL && numargs == -1)
+    {
+        win_skip("CommandLineToArgvW not implemented, skipping\n");
+        return;
+    }
+    ok(numargs == 4, "expected 4 args, got %i\n",numargs);
+    ok(lstrcmpW(args[0],one)==0,"arg0 is not as expected\n");
+    ok(lstrcmpW(args[1],two)==0,"arg1 is not as expected\n");
+    ok(lstrcmpW(args[2],three)==0,"arg2 is not as expected\n");
+    ok(lstrcmpW(args[3],four)==0,"arg3 is not as expected\n");
+
+    wsprintfW(cmdline,fmt2,one,two,three,four);
+    args=CommandLineToArgvW(cmdline,&numargs);
+    ok(numargs == 5, "expected 5 args, got %i\n",numargs);
+    ok(args[0][0]==0,"arg0 is not as expected\n");
+    ok(lstrcmpW(args[1],one)==0,"arg1 is not as expected\n");
+    ok(lstrcmpW(args[2],two)==0,"arg2 is not as expected\n");
+    ok(lstrcmpW(args[3],three)==0,"arg3 is not as expected\n");
+    ok(lstrcmpW(args[4],four)==0,"arg4 is not as expected\n");
+
+    wsprintfW(cmdline,fmt3,one,two,three,four);
+    args=CommandLineToArgvW(cmdline,&numargs);
+    ok(numargs == 2, "expected 2 args, got %i\n",numargs);
+    wsprintfW(cmdline,chkfmt1,one,two);
+    ok(lstrcmpW(args[0],cmdline)==0,"arg0 is not as expected\n");
+    wsprintfW(cmdline,chkfmt1,three,four);
+    ok(lstrcmpW(args[1],cmdline)==0,"arg1 is not as expected\n");
+
+    wsprintfW(cmdline,fmt4,one,two,three,four);
+    args=CommandLineToArgvW(cmdline,&numargs);
+    ok(numargs == 3, "expected 3 args, got %i\n",numargs);
+    ok(lstrcmpW(args[0],one)==0,"arg0 is not as expected\n");
+    wsprintfW(cmdline,chkfmt2,two,three);
+    ok(lstrcmpW(args[1],cmdline)==0,"arg1 is not as expected\n");
+    ok(lstrcmpW(args[2],four)==0,"arg2 is not as expected\n");
+
+    wsprintfW(cmdline,fmt5,one,two,three,four);
+    args=CommandLineToArgvW(cmdline,&numargs);
+    ok(numargs == 2, "expected 2 args, got %i\n",numargs);
+    wsprintfW(cmdline,chkfmt3,one);
+    todo_wine ok(lstrcmpW(args[0],cmdline)==0,"arg0 is not as expected\n");
+    wsprintfW(cmdline,chkfmt4,two,three,four);
+    todo_wine ok(lstrcmpW(args[1],cmdline)==0,"arg1 is not as expected\n");
+
+    wsprintfW(cmdline,fmt6);
+    args=CommandLineToArgvW(cmdline,&numargs);
+    ok(numargs == 1, "expected 1 args, got %i\n",numargs);
+}
+
 START_TEST(shlexec)
 {
 
@@ -1594,6 +1696,7 @@ START_TEST(shlexec)
     test_exes_long();
     test_dde();
     test_dde_default_app();
+    test_commandline();
 
     cleanup_test();
 }

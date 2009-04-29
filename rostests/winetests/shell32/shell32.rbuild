@@ -15,6 +15,8 @@
 	<library>kernel32</library>
 	<library>uuid</library>
 	<library>ntdll</library>
+	<file>appbar.c</file>
+	<file>autocomplete.c</file>
 	<file>generated.c</file>
 	<file>shelllink.c</file>
 	<file>shellpath.c</file>
@@ -25,5 +27,7 @@
 	<file>systray.c</file>
 	<file>testlist.c</file>
 	<file>shfldr_netplaces.c</file>
+	<file>shfldr_special.c</file>
+	<file>rsrc.rc</file>
 </module>
 </group>

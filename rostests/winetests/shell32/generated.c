@@ -1,4 +1,4 @@
-/* File generated automatically from tools/winapi/test.dat; do not edit! */
+/* File generated automatically from tools/winapi/tests.dat; do not edit! */
 /* This file can be copied, modified and distributed without restriction. */
 
 /*
@@ -35,21 +35,13 @@
  */
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1300) && defined(__cplusplus)
-# define FIELD_ALIGNMENT(type, field) __alignof(((type*)0)->field)
-#elif defined(__GNUC__)
-# define FIELD_ALIGNMENT(type, field) __alignof__(((type*)0)->field)
-#else
-/* FIXME: Not sure if is possible to do without compiler extension */
-#endif
-
-#if defined(_MSC_VER) && (_MSC_VER >= 1300) && defined(__cplusplus)
 # define _TYPE_ALIGNMENT(type) __alignof(type)
 #elif defined(__GNUC__)
 # define _TYPE_ALIGNMENT(type) __alignof__(type)
 #else
 /*
- * FIXME: Not sure if is possible to do without compiler extension
- *        (if type is not just a name that is, if so the normal)
+ * FIXME: May not be possible without a compiler extension
+ *        (if type is not just a name that is, otherwise the normal
  *         TYPE_ALIGNMENT can be used)
  */
 #endif
@@ -66,1179 +58,1818 @@
  * Test helper macros
  */
 
-#ifdef FIELD_ALIGNMENT
-# define TEST_FIELD_ALIGNMENT(type, field, align) \
-   ok(FIELD_ALIGNMENT(type, field) == align, \
-       "FIELD_ALIGNMENT(" #type ", " #field ") == %d (expected " #align ")\n", \
-           (int)FIELD_ALIGNMENT(type, field))
+#ifdef _WIN64
+
+# define TEST_TYPE_SIZE(type, size)
+# define TEST_TYPE_ALIGN(type, align)
+# define TEST_TARGET_ALIGN(type, align)
+# define TEST_FIELD_ALIGN(type, field, align)
+# define TEST_FIELD_OFFSET(type, field, offset)
+
 #else
-# define TEST_FIELD_ALIGNMENT(type, field, align) do { } while (0)
+
+# define TEST_TYPE_SIZE(type, size)             C_ASSERT(sizeof(type) == size);
+
+# ifdef TYPE_ALIGNMENT
+#  define TEST_TYPE_ALIGN(type, align)          C_ASSERT(TYPE_ALIGNMENT(type) == align);
+# else
+#  define TEST_TYPE_ALIGN(type, align)
+# endif
+
+# ifdef _TYPE_ALIGNMENT
+#  define TEST_TARGET_ALIGN(type, align)        C_ASSERT(_TYPE_ALIGNMENT(*(type)0) == align);
+#  define TEST_FIELD_ALIGN(type, field, align)  C_ASSERT(_TYPE_ALIGNMENT(((type*)0)->field) == align);
+# else
+#  define TEST_TARGET_ALIGN(type, align)
+#  define TEST_FIELD_ALIGN(type, field, align)
+# endif
+
+# define TEST_FIELD_OFFSET(type, field, offset) C_ASSERT(FIELD_OFFSET(type, field) == offset);
+
 #endif
 
-#define TEST_FIELD_OFFSET(type, field, offset) \
-    ok(FIELD_OFFSET(type, field) == offset, \
-        "FIELD_OFFSET(" #type ", " #field ") == %ld (expected " #offset ")\n", \
-             (long int)FIELD_OFFSET(type, field))
+#define TEST_TARGET_SIZE(type, size)            TEST_TYPE_SIZE(*(type)0, size)
+#define TEST_FIELD_SIZE(type, field, size)      TEST_TYPE_SIZE((((type*)0)->field), size)
+#define TEST_TYPE_SIGNED(type)                  C_ASSERT((type) -1 < 0);
+#define TEST_TYPE_UNSIGNED(type)                C_ASSERT((type) -1 > 0);
 
-#ifdef _TYPE_ALIGNMENT
-#define TEST__TYPE_ALIGNMENT(type, align) \
-    ok(_TYPE_ALIGNMENT(type) == align, "TYPE_ALIGNMENT(" #type ") == %d (expected " #align ")\n", (int)_TYPE_ALIGNMENT(type))
-#else
-# define TEST__TYPE_ALIGNMENT(type, align) do { } while (0)
-#endif
-
-#ifdef TYPE_ALIGNMENT
-#define TEST_TYPE_ALIGNMENT(type, align) \
-    ok(TYPE_ALIGNMENT(type) == align, "TYPE_ALIGNMENT(" #type ") == %d (expected " #align ")\n", (int)TYPE_ALIGNMENT(type))
-#else
-# define TEST_TYPE_ALIGNMENT(type, align) do { } while (0)
-#endif
-
-#define TEST_TYPE_SIZE(type, size) \
-    ok(sizeof(type) == size, "sizeof(" #type ") == %d (expected " #size ")\n", ((int) sizeof(type)))
-
-/***********************************************************************
- * Test macros
- */
-
-#define TEST_FIELD(type, field_type, field_name, field_offset, field_size, field_align) \
-  TEST_TYPE_SIZE(field_type, field_size); \
-  TEST_FIELD_ALIGNMENT(type, field_name, field_align); \
-  TEST_FIELD_OFFSET(type, field_name, field_offset); \
-
-#define TEST_TYPE(type, size, align) \
-  TEST_TYPE_ALIGNMENT(type, align); \
-  TEST_TYPE_SIZE(type, size)
-
-#define TEST_TYPE_POINTER(type, size, align) \
-    TEST__TYPE_ALIGNMENT(*(type)0, align); \
-    TEST_TYPE_SIZE(*(type)0, size)
-
-#define TEST_TYPE_SIGNED(type) \
-    ok((type) -1 < 0, "(" #type ") -1 < 0\n");
-
-#define TEST_TYPE_UNSIGNED(type) \
-     ok((type) -1 > 0, "(" #type ") -1 > 0\n");
 
 static void test_pack_BLOB(void)
 {
     /* BLOB (pack 4) */
-    TEST_TYPE(BLOB, 8, 4);
-    TEST_FIELD(BLOB, ULONG, cbSize, 0, 4, 4);
-    TEST_FIELD(BLOB, BYTE *, pBlobData, 4, 4, 4);
+    TEST_TYPE_SIZE   (BLOB, 8)
+    TEST_TYPE_ALIGN  (BLOB, 4)
+    TEST_FIELD_SIZE  (BLOB, cbSize, 4)
+    TEST_FIELD_ALIGN (BLOB, cbSize, 4)
+    TEST_FIELD_OFFSET(BLOB, cbSize, 0)
+    TEST_FIELD_SIZE  (BLOB, pBlobData, 4)
+    TEST_FIELD_ALIGN (BLOB, pBlobData, 4)
+    TEST_FIELD_OFFSET(BLOB, pBlobData, 4)
 }
 
 static void test_pack_BSTR(void)
 {
     /* BSTR */
-    TEST_TYPE(BSTR, 4, 4);
-    TEST_TYPE_POINTER(BSTR, 2, 2);
+    TEST_TYPE_SIZE   (BSTR, 4)
+    TEST_TYPE_ALIGN  (BSTR, 4)
+    TEST_TARGET_SIZE (BSTR, 2)
+    TEST_TARGET_ALIGN(BSTR, 2)
 }
 
 static void test_pack_BSTRBLOB(void)
 {
     /* BSTRBLOB (pack 4) */
-    TEST_TYPE(BSTRBLOB, 8, 4);
-    TEST_FIELD(BSTRBLOB, ULONG, cbSize, 0, 4, 4);
-    TEST_FIELD(BSTRBLOB, BYTE *, pData, 4, 4, 4);
+    TEST_TYPE_SIZE   (BSTRBLOB, 8)
+    TEST_TYPE_ALIGN  (BSTRBLOB, 4)
+    TEST_FIELD_SIZE  (BSTRBLOB, cbSize, 4)
+    TEST_FIELD_ALIGN (BSTRBLOB, cbSize, 4)
+    TEST_FIELD_OFFSET(BSTRBLOB, cbSize, 0)
+    TEST_FIELD_SIZE  (BSTRBLOB, pData, 4)
+    TEST_FIELD_ALIGN (BSTRBLOB, pData, 4)
+    TEST_FIELD_OFFSET(BSTRBLOB, pData, 4)
 }
 
 static void test_pack_BYTE_BLOB(void)
 {
     /* BYTE_BLOB (pack 4) */
-    TEST_TYPE(BYTE_BLOB, 8, 4);
-    TEST_FIELD(BYTE_BLOB, unsigned long, clSize, 0, 4, 4);
-    TEST_FIELD(BYTE_BLOB, byte[1], abData, 4, 1, 1);
+    TEST_TYPE_SIZE   (BYTE_BLOB, 8)
+    TEST_TYPE_ALIGN  (BYTE_BLOB, 4)
+    TEST_FIELD_SIZE  (BYTE_BLOB, clSize, 4)
+    TEST_FIELD_ALIGN (BYTE_BLOB, clSize, 4)
+    TEST_FIELD_OFFSET(BYTE_BLOB, clSize, 0)
+    TEST_FIELD_SIZE  (BYTE_BLOB, abData, 1)
+    TEST_FIELD_ALIGN (BYTE_BLOB, abData, 1)
+    TEST_FIELD_OFFSET(BYTE_BLOB, abData, 4)
 }
 
 static void test_pack_BYTE_SIZEDARR(void)
 {
     /* BYTE_SIZEDARR (pack 4) */
-    TEST_TYPE(BYTE_SIZEDARR, 8, 4);
-    TEST_FIELD(BYTE_SIZEDARR, unsigned long, clSize, 0, 4, 4);
-    TEST_FIELD(BYTE_SIZEDARR, byte *, pData, 4, 4, 4);
+    TEST_TYPE_SIZE   (BYTE_SIZEDARR, 8)
+    TEST_TYPE_ALIGN  (BYTE_SIZEDARR, 4)
+    TEST_FIELD_SIZE  (BYTE_SIZEDARR, clSize, 4)
+    TEST_FIELD_ALIGN (BYTE_SIZEDARR, clSize, 4)
+    TEST_FIELD_OFFSET(BYTE_SIZEDARR, clSize, 0)
+    TEST_FIELD_SIZE  (BYTE_SIZEDARR, pData, 4)
+    TEST_FIELD_ALIGN (BYTE_SIZEDARR, pData, 4)
+    TEST_FIELD_OFFSET(BYTE_SIZEDARR, pData, 4)
 }
 
 static void test_pack_CLIPDATA(void)
 {
     /* CLIPDATA (pack 4) */
-    TEST_TYPE(CLIPDATA, 12, 4);
-    TEST_FIELD(CLIPDATA, ULONG, cbSize, 0, 4, 4);
-    TEST_FIELD(CLIPDATA, long, ulClipFmt, 4, 4, 4);
-    TEST_FIELD(CLIPDATA, BYTE *, pClipData, 8, 4, 4);
+    TEST_TYPE_SIZE   (CLIPDATA, 12)
+    TEST_TYPE_ALIGN  (CLIPDATA, 4)
+    TEST_FIELD_SIZE  (CLIPDATA, cbSize, 4)
+    TEST_FIELD_ALIGN (CLIPDATA, cbSize, 4)
+    TEST_FIELD_OFFSET(CLIPDATA, cbSize, 0)
+    TEST_FIELD_SIZE  (CLIPDATA, ulClipFmt, 4)
+    TEST_FIELD_ALIGN (CLIPDATA, ulClipFmt, 4)
+    TEST_FIELD_OFFSET(CLIPDATA, ulClipFmt, 4)
+    TEST_FIELD_SIZE  (CLIPDATA, pClipData, 4)
+    TEST_FIELD_ALIGN (CLIPDATA, pClipData, 4)
+    TEST_FIELD_OFFSET(CLIPDATA, pClipData, 8)
 }
 
 static void test_pack_CLIPFORMAT(void)
 {
     /* CLIPFORMAT */
-    TEST_TYPE(CLIPFORMAT, 2, 2);
-    TEST_TYPE_UNSIGNED(CLIPFORMAT);
+    TEST_TYPE_SIZE   (CLIPFORMAT, 2)
+    TEST_TYPE_ALIGN  (CLIPFORMAT, 2)
+    TEST_TYPE_UNSIGNED(CLIPFORMAT)
 }
 
 static void test_pack_COAUTHIDENTITY(void)
 {
     /* COAUTHIDENTITY (pack 4) */
-    TEST_TYPE(COAUTHIDENTITY, 28, 4);
-    TEST_FIELD(COAUTHIDENTITY, USHORT *, User, 0, 4, 4);
-    TEST_FIELD(COAUTHIDENTITY, ULONG, UserLength, 4, 4, 4);
-    TEST_FIELD(COAUTHIDENTITY, USHORT *, Domain, 8, 4, 4);
-    TEST_FIELD(COAUTHIDENTITY, ULONG, DomainLength, 12, 4, 4);
-    TEST_FIELD(COAUTHIDENTITY, USHORT *, Password, 16, 4, 4);
-    TEST_FIELD(COAUTHIDENTITY, ULONG, PasswordLength, 20, 4, 4);
-    TEST_FIELD(COAUTHIDENTITY, ULONG, Flags, 24, 4, 4);
+    TEST_TYPE_SIZE   (COAUTHIDENTITY, 28)
+    TEST_TYPE_ALIGN  (COAUTHIDENTITY, 4)
+    TEST_FIELD_SIZE  (COAUTHIDENTITY, User, 4)
+    TEST_FIELD_ALIGN (COAUTHIDENTITY, User, 4)
+    TEST_FIELD_OFFSET(COAUTHIDENTITY, User, 0)
+    TEST_FIELD_SIZE  (COAUTHIDENTITY, UserLength, 4)
+    TEST_FIELD_ALIGN (COAUTHIDENTITY, UserLength, 4)
+    TEST_FIELD_OFFSET(COAUTHIDENTITY, UserLength, 4)
+    TEST_FIELD_SIZE  (COAUTHIDENTITY, Domain, 4)
+    TEST_FIELD_ALIGN (COAUTHIDENTITY, Domain, 4)
+    TEST_FIELD_OFFSET(COAUTHIDENTITY, Domain, 8)
+    TEST_FIELD_SIZE  (COAUTHIDENTITY, DomainLength, 4)
+    TEST_FIELD_ALIGN (COAUTHIDENTITY, DomainLength, 4)
+    TEST_FIELD_OFFSET(COAUTHIDENTITY, DomainLength, 12)
+    TEST_FIELD_SIZE  (COAUTHIDENTITY, Password, 4)
+    TEST_FIELD_ALIGN (COAUTHIDENTITY, Password, 4)
+    TEST_FIELD_OFFSET(COAUTHIDENTITY, Password, 16)
+    TEST_FIELD_SIZE  (COAUTHIDENTITY, PasswordLength, 4)
+    TEST_FIELD_ALIGN (COAUTHIDENTITY, PasswordLength, 4)
+    TEST_FIELD_OFFSET(COAUTHIDENTITY, PasswordLength, 20)
+    TEST_FIELD_SIZE  (COAUTHIDENTITY, Flags, 4)
+    TEST_FIELD_ALIGN (COAUTHIDENTITY, Flags, 4)
+    TEST_FIELD_OFFSET(COAUTHIDENTITY, Flags, 24)
 }
 
 static void test_pack_COAUTHINFO(void)
 {
     /* COAUTHINFO (pack 4) */
-    TEST_TYPE(COAUTHINFO, 28, 4);
-    TEST_FIELD(COAUTHINFO, DWORD, dwAuthnSvc, 0, 4, 4);
-    TEST_FIELD(COAUTHINFO, DWORD, dwAuthzSvc, 4, 4, 4);
-    TEST_FIELD(COAUTHINFO, LPWSTR, pwszServerPrincName, 8, 4, 4);
-    TEST_FIELD(COAUTHINFO, DWORD, dwAuthnLevel, 12, 4, 4);
-    TEST_FIELD(COAUTHINFO, DWORD, dwImpersonationLevel, 16, 4, 4);
-    TEST_FIELD(COAUTHINFO, COAUTHIDENTITY *, pAuthIdentityData, 20, 4, 4);
-    TEST_FIELD(COAUTHINFO, DWORD, dwCapabilities, 24, 4, 4);
+    TEST_TYPE_SIZE   (COAUTHINFO, 28)
+    TEST_TYPE_ALIGN  (COAUTHINFO, 4)
+    TEST_FIELD_SIZE  (COAUTHINFO, dwAuthnSvc, 4)
+    TEST_FIELD_ALIGN (COAUTHINFO, dwAuthnSvc, 4)
+    TEST_FIELD_OFFSET(COAUTHINFO, dwAuthnSvc, 0)
+    TEST_FIELD_SIZE  (COAUTHINFO, dwAuthzSvc, 4)
+    TEST_FIELD_ALIGN (COAUTHINFO, dwAuthzSvc, 4)
+    TEST_FIELD_OFFSET(COAUTHINFO, dwAuthzSvc, 4)
+    TEST_FIELD_SIZE  (COAUTHINFO, pwszServerPrincName, 4)
+    TEST_FIELD_ALIGN (COAUTHINFO, pwszServerPrincName, 4)
+    TEST_FIELD_OFFSET(COAUTHINFO, pwszServerPrincName, 8)
+    TEST_FIELD_SIZE  (COAUTHINFO, dwAuthnLevel, 4)
+    TEST_FIELD_ALIGN (COAUTHINFO, dwAuthnLevel, 4)
+    TEST_FIELD_OFFSET(COAUTHINFO, dwAuthnLevel, 12)
+    TEST_FIELD_SIZE  (COAUTHINFO, dwImpersonationLevel, 4)
+    TEST_FIELD_ALIGN (COAUTHINFO, dwImpersonationLevel, 4)
+    TEST_FIELD_OFFSET(COAUTHINFO, dwImpersonationLevel, 16)
+    TEST_FIELD_SIZE  (COAUTHINFO, pAuthIdentityData, 4)
+    TEST_FIELD_ALIGN (COAUTHINFO, pAuthIdentityData, 4)
+    TEST_FIELD_OFFSET(COAUTHINFO, pAuthIdentityData, 20)
+    TEST_FIELD_SIZE  (COAUTHINFO, dwCapabilities, 4)
+    TEST_FIELD_ALIGN (COAUTHINFO, dwCapabilities, 4)
+    TEST_FIELD_OFFSET(COAUTHINFO, dwCapabilities, 24)
 }
 
 static void test_pack_DATE(void)
 {
     /* DATE */
-    TEST_TYPE(DATE, 8, 8);
+    TEST_TYPE_SIZE   (DATE, 8)
+    TEST_TYPE_ALIGN  (DATE, 8)
 }
 
 static void test_pack_DOUBLE(void)
 {
     /* DOUBLE */
-    TEST_TYPE(DOUBLE, 8, 8);
+    TEST_TYPE_SIZE   (DOUBLE, 8)
+    TEST_TYPE_ALIGN  (DOUBLE, 8)
 }
 
 static void test_pack_DWORD_SIZEDARR(void)
 {
     /* DWORD_SIZEDARR (pack 4) */
-    TEST_TYPE(DWORD_SIZEDARR, 8, 4);
-    TEST_FIELD(DWORD_SIZEDARR, unsigned long, clSize, 0, 4, 4);
-    TEST_FIELD(DWORD_SIZEDARR, unsigned long *, pData, 4, 4, 4);
+    TEST_TYPE_SIZE   (DWORD_SIZEDARR, 8)
+    TEST_TYPE_ALIGN  (DWORD_SIZEDARR, 4)
+    TEST_FIELD_SIZE  (DWORD_SIZEDARR, clSize, 4)
+    TEST_FIELD_ALIGN (DWORD_SIZEDARR, clSize, 4)
+    TEST_FIELD_OFFSET(DWORD_SIZEDARR, clSize, 0)
+    TEST_FIELD_SIZE  (DWORD_SIZEDARR, pData, 4)
+    TEST_FIELD_ALIGN (DWORD_SIZEDARR, pData, 4)
+    TEST_FIELD_OFFSET(DWORD_SIZEDARR, pData, 4)
 }
 
 static void test_pack_FLAGGED_BYTE_BLOB(void)
 {
     /* FLAGGED_BYTE_BLOB (pack 4) */
-    TEST_TYPE(FLAGGED_BYTE_BLOB, 12, 4);
-    TEST_FIELD(FLAGGED_BYTE_BLOB, unsigned long, fFlags, 0, 4, 4);
-    TEST_FIELD(FLAGGED_BYTE_BLOB, unsigned long, clSize, 4, 4, 4);
-    TEST_FIELD(FLAGGED_BYTE_BLOB, byte[1], abData, 8, 1, 1);
+    TEST_TYPE_SIZE   (FLAGGED_BYTE_BLOB, 12)
+    TEST_TYPE_ALIGN  (FLAGGED_BYTE_BLOB, 4)
+    TEST_FIELD_SIZE  (FLAGGED_BYTE_BLOB, fFlags, 4)
+    TEST_FIELD_ALIGN (FLAGGED_BYTE_BLOB, fFlags, 4)
+    TEST_FIELD_OFFSET(FLAGGED_BYTE_BLOB, fFlags, 0)
+    TEST_FIELD_SIZE  (FLAGGED_BYTE_BLOB, clSize, 4)
+    TEST_FIELD_ALIGN (FLAGGED_BYTE_BLOB, clSize, 4)
+    TEST_FIELD_OFFSET(FLAGGED_BYTE_BLOB, clSize, 4)
+    TEST_FIELD_SIZE  (FLAGGED_BYTE_BLOB, abData, 1)
+    TEST_FIELD_ALIGN (FLAGGED_BYTE_BLOB, abData, 1)
+    TEST_FIELD_OFFSET(FLAGGED_BYTE_BLOB, abData, 8)
 }
 
 static void test_pack_FLAGGED_WORD_BLOB(void)
 {
     /* FLAGGED_WORD_BLOB (pack 4) */
-    TEST_TYPE(FLAGGED_WORD_BLOB, 12, 4);
-    TEST_FIELD(FLAGGED_WORD_BLOB, unsigned long, fFlags, 0, 4, 4);
-    TEST_FIELD(FLAGGED_WORD_BLOB, unsigned long, clSize, 4, 4, 4);
-    TEST_FIELD(FLAGGED_WORD_BLOB, unsigned short[1], asData, 8, 2, 2);
+    TEST_TYPE_SIZE   (FLAGGED_WORD_BLOB, 12)
+    TEST_TYPE_ALIGN  (FLAGGED_WORD_BLOB, 4)
+    TEST_FIELD_SIZE  (FLAGGED_WORD_BLOB, fFlags, 4)
+    TEST_FIELD_ALIGN (FLAGGED_WORD_BLOB, fFlags, 4)
+    TEST_FIELD_OFFSET(FLAGGED_WORD_BLOB, fFlags, 0)
+    TEST_FIELD_SIZE  (FLAGGED_WORD_BLOB, clSize, 4)
+    TEST_FIELD_ALIGN (FLAGGED_WORD_BLOB, clSize, 4)
+    TEST_FIELD_OFFSET(FLAGGED_WORD_BLOB, clSize, 4)
+    TEST_FIELD_SIZE  (FLAGGED_WORD_BLOB, asData, 2)
+    TEST_FIELD_ALIGN (FLAGGED_WORD_BLOB, asData, 2)
+    TEST_FIELD_OFFSET(FLAGGED_WORD_BLOB, asData, 8)
 }
 
 static void test_pack_HMETAFILEPICT(void)
 {
     /* HMETAFILEPICT */
-    TEST_TYPE(HMETAFILEPICT, 4, 4);
+    TEST_TYPE_SIZE   (HMETAFILEPICT, 4)
+    TEST_TYPE_ALIGN  (HMETAFILEPICT, 4)
 }
 
 static void test_pack_HYPER_SIZEDARR(void)
 {
     /* HYPER_SIZEDARR (pack 4) */
-    TEST_TYPE(HYPER_SIZEDARR, 8, 4);
-    TEST_FIELD(HYPER_SIZEDARR, unsigned long, clSize, 0, 4, 4);
-    TEST_FIELD(HYPER_SIZEDARR, hyper *, pData, 4, 4, 4);
+    TEST_TYPE_SIZE   (HYPER_SIZEDARR, 8)
+    TEST_TYPE_ALIGN  (HYPER_SIZEDARR, 4)
+    TEST_FIELD_SIZE  (HYPER_SIZEDARR, clSize, 4)
+    TEST_FIELD_ALIGN (HYPER_SIZEDARR, clSize, 4)
+    TEST_FIELD_OFFSET(HYPER_SIZEDARR, clSize, 0)
+    TEST_FIELD_SIZE  (HYPER_SIZEDARR, pData, 4)
+    TEST_FIELD_ALIGN (HYPER_SIZEDARR, pData, 4)
+    TEST_FIELD_OFFSET(HYPER_SIZEDARR, pData, 4)
 }
 
 static void test_pack_LPBLOB(void)
 {
     /* LPBLOB */
-    TEST_TYPE(LPBLOB, 4, 4);
+    TEST_TYPE_SIZE   (LPBLOB, 4)
+    TEST_TYPE_ALIGN  (LPBLOB, 4)
 }
 
 static void test_pack_LPBSTR(void)
 {
     /* LPBSTR */
-    TEST_TYPE(LPBSTR, 4, 4);
-    TEST_TYPE_POINTER(LPBSTR, 4, 4);
+    TEST_TYPE_SIZE   (LPBSTR, 4)
+    TEST_TYPE_ALIGN  (LPBSTR, 4)
+    TEST_TARGET_SIZE (LPBSTR, 4)
+    TEST_TARGET_ALIGN(LPBSTR, 4)
 }
 
 static void test_pack_LPBSTRBLOB(void)
 {
     /* LPBSTRBLOB */
-    TEST_TYPE(LPBSTRBLOB, 4, 4);
+    TEST_TYPE_SIZE   (LPBSTRBLOB, 4)
+    TEST_TYPE_ALIGN  (LPBSTRBLOB, 4)
 }
 
 static void test_pack_LPCOLESTR(void)
 {
     /* LPCOLESTR */
-    TEST_TYPE(LPCOLESTR, 4, 4);
-    TEST_TYPE_POINTER(LPCOLESTR, 2, 2);
+    TEST_TYPE_SIZE   (LPCOLESTR, 4)
+    TEST_TYPE_ALIGN  (LPCOLESTR, 4)
+    TEST_TARGET_SIZE (LPCOLESTR, 2)
+    TEST_TARGET_ALIGN(LPCOLESTR, 2)
 }
 
 static void test_pack_LPCY(void)
 {
     /* LPCY */
-    TEST_TYPE(LPCY, 4, 4);
+    TEST_TYPE_SIZE   (LPCY, 4)
+    TEST_TYPE_ALIGN  (LPCY, 4)
 }
 
 static void test_pack_LPDECIMAL(void)
 {
     /* LPDECIMAL */
-    TEST_TYPE(LPDECIMAL, 4, 4);
+    TEST_TYPE_SIZE   (LPDECIMAL, 4)
+    TEST_TYPE_ALIGN  (LPDECIMAL, 4)
 }
 
 static void test_pack_LPOLESTR(void)
 {
     /* LPOLESTR */
-    TEST_TYPE(LPOLESTR, 4, 4);
-    TEST_TYPE_POINTER(LPOLESTR, 2, 2);
+    TEST_TYPE_SIZE   (LPOLESTR, 4)
+    TEST_TYPE_ALIGN  (LPOLESTR, 4)
+    TEST_TARGET_SIZE (LPOLESTR, 2)
+    TEST_TARGET_ALIGN(LPOLESTR, 2)
 }
 
 static void test_pack_OLECHAR(void)
 {
     /* OLECHAR */
-    TEST_TYPE(OLECHAR, 2, 2);
+    TEST_TYPE_SIZE   (OLECHAR, 2)
+    TEST_TYPE_ALIGN  (OLECHAR, 2)
 }
 
 static void test_pack_PROPID(void)
 {
     /* PROPID */
-    TEST_TYPE(PROPID, 4, 4);
+    TEST_TYPE_SIZE   (PROPID, 4)
+    TEST_TYPE_ALIGN  (PROPID, 4)
 }
 
 static void test_pack_RemHBITMAP(void)
 {
     /* RemHBITMAP (pack 4) */
-    TEST_TYPE(RemHBITMAP, 8, 4);
-    TEST_FIELD(RemHBITMAP, unsigned long, cbData, 0, 4, 4);
-    TEST_FIELD(RemHBITMAP, byte[1], data, 4, 1, 1);
+    TEST_TYPE_SIZE   (RemHBITMAP, 8)
+    TEST_TYPE_ALIGN  (RemHBITMAP, 4)
+    TEST_FIELD_SIZE  (RemHBITMAP, cbData, 4)
+    TEST_FIELD_ALIGN (RemHBITMAP, cbData, 4)
+    TEST_FIELD_OFFSET(RemHBITMAP, cbData, 0)
+    TEST_FIELD_SIZE  (RemHBITMAP, data, 1)
+    TEST_FIELD_ALIGN (RemHBITMAP, data, 1)
+    TEST_FIELD_OFFSET(RemHBITMAP, data, 4)
 }
 
 static void test_pack_RemHENHMETAFILE(void)
 {
     /* RemHENHMETAFILE (pack 4) */
-    TEST_TYPE(RemHENHMETAFILE, 8, 4);
-    TEST_FIELD(RemHENHMETAFILE, unsigned long, cbData, 0, 4, 4);
-    TEST_FIELD(RemHENHMETAFILE, byte[1], data, 4, 1, 1);
+    TEST_TYPE_SIZE   (RemHENHMETAFILE, 8)
+    TEST_TYPE_ALIGN  (RemHENHMETAFILE, 4)
+    TEST_FIELD_SIZE  (RemHENHMETAFILE, cbData, 4)
+    TEST_FIELD_ALIGN (RemHENHMETAFILE, cbData, 4)
+    TEST_FIELD_OFFSET(RemHENHMETAFILE, cbData, 0)
+    TEST_FIELD_SIZE  (RemHENHMETAFILE, data, 1)
+    TEST_FIELD_ALIGN (RemHENHMETAFILE, data, 1)
+    TEST_FIELD_OFFSET(RemHENHMETAFILE, data, 4)
 }
 
 static void test_pack_RemHGLOBAL(void)
 {
     /* RemHGLOBAL (pack 4) */
-    TEST_TYPE(RemHGLOBAL, 12, 4);
-    TEST_FIELD(RemHGLOBAL, long, fNullHGlobal, 0, 4, 4);
-    TEST_FIELD(RemHGLOBAL, unsigned long, cbData, 4, 4, 4);
-    TEST_FIELD(RemHGLOBAL, byte[1], data, 8, 1, 1);
+    TEST_TYPE_SIZE   (RemHGLOBAL, 12)
+    TEST_TYPE_ALIGN  (RemHGLOBAL, 4)
+    TEST_FIELD_SIZE  (RemHGLOBAL, fNullHGlobal, 4)
+    TEST_FIELD_ALIGN (RemHGLOBAL, fNullHGlobal, 4)
+    TEST_FIELD_OFFSET(RemHGLOBAL, fNullHGlobal, 0)
+    TEST_FIELD_SIZE  (RemHGLOBAL, cbData, 4)
+    TEST_FIELD_ALIGN (RemHGLOBAL, cbData, 4)
+    TEST_FIELD_OFFSET(RemHGLOBAL, cbData, 4)
+    TEST_FIELD_SIZE  (RemHGLOBAL, data, 1)
+    TEST_FIELD_ALIGN (RemHGLOBAL, data, 1)
+    TEST_FIELD_OFFSET(RemHGLOBAL, data, 8)
 }
 
 static void test_pack_RemHMETAFILEPICT(void)
 {
     /* RemHMETAFILEPICT (pack 4) */
-    TEST_TYPE(RemHMETAFILEPICT, 20, 4);
-    TEST_FIELD(RemHMETAFILEPICT, long, mm, 0, 4, 4);
-    TEST_FIELD(RemHMETAFILEPICT, long, xExt, 4, 4, 4);
-    TEST_FIELD(RemHMETAFILEPICT, long, yExt, 8, 4, 4);
-    TEST_FIELD(RemHMETAFILEPICT, unsigned long, cbData, 12, 4, 4);
-    TEST_FIELD(RemHMETAFILEPICT, byte[1], data, 16, 1, 1);
+    TEST_TYPE_SIZE   (RemHMETAFILEPICT, 20)
+    TEST_TYPE_ALIGN  (RemHMETAFILEPICT, 4)
+    TEST_FIELD_SIZE  (RemHMETAFILEPICT, mm, 4)
+    TEST_FIELD_ALIGN (RemHMETAFILEPICT, mm, 4)
+    TEST_FIELD_OFFSET(RemHMETAFILEPICT, mm, 0)
+    TEST_FIELD_SIZE  (RemHMETAFILEPICT, xExt, 4)
+    TEST_FIELD_ALIGN (RemHMETAFILEPICT, xExt, 4)
+    TEST_FIELD_OFFSET(RemHMETAFILEPICT, xExt, 4)
+    TEST_FIELD_SIZE  (RemHMETAFILEPICT, yExt, 4)
+    TEST_FIELD_ALIGN (RemHMETAFILEPICT, yExt, 4)
+    TEST_FIELD_OFFSET(RemHMETAFILEPICT, yExt, 8)
+    TEST_FIELD_SIZE  (RemHMETAFILEPICT, cbData, 4)
+    TEST_FIELD_ALIGN (RemHMETAFILEPICT, cbData, 4)
+    TEST_FIELD_OFFSET(RemHMETAFILEPICT, cbData, 12)
+    TEST_FIELD_SIZE  (RemHMETAFILEPICT, data, 1)
+    TEST_FIELD_ALIGN (RemHMETAFILEPICT, data, 1)
+    TEST_FIELD_OFFSET(RemHMETAFILEPICT, data, 16)
 }
 
 static void test_pack_RemHPALETTE(void)
 {
     /* RemHPALETTE (pack 4) */
-    TEST_TYPE(RemHPALETTE, 8, 4);
-    TEST_FIELD(RemHPALETTE, unsigned long, cbData, 0, 4, 4);
-    TEST_FIELD(RemHPALETTE, byte[1], data, 4, 1, 1);
+    TEST_TYPE_SIZE   (RemHPALETTE, 8)
+    TEST_TYPE_ALIGN  (RemHPALETTE, 4)
+    TEST_FIELD_SIZE  (RemHPALETTE, cbData, 4)
+    TEST_FIELD_ALIGN (RemHPALETTE, cbData, 4)
+    TEST_FIELD_OFFSET(RemHPALETTE, cbData, 0)
+    TEST_FIELD_SIZE  (RemHPALETTE, data, 1)
+    TEST_FIELD_ALIGN (RemHPALETTE, data, 1)
+    TEST_FIELD_OFFSET(RemHPALETTE, data, 4)
 }
 
 static void test_pack_SCODE(void)
 {
     /* SCODE */
-    TEST_TYPE(SCODE, 4, 4);
+    TEST_TYPE_SIZE   (SCODE, 4)
+    TEST_TYPE_ALIGN  (SCODE, 4)
 }
 
 static void test_pack_UP_BYTE_BLOB(void)
 {
     /* UP_BYTE_BLOB */
-    TEST_TYPE(UP_BYTE_BLOB, 4, 4);
-    TEST_TYPE_POINTER(UP_BYTE_BLOB, 8, 4);
+    TEST_TYPE_SIZE   (UP_BYTE_BLOB, 4)
+    TEST_TYPE_ALIGN  (UP_BYTE_BLOB, 4)
+    TEST_TARGET_SIZE (UP_BYTE_BLOB, 8)
+    TEST_TARGET_ALIGN(UP_BYTE_BLOB, 4)
 }
 
 static void test_pack_UP_FLAGGED_BYTE_BLOB(void)
 {
     /* UP_FLAGGED_BYTE_BLOB */
-    TEST_TYPE(UP_FLAGGED_BYTE_BLOB, 4, 4);
-    TEST_TYPE_POINTER(UP_FLAGGED_BYTE_BLOB, 12, 4);
+    TEST_TYPE_SIZE   (UP_FLAGGED_BYTE_BLOB, 4)
+    TEST_TYPE_ALIGN  (UP_FLAGGED_BYTE_BLOB, 4)
+    TEST_TARGET_SIZE (UP_FLAGGED_BYTE_BLOB, 12)
+    TEST_TARGET_ALIGN(UP_FLAGGED_BYTE_BLOB, 4)
 }
 
 static void test_pack_UP_FLAGGED_WORD_BLOB(void)
 {
     /* UP_FLAGGED_WORD_BLOB */
-    TEST_TYPE(UP_FLAGGED_WORD_BLOB, 4, 4);
-    TEST_TYPE_POINTER(UP_FLAGGED_WORD_BLOB, 12, 4);
+    TEST_TYPE_SIZE   (UP_FLAGGED_WORD_BLOB, 4)
+    TEST_TYPE_ALIGN  (UP_FLAGGED_WORD_BLOB, 4)
+    TEST_TARGET_SIZE (UP_FLAGGED_WORD_BLOB, 12)
+    TEST_TARGET_ALIGN(UP_FLAGGED_WORD_BLOB, 4)
 }
 
 static void test_pack_VARIANT_BOOL(void)
 {
     /* VARIANT_BOOL */
-    TEST_TYPE(VARIANT_BOOL, 2, 2);
-    TEST_TYPE_SIGNED(VARIANT_BOOL);
+    TEST_TYPE_SIZE   (VARIANT_BOOL, 2)
+    TEST_TYPE_ALIGN  (VARIANT_BOOL, 2)
+    TEST_TYPE_SIGNED(VARIANT_BOOL)
 }
 
 static void test_pack_VARTYPE(void)
 {
     /* VARTYPE */
-    TEST_TYPE(VARTYPE, 2, 2);
-    TEST_TYPE_UNSIGNED(VARTYPE);
+    TEST_TYPE_SIZE   (VARTYPE, 2)
+    TEST_TYPE_ALIGN  (VARTYPE, 2)
+    TEST_TYPE_UNSIGNED(VARTYPE)
 }
 
 static void test_pack_WORD_SIZEDARR(void)
 {
     /* WORD_SIZEDARR (pack 4) */
-    TEST_TYPE(WORD_SIZEDARR, 8, 4);
-    TEST_FIELD(WORD_SIZEDARR, unsigned long, clSize, 0, 4, 4);
-    TEST_FIELD(WORD_SIZEDARR, unsigned short *, pData, 4, 4, 4);
+    TEST_TYPE_SIZE   (WORD_SIZEDARR, 8)
+    TEST_TYPE_ALIGN  (WORD_SIZEDARR, 4)
+    TEST_FIELD_SIZE  (WORD_SIZEDARR, clSize, 4)
+    TEST_FIELD_ALIGN (WORD_SIZEDARR, clSize, 4)
+    TEST_FIELD_OFFSET(WORD_SIZEDARR, clSize, 0)
+    TEST_FIELD_SIZE  (WORD_SIZEDARR, pData, 4)
+    TEST_FIELD_ALIGN (WORD_SIZEDARR, pData, 4)
+    TEST_FIELD_OFFSET(WORD_SIZEDARR, pData, 4)
 }
 
 static void test_pack_remoteMETAFILEPICT(void)
 {
     /* remoteMETAFILEPICT (pack 4) */
-    TEST_TYPE(remoteMETAFILEPICT, 16, 4);
-    TEST_FIELD(remoteMETAFILEPICT, long, mm, 0, 4, 4);
-    TEST_FIELD(remoteMETAFILEPICT, long, xExt, 4, 4, 4);
-    TEST_FIELD(remoteMETAFILEPICT, long, yExt, 8, 4, 4);
-    TEST_FIELD(remoteMETAFILEPICT, userHMETAFILE *, hMF, 12, 4, 4);
+    TEST_TYPE_SIZE   (remoteMETAFILEPICT, 16)
+    TEST_TYPE_ALIGN  (remoteMETAFILEPICT, 4)
+    TEST_FIELD_SIZE  (remoteMETAFILEPICT, mm, 4)
+    TEST_FIELD_ALIGN (remoteMETAFILEPICT, mm, 4)
+    TEST_FIELD_OFFSET(remoteMETAFILEPICT, mm, 0)
+    TEST_FIELD_SIZE  (remoteMETAFILEPICT, xExt, 4)
+    TEST_FIELD_ALIGN (remoteMETAFILEPICT, xExt, 4)
+    TEST_FIELD_OFFSET(remoteMETAFILEPICT, xExt, 4)
+    TEST_FIELD_SIZE  (remoteMETAFILEPICT, yExt, 4)
+    TEST_FIELD_ALIGN (remoteMETAFILEPICT, yExt, 4)
+    TEST_FIELD_OFFSET(remoteMETAFILEPICT, yExt, 8)
+    TEST_FIELD_SIZE  (remoteMETAFILEPICT, hMF, 4)
+    TEST_FIELD_ALIGN (remoteMETAFILEPICT, hMF, 4)
+    TEST_FIELD_OFFSET(remoteMETAFILEPICT, hMF, 12)
 }
 
 static void test_pack_userBITMAP(void)
 {
     /* userBITMAP (pack 4) */
-    TEST_TYPE(userBITMAP, 28, 4);
-    TEST_FIELD(userBITMAP, LONG, bmType, 0, 4, 4);
-    TEST_FIELD(userBITMAP, LONG, bmWidth, 4, 4, 4);
-    TEST_FIELD(userBITMAP, LONG, bmHeight, 8, 4, 4);
-    TEST_FIELD(userBITMAP, LONG, bmWidthBytes, 12, 4, 4);
-    TEST_FIELD(userBITMAP, WORD, bmPlanes, 16, 2, 2);
-    TEST_FIELD(userBITMAP, WORD, bmBitsPixel, 18, 2, 2);
-    TEST_FIELD(userBITMAP, ULONG, cbSize, 20, 4, 4);
-    TEST_FIELD(userBITMAP, byte[1], pBuffer, 24, 1, 1);
+    TEST_TYPE_SIZE   (userBITMAP, 28)
+    TEST_TYPE_ALIGN  (userBITMAP, 4)
+    TEST_FIELD_SIZE  (userBITMAP, bmType, 4)
+    TEST_FIELD_ALIGN (userBITMAP, bmType, 4)
+    TEST_FIELD_OFFSET(userBITMAP, bmType, 0)
+    TEST_FIELD_SIZE  (userBITMAP, bmWidth, 4)
+    TEST_FIELD_ALIGN (userBITMAP, bmWidth, 4)
+    TEST_FIELD_OFFSET(userBITMAP, bmWidth, 4)
+    TEST_FIELD_SIZE  (userBITMAP, bmHeight, 4)
+    TEST_FIELD_ALIGN (userBITMAP, bmHeight, 4)
+    TEST_FIELD_OFFSET(userBITMAP, bmHeight, 8)
+    TEST_FIELD_SIZE  (userBITMAP, bmWidthBytes, 4)
+    TEST_FIELD_ALIGN (userBITMAP, bmWidthBytes, 4)
+    TEST_FIELD_OFFSET(userBITMAP, bmWidthBytes, 12)
+    TEST_FIELD_SIZE  (userBITMAP, bmPlanes, 2)
+    TEST_FIELD_ALIGN (userBITMAP, bmPlanes, 2)
+    TEST_FIELD_OFFSET(userBITMAP, bmPlanes, 16)
+    TEST_FIELD_SIZE  (userBITMAP, bmBitsPixel, 2)
+    TEST_FIELD_ALIGN (userBITMAP, bmBitsPixel, 2)
+    TEST_FIELD_OFFSET(userBITMAP, bmBitsPixel, 18)
+    TEST_FIELD_SIZE  (userBITMAP, cbSize, 4)
+    TEST_FIELD_ALIGN (userBITMAP, cbSize, 4)
+    TEST_FIELD_OFFSET(userBITMAP, cbSize, 20)
+    TEST_FIELD_SIZE  (userBITMAP, pBuffer, 1)
+    TEST_FIELD_ALIGN (userBITMAP, pBuffer, 1)
+    TEST_FIELD_OFFSET(userBITMAP, pBuffer, 24)
 }
 
 static void test_pack_userCLIPFORMAT(void)
 {
     /* userCLIPFORMAT (pack 4) */
-    TEST_FIELD(userCLIPFORMAT, long, fContext, 0, 4, 4);
+    TEST_FIELD_SIZE  (userCLIPFORMAT, fContext, 4)
+    TEST_FIELD_ALIGN (userCLIPFORMAT, fContext, 4)
+    TEST_FIELD_OFFSET(userCLIPFORMAT, fContext, 0)
 }
 
 static void test_pack_userHBITMAP(void)
 {
     /* userHBITMAP (pack 4) */
-    TEST_FIELD(userHBITMAP, long, fContext, 0, 4, 4);
+    TEST_FIELD_SIZE  (userHBITMAP, fContext, 4)
+    TEST_FIELD_ALIGN (userHBITMAP, fContext, 4)
+    TEST_FIELD_OFFSET(userHBITMAP, fContext, 0)
 }
 
 static void test_pack_userHENHMETAFILE(void)
 {
     /* userHENHMETAFILE (pack 4) */
-    TEST_FIELD(userHENHMETAFILE, long, fContext, 0, 4, 4);
+    TEST_FIELD_SIZE  (userHENHMETAFILE, fContext, 4)
+    TEST_FIELD_ALIGN (userHENHMETAFILE, fContext, 4)
+    TEST_FIELD_OFFSET(userHENHMETAFILE, fContext, 0)
 }
 
 static void test_pack_userHGLOBAL(void)
 {
     /* userHGLOBAL (pack 4) */
-    TEST_FIELD(userHGLOBAL, long, fContext, 0, 4, 4);
+    TEST_FIELD_SIZE  (userHGLOBAL, fContext, 4)
+    TEST_FIELD_ALIGN (userHGLOBAL, fContext, 4)
+    TEST_FIELD_OFFSET(userHGLOBAL, fContext, 0)
 }
 
 static void test_pack_userHMETAFILE(void)
 {
     /* userHMETAFILE (pack 4) */
-    TEST_FIELD(userHMETAFILE, long, fContext, 0, 4, 4);
+    TEST_FIELD_SIZE  (userHMETAFILE, fContext, 4)
+    TEST_FIELD_ALIGN (userHMETAFILE, fContext, 4)
+    TEST_FIELD_OFFSET(userHMETAFILE, fContext, 0)
 }
 
 static void test_pack_userHMETAFILEPICT(void)
 {
     /* userHMETAFILEPICT (pack 4) */
-    TEST_FIELD(userHMETAFILEPICT, long, fContext, 0, 4, 4);
+    TEST_FIELD_SIZE  (userHMETAFILEPICT, fContext, 4)
+    TEST_FIELD_ALIGN (userHMETAFILEPICT, fContext, 4)
+    TEST_FIELD_OFFSET(userHMETAFILEPICT, fContext, 0)
 }
 
 static void test_pack_userHPALETTE(void)
 {
     /* userHPALETTE (pack 4) */
-    TEST_FIELD(userHPALETTE, long, fContext, 0, 4, 4);
+    TEST_FIELD_SIZE  (userHPALETTE, fContext, 4)
+    TEST_FIELD_ALIGN (userHPALETTE, fContext, 4)
+    TEST_FIELD_OFFSET(userHPALETTE, fContext, 0)
 }
 
 static void test_pack_wireBSTR(void)
 {
     /* wireBSTR */
-    TEST_TYPE(wireBSTR, 4, 4);
-    TEST_TYPE_POINTER(wireBSTR, 12, 4);
+    TEST_TYPE_SIZE   (wireBSTR, 4)
+    TEST_TYPE_ALIGN  (wireBSTR, 4)
+    TEST_TARGET_SIZE (wireBSTR, 12)
+    TEST_TARGET_ALIGN(wireBSTR, 4)
 }
 
 static void test_pack_wireCLIPFORMAT(void)
 {
     /* wireCLIPFORMAT */
-    TEST_TYPE(wireCLIPFORMAT, 4, 4);
+    TEST_TYPE_SIZE   (wireCLIPFORMAT, 4)
+    TEST_TYPE_ALIGN  (wireCLIPFORMAT, 4)
 }
 
 static void test_pack_wireHBITMAP(void)
 {
     /* wireHBITMAP */
-    TEST_TYPE(wireHBITMAP, 4, 4);
+    TEST_TYPE_SIZE   (wireHBITMAP, 4)
+    TEST_TYPE_ALIGN  (wireHBITMAP, 4)
 }
 
 static void test_pack_wireHENHMETAFILE(void)
 {
     /* wireHENHMETAFILE */
-    TEST_TYPE(wireHENHMETAFILE, 4, 4);
+    TEST_TYPE_SIZE   (wireHENHMETAFILE, 4)
+    TEST_TYPE_ALIGN  (wireHENHMETAFILE, 4)
 }
 
 static void test_pack_wireHGLOBAL(void)
 {
     /* wireHGLOBAL */
-    TEST_TYPE(wireHGLOBAL, 4, 4);
+    TEST_TYPE_SIZE   (wireHGLOBAL, 4)
+    TEST_TYPE_ALIGN  (wireHGLOBAL, 4)
 }
 
 static void test_pack_wireHMETAFILE(void)
 {
     /* wireHMETAFILE */
-    TEST_TYPE(wireHMETAFILE, 4, 4);
+    TEST_TYPE_SIZE   (wireHMETAFILE, 4)
+    TEST_TYPE_ALIGN  (wireHMETAFILE, 4)
 }
 
 static void test_pack_wireHMETAFILEPICT(void)
 {
     /* wireHMETAFILEPICT */
-    TEST_TYPE(wireHMETAFILEPICT, 4, 4);
+    TEST_TYPE_SIZE   (wireHMETAFILEPICT, 4)
+    TEST_TYPE_ALIGN  (wireHMETAFILEPICT, 4)
 }
 
 static void test_pack_wireHPALETTE(void)
 {
     /* wireHPALETTE */
-    TEST_TYPE(wireHPALETTE, 4, 4);
+    TEST_TYPE_SIZE   (wireHPALETTE, 4)
+    TEST_TYPE_ALIGN  (wireHPALETTE, 4)
 }
 
 static void test_pack_CLSID(void)
 {
     /* CLSID */
-    TEST_TYPE(CLSID, 16, 4);
+    TEST_TYPE_SIZE   (CLSID, 16)
+    TEST_TYPE_ALIGN  (CLSID, 4)
 }
 
 static void test_pack_FMTID(void)
 {
     /* FMTID */
-    TEST_TYPE(FMTID, 16, 4);
-}
-
-static void test_pack_GUID(void)
-{
-    /* GUID (pack 4) */
-    TEST_TYPE(GUID, 16, 4);
-    TEST_FIELD(GUID, unsigned long, Data1, 0, 4, 4);
-    TEST_FIELD(GUID, unsigned short, Data2, 4, 2, 2);
-    TEST_FIELD(GUID, unsigned short, Data3, 6, 2, 2);
-    TEST_FIELD(GUID, unsigned char[ 8 ], Data4, 8, 8, 1);
+    TEST_TYPE_SIZE   (FMTID, 16)
+    TEST_TYPE_ALIGN  (FMTID, 4)
 }
 
 static void test_pack_IID(void)
 {
     /* IID */
-    TEST_TYPE(IID, 16, 4);
-}
-
-static void test_pack_LPGUID(void)
-{
-    /* LPGUID */
-    TEST_TYPE(LPGUID, 4, 4);
-    TEST_TYPE_POINTER(LPGUID, 16, 4);
+    TEST_TYPE_SIZE   (IID, 16)
+    TEST_TYPE_ALIGN  (IID, 4)
 }
 
 static void test_pack_APPBARDATA(void)
 {
     /* APPBARDATA (pack 1) */
-    TEST_TYPE(APPBARDATA, 36, 1);
-    TEST_FIELD(APPBARDATA, DWORD, cbSize, 0, 4, 1);
-    TEST_FIELD(APPBARDATA, HWND, hWnd, 4, 4, 1);
-    TEST_FIELD(APPBARDATA, UINT, uCallbackMessage, 8, 4, 1);
-    TEST_FIELD(APPBARDATA, UINT, uEdge, 12, 4, 1);
-    TEST_FIELD(APPBARDATA, RECT, rc, 16, 16, 1);
-    TEST_FIELD(APPBARDATA, LPARAM, lParam, 32, 4, 1);
+    TEST_TYPE_SIZE   (APPBARDATA, 36)
+    TEST_TYPE_ALIGN  (APPBARDATA, 1)
+    TEST_FIELD_SIZE  (APPBARDATA, cbSize, 4)
+    TEST_FIELD_ALIGN (APPBARDATA, cbSize, 1)
+    TEST_FIELD_OFFSET(APPBARDATA, cbSize, 0)
+    TEST_FIELD_SIZE  (APPBARDATA, hWnd, 4)
+    TEST_FIELD_ALIGN (APPBARDATA, hWnd, 1)
+    TEST_FIELD_OFFSET(APPBARDATA, hWnd, 4)
+    TEST_FIELD_SIZE  (APPBARDATA, uCallbackMessage, 4)
+    TEST_FIELD_ALIGN (APPBARDATA, uCallbackMessage, 1)
+    TEST_FIELD_OFFSET(APPBARDATA, uCallbackMessage, 8)
+    TEST_FIELD_SIZE  (APPBARDATA, uEdge, 4)
+    TEST_FIELD_ALIGN (APPBARDATA, uEdge, 1)
+    TEST_FIELD_OFFSET(APPBARDATA, uEdge, 12)
+    TEST_FIELD_SIZE  (APPBARDATA, rc, 16)
+    TEST_FIELD_ALIGN (APPBARDATA, rc, 1)
+    TEST_FIELD_OFFSET(APPBARDATA, rc, 16)
+    TEST_FIELD_SIZE  (APPBARDATA, lParam, 4)
+    TEST_FIELD_ALIGN (APPBARDATA, lParam, 1)
+    TEST_FIELD_OFFSET(APPBARDATA, lParam, 32)
 }
 
 static void test_pack_DRAGINFOA(void)
 {
     /* DRAGINFOA (pack 1) */
-    TEST_TYPE(DRAGINFOA, 24, 1);
-    TEST_FIELD(DRAGINFOA, UINT, uSize, 0, 4, 1);
-    TEST_FIELD(DRAGINFOA, POINT, pt, 4, 8, 1);
-    TEST_FIELD(DRAGINFOA, BOOL, fNC, 12, 4, 1);
-    TEST_FIELD(DRAGINFOA, LPSTR, lpFileList, 16, 4, 1);
-    TEST_FIELD(DRAGINFOA, DWORD, grfKeyState, 20, 4, 1);
+    TEST_TYPE_SIZE   (DRAGINFOA, 24)
+    TEST_TYPE_ALIGN  (DRAGINFOA, 1)
+    TEST_FIELD_SIZE  (DRAGINFOA, uSize, 4)
+    TEST_FIELD_ALIGN (DRAGINFOA, uSize, 1)
+    TEST_FIELD_OFFSET(DRAGINFOA, uSize, 0)
+    TEST_FIELD_SIZE  (DRAGINFOA, pt, 8)
+    TEST_FIELD_ALIGN (DRAGINFOA, pt, 1)
+    TEST_FIELD_OFFSET(DRAGINFOA, pt, 4)
+    TEST_FIELD_SIZE  (DRAGINFOA, fNC, 4)
+    TEST_FIELD_ALIGN (DRAGINFOA, fNC, 1)
+    TEST_FIELD_OFFSET(DRAGINFOA, fNC, 12)
+    TEST_FIELD_SIZE  (DRAGINFOA, lpFileList, 4)
+    TEST_FIELD_ALIGN (DRAGINFOA, lpFileList, 1)
+    TEST_FIELD_OFFSET(DRAGINFOA, lpFileList, 16)
+    TEST_FIELD_SIZE  (DRAGINFOA, grfKeyState, 4)
+    TEST_FIELD_ALIGN (DRAGINFOA, grfKeyState, 1)
+    TEST_FIELD_OFFSET(DRAGINFOA, grfKeyState, 20)
 }
 
 static void test_pack_DRAGINFOW(void)
 {
     /* DRAGINFOW (pack 1) */
-    TEST_TYPE(DRAGINFOW, 24, 1);
-    TEST_FIELD(DRAGINFOW, UINT, uSize, 0, 4, 1);
-    TEST_FIELD(DRAGINFOW, POINT, pt, 4, 8, 1);
-    TEST_FIELD(DRAGINFOW, BOOL, fNC, 12, 4, 1);
-    TEST_FIELD(DRAGINFOW, LPWSTR, lpFileList, 16, 4, 1);
-    TEST_FIELD(DRAGINFOW, DWORD, grfKeyState, 20, 4, 1);
+    TEST_TYPE_SIZE   (DRAGINFOW, 24)
+    TEST_TYPE_ALIGN  (DRAGINFOW, 1)
+    TEST_FIELD_SIZE  (DRAGINFOW, uSize, 4)
+    TEST_FIELD_ALIGN (DRAGINFOW, uSize, 1)
+    TEST_FIELD_OFFSET(DRAGINFOW, uSize, 0)
+    TEST_FIELD_SIZE  (DRAGINFOW, pt, 8)
+    TEST_FIELD_ALIGN (DRAGINFOW, pt, 1)
+    TEST_FIELD_OFFSET(DRAGINFOW, pt, 4)
+    TEST_FIELD_SIZE  (DRAGINFOW, fNC, 4)
+    TEST_FIELD_ALIGN (DRAGINFOW, fNC, 1)
+    TEST_FIELD_OFFSET(DRAGINFOW, fNC, 12)
+    TEST_FIELD_SIZE  (DRAGINFOW, lpFileList, 4)
+    TEST_FIELD_ALIGN (DRAGINFOW, lpFileList, 1)
+    TEST_FIELD_OFFSET(DRAGINFOW, lpFileList, 16)
+    TEST_FIELD_SIZE  (DRAGINFOW, grfKeyState, 4)
+    TEST_FIELD_ALIGN (DRAGINFOW, grfKeyState, 1)
+    TEST_FIELD_OFFSET(DRAGINFOW, grfKeyState, 20)
 }
 
 static void test_pack_FILEOP_FLAGS(void)
 {
     /* FILEOP_FLAGS */
-    TEST_TYPE(FILEOP_FLAGS, 2, 2);
-    TEST_TYPE_UNSIGNED(FILEOP_FLAGS);
+    TEST_TYPE_SIZE   (FILEOP_FLAGS, 2)
+    TEST_TYPE_ALIGN  (FILEOP_FLAGS, 2)
+    TEST_TYPE_UNSIGNED(FILEOP_FLAGS)
 }
 
 static void test_pack_LPDRAGINFOA(void)
 {
     /* LPDRAGINFOA */
-    TEST_TYPE(LPDRAGINFOA, 4, 4);
-    TEST_TYPE_POINTER(LPDRAGINFOA, 24, 1);
+    TEST_TYPE_SIZE   (LPDRAGINFOA, 4)
+    TEST_TYPE_ALIGN  (LPDRAGINFOA, 4)
+    TEST_TARGET_SIZE (LPDRAGINFOA, 24)
+    TEST_TARGET_ALIGN(LPDRAGINFOA, 1)
 }
 
 static void test_pack_LPDRAGINFOW(void)
 {
     /* LPDRAGINFOW */
-    TEST_TYPE(LPDRAGINFOW, 4, 4);
-    TEST_TYPE_POINTER(LPDRAGINFOW, 24, 1);
+    TEST_TYPE_SIZE   (LPDRAGINFOW, 4)
+    TEST_TYPE_ALIGN  (LPDRAGINFOW, 4)
+    TEST_TARGET_SIZE (LPDRAGINFOW, 24)
+    TEST_TARGET_ALIGN(LPDRAGINFOW, 1)
 }
 
 static void test_pack_LPSHELLEXECUTEINFOA(void)
 {
     /* LPSHELLEXECUTEINFOA */
-    TEST_TYPE(LPSHELLEXECUTEINFOA, 4, 4);
+    TEST_TYPE_SIZE   (LPSHELLEXECUTEINFOA, 4)
+    TEST_TYPE_ALIGN  (LPSHELLEXECUTEINFOA, 4)
 }
 
 static void test_pack_LPSHELLEXECUTEINFOW(void)
 {
     /* LPSHELLEXECUTEINFOW */
-    TEST_TYPE(LPSHELLEXECUTEINFOW, 4, 4);
+    TEST_TYPE_SIZE   (LPSHELLEXECUTEINFOW, 4)
+    TEST_TYPE_ALIGN  (LPSHELLEXECUTEINFOW, 4)
 }
 
 static void test_pack_LPSHFILEOPSTRUCTA(void)
 {
     /* LPSHFILEOPSTRUCTA */
-    TEST_TYPE(LPSHFILEOPSTRUCTA, 4, 4);
-    TEST_TYPE_POINTER(LPSHFILEOPSTRUCTA, 30, 1);
+    TEST_TYPE_SIZE   (LPSHFILEOPSTRUCTA, 4)
+    TEST_TYPE_ALIGN  (LPSHFILEOPSTRUCTA, 4)
+    TEST_TARGET_SIZE (LPSHFILEOPSTRUCTA, 30)
+    TEST_TARGET_ALIGN(LPSHFILEOPSTRUCTA, 1)
 }
 
 static void test_pack_LPSHFILEOPSTRUCTW(void)
 {
     /* LPSHFILEOPSTRUCTW */
-    TEST_TYPE(LPSHFILEOPSTRUCTW, 4, 4);
-    TEST_TYPE_POINTER(LPSHFILEOPSTRUCTW, 30, 1);
+    TEST_TYPE_SIZE   (LPSHFILEOPSTRUCTW, 4)
+    TEST_TYPE_ALIGN  (LPSHFILEOPSTRUCTW, 4)
+    TEST_TARGET_SIZE (LPSHFILEOPSTRUCTW, 30)
+    TEST_TARGET_ALIGN(LPSHFILEOPSTRUCTW, 1)
 }
 
 static void test_pack_LPSHNAMEMAPPINGA(void)
 {
     /* LPSHNAMEMAPPINGA */
-    TEST_TYPE(LPSHNAMEMAPPINGA, 4, 4);
-    TEST_TYPE_POINTER(LPSHNAMEMAPPINGA, 16, 1);
+    TEST_TYPE_SIZE   (LPSHNAMEMAPPINGA, 4)
+    TEST_TYPE_ALIGN  (LPSHNAMEMAPPINGA, 4)
+    TEST_TARGET_SIZE (LPSHNAMEMAPPINGA, 16)
+    TEST_TARGET_ALIGN(LPSHNAMEMAPPINGA, 1)
 }
 
 static void test_pack_LPSHNAMEMAPPINGW(void)
 {
     /* LPSHNAMEMAPPINGW */
-    TEST_TYPE(LPSHNAMEMAPPINGW, 4, 4);
-    TEST_TYPE_POINTER(LPSHNAMEMAPPINGW, 16, 1);
+    TEST_TYPE_SIZE   (LPSHNAMEMAPPINGW, 4)
+    TEST_TYPE_ALIGN  (LPSHNAMEMAPPINGW, 4)
+    TEST_TARGET_SIZE (LPSHNAMEMAPPINGW, 16)
+    TEST_TARGET_ALIGN(LPSHNAMEMAPPINGW, 1)
 }
 
 static void test_pack_NOTIFYICONDATAA(void)
 {
     /* NOTIFYICONDATAA (pack 1) */
-    TEST_FIELD(NOTIFYICONDATAA, DWORD, cbSize, 0, 4, 1);
-    TEST_FIELD(NOTIFYICONDATAA, HWND, hWnd, 4, 4, 1);
-    TEST_FIELD(NOTIFYICONDATAA, UINT, uID, 8, 4, 1);
-    TEST_FIELD(NOTIFYICONDATAA, UINT, uFlags, 12, 4, 1);
-    TEST_FIELD(NOTIFYICONDATAA, UINT, uCallbackMessage, 16, 4, 1);
-    TEST_FIELD(NOTIFYICONDATAA, HICON, hIcon, 20, 4, 1);
-    TEST_FIELD(NOTIFYICONDATAA, CHAR[128], szTip, 24, 128, 1);
-    TEST_FIELD(NOTIFYICONDATAA, DWORD, dwState, 152, 4, 1);
-    TEST_FIELD(NOTIFYICONDATAA, DWORD, dwStateMask, 156, 4, 1);
-    TEST_FIELD(NOTIFYICONDATAA, CHAR[256], szInfo, 160, 256, 1);
+    TEST_FIELD_SIZE  (NOTIFYICONDATAA, cbSize, 4)
+    TEST_FIELD_ALIGN (NOTIFYICONDATAA, cbSize, 1)
+    TEST_FIELD_OFFSET(NOTIFYICONDATAA, cbSize, 0)
+    TEST_FIELD_SIZE  (NOTIFYICONDATAA, hWnd, 4)
+    TEST_FIELD_ALIGN (NOTIFYICONDATAA, hWnd, 1)
+    TEST_FIELD_OFFSET(NOTIFYICONDATAA, hWnd, 4)
+    TEST_FIELD_SIZE  (NOTIFYICONDATAA, uID, 4)
+    TEST_FIELD_ALIGN (NOTIFYICONDATAA, uID, 1)
+    TEST_FIELD_OFFSET(NOTIFYICONDATAA, uID, 8)
+    TEST_FIELD_SIZE  (NOTIFYICONDATAA, uFlags, 4)
+    TEST_FIELD_ALIGN (NOTIFYICONDATAA, uFlags, 1)
+    TEST_FIELD_OFFSET(NOTIFYICONDATAA, uFlags, 12)
+    TEST_FIELD_SIZE  (NOTIFYICONDATAA, uCallbackMessage, 4)
+    TEST_FIELD_ALIGN (NOTIFYICONDATAA, uCallbackMessage, 1)
+    TEST_FIELD_OFFSET(NOTIFYICONDATAA, uCallbackMessage, 16)
+    TEST_FIELD_SIZE  (NOTIFYICONDATAA, hIcon, 4)
+    TEST_FIELD_ALIGN (NOTIFYICONDATAA, hIcon, 1)
+    TEST_FIELD_OFFSET(NOTIFYICONDATAA, hIcon, 20)
+    TEST_FIELD_SIZE  (NOTIFYICONDATAA, szTip, 128)
+    TEST_FIELD_ALIGN (NOTIFYICONDATAA, szTip, 1)
+    TEST_FIELD_OFFSET(NOTIFYICONDATAA, szTip, 24)
+    TEST_FIELD_SIZE  (NOTIFYICONDATAA, dwState, 4)
+    TEST_FIELD_ALIGN (NOTIFYICONDATAA, dwState, 1)
+    TEST_FIELD_OFFSET(NOTIFYICONDATAA, dwState, 152)
+    TEST_FIELD_SIZE  (NOTIFYICONDATAA, dwStateMask, 4)
+    TEST_FIELD_ALIGN (NOTIFYICONDATAA, dwStateMask, 1)
+    TEST_FIELD_OFFSET(NOTIFYICONDATAA, dwStateMask, 156)
+    TEST_FIELD_SIZE  (NOTIFYICONDATAA, szInfo, 256)
+    TEST_FIELD_ALIGN (NOTIFYICONDATAA, szInfo, 1)
+    TEST_FIELD_OFFSET(NOTIFYICONDATAA, szInfo, 160)
 }
 
 static void test_pack_NOTIFYICONDATAW(void)
 {
     /* NOTIFYICONDATAW (pack 1) */
-    TEST_FIELD(NOTIFYICONDATAW, DWORD, cbSize, 0, 4, 1);
-    TEST_FIELD(NOTIFYICONDATAW, HWND, hWnd, 4, 4, 1);
-    TEST_FIELD(NOTIFYICONDATAW, UINT, uID, 8, 4, 1);
-    TEST_FIELD(NOTIFYICONDATAW, UINT, uFlags, 12, 4, 1);
-    TEST_FIELD(NOTIFYICONDATAW, UINT, uCallbackMessage, 16, 4, 1);
-    TEST_FIELD(NOTIFYICONDATAW, HICON, hIcon, 20, 4, 1);
-    TEST_FIELD(NOTIFYICONDATAW, WCHAR[128], szTip, 24, 256, 1);
-    TEST_FIELD(NOTIFYICONDATAW, DWORD, dwState, 280, 4, 1);
-    TEST_FIELD(NOTIFYICONDATAW, DWORD, dwStateMask, 284, 4, 1);
-    TEST_FIELD(NOTIFYICONDATAW, WCHAR[256], szInfo, 288, 512, 1);
+    TEST_FIELD_SIZE  (NOTIFYICONDATAW, cbSize, 4)
+    TEST_FIELD_ALIGN (NOTIFYICONDATAW, cbSize, 1)
+    TEST_FIELD_OFFSET(NOTIFYICONDATAW, cbSize, 0)
+    TEST_FIELD_SIZE  (NOTIFYICONDATAW, hWnd, 4)
+    TEST_FIELD_ALIGN (NOTIFYICONDATAW, hWnd, 1)
+    TEST_FIELD_OFFSET(NOTIFYICONDATAW, hWnd, 4)
+    TEST_FIELD_SIZE  (NOTIFYICONDATAW, uID, 4)
+    TEST_FIELD_ALIGN (NOTIFYICONDATAW, uID, 1)
+    TEST_FIELD_OFFSET(NOTIFYICONDATAW, uID, 8)
+    TEST_FIELD_SIZE  (NOTIFYICONDATAW, uFlags, 4)
+    TEST_FIELD_ALIGN (NOTIFYICONDATAW, uFlags, 1)
+    TEST_FIELD_OFFSET(NOTIFYICONDATAW, uFlags, 12)
+    TEST_FIELD_SIZE  (NOTIFYICONDATAW, uCallbackMessage, 4)
+    TEST_FIELD_ALIGN (NOTIFYICONDATAW, uCallbackMessage, 1)
+    TEST_FIELD_OFFSET(NOTIFYICONDATAW, uCallbackMessage, 16)
+    TEST_FIELD_SIZE  (NOTIFYICONDATAW, hIcon, 4)
+    TEST_FIELD_ALIGN (NOTIFYICONDATAW, hIcon, 1)
+    TEST_FIELD_OFFSET(NOTIFYICONDATAW, hIcon, 20)
+    TEST_FIELD_SIZE  (NOTIFYICONDATAW, szTip, 256)
+    TEST_FIELD_ALIGN (NOTIFYICONDATAW, szTip, 1)
+    TEST_FIELD_OFFSET(NOTIFYICONDATAW, szTip, 24)
+    TEST_FIELD_SIZE  (NOTIFYICONDATAW, dwState, 4)
+    TEST_FIELD_ALIGN (NOTIFYICONDATAW, dwState, 1)
+    TEST_FIELD_OFFSET(NOTIFYICONDATAW, dwState, 280)
+    TEST_FIELD_SIZE  (NOTIFYICONDATAW, dwStateMask, 4)
+    TEST_FIELD_ALIGN (NOTIFYICONDATAW, dwStateMask, 1)
+    TEST_FIELD_OFFSET(NOTIFYICONDATAW, dwStateMask, 284)
+    TEST_FIELD_SIZE  (NOTIFYICONDATAW, szInfo, 512)
+    TEST_FIELD_ALIGN (NOTIFYICONDATAW, szInfo, 1)
+    TEST_FIELD_OFFSET(NOTIFYICONDATAW, szInfo, 288)
 }
 
 static void test_pack_PAPPBARDATA(void)
 {
     /* PAPPBARDATA */
-    TEST_TYPE(PAPPBARDATA, 4, 4);
-    TEST_TYPE_POINTER(PAPPBARDATA, 36, 1);
+    TEST_TYPE_SIZE   (PAPPBARDATA, 4)
+    TEST_TYPE_ALIGN  (PAPPBARDATA, 4)
+    TEST_TARGET_SIZE (PAPPBARDATA, 36)
+    TEST_TARGET_ALIGN(PAPPBARDATA, 1)
 }
 
 static void test_pack_PNOTIFYICONDATAA(void)
 {
     /* PNOTIFYICONDATAA */
-    TEST_TYPE(PNOTIFYICONDATAA, 4, 4);
+    TEST_TYPE_SIZE   (PNOTIFYICONDATAA, 4)
+    TEST_TYPE_ALIGN  (PNOTIFYICONDATAA, 4)
 }
 
 static void test_pack_PNOTIFYICONDATAW(void)
 {
     /* PNOTIFYICONDATAW */
-    TEST_TYPE(PNOTIFYICONDATAW, 4, 4);
+    TEST_TYPE_SIZE   (PNOTIFYICONDATAW, 4)
+    TEST_TYPE_ALIGN  (PNOTIFYICONDATAW, 4)
 }
 
 static void test_pack_PRINTEROP_FLAGS(void)
 {
     /* PRINTEROP_FLAGS */
-    TEST_TYPE(PRINTEROP_FLAGS, 2, 2);
-    TEST_TYPE_UNSIGNED(PRINTEROP_FLAGS);
+    TEST_TYPE_SIZE   (PRINTEROP_FLAGS, 2)
+    TEST_TYPE_ALIGN  (PRINTEROP_FLAGS, 2)
+    TEST_TYPE_UNSIGNED(PRINTEROP_FLAGS)
 }
 
 static void test_pack_SHELLEXECUTEINFOA(void)
 {
     /* SHELLEXECUTEINFOA (pack 1) */
-    TEST_FIELD(SHELLEXECUTEINFOA, DWORD, cbSize, 0, 4, 1);
-    TEST_FIELD(SHELLEXECUTEINFOA, ULONG, fMask, 4, 4, 1);
-    TEST_FIELD(SHELLEXECUTEINFOA, HWND, hwnd, 8, 4, 1);
-    TEST_FIELD(SHELLEXECUTEINFOA, LPCSTR, lpVerb, 12, 4, 1);
-    TEST_FIELD(SHELLEXECUTEINFOA, LPCSTR, lpFile, 16, 4, 1);
-    TEST_FIELD(SHELLEXECUTEINFOA, LPCSTR, lpParameters, 20, 4, 1);
-    TEST_FIELD(SHELLEXECUTEINFOA, LPCSTR, lpDirectory, 24, 4, 1);
-    TEST_FIELD(SHELLEXECUTEINFOA, INT, nShow, 28, 4, 1);
-    TEST_FIELD(SHELLEXECUTEINFOA, HINSTANCE, hInstApp, 32, 4, 1);
-    TEST_FIELD(SHELLEXECUTEINFOA, LPVOID, lpIDList, 36, 4, 1);
-    TEST_FIELD(SHELLEXECUTEINFOA, LPCSTR, lpClass, 40, 4, 1);
-    TEST_FIELD(SHELLEXECUTEINFOA, HKEY, hkeyClass, 44, 4, 1);
-    TEST_FIELD(SHELLEXECUTEINFOA, DWORD, dwHotKey, 48, 4, 1);
+    TEST_FIELD_SIZE  (SHELLEXECUTEINFOA, cbSize, 4)
+    TEST_FIELD_ALIGN (SHELLEXECUTEINFOA, cbSize, 1)
+    TEST_FIELD_OFFSET(SHELLEXECUTEINFOA, cbSize, 0)
+    TEST_FIELD_SIZE  (SHELLEXECUTEINFOA, fMask, 4)
+    TEST_FIELD_ALIGN (SHELLEXECUTEINFOA, fMask, 1)
+    TEST_FIELD_OFFSET(SHELLEXECUTEINFOA, fMask, 4)
+    TEST_FIELD_SIZE  (SHELLEXECUTEINFOA, hwnd, 4)
+    TEST_FIELD_ALIGN (SHELLEXECUTEINFOA, hwnd, 1)
+    TEST_FIELD_OFFSET(SHELLEXECUTEINFOA, hwnd, 8)
+    TEST_FIELD_SIZE  (SHELLEXECUTEINFOA, lpVerb, 4)
+    TEST_FIELD_ALIGN (SHELLEXECUTEINFOA, lpVerb, 1)
+    TEST_FIELD_OFFSET(SHELLEXECUTEINFOA, lpVerb, 12)
+    TEST_FIELD_SIZE  (SHELLEXECUTEINFOA, lpFile, 4)
+    TEST_FIELD_ALIGN (SHELLEXECUTEINFOA, lpFile, 1)
+    TEST_FIELD_OFFSET(SHELLEXECUTEINFOA, lpFile, 16)
+    TEST_FIELD_SIZE  (SHELLEXECUTEINFOA, lpParameters, 4)
+    TEST_FIELD_ALIGN (SHELLEXECUTEINFOA, lpParameters, 1)
+    TEST_FIELD_OFFSET(SHELLEXECUTEINFOA, lpParameters, 20)
+    TEST_FIELD_SIZE  (SHELLEXECUTEINFOA, lpDirectory, 4)
+    TEST_FIELD_ALIGN (SHELLEXECUTEINFOA, lpDirectory, 1)
+    TEST_FIELD_OFFSET(SHELLEXECUTEINFOA, lpDirectory, 24)
+    TEST_FIELD_SIZE  (SHELLEXECUTEINFOA, nShow, 4)
+    TEST_FIELD_ALIGN (SHELLEXECUTEINFOA, nShow, 1)
+    TEST_FIELD_OFFSET(SHELLEXECUTEINFOA, nShow, 28)
+    TEST_FIELD_SIZE  (SHELLEXECUTEINFOA, hInstApp, 4)
+    TEST_FIELD_ALIGN (SHELLEXECUTEINFOA, hInstApp, 1)
+    TEST_FIELD_OFFSET(SHELLEXECUTEINFOA, hInstApp, 32)
+    TEST_FIELD_SIZE  (SHELLEXECUTEINFOA, lpIDList, 4)
+    TEST_FIELD_ALIGN (SHELLEXECUTEINFOA, lpIDList, 1)
+    TEST_FIELD_OFFSET(SHELLEXECUTEINFOA, lpIDList, 36)
+    TEST_FIELD_SIZE  (SHELLEXECUTEINFOA, lpClass, 4)
+    TEST_FIELD_ALIGN (SHELLEXECUTEINFOA, lpClass, 1)
+    TEST_FIELD_OFFSET(SHELLEXECUTEINFOA, lpClass, 40)
+    TEST_FIELD_SIZE  (SHELLEXECUTEINFOA, hkeyClass, 4)
+    TEST_FIELD_ALIGN (SHELLEXECUTEINFOA, hkeyClass, 1)
+    TEST_FIELD_OFFSET(SHELLEXECUTEINFOA, hkeyClass, 44)
+    TEST_FIELD_SIZE  (SHELLEXECUTEINFOA, dwHotKey, 4)
+    TEST_FIELD_ALIGN (SHELLEXECUTEINFOA, dwHotKey, 1)
+    TEST_FIELD_OFFSET(SHELLEXECUTEINFOA, dwHotKey, 48)
 }
 
 static void test_pack_SHELLEXECUTEINFOW(void)
 {
     /* SHELLEXECUTEINFOW (pack 1) */
-    TEST_FIELD(SHELLEXECUTEINFOW, DWORD, cbSize, 0, 4, 1);
-    TEST_FIELD(SHELLEXECUTEINFOW, ULONG, fMask, 4, 4, 1);
-    TEST_FIELD(SHELLEXECUTEINFOW, HWND, hwnd, 8, 4, 1);
-    TEST_FIELD(SHELLEXECUTEINFOW, LPCWSTR, lpVerb, 12, 4, 1);
-    TEST_FIELD(SHELLEXECUTEINFOW, LPCWSTR, lpFile, 16, 4, 1);
-    TEST_FIELD(SHELLEXECUTEINFOW, LPCWSTR, lpParameters, 20, 4, 1);
-    TEST_FIELD(SHELLEXECUTEINFOW, LPCWSTR, lpDirectory, 24, 4, 1);
-    TEST_FIELD(SHELLEXECUTEINFOW, INT, nShow, 28, 4, 1);
-    TEST_FIELD(SHELLEXECUTEINFOW, HINSTANCE, hInstApp, 32, 4, 1);
-    TEST_FIELD(SHELLEXECUTEINFOW, LPVOID, lpIDList, 36, 4, 1);
-    TEST_FIELD(SHELLEXECUTEINFOW, LPCWSTR, lpClass, 40, 4, 1);
-    TEST_FIELD(SHELLEXECUTEINFOW, HKEY, hkeyClass, 44, 4, 1);
-    TEST_FIELD(SHELLEXECUTEINFOW, DWORD, dwHotKey, 48, 4, 1);
+    TEST_FIELD_SIZE  (SHELLEXECUTEINFOW, cbSize, 4)
+    TEST_FIELD_ALIGN (SHELLEXECUTEINFOW, cbSize, 1)
+    TEST_FIELD_OFFSET(SHELLEXECUTEINFOW, cbSize, 0)
+    TEST_FIELD_SIZE  (SHELLEXECUTEINFOW, fMask, 4)
+    TEST_FIELD_ALIGN (SHELLEXECUTEINFOW, fMask, 1)
+    TEST_FIELD_OFFSET(SHELLEXECUTEINFOW, fMask, 4)
+    TEST_FIELD_SIZE  (SHELLEXECUTEINFOW, hwnd, 4)
+    TEST_FIELD_ALIGN (SHELLEXECUTEINFOW, hwnd, 1)
+    TEST_FIELD_OFFSET(SHELLEXECUTEINFOW, hwnd, 8)
+    TEST_FIELD_SIZE  (SHELLEXECUTEINFOW, lpVerb, 4)
+    TEST_FIELD_ALIGN (SHELLEXECUTEINFOW, lpVerb, 1)
+    TEST_FIELD_OFFSET(SHELLEXECUTEINFOW, lpVerb, 12)
+    TEST_FIELD_SIZE  (SHELLEXECUTEINFOW, lpFile, 4)
+    TEST_FIELD_ALIGN (SHELLEXECUTEINFOW, lpFile, 1)
+    TEST_FIELD_OFFSET(SHELLEXECUTEINFOW, lpFile, 16)
+    TEST_FIELD_SIZE  (SHELLEXECUTEINFOW, lpParameters, 4)
+    TEST_FIELD_ALIGN (SHELLEXECUTEINFOW, lpParameters, 1)
+    TEST_FIELD_OFFSET(SHELLEXECUTEINFOW, lpParameters, 20)
+    TEST_FIELD_SIZE  (SHELLEXECUTEINFOW, lpDirectory, 4)
+    TEST_FIELD_ALIGN (SHELLEXECUTEINFOW, lpDirectory, 1)
+    TEST_FIELD_OFFSET(SHELLEXECUTEINFOW, lpDirectory, 24)
+    TEST_FIELD_SIZE  (SHELLEXECUTEINFOW, nShow, 4)
+    TEST_FIELD_ALIGN (SHELLEXECUTEINFOW, nShow, 1)
+    TEST_FIELD_OFFSET(SHELLEXECUTEINFOW, nShow, 28)
+    TEST_FIELD_SIZE  (SHELLEXECUTEINFOW, hInstApp, 4)
+    TEST_FIELD_ALIGN (SHELLEXECUTEINFOW, hInstApp, 1)
+    TEST_FIELD_OFFSET(SHELLEXECUTEINFOW, hInstApp, 32)
+    TEST_FIELD_SIZE  (SHELLEXECUTEINFOW, lpIDList, 4)
+    TEST_FIELD_ALIGN (SHELLEXECUTEINFOW, lpIDList, 1)
+    TEST_FIELD_OFFSET(SHELLEXECUTEINFOW, lpIDList, 36)
+    TEST_FIELD_SIZE  (SHELLEXECUTEINFOW, lpClass, 4)
+    TEST_FIELD_ALIGN (SHELLEXECUTEINFOW, lpClass, 1)
+    TEST_FIELD_OFFSET(SHELLEXECUTEINFOW, lpClass, 40)
+    TEST_FIELD_SIZE  (SHELLEXECUTEINFOW, hkeyClass, 4)
+    TEST_FIELD_ALIGN (SHELLEXECUTEINFOW, hkeyClass, 1)
+    TEST_FIELD_OFFSET(SHELLEXECUTEINFOW, hkeyClass, 44)
+    TEST_FIELD_SIZE  (SHELLEXECUTEINFOW, dwHotKey, 4)
+    TEST_FIELD_ALIGN (SHELLEXECUTEINFOW, dwHotKey, 1)
+    TEST_FIELD_OFFSET(SHELLEXECUTEINFOW, dwHotKey, 48)
 }
 
 static void test_pack_SHFILEINFOA(void)
 {
     /* SHFILEINFOA (pack 1) */
-    TEST_TYPE(SHFILEINFOA, 352, 1);
-    TEST_FIELD(SHFILEINFOA, HICON, hIcon, 0, 4, 1);
-    TEST_FIELD(SHFILEINFOA, int, iIcon, 4, 4, 1);
-    TEST_FIELD(SHFILEINFOA, DWORD, dwAttributes, 8, 4, 1);
-    TEST_FIELD(SHFILEINFOA, CHAR[MAX_PATH], szDisplayName, 12, 260, 1);
-    TEST_FIELD(SHFILEINFOA, CHAR[80], szTypeName, 272, 80, 1);
+    TEST_TYPE_SIZE   (SHFILEINFOA, 352)
+    TEST_TYPE_ALIGN  (SHFILEINFOA, 1)
+    TEST_FIELD_SIZE  (SHFILEINFOA, hIcon, 4)
+    TEST_FIELD_ALIGN (SHFILEINFOA, hIcon, 1)
+    TEST_FIELD_OFFSET(SHFILEINFOA, hIcon, 0)
+    TEST_FIELD_SIZE  (SHFILEINFOA, iIcon, 4)
+    TEST_FIELD_ALIGN (SHFILEINFOA, iIcon, 1)
+    TEST_FIELD_OFFSET(SHFILEINFOA, iIcon, 4)
+    TEST_FIELD_SIZE  (SHFILEINFOA, dwAttributes, 4)
+    TEST_FIELD_ALIGN (SHFILEINFOA, dwAttributes, 1)
+    TEST_FIELD_OFFSET(SHFILEINFOA, dwAttributes, 8)
+    TEST_FIELD_SIZE  (SHFILEINFOA, szDisplayName, 260)
+    TEST_FIELD_ALIGN (SHFILEINFOA, szDisplayName, 1)
+    TEST_FIELD_OFFSET(SHFILEINFOA, szDisplayName, 12)
+    TEST_FIELD_SIZE  (SHFILEINFOA, szTypeName, 80)
+    TEST_FIELD_ALIGN (SHFILEINFOA, szTypeName, 1)
+    TEST_FIELD_OFFSET(SHFILEINFOA, szTypeName, 272)
 }
 
 static void test_pack_SHFILEINFOW(void)
 {
     /* SHFILEINFOW (pack 1) */
-    TEST_TYPE(SHFILEINFOW, 692, 1);
-    TEST_FIELD(SHFILEINFOW, HICON, hIcon, 0, 4, 1);
-    TEST_FIELD(SHFILEINFOW, int, iIcon, 4, 4, 1);
-    TEST_FIELD(SHFILEINFOW, DWORD, dwAttributes, 8, 4, 1);
-    TEST_FIELD(SHFILEINFOW, WCHAR[MAX_PATH], szDisplayName, 12, 520, 1);
-    TEST_FIELD(SHFILEINFOW, WCHAR[80], szTypeName, 532, 160, 1);
+    TEST_TYPE_SIZE   (SHFILEINFOW, 692)
+    TEST_TYPE_ALIGN  (SHFILEINFOW, 1)
+    TEST_FIELD_SIZE  (SHFILEINFOW, hIcon, 4)
+    TEST_FIELD_ALIGN (SHFILEINFOW, hIcon, 1)
+    TEST_FIELD_OFFSET(SHFILEINFOW, hIcon, 0)
+    TEST_FIELD_SIZE  (SHFILEINFOW, iIcon, 4)
+    TEST_FIELD_ALIGN (SHFILEINFOW, iIcon, 1)
+    TEST_FIELD_OFFSET(SHFILEINFOW, iIcon, 4)
+    TEST_FIELD_SIZE  (SHFILEINFOW, dwAttributes, 4)
+    TEST_FIELD_ALIGN (SHFILEINFOW, dwAttributes, 1)
+    TEST_FIELD_OFFSET(SHFILEINFOW, dwAttributes, 8)
+    TEST_FIELD_SIZE  (SHFILEINFOW, szDisplayName, 520)
+    TEST_FIELD_ALIGN (SHFILEINFOW, szDisplayName, 1)
+    TEST_FIELD_OFFSET(SHFILEINFOW, szDisplayName, 12)
+    TEST_FIELD_SIZE  (SHFILEINFOW, szTypeName, 160)
+    TEST_FIELD_ALIGN (SHFILEINFOW, szTypeName, 1)
+    TEST_FIELD_OFFSET(SHFILEINFOW, szTypeName, 532)
 }
 
 static void test_pack_SHFILEOPSTRUCTA(void)
 {
     /* SHFILEOPSTRUCTA (pack 1) */
-    TEST_TYPE(SHFILEOPSTRUCTA, 30, 1);
-    TEST_FIELD(SHFILEOPSTRUCTA, HWND, hwnd, 0, 4, 1);
-    TEST_FIELD(SHFILEOPSTRUCTA, UINT, wFunc, 4, 4, 1);
-    TEST_FIELD(SHFILEOPSTRUCTA, LPCSTR, pFrom, 8, 4, 1);
-    TEST_FIELD(SHFILEOPSTRUCTA, LPCSTR, pTo, 12, 4, 1);
-    TEST_FIELD(SHFILEOPSTRUCTA, FILEOP_FLAGS, fFlags, 16, 2, 1);
-    TEST_FIELD(SHFILEOPSTRUCTA, BOOL, fAnyOperationsAborted, 18, 4, 1);
-    TEST_FIELD(SHFILEOPSTRUCTA, LPVOID, hNameMappings, 22, 4, 1);
-    TEST_FIELD(SHFILEOPSTRUCTA, LPCSTR, lpszProgressTitle, 26, 4, 1);
+    TEST_TYPE_SIZE   (SHFILEOPSTRUCTA, 30)
+    TEST_TYPE_ALIGN  (SHFILEOPSTRUCTA, 1)
+    TEST_FIELD_SIZE  (SHFILEOPSTRUCTA, hwnd, 4)
+    TEST_FIELD_ALIGN (SHFILEOPSTRUCTA, hwnd, 1)
+    TEST_FIELD_OFFSET(SHFILEOPSTRUCTA, hwnd, 0)
+    TEST_FIELD_SIZE  (SHFILEOPSTRUCTA, wFunc, 4)
+    TEST_FIELD_ALIGN (SHFILEOPSTRUCTA, wFunc, 1)
+    TEST_FIELD_OFFSET(SHFILEOPSTRUCTA, wFunc, 4)
+    TEST_FIELD_SIZE  (SHFILEOPSTRUCTA, pFrom, 4)
+    TEST_FIELD_ALIGN (SHFILEOPSTRUCTA, pFrom, 1)
+    TEST_FIELD_OFFSET(SHFILEOPSTRUCTA, pFrom, 8)
+    TEST_FIELD_SIZE  (SHFILEOPSTRUCTA, pTo, 4)
+    TEST_FIELD_ALIGN (SHFILEOPSTRUCTA, pTo, 1)
+    TEST_FIELD_OFFSET(SHFILEOPSTRUCTA, pTo, 12)
+    TEST_FIELD_SIZE  (SHFILEOPSTRUCTA, fFlags, 2)
+    TEST_FIELD_ALIGN (SHFILEOPSTRUCTA, fFlags, 1)
+    TEST_FIELD_OFFSET(SHFILEOPSTRUCTA, fFlags, 16)
+    TEST_FIELD_SIZE  (SHFILEOPSTRUCTA, fAnyOperationsAborted, 4)
+    TEST_FIELD_ALIGN (SHFILEOPSTRUCTA, fAnyOperationsAborted, 1)
+    TEST_FIELD_OFFSET(SHFILEOPSTRUCTA, fAnyOperationsAborted, 18)
+    TEST_FIELD_SIZE  (SHFILEOPSTRUCTA, hNameMappings, 4)
+    TEST_FIELD_ALIGN (SHFILEOPSTRUCTA, hNameMappings, 1)
+    TEST_FIELD_OFFSET(SHFILEOPSTRUCTA, hNameMappings, 22)
+    TEST_FIELD_SIZE  (SHFILEOPSTRUCTA, lpszProgressTitle, 4)
+    TEST_FIELD_ALIGN (SHFILEOPSTRUCTA, lpszProgressTitle, 1)
+    TEST_FIELD_OFFSET(SHFILEOPSTRUCTA, lpszProgressTitle, 26)
 }
 
 static void test_pack_SHFILEOPSTRUCTW(void)
 {
     /* SHFILEOPSTRUCTW (pack 1) */
-    TEST_TYPE(SHFILEOPSTRUCTW, 30, 1);
-    TEST_FIELD(SHFILEOPSTRUCTW, HWND, hwnd, 0, 4, 1);
-    TEST_FIELD(SHFILEOPSTRUCTW, UINT, wFunc, 4, 4, 1);
-    TEST_FIELD(SHFILEOPSTRUCTW, LPCWSTR, pFrom, 8, 4, 1);
-    TEST_FIELD(SHFILEOPSTRUCTW, LPCWSTR, pTo, 12, 4, 1);
-    TEST_FIELD(SHFILEOPSTRUCTW, FILEOP_FLAGS, fFlags, 16, 2, 1);
-    TEST_FIELD(SHFILEOPSTRUCTW, BOOL, fAnyOperationsAborted, 18, 4, 1);
-    TEST_FIELD(SHFILEOPSTRUCTW, LPVOID, hNameMappings, 22, 4, 1);
-    TEST_FIELD(SHFILEOPSTRUCTW, LPCWSTR, lpszProgressTitle, 26, 4, 1);
+    TEST_TYPE_SIZE   (SHFILEOPSTRUCTW, 30)
+    TEST_TYPE_ALIGN  (SHFILEOPSTRUCTW, 1)
+    TEST_FIELD_SIZE  (SHFILEOPSTRUCTW, hwnd, 4)
+    TEST_FIELD_ALIGN (SHFILEOPSTRUCTW, hwnd, 1)
+    TEST_FIELD_OFFSET(SHFILEOPSTRUCTW, hwnd, 0)
+    TEST_FIELD_SIZE  (SHFILEOPSTRUCTW, wFunc, 4)
+    TEST_FIELD_ALIGN (SHFILEOPSTRUCTW, wFunc, 1)
+    TEST_FIELD_OFFSET(SHFILEOPSTRUCTW, wFunc, 4)
+    TEST_FIELD_SIZE  (SHFILEOPSTRUCTW, pFrom, 4)
+    TEST_FIELD_ALIGN (SHFILEOPSTRUCTW, pFrom, 1)
+    TEST_FIELD_OFFSET(SHFILEOPSTRUCTW, pFrom, 8)
+    TEST_FIELD_SIZE  (SHFILEOPSTRUCTW, pTo, 4)
+    TEST_FIELD_ALIGN (SHFILEOPSTRUCTW, pTo, 1)
+    TEST_FIELD_OFFSET(SHFILEOPSTRUCTW, pTo, 12)
+    TEST_FIELD_SIZE  (SHFILEOPSTRUCTW, fFlags, 2)
+    TEST_FIELD_ALIGN (SHFILEOPSTRUCTW, fFlags, 1)
+    TEST_FIELD_OFFSET(SHFILEOPSTRUCTW, fFlags, 16)
+    TEST_FIELD_SIZE  (SHFILEOPSTRUCTW, fAnyOperationsAborted, 4)
+    TEST_FIELD_ALIGN (SHFILEOPSTRUCTW, fAnyOperationsAborted, 1)
+    TEST_FIELD_OFFSET(SHFILEOPSTRUCTW, fAnyOperationsAborted, 18)
+    TEST_FIELD_SIZE  (SHFILEOPSTRUCTW, hNameMappings, 4)
+    TEST_FIELD_ALIGN (SHFILEOPSTRUCTW, hNameMappings, 1)
+    TEST_FIELD_OFFSET(SHFILEOPSTRUCTW, hNameMappings, 22)
+    TEST_FIELD_SIZE  (SHFILEOPSTRUCTW, lpszProgressTitle, 4)
+    TEST_FIELD_ALIGN (SHFILEOPSTRUCTW, lpszProgressTitle, 1)
+    TEST_FIELD_OFFSET(SHFILEOPSTRUCTW, lpszProgressTitle, 26)
 }
 
 static void test_pack_SHNAMEMAPPINGA(void)
 {
     /* SHNAMEMAPPINGA (pack 1) */
-    TEST_TYPE(SHNAMEMAPPINGA, 16, 1);
-    TEST_FIELD(SHNAMEMAPPINGA, LPSTR, pszOldPath, 0, 4, 1);
-    TEST_FIELD(SHNAMEMAPPINGA, LPSTR, pszNewPath, 4, 4, 1);
-    TEST_FIELD(SHNAMEMAPPINGA, int, cchOldPath, 8, 4, 1);
-    TEST_FIELD(SHNAMEMAPPINGA, int, cchNewPath, 12, 4, 1);
+    TEST_TYPE_SIZE   (SHNAMEMAPPINGA, 16)
+    TEST_TYPE_ALIGN  (SHNAMEMAPPINGA, 1)
+    TEST_FIELD_SIZE  (SHNAMEMAPPINGA, pszOldPath, 4)
+    TEST_FIELD_ALIGN (SHNAMEMAPPINGA, pszOldPath, 1)
+    TEST_FIELD_OFFSET(SHNAMEMAPPINGA, pszOldPath, 0)
+    TEST_FIELD_SIZE  (SHNAMEMAPPINGA, pszNewPath, 4)
+    TEST_FIELD_ALIGN (SHNAMEMAPPINGA, pszNewPath, 1)
+    TEST_FIELD_OFFSET(SHNAMEMAPPINGA, pszNewPath, 4)
+    TEST_FIELD_SIZE  (SHNAMEMAPPINGA, cchOldPath, 4)
+    TEST_FIELD_ALIGN (SHNAMEMAPPINGA, cchOldPath, 1)
+    TEST_FIELD_OFFSET(SHNAMEMAPPINGA, cchOldPath, 8)
+    TEST_FIELD_SIZE  (SHNAMEMAPPINGA, cchNewPath, 4)
+    TEST_FIELD_ALIGN (SHNAMEMAPPINGA, cchNewPath, 1)
+    TEST_FIELD_OFFSET(SHNAMEMAPPINGA, cchNewPath, 12)
 }
 
 static void test_pack_SHNAMEMAPPINGW(void)
 {
     /* SHNAMEMAPPINGW (pack 1) */
-    TEST_TYPE(SHNAMEMAPPINGW, 16, 1);
-    TEST_FIELD(SHNAMEMAPPINGW, LPWSTR, pszOldPath, 0, 4, 1);
-    TEST_FIELD(SHNAMEMAPPINGW, LPWSTR, pszNewPath, 4, 4, 1);
-    TEST_FIELD(SHNAMEMAPPINGW, int, cchOldPath, 8, 4, 1);
-    TEST_FIELD(SHNAMEMAPPINGW, int, cchNewPath, 12, 4, 1);
+    TEST_TYPE_SIZE   (SHNAMEMAPPINGW, 16)
+    TEST_TYPE_ALIGN  (SHNAMEMAPPINGW, 1)
+    TEST_FIELD_SIZE  (SHNAMEMAPPINGW, pszOldPath, 4)
+    TEST_FIELD_ALIGN (SHNAMEMAPPINGW, pszOldPath, 1)
+    TEST_FIELD_OFFSET(SHNAMEMAPPINGW, pszOldPath, 0)
+    TEST_FIELD_SIZE  (SHNAMEMAPPINGW, pszNewPath, 4)
+    TEST_FIELD_ALIGN (SHNAMEMAPPINGW, pszNewPath, 1)
+    TEST_FIELD_OFFSET(SHNAMEMAPPINGW, pszNewPath, 4)
+    TEST_FIELD_SIZE  (SHNAMEMAPPINGW, cchOldPath, 4)
+    TEST_FIELD_ALIGN (SHNAMEMAPPINGW, cchOldPath, 1)
+    TEST_FIELD_OFFSET(SHNAMEMAPPINGW, cchOldPath, 8)
+    TEST_FIELD_SIZE  (SHNAMEMAPPINGW, cchNewPath, 4)
+    TEST_FIELD_ALIGN (SHNAMEMAPPINGW, cchNewPath, 1)
+    TEST_FIELD_OFFSET(SHNAMEMAPPINGW, cchNewPath, 12)
 }
 
 static void test_pack_ITEMIDLIST(void)
 {
     /* ITEMIDLIST (pack 1) */
-    TEST_TYPE(ITEMIDLIST, 3, 1);
-    TEST_FIELD(ITEMIDLIST, SHITEMID, mkid, 0, 3, 1);
+    TEST_TYPE_SIZE   (ITEMIDLIST, 3)
+    TEST_TYPE_ALIGN  (ITEMIDLIST, 1)
+    TEST_FIELD_SIZE  (ITEMIDLIST, mkid, 3)
+    TEST_FIELD_ALIGN (ITEMIDLIST, mkid, 1)
+    TEST_FIELD_OFFSET(ITEMIDLIST, mkid, 0)
 }
 
 static void test_pack_LPCITEMIDLIST(void)
 {
     /* LPCITEMIDLIST */
-    TEST_TYPE(LPCITEMIDLIST, 4, 4);
-    TEST_TYPE_POINTER(LPCITEMIDLIST, 3, 1);
+    TEST_TYPE_SIZE   (LPCITEMIDLIST, 4)
+    TEST_TYPE_ALIGN  (LPCITEMIDLIST, 4)
+    TEST_TARGET_SIZE (LPCITEMIDLIST, 3)
+    TEST_TARGET_ALIGN(LPCITEMIDLIST, 1)
 }
 
 static void test_pack_LPCSHITEMID(void)
 {
     /* LPCSHITEMID */
-    TEST_TYPE(LPCSHITEMID, 4, 4);
-    TEST_TYPE_POINTER(LPCSHITEMID, 3, 1);
+    TEST_TYPE_SIZE   (LPCSHITEMID, 4)
+    TEST_TYPE_ALIGN  (LPCSHITEMID, 4)
+    TEST_TARGET_SIZE (LPCSHITEMID, 3)
+    TEST_TARGET_ALIGN(LPCSHITEMID, 1)
 }
 
 static void test_pack_LPITEMIDLIST(void)
 {
     /* LPITEMIDLIST */
-    TEST_TYPE(LPITEMIDLIST, 4, 4);
+    TEST_TYPE_SIZE   (LPITEMIDLIST, 4)
+    TEST_TYPE_ALIGN  (LPITEMIDLIST, 4)
 }
 
 static void test_pack_LPSHELLDETAILS(void)
 {
     /* LPSHELLDETAILS */
-    TEST_TYPE(LPSHELLDETAILS, 4, 4);
+    TEST_TYPE_SIZE   (LPSHELLDETAILS, 4)
+    TEST_TYPE_ALIGN  (LPSHELLDETAILS, 4)
 }
 
 static void test_pack_LPSHITEMID(void)
 {
     /* LPSHITEMID */
-    TEST_TYPE(LPSHITEMID, 4, 4);
+    TEST_TYPE_SIZE   (LPSHITEMID, 4)
+    TEST_TYPE_ALIGN  (LPSHITEMID, 4)
 }
 
 static void test_pack_LPSTRRET(void)
 {
     /* LPSTRRET */
-    TEST_TYPE(LPSTRRET, 4, 4);
+    TEST_TYPE_SIZE   (LPSTRRET, 4)
+    TEST_TYPE_ALIGN  (LPSTRRET, 4)
 }
 
 static void test_pack_SHELLDETAILS(void)
 {
     /* SHELLDETAILS (pack 1) */
-    TEST_FIELD(SHELLDETAILS, int, fmt, 0, 4, 1);
-    TEST_FIELD(SHELLDETAILS, int, cxChar, 4, 4, 1);
+    TEST_FIELD_SIZE  (SHELLDETAILS, fmt, 4)
+    TEST_FIELD_ALIGN (SHELLDETAILS, fmt, 1)
+    TEST_FIELD_OFFSET(SHELLDETAILS, fmt, 0)
+    TEST_FIELD_SIZE  (SHELLDETAILS, cxChar, 4)
+    TEST_FIELD_ALIGN (SHELLDETAILS, cxChar, 1)
+    TEST_FIELD_OFFSET(SHELLDETAILS, cxChar, 4)
 }
 
 static void test_pack_SHITEMID(void)
 {
     /* SHITEMID (pack 1) */
-    TEST_TYPE(SHITEMID, 3, 1);
-    TEST_FIELD(SHITEMID, WORD, cb, 0, 2, 1);
-    TEST_FIELD(SHITEMID, BYTE[1], abID, 2, 1, 1);
+    TEST_TYPE_SIZE   (SHITEMID, 3)
+    TEST_TYPE_ALIGN  (SHITEMID, 1)
+    TEST_FIELD_SIZE  (SHITEMID, cb, 2)
+    TEST_FIELD_ALIGN (SHITEMID, cb, 1)
+    TEST_FIELD_OFFSET(SHITEMID, cb, 0)
+    TEST_FIELD_SIZE  (SHITEMID, abID, 1)
+    TEST_FIELD_ALIGN (SHITEMID, abID, 1)
+    TEST_FIELD_OFFSET(SHITEMID, abID, 2)
 }
 
 static void test_pack_STRRET(void)
 {
     /* STRRET (pack 4) */
-    TEST_FIELD(STRRET, UINT, uType, 0, 4, 4);
+    TEST_FIELD_SIZE  (STRRET, uType, 4)
+    TEST_FIELD_ALIGN (STRRET, uType, 4)
+    TEST_FIELD_OFFSET(STRRET, uType, 0)
 }
 
 static void test_pack_AUTO_SCROLL_DATA(void)
 {
     /* AUTO_SCROLL_DATA (pack 1) */
-    TEST_TYPE(AUTO_SCROLL_DATA, 48, 1);
-    TEST_FIELD(AUTO_SCROLL_DATA, int, iNextSample, 0, 4, 1);
-    TEST_FIELD(AUTO_SCROLL_DATA, DWORD, dwLastScroll, 4, 4, 1);
-    TEST_FIELD(AUTO_SCROLL_DATA, BOOL, bFull, 8, 4, 1);
-    TEST_FIELD(AUTO_SCROLL_DATA, POINT[NUM_POINTS], pts, 12, 24, 1);
-    TEST_FIELD(AUTO_SCROLL_DATA, DWORD[NUM_POINTS], dwTimes, 36, 12, 1);
+    TEST_TYPE_SIZE   (AUTO_SCROLL_DATA, 48)
+    TEST_TYPE_ALIGN  (AUTO_SCROLL_DATA, 1)
+    TEST_FIELD_SIZE  (AUTO_SCROLL_DATA, iNextSample, 4)
+    TEST_FIELD_ALIGN (AUTO_SCROLL_DATA, iNextSample, 1)
+    TEST_FIELD_OFFSET(AUTO_SCROLL_DATA, iNextSample, 0)
+    TEST_FIELD_SIZE  (AUTO_SCROLL_DATA, dwLastScroll, 4)
+    TEST_FIELD_ALIGN (AUTO_SCROLL_DATA, dwLastScroll, 1)
+    TEST_FIELD_OFFSET(AUTO_SCROLL_DATA, dwLastScroll, 4)
+    TEST_FIELD_SIZE  (AUTO_SCROLL_DATA, bFull, 4)
+    TEST_FIELD_ALIGN (AUTO_SCROLL_DATA, bFull, 1)
+    TEST_FIELD_OFFSET(AUTO_SCROLL_DATA, bFull, 8)
+    TEST_FIELD_SIZE  (AUTO_SCROLL_DATA, pts, 24)
+    TEST_FIELD_ALIGN (AUTO_SCROLL_DATA, pts, 1)
+    TEST_FIELD_OFFSET(AUTO_SCROLL_DATA, pts, 12)
+    TEST_FIELD_SIZE  (AUTO_SCROLL_DATA, dwTimes, 12)
+    TEST_FIELD_ALIGN (AUTO_SCROLL_DATA, dwTimes, 1)
+    TEST_FIELD_OFFSET(AUTO_SCROLL_DATA, dwTimes, 36)
 }
 
 static void test_pack_BFFCALLBACK(void)
 {
     /* BFFCALLBACK */
-    TEST_TYPE(BFFCALLBACK, 4, 4);
+    TEST_TYPE_SIZE   (BFFCALLBACK, 4)
+    TEST_TYPE_ALIGN  (BFFCALLBACK, 4)
 }
 
 static void test_pack_BROWSEINFOA(void)
 {
     /* BROWSEINFOA (pack 8) */
-    TEST_TYPE(BROWSEINFOA, 32, 4);
-    TEST_FIELD(BROWSEINFOA, HWND, hwndOwner, 0, 4, 4);
-    TEST_FIELD(BROWSEINFOA, LPCITEMIDLIST, pidlRoot, 4, 4, 4);
-    TEST_FIELD(BROWSEINFOA, LPSTR, pszDisplayName, 8, 4, 4);
-    TEST_FIELD(BROWSEINFOA, LPCSTR, lpszTitle, 12, 4, 4);
-    TEST_FIELD(BROWSEINFOA, UINT, ulFlags, 16, 4, 4);
-    TEST_FIELD(BROWSEINFOA, BFFCALLBACK, lpfn, 20, 4, 4);
-    TEST_FIELD(BROWSEINFOA, LPARAM, lParam, 24, 4, 4);
-    TEST_FIELD(BROWSEINFOA, INT, iImage, 28, 4, 4);
+    TEST_TYPE_SIZE   (BROWSEINFOA, 32)
+    TEST_TYPE_ALIGN  (BROWSEINFOA, 4)
+    TEST_FIELD_SIZE  (BROWSEINFOA, hwndOwner, 4)
+    TEST_FIELD_ALIGN (BROWSEINFOA, hwndOwner, 4)
+    TEST_FIELD_OFFSET(BROWSEINFOA, hwndOwner, 0)
+    TEST_FIELD_SIZE  (BROWSEINFOA, pidlRoot, 4)
+    TEST_FIELD_ALIGN (BROWSEINFOA, pidlRoot, 4)
+    TEST_FIELD_OFFSET(BROWSEINFOA, pidlRoot, 4)
+    TEST_FIELD_SIZE  (BROWSEINFOA, pszDisplayName, 4)
+    TEST_FIELD_ALIGN (BROWSEINFOA, pszDisplayName, 4)
+    TEST_FIELD_OFFSET(BROWSEINFOA, pszDisplayName, 8)
+    TEST_FIELD_SIZE  (BROWSEINFOA, lpszTitle, 4)
+    TEST_FIELD_ALIGN (BROWSEINFOA, lpszTitle, 4)
+    TEST_FIELD_OFFSET(BROWSEINFOA, lpszTitle, 12)
+    TEST_FIELD_SIZE  (BROWSEINFOA, ulFlags, 4)
+    TEST_FIELD_ALIGN (BROWSEINFOA, ulFlags, 4)
+    TEST_FIELD_OFFSET(BROWSEINFOA, ulFlags, 16)
+    TEST_FIELD_SIZE  (BROWSEINFOA, lpfn, 4)
+    TEST_FIELD_ALIGN (BROWSEINFOA, lpfn, 4)
+    TEST_FIELD_OFFSET(BROWSEINFOA, lpfn, 20)
+    TEST_FIELD_SIZE  (BROWSEINFOA, lParam, 4)
+    TEST_FIELD_ALIGN (BROWSEINFOA, lParam, 4)
+    TEST_FIELD_OFFSET(BROWSEINFOA, lParam, 24)
+    TEST_FIELD_SIZE  (BROWSEINFOA, iImage, 4)
+    TEST_FIELD_ALIGN (BROWSEINFOA, iImage, 4)
+    TEST_FIELD_OFFSET(BROWSEINFOA, iImage, 28)
 }
 
 static void test_pack_BROWSEINFOW(void)
 {
     /* BROWSEINFOW (pack 8) */
-    TEST_TYPE(BROWSEINFOW, 32, 4);
-    TEST_FIELD(BROWSEINFOW, HWND, hwndOwner, 0, 4, 4);
-    TEST_FIELD(BROWSEINFOW, LPCITEMIDLIST, pidlRoot, 4, 4, 4);
-    TEST_FIELD(BROWSEINFOW, LPWSTR, pszDisplayName, 8, 4, 4);
-    TEST_FIELD(BROWSEINFOW, LPCWSTR, lpszTitle, 12, 4, 4);
-    TEST_FIELD(BROWSEINFOW, UINT, ulFlags, 16, 4, 4);
-    TEST_FIELD(BROWSEINFOW, BFFCALLBACK, lpfn, 20, 4, 4);
-    TEST_FIELD(BROWSEINFOW, LPARAM, lParam, 24, 4, 4);
-    TEST_FIELD(BROWSEINFOW, INT, iImage, 28, 4, 4);
+    TEST_TYPE_SIZE   (BROWSEINFOW, 32)
+    TEST_TYPE_ALIGN  (BROWSEINFOW, 4)
+    TEST_FIELD_SIZE  (BROWSEINFOW, hwndOwner, 4)
+    TEST_FIELD_ALIGN (BROWSEINFOW, hwndOwner, 4)
+    TEST_FIELD_OFFSET(BROWSEINFOW, hwndOwner, 0)
+    TEST_FIELD_SIZE  (BROWSEINFOW, pidlRoot, 4)
+    TEST_FIELD_ALIGN (BROWSEINFOW, pidlRoot, 4)
+    TEST_FIELD_OFFSET(BROWSEINFOW, pidlRoot, 4)
+    TEST_FIELD_SIZE  (BROWSEINFOW, pszDisplayName, 4)
+    TEST_FIELD_ALIGN (BROWSEINFOW, pszDisplayName, 4)
+    TEST_FIELD_OFFSET(BROWSEINFOW, pszDisplayName, 8)
+    TEST_FIELD_SIZE  (BROWSEINFOW, lpszTitle, 4)
+    TEST_FIELD_ALIGN (BROWSEINFOW, lpszTitle, 4)
+    TEST_FIELD_OFFSET(BROWSEINFOW, lpszTitle, 12)
+    TEST_FIELD_SIZE  (BROWSEINFOW, ulFlags, 4)
+    TEST_FIELD_ALIGN (BROWSEINFOW, ulFlags, 4)
+    TEST_FIELD_OFFSET(BROWSEINFOW, ulFlags, 16)
+    TEST_FIELD_SIZE  (BROWSEINFOW, lpfn, 4)
+    TEST_FIELD_ALIGN (BROWSEINFOW, lpfn, 4)
+    TEST_FIELD_OFFSET(BROWSEINFOW, lpfn, 20)
+    TEST_FIELD_SIZE  (BROWSEINFOW, lParam, 4)
+    TEST_FIELD_ALIGN (BROWSEINFOW, lParam, 4)
+    TEST_FIELD_OFFSET(BROWSEINFOW, lParam, 24)
+    TEST_FIELD_SIZE  (BROWSEINFOW, iImage, 4)
+    TEST_FIELD_ALIGN (BROWSEINFOW, iImage, 4)
+    TEST_FIELD_OFFSET(BROWSEINFOW, iImage, 28)
 }
 
 static void test_pack_CABINETSTATE(void)
 {
     /* CABINETSTATE (pack 1) */
-    TEST_TYPE(CABINETSTATE, 12, 1);
-    TEST_FIELD(CABINETSTATE, WORD, cLength, 0, 2, 1);
-    TEST_FIELD(CABINETSTATE, WORD, nVersion, 2, 2, 1);
-    TEST_FIELD(CABINETSTATE, UINT, fMenuEnumFilter, 8, 4, 1);
+    TEST_TYPE_SIZE   (CABINETSTATE, 12)
+    TEST_TYPE_ALIGN  (CABINETSTATE, 1)
+    TEST_FIELD_SIZE  (CABINETSTATE, cLength, 2)
+    TEST_FIELD_ALIGN (CABINETSTATE, cLength, 1)
+    TEST_FIELD_OFFSET(CABINETSTATE, cLength, 0)
+    TEST_FIELD_SIZE  (CABINETSTATE, nVersion, 2)
+    TEST_FIELD_ALIGN (CABINETSTATE, nVersion, 1)
+    TEST_FIELD_OFFSET(CABINETSTATE, nVersion, 2)
+    TEST_FIELD_SIZE  (CABINETSTATE, fMenuEnumFilter, 4)
+    TEST_FIELD_ALIGN (CABINETSTATE, fMenuEnumFilter, 1)
+    TEST_FIELD_OFFSET(CABINETSTATE, fMenuEnumFilter, 8)
 }
 
 static void test_pack_CIDA(void)
 {
     /* CIDA (pack 1) */
-    TEST_TYPE(CIDA, 8, 1);
-    TEST_FIELD(CIDA, UINT, cidl, 0, 4, 1);
-    TEST_FIELD(CIDA, UINT[1], aoffset, 4, 4, 1);
+    TEST_TYPE_SIZE   (CIDA, 8)
+    TEST_TYPE_ALIGN  (CIDA, 1)
+    TEST_FIELD_SIZE  (CIDA, cidl, 4)
+    TEST_FIELD_ALIGN (CIDA, cidl, 1)
+    TEST_FIELD_OFFSET(CIDA, cidl, 0)
+    TEST_FIELD_SIZE  (CIDA, aoffset, 4)
+    TEST_FIELD_ALIGN (CIDA, aoffset, 1)
+    TEST_FIELD_OFFSET(CIDA, aoffset, 4)
 }
 
 static void test_pack_CSFV(void)
 {
     /* CSFV (pack 1) */
-    TEST_FIELD(CSFV, UINT, cbSize, 0, 4, 1);
-    TEST_FIELD(CSFV, IShellFolder*, pshf, 4, 4, 1);
-    TEST_FIELD(CSFV, IShellView*, psvOuter, 8, 4, 1);
-    TEST_FIELD(CSFV, LPCITEMIDLIST, pidl, 12, 4, 1);
-    TEST_FIELD(CSFV, LONG, lEvents, 16, 4, 1);
-    TEST_FIELD(CSFV, LPFNVIEWCALLBACK, pfnCallback, 20, 4, 1);
+    TEST_FIELD_SIZE  (CSFV, cbSize, 4)
+    TEST_FIELD_ALIGN (CSFV, cbSize, 1)
+    TEST_FIELD_OFFSET(CSFV, cbSize, 0)
+    TEST_FIELD_SIZE  (CSFV, pshf, 4)
+    TEST_FIELD_ALIGN (CSFV, pshf, 1)
+    TEST_FIELD_OFFSET(CSFV, pshf, 4)
+    TEST_FIELD_SIZE  (CSFV, psvOuter, 4)
+    TEST_FIELD_ALIGN (CSFV, psvOuter, 1)
+    TEST_FIELD_OFFSET(CSFV, psvOuter, 8)
+    TEST_FIELD_SIZE  (CSFV, pidl, 4)
+    TEST_FIELD_ALIGN (CSFV, pidl, 1)
+    TEST_FIELD_OFFSET(CSFV, pidl, 12)
+    TEST_FIELD_SIZE  (CSFV, lEvents, 4)
+    TEST_FIELD_ALIGN (CSFV, lEvents, 1)
+    TEST_FIELD_OFFSET(CSFV, lEvents, 16)
+    TEST_FIELD_SIZE  (CSFV, pfnCallback, 4)
+    TEST_FIELD_ALIGN (CSFV, pfnCallback, 1)
+    TEST_FIELD_OFFSET(CSFV, pfnCallback, 20)
 }
 
 static void test_pack_DROPFILES(void)
 {
     /* DROPFILES (pack 1) */
-    TEST_TYPE(DROPFILES, 20, 1);
-    TEST_FIELD(DROPFILES, DWORD, pFiles, 0, 4, 1);
-    TEST_FIELD(DROPFILES, POINT, pt, 4, 8, 1);
-    TEST_FIELD(DROPFILES, BOOL, fNC, 12, 4, 1);
-    TEST_FIELD(DROPFILES, BOOL, fWide, 16, 4, 1);
+    TEST_TYPE_SIZE   (DROPFILES, 20)
+    TEST_TYPE_ALIGN  (DROPFILES, 1)
+    TEST_FIELD_SIZE  (DROPFILES, pFiles, 4)
+    TEST_FIELD_ALIGN (DROPFILES, pFiles, 1)
+    TEST_FIELD_OFFSET(DROPFILES, pFiles, 0)
+    TEST_FIELD_SIZE  (DROPFILES, pt, 8)
+    TEST_FIELD_ALIGN (DROPFILES, pt, 1)
+    TEST_FIELD_OFFSET(DROPFILES, pt, 4)
+    TEST_FIELD_SIZE  (DROPFILES, fNC, 4)
+    TEST_FIELD_ALIGN (DROPFILES, fNC, 1)
+    TEST_FIELD_OFFSET(DROPFILES, fNC, 12)
+    TEST_FIELD_SIZE  (DROPFILES, fWide, 4)
+    TEST_FIELD_ALIGN (DROPFILES, fWide, 1)
+    TEST_FIELD_OFFSET(DROPFILES, fWide, 16)
 }
 
 static void test_pack_FILEDESCRIPTORA(void)
 {
     /* FILEDESCRIPTORA (pack 1) */
-    TEST_TYPE(FILEDESCRIPTORA, 332, 1);
-    TEST_FIELD(FILEDESCRIPTORA, DWORD, dwFlags, 0, 4, 1);
-    TEST_FIELD(FILEDESCRIPTORA, CLSID, clsid, 4, 16, 1);
-    TEST_FIELD(FILEDESCRIPTORA, SIZEL, sizel, 20, 8, 1);
-    TEST_FIELD(FILEDESCRIPTORA, POINTL, pointl, 28, 8, 1);
-    TEST_FIELD(FILEDESCRIPTORA, DWORD, dwFileAttributes, 36, 4, 1);
-    TEST_FIELD(FILEDESCRIPTORA, FILETIME, ftCreationTime, 40, 8, 1);
-    TEST_FIELD(FILEDESCRIPTORA, FILETIME, ftLastAccessTime, 48, 8, 1);
-    TEST_FIELD(FILEDESCRIPTORA, FILETIME, ftLastWriteTime, 56, 8, 1);
-    TEST_FIELD(FILEDESCRIPTORA, DWORD, nFileSizeHigh, 64, 4, 1);
-    TEST_FIELD(FILEDESCRIPTORA, DWORD, nFileSizeLow, 68, 4, 1);
-    TEST_FIELD(FILEDESCRIPTORA, CHAR[MAX_PATH], cFileName, 72, 260, 1);
+    TEST_TYPE_SIZE   (FILEDESCRIPTORA, 332)
+    TEST_TYPE_ALIGN  (FILEDESCRIPTORA, 1)
+    TEST_FIELD_SIZE  (FILEDESCRIPTORA, dwFlags, 4)
+    TEST_FIELD_ALIGN (FILEDESCRIPTORA, dwFlags, 1)
+    TEST_FIELD_OFFSET(FILEDESCRIPTORA, dwFlags, 0)
+    TEST_FIELD_SIZE  (FILEDESCRIPTORA, clsid, 16)
+    TEST_FIELD_ALIGN (FILEDESCRIPTORA, clsid, 1)
+    TEST_FIELD_OFFSET(FILEDESCRIPTORA, clsid, 4)
+    TEST_FIELD_SIZE  (FILEDESCRIPTORA, sizel, 8)
+    TEST_FIELD_ALIGN (FILEDESCRIPTORA, sizel, 1)
+    TEST_FIELD_OFFSET(FILEDESCRIPTORA, sizel, 20)
+    TEST_FIELD_SIZE  (FILEDESCRIPTORA, pointl, 8)
+    TEST_FIELD_ALIGN (FILEDESCRIPTORA, pointl, 1)
+    TEST_FIELD_OFFSET(FILEDESCRIPTORA, pointl, 28)
+    TEST_FIELD_SIZE  (FILEDESCRIPTORA, dwFileAttributes, 4)
+    TEST_FIELD_ALIGN (FILEDESCRIPTORA, dwFileAttributes, 1)
+    TEST_FIELD_OFFSET(FILEDESCRIPTORA, dwFileAttributes, 36)
+    TEST_FIELD_SIZE  (FILEDESCRIPTORA, ftCreationTime, 8)
+    TEST_FIELD_ALIGN (FILEDESCRIPTORA, ftCreationTime, 1)
+    TEST_FIELD_OFFSET(FILEDESCRIPTORA, ftCreationTime, 40)
+    TEST_FIELD_SIZE  (FILEDESCRIPTORA, ftLastAccessTime, 8)
+    TEST_FIELD_ALIGN (FILEDESCRIPTORA, ftLastAccessTime, 1)
+    TEST_FIELD_OFFSET(FILEDESCRIPTORA, ftLastAccessTime, 48)
+    TEST_FIELD_SIZE  (FILEDESCRIPTORA, ftLastWriteTime, 8)
+    TEST_FIELD_ALIGN (FILEDESCRIPTORA, ftLastWriteTime, 1)
+    TEST_FIELD_OFFSET(FILEDESCRIPTORA, ftLastWriteTime, 56)
+    TEST_FIELD_SIZE  (FILEDESCRIPTORA, nFileSizeHigh, 4)
+    TEST_FIELD_ALIGN (FILEDESCRIPTORA, nFileSizeHigh, 1)
+    TEST_FIELD_OFFSET(FILEDESCRIPTORA, nFileSizeHigh, 64)
+    TEST_FIELD_SIZE  (FILEDESCRIPTORA, nFileSizeLow, 4)
+    TEST_FIELD_ALIGN (FILEDESCRIPTORA, nFileSizeLow, 1)
+    TEST_FIELD_OFFSET(FILEDESCRIPTORA, nFileSizeLow, 68)
+    TEST_FIELD_SIZE  (FILEDESCRIPTORA, cFileName, 260)
+    TEST_FIELD_ALIGN (FILEDESCRIPTORA, cFileName, 1)
+    TEST_FIELD_OFFSET(FILEDESCRIPTORA, cFileName, 72)
 }
 
 static void test_pack_FILEDESCRIPTORW(void)
 {
     /* FILEDESCRIPTORW (pack 1) */
-    TEST_TYPE(FILEDESCRIPTORW, 592, 1);
-    TEST_FIELD(FILEDESCRIPTORW, DWORD, dwFlags, 0, 4, 1);
-    TEST_FIELD(FILEDESCRIPTORW, CLSID, clsid, 4, 16, 1);
-    TEST_FIELD(FILEDESCRIPTORW, SIZEL, sizel, 20, 8, 1);
-    TEST_FIELD(FILEDESCRIPTORW, POINTL, pointl, 28, 8, 1);
-    TEST_FIELD(FILEDESCRIPTORW, DWORD, dwFileAttributes, 36, 4, 1);
-    TEST_FIELD(FILEDESCRIPTORW, FILETIME, ftCreationTime, 40, 8, 1);
-    TEST_FIELD(FILEDESCRIPTORW, FILETIME, ftLastAccessTime, 48, 8, 1);
-    TEST_FIELD(FILEDESCRIPTORW, FILETIME, ftLastWriteTime, 56, 8, 1);
-    TEST_FIELD(FILEDESCRIPTORW, DWORD, nFileSizeHigh, 64, 4, 1);
-    TEST_FIELD(FILEDESCRIPTORW, DWORD, nFileSizeLow, 68, 4, 1);
-    TEST_FIELD(FILEDESCRIPTORW, WCHAR[MAX_PATH], cFileName, 72, 520, 1);
+    TEST_TYPE_SIZE   (FILEDESCRIPTORW, 592)
+    TEST_TYPE_ALIGN  (FILEDESCRIPTORW, 1)
+    TEST_FIELD_SIZE  (FILEDESCRIPTORW, dwFlags, 4)
+    TEST_FIELD_ALIGN (FILEDESCRIPTORW, dwFlags, 1)
+    TEST_FIELD_OFFSET(FILEDESCRIPTORW, dwFlags, 0)
+    TEST_FIELD_SIZE  (FILEDESCRIPTORW, clsid, 16)
+    TEST_FIELD_ALIGN (FILEDESCRIPTORW, clsid, 1)
+    TEST_FIELD_OFFSET(FILEDESCRIPTORW, clsid, 4)
+    TEST_FIELD_SIZE  (FILEDESCRIPTORW, sizel, 8)
+    TEST_FIELD_ALIGN (FILEDESCRIPTORW, sizel, 1)
+    TEST_FIELD_OFFSET(FILEDESCRIPTORW, sizel, 20)
+    TEST_FIELD_SIZE  (FILEDESCRIPTORW, pointl, 8)
+    TEST_FIELD_ALIGN (FILEDESCRIPTORW, pointl, 1)
+    TEST_FIELD_OFFSET(FILEDESCRIPTORW, pointl, 28)
+    TEST_FIELD_SIZE  (FILEDESCRIPTORW, dwFileAttributes, 4)
+    TEST_FIELD_ALIGN (FILEDESCRIPTORW, dwFileAttributes, 1)
+    TEST_FIELD_OFFSET(FILEDESCRIPTORW, dwFileAttributes, 36)
+    TEST_FIELD_SIZE  (FILEDESCRIPTORW, ftCreationTime, 8)
+    TEST_FIELD_ALIGN (FILEDESCRIPTORW, ftCreationTime, 1)
+    TEST_FIELD_OFFSET(FILEDESCRIPTORW, ftCreationTime, 40)
+    TEST_FIELD_SIZE  (FILEDESCRIPTORW, ftLastAccessTime, 8)
+    TEST_FIELD_ALIGN (FILEDESCRIPTORW, ftLastAccessTime, 1)
+    TEST_FIELD_OFFSET(FILEDESCRIPTORW, ftLastAccessTime, 48)
+    TEST_FIELD_SIZE  (FILEDESCRIPTORW, ftLastWriteTime, 8)
+    TEST_FIELD_ALIGN (FILEDESCRIPTORW, ftLastWriteTime, 1)
+    TEST_FIELD_OFFSET(FILEDESCRIPTORW, ftLastWriteTime, 56)
+    TEST_FIELD_SIZE  (FILEDESCRIPTORW, nFileSizeHigh, 4)
+    TEST_FIELD_ALIGN (FILEDESCRIPTORW, nFileSizeHigh, 1)
+    TEST_FIELD_OFFSET(FILEDESCRIPTORW, nFileSizeHigh, 64)
+    TEST_FIELD_SIZE  (FILEDESCRIPTORW, nFileSizeLow, 4)
+    TEST_FIELD_ALIGN (FILEDESCRIPTORW, nFileSizeLow, 1)
+    TEST_FIELD_OFFSET(FILEDESCRIPTORW, nFileSizeLow, 68)
+    TEST_FIELD_SIZE  (FILEDESCRIPTORW, cFileName, 520)
+    TEST_FIELD_ALIGN (FILEDESCRIPTORW, cFileName, 1)
+    TEST_FIELD_OFFSET(FILEDESCRIPTORW, cFileName, 72)
 }
 
 static void test_pack_FILEGROUPDESCRIPTORA(void)
 {
     /* FILEGROUPDESCRIPTORA (pack 1) */
-    TEST_TYPE(FILEGROUPDESCRIPTORA, 336, 1);
-    TEST_FIELD(FILEGROUPDESCRIPTORA, UINT, cItems, 0, 4, 1);
-    TEST_FIELD(FILEGROUPDESCRIPTORA, FILEDESCRIPTORA[1], fgd, 4, 332, 1);
+    TEST_TYPE_SIZE   (FILEGROUPDESCRIPTORA, 336)
+    TEST_TYPE_ALIGN  (FILEGROUPDESCRIPTORA, 1)
+    TEST_FIELD_SIZE  (FILEGROUPDESCRIPTORA, cItems, 4)
+    TEST_FIELD_ALIGN (FILEGROUPDESCRIPTORA, cItems, 1)
+    TEST_FIELD_OFFSET(FILEGROUPDESCRIPTORA, cItems, 0)
+    TEST_FIELD_SIZE  (FILEGROUPDESCRIPTORA, fgd, 332)
+    TEST_FIELD_ALIGN (FILEGROUPDESCRIPTORA, fgd, 1)
+    TEST_FIELD_OFFSET(FILEGROUPDESCRIPTORA, fgd, 4)
 }
 
 static void test_pack_FILEGROUPDESCRIPTORW(void)
 {
     /* FILEGROUPDESCRIPTORW (pack 1) */
-    TEST_TYPE(FILEGROUPDESCRIPTORW, 596, 1);
-    TEST_FIELD(FILEGROUPDESCRIPTORW, UINT, cItems, 0, 4, 1);
-    TEST_FIELD(FILEGROUPDESCRIPTORW, FILEDESCRIPTORW[1], fgd, 4, 592, 1);
+    TEST_TYPE_SIZE   (FILEGROUPDESCRIPTORW, 596)
+    TEST_TYPE_ALIGN  (FILEGROUPDESCRIPTORW, 1)
+    TEST_FIELD_SIZE  (FILEGROUPDESCRIPTORW, cItems, 4)
+    TEST_FIELD_ALIGN (FILEGROUPDESCRIPTORW, cItems, 1)
+    TEST_FIELD_OFFSET(FILEGROUPDESCRIPTORW, cItems, 0)
+    TEST_FIELD_SIZE  (FILEGROUPDESCRIPTORW, fgd, 592)
+    TEST_FIELD_ALIGN (FILEGROUPDESCRIPTORW, fgd, 1)
+    TEST_FIELD_OFFSET(FILEGROUPDESCRIPTORW, fgd, 4)
 }
 
 static void test_pack_LPBROWSEINFOA(void)
 {
     /* LPBROWSEINFOA */
-    TEST_TYPE(LPBROWSEINFOA, 4, 4);
-    TEST_TYPE_POINTER(LPBROWSEINFOA, 32, 4);
+    TEST_TYPE_SIZE   (LPBROWSEINFOA, 4)
+    TEST_TYPE_ALIGN  (LPBROWSEINFOA, 4)
+    TEST_TARGET_SIZE (LPBROWSEINFOA, 32)
+    TEST_TARGET_ALIGN(LPBROWSEINFOA, 4)
 }
 
 static void test_pack_LPBROWSEINFOW(void)
 {
     /* LPBROWSEINFOW */
-    TEST_TYPE(LPBROWSEINFOW, 4, 4);
-    TEST_TYPE_POINTER(LPBROWSEINFOW, 32, 4);
+    TEST_TYPE_SIZE   (LPBROWSEINFOW, 4)
+    TEST_TYPE_ALIGN  (LPBROWSEINFOW, 4)
+    TEST_TARGET_SIZE (LPBROWSEINFOW, 32)
+    TEST_TARGET_ALIGN(LPBROWSEINFOW, 4)
 }
 
 static void test_pack_LPCABINETSTATE(void)
 {
     /* LPCABINETSTATE */
-    TEST_TYPE(LPCABINETSTATE, 4, 4);
-    TEST_TYPE_POINTER(LPCABINETSTATE, 12, 1);
+    TEST_TYPE_SIZE   (LPCABINETSTATE, 4)
+    TEST_TYPE_ALIGN  (LPCABINETSTATE, 4)
+    TEST_TARGET_SIZE (LPCABINETSTATE, 12)
+    TEST_TARGET_ALIGN(LPCABINETSTATE, 1)
 }
 
 static void test_pack_LPCSFV(void)
 {
     /* LPCSFV */
-    TEST_TYPE(LPCSFV, 4, 4);
+    TEST_TYPE_SIZE   (LPCSFV, 4)
+    TEST_TYPE_ALIGN  (LPCSFV, 4)
 }
 
 static void test_pack_LPDROPFILES(void)
 {
     /* LPDROPFILES */
-    TEST_TYPE(LPDROPFILES, 4, 4);
-    TEST_TYPE_POINTER(LPDROPFILES, 20, 1);
+    TEST_TYPE_SIZE   (LPDROPFILES, 4)
+    TEST_TYPE_ALIGN  (LPDROPFILES, 4)
+    TEST_TARGET_SIZE (LPDROPFILES, 20)
+    TEST_TARGET_ALIGN(LPDROPFILES, 1)
 }
 
 static void test_pack_LPFILEDESCRIPTORA(void)
 {
     /* LPFILEDESCRIPTORA */
-    TEST_TYPE(LPFILEDESCRIPTORA, 4, 4);
-    TEST_TYPE_POINTER(LPFILEDESCRIPTORA, 332, 1);
+    TEST_TYPE_SIZE   (LPFILEDESCRIPTORA, 4)
+    TEST_TYPE_ALIGN  (LPFILEDESCRIPTORA, 4)
+    TEST_TARGET_SIZE (LPFILEDESCRIPTORA, 332)
+    TEST_TARGET_ALIGN(LPFILEDESCRIPTORA, 1)
 }
 
 static void test_pack_LPFILEDESCRIPTORW(void)
 {
     /* LPFILEDESCRIPTORW */
-    TEST_TYPE(LPFILEDESCRIPTORW, 4, 4);
-    TEST_TYPE_POINTER(LPFILEDESCRIPTORW, 592, 1);
+    TEST_TYPE_SIZE   (LPFILEDESCRIPTORW, 4)
+    TEST_TYPE_ALIGN  (LPFILEDESCRIPTORW, 4)
+    TEST_TARGET_SIZE (LPFILEDESCRIPTORW, 592)
+    TEST_TARGET_ALIGN(LPFILEDESCRIPTORW, 1)
 }
 
 static void test_pack_LPFILEGROUPDESCRIPTORA(void)
 {
     /* LPFILEGROUPDESCRIPTORA */
-    TEST_TYPE(LPFILEGROUPDESCRIPTORA, 4, 4);
-    TEST_TYPE_POINTER(LPFILEGROUPDESCRIPTORA, 336, 1);
+    TEST_TYPE_SIZE   (LPFILEGROUPDESCRIPTORA, 4)
+    TEST_TYPE_ALIGN  (LPFILEGROUPDESCRIPTORA, 4)
+    TEST_TARGET_SIZE (LPFILEGROUPDESCRIPTORA, 336)
+    TEST_TARGET_ALIGN(LPFILEGROUPDESCRIPTORA, 1)
 }
 
 static void test_pack_LPFILEGROUPDESCRIPTORW(void)
 {
     /* LPFILEGROUPDESCRIPTORW */
-    TEST_TYPE(LPFILEGROUPDESCRIPTORW, 4, 4);
-    TEST_TYPE_POINTER(LPFILEGROUPDESCRIPTORW, 596, 1);
+    TEST_TYPE_SIZE   (LPFILEGROUPDESCRIPTORW, 4)
+    TEST_TYPE_ALIGN  (LPFILEGROUPDESCRIPTORW, 4)
+    TEST_TARGET_SIZE (LPFILEGROUPDESCRIPTORW, 596)
+    TEST_TARGET_ALIGN(LPFILEGROUPDESCRIPTORW, 1)
 }
 
 static void test_pack_LPFNVIEWCALLBACK(void)
 {
     /* LPFNVIEWCALLBACK */
-    TEST_TYPE(LPFNVIEWCALLBACK, 4, 4);
+    TEST_TYPE_SIZE   (LPFNVIEWCALLBACK, 4)
+    TEST_TYPE_ALIGN  (LPFNVIEWCALLBACK, 4)
 }
 
 static void test_pack_LPIDA(void)
 {
     /* LPIDA */
-    TEST_TYPE(LPIDA, 4, 4);
-    TEST_TYPE_POINTER(LPIDA, 8, 1);
+    TEST_TYPE_SIZE   (LPIDA, 4)
+    TEST_TYPE_ALIGN  (LPIDA, 4)
+    TEST_TARGET_SIZE (LPIDA, 8)
+    TEST_TARGET_ALIGN(LPIDA, 1)
 }
 
 static void test_pack_LPQCMINFO(void)
 {
     /* LPQCMINFO */
-    TEST_TYPE(LPQCMINFO, 4, 4);
-    TEST_TYPE_POINTER(LPQCMINFO, 20, 4);
+    TEST_TYPE_SIZE   (LPQCMINFO, 4)
+    TEST_TYPE_ALIGN  (LPQCMINFO, 4)
+    TEST_TARGET_SIZE (LPQCMINFO, 20)
+    TEST_TARGET_ALIGN(LPQCMINFO, 4)
 }
 
 static void test_pack_LPSHChangeDWORDAsIDList(void)
 {
     /* LPSHChangeDWORDAsIDList */
-    TEST_TYPE(LPSHChangeDWORDAsIDList, 4, 4);
-    TEST_TYPE_POINTER(LPSHChangeDWORDAsIDList, 12, 1);
+    TEST_TYPE_SIZE   (LPSHChangeDWORDAsIDList, 4)
+    TEST_TYPE_ALIGN  (LPSHChangeDWORDAsIDList, 4)
+    TEST_TARGET_SIZE (LPSHChangeDWORDAsIDList, 12)
+    TEST_TARGET_ALIGN(LPSHChangeDWORDAsIDList, 1)
 }
 
 static void test_pack_LPSHChangeProductKeyAsIDList(void)
 {
     /* LPSHChangeProductKeyAsIDList */
-    TEST_TYPE(LPSHChangeProductKeyAsIDList, 4, 4);
-    TEST_TYPE_POINTER(LPSHChangeProductKeyAsIDList, 82, 1);
+    TEST_TYPE_SIZE   (LPSHChangeProductKeyAsIDList, 4)
+    TEST_TYPE_ALIGN  (LPSHChangeProductKeyAsIDList, 4)
+    TEST_TARGET_SIZE (LPSHChangeProductKeyAsIDList, 82)
+    TEST_TARGET_ALIGN(LPSHChangeProductKeyAsIDList, 1)
 }
 
 static void test_pack_LPSHDESCRIPTIONID(void)
 {
     /* LPSHDESCRIPTIONID */
-    TEST_TYPE(LPSHDESCRIPTIONID, 4, 4);
-    TEST_TYPE_POINTER(LPSHDESCRIPTIONID, 20, 4);
+    TEST_TYPE_SIZE   (LPSHDESCRIPTIONID, 4)
+    TEST_TYPE_ALIGN  (LPSHDESCRIPTIONID, 4)
+    TEST_TARGET_SIZE (LPSHDESCRIPTIONID, 20)
+    TEST_TARGET_ALIGN(LPSHDESCRIPTIONID, 4)
 }
 
 static void test_pack_LPSHELLFLAGSTATE(void)
 {
     /* LPSHELLFLAGSTATE */
-    TEST_TYPE(LPSHELLFLAGSTATE, 4, 4);
-    TEST_TYPE_POINTER(LPSHELLFLAGSTATE, 4, 1);
+    TEST_TYPE_SIZE   (LPSHELLFLAGSTATE, 4)
+    TEST_TYPE_ALIGN  (LPSHELLFLAGSTATE, 4)
+    TEST_TARGET_SIZE (LPSHELLFLAGSTATE, 4)
+    TEST_TARGET_ALIGN(LPSHELLFLAGSTATE, 1)
 }
 
 static void test_pack_LPSHELLSTATE(void)
 {
     /* LPSHELLSTATE */
-    TEST_TYPE(LPSHELLSTATE, 4, 4);
-    TEST_TYPE_POINTER(LPSHELLSTATE, 32, 1);
+    TEST_TYPE_SIZE   (LPSHELLSTATE, 4)
+    TEST_TYPE_ALIGN  (LPSHELLSTATE, 4)
+    TEST_TARGET_SIZE (LPSHELLSTATE, 32)
+    TEST_TARGET_ALIGN(LPSHELLSTATE, 1)
 }
 
 static void test_pack_LPTBINFO(void)
 {
     /* LPTBINFO */
-    TEST_TYPE(LPTBINFO, 4, 4);
-    TEST_TYPE_POINTER(LPTBINFO, 8, 4);
+    TEST_TYPE_SIZE   (LPTBINFO, 4)
+    TEST_TYPE_ALIGN  (LPTBINFO, 4)
+    TEST_TARGET_SIZE (LPTBINFO, 8)
+    TEST_TARGET_ALIGN(LPTBINFO, 4)
 }
 
 static void test_pack_PBROWSEINFOA(void)
 {
     /* PBROWSEINFOA */
-    TEST_TYPE(PBROWSEINFOA, 4, 4);
-    TEST_TYPE_POINTER(PBROWSEINFOA, 32, 4);
+    TEST_TYPE_SIZE   (PBROWSEINFOA, 4)
+    TEST_TYPE_ALIGN  (PBROWSEINFOA, 4)
+    TEST_TARGET_SIZE (PBROWSEINFOA, 32)
+    TEST_TARGET_ALIGN(PBROWSEINFOA, 4)
 }
 
 static void test_pack_PBROWSEINFOW(void)
 {
     /* PBROWSEINFOW */
-    TEST_TYPE(PBROWSEINFOW, 4, 4);
-    TEST_TYPE_POINTER(PBROWSEINFOW, 32, 4);
+    TEST_TYPE_SIZE   (PBROWSEINFOW, 4)
+    TEST_TYPE_ALIGN  (PBROWSEINFOW, 4)
+    TEST_TARGET_SIZE (PBROWSEINFOW, 32)
+    TEST_TARGET_ALIGN(PBROWSEINFOW, 4)
 }
 
 static void test_pack_QCMINFO(void)
 {
     /* QCMINFO (pack 8) */
-    TEST_TYPE(QCMINFO, 20, 4);
-    TEST_FIELD(QCMINFO, HMENU, hmenu, 0, 4, 4);
-    TEST_FIELD(QCMINFO, UINT, indexMenu, 4, 4, 4);
-    TEST_FIELD(QCMINFO, UINT, idCmdFirst, 8, 4, 4);
-    TEST_FIELD(QCMINFO, UINT, idCmdLast, 12, 4, 4);
-    TEST_FIELD(QCMINFO, QCMINFO_IDMAP const*, pIdMap, 16, 4, 4);
+    TEST_TYPE_SIZE   (QCMINFO, 20)
+    TEST_TYPE_ALIGN  (QCMINFO, 4)
+    TEST_FIELD_SIZE  (QCMINFO, hmenu, 4)
+    TEST_FIELD_ALIGN (QCMINFO, hmenu, 4)
+    TEST_FIELD_OFFSET(QCMINFO, hmenu, 0)
+    TEST_FIELD_SIZE  (QCMINFO, indexMenu, 4)
+    TEST_FIELD_ALIGN (QCMINFO, indexMenu, 4)
+    TEST_FIELD_OFFSET(QCMINFO, indexMenu, 4)
+    TEST_FIELD_SIZE  (QCMINFO, idCmdFirst, 4)
+    TEST_FIELD_ALIGN (QCMINFO, idCmdFirst, 4)
+    TEST_FIELD_OFFSET(QCMINFO, idCmdFirst, 8)
+    TEST_FIELD_SIZE  (QCMINFO, idCmdLast, 4)
+    TEST_FIELD_ALIGN (QCMINFO, idCmdLast, 4)
+    TEST_FIELD_OFFSET(QCMINFO, idCmdLast, 12)
+    TEST_FIELD_SIZE  (QCMINFO, pIdMap, 4)
+    TEST_FIELD_ALIGN (QCMINFO, pIdMap, 4)
+    TEST_FIELD_OFFSET(QCMINFO, pIdMap, 16)
 }
 
 static void test_pack_QCMINFO_IDMAP(void)
 {
     /* QCMINFO_IDMAP (pack 8) */
-    TEST_TYPE(QCMINFO_IDMAP, 12, 4);
-    TEST_FIELD(QCMINFO_IDMAP, UINT, nMaxIds, 0, 4, 4);
-    TEST_FIELD(QCMINFO_IDMAP, QCMINFO_IDMAP_PLACEMENT[1], pIdList, 4, 8, 4);
+    TEST_TYPE_SIZE   (QCMINFO_IDMAP, 12)
+    TEST_TYPE_ALIGN  (QCMINFO_IDMAP, 4)
+    TEST_FIELD_SIZE  (QCMINFO_IDMAP, nMaxIds, 4)
+    TEST_FIELD_ALIGN (QCMINFO_IDMAP, nMaxIds, 4)
+    TEST_FIELD_OFFSET(QCMINFO_IDMAP, nMaxIds, 0)
+    TEST_FIELD_SIZE  (QCMINFO_IDMAP, pIdList, 8)
+    TEST_FIELD_ALIGN (QCMINFO_IDMAP, pIdList, 4)
+    TEST_FIELD_OFFSET(QCMINFO_IDMAP, pIdList, 4)
 }
 
 static void test_pack_QCMINFO_IDMAP_PLACEMENT(void)
 {
     /* QCMINFO_IDMAP_PLACEMENT (pack 8) */
-    TEST_TYPE(QCMINFO_IDMAP_PLACEMENT, 8, 4);
-    TEST_FIELD(QCMINFO_IDMAP_PLACEMENT, UINT, id, 0, 4, 4);
-    TEST_FIELD(QCMINFO_IDMAP_PLACEMENT, UINT, fFlags, 4, 4, 4);
+    TEST_TYPE_SIZE   (QCMINFO_IDMAP_PLACEMENT, 8)
+    TEST_TYPE_ALIGN  (QCMINFO_IDMAP_PLACEMENT, 4)
+    TEST_FIELD_SIZE  (QCMINFO_IDMAP_PLACEMENT, id, 4)
+    TEST_FIELD_ALIGN (QCMINFO_IDMAP_PLACEMENT, id, 4)
+    TEST_FIELD_OFFSET(QCMINFO_IDMAP_PLACEMENT, id, 0)
+    TEST_FIELD_SIZE  (QCMINFO_IDMAP_PLACEMENT, fFlags, 4)
+    TEST_FIELD_ALIGN (QCMINFO_IDMAP_PLACEMENT, fFlags, 4)
+    TEST_FIELD_OFFSET(QCMINFO_IDMAP_PLACEMENT, fFlags, 4)
 }
 
 static void test_pack_SHChangeDWORDAsIDList(void)
 {
     /* SHChangeDWORDAsIDList (pack 1) */
-    TEST_TYPE(SHChangeDWORDAsIDList, 12, 1);
-    TEST_FIELD(SHChangeDWORDAsIDList, USHORT, cb, 0, 2, 1);
-    TEST_FIELD(SHChangeDWORDAsIDList, DWORD, dwItem1, 2, 4, 1);
-    TEST_FIELD(SHChangeDWORDAsIDList, DWORD, dwItem2, 6, 4, 1);
-    TEST_FIELD(SHChangeDWORDAsIDList, USHORT, cbZero, 10, 2, 1);
+    TEST_TYPE_SIZE   (SHChangeDWORDAsIDList, 12)
+    TEST_TYPE_ALIGN  (SHChangeDWORDAsIDList, 1)
+    TEST_FIELD_SIZE  (SHChangeDWORDAsIDList, cb, 2)
+    TEST_FIELD_ALIGN (SHChangeDWORDAsIDList, cb, 1)
+    TEST_FIELD_OFFSET(SHChangeDWORDAsIDList, cb, 0)
+    TEST_FIELD_SIZE  (SHChangeDWORDAsIDList, dwItem1, 4)
+    TEST_FIELD_ALIGN (SHChangeDWORDAsIDList, dwItem1, 1)
+    TEST_FIELD_OFFSET(SHChangeDWORDAsIDList, dwItem1, 2)
+    TEST_FIELD_SIZE  (SHChangeDWORDAsIDList, dwItem2, 4)
+    TEST_FIELD_ALIGN (SHChangeDWORDAsIDList, dwItem2, 1)
+    TEST_FIELD_OFFSET(SHChangeDWORDAsIDList, dwItem2, 6)
+    TEST_FIELD_SIZE  (SHChangeDWORDAsIDList, cbZero, 2)
+    TEST_FIELD_ALIGN (SHChangeDWORDAsIDList, cbZero, 1)
+    TEST_FIELD_OFFSET(SHChangeDWORDAsIDList, cbZero, 10)
 }
 
 static void test_pack_SHChangeNotifyEntry(void)
 {
     /* SHChangeNotifyEntry (pack 1) */
-    TEST_TYPE(SHChangeNotifyEntry, 8, 1);
-    TEST_FIELD(SHChangeNotifyEntry, LPCITEMIDLIST, pidl, 0, 4, 1);
-    TEST_FIELD(SHChangeNotifyEntry, BOOL, fRecursive, 4, 4, 1);
+    TEST_TYPE_SIZE   (SHChangeNotifyEntry, 8)
+    TEST_TYPE_ALIGN  (SHChangeNotifyEntry, 1)
+    TEST_FIELD_SIZE  (SHChangeNotifyEntry, pidl, 4)
+    TEST_FIELD_ALIGN (SHChangeNotifyEntry, pidl, 1)
+    TEST_FIELD_OFFSET(SHChangeNotifyEntry, pidl, 0)
+    TEST_FIELD_SIZE  (SHChangeNotifyEntry, fRecursive, 4)
+    TEST_FIELD_ALIGN (SHChangeNotifyEntry, fRecursive, 1)
+    TEST_FIELD_OFFSET(SHChangeNotifyEntry, fRecursive, 4)
 }
 
 static void test_pack_SHChangeProductKeyAsIDList(void)
 {
     /* SHChangeProductKeyAsIDList (pack 1) */
-    TEST_TYPE(SHChangeProductKeyAsIDList, 82, 1);
-    TEST_FIELD(SHChangeProductKeyAsIDList, USHORT, cb, 0, 2, 1);
-    TEST_FIELD(SHChangeProductKeyAsIDList, WCHAR[39], wszProductKey, 2, 78, 1);
-    TEST_FIELD(SHChangeProductKeyAsIDList, USHORT, cbZero, 80, 2, 1);
+    TEST_TYPE_SIZE   (SHChangeProductKeyAsIDList, 82)
+    TEST_TYPE_ALIGN  (SHChangeProductKeyAsIDList, 1)
+    TEST_FIELD_SIZE  (SHChangeProductKeyAsIDList, cb, 2)
+    TEST_FIELD_ALIGN (SHChangeProductKeyAsIDList, cb, 1)
+    TEST_FIELD_OFFSET(SHChangeProductKeyAsIDList, cb, 0)
+    TEST_FIELD_SIZE  (SHChangeProductKeyAsIDList, wszProductKey, 78)
+    TEST_FIELD_ALIGN (SHChangeProductKeyAsIDList, wszProductKey, 1)
+    TEST_FIELD_OFFSET(SHChangeProductKeyAsIDList, wszProductKey, 2)
+    TEST_FIELD_SIZE  (SHChangeProductKeyAsIDList, cbZero, 2)
+    TEST_FIELD_ALIGN (SHChangeProductKeyAsIDList, cbZero, 1)
+    TEST_FIELD_OFFSET(SHChangeProductKeyAsIDList, cbZero, 80)
 }
 
 static void test_pack_SHDESCRIPTIONID(void)
 {
     /* SHDESCRIPTIONID (pack 8) */
-    TEST_TYPE(SHDESCRIPTIONID, 20, 4);
-    TEST_FIELD(SHDESCRIPTIONID, DWORD, dwDescriptionId, 0, 4, 4);
-    TEST_FIELD(SHDESCRIPTIONID, CLSID, clsid, 4, 16, 4);
+    TEST_TYPE_SIZE   (SHDESCRIPTIONID, 20)
+    TEST_TYPE_ALIGN  (SHDESCRIPTIONID, 4)
+    TEST_FIELD_SIZE  (SHDESCRIPTIONID, dwDescriptionId, 4)
+    TEST_FIELD_ALIGN (SHDESCRIPTIONID, dwDescriptionId, 4)
+    TEST_FIELD_OFFSET(SHDESCRIPTIONID, dwDescriptionId, 0)
+    TEST_FIELD_SIZE  (SHDESCRIPTIONID, clsid, 16)
+    TEST_FIELD_ALIGN (SHDESCRIPTIONID, clsid, 4)
+    TEST_FIELD_OFFSET(SHDESCRIPTIONID, clsid, 4)
 }
 
 static void test_pack_SHELLFLAGSTATE(void)
 {
     /* SHELLFLAGSTATE (pack 1) */
-    TEST_TYPE(SHELLFLAGSTATE, 4, 1);
+    TEST_TYPE_SIZE   (SHELLFLAGSTATE, 4)
+    TEST_TYPE_ALIGN  (SHELLFLAGSTATE, 1)
 }
 
 static void test_pack_SHELLSTATE(void)
 {
     /* SHELLSTATE (pack 1) */
-    TEST_TYPE(SHELLSTATE, 32, 1);
-    TEST_FIELD(SHELLSTATE, DWORD, dwWin95Unused, 4, 4, 1);
-    TEST_FIELD(SHELLSTATE, UINT, uWin95Unused, 8, 4, 1);
-    TEST_FIELD(SHELLSTATE, LONG, lParamSort, 12, 4, 1);
-    TEST_FIELD(SHELLSTATE, int, iSortDirection, 16, 4, 1);
-    TEST_FIELD(SHELLSTATE, UINT, version, 20, 4, 1);
-    TEST_FIELD(SHELLSTATE, UINT, uNotUsed, 24, 4, 1);
-}
-
-static void test_pack_SHELLVIEWID(void)
-{
-    /* SHELLVIEWID */
-    TEST_TYPE(SHELLVIEWID, 16, 4);
+    TEST_TYPE_SIZE   (SHELLSTATE, 32)
+    TEST_TYPE_ALIGN  (SHELLSTATE, 1)
+    TEST_FIELD_SIZE  (SHELLSTATE, dwWin95Unused, 4)
+    TEST_FIELD_ALIGN (SHELLSTATE, dwWin95Unused, 1)
+    TEST_FIELD_OFFSET(SHELLSTATE, dwWin95Unused, 4)
+    TEST_FIELD_SIZE  (SHELLSTATE, uWin95Unused, 4)
+    TEST_FIELD_ALIGN (SHELLSTATE, uWin95Unused, 1)
+    TEST_FIELD_OFFSET(SHELLSTATE, uWin95Unused, 8)
+    TEST_FIELD_SIZE  (SHELLSTATE, lParamSort, 4)
+    TEST_FIELD_ALIGN (SHELLSTATE, lParamSort, 1)
+    TEST_FIELD_OFFSET(SHELLSTATE, lParamSort, 12)
+    TEST_FIELD_SIZE  (SHELLSTATE, iSortDirection, 4)
+    TEST_FIELD_ALIGN (SHELLSTATE, iSortDirection, 1)
+    TEST_FIELD_OFFSET(SHELLSTATE, iSortDirection, 16)
+    TEST_FIELD_SIZE  (SHELLSTATE, version, 4)
+    TEST_FIELD_ALIGN (SHELLSTATE, version, 1)
+    TEST_FIELD_OFFSET(SHELLSTATE, version, 20)
+    TEST_FIELD_SIZE  (SHELLSTATE, uNotUsed, 4)
+    TEST_FIELD_ALIGN (SHELLSTATE, uNotUsed, 1)
+    TEST_FIELD_OFFSET(SHELLSTATE, uNotUsed, 24)
 }
 
 static void test_pack_TBINFO(void)
 {
     /* TBINFO (pack 8) */
-    TEST_TYPE(TBINFO, 8, 4);
-    TEST_FIELD(TBINFO, UINT, cbuttons, 0, 4, 4);
-    TEST_FIELD(TBINFO, UINT, uFlags, 4, 4, 4);
+    TEST_TYPE_SIZE   (TBINFO, 8)
+    TEST_TYPE_ALIGN  (TBINFO, 4)
+    TEST_FIELD_SIZE  (TBINFO, cbuttons, 4)
+    TEST_FIELD_ALIGN (TBINFO, cbuttons, 4)
+    TEST_FIELD_OFFSET(TBINFO, cbuttons, 0)
+    TEST_FIELD_SIZE  (TBINFO, uFlags, 4)
+    TEST_FIELD_ALIGN (TBINFO, uFlags, 4)
+    TEST_FIELD_OFFSET(TBINFO, uFlags, 4)
 }
 
 static void test_pack(void)
@@ -1275,7 +1906,6 @@ static void test_pack(void)
     test_pack_FLAGGED_BYTE_BLOB();
     test_pack_FLAGGED_WORD_BLOB();
     test_pack_FMTID();
-    test_pack_GUID();
     test_pack_HMETAFILEPICT();
     test_pack_HYPER_SIZEDARR();
     test_pack_IID();
@@ -1300,7 +1930,6 @@ static void test_pack(void)
     test_pack_LPFILEGROUPDESCRIPTORA();
     test_pack_LPFILEGROUPDESCRIPTORW();
     test_pack_LPFNVIEWCALLBACK();
-    test_pack_LPGUID();
     test_pack_LPIDA();
     test_pack_LPITEMIDLIST();
     test_pack_LPOLESTR();
@@ -1348,7 +1977,6 @@ static void test_pack(void)
     test_pack_SHELLEXECUTEINFOW();
     test_pack_SHELLFLAGSTATE();
     test_pack_SHELLSTATE();
-    test_pack_SHELLVIEWID();
     test_pack_SHFILEINFOA();
     test_pack_SHFILEINFOW();
     test_pack_SHFILEOPSTRUCTA();
@@ -1385,5 +2013,9 @@ static void test_pack(void)
 
 START_TEST(generated)
 {
+#ifdef _WIN64
+    ok(0, "The type size / alignment tests don't support Win64 yet\n");
+#else
     test_pack();
+#endif
 }
