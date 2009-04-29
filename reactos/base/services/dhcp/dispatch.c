@@ -186,7 +186,7 @@ dispatch(void)
                 time(&cur_time);
                 continue;
             } else {
-                error("poll: %m");
+                error("poll: %s", strerror(errno));
                 break;
             }
         }

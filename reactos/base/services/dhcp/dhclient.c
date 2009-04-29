@@ -606,7 +606,7 @@ bind_lease(struct interface_info *ip)
 
     note("bound to %s -- renewal in %ld seconds.",
          piaddr(ip->client->active->address),
-         ip->client->active->renewal - cur_time);
+         (long int)(ip->client->active->renewal - cur_time));
 
     ip->client->state = S_BOUND;
 
@@ -1035,7 +1035,7 @@ send_discover(void *ipp)
 
 	note("DHCPDISCOVER on %s to %s port %d interval %ld",
 	    ip->name, inet_ntoa(sockaddr_broadcast.sin_addr),
-	    ntohs(sockaddr_broadcast.sin_port), ip->client->interval);
+	    ntohs(sockaddr_broadcast.sin_port), (long int)ip->client->interval);
 
 	/* Send out a packet. */
 	(void)send_packet(ip, &ip->client->packet, ip->client->packet_length,
@@ -1088,8 +1088,8 @@ state_panic(void *ipp)
                             ip->client->active->renewal) {
                             ip->client->state = S_BOUND;
                             note("bound: renewal in %ld seconds.",
-                                 ip->client->active->renewal -
-                                 cur_time);
+                                 (long int)(ip->client->active->renewal -
+                                 cur_time));
                             add_timeout(
                                 ip->client->active->renewal,
                                 state_bound, ip);
@@ -1563,7 +1563,7 @@ rewrite_client_leases(void)
 	if (!leaseFile) {
 		leaseFile = fopen(path_dhclient_db, "w");
 		if (!leaseFile)
-			error("can't create %s: %m", path_dhclient_db);
+			error("can't create %s: %s", path_dhclient_db, strerror(errno));
 	} else {
 		fflush(leaseFile);
 		rewind(leaseFile);
@@ -1600,7 +1600,7 @@ write_client_lease(struct interface_info *ip, struct client_lease *lease,
 	if (!leaseFile) {	/* XXX */
 		leaseFile = fopen(path_dhclient_db, "w");
 		if (!leaseFile)
-			error("can't create %s: %m", path_dhclient_db);
+			error("can't create %s: %s", path_dhclient_db, strerror(errno));
 	}
 
 	fprintf(leaseFile, "lease {\n");
@@ -1655,7 +1655,7 @@ script_init(char *reason, struct string_list *medium)
 	    sizeof(size_t) + strlen(reason);
 
 	if ((buf = buf_open(hdr.len)) == NULL)
-		error("buf_open: %m");
+		error("buf_open: %s", strerror(errno));
 
 	errs = 0;
 	errs += buf_add(buf, &hdr, sizeof(hdr));
@@ -1667,10 +1667,10 @@ script_init(char *reason, struct string_list *medium)
 	errs += buf_add(buf, reason, len);
 
 	if (errs)
-		error("buf_add: %m");
+		error("buf_add: %s", strerror(errno));
 
 	if (buf_close(privfd, buf) == -1)
-		error("buf_close: %m");
+		error("buf_close: %s", strerror(errno));
 }
 
 void
@@ -1848,7 +1848,7 @@ script_write_params(char *prefix, struct client_lease *lease)
 	scripttime = time(NULL);
 
 	if ((buf = buf_open(hdr.len)) == NULL)
-		error("buf_open: %m");
+		error("buf_open: %s", strerror(errno));
 
 	errs = 0;
 	errs += buf_add(buf, &hdr, sizeof(hdr));
@@ -1868,10 +1868,10 @@ script_write_params(char *prefix, struct client_lease *lease)
 	}
 
 	if (errs)
-		error("buf_add: %m");
+		error("buf_add: %s", strerror(errno));
 
 	if (buf_close(privfd, buf) == -1)
-		error("buf_close: %m");
+		error("buf_close: %s", strerror(errno));
 }
 
 int
