@@ -91,7 +91,7 @@ ExpAllocateDebugPool(POOL_TYPE Type, ULONG Size, ULONG Tag, PVOID Caller, BOOLEA
 
 VOID
 NTAPI
-ExpFreeDebugPool(PVOID Block)
+ExpFreeDebugPool(PVOID Block, BOOLEAN PagedPool)
 {
     PEI_WHOLE_PAGE_HEADER Header;
     PVOID ProtectedPage;
@@ -111,7 +111,10 @@ ExpFreeDebugPool(PVOID Block)
     MmSetPageProtect(NULL, ProtectedPage, PAGE_READWRITE);
 
     /* Free storage */
-    ExFreeNonPagedPool(Header->ActualAddress);
+    if (PagedPool)
+        ExFreePagedPool(Header->ActualAddress);
+    else
+        ExFreeNonPagedPool(Header->ActualAddress);
 }
 
 /* EOF */

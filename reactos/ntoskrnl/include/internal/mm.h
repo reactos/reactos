@@ -574,7 +574,7 @@ ExpAllocateDebugPool(
 
 VOID
 NTAPI
-ExpFreeDebugPool(PVOID Block);
+ExpFreeDebugPool(PVOID Block, BOOLEAN PagedPool);
 
 VOID
 NTAPI
