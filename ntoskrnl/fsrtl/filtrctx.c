@@ -183,7 +183,7 @@ FsRtlInsertPerFileObjectContext(IN PFILE_OBJECT FileObject,
         return STATUS_INVALID_PARAMETER;
     }
 
-    if (FileObject->Flags & FO_NAMED_PIPE)
+    if (FileObject->Flags & FO_FILE_OBJECT_HAS_EXTENSION)
     {
         return STATUS_INVALID_DEVICE_REQUEST;
     }
