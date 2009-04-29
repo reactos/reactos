@@ -19,4 +19,3 @@
 	<file>timezone.c</file>
 	<file>timedate.rc</file>
 </module>
-
