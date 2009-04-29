@@ -504,7 +504,7 @@ static void test_StrFormatByteSize64A(void)
 
   if (!pStrFormatByteSize64A)
   {
-    skip("StrFormatByteSize64A() is not available. Tests skipped\n");
+    win_skip("StrFormatByteSize64A() is not available\n");
     return;
   }
 
@@ -528,7 +528,7 @@ static void test_StrFormatKBSizeW(void)
 
   if (!pStrFormatKBSizeW)
   {
-    skip("StrFormatKBSizeW() is not available. Tests skipped\n");
+    win_skip("StrFormatKBSizeW() is not available\n");
     return;
   }
 
@@ -550,7 +550,7 @@ static void test_StrFormatKBSizeA(void)
 
   if (!pStrFormatKBSizeA)
   {
-    skip("StrFormatKBSizeA() is not available. Tests skipped\n");
+    win_skip("StrFormatKBSizeA() is not available\n");
     return;
   }
 
@@ -596,7 +596,7 @@ static void test_StrCmpA(void)
     ok(!pStrIsIntlEqualA(TRUE, str1, str2, 5), "StrIsIntlEqualA(TRUE,...) isn't case-sensitive\n");
   }
   else
-    skip("StrIsIntlEqualA() is not available. Tests skipped\n");
+    win_skip("StrIsIntlEqualA() is not available\n");
 
   if (pIntlStrEqWorkerA)
   {
@@ -604,7 +604,7 @@ static void test_StrCmpA(void)
     ok(!pIntlStrEqWorkerA(TRUE, str1, str2, 5), "pIntlStrEqWorkerA(TRUE,...) isn't case-sensitive\n");
   }
   else
-    skip("IntlStrEqWorkerA() is not available. Tests skipped\n");
+    win_skip("IntlStrEqWorkerA() is not available\n");
 }
 
 static void test_StrCmpW(void)
@@ -623,7 +623,7 @@ static void test_StrCmpW(void)
     ok(!pStrIsIntlEqualW(TRUE, str1, str2, 5), "StrIsIntlEqualW(TRUE,...) isn't case-sensitive\n");
   }
   else
-    skip("StrIsIntlEqualW() is not available. Tests skipped\n");
+    win_skip("StrIsIntlEqualW() is not available\n");
 
   if (pIntlStrEqWorkerW)
   {
@@ -631,7 +631,7 @@ static void test_StrCmpW(void)
     ok(!pIntlStrEqWorkerW(TRUE, str1, str2, 5), "IntlStrEqWorkerW(TRUE,...) isn't case-sensitive\n");
   }
   else
-    skip("IntlStrEqWorkerW() is not available. Tests skipped\n");
+    win_skip("IntlStrEqWorkerW() is not available\n");
 }
 
 static WCHAR *CoDupStrW(const char* src)
@@ -652,7 +652,7 @@ static void test_StrRetToBSTR(void)
 
     if (!pStrRetToBSTR)
     {
-        skip("StrRetToBSTR() is not available. Tests skipped\n");
+        win_skip("StrRetToBSTR() is not available\n");
         return;
     }
 
@@ -690,7 +690,7 @@ static void test_StrCpyNXA(void)
 
   if (!pStrCpyNXA)
   {
-    skip("StrCpyNXA() is not available. Tests skipped\n");
+    win_skip("StrCpyNXA() is not available\n");
     return;
   }
 
@@ -711,7 +711,7 @@ static void test_StrCpyNXW(void)
 
   if (!pStrCpyNXW)
   {
-    skip("StrCpyNXW() is not available. Tests skipped\n");
+    win_skip("StrCpyNXW() is not available\n");
     return;
   }
 
@@ -768,7 +768,7 @@ static void test_SHAnsiToAnsi(void)
 
   if (!pSHAnsiToAnsi)
   {
-    skip("SHAnsiToAnsi() is not available. Tests skipped\n");
+    win_skip("SHAnsiToAnsi() is not available\n");
     return;
   }
 
@@ -789,7 +789,7 @@ static void test_SHUnicodeToUnicode(void)
 
   if (!pSHUnicodeToUnicode)
   {
-    skip("SHUnicodeToUnicode() is not available. Tests skipped\n");
+    win_skip("SHUnicodeToUnicode() is not available\n");
     return;
   }
 
@@ -829,7 +829,7 @@ static void test_StrXXX_overflows(void)
         expect_eq(buf[100], '\xbf', CHAR, "%x");
     }
     else
-        skip("StrCatBuffA() is not available. Tests skipped\n");
+        win_skip("StrCatBuffA() is not available\n");
 
     memset(wbuf, 0xbf, sizeof(wbuf));
     expect_eq(StrCpyNW(wbuf, wstr1, 10), wbuf, PWCHAR, "%p");
@@ -843,7 +843,7 @@ static void test_StrXXX_overflows(void)
         expect_eq(wbuf[100], (WCHAR)0xbfbf, WCHAR, "%x");
     }
     else
-        skip("StrCatBuffW() is not available. Tests skipped\n");
+        win_skip("StrCatBuffW() is not available\n");
 
     if (pStrRetToBufW)
     {
@@ -855,7 +855,7 @@ static void test_StrXXX_overflows(void)
         expect_eq(wbuf[10], (WCHAR)0xbfbf, WCHAR, "%x");
     }
     else
-        skip("StrRetToBufW() is not available. Tests skipped\n");
+        win_skip("StrRetToBufW() is not available\n");
 
     if (pStrRetToBufA)
     {
@@ -867,7 +867,7 @@ static void test_StrXXX_overflows(void)
         expect_eq(buf[10], (CHAR)0xbf, CHAR, "%x");
     }
     else
-        skip("StrRetToBufA() is not available. Tests skipped\n");
+        win_skip("StrRetToBufA() is not available\n");
 
     if (pwnsprintfA)
     {
@@ -878,7 +878,7 @@ static void test_StrXXX_overflows(void)
         expect_eq(buf[10], (CHAR)0xbf, CHAR, "%x");
     }
     else
-        skip("wnsprintfA() is not available. Tests skipped\n");
+        win_skip("wnsprintfA() is not available\n");
 
     if (pwnsprintfW)
     {
@@ -889,7 +889,7 @@ static void test_StrXXX_overflows(void)
         expect_eq(wbuf[10], (WCHAR)0xbfbf, WCHAR, "%x");
     }
     else
-        skip("wnsprintfW() is not available. Tests skipped\n");
+        win_skip("wnsprintfW() is not available\n");
 }
 
 START_TEST(string)
