@@ -880,59 +880,43 @@ static BOOL UITOOLS95_DrawFrameCaption(HDC dc, LPRECT r, UINT uFlags)
 
 static BOOL UITOOLS95_DrawFrameScroll(HDC dc, LPRECT r, UINT uFlags)
 {
-    POINT Line[4];
+    int colorIdx = uFlags & DFCS_INACTIVE ? COLOR_BTNSHADOW : COLOR_BTNTEXT;
+    LOGFONT lf;
+    HFONT hFont, hOldFont;
+    COLORREF clrsave;
     RECT myr;
+    INT bkmode;
+    TCHAR Symbol;
+    // for scrollgripsize
+    POINT Line[4];
     int SmallDiam = UITOOLS_MakeSquareRect(r, &myr) - 2;
     int i;
     HBRUSH hbsave, hb, hb2;
     HPEN hpsave, hp, hp2;
     int tri = 290*SmallDiam/1000 - 1;
     int d46, d93;
-
-    /*
-     * This fixes a problem with really tiny "scroll" buttons. In particular
-     * with the updown control.
-     * Making sure that the arrow is as least 3 pixels wide (or high).
-     */
-    if (tri == 0)
-        tri = 1;
-
+    // end scrollgripsize
     switch(uFlags & 0xff)
     {
         case DFCS_SCROLLCOMBOBOX:
         case DFCS_SCROLLDOWN:
-            Line[2].x = myr.left + 470*SmallDiam/1000 + 2;
-            Line[2].y = myr.top  + 687*SmallDiam/1000 + 1;
-            Line[0].x = Line[2].x - tri;
-            Line[1].x = Line[2].x + tri;
-            Line[0].y = Line[1].y = Line[2].y - tri;
-            break;
+		Symbol = '6';
+		break;
 
-        case DFCS_SCROLLUP:
-            Line[2].x = myr.left + 470*SmallDiam/1000 + 2;
-            Line[2].y = myr.bottom - (687*SmallDiam/1000 + 1);
-            Line[0].x = Line[2].x - tri;
-            Line[1].x = Line[2].x + tri;
-            Line[0].y = Line[1].y = Line[2].y + tri;
-            break;
+	case DFCS_SCROLLUP:
+		Symbol = '5';
+		break;
 
-        case DFCS_SCROLLLEFT:
-            Line[2].x = myr.right - (687*SmallDiam/1000 + 1);
-            Line[2].y = myr.top  + 470*SmallDiam/1000 + 2;
-            Line[0].y = Line[2].y - tri;
-            Line[1].y = Line[2].y + tri;
-            Line[0].x = Line[1].x = Line[2].x + tri;
-            break;
+	case DFCS_SCROLLLEFT:
+		Symbol = '3';
+		break;
+        
+	case DFCS_SCROLLRIGHT:
+		Symbol = '4';
+		break;
 
-        case DFCS_SCROLLRIGHT:
-            Line[2].x = myr.left + 687*SmallDiam/1000 + 1;
-            Line[2].y = myr.top  + 470*SmallDiam/1000 + 2;
-            Line[0].y = Line[2].y - tri;
-            Line[1].y = Line[2].y + tri;
-            Line[0].x = Line[1].x = Line[2].x - tri;
-            break;
-
-        case DFCS_SCROLLSIZEGRIP:
+	case DFCS_SCROLLSIZEGRIP:
+	    // FIXME: needs to use marlett too, copied for compatibility only
             /* This one breaks the flow... */
             IntDrawRectEdge(dc, r, EDGE_BUMP, BF_MIDDLE | ((uFlags&(DFCS_MONO|DFCS_FLAT)) ? BF_MONO : 0));
             hpsave = (HPEN)SelectObject(dc, GetStockObject(NULL_PEN));
@@ -1005,42 +989,50 @@ static BOOL UITOOLS95_DrawFrameScroll(HDC dc, LPRECT r, UINT uFlags)
             SelectObject(dc, hpsave);
             SelectObject(dc, hbsave);
             return TRUE;
-
-        default:
+	case DFCS_SCROLLSIZEGRIPRIGHT:
+            return FALSE; // unimplemented yet
+	default:
             return FALSE;
     }
-
-    /* Here do the real scroll-bar controls end up */
-    if( ! (uFlags & (0xff00 & ~DFCS_ADJUSTRECT)) )
-        /* UITOOLS95_DFC_ButtonPush always uses BF_SOFT which we don't */
-        /* want for the normal scroll-arrow button. */
-        IntDrawRectEdge( dc, r, EDGE_RAISED, (uFlags&DFCS_ADJUSTRECT) | BF_MIDDLE | BF_RECT);
+    if(uFlags & DFCS_PUSHED)
+        IntDrawRectEdge(dc,r,EDGE_SUNKEN, BF_RECT | BF_MIDDLE | BF_SOFT);
     else
-        UITOOLS95_DFC_ButtonPush(dc, r, (uFlags & 0xff00) );
-
+        IntDrawRectEdge(dc,r,BDR_RAISEDINNER | BDR_RAISEDOUTER, BF_RECT |
+                        BF_SOFT | BF_MIDDLE);
+    ZeroMemory(&lf, sizeof(LOGFONT));
+    UITOOLS_MakeSquareRect(r, &myr);
+    myr.left += 1;
+    myr.top += 1;
+    myr.right -= 1;
+    myr.bottom -= 1;
+    if(uFlags & DFCS_PUSHED)
+       OffsetRect(&myr,1,1);
+    lf.lfHeight = myr.bottom - myr.top;
+    lf.lfWidth = 0;
+    lf.lfWeight = FW_NORMAL;
+    lf.lfCharSet = DEFAULT_CHARSET;
+    lstrcpy(lf.lfFaceName, TEXT("Marlett"));
+    hFont = CreateFontIndirect(&lf);
+    /* save font and text color */
+    hOldFont = SelectObject(dc, hFont);
+    clrsave = GetTextColor(dc);
+    bkmode = GetBkMode(dc);
+    /* set color and drawing mode */
+    SetBkMode(dc, TRANSPARENT);
     if(uFlags & DFCS_INACTIVE)
     {
-        hbsave = (HBRUSH)SelectObject(dc, GetSysColorBrush(COLOR_BTNHIGHLIGHT));
-        hpsave = (HPEN)SelectObject(dc, GetSysColorPen(COLOR_BTNHIGHLIGHT));
-        Polygon(dc, Line, 3);
-        SelectObject(dc, hpsave);
-        SelectObject(dc, hbsave);
+        /* draw shadow */
+        SetTextColor(dc, GetSysColor(COLOR_BTNHIGHLIGHT));
+        TextOut(dc, myr.left + 1, myr.top + 1, &Symbol, 1);
     }
-
-    if( (uFlags & DFCS_INACTIVE) || !(uFlags & DFCS_PUSHED) )
-        for(i = 0; i < 3; i++)
-        {
-            Line[i].x--;
-            Line[i].y--;
-        }
-
-    i = uFlags & DFCS_INACTIVE ? COLOR_BTNSHADOW : COLOR_BTNTEXT;
-    hbsave = (HBRUSH)SelectObject(dc, GetSysColorBrush(i));
-    hpsave = (HPEN)SelectObject(dc, GetSysColorPen(i));
-    Polygon(dc, Line, 3);
-    SelectObject(dc, hpsave);
-    SelectObject(dc, hbsave);
-
+    SetTextColor(dc, GetSysColor(colorIdx));
+    /* draw selected symbol */
+    TextOut(dc, myr.left, myr.top, &Symbol, 1);
+    /* restore previous settings */
+    SetTextColor(dc, clrsave);
+    SelectObject(dc, hOldFont);
+    SetBkMode(dc, bkmode);
+    DeleteObject(hFont);
     return TRUE;
 }
 
@@ -1054,6 +1046,10 @@ static BOOL UITOOLS95_DrawFrameMenu(HDC dc, LPRECT r, UINT uFlags)
         case DFCS_MENUARROW:
             Symbol = '8';
             break;
+
+        case DFCS_MENUARROWRIGHT:
+	    Symbol = 'w'; // FIXME: needs to confirm
+	    break;
 
         case DFCS_MENUBULLET:
             Symbol = 'h';
