@@ -24,7 +24,7 @@ BEGIN
     AUTOCHECKBOX    "B&arã de stare", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
 
     DEFPUSHBUTTON   "OK", IDOK, 35, 97, 50, 14
-    PUSHBUTTON      "Revocare", IDCANCEL, 101, 97, 50, 14
+    PUSHBUTTON      "Anulare", IDCANCEL, 101, 97, 50, 14
 END
 
 
@@ -38,7 +38,7 @@ BEGIN
     CONTROL       "", IDC_CARDBACK3, "Static", SS_NOTIFY, 112, 7, 50, 61
     CONTROL       "", IDC_CARDBACK4, "Static", SS_NOTIFY, 166, 7, 50, 61
     DEFPUSHBUTTON "OK", IDOK, 104, 77, 54, 13
-    PUSHBUTTON    "Revocare", IDCANCEL, 162, 77, 54, 13
+    PUSHBUTTON    "Anulare", IDCANCEL, 162, 77, 54, 13
 END
 
 

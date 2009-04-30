@@ -210,8 +210,8 @@ BEGIN
     IDS_CMT_DEVMGMT     "Пускане на управителя на устройствата"
     IDS_CMT_SERVMAN     "Пускане на управителя на услугите"
     IDS_CMT_RDESKTOP    "Пускане на отдалечената работна площ"
-    IDS_CMT_EVENTVIEW   "Launch Event Viewer"
-    IDS_CMT_MSCONFIG    "Launch System Configuration program"
+    IDS_CMT_EVENTVIEW   "Пускане на прегледника на събития"
+    IDS_CMT_MSCONFIG    "Пускане на приложението за настройка на уредбата"
 END
 
 
@@ -227,7 +227,7 @@ BEGIN
 	IDS_SYS_TOOLS        "Системни средства"
 	IDS_CMT_CHARMAP      "Знакова таблица"
 	IDS_CMT_KBSWITCH     "Превключвател на клавиатурните подредби"
-    IDS_CMT_DXDIAG       "Launch ReactX-Diagnostic program"
+	IDS_CMT_DXDIAG       "Пускане на приложението за преглеждане на РеактХ"
 END
 
 STRINGTABLE
@@ -238,9 +238,9 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SYS_ENTERTAINMENT       "Entertainment"
-    IDS_CMT_MPLAY32             "Launch Multimedia Player"
-    IDS_CMT_SNDVOL32            "Launch Volume Control"
+    IDS_SYS_ENTERTAINMENT       "Забавление"
+    IDS_CMT_MPLAY32             "Пускане на мултимедийния възпроизводител"
+    IDS_CMT_SNDVOL32            "Пускане на упрвлението на силата на звука"
 END
 
 STRINGTABLE
@@ -263,7 +263,7 @@ BEGIN
     IDS_SHORT_DOWNLOADER "Свали!.lnk"
     IDS_SHORT_SERVICE    "Управител на услугите.lnk"
     IDS_SHORT_DEVICE     "Управител на устройствата.lnk"
-    IDS_SHORT_MPLAY32    "Multimedia Player.lnk"
+    IDS_SHORT_MPLAY32    "Мултимедиен възпроизводител.lnk"
     IDS_SHORT_CALC       "Изчислител.lnk"
     IDS_SHORT_REGEDIT    "Обработка на регистъра.lnk"
     IDS_SHORT_NOTEPAD    "Бележник.lnk"
@@ -275,10 +275,10 @@ BEGIN
     IDS_SHORT_MAGNIFY    "Лупа.lnk"
     IDS_SHORT_RDESKTOP   "Далечна работна площ.lnk"
     IDS_SHORT_KBSWITCH   "Превключвател на клавиатурните подредби.lnk"
-    IDS_SHORT_EVENTVIEW  "Event Viewer.lnk"
-    IDS_SHORT_MSCONFIG   "System Configuration.lnk"
-    IDS_SHORT_SNDVOL32   "Volume Control.lnk"
-    IDS_SHORT_DXDIAG     "ReactX Diagnostic.lnk"
+    IDS_SHORT_EVENTVIEW  "Преглед на събития.lnk"
+    IDS_SHORT_MSCONFIG   "Настройка на уредбата.lnk"
+    IDS_SHORT_SNDVOL32   "Сила на звука.lnk"
+    IDS_SHORT_DXDIAG     "Преглеждане на РеактХ.lnk"
 END
 
 

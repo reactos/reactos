@@ -16,83 +16,83 @@ IDR_TASKMANAGER MENU DISCARDABLE
 BEGIN
     POPUP "&Bestand"
     BEGIN
-        MENUITEM "&Nieuwe taak (Uitvoeren...)",          ID_FILE_NEW
+        MENUITEM "&Nieuwe taak (Uitvoeren...)",         ID_FILE_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&Taakbeheer afsluiten",          ID_FILE_EXIT
+        MENUITEM "&Taakbeheer afsluiten",               ID_FILE_EXIT
     END
     POPUP "&Opties"
     BEGIN
-        MENUITEM "&Altijd op voorgrond",              ID_OPTIONS_ALWAYSONTOP
+        MENUITEM "&Altijd op voorgrond",                ID_OPTIONS_ALWAYSONTOP
         , CHECKED
-        MENUITEM "Minimaliseren &bij gebruik",            ID_OPTIONS_MINIMIZEONUSE
+        MENUITEM "Minimaliseren &bij gebruik",          ID_OPTIONS_MINIMIZEONUSE
         , CHECKED
-        MENUITEM "&Verbergen indien geminimaliseerd",        ID_OPTIONS_HIDEWHENMINIMIZED
+        MENUITEM "&Verbergen indien geminimaliseerd",   ID_OPTIONS_HIDEWHENMINIMIZED
         , CHECKED
-        MENUITEM "16-&bits taken weergeven",          ID_OPTIONS_SHOW16BITTASKS
+        MENUITEM "16-&bits taken weergeven",            ID_OPTIONS_SHOW16BITTASKS
         , CHECKED
     END
     POPUP "&Beeld"
     BEGIN
-        MENUITEM "&Nu vernieuwen",                ID_VIEW_REFRESH
+        MENUITEM "&Nu vernieuwen",                      ID_VIEW_REFRESH
         POPUP "Bijwerk&snelheid"
         BEGIN
-            MENUITEM "&Hoog",                       ID_VIEW_UPDATESPEED_HIGH
-            MENUITEM "&Standaard",                     ID_VIEW_UPDATESPEED_NORMAL
+            MENUITEM "&Hoog",                           ID_VIEW_UPDATESPEED_HIGH
+            MENUITEM "&Standaard",                      ID_VIEW_UPDATESPEED_NORMAL
             , CHECKED
-            MENUITEM "&Laag",                        ID_VIEW_UPDATESPEED_LOW
-            MENUITEM "&Onderbroken",                     ID_VIEW_UPDATESPEED_PAUSED
+            MENUITEM "&Laag",                           ID_VIEW_UPDATESPEED_LOW
+            MENUITEM "&Onderbroken",                    ID_VIEW_UPDATESPEED_PAUSED
 
         END
         MENUITEM SEPARATOR
-        MENUITEM "&Grote pictogrammen",                ID_VIEW_LARGE
+        MENUITEM "&Grote pictogrammen",                 ID_VIEW_LARGE
         MENUITEM "&Kleine pictogrammen",                ID_VIEW_SMALL
-        MENUITEM "&Details",                    ID_VIEW_DETAILS, CHECKED
-        MENUITEM "&Kolommen selecteren...",          ID_VIEW_SELECTCOLUMNS
+        MENUITEM "&Details",                            ID_VIEW_DETAILS, CHECKED
+        MENUITEM "&Kolommen selecteren...",             ID_VIEW_SELECTCOLUMNS
         POPUP "&Geschiedenis van CPU"
         BEGIN
             MENUITEM "&Eén grafiek, alle CPU's",        ID_VIEW_CPUHISTORY_ONEGRAPHALL
 
-            MENUITEM "Eén grafiek &per CPU",          ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU
+            MENUITEM "Eén grafiek &per CPU",            ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU
             , CHECKED
         END
-        MENUITEM "&Kerneltijden weergeven",          ID_VIEW_SHOWKERNELTIMES
+        MENUITEM "&Kerneltijden weergeven",             ID_VIEW_SHOWKERNELTIMES
     END
     POPUP "&Vensters"
     BEGIN
-        MENUITEM "&Onder elkaar",          ID_WINDOWS_TILEHORIZONTALLY
-        MENUITEM "N&aast elkaar",            ID_WINDOWS_TILEVERTICALLY
-        MENUITEM "Mi&nimaliseren",                   ID_WINDOWS_MINIMIZE
-        MENUITEM "&Maximaliseren",                   ID_WINDOWS_MAXIMIZE
-        MENUITEM "&Trapsgewijs",                    ID_WINDOWS_CASCADE
-        MENUITEM "Naar &voorgrond",             ID_WINDOWS_BRINGTOFRONT
+        MENUITEM "&Onder elkaar",                       ID_WINDOWS_TILEHORIZONTALLY
+        MENUITEM "N&aast elkaar",                       ID_WINDOWS_TILEVERTICALLY
+        MENUITEM "Mi&nimaliseren",                      ID_WINDOWS_MINIMIZE
+        MENUITEM "&Maximaliseren",                      ID_WINDOWS_MAXIMIZE
+        MENUITEM "&Trapsgewijs",                        ID_WINDOWS_CASCADE
+        MENUITEM "Naar &voorgrond",                     ID_WINDOWS_BRINGTOFRONT
     END
     POPUP "&Help"
     BEGIN
-        MENUITEM "&Help-onderwerpen",   ID_HELP_TOPICS
+        MENUITEM "&Help-onderwerpen",                   ID_HELP_TOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&Info",         ID_HELP_ABOUT
+        MENUITEM "&Info",                               ID_HELP_ABOUT
     END
 END
 
 IDR_WINDOWSMENU MENU DISCARDABLE
 BEGIN
-        MENUITEM "&Onder elkaar",          ID_WINDOWS_TILEHORIZONTALLY
-        MENUITEM "N&aast elkaar",            ID_WINDOWS_TILEVERTICALLY
-        MENUITEM "Mi&nimaliseren",                   ID_WINDOWS_MINIMIZE
-        MENUITEM "&Maximaliseren",                   ID_WINDOWS_MAXIMIZE
-        MENUITEM "&Trapsgewijs",                    ID_WINDOWS_CASCADE
-        MENUITEM "Naar &voorgrond",             ID_WINDOWS_BRINGTOFRONT
+        MENUITEM "&Onder elkaar",                       ID_WINDOWS_TILEHORIZONTALLY
+        MENUITEM "N&aast elkaar",                       ID_WINDOWS_TILEVERTICALLY
+        MENUITEM "Mi&nimaliseren",                      ID_WINDOWS_MINIMIZE
+        MENUITEM "&Maximaliseren",                      ID_WINDOWS_MAXIMIZE
+        MENUITEM "&Trapsgewijs",                        ID_WINDOWS_CASCADE
+        MENUITEM "Naar &voorgrond",                     ID_WINDOWS_BRINGTOFRONT
 END
 
 IDR_APPLICATION_PAGE_CONTEXT1 MENU DISCARDABLE
 BEGIN
     POPUP "DUMMY"
     BEGIN
-        MENUITEM "&Nieuwe taak (Uitvoeren...)",          ID_FILE_NEW
+        MENUITEM "&Nieuwe taak (Uitvoeren...)",         ID_FILE_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&Grote pictogrammen",                ID_VIEW_LARGE
+        MENUITEM "&Grote pictogrammen",                 ID_VIEW_LARGE
         MENUITEM "&Kleine pictogrammen",                ID_VIEW_SMALL
-        MENUITEM "&Details",                    ID_VIEW_DETAILS, CHECKED
+        MENUITEM "&Details",                            ID_VIEW_DETAILS, CHECKED
     END
 END
 
@@ -100,17 +100,17 @@ IDR_APPLICATION_PAGE_CONTEXT2 MENU DISCARDABLE
 BEGIN
     POPUP "DUMMY"
     BEGIN
-        MENUITEM "&Activeren",                  ID_APPLICATION_PAGE_SWITCHTO
-        MENUITEM "Naar &voorgrond",             ID_WINDOWS_BRINGTOFRONT
+        MENUITEM "&Activeren",                          ID_APPLICATION_PAGE_SWITCHTO
+        MENUITEM "Naar &voorgrond",                     ID_WINDOWS_BRINGTOFRONT
         MENUITEM SEPARATOR
-        MENUITEM "&Onder elkaar",          ID_WINDOWS_TILEHORIZONTALLY
-        MENUITEM "N&aast elkaar",            ID_WINDOWS_TILEVERTICALLY
-        MENUITEM "Mi&nimaliseren",                   ID_WINDOWS_MINIMIZE
-        MENUITEM "&Maximaliseren",                   ID_WINDOWS_MAXIMIZE
-        MENUITEM "&Trapsgewijs",                    ID_WINDOWS_CASCADE
+        MENUITEM "&Onder elkaar",                       ID_WINDOWS_TILEHORIZONTALLY
+        MENUITEM "N&aast elkaar",                       ID_WINDOWS_TILEVERTICALLY
+        MENUITEM "Mi&nimaliseren",                      ID_WINDOWS_MINIMIZE
+        MENUITEM "&Maximaliseren",                      ID_WINDOWS_MAXIMIZE
+        MENUITEM "&Trapsgewijs",                        ID_WINDOWS_CASCADE
         MENUITEM SEPARATOR
-        MENUITEM "Taa&k beëindigen",                   ID_APPLICATION_PAGE_ENDTASK
-        MENUITEM "&Ga naar proces",              ID_APPLICATION_PAGE_GOTOPROCESS
+        MENUITEM "Taa&k beëindigen",                    ID_APPLICATION_PAGE_ENDTASK
+        MENUITEM "&Ga naar proces",                     ID_APPLICATION_PAGE_GOTOPROCESS
 
     END
 END
@@ -119,10 +119,10 @@ IDR_TRAY_POPUP MENU DISCARDABLE
 BEGIN
     POPUP "DUMMY"
     BEGIN
-        MENUITEM "&Vorig formaat",                    ID_RESTORE
-        MENUITEM "&Sluiten",                      ID_FILE_EXIT
+        MENUITEM "&Vorig formaat",                      ID_RESTORE
+        MENUITEM "&Sluiten",                            ID_FILE_EXIT
         MENUITEM SEPARATOR
-        MENUITEM "&Altijd op voorgrond",              ID_OPTIONS_ALWAYSONTOP
+        MENUITEM "&Altijd op voorgrond",                ID_OPTIONS_ALWAYSONTOP
     END
 END
 
@@ -130,28 +130,28 @@ IDR_PROCESS_PAGE_CONTEXT MENU DISCARDABLE
 BEGIN
     POPUP "DUMMY"
     BEGIN
-        MENUITEM "&Proces beëindigen",                ID_PROCESS_PAGE_ENDPROCESS
-        MENUITEM "Process&tructuur beëindigen",           ID_PROCESS_PAGE_ENDPROCESSTREE
+        MENUITEM "&Proces beëindigen",                  ID_PROCESS_PAGE_ENDPROCESS
+        MENUITEM "Process&tructuur beëindigen",         ID_PROCESS_PAGE_ENDPROCESSTREE
 
-        MENUITEM "&Fouten opsporen",                      ID_PROCESS_PAGE_DEBUG
+        MENUITEM "&Fouten opsporen",                    ID_PROCESS_PAGE_DEBUG
         MENUITEM SEPARATOR
         POPUP "P&rioriteit instellen"
         BEGIN
-            MENUITEM "&Realtime",                   ID_PROCESS_PAGE_SETPRIORITY_REALTIME
+            MENUITEM "&Realtime",                       ID_PROCESS_PAGE_SETPRIORITY_REALTIME
 
-            MENUITEM "&Hoog",                       ID_PROCESS_PAGE_SETPRIORITY_HIGH
+            MENUITEM "&Hoog",                           ID_PROCESS_PAGE_SETPRIORITY_HIGH
 
-            MENUITEM "Hoger &dan normaal",                ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL
+            MENUITEM "Hoger &dan normaal",              ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL
 
-            MENUITEM "&Normaal",                     ID_PROCESS_PAGE_SETPRIORITY_NORMAL
+            MENUITEM "&Normaal",                        ID_PROCESS_PAGE_SETPRIORITY_NORMAL
 
-            MENUITEM "L&ager dan normaal",                ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
+            MENUITEM "L&ager dan normaal",              ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
 
-            MENUITEM "&Laag",                        ID_PROCESS_PAGE_SETPRIORITY_LOW
+            MENUITEM "&Laag",                           ID_PROCESS_PAGE_SETPRIORITY_LOW
 
         END
         MENUITEM "&Affiniteit instellen...",            ID_PROCESS_PAGE_SETAFFINITY
-	MENUITEM "Bewerk debug kanalen...",	ID_PROCESS_PAGE_DEBUGCHANNELS
+    MENUITEM "Bewerk debug kanalen...",                 ID_PROCESS_PAGE_DEBUGCHANNELS
     END
 END
 
@@ -163,15 +163,15 @@ END
 
 IDD_ABOUTBOX DIALOGEX DISCARDABLE  22, 17, 259, 210
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Over Taak Beheer"
+CAPTION "Over Taakbeheer"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL         "Taak Beheer v1.0\nCopyright (C) 1999 - 2001\nby Brian Palmer (brianp@reactos.org)",
+    CONTROL         "Taakbeheer v1.0\nCopyright (C) 1999 - 2001\nby Brian Palmer (brianp@reactos.org)",
                     IDC_STATIC,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,53,28,
-                    122,26
-    DEFPUSHBUTTON   "OK",IDOK,183,189,44,14,WS_GROUP
+                    120,26
+    DEFPUSHBUTTON   "OK",IDOK,198,189,44,14,WS_GROUP
     ICON            IDI_TASKMANAGER,IDC_STATIC,19,30,20,20
-    EDITTEXT        IDC_LICENSE_EDIT,53,63,174,107,ES_MULTILINE |
+    EDITTEXT        IDC_LICENSE_EDIT,23,63,219,107,ES_MULTILINE |
                     ES_READONLY | WS_VSCROLL
 END
 
@@ -179,7 +179,7 @@ IDD_TASKMGR_DIALOG DIALOGEX DISCARDABLE  0, 0, 264, 246
 STYLE DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP |
     WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU |
     WS_THICKFRAME
-CAPTION "Taak Beheer"
+CAPTION "Reactos Taakbeheer"
 MENU IDR_TASKMANAGER
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -206,7 +206,7 @@ BEGIN
                     WS_BORDER | WS_TABSTOP,7,7,233,177
     PUSHBUTTON      "&Proces beëindigen",IDC_ENDPROCESS,171,189,69,14
     CONTROL         "Processen van &alle gebruikers weergeven",IDC_SHOWALLPROCESSES,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,191,111,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,191,151,10
 END
 
 //IDD_PERFORMANCE_PAGE DIALOGEX 0, 0, 247, 210
@@ -214,58 +214,59 @@ IDD_PERFORMANCE_PAGE DIALOGEX DISCARDABLE  0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX        "Weergave van CPU-gebruik",IDC_CPU_USAGE_FRAME,5,5,60,54,WS_TABSTOP, WS_EX_TRANSPARENT
-    GROUPBOX        "Weergave van geheugengebruik",IDC_MEM_USAGE_FRAME,5,63,60,54,BS_LEFTTEXT, WS_EX_TRANSPARENT
+    GROUPBOX        "CPU",IDC_CPU_USAGE_FRAME,5,5,60,54,WS_TABSTOP, WS_EX_TRANSPARENT
+    GROUPBOX        "Wisselbestand",IDC_MEM_USAGE_FRAME,5,63,60,54,BS_LEFTTEXT, WS_EX_TRANSPARENT
     GROUPBOX        "Totalen",IDC_TOTALS_FRAME,5,122,111,39,0,WS_EX_TRANSPARENT
     GROUPBOX        "Geheugengebruik (kB)",IDC_COMMIT_CHARGE_FRAME,5,166,111,39,0,WS_EX_TRANSPARENT
-    GROUPBOX        "Fysiek geheugen (kB)",IDC_PHYSICAL_MEMORY_FRAME,131,122,111,39,0,WS_EX_TRANSPARENT
-    GROUPBOX        "Kernelgeheugen (kB)",IDC_KERNEL_MEMORY_FRAME,131,166,111,39,0,WS_EX_TRANSPARENT
-    LTEXT           "Ingangen",IDS_TOTALS_HANDLE_COUNT,12,131,27,8
-    LTEXT           "Threads",IDS_TOTALS_THREAD_COUNT,12,140,27,8
-    LTEXT           "Processen",IDS_TOTALS_PROCESS_COUNT,12,149,34,8
+    GROUPBOX        "Fysiek geheugen (kB)",IDC_PHYSICAL_MEMORY_FRAME,131,122,126,39,0,WS_EX_TRANSPARENT
+    GROUPBOX        "Kernelgeheugen (kB)",IDC_KERNEL_MEMORY_FRAME,131,166,126,39,0,WS_EX_TRANSPARENT
+    LTEXT           "Ingangen",IDS_TOTALS_HANDLE_COUNT,12,131,37,8
+    LTEXT           "Threads",IDS_TOTALS_THREAD_COUNT,12,140,37,8
+    LTEXT           "Processen",IDS_TOTALS_PROCESS_COUNT,12,149,37,8
     EDITTEXT        IDC_TOTALS_HANDLE_COUNT,65,131,45,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER
     EDITTEXT        IDC_TOTALS_THREAD_COUNT,65,140,45,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER
     EDITTEXT        IDC_TOTALS_PROCESS_COUNT,65,149,45,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER
-    LTEXT           "Totaal",IDS_COMMIT_CHARGE_TOTAL,12,175,27,8
-    LTEXT           "Limiet",IDS_COMMIT_CHARGE_LIMIT,12,184,15,8
-    LTEXT           "Piek",IDS_COMMIT_CHARGE_PEAK,12,193,34,8
+    LTEXT           "Totaal",IDS_COMMIT_CHARGE_TOTAL,12,175,37,8
+    LTEXT           "Limiet",IDS_COMMIT_CHARGE_LIMIT,12,184,37,8
+    LTEXT           "Piek",IDS_COMMIT_CHARGE_PEAK,12,193,37,8
     EDITTEXT        IDC_COMMIT_CHARGE_TOTAL,65,174,45,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER
     EDITTEXT        IDC_COMMIT_CHARGE_LIMIT,65,184,45,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER
     EDITTEXT        IDC_COMMIT_CHARGE_PEAK,65,193,45,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER
-    LTEXT           "Totaal",IDS_PHYSICAL_MEMORY_TOTAL,137,131,27,8
-    LTEXT           "Beschikbaar",IDS_PHYSICAL_MEMORY_AVAILABLE,137,140,30,8
+    LTEXT           "Totaal",IDS_PHYSICAL_MEMORY_TOTAL,137,131,46,8
+    LTEXT           "Beschikbaar",IDS_PHYSICAL_MEMORY_AVAILABLE,137,140,46,8
     LTEXT           "Systeemcache",IDS_PHYSICAL_MEMORY_SYSTEM_CACHE,137,149,46,8
-    EDITTEXT        IDC_PHYSICAL_MEMORY_TOTAL,185,131,48,8,ES_RIGHT |
+    EDITTEXT        IDC_PHYSICAL_MEMORY_TOTAL,205,131,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER
-    EDITTEXT        IDC_PHYSICAL_MEMORY_AVAILABLE,185,140,48,8,ES_RIGHT |
+    EDITTEXT        IDC_PHYSICAL_MEMORY_AVAILABLE,205,140,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER
-    EDITTEXT        IDC_PHYSICAL_MEMORY_SYSTEM_CACHE,185,149,48,8,ES_RIGHT |
+    EDITTEXT        IDC_PHYSICAL_MEMORY_SYSTEM_CACHE,205,149,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER
-    LTEXT           "Totaal",IDS_KERNEL_MEMORY_TOTAL,137,174,27,8
-    LTEXT           "In wisselbestand",IDS_KERNEL_MEMORY_PAGED,137,184,21,8
-    LTEXT           "Niet in wisselbestand",IDS_KERNEL_MEMORY_NONPAGED,137,193,34,8
-    EDITTEXT        IDC_KERNEL_MEMORY_TOTAL,185,174,48,8,ES_RIGHT |
+    LTEXT           "Totaal",IDS_KERNEL_MEMORY_TOTAL,137,174,85,8
+    LTEXT           "In wisselbestand",IDS_KERNEL_MEMORY_PAGED,137,184,85,8
+    LTEXT           "Niet in wisselbestand",IDS_KERNEL_MEMORY_NONPAGED,137,193,85,8
+    EDITTEXT        IDC_KERNEL_MEMORY_TOTAL,205,174,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER
-    EDITTEXT        IDC_KERNEL_MEMORY_PAGED,185,184,48,8,ES_RIGHT |
+    EDITTEXT        IDC_KERNEL_MEMORY_PAGED,205,184,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER
-    EDITTEXT        IDC_KERNEL_MEMORY_NONPAGED,185,193,48,8,ES_RIGHT |
+    EDITTEXT        IDC_KERNEL_MEMORY_NONPAGED,205,193,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER
     GROUPBOX        "Geschiedenis van CPU gebruik",IDC_CPU_USAGE_HISTORY_FRAME,74,5,168,54,0,WS_EX_TRANSPARENT
-    GROUPBOX        "Geschiedenis van geheugen gebruik",IDC_MEMORY_USAGE_HISTORY_FRAME,74,63,168,54,0,WS_EX_TRANSPARENT
+    GROUPBOX        "Geschiedenis van wisselbestandsgebruik",IDC_MEMORY_USAGE_HISTORY_FRAME,74,63,168,54,0,WS_EX_TRANSPARENT
     PUSHBUTTON      "Weergave van CPU-gebruik",IDC_CPU_USAGE_GRAPH,12,17,47,37,0,
 		    WS_EX_CLIENTEDGE
-    PUSHBUTTON      "Weergave van geheugengebruik",IDC_MEM_USAGE_GRAPH,12,75,47,37,0,
+    PUSHBUTTON      "Weergave van wisselbestandsgebruik",IDC_MEM_USAGE_GRAPH,12,75,47,37,0,
                     WS_EX_CLIENTEDGE
     PUSHBUTTON      "Geschiedenis van CPU gebruik",IDC_CPU_USAGE_HISTORY_GRAPH,81,17,
                     153,37,0,WS_EX_CLIENTEDGE
-    PUSHBUTTON      "Geschiedenis van geheugen gebruik",IDC_MEM_USAGE_HISTORY_GRAPH,81,75,
+    PUSHBUTTON      "Geschiedenis van wisselbestandsgebruik",IDC_MEM_USAGE_HISTORY_GRAPH,81,75,
                     153,37,0,WS_EX_CLIENTEDGE
+
 END
 
 IDD_DEBUG_CHANNELS_DIALOG DIALOGEX DISCARDABLE  0, 0, 247, 210
@@ -274,8 +275,8 @@ CAPTION "Debug kanalen"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "List2",IDC_DEBUG_CHANNELS_LIST,"SysListView32",LVS_REPORT |
-                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP |
-		    LVS_SORTASCENDING,7,7,233,177
+                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP | LVS_SORTASCENDING,
+                    7,7,233,177
     PUSHBUTTON      "Sluit",IDOK,171,189,69,14
 END
 
@@ -354,15 +355,15 @@ BEGIN
                     WS_DISABLED | WS_TABSTOP,175,119,41,10
 END
 
-IDD_COLUMNS_DIALOG DIALOGEX DISCARDABLE  0, 0, 195, 199
+IDD_COLUMNS_DIALOG DIALOGEX DISCARDABLE  0, 0, 235, 199
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Kolommen selecteren"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,84,178,50,14
-    PUSHBUTTON      "Annuleren",IDCANCEL,138,178,50,14
+    DEFPUSHBUTTON   "OK",IDOK,124,178,50,14
+    PUSHBUTTON      "Annuleren",IDCANCEL,178,178,50,14
     LTEXT           "Selecteer de kolommen die op het tabblad Processen van Taakbeheer moeten worden weergegeven.",
-                    IDC_STATIC,7,7,181,17
+                    IDC_STATIC,7,7,221,17
     CONTROL         "Pr&ocesnaam",IDC_IMAGENAME,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,7,28,56,10
     CONTROL         "&PID (proces-id)",IDC_PID,"Button",
@@ -372,47 +373,47 @@ BEGIN
     CONTROL         "CPU-&tijd",IDC_CPUTIME,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,61,48,10
     CONTROL         "&Geheugengebruik",IDC_MEMORYUSAGE,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,7,72,63,10
+                    WS_TABSTOP,7,72,102,10
     CONTROL         "Ve&rschil in geheugengebruik",IDC_MEMORYUSAGEDELTA,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,7,83,82,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,83,102,10
     CONTROL         "Pie&kgeheugengebruik",IDC_PEAKMEMORYUSAGE,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,94,82,10
     CONTROL         "&Wisselbestandsfouten",IDC_PAGEFAULTS,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,7,105,53,10
+                    WS_TABSTOP,7,105,102,10
     CONTROL         "&USER-objecten",IDC_USEROBJECTS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,116,62,10
     CONTROL         "I/O: leesbewerkingen",IDC_IOREADS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,127,49,10
     CONTROL         "I/O: gelezen bytes",IDC_IOREADBYTES,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,7,138,65,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,138,102,10
     CONTROL         "S&essie-id",IDC_SESSIONID,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,149,50,10
     CONTROL         "Gebruikers&naam",IDC_USERNAME,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,7,160,51,10
+                    WS_TABSTOP,7,160,102,10
     CONTROL         "Verschil in &aantal wisselfouten",IDC_PAGEFAULTSDELTA,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,107,28,72,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,117,28,110,10
     CONTROL         "Grootte van &virtueel geheugen",IDC_VIRTUALMEMORYSIZE,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,107,39,77,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,117,39,1100,10
     CONTROL         "Wissel&bare pool",IDC_PAGEDPOOL,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,107,50,53,10
+                    WS_TABSTOP,117,50,100,10
     CONTROL         "Niet-wisse&lbare pool",IDC_NONPAGEDPOOL,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,107,61,67,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,117,61,100,10
     CONTROL         "Ba&sisprioriteit",IDC_BASEPRIORITY,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,107,72,55,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,117,72,100,10
     CONTROL         "Aantal &ingangen",IDC_HANDLECOUNT,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,107,83,59,10
+                    WS_TABSTOP,117,83,100,10
     CONTROL         "Aantal t&hreads",IDC_THREADCOUNT,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,107,94,59,10
+                    WS_TABSTOP,117,94,100,10
     CONTROL         "G&DI-objecten",IDC_GDIOBJECTS,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,107,105,55,10
+                    WS_TABSTOP,117,105,100,10
     CONTROL         "I/O: schrijfbewerkingen",IDC_IOWRITES,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,107,116,49,10
+                    WS_TABSTOP,117,116,100,10
     CONTROL         "I/O: geschreven bytes",IDC_IOWRITEBYTES,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,107,127,65,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,117,127,100,10
     CONTROL         "I/O: overig",IDC_IOOTHER,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,107,138,46,10
+                    WS_TABSTOP,117,138,100,10
     CONTROL         "I/O: overige bytes",IDC_IOOTHERBYTES,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,107,149,65,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,117,149,100,10
 END
 
 
@@ -536,8 +537,8 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_APP_TITLE           "Taak Beheer"
-    IDC_TASKMGR             "Taak Beheer"
+    IDS_APP_TITLE           "Reactos Taakbeheer"
+    IDC_TASKMGR             "Taakbeheer"
     IDS_IDLE_PROCESS        "Niet-actieve systeemprocessen"
 END
 

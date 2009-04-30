@@ -1,0 +1,270 @@
+﻿LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+#pragma code (65001)
+
+IDD_BACKGROUND DIALOGEX DISCARDABLE 0, 0, 246, 204
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Fundal"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "", IDC_BACKGROUND_PREVIEW, "Static", SS_OWNERDRAW,
+                    70, 10, 105, 70,WS_EX_STATICEDGE
+    CONTROL         "",IDC_BACKGROUND_LIST,"SysListView32",LVS_REPORT |
+                    LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS |
+                    WS_BORDER | WS_TABSTOP, 8, 114, 174, 78
+    LTEXT           "Alegeţi o imagine pe care să o folosiţi ca fundal:",
+                    IDC_STATIC, 8, 103, 180, 9
+    PUSHBUTTON      "&Răsfoire...", IDC_BROWSE_BUTTON, 188, 114, 50, 15
+    PUSHBUTTON      "&Culoare...", IDC_COLOR_BUTTON, 188, 177, 50, 15
+    LTEXT           "Poziţie:", IDC_STATIC, 188, 138, 36, 9
+    COMBOBOX        IDC_PLACEMENT_COMBO, 188, 149, 50, 54,
+                    CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+END
+
+
+IDD_SCREENSAVER DIALOGEX 0, 0, 246, 204
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Economizor ecran"
+FONT 8, "MS Shell Dlg", 0, 0
+BEGIN
+    CONTROL         "", IDC_SCREENS_PREVIEW, "Static", SS_OWNERDRAW,
+                    70, 10, 105, 70, WS_EX_STATICEDGE
+    GROUPBOX        "&Economizor",IDC_SCREENS_DUMMY, 8, 92, 230, 52
+    COMBOBOX        IDC_SCREENS_LIST, 14, 103, 100, 100, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Se&tări",IDC_SCREENS_SETTINGS, 120, 103, 50, 13, WS_GROUP
+    PUSHBUTTON      "V&izualizare",IDC_SCREENS_TESTSC, 175, 103, 50, 13
+    LTEXT           "&Aşteptaţi",IDC_WAITTEXT, 14, 125, 16, 9
+    EDITTEXT        IDC_SCREENS_TIMEDELAY, 34, 123, 32, 13, ES_RIGHT | WS_GROUP
+    CONTROL         "",IDC_SCREENS_TIME ,UPDOWN_CLASS,UDS_SETBUDDYINT |
+                    UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS |
+                    WS_BORDER | WS_GROUP, 54, 123, 12, 13
+    LTEXT           "minute", IDC_MINTEXT, 70, 125, 26, 9
+    CONTROL         "Solicitare &parolă după",IDC_SCREENS_USEPASSCHK,"button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 104, 19
+    GROUPBOX        "&Facilităţi de economisire energie monitor", IDC_SCREENS_DUMMY2, 6, 155, 232, 41
+    LTEXT           "Pentru a ajusta setările de consum curent pentru monitor clic pe butonul Setări Energie.",
+                    IDC_STATIC, 14, 166, 146 ,20
+    PUSHBUTTON      "E&nergie...", IDC_SCREENS_POWER_BUTTON, 176, 171, 50, 13
+END
+
+
+IDD_APPEARANCE DIALOGEX DISCARDABLE  0, 0, 246, 204
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Schemă de culori"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass",
+                    WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
+    LTEXT           "Schemă", IDC_STATIC, 7, 140, 64, 7
+    COMBOBOX        IDC_APPEARANCE_COLORSCHEME, 7, 150, 134, 90 , CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&Efecte...", IDC_APPEARANCE_EFFECTS, 182, 150, 56, 15
+    PUSHBUTTON      "A&vansat...", IDC_APPEARANCE_ADVANCED, 182, 170, 56, 15
+END
+
+IDD_ADVAPPEARANCE DIALOGEX DISCARDABLE 0, 0, 250, 239
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
+CAPTION "Setări avansate"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass",
+                    WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
+
+    LTEXT "Element:", 8, 5, 160, 50, 9
+    COMBOBOX IDC_ADVAPPEARANCE_ELEMENT, 5, 170, 130, 90, CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_CHILD | WS_VSCROLL | WS_TABSTOP
+
+    LTEXT "&Dim.", IDC_ADVAPPEARANCE_SIZE_T, 142, 160, 21, 9
+    EDITTEXT IDC_ADVAPPEARANCE_SIZE_E, 142, 170, 38, 13, ES_RIGHT | WS_GROUP
+    CONTROL "", IDC_ADVAPPEARANCE_SIZE_UD, UPDOWN_CLASS, UDS_AUTOBUDDY | WS_BORDER | WS_GROUP | UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_SETBUDDYINT | WS_CHILD | WS_VISIBLE, 172, 170, 10, 13
+
+    LTEXT   "&Culoare 1:", IDC_ADVAPPEARANCE_COLOR1_T, 184, 160, 40, 9
+    CHECKBOX   "-", IDC_ADVAPPEARANCE_COLOR1_B, 184, 170, 28, 13, BS_PUSHLIKE | BS_BITMAP
+
+    LTEXT   "&Culoare 2:", IDC_ADVAPPEARANCE_COLOR2_T, 216, 160, 40, 9
+    CHECKBOX   "-", IDC_ADVAPPEARANCE_COLOR2_B, 216, 170, 28, 13, BS_PUSHLIKE | BS_BITMAP
+
+    LTEXT "Font:", IDC_ADVAPPEARANCE_FONT_T, 5, 190, 50, 8
+    COMBOBOX IDC_ADVAPPEARANCE_FONT_C, 5, 200, 130, 90, CBS_DROPDOWN | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+
+    LTEXT   "Mărime:", IDC_ADVAPPEARANCE_FONTSIZE_T, 142, 190, 39, 8
+    COMBOBOX IDC_ADVAPPEARANCE_FONTSIZE_E, 142, 200, 38, 200, CBS_DROPDOWN | WS_VSCROLL
+
+    LTEXT   "Culoare:", IDC_ADVAPPEARANCE_FONTCOLOR_T, 184, 190, 20, 9
+    CHECKBOX   "", IDC_ADVAPPEARANCE_FONTCOLOR_B, 184, 200, 28, 13, BS_PUSHLIKE | BS_BITMAP
+
+    AUTOCHECKBOX   "Î", IDC_ADVAPPEARANCE_FONTBOLD, 216, 200, 14, 13, BS_PUSHLIKE
+    AUTOCHECKBOX   "C", IDC_ADVAPPEARANCE_FONTITALIC, 230, 200, 14, 13, BS_PUSHLIKE
+
+    PUSHBUTTON "Renunţare", IDCANCEL, 191, 220, 50, 14
+    DEFPUSHBUTTON "OK", IDOK, 137, 220, 50, 14
+END
+
+IDD_EFFAPPEARANCE DIALOGEX DISCARDABLE 0, 0, 285, 185
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
+CAPTION "Efecte"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "&Folosire efect de tranziţie pentru meniuri şi sfaturi-ecran.",IDC_EFFAPPEARANCE_ANIMATION,"button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP, 10, 5, 285, 19
+    COMBOBOX        IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 80, 19 , CBS_DROPDOWNLIST | CBS_HASSTRINGS | WS_CHILD | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "F&olosire următoarea metodă de netezire a marginilor textului:",IDC_EFFAPPEARANCE_SMOOTHING,"button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 42, 285, 19
+    COMBOBOX        IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 80, 19 , CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
+    CONTROL         "&Pictograme mari",IDC_EFFAPPEARANCE_LARGEICONS,"button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 80, 285, 19
+    CONTROL         "Afişare u&mbre sub meniuri",IDC_EFFAPPEARANCE_SETDROPSHADOW,"button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 95, 285, 19
+    CONTROL         "Afişare c&onţinut al ferestrelor când sunt trase",IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,"button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 110, 285, 19
+    CONTROL         "&Ascundere litere subliniate pentru navigarea cu tastatura până când apăs Alt",IDC_EFFAPPEARANCE_KEYBOARDCUES,"button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 285, 19
+    PUSHBUTTON "Renunţare", IDCANCEL, 226, 165, 50, 14
+    DEFPUSHBUTTON "OK", IDOK, 172, 165, 50, 14
+END
+
+IDD_SETTINGS DIALOGEX DISCARDABLE  0, 0, 246, 204
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Setări"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Trageţi de miniaturile monitoarelor astfel încât imaginea să reprezinte poziţia reală a monitoarelor.",-1,3,3,240,20
+    CONTROL         "",IDC_SETTINGS_MONSEL,"MONITORSELWNDCLASS",WS_CHILD|WS_VISIBLE|WS_TABSTOP,3,23,240,82,WS_EX_CLIENTEDGE
+    LTEXT           "&Afişaj:",1820,3,107,30,8
+    LTEXT           "<nimic>",IDC_SETTINGS_DEVICE,9,116,224,8
+    GROUPBOX        "&Zonă ecran",1818,3,127,115,43
+    CONTROL         "",IDC_SETTINGS_RESOLUTION,"msctls_trackbar32",
+                    TBS_AUTOTICKS | WS_TABSTOP, 30, 137, 58, 17
+    LTEXT           "Mai mic",1815,9,137,15,8,NOT WS_GROUP
+    LTEXT           "Mai mare",1816,93,137,21,8,NOT WS_GROUP
+    LTEXT           "",IDC_SETTINGS_RESOLUTION_TEXT,10,157,100,10,NOT WS_GROUP | SS_CENTER
+    GROUPBOX        "&Culori",1817,125,127,115,43
+    COMBOBOX        IDC_SETTINGS_BPP,131,137,103,80,CBS_DROPDOWNLIST | CBS_AUTOHSCROLL |
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "",IDC_SETTINGS_SPECTRUM,"Static",SS_OWNERDRAW | SS_SUNKEN,131,155,103,9
+    PUSHBUTTON      "A&vansat...",IDC_SETTINGS_ADVANCED,170,174,70,14
+END
+
+IDD_ADVANCED_GENERAL DIALOGEX DISCARDABLE 0, 0, 253, 204
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "General"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Afişaj", -1, 7, 6, 237, 56, WS_GROUP
+    LTEXT "Mărime font:", -1, 14, 20, 222, 8
+    COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "", IDC_FONTSIZE_COSTOM, 14, 46, 223, 12
+    GROUPBOX "Compatibilitate", -1, 7, 67, 237, 97
+    LTEXT "Unele programe nu funcţionează corect dacă după ce schimbaţi setările de culoare nu reporniţi computerul.\r\n\nDupă ce schimb setări:", -1, 12, 78, 228, 34
+    AUTORADIOBUTTON "&Repornire computer înaintea aplicării noilor setări.", IDC_RESTART_RB, 14, 116, 224, 10
+    AUTORADIOBUTTON "Aplicare setări noi fără repornire.", IDC_WITHOUTREBOOT_RB, 14, 131, 224, 10
+    AUTORADIOBUTTON "Întrebare înaintea aplicării", IDC_ASKME_RB, 14, 146, 224, 10
+END
+
+IDR_PREVIEW_MENU MENU
+BEGIN
+    MENUITEM "Normal",           ID_MENU_NORMAL
+    MENUITEM "Dezactivat",         ID_MENU_DISABLED
+    MENUITEM "Selectat",         ID_MENU_SELECTED
+END
+
+IDM_MONITOR_MENU MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Ataşat",   ID_MENU_ATTACHED
+        MENUITEM "&Primar",    ID_MENU_PRIMARY
+        MENUITEM SEPARATOR
+        MENUITEM "&Identificare",   ID_MENU_IDENTIFY
+        MENUITEM "P&roprietăţi", ID_MENU_PROPERTIES
+    END
+END
+
+STRINGTABLE  DISCARDABLE
+BEGIN
+    IDS_SLIDEEFFECT "Efect glisare"
+    IDS_FADEEFFECT  "Efect estompare"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_STANDARDEFFECT  "Standard"
+    IDS_CLEARTYPEEFFECT "ClearType"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_MULTIPLEMONITORS "(Monitoare multiple)"
+    IDS_UNKNOWNMONITOR "(Monitor necunoscut)"
+    IDS_ADVANCEDTITLEFMT "%s şi %s"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_CPLNAME "Afişaj"
+    IDS_CPLDESCRIPTION "Modifică setările de ecran, culorile şi economizorul de ecran."
+    IDS_NONE "(Nimic)"
+    IDS_CENTER "Centrat"
+    IDS_STRETCH "Întins"
+    IDS_TILE "Repetat"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_COLOR_4BIT "16 Culori"
+    IDS_COLOR_8BIT "256 Culori"
+    IDS_COLOR_16BIT "High Color (16 Biţi)"
+    IDS_COLOR_24BIT "True Color (24 Biţi)"
+    IDS_COLOR_32BIT "True Color (32 Biţi)"
+    IDS_PIXEL "%lux%lu Pixel"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_BACKGROUND_COMDLG_FILTER "Imagini (*.bmp;*.dib)\0*.bmp;*.dib\0"
+    IDS_SUPPORTED_EXT "*.bmp;*.dib"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_INACTWIN "Fereastră inactivă"
+    IDS_ACTWIN   "Fereastră activă"
+    IDS_WINTEXT  "Text în fereastră"
+    IDS_MESSBOX  "Fereastră mesaj"
+    IDS_MESSTEXT "Text mesaj"
+    IDS_BUTTEXT  "OK"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ELEMENT_1 "Fundal"
+    IDS_ELEMENT_2 "Titlul ferestrelor inactive"
+    IDS_ELEMENT_3 "Rama ferestrelor inactive"
+    IDS_ELEMENT_4 "Titlul ferestrelor active"
+    IDS_ELEMENT_5 "Rama ferestrelor active"
+    IDS_ELEMENT_6 "Meniu"
+    IDS_ELEMENT_7 "Elemente selectate"
+    IDS_ELEMENT_8 "Ferestre"
+    IDS_ELEMENT_9 "Bare de defilare"
+    IDS_ELEMENT_10 "Obiecte 3D"
+    IDS_ELEMENT_11 "Titlu paletă"
+    IDS_ELEMENT_12 "Titlu simbol"
+    IDS_ELEMENT_13 "Bară de titlu"
+    IDS_ELEMENT_14 "Elemente meniu dezactivate"
+    IDS_ELEMENT_15 "Fereastră de dialog"
+    IDS_ELEMENT_16 "Controale bară de defilare"
+    IDS_ELEMENT_17 "Fundal aplicaţie"
+    IDS_ELEMENT_18 "Bară de defilare mică"
+    IDS_ELEMENT_19 "Distanţă simbol (orizontal)"
+    IDS_ELEMENT_20 "Distanţă simbol (vertical)"
+    IDS_ELEMENT_21 "Informaţii rapide"
+    IDS_ELEMENT_22 "Simbol"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_DISPLAY_SETTINGS "Afişare setări"
+    IDS_APPLY_FAILED "Nu s-au putut aplica noile setări..."
+    IDS_APPLY_NEEDS_RESTART "Trebuie să reporniţi computerul pentru a aplica noile setări."
+END
+
+#pragma code (default)
