@@ -49,6 +49,6 @@ ifeq ($(ARCH),powerpc)
 include tools/ofw_interface/ofw_interface.mak
 endif
 include tools/pefixup.mak
-include tools/raddr2line.mak
+include tools/rsym/raddr2line.mak
 include tools/rbuild/rbuild.mak
 include tools/rsym/rsym.mak
