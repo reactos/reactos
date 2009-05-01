@@ -18,8 +18,8 @@
 
 size_t fixup_offset ( size_t ImageBase, size_t offset )
 {
-	if ( offset >= ImageBase )
-		offset -= ImageBase;
+//	if ( offset >= ImageBase )
+//		offset -= ImageBase;
 	return offset;
 }
 
