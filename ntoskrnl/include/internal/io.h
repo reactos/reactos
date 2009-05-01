@@ -206,7 +206,7 @@
     (_DeviceTreeTraverseContext)->Context = (_Context); }
 
 /*
- * B00LEAN
+ * BOOLEAN
  * IopIsValidPhysicalDeviceObject(
  *   IN PDEVICE_OBJECT PhysicalDeviceObject);
  */

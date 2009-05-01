@@ -116,9 +116,9 @@ IoReportTargetDeviceChange(
   }
 
   IntNotificationStructure = (PTARGET_DEVICE_CUSTOM_NOTIFICATION)NotificationStructure;
-  if (RtlCompareMemory(&(IntNotificationStructure->Event), &(GUID_TARGET_DEVICE_QUERY_REMOVE), sizeof(GUID)) ||
-      RtlCompareMemory(&(IntNotificationStructure->Event), &(GUID_TARGET_DEVICE_REMOVE_CANCELLED), sizeof(GUID)) ||
-      RtlCompareMemory(&(IntNotificationStructure->Event), &(GUID_TARGET_DEVICE_REMOVE_COMPLETE), sizeof(GUID)))
+  if ((RtlCompareMemory(&(IntNotificationStructure->Event), &(GUID_TARGET_DEVICE_QUERY_REMOVE), sizeof(GUID)) != sizeof(GUID)) ||
+      (RtlCompareMemory(&(IntNotificationStructure->Event), &(GUID_TARGET_DEVICE_REMOVE_CANCELLED), sizeof(GUID)) != sizeof(GUID)) ||
+      (RtlCompareMemory(&(IntNotificationStructure->Event), &(GUID_TARGET_DEVICE_REMOVE_COMPLETE), sizeof(GUID)) != sizeof(GUID)))
   {
     return STATUS_INVALID_DEVICE_REQUEST;
   }
