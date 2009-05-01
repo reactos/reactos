@@ -337,6 +337,12 @@ NdisReadConfiguration(
 
     NDIS_DbgPrint(MAX_TRACE,("requested read of %wZ\n", Keyword));
 
+    if (ConfigurationContext == NULL)
+    {
+       NDIS_DbgPrint(MID_TRACE,("invalid parameter ConfigurationContext (0x%x)\n",ConfigurationContext));
+       return;
+    }
+
     if(
         !wcsncmp(Keyword->Buffer, L"Environment", Keyword->Length/sizeof(WCHAR)) &&
         wcslen(L"Environment") == Keyword->Length/sizeof(WCHAR)
@@ -907,4 +913,3 @@ NdisOpenConfigurationKeyByName(
 
     *Status = NDIS_STATUS_SUCCESS;
 }
-
