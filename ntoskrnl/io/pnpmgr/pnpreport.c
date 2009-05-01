@@ -106,6 +106,23 @@ IoReportTargetDeviceChange(
   IN PDEVICE_OBJECT PhysicalDeviceObject,
   IN PVOID NotificationStructure)
 {
+  PTARGET_DEVICE_CUSTOM_NOTIFICATION IntNotificationStructure;
+
+  ASSERT(NotificationStructure);
+
+  if (!IopIsValidPhysicalDeviceObject(PhysicalDeviceObject))
+  {
+    KeBugCheckEx(PNP_DETECTED_FATAL_ERROR, 0x2, (ULONG)PhysicalDeviceObject, 0, 0);
+  }
+
+  IntNotificationStructure = (PTARGET_DEVICE_CUSTOM_NOTIFICATION)NotificationStructure;
+  if (RtlCompareMemory(&(IntNotificationStructure->Event), &(GUID_TARGET_DEVICE_QUERY_REMOVE), sizeof(GUID)) ||
+      RtlCompareMemory(&(IntNotificationStructure->Event), &(GUID_TARGET_DEVICE_REMOVE_CANCELLED), sizeof(GUID)) ||
+      RtlCompareMemory(&(IntNotificationStructure->Event), &(GUID_TARGET_DEVICE_REMOVE_COMPLETE), sizeof(GUID)))
+  {
+    return STATUS_INVALID_DEVICE_REQUEST;
+  }
+
   DPRINT1("IoReportTargetDeviceChange called (UNIMPLEMENTED)\n");
   return STATUS_NOT_IMPLEMENTED;
 }
