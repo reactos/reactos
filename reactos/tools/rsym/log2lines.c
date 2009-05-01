@@ -18,7 +18,7 @@
 
 #include "rsym.h"
 
-#define LOG2LINES_VERSION   "0.6"
+#define LOG2LINES_VERSION   "0.8"
 
 #define INVALID_BASE    0xFFFFFFFFL
 
@@ -44,7 +44,7 @@
 #define UNIX_PATHS
 #define PATH_CHAR       '/'
 #define PATH_STR        "/"
-#define PATHCMP         strcmp
+#define PATHCMP         strcasecmp
 #define CP_CMD          "cp -f "
 #define DIR_FMT         "find %s -type f > %s"
 
@@ -81,7 +81,8 @@ typedef struct cache_struct CACHE;
 
 static CACHE cache;
 
-static char *optchars  = "cd:fFhl:mMrvz:";
+static char *optchars  = "bcd:fFhl:mMrvz:";
+static int opt_buffered= 0;         // -b
 static int opt_help    = 0;         // -h
 static int opt_force   = 0;         // -f
 static int opt_exit    = 0;         // -e
@@ -267,6 +268,29 @@ file_exists(char *name)
     }
     fclose(f);
     return 1;
+}
+
+static int
+copy_file(char *src, char *dst)
+{
+    char Line[LINESIZE];
+
+    sprintf(Line, CP_FMT, src, dst);
+    if (opt_verbose > 1)
+        fprintf(stderr, "Executing: %s\n", Line);
+    remove(dst);
+    if (file_exists(dst))
+    {
+        fprintf(stderr, "Cannot remove dst %s before copy\n", dst);
+        return 1;
+    }
+    system(Line);
+    if (!file_exists(dst))
+    {
+        fprintf(stderr, "Dst %s does not exist after copy \n", dst);
+        return 2;
+    }
+    return 0;
 }
 
 static int
@@ -833,6 +857,8 @@ static char *verboseUsage =
 "  image lookup, greatly increasing performance. Only image path and its\n"
 "  base address are cached.\n\n"
 "Options:\n"
+"  -b   Use this combined with '-l'. Enable buffering on logFile.\n"
+"       This may solve loosing output on real hardware.\n\n"
 "  -c   Console mode. Outputs text per character instead of per line.\n"
 "       This is slightly slower but enables to see what you type.\n\n"
 "  -d <directory>|<ISO image>\n"
@@ -881,7 +907,7 @@ usage(int verbose)
     fprintf(stderr, "Usage: log2lines [-%s] [<exefile> <offset>]\n", optchars);
     if (verbose)
     {
-        fprintf(stderr, verboseUsage);
+        fprintf(stderr, "%s", verboseUsage);
     }
     else
     {
@@ -902,14 +928,11 @@ unpack_iso(char *dir, char *iso)
     if ((fiso = fopen(iso, "a")) == NULL)
     {
         if (opt_verbose)
-            fprintf(stderr, "Open of %s failed (locked), trying to copy first\n", iso);
+            fprintf(stderr, "Open of %s failed (locked for writing?), trying to copy first\n", iso);
 
         strcat(iso_tmp,"~");
-        remove(iso_tmp);
-        sprintf(Line, CP_FMT, iso, iso_tmp);
-        if (opt_verbose > 1)
-            fprintf(stderr, "Executing: %s\n", Line);
-        system(Line);
+        if (copy_file(iso,iso_tmp))
+            return 3;
         iso_copied = 1;
     }
     else
@@ -1005,6 +1028,9 @@ main(int argc, const char **argv)
     {
         switch (opt)
         {
+        case 'b':
+            opt_buffered++;
+            break;
         case 'c':
             opt_console++;
             break;
@@ -1074,7 +1100,17 @@ main(int argc, const char **argv)
         if (logFile)
         {
             // disable buffering so fflush is not needed
-            setbuf(logFile,NULL);
+            if (!opt_buffered)
+            {
+                if (opt_verbose)
+                    fprintf(stderr, "Disabling log buffering on %s\n", opt_logFile);
+                setbuf(logFile,NULL);
+            }
+            else
+            {
+                if (opt_verbose)
+                    fprintf(stderr, "Enabling log buffering on %s\n", opt_logFile);
+            }
         }
         else
         {
