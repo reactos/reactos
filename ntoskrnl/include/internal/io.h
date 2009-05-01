@@ -460,12 +460,6 @@ typedef struct _DEVICETREE_TRAVERSE_CONTEXT
     PVOID Context;
 } DEVICETREE_TRAVERSE_CONTEXT, *PDEVICETREE_TRAVERSE_CONTEXT;
 
-typedef struct _INT_FILE_OBJECT_FILTER_CONTEXT
-{
-    FAST_MUTEX FastMutex;
-    LIST_ENTRY FilterContexts;
-} INT_FILE_OBJECT_FILTER_CONTEXT, * PINT_FILE_OBJECT_FILTER_CONTEXT;
-
 //
 // PNP Routines
 //
@@ -983,23 +977,6 @@ IopCloseFile(
     IN ULONG ProcessHandleCount,
     IN ULONG SystemHandleCount
 );
-
-/* FIXME: Should be moved to NDK */
-#if 1
-BOOLEAN
-NTAPI
-IoChangeFileObjectFilterContext(
-    IN PFILE_OBJECT FileObject,
-    IN PINT_FILE_OBJECT_FILTER_CONTEXT FilterContext,
-    IN ULONG Unknown
-);
-
-PINT_FILE_OBJECT_FILTER_CONTEXT
-NTAPI
-IoGetFileObjectFilterContext(
-    IN PFILE_OBJECT FileObject
-);
-#endif
 
 //
 // I/O Timer Routines
