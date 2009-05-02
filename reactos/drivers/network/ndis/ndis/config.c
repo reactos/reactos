@@ -615,13 +615,23 @@ NdisReadConfiguration(
                 return;
             }
 
+            (*ParameterValue)->ParameterData.BinaryData.Buffer = ExAllocatePool(PagedPool, KeyInformation->DataLength);
+            if (!(*ParameterValue)->ParameterData.BinaryData.Buffer)
+            {
+                NDIS_DbgPrint(MIN_TRACE,("Insufficient resources.\n"));
+                ExFreePool(KeyInformation);
+                *Status = NDIS_STATUS_RESOURCES;
+                return;
+            }
+
+            (*ParameterValue)->ParameterType = ParameterType;
+            (*ParameterValue)->ParameterData.BinaryData.Length = KeyInformation->DataLength;
+            memcpy((*ParameterValue)->ParameterData.BinaryData.Buffer, KeyInformation->Data, KeyInformation->DataLength);
+
             MiniportResource->ResourceType = 0;
             MiniportResource->Resource = *ParameterValue;
             NDIS_DbgPrint(MID_TRACE,("inserting 0x%x into the resource list\n", MiniportResource->Resource));
             ExInterlockedInsertTailList(&ConfigurationContext->ResourceListHead, &MiniportResource->ListEntry, &ConfigurationContext->ResourceLock);
-
-            (*ParameterValue)->ParameterType = ParameterType;
-            memcpy(&((*ParameterValue)->ParameterData.BinaryData), KeyInformation->Data, KeyInformation->DataLength);
 
             ExFreePool(KeyInformation);
 
