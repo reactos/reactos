@@ -1047,7 +1047,7 @@ IopTranslateDeviceResources(
          {
             case CmResourceTypePort:
             {
-               ULONG AddressSpace = 0; /* IO space */
+               ULONG AddressSpace = 1; /* IO space */
                if (!HalTranslateBusAddress(
                   DeviceNode->ResourceList->List[i].InterfaceType,
                   DeviceNode->ResourceList->List[i].BusNumber,
@@ -1073,7 +1073,7 @@ IopTranslateDeviceResources(
             }
             case CmResourceTypeMemory:
             {
-               ULONG AddressSpace = 1; /* Memory space */
+               ULONG AddressSpace = 0; /* Memory space */
                if (!HalTranslateBusAddress(
                   DeviceNode->ResourceList->List[i].InterfaceType,
                   DeviceNode->ResourceList->List[i].BusNumber,
