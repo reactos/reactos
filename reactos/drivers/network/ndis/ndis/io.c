@@ -622,10 +622,14 @@ NdisMMapIoSpace(
   PAGED_CODE();
   ASSERT(VirtualAddress && MiniportAdapterHandle);
 
+  NDIS_DbgPrint(MAX_TRACE, ("Called\n"));
+
   *VirtualAddress = MmMapIoSpace(PhysicalAddress, Length, MmNonCached);
 
-  if(!*VirtualAddress)
+  if(!*VirtualAddress) {
+    NDIS_DbgPrint(MIN_TRACE, ("MmMapIoSpace failed\n"));
     return NDIS_STATUS_RESOURCES;
+  }
 
   return NDIS_STATUS_SUCCESS;
 }
