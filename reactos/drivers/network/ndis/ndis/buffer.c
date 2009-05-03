@@ -1111,4 +1111,47 @@ NdisUnchainBufferAtFront(
     *Buffer = NdisBuffer;
 }
 
+/*
+ * @implemented
+ */
+VOID
+EXPORT
+NdisCopyBuffer(
+    OUT PNDIS_STATUS    Status,
+    OUT PNDIS_BUFFER    *Buffer,
+    IN  NDIS_HANDLE     PoolHandle,
+    IN  PVOID           MemoryDescriptor,
+    IN  UINT            Offset,
+    IN  UINT            Length)
+/*
+ * FUNCTION: Returns a new buffer descriptor for a (partial) buffer
+ * ARGUMENTS:
+ *     Status           = Address of a buffer to place status of operation
+ *     Buffer           = Address of a buffer to place new buffer descriptor
+ *     PoolHandle       = Handle returned by NdisAllocateBufferPool
+ *     MemoryDescriptor = Pointer to a memory descriptor (possibly NDIS_BUFFER)
+ *     Offset           = Offset in buffer to start copying
+ *     Length           = Number of bytes to copy
+ */
+{
+    PVOID CurrentVa = (PUCHAR)(MmGetMdlVirtualAddress((PNDIS_BUFFER)MemoryDescriptor)) + Offset;
+
+    NDIS_DbgPrint(MAX_TRACE, ("Called\n"));
+
+    *Buffer = IoAllocateMdl(CurrentVa, Length, FALSE, FALSE, NULL);
+    if (!*Buffer)
+    {
+        *Status = NDIS_STATUS_FAILURE;
+        return;
+    }
+
+    IoBuildPartialMdl((PNDIS_BUFFER)MemoryDescriptor,
+                      *Buffer,
+                      CurrentVa,
+                      Length);
+
+    (*Buffer)->Next = NULL;
+    *Status = NDIS_STATUS_SUCCESS;
+}
+
 /* EOF */

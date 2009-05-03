@@ -402,4 +402,20 @@ NdisScheduleWorkItem(
     return NDIS_STATUS_SUCCESS;
 }
 
+/*
+ * @implemented
+ */
+VOID
+EXPORT
+NdisGetCurrentProcessorCpuUsage(
+    PULONG  pCpuUsage)
+/*
+ * FUNCTION: Returns how busy the current processor is as a percentage
+ * ARGUMENTS:
+ *     pCpuUsage = Pointer to a buffer to place CPU usage
+ */
+{
+    ExGetCurrentProcessorCpuUsage(pCpuUsage);
+}
+
 /* EOF */

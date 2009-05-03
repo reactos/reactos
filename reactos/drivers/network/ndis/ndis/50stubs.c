@@ -551,48 +551,3 @@ NdisMDeregisterIoPortRange(
 {
    UNIMPLEMENTED
 }
-
-/*
- * @unimplemented
- */
-VOID
-EXPORT
-NdisCopyBuffer(
-    OUT PNDIS_STATUS    Status,
-    OUT PNDIS_BUFFER    *Buffer,
-    IN  NDIS_HANDLE     PoolHandle,
-    IN  PVOID           MemoryDescriptor,
-    IN  UINT            Offset,
-    IN  UINT            Length)
-/*
- * FUNCTION: Returns a new buffer descriptor for a (partial) buffer
- * ARGUMENTS:
- *     Status           = Address of a buffer to place status of operation
- *     Buffer           = Address of a buffer to place new buffer descriptor
- *     PoolHandle       = Handle returned by NdisAllocateBufferPool
- *     MemoryDescriptor = Pointer to a memory descriptor (possibly NDIS_BUFFER)
- *     Offset           = Offset in buffer to start copying
- *     Length           = Number of bytes to copy
- */
-{
-    UNIMPLEMENTED
-
-    *Status = NDIS_STATUS_FAILURE;
-}
-
-
-/*
- * @unimplemented
- */
-VOID
-EXPORT
-NdisGetCurrentProcessorCpuUsage(
-    PULONG  pCpuUsage)
-/*
- * FUNCTION: Returns how busy the current processor is as a percentage
- * ARGUMENTS:
- *     pCpuUsage = Pointer to a buffer to place CPU usage
- */
-{
-    UNIMPLEMENTED
-}
