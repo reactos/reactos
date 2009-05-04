@@ -147,7 +147,7 @@ BEGIN
     IDS_RESTARTTITLE    "Prima fase della installazione completata"
     IDS_RESTARTSUBTITLE "La prima fase della installazione è stata completata, riavviare il computer per procedere alla seconda fase"
     IDS_SUMMARYTITLE    "Sintesi della installazione"
-    IDS_SUMMARYSUBTITLE "Elencare le proprietà della installazione da controllare prima che siano eseguite sul dispositivo di installazione"
+    IDS_SUMMARYSUBTITLE "Lista delle proprietà della installazione da controllare prima che siano eseguite sul dispositivo di installazione"
     IDS_ABORTSETUP      "ReactOS non è installato completamente sul computer. Se interropete l'installazione ora sarà necessario eseguire l'installazione di nuovo. Volete procedere?"
     IDS_ABORTSETUP2     "Volete interrompere l'installazione?"
 END

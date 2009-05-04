@@ -213,7 +213,7 @@ STRINGTABLE
 BEGIN
 	IDS_SYS_TOOLS        "Strumenti di sistema"
 	IDS_CMT_CHARMAP      "Mappa dei caratteri"
-	IDS_CMT_KBSWITCH     "Cambia la disposizione della tastiera"
+	IDS_CMT_KBSWITCH     "Cambia il layout di tastiera"
     IDS_CMT_DXDIAG       "Esegui il programma di diagnostica ReactX-"
 END
 
@@ -227,7 +227,7 @@ STRINGTABLE
 BEGIN
     IDS_SYS_ENTERTAINMENT       "Divertimento"
     IDS_CMT_MPLAY32             "Esegui Multimedia Player"
-    IDS_CMT_SNDVOL32            "Esegui Conrollo Volume"
+    IDS_CMT_SNDVOL32            "Esegui Controllo Volume"
 END
 
 STRINGTABLE
@@ -261,7 +261,7 @@ BEGIN
     IDS_SHORT_CHARMAP    "CharMap.lnk"
     IDS_SHORT_MAGNIFY    "Magnify.lnk"
     IDS_SHORT_RDESKTOP   "Remote Desktop.lnk"
-    IDS_SHORT_KBSWITCH   "Disposizione della tastiera.lnk"
+    IDS_SHORT_KBSWITCH   "Layout di tastiera.lnk"
     IDS_SHORT_EVENTVIEW  "Visualizzatore Eventi.lnk"
     IDS_SHORT_MSCONFIG   "Configuratione del sistema.lnk"
     IDS_SHORT_SNDVOL32   "Controllo Volume.lnk"

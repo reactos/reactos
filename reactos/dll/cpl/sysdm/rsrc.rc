@@ -17,6 +17,7 @@
 #include "lang/sk-SK.rc"
 #include "lang/sv-SE.rc"
 #include "lang/uk-UA.rc"
+#include "lang/zh-CN.rc"
 
 /*
 #include "lang/da-DK.rc"

@@ -1,197 +1,203 @@
-LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+/* 
+ * Simplified Chinese Resource for Intl (dll/cpl/intl/lang/zh-CN.rc)
+ * CREATED: Jingjing Fu (jingjingf AT 188.com) 2009-05-02
+ */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 IDD_GENERALPAGE DIALOGEX 0, 0, 246, 230
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Regional Options"
+CAPTION "区域选项"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Standards and formats", -1, 5, 5, 234, 162
-    LTEXT "This option affects how some programs format numbers, currencies, dates, and time.", -1, 14, 17, 220, 25
-    LTEXT "Select an item to match its properties, or click Customize to choose your own formats:", -1, 14, 37, 220, 22
+    GROUPBOX "标准和格式", -1, 5, 5, 234, 162
+    LTEXT "这个选项影响到某些程序如何格式化数字、货币、时间和日期。", -1, 14, 17, 220, 25
+    LTEXT "选择一个与其首选项匹配的项或单击“自定义”选择您自己的格式(&S):", -1, 14, 37, 220, 22
     COMBOBOX IDC_LANGUAGELIST, 14, 56, 160, 160, CBS_DROPDOWNLIST | CBS_SORT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    PUSHBUTTON "Customi&ze...", IDC_SETUP_BUTTON, 178, 56, 52, 13
-    LTEXT "Samples", -1, 14, 73, 70, 10
-    LTEXT "Number:", -1, 16, 86, 48, 10
-    LTEXT "Monetary:", -1, 16, 101, 48, 10
-    LTEXT "Time:", -1, 16, 116, 48, 10
-    LTEXT "Short date:", -1, 16, 131, 48, 10
-    LTEXT "Long date:", -1, 16, 146, 48, 10
+    PUSHBUTTON "自定义(&Z)...", IDC_SETUP_BUTTON, 178, 56, 52, 13
+    LTEXT "示例", -1, 14, 73, 70, 10
+    LTEXT "数字:", -1, 16, 86, 48, 10
+    LTEXT "货币:", -1, 16, 101, 48, 10
+    LTEXT "时间:", -1, 16, 116, 48, 10
+    LTEXT "短日期:", -1, 16, 131, 48, 10
+    LTEXT "长日期:", -1, 16, 146, 48, 10
     EDITTEXT IDC_NUMSAMPLE_EDIT, 89, 86, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
     EDITTEXT IDC_MONEYSAMPLE_EDIT, 89, 101, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
     EDITTEXT IDC_TIMESAMPLE_EDIT, 89, 116, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
     EDITTEXT IDC_SHORTTIMESAMPLE_EDIT, 89, 131, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
     EDITTEXT IDC_FULLTIMESAMPLE_EDIT, 89, 146, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
-    GROUPBOX "Geographic location", -1, 5, 172, 234, 55
-    LTEXT "Set up your location so that some services can supply you with local information; for example, news and weather reports.", -1, 14, 184, 210, 24
+    GROUPBOX "位置", -1, 5, 172, 234, 55
+    LTEXT "为了便于为您提供当地信息如新闻和天气，请选择您的所在地(&T):", -1, 14, 184, 210, 24
     COMBOBOX IDC_LOCATION_COMBO, 14, 207, 217, 160, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
 END
 
 IDD_LANGUAGESPAGE DIALOGEX 0, 0, 246, 230
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Languages"
+CAPTION "语言"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Text input languages and services", -1, 5, 5, 234, 52
-    LTEXT "To view or change language or text input methods press ""Details...""", -1, 12, 15, 220, 18
-    PUSHBUTTON "De&tails...", IDC_DETAIL_BUTTON, 177, 34, 54, 14
-    GROUPBOX "Additional language support", -1, 5, 62, 234, 82
-    LTEXT "Most languages are installed by default. To install additional languages, select the appropriate check box below.", -1, 12, 72, 220, 18
-    CHECKBOX "I&nstall files for complex script and right-to-left languages", IDC_INST_FILES_FOR_RTOL_LANG, 12, 92, 215, 22, BS_MULTILINE
-    CHECKBOX "In&stall files for East Asian languages", IDC_INST_FILES_FOR_ASIAN, 12, 114, 180, 22, BS_MULTILINE
+    GROUPBOX "文字服务和输入语言", -1, 5, 5, 234, 52
+    LTEXT "要查看用来输入文字的语言和方法，请单击“详细信息”。", -1, 12, 15, 220, 18
+    PUSHBUTTON "详细信息(&T)...", IDC_DETAIL_BUTTON, 177, 34, 54, 14
+    GROUPBOX "附加的语言支持", -1, 5, 62, 234, 82
+    LTEXT "大多数语言都会在默认情况下得到安装。要安装其他语言，选择下面相应的复选框。", -1, 12, 72, 220, 18
+    CHECKBOX "为复杂文字和从右到左的语言安装文件(包括泰文)(&N)", IDC_INST_FILES_FOR_RTOL_LANG, 12, 92, 215, 22, BS_MULTILINE
+    CHECKBOX "为东亚语言安装文件(&S)", IDC_INST_FILES_FOR_ASIAN, 12, 114, 180, 22, BS_MULTILINE
 END
 
 IDD_ADVANCEDPAGE DIALOGEX 0, 0, 246, 230
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Advanced"
+CAPTION "高级"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Language for non-Unicode programs", -1, 5, 5, 234, 90
+    GROUPBOX "非 Unicode 程序的语言", -1, 5, 5, 234, 90
     COMBOBOX IDC_LANGUAGE_COMBO, 14, 75, 217, 160, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
-    LTEXT "This system setting enables non-Unicode programs to display menus and dialogs in their native language. It does not affect Unicode programs, but it does apply to all users of this computer.", -1, 14, 18, 223, 33
-    LTEXT "Select a language to match the language version of the non-Unicode programs you want to use:", -1, 14, 55, 223, 18
-    GROUPBOX "Code page conversion tables", -1, 5, 101, 234, 88
+    LTEXT "这个设置启动某些非 Unicode 程序以便用母语显示菜单和对话。这不会影响到 Unicode 的程序，但是会应用在这台计算机上的所有用户。", -1, 14, 18, 223, 33
+    LTEXT "选择一种语言，使之与您想使用的非 Unicode 程序的语言版本相匹配(&S):", -1, 14, 55, 223, 18
+    GROUPBOX "代码页转换表(&C)", -1, 5, 101, 234, 88
     CONTROL "", IDC_CONV_TABLES, "SysListView32", LVS_REPORT | LVS_SORTASCENDING | LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP, 14, 114, 217, 70
-    GROUPBOX "Default user account settings", -1, 5, 193, 234, 30
-    CHECKBOX "Apply all settings to the current user account and to the default", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 200, 220, 22, BS_MULTILINE
+    GROUPBOX "默认用户帐户设置", -1, 5, 193, 234, 30
+    CHECKBOX "将所有设置应用于当前用户帐户和默认用户配置文件(&D)", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 200, 220, 22, BS_MULTILINE
 END
 
 IDD_NUMBERSPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Numbers"
+CAPTION "数字"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Appearance sample", -1, 7, 7, 230, 53, WS_CHILD | WS_VISIBLE
-    LTEXT "Positive:", -1, 13, 21, 31, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
+    GROUPBOX "示例", -1, 7, 7, 230, 53, WS_CHILD | WS_VISIBLE
+    LTEXT "正:", -1, 13, 21, 31, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
     EDITTEXT IDC_NUMBERSPOSSAMPLE, 43, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
-    LTEXT "Negative:", -1, 120, 21, 31, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
+    LTEXT "负:", -1, 120, 21, 31, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
     EDITTEXT IDC_NUMBERSNEGSAMPLE, 154, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
-    LTEXT "&Decimal symbol:", -1, 8, 67, 96, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
+    LTEXT "小数点(&D):", -1, 8, 67, 96, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERDSYMBOL, 137, 65, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "No. of digi&ts after decimal:", -1, 8, 83, 96, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
+    LTEXT "小数位数(&T):", -1, 8, 83, 96, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSNDIGDEC, 137, 81, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "Digit &grouping symbol:", -1, 8, 100, 96, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
+    LTEXT "数字分组符号(&G):", -1, 8, 100, 96, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSDIGITGRSYM, 137, 97, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "D&igit grouping:", -1, 8, 117, 96, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
+    LTEXT "数字分组(&I):", -1, 8, 117, 96, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSDGROUPING, 137, 113, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "N&egative sign symbol:", -1, 8, 134, 96, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
+    LTEXT "负号(&E):", -1, 8, 134, 96, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSNSIGNSYM, 137, 129, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "Negative number &format:", -1, 8, 149, 100, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
+    LTEXT "负数格式(&F):", -1, 8, 149, 100, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSNNUMFORMAT, 137, 145, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "Display leading &zeros:", -1, 8, 166, 96, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
+    LTEXT "零起始显示(&Z):", -1, 8, 166, 96, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSDISPLEADZER, 137, 161, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "&List separator:", -1, 8, 181, 96, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
+    LTEXT "列表分隔符(&L):", -1, 8, 181, 96, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSLSEP, 137, 177, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "&Measurement system:", -1, 8, 197, 96, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
+    LTEXT "度量衡系统(&M):", -1, 8, 197, 96, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSMEASSYS, 137, 193, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
 
 
 IDD_CURRENCYPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Currency"
+CAPTION "货币"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Appearance sample", -1, 7, 7, 230, 33, WS_CHILD | WS_VISIBLE
-    LTEXT "Positive:", -1, 13, 21, 31, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
+    GROUPBOX "示例", -1, 7, 7, 230, 33, WS_CHILD | WS_VISIBLE
+    LTEXT "正:", -1, 13, 21, 31, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
     EDITTEXT IDC_CURRENCYPOSSAMPLE, 43, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
-    LTEXT "Negative:", -1, 120, 21, 31, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
+    LTEXT "负:", -1, 120, 21, 31, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
     EDITTEXT IDC_CURRENCYNEGSAMPLE, 154, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
-    LTEXT "&Currency symbol:", -1, 10, 51, 121, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
+    LTEXT "货币符号(&S):", -1, 10, 51, 121, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYSYMBOL, 134, 49, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "&Positive Amount:", -1, 10, 68, 121, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
+    LTEXT "货币正数格式(&P):", -1, 10, 68, 121, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYPOSVALUE, 134, 66, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "&Negative Amount:", -1, 10, 85, 121, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
+    LTEXT "货币负数格式(&N):", -1, 10, 85, 121, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYNEGVALUE, 134, 83, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "&Decimal separator:", -1, 10, 111, 121, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
+    LTEXT "小数点(&D):", -1, 10, 111, 121, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYDECSEP, 134, 109, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "&Number of fractional digits:", -1, 10, 128, 121, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
+    LTEXT "小数位数(&T):", -1, 10, 128, 121, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYDECNUM, 134, 126, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "&Grouping symbol:", -1, 10, 156, 121, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
+    LTEXT "数字分组符号(&G):", -1, 10, 156, 121, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYGRPSEP, 134, 154, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "D&igit grouping:", -1, 10, 173, 121, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
+    LTEXT "数字分组(&I):", -1, 10, 173, 121, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYGRPNUM, 134, 171, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
 
 
 IDD_TIMEPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Time"
+CAPTION "时间"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Appearance sample", -1, 7, 7, 230, 33, WS_CHILD | WS_VISIBLE
-    LTEXT "Time sample:", -1, 13, 21, 54, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
+    GROUPBOX "示例", -1, 7, 7, 230, 33, WS_CHILD | WS_VISIBLE
+    LTEXT "时间示例:", -1, 13, 21, 54, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
     EDITTEXT IDC_TIMESAMPLE, 68, 19, 84, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
-    LTEXT "&Time format:", -1, 13, 52, 130, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
+    LTEXT "时间格式(&T):", -1, 13, 52, 130, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_TIMEFORMAT, 149, 50, 84, 100, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    LTEXT "Time &separator:", -1, 13, 70, 130, 10, WS_VISIBLE | WS_GROUP
+    LTEXT "时间分隔符(&S):", -1, 13, 70, 130, 10, WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_TIMESEPARATOR, 149, 68, 84, 100, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    LTEXT "A&M symbol:", -1, 13, 88, 130, 10, WS_VISIBLE | WS_GROUP
+    LTEXT "AM 符号(&M):", -1, 13, 88, 130, 10, WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_TIMEAMSYMBOL, 149, 86, 84, 100, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    LTEXT "&PM symbol:", -1, 13, 106, 130, 10, WS_VISIBLE | WS_GROUP
+    LTEXT "PM 符号(&P):", -1, 13, 106, 130, 10, WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_TIMEPMSYMBOL, 149, 104, 84, 100, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP
     GROUPBOX "", -1, 7, 140, 230, 80, WS_VISIBLE
-    LTEXT "Time format notation\n\n\
-h = hour    m = minute    s = second    t = am or pm\n\n\
-h = 12 hour   H = 24 hour\n\
-hh, mm, ss = leading zero   h, m, s = no leading zero",
-        -1, 13, 150, 214, 50, WS_CHILD |WS_VISIBLE | WS_GROUP
+    LTEXT "时间格式标记\n\
+    h = 小时     m = 分钟     s = 秒     t = 上午或下午\n\
+    h = 12 小时\
+    H = 24 小时\n\
+    hh, mm, ss = 零起始\
+    h, m, s = 非零起始", -1, 13, 150, 214, 50, WS_CHILD |WS_VISIBLE | WS_GROUP
 END
 
 
 IDD_DATEPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Date"
+CAPTION "日期"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Calendar", -1, 7, 7, 230, 74
-    LTEXT "If year is typed as two digits, then assume it is a year between:", -1, 13, 18, 215, 8
+    GROUPBOX "日历", -1, 7, 7, 230, 74
+    LTEXT "当键入的年份是两位数字时，将其显示为在这些年之间(&Y):", -1, 13, 18, 215, 8
     EDITTEXT IDC_FIRSTYEAR_EDIT, 13, 30, 36, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_DISABLED
-    LTEXT "and", -1, 55, 32, 17, 8
+    LTEXT "和", -1, 55, 32, 17, 8
     EDITTEXT IDC_SECONDYEAR_EDIT, 77, 30, 36, 12, ES_LEFT | ES_NUMBER | WS_GROUP
     CONTROL "",IDC_SCR_MAX_YEAR, "msctls_updown32", UDS_NOTHOUSANDS | UDS_WRAP | UDS_SETBUDDYINT | UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_CHILD | WS_VISIBLE, 113, 30, 10, 12
-    LTEXT "Calendar type:", -1, 13, 48, 56, 10
+    LTEXT "日历类型(&C):", -1, 13, 48, 56, 10
     COMBOBOX IDC_CALTYPE_COMBO, 77, 46, 153, 100, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
-    LTEXT "Muslim Calendar:", -1, 13, 65, 60, 12
+    LTEXT "穆斯林日历:", -1, 13, 65, 60, 12
     COMBOBOX IDC_HIJCHRON_COMBO, 77, 64, 153, 100, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
-    GROUPBOX "Short date format", -1, 7, 83, 230, 81
-    LTEXT "Sample:", -1, 13, 95, 63, 10
+    GROUPBOX "短日期示例:", -1, 7, 83, 230, 81
+    LTEXT "示例", -1, 13, 95, 63, 10
     EDITTEXT IDC_SHRTDATESAMPLE_EDIT, 77, 93, 153, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
-    LTEXT "Sample - right to left read:", -1, 13, 109, 60, 16
+    LTEXT "从右到左的示例:", -1, 13, 109, 60, 16
     EDITTEXT IDC_SHRTDATERTOL_EDIT, 77, 111, 153, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_DISABLED
-    LTEXT "Short format:", -1, 13, 131, 60, 10
+    LTEXT "短格式", -1, 13, 131, 60, 10
     COMBOBOX IDC_SHRTDATEFMT_COMBO, 77, 129, 153, 100, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_VISIBLE
-    LTEXT "Date components separator:", -1, 13, 148, 113, 10
+    LTEXT "日期分隔符:", -1, 13, 148, 113, 10
     COMBOBOX IDC_SHRTDATESEP_COMBO, 180, 146, 51, 100, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_VISIBLE
-    GROUPBOX "Long date format", -1, 7, 167, 230, 64
-    LTEXT "Sample:", -1, 13, 179, 61, 10
+    GROUPBOX "长日期格式", -1, 7, 167, 230, 64
+    LTEXT "示例:", -1, 13, 179, 61, 10
     EDITTEXT IDC_LONGDATESAMPLE_EDIT, 77, 177, 153, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
-    LTEXT "Sample - right to left read:", -1, 13, 193, 61, 16
+    LTEXT "从右到左的示例:", -1, 13, 193, 61, 16
     EDITTEXT IDC_LONGDATERTOL_EDIT, 77, 195, 153, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_DISABLED
-    LTEXT "Long format:", -1, 13, 215, 60, 10
+    LTEXT "长格式:", -1, 13, 215, 60, 10
     COMBOBOX IDC_LONGDATEFMT_COMBO, 77, 213, 153, 100, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_VISIBLE
 END
 
 
 IDD_SORTPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Sorting"
+CAPTION "排序"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Sorting", -1, 7, 7, 230, 74
-    LTEXT "Sorting methods define the sorting order of characters, words, files and folders.", -1, 14, 17, 220, 25
-    LTEXT "Select a sorting method for your language:", -1, 14, 37, 220, 22
+    GROUPBOX "排序", -1, 7, 7, 230, 74
+    LTEXT "排序方法改变程序排序字符、字词、文件和文件夹的方式。", -1, 14, 17, 220, 25
+    LTEXT "选择要用于这个语言的排序方法(&S):", -1, 14, 37, 220, 22
     COMBOBOX IDC_SORTLIST_COMBO, 14, 56, 217, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
 
 
 STRINGTABLE
 BEGIN
-    IDS_CUSTOMIZE_TITLE "Customize Regional Options"
-    IDS_SPAIN "Spanish (Spain)"
+    IDS_CUSTOMIZE_TITLE "自定义区域选项"
+    IDS_SPAIN "西班牙语 (西班牙)"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME "Regional Options"
-    IDS_CPLDESCRIPTION "Select languages and format numbers, currencies, times and date."
+    IDS_CPLNAME "区域选项"
+    IDS_CPLDESCRIPTION "选择语言、数字、货币、时间和日期的显示设置。"
 END

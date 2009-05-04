@@ -2,6 +2,7 @@
  *  (Simplified Chinese resources)
  *  (简体中文资源)
  *  by zhangbing 2008 <e_zb@21cn.com, ezb@mail.gywb.cn>
+ *  Updated: 2009-05-02 Jingjing Fu <jingjingf AT 188.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
@@ -184,7 +185,7 @@ END
 
 IDD_MULTICHANNEL DIALOG 0, 0, 227, 218
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Multichannel"
+CAPTION "多声道"
 FONT 9, "MS Shell Dlg"
 BEGIN
     LTEXT "Description goes here.", 9506, 8, 4, 212, 24
@@ -220,7 +221,7 @@ BEGIN
     LTEXT "", 9500, 5, 164, 55, 8
     CONTROL "Slider1", 9503, "MSCTLS_TRACKBAR32", WS_TABSTOP | 0x00000401, 87, 162, 108, 17
     LTEXT "高", 9502, 202, 164, 17, 8
-    AUTOCHECKBOX "&Move all slide indicators at the same time", 9504, 5, 185, 216, 9
+    AUTOCHECKBOX "同时移动所有滑动指示器(&M)", 9504, 5, 185, 216, 9
     PUSHBUTTON "恢复默认值(&D)", 9505, 110, 199, 110, 14
 END
 
