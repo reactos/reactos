@@ -61,7 +61,7 @@ RtlCallVectoredExceptionHandlers(IN PEXCEPTION_RECORD  ExceptionRecord,
         if (--veh->Refs == 0)
         {
           RemoveEntryList (&veh->ListEntry);
-          InterlockedDecrement (&RtlpVectoredExceptionsInstalled);
+          _InterlockedDecrement (&RtlpVectoredExceptionsInstalled);
           Remove = TRUE;
         }
         Ret = TRUE;
@@ -74,7 +74,7 @@ RtlCallVectoredExceptionHandlers(IN PEXCEPTION_RECORD  ExceptionRecord,
       {
         CurrentEntry = veh->ListEntry.Flink;
         RemoveEntryList (&veh->ListEntry);
-        InterlockedDecrement (&RtlpVectoredExceptionsInstalled);
+        _InterlockedDecrement (&RtlpVectoredExceptionsInstalled);
         RtlLeaveCriticalSection(&RtlpVectoredExceptionLock);
         
         RtlFreeHeap(RtlGetProcessHeap(),
@@ -136,7 +136,7 @@ RtlAddVectoredExceptionHandler(IN ULONG FirstHandler,
       InsertTailList(&RtlpVectoredExceptionHead,
                      &veh->ListEntry);
     }
-    InterlockedIncrement (&RtlpVectoredExceptionsInstalled);
+    _InterlockedIncrement (&RtlpVectoredExceptionsInstalled);
     RtlLeaveCriticalSection(&RtlpVectoredExceptionLock);
   }
 
