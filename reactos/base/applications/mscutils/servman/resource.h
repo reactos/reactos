@@ -61,6 +61,9 @@
 
 #define IDI_SM_ICON         50
 #define IDB_BUTTONS         51
+#define IDI_NODEPENDS       52
+#define IDI_SERVICE         53
+#define IDI_DRIVER          54
 
 #define IDB_PROP            10000
 #define IDB_REFRESH         10001
@@ -139,6 +142,7 @@
 #define IDC_DEPEND_TREE1    20002
 #define IDC_DEPEND_TREE2    20003
 #define IDC_DEPEND_SERVICE  20004
+#define IDS_NO_DEPENDS      20005
 
 
 /* create service dialog */
