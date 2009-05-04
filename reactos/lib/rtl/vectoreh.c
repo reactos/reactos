@@ -22,10 +22,6 @@ typedef struct _RTL_VECTORED_EXCEPTION_HANDLER
   PVECTORED_EXCEPTION_HANDLER VectoredHandler;
 } RTL_VECTORED_EXCEPTION_HANDLER, *PRTL_VECTORED_EXCEPTION_HANDLER;
 
-/* FIXME - stupid ld won't resolve RtlDecodePointer! Since their implementation
-           is the same just use RtlEncodePointer for now! */
-#define RtlDecodePointer RtlEncodePointer
-
 /* FUNCTIONS ***************************************************************/
 
 BOOLEAN
