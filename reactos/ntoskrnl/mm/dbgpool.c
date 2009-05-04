@@ -96,7 +96,7 @@ ExpAllocateDebugPool(POOL_TYPE Type, ULONG Size, ULONG Tag, PVOID Caller, BOOLEA
     /* Protect the guard page */
     MmSetPageProtect(NULL, (PVOID)GuardArea, PAGE_NOACCESS);
 
-    DPRINT1("Allocating whole page block Tag %c%c%c%c, Buffer %p, Header %p, UserData %p, GuardArea %p, Size %d\n",
+    DPRINT("Allocating whole page block Tag %c%c%c%c, Buffer %p, Header %p, UserData %p, GuardArea %p, Size %d\n",
         Tag & 0xFF, (Tag >> 8) & 0xFF,
         (Tag >> 16) & 0xFF, (Tag >> 24) & 0xFF,
         Buffer, Header, UserData, GuardArea, Size);
@@ -115,7 +115,7 @@ ExpFreeDebugPool(PVOID Block, BOOLEAN PagedPool)
     Header = (PEI_WHOLE_PAGE_HEADER)
         (((PCHAR)Block) - sizeof(EI_WHOLE_PAGE_HEADER));
 
-    DPRINT1("Freeing whole page block at %08x (Tag %c%c%c%c, %x Header %x)\n", Block,
+    DPRINT("Freeing whole page block at %08x (Tag %c%c%c%c, %x Header %x)\n", Block,
         Header->Tag & 0xFF, (Header->Tag >> 8) & 0xFF,
         (Header->Tag >> 16) & 0xFF, (Header->Tag >> 24) & 0xFF, Header->Tag, Header);
 
