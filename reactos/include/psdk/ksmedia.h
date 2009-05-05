@@ -575,4 +575,28 @@ typedef struct
     ULONG  Reserved;
 } KSNODEPROPERTY_AUDIO_CHANNEL, *PKSNODEPROPERTY_AUDIO_CHANNEL;
 
+typedef struct {
+#if defined(_NTDDK_)
+    ULONGLONG        PlayOffset;
+    ULONGLONG        WriteOffset;
+#else
+    DWORDLONG        PlayOffset;
+    DWORDLONG        WriteOffset;
+#endif
+} KSAUDIO_POSITION, *PKSAUDIO_POSITION;
+
+typedef struct {
+    ULONG   FifoSize;
+    ULONG   ChipsetDelay;
+    ULONG   CodecDelay;
+} KSRTAUDIO_HWLATENCY, *PKSRTAUDIO_HWLATENCY;
+
+typedef struct {
+    PVOID       Register;
+    ULONG       Width;
+    ULONGLONG   Numerator;
+    ULONGLONG   Denominator;
+    ULONG       Accuracy;
+} KSRTAUDIO_HWREGISTER, *PKSRTAUDIO_HWREGISTER;
+
 #endif
