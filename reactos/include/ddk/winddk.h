@@ -51,7 +51,13 @@ extern "C" {
 #define VOLATILE volatile
 
 #define RESTRICTED_POINTER
+
+#if defined(_WIN64)
+#define POINTER_ALIGNMENT DECLSPEC_ALIGN(8)
+#else
 #define POINTER_ALIGNMENT
+#endif
+
 #define DECLSPEC_ADDRSAFE
 
 #ifdef NONAMELESSUNION
