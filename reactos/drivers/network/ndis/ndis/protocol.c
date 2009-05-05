@@ -77,11 +77,52 @@ NdisIPnPQueryStopDevice(
      else if (Status != NDIS_STATUS_SUCCESS)
      {
          /* One protocol failed so we can fail the query stop device IRP */
+         ExFreePool(PnPEvent);
          return Status;
      }
 
      CurrentEntry = CurrentEntry->Flink;
   }
+
+  ExFreePool(PnPEvent);
+
+  return NDIS_STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+NdisIPnPCancelStopDevice(
+    IN PDEVICE_OBJECT DeviceObject,
+    PIRP Irp)
+{
+  PLIST_ENTRY CurrentEntry;
+  PADAPTER_BINDING AdapterBinding;
+  PLOGICAL_ADAPTER Adapter = (PLOGICAL_ADAPTER)DeviceObject->DeviceExtension;
+  PNET_PNP_EVENT PnPEvent;
+  NDIS_STATUS Status;
+
+  PnPEvent = ProSetupPnPEvent(NetEventCancelRemoveDevice, NULL, 0);
+  if (!PnPEvent)
+      return NDIS_STATUS_RESOURCES;
+
+  CurrentEntry = Adapter->ProtocolListHead.Flink;
+
+  while (CurrentEntry != &Adapter->ProtocolListHead)
+  {
+     AdapterBinding = CONTAINING_RECORD(CurrentEntry, ADAPTER_BINDING, AdapterListEntry);
+
+     Status = (*AdapterBinding->ProtocolBinding->Chars.PnPEventHandler)(
+      AdapterBinding->NdisOpenBlock.ProtocolBindingContext,
+      PnPEvent);
+
+     /* A protocol should always succeed NetEventCancelRemoveDevice */
+
+     ASSERT(Status == NDIS_STATUS_SUCCESS);
+
+     CurrentEntry = CurrentEntry->Flink;
+  }
+
+  ExFreePool(PnPEvent);
 
   return NDIS_STATUS_SUCCESS;
 }
