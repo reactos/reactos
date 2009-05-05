@@ -37,6 +37,7 @@ extern "C" {
 #define CDN_HELP	(CDN_FIRST-4U)
 #define CDN_FILEOK	(CDN_FIRST-5U)
 #define CDN_TYPECHANGE	(CDN_FIRST-6U)
+#define CDN_INCLUDEITEM (CDN_FIRST-7U)
 #define CDM_FIRST	(WM_USER+100)
 #define CDM_LAST	(WM_USER+200)
 #define CDM_GETSPEC	CDM_FIRST
@@ -369,6 +370,23 @@ typedef struct _OFNOTIFYW {
 	LPOPENFILENAMEW lpOFN;
 	LPWSTR pszFile;
 } OFNOTIFYW,*LPOFNOTIFYW;
+
+typedef struct _OFNOTIFYEXA
+{
+    NMHDR hdr;
+    LPOPENFILENAMEA lpOFN;
+    LPVOID psf;
+    LPVOID pidl;
+} OFNOTIFYEXA, *LPOFNOTIFYEXA;
+
+typedef struct _OFNOTIFYEXW
+{
+        NMHDR hdr;
+        LPOPENFILENAMEW lpOFN;
+        LPVOID psf;
+        LPVOID pidl;
+} OFNOTIFYEXW, *LPOFNOTIFYEXW;
+
 typedef struct tagPSDA {
 	DWORD lStructSize;
 	HWND hwndOwner;
