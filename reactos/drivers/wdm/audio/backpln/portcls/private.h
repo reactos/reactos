@@ -109,6 +109,25 @@ PMINIPORTWAVEPCI
 GetWavePciMiniport(
     PPORTWAVEPCI Port);
 
+NTSTATUS 
+NewPortFilterWaveRT(
+    OUT IPortFilterWaveRT ** OutFilter);
+
+NTSTATUS NewPortPinWaveRT(
+    OUT IPortPinWaveRT ** OutPin);
+
+PMINIPORTWAVERT
+GetWaveRTMiniport(
+    IN IPortWaveRT* iface);
+
+PDEVICE_OBJECT
+GetDeviceObjectFromPortWaveRT(
+    IPortWaveRT* iface);
+
+NTSTATUS
+NewPortWaveRTStream(
+    PPORTWAVERTSTREAM *OutStream);
+
 NTSTATUS
 NTAPI
 NewDispatchObject(

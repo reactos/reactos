@@ -475,6 +475,50 @@ DECLARE_INTERFACE_(IPortPinWavePci, IIrpTarget)
 typedef IPortPinWavePci *PPORTPINWAVEPCI;
 
 /*****************************************************************************
+ * IPortFilterWaveRT
+ *****************************************************************************
+ */
+
+#undef INTERFACE
+#define INTERFACE IPortFilterWaveRT
+
+DECLARE_INTERFACE_(IPortFilterWaveRT, IIrpTarget)
+{
+    DEFINE_ABSTRACT_UNKNOWN()
+
+    DEFINE_ABSTRACT_IRPTARGET()
+
+    STDMETHOD_(NTSTATUS, Init)(THIS_
+        IN PPORTWAVERT Port)PURE;
+};
+
+typedef IPortFilterWaveRT *PPORTFILTERWAVERT;
+
+/*****************************************************************************
+ * IPortPinWavePci
+ *****************************************************************************
+ */
+
+#undef INTERFACE
+#define INTERFACE IPortPinWaveRT
+
+DECLARE_INTERFACE_(IPortPinWaveRT, IIrpTarget)
+{
+    DEFINE_ABSTRACT_UNKNOWN()
+
+    DEFINE_ABSTRACT_IRPTARGET()
+
+    STDMETHOD_(NTSTATUS, Init)(THIS_
+        IN PPORTWAVERT Port,
+        IN PPORTFILTERWAVERT Filter,
+        IN KSPIN_CONNECT * ConnectDetails,
+        IN KSPIN_DESCRIPTOR * PinDescriptor,
+        IN PDEVICE_OBJECT DeviceObject) PURE;
+};
+
+typedef IPortPinWavePci *PPORTPINWAVERT;
+
+/*****************************************************************************
  * IPortFilterWaveCyclic
  *****************************************************************************
  */

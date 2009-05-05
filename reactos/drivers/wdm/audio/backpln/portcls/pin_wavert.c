@@ -1,8 +1,8 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Kernel Streaming
- * FILE:            drivers/wdm/audio/backpln/portcls/pin_wavecyclic.c
- * PURPOSE:         WaveCyclic IRP Audio Pin
+ * FILE:            drivers/wdm/audio/backpln/portcls/pin_wavert.c
+ * PURPOSE:         WaveRT IRP Audio Pin
  * PROGRAMMER:      Johannes Anderwald
  */
 
@@ -10,17 +10,17 @@
 
 typedef struct
 {
-    IPortPinWaveCyclicVtbl *lpVtbl;
+    IPortPinWaveRTVtbl *lpVtbl;
     IServiceSinkVtbl *lpVtblServiceSink;
-
     LONG ref;
-    IPortWaveCyclic * Port;
-    IPortFilterWaveCyclic * Filter;
+
+    IPortWaveRT * Port;
+    IPortFilterWaveRT * Filter;
     KSPIN_DESCRIPTOR * KsPinDescriptor;
-    PMINIPORTWAVECYCLIC Miniport;
+    PMINIPORTWAVERT Miniport;
+    PMINIPORTWAVERTSTREAM Stream;
+    PPORTWAVERTSTREAM PortStream;
     PSERVICEGROUP ServiceGroup;
-    PDMACHANNEL DmaChannel;
-    PMINIPORTWAVECYCLICSTREAM Stream;
     KSSTATE State;
     PKSDATAFORMAT Format;
     KSPIN_CONNECT * ConnectDetails;
@@ -31,30 +31,35 @@ typedef struct
 
     IIrpQueue * IrpQueue;
 
-    ULONG FrameSize;
     BOOL Capture;
 
     ULONG TotalPackets;
     ULONG PreCompleted;
     ULONG PostCompleted;
 
-}IPortPinWaveCyclicImpl;
+    ULONGLONG Delay;
+
+    MEMORY_CACHING_TYPE CacheType;
+    PMDL Mdl;
+
+}IPortPinWaveRTImpl;
 
 
 typedef struct
 {
-    IPortPinWaveCyclicImpl *Pin;
+    IPortPinWaveRTImpl *Pin;
     PIO_WORKITEM WorkItem;
     KSSTATE State;
 }SETSTREAM_CONTEXT, *PSETSTREAM_CONTEXT;
 
-NTSTATUS
+static
+VOID
 NTAPI
-IPortWaveCyclic_fnProcessNewIrp(
-    IPortPinWaveCyclicImpl * This);
+SetStreamState(
+   IN IPortPinWaveRTImpl * This,
+   IN KSSTATE State);
 
 //==================================================================================================================================
-
 static
 NTSTATUS
 NTAPI
@@ -63,7 +68,7 @@ IServiceSink_fnQueryInterface(
     IN  REFIID refiid,
     OUT PVOID* Output)
 {
-    IPortPinWaveCyclicImpl * This = (IPortPinWaveCyclicImpl*)CONTAINING_RECORD(iface, IPortPinWaveCyclicImpl, lpVtblServiceSink);
+    IPortPinWaveRTImpl * This = (IPortPinWaveRTImpl*)CONTAINING_RECORD(iface, IPortPinWaveRTImpl, lpVtblServiceSink);
 
     DPRINT("IServiceSink_fnQueryInterface entered\n");
 
@@ -83,7 +88,7 @@ NTAPI
 IServiceSink_fnAddRef(
     IServiceSink* iface)
 {
-    IPortPinWaveCyclicImpl * This = (IPortPinWaveCyclicImpl*)CONTAINING_RECORD(iface, IPortPinWaveCyclicImpl, lpVtblServiceSink);
+    IPortPinWaveRTImpl * This = (IPortPinWaveRTImpl*)CONTAINING_RECORD(iface, IPortPinWaveRTImpl, lpVtblServiceSink);
     DPRINT("IServiceSink_fnAddRef entered\n");
 
     return InterlockedIncrement(&This->ref);
@@ -95,7 +100,7 @@ NTAPI
 IServiceSink_fnRelease(
     IServiceSink* iface)
 {
-    IPortPinWaveCyclicImpl * This = (IPortPinWaveCyclicImpl*)CONTAINING_RECORD(iface, IPortPinWaveCyclicImpl, lpVtblServiceSink);
+    IPortPinWaveRTImpl * This = (IPortPinWaveRTImpl*)CONTAINING_RECORD(iface, IPortPinWaveRTImpl, lpVtblServiceSink);
 
     InterlockedDecrement(&This->ref);
 
@@ -112,101 +117,53 @@ IServiceSink_fnRelease(
 
 static
 VOID
-UpdateCommonBuffer(
-    IPortPinWaveCyclicImpl * This,
-    ULONG Position)
+NTAPI
+IServiceSink_fnRequestService(
+    IServiceSink* iface)
 {
-    ULONG BufferLength;
-    ULONG BytesToCopy;
-    ULONG BufferSize;
-    PUCHAR Buffer;
+    KSAUDIO_POSITION Position;
     NTSTATUS Status;
+    PUCHAR Buffer;
+    ULONG BufferSize;
+    IPortPinWaveRTImpl * This = (IPortPinWaveRTImpl*)CONTAINING_RECORD(iface, IPortPinWaveRTImpl, lpVtblServiceSink);
 
-    BufferLength = Position - This->CommonBufferOffset;
-    while(BufferLength)
+    ASSERT_IRQL(DISPATCH_LEVEL);
+
+    Status = This->IrpQueue->lpVtbl->GetMapping(This->IrpQueue, &Buffer, &BufferSize);
+    if (!NT_SUCCESS(Status))
     {
-        Status = This->IrpQueue->lpVtbl->GetMapping(This->IrpQueue, &Buffer, &BufferSize);
-        if (!NT_SUCCESS(Status))
-            return;
-
-        BytesToCopy = min(BufferLength, BufferSize);
-
-
-        if (This->Capture)
-        {
-            This->DmaChannel->lpVtbl->CopyTo(This->DmaChannel,
-                                             Buffer,
-                                             (PUCHAR)This->CommonBuffer + This->CommonBufferOffset,
-                                             BytesToCopy);
-        }
-        else
-        {
-            This->DmaChannel->lpVtbl->CopyTo(This->DmaChannel,
-                                             (PUCHAR)This->CommonBuffer + This->CommonBufferOffset,
-                                             Buffer,
-                                             BytesToCopy);
-        }
-
-        This->IrpQueue->lpVtbl->UpdateMapping(This->IrpQueue, BytesToCopy);
-        This->CommonBufferOffset += BytesToCopy;
-
-        BufferLength = Position - This->CommonBufferOffset;
+        SetStreamState(This, KSSTATE_STOP);
+        return;
     }
+
+    Status = This->Stream->lpVtbl->GetPosition(This->Stream, &Position);
+    DPRINT("PlayOffset %llu WriteOffset %llu %u Buffer %p BufferSize %u\n", Position.PlayOffset, Position.WriteOffset, Buffer, This->CommonBufferSize, BufferSize);
+
+    //FIXME
+    // implement writing into cyclic buffer
+    //
+
+    /* reschedule the timer */
+    This->ServiceGroup->lpVtbl->RequestDelayedService(This->ServiceGroup, This->Delay);
 }
+
+static IServiceSinkVtbl vt_IServiceSink = 
+{
+    IServiceSink_fnQueryInterface,
+    IServiceSink_fnAddRef,
+    IServiceSink_fnRelease,
+    IServiceSink_fnRequestService
+};
+
 
 static
-VOID
-UpdateCommonBufferOverlap(
-    IPortPinWaveCyclicImpl * This,
-    ULONG Position)
-{
-    ULONG BufferLength;
-    ULONG BytesToCopy;
-    ULONG BufferSize;
-    PUCHAR Buffer;
-    NTSTATUS Status;
-
-
-    BufferLength = This->CommonBufferSize - This->CommonBufferOffset;
-    while(BufferLength)
-    {
-        Status = This->IrpQueue->lpVtbl->GetMapping(This->IrpQueue, &Buffer, &BufferSize);
-        if (!NT_SUCCESS(Status))
-            return;
-
-        BytesToCopy = min(BufferLength, BufferSize);
-
-        if (This->Capture)
-        {
-            This->DmaChannel->lpVtbl->CopyTo(This->DmaChannel,
-                                             Buffer,
-                                             (PUCHAR)This->CommonBuffer + This->CommonBufferOffset,
-                                             BytesToCopy);
-        }
-        else
-        {
-            This->DmaChannel->lpVtbl->CopyTo(This->DmaChannel,
-                                             (PUCHAR)This->CommonBuffer + This->CommonBufferOffset,
-                                             Buffer,
-                                             BytesToCopy);
-        }
-
-        This->IrpQueue->lpVtbl->UpdateMapping(This->IrpQueue, BytesToCopy);
-        This->CommonBufferOffset += BytesToCopy;
-
-        BufferLength = This->CommonBufferSize - This->CommonBufferOffset;
-    }
-    This->CommonBufferOffset = 0;
-    UpdateCommonBuffer(This, Position);
-}
-
 VOID
 NTAPI
 SetStreamWorkerRoutine(
     IN PDEVICE_OBJECT  DeviceObject,
     IN PVOID  Context)
 {
-    IPortPinWaveCyclicImpl * This;
+    IPortPinWaveRTImpl * This;
     PSETSTREAM_CONTEXT Ctx = (PSETSTREAM_CONTEXT)Context;
     KSSTATE State;
 
@@ -230,15 +187,23 @@ SetStreamWorkerRoutine(
         {
             /* reset start stream */
             This->IrpQueue->lpVtbl->CancelBuffers(This->IrpQueue); //FIX function name
+            This->ServiceGroup->lpVtbl->CancelDelayedService(This->ServiceGroup);
             DPRINT1("Stopping PreCompleted %u PostCompleted %u\n", This->PreCompleted, This->PostCompleted);
+        }
+
+        if (This->State == KSSTATE_RUN)
+        {
+            /* start the notification timer */
+            This->ServiceGroup->lpVtbl->RequestDelayedService(This->ServiceGroup, This->Delay);
         }
     }
 }
 
+static
 VOID
 NTAPI
 SetStreamState(
-   IN IPortPinWaveCyclicImpl * This,
+   IN IPortPinWaveRTImpl * This,
    IN KSSTATE State)
 {
     PDEVICE_OBJECT DeviceObject;
@@ -256,7 +221,7 @@ SetStreamState(
         return;
 
     /* Get device object */
-    DeviceObject = GetDeviceObject(This->Port);
+    DeviceObject = GetDeviceObjectFromPortWaveRT(This->Port);
 
     /* allocate set state context */
     Context = AllocateItem(NonPagedPool, sizeof(SETSTREAM_CONTEXT), TAG_PORTCLASS);
@@ -281,60 +246,18 @@ SetStreamState(
     IoQueueWorkItem(WorkItem, SetStreamWorkerRoutine, DelayedWorkQueue, (PVOID)Context);
 }
 
-static
-VOID
-NTAPI
-IServiceSink_fnRequestService(
-    IServiceSink* iface)
-{
-    ULONG Position;
-    NTSTATUS Status;
-    PUCHAR Buffer;
-    ULONG BufferSize;
-    IPortPinWaveCyclicImpl * This = (IPortPinWaveCyclicImpl*)CONTAINING_RECORD(iface, IPortPinWaveCyclicImpl, lpVtblServiceSink);
-
-    ASSERT_IRQL(DISPATCH_LEVEL);
-
-    Status = This->IrpQueue->lpVtbl->GetMapping(This->IrpQueue, &Buffer, &BufferSize);
-    if (!NT_SUCCESS(Status))
-    {
-        SetStreamState(This, KSSTATE_STOP);
-        return;
-    }
-
-    Status = This->Stream->lpVtbl->GetPosition(This->Stream, &Position);
-    DPRINT("Position %u Buffer %p BufferSize %u ActiveIrpOffset %u\n", Position, Buffer, This->CommonBufferSize, BufferSize);
-
-    if (Position < This->CommonBufferOffset)
-    {
-        UpdateCommonBufferOverlap(This, Position);
-    }
-    else if (Position >= This->CommonBufferOffset)
-    {
-        UpdateCommonBuffer(This, Position);
-    }
-}
-
-static IServiceSinkVtbl vt_IServiceSink = 
-{
-    IServiceSink_fnQueryInterface,
-    IServiceSink_fnAddRef,
-    IServiceSink_fnRelease,
-    IServiceSink_fnRequestService
-};
-
 //==================================================================================================================================
 /*
  * @implemented
  */
 NTSTATUS
 NTAPI
-IPortPinWaveCyclic_fnQueryInterface(
-    IPortPinWaveCyclic* iface,
+IPortPinWaveRT_fnQueryInterface(
+    IPortPinWaveRT* iface,
     IN  REFIID refiid,
     OUT PVOID* Output)
 {
-    IPortPinWaveCyclicImpl * This = (IPortPinWaveCyclicImpl*)iface;
+    IPortPinWaveRTImpl * This = (IPortPinWaveRTImpl*)iface;
 
     if (IsEqualGUIDAligned(refiid, &IID_IIrpTarget) || 
         IsEqualGUIDAligned(refiid, &IID_IUnknown))
@@ -352,10 +275,10 @@ IPortPinWaveCyclic_fnQueryInterface(
  */
 ULONG
 NTAPI
-IPortPinWaveCyclic_fnAddRef(
-    IPortPinWaveCyclic* iface)
+IPortPinWaveRT_fnAddRef(
+    IPortPinWaveRT* iface)
 {
-    IPortPinWaveCyclicImpl * This = (IPortPinWaveCyclicImpl*)iface;
+    IPortPinWaveRTImpl * This = (IPortPinWaveRTImpl*)iface;
 
     return InterlockedIncrement(&This->ref);
 }
@@ -365,10 +288,10 @@ IPortPinWaveCyclic_fnAddRef(
  */
 ULONG
 NTAPI
-IPortPinWaveCyclic_fnRelease(
-    IPortPinWaveCyclic* iface)
+IPortPinWaveRT_fnRelease(
+    IPortPinWaveRT* iface)
 {
-    IPortPinWaveCyclicImpl * This = (IPortPinWaveCyclicImpl*)iface;
+    IPortPinWaveRTImpl * This = (IPortPinWaveRTImpl*)iface;
 
     InterlockedDecrement(&This->ref);
 
@@ -385,8 +308,8 @@ IPortPinWaveCyclic_fnRelease(
  */
 NTSTATUS
 NTAPI
-IPortPinWaveCyclic_fnNewIrpTarget(
-    IN IPortPinWaveCyclic* iface,
+IPortPinWaveRT_fnNewIrpTarget(
+    IN IPortPinWaveRT* iface,
     OUT struct IIrpTarget **OutTarget,
     IN WCHAR * Name,
     IN PUNKNOWN Unknown,
@@ -401,15 +324,15 @@ IPortPinWaveCyclic_fnNewIrpTarget(
 
 NTSTATUS
 NTAPI
-IPortPinWaveCyclic_HandleKsProperty(
-    IN IPortPinWaveCyclic * iface,
+IPortPinWaveRT_HandleKsProperty(
+    IN IPortPinWaveRT * iface,
     IN PIRP Irp)
 {
     PKSPROPERTY Property;
     NTSTATUS Status;
     UNICODE_STRING GuidString;
     PIO_STACK_LOCATION IoStack;
-    IPortPinWaveCyclicImpl * This = (IPortPinWaveCyclicImpl*)iface;
+    IPortPinWaveRTImpl * This = (IPortPinWaveRTImpl*)iface;
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
@@ -564,13 +487,13 @@ IPortPinWaveCyclic_HandleKsProperty(
 
 NTSTATUS
 NTAPI
-IPortPinWaveCyclic_HandleKsStream(
-    IN IPortPinWaveCyclic * iface,
+IPortPinWaveRT_HandleKsStream(
+    IN IPortPinWaveRT * iface,
     IN PIRP Irp)
 {
-    IPortPinWaveCyclicImpl * This = (IPortPinWaveCyclicImpl*)iface;
+    IPortPinWaveRTImpl * This = (IPortPinWaveRTImpl*)iface;
 
-    DPRINT("IPortPinWaveCyclic_HandleKsStream entered State %u Stream %p\n", This->State, This->Stream);
+    DPRINT("IPortPinWaveRT_HandleKsStream entered State %u Stream %p\n", This->State, This->Stream);
 
     return STATUS_PENDING;
 }
@@ -580,8 +503,8 @@ IPortPinWaveCyclic_HandleKsStream(
  */
 NTSTATUS
 NTAPI
-IPortPinWaveCyclic_fnDeviceIoControl(
-    IN IPortPinWaveCyclic* iface,
+IPortPinWaveRT_fnDeviceIoControl(
+    IN IPortPinWaveRT* iface,
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
@@ -592,7 +515,7 @@ IPortPinWaveCyclic_fnDeviceIoControl(
 
     if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_PROPERTY)
     {
-       return IPortPinWaveCyclic_HandleKsProperty(iface, Irp);
+       return IPortPinWaveRT_HandleKsProperty(iface, Irp);
     }
     else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_ENABLE_EVENT)
     {
@@ -611,7 +534,7 @@ IPortPinWaveCyclic_fnDeviceIoControl(
     }
     else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_WRITE_STREAM || IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_READ_STREAM)
     {
-       return IPortPinWaveCyclic_HandleKsStream(iface, Irp);
+       return IPortPinWaveRT_HandleKsStream(iface, Irp);
     }
     else
     {
@@ -633,8 +556,8 @@ IPortPinWaveCyclic_fnDeviceIoControl(
  */
 NTSTATUS
 NTAPI
-IPortPinWaveCyclic_fnRead(
-    IN IPortPinWaveCyclic* iface,
+IPortPinWaveRT_fnRead(
+    IN IPortPinWaveRT* iface,
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
@@ -646,8 +569,8 @@ IPortPinWaveCyclic_fnRead(
  */
 NTSTATUS
 NTAPI
-IPortPinWaveCyclic_fnWrite(
-    IN IPortPinWaveCyclic* iface,
+IPortPinWaveRT_fnWrite(
+    IN IPortPinWaveRT* iface,
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
@@ -659,28 +582,29 @@ IPortPinWaveCyclic_fnWrite(
  */
 NTSTATUS
 NTAPI
-IPortPinWaveCyclic_fnFlush(
-    IN IPortPinWaveCyclic* iface,
+IPortPinWaveRT_fnFlush(
+    IN IPortPinWaveRT* iface,
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
     return KsDispatchInvalidDeviceRequest(DeviceObject, Irp);
 }
 
+static
 VOID
 NTAPI
 CloseStreamRoutine(
     IN PDEVICE_OBJECT  DeviceObject,
     IN PVOID Context)
 {
-    PMINIPORTWAVECYCLICSTREAM Stream;
+    PMINIPORTWAVERTSTREAM Stream;
     NTSTATUS Status;
     ISubdevice *ISubDevice;
     PSUBDEVICE_DESCRIPTOR Descriptor;
-    IPortPinWaveCyclicImpl * This;
+    IPortPinWaveRTImpl * This;
     PCLOSESTREAM_CONTEXT Ctx = (PCLOSESTREAM_CONTEXT)Context;
 
-    This = (IPortPinWaveCyclicImpl*)Ctx->Pin;
+    This = (IPortPinWaveRTImpl*)Ctx->Pin;
 
     if (This->Stream)
     {
@@ -690,10 +614,6 @@ CloseStreamRoutine(
             KeStallExecutionProcessor(10);
         }
     }
-
-    This->ServiceGroup->lpVtbl->RemoveMember(This->ServiceGroup, (PSERVICESINK)&This->lpVtblServiceSink);
-    This->ServiceGroup->lpVtbl->Release(This->ServiceGroup);
-    This->DmaChannel->lpVtbl->Release(This->DmaChannel);
 
     Status = This->Port->lpVtbl->QueryInterface(This->Port, &IID_ISubdevice, (PVOID*)&ISubDevice);
     if (NT_SUCCESS(Status))
@@ -743,13 +663,13 @@ CloseStreamRoutine(
  */
 NTSTATUS
 NTAPI
-IPortPinWaveCyclic_fnClose(
-    IN IPortPinWaveCyclic* iface,
+IPortPinWaveRT_fnClose(
+    IN IPortPinWaveRT* iface,
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
     PCLOSESTREAM_CONTEXT Ctx;
-    IPortPinWaveCyclicImpl * This = (IPortPinWaveCyclicImpl*)iface;
+    IPortPinWaveRTImpl * This = (IPortPinWaveRTImpl*)iface;
 
     if (This->Stream)
     {
@@ -803,8 +723,8 @@ cleanup:
  */
 NTSTATUS
 NTAPI
-IPortPinWaveCyclic_fnQuerySecurity(
-    IN IPortPinWaveCyclic* iface,
+IPortPinWaveRT_fnQuerySecurity(
+    IN IPortPinWaveRT* iface,
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
@@ -816,8 +736,8 @@ IPortPinWaveCyclic_fnQuerySecurity(
  */
 NTSTATUS
 NTAPI
-IPortPinWaveCyclic_fnSetSecurity(
-    IN IPortPinWaveCyclic* iface,
+IPortPinWaveRT_fnSetSecurity(
+    IN IPortPinWaveRT* iface,
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
@@ -829,8 +749,8 @@ IPortPinWaveCyclic_fnSetSecurity(
  */
 BOOLEAN
 NTAPI
-IPortPinWaveCyclic_fnFastDeviceIoControl(
-    IN IPortPinWaveCyclic* iface,
+IPortPinWaveRT_fnFastDeviceIoControl(
+    IN IPortPinWaveRT* iface,
     IN PFILE_OBJECT FileObject,
     IN BOOLEAN Wait,
     IN PVOID InputBuffer,
@@ -850,8 +770,8 @@ IPortPinWaveCyclic_fnFastDeviceIoControl(
  */
 BOOLEAN
 NTAPI
-IPortPinWaveCyclic_fnFastRead(
-    IN IPortPinWaveCyclic* iface,
+IPortPinWaveRT_fnFastRead(
+    IN IPortPinWaveRT* iface,
     IN PFILE_OBJECT FileObject,
     IN PLARGE_INTEGER FileOffset,
     IN ULONG Length,
@@ -864,9 +784,9 @@ IPortPinWaveCyclic_fnFastRead(
     NTSTATUS Status;
     PCONTEXT_WRITE Packet;
     PIRP Irp;
-    IPortPinWaveCyclicImpl * This = (IPortPinWaveCyclicImpl*)iface;
+    IPortPinWaveRTImpl * This = (IPortPinWaveRTImpl*)iface;
 
-    DPRINT("IPortPinWaveCyclic_fnFastRead entered\n");
+    DPRINT("IPortPinWaveRT_fnFastRead entered\n");
 
     Packet = (PCONTEXT_WRITE)Buffer;
 
@@ -894,8 +814,8 @@ IPortPinWaveCyclic_fnFastRead(
  */
 BOOLEAN
 NTAPI
-IPortPinWaveCyclic_fnFastWrite(
-    IN IPortPinWaveCyclic* iface,
+IPortPinWaveRT_fnFastWrite(
+    IN IPortPinWaveRT* iface,
     IN PFILE_OBJECT FileObject,
     IN PLARGE_INTEGER FileOffset,
     IN ULONG Length,
@@ -908,11 +828,11 @@ IPortPinWaveCyclic_fnFastWrite(
     NTSTATUS Status;
     PCONTEXT_WRITE Packet;
     PIRP Irp;
-    IPortPinWaveCyclicImpl * This = (IPortPinWaveCyclicImpl*)iface;
+    IPortPinWaveRTImpl * This = (IPortPinWaveRTImpl*)iface;
 
     InterlockedIncrement((PLONG)&This->TotalPackets);
 
-    DPRINT("IPortPinWaveCyclic_fnFastWrite entered Total %u Pre %u Post %u\n", This->TotalPackets, This->PreCompleted, This->PostCompleted);
+    DPRINT("IPortPinWaveRT_fnFastWrite entered Total %u Pre %u Post %u\n", This->TotalPackets, This->PreCompleted, This->PostCompleted);
 
     Packet = (PCONTEXT_WRITE)Buffer;
 
@@ -953,20 +873,19 @@ IPortPinWaveCyclic_fnFastWrite(
  */
 NTSTATUS
 NTAPI
-IPortPinWaveCyclic_fnInit(
-    IN IPortPinWaveCyclic* iface,
-    IN PPORTWAVECYCLIC Port,
-    IN PPORTFILTERWAVECYCLIC Filter,
+IPortPinWaveRT_fnInit(
+    IN IPortPinWaveRT* iface,
+    IN PPORTWAVERT Port,
+    IN PPORTFILTERWAVERT Filter,
     IN KSPIN_CONNECT * ConnectDetails,
-    IN KSPIN_DESCRIPTOR * KsPinDescriptor)
+    IN KSPIN_DESCRIPTOR * KsPinDescriptor,
+    IN PDEVICE_OBJECT DeviceObject)
 {
     NTSTATUS Status;
     PKSDATAFORMAT DataFormat;
-    PDEVICE_OBJECT DeviceObject;
     BOOL Capture;
-    //IDrmAudioStream * DrmAudio = NULL;
-
-    IPortPinWaveCyclicImpl * This = (IPortPinWaveCyclicImpl*)iface;
+    KSRTAUDIO_HWLATENCY Latency;
+    IPortPinWaveRTImpl * This = (IPortPinWaveRTImpl*)iface;
 
     Port->lpVtbl->AddRef(Port);
     Filter->lpVtbl->AddRef(Filter);
@@ -975,15 +894,13 @@ IPortPinWaveCyclic_fnInit(
     This->Filter = Filter;
     This->KsPinDescriptor = KsPinDescriptor;
     This->ConnectDetails = ConnectDetails;
-    This->Miniport = GetWaveCyclicMiniport(Port);
-
-    DeviceObject = GetDeviceObject(Port);
+    This->Miniport = GetWaveRTMiniport(Port);
 
     DataFormat = (PKSDATAFORMAT)(ConnectDetails + 1);
 
-    DPRINT("IPortPinWaveCyclic_fnInit entered\n");
+    DPRINT("IPortPinWaveRT_fnInit entered\n");
 
-    This->Format = ExAllocatePoolWithTag(NonPagedPool, DataFormat->FormatSize, TAG_PORTCLASS);
+    This->Format = AllocateItem(NonPagedPool, DataFormat->FormatSize, TAG_PORTCLASS);
     if (!This->Format)
         return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -991,14 +908,30 @@ IPortPinWaveCyclic_fnInit(
 
     Status = NewIrpQueue(&This->IrpQueue);
     if (!NT_SUCCESS(Status))
-        return Status;
+    {
+        goto cleanup;
+    }
 
     Status = This->IrpQueue->lpVtbl->Init(This->IrpQueue, ConnectDetails, DataFormat, DeviceObject, 0);
     if (!NT_SUCCESS(Status))
     {
-       This->IrpQueue->lpVtbl->Release(This->IrpQueue);
-       return Status;
+        goto cleanup;
     }
+
+    Status = NewPortWaveRTStream(&This->PortStream);
+    if (!NT_SUCCESS(Status))
+    {
+        goto cleanup;
+    }
+
+    Status = PcNewServiceGroup(&This->ServiceGroup, NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        goto cleanup;
+    }
+
+    This->ServiceGroup->lpVtbl->AddMember(This->ServiceGroup, (PSERVICESINK)&This->lpVtblServiceSink);
+    This->ServiceGroup->lpVtbl->SupportDelayedService(This->ServiceGroup);
 
     if (KsPinDescriptor->Communication == KSPIN_COMMUNICATION_SINK && KsPinDescriptor->DataFlow == KSPIN_DATAFLOW_IN)
     {
@@ -1016,168 +949,96 @@ IPortPinWaveCyclic_fnInit(
 
     Status = This->Miniport->lpVtbl->NewStream(This->Miniport,
                                                &This->Stream,
-                                               NULL,
-                                               NonPagedPool,
-                                               Capture,
+                                               This->PortStream,
                                                ConnectDetails->PinId,
-                                               This->Format,
-                                               &This->DmaChannel,
-                                               &This->ServiceGroup);
-#if 0
-    Status = This->Stream->lpVtbl->QueryInterface(This->Stream, &IID_IDrmAudioStream, (PVOID*)&DrmAudio);
-    if (NT_SUCCESS(Status))
-    {
-        DRMRIGHTS DrmRights;
-        DPRINT1("Got IID_IDrmAudioStream interface %p\n", DrmAudio);
-
-        DrmRights.CopyProtect = FALSE;
-        DrmRights.Reserved = 0;
-        DrmRights.DigitalOutputDisable = FALSE;
-
-        Status = DrmAudio->lpVtbl->SetContentId(DrmAudio, 1, &DrmRights);
-        DPRINT("Status %x\n", Status);
-    }
-#endif
-
-    DPRINT("IPortPinWaveCyclic_fnInit Status %x\n", Status);
+                                               Capture,
+                                               This->Format);
+    DPRINT("IPortPinWaveRT_fnInit Status %x\n", Status);
 
     if (!NT_SUCCESS(Status))
-        return Status;
+        goto cleanup;
 
-    Status = This->ServiceGroup->lpVtbl->AddMember(This->ServiceGroup, 
-                                                   (PSERVICESINK)&This->lpVtblServiceSink);
+    This->Stream->lpVtbl->GetHWLatency(This->Stream, &Latency);
+    /* minimum delay of 10 milisec */
+    This->Delay = Int32x32To64(min(max(Latency.ChipsetDelay + Latency.CodecDelay + Latency.FifoSize, 10), 10), -10000);
+
+    Status = This->Stream->lpVtbl->AllocateAudioBuffer(This->Stream, 16384, &This->Mdl, &This->CommonBufferSize, &This->CommonBufferOffset, &This->CacheType);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to add pin to service group\n");
-        return Status;
+        DPRINT1("AllocateAudioBuffer failed with %x\n", Status);
+        goto cleanup;
     }
-    //This->ServiceGroup->lpVtbl->AddRef(This->ServiceGroup);
-    This->ServiceGroup->lpVtbl->SupportDelayedService(This->ServiceGroup);
-    //This->DmaChannel->lpVtbl->AddRef(This->DmaChannel);
 
     This->Stream->lpVtbl->SetState(This->Stream, KSSTATE_STOP);
     This->State = KSSTATE_STOP;
-    This->CommonBufferOffset = 0;
-    This->CommonBufferSize = This->DmaChannel->lpVtbl->AllocatedBufferSize(This->DmaChannel);
-    This->CommonBuffer = This->DmaChannel->lpVtbl->SystemAddress(This->DmaChannel);
     This->Capture = Capture;
 
-    Status = This->Stream->lpVtbl->SetNotificationFreq(This->Stream, 10, &This->FrameSize);
-
     This->Stream->lpVtbl->SetFormat(This->Stream, (PKSDATAFORMAT)This->Format);
-
-
     return STATUS_SUCCESS;
+
+cleanup:
+    if (This->IrpQueue)
+    {
+        This->IrpQueue->lpVtbl->Release(This->IrpQueue);
+        This->IrpQueue = NULL;
+    }
+
+    if (This->Format)
+    {
+        FreeItem(This->Format, TAG_PORTCLASS);
+        This->Format = NULL;
+    }
+
+    if (This->ServiceGroup)
+    {
+        This->ServiceGroup->lpVtbl->Release(This->ServiceGroup);
+        This->ServiceGroup = NULL;
+    }
+
+    if (This->PortStream)
+    {
+        This->PortStream->lpVtbl->Release(This->PortStream);
+        This->PortStream = NULL;
+    }
+
+    return Status;
 }
 
-/*
- * @unimplemented
- */
-ULONG
-NTAPI
-IPortPinWaveCyclic_fnGetCompletedPosition(
-    IN IPortPinWaveCyclic* iface)
+static IPortPinWaveRTVtbl vt_IPortPinWaveRT =
 {
-    UNIMPLEMENTED;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-ULONG
-NTAPI
-IPortPinWaveCyclic_fnGetCycleCount(
-    IN IPortPinWaveCyclic* iface)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
-/*
- * @implemented
- */
-ULONG
-NTAPI
-IPortPinWaveCyclic_fnGetDeviceBufferSize(
-    IN IPortPinWaveCyclic* iface)
-{
-    IPortPinWaveCyclicImpl * This = (IPortPinWaveCyclicImpl*)iface;
-
-    return This->CommonBufferSize;
-}
-
-/*
- * @implemented
- */
-PVOID
-NTAPI
-IPortPinWaveCyclic_fnGetIrpStream(
-    IN IPortPinWaveCyclic* iface)
-{
-    IPortPinWaveCyclicImpl * This = (IPortPinWaveCyclicImpl*)iface;
-
-    return (PVOID)This->IrpQueue;
-}
-
-
-/*
- * @implemented
- */
-PMINIPORT
-NTAPI
-IPortPinWaveCyclic_fnGetMiniport(
-    IN IPortPinWaveCyclic* iface)
-{
-    IPortPinWaveCyclicImpl * This = (IPortPinWaveCyclicImpl*)iface;
-
-    return (PMINIPORT)This->Miniport;
-}
-
-static IPortPinWaveCyclicVtbl vt_IPortPinWaveCyclic =
-{
-    IPortPinWaveCyclic_fnQueryInterface,
-    IPortPinWaveCyclic_fnAddRef,
-    IPortPinWaveCyclic_fnRelease,
-    IPortPinWaveCyclic_fnNewIrpTarget,
-    IPortPinWaveCyclic_fnDeviceIoControl,
-    IPortPinWaveCyclic_fnRead,
-    IPortPinWaveCyclic_fnWrite,
-    IPortPinWaveCyclic_fnFlush,
-    IPortPinWaveCyclic_fnClose,
-    IPortPinWaveCyclic_fnQuerySecurity,
-    IPortPinWaveCyclic_fnSetSecurity,
-    IPortPinWaveCyclic_fnFastDeviceIoControl,
-    IPortPinWaveCyclic_fnFastRead,
-    IPortPinWaveCyclic_fnFastWrite,
-    IPortPinWaveCyclic_fnInit,
-    IPortPinWaveCyclic_fnGetCompletedPosition,
-    IPortPinWaveCyclic_fnGetCycleCount,
-    IPortPinWaveCyclic_fnGetDeviceBufferSize,
-    IPortPinWaveCyclic_fnGetIrpStream,
-    IPortPinWaveCyclic_fnGetMiniport
+    IPortPinWaveRT_fnQueryInterface,
+    IPortPinWaveRT_fnAddRef,
+    IPortPinWaveRT_fnRelease,
+    IPortPinWaveRT_fnNewIrpTarget,
+    IPortPinWaveRT_fnDeviceIoControl,
+    IPortPinWaveRT_fnRead,
+    IPortPinWaveRT_fnWrite,
+    IPortPinWaveRT_fnFlush,
+    IPortPinWaveRT_fnClose,
+    IPortPinWaveRT_fnQuerySecurity,
+    IPortPinWaveRT_fnSetSecurity,
+    IPortPinWaveRT_fnFastDeviceIoControl,
+    IPortPinWaveRT_fnFastRead,
+    IPortPinWaveRT_fnFastWrite,
+    IPortPinWaveRT_fnInit
 };
 
-
-
-
-NTSTATUS NewPortPinWaveCyclic(
-    OUT IPortPinWaveCyclic ** OutPin)
+NTSTATUS NewPortPinWaveRT(
+    OUT IPortPinWaveRT ** OutPin)
 {
-    IPortPinWaveCyclicImpl * This;
+    IPortPinWaveRTImpl * This;
 
-    This = AllocateItem(NonPagedPool, sizeof(IPortPinWaveCyclicImpl), TAG_PORTCLASS);
+    This = AllocateItem(NonPagedPool, sizeof(IPortPinWaveRTImpl), TAG_PORTCLASS);
     if (!This)
         return STATUS_INSUFFICIENT_RESOURCES;
 
-    /* initialize IPortPinWaveCyclic */
+    /* initialize IPortPinWaveRT */
     This->ref = 1;
-    This->lpVtbl = &vt_IPortPinWaveCyclic;
+    This->lpVtbl = &vt_IPortPinWaveRT;
     This->lpVtblServiceSink = &vt_IServiceSink;
 
-
     /* store result */
-    *OutPin = (IPortPinWaveCyclic*)&This->lpVtbl;
+    *OutPin = (IPortPinWaveRT*)&This->lpVtbl;
 
     return STATUS_SUCCESS;
 }
