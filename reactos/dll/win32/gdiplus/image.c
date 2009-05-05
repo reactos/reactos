@@ -192,6 +192,13 @@ GpStatus WINGDIPAPI GdipBitmapLockBits(GpBitmap* bitmap, GDIPCONST GpRect* rect,
     return Ok;
 }
 
+GpStatus WINGDIPAPI GdipBitmapSetResolution(GpBitmap* bitmap, REAL xdpi, REAL ydpi)
+{
+    FIXME("(%p, %.2f, %.2f)\n", bitmap, xdpi, ydpi);
+
+    return NotImplemented;
+}
+
 GpStatus WINGDIPAPI GdipBitmapUnlockBits(GpBitmap* bitmap,
     BitmapData* lockeddata)
 {

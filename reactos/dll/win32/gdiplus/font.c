@@ -224,9 +224,7 @@ GpStatus WINGDIPAPI GdipCreateFontFromLogfontA(HDC hdc,
     if(!MultiByteToWideChar(CP_ACP, 0, lfa->lfFaceName, -1, lfw.lfFaceName, LF_FACESIZE))
         return GenericError;
 
-    GdipCreateFontFromLogfontW(hdc, &lfw, font);
-
-    return Ok;
+    return GdipCreateFontFromLogfontW(hdc, &lfw, font);
 }
 
 /*******************************************************************************
@@ -301,7 +299,7 @@ GpStatus WINGDIPAPI GdipGetFamily(GpFont *font, GpFontFamily **family)
  *
  * RETURNS
  *  SUCCESS: Ok
- *  FAILURE: InvalidParamter (font or size was NULL)
+ *  FAILURE: InvalidParameter (font or size was NULL)
  *
  * NOTES
  *  Size returned is actually emSize -- not internal size used for drawing.
@@ -390,7 +388,7 @@ GpStatus WINGDIPAPI GdipGetLogFontA(GpFont *font, GpGraphics *graphics,
 
     memcpy(lfa, &lfw, FIELD_OFFSET(LOGFONTA,lfFaceName) );
 
-    if(!MultiByteToWideChar(CP_ACP, 0, lfa->lfFaceName, -1, lfw.lfFaceName, LF_FACESIZE))
+    if(!WideCharToMultiByte(CP_ACP, 0, lfw.lfFaceName, -1, lfa->lfFaceName, LF_FACESIZE, NULL, NULL))
         return GenericError;
 
     return Ok;

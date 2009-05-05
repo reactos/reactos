@@ -43,7 +43,7 @@
 @ stdcall GdipBitmapGetPixel(ptr long long ptr)
 @ stdcall GdipBitmapLockBits(ptr ptr long long ptr)
 @ stub GdipBitmapSetPixel
-@ stub GdipBitmapSetResolution
+@ stdcall GdipBitmapSetResolution(ptr long long)
 @ stdcall GdipBitmapUnlockBits(ptr ptr)
 @ stdcall GdipClearPathMarkers(ptr)
 @ stub GdipCloneBitmapArea
