@@ -3414,8 +3414,7 @@ PRINTDLG_PagePaintProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
  */
 static LRESULT CALLBACK pagesetup_margin_editproc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
-    switch(msg)
-    case WM_CHAR:
+    if (msg == WM_CHAR)
     {
         WCHAR decimal = get_decimal_sep();
         WCHAR wc = (WCHAR)wparam;

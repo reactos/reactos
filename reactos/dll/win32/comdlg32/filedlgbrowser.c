@@ -846,6 +846,47 @@ static HRESULT WINAPI IShellBrowserImpl_ICommDlgBrowser_OnStateChange(ICommDlgBr
     return NOERROR;
 }
 
+/*         send_includeitem_notification
+ *
+ * Sends a CDN_INCLUDEITEM notification for "pidl" to hwndParentDlg
+ */
+static LRESULT send_includeitem_notification(HWND hwndParentDlg, LPCITEMIDLIST pidl)
+{
+    LRESULT hook_result = 0;
+    FileOpenDlgInfos *fodInfos = GetPropA(hwndParentDlg, FileOpenDlgInfosStr);
+
+    if(!fodInfos) return 0;
+
+    if(fodInfos->DlgInfos.hwndCustomDlg)
+    {
+        TRACE("call notify CDN_INCLUDEITEM for pidl=%p\n", pidl);
+        if(fodInfos->unicode)
+        {
+                OFNOTIFYEXW ofnNotify;
+                ofnNotify.psf = fodInfos->Shell.FOIShellFolder;
+                ofnNotify.pidl = (LPITEMIDLIST)pidl;
+                ofnNotify.hdr.hwndFrom = hwndParentDlg;
+                ofnNotify.hdr.idFrom = 0;
+                ofnNotify.hdr.code = CDN_INCLUDEITEM;
+                ofnNotify.lpOFN = fodInfos->ofnInfos;
+                hook_result = SendMessageW(fodInfos->DlgInfos.hwndCustomDlg, WM_NOTIFY, 0, (LPARAM)&ofnNotify);
+        }
+        else
+        {
+                OFNOTIFYEXA ofnNotify;
+                ofnNotify.psf = fodInfos->Shell.FOIShellFolder;
+                ofnNotify.pidl = (LPITEMIDLIST)pidl;
+                ofnNotify.hdr.hwndFrom = hwndParentDlg;
+                ofnNotify.hdr.idFrom = 0;
+                ofnNotify.hdr.code = CDN_INCLUDEITEM;
+                ofnNotify.lpOFN = (LPOPENFILENAMEA)fodInfos->ofnInfos;
+                hook_result = SendMessageA(fodInfos->DlgInfos.hwndCustomDlg, WM_NOTIFY, 0, (LPARAM)&ofnNotify);
+        }
+    }
+    TRACE("Retval: 0x%08lx\n", hook_result);
+    return hook_result;
+}
+
 /**************************************************************************
 *  IShellBrowserImpl_ICommDlgBrowser_IncludeObject
 */
@@ -873,6 +914,11 @@ static HRESULT WINAPI IShellBrowserImpl_ICommDlgBrowser_IncludeObject(ICommDlgBr
 
     /* always include directories and links */
     if(ulAttr & (SFGAO_FOLDER | SFGAO_LINK))
+        return S_OK;
+
+    /* if the application takes care of including the item we are done */
+    if(fodInfos->ofnInfos->Flags & OFN_ENABLEINCLUDENOTIFY &&
+       send_includeitem_notification(This->hwndOwner, pidl))
         return S_OK;
 
     /* Check if there is a mask to apply if not */

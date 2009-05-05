@@ -37,7 +37,7 @@
  * FIXME: add to recent docs
  *
  * FIXME: flags not implemented: OFN_DONTADDTORECENT,
- * OFN_ENABLEINCLUDENOTIFY, OFN_ENABLESIZING,
+ * OFN_ENABLESIZING,
  * OFN_NODEREFERENCELINKS, OFN_NOREADONLYRETURN,
  * OFN_NOTESTFILECREATE, OFN_USEMONIKERS
  *
@@ -82,8 +82,7 @@
 WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
 
 #define UNIMPLEMENTED_FLAGS \
-(OFN_DONTADDTORECENT |\
-OFN_ENABLEINCLUDENOTIFY | OFN_ENABLESIZING |\
+(OFN_DONTADDTORECENT | OFN_ENABLESIZING |\
 OFN_NODEREFERENCELINKS | OFN_NOREADONLYRETURN |\
 OFN_NOTESTFILECREATE /*| OFN_USEMONIKERS*/)
 
@@ -2787,6 +2786,8 @@ static BOOL FILEDLG95_LOOKIN_OnCommand(HWND hwnd, WORD wNotifyCode)
       int iItem;
 
       iItem = CBGetCurSel(fodInfos->DlgInfos.hwndLookInCB);
+
+      if( iItem == CB_ERR) return FALSE;
 
       if(!(tmpFolder = (LPSFOLDER) CBGetItemDataPtr(fodInfos->DlgInfos.hwndLookInCB,
                                                iItem)))

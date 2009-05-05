@@ -2837,7 +2837,7 @@ TREEVIEW_Refresh(TREEVIEW_INFO *infoPtr, HDC hdc, const RECT *rc)
     }
 
     //
-    // This is correct, but it causes an infinite loop of WM_PAINT messages, resulting
+    // This is correct, but is causes and infinite loop of WM_PAINT messages, resulting
     // in continuous painting of the scroll bar in reactos. Comment out until the real
     // bug is found
     // 
@@ -3297,56 +3297,59 @@ TREEVIEW_Expand(TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *wineItem,
     if (bExpandPartial)
 	FIXME("TVE_EXPANDPARTIAL not implemented\n");
 
-    TREEVIEW_RecalculateVisibleOrder(infoPtr, wineItem);
-    TREEVIEW_UpdateSubTree(infoPtr, wineItem);
-    TREEVIEW_UpdateScrollBars(infoPtr);
-
-    scrollRect.left = 0;
-    scrollRect.bottom = infoPtr->treeHeight;
-    scrollRect.right = infoPtr->clientWidth;
-    if (nextItem)
+    if (ISVISIBLE(wineItem))
     {
-        scrollDist = nextItem->rect.top - orgNextTop;
-        scrollRect.top = orgNextTop;
+        TREEVIEW_RecalculateVisibleOrder(infoPtr, wineItem);
+        TREEVIEW_UpdateSubTree(infoPtr, wineItem);
+        TREEVIEW_UpdateScrollBars(infoPtr);
 
-        ScrollWindowEx (infoPtr->hwnd, 0, scrollDist, &scrollRect, NULL,
-                       NULL, NULL, SW_ERASE | SW_INVALIDATE);
-        TREEVIEW_Invalidate (infoPtr, wineItem);
-    } else {
-        scrollRect.top = wineItem->rect.top;
-        InvalidateRect(infoPtr->hwnd, &scrollRect, FALSE);
-    }
+        scrollRect.left = 0;
+        scrollRect.bottom = infoPtr->treeHeight;
+        scrollRect.right = infoPtr->clientWidth;
+        if (nextItem)
+        {
+            scrollDist = nextItem->rect.top - orgNextTop;
+            scrollRect.top = orgNextTop;
 
-    /* Scroll up so that as many children as possible are visible.
-     * This fails when expanding causes an HScroll bar to appear, but we
-     * don't know that yet, so the last item is obscured. */
-    if (wineItem->firstChild != NULL)
-    {
-	int nChildren = wineItem->lastChild->visibleOrder
-	    - wineItem->firstChild->visibleOrder + 1;
+            ScrollWindowEx (infoPtr->hwnd, 0, scrollDist, &scrollRect, NULL,
+                        NULL, NULL, SW_ERASE | SW_INVALIDATE);
+            TREEVIEW_Invalidate (infoPtr, wineItem);
+        } else {
+            scrollRect.top = wineItem->rect.top;
+            InvalidateRect(infoPtr->hwnd, &scrollRect, FALSE);
+        }
 
-	int visible_pos = wineItem->visibleOrder
-	    - infoPtr->firstVisible->visibleOrder;
+        /* Scroll up so that as many children as possible are visible.
+        * This fails when expanding causes an HScroll bar to appear, but we
+        * don't know that yet, so the last item is obscured. */
+        if (wineItem->firstChild != NULL)
+        {
+            int nChildren = wineItem->lastChild->visibleOrder
+                - wineItem->firstChild->visibleOrder + 1;
 
-	int rows_below = TREEVIEW_GetVisibleCount(infoPtr) - visible_pos - 1;
+            int visible_pos = wineItem->visibleOrder
+                - infoPtr->firstVisible->visibleOrder;
 
-	if (visible_pos > 0 && nChildren > rows_below)
-	{
-	    int scroll = nChildren - rows_below;
+            int rows_below = TREEVIEW_GetVisibleCount(infoPtr) - visible_pos - 1;
 
-	    if (scroll > visible_pos)
-		scroll = visible_pos;
+            if (visible_pos > 0 && nChildren > rows_below)
+            {
+                int scroll = nChildren - rows_below;
 
-	    if (scroll > 0)
-	    {
-		TREEVIEW_ITEM *newFirstVisible
-		    = TREEVIEW_GetListItem(infoPtr, infoPtr->firstVisible,
-					   scroll);
+                if (scroll > visible_pos)
+                    scroll = visible_pos;
+
+                if (scroll > 0)
+                {
+                    TREEVIEW_ITEM *newFirstVisible
+                        = TREEVIEW_GetListItem(infoPtr, infoPtr->firstVisible,
+                                            scroll);
 
 
-		TREEVIEW_SetFirstVisible(infoPtr, newFirstVisible, TRUE);
-	    }
-	}
+                    TREEVIEW_SetFirstVisible(infoPtr, newFirstVisible, TRUE);
+                }
+            }
+        }
     }
 
     return TRUE;
