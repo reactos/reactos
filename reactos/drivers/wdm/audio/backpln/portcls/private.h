@@ -109,6 +109,8 @@ PMINIPORTWAVEPCI
 GetWavePciMiniport(
     PPORTWAVEPCI Port);
 
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+
 NTSTATUS 
 NewPortFilterWaveRT(
     OUT IPortFilterWaveRT ** OutFilter);
@@ -127,6 +129,8 @@ GetDeviceObjectFromPortWaveRT(
 NTSTATUS
 NewPortWaveRTStream(
     PPORTWAVERTSTREAM *OutStream);
+
+#endif
 
 NTSTATUS
 NTAPI
