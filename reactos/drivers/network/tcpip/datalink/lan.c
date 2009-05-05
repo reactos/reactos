@@ -1266,6 +1266,42 @@ NDIS_STATUS LANUnregisterAdapter(
     return NdisStatus;
 }
 
+VOID 
+NTAPI
+LANUnregisterProtocol(VOID)
+/*
+ * FUNCTION: Unregisters this protocol driver with NDIS
+ * NOTES: Does not care wether we are already registered
+ */
+{
+    TI_DbgPrint(DEBUG_DATALINK, ("Called.\n"));
+
+    if (ProtocolRegistered) {
+        NDIS_STATUS NdisStatus;
+        PLIST_ENTRY CurrentEntry;
+        PLIST_ENTRY NextEntry;
+        PLAN_ADAPTER Current;
+        KIRQL OldIrql;
+
+        TcpipAcquireSpinLock(&AdapterListLock, &OldIrql);
+
+        /* Search the list and remove every adapter we find */
+        CurrentEntry = AdapterListHead.Flink;
+        while (CurrentEntry != &AdapterListHead) {
+            NextEntry = CurrentEntry->Flink;
+            Current = CONTAINING_RECORD(CurrentEntry, LAN_ADAPTER, ListEntry);
+            /* Unregister it */
+            LANUnregisterAdapter(Current);
+            CurrentEntry = NextEntry;
+        }
+
+        TcpipReleaseSpinLock(&AdapterListLock, OldIrql);
+
+        NdisDeregisterProtocol(&NdisStatus, NdisProtocolHandle);
+        ProtocolRegistered = FALSE;
+    }
+}
+
 VOID
 NTAPI
 ProtocolUnbindAdapter(
@@ -1315,6 +1351,7 @@ NTSTATUS LANRegisterProtocol(
     ProtChars.BindAdapterHandler             = ProtocolBindAdapter;
     ProtChars.PnPEventHandler                = ProtocolPnPEvent;
     ProtChars.UnbindAdapterHandler           = ProtocolUnbindAdapter;
+    ProtChars.UnloadHandler                  = LANUnregisterProtocol;
 
     /* Try to register protocol */
     NdisRegisterProtocol(&NdisStatus,
@@ -1330,42 +1367,6 @@ NTSTATUS LANRegisterProtocol(
     ProtocolRegistered = TRUE;
 
     return STATUS_SUCCESS;
-}
-
-
-VOID LANUnregisterProtocol(
-    VOID)
-/*
- * FUNCTION: Unregisters this protocol driver with NDIS
- * NOTES: Does not care wether we are already registered
- */
-{
-    TI_DbgPrint(DEBUG_DATALINK, ("Called.\n"));
-
-    if (ProtocolRegistered) {
-        NDIS_STATUS NdisStatus;
-        PLIST_ENTRY CurrentEntry;
-        PLIST_ENTRY NextEntry;
-        PLAN_ADAPTER Current;
-        KIRQL OldIrql;
-
-        TcpipAcquireSpinLock(&AdapterListLock, &OldIrql);
-
-        /* Search the list and remove every adapter we find */
-        CurrentEntry = AdapterListHead.Flink;
-        while (CurrentEntry != &AdapterListHead) {
-            NextEntry = CurrentEntry->Flink;
-            Current = CONTAINING_RECORD(CurrentEntry, LAN_ADAPTER, ListEntry);
-            /* Unregister it */
-            LANUnregisterAdapter(Current);
-            CurrentEntry = NextEntry;
-        }
-
-        TcpipReleaseSpinLock(&AdapterListLock, OldIrql);
-
-        NdisDeregisterProtocol(&NdisStatus, NdisProtocolHandle);
-        ProtocolRegistered = FALSE;
-    }
 }
 
 /* EOF */
