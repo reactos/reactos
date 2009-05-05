@@ -514,6 +514,34 @@ VOID NTAPI ProtocolStatus(
     }
 }
 
+NDIS_STATUS NTAPI
+ProtocolPnPEvent(
+    NDIS_HANDLE NdisBindingContext,
+    PNET_PNP_EVENT PnPEvent)
+{
+    switch(PnPEvent->NetEvent)
+    {
+      case NetEventSetPower:
+         DbgPrint("Device transitioned to power state %ld\n", PnPEvent->Buffer);
+         return NDIS_STATUS_SUCCESS;
+
+      case NetEventQueryPower:
+         DbgPrint("Device wants to go into power state %ld\n", PnPEvent->Buffer);
+         return NDIS_STATUS_SUCCESS;
+
+      case NetEventQueryRemoveDevice:
+         DbgPrint("Device is about to be removed\n");
+         return NDIS_STATUS_SUCCESS;
+
+      case NetEventCancelRemoveDevice:
+         DbgPrint("Device removal cancelled\n");
+         return NDIS_STATUS_SUCCESS;
+
+      default:
+         DbgPrint("Unhandled event type: %ld\n", PnPEvent->NetEvent);
+         return NDIS_STATUS_SUCCESS;
+    }
+}
 
 VOID NTAPI ProtocolStatusComplete(
     NDIS_HANDLE NdisBindingContext)
@@ -1275,6 +1303,7 @@ NTSTATUS LANRegisterProtocol(
     ProtChars.StatusHandler                  = ProtocolStatus;
     ProtChars.StatusCompleteHandler          = ProtocolStatusComplete;
     ProtChars.BindAdapterHandler             = ProtocolBindAdapter;
+    ProtChars.PnPEventHandler                = ProtocolPnPEvent;
 
     /* Try to register protocol */
     NdisRegisterProtocol(&NdisStatus,
