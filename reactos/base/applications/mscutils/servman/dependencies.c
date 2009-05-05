@@ -9,8 +9,78 @@
 
 #include "precomp.h"
 
+
+/*
+ * Services which depend on the given service.
+ * The return components depend on this service
+ */
+LPTSTR
+GetDependentServices(SC_HANDLE hService)
+{
+    LPQUERY_SERVICE_CONFIG lpServiceConfig;
+    LPTSTR lpStr = NULL;
+    DWORD bytesNeeded;
+    DWORD bytes;
+
+    if (!QueryServiceConfig(hService,
+                            NULL,
+                            0,
+                            &bytesNeeded) &&
+        GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+    {
+        lpServiceConfig = HeapAlloc(ProcessHeap,
+                                    0,
+                                    bytesNeeded);
+        if (lpServiceConfig)
+        {
+            if (QueryServiceConfig(hService,
+                                   lpServiceConfig,
+                                   bytesNeeded,
+                                   &bytesNeeded))
+            {
+                if (lpServiceConfig)
+                {
+                    lpStr = lpServiceConfig->lpDependencies;
+                    bytes = 0;
+
+                    while (TRUE)
+                    {
+                        bytes++;
+
+                        if (!*lpStr && !*(lpStr + 1))
+                        {
+                            bytes++;
+                            break;
+                        }
+
+                        lpStr++;
+                    }
+
+                    bytes *= sizeof(TCHAR);
+                    lpStr = HeapAlloc(ProcessHeap,
+                                      0,
+                                      bytes);
+                    if (lpStr)
+                    {
+                        CopyMemory(lpStr,
+                                   lpServiceConfig->lpDependencies,
+                                   bytes);
+                    }
+                }
+            }
+        }
+    }
+
+    return lpStr;
+}
+
+
+/*
+ * Services which the given service depends on (1st treeview)
+ * The service depends on the return components 
+ */
 LPENUM_SERVICE_STATUS
-GetDependentServices(SC_HANDLE hService,
+GetServiceDependents(SC_HANDLE hService,
                      LPDWORD lpdwCount)
 {
     LPENUM_SERVICE_STATUS lpDependencies;
@@ -150,7 +220,7 @@ DoInitDependsDialog(PSTOP_INFO pStopInfo,
         }
 
         /* Get the list of dependencies */
-        lpDependencies = GetDependentServices(pStopInfo->hMainService, &dwCount);
+        lpDependencies = GetServiceDependents(pStopInfo->hMainService, &dwCount);
         if (lpDependencies)
         {
             LPENUM_SERVICE_STATUS lpEnumServiceStatus;

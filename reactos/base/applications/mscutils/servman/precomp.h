@@ -106,9 +106,10 @@ BOOL UpdateServiceStatus(ENUM_SERVICE_STATUS_PROCESS* pService);
 BOOL GetServiceList(PMAIN_WND_INFO Info, DWORD *NumServices);
 
 /* dependencies */
-LPENUM_SERVICE_STATUS GetDependentServices(SC_HANDLE hService, LPDWORD lpdwCount);
+LPENUM_SERVICE_STATUS GetServiceDependents(SC_HANDLE hService, LPDWORD lpdwCount);
 BOOL HasDependentServices(SC_HANDLE hService);
 INT_PTR CALLBACK StopDependsDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
+LPTSTR GetDependentServices(SC_HANDLE hService);
 
 /* propsheet.c */
 typedef struct _SERVICEPROPSHEET

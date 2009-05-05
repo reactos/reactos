@@ -61,7 +61,6 @@ AddServiceDependency(PSERVICEPROPSHEET dlgInfo,
     LPQUERY_SERVICE_CONFIG lpServiceConfig;
     SC_HANDLE hService;
     HTREEITEM hChild;
-    DWORD bytesNeeded;
     LPTSTR lpStr;
     LPTSTR lpNoDepends;
 
@@ -71,132 +70,40 @@ AddServiceDependency(PSERVICEPROPSHEET dlgInfo,
     if (hService)
     {
 
-        if (!QueryServiceConfig(hService,
-                                NULL,
-                                0,
-                                &bytesNeeded) &&
-            GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+        lpStr = GetDependentServices(hService);
+        if (lpStr)
         {
-            lpServiceConfig = HeapAlloc(ProcessHeap,
-                                        0,
-                                        bytesNeeded);
-            if (lpServiceConfig)
-            {
-                if (QueryServiceConfig(hService,
-                                       lpServiceConfig,
-                                       bytesNeeded,
-                                       &bytesNeeded))
-                {
-                    if (lpServiceConfig)
-                    {
-                        lpStr = lpServiceConfig->lpDependencies;
-
-                        if (*lpStr)
-                        {
-                            while (*lpStr)
-                            {
-                                hChild = AddItemToTreeView(hTreeView,
-                                                           hParent,
-                                                           lpServiceConfig->lpDisplayName,
-                                                           lpServiceConfig->dwServiceType);
-
-                                AddServiceDependency(dlgInfo,
-                                                     hTreeView,
-                                                     hSCManager,
-                                                     lpStr,
-                                                     hChild,
-                                                     hwndDlg);
-
-                                while (*lpStr++)
-                                    ;
-                            }
-                        }
-                        else
-                        {
-                            if (TreeView_GetCount(hTreeView) == 0)
-                            {
-                                if (AllocAndLoadString(&lpNoDepends, hInstance, IDS_NO_DEPENDS))
-                                {
-                                    lpStr = lpNoDepends;
-                                }
-
-                                AddItemToTreeView(hTreeView,
-                                                  hParent,
-                                                  lpStr,
-                                                  0);
-
-                                HeapFree(ProcessHeap,
-                                         0,
-                                         lpNoDepends);
-
-                                EnableWindow(hTreeView, FALSE);
-                            }
-                        }
-                    }
-                }
-
-                HeapFree(ProcessHeap,
-                         0,
-                         lpServiceConfig);
-            }
-        }
-
-        CloseServiceHandle(hService);
-    }
-
-}
-
-static VOID
-AddServiceDependent(PSERVICEPROPSHEET dlgInfo,
-                    HWND hTreeView,
-                    SC_HANDLE hSCManager,
-                    LPTSTR lpServiceName,
-                    HTREEITEM hParent,
-                    HWND hwndDlg)
-{
-    LPENUM_SERVICE_STATUS lpServiceStatus;
-    SC_HANDLE hService;
-    HTREEITEM hChild;
-    LPTSTR lpNoDepends;
-    DWORD count;
-    INT i;
-
-    hService = OpenService(hSCManager,
-                           lpServiceName,
-                           SERVICE_QUERY_STATUS | SERVICE_ENUMERATE_DEPENDENTS);
-    if (hService)
-    {
-        lpServiceStatus = GetDependentServices(hService, &count);
-        if (lpServiceStatus)
-        {
-            for (i = 0; i < count; i++)
+            while (*lpStr)
             {
                 hChild = AddItemToTreeView(hTreeView,
                                            hParent,
-                                           lpServiceStatus[i].lpDisplayName,
-                                           SERVICE_WIN32);
+                                           lpServiceConfig->lpDisplayName,
+                                           lpServiceConfig->dwServiceType);
 
-                AddServiceDependent(dlgInfo,
-                                    hTreeView,
-                                    hSCManager,
-                                    lpServiceStatus[i].lpServiceName,
-                                    hChild,
-                                    hwndDlg);
+
+                AddServiceDependency(dlgInfo,
+                                     hTreeView,
+                                     hSCManager,
+                                     lpStr,
+                                     hChild,
+                                     hwndDlg);
+
+                while (*lpStr++)
+                    ;
             }
-
-            HeapFree(ProcessHeap,
-                     0,
-                     lpServiceStatus);
         }
         else
         {
             if (TreeView_GetCount(hTreeView) == 0)
             {
-                AllocAndLoadString(&lpNoDepends, hInstance, IDS_NO_DEPENDS);
+                if (AllocAndLoadString(&lpNoDepends, hInstance, IDS_NO_DEPENDS))
+                {
+                    lpStr = lpNoDepends;
+                }
 
                 AddItemToTreeView(hTreeView,
                                   hParent,
-                                  lpNoDepends,
+                                  lpStr,
                                   0);
 
                 HeapFree(ProcessHeap,
@@ -206,9 +113,107 @@ AddServiceDependent(PSERVICEPROPSHEET dlgInfo,
                 EnableWindow(hTreeView, FALSE);
             }
         }
+
+
+        HeapFree(ProcessHeap,
+                 0,
+                 lpStr);
+
+        CloseServiceHandle(hService);
+    }
+
+}
+
+static VOID
+AddServiceDependent(HWND hTreeView,
+                    HTREEITEM hParent,
+                    SC_HANDLE hSCManager,
+                    LPTSTR lpServiceName,
+                    LPTSTR lpDisplayName,
+                    DWORD dwServiceType)
+{
+    LPENUM_SERVICE_STATUS lpServiceStatus;
+    SC_HANDLE hChildService;
+    HTREEITEM hChildNode;
+    DWORD count;
+    INT i;
+
+
+    hChildNode = AddItemToTreeView(hTreeView,
+                                   hParent,
+                                   lpDisplayName,
+                                   dwServiceType);
+
+    hChildService = OpenService(hSCManager,
+                                lpServiceName,
+                                SERVICE_QUERY_STATUS | SERVICE_ENUMERATE_DEPENDENTS);
+    if (hChildService)
+    {
+        lpServiceStatus = GetServiceDependents(hChildService, &count);
+        if (lpServiceStatus)
+        {
+            for (i = 0; i < count; i++)
+            {
+                AddServiceDependent(hTreeView,
+                                    hChildNode,
+                                    hSCManager,
+                                    lpServiceStatus[i].lpServiceName,
+                                    lpServiceStatus[i].lpDisplayName,
+                                    lpServiceStatus[i].ServiceStatus.dwServiceType);
+            }
+
+            HeapFree(ProcessHeap,
+                     0,
+                     lpServiceStatus);
+        }
+
+        CloseServiceHandle(hChildService);
     }
 }
 
+static VOID
+SetServiceDependents(HWND hTreeView,
+                     SC_HANDLE hSCManager,
+                     SC_HANDLE hService)
+{
+    LPENUM_SERVICE_STATUS lpServiceStatus;
+    LPTSTR lpNoDepends;
+    DWORD count, i;
+
+    lpServiceStatus = GetServiceDependents(hService, &count);
+    if (lpServiceStatus)
+    {
+        for (i = 0; i < count; i++)
+        {
+            AddServiceDependent(hTreeView,
+                                NULL,
+                                hSCManager,
+                                lpServiceStatus[i].lpServiceName,
+                                lpServiceStatus[i].lpDisplayName,
+                                lpServiceStatus[i].ServiceStatus.dwServiceType);
+        }
+    }
+    else
+    {
+            AllocAndLoadString(&lpNoDepends, hInstance, IDS_NO_DEPENDS);
+
+            AddItemToTreeView(hTreeView,
+                              NULL,
+                              lpNoDepends,
+                              0);
+
+            HeapFree(ProcessHeap,
+                     0,
+                     lpNoDepends);
+
+            EnableWindow(hTreeView, FALSE);
+    }
+}
+
+static VOID
+SetDependentServices(SC_HANDLE hService)
+{
+}
 
 static VOID
 InitDependPage(PSERVICEPROPSHEET dlgInfo,
@@ -216,6 +221,7 @@ InitDependPage(PSERVICEPROPSHEET dlgInfo,
 {
     HWND hTreeView1, hTreeView2;
     SC_HANDLE hSCManager;
+    SC_HANDLE hService;
 
     dlgInfo->hDependsImageList = InitImageList(IDI_NODEPENDS,
                                                IDI_DRIVER,
@@ -245,19 +251,21 @@ InitDependPage(PSERVICEPROPSHEET dlgInfo,
                                SC_MANAGER_ALL_ACCESS);
     if (hSCManager)
     {
-        AddServiceDependency(dlgInfo,
-                             hTreeView1,
-                             hSCManager,
-                             dlgInfo->pService->lpServiceName,
-                             NULL,
-                             hwndDlg);
+        hService = OpenService(hSCManager,
+                               dlgInfo->pService->lpServiceName,
+                               SERVICE_QUERY_STATUS | SERVICE_ENUMERATE_DEPENDENTS | SERVICE_QUERY_CONFIG);
+        if (hService)
+        {
+            /* Set the first tree view */
+            SetServiceDependents(hTreeView1,
+                                 hSCManager,
+                                 hService);
 
-        AddServiceDependent(dlgInfo,
-                            hTreeView2,
-                            hSCManager,
-                            dlgInfo->pService->lpServiceName,
-                            NULL,
-                            hwndDlg);
+            /* Set the second tree view */
+            SetDependentServices(hService);
+
+            CloseServiceHandle(hService);
+        }
 
         CloseServiceHandle(hSCManager);
     }

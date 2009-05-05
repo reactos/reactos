@@ -76,7 +76,7 @@ StopDependentServices(PSTOP_INFO pStopInfo,
     DWORD dwCount;
     BOOL bRet = FALSE;
 
-    lpDependencies = GetDependentServices(hService, &dwCount);
+    lpDependencies = GetServiceDependents(hService, &dwCount);
     if (lpDependencies)
     {
         LPENUM_SERVICE_STATUS lpEnumServiceStatus;
