@@ -1266,6 +1266,16 @@ NDIS_STATUS LANUnregisterAdapter(
     return NdisStatus;
 }
 
+VOID
+NTAPI
+ProtocolUnbindAdapter(
+    PNDIS_STATUS Status,
+    NDIS_HANDLE ProtocolBindingContext,
+    NDIS_HANDLE UnbindContext)
+{
+    /* We don't pend any unbinding so we can just ignore UnbindContext */
+    *Status = LANUnregisterAdapter((PLAN_ADAPTER)ProtocolBindingContext);
+}
 
 NTSTATUS LANRegisterProtocol(
     PNDIS_STRING Name)
@@ -1304,6 +1314,7 @@ NTSTATUS LANRegisterProtocol(
     ProtChars.StatusCompleteHandler          = ProtocolStatusComplete;
     ProtChars.BindAdapterHandler             = ProtocolBindAdapter;
     ProtChars.PnPEventHandler                = ProtocolPnPEvent;
+    ProtChars.UnbindAdapterHandler           = ProtocolUnbindAdapter;
 
     /* Try to register protocol */
     NdisRegisterProtocol(&NdisStatus,
