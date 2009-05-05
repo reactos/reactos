@@ -227,7 +227,7 @@ DECLARE_INTERFACE_(IIrpQueue, IUnknown)
         OUT PULONG  ByteCount,
         OUT PULONG  Flags);
 
-    STDMETHOD_(VOID, ReleaseMappingWithTag)(THIS_
+    STDMETHOD_(NTSTATUS, ReleaseMappingWithTag)(THIS_
         IN PVOID Tag);
 
     STDMETHOD_(BOOL, HasLastMappingFailed)(THIS);
@@ -518,7 +518,7 @@ DECLARE_INTERFACE_(IPortPinWaveRT, IIrpTarget)
         IN PDEVICE_OBJECT DeviceObject) PURE;
 };
 
-typedef IPortPinWavePci *PPORTPINWAVERT;
+typedef IPortPinWaveRT *PPORTPINWAVERT;
 
 #endif
 
