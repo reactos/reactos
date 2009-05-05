@@ -71,8 +71,11 @@ NdisIPnPQueryStopDevice(
 
      if (Status == NDIS_STATUS_PENDING)
      {
-         /* We don't handle this yet */
-         ASSERT(FALSE);
+         IoMarkIrpPending(Irp);
+         /* Yes, I know this is stupid */
+         PnPEvent->NdisReserved[0] = (ULONG_PTR)Irp;
+         PnPEvent->NdisReserved[1] = (ULONG_PTR)CurrentEntry->Flink;
+         return NDIS_STATUS_PENDING;
      }
      else if (Status != NDIS_STATUS_SUCCESS)
      {
@@ -115,7 +118,13 @@ NdisIPnPCancelStopDevice(
       AdapterBinding->NdisOpenBlock.ProtocolBindingContext,
       PnPEvent);
 
-     /* A protocol should always succeed NetEventCancelRemoveDevice */
+     if (Status == NDIS_STATUS_PENDING)
+     {
+         IoMarkIrpPending(Irp);
+         PnPEvent->NdisReserved[0] = (ULONG_PTR)Irp;
+         PnPEvent->NdisReserved[1] = (ULONG_PTR)CurrentEntry->Flink;
+         return NDIS_STATUS_PENDING;
+     }
 
      ASSERT(Status == NDIS_STATUS_SUCCESS);
 

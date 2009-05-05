@@ -2044,12 +2044,14 @@ NdisIDispatchPnp(
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
         break;
 
+      case IRP_MN_QUERY_REMOVE_DEVICE:
       case IRP_MN_QUERY_STOP_DEVICE:
         Status = NdisIPnPQueryStopDevice(DeviceObject, Irp);
         Irp->IoStatus.Status = Status;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
         break;
 
+      case IRP_MN_CANCEL_REMOVE_DEVICE:
       case IRP_MN_CANCEL_STOP_DEVICE:
         Status = NdisIPnPCancelStopDevice(DeviceObject, Irp);
         Irp->IoStatus.Status = Status;
@@ -2810,6 +2812,66 @@ NdisQueryAdapterInstanceName(
 
     return NdisMQueryAdapterInstanceName(AdapterInstanceName,
                                          Adapter);
+}
+
+/*
+ * @implemented
+ */
+VOID
+EXPORT
+NdisCompletePnPEvent(
+    IN  NDIS_STATUS     Status,
+    IN  NDIS_HANDLE     NdisBindingHandle,
+    IN  PNET_PNP_EVENT  NetPnPEvent)
+/*
+ * FUNCTION:
+ * ARGUMENTS:
+ * NOTES:
+ *    NDIS 5.0
+ */
+{
+  PIRP Irp = (PIRP)NetPnPEvent->NdisReserved[0];
+  PLIST_ENTRY CurrentEntry = (PLIST_ENTRY)NetPnPEvent->NdisReserved[1];
+  PADAPTER_BINDING AdapterBinding = NdisBindingHandle;
+  PLOGICAL_ADAPTER Adapter = AdapterBinding->Adapter;
+  NDIS_STATUS NdisStatus;
+
+  if (Status != NDIS_STATUS_SUCCESS)
+  {
+      ExFreePool(NetPnPEvent);
+      Irp->IoStatus.Status = Status;
+      IoCompleteRequest(Irp, IO_NO_INCREMENT);
+      return;
+  }
+
+  while (CurrentEntry != &Adapter->ProtocolListHead)
+  {
+     AdapterBinding = CONTAINING_RECORD(CurrentEntry, ADAPTER_BINDING, AdapterListEntry);
+
+     NdisStatus = (*AdapterBinding->ProtocolBinding->Chars.PnPEventHandler)(
+      AdapterBinding->NdisOpenBlock.ProtocolBindingContext,
+      NetPnPEvent);
+
+     if (NdisStatus == NDIS_STATUS_PENDING)
+     {
+         NetPnPEvent->NdisReserved[1] = (ULONG_PTR)CurrentEntry->Flink;
+         return;
+     }
+     else if (NdisStatus != NDIS_STATUS_SUCCESS)
+     {
+         ExFreePool(NetPnPEvent);
+         Irp->IoStatus.Status = NdisStatus;
+         IoCompleteRequest(Irp, IO_NO_INCREMENT);
+         return;
+     }
+
+     CurrentEntry = CurrentEntry->Flink;
+  }
+
+  ExFreePool(NetPnPEvent);
+
+  Irp->IoStatus.Status = NDIS_STATUS_SUCCESS;
+  IoCompleteRequest(Irp, IO_NO_INCREMENT);
 }
 
 /* EOF */

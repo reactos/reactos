@@ -170,26 +170,6 @@ NdisWriteEventLogEntry
  */
 VOID
 EXPORT
-NdisCompletePnPEvent(
-    IN  NDIS_STATUS     Status,
-    IN  NDIS_HANDLE     NdisBindingHandle,
-    IN  PNET_PNP_EVENT  NetPnPEvent)
-/*
- * FUNCTION:
- * ARGUMENTS:
- * NOTES:
- *    NDIS 5.0
- */
-{
-    UNIMPLEMENTED
-}
-
-
-/*
- * @unimplemented
- */
-VOID
-EXPORT
 NdisConvertStringToAtmAddress(
     OUT PNDIS_STATUS    Status,
     IN  PNDIS_STRING    String,
