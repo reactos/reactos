@@ -22,6 +22,70 @@ KSPIN_LOCK ProtocolListLock;
 
 #define WORKER_TEST 0
 
+PNET_PNP_EVENT
+ProSetupPnPEvent(
+    NET_PNP_EVENT_CODE EventCode,
+    PVOID              EventBuffer,
+    ULONG              EventBufferLength)
+{
+    PNET_PNP_EVENT PnPEvent;
+
+    PnPEvent = ExAllocatePool(PagedPool, sizeof(NET_PNP_EVENT));
+    if (!PnPEvent)
+        return NULL;
+
+    RtlZeroMemory(PnPEvent, sizeof(NET_PNP_EVENT));
+
+    PnPEvent->NetEvent = EventCode;
+    PnPEvent->Buffer = EventBuffer;
+    PnPEvent->BufferLength = EventBufferLength;
+
+    return PnPEvent;
+}
+
+NTSTATUS
+NTAPI
+NdisIPnPQueryStopDevice(
+    IN PDEVICE_OBJECT DeviceObject,
+    PIRP Irp)
+{
+  PLIST_ENTRY CurrentEntry;
+  PADAPTER_BINDING AdapterBinding;
+  PLOGICAL_ADAPTER Adapter = (PLOGICAL_ADAPTER)DeviceObject->DeviceExtension;
+  PNET_PNP_EVENT PnPEvent;
+  NDIS_STATUS Status;
+
+  PnPEvent = ProSetupPnPEvent(NetEventQueryRemoveDevice, NULL, 0);
+  if (!PnPEvent)
+      return NDIS_STATUS_RESOURCES;
+
+  CurrentEntry = Adapter->ProtocolListHead.Flink;
+
+  while (CurrentEntry != &Adapter->ProtocolListHead)
+  {
+     AdapterBinding = CONTAINING_RECORD(CurrentEntry, ADAPTER_BINDING, AdapterListEntry);
+
+     Status = (*AdapterBinding->ProtocolBinding->Chars.PnPEventHandler)(
+      AdapterBinding->NdisOpenBlock.ProtocolBindingContext,
+      PnPEvent);
+
+     if (Status == NDIS_STATUS_PENDING)
+     {
+         /* We don't handle this yet */
+         ASSERT(FALSE);
+     }
+     else if (Status != NDIS_STATUS_SUCCESS)
+     {
+         /* One protocol failed so we can fail the query stop device IRP */
+         return Status;
+     }
+
+     CurrentEntry = CurrentEntry->Flink;
+  }
+
+  return NDIS_STATUS_SUCCESS;
+}
+
 
 /*
  * @implemented

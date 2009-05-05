@@ -2044,6 +2044,12 @@ NdisIDispatchPnp(
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
         break;
 
+      case IRP_MN_QUERY_STOP_DEVICE:
+        Status = NdisIPnPQueryStopDevice(DeviceObject, Irp);
+        Irp->IoStatus.Status = Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        break;
+
       default:
         IoSkipCurrentIrpStackLocation(Irp);
         Status = IoCallDriver(Adapter->NdisMiniportBlock.NextDeviceObject, Irp);
