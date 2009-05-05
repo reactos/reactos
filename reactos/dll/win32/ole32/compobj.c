@@ -2922,7 +2922,10 @@ HRESULT WINAPI CoGetTreatAsClass(REFCLSID clsidOld, LPCLSID clsidNew)
 
     res = COM_OpenKeyForCLSID(clsidOld, wszTreatAs, KEY_READ, &hkey);
     if (FAILED(res))
+    {
+        res = S_FALSE;
         goto done;
+    }
     if (RegQueryValueW(hkey, NULL, szClsidNew, &len))
     {
         res = S_FALSE;

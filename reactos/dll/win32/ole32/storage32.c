@@ -912,7 +912,7 @@ static HRESULT WINAPI StorageBaseImpl_RenameElement(
      * Invoke Destroy to get rid of the ole property and automatically redo
      * the linking of its previous and next members...
      */
-    IStorage_DestroyElement((IStorage*)This->ancestorStorage, pwcsOldName);
+    IStorage_DestroyElement(iface, pwcsOldName);
 
   }
   else
@@ -3472,7 +3472,7 @@ static BOOL StorageImpl_ReadDWordFromBigBlock(
   ulOffset.u.LowPart += offset;
 
   StorageImpl_ReadAt(This, ulOffset, &tmp, sizeof(DWORD), &read);
-  *value = le32toh(tmp);
+  *value = lendian32toh(tmp);
   return (read == sizeof(DWORD));
 }
 
@@ -4250,7 +4250,7 @@ void StorageUtl_ReadWord(const BYTE* buffer, ULONG offset, WORD* value)
   WORD tmp;
 
   memcpy(&tmp, buffer+offset, sizeof(WORD));
-  *value = le16toh(tmp);
+  *value = lendian16toh(tmp);
 }
 
 void StorageUtl_WriteWord(BYTE* buffer, ULONG offset, WORD value)
@@ -4264,7 +4264,7 @@ void StorageUtl_ReadDWord(const BYTE* buffer, ULONG offset, DWORD* value)
   DWORD tmp;
 
   memcpy(&tmp, buffer+offset, sizeof(DWORD));
-  *value = le32toh(tmp);
+  *value = lendian32toh(tmp);
 }
 
 void StorageUtl_WriteDWord(BYTE* buffer, ULONG offset, DWORD value)

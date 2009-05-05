@@ -907,7 +907,7 @@ interface IStorage : IUnknown
   [call_as(OpenStream)]
   HRESULT RemoteOpenStream(
     [in] LPCOLESTR pwcsName,
-    [in] unsigned long cbReserved1,
+    [in] ULONG cbReserved1,
     [in, unique, size_is(cbReserved1)] byte *reserved1,
     [in] DWORD grfMode,
     [in] DWORD reserved2,
@@ -955,7 +955,7 @@ interface IStorage : IUnknown
   [call_as(EnumElements)]
   HRESULT RemoteEnumElements(
     [in] DWORD reserved1,
-    [in] unsigned long cbReserved2,
+    [in] ULONG cbReserved2,
     [in, unique, size_is(cbReserved2)] byte *reserved2,
     [in] DWORD reserved3,
     [out] IEnumSTATSTG **ppenum);

@@ -431,7 +431,7 @@ static HRESULT WINAPI Proxy_MarshalInterface(
 
         if (SUCCEEDED(hr))
         {
-            TRACE("writing stdobjref:\n\tflags = %04lx\n\tcPublicRefs = %ld\n\toxid = %s\n\toid = %s\n\tipid = %s\n",
+            TRACE("writing stdobjref:\n\tflags = %04x\n\tcPublicRefs = %d\n\toxid = %s\n\toid = %s\n\tipid = %s\n",
                 stdobjref.flags, stdobjref.cPublicRefs,
                 wine_dbgstr_longlong(stdobjref.oxid),
                 wine_dbgstr_longlong(stdobjref.oid),
@@ -925,7 +925,7 @@ static HRESULT proxy_manager_create_ifproxy(
         LeaveCriticalSection(&This->cs);
 
         *iif_out = ifproxy;
-        TRACE("ifproxy %p created for IPID %s, interface %s with %lu public refs\n",
+        TRACE("ifproxy %p created for IPID %s, interface %s with %u public refs\n",
               ifproxy, debugstr_guid(&stdobjref->ipid), debugstr_guid(riid), stdobjref->cPublicRefs);
     }
     else
@@ -1239,7 +1239,7 @@ static HRESULT unmarshal_object(const STDOBJREF *stdobjref, APARTMENT *apt,
 
     assert(apt);
 
-    TRACE("stdobjref:\n\tflags = %04lx\n\tcPublicRefs = %ld\n\toxid = %s\n\toid = %s\n\tipid = %s\n",
+    TRACE("stdobjref:\n\tflags = %04x\n\tcPublicRefs = %d\n\toxid = %s\n\toid = %s\n\tipid = %s\n",
         stdobjref->flags, stdobjref->cPublicRefs,
         wine_dbgstr_longlong(stdobjref->oxid),
         wine_dbgstr_longlong(stdobjref->oid),
@@ -1546,7 +1546,7 @@ static HRESULT get_unmarshaler_from_stream(IStream *stream, IMarshal **marshal, 
     /* sanity check on header */
     if (objref.signature != OBJREF_SIGNATURE)
     {
-        ERR("Bad OBJREF signature 0x%08lx\n", objref.signature);
+        ERR("Bad OBJREF signature 0x%08x\n", objref.signature);
         return RPC_E_INVALID_OBJREF;
     }
 
@@ -1578,7 +1578,7 @@ static HRESULT get_unmarshaler_from_stream(IStream *stream, IMarshal **marshal, 
     }
     else
     {
-        FIXME("Invalid or unimplemented marshaling type specified: %lx\n",
+        FIXME("Invalid or unimplemented marshaling type specified: %x\n",
             objref.flags);
         return RPC_E_INVALID_OBJREF;
     }

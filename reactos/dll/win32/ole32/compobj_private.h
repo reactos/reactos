@@ -319,4 +319,16 @@ extern HRESULT WINAPI OLE32_DllUnregisterServer(void) DECLSPEC_HIDDEN;
 HRESULT DataAdviseHolder_OnConnect(IDataAdviseHolder *iface, IDataObject *pDelegate);
 void DataAdviseHolder_OnDisconnect(IDataAdviseHolder *iface);
 
+extern UINT ownerlink_clipboard_format;
+extern UINT filename_clipboard_format;
+extern UINT filenameW_clipboard_format;
+extern UINT dataobject_clipboard_format;
+extern UINT embedded_object_clipboard_format;
+extern UINT embed_source_clipboard_format;
+extern UINT custom_link_source_clipboard_format;
+extern UINT link_source_clipboard_format;
+extern UINT object_descriptor_clipboard_format;
+extern UINT link_source_descriptor_clipboard_format;
+extern UINT ole_private_data_clipboard_format;
+
 #endif /* __WINE_OLE_COMPOBJ_H */

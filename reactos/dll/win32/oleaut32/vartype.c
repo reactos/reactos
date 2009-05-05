@@ -5961,7 +5961,13 @@ HRESULT WINAPI VarBoolFromCy(CY cyIn, VARIANT_BOOL *pBoolOut)
   return S_OK;
 }
 
-static BOOL VARIANT_GetLocalisedText(LANGID langId, DWORD dwId, WCHAR *lpszDest)
+/************************************************************************
+ * VARIANT_GetLocalisedText [internal]
+ *
+ * Get a localized string from the resources
+ *
+ */
+BOOL VARIANT_GetLocalisedText(LANGID langId, DWORD dwId, WCHAR *lpszDest)
 {
   HRSRC hrsrc;
 
@@ -6957,9 +6963,8 @@ HRESULT WINAPI VarBstrCmp(BSTR pbstrLeft, BSTR pbstrRight, LCID lcid, DWORD dwFl
 
     if (!pbstrLeft || !*pbstrLeft)
     {
-      if (!pbstrRight || !*pbstrRight)
-        return VARCMP_EQ;
-      return VARCMP_LT;
+      if (pbstrRight && *pbstrRight)
+        return VARCMP_LT;
     }
     else if (!pbstrRight || !*pbstrRight)
         return VARCMP_GT;
@@ -6981,8 +6986,17 @@ HRESULT WINAPI VarBstrCmp(BSTR pbstrLeft, BSTR pbstrRight, LCID lcid, DWORD dwFl
     }
     else
     {
-      hres = CompareStringW(lcid, dwFlags, pbstrLeft, SysStringLen(pbstrLeft),
-              pbstrRight, SysStringLen(pbstrRight)) - 1;
+      unsigned int lenLeft = SysStringLen(pbstrLeft);
+      unsigned int lenRight = SysStringLen(pbstrRight);
+
+      if (lenLeft == 0 || lenRight == 0)
+      {
+          if (lenLeft == 0 && lenRight == 0) return VARCMP_EQ;
+          return lenLeft < lenRight ? VARCMP_LT : VARCMP_GT;
+      }
+
+      hres = CompareStringW(lcid, dwFlags, pbstrLeft, lenLeft,
+              pbstrRight, lenRight) - 1;
       TRACE("%d\n", hres);
       return hres;
     }

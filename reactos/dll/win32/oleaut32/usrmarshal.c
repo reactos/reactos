@@ -755,7 +755,7 @@ ULONG WINAPI LPSAFEARRAY_UserSize(ULONG *pFlags, ULONG StartingSize, LPSAFEARRAY
     TRACE("("); dump_user_flags(pFlags); TRACE(", %d, %p\n", StartingSize, *ppsa);
 
     ALIGN_LENGTH(size, 3);
-    size += sizeof(ULONG_PTR);
+    size += sizeof(ULONG);
     if (*ppsa)
     {
         SAFEARRAY *psa = *ppsa;
@@ -770,7 +770,7 @@ ULONG WINAPI LPSAFEARRAY_UserSize(ULONG *pFlags, ULONG StartingSize, LPSAFEARRAY
         size += sizeof(ULONG);
 
         size += sizeof(ULONG);
-        size += sizeof(ULONG_PTR);
+        size += sizeof(ULONG);
         if (sftype == SF_HAVEIID)
             size += sizeof(IID);
 
@@ -843,8 +843,8 @@ unsigned char * WINAPI LPSAFEARRAY_UserMarshal(ULONG *pFlags, unsigned char *Buf
     TRACE("("); dump_user_flags(pFlags); TRACE(", %p, &%p\n", Buffer, *ppsa);
 
     ALIGN_POINTER(Buffer, 3);
-    *(ULONG_PTR *)Buffer = *ppsa ? TRUE : FALSE;
-    Buffer += sizeof(ULONG_PTR);
+    *(ULONG *)Buffer = *ppsa ? 0x1 : 0x0;
+    Buffer += sizeof(ULONG);
     if (*ppsa)
     {
         VARTYPE vt;
@@ -874,8 +874,8 @@ unsigned char * WINAPI LPSAFEARRAY_UserMarshal(ULONG *pFlags, unsigned char *Buf
 
         *(ULONG *)Buffer = ulCellCount;
         Buffer += sizeof(ULONG);
-        *(ULONG_PTR *)Buffer = (ULONG_PTR)psa->pvData;
-        Buffer += sizeof(ULONG_PTR);
+        *(ULONG *)Buffer = psa->pvData ? 0x2 : 0x0;
+        Buffer += sizeof(ULONG);
         if (sftype == SF_HAVEIID)
         {
             SafeArrayGetIID(psa, &guid);
@@ -958,7 +958,7 @@ unsigned char * WINAPI LPSAFEARRAY_UserMarshal(ULONG *pFlags, unsigned char *Buf
 
 unsigned char * WINAPI LPSAFEARRAY_UserUnmarshal(ULONG *pFlags, unsigned char *Buffer, LPSAFEARRAY *ppsa)
 {
-    ULONG_PTR ptr;
+    ULONG ptr;
     wireSAFEARRAY wiresa;
     ULONG cDims;
     HRESULT hr;
@@ -971,8 +971,8 @@ unsigned char * WINAPI LPSAFEARRAY_UserUnmarshal(ULONG *pFlags, unsigned char *B
     TRACE("("); dump_user_flags(pFlags); TRACE(", %p, %p\n", Buffer, ppsa);
 
     ALIGN_POINTER(Buffer, 3);
-    ptr = *(ULONG_PTR *)Buffer;
-    Buffer += sizeof(ULONG_PTR);
+    ptr = *(ULONG *)Buffer;
+    Buffer += sizeof(ULONG);
 
     if (!ptr)
     {
@@ -1001,8 +1001,8 @@ unsigned char * WINAPI LPSAFEARRAY_UserUnmarshal(ULONG *pFlags, unsigned char *B
 
     cell_count = *(ULONG *)Buffer;
     Buffer += sizeof(ULONG);
-    ptr = *(ULONG_PTR *)Buffer;
-    Buffer += sizeof(ULONG_PTR);
+    ptr = *(ULONG *)Buffer;
+    Buffer += sizeof(ULONG);
     if (sftype == SF_HAVEIID)
     {
         memcpy(&guid, Buffer, sizeof(guid));
@@ -2041,7 +2041,8 @@ HRESULT CALLBACK IPropertyBag_Read_Proxy(
       FIXME("Safearray support not yet implemented.\n");
       return E_NOTIMPL;
     default:
-      break;
+      FIXME("Unknown V_VT %d - support not yet implemented.\n", V_VT(pVar));
+      return E_NOTIMPL;
   }
 
   return IPropertyBag_RemoteRead_Proxy(This, pszPropName, pVar, pErrorLog,
