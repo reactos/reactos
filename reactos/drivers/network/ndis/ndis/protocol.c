@@ -37,27 +37,33 @@ ProSetupPnPEvent(
     RtlZeroMemory(PnPEvent, sizeof(NET_PNP_EVENT));
 
     PnPEvent->NetEvent = EventCode;
-    PnPEvent->Buffer = EventBuffer;
-    PnPEvent->BufferLength = EventBufferLength;
+
+    if (EventBuffer != NULL)
+    {
+        PnPEvent->Buffer = ExAllocatePool(PagedPool, EventBufferLength);
+        if (!PnPEvent->Buffer)
+        {
+            ExFreePool(PnPEvent);
+            return NULL;
+        }
+
+        PnPEvent->BufferLength = EventBufferLength;
+
+        RtlCopyMemory(PnPEvent->Buffer, EventBuffer, PnPEvent->BufferLength);
+    }
 
     return PnPEvent;
 }
 
-NTSTATUS
-NTAPI
-NdisIPnPQueryStopDevice(
-    IN PDEVICE_OBJECT DeviceObject,
-    PIRP Irp)
+NDIS_STATUS
+ProSendAndFreePnPEvent(
+   PLOGICAL_ADAPTER Adapter,
+   PNET_PNP_EVENT   PnPEvent,
+   PIRP             Irp)
 {
   PLIST_ENTRY CurrentEntry;
-  PADAPTER_BINDING AdapterBinding;
-  PLOGICAL_ADAPTER Adapter = (PLOGICAL_ADAPTER)DeviceObject->DeviceExtension;
-  PNET_PNP_EVENT PnPEvent;
   NDIS_STATUS Status;
-
-  PnPEvent = ProSetupPnPEvent(NetEventQueryRemoveDevice, NULL, 0);
-  if (!PnPEvent)
-      return NDIS_STATUS_RESOURCES;
+  PADAPTER_BINDING AdapterBinding;
 
   CurrentEntry = Adapter->ProtocolListHead.Flink;
 
@@ -79,7 +85,7 @@ NdisIPnPQueryStopDevice(
      }
      else if (Status != NDIS_STATUS_SUCCESS)
      {
-         /* One protocol failed so we can fail the query stop device IRP */
+         if (PnPEvent->Buffer) ExFreePool(PnPEvent->Buffer);
          ExFreePool(PnPEvent);
          return Status;
      }
@@ -87,9 +93,65 @@ NdisIPnPQueryStopDevice(
      CurrentEntry = CurrentEntry->Flink;
   }
 
+  if (PnPEvent->Buffer) ExFreePool(PnPEvent->Buffer);
   ExFreePool(PnPEvent);
 
   return NDIS_STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+NdisIPwrSetPower(
+    IN PDEVICE_OBJECT DeviceObject,
+    PIRP Irp)
+{
+  PLOGICAL_ADAPTER Adapter = (PLOGICAL_ADAPTER)DeviceObject->DeviceExtension;
+  PNET_PNP_EVENT PnPEvent;
+  PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(Irp);
+
+  ASSERT(Stack->Parameters.Power.Type == DevicePowerState);
+
+  PnPEvent = ProSetupPnPEvent(NetEventSetPower, &Stack->Parameters.Power.State, sizeof(NDIS_DEVICE_POWER_STATE));
+  if (!PnPEvent)
+      return NDIS_STATUS_RESOURCES;
+
+  return ProSendAndFreePnPEvent(Adapter, PnPEvent, Irp);
+}
+
+NTSTATUS
+NTAPI
+NdisIPwrQueryPower(
+    IN PDEVICE_OBJECT DeviceObject,
+    PIRP Irp)
+{
+  PLOGICAL_ADAPTER Adapter = (PLOGICAL_ADAPTER)DeviceObject->DeviceExtension;
+  PNET_PNP_EVENT PnPEvent;
+  PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(Irp);
+
+  ASSERT(Stack->Parameters.Power.Type == DevicePowerState);
+
+  PnPEvent = ProSetupPnPEvent(NetEventQueryPower, &Stack->Parameters.Power.State, sizeof(NDIS_DEVICE_POWER_STATE));
+  if (!PnPEvent)
+      return NDIS_STATUS_RESOURCES;
+
+  return ProSendAndFreePnPEvent(Adapter, PnPEvent, Irp);
+}
+
+
+NTSTATUS
+NTAPI
+NdisIPnPQueryStopDevice(
+    IN PDEVICE_OBJECT DeviceObject,
+    PIRP Irp)
+{
+  PLOGICAL_ADAPTER Adapter = (PLOGICAL_ADAPTER)DeviceObject->DeviceExtension;
+  PNET_PNP_EVENT PnPEvent;
+
+  PnPEvent = ProSetupPnPEvent(NetEventQueryRemoveDevice, NULL, 0);
+  if (!PnPEvent)
+      return NDIS_STATUS_RESOURCES;
+
+  return ProSendAndFreePnPEvent(Adapter, PnPEvent, Irp);
 }
 
 NTSTATUS
@@ -98,42 +160,14 @@ NdisIPnPCancelStopDevice(
     IN PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
-  PLIST_ENTRY CurrentEntry;
-  PADAPTER_BINDING AdapterBinding;
   PLOGICAL_ADAPTER Adapter = (PLOGICAL_ADAPTER)DeviceObject->DeviceExtension;
   PNET_PNP_EVENT PnPEvent;
-  NDIS_STATUS Status;
 
   PnPEvent = ProSetupPnPEvent(NetEventCancelRemoveDevice, NULL, 0);
   if (!PnPEvent)
       return NDIS_STATUS_RESOURCES;
 
-  CurrentEntry = Adapter->ProtocolListHead.Flink;
-
-  while (CurrentEntry != &Adapter->ProtocolListHead)
-  {
-     AdapterBinding = CONTAINING_RECORD(CurrentEntry, ADAPTER_BINDING, AdapterListEntry);
-
-     Status = (*AdapterBinding->ProtocolBinding->Chars.PnPEventHandler)(
-      AdapterBinding->NdisOpenBlock.ProtocolBindingContext,
-      PnPEvent);
-
-     if (Status == NDIS_STATUS_PENDING)
-     {
-         IoMarkIrpPending(Irp);
-         PnPEvent->NdisReserved[0] = (ULONG_PTR)Irp;
-         PnPEvent->NdisReserved[1] = (ULONG_PTR)CurrentEntry->Flink;
-         return NDIS_STATUS_PENDING;
-     }
-
-     ASSERT(Status == NDIS_STATUS_SUCCESS);
-
-     CurrentEntry = CurrentEntry->Flink;
-  }
-
-  ExFreePool(PnPEvent);
-
-  return NDIS_STATUS_SUCCESS;
+  return ProSendAndFreePnPEvent(Adapter, PnPEvent, Irp);
 }
 
 

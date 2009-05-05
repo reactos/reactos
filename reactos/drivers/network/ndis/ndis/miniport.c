@@ -2838,6 +2838,7 @@ NdisCompletePnPEvent(
 
   if (Status != NDIS_STATUS_SUCCESS)
   {
+      if (NetPnPEvent->Buffer) ExFreePool(NetPnPEvent->Buffer);
       ExFreePool(NetPnPEvent);
       Irp->IoStatus.Status = Status;
       IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -2859,6 +2860,7 @@ NdisCompletePnPEvent(
      }
      else if (NdisStatus != NDIS_STATUS_SUCCESS)
      {
+         if (NetPnPEvent->Buffer) ExFreePool(NetPnPEvent->Buffer);
          ExFreePool(NetPnPEvent);
          Irp->IoStatus.Status = NdisStatus;
          IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -2868,6 +2870,7 @@ NdisCompletePnPEvent(
      CurrentEntry = CurrentEntry->Flink;
   }
 
+  if (NetPnPEvent->Buffer) ExFreePool(NetPnPEvent->Buffer);
   ExFreePool(NetPnPEvent);
 
   Irp->IoStatus.Status = NDIS_STATUS_SUCCESS;
