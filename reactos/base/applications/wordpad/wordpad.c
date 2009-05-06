@@ -2233,7 +2233,7 @@ static LRESULT OnCommand( HWND hWnd, WPARAM wParam, LPARAM lParam)
 
     case ID_EDIT_READONLY:
         {
-        long nStyle = GetWindowLong(hwndEditor, GWL_STYLE);
+        LONG nStyle = GetWindowLong(hwndEditor, GWL_STYLE);
         if (nStyle & ES_READONLY)
             SendMessageW(hwndEditor, EM_SETREADONLY, 0, 0);
         else

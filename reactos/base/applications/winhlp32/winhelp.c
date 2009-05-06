@@ -353,7 +353,7 @@ static LRESULT  WINHELP_HandleCommand(HWND hSrcWnd, LPARAM lParam)
         return 0;
     }
 
-    wh = (WINHELP*)cds->lpData;
+    wh = cds->lpData;
 
     if (wh)
     {
@@ -1154,7 +1154,7 @@ static LRESULT CALLBACK WINHELP_ShadowWndProc(HWND hWnd, UINT msg, WPARAM wParam
  */
 static void cb_KWBTree(void *p, void **next, void *cookie)
 {
-    HWND hListWnd = (HWND)cookie;
+    HWND hListWnd = cookie;
     int count;
 
     WINE_TRACE("Adding '%s' to search list\n", (char *)p);
