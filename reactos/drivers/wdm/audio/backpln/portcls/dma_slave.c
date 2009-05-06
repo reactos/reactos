@@ -42,6 +42,7 @@ typedef struct
 // IUnknown methods
 //
 
+extern GUID IID_IDmaChannelSlave;
 
 NTSTATUS
 NTAPI

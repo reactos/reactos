@@ -8,6 +8,8 @@
 
 #include "private.h"
 
+extern GUID IID_IDmaChannelSlave;
+
 typedef struct
 {
     IPortWaveCyclicVtbl *lpVtbl;
