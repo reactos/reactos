@@ -173,6 +173,11 @@ typedef struct _NDIS_PNP_CAPABILITIES {
 #define NDIS_MINIPORT_SUPPORTS_CANCEL_SEND_PACKETS    0x00800000
 #define NDIS_MINIPORT_64BITS_DMA                      0x01000000
 
+#define IOCTL_NDIS_QUERY_GLOBAL_STATS CTL_CODE(FILE_DEVICE_PHYSICAL_NETCARD, \
+                                               0,                            \
+                                               METHOD_OUT_DIRECT,            \
+                                               FILE_ANY_ACCESS)
+
 #pragma pack(pop)
 
 #ifdef __cplusplus
