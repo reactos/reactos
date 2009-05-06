@@ -622,4 +622,16 @@
 <directory name="wuapi">
 	<xi:include href="wuapi/wuapi.rbuild" />
 </directory>
+<directory name="xinput1_1">
+	<xi:include href="xinput1_1/xinput1_1.rbuild" />
+</directory>
+<directory name="xinput1_2">
+	<xi:include href="xinput1_2/xinput1_2.rbuild" />
+</directory>
+<directory name="xinput1_3">
+	<xi:include href="xinput1_3/xinput1_3.rbuild" />
+</directory>
+<directory name="xinput9_1_0">
+	<xi:include href="xinput9_1_0/xinput9_1_0.rbuild" />
+</directory>
 </group>
