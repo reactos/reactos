@@ -29,6 +29,7 @@ typedef WORD LANGID;
 cpp_quote("#endif")
 
 cpp_quote("#define TF_E_STACKFULL MAKE_HRESULT(SEVERITY_ERROR, FACILITY_ITF, 0x0501)")
+cpp_quote("#define TF_E_ALREADY_EXISTS  MAKE_HRESULT(SEVERITY_ERROR, FACILITY_ITF, 0x0506)")
 cpp_quote("EXTERN_C const CLSID CLSID_TF_ThreadMgr;")
 cpp_quote("EXTERN_C const CLSID CLSID_TF_InputProcessorProfiles;")
 cpp_quote("EXTERN_C const CLSID CLSID_TF_CategoryMgr;")
@@ -42,6 +43,18 @@ cpp_quote("EXTERN_C const GUID GUID_TFCAT_DISPLAYATTRIBUTEPROVIDER;")
 typedef [uuid(7213778c-7bb0-4270-b050-6189ee594e97)]  DWORD TfEditCookie;
 typedef [uuid(de403c21-89fd-4f85-8b87-64584d063fbc)] DWORD TfClientId;
 typedef [uuid(88a9c478-f3ec-4763-8345-cd9250443f8d)] DWORD TfGuidAtom;
+
+cpp_quote("#define TF_MOD_ALT                   0x0001")
+cpp_quote("#define TF_MOD_CONTROL               0x0002")
+cpp_quote("#define TF_MOD_SHIFT                 0x0004")
+cpp_quote("#define TF_MOD_RALT                  0x0008")
+cpp_quote("#define TF_MOD_RCONTROL              0x0010")
+cpp_quote("#define TF_MOD_RSHIFT                0x0020")
+cpp_quote("#define TF_MOD_LALT                  0x0040")
+cpp_quote("#define TF_MOD_LCONTROL              0x0080")
+cpp_quote("#define TF_MOD_LSHIFT                0x0100")
+cpp_quote("#define TF_MOD_ON_KEYUP              0x0200")
+cpp_quote("#define TF_MOD_IGNORE_ALL_MODIFIER   0x0400")
 
 interface ITfDocumentMgr;
 interface ITfContext;
@@ -61,6 +74,7 @@ interface ITfRangeBackup;
 interface IEnumTfLanguageProfiles;
 interface ITfEditRecord;
 interface ITfCompositionView;
+interface ITfKeyEventSink;
 
 typedef [uuid(e1b5808d-1e46-4c19-84dc-68c5f5978cc8)] struct TF_LANGUAGEPROFILE
 {
@@ -70,6 +84,12 @@ typedef [uuid(e1b5808d-1e46-4c19-84dc-68c5f5978cc8)] struct TF_LANGUAGEPROFILE
     BOOL fActive;
     GUID guidProfile;
 } TF_LANGUAGEPROFILE;
+
+typedef [uuid(77c12f95-b783-450d-879f-1cd2362c6521)] struct TF_PRESERVEDKEY
+{
+    UINT uVKey;
+    UINT uModifiers;
+} TF_PRESERVEDKEY;
 
 [
     object,
@@ -514,4 +534,120 @@ interface ITfThreadMgrEventSink : IUnknown
 
     HRESULT OnPopContext(
         [in] ITfContext *pic);
+};
+
+[
+  object,
+  local,
+  uuid(aa80e7f0-2021-11d2-93e0-0060b067b86e),
+  pointer_default(unique)
+]
+interface ITfKeystrokeMgr : IUnknown
+{
+    HRESULT AdviseKeyEventSink(
+        [in] TfClientId tid,
+        [in] ITfKeyEventSink *pSink,
+        [in] BOOL fForeground);
+
+    HRESULT UnadviseKeyEventSink(
+        [in] TfClientId tid);
+
+    HRESULT GetForeground(
+        [out] CLSID *pclsid);
+
+    HRESULT TestKeyDown(
+        [in] WPARAM wParam,
+        [in] LPARAM lParam,
+        [out] BOOL *pfEaten);
+
+    HRESULT TestKeyUp(
+        [in] WPARAM wParam,
+        [in] LPARAM lParam,
+        [out] BOOL *pfEaten);
+
+    HRESULT KeyDown(
+        [in] WPARAM wParam,
+        [in] LPARAM lParam,
+        [out] BOOL *pfEaten);
+
+    HRESULT KeyUp(
+        [in] WPARAM wParam,
+        [in] LPARAM lParam,
+        [out] BOOL *pfEaten);
+
+    HRESULT GetPreservedKey(
+        [in] ITfContext *pic,
+        [in] const TF_PRESERVEDKEY *pprekey,
+        [out] GUID *pguid);
+
+    HRESULT IsPreservedKey(
+        [in] REFGUID rguid,
+        [in] const TF_PRESERVEDKEY *pprekey,
+        [out] BOOL *pfRegistered);
+
+    HRESULT PreserveKey(
+        [in] TfClientId tid,
+        [in] REFGUID rguid,
+        [in] const TF_PRESERVEDKEY *prekey,
+        [in, size_is(cchDesc)] const WCHAR *pchDesc,
+        [in] ULONG cchDesc);
+
+    HRESULT UnpreserveKey(
+        [in] REFGUID rguid,
+        [in] const TF_PRESERVEDKEY *pprekey);
+
+    HRESULT SetPreservedKeyDescription(
+        [in] REFGUID rguid,
+        [in, size_is(cchDesc)] const WCHAR *pchDesc,
+        [in] ULONG cchDesc);
+
+    HRESULT GetPreservedKeyDescription(
+        [in] REFGUID rguid,
+        [out] BSTR *pbstrDesc);
+
+    HRESULT SimulatePreservedKey(
+        [in] ITfContext *pic,
+        [in] REFGUID rguid,
+        [out] BOOL *pfEaten);
+};
+
+[
+  object,
+  local,
+  uuid(aa80e7f5-2021-11d2-93e0-0060b067b86e),
+  pointer_default(unique)
+]
+interface ITfKeyEventSink : IUnknown
+{
+    HRESULT OnSetFocus(
+        [in] BOOL fForeground);
+
+    HRESULT OnTestKeyDown(
+        [in] ITfContext *pic,
+        [in] WPARAM wParam,
+        [in] LPARAM lParam,
+        [out] BOOL *pfEaten);
+
+    HRESULT OnTestKeyUp(
+        [in] ITfContext *pic,
+        [in] WPARAM wParam,
+        [in] LPARAM lParam,
+        [out] BOOL *pfEaten);
+
+    HRESULT OnKeyDown(
+        [in] ITfContext *pic,
+        [in] WPARAM wParam,
+        [in] LPARAM lParam,
+        [out] BOOL *pfEaten);
+
+    HRESULT OnKeyUp(
+        [in] ITfContext *pic,
+        [in] WPARAM wParam,
+        [in] LPARAM lParam,
+        [out] BOOL *pfEaten);
+
+    HRESULT OnPreservedKey(
+        [in] ITfContext *pic,
+        [in] REFGUID rguid,
+        [out] BOOL *pfEaten);
 };
