@@ -1,0 +1,99 @@
+/*
+ * Language specific resource file for browseui
+ *
+ * Copyright 2009 Andrew Hill <ash77 at domain reactos.org>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+IDM_CABINET_CONTEXTMENU MENUEX 
+BEGIN
+    POPUP "",									264,MFT_STRING,MFS_ENABLED
+    BEGIN
+        MENUITEM "&Standard Buttons",           IDM_TOOLBARS_STANDARDBUTTONS,MFT_STRING,MFS_ENABLED
+        MENUITEM "&Address Bar",                IDM_TOOLBARS_ADDRESSBAR,MFT_STRING,MFS_ENABLED
+        MENUITEM "&Links",                      IDM_TOOLBARS_LINKSBAR,MFT_STRING,MFS_ENABLED
+        MENUITEM MFT_SEPARATOR
+        MENUITEM "Lock the Tool&bars",          IDM_TOOLBARS_LOCKTOOLBARS,MFT_STRING,MFS_ENABLED
+        MENUITEM "&Customize...",               IDM_TOOLBARS_CUSTOMIZE,MFT_STRING,MFS_ENABLED
+        MENUITEM "&Text Labels",                IDM_TOOLBARS_TEXTLABELS,MFT_STRING,MFS_ENABLED
+        MENUITEM "&Go Button",                  IDM_TOOLBARS_GOBUTTON,MFT_STRING,MFS_ENABLED
+    END
+END
+
+IDM_CABINET_MAINMENU MENUEX
+BEGIN
+    POPUP "&File",									FCIDM_MENU_FILE
+    BEGIN
+        MENUITEM "",								-1, MFT_SEPARATOR
+        MENUITEM "&Close",							IDM_FILE_CLOSE
+    END
+    POPUP "&Edit",									FCIDM_MENU_EDIT
+    BEGIN
+        MENUITEM "",								-1, MFT_SEPARATOR
+    END
+    POPUP "&View",									FCIDM_MENU_VIEW
+    BEGIN
+        POPUP "&Toolbars",							IDM_VIEW_TOOLBARS
+        BEGIN
+            MENUITEM "",							-1, MFT_SEPARATOR
+        END
+        MENUITEM "Status &Bar",						IDM_VIEW_STATUSBAR
+        POPUP "&Explorer Bar",						IDM_VIEW_EXPLORERBAR
+        BEGIN
+            MENUITEM "&Search\tCtrl+E",				IDM_EXPLORERBAR_SEARCH
+            MENUITEM "&Favorites\tCtrl+I",			IDM_EXPLORERBAR_FAVORITES
+            MENUITEM "&Media",						IDM_EXPLORERBAR_MEDIA
+            MENUITEM "&History\tCtrl+H",			IDM_EXPLORERBAR_HISTORY
+            MENUITEM "F&olders",					IDM_EXPLORERBAR_FOLDERS
+            MENUITEM "",							IDM_EXPLORERBAR_SEPARATOR
+        END
+        MENUITEM "",								FCIDM_MENU_VIEW_SEP_OPTIONS, MFT_SEPARATOR
+        POPUP "G&o To",								FCIDM_MENU_EXPLORE
+        BEGIN
+            MENUITEM "&Back\tAlt+Left Arrow",       IDM_GOTO_BACK
+            MENUITEM "&Forward\tAlt+Right Arrow",   IDM_GOTO_FORWARD
+            MENUITEM "&Up One Level",               IDM_GOTO_UPONELEVEL
+            MENUITEM "",							-1, MFT_SEPARATOR
+            MENUITEM "&Home Page\tAlt+Home",        IDM_GOTO_HOMEPAGE
+        END
+        MENUITEM "&Refresh",						IDM_VIEW_REFRESH
+    END
+    POPUP "F&avorites",								FCIDM_MENU_FAVORITES
+    BEGIN
+        MENUITEM "&Add to Favorites...",			IDM_FAVORITES_ADDTOFAVORITES
+        MENUITEM "&Organize Favorites...",			IDM_FAVORITES_ORGANIZEFAVORITES
+        MENUITEM "",								-1, MFT_SEPARATOR
+        MENUITEM "(Empty)",							IDM_FAVORITES_EMPTY
+    END
+    POPUP "&Tools",									FCIDM_MENU_TOOLS
+    BEGIN
+        MENUITEM "Map &Network Drive...",			IDM_TOOLS_MAPNETWORKDRIVE
+        MENUITEM "&Disconnect Network Drive...",	IDM_TOOLS_DISCONNECTNETWORKDRIVE
+        MENUITEM "&Synchronize...",					IDM_TOOLS_SYNCHRONIZE
+        MENUITEM "",								-1, MFT_SEPARATOR
+        MENUITEM "Folder &Options...",				IDM_TOOLS_FOLDEROPTIONS
+    END
+    POPUP "&Help",									FCIDM_MENU_HELP
+    BEGIN
+        MENUITEM "Is this copy of ReactOS &legal?", IDM_HELP_ISTHISCOPYLEGAL
+        MENUITEM "&About ReactOS",					IDM_HELP_ABOUT
+    END
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_GOBUTTONLABEL             "Go"
+END

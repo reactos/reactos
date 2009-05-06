@@ -1,0 +1,18 @@
+HKCR
+{
+	NoRemove CLSID
+	{
+		ForceRemove {01E04581-4EEE-11d0-BFE9-00AA005B4383} = s '&Address'
+		{
+			MenuTextPUI = s '@browselc.dll,-13137'
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+			'Implemented Categories'
+			{
+				'{00021492-0000-0000-C000-000000000046}'
+			}
+		}
+	}
+}
