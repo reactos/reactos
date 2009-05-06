@@ -20,13 +20,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdio.h>
-
 #include "urlmon_main.h"
 
 #include "winreg.h"
-#include "winternl.h"
-#include "wininet.h"
 #include "shlwapi.h"
 
 #include "wine/debug.h"

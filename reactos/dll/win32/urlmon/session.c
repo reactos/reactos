@@ -228,7 +228,7 @@ IInternetProtocolInfo *get_protocol_info(LPCWSTR url)
     return ret;
 }
 
-HRESULT get_protocol_handler(LPCWSTR url, CLSID *clsid, IClassFactory **ret)
+HRESULT get_protocol_handler(LPCWSTR url, CLSID *clsid, BOOL *urlmon_protocol, IClassFactory **ret)
 {
     name_space *ns;
     WCHAR schema[64];
@@ -250,6 +250,8 @@ HRESULT get_protocol_handler(LPCWSTR url, CLSID *clsid, IClassFactory **ret)
         IClassFactory_AddRef(*ret);
         if(clsid)
             *clsid = ns->clsid;
+        if(urlmon_protocol)
+            *urlmon_protocol = ns->urlmon;
     }
 
     LeaveCriticalSection(&session_cs);
@@ -257,6 +259,8 @@ HRESULT get_protocol_handler(LPCWSTR url, CLSID *clsid, IClassFactory **ret)
     if(*ret)
         return S_OK;
 
+    if(urlmon_protocol)
+        *urlmon_protocol = FALSE;
     return get_protocol_cf(schema, schema_len, clsid, ret);
 }
 
