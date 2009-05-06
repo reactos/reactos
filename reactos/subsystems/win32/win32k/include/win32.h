@@ -38,6 +38,7 @@ typedef struct _THREADINFO
     PDESKTOPINFO        pDeskInfo;
     PCLIENTINFO         pClientInfo;
     FLONG               TIF_flags;
+    LONG                timeLast;
     HANDLE              hDesktop;
     UINT                cPaintsReady; /* Count of paints pending. */
     UINT                cTimersReady; /* Count of timers pending. */

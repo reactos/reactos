@@ -1359,7 +1359,7 @@ UserPostMessage(HWND Wnd,
       IntGetCursorLocation(pti->Desktop->WindowStation,
                            &KernelModeMsg.pt);
       KeQueryTickCount(&LargeTickCount);
-      KernelModeMsg.time = MsqCalculateMessageTime(&LargeTickCount);
+      pti->timeLast = KernelModeMsg.time = MsqCalculateMessageTime(&LargeTickCount);
       MsqPostMessage(Window->MessageQueue, &KernelModeMsg,
                      NULL != MsgMemoryEntry && 0 != KernelModeMsg.lParam,
                      QS_POSTMESSAGE);

@@ -1071,6 +1071,7 @@ GetMessageTime(VOID)
 {
   PUSER32_THREAD_DATA ThreadData = User32GetThreadData();
   return(ThreadData->LastMessage.time);
+//  return NtUserGetThreadState(THREADSTATE_GETMESSAGETIME);
 }
 
 
@@ -1090,8 +1091,7 @@ InSendMessage(VOID)
        return TRUE;
     }
   }
-  return FALSE;
-/*    return(NtUserGetThreadState(THREADSTATE_INSENDMESSAGE) != ISMEX_NOSEND);*/
+  return(NtUserGetThreadState(THREADSTATE_INSENDMESSAGE) != ISMEX_NOSEND);
 }
 
 
@@ -1105,23 +1105,22 @@ InSendMessageEx(
 {
   PCLIENTTHREADINFO pcti = GetWin32ClientInfo()->pClientThreadInfo;
 //  FIXME("ISMEX %x\n",pcti);
-  if (pcti && !(pcti->CTI_flags & CTI_INSENDMESSAGE)) return ISMEX_NOSEND;
+  if (pcti && !(pcti->CTI_flags & CTI_INSENDMESSAGE))
+     return ISMEX_NOSEND;
   else
-  /* return NtUserGetThreadState(THREADSTATE_INSENDMESSAGE); */
-  return 0;
+     return NtUserGetThreadState(THREADSTATE_INSENDMESSAGE);
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
 ReplyMessage(
   LRESULT lResult)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  return NtUserCallOneParam(lResult, ONEPARAM_ROUTINE_REPLYMESSAGE);
 }
 
 

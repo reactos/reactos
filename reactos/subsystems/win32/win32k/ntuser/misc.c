@@ -96,6 +96,28 @@ NtUserGetThreadState(
          RETURN( (DWORD)GetW32ThreadInfo()->pDeskInfo->hTaskManWindow);
       case THREADSTATE_ACTIVEWINDOW:
          RETURN ( (DWORD)UserGetActiveWindow());
+      case THREADSTATE_INSENDMESSAGE:
+         {
+           DWORD Ret = ISMEX_NOSEND;
+           PUSER_MESSAGE_QUEUE MessageQueue = 
+                ((PTHREADINFO)PsGetCurrentThreadWin32Thread())->MessageQueue;
+           DPRINT1("THREADSTATE_INSENDMESSAGE\n");
+
+           if (!IsListEmpty(&MessageQueue->SentMessagesListHead))
+           {
+             Ret = ISMEX_SEND;
+           }
+           else if (!IsListEmpty(&MessageQueue->NotifyMessagesListHead))
+           {
+           /* FIXME Need to set message flag when in callback mode with notify */
+             Ret = ISMEX_NOTIFY;
+           }
+           /* FIXME Need to set message flag if replied to or ReplyMessage */
+           RETURN( Ret);           
+         }
+      case THREADSTATE_GETMESSAGETIME: 
+         /* FIXME Needs more work! */
+         RETURN( ((PTHREADINFO)PsGetCurrentThreadWin32Thread())->timeLast);
    }
    RETURN( 0);
 
