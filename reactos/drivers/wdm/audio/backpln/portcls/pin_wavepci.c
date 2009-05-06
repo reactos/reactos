@@ -202,7 +202,7 @@ IServiceSink_fnRequestService(
     ASSERT_IRQL(DISPATCH_LEVEL);
 
     Status = This->Stream->lpVtbl->GetPosition(This->Stream, &Position);
-    DPRINT("Position %llu Status %x\n", Position, Status);
+    DPRINT("Position %lu Status %x\n", Position, Status);
 }
 
 static IServiceSinkVtbl vt_IServiceSink = 

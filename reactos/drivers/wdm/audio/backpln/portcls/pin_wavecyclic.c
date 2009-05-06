@@ -1051,10 +1051,8 @@ IPortPinWaveCyclic_fnInit(
         DPRINT1("Failed to add pin to service group\n");
         return Status;
     }
-    //This->ServiceGroup->lpVtbl->AddRef(This->ServiceGroup);
-    This->ServiceGroup->lpVtbl->SupportDelayedService(This->ServiceGroup);
-    //This->DmaChannel->lpVtbl->AddRef(This->DmaChannel);
 
+    This->ServiceGroup->lpVtbl->SupportDelayedService(This->ServiceGroup);
     This->Stream->lpVtbl->SetState(This->Stream, KSSTATE_STOP);
     This->State = KSSTATE_STOP;
     This->CommonBufferOffset = 0;
