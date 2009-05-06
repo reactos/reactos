@@ -1626,6 +1626,7 @@ typedef struct _PNP_BUS_INFORMATION {
   ULONG  BusNumber;
 } PNP_BUS_INFORMATION, *PPNP_BUS_INFORMATION;
 
+#include <pshpack1.h>
 /* CM_PARTIAL_RESOURCE_DESCRIPTOR.Type */
 
 #define CmResourceTypeNull                0
@@ -1740,6 +1741,7 @@ typedef struct _CM_PNP_BIOS_INSTALLATION_CHECK
     ULONG ProtectedModeDataBaseAddress;
 } CM_PNP_BIOS_INSTALLATION_CHECK, *PCM_PNP_BIOS_INSTALLATION_CHECK;
 
+#include <poppack.h>
 
 
 typedef struct _CM_DISK_GEOMETRY_DEVICE_DATA
