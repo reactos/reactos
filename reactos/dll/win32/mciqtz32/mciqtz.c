@@ -34,23 +34,37 @@ static DWORD MCIQTZ_mciClose(UINT, DWORD, LPMCI_GENERIC_PARMS);
 static DWORD MCIQTZ_mciStop(UINT, DWORD, LPMCI_GENERIC_PARMS);
 
 /*======================================================================*
- *                  	    MCI QTZ implementation			*
+ *                          MCI QTZ implementation                      *
  *======================================================================*/
 
 HINSTANCE MCIQTZ_hInstance = 0;
 
 /***********************************************************************
- *		DllMain (MCIQTZ.0)
+ *              DllMain (MCIQTZ.0)
  */
 BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID fImpLoad)
 {
     switch (fdwReason) {
     case DLL_PROCESS_ATTACH:
         DisableThreadLibraryCalls(hInstDLL);
-	MCIQTZ_hInstance = hInstDLL;
-	break;
+        MCIQTZ_hInstance = hInstDLL;
+        break;
     }
     return TRUE;
+}
+
+/**************************************************************************
+ *                              MCIQTZ_mciGetOpenDev            [internal]
+ */
+static WINE_MCIQTZ* MCIQTZ_mciGetOpenDev(UINT wDevID)
+{
+    WINE_MCIQTZ* wma = (WINE_MCIQTZ*)mciGetDriverData(wDevID);
+
+    if (!wma) {
+        WARN("Invalid wDevID=%u\n", wDevID);
+        return NULL;
+    }
+    return wma;
 }
 
 /**************************************************************************
@@ -60,7 +74,7 @@ static DWORD MCIQTZ_drvOpen(LPCWSTR str, LPMCI_OPEN_DRIVER_PARMSW modp)
 {
     WINE_MCIQTZ* wma;
 
-    TRACE("%s, %p\n", debugstr_w(str), modp);
+    TRACE("(%s, %p)\n", debugstr_w(str), modp);
 
     /* session instance */
     if (!modp)
@@ -83,14 +97,14 @@ static DWORD MCIQTZ_drvClose(DWORD dwDevID)
 {
     WINE_MCIQTZ* wma;
 
-    TRACE("%04x\n", dwDevID);
+    TRACE("(%04x)\n", dwDevID);
 
-    /* finish all outstanding things */
-    MCIQTZ_mciClose(dwDevID, MCI_WAIT, NULL);
-
-    wma = (WINE_MCIQTZ*)mciGetDriverData(dwDevID);
+    wma = MCIQTZ_mciGetOpenDev(dwDevID);
 
     if (wma) {
+        /* finish all outstanding things */
+        MCIQTZ_mciClose(dwDevID, MCI_WAIT, NULL);
+
         HeapFree(GetProcessHeap(), 0, wma);
         return 1;
     }
@@ -105,32 +119,17 @@ static DWORD MCIQTZ_drvConfigure(DWORD dwDevID)
 {
     WINE_MCIQTZ* wma;
 
-    TRACE("%04x\n", dwDevID);
+    TRACE("(%04x)\n", dwDevID);
+
+    wma = MCIQTZ_mciGetOpenDev(dwDevID);
+    if (!wma)
+        return 0;
 
     MCIQTZ_mciStop(dwDevID, MCI_WAIT, NULL);
 
-    wma = (WINE_MCIQTZ*)mciGetDriverData(dwDevID);
+    MessageBoxA(0, "Sample QTZ Wine Driver !", "MM-Wine Driver", MB_OK);
 
-    if (wma) {
-        MessageBoxA(0, "Sample QTZ Wine Driver !", "MM-Wine Driver", MB_OK);
-        return 1;
-    }
-
-    return 0;
-}
-
-/**************************************************************************
- *                              MCIQTZ_mciGetOpenDev            [internal]
- */
-static WINE_MCIQTZ* MCIQTZ_mciGetOpenDev(UINT wDevID)
-{
-    WINE_MCIQTZ* wma = (WINE_MCIQTZ*)mciGetDriverData(wDevID);
-
-    if (!wma) {
-        WARN("Invalid wDevID=%u\n", wDevID);
-        return 0;
-    }
-    return wma;
+    return 1;
 }
 
 /***************************************************************************
@@ -144,14 +143,14 @@ static DWORD MCIQTZ_mciOpen(UINT wDevID, DWORD dwFlags,
 
     TRACE("(%04x, %08X, %p)\n", wDevID, dwFlags, lpOpenParms);
 
-    MCIQTZ_mciStop(wDevID, MCI_WAIT, NULL);
-
     if (!lpOpenParms)
         return MCIERR_NULL_PARAMETER_BLOCK;
 
-    wma = (WINE_MCIQTZ*)mciGetDriverData(wDevID);
+    wma = MCIQTZ_mciGetOpenDev(wDevID);
     if (!wma)
         return MCIERR_INVALID_DEVICE_ID;
+
+    MCIQTZ_mciStop(wDevID, MCI_WAIT, NULL);
 
     CoInitializeEx(NULL, COINIT_MULTITHREADED);
 
@@ -185,6 +184,8 @@ static DWORD MCIQTZ_mciOpen(UINT wDevID, DWORD dwFlags,
         goto err;
     }
 
+    wma->opened = TRUE;
+
     return 0;
 
 err:
@@ -209,20 +210,18 @@ static DWORD MCIQTZ_mciClose(UINT wDevID, DWORD dwFlags, LPMCI_GENERIC_PARMS lpP
 
     TRACE("(%04x, %08X, %p)\n", wDevID, dwFlags, lpParms);
 
-    MCIQTZ_mciStop(wDevID, MCI_WAIT, NULL);
-
     wma = MCIQTZ_mciGetOpenDev(wDevID);
     if (!wma)
         return MCIERR_INVALID_DEVICE_ID;
 
-    if (wma->pgraph)
-        IGraphBuilder_Release(wma->pgraph);
-    wma->pgraph = NULL;
-    if (wma->pmctrl)
-        IMediaControl_Release(wma->pmctrl);
-    wma->pmctrl = NULL;
+    MCIQTZ_mciStop(wDevID, MCI_WAIT, NULL);
 
-    CoUninitialize();
+    if (wma->opened) {
+        IGraphBuilder_Release(wma->pgraph);
+        IMediaControl_Release(wma->pmctrl);
+        CoUninitialize();
+        wma->opened = FALSE;
+    }
 
     return 0;
 }
@@ -241,6 +240,8 @@ static DWORD MCIQTZ_mciPlay(UINT wDevID, DWORD dwFlags, LPMCI_PLAY_PARMS lpParms
         return MCIERR_NULL_PARAMETER_BLOCK;
 
     wma = MCIQTZ_mciGetOpenDev(wDevID);
+    if (!wma)
+        return MCIERR_INVALID_DEVICE_ID;
 
     hr = IMediaControl_Run(wma->pmctrl);
     if (FAILED(hr)) {
@@ -265,14 +266,14 @@ static DWORD MCIQTZ_mciSeek(UINT wDevID, DWORD dwFlags, LPMCI_SEEK_PARMS lpParms
 
     TRACE("(%04x, %08X, %p)\n", wDevID, dwFlags, lpParms);
 
-    MCIQTZ_mciStop(wDevID, MCI_WAIT, NULL);
-
     if (!lpParms)
         return MCIERR_NULL_PARAMETER_BLOCK;
 
     wma = MCIQTZ_mciGetOpenDev(wDevID);
     if (!wma)
         return MCIERR_INVALID_DEVICE_ID;
+
+    MCIQTZ_mciStop(wDevID, MCI_WAIT, NULL);
 
     if (dwFlags & MCI_SEEK_TO_START) {
         newpos = 0;
@@ -415,11 +416,11 @@ static DWORD MCIQTZ_mciStatus(UINT wDevID, DWORD dwFlags, LPMCI_DGV_STATUS_PARMS
 }
 
 /*======================================================================*
- *                  	    MCI QTZ entry points			*
+ *                          MCI QTZ entry points                        *
  *======================================================================*/
 
 /**************************************************************************
- * 				DriverProc (MCIQTZ.@)
+ *                              DriverProc (MCIQTZ.@)
  */
 LRESULT CALLBACK MCIQTZ_DriverProc(DWORD_PTR dwDevID, HDRVR hDriv, UINT wMsg,
                                    LPARAM dwParam1, LPARAM dwParam2)
@@ -449,9 +450,9 @@ LRESULT CALLBACK MCIQTZ_DriverProc(DWORD_PTR dwDevID, HDRVR hDriv, UINT wMsg,
         case MCI_CLOSE_DRIVER:  return MCIQTZ_mciClose     (dwDevID, dwParam1, (LPMCI_GENERIC_PARMS)       dwParam2);
         case MCI_PLAY:          return MCIQTZ_mciPlay      (dwDevID, dwParam1, (LPMCI_PLAY_PARMS)          dwParam2);
         case MCI_SEEK:          return MCIQTZ_mciSeek      (dwDevID, dwParam1, (LPMCI_SEEK_PARMS)          dwParam2);
+        case MCI_STOP:          return MCIQTZ_mciStop      (dwDevID, dwParam1, (LPMCI_GENERIC_PARMS)       dwParam2);
         case MCI_STATUS:        return MCIQTZ_mciStatus    (dwDevID, dwParam1, (LPMCI_DGV_STATUS_PARMSW)   dwParam2);
         case MCI_RECORD:
-        case MCI_STOP:
         case MCI_SET:
         case MCI_PAUSE:
         case MCI_RESUME:
@@ -484,18 +485,18 @@ LRESULT CALLBACK MCIQTZ_DriverProc(DWORD_PTR dwDevID, HDRVR hDriv, UINT wMsg,
         case MCI_UNDO:
         case MCI_CONFIGURE:
         case MCI_RESTORE:
-            FIXME("Unimplemented command [%u]\n", wMsg);
+            FIXME("Unimplemented command [%08X]\n", wMsg);
             break;
         case MCI_SPIN:
         case MCI_ESCAPE:
-            WARN("Unsupported command [%u]\n", wMsg);
+            WARN("Unsupported command [%08X]\n", wMsg);
             break;
         case MCI_OPEN:
         case MCI_CLOSE:
             FIXME("Shouldn't receive a MCI_OPEN or CLOSE message\n");
             break;
         default:
-            TRACE("Sending msg [%u] to default driver proc\n", wMsg);
+            TRACE("Sending msg [%08X] to default driver proc\n", wMsg);
             return DefDriverProc(dwDevID, hDriv, wMsg, dwParam1, dwParam2);
     }
 

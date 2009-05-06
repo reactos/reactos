@@ -225,72 +225,73 @@ DWORD	MCIAVI_mciSet(UINT wDevID, DWORD dwFlags, LPMCI_DGV_SET_PARMS lpParms)
     }
 
     if (dwFlags & MCI_SET_ON) {
-	char	buffer[256];
-
-	strcpy(buffer, "MCI_SET_ON:");
+	const char *szVideo="";
+	const char *szAudio="";
+	const char *szSeek="";
 
 	if (dwFlags & MCI_SET_VIDEO) {
-	    strncat(buffer, " video", sizeof(buffer)-sizeof("MCI_SET_ON:"));
+	    szVideo = " video";
 	    wma->dwSet |= 4;
 	}
 	if (dwFlags & MCI_SET_AUDIO) {
-	    strncat(buffer, " audio", sizeof(buffer)-sizeof("MCI_SET_ON:"));
 	    switch (lpParms->dwAudio) {
 	    case MCI_SET_AUDIO_ALL:
-		strncat(buffer, " all", sizeof(buffer)-sizeof("MCI_SET_ON:"));
+		szAudio = " audio all";
 		wma->dwSet |= 3;
 		break;
 	    case MCI_SET_AUDIO_LEFT:
-		strncat(buffer, " left", sizeof(buffer)-sizeof("MCI_SET_ON:"));
+		szAudio = " audio left";
 		wma->dwSet |= 1;
 		break;
 	    case MCI_SET_AUDIO_RIGHT:
-		strncat(buffer, " right", sizeof(buffer)-sizeof("MCI_SET_ON:"));
+		szAudio = " audio right";
 		wma->dwSet |= 2;
 		break;
 	    default:
+		szAudio = " audio unknown";
 		WARN("Unknown audio channel %u\n", lpParms->dwAudio);
 		break;
 	    }
 	}
 	if (dwFlags & MCI_DGV_SET_SEEK_EXACTLY) {
-	    strncat(buffer, " seek_exactly", sizeof(buffer));
+	    szSeek = " seek_exactly";
 	}
-	FIXME("%s\n", buffer);
+	FIXME("MCI_SET_ON:%s%s%s\n", szVideo, szAudio, szSeek);
     }
 
     if (dwFlags & MCI_SET_OFF) {
-	char	buffer[256];
+	const char *szVideo="";
+	const char *szAudio="";
+	const char *szSeek="";
 
-	strcpy(buffer, "MCI_SET_OFF:");
 	if (dwFlags & MCI_SET_VIDEO) {
-	    strncat(buffer, " video", sizeof(buffer)-sizeof("MCI_SET_OFF:"));
+	    szVideo = " video";
 	    wma->dwSet &= ~4;
 	}
 	if (dwFlags & MCI_SET_AUDIO) {
-	    strncat(buffer, " audio", sizeof(buffer)-sizeof("MCI_SET_OFF:"));
 	    switch (lpParms->dwAudio) {
 	    case MCI_SET_AUDIO_ALL:
-		strncat(buffer, " all", sizeof(buffer)-sizeof("MCI_SET_OFF:"));
+		szAudio = " audio all";
 		wma->dwSet &= ~3;
 		break;
 	    case MCI_SET_AUDIO_LEFT:
-		strncat(buffer, " left", sizeof(buffer)-sizeof("MCI_SET_OFF:"));
+		szAudio = " audio left";
 		wma->dwSet &= ~2;
 		break;
 	    case MCI_SET_AUDIO_RIGHT:
-		strncat(buffer, " right", sizeof(buffer)-sizeof("MCI_SET_OFF:"));
+		szAudio = " audio right";
 		wma->dwSet &= ~2;
 		break;
 	    default:
+		szAudio = " audio unknown";
 		WARN("Unknown audio channel %u\n", lpParms->dwAudio);
 		break;
 	    }
 	}
 	if (dwFlags & MCI_DGV_SET_SEEK_EXACTLY) {
-	    strncat(buffer, " seek_exactly", sizeof(buffer)-strlen(buffer)-1);
+	    szSeek = " seek_exactly";
 	}
-	FIXME("%s\n", buffer);
+	FIXME("MCI_SET_OFF:%s%s%s\n", szVideo, szAudio, szSeek);
     }
     if (dwFlags & MCI_DGV_SET_FILEFORMAT) {
 	LPCSTR	str = "save";

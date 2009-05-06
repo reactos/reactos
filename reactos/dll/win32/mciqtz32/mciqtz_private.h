@@ -27,6 +27,7 @@
 
 typedef struct {
     MCIDEVICEID    wDevID;
+    BOOL           opened;
     IGraphBuilder* pgraph;
     IMediaControl* pmctrl;
     BOOL           started;
