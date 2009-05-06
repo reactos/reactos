@@ -636,6 +636,7 @@ IPortPinWavePci_fnFastWrite(
     if (This->IrpQueue->lpVtbl->HasLastMappingFailed(This->IrpQueue))
     {
         /* notify port driver that new mapping is available */
+        DPRINT("Notifying of new mapping\n");
         This->Stream->lpVtbl->MappingAvailable(This->Stream);
     }
 

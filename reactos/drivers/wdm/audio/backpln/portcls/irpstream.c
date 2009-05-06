@@ -14,6 +14,7 @@ typedef struct _IRP_MAPPING_
     KSSTREAM_HEADER *Header;
     PIRP Irp;
 
+    ULONG References;
     ULONG NumTags;
     PVOID * Tag;
 }IRP_MAPPING, *PIRP_MAPPING;
@@ -141,6 +142,7 @@ IIrpQueue_fnAddMapping(
     IN PIRP Irp)
 {
     PIRP_MAPPING Mapping;
+    ULONG Index;
     IIrpQueueImpl * This = (IIrpQueueImpl*)iface;
 
     Mapping = AllocateItem(NonPagedPool, sizeof(IRP_MAPPING), TAG_PORTCLASS);
@@ -166,7 +168,6 @@ IIrpQueue_fnAddMapping(
             {
                 Mapping->NumTags++;
             }
-            ASSERT(Mapping->NumTags < 32);
         }
     }
     else
@@ -181,12 +182,18 @@ IIrpQueue_fnAddMapping(
         FreeItem(Mapping, TAG_PORTCLASS);
         return STATUS_UNSUCCESSFUL;
     }
+    ASSERT(Mapping->NumTags < 32);
+    for(Index = 0; Index < Mapping->NumTags; Index++);
+        Mapping->References |= (1 << Index);
 
     This->NumDataAvailable += Mapping->Header->DataUsed;
 
-    DPRINT("IIrpQueue_fnAddMapping NumMappings %u SizeOfMapping %lu NumDataAvailable %lu Mapping %p NumTags %u FrameSize %u\n", This->NumMappings, Mapping->Header->DataUsed, This->NumDataAvailable, Mapping, Mapping->NumTags, This->MaxFrameSize);
+    DPRINT("IIrpQueue_fnAddMapping NumMappings %u SizeOfMapping %lu NumDataAvailable %lu Mapping %p NumTags %u References %x FrameSize %u\n", This->NumMappings, Mapping->Header->DataUsed, This->NumDataAvailable, Mapping, Mapping->NumTags, Mapping->References, This->MaxFrameSize);
 
-    ExInterlockedInsertTailList(&This->ListHead, &Mapping->Entry, &This->Lock);
+    KeAcquireSpinLockAtDpcLevel(&This->Lock);
+    InsertTailList(&This->ListHead, &Mapping->Entry);
+    KeReleaseSpinLockFromDpcLevel(&This->Lock);
+
     (void)InterlockedIncrement((volatile long*)&This->NumMappings);
 
     if (Irp)
@@ -253,7 +260,10 @@ IIrpQueue_fnUpdateMapping(
     {
         This->CurrentOffset = 0;
 
-        (void)ExInterlockedRemoveHeadList(&This->ListHead, &This->Lock);
+        KeAcquireSpinLockAtDpcLevel(&This->Lock);
+        RemoveHeadList(&This->ListHead);
+        KeReleaseSpinLockFromDpcLevel(&This->Lock);
+
         InterlockedDecrement(&This->NumMappings);
         FreeMappingRoutine(CurMapping);
     }
@@ -339,7 +349,7 @@ GetMapping(
 
     /* calculate the offset */
     if (Index)
-        Offset = (Index + 1) * This->MaxFrameSize;
+        Offset = Index * This->MaxFrameSize;
     else
         Offset = 0;
 
@@ -416,6 +426,7 @@ IIrpQueue_fnGetMappingWithTag(
     KeReleaseSpinLockFromDpcLevel(&This->Lock);
     This->OutOfMapping = TRUE;
     This->StartStream = FALSE;
+    DPRINT("No Mapping available\n");
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -425,9 +436,9 @@ IIrpQueue_fnReleaseMappingWithTag(
     IN IIrpQueue *iface,
     IN PVOID Tag)
 {
-    PIRP_MAPPING CurMapping;
+    PIRP_MAPPING CurMapping = NULL;
     PLIST_ENTRY CurEntry;
-    ULONG Index;
+    ULONG Index = 0;
     ULONG Found;
     IIrpQueueImpl * This = (IIrpQueueImpl*)iface;
 
@@ -440,40 +451,48 @@ IIrpQueue_fnReleaseMappingWithTag(
         return STATUS_UNSUCCESSFUL;
     }
 
-    CurMapping = CONTAINING_RECORD(CurEntry, IRP_MAPPING, Entry);
     Found = FALSE;
-
-    for(Index = 0; Index < CurMapping->NumTags; Index++)
+    MapIndex = 0;
+    while (CurEntry != &This->ListHead)
     {
-        if (CurMapping->Tag[Index] == Tag)
+        CurMapping = CONTAINING_RECORD(CurEntry, IRP_MAPPING, Entry);
+        for(Index = 0; Index < CurMapping->NumTags; Index++)
         {
-            Found = TRUE;
-            break;
+            if (CurMapping->Tag[Index] == Tag)
+            {
+                Found = TRUE;
+                break;
+            }
         }
+        if (Found)
+            break;
+
+        CurEntry = CurEntry->Flink;
     }
-    KeReleaseSpinLockFromDpcLevel(&This->Lock);
 
     if (!Found)
     {
-        DPRINT("Tag %p not in first mapping %p\n", Tag, CurMapping);
-        return STATUS_UNSUCCESSFUL;
+        DPRINT1("Tag %p not found\n", Tag);
+        ASSERT(Found);
     }
+    DPRINT("References %x\n", CurMapping->References);
+    CurMapping->References &= ~(1 << Index);
 
-    if (Index != CurMapping->NumTags - 1)
+    if (CurMapping->References)
     {
         /* released mapping is not the last mapping of the irp */
-        DPRINT1("IIrpQueue_fnReleaseMappingWithTag Tag %p Index %u NumTags %u\n", Tag, Index, CurMapping->NumTags);
+        DPRINT1("IIrpQueue_fnReleaseMappingWithTag Tag %p Index %u NumTags %u Refs %x\n", Tag, Index, CurMapping->NumTags, CurMapping->References);
+        KeReleaseSpinLockFromDpcLevel(&This->Lock);
         return STATUS_SUCCESS;
     }
 
-    CurEntry = ExInterlockedRemoveHeadList(&This->ListHead, &This->Lock);
-    ASSERT(CurEntry);
-    CurMapping = CONTAINING_RECORD(CurEntry, IRP_MAPPING, Entry);
+    RemoveEntryList(&CurMapping->Entry);
 
     /* last mapping of the irp, free irp */
     DPRINT("Freeing mapping %p\n", CurMapping);
     InterlockedDecrement(&This->NumMappings);
     FreeMappingRoutine(CurMapping);
+    KeReleaseSpinLockFromDpcLevel(&This->Lock);
 
     return STATUS_SUCCESS;
 }
