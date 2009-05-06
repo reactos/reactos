@@ -20,6 +20,10 @@
 
 #ifndef __WINE_MSCTF_I_H
 #define __WINE_MSCTF_I_H
+
+#define COOKIE_MAGIC_TMSINK  0x0010
+#define COOKIE_MAGIC_CONTEXTSINK 0x0020
+
 extern DWORD tlsIndex;
 
 extern HRESULT ThreadMgr_Constructor(IUnknown *pUnkOuter, IUnknown **ppOut);
@@ -27,6 +31,12 @@ extern HRESULT DocumentMgr_Constructor(ITfThreadMgrEventSink*, ITfDocumentMgr **
 extern HRESULT Context_Constructor(TfClientId tidOwner, IUnknown *punk, ITfContext **ppOut, TfEditCookie *pecTextStore);
 extern HRESULT InputProcessorProfiles_Constructor(IUnknown *pUnkOuter, IUnknown **ppOut);
 extern HRESULT CategoryMgr_Constructor(IUnknown *pUnkOuter, IUnknown **ppOut);
+
+/* cookie function */
+extern DWORD  generate_Cookie(DWORD magic, LPVOID data);
+extern DWORD  get_Cookie_magic(DWORD id);
+extern LPVOID get_Cookie_data(DWORD id);
+extern LPVOID remove_Cookie(DWORD id);
 
 extern const WCHAR szwSystemTIPKey[];
 #endif /* __WINE_MSCTF_I_H */

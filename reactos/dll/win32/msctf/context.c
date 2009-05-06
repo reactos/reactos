@@ -382,7 +382,7 @@ static WINAPI HRESULT ContextSource_AdviseSink(ITfSource *iface,
             return CONNECT_E_CANNOTCONNECT;
         }
         list_add_head(&This->pTextEditSink ,&es->entry);
-        *pdwCookie = (DWORD)es;
+        *pdwCookie = generate_Cookie(COOKIE_MAGIC_CONTEXTSINK, es);
     }
     else
     {
@@ -396,9 +396,17 @@ static WINAPI HRESULT ContextSource_AdviseSink(ITfSource *iface,
 
 static WINAPI HRESULT ContextSource_UnadviseSink(ITfSource *iface, DWORD pdwCookie)
 {
-    ContextSink *sink = (ContextSink*)pdwCookie;
+    ContextSink *sink;
     Context *This = impl_from_ITfSourceVtbl(iface);
+
     TRACE("(%p) %x\n",This,pdwCookie);
+
+    if (get_Cookie_magic(pdwCookie)!=COOKIE_MAGIC_CONTEXTSINK)
+        return E_INVALIDARG;
+
+    sink = (ContextSink*)remove_Cookie(pdwCookie);
+    if (!sink)
+        return CONNECT_E_NOCONNECTION;
 
     list_remove(&sink->entry);
     free_sink(sink);

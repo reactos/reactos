@@ -43,6 +43,17 @@ static LONG MSCTF_refCount;
 
 static HINSTANCE MSCTF_hinstance;
 
+typedef struct
+{
+    DWORD id;
+    DWORD magic;
+    LPVOID data;
+} CookieInternal;
+
+static CookieInternal *cookies;
+static UINT id_last;
+static UINT array_size;
+
 DWORD tlsIndex = 0;
 
 const WCHAR szwSystemTIPKey[] = {'S','O','F','T','W','A','R','E','\\','M','i','c','r','o','s','o','f','t','\\','C','T','F','\\','T','I','P',0};
@@ -152,6 +163,93 @@ static HRESULT ClassFactory_Constructor(LPFNCONSTRUCTOR ctor, LPVOID *ppvOut)
     TRACE("Created class factory %p\n", This);
     MSCTF_refCount++;
     return S_OK;
+}
+
+/*************************************************************************
+ * DWORD Cookie Management
+ */
+DWORD generate_Cookie(DWORD magic, LPVOID data)
+{
+    int i;
+
+    /* try to reuse IDs if possible */
+    for (i = 0; i < id_last; i++)
+        if (cookies[i].id == 0) break;
+
+    if (i == array_size)
+    {
+        if (!array_size)
+        {
+            cookies = HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,sizeof(CookieInternal) * 10);
+            if (!cookies)
+            {
+                ERR("Out of memory, Unable to alloc cookies array\n");
+                return 0;
+            }
+            array_size = 10;
+        }
+        else
+        {
+            CookieInternal *new_cookies = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, cookies,
+                                                      sizeof(CookieInternal) * (array_size * 2));
+            if (!new_cookies)
+            {
+                ERR("Out of memory, Unable to realloc cookies array\n");
+                return 0;
+            }
+            cookies = new_cookies;
+            array_size *= 2;
+        }
+    }
+
+    cookies[i].id = i + 1; /* a return of 0 is used for failure */
+    cookies[i].magic = magic;
+    cookies[i].data = data;
+
+    if (i == id_last)
+        id_last++;
+
+    return cookies[i].id;
+}
+
+DWORD get_Cookie_magic(DWORD id)
+{
+    UINT index = id - 1;
+
+    if (index >= id_last)
+        return 0;
+
+    if (cookies[index].id == 0)
+        return 0;
+
+    return cookies[index].magic;
+}
+
+LPVOID get_Cookie_data(DWORD id)
+{
+    UINT index = id - 1;
+
+    if (index >= id_last)
+        return NULL;
+
+    if (cookies[index].id == 0)
+        return NULL;
+
+    return cookies[index].data;
+}
+
+LPVOID remove_Cookie(DWORD id)
+{
+    UINT index = id - 1;
+
+    if (index >= id_last)
+        return NULL;
+
+    if (cookies[index].id == 0)
+        return NULL;
+
+    cookies[index].id = 0;
+    return cookies[index].data;
 }
 
 /*************************************************************************

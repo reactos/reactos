@@ -1,3 +1,6 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
+<group>
 <module name="msctf" type="win32dll" baseaddress="${BASEADDRESS_MSCTF}" installbase="system32" installname="msctf.dll" allowwarnings="true">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="msctf.spec" />
@@ -21,3 +24,7 @@
 	<library>kernel32</library>
 	<library>ntdll</library>
 </module>
+<module name="msctf_local_interface" type="idlinterface">
+	<file>msctf_local.idl</file>
+</module>
+</group>

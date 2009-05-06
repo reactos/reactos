@@ -59,6 +59,7 @@ typedef struct tagThreadMgrSink {
 typedef struct tagACLMulti {
     const ITfThreadMgrVtbl *ThreadMgrVtbl;
     const ITfSourceVtbl *SourceVtbl;
+    const ITfKeystrokeMgrVtbl *KeystrokeMgrVtbl;
     LONG refCount;
 
     const ITfThreadMgrEventSinkVtbl *ThreadMgrEventSinkVtbl; /* internal */
@@ -77,6 +78,11 @@ typedef struct tagACLMulti {
 static inline ThreadMgr *impl_from_ITfSourceVtbl(ITfSource *iface)
 {
     return (ThreadMgr *)((char *)iface - FIELD_OFFSET(ThreadMgr,SourceVtbl));
+}
+
+static inline ThreadMgr *impl_from_ITfKeystrokeMgrVtbl(ITfKeystrokeMgr *iface)
+{
+    return (ThreadMgr *)((char *)iface - FIELD_OFFSET(ThreadMgr,KeystrokeMgrVtbl));
 }
 
 static inline ThreadMgr *impl_from_ITfThreadMgrEventSink(ITfThreadMgrEventSink *iface)
@@ -153,6 +159,10 @@ static HRESULT WINAPI ThreadMgr_QueryInterface(ITfThreadMgr *iface, REFIID iid, 
     {
         *ppvOut = &This->SourceVtbl;
     }
+    else if (IsEqualIID(iid, &IID_ITfKeystrokeMgr))
+    {
+        *ppvOut = &This->KeystrokeMgrVtbl;
+    }
 
     if (*ppvOut)
     {
@@ -196,6 +206,14 @@ static HRESULT WINAPI ThreadMgr_fnDeactivate( ITfThreadMgr* iface)
 {
     ThreadMgr *This = (ThreadMgr *)iface;
     FIXME("STUB:(%p)\n",This);
+
+    if (This->focus)
+    {
+        ITfThreadMgrEventSink_OnSetFocus((ITfThreadMgrEventSink*)&This->ThreadMgrEventSinkVtbl, 0, This->focus);
+        ITfDocumentMgr_Release(This->focus);
+        This->focus = 0;
+    }
+
     return E_NOTIMPL;
 }
 
@@ -246,7 +264,7 @@ static HRESULT WINAPI ThreadMgr_SetFocus( ITfThreadMgr* iface, ITfDocumentMgr *p
     if (!pdimFocus || FAILED(IUnknown_QueryInterface(pdimFocus,&IID_ITfDocumentMgr,(LPVOID*) &check)))
         return E_INVALIDARG;
 
-    ITfThreadMgrEventSink_OnSetFocus((ITfThreadMgrEventSink*)&This->ThreadMgrEventSinkVtbl, This->focus, check);
+    ITfThreadMgrEventSink_OnSetFocus((ITfThreadMgrEventSink*)&This->ThreadMgrEventSinkVtbl, check, This->focus);
 
     if (This->focus)
         ITfDocumentMgr_Release(This->focus);
@@ -357,7 +375,7 @@ static WINAPI HRESULT ThreadMgrSource_AdviseSink(ITfSource *iface,
             return CONNECT_E_CANNOTCONNECT;
         }
         list_add_head(&This->ThreadMgrEventSink,&tms->entry);
-        *pdwCookie = (DWORD)tms;
+        *pdwCookie = generate_Cookie(COOKIE_MAGIC_TMSINK, tms);
     }
     else
     {
@@ -372,9 +390,17 @@ static WINAPI HRESULT ThreadMgrSource_AdviseSink(ITfSource *iface,
 
 static WINAPI HRESULT ThreadMgrSource_UnadviseSink(ITfSource *iface, DWORD pdwCookie)
 {
-    ThreadMgrSink *sink = (ThreadMgrSink*)pdwCookie;
+    ThreadMgrSink *sink;
     ThreadMgr *This = impl_from_ITfSourceVtbl(iface);
+
     TRACE("(%p) %x\n",This,pdwCookie);
+
+    if (get_Cookie_magic(pdwCookie)!=COOKIE_MAGIC_TMSINK)
+        return E_INVALIDARG;
+
+    sink = (ThreadMgrSink*)remove_Cookie(pdwCookie);
+    if (!sink)
+        return CONNECT_E_NOCONNECTION;
 
     list_remove(&sink->entry);
     free_sink(sink);
@@ -390,6 +416,163 @@ static const ITfSourceVtbl ThreadMgr_SourceVtbl =
 
     ThreadMgrSource_AdviseSink,
     ThreadMgrSource_UnadviseSink,
+};
+
+/*****************************************************
+ * ITfKeystrokeMgr functions
+ *****************************************************/
+
+static HRESULT WINAPI KeystrokeMgr_QueryInterface(ITfKeystrokeMgr *iface, REFIID iid, LPVOID *ppvOut)
+{
+    ThreadMgr *This = impl_from_ITfKeystrokeMgrVtbl(iface);
+    return ThreadMgr_QueryInterface((ITfThreadMgr *)This, iid, *ppvOut);
+}
+
+static ULONG WINAPI KeystrokeMgr_AddRef(ITfKeystrokeMgr *iface)
+{
+    ThreadMgr *This = impl_from_ITfKeystrokeMgrVtbl(iface);
+    return ThreadMgr_AddRef((ITfThreadMgr*)This);
+}
+
+static ULONG WINAPI KeystrokeMgr_Release(ITfKeystrokeMgr *iface)
+{
+    ThreadMgr *This = impl_from_ITfKeystrokeMgrVtbl(iface);
+    return ThreadMgr_Release((ITfThreadMgr *)This);
+}
+
+static HRESULT WINAPI KeystrokeMgr_AdviseKeyEventSink(ITfKeystrokeMgr *iface,
+        TfClientId tid, ITfKeyEventSink *pSink, BOOL fForeground)
+{
+    ThreadMgr *This = impl_from_ITfKeystrokeMgrVtbl(iface);
+    FIXME("STUB:(%p)\n",This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI KeystrokeMgr_UnadviseKeyEventSink(ITfKeystrokeMgr *iface,
+        TfClientId tid)
+{
+    ThreadMgr *This = impl_from_ITfKeystrokeMgrVtbl(iface);
+    FIXME("STUB:(%p)\n",This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI KeystrokeMgr_GetForeground(ITfKeystrokeMgr *iface,
+        CLSID *pclsid)
+{
+    ThreadMgr *This = impl_from_ITfKeystrokeMgrVtbl(iface);
+    FIXME("STUB:(%p)\n",This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI KeystrokeMgr_TestKeyDown(ITfKeystrokeMgr *iface,
+        WPARAM wParam, LPARAM lParam, BOOL *pfEaten)
+{
+    ThreadMgr *This = impl_from_ITfKeystrokeMgrVtbl(iface);
+    FIXME("STUB:(%p)\n",This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI KeystrokeMgr_TestKeyUp(ITfKeystrokeMgr *iface,
+        WPARAM wParam, LPARAM lParam, BOOL *pfEaten)
+{
+    ThreadMgr *This = impl_from_ITfKeystrokeMgrVtbl(iface);
+    FIXME("STUB:(%p)\n",This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI KeystrokeMgr_KeyDown(ITfKeystrokeMgr *iface,
+        WPARAM wParam, LPARAM lParam, BOOL *pfEaten)
+{
+    ThreadMgr *This = impl_from_ITfKeystrokeMgrVtbl(iface);
+    FIXME("STUB:(%p)\n",This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI KeystrokeMgr_KeyUp(ITfKeystrokeMgr *iface,
+        WPARAM wParam, LPARAM lParam, BOOL *pfEaten)
+{
+    ThreadMgr *This = impl_from_ITfKeystrokeMgrVtbl(iface);
+    FIXME("STUB:(%p)\n",This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI KeystrokeMgr_GetPreservedKey(ITfKeystrokeMgr *iface,
+        ITfContext *pic, const TF_PRESERVEDKEY *pprekey, GUID *pguid)
+{
+    ThreadMgr *This = impl_from_ITfKeystrokeMgrVtbl(iface);
+    FIXME("STUB:(%p)\n",This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI KeystrokeMgr_IsPreservedKey(ITfKeystrokeMgr *iface,
+        REFGUID rguid, const TF_PRESERVEDKEY *pprekey, BOOL *pfRegistered)
+{
+    ThreadMgr *This = impl_from_ITfKeystrokeMgrVtbl(iface);
+    FIXME("STUB:(%p)\n",This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI KeystrokeMgr_PreserveKey(ITfKeystrokeMgr *iface,
+        TfClientId tid, REFGUID rguid, const TF_PRESERVEDKEY *prekey,
+        const WCHAR *pchDesc, ULONG cchDesc)
+{
+    ThreadMgr *This = impl_from_ITfKeystrokeMgrVtbl(iface);
+    FIXME("STUB:(%p)\n",This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI KeystrokeMgr_UnpreserveKey(ITfKeystrokeMgr *iface,
+        REFGUID rguid, const TF_PRESERVEDKEY *pprekey)
+{
+    ThreadMgr *This = impl_from_ITfKeystrokeMgrVtbl(iface);
+    FIXME("STUB:(%p)\n",This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI KeystrokeMgr_SetPreservedKeyDescription(ITfKeystrokeMgr *iface,
+        REFGUID rguid, const WCHAR *pchDesc, ULONG cchDesc)
+{
+    ThreadMgr *This = impl_from_ITfKeystrokeMgrVtbl(iface);
+    FIXME("STUB:(%p)\n",This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI KeystrokeMgr_GetPreservedKeyDescription(ITfKeystrokeMgr *iface,
+        REFGUID rguid, BSTR *pbstrDesc)
+{
+    ThreadMgr *This = impl_from_ITfKeystrokeMgrVtbl(iface);
+    FIXME("STUB:(%p)\n",This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI KeystrokeMgr_SimulatePreservedKey(ITfKeystrokeMgr *iface,
+        ITfContext *pic, REFGUID rguid, BOOL *pfEaten)
+{
+    ThreadMgr *This = impl_from_ITfKeystrokeMgrVtbl(iface);
+    FIXME("STUB:(%p)\n",This);
+    return E_NOTIMPL;
+}
+
+static const ITfKeystrokeMgrVtbl ThreadMgr_KeystrokeMgrVtbl =
+{
+    KeystrokeMgr_QueryInterface,
+    KeystrokeMgr_AddRef,
+    KeystrokeMgr_Release,
+
+    KeystrokeMgr_AdviseKeyEventSink,
+    KeystrokeMgr_UnadviseKeyEventSink,
+    KeystrokeMgr_GetForeground,
+    KeystrokeMgr_TestKeyDown,
+    KeystrokeMgr_TestKeyUp,
+    KeystrokeMgr_KeyDown,
+    KeystrokeMgr_KeyUp,
+    KeystrokeMgr_GetPreservedKey,
+    KeystrokeMgr_IsPreservedKey,
+    KeystrokeMgr_PreserveKey,
+    KeystrokeMgr_UnpreserveKey,
+    KeystrokeMgr_SetPreservedKeyDescription,
+    KeystrokeMgr_GetPreservedKeyDescription,
+    KeystrokeMgr_SimulatePreservedKey
 };
 
 /*****************************************************
@@ -534,6 +717,7 @@ HRESULT ThreadMgr_Constructor(IUnknown *pUnkOuter, IUnknown **ppOut)
 
     This->ThreadMgrVtbl= &ThreadMgr_ThreadMgrVtbl;
     This->SourceVtbl = &ThreadMgr_SourceVtbl;
+    This->KeystrokeMgrVtbl= &ThreadMgr_KeystrokeMgrVtbl;
     This->ThreadMgrEventSinkVtbl = &ThreadMgr_ThreadMgrEventSinkVtbl;
     This->refCount = 1;
     TlsSetValue(tlsIndex,This);
