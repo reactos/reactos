@@ -71,7 +71,100 @@ typedef int CM_RESOURCE_TYPE;
 #define CmResourceTypePcCardConfig	  130
 #define CmResourceTypeMfCardConfig	  131
 
+typedef enum _INTERFACE_TYPE {
+  InterfaceTypeUndefined = -1,
+  Internal,
+  Isa,
+  Eisa,
+  MicroChannel,
+  TurboChannel,
+  PCIBus,
+  VMEBus,
+  NuBus,
+  PCMCIABus,
+  CBus,
+  MPIBus,
+  MPSABus,
+  ProcessorInternal,
+  InternalPowerBus,
+  PNPISABus,
+  PNPBus,
+  MaximumInterfaceType
+} INTERFACE_TYPE, *PINTERFACE_TYPE;
 
+/* IO_RESOURCE_DESCRIPTOR.Option */
+
+#define IO_RESOURCE_PREFERRED             0x01
+#define IO_RESOURCE_DEFAULT               0x02
+#define IO_RESOURCE_ALTERNATIVE           0x08
+
+typedef struct _IO_RESOURCE_DESCRIPTOR {
+  UCHAR  Option;
+  UCHAR  Type;
+  UCHAR  ShareDisposition;
+  UCHAR  Spare1;
+  USHORT  Flags;
+  USHORT  Spare2;
+  union {
+    struct {
+      ULONG  Length;
+      ULONG  Alignment;
+      PHYSICAL_ADDRESS  MinimumAddress;
+      PHYSICAL_ADDRESS  MaximumAddress;
+    } Port;
+    struct {
+      ULONG  Length;
+      ULONG  Alignment;
+      PHYSICAL_ADDRESS  MinimumAddress;
+      PHYSICAL_ADDRESS  MaximumAddress;
+    } Memory;
+    struct {
+      ULONG  MinimumVector;
+      ULONG  MaximumVector;
+    } Interrupt;
+    struct {
+      ULONG  MinimumChannel;
+      ULONG  MaximumChannel;
+    } Dma;
+    struct {
+      ULONG  Length;
+      ULONG  Alignment;
+      PHYSICAL_ADDRESS  MinimumAddress;
+      PHYSICAL_ADDRESS  MaximumAddress;
+    } Generic;
+    struct {
+      ULONG  Data[3];
+    } DevicePrivate;
+    struct {
+      ULONG  Length;
+      ULONG  MinBusNumber;
+      ULONG  MaxBusNumber;
+      ULONG  Reserved;
+    } BusNumber;
+    struct {
+      ULONG  Priority;
+      ULONG  Reserved1;
+      ULONG  Reserved2;
+    } ConfigData;
+  } u;
+} IO_RESOURCE_DESCRIPTOR, *PIO_RESOURCE_DESCRIPTOR;
+
+typedef struct _IO_RESOURCE_LIST {
+  USHORT  Version;
+  USHORT  Revision;
+  ULONG  Count;
+  IO_RESOURCE_DESCRIPTOR  Descriptors[1];
+} IO_RESOURCE_LIST, *PIO_RESOURCE_LIST;
+
+typedef struct _IO_RESOURCE_REQUIREMENTS_LIST {
+  ULONG  ListSize;
+  INTERFACE_TYPE  InterfaceType;
+  ULONG  BusNumber;
+  ULONG  SlotNumber;
+  ULONG  Reserved[3];
+  ULONG  AlternativeLists;
+  IO_RESOURCE_LIST  List[1];
+} IO_RESOURCE_REQUIREMENTS_LIST, *PIO_RESOURCE_REQUIREMENTS_LIST;
 
 //
 // Global debug flag
@@ -79,6 +172,81 @@ typedef int CM_RESOURCE_TYPE;
 extern ULONG NtGlobalFlag;
 
 
+#include <pshpack4.h>
+typedef struct _CM_PARTIAL_RESOURCE_DESCRIPTOR {
+  UCHAR Type;
+  UCHAR ShareDisposition;
+  USHORT Flags;
+  union {
+    struct {
+      PHYSICAL_ADDRESS Start;
+      ULONG Length;
+    } Generic;
+    struct {
+      PHYSICAL_ADDRESS Start;
+      ULONG Length;
+    } Port;
+    struct {
+      ULONG Level;
+      ULONG Vector;
+      KAFFINITY Affinity;
+    } Interrupt;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    struct {
+      union {
+        struct {
+          USHORT Reserved;
+          USHORT MessageCount;
+          ULONG Vector;
+          KAFFINITY Affinity;
+        } Raw;
+        struct {
+          ULONG Level;
+          ULONG Vector;
+          KAFFINITY Affinity;
+        } Translated;
+      };
+    } MessageInterrupt;
+#endif
+    struct {
+      PHYSICAL_ADDRESS Start;
+      ULONG Length;
+    } Memory;
+    struct {
+      ULONG Channel;
+      ULONG Port;
+      ULONG Reserved1;
+    } Dma;
+    struct {
+      ULONG Data[3];
+    } DevicePrivate;
+    struct {
+      ULONG Start;
+      ULONG Length;
+      ULONG Reserved;
+    } BusNumber;
+    struct {
+      ULONG DataSize;
+      ULONG Reserved1;
+      ULONG Reserved2;
+    } DeviceSpecificData;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    struct {
+      PHYSICAL_ADDRESS Start;
+      ULONG Length40;
+    } Memory40;
+    struct {
+      PHYSICAL_ADDRESS Start;
+      ULONG Length48;
+    } Memory48;
+    struct {
+      PHYSICAL_ADDRESS Start;
+      ULONG Length64;
+    } Memory64;
+#endif
+  } u;
+} CM_PARTIAL_RESOURCE_DESCRIPTOR, *PCM_PARTIAL_RESOURCE_DESCRIPTOR;
+#include <poppack.h>
 
 //
 // Section map options
@@ -2316,6 +2484,8 @@ typedef struct _EX_RUNDOWN_REF {
         volatile PVOID Ptr;
     };
 } EX_RUNDOWN_REF, *PEX_RUNDOWN_REF;
+
+typedef struct _EX_RUNDOWN_REF_CACHE_AWARE  *PEX_RUNDOWN_REF_CACHE_AWARE;
 
 typedef enum _WORK_QUEUE_TYPE {
   CriticalWorkQueue,
