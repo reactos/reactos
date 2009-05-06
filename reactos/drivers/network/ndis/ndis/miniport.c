@@ -2011,6 +2011,46 @@ NdisIShutdown(
   return STATUS_SUCCESS;
 }
 
+NTSTATUS
+NTAPI
+NdisIDeviceIoControl(
+    IN PDEVICE_OBJECT DeviceObject,
+    PIRP Irp)
+{
+  PLOGICAL_ADAPTER Adapter = (PLOGICAL_ADAPTER)DeviceObject->DeviceExtension;
+  PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(Irp);
+  NDIS_STATUS Status = STATUS_NOT_SUPPORTED;
+
+  Irp->IoStatus.Information = 0;
+
+  ASSERT(Adapter);
+
+  switch (Stack->Parameters.DeviceIoControl.IoControlCode)
+  {
+    case IOCTL_NDIS_QUERY_GLOBAL_STATS:
+      Status = MiniQueryInformation(Adapter,
+                                    (NDIS_OID)Irp->AssociatedIrp.SystemBuffer,
+                                    Stack->Parameters.DeviceIoControl.OutputBufferLength,
+                                    MmGetSystemAddressForMdl(Irp->MdlAddress),
+                                    &Irp->IoStatus.Information);
+      break;
+
+    default:
+      ASSERT(FALSE);
+      break;
+  }
+
+  if (Status != NDIS_STATUS_PENDING)
+  {
+      Irp->IoStatus.Status = Status;
+      IoCompleteRequest(Irp, IO_NO_INCREMENT);
+  }
+  else
+      IoMarkIrpPending(Irp);
+
+  return Status;
+}
+
 
 NTSTATUS
 NTAPI
@@ -2313,6 +2353,7 @@ NdisMRegisterMiniport(
 
   Miniport->DriverObject->MajorFunction[IRP_MJ_PNP] = NdisIDispatchPnp;
   Miniport->DriverObject->MajorFunction[IRP_MJ_SHUTDOWN] = NdisIShutdown;
+  Miniport->DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = NdisIDeviceIoControl;
   Miniport->DriverObject->DriverExtension->AddDevice = NdisIAddDevice;
 
   return NDIS_STATUS_SUCCESS;
@@ -2757,6 +2798,7 @@ NdisMRegisterDevice(
 
     DriverBlock->DriverObject->MajorFunction[IRP_MJ_PNP] = NdisIDispatchPnp;
     DriverBlock->DriverObject->MajorFunction[IRP_MJ_SHUTDOWN] = NdisIShutdown;
+    DriverBlock->DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = NdisIDeviceIoControl;
 
     DeviceBlock->DeviceObject = DeviceObject;
     DeviceBlock->SymbolicName = SymbolicName;
