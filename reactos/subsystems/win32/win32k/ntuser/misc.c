@@ -547,7 +547,8 @@ GetW32ThreadInfo(VOID)
                               sizeof(ULONG));
        // FIXME PLEASE! it's a ref pointer and not user data! Use ClientThreadInfo!
                 Teb->Win32ThreadInfo = UserHeapAddressToUser(W32Thread->ThreadInfo);
-                ci->pClientThreadInfo = &ti->ClientThreadInfo; // FIXME!
+//                ci->pClientThreadInfo = &ti->ClientThreadInfo; // FIXME!
+                ci->pClientThreadInfo = NULL;
                 ci->ppi = ti->ppi;
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)

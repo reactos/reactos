@@ -283,7 +283,7 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
       if (Win32Thread->ThreadInfo)
       {
           Win32Thread->ThreadInfo->ClientThreadInfo.dwcPumpHook = 0;
-          Win32Thread->pClientInfo->pClientThreadInfo = &Win32Thread->ThreadInfo->ClientThreadInfo;
+//          Win32Thread->pClientInfo->pClientThreadInfo = &Win32Thread->ThreadInfo->ClientThreadInfo;
       }
     }
   else
