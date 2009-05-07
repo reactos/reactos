@@ -595,7 +595,7 @@ SH_ShowFolderProperties(LPWSTR pwszFolder)
     psh.pszCaption = szName;
 
     hpsx = SHCreatePropSheetExtArray(HKEY_CLASSES_ROOT,
-                                     L"Folder",
+                                     L"Directory",
                                      MAX_PROPERTY_SHEET_PAGE-1);
 
     SHAddFromPropSheetExtArray(hpsx,
