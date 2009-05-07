@@ -807,7 +807,7 @@ SH_ShowPropertiesDialog(WCHAR *lpf, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST *api
 
     if (PathIsDirectoryW(wFileName))
     {
-        return SH_ShowFolderProperties(wFileName);
+        return SH_ShowFolderProperties(wFileName, pidlFolder, apidl);
     }
 
     if (wcslen(wFileName) == 3)
