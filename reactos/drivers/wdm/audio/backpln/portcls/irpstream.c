@@ -452,7 +452,6 @@ IIrpQueue_fnReleaseMappingWithTag(
     }
 
     Found = FALSE;
-    MapIndex = 0;
     while (CurEntry != &This->ListHead)
     {
         CurMapping = CONTAINING_RECORD(CurEntry, IRP_MAPPING, Entry);
