@@ -41,7 +41,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS installasjon"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT           "ReactOS utviklerene anerkjenner de følgende Åpen kildekode prosjektene, "\
+    LTEXT           "ReactOS utviklerene anerkjenner de følgende åpen kildekode prosjektene, "\
                     "(deler av) som ble brukt til å skape ReactOS:",
                     IDC_STATIC,15,7,286,19
     LISTBOX         IDC_PROJECTS,15,30,286,75,LBS_NOSEL | LBS_HASSTRINGS | 
@@ -97,9 +97,9 @@ CAPTION "ReactOS installasjon"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Systemets språk og region burde samsvare med språket på programmene "\
-          "du vil bruke. Instillingene for språk og region kontrollerer hvordan tall, "\
-          "valutaer, og dato vises.", IDC_STATIC, 53, 7, 253, 20
-    LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
+          "du vil bruke. Innstillingene for språk og region kontrollerer hvordan tall, "\
+          "valutaer, og dato vises.", IDC_STATIC, 55, 7, 259, 20
+    LTEXT "", IDC_LOCALETEXT, 53, 32, 250, 18
     LTEXT "For å forandre systemets språk og region instilling, Trykk på Tilpass.",
           IDC_STATIC, 53, 60, 184, 8
     PUSHBUTTON "&Tilpass...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
@@ -117,7 +117,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS installasjon"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Dato og Tid", IDC_STATIC, 53, 7, 253, 8
+    LTEXT "Dato og tid", IDC_STATIC, 53, 7, 253, 8
     CONTROL "", IDC_DATEPICKER, "SysDateTimePick32",
             DTS_LONGDATEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 53, 17, 137, 14
     CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32",
@@ -180,7 +180,7 @@ STRINGTABLE
 BEGIN
     IDS_ACKTITLE         "Annerkjennelser"
     IDS_ACKSUBTITLE      "Skuldrene ReactOS står på og lisens informasjon"
-    IDS_OWNERTITLE       "Personaliserer dine Programmer"
+    IDS_OWNERTITLE       "Personaliserer dine programmer"
     IDS_OWNERSUBTITLE    "Installasjonen bruker denne informasjonen om deg selv for å personalisere ReactOS."
     IDS_COMPUTERTITLE    "Datamaskin navn og Administrator passord"
     IDS_COMPUTERSUBTITLE "Du må angi et navn og et administrator passord for din datamaskin."

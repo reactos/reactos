@@ -166,7 +166,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Om Oppgavebehandling"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL         "Oppgavebehandler v1.0\nCopyright (C) 1999 - 2001\nby Brian Palmer (brianp@reactos.org)",
+    CONTROL         "Oppgavebehandler v1.0\nEnerett (C) 1999 - 2001\nav Brian Palmer (brianp@reactos.org)",
                     IDC_STATIC,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,53,28,
                     122,26
     DEFPUSHBUTTON   "OK",IDOK,183,189,44,14,WS_GROUP
@@ -602,7 +602,7 @@ BEGIN
     ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
                             "Sett prosess til NEDENFOR NORMAL prioritet klasse"
     ID_PROCESS_PAGE_SETPRIORITY_LOW "Sett prosess til LAV prioritet klasse"
-    IDS_LICENSE             "Dette programet er gratis programvare; you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation; either version 2.1 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA."
+    IDS_LICENSE             "Dette programmet er gratis programvare; du kan distribuere det og/eller endre det under betingelsene av GNU General Public License som er utgitt av Free Software Foundation;  version 2 av lisensen, eller (etter din mening) alle senere versjoner.\r\n\r\nDette programmet er utgitt i håp for at det skal kunne brukes, men DET ER INGEN GARANTIER; uten heller forutsatt garantier av SALGBARHET eller SIKKETHET FOR EN ENKELTHET FORMÅL.  Se på GNU General Public Lisensen for mere detaljer.\r\n\r\nDu skal ha motatt en kopi av GNU General Public Lisensen sammen med denne programmet; hvis du ikke har motatt det, skriv til Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
 END
 
 
@@ -660,9 +660,9 @@ BEGIN
     IDS_MSG_UNABLETERMINATEPRO    "Ikke i stand til å avslutte prosess"
     IDS_MSG_UNABLECHANGEPRIORITY  "Ikke i stand til endre prioritet"
     IDS_MSG_WARNINGCHANGEPRIORITY "ADVARSEL: Endring av prioritet klasse av denne prosess kan\nforutsake uønsket resultat inkluderer systemet kan bli ustabilt. Er du\nsikker på at du vil endre prioritet klassen?"
-    IDS_MSG_TRAYICONCPUUSAGE      "Bruk av CPU: %d%%"
+    IDS_MSG_TRAYICONCPUUSAGE      "Prosessorbruk: %d%%"
     IDS_STATUS_MEMUSAGE           "Tildelt minne: %dK / %dK"
-    IDS_STATUS_CPUUSAGE           "Bruk av CPU: %3d%%"
+    IDS_STATUS_CPUUSAGE           "Prosessorbruk: %3d%%"
     IDS_STATUS_PROCESSES          "Prosesser: %d"
     IDS_Not_Responding            "Ingen reaksjon"
     IDS_Running                   "Kjører"  

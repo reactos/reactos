@@ -271,33 +271,33 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Generielt"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-	EDITTEXT 14001, 40, 20, 190, 14, ES_LEFT|WS_BORDER|WS_GROUP
+	EDITTEXT 14000, 40, 20, 190, 14, ES_LEFT|WS_BORDER|WS_GROUP
 	LTEXT "Type:", -1, 15, 55, 40, 10
-	LTEXT "", 14002, 110, 55, 100, 10
+	LTEXT "", 14001, 110, 55, 100, 10
 
 	LTEXT "Filsystem:", -1, 15, 70, 100, 10
-	LTEXT "", 14003, 110, 70, 100, 10
+	LTEXT "", 14002, 110, 70, 100, 10
 
-	CONTROL "", 14013, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 90, 10, 10
+	CONTROL "", 14003, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 90, 10, 10
 	LTEXT "Brukt plass:", -1, 25, 90, 120, 10
 	LTEXT "", 14004, 110, 90, 120, 10
 	LTEXT "", 14005, 200, 90, 40, 10
 
-	CONTROL "", 14014, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 105, 10, 10
+	CONTROL "", 14006, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 105, 10, 10
 	LTEXT "Ledig plass:", -1, 25, 105, 70, 10
-	LTEXT "", 14006, 110, 105, 120, 10
-	LTEXT "", 14007, 200, 105, 40, 10
+	LTEXT "", 14007, 110, 105, 120, 10
+	LTEXT "", 14008, 200, 105, 40, 10
 
 	LTEXT "Kapasitet:", -1, 25, 125, 80, 10
-	LTEXT "", 14008, 110, 125, 120, 10
-	LTEXT "", 14009, 200, 125, 40, 10
+	LTEXT "", 14009, 110, 125, 120, 10
+	LTEXT "", 14010, 200, 125, 40, 10
 
-	CONTROL "", 14015, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 20, 140, 200, 20
+	CONTROL "", 14011, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 20, 140, 200, 20
 
-	LTEXT "Stasjon %s", 14010, 100, 170, 40, 10
-	PUSHBUTTON "Diskoppryding", 14011, 180, 175, 50, 15, WS_TABSTOP
-	CHECKBOX "Komprimer denne stasjonen for å frigjøre diskplass", 14012, 15, 205, 180, 10, WS_DISABLED
-	CHECKBOX "Indekser denne stasjonen for raskere søking", 14012, 15, 220, 200, 10, WS_DISABLED
+	LTEXT "Stasjon %s", 14012, 100, 170, 40, 10
+	PUSHBUTTON "Diskoppryding", 14013, 180, 175, 50, 15, WS_TABSTOP
+	CHECKBOX "Komprimer denne stasjonen for å frigjøre diskplass", 14014, 15, 205, 180, 10, WS_DISABLED
+	CHECKBOX "Indekser denne stasjonen for raskere søking", 14015, 15, 220, 200, 10, WS_DISABLED
 END
 
 DRIVE_EXTRA_DLG DIALOGEX 0, 0, 240, 230
@@ -389,11 +389,11 @@ BEGIN
 	AUTORADIOBUTTON "Åpne hver mapper i sitt egen &vindu", 14005, 40, 82, 140, 10, WS_TABSTOP | WS_GROUP
 	GROUPBOX "Klikk enheter som følgende", -1, 7, 110, 249, 60
 	ICON "", 30111, 14, 120, 21, 20, SS_REALSIZECONTROL
-	AUTORADIOBUTTON "&Enkelt-klikk for å åpne en enhet (peker for å velge)", 14007, 40, 120, 170, 10, WS_TABSTOP | WS_GROUP
-	AUTORADIOBUTTON "Utheve ikon titteler konsekvent med min &utforsker", 14008, 50, 132, 170, 10, WS_TABSTOP | WS_GROUP
-	AUTORADIOBUTTON "UUtheve ikon titteler bare mens jeg &peker på de", 14009, 50, 144, 170, 10, WS_TABSTOP | WS_GROUP
-	AUTORADIOBUTTON "&Dobbelt klikk for å åpne enheten (Enkelt-klikk for å velge)", 14010, 40, 156, 170, 10, WS_TABSTOP | WS_GROUP
-	PUSHBUTTON "&Gjenopprette standard", 14011, 180, 180, 60, 14, WS_TABSTOP
+	AUTORADIOBUTTON "&Enkelt-klikk for å åpne en enhet (peker for å velge)", 14007, 40, 120, 190, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Understrek ikon titteler konsekvent med min &utforsker", 14008, 50, 132, 190, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Understrek ikon titteler bare mens jeg &peker på dem", 14009, 50, 144, 190, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "&Dobbelt klikk for å åpne enheten (Enkelt-klikk for å velge)", 14010, 40, 156, 194, 10, WS_TABSTOP | WS_GROUP
+	PUSHBUTTON "&Bruk standard", 14011, 180, 180, 60, 14, WS_TABSTOP
 END
 
 FOLDER_OPTIONS_VIEW_DLG DIALOGEX 0, 0, 264, 256
@@ -425,7 +425,7 @@ LTEXT "Åpne med:", -1, 12, 140, 40, 10
 //ICON
 LTEXT "Appname", 14005, 100, 140, 40, 10
 PUSHBUTTON "&Endre...", 14006, 180, 140, 50, 14, WS_TABSTOP
-LTEXT "Filer med utvidelser '%s' are of type '%s'. To\nchange settings that affect all '%s' files, click\nAdvanced.", 14007, 12, 155, 160, 30
+LTEXT "Filer med utvidelser '%s' er av typen '%s'. For å\nendre innstillingene som er av filen '%s', trykk på\navansert.", 14007, 12, 155, 160, 30
 PUSHBUTTON "Av&ansert", 14008, 180, 175, 50, 14, WS_TABSTOP
 END
 

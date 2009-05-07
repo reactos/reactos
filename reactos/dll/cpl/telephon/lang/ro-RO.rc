@@ -1,0 +1,7 @@
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE 
+BEGIN
+	IDS_CPLSYSTEMNAME "Opþiuni telefon ºi modem"
+	IDS_CPLSYSTEMDESCRIPTION "Configureazã regulile de apelare telefonicã ºi setãrile pentru modem."
+END

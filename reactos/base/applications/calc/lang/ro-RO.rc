@@ -1,5 +1,4 @@
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
-#pragma code_page(65001)
 
 // Dialog
 
@@ -123,7 +122,7 @@ BEGIN
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     PUSHBUTTON      "E",IDC_BUTTON_E,262,140,24,17,BS_CENTER | BS_VCENTER | 
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
-    PUSHBUTTON      "Åži",IDC_BUTTON_AND,288,64,24,17,BS_CENTER | BS_VCENTER | 
+    PUSHBUTTON      "ªi",IDC_BUTTON_AND,288,64,24,17,BS_CENTER | BS_VCENTER | 
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     PUSHBUTTON      "Xor",IDC_BUTTON_XOR,288,83,24,17,BS_CENTER | BS_VCENTER | 
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
@@ -152,7 +151,7 @@ BEGIN
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     PUSHBUTTON      "CE",IDC_BUTTON_CE,228,40,40,17,BS_CENTER | BS_VCENTER | 
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
-    PUSHBUTTON      "ÃŽnapoi",IDC_BUTTON_BACK,184,40,40,17,BS_CENTER | 
+    PUSHBUTTON      "Înapoi",IDC_BUTTON_BACK,184,40,40,17,BS_CENTER | 
                     BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     RTEXT           "",IDC_TEXT_OUTPUT,4,4,308,12,SS_CENTERIMAGE,
                     WS_EX_CLIENTEDGE
@@ -169,7 +168,7 @@ BEGIN
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     PUSHBUTTON      "CE",IDC_BUTTON_CE,84,24,40,17,BS_CENTER | BS_VCENTER | 
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
-    PUSHBUTTON      "ÃŽnapoi",IDC_BUTTON_BACK,40,24,40,17,BS_CENTER | 
+    PUSHBUTTON      "Înapoi",IDC_BUTTON_BACK,40,24,40,17,BS_CENTER | 
                     BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     RTEXT           "",IDC_TEXT_OUTPUT,4,4,164,12,SS_CENTERIMAGE,
                     WS_EX_CLIENTEDGE
@@ -246,7 +245,7 @@ BEGIN
                     BS_VCENTER | BS_NOTIFY | WS_TABSTOP,276,24,40,17
     CONTROL         "CE",IDC_BUTTON_CE,"Button",BS_OWNERDRAW | BS_CENTER | 
                     BS_VCENTER | BS_NOTIFY | WS_TABSTOP,232,24,40,17
-    CONTROL         "ÃŽnapoi",IDC_BUTTON_BACK,"Button",BS_OWNERDRAW | 
+    CONTROL         "Înapoi",IDC_BUTTON_BACK,"Button",BS_OWNERDRAW | 
                     BS_CENTER | BS_VCENTER | BS_NOTIFY | WS_TABSTOP,188,24,
                     40,17
     RTEXT           "",IDC_TEXT_OUTPUT,4,4,312,12,SS_CENTERIMAGE,
@@ -350,7 +349,7 @@ BEGIN
     POPUP "Vizualizare"
     BEGIN
         MENUITEM "Standard",                    IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "ÅžtiinÅ£ific",                  IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "ªtiinþific",                  IDM_VIEW_SCIENTIFIC, CHECKED
         MENUITEM "Conversie",                  IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "Hex\tF5",                     IDM_VIEW_HEX, CHECKED
@@ -382,7 +381,7 @@ BEGIN
     POPUP "Vizualizare"
     BEGIN
         MENUITEM "Standard",                    IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "ÅžtiinÅ£ific",                  IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "ªtiinþific",                  IDM_VIEW_SCIENTIFIC, CHECKED
         MENUITEM "Conversie",                  IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "Hex\tF5",                     IDM_VIEW_HEX, CHECKED
@@ -415,7 +414,7 @@ BEGIN
     POPUP "Vizualizare"
     BEGIN
         MENUITEM "Standard",                    IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "ÅžtiinÅ£ific",                  IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "ªtiinþific",                  IDM_VIEW_SCIENTIFIC, CHECKED
         MENUITEM "Conversie",                  IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "Grupare cifre",                IDM_VIEW_GROUP, CHECKED
@@ -432,7 +431,7 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_STRING_LICENSE      "ReactOS Calc este software liber sub licenÅ£a GNU GPL. \r\n\r\nGÄƒsiÅ£i o copie a acestei licenÅ£e aici:\r\nhttp://www.gnu.org/licenses/gpl.html\r\n\r\nDe asemenea gÄƒsiÅ£i traduceri ale aceste licenÅ£e aici:\r\nhttp://www.gnu.org/licenses/translations.html\r\nTraducerea Ã®n limba romÃ¢nÄƒ de Petru Dimitriu."
+    IDS_STRING_LICENSE      "ReactOS Calc este software liber sub licenþa GNU GPL. \r\n\r\nGãsiþi o copie a acestei licenþe aici:\r\nhttp://www.gnu.org/licenses/gpl.html\r\n\r\nDe asemenea gãsiþi traduceri ale aceste licenþe aici:\r\nhttp://www.gnu.org/licenses/translations.html\r\nTraducerea în limba românã de Petru Dimitriu."
     IDS_MATH_ERROR          "Eroare"
     IDS_QUICKHELP           "Ajutor rapid"
 END
@@ -441,18 +440,18 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_CONV_ANGLE          "Unghi"
-    IDS_CONV_AREA           "SuprafaÅ£Äƒ"
+    IDS_CONV_AREA           "Suprafaþã"
     IDS_CONV_CONSUMPTION    "Consum (motoare)"
-    IDS_CONV_CURRENCY       "ValutÄƒ"
+    IDS_CONV_CURRENCY       "Valutã"
     IDS_CONV_ENERGY         "Energie"
     IDS_CONV_LENGTH         "Lungimi"
     IDS_CONV_POWER          "Putere"
     IDS_CONV_PRESSURE       "Presiune"
-    IDS_CONV_TEMPERATURE    "TemperaturÄƒ"
+    IDS_CONV_TEMPERATURE    "Temperaturã"
     IDS_CONV_TIME           "Timp"
     IDS_CONV_VELOCITY       "Velocitate"
     IDS_CONV_VOLUME         "Volum"
-    IDS_CONV_WEIGHT         "MasÄƒ"
+    IDS_CONV_WEIGHT         "Masã"
 END
 
 // TYPES OF ANGLES
@@ -468,7 +467,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_AREA_ACRES                  "Acri"
     IDS_AREA_ACRES_BRAZIL           "Acri (Brazilia)"
-    IDS_AREA_ACRES_FRANCE           "Acri (FranÅ£a)"
+    IDS_AREA_ACRES_FRANCE           "Acri (Franþa)"
     IDS_AREA_ACRES_SCOTS            "Acri (Scots)"
     IDS_AREA_ACRES_US               "Acri (SUA)"
     IDS_AREA_ARES                   "Ares"
@@ -483,21 +482,21 @@ BEGIN
     IDS_AREA_PYEONGBANGJA           "Pyeongbangja"
     IDS_AREA_RAI                    "Rai"
     IDS_AREA_SE                     "Se"
-    IDS_AREA_SQUARE_CENTIMETERS     "Centimetri pÄƒtraÅ£i"
-    IDS_AREA_SQUARE_CHR             "Chr pÄƒtraÅ£i"
-    IDS_AREA_SQUARE_FATHOMS         "Fathomi pÄƒtraÅ£i"
-    IDS_AREA_SQUARE_FATHOMS_HUNGARY "Fathomi pÄƒtraÅ£i (Ungaria)"
-    IDS_AREA_SQUARE_FEET            "Picioare pÄƒtrate"
-    IDS_AREA_SQUARE_INCHES          "Å¢oli pÄƒtraÅ£i"
-    IDS_AREA_SQUARE_KILOMETERS      "Kilometri pÄƒtraÅ£i"
-    IDS_AREA_SQUARE_LAR             "Lar pÄƒtraÅ£i"
-    IDS_AREA_SQUARE_METER           "Metri pÄƒtraÅ£i"
-    IDS_AREA_SQUARE_MILES           "Mile pÄƒtrate"
-    IDS_AREA_SQUARE_MILLIMETERS     "Milimetri pÄƒtraÅ£i"
-    IDS_AREA_SQUARE_SHAKU           "Shaku pÄƒtraÅ£i"
-    IDS_AREA_SQUARE_TSUEN           "Tsuen pÄƒtraÅ£i"
-    IDS_AREA_SQUARE_VA              "Va pÄƒtraÅ£i"
-    IDS_AREA_SQUARE_YARD            "Yarzi pÄƒtraÅ£i"
+    IDS_AREA_SQUARE_CENTIMETERS     "Centimetri pãtraþi"
+    IDS_AREA_SQUARE_CHR             "Chr pãtraþi"
+    IDS_AREA_SQUARE_FATHOMS         "Fathomi pãtraþi"
+    IDS_AREA_SQUARE_FATHOMS_HUNGARY "Fathomi pãtraþi (Ungaria)"
+    IDS_AREA_SQUARE_FEET            "Picioare pãtrate"
+    IDS_AREA_SQUARE_INCHES          "Þoli pãtraþi"
+    IDS_AREA_SQUARE_KILOMETERS      "Kilometri pãtraþi"
+    IDS_AREA_SQUARE_LAR             "Lar pãtraþi"
+    IDS_AREA_SQUARE_METER           "Metri pãtraþi"
+    IDS_AREA_SQUARE_MILES           "Mile pãtrate"
+    IDS_AREA_SQUARE_MILLIMETERS     "Milimetri pãtraþi"
+    IDS_AREA_SQUARE_SHAKU           "Shaku pãtraþi"
+    IDS_AREA_SQUARE_TSUEN           "Tsuen pãtraþi"
+    IDS_AREA_SQUARE_VA              "Va pãtraþi"
+    IDS_AREA_SQUARE_YARD            "Yarzi pãtraþi"
     IDS_AREA_TAN                    "Tan"
     IDS_AREA_TSUBO                  "Tsubo"
 END
@@ -514,48 +513,48 @@ END
 // TYPES OF CURRENCIES
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_CURRENCY_AUSTRIAN_SCHILLING "Åžiling autriac"
+    IDS_CURRENCY_AUSTRIAN_SCHILLING "ªiling autriac"
     IDS_CURRENCY_BELGIAN_FRANC      "Franc belgian"
-    IDS_CURRENCY_CYPRIOT_POUND      "LirÄƒ cipriotÄƒ"
-    IDS_CURRENCY_CZECH_KORUNA       "CoroanÄƒ cehÄƒ"
-    IDS_CURRENCY_DEUTSCHE_MARK      "MarcÄƒ nemÅ£eascÄƒ"
+    IDS_CURRENCY_CYPRIOT_POUND      "Lirã cipriotã"
+    IDS_CURRENCY_CZECH_KORUNA       "Coroanã cehã"
+    IDS_CURRENCY_DEUTSCHE_MARK      "Marcã nemþeascã"
     IDS_CURRENCY_DUTCH_GUILDER      "Guilder olandez"
     IDS_CURRENCY_EURO               "Euro"
-    IDS_CURRENCY_FINNISH_MARKKA     "MarcÄƒ finlandezÄƒ"
+    IDS_CURRENCY_FINNISH_MARKKA     "Marcã finlandezã"
     IDS_CURRENCY_FRENCH_FRANC       "Franc framcez"
-    IDS_CURRENCY_GREEK_DRACHMA      "DrahmÄƒ greceascÄƒ"
-    IDS_CURRENCY_IRISH_POUND        "LirÄƒ irlandezÄƒ"
-    IDS_CURRENCY_ITALIAN_LIRA       "LirÄƒ italianÄƒ"
+    IDS_CURRENCY_GREEK_DRACHMA      "Drahmã greceascã"
+    IDS_CURRENCY_IRISH_POUND        "Lirã irlandezã"
+    IDS_CURRENCY_ITALIAN_LIRA       "Lirã italianã"
     IDS_CURRENCY_LUXEMBOURG_FRANC   "Franc luxemburghez"
-    IDS_CURRENCY_MALTESE_LIRA       "LitrÄƒ maltezÄƒ"
+    IDS_CURRENCY_MALTESE_LIRA       "Litrã maltezã"
     IDS_CURRENCY_PORTOGUESE_ESCUDO  "Escudo portughez"
-    IDS_CURRENCY_SLOVAK_KORUNA      "CoroanÄƒ slovacÄƒ"
+    IDS_CURRENCY_SLOVAK_KORUNA      "Coroanã slovacã"
     IDS_CURRENCY_SLOVENIAN_TOLAR    "Tolar sloven"
-    IDS_CURRENCY_SPANISH_PESETA     "Peseta spaniolÄƒ"
+    IDS_CURRENCY_SPANISH_PESETA     "Peseta spaniolã"
 END
 
 // TYPES OF ENERGIES
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_ENERGY_15_C_CALORIES        "Calorii 15 Â°C"
-    IDS_ENERGY_BTUS                 "UnitÄƒÅ£i termale britanice"
+    IDS_ENERGY_15_C_CALORIES        "Calorii 15 °C"
+    IDS_ENERGY_BTUS                 "Unitãþi termale britanice"
     IDS_ENERGY_ERGS                 "Ergs"
-    IDS_ENERGY_EVS                  "Electron-VolÅ£i"
-    IDS_ENERGY_FOOT_POUNDS          "Picioare-LivrÄƒ"
-    IDS_ENERGY_IT_CALORIES          "Calorii Tabel InternaÅ£ional"
-    IDS_ENERGY_IT_KILOCALORIES      "Kilocalorii Tabel InternaÅ£ional"
+    IDS_ENERGY_EVS                  "Electron-Volþi"
+    IDS_ENERGY_FOOT_POUNDS          "Picioare-Livrã"
+    IDS_ENERGY_IT_CALORIES          "Calorii Tabel Internaþional"
+    IDS_ENERGY_IT_KILOCALORIES      "Kilocalorii Tabel Internaþional"
     IDS_ENERGY_JOULES               "Jouli"
     IDS_ENERGY_KILOJOULES           "KiloJouli"
     IDS_ENERGY_KILOWATT_HOURS       "Kilowatt ore"
-    IDS_ENERGY_NUTRITION_CALORIES   "Calorii nutriÅ£ie"
-    IDS_ENERGY_TH_CALORIES          "Calorie termochimicÄƒ"
+    IDS_ENERGY_NUTRITION_CALORIES   "Calorii nutriþie"
+    IDS_ENERGY_TH_CALORIES          "Calorie termochimicã"
 END
 
 // TYPES OF LENGTHS
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_LENGTH_ANGSTROMS            "Ã…ngstrÃ¶ms"
-    IDS_LENGTH_ASTRONOMICAL_UNITS   "UnitÄƒÅ£i astronomice"
+    IDS_LENGTH_ANGSTROMS            "Angströms"
+    IDS_LENGTH_ASTRONOMICAL_UNITS   "Unitãþi astronomice"
     IDS_LENGTH_BARLEYCORNS          "Barleycorns"
     IDS_LENGTH_CENTIMETERS          "Centimetri"
     IDS_LENGTH_CHAINS_UK            "Chains (Marea Britanie)"
@@ -570,7 +569,7 @@ BEGIN
     IDS_LENGTH_GAN                  "Gan"
     IDS_LENGTH_HANDS                "Hands"
     IDS_LENGTH_HUNH                 "Hunh"
-    IDS_LENGTH_INCHES               "Incii (Å¢oli)"
+    IDS_LENGTH_INCHES               "Incii (Þoli)"
     IDS_LENGTH_JA                   "Ja"
     IDS_LENGTH_JEONG                "Jeong"
     IDS_LENGTH_KABIET               "Kabiet"
@@ -578,7 +577,7 @@ BEGIN
     IDS_LENGTH_KEUB                 "Keub"
     IDS_LENGTH_KILOMETERS           "Kilometeri"
     IDS_LENGTH_LAR                  "Lar"
-    IDS_LENGTH_LIGHT_YEARS          "Ani luminÄƒ"
+    IDS_LENGTH_LIGHT_YEARS          "Ani luminã"
     IDS_LENGTH_LINKS_UK             "Links (Marea Britanie)"
     IDS_LENGTH_METERS               "Metri"
     IDS_LENGTH_MICRONS              "Microni"
@@ -606,12 +605,12 @@ END
 // TYPES OF POWERS
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_POWER_BTUS_PER_MINUTE       "UnitÄƒÅ£i termice britanice pe minut"
+    IDS_POWER_BTUS_PER_MINUTE       "Unitãþi termice britanice pe minut"
     IDS_POWER_FPS_PER_MINUTE        "Picior-livre pe minut"
     IDS_POWER_HORSEPOWER            "Cai putere"
-    IDS_POWER_KILOWATTS             "KilowaÅ£i"
-    IDS_POWER_MEGAWATTS             "MegawaÅ£i"
-    IDS_POWER_WATTS                 "WaÅ£i"
+    IDS_POWER_KILOWATTS             "Kilowaþi"
+    IDS_POWER_MEGAWATTS             "Megawaþi"
+    IDS_POWER_WATTS                 "Waþi"
 END
 
 // TYPE OF PRESSURES
@@ -621,9 +620,9 @@ BEGIN
     IDS_PRESSURE_BARS               "Bari"
     IDS_PRESSURE_HECTOPASCALS       "Hectopascali"
     IDS_PRESSURE_KILOPASCALS        "Kilopascali"
-    IDS_PRESSURE_MM_OF_MERCURY      "Milimetri coloanÄƒ de mercur"
+    IDS_PRESSURE_MM_OF_MERCURY      "Milimetri coloanã de mercur"
     IDS_PRESSURE_PASCALS            "Pascali"
-    IDS_PRESSURE_PSI                "Livre-forÅ£Äƒ pe Å£ol pÄƒtrat"
+    IDS_PRESSURE_PSI                "Livre-forþã pe þol pãtrat"
 END
 
 // TYPES OF TEMPERATURES
@@ -644,21 +643,21 @@ BEGIN
     IDS_TIME_MILLISECONDS "Milisecunde"
     IDS_TIME_MINUTES      "Minute"
     IDS_TIME_SECONDS      "Secunde"
-    IDS_TIME_WEEKS        "SÄƒptÄƒmÃ¢ni"
+    IDS_TIME_WEEKS        "Sãptãmâni"
     IDS_TIME_YEARS        "Ani"
 END
 
 // TYPES OF VELOCITIES
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_VELOCITY_CMS_SECOND         "Centimetri/orÄƒ"
-    IDS_VELOCITY_FEET_HOUR          "Picioare/orÄƒ"
-    IDS_VELOCITY_FEET_SECOND        "Picioare/secundÄƒ"
+    IDS_VELOCITY_CMS_SECOND         "Centimetri/orã"
+    IDS_VELOCITY_FEET_HOUR          "Picioare/orã"
+    IDS_VELOCITY_FEET_SECOND        "Picioare/secundã"
     IDS_VELOCITY_KILOMETERS_HOUR    "Kilometri/ore"
     IDS_VELOCITY_KNOTS              "Nod"
     IDS_VELOCITY_MACH               "Mach"
-    IDS_VELOCITY_METERS_SECOND      "Metri/secundÄƒ"
-    IDS_VELOCITY_MILES_HOUR         "Mile/orÄƒ"
+    IDS_VELOCITY_METERS_SECOND      "Metri/secundã"
+    IDS_VELOCITY_MILES_HOUR         "Mile/orã"
 END
 
 // TYPES OF VOLUMES
@@ -671,7 +670,7 @@ BEGIN
     IDS_VOLUME_BUSHELS_US           "Bushels (SUA)"
     IDS_VOLUME_CUBIC_CENTIMETERS    "Centrimetri cubi"
     IDS_VOLUME_CUBIC_FEET           "Picioare^3"
-    IDS_VOLUME_CUBIC_INCHES         "Å¢oli cubi"
+    IDS_VOLUME_CUBIC_INCHES         "Þoli cubi"
     IDS_VOLUME_CUBIC_METERS         "Metri cubi"
     IDS_VOLUME_CUBIC_YARDS          "Yarzi cubi"
     IDS_VOLUME_DOE                  "Doe"
@@ -730,5 +729,3 @@ BEGIN
     IDS_WEIGHT_TONS_UK              "Tone (Marea Britanie)"
     IDS_WEIGHT_TONS_US              "Tone (SUA)"
 END
-
-#pragma code_page(default)

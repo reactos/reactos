@@ -153,7 +153,7 @@ CAPTION "Rulare"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
-	LTEXT "Scrieþi numele unui program, dosar, document sau a unei resurse de Internet iar ReactOS le va deschide pentru dumneavoastrã.", 12289, 36, 11, 182, 18
+	LTEXT "Scrieþi numele unui program, dosar, document sau a unei resurse de Internet iar ReactOS le va deschide imediat.", 12289, 36, 11, 182, 18
 	LTEXT "&Deschidere:", 12305, 7, 39, 24, 10
 	CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
 	DEFPUSHBUTTON "OK", IDOK, 36, 63, 59, 14, WS_TABSTOP
@@ -271,33 +271,33 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "General"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-	EDITTEXT 14001, 40, 20, 190, 14, ES_LEFT|WS_BORDER|WS_GROUP
+	EDITTEXT 14000, 40, 20, 190, 14, ES_LEFT|WS_BORDER|WS_GROUP
 	LTEXT "Tip:", -1, 15, 55, 40, 10
-	LTEXT "", 14002, 110, 55, 100, 10
+	LTEXT "", 14001, 110, 55, 100, 10
 
 	LTEXT "Sistem de fiºiere:", -1, 15, 70, 100, 10
-	LTEXT "", 14003, 110, 70, 100, 10
+	LTEXT "", 14002, 110, 70, 100, 10
 
-	CONTROL "", 14013, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 90, 10, 10
+	CONTROL "", 14003, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 90, 10, 10
 	LTEXT "Spaþiu folosit:", -1, 25, 90, 120, 10
 	LTEXT "", 14004, 110, 90, 120, 10
 	LTEXT "", 14005, 200, 90, 40, 10
 
-	CONTROL "", 14014, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 105, 10, 10
+	CONTROL "", 14006, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 105, 10, 10
 	LTEXT "Spaþiu liber:", -1, 25, 105, 70, 10
-	LTEXT "", 14006, 110, 105, 120, 10
-	LTEXT "", 14007, 200, 105, 40, 10
+	LTEXT "", 14007, 110, 105, 120, 10
+	LTEXT "", 14008, 200, 105, 40, 10
 
 	LTEXT "Capacitate:", -1, 25, 125, 80, 10
-	LTEXT "", 14008, 110, 125, 120, 10
-	LTEXT "", 14009, 200, 125, 40, 10
+	LTEXT "", 14009, 110, 125, 120, 10
+	LTEXT "", 14010, 200, 125, 40, 10
 
-	CONTROL "", 14015, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 20, 140, 200, 20
+	CONTROL "", 14011, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 20, 140, 200, 20
 
-	LTEXT "Partiþie %s", 14010, 100, 170, 40, 10
-	PUSHBUTTON "Curãþire disc", 14011, 180, 175, 50, 15, WS_TABSTOP
-	CHECKBOX "Comprimare pentru a salva spaþiu", 14012, 15, 205, 180, 10, WS_DISABLED
-	CHECKBOX "Permitere Serviciu de Indexare pentru cãutare rapidã", 14012, 15, 220, 200, 10, WS_DISABLED
+	LTEXT "Partiþie %s", 14012, 100, 170, 40, 10
+	PUSHBUTTON "Curãþire disc", 14013, 180, 175, 50, 15, WS_TABSTOP
+	CHECKBOX "Comprimare pentru a salva spaþiu", 14014, 15, 205, 180, 10, WS_DISABLED
+	CHECKBOX "Permitere Serviciu de Indexare pentru cãutare rapidã", 14015, 15, 220, 200, 10, WS_DISABLED
 END
 
 DRIVE_EXTRA_DLG DIALOGEX 0, 0, 240, 230
@@ -346,7 +346,7 @@ END
 
 BITBUCKET_PROPERTIES_DLG DIALOGEX 0, 0, 240, 190
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Proprietãþi pentru Coºul de reciclare"
+CAPTION "Proprietãþi pentru Gunoi"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 10, 10, 220, 50
@@ -391,7 +391,7 @@ BEGIN
 	ICON "", 30111, 14, 120, 21, 20, SS_REALSIZECONTROL
 	AUTORADIOBUTTON "&Clic pentru deschidere (cursor deasupra pt. a selecta)", 14007, 40, 120, 170, 10, WS_TABSTOP | WS_GROUP
 	AUTORADIOBUTTON "Subliniere titluri pictograme precum în navigatorul meu", 14008, 50, 132, 170, 10, WS_TABSTOP | WS_GROUP
-	AUTORADIOBUTTON "Subliniere titluri pictograme când þin cursorul deasupra", 14009, 50, 144, 170, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Subliniere titluri când þin cursorul deasupra", 14009, 50, 144, 170, 10, WS_TABSTOP | WS_GROUP
 	AUTORADIOBUTTON "&Dublu-clic pentru a deschide (clic pt. a selecta)", 14010, 40, 156, 170, 10, WS_TABSTOP | WS_GROUP
 	PUSHBUTTON "&Restabilire implicite", 14011, 180, 180, 60, 14, WS_TABSTOP
 END
@@ -474,21 +474,21 @@ END
 
 AUTOPLAY1_DLG DIALOGEX 0, 0, 227, 218
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CAPTION
-CAPTION "AutoPlay"
+CAPTION "AutoRulare"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "&Select a content type, then choose an action for ReactOS to perform automatically when that type is used in this device:", 1000, 7, 7, 215, 20
+	LTEXT "&Alegeþi un tip de conþinut ºi acþiunea pe care ReactOS sã o îndeplineascã:", 1000, 7, 7, 215, 20
 	CONTROL "", 1001, "COMBOBOXEX32", WS_TABSTOP | 0x00000043, 7, 27, 212, 200
-	GROUPBOX "Actions", -1, 7, 45, 212, 146
-	AUTORADIOBUTTON "Select an action to &perform:", 1005, 14, 54, 202, 10, WS_GROUP
+	GROUPBOX "Acþiuni", -1, 7, 45, 212, 146
+	AUTORADIOBUTTON "Alegeþi o acþiune:", 1005, 14, 54, 202, 10, WS_GROUP
 	CONTROL "LIST2", 1002, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 22, 66, 192, 107
-	AUTORADIOBUTTON "Prompt me each time to &choose an action", 1006, 14, 177, 202, 10
-	PUSHBUTTON "&Restore Defaults", 1008, 108, 197, 110, 14, WS_DISABLED
+	AUTORADIOBUTTON "Vreau sã fiu întrebat mereu", 1006, 14, 177, 202, 10
+	PUSHBUTTON "&Restabilire implicite", 1008, 108, 197, 110, 14, WS_DISABLED
 END
 
 MIXED_CONTENT1_DLG DIALOGEX 0, 0, 227, 207
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CAPTION
-CAPTION "Mixed Content"
+CAPTION "Conþinut mixt"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", 1000, 5, 7, 21, 20
@@ -517,7 +517,7 @@ END
 
 AUTOPLAY2_DLG DIALOGEX 0, 0, 227, 181
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CAPTION
-CAPTION "Autoplay"
+CAPTION "Autorulare"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", 1000, 5, 7, 21, 20
@@ -668,36 +668,36 @@ BEGIN
 	IDS_SHUTDOWN_PROMPT         "Vreþi sã închideþi computerul?"
 
 	/* shell folder path default values */
-	IDS_PROGRAMS                "Start Menu\\Programs"
-	IDS_PERSONAL                "My Documents"
-	IDS_FAVORITES               "Favorites"
-	IDS_STARTUP                 "Start Menu\\Programs\\StartUp"
-	IDS_RECENT                  "Recent"
-	IDS_SENDTO                  "SendTo"
-	IDS_STARTMENU               "Start Menu"
-	IDS_MYMUSIC                 "My Music"
-	IDS_MYVIDEO                 "My Videos"
-	IDS_DESKTOPDIRECTORY        "Desktop"
+	IDS_PROGRAMS                "Meniu Start\\Programe"
+	IDS_PERSONAL                "Documentele mele"
+	IDS_FAVORITES               "Favorite"
+	IDS_STARTUP                 "Meniu Start\\Programe\\StartUp"
+	IDS_RECENT                  "Recente"
+	IDS_SENDTO                  "TrimitereLa"
+	IDS_STARTMENU               "Meniu Start"
+	IDS_MYMUSIC                 "Muzica mea"
+	IDS_MYVIDEO                 "Filmele Mele"
+	IDS_DESKTOPDIRECTORY        "Spaþiu de lucru"
 	IDS_NETHOOD                 "NetHood"
-	IDS_TEMPLATES               "Templates"
-	IDS_APPDATA                 "Application Data"
+	IDS_TEMPLATES               "Modele"
+	IDS_APPDATA                 "Date Aplicaþii"
 	IDS_PRINTHOOD               "PrintHood"
-	IDS_LOCAL_APPDATA           "Local Settings\\Application Data"
-	IDS_INTERNET_CACHE          "Local Settings\\Temporary Internet Files"
-	IDS_COOKIES                 "Cookies"
-	IDS_HISTORY                 "Local Settings\\History"
-	IDS_PROGRAM_FILES           "Program Files"
-	IDS_MYPICTURES              "My Pictures"
-	IDS_PROGRAM_FILES_COMMON    "Program Files\\Common Files"
-	IDS_COMMON_DOCUMENTS        "Documents"
-	IDS_ADMINTOOLS              "Start Menu\\Programs\\Administrative Tools"
-	IDS_COMMON_MUSIC            "Documents\\My Music"
-	IDS_COMMON_PICTURES         "Documents\\My Pictures"
-	IDS_COMMON_VIDEO            "Documents\\My Videos"
-	IDS_CDBURN_AREA             "Local Settings\\Application Data\\Microsoft\\CD Burning"
-	IDS_NETWORKPLACE            "My Network Places"
+	IDS_LOCAL_APPDATA           "Setãri locale\\Date Aplicaþii"
+	IDS_INTERNET_CACHE          "Setãri locale\\Fiºiere internet temporare"
+	IDS_COOKIES                 "Cookie-uri"
+	IDS_HISTORY                 "Setãri locale\\Istoric"
+	IDS_PROGRAM_FILES           "Fiºiere Program"
+	IDS_MYPICTURES              "Fotografiile mele"
+	IDS_PROGRAM_FILES_COMMON    "Fiºiere Program\\Fiºiere Comune"
+	IDS_COMMON_DOCUMENTS        "Documente"
+	IDS_ADMINTOOLS              "Meniu Start\\Programe\\Unelte administrative"
+	IDS_COMMON_MUSIC            "Documente\\Muzica mea"
+	IDS_COMMON_PICTURES         "Documente\\Fotografiile mele"
+	IDS_COMMON_VIDEO            "Documente\\Filmele mele"
+	IDS_CDBURN_AREA             "Setãri locale\\Date Aplicaþii\\Microsoft\\CD Burning"
+	IDS_NETWORKPLACE            "Locaºiile mele în reºea"
 
-	IDS_NEWFOLDER               "Dosar nou nou"
+	IDS_NEWFOLDER               "Dosar nou"
 
 	IDS_DRIVE_FIXED             "Disc local"
 	IDS_DRIVE_CDROM             "CDROM"

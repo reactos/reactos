@@ -62,7 +62,7 @@ BEGIN
     POPUP "&Hjelp"
     BEGIN
         MENUITEM "Explorer &FAQ...",            ID_EXPLORER_FAQ
-        MENUITEM "&Om Explorer...",          ID_ABOUT_EXPLORER
+        MENUITEM "&Om utforsker...",          ID_ABOUT_EXPLORER
         MENUITEM "Om &OS...",                ID_ABOUT_WINDOWS
     END
 END
@@ -94,9 +94,9 @@ BEGIN
         MENUITEM "&Vis skjulte ikoner",          ID_SHOW_HIDDEN_ICONS
         MENUITEM "Vis ikon &knapp",           ID_SHOW_ICON_BUTTON
         MENUITEM "&Konfigurere notifikasjoner...", ID_CONFIG_NOTIFYAREA
-        MENUITEM "Still Dato/&Tid...",        ID_CONFIG_TIME
+        MENUITEM "Still Dato/&tid...",        ID_CONFIG_TIME
         MENUITEM SEPARATOR
-        MENUITEM "&Om Explorer...",          ID_ABOUT_EXPLORER
+        MENUITEM "&Om Utforsker...",          ID_ABOUT_EXPLORER
     END
 END
 
@@ -198,7 +198,7 @@ BEGIN
                     BS_BOTTOM | WS_TABSTOP,110,121,46,44
     CONTROL         "",IDC_ICON_ALIGN_11,"Button",BS_OWNERDRAW | BS_BOTTOM |
                     WS_TABSTOP,159,121,46,44
-//    CONTROL         "Vis &versjonsummer",ID_DESKTOP_VERSION,"Button",
+//    CONTROL         "Vis &versjonsnummer",ID_DESKTOP_VERSION,"Button",
 //                    BS_AUTOCHECKBOX | WS_TABSTOP,7,177,91,10
 END
 
@@ -212,7 +212,7 @@ BEGIN
     CONTROL         "&Skjul inaktive notifikasjoner",
                     ID_HIDE_INACTIVE_ICONS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,174,111,10
-    PUSHBUTTON      "&Notifikasjoner...",ID_CONFIG_NOTIFYAREA,153,173,50,14
+    PUSHBUTTON      "&Notifikasjoner...",ID_CONFIG_NOTIFYAREA,153,173,58,14
 END
 
 IDD_DESKBAR_STARTMENU DIALOGEX DISCARDABLE  0, 0, 210, 194
@@ -237,13 +237,13 @@ BEGIN
     EDITTEXT        IDC_NOTIFY_TITLE,58,60,143,14,ES_AUTOHSCROLL
     LTEXT           "&Modul Mappe:",IDC_LABEL3,7,81,43,8
     EDITTEXT        IDC_NOTIFY_MODULE,58,78,143,14,ES_AUTOHSCROLL
-    GROUPBOX        "&Skjerm modus",IDC_LABEL4,7,96,157,28
-    CONTROL         "&vis",IDC_NOTIFY_SHOW,"Button",BS_AUTORADIOBUTTON |
+    GROUPBOX        "&Skjerm modus",IDC_LABEL4,7,96,194,28
+    CONTROL         "&Vis",IDC_NOTIFY_SHOW,"Button",BS_AUTORADIOBUTTON |
                     WS_TABSTOP,15,108,33,10
-    CONTROL         "&skjul",IDC_NOTIFY_HIDE,"Button",BS_AUTORADIOBUTTON,66,
+    CONTROL         "&Skjul",IDC_NOTIFY_HIDE,"Button",BS_AUTORADIOBUTTON,66,
                     108,29,10
-    CONTROL         "skjul a&utomatisk",IDC_NOTIFY_AUTOHIDE,"Button",
-                    BS_AUTORADIOBUTTON,112,108,43,10
+    CONTROL         "Skjul a&utomatisk",IDC_NOTIFY_AUTOHIDE,"Button",
+                    BS_AUTORADIOBUTTON,112,108,69,10
     ICON            "",IDC_PICTURE,173,101,21,20
     LTEXT           "&Sist endret:",IDC_LABEL6,7,132,43,8
     EDITTEXT        IDC_LAST_CHANGE,59,129,105,14,ES_AUTOHSCROLL |
