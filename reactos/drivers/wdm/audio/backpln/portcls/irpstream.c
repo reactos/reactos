@@ -142,7 +142,6 @@ IIrpQueue_fnAddMapping(
     IN PIRP Irp)
 {
     PIRP_MAPPING Mapping;
-    ULONG Index;
     IIrpQueueImpl * This = (IIrpQueueImpl*)iface;
 
     Mapping = AllocateItem(NonPagedPool, sizeof(IRP_MAPPING), TAG_PORTCLASS);
@@ -183,8 +182,7 @@ IIrpQueue_fnAddMapping(
         return STATUS_UNSUCCESSFUL;
     }
     ASSERT(Mapping->NumTags < 32);
-    for(Index = 0; Index < Mapping->NumTags; Index++);
-        Mapping->References |= (1 << Index);
+    Mapping->References = (1 << Mapping->NumTags) - 1;
 
     This->NumDataAvailable += Mapping->Header->DataUsed;
 
@@ -392,6 +390,7 @@ IIrpQueue_fnGetMappingWithTag(
     PIRP_MAPPING CurMapping;
     PLIST_ENTRY CurEntry;
     ULONG Index;
+    ULONG Value;
     IIrpQueueImpl * This = (IIrpQueueImpl*)iface;
 
     *Flags = 0;
@@ -413,7 +412,8 @@ IIrpQueue_fnGetMappingWithTag(
         CurMapping = CONTAINING_RECORD(CurEntry, IRP_MAPPING, Entry);
         for(Index = 0; Index < CurMapping->NumTags; Index++)
         {
-            if (CurMapping->Tag[Index] == NULL)
+            Value = CurMapping->References & ( 1 << Index);
+            if (CurMapping->Tag[Index] == NULL && Value)
             {
                 /* found a free mapping within audio irp */
                 GetMapping(This, Index, Tag, CurMapping, PhysicalAddress, VirtualAddress, ByteCount, Flags);
@@ -460,6 +460,7 @@ IIrpQueue_fnReleaseMappingWithTag(
             if (CurMapping->Tag[Index] == Tag)
             {
                 Found = TRUE;
+                CurMapping->Tag[Index] = NULL;
                 break;
             }
         }
