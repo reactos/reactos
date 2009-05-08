@@ -2032,6 +2032,7 @@ DECLARE_INTERFACE_(IPortClsVersion, IUnknown)
 
 typedef IPortClsVersion *PPORTCLSVERSION;
 
+#undef INTERFACE
 
 /* ===============================================================
     IDmaOperations Interface
