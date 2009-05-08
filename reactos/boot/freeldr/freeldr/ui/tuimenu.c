@@ -23,7 +23,6 @@ TuiDisplayMenu(PCSTR MenuItemList[],
                UiMenuKeyPressFilterCallback KeyPressFilter)
 {
     UI_MENU_INFO MenuInformation;
-    ULONG InitialClockSecond;
     ULONG LastClockSecond;
     ULONG CurrentClockSecond;
     ULONG KeyPress;
@@ -60,7 +59,7 @@ TuiDisplayMenu(PCSTR MenuItemList[],
     //
     // Get the current second of time
     //
-    InitialClockSecond = LastClockSecond = ArcGetRelativeTime();
+    LastClockSecond = ArcGetTime()->Second;
 
     //
     // Process keys
@@ -88,12 +87,12 @@ TuiDisplayMenu(PCSTR MenuItemList[],
         //
         // Check if there is a countdown
         //
-        if (MenuInformation.MenuTimeRemaining != -1)
+        if (MenuInformation.MenuTimeRemaining)
         {
             //
-            // Get the updated time
+            // Get the updated time, seconds only
             //
-            CurrentClockSecond = ArcGetRelativeTime();
+            CurrentClockSecond = ArcGetTime()->Second;
 
             //
             // Check if more then a second has now elapsed
@@ -104,10 +103,7 @@ TuiDisplayMenu(PCSTR MenuItemList[],
                 // Update the time information
                 //
                 LastClockSecond = CurrentClockSecond;
-                MenuInformation.MenuTimeRemaining =
-                    InitialClockSecond + MenuTimeOut - LastClockSecond;
-                if (MenuInformation.MenuTimeRemaining < 0)
-                    MenuInformation.MenuTimeRemaining = 0;
+                MenuInformation.MenuTimeRemaining--;
 
                 //
                 // Update the menu
@@ -116,7 +112,7 @@ TuiDisplayMenu(PCSTR MenuItemList[],
                 VideoCopyOffScreenBufferToVRAM();
             }
         }
-        else if (MenuInformation.MenuTimeRemaining == 0)
+        else
         {
             //
             // A time out occurred, exit this loop and return default OS
