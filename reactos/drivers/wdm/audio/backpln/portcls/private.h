@@ -63,9 +63,6 @@ NTSTATUS NewMiniportFmSynth(
     OUT PMINIPORT* OutMiniport,
     IN  REFCLSID ClassId);
 
-NTSTATUS NewPortMidi(
-    OUT PPORT* OutPort);
-
 NTSTATUS NewPortDMus(
     OUT PPORT* OutPort);
 
@@ -108,6 +105,19 @@ GetDeviceObjectFromPortWavePci(
 PMINIPORTWAVEPCI
 GetWavePciMiniport(
     PPORTWAVEPCI Port);
+
+NTSTATUS 
+NewPortFilterDMus(
+    OUT PPORTFILTERDMUS * OutFilter);
+
+NTSTATUS NewPortPinDMus(
+    OUT PPORTPINDMUS * OutPin);
+
+VOID
+GetDMusMiniport(
+    IN IPortDMus * iface, 
+    IN PMINIPORTDMUS * Miniport,
+    IN PMINIPORTMIDI * MidiMiniport);
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
 

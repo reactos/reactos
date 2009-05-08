@@ -19,6 +19,7 @@
 	<file>dma_slave.c</file>
 	<file>drm.c</file>
 	<file>drm_port.c</file>
+	<file>filter_dmus.c</file>
 	<file>filter_wavecyclic.c</file>
 	<file>filter_wavepci.c</file>
 	<file>filter_wavert.c</file>
@@ -29,13 +30,13 @@
 	<file>miniport.c</file>
 	<file>miniport_dmus.c</file>
 	<file>miniport_fmsynth.c</file>
+	<file>pin_dmus.c</file>
 	<file>pin_wavecyclic.c</file>
 	<file>pin_wavepci.c</file>
 	<file>pin_wavert.c</file>
 	<file>pool.c</file>
 	<file>port.c</file>
 	<file>port_dmus.c</file>
-	<file>port_midi.c</file>
 	<file>port_topology.c</file>
 	<file>port_wavecyclic.c</file>
 	<file>port_wavepci.c</file>

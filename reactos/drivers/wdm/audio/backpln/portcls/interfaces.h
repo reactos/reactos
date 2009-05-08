@@ -497,7 +497,7 @@ DECLARE_INTERFACE_(IPortFilterWaveRT, IIrpTarget)
 typedef IPortFilterWaveRT *PPORTFILTERWAVERT;
 
 /*****************************************************************************
- * IPortPinWavePci
+ * IPortPinWaveRT
  *****************************************************************************
  */
 
@@ -568,6 +568,59 @@ DECLARE_INTERFACE_(IPortPinWaveCyclic, IIrpTarget)
     STDMETHOD_(PVOID, GetIrpStream)(THIS);
     STDMETHOD_(PMINIPORT, GetMiniport)(THIS);
 };
+
+/*****************************************************************************
+ * IPortFilterDMus
+ *****************************************************************************
+ */
+
+#undef INTERFACE
+#define INTERFACE IPortFilterDMus
+
+struct IPortPinDMus;
+
+DECLARE_INTERFACE_(IPortFilterDMus, IIrpTarget)
+{
+    DEFINE_ABSTRACT_UNKNOWN()
+
+    DEFINE_ABSTRACT_IRPTARGET()
+
+    STDMETHOD_(NTSTATUS, Init)(THIS_
+        IN PPORTDMUS Port)PURE;
+
+    STDMETHOD_(NTSTATUS, FreePin)(THIS_
+        IN struct IPortPinDMus* Pin)PURE;
+
+    STDMETHOD_(VOID, NotifyPins)(THIS);
+};
+
+typedef IPortFilterDMus *PPORTFILTERDMUS;
+
+/*****************************************************************************
+ * IPortPinDMus
+ *****************************************************************************
+ */
+
+#undef INTERFACE
+#define INTERFACE IPortPinDMus
+
+DECLARE_INTERFACE_(IPortPinDMus, IIrpTarget)
+{
+    DEFINE_ABSTRACT_UNKNOWN()
+
+    DEFINE_ABSTRACT_IRPTARGET()
+
+    STDMETHOD_(NTSTATUS, Init)(THIS_
+        IN PPORTDMUS Port,
+        IN PPORTFILTERDMUS Filter,
+        IN KSPIN_CONNECT * ConnectDetails,
+        IN KSPIN_DESCRIPTOR * PinDescriptor,
+        IN PDEVICE_OBJECT DeviceObject) PURE;
+
+    STDMETHOD_(VOID, Notify)(THIS);
+};
+
+typedef IPortPinDMus *PPORTPINDMUS;
 
 /*****************************************************************************
  * IDmaChannelInit

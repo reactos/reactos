@@ -31,7 +31,7 @@ PcNewPort(
     }
 
     if (IsEqualGUIDAligned(ClassId, &CLSID_PortMidi))
-        Status = NewPortMidi(OutPort);
+        Status = NewPortDMus(OutPort);
     else if (IsEqualGUIDAligned(ClassId, &CLSID_PortDMus))
         Status = NewPortDMus(OutPort);
     else if (IsEqualGUIDAligned(ClassId, &CLSID_PortTopology))
