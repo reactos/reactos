@@ -4690,6 +4690,8 @@ MmMapViewOfSection(IN PVOID SectionObject,
          (*ViewSize) = Section->MaximumSize.u.LowPart - ViewOffset;
       }
 
+      *ViewSize = PAGE_ROUND_UP(*ViewSize);
+
       MmLockSectionSegment(Section->Segment);
       Status = MmMapViewOfSegment(AddressSpace,
                                   Section,
