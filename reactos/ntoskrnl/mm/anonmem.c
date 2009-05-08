@@ -1003,7 +1003,9 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
          Status =
             MmAlterRegion(AddressSpace,
                           MemoryArea->StartingAddress,
-                          &MemoryArea->Data.VirtualMemoryData.RegionListHead,
+                          (MemoryArea->Type == MEMORY_AREA_SECTION_VIEW) ?
+                             &MemoryArea->Data.SectionData.RegionListHead :
+                             &MemoryArea->Data.VirtualMemoryData.RegionListHead,
                           BaseAddress,
                           RegionSize,
                           MEM_RESERVE,
