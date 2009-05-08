@@ -14,6 +14,9 @@ typedef struct
 {
     IPortPinDMusVtbl *lpVtbl;
     IServiceSinkVtbl *lpVtblServiceSink;
+    IMasterClockVtbl *lpVtblMasterClock;
+    IAllocatorMXFVtbl *lpVtblAllocatorMXF;
+    IMXFVtbl *lpVtblMXF;
 
     LONG ref;
     IPortDMus * Port;
@@ -22,6 +25,11 @@ typedef struct
     PMINIPORTDMUS Miniport;
 
     PSERVICEGROUP ServiceGroup;
+
+    PMXF Mxf;
+    ULONGLONG SchedulePreFetch;
+    NPAGED_LOOKASIDE_LIST LookAsideEvent;
+    NPAGED_LOOKASIDE_LIST LookAsideBuffer;
 
     PMINIPORTMIDI MidiMiniport;
     PMINIPORTMIDISTREAM MidiStream;
@@ -39,8 +47,15 @@ typedef struct
     ULONG PreCompleted;
     ULONG PostCompleted;
 
+    ULONG LastTag;
+
 }IPortPinDMusImpl;
 
+typedef struct
+{
+    DMUS_KERNEL_EVENT Event;
+    PVOID Tag;
+}DMUS_KERNEL_EVENT_WITH_TAG, *PDMUS_KERNEL_EVENT_WITH_TAG;
 
 typedef struct
 {
@@ -49,10 +64,263 @@ typedef struct
     KSSTATE State;
 }SETSTREAM_CONTEXT, *PSETSTREAM_CONTEXT;
 
+//==================================================================================================================================
+
+
+static
 NTSTATUS
 NTAPI
-IPortDMus_fnProcessNewIrp(
-    IPortPinDMusImpl * This);
+IMasterClock_fnQueryInterface(
+    IMasterClock* iface,
+    IN  REFIID refiid,
+    OUT PVOID* Output)
+{
+    IPortPinDMusImpl * This = (IPortPinDMusImpl*)CONTAINING_RECORD(iface, IPortPinDMusImpl, lpVtblMasterClock);
+
+    DPRINT("IServiceSink_fnQueryInterface entered\n");
+
+    if (IsEqualGUIDAligned(refiid, &IID_IUnknown))
+    {
+        *Output = &This->lpVtblServiceSink;
+        InterlockedIncrement(&This->ref);
+        return STATUS_SUCCESS;
+    }
+    return STATUS_UNSUCCESSFUL;
+}
+
+static
+ULONG
+NTAPI
+IMasterClock_fnAddRef(
+    IMasterClock* iface)
+{
+    IPortPinDMusImpl * This = (IPortPinDMusImpl*)CONTAINING_RECORD(iface, IPortPinDMusImpl, lpVtblMasterClock);
+    DPRINT("IServiceSink_fnAddRef entered\n");
+
+    return InterlockedIncrement(&This->ref);
+}
+
+static
+ULONG
+NTAPI
+IMasterClock_fnRelease(
+    IMasterClock* iface)
+{
+    IPortPinDMusImpl * This = (IPortPinDMusImpl*)CONTAINING_RECORD(iface, IPortPinDMusImpl, lpVtblMasterClock);
+
+    InterlockedDecrement(&This->ref);
+
+    DPRINT("IServiceSink_fnRelease entered %u\n", This->ref);
+
+    if (This->ref == 0)
+    {
+        FreeItem(This, TAG_PORTCLASS);
+        return 0;
+    }
+    /* Return new reference count */
+    return This->ref;
+}
+
+static
+NTSTATUS
+NTAPI
+IMasterClock_fnGetTime(
+    IMasterClock* iface,
+    OUT REFERENCE_TIME  *prtTime)
+{
+    UNIMPLEMENTED
+    return STATUS_SUCCESS;
+}
+
+static IMasterClockVtbl vt_IMasterClock = 
+{
+    IMasterClock_fnQueryInterface,
+    IMasterClock_fnAddRef,
+    IMasterClock_fnRelease,
+    IMasterClock_fnGetTime
+};
+
+//==================================================================================================================================
+
+
+static
+NTSTATUS
+NTAPI
+IAllocatorMXF_fnQueryInterface(
+    IAllocatorMXF* iface,
+    IN  REFIID refiid,
+    OUT PVOID* Output)
+{
+    IPortPinDMusImpl * This = (IPortPinDMusImpl*)CONTAINING_RECORD(iface, IPortPinDMusImpl, lpVtblAllocatorMXF);
+
+    DPRINT("IServiceSink_fnQueryInterface entered\n");
+
+    if (IsEqualGUIDAligned(refiid, &IID_IAllocatorMXF) ||
+        IsEqualGUIDAligned(refiid, &IID_IUnknown))
+    {
+        *Output = &This->lpVtblServiceSink;
+        InterlockedIncrement(&This->ref);
+        return STATUS_SUCCESS;
+    }
+    return STATUS_UNSUCCESSFUL;
+}
+
+static
+ULONG
+NTAPI
+IAllocatorMXF_fnAddRef(
+    IAllocatorMXF* iface)
+{
+    IPortPinDMusImpl * This = (IPortPinDMusImpl*)CONTAINING_RECORD(iface, IPortPinDMusImpl, lpVtblAllocatorMXF);
+    DPRINT("IServiceSink_fnAddRef entered\n");
+
+    return InterlockedIncrement(&This->ref);
+}
+
+static
+ULONG
+NTAPI
+IAllocatorMXF_fnRelease(
+    IAllocatorMXF* iface)
+{
+    IPortPinDMusImpl * This = (IPortPinDMusImpl*)CONTAINING_RECORD(iface, IPortPinDMusImpl, lpVtblAllocatorMXF);
+
+    InterlockedDecrement(&This->ref);
+
+    DPRINT("IServiceSink_fnRelease entered %u\n", This->ref);
+
+    if (This->ref == 0)
+    {
+        FreeItem(This, TAG_PORTCLASS);
+        return 0;
+    }
+    /* Return new reference count */
+    return This->ref;
+}
+
+static
+NTSTATUS
+NTAPI
+IAllocatorMXF_fnGetMessage(
+    IAllocatorMXF* iface,
+    OUT PDMUS_KERNEL_EVENT * ppDMKEvt)
+{
+    PVOID Buffer;
+    IPortPinDMusImpl * This = (IPortPinDMusImpl*)CONTAINING_RECORD(iface, IPortPinDMusImpl, lpVtblAllocatorMXF);
+
+    Buffer = ExAllocateFromNPagedLookasideList(&This->LookAsideEvent);
+    if (!Buffer)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    *ppDMKEvt = Buffer;
+    RtlZeroMemory(Buffer, sizeof(DMUS_KERNEL_EVENT));
+    return STATUS_SUCCESS;
+}
+
+static
+USHORT
+NTAPI
+IAllocatorMXF_fnGetBufferSize(
+    IAllocatorMXF* iface)
+{
+    return PAGE_SIZE;
+}
+
+static
+NTSTATUS
+NTAPI
+IAllocatorMXF_fnGetBuffer(
+    IAllocatorMXF* iface,
+    OUT PBYTE * ppBuffer)
+{
+    PVOID Buffer;
+    IPortPinDMusImpl * This = (IPortPinDMusImpl*)CONTAINING_RECORD(iface, IPortPinDMusImpl, lpVtblAllocatorMXF);
+
+    Buffer = ExAllocateFromNPagedLookasideList(&This->LookAsideBuffer);
+    if (!Buffer)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    *ppBuffer = Buffer;
+    RtlZeroMemory(Buffer, PAGE_SIZE);
+    return STATUS_SUCCESS;
+}
+
+static
+NTSTATUS
+NTAPI
+IAllocatorMXF_fnPutBuffer(
+    IAllocatorMXF* iface,
+    IN PBYTE pBuffer)
+{
+    PDMUS_KERNEL_EVENT_WITH_TAG Event = (PDMUS_KERNEL_EVENT_WITH_TAG)pBuffer;
+    IPortPinDMusImpl * This = (IPortPinDMusImpl*)CONTAINING_RECORD(iface, IPortPinDMusImpl, lpVtblAllocatorMXF);
+
+    This->IrpQueue->lpVtbl->ReleaseMappingWithTag(This->IrpQueue, Event->Tag);
+
+    ExFreeToNPagedLookasideList(&This->LookAsideBuffer, pBuffer);
+    return STATUS_SUCCESS;
+}
+
+static
+NTSTATUS
+NTAPI
+IAllocatorMXF_fnSetState(
+    IAllocatorMXF* iface,
+    IN KSSTATE State)
+{
+    UNIMPLEMENTED
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+static
+NTSTATUS
+NTAPI
+IAllocatorMXF_fnPutMessage(
+    IAllocatorMXF* iface,
+    IN PDMUS_KERNEL_EVENT pDMKEvt)
+{
+    IPortPinDMusImpl * This = (IPortPinDMusImpl*)CONTAINING_RECORD(iface, IPortPinDMusImpl, lpVtblAllocatorMXF);
+
+    ExFreeToNPagedLookasideList(&This->LookAsideEvent, pDMKEvt);
+    return STATUS_SUCCESS;
+}
+
+static
+NTSTATUS
+NTAPI
+IAllocatorMXF_fnConnectOutput(
+    IAllocatorMXF* iface,
+    IN PMXF sinkMXF)
+{
+    UNIMPLEMENTED
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+static
+NTSTATUS
+NTAPI
+IAllocatorMXF_fnDisconnectOutput(
+    IAllocatorMXF* iface,
+    IN PMXF sinkMXF)
+{
+    UNIMPLEMENTED
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+static IAllocatorMXFVtbl vt_IAllocatorMXF =
+{
+    IAllocatorMXF_fnQueryInterface,
+    IAllocatorMXF_fnAddRef,
+    IAllocatorMXF_fnRelease,
+    IAllocatorMXF_fnSetState,
+    IAllocatorMXF_fnPutMessage,
+    IAllocatorMXF_fnConnectOutput,
+    IAllocatorMXF_fnDisconnectOutput,
+    IAllocatorMXF_fnGetMessage,
+    IAllocatorMXF_fnGetBufferSize,
+    IAllocatorMXF_fnGetBuffer,
+    IAllocatorMXF_fnPutBuffer
+};
 
 //==================================================================================================================================
 
@@ -110,6 +378,8 @@ IServiceSink_fnRelease(
     /* Return new reference count */
     return This->ref;
 }
+
+
 static
 VOID
 NTAPI
@@ -118,8 +388,9 @@ SetStreamWorkerRoutine(
     IN PVOID  Context)
 {
     IPortPinDMusImpl * This;
-    PSETSTREAM_CONTEXT Ctx = (PSETSTREAM_CONTEXT)Context;
     KSSTATE State;
+    NTSTATUS Status;
+    PSETSTREAM_CONTEXT Ctx = (PSETSTREAM_CONTEXT)Context;
 
     This = Ctx->Pin;
     State = Ctx->State;
@@ -132,9 +403,18 @@ SetStreamWorkerRoutine(
         return;
 
     /* Set the state */
-    if (NT_SUCCESS(This->MidiStream->lpVtbl->SetState(This->MidiStream, State)))
+    if (This->MidiStream)
     {
-        /* Set internal state to stop */
+        Status = This->MidiStream->lpVtbl->SetState(This->MidiStream, State);
+    }
+    else
+    {
+        Status = This->Mxf->lpVtbl->SetState(This->Mxf, State);
+    }
+
+    if (NT_SUCCESS(Status))
+    {
+        /* Set internal state to requested state */
         This->State = State;
 
         if (This->State == KSSTATE_STOP)
@@ -237,6 +517,59 @@ TransferMidiData(
 
 }
 
+VOID
+TransferMidiDataToDMus(
+    IPortPinDMusImpl * This)
+{
+    NTSTATUS Status;
+    PHYSICAL_ADDRESS  PhysicalAddress;
+    ULONG BufferSize, Flags;
+    PVOID Buffer;
+    PDMUS_KERNEL_EVENT_WITH_TAG Event, LastEvent = NULL, Root = NULL;
+
+    do
+    {
+        This->LastTag++;
+        Status = This->IrpQueue->lpVtbl->GetMappingWithTag(This->IrpQueue, UlongToPtr(This->LastTag), &PhysicalAddress, &Buffer, &BufferSize, &Flags);
+        if (!NT_SUCCESS(Status))
+        {
+            break;
+        }
+
+        Status = IAllocatorMXF_fnGetMessage((IAllocatorMXF*)&This->lpVtblAllocatorMXF, (PDMUS_KERNEL_EVENT*)&Event);
+        if (!NT_SUCCESS(Status))
+            break;
+
+        //FIXME
+        //set up struct
+        //Event->Event.usFlags = DMUS_KEF_EVENT_COMPLETE;
+        Event->Event.cbStruct = sizeof(DMUS_KERNEL_EVENT);
+        Event->Event.cbEvent = BufferSize;
+        Event->Event.uData.pbData = Buffer;
+
+
+        if (!Root)
+            Root = Event;
+        else
+            LastEvent->Event.pNextEvt = (struct _DMUS_KERNEL_EVENT *)Event;
+
+        LastEvent = Event;
+        LastEvent->Event.pNextEvt = NULL;
+        LastEvent->Tag = UlongToPtr(This->LastTag);
+
+    }while(TRUE);
+
+    if (!Root)
+    {
+        SetStreamState(This, KSSTATE_STOP);
+        return;
+    }
+
+    Status = This->Mxf->lpVtbl->PutMessage(This->Mxf, (PDMUS_KERNEL_EVENT)Root);
+    DPRINT("Status %x\n", Status);
+}
+
+
 static
 VOID
 NTAPI
@@ -251,8 +584,10 @@ IServiceSink_fnRequestService(
     {
         TransferMidiData(This);
     }
-
-
+    else if (This->Mxf)
+    {
+        TransferMidiDataToDMus(This);
+    }
 }
 
 static IServiceSinkVtbl vt_IServiceSink = 
@@ -486,7 +821,7 @@ IPortPinDMus_fnClose(
     PCLOSESTREAM_CONTEXT Ctx;
     IPortPinDMusImpl * This = (IPortPinDMusImpl*)iface;
 
-    if (This->MidiStream)
+    if (This->MidiStream || This->Mxf)
     {
         Ctx = AllocateItem(NonPagedPool, sizeof(CLOSESTREAM_CONTEXT), TAG_PORTCLASS);
         if (!Ctx)
@@ -757,6 +1092,38 @@ IPortPinDMus_fnInit(
         if (!NT_SUCCESS(Status))
             return Status;
     }
+    else
+    {
+        Status = This->Miniport->lpVtbl->NewStream(This->Miniport,
+                                                   &This->Mxf,
+                                                   NULL,
+                                                   NonPagedPool,
+                                                   ConnectDetails->PinId,
+                                                   Capture, //FIXME
+                                                   This->Format,
+                                                   &This->ServiceGroup,
+                                                   (PAllocatorMXF)&This->lpVtblAllocatorMXF,
+                                                   (PMASTERCLOCK)&This->lpVtblMasterClock,
+                                                   &This->SchedulePreFetch);
+
+        DPRINT("IPortPinDMus_fnInit Status %x\n", Status);
+
+        if (!NT_SUCCESS(Status))
+            return Status;
+
+        if (Capture == DMUS_STREAM_MIDI_CAPTURE)
+        {
+            Status = This->Mxf->lpVtbl->ConnectOutput(This->Mxf, (PMXF)&This->lpVtblMXF);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT("IMXF_ConnectOutput failed with Status %x\n", Status);
+                return Status;
+            }
+        }
+
+        ExInitializeNPagedLookasideList(&This->LookAsideEvent, NULL, NULL, 0, sizeof(DMUS_KERNEL_EVENT_WITH_TAG), TAG_PORTCLASS, 0);
+        ExInitializeNPagedLookasideList(&This->LookAsideBuffer, NULL, NULL, 0, PAGE_SIZE, TAG_PORTCLASS, 0);
+    }
 
     if (This->ServiceGroup)
     {
@@ -832,6 +1199,8 @@ NTSTATUS NewPortPinDMus(
     This->ref = 1;
     This->lpVtbl = &vt_IPortPinDMus;
     This->lpVtblServiceSink = &vt_IServiceSink;
+    This->lpVtblMasterClock = &vt_IMasterClock;
+    This->lpVtblAllocatorMXF = &vt_IAllocatorMXF;
 
 
     /* store result */
@@ -839,6 +1208,3 @@ NTSTATUS NewPortPinDMus(
 
     return STATUS_SUCCESS;
 }
-
-
-

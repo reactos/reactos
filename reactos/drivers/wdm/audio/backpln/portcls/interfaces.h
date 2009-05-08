@@ -678,4 +678,6 @@ DECLARE_INTERFACE_(IDmaChannelInit, IUnknown)
         IN PDEVICE_OBJECT DeviceObject) PURE;
 };
 
+#undef INTERFACE
+
 #endif
