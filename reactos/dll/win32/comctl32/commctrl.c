@@ -772,7 +772,7 @@ InitCommonControlsEx (const INITCOMMONCONTROLSEX *lpInitCtrls)
 
 HWND WINAPI
 CreateToolbarEx (HWND hwnd, DWORD style, UINT wID, INT nBitmaps,
-                 HINSTANCE hBMInst, UINT wBMID, LPCTBBUTTON lpButtons,
+                 HINSTANCE hBMInst, UINT_PTR wBMID, LPCTBBUTTON lpButtons,
                  INT iNumButtons, INT dxButton, INT dyButton,
                  INT dxBitmap, INT dyBitmap, UINT uStructSize)
 {

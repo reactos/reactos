@@ -1841,7 +1841,9 @@ TOOLBAR_InternalInsertButtonsT(TOOLBAR_INFO *infoPtr, INT iIndex, UINT nAddButto
         btnPtr->fsState   = lpTbb[iButton].fsState;
         btnPtr->fsStyle   = lpTbb[iButton].fsStyle;
         btnPtr->dwData    = lpTbb[iButton].dwData;
-        if(HIWORD(lpTbb[iButton].iString) && lpTbb[iButton].iString != -1)
+        if (btnPtr->fsStyle & BTNS_SEP)
+            btnPtr->iString = -1;
+        else if(HIWORD(lpTbb[iButton].iString) && lpTbb[iButton].iString != -1)
         {
             if (fUnicode)
                 Str_SetPtrW((LPWSTR*)&btnPtr->iString, (LPWSTR)lpTbb[iButton].iString );
@@ -3433,9 +3435,6 @@ TOOLBAR_GetButtonTextA (HWND hwnd, WPARAM wParam, LPARAM lParam)
     INT nIndex;
     LPWSTR lpText;
 
-    if (lParam == 0)
-	return -1;
-
     nIndex = TOOLBAR_GetButtonIndex (infoPtr, (INT)wParam, FALSE);
     if (nIndex == -1)
 	return -1;
@@ -3443,7 +3442,7 @@ TOOLBAR_GetButtonTextA (HWND hwnd, WPARAM wParam, LPARAM lParam)
     lpText = TOOLBAR_GetText(infoPtr,&infoPtr->buttons[nIndex]);
 
     return WideCharToMultiByte( CP_ACP, 0, lpText, -1,
-                                (LPSTR)lParam, 0x7fffffff, NULL, NULL ) - 1;
+                                (LPSTR)lParam, lParam ? 0x7fffffff : 0, NULL, NULL ) - 1;
 }
 
 
