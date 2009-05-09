@@ -47,7 +47,7 @@ STRINGTABLE DISCARDABLE
     IDS_INCORRECTPASSWORDTITLE  "Autentificare eșuată"
     IDS_INCORRECTPASSWORD       "Verificați numele de utilizator și parola."
     IDS_CAPSLOCKONTITLE "Tasta Caps Lock este activată"
-    IDS_CAPSLOCKON      "Cu tasta Caps Lock activată este foarte probabil că veți introduce parola greșit. \n\nInainte de a introduce parola apăsați tasta Caps Lock pentru a dezactiva scrierea cu majuscule."
+    IDS_CAPSLOCKON      "Cu tasta Caps Lock activată este foarte probabil că veți introduce parola greșit.\n\nInainte de a introduce parola apăsați tasta Caps Lock pentru a dezactiva scrierea cu majuscule."
 }
 
 #pragma code_page(default)

@@ -4993,6 +4993,12 @@ static LRESULT CALLBACK import_file_dlg_proc(HWND hwnd, UINT msg, WPARAM wp,
 
         data = (struct ImportWizData *)page->lParam;
         SetWindowLongPtrW(hwnd, DWLP_USER, (LPARAM)data);
+        if (data->fileName)
+        {
+            HWND fileNameEdit = GetDlgItem(hwnd, IDC_IMPORT_FILENAME);
+
+            SendMessageW(fileNameEdit, WM_SETTEXT, 0, (LPARAM)data->fileName);
+        }
         break;
     }
     case WM_NOTIFY:
@@ -5383,10 +5389,15 @@ static BOOL show_import_ui(DWORD dwFlags, HWND hwndParent,
     data.dwFlags = dwFlags;
     data.pwszWizardTitle = pwszWizardTitle;
     if (pImportSrc)
+    {
         memcpy(&data.importSrc, pImportSrc, sizeof(data.importSrc));
+        data.fileName = (LPWSTR)pImportSrc->u.pwszFileName;
+    }
     else
+    {
         memset(&data.importSrc, 0, sizeof(data.importSrc));
-    data.fileName = NULL;
+        data.fileName = NULL;
+    }
     data.freeSource = FALSE;
     data.hDestCertStore = hDestCertStore;
     data.freeDest = FALSE;
@@ -5470,7 +5481,8 @@ static BOOL show_import_ui(DWORD dwFlags, HWND hwndParent,
     hdr.u4.pszbmWatermark = MAKEINTRESOURCEW(IDB_CERT_WATERMARK);
     hdr.u5.pszbmHeader = MAKEINTRESOURCEW(IDB_CERT_HEADER);
     PropertySheetW(&hdr);
-    HeapFree(GetProcessHeap(), 0, data.fileName);
+    if (data.fileName != data.importSrc.u.pwszFileName)
+        HeapFree(GetProcessHeap(), 0, data.fileName);
     if (data.freeSource &&
      data.importSrc.dwSubjectChoice == CRYPTUI_WIZ_IMPORT_SUBJECT_CERT_STORE)
         CertCloseStore(data.importSrc.u.hCertStore, 0);
