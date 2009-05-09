@@ -79,8 +79,8 @@
 @ stdcall PdhLookupPerfIndexByNameW(wstr wstr ptr)
 @ stdcall PdhLookupPerfNameByIndexA(str long ptr ptr)
 @ stdcall PdhLookupPerfNameByIndexW(wstr long ptr ptr)
-@ stub PdhMakeCounterPathA
-@ stub PdhMakeCounterPathW
+@ stdcall PdhMakeCounterPathA(ptr ptr ptr long)
+@ stdcall PdhMakeCounterPathW(ptr ptr ptr long)
 @ stub PdhOpenLogA
 @ stub PdhOpenLogW
 @ stdcall PdhOpenQuery(wstr long ptr) PdhOpenQueryW
