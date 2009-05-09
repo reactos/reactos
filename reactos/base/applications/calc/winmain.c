@@ -302,7 +302,7 @@ static LRESULT post_key_press(LPARAM lParam, WORD idc)
         return 1;
 
     if (!_tcscmp(ClassName, TEXT("Button"))) {
-        DWORD dwStyle = GetWindowLong(hCtlWnd, GWL_STYLE) & 0xF;
+        DWORD dwStyle = GetWindowLongPtr(hCtlWnd, GWL_STYLE) & 0xF;
 
         /* Set states for press/release, but only for push buttons */
         if (dwStyle == BS_PUSHBUTTON || dwStyle == BS_DEFPUSHBUTTON || dwStyle == BS_OWNERDRAW) {
@@ -1136,7 +1136,7 @@ static void handle_context_menu(HWND hWnd, WPARAM wp, LPARAM lp)
         popup.rcMargins.bottom = -1;
         popup.rcMargins.left   = -1;
         popup.rcMargins.right  = -1;
-        popup.idString = GetWindowLong((HWND)wp, GWL_ID);
+        popup.idString = GetWindowLongPtr((HWND)wp, GWL_ID);
         HtmlHelp((HWND)wp, HTMLHELP_PATH("/popups.txt"), HH_DISPLAY_TEXT_POPUP, (DWORD_PTR)&popup);
     }
 #endif

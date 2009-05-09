@@ -143,9 +143,9 @@ extern void _splitpath(const CHAR* path, CHAR* drv, CHAR* dir, CHAR* name, CHAR*
 #endif
 
 
-#define	SetDlgCtrlID(hwnd, id) SetWindowLong(hwnd, GWL_ID, id)
-#define	SetWindowStyle(hwnd, val) (DWORD)SetWindowLong(hwnd, GWL_STYLE, val)
-#define	SetWindowExStyle(h, val) (DWORD)SetWindowLong(hwnd, GWL_EXSTYLE, val)
+#define	SetDlgCtrlID(hwnd, id) SetWindowLongPtr(hwnd, GWL_ID, id)
+#define	SetWindowStyle(hwnd, val) (DWORD)SetWindowLongPtr(hwnd, GWL_STYLE, val)
+#define	SetWindowExStyle(h, val) (DWORD)SetWindowLongPtr(hwnd, GWL_EXSTYLE, val)
 #define	Window_SetIcon(hwnd, type, hicon) (HICON)SendMessage(hwnd, WM_SETICON, type, (LPARAM)(hicon))
 
 

@@ -250,7 +250,7 @@ TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
             GetCursorPos(&pt);
 
-            OnTop = ((GetWindowLongW(hMainWnd, GWL_EXSTYLE) & WS_EX_TOPMOST) != 0);
+            OnTop = ((GetWindowLongPtrW(hMainWnd, GWL_EXSTYLE) & WS_EX_TOPMOST) != 0);
 
             hMenu = LoadMenuW(hInst, MAKEINTRESOURCEW(IDR_TRAY_POPUP));
             hPopupMenu = GetSubMenu(hMenu, 0);
@@ -758,7 +758,7 @@ void TaskManager_OnRestoreMainWindow(void)
 
     hMenu = GetMenu(hMainWnd);
     hOptionsMenu = GetSubMenu(hMenu, OPTIONS_MENU_INDEX);
-    OnTop = ((GetWindowLongW(hMainWnd, GWL_EXSTYLE) & WS_EX_TOPMOST) != 0);
+    OnTop = ((GetWindowLongPtrW(hMainWnd, GWL_EXSTYLE) & WS_EX_TOPMOST) != 0);
 
     OpenIcon(hMainWnd);
     SetForegroundWindow(hMainWnd);
