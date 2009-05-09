@@ -3213,7 +3213,7 @@ IoGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
         {
             Length = CM_RESOURCE_LIST_SIZE(DeviceNode->BootResources);
         }
-        Data = &DeviceNode->BootResources;
+        Data = DeviceNode->BootResources;
         break;
 
         /* FIXME: use a translated boot configuration instead */
@@ -3223,7 +3223,7 @@ IoGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
         {
             Length = CM_RESOURCE_LIST_SIZE(DeviceNode->BootResources);
         }
-        Data = &DeviceNode->BootResources;
+        Data = DeviceNode->BootResources;
         break;
 
     case DevicePropertyEnumeratorName:
