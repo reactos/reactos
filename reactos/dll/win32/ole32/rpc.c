@@ -1904,7 +1904,7 @@ static DWORD WINAPI local_server_thread(LPVOID param)
 
         TRACE("marshalling IClassFactory to client\n");
         
-        hres = IStream_Stat(pStm,&ststg,0);
+        hres = IStream_Stat(pStm,&ststg,STATFLAG_NONAME);
         if (hres) return hres;
 
         seekto.u.LowPart = 0;

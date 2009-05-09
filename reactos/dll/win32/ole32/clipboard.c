@@ -1197,7 +1197,7 @@ static HRESULT WINAPI snapshot_GetData(IDataObject *iface, FORMATETC *fmt,
         hr = get_stgmed_for_stream(h, med);
     else
     {
-        FIXME("Unhandled tymed - emum tymed %x req tymed %x\n", entry->fmtetc.tymed, fmt->tymed);
+        FIXME("Unhandled tymed - mask %x req tymed %x\n", mask, fmt->tymed);
         hr = E_FAIL;
         goto end;
     }
@@ -1214,8 +1214,108 @@ end:
 static HRESULT WINAPI snapshot_GetDataHere(IDataObject *iface, FORMATETC *fmt,
                                            STGMEDIUM *med)
 {
-    FIXME("(%p, %p {%s}, %p): stub\n", iface, fmt, dump_fmtetc(fmt), med);
-    return E_NOTIMPL;
+    snapshot *This = impl_from_IDataObject(iface);
+    HANDLE h;
+    HRESULT hr;
+    ole_priv_data *enum_data = NULL;
+    ole_priv_data_entry *entry;
+    TYMED supported;
+
+    TRACE("(%p, %p {%s}, %p (tymed %x)\n", iface, fmt, dump_fmtetc(fmt), med, med->tymed);
+
+    if ( !fmt || !med ) return E_INVALIDARG;
+
+    if ( !OpenClipboard(NULL)) return CLIPBRD_E_CANT_OPEN;
+
+    if(!This->data)
+        hr = get_current_dataobject(&This->data);
+
+    if(This->data)
+    {
+        hr = IDataObject_GetDataHere(This->data, fmt, med);
+        if(SUCCEEDED(hr))
+        {
+            CloseClipboard();
+            return hr;
+        }
+    }
+
+    h = GetClipboardData(fmt->cfFormat);
+    if(!h)
+    {
+        hr = DV_E_FORMATETC;
+        goto end;
+    }
+
+    hr = get_priv_data(&enum_data);
+    if(FAILED(hr)) goto end;
+
+    entry = find_format_in_list(enum_data->entries, enum_data->count, fmt->cfFormat);
+    if(entry)
+    {
+        if(!td_equal(fmt->ptd, entry->fmtetc.ptd))
+        {
+            hr = DV_E_FORMATETC;
+            goto end;
+        }
+        supported = entry->fmtetc.tymed;
+    }
+    else /* non-Ole format */
+        supported = TYMED_HGLOBAL;
+
+    switch(med->tymed)
+    {
+    case TYMED_HGLOBAL:
+    {
+        DWORD src_size = GlobalSize(h);
+        DWORD dst_size = GlobalSize(med->u.hGlobal);
+        hr = E_FAIL;
+        if(dst_size >= src_size)
+        {
+            void *src = GlobalLock(h);
+            void *dst = GlobalLock(med->u.hGlobal);
+
+            memcpy(dst, src, src_size);
+            GlobalUnlock(med->u.hGlobal);
+            GlobalUnlock(h);
+            hr = S_OK;
+        }
+        break;
+    }
+    case TYMED_ISTREAM:
+    {
+        DWORD src_size = GlobalSize(h);
+        void *src = GlobalLock(h);
+        hr = IStream_Write(med->u.pstm, src, src_size, NULL);
+        GlobalUnlock(h);
+        break;
+    }
+    case TYMED_ISTORAGE:
+    {
+        STGMEDIUM copy;
+        if(!(supported & TYMED_ISTORAGE))
+        {
+            hr = E_FAIL;
+            goto end;
+        }
+        hr = get_stgmed_for_storage(h, &copy);
+        if(SUCCEEDED(hr))
+        {
+            hr = IStorage_CopyTo(copy.u.pstg, 0, NULL, NULL, med->u.pstg);
+            ReleaseStgMedium(&copy);
+        }
+        break;
+    }
+    default:
+        FIXME("Unhandled tymed - supported %x req tymed %x\n", supported, med->tymed);
+        hr = E_FAIL;
+        goto end;
+    }
+
+end:
+    HeapFree(GetProcessHeap(), 0, enum_data);
+    if ( !CloseClipboard() ) hr = CLIPBRD_E_CANT_CLOSE;
+    return hr;
 }
 
 /************************************************************************

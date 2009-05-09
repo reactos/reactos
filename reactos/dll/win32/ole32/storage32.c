@@ -6310,7 +6310,7 @@ HRESULT WINAPI ReadClassStg(IStorage *pstg,CLSID *pclsid){
    /*
     * read a STATSTG structure (contains the clsid) from the storage
     */
-    hRes=IStorage_Stat(pstg,&pstatstg,STATFLAG_DEFAULT);
+    hRes=IStorage_Stat(pstg,&pstatstg,STATFLAG_NONAME);
 
     if(SUCCEEDED(hRes))
         *pclsid=pstatstg.clsid;

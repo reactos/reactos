@@ -25,3 +25,4 @@
 #include "oleacc_Fr.rc"
 #include "oleacc_Ko.rc"
 #include "oleacc_Nl.rc"
+#include "oleacc_Pl.rc"
