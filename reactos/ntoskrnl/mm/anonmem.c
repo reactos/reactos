@@ -1034,26 +1034,48 @@ MmProtectAnonMem(PMMSUPPORT AddressSpace,
                  PULONG OldProtect)
 {
    PMM_REGION Region;
-   NTSTATUS Status;
+   NTSTATUS Status = STATUS_SUCCESS;
+   ULONG LengthCount = 0;
 
-   Region = MmFindRegion(MemoryArea->StartingAddress,
-                         &MemoryArea->Data.VirtualMemoryData.RegionListHead,
-                         BaseAddress, NULL);
-   if (Region->Type == MEM_COMMIT)
+   /* Search all Regions in MemoryArea up to Length */
+   /* Every Region up to Length must be committed for success */
+   for (;;)
    {
-       /* FIXME: check if the whole range is committed 
-        * before altering the memory */
+      Region = MmFindRegion(MemoryArea->StartingAddress,
+                            &MemoryArea->Data.VirtualMemoryData.RegionListHead,
+                            (PVOID)((ULONG_PTR)BaseAddress + (ULONG_PTR)LengthCount), NULL);
+
+      /* If a Region was found and it is committed */
+      if ((Region) && (Region->Type == MEM_COMMIT))
+      {
+         LengthCount += Region->Length;
+         if (Length <= LengthCount) break;
+         continue;
+      }
+      /* If Region was found and it is not commited */
+      else if (Region)
+      {
+         Status = STATUS_NOT_COMMITTED;
+         break;
+      }
+      /* If no Region was found at all */
+      else if (LengthCount == 0)
+      {
+         Status = STATUS_INVALID_ADDRESS;
+         break;
+      }
+   }
+
+   if (NT_SUCCESS(Status))
+   {
        *OldProtect = Region->Protect;
        Status = MmAlterRegion(AddressSpace, MemoryArea->StartingAddress,
                               &MemoryArea->Data.VirtualMemoryData.RegionListHead,
                               BaseAddress, Length, Region->Type, Protect,
                               MmModifyAttributes);
    }
-   else
-   {
-       Status = STATUS_NOT_COMMITTED;
-   }
-   return(Status);
+
+   return (Status);
 }
 
 NTSTATUS NTAPI
