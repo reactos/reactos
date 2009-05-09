@@ -1324,6 +1324,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
 
         SIC_Initialize();
         InitChangeNotifications();
+        InitIconOverlays();
         break;
 
     case DLL_PROCESS_DETACH:

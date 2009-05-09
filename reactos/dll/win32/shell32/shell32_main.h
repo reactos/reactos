@@ -148,6 +148,7 @@ HGLOBAL RenderPREFEREDDROPEFFECT (DWORD dwFlags);
 /* Change Notification */
 void InitChangeNotifications(void);
 void FreeChangeNotifications(void);
+void InitIconOverlays(void);
 
 /* file operation */
 #define ASK_DELETE_FILE           1
