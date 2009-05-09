@@ -483,7 +483,7 @@ DriveGeneralDlg(
         }
         break;
     case WM_COMMAND:
-        if (LOWORD(wParam) == 14011)
+        if (LOWORD(wParam) == 14010) /* Disk Cleanup */
         {
            lpstr = (WCHAR*)GetWindowLongPtr(hwndDlg, DWLP_USER);
            ZeroMemory( &si, sizeof(si) );
@@ -504,7 +504,7 @@ DriveGeneralDlg(
         }
     case WM_NOTIFY:
         lppsn = (LPPSHNOTIFY) lParam;
-        if (LOWORD(wParam) == 14001)
+        if (LOWORD(wParam) == 14000)
         {
            if (HIWORD(wParam) == EN_CHANGE)
            {
@@ -515,7 +515,7 @@ DriveGeneralDlg(
         if (lppsn->hdr.code == PSN_APPLY)
         {
            lpstr = (LPWSTR)GetWindowLong(hwndDlg, DWLP_USER);
-           if (lpstr && SendDlgItemMessageW(hwndDlg, 14001, WM_GETTEXT, sizeof(szPath)/sizeof(WCHAR), (LPARAM)szPath))
+           if (lpstr && SendDlgItemMessageW(hwndDlg, 14000, WM_GETTEXT, sizeof(szPath)/sizeof(WCHAR), (LPARAM)szPath))
            {
               szPath[(sizeof(szPath)/sizeof(WCHAR))-1] = L'\0';
               SetVolumeLabelW(lpstr, szPath);
