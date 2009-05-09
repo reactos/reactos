@@ -36,6 +36,8 @@ WINE_DEFAULT_DEBUG_CHANNEL (gdiplus);
 static const REAL mm_per_inch = 25.4;
 static const REAL inch_per_point = 1.0/72.0;
 
+static GpFontCollection installedFontCollection = {0};
+
 static inline REAL get_dpi (void)
 {
     REAL dpi;
@@ -193,7 +195,7 @@ GpStatus WINGDIPAPI GdipCreateFontFromLogfontW(HDC hdc,
     oldfont = SelectObject(hdc, hfont);
     GetTextMetricsW(hdc, &textmet);
 
-    (*font)->lfw.lfHeight = -textmet.tmHeight;
+    (*font)->lfw.lfHeight = -(textmet.tmHeight-textmet.tmInternalLeading);
     (*font)->lfw.lfWeight = textmet.tmWeight;
     (*font)->lfw.lfCharSet = textmet.tmCharSet;
 
@@ -936,5 +938,7 @@ GpStatus WINGDIPAPI GdipNewInstalledFontCollection(
     if (!fontCollection)
         return InvalidParameter;
 
-    return NotImplemented;
+    *fontCollection = &installedFontCollection;
+
+    return Ok;
 }

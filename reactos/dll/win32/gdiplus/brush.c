@@ -34,6 +34,33 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(gdiplus);
 
+/*
+    Unix stuff
+    Code from http://www.johndcook.com/blog/2009/01/19/stand-alone-error-function-erf/
+*/
+double erf(double x)
+{
+    const float a1 =  0.254829592;
+    const float a2 = -0.284496736;
+    const float a3 =  1.421413741;
+    const float a4 = -1.453152027;
+    const float a5 =  1.061405429;
+    const float p  =  0.3275911;
+    float t, y, sign;
+
+    /* Save the sign of x */
+    sign = 1;
+    if (x < 0)
+        sign = -1;
+    x = abs(x);
+
+    /* A & S 7.1.26 */
+    t = 1.0/(1.0 + p*x);
+    y = 1.0 - (((((a5*t + a4)*t) + a3)*t + a2)*t + a1)*t*exp(-x*x);
+
+    return sign*y;
+}
+
 /******************************************************************************
  * GdipCloneBrush [GDIPLUS.@]
  */
@@ -108,14 +135,38 @@ GpStatus WINGDIPAPI GdipCloneBrush(GpBrush *brush, GpBrush **clone)
 
             break;
         }
-        case BrushTypeLinearGradient:
-            *clone = GdipAlloc(sizeof(GpLineGradient));
-            if(!*clone)    return OutOfMemory;
+        case BrushTypeLinearGradient:{
+            GpLineGradient *dest, *src;
+            INT count;
 
-            memcpy(*clone, brush, sizeof(GpLineGradient));
+            dest = GdipAlloc(sizeof(GpLineGradient));
+            if(!dest)    return OutOfMemory;
 
-            (*clone)->gdibrush = CreateSolidBrush((*clone)->lb.lbColor);
+            src = (GpLineGradient*)brush;
+
+            memcpy(dest, src, sizeof(GpLineGradient));
+
+            dest->brush.gdibrush = CreateSolidBrush(dest->brush.lb.lbColor);
+
+            count = dest->blendcount;
+            dest->blendfac = GdipAlloc(count * sizeof(REAL));
+            dest->blendpos = GdipAlloc(count * sizeof(REAL));
+
+            if (!dest->blendfac || !dest->blendpos)
+            {
+                GdipFree(dest->blendfac);
+                GdipFree(dest->blendpos);
+                DeleteObject(dest->brush.gdibrush);
+                GdipFree(dest);
+                return OutOfMemory;
+            }
+
+            memcpy(dest->blendfac, src->blendfac, count * sizeof(REAL));
+            memcpy(dest->blendpos, src->blendpos, count * sizeof(REAL));
+
+            *clone = &dest->brush;
             break;
+        }
         case BrushTypeTextureFill:
             *clone = GdipAlloc(sizeof(GpTexture));
             if(!*clone)    return OutOfMemory;
@@ -226,6 +277,28 @@ GpStatus WINGDIPAPI GdipCreateLineBrush(GDIPCONST GpPointF* startpoint,
     (*line)->wrap = wrap;
     (*line)->gamma = FALSE;
 
+    (*line)->rect.X = (startpoint->X < endpoint->X ? startpoint->X: endpoint->X);
+    (*line)->rect.Y = (startpoint->Y < endpoint->Y ? startpoint->Y: endpoint->Y);
+    (*line)->rect.Width  = fabs(startpoint->X - endpoint->X);
+    (*line)->rect.Height = fabs(startpoint->Y - endpoint->Y);
+
+    (*line)->blendcount = 1;
+    (*line)->blendfac = GdipAlloc(sizeof(REAL));
+    (*line)->blendpos = GdipAlloc(sizeof(REAL));
+
+    if (!(*line)->blendfac || !(*line)->blendpos)
+    {
+        GdipFree((*line)->blendfac);
+        GdipFree((*line)->blendpos);
+        DeleteObject((*line)->brush.gdibrush);
+        GdipFree(*line);
+        *line = NULL;
+        return OutOfMemory;
+    }
+
+    (*line)->blendfac[0] = 1.0f;
+    (*line)->blendpos[0] = 1.0f;
+
     return Ok;
 }
 
@@ -255,6 +328,7 @@ GpStatus WINGDIPAPI GdipCreateLineBrushFromRect(GDIPCONST GpRectF* rect,
     GpLineGradient **line)
 {
     GpPointF start, end;
+    GpStatus stat;
 
     TRACE("(%p, %x, %x, %d, %d, %p)\n", rect, startcolor, endcolor, mode,
           wrap, line);
@@ -262,12 +336,42 @@ GpStatus WINGDIPAPI GdipCreateLineBrushFromRect(GDIPCONST GpRectF* rect,
     if(!line || !rect)
         return InvalidParameter;
 
-    start.X = rect->X;
-    start.Y = rect->Y;
-    end.X = rect->X + rect->Width;
-    end.Y = rect->Y + rect->Height;
+    switch (mode)
+    {
+    case LinearGradientModeHorizontal:
+        start.X = rect->X;
+        start.Y = rect->Y;
+        end.X = rect->X + rect->Width;
+        end.Y = rect->Y;
+        break;
+    case LinearGradientModeVertical:
+        start.X = rect->X;
+        start.Y = rect->Y;
+        end.X = rect->X;
+        end.Y = rect->Y + rect->Height;
+        break;
+    case LinearGradientModeForwardDiagonal:
+        start.X = rect->X;
+        start.Y = rect->Y;
+        end.X = rect->X + rect->Width;
+        end.Y = rect->Y + rect->Height;
+        break;
+    case LinearGradientModeBackwardDiagonal:
+        start.X = rect->X + rect->Width;
+        start.Y = rect->Y;
+        end.X = rect->X;
+        end.Y = rect->Y + rect->Height;
+        break;
+    default:
+        return InvalidParameter;
+    }
 
-    return GdipCreateLineBrush(&start, &end, startcolor, endcolor, wrap, line);
+    stat = GdipCreateLineBrush(&start, &end, startcolor, endcolor, wrap, line);
+
+    if (stat == Ok)
+        (*line)->rect = *rect;
+
+    return stat;
 }
 
 GpStatus WINGDIPAPI GdipCreateLineBrushFromRectI(GDIPCONST GpRect* rect,
@@ -765,7 +869,10 @@ GpStatus WINGDIPAPI GdipDeleteBrush(GpBrush *brush)
             GdipFree(((GpPathGradient*) brush)->blendpos);
             break;
         case BrushTypeSolidColor:
+            break;
         case BrushTypeLinearGradient:
+            GdipFree(((GpLineGradient*)brush)->blendfac);
+            GdipFree(((GpLineGradient*)brush)->blendpos);
             break;
         case BrushTypeTextureFill:
             GdipDeleteMatrix(((GpTexture*)brush)->transform);
@@ -1071,15 +1178,64 @@ GpStatus WINGDIPAPI GdipScaleTextureTransform(GpTexture* brush,
 }
 
 GpStatus WINGDIPAPI GdipSetLineBlend(GpLineGradient *brush,
-    GDIPCONST REAL *blend, GDIPCONST REAL* positions, INT count)
+    GDIPCONST REAL *factors, GDIPCONST REAL* positions, INT count)
 {
-    static int calls;
+    REAL *new_blendfac, *new_blendpos;
 
-    if(!brush || !blend || !positions || count <= 0)
+    TRACE("(%p, %p, %p, %i)\n", brush, factors, positions, count);
+
+    if(!brush || !factors || !positions || count <= 0 ||
+       (count >= 2 && (positions[0] != 0.0f || positions[count-1] != 1.0f)))
         return InvalidParameter;
 
-    if(!(calls++))
-        FIXME("not implemented\n");
+    new_blendfac = GdipAlloc(count * sizeof(REAL));
+    new_blendpos = GdipAlloc(count * sizeof(REAL));
+
+    if (!new_blendfac || !new_blendpos)
+    {
+        GdipFree(new_blendfac);
+        GdipFree(new_blendpos);
+        return OutOfMemory;
+    }
+
+    memcpy(new_blendfac, factors, count * sizeof(REAL));
+    memcpy(new_blendpos, positions, count * sizeof(REAL));
+
+    GdipFree(brush->blendfac);
+    GdipFree(brush->blendpos);
+
+    brush->blendcount = count;
+    brush->blendfac = new_blendfac;
+    brush->blendpos = new_blendpos;
+
+    return Ok;
+}
+
+GpStatus WINGDIPAPI GdipGetLineBlend(GpLineGradient *brush, REAL *factors,
+    REAL *positions, INT count)
+{
+    TRACE("(%p, %p, %p, %i)\n", brush, factors, positions, count);
+
+    if (!brush || !factors || !positions || count <= 0)
+        return InvalidParameter;
+
+    if (count < brush->blendcount)
+        return InsufficientBuffer;
+
+    memcpy(factors, brush->blendfac, brush->blendcount * sizeof(REAL));
+    memcpy(positions, brush->blendpos, brush->blendcount * sizeof(REAL));
+
+    return Ok;
+}
+
+GpStatus WINGDIPAPI GdipGetLineBlendCount(GpLineGradient *brush, INT *count)
+{
+    TRACE("(%p, %p)\n", brush, count);
+
+    if (!brush || !count)
+        return InvalidParameter;
+
+    *count = brush->blendcount;
 
     return Ok;
 }
@@ -1100,15 +1256,57 @@ GpStatus WINGDIPAPI GdipSetLineGammaCorrection(GpLineGradient *line,
 GpStatus WINGDIPAPI GdipSetLineSigmaBlend(GpLineGradient *line, REAL focus,
     REAL scale)
 {
-    static int calls;
+    REAL factors[33];
+    REAL positions[33];
+    int num_points = 0;
+    int i;
+    const int precision = 16;
+    REAL erf_range; /* we use values erf(-erf_range) through erf(+erf_range) */
+    REAL min_erf;
+    REAL scale_erf;
+
+    TRACE("(%p, %0.2f, %0.2f)\n", line, focus, scale);
 
     if(!line || focus < 0.0 || focus > 1.0 || scale < 0.0 || scale > 1.0)
         return InvalidParameter;
 
-    if(!(calls++))
-        FIXME("not implemented\n");
+    /* we want 2 standard deviations */
+    erf_range = 2.0 / sqrt(2);
 
-    return NotImplemented;
+    /* calculate the constants we need to normalize the error function to be
+        between 0.0 and scale over the range we need */
+    min_erf = erf(-erf_range);
+    scale_erf = scale / (-2.0 * min_erf);
+
+    if (focus != 0.0)
+    {
+        positions[0] = 0.0;
+        factors[0] = 0.0;
+        for (i=1; i<precision; i++)
+        {
+            positions[i] = focus * i / precision;
+            factors[i] = scale_erf * (erf(2 * erf_range * i / precision - erf_range) - min_erf);
+        }
+        num_points += precision;
+    }
+
+    positions[num_points] = focus;
+    factors[num_points] = scale;
+    num_points += 1;
+
+    if (focus != 1.0)
+    {
+        for (i=1; i<precision; i++)
+        {
+            positions[i+num_points-1] = (focus + ((1.0-focus) * i / precision));
+            factors[i+num_points-1] = scale_erf * (erf(erf_range - 2 * erf_range * i / precision) - min_erf);
+        }
+        num_points += precision;
+        positions[num_points-1] = 1.0;
+        factors[num_points-1] = 0.0;
+    }
+
+    return GdipSetLineBlend(line, factors, positions, num_points);
 }
 
 GpStatus WINGDIPAPI GdipSetLineWrapMode(GpLineGradient *line,
@@ -1403,11 +1601,7 @@ GpStatus WINGDIPAPI GdipGetLineRect(GpLineGradient *brush, GpRectF *rect)
     if(!brush || !rect)
         return InvalidParameter;
 
-    rect->X = (brush->startpoint.X < brush->endpoint.X ? brush->startpoint.X: brush->endpoint.X);
-    rect->Y = (brush->startpoint.Y < brush->endpoint.Y ? brush->startpoint.Y: brush->endpoint.Y);
-
-    rect->Width  = fabs(brush->startpoint.X - brush->endpoint.X);
-    rect->Height = fabs(brush->startpoint.Y - brush->endpoint.Y);
+    *rect = brush->rect;
 
     return Ok;
 }

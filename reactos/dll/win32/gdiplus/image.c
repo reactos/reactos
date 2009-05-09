@@ -87,6 +87,21 @@ GpStatus WINGDIPAPI GdipBitmapGetPixel(GpBitmap* bitmap, INT x, INT y,
     return NotImplemented;
 }
 
+GpStatus WINGDIPAPI GdipBitmapSetPixel(GpBitmap* bitmap, INT x, INT y,
+    ARGB color)
+{
+    static int calls;
+    TRACE("bitmap:%p, x:%d, y:%d, color:%08x\n", bitmap, x, y, color);
+
+    if(!bitmap)
+        return InvalidParameter;
+
+    if(!(calls++))
+        FIXME("not implemented\n");
+
+    return NotImplemented;
+}
+
 /* This function returns a pointer to an array of pixels that represents the
  * bitmap. The *entire* bitmap is locked according to the lock mode specified by
  * flags.  It is correct behavior that a user who calls this function with write
@@ -1647,4 +1662,25 @@ GpStatus WINGDIPAPI GdipImageForceValidation(GpImage *image)
     FIXME("%p\n", image);
 
     return Ok;
+}
+
+/*****************************************************************************
+ * GdipGetImageThumbnail [GDIPLUS.@]
+ */
+GpStatus WINGDIPAPI GdipGetImageThumbnail(GpImage *image, UINT width, UINT height,
+                            GpImage **ret_image, GetThumbnailImageAbort cb,
+                            VOID * cb_data)
+{
+    FIXME("(%p %u %u %p %p %p) stub\n",
+        image, width, height, ret_image, cb, cb_data);
+    return NotImplemented;
+}
+
+/*****************************************************************************
+ * GdipImageRotateFlip [GDIPLUS.@]
+ */
+GpStatus WINGDIPAPI GdipImageRotateFlip(GpImage *image, RotateFlipType type)
+{
+    FIXME("(%p %u) stub\n", image, type);
+    return NotImplemented;
 }
