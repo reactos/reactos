@@ -23,8 +23,10 @@
 
 #define COOKIE_MAGIC_TMSINK  0x0010
 #define COOKIE_MAGIC_CONTEXTSINK 0x0020
+#define COOKIE_MAGIC_GUIDATOM 0x0030
 
 extern DWORD tlsIndex;
+extern TfClientId processId;
 
 extern HRESULT ThreadMgr_Constructor(IUnknown *pUnkOuter, IUnknown **ppOut);
 extern HRESULT DocumentMgr_Constructor(ITfThreadMgrEventSink*, ITfDocumentMgr **ppOut);
@@ -37,6 +39,13 @@ extern DWORD  generate_Cookie(DWORD magic, LPVOID data);
 extern DWORD  get_Cookie_magic(DWORD id);
 extern LPVOID get_Cookie_data(DWORD id);
 extern LPVOID remove_Cookie(DWORD id);
+extern DWORD enumerate_Cookie(DWORD magic, DWORD *index);
+
+/* activated text services functions */
+extern HRESULT add_active_textservice(TF_LANGUAGEPROFILE *lp);
+extern BOOL get_active_textservice(REFCLSID rclsid, TF_LANGUAGEPROFILE *lp);
+extern HRESULT activate_textservices(ITfThreadMgr *tm);
+extern HRESULT deactivate_textservices(void);
 
 extern const WCHAR szwSystemTIPKey[];
 #endif /* __WINE_MSCTF_I_H */

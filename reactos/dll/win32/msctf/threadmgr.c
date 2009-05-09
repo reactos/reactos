@@ -56,15 +56,29 @@ typedef struct tagThreadMgrSink {
     } interfaces;
 } ThreadMgrSink;
 
+typedef struct tagPreservedKey
+{
+    struct list     entry;
+    GUID            guid;
+    TF_PRESERVEDKEY prekey;
+    LPWSTR          description;
+    TfClientId      tid;
+} PreservedKey;
+
 typedef struct tagACLMulti {
     const ITfThreadMgrVtbl *ThreadMgrVtbl;
     const ITfSourceVtbl *SourceVtbl;
     const ITfKeystrokeMgrVtbl *KeystrokeMgrVtbl;
+    const ITfMessagePumpVtbl *MessagePumpVtbl;
+    const ITfClientIdVtbl *ClientIdVtbl;
     LONG refCount;
 
     const ITfThreadMgrEventSinkVtbl *ThreadMgrEventSinkVtbl; /* internal */
 
     ITfDocumentMgr *focus;
+    LONG activationCount;
+
+    struct list CurrentPreservedKeys;
 
     /* kept as separate lists to reduce unnecessary iterations */
     struct list     ActiveLanguageProfileNotifySink;
@@ -83,6 +97,16 @@ static inline ThreadMgr *impl_from_ITfSourceVtbl(ITfSource *iface)
 static inline ThreadMgr *impl_from_ITfKeystrokeMgrVtbl(ITfKeystrokeMgr *iface)
 {
     return (ThreadMgr *)((char *)iface - FIELD_OFFSET(ThreadMgr,KeystrokeMgrVtbl));
+}
+
+static inline ThreadMgr *impl_from_ITfMessagePumpVtbl(ITfMessagePump *iface)
+{
+    return (ThreadMgr *)((char *)iface - FIELD_OFFSET(ThreadMgr,MessagePumpVtbl));
+}
+
+static inline ThreadMgr *impl_from_ITfClientIdVtbl(ITfClientId *iface)
+{
+    return (ThreadMgr *)((char *)iface - FIELD_OFFSET(ThreadMgr,ClientIdVtbl));
 }
 
 static inline ThreadMgr *impl_from_ITfThreadMgrEventSink(ITfThreadMgrEventSink *iface)
@@ -143,6 +167,14 @@ static void ThreadMgr_Destructor(ThreadMgr *This)
         free_sink(sink);
     }
 
+    LIST_FOR_EACH_SAFE(cursor, cursor2, &This->CurrentPreservedKeys)
+    {
+        PreservedKey* key = LIST_ENTRY(cursor,PreservedKey,entry);
+        list_remove(cursor);
+        HeapFree(GetProcessHeap(),0,key->description);
+        HeapFree(GetProcessHeap(),0,key);
+    }
+
     HeapFree(GetProcessHeap(),0,This);
 }
 
@@ -162,6 +194,14 @@ static HRESULT WINAPI ThreadMgr_QueryInterface(ITfThreadMgr *iface, REFIID iid, 
     else if (IsEqualIID(iid, &IID_ITfKeystrokeMgr))
     {
         *ppvOut = &This->KeystrokeMgrVtbl;
+    }
+    else if (IsEqualIID(iid, &IID_ITfMessagePump))
+    {
+        *ppvOut = &This->MessagePumpVtbl;
+    }
+    else if (IsEqualIID(iid, &IID_ITfClientId))
+    {
+        *ppvOut = &This->ClientIdVtbl;
     }
 
     if (*ppvOut)
@@ -198,23 +238,48 @@ static ULONG WINAPI ThreadMgr_Release(ITfThreadMgr *iface)
 static HRESULT WINAPI ThreadMgr_fnActivate( ITfThreadMgr* iface, TfClientId *ptid)
 {
     ThreadMgr *This = (ThreadMgr *)iface;
-    FIXME("STUB:(%p)\n",This);
-    return E_NOTIMPL;
+
+    TRACE("(%p) %p\n",This, ptid);
+
+    if (!ptid)
+        return E_INVALIDARG;
+
+    if (!processId)
+    {
+        GUID guid;
+        CoCreateGuid(&guid);
+        ITfClientId_GetClientId((ITfClientId*)&This->ClientIdVtbl,&guid,&processId);
+    }
+
+    activate_textservices(iface);
+    This->activationCount++;
+    *ptid = processId;
+    return S_OK;
 }
 
 static HRESULT WINAPI ThreadMgr_fnDeactivate( ITfThreadMgr* iface)
 {
     ThreadMgr *This = (ThreadMgr *)iface;
-    FIXME("STUB:(%p)\n",This);
+    TRACE("(%p)\n",This);
 
-    if (This->focus)
+    if (This->activationCount == 0)
+        return E_UNEXPECTED;
+
+    This->activationCount --;
+
+    if (This->activationCount == 0)
     {
-        ITfThreadMgrEventSink_OnSetFocus((ITfThreadMgrEventSink*)&This->ThreadMgrEventSinkVtbl, 0, This->focus);
-        ITfDocumentMgr_Release(This->focus);
-        This->focus = 0;
+        if (This->focus)
+        {
+            ITfThreadMgrEventSink_OnSetFocus((ITfThreadMgrEventSink*)&This->ThreadMgrEventSinkVtbl, 0, This->focus);
+            ITfDocumentMgr_Release(This->focus);
+            This->focus = 0;
+        }
     }
 
-    return E_NOTIMPL;
+    deactivate_textservices();
+
+    return S_OK;
 }
 
 static HRESULT WINAPI ThreadMgr_CreateDocumentMgr( ITfThreadMgr* iface, ITfDocumentMgr
@@ -508,8 +573,25 @@ static HRESULT WINAPI KeystrokeMgr_IsPreservedKey(ITfKeystrokeMgr *iface,
         REFGUID rguid, const TF_PRESERVEDKEY *pprekey, BOOL *pfRegistered)
 {
     ThreadMgr *This = impl_from_ITfKeystrokeMgrVtbl(iface);
-    FIXME("STUB:(%p)\n",This);
-    return E_NOTIMPL;
+    struct list *cursor;
+
+    TRACE("(%p) %s (%x %x) %p\n",This,debugstr_guid(rguid), (pprekey)?pprekey->uVKey:0, (pprekey)?pprekey->uModifiers:0, pfRegistered);
+
+    if (!rguid || !pprekey || !pfRegistered)
+        return E_INVALIDARG;
+
+    LIST_FOR_EACH(cursor, &This->CurrentPreservedKeys)
+    {
+        PreservedKey* key = LIST_ENTRY(cursor,PreservedKey,entry);
+        if (IsEqualGUID(rguid,&key->guid) && pprekey->uVKey == key->prekey.uVKey && pprekey->uModifiers == key->prekey.uModifiers)
+        {
+            *pfRegistered = TRUE;
+            return S_OK;
+        }
+    }
+
+    *pfRegistered = FALSE;
+    return S_FALSE;
 }
 
 static HRESULT WINAPI KeystrokeMgr_PreserveKey(ITfKeystrokeMgr *iface,
@@ -517,16 +599,71 @@ static HRESULT WINAPI KeystrokeMgr_PreserveKey(ITfKeystrokeMgr *iface,
         const WCHAR *pchDesc, ULONG cchDesc)
 {
     ThreadMgr *This = impl_from_ITfKeystrokeMgrVtbl(iface);
-    FIXME("STUB:(%p)\n",This);
-    return E_NOTIMPL;
+    struct list *cursor;
+    PreservedKey *newkey;
+
+    TRACE("(%p) %x %s (%x,%x) %s\n",This,tid, debugstr_guid(rguid),(prekey)?prekey->uVKey:0,(prekey)?prekey->uModifiers:0,debugstr_wn(pchDesc,cchDesc));
+
+    if (!tid || ! rguid || !prekey || (cchDesc && !pchDesc))
+        return E_INVALIDARG;
+
+    LIST_FOR_EACH(cursor, &This->CurrentPreservedKeys)
+    {
+        PreservedKey* key = LIST_ENTRY(cursor,PreservedKey,entry);
+        if (IsEqualGUID(rguid,&key->guid) && prekey->uVKey == key->prekey.uVKey && prekey->uModifiers == key->prekey.uModifiers)
+            return TF_E_ALREADY_EXISTS;
+    }
+
+    newkey = HeapAlloc(GetProcessHeap(),0,sizeof(PreservedKey));
+    if (!newkey)
+        return E_OUTOFMEMORY;
+
+    newkey->guid  = *rguid;
+    newkey->prekey = *prekey;
+    newkey->tid = tid;
+    if (cchDesc)
+    {
+        newkey->description = HeapAlloc(GetProcessHeap(),0,cchDesc * sizeof(WCHAR));
+        if (!newkey->description)
+        {
+            HeapFree(GetProcessHeap(),0,newkey);
+            return E_OUTOFMEMORY;
+        }
+        memcpy(newkey->description, pchDesc, cchDesc*sizeof(WCHAR));
+    }
+
+    list_add_head(&This->CurrentPreservedKeys,&newkey->entry);
+
+    return S_OK;
 }
 
 static HRESULT WINAPI KeystrokeMgr_UnpreserveKey(ITfKeystrokeMgr *iface,
         REFGUID rguid, const TF_PRESERVEDKEY *pprekey)
 {
     ThreadMgr *This = impl_from_ITfKeystrokeMgrVtbl(iface);
-    FIXME("STUB:(%p)\n",This);
-    return E_NOTIMPL;
+    PreservedKey* key = NULL;
+    struct list *cursor;
+    TRACE("(%p) %s (%x %x)\n",This,debugstr_guid(rguid),(pprekey)?pprekey->uVKey:0, (pprekey)?pprekey->uModifiers:0);
+
+    if (!pprekey || !rguid)
+        return E_INVALIDARG;
+
+    LIST_FOR_EACH(cursor, &This->CurrentPreservedKeys)
+    {
+        key = LIST_ENTRY(cursor,PreservedKey,entry);
+        if (IsEqualGUID(rguid,&key->guid) && pprekey->uVKey == key->prekey.uVKey && pprekey->uModifiers == key->prekey.uModifiers)
+            break;
+        key = NULL;
+    }
+
+    if (!key)
+        return CONNECT_E_NOCONNECTION;
+
+    list_remove(&key->entry);
+    HeapFree(GetProcessHeap(),0,key->description);
+    HeapFree(GetProcessHeap(),0,key);
+
+    return S_OK;
 }
 
 static HRESULT WINAPI KeystrokeMgr_SetPreservedKeyDescription(ITfKeystrokeMgr *iface,
@@ -573,6 +710,128 @@ static const ITfKeystrokeMgrVtbl ThreadMgr_KeystrokeMgrVtbl =
     KeystrokeMgr_SetPreservedKeyDescription,
     KeystrokeMgr_GetPreservedKeyDescription,
     KeystrokeMgr_SimulatePreservedKey
+};
+
+/*****************************************************
+ * ITfMessagePump functions
+ *****************************************************/
+
+static HRESULT WINAPI MessagePump_QueryInterface(ITfMessagePump *iface, REFIID iid, LPVOID *ppvOut)
+{
+    ThreadMgr *This = impl_from_ITfMessagePumpVtbl(iface);
+    return ThreadMgr_QueryInterface((ITfThreadMgr *)This, iid, *ppvOut);
+}
+
+static ULONG WINAPI MessagePump_AddRef(ITfMessagePump *iface)
+{
+    ThreadMgr *This = impl_from_ITfMessagePumpVtbl(iface);
+    return ThreadMgr_AddRef((ITfThreadMgr*)This);
+}
+
+static ULONG WINAPI MessagePump_Release(ITfMessagePump *iface)
+{
+    ThreadMgr *This = impl_from_ITfMessagePumpVtbl(iface);
+    return ThreadMgr_Release((ITfThreadMgr *)This);
+}
+
+static HRESULT WINAPI MessagePump_PeekMessageA(ITfMessagePump *iface,
+        LPMSG pMsg, HWND hwnd, UINT wMsgFilterMin, UINT wMsgFilterMax,
+        UINT wRemoveMsg, BOOL *pfResult)
+{
+    if (!pfResult)
+        return E_INVALIDARG;
+    *pfResult = PeekMessageA(pMsg, hwnd, wMsgFilterMin, wMsgFilterMax, wRemoveMsg);
+    return S_OK;
+}
+
+static HRESULT WINAPI MessagePump_GetMessageA(ITfMessagePump *iface,
+        LPMSG pMsg, HWND hwnd, UINT wMsgFilterMin, UINT wMsgFilterMax,
+        BOOL *pfResult)
+{
+    if (!pfResult)
+        return E_INVALIDARG;
+    *pfResult = GetMessageA(pMsg, hwnd, wMsgFilterMin, wMsgFilterMax);
+    return S_OK;
+}
+
+static HRESULT WINAPI MessagePump_PeekMessageW(ITfMessagePump *iface,
+        LPMSG pMsg, HWND hwnd, UINT wMsgFilterMin, UINT wMsgFilterMax,
+        UINT wRemoveMsg, BOOL *pfResult)
+{
+    if (!pfResult)
+        return E_INVALIDARG;
+    *pfResult = PeekMessageW(pMsg, hwnd, wMsgFilterMin, wMsgFilterMax, wRemoveMsg);
+    return S_OK;
+}
+
+static HRESULT WINAPI MessagePump_GetMessageW(ITfMessagePump *iface,
+        LPMSG pMsg, HWND hwnd, UINT wMsgFilterMin, UINT wMsgFilterMax,
+        BOOL *pfResult)
+{
+    if (!pfResult)
+        return E_INVALIDARG;
+    *pfResult = GetMessageW(pMsg, hwnd, wMsgFilterMin, wMsgFilterMax);
+    return S_OK;
+}
+
+static const ITfMessagePumpVtbl ThreadMgr_MessagePumpVtbl =
+{
+    MessagePump_QueryInterface,
+    MessagePump_AddRef,
+    MessagePump_Release,
+
+    MessagePump_PeekMessageA,
+    MessagePump_GetMessageA,
+    MessagePump_PeekMessageW,
+    MessagePump_GetMessageW
+};
+
+/*****************************************************
+ * ITfClientId functions
+ *****************************************************/
+
+static HRESULT WINAPI ClientId_QueryInterface(ITfClientId *iface, REFIID iid, LPVOID *ppvOut)
+{
+    ThreadMgr *This = impl_from_ITfClientIdVtbl(iface);
+    return ThreadMgr_QueryInterface((ITfThreadMgr *)This, iid, *ppvOut);
+}
+
+static ULONG WINAPI ClientId_AddRef(ITfClientId *iface)
+{
+    ThreadMgr *This = impl_from_ITfClientIdVtbl(iface);
+    return ThreadMgr_AddRef((ITfThreadMgr*)This);
+}
+
+static ULONG WINAPI ClientId_Release(ITfClientId *iface)
+{
+    ThreadMgr *This = impl_from_ITfClientIdVtbl(iface);
+    return ThreadMgr_Release((ITfThreadMgr *)This);
+}
+
+static HRESULT WINAPI ClientId_GetClientId(ITfClientId *iface,
+    REFCLSID rclsid, TfClientId *ptid)
+
+{
+    HRESULT hr;
+    ITfCategoryMgr *catmgr;
+    ThreadMgr *This = impl_from_ITfClientIdVtbl(iface);
+
+    TRACE("(%p) %s\n",This,debugstr_guid(rclsid));
+
+    CategoryMgr_Constructor(NULL,(IUnknown**)&catmgr);
+    hr = ITfCategoryMgr_RegisterGUID(catmgr,rclsid,ptid);
+    ITfCategoryMgr_Release(catmgr);
+
+    return hr;
+}
+
+static const ITfClientIdVtbl ThreadMgr_ClientIdVtbl =
+{
+    ClientId_QueryInterface,
+    ClientId_AddRef,
+    ClientId_Release,
+
+    ClientId_GetClientId
 };
 
 /*****************************************************
@@ -718,9 +977,13 @@ HRESULT ThreadMgr_Constructor(IUnknown *pUnkOuter, IUnknown **ppOut)
     This->ThreadMgrVtbl= &ThreadMgr_ThreadMgrVtbl;
     This->SourceVtbl = &ThreadMgr_SourceVtbl;
     This->KeystrokeMgrVtbl= &ThreadMgr_KeystrokeMgrVtbl;
+    This->MessagePumpVtbl= &ThreadMgr_MessagePumpVtbl;
+    This->ClientIdVtbl = &ThreadMgr_ClientIdVtbl;
     This->ThreadMgrEventSinkVtbl = &ThreadMgr_ThreadMgrEventSinkVtbl;
     This->refCount = 1;
     TlsSetValue(tlsIndex,This);
+
+    list_init(&This->CurrentPreservedKeys);
 
     list_init(&This->ActiveLanguageProfileNotifySink);
     list_init(&This->DisplayAttributeNotifySink);

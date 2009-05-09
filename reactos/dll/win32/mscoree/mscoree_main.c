@@ -324,6 +324,18 @@ HRESULT WINAPI CorBindToCurrentRuntime(LPCWSTR filename, REFCLSID rclsid, REFIID
     return E_NOTIMPL;
 }
 
+BOOL WINAPI StrongNameSignatureVerification(LPCWSTR filename, DWORD inFlags, DWORD* pOutFlags)
+{
+    FIXME("(%s, 0x%X, %p): stub\n", debugstr_w(filename), inFlags, pOutFlags);
+    return FALSE;
+}
+
+BOOL WINAPI StrongNameSignatureVerificationEx(LPCWSTR filename, BOOL forceVerification, BOOL* pVerified)
+{
+    FIXME("(%s, %u, %p): stub\n", debugstr_w(filename), forceVerification, pVerified);
+    return FALSE;
+}
+
 HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID* ppv)
 {
     FIXME("(%p, %p, %p): stub\n", rclsid, riid, ppv);

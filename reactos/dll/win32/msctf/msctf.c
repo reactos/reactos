@@ -26,6 +26,7 @@
 #define COBJMACROS
 
 #include "wine/debug.h"
+#include "wine/list.h"
 #include "windef.h"
 #include "winbase.h"
 #include "winreg.h"
@@ -50,11 +51,28 @@ typedef struct
     LPVOID data;
 } CookieInternal;
 
+typedef struct {
+    TF_LANGUAGEPROFILE      LanguageProfile;
+    ITfTextInputProcessor   *pITfTextInputProcessor;
+    ITfThreadMgr            *pITfThreadMgr;
+    TfClientId              tid;
+} ActivatedTextService;
+
+typedef struct
+{
+    struct list entry;
+    ActivatedTextService *ats;
+} AtsEntry;
+
 static CookieInternal *cookies;
 static UINT id_last;
 static UINT array_size;
 
+static struct list AtsList = LIST_INIT(AtsList);
+static UINT activated = 0;
+
 DWORD tlsIndex = 0;
+TfClientId processId = 0;
 
 const WCHAR szwSystemTIPKey[] = {'S','O','F','T','W','A','R','E','\\','M','i','c','r','o','s','o','f','t','\\','C','T','F','\\','T','I','P',0};
 
@@ -250,6 +268,192 @@ LPVOID remove_Cookie(DWORD id)
 
     cookies[index].id = 0;
     return cookies[index].data;
+}
+
+DWORD enumerate_Cookie(DWORD magic, DWORD *index)
+{
+    int i;
+    for (i = *index; i < id_last; i++)
+        if (cookies[i].id != 0 && cookies[i].magic == magic)
+        {
+            *index = (i+1);
+            return cookies[i].id;
+        }
+    return 0x0;
+}
+
+/*****************************************************************************
+ * Active Text Service Management
+ *****************************************************************************/
+static HRESULT activate_given_ts(ActivatedTextService *actsvr, ITfThreadMgr* tm)
+{
+    HRESULT hr;
+
+    /* Already Active? */
+    if (actsvr->pITfTextInputProcessor)
+        return S_OK;
+
+    hr = CoCreateInstance (&actsvr->LanguageProfile.clsid, NULL, CLSCTX_INPROC_SERVER,
+        &IID_ITfTextInputProcessor, (void**)&actsvr->pITfTextInputProcessor);
+    if (FAILED(hr)) return hr;
+
+    hr = ITfTextInputProcessor_Activate(actsvr->pITfTextInputProcessor, tm, actsvr->tid);
+    if (FAILED(hr))
+    {
+        ITfTextInputProcessor_Release(actsvr->pITfTextInputProcessor);
+        actsvr->pITfTextInputProcessor = NULL;
+        return hr;
+    }
+
+    actsvr->pITfThreadMgr = tm;
+    ITfThreadMgr_AddRef(tm);
+    return hr;
+}
+
+static HRESULT deactivate_given_ts(ActivatedTextService *actsvr)
+{
+    HRESULT hr = S_OK;
+
+    if (actsvr->pITfTextInputProcessor)
+    {
+        hr = ITfTextInputProcessor_Deactivate(actsvr->pITfTextInputProcessor);
+        ITfTextInputProcessor_Release(actsvr->pITfTextInputProcessor);
+        ITfThreadMgr_Release(actsvr->pITfThreadMgr);
+        actsvr->pITfTextInputProcessor = NULL;
+        actsvr->pITfThreadMgr = NULL;
+    }
+
+    return hr;
+}
+
+static void deactivate_remove_conflicting_ts(REFCLSID catid)
+{
+    AtsEntry *ats, *cursor2;
+
+    LIST_FOR_EACH_ENTRY_SAFE(ats, cursor2, &AtsList, AtsEntry, entry)
+    {
+        if (IsEqualCLSID(catid,&ats->ats->LanguageProfile.catid))
+        {
+            deactivate_given_ts(ats->ats);
+            list_remove(&ats->entry);
+            HeapFree(GetProcessHeap(),0,ats->ats);
+            HeapFree(GetProcessHeap(),0,ats);
+            /* we are guarenteeing there is only 1 */
+            break;
+        }
+    }
+}
+
+HRESULT add_active_textservice(TF_LANGUAGEPROFILE *lp)
+{
+    ActivatedTextService *actsvr;
+    ITfCategoryMgr *catmgr;
+    AtsEntry *entry;
+    ITfThreadMgr *tm = (ITfThreadMgr*)TlsGetValue(tlsIndex);
+    ITfClientId *clientid;
+
+    if (!tm) return E_UNEXPECTED;
+
+    actsvr = HeapAlloc(GetProcessHeap(),0,sizeof(ActivatedTextService));
+    if (!actsvr) return E_OUTOFMEMORY;
+
+    entry = HeapAlloc(GetProcessHeap(),0,sizeof(AtsEntry));
+
+    if (!entry)
+    {
+        HeapFree(GetProcessHeap(),0,actsvr);
+        return E_OUTOFMEMORY;
+    }
+
+    ITfThreadMgr_QueryInterface(tm,&IID_ITfClientId,(LPVOID)&clientid);
+    ITfClientId_GetClientId(clientid, &lp->clsid, &actsvr->tid);
+    ITfClientId_Release(clientid);
+
+    if (!actsvr->tid)
+    {
+        HeapFree(GetProcessHeap(),0,actsvr);
+        return E_OUTOFMEMORY;
+    }
+
+    actsvr->pITfTextInputProcessor = NULL;
+    actsvr->LanguageProfile = *lp;
+    actsvr->LanguageProfile.fActive = TRUE;
+
+    /* get TIP category */
+    if (SUCCEEDED(CategoryMgr_Constructor(NULL,(IUnknown**)&catmgr)))
+    {
+        static const GUID *list[3] = {&GUID_TFCAT_TIP_SPEECH, &GUID_TFCAT_TIP_KEYBOARD, &GUID_TFCAT_TIP_HANDWRITING};
+
+        ITfCategoryMgr_FindClosestCategory(catmgr,
+                &actsvr->LanguageProfile.clsid, &actsvr->LanguageProfile.catid,
+                list, 3);
+
+        ITfCategoryMgr_Release(catmgr);
+    }
+    else
+    {
+        ERR("CategoryMgr construction failed\n");
+        actsvr->LanguageProfile.catid = GUID_NULL;
+    }
+
+    if (!IsEqualGUID(&actsvr->LanguageProfile.catid,&GUID_NULL))
+        deactivate_remove_conflicting_ts(&actsvr->LanguageProfile.catid);
+
+    if (activated > 0)
+        activate_given_ts(actsvr, tm);
+
+    entry->ats = actsvr;
+    list_add_head(&AtsList, &entry->entry);
+
+    return S_OK;
+}
+
+BOOL get_active_textservice(REFCLSID rclsid, TF_LANGUAGEPROFILE *profile)
+{
+    AtsEntry *ats;
+
+    LIST_FOR_EACH_ENTRY(ats, &AtsList, AtsEntry, entry)
+    {
+        if (IsEqualCLSID(rclsid,&ats->ats->LanguageProfile.clsid))
+        {
+            if (profile)
+                *profile = ats->ats->LanguageProfile;
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+HRESULT activate_textservices(ITfThreadMgr *tm)
+{
+    HRESULT hr = S_OK;
+    AtsEntry *ats;
+
+    activated ++;
+    if (activated > 1)
+        return S_OK;
+
+    LIST_FOR_EACH_ENTRY(ats, &AtsList, AtsEntry, entry)
+    {
+        hr = activate_given_ts(ats->ats, tm);
+        if (FAILED(hr))
+            FIXME("Failed to activate text service\n");
+    }
+    return hr;
+}
+
+HRESULT deactivate_textservices(void)
+{
+    AtsEntry *ats;
+
+    if (activated > 0)
+        activated --;
+
+    if (activated == 0)
+        LIST_FOR_EACH_ENTRY(ats, &AtsList, AtsEntry, entry)
+            deactivate_given_ts(ats->ats);
+
+    return S_OK;
 }
 
 /*************************************************************************
