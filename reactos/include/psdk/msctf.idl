@@ -22,6 +22,7 @@ import "comcat.idl";
 import "textstor.idl";
 /* import "ctfutb.idl"; */
 #endif
+cpp_quote("#include <winuser.h>")
 
 /* FIXME: LANGID is defined in winnt.h and mlang.h in the platform SDK */
 cpp_quote("#ifndef _WINNT_H")
@@ -650,4 +651,56 @@ interface ITfKeyEventSink : IUnknown
         [in] ITfContext *pic,
         [in] REFGUID rguid,
         [out] BOOL *pfEaten);
+};
+
+[
+  object,
+  local,
+  uuid(8f1b8ad8-0b6b-4874-90c5-bd76011e8f7c),
+  pointer_default(unique)
+]
+interface ITfMessagePump : IUnknown
+{
+    HRESULT PeekMessageA(
+        [out] LPMSG pMsg,
+        [in] HWND hwnd,
+        [in] UINT wMsgFilterMin,
+        [in] UINT wMsgFilterMax,
+        [in] UINT wRemoveMsg,
+        [out] BOOL *pfResult);
+
+    HRESULT GetMessageA(
+        [out] LPMSG pMsg,
+        [in] HWND hwnd,
+        [in] UINT wMsgFilterMin,
+        [in] UINT wMsgFilterMax,
+        [out] BOOL *pfResult);
+
+    HRESULT PeekMessageW(
+        [out] LPMSG pMsg,
+        [in] HWND hwnd,
+        [in] UINT wMsgFilterMin,
+        [in] UINT wMsgFilterMax,
+        [in] UINT wRemoveMsg,
+        [out] BOOL *pfResult);
+
+    HRESULT GetMessageW(
+        [out] LPMSG pMsg,
+        [in] HWND hwnd,
+        [in] UINT wMsgFilterMin,
+        [in] UINT wMsgFilterMax,
+        [out] BOOL *pfResult);
+};
+
+[
+  object,
+  local,
+  uuid(d60a7b49-1b9f-4be2-b702-47e9dc05dec3),
+  pointer_default(unique)
+]
+interface ITfClientId : IUnknown
+{
+    HRESULT GetClientId(
+        [in] REFCLSID rclsid,
+        [out] TfClientId *ptid);
 };
