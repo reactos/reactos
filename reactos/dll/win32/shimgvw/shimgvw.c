@@ -292,7 +292,7 @@ ImageView_InitControls(HWND hwnd)
                               WS_CHILD | WS_VISIBLE,
                               0, 0, 0, 0, hwnd, NULL, hInstance, NULL);
 
-    SetClassLong(hDispWnd, GCL_STYLE, CS_HREDRAW | CS_VREDRAW);
+    SetClassLongPtr(hDispWnd, GCL_STYLE, CS_HREDRAW | CS_VREDRAW);
     PrevProc = (WNDPROC) SetWindowLong(hDispWnd, GWL_WNDPROC, (LPARAM) ImageView_DispWndProc);
 
     ImageView_CreateToolBar(hwnd);

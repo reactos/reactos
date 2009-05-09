@@ -235,7 +235,7 @@ static MDICLIENTINFO *get_client_info( HWND client )
 
 static BOOL is_close_enabled(HWND hwnd, HMENU hSysMenu)
 {
-    if (GetClassLongW(hwnd, GCL_STYLE) & CS_NOCLOSE) return FALSE;
+    if (GetClassLongPtrW(hwnd, GCL_STYLE) & CS_NOCLOSE) return FALSE;
 
     if (!hSysMenu) hSysMenu = GetSystemMenu(hwnd, FALSE);
     if (hSysMenu)

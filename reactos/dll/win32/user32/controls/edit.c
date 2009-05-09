@@ -4105,7 +4105,7 @@ static BOOL EDIT_IsInsideDialog(EDITSTATE *es)
 #ifdef __REACTOS__
     if (es->hwndParent && es->hwndParent != GetDesktopWindow())
     {
-        if (GetClassLongW (es->hwndParent, GCW_ATOM) == (DWORD)MAKEINTATOM(32770))
+        if (GetClassLongPtrW (es->hwndParent, GCW_ATOM) == (DWORD)MAKEINTATOM(32770))
             return TRUE;
     }
     return FALSE;

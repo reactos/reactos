@@ -2216,7 +2216,7 @@ MenuShowSubPopup(HWND WndOwner, PROSMENUINFO MenuInfo, BOOL SelectFirst, UINT Fl
   if (IS_SYSTEM_MENU(MenuInfo))
     {
       MenuInitSysMenuPopup(ItemInfo.hSubMenu, GetWindowLongW(MenuInfo->Wnd, GWL_STYLE),
-                           GetClassLongW(MenuInfo->Wnd, GCL_STYLE), HTSYSMENU);
+                           GetClassLongPtrW(MenuInfo->Wnd, GCL_STYLE), HTSYSMENU);
 
       NcGetSysPopupPos(MenuInfo->Wnd, &Rect);
       Rect.top = Rect.bottom;

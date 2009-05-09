@@ -224,7 +224,7 @@ DefWndHandleSetCursor(HWND hWnd, WPARAM wParam, LPARAM lParam, ULONG Style)
 
     case HTCLIENT:
       {
-	HICON hCursor = (HICON)GetClassLongW(hWnd, GCL_HCURSOR);
+	HICON hCursor = (HICON)GetClassLongPtrW(hWnd, GCL_HCURSOR);
 	if (hCursor)
 	  {
 	    SetCursor(hCursor);
@@ -554,7 +554,7 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
 
   if( iconic ) /* create a cursor for dragging */
     {
-      HICON hIcon = (HICON)GetClassLongW(hwnd, GCL_HICON);
+      HICON hIcon = (HICON)GetClassLongPtrW(hwnd, GCL_HICON);
       if(!hIcon) hIcon = (HICON)SendMessageW( hwnd, WM_QUERYDRAGICON, 0, 0L);
       if( hIcon ) hDragCursor = CursorIconToCursor( hIcon, TRUE );
       if( !hDragCursor ) iconic = FALSE;
@@ -1181,7 +1181,7 @@ User32DefWindowProc(HWND hWnd,
                     if((SystemMenu = GetSystemMenu(hWnd, FALSE)))
                     {
                       MenuInitSysMenuPopup(SystemMenu, GetWindowLongW(hWnd, GWL_STYLE),
-                                           GetClassLongW(hWnd, GCL_STYLE), HitCode);
+                                           GetClassLongPtrW(hWnd, GCL_STYLE), HitCode);
 
                       if(HitCode == HTCAPTION)
                         Flags = TPM_LEFTBUTTON | TPM_RIGHTBUTTON;
@@ -1224,7 +1224,7 @@ User32DefWindowProc(HWND hWnd,
                 HICON hIcon;
 
                 if (GetWindowLongW(hWnd, GWL_STYLE) & WS_MINIMIZE &&
-                    (hIcon = (HICON)GetClassLongW(hWnd, GCL_HICON)) != NULL)
+                    (hIcon = (HICON)GetClassLongPtrW(hWnd, GCL_HICON)) != NULL)
                 {
                     RECT ClientRect;
                     INT x, y;
@@ -1322,13 +1322,13 @@ User32DefWindowProc(HWND hWnd,
         case WM_ICONERASEBKGND:
         {
             RECT Rect;
-            HBRUSH hBrush = (HBRUSH)GetClassLongW(hWnd, GCL_HBRBACKGROUND);
+            HBRUSH hBrush = (HBRUSH)GetClassLongPtrW(hWnd, GCL_HBRBACKGROUND);
 
             if (NULL == hBrush)
             {
                 return 0;
             }
-            if (GetClassLongW(hWnd, GCL_STYLE) & CS_PARENTDC)
+            if (GetClassLongPtrW(hWnd, GCL_STYLE) & CS_PARENTDC)
             {
                 /* can't use GetClipBox with a parent DC or we fill the whole parent */
                 GetClientRect(hWnd, &Rect);
@@ -1410,7 +1410,7 @@ User32DefWindowProc(HWND hWnd,
 
                 if (wParam == VK_F4) /* Try to close the window */
                 {
-                    if (!(GetClassLongW(top, GCL_STYLE) & CS_NOCLOSE))
+                    if (!(GetClassLongPtrW(top, GCL_STYLE) & CS_NOCLOSE))
                     {
                         if (bUnicode)
                             PostMessageW(top, WM_SYSCOMMAND, SC_CLOSE, 0);
@@ -1507,7 +1507,7 @@ User32DefWindowProc(HWND hWnd,
             UINT Len;
             HICON hIcon;
 
-            hIcon = (HICON)GetClassLongW(hWnd, GCL_HICON);
+            hIcon = (HICON)GetClassLongPtrW(hWnd, GCL_HICON);
             if (hIcon)
             {
                 return ((LRESULT)hIcon);
@@ -1534,8 +1534,8 @@ User32DefWindowProc(HWND hWnd,
         case WM_SETICON:
         {
            INT Index = (wParam != 0) ? GCL_HICON : GCL_HICONSM;
-           HICON hOldIcon = (HICON)GetClassLongW(hWnd, Index);
-           SetClassLongW(hWnd, Index, lParam);
+           HICON hOldIcon = (HICON)GetClassLongPtrW(hWnd, Index);
+           SetClassLongPtrW(hWnd, Index, lParam);
            SetWindowPos(hWnd, 0, 0, 0, 0, 0,
 		       SWP_FRAMECHANGED | SWP_NOSIZE | SWP_NOMOVE |
 		       SWP_NOACTIVATE | SWP_NOZORDER);
@@ -1545,7 +1545,7 @@ User32DefWindowProc(HWND hWnd,
         case WM_GETICON:
         {
             INT Index = (wParam == ICON_BIG) ? GCL_HICON : GCL_HICONSM;
-            return (GetClassLongW(hWnd, Index));
+            return (GetClassLongPtrW(hWnd, Index));
         }
 
         case WM_HELP:

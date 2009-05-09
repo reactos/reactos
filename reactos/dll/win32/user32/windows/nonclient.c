@@ -134,10 +134,10 @@ UserGetWindowIcon(HWND hwnd)
       SendMessageTimeout(hwnd, WM_GETICON, ICON_BIG, 0, SMTO_ABORTIFHUNG, 1000, (LPDWORD)&hIcon);
 
    if (!hIcon)
-      hIcon = (HICON)GetClassLong(hwnd, GCL_HICONSM);
+      hIcon = (HICON)GetClassLongPtr(hwnd, GCL_HICONSM);
 
    if (!hIcon)
-      hIcon = (HICON)GetClassLong(hwnd, GCL_HICON);
+      hIcon = (HICON)GetClassLongPtr(hwnd, GCL_HICON);
 
    return hIcon;
 }
@@ -499,7 +499,7 @@ LRESULT
 DefWndNCCalcSize(HWND hWnd, BOOL CalcSizeStruct, RECT *Rect)
 {
    LRESULT Result = 0;
-   DWORD Style = GetClassLongW(hWnd, GCL_STYLE);
+   DWORD Style = GetClassLongPtrW(hWnd, GCL_STYLE);
    DWORD ExStyle;
    SIZE WindowBorders;
    RECT OrigRect;
