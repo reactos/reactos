@@ -550,10 +550,7 @@ NtAllocateVirtualMemory(IN     HANDLE ProcessHandle,
  *      AllocationType = Indicates the type of virtual memory you like to
  *                       allocated, can be a combination of MEM_COMMIT,
  *                       MEM_RESERVE, MEM_RESET, MEM_TOP_DOWN.
- *      Protect = Indicates the protection type of the pages allocated, can be
- *                a combination of PAGE_READONLY, PAGE_READWRITE,
- *                PAGE_EXECUTE_READ, PAGE_EXECUTE_READWRITE, PAGE_GUARD,
- *                PAGE_NOACCESS
+ *      Protect = Indicates the protection type of the pages allocated.
  * RETURNS: Status
  */
 {
@@ -567,6 +564,7 @@ NtAllocateVirtualMemory(IN     HANDLE ProcessHandle,
    ULONG RegionSize;
    PVOID PBaseAddress;
    ULONG PRegionSize;
+   ULONG MemProtection;
    PHYSICAL_ADDRESS BoundaryAddressMultiple;
    KPROCESSOR_MODE PreviousMode;
 
@@ -578,7 +576,15 @@ NtAllocateVirtualMemory(IN     HANDLE ProcessHandle,
           Protect);
 
    /* Check for valid protection flags */
-   if (!Protect || Protect & ~PAGE_FLAGS_VALID_FROM_USER_MODE)
+   MemProtection = Protect & ~(PAGE_GUARD|PAGE_NOCACHE);
+   if (MemProtection != PAGE_NOACCESS &&
+       MemProtection != PAGE_READONLY &&
+       MemProtection != PAGE_READWRITE &&
+       MemProtection != PAGE_WRITECOPY &&
+       MemProtection != PAGE_EXECUTE &&
+       MemProtection != PAGE_EXECUTE_READ &&
+       MemProtection != PAGE_EXECUTE_READWRITE &&
+       MemProtection != PAGE_EXECUTE_WRITECOPY)
    {
       DPRINT1("Invalid page protection\n");
       return STATUS_INVALID_PAGE_PROTECTION;

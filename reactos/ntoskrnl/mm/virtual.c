@@ -844,10 +844,25 @@ NtProtectVirtualMemory(IN HANDLE ProcessHandle,
 {
     PEPROCESS Process;
     ULONG OldAccessProtection;
+    ULONG Protection;
     PVOID BaseAddress = NULL;
     SIZE_T NumberOfBytesToProtect = 0;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status = STATUS_SUCCESS;
+
+    /* Check for valid protection flags */
+    Protection = NewAccessProtection & ~(PAGE_GUARD|PAGE_NOCACHE);
+    if (Protection != PAGE_NOACCESS &&
+        Protection != PAGE_READONLY &&
+        Protection != PAGE_READWRITE &&
+        Protection != PAGE_WRITECOPY &&
+        Protection != PAGE_EXECUTE &&
+        Protection != PAGE_EXECUTE_READ &&
+        Protection != PAGE_EXECUTE_READWRITE &&
+        Protection != PAGE_EXECUTE_WRITECOPY)
+    {
+        return STATUS_INVALID_PAGE_PROTECTION;
+    }
 
     /* Check if we came from user mode */
     if (PreviousMode != KernelMode)
