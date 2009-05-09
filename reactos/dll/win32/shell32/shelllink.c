@@ -2633,7 +2633,7 @@ SH_ShellLinkDlgProc(
             {
                 //FIXME load localized error msg
                 MessageBoxW( hwndDlg, L"file not existing", szBuffer, MB_OK );
-                SetWindowLong( hwndDlg, DWL_MSGRESULT, PSNRET_INVALID_NOCHANGEPAGE );
+                SetWindowLongPtr( hwndDlg, DWL_MSGRESULT, PSNRET_INVALID_NOCHANGEPAGE );
                 return TRUE;
             }
             ptr = wcsrchr(szBuffer, L'.');
@@ -2641,7 +2641,7 @@ SH_ShellLinkDlgProc(
             {
                 // FIXME load localized error msg
                 MessageBoxW( hwndDlg, L"You cannot create a link to a shortcut", L"Error", MB_ICONERROR );
-                SetWindowLong( hwndDlg, DWL_MSGRESULT, PSNRET_INVALID_NOCHANGEPAGE );
+                SetWindowLongPtr( hwndDlg, DWL_MSGRESULT, PSNRET_INVALID_NOCHANGEPAGE );
                 return TRUE;
             }
 
@@ -2649,7 +2649,7 @@ SH_ShellLinkDlgProc(
 
             TRACE("This %p sLinkPath %S\n", This, This->sLinkPath);
             IPersistFile_fnSave( (IPersistFile*)&This->lpvtblPersistFile, This->sLinkPath, TRUE );
-            SetWindowLong( hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR );
+            SetWindowLongPtr( hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR );
             return TRUE;
        }
        break;

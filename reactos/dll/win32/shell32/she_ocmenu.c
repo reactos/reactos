@@ -636,12 +636,12 @@ static BOOL CALLBACK OpenWithProgrammDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam,
     LONG YOffset;
     OPEN_WITH_CONTEXT Context;
 
-    poainfo = (OPENASINFO*) GetWindowLong(hwndDlg, DWLP_USER);
+    poainfo = (OPENASINFO*) GetWindowLongPtr(hwndDlg, DWLP_USER);
 
     switch(uMsg)
     {
     case WM_INITDIALOG:
-        SetWindowLong(hwndDlg, DWLP_USER, (LONG)lParam);
+        SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG)lParam);
         poainfo = (OPENASINFO*)lParam;
         if (!(poainfo->oaifInFlags & OAIF_ALLOW_REGISTRATION))
             EnableWindow(GetDlgItem(hwndDlg, 14003), FALSE);

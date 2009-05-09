@@ -771,12 +771,12 @@ static LRESULT EditWndProc_common( HWND hwnd, UINT msg,
 #endif
 	case EM_SETREADONLY:
 		if (wParam) {
-                    SetWindowLongW( hwnd, GWL_STYLE,
-                                    GetWindowLongW( hwnd, GWL_STYLE ) | ES_READONLY );
+                    SetWindowLongPtrW( hwnd, GWL_STYLE,
+                                       GetWindowLongPtrW( hwnd, GWL_STYLE ) | ES_READONLY );
                     es->style |= ES_READONLY;
 		} else {
-                    SetWindowLongW( hwnd, GWL_STYLE,
-                                    GetWindowLongW( hwnd, GWL_STYLE ) & ~ES_READONLY );
+                    SetWindowLongPtrW( hwnd, GWL_STYLE,
+                                       GetWindowLongPtrW( hwnd, GWL_STYLE ) & ~ES_READONLY );
                     es->style &= ~ES_READONLY;
 		}
                 result = 1;
@@ -3875,13 +3875,13 @@ static void EDIT_EM_SetPasswordChar(EDITSTATE *es, WCHAR c)
 	if (es->password_char == c)
 		return;
 
-        style = GetWindowLongW( es->hwndSelf, GWL_STYLE );
+        style = GetWindowLongPtrW( es->hwndSelf, GWL_STYLE );
 	es->password_char = c;
 	if (c) {
-            SetWindowLongW( es->hwndSelf, GWL_STYLE, style | ES_PASSWORD );
+            SetWindowLongPtrW( es->hwndSelf, GWL_STYLE, style | ES_PASSWORD );
             es->style |= ES_PASSWORD;
 	} else {
-            SetWindowLongW( es->hwndSelf, GWL_STYLE, style & ~ES_PASSWORD );
+            SetWindowLongPtrW( es->hwndSelf, GWL_STYLE, style & ~ES_PASSWORD );
             es->style &= ~ES_PASSWORD;
 	}
 	EDIT_UpdateText(es, NULL, TRUE);
@@ -4513,7 +4513,7 @@ static LRESULT EDIT_WM_HScroll(EDITSTATE *es, INT action, INT pos)
 	case SB_THUMBPOSITION:
 		TRACE("SB_THUMBPOSITION %d\n", pos);
 		es->flags &= ~EF_HSCROLL_TRACK;
-		if(GetWindowLongW( es->hwndSelf, GWL_STYLE ) & WS_HSCROLL)
+		if(GetWindowLongPtrW( es->hwndSelf, GWL_STYLE ) & WS_HSCROLL)
 		    dx = pos - es->x_offset;
 		else
 		{
@@ -4546,7 +4546,7 @@ static LRESULT EDIT_WM_HScroll(EDITSTATE *es, INT action, INT pos)
 #endif
 	{
 		LRESULT ret;
-		if(GetWindowLongW( es->hwndSelf, GWL_STYLE ) & WS_HSCROLL)
+		if(GetWindowLongPtrW( es->hwndSelf, GWL_STYLE ) & WS_HSCROLL)
 		    ret = GetScrollPos(es->hwndSelf, SB_HORZ);
 		else
 		{
@@ -5008,7 +5008,7 @@ static LRESULT EDIT_WM_NCCreate(HWND hwnd, LPCREATESTRUCTW lpcs, BOOL unicode)
 	if (lpcs->dwExStyle & WS_EX_CLIENTEDGE)
 		es->style &= ~WS_BORDER;
         else if (es->style & WS_BORDER)
-		SetWindowLongW(hwnd, GWL_STYLE, es->style & ~WS_BORDER);
+		SetWindowLongPtrW(hwnd, GWL_STYLE, es->style & ~WS_BORDER);
 
 	return TRUE;
 }
@@ -5475,7 +5475,7 @@ static LRESULT EDIT_WM_VScroll(EDITSTATE *es, INT action, INT pos)
 #endif
 	{
 		LRESULT ret;
-		if(GetWindowLongW( es->hwndSelf, GWL_STYLE ) & WS_VSCROLL)
+		if(GetWindowLongPtrW( es->hwndSelf, GWL_STYLE ) & WS_VSCROLL)
 		    ret = GetScrollPos(es->hwndSelf, SB_VERT);
 		else
 		{

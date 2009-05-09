@@ -293,7 +293,7 @@ ImageView_InitControls(HWND hwnd)
                               0, 0, 0, 0, hwnd, NULL, hInstance, NULL);
 
     SetClassLongPtr(hDispWnd, GCL_STYLE, CS_HREDRAW | CS_VREDRAW);
-    PrevProc = (WNDPROC) SetWindowLong(hDispWnd, GWL_WNDPROC, (LPARAM) ImageView_DispWndProc);
+    PrevProc = (WNDPROC) SetWindowLongPtr(hDispWnd, GWL_WNDPROC, (LPARAM) ImageView_DispWndProc);
 
     ImageView_CreateToolBar(hwnd);
 }
@@ -407,7 +407,7 @@ ImageView_WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
         case WM_DESTROY:
         {
             ImageView_SaveSettings(hwnd);
-            SetWindowLong(hDispWnd, GWL_WNDPROC, (LPARAM) PrevProc);
+            SetWindowLongPtr(hDispWnd, GWL_WNDPROC, (LPARAM) PrevProc);
             PostQuitMessage(0);
             break;
         }

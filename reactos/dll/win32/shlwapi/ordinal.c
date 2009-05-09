@@ -1081,11 +1081,11 @@ HRESULT WINAPI IUnknown_Exec(IUnknown* lpUnknown, REFGUID pguidCmdGroup,
  */
 LONG WINAPI SHSetWindowBits(HWND hwnd, INT offset, UINT wMask, UINT wFlags)
 {
-  LONG ret = GetWindowLongA(hwnd, offset);
+  LONG ret = GetWindowLongPtrA(hwnd, offset);
   LONG newFlags = (wFlags & wMask) | (ret & ~wFlags);
 
   if (newFlags != ret)
-    ret = SetWindowLongA(hwnd, offset, newFlags);
+    ret = SetWindowLongPtrA(hwnd, offset, newFlags);
   return ret;
 }
 

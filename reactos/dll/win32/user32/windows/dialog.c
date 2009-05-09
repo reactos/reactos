@@ -450,7 +450,7 @@ static BOOL DIALOG_IsAccelerator( HWND hwnd, HWND hwndDlg, WPARAM wParam )
 
     do
     {
-        DWORD style = GetWindowLongW( hwndControl, GWL_STYLE );
+        DWORD style = GetWindowLongPtrW( hwndControl, GWL_STYLE );
         if ((style & (WS_VISIBLE | WS_DISABLED)) == WS_VISIBLE)
         {
             dlgCode = SendMessageA( hwndControl, WM_GETDLGCODE, 0, 0 );
@@ -539,7 +539,7 @@ INT DIALOG_DoDialogBox( HWND hwnd, HWND owner )
                     ShowWindow( hwnd, SW_SHOWNORMAL );
                     bFirstEmpty = FALSE;
                 }
-                if (!(GetWindowLongW( hwnd, GWL_STYLE ) & DS_NOIDLEMSG))
+                if (!(GetWindowLongPtrW( hwnd, GWL_STYLE ) & DS_NOIDLEMSG))
                {
                     /* No message present -> send ENTERIDLE and wait */
                     SendMessageW( ownerMsg, WM_ENTERIDLE, MSGF_DIALOGBOX, (LPARAM)hwnd );
@@ -875,10 +875,10 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
                     SetFocus( dlgInfo->hwndFocus );
             }
         }
-        if (!(GetWindowLongW( hwnd, GWL_STYLE ) & WS_CHILD))
+        if (!(GetWindowLongPtrW( hwnd, GWL_STYLE ) & WS_CHILD))
             SendMessageW( hwnd, WM_CHANGEUISTATE, MAKEWPARAM(UIS_INITIALIZE, 0), 0);
 
-        if (template.style & WS_VISIBLE && !(GetWindowLongW( hwnd, GWL_STYLE ) & WS_VISIBLE))
+        if (template.style & WS_VISIBLE && !(GetWindowLongPtrW( hwnd, GWL_STYLE ) & WS_VISIBLE))
         {
            ShowWindow( hwnd, SW_SHOWNORMAL );   /* SW_SHOW doesn't always work */
         }
@@ -962,9 +962,9 @@ static HWND DEFDLG_FindDefButton( HWND hwndDlg )
             break;
 
         /* Recurse into WS_EX_CONTROLPARENT controls */
-        if (GetWindowLongW( hwndChild, GWL_EXSTYLE ) & WS_EX_CONTROLPARENT)
+        if (GetWindowLongPtrW( hwndChild, GWL_EXSTYLE ) & WS_EX_CONTROLPARENT)
         {
-            LONG dsStyle = GetWindowLongW( hwndChild, GWL_STYLE );
+            LONG dsStyle = GetWindowLongPtrW( hwndChild, GWL_STYLE );
             if ((dsStyle & WS_VISIBLE) && !(dsStyle & WS_DISABLED) &&
                 (hwndTmp = DEFDLG_FindDefButton(hwndChild)) != NULL)
            return hwndTmp;
@@ -1198,8 +1198,8 @@ static HWND DIALOG_GetNextTabItem( HWND hwndMain, HWND hwndDlg, HWND hwndCtrl, B
 
     while(hChildFirst)
     {
-        dsStyle = GetWindowLongA(hChildFirst,GWL_STYLE);
-        exStyle = GetWindowLongA(hChildFirst,GWL_EXSTYLE);
+        dsStyle = GetWindowLongPtrA(hChildFirst,GWL_STYLE);
+        exStyle = GetWindowLongPtrA(hChildFirst,GWL_EXSTYLE);
         if( (exStyle & WS_EX_CONTROLPARENT) && (dsStyle & WS_VISIBLE) && !(dsStyle & WS_DISABLED))
         {
             HWND retWnd;
@@ -1411,7 +1411,7 @@ static BOOL DIALOG_DlgDirSelect( HWND hwnd, LPWSTR str, INT len,
 BOOL CALLBACK GetDlgItemEnumProc (HWND hwnd, LPARAM lParam )
 {
     GETDLGITEMINFO * info = (GETDLGITEMINFO *)lParam;
-    if(info->nIDDlgItem == GetWindowLongW( hwnd, GWL_ID ))
+    if(info->nIDDlgItem == GetWindowLongPtrW( hwnd, GWL_ID ))
     {
         info->control = hwnd;
         return FALSE;
@@ -2092,7 +2092,7 @@ GetNextDlgGroupItem(
         /* MSDN is wrong. fPrevious does not result in the last child */
 
         /* Maybe that first one is valid.  If so then we don't want to skip it*/
-        if ((GetWindowLongW( hCtl, GWL_STYLE ) & (WS_VISIBLE|WS_DISABLED)) == WS_VISIBLE)
+        if ((GetWindowLongPtrW( hCtl, GWL_STYLE ) & (WS_VISIBLE|WS_DISABLED)) == WS_VISIBLE)
         {
             return hCtl;
         }
@@ -2130,8 +2130,8 @@ GetNextDlgGroupItem(
         hwnd = hwndNext;
 
         /* Wander down the leading edge of controlparents */
-        while ( (GetWindowLongW (hwnd, GWL_EXSTYLE) & WS_EX_CONTROLPARENT) &&
-                ((GetWindowLongW (hwnd, GWL_STYLE) & (WS_VISIBLE | WS_DISABLED)) == WS_VISIBLE) &&
+        while ( (GetWindowLongPtrW (hwnd, GWL_EXSTYLE) & WS_EX_CONTROLPARENT) &&
+                ((GetWindowLongPtrW (hwnd, GWL_STYLE) & (WS_VISIBLE | WS_DISABLED)) == WS_VISIBLE) &&
                 (hwndNext = GetWindow (hwnd, GW_CHILD)))
             hwnd = hwndNext;
         /* Question.  If the control is a control parent but either has no
@@ -2140,7 +2140,7 @@ GetNextDlgGroupItem(
          * I believe it doesn't count.
          */
 
-        if ((GetWindowLongW (hwnd, GWL_STYLE) & WS_GROUP))
+        if ((GetWindowLongPtrW (hwnd, GWL_STYLE) & WS_GROUP))
         {
             hwndLastGroup = hwnd;
             if (!fSkipping)
@@ -2160,7 +2160,7 @@ GetNextDlgGroupItem(
         }
 
         if (!fSkipping &&
-            (GetWindowLongW (hwnd, GWL_STYLE) & (WS_VISIBLE|WS_DISABLED)) ==
+            (GetWindowLongPtrW (hwnd, GWL_STYLE) & (WS_VISIBLE|WS_DISABLED)) ==
              WS_VISIBLE)
         {
             retvalue = hwnd;

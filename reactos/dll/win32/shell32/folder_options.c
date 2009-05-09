@@ -513,11 +513,11 @@ FolderPropertiesGeneralDlg(
             }
             break;
         case WM_DESTROY:
-            pContext = (PFOLDER_PROPERTIES_CONTEXT)GetWindowLong(hwndDlg, DWL_USER);
+            pContext = (PFOLDER_PROPERTIES_CONTEXT)GetWindowLongPtr(hwndDlg, DWL_USER);
             SHFree((LPVOID)pContext);
             break;
         case WM_NOTIFY:
-            pContext = (PFOLDER_PROPERTIES_CONTEXT)GetWindowLong(hwndDlg, DWL_USER);
+            pContext = (PFOLDER_PROPERTIES_CONTEXT)GetWindowLongPtr(hwndDlg, DWL_USER);
             lppsn = (LPPSHNOTIFY) lParam;
             if (lppsn->hdr.code == PSN_APPLY)
             {
@@ -540,7 +540,7 @@ FolderPropertiesGeneralDlg(
 
                     SetFileAttributesW(pContext->szFolderPath, Attribute);
                 }
-                SetWindowLong( hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR );
+                SetWindowLongPtr( hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR );
                 return TRUE;
             }
             break;

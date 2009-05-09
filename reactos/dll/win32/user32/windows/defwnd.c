@@ -178,13 +178,13 @@ UserGetInsideRectNC(PWINDOW Wnd, RECT *rect)
 VOID
 DefWndSetRedraw(HWND hWnd, WPARAM wParam)
 {
-    LONG Style = GetWindowLong(hWnd, GWL_STYLE);
+    LONG Style = GetWindowLongPtr(hWnd, GWL_STYLE);
     /* Content can be redrawn after a change. */
     if (wParam)
     {
        if (!(Style & WS_VISIBLE)) /* Not Visible */
        {
-          SetWindowLong(hWnd, GWL_STYLE, WS_VISIBLE);
+          SetWindowLongPtr(hWnd, GWL_STYLE, WS_VISIBLE);
        }
     }
     else /* Content cannot be redrawn after a change. */
@@ -193,7 +193,7 @@ DefWndSetRedraw(HWND hWnd, WPARAM wParam)
        {
             RedrawWindow( hWnd, NULL, 0, RDW_ALLCHILDREN | RDW_VALIDATE );
             Style &= ~WS_VISIBLE;
-            SetWindowLong(hWnd, GWL_STYLE, Style); /* clear bits */
+            SetWindowLongPtr(hWnd, GWL_STYLE, Style); /* clear bits */
        }
     }
     return;
@@ -266,7 +266,7 @@ DefWndHandleSetCursor(HWND hWnd, WPARAM wParam, LPARAM lParam, ULONG Style)
     case HTBOTTOMLEFT:
     case HTTOPRIGHT:
       {
-        if (GetWindowLongW(hWnd, GWL_STYLE) & WS_MAXIMIZE)
+        if (GetWindowLongPtrW(hWnd, GWL_STYLE) & WS_MAXIMIZE)
         {
           break;
         }
@@ -840,7 +840,7 @@ LRESULT
 DefWndHandleWindowPosChanging(HWND hWnd, WINDOWPOS* Pos)
 {
     POINT maxTrack, minTrack;
-    LONG style = GetWindowLongA(hWnd, GWL_STYLE);
+    LONG style = GetWindowLongPtrA(hWnd, GWL_STYLE);
 
     if (Pos->flags & SWP_NOSIZE) return 0;
     if ((style & WS_THICKFRAME) || ((style & (WS_POPUP | WS_CHILD)) == 0))
@@ -872,7 +872,7 @@ DefWndHandleWindowPosChanged(HWND hWnd, WINDOWPOS* Pos)
   RECT Rect;
 
   GetClientRect(hWnd, &Rect);
-  MapWindowPoints(hWnd, (GetWindowLongW(hWnd, GWL_STYLE) & WS_CHILD ?
+  MapWindowPoints(hWnd, (GetWindowLongPtrW(hWnd, GWL_STYLE) & WS_CHILD ?
                          GetParent(hWnd) : NULL), (LPPOINT) &Rect, 2);
 
   if (! (Pos->flags & SWP_NOCLIENTMOVE))
@@ -1145,7 +1145,7 @@ User32DefWindowProc(HWND hWnd,
 
         case WM_CONTEXTMENU:
         {
-            if (GetWindowLongW(hWnd, GWL_STYLE) & WS_CHILD)
+            if (GetWindowLongPtrW(hWnd, GWL_STYLE) & WS_CHILD)
             {
                 if (bUnicode)
                 {
@@ -1162,7 +1162,7 @@ User32DefWindowProc(HWND hWnd,
                 DWORD Style;
                 LONG HitCode;
 
-                Style = GetWindowLongW(hWnd, GWL_STYLE);
+                Style = GetWindowLongPtrW(hWnd, GWL_STYLE);
 
                 Pt.x = GET_X_LPARAM(lParam);
                 Pt.y = GET_Y_LPARAM(lParam);
@@ -1180,7 +1180,7 @@ User32DefWindowProc(HWND hWnd,
 
                     if((SystemMenu = GetSystemMenu(hWnd, FALSE)))
                     {
-                      MenuInitSysMenuPopup(SystemMenu, GetWindowLongW(hWnd, GWL_STYLE),
+                      MenuInitSysMenuPopup(SystemMenu, GetWindowLongPtrW(hWnd, GWL_STYLE),
                                            GetClassLongPtrW(hWnd, GCL_STYLE), HitCode);
 
                       if(HitCode == HTCAPTION)
@@ -1223,7 +1223,7 @@ User32DefWindowProc(HWND hWnd,
             {
                 HICON hIcon;
 
-                if (GetWindowLongW(hWnd, GWL_STYLE) & WS_MINIMIZE &&
+                if (GetWindowLongPtrW(hWnd, GWL_STYLE) & WS_MINIMIZE &&
                     (hIcon = (HICON)GetClassLongPtrW(hWnd, GCL_HICON)) != NULL)
                 {
                     RECT ClientRect;
@@ -1268,7 +1268,7 @@ User32DefWindowProc(HWND hWnd,
 
         case WM_MOUSEACTIVATE:
         {
-            if (GetWindowLongW(hWnd, GWL_STYLE) & WS_CHILD)
+            if (GetWindowLongPtrW(hWnd, GWL_STYLE) & WS_CHILD)
             {
                 LONG Ret;
                 if (bUnicode)
@@ -1293,7 +1293,7 @@ User32DefWindowProc(HWND hWnd,
         {
             /* Check if the window is minimized. */
             if (LOWORD(wParam) != WA_INACTIVE &&
-                !(GetWindowLongW(hWnd, GWL_STYLE) & WS_MINIMIZE))
+                !(GetWindowLongPtrW(hWnd, GWL_STYLE) & WS_MINIMIZE))
             {
                 SetFocus(hWnd);
             }
@@ -1302,7 +1302,7 @@ User32DefWindowProc(HWND hWnd,
 
         case WM_MOUSEWHEEL:
         {
-            if (GetWindowLongW(hWnd, GWL_STYLE) & WS_CHILD)
+            if (GetWindowLongPtrW(hWnd, GWL_STYLE) & WS_CHILD)
             {
                 if (bUnicode)
                 {
@@ -1356,7 +1356,7 @@ User32DefWindowProc(HWND hWnd,
 
         case WM_SETCURSOR:
         {
-            ULONG Style = GetWindowLongW(hWnd, GWL_STYLE);
+            ULONG Style = GetWindowLongPtrW(hWnd, GWL_STYLE);
 
             if (Style & WS_CHILD)
             {
@@ -1457,7 +1457,7 @@ User32DefWindowProc(HWND hWnd,
             if ((HIWORD(lParam) & KEYDATA_ALT) && wParam)
             {
                 if (wParam == '\t' || wParam == '\x1b') break;
-                if (wParam == ' ' && (GetWindowLongW( hWnd, GWL_STYLE ) & WS_CHILD))
+                if (wParam == ' ' && (GetWindowLongPtrW( hWnd, GWL_STYLE ) & WS_CHILD))
                     SendMessageW( GetParent(hWnd), Msg, wParam, lParam );
                 else
                     SendMessageW( hWnd, WM_SYSCOMMAND, SC_KEYMENU, wParam );
@@ -1478,7 +1478,7 @@ User32DefWindowProc(HWND hWnd,
         {
             iMenuSysKey = 0;
             /* FIXME: Check for a desktop. */
-            if (!(GetWindowLongW( hWnd, GWL_STYLE ) & WS_CHILD)) EndMenu();
+            if (!(GetWindowLongPtrW( hWnd, GWL_STYLE ) & WS_CHILD)) EndMenu();
             if (GetCapture() == hWnd)
             {
                 ReleaseCapture();
@@ -1495,7 +1495,7 @@ User32DefWindowProc(HWND hWnd,
 */
         case WM_QUERYDROPOBJECT:
         {
-            if (GetWindowLongW(hWnd, GWL_EXSTYLE) & WS_EX_ACCEPTFILES)
+            if (GetWindowLongPtrW(hWnd, GWL_EXSTYLE) & WS_EX_ACCEPTFILES)
             {
                 return(1);
             }
@@ -1953,7 +1953,7 @@ DefWindowProcA(HWND hWnd,
         {
             DefSetText(hWnd, (PCWSTR)lParam, TRUE);
 
-            if ((GetWindowLongW(hWnd, GWL_STYLE) & WS_CAPTION) == WS_CAPTION)
+            if ((GetWindowLongPtrW(hWnd, GWL_STYLE) & WS_CAPTION) == WS_CAPTION)
             {
                 DefWndNCPaint(hWnd, (HRGN)1, -1);
             }
@@ -2095,7 +2095,7 @@ DefWindowProcW(HWND hWnd,
         {
             DefSetText(hWnd, (PCWSTR)lParam, FALSE);
 
-            if ((GetWindowLongW(hWnd, GWL_STYLE) & WS_CAPTION) == WS_CAPTION)
+            if ((GetWindowLongPtrW(hWnd, GWL_STYLE) & WS_CAPTION) == WS_CAPTION)
             {
                 DefWndNCPaint(hWnd, (HRGN)1, -1);
             }

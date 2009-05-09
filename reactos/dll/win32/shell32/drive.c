@@ -514,13 +514,13 @@ DriveGeneralDlg(
         }
         if (lppsn->hdr.code == PSN_APPLY)
         {
-           lpstr = (LPWSTR)GetWindowLong(hwndDlg, DWLP_USER);
+           lpstr = (LPWSTR)GetWindowLongPtr(hwndDlg, DWLP_USER);
            if (lpstr && SendDlgItemMessageW(hwndDlg, 14000, WM_GETTEXT, sizeof(szPath)/sizeof(WCHAR), (LPARAM)szPath))
            {
               szPath[(sizeof(szPath)/sizeof(WCHAR))-1] = L'\0';
               SetVolumeLabelW(lpstr, szPath);
            }
-           SetWindowLong( hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR );
+           SetWindowLongPtr( hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR );
            return TRUE;
         }
         break;

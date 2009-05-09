@@ -272,7 +272,7 @@ static HWND MDI_GetWindow(MDICLIENTINFO *clientInfo, HWND hWnd, BOOL bNext,
     for ( ; list[i]; i++)
     {
         if (GetWindow( list[i], GW_OWNER )) continue;
-        if ((GetWindowLongW( list[i], GWL_STYLE ) & dwStyleMask) != WS_VISIBLE) continue;
+        if ((GetWindowLongPtrW( list[i], GWL_STYLE ) & dwStyleMask) != WS_VISIBLE) continue;
         last = list[i];
         if (bNext) goto found;
     }
@@ -280,7 +280,7 @@ static HWND MDI_GetWindow(MDICLIENTINFO *clientInfo, HWND hWnd, BOOL bNext,
     for (i = 0; list[i] && list[i] != hWnd; i++)
     {
         if (GetWindow( list[i], GW_OWNER )) continue;
-        if ((GetWindowLongW( list[i], GWL_STYLE ) & dwStyleMask) != WS_VISIBLE) continue;
+        if ((GetWindowLongPtrW( list[i], GWL_STYLE ) & dwStyleMask) != WS_VISIBLE) continue;
         last = list[i];
         if (bNext) goto found;
     }
@@ -382,7 +382,7 @@ static LRESULT MDISetMenu( HWND hwnd, HMENU hmenuFrame,
             HMENU oldFrameMenu = ci->hFrameMenu;
 
             ci->hFrameMenu = hmenuFrame;
-            if (IsZoomed(ci->hwndActiveChild) && (GetWindowLongW(ci->hwndActiveChild, GWL_STYLE) & WS_VISIBLE))
+            if (IsZoomed(ci->hwndActiveChild) && (GetWindowLongPtrW(ci->hwndActiveChild, GWL_STYLE) & WS_VISIBLE))
                 MDI_AugmentFrameMenu( hwndFrame, ci->hwndActiveChild );
 
             return (LRESULT)oldFrameMenu;
@@ -460,7 +460,7 @@ static LRESULT MDI_RefreshMenu(MDICLIENTINFO *ci)
     visible = 0;
     for (i = 0; i < ci->nActiveChildren; i++)
     {
-        if (GetWindowLongW(ci->child[i], GWL_STYLE) & WS_VISIBLE)
+        if (GetWindowLongPtrW(ci->child[i], GWL_STYLE) & WS_VISIBLE)
         {
             id = ci->idFirstChild + visible;
 
@@ -510,8 +510,8 @@ static void MDI_ChildGetMinMaxInfo( HWND client, HWND hwnd, MINMAXINFO* lpMinMax
     RECT rect;
 
     GetClientRect( client, &rect );
-    AdjustWindowRectEx( &rect, GetWindowLongW( hwnd, GWL_STYLE ),
-                        0, GetWindowLongW( hwnd, GWL_EXSTYLE ));
+    AdjustWindowRectEx( &rect, GetWindowLongPtrW( hwnd, GWL_STYLE ),
+                        0, GetWindowLongPtrW( hwnd, GWL_EXSTYLE ));
 
     lpMinMax->ptMaxSize.x = rect.right -= rect.left;
     lpMinMax->ptMaxSize.y = rect.bottom -= rect.top;
@@ -1249,7 +1249,7 @@ static LRESULT MDIClientWndProc_common( HWND hwnd, UINT message,
         switch (LOWORD(wParam))
         {
         case WM_CREATE:
-            if (GetWindowLongW((HWND)lParam, GWL_EXSTYLE) & WS_EX_MDICHILD)
+            if (GetWindowLongPtrW((HWND)lParam, GWL_EXSTYLE) & WS_EX_MDICHILD)
             {
                 if (!ci->child)
                     ci->child = HeapAlloc(GetProcessHeap(), 0, sizeof(HWND));
@@ -1284,7 +1284,7 @@ static LRESULT MDIClientWndProc_common( HWND hwnd, UINT message,
 
       case WM_SIZE:
         if( IsWindow(ci->hwndActiveChild) && IsZoomed(ci->hwndActiveChild) &&
-            (GetWindowLongW(ci->hwndActiveChild, GWL_STYLE) & WS_VISIBLE) )
+            (GetWindowLongPtrW(ci->hwndActiveChild, GWL_STYLE) & WS_VISIBLE) )
 	{
 	    RECT	rect;
 
@@ -1293,8 +1293,8 @@ static LRESULT MDIClientWndProc_common( HWND hwnd, UINT message,
 	    rect.right = LOWORD(lParam);
 	    rect.bottom = HIWORD(lParam);
 
-	    AdjustWindowRectEx(&rect, GetWindowLongA(ci->hwndActiveChild, GWL_STYLE),
-                               0, GetWindowLongA(ci->hwndActiveChild, GWL_EXSTYLE) );
+	    AdjustWindowRectEx(&rect, GetWindowLongPtrA(ci->hwndActiveChild, GWL_STYLE),
+                               0, GetWindowLongPtrA(ci->hwndActiveChild, GWL_EXSTYLE) );
 	    MoveWindow(ci->hwndActiveChild, rect.left, rect.top,
 			 rect.right - rect.left, rect.bottom - rect.top, 1);
 	}
@@ -1755,7 +1755,7 @@ void WINAPI CalcChildScroll( HWND hwnd, INT scroll )
         int i;
         for (i = 0; list[i]; i++)
         {
-            DWORD style = GetWindowLongW( list[i], GWL_STYLE );
+            DWORD style = GetWindowLongPtrW( list[i], GWL_STYLE );
             if (style & WS_MAXIMIZE)
             {
                 HeapFree( GetProcessHeap(), 0, list );

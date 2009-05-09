@@ -158,18 +158,18 @@ static LRESULT COMBO_NCCreate(HWND hwnd, LONG style)
        /* some braindead apps do try to use scrollbar/border flags */
 
 	lphc->dwStyle = style & ~(WS_BORDER | WS_HSCROLL | WS_VSCROLL);
-        SetWindowLongW( hwnd, GWL_STYLE, style & ~(WS_BORDER | WS_HSCROLL | WS_VSCROLL) );
+        SetWindowLongPtrW( hwnd, GWL_STYLE, style & ~(WS_BORDER | WS_HSCROLL | WS_VSCROLL) );
 
 	/*
 	 * We also have to remove the client edge style to make sure
 	 * we don't end-up with a non client area.
 	 */
-        SetWindowLongW( hwnd, GWL_EXSTYLE,
-                        GetWindowLongW( hwnd, GWL_EXSTYLE ) & ~WS_EX_CLIENTEDGE );
+        SetWindowLongPtrW( hwnd, GWL_EXSTYLE,
+                        GetWindowLongPtrW( hwnd, GWL_EXSTYLE ) & ~WS_EX_CLIENTEDGE );
 
 	if( !(style & (CBS_OWNERDRAWFIXED | CBS_OWNERDRAWVARIABLE)) )
               lphc->dwStyle |= CBS_HASSTRINGS;
-	if( !(GetWindowLongW( hwnd, GWL_EXSTYLE ) & WS_EX_NOPARENTNOTIFY) )
+	if( !(GetWindowLongPtrW( hwnd, GWL_EXSTYLE ) & WS_EX_NOPARENTNOTIFY) )
 	      lphc->wState |= CBF_NOTIFY;
 
         TRACE("[%p], style = %08x\n", lphc, lphc->dwStyle );

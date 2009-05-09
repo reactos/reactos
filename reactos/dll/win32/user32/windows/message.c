@@ -428,7 +428,7 @@ MsgiAnsiToUnicodeMessage(LPMSG UnicodeMsg, LPMSG AnsiMsg)
     case LB_FINDSTRINGEXACT:
     case LB_SELECTSTRING:
       {
-        DWORD dwStyle = GetWindowLongW(AnsiMsg->hwnd, GWL_STYLE);
+        DWORD dwStyle = GetWindowLongPtrW(AnsiMsg->hwnd, GWL_STYLE);
         if (!(dwStyle & (LBS_OWNERDRAWFIXED | LBS_OWNERDRAWVARIABLE)) &&
             (dwStyle & LBS_HASSTRINGS))
           {
@@ -443,7 +443,7 @@ MsgiAnsiToUnicodeMessage(LPMSG UnicodeMsg, LPMSG AnsiMsg)
     case CB_FINDSTRINGEXACT:
     case CB_SELECTSTRING:
       {
-        DWORD dwStyle = GetWindowLongW(AnsiMsg->hwnd, GWL_STYLE);
+        DWORD dwStyle = GetWindowLongPtrW(AnsiMsg->hwnd, GWL_STYLE);
         if (!(dwStyle & (CBS_OWNERDRAWFIXED | CBS_OWNERDRAWVARIABLE)) &&
             (dwStyle & CBS_HASSTRINGS))
           {
@@ -550,7 +550,7 @@ MsgiAnsiToUnicodeCleanup(LPMSG UnicodeMsg, LPMSG AnsiMsg)
     case LB_FINDSTRINGEXACT:
     case LB_SELECTSTRING:
       {
-        DWORD dwStyle = GetWindowLongW(AnsiMsg->hwnd, GWL_STYLE);
+        DWORD dwStyle = GetWindowLongPtrW(AnsiMsg->hwnd, GWL_STYLE);
         if (!(dwStyle & (LBS_OWNERDRAWFIXED | LBS_OWNERDRAWVARIABLE)) &&
             (dwStyle & LBS_HASSTRINGS))
           {
@@ -565,7 +565,7 @@ MsgiAnsiToUnicodeCleanup(LPMSG UnicodeMsg, LPMSG AnsiMsg)
     case CB_FINDSTRINGEXACT:
     case CB_SELECTSTRING:
       {
-        DWORD dwStyle = GetWindowLongW(AnsiMsg->hwnd, GWL_STYLE);
+        DWORD dwStyle = GetWindowLongPtrW(AnsiMsg->hwnd, GWL_STYLE);
         if (!(dwStyle & (CBS_OWNERDRAWFIXED | CBS_OWNERDRAWVARIABLE)) &&
             (dwStyle & CBS_HASSTRINGS))
           {
@@ -726,7 +726,7 @@ MsgiUnicodeToAnsiMessage(LPMSG AnsiMsg, LPMSG UnicodeMsg)
       case LB_FINDSTRINGEXACT:
       case LB_SELECTSTRING:
         {
-          DWORD dwStyle = GetWindowLongW(AnsiMsg->hwnd, GWL_STYLE);
+          DWORD dwStyle = GetWindowLongPtrW(AnsiMsg->hwnd, GWL_STYLE);
           if (!(dwStyle & (LBS_OWNERDRAWFIXED | LBS_OWNERDRAWVARIABLE)) &&
               (dwStyle & LBS_HASSTRINGS))
             {
@@ -741,7 +741,7 @@ MsgiUnicodeToAnsiMessage(LPMSG AnsiMsg, LPMSG UnicodeMsg)
       case CB_FINDSTRINGEXACT:
       case CB_SELECTSTRING:
         {
-          DWORD dwStyle = GetWindowLongW(AnsiMsg->hwnd, GWL_STYLE);
+          DWORD dwStyle = GetWindowLongPtrW(AnsiMsg->hwnd, GWL_STYLE);
           if (!(dwStyle & (CBS_OWNERDRAWFIXED | CBS_OWNERDRAWVARIABLE)) &&
                (dwStyle & CBS_HASSTRINGS))
             {
@@ -852,7 +852,7 @@ MsgiUnicodeToAnsiCleanup(LPMSG AnsiMsg, LPMSG UnicodeMsg)
       case LB_FINDSTRINGEXACT:
       case LB_SELECTSTRING:
         {
-          DWORD dwStyle = GetWindowLongW(AnsiMsg->hwnd, GWL_STYLE);
+          DWORD dwStyle = GetWindowLongPtrW(AnsiMsg->hwnd, GWL_STYLE);
           if (!(dwStyle & (LBS_OWNERDRAWFIXED | LBS_OWNERDRAWVARIABLE)) &&
               (dwStyle & LBS_HASSTRINGS))
             {
@@ -867,7 +867,7 @@ MsgiUnicodeToAnsiCleanup(LPMSG AnsiMsg, LPMSG UnicodeMsg)
       case CB_FINDSTRINGEXACT:
       case CB_SELECTSTRING:
         {
-          DWORD dwStyle = GetWindowLongW(AnsiMsg->hwnd, GWL_STYLE);
+          DWORD dwStyle = GetWindowLongPtrW(AnsiMsg->hwnd, GWL_STYLE);
           if (!(dwStyle & (CBS_OWNERDRAWFIXED | CBS_OWNERDRAWVARIABLE)) &&
                (dwStyle & CBS_HASSTRINGS))
             {

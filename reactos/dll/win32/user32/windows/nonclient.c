@@ -251,8 +251,8 @@ UserDrawCaptionButtonWnd(HWND hWnd, HDC hDC, BOOL bDown, ULONG Type)
    WindowRect.right -= WindowRect.left;
    WindowRect.bottom -= WindowRect.top;
    WindowRect.left = WindowRect.top = 0;
-   Style = GetWindowLongW(hWnd, GWL_STYLE);
-   ExStyle = GetWindowLongW(hWnd, GWL_EXSTYLE);
+   Style = GetWindowLongPtrW(hWnd, GWL_STYLE);
+   ExStyle = GetWindowLongPtrW(hWnd, GWL_EXSTYLE);
    UserGetWindowBorders(Style, ExStyle, &WindowBorder, FALSE);
    InflateRect(&WindowRect, -WindowBorder.cx, -WindowBorder.cy);
    UserDrawCaptionButton(&WindowRect, Style, ExStyle, hDC, bDown, Type);
@@ -281,7 +281,7 @@ DefWndNCPaint(HWND hWnd, HRGN hRgn, BOOL Active)
    if (!IsWindowVisible(hWnd))
       return 0;
 
-   Style = GetWindowLongW(hWnd, GWL_STYLE);
+   Style = GetWindowLongPtrW(hWnd, GWL_STYLE);
 
    hDC = GetDCEx(hWnd, hRgn, DCX_WINDOW | DCX_INTERSECTRGN | DCX_USESTYLE | DCX_KEEPCLIPRGN);
    if (hDC == 0)
@@ -290,7 +290,7 @@ DefWndNCPaint(HWND hWnd, HRGN hRgn, BOOL Active)
    }
 
    Parent = GetParent(hWnd);
-   ExStyle = GetWindowLongW(hWnd, GWL_EXSTYLE);
+   ExStyle = GetWindowLongPtrW(hWnd, GWL_EXSTYLE);
    if (Active == -1)
    {
       if (ExStyle & WS_EX_MDICHILD)
@@ -474,7 +474,7 @@ DefWndNCPaint(HWND hWnd, HRGN hRgn, BOOL Active)
         /* FIXME: Correct drawing of size-box with WS_EX_LEFTSCROLLBAR */
         if(Parent)
           GetClientRect(Parent, &ParentClientRect);
-        if (HASSIZEGRIP(Style, ExStyle, GetWindowLongW(Parent, GWL_STYLE), WindowRect, ParentClientRect))
+        if (HASSIZEGRIP(Style, ExStyle, GetWindowLongPtrW(Parent, GWL_STYLE), WindowRect, ParentClientRect))
         {
            DrawFrameControl(hDC, &TempRect, DFC_SCROLL, DFCS_SCROLLSIZEGRIP);
         }
@@ -523,8 +523,8 @@ DefWndNCCalcSize(HWND hWnd, BOOL CalcSizeStruct, RECT *Rect)
       Result |= WVR_VALIDRECTS;
    }
 
-   Style = GetWindowLongW(hWnd, GWL_STYLE);
-   ExStyle = GetWindowLongW(hWnd, GWL_EXSTYLE);
+   Style = GetWindowLongPtrW(hWnd, GWL_STYLE);
+   ExStyle = GetWindowLongPtrW(hWnd, GWL_EXSTYLE);
 
    if (!(Style & WS_MINIMIZE))
    {
@@ -665,8 +665,8 @@ DefWndNCHitTest(HWND hWnd, POINT Point)
    RECT WindowRect, ClientRect, OrigWndRect;
    POINT ClientPoint;
    SIZE WindowBorders;
-   ULONG Style = GetWindowLongW(hWnd, GWL_STYLE);
-   ULONG ExStyle = GetWindowLongW(hWnd, GWL_EXSTYLE);
+   ULONG Style = GetWindowLongPtrW(hWnd, GWL_STYLE);
+   ULONG ExStyle = GetWindowLongPtrW(hWnd, GWL_EXSTYLE);
 
    GetWindowRect(hWnd, &WindowRect);
    if (!PtInRect(&WindowRect, Point))
@@ -837,7 +837,7 @@ DefWndNCHitTest(HWND hWnd, POINT Point)
         if(Parent)
           GetClientRect(Parent, &ParentRect);
         if (PtInRect(&TempRect, Point) && HASSIZEGRIP(Style, ExStyle,
-            GetWindowLongW(Parent, GWL_STYLE), OrigWndRect, ParentRect))
+            GetWindowLongPtrW(Parent, GWL_STYLE), OrigWndRect, ParentRect))
         {
            if ((ExStyle & WS_EX_LEFTSCROLLBAR) != 0)
               return HTBOTTOMLEFT;
@@ -880,7 +880,7 @@ DefWndDoButton(HWND hWnd, WPARAM wParam)
    WPARAM SCMsg;
    ULONG ButtonType, Style;
 
-   Style = GetWindowLongW(hWnd, GWL_STYLE);
+   Style = GetWindowLongPtrW(hWnd, GWL_STYLE);
    switch (wParam)
    {
       case HTCLOSE:
@@ -962,7 +962,7 @@ DefWndNCLButtonDown(HWND hWnd, WPARAM wParam, LPARAM lParam)
         }
         case HTSYSMENU:
         {
-	  if (GetWindowLongW(hWnd, GWL_STYLE) & WS_SYSMENU)
+	  if (GetWindowLongPtrW(hWnd, GWL_STYLE) & WS_SYSMENU)
             {
 	      SendMessageW(hWnd, WM_SYSCOMMAND, SC_MOUSEMENU + HTSYSMENU,
 			   lParam);
@@ -1013,7 +1013,7 @@ DefWndNCLButtonDblClk(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
   ULONG Style;
 
-  Style = GetWindowLongW(hWnd, GWL_STYLE);
+  Style = GetWindowLongPtrW(hWnd, GWL_STYLE);
   switch(wParam)
   {
     case HTCAPTION:
@@ -1185,14 +1185,14 @@ NcGetInsideRect(HWND Wnd, RECT *Rect)
   Rect->bottom = Rect->bottom - Rect->top;
   Rect->top = 0;
 
-  Style = GetWindowLongW(Wnd, GWL_STYLE);
+  Style = GetWindowLongPtrW(Wnd, GWL_STYLE);
   if (0 != (Style & WS_ICONIC))
     {
       return;
     }
 
   /* Remove frame from rectangle */
-  ExStyle = GetWindowLongW(Wnd, GWL_EXSTYLE);
+  ExStyle = GetWindowLongPtrW(Wnd, GWL_EXSTYLE);
   if (HAS_THICKFRAME(Style, ExStyle))
     {
       InflateRect(Rect, - GetSystemMetrics(SM_CXFRAME), - GetSystemMetrics(SM_CYFRAME));
@@ -1239,7 +1239,7 @@ NcGetSysPopupPos(HWND Wnd, RECT *Rect)
       NcGetInsideRect(Wnd, Rect);
       GetWindowRect(Wnd, &WindowRect);
       OffsetRect(Rect, WindowRect.left, WindowRect.top);
-      if (0 != (GetWindowLongW(Wnd, GWL_STYLE) & WS_CHILD))
+      if (0 != (GetWindowLongPtrW(Wnd, GWL_STYLE) & WS_CHILD))
         {
           ClientToScreen(GetParent(Wnd), (POINT *) Rect);
         }

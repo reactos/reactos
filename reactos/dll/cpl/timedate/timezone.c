@@ -454,7 +454,7 @@ TimeZonePageProc(HWND hwndDlg,
                 {
                     SetAutoDaylightInfo(GetDlgItem(hwndDlg, IDC_AUTODAYLIGHT));
                     SetLocalTimeZone(GetDlgItem(hwndDlg, IDC_TIMEZONELIST));
-                    SetWindowLong(hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR);
+                    SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR);
                     return TRUE;
                 }
 

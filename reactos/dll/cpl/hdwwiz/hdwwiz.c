@@ -172,9 +172,9 @@ IsConnctedPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 case PSN_WIZNEXT:
                 {
                     if (SendDlgItemMessage(hwndDlg, IDC_NOTCONNECTED, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                        SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_NOTCONNECTEDPAGE);
+                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_NOTCONNECTEDPAGE);
                     else
-                        SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_PROBELISTPAGE);
+                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_PROBELISTPAGE);
 
                     return TRUE;
                 }
@@ -244,7 +244,7 @@ NotConnectedPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
                 case PSN_WIZBACK:
                 {
-                    SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_ISCONNECTEDPAGE);
+                    SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_ISCONNECTEDPAGE);
                     return TRUE;
                 }
             }
@@ -429,7 +429,7 @@ ProbeListPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
                     if (Index == 0)
                     {
-                        SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_SELECTWAYPAGE);
+                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_SELECTWAYPAGE);
                     }
                     else
                     {
@@ -443,7 +443,7 @@ ProbeListPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                         pts = (PWSTR) Item.lParam;
                         wcscpy(pDeviceStatusText, pts);
 
-                        SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_HWSTATUSPAGE);
+                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_HWSTATUSPAGE);
                     }
                     return TRUE;
                 }
@@ -499,9 +499,9 @@ SelectWayPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 case PSN_WIZNEXT:
                 {
                     if (SendDlgItemMessage(hwndDlg, IDC_AUTOINSTALL, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                        SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_PROGRESSPAGE);
+                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_PROGRESSPAGE);
                     else
-                        SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_HWTYPESPAGE);
+                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_HWTYPESPAGE);
 
                     return TRUE;
                 }
@@ -542,7 +542,7 @@ DevStatusPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
                 case PSN_WIZBACK:
                 {
-                    SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_PROBELISTPAGE);
+                    SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_PROBELISTPAGE);
                     return TRUE;
                 }
             }
@@ -735,7 +735,7 @@ HdTypesPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
                 case PSN_WIZBACK:
                 {
-                    SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_SELECTWAYPAGE);
+                    SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_SELECTWAYPAGE);
                     return TRUE;
                 }
             }
@@ -765,7 +765,7 @@ ProgressPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
                 case PSN_WIZBACK:
                 {
-                    SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_SELECTWAYPAGE);
+                    SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_SELECTWAYPAGE);
                     return TRUE;
                 }
             }

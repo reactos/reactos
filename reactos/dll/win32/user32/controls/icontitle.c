@@ -59,7 +59,7 @@ HWND ICONTITLE_Create( HWND owner )
     LONG style = WS_CLIPSIBLINGS;
 
     if (!IsWindowEnabled(owner)) style |= WS_DISABLED;
-    if( GetWindowLongA( owner, GWL_STYLE ) & WS_CHILD )
+    if( GetWindowLongPtrA( owner, GWL_STYLE ) & WS_CHILD )
 	hWnd = CreateWindowExA( 0, (LPCSTR)ICONTITLE_CLASS_ATOM, NULL,
                                 style | WS_CHILD, 0, 0, 1, 1,
                                 GetParent(owner), 0, instance, NULL );
@@ -68,8 +68,8 @@ HWND ICONTITLE_Create( HWND owner )
                                 style, 0, 0, 1, 1,
                                 owner, 0, instance, NULL );
     WIN_SetOwner( hWnd, owner );  /* MDI depends on this */
-    SetWindowLongW( hWnd, GWL_STYLE,
-                    GetWindowLongW( hWnd, GWL_STYLE ) & ~(WS_CAPTION | WS_BORDER) );
+    SetWindowLongPtrW( hWnd, GWL_STYLE,
+                       GetWindowLongPtrW( hWnd, GWL_STYLE ) & ~(WS_CAPTION | WS_BORDER) );
     return hWnd;
 }
 #endif
@@ -142,7 +142,7 @@ static BOOL ICONTITLE_Paint( HWND hwnd, HWND owner, HDC hDC, BOOL bActive )
     }
     else
     {
-        if( GetWindowLongA( hwnd, GWL_STYLE ) & WS_CHILD )
+        if( GetWindowLongPtrA( hwnd, GWL_STYLE ) & WS_CHILD )
 	{
 	    hBrush = (HBRUSH) GetClassLongPtrW(hwnd, GCLP_HBRBACKGROUND);
 	    if( hBrush )
@@ -222,7 +222,7 @@ LRESULT WINAPI IconTitleWndProc( HWND hWnd, UINT msg,
             if (wParam) ICONTITLE_SetTitlePos( hWnd, owner );
 	     return 0;
 	case WM_ERASEBKGND:
-            if( GetWindowLongW( owner, GWL_STYLE ) & WS_CHILD )
+            if( GetWindowLongPtrW( owner, GWL_STYLE ) & WS_CHILD )
                 lParam = SendMessageW( owner, WM_ISACTIVEICON, 0, 0 );
             else
                 lParam = (owner == GetActiveWindow());

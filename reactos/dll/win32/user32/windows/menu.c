@@ -2215,7 +2215,7 @@ MenuShowSubPopup(HWND WndOwner, PROSMENUINFO MenuInfo, BOOL SelectFirst, UINT Fl
 
   if (IS_SYSTEM_MENU(MenuInfo))
     {
-      MenuInitSysMenuPopup(ItemInfo.hSubMenu, GetWindowLongW(MenuInfo->Wnd, GWL_STYLE),
+      MenuInitSysMenuPopup(ItemInfo.hSubMenu, GetWindowLongPtrW(MenuInfo->Wnd, GWL_STYLE),
                            GetClassLongPtrW(MenuInfo->Wnd, GCL_STYLE), HTSYSMENU);
 
       NcGetSysPopupPos(MenuInfo->Wnd, &Rect);
@@ -2773,7 +2773,7 @@ MenuDoNextMenu(MTRACKER* Mt, UINT Vk)
 
       if (NULL == NextMenu.hmenuNext || NULL == NextMenu.hwndNext)
         {
-          DWORD Style = GetWindowLongW(Mt->OwnerWnd, GWL_STYLE);
+          DWORD Style = GetWindowLongPtrW(Mt->OwnerWnd, GWL_STYLE);
           NewWnd = Mt->OwnerWnd;
           if (IS_SYSTEM_MENU(&TopMenuInfo))
             {
@@ -2811,7 +2811,7 @@ MenuDoNextMenu(MTRACKER* Mt, UINT Vk)
 
           if (IsMenu(NewMenu) && IsWindow(NewWnd))
             {
-              DWORD Style = GetWindowLongW(NewWnd, GWL_STYLE);
+              DWORD Style = GetWindowLongPtrW(NewWnd, GWL_STYLE);
 
               if (0 != (Style & WS_SYSMENU)
                   && GetSystemMenu(NewWnd, FALSE) == NewMenu)
@@ -3585,7 +3585,7 @@ MenuTrackKbdMenuBar(HWND hWnd, UINT wParam, WCHAR wChar)
 
     /* find window that has a menu */
 
-    while (!((GetWindowLongW( hWnd, GWL_STYLE ) &
+    while (!((GetWindowLongPtrW( hWnd, GWL_STYLE ) &
                                          (WS_CHILD | WS_POPUP)) != WS_CHILD))
         if (!(hWnd = GetAncestor( hWnd, GA_PARENT ))) return;
 
@@ -3594,7 +3594,7 @@ MenuTrackKbdMenuBar(HWND hWnd, UINT wParam, WCHAR wChar)
     hTrackMenu = GetMenu( hWnd );
     if (!hTrackMenu || IsIconic(hWnd) || wChar == ' ' )
     {
-        if (!(GetWindowLongW( hWnd, GWL_STYLE ) & WS_SYSMENU)) return;
+        if (!(GetWindowLongPtrW( hWnd, GWL_STYLE ) & WS_SYSMENU)) return;
         hTrackMenu = NtUserGetSystemMenu(hWnd, FALSE);
         uItem = 0;
         wParam |= HTSYSMENU; /* prevent item lookup */

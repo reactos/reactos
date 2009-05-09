@@ -138,7 +138,7 @@ WelcomeDlgProc(HWND hwndDlg,
                     }
                     SendDlgItemMessage(hwndDlg, IDC_SHORTCUT_LOCATION, EM_SETSEL, 0, -1);
                     SetFocus(GetDlgItem(hwndDlg, IDC_SHORTCUT_LOCATION));
-                    SetWindowLong(hwndDlg, DWL_MSGRESULT, PSNRET_INVALID_NOCHANGEPAGE);
+                    SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, PSNRET_INVALID_NOCHANGEPAGE);
                     return -1;
                 }
                 else

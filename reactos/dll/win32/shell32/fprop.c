@@ -536,7 +536,7 @@ SH_FileVersionInitialize(HWND hwndDlg, WCHAR *lpfilename)
     SH_FileVersionQuerySetListText(hwndDlg, pBuf, wOriginalFilename, &str, lang, code);
     SH_FileVersionQuerySetListText(hwndDlg, pBuf, wProductName, &str, lang, code);
     SH_FileVersionQuerySetListText(hwndDlg, pBuf, wProductVersion, &str, lang, code);
-    SetWindowLong(hwndDlg, DWL_USER, (LONG)pBuf);
+    SetWindowLongPtr(hwndDlg, DWL_USER, (LONG)pBuf);
 
     /* select first item */
     hDlgCtrl = GetDlgItem(hwndDlg, 14009);
@@ -610,7 +610,7 @@ SH_FileVersionDlgProc(HWND hwndDlg,
         break;
 
         case WM_DESTROY:
-            buf = (LPVOID) GetWindowLong(hwndDlg, DWL_USER);
+            buf = (LPVOID) GetWindowLongPtr(hwndDlg, DWL_USER);
             HeapFree(GetProcessHeap(), 0, buf);
             break;
 
