@@ -26,8 +26,6 @@ WCHAR swShell32Name[MAX_PATH];
 DWORD NumIconOverlayHandlers = 0;
 IShellIconOverlayIdentifier ** Handlers = NULL;
 
-const GUID IID_IShellIconOverlayIdentifier = {0x0c6c4200L, 0xc589, 0x11d0, {0x99, 0x9a, 0x00, 0xc0, 0x4f, 0xd6, 0x55, 0xe1}};
-
 static HRESULT getIconLocationForFolder(LPCITEMIDLIST pidl, UINT uFlags,
  LPWSTR szIconFile, UINT cchMax, int *piIndex, UINT *pwFlags)
 {
