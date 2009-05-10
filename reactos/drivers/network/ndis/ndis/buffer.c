@@ -428,7 +428,9 @@ NdisAllocatePacket(
         Temp->Private.Pool = Pool;
         Temp->Private.ValidCounts = TRUE;
         Temp->Private.NdisPacketFlags = fPACKET_ALLOCATED_BY_NDIS;
-        Temp->Private.NdisPacketOobOffset = Pool->PacketLength - sizeof(NDIS_PACKET_OOB_DATA);
+        Temp->Private.NdisPacketOobOffset = Pool->PacketLength -
+                                            (sizeof(NDIS_PACKET_OOB_DATA) +
+                                             sizeof(NDIS_PACKET_EXTENSION));
 
         *Packet = Temp;
         *Status = NDIS_STATUS_SUCCESS;
@@ -507,7 +509,8 @@ NdisAllocatePacketPoolEx(
             NumberOfDescriptors = 0xffff;
         }
 
-        Length = sizeof(NDIS_PACKET) + sizeof(NDIS_PACKET_OOB_DATA) + ProtocolReservedLength;
+        Length = sizeof(NDIS_PACKET) + sizeof(NDIS_PACKET_OOB_DATA) + 
+                 sizeof(NDIS_PACKET_EXTENSION) + ProtocolReservedLength;
         Size   = sizeof(NDISI_PACKET_POOL) + Length * NumberOfDescriptors;
 
         Pool   = ExAllocatePool(NonPagedPool, Size);
@@ -712,7 +715,9 @@ NdisDprAllocatePacket(
         Temp->Private.Pool = Pool;
         Temp->Private.ValidCounts = TRUE;
         Temp->Private.NdisPacketFlags = fPACKET_ALLOCATED_BY_NDIS;
-        Temp->Private.NdisPacketOobOffset = Pool->PacketLength - sizeof(NDIS_PACKET_OOB_DATA);
+        Temp->Private.NdisPacketOobOffset = Pool->PacketLength -
+                                            (sizeof(NDIS_PACKET_OOB_DATA) +
+                                             sizeof(NDIS_PACKET_EXTENSION));
 
         *Packet = Temp;
         *Status = NDIS_STATUS_SUCCESS;
@@ -762,7 +767,9 @@ NdisDprAllocatePacketNonInterlocked(
         Temp->Private.Pool = Pool;
         Temp->Private.ValidCounts = TRUE;
         Temp->Private.NdisPacketFlags = fPACKET_ALLOCATED_BY_NDIS;
-        Temp->Private.NdisPacketOobOffset = Pool->PacketLength - sizeof(NDIS_PACKET_OOB_DATA);
+        Temp->Private.NdisPacketOobOffset = Pool->PacketLength -
+                                            (sizeof(NDIS_PACKET_OOB_DATA) +
+                                             sizeof(NDIS_PACKET_EXTENSION));
 
         *Packet = Temp;
         *Status = NDIS_STATUS_SUCCESS;
