@@ -231,6 +231,7 @@ DECLARE_INTERFACE_(IIrpQueue, IUnknown)
         IN PVOID Tag);
 
     STDMETHOD_(BOOL, HasLastMappingFailed)(THIS);
+    STDMETHOD_(VOID, PrintQueueStatus)(THIS);
 };
 
 

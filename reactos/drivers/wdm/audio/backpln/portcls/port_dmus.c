@@ -207,6 +207,10 @@ IPortDMus_fnInit(
             Miniport->lpVtbl->Release(Miniport);
             return Status;
         }
+
+        /* increment reference on miniport adapter */
+        Miniport->lpVtbl->AddRef(Miniport);
+
     }
     else
     {
@@ -226,6 +230,9 @@ IPortDMus_fnInit(
             MidiMiniport->lpVtbl->Release(MidiMiniport);
             return Status;
         }
+
+        /* increment reference on miniport adapter */
+        MidiMiniport->lpVtbl->AddRef(MidiMiniport);
     }
 
     /* create the subdevice descriptor */
@@ -264,10 +271,6 @@ IPortDMus_fnInit(
     This->pMiniportMidi = MidiMiniport;
     This->pDeviceObject = DeviceObject;
     This->bInitialized = TRUE;
-
-    /* increment reference on miniport adapter */
-    Miniport->lpVtbl->AddRef(Miniport);
-
 
     /* check if it supports IPinCount interface */
     Status = UnknownMiniport->lpVtbl->QueryInterface(UnknownMiniport, &IID_IPinCount, (PVOID*)&PinCount);

@@ -504,7 +504,6 @@ PcCreateItemDispatch(
     PIO_STACK_LOCATION IoStack;
     ISubdevice * SubDevice;
     PPCLASS_DEVICE_EXTENSION DeviceExt;
-    SUBDEVICE_ENTRY * Entry;
     IIrpTarget *Filter;
     PKSOBJECT_CREATE_ITEM CreateItem;
     PPIN_WORKER_CONTEXT Context;
@@ -526,13 +525,6 @@ PcCreateItemDispatch(
     {
         DPRINT1("PcCreateItemDispatch SubDevice %p DeviceExt %p\n", SubDevice, DeviceExt);
         return STATUS_UNSUCCESSFUL;
-    }
-
-    Entry = AllocateItem(NonPagedPool, sizeof(SUBDEVICE_ENTRY), TAG_PORTCLASS);
-    if (!Entry)
-    {
-        DPRINT1("PcCreateItemDispatch no memory\n");
-        return STATUS_INSUFFICIENT_RESOURCES;
     }
 
 #if KS_IMPLEMENTED
