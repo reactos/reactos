@@ -650,7 +650,7 @@ GlobalReAlloc(HGLOBAL hMem,
                     RtlSetUserFlagsHeap(hProcessHeap,
                                         HEAP_NO_SERIALIZE,
                                         HandleEntry->Object,
-                                        HandleEntry->Flags);
+                                        Flags);
                 }
             }
         }
