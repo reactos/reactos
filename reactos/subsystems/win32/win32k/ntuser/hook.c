@@ -108,12 +108,12 @@ IntAddHook(PETHREAD Thread, int HookId, BOOLEAN Global, PWINSTATION_OBJECT WinSt
    {
       W32Thread = ((PTHREADINFO)Thread->Tcb.Win32Thread);
       ASSERT(W32Thread != NULL);
-      W32Thread->Hooks |= HOOKID_TO_FLAG(HookId);
+      W32Thread->fsHooks |= HOOKID_TO_FLAG(HookId);
 
-      GetWin32ClientInfo()->fsHooks = W32Thread->Hooks;
+      GetWin32ClientInfo()->fsHooks = W32Thread->fsHooks;
 
       if (W32Thread->ThreadInfo != NULL)
-          W32Thread->ThreadInfo->fsHooks = W32Thread->Hooks;
+          W32Thread->ThreadInfo->fsHooks = W32Thread->fsHooks;
    }
 
    RtlInitUnicodeString(&Hook->ModuleName, NULL);
@@ -222,12 +222,12 @@ IntRemoveHook(PHOOK Hook, PWINSTATION_OBJECT WinStaObj, BOOL TableAlreadyLocked)
 
    W32Thread = ((PTHREADINFO)Hook->Thread->Tcb.Win32Thread);
    ASSERT(W32Thread != NULL);
-   W32Thread->Hooks &= ~HOOKID_TO_FLAG(Hook->HookId);
+   W32Thread->fsHooks &= ~HOOKID_TO_FLAG(Hook->HookId);
 
-   GetWin32ClientInfo()->fsHooks = W32Thread->Hooks;
+   GetWin32ClientInfo()->fsHooks = W32Thread->fsHooks;
 
    if (W32Thread->ThreadInfo != NULL)
-       W32Thread->ThreadInfo->fsHooks = W32Thread->Hooks;
+       W32Thread->ThreadInfo->fsHooks = W32Thread->fsHooks;
 
    if (0 != Table->Counts[HOOKID_TO_INDEX(Hook->HookId)])
    {

@@ -42,13 +42,13 @@ typedef struct _THREADINFO
     HANDLE              hDesktop;
     UINT                cPaintsReady; /* Count of paints pending. */
     UINT                cTimersReady; /* Count of timers pending. */
+    ULONG               fsHooks;
     LIST_ENTRY          PtiLink;
 
   LIST_ENTRY WindowListHead;
   LIST_ENTRY W32CallbackListHead;
   BOOLEAN IsExiting;
   SINGLE_LIST_ENTRY  ReferencesList;
-  ULONG Hooks;
   PW32THREADINFO ThreadInfo;
 } THREADINFO, *PTHREADINFO;
 

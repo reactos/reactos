@@ -524,8 +524,9 @@ GetW32ThreadInfo(VOID)
 
             /* initialize it */
             ti->ppi = GetW32ProcessInfo();
-            ti->fsHooks = W32Thread->Hooks;
-            W32Thread->pcti = &ti->ClientThreadInfo;
+            ti->fsHooks = W32Thread->fsHooks;
+//            W32Thread->pcti = &ti->ClientThreadInfo;
+            W32Thread->pcti = NULL; // FIXME
             if (W32Thread->Desktop != NULL)
             {
                 ti->pDeskInfo = W32Thread->Desktop->DesktopInfo;

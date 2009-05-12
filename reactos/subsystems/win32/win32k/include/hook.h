@@ -18,7 +18,7 @@ typedef struct tagHOOK
 #define NB_HOOKS (WH_MAXHOOK-WH_MINHOOK+1)
 #define HOOKID_TO_INDEX(HookId) (HookId - WH_MINHOOK)
 #define HOOKID_TO_FLAG(HookId) (1 << ((HookId) + 1))
-#define ISITHOOKED(HookId) (((PTHREADINFO)PsGetCurrentThreadWin32Thread())->Hooks & HOOKID_TO_FLAG(HookId))
+#define ISITHOOKED(HookId) (((PTHREADINFO)PsGetCurrentThreadWin32Thread())->fsHooks & HOOKID_TO_FLAG(HookId))
 
 typedef struct tagHOOKTABLE
 {
