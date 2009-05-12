@@ -219,7 +219,6 @@ MapViewOfFileEx(HANDLE hFileMappingObject,
         return NULL;
     }
 
-    SetLastError(ERROR_SUCCESS);
     /* Return the base */
     return ViewBase;
 }
@@ -262,7 +261,6 @@ UnmapViewOfFile(LPCVOID lpBaseAddress)
         return FALSE;
     }
 
-    SetLastError(ERROR_SUCCESS);
     /* Otherwise, return sucess */
     return TRUE;
 }
@@ -385,7 +383,6 @@ FlushViewOfFile(LPCVOID lpBaseAddress,
         return FALSE;
     }
 
-    SetLastError(ERROR_SUCCESS);
     /* Return success */
     return TRUE;
 }
