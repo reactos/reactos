@@ -69,6 +69,7 @@ base\applications\network\telnet\telnet.exe             1
 base\applications\network\tracert\tracert.exe           1
 base\applications\network\whois\whois.exe               1
 base\applications\notepad\notepad.exe                   1
+base\applications\paint\paint.exe                       1
 base\applications\regedit\regedit.exe                   4
 base\applications\regedit\clb\clb.dll                   1
 base\applications\regedt32\regedt32.exe                 1
