@@ -396,7 +396,7 @@ BOOL SIC_Initialize(void)
         return FALSE;
     }
 
-    hDC = CreateICW(L"DISPLAY", NULL, NULL, NULL); bpp 0
+    hDC = CreateICW(L"DISPLAY", NULL, NULL, NULL);
     if (!hDC)
     {
         ERR("Failed to create information context (error %d)\n", GetLastError());
