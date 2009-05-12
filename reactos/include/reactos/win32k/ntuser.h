@@ -366,11 +366,7 @@ typedef struct _W32THREADINFO
 {
     PPROCESSINFO ppi; /* [KERNEL] */
     PDESKTOPINFO pDeskInfo;
-//    PVOID DesktopHeapBase;
-//    ULONG_PTR DesktopHeapLimit;
-    /* A mask of what hooks are currently active */
     ULONG fsHooks;
-    CLIENTTHREADINFO ClientThreadInfo;
 } W32THREADINFO, *PW32THREADINFO;
 
 /* Window Client Information structure */

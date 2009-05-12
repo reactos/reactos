@@ -45,6 +45,8 @@ typedef struct _THREADINFO
     ULONG               fsHooks;
     LIST_ENTRY          PtiLink;
 
+    CLIENTTHREADINFO    cti;  // Used only when no Desktop or pcti NULL.
+
   LIST_ENTRY WindowListHead;
   LIST_ENTRY W32CallbackListHead;
   BOOLEAN IsExiting;

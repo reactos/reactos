@@ -1998,7 +1998,7 @@ IntInitMessagePumpHook()
 {
    if (((PTHREADINFO)PsGetCurrentThread()->Tcb.Win32Thread)->ThreadInfo)
    {
-     ((PTHREADINFO)PsGetCurrentThread()->Tcb.Win32Thread)->ThreadInfo->ClientThreadInfo.dwcPumpHook++;
+     ((PTHREADINFO)PsGetCurrentThread()->Tcb.Win32Thread)->pcti->dwcPumpHook++;
      return TRUE;
    }
    return FALSE;
@@ -2009,11 +2009,11 @@ IntUninitMessagePumpHook()
 {
    if (((PTHREADINFO)PsGetCurrentThread()->Tcb.Win32Thread)->ThreadInfo)
    {
-      if (((PTHREADINFO)PsGetCurrentThread()->Tcb.Win32Thread)->ThreadInfo->ClientThreadInfo.dwcPumpHook <= 0)
+      if (((PTHREADINFO)PsGetCurrentThread()->Tcb.Win32Thread)->pcti->dwcPumpHook <= 0)
       {
          return FALSE;
       }
-      ((PTHREADINFO)PsGetCurrentThread()->Tcb.Win32Thread)->ThreadInfo->ClientThreadInfo.dwcPumpHook--;
+      ((PTHREADINFO)PsGetCurrentThread()->Tcb.Win32Thread)->pcti->dwcPumpHook--;
       return TRUE;
    }
    return FALSE;
