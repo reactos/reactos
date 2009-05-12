@@ -138,6 +138,13 @@ CreateFileMappingW(HANDLE hFile,
                              flProtect,
                              Attributes,
                              hFile);
+    
+    if (Status == STATUS_OBJECT_NAME_EXISTS)
+    {
+        SetLastError(ERROR_ALREADY_EXISTS);
+        return SectionHandle;
+    }
+
     if (!NT_SUCCESS(Status))
     {
         /* We failed */
@@ -145,6 +152,7 @@ CreateFileMappingW(HANDLE hFile,
         return NULL;
     }
 
+    SetLastError(ERROR_SUCCESS);
     /* Return the section */
     return SectionHandle;
 }
@@ -211,6 +219,7 @@ MapViewOfFileEx(HANDLE hFileMappingObject,
         return NULL;
     }
 
+    SetLastError(ERROR_SUCCESS);
     /* Return the base */
     return ViewBase;
 }
@@ -253,6 +262,7 @@ UnmapViewOfFile(LPCVOID lpBaseAddress)
         return FALSE;
     }
 
+    SetLastError(ERROR_SUCCESS);
     /* Otherwise, return sucess */
     return TRUE;
 }
@@ -343,6 +353,7 @@ OpenFileMappingW(DWORD dwDesiredAccess,
         return NULL;
     }
 
+    SetLastError(ERROR_SUCCESS);
     /* Otherwise, return the handle */
     return SectionHandle;
 }
@@ -374,6 +385,7 @@ FlushViewOfFile(LPCVOID lpBaseAddress,
         return FALSE;
     }
 
+    SetLastError(ERROR_SUCCESS);
     /* Return success */
     return TRUE;
 }
