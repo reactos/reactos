@@ -17,6 +17,7 @@
 #include "lang/de-DE.rc"
 #include "lang/en-GB.rc"
 #include "lang/en-US.rc"
+#include "lang/no-NO.rc"
 #include "lang/fr-FR.rc"
 #include "lang/it-IT.rc"
 #include "lang/es-ES.rc"

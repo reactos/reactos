@@ -84,9 +84,9 @@ BEGIN
           IDC_STATIC, 54, 57, 250, 25
     LTEXT "Skriv inn et Administrator passord som er 14 karakterer eller mindre.",
           IDC_STATIC, 54, 87, 250, 8
-    LTEXT "&Administrator Passord:", IDC_STATIC, 54, 104, 75, 8
+    LTEXT "&Administrator passord:", IDC_STATIC, 54, 104, 75, 8
     EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
-    LTEXT "B&ekreft Passord:", IDC_STATIC, 54, 123, 75, 8
+    LTEXT "B&ekreft passord:", IDC_STATIC, 54, 123, 75, 8
     EDITTEXT IDC_ADMINPASSWORD2, 132, 120, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
 END
 
@@ -98,7 +98,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Systemets språk og region burde samsvare med språket på programmene "\
           "du vil bruke. Innstillingene for språk og region kontrollerer hvordan tall, "\
-          "valutaer, og dato vises.", IDC_STATIC, 55, 7, 259, 20
+          "valutaer, og dato vises.", IDC_STATIC, 55, 7, 259, 24
     LTEXT "", IDC_LOCALETEXT, 53, 32, 250, 18
     LTEXT "For å forandre systemets språk og region instilling, Trykk på Tilpass.",
           IDC_STATIC, 53, 60, 184, 8
@@ -149,7 +149,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Fullfører ReactOS installasjons veiviser", IDC_FINISHTITLE, 115, 8, 195, 24
     LTEXT "Installasjonen av ReactOS er fullført.\n\n" \
-          "Når du trykker på fullfør, vil datamaskinen bli restartet.", IDC_STATIC, 115, 40, 195, 100
+          "Når du trykker på fullfør, vil datamaskinen bli startet på nytt.", IDC_STATIC, 115, 40, 205, 100
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
     LTEXT "Fjern en eventuell CD-ROM fra stasjonen. Klikk Fullfør "\
           "for å starte datamaskinen på nytt.", IDC_STATIC, 115, 169, 195, 17
@@ -186,7 +186,7 @@ BEGIN
     IDS_COMPUTERSUBTITLE "Du må angi et navn og et administrator passord for din datamaskin."
     IDS_LOCALETITLE      "Regionale innstillinger"
     IDS_LOCALESUBTITLE   "Du kan stille inn ReactOS for andre regioner og språk."
-    IDS_DATETIMETITLE    "Dato og Tid"
+    IDS_DATETIMETITLE    "Dato og tid"
     IDS_DATETIMESUBTITLE "Still inn dato og tid for din datamaskin."
     IDS_PROCESSTITLE     "Bearbeid side tittel"
     IDS_PROCESSSUBTITLE  "Bearbeider side undertittel"
