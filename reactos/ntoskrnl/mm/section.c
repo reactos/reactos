@@ -4990,8 +4990,7 @@ MmCreateSection (OUT PVOID  * Section,
     * Check the protection
     */
    Protection = SectionPageProtection & ~(PAGE_GUARD|PAGE_NOCACHE);
-   if (Protection != PAGE_NOACCESS &&
-       Protection != PAGE_READONLY &&
+   if (Protection != PAGE_READONLY &&
        Protection != PAGE_READWRITE &&
        Protection != PAGE_WRITECOPY &&
        Protection != PAGE_EXECUTE &&
