@@ -1,0 +1,202 @@
+/*
+ * Ukrainian Language resource file
+ * Translated by: Artem Reznikov
+ * Last changed:  29-04-2009
+ */
+
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+
+ID_MENU MENU
+BEGIN
+    POPUP "&Файл"
+    BEGIN
+        MENUITEM "&Створити\tCtrl+N", IDM_FILENEW
+        MENUITEM "В&ідкрити...\tCtrl+O", IDM_FILEOPEN
+        MENUITEM "З&берегти\tCtrl+S", IDM_FILESAVE
+        MENUITEM "Зберегти &як...", IDM_FILESAVEAS
+        MENUITEM SEPARATOR
+        MENUITEM "&Замостити робочий стіл Windows", IDM_FILEASWALLPAPERPLANE
+        MENUITEM "До ц&ентру робочого стола Windows", IDM_FILEASWALLPAPERCENTERED
+        MENUITEM "&Встановити як тло (розтягнути)", IDM_FILEASWALLPAPERSTRETCHED
+        MENUITEM SEPARATOR
+        MENUITEM "В&ихід\tAlt+F4", IDM_FILEEXIT
+    END
+
+    POPUP "&Редагування"
+    BEGIN
+        MENUITEM "Скасувати\tCtrl+Z", IDM_EDITUNDO
+        MENUITEM "Повторити\tCtrl+Y", IDM_EDITREDO
+        MENUITEM SEPARATOR
+        MENUITEM "Вирізати\tCtrl+X", IDM_EDITCUT
+        MENUITEM "Копіювати\tCtrl+C", IDM_EDITCOPY
+        MENUITEM "Вставити\tCtrl+V", IDM_EDITPASTE
+        MENUITEM "Видалити виділення\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "Обернути виділення", IDM_EDITINVERTSELECTION
+        MENUITEM "Виділити все\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM SEPARATOR
+        MENUITEM "Копіювати до файлу...", IDM_EDITCOPYTO
+        MENUITEM "Вставити з файлу...", IDM_EDITPASTEFROM
+    END
+
+    POPUP "В&игляд"
+    BEGIN
+        MENUITEM "Панель елементів\tCtrl+T", IDM_VIEWTOOLBOX, CHECKED
+        MENUITEM "Палітра\tCtrl+L", IDM_VIEWCOLORPALETTE, CHECKED
+        MENUITEM "Рядок стану", IDM_VIEWSTATUSBAR, CHECKED
+        MENUITEM "Панель атрибутів тексту", IDM_FORMATICONBAR, CHECKED, GRAYED
+        MENUITEM SEPARATOR
+        POPUP "Масштаб"
+        BEGIN
+            MENUITEM "12,5%", IDM_VIEWZOOM125
+            MENUITEM "25%", IDM_VIEWZOOM25
+            MENUITEM "50%", IDM_VIEWZOOM50
+            MENUITEM "100%", IDM_VIEWZOOM100
+            MENUITEM "200%", IDM_VIEWZOOM200
+            MENUITEM "400%", IDM_VIEWZOOM400
+            MENUITEM "800%", IDM_VIEWZOOM800
+        END
+        MENUITEM "На весь екран\tCtrl+F", IDM_VIEWFULLSCREEN
+    END
+    
+    POPUP "&Зображення"
+    BEGIN
+        MENUITEM "Відобразити/повернути...\tCtrl+R", IDM_IMAGEROTATEMIRROR
+        MENUITEM "Змінити розмір...\tCtrl+W", IDM_IMAGECHANGESIZE
+        MENUITEM "Обітнути", IDM_IMAGECROP
+        MENUITEM "Обернути кольори\tCtrl+I", IDM_IMAGEINVERTCOLORS
+        MENUITEM "Атрибути...\tCtrl+E", IDM_IMAGEATTRIBUTES
+        MENUITEM "Видалити малюнок\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
+        MENUITEM "Непрозоре тло", IDM_IMAGEDRAWOPAQUE
+    END
+    
+    POPUP "&Кольори"
+    BEGIN
+        MENUITEM "Змінити палітру...", IDM_COLORSEDITPALETTE
+    END
+    
+    POPUP "&Довідка"
+    BEGIN
+        MENUITEM "Виклик довідки", IDM_HELPHELPTOPICS
+        MENUITEM SEPARATOR
+        MENUITEM "Інформація", IDM_HELPINFO
+    END
+END
+
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+
+ID_ACCELERATORS ACCELERATORS
+BEGIN
+    "^N", IDM_FILENEW
+    "^O", IDM_FILEOPEN
+    "^S", IDM_FILESAVE
+    "^Z", IDM_EDITUNDO
+    "^Y", IDM_EDITREDO
+    "^X", IDM_EDITCUT
+    "^C", IDM_EDITCOPY
+    "^V", IDM_EDITPASTE
+    VK_DELETE, IDM_EDITDELETESELECTION, VIRTKEY
+    "^A", IDM_EDITSELECTALL
+    "^T", IDM_VIEWTOOLBOX
+    "^L", IDM_VIEWCOLORPALETTE
+    "^F", IDM_VIEWFULLSCREEN
+    "^R", IDM_IMAGEROTATEMIRROR
+    "^W", IDM_IMAGECHANGESIZE
+    "^I", IDM_IMAGEINVERTCOLORS
+    "^E", IDM_IMAGEATTRIBUTES
+    "N", IDM_IMAGEDELETEIMAGE, CONTROL, SHIFT, VIRTKEY
+END
+
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+
+IDD_MIRRORROTATE DIALOGEX 100, 100, 180, 100
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Відображення й поворот"
+BEGIN
+    GROUPBOX "Перегорнути або повернути", IDD_MIRRORROTATEGROUP, 6, 6, 112, 86
+    AUTORADIOBUTTON "Відобразити зліва направо", IDD_MIRRORROTATERB1, 12, 18, 100, 10, WS_GROUP
+    AUTORADIOBUTTON "Відобразити зверху вниз", IDD_MIRRORROTATERB2, 12, 30, 100, 10
+    AUTORADIOBUTTON "Повернути на кут", IDD_MIRRORROTATERB3, 12, 42, 100, 10
+    AUTORADIOBUTTON "90°", IDD_MIRRORROTATERB4, 42, 54, 50, 10, WS_GROUP | WS_DISABLED
+    AUTORADIOBUTTON "180°", IDD_MIRRORROTATERB5, 42, 66, 50, 10, WS_DISABLED
+    AUTORADIOBUTTON "270°", IDD_MIRRORROTATERB6, 42, 78, 50, 10, WS_DISABLED
+    DEFPUSHBUTTON "OK", IDOK, 125, 8, 48, 14
+    PUSHBUTTON "Скасувати", IDCANCEL, 125, 24, 48, 14
+END
+
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+
+IDD_ATTRIBUTES DIALOGEX 100, 100, 210, 120
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Атрибути"
+BEGIN
+    EDITTEXT IDD_ATTRIBUTESEDIT1, 40, 40, 35, 12
+    EDITTEXT IDD_ATTRIBUTESEDIT2, 110, 40, 35, 12
+    LTEXT "Ширина:", IDD_ATTRIBUTESTEXT1, 10, 40, 30, 10
+    LTEXT "Висота:", IDD_ATTRIBUTESTEXT2, 80, 40, 30, 10
+    LTEXT "Дата файла:", IDD_ATTRIBUTESTEXT3, 10, 5, 60, 10
+    LTEXT "Розмір файла:", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10
+    LTEXT "Роздільна здатність:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
+    LTEXT "Not available", IDD_ATTRIBUTESTEXT6, 70, 5, 60, 10
+    LTEXT "Not available", IDD_ATTRIBUTESTEXT7, 70, 15, 60, 10
+    LTEXT "Not available", IDD_ATTRIBUTESTEXT8, 70, 25, 60, 10
+    GROUPBOX "Одиниці вимірювання", IDD_ATTRIBUTESGROUP1, 6, 57, 139, 27
+    AUTORADIOBUTTON "дюйми", IDD_ATTRIBUTESRB1, 12, 69, 35, 10, WS_GROUP
+    AUTORADIOBUTTON "см", IDD_ATTRIBUTESRB2, 52, 69, 35, 10
+    AUTORADIOBUTTON "пікселі", IDD_ATTRIBUTESRB3, 92, 69, 35, 10
+    GROUPBOX "Кольори", IDD_ATTRIBUTESGROUP2, 6, 88, 139, 27
+    AUTORADIOBUTTON "чорно-біла", IDD_ATTRIBUTESRB4, 12, 100, 70, 10, WS_GROUP
+    AUTORADIOBUTTON "кольорова", IDD_ATTRIBUTESRB5, 92, 100, 35, 10
+    DEFPUSHBUTTON "OK", IDOK, 155, 8, 48, 14
+    PUSHBUTTON "Скасувати", IDCANCEL, 155, 24, 48, 14
+    PUSHBUTTON "За промовчанням", IDD_ATTRIBUTESSTANDARD, 155, 40, 48, 14
+END
+
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+
+IDD_CHANGESIZE DIALOGEX 100, 100, 210, 80
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Зміна розміру"
+BEGIN
+    GROUPBOX "Змінення розміру", IDD_CHANGESIZEGROUP, 6, 6, 142, 66
+    ICON IDI_HORZSTRETCH, IDD_CHANGESIZEICON1, 12, 18
+    LTEXT "По горизонталі:", IDD_CHANGESIZETEXT1, 45, 24, 40, 10
+    EDITTEXT IDD_CHANGESIZEEDIT1, 90, 23, 32, 12
+    LTEXT "%", IDD_CHANGESIZETEXT2, 125, 24, 15, 10
+    ICON IDI_VERTSTRETCH, IDD_CHANGESIZEICON2, 12, 43
+    LTEXT "По вертикалі:", IDD_CHANGESIZETEXT3, 45, 49, 40, 10
+    EDITTEXT IDD_CHANGESIZEEDIT2, 90, 48, 32, 12
+    LTEXT "%", IDD_CHANGESIZETEXT4, 125, 49, 15, 10
+    DEFPUSHBUTTON "OK", IDOK, 155, 8, 48, 14
+    PUSHBUTTON "Скасувати", IDCANCEL, 155, 24, 48, 14
+END
+
+STRINGTABLE
+BEGIN
+    IDS_PROGRAMNAME, "Paint"
+    IDS_WINDOWTITLE, "%s - Paint"
+    IDS_INFOTITLE, "Paint для ReactOS"
+    IDS_INFOTEXT, "Paint for ReactOS is available under the GNU Lesser General Public License (LGPL) version 3 (see www.gnu.org)"
+    IDS_SAVEPROMPTTEXT, "Зберегти зміни до %s?"
+    IDS_DEFAULTFILENAME, "Без_імені.bmp"
+    IDS_TOOLTIP1, "Виділення довільної області"
+    IDS_TOOLTIP2, "Виділення"
+    IDS_TOOLTIP3, "Ластик"
+    IDS_TOOLTIP4, "Заливка"
+    IDS_TOOLTIP5, "Вибір кольорів"
+    IDS_TOOLTIP6, "Масштаб"
+    IDS_TOOLTIP7, "Олівець"
+    IDS_TOOLTIP8, "Пензель"
+    IDS_TOOLTIP9, "Розпилювач"
+    IDS_TOOLTIP10, "Текст"
+    IDS_TOOLTIP11, "Лінія"
+    IDS_TOOLTIP12, "Крива Без'є"
+    IDS_TOOLTIP13, "Прямокутник"
+    IDS_TOOLTIP14, "Багатокутник"
+    IDS_TOOLTIP15, "Еліпс"
+    IDS_TOOLTIP16, "Прямокутник з округленими кутами"
+    IDS_OPENFILTER, "Точкові рисунки (*.bmp;*.dib)\1*.bmp;*.dib\1Усі файли (*.*)\1*.*\1"
+    IDS_SAVEFILTER, "24-розрядний рисунок (*.bmp;*.dib)\1*.bmp;*.dib\1"
+END

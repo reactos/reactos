@@ -1,0 +1,37 @@
+/*
+ * PROJECT:     PAINT for ReactOS
+ * LICENSE:     LGPL
+ * FILE:        main.c
+ * PURPOSE:     Managing the resources
+ * PROGRAMMERS: Benedikt Freisen
+ */
+ 
+/* INCLUDES *********************************************************/
+
+#include <windows.h>
+#include "definitions.h"
+
+#include "icons.rc"
+
+// cp 1252 languages
+#include "lang/de-DE.rc"
+#include "lang/en-GB.rc"
+#include "lang/en-US.rc"
+#include "lang/fr-FR.rc"
+#include "lang/it-IT.rc"
+#include "lang/es-ES.rc"
+#include "lang/pt-BR.rc"
+#include "lang/pt-PT.rc"
+// cp 1250 languages
+#include "lang/sk-SK.rc"
+#include "lang/cs-CZ.rc"
+// cp 1251 languages
+#include "lang/uk-UA.rc"
+
+
+//
+// SUPPORT FOR WINDOWS XP THEMES:
+// THIS WILL MAKE THE PROGRAM USE THE COMMON CONTROLS
+// LIBRARY VERSION 6.0 (IF IT IS AVAILABLE)
+//
+1 24 "paint.exe.manifest"
