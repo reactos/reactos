@@ -140,6 +140,11 @@ NTSTATUS
 NewPortWaveRTStream(
     PPORTWAVERTSTREAM *OutStream);
 
+NTSTATUS
+NewPortWaveRT(
+    OUT PPORT* OutPort);
+
+
 #endif
 
 NTSTATUS
