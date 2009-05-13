@@ -504,17 +504,18 @@ GetW32ThreadInfo(VOID)
 {
     PTEB Teb;
     PW32THREADINFO ti;
-    PCLIENTINFO ci;
-    PTHREADINFO W32Thread = PsGetCurrentThreadWin32Thread();
+    PPROCESSINFO ppi;
+    PCLIENTINFO pci;
+    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
 
-    if (W32Thread == NULL)
+    if (pti == NULL)
     {
         /* FIXME - temporary hack for system threads... */
         return NULL;
     }
 
     /* allocate a THREADINFO structure if neccessary */
-    if (W32Thread->ThreadInfo == NULL)
+    if (pti->ThreadInfo == NULL)
     {
         ti = UserHeapAlloc(sizeof(W32THREADINFO));
         if (ti != NULL)
@@ -523,33 +524,42 @@ GetW32ThreadInfo(VOID)
                           sizeof(W32THREADINFO));
 
             /* initialize it */
-            ti->ppi = GetW32ProcessInfo();
-            ti->fsHooks = W32Thread->fsHooks;
-            W32Thread->pcti = &W32Thread->cti; // FIXME
-            if (W32Thread->Desktop != NULL)
+            ti->ppi = ppi = GetW32ProcessInfo();
+            ti->fsHooks = pti->fsHooks;
+            pti->pcti = &pti->cti; // FIXME Need to set it in desktop.c!
+            if (pti->Desktop != NULL)
             {
-                ti->pDeskInfo = W32Thread->Desktop->DesktopInfo;
+                pti->pDeskInfo = ti->pDeskInfo = pti->Desktop->DesktopInfo;
             }
             else
             {
-                ti->pDeskInfo = NULL;
+                pti->pDeskInfo = ti->pDeskInfo = NULL;
             }
 
-            W32Thread->ThreadInfo = ti;
+            pti->ThreadInfo = ti;
             /* update the TEB */
             Teb = NtCurrentTeb();
-            ci = GetWin32ClientInfo();
-            W32Thread->pClientInfo = ci;
+            pci = GetWin32ClientInfo();
+            pti->pClientInfo = pci;
             _SEH2_TRY
             {
                 ProbeForWrite(Teb,
                               sizeof(TEB),
                               sizeof(ULONG));
-       // FIXME PLEASE! it's a ref pointer and not user data! Use ClientThreadInfo!
-                Teb->Win32ThreadInfo = UserHeapAddressToUser(W32Thread->ThreadInfo);
-//                ci->pClientThreadInfo = &ti->ClientThreadInfo; // FIXME!
-                ci->pClientThreadInfo = NULL;
-                ci->ppi = ti->ppi;
+
+                Teb->Win32ThreadInfo = UserHeapAddressToUser(pti->ThreadInfo);
+
+                pci->pClientThreadInfo = NULL; // FIXME Need to set it in desktop.c!
+                pci->ppi = ppi;
+                pci->fsHooks = pti->fsHooks;
+                /* CI may not have been initialized. */
+                if (!pci->pDeskInfo && pti->pDeskInfo)
+                {
+                   if (!pci->ulClientDelta) pci->ulClientDelta = DesktopHeapGetUserDelta();
+
+                   pci->pDeskInfo = 
+                            (PVOID)((ULONG_PTR)pti->pDeskInfo - pci->ulClientDelta);
+                }
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
@@ -563,7 +573,7 @@ GetW32ThreadInfo(VOID)
         }
     }
 
-    return W32Thread->ThreadInfo;
+    return pti->ThreadInfo;
 }
 
 
