@@ -515,6 +515,11 @@ IopInitiatePnpIrp(PDEVICE_OBJECT DeviceObject,
    Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
    Irp->IoStatus.Information = 0;
 
+   if (MinorFunction == IRP_MN_FILTER_RESOURCE_REQUIREMENTS)
+   {
+      Irp->IoStatus.Information = (ULONG_PTR)Stack->Parameters.FilterResourceRequirements.IoResourceRequirementList;
+   }
+
    IrpSp = IoGetNextIrpStackLocation(Irp);
    IrpSp->MinorFunction = (UCHAR)MinorFunction;
 
