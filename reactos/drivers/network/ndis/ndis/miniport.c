@@ -16,17 +16,6 @@
 
 #include <buffer.h>
 
-#undef NdisMSendComplete
-VOID
-EXPORT
-NdisMSendComplete(
-    IN  NDIS_HANDLE     MiniportAdapterHandle,
-    IN  PNDIS_PACKET    Packet,
-    IN  NDIS_STATUS     Status);
-
-/* Root of the scm database */
-#define SERVICES_ROOT L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\"
-
 /*
  * Define to 1 to get a debugger breakpoint at the end of NdisInitializeWrapper
  * for each new miniport starting up
@@ -1080,7 +1069,7 @@ MiniportWorker(IN PDEVICE_OBJECT DeviceObject, IN PVOID Context)
               }
 
 	    if( NdisStatus != NDIS_STATUS_PENDING ) {
-		NdisMSendComplete
+		MiniSendComplete
 		    ( Adapter, (PNDIS_PACKET)WorkItemContext, NdisStatus );
 	    }
             break;
