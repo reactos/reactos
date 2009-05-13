@@ -74,7 +74,7 @@ POSK_IFADDR TCPFindInterface( void *ClientData,
 			      OSK_UINT FindType,
 			      OSK_SOCKADDR *ReqAddr,
 			      OSK_IFADDR *Interface ) {
-    PNEIGHBOR_CACHE_ENTRY NCE;
+    PIP_INTERFACE IF;
     IP_ADDRESS Destination;
     struct sockaddr_in *addr_in = (struct sockaddr_in *)ReqAddr;
 
@@ -90,23 +90,20 @@ POSK_IFADDR TCPFindInterface( void *ClientData,
 
     TI_DbgPrint(DEBUG_TCPIF,("Address is %x\n", addr_in->sin_addr.s_addr));
 
-    NCE = RouteGetRouteToDestination(&Destination);
+    IF = FindOnLinkInterface(&Destination);
 
-    if( !NCE || !NCE->Interface ) {
-	TI_DbgPrint(DEBUG_TCPIF,("no neighbor cache or no interface (%x %x)\n",
-			       NCE, NCE ? NCE->Interface : 0));
-	return NULL;
+    if (!IF || !IF->TCPContext) {
+        /* TCPContext can be NULL if we don't have an IP address yet */
+        TI_DbgPrint(DEBUG_TCPIF, ("No interface or TCP context (%x) (%x)\n",
+                                  IF, IF ? IF->TCPContext : 0));
+        return NULL;
     }
 
-    TI_DbgPrint(DEBUG_TCPIF,("NCE: %x\n", NCE));
-    TI_DbgPrint(DEBUG_TCPIF,("NCE->Interface: %x\n", NCE->Interface));
-    TI_DbgPrint(DEBUG_TCPIF,("NCE->Interface->TCPContext: %x\n",
-			   NCE->Interface->TCPContext));
-
     addr_in = (struct sockaddr_in *)
-	((POSK_IFADDR)NCE->Interface->TCPContext)->ifa_addr;
+	((POSK_IFADDR)IF->TCPContext)->ifa_addr;
+
     TI_DbgPrint(DEBUG_TCPIF,("returning addr %x\n", addr_in->sin_addr.s_addr));
 
-    return NCE->Interface->TCPContext;
+    return IF->TCPContext;
 }
 
