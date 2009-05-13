@@ -211,7 +211,7 @@ ifeq ($(ROS_BUILDDEPS),full)
 
 ${call RBUILD_intermediate_path_unique,$(1),$(2)}.o.d: $(2) | ${call RBUILD_intermediate_dir,$(2)}
 	$$(ECHO_DEPENDS)
-	$${gpp} -MF ${call RBUILD_cxxflags,$(1),$(4)} -M -MP -MT $$@ $$<
+	$${gpp} -MF $$@ ${call RBUILD_cxxflags,$(1),$(4)} -M -MP -MT $$@ $$<
 
 -include ${call RBUILD_intermediate_path_unique,$(1),$(2)}.o.d
 
