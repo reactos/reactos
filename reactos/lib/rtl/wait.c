@@ -55,7 +55,7 @@ Wait_thread_proc(LPVOID Arg)
     {
         Status = NtWaitForMultipleObjects( 2,
                                            handles,
-                                           FALSE,
+                                           WaitAny,
                                            alertable,
                                            get_nt_timeout( &timeout, Wait->Milliseconds ) );
 
