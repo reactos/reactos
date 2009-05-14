@@ -217,6 +217,7 @@ BEGIN
     IDS_CMT_RDESKTOP    "Start Ekstern skrivebord"
     IDS_CMT_EVENTVIEW   "Start Hendelseliste"
     IDS_CMT_MSCONFIG    "Start Systemkonfigurasjon"
+    IDS_CMT_PAINT       "Launch Paint"
 END
 
 STRINGTABLE
@@ -283,6 +284,7 @@ BEGIN
     IDS_SHORT_MSCONFIG   "System Configuration.lnk"
     IDS_SHORT_SNDVOL32   "Volume Control.lnk"
     IDS_SHORT_DXDIAG     "ReactX Diagnostic.lnk"
+    IDS_SHORT_PAINT      "Paint.lnk"
 END
 
 STRINGTABLE

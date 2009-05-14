@@ -199,6 +199,7 @@ BEGIN
     IDS_CMT_RDESKTOP    "Spustiù Vzdialen˙ pracovn˙ plochu"
     IDS_CMT_EVENTVIEW   "Spustiù ZobrazovaË udalostÌ"
     IDS_CMT_MSCONFIG    "Spustiù Program na konfigur·ciu systÈmu"
+    IDS_CMT_PAINT       "Launch Paint"
 END
 
 STRINGTABLE
@@ -266,6 +267,7 @@ BEGIN
     IDS_SHORT_MSCONFIG   "Program na konfigur·ciu systÈmu.lnk"
     IDS_SHORT_SNDVOL32   "Ovl·danie hlasitosti.lnk" //Volume Control
     IDS_SHORT_DXDIAG     "Diagnostika ReactX.lnk"
+    IDS_SHORT_PAINT      "Paint.lnk"
 END
 
 STRINGTABLE

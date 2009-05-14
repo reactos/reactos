@@ -213,6 +213,7 @@ BEGIN
     IDS_CMT_RDESKTOP    "Spustit Vzdálenou plochu"
     IDS_CMT_EVENTVIEW   "Launch Event Viewer"
     IDS_CMT_MSCONFIG    "Launch System Configuration program"
+    IDS_CMT_PAINT       "Launch Paint"
 END
 
 STRINGTABLE
@@ -280,6 +281,7 @@ BEGIN
     IDS_SHORT_MPLAY32    "Multimedia Player.lnk"
     IDS_SHORT_SNDVOL32   "Volume Control.lnk"
     IDS_SHORT_DXDIAG     "ReactX Diagnostic.lnk"
+    IDS_SHORT_PAINT      "Paint.lnk"
 END
 
 STRINGTABLE

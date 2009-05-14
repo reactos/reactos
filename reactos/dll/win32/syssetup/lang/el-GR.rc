@@ -214,6 +214,7 @@ BEGIN
     IDS_CMT_RDESKTOP    "Launch Remote Desktop"
     IDS_CMT_EVENTVIEW   "Προβολή Συμβάντων"
     IDS_CMT_MSCONFIG    "Βοηθητικό πρόγραμμα ρύθμισης παραμέτρων"
+    IDS_CMT_PAINT       "Launch Paint"
 END
 
 STRINGTABLE
@@ -281,6 +282,7 @@ BEGIN
     IDS_SHORT_MSCONFIG   "Βοηθητικό πρόγραμμα ρύθμισης παραμέτρων.lnk"
     IDS_SHORT_SNDVOL32   "Volume Control.lnk"
     IDS_SHORT_DXDIAG     "ReactX Diagnostic.lnk"
+    IDS_SHORT_PAINT      "Paint.lnk"
 END
 
 STRINGTABLE

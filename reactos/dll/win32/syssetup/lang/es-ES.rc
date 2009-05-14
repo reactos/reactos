@@ -223,6 +223,7 @@ BEGIN
     IDS_CMT_RDESKTOP    "Ejecutar Escritorio remoto"
     IDS_CMT_EVENTVIEW   "Ejecutar Visor de sucesos"
     IDS_CMT_MSCONFIG    "Ejecutar Utilidad de configuración del sistema"
+    IDS_CMT_PAINT       "Launch Paint"
 END
 
 STRINGTABLE
@@ -290,6 +291,7 @@ BEGIN
     IDS_SHORT_MSCONFIG   "Configuración del sistema.lnk"
     IDS_SHORT_SNDVOL32   "Control de volumen.lnk"
     IDS_SHORT_DXDIAG     "Diagnóstico de ReactX.lnk"
+    IDS_SHORT_PAINT      "Paint.lnk"
 END
 
 STRINGTABLE

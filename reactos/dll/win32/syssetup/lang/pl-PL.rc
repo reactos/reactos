@@ -222,6 +222,7 @@ BEGIN
     IDS_CMT_RDESKTOP    "Uruchom Zdalny pulpit"
     IDS_CMT_EVENTVIEW   "Uruchom Podgl¹d Zdarzeñ"
     IDS_CMT_MSCONFIG    "Uruchom Narzêdzie konfiguracji systemu"
+    IDS_CMT_PAINT       "Launch Paint"
 END
 
 
@@ -288,6 +289,7 @@ BEGIN
     IDS_SHORT_MSCONFIG   "Konfiguracja systemowa.lnk"
     IDS_SHORT_SNDVOL32   "Regulacja g³oœnoœci.lnk"
     IDS_SHORT_DXDIAG     "Program diagnostyczny ReactX.lnk"
+    IDS_SHORT_PAINT      "Paint.lnk"
 END
 
 STRINGTABLE

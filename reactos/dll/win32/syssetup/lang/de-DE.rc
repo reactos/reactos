@@ -213,6 +213,7 @@ BEGIN
     IDS_CMT_RDESKTOP    "Starte Remote Desktop"
     IDS_CMT_EVENTVIEW   "Starte Ereignisanzeige"
     IDS_CMT_MSCONFIG    "Starte Systemkonfigurations Programm"
+    IDS_CMT_PAINT       "Launch Paint"
 END
 
 STRINGTABLE
@@ -280,6 +281,7 @@ BEGIN
     IDS_SHORT_MSCONFIG   "Systemkonfiguration.lnk"
     IDS_SHORT_SNDVOL32   "Volume Control.lnk"
     IDS_SHORT_DXDIAG     "ReactX Diagnostic.lnk"
+    IDS_SHORT_PAINT      "Paint.lnk"
 END
 
 STRINGTABLE

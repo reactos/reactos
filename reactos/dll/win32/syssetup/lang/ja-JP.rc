@@ -214,6 +214,7 @@ BEGIN
     IDS_CMT_SCREENSHOT  "スクリーンショットを撮ります"
     IDS_CMT_SERVMAN     "サービス マネージャを起動します"
     IDS_CMT_WORDPAD     "ドキュメントエディタを起動します"
+    IDS_CMT_PAINT       "Launch Paint"
 END
 
 STRINGTABLE
@@ -280,6 +281,7 @@ BEGIN
     IDS_SHORT_SOLITAIRE  "ソ\リティア.lnk"
     IDS_SHORT_WINEMINE   "WineMine.lnk"
     IDS_SHORT_WORDPAD    "ワードパッド.lnk"
+    IDS_SHORT_PAINT      "Paint.lnk"
 END
 
 STRINGTABLE

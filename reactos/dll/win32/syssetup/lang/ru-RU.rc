@@ -195,6 +195,7 @@ BEGIN
     IDS_CMT_RDESKTOP    "Запустить удаленный рабочий стол"
     IDS_CMT_EVENTVIEW   "Запустить программу просмотра событий"
     IDS_CMT_MSCONFIG    "Запустить программу настройки системы"
+    IDS_CMT_PAINT       "Запустить Paint"
 END
 
 STRINGTABLE
@@ -262,6 +263,7 @@ BEGIN
     IDS_SHORT_MSCONFIG   "Параметры системы.lnk"
     IDS_SHORT_SNDVOL32   "Громкость.lnk"
     IDS_SHORT_DXDIAG     "Средство диагностики ReactX.lnk"
+    IDS_SHORT_PAINT      "Paint.lnk"
 END
 
 STRINGTABLE

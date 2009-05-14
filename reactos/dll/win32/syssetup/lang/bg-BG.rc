@@ -217,6 +217,7 @@ BEGIN
     IDS_CMT_RDESKTOP    "Пускане на отдалечената работна площ"
     IDS_CMT_EVENTVIEW   "Пускане на прегледника на събития"
     IDS_CMT_MSCONFIG    "Пускане на приложението за настройка на уредбата"
+    IDS_CMT_PAINT       "Launch Paint"
 END
 
 
@@ -284,6 +285,7 @@ BEGIN
     IDS_SHORT_MSCONFIG   "Настройка на уредбата.lnk"
     IDS_SHORT_SNDVOL32   "Сила на звука.lnk"
     IDS_SHORT_DXDIAG     "Преглеждане на РеактХ.lnk"
+    IDS_SHORT_PAINT      "Paint.lnk"
 END
 
 
