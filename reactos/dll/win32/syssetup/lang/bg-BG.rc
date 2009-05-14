@@ -58,6 +58,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Настройка на РеактОС"
 FONT 8, "MS Shell Dlg"
 BEGIN
+    ICON IDI_ICON2, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Напишете имената си и името на вашето предприятието.",
           IDC_STATIC, 54, 7, 242, 21
     LTEXT "&Име:", IDC_STATIC, 54, 37, 44, 8
@@ -72,11 +73,13 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Настройка на РеактОС"
 FONT 8, "MS Shell Dlg"
 BEGIN
+    ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Напишете ненадвишаващо 63 знака име на компютъра. "\
           "Ако сте в мрежа, никой друг компютър не трябва да има същото име.",
           IDC_STATIC, 45, 7, 250, 24
     LTEXT "Име на &компютъра:", IDC_STATIC, 45, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
+    ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
     LTEXT "Настройката ще създаде потребителска сметка, под името „Administrator“. "\
           "Можете да използвате тази сметка, за да получите пълен достъп до компютъра.",
           IDC_STATIC, 45, 57, 250, 25
@@ -94,6 +97,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Настройка на РеактОС"
 FONT 8, "MS Shell Dlg"
 BEGIN
+    ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Местната стойност на уредбата трябва да отговаря на езика на приложенията, "\
           "които ще използвате. Местната стойност определя как се изобразават "\
           "паричните стойности и датите.", IDC_STATIC, 53, 2, 253, 26
@@ -115,6 +119,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Настройка на РеактОС"
 FONT 8, "MS Shell Dlg"
 BEGIN
+    ICON IDI_ICON3, IDC_STATIC, 21, 10, 20, 20
     LTEXT "Дата и време", IDC_STATIC, 53, 7, 253, 8
     CONTROL "", IDC_DATEPICKER, "SysDateTimePick32",
             DTS_LONGDATEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 53, 17, 137, 14

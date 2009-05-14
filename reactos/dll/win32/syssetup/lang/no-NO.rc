@@ -60,6 +60,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS installasjon"
 FONT 8, "MS Shell Dlg"
 BEGIN
+    ICON IDI_ICON2, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Skriv inn ditt fulle navn og navnet på din bedrift eller organisasjon.",
           IDC_STATIC, 54, 7, 242, 21
     LTEXT "Na&vn:", IDC_STATIC, 54, 37, 44, 8
@@ -74,11 +75,13 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS installasjon"
 FONT 8, "MS Shell Dlg"
 BEGIN
+    ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Skriv inn et navn for din datamaskin som er 63 karakterer eller mindre. "\
           "Hvis du er på et nettverk, så må ditt datamaskin navn være unikt.",
           IDC_STATIC, 54, 7, 250, 24
     LTEXT "&Datamaskin navn:", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
+    ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
     LTEXT "Installasjonen vil lage en brukerkonto som blir kalt Administrator. "\
           "Du kan bruke denne kontoen hvis du trenger full adgang til din datamaskin.",
           IDC_STATIC, 54, 57, 250, 25
@@ -96,6 +99,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS installasjon"
 FONT 8, "MS Shell Dlg"
 BEGIN
+    ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Systemets språk og region burde samsvare med språket på programmene "\
           "du vil bruke. Innstillingene for språk og region kontrollerer hvordan tall, "\
           "valutaer, og dato vises.", IDC_STATIC, 55, 7, 259, 24
@@ -117,6 +121,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS installasjon"
 FONT 8, "MS Shell Dlg"
 BEGIN
+    ICON IDI_ICON3, IDC_STATIC, 21, 10, 20, 20
     LTEXT "Dato og tid", IDC_STATIC, 53, 7, 253, 8
     CONTROL "", IDC_DATEPICKER, "SysDateTimePick32",
             DTS_LONGDATEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 53, 17, 137, 14

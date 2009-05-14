@@ -48,11 +48,12 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Installazione di ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
+    ICON IDI_ICON2, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Scrivere il proprio nome completo e il nome della propria ditta o organizzazione.",
-          IDC_STATIC, 20, 7, 242, 21
-    LTEXT "No&me:", IDC_STATIC, 20, 37, 108, 8
+          IDC_STATIC, 54, 7, 242, 21
+    LTEXT "No&me:", IDC_STATIC, 26, 39, 90, 8
     EDITTEXT IDC_OWNERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "&Organizzazione:", IDC_STATIC, 20, 57, 108, 8
+    LTEXT "&Organizzazione:", IDC_STATIC, 26, 59, 90, 8
     EDITTEXT IDC_OWNERORGANIZATION, 132, 55, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
 END
 
@@ -62,19 +63,21 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Installazione di ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
+    ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Scrivere un nome per il computer che sia lungo al massimo 63 caratteri.\n"\
           "Se si è in rete, il nome del computer deve essere univoco.",
-          IDC_STATIC, 20, 7, 250, 24
-    LTEXT "Nome del &computer:", IDC_STATIC, 20, 38, 75, 8
+          IDC_STATIC, 54, 7, 250, 24
+    LTEXT "Nome del &computer:", IDC_STATIC, 29, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 140, 35, 160, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
+    ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
     LTEXT "Questa procedura creerà su questo computer un account utente chiamato Administrator. "\
           "Si potrà usare questo account se si necessita l'accesso completo al computer.",
-          IDC_STATIC, 20, 57, 250, 25
+          IDC_STATIC, 54, 57, 250, 25
     LTEXT "Scrivere una password per Administrator che sia lunga al massimo 14 caratteri.",
-          IDC_STATIC, 20, 87, 280, 8
-    LTEXT "Password per &Administrator:", IDC_STATIC, 20, 105, 95, 8
+          IDC_STATIC, 26, 87, 280, 8
+    LTEXT "Password per &Administrator:", IDC_STATIC, 29, 105, 95, 8
     EDITTEXT IDC_ADMINPASSWORD1, 140, 100, 160, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
-    LTEXT "C&onfermare la password:", IDC_STATIC, 20, 125, 95, 8
+    LTEXT "C&onfermare la password:", IDC_STATIC, 29, 125, 95, 8
     EDITTEXT IDC_ADMINPASSWORD2, 140, 120, 160, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
 END
 
@@ -84,10 +87,11 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Installazione di ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
+    ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Le impostazioni linguistiche del sistema devono coincidere con la lingua degli applicativi "\
           "che si desidera usare. Le impostazioni linguistiche dell'utente stabiliscono come appaiono "\
-          "i numeri, i valori monetari e le date.", IDC_STATIC, 20, 7, 253, 26
-    LTEXT "", IDC_LOCALETEXT, 20, 35, 250, 16
+          "i numeri, i valori monetari e le date.", IDC_STATIC, 56, 7, 253, 26
+    LTEXT "", IDC_LOCALETEXT, 56, 35, 250, 16
     LTEXT "Per cambiare le impostazioni linguistiche del sistema o dell'utente, selezionare Personalizza.",
           IDC_STATIC, 20, 55, 184, 16
     PUSHBUTTON "&Personalizza...", IDC_CUSTOMLOCALE, 240, 55, 60, 16
@@ -105,9 +109,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Installazione di ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Data e ora", IDC_STATIC, 20, 7, 253, 8
+    ICON IDI_ICON3, IDC_STATIC, 21, 10, 20, 20
+    LTEXT "Data e ora", IDC_STATIC, 56, 7, 253, 8
     CONTROL "", IDC_DATEPICKER, "SysDateTimePick32",
-            DTS_LONGDATEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 20, 17, 137, 10
+            DTS_LONGDATEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 56, 17, 137, 10
     CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32",
             DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 200, 17, 54, 10
     LTEXT "Fuso orario", IDC_STATIC, 20, 42, 253, 8

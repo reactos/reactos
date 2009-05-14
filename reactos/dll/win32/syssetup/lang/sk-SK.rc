@@ -43,6 +43,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Inötal·tor systÈmu ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
+    ICON IDI_ICON2, IDC_STATIC, 21, 7, 20, 20
     LTEXT "NapÌöte Vaöe celÈ meno a n·zov Vaöej firmy alebo organiz·cie.",
           IDC_STATIC, 54, 7, 242, 21
     LTEXT "&Meno:", IDC_STATIC, 54, 37, 44, 8
@@ -57,11 +58,13 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Inötal·tor systÈmu ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
+    ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
     LTEXT "NapÌöte n·zov V·öho poËÌtaËa v dÂûke 63 znakov alebo menej. "\
           "Ak je poËÌtaË pripojen˝ k sieti, musÌ b˝ù jeho n·zov unik·tny.",
           IDC_STATIC, 54, 7, 250, 24
     LTEXT "&N·zov poËÌtaËa:", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
+    ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
     LTEXT "Inötal·tor vytvorÌ na poËÌtaËi pouûÌvateæsk˝ ˙Ëet nazvan˝ Administrator. "\
           "Tento ˙Ëet mÙûete pouûiù, keÔ budete potrebovaù pln˝ prÌstup k V·ömu poËÌtaËu.",
           IDC_STATIC, 54, 57, 250, 25
@@ -79,6 +82,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Inötal·tor systÈmu ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
+    ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Lokaliz·cia systÈmu by mala s˙hlasiù s jazykom aplik·ciÌ, "\
           "ktorÈ chcete pouûÌvaù. Lokaliz·cia urËÌ ako bud˙ zobrazenÈ "\
           "ËÌsla, meny a ˙daje kalend·ra.", IDC_STATIC, 53, 7, 253, 20
@@ -100,6 +104,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Inötal·tor systÈmu ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
+    ICON IDI_ICON3, IDC_STATIC, 21, 10, 20, 20
     LTEXT "D·tum a Ëas", IDC_STATIC, 53, 7, 253, 8
     CONTROL "", IDC_DATEPICKER, "SysDateTimePick32",
             DTS_LONGDATEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 53, 17, 137, 14

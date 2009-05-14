@@ -19,8 +19,14 @@
 #ifndef RESOURCE_H
 #define RESOURCE_H
 
-#define IDB_WATERMARK                    100
-#define IDB_HEADER                       101
+#define IDB_WATERMARK                   100
+#define IDB_HEADER                      101
+
+#define IDI_ICON1                       10
+#define IDI_ICON2                       11
+#define IDI_ICON3                       12
+#define IDI_ICON4                       13
+#define IDI_ICON5                       14
 
 #define IDC_STATIC                        -1
 

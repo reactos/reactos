@@ -57,6 +57,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Εγκατάσταση του ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
+    ICON IDI_ICON2, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Εισάγετε το όνομά σας και το όνομα της εταιρίας ή του οργανισμού σας.",
           IDC_STATIC, 54, 7, 242, 21
     LTEXT "Ό&νομα:", IDC_STATIC, 54, 37, 44, 8
@@ -71,11 +72,13 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Εγκατάσταση του ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
+    ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Εισάγετε το όνομα του υπολογιστή σας, το οποίο δεν πρέπει να ξεπερνά τους 63 χαρακτήρες. "\
           "’ν ο υπολογιστής ανήκει σε κάποιο δίκτυο, το όνομά του πρέπει να είναι μοναδικό.",
           IDC_STATIC, 54, 7, 250, 24
     LTEXT "&Όνομα υπολογιστή:", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
+    ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
     LTEXT "Η εγκατάσταση θα δημιουργήσει ένα λογαριαρισμό διαχειριστή στον υπολογιστή σας με το όνομα Administrator. "\
           "Με το λογιαριασμό διαχειριστή μπορείτε να αποκτήσετε τον πλήρη έλεγχο του υπολογιστή.",
           IDC_STATIC, 54, 57, 250, 25
@@ -93,6 +96,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Εγκατάσταση του ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
+    ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Οι τοπικές ρυθμισεις πρέπει να ταιριάζουν με τη γλώσσα των εφαρμογών  "\
           "που θέλετε να χρησιμοποιήσετε. Επίσης ελέγχουν τον τρόπο  "\
           "με τον οποίο θα εμφανίζονται οι αριθμοί, τα νομίσματα και οι ημερομηνίες.", IDC_STATIC, 53, 7, 253, 31
@@ -114,6 +118,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Εγκατάσταση του ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
+    ICON IDI_ICON3, IDC_STATIC, 21, 10, 20, 20
     LTEXT "Ημερομηνία και ώρα", IDC_STATIC, 53, 7, 253, 8
     CONTROL "", IDC_DATEPICKER, "SysDateTimePick32",
             DTS_LONGDATEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 53, 17, 137, 14

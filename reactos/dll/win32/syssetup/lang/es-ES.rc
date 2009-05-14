@@ -65,6 +65,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Instalación de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
+    ICON IDI_ICON2, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Escriba su nombre completo y el nombre de su compañia u organización.",
           IDC_STATIC, 54, 7, 242, 21
     LTEXT "No&mbre:", IDC_STATIC, 54, 37, 44, 8
@@ -79,11 +80,13 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Instalación de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
+    ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Escriba un nombre para su equipo que sea de 63 caracteres o menos. "\
           "Si se encuentra conectado a una red, el nombre debe ser único.",
           IDC_STATIC, 54, 7, 250, 24
     LTEXT "Nombre del &Equipo:", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
+    ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
     LTEXT "El instalador creará un perfil de usuario en su equipo llamado Administrator. "\
           "Puede utilizar este perfil si necesita acceso completo a su equipo.",
           IDC_STATIC, 54, 57, 250, 25
@@ -101,6 +104,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Instalación de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
+    ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Las opciones regionales y de idioma permiten configurar la manera en que se representan "\
           "fechas ,número ,monedas y horas. También puede agregar compatibilidad con otros idiomas "\
           "y cambiar la configuración de su ubicación.", IDC_STATIC, 53, 6, 253, 30
@@ -123,6 +127,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Instalación de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
+    ICON IDI_ICON3, IDC_STATIC, 21, 10, 20, 20
     LTEXT "Fecha y Hora", IDC_STATIC, 53, 7, 253, 8
     CONTROL "", IDC_DATEPICKER, "SysDateTimePick32",
             DTS_LONGDATEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 53, 17, 137, 14
