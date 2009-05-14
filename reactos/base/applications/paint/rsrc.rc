@@ -27,6 +27,7 @@
 #include "lang/sk-SK.rc"
 #include "lang/cs-CZ.rc"
 // cp 1251 languages
+#include "lang/ru-RU.rc"
 #include "lang/uk-UA.rc"
 
 
