@@ -25,6 +25,9 @@
 	<directory name="telnetd">
 		<xi:include href="telnetd/telnetd.rbuild" />
 	</directory>
+        <directory name="tftpd">
+                <xi:include href="tftpd/tftpd.rbuild" />
+        </directory>
 	<directory name="umpnpmgr">
 		<xi:include href="umpnpmgr/umpnpmgr.rbuild" />
 	</directory>
