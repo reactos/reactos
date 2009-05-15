@@ -33,7 +33,7 @@ INT CommandMemory (LPTSTR param)
 	}
 
 	BOOL (WINAPI *GlobalMemoryStatusEx)(LPMEMORYSTATUSEX)
-		= GetProcAddress(GetModuleHandle(_T("KERNEL32")), "GlobalMemoryStatusEx");
+		= (PVOID)GetProcAddress(GetModuleHandle(_T("KERNEL32")), "GlobalMemoryStatusEx");
 	if (GlobalMemoryStatusEx)
 	{
 		msex.dwLength = sizeof(MEMORYSTATUSEX);
