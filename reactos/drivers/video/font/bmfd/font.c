@@ -389,7 +389,7 @@ BmfdQueryFontTree(
 {
     PBMFD_FILE pfile = (PBMFD_FILE)iFile;
     PBMFD_FACE pface;
-    ULONG i, j, cjOffset, cjSize, cGlyphs, cRuns;
+    ULONG i, j, cjSize, cGlyphs, cRuns;
     CHAR ch, chFirst, ach[256];
     WCHAR wc, awc[256];
     PFD_GLYPHSET pGlyphSet;
@@ -475,14 +475,13 @@ BmfdQueryFontTree(
     pwcrun[0].wcLow = awc[0];
     pwcrun[0].cGlyphs = 1;
     pwcrun[0].phg = phglyphs;
-    phglyphs[0] = (HGLYPH)pface->pCharTable;
+    phglyphs[0] = 0;
 
     /* Walk through all supported chars */
     for (i = 1, j = 0; i < cGlyphs; i++)
     {
-        /* Use pointer to glyph entry as hglyph */
-        cjOffset = (ach[i] - chFirst) * pface->cjEntrySize;
-        phglyphs[i] = (HGLYPH)(pface->pCharTable + cjOffset);
+        /* Use offset to glyph entry as hglyph */
+        phglyphs[i] = (ach[i] - chFirst) * pface->cjEntrySize;
 
         /* Check whether we can append the wchar to a run */
         if (awc[i] == awc[i - 1] + 1)
