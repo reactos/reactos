@@ -180,6 +180,108 @@ static BOOLEAN LdrpCallDllEntry(PLDR_DATA_TABLE_ENTRY Module, DWORD dwReason, PV
    return  ((PDLLMAIN_FUNC)Module->EntryPoint)(Module->DllBase, dwReason, lpReserved);
 }
 
+static PWSTR
+LdrpQueryAppPaths(IN PCWSTR ImageName)
+{
+    PKEY_VALUE_PARTIAL_INFORMATION KeyInfo;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    WCHAR SearchPathBuffer[MAX_PATH];
+    UNICODE_STRING ValueNameString;
+    UNICODE_STRING KeyName;
+    WCHAR NameBuffer[256];
+    ULONG KeyInfoSize;
+    ULONG ResultSize;
+    ULONG len;
+    HANDLE KeyHandle;
+    NTSTATUS Status;
+    PWSTR Path = NULL;
+
+    swprintf(NameBuffer,
+             L"\\Registry\\Machine\\Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\%s", ImageName);
+
+    RtlInitUnicodeString(&KeyName, NameBuffer);
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    Status = NtOpenKey(&KeyHandle,
+                       KEY_READ,
+                       &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT ("NtOpenKey() failed (Status %lx)\n", Status);
+        return NULL;
+    }
+
+    KeyInfoSize = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + 256 * sizeof(WCHAR);
+
+    KeyInfo = RtlAllocateHeap(RtlGetProcessHeap(), 0, KeyInfoSize);
+    if (KeyInfo == NULL)
+    {
+        DPRINT("RtlAllocateHeap() failed\n");
+        NtClose(KeyHandle);
+        return NULL;
+    }
+
+    RtlInitUnicodeString(&ValueNameString,
+                         L"Path");
+
+    Status = NtQueryValueKey(KeyHandle,
+                             &ValueNameString,
+                             KeyValuePartialInformation,
+                             KeyInfo,
+                             KeyInfoSize,
+                             &ResultSize);
+
+    if (NT_SUCCESS(Status))
+    {
+        RtlCopyMemory(SearchPathBuffer,
+                      &KeyInfo->Data,
+                      KeyInfo->DataLength);
+
+        /* get application running path */
+        wcscat(SearchPathBuffer, L";");
+        wcscat (SearchPathBuffer, NtCurrentPeb()->ProcessParameters->ImagePathName.Buffer);
+
+        len = wcslen (SearchPathBuffer);
+
+        while (len && SearchPathBuffer[len - 1] != L'\\')
+            len--;
+
+        if (len) SearchPathBuffer[len-1] = L'\0';
+
+        wcscat (SearchPathBuffer, L";");
+
+        wcscat (SearchPathBuffer, SharedUserData->NtSystemRoot);
+        wcscat (SearchPathBuffer, L"\\system32;");
+        wcscat (SearchPathBuffer, SharedUserData->NtSystemRoot);
+        wcscat (SearchPathBuffer, L";.");
+
+        Path = RtlAllocateHeap(RtlGetProcessHeap(),
+                               0,
+                               wcslen(SearchPathBuffer) * sizeof(WCHAR));
+
+        if (Path == NULL)
+        {
+            DPRINT("RtlAllocateHeap() failed\n");
+            RtlFreeHeap(RtlGetProcessHeap(), 0, KeyInfo);
+            NtClose(KeyHandle);
+            return NULL;
+        }
+
+        Path = SearchPathBuffer;
+    }
+
+    RtlFreeHeap(RtlGetProcessHeap(), 0, KeyInfo);
+
+    NtClose(KeyHandle);
+
+    return Path;
+}
+
 static NTSTATUS
 LdrpInitializeTlsForThread(VOID)
 {
@@ -1676,6 +1778,7 @@ LdrFixupImports(IN PWSTR SearchPath OPTIONAL,
    NTSTATUS Status;
    PLDR_DATA_TABLE_ENTRY ImportedModule;
    PCHAR ImportedName;
+   PWSTR ModulePath;
    ULONG Size;
 
    DPRINT("LdrFixupImports(SearchPath %S, Module %p)\n", SearchPath, Module);
@@ -1855,12 +1958,22 @@ LdrFixupImports(IN PWSTR SearchPath OPTIONAL,
            ImportedName = (PCHAR)Module->DllBase + ImportModuleDirectoryCurrent->Name;
            TRACE_LDR("%wZ imports functions from %s\n", &Module->BaseDllName, ImportedName);
 
+           if (SearchPath == NULL)
+           {
+                ModulePath = LdrpQueryAppPaths(Module->BaseDllName.Buffer);
+
+                Status = LdrpGetOrLoadModule(ModulePath, ImportedName, &ImportedModule, TRUE);
+                if (ModulePath != NULL) RtlFreeHeap(RtlGetProcessHeap(), 0, ModulePath);
+                if (NT_SUCCESS(Status)) goto Success;
+           }
+
            Status = LdrpGetOrLoadModule(SearchPath, ImportedName, &ImportedModule, TRUE);
            if (!NT_SUCCESS(Status))
              {
                DPRINT1("failed to load %s\n", ImportedName);
                return Status;
              }
+Success:
            if (Module == ImportedModule)
              {
                LdrpDecrementLoadCount(Module, FALSE);
