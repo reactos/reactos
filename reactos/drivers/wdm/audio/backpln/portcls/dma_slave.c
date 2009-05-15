@@ -524,11 +524,12 @@ IDmaChannelInitVtbl vt_IDmaChannelInitVtbl =
     IDmaChannelInit_fnGetAdapterObject,
     IDmaChannelInit_fnCopyTo,
     IDmaChannelInit_fnCopyFrom,
-    /* IDmaChannelInit methods */
+    /* IDmaChannelSlave methods */
     IDmaChannelInit_fnStart,
     IDmaChannelInit_fnStop,
     IDmaChannelInit_fnReadCounter,
     IDmaChannelInit_fnWaitForTC,
+    /* IDmaChannelInit methods */
     IDmaChannelInit_fnInit
 };
 

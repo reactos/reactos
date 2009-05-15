@@ -912,7 +912,7 @@ IPortPinWaveRT_fnInit(
         goto cleanup;
     }
 
-    Status = This->IrpQueue->lpVtbl->Init(This->IrpQueue, ConnectDetails, DataFormat, DeviceObject, 0);
+    Status = This->IrpQueue->lpVtbl->Init(This->IrpQueue, ConnectDetails, DataFormat, DeviceObject, 0, 0);
     if (!NT_SUCCESS(Status))
     {
         goto cleanup;

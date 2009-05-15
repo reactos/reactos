@@ -284,12 +284,22 @@ KsSynchronousIoControlDevice(
 
     /* get object header */
     ObjectHeader = (PKSIOBJECT_HEADER)FileObject->FsContext;
+    if (!ObjectHeader)
+    {
+        DPRINT("Expected object header\n");
+        return STATUS_UNSUCCESSFUL;
+    }
+
     /* check if there is fast device io function */
     if (ObjectHeader->DispatchTable.FastDeviceIoControl)
     {
+        IoStatusBlock.Status = STATUS_UNSUCCESSFUL;
+        IoStatusBlock.Information = 0;
+
         /* it is send the request */
         Status = ObjectHeader->DispatchTable.FastDeviceIoControl(FileObject, TRUE, InBuffer, InSize, OutBuffer, OutSize, IoControl, &IoStatusBlock, DeviceObject);
         /* check if the request was handled */
+        DPRINT("Handled %u Status %x Length %u\n", Status, IoStatusBlock.Status, IoStatusBlock.Information);
         if (Status)
         {
             /* store bytes returned */

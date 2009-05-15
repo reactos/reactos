@@ -39,6 +39,7 @@ typedef struct
 
     ULONG OutOfMapping;
     ULONG MaxFrameSize;
+    ULONG Alignment;
 
 }IIrpQueueImpl;
 
@@ -118,13 +119,15 @@ IIrpQueue_fnInit(
     IN KSPIN_CONNECT *ConnectDetails,
     IN PKSDATAFORMAT DataFormat,
     IN PDEVICE_OBJECT DeviceObject,
-    IN ULONG FrameSize)
+    IN ULONG FrameSize,
+    IN ULONG Alignment)
 {
     IIrpQueueImpl * This = (IIrpQueueImpl*)iface;
 
     This->ConnectDetails = ConnectDetails;
     This->DataFormat = (PKSDATAFORMAT_WAVEFORMATEX)DataFormat;
     This->MaxFrameSize = FrameSize;
+    This->Alignment = Alignment;
 
     InitializeListHead(&This->ListHead);
     InitializeListHead(&This->FreeHead);
@@ -185,7 +188,7 @@ IIrpQueue_fnAddMapping(
         else
             Offset = 0;
 
-        Mapping->Buffer = (PVOID)UlongToPtr(PtrToUlong(Header->Data) + Offset);
+        Mapping->Buffer = (PVOID)UlongToPtr((PtrToUlong(Header->Data) + Offset + 3) & ~(0x3));
 
         if (This->MaxFrameSize)
             Mapping->BufferSize = min(Header->DataUsed - Offset, This->MaxFrameSize);

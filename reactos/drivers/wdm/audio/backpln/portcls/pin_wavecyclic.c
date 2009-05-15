@@ -993,7 +993,7 @@ IPortPinWaveCyclic_fnInit(
     if (!NT_SUCCESS(Status))
         return Status;
 
-    Status = This->IrpQueue->lpVtbl->Init(This->IrpQueue, ConnectDetails, DataFormat, DeviceObject, 0);
+    Status = This->IrpQueue->lpVtbl->Init(This->IrpQueue, ConnectDetails, DataFormat, DeviceObject, 0, 0);
     if (!NT_SUCCESS(Status))
     {
        This->IrpQueue->lpVtbl->Release(This->IrpQueue);
@@ -1018,8 +1018,8 @@ IPortPinWaveCyclic_fnInit(
                                                &This->Stream,
                                                NULL,
                                                NonPagedPool,
-                                               Capture,
                                                ConnectDetails->PinId,
+                                               Capture,
                                                This->Format,
                                                &This->DmaChannel,
                                                &This->ServiceGroup);
@@ -1062,7 +1062,10 @@ IPortPinWaveCyclic_fnInit(
 
     Status = This->Stream->lpVtbl->SetNotificationFreq(This->Stream, 10, &This->FrameSize);
 
-    This->Stream->lpVtbl->SetFormat(This->Stream, (PKSDATAFORMAT)This->Format);
+    //This->Stream->lpVtbl->SetFormat(This->Stream, (PKSDATAFORMAT)This->Format);
+	DPRINT1("Setting state to acquire %x\n", This->Stream->lpVtbl->SetState(This->Stream, KSSTATE_ACQUIRE));
+	DPRINT1("Setting state to run %x\n", This->Stream->lpVtbl->SetState(This->Stream, KSSTATE_PAUSE));
+    This->State = KSSTATE_PAUSE;
 
 
     return STATUS_SUCCESS;

@@ -159,7 +159,7 @@ IRegistryKey_fnNewSubKey(
 
     ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
-    DPRINT("IRegistryKey_fnNewSubKey entered %S\n", SubKeyName);
+    DPRINT("IRegistryKey_fnNewSubKey entered %S\n", SubKeyName->Buffer);
 
     if (This->Deleted)
     {
@@ -381,7 +381,7 @@ PcNewRegistryKey(
 
     This->hKey = hHandle;
     This->lpVtbl = &vt_IRegistryKey;
-    This->ref = 2;
+    This->ref = 1;
 
     *OutRegistryKey = (PREGISTRYKEY)&This->lpVtbl;
     DPRINT("PcNewRegistryKey result %p\n", *OutRegistryKey);

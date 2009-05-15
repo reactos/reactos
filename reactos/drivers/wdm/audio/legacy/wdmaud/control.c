@@ -390,23 +390,6 @@ WdmAudControlDeviceState(
     return SetIrpIoStatus(Irp, Status, sizeof(WDMAUD_DEVICE_INFO));
 }
 
-NTSTATUS
-NTAPI
-WdmAudWriteCompleted(
-    IN PDEVICE_OBJECT  DeviceObject,
-    IN PIRP  Irp,
-    IN PVOID  Ctx)
-{
-    PWRITE_CONTEXT Context = (PWRITE_CONTEXT)Ctx;
-
-    Context->Irp->IoStatus.Information = Context->Length;
-    Context->Irp->IoStatus.Status = Irp->IoStatus.Status;
-    IoCompleteRequest(Context->Irp, IO_SOUND_INCREMENT);
-
-    ExFreePool(Context);
-    return STATUS_SUCCESS;
-}
-
 ULONG
 CheckFormatSupport(
     IN PKSDATARANGE_AUDIO DataRangeAudio,
@@ -684,6 +667,7 @@ WdmAudWrite(
     {
         /* invalid parameter */
         DPRINT1("Error: device type not set\n");
+        ObDereferenceObject(FileObject);
         return SetIrpIoStatus(Irp, STATUS_INVALID_PARAMETER, 0);
     }
 
@@ -691,6 +675,7 @@ WdmAudWrite(
     {
         /* file object parameter */
         DPRINT1("Error: file object is not attached\n");
+        ObDereferenceObject(FileObject);
         return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, 0);
     }
     ClientInfo = (PWDMAUD_CLIENT)IoStack->FileObject->FsContext;
@@ -716,6 +701,7 @@ WdmAudWrite(
     {
         /* no memory */
         ExFreePool(Packet);
+        ObDereferenceObject(FileObject);
         return SetIrpIoStatus(Irp, STATUS_NO_MEMORY, 0);
     }
     Packet->Header.Data = Buffer;
@@ -737,12 +723,12 @@ WdmAudWrite(
         DPRINT1("Invalid buffer supplied\n");
         ExFreePool(Buffer);
         ExFreePool(Packet);
+        ObDereferenceObject(FileObject);
         return SetIrpIoStatus(Irp, Status, 0);
     }
 
     KsStreamIo(FileObject, NULL, NULL, NULL, NULL, 0, &IoStatusBlock, Packet, sizeof(CONTEXT_WRITE), KSSTREAM_WRITE, KernelMode);
-
-
+    ObDereferenceObject(FileObject);
     return IoStatusBlock.Status;
 }
 

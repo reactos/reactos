@@ -126,23 +126,21 @@ PortClsPnp(
         case IRP_MN_QUERY_INTERFACE:
             DPRINT("IRP_MN_QUERY_INTERFACE\n");
             Status = PcForwardIrpSynchronous(DeviceObject, Irp);
-            Irp->IoStatus.Status = Status;
-            IoCompleteRequest(Irp, IO_NO_INCREMENT);
             return Status;
 
         case IRP_MN_QUERY_DEVICE_RELATIONS:
-            Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+            DPRINT("IRP_MN_QUERY_DEVICE_RELATIONS\n");
+            Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
-            return STATUS_UNSUCCESSFUL;
+            return STATUS_NOT_SUPPORTED;
         case IRP_MN_FILTER_RESOURCE_REQUIREMENTS:
-            Irp->IoStatus.Status = STATUS_SUCCESS;
+            DPRINT("IRP_MN_FILTER_RESOURCE_REQUIREMENTS\n");
+            Status = Irp->IoStatus.Status;
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
-            return STATUS_SUCCESS;
+            return Status;
        case IRP_MN_QUERY_RESOURCE_REQUIREMENTS:
             DPRINT("IRP_MN_QUERY_RESOURCE_REQUIREMENTS\n");
             Status = PcForwardIrpSynchronous(DeviceObject, Irp);
-            Irp->IoStatus.Status = Status;
-            IoCompleteRequest(Irp, IO_NO_INCREMENT);
             return Status;
     }
 

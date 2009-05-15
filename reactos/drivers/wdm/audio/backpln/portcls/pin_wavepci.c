@@ -201,8 +201,20 @@ IServiceSink_fnRequestService(
 
     ASSERT_IRQL(DISPATCH_LEVEL);
 
+    if (This->IrpQueue->lpVtbl->HasLastMappingFailed(This->IrpQueue))
+    {
+        This->IrpQueue->lpVtbl->PrintQueueStatus(This->IrpQueue);
+        if (This->IrpQueue->lpVtbl->NumMappings(This->IrpQueue) == 0)
+        {
+            DPRINT("Stopping stream...\n");
+            SetStreamState(This, KSSTATE_STOP);
+        }
+    }
+
     Status = This->Stream->lpVtbl->GetPosition(This->Stream, &Position);
     DPRINT("Position %lu Status %x\n", Position, Status);
+
+    This->Stream->lpVtbl->Service(This->Stream);
 }
 
 static IServiceSinkVtbl vt_IServiceSink = 
@@ -598,9 +610,9 @@ IPortPinWavePci_fnFastWrite(
     PIRP Irp;
     IPortPinWavePciImpl * This = (IPortPinWavePciImpl*)iface;
 
-    InterlockedIncrement((PLONG)&This->TotalPackets);
-
     DPRINT("IPortPinWavePci_fnFastWrite entered Total %u Pre %u Post %u\n", This->TotalPackets, This->PreCompleted, This->PostCompleted);
+
+    InterlockedIncrement((PLONG)&This->TotalPackets);
 
     Packet = (PCONTEXT_WRITE)Buffer;
 
@@ -710,8 +722,8 @@ IPortPinWavePci_fnInit(
                                                NULL,
                                                NonPagedPool,
                                                This->WaveStream,
-                                               Capture,
                                                ConnectDetails->PinId,
+                                               Capture,
                                                This->Format,
                                                &This->DmaChannel,
                                                &This->ServiceGroup);
@@ -742,7 +754,11 @@ IPortPinWavePci_fnInit(
         return Status;
     }
 
-    Status = This->IrpQueue->lpVtbl->Init(This->IrpQueue, ConnectDetails, This->Format, DeviceObject, AllocatorFraming.FrameSize);
+	DPRINT("OptionFlags %x RequirementsFlag %x PoolType %x Frames %lu FrameSize %lu FileAlignment %lu\n",
+			AllocatorFraming.OptionsFlags, AllocatorFraming.RequirementsFlags, AllocatorFraming.PoolType, AllocatorFraming.Frames, AllocatorFraming.FrameSize, AllocatorFraming.FileAlignment);
+
+
+    Status = This->IrpQueue->lpVtbl->Init(This->IrpQueue, ConnectDetails, This->Format, DeviceObject, AllocatorFraming.FrameSize, AllocatorFraming.FileAlignment);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("IrpQueue_Init failed with %x\n", Status);

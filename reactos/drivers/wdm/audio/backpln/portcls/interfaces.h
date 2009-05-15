@@ -195,7 +195,8 @@ DECLARE_INTERFACE_(IIrpQueue, IUnknown)
         IN KSPIN_CONNECT *ConnectDetails,
         IN PKSDATAFORMAT DataFormat,
         IN PDEVICE_OBJECT DeviceObject,
-        IN ULONG FrameSize);
+        IN ULONG FrameSize,
+        IN ULONG Alignment);
 
     STDMETHOD_(NTSTATUS, AddMapping)(THIS_
         IN PUCHAR Buffer,

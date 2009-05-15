@@ -519,6 +519,7 @@ ISubDevice_fnNewIrpTarget(
     }
 
     *OutTarget = (IIrpTarget*)Filter;
+    This->Filter = Filter;
     return Status;
 }
 
