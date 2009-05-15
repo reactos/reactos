@@ -601,6 +601,8 @@ struct IDirect3DVertexShader8Impl {
   IWineD3DVertexShader             *wineD3DVertexShader;
 };
 
+#define D3D8_MAX_VERTEX_SHADER_CONSTANTF 256
+
 
 /* ------------------------ */
 /* IDirect3DPixelShaderImpl */

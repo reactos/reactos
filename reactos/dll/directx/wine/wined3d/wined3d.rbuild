@@ -33,6 +33,8 @@
 	<file>pixelshader.c</file>
 	<file>query.c</file>
 	<file>resource.c</file>
+	<file>shader_sm1.c</file>
+	<file>shader_sm4.c</file>
 	<file>state.c</file>
 	<file>stateblock.c</file>
 	<file>surface_base.c</file>

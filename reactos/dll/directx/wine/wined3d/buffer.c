@@ -214,7 +214,7 @@ static BOOL buffer_check_attribute(struct wined3d_buffer *This,
 
     format = attrib->format_desc->format;
     /* Look for newly appeared conversion */
-    if (!GL_SUPPORT(NV_HALF_FLOAT) && (format == WINED3DFMT_R16G16_FLOAT || format == WINED3DFMT_R16G16B16A16_FLOAT))
+    if (!GL_SUPPORT(ARB_HALF_FLOAT_VERTEX) && (format == WINED3DFMT_R16G16_FLOAT || format == WINED3DFMT_R16G16B16A16_FLOAT))
     {
         ret = buffer_process_converted_attribute(This, CONV_FLOAT16_2, attrib, stride_this_run);
 
@@ -327,7 +327,7 @@ static BOOL buffer_find_decl(struct wined3d_buffer *This)
     /* Certain declaration types need some fixups before we can pass them to
      * opengl. This means D3DCOLOR attributes with fixed function vertex
      * processing, FLOAT4 POSITIONT with fixed function, and FLOAT16 if
-     * GL_NV_half_float is not supported.
+     * GL_ARB_half_float_vertex is not supported.
      *
      * Note for d3d8 and d3d9:
      * The vertex buffer FVF doesn't help with finding them, we have to use
@@ -590,7 +590,8 @@ static ULONG STDMETHODCALLTYPE buffer_AddRef(IWineD3DBuffer *iface)
 
 const BYTE *buffer_get_sysmem(struct wined3d_buffer *This)
 {
-    if(This->flags & WINED3D_BUFFER_DOUBLEBUFFER) return This->resource.allocatedMemory;
+    /* AllocatedMemory exists if the buffer is double buffered or has no buffer object at all */
+    if(This->resource.allocatedMemory) return This->resource.allocatedMemory;
 
     This->resource.heapMemory = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, This->resource.size + RESOURCE_ALIGNMENT);
     This->resource.allocatedMemory = (BYTE *)(((ULONG_PTR)This->resource.heapMemory + (RESOURCE_ALIGNMENT - 1)) & ~(RESOURCE_ALIGNMENT - 1));
@@ -951,12 +952,18 @@ static HRESULT STDMETHODCALLTYPE buffer_Map(IWineD3DBuffer *iface, UINT offset, 
     {
         if(count == 1)
         {
+            IWineD3DDeviceImpl *device = This->resource.wineD3DDevice;
+
             if(This->buffer_type_hint == GL_ELEMENT_ARRAY_BUFFER_ARB)
             {
                 IWineD3DDeviceImpl_MarkStateDirty(This->resource.wineD3DDevice, STATE_INDEXBUFFER);
             }
+
+            ActivateContext(device, device->lastActiveRenderTarget, CTXUSAGE_RESOURCELOAD);
+            ENTER_GL();
             GL_EXTCALL(glBindBufferARB(This->buffer_type_hint, This->buffer_object));
             This->resource.allocatedMemory = GL_EXTCALL(glMapBufferARB(This->buffer_type_hint, GL_READ_WRITE_ARB));
+            LEAVE_GL();
         }
     }
     else
@@ -987,12 +994,19 @@ static HRESULT STDMETHODCALLTYPE buffer_Unmap(IWineD3DBuffer *iface)
 
     if(!(This->flags & WINED3D_BUFFER_DOUBLEBUFFER) && This->buffer_object)
     {
+        IWineD3DDeviceImpl *device = This->resource.wineD3DDevice;
+
         if(This->buffer_type_hint == GL_ELEMENT_ARRAY_BUFFER_ARB)
         {
             IWineD3DDeviceImpl_MarkStateDirty(This->resource.wineD3DDevice, STATE_INDEXBUFFER);
         }
+
+        ActivateContext(device, device->lastActiveRenderTarget, CTXUSAGE_RESOURCELOAD);
+        ENTER_GL();
         GL_EXTCALL(glBindBufferARB(This->buffer_type_hint, This->buffer_object));
         GL_EXTCALL(glUnmapBufferARB(This->buffer_type_hint));
+        LEAVE_GL();
+
         This->resource.allocatedMemory = NULL;
     }
     else if (This->flags & WINED3D_BUFFER_HASDESC)

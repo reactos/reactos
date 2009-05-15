@@ -128,7 +128,8 @@ HRESULT WINAPI IDirect3DDevice9Impl_CreatePixelShader(LPDIRECT3DDEVICE9EX iface,
     object->ref    = 1;
     object->lpVtbl = &Direct3DPixelShader9_Vtbl;
     EnterCriticalSection(&d3d9_cs);
-    hrc = IWineD3DDevice_CreatePixelShader(This->WineD3DDevice, pFunction, &object->wineD3DPixelShader , (IUnknown *)object);
+    hrc = IWineD3DDevice_CreatePixelShader(This->WineD3DDevice, pFunction, NULL,
+            &object->wineD3DPixelShader, (IUnknown *)object);
     LeaveCriticalSection(&d3d9_cs);
     if (hrc != D3D_OK) {
 

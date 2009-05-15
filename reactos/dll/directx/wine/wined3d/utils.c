@@ -651,15 +651,15 @@ static void apply_format_fixups(WineD3D_GL_Info *gl_info)
         gl_info->gl_formats[idx].gl_vtx_format = GL_BGRA;
     }
 
-    if (GL_SUPPORT(NV_HALF_FLOAT))
+    if (GL_SUPPORT(ARB_HALF_FLOAT_VERTEX))
     {
         /* Do not change the size of the type, it is CPU side. We have to change the GPU-side information though.
          * It is the job of the vertex buffer code to make sure that the vbos have the right format */
         idx = getFmtIdx(WINED3DFMT_R16G16_FLOAT);
-        gl_info->gl_formats[idx].gl_vtx_type = GL_HALF_FLOAT_NV;
+        gl_info->gl_formats[idx].gl_vtx_type = GL_HALF_FLOAT; /* == GL_HALF_FLOAT_NV */
 
         idx = getFmtIdx(WINED3DFMT_R16G16B16A16_FLOAT);
-        gl_info->gl_formats[idx].gl_vtx_type = GL_HALF_FLOAT_NV;
+        gl_info->gl_formats[idx].gl_vtx_type = GL_HALF_FLOAT;
     }
 }
 

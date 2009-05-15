@@ -359,6 +359,7 @@ static HRESULT WINAPI IDirect3DDevice8Impl_GetDeviceCaps(LPDIRECT3DDEVICE8 iface
     if(pCaps->VertexShaderVersion > D3DVS_VERSION(1,1)){
         pCaps->VertexShaderVersion = D3DVS_VERSION(1,1);
     }
+    pCaps->MaxVertexShaderConst = min(D3D8_MAX_VERTEX_SHADER_CONSTANTF, pCaps->MaxVertexShaderConst);
 
     TRACE("Returning %p %p\n", This, pCaps);
     return hrc;
@@ -620,7 +621,7 @@ static HRESULT WINAPI IDirect3DDevice8Impl_CreateTexture(LPDIRECT3DDEVICE8 iface
     object->ref = 1;
     EnterCriticalSection(&d3d8_cs);
     hrc = IWineD3DDevice_CreateTexture(This->WineD3DDevice, Width, Height, Levels, Usage & WINED3DUSAGE_MASK,
-            wined3dformat_from_d3dformat(Format), Pool, &object->wineD3DTexture, NULL, (IUnknown *)object);
+            wined3dformat_from_d3dformat(Format), Pool, &object->wineD3DTexture, (IUnknown *)object);
     LeaveCriticalSection(&d3d8_cs);
 
     if (FAILED(hrc)) {
@@ -660,8 +661,8 @@ static HRESULT WINAPI IDirect3DDevice8Impl_CreateVolumeTexture(LPDIRECT3DDEVICE8
     object->ref = 1;
     EnterCriticalSection(&d3d8_cs);
     hrc = IWineD3DDevice_CreateVolumeTexture(This->WineD3DDevice, Width, Height, Depth, Levels,
-            Usage & WINED3DUSAGE_MASK, wined3dformat_from_d3dformat(Format), Pool,
-            &object->wineD3DVolumeTexture, NULL, (IUnknown *)object);
+            Usage & WINED3DUSAGE_MASK, wined3dformat_from_d3dformat(Format),
+            Pool, &object->wineD3DVolumeTexture, (IUnknown *)object);
     LeaveCriticalSection(&d3d8_cs);
 
     if (hrc != D3D_OK) {
@@ -701,7 +702,7 @@ static HRESULT WINAPI IDirect3DDevice8Impl_CreateCubeTexture(LPDIRECT3DDEVICE8 i
     object->ref = 1;
     EnterCriticalSection(&d3d8_cs);
     hr = IWineD3DDevice_CreateCubeTexture(This->WineD3DDevice, EdgeLength, Levels, Usage & WINED3DUSAGE_MASK,
-            wined3dformat_from_d3dformat(Format), Pool, &object->wineD3DCubeTexture, NULL, (IUnknown *)object);
+            wined3dformat_from_d3dformat(Format), Pool, &object->wineD3DCubeTexture, (IUnknown *)object);
     LeaveCriticalSection(&d3d8_cs);
 
     if (hr != D3D_OK){
@@ -738,8 +739,7 @@ static HRESULT WINAPI IDirect3DDevice8Impl_CreateVertexBuffer(LPDIRECT3DDEVICE8 
     object->ref = 1;
     EnterCriticalSection(&d3d8_cs);
     hrc = IWineD3DDevice_CreateVertexBuffer(This->WineD3DDevice, Size, Usage & WINED3DUSAGE_MASK,
-            0 /* fvf for ddraw only */, (WINED3DPOOL) Pool, &(object->wineD3DVertexBuffer), NULL,
-            (IUnknown *)object);
+            0 /* fvf for ddraw only */, (WINED3DPOOL)Pool, &object->wineD3DVertexBuffer, (IUnknown *)object);
     LeaveCriticalSection(&d3d8_cs);
     object->fvf = FVF;
 
@@ -777,8 +777,7 @@ static HRESULT WINAPI IDirect3DDevice8Impl_CreateIndexBuffer(LPDIRECT3DDEVICE8 i
     TRACE("Calling wined3d create index buffer\n");
     EnterCriticalSection(&d3d8_cs);
     hrc = IWineD3DDevice_CreateIndexBuffer(This->WineD3DDevice, Length, Usage & WINED3DUSAGE_MASK,
-            (WINED3DPOOL) Pool, &object->wineD3DIndexBuffer,
-            NULL, (IUnknown *)object);
+            (WINED3DPOOL)Pool, &object->wineD3DIndexBuffer, (IUnknown *)object);
     LeaveCriticalSection(&d3d8_cs);
 
     if (D3D_OK != hrc) {
@@ -827,7 +826,7 @@ static HRESULT IDirect3DDevice8Impl_CreateSurface(LPDIRECT3DDEVICE8 iface, UINT 
     EnterCriticalSection(&d3d8_cs);
     hrc = IWineD3DDevice_CreateSurface(This->WineD3DDevice, Width, Height, wined3dformat_from_d3dformat(Format),
             Lockable, Discard, Level,  &object->wineD3DSurface, Type, Usage & WINED3DUSAGE_MASK,
-            (WINED3DPOOL)Pool, MultiSample,MultisampleQuality, NULL, SURFACE_OPENGL, (IUnknown *)object);
+            (WINED3DPOOL)Pool, MultiSample, MultisampleQuality, SURFACE_OPENGL, (IUnknown *)object);
     LeaveCriticalSection(&d3d8_cs);
     if (hrc != D3D_OK || NULL == object->wineD3DSurface) {
        /* free up object */
@@ -2000,6 +1999,12 @@ static HRESULT WINAPI IDirect3DDevice8Impl_SetVertexShaderConstant(LPDIRECT3DDEV
     HRESULT hr;
     TRACE("(%p) : Relay\n", This);
 
+    if(Register + ConstantCount > D3D8_MAX_VERTEX_SHADER_CONSTANTF) {
+        WARN("Trying to access %u constants, but d3d8 only supports %u\n",
+             Register + ConstantCount, D3D8_MAX_VERTEX_SHADER_CONSTANTF);
+        return D3DERR_INVALIDCALL;
+    }
+
     EnterCriticalSection(&d3d8_cs);
     hr = IWineD3DDevice_SetVertexShaderConstantF(This->WineD3DDevice, Register, pConstantData, ConstantCount);
     LeaveCriticalSection(&d3d8_cs);
@@ -2010,6 +2015,12 @@ static HRESULT WINAPI IDirect3DDevice8Impl_GetVertexShaderConstant(LPDIRECT3DDEV
     IDirect3DDevice8Impl *This = (IDirect3DDevice8Impl *)iface;
     HRESULT hr;
     TRACE("(%p) : Relay\n", This);
+
+    if(Register + ConstantCount > D3D8_MAX_VERTEX_SHADER_CONSTANTF) {
+        WARN("Trying to access %u constants, but d3d8 only supports %u\n",
+             Register + ConstantCount, D3D8_MAX_VERTEX_SHADER_CONSTANTF);
+        return D3DERR_INVALIDCALL;
+    }
 
     EnterCriticalSection(&d3d8_cs);
     hr = IWineD3DDevice_GetVertexShaderConstantF(This->WineD3DDevice, Register, pConstantData, ConstantCount);
@@ -2155,7 +2166,7 @@ static HRESULT WINAPI IDirect3DDevice8Impl_CreatePixelShader(LPDIRECT3DDEVICE8 i
 
     EnterCriticalSection(&d3d8_cs);
     hr = IWineD3DDevice_CreatePixelShader(This->WineD3DDevice, pFunction,
-            &object->wineD3DPixelShader, (IUnknown *)object);
+            NULL, &object->wineD3DPixelShader, (IUnknown *)object);
     if (FAILED(hr))
     {
         LeaveCriticalSection(&d3d8_cs);
@@ -2651,7 +2662,7 @@ static HRESULT STDMETHODCALLTYPE device_parent_CreateVolume(IWineD3DDeviceParent
     object->lpVtbl = &Direct3DVolume8_Vtbl;
     object->ref = 1;
     hr = IWineD3DDevice_CreateVolume(This->WineD3DDevice, width, height, depth, usage,
-            format, pool, &object->wineD3DVolume, NULL, (IUnknown *)object);
+            format, pool, &object->wineD3DVolume, (IUnknown *)object);
     if (FAILED(hr))
     {
         ERR("(%p) CreateVolume failed, returning %#x\n", iface, hr);

@@ -751,6 +751,7 @@ IDirect3DViewportImpl_AddLight(IDirect3DViewport3 *iface,
     /* Add the light in the 'linked' chain */
     lpDirect3DLightImpl->next = This->lights;
     This->lights = lpDirect3DLightImpl;
+    IDirect3DLight_AddRef(lpDirect3DLight);
 
     /* Attach the light to the viewport */
     lpDirect3DLightImpl->active_viewport = This;
@@ -796,6 +797,7 @@ IDirect3DViewportImpl_DeleteLight(IDirect3DViewport3 *iface,
 	    else prev_light->next = cur_light->next;
 	    /* Detach the light to the viewport */
 	    cur_light->active_viewport = NULL;
+	    IDirect3DLight_Release( (IDirect3DLight *)cur_light );
 	    This->num_lights--;
 	    This->map_lights &= ~(1<<lpDirect3DLightImpl->dwLightIndex);
             LeaveCriticalSection(&ddraw_cs);
@@ -870,6 +872,9 @@ IDirect3DViewportImpl_NextLight(IDirect3DViewport3 *iface,
             ERR("Unknown flag %d\n", dwFlags);
             break;
     }
+
+    if (*lplpDirect3DLight)
+        IDirect3DLight_AddRef(*lplpDirect3DLight);
 
     LeaveCriticalSection(&ddraw_cs);
 

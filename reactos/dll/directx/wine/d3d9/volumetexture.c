@@ -431,8 +431,8 @@ HRESULT  WINAPI  IDirect3DDevice9Impl_CreateVolumeTexture(LPDIRECT3DDEVICE9EX if
     EnterCriticalSection(&d3d9_cs);
 
     hrc = IWineD3DDevice_CreateVolumeTexture(This->WineD3DDevice, Width, Height, Depth, Levels,
-            Usage & WINED3DUSAGE_MASK, wined3dformat_from_d3dformat(Format), Pool,
-            &object->wineD3DVolumeTexture, pSharedHandle, (IUnknown *)object);
+            Usage & WINED3DUSAGE_MASK, wined3dformat_from_d3dformat(Format),
+            Pool, &object->wineD3DVolumeTexture, (IUnknown *)object);
 
     LeaveCriticalSection(&d3d9_cs);
 

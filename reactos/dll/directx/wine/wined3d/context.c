@@ -895,12 +895,10 @@ WineD3DContext *CreateContext(IWineD3DDeviceImpl *This, IWineD3DSurfaceImpl *tar
         }
     }
 
-    if(GL_SUPPORT(ARB_POINT_SPRITE)) {
-        for(s = 0; s < GL_LIMITS(textures); s++) {
-            GL_EXTCALL(glActiveTextureARB(GL_TEXTURE0_ARB + s));
-            glTexEnvi(GL_POINT_SPRITE_ARB, GL_COORD_REPLACE_ARB, GL_TRUE);
-            checkGLcall("glTexEnvi(GL_POINT_SPRITE_ARB, GL_COORD_REPLACE_ARB, GL_TRUE)\n");
-        }
+    for(s = 0; s < GL_LIMITS(point_sprite_units); s++) {
+        GL_EXTCALL(glActiveTextureARB(GL_TEXTURE0_ARB + s));
+        glTexEnvi(GL_POINT_SPRITE_ARB, GL_COORD_REPLACE_ARB, GL_TRUE);
+        checkGLcall("glTexEnvi(GL_POINT_SPRITE_ARB, GL_COORD_REPLACE_ARB, GL_TRUE)\n");
     }
     LEAVE_GL();
 

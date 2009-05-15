@@ -261,7 +261,7 @@ HRESULT vertexdeclaration_init(IWineD3DVertexDeclarationImpl *This,
 
         if (elements[i].format == WINED3DFMT_R16G16_FLOAT || elements[i].format == WINED3DFMT_R16G16B16A16_FLOAT)
         {
-            if (!GL_SUPPORT(NV_HALF_FLOAT)) This->half_float_conv_needed = TRUE;
+            if (!GL_SUPPORT(ARB_HALF_FLOAT_VERTEX)) This->half_float_conv_needed = TRUE;
         }
     }
 
