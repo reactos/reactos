@@ -30,17 +30,20 @@ struct	ifnet *ifnet;
  * parameters.
  */
 
-PVOID TCPPrepareInterface( PIP_INTERFACE IF ) {
+POSK_IFADDR TCPGetInterfaceData( PIP_INTERFACE IF ) {
     NTSTATUS Status;
-    POSK_IFADDR ifaddr = exAllocatePool
-	( NonPagedPool, sizeof(*ifaddr) + 2 * sizeof( struct sockaddr_in ) );
-    if( !ifaddr ) return NULL;
+    POSK_IFADDR ifaddr = IF->TCPContext;
+    ASSERT(ifaddr);
+
+    RtlZeroMemory(ifaddr, sizeof(OSK_IFADDR) + 2 * sizeof( struct sockaddr_in ));
+
     struct sockaddr_in *addr_in = (struct sockaddr_in *)&ifaddr[1];
     struct sockaddr_in *dstaddr_in = (struct sockaddr_in *)&addr_in[1];
 
     TI_DbgPrint(DEBUG_TCPIF,("Called\n"));
 
     ifaddr->ifa_dstaddr = (struct sockaddr *)dstaddr_in;
+
     /* XXX - Point-to-point interfaces not supported yet */
     memset( &ifaddr->ifa_dstaddr, 0, sizeof( struct sockaddr ) );
 
@@ -49,10 +52,9 @@ PVOID TCPPrepareInterface( PIP_INTERFACE IF ) {
 				      ADE_UNICAST,
 				      (PULONG)&addr_in->sin_addr.s_addr );
 
-    if( !NT_SUCCESS(Status) )
-	addr_in->sin_addr.s_addr = 0;
+    ASSERT(NT_SUCCESS(Status));
 
-    TI_DbgPrint(DEBUG_TCPIF,("Prepare interface %x : addr %x\n",
+    TI_DbgPrint(DEBUG_TCPIF,("interface %x : addr %x\n",
 			   IF, addr_in->sin_addr.s_addr));
 
     ifaddr->ifa_flags = 0; /* XXX what goes here? */
@@ -65,10 +67,6 @@ PVOID TCPPrepareInterface( PIP_INTERFACE IF ) {
     return ifaddr;
 }
 
-VOID TCPDisposeInterfaceData( PVOID Ptr ) {
-    exFreePool( Ptr );
-}
-
 POSK_IFADDR TCPFindInterface( void *ClientData,
 			      OSK_UINT AddrType,
 			      OSK_UINT FindType,
@@ -77,6 +75,7 @@ POSK_IFADDR TCPFindInterface( void *ClientData,
     PIP_INTERFACE IF;
     IP_ADDRESS Destination;
     struct sockaddr_in *addr_in = (struct sockaddr_in *)ReqAddr;
+    POSK_IFADDR InterfaceData;
 
     TI_DbgPrint(DEBUG_TCPIF,("called for type %d\n", FindType));
 
@@ -91,19 +90,15 @@ POSK_IFADDR TCPFindInterface( void *ClientData,
     TI_DbgPrint(DEBUG_TCPIF,("Address is %x\n", addr_in->sin_addr.s_addr));
 
     IF = FindOnLinkInterface(&Destination);
+    if (!IF) return NULL;
 
-    if (!IF || !IF->TCPContext) {
-        /* TCPContext can be NULL if we don't have an IP address yet */
-        TI_DbgPrint(DEBUG_TCPIF, ("No interface or TCP context (%x) (%x)\n",
-                                  IF, IF ? IF->TCPContext : 0));
-        return NULL;
-    }
+    InterfaceData = TCPGetInterfaceData(IF);
 
     addr_in = (struct sockaddr_in *)
-	((POSK_IFADDR)IF->TCPContext)->ifa_addr;
+	InterfaceData->ifa_addr;
 
     TI_DbgPrint(DEBUG_TCPIF,("returning addr %x\n", addr_in->sin_addr.s_addr));
 
-    return IF->TCPContext;
+    return InterfaceData;
 }
 
