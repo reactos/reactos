@@ -239,7 +239,11 @@ LdrpQueryAppPaths(IN PCWSTR ImageName)
                              &ResultSize);
 
     if (!NT_SUCCESS(Status))
+    {
+        NtClose(KeyHandle);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, KeyInfo);
         return NULL;
+    }
 
     RtlCopyMemory(SearchPathBuffer,
                   &KeyInfo->Data,
