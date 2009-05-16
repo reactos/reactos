@@ -2281,13 +2281,17 @@ NdisMRegisterMiniport(
         break;
 
       default:
-        NDIS_DbgPrint(DEBUG_MINIPORT, ("Bad miniport characteristics version.\n"));
+        NDIS_DbgPrint(MIN_TRACE, ("Bad miniport characteristics version.\n"));
         return NDIS_STATUS_BAD_VERSION;
     }
 
+   NDIS_DbgPrint(MIN_TRACE, ("Initializing an NDIS %u.%u miniport\n", 
+                              MiniportCharacteristics->MajorNdisVersion,
+                              MiniportCharacteristics->MinorNdisVersion));
+
   if (CharacteristicsLength < MinSize)
     {
-        NDIS_DbgPrint(DEBUG_MINIPORT, ("Bad miniport characteristics.\n"));
+        NDIS_DbgPrint(MIN_TRACE, ("Bad miniport characteristics length.\n"));
         return NDIS_STATUS_BAD_CHARACTERISTICS;
     }
 
@@ -2298,7 +2302,7 @@ NdisMRegisterMiniport(
       (!MiniportCharacteristics->ResetHandler) ||
       (!MiniportCharacteristics->SetInformationHandler))
     {
-      NDIS_DbgPrint(DEBUG_MINIPORT, ("Bad miniport characteristics.\n"));
+      NDIS_DbgPrint(MIN_TRACE, ("Bad miniport characteristics.\n"));
       return NDIS_STATUS_BAD_CHARACTERISTICS;
     }
 
@@ -2306,7 +2310,7 @@ NdisMRegisterMiniport(
     {
       if (!MiniportCharacteristics->SendHandler)
         {
-          NDIS_DbgPrint(DEBUG_MINIPORT, ("Bad miniport characteristics.\n"));
+          NDIS_DbgPrint(MIN_TRACE, ("Bad miniport characteristics. (NDIS 3.0)\n"));
           return NDIS_STATUS_BAD_CHARACTERISTICS;
         }
     }
@@ -2316,7 +2320,7 @@ NdisMRegisterMiniport(
       if ((!MiniportCharacteristics->SendHandler) &&
           (!MiniportCharacteristics->SendPacketsHandler))
         {
-          NDIS_DbgPrint(DEBUG_MINIPORT, ("Bad miniport characteristics.\n"));
+          NDIS_DbgPrint(MIN_TRACE, ("Bad miniport characteristics. (NDIS 4.0)\n"));
           return NDIS_STATUS_BAD_CHARACTERISTICS;
         }
     }
