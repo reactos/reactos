@@ -185,19 +185,21 @@ LdrpQueryAppPaths(IN PCWSTR ImageName)
 {
     PKEY_VALUE_PARTIAL_INFORMATION KeyInfo;
     OBJECT_ATTRIBUTES ObjectAttributes;
-    WCHAR SearchPathBuffer[MAX_PATH];
+    WCHAR SearchPathBuffer[5*MAX_PATH];
     UNICODE_STRING ValueNameString;
     UNICODE_STRING KeyName;
-    WCHAR NameBuffer[256];
+    WCHAR NameBuffer[MAX_PATH];
     ULONG KeyInfoSize;
     ULONG ResultSize;
-    ULONG len;
+    PWCHAR Backslash;
     HANDLE KeyHandle;
     NTSTATUS Status;
     PWSTR Path = NULL;
 
-    swprintf(NameBuffer,
-             L"\\Registry\\Machine\\Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\%s", ImageName);
+    _snwprintf(NameBuffer,
+              sizeof(NameBuffer) / sizeof(WCHAR),
+              L"\\Registry\\Machine\\Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\%s",
+              ImageName);
 
     RtlInitUnicodeString(&KeyName, NameBuffer);
 
@@ -236,48 +238,46 @@ LdrpQueryAppPaths(IN PCWSTR ImageName)
                              KeyInfoSize,
                              &ResultSize);
 
-    if (NT_SUCCESS(Status))
-    {
-        RtlCopyMemory(SearchPathBuffer,
-                      &KeyInfo->Data,
-                      KeyInfo->DataLength);
+    if (!NT_SUCCESS(Status))
+        return NULL;
 
-        /* get application running path */
-        wcscat(SearchPathBuffer, L";");
-        wcscat (SearchPathBuffer, NtCurrentPeb()->ProcessParameters->ImagePathName.Buffer);
+    RtlCopyMemory(SearchPathBuffer,
+                  &KeyInfo->Data,
+                  KeyInfo->DataLength);
 
-        len = wcslen (SearchPathBuffer);
-
-        while (len && SearchPathBuffer[len - 1] != L'\\')
-            len--;
-
-        if (len) SearchPathBuffer[len-1] = L'\0';
-
-        wcscat (SearchPathBuffer, L";");
-
-        wcscat (SearchPathBuffer, SharedUserData->NtSystemRoot);
-        wcscat (SearchPathBuffer, L"\\system32;");
-        wcscat (SearchPathBuffer, SharedUserData->NtSystemRoot);
-        wcscat (SearchPathBuffer, L";.");
-
-        Path = RtlAllocateHeap(RtlGetProcessHeap(),
-                               0,
-                               wcslen(SearchPathBuffer) * sizeof(WCHAR));
-
-        if (Path == NULL)
-        {
-            DPRINT("RtlAllocateHeap() failed\n");
-            RtlFreeHeap(RtlGetProcessHeap(), 0, KeyInfo);
-            NtClose(KeyHandle);
-            return NULL;
-        }
-
-        Path = SearchPathBuffer;
-    }
-
+    /* Free KeyInfo memory, we won't need it anymore */
     RtlFreeHeap(RtlGetProcessHeap(), 0, KeyInfo);
 
+    /* Close the key handle */
     NtClose(KeyHandle);
+
+    /* get application running path */
+    wcscat(SearchPathBuffer, L";");
+    wcscat(SearchPathBuffer, NtCurrentPeb()->ProcessParameters->ImagePathName.Buffer); // FIXME: Don't rely on it being NULL-terminated!!!
+
+    /* Remove trailing backslash */
+    Backslash = wcsrchr(SearchPathBuffer, L'\\');
+    if (Backslash) Backslash = L'\0';
+
+    wcscat(SearchPathBuffer, L";");
+
+    wcscat(SearchPathBuffer, SharedUserData->NtSystemRoot);
+    wcscat(SearchPathBuffer, L"\\system32;");
+    wcscat(SearchPathBuffer, SharedUserData->NtSystemRoot);
+    wcscat(SearchPathBuffer, L";.");
+
+    /* Copy it to the heap allocd memory */
+    Path = RtlAllocateHeap(RtlGetProcessHeap(),
+                           0,
+                           wcslen(SearchPathBuffer) * sizeof(WCHAR));
+
+    if (!Path)
+    {
+        DPRINT1("RtlAllocateHeap() failed\n");
+        return NULL;
+    }
+
+    wcscpy(Path, SearchPathBuffer);
 
     return Path;
 }
