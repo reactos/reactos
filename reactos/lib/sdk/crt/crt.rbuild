@@ -166,10 +166,12 @@
 				<file>atan.S</file>
 				<file>atan2.S</file>
 				<file>ceil.S</file>
+				<file>ceilf.S</file>
 				<file>cos.S</file>
 				<file>exp.S</file>
 				<file>fabs.S</file>
 				<file>floor.S</file>
+				<file>floorf.S</file>
 				<file>fmod.S</file>
 				<file>ldexp.S</file>
 				<file>log.S</file>
@@ -177,6 +179,7 @@
 				<file>pow.S</file>
 				<file>sin.S</file>
 				<file>sqrt.S</file>
+				<file>sqrtf.S</file>
 				<file>tan.S</file>
 			</directory>
 		</if>
