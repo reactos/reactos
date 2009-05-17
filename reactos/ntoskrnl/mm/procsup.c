@@ -259,8 +259,11 @@ MmGrowKernelStack(PVOID StackPointer)
     PETHREAD Thread = PsGetCurrentThread();
 
     /* Make sure we have reserved space for our grow */
-    ASSERT(((PCHAR)Thread->Tcb.StackBase - (PCHAR)Thread->Tcb.StackLimit) <=
-           (KERNEL_LARGE_STACK_SIZE + PAGE_SIZE));
+    if (((PCHAR)Thread->Tcb.StackBase - (PCHAR)Thread->Tcb.StackLimit) >
+           (KERNEL_LARGE_STACK_SIZE + PAGE_SIZE))
+    {
+        return STATUS_NO_MEMORY;
+    }
 
     /*
      * We'll give you three more pages.
