@@ -161,20 +161,6 @@ END
 // Dialog
 //
 
-IDD_ABOUTBOX DIALOGEX DISCARDABLE  22, 17, 259, 210
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Sobre o Gerenciador de tarefas"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    CONTROL         "Gerenciador de tarefas v1.0\nCopyright (C) 1999 - 2001\npor Brian Palmer (brianp@reactos.org)",
-                    IDC_STATIC,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,53,28,
-                    122,26
-    DEFPUSHBUTTON   "OK",IDOK,183,189,44,14,WS_GROUP
-    ICON            IDI_TASKMANAGER,IDC_STATIC,19,30,20,20
-    EDITTEXT        IDC_LICENSE_EDIT,53,63,174,107,ES_MULTILINE |
-                    ES_READONLY | WS_VSCROLL
-END
-
 IDD_TASKMGR_DIALOG DIALOGEX DISCARDABLE  0, 0, 264, 246
 STYLE DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP |
     WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU |
@@ -602,7 +588,6 @@ BEGIN
     ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
                             "Define o processo com a classe de prioridade ABAIXO DO NORMAL"
     ID_PROCESS_PAGE_SETPRIORITY_LOW "Define o processo como tendo classe de prioridade BAIXA"
-    IDS_LICENSE             "Este programa é software livre; você pode redistribuí-lo e/ou modificá-lo sob os termos da GNU General Public License conforme publicada pela Free Software Foundation; quer a versão 2 da licença, ou (conforme você escolha) qualquer versão posterior.\r\n\r\nEste programa é distribuído com a esperança de que seja útil, mas SEM QUALQUER GARANTIA; mesmo sem a garantia implícita de MERCANTIBILIDADE OU ADEQUAÇÃO A UM DETERMINADO PROPÓSITO. Para mais detalhes, veja a GNU General Public License.\r\n\r\nVocê deve ter recebido uma cópia da GNU General Public License juntamente com este programa; caso contrário, escreva para a Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA."
 END
 
 

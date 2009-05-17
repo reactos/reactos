@@ -178,20 +178,6 @@ END
 // Dialog
 //
 
-IDD_ABOUTBOX DIALOGEX DISCARDABLE  22, 17, 259, 210
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Acerca del Administrador de Tareas"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    CONTROL         "Task Manager v1.0\nCopyright (C) 1999 - 2001\nby Brian Palmer (brianp@reactos.org)",
-                    IDC_STATIC,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,53,28,
-                    122,26
-    DEFPUSHBUTTON   "Aceptar",IDOK,183,189,44,14,WS_GROUP
-    ICON            IDI_TASKMANAGER,IDC_STATIC,19,30,20,20
-    EDITTEXT        IDC_LICENSE_EDIT,53,63,174,107,ES_MULTILINE |
-                    ES_READONLY | WS_VSCROLL
-END
-
 IDD_TASKMGR_DIALOG DIALOGEX DISCARDABLE  0, 0, 264, 246
 STYLE DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP |
     WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU |
@@ -624,7 +610,6 @@ BEGIN
     ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
                             "Establece el proceso en prioridad ABAJO DE LO NORMAL"
     ID_PROCESS_PAGE_SETPRIORITY_LOW "Establece el proceso en prioridad BAJA"
-    IDS_LICENSE             "Este programa es software libre; usted puede redistribuirlo y/o modificarlo bajo los términos de la Licencia de GNU General Public License publicada por la Free Software Fundation;  la versión 2.1 de la Licencia, (o en su opción) cualquier versión posterior.\r\n\r\nEste programa es distribuido con la esperanza de que será útil, pero SIN NINGUNA GARANTÍA; sin ni siquiera la garantía implícita de VALOR COMERCIAL O SALUD PARA UN OBJETIVO PARTICULAR. Ver que la GNU General Public License para más detalles \r\n\r\nUsted debería haber recibido una copia de la GNU General Public License junto con este programa; si no, escriba a la Free Software Fundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, EE. UU."
 
 END	// Spanish (SPAIN) resources by Carlos Garcia Gomez
 

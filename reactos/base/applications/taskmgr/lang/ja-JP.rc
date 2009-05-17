@@ -161,20 +161,6 @@ END
 // Dialog
 //
 
-IDD_ABOUTBOX DIALOGEX DISCARDABLE  22, 17, 259, 210
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "タスク マネージャについて"
-FONT 9, "MS UI Gothic"
-BEGIN
-    CONTROL         "タスク マネージャ v1.0\nCopyright (C) 1999 - 2001\nby Brian Palmer (brianp@reactos.org)",
-                    IDC_STATIC,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,53,28,
-                    122,26
-    DEFPUSHBUTTON   "OK",IDOK,183,189,44,14,WS_GROUP
-    ICON            IDI_TASKMANAGER,IDC_STATIC,19,30,20,20
-    EDITTEXT        IDC_LICENSE_EDIT,53,63,174,107,ES_MULTILINE |
-                    ES_READONLY | WS_VSCROLL
-END
-
 IDD_TASKMGR_DIALOG DIALOGEX DISCARDABLE  0, 0, 264, 246
 STYLE DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP |
     WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU |
@@ -602,7 +588,6 @@ BEGIN
     ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
                             "プロセスの優先度を 通常以下 に設定します。"
     ID_PROCESS_PAGE_SETPRIORITY_LOW "プロセスの優先度を 低 に設定します。"
-    IDS_LICENSE             "このプログラムはフリーソ\フトウェアです。あなたはこれを、フリーソ\フトウェア財団によって発行された GNU General Public License (バージョン 2.1 か、希望によってはそれ以降のバージョンのうちどれか) の定める条件の下で再頒布または改変することができます。\r\n\r\nこのプログラムは有用であることを願って頒布されますが、*全くの無保証* です。商業可能\性の保証や特定の目的への適合性は、言外に示されたものも含め全く存在しません。詳しくは GNU General Public License をご覧ください。\r\n\r\nあなたはこのプログラムと共に、GNU 一般公衆利用許諾契約書の複製物を一部受け取ったはずです。もし受け取っていなければ、フリーソ\フトウェア財団まで請求してください (宛先は the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA)。"
 END
 
 
