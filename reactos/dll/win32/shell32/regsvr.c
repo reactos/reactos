@@ -602,7 +602,7 @@ static struct regsvr_coclass const coclass_list[] = {
         0,
         NULL,
         NULL,
-        IDI_SHELL_PRINTER
+        IDI_SHELL_PRINTERS_FOLDER
     },
     {   &CLSID_MyComputer,
         "My Computer",
