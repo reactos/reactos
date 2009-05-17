@@ -126,10 +126,10 @@ static const struct
     { ";\n;\nabc\r\n" STD_HEADER,                            ERROR_EXPECTED_SECTION_NAME, 3,    0 },
     { ";\n;\nab\nab\n" STD_HEADER,                           ERROR_EXPECTED_SECTION_NAME, 3,    0 },
     { ";aa\n;bb\n" STD_HEADER,                               0,                           0,    0 },
-    { STD_HEADER " [TestSection\x00] \n",                    ERROR_BAD_SECTION_NAME_LINE, 3,    0 },
-    { STD_HEADER " [Test\x00Section] \n",                    ERROR_BAD_SECTION_NAME_LINE, 3,    0 },
-    { STD_HEADER " [TestSection\x00] \n",                    ERROR_BAD_SECTION_NAME_LINE, 3,    0 },
-    { STD_HEADER " [Test\x00Section] \n",                    ERROR_BAD_SECTION_NAME_LINE, 3,    0 },
+    { STD_HEADER " [TestSection\x00]\n",                     ERROR_BAD_SECTION_NAME_LINE, 3,    0 },
+    { STD_HEADER " [Test\x00Section]\n",                     ERROR_BAD_SECTION_NAME_LINE, 3,    0 },
+    { STD_HEADER " [TestSection\x00]\n",                     ERROR_BAD_SECTION_NAME_LINE, 3,    0 },
+    { STD_HEADER " [Test\x00Section]\n",                     ERROR_BAD_SECTION_NAME_LINE, 3,    0 },
 };
 
 static void test_invalid_files(void)

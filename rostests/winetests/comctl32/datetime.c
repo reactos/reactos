@@ -140,7 +140,7 @@ struct subclass_info
 static LRESULT WINAPI datetime_subclass_proc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     struct subclass_info *info = (struct subclass_info *)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
-    static long defwndproc_counter = 0;
+    static LONG defwndproc_counter = 0;
     LRESULT ret;
     struct message msg;
 

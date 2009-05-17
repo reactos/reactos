@@ -42,7 +42,7 @@ static void test_xmlelem(void)
     VARIANT vType, vName;
     VARIANT vIndex, vValue;
     BSTR str, val;
-    long type, num_child;
+    LONG type, num_child;
 
     static const WCHAR propName[] = {'p','r','o','p',0};
     static const WCHAR propVal[] = {'v','a','l',0};
@@ -136,7 +136,7 @@ static void test_xmlelem(void)
 
     hr = IXMLElement_get_type(element, &type);
     ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
-    ok(type == XMLELEMTYPE_ELEMENT, "Expected XMLELEMTYPE_ELEMENT, got %ld\n", type);
+    ok(type == XMLELEMTYPE_ELEMENT, "Expected XMLELEMTYPE_ELEMENT, got %d\n", type);
 
     hr = IXMLElement_get_text(element, &str);
     ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
@@ -171,7 +171,7 @@ static void test_xmlelem(void)
 
     hr = IXMLElement_get_type(parent, &type);
     ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
-    ok(type == XMLELEMTYPE_ELEMENT, "Expected XMLELEMTYPE_ELEMENT, got %ld\n", type);
+    ok(type == XMLELEMTYPE_ELEMENT, "Expected XMLELEMTYPE_ELEMENT, got %d\n", type);
 
     children = (IXMLElementCollection *)0xdeadbeef;
     hr = IXMLElement_get_children(element, &children);
@@ -180,7 +180,7 @@ static void test_xmlelem(void)
 
     hr = IXMLElementCollection_get_length(children, &num_child);
     ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
-    ok(num_child == 1, "Expected 1, got %ld\n", num_child);
+    ok(num_child == 1, "Expected 1, got %d\n", num_child);
 
     V_VT(&vIndex) = VT_I4;
     V_I4(&vIndex) = 0;
@@ -192,7 +192,7 @@ static void test_xmlelem(void)
 
     hr = IXMLElement_get_type(child2, &type);
     ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
-    ok(type == XMLELEMTYPE_TEXT, "Expected XMLELEMTYPE_TEXT, got %ld\n", type);
+    ok(type == XMLELEMTYPE_TEXT, "Expected XMLELEMTYPE_TEXT, got %d\n", type);
 
     hr = IXMLElement_get_text(element, &str);
     ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
@@ -255,7 +255,7 @@ static void test_xmlelem_collection(void)
     IEnumVARIANT *enumVar = NULL;
     CHAR pathA[MAX_PATH];
     WCHAR path[MAX_PATH];
-    long length, type;
+    LONG length, type;
     ULONG num_vars;
     VARIANT var, vIndex, vName;
     BSTR url, str;
@@ -296,7 +296,7 @@ static void test_xmlelem_collection(void)
 
     hr = IXMLElementCollection_get_length(collection, &length);
     ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
-    ok(length == 2, "Expected 2, got %ld\n", length);
+    ok(length == 2, "Expected 2, got %d\n", length);
 
     /* IXMLElementCollection:put_length does nothing */
     hr = IXMLElementCollection_put_length(collection, -1);
@@ -320,7 +320,7 @@ static void test_xmlelem_collection(void)
     /* make sure the length hasn't changed */
     hr = IXMLElementCollection_get_length(collection, &length);
     ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
-    ok(length == 2, "Expected 2, got %ld\n", length);
+    ok(length == 2, "Expected 2, got %d\n", length);
 
     /* IXMLElementCollection implements IEnumVARIANT */
     hr = IXMLElementCollection_QueryInterface(collection, &IID_IEnumVARIANT, (LPVOID *)&enumVar);
@@ -351,7 +351,7 @@ static void test_xmlelem_collection(void)
 
     hr = IXMLElement_get_type(child, &type);
     ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
-    ok(type == XMLELEMTYPE_ELEMENT, "Expected XMLELEMTYPE_ELEMENT, got %ld\n", type);
+    ok(type == XMLELEMTYPE_ELEMENT, "Expected XMLELEMTYPE_ELEMENT, got %d\n", type);
 
     hr = IXMLElement_get_tagName(child, &str);
     ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
@@ -373,7 +373,7 @@ static void test_xmlelem_collection(void)
 
     hr = IXMLElement_get_type(child, &type);
     ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
-    ok(type == XMLELEMTYPE_ELEMENT, "Expected XMLELEMTYPE_ELEMENT, got %ld\n", type);
+    ok(type == XMLELEMTYPE_ELEMENT, "Expected XMLELEMTYPE_ELEMENT, got %d\n", type);
 
     hr = IXMLElement_get_tagName(child, &str);
     ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
@@ -392,7 +392,7 @@ static void test_xmlelem_collection(void)
 
     hr = IXMLElement_get_type(child, &type);
     ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
-    ok(type == XMLELEMTYPE_ELEMENT, "Expected XMLELEMTYPE_ELEMENT, got %ld\n", type);
+    ok(type == XMLELEMTYPE_ELEMENT, "Expected XMLELEMTYPE_ELEMENT, got %d\n", type);
 
     hr = IXMLElement_get_tagName(child, &str);
     ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
@@ -411,7 +411,7 @@ static void test_xmlelem_collection(void)
 
     hr = IXMLElement_get_type(child, &type);
     ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
-    ok(type == XMLELEMTYPE_ELEMENT, "Expected XMLELEMTYPE_ELEMENT, got %ld\n", type);
+    ok(type == XMLELEMTYPE_ELEMENT, "Expected XMLELEMTYPE_ELEMENT, got %d\n", type);
 
     hr = IXMLElement_get_tagName(child, &str);
     ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);

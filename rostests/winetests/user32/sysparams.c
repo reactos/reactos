@@ -156,6 +156,7 @@ static DWORD WINAPI SysParamsThreadFunc( LPVOID lpParam );
 static LRESULT CALLBACK SysParamsTestWndProc( HWND hWnd, UINT msg, WPARAM wParam,
                                               LPARAM lParam );
 static int change_counter;
+static int change_setworkarea_param, change_iconverticalspacing_param;
 static int change_last_param;
 static int last_bpp;
 static BOOL displaychange_ok = FALSE, displaychange_test_active = FALSE;
@@ -176,21 +177,32 @@ static LRESULT CALLBACK SysParamsTestWndProc( HWND hWnd, UINT msg, WPARAM wParam
     case WM_SETTINGCHANGE:
         if (change_counter>0) { 
             /* ignore these messages caused by resizing of toolbars */
-            if( wParam == SPI_SETWORKAREA ||
-                wParam == SPI_ICONVERTICALSPACING ||
-                displaychange_test_active)
+            if( wParam == SPI_SETWORKAREA){
+                change_setworkarea_param = 1;
                 break;
-            if( change_last_param == SPI_SETWORKAREA ||
-                change_last_param == SPI_ICONVERTICALSPACING)
-            {
+            } else if( wParam == SPI_ICONVERTICALSPACING) {
+                change_iconverticalspacing_param = 1;
+                break;
+            } else if( displaychange_test_active)
+                break;
+            if( !change_last_param){
                 change_last_param = wParam;
                 break;
             }
             ok(0,"too many changes counter=%d last change=%d\n",
                change_counter,change_last_param);
+            change_counter++;
+            change_last_param = wParam;
+            break;
         }
         change_counter++;
-        change_last_param = wParam;
+        change_last_param = change_setworkarea_param = change_iconverticalspacing_param =0;
+        if( wParam == SPI_SETWORKAREA)
+            change_setworkarea_param = 1;
+        else if( wParam == SPI_ICONVERTICALSPACING)
+            change_iconverticalspacing_param = 1;
+        else
+            change_last_param = wParam;
         break;
 
     case WM_DESTROY:
@@ -218,7 +230,9 @@ static void test_change_message( int action, int optional )
     ok( 1 == change_counter,
         "Missed a message: change_counter=%d\n", change_counter );
     change_counter = 0;
-    ok( action == change_last_param,
+    ok( action == change_last_param ||
+        ( change_setworkarea_param && action == SPI_SETWORKAREA) ||
+        ( change_iconverticalspacing_param && action == SPI_ICONVERTICALSPACING),
         "Wrong action got %d expected %d\n", change_last_param, action );
     change_last_param = 0;
 }
@@ -709,11 +723,15 @@ static void test_SPI_SETBORDER( void )                 /*      6 */
     BOOL rc;
     UINT old_border;
     NONCLIENTMETRICSA ncmsave;
-    INT CaptionWidth;
+    INT CaptionWidth,
+        PaddedBorderWidth;
 
     ncmsave.cbSize = sizeof( ncmsave);
     rc=SystemParametersInfo( SPI_GETNONCLIENTMETRICS, 0, &ncmsave, 0);
-    ok(rc!=0,"SystemParametersInfoA: rc=%d err=%d\n",rc,GetLastError());
+    if( !rc) {
+        win_skip("SPI_GETNONCLIENTMETRICS is not available\n");
+        return;
+    }
     /* CaptionWidth from the registry may have different value of iCaptionWidth
      * from the non client metrics (observed on WinXP).
      * Fix this so we can safely restore settings with the nonclientmetrics */
@@ -734,6 +752,13 @@ static void test_SPI_SETBORDER( void )                 /*      6 */
     rc=SystemParametersInfoA( SPI_GETBORDER, 0, &old_border, 0 );
     if (!test_error_msg(rc,"SPI_{GET,SET}BORDER"))
         return;
+    /* FIXME: include new PaddedBorderWidth parameter */
+    PaddedBorderWidth = ncmsave.iBorderWidth - old_border;
+    if( PaddedBorderWidth){
+        win_skip( "Cannot reliably restore border width yet (PaddedBorderWidth = %d)\n",
+                PaddedBorderWidth);
+        return;
+    }
     /* This will restore sane values if the test hang previous run. */
     if ( old_border == 7 || old_border == 20 )
         old_border = 1;
@@ -1054,7 +1079,7 @@ static void test_SPI_SETICONTITLEWRAP( void )          /*     26 */
         if( regval != vals[i])
             regval = metricfromreg( SPI_SETICONTITLEWRAP_REGKEY1,
                     SPI_SETICONTITLEWRAP_VALNAME, dpi);
-        ok( regval == vals[i],
+        ok( regval == vals[i] || broken(regval == -1), /* win9x */
                 "wrong value in registry %d, expected %d\n", regval, vals[i] );
 
         rc=SystemParametersInfoA( SPI_GETICONTITLEWRAP, 0, &v, 0 );
@@ -1346,7 +1371,7 @@ static void test_SPI_SETDRAGFULLWINDOWS( void )        /*     37 */
 }
 
 #define TEST_NONCLIENTMETRICS_REG( ncm) \
-test_reg_metric2( SPI_SETBORDER_REGKEY2, SPI_SETBORDER_REGKEY, SPI_SETBORDER_VALNAME, (ncm).iBorderWidth);\
+/*FIXME: test_reg_metric2( SPI_SETBORDER_REGKEY2, SPI_SETBORDER_REGKEY, SPI_SETBORDER_VALNAME, (ncm).iBorderWidth);*/\
 test_reg_metric( SPI_METRIC_REGKEY, SPI_SCROLLWIDTH_VALNAME, (ncm).iScrollWidth);\
 test_reg_metric( SPI_METRIC_REGKEY, SPI_SCROLLHEIGHT_VALNAME, (ncm).iScrollHeight);\
 /*FIXME: test_reg_metric( SPI_METRIC_REGKEY, SPI_CAPTIONWIDTH_VALNAME, (ncm).iCaptionWidth);*/\
@@ -1390,6 +1415,7 @@ static void test_SPI_SETNONCLIENTMETRICS( void )               /*     44 */
     Ncmstart.cbSize = sizeof(NONCLIENTMETRICSA);
 
     trace("testing SPI_{GET,SET}NONCLIENTMETRICS\n");
+    change_counter = 0;
     SetLastError(0xdeadbeef);
     rc=SystemParametersInfoA( SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &Ncmorig, FALSE );
     if (!test_error_msg(rc,"SPI_{GET,SET}NONCLIENTMETRICS"))
@@ -1443,7 +1469,7 @@ static void test_SPI_SETNONCLIENTMETRICS( void )               /*     44 */
     ok(rc!=0,"SystemParametersInfoA: rc=%d err=%d\n",rc,GetLastError());
     /* test registry entries */
     TEST_NONCLIENTMETRICS_REG( Ncmcur)
-    /* test the systemm metrics with these settings */
+    /* test the system metrics with these settings */
     test_GetSystemMetrics();
     /* now for something invalid: increase the {menu|caption|smcaption} fonts
        by a large amount will increase the {menu|caption|smcaption} height*/
@@ -1478,19 +1504,22 @@ static void test_SPI_SETNONCLIENTMETRICS( void )               /*     44 */
         "SmCaptionHeight: %d expected %d\n", Ncmcur.iSmCaptionHeight, expect);
 
     ok( Ncmcur.iCaptionWidth == 8 ||
+        Ncmcur.iCaptionWidth == 12 || /* Vista, W7b */
         Ncmcur.iCaptionWidth == Ncmstart.iCaptionWidth, /* with windows XP theme,  the value never changes */
-        "CaptionWidth: %d expected 8\n", Ncmcur.iCaptionWidth);
+        "CaptionWidth: %d expected 8, 12 or %d\n", Ncmcur.iCaptionWidth, Ncmstart.iCaptionWidth);
     ok( Ncmcur.iScrollWidth == 8,
         "ScrollWidth: %d expected 8\n", Ncmcur.iScrollWidth);
     ok( Ncmcur.iScrollHeight == 8,
         "ScrollHeight: %d expected 8\n", Ncmcur.iScrollHeight);
-    /* test the systemm metrics with these settings */
+    /* test the system metrics with these settings */
     test_GetSystemMetrics();
     /* restore */
     rc=SystemParametersInfoA( SPI_SETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS),
         &Ncmorig, SPIF_UPDATEINIFILE | SPIF_SENDCHANGE);
     test_change_message( SPI_SETNONCLIENTMETRICS, 0 );
     ok(rc!=0,"***warning*** failed to restore the original value: rc=%d err=%d\n",rc,GetLastError());
+    /* test the system metrics with these settings */
+    test_GetSystemMetrics();
 }
 
 static void test_SPI_SETMINIMIZEDMETRICS( void )               /*     44 */
@@ -1639,9 +1668,11 @@ static void test_SPI_SETICONMETRICS( void )               /*     46 */
         return;
    /* check some registry values */ 
     regval = metricfromreg( SPI_ICONHORIZONTALSPACING_REGKEY, SPI_ICONHORIZONTALSPACING_VALNAME, dpi);
-    ok( regval==im_orig.iHorzSpacing, "wrong value in registry %d, expected %d\n", regval, im_orig.iHorzSpacing);
+    ok( regval==im_orig.iHorzSpacing || broken(regval == -1), /* nt4 */
+        "wrong value in registry %d, expected %d\n", regval, im_orig.iHorzSpacing);
     regval = metricfromreg( SPI_ICONVERTICALSPACING_REGKEY, SPI_ICONVERTICALSPACING_VALNAME, dpi);
-    ok( regval==im_orig.iVertSpacing, "wrong value in registry %d, expected %d\n", regval, im_orig.iVertSpacing);
+    ok( regval==im_orig.iVertSpacing || broken(regval == -1), /* nt4 */
+        "wrong value in registry %d, expected %d\n", regval, im_orig.iVertSpacing);
     regval = metricfromreg( SPI_SETICONTITLEWRAP_REGKEY2, SPI_SETICONTITLEWRAP_VALNAME, dpi);
     if( regval != im_orig.iTitleWrap)
         regval = metricfromreg( SPI_SETICONTITLEWRAP_REGKEY1, SPI_SETICONTITLEWRAP_VALNAME, dpi);
@@ -1763,24 +1794,32 @@ static void test_SPI_SETWORKAREA( void )               /*     47 */
                               SPIF_UPDATEINIFILE | SPIF_SENDCHANGE );
     if (!test_error_msg(rc,"SPI_SETWORKAREA")) return;
     ok(rc!=0,"SystemParametersInfoA: rc=%d err=%d\n",rc,GetLastError());
-    test_change_message( SPI_SETWORKAREA, 0 );
     rc=SystemParametersInfoA( SPI_GETWORKAREA, 0, &area, 0 );
     ok(rc!=0,"SystemParametersInfoA: rc=%d err=%d\n",rc,GetLastError());
+    if( !EqualRect( &area, &curr_val)) /* no message if rect has not changed */
+        test_change_message( SPI_SETWORKAREA, 0);
     eq( area.left,   curr_val.left,   "left",   "%d" );
     eq( area.top,    curr_val.top,    "top",    "%d" );
-    eq( area.right,  curr_val.right,  "right",  "%d" );
-    eq( area.bottom, curr_val.bottom, "bottom", "%d" );
-
+    /* size may be rounded up */
+    ok( area.right >= curr_val.right && area.right < curr_val.right + 16,
+        "right: got %d instead of %d\n", area.right, curr_val.right );
+    ok( area.bottom >= curr_val.bottom && area.bottom < curr_val.bottom + 16,
+        "bottom: got %d instead of %d\n", area.bottom, curr_val.bottom );
+    curr_val = area;
     rc=SystemParametersInfoA( SPI_SETWORKAREA, 0, &old_area,
                               SPIF_UPDATEINIFILE | SPIF_SENDCHANGE );
     ok(rc!=0,"***warning*** failed to restore the original value: rc=%d err=%d\n",rc,GetLastError());
-    test_change_message( SPI_SETWORKAREA, 0 );
     rc=SystemParametersInfoA( SPI_GETWORKAREA, 0, &area, 0 );
     ok(rc!=0,"SystemParametersInfoA: rc=%d err=%d\n",rc,GetLastError());
+    if( !EqualRect( &area, &curr_val)) /* no message if rect has not changed */
+        test_change_message( SPI_SETWORKAREA, 0 );
     eq( area.left,   old_area.left,   "left",   "%d" );
     eq( area.top,    old_area.top,    "top",    "%d" );
-    eq( area.right,  old_area.right,  "right",  "%d" );
-    eq( area.bottom, old_area.bottom, "bottom", "%d" );
+    /* size may be rounded up */
+    ok( area.right >= old_area.right && area.right < old_area.right + 16,
+        "right: got %d instead of %d\n", area.right, old_area.right );
+    ok( area.bottom >= old_area.bottom && area.bottom < old_area.bottom + 16,
+        "bottom: got %d instead of %d\n", area.bottom, old_area.bottom );
 }
 
 static void test_SPI_SETSHOWSOUNDS( void )             /*     57 */
@@ -2409,6 +2448,14 @@ static DWORD WINAPI SysParamsThreadFunc( LPVOID lpParam )
     test_SPI_SETMOUSEBUTTONSWAP();              /*     33 */
     test_SPI_SETFASTTASKSWITCH();               /*     36 */
     test_SPI_SETDRAGFULLWINDOWS();              /*     37 */
+    /* test_WM_DISPLAYCHANGE seems to be somewhat buggy on
+     * some versions of Windows (Vista, Win2k8, Win7B) in that
+     * not all metrics are properly restored. Problems are
+     * SM_CXMAXTRACK, SM_CYMAXTRACK
+     * Fortunately setting the Non-Client metrics like in
+     * test_SPI_SETNONCLIENTMETRICS will corect this. That is why
+     * we do the DISPLAY change now... */
+    test_WM_DISPLAYCHANGE();
     test_SPI_SETNONCLIENTMETRICS();             /*     42 */
     test_SPI_SETMINIMIZEDMETRICS();             /*     44 */
     test_SPI_SETICONMETRICS();                  /*     46 */
@@ -2428,7 +2475,6 @@ static DWORD WINAPI SysParamsThreadFunc( LPVOID lpParam )
     test_SPI_SETWHEELSCROLLCHARS();             /*    108 */
     test_SPI_SETWALLPAPER();                    /*    115 */
 
-    test_WM_DISPLAYCHANGE();
 
     SendMessageA( ghTestWnd, WM_DESTROY, 0, 0 );
     return 0;
@@ -2509,10 +2555,11 @@ static void test_GetSystemMetrics( void)
 {
     TEXTMETRICA tmMenuFont;
     UINT IconSpacing, IconVerticalSpacing;
+    BOOL rc;
 
     HDC hdc = CreateIC( "Display", 0, 0, 0);
     UINT avcwCaption;
-    INT CaptionWidth;
+    INT CaptionWidthfromreg;
     MINIMIZEDMETRICS minim;
     NONCLIENTMETRICS ncm;
     SIZE screen;
@@ -2520,11 +2567,14 @@ static void test_GetSystemMetrics( void)
     minim.cbSize = sizeof( minim);
     ncm.cbSize = sizeof( ncm);
     SystemParametersInfo( SPI_GETMINIMIZEDMETRICS, 0, &minim, 0);
-    SystemParametersInfo( SPI_GETNONCLIENTMETRICS, 0, &ncm, 0);
-
+    rc = SystemParametersInfo( SPI_GETNONCLIENTMETRICS, 0, &ncm, 0);
+    if( !rc) {
+        win_skip("SPI_GETNONCLIENTMETRICS is not available\n");
+        return;
+    }
     /* CaptionWidth from the registry may have different value of iCaptionWidth
      * from the non client metrics (observed on WinXP) */
-    CaptionWidth = metricfromreg(
+    CaptionWidthfromreg = metricfromreg(
             "Control Panel\\Desktop\\WindowMetrics","CaptionWidth", dpi);
     get_text_metr_size( hdc, &ncm.lfMenuFont, &tmMenuFont, NULL);
     get_text_metr_size( hdc, &ncm.lfCaptionFont, NULL, &avcwCaption);
@@ -2568,8 +2618,8 @@ static void test_GetSystemMetrics( void)
     /* SM_RESERVED2 */
     /* SM_RESERVED3 */
     /* SM_RESERVED4 */
-    ok_gsm( SM_CXMIN, 3 * max( CaptionWidth, 8) + GetSystemMetrics( SM_CYSIZE) +
-            4 + 4 * avcwCaption + 2 * GetSystemMetrics( SM_CXFRAME));
+    ok_gsm( SM_CXMIN, 3 * max( CaptionWidthfromreg >= 0 ? CaptionWidthfromreg : ncm.iCaptionWidth, 8) +
+            GetSystemMetrics( SM_CYSIZE) + 4 + 4 * avcwCaption + 2 * GetSystemMetrics( SM_CXFRAME));
     ok_gsm( SM_CYMIN, GetSystemMetrics( SM_CYCAPTION) +
             2 * GetSystemMetrics( SM_CYFRAME));
     ok_gsm_2( SM_CXSIZE,
@@ -2617,8 +2667,10 @@ static void test_GetSystemMetrics( void)
         screen.cx = GetSystemMetrics( SM_CXSCREEN );
         screen.cy = GetSystemMetrics( SM_CYSCREEN );
     }
-    ok_gsm( SM_CXMAXTRACK, screen.cx + 4 + 2 * GetSystemMetrics(SM_CXFRAME));
-    ok_gsm( SM_CYMAXTRACK, screen.cy + 4 + 2 * GetSystemMetrics(SM_CYFRAME));
+    ok_gsm_2( SM_CXMAXTRACK, screen.cx + 4 + 2 * GetSystemMetrics(SM_CXFRAME),
+              screen.cx - 4 + 2 * GetSystemMetrics(SM_CXFRAME)); /* Vista */
+    ok_gsm_2( SM_CYMAXTRACK, screen.cy + 4 + 2 * GetSystemMetrics(SM_CYFRAME),
+              screen.cy - 4 + 2 * GetSystemMetrics(SM_CYFRAME)); /* Vista */
     /* the next two cannot really be tested as they depend on (application)
      * toolbars */
     /* SM_CXMAXIMIZED */
@@ -2656,8 +2708,8 @@ static void test_GetSystemMetrics( void)
                 ncm.iBorderWidth, ncm.iCaptionWidth, ncm.iCaptionHeight, IconSpacing, IconVerticalSpacing);
         trace( "MenuHeight %d MenuWidth %d ScrollHeight %d ScrollWidth %d SmCaptionHeight %d SmCaptionWidth %d\n",
                 ncm.iMenuHeight, ncm.iMenuWidth, ncm.iScrollHeight, ncm.iScrollWidth, ncm.iSmCaptionHeight, ncm.iSmCaptionWidth);
-        trace( "Captionfontchar width %d  MenuFont %d,%d CaptionWidth from registry: %d\n",
-                avcwCaption, tmMenuFont.tmHeight, tmMenuFont.tmExternalLeading, CaptionWidth);
+        trace( "Captionfontchar width %d  MenuFont %d,%d CaptionWidth from registry: %d screen %d,%d\n",
+                avcwCaption, tmMenuFont.tmHeight, tmMenuFont.tmExternalLeading, CaptionWidthfromreg, screen.cx, screen.cy);
     }
     ReleaseDC( 0, hdc);
 }

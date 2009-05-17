@@ -229,6 +229,7 @@ static void test_SavingImages(void)
     const REAL WIDTH = 10.0, HEIGHT = 20.0;
     REAL w, h;
     ImageCodecInfo *codecs;
+    static const CHAR filenameA[] = "a.bmp";
     static const WCHAR filename[] = { 'a','.','b','m','p',0 };
 
     codecs = NULL;
@@ -280,7 +281,7 @@ static void test_SavingImages(void)
     GdipFree(codecs);
     if (bm)
         GdipDisposeImage((GpImage*)bm);
-    ok(DeleteFileW(filename), "Delete failed.\n");
+    ok(DeleteFileA(filenameA), "Delete failed.\n");
 }
 
 static void test_encoders(void)
@@ -292,7 +293,7 @@ static void test_encoders(void)
     int i;
     int bmp_found;
 
-    static const WCHAR bmp_format[] = {'B', 'M', 'P', 0};
+    static const CHAR bmp_format[] = "BMP";
 
     stat = GdipGetImageEncodersSize(&n, &s);
     expect(stat, Ok);
@@ -319,8 +320,13 @@ static void test_encoders(void)
     bmp_found = FALSE;
     for (i = 0; i < n; i++)
         {
-            if (CompareStringW(LOCALE_SYSTEM_DEFAULT, 0,
-                               codecs[i].FormatDescription, -1,
+            CHAR desc[32];
+
+            WideCharToMultiByte(CP_ACP, 0, codecs[i].FormatDescription, -1,
+                                desc, 32, 0, 0);
+
+            if (CompareStringA(LOCALE_SYSTEM_DEFAULT, 0,
+                               desc, -1,
                                bmp_format, -1) == CSTR_EQUAL) {
                 bmp_found = TRUE;
                 break;
@@ -474,7 +480,7 @@ static void test_GdipCreateBitmapFromHBITMAP(void)
     expectf(HEIGHT1, height);
     if (stat == Ok)
         GdipDisposeImage((GpImage*)gpbm);
-    GlobalFree(hbm);
+    DeleteObject(hbm);
 
     hbm = CreateBitmap(WIDTH2, HEIGHT2, 1, 1, &buff);
     stat = GdipCreateBitmapFromHBITMAP(hbm, NULL, &gpbm);
@@ -487,7 +493,7 @@ static void test_GdipCreateBitmapFromHBITMAP(void)
     expectf(HEIGHT2, height);
     if (stat == Ok)
         GdipDisposeImage((GpImage*)gpbm);
-    GlobalFree(hbm);
+    DeleteObject(hbm);
 
     hdc = CreateCompatibleDC(0);
     ok(hdc != NULL, "CreateCompatibleDC failed\n");
@@ -524,8 +530,8 @@ static void test_GdipCreateBitmapFromHBITMAP(void)
     if (stat == Ok)
         GdipDisposeImage((GpImage*)gpbm);
 
-    GlobalFree(hpal);
-    GlobalFree(hbm);
+    DeleteObject(hpal);
+    DeleteObject(hbm);
 }
 
 static void test_GdipGetImageFlags(void)
@@ -623,7 +629,9 @@ static void test_fromhicon(void)
     DeleteObject(hbmColor);
 
     stat = GdipCreateBitmapFromHICON(hIcon, &bitmap);
-    expect(Ok, stat);
+    ok(stat == Ok ||
+       broken(stat == InvalidParameter), /* Win98 */
+       "Expected Ok, got %.8x\n", stat);
     if(stat == Ok){
        /* check attributes */
        stat = GdipGetImageHeight((GpImage*)bitmap, &dim);

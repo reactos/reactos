@@ -793,12 +793,14 @@ static void test_fromhrgn(void)
     status = GdipGetRegionDataSize(region, &needed);
 todo_wine{
     expect(Ok, status);
-    expect(216, needed);
+    ok(needed == 216 ||
+       needed == 196, /* win98 */
+       "Got %.8x\n", needed);
 }
     status = GdipGetRegionData(region, (BYTE*)buf, sizeof(buf), &needed);
     todo_wine expect(Ok, status);
 
-    if(status == Ok)
+    if(status == Ok && needed == 216) /* Don't try to test win98 layout */
     {
 todo_wine{
     expect(Ok, status);

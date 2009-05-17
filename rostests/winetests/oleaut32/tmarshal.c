@@ -849,7 +849,7 @@ static HRESULT WINAPI KindaEnum_Next(
 
 static HRESULT WINAPI KindaEnum_Count(
     IKindaEnumWidget *iface,
-    /* [out] */ unsigned long __RPC_FAR *count)
+    /* [out] */ ULONG __RPC_FAR *count)
 {
     return E_NOTIMPL;
 }

@@ -36,6 +36,7 @@
 #include "wine/test.h"
 #include "windef.h"
 #include "winbase.h"
+#include "wingdi.h"
 #include "winuser.h"
 
 #define MAXHWNDS 1024
@@ -926,6 +927,99 @@ static void test_DisabledDialogTest(void)
     ok(FALSE == g_terminated, "dialog with disabled ok button has been terminated\n");
 }
 
+static INT_PTR CALLBACK messageBoxFontDlgWinProc (HWND hDlg, UINT uiMsg, WPARAM wParam,
+        LPARAM lParam)
+{
+    return (uiMsg == WM_INITDIALOG);
+}
+
+static void test_MessageBoxFontTest(void)
+{
+    /* This dialog template defines a dialog template which got 0x7fff as its
+     * font size and omits the other font members. On WinNT, passing such a
+     * dialog template to CreateDialogIndirectParamW will result in a dialog
+     * being created which uses the message box font. We test that here.
+     */
+
+    static unsigned char dlgTemplate[] =
+    {
+        /* Dialog header */
+        0x01,0x00,              /* Version */
+        0xff,0xff,              /* Extended template marker */
+        0x00,0x00,0x00,0x00,    /* Context Help ID */
+        0x00,0x00,0x00,0x00,    /* Extended style */
+        0xc0,0x00,0xc8,0x80,    /* Style (WS_SYSMENU|WS_CAPTION|WS_POPUP|DS_SETFONT|DS_MODALFRAME) */
+        0x01,0x00,              /* Control count */
+        0x00,0x00,              /* X */
+        0x00,0x00,              /* Y */
+        0x80,0x00,              /* Width */
+        0x80,0x00,              /* Height */
+        0x00,0x00,              /* Menu name */
+        0x00,0x00,              /* Class name */
+        'T',0x00,'e',0x00,      /* Caption (unicode) */
+        's',0x00,'t',0x00,
+        0x00,0x00,
+        0xff,0x7f,              /* Font height (0x7fff = message box font) */
+
+        /* Control #1 */
+        0x00,0x00,              /* Align to DWORD (header is 42 bytes) */
+        0x00,0x00,0x00,0x00,    /* Context Help ID */
+        0x00,0x00,0x00,0x00,    /* Extended style */
+        0x00,0x00,0x00,0x50,    /* Style (WS_CHILD|WS_VISIBLE) */
+        0x00,0x00,              /* X */
+        0x00,0x00,              /* Y */
+        0x80,0x00,              /* Width */
+        0x80,0x00,              /* Height */
+        0x00,0x01,0x00,0x00,    /* Control ID (256) */
+        0xff,0xff,0x82,0x00,    /* Class (Static) */
+        'W',0x00,'I',0x00,      /* Caption (unicode) */
+        'N',0x00,'E',0x00,
+        ' ',0x00,'d',0x00,
+        'i',0x00,'a',0x00,
+        'l',0x00,'o',0x00,
+        'g',0x00,' ',0x00,
+        't',0x00,'e',0x00,
+        's',0x00,'t',0x00,
+        '.',0x00,0x00,0x00,
+        0x00,0x00,              /* Size of extended data */
+
+        0x00,0x00               /* Align to DWORD */
+    };
+
+    HWND hDlg;
+    HFONT hFont;
+    LOGFONTW lfStaticFont;
+    NONCLIENTMETRICSW ncMetrics;
+
+    /* Check if the dialog can be created from the template. On Win9x, this should fail
+     * because we are calling the W function which is not implemented, but that's what
+     * we want, because passing such a template to CreateDialogIndirectParamA would crash
+     * anyway.
+     */
+    hDlg = CreateDialogIndirectParamW(g_hinst, (LPCDLGTEMPLATE)dlgTemplate, NULL, messageBoxFontDlgWinProc, 0);
+    if (!hDlg)
+    {
+        win_skip("dialog wasn't created\n");
+        return;
+    }
+
+    hFont = (HFONT) SendDlgItemMessageW(hDlg, 256, WM_GETFONT, 0, 0);
+    if (!hFont)
+    {
+        skip("dialog uses system font\n");
+        DestroyWindow(hDlg);
+        return;
+    }
+    GetObjectW(hFont, sizeof(LOGFONTW), &lfStaticFont);
+
+    ncMetrics.cbSize = sizeof(NONCLIENTMETRICSW);
+    SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, 0, &ncMetrics, 0);
+    ok( !memcmp(&lfStaticFont, &ncMetrics.lfMessageFont, FIELD_OFFSET(LOGFONTW, lfFaceName)) &&
+        !lstrcmpW(lfStaticFont.lfFaceName, ncMetrics.lfMessageFont.lfFaceName),
+        "dialog doesn't use message box font\n");
+    DestroyWindow(hDlg);
+}
+
 START_TEST(dialog)
 {
     g_hinst = GetModuleHandleA (0);
@@ -939,4 +1033,5 @@ START_TEST(dialog)
     test_GetDlgItemText();
     test_DialogBoxParamA();
     test_DisabledDialogTest();
+    test_MessageBoxFontTest();
 }

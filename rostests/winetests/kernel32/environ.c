@@ -148,7 +148,7 @@ static void test_GetSetEnvironmentVariableW(void)
     if (ret == FALSE && GetLastError()==ERROR_CALL_NOT_IMPLEMENTED)
     {
         /* Must be Win9x which doesn't support the Unicode functions */
-        skip("SetEnvironmentVariableW is not implemented\n");
+        win_skip("SetEnvironmentVariableW is not implemented\n");
         return;
     }
     ok(ret == TRUE,
@@ -245,13 +245,14 @@ static void test_ExpandEnvironmentStringsA(void)
     SetEnvironmentVariableA("EnvVar", value);
 
     ret_size = ExpandEnvironmentStringsA(NULL, buf1, sizeof(buf1));
-    ok(ret_size == 1 || ret_size == 0 /* Win9x */,
+    ok(ret_size == 1 || ret_size == 0 /* Win9x */ || ret_size == 2 /* NT4 */,
        "ExpandEnvironmentStrings returned %d\n", ret_size);
 
     /* Try to get the required buffer size 'the natural way' */
     strcpy(buf, "%EnvVar%");
     ret_size = ExpandEnvironmentStringsA(buf, NULL, 0);
     ok(ret_size == strlen(value)+1 || /* win98 */
+       ret_size == (strlen(value)+1)*2 || /* NT4 */
        ret_size == strlen(value)+2 || /* win2k, XP, win2k3 */
        ret_size == 0 /* Win95 */,
        "ExpandEnvironmentStrings returned %d instead of %d, %d or %d\n",
@@ -260,21 +261,24 @@ static void test_ExpandEnvironmentStringsA(void)
     /* Again, side-stepping the Win95 bug */
     ret_size = ExpandEnvironmentStringsA(buf, buf1, 0);
     /* v5.1.2600.2945 (XP SP2) returns len + 2 here! */
-    ok(ret_size == strlen(value)+1 || ret_size == strlen(value)+2,
+    ok(ret_size == strlen(value)+1 || ret_size == strlen(value)+2 ||
+       ret_size == (strlen(value)+1)*2 /* NT4 */,
        "ExpandEnvironmentStrings returned %d instead of %d\n",
        ret_size, lstrlenA(value)+1);
 
     /* Try with a buffer that's too small */
     ret_size = ExpandEnvironmentStringsA(buf, buf1, 12);
     /* v5.1.2600.2945 (XP SP2) returns len + 2 here! */
-    ok(ret_size == strlen(value)+1 || ret_size == strlen(value)+2,
+    ok(ret_size == strlen(value)+1 || ret_size == strlen(value)+2 ||
+       ret_size == (strlen(value)+1)*2 /* NT4 */,
        "ExpandEnvironmentStrings returned %d instead of %d\n",
        ret_size, lstrlenA(value)+1);
 
     /* Try with a buffer of just the right size */
     /* v5.1.2600.2945 (XP SP2) needs and returns len + 2 here! */
     ret_size = ExpandEnvironmentStringsA(buf, buf1, ret_size);
-    ok(ret_size == strlen(value)+1 || ret_size == strlen(value)+2,
+    ok(ret_size == strlen(value)+1 || ret_size == strlen(value)+2 ||
+       ret_size == (strlen(value)+1)*2 /* NT4 */,
        "ExpandEnvironmentStrings returned %d instead of %d\n",
        ret_size, lstrlenA(value)+1);
     ok(!strcmp(buf1, value), "ExpandEnvironmentStrings returned [%s]\n", buf1);
@@ -282,7 +286,9 @@ static void test_ExpandEnvironmentStringsA(void)
     /* Try with an unset environment variable */
     strcpy(buf, not_an_env_var);
     ret_size = ExpandEnvironmentStringsA(buf, buf1, sizeof(buf1));
-    ok(ret_size == strlen(not_an_env_var)+1, "ExpandEnvironmentStrings returned %d instead of %d\n", ret_size, lstrlenA(value)+1);
+    ok(ret_size == strlen(not_an_env_var)+1 ||
+       ret_size == (strlen(not_an_env_var)+1)*2 /* NT4 */,
+       "ExpandEnvironmentStrings returned %d instead of %d\n", ret_size, lstrlenA(not_an_env_var)+1);
     ok(!strcmp(buf1, not_an_env_var), "ExpandEnvironmentStrings returned [%s]\n", buf1);
 
     /* test a large destination size */
@@ -303,7 +309,9 @@ static void test_ExpandEnvironmentStringsA(void)
     strcpy(buf, "Indirect-%IndirectVar%-Indirect");
     strcpy(buf2, "Indirect-Foo%EnvVar%Bar-Indirect");
     ret_size = ExpandEnvironmentStringsA(buf, buf1, sizeof(buf1));
-    ok(ret_size == strlen(buf2)+1, "ExpandEnvironmentStrings returned %d instead of %d\n", ret_size, lstrlen(buf2)+1);
+    ok(ret_size == strlen(buf2)+1 ||
+       ret_size == (strlen(buf2)+1)*2 /* NT4 */,
+       "ExpandEnvironmentStrings returned %d instead of %d\n", ret_size, lstrlen(buf2)+1);
     ok(!strcmp(buf1, buf2), "ExpandEnvironmentStrings returned [%s]\n", buf1);
     SetEnvironmentVariableA("IndirectVar", NULL);
 
@@ -351,7 +359,7 @@ static void test_GetComputerName(void)
     ret = GetComputerNameW((LPWSTR)0xdeadbeef, &size);
     error = GetLastError();
     if (error == ERROR_CALL_NOT_IMPLEMENTED)
-        skip("GetComputerNameW is not implemented\n");
+        win_skip("GetComputerNameW is not implemented\n");
     else
     {
         todo_wine
@@ -376,7 +384,7 @@ static void test_GetComputerNameExA(void)
 
     if (!pGetComputerNameExA)
     {
-        skip("GetComputerNameExA function not implemented\n");
+        win_skip("GetComputerNameExA function not implemented\n");
         return;
     }
 
@@ -450,7 +458,7 @@ static void test_GetComputerNameExW(void)
 
     if (!pGetComputerNameExW)
     {
-        skip("GetComputerNameExW function not implemented\n");
+        win_skip("GetComputerNameExW function not implemented\n");
         return;
     }
 

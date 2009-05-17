@@ -306,7 +306,7 @@ static struct _tagASSEMBLY
         },
         /* IMAGE_OPTIONAL_HEADER32 */
         {
-            IMAGE_NT_OPTIONAL_HDR_MAGIC, /* Magic */
+            IMAGE_NT_OPTIONAL_HDR32_MAGIC, /* Magic */
             8, /* MajorLinkerVersion */
             0, /* MinorLinkerVersion */
             0x400, /* SizeOfCode */

@@ -97,7 +97,7 @@ static void test_createfont(void)
 
 static void test_logfont(void)
 {
-    LOGFONTW lfw, lfw2;
+    LOGFONTA lfa, lfa2;
     GpFont *font;
     GpStatus stat;
     GpGraphics *graphics;
@@ -105,70 +105,69 @@ static void test_logfont(void)
     INT style;
 
     GdipCreateFromHDC(hdc, &graphics);
-    memset(&lfw, 0, sizeof(LOGFONTW));
-    memset(&lfw2, 0xff, sizeof(LOGFONTW));
+    memset(&lfa, 0, sizeof(LOGFONTA));
+    memset(&lfa2, 0xff, sizeof(LOGFONTA));
 
     /* empty FaceName */
-    lfw.lfFaceName[0] = 0;
-    stat = GdipCreateFontFromLogfontW(hdc, &lfw, &font);
-
+    lfa.lfFaceName[0] = 0;
+    stat = GdipCreateFontFromLogfontA(hdc, &lfa, &font);
     expect(NotTrueTypeFont, stat);
 
-    memcpy(&lfw.lfFaceName, arial, 6 * sizeof(WCHAR));
+    lstrcpyA(lfa.lfFaceName, "Arial");
 
-    stat = GdipCreateFontFromLogfontW(hdc, &lfw, &font);
+    stat = GdipCreateFontFromLogfontA(hdc, &lfa, &font);
     if (stat == FileNotFound)
     {
         skip("Arial not installed.\n");
         return;
     }
     expect(Ok, stat);
-    stat = GdipGetLogFontW(font, graphics, &lfw2);
+    stat = GdipGetLogFontA(font, graphics, &lfa2);
     expect(Ok, stat);
 
-    ok(lfw2.lfHeight < 0, "Expected negative height\n");
-    expect(0, lfw2.lfWidth);
-    expect(0, lfw2.lfEscapement);
-    expect(0, lfw2.lfOrientation);
-    ok((lfw2.lfWeight >= 100) && (lfw2.lfWeight <= 900), "Expected weight to be set\n");
-    expect(0, lfw2.lfItalic);
-    expect(0, lfw2.lfUnderline);
-    expect(0, lfw2.lfStrikeOut);
-    expect(GetTextCharset(hdc), lfw2.lfCharSet);
-    expect(0, lfw2.lfOutPrecision);
-    expect(0, lfw2.lfClipPrecision);
-    expect(0, lfw2.lfQuality);
-    expect(0, lfw2.lfPitchAndFamily);
+    ok(lfa2.lfHeight < 0, "Expected negative height\n");
+    expect(0, lfa2.lfWidth);
+    expect(0, lfa2.lfEscapement);
+    expect(0, lfa2.lfOrientation);
+    ok((lfa2.lfWeight >= 100) && (lfa2.lfWeight <= 900), "Expected weight to be set\n");
+    expect(0, lfa2.lfItalic);
+    expect(0, lfa2.lfUnderline);
+    expect(0, lfa2.lfStrikeOut);
+    expect(GetTextCharset(hdc), lfa2.lfCharSet);
+    expect(0, lfa2.lfOutPrecision);
+    expect(0, lfa2.lfClipPrecision);
+    expect(0, lfa2.lfQuality);
+    expect(0, lfa2.lfPitchAndFamily);
 
     GdipDeleteFont(font);
 
-    memset(&lfw, 0, sizeof(LOGFONTW));
-    lfw.lfHeight = 25;
-    lfw.lfWidth = 25;
-    lfw.lfEscapement = lfw.lfOrientation = 50;
-    lfw.lfItalic = lfw.lfUnderline = lfw.lfStrikeOut = TRUE;
+    memset(&lfa, 0, sizeof(LOGFONTA));
+    lfa.lfHeight = 25;
+    lfa.lfWidth = 25;
+    lfa.lfEscapement = lfa.lfOrientation = 50;
+    lfa.lfItalic = lfa.lfUnderline = lfa.lfStrikeOut = TRUE;
 
-    memset(&lfw2, 0xff, sizeof(LOGFONTW));
-    memcpy(&lfw.lfFaceName, arial, 6 * sizeof(WCHAR));
+    memset(&lfa2, 0xff, sizeof(LOGFONTA));
+    lstrcpyA(lfa.lfFaceName, "Arial");
 
-    stat = GdipCreateFontFromLogfontW(hdc, &lfw, &font);
+    stat = GdipCreateFontFromLogfontA(hdc, &lfa, &font);
     expect(Ok, stat);
-    stat = GdipGetLogFontW(font, graphics, &lfw2);
+    stat = GdipGetLogFontA(font, graphics, &lfa2);
     expect(Ok, stat);
 
-    ok(lfw2.lfHeight < 0, "Expected negative height\n");
-    expect(0, lfw2.lfWidth);
-    expect(0, lfw2.lfEscapement);
-    expect(0, lfw2.lfOrientation);
-    ok((lfw2.lfWeight >= 100) && (lfw2.lfWeight <= 900), "Expected weight to be set\n");
-    expect(TRUE, lfw2.lfItalic);
-    expect(TRUE, lfw2.lfUnderline);
-    expect(TRUE, lfw2.lfStrikeOut);
-    expect(GetTextCharset(hdc), lfw2.lfCharSet);
-    expect(0, lfw2.lfOutPrecision);
-    expect(0, lfw2.lfClipPrecision);
-    expect(0, lfw2.lfQuality);
-    expect(0, lfw2.lfPitchAndFamily);
+    ok(lfa2.lfHeight < 0, "Expected negative height\n");
+    expect(0, lfa2.lfWidth);
+    expect(0, lfa2.lfEscapement);
+    expect(0, lfa2.lfOrientation);
+    ok((lfa2.lfWeight >= 100) && (lfa2.lfWeight <= 900), "Expected weight to be set\n");
+    expect(TRUE, lfa2.lfItalic);
+    expect(TRUE, lfa2.lfUnderline);
+    expect(TRUE, lfa2.lfStrikeOut);
+    expect(GetTextCharset(hdc), lfa2.lfCharSet);
+    expect(0, lfa2.lfOutPrecision);
+    expect(0, lfa2.lfClipPrecision);
+    expect(0, lfa2.lfQuality);
+    expect(0, lfa2.lfPitchAndFamily);
 
     stat = GdipGetFontStyle(font, &style);
     expect(Ok, stat);
@@ -341,6 +340,19 @@ monospace:
     expect (Ok, stat);
 }
 
+static void test_installedfonts (void)
+{
+    GpStatus stat;
+    GpFontCollection* collection=NULL;
+
+    stat = GdipNewInstalledFontCollection(NULL);
+    expect (InvalidParameter, stat);
+
+    stat = GdipNewInstalledFontCollection(&collection);
+    expect (Ok, stat);
+    ok (collection != NULL, "got NULL font collection\n");
+}
+
 START_TEST(font)
 {
     struct GdiplusStartupInput gdiplusStartupInput;
@@ -358,6 +370,7 @@ START_TEST(font)
     test_fontfamily();
     test_fontfamily_properties();
     test_getgenerics();
+    test_installedfonts();
 
     GdiplusShutdown(gdiplusToken);
 }

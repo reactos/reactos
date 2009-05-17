@@ -51,6 +51,7 @@ static BOOL (WINAPI *pGetLayeredWindowAttributes)(HWND,COLORREF*,BYTE*,DWORD*);
 static BOOL (WINAPI *pSetLayeredWindowAttributes)(HWND,COLORREF,BYTE,DWORD);
 static BOOL (WINAPI *pGetMonitorInfoA)(HMONITOR,LPMONITORINFO);
 static HMONITOR (WINAPI *pMonitorFromPoint)(POINT,DWORD);
+static int  (WINAPI *pGetWindowRgnBox)(HWND,LPRECT);
 
 static BOOL test_lbuttondown_flag;
 static HWND hwndMessage;
@@ -2430,9 +2431,9 @@ static void test_SetForegroundWindow(HWND hwnd)
 
     /*trace("testing SetForegroundWindow on an invisible window %p\n", hwnd);*/
     ret = SetForegroundWindow(hwnd);
-    ok(ret, "SetForegroundWindow returned FALSE instead of TRUE\n");
+    ok(ret || broken(!ret), /* win98 */ "SetForegroundWindow returned FALSE instead of TRUE\n");
     check_wnd_state(hwnd, hwnd, hwnd, 0);
-    
+
     ShowWindow(hwnd, SW_SHOW);
     check_wnd_state(hwnd, hwnd, hwnd, 0);
 
@@ -2661,7 +2662,10 @@ static void test_keyboard_input(HWND hwnd)
     ok(GetFocus() == hwnd, "wrong focus window %p\n", GetFocus());
 
     keybd_event(VK_SPACE, 0, 0, 0);
-    ret = PeekMessageA(&msg, 0, 0, 0, PM_REMOVE);
+    do
+    {
+        ret = PeekMessageA(&msg, 0, 0, 0, PM_REMOVE);
+    } while (ret && msg.message >= 0xc000);
     if (!ret)
     {
         skip( "keybd_event didn't work, skipping keyboard test\n" );
@@ -4929,7 +4933,10 @@ static void test_GetWindowModuleFileName(void)
         ok(IsWindow(hwnd), "got invalid desktop window %p\n", hwnd);
         SetLastError(0xdeadbeef);
         ret2 = pGetWindowModuleFileNameA(hwnd, buf2, sizeof(buf2));
-        ok(!ret2 || ret1 == ret2 /* vista */, "expected 0 or %u, got %u %s\n", ret1, ret2, buf2);
+        ok(!ret2 ||
+           ret1 == ret2 || /* vista */
+           broken(ret2),  /* some win98 return user.exe as file name */
+           "expected 0 or %u, got %u %s\n", ret1, ret2, buf2);
     }
 }
 
@@ -5529,6 +5536,48 @@ static void test_handles( HWND full_hwnd )
 #endif
 }
 
+static void test_winregion(void)
+{
+    HWND hwnd;
+    RECT r;
+    int ret;
+    HRGN hrgn;
+
+    if (!pGetWindowRgnBox)
+    {
+        win_skip("GetWindowRgnBox not supported\n");
+        return;
+    }
+
+    hwnd = CreateWindowExA(0, "static", NULL, WS_VISIBLE, 10, 10, 10, 10, NULL, 0, 0, NULL);
+    /* NULL prect */
+    SetLastError(0xdeadbeef);
+    ret = pGetWindowRgnBox(hwnd, NULL);
+    ok( ret == ERROR, "Expected ERROR, got %d\n", ret);
+    ok( GetLastError() == 0xdeadbeef, "Expected , got %d\n", GetLastError());
+
+    hrgn = CreateRectRgn(2, 3, 10, 15);
+    ok( hrgn != NULL, "Region creation failed\n");
+    if (hrgn)
+    {
+        SetWindowRgn(hwnd, hrgn, FALSE);
+
+        SetLastError(0xdeadbeef);
+        ret = pGetWindowRgnBox(hwnd, NULL);
+        ok( ret == ERROR, "Expected ERROR, got %d\n", ret);
+        ok( GetLastError() == 0xdeadbeef, "Expected , got %d\n", GetLastError());
+
+        r.left = r.top = r.right = r.bottom = 0;
+        ret = pGetWindowRgnBox(hwnd, &r);
+        ok( ret == SIMPLEREGION, "Expected SIMPLEREGION, got %d\n", ret);
+        ok( r.left == 2 && r.top == 3 && r.right == 10 && r.bottom == 15,
+           "Expected (2,3,10,15), got (%d,%d,%d,%d)\n", r.left, r.top,
+                                                            r.right, r.bottom);
+        DeleteObject(hrgn);
+    }
+    DestroyWindow(hwnd);
+}
+
 START_TEST(win)
 {
     HMODULE user32 = GetModuleHandleA( "user32.dll" );
@@ -5539,6 +5588,7 @@ START_TEST(win)
     pSetLayeredWindowAttributes = (void *)GetProcAddress( user32, "SetLayeredWindowAttributes" );
     pGetMonitorInfoA = (void *)GetProcAddress( user32,  "GetMonitorInfoA" );
     pMonitorFromPoint = (void *)GetProcAddress( user32,  "MonitorFromPoint" );
+    pGetWindowRgnBox = (void *)GetProcAddress( user32, "GetWindowRgnBox" );
 
     if (!RegisterWindowClasses()) assert(0);
 
@@ -5608,6 +5658,7 @@ START_TEST(win)
     test_SetForegroundWindow(hwndMain);
     test_shell_window();
     test_handles( hwndMain );
+    test_winregion();
 
     /* add the tests above this line */
     if (hhook) UnhookWindowsHookEx(hhook);

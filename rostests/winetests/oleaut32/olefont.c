@@ -808,7 +808,7 @@ START_TEST(olefont)
 	pOleCreateFontIndirect = (void*)GetProcAddress(hOleaut32, "OleCreateFontIndirect");
 	if (!pOleCreateFontIndirect)
 	{
-	    skip("OleCreateFontIndirect not available\n");
+	    win_skip("OleCreateFontIndirect not available\n");
 	    return;
 	}
 

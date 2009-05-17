@@ -18,6 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define _WIN32_WINNT 0x0501
+
 #include "wine/test.h"
 #include "winbase.h"
 
@@ -37,14 +39,14 @@ static void test_timer(void)
     pCreateWaitableTimerA = (fnCreateWaitableTimerA) GetProcAddress( hker, "CreateWaitableTimerA");
     if( !pCreateWaitableTimerA )
     {
-        skip("CreateWaitableTimerA is not available\n");
+        win_skip("CreateWaitableTimerA is not available\n");
         return;
     }
 
     pSetWaitableTimer = (fnSetWaitableTimer) GetProcAddress( hker, "SetWaitableTimer");
     if( !pSetWaitableTimer )
     {
-        skip("SetWaitableTimer is not available\n");
+        win_skip("SetWaitableTimer is not available\n");
         return;
     }
        

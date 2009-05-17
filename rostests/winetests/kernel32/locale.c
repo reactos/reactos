@@ -1110,6 +1110,12 @@ static void test_CompareStringA(void)
 
     ret = CompareStringA(lcid, 0, "\2", 2, "\1", 2);
     todo_wine ok(ret != 2, "\\2 vs \\1 expected unequal\n");
+
+    ret = CompareStringA(lcid, NORM_IGNORECASE | LOCALE_USE_CP_ACP, "#", -1, ".", -1);
+    todo_wine ok(ret == CSTR_LESS_THAN, "\"#\" vs \".\" expected CSTR_LESS_THAN, got %d\n", ret);
+
+    ret = lstrcmpi("#", ".");
+    todo_wine ok(ret == -1, "\"#\" vs \".\" expected -1, got %d\n", ret);
 }
 
 static void test_LCMapStringA(void)
@@ -1221,9 +1227,11 @@ static void test_LCMapStringA(void)
     ret = LCMapStringA(LOCALE_USER_DEFAULT, LCMAP_SORTKEY,
                        upper_case, -1, buf, sizeof(buf));
     ok(ret, "LCMapStringA must succeed\n");
+    ok(buf[ret-1] == 0, "LCMapStringA not null-terminated\n");
     ret2 = LCMapStringA(LOCALE_USER_DEFAULT, LCMAP_SORTKEY,
                        upper_case, lstrlenA(upper_case), buf2, sizeof(buf2));
-    ok(ret, "LCMapStringA must succeed\n");
+    ok(ret2, "LCMapStringA must succeed\n");
+    ok(buf2[ret2-1] == 0, "LCMapStringA not null-terminated\n" );
     ok(ret == ret2, "lengths of sort keys must be equal\n");
     ok(!lstrcmpA(buf, buf2), "sort keys must be equal\n");
 
@@ -1901,7 +1909,7 @@ static void test_FoldStringW(void)
 
   if (!pFoldStringW)
   {
-    skip("FoldStringW is not available\n");
+    win_skip("FoldStringW is not available\n");
     return; /* FoldString is present in NT v3.1+, but not 95/98/Me */
   }
 
@@ -1913,7 +1921,7 @@ static void test_FoldStringW(void)
     ret = pFoldStringW(badFlags[i], src, 256, dst, 256);
     if (GetLastError()==ERROR_CALL_NOT_IMPLEMENTED)
     {
-      skip("FoldStringW is not implemented\n");
+      win_skip("FoldStringW is not implemented\n");
       return;
     }
     ok(!ret && GetLastError() == ERROR_INVALID_FLAGS,
@@ -2291,7 +2299,7 @@ static void test_EnumUILanguageA(void)
 {
   BOOL ret;
   if (!pEnumUILanguagesA) {
-    skip("EnumUILanguagesA is not available on Win9x or NT4\n");
+    win_skip("EnumUILanguagesA is not available on Win9x or NT4\n");
     return;
   }
 

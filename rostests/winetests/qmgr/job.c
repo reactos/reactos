@@ -24,6 +24,7 @@
 
 #include "wine/test.h"
 #include "bits.h"
+#include "initguid.h"
 
 /* Globals used by many tests */
 static const WCHAR test_displayName[] = {'T', 'e', 's', 't', 0};
@@ -121,6 +122,49 @@ static void teardown(void)
 {
     IBackgroundCopyJob_Release(test_job);
     IBackgroundCopyManager_Release(test_manager);
+}
+
+/* FIXME: Remove when Wine has implemented this */
+DEFINE_GUID(CLSID_BackgroundCopyManager2_0, 0x6d18ad12, 0xbde3, 0x4393, 0xb3,0x11, 0x09,0x9c,0x34,0x6e,0x6d,0xf9);
+
+static BOOL check_bits20(void)
+{
+    HRESULT hres;
+    IBackgroundCopyManager *manager;
+    BOOL ret = TRUE;
+
+    hres = CoCreateInstance(&CLSID_BackgroundCopyManager2_0, NULL,
+                            CLSCTX_LOCAL_SERVER,
+                            &IID_IBackgroundCopyManager,
+                            (void **) &manager);
+
+    if (hres == REGDB_E_CLASSNOTREG)
+    {
+        ret = FALSE;
+
+        /* FIXME: Wine implements 2.0 functionality but doesn't advertise 2.0
+         *
+         * Remove when Wine is fixed
+         */
+        if (setup())
+        {
+            HRESULT hres2;
+
+            hres2 = IBackgroundCopyJob_AddFile(test_job, test_remotePathA,
+                                               test_localPathA);
+            if (hres2 == S_OK)
+            {
+                trace("Running on Wine, claim 2.0 is present\n");
+                ret = TRUE;
+            }
+            teardown();
+        }
+    }
+
+    if (manager)
+        IBackgroundCopyManager_Release(manager);
+
+    return ret;
 }
 
 /* Test that the jobId is properly set */
@@ -486,12 +530,15 @@ START_TEST(job)
         test_GetId,
         test_GetType,
         test_GetName,
-        test_AddFile,
-        test_AddFileSet,
-        test_EnumFiles,
         test_GetProgress_preTransfer,
         test_GetState,
         test_ResumeEmpty,
+        0
+    };
+    static const test_t tests_bits20[] = {
+        test_AddFile,
+        test_AddFileSet,
+        test_EnumFiles,
         test_CompleteLocal,
         test_CompleteLocalURL,
         0
@@ -502,6 +549,7 @@ START_TEST(job)
         return;
 
     CoInitialize(NULL);
+
     for (test = tests; *test; ++test)
     {
         /* Keep state separate between tests. */
@@ -513,5 +561,25 @@ START_TEST(job)
         (*test)();
         teardown();
     }
+
+    if (check_bits20())
+    {
+        for (test = tests_bits20; *test; ++test)
+        {
+            /* Keep state separate between tests. */
+            if (!setup())
+            {
+                skip("Unable to setup test\n");
+                break;
+            }
+            (*test)();
+            teardown();
+        }
+    }
+    else
+    {
+        win_skip("Tests need BITS 2.0 or higher\n");
+    }
+
     CoUninitialize();
 }

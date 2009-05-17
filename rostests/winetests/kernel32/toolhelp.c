@@ -44,7 +44,7 @@ static BOOL (WINAPI *pThread32Next)(HANDLE, LPTHREADENTRY32);
 
 static DWORD WINAPI sub_thread(void* pmt)
 {
-    DWORD w = WaitForSingleObject((HANDLE)pmt, WAIT_TIME);
+    DWORD w = WaitForSingleObject(pmt, WAIT_TIME);
     return w;
 }
 
@@ -73,8 +73,8 @@ static int     init(void)
     case 2: /* the test program */
         return 0;
     case 4: /* the sub-process */
-        ev1 = (HANDLE)atoi(argv[2]);
-        ev2 = (HANDLE)atoi(argv[3]);
+        ev1 = (HANDLE)(INT_PTR)atoi(argv[2]);
+        ev2 = (HANDLE)(INT_PTR)atoi(argv[3]);
         ev3 = CreateEvent(NULL, FALSE, FALSE, NULL);
 
         if (ev3 == NULL) ExitProcess(WAIT_ABANDONED);
@@ -204,14 +204,14 @@ static void test_thread(DWORD curr_pid, DWORD sub_pcs_pid)
 
 static const char* curr_expected_modules[] =
 {
-    "kernel32.dll",
     "kernel32_test.exe"
+    "kernel32.dll",
     /* FIXME: could test for ntdll on NT and Wine */
 };
 static const char* sub_expected_modules[] =
 {
-    "kernel32.dll",
     "kernel32_test.exe",
+    "kernel32.dll",
     "shell32.dll"
     /* FIXME: could test for ntdll on NT and Wine */
 };
@@ -283,6 +283,7 @@ START_TEST(toolhelp)
 {
     DWORD               pid = GetCurrentProcessId();
     int                 r;
+    char                *p, module[MAX_PATH];
     char                buffer[MAX_PATH];
     SECURITY_ATTRIBUTES sa;
     PROCESS_INFORMATION	info;
@@ -304,7 +305,7 @@ START_TEST(toolhelp)
         !pProcess32First || !pProcess32Next ||
         !pThread32First || !pThread32Next)
     {
-        skip("Needed functions are not available, most likely running on Windows NT\n");
+        win_skip("Needed functions are not available, most likely running on Windows NT\n");
         return;
     }
 
@@ -324,11 +325,17 @@ START_TEST(toolhelp)
     startup.dwFlags = STARTF_USESHOWWINDOW;
     startup.wShowWindow = SW_SHOWNORMAL;
 
-    sprintf(buffer, "%s tests/toolhelp.c %u %u", selfname, (DWORD)ev1, (DWORD)ev2);
+    sprintf(buffer, "%s tests/toolhelp.c %lu %lu", selfname, (DWORD_PTR)ev1, (DWORD_PTR)ev2);
     ok(CreateProcessA(NULL, buffer, NULL, NULL, TRUE, 0, NULL, NULL, &startup, &info), "CreateProcess\n");
     /* wait for child to be initialized */
     w = WaitForSingleObject(ev1, WAIT_TIME);
     ok(w == WAIT_OBJECT_0, "Failed to wait on sub-process startup\n");
+
+    GetModuleFileNameA( 0, module, sizeof(module) );
+    if (!(p = strrchr( module, '\\' ))) p = module;
+    else p++;
+    curr_expected_modules[0] = p;
+    sub_expected_modules[0] = p;
 
     test_process(pid, info.dwProcessId);
     test_thread(pid, info.dwProcessId);

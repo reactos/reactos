@@ -592,7 +592,7 @@ static void dump_sizes(HWND hToolbar)
         SendMessageA(hToolbar, TB_GETITEMRECT, i, &r);
         printf("%s{%3d, %3d, %3d, %3d}, ", (i%3==0 ? "\n    " : ""), r.left, r.top, r.right, r.bottom);
     }
-    printf("\n  }, }, \n");
+    printf("\n  }, },\n");
 }
 
 #define check_sizes() dump_sizes(hToolbar);
@@ -777,7 +777,7 @@ static TBBUTTON buttons3[] = {
 static void test_sizes(void)
 {
     HWND hToolbar = NULL;
-    HIMAGELIST himl;
+    HIMAGELIST himl, himl2;
     TBBUTTONINFO tbinfo;
     int style;
     int i;
@@ -928,9 +928,13 @@ static void test_sizes(void)
     ok(SendMessageA(hToolbar, TB_GETBUTTONSIZE, 0, 0) == MAKELONG(100, 21), "Unexpected button size\n");
     SendMessageA(hToolbar, TB_SETBUTTONSIZE, 0, MAKELONG(100, 100));
     ok(SendMessageA(hToolbar, TB_GETBUTTONSIZE, 0, 0) == MAKELONG(100, 100), "Unexpected button size\n");
+    /* But there are no update when we change imagelist, and image sizes are the same */
+    himl2 = ImageList_LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(IDB_BITMAP_128x15), 20, 2, CLR_NONE, IMAGE_BITMAP, LR_DEFAULTCOLOR);
+    ok(SendMessageA(hToolbar, TB_SETIMAGELIST, 0, (LRESULT)himl2) == (LRESULT)himl, "TB_SETIMAGELIST failed\n");
+    ok(SendMessageA(hToolbar, TB_GETBUTTONSIZE, 0, 0) == MAKELONG(100, 100), "Unexpected button size\n");
     SendMessageA(hToolbar, TB_SETBUTTONSIZE, 0, MAKELONG(1, 1));
     ok(SendMessageA(hToolbar, TB_GETBUTTONSIZE, 0, 0) == MAKELONG(27, 21), "Unexpected button size\n");
-    ok(SendMessageA(hToolbar, TB_SETIMAGELIST, 0, 0) == (LRESULT)himl, "TB_SETIMAGELIST failed\n");
+    ok(SendMessageA(hToolbar, TB_SETIMAGELIST, 0, 0) == (LRESULT)himl2, "TB_SETIMAGELIST failed\n");
     ok(SendMessageA(hToolbar, TB_GETBUTTONSIZE, 0, 0) == MAKELONG(27, 7), "Unexpected button size\n");
     SendMessageA(hToolbar, TB_SETBUTTONSIZE, 0, MAKELONG(1, 1));
     ok(SendMessageA(hToolbar, TB_GETBUTTONSIZE, 0, 0) == MAKELONG(8, 7), "Unexpected button size\n");
@@ -995,6 +999,108 @@ static void test_sizes(void)
     ok(SendMessageA(hToolbar, TB_SETBUTTONINFO, 1, (LPARAM)&tbinfo) != 0, "TB_SETBUTTONINFO failed\n");
     SendMessageA(hToolbar, TB_AUTOSIZE, 0, 0);
     check_sizes();
+
+    DestroyWindow(hToolbar);
+}
+
+/* Toolbar control has two ways of reacting to a change. We call them a
+ * relayout and recalc. A recalc forces a recompute of values like button size
+ * and top margin (the latter in comctl32 <v6), while a relayout uses the cached
+ * values. This functions creates a flat toolbar with a top margin of a non-flat
+ * toolbar. We will notice a recalc, as it will recompte the top margin and
+ * change it to zero*/
+static void prepare_recalc_test(HWND *phToolbar)
+{
+    RECT rect;
+    rebuild_toolbar_with_buttons(phToolbar);
+    SetWindowLong(*phToolbar, GWL_STYLE,
+        GetWindowLong(*phToolbar, GWL_STYLE) | TBSTYLE_FLAT);
+    SendMessage(*phToolbar, TB_GETITEMRECT, 1, (LPARAM)&rect);
+    ok(rect.top == 2, "Test will make no sense because initial top is %d instead of 2\n",
+        rect.top);
+}
+
+static BOOL did_recalc(HWND hToolbar)
+{
+    RECT rect;
+    SendMessage(hToolbar, TB_GETITEMRECT, 1, (LPARAM)&rect);
+    ok(rect.top == 2 || rect.top == 0, "Unexpected top margin %d in recalc test\n",
+        rect.top);
+    return (rect.top == 0);
+}
+
+/* call after a recalc did happen to return to an unstable state */
+static void restore_recalc_state(HWND hToolbar)
+{
+    RECT rect;
+    /* return to style with a 2px top margin */
+    SetWindowLong(hToolbar, GWL_STYLE,
+        GetWindowLong(hToolbar, GWL_STYLE) & ~TBSTYLE_FLAT);
+    /* recalc */
+    SendMessage(hToolbar, TB_ADDBUTTONS, 1, (LPARAM)&buttons3[3]);
+    /* top margin will be 0px if a recalc occurs */
+    SetWindowLong(hToolbar, GWL_STYLE,
+        GetWindowLong(hToolbar, GWL_STYLE) | TBSTYLE_FLAT);
+    /* safety check */
+    SendMessage(hToolbar, TB_GETITEMRECT, 1, (LPARAM)&rect);
+    ok(rect.top == 2, "Test will make no sense because initial top is %d instead of 2\n",
+        rect.top);
+}
+
+static void test_recalc(void)
+{
+    HWND hToolbar;
+    TBBUTTONINFO bi;
+    CHAR test[] = "Test";
+    const int EX_STYLES_COUNT = 5;
+    int i;
+
+    /* Like TB_ADDBUTTONS tested in test_sized, inserting a button without text
+     * results in a relayout, while adding one with text forces a recalc */
+    prepare_recalc_test(&hToolbar);
+    SendMessage(hToolbar, TB_INSERTBUTTON, 1, (LPARAM)&buttons3[0]);
+    ok(!did_recalc(hToolbar), "Unexpected recalc - adding button without text\n");
+
+    prepare_recalc_test(&hToolbar);
+    SendMessage(hToolbar, TB_INSERTBUTTON, 1, (LPARAM)&buttons3[3]);
+    ok(did_recalc(hToolbar), "Expected a recalc - adding button with text\n");
+
+    /* TB_SETBUTTONINFO, even when adding a text, results only in a relayout */
+    prepare_recalc_test(&hToolbar);
+    bi.cbSize = sizeof(bi);
+    bi.dwMask = TBIF_TEXT;
+    bi.pszText = test;
+    SendMessage(hToolbar, TB_SETBUTTONINFO, 1, (LPARAM)&bi);
+    ok(!did_recalc(hToolbar), "Unexpected recalc - setting a button text\n");
+
+    /* most extended styled doesn't force a recalc (testing all the bits gives
+     * the same results, but prints some ERRs while testing) */
+    for (i = 0; i < EX_STYLES_COUNT; i++)
+    {
+        if (i == 1 || i == 3)  /* an undoc style and TBSTYLE_EX_MIXEDBUTTONS */
+            continue;
+        prepare_recalc_test(&hToolbar);
+        expect(0, (int)SendMessage(hToolbar, TB_GETEXTENDEDSTYLE, 0, 0));
+        SendMessage(hToolbar, TB_SETEXTENDEDSTYLE, 0, (1 << i));
+        ok(!did_recalc(hToolbar), "Unexpected recalc - setting bit %d\n", i);
+        SendMessage(hToolbar, TB_SETEXTENDEDSTYLE, 0, 0);
+        ok(!did_recalc(hToolbar), "Unexpected recalc - clearing bit %d\n", i);
+        expect(0, (int)SendMessage(hToolbar, TB_GETEXTENDEDSTYLE, 0, 0));
+    }
+
+    /* TBSTYLE_EX_MIXEDBUTTONS does a recalc on change */
+    prepare_recalc_test(&hToolbar);
+    SendMessage(hToolbar, TB_SETEXTENDEDSTYLE, 0, TBSTYLE_EX_MIXEDBUTTONS);
+    ok(did_recalc(hToolbar), "Expected a recalc - setting TBSTYLE_EX_MIXEDBUTTONS\n");
+    restore_recalc_state(hToolbar);
+    SendMessage(hToolbar, TB_SETEXTENDEDSTYLE, 0, TBSTYLE_EX_MIXEDBUTTONS);
+    ok(!did_recalc(hToolbar), "Unexpected recalc - setting TBSTYLE_EX_MIXEDBUTTONS again\n");
+    restore_recalc_state(hToolbar);
+    SendMessage(hToolbar, TB_SETEXTENDEDSTYLE, 0, 0);
+    ok(did_recalc(hToolbar), "Expected a recalc - clearing TBSTYLE_EX_MIXEDBUTTONS\n");
+
+    /* undocumented exstyle 0x2 seems to changes the top margin, what
+     * interferes with these tests */
 
     DestroyWindow(hToolbar);
 }
@@ -1224,6 +1330,7 @@ START_TEST(toolbar)
     test_add_string();
     test_hotitem();
     test_sizes();
+    test_recalc();
     test_getbuttoninfo();
     test_createtoolbarex();
     test_dispinfo();

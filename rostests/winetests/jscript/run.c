@@ -600,11 +600,62 @@ static void parse_script(BSTR script_str)
     IUnknown_Release(parser);
 }
 
+static HRESULT parse_htmlscript(BSTR script_str)
+{
+    IActiveScriptParse *parser;
+    IActiveScript *engine;
+    HRESULT hres;
+    BSTR tmp = a2bstr("</SCRIPT>");
+
+    engine = create_script();
+    if(!engine)
+        return E_FAIL;
+
+    hres = IActiveScript_QueryInterface(engine, &IID_IActiveScriptParse, (void**)&parser);
+    ok(hres == S_OK, "Could not get IActiveScriptParse: %08x\n", hres);
+    if (FAILED(hres))
+    {
+        IActiveScript_Release(engine);
+        return E_FAIL;
+    }
+
+    hres = IActiveScriptParse64_InitNew(parser);
+    ok(hres == S_OK, "InitNew failed: %08x\n", hres);
+
+    hres = IActiveScript_SetScriptSite(engine, &ActiveScriptSite);
+    ok(hres == S_OK, "SetScriptSite failed: %08x\n", hres);
+
+    hres = IActiveScript_AddNamedItem(engine, testW,
+            SCRIPTITEM_ISVISIBLE|SCRIPTITEM_ISSOURCE|SCRIPTITEM_GLOBALMEMBERS);
+    ok(hres == S_OK, "AddNamedItem failed: %08x\n", hres);
+
+    hres = IActiveScript_SetScriptState(engine, SCRIPTSTATE_STARTED);
+    ok(hres == S_OK, "SetScriptState(SCRIPTSTATE_STARTED) failed: %08x\n", hres);
+
+    hres = IActiveScriptParse64_ParseScriptText(parser, script_str, NULL, NULL, tmp, 0, 0, 0, NULL, NULL);
+
+    IActiveScript_Release(engine);
+    IUnknown_Release(parser);
+    SysFreeString(tmp);
+
+    return hres;
+}
+
 static void parse_script_a(const char *src)
 {
     BSTR tmp = a2bstr(src);
     parse_script(tmp);
     SysFreeString(tmp);
+}
+
+static HRESULT parse_htmlscript_a(const char *src)
+{
+    HRESULT hres;
+    BSTR tmp = a2bstr(src);
+    hres = parse_htmlscript(tmp);
+    SysFreeString(tmp);
+
+    return hres;
 }
 
 static BSTR get_script_from_file(const char *filename)
@@ -741,6 +792,8 @@ static void test_isvisible(BOOL global_members)
 
 static void run_tests(void)
 {
+    HRESULT hres;
+
     strict_dispid_check = TRUE;
 
     parse_script_a("");
@@ -776,6 +829,19 @@ static void run_tests(void)
 
     test_isvisible(FALSE);
     test_isvisible(TRUE);
+
+    hres = parse_htmlscript_a("<!--");
+    ok(hres == S_OK, "ParseScriptText failed: %08x\n", hres);
+    hres = parse_htmlscript_a("-->");
+    ok(hres == S_OK, "ParseScriptText failed: %08x\n", hres);
+    hres = parse_htmlscript_a("<!--\nvar a=1;\n-->\n");
+    ok(hres == S_OK, "ParseScriptText failed: %08x\n", hres);
+    hres = parse_htmlscript_a("<!--\n<!-- ignore this\n-->\n");
+    ok(hres == S_OK, "ParseScriptText failed: %08x\n", hres);
+    hres = parse_htmlscript_a("var a=1;\nif(a-->0) a=5;\n");
+    ok(hres == S_OK, "ParseScriptText failed: %08x\n", hres);
+    hres = parse_htmlscript_a("var a=1;\nif(a\n-->0) a=5;\n");
+    ok(hres != S_OK, "ParseScriptText have not failed\n");
 }
 
 START_TEST(run)

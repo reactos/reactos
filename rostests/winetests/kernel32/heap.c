@@ -34,7 +34,30 @@ static SIZE_T resize_9x(SIZE_T size)
     return max(dwSizeAligned, 12); /* at least 12 bytes */
 }
 
-START_TEST(heap)
+static void test_sized_HeapAlloc(int nbytes)
+{
+    int success;
+    char *buf = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, nbytes);
+    ok(buf != NULL, "allocate failed\n");
+    ok(buf[0] == 0, "buffer not zeroed\n");
+    success = HeapFree(GetProcessHeap(), 0, buf);
+    ok(success, "free failed\n");
+}
+
+static void test_sized_HeapReAlloc(int nbytes1, int nbytes2)
+{
+    int success;
+    char *buf = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, nbytes1);
+    ok(buf != NULL, "allocate failed\n");
+    ok(buf[0] == 0, "buffer not zeroed\n");
+    buf = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, buf, nbytes2);
+    ok(buf != NULL, "reallocate failed\n");
+    ok(buf[nbytes2-1] == 0, "buffer not zeroed\n");
+    success = HeapFree(GetProcessHeap(), 0, buf);
+    ok(success, "free failed\n");
+}
+
+static void test_heap(void)
 {
     LPVOID  mem;
     LPVOID  msecond;
@@ -64,13 +87,13 @@ START_TEST(heap)
     /* test some border cases of HeapAlloc and HeapReAlloc */
     mem = HeapAlloc(GetProcessHeap(), 0, 0);
     ok(mem != NULL, "memory not allocated for size 0\n");
-    msecond = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, mem, ~0UL - 7);
-    ok(msecond == NULL, "HeapReAlloc(0xfffffff8) should have failed\n");
-    msecond = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, mem, ~0UL);
-    ok(msecond == NULL, "HeapReAlloc(0xffffffff) should have failed\n");
+    msecond = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, mem, ~(SIZE_T)0 - 7);
+    ok(msecond == NULL, "HeapReAlloc(~0 - 7) should have failed\n");
+    msecond = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, mem, ~(SIZE_T)0);
+    ok(msecond == NULL, "HeapReAlloc(~0) should have failed\n");
     HeapFree(GetProcessHeap(), 0, mem);
-    mem = HeapAlloc(GetProcessHeap(), 0, ~0UL);
-    ok(mem == NULL, "memory allocated for size ~0UL\n");
+    mem = HeapAlloc(GetProcessHeap(), 0, ~(SIZE_T)0);
+    ok(mem == NULL, "memory allocated for size ~0\n");
 
     /* large blocks must be 16-byte aligned */
     mem = HeapAlloc(GetProcessHeap(), 0, 512 * 1024);
@@ -190,13 +213,16 @@ START_TEST(heap)
     ok(mem == NULL, "Expected NULL, got %p\n", mem);
 
     /* invalid free */
-    SetLastError(MAGIC_DEAD);
-    mem = GlobalFree(gbl);
-    ok(mem == gbl || broken(mem == NULL) /* nt4 */, "Expected gbl, got %p\n", mem);
-    if (mem == gbl)
-        ok(GetLastError() == ERROR_INVALID_HANDLE ||
-           GetLastError() == ERROR_INVALID_PARAMETER, /* win9x */
-           "Expected ERROR_INVALID_HANDLE or ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
+    if (sizeof(void *) != 8)  /* crashes on 64-bit Vista */
+    {
+        SetLastError(MAGIC_DEAD);
+        mem = GlobalFree(gbl);
+        ok(mem == gbl || broken(mem == NULL) /* nt4 */, "Expected gbl, got %p\n", mem);
+        if (mem == gbl)
+            ok(GetLastError() == ERROR_INVALID_HANDLE ||
+               GetLastError() == ERROR_INVALID_PARAMETER, /* win9x */
+               "Expected ERROR_INVALID_HANDLE or ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
+    }
 
     gbl = GlobalAlloc(GMEM_DDESHARE, 100);
 
@@ -211,12 +237,15 @@ START_TEST(heap)
        "Expected 1 or 0, got %d\n", res);
 
     /* GlobalSize on an invalid handle */
-    SetLastError(MAGIC_DEAD);
-    size = GlobalSize((HGLOBAL)0xc042);
-    ok(size == 0, "Expected 0, got %ld\n", size);
-    ok(GetLastError() == ERROR_INVALID_HANDLE ||
-       GetLastError() == ERROR_INVALID_PARAMETER, /* win9x */
-       "Expected ERROR_INVALID_HANDLE or ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
+    if (sizeof(void *) != 8)  /* crashes on 64-bit Vista */
+    {
+        SetLastError(MAGIC_DEAD);
+        size = GlobalSize((HGLOBAL)0xc042);
+        ok(size == 0, "Expected 0, got %ld\n", size);
+        ok(GetLastError() == ERROR_INVALID_HANDLE ||
+           GetLastError() == ERROR_INVALID_PARAMETER, /* win9x */
+           "Expected ERROR_INVALID_HANDLE or ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
+    }
 
     /* ####################################### */
     /* Local*() functions */
@@ -331,4 +360,17 @@ START_TEST(heap)
         "MAGIC_DEAD)\n", mem, GetLastError(), GetLastError());
 
     GlobalFree(gbl);
+}
+
+START_TEST(heap)
+{
+    test_heap();
+
+    /* Test both short and very long blocks */
+    test_sized_HeapAlloc(1);
+    test_sized_HeapAlloc(1 << 20);
+    test_sized_HeapReAlloc(1, 100);
+    test_sized_HeapReAlloc(1, (1 << 20));
+    test_sized_HeapReAlloc((1 << 20), (2 << 20));
+    test_sized_HeapReAlloc((1 << 20), 1);
 }

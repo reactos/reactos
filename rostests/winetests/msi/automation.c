@@ -1046,7 +1046,7 @@ static HRESULT Session_EvaluateCondition(IDispatch *pSession, LPCWSTR szConditio
     return hr;
 }
 
-static HRESULT Session_Message(IDispatch *pSession, long kind, IDispatch *record, int *ret)
+static HRESULT Session_Message(IDispatch *pSession, LONG kind, IDispatch *record, int *ret)
 {
     VARIANT varresult;
     VARIANTARG vararg[2];
@@ -1067,7 +1067,7 @@ static HRESULT Session_Message(IDispatch *pSession, long kind, IDispatch *record
     return hr;
 }
 
-static HRESULT Session_SetInstallLevel(IDispatch *pSession, long iInstallLevel)
+static HRESULT Session_SetInstallLevel(IDispatch *pSession, LONG iInstallLevel)
 {
     VARIANT varresult;
     VARIANTARG vararg[1];
@@ -2022,7 +2022,7 @@ static void test_Installer_Products(BOOL bProductInstalled)
             }
         }
 
-        if (bProductInstalled) todo_wine
+        if (bProductInstalled)
         {
             ok(bProductInstalled == bProductFound, "Product expected to %s installed but product code was %s\n",
                bProductInstalled ? "be" : "not be",
@@ -2295,12 +2295,22 @@ static void test_Installer_InstallProduct(void)
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     res = find_registry_key(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Installer\\UserData", "05FA3C1F65B896A40AC00077F34EF203", &hkey);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_SUCCESS ||
+       broken(res == ERROR_FILE_NOT_FOUND), /* win9x */
+       "Expected ERROR_SUCCESS, got %d\n", res);
     if (res == ERROR_SUCCESS)
     {
         res = delete_registry_key(hkey, "05FA3C1F65B896A40AC00077F34EF203");
         ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
         RegCloseKey(hkey);
+
+        res = RegDeleteKeyA(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Installer\\Products\\05FA3C1F65B896A40AC00077F34EF203");
+        ok(res == ERROR_FILE_NOT_FOUND, "Expected ERROR_FILE_NOT_FOUND, got %d\n", res);
+    }
+    else
+    {
+        /* win9x defaults to a per-machine install. */
+        RegDeleteKeyA(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Installer\\Products\\05FA3C1F65B896A40AC00077F34EF203");
     }
 
     /* Remove registry keys written by PublishProduct standard action */
@@ -2315,16 +2325,12 @@ static void test_Installer_InstallProduct(void)
 
     RegCloseKey(hkey);
 
-    res = RegDeleteKeyA(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Installer\\Products\\05FA3C1F65B896A40AC00077F34EF203");
-    ok(res == ERROR_FILE_NOT_FOUND, "Expected ERROR_FILE_NOT_FOUND, got %d\n", res);
-
     /* Delete installation files we installed */
     delete_test_files();
 }
 
 static void test_Installer(void)
 {
-    static WCHAR szBackslash[] = { '\\',0 };
     static WCHAR szCreateRecordException[] = { 'C','r','e','a','t','e','R','e','c','o','r','d',',','C','o','u','n','t',0 };
     static WCHAR szIntegerDataException[] = { 'I','n','t','e','g','e','r','D','a','t','a',',','F','i','e','l','d',0 };
     WCHAR szPath[MAX_PATH];
@@ -2388,8 +2394,9 @@ static void test_Installer(void)
     ok(len, "MultiByteToWideChar returned error %d\n", GetLastError());
     if (!len) return;
 
-    lstrcatW(szPath, szBackslash);
-    lstrcatW(szPath, szMsifile);
+    /* lstrcatW does not work on win95 */
+    szPath[len - 1] = '\\';
+    memcpy(&szPath[len], szMsifile, sizeof(szMsifile));
 
     /* Installer::OpenPackage */
     hr = Installer_OpenPackage(szPath, 0, &pSession);

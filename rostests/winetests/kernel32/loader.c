@@ -52,6 +52,8 @@ static IMAGE_NT_HEADERS nt_header =
       IMAGE_FILE_MACHINE_I386, /* Machine */
 #elif defined __x86_64__
       IMAGE_FILE_MACHINE_AMD64, /* Machine */
+#elif defined __powerpc__
+      IMAGE_FILE_MACHINE_POWERPC, /* Machine */
 #else
 # error You must specify the machine type
 #endif
@@ -70,7 +72,9 @@ static IMAGE_NT_HEADERS nt_header =
       0, /* SizeOfUninitializedData */
       0, /* AddressOfEntryPoint */
       0x10, /* BaseOfCode, also serves as e_lfanew in the truncated MZ header */
+#ifndef _WIN64
       0, /* BaseOfData */
+#endif
       0x10000000, /* ImageBase */
       0, /* SectionAlignment */
       0, /* FileAlignment */
@@ -398,7 +402,7 @@ static void test_Loader(void)
                     "%d: VirtualQuery error %d\n", i, GetLastError());
                 if (nt_header.OptionalHeader.SectionAlignment < si.dwPageSize)
                 {
-                    ok(info.BaseAddress == (char *)hlib, "%d: got %p != expected %p\n", i, info.BaseAddress, (char *)hlib);
+                    ok(info.BaseAddress == hlib, "%d: got %p != expected %p\n", i, info.BaseAddress, hlib);
                     ok(info.RegionSize == ALIGN_SIZE(nt_header.OptionalHeader.SizeOfImage, si.dwPageSize), "%d: got %lx != expected %x\n",
                        i, info.RegionSize, ALIGN_SIZE(nt_header.OptionalHeader.SizeOfImage, si.dwPageSize));
                     ok(info.Protect == PAGE_EXECUTE_WRITECOPY, "%d: %x != PAGE_EXECUTE_WRITECOPY\n", i, info.Protect);

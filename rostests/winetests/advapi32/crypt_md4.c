@@ -156,23 +156,23 @@ START_TEST(crypt_md4)
     if (pMD4Init && pMD4Update && pMD4Final)
         test_md4_ctx();
     else
-        skip("MD4Init and/or MD4Update and/or MD4Final are not available\n");
+        win_skip("MD4Init and/or MD4Update and/or MD4Final are not available\n");
 
     pSystemFunction007 = (fnSystemFunction007)GetProcAddress( module, "SystemFunction007" );
     if (pSystemFunction007)
         test_SystemFunction007();
     else
-        skip("SystemFunction007 is not available\n");
+        win_skip("SystemFunction007 is not available\n");
 
     pSystemFunction010 = (md4hashfunc)GetProcAddress( module, "SystemFunction010" );
     if (pSystemFunction010)
         test_md4hashfunc(pSystemFunction010);
     else
-        skip("SystemFunction010 is not available\n");
+        win_skip("SystemFunction010 is not available\n");
 
     pSystemFunction011 = (md4hashfunc)GetProcAddress( module, "SystemFunction011" );
     if (pSystemFunction011)
         test_md4hashfunc(pSystemFunction011);
     else
-        skip("SystemFunction011 is not available\n");
+        win_skip("SystemFunction011 is not available\n");
 }

@@ -47,9 +47,9 @@ static DWORD (WINAPI *pRegDeleteTreeA)(HKEY,LPCSTR);
 static char *get_temp_buffer( int size )
 {
     static char *list[32];
-    static long pos;
+    static UINT pos;
     char *ret;
-    int idx;
+    UINT idx;
 
     idx = ++pos % (sizeof(list)/sizeof(list[0]));
     if ((ret = realloc( list[idx], size ))) list[idx] = ret;

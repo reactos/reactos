@@ -205,7 +205,7 @@ static void test_overlapped_buffers(void)
     int ret;
 
     SetLastError(0xdeadbeef);
-    memcpy((WCHAR *)(buf + 1), strW, sizeof(strW));
+    memcpy(buf + 1, strW, sizeof(strW));
     ret = WideCharToMultiByte(CP_ACP, 0, (WCHAR *)(buf + 1), -1, buf, sizeof(buf), NULL, NULL);
     ok(ret == sizeof(strA), "unexpected ret %d\n", ret);
     ok(!memcmp(buf, strA, sizeof(strA)), "conversion failed: %s\n", buf);

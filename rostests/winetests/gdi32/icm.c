@@ -39,7 +39,7 @@ static void test_GetICMProfileA( HDC dc )
     ret = GetICMProfileA( NULL, NULL, NULL );
     if ( !ret && ( GetLastError() == ERROR_CALL_NOT_IMPLEMENTED ) )
     {
-        skip( "GetICMProfileA is not implemented\n" );
+        win_skip( "GetICMProfileA is not implemented\n" );
         return;
     }
     ok( !ret, "GetICMProfileA succeeded\n" );
@@ -91,7 +91,7 @@ static void test_GetICMProfileW( HDC dc )
     ret = GetICMProfileW( NULL, NULL, NULL );
     if ( !ret && ( GetLastError() == ERROR_CALL_NOT_IMPLEMENTED ) )
     {
-        skip( "GetICMProfileW is not implemented\n" );
+        win_skip( "GetICMProfileW is not implemented\n" );
         return;
     }
     ok( !ret, "GetICMProfileW succeeded\n" );
@@ -136,7 +136,7 @@ static void test_SetICMMode( HDC dc )
     impl = GetICMProfileA( NULL, NULL, NULL );
     if ( !impl && ( GetLastError() == ERROR_CALL_NOT_IMPLEMENTED ) )
     {
-        skip( "On NT4 where SetICMMode is not implemented but this is not advertised\n" );
+        win_skip( "On NT4 where SetICMMode is not implemented but this is not advertised\n" );
         return;
     }
 
@@ -165,7 +165,7 @@ static void test_SetICMMode( HDC dc )
     dc = CreateDCW( displayW, NULL, NULL, NULL );
     if ( !dc && ( GetLastError() == ERROR_CALL_NOT_IMPLEMENTED ) )
     {
-        skip( "CreateDCW is not implemented\n" );
+        win_skip( "CreateDCW is not implemented\n" );
         return;
     }
     ok( dc != NULL, "CreateDCW failed (%d)\n", GetLastError() );

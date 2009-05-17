@@ -47,6 +47,40 @@ static void get_file_name(char* buf)
     GetTempFileNameA(path, "wt", 0, buf);
 }
 
+typedef struct tag_reg_save_value
+{
+    const char *name;
+    DWORD type;
+    BYTE *data;
+    DWORD size;
+} reg_save_value;
+
+static DWORD save_value(HKEY hkey, const char *value, reg_save_value *saved)
+{
+    DWORD ret;
+    saved->name=value;
+    saved->data=0;
+    saved->size=0;
+    ret=RegQueryValueExA(hkey, value, NULL, &saved->type, NULL, &saved->size);
+    if (ret == ERROR_SUCCESS)
+    {
+        saved->data=HeapAlloc(GetProcessHeap(), 0, saved->size);
+        RegQueryValueExA(hkey, value, NULL, &saved->type, saved->data, &saved->size);
+    }
+    return ret;
+}
+
+static void restore_value(HKEY hkey, reg_save_value *saved)
+{
+    if (saved->data)
+    {
+        RegSetValueExA(hkey, saved->name, 0, saved->type, saved->data, saved->size);
+        HeapFree(GetProcessHeap(), 0, saved->data);
+    }
+    else
+        RegDeleteValueA(hkey, saved->name);
+}
+
 static void get_events(const char* name, HANDLE *start_event, HANDLE *done_event)
 {
     const char* basename;
@@ -133,7 +167,7 @@ static void doDebugger(int argc, char** argv)
 {
     const char* logfile;
     debugger_blackbox_t blackbox;
-    HANDLE start_event, done_event, debug_event;
+    HANDLE start_event = 0, done_event = 0, debug_event;
 
     blackbox.argc=argc;
     logfile=(argc >= 4 ? argv[3] : NULL);
@@ -149,7 +183,7 @@ static void doDebugger(int argc, char** argv)
     else
         blackbox.attach_rc=TRUE;
 
-    debug_event=(argc >= 6 ? (HANDLE)atol(argv[5]) : NULL);
+    debug_event=(argc >= 6 ? (HANDLE)(INT_PTR)atol(argv[5]) : NULL);
     blackbox.debug_err=0;
     if (debug_event && strstr(myARGV[2], "event"))
     {
@@ -313,14 +347,13 @@ static void crash_and_winedbg(HKEY hkey, const char* argv0)
 static void test_ExitCode(void)
 {
     static const char* AeDebug="Software\\Microsoft\\Windows NT\\CurrentVersion\\AeDebug";
+    static const char* WineDbg="Software\\Wine\\WineDbg";
     char test_exe[MAX_PATH];
     DWORD ret;
     HKEY hkey;
     DWORD disposition;
-    LPBYTE auto_val=NULL;
-    DWORD auto_size, auto_type;
-    LPBYTE debugger_val=NULL;
-    DWORD debugger_size, debugger_type;
+    reg_save_value auto_value;
+    reg_save_value debugger_value;
 
     GetModuleFileNameA(GetModuleHandle(NULL), test_exe, sizeof(test_exe));
     if (GetFileAttributes(test_exe) == INVALID_FILE_ATTRIBUTES)
@@ -334,22 +367,9 @@ static void test_ExitCode(void)
     ret=RegCreateKeyExA(HKEY_LOCAL_MACHINE, AeDebug, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hkey, &disposition);
     if (ret == ERROR_SUCCESS)
     {
-        auto_size=0;
-        ret=RegQueryValueExA(hkey, "auto", NULL, &auto_type, NULL, &auto_size);
-        if (ret == ERROR_SUCCESS)
-        {
-            auto_val=HeapAlloc(GetProcessHeap(), 0, auto_size);
-            RegQueryValueExA(hkey, "auto", NULL, &auto_type, auto_val, &auto_size);
-        }
-
-        debugger_size=0;
-        ret=RegQueryValueExA(hkey, "debugger", NULL, &debugger_type, NULL, &debugger_size);
-        if (ret == ERROR_SUCCESS)
-        {
-            debugger_val=HeapAlloc(GetProcessHeap(), 0, debugger_size);
-            RegQueryValueExA(hkey, "debugger", NULL, &debugger_type, debugger_val, &debugger_size);
-            trace("HKLM\\%s\\debugger is set to '%s'\n", AeDebug, debugger_val);
-        }
+        save_value(hkey, "auto", &auto_value);
+        save_value(hkey, "debugger", &debugger_value);
+        trace("HKLM\\%s\\debugger is set to '%s'\n", AeDebug, debugger_value.data);
     }
     else if (ret == ERROR_ACCESS_DENIED)
     {
@@ -362,11 +382,32 @@ static void test_ExitCode(void)
         return;
     }
 
-    if (debugger_val && debugger_type == REG_SZ &&
-        strstr((char*)debugger_val, "winedbg --auto"))
-        crash_and_winedbg(hkey, test_exe);
+    if (debugger_value.data && debugger_value.type == REG_SZ &&
+        strstr((char*)debugger_value.data, "winedbg --auto"))
+    {
+        HKEY hkeyWinedbg;
+        ret=RegCreateKeyA(HKEY_CURRENT_USER, WineDbg, &hkeyWinedbg);
+        if (ret == ERROR_SUCCESS)
+        {
+            static DWORD zero;
+            reg_save_value crash_dlg_value;
+            save_value(hkeyWinedbg, "ShowCrashDialog", &crash_dlg_value);
+            RegSetValueExA(hkeyWinedbg, "ShowCrashDialog", 0, REG_DWORD, (BYTE *)&zero, sizeof(DWORD));
+            crash_and_winedbg(hkey, test_exe);
+            restore_value(hkeyWinedbg, &crash_dlg_value);
+            RegCloseKey(hkeyWinedbg);
+        }
+        else
+            ok(0, "Couldn't access WineDbg Key - error %u\n", ret);
+    }
 
-    crash_and_debug(hkey, test_exe, "dbg,none");
+    if (winetest_interactive)
+        /* Since the debugging process never sets the debug event, it isn't recognized
+           as a valid debugger and, after the debugger exits, Windows will show a dialog box
+           asking the user what to do */
+        crash_and_debug(hkey, test_exe, "dbg,none");
+    else
+        skip("\"none\" debugger test needs user interaction\n");
     crash_and_debug(hkey, test_exe, "dbg,event,order");
     crash_and_debug(hkey, test_exe, "dbg,attach,event,code2");
     if (pDebugSetProcessKillOnExit)
@@ -381,20 +422,8 @@ static void test_ExitCode(void)
     }
     else
     {
-        if (auto_val)
-        {
-            RegSetValueExA(hkey, "auto", 0, auto_type, auto_val, auto_size);
-            HeapFree(GetProcessHeap(), 0, auto_val);
-        }
-        else
-            RegDeleteValueA(hkey, "auto");
-        if (debugger_val)
-        {
-            RegSetValueExA(hkey, "debugger", 0, debugger_type, debugger_val, debugger_size);
-            HeapFree(GetProcessHeap(), 0, debugger_val);
-        }
-        else
-            RegDeleteValueA(hkey, "debugger");
+        restore_value(hkey, &auto_value);
+        restore_value(hkey, &debugger_value);
         RegCloseKey(hkey);
     }
 }

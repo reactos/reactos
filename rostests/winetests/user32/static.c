@@ -56,6 +56,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
             ok(GetClipRgn(hdc, hrgn) == 1, "Static controls during a WM_CTLCOLORSTATIC must have a clipping region\n");
             DeleteObject(hrgn);
             g_nReceivedColorStatic++;
+            return (LRESULT) GetStockObject(BLACK_BRUSH);
         }
         break;
     }
@@ -81,7 +82,11 @@ static void test_updates(int style, int flags)
     InvalidateRect(hStatic, NULL, FALSE);
     UpdateWindow(hStatic);
 
-
+    if( (style & SS_TYPEMASK) == SS_BITMAP) {
+        HDC hdc = GetDC( hStatic);
+        COLORREF colour = GetPixel( hdc, 10, 10);
+        ok ( colour != 0, "pixel should NOT be painted black!\n");
+    }
     if (style != SS_ETCHEDHORZ && style != SS_ETCHEDVERT)
         exp = 4;
     else
@@ -89,7 +94,7 @@ static void test_updates(int style, int flags)
 
     if (flags & TODO_COUNT)
         todo_wine { expect_eq(g_nReceivedColorStatic, exp, int, "%d"); }
-    else if (style == SS_ICON || style == SS_BITMAP)
+    else if ((style & SS_TYPEMASK) == SS_ICON || (style & SS_TYPEMASK) == SS_BITMAP)
         ok( g_nReceivedColorStatic == exp ||
             broken(g_nReceivedColorStatic == 0), /* win9x */
             "expected %u got %u\n", exp, g_nReceivedColorStatic );
@@ -125,6 +130,7 @@ START_TEST(static)
     test_updates(SS_SIMPLE, 0);
     test_updates(SS_ICON, 0);
     test_updates(SS_BITMAP, 0);
+    test_updates(SS_BITMAP | SS_CENTERIMAGE, 0);
     test_updates(SS_BLACKRECT, TODO_COUNT);
     test_updates(SS_WHITERECT, TODO_COUNT);
     test_updates(SS_ETCHEDHORZ, TODO_COUNT);

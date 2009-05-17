@@ -373,7 +373,7 @@ static void test_dpa(void)
     if(pDPA_EnumCallback)
     {
         nEnum = 0;
-        pDPA_EnumCallback(dpa2, CB_EnumFirstThree, (PVOID)dpa2);
+        pDPA_EnumCallback(dpa2, CB_EnumFirstThree, dpa2);
         rc=CheckDPA(dpa2, 0x777456, &dw2);
         ok(rc, "dw=0x%x\n", dw2);
         ok(nEnum == 3, "nEnum=%d\n", nEnum);

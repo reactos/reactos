@@ -43,6 +43,14 @@ static const char* strw(LPCWSTR x)
     return buffer;
 }
 
+#ifdef __i386__
+#define ARCH "x86"
+#elif defined __x86_64__
+#define ARCH "amd64"
+#else
+#define ARCH "none"
+#endif
+
 static const char manifest1[] =
 "<assembly xmlns=\"urn:schemas-microsoft-com:asm.v1\" manifestVersion=\"1.0\">"
 "<assemblyIdentity version=\"1.0.0.0\"  name=\"Wine.Test\" type=\"win32\"></assemblyIdentity>"
@@ -54,7 +62,7 @@ static const char manifest2[] =
 "</assemblyIdentity>"
 "<dependency>"
 "<dependentAssembly>"
-"<assemblyIdentity type=\"win32\" name=\"testdep\" version=\"6.5.4.3\" processorArchitecture=\"x86\">"
+"<assemblyIdentity type=\"win32\" name=\"testdep\" version=\"6.5.4.3\" processorArchitecture=\"" ARCH "\">"
 "</assemblyIdentity>"
 "</dependentAssembly>"
 "</dependency>"
@@ -76,7 +84,7 @@ static const char manifest4[] =
 "<dependency>"
 "<dependentAssembly>"
 "<assemblyIdentity type=\"win32\" name=\"Microsoft.Windows.Common-Controls\" "
-    "version=\"6.0.1.0\" processorArchitecture=\"x86\" publicKeyToken=\"6595b64144ccf1df\">"
+    "version=\"6.0.1.0\" processorArchitecture=\"" ARCH "\" publicKeyToken=\"6595b64144ccf1df\">"
 "</assemblyIdentity>"
 "</dependentAssembly>"
 "</dependency>"
@@ -84,19 +92,19 @@ static const char manifest4[] =
 
 static const char testdep_manifest1[] =
 "<assembly xmlns=\"urn:schemas-microsoft-com:asm.v1\" manifestVersion=\"1.0\">"
-"<assemblyIdentity type=\"win32\" name=\"testdep\" version=\"6.5.4.3\" processorArchitecture=\"x86\"/>"
+"<assemblyIdentity type=\"win32\" name=\"testdep\" version=\"6.5.4.3\" processorArchitecture=\"" ARCH "\"/>"
 "</assembly>";
 
 static const char testdep_manifest2[] =
 "<assembly xmlns=\"urn:schemas-microsoft-com:asm.v1\" manifestVersion=\"1.0\">"
-"<assemblyIdentity type=\"win32\" name=\"testdep\" version=\"6.5.4.3\" processorArchitecture=\"x86\" />"
+"<assemblyIdentity type=\"win32\" name=\"testdep\" version=\"6.5.4.3\" processorArchitecture=\"" ARCH "\" />"
 "<file name=\"testlib.dll\"></file>"
 "<file name=\"testlib2.dll\" hash=\"63c978c2b53d6cf72b42fb7308f9af12ab19ec53\" hashalg=\"SHA1\" />"
 "</assembly>";
 
 static const char testdep_manifest3[] =
 "<assembly xmlns=\"urn:schemas-microsoft-com:asm.v1\" manifestVersion=\"1.0\"> "
-"<assemblyIdentity type=\"win32\" name=\"testdep\" version=\"6.5.4.3\" processorArchitecture=\"x86\"/>"
+"<assemblyIdentity type=\"win32\" name=\"testdep\" version=\"6.5.4.3\" processorArchitecture=\"" ARCH "\"/>"
 "<file name=\"testlib.dll\"/>"
 "<file name=\"testlib2.dll\" hash=\"63c978c2b53d6cf72b42fb7308f9af12ab19ec53\" hashalg=\"SHA1\">"
 "<windowClass>wndClass</windowClass>"
@@ -138,7 +146,7 @@ static const char wrong_manifest6[] =
 
 static const char wrong_manifest7[] =
 "<assembly xmlns=\"urn:schemas-microsoft-com:asm.v1\" manifestVersion=\"1.0\">"
-"<assemblyIdentity type=\"win32\" name=\"testdep\" version=\"6.5.4.3\" processorArchitecture=\"x86\" />"
+"<assemblyIdentity type=\"win32\" name=\"testdep\" version=\"6.5.4.3\" processorArchitecture=\"" ARCH "\" />"
 "<file name=\"testlib.dll\" hash=\"63c978c2b53d6cf72b42fb7308f9af12ab19ec5\" hashalg=\"SHA1\" />"
 "</assembly>";
 
@@ -150,7 +158,7 @@ static const char wrong_manifest8[] =
 
 static const char wrong_depmanifest1[] =
 "<assembly xmlns=\"urn:schemas-microsoft-com:asm.v1\" manifestVersion=\"1.0\">"
-"<assemblyIdentity type=\"win32\" name=\"testdep\" version=\"6.5.4.4\" processorArchitecture=\"x86\" />"
+"<assemblyIdentity type=\"win32\" name=\"testdep\" version=\"6.5.4.4\" processorArchitecture=\"" ARCH "\" />"
 "</assembly>";
 
 static const WCHAR testlib_dll[] =
@@ -386,21 +394,21 @@ static const info_in_assembly manifest4_info = {
 
 static const info_in_assembly depmanifest1_info = {
     0x10, depmanifest_path,
-    "testdep,processorArchitecture=\"x86\","
+    "testdep,processorArchitecture=\"" ARCH "\","
     "type=\"win32\",version=\"6.5.4.3\"",
     TRUE
 };
 
 static const info_in_assembly depmanifest2_info = {
     0x10, depmanifest_path,
-    "testdep,processorArchitecture=\"x86\","
+    "testdep,processorArchitecture=\"" ARCH "\","
     "type=\"win32\",version=\"6.5.4.3\"",
     TRUE
 };
 
 static const info_in_assembly depmanifest3_info = {
     0x10, depmanifest_path,
-    "testdep,processorArchitecture=\"x86\",type=\"win32\",version=\"6.5.4.3\"",
+    "testdep,processorArchitecture=\"" ARCH "\",type=\"win32\",version=\"6.5.4.3\"",
     TRUE
 };
 
@@ -1202,7 +1210,7 @@ START_TEST(actctx)
 
     if (!init_funcs())
     {
-        skip("Needed functions are not available\n");
+        win_skip("Needed functions are not available\n");
         return;
     }
     init_paths();

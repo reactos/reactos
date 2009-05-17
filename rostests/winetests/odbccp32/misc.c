@@ -112,14 +112,24 @@ static void test_SQLInstallDriverManager(void)
     /* Length OK */
     bool_ret = SQLInstallDriverManager(target_path, MAX_PATH, NULL);
     sql_ret = SQLInstallerErrorW(1, &error_code, NULL, 0, NULL);
-    ok(bool_ret, "SQLInstallDriverManager unexpectedly failed\n");
-    ok(sql_ret == SQL_NO_DATA, "Expected SQL_NO_DATA, got %d\n", sql_ret);
+    ok(bool_ret, "SQLInstallDriverManager unexpectedly failed: %d\n",
+        error_code);
+    if (bool_ret)
+        ok(sql_ret == SQL_NO_DATA, "Expected SQL_NO_DATA, got %d\n", sql_ret);
+    else
+        ok(sql_ret == SQL_SUCCESS_WITH_INFO,
+            "Expected SQL_SUCCESS_WITH_INFO, got %d\n", sql_ret);
 
     path_out = 0xcafe;
     bool_ret = SQLInstallDriverManager(target_path, MAX_PATH, &path_out);
     sql_ret = SQLInstallerErrorW(1, &error_code, NULL, 0, NULL);
-    ok(bool_ret, "SQLInstallDriverManager unexpectedly failed\n");
-    ok(sql_ret == SQL_NO_DATA, "Expected SQL_NO_DATA, got %d\n", sql_ret);
+    ok(bool_ret, "SQLInstallDriverManager unexpectedly failed: %d\n",
+        error_code);
+    if (bool_ret)
+        ok(sql_ret == SQL_NO_DATA, "Expected SQL_NO_DATA, got %d\n", sql_ret);
+    else
+        ok(sql_ret == SQL_SUCCESS_WITH_INFO,
+            "Expected SQL_SUCCESS_WITH_INFO, got %d\n", sql_ret);
     /* path_out should in practice be less than 0xcafe */
     ok(path_out != 0xcafe, "Expected path_out to show the correct amount of bytes\n");
 }

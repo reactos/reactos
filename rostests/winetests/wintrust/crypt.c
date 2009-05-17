@@ -206,9 +206,7 @@ static void test_context(void)
     /* Proper release */
     SetLastError(0xdeadbeef);
     ret = pCryptCATAdminReleaseContext(hca, 0);
-    ok(ret, "Expected success\n");
-    ok(GetLastError() == 0xdeadbeef,
-       "Expected no change in last error, got %d\n", GetLastError());
+    ok(ret, "Expected success, got FALSE with %d\n", GetLastError());
 
     /* Try to release a second time */
     SetLastError(0xdeadbeef);
@@ -854,7 +852,9 @@ static void test_cdf_parsing(void)
     catcdf = pCryptCATCDFOpen(cdffileW, cdf_callback);
     ok(catcdf == NULL, "CryptCATCDFOpen succeeded\n");
     todo_wine
-    ok(GetLastError() == ERROR_SHARING_VIOLATION, "Expected ERROR_SHARING_VIOLATION, got %d\n", GetLastError());
+    ok(GetLastError() == ERROR_SHARING_VIOLATION ||
+        broken(GetLastError() == ERROR_SUCCESS),    /* win9x */
+        "Expected ERROR_SHARING_VIOLATION, got %d\n", GetLastError());
     DeleteFileA(cdffileA);
 
     /* Header and member only */
@@ -868,7 +868,9 @@ static void test_cdf_parsing(void)
     catcdf = pCryptCATCDFOpen(cdffileW, cdf_callback);
     ok(catcdf == NULL, "CryptCATCDFOpen succeeded\n");
     todo_wine
-    ok(GetLastError() == ERROR_SHARING_VIOLATION, "Expected ERROR_SHARING_VIOLATION, got %d\n", GetLastError());
+    ok(GetLastError() == ERROR_SHARING_VIOLATION ||
+        broken(GetLastError() == ERROR_SUCCESS),    /* win9x */
+        "Expected ERROR_SHARING_VIOLATION, got %d\n", GetLastError());
     DeleteFileA(cdffileA);
     ok(!DeleteFileA(catfileA), "Didn't expect a catalog file to be created\n");
 
@@ -882,7 +884,9 @@ static void test_cdf_parsing(void)
     catcdf = pCryptCATCDFOpen(cdffileW, cdf_callback);
     ok(catcdf == NULL, "CryptCATCDFOpen succeeded\n");
     todo_wine
-    ok(GetLastError() == ERROR_SHARING_VIOLATION, "Expected ERROR_SHARING_VIOLATION, got %d\n", GetLastError());
+    ok(GetLastError() == ERROR_SHARING_VIOLATION ||
+        broken(GetLastError() == ERROR_SUCCESS),    /* win9x */
+        "Expected ERROR_SHARING_VIOLATION, got %d\n", GetLastError());
     DeleteFileA(cdffileA);
     ok(!DeleteFileA(catfileA), "Didn't expect a catalog file to be created\n");
 

@@ -23,13 +23,14 @@
 #include "wine/test.h"
 
 /* invalid in all versions */
-#define PROP_INV 255
+#define PROP_INV 0x7f
 /* valid in v0 and above (NT4+) */
 #define PROP_V0  0
 /* valid in v1 and above (Win2k+) */
 #define PROP_V1  1
 /* valid in v1a and above (WinXP+) */
 #define PROP_V1A 2
+#define PROP_TODO 0x80
 
 struct valid_mapping
 {
@@ -41,28 +42,28 @@ struct valid_mapping
 {
     { PROP_V0 , PROP_INV, PROP_INV, PROP_INV }, /* VT_EMPTY */
     { PROP_V0 , PROP_INV, PROP_INV, PROP_INV }, /* VT_NULL */
-    { PROP_V0 , PROP_V1 , PROP_V0 , PROP_V1  }, /* VT_I2 */
-    { PROP_V0 , PROP_V1 , PROP_V0 , PROP_V1  }, /* VT_I4 */
-    { PROP_V0 , PROP_V1 , PROP_V0 , PROP_V1  }, /* VT_R4 */
-    { PROP_V0 , PROP_V1 , PROP_V0 , PROP_V1  }, /* VT_R8 */
-    { PROP_V0 , PROP_V1 , PROP_V0 , PROP_V1  }, /* VT_CY */
-    { PROP_V0 , PROP_V1 , PROP_V0 , PROP_V1  }, /* VT_DATE */
-    { PROP_V0 , PROP_V1 , PROP_V0 , PROP_V1  }, /* VT_BSTR */
-    { PROP_V1 , PROP_V1 , PROP_INV, PROP_V1  }, /* VT_DISPATCH */
-    { PROP_V0 , PROP_V1 , PROP_V0 , PROP_V1  }, /* VT_ERROR */
-    { PROP_V0 , PROP_V1 , PROP_V0 , PROP_V1  }, /* VT_BOOL */
-    { PROP_V1 , PROP_V1 , PROP_V0 , PROP_V1  }, /* VT_VARIANT */
-    { PROP_V1 , PROP_V1 , PROP_INV, PROP_V1  }, /* VT_UNKNOWN */
-    { PROP_V1 , PROP_V1 , PROP_INV, PROP_V1  }, /* VT_DECIMAL */
+    { PROP_V0 , PROP_V1 | PROP_TODO , PROP_V0 , PROP_V1 | PROP_TODO  }, /* VT_I2 */
+    { PROP_V0 , PROP_V1 | PROP_TODO , PROP_V0 , PROP_V1 | PROP_TODO  }, /* VT_I4 */
+    { PROP_V0 , PROP_V1 | PROP_TODO , PROP_V0 , PROP_V1 | PROP_TODO  }, /* VT_R4 */
+    { PROP_V0 , PROP_V1 | PROP_TODO , PROP_V0 , PROP_V1 | PROP_TODO  }, /* VT_R8 */
+    { PROP_V0 , PROP_V1 | PROP_TODO , PROP_V0 , PROP_V1 | PROP_TODO  }, /* VT_CY */
+    { PROP_V0 , PROP_V1 | PROP_TODO , PROP_V0 , PROP_V1 | PROP_TODO  }, /* VT_DATE */
+    { PROP_V0 , PROP_V1 | PROP_TODO , PROP_V0 , PROP_V1 | PROP_TODO  }, /* VT_BSTR */
+    { PROP_V1 | PROP_TODO , PROP_V1 | PROP_TODO , PROP_INV, PROP_V1 | PROP_TODO  }, /* VT_DISPATCH */
+    { PROP_V0 , PROP_V1 | PROP_TODO , PROP_V0 , PROP_V1 | PROP_TODO  }, /* VT_ERROR */
+    { PROP_V0 , PROP_V1 | PROP_TODO , PROP_V0 , PROP_V1 | PROP_TODO  }, /* VT_BOOL */
+    { PROP_V1 | PROP_TODO , PROP_V1 | PROP_TODO , PROP_V0 , PROP_V1 | PROP_TODO  }, /* VT_VARIANT */
+    { PROP_V1 | PROP_TODO , PROP_V1 | PROP_TODO , PROP_INV, PROP_V1 | PROP_TODO  }, /* VT_UNKNOWN */
+    { PROP_V1 , PROP_V1 | PROP_TODO , PROP_INV, PROP_V1 | PROP_TODO  }, /* VT_DECIMAL */
     { PROP_INV, PROP_INV, PROP_INV, PROP_INV }, /* 15 */
-    { PROP_V1 , PROP_V1 , PROP_V1 , PROP_V1  }, /* VT_I1 */
-    { PROP_V0 , PROP_V1 , PROP_V0 , PROP_V1  }, /* VT_UI1 */
-    { PROP_V0 , PROP_V1 , PROP_V0 , PROP_V1  }, /* VT_UI2 */
-    { PROP_V0 , PROP_V1 , PROP_V0 , PROP_V1  }, /* VT_UI4 */
-    { PROP_V0 , PROP_V1A, PROP_V0 , PROP_V1A }, /* VT_I8 */
-    { PROP_V0 , PROP_V1A, PROP_V0 , PROP_V1A }, /* VT_UI8 */
-    { PROP_V1 , PROP_V1 , PROP_INV, PROP_V1  }, /* VT_INT */
-    { PROP_V1 , PROP_V1 , PROP_INV, PROP_V1  }, /* VT_UINT */
+    { PROP_V1 | PROP_TODO , PROP_V1 | PROP_TODO , PROP_V1 | PROP_TODO , PROP_V1 | PROP_TODO  }, /* VT_I1 */
+    { PROP_V0 , PROP_V1 | PROP_TODO , PROP_V0 , PROP_V1 | PROP_TODO  }, /* VT_UI1 */
+    { PROP_V0 , PROP_V1 | PROP_TODO , PROP_V0 , PROP_V1 | PROP_TODO  }, /* VT_UI2 */
+    { PROP_V0 , PROP_V1 | PROP_TODO , PROP_V0 , PROP_V1 | PROP_TODO  }, /* VT_UI4 */
+    { PROP_V0 , PROP_V1A | PROP_TODO, PROP_V0 , PROP_V1A | PROP_TODO }, /* VT_I8 */
+    { PROP_V0 , PROP_V1A | PROP_TODO, PROP_V0 , PROP_V1A | PROP_TODO }, /* VT_UI8 */
+    { PROP_V1 | PROP_TODO , PROP_V1 | PROP_TODO , PROP_INV, PROP_V1 | PROP_TODO  }, /* VT_INT */
+    { PROP_V1 | PROP_TODO , PROP_V1 | PROP_TODO , PROP_INV, PROP_V1 | PROP_TODO  }, /* VT_UINT */
     { PROP_INV, PROP_INV, PROP_INV, PROP_INV }, /* VT_VOID */
     { PROP_INV, PROP_INV, PROP_INV, PROP_INV }, /* VT_HRESULT */
     { PROP_INV, PROP_INV, PROP_INV, PROP_INV }, /* VT_PTR */
@@ -75,7 +76,7 @@ struct valid_mapping
     { PROP_INV, PROP_INV, PROP_INV, PROP_INV }, /* 33 */
     { PROP_INV, PROP_INV, PROP_INV, PROP_INV }, /* 34 */
     { PROP_INV, PROP_INV, PROP_INV, PROP_INV }, /* 35 */
-    { PROP_V1 , PROP_V1 , PROP_INV, PROP_V1  }, /* VT_RECORD */
+    { PROP_V1 | PROP_TODO , PROP_V1 | PROP_TODO , PROP_INV, PROP_V1 | PROP_TODO  }, /* VT_RECORD */
     { PROP_INV, PROP_INV, PROP_INV, PROP_INV }, /* VT_INT_PTR */
     { PROP_INV, PROP_INV, PROP_INV, PROP_INV }, /* VT_UINT_PTR */
     { PROP_INV, PROP_INV, PROP_INV, PROP_INV }, /* 39 */
@@ -126,74 +127,83 @@ static const char* wine_vtypes[VT_CLSID+1] =
   "VT_STREAMED_OBJECT","VT_STORED_OBJECT","VT_BLOB_OBJECT","VT_CF","VT_CLSID"
 };
 
+
+static void expect(HRESULT hr, VARTYPE vt)
+{
+    int idx = vt & VT_TYPEMASK;
+    BYTE flags;
+    const char *modifier;
+
+    if(vt & VT_BYREF)
+    {
+        flags = valid_types[idx].byref;
+        modifier = "byref";
+    }
+    else if(vt & VT_ARRAY)
+    {
+        flags = valid_types[idx].with_array;
+        modifier = "array";
+    }
+    else if(vt & VT_VECTOR)
+    {
+        flags = valid_types[idx].with_vector;
+        modifier = "vector";
+    }
+    else
+    {
+        flags = valid_types[idx].simple;
+        modifier = "simple";
+    }
+
+    if(flags == PROP_INV)
+        ok(hr == STG_E_INVALIDPARAMETER, "%s (%s): got %08x\n", wine_vtypes[idx], modifier, hr);
+    else if(flags == PROP_V0)
+        ok(hr == S_OK, "%s (%s): got %08x\n", wine_vtypes[idx], modifier, hr);
+    else if(flags & PROP_TODO)
+    {
+        todo_wine
+        {
+        if(hr != S_OK)
+            win_skip("%s (%s): unsupported\n", wine_vtypes[idx], modifier);
+        else ok(hr == S_OK, "%s (%s): got %08x\n", wine_vtypes[idx], modifier, hr);
+        }
+    }
+    else
+    {
+        if(hr != S_OK)
+            win_skip("%s (%s): unsupported\n", wine_vtypes[idx], modifier);
+        else ok(hr == S_OK, "%s (%s): got %08x\n", wine_vtypes[idx], modifier, hr);
+    }
+}
+
 static void test_validtypes(void)
 {
     PROPVARIANT propvar;
     HRESULT hr;
     unsigned int i;
-    BYTE version;
 
     memset(&propvar, 0, sizeof(propvar));
 
-    /* detect version */
-    propvar.vt = VT_I2 | VT_ARRAY;
-    hr = PropVariantClear(&propvar);
-    if (hr == S_OK)
-    {
-        propvar.vt = VT_I8 | VT_ARRAY;
-        hr = PropVariantClear(&propvar);
-        if (hr == S_OK)
-        {
-            version = PROP_V1A;
-            trace("detected prop variant v1a\n");
-        }
-        else
-        {
-            version = PROP_V1;
-            trace("detected prop variant v1\n");
-        }
-    }
-    else
-    {
-        version = PROP_V0;
-        trace("detected prop variant v0\n");
-    }
-
     for (i = 0; i < sizeof(valid_types)/sizeof(valid_types[0]); i++)
     {
-        BOOL expected_result;
+        VARTYPE vt;
 
-        propvar.vt = i;
+        vt = propvar.vt = i;
         hr = PropVariantClear(&propvar);
-        expected_result = (valid_types[i].simple <= version ? TRUE : FALSE);
-        ok(expected_result == !(hr == STG_E_INVALIDPARAMETER),
-            "PropVariantClear(%s) should have returned 0x%08x, but returned 0x%08x\n",
-            wine_vtypes[i],
-            expected_result ? S_OK : STG_E_INVALIDPARAMETER, hr);
+        expect(hr, vt);
 
-        propvar.vt = i | VT_ARRAY;
+        vt = propvar.vt = i | VT_ARRAY;
         hr = PropVariantClear(&propvar);
-        expected_result = (valid_types[i].with_array <= version ? TRUE : FALSE);
-        ok(expected_result == !(hr == STG_E_INVALIDPARAMETER),
-            "PropVariantClear(%s|VT_ARRAY) should have returned 0x%08x, but returned 0x%08x\n",
-            wine_vtypes[i],
-            expected_result ? S_OK : STG_E_INVALIDPARAMETER, hr);
+        expect(hr, vt);
 
-        propvar.vt = i | VT_VECTOR;
+        vt = propvar.vt = i | VT_VECTOR;
         hr = PropVariantClear(&propvar);
-        expected_result = (valid_types[i].with_vector <= version ? TRUE : FALSE);
-        ok(expected_result == !(hr == STG_E_INVALIDPARAMETER),
-            "PropVariantClear(%s|VT_VECTOR) should have returned 0x%08x, but returned 0x%08x\n",
-            wine_vtypes[i],
-            expected_result ? S_OK : STG_E_INVALIDPARAMETER, hr);
+        expect(hr, vt);
 
-        propvar.vt = i | VT_BYREF;
+        vt = propvar.vt = i | VT_BYREF;
         hr = PropVariantClear(&propvar);
-        expected_result = (valid_types[i].byref <= version ? TRUE : FALSE);
-        ok(expected_result == !(hr == STG_E_INVALIDPARAMETER),
-            "PropVariantClear(%s|VT_BYREF) should have returned 0x%08x, but returned 0x%08x\n",
-            wine_vtypes[i],
-            expected_result ? S_OK : STG_E_INVALIDPARAMETER, hr);
+        expect(hr, vt);
+
     }
 }
 

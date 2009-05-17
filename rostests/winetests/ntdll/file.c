@@ -108,7 +108,7 @@ static long get_pending_msgs(HANDLE h)
     NTSTATUS res;
     ULONG a, req;
 
-    res = pNtQueryIoCompletion( h, IoCompletionBasicInformation, (PVOID)&a, sizeof(a), &req );
+    res = pNtQueryIoCompletion( h, IoCompletionBasicInformation, &a, sizeof(a), &req );
     ok( res == STATUS_SUCCESS, "NtQueryIoCompletion failed: %x\n", res );
     if (res != STATUS_SUCCESS) return -1;
     ok( req == sizeof(a), "Unexpected response size: %x\n", req );

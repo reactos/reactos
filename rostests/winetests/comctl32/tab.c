@@ -310,7 +310,7 @@ create_tabcontrol (DWORD style, DWORD mask)
 
 static LRESULT WINAPI parentWindowProcess(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    static long defwndproc_counter = 0;
+    static LONG defwndproc_counter = 0;
     LRESULT ret;
     struct message msg;
 
@@ -378,7 +378,7 @@ struct subclass_info
 static LRESULT WINAPI tabSubclassProcess(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     struct subclass_info *info = (struct subclass_info *)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
-    static long defwndproc_counter = 0;
+    static LONG defwndproc_counter = 0;
     LRESULT ret;
     struct message msg;
 
@@ -492,7 +492,7 @@ static HWND create_tooltip (HWND hTab, char toolTipText[])
     ti.rect = rect;
 
     /* Add toolinfo structure to the tooltip control */
-    SendMessage(hwndTT, TTM_ADDTOOL, 0, (LPARAM) (LPTOOLINFO) &ti);
+    SendMessage(hwndTT, TTM_ADDTOOL, 0, (LPARAM) &ti);
 
     return hwndTT;
 }
@@ -727,6 +727,7 @@ static void test_getters_setters(HWND parent_wnd, INT nTabs)
     {
         INT selectionIndex;
         INT focusIndex;
+        TCITEM tcItem;
 
         flush_sequences(sequences, NUM_MSG_SEQUENCES);
 
@@ -756,6 +757,15 @@ static void test_getters_setters(HWND parent_wnd, INT nTabs)
 
         ok_sequence(sequences, TAB_SEQ_INDEX, getset_cur_sel_seq, "Getset curSel test sequence", FALSE);
         ok_sequence(sequences, PARENT_SEQ_INDEX, empty_sequence, "Getset curSel test parent sequence", FALSE);
+
+        /* selected item should have TCIS_BUTTONPRESSED state
+           It doesn't depend on button state */
+        memset(&tcItem, 0, sizeof(TCITEM));
+        tcItem.mask = TCIF_STATE;
+        tcItem.dwStateMask = TCIS_BUTTONPRESSED;
+        selectionIndex = SendMessage(hTab, TCM_GETCURSEL, 0, 0);
+        SendMessage(hTab, TCM_GETITEM, selectionIndex, (LPARAM) &tcItem);
+        ok (tcItem.dwState & TCIS_BUTTONPRESSED, "Selected item should have TCIS_BUTTONPRESSED\n");
     }
 
     /* Testing ExtendedStyle */
@@ -768,12 +778,10 @@ static void test_getters_setters(HWND parent_wnd, INT nTabs)
         /* Testing Flat Separators */
         extendedStyle = SendMessage(hTab, TCM_GETEXTENDEDSTYLE, 0, 0);
         prevExtendedStyle = SendMessage(hTab, TCM_SETEXTENDEDSTYLE, 0, TCS_EX_FLATSEPARATORS);
-            expect(extendedStyle, prevExtendedStyle);
+        expect(extendedStyle, prevExtendedStyle);
 
         extendedStyle = SendMessage(hTab, TCM_GETEXTENDEDSTYLE, 0, 0);
-        todo_wine{
-            expect(TCS_EX_FLATSEPARATORS, extendedStyle);
-        }
+        expect(TCS_EX_FLATSEPARATORS, extendedStyle);
 
         /* Testing Register Drop */
         prevExtendedStyle = SendMessage(hTab, TCM_SETEXTENDEDSTYLE, 0, TCS_EX_REGISTERDROP);
@@ -833,6 +841,29 @@ static void test_getters_setters(HWND parent_wnd, INT nTabs)
 
         ok_sequence(sequences, TAB_SEQ_INDEX, getset_item_seq, "Getset item test sequence", FALSE);
         ok_sequence(sequences, PARENT_SEQ_INDEX, empty_sequence, "Getset item test parent sequence", FALSE);
+
+        /* TCIS_BUTTONPRESSED doesn't depend on tab style */
+        memset(&tcItem, 0, sizeof(tcItem));
+        tcItem.mask = TCIF_STATE;
+        tcItem.dwStateMask = TCIS_BUTTONPRESSED;
+        tcItem.dwState = TCIS_BUTTONPRESSED;
+        ok ( SendMessage(hTab, TCM_SETITEM, 0, (LPARAM) &tcItem), "Setting new item failed.\n");
+        tcItem.dwState = 0;
+        ok ( SendMessage(hTab, TCM_GETITEM, 0, (LPARAM) &tcItem), "Getting item failed.\n");
+        ok (tcItem.dwState == TCIS_BUTTONPRESSED, "TCIS_BUTTONPRESSED should be set.\n");
+        /* next highlight item, test that dwStateMask actually masks */
+        tcItem.mask = TCIF_STATE;
+        tcItem.dwStateMask = TCIS_HIGHLIGHTED;
+        tcItem.dwState = TCIS_HIGHLIGHTED;
+        ok ( SendMessage(hTab, TCM_SETITEM, 0, (LPARAM) &tcItem), "Setting new item failed.\n");
+        tcItem.dwState = 0;
+        ok ( SendMessage(hTab, TCM_GETITEM, 0, (LPARAM) &tcItem), "Getting item failed.\n");
+        ok (tcItem.dwState == TCIS_HIGHLIGHTED, "TCIS_HIGHLIGHTED should be set.\n");
+        tcItem.mask = TCIF_STATE;
+        tcItem.dwStateMask = TCIS_BUTTONPRESSED;
+        tcItem.dwState = 0;
+        ok ( SendMessage(hTab, TCM_GETITEM, 0, (LPARAM) &tcItem), "Getting item failed.\n");
+        ok (tcItem.dwState == TCIS_BUTTONPRESSED, "TCIS_BUTTONPRESSED should be set.\n");
     }
 
     /* Testing GetSet ToolTip */
@@ -984,6 +1015,69 @@ static void test_delete_focus(HWND parent_wnd)
     DestroyWindow(hTab);
 }
 
+static void test_removeimage(HWND parent_wnd)
+{
+    static const BYTE bits[32];
+    HWND hwTab;
+    INT i;
+    TCITEM item;
+    HICON hicon;
+    HIMAGELIST himl = ImageList_Create(16, 16, ILC_COLOR, 3, 4);
+
+    hicon = CreateIcon(NULL, 16, 16, 1, 1, bits, bits);
+    ImageList_AddIcon(himl, hicon);
+    ImageList_AddIcon(himl, hicon);
+    ImageList_AddIcon(himl, hicon);
+
+    hwTab = create_tabcontrol(TCS_FIXEDWIDTH, TCIF_TEXT|TCIF_IMAGE);
+    SendMessage(hwTab, TCM_SETIMAGELIST, 0, (LPARAM)himl);
+
+    memset(&item, 0, sizeof(TCITEM));
+    item.mask = TCIF_IMAGE;
+
+    for(i = 0; i < 3; i++) {
+        SendMessage(hwTab, TCM_GETITEM, i, (LPARAM)&item);
+        expect(i, item.iImage);
+    }
+
+    /* remove image middle image */
+    SendMessage(hwTab, TCM_REMOVEIMAGE, 1, 0);
+    expect(2, ImageList_GetImageCount(himl));
+    item.iImage = -1;
+    SendMessage(hwTab, TCM_GETITEM, 0, (LPARAM)&item);
+    expect(0, item.iImage);
+    item.iImage = 0;
+    SendMessage(hwTab, TCM_GETITEM, 1, (LPARAM)&item);
+    expect(-1, item.iImage);
+    item.iImage = 0;
+    SendMessage(hwTab, TCM_GETITEM, 2, (LPARAM)&item);
+    expect(1, item.iImage);
+    /* remove first image */
+    SendMessage(hwTab, TCM_REMOVEIMAGE, 0, 0);
+    expect(1, ImageList_GetImageCount(himl));
+    item.iImage = 0;
+    SendMessage(hwTab, TCM_GETITEM, 0, (LPARAM)&item);
+    expect(-1, item.iImage);
+    item.iImage = 0;
+    SendMessage(hwTab, TCM_GETITEM, 1, (LPARAM)&item);
+    expect(-1, item.iImage);
+    item.iImage = -1;
+    SendMessage(hwTab, TCM_GETITEM, 2, (LPARAM)&item);
+    expect(0, item.iImage);
+    /* remove the last one */
+    SendMessage(hwTab, TCM_REMOVEIMAGE, 0, 0);
+    expect(0, ImageList_GetImageCount(himl));
+    for(i = 0; i < 3; i++) {
+        item.iImage = 0;
+        SendMessage(hwTab, TCM_GETITEM, i, (LPARAM)&item);
+        expect(-1, item.iImage);
+    }
+
+    DestroyWindow(hwTab);
+    ImageList_Destroy(himl);
+    DestroyIcon(hicon);
+}
+
 START_TEST(tab)
 {
     HWND parent_wnd;
@@ -1021,6 +1115,7 @@ START_TEST(tab)
 
     test_insert_focus(parent_wnd);
     test_delete_focus(parent_wnd);
+    test_removeimage(parent_wnd);
 
     DestroyWindow(parent_wnd);
 }

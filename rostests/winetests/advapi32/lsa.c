@@ -182,7 +182,7 @@ static void test_lsa(void)
 START_TEST(lsa)
 {
     if (!init()) {
-        skip("Needed functions are not available\n");
+        win_skip("Needed functions are not available\n");
         return;
     }
 

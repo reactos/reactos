@@ -571,7 +571,7 @@ static void test_RtlUniform(void)
 }
 
 
-static ULONG WINAPI my_RtlRandom(PULONG seed)
+static ULONG my_RtlRandom(PULONG seed)
 {
     static ULONG saved_value[128] =
     { /*   0 */ 0x4c8bc0aa, 0x4c022957, 0x2232827a, 0x2f1e7626, 0x7f8bdafb, 0x5c37d02a, 0x0ab48f72, 0x2f0c4ffa,

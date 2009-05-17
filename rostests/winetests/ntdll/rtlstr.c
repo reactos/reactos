@@ -191,7 +191,7 @@ static void test_RtlInitUnicodeStringEx(void)
     UNICODE_STRING uni;
     NTSTATUS result;
 
-    teststring2 = (WCHAR *) malloc((TESTSTRING2_LEN + 1) * sizeof(WCHAR));
+    teststring2 = malloc((TESTSTRING2_LEN + 1) * sizeof(WCHAR));
     memset(teststring2, 'X', TESTSTRING2_LEN * sizeof(WCHAR));
     teststring2[TESTSTRING2_LEN] = '\0';
 

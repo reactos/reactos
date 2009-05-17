@@ -536,6 +536,7 @@ static void test_symboliclink(void)
     IO_STATUS_BLOCK iosb;
 
     /* No name and/or no attributes */
+    InitializeObjectAttributes(&attr, NULL, 0, 0, NULL);
     SYMLNK_TEST_CREATE_OPEN_FAILURE2(NULL, "", "", STATUS_ACCESS_VIOLATION, STATUS_INVALID_PARAMETER)
 
     status = pNtCreateSymbolicLinkObject(&h, SYMBOLIC_LINK_QUERY, NULL, NULL);

@@ -107,7 +107,7 @@ static void test_VerifyVersionInfo(void)
 
     if(!pVerifyVersionInfoA || !pVerSetConditionMask)
     {
-        skip("Needed functions not available\n");
+        win_skip("Needed functions not available\n");
         return;
     }
 

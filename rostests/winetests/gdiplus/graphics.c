@@ -935,6 +935,57 @@ static void test_textcontrast(void)
     ReleaseDC(0, hdc);
 }
 
+static void test_GdipDrawString(void)
+{
+    GpStatus status;
+    GpGraphics *graphics = NULL;
+    GpFont *fnt = NULL;
+    RectF  rect;
+    GpStringFormat *format;
+    GpBrush *brush;
+    LOGFONTA logfont;
+    HDC hdc = GetDC(0);
+    static const WCHAR string[] = {'T','e','s','t',0};
+
+    memset(&logfont,0,sizeof(logfont));
+    strcpy(logfont.lfFaceName,"Arial");
+    logfont.lfHeight = 12;
+    logfont.lfCharSet = DEFAULT_CHARSET;
+
+    status = GdipCreateFromHDC(hdc, &graphics);
+    expect(Ok, status);
+
+    status = GdipCreateFontFromLogfontA(hdc, &logfont, &fnt);
+    if (status == FileNotFound)
+    {
+        skip("Arial not installed.\n");
+        return;
+    }
+    expect(Ok, status);
+
+    status = GdipCreateSolidFill((ARGB)0xdeadbeef, (GpSolidFill**)&brush);
+    expect(Ok, status);
+
+    status = GdipCreateStringFormat(0,0,&format);
+    expect(Ok, status);
+
+    rect.X = 0;
+    rect.Y = 0;
+    rect.Width = 0;
+    rect.Height = 12;
+
+    status = GdipDrawString(graphics, string, 4, fnt, &rect, format, brush);
+    expect(Ok, status);
+
+    GdipDeleteGraphics(graphics);
+    GdipDeleteBrush(brush);
+    GdipDeleteFont(fnt);
+    GdipDeleteStringFormat(format);
+
+    ReleaseDC(0, hdc);
+}
+
+
 START_TEST(graphics)
 {
     struct GdiplusStartupInput gdiplusStartupInput;
@@ -954,6 +1005,7 @@ START_TEST(graphics)
     test_GdipDrawArcI();
     test_GdipDrawLineI();
     test_GdipDrawLinesI();
+    test_GdipDrawString();
     test_Get_Release_DC();
     test_transformpoints();
     test_get_set_clip();

@@ -1721,6 +1721,21 @@ static void test_MsiInstallProduct(void)
         return;
     }
 
+    /* szPackagePath is NULL */
+    r = MsiInstallProductA(NULL, "INSTALL=ALL");
+    ok(r == ERROR_INVALID_PARAMETER,
+       "Expected ERROR_INVALID_PARAMETER, got %d\n", r);
+
+    /* both szPackagePath and szCommandLine are NULL */
+    r = MsiInstallProductA(NULL, NULL);
+    ok(r == ERROR_INVALID_PARAMETER,
+       "Expected ERROR_INVALID_PARAMETER, got %d\n", r);
+
+    /* szPackagePath is empty */
+    r = MsiInstallProductA("", "INSTALL=ALL");
+    ok(r == ERROR_PATH_NOT_FOUND,
+       "Expected ERROR_PATH_NOT_FOUND, got %d\n", r);
+
     create_test_files();
     create_database(msifile, tables, sizeof(tables) / sizeof(msi_table));
 
@@ -1764,7 +1779,7 @@ static void test_MsiInstallProduct(void)
     type = REG_SZ;
     res = RegQueryValueExA(hkey, "OrderTestName", NULL, &type, (LPBYTE)path, &size);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
-    ok(!lstrcmpA(path, "OrderTestValue"), "Expected imaname, got %s\n", path);
+    ok(!lstrcmpA(path, "OrderTestValue"), "Expected OrderTestValue, got %s\n", path);
 
     check_service_is_installed();
 
@@ -2280,6 +2295,7 @@ static void test_setpropertyfolder(void)
 {
     UINT r;
     CHAR path[MAX_PATH];
+    DWORD attr;
 
     lstrcpyA(path, PROG_FILES_DIR);
     lstrcatA(path, "\\msitest\\added");
@@ -2293,7 +2309,8 @@ static void test_setpropertyfolder(void)
 
     r = MsiInstallProductA(msifile, NULL);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-    if (GetFileAttributesA(path) == FILE_ATTRIBUTE_DIRECTORY)
+    attr = GetFileAttributesA(path);
+    if (attr != INVALID_FILE_ATTRIBUTES && (attr & FILE_ATTRIBUTE_DIRECTORY))
     {
         ok(delete_pf("msitest\\added\\maximus", TRUE), "File not installed\n");
         ok(delete_pf("msitest\\added", FALSE), "File not installed\n");
@@ -3213,7 +3230,7 @@ static void test_publish_processcomponents(void)
     lstrcpyA(program_files_maximus,PROG_FILES_DIR);
     lstrcatA(program_files_maximus,"\\msitest\\maximus");
 
-    ok(!lstrcmpA(val, program_files_maximus),
+    ok(!lstrcmpiA(val, program_files_maximus),
        "Expected \"%s\", got \"%s\"\n", program_files_maximus, val);
 
     res = RegOpenKeyA(HKEY_LOCAL_MACHINE, compkey, &hkey);
@@ -3257,7 +3274,7 @@ static void test_publish_processcomponents(void)
     res = RegQueryValueExA(comp, "84A88FD7F6998CE40A22FB59F6B9C2BB",
                            NULL, NULL, (LPBYTE)val, &size);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
-    ok(!lstrcmpA(val, program_files_maximus),
+    ok(!lstrcmpiA(val, program_files_maximus),
        "Expected \"%s\", got \"%s\"\n", program_files_maximus, val);
 
     res = RegOpenKeyA(HKEY_LOCAL_MACHINE, compkey, &hkey);
@@ -4193,8 +4210,8 @@ static void test_transformprop(void)
 static void test_currentworkingdir(void)
 {
     UINT r;
-    CHAR path[MAX_PATH];
-    LPSTR ptr, ptr2;
+    CHAR drive[MAX_PATH], path[MAX_PATH];
+    LPSTR ptr;
 
     CreateDirectoryA("msitest", NULL);
     create_file("msitest\\augustus", 500);
@@ -4221,18 +4238,17 @@ static void test_currentworkingdir(void)
     ok(delete_pf("msitest\\augustus", TRUE), "File not installed\n");
     ok(delete_pf("msitest", FALSE), "File not installed\n");
 
-    lstrcpyA(path, CURR_DIR);
+    lstrcpyA(drive, CURR_DIR);
+    drive[2] = '\\';
+    drive[3] = '\0';
+    SetCurrentDirectoryA(drive);
+
+    lstrcpy(path, CURR_DIR);
     if (path[lstrlenA(path) - 1] != '\\')
         lstrcatA(path, "\\");
-    lstrcatA(path, "msitest.msi");
-
-    ptr2 = strrchr(path, '\\');
-    *ptr2 = '\0';
-    ptr = strrchr(path, '\\');
-    *ptr2 = '\\';
-    *(ptr++) = '\0';
-
-    SetCurrentDirectoryA(path);
+    lstrcatA(path, msifile);
+    ptr = strchr(path, ':');
+    ptr +=2;
 
     r = MsiInstallProductA(ptr, NULL);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
@@ -4628,10 +4644,15 @@ static void test_missingcab(void)
     create_pf_data("msitest\\caesar", "abcdefgh", TRUE);
 
     r = MsiInstallProductA(msifile, NULL);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-    ok(delete_pf("msitest\\augustus", TRUE), "File not installed\n");
+    ok(r == ERROR_SUCCESS ||
+       broken(r == ERROR_INSTALL_FAILURE), /* win9x */
+       "Expected ERROR_SUCCESS, got %u\n", r);
+    if (r == ERROR_SUCCESS)
+    {
+      ok(delete_pf("msitest\\augustus", TRUE), "File not installed\n");
+      ok(delete_pf("msitest\\maximus", TRUE), "File not installed\n");
+    }
     ok(delete_pf("msitest\\caesar", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\maximus", TRUE), "File not installed\n");
     ok(!delete_pf("msitest\\gaius", TRUE), "File installed\n");
     ok(delete_pf("msitest", FALSE), "File not installed\n");
 

@@ -1161,15 +1161,14 @@ static void  test_WaitRx(HANDLE hcom)
 */
 static DWORD CALLBACK toggle_ctlLine(LPVOID arg)
 {
-    DWORD *args = (DWORD *) arg;
+    DWORD_PTR *args = arg;
     DWORD timeout = args[0];
     DWORD ctl     = args[1];
     HANDLE hcom   = (HANDLE) args[2];
     HANDLE hComPortEvent = (HANDLE) args[3];
     DWORD success, err;
 
-    trace("toggle_ctlLine timeout %d clt 0x%08x handle 0x%08x\n",
-	  args[0], args[1], args[2]);
+    trace("toggle_ctlLine timeout %d ctl 0x%08x handle %p\n", timeout, ctl, hcom );
     Sleep(timeout);
     ok(EscapeCommFunction(hcom, ctl),"EscapeCommFunction 0x%08x failed\n", ctl);
     trace("toggle_ctline done\n");
@@ -1190,8 +1189,8 @@ static void  test_WaitCts(HANDLE hcom)
     OVERLAPPED overlapped;
     HANDLE hComPortEvent;
     HANDLE alarmThread;
-    DWORD args[4], defaultStat = 0;
-    DWORD alarmThreadId, before, after, after1, diff, success, err, written, evtmask=0;
+    DWORD_PTR args[4];
+    DWORD alarmThreadId, before, after, after1, diff, success, err, written, evtmask=0, defaultStat = 0;
 
     ok(GetCommState(hcom, &dcb), "GetCommState failed\n");
     dcb.fRtsControl=RTS_CONTROL_ENABLE;
@@ -1208,15 +1207,15 @@ static void  test_WaitCts(HANDLE hcom)
 	args[1] = CLRRTS;
     else
 	args[1] = SETRTS;
-    args[2]=(DWORD) hcom;
+    args[2]=(DWORD_PTR)hcom;
 
-    trace("test_WaitCts timeout %d clt 0x%08x handle 0x%08x\n",args[0], args[1], args[2]);
+    trace("test_WaitCts timeout %ld clt 0x%08lx handle %p\n",args[0], args[1], hcom);
 
     ok(SetCommMask(hcom, EV_CTS), "SetCommMask failed\n");
     hComPortEvent =  CreateEvent( NULL, TRUE, FALSE, NULL );
     ok(hComPortEvent != 0, "CreateEvent failed\n");
-    args[3] = (DWORD) hComPortEvent;
-    alarmThread = CreateThread(NULL, 0, toggle_ctlLine, (void *) &args, 0, &alarmThreadId);
+    args[3] = (DWORD_PTR)hComPortEvent;
+    alarmThread = CreateThread(NULL, 0, toggle_ctlLine, args, 0, &alarmThreadId);
     /* Wait a minimum to let the thread start up */
     Sleep(10);
     trace("Thread created\n");
@@ -1265,7 +1264,7 @@ static void  test_WaitCts(HANDLE hcom)
 */
 static DWORD CALLBACK reset_CommMask(LPVOID arg)
 {
-    DWORD *args = (DWORD *) arg;
+    DWORD_PTR *args = arg;
     DWORD timeout = args[0];
     HANDLE hcom   = (HANDLE) args[1];
 
@@ -1287,7 +1286,7 @@ static void  test_AbortWaitCts(HANDLE hcom)
     OVERLAPPED overlapped;
     HANDLE hComPortEvent;
     HANDLE alarmThread;
-    DWORD args[2];
+    DWORD_PTR args[2];
     DWORD alarmThreadId, before, after, after1, diff, success, err, written, evtmask=0;
 
     ok(GetCommState(hcom, &dcb), "GetCommState failed\n");
@@ -1297,14 +1296,14 @@ static void  test_AbortWaitCts(HANDLE hcom)
 	return;
     }
     args[0]= TIMEOUT >>1;
-    args[1]=(DWORD) hcom;
+    args[1]= (DWORD_PTR)hcom;
 
-    trace("test_AbortWaitCts timeout %d handle 0x%08x\n",args[0], args[1]);
+    trace("test_AbortWaitCts timeout %ld handle %p\n",args[0], hcom);
 
     ok(SetCommMask(hcom, EV_CTS), "SetCommMask failed\n");
     hComPortEvent =  CreateEvent( NULL, TRUE, FALSE, NULL );
     ok(hComPortEvent != 0, "CreateEvent failed\n");
-    alarmThread = CreateThread(NULL, 0, reset_CommMask, (void *) &args, 0, &alarmThreadId);
+    alarmThread = CreateThread(NULL, 0, reset_CommMask, args, 0, &alarmThreadId);
     /* Wait a minimum to let the thread start up */
     Sleep(10);
     trace("Thread created\n");
@@ -1348,8 +1347,8 @@ static void  test_WaitDsr(HANDLE hcom)
     OVERLAPPED overlapped;
     HANDLE hComPortEvent;
     HANDLE alarmThread;
-    DWORD args[3], defaultStat = 0;
-    DWORD alarmThreadId, before, after, after1, diff, success, err, written, evtmask=0;
+    DWORD_PTR args[3];
+    DWORD alarmThreadId, before, after, after1, diff, success, err, written, evtmask=0, defaultStat = 0;
 
     ok(GetCommState(hcom, &dcb), "GetCommState failed\n");
     if (dcb.fDtrControl == DTR_CONTROL_DISABLE)
@@ -1363,14 +1362,14 @@ static void  test_WaitDsr(HANDLE hcom)
 	args[1] = CLRDTR;
     else
 	args[1] = SETDTR;
-    args[2]=(DWORD) hcom;
+    args[2]= (DWORD_PTR)hcom;
 
-    trace("test_WaitDsr timeout %d clt 0x%08x handle 0x%08x\n",args[0], args[1], args[2]);
+    trace("test_WaitDsr timeout %ld clt 0x%08lx handle %p\n",args[0], args[1], hcom);
 
     ok(SetCommMask(hcom, EV_DSR), "SetCommMask failed\n");
     hComPortEvent =  CreateEvent( NULL, TRUE, FALSE, NULL );
     ok(hComPortEvent != 0, "CreateEvent failed\n");
-    alarmThread = CreateThread(NULL, 0, toggle_ctlLine, (void *) &args, 0, &alarmThreadId);
+    alarmThread = CreateThread(NULL, 0, toggle_ctlLine, args, 0, &alarmThreadId);
     ok(alarmThread !=0 , "CreateThread Failed\n");
 
     ZeroMemory( &overlapped, sizeof(overlapped));
@@ -1421,8 +1420,8 @@ static void  test_WaitRing(HANDLE hcom)
     OVERLAPPED overlapped;
     HANDLE hComPortEvent;
     HANDLE alarmThread;
-    DWORD args[3], defaultStat;
-    DWORD alarmThreadId, before, after, after1, diff, success, err, written, evtmask=0;
+    DWORD_PTR args[3];
+    DWORD alarmThreadId, before, after, after1, diff, success, err, written, evtmask=0, defaultStat;
     BOOL ret;
 
     ok(GetCommState(hcom, &dcb), "GetCommState failed\n");
@@ -1441,14 +1440,14 @@ static void  test_WaitRing(HANDLE hcom)
 	args[1] = CLRDTR;
     else
 	args[1] = SETDTR;
-    args[2]=(DWORD) hcom;
+    args[2]=(DWORD_PTR) hcom;
 
-    trace("test_WaitRing timeout %d clt 0x%08x handle 0x%08x\n",args[0], args[1], args[2]);
+    trace("test_WaitRing timeout %ld clt 0x%08lx handle %p\n",args[0], args[1], hcom);
 
     ok(SetCommMask(hcom, EV_RING), "SetCommMask failed\n");
     hComPortEvent =  CreateEvent( NULL, TRUE, FALSE, NULL );
     ok(hComPortEvent != 0, "CreateEvent failed\n");
-    alarmThread = CreateThread(NULL, 0, toggle_ctlLine, (void *) &args, 0, &alarmThreadId);
+    alarmThread = CreateThread(NULL, 0, toggle_ctlLine, args, 0, &alarmThreadId);
     ok(alarmThread !=0 , "CreateThread Failed\n");
 
     ZeroMemory( &overlapped, sizeof(overlapped));
@@ -1498,8 +1497,8 @@ static void  test_WaitDcd(HANDLE hcom)
     OVERLAPPED overlapped;
     HANDLE hComPortEvent;
     HANDLE alarmThread;
-    DWORD args[3], defaultStat = 0;
-    DWORD alarmThreadId, before, after, after1, diff, success, err, written, evtmask=0;
+    DWORD_PTR args[3];
+    DWORD alarmThreadId, before, after, after1, diff, success, err, written, evtmask=0, defaultStat = 0;
 
     ok(GetCommState(hcom, &dcb), "GetCommState failed\n");
     if (dcb.fDtrControl == DTR_CONTROL_DISABLE)
@@ -1513,14 +1512,14 @@ static void  test_WaitDcd(HANDLE hcom)
 	args[1] = CLRDTR;
     else
 	args[1] = SETDTR;
-    args[2]=(DWORD) hcom;
+    args[2]= (DWORD_PTR)hcom;
 
-    trace("test_WaitDcd timeout %d clt 0x%08x handle 0x%08x\n",args[0], args[1], args[2]);
+    trace("test_WaitDcd timeout %ld clt 0x%08lx handle %p\n",args[0], args[1], hcom);
 
     ok(SetCommMask(hcom, EV_RLSD), "SetCommMask failed\n");
     hComPortEvent =  CreateEvent( NULL, TRUE, FALSE, NULL );
     ok(hComPortEvent != 0, "CreateEvent failed\n");
-    alarmThread = CreateThread(NULL, 0, toggle_ctlLine, (void *) &args, 0, &alarmThreadId);
+    alarmThread = CreateThread(NULL, 0, toggle_ctlLine, args, 0, &alarmThreadId);
     ok(alarmThread !=0 , "CreateThread Failed\n");
 
     ZeroMemory( &overlapped, sizeof(overlapped));
@@ -1566,7 +1565,7 @@ static void  test_WaitDcd(HANDLE hcom)
 */
 static DWORD CALLBACK set_CommBreak(LPVOID arg)
 {
-    DWORD *args = (DWORD *) arg;
+    DWORD_PTR *args = arg;
     DWORD timeout = args[0];
     HANDLE hcom   = (HANDLE) args[1];
 
@@ -1587,7 +1586,7 @@ static void  test_WaitBreak(HANDLE hcom)
     OVERLAPPED overlapped;
     HANDLE hComPortEvent;
     HANDLE alarmThread;
-    DWORD args[2];
+    DWORD_PTR args[2];
     DWORD alarmThreadId, before, after, after1, diff, success, err, written, evtmask=0;
 
     ok(SetCommMask(hcom, EV_BREAK), "SetCommMask failed\n");
@@ -1596,8 +1595,8 @@ static void  test_WaitBreak(HANDLE hcom)
 
     trace("test_WaitBreak\n");
     args[0]= TIMEOUT >>1;
-    args[1]=(DWORD) hcom;
-    alarmThread = CreateThread(NULL, 0, set_CommBreak, (void *) &args, 0, &alarmThreadId);
+    args[1]= (DWORD_PTR)hcom;
+    alarmThread = CreateThread(NULL, 0, set_CommBreak, args, 0, &alarmThreadId);
     /* Wait a minimum to let the thread start up */
     Sleep(10);
     trace("Thread created\n");

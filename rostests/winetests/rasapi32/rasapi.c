@@ -163,4 +163,6 @@ START_TEST(rasapi)
     InitFunctionPtrs();
 
     test_rasenum();
+
+    FreeLibrary(hmodule);
 }

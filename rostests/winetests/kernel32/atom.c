@@ -77,7 +77,7 @@ static BOOL unicode_OS;
 static void test_add_atom(void)
 {
     ATOM atom, w_atom;
-    int i;
+    INT_PTR i;
 
     SetLastError( 0xdeadbeef );
     atom = GlobalAddAtomA( "foobar" );
@@ -129,20 +129,20 @@ static void test_add_atom(void)
     {
         SetLastError( 0xdeadbeef );
         ok( GlobalAddAtomA((LPCSTR)i) == i && GetLastError() == 0xdeadbeef,
-            "failed to add atom %x\n", i );
+            "failed to add atom %lx\n", i );
         if (unicode_OS)
         {
             SetLastError( 0xdeadbeef );
             ok( GlobalAddAtomW((LPCWSTR)i) == i && GetLastError() == 0xdeadbeef,
-                "failed to add atom %x\n", i );
+                "failed to add atom %lx\n", i );
         }
     }
 
     for (i = 0xc000; i <= 0xffff; i++)
     {
-        ok( !GlobalAddAtomA((LPCSTR)i), "succeeded adding %x\n", i );
+        ok( !GlobalAddAtomA((LPCSTR)i), "succeeded adding %lx\n", i );
         if (unicode_OS)
-            ok( !GlobalAddAtomW((LPCWSTR)i), "succeeded adding %x\n", i );
+            ok( !GlobalAddAtomW((LPCWSTR)i), "succeeded adding %lx\n", i );
     }
 }
 
@@ -201,6 +201,7 @@ static void test_get_atom_name(void)
             sprintf( res, "#%d", i );
             memset( res + strlen(res) + 1, 'a', 10 );
             ok( !memcmp( res, buf, 10 ), "bad buffer contents %s\n", buf );
+            if (len <= 1 || len >= 7) break;  /* don't bother testing all of them */
         }
         else
             ok( !len, "bad length %d\n", len );
@@ -283,6 +284,7 @@ static void test_get_atom_name(void)
                 print_integral( res, i );
                 memset( res + lstrlenW(res) + 1, 'a', 10 * sizeof(WCHAR));
                 ok( !memcmp( res, outW, 10 * sizeof(WCHAR) ), "bad buffer contents for %d\n", i );
+                if (len <= 1 || len >= 7) break;  /* don't bother testing all of them */
             }
             else
                 ok( !len, "bad length %d\n", len );
@@ -349,7 +351,7 @@ static void test_error_handling(void)
 static void test_local_add_atom(void)
 {
     ATOM atom, w_atom;
-    int i;
+    INT_PTR i;
 
     SetLastError( 0xdeadbeef );
     atom = AddAtomA( "foobar" );
@@ -401,20 +403,20 @@ static void test_local_add_atom(void)
     {
         SetLastError( 0xdeadbeef );
         ok( AddAtomA((LPCSTR)i) == i && GetLastError() == 0xdeadbeef,
-            "failed to add atom %x\n", i );
+            "failed to add atom %lx\n", i );
         if (unicode_OS)
         {
             SetLastError( 0xdeadbeef );
             ok( AddAtomW((LPCWSTR)i) == i && GetLastError() == 0xdeadbeef,
-                "failed to add atom %x\n", i );
+                "failed to add atom %lx\n", i );
         }
     }
 
     for (i = 0xc000; i <= 0xffff; i++)
     {
-        ok( !AddAtomA((LPCSTR)i), "succeeded adding %x\n", i );
+        ok( !AddAtomA((LPCSTR)i), "succeeded adding %lx\n", i );
         if (unicode_OS)
-            ok( !AddAtomW((LPCWSTR)i), "succeeded adding %x\n", i );
+            ok( !AddAtomW((LPCWSTR)i), "succeeded adding %lx\n", i );
     }
 }
 

@@ -35,9 +35,42 @@
 
 #include "wine/test.h"
 
+#define PROCESS_NAME_NATIVE 1
+
+#define expect_eq_d(expected, actual) \
+    do { \
+      int value = (actual); \
+      ok((expected) == value, "Expected " #actual " to be %d (" #expected ") is %d\n", \
+          (expected), value); \
+    } while (0)
+#define expect_eq_ws_i(expected, actual) \
+    do { \
+      LPCWSTR value = (actual); \
+      ok(lstrcmpiW((expected), value) == 0, "Expected " #actual " to be L\"%s\" (" #expected ") is L\"%s\"\n", \
+          wine_dbgstr_w(expected), wine_dbgstr_w(value)); \
+    } while (0)
+
+/* A simpler version of wine_dbgstr_w. Note that the returned buffer will be
+ * invalid after 16 calls to this funciton. */
+static const char *wine_dbgstr_w(LPCWSTR wstr)
+{
+  static char *buffers[16];
+  static int curr_buffer = 0;
+
+  int size;
+
+  curr_buffer = (curr_buffer + 1) % 16;
+  HeapFree(GetProcessHeap(), 0, buffers[curr_buffer]);
+  size = WideCharToMultiByte(CP_ACP, 0, wstr, -1, NULL, 0, NULL, NULL);
+  buffers[curr_buffer] = HeapAlloc(GetProcessHeap(), 0, size);
+  size = WideCharToMultiByte(CP_ACP, 0, wstr, -1, buffers[curr_buffer], size, NULL, NULL);
+  return buffers[curr_buffer];
+}
+
 static HINSTANCE hkernel32;
 static LPVOID (WINAPI *pVirtualAllocEx)(HANDLE, LPVOID, SIZE_T, DWORD, DWORD);
 static BOOL   (WINAPI *pVirtualFreeEx)(HANDLE, LPVOID, SIZE_T, DWORD);
+static BOOL   (WINAPI *pQueryFullProcessImageNameW)(HANDLE hProcess, DWORD dwFlags, LPWSTR lpExeName, PDWORD lpdwSize);
 
 /* ############################### */
 static char     base[MAX_PATH];
@@ -175,6 +208,7 @@ static int     init(void)
     hkernel32 = GetModuleHandleA("kernel32");
     pVirtualAllocEx = (void *) GetProcAddress(hkernel32, "VirtualAllocEx");
     pVirtualFreeEx = (void *) GetProcAddress(hkernel32, "VirtualFreeEx");
+    pQueryFullProcessImageNameW = (void *) GetProcAddress(hkernel32, "QueryFullProcessImageNameW");
     return 1;
 }
 
@@ -241,7 +275,7 @@ static void     doChild(const char* file, const char* option)
                 siA.dwX, siA.dwY, siA.dwXSize, siA.dwYSize,
                 siA.dwXCountChars, siA.dwYCountChars, siA.dwFillAttribute,
                 siA.dwFlags, siA.wShowWindow,
-                (DWORD)siA.hStdInput, (DWORD)siA.hStdOutput, (DWORD)siA.hStdError);
+                (DWORD_PTR)siA.hStdInput, (DWORD_PTR)siA.hStdOutput, (DWORD_PTR)siA.hStdError);
 
     /* since GetStartupInfoW is only implemented in win2k,
      * zero out before calling so we can notice the difference
@@ -258,7 +292,7 @@ static void     doChild(const char* file, const char* option)
                 siW.dwX, siW.dwY, siW.dwXSize, siW.dwYSize,
                 siW.dwXCountChars, siW.dwYCountChars, siW.dwFillAttribute,
                 siW.dwFlags, siW.wShowWindow,
-                (DWORD)siW.hStdInput, (DWORD)siW.hStdOutput, (DWORD)siW.hStdError);
+                (DWORD_PTR)siW.hStdInput, (DWORD_PTR)siW.hStdOutput, (DWORD_PTR)siW.hStdError);
 
     /* Arguments */
     childPrintf(hFile, "[Arguments]\nargcA=%d\n", myARGC);
@@ -492,7 +526,7 @@ static void ok_child_stringWA( int line, const char *sect, const char *key,
 #define okChildInt(sect, key, expect) \
     do { \
         UINT result = GetPrivateProfileIntA((sect), (key), !(expect), resfile); \
-        ok(result == expect, "%s:%s expected %d, but got %d\n", (sect), (key), (int)(expect), result); \
+        ok(result == expect, "%s:%s expected %u, but got %u\n", (sect), (key), (UINT)(expect), result); \
    } while (0)
 
 static void test_Startup(void)
@@ -1292,9 +1326,9 @@ static void test_Console(void)
     okChildInt("StartupInfoA", "wShowWindow", startup.wShowWindow);
 
     /* check child correctly inherited the console */
-    okChildInt("StartupInfoA", "hStdInput", (DWORD)startup.hStdInput);
-    okChildInt("StartupInfoA", "hStdOutput", (DWORD)startup.hStdOutput);
-    okChildInt("StartupInfoA", "hStdError", (DWORD)startup.hStdError);
+    okChildInt("StartupInfoA", "hStdInput", (DWORD_PTR)startup.hStdInput);
+    okChildInt("StartupInfoA", "hStdOutput", (DWORD_PTR)startup.hStdOutput);
+    okChildInt("StartupInfoA", "hStdError", (DWORD_PTR)startup.hStdError);
     okChildInt("Console", "SizeX", (DWORD)sbi.dwSize.X);
     okChildInt("Console", "SizeY", (DWORD)sbi.dwSize.Y);
     okChildInt("Console", "CursorX", (DWORD)sbi.dwCursorPosition.X);
@@ -1409,7 +1443,7 @@ static void test_OpenProcess(void)
 
     /* not exported in all windows versions */
     if ((!pVirtualAllocEx) || (!pVirtualFreeEx)) {
-        skip("VirtualAllocEx not found\n");
+        win_skip("VirtualAllocEx not found\n");
         return;
     }
 
@@ -1423,7 +1457,7 @@ static void test_OpenProcess(void)
     if (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
     {   /* Win9x */
         CloseHandle(hproc);
-        skip("VirtualAllocEx not implemented\n");
+        win_skip("VirtualAllocEx not implemented\n");
         return;
     }
     ok(GetLastError() == ERROR_ACCESS_DENIED, "wrong error %d\n", GetLastError());
@@ -1520,6 +1554,76 @@ static void test_GetProcessVersion(void)
     CloseHandle(pi.hThread);
 }
 
+static void test_ProcessName(void)
+{
+    HANDLE hSelf;
+    WCHAR module_name[1024];
+    WCHAR deviceW[] = {'\\','D', 'e','v','i','c','e',0};
+    WCHAR buf[1024];
+    DWORD size;
+
+    if (!pQueryFullProcessImageNameW)
+    {
+        win_skip("QueryFullProcessImageNameW unavailable (added in Windows Vista)\n");
+        return;
+    }
+
+    ok(GetModuleFileNameW(NULL, module_name, 1024), "GetModuleFileNameW(NULL, ...) failed\n");
+
+    /* GetCurrentProcess pseudo-handle */
+    size = sizeof(buf) / sizeof(buf[0]);
+    expect_eq_d(TRUE, pQueryFullProcessImageNameW(GetCurrentProcess(), 0, buf, &size));
+    expect_eq_d(lstrlenW(buf), size);
+    expect_eq_ws_i(buf, module_name);
+
+    hSelf = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, GetCurrentProcessId());
+    /* Real handle */
+    size = sizeof(buf) / sizeof(buf[0]);
+    expect_eq_d(TRUE, pQueryFullProcessImageNameW(hSelf, 0, buf, &size));
+    expect_eq_d(lstrlenW(buf), size);
+    expect_eq_ws_i(buf, module_name);
+
+    /* Buffer too small */
+    size = lstrlenW(module_name)/2;
+    lstrcpyW(buf, deviceW);
+    SetLastError(0xdeadbeef);
+    expect_eq_d(FALSE, pQueryFullProcessImageNameW(hSelf, 0, buf, &size));
+    expect_eq_d(lstrlenW(module_name)/2, size);  /* size not changed(!) */
+    expect_eq_d(ERROR_INSUFFICIENT_BUFFER, GetLastError());
+    expect_eq_ws_i(deviceW, buf);  /* buffer not changed */
+
+    /* Too small - not space for NUL terminator */
+    size = lstrlenW(module_name);
+    SetLastError(0xdeadbeef);
+    expect_eq_d(FALSE, pQueryFullProcessImageNameW(hSelf, 0, buf, &size));
+    expect_eq_d(lstrlenW(module_name), size);  /* size not changed(!) */
+    expect_eq_d(ERROR_INSUFFICIENT_BUFFER, GetLastError());
+
+    /* NULL buffer */
+    size = 0;
+    expect_eq_d(FALSE, pQueryFullProcessImageNameW(hSelf, 0, NULL, &size));
+    expect_eq_d(0, size);
+    expect_eq_d(ERROR_INSUFFICIENT_BUFFER, GetLastError());
+
+    /* native path */
+    size = sizeof(buf) / sizeof(buf[0]);
+    expect_eq_d(TRUE, pQueryFullProcessImageNameW(hSelf, PROCESS_NAME_NATIVE, buf, &size));
+    expect_eq_d(lstrlenW(buf), size);
+    ok(buf[0] == '\\', "NT path should begin with '\\'\n");
+    todo_wine ok(memcmp(buf, deviceW, sizeof(WCHAR)*lstrlenW(deviceW)) == 0, "NT path should begin with \\Device\n");
+
+    /* Buffer too small */
+    size = lstrlenW(module_name)/2;
+    SetLastError(0xdeadbeef);
+    lstrcpyW(buf, module_name);
+    expect_eq_d(FALSE, pQueryFullProcessImageNameW(hSelf, 0, buf, &size));
+    expect_eq_d(lstrlenW(module_name)/2, size);  /* size not changed(!) */
+    expect_eq_d(ERROR_INSUFFICIENT_BUFFER, GetLastError());
+    expect_eq_ws_i(module_name, buf);  /* buffer not changed */
+
+    CloseHandle(hSelf);
+}
+
 static void test_Handles(void)
 {
     HANDLE handle = GetCurrentProcess();
@@ -1573,6 +1677,7 @@ START_TEST(process)
     test_ExitCode();
     test_OpenProcess();
     test_GetProcessVersion();
+    test_ProcessName();
     test_Handles();
     /* things that can be tested:
      *  lookup:         check the way program to be executed is searched

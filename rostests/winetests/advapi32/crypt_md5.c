@@ -85,7 +85,7 @@ static void test_md5_ctx(void)
 
     if (!pMD5Init || !pMD5Update || !pMD5Final)
     {
-        skip("Needed functions are not available\n");
+        win_skip("Needed functions are not available\n");
         return;
     }
 

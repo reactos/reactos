@@ -581,9 +581,14 @@ static void check_registry(BOOL *has_space_rgb)
             trace("RegEnumValueA() failed (%d), cannot enumerate profiles\n", res);
             break;
         }
-        ok( dwType == REG_SZ, "RegEnumValueA() returned unexpected value type (%d)\n", dwType );
-        if (dwType != REG_SZ) break;
-        trace(" found '%s' value containing '%s' (%d chars)\n", szName, szData, lstrlenA(szData));
+        ok( dwType == REG_SZ || dwType == REG_DWORD, "RegEnumValueA() returned unexpected value type (%d)\n", dwType );
+
+        if (dwType == REG_SZ)
+            trace(" found string value '%s' containing '%s' (%d chars)\n", szName, szData, lstrlenA(szData));
+        else if (dwType == REG_DWORD)
+            trace(" found DWORD value '%s' containing '%x'\n", szName, *(DWORD *)szData);
+        else
+            break;
     } 
 
     RegCloseKey( hkIcmKey );

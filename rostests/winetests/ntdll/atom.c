@@ -295,7 +295,7 @@ static void test_NtIntAtom(void)
     RTL_ATOM_TABLE AtomTable;
     RTL_ATOM testAtom;
     ULONG RefCount = 0, PinCount = 0;
-    int i;
+    INT_PTR i;
     WCHAR Name[64];
     ULONG Len;
 
@@ -311,25 +311,25 @@ static void test_NtIntAtom(void)
         ok(res == STATUS_INVALID_PARAMETER, "Didn't get expected result from adding 0 int atom, retval: %x\n", res);
         for (i = 1; i <= 0xbfff; i++)
         {
-            res = pRtlAddAtomToAtomTable(AtomTable, (PWSTR)i, &testAtom);
-            ok(!res, "Unable to add valid integer atom %i, retval: %x\n", i, res);
+            res = pRtlAddAtomToAtomTable(AtomTable, (LPWSTR)i, &testAtom);
+            ok(!res, "Unable to add valid integer atom %li, retval: %x\n", i, res);
         }
 
         for (i = 1; i <= 0xbfff; i++)
         {
-            res = pRtlLookupAtomInAtomTable(AtomTable, (PWSTR)i, &testAtom);
-            ok(!res, "Unable to find int atom %i, retval: %x\n", i, res);
+            res = pRtlLookupAtomInAtomTable(AtomTable, (LPWSTR)i, &testAtom);
+            ok(!res, "Unable to find int atom %li, retval: %x\n", i, res);
             if (!res)
             {
                 res = pRtlPinAtomInAtomTable(AtomTable, testAtom);
-                ok(!res, "Unable to pin int atom %i, retval: %x\n", i, res);
+                ok(!res, "Unable to pin int atom %li, retval: %x\n", i, res);
             }
         }
 
         for (i = 0xc000; i <= 0xffff; i++)
         {
-            res = pRtlAddAtomToAtomTable(AtomTable, (PWSTR)i, &testAtom);
-            ok(res, "Able to illeageal integer atom %i, retval: %x\n", i, res);
+            res = pRtlAddAtomToAtomTable(AtomTable, (LPWSTR)i, &testAtom);
+            ok(res, "Able to illeageal integer atom %li, retval: %x\n", i, res);
         }
 
         res = pRtlDestroyAtomTable(AtomTable);

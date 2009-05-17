@@ -57,20 +57,26 @@ static void testInitialize(void)
     /* SpLsaModeInitialize does not care about the LSA version. */
     status = pSpLsaModeInitialize(0, &Version, &pTables2, &cTables);
     ok(status == STATUS_SUCCESS, "status: 0x%x\n", status);
-    ok(cTables == 2, "cTables: %d\n", cTables);
+    ok(cTables == 2 ||
+       broken(cTables == 1), /* Win2k */
+       "cTables: %d\n", cTables);
     ok(pTables2 != NULL,"pTables: %p\n", pTables2);
 
     /* We can call it as many times we want. */
     status = pSpLsaModeInitialize(0x10000, &Version, &pTables, &cTables);
     ok(status == STATUS_SUCCESS, "status: 0x%x\n", status);
-    ok(cTables == 2, "cTables: %d\n", cTables);
+    ok(cTables == 2 ||
+       broken(cTables == 1), /* Win2k */
+       "cTables: %d\n", cTables);
     ok(pTables != NULL, "pTables: %p\n", pTables);
     /* It will always return the same pointer. */
     ok(pTables == pTables2, "pTables: %p, pTables2: %p\n", pTables, pTables2);
 
     status = pSpLsaModeInitialize(0x23456, &Version, &pTables, &cTables);
     ok(status == STATUS_SUCCESS, "status: 0x%x\n", status);
-    ok(cTables == 2, "cTables: %d\n", cTables);
+    ok(cTables == 2 ||
+       broken(cTables == 1), /* Win2k */
+       "cTables: %d\n", cTables);
     ok(pTables != NULL, "pTables: %p\n", pTables);
     ok(pTables == pTables2, "pTables: %p, pTables2: %p\n", pTables, pTables2);
 
@@ -96,7 +102,9 @@ static void testInitialize(void)
                                    &pUserTables, &cUserTables);
     ok(status == STATUS_SUCCESS, "status: 0x%x\n", status);
     ok(Version == SECPKG_INTERFACE_VERSION, "Version: 0x%x\n", Version);
-    ok(cUserTables == 2, "cUserTables: %d\n", cUserTables);
+    ok(cUserTables == 2 ||
+       broken(cUserTables == 4), /* Win2k */
+       "cUserTables: %d\n", cUserTables);
     ok(pUserTables != NULL, "pUserTables: %p\n", pUserTables);
 
     /* Initializing user again */
@@ -153,7 +161,12 @@ static void testGetInfo(void)
        "cbMaxToken: 0x%x\n",
        PackageInfo.cbMaxToken);
 
-    /* Second package: SChannel */
+    /* Second package */
+    if (cTables == 1)
+    {
+        win_skip("Second package missing\n");
+        return;
+    }
     pTables = getNextSecPkgTable(pTables, Version);
     if (!pTables)
         return;

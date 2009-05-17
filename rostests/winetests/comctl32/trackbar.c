@@ -392,7 +392,7 @@ struct subclass_info
 };
 
 static LRESULT WINAPI parent_wnd_proc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam){
-    static long defwndproc_counter = 0;
+    static LONG defwndproc_counter = 0;
     LRESULT ret;
     struct message msg;
 
@@ -453,7 +453,7 @@ static HWND create_parent_window(void){
 
 static LRESULT WINAPI trackbar_subclass_proc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam){
     struct subclass_info *info = (struct subclass_info *) GetWindowLongPtrA(hwnd, GWLP_USERDATA);
-    static long defwndproc_counter = 0;
+    static LONG defwndproc_counter = 0;
     LRESULT ret;
     struct message msg;
 
@@ -511,7 +511,7 @@ static void test_trackbar_buddy(HWND hWndTrackbar){
 
     flush_sequences(sequences, NUM_MSG_SEQUENCE);
 
-    hWndLeftBuddy = (HWND) CreateWindowEx(0, STATUSCLASSNAME, NULL, 0,
+    hWndLeftBuddy = CreateWindowEx(0, STATUSCLASSNAME, NULL, 0,
         0,0,300,20, NULL, NULL, NULL, NULL);
     ok(hWndLeftBuddy != NULL, "Expected non NULL value\n");
 
@@ -524,7 +524,7 @@ static void test_trackbar_buddy(HWND hWndTrackbar){
     } else
         skip ("left buddy control not present?\n");
 
-    hWndRightBuddy = (HWND) CreateWindowEx(0, STATUSCLASSNAME, NULL, 0,
+    hWndRightBuddy = CreateWindowEx(0, STATUSCLASSNAME, NULL, 0,
         0,0,300,20,NULL,NULL, NULL, NULL);
 
     ok(hWndRightBuddy != NULL, "expected non NULL value\n");
@@ -588,12 +588,26 @@ static void test_page_size(HWND hWndTrackbar){
 
     /* test TBM_GETPAGESIZE */
     r = SendMessage(hWndTrackbar, TBM_GETPAGESIZE, 0,0);
-    todo_wine{
-        expect(20, r);
-    }
+    expect(20, r);
 
     ok_sequence(sequences, TRACKBAR_SEQ_INDEX, page_size_test_seq, "page size test sequence", FALSE);
     ok_sequence(sequences, PARENT_SEQ_INDEX, parent_empty_test_seq, "parent page size test sequence", FALSE);
+
+    /* check for zero page size */
+    r = SendMessage(hWndTrackbar, TBM_SETPAGESIZE, 0, 0);
+    expect(20, r);
+    r = SendMessage(hWndTrackbar, TBM_GETPAGESIZE, 0, 0);
+    expect(0, r);
+    /* revert to default */
+    r = SendMessage(hWndTrackbar, TBM_SETPAGESIZE, 0, -1);
+    expect(0, r);
+    r = SendMessage(hWndTrackbar, TBM_GETPAGESIZE, 0, 0);
+    expect(20, r);
+    /* < -1 */
+    r = SendMessage(hWndTrackbar, TBM_SETPAGESIZE, 0, -2);
+    expect(20, r);
+    r = SendMessage(hWndTrackbar, TBM_GETPAGESIZE, 0, 0);
+    expect(-2, r);
 }
 
 static void test_position(HWND hWndTrackbar){

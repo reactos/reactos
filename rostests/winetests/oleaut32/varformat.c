@@ -230,6 +230,7 @@ static const FMTDATERES VarFormat_date_results[] =
 static void test_VarFormat(void)
 {
   static const WCHAR szTesting[] = { 't','e','s','t','i','n','g','\0' };
+  static const WCHAR szNum[] = { '3','9','6','9','7','.','1','1','\0' };
   size_t i;
   WCHAR buffW[256];
   char buff[256];
@@ -314,6 +315,10 @@ static void test_VarFormat(void)
   VARFMT(VT_BSTR,V_BSTR,bstrin,">&&",S_OK,"TESTING");
   VARFMT(VT_BSTR,V_BSTR,bstrin,"<&&",S_OK,"testing");
   VARFMT(VT_BSTR,V_BSTR,bstrin,"<&>&",S_OK,"testing");
+  SysFreeString(bstrin);
+  bstrin = SysAllocString(szNum);
+  todo_wine VARFMT(VT_BSTR,V_BSTR,bstrin,"hh:mm",S_OK,"02:38");
+  todo_wine VARFMT(VT_BSTR,V_BSTR,bstrin,"mm-dd-yy",S_OK,"09-06-08");
   SysFreeString(bstrin);
   /* Numeric values are converted to strings then output */
   VARFMT(VT_I1,V_I1,1,"<&>&",S_OK,"1");
@@ -444,7 +449,7 @@ static void test_VarWeekdayName(void)
   GetLocaleInfoW(LOCALE_USER_DEFAULT, 0, NULL, 0);
   if (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
   {
-    skip("GetLocaleInfoW is not implemented\n");
+    win_skip("GetLocaleInfoW is not implemented\n");
     return;
   }
 

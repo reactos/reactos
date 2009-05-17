@@ -2040,17 +2040,17 @@ static void test_WM_QUIT_handling(void)
     }
 }
 
-static SIZE_T round_heap_size(SIZE_T size)
+static SIZE_T round_global_size(SIZE_T size)
 {
-    static SIZE_T heap_size_alignment = -1;
-    if (heap_size_alignment == -1)
+    static SIZE_T global_size_alignment = -1;
+    if (global_size_alignment == -1)
     {
-        void *p = HeapAlloc(GetProcessHeap(), 0, 1);
-        heap_size_alignment = HeapSize(GetProcessHeap(), 0, p);
-        HeapFree(GetProcessHeap(), 0, p);
+        void *p = GlobalAlloc(GMEM_FIXED, 1);
+        global_size_alignment = GlobalSize(p);
+        GlobalFree(p);
     }
 
-    return ((size + heap_size_alignment - 1) & ~(heap_size_alignment - 1));
+    return ((size + global_size_alignment - 1) & ~(global_size_alignment - 1));
 }
 
 static void test_freethreadedmarshaldata(IStream *pStream, MSHCTX mshctx, void *ptr, DWORD mshlflags)
@@ -2069,22 +2069,27 @@ static void test_freethreadedmarshaldata(IStream *pStream, MSHCTX mshctx, void *
 
     if (mshctx == MSHCTX_INPROC)
     {
-        DWORD expected_size = round_heap_size(3*sizeof(DWORD) + sizeof(GUID));
-        ok(size == expected_size, "size should have been %d instead of %d\n", expected_size, size);
+        DWORD expected_size = round_global_size(3*sizeof(DWORD) + sizeof(GUID));
+        ok(size == expected_size ||
+           broken(size == round_global_size(2*sizeof(DWORD))) /* Win9x & NT4 */,
+           "size should have been %d instead of %d\n", expected_size, size);
 
         ok(*(DWORD *)marshal_data == mshlflags, "expected 0x%x, but got 0x%x for mshctx\n", mshlflags, *(DWORD *)marshal_data);
         marshal_data += sizeof(DWORD);
         ok(*(void **)marshal_data == ptr, "expected %p, but got %p for mshctx\n", ptr, *(void **)marshal_data);
         marshal_data += sizeof(void *);
-        if (sizeof(void*) == 4)
+        if (sizeof(void*) == 4 && size >= 3*sizeof(DWORD))
         {
             ok(*(DWORD *)marshal_data == 0, "expected 0x0, but got 0x%x\n", *(DWORD *)marshal_data);
             marshal_data += sizeof(DWORD);
         }
-        trace("got guid data: {%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}\n",
-            ((GUID *)marshal_data)->Data1, ((GUID *)marshal_data)->Data2, ((GUID *)marshal_data)->Data3,
-            ((GUID *)marshal_data)->Data4[0], ((GUID *)marshal_data)->Data4[1], ((GUID *)marshal_data)->Data4[2], ((GUID *)marshal_data)->Data4[3],
-            ((GUID *)marshal_data)->Data4[4], ((GUID *)marshal_data)->Data4[5], ((GUID *)marshal_data)->Data4[6], ((GUID *)marshal_data)->Data4[7]);
+        if (size >= 3*sizeof(DWORD) + sizeof(GUID))
+        {
+            trace("got guid data: {%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}\n",
+                ((GUID *)marshal_data)->Data1, ((GUID *)marshal_data)->Data2, ((GUID *)marshal_data)->Data3,
+                ((GUID *)marshal_data)->Data4[0], ((GUID *)marshal_data)->Data4[1], ((GUID *)marshal_data)->Data4[2], ((GUID *)marshal_data)->Data4[3],
+                ((GUID *)marshal_data)->Data4[4], ((GUID *)marshal_data)->Data4[5], ((GUID *)marshal_data)->Data4[6], ((GUID *)marshal_data)->Data4[7]);
+        }
     }
     else
     {
@@ -2583,7 +2588,7 @@ static void test_register_local_server(void)
 
     do
     {
-        wait = MsgWaitForMultipleObjects(1, &quit_event, FALSE, INFINITE, QS_ALLINPUT);
+        wait = MsgWaitForMultipleObjects(1, &quit_event, FALSE, 30000, QS_ALLINPUT);
         if (wait == WAIT_OBJECT_0+1)
         {
             MSG msg;
@@ -2598,6 +2603,7 @@ static void test_register_local_server(void)
     }
     while (wait == WAIT_OBJECT_0+1);
 
+    ok( wait == WAIT_OBJECT_0, "quit event wait timed out\n" );
     hr = CoRevokeClassObject(cookie);
     ok_ole_success(hr, CoRevokeClassObject);
 }

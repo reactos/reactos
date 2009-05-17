@@ -238,7 +238,7 @@ static void test_arcto(void)
         GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
     {
         /* ArcTo is only available on Win2k and later */
-        skip("ArcTo is not available\n");
+        win_skip("ArcTo is not available\n");
         goto done;
     }
     SetArcDirection(hdc, AD_COUNTERCLOCKWISE);
@@ -282,7 +282,7 @@ static void test_anglearc(void)
         GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
     {
         /* AngleArc is only available on Win2k and later */
-        skip("AngleArc is not available\n");
+        win_skip("AngleArc is not available\n");
         goto done;
     }
     AngleArc(hdc, 300, 300, 80, 150.0, -180.0);
@@ -355,7 +355,7 @@ static void test_polydraw(void)
         GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
     {
         /* PolyDraw is only available on Win2k and later */
-        skip("PolyDraw is not available\n");
+        win_skip("PolyDraw is not available\n");
         goto done;
     }
     expect(TRUE, retb);

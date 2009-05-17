@@ -106,7 +106,7 @@ static void trace_hex(BYTE *pbData, DWORD dwLen) {
         trace(szTemp);
     }
     for (j=0; i<dwLen; j++,i++) {
-        sprintf(szTemp+6*j, "0x%02x, \n", pbData[i]);
+        sprintf(szTemp+6*j, "0x%02x,\n", pbData[i]);
     }
     trace(szTemp);
 }

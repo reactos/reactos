@@ -646,8 +646,8 @@ static void set_client_height(HWND Wnd, unsigned Height)
 
     GetClientRect(Wnd, &ClientRect);
     ok(ClientRect.bottom - ClientRect.top == Height,
-        "The client height should be %ld, but is %ld\n",
-        (long)Height, (long)(ClientRect.bottom - ClientRect.top));
+        "The client height should be %d, but is %d\n",
+        Height, ClientRect.bottom - ClientRect.top);
 }
 
 static void test_edit_control_1(void)
@@ -1177,9 +1177,13 @@ static void test_edit_control_4(void)
 static void test_edit_control_5(void)
 {
     static const char *str = "test\r\ntest";
+    HWND parentWnd;
     HWND hWnd;
     int len;
+    RECT rc1 = { 10, 10, 11, 11};
+    RECT rc;
 
+    /* first show that a non-child won't do for this test */
     hWnd = CreateWindowEx(0,
               "EDIT",
               str,
@@ -1187,19 +1191,48 @@ static void test_edit_control_5(void)
               10, 10, 1, 1,
               NULL, NULL, NULL, NULL);
     assert(hWnd);
-
+    /* size of non-child edit control is (much) bigger than requested */
+    GetWindowRect( hWnd, &rc);
+    ok( rc.right - rc.left > 20, "size of the window (%d) is smaller than expected\n",
+            rc.right - rc.left);
+    DestroyWindow(hWnd);
+    /* so create a parent, and give it edit controls children to test with */
+    parentWnd = CreateWindowEx(0,
+                            szEditTextPositionClass,
+                            "Edit Test", WS_VISIBLE |
+                            WS_OVERLAPPEDWINDOW,
+                            CW_USEDEFAULT, CW_USEDEFAULT,
+                            250, 250,
+                            NULL, NULL, hinst, NULL);
+    assert(parentWnd);
+    ShowWindow( parentWnd, SW_SHOW);
+    /* single line */
+    hWnd = CreateWindowEx(0,
+              "EDIT",
+              str, WS_VISIBLE | WS_BORDER |
+              WS_CHILD,
+              rc1.left, rc1.top, rc1.right - rc1.left, rc1.bottom - rc1.top,
+              parentWnd, NULL, NULL, NULL);
+    assert(hWnd);
+    GetClientRect( hWnd, &rc);
+    ok( rc.right == rc1.right - rc1.left && rc.bottom == rc1.bottom - rc1.top,
+            "Client rectangle not the expected size (%d,%d,%d,%d)\n",
+            rc.left, rc.top, rc.right, rc.bottom);
     len = SendMessageA(hWnd, WM_GETTEXTLENGTH, 0, 0);
     ok(lstrlenA(str) == len, "text shouldn't have been truncated\n");
     DestroyWindow(hWnd);
-
+    /* multi line */
     hWnd = CreateWindowEx(0,
               "EDIT",
               str,
-              ES_MULTILINE,
-              10, 10, 1, 1,
-              NULL, NULL, NULL, NULL);
+              WS_CHILD | ES_MULTILINE,
+              rc1.left, rc1.top, rc1.right - rc1.left, rc1.bottom - rc1.top,
+              parentWnd, NULL, NULL, NULL);
     assert(hWnd);
-
+    GetClientRect( hWnd, &rc);
+    ok( rc.right == rc1.right - rc1.left && rc.bottom == rc1.bottom - rc1.top,
+            "Client rectangle not the expected size (%d,%d,%d,%d)\n",
+            rc.left, rc.top, rc.right, rc.bottom);
     len = SendMessageA(hWnd, WM_GETTEXTLENGTH, 0, 0);
     ok(lstrlenA(str) == len, "text shouldn't have been truncated\n");
     DestroyWindow(hWnd);

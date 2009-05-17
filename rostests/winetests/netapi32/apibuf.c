@@ -42,12 +42,12 @@ static void run_apibuf_tests(void)
     NET_API_STATUS res;
 
     /* test normal logic */
-    ok(pNetApiBufferAllocate(1024, (LPVOID *)&p) == NERR_Success,
+    ok(pNetApiBufferAllocate(1024, &p) == NERR_Success,
        "Reserved memory\n");
     ok(pNetApiBufferSize(p, &dwSize) == NERR_Success, "Got size\n");
     ok(dwSize >= 1024, "The size is correct\n");
 
-    ok(pNetApiBufferReallocate(p, 1500, (LPVOID *) &p) == NERR_Success,
+    ok(pNetApiBufferReallocate(p, 1500, &p) == NERR_Success,
        "Reallocated\n");
     ok(pNetApiBufferSize(p, &dwSize) == NERR_Success, "Got size\n");
     ok(dwSize >= 1500, "The size is correct\n");
@@ -58,14 +58,14 @@ static void run_apibuf_tests(void)
     ok(pNetApiBufferSize(NULL, &dwSize) == ERROR_INVALID_PARAMETER, "Error for NULL pointer\n");
 
     /* border reallocate cases */
-    ok(pNetApiBufferReallocate(0, 1500, (LPVOID *) &p) == NERR_Success, "Reallocate with OldBuffer = NULL failed\n");
+    ok(pNetApiBufferReallocate(0, 1500, &p) == NERR_Success, "Reallocate with OldBuffer = NULL failed\n");
     ok(p != NULL, "No memory got allocated\n");
-    ok(pNetApiBufferAllocate(1024, (LPVOID *)&p) == NERR_Success, "Memory not reserved\n");
-    ok(pNetApiBufferReallocate(p, 0, (LPVOID *) &p) == NERR_Success, "Not freed\n");
+    ok(pNetApiBufferAllocate(1024, &p) == NERR_Success, "Memory not reserved\n");
+    ok(pNetApiBufferReallocate(p, 0, &p) == NERR_Success, "Not freed\n");
     ok(p == NULL, "Pointer not cleared\n");
-    
+
     /* 0-length buffer */
-    ok(pNetApiBufferAllocate(0, (LPVOID *)&p) == NERR_Success,
+    ok(pNetApiBufferAllocate(0, &p) == NERR_Success,
        "Reserved memory\n");
     ok(pNetApiBufferSize(p, &dwSize) == NERR_Success, "Got size\n");
     ok(dwSize < 0xFFFFFFFF, "The size of the 0-length buffer\n");

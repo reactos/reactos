@@ -299,14 +299,25 @@ static void InternetCrackUrlW_test(void)
     SetLastError(0xdeadbeef);
     r = InternetCrackUrlW(NULL, 0, 0, &comp );
     error = GetLastError();
+    if (!r && error == ERROR_CALL_NOT_IMPLEMENTED)
+    {
+        win_skip("InternetCrackUrlW is not implemented\n");
+        return;
+    }
     ok( !r, "InternetCrackUrlW succeeded unexpectedly\n");
-    ok( error == ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER got %u\n", error);
+    ok( error == ERROR_INVALID_PARAMETER ||
+        broken(error == ERROR_INTERNET_UNRECOGNIZED_SCHEME), /* IE5 */
+        "expected ERROR_INVALID_PARAMETER got %u\n", error);
 
-    SetLastError(0xdeadbeef);
-    r = InternetCrackUrlW(url, 0, 0, NULL );
-    error = GetLastError();
-    ok( !r, "InternetCrackUrlW succeeded unexpectedly\n");
-    ok( error == ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER got %u\n", error);
+    if (error == ERROR_INVALID_PARAMETER)
+    {
+        /* Crashes on IE5 */
+        SetLastError(0xdeadbeef);
+        r = InternetCrackUrlW(url, 0, 0, NULL );
+        error = GetLastError();
+        ok( !r, "InternetCrackUrlW succeeded unexpectedly\n");
+        ok( error == ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER got %u\n", error);
+    }
 
     r = InternetCrackUrlW(url, 0, 0, &comp );
     ok( r, "failed to crack url\n");

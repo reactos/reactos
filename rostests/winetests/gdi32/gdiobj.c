@@ -110,7 +110,7 @@ struct hgdiobj_event
 static DWORD WINAPI thread_proc(void *param)
 {
     LOGPEN lp;
-    struct hgdiobj_event *hgdiobj_event = (struct hgdiobj_event *)param;
+    struct hgdiobj_event *hgdiobj_event = param;
 
     hgdiobj_event->hdc = CreateDC("display", NULL, NULL, NULL);
     ok(hgdiobj_event->hdc != NULL, "CreateDC error %u\n", GetLastError());

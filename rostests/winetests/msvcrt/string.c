@@ -619,6 +619,50 @@ static void test_mbcjisjms(void)
     } while(jisjms[i++][0] != 0);
 }
 
+static const struct {
+    const char* string;
+    const char* delimiter;
+    int exp_offsetret1; /* returned offset from string after first call to strtok()
+                           -1 means NULL  */
+    int exp_offsetret2; /* returned offset from string after second call to strtok()
+                           -1 means NULL  */
+    int exp_offsetret3; /* returned offset from string after third call to strtok()
+                           -1 means NULL  */
+} testcases_strtok[] = {
+    { "red cabernet", " ", 0, 4, -1 },
+    { "sparkling white riesling", " ", 0, 10, 16 },
+    { " pale cream sherry", "e ", 1, 6, 9 },
+    /* end mark */
+    { 0}
+};
+
+static void test_strtok(void)
+{
+    int i;
+    char *strret;
+    char teststr[100];
+    for( i = 0; testcases_strtok[i].string; i++){
+        strcpy( teststr, testcases_strtok[i].string);
+        strret = strtok( teststr, testcases_strtok[i].delimiter);
+        ok( (int)(strret - teststr) ==  testcases_strtok[i].exp_offsetret1 ||
+                (!strret && testcases_strtok[i].exp_offsetret1 == -1),
+                "string (%p) \'%s\' return %p\n",
+                teststr, testcases_strtok[i].string, strret);
+        if( !strret) continue;
+        strret = strtok( NULL, testcases_strtok[i].delimiter);
+        ok( (int)(strret - teststr) ==  testcases_strtok[i].exp_offsetret2 ||
+                (!strret && testcases_strtok[i].exp_offsetret2 == -1),
+                "second call string (%p) \'%s\' return %p\n",
+                teststr, testcases_strtok[i].string, strret);
+        if( !strret) continue;
+        strret = strtok( NULL, testcases_strtok[i].delimiter);
+        ok( (int)(strret - teststr) ==  testcases_strtok[i].exp_offsetret3 ||
+                (!strret && testcases_strtok[i].exp_offsetret3 == -1),
+                "third call string (%p) \'%s\' return %p\n",
+                teststr, testcases_strtok[i].string, strret);
+    }
+}
+
 START_TEST(string)
 {
     char mem[100];
@@ -660,6 +704,6 @@ START_TEST(string)
     test_strcat_s();
     test__mbsnbcpy_s();
     test_mbcjisjms();
-
+    test_strtok();
     test_wcscpy_s();
 }

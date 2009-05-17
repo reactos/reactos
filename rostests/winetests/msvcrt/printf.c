@@ -698,6 +698,90 @@ static void test_fcvt(void)
     ok( 0 == sign, "sign wrong\n");
 }
 
+static struct {
+    double value;
+    int nrdigits;
+    const char *expstr_e;
+    const char *expstr_f;
+    int expdecpt_e;
+    int expdecpt_f;
+    int expsign;
+} test_cvt_testcases[] = {
+    {          45.0,   2,        "45",           "4500",          2,      2,      0 },
+    /* Numbers less than 1.0 with different precisions */
+    {        0.0001,   1,         "1",               "",         -3,     -3,     0 },
+    {        0.0001, -10,          "",               "",         -3,     -3,     0 },
+    {        0.0001,  10,"1000000000",        "1000000",         -3,     -3,     0 },
+    /* Basic sign test */
+    {     -111.0001,   5,     "11100",       "11100010",          3,      3,     1 },
+    {      111.0001,   5,     "11100",       "11100010",          3,      3,     0 },
+    /* big numbers with low precision */
+    {        3333.3,   2,        "33",         "333330",          4,      4,     0 },
+    {999999999999.9,   3,       "100","999999999999900",         13,     12,     0 },
+    /* 0.0 with different precisions */
+    {           0.0,   5,     "00000",          "00000",          0,      0,     0 },
+    {           0.0,   0,          "",               "",          0,      0,     0 },
+    {           0.0,  -1,          "",               "",          0,      0,     0 },
+    /* Numbers > 1.0 with 0 or -ve precision */
+    {     -123.0001,   0,          "",            "123",          3,      3,     1 },
+    {     -123.0001,  -1,          "",             "12",          3,      3,     1 },
+    {     -123.0001,  -2,          "",              "1",          3,      3,     1 },
+    {     -123.0001,  -3,          "",               "",          3,      3,     1 },
+    /* Numbers > 1.0, but with rounding at the point of precision */
+    {         99.99,   1,         "1",           "1000",          3,      3,     0 },
+    /* Numbers < 1.0 where rounding occurs at the point of precision */
+    {        0.0063,   2,        "63",              "1",         -2,     -1,     0 },
+    {        0.0063,   3,        "630",             "6",         -2,     -2,     0 },
+    { 0.09999999996,   2,        "10",             "10",          0,      0,     0 },
+    {           0.6,   1,         "6",              "6",          0,      0,     0 },
+    {           0.6,   0,          "",              "1",          1,      1,     0 },
+    {           0.4,   0,          "",               "",          0,      0,     0 },
+    {          0.49,   0,          "",               "",          0,      0,     0 },
+    {          0.51,   0,          "",              "1",          1,      1,     0 },
+    /* ask ridiculous amunt of precision, ruin formatting this table */
+    {           1.0,  30, "100000000000000000000000000000",
+                      "1000000000000000000000000000000",          1,      1,      0},
+    {           123456789012345678901.0,  30, "123456789012345680000000000000",
+                      "123456789012345680000000000000000000000000000000000",         21,    21,      0},
+    /* end marker */
+    { 0, 0, "END"}
+};
+
+static void test_xcvt(void)
+{
+    char *str;
+    int i, decpt, sign;
+    for( i = 0; strcmp( test_cvt_testcases[i].expstr_e, "END"); i++){
+        decpt = sign = 100;
+        str = _ecvt( test_cvt_testcases[i].value,
+                test_cvt_testcases[i].nrdigits,
+                &decpt,
+                &sign);
+        ok( 0 == strncmp( str, test_cvt_testcases[i].expstr_e, 15),
+               "_ecvt() bad return, got \n'%s' expected \n'%s'\n", str,
+              test_cvt_testcases[i].expstr_e);
+        ok( decpt == test_cvt_testcases[i].expdecpt_e,
+                "_ecvt() decimal point wrong, got %d expected %d\n", decpt,
+                test_cvt_testcases[i].expdecpt_e);
+    }
+    for( i = 0; strcmp( test_cvt_testcases[i].expstr_e, "END"); i++){
+        decpt = sign = 100;
+        str = _fcvt( test_cvt_testcases[i].value,
+                test_cvt_testcases[i].nrdigits,
+                &decpt,
+                &sign);
+        ok( 0 == strncmp( str, test_cvt_testcases[i].expstr_f, 15),
+               "_fcvt() bad return, got \n'%s' expected \n'%s'\n", str,
+              test_cvt_testcases[i].expstr_f);
+        ok( decpt == test_cvt_testcases[i].expdecpt_f,
+                "_fcvt() decimal point wrong, got %d expected %d\n", decpt,
+                test_cvt_testcases[i].expdecpt_f);
+        ok( sign == test_cvt_testcases[i].expsign,
+                "_ecvt() sign wrong, got %d expected %d\n", sign,
+                test_cvt_testcases[i].expsign);
+    }
+}
+
 static int _vsnwprintf_wrapper(wchar_t *str, size_t len, const wchar_t *format, ...)
 {
     int ret;
@@ -726,11 +810,60 @@ static void test_vsnwprintf(void)
     ok( !strcmp(buf, "onetwothree"), "got %s expected 'onetwothree'\n", buf );
 }
 
+static int (*p__vscprintf)(const char *format, __ms_va_list valist);
+static int (*p__vscwprintf)(const wchar_t *format, __ms_va_list valist);
+
+static int __cdecl _vscprintf_wrapper(const char *format, ...)
+{
+    int ret;
+    __ms_va_list valist;
+    __ms_va_start(valist, format);
+    ret = p__vscprintf(format, valist);
+    __ms_va_end(valist);
+    return ret;
+}
+
+static void test_vscprintf(void)
+{
+    int ret;
+
+    ret = _vscprintf_wrapper( "%s %d", "number", 1 );
+    ok( ret == 8, "got %d expected 8\n", ret );
+}
+
+static int __cdecl _vscwprintf_wrapper(const wchar_t *format, ...)
+{
+    int ret;
+    __ms_va_list valist;
+    __ms_va_start(valist, format);
+    ret = p__vscwprintf(format, valist);
+    __ms_va_end(valist);
+    return ret;
+}
+
+static void test_vscwprintf(void)
+{
+    const wchar_t format[] = {'%','s',' ','%','d',0};
+    const wchar_t number[] = {'n','u','m','b','e','r',0};
+
+    int ret;
+
+    ret = _vscwprintf_wrapper( format, number, 1 );
+    ok( ret == 8, "got %d expected 8\n", ret );
+}
+
 START_TEST(printf)
 {
     test_sprintf();
     test_swprintf();
     test_snprintf();
     test_fcvt();
+    test_xcvt();
     test_vsnwprintf();
+
+    p__vscprintf = (void *)GetProcAddress(GetModuleHandle("msvcrt.dll"), "_vscprintf");
+    p__vscwprintf = (void *)GetProcAddress(GetModuleHandle("msvcrt.dll"), "_vscwprintf");
+
+    if (p__vscprintf) test_vscprintf();
+    if (p__vscwprintf) test_vscwprintf();
 }

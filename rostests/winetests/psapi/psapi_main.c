@@ -21,9 +21,16 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-#include "wine/test.h"
 #include "windows.h"
+#include "wine/test.h"
 #include "psapi.h"
+
+#define expect_eq_d(expected, actual) \
+    do { \
+      int value = (actual); \
+      ok((expected) == value, "Expected " #actual " to be %d (" #expected ") is %d\n", \
+          (expected), value); \
+    } while (0)
 
 #define PSAPI_GET_PROC(func) \
     p ## func = (void*)GetProcAddress(hpsapi, #func); \
@@ -63,6 +70,7 @@ static DWORD (WINAPI *pGetModuleFileNameExA)(HANDLE, HMODULE, LPSTR, DWORD);
 static BOOL  (WINAPI *pGetModuleInformation)(HANDLE, HMODULE, LPMODULEINFO, DWORD);
 static DWORD (WINAPI *pGetMappedFileNameA)(HANDLE, LPVOID, LPSTR, DWORD);
 static DWORD (WINAPI *pGetProcessImageFileNameA)(HANDLE, LPSTR, DWORD);
+static DWORD (WINAPI *pGetProcessImageFileNameW)(HANDLE, LPWSTR, DWORD);
 static BOOL  (WINAPI *pGetProcessMemoryInfo)(HANDLE, PPROCESS_MEMORY_COUNTERS, DWORD);
 static BOOL  (WINAPI *pGetWsChanges)(HANDLE, PPSAPI_WS_WATCH_INFORMATION, DWORD);
 static BOOL  (WINAPI *pInitializeProcessForWsWatch)(HANDLE);
@@ -84,6 +92,8 @@ static BOOL InitFunctionPtrs(HMODULE hpsapi)
     /* GetProcessImageFileName is not exported on NT4 */
     pGetProcessImageFileNameA =
       (void *)GetProcAddress(hpsapi, "GetProcessImageFileNameA");
+    pGetProcessImageFileNameW =
+      (void *)GetProcAddress(hpsapi, "GetProcessImageFileNameW");
     return TRUE;
 }
 
@@ -166,6 +176,7 @@ static void test_GetProcessImageFileName(void)
 {
     HMODULE hMod = GetModuleHandle(NULL);
     char szImgPath[MAX_PATH], szMapPath[MAX_PATH];
+    WCHAR szImgPathW[MAX_PATH];
     DWORD ret;
 
     if(pGetProcessImageFileNameA == NULL)
@@ -175,26 +186,49 @@ static void test_GetProcessImageFileName(void)
     SetLastError(0xdeadbeef);
     if(!pGetProcessImageFileNameA(hpQI, szImgPath, sizeof(szImgPath)))
     {
-        if(GetLastError() == ERROR_INVALID_FUNCTION)
+        if(GetLastError() == ERROR_INVALID_FUNCTION) {
 	    win_skip("GetProcessImageFileName not implemented\n");
-	else if(GetLastError() == 0xdeadbeef)
-	    ok(0, "failed without error code\n");
-	else
-	    ok(0, "failed with %d\n", GetLastError());
+            return;
+        }
 
-        return;
+        if(GetLastError() == 0xdeadbeef)
+	    todo_wine ok(0, "failed without error code\n");
+	else
+	    todo_wine ok(0, "failed with %d\n", GetLastError());
     }
-    
-    w32_err(pGetProcessImageFileNameA(NULL, szImgPath, sizeof(szImgPath)), ERROR_INVALID_HANDLE);
-    w32_err(pGetProcessImageFileNameA(hpSR, szImgPath, sizeof(szImgPath)), ERROR_ACCESS_DENIED);
-    w32_err(pGetProcessImageFileNameA(hpQI, szImgPath, 0), ERROR_INSUFFICIENT_BUFFER);
-    if(!w32_suc(ret = pGetProcessImageFileNameA(hpQI, szImgPath, sizeof(szImgPath))) ||
-       !w32_suc(pGetMappedFileNameA(hpQV, hMod, szMapPath, sizeof(szMapPath))))
-        return;
-    /* Windows returns 2*strlen-1 */
-    ok(ret >= strlen(szImgPath), "szImgPath=\"%s\" ret=%d\n", szImgPath, ret);
-    ok(!strcmp(szImgPath, szMapPath),
-       "szImgPath=\"%s\" szMapPath=\"%s\"\n", szImgPath, szMapPath);    
+
+    todo_wine w32_err(pGetProcessImageFileNameA(NULL, szImgPath, sizeof(szImgPath)), ERROR_INVALID_HANDLE);
+    todo_wine w32_err(pGetProcessImageFileNameA(hpSR, szImgPath, sizeof(szImgPath)), ERROR_ACCESS_DENIED);
+    todo_wine w32_err(pGetProcessImageFileNameA(hpQI, szImgPath, 0), ERROR_INSUFFICIENT_BUFFER);
+    todo_wine
+    if(w32_suc(ret = pGetProcessImageFileNameA(hpQI, szImgPath, sizeof(szImgPath))) &&
+       w32_suc(pGetMappedFileNameA(hpQV, hMod, szMapPath, sizeof(szMapPath)))) {
+        /* Windows returns 2*strlen-1 */
+        ok(ret >= strlen(szImgPath), "szImgPath=\"%s\" ret=%d\n", szImgPath, ret);
+        ok(!strcmp(szImgPath, szMapPath),
+           "szImgPath=\"%s\" szMapPath=\"%s\"\n", szImgPath, szMapPath);
+    }
+
+    w32_err(pGetProcessImageFileNameW(NULL, szImgPathW, sizeof(szImgPathW)), ERROR_INVALID_HANDLE);
+    /* no information about correct buffer size returned: */
+    w32_err(pGetProcessImageFileNameW(hpQI, szImgPathW, 0), ERROR_INSUFFICIENT_BUFFER);
+    w32_err(pGetProcessImageFileNameW(hpQI, NULL, 0), ERROR_INSUFFICIENT_BUFFER);
+
+    /* correct call */
+    memset(szImgPathW, 0xff, sizeof(szImgPathW));
+    ret = pGetProcessImageFileNameW(hpQI, szImgPathW, sizeof(szImgPathW)/sizeof(WCHAR));
+    ok(ret > 0, "GetProcessImageFileNameW should have succeeded.\n");
+    ok(szImgPathW[0] == '\\', "GetProcessImageFileNameW should have returned an NT path.\n");
+    expect_eq_d(lstrlenW(szImgPathW), ret);
+
+    /* boundary values of 'size' */
+    w32_err(pGetProcessImageFileNameW(hpQI, szImgPathW, ret), ERROR_INSUFFICIENT_BUFFER);
+
+    memset(szImgPathW, 0xff, sizeof(szImgPathW));
+    ret = pGetProcessImageFileNameW(hpQI, szImgPathW, ret + 1);
+    ok(ret > 0, "GetProcessImageFileNameW should have succeeded.\n");
+    ok(szImgPathW[0] == '\\', "GetProcessImageFileNameW should have returned an NT path.\n");
+    expect_eq_d(lstrlenW(szImgPathW), ret);
 }
 
 static void test_GetModuleFileNameEx(void)
@@ -309,7 +343,7 @@ START_TEST(psapi_main)
 	    test_GetModuleInformation();
 	    test_GetProcessMemoryInfo();
 	    todo_wine test_GetMappedFileName();
-            todo_wine test_GetProcessImageFileName();
+            test_GetProcessImageFileName();
             test_GetModuleFileNameEx();
             test_GetModuleBaseName();
 	    test_ws_functions();

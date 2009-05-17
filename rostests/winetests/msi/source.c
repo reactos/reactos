@@ -27,10 +27,12 @@
 #include <msidefs.h>
 #include <msi.h>
 #include <sddl.h>
+#include <secext.h>
 
 #include "wine/test.h"
 
 static BOOL (WINAPI *pConvertSidToStringSidA)(PSID, LPSTR*);
+static BOOLEAN (WINAPI *pGetUserNameExA)(EXTENDED_NAME_FORMAT, LPSTR, PULONG);
 static UINT (WINAPI *pMsiSourceListAddMediaDiskA)
     (LPCSTR, LPCSTR, MSIINSTALLCONTEXT, DWORD, DWORD, LPCSTR, LPCSTR);
 static UINT (WINAPI *pMsiSourceListAddSourceExA)
@@ -51,6 +53,7 @@ static void init_functionpointers(void)
 {
     HMODULE hmsi = GetModuleHandleA("msi.dll");
     HMODULE hadvapi32 = GetModuleHandleA("advapi32.dll");
+    HMODULE hsecur32 = LoadLibraryA("secur32.dll");
 
 #define GET_PROC(dll, func) \
     p ## func = (void *)GetProcAddress(dll, #func); \
@@ -66,6 +69,8 @@ static void init_functionpointers(void)
     GET_PROC(hmsi, MsiSourceListAddSourceA)
 
     GET_PROC(hadvapi32, ConvertSidToStringSidA)
+
+    GET_PROC(hsecur32, GetUserNameExA)
 
 #undef GET_PROC
 }
@@ -3139,11 +3144,17 @@ static void test_MsiSourceListAddSource(void)
 
     /* MACHINENAME\username */
     size = MAX_PATH;
-    GetComputerNameA(username, &size);
-    lstrcatA(username, "\\");
-    ptr = username + lstrlenA(username);
-    size = MAX_PATH;
-    GetUserNameA(ptr, &size);
+    if (pGetUserNameExA != NULL)
+        pGetUserNameExA(NameSamCompatible, username, &size);
+    else
+    {
+        GetComputerNameA(username, &size);
+        lstrcatA(username, "\\");
+        ptr = username + lstrlenA(username);
+        size = MAX_PATH - (ptr - username);
+        GetUserNameA(ptr, &size);
+    }
+    trace("username: %s\n", username);
 
     /* GetLastError is not set by the function */
 

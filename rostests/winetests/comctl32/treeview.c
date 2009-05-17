@@ -32,6 +32,8 @@
 #include "wine/test.h"
 #include "msg.h"
 
+const char *TEST_CALLBACK_TEXT = "callback_text";
+
 #define NUM_MSG_SEQUENCES   1
 #define LISTVIEW_SEQ_INDEX  0
 
@@ -264,6 +266,64 @@ static void FillRoot(void)
     ok(!strcmp(sequence, "AB."), "Item creation\n");
 }
 
+static void TestCallback(void)
+{
+    HTREEITEM hRoot;
+    HTREEITEM hItem1, hItem2;
+    TVINSERTSTRUCTA ins;
+    TVITEM tvi;
+    CHAR test_string[] = "Test_string";
+    CHAR buf[128];
+    LRESULT ret;
+
+    TreeView_DeleteAllItems(hTree);
+    ins.hParent = TVI_ROOT;
+    ins.hInsertAfter = TVI_ROOT;
+    U(ins).item.mask = TVIF_TEXT;
+    U(ins).item.pszText = LPSTR_TEXTCALLBACK;
+    hRoot = TreeView_InsertItem(hTree, &ins);
+    assert(hRoot);
+
+    tvi.hItem = hRoot;
+    tvi.mask = TVIF_TEXT;
+    tvi.pszText = buf;
+    tvi.cchTextMax = sizeof(buf)/sizeof(buf[0]);
+    ret = TreeView_GetItem(hTree, &tvi);
+    ok(ret == 1, "ret\n");
+    ok(strcmp(tvi.pszText, TEST_CALLBACK_TEXT) == 0, "Callback item text mismatch %s vs %s\n",
+        tvi.pszText, TEST_CALLBACK_TEXT);
+
+    ins.hParent = hRoot;
+    ins.hInsertAfter = TVI_FIRST;
+    U(ins).item.mask = TVIF_TEXT;
+    U(ins).item.pszText = test_string;
+    hItem1 = TreeView_InsertItem(hTree, &ins);
+    assert(hItem1);
+
+    tvi.hItem = hItem1;
+    TreeView_GetItem(hTree, &tvi);
+    ok(strcmp(tvi.pszText, test_string) == 0, "Item text mismatch %s vs %s\n",
+        tvi.pszText, test_string);
+
+    /* undocumented: pszText of NULL also means LPSTR_CALLBACK: */
+    tvi.pszText = NULL;
+    ret = TreeView_SetItem(hTree, &tvi);
+    ok(ret == 1, "Expected SetItem return 1, got %ld\n", ret);
+    tvi.pszText = buf;
+    TreeView_GetItem(hTree, &tvi);
+    ok(strcmp(tvi.pszText, TEST_CALLBACK_TEXT) == 0, "Item text mismatch %s vs %s\n",
+        tvi.pszText, TEST_CALLBACK_TEXT);
+
+    U(ins).item.pszText = NULL;
+    hItem2 = TreeView_InsertItem(hTree, &ins);
+    assert(hItem2);
+    tvi.hItem = hItem2;
+    memset(buf, 0, sizeof(buf));
+    TreeView_GetItem(hTree, &tvi);
+    ok(strcmp(tvi.pszText, TEST_CALLBACK_TEXT) == 0, "Item text mismatch %s vs %s\n",
+        tvi.pszText, TEST_CALLBACK_TEXT);
+}
+
 static void DoTest1(void)
 {
     BOOL r;
@@ -367,11 +427,9 @@ static void TestGetSetBkColor(void)
 {
     COLORREF crColor = RGB(0,0,0);
 
-    todo_wine{
-        /* If the value is -1, the control is using the system color for the background color. */
-        crColor = (COLORREF)SendMessage( hTree, TVM_GETBKCOLOR, 0, 0 );
-        ok(crColor == -1, "Default background color reported as 0x%.8x\n", crColor);
-    }
+    /* If the value is -1, the control is using the system color for the background color. */
+    crColor = (COLORREF)SendMessage( hTree, TVM_GETBKCOLOR, 0, 0 );
+    ok(crColor == -1, "Default background color reported as 0x%.8x\n", crColor);
 
     /* Test for black background */
     SendMessage( hTree, TVM_SETBKCOLOR, 0, (LPARAM)RGB(0,0,0) );
@@ -607,7 +665,7 @@ static void TestGetSet(void)
 /* This function hooks in and records all messages to the treeview control */
 static LRESULT WINAPI TreeviewWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    static long defwndproc_counter = 0;
+    static LONG defwndproc_counter = 0;
     LRESULT ret;
     struct message msg;
     WNDPROC lpOldProc = (WNDPROC)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
@@ -664,6 +722,13 @@ static LRESULT CALLBACK MyWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPa
                 IdentifyItem(pTreeView->itemOld.hItem);
                 IdentifyItem(pTreeView->itemNew.hItem);
                 return 0;
+            case TVN_GETDISPINFOA: {
+                NMTVDISPINFOA *disp = (NMTVDISPINFOA *)lParam;
+                if (disp->item.mask & TVIF_TEXT) {
+                    lstrcpyn(disp->item.pszText, TEST_CALLBACK_TEXT, disp->item.cchTextMax);
+                }
+                return 0;
+              }
             }
         }
         return 0;
@@ -682,6 +747,76 @@ static LRESULT CALLBACK MyWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPa
     }
     return 0L;
 }
+
+static void TestExpandInvisible(void)
+{
+    static CHAR nodeText[][5] = {"0", "1", "2", "3", "4"};
+    TVINSERTSTRUCTA ins;
+    HTREEITEM node[5];
+    RECT dummyRect;
+    BOOL nodeVisible;
+
+    /* The test builds the following tree and expands then node 1, while node 0 is collapsed.
+     *
+     * 0
+     * |- 1
+     * |  |- 2
+     * |  |- 3
+     * |- 4
+     *
+     */
+
+    TreeView_DeleteAllItems(hTree);
+
+    ins.hParent = TVI_ROOT;
+    ins.hInsertAfter = TVI_ROOT;
+    U(ins).item.mask = TVIF_TEXT;
+    U(ins).item.pszText = nodeText[0];
+    node[0] = TreeView_InsertItem(hTree, &ins);
+    assert(node[0]);
+
+    ins.hInsertAfter = TVI_LAST;
+    U(ins).item.mask = TVIF_TEXT;
+    ins.hParent = node[0];
+
+    U(ins).item.pszText = nodeText[1];
+    node[1] = TreeView_InsertItem(hTree, &ins);
+    assert(node[1]);
+    U(ins).item.pszText = nodeText[4];
+    node[4] = TreeView_InsertItem(hTree, &ins);
+    assert(node[4]);
+
+    ins.hParent = node[1];
+
+    U(ins).item.pszText = nodeText[2];
+    node[2] = TreeView_InsertItem(hTree, &ins);
+    assert(node[2]);
+    U(ins).item.pszText = nodeText[3];
+    node[3] = TreeView_InsertItem(hTree, &ins);
+    assert(node[3]);
+
+
+    nodeVisible = TreeView_GetItemRect(hTree, node[1], &dummyRect, FALSE);
+    ok(!nodeVisible, "Node 1 should not be visible.\n");
+    nodeVisible = TreeView_GetItemRect(hTree, node[2], &dummyRect, FALSE);
+    ok(!nodeVisible, "Node 2 should not be visible.\n");
+    nodeVisible = TreeView_GetItemRect(hTree, node[3], &dummyRect, FALSE);
+    ok(!nodeVisible, "Node 3 should not be visible.\n");
+    nodeVisible = TreeView_GetItemRect(hTree, node[4], &dummyRect, FALSE);
+    ok(!nodeVisible, "Node 4 should not be visible.\n");
+
+    ok(TreeView_Expand(hTree, node[1], TVE_EXPAND), "Expand of node 1 failed.\n");
+
+    nodeVisible = TreeView_GetItemRect(hTree, node[1], &dummyRect, FALSE);
+    ok(!nodeVisible, "Node 1 should not be visible.\n");
+    nodeVisible = TreeView_GetItemRect(hTree, node[2], &dummyRect, FALSE);
+    ok(!nodeVisible, "Node 2 should not be visible.\n");
+    nodeVisible = TreeView_GetItemRect(hTree, node[3], &dummyRect, FALSE);
+    ok(!nodeVisible, "Node 3 should not be visible.\n");
+    nodeVisible = TreeView_GetItemRect(hTree, node[4], &dummyRect, FALSE);
+    ok(!nodeVisible, "Node 4 should not be visible.\n");
+}
+
 
 START_TEST(treeview)
 {
@@ -745,6 +880,12 @@ START_TEST(treeview)
 
     /* Sequences tested inside due to number */
     TestGetSet();
+
+    /* Clears all the previous items */
+    TestCallback();
+
+    /* Clears all the previous items */
+    TestExpandInvisible();
 
     PostMessageA(hMainWnd, WM_CLOSE, 0, 0);
     while(GetMessageA(&msg,0,0,0)) {

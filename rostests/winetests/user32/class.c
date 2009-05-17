@@ -43,11 +43,13 @@ static const WCHAR WC_EDITW[] = {'E','d','i','t',0};
 
 static LRESULT WINAPI ClassTest_WndProc (HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
+    if (msg == WM_NCCREATE) return 1;
     return DefWindowProcW (hWnd, msg, wParam, lParam);
 }
 
 static LRESULT WINAPI ClassTest_WndProc2 (HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
+    if (msg == WM_NCCREATE) return 1;
     return DefWindowProcA (hWnd, msg, wParam, lParam);
 }
 
@@ -234,42 +236,48 @@ static void test_styles(void)
     check_style( "#32772",     1, 0, 0 );  /* icon title */
 }
 
-static void check_class(HINSTANCE inst, const char *name, const char *menu_name)
+static void check_class_(int line, HINSTANCE inst, const char *name, const char *menu_name)
 {
     WNDCLASS wc;
     UINT atom = GetClassInfo(inst,name,&wc);
-    ok( atom, "Class %s %p not found\n", name, inst );
+    ok_(__FILE__,line)( atom, "Class %s %p not found\n", name, inst );
     if (atom)
     {
         if (wc.lpszMenuName && menu_name)
-            ok( !strcmp( menu_name, wc.lpszMenuName ), "Wrong name %s/%s for class %s %p\n",
-                wc.lpszMenuName, menu_name, name, inst );
+            ok_(__FILE__,line)( !strcmp( menu_name, wc.lpszMenuName ),
+                                "Wrong name %s/%s for class %s %p\n",
+                                wc.lpszMenuName, menu_name, name, inst );
         else
-            ok( !menu_name == !wc.lpszMenuName, "Wrong name %p/%p for class %s %p\n",
-                wc.lpszMenuName, menu_name, name, inst );
+            ok_(__FILE__,line)( !menu_name == !wc.lpszMenuName, "Wrong name %p/%p for class %s %p\n",
+                                wc.lpszMenuName, menu_name, name, inst );
     }
 }
+#define check_class(inst,name,menu) check_class_(__LINE__,inst,name,menu)
 
-static void check_instance( const char *name, HINSTANCE inst, HINSTANCE info_inst, HINSTANCE gcl_inst )
+static void check_instance_( int line, const char *name, HINSTANCE inst,
+                             HINSTANCE info_inst, HINSTANCE gcl_inst )
 {
     WNDCLASSA wc;
     HWND hwnd;
 
-    ok( GetClassInfo( inst, name, &wc ), "Couldn't find class %s inst %p\n", name, inst );
-    ok( wc.hInstance == info_inst, "Wrong info instance %p/%p for class %s\n",
-        wc.hInstance, info_inst, name );
+    ok_(__FILE__,line)( GetClassInfo( inst, name, &wc ), "Couldn't find class %s inst %p\n", name, inst );
+    ok_(__FILE__,line)( wc.hInstance == info_inst, "Wrong info instance %p/%p for class %s\n",
+                        wc.hInstance, info_inst, name );
     hwnd = CreateWindowExA( 0, name, "test_window", 0, 0, 0, 0, 0, 0, 0, inst, 0 );
-    ok( hwnd != NULL, "Couldn't create window for class %s inst %p\n", name, inst );
-    ok( (HINSTANCE)GetClassLongPtrA( hwnd, GCLP_HMODULE ) == gcl_inst,
-        "Wrong GCL instance %p/%p for class %s\n",
+    ok_(__FILE__,line)( hwnd != NULL, "Couldn't create window for class %s inst %p\n", name, inst );
+    ok_(__FILE__,line)( (HINSTANCE)GetClassLongPtrA( hwnd, GCLP_HMODULE ) == gcl_inst,
+                        "Wrong GCL instance %p/%p for class %s\n",
         (HINSTANCE)GetClassLongPtrA( hwnd, GCLP_HMODULE ), gcl_inst, name );
-    ok( (HINSTANCE)GetWindowLongPtrA( hwnd, GWLP_HINSTANCE ) == inst,
-        "Wrong GWL instance %p/%p for window %s\n",
+    ok_(__FILE__,line)( (HINSTANCE)GetWindowLongPtrA( hwnd, GWLP_HINSTANCE ) == inst,
+                        "Wrong GWL instance %p/%p for window %s\n",
         (HINSTANCE)GetWindowLongPtrA( hwnd, GWLP_HINSTANCE ), inst, name );
-    ok(!UnregisterClassA(name, inst), "UnregisterClassA should fail while exists a class window\n");
-    ok(GetLastError() == ERROR_CLASS_HAS_WINDOWS, "GetLastError() should be set to ERROR_CLASS_HAS_WINDOWS not %d\n", GetLastError());
+    ok_(__FILE__,line)(!UnregisterClassA(name, inst),
+                       "UnregisterClassA should fail while exists a class window\n");
+    ok_(__FILE__,line)(GetLastError() == ERROR_CLASS_HAS_WINDOWS,
+                       "GetLastError() should be set to ERROR_CLASS_HAS_WINDOWS not %d\n", GetLastError());
     DestroyWindow(hwnd);
 }
+#define check_instance(name,inst,info_inst,gcl_inst) check_instance_(__LINE__,name,inst,info_inst,gcl_inst)
 
 struct class_info
 {
@@ -364,6 +372,7 @@ static void test_instances(void)
 
     /* setting global flag doesn't change status of class */
     hwnd = CreateWindowExA( 0, name, "test", 0, 0, 0, 0, 0, 0, 0, main_module, 0 );
+    ok( hwnd != 0, "CreateWindow failed error %u\n", GetLastError());
     SetClassLongA( hwnd, GCL_STYLE, CS_GLOBALCLASS );
     cls.lpszMenuName  = "kernel32";
     cls.hInstance = kernel32;

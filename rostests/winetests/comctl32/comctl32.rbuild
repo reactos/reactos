@@ -10,6 +10,7 @@
 	<file>dpa.c</file>
 	<file>header.c</file>
 	<file>imagelist.c</file>
+	<file>ipaddress.c</file>
 	<file>listview.c</file>
 	<file>misc.c</file>
 	<file>monthcal.c</file>

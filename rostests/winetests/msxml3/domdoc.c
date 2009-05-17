@@ -376,7 +376,7 @@ static char *list_to_string(IXMLDOMNodeList *list)
 {
     static char buf[4096];
     char *pos = buf;
-    long len = 0;
+    LONG len = 0;
     int i;
 
     if (list == NULL)
@@ -418,8 +418,8 @@ static void test_domdoc( void )
     VARIANT_BOOL b;
     VARIANT var;
     BSTR str;
-    long code;
-    long nLength = 0;
+    LONG code;
+    LONG nLength = 0;
 
     r = CoCreateInstance( &CLSID_DOMDocument, NULL, 
         CLSCTX_INPROC_SERVER, &IID_IXMLDOMDocument, (LPVOID*)&doc );
@@ -571,7 +571,7 @@ static void test_domdoc( void )
 
     r = IXMLDOMParseError_get_errorCode( error, &code );
     ok( r == S_FALSE, "returns %08x\n", r );
-    ok( code == 0, "code %ld\n", code );
+    ok( code == 0, "code %d\n", code );
     IXMLDOMParseError_Release( error );
 
      /* test createTextNode */
@@ -618,7 +618,7 @@ static void test_domdoc( void )
 
         r = IXMLDOMText_get_length(nodetext, &nLength);
         ok(r == S_OK, "ret %08x\n", r );
-        ok(nLength == 4, "expected 4 got %ld\n", nLength);
+        ok(nLength == 4, "expected 4 got %d\n", nLength);
 
         /* test nodeTypeString */
         r = IXMLDOMText_get_nodeTypeString(nodetext, &str);
@@ -909,7 +909,7 @@ static void test_domnode( void )
     VARIANT_BOOL b;
     BSTR str;
     VARIANT var;
-    long count;
+    LONG count;
 
     r = CoCreateInstance( &CLSID_DOMDocument, NULL, 
         CLSCTX_INPROC_SERVER, &IID_IXMLDOMDocument, (LPVOID*)&doc );
@@ -1244,7 +1244,7 @@ todo_wine
 
         r = IXMLDOMNodeList_get_length( list, &count );
         ok( r == S_OK, "get_length returns %08x\n", r );
-        ok( count == 4, "get_length got %ld\n", count );
+        ok( count == 4, "get_length got %d\n", count );
 
         r = IXMLDOMNodeList_nextNode(list, NULL);
         ok(r == E_INVALIDARG, "Exected E_INVALIDARG got %08x\n", r);
@@ -1439,7 +1439,7 @@ static void test_create(void)
     IXMLDOMNamedNodeMap *attr_map;
     IUnknown *unk;
     LONG ref;
-    long num;
+    LONG num;
 
     r = CoCreateInstance( &CLSID_DOMDocument, NULL, 
         CLSCTX_INPROC_SERVER, &IID_IXMLDOMDocument, (LPVOID*)&doc );
@@ -1536,7 +1536,7 @@ static void test_create(void)
     ok( r == S_OK, "returns %08x\n", r );
     r = IXMLDOMNamedNodeMap_get_length( attr_map, &num );
     ok( r == S_OK, "returns %08x\n", r );
-    ok( num == 0, "num %ld\n", num );
+    ok( num == 0, "num %d\n", num );
     IXMLDOMNamedNodeMap_Release( attr_map );
 
     V_VT(&var) = VT_BSTR;
@@ -1548,7 +1548,7 @@ static void test_create(void)
     ok( r == S_OK, "returns %08x\n", r );
     r = IXMLDOMNamedNodeMap_get_length( attr_map, &num );
     ok( r == S_OK, "returns %08x\n", r );
-    ok( num == 1, "num %ld\n", num );
+    ok( num == 1, "num %d\n", num );
     IXMLDOMNamedNodeMap_Release( attr_map );
     VariantClear(&var);
 
@@ -1560,7 +1560,7 @@ static void test_create(void)
     ok( r == S_OK, "returns %08x\n", r );
     r = IXMLDOMNamedNodeMap_get_length( attr_map, &num );
     ok( r == S_OK, "returns %08x\n", r );
-    ok( num == 1, "num %ld\n", num );
+    ok( num == 1, "num %d\n", num );
     IXMLDOMNamedNodeMap_Release( attr_map );
     VariantClear(&var);
     r = IXMLDOMElement_getAttribute( element, name, &var );
@@ -1578,7 +1578,7 @@ static void test_create(void)
     ok( r == S_OK, "returns %08x\n", r );
     r = IXMLDOMNamedNodeMap_get_length( attr_map, &num );
     ok( r == S_OK, "returns %08x\n", r );
-    ok( num == 2, "num %ld\n", num );
+    ok( num == 2, "num %d\n", num );
     IXMLDOMNamedNodeMap_Release( attr_map );
     VariantClear(&var);
     SysFreeString(name);
@@ -1626,7 +1626,7 @@ static void test_getElementsByTagName(void)
     IXMLDOMDocument *doc;
     IXMLDOMNodeList *node_list;
     IDispatchEx *dispex;
-    long len;
+    LONG len;
 
     r = CoCreateInstance( &CLSID_DOMDocument, NULL, 
         CLSCTX_INPROC_SERVER, &IID_IXMLDOMDocument, (LPVOID*)&doc );
@@ -1644,7 +1644,7 @@ static void test_getElementsByTagName(void)
     ok( r == S_OK, "ret %08x\n", r );
     r = IXMLDOMNodeList_get_length( node_list, &len );
     ok( r == S_OK, "ret %08x\n", r );
-    ok( len == 6, "len %ld\n", len );
+    ok( len == 6, "len %d\n", len );
 
     r = IXMLDOMNodeList_QueryInterface( node_list, &IID_IDispatchEx, (void**)&dispex );
     ok( r == S_OK, "rets %08x\n", r);
@@ -1692,7 +1692,7 @@ static void test_getElementsByTagName(void)
     ok( r == S_OK, "ret %08x\n", r );
     r = IXMLDOMNodeList_get_length( node_list, &len );
     ok( r == S_OK, "ret %08x\n", r );
-    ok( len == 1, "len %ld\n", len );
+    ok( len == 1, "len %d\n", len );
     IXMLDOMNodeList_Release( node_list );
     SysFreeString( str );
 
@@ -1701,7 +1701,7 @@ static void test_getElementsByTagName(void)
     ok( r == S_OK, "ret %08x\n", r );
     r = IXMLDOMNodeList_get_length( node_list, &len );
     ok( r == S_OK, "ret %08x\n", r );
-    ok( len == 0, "len %ld\n", len );
+    ok( len == 0, "len %d\n", len );
     IXMLDOMNodeList_Release( node_list );
     SysFreeString( str );
 
@@ -1710,7 +1710,7 @@ static void test_getElementsByTagName(void)
     ok( r == S_OK, "ret %08x\n", r );
     r = IXMLDOMNodeList_get_length( node_list, &len );
     ok( r == S_OK, "ret %08x\n", r );
-    ok( len == 0, "len %ld\n", len );
+    ok( len == 0, "len %d\n", len );
     IXMLDOMNodeList_Release( node_list );
     SysFreeString( str );
 
@@ -1727,7 +1727,7 @@ static void test_get_text(void)
     IXMLDOMNode *nodeRoot;
     IXMLDOMNodeList *node_list;
     IXMLDOMNamedNodeMap *node_map;
-    long len;
+    LONG len;
 
     r = CoCreateInstance( &CLSID_DOMDocument, NULL, 
         CLSCTX_INPROC_SERVER, &IID_IXMLDOMDocument, (LPVOID*)&doc );
@@ -1769,7 +1769,7 @@ static void test_get_text(void)
 
     r = IXMLDOMNodeList_get_length( node_list, &len );
     ok( r == S_OK, "ret %08x\n", r );
-    ok( len == 1, "expect 1 got %ld\n", len );
+    ok( len == 1, "expect 1 got %d\n", len );
 
     r = IXMLDOMNodeList_get_item( node_list, 0, NULL );
     ok( r == E_INVALIDARG, "ret %08x\n", r );
@@ -1828,7 +1828,7 @@ static void test_get_childNodes(void)
     IXMLDOMElement *element;
     IXMLDOMNode *node, *node2;
     IXMLDOMNodeList *node_list, *node_list2;
-    long len;
+    LONG len;
 
     r = CoCreateInstance( &CLSID_DOMDocument, NULL, 
         CLSCTX_INPROC_SERVER, &IID_IXMLDOMDocument, (LPVOID*)&doc );
@@ -1849,7 +1849,7 @@ static void test_get_childNodes(void)
 
     r = IXMLDOMNodeList_get_length( node_list, &len );
     ok( r == S_OK, "ret %08x\n", r);
-    ok( len == 4, "len %ld\n", len);
+    ok( len == 4, "len %d\n", len);
 
     r = IXMLDOMNodeList_get_item( node_list, 2, &node );
     ok( r == S_OK, "ret %08x\n", r);
@@ -1859,7 +1859,7 @@ static void test_get_childNodes(void)
 
     r = IXMLDOMNodeList_get_length( node_list2, &len );
     ok( r == S_OK, "ret %08x\n", r);
-    ok( len == 0, "len %ld\n", len);
+    ok( len == 0, "len %d\n", len);
 
     r = IXMLDOMNodeList_get_item( node_list2, 0, &node2);
     ok( r == S_FALSE, "ret %08x\n", r);
@@ -1968,7 +1968,7 @@ static void test_replaceChild(void)
     IXMLDOMNode *fo_node, *ba_node, *lc_node, *removed_node, *temp_node;
     IXMLDOMNodeList *root_list, *fo_list;
     IUnknown * unk1, *unk2;
-    long len;
+    LONG len;
 
     r = CoCreateInstance( &CLSID_DOMDocument, NULL,
         CLSCTX_INPROC_SERVER, &IID_IXMLDOMDocument, (LPVOID*)&doc );
@@ -2056,7 +2056,7 @@ static void test_replaceChild(void)
 
     r = IXMLDOMNodeList_get_length( fo_list, &len);
     ok( r == S_OK, "ret %08x\n", r );
-    ok( len == 0, "len %ld\n", len);
+    ok( len == 0, "len %d\n", len);
 
     IXMLDOMNodeList_Release( fo_list );
 
@@ -2077,7 +2077,7 @@ static void test_removeNamedItem(void)
     IXMLDOMNamedNodeMap * pr_attrs;
     VARIANT_BOOL b;
     BSTR str;
-    long len;
+    LONG len;
     HRESULT r;
 
     r = CoCreateInstance( &CLSID_DOMDocument, NULL,
@@ -2105,7 +2105,7 @@ static void test_removeNamedItem(void)
 
     r = IXMLDOMNamedNodeMap_get_length( pr_attrs, &len );
     ok( r == S_OK, "ret %08x\n", r);
-    ok( len == 3, "length %ld\n", len);
+    ok( len == 3, "length %d\n", len);
 
     removed_node = (void*)0xdeadbeef;
     r = IXMLDOMNamedNodeMap_removeNamedItem( pr_attrs, NULL, &removed_node);
@@ -2124,7 +2124,7 @@ static void test_removeNamedItem(void)
 
     r = IXMLDOMNamedNodeMap_get_length( pr_attrs, &len );
     ok( r == S_OK, "ret %08x\n", r);
-    ok( len == 2, "length %ld\n", len);
+    ok( len == 2, "length %d\n", len);
 
     r = IXMLDOMNamedNodeMap_setNamedItem( pr_attrs, removed_node, NULL);
     ok ( r == S_OK, "ret %08x\n", r);
@@ -2132,14 +2132,14 @@ static void test_removeNamedItem(void)
 
     r = IXMLDOMNamedNodeMap_get_length( pr_attrs, &len );
     ok( r == S_OK, "ret %08x\n", r);
-    ok( len == 3, "length %ld\n", len);
+    ok( len == 3, "length %d\n", len);
 
     r = IXMLDOMNamedNodeMap_removeNamedItem( pr_attrs, str, NULL);
     ok ( r == S_OK, "ret %08x\n", r);
 
     r = IXMLDOMNamedNodeMap_get_length( pr_attrs, &len );
     ok( r == S_OK, "ret %08x\n", r);
-    ok( len == 2, "length %ld\n", len);
+    ok( len == 2, "length %d\n", len);
 
     r = IXMLDOMNamedNodeMap_removeNamedItem( pr_attrs, str, NULL);
     ok ( r == S_FALSE, "ret %08x\n", r);
@@ -2400,8 +2400,8 @@ static void test_cloneNode(void )
     VARIANT_BOOL b;
     IXMLDOMNodeList *pList;
     IXMLDOMNamedNodeMap *mapAttr;
-    long nLength = 0, nLength1 = 0;
-    long nAttrCnt = 0, nAttrCnt1 = 0;
+    LONG nLength = 0, nLength1 = 0;
+    LONG nAttrCnt = 0, nAttrCnt1 = 0;
     IXMLDOMNode *node;
     IXMLDOMNode *node_clone;
     IXMLDOMNode *node_first;
@@ -2495,8 +2495,8 @@ static void test_cloneNode(void )
         IXMLDOMNamedNodeMap_Release(mapAttr);
     }
 
-    ok(nLength == nLength1, "wrong Child count (%ld, %ld)\n", nLength, nLength1);
-    ok(nAttrCnt == nAttrCnt1, "wrong Attribute count (%ld, %ld)\n", nAttrCnt, nAttrCnt1);
+    ok(nLength == nLength1, "wrong Child count (%d, %d)\n", nLength, nLength1);
+    ok(nAttrCnt == nAttrCnt1, "wrong Attribute count (%d, %d)\n", nAttrCnt, nAttrCnt1);
     IXMLDOMNode_Release(node_clone);
 
     /* No Children */
@@ -2530,7 +2530,7 @@ static void test_cloneNode(void )
     if (pList)
 	{
 		IXMLDOMNodeList_get_length(pList, &nLength1);
-        ok( nLength1 == 0, "Length should be 0 (%ld)\n", nLength1);
+        ok( nLength1 == 0, "Length should be 0 (%d)\n", nLength1);
 		IXMLDOMNodeList_Release(pList);
 	}
 
@@ -2539,12 +2539,12 @@ static void test_cloneNode(void )
     if(mapAttr)
     {
         IXMLDOMNamedNodeMap_get_length(mapAttr, &nAttrCnt1);
-        ok( nAttrCnt1 == 3, "Attribute count should be 3 (%ld)\n", nAttrCnt1);
+        ok( nAttrCnt1 == 3, "Attribute count should be 3 (%d)\n", nAttrCnt1);
         IXMLDOMNamedNodeMap_Release(mapAttr);
     }
 
-    ok(nLength != nLength1, "wrong Child count (%ld, %ld)\n", nLength, nLength1);
-    ok(nAttrCnt == nAttrCnt1, "wrong Attribute count (%ld, %ld)\n", nAttrCnt, nAttrCnt1);
+    ok(nLength != nLength1, "wrong Child count (%d, %d)\n", nLength, nLength1);
+    ok(nAttrCnt == nAttrCnt1, "wrong Attribute count (%d, %d)\n", nAttrCnt, nAttrCnt1);
     IXMLDOMNode_Release(node_clone);
 
 
@@ -2568,7 +2568,7 @@ static void test_xmlTypes(void)
     BSTR str;
     IXMLDOMNode *pNextChild = (IXMLDOMNode *)0x1;   /* Used for testing Siblings */
     VARIANT v;
-    long len = 0;
+    LONG len = 0;
 
     hr = CoCreateInstance( &CLSID_DOMDocument, NULL, CLSCTX_INPROC_SERVER, &IID_IXMLDOMDocument2, (LPVOID*)&doc );
     if( hr != S_OK )
@@ -2744,7 +2744,7 @@ static void test_xmlTypes(void)
                 /* test length property */
                 hr = IXMLDOMComment_get_length(pComment, &len);
                 ok(hr == S_OK, "ret %08x\n", hr );
-                ok(len == 21, "expected 21 got %ld\n", len);
+                ok(len == 21, "expected 21 got %d\n", len);
 
                 /* test substringData */
                 hr = IXMLDOMComment_substringData(pComment, 0, 4, NULL);
@@ -3072,7 +3072,7 @@ static void test_xmlTypes(void)
                 /* test length property */
                 hr = IXMLDOMCDATASection_get_length(pCDataSec, &len);
                 ok(hr == S_OK, "ret %08x\n", hr );
-                ok(len == 21, "expected 21 got %ld\n", len);
+                ok(len == 21, "expected 21 got %d\n", len);
 
                 /* test get nodeValue */
                 hr = IXMLDOMCDATASection_get_nodeValue(pCDataSec, &var);

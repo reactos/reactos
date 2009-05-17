@@ -355,6 +355,48 @@ static void test_WM_LBUTTONDOWN(void)
     DestroyWindow(hCombo);
 }
 
+static void test_changesize( DWORD style)
+{
+    HWND hCombo = build_combo(style);
+    RECT rc;
+    INT ddheight, clheight, ddwidth, clwidth;
+    /* get initial measurements */
+    GetClientRect( hCombo, &rc);
+    clheight = rc.bottom - rc.top;
+    clwidth = rc.right - rc.left;
+    SendMessageA(hCombo, CB_GETDROPPEDCONTROLRECT, 0, (LPARAM)&rc);
+    ddheight = rc.bottom - rc.top;
+    ddwidth = rc.right - rc.left;
+    /* use MoveWindow to move & resize the combo */
+    /* first make it slightly smaller */
+    MoveWindow( hCombo, 10, 10, clwidth - 2, clheight - 2, TRUE);
+    GetClientRect( hCombo, &rc);
+    ok( rc.right - rc.left == clwidth - 2, "clientrect witdh is %d vs %d\n",
+            rc.right - rc.left, clwidth - 2);
+    ok( rc.bottom - rc.top == clheight, "clientrect height is %d vs %d\n",
+                rc.bottom - rc.top, clheight);
+    SendMessageA(hCombo, CB_GETDROPPEDCONTROLRECT, 0, (LPARAM)&rc);
+    ok( rc.right - rc.left == clwidth - 2, "drop-down rect witdh is %d vs %d\n",
+            rc.right - rc.left, clwidth - 2);
+    ok( rc.bottom - rc.top == ddheight, "drop-down rect height is %d vs %d\n",
+            rc.bottom - rc.top, ddheight);
+    /* new cx, cy is slightly bigger than the initial values */
+    MoveWindow( hCombo, 10, 10, clwidth + 2, clheight + 2, TRUE);
+    GetClientRect( hCombo, &rc);
+    ok( rc.right - rc.left == clwidth + 2, "clientrect witdh is %d vs %d\n",
+            rc.right - rc.left, clwidth + 2);
+    ok( rc.bottom - rc.top == clheight, "clientrect height is %d vs %d\n",
+            rc.bottom - rc.top, clheight);
+    SendMessageA(hCombo, CB_GETDROPPEDCONTROLRECT, 0, (LPARAM)&rc);
+    ok( rc.right - rc.left == clwidth + 2, "drop-down rect witdh is %d vs %d\n",
+            rc.right - rc.left, clwidth + 2);
+    todo_wine {
+        ok( rc.bottom - rc.top == clheight + 2, "drop-down rect height is %d vs %d\n",
+                rc.bottom - rc.top, clheight + 2);
+    }
+    DestroyWindow(hCombo);
+}
+
 START_TEST(combo)
 {
     hMainWnd = CreateWindow("static", "Test", WS_OVERLAPPEDWINDOW, 10, 10, 300, 300, NULL, NULL, NULL, 0);
@@ -366,6 +408,8 @@ START_TEST(combo)
     test_setitemheight(CBS_DROPDOWNLIST);
     test_CBN_SELCHANGE();
     test_WM_LBUTTONDOWN();
+    test_changesize(CBS_DROPDOWN);
+    test_changesize(CBS_DROPDOWNLIST);
 
     DestroyWindow(hMainWnd);
 }

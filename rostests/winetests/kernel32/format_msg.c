@@ -237,7 +237,7 @@ static void test_message_null_buffer(void)
     error = GetLastError();
     if (!ret && error == ERROR_CALL_NOT_IMPLEMENTED)
     {
-        skip("FormatMessageW is not implemented\n");
+        win_skip("FormatMessageW is not implemented\n");
         return;
     }
 

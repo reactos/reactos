@@ -53,7 +53,7 @@ static void test_sha_ctx(void)
 
    if (!pA_SHAInit || !pA_SHAUpdate || !pA_SHAFinal)
    {
-      skip("A_SHAInit and/or A_SHAUpdate and/or A_SHAFinal are not available\n");
+      win_skip("A_SHAInit and/or A_SHAUpdate and/or A_SHAFinal are not available\n");
       return;
    }
 

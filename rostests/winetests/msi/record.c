@@ -24,6 +24,8 @@
 
 #include "wine/test.h"
 
+static const char *msifile = "winetest.msi";
+
 static BOOL create_temp_file(char *name)
 {
     UINT r;
@@ -120,15 +122,45 @@ static void test_msirecord(void)
     r = MsiRecordGetInteger(h, 0);
     ok(r == 1, "failed to get integer\n");
 
-    /* same record, but add a string to it */
+    /* same record, but add a null or empty string to it */
     r = MsiRecordSetString(h, 0, NULL);
     ok(r == ERROR_SUCCESS, "Failed to set null string at 0\n");
     r = MsiRecordIsNull(h, 0);
     ok(r == TRUE, "null string not null field\n");
+    r = MsiRecordDataSize(h, 0);
+    ok(r == 0, "size of string record is strlen\n");
+    buf[0] = 0;
+    sz = sizeof buf;
+    r = MsiRecordGetStringA(h, 0, buf, &sz);
+    ok(r == ERROR_SUCCESS, "Failed to get string at 0\n");
+    ok(buf[0] == 0, "MsiRecordGetStringA returned the wrong string\n");
+    ok(sz == 0, "MsiRecordGetStringA returned the wrong length\n");
+    bufW[0] = 0;
+    sz = sizeof bufW / sizeof bufW[0];
+    r = MsiRecordGetStringW(h, 0, bufW, &sz);
+    ok(r == ERROR_SUCCESS, "Failed to get string at 0\n");
+    ok(bufW[0] == 0, "MsiRecordGetStringW returned the wrong string\n");
+    ok(sz == 0, "MsiRecordGetStringW returned the wrong length\n");
     r = MsiRecordSetString(h, 0, "");
     ok(r == ERROR_SUCCESS, "Failed to set empty string at 0\n");
     r = MsiRecordIsNull(h, 0);
     ok(r == TRUE, "null string not null field\n");
+    r = MsiRecordDataSize(h, 0);
+    ok(r == 0, "size of string record is strlen\n");
+    buf[0] = 0;
+    sz = sizeof buf;
+    r = MsiRecordGetStringA(h, 0, buf, &sz);
+    ok(r == ERROR_SUCCESS, "Failed to get string at 0\n");
+    ok(buf[0] == 0, "MsiRecordGetStringA returned the wrong string\n");
+    ok(sz == 0, "MsiRecordGetStringA returned the wrong length\n");
+    bufW[0] = 0;
+    sz = sizeof bufW / sizeof bufW[0];
+    r = MsiRecordGetStringW(h, 0, bufW, &sz);
+    ok(r == ERROR_SUCCESS, "Failed to get string at 0\n");
+    ok(bufW[0] == 0, "MsiRecordGetStringW returned the wrong string\n");
+    ok(sz == 0, "MsiRecordGetStringW returned the wrong length\n");
+
+    /* same record, but add a string to it */
     r = MsiRecordSetString(h,0,str);
     ok(r == ERROR_SUCCESS, "Failed to set string at 0\n");
     r = MsiRecordGetInteger(h, 0);
@@ -443,9 +475,143 @@ static void test_MsiRecordGetInteger(void)
     MsiCloseHandle(rec);
 }
 
+static void test_fieldzero(void)
+{
+    MSIHANDLE hdb, hview, rec;
+    CHAR buf[MAX_PATH];
+    LPCSTR query;
+    DWORD sz;
+    UINT r;
+
+    rec = MsiCreateRecord(1);
+    ok(rec != 0, "Expected a valid handle\n");
+
+    r = MsiRecordGetInteger(rec, 0);
+    ok(r == MSI_NULL_INTEGER, "Expected MSI_NULL_INTEGER, got %d\n", r);
+
+    sz = MAX_PATH;
+    lstrcpyA(buf, "apple");
+    r = MsiRecordGetString(rec, 0, buf, &sz);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+    ok(!lstrcmpA(buf, ""), "Expected \"\", got \"%s\"\n", buf);
+    ok(sz == 0, "Expectd 0, got %d\n", sz);
+
+    r = MsiRecordIsNull(rec, 0);
+    ok(r == TRUE, "Expected TRUE, got %d\n", r);
+
+    r = MsiRecordGetInteger(rec, 1);
+    ok(r == MSI_NULL_INTEGER, "Expected MSI_NULL_INTEGER, got %d\n", r);
+
+    r = MsiRecordSetInteger(rec, 1, 42);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+
+    r = MsiRecordGetInteger(rec, 0);
+    ok(r == MSI_NULL_INTEGER, "Expected MSI_NULL_INTEGER, got %d\n", r);
+
+    sz = MAX_PATH;
+    lstrcpyA(buf, "apple");
+    r = MsiRecordGetString(rec, 0, buf, &sz);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+    ok(!lstrcmpA(buf, ""), "Expected \"\", got \"%s\"\n", buf);
+    ok(sz == 0, "Expectd 0, got %d\n", sz);
+
+    r = MsiRecordIsNull(rec, 0);
+    ok(r == TRUE, "Expected TRUE, got %d\n", r);
+
+    r = MsiRecordGetInteger(rec, 1);
+    ok(r == 42, "Expected 42, got %d\n", r);
+
+    r = MsiRecordSetString(rec, 1, "bologna");
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+
+    r = MsiRecordGetInteger(rec, 0);
+    ok(r == MSI_NULL_INTEGER, "Expected MSI_NULL_INTEGER, got %d\n", r);
+
+    sz = MAX_PATH;
+    lstrcpyA(buf, "apple");
+    r = MsiRecordGetString(rec, 0, buf, &sz);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+    ok(!lstrcmpA(buf, ""), "Expected \"\", got \"%s\"\n", buf);
+    ok(sz == 0, "Expectd 0, got %d\n", sz);
+
+    r = MsiRecordIsNull(rec, 0);
+    ok(r == TRUE, "Expected TRUE, got %d\n", r);
+
+    sz = MAX_PATH;
+    lstrcpyA(buf, "apple");
+    r = MsiRecordGetString(rec, 1, buf, &sz);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+    ok(!lstrcmpA(buf, "bologna"), "Expected \"bologna\", got \"%s\"\n", buf);
+    ok(sz == 7, "Expectd 7, got %d\n", sz);
+
+    MsiCloseHandle(rec);
+
+    r = MsiOpenDatabase(msifile, MSIDBOPEN_CREATE, &hdb);
+    ok(r == ERROR_SUCCESS, "MsiOpenDatabase failed\n");
+
+    query = "CREATE TABLE `drone` ( "
+           "`id` INT, `name` CHAR(32), `number` CHAR(32) "
+           "PRIMARY KEY `id`)";
+    r = MsiDatabaseOpenView(hdb, query, &hview);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+    r = MsiViewExecute(hview, 0);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+    r = MsiViewClose(hview);
+    ok(r == ERROR_SUCCESS, "MsiViewClose failed\n");
+    r = MsiCloseHandle(hview);
+    ok(r == ERROR_SUCCESS, "MsiCloseHandle failed\n");
+
+    query = "INSERT INTO `drone` ( `id`, `name`, `number` )"
+           "VALUES('1', 'Abe', '8675309')";
+    r = MsiDatabaseOpenView(hdb, query, &hview);
+    ok(r == ERROR_SUCCESS, "MsiDatabaseOpenView failed\n");
+    r = MsiViewExecute(hview, 0);
+    ok(r == ERROR_SUCCESS, "MsiViewExecute failed\n");
+    r = MsiViewClose(hview);
+    ok(r == ERROR_SUCCESS, "MsiViewClose failed\n");
+    r = MsiCloseHandle(hview);
+    ok(r == ERROR_SUCCESS, "MsiCloseHandle failed\n");
+
+    r = MsiDatabaseGetPrimaryKeysA(hdb, "drone", &rec);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+
+    r = MsiRecordGetInteger(rec, 0);
+    ok(r == MSI_NULL_INTEGER, "Expected MSI_NULL_INTEGER, got %d\n", r);
+
+    sz = MAX_PATH;
+    lstrcpyA(buf, "apple");
+    r = MsiRecordGetString(rec, 0, buf, &sz);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+    ok(!lstrcmpA(buf, "drone"), "Expected \"drone\", got \"%s\"\n", buf);
+    ok(sz == 5, "Expectd 5, got %d\n", sz);
+
+    r = MsiRecordIsNull(rec, 0);
+    ok(r == FALSE, "Expected FALSE, got %d\n", r);
+
+    MsiCloseHandle(rec);
+
+    query = "SELECT * FROM `drone` WHERE `id` = 1";
+    r = MsiDatabaseOpenView(hdb, query, &hview);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+    r = MsiViewExecute(hview, 0);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+    r = MsiViewFetch(hview, &rec);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+
+    r = MsiRecordGetInteger(rec, 0);
+    ok(r != MSI_NULL_INTEGER && r != 0, "Expected non-NULL value, got %d\n", r);
+
+    r = MsiRecordIsNull(rec, 0);
+    ok(r == FALSE, "Expected FALSE, got %d\n", r);
+
+    MsiCloseHandle(hdb);
+    DeleteFileA(msifile);
+}
+
 START_TEST(record)
 {
     test_msirecord();
     test_MsiRecordGetString();
     test_MsiRecordGetInteger();
+    test_fieldzero();
 }

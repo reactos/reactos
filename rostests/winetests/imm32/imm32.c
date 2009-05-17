@@ -135,6 +135,7 @@ static HWND hwnd;
 
 static int init(void) {
     WNDCLASSEX wc;
+    HIMC imc;
 
     wc.cbSize        = sizeof(WNDCLASSEX);
     wc.style         = 0;
@@ -158,6 +159,14 @@ static int init(void) {
     if (!hwnd)
         return 0;
 
+    imc = ImmGetContext(hwnd);
+    if (!imc)
+    {
+        win_skip("IME support not implemented\n");
+        return 0;
+    }
+    ImmReleaseContext(hwnd, imc);
+
     ShowWindow(hwnd, SW_SHOWNORMAL);
     UpdateWindow(hwnd);
 
@@ -173,7 +182,7 @@ static void cleanup(void) {
     UnregisterClass(wndcls, GetModuleHandle(0));
 }
 
-static int test_ImmNotifyIME(void) {
+static void test_ImmNotifyIME(void) {
     static const char string[] = "wine";
     char resstr[16] = "";
     HIMC imc;
@@ -216,12 +225,88 @@ static int test_ImmNotifyIME(void) {
 
     msg_spy_flush_msgs();
     ImmReleaseContext(hwnd, imc);
+}
 
-    return 0;
+static void test_ImmGetCompositionString(void)
+{
+    HIMC imc;
+    static const WCHAR string[] = {'w','i','n','e',0x65e5,0x672c,0x8a9e};
+    char cstring[20];
+    WCHAR wstring[20];
+    DWORD len;
+    DWORD alen,wlen;
+
+    imc = ImmGetContext(hwnd);
+    ImmSetCompositionStringW(imc, SCS_SETSTR, string, sizeof(string), NULL,0);
+    alen = ImmGetCompositionStringA(imc, GCS_COMPSTR, cstring, 20);
+    wlen = ImmGetCompositionStringW(imc, GCS_COMPSTR, wstring, 20);
+    /* windows machines without any IME installed just return 0 above */
+    if( alen && wlen)
+    {
+        len = ImmGetCompositionStringW(imc, GCS_COMPATTR, NULL, 0);
+        ok(len*sizeof(WCHAR)==wlen,"GCS_COMPATTR(W) not returning correct count\n");
+        len = ImmGetCompositionStringA(imc, GCS_COMPATTR, NULL, 0);
+        ok(len==alen,"GCS_COMPATTR(A) not returning correct count\n");
+    }
+    ImmReleaseContext(hwnd, imc);
+}
+
+static void test_ImmSetCompositionString(void)
+{
+    HIMC imc;
+    BOOL ret;
+
+    SetLastError(0xdeadbeef);
+    imc = ImmGetContext(hwnd);
+    ok(imc != 0, "ImmGetContext() failed. Last error: %u\n", GetLastError());
+    if (!imc)
+        return;
+
+    ret = ImmSetCompositionStringW(imc, SCS_SETSTR, NULL, 0, NULL, 0);
+    todo_wine
+    ok(!ret, "ImmSetCompositionStringW() succeeded.\n");
+
+    ret = ImmSetCompositionStringW(imc, SCS_SETSTR | SCS_CHANGEATTR,
+        NULL, 0, NULL, 0);
+    todo_wine
+    ok(!ret, "ImmSetCompositionStringW() succeeded.\n");
+
+    ret = ImmSetCompositionStringW(imc, SCS_SETSTR | SCS_CHANGECLAUSE,
+        NULL, 0, NULL, 0);
+    todo_wine
+    ok(!ret, "ImmSetCompositionStringW() succeeded.\n");
+
+    ret = ImmSetCompositionStringW(imc, SCS_CHANGEATTR | SCS_CHANGECLAUSE,
+        NULL, 0, NULL, 0);
+    todo_wine
+    ok(!ret, "ImmSetCompositionStringW() succeeded.\n");
+
+    ImmReleaseContext(hwnd, imc);
+}
+
+static void test_ImmIME(void)
+{
+    HIMC imc;
+
+    imc = ImmGetContext(hwnd);
+    if (imc)
+    {
+        BOOL rc;
+        rc = ImmConfigureIMEA(imc, NULL, IME_CONFIG_REGISTERWORD, NULL);
+        ok (rc == 0, "ImmConfigureIMEA did not fail\n");
+        rc = ImmConfigureIMEW(imc, NULL, IME_CONFIG_REGISTERWORD, NULL);
+        ok (rc == 0, "ImmConfigureIMEW did not fail\n");
+    }
+    ImmReleaseContext(hwnd,imc);
 }
 
 START_TEST(imm32) {
     if (init())
+    {
         test_ImmNotifyIME();
+        test_ImmGetCompositionString();
+        test_ImmSetCompositionString();
+        test_ImmIME();
+    }
     cleanup();
 }

@@ -144,7 +144,7 @@ static void test_SetupCopyOEMInf(void)
     CHAR toolong[MAX_PATH * 2];
     CHAR path[MAX_PATH], dest[MAX_PATH];
     CHAR tmpfile[MAX_PATH], dest_save[MAX_PATH];
-    LPSTR inf;
+    LPSTR inf = NULL;
     DWORD size;
     BOOL res;
 
@@ -293,6 +293,9 @@ static void test_SetupCopyOEMInf(void)
     ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", GetLastError());
     ok(lstrlen(dest) + 1 == size, "Expected sizes to match, got (%d, %d)\n", lstrlen(dest), size);
     ok(file_exists(dest), "Expected destination inf to exist\n");
+    ok((inf && inf[0] != 0) ||
+       broken(!inf), /* Win98 */
+       "Expected inf to point to the filename\n");
     ok(check_format(dest, inf), "Expected %%windir%%\\inf\\OEMx.inf, got %s\n", dest);
     ok(file_exists(path), "Expected source inf to exist\n");
     ok(size == lstrlen(dest_save) + 1, "Expected size to be lstrlen(dest_save) + 1\n");

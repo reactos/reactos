@@ -86,11 +86,12 @@ static void testQuery(void)
     WCHAR               bv[257];
     UNICODE_STRING      name;
     UNICODE_STRING      value;
-    const struct test*  test;
     NTSTATUS            nts;
+    unsigned int i;
 
-    for (test = tests; test->var; test++)
+    for (i = 0; tests[i].var; i++)
     {
+        const struct test *test = &tests[i];
         name.Length = strlen(test->var) * 2;
         name.MaximumLength = name.Length + 2;
         name.Buffer = bn;
@@ -103,7 +104,7 @@ static void testQuery(void)
         nts = pRtlQueryEnvironmentVariable_U(small_env, &name, &value);
         ok( nts == test->status || (test->alt && nts == test->alt),
             "[%d]: Wrong status for '%s', expecting %x got %x\n",
-            test - tests, test->var, test->status, nts );
+            i, test->var, test->status, nts );
         if (nts == test->status) switch (nts)
         {
         case STATUS_SUCCESS:

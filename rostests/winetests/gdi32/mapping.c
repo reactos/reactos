@@ -75,8 +75,9 @@ static void test_world_transform(void)
 {
     BOOL is_win9x;
     HDC hdc;
-    INT ret, size_cx, size_cy, res_x, res_y;
+    INT ret, size_cx, size_cy, res_x, res_y, dpi_x, dpi_y;
     XFORM xform;
+    SIZE size;
 
     SetLastError(0xdeadbeef);
     GetWorldTransform(0, NULL);
@@ -84,11 +85,23 @@ static void test_world_transform(void)
 
     hdc = CreateCompatibleDC(0);
 
+    xform.eM11 = 1.0f;
+    xform.eM12 = 0.0f;
+    xform.eM21 = 0.0f;
+    xform.eM22 = 1.0f;
+    xform.eDx = 0.0f;
+    xform.eDy = 0.0f;
+    ret = SetWorldTransform(hdc, &xform);
+    ok(!ret, "SetWorldTransform should fail in GM_COMPATIBLE mode\n");
+
     size_cx = GetDeviceCaps(hdc, HORZSIZE);
     size_cy = GetDeviceCaps(hdc, VERTSIZE);
     res_x = GetDeviceCaps(hdc, HORZRES);
     res_y = GetDeviceCaps(hdc, VERTRES);
-    trace("dc size %d x %d, resolution %d x %d\n", size_cx, size_cy, res_x, res_y);
+    dpi_x = GetDeviceCaps(hdc, LOGPIXELSX);
+    dpi_y = GetDeviceCaps(hdc, LOGPIXELSY);
+    trace("dc size %d x %d, resolution %d x %d dpi %d x %d\n",
+          size_cx, size_cy, res_x, res_y, dpi_x, dpi_y );
 
     expect_viewport_ext(hdc, 1, 1);
     expect_window_ext(hdc, 1, 1);
@@ -101,13 +114,19 @@ static void test_world_transform(void)
 
     if (is_win9x)
     {
-        expect_viewport_ext(hdc, GetDeviceCaps(hdc, LOGPIXELSX), GetDeviceCaps(hdc, LOGPIXELSY));
+        expect_viewport_ext(hdc, dpi_x, dpi_y);
         expect_window_ext(hdc, 254, -254);
     }
     else
     {
         expect_viewport_ext(hdc, res_x, -res_y);
-        expect_window_ext(hdc, size_cx * 10, size_cy * 10);
+        ok( GetWindowExtEx( hdc, &size ), "GetWindowExtEx failed\n" );
+        ok( size.cx == size_cx * 10 ||
+            size.cx == MulDiv( res_x, 254, dpi_x ),  /* Vista uses a more precise method */
+            "expected cx %d or %d, got %d\n", size_cx * 10, MulDiv( res_x, 254, dpi_x ), size.cx );
+        ok( size.cy == size_cy * 10 ||
+            size.cy == MulDiv( res_y, 254, dpi_y ),  /* Vista uses a more precise method */
+            "expected cy %d or %d, got %d\n", size_cy * 10, MulDiv( res_y, 254, dpi_y ), size.cy );
     }
     expect_world_trasform(hdc, 1.0, 1.0);
     expect_LPtoDP(hdc, MulDiv(1000 / 10, res_x, size_cx), -MulDiv(1000 / 10, res_y, size_cy));
@@ -134,6 +153,18 @@ static void test_world_transform(void)
     expect_world_trasform(hdc, 1.0, 1.0);
     expect_LPtoDP(hdc, 1000, 1000);
 
+    /* The transform must conform to (eM11 * eM22 != eM12 * eM21) requirement */
+    xform.eM11 = 1.0f;
+    xform.eM12 = 2.0f;
+    xform.eM21 = 1.0f;
+    xform.eM22 = 2.0f;
+    xform.eDx = 0.0f;
+    xform.eDy = 0.0f;
+    ret = SetWorldTransform(hdc, &xform);
+    ok(!ret ||
+       broken(ret), /* NT4 */
+       "SetWorldTransform should fail with an invalid xform\n");
+
     xform.eM11 = 20.0f;
     xform.eM12 = 0.0f;
     xform.eM21 = 0.0f;
@@ -154,13 +185,29 @@ static void test_world_transform(void)
     ok(ret == MM_TEXT, "expected MM_TEXT, got %d\n", ret);
 
     expect_viewport_ext(hdc, res_x, -res_y);
-    expect_window_ext(hdc, size_cx * 10, size_cy * 10);
+    ok( GetWindowExtEx( hdc, &size ), "GetWindowExtEx failed\n" );
+    ok( size.cx == size_cx * 10 ||
+        size.cx == MulDiv( res_x, 254, dpi_x ),  /* Vista uses a more precise method */
+        "expected cx %d or %d, got %d\n", size_cx * 10, MulDiv( res_x, 254, dpi_x ), size.cx );
+    ok( size.cy == size_cy * 10 ||
+        size.cy == MulDiv( res_y, 254, dpi_y ),  /* Vista uses a more precise method */
+        "expected cy %d or %d, got %d\n", size_cy * 10, MulDiv( res_y, 254, dpi_y ), size.cy );
     expect_world_trasform(hdc, 20.0, 20.0);
-    expect_LPtoDP(hdc, MulDiv(1000 * 2, res_x, size_cx), -MulDiv(1000 * 2, res_y, size_cy));
+    expect_LPtoDP(hdc, MulDiv(20000, res_x, size.cx), -MulDiv(20000, res_y, size.cy));
 
     SetLastError(0xdeadbeef);
     ret = SetMapMode(hdc, MM_TEXT);
     ok(ret == MM_LOMETRIC, "expected MM_LOMETRIC, got %d\n", ret);
+
+    expect_viewport_ext(hdc, 1, 1);
+    expect_window_ext(hdc, 1, 1);
+    expect_world_trasform(hdc, 20.0, 20.0);
+    expect_LPtoDP(hdc, 20000, 20000);
+
+    ret = SetGraphicsMode(hdc, GM_COMPATIBLE);
+    ok(ret, "SetGraphicsMode(GM_COMPATIBLE) should not fail if DC has't an identity transform\n");
+    ret = GetGraphicsMode(hdc);
+    ok(ret == GM_COMPATIBLE, "expected GM_COMPATIBLE, got %d\n", ret);
 
     expect_viewport_ext(hdc, 1, 1);
     expect_window_ext(hdc, 1, 1);

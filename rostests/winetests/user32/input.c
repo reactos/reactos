@@ -58,7 +58,7 @@
 
 /* globals */
 static HWND hWndTest;
-static long timetag = 0x10000000;
+static LONG timetag = 0x10000000;
 
 static UINT (WINAPI *pSendInput) (UINT, INPUT*, size_t);
 static int (WINAPI *pGetMouseMovePointsEx) (UINT, LPMOUSEMOVEPOINT, LPMOUSEMOVEPOINT, int, DWORD);
@@ -573,6 +573,7 @@ struct sendinput_test_s {
         {{VK_MENU, 0x00}, {VK_LMENU, 0x00}, {VK_CONTROL, 0x00, 1}, {VK_LCONTROL, 0x01, 1}, {0}},
         {{WM_SYSKEYDOWN, hook|wparam|optional, VK_LCONTROL},
         {WM_SYSKEYDOWN, hook|wparam, VK_RMENU},
+        {WM_KEYDOWN, wparam|lparam|optional, VK_CONTROL, 0},
         {WM_SYSKEYDOWN, wparam|lparam, VK_MENU, 0}, {0}}},
     {VK_RMENU, KEYEVENTF_KEYUP, 1,
         {{VK_MENU, 0x80}, {VK_LMENU, 0x80}, {VK_CONTROL, 0x81, 1}, {VK_LCONTROL, 0x80, 1}, {0}},
@@ -580,7 +581,7 @@ struct sendinput_test_s {
         {WM_KEYUP, hook|wparam, VK_RMENU},
         {WM_SYSKEYUP, wparam|lparam|optional, VK_CONTROL, KF_UP},
         {WM_SYSKEYUP, wparam|lparam, VK_MENU, KF_UP},
-        {WM_SYSCOMMAND}, {0}}},
+        {WM_SYSCOMMAND, optional}, {0}}},
     /* LMENU | KEYEVENTF_EXTENDEDKEY == RMENU */
     /* 40 */
     {VK_LMENU, KEYEVENTF_EXTENDEDKEY, 0,
@@ -598,6 +599,7 @@ struct sendinput_test_s {
         {{VK_MENU, 0x00}, {VK_RMENU, 0x00}, {VK_CONTROL, 0x00, 1}, {VK_LCONTROL, 0x01, 1}, {0}},
         {{WM_SYSKEYDOWN, hook|wparam|lparam|optional, VK_LCONTROL, 0},
         {WM_SYSKEYDOWN, hook|wparam|lparam, VK_RMENU, LLKHF_EXTENDED},
+        {WM_KEYDOWN, wparam|lparam|optional, VK_CONTROL, 0},
         {WM_SYSKEYDOWN, wparam|lparam, VK_MENU, KF_EXTENDED}, {0}}},
     {VK_RMENU, KEYEVENTF_KEYUP | KEYEVENTF_EXTENDEDKEY, 1,
         {{VK_MENU, 0x80}, {VK_RMENU, 0x80}, {VK_CONTROL, 0x81, 1}, {VK_LCONTROL, 0x80, 1}, {0}},
@@ -605,7 +607,7 @@ struct sendinput_test_s {
         {WM_KEYUP, hook|wparam|lparam, VK_RMENU, LLKHF_UP|LLKHF_EXTENDED},
         {WM_SYSKEYUP, wparam|lparam|optional, VK_CONTROL, KF_UP},
         {WM_SYSKEYUP, wparam|lparam, VK_MENU, KF_UP|KF_EXTENDED},
-        {WM_SYSCOMMAND}, {0}}},
+        {WM_SYSCOMMAND, optional}, {0}}},
     /* MENU == LMENU */
     /* 44 */
     {VK_MENU, 0, 0,
@@ -747,6 +749,25 @@ static void compare_and_check(int id, BYTE *ks1, BYTE *ks2, struct sendinput_tes
             expected++;
             continue;
         }
+        /* NT4 doesn't send SYSKEYDOWN/UP to hooks, only KEYDOWN/UP */
+        else if ((expected->flags & hook) &&
+                 (expected->message == WM_SYSKEYDOWN || expected->message == WM_SYSKEYUP) &&
+                 (actual->message == expected->message - 4))
+        {
+            ok((expected->flags & hook) == (actual->flags & hook),
+               "%2d (%x/%x): the msg 0x%04x should have been sent by a hook\n",
+               id, test->wVk, test->dwFlags, expected->message);
+        }
+        /* For VK_RMENU, at least localized Win2k/XP sends KEYDOWN/UP
+         * instead of SYSKEYDOWN/UP to the WNDPROC */
+        else if (test->wVk == VK_RMENU && !(expected->flags & hook) &&
+                 (expected->message == WM_SYSKEYDOWN || expected->message == WM_SYSKEYUP) &&
+                 (actual->message == expected->message - 4))
+        {
+            ok(expected->wParam == actual->wParam && expected->lParam == actual->lParam,
+               "%2d (%x/%x): the msg 0x%04x was expected, but got msg 0x%04x instead\n",
+               id, test->wVk, test->dwFlags, expected->message, actual->message);
+        }
         else if (test->_todo_wine)
         {
             failcount++;
@@ -885,9 +906,12 @@ static void test_Input_blackbox(void)
         pSendInput(1, (INPUT*)&i, sizeof(TEST_INPUT));
         empty_message_queue();
         GetKeyboardState(ks2);
-        if (!ii && !sent_messages_cnt && !memcmp( ks1, ks2, sizeof(ks1) ))
+        if (!ii && sent_messages_cnt <= 1 && !memcmp( ks1, ks2, sizeof(ks1) ))
         {
             win_skip( "window doesn't receive the queued input\n" );
+            /* release the key */
+            i.u.ki.dwFlags |= KEYEVENTF_KEYUP;
+            pSendInput(1, (INPUT*)&i, sizeof(TEST_INPUT));
             break;
         }
         compare_and_check(ii, ks1, ks2, &sendinput_test[ii]);
@@ -913,7 +937,7 @@ static void test_keynames(void)
 
 static POINT pt_old, pt_new;
 static BOOL clipped;
-#define STEP 20
+#define STEP 3
 
 static LRESULT CALLBACK hook_proc1( int code, WPARAM wparam, LPARAM lparam )
 {
@@ -973,7 +997,11 @@ static void test_mouse_ll_hook(void)
                         10, 10, 200, 200, NULL, NULL, NULL, NULL);
     SetCursorPos(100, 100);
 
-    hook2 = SetWindowsHookExA(WH_MOUSE_LL, hook_proc2, GetModuleHandleA(0), 0);
+    if (!(hook2 = SetWindowsHookExA(WH_MOUSE_LL, hook_proc2, GetModuleHandleA(0), 0)))
+    {
+        win_skip( "cannot set MOUSE_LL hook\n" );
+        goto done;
+    }
     hook1 = SetWindowsHookExA(WH_MOUSE_LL, hook_proc1, GetModuleHandleA(0), 0);
 
     GetCursorPos(&pt_old);
@@ -1030,6 +1058,7 @@ static void test_mouse_ll_hook(void)
     ok(pt.x == pt_new.x && pt.y == pt_new.y, "Position changed: (%d,%d)\n", pt.x, pt.y);
 
     UnhookWindowsHookEx(hook2);
+done:
     DestroyWindow(hwnd);
     SetCursorPos(pt_org.x, pt_org.y);
 }
@@ -1058,6 +1087,11 @@ static void test_GetMouseMovePointsEx(void)
      */
     SetLastError(MYERROR);
     retval = pGetMouseMovePointsEx(0, &in, out, BUFLIM, GMMP_USE_DISPLAY_POINTS);
+    if (retval == ERROR_INVALID_PARAMETER)
+    {
+        win_skip( "GetMouseMovePointsEx broken on WinME\n" );
+        return;
+    }
     ok(retval == -1, "expected GetMouseMovePointsEx to fail, got %d\n", retval);
     ok(GetLastError() == ERROR_INVALID_PARAMETER || GetLastError() == MYERROR,
        "expected error ERROR_INVALID_PARAMETER, got %u\n", GetLastError());
@@ -1097,11 +1131,10 @@ static void test_GetMouseMovePointsEx(void)
     SetLastError(MYERROR);
     count = 0;
     retval = pGetMouseMovePointsEx(sizeof(MOUSEMOVEPOINT), &in, NULL, count, GMMP_USE_DISPLAY_POINTS);
-    todo_wine {
-    ok(retval == count, "expected GetMouseMovePointsEx to succeed, got %d\n", retval);
-    ok(MYERROR == GetLastError(),
-       "expected error %d, got %u\n", MYERROR, GetLastError());
-    }
+    if (retval == -1)
+        ok(GetLastError() == ERROR_POINT_NOT_FOUND, "unexpected error %u\n", GetLastError());
+    else
+        ok(retval == count, "expected GetMouseMovePointsEx to succeed, got %d\n", retval);
 
     /* test fourth parameter
      * a value higher than 64 is expected to fail with ERROR_INVALID_PARAMETER
@@ -1116,20 +1149,18 @@ static void test_GetMouseMovePointsEx(void)
     SetLastError(MYERROR);
     count = 0;
     retval = pGetMouseMovePointsEx(sizeof(MOUSEMOVEPOINT), &in, out, count, GMMP_USE_DISPLAY_POINTS);
-    todo_wine {
-    ok(retval == count, "expected GetMouseMovePointsEx to succeed, got %d\n", retval);
-    ok(MYERROR == GetLastError(),
-       "expected error %d, got %u\n", MYERROR, GetLastError());
-    }
+    if (retval == -1)
+        ok(GetLastError() == ERROR_POINT_NOT_FOUND, "unexpected error %u\n", GetLastError());
+    else
+        ok(retval == count, "expected GetMouseMovePointsEx to succeed, got %d\n", retval);
 
     SetLastError(MYERROR);
     count = BUFLIM;
     retval = pGetMouseMovePointsEx(sizeof(MOUSEMOVEPOINT), &in, out, count, GMMP_USE_DISPLAY_POINTS);
-    todo_wine {
-    ok((0 <= retval) && (retval <= count), "expected GetMouseMovePointsEx to succeed, got %d\n", retval);
-    ok(MYERROR == GetLastError(),
-       "expected error %d, got %u\n", MYERROR, GetLastError());
-    }
+    if (retval == -1)
+        ok(GetLastError() == ERROR_POINT_NOT_FOUND, "unexpected error %u\n", GetLastError());
+    else
+        ok((0 <= retval) && (retval <= count), "expected GetMouseMovePointsEx to succeed, got %d\n", retval);
 
     SetLastError(MYERROR);
     retval = pGetMouseMovePointsEx(sizeof(MOUSEMOVEPOINT), &in, out, BUFLIM+1, GMMP_USE_DISPLAY_POINTS);
@@ -1265,6 +1296,19 @@ static void test_get_async_key_state(void)
     ok(0 == GetAsyncKeyState(-1000000), "GetAsyncKeyState did not return 0\n");
 }
 
+static void test_keyboard_layout_name(void)
+{
+    BOOL ret;
+    char klid[KL_NAMELENGTH];
+
+    if (GetKeyboardLayout(0) != (HKL)(ULONG_PTR)0x04090409) return;
+
+    klid[0] = 0;
+    ret = GetKeyboardLayoutNameA(klid);
+    ok(ret, "GetKeyboardLayoutNameA failed %u\n", GetLastError());
+    ok(!strcmp(klid, "00000409"), "expected 00000409, got %s\n", klid);
+}
+
 START_TEST(input)
 {
     init_function_pointers();
@@ -1281,6 +1325,7 @@ START_TEST(input)
     test_key_map();
     test_ToUnicode();
     test_get_async_key_state();
+    test_keyboard_layout_name();
 
     if(pGetMouseMovePointsEx)
         test_GetMouseMovePointsEx();

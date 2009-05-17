@@ -707,7 +707,7 @@ static void test_command(HINTERNET hFtp, HINTERNET hConnect)
 
     if (!pFtpCommandA)
     {
-        skip("FtpCommandA() is not available. Skipping the Ftp command tests\n");
+        win_skip("FtpCommandA() is not available. Skipping the Ftp command tests\n");
         return;
     }
 
@@ -813,7 +813,7 @@ static void test_get_current_dir(HINTERNET hFtp, HINTERNET hConnect)
 
     if (!pFtpCommandA)
     {
-        skip("FtpCommandA() is not available. Skipping the Ftp get_current_dir tests\n");
+        win_skip("FtpCommandA() is not available. Skipping the Ftp get_current_dir tests\n");
         return;
     }
 

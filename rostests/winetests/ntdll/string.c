@@ -591,20 +591,23 @@ static void one_i64toa_test(int test_num, const ulonglong2str_t *ulonglong2str)
     dest_str[LARGE_STRI_BUFFER_LENGTH] = '\0';
     result = p_i64toa(ulonglong2str->value, dest_str, ulonglong2str->base);
     ok(result == dest_str,
-       "(test %d): _i64toa(%Lu, [out], %d) has result %p, expected: %p\n",
-       test_num, ulonglong2str->value, ulonglong2str->base, result, dest_str);
+       "(test %d): _i64toa(%08x%08x, [out], %d) has result %p, expected: %p\n",
+       test_num, (DWORD)(ulonglong2str->value >> 32), (DWORD)ulonglong2str->value,
+       ulonglong2str->base, result, dest_str);
     if (ulonglong2str->mask & 0x04) {
 	if (memcmp(dest_str, ulonglong2str->Buffer, LARGE_STRI_BUFFER_LENGTH) != 0) {
 	    if (memcmp(dest_str, ulonglong2str[1].Buffer, LARGE_STRI_BUFFER_LENGTH) != 0) {
 		ok(memcmp(dest_str, ulonglong2str->Buffer, LARGE_STRI_BUFFER_LENGTH) == 0,
-		   "(test %d): _i64toa(%Lu, [out], %d) assigns string \"%s\", expected: \"%s\"\n",
-		   test_num, ulonglong2str->value, ulonglong2str->base, dest_str, ulonglong2str->Buffer);
+		   "(test %d): _i64toa(%08x%08x, [out], %d) assigns string \"%s\", expected: \"%s\"\n",
+		   test_num, (DWORD)(ulonglong2str->value >> 32), (DWORD)ulonglong2str->value,
+                   ulonglong2str->base, dest_str, ulonglong2str->Buffer);
 	    } /* if */
 	} /* if */
     } else {
 	ok(memcmp(dest_str, ulonglong2str->Buffer, LARGE_STRI_BUFFER_LENGTH) == 0,
-	   "(test %d): _i64toa(%Lu, [out], %d) assigns string \"%s\", expected: \"%s\"\n",
-	   test_num, ulonglong2str->value, ulonglong2str->base, dest_str, ulonglong2str->Buffer);
+	   "(test %d): _i64toa(%08x%08x, [out], %d) assigns string \"%s\", expected: \"%s\"\n",
+	   test_num, (DWORD)(ulonglong2str->value >> 32), (DWORD)ulonglong2str->value,
+           ulonglong2str->base, dest_str, ulonglong2str->Buffer);
     } /* if */
 }
 
@@ -618,11 +621,13 @@ static void one_ui64toa_test(int test_num, const ulonglong2str_t *ulonglong2str)
     dest_str[LARGE_STRI_BUFFER_LENGTH] = '\0';
     result = p_ui64toa(ulonglong2str->value, dest_str, ulonglong2str->base);
     ok(result == dest_str,
-       "(test %d): _ui64toa(%Lu, [out], %d) has result %p, expected: %p\n",
-       test_num, ulonglong2str->value, ulonglong2str->base, result, dest_str);
+       "(test %d): _ui64toa(%08x%08x, [out], %d) has result %p, expected: %p\n",
+       test_num, (DWORD)(ulonglong2str->value >> 32), (DWORD)ulonglong2str->value,
+       ulonglong2str->base, result, dest_str);
     ok(memcmp(dest_str, ulonglong2str->Buffer, LARGE_STRI_BUFFER_LENGTH) == 0,
-       "(test %d): _ui64toa(%Lu, [out], %d) assigns string \"%s\", expected: \"%s\"\n",
-       test_num, ulonglong2str->value, ulonglong2str->base, dest_str, ulonglong2str->Buffer);
+       "(test %d): _ui64toa(%08x%08x, [out], %d) assigns string \"%s\", expected: \"%s\"\n",
+       test_num, (DWORD)(ulonglong2str->value >> 32), (DWORD)ulonglong2str->value,
+       ulonglong2str->base, dest_str, ulonglong2str->Buffer);
 }
 
 

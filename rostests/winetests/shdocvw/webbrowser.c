@@ -31,12 +31,14 @@
 #include "htiframe.h"
 #include "mshtmhst.h"
 #include "mshtmcid.h"
+#include "mshtml.h"
 #include "idispids.h"
 #include "olectl.h"
 #include "mshtmdid.h"
 #include "shobjidl.h"
 #include "shlguid.h"
 #include "exdispid.h"
+#include "mimeinfo.h"
 
 DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
 
@@ -277,8 +279,15 @@ static HRESULT WINAPI OleCommandTarget_Exec(IOleCommandTarget *iface, const GUID
         default:
             ok(0, "unexpected nCmdID %d\n", nCmdID);
         }
+    }else if(IsEqualGUID(&CGID_ShellDocView, pguidCmdGroup)) {
+        switch(nCmdID) {
+        case 105: /* TODO */
+            return E_FAIL;
+        default:
+            ok(0, "unexpected nCmdID %d\n", nCmdID);
+        }
     }else {
-        ok(0, "unepected pguidCmdGroup %s\n", debugstr_guid(pguidCmdGroup));
+        ok(0, "unexpected pguidCmdGroup %s\n", debugstr_guid(pguidCmdGroup));
     }
 
     return E_FAIL;
@@ -1270,6 +1279,71 @@ static const IDocHostUIHandler2Vtbl DocHostUIHandlerVtbl = {
 
 static IDocHostUIHandler2 DocHostUIHandler = { &DocHostUIHandlerVtbl };
 
+
+static HRESULT WINAPI ServiceProvider_QueryInterface(IServiceProvider *iface, REFIID riid, void **ppv)
+{
+    return QueryInterface(riid, ppv);
+}
+
+static ULONG WINAPI ServiceProvider_AddRef(IServiceProvider *iface)
+{
+    return 2;
+}
+
+static ULONG WINAPI ServiceProvider_Release(IServiceProvider *iface)
+{
+    return 1;
+}
+
+static HRESULT WINAPI ServiceProvider_QueryService(IServiceProvider *iface,
+                                    REFGUID guidService, REFIID riid, void **ppv)
+{
+    *ppv = NULL;
+
+    if (IsEqualGUID(&SID_STopLevelBrowser, guidService))
+        trace("Service SID_STopLevelBrowser\n");
+    else if (IsEqualGUID(&SID_SEditCommandTarget, guidService))
+        trace("Service SID_SEditCommandTarget\n");
+    else if (IsEqualGUID(&IID_ITargetFrame2, guidService))
+        trace("Service IID_ITargetFrame2\n");
+    else if (IsEqualGUID(&SID_SInternetSecurityManager, guidService))
+        trace("Service SID_SInternetSecurityManager\n");
+    else if (IsEqualGUID(&SID_SOleUndoManager, guidService))
+        trace("Service SID_SOleUndoManager\n");
+    else if (IsEqualGUID(&SID_IMimeInfo, guidService))
+        trace("Service SID_IMimeInfo\n");
+    else if (IsEqualGUID(&SID_STopWindow, guidService))
+        trace("Service SID_STopWindow\n");
+
+    /* 30D02401-6A81-11D0-8274-00C04FD5AE38 Explorer Bar: Search */
+    /* D1E7AFEC-6A2E-11D0-8C78-00C04FD918B4 no info */
+    /* A9227C3C-7F8E-11D0-8CB0-00A0C92DBFE8 no info */
+    /* 371EA634-DC5C-11D1-BA57-00C04FC2040E one reference to IVersionHost */
+    /* 3050F429-98B5-11CF-BB82-00AA00BDCE0B IID_IElementBehaviorFactory */
+    /* 6D12FE80-7911-11CF-9534-0000C05BAE0B SID_DefView */
+    /* AD7F6C62-F6BD-11D2-959B-006097C553C8 no info */
+    /* 53A2D5B1-D2FC-11D0-84E0-006097C9987D no info */
+    /* 3050F312-98B5-11CF-BB82-00AA00BDCE0B HTMLFrameBaseClass */
+    /* 639447BD-B2D3-44B9-9FB0-510F23CB45E4 no info */
+    /* 20C46561-8491-11CF-960C-0080C7F4EE85 no info */
+
+    else
+        trace("Service %s not supported\n", debugstr_guid(guidService));
+
+    return E_NOINTERFACE;
+}
+
+
+static const IServiceProviderVtbl ServiceProviderVtbl = {
+    ServiceProvider_QueryInterface,
+    ServiceProvider_AddRef,
+    ServiceProvider_Release,
+    ServiceProvider_QueryService
+};
+
+static IServiceProvider ServiceProvider = { &ServiceProviderVtbl };
+
+
 static HRESULT QueryInterface(REFIID riid, void **ppv)
 {
     *ppv = NULL;
@@ -1286,11 +1360,24 @@ static HRESULT QueryInterface(REFIID riid, void **ppv)
         *ppv = &DocHostUIHandler;
     else if(IsEqualGUID(&IID_IDispatch, riid))
         *ppv = &Dispatch;
+    else if(IsEqualGUID(&IID_IServiceProvider, riid))
+        *ppv = &ServiceProvider;
+    else if(IsEqualGUID(&IID_IDocHostShowUI, riid))
+        trace("interface IID_IDocHostShowUI\n");
+    else if(IsEqualGUID(&IID_IOleControlSite, riid))
+        trace("interface IID_IOleControlSite\n");
+    else if(IsEqualGUID(&IID_IOleCommandTarget, riid))
+        trace("interface IID_IOleCommandTarget\n");
 
-    if(*ppv)
-        return S_OK;
+    /* B6EA2050-048A-11D1-82B9-00C04FB9942E IAxWinHostWindow */
 
-    return E_NOINTERFACE;
+    else
+    {
+        /* are there more interfaces, that a host can support? */
+        trace("%s: interface not supported\n", debugstr_guid(riid));
+    }
+
+    return (*ppv) ? S_OK : E_NOINTERFACE;
 }
 
 static LRESULT WINAPI wnd_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -1490,7 +1577,7 @@ static void test_ie_funcs(IUnknown *unk)
     IDispatch *disp;
     VARIANT_BOOL b;
     int i;
-    long hwnd;
+    LONG hwnd;
     HRESULT hres;
 
     hres = IUnknown_QueryInterface(unk, &IID_IWebBrowser2, (void**)&wb);
@@ -1503,7 +1590,7 @@ static void test_ie_funcs(IUnknown *unk)
     hwnd = 0xdeadbeef;
     hres = IWebBrowser2_get_HWND(wb, &hwnd);
     ok(hres == E_FAIL, "get_HWND failed: %08x, expected E_FAIL\n", hres);
-    ok(hwnd == 0, "unexpected hwnd %lx\n", hwnd);
+    ok(hwnd == 0, "unexpected hwnd %x\n", hwnd);
 
     /* MenuBar */
 

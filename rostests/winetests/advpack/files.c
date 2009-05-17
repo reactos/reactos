@@ -133,8 +133,13 @@ static void test_AddDelBackupEntry(void)
     /* create the INF file */
     res = pAddDelBackupEntry("one\0two\0three\0", "c:\\", "basename", AADBE_ADD_ENTRY);
     ok(res == S_OK, "Expected S_OK, got %d\n", res);
-    ok(check_ini_file_attr(path), "Expected ini file to be hidden\n");
-    ok(DeleteFileA(path), "Expected path to exist\n");
+    if (GetFileAttributes(path) != INVALID_FILE_ATTRIBUTES)
+    {
+        ok(check_ini_file_attr(path), "Expected ini file to be hidden\n");
+        ok(DeleteFileA(path), "Expected path to exist\n");
+    }
+    else
+        win_skip("Test file could not be created\n");
 
     lstrcpyA(path, CURR_DIR);
     lstrcatA(path, "\\backup\\basename.INI");
