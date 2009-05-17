@@ -938,7 +938,7 @@ ReportEventW(IN HANDLE hEventLog,
         RtlInitUnicodeString(&Strings[i], lpStrings[i]);
 
     /*FIXME: ComputerName */
-    RtlInitEmptyUnicodeString(&ComputerName, NULL, 0);
+    RtlInitEmptyUnicodeString(&ComputerName, L"", 0);
 
     RpcTryExcept
     {
