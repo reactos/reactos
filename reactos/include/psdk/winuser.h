@@ -1792,6 +1792,7 @@ extern "C" {
 #define WM_PENWINLAST 911
 #define WM_USER 1024
 #define WM_APP 32768
+#define WM_GETTITLEBARINFOEX 0x033F
 
 
 #if (_WIN32_WINNT >= 0x0400)
