@@ -963,11 +963,12 @@ AboutDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
 VOID DIALOG_HelpAboutWine(VOID)
 {
-    static const TCHAR notepad[] = _T("Notepad\n");
     TCHAR szNotepad[MAX_STRING_LEN];
+    HICON notepadIcon = LoadIcon(Globals.hInstance, MAKEINTRESOURCE(IDI_NPICON));
 
     LoadString(Globals.hInstance, STRING_NOTEPAD, szNotepad, SIZEOF(szNotepad));
-    ShellAbout(Globals.hMainWnd, szNotepad, notepad, 0);
+    ShellAbout(Globals.hMainWnd, szNotepad, 0, notepadIcon);
+    DeleteObject(notepadIcon);
 }
 
 
