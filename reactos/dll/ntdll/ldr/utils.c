@@ -21,7 +21,7 @@
 #define NDEBUG
 #include <debug.h>
 
-#define LDRP_PROCESS_CREATION_TIME 0x8000000
+#define LDRP_PROCESS_CREATION_TIME 0xffff
 #define RVA(m, b) ((PVOID)((ULONG_PTR)(b) + (ULONG_PTR)(m)))
 
 /* GLOBALS *******************************************************************/
@@ -105,7 +105,7 @@ static __inline LONG LdrpDecrementLoadCount(PLDR_DATA_TABLE_ENTRY Module, BOOLEA
        RtlEnterCriticalSection (NtCurrentPeb()->LoaderLock);
      }
    LoadCount = Module->LoadCount;
-   if (Module->LoadCount > 0 && Module->LoadCount != 0xFFFF)
+   if (Module->LoadCount > 0 && Module->LoadCount != LDRP_PROCESS_CREATION_TIME)
      {
        Module->LoadCount--;
      }
@@ -124,7 +124,7 @@ static __inline LONG LdrpIncrementLoadCount(PLDR_DATA_TABLE_ENTRY Module, BOOLEA
        RtlEnterCriticalSection (NtCurrentPeb()->LoaderLock);
      }
    LoadCount = Module->LoadCount;
-   if (Module->LoadCount != 0xFFFF)
+   if (Module->LoadCount != LDRP_PROCESS_CREATION_TIME)
      {
        Module->LoadCount++;
      }
@@ -153,7 +153,7 @@ static __inline VOID LdrpAcquireTlsSlot(PLDR_DATA_TABLE_ENTRY Module, ULONG Size
 static __inline VOID LdrpTlsCallback(PLDR_DATA_TABLE_ENTRY Module, ULONG dwReason)
 {
    PIMAGE_TLS_CALLBACK *TlsCallback;
-   if (Module->TlsIndex != 0xFFFF && Module->LoadCount == 0xFFFF)
+   if (Module->TlsIndex != 0xFFFF && Module->LoadCount == LDRP_PROCESS_CREATION_TIME)
      {
        TlsCallback = LdrpTlsArray[Module->TlsIndex].TlsAddressOfCallBacks;
        if (TlsCallback)
@@ -365,7 +365,7 @@ LdrpInitializeTlsForProccess(VOID)
        while (Entry != ModuleListHead)
          {
            Module = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
-           if (Module->LoadCount == 0xFFFF &&
+           if (Module->LoadCount == LDRP_PROCESS_CREATION_TIME &&
                Module->TlsIndex != 0xFFFF)
              {
                TlsDirectory = (PIMAGE_TLS_DIRECTORY)
@@ -592,7 +592,7 @@ LdrAddModuleEntry(PVOID ImageBase,
        * loading while app is initializing
        * dll must not be unloaded
        */
-      Module->LoadCount = 0xFFFF;
+      Module->LoadCount = LDRP_PROCESS_CREATION_TIME;
     }
 
   Module->Flags = 0;
@@ -998,7 +998,7 @@ LdrFindEntryForName(PUNICODE_STRING Name,
            0 == RtlCompareUnicodeString(&LdrpLastModule->FullDllName, &AdjustedName, TRUE)))
         {
           *Module = LdrpLastModule;
-          if (Ref && (*Module)->LoadCount != 0xFFFF)
+          if (Ref && (*Module)->LoadCount != LDRP_PROCESS_CREATION_TIME)
             {
               (*Module)->LoadCount++;
             }
@@ -1019,7 +1019,7 @@ LdrFindEntryForName(PUNICODE_STRING Name,
            0 == RtlCompareUnicodeString(&ModulePtr->FullDllName, &AdjustedName, TRUE)))
         {
           *Module = LdrpLastModule = ModulePtr;
-          if (Ref && ModulePtr->LoadCount != 0xFFFF)
+          if (Ref && ModulePtr->LoadCount != LDRP_PROCESS_CREATION_TIME)
             {
               ModulePtr->LoadCount++;
             }
@@ -1078,9 +1078,8 @@ LdrFixupForward(PCHAR ForwardName)
          */
         if (!NT_SUCCESS(Status))
           {
-             ULONG Flags = LDRP_PROCESS_CREATION_TIME;
              Status = LdrLoadDll(NULL,
-                                 &Flags,
+								 NULL,
                                  &DllName,
                                  &BaseAddress);
              if (NT_SUCCESS(Status))
@@ -1449,10 +1448,10 @@ LdrpGetOrLoadModule(PWCHAR SearchPath,
    if (Load && !NT_SUCCESS(Status))
      {
        Status = LdrpLoadModule(SearchPath,
-                               NtCurrentPeb()->Ldr->Initialized ? 0 : LDRP_PROCESS_CREATION_TIME,
+							   0,
                                &DllName,
                                Module,
-                               NULL);
+							   NULL);
        if (NT_SUCCESS(Status))
          {
            Status = LdrFindEntryForName (&DllName, Module, FALSE);
@@ -2669,7 +2668,7 @@ LdrpDetachProcess(BOOLEAN UnloadAll)
    while (Entry != ModuleListHead)
      {
        Module = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InInitializationOrderModuleList);
-       if (((UnloadAll && Module->LoadCount == 0xFFFF) || Module->LoadCount == 0) &&
+       if (((UnloadAll && Module->LoadCount == LDRP_PROCESS_CREATION_TIME) || Module->LoadCount == 0) &&
            Module->Flags & LDRP_ENTRY_PROCESSED &&
            !(Module->Flags & LDRP_UNLOAD_IN_PROGRESS))
          {
@@ -2682,7 +2681,7 @@ LdrpDetachProcess(BOOLEAN UnloadAll)
              {
                TRACE_LDR("Unload %wZ - Calling entry point at %x\n",
                          &Module->BaseDllName, Module->EntryPoint);
-               LdrpCallDllEntry(Module, DLL_PROCESS_DETACH, (PVOID)(Module->LoadCount == 0xFFFF ? 1 : 0));
+               LdrpCallDllEntry(Module, DLL_PROCESS_DETACH, (PVOID)(Module->LoadCount == LDRP_PROCESS_CREATION_TIME ? 1 : 0));
              }
            else
              {
@@ -2704,7 +2703,7 @@ LdrpDetachProcess(BOOLEAN UnloadAll)
            Module = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InInitializationOrderModuleList);
            Entry = Entry->Blink;
            if (Module->Flags & LDRP_UNLOAD_IN_PROGRESS &&
-               ((UnloadAll && Module->LoadCount != 0xFFFF) || Module->LoadCount == 0))
+               ((UnloadAll && Module->LoadCount != LDRP_PROCESS_CREATION_TIME) || Module->LoadCount == 0))
              {
                /* remove the module entry from the list */
                RemoveEntryList (&Module->InLoadOrderLinks);
@@ -2767,7 +2766,7 @@ LdrpAttachProcess(VOID)
            Module->Flags |= LDRP_LOAD_IN_PROGRESS;
            TRACE_LDR("%wZ loaded - Calling init routine at %x for process attaching\n",
                      &Module->BaseDllName, Module->EntryPoint);
-           Result = LdrpCallDllEntry(Module, DLL_PROCESS_ATTACH, (PVOID)(Module->LoadCount == 0xFFFF ? 1 : 0));
+           Result = LdrpCallDllEntry(Module, DLL_PROCESS_ATTACH, (PVOID)(Module->LoadCount == LDRP_PROCESS_CREATION_TIME ? 1 : 0));
            if (!Result)
              {
                Status = STATUS_DLL_INIT_FAILED;
