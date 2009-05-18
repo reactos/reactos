@@ -152,6 +152,13 @@ NtUserCallOneParam(
 
    switch(Routine)
    {
+      case ONEPARAM_ROUTINE_POSTQUITMESSAGE:
+          {
+                PTHREADINFO pti;
+                pti = PsGetCurrentThreadWin32Thread();
+                MsqPostQuitMessage(pti->MessageQueue, Param);
+                RETURN(TRUE);
+          }
       case ONEPARAM_ROUTINE_SHOWCURSOR:
          RETURN( (DWORD)UserShowCursor((BOOL)Param) );
 

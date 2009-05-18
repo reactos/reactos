@@ -1709,7 +1709,7 @@ WINAPI
 PostQuitMessage(
   int nExitCode)
 {
-  (void) NtUserPostMessage(NULL, WM_QUIT, nExitCode, 0);
+    NtUserCallOneParam(nExitCode, ONEPARAM_ROUTINE_POSTQUITMESSAGE);
 }
 
 
