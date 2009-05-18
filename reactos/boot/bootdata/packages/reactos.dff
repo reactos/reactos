@@ -20,6 +20,7 @@ Signature = "$ReactOS$"
 5 = system32\drivers\etc
 6 = inf
 7 = bin
+8 = media
 
 .InfEnd
 
@@ -632,6 +633,10 @@ media\inf\usbport.inf                               6
 media\inf\usb.inf                                   6
 media\inf\usbstor.inf                               6
 media\inf\xboxdisp.inf                              6
+
+
+; Media Files
+media\sounds\ReactOS_LogOn.wav                      8
 
 ; Ini Files
 boot\bootdata\system.ini                            4
