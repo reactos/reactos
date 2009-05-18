@@ -24,6 +24,7 @@
 #include "lang/pl-PL.rc"
 #include "lang/pt-BR.rc"
 #include "lang/pt-PT.rc"
+#include "lang/nl-NL.rc"
 // cp 1250 languages
 #include "lang/sk-SK.rc"
 #include "lang/cs-CZ.rc"
