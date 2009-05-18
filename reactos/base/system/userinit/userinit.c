@@ -591,6 +591,51 @@ static VOID SetUserPreferences(VOID)
         WARN("RegOpenKeyEx() failed with error %lu\n", rc);
 }
 
+static VOID
+PlayLogonSound()
+{
+    HKEY hKey;
+    WCHAR szBuffer[MAX_PATH] = {0};
+    WCHAR szDest[MAX_PATH];
+    DWORD dwSize = sizeof(szBuffer);
+    HMODULE hLibrary;
+    typedef BOOL WINAPI (*PLAYSOUNDW)(LPCWSTR,HMODULE,DWORD);
+    PLAYSOUNDW Play;
+
+    if (RegOpenKeyExW(HKEY_CURRENT_USER, L"AppEvents\\Schemes\\Apps\\.Default\\WindowsLogon\\.Current", 0, KEY_READ, &hKey) != ERROR_SUCCESS)
+    {
+        return;
+    }
+
+    if (RegQueryValueExW(hKey, NULL, NULL, NULL, (LPBYTE)szBuffer, &dwSize) != ERROR_SUCCESS)
+    {
+        RegCloseKey(hKey);
+        return;
+    }
+
+
+    RegCloseKey(hKey);
+
+    if (!szBuffer[0])
+        return;
+
+
+    szBuffer[MAX_PATH-1] = L'\0';
+    if (ExpandEnvironmentStringsW(szBuffer, szDest, MAX_PATH))
+    {
+        hLibrary = LoadLibraryW(L"winmm.dll");
+        if (hLibrary)
+        {
+            Play = (PLAYSOUNDW)GetProcAddress(hLibrary, "PlaySoundW");
+            if (Play)
+            {
+                Play(szDest, NULL, SND_FILENAME);
+            }
+            FreeLibrary(hLibrary);
+        }
+    }
+}
+
 static
 VOID SetUserSettings(VOID)
 {
@@ -640,6 +685,7 @@ wWinMain(IN HINSTANCE hInst,
     SetUserSettings();
     StartShell();
     NotifyLogon();
+    PlayLogonSound();
     return 0;
 }
 
