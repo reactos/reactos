@@ -32,7 +32,7 @@ TuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 }
 
 static BOOL FASTCALL
-TuiInit(VOID)
+TuiInit(DWORD OemCP)
 {
   CONSOLE_SCREEN_BUFFER_INFO ScrInfo;
   DWORD BytesReturned;
@@ -44,6 +44,14 @@ TuiInit(VOID)
     {
       DPRINT1("Failed to open BlueScreen.\n");
       return FALSE;
+    }
+
+    if (!DeviceIoControl(ConsoleDeviceHandle, IOCTL_CONSOLE_LOADFONT,
+                         &OemCP, sizeof(OemCP), NULL, 0,
+                         &BytesReturned, NULL))
+    {
+        DPRINT("Failed to load the font for codepage %d\n", OemCP);
+        /* Let's suppose the font is good enough to continue */
     }
 
   ActiveConsole = NULL;
@@ -304,7 +312,7 @@ TuiInitConsole(PCSRSS_CONSOLE Console)
   if (! ConsInitialized)
     {
       ConsInitialized = TRUE;
-      if (! TuiInit())
+      if (! TuiInit(Console->CodePage))
         {
           ConsInitialized = FALSE;
           return STATUS_UNSUCCESSFUL;
