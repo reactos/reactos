@@ -32,11 +32,42 @@ TuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 }
 
 static BOOL FASTCALL
+TuiStartService(LPCWSTR lpServiceName)
+{
+    SC_HANDLE hSCManager = NULL;
+    SC_HANDLE hService = NULL;
+    BOOL ret = FALSE;
+
+    hSCManager = OpenSCManagerW(NULL, NULL, 0);
+    if (hSCManager == NULL)
+        goto cleanup;
+
+    hService = OpenServiceW(hSCManager, lpServiceName, SERVICE_START);
+    if (hService == NULL)
+        goto cleanup;
+
+    ret = StartServiceW(hService, 0, NULL);
+    if (!ret)
+        goto cleanup;
+
+    ret = TRUE;
+
+cleanup:
+    if (hSCManager != NULL)
+        CloseServiceHandle(hSCManager);
+    if (hService != NULL)
+        CloseServiceHandle(hService);
+    return ret;
+}
+
+static BOOL FASTCALL
 TuiInit(DWORD OemCP)
 {
   CONSOLE_SCREEN_BUFFER_INFO ScrInfo;
   DWORD BytesReturned;
   WNDCLASSEXW wc;
+
+  TuiStartService(L"Blue");
 
   ConsoleDeviceHandle = CreateFileW(L"\\\\.\\BlueScreen", FILE_ALL_ACCESS, 0, NULL,
                                     OPEN_EXISTING, 0, NULL);
