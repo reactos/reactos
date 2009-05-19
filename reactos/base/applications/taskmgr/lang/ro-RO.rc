@@ -1,7 +1,11 @@
 /////////////////////////////////////////////////////////////////////////////
 // Romanian resources
 
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+#pragma code_page(1250)
+#endif //_WIN32
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -156,20 +160,6 @@ END
 //
 // Dialog
 //
-
-IDD_ABOUTBOX DIALOGEX DISCARDABLE  22, 17, 259, 210
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Despre Gestionarul de activitãþi"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    CONTROL         "Gestionar de activitãþi v1.0\nDrept de autor (C) 1999 - 2001\nde Brian Palmer (brianp@reactos.org)\ntradus de Dimitriu Petru",
-                    IDC_STATIC,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,53,28,
-                    122,26
-    DEFPUSHBUTTON   "OK",IDOK,183,189,44,14,WS_GROUP
-    ICON            IDI_TASKMANAGER,IDC_STATIC,19,30,20,20
-    EDITTEXT        IDC_LICENSE_EDIT,53,63,174,107,ES_MULTILINE |
-                    ES_READONLY | WS_VSCROLL
-END
 
 IDD_TASKMGR_DIALOG DIALOGEX DISCARDABLE  0, 0, 264, 246
 STYLE DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP |
@@ -598,7 +588,6 @@ BEGIN
     ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
                             "Seteazã prioritatea"
     ID_PROCESS_PAGE_SETPRIORITY_LOW "Seteazã prioritatea"
-    IDS_LICENSE             "Tradus în limba românã de Petru Dimitriu.\r\nAcest program este software liber; puteþi redistribui sau modifica programul sub termenii licenþei publice GNU aºa cum este publicatã de Free Software Foundation - fie versiunea 2 a licenþei, sau (la alegerea dvs.) oricare versiune ulterioarã.\r\n\r\nAcest program este distribuit în speranþa cã va fi de folos, dar FÃRÃ NICIO GARANÞIE, nici mãcar garanþia VANDABILITÃÞII sau a POTRIVIRII PENTRU UN SCOP ANUME.  Vedeþi Licenþa GNU GPL pentru detalii.\r\n\r\nDvs. ar trebui sã fi primit o copie a licenþei împreunã cu acest program; dacã nu, scrieþi la Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
 END
 
 
