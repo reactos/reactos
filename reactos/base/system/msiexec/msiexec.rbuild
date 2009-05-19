@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="msiexec" type="win32gui" installbase="system32" installname="msiexec.exe">
+	<compilerflag>-Wno-format</compilerflag>
 	<include base="msiexec">.</include>
 	<include base="ReactOS">include/wine</include>
 	<define name="__WINESRC__" />
