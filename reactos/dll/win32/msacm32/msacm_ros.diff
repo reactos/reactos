@@ -55,10 +55,11 @@ Name: svn:eol-style
 
 Index: msacm.rc
 ===================================================================
---- msacm.rc	(revision 25687)
-+++ msacm.rc	(working copy)
-@@ -34,3 +34,4 @@
- #include "msacm_Ru.rc"
+--- msacm.rc	(Revision 40986)
++++ msacm.rc	(Arbeitskopie)
+@@ -43,4 +43,5 @@
+ #include "msacm_Si.rc"
  #include "msacm_Sv.rc"
- #include "msacm_Hu.rc"
+ #include "msacm_Tr.rc"
 +#include "msacm_Uk.rc"
+ #include "msacm_Zh.rc"
