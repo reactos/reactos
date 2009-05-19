@@ -118,6 +118,9 @@ NtUserGetThreadState(
       case THREADSTATE_GETMESSAGETIME: 
          /* FIXME Needs more work! */
          RETURN( ((PTHREADINFO)PsGetCurrentThreadWin32Thread())->timeLast);
+
+      case THREADSTATE_GETINPUTSTATE:
+         RETURN( HIWORD(IntGetQueueStatus(FALSE)) & (QS_KEY | QS_MOUSEBUTTON));
    }
    RETURN( 0);
 

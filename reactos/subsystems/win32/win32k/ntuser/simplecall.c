@@ -397,8 +397,14 @@ NtUserCallOneParam(
          RETURN (UserRealizePalette((HDC) Param));
 
       case ONEPARAM_ROUTINE_GETQUEUESTATUS:
-         RETURN (IntGetQueueStatus((BOOL) Param));
-
+      {
+         DWORD Ret;
+         WORD changed_bits, wake_bits;
+         Ret = IntGetQueueStatus(FALSE);
+         changed_bits = LOWORD(Ret);
+         wake_bits = HIWORD(Ret);
+         RETURN( MAKELONG(changed_bits & Param, wake_bits & Param));
+      }
       case ONEPARAM_ROUTINE_ENUMCLIPBOARDFORMATS:
          /* FIXME: Should use UserEnterShared */
          RETURN(IntEnumClipboardFormats(Param));

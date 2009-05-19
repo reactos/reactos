@@ -2198,51 +2198,27 @@ ReleaseCapture(VOID)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 DWORD
 WINAPI
 RealGetQueueStatus(UINT flags)
 {
-   DWORD ret;
-   WORD changed_bits, wake_bits;
-
-#if 0 /* wine stuff. don't know what it does... */
-
-   /* check for pending X events */
-   if (USER_Driver.pMsgWaitForMultipleObjectsEx)
-      USER_Driver.pMsgWaitForMultipleObjectsEx( 0, NULL, 0, 0, 0 );
-#endif
-
-   ret = NtUserCallOneParam(TRUE, ONEPARAM_ROUTINE_GETQUEUESTATUS);
-
-   changed_bits = LOWORD(ret);
-   wake_bits = HIWORD(ret);
-
-   return MAKELONG(changed_bits & flags, wake_bits & flags);
+   return NtUserCallOneParam(flags, ONEPARAM_ROUTINE_GETQUEUESTATUS);
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL WINAPI GetInputState(VOID)
 {
-   DWORD ret;
-   WORD  wake_bits;
+   PCLIENTTHREADINFO pcti = GetWin32ClientInfo()->pClientThreadInfo;
 
-#if 0 /* wine stuff. don't know what it does... */
-
-   /* check for pending X events */
-   if (USER_Driver.pMsgWaitForMultipleObjectsEx)
-     USER_Driver.pMsgWaitForMultipleObjectsEx( 0, NULL, 0, 0, 0 );
-#endif
-
-   ret = NtUserCallOneParam(FALSE, ONEPARAM_ROUTINE_GETQUEUESTATUS);
-
-   wake_bits = HIWORD(ret);
-
-   return wake_bits & (QS_KEY | QS_MOUSEBUTTON);
+   if ((!pcti) || (pcti->fsChangeBits & (QS_KEY|QS_MOUSEBUTTON)))
+      return (BOOL)NtUserGetThreadState(THREADSTATE_GETINPUTSTATE);
+            
+   return FALSE;
 }
 
 
