@@ -46,7 +46,7 @@ typedef struct _AFD_LISTEN_DATA {
 } AFD_LISTEN_DATA, *PAFD_LISTEN_DATA;
 
 typedef struct _AFD_HANDLE_ {
-    HANDLE				Handle;
+    SOCKET				Handle;
     ULONG				Events;
     NTSTATUS			        Status;
 } AFD_HANDLE, *PAFD_HANDLE;
