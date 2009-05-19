@@ -1,8 +1,9 @@
-/*
- * Italian resource file for MS ACM
+/* Hey, Emacs, open this file with -*- coding: cp1250 -*-
  *
  * Copyright 2000 Eric Pouech
- * Copyright 2003 Ivan Leo Puoti
+ *
+ * Czech resources for MS ACM
+ * Copyright 2004 David Kredba
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,28 +20,30 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+
+/* Czech strings in CP1250 */
 
 DLG_ACMFORMATCHOOSE_ID DIALOG DISCARDABLE  10, 20, 225, 100
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Selezione dell'audio"
+CAPTION "Výbìr zvuku"
 FONT 8, "MS Shell Dlg"
 BEGIN
 
-    LTEXT           "&Nome:", -1, 5, 5, 115, 8, NOT WS_GROUP
+    LTEXT           "&Název:", -1, 5, 5, 115, 8, NOT WS_GROUP
 
     COMBOBOX        IDD_ACMFORMATCHOOSE_CMB_CUSTOM, 5, 15, 115, 60,
                     CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 
-    PUSHBUTTON      "&Salva con nome...", IDD_ACMFORMATCHOOSE_BTN_SETNAME, 125, 14, 45, 14
-    PUSHBUTTON      "&Rimuovi", IDD_ACMFORMATCHOOSE_BTN_DELNAME, 175, 14, 45, 14
+    PUSHBUTTON      "&Uložit jako", IDD_ACMFORMATCHOOSE_BTN_SETNAME, 125, 14, 45, 14
+    PUSHBUTTON      "Odeb&rat", IDD_ACMFORMATCHOOSE_BTN_DELNAME, 175, 14, 45, 14
 
-    LTEXT           "&Formato:", -1, 5, 41, 44, 8, NOT WS_GROUP
+    LTEXT           "&Formát:", -1, 5, 41, 44, 8, NOT WS_GROUP
 
     COMBOBOX        IDD_ACMFORMATCHOOSE_CMB_FORMATTAG, 50, 39, 170, 60,
                     CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 
-    LTEXT           "&Attributi:", -1, 5, 59, 44, 8, NOT WS_GROUP
+    LTEXT           "&Atributy:", -1, 5, 59, 44, 8, NOT WS_GROUP
 
 #if 0
     COMBOBOX        IDD_ACMFORMATCHOOSE_CMB_FORMAT, 50, 57, 170, 60,
@@ -51,7 +54,7 @@ BEGIN
                     CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 #endif
     DEFPUSHBUTTON   "OK", IDOK, 48, 80, 40, 14
-    PUSHBUTTON      "Annulla", IDCANCEL, 92, 80, 40, 14
-    PUSHBUTTON      "&Aiuto", IDD_ACMFORMATCHOOSE_BTN_HELP, 136, 80, 40, 14
+    PUSHBUTTON      "Storno", IDCANCEL, 92, 80, 40, 14
+    PUSHBUTTON      "P&omoc", IDD_ACMFORMATCHOOSE_BTN_HELP, 136, 80, 40, 14
 
 END

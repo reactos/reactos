@@ -1,8 +1,7 @@
 /*
- * Portuguese resource file for MS ACM
+ * MS ACM (Simplified and Traditional Chinese Resources)
  *
- * Copyright 2003 Marcelo Duarte
- * Copyright 2006 Am�rico Jos� Melo
+ * Copyright 2008 Hongbo Ni <hongbo.at.njstar.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,28 +18,31 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
+/* Chinese text is encoded in UTF-8 */
+#pragma code_page(65001)
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 DLG_ACMFORMATCHOOSE_ID DIALOG DISCARDABLE  10, 20, 225, 100
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Selec��o de som"
-FONT 8, "MS Shell Dlg"
+CAPTION "声音选择"
+FONT 9, "MS Shell Dlg"
 BEGIN
 
-    LTEXT           "&Nome:", -1, 5, 5, 115, 8, NOT WS_GROUP
+    LTEXT           "名称(&N):", -1, 5, 5, 115, 8, NOT WS_GROUP
 
     COMBOBOX        IDD_ACMFORMATCHOOSE_CMB_CUSTOM, 5, 15, 115, 60,
                     CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 
-    PUSHBUTTON      "&Gravar como...", IDD_ACMFORMATCHOOSE_BTN_SETNAME, 125, 14, 45, 14
-    PUSHBUTTON      "&Remover", IDD_ACMFORMATCHOOSE_BTN_DELNAME, 175, 14, 45, 14
+    PUSHBUTTON      "保存为(&S)...", IDD_ACMFORMATCHOOSE_BTN_SETNAME, 125, 14, 45, 14
+    PUSHBUTTON      "删除(&R)", IDD_ACMFORMATCHOOSE_BTN_DELNAME, 175, 14, 45, 14
 
-    LTEXT           "&Formato:", -1, 5, 41, 44, 8, NOT WS_GROUP
+    LTEXT           "格式(&F):", -1, 5, 41, 44, 8, NOT WS_GROUP
 
     COMBOBOX        IDD_ACMFORMATCHOOSE_CMB_FORMATTAG, 50, 39, 170, 60,
                     CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 
-    LTEXT           "&Atributos:", -1, 5, 59, 44, 8, NOT WS_GROUP
+    LTEXT           "属性(&A):", -1, 5, 59, 44, 8, NOT WS_GROUP
 
 #if 0
     COMBOBOX        IDD_ACMFORMATCHOOSE_CMB_FORMAT, 50, 57, 170, 60,
@@ -50,34 +52,34 @@ BEGIN
     COMBOBOX        IDD_ACMFORMATCHOOSE_CMB_FORMAT, 50, 57, 170, 60,
                     CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 #endif
-    DEFPUSHBUTTON   "OK", IDOK, 48, 80, 40, 14
-    PUSHBUTTON      "Cancelar", IDCANCEL, 92, 80, 40, 14
-    PUSHBUTTON      "Aj&uda", IDD_ACMFORMATCHOOSE_BTN_HELP, 136, 80, 40, 14
+    DEFPUSHBUTTON   "确定", IDOK, 48, 80, 40, 14
+    PUSHBUTTON      "取消", IDCANCEL, 92, 80, 40, 14
+    PUSHBUTTON      "帮助(&H)", IDD_ACMFORMATCHOOSE_BTN_HELP, 136, 80, 40, 14
 
 END
 
-LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 DLG_ACMFORMATCHOOSE_ID DIALOG DISCARDABLE  10, 20, 225, 100
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Selec��o de som"
-FONT 8, "MS Shell Dlg"
+CAPTION "聲音選擇"
+FONT 9, "MS Shell Dlg"
 BEGIN
 
-    LTEXT           "&Nome:", -1, 5, 5, 115, 8, NOT WS_GROUP
+    LTEXT           "名稱(&N):", -1, 5, 5, 115, 8, NOT WS_GROUP
 
     COMBOBOX        IDD_ACMFORMATCHOOSE_CMB_CUSTOM, 5, 15, 115, 60,
                     CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 
-    PUSHBUTTON      "&Gravar como...", IDD_ACMFORMATCHOOSE_BTN_SETNAME, 125, 14, 45, 14
-    PUSHBUTTON      "&Remover", IDD_ACMFORMATCHOOSE_BTN_DELNAME, 175, 14, 45, 14
+    PUSHBUTTON      "儲存為(&S)...", IDD_ACMFORMATCHOOSE_BTN_SETNAME, 125, 14, 45, 14
+    PUSHBUTTON      "刪除(&R)", IDD_ACMFORMATCHOOSE_BTN_DELNAME, 175, 14, 45, 14
 
-    LTEXT           "&Formato:", -1, 5, 41, 44, 8, NOT WS_GROUP
+    LTEXT           "格式(&F):", -1, 5, 41, 44, 8, NOT WS_GROUP
 
     COMBOBOX        IDD_ACMFORMATCHOOSE_CMB_FORMATTAG, 50, 39, 170, 60,
                     CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 
-    LTEXT           "&Atributos:", -1, 5, 59, 44, 8, NOT WS_GROUP
+    LTEXT           "屬性(&A):", -1, 5, 59, 44, 8, NOT WS_GROUP
 
 #if 0
     COMBOBOX        IDD_ACMFORMATCHOOSE_CMB_FORMAT, 50, 57, 170, 60,
@@ -87,8 +89,10 @@ BEGIN
     COMBOBOX        IDD_ACMFORMATCHOOSE_CMB_FORMAT, 50, 57, 170, 60,
                     CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 #endif
-    DEFPUSHBUTTON   "OK", IDOK, 48, 80, 40, 14
-    PUSHBUTTON      "Cancelar", IDCANCEL, 92, 80, 40, 14
-    PUSHBUTTON      "Aj&uda", IDD_ACMFORMATCHOOSE_BTN_HELP, 136, 80, 40, 14
+    DEFPUSHBUTTON   "確定", IDOK, 48, 80, 40, 14
+    PUSHBUTTON      "取消", IDCANCEL, 92, 80, 40, 14
+    PUSHBUTTON      "幫助(&H)", IDD_ACMFORMATCHOOSE_BTN_HELP, 136, 80, 40, 14
 
 END
+
+#pragma code_page(default)

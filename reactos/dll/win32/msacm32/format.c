@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include <stdarg.h>
@@ -54,17 +54,18 @@ struct MSACM_FillFormatData {
 
 static BOOL CALLBACK MSACM_FillFormatTagsCB(HACMDRIVERID hadid,
 					    PACMFORMATTAGDETAILSA paftd,
-					    DWORD dwInstance, DWORD fdwSupport)
+                                            DWORD_PTR dwInstance,
+                                            DWORD fdwSupport)
 {
     struct MSACM_FillFormatData*	affd = (struct MSACM_FillFormatData*)dwInstance;
 
     switch (affd->mode) {
     case WINE_ACMFF_TAG:
 	if (SendDlgItemMessageA(affd->hWnd, IDD_ACMFORMATCHOOSE_CMB_FORMATTAG,
-				CB_FINDSTRINGEXACT,
-				(WPARAM)-1, (LPARAM)paftd->szFormatTag) == CB_ERR)
+                                CB_FINDSTRINGEXACT, -1,
+                                (LPARAM)paftd->szFormatTag) == CB_ERR)
 	    SendDlgItemMessageA(affd->hWnd, IDD_ACMFORMATCHOOSE_CMB_FORMATTAG,
-				CB_ADDSTRING, 0, (DWORD)paftd->szFormatTag);
+                                CB_ADDSTRING, 0, (LPARAM)paftd->szFormatTag);
 	break;
     case WINE_ACMFF_FORMAT:
 	if (strcmp(affd->szFormatTag, paftd->szFormatTag) == 0) {
@@ -72,7 +73,7 @@ static BOOL CALLBACK MSACM_FillFormatTagsCB(HACMDRIVERID hadid,
 
 	    if (acmDriverOpen(&had, hadid, 0) == MMSYSERR_NOERROR) {
 		ACMFORMATDETAILSA	afd;
-		int			i, idx;
+               unsigned int            i, len;
 		MMRESULT		mmr;
 		char			buffer[ACMFORMATDETAILS_FORMAT_CHARS+16];
 
@@ -88,16 +89,15 @@ static BOOL CALLBACK MSACM_FillFormatTagsCB(HACMDRIVERID hadid,
 		    afd.dwFormatIndex = i;
 		    mmr = acmFormatDetailsA(had, &afd, ACM_FORMATDETAILSF_INDEX);
 		    if (mmr == MMSYSERR_NOERROR) {
-			strncpy(buffer, afd.szFormat, ACMFORMATTAGDETAILS_FORMATTAG_CHARS);
-			for (idx = strlen(buffer);
-			     idx < ACMFORMATTAGDETAILS_FORMATTAG_CHARS; idx++)
-			    buffer[idx] = ' ';
+                       lstrcpynA(buffer, afd.szFormat, ACMFORMATTAGDETAILS_FORMATTAG_CHARS + 1);
+                       len = strlen(buffer);
+                       memset(buffer+len, ' ', ACMFORMATTAGDETAILS_FORMATTAG_CHARS - len);
 			wsprintfA(buffer + ACMFORMATTAGDETAILS_FORMATTAG_CHARS,
 				  "%d Ko/s",
 				  (afd.pwfx->nAvgBytesPerSec + 512) / 1024);
 			SendDlgItemMessageA(affd->hWnd,
 					    IDD_ACMFORMATCHOOSE_CMB_FORMAT,
-					    CB_ADDSTRING, 0, (DWORD)buffer);
+                                            CB_ADDSTRING, 0, (LPARAM)buffer);
 		    }
 		}
 		acmDriverClose(had, 0);
@@ -145,7 +145,7 @@ static BOOL MSACM_FillFormatTags(HWND hWnd)
     affd.hWnd = hWnd;
     affd.mode = WINE_ACMFF_TAG;
 
-    acmFormatTagEnumA(NULL, &aftd, MSACM_FillFormatTagsCB, (DWORD)&affd, 0);
+    acmFormatTagEnumA(NULL, &aftd, MSACM_FillFormatTagsCB, (DWORD_PTR)&affd, 0);
     SendDlgItemMessageA(hWnd, IDD_ACMFORMATCHOOSE_CMB_FORMATTAG, CB_SETCURSEL, 0, 0);
     return TRUE;
 }
@@ -166,9 +166,9 @@ static BOOL MSACM_FillFormat(HWND hWnd)
 			CB_GETLBTEXT,
 			SendDlgItemMessageA(hWnd, IDD_ACMFORMATCHOOSE_CMB_FORMATTAG,
 					    CB_GETCURSEL, 0, 0),
-			(DWORD)affd.szFormatTag);
+                        (LPARAM)affd.szFormatTag);
 
-    acmFormatTagEnumA(NULL, &aftd, MSACM_FillFormatTagsCB, (DWORD)&affd, 0);
+    acmFormatTagEnumA(NULL, &aftd, MSACM_FillFormatTagsCB, (DWORD_PTR)&affd, 0);
     SendDlgItemMessageA(hWnd, IDD_ACMFORMATCHOOSE_CMB_FORMAT, CB_SETCURSEL, 0, 0);
     return TRUE;
 }
@@ -189,9 +189,9 @@ static MMRESULT MSACM_GetWFX(HWND hWnd, PACMFORMATCHOOSEA afc)
 			CB_GETLBTEXT,
 			SendDlgItemMessageA(hWnd, IDD_ACMFORMATCHOOSE_CMB_FORMATTAG,
 					    CB_GETCURSEL, 0, 0),
-			(DWORD)affd.szFormatTag);
+                        (LPARAM)affd.szFormatTag);
 
-    acmFormatTagEnumA(NULL, &aftd, MSACM_FillFormatTagsCB, (DWORD)&affd, 0);
+    acmFormatTagEnumA(NULL, &aftd, MSACM_FillFormatTagsCB, (DWORD_PTR)&affd, 0);
     return affd.ret;
 }
 
@@ -199,7 +199,7 @@ static INT_PTR CALLBACK FormatChooseDlgProc(HWND hWnd, UINT msg,
 				       WPARAM wParam, LPARAM lParam)
 {
 
-    TRACE("hwnd=%p msg=%i 0x%08x 0x%08lx\n", hWnd,  msg, wParam, lParam );
+    TRACE("hwnd=%p msg=%i 0x%08lx 0x%08lx\n", hWnd,  msg, wParam, lParam );
 
     switch (msg) {
     case WM_INITDIALOG:
@@ -208,7 +208,7 @@ static INT_PTR CALLBACK FormatChooseDlgProc(HWND hWnd, UINT msg,
 	MSACM_FillFormat(hWnd);
 	if ((afc->fdwStyle & ~(ACMFORMATCHOOSE_STYLEF_CONTEXTHELP|
 			       ACMFORMATCHOOSE_STYLEF_SHOWHELP)) != 0)
-	    FIXME("Unsupported style %08lx\n", ((PACMFORMATCHOOSEA)lParam)->fdwStyle);
+            FIXME("Unsupported style %08x\n", ((PACMFORMATCHOOSEA)lParam)->fdwStyle);
 	if (!(afc->fdwStyle & ACMFORMATCHOOSE_STYLEF_SHOWHELP))
 	    ShowWindow(GetDlgItem(hWnd, IDD_ACMFORMATCHOOSE_BTN_HELP), SW_HIDE);
 	return TRUE;
@@ -259,7 +259,7 @@ static INT_PTR CALLBACK FormatChooseDlgProc(HWND hWnd, UINT msg,
 	break;
 #endif
     default:
-	TRACE("Dropped dlgMsg: hwnd=%p msg=%i 0x%08x 0x%08lx\n",
+	TRACE("Dropped dlgMsg: hwnd=%p msg=%i 0x%08lx 0x%08lx\n",
 	      hWnd,  msg, wParam, lParam );
 	break;
     }
@@ -272,7 +272,7 @@ static INT_PTR CALLBACK FormatChooseDlgProc(HWND hWnd, UINT msg,
 MMRESULT WINAPI acmFormatChooseA(PACMFORMATCHOOSEA pafmtc)
 {
     return DialogBoxParamA(MSACM_hInstance32, MAKEINTRESOURCEA(DLG_ACMFORMATCHOOSE_ID),
-			   pafmtc->hwndOwner, FormatChooseDlgProc, (INT)pafmtc);
+                           pafmtc->hwndOwner, FormatChooseDlgProc, (LPARAM)pafmtc);
 }
 
 /***********************************************************************
@@ -321,7 +321,7 @@ MMRESULT WINAPI acmFormatDetailsW(HACMDRIVER had, PACMFORMATDETAILSW pafd, DWORD
     static const WCHAR		fmt2[] = {';',' ','%','d',' ','b','i','t','s',0};
     ACMFORMATTAGDETAILSA	aftd;
 
-    TRACE("(%p, %p, %ld)\n", had, pafd, fdwDetails);
+    TRACE("(%p, %p, %d)\n", had, pafd, fdwDetails);
 
     memset(&aftd, 0, sizeof(aftd));
     aftd.cbStruct = sizeof(aftd);
@@ -356,12 +356,12 @@ MMRESULT WINAPI acmFormatDetailsW(HACMDRIVER had, PACMFORMATDETAILSW pafd, DWORD
 	mmr = MSACM_Message(had, ACMDM_FORMAT_DETAILS, (LPARAM)pafd, fdwDetails);
 	break;
     default:
-	WARN("Unknown fdwDetails %08lx\n", fdwDetails);
+	WARN("Unknown fdwDetails %08x\n", fdwDetails);
 	mmr = MMSYSERR_INVALFLAG;
 	break;
     }
 
-    if (mmr == MMSYSERR_NOERROR && pafd->szFormat[0] == (WCHAR)0) {
+    if (mmr == MMSYSERR_NOERROR && pafd->szFormat[0] == 0) {
 	wsprintfW(pafd->szFormat, fmt1, pafd->pwfx->nSamplesPerSec);
 	if (pafd->pwfx->wBitsPerSample) {
 	    wsprintfW(pafd->szFormat + lstrlenW(pafd->szFormat), fmt2,
@@ -377,14 +377,14 @@ MMRESULT WINAPI acmFormatDetailsW(HACMDRIVER had, PACMFORMATDETAILSW pafd, DWORD
 }
 
 struct MSACM_FormatEnumWtoA_Instance {
-    PACMFORMATDETAILSA	pafda;
-    DWORD		dwInstance;
-    ACMFORMATENUMCBA 	fnCallback;
+    PACMFORMATDETAILSA pafda;
+    DWORD_PTR          dwInstance;
+    ACMFORMATENUMCBA   fnCallback;
 };
 
 static BOOL CALLBACK MSACM_FormatEnumCallbackWtoA(HACMDRIVERID hadid,
 						  PACMFORMATDETAILSW pafdw,
-						  DWORD dwInstance,
+                                                  DWORD_PTR dwInstance,
 						  DWORD fdwSupport)
 {
     struct MSACM_FormatEnumWtoA_Instance* pafei;
@@ -405,8 +405,8 @@ static BOOL CALLBACK MSACM_FormatEnumCallbackWtoA(HACMDRIVERID hadid,
  *           acmFormatEnumA (MSACM32.@)
  */
 MMRESULT WINAPI acmFormatEnumA(HACMDRIVER had, PACMFORMATDETAILSA pafda,
-			       ACMFORMATENUMCBA fnCallback, DWORD dwInstance,
-			       DWORD fdwEnum)
+                               ACMFORMATENUMCBA fnCallback,
+                               DWORD_PTR dwInstance, DWORD fdwEnum)
 {
     ACMFORMATDETAILSW		afdw;
     struct MSACM_FormatEnumWtoA_Instance afei;
@@ -429,7 +429,7 @@ MMRESULT WINAPI acmFormatEnumA(HACMDRIVER had, PACMFORMATDETAILSA pafda,
     afei.fnCallback = fnCallback;
 
     return acmFormatEnumW(had, &afdw, MSACM_FormatEnumCallbackWtoA,
-			  (DWORD)&afei, fdwEnum);
+                          (DWORD_PTR)&afei, fdwEnum);
 }
 
 /***********************************************************************
@@ -437,47 +437,91 @@ MMRESULT WINAPI acmFormatEnumA(HACMDRIVER had, PACMFORMATDETAILSA pafda,
  */
 static BOOL MSACM_FormatEnumHelper(PWINE_ACMDRIVERID padid, HACMDRIVER had,
 				   PACMFORMATDETAILSW pafd, PWAVEFORMATEX pwfxRef,
-				   ACMFORMATENUMCBW fnCallback, DWORD dwInstance,
-				   DWORD fdwEnum)
+                                   ACMFORMATENUMCBW fnCallback,
+                                   DWORD_PTR dwInstance, DWORD fdwEnum)
 {
     ACMFORMATTAGDETAILSW	aftd;
-    int				i, j;
+    unsigned int			i, j;
 
-    for (i = 0; i < padid->cFormatTags; i++) {
-	memset(&aftd, 0, sizeof(aftd));
-	aftd.cbStruct = sizeof(aftd);
-	aftd.dwFormatTagIndex = i;
-	if (acmFormatTagDetailsW(had, &aftd, ACM_FORMATTAGDETAILSF_INDEX) != MMSYSERR_NOERROR)
-	    continue;
+    if (fdwEnum & ACM_FORMATENUMF_SUGGEST) {
+        HDRVR hdrvr;
+        ACMDRVFORMATSUGGEST adfs;
+        pafd->dwFormatIndex = 0;
+        memset(&aftd, 0, sizeof(aftd));
+        aftd.cbStruct = sizeof(aftd);
+        memset(&adfs, 0, sizeof(adfs));
+        adfs.cbStruct = sizeof(adfs);
 
-	if ((fdwEnum & ACM_FORMATENUMF_WFORMATTAG) && aftd.dwFormatTag != pwfxRef->wFormatTag)
-	    continue;
+        for (i = 0; i < padid->cFormatTags; i++) {
+            aftd.dwFormatTag = i;
+            pafd->dwFormatTag = aftd.dwFormatTag;
+            pafd->pwfx->wFormatTag = pafd->dwFormatTag;
 
-	for (j = 0; j < aftd.cStandardFormats; j++) {
-	    pafd->dwFormatIndex = j;
-	    pafd->dwFormatTag = aftd.dwFormatTag;
-	    if (acmFormatDetailsW(had, pafd, ACM_FORMATDETAILSF_INDEX) != MMSYSERR_NOERROR)
-		continue;
+            if (acmFormatTagDetailsW(had, &aftd, ACM_FORMATTAGDETAILSF_INDEX) != MMSYSERR_NOERROR)
+                continue;
 
-	    if ((fdwEnum & ACM_FORMATENUMF_NCHANNELS) &&
-		pafd->pwfx->nChannels != pwfxRef->nChannels)
-		continue;
-	    if ((fdwEnum & ACM_FORMATENUMF_NSAMPLESPERSEC) &&
-		pafd->pwfx->nSamplesPerSec != pwfxRef->nSamplesPerSec)
-		continue;
-	    if ((fdwEnum & ACM_FORMATENUMF_WBITSPERSAMPLE) &&
-		pafd->pwfx->wBitsPerSample != pwfxRef->wBitsPerSample)
-		continue;
-	    if ((fdwEnum & ACM_FORMATENUMF_HARDWARE) &&
-		!(pafd->fdwSupport & ACMDRIVERDETAILS_SUPPORTF_HARDWARE))
-		continue;
+            adfs.cbwfxSrc = aftd.cbFormatSize;
+            adfs.cbwfxDst = aftd.cbFormatSize;
+            adfs.pwfxSrc = pwfxRef;
+            adfs.pwfxDst = pafd->pwfx;
+            pafd->fdwSupport = padid->fdwSupport;
 
-	    /* more checks to be done on fdwEnum */
+            if ((fdwEnum & ACM_FORMATENUMF_WFORMATTAG) &&
+                aftd.dwFormatTag != pwfxRef->wFormatTag)
+                continue;
 
-	    if (!(fnCallback)((HACMDRIVERID)padid, pafd, dwInstance, padid->fdwSupport))
-		return FALSE;
-	}
-	/* the "formats" used by the filters are also reported */
+            if ((fdwEnum & ACM_FORMATENUMF_HARDWARE) &&
+                !(pafd->fdwSupport & ACMDRIVERDETAILS_SUPPORTF_HARDWARE))
+                continue;
+
+            hdrvr = OpenDriver(padid->pszFileName,0,0);
+            SendDriverMessage(hdrvr,ACMDM_FORMAT_SUGGEST,(DWORD)&adfs,(fdwEnum & 0x000000FFL));
+
+            if (acmFormatDetailsW(had, pafd, ACM_FORMATDETAILSF_FORMAT) != MMSYSERR_NOERROR)
+                continue;
+
+            pafd->cbwfx = sizeof(*(pafd->pwfx));
+
+            if (!(fnCallback)((HACMDRIVERID)padid, pafd, dwInstance, padid->fdwSupport))
+                return FALSE;
+        }
+    } else {
+        for (i = 0; i < padid->cFormatTags; i++) {
+            memset(&aftd, 0, sizeof(aftd));
+            aftd.cbStruct = sizeof(aftd);
+            aftd.dwFormatTagIndex = i;
+            if (acmFormatTagDetailsW(had, &aftd, ACM_FORMATTAGDETAILSF_INDEX) != MMSYSERR_NOERROR)
+                continue;
+
+            if ((fdwEnum & ACM_FORMATENUMF_WFORMATTAG) && aftd.dwFormatTag != pwfxRef->wFormatTag)
+                continue;
+
+            for (j = 0; j < aftd.cStandardFormats; j++) {
+                pafd->dwFormatIndex = j;
+                pafd->dwFormatTag = aftd.dwFormatTag;
+                if (acmFormatDetailsW(had, pafd, ACM_FORMATDETAILSF_INDEX) != MMSYSERR_NOERROR)
+                    continue;
+
+                if ((fdwEnum & ACM_FORMATENUMF_NCHANNELS) &&
+                    pafd->pwfx->nChannels != pwfxRef->nChannels)
+                    continue;
+                if ((fdwEnum & ACM_FORMATENUMF_NSAMPLESPERSEC) &&
+                    pafd->pwfx->nSamplesPerSec != pwfxRef->nSamplesPerSec)
+                    continue;
+                if ((fdwEnum & ACM_FORMATENUMF_WBITSPERSAMPLE) &&
+                    pafd->pwfx->wBitsPerSample != pwfxRef->wBitsPerSample)
+                    continue;
+                if ((fdwEnum & ACM_FORMATENUMF_HARDWARE) &&
+                    !(pafd->fdwSupport & ACMDRIVERDETAILS_SUPPORTF_HARDWARE))
+                    continue;
+
+            /* more checks to be done on fdwEnum */
+
+                if (!(fnCallback)((HACMDRIVERID)padid, pafd, dwInstance, padid->fdwSupport))
+                    return FALSE;
+            }
+        /* the "formats" used by the filters are also reported */
+        }
     }
     return TRUE;
 }
@@ -485,14 +529,14 @@ static BOOL MSACM_FormatEnumHelper(PWINE_ACMDRIVERID padid, HACMDRIVER had,
 /**********************************************************************/
 
 MMRESULT WINAPI acmFormatEnumW(HACMDRIVER had, PACMFORMATDETAILSW pafd,
-			       ACMFORMATENUMCBW fnCallback, DWORD dwInstance,
-			       DWORD fdwEnum)
+                               ACMFORMATENUMCBW fnCallback,
+                               DWORD_PTR dwInstance, DWORD fdwEnum)
 {
     PWINE_ACMDRIVERID		padid;
     WAVEFORMATEX		wfxRef;
     BOOL			ret;
 
-    TRACE("(%p, %p, %p, %ld, %ld)\n",
+    TRACE("(%p, %p, %p, %ld, %d)\n",
 	  had, pafd, fnCallback, dwInstance, fdwEnum);
 
     if (!pafd)
@@ -514,9 +558,8 @@ MMRESULT WINAPI acmFormatEnumW(HACMDRIVER had, PACMFORMATDETAILSW pafd,
 	(pafd->dwFormatTag != pafd->pwfx->wFormatTag))
 	return MMSYSERR_INVALPARAM;
 
-    if (fdwEnum & (ACM_FORMATENUMF_CONVERT|ACM_FORMATENUMF_SUGGEST|
-		   ACM_FORMATENUMF_INPUT|ACM_FORMATENUMF_OUTPUT))
-	FIXME("Unsupported fdwEnum values %08lx\n", fdwEnum);
+    if (fdwEnum & (ACM_FORMATENUMF_CONVERT|ACM_FORMATENUMF_INPUT|ACM_FORMATENUMF_OUTPUT))
+	FIXME("Unsupported fdwEnum values %08x\n", fdwEnum);
 
     if (had) {
 	HACMDRIVERID	hadid;
@@ -549,7 +592,7 @@ MMRESULT WINAPI acmFormatSuggest(HACMDRIVER had, PWAVEFORMATEX pwfxSrc,
     ACMDRVFORMATSUGGEST	adfg;
     MMRESULT		mmr;
 
-    TRACE("(%p, %p, %p, %ld, %ld)\n",
+    TRACE("(%p, %p, %p, %d, %d)\n",
 	  had, pwfxSrc, pwfxDst, cbwfxDst, fdwSuggest);
 
     if (fdwSuggest & ~(ACM_FORMATSUGGESTF_NCHANNELS|ACM_FORMATSUGGESTF_NSAMPLESPERSEC|
@@ -625,7 +668,7 @@ MMRESULT WINAPI acmFormatTagDetailsW(HACMDRIVER had, PACMFORMATTAGDETAILSW paftd
     PWINE_ACMDRIVERID	padid;
     MMRESULT		mmr = ACMERR_NOTPOSSIBLE;
 
-    TRACE("(%p, %p, %ld)\n", had, paftd, fdwDetails);
+    TRACE("(%p, %p, %d)\n", had, paftd, fdwDetails);
 
     if (fdwDetails & ~(ACM_FORMATTAGDETAILSF_FORMATTAG|ACM_FORMATTAGDETAILSF_INDEX|
 		       ACM_FORMATTAGDETAILSF_LARGESTSIZE))
@@ -692,7 +735,7 @@ MMRESULT WINAPI acmFormatTagDetailsW(HACMDRIVER had, PACMFORMATTAGDETAILSW paftd
 	break;
 
     default:
-	WARN("Unsupported fdwDetails=%08lx\n", fdwDetails);
+	WARN("Unsupported fdwDetails=%08x\n", fdwDetails);
 	mmr = MMSYSERR_ERROR;
     }
 
@@ -705,14 +748,14 @@ MMRESULT WINAPI acmFormatTagDetailsW(HACMDRIVER had, PACMFORMATTAGDETAILSW paftd
 }
 
 struct MSACM_FormatTagEnumWtoA_Instance {
-    PACMFORMATTAGDETAILSA	paftda;
-    DWORD			dwInstance;
-    ACMFORMATTAGENUMCBA 	fnCallback;
+    PACMFORMATTAGDETAILSA paftda;
+    DWORD_PTR             dwInstance;
+    ACMFORMATTAGENUMCBA   fnCallback;
 };
 
 static BOOL CALLBACK MSACM_FormatTagEnumCallbackWtoA(HACMDRIVERID hadid,
 						     PACMFORMATTAGDETAILSW paftdw,
-						     DWORD dwInstance,
+                                                     DWORD_PTR dwInstance,
 						     DWORD fdwSupport)
 {
     struct MSACM_FormatTagEnumWtoA_Instance* paftei;
@@ -735,8 +778,8 @@ static BOOL CALLBACK MSACM_FormatTagEnumCallbackWtoA(HACMDRIVERID hadid,
  *           acmFormatTagEnumA (MSACM32.@)
  */
 MMRESULT WINAPI acmFormatTagEnumA(HACMDRIVER had, PACMFORMATTAGDETAILSA paftda,
-				  ACMFORMATTAGENUMCBA fnCallback, DWORD dwInstance,
-				  DWORD fdwEnum)
+                                  ACMFORMATTAGENUMCBA fnCallback,
+                                  DWORD_PTR dwInstance, DWORD fdwEnum)
 {
     ACMFORMATTAGDETAILSW	aftdw;
     struct MSACM_FormatTagEnumWtoA_Instance aftei;
@@ -760,21 +803,21 @@ MMRESULT WINAPI acmFormatTagEnumA(HACMDRIVER had, PACMFORMATTAGDETAILSA paftda,
     aftei.fnCallback = fnCallback;
 
     return acmFormatTagEnumW(had, &aftdw, MSACM_FormatTagEnumCallbackWtoA,
-			     (DWORD)&aftei, fdwEnum);
+                             (DWORD_PTR)&aftei, fdwEnum);
 }
 
 /***********************************************************************
  *           acmFormatTagEnumW (MSACM32.@)
  */
 MMRESULT WINAPI acmFormatTagEnumW(HACMDRIVER had, PACMFORMATTAGDETAILSW paftd,
-				  ACMFORMATTAGENUMCBW fnCallback, DWORD dwInstance,
-				  DWORD fdwEnum)
+                                  ACMFORMATTAGENUMCBW fnCallback,
+                                  DWORD_PTR dwInstance, DWORD fdwEnum)
 {
     PWINE_ACMDRIVERID		padid;
-    int				i;
+    unsigned int			i;
     BOOL			bPcmDone = FALSE;
 
-    TRACE("(%p, %p, %p, %ld, %ld)\n",
+    TRACE("(%p, %p, %p, %ld, %d)\n",
 	  had, paftd, fnCallback, dwInstance, fdwEnum);
 
     if (!paftd)
@@ -789,8 +832,8 @@ MMRESULT WINAPI acmFormatTagEnumW(HACMDRIVER had, PACMFORMATTAGDETAILSW paftd,
     /* (WS) MSDN info page says that if had != 0, then we should find
      * the specific driver to get its tags from. Therefore I'm removing
      * the FIXME call and adding a search block below. It also seems
-     * that the lack of this functionality was the responsible for
-     * codecs to be multiply and incorrectly listed.
+     * that the lack of this functionality was the responsible for 
+     * codecs to be multiply and incorrectly listed. 
      */
 
     /* if (had) FIXME("had != NULL, not supported\n"); */
@@ -815,7 +858,7 @@ MMRESULT WINAPI acmFormatTagEnumW(HACMDRIVER had, PACMFORMATTAGDETAILSW paftd,
 		if (bPcmDone) continue;
 		   bPcmDone = TRUE;
 	     }
-	     if (!(fnCallback)((HACMDRIVERID)padid, paftd, dwInstance, padid->fdwSupport))
+	     if (!(fnCallback)((HACMDRIVERID)padid, paftd, dwInstance, padid->fdwSupport)) 
                 return MMSYSERR_NOERROR;
 	  }
        }

@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include "windef.h"
@@ -23,18 +23,24 @@
 #include "winuser.h"
 #include "wineacm.h"
 
-#include "msacm_El.rc"
-#include "msacm_En.rc"
+#include "msacm_Cs.rc"
+#include "msacm_Da.rc"
 #include "msacm_De.rc"
+#include "msacm_En.rc"
 #include "msacm_Es.rc"
 #include "msacm_Fr.rc"
+#include "msacm_Hu.rc"
 #include "msacm_It.rc"
 #include "msacm_Ja.rc"
+#include "msacm_Ko.rc"
+#include "msacm_Lt.rc"
 #include "msacm_Nl.rc"
 #include "msacm_No.rc"
 #include "msacm_Pl.rc"
 #include "msacm_Pt.rc"
+#include "msacm_Ro.rc"
 #include "msacm_Ru.rc"
+#include "msacm_Si.rc"
 #include "msacm_Sv.rc"
-#include "msacm_Hu.rc"
-#include "msacm_Uk.rc"
+#include "msacm_Tr.rc"
+#include "msacm_Zh.rc"

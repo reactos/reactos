@@ -1,8 +1,6 @@
 /*
- * Italian resource file for MS ACM
- *
  * Copyright 2000 Eric Pouech
- * Copyright 2003 Ivan Leo Puoti
+ * Copyright 2008 Michael Stefaniuc
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,39 +17,38 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+#pragma code_page(65001)
 
 DLG_ACMFORMATCHOOSE_ID DIALOG DISCARDABLE  10, 20, 225, 100
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Selezione dell'audio"
+CAPTION "Sound Selection"
 FONT 8, "MS Shell Dlg"
 BEGIN
 
-    LTEXT           "&Nome:", -1, 5, 5, 115, 8, NOT WS_GROUP
+    LTEXT           "&Nume:", -1, 5, 5, 115, 8, NOT WS_GROUP
 
     COMBOBOX        IDD_ACMFORMATCHOOSE_CMB_CUSTOM, 5, 15, 115, 60,
                     CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 
-    PUSHBUTTON      "&Salva con nome...", IDD_ACMFORMATCHOOSE_BTN_SETNAME, 125, 14, 45, 14
-    PUSHBUTTON      "&Rimuovi", IDD_ACMFORMATCHOOSE_BTN_DELNAME, 175, 14, 45, 14
+    PUSHBUTTON      "&Salvează ca", IDD_ACMFORMATCHOOSE_BTN_SETNAME, 125, 14, 45, 14
+    PUSHBUTTON      "&Elimină", IDD_ACMFORMATCHOOSE_BTN_DELNAME, 175, 14, 45, 14
 
-    LTEXT           "&Formato:", -1, 5, 41, 44, 8, NOT WS_GROUP
+    LTEXT           "&Format:", -1, 5, 41, 44, 8, NOT WS_GROUP
 
     COMBOBOX        IDD_ACMFORMATCHOOSE_CMB_FORMATTAG, 50, 39, 170, 60,
                     CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 
-    LTEXT           "&Attributi:", -1, 5, 59, 44, 8, NOT WS_GROUP
+    LTEXT           "&Atribute:", -1, 5, 59, 44, 8, NOT WS_GROUP
 
-#if 0
-    COMBOBOX        IDD_ACMFORMATCHOOSE_CMB_FORMAT, 50, 57, 170, 60,
-                    CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP |
-                    CBS_OWNERDRAWFIXED | CBS_HASSTRINGS
-#else
     COMBOBOX        IDD_ACMFORMATCHOOSE_CMB_FORMAT, 50, 57, 170, 60,
                     CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-#endif
+
     DEFPUSHBUTTON   "OK", IDOK, 48, 80, 40, 14
-    PUSHBUTTON      "Annulla", IDCANCEL, 92, 80, 40, 14
-    PUSHBUTTON      "&Aiuto", IDD_ACMFORMATCHOOSE_BTN_HELP, 136, 80, 40, 14
+    PUSHBUTTON      "Renunță", IDCANCEL, 92, 80, 40, 14
+    PUSHBUTTON      "&Ajutor", IDD_ACMFORMATCHOOSE_BTN_HELP, 136, 80, 40, 14
 
 END
+
+#pragma code_page(default)

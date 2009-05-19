@@ -1,8 +1,7 @@
 /*
  * Hungarian resource file for MS ACM
  *
- * Copyright 2000 Eric Pouech
- * Copyright 2005 Gergely Risko
+ * Copyright 2006 Andras Kovacs
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,14 +15,14 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 
 DLG_ACMFORMATCHOOSE_ID DIALOG DISCARDABLE  10, 20, 225, 100
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Hang Kiválasztása"
+CAPTION "Hang kiválasztás"
 FONT 8, "MS Shell Dlg"
 BEGIN
 
@@ -33,7 +32,7 @@ BEGIN
                     CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 
     PUSHBUTTON      "&Mentés másként...", IDD_ACMFORMATCHOOSE_BTN_SETNAME, 125, 14, 45, 14
-/* NOT TRANSLATED */    PUSHBUTTON      "&Remove", IDD_ACMFORMATCHOOSE_BTN_DELNAME, 175, 14, 45, 14
+    PUSHBUTTON      "&Eltávolítás", IDD_ACMFORMATCHOOSE_BTN_DELNAME, 175, 14, 45, 14
 
     LTEXT           "&Formátum:", -1, 5, 41, 44, 8, NOT WS_GROUP
 

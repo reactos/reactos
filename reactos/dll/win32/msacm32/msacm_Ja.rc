@@ -15,31 +15,34 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
+
+/* UTF-8 */
+#pragma code_page(65001)
 
 LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 
 DLG_ACMFORMATCHOOSE_ID DIALOG DISCARDABLE  10, 20, 225, 100
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ÉTÉEÉìÉhÇÃëIë"
-FONT 9, "MS UI Gothic"
+CAPTION "„Çµ„Ç¶„É≥„Éâ„ÅÆÈÅ∏Êäû"
+FONT 9, "MS Shell Dlg"
 BEGIN
 
-    LTEXT           "ñºëO(&N):", -1, 5, 5, 115, 8, NOT WS_GROUP
+    LTEXT           "ÂêçÂâç(&N):", -1, 5, 5, 115, 8, NOT WS_GROUP
 
     COMBOBOX        IDD_ACMFORMATCHOOSE_CMB_CUSTOM, 5, 15, 115, 60,
                     CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 
-    PUSHBUTTON      "ñºëOÇïtÇØÇƒï€ë∂(&S)...", IDD_ACMFORMATCHOOSE_BTN_SETNAME, 125, 14, 45, 14
-    PUSHBUTTON      "çÌèú(&R)", IDD_ACMFORMATCHOOSE_BTN_DELNAME, 175, 14, 45, 14
+    PUSHBUTTON      "ÂêçÂâç„Çí‰ªò„Åë„Å¶‰øùÂ≠ò(&S)...", IDD_ACMFORMATCHOOSE_BTN_SETNAME, 125, 14, 45, 14
+    PUSHBUTTON      "ÂâäÈô§(&R)", IDD_ACMFORMATCHOOSE_BTN_DELNAME, 175, 14, 45, 14
 
-    LTEXT           "ÉtÉHÅ[É}ÉbÉg(&F):", -1, 5, 41, 44, 8, NOT WS_GROUP
+    LTEXT           "„Éï„Ç©„Éº„Éû„ÉÉ„Éà(&F):", -1, 5, 41, 44, 8, NOT WS_GROUP
 
     COMBOBOX        IDD_ACMFORMATCHOOSE_CMB_FORMATTAG, 50, 39, 170, 60,
                     CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 
-    LTEXT           "ëÆê´(&A):", -1, 5, 59, 44, 8, NOT WS_GROUP
+    LTEXT           "Â±ûÊÄß(&A):", -1, 5, 59, 44, 8, NOT WS_GROUP
 
 #if 0
     COMBOBOX        IDD_ACMFORMATCHOOSE_CMB_FORMAT, 50, 57, 170, 60,
@@ -50,7 +53,9 @@ BEGIN
                     CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 #endif
     DEFPUSHBUTTON   "OK", IDOK, 48, 80, 40, 14
-    PUSHBUTTON      "ÉLÉÉÉìÉZÉã", IDCANCEL, 92, 80, 40, 14
-    PUSHBUTTON      "ÉwÉãÉv(&H)", IDD_ACMFORMATCHOOSE_BTN_HELP, 136, 80, 40, 14
+    PUSHBUTTON      "„Ç≠„É£„É≥„Çª„É´", IDCANCEL, 92, 80, 40, 14
+    PUSHBUTTON      "„Éò„É´„Éó(&H)", IDD_ACMFORMATCHOOSE_BTN_HELP, 136, 80, 40, 14
 
 END
+
+#pragma code_page(default)

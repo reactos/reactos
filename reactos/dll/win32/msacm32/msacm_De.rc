@@ -1,7 +1,7 @@
 /*
  * German resource file for MS ACM
  *
- * by Friedrich Stange (dj_smith_reactos@online.de)
+ * Copyright 2004 Henning Gerhardt
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -15,14 +15,14 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 DLG_ACMFORMATCHOOSE_ID DIALOG DISCARDABLE  10, 20, 225, 100
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Sound auswahl"
+CAPTION "Soundauswahl"
 FONT 8, "MS Shell Dlg"
 BEGIN
 
@@ -31,15 +31,15 @@ BEGIN
     COMBOBOX        IDD_ACMFORMATCHOOSE_CMB_CUSTOM, 5, 15, 115, 60,
                     CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 
-    PUSHBUTTON      "&Speichern als...", IDD_ACMFORMATCHOOSE_BTN_SETNAME, 125, 14, 45, 14
-    PUSHBUTTON      "&Löschen", IDD_ACMFORMATCHOOSE_BTN_DELNAME, 175, 14, 45, 14
+    PUSHBUTTON      "Speichern &unter...", IDD_ACMFORMATCHOOSE_BTN_SETNAME, 125, 14, 45, 14
+    PUSHBUTTON      "&Entfernen", IDD_ACMFORMATCHOOSE_BTN_DELNAME, 175, 14, 45, 14
 
     LTEXT           "&Format:", -1, 5, 41, 44, 8, NOT WS_GROUP
 
     COMBOBOX        IDD_ACMFORMATCHOOSE_CMB_FORMATTAG, 50, 39, 170, 60,
                     CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 
-    LTEXT           "&Eigenschaften:", -1, 5, 59, 44, 8, NOT WS_GROUP
+    LTEXT           "&Attribute:", -1, 5, 59, 44, 8, NOT WS_GROUP
 
 #if 0
     COMBOBOX        IDD_ACMFORMATCHOOSE_CMB_FORMAT, 50, 57, 170, 60,
