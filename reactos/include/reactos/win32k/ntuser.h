@@ -501,6 +501,11 @@ typedef struct _USERCONNECT
 #define DCX_USESTYLE     0x00010000
 #define DCX_KEEPCLIPRGN  0x00040000
 
+//
+// Non SDK Queue message types.
+//
+#define QS_SMRESULT      0x8000
+
 DWORD
 NTAPI
 NtUserAssociateInputContext(

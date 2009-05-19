@@ -2204,6 +2204,11 @@ DWORD
 WINAPI
 RealGetQueueStatus(UINT flags)
 {
+   if (flags & ~(QS_SMRESULT|QS_ALLPOSTMESSAGE|QS_ALLINPUT))
+   {
+      SetLastError( ERROR_INVALID_FLAGS );
+      return 0;
+   }
    return NtUserCallOneParam(flags, ONEPARAM_ROUTINE_GETQUEUESTATUS);
 }
 
