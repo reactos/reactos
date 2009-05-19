@@ -522,6 +522,8 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     }
 
     /* Initialize layout array */
+    if (ConfigInfo->DiskCount == 0)
+        goto end_assign_disks;
     LayoutArray = ExAllocatePool(NonPagedPool,
         ConfigInfo->DiskCount * sizeof(PDRIVE_LAYOUT_INFORMATION));
     RtlZeroMemory(LayoutArray,
@@ -885,6 +887,7 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
             ExFreePool(LayoutArray[i]);
     }
     ExFreePool(LayoutArray);
+end_assign_disks:
 
     /* Assign floppy drives */
     DPRINT("Floppy drives: %d\n", ConfigInfo->FloppyCount);
