@@ -905,7 +905,7 @@ WSPAccept(SOCKET Handle,
           struct sockaddr *SocketAddress,
           int *SocketAddressLength,
           LPCONDITIONPROC lpfnCondition,
-          DWORD_PTR dwCallbackData,
+          DWORD dwCallbackData,
           LPINT lpErrno)
 {
     IO_STATUS_BLOCK             IOSB;
