@@ -84,7 +84,7 @@ reactos/dll/win32/mciseq          # Autosync
 reactos/dll/win32/mciwave         # Autosync
 reactos/dll/win32/mlang           # Autosync
 reactos/dll/win32/mpr             # Autosync
-reactos/dll/win32/msacm32         # Out of sync
+reactos/dll/win32/msacm32         # Synced to Wine-1_1_21
 reactos/dll/win32/msadp32.acm     # Autosync
 reactos/dll/win32/mscat32         # Autosync
 reactos/dll/win32/mscms           # Autosync
