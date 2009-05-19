@@ -475,7 +475,7 @@ static BOOL MSACM_FormatEnumHelper(PWINE_ACMDRIVERID padid, HACMDRIVER had,
                 continue;
 
             hdrvr = OpenDriver(padid->pszFileName,0,0);
-            SendDriverMessage(hdrvr,ACMDM_FORMAT_SUGGEST,(DWORD)&adfs,(fdwEnum & 0x000000FFL));
+            SendDriverMessage(hdrvr,ACMDM_FORMAT_SUGGEST,(DWORD_PTR)&adfs,(fdwEnum & 0x000000FFL));
 
             if (acmFormatDetailsW(had, pafd, ACM_FORMATDETAILSF_FORMAT) != MMSYSERR_NOERROR)
                 continue;

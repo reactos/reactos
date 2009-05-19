@@ -63,3 +63,17 @@ Index: msacm.rc
  #include "msacm_Tr.rc"
 +#include "msacm_Uk.rc"
  #include "msacm_Zh.rc"
+
+Index: format.c
+===================================================================
+--- format.c	(Revision 40986)
++++ format.c	(Arbeitskopie)
+@@ -475,7 +475,7 @@
+                 continue;
+ 
+             hdrvr = OpenDriver(padid->pszFileName,0,0);
+-            SendDriverMessage(hdrvr,ACMDM_FORMAT_SUGGEST,(DWORD)&adfs,(fdwEnum & 0x000000FFL));
++            SendDriverMessage(hdrvr,ACMDM_FORMAT_SUGGEST,(DWORD_PTR)&adfs,(fdwEnum & 0x000000FFL));
+ 
+             if (acmFormatDetailsW(had, pafd, ACM_FORMATDETAILSF_FORMAT) != MMSYSERR_NOERROR)
+                 continue;
