@@ -12,10 +12,13 @@
 	<define name="BUILD_GL32" />
 	<define name="WIN32" />
 	<define name="USE_EXTERNAL_DXTN_LIB=1" />
-	<define name="USE_X86_ASM" />
-	<define name="USE_MMX_ASM" />
-	<define name="USE_SSE_ASM" />
+	<if property="ARCH" value="i386">
+		<define name="USE_X86_ASM" />
+		<define name="USE_MMX_ASM" />
+		<define name="USE_SSE_ASM" />
+	</if>
 	<define name="USE_3DNOW_ASM" />
+	<define name="GL_NO_STDCALL" />
 	<include base="mesa32">include</include>
 	<include base="mesa32">src</include>
 	<include base="mesa32">src/main</include>
@@ -222,7 +225,9 @@
 		<file>t_vertex.c</file>
 		<file>t_vertex_generic.c</file>
 		<file>t_vp_build.c</file>
-		<file>t_vertex_sse.c</file>
+		<if property="ARCH" value="i386">
+			<file>t_vertex_sse.c</file>
+		</if>
 	</directory>
 	<directory name="vbo">
 		<file>vbo_context.c</file>
@@ -257,35 +262,44 @@
 			</directory>
 		</directory>
 	</directory>
-	<directory name="x86">
-		<directory name="rtasm">
-			<file>x86sse.c</file>
+
+	<if property="ARCH" value="i386">
+		<directory name="x86">
+			<directory name="rtasm">
+				<file>x86sse.c</file>
+			</directory>
+			<file>3dnow.c</file>
+			<file>3dnow_normal.S</file>
+			<file>3dnow_xform1.S</file>
+			<file>3dnow_xform2.S</file>
+			<file>3dnow_xform3.S</file>
+			<file>3dnow_xform4.S</file>
+			<file>common_x86.c</file>
+			<file>common_x86_asm.S</file>
+			<file>glapi_x86.S</file>
+			<file>mmx_blend.S</file>
+			<file>read_rgba_span_x86.S</file>
+			<file>sse_normal.S</file>
+			<file>sse_xform1.S</file>
+			<file>sse_xform2.S</file>
+			<file>sse_xform3.S</file>
+			<file>sse_xform4.S</file>
+			<file>x86.c</file>
+			<file>x86_cliptest.S</file>
+			<file>x86_xform2.S</file>
+			<file>x86_xform3.S</file>
+			<file>x86_xform4.S</file>
+			<file>sse.c</file>
 		</directory>
-		<file>3dnow.c</file>
-		<file>3dnow_normal.S</file>
-		<file>3dnow_xform1.S</file>
-		<file>3dnow_xform2.S</file>
-		<file>3dnow_xform3.S</file>
-		<file>3dnow_xform4.S</file>
-		<file>common_x86.c</file>
-		<file>common_x86_asm.S</file>
-		<file>glapi_x86.S</file>
-		<file>mmx_blend.S</file>
-		<file>read_rgba_span_x86.S</file>
-		<file>sse_normal.S</file>
-		<file>sse_xform1.S</file>
-		<file>sse_xform2.S</file>
-		<file>sse_xform3.S</file>
-		<file>sse_xform4.S</file>
-		<file>x86.c</file>
-		<file>x86_cliptest.S</file>
-		<file>x86_xform2.S</file>
-		<file>x86_xform3.S</file>
-		<file>x86_xform4.S</file>
-		<file>sse.c</file>
+	</if>
+
+	<if property="ARCH" value="amd64">
+		<directory name="x86-64">
+			<file>x86-64.c</file>
+			<!-- file>glapi_x86-64.S</file -->
+			<file>xform4.S</file>
+		</directory>
+	</if>
+
 	</directory>
-	<directory name="x86-64">
-		<file>x86-64.c</file>
-	</directory>
-</directory>
 </module>
