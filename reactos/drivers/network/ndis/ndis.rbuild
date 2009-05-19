@@ -4,9 +4,7 @@
 	<importlibrary definition="ndis.def"></importlibrary>
 	<include base="ndis">include</include>
 	<define name="NDIS_WRAPPER" />
-	<define name="NDIS50" />
 	<define name="NDIS51" />
-	<define name="NDIS50_MINIPORT" />
 	<define name="NDIS51_MINIPORT" />
 	<define name="NDIS_LEGACY_DRIVER" />
 	<define name="NDIS_LEGACY_MINIPORT" />
