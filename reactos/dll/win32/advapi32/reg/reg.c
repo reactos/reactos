@@ -3338,7 +3338,7 @@ RegOpenKeyExA(HKEY hKey,
 
     TRACE("RegOpenKeyExA hKey 0x%x lpSubKey %s ulOptions 0x%x samDesired 0x%x phkResult %p\n",
           hKey, lpSubKey, ulOptions, samDesired, phkResult);
-	if (!phkResult)
+    if (!phkResult)
     {
         return ERROR_INVALID_PARAMETER;
     }
@@ -3393,7 +3393,7 @@ RegOpenKeyExW(HKEY hKey,
 
     TRACE("RegOpenKeyExW hKey 0x%x lpSubKey %S ulOptions 0x%x samDesired 0x%x phkResult %p\n",
           hKey, lpSubKey, ulOptions, samDesired, phkResult);
-	if (!phkResult)
+    if (!phkResult)
     {
         return ERROR_INVALID_PARAMETER;
     }
@@ -4273,10 +4273,10 @@ RegQueryValueW(HKEY hKey,
 
     TRACE("hKey 0x%X lpSubKey %S lpValue %p lpcbValue %d\n",
           hKey, lpSubKey, lpValue, lpcbValue ? *lpcbValue : 0);
-   if (hKey == NULL)
-	{
-		return ERROR_INVALID_HANDLE;
-	}
+    if (hKey == NULL)
+    {
+       return ERROR_INVALID_HANDLE;
+    }
     Status = MapDefaultKey(&KeyHandle,
                            hKey);
     if (!NT_SUCCESS(Status))
