@@ -1,0 +1,45 @@
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+IDD_SHUTDOWNCOMPUTER DIALOGEX  45, 22, 164, 52
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Oprire computer"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Acum puteþi închide computerul în siguranþã.", IDC_SHUTDOWNCOMPUTER, 31, 13, 132, 8
+    ICON  IDI_WINLOGON, IDC_SHTDOWNICON, 6, 7, 18, 20
+    DEFPUSHBUTTON "&Repornire", IDC_BTNSHTDOWNCOMPUTER, 62, 32, 40, 14
+END
+
+IDD_GINALOADFAILED DIALOGEX  58, 83, 231, 119
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Eroare interfaþã de utilizator"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Fiºierul DLL al interfeþei %s nu a putut fi încãrcat.", IDC_GINALOADFAILED, 39, 16, 156, 24
+    LTEXT "Reinstalaþi ReactOS pentru a rezolva aceastã problemã.", IDC_GINALOADFAILEDCONTACT, 39, 53, 151, 25
+    DEFPUSHBUTTON "&Repornire", 1, 80, 91, 68, 14
+END
+
+STRINGTABLE
+BEGIN
+    IDS_PREPARENETWORKCONNECTIONS "Se pregãtesc conexiunile la reþea..."
+    IDS_APPLYINGCOMPUTERSETTINGS "Se aplicã setãrile generale..."
+    IDS_RUNNINGSTARTUPSCRIPTS "Se executã operaþiile de pornire..."
+    IDS_RUNNINGSHUTDOWNSCRIPTS "Se executã operaþiile de oprire..."
+    IDS_APPLYINGYOURPERSONALSETTINGS "Se aplicã setãrile personale..."
+    IDS_RUNNINGLOGOFFSCRIPTS "Se executã operaþiile de ieºire..."
+    IDS_RUNNINGLOGONSCRIPTS "Se executã operaþiile de ieºire..."
+    IDS_LOADINGYOURPERSONALSETTINGS "Se încarcã setãrile personale..."
+    IDS_CLOSINGNETWORKCONNECTIONS "Se închid conexiunile la reþea..."
+    IDS_REACTOSISSHUTTINGDOWN "ReactOS se închide..."
+    IDS_PREPARETOSTANDBY "Pregãtire pentru stare de veghe..."
+    IDS_PREPARETOHIBERNATE "Pregãtire pentru hibernare..."
+    IDS_SAVEYOURSETTINGS "Salvare setãri..."
+    IDS_REACTOSISSTARTINGUP "ReactOS porneºte..."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_FAILEDACTIVATEUSERSHELL "Winlogon nu a putut porni nucleul sistemului!"
+END
+

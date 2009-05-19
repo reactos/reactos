@@ -57,7 +57,7 @@ STRINGTABLE
 BEGIN
   IDS_ERROR,    "Eroare"
   IDS_OK,       "OK"
-  IDS_CANCEL,   "Revocare"
+  IDS_CANCEL,   "Anulare"
   IDS_ABORT,    "&Abandon"
   IDS_RETRY,    "&Reîncercare"
   IDS_IGNORE,   "&Ignorare"

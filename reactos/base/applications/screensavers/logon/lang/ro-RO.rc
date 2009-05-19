@@ -1,0 +1,7 @@
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_DESCRIPTION "Economizor Siglã"
+    IDS_TEXT        "Acest economizor nu are opþiuni."
+END

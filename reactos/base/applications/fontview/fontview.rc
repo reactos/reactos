@@ -20,6 +20,7 @@ END
 #include "lang/fr-FR.rc"
 #include "lang/lt-LT.rc"
 #include "lang/pl-PL.rc"
+#include "lang/ro-RO.rc"
 #include "lang/ru-RU.rc"
 #include "lang/sk-SK.rc"
 #include "lang/uk-UA.rc"
