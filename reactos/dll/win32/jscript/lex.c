@@ -174,6 +174,20 @@ static void skip_spaces(parser_ctx_t *ctx)
     }
 }
 
+static BOOL skip_html_comment(parser_ctx_t *ctx)
+{
+    const WCHAR html_commentW[] = {'<','!','-','-',0};
+
+    if(!ctx->is_html || ctx->ptr+3 >= ctx->end ||
+        memcmp(ctx->ptr, html_commentW, sizeof(WCHAR)*4))
+        return FALSE;
+
+    ctx->nl = TRUE;
+    while(ctx->ptr < ctx->end && !is_endline(*ctx->ptr++));
+
+    return TRUE;
+}
+
 static BOOL skip_comment(parser_ctx_t *ctx)
 {
     if(ctx->ptr+1 >= ctx->end || *ctx->ptr != '/')
@@ -466,13 +480,13 @@ int parser_lex(void *lval, parser_ctx_t *ctx)
 {
     int ret;
 
-    ctx->nl = FALSE;
+    ctx->nl = ctx->ptr == ctx->begin;
 
     do {
         skip_spaces(ctx);
         if(ctx->ptr == ctx->end)
             return 0;
-    }while(skip_comment(ctx));
+    }while(skip_comment(ctx) || skip_html_comment(ctx));
 
     if(isalphaW(*ctx->ptr)) {
         ret = check_keywords(ctx, lval);
@@ -585,8 +599,12 @@ int parser_lex(void *lval, parser_ctx_t *ctx)
         ctx->ptr++;
         if(ctx->ptr < ctx->end) {
             switch(*ctx->ptr) {
-            case '-':  /* -- */
+            case '-':  /* -- or --> */
                 ctx->ptr++;
+                if(ctx->is_html && ctx->nl && ctx->ptr < ctx->end && *ctx->ptr == '>') {
+                    ctx->ptr++;
+                    return tHTMLCOMMENT;
+                }
                 return tDEC;
             case '=':  /* -= */
                 ctx->ptr++;
