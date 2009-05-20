@@ -45,11 +45,12 @@ typedef struct tag_SQL_input
     MSIDATABASE *db;
     LPCWSTR command;
     DWORD n, len;
+    UINT r;
     MSIVIEW **view;  /* view structure for the resulting query */
     struct list *mem;
 } SQL_input;
 
-static LPWSTR SQL_getstring( void *info, const struct sql_str *str );
+static UINT SQL_getstring( void *info, const struct sql_str *strdata, LPWSTR *str );
 static INT SQL_getint( void *info );
 static int sql_lex( void *SQL_lval, SQL_input *info );
 
@@ -57,7 +58,7 @@ static LPWSTR parser_add_table( LPWSTR list, LPWSTR table );
 static void *parser_alloc( void *info, unsigned int sz );
 static column_info *parser_alloc_column( void *info, LPCWSTR table, LPCWSTR column );
 
-static BOOL SQL_MarkPrimaryKeys( column_info *cols, column_info *keys);
+static BOOL SQL_MarkPrimaryKeys( column_info **cols, column_info *keys);
 
 static struct expr * EXPR_complex( void *info, struct expr *l, UINT op, struct expr *r );
 static struct expr * EXPR_unary( void *info, struct expr *l, UINT op );
@@ -166,12 +167,16 @@ onecreate:
         {
             SQL_input* sql = (SQL_input*) info;
             MSIVIEW *create = NULL;
+            UINT r;
 
             if( !$5 )
                 YYABORT;
-            CREATE_CreateView( sql->db, &create, $3, $5, FALSE );
+            r = CREATE_CreateView( sql->db, &create, $3, $5, FALSE );
             if( !create )
+            {
+                sql->r = r;
                 YYABORT;
+            }
             $$ = create;
         }
   | TK_CREATE TK_TABLE table TK_LP table_def TK_RP TK_HOLD
@@ -284,7 +289,7 @@ onedrop:
 table_def:
     column_def TK_PRIMARY TK_KEY selcollist
         {
-            if( SQL_MarkPrimaryKeys( $1, $4 ) )
+            if( SQL_MarkPrimaryKeys( &$1, $4 ) )
                 $$ = $1;
             else
                 $$ = NULL;
@@ -354,15 +359,15 @@ data_type:
         }
   | TK_LONGCHAR
         {
-            $$ = 2;
+            $$ = MSITYPE_STRING | 0x400;
         }
   | TK_SHORT
         {
-            $$ = 2;
+            $$ = 2 | 0x400;
         }
   | TK_INT
         {
-            $$ = 2;
+            $$ = 2 | 0x400;
         }
   | TK_LONG
         {
@@ -677,8 +682,7 @@ table:
 id:
     TK_ID
         {
-            $$ = SQL_getstring( info, &$1 );
-            if( !$$ )
+            if ( SQL_getstring( info, &$1, &$$ ) != ERROR_SUCCESS || !$$ )
                 YYABORT;
         }
     ;
@@ -757,11 +761,15 @@ static int sql_lex( void *SQL_lval, SQL_input *sql )
     return token;
 }
 
-LPWSTR SQL_getstring( void *info, const struct sql_str *strdata )
+UINT SQL_getstring( void *info, const struct sql_str *strdata, LPWSTR *str )
 {
     LPCWSTR p = strdata->data;
     UINT len = strdata->len;
-    LPWSTR str;
+
+    /* match quotes */
+    if( ( (p[0]=='`') && (p[len-1]!='`') ) ||
+        ( (p[0]=='\'') && (p[len-1]!='\'') ) )
+        return ERROR_FUNCTION_FAILED;
 
     /* if there's quotes, remove them */
     if( ( (p[0]=='`') && (p[len-1]=='`') ) ||
@@ -770,13 +778,13 @@ LPWSTR SQL_getstring( void *info, const struct sql_str *strdata )
         p++;
         len -= 2;
     }
-    str = parser_alloc( info, (len + 1)*sizeof(WCHAR) );
-    if( !str )
-        return str;
-    memcpy( str, p, len*sizeof(WCHAR) );
-    str[len]=0;
+    *str = parser_alloc( info, (len + 1)*sizeof(WCHAR) );
+    if( !*str )
+        return ERROR_OUTOFMEMORY;
+    memcpy( *str, p, len*sizeof(WCHAR) );
+    (*str)[len]=0;
 
-    return str;
+    return ERROR_SUCCESS;
 }
 
 INT SQL_getint( void *info )
@@ -867,28 +875,62 @@ static struct expr * EXPR_sval( void *info, const struct sql_str *str )
     if( e )
     {
         e->type = EXPR_SVAL;
-        e->u.sval = SQL_getstring( info, str );
+        if( SQL_getstring( info, str, (LPWSTR *)&e->u.sval ) != ERROR_SUCCESS )
+            return NULL; /* e will be freed by query destructor */
     }
     return e;
 }
 
-static BOOL SQL_MarkPrimaryKeys( column_info *cols,
+static void swap_columns( column_info **cols, column_info *A, int idx )
+{
+    column_info *preA = NULL, *preB = NULL, *B, *ptr;
+    int i = 0;
+
+    B = NULL;
+    ptr = *cols;
+    while( ptr )
+    {
+        if( i++ == idx )
+            B = ptr;
+        else if( !B )
+            preB = ptr;
+
+        if( ptr->next == A )
+            preA = ptr;
+
+        ptr = ptr->next;
+    }
+
+    if( preB ) preB->next = A;
+    if( preA ) preA->next = B;
+    ptr = A->next;
+    A->next = B->next;
+    B->next = ptr;
+    if( idx == 0 )
+      *cols = A;
+}
+
+static BOOL SQL_MarkPrimaryKeys( column_info **cols,
                                  column_info *keys )
 {
     column_info *k;
     BOOL found = TRUE;
+    int count;
 
-    for( k = keys; k && found; k = k->next )
+    for( k = keys, count = 0; k && found; k = k->next, count++ )
     {
         column_info *c;
+        int idx;
 
         found = FALSE;
-        for( c = cols; c && !found; c = c->next )
+        for( c = *cols, idx = 0; c && !found; c = c->next, idx++ )
         {
-             if( lstrcmpW( k->column, c->column ) )
-                 continue;
-             c->type |= MSITYPE_KEY;
-             found = TRUE;
+            if( lstrcmpW( k->column, c->column ) )
+                continue;
+            c->type |= MSITYPE_KEY;
+            found = TRUE;
+            if (idx != count)
+                swap_columns( cols, c, count );
         }
     }
 
@@ -907,6 +949,7 @@ UINT MSI_ParseSQL( MSIDATABASE *db, LPCWSTR command, MSIVIEW **phview,
     sql.command = command;
     sql.n = 0;
     sql.len = 0;
+    sql.r = ERROR_BAD_QUERY_SYNTAX;
     sql.view = phview;
     sql.mem = mem;
 
@@ -915,8 +958,12 @@ UINT MSI_ParseSQL( MSIDATABASE *db, LPCWSTR command, MSIVIEW **phview,
     TRACE("Parse returned %d\n", r);
     if( r )
     {
-        *sql.view = NULL;
-        return ERROR_BAD_QUERY_SYNTAX;
+        if (*sql.view)
+        {
+            (*sql.view)->ops->delete(*sql.view);
+            *sql.view = NULL;
+        }
+        return sql.r;
     }
 
     return ERROR_SUCCESS;

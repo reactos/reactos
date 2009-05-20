@@ -162,7 +162,7 @@ static HRESULT create_automation_object(MSIHANDLE msiHandle, IUnknown *pUnkOuter
     AutomationObject *object;
     HRESULT hr;
 
-    TRACE("(%ld,%p,%p,%s,%p,%p,%ld)\n", (unsigned long)msiHandle, pUnkOuter, ppObj, debugstr_guid(clsid), funcInvoke, funcFree, sizetPrivateData);
+    TRACE("(%d,%p,%p,%s,%p,%p,%ld)\n", msiHandle, pUnkOuter, ppObj, debugstr_guid(clsid), funcInvoke, funcFree, sizetPrivateData);
 
     if( pUnkOuter )
         return CLASS_E_NOAGGREGATION;

@@ -444,7 +444,6 @@ UINT MSI_RecordGetStringW(MSIRECORD *rec, UINT iField,
             lstrcpynW(szValue, rec->fields[iField].u.szwVal, *pcchValue);
         break;
     case MSIFIELD_NULL:
-        len = 1;
         if( szValue && *pcchValue > 0 )
             szValue[0] = 0;
     default:
@@ -764,6 +763,12 @@ UINT MSI_RecordReadStream(MSIRECORD *rec, UINT iField, char *buf, LPDWORD sz)
 
     if( iField > rec->count)
         return ERROR_INVALID_PARAMETER;
+
+    if ( rec->fields[iField].type == MSIFIELD_NULL )
+    {
+        *sz = 0;
+        return ERROR_INVALID_DATA;
+    }
 
     if( rec->fields[iField].type != MSIFIELD_STREAM )
         return ERROR_INVALID_DATATYPE;

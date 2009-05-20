@@ -1,7 +1,6 @@
 /*
- * German resources for MSI
- *
- * Copyright 2005 Henning Gerhardt
+ * Copyright 2005 Mike McCormack
+ * Copyright 2009 Michael Stefaniuc
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,21 +17,21 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 #pragma code_page(65001)
 
 STRINGTABLE DISCARDABLE
 {
-	4 "Das angegebene Installationspaket konnte nicht geöffnet werden. Bitte überprüfen Sie den Pfadnamen und versuchen Sie es noch einmal."
-	5 "Der Pfad %s wurde nicht gefunden."
-	9 "Bitte Disk %s einlegen."
-	10 "Falsche Parameter"
-	11 "Geben Sie das Verzeichnis ein, dass %s enthält."
-	12 "Die Installationsquelle für das Feature fehlt."
-	13 "Das Netzwerklaufwerk für das Feature fehlt."
-	14 "Feature von:"
-	15 "Wählen Sie das Verzeichnis aus, dass %s enthält."
+        4 "Pachetul de instalare menționat nu a putut fi deschis. Verificați calea și încercați din nou."
+        5 "calea %s nu a fost găsită"
+        9 "inserați discul %s"
+        10 "parameteri greșiți"
+        11 "introduceți fișierul care conține %s"
+        12 "lipsește sursa de instalare pentru această caracteristică"
+        13 "lipsește unitatea de rețea pentru această caracteristică"
+        14 "caracteristică de la:"
+        15 "selectați fișierul care conține %s"
 }
 
 #pragma code_page(default)
