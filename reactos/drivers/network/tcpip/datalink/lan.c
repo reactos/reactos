@@ -600,6 +600,7 @@ VOID LANTransmit(
     UINT Size;
     PLAN_ADAPTER Adapter = (PLAN_ADAPTER)Context;
     KIRQL OldIrql;
+    UINT PacketLength;
 
     TI_DbgPrint(DEBUG_DATALINK,
 		("Called( NdisPacket %x, Offset %d, Adapter %x )\n",
@@ -677,6 +678,14 @@ VOID LANTransmit(
 		   ((PCHAR)LinkAddress)[4] & 0xff,
 		   ((PCHAR)LinkAddress)[5] & 0xff));
 	}
+
+        NdisQueryPacketLength(NdisPacket, &PacketLength);
+
+        if (Adapter->MTU < PacketLength) {
+            /* This is NOT a pointer. MSDN explicitly says so. */
+            NDIS_PER_PACKET_INFO_FROM_PACKET(NdisPacket,
+                                             TcpLargeSendPacketInfo) = (PVOID)((ULONG)Adapter->MTU);
+        }
 
 	TcpipAcquireSpinLock( &Adapter->Lock, &OldIrql );
 	TI_DbgPrint(MID_TRACE, ("NdisSend\n"));
