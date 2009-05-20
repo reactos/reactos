@@ -434,6 +434,9 @@ MmSetAddressRangeModified (
    return (FALSE);
 }
 
+/*
+ * @unimplemented
+ */
 NTSTATUS
 NTAPI
 NtGetWriteWatch(IN HANDLE ProcessHandle,
@@ -444,16 +447,42 @@ NtGetWriteWatch(IN HANDLE ProcessHandle,
                 OUT PULONG EntriesInUserAddressArray,
                 OUT PULONG Granularity)
 {
+    if (!EntriesInUserAddressArray || !Granularity)
+    {
+        return STATUS_ACCESS_VIOLATION;
+    }
+
+    if (!*EntriesInUserAddressArray || !RegionSize)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    if (!UserAddressArray)
+    {
+        return STATUS_ACCESS_VIOLATION;
+    }
+
+    /* HACK: Set granularity to PAGE_SIZE */
+    *Granularity = PAGE_SIZE;
+
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
+/*
+ * @unimplemented
+ */
 NTSTATUS
 NTAPI
 NtResetWriteWatch(IN HANDLE ProcessHandle,
                  IN PVOID BaseAddress,
                  IN ULONG RegionSize)
 {
+    if (!RegionSize)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
