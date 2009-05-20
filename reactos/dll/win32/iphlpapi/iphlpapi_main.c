@@ -2178,6 +2178,8 @@ PIP_ADAPTER_ORDER_MAP WINAPI GetAdapterOrderMap(VOID)
  */
 DWORD WINAPI GetAdaptersAddresses(ULONG Family,ULONG Flags,PVOID Reserved,PIP_ADAPTER_ADDRESSES pAdapterAddresses,PULONG pOutBufLen)
 {
+    if (!pOutBufLen) return ERROR_INVALID_PARAMETER;
+
     FIXME(":stub\n");
     return 0L;
 }
