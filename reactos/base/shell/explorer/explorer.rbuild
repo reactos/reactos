@@ -66,6 +66,7 @@
 	</if>
 	<file>explorer.rc</file>
 	<linkerflag>--enable-stdcall-fixup</linkerflag>
+	<linkerflag>'$(shell ${TARGET_CPP} -print-file-name=libcoldname.a)'</linkerflag>
 </module>
 <installfile installbase=".">explorer-cfg-template.xml</installfile>
 <directory name="notifyhook">
