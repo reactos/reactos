@@ -40,7 +40,7 @@ image.
 
 The utility is called up by a command line of the following form:
 
-     CDMAKE  [-q] [-v] [-p] [-s N] [-m] [-b bootimage]  source  volume  image
+     CDMAKE  [-q] [-v] [-p] [-s N] [-m] [-j] [-b bootimage]  source  volume  image
 
      source        specifications of base directory containing all files to
                    be written to CD-ROM image
@@ -61,6 +61,8 @@ The utility is called up by a command line of the following form:
 
      -m            accept punctuation marks other than underscores in
                    names and extensions
+
+     -j            generates Joliet filename records
 
      -b bootimage  create bootable ElTorito CD-ROM using 'no emulation' mode
 
