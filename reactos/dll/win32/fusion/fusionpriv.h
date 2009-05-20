@@ -26,6 +26,7 @@
 #include "windef.h"
 #include "winbase.h"
 #include "winuser.h"
+#include "winver.h"
 
 #include <pshpack1.h>
 
@@ -429,10 +430,44 @@ typedef struct tagASSEMBLY ASSEMBLY;
 
 HRESULT assembly_create(ASSEMBLY **out, LPCWSTR file);
 HRESULT assembly_release(ASSEMBLY *assembly);
-HRESULT assembly_get_name(ASSEMBLY *assembly, LPSTR *name);
-HRESULT assembly_get_path(ASSEMBLY *assembly, LPSTR *path);
-HRESULT assembly_get_version(ASSEMBLY *assembly, LPSTR *version);
+HRESULT assembly_get_name(ASSEMBLY *assembly, LPWSTR *name);
+HRESULT assembly_get_path(ASSEMBLY *assembly, LPWSTR *path);
+HRESULT assembly_get_version(ASSEMBLY *assembly, LPWSTR *version);
 HRESULT assembly_get_architecture(ASSEMBLY *assembly, DWORD fixme);
-HRESULT assembly_get_pubkey_token(ASSEMBLY *assembly, LPSTR *token);
+HRESULT assembly_get_pubkey_token(ASSEMBLY *assembly, LPWSTR *token);
+
+static inline LPWSTR strdupW(LPCWSTR src)
+{
+    LPWSTR dest;
+
+    if (!src)
+        return NULL;
+
+    dest = HeapAlloc(GetProcessHeap(), 0, (lstrlenW(src) + 1) * sizeof(WCHAR));
+    if (dest)
+        lstrcpyW(dest, src);
+
+    return dest;
+}
+
+#define BYTES_PER_TOKEN 8
+#define CHARS_PER_BYTE  2
+#define TOKEN_LENGTH    (BYTES_PER_TOKEN * CHARS_PER_BYTE + 1)
+
+static inline void token_to_str(BYTE *bytes, LPWSTR str)
+{
+    DWORD i;
+
+    static const WCHAR hexval[16] = {
+        '0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'
+    };
+
+    for(i = 0; i < BYTES_PER_TOKEN; i++)
+    {
+        str[i * 2] = hexval[((bytes[i] >> 4) & 0xF)];
+        str[i * 2 + 1] = hexval[(bytes[i]) & 0x0F];
+    }
+    str[i * 2] = 0;
+}
 
 #endif /* __WINE_FUSION_PRIVATE__ */
