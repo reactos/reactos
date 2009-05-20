@@ -1161,4 +1161,50 @@ NdisCopyBuffer(
     *Status = NDIS_STATUS_SUCCESS;
 }
 
+/*
+ * @implemented
+ */
+NDIS_HANDLE
+EXPORT
+NdisGetPoolFromPacket(
+    IN PNDIS_PACKET  Packet)
+{
+    return Packet->Private.Pool;
+}
+
+/*
+ * @implemented
+ */
+UINT
+EXPORT
+NdisPacketSize(
+    IN UINT  ProtocolReservedSize)
+{
+    return sizeof(NDIS_PACKET) + sizeof(NDIS_PACKET_OOB_DATA) + 
+                 sizeof(NDIS_PACKET_EXTENSION) + ProtocolReservedSize;
+}
+
+/*
+ * @implemented
+ */
+PVOID
+EXPORT
+NdisGetPacketCancelId(
+    IN PNDIS_PACKET  Packet)
+{
+    return NDIS_GET_PACKET_CANCEL_ID(Packet);
+}
+
+/*
+ * @implemented
+ */
+VOID
+EXPORT
+NdisSetPacketCancelId(
+    IN PNDIS_PACKET  Packet,
+    IN PVOID  CancelId)
+{
+    NDIS_SET_PACKET_CANCEL_ID(Packet, CancelId);
+}
+
 /* EOF */
