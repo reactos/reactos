@@ -74,7 +74,6 @@ DIB_GetBitmapInfo(const BITMAPINFOHEADER *header,
                   PLONG compr,
                   PLONG size )
 {
-
   if (header->biSize == sizeof(BITMAPCOREHEADER))
   {
      BITMAPCOREHEADER *core = (BITMAPCOREHEADER *)header;
@@ -467,6 +466,8 @@ CreateDIBitmap( HDC hDC,
   UINT cjBmpScanSize;
   PVOID pvSafeBits = NULL;
   HBITMAP hBmp;
+
+  if (!Header) return 0;
 
   pConvertedInfo = ConvertBitmapInfo(Data, ColorUse,
                                           &ConvertedInfoSize, FALSE);
