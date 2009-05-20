@@ -963,6 +963,40 @@ NdisGetFirstBufferFromPacket(
     }
 }
 
+/*
+ * @implemented
+ */
+VOID
+EXPORT
+NdisGetFirstBufferFromPacketSafe(
+    IN  PNDIS_PACKET     _Packet,
+    OUT PNDIS_BUFFER     *_FirstBuffer,
+    OUT PVOID            *_FirstBufferVA,
+    OUT PUINT            _FirstBufferLength,
+    OUT PUINT            _TotalBufferLength,
+    IN  MM_PAGE_PRIORITY Priority)
+{
+    PNDIS_BUFFER Buffer;
+
+    Buffer          = _Packet->Private.Head;
+    *_FirstBuffer   = Buffer;
+
+    if (Buffer != NULL) {
+        *_FirstBufferLength = MmGetMdlByteCount(Buffer);
+        *_FirstBufferVA = MmGetSystemAddressForMdlSafe(Buffer, Priority);
+        Buffer = Buffer->Next;
+    } else {
+        *_FirstBufferLength = 0;
+        *_FirstBufferVA = NULL;
+    }
+
+    *_TotalBufferLength = *_FirstBufferLength;
+
+    while (Buffer != NULL) {
+        *_TotalBufferLength += MmGetMdlByteCount(Buffer);
+        Buffer = Buffer->Next;
+    }
+}
 
 /*
  * @implemented
@@ -1205,6 +1239,85 @@ NdisSetPacketCancelId(
     IN PVOID  CancelId)
 {
     NDIS_SET_PACKET_CANCEL_ID(Packet, CancelId);
+}
+
+/*
+ * @implemented
+ */
+VOID
+EXPORT
+NdisCopyFromPacketToPacketSafe(
+    IN  PNDIS_PACKET     Destination,
+    IN  UINT             DestinationOffset,
+    IN  UINT             BytesToCopy,
+    IN  PNDIS_PACKET     Source,
+    IN  UINT             SourceOffset,
+    OUT PUINT            BytesCopied,
+    IN  MM_PAGE_PRIORITY Priority)
+{
+    PNDIS_BUFFER SrcBuffer;
+    PNDIS_BUFFER DstBuffer;
+    PUCHAR DstData, SrcData;
+    UINT DstSize, SrcSize;
+    UINT Count, Total;
+
+    *BytesCopied = 0;
+
+    /* Skip DestinationOffset bytes in the destination packet */
+    NdisGetFirstBufferFromPacketSafe(Destination, &DstBuffer, (PVOID*)&DstData, &DstSize, &Total, Priority);
+    if (!DstData || SkipToOffset(DstBuffer, DestinationOffset, &DstData, &DstSize) == 0xFFFFFFFF)
+        return;
+
+    /* Skip SourceOffset bytes in the source packet */
+    NdisGetFirstBufferFromPacketSafe(Source, &SrcBuffer, (PVOID*)&SrcData, &SrcSize, &Total, Priority);
+    if (!SrcData || SkipToOffset(SrcBuffer, SourceOffset, &SrcData, &SrcSize) == 0xFFFFFFFF)
+        return;
+
+    /* Copy the data */
+    for (Total = 0;;) {
+        /* Find out how many bytes we can copy at one time */
+        if (BytesToCopy < SrcSize)
+            Count = BytesToCopy;
+        else
+            Count = SrcSize;
+        if (DstSize < Count)
+            Count = DstSize;
+
+        RtlCopyMemory(DstData, SrcData, Count);
+
+        Total       += Count;
+        BytesToCopy -= Count;
+        if (BytesToCopy == 0)
+            break;
+
+        DstSize -= Count;
+        if (DstSize == 0) {
+            /* No more bytes in destination buffer. Proceed to
+               the next buffer in the destination buffer chain */
+            NdisGetNextBuffer(DstBuffer, &DstBuffer);
+            if (!DstBuffer)
+                break;
+
+            NdisQueryBufferSafe(DstBuffer, (PVOID)&DstData, &DstSize, Priority);
+            if (!DstData)
+                break;
+        }
+
+        SrcSize -= Count;
+        if (SrcSize == 0) {
+            /* No more bytes in source buffer. Proceed to
+               the next buffer in the source buffer chain */
+            NdisGetNextBuffer(SrcBuffer, &SrcBuffer);
+            if (!SrcBuffer)
+                break;
+
+            NdisQueryBufferSafe(SrcBuffer, (PVOID)&SrcData, &SrcSize, Priority);
+            if (!SrcData)
+                break;
+        }
+    }
+
+    *BytesCopied = Total;
 }
 
 /* EOF */
