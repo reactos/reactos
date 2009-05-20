@@ -45,6 +45,8 @@
 	<compilerflag>-fno-strict-aliasing</compilerflag>
 	<compilerflag>-Wno-strict-aliasing</compilerflag>
 	<compilerflag>-Wpointer-arith</compilerflag>
+	<compilerflag>-Wno-multichar</compilerflag>
+	<!-- compilerflag>-H</compilerflag>    enable this for header traces -->
 	<linkerflag>-disable-stdcall-fixup</linkerflag>
 	<linkerflag>-static</linkerflag>
 	<linkerflag>--unique=.eh_frame</linkerflag>
@@ -144,16 +146,21 @@
 	</directory>
 
 	<directory name="drivers">
-		<directory name="bus">
-			<directory name="pci">
-				<xi:include href="drivers/bus/pci/pci.rbuild" />
-			</directory>
+		<directory name="base">
+			<xi:include href="drivers/base/directory.rbuild" />
 		</directory>
-
-		<!-- directory name="directx">
+		<directory name="bus">
+			<xi:include href="drivers/bus/directory.rbuild" />
+		</directory>
+		<directory name="directx">
 			<xi:include href="drivers/directx/directory.rbuild" />
-		</directory -->
-
+		</directory>
+		<directory name="filesystems">
+			<xi:include href="drivers/filesystems/directory.rbuild" />
+		</directory>
+		<directory name="input">
+			<xi:include href="drivers/input/directory.rbuild" />
+		</directory>
 		<directory name="ksfilter">
 			<xi:include href="drivers/ksfilter/directory.rbuild" />
 		</directory>
@@ -162,71 +169,32 @@
 			<xi:include href="drivers/multimedia/directory.rbuild" />
 		</directory -->
 
+		<directory name="network">
+			<xi:include href="drivers/network/directory.rbuild" />
+		</directory>
 		<directory name="parallel">
 			<xi:include href="drivers/parallel/directory.rbuild" />
 		</directory>
-
 		<directory name="serial">
 			<xi:include href="drivers/serial/directory.rbuild" />
-		</directory>
-
-		<!--directory name="usb">	
-			<xi:include href="drivers/usb/directory.rbuild" />
-		</directory-->
-	
-		<!--directory name="video">
-			<xi:include href="drivers/video/directory.rbuild" />
-		</directory-->
-	
-		<directory name="wdm">
-			<xi:include href="drivers/wdm/wdm.rbuild" />
-		</directory>
-
-		<directory name="wmi">
-			<xi:include href="drivers/wmi/wmilib.rbuild" />
-		</directory>
-
-		<directory name="base">
-			<xi:include href="drivers/base/directory.rbuild" />
-		</directory>
-		<directory name="filesystems">
-			<xi:include href="drivers/filesystems/directory.rbuild" />
-		</directory>
-		<directory name="input">
-			<xi:include href="drivers/input/directory.rbuild" />
-		</directory>
-		<directory name="network">
-			<xi:include href="drivers/network/directory.rbuild" />
 		</directory>
 		<directory name="setup">
 			<xi:include href="drivers/setup/directory.rbuild" />
 		</directory>
 		<directory name="storage">
-			<directory name="class">
-				<directory name="cdrom">
-					<xi:include href="drivers/storage/class/cdrom/cdrom.rbuild" />
-				</directory>
-				<directory name="class2">
-					<xi:include href="drivers/storage/class/class2/class2.rbuild" />
-				</directory>
-				<directory name="disk">
-					<xi:include href="drivers/storage/class/disk/disk.rbuild" />
-				</directory>
-			</directory>
-			<directory name="floppy">
-				<xi:include href="drivers/storage/floppy/floppy.rbuild" />
-			</directory>
-			<directory name="ide">
-				<directory name="atapi">
-					<xi:include href="drivers/storage/ide/atapi/atapi.rbuild" />
-				</directory>
-			</directory>
-			<directory name="port">
-				<xi:include href="drivers/storage/port/directory.rbuild" />
-			</directory>
-			<directory name="scsiport">
-				<xi:include href="drivers/storage/scsiport/scsiport.rbuild" />
-			</directory>
+            <xi:include href="drivers/storage/directory.rbuild" />
+		</directory>
+		<directory name="usb">	
+			<xi:include href="drivers/usb/directory.rbuild" />
+		</directory>
+		<directory name="video">
+			<xi:include href="drivers/video/directory.rbuild" />
+		</directory>
+			<directory name="wdm">
+			<xi:include href="drivers/wdm/wdm.rbuild" />
+		</directory>
+		<directory name="wmi">
+			<xi:include href="drivers/wmi/wmilib.rbuild" />
 		</directory>
 	</directory>
 
@@ -248,6 +216,9 @@
 			</directory>
 			<directory name="expat">
 				<xi:include href="lib/3rdparty/expat/expat.rbuild" />
+			</directory>
+			<directory name="freetype">
+				<xi:include href="lib/3rdparty/freetype/freetype.rbuild" />
 			</directory>
 			<directory name="icu4ros">
 				<xi:include href="lib/3rdparty/icu4ros/icu4ros.rbuild" />
@@ -329,9 +300,9 @@
 		<xi:include href="ntoskrnl/ntoskrnl.rbuild" />
 	</directory>
 
-	<!-- directory name="subsystems">
+	<directory name="subsystems">
 		<xi:include href="subsystems/subsystems.rbuild" />
-	</directory -->
+	</directory>
 
 	<directory name="tools">
 		<xi:include href="tools/tools.rbuild" />
