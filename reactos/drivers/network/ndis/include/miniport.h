@@ -80,6 +80,7 @@ typedef struct _NDIS_WRAPPER_CONTEXT {
     HANDLE            RegistryHandle;
     PDEVICE_OBJECT    DeviceObject;
     ULONG             BusNumber;
+    ULONG             SlotNumber;
 } NDIS_WRAPPER_CONTEXT, *PNDIS_WRAPPER_CONTEXT;
 
 #define GET_MINIPORT_DRIVER(Handle)((PNDIS_M_DRIVER_BLOCK)Handle)

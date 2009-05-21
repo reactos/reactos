@@ -1817,6 +1817,8 @@ NdisIPnPStartDevice(
 
         Adapter->NdisMiniportBlock.SlotNumber = SlotNumber.u.AsULONG;
     }
+  WrapperContext.SlotNumber = Adapter->NdisMiniportBlock.SlotNumber;
+
   NdisCloseConfiguration(ConfigHandle);
 
   /* Set handlers (some NDIS macros require these) */
