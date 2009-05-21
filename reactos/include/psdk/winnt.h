@@ -3207,20 +3207,53 @@ typedef struct _SINGLE_LIST_ENTRY {
 	struct _SINGLE_LIST_ENTRY *Next;
 } SINGLE_LIST_ENTRY,*PSINGLE_LIST_ENTRY;
 
+//
+// Slist Header
+//
 #ifndef _SLIST_HEADER_
 #define _SLIST_HEADER_
+
 #define SLIST_ENTRY SINGLE_LIST_ENTRY
 #define _SLIST_ENTRY _SINGLE_LIST_ENTRY
 #define PSLIST_ENTRY PSINGLE_LIST_ENTRY
+
+#if defined(_WIN64)
+typedef union DECLSPEC_ALIGN(16) _SLIST_HEADER {
+    struct {
+        ULONGLONG Alignment;
+        ULONGLONG Region;
+    } DUMMYSTRUCTNAME;
+    struct {
+        ULONGLONG Depth:16;
+        ULONGLONG Sequence:9;
+        ULONGLONG NextEntry:39;
+        ULONGLONG HeaderType:1;
+        ULONGLONG Init:1;
+        ULONGLONG Reserved:59;
+        ULONGLONG Region:3;
+    } Header8;
+    struct {
+        ULONGLONG Depth:16;
+        ULONGLONG Sequence:48;
+        ULONGLONG HeaderType:1;
+        ULONGLONG Init:1;
+        ULONGLONG Reserved:2;
+        ULONGLONG NextEntry:60;
+    } Header16;
+} SLIST_HEADER, *PSLIST_HEADER;
+#else
 typedef union _SLIST_HEADER {
-	ULONGLONG Alignment;
-	_ANONYMOUS_STRUCT struct {
-		SLIST_ENTRY Next;
-		WORD Depth;
-		WORD Sequence;
-	} DUMMYSTRUCTNAME;
-} SLIST_HEADER,*PSLIST_HEADER;
-#endif /* !_SLIST_HEADER_ */
+    ULONGLONG Alignment;
+    struct {
+        SLIST_ENTRY Next;
+        USHORT Depth;
+        USHORT Sequence;
+    } DUMMYSTRUCTNAME;
+} SLIST_HEADER, *PSLIST_HEADER;
+#endif
+
+#endif /* _SLIST_HEADER_ */
+
 
 NTSYSAPI
 VOID
