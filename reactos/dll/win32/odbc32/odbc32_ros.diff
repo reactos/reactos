@@ -1,0 +1,395 @@
+Index: proxyodbc.c
+===================================================================
+--- proxyodbc.c	(Revision 41027)
++++ proxyodbc.c	(Arbeitskopie)
+@@ -733,8 +733,8 @@
+  */
+ SQLRETURN WINAPI SQLBindCol(SQLHSTMT StatementHandle,
+                      SQLUSMALLINT ColumnNumber, SQLSMALLINT TargetType,
+-                     SQLPOINTER TargetValue, SQLINTEGER BufferLength,
+-                     SQLINTEGER *StrLen_or_Ind)
++                     SQLPOINTER TargetValue, SQLLEN BufferLength,
++                     SQLLEN *StrLen_or_Ind)
+ {
+         TRACE("\n");
+ 
+@@ -756,9 +756,9 @@
+  */
+ SQLRETURN WINAPI SQLBindParam(SQLHSTMT StatementHandle,
+              SQLUSMALLINT ParameterNumber, SQLSMALLINT ValueType,
+-             SQLSMALLINT ParameterType, SQLUINTEGER LengthPrecision,
++             SQLSMALLINT ParameterType, SQLULEN LengthPrecision,
+              SQLSMALLINT ParameterScale, SQLPOINTER ParameterValue,
+-             SQLINTEGER *StrLen_or_Ind)
++             SQLLEN *StrLen_or_Ind)
+ {
+         TRACE("\n");
+ 
+@@ -926,7 +926,7 @@
+ SQLRETURN WINAPI SQLDescribeCol(SQLHSTMT StatementHandle,
+              SQLUSMALLINT ColumnNumber, SQLCHAR *ColumnName,
+              SQLSMALLINT BufferLength, SQLSMALLINT *NameLength,
+-             SQLSMALLINT *DataType, SQLUINTEGER *ColumnSize,
++             SQLSMALLINT *DataType, SQLULEN *ColumnSize,
+              SQLSMALLINT *DecimalDigits, SQLSMALLINT *Nullable)
+ {
+         TRACE("\n");
+@@ -1040,7 +1040,7 @@
+ /*************************************************************************
+  *				SQLFetchScroll          [ODBC32.030]
+  */
+-SQLRETURN WINAPI SQLFetchScroll(SQLHSTMT StatementHandle, SQLSMALLINT FetchOrientation, SQLINTEGER FetchOffset)
++SQLRETURN WINAPI SQLFetchScroll(SQLHSTMT StatementHandle, SQLSMALLINT FetchOrientation, SQLLEN FetchOffset)
+ {
+         TRACE("\n");
+ 
+@@ -1177,8 +1177,8 @@
+  */
+ SQLRETURN WINAPI SQLGetData(SQLHSTMT StatementHandle,
+              SQLUSMALLINT ColumnNumber, SQLSMALLINT TargetType,
+-             SQLPOINTER TargetValue, SQLINTEGER BufferLength,
+-             SQLINTEGER *StrLen_or_Ind)
++             SQLPOINTER TargetValue, SQLLEN BufferLength,
++             SQLLEN *StrLen_or_Ind)
+ {
+         TRACE("\n");
+ 
+@@ -1217,7 +1217,7 @@
+              SQLSMALLINT RecNumber, SQLCHAR *Name,
+              SQLSMALLINT BufferLength, SQLSMALLINT *StringLength,
+              SQLSMALLINT *Type, SQLSMALLINT *SubType,
+-             SQLINTEGER *Length, SQLSMALLINT *Precision,
++             SQLLEN *Length, SQLSMALLINT *Precision,
+              SQLSMALLINT *Scale, SQLSMALLINT *Nullable)
+ {
+         TRACE("\n");
+@@ -1413,7 +1413,7 @@
+ /*************************************************************************
+  *				SQLPutData           [ODBC32.049]
+  */
+-SQLRETURN WINAPI SQLPutData(SQLHSTMT StatementHandle, SQLPOINTER Data, SQLINTEGER StrLen_or_Ind)
++SQLRETURN WINAPI SQLPutData(SQLHSTMT StatementHandle, SQLPOINTER Data, SQLLEN StrLen_or_Ind)
+ {
+         TRACE("\n");
+ 
+@@ -1428,7 +1428,7 @@
+ /*************************************************************************
+  *				SQLRowCount           [ODBC32.020]
+  */
+-SQLRETURN WINAPI SQLRowCount(SQLHSTMT StatementHandle, SQLINTEGER *RowCount)
++SQLRETURN WINAPI SQLRowCount(SQLHSTMT StatementHandle, SQLLEN *RowCount)
+ {
+         TRACE("\n");
+ 
+@@ -1459,7 +1459,7 @@
+ /*************************************************************************
+  *				SQLSetConnectOption           [ODBC32.050]
+  */
+-SQLRETURN WINAPI SQLSetConnectOption(SQLHDBC ConnectionHandle, SQLUSMALLINT Option, SQLUINTEGER Value)
++SQLRETURN WINAPI SQLSetConnectOption(SQLHDBC ConnectionHandle, SQLUSMALLINT Option, SQLULEN Value)
+ {
+         TRACE("\n");
+ 
+@@ -1508,10 +1508,10 @@
+  */
+ SQLRETURN WINAPI SQLSetDescRec(SQLHDESC DescriptorHandle,
+              SQLSMALLINT RecNumber, SQLSMALLINT Type,
+-             SQLSMALLINT SubType, SQLINTEGER Length,
++             SQLSMALLINT SubType, SQLLEN Length,
+              SQLSMALLINT Precision, SQLSMALLINT Scale,
+-             SQLPOINTER Data, SQLINTEGER *StringLength,
+-             SQLINTEGER *Indicator)
++             SQLPOINTER Data, SQLLEN *StringLength,
++             SQLLEN *Indicator)
+ {
+         TRACE("\n");
+ 
+@@ -1546,9 +1546,9 @@
+  */
+ SQLRETURN WINAPI SQLSetParam(SQLHSTMT StatementHandle,
+              SQLUSMALLINT ParameterNumber, SQLSMALLINT ValueType,
+-             SQLSMALLINT ParameterType, SQLUINTEGER LengthPrecision,
++             SQLSMALLINT ParameterType, SQLULEN LengthPrecision,
+              SQLSMALLINT ParameterScale, SQLPOINTER ParameterValue,
+-             SQLINTEGER *StrLen_or_Ind)
++             SQLLEN *StrLen_or_Ind)
+ {
+         TRACE("\n");
+ 
+@@ -1581,7 +1581,7 @@
+ /*************************************************************************
+  *				SQLSetStmtOption           [ODBC32.051]
+  */
+-SQLRETURN WINAPI SQLSetStmtOption(SQLHSTMT StatementHandle, SQLUSMALLINT Option, SQLUINTEGER Value)
++SQLRETURN WINAPI SQLSetStmtOption(SQLHSTMT StatementHandle, SQLUSMALLINT Option, SQLULEN Value)
+ {
+         TRACE("\n");
+ 
+@@ -1717,7 +1717,7 @@
+     SQLPOINTER         rgbDesc,
+     SQLSMALLINT        cbDescMax,
+     SQLSMALLINT           *pcbDesc,
+-    SQLINTEGER            *pfDesc)
++    SQLLEN            *pfDesc)
+ {
+         TRACE("\n");
+ 
+@@ -1761,7 +1761,7 @@
+     SQLHSTMT           hstmt,
+     SQLUSMALLINT       ipar,
+     SQLSMALLINT           *pfSqlType,
+-    SQLUINTEGER           *pcbParamDef,
++    SQLULEN           *pcbParamDef,
+     SQLSMALLINT           *pibScale,
+     SQLSMALLINT           *pfNullable)
+ {
+@@ -2039,11 +2039,11 @@
+     SQLSMALLINT        fParamType,
+     SQLSMALLINT        fCType,
+     SQLSMALLINT        fSqlType,
+-    SQLUINTEGER        cbColDef,
++    SQLULEN        cbColDef,
+     SQLSMALLINT        ibScale,
+     SQLPOINTER         rgbValue,
+-    SQLINTEGER         cbValueMax,
+-    SQLINTEGER            *pcbValue)
++    SQLLEN         cbValueMax,
++    SQLLEN            *pcbValue)
+ {
+         TRACE("\n");
+ 
+@@ -2086,7 +2086,7 @@
+ SQLRETURN WINAPI SQLSetScrollOptions(
+     SQLHSTMT           statement_handle,
+     SQLUSMALLINT       f_concurrency,
+-    SQLINTEGER         crow_keyset,
++    SQLLEN         crow_keyset,
+     SQLUSMALLINT       crow_rowset )
+ {
+         TRACE("\n");
+@@ -2138,7 +2138,7 @@
+     SQLPOINTER         rgbDesc,
+     SQLSMALLINT        cbDescMax,
+     SQLSMALLINT           *pcbDesc,
+-    SQLINTEGER            *pfDesc)
++    SQLLEN            *pfDesc)
+ {
+         SQLRETURN iResult;
+ 
+@@ -2200,9 +2200,9 @@
+  *				SQLDescribeColW          [ODBC32.108]
+  */
+ SQLRETURN WINAPI SQLDescribeColW(SQLHSTMT StatementHandle,
+-             SQLUSMALLINT ColumnNumber, WCHAR *ColumnName,
++             SQLUSMALLINT ColumnNumber, SQLWCHAR *ColumnName,
+              SQLSMALLINT BufferLength, SQLSMALLINT *NameLength,
+-             SQLSMALLINT *DataType, SQLUINTEGER *ColumnSize,
++             SQLSMALLINT *DataType, SQLULEN *ColumnSize,
+              SQLSMALLINT *DecimalDigits, SQLSMALLINT *Nullable)
+ {
+         SQLRETURN iResult;
+@@ -2378,10 +2378,10 @@
+  *				SQLGetDescRecW          [ODBC32.134]
+  */
+ SQLRETURN WINAPI SQLGetDescRecW(SQLHDESC DescriptorHandle,
+-             SQLSMALLINT RecNumber, WCHAR *Name,
++             SQLSMALLINT RecNumber, SQLWCHAR *Name,
+              SQLSMALLINT BufferLength, SQLSMALLINT *StringLength,
+              SQLSMALLINT *Type, SQLSMALLINT *SubType,
+-             SQLINTEGER *Length, SQLSMALLINT *Precision,
++             SQLLEN *Length, SQLSMALLINT *Precision,
+              SQLSMALLINT *Scale, SQLSMALLINT *Nullable)
+ {
+         TRACE("\n");
+@@ -2573,7 +2573,7 @@
+ /*************************************************************************
+  *				SQLSetConnectOptionW          [ODBC32.150]
+  */
+-SQLRETURN WINAPI SQLSetConnectOptionW(SQLHDBC ConnectionHandle, SQLUSMALLINT Option, SQLUINTEGER Value)
++SQLRETURN WINAPI SQLSetConnectOptionW(SQLHDBC ConnectionHandle, SQLUSMALLINT Option, SQLULEN Value)
+ {
+         TRACE("\n");
+ 
+@@ -2588,9 +2588,9 @@
+  *				SQLSpecialColumnsW          [ODBC32.152]
+  */
+ SQLRETURN WINAPI SQLSpecialColumnsW(SQLHSTMT StatementHandle,
+-             SQLUSMALLINT IdentifierType, SQLCHAR *CatalogName,
+-             SQLSMALLINT NameLength1, SQLCHAR *SchemaName,
+-             SQLSMALLINT NameLength2, SQLCHAR *TableName,
++             SQLUSMALLINT IdentifierType, SQLWCHAR *CatalogName,
++             SQLSMALLINT NameLength1, SQLWCHAR *SchemaName,
++             SQLSMALLINT NameLength2, SQLWCHAR *TableName,
+              SQLSMALLINT NameLength3, SQLUSMALLINT Scope,
+              SQLUSMALLINT Nullable)
+ {
+@@ -2607,9 +2607,9 @@
+  *				SQLStatisticsW          [ODBC32.153]
+  */
+ SQLRETURN WINAPI SQLStatisticsW(SQLHSTMT StatementHandle,
+-             SQLCHAR *CatalogName, SQLSMALLINT NameLength1,
+-             SQLCHAR *SchemaName, SQLSMALLINT NameLength2,
+-             SQLCHAR *TableName, SQLSMALLINT NameLength3,
++             SQLWCHAR *CatalogName, SQLSMALLINT NameLength1,
++             SQLWCHAR *SchemaName, SQLSMALLINT NameLength2,
++             SQLWCHAR *TableName, SQLSMALLINT NameLength3,
+              SQLUSMALLINT Unique, SQLUSMALLINT Reserved)
+ {
+         TRACE("\n");
+@@ -2626,10 +2626,10 @@
+  *				SQLTablesW          [ODBC32.154]
+  */
+ SQLRETURN WINAPI SQLTablesW(SQLHSTMT StatementHandle,
+-             SQLCHAR *CatalogName, SQLSMALLINT NameLength1,
+-             SQLCHAR *SchemaName, SQLSMALLINT NameLength2,
+-             SQLCHAR *TableName, SQLSMALLINT NameLength3,
+-             SQLCHAR *TableType, SQLSMALLINT NameLength4)
++             SQLWCHAR *CatalogName, SQLSMALLINT NameLength1,
++             SQLWCHAR *SchemaName, SQLSMALLINT NameLength2,
++             SQLWCHAR *TableName, SQLSMALLINT NameLength3,
++             SQLWCHAR *TableType, SQLSMALLINT NameLength4)
+ {
+         TRACE("\n");
+ 
+@@ -2646,9 +2646,9 @@
+  */
+ SQLRETURN WINAPI SQLBrowseConnectW(
+     SQLHDBC            hdbc,
+-    SQLCHAR               *szConnStrIn,
++    SQLWCHAR               *szConnStrIn,
+     SQLSMALLINT        cbConnStrIn,
+-    SQLCHAR               *szConnStrOut,
++    SQLWCHAR               *szConnStrOut,
+     SQLSMALLINT        cbConnStrOutMax,
+     SQLSMALLINT       *pcbConnStrOut)
+ {
+@@ -2666,13 +2666,13 @@
+  */
+ SQLRETURN WINAPI SQLColumnPrivilegesW(
+     SQLHSTMT           hstmt,
+-    SQLCHAR               *szCatalogName,
++    SQLWCHAR               *szCatalogName,
+     SQLSMALLINT        cbCatalogName,
+-    SQLCHAR               *szSchemaName,
++    SQLWCHAR               *szSchemaName,
+     SQLSMALLINT        cbSchemaName,
+-    SQLCHAR               *szTableName,
++    SQLWCHAR               *szTableName,
+     SQLSMALLINT        cbTableName,
+-    SQLCHAR               *szColumnName,
++    SQLWCHAR               *szColumnName,
+     SQLSMALLINT        cbColumnName)
+ {
+         TRACE("\n");
+@@ -2727,17 +2727,17 @@
+  */
+ SQLRETURN WINAPI SQLForeignKeysW(
+     SQLHSTMT           hstmt,
+-    SQLCHAR               *szPkCatalogName,
++    SQLWCHAR               *szPkCatalogName,
+     SQLSMALLINT        cbPkCatalogName,
+-    SQLCHAR               *szPkSchemaName,
++    SQLWCHAR               *szPkSchemaName,
+     SQLSMALLINT        cbPkSchemaName,
+-    SQLCHAR               *szPkTableName,
++    SQLWCHAR               *szPkTableName,
+     SQLSMALLINT        cbPkTableName,
+-    SQLCHAR               *szFkCatalogName,
++    SQLWCHAR               *szFkCatalogName,
+     SQLSMALLINT        cbFkCatalogName,
+-    SQLCHAR               *szFkSchemaName,
++    SQLWCHAR               *szFkSchemaName,
+     SQLSMALLINT        cbFkSchemaName,
+-    SQLCHAR               *szFkTableName,
++    SQLWCHAR               *szFkTableName,
+     SQLSMALLINT        cbFkTableName)
+ {
+         TRACE("\n");
+@@ -2756,9 +2756,9 @@
+  */
+ SQLRETURN WINAPI SQLNativeSqlW(
+     SQLHDBC            hdbc,
+-    SQLCHAR               *szSqlStrIn,
++    SQLWCHAR               *szSqlStrIn,
+     SQLINTEGER         cbSqlStrIn,
+-    SQLCHAR               *szSqlStr,
++    SQLWCHAR               *szSqlStr,
+     SQLINTEGER         cbSqlStrMax,
+     SQLINTEGER            *pcbSqlStr)
+ {
+@@ -2776,11 +2776,11 @@
+  */
+ SQLRETURN WINAPI SQLPrimaryKeysW(
+     SQLHSTMT           hstmt,
+-    SQLCHAR               *szCatalogName,
++    SQLWCHAR               *szCatalogName,
+     SQLSMALLINT        cbCatalogName,
+-    SQLCHAR               *szSchemaName,
++    SQLWCHAR               *szSchemaName,
+     SQLSMALLINT        cbSchemaName,
+-    SQLCHAR               *szTableName,
++    SQLWCHAR               *szTableName,
+     SQLSMALLINT        cbTableName)
+ {
+         TRACE("\n");
+@@ -2798,13 +2798,13 @@
+  */
+ SQLRETURN WINAPI SQLProcedureColumnsW(
+     SQLHSTMT           hstmt,
+-    SQLCHAR               *szCatalogName,
++    SQLWCHAR               *szCatalogName,
+     SQLSMALLINT        cbCatalogName,
+-    SQLCHAR               *szSchemaName,
++    SQLWCHAR               *szSchemaName,
+     SQLSMALLINT        cbSchemaName,
+-    SQLCHAR               *szProcName,
++    SQLWCHAR               *szProcName,
+     SQLSMALLINT        cbProcName,
+-    SQLCHAR               *szColumnName,
++    SQLWCHAR               *szColumnName,
+     SQLSMALLINT        cbColumnName)
+ {
+         TRACE("\n");
+@@ -2822,11 +2822,11 @@
+  */
+ SQLRETURN WINAPI SQLProceduresW(
+     SQLHSTMT           hstmt,
+-    SQLCHAR               *szCatalogName,
++    SQLWCHAR               *szCatalogName,
+     SQLSMALLINT        cbCatalogName,
+-    SQLCHAR               *szSchemaName,
++    SQLWCHAR               *szSchemaName,
+     SQLSMALLINT        cbSchemaName,
+-    SQLCHAR               *szProcName,
++    SQLWCHAR               *szProcName,
+     SQLSMALLINT        cbProcName)
+ {
+         TRACE("\n");
+@@ -2844,11 +2844,11 @@
+  */
+ SQLRETURN WINAPI SQLTablePrivilegesW(
+     SQLHSTMT           hstmt,
+-    SQLCHAR               *szCatalogName,
++    SQLWCHAR               *szCatalogName,
+     SQLSMALLINT        cbCatalogName,
+-    SQLCHAR               *szSchemaName,
++    SQLWCHAR               *szSchemaName,
+     SQLSMALLINT        cbSchemaName,
+-    SQLCHAR               *szTableName,
++    SQLWCHAR               *szTableName,
+     SQLSMALLINT        cbTableName)
+ {
+         TRACE("\n");
+@@ -2867,10 +2867,10 @@
+ SQLRETURN WINAPI SQLDriversW(
+     SQLHENV            henv,
+     SQLUSMALLINT       fDirection,
+-    SQLCHAR               *szDriverDesc,
++    SQLWCHAR               *szDriverDesc,
+     SQLSMALLINT        cbDriverDescMax,
+     SQLSMALLINT           *pcbDriverDesc,
+-    SQLCHAR               *szDriverAttributes,
++    SQLWCHAR               *szDriverAttributes,
+     SQLSMALLINT        cbDriverAttrMax,
+     SQLSMALLINT           *pcbDriverAttr)
+ {
