@@ -7,6 +7,7 @@
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
 	<library>wine</library>
+	<library>advapi32</library>
 	<library>kernel32</library>
 	<file>proxyodbc.c</file>
 </module>
