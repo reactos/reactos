@@ -172,6 +172,7 @@
 				<file>floor.S</file>
 				<file>floorf.S</file>
 				<file>fmod.S</file>
+				<file>fmodf.S</file>
 				<file>ldexp.S</file>
 				<file>log.S</file>
 				<file>log10.S</file>
