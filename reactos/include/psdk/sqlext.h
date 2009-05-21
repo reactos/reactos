@@ -1142,7 +1142,9 @@ extern "C" {
 #endif
 
 #define	TRACE_VERSION 1000
+#ifndef __WINE_DEBUG_H // HACK!!!
 #define TRACE_ON 1
+#endif
 
 #ifndef RC_INVOKED
 #define SQL_ODBC_KEYWORDS \
