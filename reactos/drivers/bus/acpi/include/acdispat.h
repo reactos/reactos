@@ -87,7 +87,7 @@ ACPI_STATUS
 acpi_ds_get_predicate_value (
 	ACPI_WALK_STATE         *walk_state,
 	ACPI_PARSE_OBJECT       *op,
-	u32                     has_result_obj);
+	NATIVE_UINT             has_result_obj);
 
 ACPI_STATUS
 acpi_ds_exec_begin_op (

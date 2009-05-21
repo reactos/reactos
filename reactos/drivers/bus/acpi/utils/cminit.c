@@ -30,7 +30,7 @@
 	 MODULE_NAME         ("cminit")
 
 
-#define ACPI_OFFSET(d,o)    ((u32) &(((d *)0)->o))
+#define ACPI_OFFSET(d,o)    ((NATIVE_INT) &(((d *)0)->o))
 #define ACPI_FADT_OFFSET(o) ACPI_OFFSET (FADT_DESCRIPTOR, o)
 
 /*******************************************************************************

@@ -634,7 +634,7 @@ static void
 acpi_ev_asynch_execute_gpe_method (
 	void                    *context)
 {
-	u32                     gpe_number = (u32) context;
+	NATIVE_UINT             gpe_number = (NATIVE_UINT) context;
 	ACPI_GPE_LEVEL_INFO     gpe_info;
 
 

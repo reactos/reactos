@@ -49,17 +49,17 @@
  */
 
 
-#ifdef _IA64
+#if defined (_IA64) || defined(_AMD64_)
 /*
  * 64-bit type definitions
  */
-typedef unsigned char                   UINT8;
-typedef unsigned char                   BOOLEAN;
-typedef unsigned char                   UCHAR;
-typedef unsigned short                  UINT16;
-typedef int                             INT32;
-typedef unsigned int                    UINT32;
-typedef COMPILER_DEPENDENT_UINT64       UINT64;
+//typedef unsigned char                   UINT8;
+//typedef unsigned char                   BOOLEAN;
+//typedef unsigned char                   UCHAR;
+//typedef unsigned short                  UINT16;
+//typedef int                             INT32;
+//typedef unsigned int                    UINT32;
+//typedef COMPILER_DEPENDENT_UINT64       UINT64;
 
 typedef UINT64                          NATIVE_UINT;
 typedef INT64                           NATIVE_INT;

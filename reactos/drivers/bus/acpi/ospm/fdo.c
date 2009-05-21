@@ -402,7 +402,7 @@ AcpiCheckIfIsSerialDebugPort(
       case io:
       {
         IO_RESOURCE *io_data = (IO_RESOURCE*) &resource->data;
-        if (KdComPortInUse == (PUCHAR)io_data->min_base_address)
+        if (KdComPortInUse == UlongToPtr(io_data->min_base_address))
         {
           ExFreePool(Buffer.pointer);
           return TRUE;
@@ -600,7 +600,7 @@ FdoQueryBusRelations(
     CurrentEntry = CurrentEntry->Flink;
   }
 
-  Irp->IoStatus.Information = (ULONG)Relations;
+  Irp->IoStatus.Information = (ULONG_PTR)Relations;
 
   return Status;
 }

@@ -305,37 +305,37 @@ acpi_os_out32(ACPI_IO_ADDRESS port, u32 val)
 u8
 acpi_os_mem_in8 (ACPI_PHYSICAL_ADDRESS phys_addr)
 {
-  return (*(PUCHAR)(ULONG)phys_addr);
+  return (*(PUCHAR)(ULONG_PTR)phys_addr);
 }
 
 u16
 acpi_os_mem_in16 (ACPI_PHYSICAL_ADDRESS phys_addr)
 {
-  return (*(PUSHORT)(ULONG)phys_addr);
+  return (*(PUSHORT)(ULONG_PTR)phys_addr);
 }
 
 u32
 acpi_os_mem_in32 (ACPI_PHYSICAL_ADDRESS phys_addr)
 {
-  return (*(PULONG)(ULONG)phys_addr);
+  return (*(PULONG)(ULONG_PTR)phys_addr);
 }
 
 void
 acpi_os_mem_out8 (ACPI_PHYSICAL_ADDRESS phys_addr, u8 value)
 {
-  *(PUCHAR)(ULONG)phys_addr = value;
+  *(PUCHAR)(ULONG_PTR)phys_addr = value;
 }
 
 void
 acpi_os_mem_out16 (ACPI_PHYSICAL_ADDRESS phys_addr, u16 value)
 {
-  *(PUSHORT)(ULONG)phys_addr = value;
+  *(PUSHORT)(ULONG_PTR)phys_addr = value;
 }
 
 void
 acpi_os_mem_out32 (ACPI_PHYSICAL_ADDRESS phys_addr, u32 value)
 {
-  *(PULONG)(ULONG)phys_addr = value;
+  *(PULONG)(ULONG_PTR)phys_addr = value;
 }
 
 ACPI_STATUS
@@ -702,5 +702,5 @@ acpi_os_writable(void *ptr, u32 len)
 u32
 acpi_os_get_thread_id (void)
 {
-  return (ULONG)PsGetCurrentThreadId() + 1;
+  return (ULONG_PTR)PsGetCurrentThreadId() + 1;
 }

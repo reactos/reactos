@@ -92,8 +92,50 @@
 	} while (0)
 /*! [End] no source code translation !*/
 
+#elif defined (_AMD64_)
+
+#define COMPILER_DEPENDENT_UINT64   unsigned long long
+#define ACPI_ASM_MACROS
+#define causeinterrupt(level)
+#define BREAKPOINT3
+#define disable() __cli()
+#define enable()  __sti()
+#define halt()    __asm__ __volatile__ ("sti; hlt":::"memory")
+#define wbinvd()
+
+/*! [Begin] no source code translation
+ *
+ * A brief explanation as GNU inline assembly is a bit hairy
+ *  %0 is the output parameter in EAX ("=a")
+ *  %1 and %2 are the input parameters in ECX ("c")
+ *  and an immediate value ("i") respectively
+ *  All actual register references are preceded with "%%" as in "%%edx"
+ *  Immediate values in the assembly are preceded by "$" as in "$0x1"
+ *  The final asm parameter are the operation altered non-output registers.
+ */
+ 
+// FIXME: These are only sonly stubs to make it compile
+
+#define ACPI_ACQUIRE_GLOBAL_LOCK(GLptr, Acq) \
+	do { \
+		int dummy; \
+		asm("1:     movl (%1),%%eax;" \
+			"movl   %%eax,%%edx;" \
+			:"=a"(Acq),"=c"(dummy):"c"(GLptr),"i"(~1L):"dx"); \
+	} while(0)
+
+#define ACPI_RELEASE_GLOBAL_LOCK(GLptr, Acq) \
+	do { \
+		int dummy; \
+		asm("1:     movl (%1),%%eax;" \
+			"movl   %%eax,%%edx;" \
+			:"=a"(Acq),"=c"(dummy):"c"(GLptr),"i"(~3L):"dx"); \
+	} while(0)
+
+/*! [End] no source code translation !*/
 
 #else /* DO IA32 */
+
 #define COMPILER_DEPENDENT_UINT64   unsigned long long
 #define ACPI_ASM_MACROS
 #define causeinterrupt(level)

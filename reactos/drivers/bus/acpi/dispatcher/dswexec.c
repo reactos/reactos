@@ -47,7 +47,7 @@ ACPI_STATUS
 acpi_ds_get_predicate_value (
 	ACPI_WALK_STATE         *walk_state,
 	ACPI_PARSE_OBJECT       *op,
-	u32                     has_result_obj)
+	NATIVE_UINT             has_result_obj)
 {
 	ACPI_STATUS             status = AE_OK;
 	ACPI_OPERAND_OBJECT     *obj_desc;
@@ -615,7 +615,7 @@ acpi_ds_exec_end_op (
 		(walk_state->control_state->common.state ==
 			CONTROL_PREDICATE_EXECUTING) &&
 		(walk_state->control_state->control.predicate_op == op)) {
-		status = acpi_ds_get_predicate_value (walk_state, op, (u32) result_obj);
+		status = acpi_ds_get_predicate_value (walk_state, op, (NATIVE_UINT) result_obj);
 		result_obj = NULL;
 	}
 
