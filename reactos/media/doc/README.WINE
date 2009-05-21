@@ -112,7 +112,7 @@ reactos/dll/win32/netapi32        # Autosync
 reactos/dll/win32/ntdsapi         # Autosync
 reactos/dll/win32/ntprint         # Autosync
 reactos/dll/win32/objsel          # Autosync
-reactos/dll/win32/odbc32          # Out of sync. Depends on port of Linux ODBC.
+reactos/dll/win32/odbc32          # Synced to Wine-1.1.21. Depends on port of Linux ODBC.
 reactos/dll/win32/odbccp32        # Autosync
 reactos/dll/win32/ole32           # Autosync
 reactos/dll/win32/oleacc          # Autosync
