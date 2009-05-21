@@ -1,5 +1,10 @@
 #include <msvctarget.h>
 #undef i386
+#ifndef __x86_64__
+#define FASTCALL fastcall
+#else
+#define FASTCALL stdcall
+#endif
 
 @ stdcall CcCanIWrite(ptr long long long)
 @ stdcall CcCopyRead(ptr ptr long long ptr ptr)
@@ -56,14 +61,14 @@
 @ stdcall DbgPrompt(str ptr long)
 @ stdcall DbgQueryDebugFilterState(long long)
 @ stdcall DbgSetDebugFilterState(long long long)
-@ fastcall -arch=x86_64 ExAcquireFastMutex(ptr)
-@ fastcall ExAcquireFastMutexUnsafe(ptr)
+@ stdcall -arch=x86_64 ExAcquireFastMutex(ptr)
+@ FASTCALL ExAcquireFastMutexUnsafe(ptr)
 @ stdcall ExAcquireResourceExclusiveLite(ptr long)
 @ stdcall ExAcquireResourceSharedLite(ptr long)
-@ fastcall ExAcquireRundownProtection(ptr) ExfAcquireRundownProtection
-@ fastcall ExAcquireRundownProtectionCacheAware(ptr) ExfAcquireRundownProtectionCacheAware
-@ fastcall ExAcquireRundownProtectionCacheAwareEx(ptr long) ExfAcquireRundownProtectionCacheAwareEx
-@ fastcall ExAcquireRundownProtectionEx(ptr long) ExfAcquireRundownProtectionEx
+@ FASTCALL ExAcquireRundownProtection(ptr) ExfAcquireRundownProtection
+@ FASTCALL ExAcquireRundownProtectionCacheAware(ptr) ExfAcquireRundownProtectionCacheAware
+@ FASTCALL ExAcquireRundownProtectionCacheAwareEx(ptr long) ExfAcquireRundownProtectionCacheAwareEx
+@ FASTCALL ExAcquireRundownProtectionEx(ptr long) ExfAcquireRundownProtectionEx
 @ stdcall ExAcquireSharedStarveExclusive(ptr long)
 @ stdcall ExAcquireSharedWaitForExclusive(ptr long)
 @ stdcall ExAllocateCacheAwareRundownProtection(long long)
@@ -80,7 +85,7 @@
 @ stdcall ExDeleteResourceLite(ptr)
 @ extern ExDesktopObjectType
 @ stdcall ExDisableResourceBoostLite(ptr)
-@ fastcall ExEnterCriticalRegionAndAcquireFastMutexUnsafe(ptr)
+@ FASTCALL ExEnterCriticalRegionAndAcquireFastMutexUnsafe(ptr)
 @ stdcall ExEnterCriticalRegionAndAcquireResourceExclusive(ptr)
 @ stdcall ExEnterCriticalRegionAndAcquireResourceShared(ptr)
 @ stdcall ExEnterCriticalRegionAndAcquireSharedWaitForExclusive(ptr)
@@ -99,33 +104,33 @@
 @ stdcall ExInitializeNPagedLookasideList(ptr ptr ptr long long long long)
 @ stdcall ExInitializePagedLookasideList(ptr ptr ptr long long long long)
 @ stdcall ExInitializeResourceLite(ptr)
-@ fastcall ExInitializeRundownProtection(ptr) ExfInitializeRundownProtection
+@ FASTCALL ExInitializeRundownProtection(ptr) ExfInitializeRundownProtection
 @ stdcall ExInitializeRundownProtectionCacheAware(ptr long)
 @ stdcall ExInitializeZone(ptr long ptr long)
 @ stdcall ExInterlockedAddLargeInteger(ptr long long ptr)
 #ifndef __x86_64__
-@ fastcall ExInterlockedAddLargeStatistic(ptr long)
+@ FASTCALL ExInterlockedAddLargeStatistic(ptr long)
 #endif
 @ stdcall ExInterlockedAddUlong(ptr long ptr)
 #ifndef __x86_64__
-@ fastcall ExInterlockedCompareExchange64(ptr ptr ptr ptr)
+@ FASTCALL ExInterlockedCompareExchange64(ptr ptr ptr ptr)
 @ stdcall ExInterlockedDecrementLong(ptr ptr)
 @ stdcall ExInterlockedExchangeUlong(ptr long ptr)
 #endif
 @ stdcall ExInterlockedExtendZone(ptr ptr long ptr)
 #ifndef __x86_64__
-@ fastcall ExInterlockedFlushSList(ptr)
+@ FASTCALL ExInterlockedFlushSList(ptr)
 @ stdcall ExInterlockedIncrementLong(ptr ptr)
 #endif
 @ stdcall ExInterlockedInsertHeadList(ptr ptr ptr)
 @ stdcall ExInterlockedInsertTailList(ptr ptr ptr)
 @ stdcall ExInterlockedPopEntryList(ptr ptr)
 #ifndef __x86_64__
-@ fastcall ExInterlockedPopEntrySList(ptr ptr)
+@ FASTCALL ExInterlockedPopEntrySList(ptr ptr)
 #endif
 @ stdcall ExInterlockedPushEntryList(ptr ptr ptr)
 #ifndef __x86_64__
-@ fastcall ExInterlockedPushEntrySList(ptr ptr ptr)
+@ FASTCALL ExInterlockedPushEntrySList(ptr ptr ptr)
 #endif
 @ stdcall ExInterlockedRemoveHeadList(ptr ptr)
 @ stdcall ExIsProcessorFeaturePresent(long)
@@ -141,63 +146,63 @@
 @ stdcall ExRaiseException(ptr) RtlRaiseException
 @ stdcall ExRaiseHardError(long long long ptr long ptr)
 @ stdcall ExRaiseStatus(long) RtlRaiseStatus
-@ fastcall ExReInitializeRundownProtection(ptr) ExfReInitializeRundownProtection
-@ fastcall ExReInitializeRundownProtectionCacheAware(ptr) ExfReInitializeRundownProtectionCacheAware
+@ FASTCALL ExReInitializeRundownProtection(ptr) ExfReInitializeRundownProtection
+@ FASTCALL ExReInitializeRundownProtectionCacheAware(ptr) ExfReInitializeRundownProtectionCacheAware
 @ stdcall ExRegisterCallback(ptr ptr ptr)
 @ stdcall ExReinitializeResourceLite(ptr)
-@ fastcall -arch=x86_64 ExReleaseFastMutex(ptr)
-@ fastcall ExReleaseFastMutexUnsafe(ptr)
-@ fastcall ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(ptr)
-@ fastcall ExReleaseResourceAndLeaveCriticalRegion(ptr)
+@ stdcall -arch=x86_64 ExReleaseFastMutex(ptr)
+@ FASTCALL ExReleaseFastMutexUnsafe(ptr)
+@ FASTCALL ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(ptr)
+@ FASTCALL ExReleaseResourceAndLeaveCriticalRegion(ptr)
 @ stdcall ExReleaseResourceForThreadLite(ptr long)
-@ fastcall ExReleaseResourceLite(ptr)
-@ fastcall ExReleaseRundownProtection(ptr) ExfReleaseRundownProtection
-@ fastcall ExReleaseRundownProtectionCacheAware(ptr) ExfReleaseRundownProtectionCacheAware
-@ fastcall ExReleaseRundownProtectionCacheAwareEx(ptr long) ExfReleaseRundownProtectionCacheAwareEx
-@ fastcall ExReleaseRundownProtectionEx(ptr long) ExfReleaseRundownProtectionEx
-@ fastcall ExRundownCompleted(ptr) ExfRundownCompleted
-@ fastcall ExRundownCompletedCacheAware(ptr) ExfRundownCompletedCacheAware
+@ FASTCALL ExReleaseResourceLite(ptr)
+@ FASTCALL ExReleaseRundownProtection(ptr) ExfReleaseRundownProtection
+@ FASTCALL ExReleaseRundownProtectionCacheAware(ptr) ExfReleaseRundownProtectionCacheAware
+@ FASTCALL ExReleaseRundownProtectionCacheAwareEx(ptr long) ExfReleaseRundownProtectionCacheAwareEx
+@ FASTCALL ExReleaseRundownProtectionEx(ptr long) ExfReleaseRundownProtectionEx
+@ FASTCALL ExRundownCompleted(ptr) ExfRundownCompleted
+@ FASTCALL ExRundownCompletedCacheAware(ptr) ExfRundownCompletedCacheAware
 @ extern ExSemaphoreObjectType _ExSemaphoreObjectType
 @ stdcall ExSetResourceOwnerPointer(ptr ptr)
 @ stdcall ExSetTimerResolution(long long)
 @ stdcall ExSizeOfRundownProtectionCacheAware()
 @ stdcall ExSystemExceptionFilter()
 @ stdcall ExSystemTimeToLocalTime(ptr ptr)
-@ fastcall -arch=x86_64 ExTryToAcquireFastMutex(ptr)
+@ stdcall -arch=x86_64 ExTryToAcquireFastMutex(ptr)
 @ stdcall ExUnregisterCallback(ptr)
 @ stdcall ExUuidCreate(ptr)
 @ stdcall ExVerifySuite(long)
-@ fastcall ExWaitForRundownProtectionRelease(ptr) ExfWaitForRundownProtectionRelease
-@ fastcall ExWaitForRundownProtectionReleaseCacheAware(ptr) ExfWaitForRundownProtectionReleaseCacheAware
+@ FASTCALL ExWaitForRundownProtectionRelease(ptr) ExfWaitForRundownProtectionRelease
+@ FASTCALL ExWaitForRundownProtectionReleaseCacheAware(ptr) ExfWaitForRundownProtectionReleaseCacheAware
 @ extern ExWindowStationObjectType
-@ fastcall ExfAcquirePushLockExclusive(ptr)
-@ fastcall ExfAcquirePushLockShared(ptr)
+@ FASTCALL ExfAcquirePushLockExclusive(ptr)
+@ FASTCALL ExfAcquirePushLockShared(ptr)
 #ifndef __x86_64__
-@ fastcall ExfInterlockedAddUlong(ptr long ptr)
-@ fastcall ExfInterlockedCompareExchange64(ptr ptr ptr)
-@ fastcall ExfInterlockedInsertHeadList(ptr ptr ptr)
-@ fastcall ExfInterlockedInsertTailList(ptr ptr ptr)
-@ fastcall ExfInterlockedPopEntryList(ptr ptr)
-@ fastcall ExfInterlockedPushEntryList(ptr ptr ptr)
-@ fastcall ExfInterlockedRemoveHeadList(ptr ptr)
+@ FASTCALL ExfInterlockedAddUlong(ptr long ptr)
+@ FASTCALL ExfInterlockedCompareExchange64(ptr ptr ptr)
+@ FASTCALL ExfInterlockedInsertHeadList(ptr ptr ptr)
+@ FASTCALL ExfInterlockedInsertTailList(ptr ptr ptr)
+@ FASTCALL ExfInterlockedPopEntryList(ptr ptr)
+@ FASTCALL ExfInterlockedPushEntryList(ptr ptr ptr)
+@ FASTCALL ExfInterlockedRemoveHeadList(ptr ptr)
 #endif
-@ fastcall ExfReleasePushLock(ptr)
-@ fastcall ExfReleasePushLockExclusive(ptr)
-@ fastcall ExfReleasePushLockShared(ptr)
-@ fastcall ExfTryToWakePushLock(ptr)
-@ fastcall ExfUnblockPushLock(ptr ptr)
+@ FASTCALL ExfReleasePushLock(ptr)
+@ FASTCALL ExfReleasePushLockExclusive(ptr)
+@ FASTCALL ExfReleasePushLockShared(ptr)
+@ FASTCALL ExfTryToWakePushLock(ptr)
+@ FASTCALL ExfUnblockPushLock(ptr ptr)
 @ stdcall -arch=x86_64 ExpInterlockedFlushSList(ptr)
 @ stdcall -arch=x86_64 ExpInterlockedPopEntrySList(ptr ptr)
 @ stdcall -arch=x86_64 ExpInterlockedPushEntrySList(ptr ptr)
-@ fastcall -arch=i386 Exfi386InterlockedDecrementLong(ptr)
-@ fastcall -arch=i386 Exfi386InterlockedExchangeUlong(ptr long)
-@ fastcall -arch=i386 Exfi386InterlockedIncrementLong(ptr)
+@ FASTCALL -arch=i386 Exfi386InterlockedDecrementLong(ptr)
+@ FASTCALL -arch=i386 Exfi386InterlockedExchangeUlong(ptr long)
+@ FASTCALL -arch=i386 Exfi386InterlockedIncrementLong(ptr)
 @ stdcall -arch=i386 Exi386InterlockedDecrementLong(ptr)
 @ stdcall -arch=i386 Exi386InterlockedExchangeUlong(ptr long long)
 @ stdcall -arch=i386 Exi386InterlockedIncrementLong(ptr)
-@ fastcall -arch=i386 ExiAcquireFastMutex(ptr) ExAcquireFastMutex
-@ fastcall -arch=i386 ExiReleaseFastMutex(ptr) ExReleaseFastMutex
-@ fastcall -arch=i386 ExiTryToAcquireFastMutex(ptr) ExTryToAcquireFastMutex
+@ FASTCALL -arch=i386 ExiAcquireFastMutex(ptr) ExAcquireFastMutex
+@ FASTCALL -arch=i386 ExiReleaseFastMutex(ptr) ExReleaseFastMutex
+@ FASTCALL -arch=i386 ExiTryToAcquireFastMutex(ptr) ExTryToAcquireFastMutex
 @ stdcall FsRtlAcquireFileExclusive(ptr)
 ;FsRtlAddBaseMcbEntry
 @ stdcall FsRtlAddLargeMcbEntry(ptr long long long long long long)
@@ -318,7 +323,7 @@
 @ stdcall FsRtlUninitializeMcb(ptr)
 @ stdcall FsRtlUninitializeOplock(ptr)
 @ extern HalDispatchTable _HalDispatchTable
-@ fastcall HalExamineMBR(ptr long long ptr)
+@ FASTCALL HalExamineMBR(ptr long long ptr)
 @ extern HalPrivateDispatchTable
 ;HeadlessDispatch
 @ stdcall InbvAcquireDisplayOwnership()
@@ -334,14 +339,14 @@
 @ stdcall InbvSetTextColor(long)
 @ stdcall InbvSolidColorFill(long long long long long)
 @ extern InitSafeBootMode
-@ fastcall InterlockedCompareExchange(ptr long long)
-@ fastcall InterlockedDecrement(ptr)
-@ fastcall InterlockedExchange(ptr long)
-@ fastcall InterlockedExchangeAdd(ptr long)
-@ fastcall InterlockedIncrement(ptr)
+@ FASTCALL InterlockedCompareExchange(ptr long long)
+@ FASTCALL InterlockedDecrement(ptr)
+@ FASTCALL InterlockedExchange(ptr long)
+@ FASTCALL InterlockedExchangeAdd(ptr long)
+@ FASTCALL InterlockedIncrement(ptr)
 #ifndef __x86_64__
-@ fastcall InterlockedPopEntrySList(ptr)
-@ fastcall InterlockedPushEntrySList(ptr ptr)
+@ FASTCALL InterlockedPopEntrySList(ptr)
+@ FASTCALL InterlockedPushEntrySList(ptr ptr)
 #endif
 @ stdcall IoAcquireCancelSpinLock(ptr)
 @ stdcall IoAcquireRemoveLockEx(ptr ptr str long long)
@@ -354,7 +359,7 @@
 @ stdcall IoAllocateIrp(long long)
 @ stdcall IoAllocateMdl(ptr long long long ptr)
 @ stdcall IoAllocateWorkItem(ptr)
-@ fastcall IoAssignDriveLetters(ptr ptr ptr ptr)
+@ FASTCALL IoAssignDriveLetters(ptr ptr ptr ptr)
 @ stdcall IoAssignResources(ptr ptr ptr ptr ptr ptr)
 @ stdcall IoAttachDevice(ptr ptr ptr)
 @ stdcall IoAttachDeviceByPointer(ptr ptr)
@@ -435,7 +440,7 @@
 @ stdcall IoGetFileObjectGenericMapping()
 @ stdcall IoGetInitialStack()
 @ stdcall IoGetLowerDeviceObject(ptr)
-@ fastcall IoGetPagingIoPriority(ptr)
+@ FASTCALL IoGetPagingIoPriority(ptr)
 @ stdcall IoGetRelatedDeviceObject(ptr)
 @ stdcall IoGetRequestorProcess(ptr)
 @ stdcall IoGetRequestorProcessId(ptr)
@@ -467,7 +472,7 @@
 @ stdcall IoRaiseInformationalHardError(long ptr ptr)
 @ stdcall IoReadDiskSignature(ptr long ptr)
 @ extern IoReadOperationCount
-@ fastcall IoReadPartitionTable(ptr long long ptr)
+@ FASTCALL IoReadPartitionTable(ptr long long ptr)
 @ stdcall IoReadPartitionTableEx(ptr ptr)
 @ extern IoReadTransferCount
 @ stdcall IoRegisterBootDriverReinitialization(ptr ptr ptr)
@@ -498,7 +503,7 @@
 @ stdcall IoSetHardErrorOrVerifyDevice(ptr ptr)
 @ stdcall IoSetInformation(ptr ptr long ptr)
 @ stdcall IoSetIoCompletion(ptr ptr ptr long ptr long)
-@ fastcall IoSetPartitionInformation(ptr long long long)
+@ FASTCALL IoSetPartitionInformation(ptr long long long)
 @ stdcall IoSetPartitionInformationEx(ptr long ptr)
 @ stdcall IoSetShareAccess(long long ptr ptr)
 @ stdcall IoSetStartIoAttributes(ptr long long)
@@ -541,11 +546,11 @@
 @ stdcall IoWMIWriteEvent(ptr)
 @ stdcall IoWriteErrorLogEntry(ptr)
 @ extern IoWriteOperationCount
-@ fastcall IoWritePartitionTable(ptr long long long ptr)
+@ FASTCALL IoWritePartitionTable(ptr long long long ptr)
 @ stdcall IoWritePartitionTableEx(ptr ptr)
 @ extern IoWriteTransferCount
-@ fastcall IofCallDriver(ptr ptr)
-@ fastcall IofCompleteRequest(ptr long)
+@ FASTCALL IofCallDriver(ptr ptr)
+@ FASTCALL IofCompleteRequest(ptr long)
 @ stdcall KdChangeOption(long long ptr long ptr ptr)
 @ extern KdDebuggerEnabled _KdDebuggerEnabled
 @ extern KdDebuggerNotPresent _KdDebuggerNotPresent
@@ -560,13 +565,13 @@
 @ stdcall -arch=i386 Ke386IoSetAccessProcess(ptr long)
 @ stdcall -arch=i386 Ke386QueryIoAccessMap(long ptr)
 @ stdcall -arch=i386 Ke386SetIoAccessMap(long ptr)
-@ fastcall KeAcquireGuardedMutex(ptr)
-@ fastcall KeAcquireGuardedMutexUnsafe(ptr)
-@ fastcall KeAcquireInStackQueuedSpinLockAtDpcLevel(ptr ptr)
-@ fastcall KeAcquireInStackQueuedSpinLockForDpc(ptr ptr)
+@ FASTCALL KeAcquireGuardedMutex(ptr)
+@ FASTCALL KeAcquireGuardedMutexUnsafe(ptr)
+@ FASTCALL KeAcquireInStackQueuedSpinLockAtDpcLevel(ptr ptr)
+@ FASTCALL KeAcquireInStackQueuedSpinLockForDpc(ptr ptr)
 @ stdcall KeAcquireInterruptSpinLock(ptr)
 @ stdcall KeAcquireSpinLockAtDpcLevel(ptr)
-@ fastcall KeAcquireSpinLockForDpc(ptr)
+@ FASTCALL KeAcquireSpinLockForDpc(ptr)
 @ stdcall -arch=x86_64 KeAcquireSpinLockRaiseToDpc(ptr)
 @ stdcall KeAddSystemServiceTable(ptr ptr long ptr long)
 @ stdcall KeAreAllApcsDisabled()
@@ -610,7 +615,7 @@
 @ stdcall KeInitializeDeviceQueue(ptr)
 @ stdcall KeInitializeDpc(ptr ptr ptr)
 @ stdcall KeInitializeEvent(ptr long long)
-@ fastcall KeInitializeGuardedMutex(ptr)
+@ FASTCALL KeInitializeGuardedMutex(ptr)
 @ stdcall KeInitializeInterrupt(ptr ptr ptr ptr long long long long long long long)
 @ stdcall KeInitializeMutant(ptr long)
 @ stdcall KeInitializeMutex(ptr long)
@@ -661,10 +666,10 @@
 @ stdcall KeRegisterBugCheckCallback(ptr ptr ptr long ptr)
 @ stdcall KeRegisterBugCheckReasonCallback(ptr ptr ptr ptr)
 @ stdcall KeRegisterNmiCallback(ptr ptr)
-@ fastcall KeReleaseGuardedMutex(ptr)
-@ fastcall KeReleaseGuardedMutexUnsafe(ptr)
-@ fastcall KeReleaseInStackQueuedSpinLockForDpc(ptr)
-@ fastcall KeReleaseInStackQueuedSpinLockFromDpcLevel(ptr)
+@ FASTCALL KeReleaseGuardedMutex(ptr)
+@ FASTCALL KeReleaseGuardedMutexUnsafe(ptr)
+@ FASTCALL KeReleaseInStackQueuedSpinLockForDpc(ptr)
+@ FASTCALL KeReleaseInStackQueuedSpinLockFromDpcLevel(ptr)
 @ stdcall KeReleaseInterruptSpinLock(ptr long)
 @ stdcall KeReleaseMutant(ptr long long long)
 @ stdcall KeReleaseMutex(ptr long)
@@ -672,7 +677,7 @@
 #ifdef __x86_64__
 @ stdcall KeReleaseSpinLock(ptr long)
 #endif
-@ fastcall KeReleaseSpinLockForDpc(ptr long)
+@ FASTCALL KeReleaseSpinLockForDpc(ptr long)
 @ stdcall KeReleaseSpinLockFromDpcLevel(ptr)
 @ stdcall KeRemoveByKeyDeviceQueue(ptr long)
 @ stdcall KeRemoveByKeyDeviceQueueIfBusy(ptr long)
@@ -708,10 +713,10 @@
 @ stdcall KeStackAttachProcess(ptr ptr)
 @ stdcall KeSynchronizeExecution(ptr ptr ptr)
 @ stdcall KeTerminateThread(long)
-@ fastcall KeTestSpinLock(ptr)
+@ FASTCALL KeTestSpinLock(ptr)
 @ extern KeTickCount
-@ fastcall KeTryToAcquireGuardedMutex(ptr)
-@ fastcall KeTryToAcquireSpinLockAtDpcLevel(ptr)
+@ FASTCALL KeTryToAcquireGuardedMutex(ptr)
+@ FASTCALL KeTryToAcquireSpinLockAtDpcLevel(ptr)
 @ stdcall KeUnstackDetachProcess(ptr)
 @ stdcall KeUpdateRunTime(ptr long)
 #ifdef _M_IX86
@@ -723,10 +728,10 @@
 @ stdcall KeWaitForMultipleObjects(long ptr long long long long ptr ptr)
 @ stdcall KeWaitForMutexObject(ptr long long long ptr) KeWaitForSingleObject
 @ stdcall KeWaitForSingleObject(ptr long long long ptr)
-@ fastcall KefAcquireSpinLockAtDpcLevel(ptr)
-@ fastcall KefReleaseSpinLockFromDpcLevel(ptr)
+@ FASTCALL KefAcquireSpinLockAtDpcLevel(ptr)
+@ FASTCALL KefReleaseSpinLockFromDpcLevel(ptr)
 @ stdcall -arch=i386 Kei386EoiHelper()
-@ fastcall KiAcquireSpinLock(ptr)
+@ FASTCALL KiAcquireSpinLock(ptr)
 @ extern KiBugCheckData
 @ stdcall KiCheckForKernelApcDelivery()
 ;KiCheckForSListAddress
@@ -735,7 +740,7 @@
 @ stdcall -arch=i386 KiDispatchInterrupt()
 @ extern KiEnableTimerWatchdog
 @ stdcall KiIpiServiceRoutine(ptr ptr)
-@ fastcall KiReleaseSpinLock(ptr)
+@ FASTCALL KiReleaseSpinLock(ptr)
 @ cdecl KiUnexpectedInterrupt()
 ;-arch=i386 Kii386SpinOnSpinLock
 @ stdcall LdrAccessResource(ptr ptr ptr ptr)
@@ -927,8 +932,8 @@
 ;ObSetHandleAttributes@12
 @ stdcall ObSetSecurityDescriptorInfo(ptr ptr ptr ptr long ptr)
 @ stdcall ObSetSecurityObjectByPointer(ptr long ptr)
-@ fastcall ObfDereferenceObject(ptr)
-@ fastcall ObfReferenceObject(ptr)
+@ FASTCALL ObfDereferenceObject(ptr)
+@ FASTCALL ObfReferenceObject(ptr)
 ;PfxFindPrefix
 ;PfxInitialize
 ;PfxInsertPrefix
@@ -1250,7 +1255,7 @@
 @ stdcall RtlOemStringToUnicodeString(ptr ptr long)
 @ stdcall RtlOemToUnicodeN(wstr long ptr ptr long)
 @ stdcall RtlPinAtomInAtomTable(ptr ptr)
-@ fastcall RtlPrefetchMemoryNonTemporal(ptr long)
+@ FASTCALL RtlPrefetchMemoryNonTemporal(ptr long)
 @ stdcall RtlPrefixString(ptr ptr long)
 @ stdcall RtlPrefixUnicodeString(ptr ptr long)
 @ stdcall RtlQueryAtomInAtomTable(ptr ptr ptr ptr ptr ptr)
@@ -1297,8 +1302,8 @@
 ;RtlTraceDatabaseUnlock
 ;RtlTraceDatabaseValidate
 #ifndef __x86_64__
-@ fastcall RtlUlongByteSwap(long)
-@ fastcall RtlUlonglongByteSwap(long long)
+@ FASTCALL RtlUlongByteSwap(long)
+@ FASTCALL RtlUlonglongByteSwap(long long)
 #endif
 @ stdcall RtlUnicodeStringToAnsiSize(ptr) RtlxUnicodeStringToAnsiSize
 @ stdcall RtlUnicodeStringToAnsiString(ptr ptr long)
@@ -1323,7 +1328,7 @@
 @ stdcall RtlUpperChar(long)
 @ stdcall RtlUpperString(ptr ptr)
 #ifndef __x86_64__
-@ fastcall RtlUshortByteSwap(long)
+@ FASTCALL RtlUshortByteSwap(long)
 #endif
 @ stdcall RtlValidRelativeSecurityDescriptor(ptr long long)
 @ stdcall RtlValidSecurityDescriptor(ptr)
